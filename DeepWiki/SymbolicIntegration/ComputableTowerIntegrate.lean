@@ -198,4 +198,73 @@ def cHermiteReduceTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
 
 end CPolyG
 
+/-! ### ★ The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
+
+This is the headline. We run `cHermiteReduceTowerG` over `CPolyG (QFunNZG (QFunNZG ℚ)) =
+ℚ(x)(t₁)[t₂]` (tower **level 2**, the new monomial `t₂`) on a concrete proper fraction whose
+denominator has a **repeated `t₂`-factor**, and certify `D(g) + h = f`. The setting is Bronstein's
+Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt₂ = t₂² + 1`), and
+`f = a/d = 1/t₂²`, whose denominator `d = t₂²` has the **normal factor `t₂` of multiplicity 2**
+(`t₂` is normal: `gcd(t₂, Dt₂) = gcd(t₂, t₂²+1) = 1`). The reduction lowers the multiplicity:
+`g = −1/t₂`, `h = −1` (squarefree denominator `t₂`), with `D(−1/t₂) = (t₂²+1)/t₂²` so
+`D(g) + h = (t₂²+1)/t₂² − 1 = 1/t₂² = f`.
+
+All coefficients are level-2 *constants* (elements of ℚ ⊂ ℚ(x)(t₁) = `Lvl2`), so the engine genuinely
+runs the level-2 `CField`/`CDiffField` instances over `CPolyG Lvl2`. The `CField (QFunNZG (QFunNZG ℚ))`
+and `CDiffField (QFunNZG (QFunNZG ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
+proofs, so nothing noncomputable reaches the native compiler — `native_decide` reduces. The load-bearing
+check is the cleared-denominator form of `D(gnum/gden) + h_num/h_den = a/d`, equating numerators over the
+common denominator `gden²·h_den·d`: `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`. -/
+
+open QFunNZG
+
+/-- Level-2 scalar `2 = 1 + 1 ∈ Lvl2 = ℚ(x)(t₁)`. -/
+def lvl2Two : Lvl2 := CField.add CField.one CField.one
+
+/-- Level-2 monomial derivative `Dt₂ = t₂² + 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` (so `t₂ = tan`,
+Bronstein Example 5.3.1 lifted to level 2; constant coefficients in ℚ ⊂ ℚ(x)(t₁)). -/
+def towerHermiteLvl2Dt : CPolyG Lvl2 := [CField.one, CField.zero, CField.one]
+
+/-- Level-2 numerator `a = 1` over `CPolyG Lvl2` (constant coefficient `1 ∈ ℚ(x)(t₁)`). -/
+def towerHermiteLvl2A : CPolyG Lvl2 := [CField.one]
+
+/-- Level-2 denominator `d = t₂²` over `CPolyG Lvl2` — the normal factor `t₂` of multiplicity 2 (under
+`Dt₂ = t₂² + 1`, `t₂` is normal and `t₂²` its square), so Hermite lowers the power. -/
+def towerHermiteLvl2D : CPolyG Lvl2 := [CField.zero, CField.zero, CField.one]
+
+/-- **★ `cHermiteReduceTowerG` computes the RATIONAL PART at tower level 2** (`native_decide`): for
+`f = a/d = 1/t₂²` over `ℚ(x)(t₁)[t₂]` (`= CPolyG (QFunNZG (QFunNZG ℚ))`, tower level 2) with the monomial
+derivation `D = cmonomialDeriv Dt`, `Dt₂ = t₂² + 1` (`t₂ = tan`), the computed
+`((gnum, gden), (h_num, h_den))` satisfies the Hermite identity `D(gnum/gden) + h_num/h_den = a/d`. With
+`D(g) = gprimeNum/gden²`, `gprimeNum = D(gnum)·gden − gnum·D(gden)`, equate numerators over `gden²·h_den·d`:
+`(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`, by `cisZeroG` of the difference over ℚ(x)(t₁)[t₂].
+The denominator `d = t₂²` has a repeated normal factor `t₂`, so this exercises the genuine
+multiplicity-lowering step (`g = −1/t₂`, `h = −1`). **This is the deliverable: tower integration, rational
+part, executing at LEVEL 2** — the whole generic engine (`cSqfreeYunFFG`/`cgcdMonicG`/`cHermiteReduceTowerInner`/
+`cmonomialDeriv`) reduces over `ℚ(x)(t₁)[t₂]`. -/
+theorem towerHermiteLvl2_rationalPart :
+    (let res := CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt 12
+        towerHermiteLvl2A towerHermiteLvl2D
+      let gnum := res.1.1
+      let gden := res.1.2
+      let hNum := res.2.1
+      let hDen := res.2.2
+      let Dgnum := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gnum
+      let Dgden := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gden
+      let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
+      let gden2 := CPolyG.cmulG gden gden
+      let lhs := CPolyG.cmulG
+        (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) towerHermiteLvl2D
+      let rhs := CPolyG.cmulG towerHermiteLvl2A (CPolyG.cmulG gden2 hDen)
+      CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
+
+/-- **The level-2 residual `h` has a squarefree denominator** (`native_decide`): the Hermite reduction
+lowered the multiplicity-2 factor `t₂` of `d = t₂²` to multiplicity 1, so the residual denominator
+`h_den = Dstar = t₂` is squarefree (`t₂`-degree 1) over ℚ(x)(t₁)[t₂], as the reduction guarantees. -/
+theorem towerHermiteLvl2_residual_degree :
+    CPolyG.cdegG (CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt 12
+      towerHermiteLvl2A towerHermiteLvl2D).2.2 = 1 := by native_decide
+
+#print axioms towerHermiteLvl2_rationalPart
+
 end DeepWiki.SymbolicIntegration
