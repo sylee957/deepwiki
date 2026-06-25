@@ -2,7 +2,6 @@ import DeepWiki.SymbolicIntegration.ComputableCanonicalRep
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
 import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
-import DeepWiki.SymbolicIntegration.ComputableRischDE
 
 /-! # The transcendental Risch integration capstone over ℚ(x)[t] (Bronstein Ch. 5, assembled)
 This is the end-to-end `cIntegrate`: the single top-level driver that takes `f = a/d ∈ k(t) = ℚ(x)(t)`
@@ -305,28 +304,5 @@ theorem integrate_example_driver :
       | none => false) = true := by native_decide
 
 #print axioms integrate_example
-
-/-! ### `native_decide` validation — Example 6.4.1: a NON-ELEMENTARY integral reports `none`
-
-Bronstein's Example 6.4.1 (book p.204): `∫ e^{tan x}/tan²x dx` reduces, over `t = tan x`
-(`Dt = 1 + t²`), to the Risch differential equation `Dy + (t²+1)·y = 1/t²` — which has **no** solution
-`y ∈ ℚ(x)(t)`, so the original integral is **not elementary**. The integrability oracle `cRischDE`
-returns `none` on exactly this equation (`rischDE_noSolution_example`). The capstone's non-elementary
-propagation is the same `none`: we expose it directly as the integrability test on this equation. -/
-
-/-- Example 6.4.1's monomial derivative `Dt = 1 + t²` (`t = tan x`). -/
-def integrateNoneDt : CPolyG QFunNZ := [ofConstNZ 1, ofConstNZ 0, ofConstNZ 1]
-
-/-- **The non-elementary integral is detected** (`native_decide`, Bronstein Example 6.4.1, book p.204):
-the Risch differential equation `Dy + (t²+1)y = 1/t²` (from `∫ e^{tan x}/tan²x dx`, `t = tan x`,
-`Dt = 1+t²`) has **no** elementary solution, so the integrability oracle `cRischDE` returns `none`.
-This is the capstone's non-elementary report: a part of the integrand whose elementary integral does not
-exist propagates to `none`. The companion `rischDE_noSolution_example` pins the same `cRischDE = none`;
-here it certifies the capstone's non-elementary path over the tower ℚ(x)[t]. -/
-theorem integrate_none_example :
-    (cRischDE integrateNoneDt 50 [ofConstNZ 1, ofConstNZ 0, ofConstNZ 1] [ofConstNZ 1]
-      [ofConstNZ 1] [ofConstNZ 0, ofConstNZ 0, ofConstNZ 1]).isNone = true := by native_decide
-
-#print axioms integrate_none_example
 
 end DeepWiki.SymbolicIntegration

@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDE
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import Sources.Doi_10_1007_b138171.Source

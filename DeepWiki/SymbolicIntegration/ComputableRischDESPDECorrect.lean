@@ -250,73 +250,9 @@ example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ) (n : ℤ)
     (hin : CSPDEClearedInputs Dt fuel a b c n) : cSPDECleared Dt fuel a b c n :=
   cSPDECleared_of_inputs Dt fuel a b c n hin
 
-/-! ### The re-gated §6.4 headlines — `cSPDE` lifting under transparent inputs only
-Composing `cSPDECleared_of_inputs` into the §6.4 lifting (`cSPDE_cleared_lifting`) and the §6.4-§6.5
-composition (`cSPDE_polyRischDENoCancel_cleared`) replaces their abstract `cSPDECleared` gate with the
-transparent `CSPDEClearedInputs` — the §6.4 SPDE spine now rests only on degree/fuel/termination
-preconditions (the §3.5/cgcdFF-headline shape), no per-level exact-division/Bézout assumptions. -/
-
-/-- **The §6.4 `cSPDE` cleared lifting under transparent inputs**: if `cSPDE Dt fuel a b c n =
-some (b̄, c̄, m, α, β)` and the transparent `CSPDEClearedInputs Dt fuel a b c n` holds, then for every
-`h` solving the reduced `D(h) + b̄·h = c̄`, the reconstruction `q = α·h + β` solves the original
-`a·D(q) + b·q = c` over `(RatFunc ℚ)[X]` (`D = implicitDeriv (toPolyG Dt)`). `cSPDE_cleared_lifting`
-with its `cSPDECleared` gate discharged by `cSPDECleared_of_inputs`. -/
-theorem cSPDE_cleared_lifting_of_inputs (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ)
-    (n : ℤ) (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β : CPolyG QFunNZ)
-    (hspde : cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β))
-    (hin : CSPDEClearedInputs Dt fuel a b c n) (h : CPolyG QFunNZ)
-    (hh : Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h
-      = toPolyG cbar) :
-    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α h) β))
-        + toPolyG b * toPolyG (caddG (cmulG α h) β)
-      = toPolyG c :=
-  cSPDE_cleared_lifting Dt fuel a b c n bbar cbar m α β hspde
-    (cSPDECleared_of_inputs Dt fuel a b c n hin) h hh
-
--- The §6.4 lifting under transparent inputs only: reduced solution lifts to the original equation.
-example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ) (n : ℤ)
-    (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β : CPolyG QFunNZ)
-    (hspde : cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β))
-    (hin : CSPDEClearedInputs Dt fuel a b c n) (h : CPolyG QFunNZ)
-    (hh : Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h
-      = toPolyG cbar) :
-    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α h) β))
-        + toPolyG b * toPolyG (caddG (cmulG α h) β)
-      = toPolyG c :=
-  cSPDE_cleared_lifting_of_inputs Dt fuel a b c n bbar cbar m α β hspde hin h hh
-
-/-- **The §6.4-§6.5 polynomial-stage spine under transparent inputs**: if `cSPDE Dt fuel a b c n =
-some (b̄, c̄, m, α, β)` (under transparent `CSPDEClearedInputs`) and `cPolyRischDENoCancel Dt fuel b̄
-c̄ m = some v`, then `q = α·v + β` solves the original `a·D(q) + b·q = c`. The `cSPDE →
-cPolyRischDENoCancel` composition with the §6.4 certificate gate replaced by transparent
-degree/fuel/termination preconditions. Axiom-clean (no `native_decide`). -/
-theorem cSPDE_polyRischDENoCancel_cleared_of_inputs (Dt : CPolyG QFunNZ) (fuel : ℕ)
-    (a b c : CPolyG QFunNZ) (n : ℤ) (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β v : CPolyG QFunNZ)
-    (hspde : cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β))
-    (hin : CSPDEClearedInputs Dt fuel a b c n)
-    (hpoly : cPolyRischDENoCancel Dt fuel bbar cbar m = some v) :
-    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α v) β))
-        + toPolyG b * toPolyG (caddG (cmulG α v) β)
-      = toPolyG c :=
-  cSPDE_polyRischDENoCancel_cleared Dt fuel a b c n bbar cbar m α β v hspde
-    (cSPDECleared_of_inputs Dt fuel a b c n hin) hpoly
-
--- The §6.4-§6.5 spine under transparent inputs: `q = α·v + β` solves `a·D(q)+b·q=c` (cleared).
-example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ) (n : ℤ)
-    (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β v : CPolyG QFunNZ)
-    (hspde : cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β))
-    (hin : CSPDEClearedInputs Dt fuel a b c n)
-    (hpoly : cPolyRischDENoCancel Dt fuel bbar cbar m = some v) :
-    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α v) β))
-        + toPolyG b * toPolyG (caddG (cmulG α v) β)
-      = toPolyG c :=
-  cSPDE_polyRischDENoCancel_cleared_of_inputs Dt fuel a b c n bbar cbar m α β v hspde hin hpoly
-
 #print axioms cgcdExtG_isUnit_of_divided
 #print axioms dvd_of_cdvdG
 #print axioms cdivFF_a_exact_of_gcd
 #print axioms cSPDECleared_of_inputs
-#print axioms cSPDE_cleared_lifting_of_inputs
-#print axioms cSPDE_polyRischDENoCancel_cleared_of_inputs
 
 end DeepWiki.SymbolicIntegration

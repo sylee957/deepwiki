@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDE
+import DeepWiki.SymbolicIntegration.ComputableLogPartTower
 
 /-! # Computable parametric problems over the tower ℚ(x)[t] (Bronstein Chapter 7)
 
@@ -68,6 +68,45 @@ namespace DeepWiki.SymbolicIntegration
 open Compute CPolyG QFunNZ
 
 namespace CPolyG
+
+/-! ### `cParametricLogDeriv` over the base field `k = ℚ(x)` (Bronstein §5.12 / §7.3,
+the `ParametricLogarithmicDerivative` box, book p.176/253)
+
+The §6.6 cancellation primitive case branches on whether the coefficient `b ∈ k = ℚ(x)` is of the form
+`b = Dz/z` (a logarithmic derivative of a `k`-element) and, more generally, whether `n·b = Dz/z` for a
+nonzero `n ∈ ℤ` and `z ∈ k*` (a logarithmic derivative of a `k`-**radical**, the *parametric*
+logarithmic derivative problem, §7.3 eq. 7.37). Here `k = ℚ(x)`, `D = d/dx`, so a `QFunNZ` element `b`
+is handled directly (the §5.12 recursion bottoms out at the base field, where the special set `S = k`).
+A `b = Dz/z` is **proper** (`deg(num) < deg(den)`), so a non-proper `b` (in particular every nonzero
+constant) is provably not a logarithmic derivative — the constant Liouville obstruction. -/
+
+/-- **`d/dx` on `CPolyG ℚ`** `cderivQ p = cderivG p`: the plain formal derivative (the generic `cderivG`
+specialized at the constant field `ℚ`, the base monomial derivation `D` with `Dx = 1`, `κ_D = 0`). -/
+abbrev cderivQ (p : CPolyG ℚ) : CPolyG ℚ := cderivG p
+
+/-- **Polynomial part / properness of a base-field element** `cBaseIsProper b`: `true` iff the
+lowest-terms `QFunNZ` value `b = a/d ∈ ℚ(x)` is *proper*, i.e. `deg(a) < deg(d)` (so `b` has no
+polynomial part). A logarithmic derivative `Dz/z` of a `ℚ(x)`-element is always proper, so a `b` that
+fails this is **not** a logarithmic derivative. A nonzero constant `b ∈ ℚ*` (`deg a = deg d = 0`) is
+*not* proper, hence not a logarithmic derivative — the constant obstruction. -/
+def cBaseIsProper (fuel : ℕ) (b : QFunNZ) : Bool :=
+  let bn := Compute.qnorm fuel b.1
+  Compute.cdeg bn.1 < Compute.cdeg bn.2 && !Compute.cisZero bn.1
+
+/-- **Parametric-logarithmic-derivative test over the base field** `cParametricLogDeriv fuel b`
+(Bronstein §5.12 / §7.3, book p.176/253), for `b ∈ k = ℚ(x)`: returns `true` iff `b` *could* be a
+logarithmic derivative of a `ℚ(x)`-radical, i.e. `n·b = Dz/z` for some nonzero `n ∈ ℤ` and `z ∈ ℚ(x)*`
+— and `false` iff `b` is provably **not** of that form. A nonzero element of `ℚ(x)` that is not proper
+(has a polynomial part, in particular every nonzero constant) is provably not a logarithmic derivative
+of a radical (the residues argument of §5.12: `Dz/z` is always proper and simple). This decides the
+constant sub-case `b ∈ ℚ*` exactly (returns `false`), the branch the §6.6 cancellation primitive case
+reaches. For a proper `b` the full recognizer (squarefree-denominator test + integer Rothstein–Trager
+residues + the §7.3 unique-`m/n` linear solve) is the documented continuation; this conservative test
+returns `true` there, so the caller takes the *radical/log-derivative* branch only when it cannot rule
+it out — keeping the **non-radical** branch (eq. 6.23) sound. -/
+def cParametricLogDeriv (fuel : ℕ) (b : QFunNZ) : Bool :=
+  -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
+  CField.isZero b || cBaseIsProper fuel b
 
 /-! ### The new ingredient: a dense linear solver over the constant field `Const(k) = ℚ`
 

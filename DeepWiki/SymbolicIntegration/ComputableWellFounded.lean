@@ -341,6 +341,19 @@ example :
     0 < ((CPolyG.cgcdWf [(CField.neg CField.one : QFunNZ), CField.zero, CField.one]
       [CField.neg CField.one, CField.one]).1 : List QFunNZ).length := by native_decide
 
+/-- **Fuel-free divisibility test** `cdvdGWf q p = cisZeroG (cmodWf p q)`: the fuel-free companion of
+`cdvdG`, deciding `q ∣ p` (remainder of `p` by `q` is zero) with the leaf fuel-free remainder `cmodWf`
+(true well-founded recursion, no fuel at runtime). Generic over `[CField α]`. -/
+def cdvdGWf (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
+
+/-- **`cdvdGWf` equals the fuel'd `cdvdG` at any sufficient fuel**: for `(cnormG p).length ≤ fuel`,
+`cdvdGWf q p = cdvdG fuel q p`. Both test the zero-ness of the Euclidean remainder; the leaf bridge
+`cdivmodWf_eq_of_fuel` supplies the agreement. -/
+theorem cdvdGWf_eq_of_fuel (fuel : ℕ) (q p : CPolyG α)
+    (hfuel : (cnormG p : List α).length ≤ fuel) :
+    cdvdGWf q p = CPolyG.cdvdG fuel q p := by
+  rw [cdvdGWf, CPolyG.cdvdG, cmodWf, cmodG, cdivmodWf_eq_of_fuel fuel p q hfuel]
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
