@@ -828,4 +828,53 @@ theorem resultant_split_eq_zero_iff_residue {K : Type*} [Field K] (s : Finset K)
   rw [not_iff_comm, hcopiff, not_exists]
   simp only [not_and, ne_eq]
 
+namespace CPolyG
+
+open QFunNZ
+
+open scoped Classical Differential in
+/-- **The per-candidate residue criterion** (composing steps 1–4a): in the split squarefree primitive
+regime `toPolyG d = Lagrange.nodal s id` with the monomial seed `Δd` nonzero at every root, a candidate
+`c ∈ ℚ` passes `cRationalResidues`' test — `cisZeroG [cevalG R (ofConstNZ c)] = true` for
+`R = cResidueResultantTower Dt fuel a d` — **iff** `c` is a residue, i.e.
+`∃ α ∈ s, A(α)/(Δd)(α) = toK(ofConstNZ c)`. The vanishing of the residue resultant at `c` reads through
+step 3 (`toPolyG_cResidueResultantTower` + `rtResultantSeed_eval`) as `res_t(d, a − c·Δd) = 0`, which
+`resultant_split_eq_zero_iff_residue` turns into the residue equation. -/
+theorem cisZeroG_cevalG_cResidueResultantTower_iff (Dt a d : CPolyG QFunNZ) (fuel : ℕ)
+    (s : Finset (CFieldSpec.K QFunNZ)) (hden : toPolyG d = Lagrange.nodal s id)
+    (hDd : ∀ α ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval α ≠ 0)
+    (hadeg : (toPolyG a).natDegree ≤ (toPolyG d).natDegree)
+    (hδdeg : (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).natDegree
+      ≤ (toPolyG d).natDegree)
+    (hamc : ∀ k ∈ Finset.range (cdegG d + 1),
+      (toPolyG (cAmcDd Dt a d (ofConstNZ (k : ℚ)))).natDegree ≤ (toPolyG d).natDegree)
+    (hfuel : ∀ k ∈ Finset.range (cdegG d + 1),
+      (cnormG d : List QFunNZ).length
+        + (cnormG (cAmcDd Dt a d (ofConstNZ (k : ℚ))) : List QFunNZ).length + 2 ≤ fuel) (c : ℚ) :
+    cisZeroG [cevalG (cResidueResultantTower Dt fuel a d) (ofConstNZ c)] = true
+      ↔ ∃ α ∈ s, (toPolyG a).eval α
+          / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval α
+            = CFieldSpec.toK (ofConstNZ c) := by
+  classical
+  set δ := Differential.implicitDeriv (toPolyG Dt) (toPolyG d) with hδ
+  have hdmonic : (toPolyG d).Monic := hden ▸ Lagrange.nodal_monic
+  -- `cisZeroG [cevalG R c'] = true ↔ R(toK c') = 0`
+  have hzero : cisZeroG [cevalG (cResidueResultantTower Dt fuel a d) (ofConstNZ c)] = true
+      ↔ (toPolyG (cResidueResultantTower Dt fuel a d)).eval (CFieldSpec.toK (ofConstNZ c)) = 0 := by
+    rw [cisZeroG_iff, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, ← toK_cevalG,
+      Polynomial.C_eq_zero]
+  rw [hzero, toPolyG_cResidueResultantTower Dt a d fuel hdmonic hamc hfuel, ← hδ,
+    rtResultantSeed_eval]
+  -- `deg(a − C c·δ) ≤ deg d` (from `deg a ≤ deg d` and `deg δ ≤ deg d`)
+  have hEdeg : (toPolyG a - C (CFieldSpec.toK (ofConstNZ c)) * δ).natDegree
+      ≤ (toPolyG d).natDegree :=
+    (natDegree_sub_le _ _).trans (max_le hadeg
+      ((natDegree_C_mul_le _ _).trans hδdeg))
+  rw [show (toPolyG d).natDegree = (Lagrange.nodal s id).natDegree from by rw [hden]] at hEdeg
+  -- specialize the split-field criterion (with `d = nodal s id`)
+  rw [hden, resultant_split_eq_zero_iff_residue s (toPolyG a) δ hDd
+    (CFieldSpec.toK (ofConstNZ c)) hEdeg]
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
