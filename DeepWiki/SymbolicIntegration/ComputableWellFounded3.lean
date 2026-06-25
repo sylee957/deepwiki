@@ -352,4 +352,80 @@ theorem cSplitFactorFastWf_eq :
       have hih := ih (CPolyG.cdivFF (fuel + 1) p S) hqne hqdeg hrecreg
       rw [hdiveq, hih]
 
+/-- **The fuel-free `cSplitFactorFastWf` loop output is a book-faithful splitting factorization** (the
+transported headline): for `toPolyG p ≠ 0`, fuel strictly exceeding the `t`-degree
+(`(toPolyG p).natDegree < fuel`), and a regular run (`CSplitFactorFastRegular Dt fuel p`), the WF loop
+output `(pₙ, pₛ) = cSplitFactorFastWf Dt p`, read through `toPolyG` over the field ℚ(x) = `RatFunc ℚ`,
+satisfies `IsSplittingFactorizationGen (toPolyG p) (toPolyG pₛ) (toPolyG pₙ)` w.r.t. the monomial
+derivation `D` (`Dt = toPolyG Dt`). The same `CSplitFactorFastRegular` gate as the fuel'd
+`cSplitFactorFast_isSplittingFactorizationGen`; the WF bridge `cSplitFactorFastWf_eq` only removes the
+explicit `fuel` from the runtime, fuel-free. -/
+theorem cSplitFactorFastWf_isSplittingFactorizationGen (Dt : CPolyG QFunNZ) (fuel : ℕ)
+    (p : CPolyG QFunNZ) (hp : toPolyG p ≠ 0) (hdegp : (toPolyG p).natDegree < fuel)
+    (hreg : CSplitFactorFastRegular Dt fuel p) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+      (toPolyG p)
+      (toPolyG (CPolyG.cSplitFactorFastWf Dt p).2)
+      (toPolyG (CPolyG.cSplitFactorFastWf Dt p).1) := by
+  rw [cSplitFactorFastWf_eq Dt fuel p hp hdegp hreg]
+  exact cSplitFactorFast_isSplittingFactorizationGen Dt fuel p hp (le_of_lt hdegp) hreg
+
+-- The fuel-free splitting-factorization headline (`CSplitFactorFastRegular`-gated, as the fuel'd version)
+-- carries only the standard axioms.
+#print axioms cSplitFactorFastWf_isSplittingFactorizationGen
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- The headline: the fuel-free `cSplitFactorFastWf` loop, read over ℚ(x) = `RatFunc ℚ`, returns a
+-- book-faithful splitting factorization of `toPolyG p` w.r.t. the monomial derivation `Dt = toPolyG Dt`
+-- — `toPolyG p = toPolyG pₛ · toPolyG pₙ`, `pₛ` special, every squarefree factor of `pₙ` normal — under
+-- the same regularity gate the fuel'd version carries, **with no fuel at runtime**.
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ) (hp : toPolyG p ≠ 0)
+    (hdegp : (toPolyG p).natDegree < fuel) (hreg : CSplitFactorFastRegular Dt fuel p) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+      (toPolyG p)
+      (toPolyG (CPolyG.cSplitFactorFastWf Dt p).2)
+      (toPolyG (CPolyG.cSplitFactorFastWf Dt p).1) :=
+  cSplitFactorFastWf_isSplittingFactorizationGen Dt fuel p hp hdegp hreg
+
+/-! ### `native_decide` smoke tests for `cSplitFactorFastWf`
+
+The whole fuel-free splitting-factorization loop executes in native code over the noncomputable-`CFieldSpec`
+tower `QFunNZ` (ℚ(x)) — `cSplitFactorFastWf` carries no fuel and no noncomputable bridge into the compiled
+body. Bronstein's degree-5 Example 3.5.1 (where the naive ℚ(x)-Euclidean kernel did not finish) computes
+the book's `(deg pₙ, deg pₛ) = (3, 2)`. -/
+
+namespace CPolyG
+
+/-- `cSplitFactorFastWf` on `(t−1)(t−2)` over ℚ(x)[t]: degree-1 normal part. -/
+example :
+    CPolyG.cdegG (CPolyG.cSplitFactorFastWf cSplitFactorExampleDt cSplitFactorExampleP).1 = 1 := by
+  native_decide
+
+/-- `cSplitFactorFastWf` on `(t−1)(t−2)`: degree-1 special part. -/
+example :
+    CPolyG.cdegG (CPolyG.cSplitFactorFastWf cSplitFactorExampleDt cSplitFactorExampleP).2 = 1 := by
+  native_decide
+
+/-- **Example 3.5.1** (Bronstein §3.5, p.101) COMPUTES fuel-free: `cSplitFactorFastWf` on the degree-5 `p`
+returns `(deg pₙ, deg pₛ) = (3, 2)`, the book's worked answer — the own-loop runs end-to-end with **no fuel
+at runtime**, where the naive ℚ(x)-Euclidean kernel did not finish in budget. -/
+example :
+    (CPolyG.cdegG (CPolyG.cSplitFactorFastWf splitFastExample351Dt splitFastExample351P).1,
+     CPolyG.cdegG (CPolyG.cSplitFactorFastWf splitFastExample351Dt splitFastExample351P).2) = (3, 2) := by
+  native_decide
+
+/-- **Example 3.5.1 fuel-free split matches the book's `pₙ`/`pₛ`** — the monic-normalized normal and special
+parts of the fuel-free `cSplitFactorFastWf` split equal Bronstein's `pₙ = 4x⁴t³−4x³(x+2)t²+4x²(2x+1)t−4x²`
+and `pₛ = t²+(1/x)t−(2x−1)/(4x²)`, checked by `cisZeroG` of the differences over ℚ(x)[t]. -/
+example :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (CPolyG.cSplitFactorFastWf splitFastExample351Dt splitFastExample351P).1)
+      (CPolyG.cmonicG splitFastExample351Pn)) = true
+    ∧ CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonicG (CPolyG.cSplitFactorFastWf splitFastExample351Dt splitFastExample351P).2)
+      (CPolyG.cmonicG splitFastExample351Ps)) = true := by native_decide
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
