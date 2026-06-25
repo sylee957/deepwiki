@@ -534,4 +534,83 @@ theorem cIntegrateWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) 
 
 end CPolyG
 
+/-! ### Target TOP.3 — the fuel-free self-validating integrator `cIntegrateCheckedWf` (the headline)
+
+The raw `cIntegrateWf` (like the fuel'd `cIntegrate`) returns its `IntegralResult` **without** re-validating
+it against the antiderivative identity, so out of its documented scope it can emit a wrong `some res`. The
+**checked wrapper** `cIntegrateCheckedWf` guards `cIntegrateWf` by the engine's own cleared antiderivative
+check `IntegralResult.checkIdentity` — returning `some res` only when `checkIdentity Dt res a d = true`.
+
+Its correctness `cIntegrateCheckedWf_correct` is **UNCONDITIONAL** (all inputs, all regimes) and crucially
+**engine-independent**: `cIntegrateCheckedWf = some res` forces `checkIdentity Dt res a d = true` (pure
+`Option.bind` reasoning), and the converse bridge `field_identity_of_checkIdentity` (which works on *any*
+`res`, no reference to `cIntegrate`/`cIntegrateWf`) turns that into the field identity `D(res) = f`. So **no
+bridge to the fuel'd `cIntegrate` is needed** — the `checkIdentity` guard alone supplies correctness. This
+is the cleanest fuel-free headline: the self-validating integrator that never returns a wrong answer. -/
+
+namespace CPolyG
+
+/-- **The fuel-free self-validating integrator** `cIntegrateCheckedWf Dt a d cands`: run the fuel-free
+engine `cIntegrateWf`, then **guard** its output by the engine's own cleared antiderivative check
+`IntegralResult.checkIdentity`. Returns `some res` only when `checkIdentity Dt res a d = true` (i.e. `res`
+is a genuine antiderivative of `f = a/d`), and `none` otherwise — so it never returns a wrong answer. The
+fuel-free companion of `cIntegrateChecked`: a thin wrapper that does **not** modify `cIntegrateWf`. **No
+fuel at runtime**; `native_decide`-able over the tower `QFunNZ`. -/
+def cIntegrateCheckedWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (cands : List ℚ) :
+    Option IntegralResult :=
+  (cIntegrateWf Dt a d cands).bind
+    (fun res => if IntegralResult.checkIdentity Dt res a d then some res else none)
+
+end CPolyG
+
+open IntegralResult in
+/-- **`cIntegrateCheckedWf f = some res ⟹ D(res) = f`**, the ultimate fuel-free integrator-correctness
+statement — **UNCONDITIONAL**, for ALL inputs and ALL regimes (primitive, hyperexponential, anything),
+**fuel-free**. If `cIntegrateCheckedWf Dt a d cands = some res`, then the field-level antiderivative
+identity `towerFractionFieldDeriv Dt (g) + logResidueSum Dt res.logs = a/d` holds over the tower fraction
+field `RatFunc (RatFunc ℚ)`, where `g = towerAlg(res.rational.1)/towerAlg(res.rational.2)`. The only side
+conditions are the structural nonzero-denominator hypotheses (`gden`, `d`, every log argument `vᵢ` nonzero)
+the field statement needs; **no** regime / `fₛ = 0` / residue-set / degree / fuel hypothesis is required —
+the `checkIdentity` guard inside `cIntegrateCheckedWf` supplies all of that. Immediate from the wrapper
+definition (`some` forces `checkIdentity = true`) and the **engine-agnostic** converse bridge
+`field_identity_of_checkIdentity` — *no bridge to the fuel'd `cIntegrate` is used*. The fuel-free companion
+of `cIntegrateChecked_correct`. -/
+theorem cIntegrateCheckedWf_correct (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ)
+    (cands : List ℚ) (res : IntegralResult)
+    (hsome : CPolyG.cIntegrateCheckedWf Dt a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (hdne : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG res.rational.1) / towerAlg (toPolyG res.rational.2))
+        + logResidueSum Dt res.logs
+      = towerAlg (toPolyG a) / towerAlg (toPolyG d) := by
+  -- the wrapper returned `some res`, so the guard `checkIdentity` fired `true` (pure `Option.bind`)
+  have hcheck : IntegralResult.checkIdentity Dt res a d = true := by
+    rw [CPolyG.cIntegrateCheckedWf] at hsome
+    rcases hci : CPolyG.cIntegrateWf Dt a d cands with _ | res'
+    · rw [hci] at hsome; simp only [Option.bind_none] at hsome; exact absurd hsome (by simp)
+    · rw [hci] at hsome
+      simp only [Option.bind_some] at hsome
+      by_cases hc : IntegralResult.checkIdentity Dt res' a d
+      · simp only [hc, if_true, Option.some.injEq] at hsome
+        rw [← hsome]; exact hc
+      · simp only [hc] at hsome; exact absurd hsome (by simp)
+  -- the engine-agnostic converse bridge turns the guard into the field identity (no fuel'd reference)
+  exact field_identity_of_checkIdentity Dt res a d hgden hdne hlogs hcheck
+
+-- The HEADLINE (fuel-free): the self-validating integrator never returns a wrong answer.
+-- `cIntegrateCheckedWf f = some res` ⟹ `D(res) = f` over the tower fraction field — UNCONDITIONAL, for
+-- EVERY input and EVERY regime, with NO fuel and NO bridge to the fuel'd engine. The `checkIdentity` guard
+-- alone supplies correctness; the only side conditions are the structural nonzero-denominator facts.
+example (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (cands : List ℚ) (res : IntegralResult)
+    (hsome : CPolyG.cIntegrateCheckedWf Dt a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (hdne : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0) :
+    towerFractionFieldDeriv Dt (towerAlg (toPolyG res.rational.1) / towerAlg (toPolyG res.rational.2))
+        + logResidueSum Dt res.logs
+      = towerAlg (toPolyG a) / towerAlg (toPolyG d) :=
+  cIntegrateCheckedWf_correct Dt a d cands res hsome hgden hdne hlogs
+
+-- The fuel-free self-validating integrator's headline carries only the standard axioms.
+#print axioms cIntegrateCheckedWf_correct
+
 end DeepWiki.SymbolicIntegration
