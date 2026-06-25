@@ -637,6 +637,136 @@ theorem cRischDEWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (fnum fden gnum gden : C
 
 end CPolyG
 
+/-! ### The transported abstract headline — `cRischDEWf` returns a cleared solution (primitive regime)
+
+Composing the bridge `cRischDEWf_eq` with the §6 pipeline correctness `cRischDE_rdeCleared_of_inputs`
+(`ComputableRischDEPipelineCorrect`) gives the **fuel-free** abstract Risch-DE correctness in the primitive
+regime: the reconstruction `ynum = (α·v + β)·[1]`, `yden = h0` that the fuel-free `cRischDEWf` returns
+(exactly the fuel'd `cRischDE`'s output, via the bridge) satisfies the cleared Risch-DE identity
+`D(y) + f·y = g` over `(RatFunc ℚ)[X]`. The transport rides entirely on the existing fuel'd headline; the
+bridge only certifies the fuel-free engine produces the same reconstruction. -/
+
+/-- **The fuel-free §6 RDE pipeline correctness (primitive regime, transported)**: in the primitive special
+regime (`cdegG (cSpecialPoly Dt fuel) = 0`), given the §6.2/§6.4/§6.5 intermediate fuel'd `some`-results
+(`hnorm`, `hspde`, `hpoly`) and the §6.2 normal-denominator certificates (the same gate the fuel'd
+`cRischDE_rdeCleared_of_inputs` carries), the reconstruction `ynum = (α·v + β)·[1]`, `yden = h0` satisfies
+the cleared Risch-DE identity `gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden =
+gnum·fden·yden²` over `(RatFunc ℚ)[X]` (`D = implicitDeriv (toPolyG Dt)`). This is the all-inputs (no
+`native_decide`) abstract correctness of the fuel-free engine in the primitive regime — the *exact same*
+statement and proof as `cRischDE_rdeCleared_of_inputs`, since the reconstruction quantities `α, v, β, h0`
+are produced identically by both engines (the bridge `cRischDEWf_eq` certifies the runtime equality, but the
+cleared identity is purely about the reconstruction, not which engine computed it). -/
+theorem cRischDEWf_rdeCleared_of_inputs (Dt : CPolyG QFunNZ) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG QFunNZ)
+    (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β v : CPolyG QFunNZ)
+    (hprim : cdegG (CPolyG.cSpecialPoly Dt fuel) = 0)
+    (hnorm : CPolyG.cRdeNormalDenominator Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (CPolyG.cSplitFactorFast Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) h0) gnum) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣
+      toPolyG (cmulG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) h0) gnum))
+    (hspde : CPolyG.cSPDE Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1
+        (CPolyG.cRdeBoundDegree Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α, β))
+    (hin : CSPDEClearedInputs Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1
+        (CPolyG.cRdeBoundDegree Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : CPolyG.cPolyRischDENoCancel Dt fuel bbar cbar m = some v) :
+    let Q := caddG (cmulG α v) β
+    let ynum := cmulG Q [CField.one]
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  cRischDE_rdeCleared_of_inputs Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α β v
+    hprim hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+
+-- The fuel-free §6 pipeline abstract correctness (primitive regime) carries only the standard axioms.
+#print axioms cRischDEWf_rdeCleared_of_inputs
+
+/-- **The fuel-free `cRischDEWf` returns a genuine cleared solution** (primitive regime, the headline): if
+the bridge holds (`hbridge : cRischDEWf … = cRischDE fuel …`, dischargeable from `cRischDEWf_eq`) and the
+fuel'd pipeline reaches its §6.2/§6.4/§6.5 intermediate `some`-results under the primitive special regime,
+then `cRischDEWf Dt fnum fden gnum gden = some (ynum, yden)` (with `ynum = (α·v + β)·[1]`, `yden = h0`) and
+the returned `y = ynum/yden` solves `Dy + f·y = g` in the cleared form over `(RatFunc ℚ)[X]`. The fuel-free
+headline: the §6 RDE solver, with **no fuel at runtime**, returns an answer that is a genuine antiderivative-
+side solution. Combines the bridge `cRischDEWf_eq` (so `cRischDEWf` returns the fuel'd reconstruction) with
+the transported `cRischDEWf_rdeCleared_of_inputs`. -/
+theorem cRischDEWf_returns_cleared_solution (Dt : CPolyG QFunNZ) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG QFunNZ)
+    (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β v : CPolyG QFunNZ)
+    (hbridge : CPolyG.cRischDEWf Dt fnum fden gnum gden
+      = CPolyG.cRischDE Dt fuel fnum fden gnum gden)
+    (hprim : cdegG (CPolyG.cSpecialPoly Dt fuel) = 0)
+    (hnorm : CPolyG.cRdeNormalDenominator Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (CPolyG.cSplitFactorFast Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) h0) gnum) :
+        List QFunNZ).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣
+      toPolyG (cmulG (cmulG (cmulG (CPolyG.cSplitFactorFast Dt fuel fden).1 h0) h0) gnum))
+    (hspeceq : CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0 = (a0, b0, c0, [CField.one]))
+    (hspde : CPolyG.cSPDE Dt fuel a0 b0 c0
+        (CPolyG.cRdeBoundDegree Dt fuel a0 b0 c0 : ℤ) = some (bbar, cbar, m, α, β))
+    (hin : CSPDEClearedInputs Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1
+        (CPolyG.cRdeBoundDegree Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hdispatch : CPolyG.cPolyRischDE Dt fuel bbar cbar m
+      = CPolyG.cPolyRischDENoCancel Dt fuel bbar cbar m)
+    (hpoly : CPolyG.cPolyRischDENoCancel Dt fuel bbar cbar m = some v) :
+    CPolyG.cRischDEWf Dt fnum fden gnum gden
+        = some (cmulG (caddG (cmulG α v) β) [CField.one], h0)
+      ∧ toPolyG gden * toPolyG fden
+          * (Differential.implicitDeriv (toPolyG Dt) (toPolyG (cmulG (caddG (cmulG α v) β) [CField.one]))
+              * toPolyG h0
+            - toPolyG (cmulG (caddG (cmulG α v) β) [CField.one])
+              * Differential.implicitDeriv (toPolyG Dt) (toPolyG h0))
+          + toPolyG gden * toPolyG fnum * toPolyG (cmulG (caddG (cmulG α v) β) [CField.one]) * toPolyG h0
+        = toPolyG gnum * toPolyG fden * toPolyG h0 ^ 2 := by
+  refine ⟨?_, ?_⟩
+  · -- the bridge + the fuel'd `cRischDE`'s reconstruction give the explicit output
+    rw [hbridge, CPolyG.cRischDE, hnorm]
+    simp only []
+    rw [hspeceq]
+    simp only [hspde, hdispatch, hpoly]
+  · -- the cleared identity, transported (the special regime makes the SPDE inputs collapse to `a0,b0,c0`)
+    have hspde' : CPolyG.cSPDE Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+        (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1
+        (CPolyG.cRdeBoundDegree Dt fuel (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.1
+          (CPolyG.cRdeSpecialDenominator Dt fuel a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α, β) := by rw [hspeceq]; exact hspde
+    exact cRischDEWf_rdeCleared_of_inputs Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α β v
+      hprim hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde' hin hpoly
+
+-- The fuel-free §6 RDE solver headline carries only the standard axioms.
+#print axioms cRischDEWf_returns_cleared_solution
+
 /-! ### `native_decide` — the fuel-free Risch DE solver on Bronstein Examples 6.5.1 + 6.4.1
 
 Re-runs `rischDE_solve_example` (`y = t + x`) and `rischDE_noSolution_example` (`none`) over the
