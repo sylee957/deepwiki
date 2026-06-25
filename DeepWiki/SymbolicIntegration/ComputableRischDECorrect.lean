@@ -444,9 +444,52 @@ example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ) (n : ℤ)
       = toPolyG c :=
   cSPDE_cleared_lifting Dt fuel a b c n bbar cbar m α β hspde hcert h hh
 
+/-! ### §6.4 + §6.5 composed — `cSPDE` then `cPolyRischDENoCancel` solves the original equation
+
+The two landed leaves compose: `cSPDE` reduces `a·D(q) + b·q = c` to `D(h) + b̄·h = c̄`, and
+`cPolyRischDENoCancel` solves *that* (the non-cancellation case). Feeding the §6.5 output `v` (which
+satisfies `D(v) + b̄·v = c̄` by `cPolyRischDENoCancel_cleared_identity`) as the `h` of
+`cSPDE_cleared_lifting`, the reconstruction `q = α·v + β` solves the original `a·D(q) + b·q = c`. This is
+the **polynomial-stage spine** of the §6 pipeline — the `cSPDE → cPolyRischDE` composition that
+`cRischDE` runs after the §6.2/§6.3 denominator/degree stages, proved cleared and axiom-clean for ALL
+inputs (under the §6.4 certificate). -/
+
+/-- **`cSPDE` ∘ `cPolyRischDENoCancel` cleared composition**: if `cSPDE Dt fuel a b c n =
+some (b̄, c̄, m, α, β)` (under the certificate `cSPDECleared`) and `cPolyRischDENoCancel Dt fuel b̄ c̄ m =
+some v`, then the reconstruction `q = α·v + β` solves the original equation `a·D(q) + b·q = c` over
+`(RatFunc ℚ)[X]` (`D = implicitDeriv (toPolyG Dt)`). The §6.4-§6.5 polynomial-stage spine: `cSPDE`'s
+reduction lifting fed the §6.5 non-cancellation solution. Axiom-clean (no `native_decide`); the
+all-inputs generalization of the `cRischDE` end-to-end `native_decide` validation's polynomial core. -/
+theorem cSPDE_polyRischDENoCancel_cleared (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ)
+    (n : ℤ) (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β v : CPolyG QFunNZ)
+    (hspde : cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β))
+    (hcert : cSPDECleared Dt fuel a b c n)
+    (hpoly : cPolyRischDENoCancel Dt fuel bbar cbar m = some v) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α v) β))
+        + toPolyG b * toPolyG (caddG (cmulG α v) β)
+      = toPolyG c := by
+  -- §6.5: `v` solves the reduced `D(v) + b̄·v = c̄`
+  have hv : Differential.implicitDeriv (toPolyG Dt) (toPolyG v) + toPolyG bbar * toPolyG v
+      = toPolyG cbar :=
+    cPolyRischDENoCancel_cleared_identity Dt bbar fuel cbar m v hpoly
+  -- §6.4: lift through the `cSPDE` reduction with `h = v`
+  exact cSPDE_cleared_lifting Dt fuel a b c n bbar cbar m α β hspde hcert v hv
+
+-- The `cSPDE`→`cPolyRischDENoCancel` composition solves the original `a·D(q)+b·q=c` (cleared).
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a b c : CPolyG QFunNZ) (n : ℤ)
+    (bbar cbar : CPolyG QFunNZ) (m : ℤ) (α β v : CPolyG QFunNZ)
+    (hspde : cSPDE Dt fuel a b c n = some (bbar, cbar, m, α, β))
+    (hcert : cSPDECleared Dt fuel a b c n)
+    (hpoly : cPolyRischDENoCancel Dt fuel bbar cbar m = some v) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α v) β))
+        + toPolyG b * toPolyG (caddG (cmulG α v) β)
+      = toPolyG c :=
+  cSPDE_polyRischDENoCancel_cleared Dt fuel a b c n bbar cbar m α β v hspde hcert hpoly
+
 #print axioms spde_step_glue
 #print axioms spde_const_base
 #print axioms cSPDE_peel_cleared
 #print axioms cSPDE_cleared_lifting
+#print axioms cSPDE_polyRischDENoCancel_cleared
 
 end DeepWiki.SymbolicIntegration
