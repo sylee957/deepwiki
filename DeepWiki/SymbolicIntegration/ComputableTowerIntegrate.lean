@@ -267,4 +267,55 @@ theorem towerHermiteLvl2_residual_degree :
 
 #print axioms towerHermiteLvl2_rationalPart
 
+/-! ### Level-2 validation of `canonicalRepresentationFastG` — the parts recombine to `f`
+
+The canonical-representation companion to the Hermite check, at the same tower level. `f = a/d` with
+`a = t₂³` and the monic `d = (t₂−1)(t₂−2) = t₂² − 3t₂ + 2` over `ℚ(x)(t₁)[t₂]`, monomial `t₂` with
+`Dt₂ = t₂ − 1` (so the root `t₂ = 1` is special, `t₂ = 2` normal). `canonicalRepresentationFastG`
+returns `(q, (b, dₛ), (c, dₙ))`; the load-bearing identity `q + b/dₛ + c/dₙ = a/d` is checked by
+clearing denominators: numerator `N = q·dₛ·dₙ + b·dₙ + c·dₛ`, identity `N · d = a · (dₛ·dₙ)`, by
+`cisZeroG` of the difference over ℚ(x)(t₁)[t₂]. Scalar-robust (independent of the split's internal
+scalar ambiguity). -/
+
+/-- Level-2 scalar `−1 ∈ Lvl2 = ℚ(x)(t₁)`. -/
+def lvl2NegOne : Lvl2 := CField.neg CField.one
+
+/-- Level-2 scalar `−2 ∈ Lvl2`. -/
+def lvl2NegTwo : Lvl2 := CField.neg (CField.add CField.one CField.one)
+
+/-- Level-2 scalar `−3 ∈ Lvl2`. -/
+def lvl2NegThree : Lvl2 := CField.neg (CField.add CField.one (CField.add CField.one CField.one))
+
+/-- Level-2 canonical-rep numerator `a = t₂³` over `ℚ(x)(t₁)[t₂]` (constant coefficients in ℚ). -/
+def towerCanRepLvl2A : CPolyG Lvl2 := [CField.zero, CField.zero, CField.zero, CField.one]
+
+/-- Level-2 canonical-rep denominator `d = (t₂−1)(t₂−2) = t₂² − 3t₂ + 2` over `ℚ(x)(t₁)[t₂]` (monic). -/
+def towerCanRepLvl2D : CPolyG Lvl2 := [lvl2Two, lvl2NegThree, CField.one]
+
+/-- Level-2 monomial derivative `Dt₂ = t₂ − 1` (root `t₂ = 1` special, `t₂ = 2` normal). -/
+def towerCanRepLvl2Dt : CPolyG Lvl2 := [lvl2NegOne, CField.one]
+
+/-- **`canonicalRepresentationFastG` recombines to `f` at tower level 2** (`native_decide`): for
+`f = t₂³/((t₂−1)(t₂−2))` over `ℚ(x)(t₁)[t₂]` (`= CPolyG (QFunNZG (QFunNZG ℚ))`, tower level 2) with
+`Dt₂ = t₂ − 1`, the computed parts `(q, (b, dₛ), (c, dₙ))` satisfy the canonical identity
+`q + b/dₛ + c/dₙ = a/d` — checked, after clearing denominators, as
+`(q·dₛ·dₙ + b·dₙ + c·dₛ)·d = a·(dₛ·dₙ)` via `cisZeroG` of the difference over ℚ(x)(t₁)[t₂]. The generic
+canonical-representation engine (`cSplitFactorFastG` denominator split + Bézout) executes over the tower
+at level 2 and its output genuinely reconstructs `f`. -/
+theorem towerCanRepLvl2_recombines :
+    (let res := CPolyG.canonicalRepresentationFastG towerCanRepLvl2Dt 8
+        towerCanRepLvl2A towerCanRepLvl2D
+      let q := res.1
+      let b := res.2.1.1
+      let ds := res.2.1.2
+      let c := res.2.2.1
+      let dn := res.2.2.2
+      let dsdn := CPolyG.cmulG ds dn
+      let num := CPolyG.caddG (CPolyG.caddG (CPolyG.cmulG q dsdn) (CPolyG.cmulG b dn))
+        (CPolyG.cmulG c ds)
+      CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cmulG num towerCanRepLvl2D)
+        (CPolyG.cmulG towerCanRepLvl2A dsdn))) = true := by native_decide
+
+#print axioms towerCanRepLvl2_recombines
+
 end DeepWiki.SymbolicIntegration
