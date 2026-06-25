@@ -347,4 +347,119 @@ theorem logPartTowerWf_example :
 
 #print axioms logPartTowerWf_example
 
+/-! ### Target TOP.1 — the fuel-free reduced-case capstone `cIntegrateReducedWf`
+
+`cIntegrateReduced Dt fuel a d cands` Hermite-reduces `f = a/d` to the rational part `g` and the simple
+residual `h`, then takes the rational-residue log part of `h`. A **composition** — the fuel-free companion
+substitutes `cHermiteReduceTowerWf` (`ComputableWellFounded5`) and `cLogPartWf`. -/
+
+namespace CPolyG
+
+/-- **Fuel-free reduced-case capstone** `cIntegrateReducedWf Dt a d cands = IntegralResult`: the fuel-free
+companion of `cIntegrateReduced`. Hermite-reduce `f = a/d` with the **fuel-free** `cHermiteReduceTowerWf` to
+the rational part `g = gnum/gden` and the simple residual `h = hNum/hDen` (squarefree denominator), then
+take the rational-residue log part of `h` with the **fuel-free** `cLogPartWf`. Returns the `IntegralResult`
+`⟨(gnum, gden), [(c, v)]⟩` — **no fuel at runtime**; stated with `.1`/`.2` projections so the bridge
+`cIntegrateReducedWf_eq` rewrites cleanly. -/
+def cIntegrateReducedWf (Dt : CPolyG QFunNZ) (a d : CPolyG QFunNZ) (cands : List ℚ) :
+    IntegralResult :=
+  let H := cHermiteReduceTowerWf Dt a d
+  let logs := cLogPartWf Dt H.2.1 H.2.2 cands
+  ⟨(H.1.1, H.1.2), logs⟩
+
+end CPolyG
+
+/-! ### Bridge of `cIntegrateReducedWf` to the fuel'd `cIntegrateReduced`
+
+Under the Hermite bridge (`cHermiteReduceTowerWf = cHermiteReduceTower fuel`, the WF5
+`cHermiteReduceTowerWf_eq_of_steps`) and the `cLogPartWf` bridge on the resulting simple residual
+(`hNum/hDen`), the two `IntegralResult`s coincide. -/
+
+namespace CPolyG
+
+/-- **Bridge — `cIntegrateReducedWf` equals `cIntegrateReduced` at any sufficient fuel.** From the Hermite
+bridge `hHermite : cHermiteReduceTowerWf Dt a d = cHermiteReduceTower Dt fuel a d` (the WF5
+`cHermiteReduceTowerWf_eq_of_steps`) and the log-part bridge `hLog` on the resulting simple residual,
+`cIntegrateReducedWf Dt a d cands = cIntegrateReduced Dt fuel a d cands`. The fuel bounds live only in
+`hHermite`/`hLog`; `cIntegrateReducedWf` carries none. -/
+theorem cIntegrateReducedWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (hHermite : cHermiteReduceTowerWf Dt a d = CPolyG.cHermiteReduceTower Dt fuel a d)
+    (hLog : cLogPartWf Dt (cHermiteReduceTowerWf Dt a d).2.1 (cHermiteReduceTowerWf Dt a d).2.2 cands
+      = CPolyG.cLogPart Dt fuel (CPolyG.cHermiteReduceTower Dt fuel a d).2.1
+          (CPolyG.cHermiteReduceTower Dt fuel a d).2.2 cands) :
+    cIntegrateReducedWf Dt a d cands = CPolyG.cIntegrateReduced Dt fuel a d cands := by
+  rw [cIntegrateReducedWf, CPolyG.cIntegrateReduced]
+  -- the fuel'd `cIntegrateReduced` destructures `cHermiteReduceTower` via `let ((gnum,gden),(hNum,hDen))`;
+  -- rewrite the Hermite result and the log part, then both sides are the same `IntegralResult`
+  rw [hLog, hHermite]
+
+end CPolyG
+
+/-! ### The fuel-free primitive-poly bridge `cPrimitivePolyIntegrateWf = cPrimitivePolyIntegrate fuel`
+
+`cIntegrate` integrates the polynomial part `fp` via the fuel'd `cPrimitivePolyIntegrate` (§5.8 primitive
+sub-case). Its own-loop fuel-free companion `cPrimitivePolyIntegrateWf` (`ComputableWellFounded5`, proved
+correct *directly* by WF induction, with no fuel'd bridge) must be related to the fuel'd op for the
+`cIntegrateWf = cIntegrate fuel` composition. The two share the **identical** peeling recurrence (peel
+`q₀ = c·t^(m+1)`, recurse on `p − D(q₀)`); over a genuine run the leading term cancels and the normalized
+length strictly drops, so the WF guard never fails and the fuel'd version descends one step at a time. We
+package the per-step length-drop as a `j`-bounded fuel-regularity predicate and bridge by WF induction. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Per-run primitive-poly fuel-regularity** `CPrimIntRegular Dt fuel p`: mirrors the fuel'd
+`cPrimitivePolyIntegrate` descent as an inductive predicate over the structural fuel counter — `stop` when
+the loop is done (`(cnormG p).length ≤ 1`, only the `t⁰` term left; any fuel), or `step` when the loop
+continues (`¬ (cnormG p).length ≤ 1`), the peeled leading term genuinely drops the normalized length
+(`(cnormG (p − D(q₀))).length < (cnormG p).length` — the WF guard a real run meets), and the same holds
+recursively on `p' = cnormG p − D(q₀)` at one less fuel (so `fuel` is sufficient). The transparent per-node
+preconditions a real primitive-integration run satisfies. -/
+inductive CPrimIntRegular (Dt : CPolyG α) : ℕ → CPolyG α → Prop
+  /-- terminal node: the loop is done (only the `t⁰` term left), at any fuel. -/
+  | stop {fuel : ℕ} {p : CPolyG α} (hdone : (cnormG p : List α).length ≤ 1) :
+      CPrimIntRegular Dt fuel p
+  /-- recursive node: the loop continues, the leading term drops the length, recurse on `p'`. -/
+  | step {fuel : ℕ} {p : CPolyG α} (hne : ¬ (cnormG p : List α).length ≤ 1)
+      (hguard : (cnormG (csubG (cnormG p) (cmonomialDeriv Dt
+          (cshiftG (cdegG p + 1) [CField.div (cleadG p)
+            (CField.mul (cnatCastG (cdegG p + 1)) (cleadG Dt))]))) : List α).length
+        < (cnormG p : List α).length)
+      (hrec : CPrimIntRegular Dt fuel (csubG (cnormG p) (cmonomialDeriv Dt
+          (cshiftG (cdegG p + 1) [CField.div (cleadG p)
+            (CField.mul (cnatCastG (cdegG p + 1)) (cleadG Dt))])))) :
+      CPrimIntRegular Dt (fuel + 1) p
+
+/-- **Bridge — `cPrimitivePolyIntegrateWf` equals the fuel'd `cPrimitivePolyIntegrate` on a regular run.**
+Under `CPrimIntRegular Dt fuel p` (the per-step length-drop a real run meets, with sufficient fuel),
+`cPrimitivePolyIntegrateWf Dt p = cPrimitivePolyIntegrate Dt fuel p`. The fuel regularity lives only here;
+the WF own-loop carries none. By induction on the `CPrimIntRegular` derivation: at a `stop` node both return
+`([], cnormG p)`; at a `step` node both peel the same `q₀` and recurse — the WF guard fires (`hguard`) and
+the fuel'd version (at `fuel + 1`) descends. -/
+theorem cPrimitivePolyIntegrateWf_eq (Dt : CPolyG α) :
+    ∀ (fuel : ℕ) (p : CPolyG α), CPrimIntRegular Dt fuel p →
+      cPrimitivePolyIntegrateWf Dt p = CPolyG.cPrimitivePolyIntegrate Dt fuel p := by
+  intro fuel p hreg
+  induction hreg with
+  | @stop fuel p hdone =>
+    -- both return `([], cnormG p)`: WF via `if_pos hdone`; fuel'd via `if_pos` (fuel ≥ 1) or directly
+    rw [cPrimitivePolyIntegrateWf.eq_def, if_pos hdone]
+    cases fuel with
+    | zero => rw [CPolyG.cPrimitivePolyIntegrate]
+    | succ fuel =>
+      rw [CPolyG.cPrimitivePolyIntegrate]
+      -- fuel'd `fuel+1` body `let p := cnormG p`, so its `if` condition is `(cnormG p).length ≤ 1 = hdone`
+      rw [if_pos hdone]
+  | @step fuel p hne hguard hrec ih =>
+    -- both peel `q₀ = c·t^(m+1)`, recurse on `p' = cnormG p − D(q₀)`; WF guard fires, fuel'd descends
+    rw [cPrimitivePolyIntegrateWf.eq_def, if_neg hne, if_pos hguard,
+      CPolyG.cPrimitivePolyIntegrate, if_neg hne]
+    -- the fuel'd body's `have m := cdegG (cnormG p)`/`cleadG (cnormG p)` reduce to `cdegG p`/`cleadG p`
+    simp only [cdegG_cnormG, cleadG_cnormG]
+    -- the recursive results agree by the IH
+    rw [ih]
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
