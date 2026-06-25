@@ -666,4 +666,51 @@ theorem cRischDEGWf_eq (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPol
 
 end CPolyG
 
+/-! ## Part 6 — ★ `native_decide` smoke test: the headline `cRischDEGWf` computes fuel-free
+
+The deliverable: the generic fuel-free RDE oracle `cRischDEGWf` *runs in native code* over the tower. We solve
+a small Risch differential equation over `CPolyG (QFunNZG ℚ) = ℚ(x)[t₁]` with the primitive monomial `t₁`
+(`Dt₁ = [1]`, `D(t₁) = 1`): `Dy + 0·y = 1` (`f = 0/1`, `g = 1/1`), whose solution is `y = t₁`. The fuel-free
+oracle — normal denominator → special denominator → degree bound → SPDE → the §6.5/§6.6 dispatch (here the
+`b = 0` primitive-integration branch) — returns `some (ynum, yden)` with **no fuel at runtime**, and the
+returned `y = ynum/yden` is verified to **actually solve** the equation by the cleared polynomial identity
+`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²` reading to `0`
+(`cisZeroG`, the generic analogue of `rdeClearedCheck`, not merely pinning the output). Everything stays
+`[CField …]`/`[CDiffField …]`/`[CFracGcdCoreWf …]`/`[CRischField …]`-computable with `Prop`-erased subtype
+proofs, so nothing noncomputable reaches the native compiler — `native_decide` reduces, the oracle genuinely
+running the fuel-free §6 pipeline over ℚ(x)[t₁]. -/
+
+open CPolyG in
+/-- The level-1 monomial derivative `Dt₁ = 1` over `CPolyG (QFunNZG ℚ) = ℚ(x)[t₁]` (`t₁` primitive). -/
+def towerRdeGWfDt : CPolyG (QFunNZG ℚ) := [CField.one]
+
+open CPolyG in
+/-- **★ The generic fuel-free RDE oracle `cRischDEGWf` solves `Dy = 1` over ℚ(x)(t₁), fuel-free**
+(`native_decide`, the smoke-test deliverable). `cRischDEGWf [1] 0 1 1 1` over `CPolyG (QFunNZG ℚ) = ℚ(x)[t₁]`
+(monomial `t₁`, `Dt₁ = 1`, primitive) returns `some (ynum, yden)` with **no fuel at runtime**, and the
+returned `y = ynum/yden` is verified to **actually solve** `Dy + 0·y = 1` by the cleared polynomial identity
+(`= 0` via `cisZeroG`) — the solution `y = t₁`. This certifies the headline generic fuel-free oracle computes
+end-to-end over the tower: the §6 pipeline (down to the `b = 0` integration branch of `cPolyRischDEGWf`) runs
+fuel-free over ℚ(x)[t₁]. -/
+theorem towerRdeGWf_solves_Dy_eq_one :
+    (match cRischDEGWf towerRdeGWfDt ([] : CPolyG (QFunNZG ℚ)) [CField.one] [CField.one] [CField.one] with
+      | some (ynum, yden) =>
+          let Dyn := cmonomialDeriv towerRdeGWfDt ynum
+          let Dyd := cmonomialDeriv towerRdeGWfDt yden
+          let fnum : CPolyG (QFunNZG ℚ) := []
+          let fden : CPolyG (QFunNZG ℚ) := [CField.one]
+          let gnum : CPolyG (QFunNZG ℚ) := [CField.one]
+          let gden : CPolyG (QFunNZG ℚ) := [CField.one]
+          let lhs := caddG
+            (cmulG (cmulG gden fden) (csubG (cmulG Dyn yden) (cmulG ynum Dyd)))
+            (cmulG (cmulG (cmulG gden fnum) ynum) yden)
+          let rhs := cmulG (cmulG gnum fden) (cmulG yden yden)
+          cisZeroG (csubG lhs rhs)
+      | none => false) = true := by native_decide
+
+-- The headline fuel-free RDE-oracle bridge carries only the standard axioms (no fuel, no `sorry`);
+-- the `native_decide` smoke test carries `Lean.ofReduceBool` separately.
+#print axioms CPolyG.cRischDEGWf_eq
+#print axioms towerRdeGWf_solves_Dy_eq_one
+
 end DeepWiki.SymbolicIntegration
