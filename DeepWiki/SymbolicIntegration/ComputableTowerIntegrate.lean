@@ -135,6 +135,34 @@ def cSqfreeYunFFG (fuel : ℕ) (p : CPolyG α) : List (CPolyG α) :=
 
 end CPolyG
 
+/-! ### Generic `SplitSquarefreeFactor` over the tower (§3.5, p.102)
+
+`cSplitSquarefreeFactorFastG` is the `[CField α] [CDiffField α] [CFracGcdCore α]`-generic mirror of
+`cSplitSquarefreeFactorFast`: Yun-factor in `t` (`cSqfreeYunFFG`), then per factor `pᵢ` split into its
+special part `Sᵢ = gcd(pᵢ, D pᵢ)` (the DIFFERENTIAL `cmonomialDeriv`) and normal part `Nᵢ = pᵢ/Sᵢ`,
+with the flat fraction-free gcd `CFracGcdCore.cgcdFFCore` for every gcd. Runs at any tower level. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+
+/-- **Generic `SplitSquarefreeFactor`** (Bronstein §3.5, p.102) over the tower:
+`cSplitSquarefreeFactorFastG Dt fuel p = ((N₁,…,Nₘ), (S₁,…,Sₘ))`. First `(p₁,…,pₘ) ← cSqfreeYunFFG p`
+(squarefree factorization in `t`); then for each `i`, `Sᵢ = CFracGcdCore.cgcdFFCore pᵢ (cmonomialDeriv Dt
+pᵢ)` is the **special** part (the DIFFERENTIAL derivation `D = cmonomialDeriv Dt`) and `Nᵢ = pᵢ/Sᵢ` the
+**normal** part. The `[CField α] [CDiffField α] [CFracGcdCore α]`-generic mirror of
+`cSplitSquarefreeFactorFast` — runs at any tower level. -/
+def cSplitSquarefreeFactorFastG (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α) :
+    List (CPolyG α) × List (CPolyG α) :=
+  let ps := cSqfreeYunFFG fuel p
+  let parts := ps.map (fun pf =>
+    let si := CFracGcdCore.cgcdFFCore fuel pf (cmonomialDeriv Dt pf)
+    let ni := cdivG fuel pf si
+    (ni, si))
+  (parts.map Prod.fst, parts.map Prod.snd)
+
+end CPolyG
+
 /-! ### Generic canonical representation over the tower (§3.5)
 
 `canonicalRepresentationFastG` is the `[CField α] [CDiffField α]`-generic mirror of
