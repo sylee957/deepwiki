@@ -130,4 +130,32 @@ def cSqfreeYunFFG (fuel : ℕ) (p : CPolyG α) : List (CPolyG α) :=
 
 end CPolyG
 
+/-! ### Generic canonical representation over the tower (§3.5)
+
+`canonicalRepresentationFastG` is the `[CField α] [CDiffField α]`-generic mirror of
+`canonicalRepresentationFast`: it splits `f = a/d` (d monic) into `(fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))`.
+The denominator split `d = dₛ·dₙ` uses the generic `cSplitFactorFastG`; the Bézout-split of the
+remainder reuses the **already-generic** `cbezoutOne`/`cextendedEuclideanSplit` from
+`ComputableCanonicalRep` (those need only `[CField α]`). -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Generic `CanonicalRepresentation`** (Bronstein §3.5, p.103) over the tower:
+`canonicalRepresentationFastG Dt fuel (a, d) = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d`
+(`d` monic). Steps: divide `a = q·d + r` (`cdivmodG`); split the denominator `d = dₛ·dₙ`
+(`cSplitFactorFastG`, generic); Bézout-split `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplit`
+with `cbezoutOne`, the already-generic helpers). The reduced part is `b/dₛ`, the simple part `c/dₙ`.
+`[CField α] [CDiffField α]`-generic — runs at any tower level. -/
+def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
+    CPolyG α × (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
+  let (q, r) := cdivmodG fuel a d
+  let (dn, ds) := cSplitFactorFastG Dt fuel d
+  let (u, w) := cbezoutOne fuel dn ds
+  let (b, c) := cextendedEuclideanSplit fuel dn ds r u w
+  (q, (b, ds), (c, dn))
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
