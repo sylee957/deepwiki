@@ -225,6 +225,32 @@ theorem residue_seed_mul_eq_residue_derivative (A : K[X]) (s : Finset K) {α b :
   rw [hδd, hd']
   field_simp
 
+omit [Algebra ℚ K] in
+/-- **The §5.6 residue match over individual roots** (the discharged `hmatch`, primitive case): for
+`A` of degree `< #s` over the split squarefree `d = nodal s id = ∏_{α∈s}(X−α)`, and a base derivation
+`δ` sending each linear factor to a *constant* `δ(X − Cα) = C (b α)` with `b α ≠ 0` (the primitive
+condition `δt ∈ k`), the residue sum equals the integrand:
+`∑_{α∈s} algMap(C(res α))·(algMap(δ(X−Cα))/algMap(X−Cα)) = algMap(A)/algMap(d)`, with the §5.6 residue
+`res α = A(α)/(δ d)(α)`. Assembled from the §2 partial fraction `ratFunc_eq_sum_residue_div`
+(`a/d = ∑ (A(α)/d'(α))/(X−α)`) and the per-root scalar identity
+`residue_seed_mul_eq_residue_derivative` (`res α·b α = A(α)/d'(α)`), which fold each tower term
+`C(res α)·C(b α)/(X−α)` into the §2 term `C(A(α)/d'(α))/(X−α)`. This is the precise tower analogue of
+`deriv_sum_residue_log`'s partial fraction; its constancy hypothesis `hb` is exactly where a
+non-primitive (`δt ∉ k`) derivation would leave a residual polynomial part. -/
+theorem sum_residue_seed_logDeriv_eq_div (A : K[X]) (s : Finset K) (hA : A.degree < s.card)
+    (b : K → K) (hb : ∀ α ∈ s, δ (X - C α) = C (b α)) (hb0 : ∀ α ∈ s, b α ≠ 0) :
+    ∑ α ∈ s, algebraMap K[X] (RatFunc K)
+          (C (A.eval α / (δ (Lagrange.nodal s id)).eval α))
+        * (algebraMap K[X] (RatFunc K) (δ (X - C α))
+            / algebraMap K[X] (RatFunc K) (X - C α))
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) := by
+  classical
+  rw [ratFunc_eq_sum_residue_div s A hA]
+  refine Finset.sum_congr rfl fun α hα => ?_
+  -- fold the tower term `C(res α)·(C(b α)/(X−α))` into the §2 term `C(A(α)/d'(α))/(X−α)`
+  rw [hb α hα, ← mul_div_assoc, ← map_mul, ← C_mul,
+    residue_seed_mul_eq_residue_derivative δ A s hα (hb α hα) (hb0 α hα)]
+
 end ResidueMatch
 
 /-! ### The d/dx specialization: the generic spine recovers §2's full integral identity
