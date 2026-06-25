@@ -413,4 +413,86 @@ def cLogPartG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) 
 
 end CPolyG
 
+/-! ### The generic integral result and the cleared antiderivative identity
+
+`IntegralResultG α` is the generic mirror of `IntegralResult`: the rational part `g = num/den ∈ α(t)`
+plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments `vᵢ : CPolyG α`).
+`checkIdentityG` verifies the antiderivative identity `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f`, cleared of
+denominators — the generic mirror of `IntegralResult.checkIdentity`. -/
+
+/-- **The generic integral result**: `∫ f = rational + ∑ᵢ coeff·log(arg)` over the tower, with
+`rational = (num, den)` the rational part `g = num/den ∈ α(t)` and `logs = [(cᵢ, vᵢ)]` the logarithmic
+part (each `cᵢ : α`, each `vᵢ : CPolyG α`). The generic mirror of `IntegralResult`. -/
+structure IntegralResultG (α : Type*) [CField α] where
+  /-- The rational part `g = num/den ∈ α(t)` of `∫ f`. -/
+  rational : CPolyG α × CPolyG α
+  /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f` (`α`-coefficients, `CPolyG α` arguments). -/
+  logs : List (α × CPolyG α)
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **The generic antiderivative identity, cleared of denominators** `checkIdentityG Dt res anum aden`:
+`true` iff `res` is a genuine antiderivative of `f = anum/aden`, i.e. `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` for
+`D = cmonomialDeriv Dt`. Accumulate `∑ᵢ cᵢ·D(vᵢ)/vᵢ` as a single fraction `(Lnum, Lden)` over `∏ᵢ vᵢ`,
+add `D(g) = (D(gnum)·gden − gnum·D(gden))/gden²`, and equate with `f` over `gden²·Lden·aden`:
+`(gprimeNum·Lden + Lnum·gden²)·aden = anum·(gden²·Lden)`, by `cisZeroG` of the cleared difference. The
+generic mirror of `IntegralResult.checkIdentity` (`α` has no `DecidableEq`, hence the `cisZeroG∘csubG`
+form). -/
+def checkIdentityG (Dt : CPolyG α) (res : IntegralResultG α) (anum aden : CPolyG α) : Bool :=
+  let gnum := res.rational.1
+  let gden := res.rational.2
+  let gprimeNum := csubG (cmulG (cmonomialDeriv Dt gnum) gden) (cmulG gnum (cmonomialDeriv Dt gden))
+  let gden2 := cmulG gden gden
+  let Lstart : CPolyG α × CPolyG α := ([CField.zero], [CField.one])
+  let (Lnum, Lden) := res.logs.foldl
+    (fun (acc : CPolyG α × CPolyG α) (cv : α × CPolyG α) =>
+      let c := cv.1
+      let v := cv.2
+      let Dv := cmonomialDeriv Dt v
+      let termNum := cscaleG c Dv
+      (caddG (cmulG acc.1 v) (cmulG termNum acc.2), cmulG acc.2 v))
+    Lstart
+  let lhs := cmulG (caddG (cmulG gprimeNum Lden) (cmulG Lnum gden2)) aden
+  let rhs := cmulG anum (cmulG gden2 Lden)
+  cisZeroG (csubG lhs rhs)
+
+/-! ### The generic reduced-case integration capstone and the tower integral driver
+
+`cIntegrateReducedG` integrates a reduced/simple `f = a/d` over the tower: Hermite rational part
+(`cHermiteReduceTowerG`) + Rothstein–Trager residue logs (`cLogPartG`). `cIntegrateG` is the assembled
+top-level driver: canonical split (`canonicalRepresentationFastG`) + reduced capstone on the simple
+normal part, returning `none` when the polynomial/special part is left non-disposed (the conservative
+reduced-case driver — full poly/special handling over the generic tower is the documented continuation).
+Candidates are `α` elements (the generic residue form). -/
+
+/-- **The generic reduced-case integration capstone** `cIntegrateReducedG Dt fuel a d cands`: for
+`f = a/d` reduced/normal (no polynomial or special part), `∫ f = g + ∑ c·log(v)`. Hermite-reduce
+(`cHermiteReduceTowerG`) to the rational part `g = gnum/gden` and the simple residual `h = h_num/h_den`
+(squarefree denominator), then take the residue log part of `h` (`cLogPartG`, residues drawn from
+`cands : List α`). Returns the `IntegralResultG` `⟨(gnum, gden), [(c, v)]⟩`. `[CField α] [CDiffField α]`-
+generic — runs at any tower level. -/
+def cIntegrateReducedG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
+    IntegralResultG α :=
+  let ((gnum, gden), (hNum, hDen)) := cHermiteReduceTowerG Dt fuel a d
+  let logs := cLogPartG Dt fuel hNum hDen cands
+  ⟨(gnum, gden), logs⟩
+
+/-- **The generic top-level tower integral** `cIntegrateG Dt fuel a d cands` (Bronstein Ch. 5, the
+reduced-case driver over the tower): integrate `f = a/d ∈ α(t)` over `D = cmonomialDeriv Dt`, returning
+`some ⟨(gnum, gden), [(cᵢ, vᵢ)]⟩` with `∫ f = gnum/gden + ∑ᵢ cᵢ·log(vᵢ)`, or `none`. Steps: (1)
+`canonicalRepresentationFastG` splits `f = fₚ + fₛ + fₙ = q + (b/dₛ) + (c/dₙ)`; (2) the simple normal
+part `fₙ = c/dₙ` is integrated by `cIntegrateReducedG` (Hermite + residue logs from `cands`); (3) if the
+polynomial part `fₚ = q` and the special part `b/dₛ` both vanish, return the simple-part integral, else
+`none` (the conservative reduced-case driver; the generic poly/special engines are the documented
+continuation). `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
+def cIntegrateG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
+    Option (IntegralResultG α) :=
+  let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
+  let nrm := cIntegrateReducedG Dt fuel cn dn cands
+  if cisZeroG fp && cisZeroG b then some nrm else none
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
