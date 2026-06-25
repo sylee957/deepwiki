@@ -212,6 +212,227 @@ omit [CFieldSpec β] in
       rw [h] at ih
       simp only [toGBCoeffPoly_cons, toPolyG_cnormG, ih]
 
+/-- **Coefficient read** of `toGBCoeffPoly`: `(toGBCoeffPoly p).coeff i = toPolyG (p.getD i [])`. The
+Horner bridge realizes the dense `t`-coefficient list exactly (mirror of `toBPoly_coeff`). -/
+theorem toGBCoeffPoly_coeff (p : GBPolyCore β) (i : ℕ) :
+    (toGBCoeffPoly p).coeff i = CPolyG.toPolyG (p.getD i ([] : CPolyG β)) := by
+  induction p generalizing i with
+  | nil => simp [toPolyG_nil]
+  | cons a as ih =>
+    rw [toGBCoeffPoly_cons]
+    cases i with
+    | zero => simp [coeff_C]
+    | succ n => simp [coeff_X_mul, ih]
+
 end GBPolyCore
+
+/-! ### The field-coefficient lift `R[t] → (RatFunc K)[t]` and `toGBPolyG`
+`liftK = mapRingHom (amG β)` is the polynomial ring map induced by the field embedding
+`amG β : R = (CFieldSpec.K β)[X] ↪ RatFunc (CFieldSpec.K β)`. `toGBPolyG p := liftK (toGBCoeffPoly p)`
+reads a `GBPolyCore β` (`(β[s])[t]`) as a `(RatFunc K)[t]` polynomial, in the same indeterminate `t` as
+`toPolyG` over `CPolyG (QFunNZG β)`. The generic mirror of `ComputableGcdCorrect.liftRF`/`toPolyB`. -/
+
+open QFunNZG in
+/-- The induced coefficient-ring lift `R[t] → (RatFunc K)[t]` (`(β[s])[t] → β(s)[t]`), applying
+`amG β` to every `t`-coefficient. -/
+noncomputable abbrev liftKG (β : Type*) [CField β] [CFieldSpec β] :
+    ((CFieldSpec.K β)[X])[X] →+* (RatFunc (CFieldSpec.K β))[X] :=
+  Polynomial.mapRingHom (QFunNZG.amG β)
+
+/-- **The β(s)[t] reading of a `GBPolyCore β`** `toGBPolyG p`: read the `(β[s])[t]` polynomial
+`toGBCoeffPoly p` over the field `β(s) = RatFunc (CFieldSpec.K β)` via the coefficient embedding
+`amG β`. Lives in the same `(RatFunc (CFieldSpec.K β))[X] = (CFieldSpec.K (QFunNZG β))[X]` as
+`toPolyG`. The generic mirror of `ComputableGcdCorrect.toPolyB`. -/
+noncomputable def toGBPolyG {β : Type*} [CField β] [CFieldSpec β] (p : GBPolyCore β) :
+    (RatFunc (CFieldSpec.K β))[X] :=
+  liftKG β (GBPolyCore.toGBCoeffPoly p)
+
+variable {β : Type*} [CField β] [CFieldSpec β]
+
+/-- `toGBPolyG [] = 0`. -/
+@[simp] theorem toGBPolyG_nil : toGBPolyG ([] : GBPolyCore β) = 0 := by simp [toGBPolyG]
+
+/-- `liftKG (C c) = C (amG c)`: the lift sends a constant `β[s]`-coefficient to its `β(s)` embedding. -/
+theorem liftKG_C (c : (CFieldSpec.K β)[X]) :
+    liftKG β (Polynomial.C c) = Polynomial.C (QFunNZG.amG β c) := by
+  simp [liftKG, Polynomial.coe_mapRingHom, Polynomial.map_C]
+
+/-- **The lift-back bridge** `toPolyG (liftGBPolyCoreG p) = toGBPolyG p`: reading a `GBPolyCore β`
+(`(β[s])[t]`) coefficientwise as the fraction `c/1 ∈ QFunNZG β` (`liftGBPolyCoreG`) and then through
+`toPolyG` gives the SAME `β(s)[t]` polynomial as the coefficient-ring embedding `toGBPolyG` — both send
+the `i`-th coefficient to `amG (toPolyG cᵢ)`. The generic mirror of `toPolyG_liftBPolyToQFunNZ`. -/
+theorem toPolyG_liftGBPolyCoreG (p : GBPolyCore β) :
+    toPolyG (CPolyG.liftGBPolyCoreG p) = toGBPolyG p := by
+  apply Polynomial.ext
+  intro i
+  rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
+    GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff, CPolyG.liftGBPolyCoreG,
+    List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map]
+  cases h : p[i]? with
+  | none => simp [CFieldSpec.toK_zero, toPolyG_nil, map_zero]
+  | some c =>
+    simp only [Option.map_some, Option.getD_some]
+    show QFunNZG.toQFunNZG _ = QFunNZG.amG β (CPolyG.toPolyG c)
+    rw [QFunNZG.toQFunNZG]
+    have h1 : CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 := by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    show QFunNZG.amG β (CPolyG.toPolyG c) / QFunNZG.amG β (CPolyG.toPolyG ([CField.one] : CPolyG β))
+      = QFunNZG.amG β (CPolyG.toPolyG c)
+    rw [h1, map_one, div_one]
+
+/-! ### The `cclearDenomsCoreG` bridge `β(s)[t] ↔ (β[s])[t]`
+`cclearDenomsCoreG p` multiplies the `t`-polynomial `p ∈ β(s)[t]` through by the product of its
+β(s)-coefficient denominators, landing a `GBPolyCore β ∈ (β[s])[t]` whose `i`-th coefficient is
+`numᵢ · ∏_{j≠i} denⱼ`. Read back over the field `β(s)` (`toGBPolyG`), this equals `C s · toPolyG p` for
+the **common denominator scalar** `s = ∏_j denⱼ ∈ β(s)` (nonzero, a unit). So the cleared polynomial is,
+over β(s), a unit multiple of `toPolyG p` (`Associated`). The generic mirror of
+`ComputableGcdCorrect.toPolyB_clearDenoms` — and structurally `cclearDenomsCoreG` is *identical* to the
+concrete `clearDenoms` (same `zipIdx.map` + `filter`-fold), so the combinatorial core (`filter_prod_mul`)
+is reused verbatim. -/
+
+variable [CFieldDomain β]
+
+omit [CFieldDomain β] in
+/-- A `QFunNZG β` coefficient reads as `amG (toPolyG num) / amG (toPolyG den)` in `RatFunc (CFieldSpec.K
+β)`. -/
+theorem toQFunNZG_eq_div (c : QFunNZG β) :
+    QFunNZG.toQFunNZG c
+      = QFunNZG.amG β (CPolyG.toPolyG (CPolyG.qnumCoeffCoreG c))
+        / QFunNZG.amG β (CPolyG.toPolyG (CPolyG.qdenCoeffCoreG c)) := by
+  obtain ⟨⟨a, b⟩, hb⟩ := c; rfl
+
+omit [CFieldDomain β] in
+/-- A `QFunNZG β` coefficient's denominator has nonzero `toPolyG` (by subtype membership
+`cisZeroG _ = false`). -/
+theorem toPolyG_qdenCoeffCoreG_ne_zero (c : QFunNZG β) :
+    CPolyG.toPolyG (CPolyG.qdenCoeffCoreG c) ≠ 0 := by
+  obtain ⟨⟨a, b⟩, hb⟩ := c
+  exact QFunNZG.toPolyG_ne_zero_of_cisZeroG_false hb
+
+/-- **The common-denominator scalar** `commonDenG p ∈ R = (CFieldSpec.K β)[X]`: the product of all the
+`β[s]`-denominators of `p`'s β(s)-coefficients, `∏_j toPolyG (qdenCoeffCoreG (p.get j))`. The (nonzero)
+β(s)-unit by which `cclearDenomsCoreG` scales `toPolyG p`. The generic mirror of
+`ComputableGcdCorrect.commonDen`. -/
+noncomputable def commonDenG (p : CPolyG (QFunNZG β)) : (CFieldSpec.K β)[X] :=
+  ((p.map CPolyG.qdenCoeffCoreG).map CPolyG.toPolyG).prod
+
+omit [CFieldDomain β] in
+/-- `commonDenG p ≠ 0`: a product of nonzero denominators. -/
+theorem commonDenG_ne_zero (p : CPolyG (QFunNZG β)) : commonDenG p ≠ 0 := by
+  rw [commonDenG]
+  refine List.prod_ne_zero ?_
+  intro hmem
+  rw [List.mem_map] at hmem
+  obtain ⟨d, hd, hd0⟩ := hmem
+  rw [List.mem_map] at hd
+  obtain ⟨c, hc, rfl⟩ := hd
+  exact toPolyG_qdenCoeffCoreG_ne_zero c hd0
+
+omit [CFieldDomain β] in
+/-- `amG (commonDenG p) ≠ 0` (the field embedding of a nonzero product). -/
+theorem amG_commonDenG_ne_zero (p : CPolyG (QFunNZG β)) : QFunNZG.amG β (commonDenG p) ≠ 0 :=
+  (map_ne_zero_iff _ (RatFunc.algebraMap_injective (CFieldSpec.K β))).mpr (commonDenG_ne_zero p)
+
+omit [CFieldDomain β] in
+/-- `toPolyG` of a `cmulG`-fold is `toPolyG init` times the product of the `toPolyG`-images of the folded
+list (the `R`-product realized by the computable fold). The generic mirror of
+`ComputableGcdCorrect.toPoly_foldl_cmul`. -/
+theorem toPolyG_foldl_cmulG (init : CPolyG β) (ds : List (CPolyG β × ℕ)) :
+    CPolyG.toPolyG (ds.foldl (fun acc de => CPolyG.cmulG acc de.1) init)
+      = CPolyG.toPolyG init * (ds.map (fun de => CPolyG.toPolyG de.1)).prod := by
+  induction ds generalizing init with
+  | nil => simp
+  | cons hd tl ih =>
+    rw [List.foldl_cons, ih, CPolyG.toPolyG_cmulG, List.map_cons, List.prod_cons]; ring
+
+omit [CFieldSpec β] in
+/-- The list-getElem reading of `cclearDenomsCoreG p` at an in-range index `i`: the `i`-th cleared
+coefficient is `numᵢ · (∏_{j≠i} denⱼ)`, with `∏_{j≠i}` the filtered fold over the denominator list.
+Mirror of `ComputableGcdCorrect.clearDenoms_getElem`. -/
+theorem cclearDenomsCoreG_getElem (p : CPolyG (QFunNZG β)) (i : ℕ) (hi : i < p.length) :
+    (CPolyG.cclearDenomsCoreG p)[i]? = some (CPolyG.cmulG (CPolyG.qnumCoeffCoreG (p.getD i CField.zero))
+      ((((p.map CPolyG.qdenCoeffCoreG).zipIdx).filter (fun de => decide (de.2 ≠ i))).foldl
+        (fun acc de => CPolyG.cmulG acc de.1) [CField.one])) := by
+  unfold CPolyG.cclearDenomsCoreG
+  simp only
+  rw [List.getElem?_map, List.getElem?_zipIdx, List.getElem?_eq_getElem hi]
+  simp [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hi]
+
+omit [CFieldSpec β] [CFieldDomain β] in
+/-- `cclearDenomsCoreG` preserves the `t`-length: `(cclearDenomsCoreG p).length = p.length`. -/
+theorem cclearDenomsCoreG_length (p : CPolyG (QFunNZG β)) :
+    (CPolyG.cclearDenomsCoreG p).length = p.length := by
+  unfold CPolyG.cclearDenomsCoreG; simp
+
+/-- `toPolyG p` vanishes past the list length (the out-of-range coefficient is `CField.zero = 0`). -/
+theorem toPolyG_coeff_eq_zero_of_length_leG (p : CPolyG (QFunNZG β)) {i : ℕ} (hi : p.length ≤ i) :
+    (toPolyG p).coeff i = 0 := by
+  rw [toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none hi]
+  show CFieldSpec.toK (CField.zero : QFunNZG β) = 0
+  rw [CFieldSpec.toK_zero]
+
+/-- **Per-coefficient `cclearDenomsCoreG` identity**: `(toGBPolyG (cclearDenomsCoreG p)).coeff i =
+amG (commonDenG p) · (toPolyG p).coeff i` — the cleared `i`-th coefficient `amG (numᵢ · ∏_{j≠i} denⱼ)`
+equals the common-denominator scalar `amG (∏_j denⱼ)` times `amG numᵢ / amG denᵢ`. Generic mirror of
+`toPolyB_clearDenoms_coeff`. -/
+theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPolyG (QFunNZG β)) (i : ℕ) :
+    (toGBPolyG (CPolyG.cclearDenomsCoreG p)).coeff i
+      = QFunNZG.amG β (commonDenG p) * (toPolyG p).coeff i := by
+  rcases lt_or_ge i p.length with hi | hi
+  · rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
+      GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff,
+      List.getD_eq_getElem?_getD, cclearDenomsCoreG_getElem p i hi, Option.getD_some]
+    rw [CPolyG.toPolyG_cmulG, toPolyG_foldl_cmulG,
+      show CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 by
+        rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one],
+      one_mul]
+    set dens := p.map CPolyG.qdenCoeffCoreG with hdens
+    have hcd : commonDenG p = (dens.map CPolyG.toPolyG).prod := by rw [commonDenG, hdens]
+    have hlen : i < dens.length := by rw [hdens, List.length_map]; exact hi
+    have hfilt := filter_prod_mul (CPolyG.toPolyG) ([] : CPolyG β) dens 0 i (Nat.zero_le i)
+      (by simpa using hlen)
+    rw [Nat.sub_zero] at hfilt
+    have hdeni : CPolyG.toPolyG (dens.getD i []) = CPolyG.toPolyG (CPolyG.qdenCoeffCoreG (p.getD i CField.zero)) := by
+      congr 1
+      rw [hdens, List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map,
+        List.getElem?_eq_getElem hi]
+      simp
+    have hcoeff : (CFieldSpec.toK (p.getD i CField.zero) : RatFunc (CFieldSpec.K β))
+        = QFunNZG.amG β (CPolyG.toPolyG (CPolyG.qnumCoeffCoreG (p.getD i CField.zero)))
+          / QFunNZG.amG β (CPolyG.toPolyG (CPolyG.qdenCoeffCoreG (p.getD i CField.zero))) := by
+      show QFunNZG.toQFunNZG (p.getD i CField.zero) = _
+      rw [toQFunNZG_eq_div]
+    have hden0 : QFunNZG.amG β (CPolyG.toPolyG (CPolyG.qdenCoeffCoreG (p.getD i CField.zero))) ≠ 0 :=
+      QFunNZG.amG_toPolyG_ne_zero (toPolyG_qdenCoeffCoreG_ne_zero _)
+    rw [hcoeff, hcd]
+    have hpushP : QFunNZG.amG β (((dens.zipIdx.filter (fun de => decide (de.2 ≠ i))).map
+        (fun de => CPolyG.toPolyG de.1)).prod)
+        * QFunNZG.amG β (CPolyG.toPolyG (CPolyG.qdenCoeffCoreG (p.getD i CField.zero)))
+        = QFunNZG.amG β ((dens.map CPolyG.toPolyG).prod) := by
+      rw [← map_mul, ← hdeni, hfilt]
+    rw [map_mul, mul_comm (QFunNZG.amG β ((dens.map CPolyG.toPolyG).prod)) _, div_mul_eq_mul_div,
+      eq_div_iff hden0, mul_assoc, hpushP]
+  · rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
+      GBPolyCore.toGBCoeffPoly_coeff, List.getD_eq_getElem?_getD,
+      List.getElem?_eq_none (by rw [cclearDenomsCoreG_length]; exact hi), Option.getD_none,
+      toPolyG_nil, map_zero, toPolyG_coeff_eq_zero_of_length_leG p hi, mul_zero]
+
+/-- **The `cclearDenomsCoreG` bridge** (exact form): over the field β(s), the cleared polynomial
+`toGBPolyG (cclearDenomsCoreG p)` is the common-denominator scalar `C (amG (commonDenG p))` times
+`toPolyG p`. Generic mirror of `toPolyB_clearDenoms`. -/
+theorem toGBPolyG_cclearDenomsCoreG (p : CPolyG (QFunNZG β)) :
+    toGBPolyG (CPolyG.cclearDenomsCoreG p) = Polynomial.C (QFunNZG.amG β (commonDenG p)) * toPolyG p := by
+  ext i
+  rw [toGBPolyG_cclearDenomsCoreG_coeff, Polynomial.coeff_C_mul]
+
+/-- **The `cclearDenomsCoreG` bridge** (`Associated` form): over the field β(s), the cleared `(β[s])[t]`
+polynomial and `toPolyG p` are **associates** in `(RatFunc (CFieldSpec.K β))[X]` — they differ by the
+unit `C (amG (commonDenG p))`. The fraction-clearing is a unit-scaling over the field, so it preserves
+the gcd up to associates. Generic mirror of `associated_toPolyB_clearDenoms`. -/
+theorem associated_toGBPolyG_cclearDenomsCoreG (p : CPolyG (QFunNZG β)) :
+    Associated (toGBPolyG (CPolyG.cclearDenomsCoreG p)) (toPolyG p) := by
+  rw [toGBPolyG_cclearDenomsCoreG]
+  exact (associated_unit_mul_left _ _
+    (Polynomial.isUnit_C.mpr (amG_commonDenG_ne_zero p).isUnit))
 
 end DeepWiki.SymbolicIntegration
