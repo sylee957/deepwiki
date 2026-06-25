@@ -683,6 +683,41 @@ theorem ContentRegularNode.associated (P : BPoly) (h : ContentRegularNode P) :
   have hg0 : toPoly (bcontentX 30 P) ≠ 0 := fun he => hgcn ((cnorm_eq_nil_iff _).mpr he)
   exact associated_toPolyB_bprimitivePartX_of_term 30 P hg hgcn hg0 hfuel hterm
 
+/-- **The content vanishes only for the zero polynomial**: if `toPoly (bcontentX fuel P) = 0` then `P`
+is zero (`bisZero P`). Since the content divides every `x`-coefficient (`toPoly_bcontentX_dvd_mem`), a
+zero content forces every coefficient to `0`, hence `toBPoly P = 0`. The converse direction lets the node
+content-nonzero precondition be read off the cleaner `¬ bisZero P` for a real (nonzero-remainder) run. -/
+theorem bisZero_of_toPoly_bcontentX_eq_zero (fuel : ℕ) (P : BPoly)
+    (hterm : ContentFoldTerminates fuel [] (bnorm P))
+    (h0 : toPoly (bcontentX fuel P) = 0) : bisZero P = true := by
+  rw [bisZero_iff_toBPoly_eq_zero, ← toBPoly_bnorm]
+  apply Polynomial.ext
+  intro i
+  rw [toBPoly_coeff, Polynomial.coeff_zero, List.getD_eq_getElem?_getD]
+  cases ha : (bnorm P)[i]? with
+  | none => rw [Option.getD_none, toPoly_nil]
+  | some a =>
+    have hmem : a ∈ bnorm P := List.mem_of_getElem? ha
+    have hdvd := toPoly_bcontentX_dvd_mem fuel P hterm a hmem
+    rw [h0] at hdvd
+    rw [Option.getD_some, zero_dvd_iff.mp hdvd]
+
+/-- **Node content-regularity from a nonzero polynomial** (the cleaner entry): for a nonzero `P`
+(`¬ bisZero P`), the fuel bound and the content `cgcd`-fold termination give `ContentRegularNode P` — the
+content-nonzero condition `¬ cisZero (bcontentX 30 P)` is *derived* from `¬ bisZero P` via
+`bisZero_of_toPoly_bcontentX_eq_zero`, not assumed. So a real PRS node (nonzero remainder) supplies its
+content regularity from just nonzeroness + the fuel/termination algorithmics. -/
+theorem ContentRegularNode.of_ne_bisZero (P : BPoly) (hP : ¬ bisZero P = true)
+    (hfuel : ∀ a ∈ bnorm P, (cnorm a).length ≤ 30)
+    (hterm : ContentFoldTerminates 30 [] (bnorm P)) :
+    ContentRegularNode P := by
+  refine ⟨?_, hfuel, hterm⟩
+  intro hcz
+  have h0 : toPoly (bcontentX 30 P) = 0 := by
+    have : cnorm (bcontentX 30 P) = [] := by simpa [cisZero, beq_iff_eq] using hcz
+    exact (cnorm_eq_nil_iff _).mp this
+  exact hP (bisZero_of_toPoly_bcontentX_eq_zero 30 P hterm h0)
+
 /-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
 preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
 and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
@@ -767,6 +802,14 @@ example (fuel : ℕ) (p q : BPoly) (hq : ¬ bisZero q = true) :
 -- The `PrimPRSRegular` gate is fully discharged from the algorithmic-input bundle `PrimPRSInputs`.
 example (fuel : ℕ) (P Q : BPoly) (hin : PrimPRSInputs fuel P Q) : PrimPRSRegular fuel P Q :=
   primPRSRegular_of_inputs fuel P Q hin
+
+-- The node content-nonzero precondition is derivable from plain nonzeroness (real PRS nodes are nonzero):
+-- only the fuel/termination algorithmics remain genuinely assumed.
+example (P : BPoly) (hP : ¬ bisZero P = true)
+    (hfuel : ∀ a ∈ bnorm P, (cnorm a).length ≤ 30)
+    (hterm : ContentFoldTerminates 30 [] (bnorm P)) :
+    ContentRegularNode P :=
+  ContentRegularNode.of_ne_bisZero P hP hfuel hterm
 
 -- The headline: `cgcdFF` computes the ℚ(x)[t] polynomial gcd, gated only on `PrimPRSInputs`.
 example (fuel : ℕ) (p q : CPolyG QFunNZ)
