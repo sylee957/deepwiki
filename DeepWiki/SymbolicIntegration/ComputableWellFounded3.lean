@@ -247,4 +247,109 @@ theorem cstepWf_eq (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ)
   -- the exact division: the numerator gcd's normalized length is bounded by `fuel+1`
   rw [CPolyG.cdivFFWf_eq_of_fuel (fuel + 1) _ _ hfuelN]
 
+open Classical in
+/-- **Bridge — `cSplitFactorFastWf` equals `cSplitFactorFast` at any sufficient fuel.** For `toPolyG p ≠ 0`,
+fuel *strictly* exceeding the `t`-degree (`(toPolyG p).natDegree < fuel`), and a regular run
+(`CSplitFactorFastRegular Dt fuel p`), `cSplitFactorFastWf Dt p = cSplitFactorFast Dt fuel p`. The fuel
+bound appears only here; `cSplitFactorFastWf` carries none. By induction on `fuel`, mirroring
+`cSplitFactorFast_isSplittingFactorizationGen`: at each node `cstepWf` matches `cstep` (`cstepWf_eq`); a
+constant step (`cdegG S = 0`) terminates both, else the non-constant special factor `S` divides `p` exactly,
+so the quotient `p/S` is nonzero with strictly smaller `t`-degree (`toPolyG_cdivFF_exact` +
+`splitFactorStep_dvd`), discharging the structural length guard and supplying the IH's preconditions. The
+*strict* `< fuel` keeps the recursion strictly above the fuel-exhaustion base case (which `cSplitFactorFast`
+short-circuits but `cSplitFactorFastWf` does not): the `fuel = 0` case is vacuous (`natDegree < 0`). -/
+theorem cSplitFactorFastWf_eq :
+    ∀ (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ), toPolyG p ≠ 0 →
+      (toPolyG p).natDegree < fuel → CSplitFactorFastRegular Dt fuel p →
+      CPolyG.cSplitFactorFastWf Dt p = CPolyG.cSplitFactorFast Dt fuel p := by
+  intro Dt fuel
+  induction fuel with
+  | zero =>
+    -- vacuous: `(toPolyG p).natDegree < 0` is impossible
+    intro p _ hdegp _
+    exact absurd hdegp (Nat.not_lt_zero _)
+  | succ fuel ih =>
+    intro p hp hdegp hreg
+    obtain ⟨hstepreg, hpfuel, hbranch⟩ := hreg
+    haveI : CharZero (CFieldSpec.K QFunNZ) := inferInstanceAs (CharZero (RatFunc ℚ))
+    set S := cstep Dt (fuel + 1) p with hSdef
+    -- the fuel-free step matches the fuel'd step
+    have hstepeq : CPolyG.cstepWf Dt p = S := cstepWf_eq Dt fuel p hstepreg
+    -- the abstract step facts
+    have haS : Associated (toPolyG S) (splitFactorStep (toPolyG Dt) (toPolyG p)) :=
+      associated_toPolyG_cstep Dt (fuel + 1) p hp hstepreg
+    have hstepne : splitFactorStep (toPolyG Dt) (toPolyG p) ≠ 0 := by
+      have hdvd := splitFactorStep_dvd (toPolyG Dt) hp
+      intro h0; exact hp (eq_zero_of_zero_dvd (h0 ▸ hdvd))
+    have hSne : toPolyG S ≠ 0 := fun h => hstepne (eq_zero_of_zero_dvd (h ▸ haS.dvd))
+    have hSnd : (toPolyG S).natDegree = (splitFactorStep (toPolyG Dt) (toPolyG p)).natDegree :=
+      natDegree_eq_of_associated haS
+    have hcdeg : cdegG S = (toPolyG S).natDegree := cdegG_eq_natDegree S
+    -- the fuel'd loop step shape (its inline `let S := cdivFF (cgcdFF…) (cgcdFF…)` is defeq to `cstep`)
+    have hloop : CPolyG.cSplitFactorFast Dt (fuel + 1) p
+        = (if cdegG S = 0 then (p, [CField.one])
+           else ((CPolyG.cSplitFactorFast Dt fuel (CPolyG.cdivFF (fuel + 1) p S)).1,
+                 cmulG S (CPolyG.cSplitFactorFast Dt fuel (CPolyG.cdivFF (fuel + 1) p S)).2)) := by
+      conv_lhs => rw [CPolyG.cSplitFactorFast]
+      rfl
+    -- the WF loop step shape, with `cstepWf` rewritten to `S`
+    have hloopWf : CPolyG.cSplitFactorFastWf Dt p
+        = (if cdegG S = 0 then (p, [CField.one])
+           else (if (cnormG (CPolyG.cdivFFWf p S) : List QFunNZ).length
+                    < (cnormG p : List QFunNZ).length
+                 then ((CPolyG.cSplitFactorFastWf Dt (CPolyG.cdivFFWf p S)).1,
+                       cmulG S (CPolyG.cSplitFactorFastWf Dt (CPolyG.cdivFFWf p S)).2)
+                 else (p, [CField.one]))) := by
+      conv_lhs => rw [CPolyG.cSplitFactorFastWf]
+      simp only [hstepeq]
+    rw [hloop, hloopWf]
+    -- abstract the (giant) `cstep`-defined `S` behind an opaque local so the projections below never
+    -- `whnf` the `cdivFF`/`cgcdFF` term (the loop shapes `hloop`/`hloopWf` are already fixed).
+    clear_value S
+    by_cases hdeg : cdegG S = 0
+    · -- terminal: both return (p, [one])
+      simp only [if_pos hdeg]
+    · -- recursive step
+      simp only [if_neg hdeg]
+      -- the step is non-constant and divides `p` exactly
+      have hSpos : 0 < (splitFactorStep (toPolyG Dt) (toPolyG p)).natDegree := by
+        rw [← hSnd, ← hcdeg]; exact Nat.pos_of_ne_zero hdeg
+      have hSdvd : toPolyG S ∣ toPolyG p :=
+        haS.dvd.trans (splitFactorStep_dvd (toPolyG Dt) hp)
+      have hScn : cnormG S ≠ [] := fun h => hSne ((cnormG_eq_nil_iff S).mp h)
+      have hexact : toPolyG p = toPolyG (CPolyG.cdivFF (fuel + 1) p S) * toPolyG S :=
+        toPolyG_cdivFF_exact (fuel + 1) p S hScn hpfuel hSdvd
+      -- the quotient is nonzero with strictly smaller degree
+      have hqne : toPolyG (CPolyG.cdivFF (fuel + 1) p S) ≠ 0 := by
+        intro h0; rw [h0, zero_mul] at hexact; exact hp hexact
+      have hqdeg : (toPolyG (CPolyG.cdivFF (fuel + 1) p S)).natDegree < fuel := by
+        have hdegdrop : (toPolyG (CPolyG.cdivFF (fuel + 1) p S)).natDegree + (toPolyG S).natDegree
+            = (toPolyG p).natDegree := by
+          rw [hexact, Polynomial.natDegree_mul hqne hSne]
+        have hSposc : 0 < (toPolyG S).natDegree := by rw [hSnd]; exact hSpos
+        omega
+      -- bridge the quotient: `cdivFFWf p S = cdivFF (fuel+1) p S`
+      have hdiveq : CPolyG.cdivFFWf p S = CPolyG.cdivFF (fuel + 1) p S :=
+        CPolyG.cdivFFWf_eq_of_fuel (fuel + 1) p S hpfuel
+      -- the structural length guard holds (strict degree drop)
+      have hguard : (cnormG (CPolyG.cdivFFWf p S) : List QFunNZ).length
+          < (cnormG p : List QFunNZ).length := by
+        rw [hdiveq]
+        have hqcn : cnormG (CPolyG.cdivFF (fuel + 1) p S) ≠ [] :=
+          fun h => hqne ((cnormG_eq_nil_iff _).mp h)
+        have hpcn : cnormG p ≠ [] := fun h => hp ((cnormG_eq_nil_iff p).mp h)
+        rw [length_cnormG_of_ne _ hqcn, length_cnormG_of_ne p hpcn]
+        have hSposc : 0 < (toPolyG S).natDegree := by rw [hSnd]; exact hSpos
+        have hdegdrop : (toPolyG (CPolyG.cdivFF (fuel + 1) p S)).natDegree + (toPolyG S).natDegree
+            = (toPolyG p).natDegree := by
+          rw [hexact, Polynomial.natDegree_mul hqne hSne]
+        omega
+      rw [if_pos hguard]
+      -- the recursive regularity branch (non-terminal: `cdegG S ≠ 0`); `S` is opaque, matching `hbranch`
+      have hrecreg : CSplitFactorFastRegular Dt fuel (CPolyG.cdivFF (fuel + 1) p S) :=
+        hbranch.resolve_left hdeg
+      -- apply the IH on the quotient (matched through the division bridge)
+      have hih := ih (CPolyG.cdivFF (fuel + 1) p S) hqne hqdeg hrecreg
+      rw [hdiveq, hih]
+
 end DeepWiki.SymbolicIntegration
