@@ -36,6 +36,48 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
 
+/-! ### Task 1 — `CRischField QFunNZ`: running the generic engine at the level-1 carrier
+
+The generic tower engine's RDE solver `cRischDEG` recurses, at every step, into the typeclass method
+`CRischField.crischDESolve : α → α → Option α` (solving `Dy + f·y = g` over `α` with `α`'s own
+derivation). To run the generic engine at `α = QFunNZ = ℚ(x)` (the level-1 carrier of the *old*
+engine) we must supply `CRischField QFunNZ`. The other instances the generic algorithms need —
+`CField QFunNZ`, `CFieldSpec QFunNZ`, `CDiffField QFunNZ`, and `CFieldDomain QFunNZ` (the last via the
+global `[CFieldSpec α] → CFieldDomain α`) — all already resolve (verified by `#synth` below).
+
+The RDE over ℚ(x) (`D = d/dx`) is *exactly* the existing level-1 base solver `cRischDEBase`
+(`ComputableRischDE`, §6.6 eq. 6.23): `cRischDEBase fuel b c : Option QFunNZ` returns `some s` with
+`Ds + b·s = c` (`D = d/dx` on `QFunNZ`, the `CDiffField QFunNZ` derivation `qderivNZ`), or `none`. Its
+signature `QFunNZ → QFunNZ → Option QFunNZ` matches `crischDESolve` after fixing the fuel — so we wrap
+it directly, no re-implementation. -/
+
+/-- **The fixed fuel budget** for the `CRischField QFunNZ` base solve (the class method `crischDESolve`
+carries no fuel argument). Matches `towerRischDEFuel`; generous for the small-degree validations. -/
+def qfunNZRischDEFuel : ℕ := 60
+
+/-- **★ `CRischField QFunNZ`** — the RDE over `QFunNZ = ℚ(x)` (`D = d/dx`), wrapping the existing level-1
+base solver `cRischDEBase` (Bronstein §6.6 eq. 6.23). This is the missing instance that lets the
+*generic* tower engine (`cRischDEG`/`cIntegrateG`/…) run at `α = QFunNZ`, i.e. on top of the old
+engine's level-1 carrier. `crischDESolve f g = cRischDEBase fuel f g` solves `Dy + f·y = g` for
+`y ∈ ℚ(x)`. Because `cRischDEBase` routes general non-constant inputs through the whole base ℚ-pipeline
+`cRationalRDE` (over `CPolyG ℚ`, monomial `x`), this realizes the same level-1 RDE the QFunNZ engine
+uses — now exposed to the generic driver via the typeclass. -/
+instance instCRischFieldQFunNZ : CRischField QFunNZ where
+  crischDESolve f g := CPolyG.cRischDEBase qfunNZRischDEFuel f g
+
+/-- **All generic-engine instances resolve at `QFunNZ`** (the Task 1 readout): the generic algorithms
+`cgcdMonicG`/`cRischDEG`/`cIntegrateG`/… need `CField`, `CFieldSpec`, `CDiffField`, `CFieldDomain`, and
+`CRischField` — every one is provided at `α = QFunNZ`. (`CFieldDomain QFunNZ` comes from the global
+`[CFieldSpec α] → CFieldDomain α` instance `instCFieldDomainOfCFieldSpec`; `CRischField QFunNZ` is
+`instCRischFieldQFunNZ` above.) We pin them by name rather than `inferInstance` — `CFieldSpec`'s `Type*`
+field (`K`) makes term-mode `inferInstance` fragile while `#synth`/by-name resolution succeeds; this is
+the explicit witness that the whole stack is present. -/
+theorem qfunNZ_resolves_all_generic_instances :
+    Nonempty (CField QFunNZ) ∧ Nonempty (CFieldSpec.{0, 0} QFunNZ) ∧ Nonempty (CDiffField QFunNZ) ∧
+      Nonempty (CFieldDomain QFunNZ) ∧ Nonempty (CRischField QFunNZ) :=
+  ⟨⟨instCFieldQFunNZ⟩, ⟨instCFieldSpecQFunNZ⟩, ⟨instCDiffFieldQFunNZ⟩,
+    ⟨instCFieldDomainOfCFieldSpec⟩, ⟨instCRischFieldQFunNZ⟩⟩
+
 /-! ### Task 3 — generic monic-gcd correctness `associated_toPolyG_cgcdMonicG`
 
 The generic monic gcd `cgcdMonicG fuel p q = cmonicG (cgcdExtG fuel p q).1` returns the polynomial gcd
