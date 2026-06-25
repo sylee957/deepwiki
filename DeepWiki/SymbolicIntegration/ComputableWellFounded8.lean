@@ -49,7 +49,22 @@ lives over the **different** carrier `CPolyG ℚ`. So we convert leaf-first, bas
 recursion** `rischDE_baseRecursion_example` (`Dy + (1/x)y = 2log x + 1 → y = x·log x`, exercising the full
 base ℚ-pipeline), and the **hyperexponential** cancellation `rischDE_cancelExp_example`
 (`t = eˣ`, `Dq + (1/x)q = (2+x)eˣ → q = x·eˣ`). As throughout, the runtime WF ops carry no fuel; fuel
-bounds live only in the bridge proofs. -/
+bounds live only in the bridge proofs.
+
+**Bridges and the remaining gap.** Each WF leaf/own-loop carries a fuel'd bridge (`cPolyRischDENoCancelQWf_eq`,
+`cPolyRischDECancelPrimQWf_eq`, `cSPDEQWf_eq` for the base; `cPolyRischDECancelPrimWf_eq`,
+`cPolyRischDECancelExpWf_eq`, `cPolyRischDEWf_eq` for the tower), composed into `cRischDEWfFull_eq`
+(`cRischDEWfFull = cRischDE fuel` on any regular run, **all** regimes — the runtime equality to the fuel'd
+engine is certified, the §6.6 cancellation regimes included). The one thing **not** transported is the
+*abstract cleared identity* `D(y) + f·y = g` for the cancellation regime: the engine's
+`cRischDE_rdeCleared_of_inputs` (transported fuel-free for the **primitive non-cancellation** regime in WF7
+as `cRischDEWf_rdeCleared_of_inputs`) consumes the §6.4/§6.5 *non-cancellation* poly-stage cleared identity
+(`cPolyRischDENoCancel_cleared_identity`), and the engine **does not prove** a cancellation-stage cleared
+identity (`cPolyRischDECancelPrim`/`Exp` are `native_decide`-validated, not abstractly verified — by design,
+see `ComputableRischDE`'s "What is NOT here"). So the cancellation regime's correctness here is the runtime
+bridge plus `native_decide`, not an all-inputs `D(y)+f·y=g` theorem; that abstract cancellation cleared
+identity is the documented remaining obligation (it would first require the §6.6 poly-stage cleared identity
+upstream in the engine). -/
 
 open Polynomial Classical
 open scoped Differential
