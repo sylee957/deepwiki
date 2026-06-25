@@ -1085,8 +1085,82 @@ example (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C
     hhNumE hq0 hfuelH hdvd hgdenHne hHDenne hdnne hlognz s hden hAh hb0 hDd hadeg hδdeg hamc hfuelR
     hcompl hdistinct hreg
 
+/-! ### Why the `fₛ = 0` gate is FAITHFUL — the engine `cIntegrate` discards the special part
+
+The headline `cIntegrate_checkIdentity_uncond` is gated on `hfs0 : fₛ = b/dₛ = 0` (the canonical-split
+**special** part is zero) and on the `prem = 0` branch. This gate is **not** an artifact of the proof — it
+is forced by the *structure of the engine* `cIntegrate` (`ComputableIntegrate`), which one is forbidden to
+modify. Reading the engine body (`canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn))`,
+then integrate `fp` via `cPrimitivePolyIntegrate` and `cn/dn` via `cIntegrateReduced`), the special-part
+component `(b, ds)` is bound to **unused** `let`-binders `(_b, _ds)`: it is never passed to the §6 RDE
+oracle `cRischDE`/`cRationalRDE`, never to any integration routine, never into the returned
+`IntegralResult`. The engine integrates **only** `fₚ + fₙ`. Hence `D(cIntegrate f)` is the derivative of
+`g + ∑ cᵢ·log vᵢ`, which (by `cIntegrate_field_identity`) recovers `fₚ + fₙ`, *not* `f = fₚ + fₛ + fₙ`.
+The identity `D(cIntegrate f) = f` can therefore hold **iff** `fₛ = 0`; the `hfs0` gate is the exact
+faithful boundary, and broadening to `fₛ ≠ 0` would require *editing the engine* to wire `(b, ds)` through
+the RDE oracle — out of scope here. The two theorems below make this structural fact citable: (1)
+`cIntegrate`'s output is **independent of the special part** `(b, ds)` (it is a closed form in
+`fp, cn, dn, cands` alone), and (2) the nonzero-remainder branch returns `none` (so the
+`checkIdentity` headline only ever lives in the `prem = 0` branch). -/
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+/-- **`cIntegrate` discards the canonical-split special part `fₛ = b/dₛ`** (faithfulness of the `hfs0`
+gate): given the canonical split `canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn))`, the
+engine's value is the closed form built from `fp`, `cn`, `dn`, `cands` **alone** — the special-part
+component `(b, ds)` never appears. The reduced normal part `cIntegrateReduced … cn dn cands` and the
+primitive polynomial part `cPrimitivePolyIntegrate … fp` are the only integrated pieces; `(b, ds)` is bound
+to unused `let`-binders in the engine body, so `cIntegrate` does *not* integrate `fₛ`. This is exactly why
+`cIntegrate_checkIdentity_uncond` must assume `fₛ = 0`: the engine returns the integral of `fₚ + fₙ`, so
+`D(cIntegrate f) = f` only when the discarded `fₛ` vanishes. -/
+theorem cIntegrate_indep_special (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (cands : List ℚ) (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn))) :
+    cIntegrate Dt fuel a d cands =
+      (let nrm := cIntegrateReduced Dt fuel cn dn cands
+       let (pq, prem) := cPrimitivePolyIntegrate Dt fuel fp
+       if cisZeroG prem then
+         some (⟨(caddG (cmulG nrm.rational.1 [CField.one]) (cmulG pq nrm.rational.2),
+                 nrm.rational.2), nrm.logs⟩ : IntegralResult)
+       else none) := by
+  rw [cIntegrate, hcanon]
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+/-- **The nonzero polynomial-remainder branch returns `none`** (faithfulness of the `prem = 0` gate): when
+the primitive polynomial integration leaves a nonzero `t`-degree remainder
+(`cisZeroG prem = false`), `cIntegrate` returns `none` — it produces no `IntegralResult` to check. So the
+`checkIdentity` headline (`cIntegrate = some res ∧ checkIdentity res = true`) only ever lives in the
+`prem = 0` branch; the `hpremZero` gate of `cIntegrate_checkIdentity_uncond` is the engine's own `if`, not
+a proof artifact. A nonzero remainder is the engine's non-elementary report (the primitive sub-case did not
+dispose of the polynomial part), so there is nothing to broaden off `prem ≠ 0`. -/
+theorem cIntegrate_none_of_prem_ne (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (cands : List ℚ) (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn)))
+    (pq prem : CPolyG QFunNZ) (hpoly : cPrimitivePolyIntegrate Dt fuel fp = (pq, prem))
+    (hprem : cisZeroG prem = false) :
+    cIntegrate Dt fuel a d cands = none := by
+  rw [cIntegrate, hcanon]
+  simp only [hpoly, hprem, Bool.false_eq_true, if_false]
+
+open DeepWiki.SymbolicIntegration.CPolyG QFunNZ in
+/-- Restatement: `cIntegrate`'s result depends only on the polynomial and normal parts `fp, cn, dn` (and
+`cands`) of the canonical split — the special part `fₛ = b/dₛ` is structurally discarded, so the `fₛ = 0`
+gate of the headline `cIntegrate_checkIdentity_uncond` is faithful. -/
+example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ) (cands : List ℚ)
+    (fp b ds cn dn : CPolyG QFunNZ)
+    (hcanon : canonicalRepresentationFast Dt fuel a d = (fp, (b, ds), (cn, dn))) :
+    cIntegrate Dt fuel a d cands =
+      (let nrm := cIntegrateReduced Dt fuel cn dn cands
+       let (pq, prem) := cPrimitivePolyIntegrate Dt fuel fp
+       if cisZeroG prem then
+         some (⟨(caddG (cmulG nrm.rational.1 [CField.one]) (cmulG pq nrm.rational.2),
+                 nrm.rational.2), nrm.logs⟩ : IntegralResult)
+       else none) :=
+  cIntegrate_indep_special Dt fuel a d cands fp b ds cn dn hcanon
+
 -- Axiom audits for the headline deliverables (`[propext, Classical.choice, Quot.sound]` — no
 -- `native_decide`, no `sorryAx`).
+#print axioms cIntegrate_indep_special
+#print axioms cIntegrate_none_of_prem_ne
 #print axioms CPolyG.toPolyG_cresultantG
 #print axioms CPolyG.eval_toPolyG_cinterpolateG
 #print axioms CPolyG.toPolyG_cResidueResultantTower
