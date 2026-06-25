@@ -1044,7 +1044,46 @@ example (fuel : ℕ) (p q : CPolyG (QFunNZG β))
 
 end
 
-/-! ### Axioms — the gcd-correctness is `native_decide`-free and `sorry`-free -/
+/-! ### Verdict and the precise remaining gap
+
+**Verdict (Task 1): the QFunNZ proof transports — mechanically in spirit, by re-derivation in fact.**
+The spine of `ComputableGcdCorrect` (clear-denominators unit-scaling, Euclidean-step gcd invariant,
+primitive-part unit scaling, the `filter_prod_mul` combinatorics) carries over with `ℚ ⟿ CFieldSpec.K β`
+and the concrete `Compute.b*` engine + `toBPoly` bridge replaced by the generic `gb*Core` engine +
+`toGBPolyG`. NO `ℚ[x]`/`ℚ`-specific fact was needed: every `ℚ[x]`-content step became a Mathlib
+generic-content / field-generic step (the `(CFieldSpec.K β)[X]` is a `NormalizedGCDMonoid`/Euclidean
+domain, and `RatFunc (CFieldSpec.K β)` is a field), and `filter_prod_mul` was reused verbatim. So the
+algorithm's "almost-purely-mechanical" generalization is matched by an almost-purely-mechanical proof
+generalization.
+
+**What is fully proved (axiom-clean, `[propext, Classical.choice, Quot.sound]`):**
+* `associated_toPolyG_cgcdFFRawCore` / `associated_toPolyG_cgcdFFCore` — THE deliverable: the recursive
+  tower fraction-free gcd computes the polynomial gcd up to associates over β(s)[t], gated on the
+  per-step regularity bundle `CPrimPRSGenAssocReg` (the generic mirror of `PrimPRSRegular`).
+* Clause (ii) (pseudo-division witness) `toGBPolyG_gbpsremainderCore`, and clause (iii) (content strip is
+  a β(s)-unit) DISCHARGED from `CgcdBCorrect cgcdB` (the level-`β` gcd-correctness) +
+  transparent algorithmics, via Mathlib content + the `cgcdB`-fold-divides theory
+  (`associated_toGBPolyG_gbprimitivePartCore_of_correct`).
+* The base case `associated_toPolyG_cgcdExtG` (the bottom of the tower, and the content-gcd at any level).
+
+**The precise remaining gap (toward a fully *unconditional* tower induction):**
+1. **Clause (i) termination** of `CPrimPRSGenAssocReg` is still assumed. It is discharged in the QFunNZ
+   file by `primPRSInputs_of_nodeRegular` from a `t`-degree bound via the strict per-step
+   `bdeg`-decrease; the generic version needs the `gb*Core` analogue of `bdegree_reduce_step_lt` /
+   `primPRSstep_length_lt` (a mechanical re-derivation, not a new idea).
+2. **The tower recursion** must thread `CgcdBCorrect (cgcdFFRawCore β)` as the induction hypothesis. This
+   is NOT a plain structural induction: `CFracGcdCore` is a depth-free typeclass, so it needs a companion
+   correctness class (`CFracGcdCoreCorrect`, with a base instance at `ℚ` and a recursive instance at
+   `QFunNZG β`) capturing "this level's `cgcdFFRawCore` is gcd-correct on terminating runs". The genuine
+   subtlety found: **`CgcdBCorrect` (unconditional over all inputs) does NOT hold for the base
+   `cgcdFFRawCore ℚ = (cgcdExtG _).1`** — `associated_toPolyG_cgcdExtG` needs `cgcdTerminatesG` — so the
+   recursion must carry the fuel/termination side-conditions (the `cgcdTerminatesG`/`ContentFoldTerminates`
+   threading the QFunNZ file does), not a clean `∀`-correctness.
+
+So the residual obstruction is **not** a missing Mathlib/GCD-domain fact (the content lever closed every
+`ℚ[x]`-specific step) — it is the **bookkeeping of the fuel-termination side-conditions through the tower
+recursion**, exactly the machinery `ComputableGcdCorrect`'s `PrimPRSInputs`/`primPRSInputs_of_nodeRegular`
+layer carries at the single concrete level, now to be lifted to the depth-indexed tower. -/
 
 #print axioms associated_toPolyG_cgcdExtG
 #print axioms associated_toGBPolyG_cprimPRSgcdGenCore
