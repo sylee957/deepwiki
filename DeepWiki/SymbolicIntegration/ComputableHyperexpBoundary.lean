@@ -187,3 +187,53 @@ theorem sum_residue_seed_logDeriv_eq_div_add_residual (A : K[X]) (s : Finset K) 
     congr 2
     rw [← map_sum (C : K →+* K[X]), ← C_mul, mul_comm]
   rw [hproper, hconst, add_comm]
+
+/-- **The hyperexponential integral identity with explicit residual** (`D(∑ aᵢ·log gᵢ) = a/d + R`, the
+headline): over a split squarefree `d = nodal s id`, with a base derivation `δ` of **hyperexponential**
+type — `δ(X − Cα) = C η·X + C(γ α)` (degree-≤1, the X-coefficient `η = δX` uniform), `b α = η·α + γ α ≠ 0`
+— and δ-constant residues `C(res α)`, the logarithmic part `∑_{α∈s} algMap(C(res α))·log(X−Cα)` (each
+`log(X−Cα)` modeled by `L α` with the per-factor log-derivative `hL`) differentiates under `extendDeriv δ`
+to `A/d` **plus the explicit constant residual** `algMap(C(η·∑ res α))`:
+`extendDeriv δ (∑ algMap(C(res α))·L α) = A/d + algMap(C(η·∑ res α))`. The full hyperexponential analogue of
+the primitive `extendDeriv_logPart_eq_div`: the differential spine
+(`extendDeriv_sum_const_logDerivOf`) reduces the LHS to the residue sum, and
+`sum_residue_seed_logDeriv_eq_div_add_residual` supplies its closed form `A/d + R`. For `η = 0` (primitive,
+`Dt ∈ k`) `R = 0` and this **is** `extendDeriv_logPart_eq_div` (per-root form). The residual `R = C(η·∑ res
+α) ∈ k` is the §5.9 hyperexponential reduction's leftover — itself integrable (a rational function of `x`),
+so the obstruction is an engine limit, not non-elementarity. -/
+theorem extendDeriv_logPart_eq_div_add_residual (A : K[X]) (s : Finset K) (hA : A.degree < s.card)
+    (η : K) (γ : K → K) (hδ : ∀ α ∈ s, δ (X - C α) = C η * X + C (γ α))
+    (hb0 : ∀ α ∈ s, η * α + γ α ≠ 0)
+    (hc : ∀ α ∈ s, δ (C (A.eval α / (δ (Lagrange.nodal s id)).eval α)) = 0)
+    (L : K → RatFunc K)
+    (hL : ∀ α ∈ s, extendDeriv δ (L α)
+      = algebraMap K[X] (RatFunc K) (δ (X - C α)) / algebraMap K[X] (RatFunc K) (X - C α)) :
+    extendDeriv δ (∑ α ∈ s,
+        algebraMap K[X] (RatFunc K) (C (A.eval α / (δ (Lagrange.nodal s id)).eval α)) * L α)
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
+        + algebraMap K[X] (RatFunc K)
+            (C (η * ∑ α ∈ s, A.eval α / (δ (Lagrange.nodal s id)).eval α)) := by
+  rw [extendDeriv_sum_const_logDerivOf δ s
+      (fun α => C (A.eval α / (δ (Lagrange.nodal s id)).eval α)) (fun α => X - C α) hc L hL,
+    sum_residue_seed_logDeriv_eq_div_add_residual δ A s hA η γ hδ hb0]
+
+/-- **The primitive case as the `η = 0` corollary** (`R = 0` ⟺ `Dt ∈ k`): when the X-coefficient `η = 0`
+(the seed `δ(X − Cα) = C(γ α)` is constant, the primitive condition), the explicit residual
+`C(η·∑ res α) = C 0 = 0` vanishes and the hyperexponential identity collapses to the primitive
+`D(∑ aᵢ·log gᵢ) = A/d`. The boundary `η = 0` is exactly the dividing line of
+`towerLogPart_eq_div_of_const_seed`. -/
+theorem extendDeriv_logPart_eq_div_of_eta_zero (A : K[X]) (s : Finset K) (hA : A.degree < s.card)
+    (γ : K → K) (hδ : ∀ α ∈ s, δ (X - C α) = C (γ α)) (hb0 : ∀ α ∈ s, γ α ≠ 0)
+    (hc : ∀ α ∈ s, δ (C (A.eval α / (δ (Lagrange.nodal s id)).eval α)) = 0)
+    (L : K → RatFunc K)
+    (hL : ∀ α ∈ s, extendDeriv δ (L α)
+      = algebraMap K[X] (RatFunc K) (δ (X - C α)) / algebraMap K[X] (RatFunc K) (X - C α)) :
+    extendDeriv δ (∑ α ∈ s,
+        algebraMap K[X] (RatFunc K) (C (A.eval α / (δ (Lagrange.nodal s id)).eval α)) * L α)
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) := by
+  have h := extendDeriv_logPart_eq_div_add_residual δ A s hA 0 γ
+    (fun α hα => by rw [hδ α hα, C_0, zero_mul, zero_add]) (fun α hα => by simpa using hb0 α hα)
+    hc L hL
+  rw [h, zero_mul, C_0, map_zero, add_zero]
+
+end Residual
