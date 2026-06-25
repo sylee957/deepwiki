@@ -224,6 +224,63 @@ theorem toGBCoeffPoly_coeff (p : GBPolyCore β) (i : ℕ) :
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
+/-- `gbnormCore` has **no trailing `toPolyG`-zero**: the last coefficient of `gbnormCore p` reads to a
+nonzero `R = (CFieldSpec.K β)[X]` (its `cnormG` is nonempty, hence `toPolyG ≠ 0`). Mirror of
+`SubresultantCorrectness.bnorm_getLast?_toPoly_ne_zero`. -/
+theorem gbnormCore_getLast?_toPolyG_ne_zero (p : GBPolyCore β) :
+    ∀ v, (gbnormCore p).getLast? = some v → CPolyG.toPolyG v ≠ 0 := by
+  induction p with
+  | nil => simp
+  | cons a as ih =>
+    rw [gbnormCore_cons_eq]
+    cases h : gbnormCore as with
+    | nil =>
+      cases ha : CPolyG.cisZeroG (CPolyG.cnormG a) with
+      | true => rw [if_pos rfl]; simp
+      | false =>
+        intro v hv
+        rw [if_neg (by simp), List.getLast?_singleton, Option.some.injEq] at hv
+        subst hv
+        rw [toPolyG_cnormG]
+        intro hz
+        have hca : CPolyG.cnormG a = [] := (cnormG_eq_nil_iff a).mpr hz
+        rw [CPolyG.cisZeroG, hca] at ha
+        simp at ha
+    | cons b bs =>
+      rw [h] at ih
+      intro v hv
+      rw [List.getLast?_cons_cons] at hv
+      exact ih v hv
+
+/-- `gblcCore` is the **`t`-coefficient at the top index**: `toPolyG (gblcCore p) =
+(toGBCoeffPoly p).coeff (gbdegCore p)`. -/
+theorem toPolyG_gblcCore_eq_coeff (p : GBPolyCore β) :
+    CPolyG.toPolyG (gblcCore p) = (toGBCoeffPoly p).coeff (gbdegCore p) := by
+  rw [gblcCore, gbdegCore, ← toGBCoeffPoly_gbnormCore, toGBCoeffPoly_coeff,
+    List.getD_eq_getElem?_getD, ← List.getLast?_eq_getElem?]
+
+/-- **`gbisZeroCore` reads as `toGBCoeffPoly = 0`**: `gbisZeroCore p = true ↔ toGBCoeffPoly p = 0` (the
+list normalizes to empty exactly for the zero polynomial in `t`). Generic mirror of
+`SubresultantCorrectness.bisZero_iff_toBPoly_eq_zero`. -/
+theorem gbisZeroCore_iff_toGBCoeffPoly (p : GBPolyCore β) :
+    gbisZeroCore p = true ↔ toGBCoeffPoly p = 0 := by
+  rw [gbisZeroCore, List.isEmpty_iff]
+  constructor
+  · intro h; rw [← toGBCoeffPoly_gbnormCore, h, toGBCoeffPoly_nil]
+  · intro h
+    rcases hb : gbnormCore p with _ | ⟨c, cs⟩
+    · rfl
+    · exfalso
+      have hne : (gbnormCore p).getLast? ≠ none := by rw [hb]; simp
+      rcases hg : (gbnormCore p).getLast? with _ | v
+      · exact hne hg
+      · have hv := gbnormCore_getLast?_toPolyG_ne_zero p v hg
+        have hlc : gblcCore p = v := by rw [gblcCore, hg, Option.getD_some]
+        have hcoeff0 : CPolyG.toPolyG (gblcCore p) = 0 := by
+          rw [toPolyG_gblcCore_eq_coeff, h]; simp
+        rw [hlc] at hcoeff0
+        exact hv hcoeff0
+
 end GBPolyCore
 
 /-! ### The field-coefficient lift `R[t] → (RatFunc K)[t]` and `toGBPolyG`
@@ -434,5 +491,107 @@ theorem associated_toGBPolyG_cclearDenomsCoreG (p : CPolyG (QFunNZG β)) :
   rw [toGBPolyG_cclearDenomsCoreG]
   exact (associated_unit_mul_left _ _
     (Polynomial.isUnit_C.mpr (amG_commonDenG_ne_zero p).isUnit))
+
+/-! ### The primitive PRS over the GCD-domain coefficient ring `R = β[s]`
+The kernel `cprimPRSgcdGenCore cgcdB fuel P Q` runs a primitive polynomial-remainder sequence over the
+coefficient ring `CPolyG β = β[s]`, stripping the content each step. Over the field `β(s) = Frac R`, each
+step preserves the gcd up to associates: the pseudo-remainder is a Euclidean step up to a β(s)-unit (the
+pseudo-division multiplier), and the content-strip `gbprimitivePartCore` divides out a β[s]-content that
+is a β(s)-unit. The content/multiplier nonvanishing and the content-strip-is-unit facts enter as explicit
+hypotheses (a `CPrimPRSGenRegular`-style bundle) — they hold on real PRS runs; this is the same gating as
+`ComputableGcdCorrect.associated_toPolyB_primPRSgcd` (gated on `PrimPRSRegular`). -/
+
+namespace GBPolyCore
+
+variable {β : Type*} [CField β] [CFieldSpec β]
+
+omit [CFieldSpec β] in
+/-- `gbpsremainderCore` **normalizes its divisor**: `gbpsremainderCore fuel p q = gbpsremainderCore fuel p
+(gbnormCore q)`. Mirror of `bpsremainder_bnorm_right`. -/
+theorem gbpsremainderCore_gbnormCore_right (fuel : ℕ) (p q : GBPolyCore β) :
+    gbpsremainderCore fuel p q = gbpsremainderCore fuel p (gbnormCore q) := by
+  cases fuel with
+  | zero => rfl
+  | succ fuel => simp only [gbpsremainderCore, gbnormCore_idem]
+
+/-- `toGBCoeffPoly [[CField.one]] = 1`: the `GBPolyCore` constant `1` (`[1] ∈ β[s]` as the single
+`t`-coefficient). -/
+@[simp] theorem toGBCoeffPoly_one : toGBCoeffPoly ([[CField.one]] : GBPolyCore β) = 1 := by
+  rw [toGBCoeffPoly_cons, toGBCoeffPoly_nil, mul_zero, add_zero,
+    show CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], map_one]
+
+/-- **Pseudo-division identity through `toGBCoeffPoly`** (any fuel): there is a multiplier `c ∈ β[s]`
+(a product of leading `t`-coefficients of `q`) and a quotient `s` with `C (toPolyG c) · toGBCoeffPoly p =
+toGBCoeffPoly s · toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q)` in `R[t]`. The computable
+pseudo-remainder realizes the honest `R[t]` pseudo-division relation `lc(q)ᵏ·p = s·q + prem` (the
+existential matches the non-field coefficient ring `R = β[s]`). The generic mirror of
+`ComputeCorrectness.toBPoly_bpsremainder`. -/
+theorem toGBCoeffPoly_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
+    ∃ (s : GBPolyCore β) (c : CPolyG β),
+      Polynomial.C (CPolyG.toPolyG c) * toGBCoeffPoly p
+        = toGBCoeffPoly s * toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q) := by
+  have hone : CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  induction fuel generalizing p with
+  | zero => exact ⟨[], [CField.one], by simp [gbpsremainderCore, toGBCoeffPoly_gbnormCore, hone]⟩
+  | succ fuel ih =>
+    simp only [gbpsremainderCore]
+    split_ifs with hq hlen
+    · exact ⟨[], [CField.one], by simp [toGBCoeffPoly_gbnormCore, hone]⟩
+    · exact ⟨[], [CField.one], by simp [toGBCoeffPoly_gbnormCore, hone]⟩
+    · obtain ⟨s', c', hsc⟩ := ih (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q)) (gbnormCore p))
+        (gbscaleCCore (gblcCore (gbnormCore p))
+          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+      have hp' : toGBCoeffPoly (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q)) (gbnormCore p))
+          (gbscaleCCore (gblcCore (gbnormCore p))
+            (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+          = Polynomial.C (CPolyG.toPolyG (gblcCore (gbnormCore q))) * toGBCoeffPoly p
+            - Polynomial.C (CPolyG.toPolyG (gblcCore (gbnormCore p)))
+              * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * toGBCoeffPoly q := by
+        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore,
+          toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore, toGBCoeffPoly_gbnormCore,
+          toGBCoeffPoly_gbnormCore]
+        ring
+      rw [hp', gbpsremainderCore_gbnormCore_right] at hsc
+      refine ⟨gbaddCore s' (gbscaleCCore (CPolyG.cmulG c' (gblcCore (gbnormCore p)))
+          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CField.one]])),
+          CPolyG.cmulG c' (gblcCore (gbnormCore q)), ?_⟩
+      rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
+        toGBCoeffPoly_one, CPolyG.toPolyG_cmulG, map_mul, CPolyG.toPolyG_cmulG, map_mul]
+      linear_combination hsc
+
+end GBPolyCore
+
+open GBPolyCore
+
+omit [CFieldDomain β] in
+/-- **`gbpsremainderCore` lifts to a β(s)[t] Euclidean relation**: there is a quotient `s` and a
+multiplier `c ∈ β[s]` with `C (amG (toPolyG c)) · toGBPolyG p = toGBPolyG s · toGBPolyG q +
+toGBPolyG (gbpsremainderCore fuel p q)` in `(RatFunc (CFieldSpec.K β))[X]` — the lift of
+`toGBCoeffPoly_gbpsremainderCore` through the field embedding `amG`. Generic mirror of
+`toPolyB_bpsremainder`. -/
+theorem toGBPolyG_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
+    ∃ (s : GBPolyCore β) (c : CPolyG β),
+      Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG c)) * toGBPolyG p
+        = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q) := by
+  obtain ⟨s, c, hsc⟩ := toGBCoeffPoly_gbpsremainderCore fuel p q
+  refine ⟨s, c, ?_⟩
+  have hl := congrArg (liftKG β) hsc
+  simp only [map_add, map_mul] at hl
+  rw [liftKG_C] at hl
+  simpa [toGBPolyG] using hl
+
+omit [CFieldDomain β] in
+/-- **`toGBPolyG` ignores normalization**: `toGBPolyG (gbnormCore p) = toGBPolyG p`. -/
+@[simp] theorem toGBPolyG_gbnormCore (p : GBPolyCore β) :
+    toGBPolyG (gbnormCore p) = toGBPolyG p := by
+  rw [toGBPolyG, toGBCoeffPoly_gbnormCore, ← toGBPolyG]
+
+omit [CFieldDomain β] in
+/-- `toGBPolyG p = 0 ↔ toGBCoeffPoly p = 0` (the lift is injective, `amG` injective on coefficients). -/
+theorem toGBPolyG_eq_zero_iff (p : GBPolyCore β) : toGBPolyG p = 0 ↔ toGBCoeffPoly p = 0 := by
+  rw [toGBPolyG, liftKG, ← Polynomial.map_zero (QFunNZG.amG β)]
+  exact Polynomial.map_injective (QFunNZG.amG β) (RatFunc.algebraMap_injective (CFieldSpec.K β)) |>.eq_iff
 
 end DeepWiki.SymbolicIntegration
