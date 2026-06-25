@@ -63,4 +63,33 @@ def cgcdMonicG (fuel : ℕ) (p q : CPolyG α) : CPolyG α :=
 
 end CPolyG
 
+/-! ### Generic `splitFactor` over the tower (§3.5)
+
+`cSplitFactorFastG` is the `[CField α] [CDiffField α]`-generic mirror of `cSplitFactorFast`: Bronstein's
+splitting-factorization loop with the generic monic gcd `cgcdMonicG` (for the two gcds `gcd(p, Dp)` and
+`gcd(p, dp/dt)`) and the generic exact division `cdivG`. `Dp = cmonomialDeriv Dt p` is the differential
+derivation (needs `[CDiffField α]`); `dp/dt = cderivG p` the formal `t`-derivative. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **Generic splitting-factorization loop** (Bronstein §3.5): `cSplitFactorFastG Dt fuel p =
+(pₙ, pₛ)`, the same recursion as `cSplitFactorFast` but on a generic `[CField α] [CDiffField α]`
+carrier with the generic monic gcd `cgcdMonicG` for the two gcds `gcd(p, Dp)` and `gcd(p, dp/dt)`. One
+step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)` (`Dp = cmonomialDeriv Dt p` the differential derivation,
+`dp/dt = cderivG p` the formal one); constant `S` ⇒ `p` is normal, else recurse on `p/S` and accumulate
+`S` into the special part. Fuel-bounded; runs at any tower level. -/
+def cSplitFactorFastG (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
+  | 0, p => (p, [CField.one])
+  | fuel + 1, p =>
+    let S := cdivG (fuel + 1) (cgcdMonicG (fuel + 1) p (cmonomialDeriv Dt p))
+      (cgcdMonicG (fuel + 1) p (cderivG p))
+    if cdegG S = 0 then (p, [CField.one])
+    else
+      let (qn, qs) := cSplitFactorFastG Dt fuel (cdivG (fuel + 1) p S)
+      (qn, cmulG S qs)
+
+end CPolyG
+
 end DeepWiki.SymbolicIntegration
