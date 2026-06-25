@@ -79,7 +79,7 @@ end CPolyG
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
 
 /-! ### The §5.9 normal-part integrator `∫ fₙ = logPart − ∫R`
 

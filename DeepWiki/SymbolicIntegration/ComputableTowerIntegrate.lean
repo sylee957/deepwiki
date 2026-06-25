@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
+import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
 `ComputableTowerField`/`ComputableTowerDeriv` built the generic fraction-field carrier `QFunNZG α`
@@ -14,13 +15,17 @@ derivation tower (`CDiffField (QFunNZG α)`, `towerDerivQFunNZG`). What was stil
 gcd `cgcdFF` (with its `BPoly = ℚ[x][t]` `clearDenoms` bridge).
 
 This file produces **generic copies** (suffix `G`) over `[CField α] [CFieldDomain α] [CDiffField α]`,
-replacing every `cgcdFF fuel p q` with `cgcdMonicG fuel p q := cmonicG (cgcdExtG fuel p q).1` — the
-already-generic Euclidean gcd (validated at tower level 2 in `ComputableTowerField`). We accept the
-ℚ(x)-coefficient swell of the Euclidean kernel: it is a separate optimization, and the small
-level-2 validations stay in budget.
+replacing every `cgcdFF fuel p q` with the **flat** generic fraction-free gcd
+`CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) — the recursive primitive-PRS gcd that
+stays polynomial-sized over the tower (it AGREES with `cgcdFF` and the swelling Euclidean `cgcdMonicG`,
+both being the unique monic gcd, but computes it without the fraction-field coefficient swell that made
+`cIntegrateG`-at-`QFunNZ` take ~86 s). Every pipeline def that calls a `t`-gcd therefore carries the
+`[CFracGcdCore α]` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
++ recursive `CFracGcdCore (QFunNZG β)`).
 
-* **`cgcdMonicG`** — the monic gcd via the generic extended Euclidean `cgcdExtG`, the generic
-  drop-in for `cgcdFF`.
+* **`cgcdMonicG`** — the (super-exponentially swelling) monic gcd via the generic extended Euclidean
+  `cgcdExtG`, kept for the `ComputableTowerReduce` correctness layer; the pipeline now calls the flat
+  `CFracGcdCore.cgcdFFCore` instead.
 * **`cSplitFactorFastG`** (§3.5 special/normal split `p = pₙ·pₛ` via the derivation `D` + gcd).
 * **`cSqfreeYunFFG`** (Yun squarefree factorization in `t`, the formal `dp/dt`) — what the Hermite
   reduction factors the denominator with.
@@ -72,19 +77,19 @@ derivation (needs `[CDiffField α]`); `dp/dt = cderivG p` the formal `t`-derivat
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 /-- **Generic splitting-factorization loop** (Bronstein §3.5): `cSplitFactorFastG Dt fuel p =
 (pₙ, pₛ)`, the same recursion as `cSplitFactorFast` but on a generic `[CField α] [CDiffField α]`
-carrier with the generic monic gcd `cgcdMonicG` for the two gcds `gcd(p, Dp)` and `gcd(p, dp/dt)`. One
-step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)` (`Dp = cmonomialDeriv Dt p` the differential derivation,
-`dp/dt = cderivG p` the formal one); constant `S` ⇒ `p` is normal, else recurse on `p/S` and accumulate
-`S` into the special part. Fuel-bounded; runs at any tower level. -/
+carrier with the flat fraction-free gcd `CFracGcdCore.cgcdFFCore` for the two gcds `gcd(p, Dp)` and
+`gcd(p, dp/dt)`. One step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)` (`Dp = cmonomialDeriv Dt p` the
+differential derivation, `dp/dt = cderivG p` the formal one); constant `S` ⇒ `p` is normal, else recurse
+on `p/S` and accumulate `S` into the special part. Fuel-bounded; runs at any tower level. -/
 def cSplitFactorFastG (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
   | 0, p => (p, [CField.one])
   | fuel + 1, p =>
-    let S := cdivG (fuel + 1) (cgcdMonicG (fuel + 1) p (cmonomialDeriv Dt p))
-      (cgcdMonicG (fuel + 1) p (cderivG p))
+    let S := cdivG (fuel + 1) (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+      (CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p))
     if cdegG S = 0 then (p, [CField.one])
     else
       let (qn, qs) := cSplitFactorFastG Dt fuel (cdivG (fuel + 1) p S)
@@ -102,28 +107,29 @@ the denominator with. It needs only `[CField α]` (the formal derivative `cderiv
 
 namespace CPolyG
 
-variable {α : Type*} [CField α]
+variable {α : Type*} [CField α] [CFracGcdCore α]
 
-/-- Yun's main loop (generic): from `(b, d, i)` emit `pᵢ = cgcdMonicG b d` (monic), recurse on
-`bᵢ₊₁ = b/pᵢ`, `dᵢ₊₁ = d/pᵢ − bᵢ₊₁'` (the formal `'`). Stops when `b` is constant. The generic mirror
-of `cSqfreeYunFFgo` with `cgcdMonicG` for `cgcdFF`. -/
+/-- Yun's main loop (generic): from `(b, d, i)` emit `pᵢ = CFracGcdCore.cgcdFFCore b d` (monic), recurse
+on `bᵢ₊₁ = b/pᵢ`, `dᵢ₊₁ = d/pᵢ − bᵢ₊₁'` (the formal `'`). Stops when `b` is constant. The generic mirror
+of `cSqfreeYunFFgo` with the flat fraction-free gcd `CFracGcdCore.cgcdFFCore` for `cgcdFF`. -/
 def cSqfreeYunFFGgo (fuel : ℕ) : ℕ → CPolyG α → CPolyG α → List (CPolyG α)
   | 0, _, _ => []
   | fo + 1, b, d =>
     if cdegG b = 0 then []
     else
-      let p := cmonicG (cgcdMonicG fuel b d)
+      let p := cmonicG (CFracGcdCore.cgcdFFCore fuel b d)
       let b' := cdivG fuel b p
       let d' := csubG (cdivG fuel d p) (cderivG b')
       p :: cSqfreeYunFFGgo fuel fo b' d'
 
 /-- **Generic Yun squarefree factorization in `t`** `cSqfreeYunFFG fuel p = [p₁, …, pₘ]`: the
-purely-algebraic squarefree factorization in `t` (the formal derivative `dp/dt = cderivG`), with the
-generic monic gcd `cgcdMonicG` for `cgcdFF`. With `g = cgcdMonicG p (cderivG p)`, `b₁ = p/g`,
-`d₁ = p'/g − b₁'`, the recurrence `pᵢ = cgcdMonicG bᵢ dᵢ` peels the monic squarefree part of
-multiplicity `i`. `p` is associate to `∏ᵢ pᵢ^i`. `[CField α]`-generic — runs at any tower level. -/
+purely-algebraic squarefree factorization in `t` (the formal derivative `dp/dt = cderivG`), with the flat
+fraction-free gcd `CFracGcdCore.cgcdFFCore` for `cgcdFF`. With `g = CFracGcdCore.cgcdFFCore p (cderivG p)`,
+`b₁ = p/g`, `d₁ = p'/g − b₁'`, the recurrence `pᵢ = CFracGcdCore.cgcdFFCore bᵢ dᵢ` peels the monic
+squarefree part of multiplicity `i`. `p` is associate to `∏ᵢ pᵢ^i`.
+`[CField α] [CFracGcdCore α]`-generic — runs at any tower level. -/
 def cSqfreeYunFFG (fuel : ℕ) (p : CPolyG α) : List (CPolyG α) :=
-  let g := cgcdMonicG fuel p (cderivG p)
+  let g := CFracGcdCore.cgcdFFCore fuel p (cderivG p)
   let b1 := cdivG fuel p g
   let d1 := csubG (cdivG fuel (cderivG p) g) (cderivG b1)
   cSqfreeYunFFGgo fuel fuel b1 d1
@@ -140,14 +146,14 @@ remainder reuses the **already-generic** `cbezoutOne`/`cextendedEuclideanSplit` 
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 /-- **Generic `CanonicalRepresentation`** (Bronstein §3.5, p.103) over the tower:
 `canonicalRepresentationFastG Dt fuel (a, d) = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d`
 (`d` monic). Steps: divide `a = q·d + r` (`cdivmodG`); split the denominator `d = dₛ·dₙ`
 (`cSplitFactorFastG`, generic); Bézout-split `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplit`
 with `cbezoutOne`, the already-generic helpers). The reduced part is `b/dₛ`, the simple part `c/dₙ`.
-`[CField α] [CDiffField α]`-generic — runs at any tower level. -/
+`[CField α] [CDiffField α] [CFracGcdCore α]`-generic — runs at any tower level. -/
 def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
     CPolyG α × (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
   let (q, r) := cdivmodG fuel a d
@@ -355,7 +361,7 @@ end CPolyG
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 /-! ### The generic residue resultant `R(z) = res_t(d, a − z·Dd)` and the log argument
 
@@ -387,7 +393,7 @@ def cResidueResultantTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) : CP
 `a − c·Dd`. Together with the residues `c` (roots of `cResidueResultantTowerG`),
 `∑_c c·log(cLogArgTowerG … c)` is the logarithmic part of `∫ a/d`. -/
 def cLogArgTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (c : α) : CPolyG α :=
-  cgcdMonicG fuel d (cAmcDdG Dt a d c)
+  CFracGcdCore.cgcdFFCore fuel d (cAmcDdG Dt a d c)
 
 /-! ### The generic rational-residue scan and logarithmic part
 
@@ -431,7 +437,7 @@ structure IntegralResultG (α : Type*) [CField α] where
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 /-- **The generic antiderivative identity, cleared of denominators** `checkIdentityG Dt res anum aden`:
 `true` iff `res` is a genuine antiderivative of `f = anum/aden`, i.e. `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` for

@@ -352,7 +352,7 @@ the integral). -/
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CRischField α] [CFieldDomain α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α] [CFieldDomain α]
 
 /-- **The §5.9 hyperexponential normal-part integrator with residual reduction**
 `cIntegrateHyperexpNormalReducedG Dt fuel a d cands`: identical to `cIntegrateHyperexpNormalG` but applies

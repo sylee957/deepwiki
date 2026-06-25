@@ -49,7 +49,7 @@ the base RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` over `α`, solved by `CRischField.cr
 is `cnatCastG |j| · η` with the sign of `j` (so `j = 0` gives coefficient `0` — the pure base integration
 `Dq₀ = a₀`). -/
 
-variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
 
 /-- **The signed scalar `j·η ∈ α`** `cLaurentShiftG η j`: lift the (signed) Laurent index `j : ℤ` to `α`
 via `cnatCastG |j|`, negate for `j < 0`, and multiply by `η`. The base-RDE coefficient of the §5.10

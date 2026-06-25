@@ -251,8 +251,8 @@ witness, and `d ≠ 0` with enough fuel, the three pieces recombine to `f = a/d`
 `toPolyG_cextendedEuclideanSplit`, `canonicalRepFast_field_identity`) is already generic. **The probe
 result**: high-level reconstruction proofs transport mechanically once the split-factor correctness is
 generified. -/
-theorem canonicalRepresentationFastG_reconstructs [CField α] [CDiffField α] [CFieldSpec α]
-    (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
+theorem canonicalRepresentationFastG_reconstructs [CField α] [CDiffField α] [CFracGcdCore α]
+    [CFieldSpec α] (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
     (hd : toPolyG d ≠ 0)
     (hsplit_eq : toPolyG (cSplitFactorFastG Dt fuel d).2 ≠ 0 →
       toPolyG (cSplitFactorFastG Dt fuel d).1 ≠ 0 →

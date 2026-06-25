@@ -18,8 +18,8 @@ The clean encoding is a **typeclass-carried base solve**:
 * **`instance : CRischField ℚ`** — the constant-field base (`D = 0`): `b·y = g`, so `y = g/b` (`b ≠ 0`),
   `b = 0` needs `g = 0`.
 * **`cRischDEG`** — the generic §6 pipeline over `CPolyG α = α[t]`, the mechanical generalization of
-  `cRischDE` (`QFunNZ → α`, `cgcdFF → cgcdMonicG`, base solve → `CRischField.crischDESolve`): weak
-  normalization + normal/special denominator + degree bound + SPDE + the §6.5/§6.6 PolyRischDE dispatch.
+  `cRischDE` (`QFunNZ → α`, `cgcdFF → CFracGcdCore.cgcdFFCore`, base solve → `CRischField.crischDESolve`):
+  weak normalization + normal/special denominator + degree bound + SPDE + the §6.5/§6.6 PolyRischDE dispatch.
   It reduces an RDE over `α[t]` to RDEs over `α` via `crischDESolve`.
 * **`instance : CRischField (QFunNZG β)`** — the RDE over `β(s) = QFunNZG β`, **built by running
   `cRischDEG` over `CPolyG β = β[s]`** with the new monomial `s` (`Ds = [1]`) and `[CRischField β]` for
@@ -98,13 +98,14 @@ end CPolyG
 
 /-! ### The generic §6.1 weak normalizer over the tower
 
-`cWeakNormalizerG` mirrors `cWeakNormalizer` (`QFunNZ → α`, `cgcdFF → cgcdMonicG`, `cdivFF → cdivG`,
+`cWeakNormalizerG` mirrors `cWeakNormalizer` (`QFunNZ → α`, `cgcdFF → CFracGcdCore.cgcdFFCore`,
+`cdivFF → cdivG`,
 `ofConstNZ (n : ℚ) → cnatCastG n`, `cResidueResultantTower → cResidueResultantTowerG`). Everything else
 is the already-generic engine. -/
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 /-- **Generic weak normalizer** `cWeakNormalizerG Dt fuel fnum fden = q ∈ α[t]` (Bronstein §6.1, book
 p.183) with `f − Dq/q` weakly normalized for `f = fnum/fden`, the `[CField α] [CDiffField α]`-generic
@@ -117,21 +118,22 @@ no positive integer roots and the result is `q = 1`. -/
 def cWeakNormalizerG (Dt : CPolyG α) (fuel : ℕ) (fnum fden : CPolyG α)
     (boundRoots : ℕ := 16) : CPolyG α :=
   let dn := (cSplitFactorFastG Dt fuel fden).1
-  let g := cgcdMonicG fuel dn (cderivG dn)
+  let g := CFracGcdCore.cgcdFFCore fuel dn (cderivG dn)
   let dstar := cdivG fuel dn g
-  let d1 := cdivG fuel dstar (cgcdMonicG fuel dstar g)
+  let d1 := cdivG fuel dstar (CFracGcdCore.cgcdFFCore fuel dstar g)
   let fdenOverD1 := cdivG fuel fden d1
   let a := (cdiophantineG fuel fdenOverD1 d1 fnum).1
   let Dd1 := cmonomialDeriv Dt d1
   let r := cResidueResultantTowerG Dt fuel a d1
   let roots := cPosIntRootsG r boundRoots
   roots.foldl (fun (acc : CPolyG α) (n : ℕ) =>
-    let gi := cgcdMonicG fuel (csubG a (cscaleG (cnatCastG n) Dd1)) d1
+    let gi := CFracGcdCore.cgcdFFCore fuel (csubG a (cscaleG (cnatCastG n) Dd1)) d1
     cmulG acc (cpowG gi n)) [CField.one]
 
 /-! ### The generic §6.2 normal-denominator reduction over the tower
 
-`cRdeNormalDenominatorG` mirrors `cRdeNormalDenominator` (the same `QFunNZ → α`, `cgcdFF → cgcdMonicG`,
+`cRdeNormalDenominatorG` mirrors `cRdeNormalDenominator` (the same `QFunNZ → α`,
+`cgcdFF → CFracGcdCore.cgcdFFCore`,
 `cdivFF → cdivG` substitutions). Returns `none` ("no solution") or the reduction quadruplet
 `(a, b, c, h)` reducing `Dy + fy = g` to `a·Dq + b·q = c` with `q = y·h`. -/
 
@@ -147,8 +149,8 @@ def cRdeNormalDenominatorG (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : 
     Option (CPolyG α × CPolyG α × CPolyG α × CPolyG α) :=
   let dn := (cSplitFactorFastG Dt fuel fden).1
   let en := (cSplitFactorFastG Dt fuel gden).1
-  let p := cgcdMonicG fuel dn en
-  let h := cdivG fuel (cgcdMonicG fuel en (cderivG en)) (cgcdMonicG fuel p (cderivG p))
+  let p := CFracGcdCore.cgcdFFCore fuel dn en
+  let h := cdivG fuel (CFracGcdCore.cgcdFFCore fuel en (cderivG en)) (CFracGcdCore.cgcdFFCore fuel p (cderivG p))
   let dnh2 := cmulG (cmulG dn h) h
   if cdvdG fuel en dnh2 then
     let a := cmulG dn h
@@ -188,7 +190,7 @@ end CPolyG
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 /-- **Generic special-denominator reduction** `cRdeSpecialDenominatorG Dt fuel a b c` (Bronstein §6.2,
 book p.190/192), the `[CField α] [CDiffField α]`-generic mirror of `cRdeSpecialDenominator`. Given
@@ -248,7 +250,8 @@ def cRdeBoundDegreeG (Dt : CPolyG α) (_fuel : ℕ) (a b c : CPolyG α) : ℕ :=
 
 /-! ### The generic §6.4 SPDE over the tower
 
-`cSPDEG` mirrors `cSPDE` (Rothstein's `gcd(a,b)`-peel). `cgcdFF → cgcdMonicG`, `cdivFF → cdivG`,
+`cSPDEG` mirrors `cSPDE` (Rothstein's `gcd(a,b)`-peel). `cgcdFF → CFracGcdCore.cgcdFFCore`,
+`cdivFF → cdivG`,
 `cmonomialDeriv` already generic. -/
 
 /-- **Generic SPDE** `cSPDEG Dt fuel a b c n` (Bronstein §6.4, Rothstein's box, book p.203), the generic
@@ -263,7 +266,7 @@ def cSPDEG (Dt : CPolyG α) : ℕ → (a b c : CPolyG α) → (n : ℤ) →
     if n < 0 then
       if cisZeroG c then some ([], [], 0, [], []) else none
     else
-      let g := cgcdMonicG fuel a b
+      let g := CFracGcdCore.cgcdFFCore fuel a b
       if cdvdG fuel g c then
         let a := cdivG fuel a g
         let b := cdivG fuel b g
@@ -322,7 +325,7 @@ logarithmic-derivative branch (the `b = Dz/z` optimization) is the documented co
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
 
 /-- **Generic Poly-Risch-DE, primitive cancellation case** `cPolyRischDECancelPrimG Dt fuel b c n`
 (Bronstein §6.6, book p.212), the `[CRischField α]`-generic mirror of `cPolyRischDECancelPrim`. Given the
@@ -495,7 +498,7 @@ supplies the `CField`/`CDiffField (QFunNZG β)` instances, `CRischField β` the 
 requires `CRischField β`, strictly one level down. -/
 
 section
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CRischField β]
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CRischField β]
 
 /-- **The fixed fuel budget** for the recursive tower RDE solve (the class method carries no fuel
 argument). Generous enough for the small-degree level-2 validations; deeper/larger problems take a larger
@@ -604,7 +607,7 @@ hyperexp/hypertangent special part is the documented continuation). This uses th
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
 
 /-- **The full poly/special tower integral** `cIntegrateGFull Dt fuel a d cands` (Bronstein Ch. 5,
 extending the reduced `cIntegrateG` with the polynomial part). Integrate `f = a/d ∈ α(t)` over
