@@ -594,4 +594,95 @@ example :
         CPolyG.cdegG (CPolyG.cHermiteReduceTower CPolyG.hermiteWfExampleDt 16
           CPolyG.hermiteWfExampleA CPolyG.hermiteWfExampleD).2.2) := by native_decide
 
+/-! ### Conditional bridge of `cHermiteReduceTowerWf` to the fuel'd `cHermiteReduceTower`, and transport
+
+The fuel-free Hermite reduction differs from the fuel'd one only in the threaded leaves; the `Dstar`/`g`
+folds run over the *same* factor list once `cSqfreeYunFFWf d = cSqfreeYunFF fuel d` (the squarefree
+agreement — valid for all-multiplicities-present `d`, see the caveat). Each `g`-fold step's per-factor
+inner-loop call `cHermiteReduceTowerInnerWf Dt vi u (i−1) a init` depends only on `(vi, i)` (the global
+numerator `a`, **not** the accumulator `gAcc`), so the two fold step functions agree element-by-element
+once each per-factor `cdivWf = cdivG fuel` (the `u = d/vⁱ` quotient) and `cHermiteReduceTowerInnerWf =
+cHermiteReduceTowerInner` (`CHermiteInnerRegular`) hold. Bundling those per-factor agreements as a single
+hypothesis `hstep` (one equation of the fold step functions on the shared list) collapses the folds; the
+residual `cdivWf = cdivG fuel` then matches. The transport of `cHermiteReduceTower_cleared_identity` follows
+by rewriting through the bridge equation. -/
+
+namespace CPolyG
+
+/-- **Bridge — `cHermiteReduceTowerWf` equals `cHermiteReduceTower` from a fold-step agreement.** Given the
+squarefree agreement `cSqfreeYunFFWf d = cSqfreeYunFF fuel d` (`hsqfree`), the equality of the two `g`-fold
+step functions on the shared factor list (`hstep` — the per-factor `cdivWf`/inner-loop agreements packaged
+as one function equation; each holds under the WF-leaf bounds and `CHermiteInnerRegular`), and the residual
+exact-division agreement `cdivWf (resNum·Dstar) resDen = cdivG fuel (resNum·Dstar) resDen` (`hres`, the
+length bound), `cHermiteReduceTowerWf Dt a d = cHermiteReduceTower Dt fuel a d`. The fuel bounds live only in
+the hypotheses; `cHermiteReduceTowerWf` carries none. (The hypotheses `hstep`/`hres` are exactly what the
+`native_decide` evidence validates concretely; proving them unconditionally needs a correct fuel-free Yun in
+`ComputableWellFounded4`, which this file may not edit — see the caveat.) -/
+theorem cHermiteReduceTowerWf_eq_of_steps (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (hsqfree : cSqfreeYunFFWf d = CPolyG.cSqfreeYunFF fuel d)
+    (hstep : (fun (gAcc : CPolyG QFunNZ × CPolyG QFunNZ) (p : CPolyG QFunNZ × ℕ) =>
+        let i := p.2 + 1
+        if i ≤ 1 then gAcc
+        else
+          let u := cdivWf d (cpowG p.1 i)
+          let gloc := (cHermiteReduceTowerInnerWf Dt p.1 u (i - 1) a ([CField.zero], [CField.one])).1
+          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+      = (fun (gAcc : CPolyG QFunNZ × CPolyG QFunNZ) (p : CPolyG QFunNZ × ℕ) =>
+        let i := p.2 + 1
+        if i ≤ 1 then gAcc
+        else
+          let u := CPolyG.cdivG fuel d (cpowG p.1 i)
+          let gloc := (cHermiteReduceTowerInner Dt fuel p.1 u (i - 1) a ([CField.zero], [CField.one])).1
+          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)))
+    (hres : ∀ (g : CPolyG QFunNZ × CPolyG QFunNZ),
+      cdivWf (cmulG (csubG (cmulG a (cmulG g.2 g.2))
+          (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
+          ((CPolyG.cSqfreeYunFF fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one]))
+          (cmulG d (cmulG g.2 g.2))
+        = CPolyG.cdivG fuel (cmulG (csubG (cmulG a (cmulG g.2 g.2))
+          (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
+          ((CPolyG.cSqfreeYunFF fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one]))
+          (cmulG d (cmulG g.2 g.2))) :
+    cHermiteReduceTowerWf Dt a d = CPolyG.cHermiteReduceTower Dt fuel a d := by
+  rw [cHermiteReduceTowerWf, CPolyG.cHermiteReduceTower]
+  -- the squarefree factor lists agree, so `factors` and `Dstar` and the `g`-fold input coincide
+  simp only [hsqfree, hstep]
+  -- the `g` accumulator now matches; the residual exact division is bridged by `hres`
+  rw [hres]
+
+end CPolyG
+
+open RatFunc in
+/-- **`cHermiteReduceTowerWf` satisfies the cleared Hermite identity** (transported, fuel-free), under the
+bridge agreements (`cHermiteReduceTowerWf_eq_of_steps`) and the same exact-division certificate the fuel'd
+`cHermiteReduceTower_cleared_identity` carries. Write `((gnum, gden), (hNum, Dstar)) =
+cHermiteReduceTowerWf Dt a d`, `D = cmonomialDeriv Dt`, `gprimeNum = D(gnum)·gden − gnum·D(gden)`. The
+cleared identity `(gprimeNum·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` holds in `(RatFunc ℚ)[X]` — the
+fuel-free companion of `cHermiteReduceTower_cleared_identity`, transported through the bridge. -/
+theorem cHermiteReduceTowerWf_cleared_identity (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d : CPolyG QFunNZ)
+    (hbridge : CPolyG.cHermiteReduceTowerWf Dt a d = CPolyG.cHermiteReduceTower Dt fuel a d)
+    (gnumR gdenR DstarR gprimeNum resNum resDen hNumR : CPolyG QFunNZ)
+    (hgnum : gnumR = (CPolyG.cHermiteReduceTowerWf Dt a d).1.1)
+    (hgden : gdenR = (CPolyG.cHermiteReduceTowerWf Dt a d).1.2)
+    (hDstar : DstarR = (CPolyG.cHermiteReduceTowerWf Dt a d).2.2)
+    (hgprime : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumR) gdenR) (cmulG gnumR (cmonomialDeriv Dt gdenR)))
+    (hresNum : resNum = csubG (cmulG a (cmulG gdenR gdenR)) (cmulG d gprimeNum))
+    (hresDen : resDen = cmulG d (cmulG gdenR gdenR))
+    (hhNum : hNumR = CPolyG.cdivG fuel (cmulG resNum DstarR) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuel : (cnormG (cmulG resNum DstarR) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum DstarR)) :
+    ((toPolyG (cmonomialDeriv Dt gnumR) * toPolyG gdenR
+        - toPolyG gnumR * toPolyG (cmonomialDeriv Dt gdenR)) * toPolyG DstarR
+        + toPolyG hNumR * (toPolyG gdenR * toPolyG gdenR)) * toPolyG d
+      = toPolyG a * ((toPolyG gdenR * toPolyG gdenR) * toPolyG DstarR) := by
+  -- carry the output identifications through the bridge to the fuel'd reduction, then transport
+  rw [hbridge] at hgnum hgden hDstar
+  exact cHermiteReduceTower_cleared_identity Dt fuel a d gnumR gdenR DstarR gprimeNum resNum resDen
+    hNumR hgnum hgden hDstar hgprime hresNum hresDen hhNum hq0 hfuel hdvd
+
+-- The fuel-free transcendental Hermite cleared identity carries only the standard axioms.
+#print axioms cHermiteReduceTowerWf_cleared_identity
+
 end DeepWiki.SymbolicIntegration
