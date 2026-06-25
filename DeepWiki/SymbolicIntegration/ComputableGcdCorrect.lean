@@ -850,6 +850,45 @@ theorem bstep_length_lt (p q : BPoly) (hp : ¬ bisZero p = true) (hq : ¬ bisZer
     rw [length_bnorm_of_ne _ hne, length_bnorm_of_ne p hp]
     omega
 
+/-- **The pseudo-remainder degree bound** (the run-termination measure): with enough fuel and a nonzero
+divisor, `bpsremainder fuel p q` has strictly smaller normalized `t`-length than `q` — `deg prem < deg q`.
+The `BPoly` analogue of `cmod_length_lt`, by induction on fuel using `bstep_length_lt` for the recursive
+(degree-drop) case; the divisor-zero branch is excluded by `hq`. -/
+theorem bpsremainder_length_lt (fuel : ℕ) (p q : BPoly) (hq : ¬ bisZero q = true)
+    (hfuel : (bnorm p).length ≤ fuel) :
+    (bnorm (bpsremainder fuel p q)).length < (bnorm q).length := by
+  induction fuel generalizing p with
+  | zero =>
+    have hp0 : bnorm p = [] := List.length_eq_zero_iff.mp (by omega)
+    have h2 : bnorm (bpsremainder 0 p q) = bnorm p := by rw [show bpsremainder 0 p q = bnorm p from rfl, bnorm_idem]
+    rw [h2, hp0, List.length_nil]
+    have hqne : bnorm q ≠ [] := fun hb => hq (by rw [bisZero, beq_iff_eq, hb])
+    exact List.length_pos_iff.mpr hqne
+  | succ fuel ih =>
+    have hqz : bisZero (bnorm q) = false := by rw [bisZero_bnorm]; simpa [bisZero] using hq
+    by_cases hlen : (bnorm p).length < (bnorm q).length
+    · have h2 : bpsremainder (fuel + 1) p q = bnorm p := by
+        rw [bpsremainder]
+        simp only [hqz, Bool.false_eq_true, if_false, if_pos hlen]
+      rw [h2, bnorm_idem]; exact hlen
+    · have hp : ¬ bisZero p = true := by
+        intro hpz
+        have hpnil : bnorm p = [] := by rw [bisZero, beq_iff_eq] at hpz; exact hpz
+        rw [hpnil, List.length_nil] at hlen
+        exact hlen (List.length_pos_iff.mpr (fun hb => hq (by rw [bisZero, beq_iff_eq, hb])))
+      have hstep := bstep_length_lt p q hp hq (by omega)
+      have key : bpsremainder (fuel + 1) p q
+          = bpsremainder fuel (bnorm (bsub (bscaleC (blc (bnorm q)) (bnorm p))
+              (bscaleC (blc (bnorm p))
+                (bshift ((bnorm p).length - (bnorm q).length) (bnorm q))))) q := by
+        conv_lhs => rw [bpsremainder]
+        simp only [hqz, Bool.false_eq_true, if_false, if_neg hlen]
+        rw [← bpsremainder_bnorm_right]
+      rw [key]
+      apply ih
+      rw [bnorm_idem]
+      omega
+
 /-- **Per-run input regularity** `PrimPRSInputs fuel P Q`: the recursive bundle of genuine algorithmic
 preconditions of the primitive PRS — the run terminates within `fuel` (clause (i)), and at the terminal
 and every non-terminal node the content is regular (`ContentRegularNode`, discharging clause (iii)) — with
