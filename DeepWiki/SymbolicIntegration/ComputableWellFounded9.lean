@@ -276,4 +276,88 @@ theorem parallelIntegrateWf_failure_example :
 
 #print axioms parallelIntegrateWf_mixed_example
 
+/-! ### The fuel-free `Compute`-layer leaves — `qnormWf`, `cLcmQWf`
+
+The §9 structure decisions and §7 `cParamLogDeriv` thread fuel through the `Compute.*` rational-function
+layer (`Compute.qnorm`/`Compute.cdiv`/`Compute.cgcdExt`, over `CPoly = CPolyG ℚ`), which has no
+pre-existing fuel-free leaf. We build the two leaves they need on top of the **generic** fuel-free
+`cgcdWf`/`cdivWf` (which work at `α = ℚ`, `[CFieldSpec ℚ]`), bridging to the fuel'd `Compute` ops through the
+existing generic↔Compute agreements `cgcdExtG_eq_cgcdExt`/`cdivG_eq_cdiv` (`ComputableFieldGcd`) composed
+with the WF-leaf fuel bridges `cgcdWf_eq_of_fuel`/`cdivmodWf_eq_of_fuel`. The polynomial lcm `cLcmQ`
+threads only the **generic** `cdivG`/`cgcdExtG`, so its companion sits directly on the generic leaves. -/
+
+namespace Compute
+
+/-- **Fuel-free lowest-terms reduction** `qnormWf x = (a/q, b/q)` scaled to a monic denominator, the
+fuel-free companion of `Compute.qnorm`. Identical to `qnorm` — divide numerator and denominator by their
+gcd `q = (cgcdWf a b).1`, then scale both by `(lead of b/q)⁻¹` — but with the **generic fuel-free**
+extended-Euclid gcd `cgcdWf` and division `cdivWf` (over `CPolyG ℚ = CPoly`) replacing `Compute.cgcdExt
+fuel`/`Compute.cdiv fuel`. The zero fraction stays `qzero`. **No fuel at runtime**. -/
+def qnormWf (x : QFun) : QFun :=
+  let (a, b) := x
+  if cisZero a then qzero
+  else
+    let q := (CPolyG.cgcdWf a b).1
+    let a' := CPolyG.cdivWf a q
+    let b' := CPolyG.cdivWf b q
+    let s := (clead b')⁻¹
+    (cscale s a', cscale s b')
+
+/-- **Bridge — `qnormWf` equals `Compute.qnorm` at any sufficient fuel.** For
+`(cnormG a).length ≤ fuel` and `(cnormG b).length < fuel` (the `cgcdWf_eq_of_fuel` margin; the divisions
+inherit `a, b ≤ fuel`), `qnormWf x = Compute.qnorm fuel x`. The gcd agrees by `cgcdWf_eq_of_fuel` then
+`cgcdExtG_eq_cgcdExt`; the two divisions by `cdivWf = cdivG fuel = cdiv fuel`
+(`cdivmodWf_eq_of_fuel`/`cdivG_eq_cdiv`). The fuel bounds live only here; `qnormWf` carries none. -/
+theorem qnormWf_eq_of_fuel (fuel : ℕ) (x : QFun)
+    (ha : (CPolyG.cnormG x.1 : List ℚ).length ≤ fuel)
+    (hb : (CPolyG.cnormG x.2 : List ℚ).length < fuel) :
+    qnormWf x = Compute.qnorm fuel x := by
+  obtain ⟨a, b⟩ := x
+  rw [qnormWf, Compute.qnorm]
+  by_cases hca : cisZero a = true
+  · simp only [hca, if_true]
+  · simp only [hca, Bool.false_eq_true, if_false]
+    -- the gcd agrees: `cgcdWf a b = cgcdExtG fuel a b = cgcdExt fuel a b`
+    have hgcd : (CPolyG.cgcdWf a b).1 = (Compute.cgcdExt fuel a b).1 := by
+      rw [CPolyG.cgcdWf_eq_of_fuel fuel a b ha hb, ← CPolyG.cgcdExtG_eq_cgcdExt fuel]
+    -- the two divisions agree at fuel: `cdivWf p q = cdiv fuel p q`
+    have hdiv : ∀ p : CPolyG ℚ, (CPolyG.cnormG p : List ℚ).length ≤ fuel →
+        CPolyG.cdivWf p ((Compute.cgcdExt fuel a b).1)
+          = Compute.cdiv fuel p ((Compute.cgcdExt fuel a b).1) := by
+      intro p hp
+      rw [CPolyG.cdivWf, CPolyG.cdivmodWf_eq_of_fuel fuel p _ hp, Compute.cdiv,
+        CPolyG.cdivmodG_eq_cdivmod fuel]
+    rw [hgcd, hdiv a ha, hdiv b (le_of_lt hb)]
+
+end Compute
+
+namespace CPolyG
+
+/-- **Fuel-free polynomial lcm over ℚ** `cLcmQWf p q = p·q / gcd(p, q)` (monic): the fuel-free companion
+of `cLcmQ`, with the **generic fuel-free** extended-Euclid gcd `cgcdWf` and division `cdivWf` replacing
+`cgcdExtG fuel`/`cdivG fuel`. **No fuel at runtime**. -/
+def cLcmQWf (p q : CPolyG ℚ) : CPolyG ℚ :=
+  if cisZeroG p ∨ cisZeroG q then []
+  else cmonicG (cdivWf (cmulG p q) (cgcdWf p q).1)
+
+/-- **Bridge — `cLcmQWf` equals `cLcmQ` at any sufficient fuel.** For `(cnormG (p·q)).length ≤ fuel`,
+`(cnormG p).length ≤ fuel` and `(cnormG q).length < fuel` (the `cgcdWf_eq_of_fuel`/`cdivmodWf_eq_of_fuel`
+margins), `cLcmQWf p q = cLcmQ fuel p q`: the gcd agrees (`cgcdWf_eq_of_fuel`) and the division agrees
+(`cdivWf = cdivG fuel`). The fuel bounds live only here; `cLcmQWf` carries none. -/
+theorem cLcmQWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG ℚ)
+    (hpq : (cnormG (cmulG p q) : List ℚ).length ≤ fuel)
+    (hp : (cnormG p : List ℚ).length ≤ fuel) (hq : (cnormG q : List ℚ).length < fuel) :
+    cLcmQWf p q = cLcmQ fuel p q := by
+  rw [cLcmQWf, cLcmQ]
+  by_cases h : cisZeroG p ∨ cisZeroG q
+  · simp only [h, if_true]
+  · simp only [h, if_false]
+    rw [cgcdWf_eq_of_fuel fuel p q hp hq, cdivWf, cdivmodWf_eq_of_fuel fuel _ _ hpq, cdivG]
+
+end CPolyG
+
+-- The fuel-free `Compute`-layer + lcm leaf bridges carry only the standard axioms.
+#print axioms Compute.qnormWf_eq_of_fuel
+#print axioms CPolyG.cLcmQWf_eq_of_fuel
+
 end DeepWiki.SymbolicIntegration
