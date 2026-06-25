@@ -303,4 +303,81 @@ theorem nSpecNorm_full_lands :
 
 #print axioms nSpecNorm_full_lands
 
+/-! ### ★★ A genuinely NON-CONSTANT base residual: `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²` (`native_decide`)
+
+The headline residual `R = 1` is a `k`-constant. Here the §5.9 feedback handles a genuinely **non-constant**
+base residual. Take `t = exp(x²)`, so `Dt = η·t` with `η = 2x` (non-constant in `x`), over `ℚ(x)[t]`, and
+`fₙ = 2x/(t−1)`. The §5.6 residue is `A(1)/(δd)(1) = 2x/(η·1) = 2x/(2x) = 1` — a genuine δ-constant residue
+(the `η` in the numerator cancels the `η` from `δd = D(t−1) = η·t`, so the residue is the *constant* `1`,
+valid for the Rothstein–Trager criterion). The log part `1·log(t−1)` overshoots by `R = η·∑res = 2x·1 =
+2x`, a **non-constant** rational function of `x`. The §5.9 feedback integrates the base residual `∫R = ∫2x
+dx = x²` over `k = ℚ(x)` (`crischDESolve 0 (2x)` runs the §6 pipeline over ℚ[x], recursing to ℚ) and
+subtracts it: `∫fₙ = log(t−1) − x²`.
+
+This exercises the residual feedback with a **non-constant `R`** (the stretch): `R = 2x` is stored as the
+reduced fraction `2x/1` (the numerator-`η` cancellation keeps the residue constant, so `R = η·1` carries no
+spurious denominator — unlike the unreduced `2x/2x` of a non-δ-constant residue), so `crischDESolve` over
+ℚ(x) genuinely integrates the non-constant `2x` to `x²`, and `cIntegrateHyperexpNormalG` lands
+`log(t−1) − x²` with `D(∫f) = f`. -/
+
+/-- The base value `x² ∈ Lvl1 = ℚ(x)` (the antiderivative of `2x`), as `x·x`. -/
+def nLvl1XSq : NLvl1 := CField.mul nLvl1X nLvl1X
+
+/-- The hyperexponential coefficient `η = 2x ∈ ℚ(x)` for `t = exp(x²)` (the monomial of ℚ(x) is `x`). -/
+def nLvl1TwoX : NLvl1 := CField.mul (CField.add CField.one CField.one) nLvl1X
+
+/-- The hyperexponential monomial derivative `Dt = η·t = [0, 2x]` over `CPolyG NLvl1 = ℚ(x)[t]`
+(`t = exp(x²)`, `η = 2x`): the coefficient of `t¹` is the **non-constant** `η = 2x ∈ ℚ(x)`. -/
+def nVarDt : CPolyG NLvl1 := [CField.zero, nLvl1TwoX]
+
+/-- The integrand numerator `a = 2x` over `CPolyG NLvl1` for `f = 2x/(t−1) = 2x/(exp(x²) − 1)`. The
+numerator carries the `η = 2x` factor so the §5.6 residue `2x/(η·1) = 1` is a genuine δ-constant. -/
+def nVarNormA : CPolyG NLvl1 := [nLvl1TwoX]
+
+/-- The integrand denominator `d = t − 1` over `CPolyG NLvl1` for `f = 2x/(t−1)` (a normal factor:
+`gcd(t−1, Dt) = 1`). -/
+def nVarNormD : CPolyG NLvl1 := [CField.neg CField.one, CField.one]
+
+/-- The residue candidate set `{0, 1, −1}` as `Lvl1 = ℚ(x)` constants for `2x/(exp(x²) − 1)` (the genuine
+δ-constant residue is `1`). -/
+def nVarNormCands : List NLvl1 := [CField.zero, CField.one, CField.neg CField.one]
+
+/-- **The non-constant base residual `R = 2x` on `f = 2x/(exp(x²) − 1)`** (`native_decide`): for the normal
+part `fₙ = 2x/(t−1)` over ℚ(x)[t] (`Dt = η·t`, `η = 2x` **non-constant**), the §5.6 residue `2x/(η·1) = 1` is
+a genuine δ-constant, so `∑res = 1` and the §5.9 residual `R = η·∑res = 2x·1 = 2x` is a genuinely
+**non-constant** rational function of `x` (`cHyperexpResidualG`), confirmed by `CField.isZero (R − 2x) =
+true`. The non-constant overshoot the feedback must integrate. -/
+theorem nVarNorm_residual_eq_twoX :
+    CField.isZero (CField.sub
+      (cHyperexpResidualG (cExpEtaG 28 nVarDt)
+        (cIntegrateReducedG nVarDt 28 nVarNormA nVarNormD nVarNormCands).logs)
+      nLvl1TwoX) = true := by native_decide
+
+/-- **The non-constant base residual integral `∫R = ∫2x = x²`** (`native_decide`): the §5.9 feedback
+integrates the **non-constant** residual `R = 2x ∈ ℚ(x)` as a base Risch-DE `Dy = 2x` over `k = ℚ(x)`
+(`crischDESolve 0 (2x)`, running the §6 pipeline over ℚ[x] and recursing to ℚ), recovering `y = x²` —
+genuine non-constant base polynomial integration. Certified by `CField.isZero (y − x²) = true`. -/
+theorem nVarNorm_baseIntegral_eq_xSq :
+    (match CRischField.crischDESolve (CField.zero : NLvl1) nLvl1TwoX with
+      | some y => CField.isZero (CField.sub y nLvl1XSq)
+      | none => false) = true := by native_decide
+
+/-- **★★ The §5.9 driver lands `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`, and `D(∫f) = f`**
+(`native_decide`, the non-constant-residual stretch). On the hyperexponential **normal** integrand
+`f = 2x/(t−1)` over `ℚ(x)[t]` with `t = exp(x²)` (`Dt = η·t`, `η = 2x` **non-constant**), the §5.9 driver
+`cIntegrateHyperexpNormalG` reads the **non-constant** residual `R = 2x` (`nVarNorm_residual_eq_twoX`),
+integrates the base residual `∫R = x²` (`nVarNorm_baseIntegral_eq_xSq`), and subtracts it from the log
+part, returning `log(t−1) − x²` (rational part `−x²`, one log `(1, t−1)`) with the antiderivative identity
+`D(res) = f` (`checkIdentityG`, over ℚ(x)[t]). **The residual feedback handles a genuinely non-constant
+base residual** — the §5.9 reduction is not limited to constant `R`. -/
+theorem nVarNorm_landsNormalPart :
+    (match CPolyG.cIntegrateHyperexpNormalG nVarDt 28 nVarNormA nVarNormD nVarNormCands with
+      | some res =>
+        CPolyG.checkIdentityG nVarDt res nVarNormA nVarNormD
+          && CPolyG.cisZeroG (CPolyG.csubG res.rational.1 [CField.neg nLvl1XSq])
+          && res.logs.length == 1
+      | none => false) = true := by native_decide
+
+#print axioms nVarNorm_landsNormalPart
+
 end DeepWiki.SymbolicIntegration
