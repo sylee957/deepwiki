@@ -35,14 +35,22 @@ This file establishes, **derivation-generically** (over any base `δ : Derivatio
   `RatFunc (RatFunc ℚ)` with `δ = implicitDeriv (toPolyG Dt)`, i.e. the actual carrier of
   `cResidueResultantTower`/`cLogArgTower`.
 
-**The remaining gap** is the *residue-matching* half: that the residue sum `∑ aᵢ·(Δgᵢ)/gᵢ` equals the
-integrand `a/d`. Over a splitting field where `d = ∏(t−αⱼ)`, this is the partial-fraction
+**The residue match is now discharged** (`extendDeriv_logPart_eq_div`, and its tower form
+`towerLogPart_eq_div_of_const_seed`) in the **primitive** regime: that the residue sum `∑ aᵢ·(Δgᵢ)/gᵢ`
+equals the integrand `a/d`. Over a split squarefree `d = ∏(t−αⱼ)`, this is the partial-fraction
 `a/d = ∑ⱼ (a(αⱼ)/d'(αⱼ))/(t−αⱼ)` matched against `∑ⱼ cⱼ·Δ(t−αⱼ)/(t−αⱼ)`. In §2 (`d/dx`) the match is
-immediate because `Δ(t−αⱼ) = 1`; in §5.6 `Δ(t−αⱼ) = Δt − Δαⱼ` with **`αⱼ` a constant of `t` but not
-of `x`** (the roots live in an algebraic extension of `k = ℚ(x)`, where `Δ = D` acts nontrivially), so
-the match is the genuine splitting-field/algebraic-extension argument of Bronstein Theorem 5.6.1 —
-the analogue of §2 `deriv_sum_residue_log`'s partial fraction, but over the tower, and deferred here.
-The *differential* spine (everything `D(∑ aᵢ log gᵢ)` reduces to before the residue match) is proved. -/
+immediate because `Δ(t−αⱼ) = 1`. In §5.6 `Δ(t−αⱼ) = Δt − Δαⱼ`: the assembly works **iff `Δt = Dt` is a
+constant of `t`** (`Dt ∈ k`, the primitive/Liouvillian monomial condition — Bronstein Example 5.6.2 has
+`Dt = 1/x ∈ ℚ(x)`), since then `Δ(t−αⱼ) = C(Dt − αⱼ′)` is a constant and the §2 partial fraction applies
+after the per-root scalar identity `cⱼ·(Dt − αⱼ′) = a(αⱼ)/d'(αⱼ)` (`residue_seed_mul_eq_residue_derivative`
+from `deriv_eval_at_simple_root` + `eval_derivative_X_sub_C_mul`). For a **non-constant** `Δt` (e.g.
+`Δt = t`, the hyperexponential case) the residue sum exceeds `a/d` by a nonzero **polynomial part** — so
+the unqualified `hmatch` is FALSE there, and the constancy hypothesis is the precise dividing line.
+The assembly: `sum_residue_seed_logDeriv_eq_div` (per-root partial fraction) → `sum_logDeriv_prod_X_sub_C`
+(log-deriv of a product = sum) + fiberwise regrouping → `sum_residue_grouped_logDeriv_eq_div` (the
+Rothstein–Trager grouped `hmatch`) → fed into the spine `extendDeriv_logPart_eq_of_residue_match` to give
+the **unconditional** `D(∑ c·log gᶜ) = a/d`. The hyperexponential / general non-primitive residue match
+remains open (a genuine residual-polynomial-part obstruction, not just plumbing). -/
 
 open Polynomial
 
@@ -484,6 +492,47 @@ theorem towerLogPart_eq_of_residue_match (Dt : CPolyG QFunNZ) {ι : Type*} (s : 
       = f := by
   rw [towerLogPart_sum_const_logDerivOf Dt s c g hc L hL, hmatch]
 
+open scoped Classical Differential in
+/-- **The §5.6 integral identity on the tower, unconditional in the primitive case**
+(`D(∑ c·log gᶜ) = a/d`): on the genuine tower fraction field `RatFunc (RatFunc ℚ)`, when the monomial
+derivative seed is a *constant* `toPolyG Dt = C w₀` (the primitive condition `Dt ∈ k = ℚ(x)`, e.g.
+Bronstein Example 5.6.2 with `Dt = 1/x`), for `A` of degree `< #s` over the split squarefree
+`d = nodal s id`, with residues `c ∈ s.image res` δ-constant and normality `w₀ ≠ α′` at each root, the
+logarithmic part `∑_c algMap(C c)·log gᶜ` (`gᶜ = ∏_{res α = c}(X−α)` the Rothstein–Trager log argument,
+each `log gᶜ` modeled by `L c` with the per-factor `hL`) differentiates back to the integrand `A/d`
+under `towerFractionFieldDeriv Dt`, **with no residue-match hypothesis** — `hmatch` discharged via the
+generic `extendDeriv_logPart_eq_div` with the primitive constancy `δ(X − Cα) = C(w₀ − α′)`
+(`implicitDeriv_X_sub_C`). The unconditional discharge of `towerLogPart_eq_of_residue_match` in the
+primitive regime, on the actual carrier of `cResidueResultantTower`/`cLogArgTower`. -/
+theorem towerLogPart_eq_div_of_const_seed (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ}
+    (htop : toPolyG Dt = C w₀) (A : (CFieldSpec.K QFunNZ)[X]) (s : Finset (CFieldSpec.K QFunNZ))
+    (hA : A.degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hc : ∀ c ∈ s.image
+            (fun α => A.eval α / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α),
+          Differential.implicitDeriv (toPolyG Dt) (C c) = 0)
+    (L : CFieldSpec.K QFunNZ → RatFunc (CFieldSpec.K QFunNZ))
+    (hL : ∀ c ∈ s.image
+            (fun α => A.eval α / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α),
+          towerFractionFieldDeriv Dt (L c)
+            = algebraMap _ (RatFunc (CFieldSpec.K QFunNZ))
+                  (Differential.implicitDeriv (toPolyG Dt)
+                    (∏ α ∈ s.filter (fun α => A.eval α
+                        / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α = c),
+                      (X - C α)))
+              / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ))
+                  (∏ α ∈ s.filter (fun α => A.eval α
+                      / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α = c),
+                    (X - C α))) :
+    towerFractionFieldDeriv Dt (∑ c ∈ s.image
+          (fun α => A.eval α / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α),
+        algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (C c) * L c)
+      = algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) A
+          / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (Lagrange.nodal s id) :=
+  extendDeriv_logPart_eq_div (Differential.implicitDeriv (toPolyG Dt)) A s hA
+    (fun α => w₀ - α′)
+    (fun α _ => by rw [implicitDeriv_X_sub_C, htop, ← C_sub]) hb0 hc L hL
+
 /-- Headline restatement: the §5.6 per-factor log-derivative on the genuine tower carrier. -/
 example (Dt : CPolyG QFunNZ) (g : (CFieldSpec.K QFunNZ)[X]) :
     towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g)
@@ -498,8 +547,60 @@ example {F : Type*} [Field F] (a d Dd : F[X]) (c α : F) (hα : Dd.eval α ≠ 0
     (gcd d (a - C c * Dd)).IsRoot α ↔ (d.IsRoot α ∧ a.eval α / Dd.eval α = c) :=
   isRoot_gcd_iff_residue_seed a d Dd c α hα
 
+open scoped Classical in
+/-- Headline restatement: the §5.6 **discharged** residue match (the integrand `A/d` is exactly the
+residue-grouped sum) for a base derivation primitive on every linear factor. -/
+example {K : Type*} [Field K] [Algebra ℚ K] (δ : Derivation ℤ K[X] K[X]) (A : K[X]) (s : Finset K)
+    (hA : A.degree < s.card) (b : K → K) (hb : ∀ α ∈ s, δ (X - C α) = C (b α))
+    (hb0 : ∀ α ∈ s, b α ≠ 0) :
+    ∑ c ∈ s.image (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α),
+        algebraMap K[X] (RatFunc K) (C c)
+          * (algebraMap K[X] (RatFunc K)
+                (δ (∏ α ∈ s.filter
+                      (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α)))
+              / algebraMap K[X] (RatFunc K)
+                (∏ α ∈ s.filter
+                      (fun α => A.eval α / (δ (Lagrange.nodal s id)).eval α = c), (X - C α)))
+      = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) :=
+  sum_residue_grouped_logDeriv_eq_div δ A s hA b hb hb0
+
+open scoped Classical Differential in
+/-- Headline restatement: the §5.6 unconditional log-part integral identity on the genuine tower
+carrier `RatFunc (RatFunc ℚ)` for a constant (primitive) seed `toPolyG Dt = C w₀`. -/
+example (Dt : CPolyG QFunNZ) {w₀ : CFieldSpec.K QFunNZ} (htop : toPolyG Dt = C w₀)
+    (A : (CFieldSpec.K QFunNZ)[X]) (s : Finset (CFieldSpec.K QFunNZ)) (hA : A.degree < s.card)
+    (hb0 : ∀ α ∈ s, w₀ - α′ ≠ 0)
+    (hc : ∀ c ∈ s.image
+            (fun α => A.eval α / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α),
+          Differential.implicitDeriv (toPolyG Dt) (C c) = 0)
+    (L : CFieldSpec.K QFunNZ → RatFunc (CFieldSpec.K QFunNZ))
+    (hL : ∀ c ∈ s.image
+            (fun α => A.eval α / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α),
+          towerFractionFieldDeriv Dt (L c)
+            = algebraMap _ (RatFunc (CFieldSpec.K QFunNZ))
+                  (Differential.implicitDeriv (toPolyG Dt)
+                    (∏ α ∈ s.filter (fun α => A.eval α
+                        / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α = c),
+                      (X - C α)))
+              / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ))
+                  (∏ α ∈ s.filter (fun α => A.eval α
+                      / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α = c),
+                    (X - C α))) :
+    towerFractionFieldDeriv Dt (∑ c ∈ s.image
+          (fun α => A.eval α / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval α),
+        algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (C c) * L c)
+      = algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) A
+          / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (Lagrange.nodal s id) :=
+  towerLogPart_eq_div_of_const_seed Dt htop A s hA hb0 hc L hL
+
 #print axioms residue_eq_iff_isRoot_sub_seed
 #print axioms isRoot_gcd_iff_residue_seed
+#print axioms residue_seed_mul_eq_residue_derivative
+#print axioms sum_residue_seed_logDeriv_eq_div
+#print axioms sum_logDeriv_prod_X_sub_C
+#print axioms sum_residue_grouped_logDeriv_eq_div
+#print axioms extendDeriv_logPart_eq_div
+#print axioms towerLogPart_eq_div_of_const_seed
 #print axioms deriv_eval_at_simple_root
 #print axioms extendDeriv_logDerivOf
 #print axioms extendDeriv_sum_const_logDerivOf
