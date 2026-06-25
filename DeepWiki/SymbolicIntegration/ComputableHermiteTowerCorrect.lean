@@ -157,4 +157,44 @@ example (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d gnumR gdenR DstarR gprimeNum resN
   cHermiteReduceTower_cleared_identity Dt fuel a d gnumR gdenR DstarR gprimeNum resNum resDen hNumR
     hgnum hgden hDstar hgprime hresNum hresDen hhNum hq0 hfuel hdvd
 
+/-! ### The `cisZeroG`-Boolean form — directly bridging the `native_decide` validation
+`hermiteTower_example` checks `cisZeroG (csubG lhs rhs) = true` for the concrete `(a, d, Dt)`. The
+abstract theorem makes that exact Boolean check provably `true` for ALL inputs (under the exact-division
+precondition): through `cisZeroG_iff` (`cisZeroG p = true ↔ toPolyG p = 0`) and the `toPolyG`
+homomorphism lemmas, the `lhs − rhs` polynomial is `0` exactly when the cleared identity holds. -/
+
+/-- **The `native_decide` cleared check holds for ALL inputs** (under the exact-division certificate):
+with `((gnum, gden), (hNum, hDen)) = cHermiteReduceTower Dt fuel a d`, `gprimeNum = D(gnum)·gden −
+gnum·D(gden)` (`D = cmonomialDeriv Dt`), `gden2 = gden·gden`, the exact Boolean check that
+`hermiteTower_example` runs by `native_decide` — `cisZeroG ((gprimeNum·hDen + hNum·gden²)·d − a·(gden²·hDen))
+= true` — is a theorem for every `Dt fuel a d`, gated only on the transparent exact-division /
+nonzero-divisor / fuel preconditions. The all-inputs, axiom-clean (no `native_decide`) generalization of
+the pointwise validation. -/
+theorem cHermiteReduceTower_cisZeroG_cleared (Dt : CPolyG QFunNZ) (fuel : ℕ) (a d gnumR gdenR DstarR
+      gprimeNum resNum resDen hNumR : CPolyG QFunNZ)
+    (hgnum : gnumR = (cHermiteReduceTower Dt fuel a d).1.1)
+    (hgden : gdenR = (cHermiteReduceTower Dt fuel a d).1.2)
+    (hDstar : DstarR = (cHermiteReduceTower Dt fuel a d).2.2)
+    (hgprime : gprimeNum
+      = csubG (cmulG (cmonomialDeriv Dt gnumR) gdenR) (cmulG gnumR (cmonomialDeriv Dt gdenR)))
+    (hresNum : resNum = csubG (cmulG a (cmulG gdenR gdenR)) (cmulG d gprimeNum))
+    (hresDen : resDen = cmulG d (cmulG gdenR gdenR))
+    (hhNum : hNumR = cdivG fuel (cmulG resNum DstarR) resDen)
+    (hq0 : cnormG resDen ≠ [])
+    (hfuel : (cnormG (cmulG resNum DstarR) : List QFunNZ).length ≤ fuel)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum DstarR)) :
+    cisZeroG (csubG
+      (cmulG (caddG (cmulG gprimeNum DstarR) (cmulG hNumR (cmulG gdenR gdenR))) d)
+      (cmulG a (cmulG (cmulG gdenR gdenR) DstarR))) = true := by
+  rw [cisZeroG_iff, toPolyG_csubG, toPolyG_cmulG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG,
+    toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, sub_eq_zero]
+  have hgp : toPolyG gprimeNum
+      = toPolyG (cmonomialDeriv Dt gnumR) * toPolyG gdenR
+          - toPolyG gnumR * toPolyG (cmonomialDeriv Dt gdenR) := by
+    rw [hgprime, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG]
+  rw [hgp]
+  exact cHermiteReduceTower_cleared_identity Dt fuel a d gnumR gdenR DstarR gprimeNum resNum resDen
+    hNumR hgnum hgden hDstar hgprime hresNum hresDen hhNum hq0 hfuel hdvd
+
 #print axioms cHermiteReduceTower_cleared_identity
+#print axioms cHermiteReduceTower_cisZeroG_cleared
