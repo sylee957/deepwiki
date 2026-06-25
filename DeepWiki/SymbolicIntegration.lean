@@ -109,5 +109,6 @@ import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
 import DeepWiki.SymbolicIntegration.ComputableTowerReduce
 import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorTowerCorrect
+import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrect
 import DeepWiki.SymbolicIntegration.ComputableTowerBench
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFF
