@@ -131,3 +131,94 @@ theorem gcd_derivative_dvd_gcd_implicitDeriv {K : Type*} [Field K] [CharZero K] 
     rwa [hfilt, Finset.prod_empty, mul_one] at h
   refine hden.dvd.trans ?_
   exact (dvd_mul_right _ _).trans hnum.symm.dvd
+
+/-! ### Step 2 — the computable step `S` is associated to the abstract `splitFactorStep`
+The loop's special-factor candidate is `S = cdivFF (cgcdFF p (cmonomialDeriv Dt p)) (cgcdFF p
+(cderivG p))`. Each `cgcdFF` is associated to the corresponding abstract gcd
+(`associated_toPolyG_cgcdFF_of_nodeRegular`, with the `cmonomialDeriv`/`cderivG` bridges identifying the
+second arguments as `Dp = implicitDeriv v p` and `dp/dt = derivative p`). Since the denominator gcd
+divides the numerator gcd (`gcd_derivative_dvd_gcd_implicitDeriv`), exact division cancels it, and
+`toPolyG S ~ splitFactorStep v (toPolyG p)`. -/
+
+/-- **Per-`cgcdFF`-call node-regularity bundle** `CgcdFFNodeReg fuel p q`: the three transparent
+preconditions of `associated_toPolyG_cgcdFF_of_nodeRegular` on the `bdeg`-ordered cleared pair — fuel
+exceeds the divisor `t`-degree, divisor `t`-degree ≤ dividend `t`-degree, and the per-node degree bounds
+`PrimPRSNodeRegular` (`deg_x < 30`, `deg_t ≤ 60`). Bundled to keep step/loop signatures readable. -/
+def CgcdFFNodeReg (fuel : ℕ) (p q : CPolyG QFunNZ) : Prop :=
+  (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+      then CPolyG.clearDenoms p else CPolyG.clearDenoms q)).length ≤ fuel ∧
+  (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+      then CPolyG.clearDenoms p else CPolyG.clearDenoms q)).length
+    ≤ (bnorm (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+      then CPolyG.clearDenoms q else CPolyG.clearDenoms p)).length ∧
+  PrimPRSNodeRegular fuel
+    (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+      then CPolyG.clearDenoms q else CPolyG.clearDenoms p)
+    (if Compute.bdeg (CPolyG.clearDenoms p) < Compute.bdeg (CPolyG.clearDenoms q)
+      then CPolyG.clearDenoms p else CPolyG.clearDenoms q)
+
+/-- `cgcdFF` is associated to the abstract gcd, from a `CgcdFFNodeReg` bundle — the wrapper of
+`associated_toPolyG_cgcdFF_of_nodeRegular` with its three hypotheses bundled. -/
+theorem associated_toPolyG_cgcdFF_node (fuel : ℕ) (p q : CPolyG QFunNZ)
+    (hreg : CgcdFFNodeReg fuel p q) :
+    Associated (toPolyG (CPolyG.cgcdFF fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
+  associated_toPolyG_cgcdFF_of_nodeRegular fuel p q hreg.1 hreg.2.1 hreg.2.2
+
+/-- **The computable `SplitFactor` step** `cstep Dt fuel p = cdivFF (cgcdFF p (cmonomialDeriv Dt p))
+(cgcdFF p (cderivG p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)` computed with the
+fraction-free gcd and exact Euclidean division (the inner `S` of `cSplitFactorFast`). -/
+def cstep (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ) : CPolyG QFunNZ :=
+  CPolyG.cdivFF fuel (CPolyG.cgcdFF fuel p (cmonomialDeriv Dt p))
+    (CPolyG.cgcdFF fuel p (cderivG p))
+
+/-- **Per-step regularity bundle** `CStepRegular Dt fuel p`: the transparent preconditions for the
+computable step `cstep Dt fuel p` to match the abstract `splitFactorStep` — node-regularity of both
+`cgcdFF` calls (numerator `gcd(p, Dp)`, denominator `gcd(p, dp/dt)`) and a fuel bound on the numerator
+gcd's length so the exact Euclidean division `cdivFF` is fully reduced. -/
+def CStepRegular (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ) : Prop :=
+  CgcdFFNodeReg fuel p (cmonomialDeriv Dt p) ∧
+  CgcdFFNodeReg fuel p (cderivG p) ∧
+  (cnormG (CPolyG.cgcdFF fuel p (cmonomialDeriv Dt p)) : List QFunNZ).length ≤ fuel
+
+/-- **Step 2 — the computable step is associated to the abstract `splitFactorStep`**: for `toPolyG p ≠ 0`
+and a regular step (`CStepRegular`), `toPolyG (cstep Dt fuel p)` is `Associated` to
+`splitFactorStep (toPolyG Dt) (toPolyG p)` in `(RatFunc ℚ)[X]`. The two `cgcdFF` calls land the
+numerator/denominator gcds up to associates; exact division cancels the (nonzero) denominator gcd, which
+divides the numerator gcd (`gcd_derivative_dvd_gcd_implicitDeriv`). -/
+theorem associated_toPolyG_cstep (Dt : CPolyG QFunNZ) (fuel : ℕ) (p : CPolyG QFunNZ)
+    (hp : toPolyG p ≠ 0) (hreg : CStepRegular Dt fuel p) :
+    Associated (toPolyG (cstep Dt fuel p))
+      (splitFactorStep (toPolyG Dt) (toPolyG p)) := by
+  haveI : CharZero (CFieldSpec.K QFunNZ) := inferInstanceAs (CharZero (RatFunc ℚ))
+  obtain ⟨hregN, hregD, hfuelN⟩ := hreg
+  set v := toPolyG Dt with hv
+  set P := toPolyG p with hP
+  set N := CPolyG.cgcdFF fuel p (cmonomialDeriv Dt p) with hN
+  set Dn := CPolyG.cgcdFF fuel p (cderivG p) with hDn
+  -- the two gcd associations, with the second arguments identified by the bridges
+  have aN : Associated (toPolyG N) (gcd P (Differential.implicitDeriv v P)) := by
+    have h := associated_toPolyG_cgcdFF_node fuel p (cmonomialDeriv Dt p) hregN
+    rwa [toPolyG_cmonomialDeriv, ← hP, ← hv] at h
+  have aD : Associated (toPolyG Dn) (gcd P (derivative P)) := by
+    have h := associated_toPolyG_cgcdFF_node fuel p (cderivG p) hregD
+    rwa [toPolyG_cderivG, ← hP] at h
+  -- the abstract gcds, the divisibility, and the exact factorization of the numerator gcd
+  set gN := gcd P (Differential.implicitDeriv v P) with hgN
+  set gD := gcd P (derivative P) with hgD
+  have hgDdvd : gD ∣ gN := gcd_derivative_dvd_gcd_implicitDeriv v hp
+  have hgDne : gD ≠ 0 := fun h => hp (eq_zero_of_zero_dvd (h ▸ gcd_dvd_left _ _))
+  have hstepmul : splitFactorStep v P * gD = gN := by
+    rw [splitFactorStep, ← hgN, ← hgD, mul_comm, EuclideanDomain.mul_div_cancel' hgDne hgDdvd]
+  -- the denominator gcd divides the numerator gcd in the computable readings
+  have hDn0 : toPolyG Dn ≠ 0 := fun h => hgDne (aD.eq_zero_iff.mp h)
+  have hDncn : cnormG Dn ≠ [] := fun h => hDn0 ((cnormG_eq_nil_iff Dn).mp h)
+  have hDnNdvd : toPolyG Dn ∣ toPolyG N :=
+    (aD.dvd.trans hgDdvd).trans aN.symm.dvd
+  -- exact division: toPolyG N = toPolyG (cstep …) · toPolyG Dn
+  have hexact : toPolyG N = toPolyG (cstep Dt fuel p) * toPolyG Dn := by
+    have := toPolyG_cdivFF_exact fuel N Dn hDncn hfuelN hDnNdvd
+    rwa [show cstep Dt fuel p = CPolyG.cdivFF fuel N Dn from rfl]
+  -- cancel the denominator gcd: toPolyG (cstep) · toPolyG Dn ~ splitFactorStep · gD, toPolyG Dn ~ gD
+  have hmul : Associated (toPolyG (cstep Dt fuel p) * toPolyG Dn) (splitFactorStep v P * gD) := by
+    rw [← hexact, hstepmul]; exact aN
+  exact Associated.of_mul_right hmul aD hDn0
