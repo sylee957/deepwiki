@@ -1066,4 +1066,14 @@ theorem rischDEWf_cancelExp_example :
 
 #print axioms rischDEWf_cancelExp_example
 
+/-! ### Axiom audit of the headline fuel-free §6.6 cancellation pipeline
+
+The full fuel-free solver `cRischDEWfFull` and the bridge `cRischDEWfFull_eq` (the extended fuel-free
+`cRischDE`, all regimes) carry only `[propext, Classical.choice, Quot.sound]` — no fuel, no `sorry`. The
+`native_decide` cancellation examples additionally carry their native-decide axiom (expected). -/
+
+-- The fuel-free full RDE solver (all regimes) and its fuel'd bridge carry only the standard axioms.
+#print axioms CPolyG.cRischDEWfFull_eq
+#print axioms CPolyG.cPolyRischDEWf_eq
+
 end DeepWiki.SymbolicIntegration
