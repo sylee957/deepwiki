@@ -94,7 +94,11 @@ When the user posts a capture/screenshot of a book passage or points at PDF page
   non-interactive and may not load `~/.zshrc`). Deps pinned to `v4.31.0`: `mathlib`,
   `doc-gen4`.
 - `lakefile.toml`: libs `DeepWiki` (root `DeepWiki.lean`) and `Sources`;
-  `defaultTargets = ["DeepWiki", "Sources"]`.
+  `defaultTargets = ["DeepWiki", "Sources"]`. The `Sources` lib has **no globs**, so every new
+  `Sources/<folder>/` catalog module must be `import`ed into `Sources.lean` (the lib root) — an
+  un-imported catalog is **silently skipped by the gate** (it compiles only under an explicit
+  `lake build Sources.<mod>`), a false `GATE PASS`. Audit:
+  `for d in Sources/*/; do m=$(basename $d); grep -q "import Sources.$m\." Sources.lean || echo "ORPHAN $m"; done`.
 - Build one chapter: `lake build DeepWiki.NetworkCalculus.<Chapter>`. Everything: `lake build`.
 - **Gate: `scripts/check.sh [DeepWiki.NetworkCalculus.<Chapter>]`** — runs the full
   `lake build`, exit `0` = `GATE: PASS`, `1` = `GATE: FAIL`. Treats
