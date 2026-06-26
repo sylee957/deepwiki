@@ -95,8 +95,13 @@ def mul (p q : RadExt α n f) : RadExt α n f := ⟨radMul n f p.toRad q.toRad�
 extension is a field only for `n = 2` here); the carrier's *ring* structure is `n`-generic. -/
 def inv (p : RadExt α n f) : RadExt α n f := ⟨radInv2 f p.toRad⟩
 
-/-- **Zero test** in `RadExt α n f` — `radIsZero` (all coefficients vanish). -/
-def isZero (p : RadExt α n f) : Bool := radIsZero p.toRad
+/-- **Zero test** in `RadExt α n f` — **reduce `mod yⁿ = f` first**, then `radIsZero`: the element is
+zero in `α[y]/(yⁿ − f)` iff its `radReduce`d (degree `< n`) coefficient list vanishes. Reducing first is
+what makes the test agree with the genuine field `AdjoinRoot (Xⁿ − f)` for *every* representative (an
+over-degree `aₘyᵐ` with `m ≥ n` folds to `aₘ·f·y^{m−n}`, not spuriously nonzero); on engine-produced
+values (always length `≤ n`) the reduction is a no-op, so it coincides with `radIsZero`. -/
+def isZero (p : RadExt α n f) : Bool :=
+  radIsZero (radReduce n f ((p.toRad : List α).length + 1) p.toRad)
 
 end RadExt
 
@@ -197,13 +202,77 @@ theorem radX3_cderiv_one_zero :
     CField.isZero (CDiffField.cderiv (CField.zero : RadX3)) = true := by
   constructor <;> native_decide
 
+/-! ### ★★ A TRANSCENDENTAL MONOMIAL over the algebraic base (`native_decide`)
+
+The milestone: a new **transcendental** monomial `t` stacks on top of the radical base `RadX3 =
+ℚ(x)[√(x³+1)]`. The ring `RadX3[t] = CPolyG RadX3` (polynomials in `t` over the radical extension) is the
+first **mixed elementary tower** — transcendental over algebraic (Bronstein-1990's "transcendental over
+algebraic"). It needs *only* the `CField (RadExt …)` and `CDiffField (RadExt …)` instances built above —
+both supplied — so the whole monomial-derivation engine `cmonomialDeriv` runs over `RadX3[t]` in the
+native compiler. The genuine tower derivation `D = κ_D + Dt·d/dt` differentiates **both** the `t`-structure
+*and* the `RadX3` coefficients (the diagonal radical derivation `radDeriv` on each coefficient). We exhibit:
+
+* `t = exp` (so `Dt = t`, `Dt = [0, 1]`): `D(t²) = 2t²` — the `d/dt` half, over the radical base.
+* the mixing `D(y·t)` for `y = √(x³+1)` and `t = exp` — both `D(y) = ℓ·y` (radical) and `D(t) = t`
+  (monomial) fire: `D(y·t) = ℓ·y·t + y·t = (ℓ+1)·y·t`. The **first derivative computed at transcendental
+  level over an algebraic base**. -/
+
+/-- The transcendental monomial `t = eˣ` over the radical base: its derivative `Dt = t`, as the
+`RadX3[t]`-polynomial `[0, 1] = t` (the independent exponential, `Dt = t`). -/
+def radX3DtExp : CPolyG RadX3 := [CField.zero, CField.one]
+
+/-- The `RadX3[t]`-polynomial `t² = [0, 0, 1]` (a transcendental square over the radical base). -/
+def radX3T2sq : CPolyG RadX3 := [CField.zero, CField.zero, CField.one]
+
+/-- The `RadX3[t]`-polynomial `2·t² = [0, 0, 2]` (`2 = 1 + 1`), the expected `D(t²)` for `t = eˣ`. -/
+def radX3TwoT2sq : CPolyG RadX3 := [CField.zero, CField.zero, CField.add CField.one CField.one]
+
+/-- **★★ `D(t²) = 2t²` over `RadX3[t] = ℚ(x)[√(x³+1)][eˣ]`** (`native_decide`): the monomial derivation
+`cmonomialDeriv` (with `t = eˣ`, `Dt = t`, and the radical-base coefficient derivation
+`CDiffField.cderiv = radDeriv 2 (x³+1)`) computes `D(t²) = 2t·Dt = 2t·t = 2t²` over the ALGEBRAIC base.
+Checked by `cisZeroG` of the difference. THE TRANSCENDENTAL-MONOMIAL DERIVATION ENGINE RUNS OVER A RADICAL
+BASE — the first transcendental-on-algebraic computation. -/
+theorem radX3_monomialDeriv_t2sq_eq_two_t2sq :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonomialDeriv radX3DtExp radX3T2sq) radX3TwoT2sq) = true := by native_decide
+
+/-- The `RadX3[t]`-polynomial `y·t = [0, y]` (the radical generator `y = √(x³+1)` times the monomial
+`t = eˣ`): constant `t`-coefficient `0`, linear `t`-coefficient `y = radX3Gen`. -/
+def radX3GenT : CPolyG RadX3 := [CField.zero, radX3Gen]
+
+/-- The `RadX3[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected `D(y·t)` (`ℓ = f'/(2f)`): the
+`t`-coefficient is `(ℓ+1)·y`, with `ℓ·y` the radical part `D(y)` and `y` the monomial part `y·Dt = y·t`. -/
+def radX3GenTDeriv : CPolyG RadX3 :=
+  [CField.zero, CField.mul (⟨[CField.zero, CField.add radicandLogDer CField.one]⟩ : RadX3) CField.one]
+
+/-- **★★ `D(y·t) = (ℓ+1)·y·t` over `RadX3[t]`** (`native_decide`): the genuine mixed tower derivation. With
+`y = √(x³+1)` (radical generator, `D(y) = ℓ·y`, `ℓ = 3x²/(2(x³+1))`) and `t = eˣ` (monomial, `Dt = t`), the
+product rule gives `D(y·t) = D(y)·t + y·Dt = ℓ·y·t + y·t = (ℓ+1)·y·t`. So `cmonomialDeriv` ran **both** the
+radical-base coefficient derivation (the diagonal `radDeriv`, contributing `ℓ·y`) and the `d/dt` part
+(contributing `y`). Checked by `cisZeroG` of the difference over `RadX3[t]`. BOTH HALVES OF THE MIXED
+TOWER DERIVATION FIRE — `d/dx + (radical y') + ∂/∂t` at transcendental-over-algebraic level. -/
+theorem radX3_monomialDeriv_genT_eq :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonomialDeriv radX3DtExp radX3GenT) radX3GenTDeriv) = true := by native_decide
+
+/-- **The mixed derivation genuinely runs the coefficient derivation** (`native_decide`): `D(y·t)` over
+`RadX3[t]` is **not** `cisZeroG`-zero and **not** equal to the pure-`d/dt` result `y·t` — confirming the
+radical-base `cderiv` contributed the `ℓ·y·t` term (had `cmonomialDeriv` only done `d/dt`, the result
+would be `y·t = radX3GenT`). The coefficient-derivation half is real, not a no-op. -/
+theorem radX3_monomialDeriv_genT_runs_coeff :
+    (CPolyG.cisZeroG (CPolyG.cmonomialDeriv radX3DtExp radX3GenT) = false) ∧
+    (CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonomialDeriv radX3DtExp radX3GenT) radX3GenT) = false) := by
+  constructor <;> native_decide
+
 /-! ### `#print axioms` — the algebraic Risch base computes
 
 The `CField (RadExt …)` ring/inverse and the `CDiffField (RadExt …)` derivation, exercised through the
-**typeclass projections** over the base radical `√(x³+1)`, each carry only the standard `[propext,
+**typeclass projections** over the base radical `√(x³+1)`, plus the **transcendental-monomial derivation
+over the radical base** (`cmonomialDeriv` over `RadX3[t]`), each carry only the standard `[propext,
 Classical.choice, Quot.sound]` plus the `native_decide` compiler axiom — no `sorry`, no extra axiom. The
 `Prop`-erased domain facts keep everything native-`decide`-able. `RadExt` is now a computable
-`CField`+`CDiffField` Risch **base**. -/
+`CField`+`CDiffField` Risch **base**, and a transcendental monomial stacks on it (mixed elementary tower). -/
 
 -- The `CField (RadExt …)` instance: the ring product and the field inverse:
 #print axioms radX3_gen_sq_eq_radicand
@@ -211,5 +280,9 @@ Classical.choice, Quot.sound]` plus the `native_decide` compiler axiom — no `s
 
 -- The `CDiffField (RadExt …)` instance: the diagonal derivation through `CDiffField.cderiv`:
 #print axioms radX3_cderiv_gen_eq
+
+-- ★★ The transcendental monomial over the algebraic base: the mixed-tower derivation computes:
+#print axioms radX3_monomialDeriv_t2sq_eq_two_t2sq
+#print axioms radX3_monomialDeriv_genT_eq
 
 end DeepWiki.SymbolicIntegration
