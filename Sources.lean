@@ -54,6 +54,13 @@ import Sources.Doi_10_1007_b138171.Chapter8
 import Sources.Doi_10_1007_b138171.Chapter9
 import Sources.Doi_10_1007_b138171.Chapter10
 
+-- Trager 1984 thesis (algebraic-function integration; the algebraic companion to Bronstein above)
+import Sources.Hdl_1721_1_15391.Source
+import Sources.Hdl_1721_1_15391.Chapter2
+import Sources.Hdl_1721_1_15391.Chapter5
+import Sources.Hdl_1721_1_15391.AppendixA
+import Sources.Hdl_1721_1_15391.IntegrateFull
+
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 import Sources.Doi_10_1007_978_3_642_69956_6.Chapter1
 import Sources.Doi_10_1007_978_3_642_69956_6.Chapter2
