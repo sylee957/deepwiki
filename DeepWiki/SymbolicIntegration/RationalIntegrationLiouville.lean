@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
+import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 
 /-! # Rational-function completeness — Liouville's theorem, rational case (Bronstein §2.4/§2.5)
 The converse-direction companion to the rational-integration soundness capstone: *every* rational
@@ -212,6 +213,127 @@ theorem ratFunc_liouville_list [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
   -- the log sum: from the flat Finset sum to the mapped List sum
   exact finsetLogSum_eq_listSum f.denom.roots.toFinset
     (fun α => (r α).eval α) (fun α => algebraMap K[X] (RatFunc K) (X - C α))
+
+/-! ## A rational derivative has no simple-pole residue (the converse ingredient)
+The Laurent fact behind the *converse* of the decision corollary: `residueAt α (G′) = 0` for every
+`G ∈ K(x)`. In the Laurent expansion `G = ∑ⱼ cⱼ(x−α)^j`, `G′ = ∑ⱼ j·cⱼ(x−α)^{j−1}`, whose
+`(x−α)^{−1}`-coefficient is the `j = 0` term `0·c₀ = 0` — a derivative never produces a simple-pole
+residue. Formalized through `residueAt α f = ((X−α)·f)(α)`: writing `G = n/d` (`n = num G`,
+`d = denom G`, coprime), `(X − α)·G′ = (X − α)(n′d − nd′)/d²`; either `α` is *not* a pole (`d(α) ≠ 0`)
+and the explicit `(X − α)` factor in the numerator vanishes at `α`, or `α` *is* a pole (`d(α) = 0`)
+and `(X − α)·G′` still has a genuine pole there, so `RatFunc.eval` reads `0`. -/
+
+open scoped Classical in
+/-- **`RatFunc.eval` reads `0` at a genuine pole**: if `x = g/h ∈ K(x)` with the *numerator* `g`
+nonzero at `α` (`g(α) ≠ 0`) but the denominator `h` vanishing there (`h(α) = 0`, `h ≠ 0`), then `α` is
+a true pole and `RatFunc.eval id α x = 0` (division by the vanished reduced denominator). The pole-case
+companion to `eval_algebraMap_div` (which needs `h(α) ≠ 0`): from the cross-multiplication
+`num x · h = g · denom x`, evaluating at `α` gives `0 = g(α)·(denom x)(α)`, so `(denom x)(α) = 0`. -/
+theorem eval_algebraMap_div_eq_zero_of_pole (α : K) (g h : K[X]) (hg : g.eval α ≠ 0)
+    (hh : h.eval α = 0) (hh0 : h ≠ 0) :
+    RatFunc.eval (RingHom.id K) α
+        (algebraMap K[X] (RatFunc K) g / algebraMap K[X] (RatFunc K) h) = 0 := by
+  set x : RatFunc K := algebraMap K[X] (RatFunc K) g / algebraMap K[X] (RatFunc K) h with hx
+  -- cross-multiplication `num x · h = g · denom x`, from `num x / denom x = g / h`
+  have hcross : RatFunc.num x * h = g * RatFunc.denom x := by
+    have hd := RatFunc.denom_ne_zero x
+    have heq : algebraMap K[X] (RatFunc K) (RatFunc.num x)
+          / algebraMap K[X] (RatFunc K) (RatFunc.denom x)
+        = algebraMap K[X] (RatFunc K) g / algebraMap K[X] (RatFunc K) h :=
+      (RatFunc.num_div_denom x).trans hx
+    rw [div_eq_div_iff
+      ((map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hd)
+      ((map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hh0),
+      ← map_mul, ← map_mul] at heq
+    exact RatFunc.algebraMap_injective K heq
+  -- evaluate the cross-mult at `α`: `0 = g(α)·(denom x)(α)`, so `(denom x)(α) = 0`
+  have heval : (RatFunc.num x).eval α * h.eval α = g.eval α * (RatFunc.denom x).eval α := by
+    simpa only [eval_mul] using congrArg (Polynomial.eval α) hcross
+  rw [hh, mul_zero] at heval
+  have hdenom : (RatFunc.denom x).eval α = 0 :=
+    (mul_eq_zero.mp heval.symm).resolve_left hg
+  -- `RatFunc.eval` divides by the vanished reduced denominator → `0`
+  exact RatFunc.eval_eq_zero_of_eval₂_denom_eq_zero
+    (by rw [Polynomial.eval₂_id]; exact hdenom)
+
+open scoped Classical in
+open scoped Differential in
+/-- **A rational derivative has zero residue at every simple pole** (the converse ingredient,
+Bronstein §2.4/§2.5): `residueAt α (G′) = 0` for all `G ∈ K(x)` and `α ∈ K`. The Laurent statement —
+the `(x−α)^{−1}`-coefficient of `G′` is the `j = 0` term `0·c₀ = 0` — made elementary through
+`residueAt α f = ((X−α)·f)(α)` and the quotient rule `G′ = (n′d − nd′)/d²` (`n = num G`, `d = denom G`):
+casing on whether `α` is a pole, either `d(α) ≠ 0` and the numerator's explicit `(X−α)` factor kills
+the value, or `d(α) = 0` and `(X−α)·G′` retains a genuine pole so `RatFunc.eval` reads `0`
+(`eval_algebraMap_div_eq_zero_of_pole`, the numerator `(X−α)(n′d − nd′)` being nonzero at `α` exactly
+when `d(α) = 0`, as `gcd(n,d) = 1` forces `n(α) ≠ 0` and char `0` keeps the multiplicity `m+1 ≠ 0`). -/
+theorem residueAt_derivative_eq_zero [CharZero K] (G : RatFunc K) (α : K) :
+    residueAt α (G′) = 0 := by
+  set n := RatFunc.num G with hn
+  set d := RatFunc.denom G with hd
+  have hd0 : d ≠ 0 := RatFunc.denom_ne_zero G
+  -- `G = n/d`, so `G′ = (n′d − nd′)/d²` and `(X−α)·G′ = (X−α)(n′d − nd′)/d²`
+  have hGmk : G′ = ratFuncDeriv G := rfl
+  have hGdiv : G = RatFunc.mk n d := by rw [RatFunc.mk_eq_div, RatFunc.num_div_denom]
+  have hderiv : G′ = algebraMap K[X] (RatFunc K) (derivative n * d - n * derivative d)
+      / algebraMap K[X] (RatFunc K) (d ^ 2) := by
+    rw [hGmk, hGdiv, ratFuncDeriv_mk, RatFunc.mk_eq_div]
+  set N := (X - C α) * (derivative n * d - n * derivative d) with hN
+  set D := d ^ 2 with hD
+  have hxG : algebraMap K[X] (RatFunc K) (X - C α) * G′
+      = algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) D := by
+    rw [hderiv, hN, map_mul, mul_div_assoc']
+  rw [residueAt, hxG]
+  by_cases hdα : d.eval α = 0
+  · -- pole case: `α` is a root of `d`.  Cancel the common `(X−α)`-powers from `N/D`, leaving a
+    -- numerator nonzero at `α` over a denominator vanishing at `α` → a genuine pole, `eval = 0`.
+    -- `n(α) ≠ 0`: `gcd(n, d) = 1`, so `α` can't be a common root
+    have hnα : n.eval α ≠ 0 := by
+      intro hnα0
+      have hcop : IsCoprime n d := RatFunc.isCoprime_num_denom G
+      exact (Polynomial.not_isUnit_X_sub_C α)
+        (hcop.isUnit_of_dvd' (dvd_iff_isRoot.mpr hnα0) (dvd_iff_isRoot.mpr hdα))
+    -- `d = (X − α)^(m+1) · d₁`, `m + 1 = rootMultiplicity α d ≥ 1`, `d₁(α) ≠ 0`
+    have hk1 : 1 ≤ d.rootMultiplicity α :=
+      (rootMultiplicity_pos hd0).mpr (by rw [Polynomial.IsRoot]; exact hdα)
+    obtain ⟨m, hkm⟩ : ∃ m, d.rootMultiplicity α = m + 1 := ⟨d.rootMultiplicity α - 1, by omega⟩
+    obtain ⟨d₁, hdeq, hndvd⟩ := d.exists_eq_pow_rootMultiplicity_mul_and_not_dvd hd0 α
+    rw [hkm] at hdeq
+    have hd₁ : d₁.eval α ≠ 0 := fun h0 => hndvd (dvd_iff_isRoot.mpr h0)
+    -- reduced numerator `M = n′(X−α)d₁ − n((m+1)·d₁ + (X−α)d₁′)`, value at `α` is `−(m+1)·n(α)·d₁(α) ≠ 0`
+    set M := derivative n * ((X - C α) * d₁) - n * (C ((m : K) + 1) * d₁ + (X - C α) * derivative d₁)
+      with hM
+    set Dred := (X - C α) ^ (m + 1) * d₁ ^ 2 with hDred
+    -- cancel `(X−α)^(m+1)`: `N/D = M/Dred` in `K(x)`, from the polynomial factorization
+    have hpolyN : N = (X - C α) ^ (m + 1) * M := by
+      rw [hN, hM, hdeq, derivative_mul, derivative_pow, derivative_X_sub_C, mul_one,
+        Nat.add_sub_cancel]
+      push_cast
+      ring
+    have hpolyD : D = (X - C α) ^ (m + 1) * Dred := by
+      rw [hD, hDred, hdeq]; ring
+    have hMα : M.eval α ≠ 0 := by
+      rw [hM]
+      simp only [eval_sub, eval_mul, eval_add, eval_C, eval_sub, eval_X, sub_self,
+        zero_mul, mul_zero, add_zero]
+      -- `M(α) = 0 − n(α)·((m+1)·d₁(α)) = −(m+1)·n(α)·d₁(α)`
+      rw [zero_sub, neg_ne_zero, mul_ne_zero_iff]
+      exact ⟨hnα, mul_ne_zero (Nat.cast_add_one_ne_zero m) hd₁⟩
+    have hDredα : Dred.eval α = 0 := by
+      rw [hDred, eval_mul, eval_pow, eval_sub, eval_X, eval_C, sub_self,
+        zero_pow (Nat.succ_ne_zero m), zero_mul]
+    have hDred0 : Dred ≠ 0 := by
+      rw [hDred]; exact mul_ne_zero (pow_ne_zero _ (X_sub_C_ne_zero α))
+        (pow_ne_zero 2 (fun h0 => hd₁ (by rw [h0, eval_zero])))
+    -- rewrite `N/D` to `M/Dred` by canceling `algebraMap((X−α)^(m+1))`
+    have hpkne : algebraMap K[X] (RatFunc K) ((X - C α) ^ (m + 1)) ≠ 0 :=
+      (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (pow_ne_zero _ (X_sub_C_ne_zero α))
+    rw [hpolyN, hpolyD, map_mul, map_mul, mul_div_mul_left _ _ hpkne]
+    exact eval_algebraMap_div_eq_zero_of_pole α M Dred hMα hDredα hDred0
+  · -- regular case: `d(α) ≠ 0`, so `D(α) = d(α)² ≠ 0`; `N(α)` has the `(X−α)` factor → `0`
+    have hDα : D.eval α ≠ 0 := by rw [hD, eval_pow]; exact pow_ne_zero 2 hdα
+    rw [eval_algebraMap_div α N D hDα]
+    have hNα : N.eval α = 0 := by rw [hN, eval_mul, eval_sub, eval_X, eval_C, sub_self, zero_mul]
+    rw [hNα, zero_div]
 
 /-! ## The decision corollary — logarithm-detection completeness -/
 
