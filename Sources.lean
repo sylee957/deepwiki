@@ -94,3 +94,20 @@ import Sources.Doi_10_1007_978_3_7091_7551_4_9.Source
 import Sources.Doi_10_1007_978_3_7091_7551_4_9.SubresultantPRS
 import Sources.Doi_10_1006_jsco_1995_1043.Source
 import Sources.Doi_10_1006_jsco_1995_1043.Integration
+-- Collins 1967 "Subresultants and Reduced Polynomial Remainder Sequences" (Bronstein Thm 1.5.3 source)
+import Sources.Doi_10_1145_321371_321381.Source
+import Sources.Doi_10_1145_321371_321381.Subresultants
+
+-- Deterministic Network Calculus papers the book defers to
+-- Le Corronc/Cottenceau/Hardouin 2014 "Container of (min,+)-linear systems" (DNC Thm 4.4 / Def 4.5)
+import Sources.Doi_10_1007_s10626_012_0148_9.Source
+import Sources.Doi_10_1007_s10626_012_0148_9.ContainerInternality
+-- Bouillard/Faou/Zavidovique 2016 "Fast weak-KAM integrators" (DNC Thm 4.2 three-part decomposition)
+import Sources.Doi_10_1090_mcom_2986.Source
+import Sources.Doi_10_1090_mcom_2986.ThreePartDecomposition
+-- Bouillard/Stea 2016 "Exact Worst-Case Delay in FIFO-Multiplexing Feed-Forward Networks" (DNC Thm 11.2)
+import Sources.Doi_10_1109_TNET_2014_2332071.Source
+import Sources.Doi_10_1109_TNET_2014_2332071.ExactFifoTandem
+-- Fidler/Schmitt 2006 "Network Calculus with Data Scaling" (DNC §12.4.2 constant-scaling instability)
+import Sources.Doi_10_1145_1140277_1140310.Source
+import Sources.Doi_10_1145_1140277_1140310.DataScaling
