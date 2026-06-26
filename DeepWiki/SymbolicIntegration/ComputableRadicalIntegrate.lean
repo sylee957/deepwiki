@@ -99,4 +99,109 @@ def radIntegrateCase1 (der : CPolyG α → CPolyG α) (V f g : CPolyG α) (k0 : 
 
 end CPolyG
 
+/-! ### ★ The driver integrates `∫ 1/((x−1)³√x)` end-to-end (`native_decide`)
+
+The headline: a **full simple-radical rational integral** taken end-to-end by the driver, with the result
+validated by the **actual** radical derivation `radDeriv`.
+
+* **Picture A** (where the Case lemmas live): `F = ℚ` (constants), `θ = x` (`θ' = 1`, base derivation
+  `cderivG` on `ℚ[x]`), radicand `y² = f = x` (`n = 2`, `y = √x`), denominator factor `V = x − 1`
+  (squarefree, coprime to `f = x`), initial multiplicity `k₀ = 3`, numerator `C₀ = 1` — the integrand
+  `1/((x−1)³√x)`. The Case-1 helper data is `g = ((n−1)/n)·f' = (1/2)·1 = 1/2`. `radIntegrateCase1` runs
+  **two** Hermite steps (`k = 3 → 2 → 1`): it accumulates `vNum = (3/4)x² − (5/4)x` (the rational-part
+  numerator over the common denominator `V² = (x−1)²`) and leaves `Crem = 3/8` (the `k = 1` residual
+  numerator). So `∫ 1/((x−1)³√x) = ((3/4)x² − (5/4)x)/((x−1)²√x) + ∫ (3/8)/((x−1)√x)` — the rational part
+  fully extracted, only a single `k = 1` log-type term left.
+
+* **Picture B** (the genuine radical extension, where `radDeriv` lives): `F = ℚ(x) = QFunNZG ℚ`, the
+  same `y² = x` over `ℚ(x)`, elements `RadElem (QFunNZG ℚ)`. An `R(x)/y` form lifts to a **pure-`y`**
+  element `[0, R/f]` (since `R/y = R·y/y² = (R/f)·y`). So the rational part `v = vNum/(V²·y)` lifts to
+  `[0, vNum/(V²·f)]` and the integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifts to
+  `[0, C₀/(V³f) − Crem/(Vf)]`, both with `ℚ(x)` coefficients (the `/V…f` divisions are `QFunNZG ℚ`
+  field divisions).
+
+* **The check**: `radDeriv 2 x (lift v) = lift (rational part of the integrand)`, verified by `radIsZero`
+  of the difference over `ℚ(x)`. The diagonal radical derivation `radDeriv` — the *real* `d/dx` extended
+  to `ℚ(x)[√x]` — confirms the driver's accumulated `v` integrates the rational part of `1/((x−1)³√x)`. -/
+
+open RadElem CPolyG
+
+/-- Driver example radicand `f = x` (`y² = x`, `y = √x`), as `ℚ[x]` `[0, 1]`. -/
+def sqrtxF : CPolyG ℚ := [0, 1]
+
+/-- Driver example denominator factor `V = x − 1` (squarefree, coprime to `f = x`), `[−1, 1]`. -/
+def sqrtxV : CPolyG ℚ := [-1, 1]
+
+/-- Driver example Case-1 helper `g = ((n−1)/n)·f' = (1/2)·1 = 1/2` (`n = 2`, `(f/y)' = g/y`), `[1/2]`. -/
+def sqrtxG : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG sqrtxF)
+
+/-- Driver example numerator `C₀ = 1` (integrand `1/((x−1)³√x)`), `[1]`. -/
+def sqrtxC : CPolyG ℚ := [1]
+
+/-- **The driver run** `radIntegrateCase1 cderivG V f g 3 C = (Crem, vNum)` on `∫ 1/((x−1)³√x)` — runs two
+Case-1 Hermite steps (`k = 3 → 2 → 1`), returning the `k = 1` residual `Crem` and the accumulated
+rational-part numerator `vNum` over the common denominator `V² = (x−1)²`. -/
+def sqrtxRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase1 cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
+
+/-- **The accumulated rational-part numerator is `vNum = (3/4)x² − (5/4)x`** (`native_decide`): the driver
+collects the two cofactor contributions over `V² = (x−1)²` into `(3/4)x² − (5/4)x` (`cisZeroG` of the
+difference against `[0, −5/4, 3/4]`). The rational part is `v = ((3/4)x² − (5/4)x)/((x−1)²√x)`. -/
+theorem sqrtxRun_vNum_eq :
+    cisZeroG (csubG sqrtxRun.2 [(0 : ℚ), -5/4, 3/4]) = true := by native_decide
+
+/-- **The leftover `k = 1` residual is `Crem = 3/8`** (`native_decide`): after the two Hermite steps the
+driver leaves the single `k = 1` term `∫ (3/8)/((x−1)√x)` (`cisZeroG` of `Crem − 3/8`) — the irreducible
+first-order-ODE / logarithmic remainder, the documented next step. -/
+theorem sqrtxRun_remainder_eq :
+    cisZeroG (csubG sqrtxRun.1 [(3/8 : ℚ)]) = true := by native_decide
+
+/-- The radicand `f = x` lifted to `ℚ(x)` (`QFunNZG ℚ`), the Picture-B radicand for `radDeriv 2`. -/
+def sqrtxFqx : QFunNZG ℚ := qxOfNum [0, 1]
+
+/-- The common-denominator power `V² = (x−1)²` as a `ℚ[x]` polynomial (the denominator of `vNum`). -/
+def sqrtxV2 : CPolyG ℚ := cpowG sqrtxV 2
+
+/-- The initial denominator power `V³ = (x−1)³` as a `ℚ[x]` polynomial (the integrand's denominator). -/
+def sqrtxV3 : CPolyG ℚ := cpowG sqrtxV 3
+
+/-- **The rational part `v` lifted to the radical extension** `RadElem (QFunNZG ℚ)` — the pure-`y` element
+`[0, vNum/(V²·f)]` realizing `v = vNum/(V²·y)` over `ℚ(x)` (an `R/y` form is `[0, R/f]` since
+`R/y = (R/f)·y`). The `y`-coefficient is the `ℚ(x)` division `vNum/((x−1)²·x)`. -/
+def sqrtxVlift : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum sqrtxRun.2) (qxOfNum (cmulG sqrtxV2 sqrtxF))]
+
+/-- **The integrand's rational part lifted to the radical extension** `RadElem (QFunNZG ℚ)` — the pure-`y`
+element `[0, C₀/(V³·f) − Crem/(V·f)]` realizing `C₀/(V³y) − Crem/(Vy)` over `ℚ(x)` (the part of the
+integrand the driver's `v` is to integrate, the leftover `Crem/(Vy)` subtracted off). -/
+def sqrtxRatLift : RadElem (QFunNZG ℚ) :=
+  [CField.zero,
+    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmulG sqrtxV3 sqrtxF)))
+      (CField.div (qxOfNum sqrtxRun.1) (qxOfNum (cmulG sqrtxV sqrtxF)))]
+
+/-- **★ The driver integrates `∫ 1/((x−1)³√x)`: `D(v) = rational part of the integrand`**
+(`native_decide`). Over the genuine radical extension `(QFunNZG ℚ)[y]/(y² − x)`, the **actual** diagonal
+radical derivation `radDeriv 2 x` of the driver's accumulated rational part `v = vNum/(V²√x)` equals the
+rational part `C₀/(V³√x) − Crem/(V√x)` of the integrand `1/((x−1)³√x)` (with the leftover `k = 1` term
+subtracted). Checked by `radIsZero` of `radDeriv 2 x (lift v) − lift(ratPart)` over `ℚ(x)`. **THE DRIVER
+ACTUALLY INTEGRATES** — `D(∫) = rational-part` for a multi-step (`k = 3 → 2 → 1`) simple-radical rational
+integral, validated by the real derivation, not just the per-step cleared identity. The accumulated `v`
+from the iterated Hermite reductions is a correct antiderivative of the integrand's rational part. -/
+theorem sqrtxDriver_integrates :
+    radIsZero (radSub (radDeriv 2 sqrtxFqx sqrtxVlift) sqrtxRatLift) = true := by native_decide
+
+/-! ### `#print axioms` — the driver headline
+
+The end-to-end `D(v) = rational-part` identity and the driver's `vNum`/`Crem` values carry the standard
+`[propext, Classical.choice, Quot.sound]` plus the `native_decide` compiler axiom — no `sorry`, no extra
+axiom. The iterated Case-1 reductions assemble a rational part `v` whose **actual** radical derivative is
+the rational part of the integrand: the simple-radical rational integral `∫ 1/((x−1)³√x)` is integrated
+end-to-end, leaving only the documented `k = 1` first-order-ODE / logarithmic term. -/
+
+-- The driver's assembled rational-part numerator and the leftover `k = 1` residual:
+#print axioms sqrtxRun_vNum_eq
+#print axioms sqrtxRun_remainder_eq
+
+-- ★ The driver integrates: `D(v) = rational part of the integrand`, by the real radical derivation:
+#print axioms sqrtxDriver_integrates
+
 end DeepWiki.SymbolicIntegration
