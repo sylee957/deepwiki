@@ -807,6 +807,21 @@ theorem fDataReduction_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u)
   exact ⟨w₀, v₀, by rw [h₁, hv₀]⟩
 
 omit [CharZero F] in
+/-- **The single-log pole obligation is the `ι = Fin 1` instance of the multi-term one — PROVEN.**
+`SingleLogPoleObligation` follows from `MultiLogPoleObligation` by specializing to a one-element index
+(`∑ x : Fin 1, … = …`), so the single-logarithm pole-independence is genuinely a *special case* of the
+full pole-matching, not an independent assumption.  (Confirms the obligation hierarchy: discharging
+`MultiLogPoleObligation` discharges the single-log case too.) -/
+theorem singleLogPole_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u) :
+    SingleLogPoleObligation u := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  intro a c hc w v h
+  obtain ⟨w₀, v₀, h₀, hv₀⟩ :=
+    hmlp a (Fin 1) (fun _ => c) (fun _ => hc) (fun _ => w) v (by simpa using h)
+  exact ⟨w₀ 0, v₀, by simpa using h₀, hv₀⟩
+
+omit [CharZero F] in
 /-- **The mechanical packaging — PROVEN.**  Given `F`-data for a single representation (the output of
 the pole-matching reduction), `IsLiouville`'s existential conclusion holds: pull the
 already-`F`-valued logarithms and `v`-term back through `algebraMap` injectivity
@@ -917,6 +932,21 @@ example (u : F) (hred : LiouvilleFDataReduction u) :
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   isLiouville_of_fDataReduction u hred
+-- The `v ∈ F` reduction: `v′ ∈ F ⟹ v ∈ F` on `RatFunc F`, modulo the two stated residues.
+example (u : F) (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligation u)
+    (hu : logDeriv u ≠ 0) :
+    letI := logDifferential u
+    ∀ {v : RatFunc F}, v′ ∈ (algebraMap F (RatFunc F)).range →
+      v ∈ (algebraMap F (RatFunc F)).range :=
+  mem_range_of_deriv_mem_range u hrtp hpv hu
+-- The keystone closes from the multi-term pole-matching core: discharging `MultiLogPoleObligation`
+-- (+ the `v ∈ F` residues) yields the real `IsLiouville F (RatFunc F)` instance.
+example (u : F) (hmlp : MultiLogPoleObligation u) (hrtp : RationalToPolyObligation u)
+    (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    IsLiouville F (RatFunc F) :=
+  isLiouville_of_multiLogPole u hmlp hrtp hpv hu
 
 end FieldObligations
 
