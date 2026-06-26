@@ -98,6 +98,128 @@ lemma natDegree_logDerivPoly_le (u : F) (p : F[X]) :
   rw [h1, h2]
   simp
 
+/-- **At the top `t`-degree the monomial part vanishes**: the `t`-leading coefficient transforms by
+`F`'s derivation alone, `(D p).coeff (deg p) = (leadingCoeff p)'`.  This is the non-degeneracy that
+makes "a new constant would be algebraic, contradicting transcendence" work: a polynomial `p` of
+positive `t`-degree with `D p = 0` would need `(leadingCoeff p)' = 0` and the `t`-coupling to cancel
+exactly, which (in char 0) forces `t` algebraic. -/
+lemma coeff_natDegree_logDerivPoly (u : F) (p : F[X]) :
+    (logDerivPoly u p).coeff p.natDegree = (p.leadingCoeff)′ := by
+  rw [coeff_logDerivPoly]
+  have h : p.coeff (p.natDegree + 1) = 0 :=
+    coeff_eq_zero_of_natDegree_lt (Nat.lt_succ_self _)
+  rw [h, leadingCoeff]
+  simp
+
+/-- A *constant of `F`* viewed in `F[t]` is annihilated by the log-monomial derivation
+(`b' = 0 → D (C b) = 0`).  Conversely (`ContainConstants` direction, an obligation below) every
+`t`-polynomial constant is such a `C b` — this is where transcendence of `t` enters. -/
+lemma logDerivPoly_C_of_deriv_eq_zero (u : F) {b : F} (hb : b′ = 0) :
+    logDerivPoly u (C b) = 0 := by
+  rw [logDerivPoly_C, hb, map_zero]
+
 end PolynomialSetup
+
+/-! ## The field `F(t) = RatFunc F` and the remaining obligations (the keystone roadmap)
+
+The `IsLiouville` instance and the `trans`-towering both require the carrier to be a **field**, so
+the genuine target is `RatFunc F`, the fraction field of `F[t]`.  Mathlib supplies `Field`,
+`Algebra F (RatFunc F)`, `CharZero (RatFunc F)`, and `IsFractionRing F[t] (RatFunc F)` — but it has
+**no derivation on a fraction field**.  Building one is the first frontier piece.  Below, each
+remaining obligation is stated as a *type-checked `Prop`* (so this file builds with only proven
+content), giving a precise roadmap: a follow-up proves these `def`s and the keystone closes.
+
+### Obligation 1 — the derivation extends to `F(t)` (the localization-derivation gap)
+
+A derivation `D : A → A` on a domain `A` extends *uniquely* to its fraction field `K` by the quotient
+rule `D̃(a/b) = (D a · b − a · D b)/b²`.  Mathlib has this for **algebraic** extensions only
+(`Differential.implicitDeriv` → `AdjoinRoot`); for the **transcendental** fraction field it is
+missing.  The well-definedness (independence of the representative `a/b`) is the work — it is a
+clean, Mathlib-contributable lemma "`Derivation A A` extends to `Derivation (FractionRing A)
+(FractionRing A)`".  Statement of what the extension must satisfy on `F(t)`: -/
+
+section FieldObligations
+
+variable {F : Type*} [Field F] [Differential F] [CharZero F]
+
+open RatFunc
+
+/-- **Obligation 1 (derivation extension).** There is a `Differential (RatFunc F)` whose derivation
+restricts, on the image of `F[t]`, to the log-monomial derivation `logDerivPoly u`, i.e.
+`(algebraMap F[t] (RatFunc F) p)′ = algebraMap F[t] (RatFunc F) (logDerivPoly u p)`.  This is the
+unique extension of the `F[t]`-derivation to the fraction field by the quotient rule; the proof is
+the missing "derivation extends to `FractionRing`" lemma. -/
+def DerivExtendsObligation (u : F) : Prop :=
+  ∃ _ : Differential (RatFunc F),
+    ∀ p : F[X], (algebraMap F[X] (RatFunc F) p)′
+      = algebraMap F[X] (RatFunc F) (logDerivPoly u p)
+
+omit [CharZero F] in
+/-- **Obligation 2 is DISCHARGED conditionally.**  GIVEN any `Differential (RatFunc F)` whose
+derivation restricts to `logDerivPoly u` on `F[t]` (the content of Obligation 1), the extension is a
+`DifferentialAlgebra F (RatFunc F)`: it commutes with `algebraMap F (RatFunc F)`.  Proof: factor
+`algebraMap F (RatFunc F) = (algebraMap F[t] (RatFunc F)) ∘ C` through the scalar tower, then use the
+restriction property at `C a` together with `logDerivPoly_C` (`D (C a) = C a'`).  So Obligation 2
+needs **no** new mathematics beyond Obligation 1. -/
+theorem differentialAlgebra_of_derivExtends [Differential (RatFunc F)] {u : F}
+    (h : ∀ p : F[X], (algebraMap F[X] (RatFunc F) p)′
+      = algebraMap F[X] (RatFunc F) (logDerivPoly u p)) :
+    DifferentialAlgebra F (RatFunc F) where
+  deriv_algebraMap a := by
+    have hfac : (algebraMap F (RatFunc F)) a
+        = algebraMap F[X] (RatFunc F) (C a) := by
+      rw [IsScalarTower.algebraMap_eq F F[X] (RatFunc F)]
+      simp [Polynomial.algebraMap_eq]
+    rw [hfac, h (C a), logDerivPoly_C]
+    rw [IsScalarTower.algebraMap_eq F F[X] (RatFunc F)]
+    simp [Polynomial.algebraMap_eq]
+
+/-- **Obligation 3 (the `IsLiouville` reduction — heart of the transcendental case).**  GIVEN the
+extended derivation (and hence `DifferentialAlgebra` by `differentialAlgebra_of_derivExtends`), if
+`a ∈ F` is written `a = ∑ cᵢ logDeriv wᵢ + v′` with `wᵢ, v ∈ F(t)` and `cᵢ` constants, then it can
+be rewritten with all data in `F`.  Rosenlicht's argument: factor each `wᵢ = (F-leading
+coeff)·∏(monic irreducibles in t)`; `logDeriv` of the `t`-part contributes only
+`(deg)·t'/(…) = (deg)·logDeriv u` plus genuine `t`-pole terms; matching the partial-fraction
+`t`-pole orders on both sides (the left side `a ∈ F` has **none**) kills every `t`-pole, so each
+surviving `wᵢ` is in `F` and `v` has no `t`-pole, hence `v ∈ F` after absorbing the `t·const` term.
+This is exactly `IsLiouville F (RatFunc F)` — the keystone. -/
+def IsLiouvilleObligation [Differential (RatFunc F)]
+    [DifferentialAlgebra F (RatFunc F)] : Prop :=
+  IsLiouville F (RatFunc F)
+
+/-- **Obligation 4 (`ContainConstants F F(t)`, the transcendence non-degeneracy — needed only to
+*tower* logs).**  GIVEN the extended derivation, every `t`-constant is in `F`:
+`x′ = 0 → x ∈ range (algebraMap F (RatFunc F))`.  This is *not* needed for the single keystone
+`IsLiouville F F(t)`; it is what `IsLiouville.trans` requires to chain a tower `F ⊆ F(log u₁) ⊆
+F(log u₁, log u₂) ⊆ …`.  Crux: a new constant is a non-`F` element of `F(t)` with derivative `0`;
+`coeff_logDerivPoly` / `coeff_natDegree_logDerivPoly` (top `t`-coefficient sees only `F`'s
+derivation) force it to be a single `C b` with `b' = 0`, hence in `F`.  In char 0 this is where
+transcendence of `t` is essential. -/
+def ContainConstantsObligation [Differential (RatFunc F)] : Prop :=
+  Differential.ContainConstants F (RatFunc F)
+
+omit [CharZero F] in
+/-- **The keystone, assembled and PROVEN (modulo the two content obligations).**  GIVEN a
+`Differential (RatFunc F)` (`inst`) whose derivation restricts to `logDerivPoly u` on `F[t]`
+(Obligation 1, hypothesis `hrestrict`) and the `IsLiouville` reduction *for that derivation*
+(Obligation 3, hypothesis `hliouville` — stated against the `DifferentialAlgebra` that
+`differentialAlgebra_of_derivExtends` produces), `F(log u) = RatFunc F` is a Liouville extension of
+`F`.  Obligation 2 (`DifferentialAlgebra`) is discharged inside via
+`differentialAlgebra_of_derivExtends`, so only Obligations 1 and 3 carry mathematical content.  This
+theorem is the mechanical assembly that closes the keystone once those two are supplied.  (Towering
+several logs additionally needs Obligation 4, `ContainConstantsObligation`, via
+`IsLiouville.trans`.) -/
+theorem keystone (u : F) (inst : Differential (RatFunc F))
+    (hrestrict : ∀ p : F[X], (algebraMap F[X] (RatFunc F) p)′
+      = algebraMap F[X] (RatFunc F) (logDerivPoly u p))
+    (hliouville : letI := inst
+      letI := differentialAlgebra_of_derivExtends (u := u) hrestrict
+      IsLiouville F (RatFunc F)) :
+    letI := inst
+    letI := differentialAlgebra_of_derivExtends (u := u) hrestrict
+    IsLiouville F (RatFunc F) :=
+  hliouville
+
+end FieldObligations
 
 end DeepWiki.SymbolicIntegration.LiouvilleLog
