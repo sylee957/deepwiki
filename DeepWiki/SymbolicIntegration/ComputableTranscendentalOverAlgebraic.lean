@@ -129,16 +129,17 @@ instance instCFieldRadExt {α : Type*} [CField α] [CFieldDomain α] {n : ℕ} {
   inv := RadExt.inv
   isZero := RadExt.isZero
 
-/-! ### `CFieldDomain (RadExt α n f)` — the Prop-erased domain facts
+/-! ### `CFieldDomain (RadExt α n f)` — the Prop-erased domain facts (the composition hypothesis)
 
 For the **next** transcendental level `QFunNZG (RadExt α n f)` to be a `CField`, the base must be a
 `CFieldDomain` — the two pure-`CField` closure facts (`cisZeroG [1] = false`, products of nonzero
-`CPolyG`s are nonzero). For a genuine field `RadExt α 2 f` (`f` a non-square in `α`) these hold; they are
-**`Prop`** fields, so although they may be discharged through the (noncomputable) `CFieldSpec` bridge they
-are erased at runtime and keep the higher tower `native_decide`-able. We supply them via the global
-`instCFieldDomainOfCFieldSpec` route, which needs a `CFieldSpec (RadExt α n f)` — provided as the stretch
-below. To keep the **computable** core independent of that bridge, we also state the domain facts for the
-concrete validation base directly. -/
+`CPolyG`s are nonzero). For a genuine field `RadExt α 2 f` (`f` a non-square in `α`) these hold, and being
+**`Prop`** fields they are erased at runtime, keeping a stacked tower `native_decide`-able. A *concrete*
+`CFieldDomain (RadExt …)` instance routes through the global `instCFieldDomainOfCFieldSpec`, hence needs a
+`CFieldSpec (RadExt α n f)` (the `AdjoinRoot` bridge — the documented stretch at the end of this file); it
+is not shipped here. The composition section below instead carries `CFieldDomain RadX3` as an explicit
+**hypothesis**, and shows the transcendental level resolves under it — the keystone-composes statement that
+needs no concrete witness. -/
 
 /-! ### `CDiffField (RadExt α n f)` — the diagonal derivation makes it a *differential* base
 
