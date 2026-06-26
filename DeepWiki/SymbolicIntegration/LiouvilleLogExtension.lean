@@ -14,8 +14,27 @@ instances — that a simple transcendental *logarithmic* extension `F(t)` with `
 logDeriv u` (`t = log u`, `u ∈ F`) is Liouville over `F` — are exactly what is missing, and they
 are the single piece the whole transcendental Risch *completeness* direction waits on.
 
-This file builds the **setup** for the log monomial faithfully and isolates the remaining proof
-obligations as named lemmas.
+This file **builds the full setup** for the log monomial faithfully and **closes everything except
+one named obligation**.
+
+## Status (the keystone roadmap)
+
+- **Setup — CLOSED.**  `logDifferential u : Differential (RatFunc F)` is a *genuine* differential
+  field structure with `t' = u'/u`, and `logDifferentialAlgebra u : DifferentialAlgebra F (RatFunc
+  F)` is real — so `F(log u) = RatFunc F` is an actual differential field extension of `F`.  The
+  load-bearing piece is `fracDeriv`: **a derivation on `F[X]` extends to its fraction field by the
+  quotient rule** — a self-derivation `Derivation ℤ K K` for any fraction field `K` of `F[X]`,
+  built from scratch here (Mathlib has no such extension — only the Kähler-module-valued
+  localization).  This is Mathlib-contributable on its own.
+- **Obligation 3 (the only remainder) — the `IsLiouville` reduction.**  `keystone` reduces the
+  *entire* transcendental-log Liouville instance to the single `Prop`
+  `IsLiouvilleReductionObligation u` — Rosenlicht's partial-fraction / `t`-pole-matching argument.
+  Its engine is built and proven here (`natDegree_logDerivPoly_lt_of_monic`,
+  `coeff_logDerivPoly`, `logDerivPoly_monomial_eq`).
+- **Obligation 4 (`ContainConstants`, only for towering logs).**  Polynomial layer discharged
+  (`eq_C_of_logDerivPoly_eq_zero`); reduces to `NoDegreeDropObligation` (the transcendence input)
+  and carries `logDeriv u ≠ 0` (when `u' = 0`, `log u` *is* a new constant — `ContainConstants`
+  genuinely fails).
 
 ## Orientation: the log monomial derivation
 
@@ -24,10 +43,8 @@ obligations as named lemmas.
 transcendental logarithmic extension is `F(t) = RatFunc F` with the derivation extended by
 `t' = c` (the **log monomial**: `D t = u'/u`, NOT `t' = 1`).  Concretely, on the polynomial ring
 `F[t]` this is `Differential.implicitDeriv (C c)` — Mathlib's "the unique derivation making a
-`DifferentialAlgebra F F[t]` with `t' = v`" — instantiated at the *constant* polynomial `v = C c`.
-
-The carrier of the algebra is the polynomial ring `F[X]` (this file) and its fraction field
-`RatFunc F` (the field setup, stated as obligations).
+`DifferentialAlgebra F F[t]` with `t' = v`" — instantiated at the *constant* polynomial `v = C c`,
+then extended to `RatFunc F` by `fracDeriv`.
 -/
 
 open scoped Differential
@@ -365,20 +382,14 @@ noncomputable def fracDifferential (h : Differential F[X]) : Differential K :=
 
 end FractionFieldDeriv
 
-/-! ## The field `F(t) = RatFunc F` and the remaining obligations (the keystone roadmap)
+/-! ## The genuine field extension `F(t) = RatFunc F` (setup CLOSED; one obligation left)
 
-The `IsLiouville` instance and the `trans`-towering both require the carrier to be a **field**, so
-the genuine target is `RatFunc F`, the fraction field of `F[t]`.  Mathlib supplies `Field`,
-`Algebra F (RatFunc F)`, `CharZero (RatFunc F)`, and `IsFractionRing F[t] (RatFunc F)` — but it has
-**no derivation on a fraction field**.  Building one is the first frontier piece.  Below, each
-remaining obligation is stated as a *type-checked `Prop`* (so this file builds with only proven
-content), giving a precise roadmap: a follow-up proves these `def`s and the keystone closes.
-
-### Obligation 1 — CLOSED above (`fracDeriv` / `fracDeriv_algebraMap`)
-
-The log-monomial derivation `logDerivPoly u` on `F[t]` extends to the genuine fraction field
-`RatFunc F` via `fracDeriv` (built from scratch above), restricting to it on `F[t]`.  This is now a
-*proven theorem* `derivExtends`, not an obligation — the **setup fully closes**. -/
+The `IsLiouville` instance and `trans`-towering require the carrier to be a **field**, so the
+target is `RatFunc F`, the fraction field of `F[t]`.  Mathlib supplies `Field`, `Algebra F (RatFunc
+F)`, `CharZero (RatFunc F)`, `IsFractionRing F[t] (RatFunc F)` — and now, via `fracDeriv` above, the
+**derivation too**.  So `logDifferential u` / `logDifferentialAlgebra u` make this a *real*
+differential field extension (Obligations 1, 2 CLOSED).  What remains (`IsLiouvilleReductionObligation`)
+is exactly the Rosenlicht `IsLiouville` reduction. -/
 
 section FieldObligations
 
@@ -474,6 +485,22 @@ theorem keystone (u : F) (hreduction : IsLiouvilleReductionObligation u) :
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   hreduction
+
+-- Restatements pinning the genuine field setup.
+-- `t' = u'/u` on `RatFunc F` itself (the log monomial, on the fraction field):
+example (u : F) :
+    letI := logDifferential u
+    (algebraMap F[X] (RatFunc F) X)′ = algebraMap F[X] (RatFunc F) (C (logDeriv u)) := by
+  have := derivExtends u X
+  simpa [logDerivPoly_X] using this
+-- The setup is a genuine differential field extension: `D` commutes with `algebraMap F (RatFunc F)`.
+example (u : F) (a : F) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    (algebraMap F (RatFunc F) a)′ = algebraMap F (RatFunc F) a′ :=
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  deriv_algebraMap a
 
 end FieldObligations
 
