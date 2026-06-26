@@ -443,6 +443,33 @@ theorem logDifferentialAlgebra (u : F) :
   letI := logDifferential u
   differentialAlgebra_of_derivExtends (u := u) (derivExtends u)
 
+omit [CharZero F] in
+/-- **The `logDeriv`-to-polynomial bridge** (the entry point for Obligation 3): in `RatFunc F`, the
+logarithmic derivative of `algebraMap p` is `algebraMap (D p) / algebraMap p`, with `D p` the
+proven polynomial engine `logDerivPoly u p`.  This is how the `IsLiouville` statement's `logDeriv
+wᵢ` connects to the `t`-pole engine. -/
+theorem logDeriv_algebraMap_eq (u : F) (p : F[X]) :
+    letI := logDifferential u
+    logDeriv (algebraMap F[X] (RatFunc F) p)
+      = algebraMap F[X] (RatFunc F) (logDerivPoly u p) / algebraMap F[X] (RatFunc F) p := by
+  letI := logDifferential u
+  unfold logDeriv
+  rw [derivExtends u p]
+
+omit [CharZero F] in
+/-- **A monic `t`-factor contributes a genuine `t`-pole to its `logDeriv`** (the pole-matching
+mechanism, lifted to `RatFunc F`): for monic `p` of `t`-degree `≥ 1`, `logDeriv (algebraMap p) =
+algebraMap (D p) / algebraMap p` is a *proper* fraction in `t` — `D p` has strictly smaller
+`t`-degree than `p` (`natDegree_logDerivPoly_lt_of_monic`).  Since `a ∈ F` carries **no** `t`-pole,
+in `a = ∑ cᵢ logDeriv wᵢ + v′` these poles must cancel among the `wᵢ` — the crux of Obligation 3. -/
+theorem logDeriv_monic_proper (u : F) {p : F[X]} (hm : p.Monic) (hdeg : 1 ≤ p.natDegree) :
+    letI := logDifferential u
+    logDeriv (algebraMap F[X] (RatFunc F) p)
+        = algebraMap F[X] (RatFunc F) (logDerivPoly u p) / algebraMap F[X] (RatFunc F) p ∧
+      (logDerivPoly u p).natDegree < p.natDegree :=
+  letI := logDifferential u
+  ⟨logDeriv_algebraMap_eq u p, natDegree_logDerivPoly_lt_of_monic u hm hdeg⟩
+
 /-- **Obligation 4 (`ContainConstants F F(t)`, the transcendence non-degeneracy — needed only to
 *tower* logs).**  GIVEN the extended derivation, every `t`-constant is in `F`:
 `x′ = 0 → x ∈ range (algebraMap F (RatFunc F))`.  This is *not* needed for the single keystone
