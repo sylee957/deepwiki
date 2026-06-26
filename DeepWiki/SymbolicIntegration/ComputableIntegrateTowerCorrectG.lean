@@ -316,4 +316,61 @@ theorem cIntegrateGChecked_correct [CFracGcdCore α] [CRischField α] (Dt : CPol
   -- the bridge turns the guard into the field identity
   exact field_identity_of_checkIdentityG Dt res a d hgden hdne hlogs hcheck
 
+/-! ### ★ The deliverable at the level-1 carrier `α = QFunNZG ℚ`
+
+Instantiating the carrier-generic bridge at `α = QFunNZG ℚ = Frac(ℚ[x])`, where `CFieldSpec.K (QFunNZG ℚ) =
+RatFunc ℚ` (so `Algebra ℚ (CFieldSpec.K (QFunNZG ℚ))` is the genuine `Algebra ℚ (RatFunc ℚ)`) and the
+engine runs the recursive tower instances (`instCFracGcdCoreQFunNZG`, the chunk-1 `instCDiffFieldSpecQFunNZG`,
+the level-1 `CRischField (QFunNZG ℚ)`) — `cgcdFF`-free, exactly the chunk-1 pattern of
+`ComputableSplitFactorTowerCorrectG` / `ComputableRischDETowerCorrectG`. -/
+
+/-- The engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Re-declared as a local
+instance so this file synthesizes the **same** `Algebra ℚ` the bridge `towerFractionFieldDerivG` needs,
+avoiding an instance-mismatch detour. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
+  inferInstanceAs (Algebra ℚ (RatFunc ℚ))
+
+/-- **★ `cIntegrateGChecked f = some res ⟹ D(res) = f` at `α = QFunNZG ℚ`** — the self-validating tower
+integrator's UNCONDITIONAL correctness at the generic level-1 carrier `ℚ(x) = QFunNZG ℚ`, `cgcdFF`-free.
+If `cIntegrateGChecked Dt fuel a d cands = some res`, then the field-level antiderivative identity
+`towerFractionFieldDerivG Dt (g) + logResidueSumG Dt res.logs = amG a / amG d` holds over `RatFunc ℚ =
+RatFunc (CFieldSpec.K (QFunNZG ℚ))`, with `g = amG(res.rational.1)/amG(res.rational.2)` — gated only on the
+structural nonzero-denominator facts, for ALL inputs and ALL regimes. The `QFunNZG ℚ` instance of
+`cIntegrateGChecked_correct`; the deliverable — the engine's `D(∫f) = f` self-check bridge at the generic
+ℚ(x) carrier. -/
+theorem cIntegrateGChecked_correct_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
+    (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
+    (hsome : CPolyG.cIntegrateGChecked Dt fuel a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (hdne : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0) :
+    towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (toPolyG res.rational.1)
+          / amG (QFunNZG ℚ) (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
+  cIntegrateGChecked_correct Dt fuel a d cands res hsome hgden hdne hlogs
+
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- ★ THE DELIVERABLE (UNCONDITIONAL, checked form) at `α = QFunNZG ℚ`: the self-validating tower integrator
+-- never returns a wrong answer. `cIntegrateGChecked f = some res` ⟹ `D(res) = f` over `RatFunc ℚ` — for
+-- EVERY input and EVERY regime; the `checkIdentityG` guard alone supplies correctness.
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ))
+    (res : IntegralResultG (QFunNZG ℚ))
+    (hsome : CPolyG.cIntegrateGChecked Dt fuel a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (hdne : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0) :
+    towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (toPolyG res.rational.1)
+          / amG (QFunNZG ℚ) (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
+  cIntegrateGChecked_correct_qfunNZG Dt fuel a d cands res hsome hgden hdne hlogs
+
+/-! ### Axiom audit (the bridge rests only on the standard kernel axioms) -/
+
+#print axioms logResidueSumG
+#print axioms checkIdentityG_fold_eq
+#print axioms field_identity_of_checkIdentityG
+#print axioms cIntegrateGChecked_correct
+#print axioms cIntegrateGChecked_correct_qfunNZG
+
 end DeepWiki.SymbolicIntegration
