@@ -138,3 +138,4 @@ import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
 import DeepWiki.SymbolicIntegration.ComputableGeneralDivisor
 import DeepWiki.SymbolicIntegration.ComputableGeneralDivisorOrder
 import DeepWiki.SymbolicIntegration.ComputableGeneralIntegralSoundness
+import DeepWiki.SymbolicIntegration.ComputableGeneralLogSoundness
