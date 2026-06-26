@@ -118,3 +118,4 @@ import DeepWiki.SymbolicIntegration.ComputableCantorComposition
 import DeepWiki.SymbolicIntegration.ComputableDivisorOrder
 import DeepWiki.SymbolicIntegration.ComputablePrincipalGenerator
 import DeepWiki.SymbolicIntegration.ComputableTorsionLogTerm
+import DeepWiki.SymbolicIntegration.ComputableHermiteNormalForm
