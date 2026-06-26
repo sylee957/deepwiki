@@ -82,6 +82,7 @@ import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeResultant
 import DeepWiki.SymbolicIntegration.ComputableTowerField
+import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
