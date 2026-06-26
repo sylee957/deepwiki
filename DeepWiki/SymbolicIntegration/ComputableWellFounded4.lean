@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableWellFounded3
+import DeepWiki.SymbolicIntegration.ComputableWellFoundedDioph
 import DeepWiki.SymbolicIntegration.ComputableCanonicalRepCorrect
 
 /-! # Fuel-free (well-founded) §3.5 ops — Yun squarefree split, `SplitSquarefreeFactor`, canonical rep
@@ -561,47 +562,6 @@ fuel-free Bézout helpers `cbezoutOneWf`/`cextendedEuclideanSplitWf` (via the fu
 `cgcdWf`). Every sub-op is a WF leaf, so the capstone is **fuel-free end-to-end**. The abstract
 reconstruction `canonicalRepFast_reconstructs` (`ComputableCanonicalRepCorrect`) transports through the
 bridge. -/
-
-namespace CPolyG
-
-variable {α : Type*} [CField α]
-
-/-- **Fuel-free Bézout cofactors** `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`: the
-fuel-free companion of `cbezoutOne`. Runs the **fuel-free** extended-Euclid `cgcdWf` to get `(g, s, t)` with
-`s·a + t·b = g` (a nonzero constant, since `a, b` coprime), then rescales by `g⁻¹` — **no fuel at runtime**. -/
-def cbezoutOneWf (a b : CPolyG α) : CPolyG α × CPolyG α :=
-  let (g, s, t) := cgcdWf a b
-  let ginv := CField.inv (cleadG g)
-  (cscaleG ginv s, cscaleG ginv t)
-
-/-- **Fuel-free Bézout split** `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)`: the fuel-free companion of
-`cextendedEuclideanSplit`. With a Bézout pair `u·dₙ + w·dₛ = 1`, returns `b = (u·r) mod dₛ` and `c = w·r +
-(u·r div dₛ)·dₙ` via the **fuel-free** `cdivmodWf` — **no fuel at runtime**. -/
-def cextendedEuclideanSplitWf (dn ds r u w : CPolyG α) : CPolyG α × CPolyG α :=
-  let ur := cmulG u r
-  let (quo, rem) := cdivmodWf ur ds
-  (rem, caddG (cmulG w r) (cmulG quo dn))
-
-variable [CFieldSpec α]
-
-/-- **`cbezoutOneWf` equals the fuel'd `cbezoutOne` at any sufficient fuel** — with `(cnormG a).length ≤
-fuel` and `(cnormG b).length < fuel`, `cbezoutOneWf a b = cbezoutOne fuel a b`, since the only fuel'd
-sub-op `cgcdExtG` is bridged by `cgcdWf_eq_of_fuel`. -/
-theorem cbezoutOneWf_eq_of_fuel (fuel : ℕ) (a b : CPolyG α)
-    (ha : (cnormG a : List α).length ≤ fuel) (hb : (cnormG b : List α).length < fuel) :
-    cbezoutOneWf a b = CPolyG.cbezoutOne fuel a b := by
-  rw [cbezoutOneWf, CPolyG.cbezoutOne, cgcdWf_eq_of_fuel fuel a b ha hb]
-
-/-- **`cextendedEuclideanSplitWf` equals the fuel'd `cextendedEuclideanSplit` at any sufficient fuel** —
-with `(cnormG (cmulG u r)).length ≤ fuel`, `cextendedEuclideanSplitWf dn ds r u w = cextendedEuclideanSplit
-fuel dn ds r u w`, since the only fuel'd sub-op `cdivmodG` is bridged by `cdivmodWf_eq_of_fuel`. -/
-theorem cextendedEuclideanSplitWf_eq_of_fuel (fuel : ℕ) (dn ds r u w : CPolyG α)
-    (hur : (cnormG (cmulG u r) : List α).length ≤ fuel) :
-    cextendedEuclideanSplitWf dn ds r u w = CPolyG.cextendedEuclideanSplit fuel dn ds r u w := by
-  rw [cextendedEuclideanSplitWf, CPolyG.cextendedEuclideanSplit,
-    cdivmodWf_eq_of_fuel fuel (cmulG u r) ds hur]
-
-end CPolyG
 
 namespace CPolyG
 

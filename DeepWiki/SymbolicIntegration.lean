@@ -88,6 +88,7 @@ import DeepWiki.SymbolicIntegration.ComputableResultantGenericCore
 import DeepWiki.SymbolicIntegration.ComputableResultantGeneric
 import DeepWiki.SymbolicIntegration.ComputableParallel
 import DeepWiki.SymbolicIntegration.ComputableWellFounded
+import DeepWiki.SymbolicIntegration.ComputableWellFoundedDioph
 import DeepWiki.SymbolicIntegration.ComputableWellFounded2
 import DeepWiki.SymbolicIntegration.ComputablePrimPRSWf
 import DeepWiki.SymbolicIntegration.ComputableWellFounded3
