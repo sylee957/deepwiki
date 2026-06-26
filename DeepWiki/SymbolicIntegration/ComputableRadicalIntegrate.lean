@@ -189,6 +189,58 @@ from the iterated Hermite reductions is a correct antiderivative of the integran
 theorem sqrtxDriver_integrates :
     radIsZero (radSub (radDeriv 2 sqrtxFqx sqrtxVlift) sqrtxRatLift) = true := by native_decide
 
+/-! ### ★ The driver integrates `∫ 1/((x−1)³√(x³+1))` end-to-end (`native_decide`)
+
+The same driver on the carrier's **headline radicand** `y² = x³ + 1` (`y = √(x³+1)`, the
+`radGen_sq_eq_radicand` curve — a genuine elliptic-curve radical, not the trivial `√x`). With `V = x − 1`
+(coprime to `f = x³+1`, since `f(1) = 2 ≠ 0`), `k₀ = 3`, `C₀ = 1` — the integrand `1/((x−1)³√(x³+1))` —
+`radIntegrateCase1` again runs **two** Case-1 steps (`k = 3 → 2 → 1`), assembling `vNum` (a degree-4
+`ℚ[x]` numerator over `V² = (x−1)²`) and leaving `Crem` (the `k = 1` residual). The end-to-end check is
+the *same shape*: with the **actual** diagonal derivation `radDeriv 2 (x³+1)`, the lift of the assembled
+rational part `v = vNum/(V²·√(x³+1))` differentiates to the lift of the integrand's rational part
+`C₀/(V³√(x³+1)) − Crem/(V√(x³+1))`. The driver integrates over a nontrivial algebraic curve. -/
+
+/-- Headline-radicand example `f = x³ + 1` (`y² = x³+1`, `y = √(x³+1)`), as `ℚ[x]` `[1,0,0,1]`. -/
+def cubeF : CPolyG ℚ := [1, 0, 0, 1]
+
+/-- Headline-radicand denominator factor `V = x − 1` (coprime to `f = x³+1`: `f(1) = 2 ≠ 0`), `[−1, 1]`. -/
+def cubeV : CPolyG ℚ := [-1, 1]
+
+/-- Headline-radicand Case-1 helper `g = ((n−1)/n)·f' = (1/2)·3x² = (3/2)x²` (`n = 2`, `(f/y)' = g/y`). -/
+def cubeG : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG cubeF)
+
+/-- Headline-radicand numerator `C₀ = 1` (integrand `1/((x−1)³√(x³+1))`), `[1]`. -/
+def cubeC : CPolyG ℚ := [1]
+
+/-- **The driver run** on `∫ 1/((x−1)³√(x³+1))` — two Case-1 Hermite steps (`k = 3 → 2 → 1`), returning the
+`k = 1` residual `Crem` and the accumulated rational-part numerator `vNum` over `V² = (x−1)²`. -/
+def cubeRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase1 cderivG cubeV cubeF cubeG 3 cubeC
+
+/-- The headline radicand `f = x³ + 1` lifted to `ℚ(x)` (`QFunNZG ℚ`), the Picture-B radicand. -/
+def cubeFqx : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
+
+/-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (QFunNZG ℚ)` — the pure-`y` element
+`[0, vNum/(V²·f)]` over `ℚ(x)`. -/
+def cubeVlift : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum cubeRun.2) (qxOfNum (cmulG (cpowG cubeV 2) cubeF))]
+
+/-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (QFunNZG ℚ)` — the pure-`y`
+element `[0, C₀/(V³·f) − Crem/(V·f)]` over `ℚ(x)`. -/
+def cubeRatLift : RadElem (QFunNZG ℚ) :=
+  [CField.zero,
+    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmulG (cpowG cubeV 3) cubeF)))
+      (CField.div (qxOfNum cubeRun.1) (qxOfNum (cmulG cubeV cubeF)))]
+
+/-- **★ The driver integrates `∫ 1/((x−1)³√(x³+1))`: `D(v) = rational part of the integrand`**
+(`native_decide`). On the carrier's headline radicand `y² = x³ + 1` (a genuine elliptic-curve radical),
+the **actual** diagonal radical derivation `radDeriv 2 (x³+1)` of the driver's accumulated rational part
+`v = vNum/(V²√(x³+1))` equals the rational part `C₀/(V³√(x³+1)) − Crem/(V√(x³+1))` of the integrand
+`1/((x−1)³√(x³+1))`. Checked by `radIsZero` of the difference over `ℚ(x)`. **THE DRIVER INTEGRATES OVER A
+NONTRIVIAL ALGEBRAIC CURVE** — `D(∫) = rational-part` for the multi-step (`k = 3 → 2 → 1`) simple-radical
+rational integral on `√(x³+1)`, validated by the real derivation. -/
+theorem cubeDriver_integrates :
+    radIsZero (radSub (radDeriv 2 cubeFqx cubeVlift) cubeRatLift) = true := by native_decide
+
 /-! ### `#print axioms` — the driver headline
 
 The end-to-end `D(v) = rational-part` identity and the driver's `vNum`/`Crem` values carry the standard
@@ -203,5 +255,8 @@ end-to-end, leaving only the documented `k = 1` first-order-ODE / logarithmic te
 
 -- ★ The driver integrates: `D(v) = rational part of the integrand`, by the real radical derivation:
 #print axioms sqrtxDriver_integrates
+
+-- ★ The same, on the headline radicand `y² = x³+1` (a genuine elliptic-curve radical `√(x³+1)`):
+#print axioms cubeDriver_integrates
 
 end DeepWiki.SymbolicIntegration
