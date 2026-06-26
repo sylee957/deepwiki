@@ -1,6 +1,7 @@
 import Mathlib.FieldTheory.Differential.Liouville
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
+import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
 
 /-! # The transcendental logarithmic Liouville extension (completeness keystone)
@@ -229,6 +230,41 @@ lemma logDerivPoly_monomial_eq (u : F) (n : ℕ) (b : F) :
   · rw [Derivation.leibniz_pow, logDerivPoly_X, nsmul_eq_mul]
     ring
 
+/-- **Pole-order drops by at most one under the log-monomial derivation** (the pure-Leibniz core of
+the `t`-pole analysis, fully provable for *any* derivation).  If `q^n ∣ p` then `q^(n-1) ∣ D p`:
+differentiating `p = q^n · r` gives `D p = (n · q^(n-1) · D q) · r + q^n · D r`, both summands divisible
+by `q^(n-1)` (`Derivation.leibniz`, `Derivation.leibniz_pow`).  This is the general-derivation analogue
+of Mathlib's `Polynomial.pow_sub_one_dvd_derivative_of_pow_dvd` (which is stated only for the formal
+`derivative`).  It is the load-bearing divisibility behind "the `t`-derivative raises pole order" in the
+`RationalToPolyObligation` / `PoleIndependenceObligation` analyses — the *strict* increase additionally
+needs `q ∤ D q` (`not_dvd_logDerivPoly_of_natDegree_lt` below), which is where transcendence enters. -/
+lemma pow_sub_one_dvd_logDerivPoly (u : F) {p q : F[X]} {n : ℕ} (hdvd : q ^ n ∣ p) :
+    q ^ (n - 1) ∣ logDerivPoly u p := by
+  obtain ⟨r, rfl⟩ := hdvd
+  -- `q^(n-1) ∣ D(q^n)` directly from `leibniz_pow` (`D(q^n) = ↑n * (q^(n-1) * D q)`).
+  have hpn : q ^ (n - 1) ∣ logDerivPoly u (q ^ n) := by
+    rw [Derivation.leibniz_pow, nsmul_eq_mul, smul_eq_mul]
+    exact dvd_mul_of_dvd_right (dvd_mul_right _ _) _
+  -- `q^(n-1) ∣ q^n` (so the `q^n · D r` summand is divisible).
+  have hpow : q ^ (n - 1) ∣ q ^ n := pow_dvd_pow q (Nat.sub_le n 1)
+  rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul]
+  exact dvd_add (dvd_mul_of_dvd_left hpow _) (dvd_mul_of_dvd_right hpn _)
+
+/-- **A monic `t`-factor `q` does not divide its own log-monomial derivative `D q`**, *provided*
+`D q ≠ 0` (and `q` has positive degree): since `(D q).natDegree < q.natDegree`
+(`natDegree_logDerivPoly_lt_of_monic`), a nonzero `D q` is too low-degree to be a `q`-multiple.  Hence
+at a `q`-pole the order strictly increases — the missing strict half of `pow_sub_one_dvd_logDerivPoly`.
+The hypothesis `D q ≠ 0` is *exactly* the transcendence input: for a genuine new transcendental
+`t = log u` no monic irreducible of positive `t`-degree is annihilated by `D`, whereas if `F` already
+contains an antiderivative `s` of `u'/u` then `q = t − C s` has `D q = 0` and the pole can vanish — so
+this is unprovable from the abstract typeclasses alone (see the obligation notes below). -/
+lemma not_dvd_logDerivPoly_of_natDegree_lt (u : F) {q : F[X]} (hm : q.Monic)
+    (hdeg : 1 ≤ q.natDegree) (hDq : logDerivPoly u q ≠ 0) : ¬ q ∣ logDerivPoly u q := by
+  intro hdvd
+  have hlt := natDegree_logDerivPoly_lt_of_monic u hm hdeg
+  have hle := Polynomial.natDegree_le_of_dvd hdvd hDq
+  omega
+
 -- Restatements pinning the log-monomial setup to the book's wording (Rosenlicht §, log case).
 -- `t' = u'/u`: the defining equation of the log monomial `t = log u`.
 example (u : F) : logDerivPoly u (X : F[X]) = C (logDeriv u) := logDerivPoly_X u
@@ -248,6 +284,15 @@ example (u : F) (p : F[X]) (i : ℕ) :
 example (u : F) {p : F[X]} (hm : p.Monic) (hdeg : 1 ≤ p.natDegree) :
     (logDerivPoly u p).natDegree < p.natDegree :=
   natDegree_logDerivPoly_lt_of_monic u hm hdeg
+-- Pole order drops by at most one: `q^n ∣ p ⟹ q^(n-1) ∣ D p` (pure Leibniz, any derivation).
+example (u : F) {p q : F[X]} {n : ℕ} (hdvd : q ^ n ∣ p) :
+    q ^ (n - 1) ∣ logDerivPoly u p :=
+  pow_sub_one_dvd_logDerivPoly u hdvd
+-- A monic irreducible-degree factor does not divide its own derivative (strict pole increase),
+-- provided `D q ≠ 0` (the transcendence input).
+example (u : F) {q : F[X]} (hm : q.Monic) (hdeg : 1 ≤ q.natDegree)
+    (hDq : logDerivPoly u q ≠ 0) : ¬ q ∣ logDerivPoly u q :=
+  not_dvd_logDerivPoly_of_natDegree_lt u hm hdeg hDq
 -- A `t`-constant has an `F`-constant `t`-leading coefficient.
 example (u : F) {p : F[X]} (h : logDerivPoly u p = 0) : (p.leadingCoeff)′ = 0 :=
   leadingCoeff_deriv_eq_zero_of_logDerivPoly_eq_zero u h
@@ -766,6 +811,90 @@ def PoleIndependenceObligation (u : F) : Prop :=
       ∈ (algebraMap F[X] (RatFunc F)).range →
     ∀ j, d j = 0
 
+open scoped algebraMap in
+omit [CharZero F] in
+/-- **`PoleIndependenceObligation` PROVED from the engine, modulo the one transcendence residue
+`∀ j, D πⱼ ≠ 0`.**  This is the genuine pole-independence proof: given distinct monic irreducible
+`t`-polynomials `πⱼ`, numerators `dⱼ` with `deg dⱼ < deg πⱼ`, and `∑ⱼ dⱼ · logDeriv πⱼ` a *polynomial*,
+every `dⱼ = 0` — *provided* no `πⱼ` is annihilated by the log-monomial derivation (`D πⱼ ≠ 0`).  The
+argument is exactly Rosenlicht's: rewrite `logDeriv πⱼ = (D πⱼ)/πⱼ`, do polynomial division
+`dⱼ·(D πⱼ) = πⱼ·quoⱼ + remⱼ` (`degree remⱼ < degree πⱼ`), so the sum is `↑(∑ quoⱼ) + ∑ ↑remⱼ/↑πⱼ`; matching
+it against the polynomial value via the **partial-fraction uniqueness** `quo_add_sum_rem_div_unique`
+(distinct monic irreducibles are pairwise coprime, `Irreducible.coprime_iff_not_dvd` +
+`eq_of_monic_of_associated`) forces every `remⱼ = 0`, i.e. `πⱼ ∣ dⱼ·(D πⱼ)`.  Since
+`πⱼ ∤ D πⱼ` (the strict pole increase `not_dvd_logDerivPoly_of_natDegree_lt`, using `D πⱼ ≠ 0`), Euclid's
+lemma gives `πⱼ ∣ dⱼ`, and `deg dⱼ < deg πⱼ` forces `dⱼ = 0`.  **The residue `D πⱼ ≠ 0` is precisely the
+transcendence of `log u`** (see `PolyVReductionObligation`): for a genuine log no positive-degree monic
+irreducible is killed by `D`; if `F` already contains an antiderivative `s` of `u'/u` then `π = t − C s`
+has `D π = 0` and the statement is **false** — so this residue cannot be discharged from the abstract
+`[Field F] [Differential F] [CharZero F]` alone, and `PoleIndependenceObligation` as literally stated
+(no such guard) is a non-theorem in that degenerate case. -/
+theorem poleIndependence_of_logDerivPoly_ne_zero (u : F) {ιπ : Type} [Fintype ιπ]
+    (π : ιπ → F[X]) (d : ιπ → F[X]) (hmon : ∀ j, (π j).Monic) (hirr : ∀ j, Irreducible (π j))
+    (hinj : Function.Injective π) (hdeg : ∀ j, (d j).natDegree < (π j).natDegree)
+    (hDne : ∀ j, logDerivPoly u (π j) ≠ 0)
+    (hpoly : letI := logDifferential u
+      (∑ j, algebraMap F[X] (RatFunc F) (d j)
+          * logDeriv (algebraMap F[X] (RatFunc F) (π j)))
+        ∈ (algebraMap F[X] (RatFunc F)).range) :
+    ∀ j, d j = 0 := by
+  letI := logDifferential u
+  -- Notation: `D πⱼ`, the quotient/remainder of `dⱼ · D πⱼ` by the monic `πⱼ`.
+  set Dπ : ιπ → F[X] := fun j => logDerivPoly u (π j) with hDπ
+  set rem : ιπ → F[X] := fun j => (d j * Dπ j) %ₘ (π j) with hrem
+  set quo : ιπ → F[X] := fun j => (d j * Dπ j) /ₘ (π j) with hquo
+  -- `deg πⱼ ≥ 1` and `deg remⱼ < deg πⱼ`.
+  have hdegπ : ∀ j, 1 ≤ (π j).natDegree := fun j => (hirr j).natDegree_pos
+  have hdegrem : ∀ j, (rem j).degree < (π j).degree := fun j =>
+    degree_modByMonic_lt _ (hmon j)
+  -- Each term equals `↑quoⱼ + ↑remⱼ / ↑πⱼ` in `RatFunc F`.
+  have hπne : ∀ j, (algebraMap F[X] (RatFunc F) (π j)) ≠ 0 := fun j =>
+    RatFunc.algebraMap_ne_zero (hmon j).ne_zero
+  have hterm : ∀ j, algebraMap F[X] (RatFunc F) (d j)
+      * logDeriv (algebraMap F[X] (RatFunc F) (π j))
+      = (quo j : RatFunc F) + (rem j : RatFunc F) / (π j : RatFunc F) := by
+    intro j
+    rw [logDeriv_algebraMap_eq u (π j)]
+    show algebraMap F[X] (RatFunc F) (d j)
+        * (algebraMap F[X] (RatFunc F) (Dπ j) / algebraMap F[X] (RatFunc F) (π j))
+      = (quo j : RatFunc F) + (rem j : RatFunc F) / (π j : RatFunc F)
+    -- `dⱼ · (D πⱼ / πⱼ) = (dⱼ · D πⱼ) / πⱼ`, then `dⱼ·D πⱼ = πⱼ·quoⱼ + remⱼ`.
+    have hsplit : d j * Dπ j = π j * quo j + rem j := by
+      rw [hrem, hquo, add_comm]; exact (modByMonic_add_div (d j * Dπ j) (π j)).symm
+    rw [mul_div_assoc', ← map_mul, hsplit, map_add, map_mul, add_div]
+    congr 1
+    rw [mul_comm, mul_div_assoc, div_self (hπne j), mul_one]
+  -- Rewrite the whole sum and pull out the polynomial value `P`.
+  obtain ⟨P, hP⟩ := hpoly
+  simp_rw [hterm] at hP
+  rw [Finset.sum_add_distrib, ← map_sum] at hP
+  -- Now `↑P = ↑(∑ quoⱼ) + ∑ ↑remⱼ/↑πⱼ`; uniqueness against `↑P + ∑ ↑0/↑πⱼ` forces `remⱼ = 0`.
+  have hcop : Set.Pairwise (Finset.univ : Finset ιπ) fun i j => IsCoprime (π i) (π j) := by
+    intro i _ j _ hij
+    rw [(hirr i).coprime_iff_not_dvd]
+    intro hdvd
+    exact hij (hinj (eq_of_monic_of_associated (hmon i) (hmon j)
+      ((hirr i).associated_of_dvd (hirr j) hdvd)))
+  have hdeg0 : ∀ j, (0 : F[X]).degree < (π j).degree := by
+    intro j
+    rw [Polynomial.degree_zero]
+    exact bot_lt_iff_ne_bot.mpr (Polynomial.degree_eq_bot.not.mpr (hmon j).ne_zero)
+  have huniq := Polynomial.quo_add_sum_rem_div_unique (R := F) (K := RatFunc F)
+    (g := π) (s := Finset.univ) (fun j _ => hmon j) hcop
+    (q₁ := ∑ j, quo j) (q₂ := P) (r₁ := rem) (r₂ := fun _ => 0)
+    (fun j _ => hdegrem j) (fun j _ => hdeg0 j)
+    (by push_cast; simpa [div_eq_mul_inv] using hP.symm)
+  -- From uniqueness `remⱼ = 0`, get `πⱼ ∣ dⱼ · D πⱼ`, then `πⱼ ∣ dⱼ`, then `dⱼ = 0`.
+  intro j
+  have hrem0 : rem j = 0 := huniq.2 j (Finset.mem_univ j)
+  have hdvd : π j ∣ d j * Dπ j :=
+    (Polynomial.modByMonic_eq_zero_iff_dvd (hmon j)).mp hrem0
+  have hnd : ¬ π j ∣ Dπ j :=
+    not_dvd_logDerivPoly_of_natDegree_lt u (hmon j) (hdegπ j) (hDne j)
+  have hdvdd : π j ∣ d j := ((hirr j).prime.dvd_or_dvd hdvd).resolve_right hnd
+  by_contra hd0
+  exact absurd (Polynomial.natDegree_le_of_dvd hdvdd hd0) (by have := hdeg j; omega)
+
 /-- **The multi-term pole-matching obligation** — the full `Σᵢ` analogue of `SingleLogPoleObligation`,
 sharply isolated.  GIVEN `a ∈ F`, constants `cᵢ`, and `wᵢ, v ∈ RatFunc F` with `algebraMap a = ∑ᵢ cᵢ
 logDeriv wᵢ + v′`, there exist `F`-arguments `w₀ : ι → F` and a corrected `v₀ : RatFunc F` with the
@@ -947,6 +1076,17 @@ example (u : F) (hmlp : MultiLogPoleObligation u) (hrtp : RationalToPolyObligati
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   isLiouville_of_multiLogPole u hmlp hrtp hpv hu
+-- `PoleIndependenceObligation` is PROVEN from the engine once the transcendence residue
+-- `∀ j, D πⱼ ≠ 0` is supplied: feeding that residue into `poleIndependence_of_logDerivPoly_ne_zero`
+-- discharges the obligation, so the obligation ⟺ "no positive-degree monic irreducible is killed by `D`".
+example (u : F)
+    (hDne : letI := logDifferential u; ∀ {ιπ : Type} [Fintype ιπ] (π : ιπ → F[X]),
+      (∀ j, Irreducible (π j)) → ∀ j, logDerivPoly u (π j) ≠ 0) :
+    PoleIndependenceObligation u := by
+  letI := logDifferential u
+  intro ιπ _ π d hmon hirr hinj hdeg hpoly
+  exact poleIndependence_of_logDerivPoly_ne_zero u π d hmon hirr hinj hdeg
+    (hDne π hirr) hpoly
 
 end FieldObligations
 
