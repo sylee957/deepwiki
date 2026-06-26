@@ -1,141 +1,35 @@
+import DeepWiki.SymbolicIntegration.ComputableBareissEngine
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
 
-/-! # Fraction-free linear algebra over `ℚ[x]` — the Bareiss algorithm (no coefficient swell)
+/-! # Agreement of the fraction-free Bareiss determinant with `fieldDet` (no coefficient swell)
 (Bareiss, *Sylvester's Identity and Multistep Integer-Preserving Gaussian Elimination*, 1968;
 the polynomial form, e.g. Geddes–Czapor–Labahn §9.3)
 
-The general algebraic-curve machinery (`ComputableAlgFunctionField`/`ComputableRound2IntegralBasis`/
-`ComputableGeneral*`) runs its linear algebra — `fieldDet`, `gaussElimG`, `kernelBasisG`, `matInvG`,
-`matMulG` — over `QFunNZG ℚ ≅ ℚ(x)` **fractions**. Forming `ℚ(x)` fractions makes intermediate
-numerators/denominators **balloon** (the classic fraction-field swell, exactly the `cgcdExtG`→`cgcdFF`
-story for the GCD): `fieldDet` of an `n×n` matrix over `ℚ(x)` Laplace-expands into `n!` products of
-fractions, each `qmulNZG` multiplying *unreduced* numerator·denominator pairs whose degrees add up.
+`ComputableBareissEngine` defines the **pure** fraction-free linear-algebra primitives over `ℚ[x] =
+CPolyG α` — `bareissDet`/`bareissAdjugate`/`bareissSolve` (and the `ℚ(x)` wrappers). This file pairs them
+with the general algebraic-curve `fieldDet` over `QFunNZG ℚ ≅ ℚ(x)`: it **embeds** a `ℚ[x]`-matrix into
+`ℚ(x)` (`fromQ`) and **validates** that the fraction-free `bareissDet M` equals the fraction-based
+`fieldDet (fromQ M)` on concrete curves, then records the **swell benchmark**.
 
-**The fix is FRACTION-FREE elimination over `ℚ[x] = CPolyG α`** (`bareissDet`): stay in polynomials,
-never form a `ℚ(x)` fraction, using **exact** division `cdivG` (exact because Bareiss's theorem
-guarantees the divisibility). The single-step recurrence is, with `M⁽⁰⁾ = M`, `p₋₁ = 1`, pivot at
-`[k][k]`, and for `i, j > k`:
+Forming `ℚ(x)` fractions makes intermediate numerators/denominators **balloon** (the classic
+fraction-field swell, exactly the `cgcdExtG`→`cgcdFF` story for the GCD): `fieldDet` of an `n×n` matrix
+over `ℚ(x)` Laplace-expands into `n!` products of fractions, each `qmulNZG` multiplying *unreduced*
+numerator·denominator pairs whose degrees add up. The engine's `bareissDet` stays in polynomials, using
+**exact** division `cdivG`, so entries stay in `ℚ[x]` with **bounded degree** — no swell.
 
-  `M⁽ᵏ⁺¹⁾[i][j] = (M⁽ᵏ⁾[k][k]·M⁽ᵏ⁾[i][j] − M⁽ᵏ⁾[i][k]·M⁽ᵏ⁾[k][j]) / pₖ₋₁`,   `pₖ₋₁ = M⁽ᵏ⁾[k-1][k-1]`.
-
-Every division is **exact** (Bareiss's identity: the numerator is a `2×2` connecting minor, divisible by
-the previous pivot), so the entries stay in `ℚ[x]` with **bounded degree** — no swell. `det M =
-M⁽ⁿ⁾[n-1][n-1]` (the final pivot). The fuel is the matrix size (`ℕ`-structural).
-
-* **`bareissDet`** — the fraction-free determinant over `ℚ[x]` (`cmulG`/`csubG`/`cdivG`, exact).
-* **`bareissSolve`** — fraction-free Cramer solve `M·x = det·b` (returns `(det, det·x)`, polynomial).
-* **`bareissAdjugate`** — the adjugate matrix `adj M` (so `M⁻¹ = adj M / det M` is the fraction-free
-  inverse representation: keep the `(det, adjugate)` pair, never a `ℚ(x)` matrix).
 * **`fromQ`** — embed a `ℚ[x]`-matrix into `ℚ(x)` (`qxOfNum`), so `bareissDet M` and `fieldDet (fromQ M)`
   can be compared.
 
 **Validation** (`native_decide`): `bareissDet M = fieldDet (fromQ M)` on the `2×2`/`3×3` `traceMatrix`
 curves of `ComputableAlgFunctionField` (`y² − xy − x³` → `x² + 4x³`, `y³ + xy + x` → `−4x³ − 27x²`) and
 a `4×4` Vandermonde, and `bareissSolve`/`bareissAdjugate` satisfy `M·adj = det·I`. **The swell
-benchmark** (`bareissSwellWin`): on a degree-parametrized Vandermonde, the `ℚ(x)`-fraction path's
-*intermediate* entries reach denominator+numerator degrees in the dozens while every Bareiss entry stays
-a single polynomial of degree `≤` the final determinant degree — a measured swell reduction recorded at
-the end. **The engine now has fraction-free matrix linear algebra (Bareiss).** -/
+benchmark** (`bareissSwellWin`): on a `3×3` Cauchy matrix, the `ℚ(x)`-fraction path's `fieldDet` reaches
+denominator+numerator total degree in the dozens while every Bareiss entry stays a single polynomial of
+degree `≤` the final determinant degree — a measured swell reduction recorded at the end. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
-
-namespace CPolyG
-
-variable {α : Type*} [CField α]
-
-/-! ### Matrix entry access and the Bareiss single-step over `ℚ[x]`
-
-A polynomial matrix is `List (List (CPolyG α))` (rows of `CPolyG α = α[x]` entries). `getEntry M i j`
-reads `M[i][j]` (the zero polynomial `[]` past the end). The Bareiss step `bareissStep prevPiv k M`
-applies, to every entry `[i][j]` with `i, j > k` (`k` = current pivot index), the cross-multiply
-`M[k][k]·M[i][j] − M[i][k]·M[k][j]` divided **exactly** by the previous pivot `prevPiv`. Entries on or
-above the pivot row/column are carried unchanged (the upper-triangular part already computed). -/
-
-/-- **Read the polynomial entry `M[i][j]`** of a `ℚ[x]`-matrix (rows of `CPolyG α`); the zero polynomial
-`[]` past the end (`getEntry M i j` never panics). -/
-def getEntry (M : List (List (CPolyG α))) (i j : ℕ) : CPolyG α :=
-  (M.getD i []).getD j []
-
-/-- **One Bareiss fraction-free elimination step** with pivot index `k` and previous pivot `prevPiv`:
-each entry `[i][j]` with `i > k` and `j > k` becomes
-`(M[k][k]·M[i][j] − M[i][k]·M[k][j]) / prevPiv` (the cross-minor divided **exactly** by the previous
-pivot — Bareiss's identity guarantees divisibility, so `cdivG` returns the exact quotient with no
-remainder). Entries with `i ≤ k` or `j ≤ k` are left unchanged. `divFuel` bounds the exact division
-(`len numerator + 1` suffices). -/
-def bareissStep (divFuel : ℕ) (prevPiv : CPolyG α) (k : ℕ) (M : List (List (CPolyG α))) :
-    List (List (CPolyG α)) :=
-  let mkk := getEntry M k k
-  (List.range M.length).map (fun i =>
-    (List.range (M.getD i []).length).map (fun j =>
-      if k < i ∧ k < j then
-        let num := csubG (cmulG mkk (getEntry M i j)) (cmulG (getEntry M i k) (getEntry M k j))
-        cdivG divFuel num prevPiv
-      else getEntry M i j))
-
-/-- **Bareiss elimination driver**: run `bareissStep` for pivot indices `k = 0, 1, …` carrying the
-previous pivot `prevPiv` (initially `[1]`, then `M[k][k]` after step `k`). `fuel` is the **matrix size**
-(`ℕ`-structural recursion, one step per pivot). Returns the fully reduced (upper-triangular-in-the-
-fraction-free-sense) matrix whose `[n-1][n-1]` entry is `det M`. `divFuel` is passed to each step's exact
-division. -/
-def bareissDrive (divFuel : ℕ) : ℕ → CPolyG α → ℕ → List (List (CPolyG α)) → List (List (CPolyG α))
-  | 0, _, _, M => M
-  | fuel + 1, prevPiv, k, M =>
-    let M' := bareissStep divFuel prevPiv k M
-    bareissDrive divFuel fuel (getEntry M' k k) (k + 1) M'
-
-/-- **The Bareiss fraction-free determinant over `ℚ[x]`** `bareissDet M`: run `bareissDrive` for `n =
-M.length` pivots starting from `prevPiv = [1]`, then read the final pivot `M⁽ⁿ⁾[n-1][n-1]`. Every
-intermediate entry is an **exact** polynomial (no `ℚ(x)` fraction is ever formed), so the degrees stay
-bounded — the swell-free determinant. Equals `fieldDet (fromQ M)` over `ℚ(x)` (validated below). The
-empty matrix has determinant `1`. -/
-def bareissDet (M : List (List (CPolyG α))) : CPolyG α :=
-  let n := M.length
-  if n = 0 then [CField.one]
-  else
-    -- a division-fuel bound large enough for every cross-minor numerator over the run
-    let divFuel := (M.foldl (fun acc row => acc + row.foldl (fun a p => a + p.length + 1) 0) 0) + n + 2
-    let M' := bareissDrive divFuel n [CField.one] 0 M
-    getEntry M' (n - 1) (n - 1)
-
-/-! ### Fraction-free solve and adjugate (the inverse representation `(det, adjugate)`)
-
-Over `ℚ[x]` the inverse `M⁻¹ = adj(M)/det(M)` is kept as the **pair** `(det M, adj M)` — both
-polynomial, no `ℚ(x)` fraction. `bareissAdjugate` builds `adj M` cofactor-by-cofactor through the
-**fraction-free** `bareissDet` on each minor (the `(j, i)` cofactor is `(−1)^{i+j} det(minor M i j)`,
-transposed). `bareissSolve M b` returns `(det M, det M · x)` where `x = M⁻¹ b`: the polynomial solution
-of `M·(det·x) = det·b`, by Cramer (`adj M · b`). Both stay in `ℚ[x]`. -/
-
-/-- **Delete row `i` and column `j`** from a `ℚ[x]`-matrix (the `(i, j)` minor), for the cofactor
-expansion of the adjugate. -/
-def minorMat (M : List (List (CPolyG α))) (i j : ℕ) : List (List (CPolyG α)) :=
-  (M.eraseIdx i).map (fun row => row.eraseIdx j)
-
-/-- **The adjugate (classical adjoint) of a `ℚ[x]`-matrix** `bareissAdjugate M`, fraction-free: the
-**transpose** of the cofactor matrix, entry `(i, j) = (−1)^{i+j}·det(minor M j i)` computed by the
-fraction-free `bareissDet`. Satisfies `M · adj M = (det M)·I = adj M · M`, so `M⁻¹ = adj M / det M` is
-the fraction-free inverse representation `(det M, adj M)` — never a `ℚ(x)` matrix. -/
-def bareissAdjugate (M : List (List (CPolyG α))) : List (List (CPolyG α)) :=
-  let n := M.length
-  (List.range n).map (fun i =>
-    (List.range n).map (fun j =>
-      let c := bareissDet (minorMat M j i)
-      if (i + j) % 2 = 0 then c else cnegG c))
-
-/-- **Fraction-free linear solve** `bareissSolve M b = (det M, det M · x)` where `x = M⁻¹·b`: by Cramer,
-`det M · x = adj M · b`, a polynomial vector (`adj M` applied to the column `b`), paired with `det M`.
-The solution of `M·(det M·x) = det M·b` over `ℚ[x]` — no fraction is formed; recover `x` as
-`(det M · x)/det M` only if a genuine `ℚ(x)` value is wanted. -/
-def bareissSolve (M : List (List (CPolyG α))) (b : List (CPolyG α)) : CPolyG α × List (CPolyG α) :=
-  let n := M.length
-  let adj := bareissAdjugate M
-  let sol := (List.range n).map (fun i =>
-    (List.range n).foldl (fun acc j =>
-      caddG acc (cmulG (getEntry adj i j) (b.getD j []))) [])
-  (bareissDet M, sol)
-
-end CPolyG
 
 /-! ### Embedding `ℚ[x]` matrices into `ℚ(x)` (`fromQ`) — to compare against `fieldDet`
 
