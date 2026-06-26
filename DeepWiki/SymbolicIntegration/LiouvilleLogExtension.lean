@@ -1508,6 +1508,191 @@ theorem sum_const_logDeriv_algebraMap_mem_range [Differential F] (u : F) {ι : T
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [logDeriv_algebraMap, ← algebraMap_eq_algebraMap_C, ← map_mul]
 
+omit [CharZero F] in
+/-- **A simple-pole sum, times the common denominator `∏_{π∈S} π`, is a polynomial** (the
+`v`-is-polynomial engine): for a set `S` of monic irreducibles, `(∑_{π∈S} ↑(C (r π)) · logDeriv
+(algebraMap π)) · algebraMap (∏_{π∈S} π) ∈ range (algebraMap F[t])`.  Each term `↑(C rπ)·(Dπ/π)·↑(∏ ρ)
+= ↑(C rπ · Dπ · ∏_{ρ≠π} ρ)` is a polynomial image, since `∏_{ρ∈S} ρ = π · ∏_{ρ∈S.erase π} ρ`. -/
+theorem simplePole_mul_prod_mem_range (u : F) (S : Finset F[X]) (r : F[X] → F)
+    (hmon : ∀ π ∈ S, π.Monic) :
+    letI := logDifferential u
+    ((∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
+        * logDeriv (algebraMap F[X] (RatFunc F) π))
+        * algebraMap F[X] (RatFunc F) (∏ ρ ∈ S, ρ))
+      ∈ (algebraMap F[X] (RatFunc F)).range := by
+  classical
+  letI := logDifferential u
+  refine ⟨∑ π ∈ S, Polynomial.C (r π) * logDerivPoly u π * ∏ ρ ∈ S.erase π, ρ, ?_⟩
+  rw [Finset.sum_mul, map_sum]
+  refine Finset.sum_congr rfl fun π hπ => ?_
+  have hπne : algebraMap F[X] (RatFunc F) π ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (hmon π hπ).ne_zero
+  have hprod : (∏ ρ ∈ S, ρ) = π * ∏ ρ ∈ S.erase π, ρ := (Finset.mul_prod_erase S _ hπ).symm
+  rw [logDeriv_algebraMap_eq u π, hprod, map_mul, map_mul, map_mul]
+  field_simp
+
+omit [Differential F] [CharZero F] in
+/-- **A product of distinct monic irreducibles is squarefree** (the order-`≤ 1` bound on the
+common-denominator's poles): `∏_{π∈S} π` is squarefree when `S`'s elements are monic irreducibles.
+Pairwise `IsRelPrime` (distinct monic irreducibles are non-associated, hence coprime), each factor
+squarefree (irreducible). -/
+theorem squarefree_prod_of_monic_irreducible (S : Finset F[X])
+    (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π) :
+    Squarefree (∏ ρ ∈ S, ρ) := by
+  refine Finset.squarefree_prod_of_pairwise_isCoprime ?_ (fun π hπ => (hirr π hπ).squarefree)
+  intro i hi j hj hij
+  simp only [Function.onFun]
+  -- Distinct monic irreducibles are coprime, hence `IsRelPrime`.
+  refine ((hirr i hi).coprime_iff_not_dvd.mpr fun hdvd => hij ?_).isRelPrime
+  exact eq_of_monic_of_associated (hmon i hi) (hmon j hj)
+    ((hirr i hi).associated_of_dvd (hirr j hj) hdvd)
+
+/-- **The pole of `v′` cannot be cancelled** (the valuation contradiction at the heart of "`v′` has no
+simple pole"): for a monic irreducible `π ∣ D` (with `π ∤ D π` from `NondegenerateLog`), `N` coprime
+to `D`, and `G = ∏_{ρ∈S} ρ` a product of distinct monic irreducibles, `D² ∤ (D·DN − N·DD)·G` where
+`DN = logDerivPoly u N`, `DD = logDerivPoly u D`.  Taking `v_π`: `v_π(D²) = 2k` while `v_π((D·DN −
+N·DD)·G) = (k − 1) + v_π(G) ≤ k` (using `v_π(DD) = k − 1` exactly via `emultiplicity_logDerivPoly_eq`,
+`v_π(N) = 0` by coprimality, `v_π(G) ≤ 1` by squarefreeness), so `2k ≤ k` is impossible (`k ≥ 1`). -/
+theorem not_dvd_sq_mul_of_pole (u : F) (hnd : NondegenerateLog u) {N D π : F[X]}
+    (hπmon : π.Monic) (hπirr : Irreducible π) (hDne0 : D ≠ 0) (hcop : IsCoprime N D)
+    (hπdvdD : π ∣ D) {S : Finset F[X]} (hSmon : ∀ ρ ∈ S, ρ.Monic) (hSirr : ∀ ρ ∈ S, Irreducible ρ) :
+    ¬ D * D ∣ (D * logDerivPoly u N - N * logDerivPoly u D) * (∏ ρ ∈ S, ρ) := by
+  intro hdvd
+  set DN := logDerivPoly u N with hDNdef
+  set DD := logDerivPoly u D with hDDdef
+  set G := ∏ ρ ∈ S, ρ with hGdef
+  have hπprime : Prime π := hπirr.prime
+  -- `k := v_π(D) ≥ 1` (finite, since `π` prime and `D ≠ 0`).
+  have hfinD : FiniteMultiplicity π D := Polynomial.finiteMultiplicity_of_degree_pos_of_monic
+    (hπirr.degree_pos) hπmon hDne0
+  set k := multiplicity π D with hkdef
+  have hmultD : emultiplicity π D = (k : ℕ∞) := hfinD.emultiplicity_eq_multiplicity
+  have hk1 : 1 ≤ k := hfinD.le_multiplicity_of_pow_dvd (by simpa using hπdvdD)
+  -- `π ∤ D π` from non-degeneracy.
+  have hπnDπ : ¬ π ∣ logDerivPoly u π :=
+    not_dvd_logDerivPoly_of_monic u hnd hπmon hπirr.natDegree_pos
+  -- `v_π(DD) = k − 1`, `v_π(N) = 0`, `v_π(G) ≤ 1`.
+  have hmultDD : emultiplicity π DD = ((k - 1 : ℕ) : ℕ∞) :=
+    emultiplicity_logDerivPoly_eq u hπirr hπnDπ hk1 hmultD
+  have hmultN : emultiplicity π N = 0 := by
+    rw [emultiplicity_eq_zero]
+    intro hπN
+    exact hπirr.1 (hcop.isUnit_of_dvd' hπN hπdvdD)
+  have hmultG : emultiplicity π G ≤ 1 :=
+    ((squarefree_iff_emultiplicity_le_one G).mp
+      (squarefree_prod_of_monic_irreducible S hSmon hSirr) π).resolve_right hπirr.1
+  -- `v_π(N·DD) = k − 1`; `v_π(D·DN) ≥ k > k − 1`; so `v_π(D·DN − N·DD) = k − 1`.
+  have hmult_NDD : emultiplicity π (N * DD) = ((k - 1 : ℕ) : ℕ∞) := by
+    rw [emultiplicity_mul hπprime, hmultN, hmultDD, zero_add]
+  have hmult_DDN_ge : (k : ℕ∞) ≤ emultiplicity π (D * DN) := by
+    rw [emultiplicity_mul hπprime, hmultD]
+    exact le_add_right le_rfl
+  have hk1lt : ((k - 1 : ℕ) : ℕ∞) < (k : ℕ∞) := by
+    rw [Nat.cast_lt]; omega
+  have hne : emultiplicity π (D * DN) ≠ emultiplicity π (N * DD) := by
+    rw [hmult_NDD]; exact (lt_of_lt_of_le hk1lt hmult_DDN_ge).ne'
+  have hmult_diff : emultiplicity π (D * DN - N * DD) = ((k - 1 : ℕ) : ℕ∞) := by
+    rw [sub_eq_add_neg, emultiplicity_add_eq_min (by rwa [emultiplicity_neg]),
+      emultiplicity_neg, hmult_NDD, min_eq_right (le_of_lt (lt_of_lt_of_le hk1lt hmult_DDN_ge))]
+  -- `2k ≤ v_π((D·DN − N·DD)·G) = (k − 1) + v_π(G) ≤ (k − 1) + 1 = k`, contradiction.
+  have hdvd2 : (D : F[X]) ^ 2 ∣ (D * DN - N * DD) * G := by rw [sq]; exact hdvd
+  have hle : emultiplicity π (D ^ 2) ≤ emultiplicity π ((D * DN - N * DD) * G) :=
+    emultiplicity_le_emultiplicity_of_dvd_right hdvd2
+  rw [emultiplicity_pow hπprime, hmultD, emultiplicity_mul hπprime, hmult_diff] at hle
+  -- `hle : ↑2 · ↑k ≤ ↑(k−1) + v_π(G)`; with `v_π(G) ≤ 1` and `↑(k−1)+1 = ↑k`, get `2k ≤ k`.
+  have hk_succ : ((k - 1 : ℕ) : ℕ∞) + 1 = ((k : ℕ) : ℕ∞) := by
+    rw [show ((k - 1 : ℕ) : ℕ∞) + 1 = (((k - 1) + 1 : ℕ) : ℕ∞) by push_cast; ring,
+      show (k - 1) + 1 = k from by omega]
+  have hG1 : ((k - 1 : ℕ) : ℕ∞) + emultiplicity π G ≤ ((k : ℕ) : ℕ∞) :=
+    le_trans (add_le_add le_rfl hmultG) (le_of_eq hk_succ)
+  have hfinal : ((2 : ℕ) : ℕ∞) * ((k : ℕ) : ℕ∞) ≤ ((k : ℕ) : ℕ∞) := le_trans hle hG1
+  rw [← Nat.cast_mul, Nat.cast_le] at hfinal
+  omega
+
+/-- **`v′ + (simple-pole sum)` a polynomial ⟹ `v` is a polynomial** — the separation engine.  Under
+`NondegenerateLog`, the twisted derivative `v′` has only poles of order `≥ 2` while the simple-pole sum
+has poles of order `≤ 1`; since their sum is pole-free, `v` itself must be pole-free.  Proof: with `D =
+denom v`, `N = num v`, `G = ∏_{π∈S} π`, clearing denominators gives the polynomial identity
+`(D·DN − N·DD)·G + D²·NQ = Rp·D²·G`, so `D² ∣ (D·DN − N·DD)·G`.  At any monic irreducible `π ∣ D` of
+exact multiplicity `k ≥ 1`: `v_π(D·DN − N·DD) = k − 1` (since `v_π(N·DD) = k − 1` by
+`emultiplicity_logDerivPoly_eq` and `v_π(D·DN) ≥ k`), and `v_π(G) ≤ 1` (squarefree), so the RHS has
+`v_π ≤ k`, while `v_π(D²·…) ≥ 2k` — forcing `2k ≤ k`, impossible.  Hence `D = 1`. -/
+theorem mem_range_of_deriv_add_simplePole_mem_range (u : F) (hnd : NondegenerateLog u)
+    (v : RatFunc F) (S : Finset F[X]) (r : F[X] → F)
+    (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π)
+    (hpoly : letI := logDifferential u
+      (v′ + ∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
+          * logDeriv (algebraMap F[X] (RatFunc F) π))
+        ∈ (algebraMap F[X] (RatFunc F)).range) :
+    v ∈ (algebraMap F[X] (RatFunc F)).range := by
+  classical
+  letI := logDifferential u
+  rcases eq_or_ne v 0 with rfl | hv0
+  · exact ⟨0, by rw [map_zero]⟩
+  set N := RatFunc.num v with hNdef
+  set D := RatFunc.denom v with hDdef
+  set G := ∏ ρ ∈ S, ρ with hGdef
+  have hDmon : D.Monic := RatFunc.monic_denom v
+  have hDne0 : D ≠ 0 := RatFunc.denom_ne_zero v
+  have hNne0 : N ≠ 0 := RatFunc.num_ne_zero hv0
+  have hcop : IsCoprime N D := RatFunc.isCoprime_num_denom v
+  have hNA : algebraMap F[X] (RatFunc F) N ≠ 0 := RatFunc.algebraMap_ne_zero hNne0
+  have hDA : algebraMap F[X] (RatFunc F) D ≠ 0 := RatFunc.algebraMap_ne_zero hDne0
+  set DN := logDerivPoly u N with hDNdef
+  set DD := logDerivPoly u D with hDDdef
+  -- `Q · ↑G = ↑NQ` (helper) and `R = ↑Rp` (hypothesis).
+  obtain ⟨NQ, hNQ⟩ := simplePole_mul_prod_mem_range u S r hmon
+  obtain ⟨Rp, hRp⟩ := hpoly
+  set Q : RatFunc F := ∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
+      * logDeriv (algebraMap F[X] (RatFunc F) π) with hQdef
+  -- Quotient-rule clearing: `v′ · ↑(D·D) = ↑(D·DN − N·DD)`.
+  have hveq : v = algebraMap F[X] (RatFunc F) N / algebraMap F[X] (RatFunc F) D := by
+    rw [← RatFunc.num_div_denom v, ← hNdef, ← hDdef]
+  have hlogv : logDeriv v
+      = algebraMap F[X] (RatFunc F) DN / algebraMap F[X] (RatFunc F) N
+        - algebraMap F[X] (RatFunc F) DD / algebraMap F[X] (RatFunc F) D := by
+    have hsplit : logDeriv v = logDeriv (algebraMap F[X] (RatFunc F) N)
+        - logDeriv (algebraMap F[X] (RatFunc F) D) := by
+      conv_lhs => rw [hveq]; exact logDeriv_div _ _ hNA hDA
+    rw [hsplit, logDeriv_algebraMap_eq u N, logDeriv_algebraMap_eq u D]
+  have hv'eq : v′ = v * logDeriv v := by rw [logDeriv, mul_div_cancel₀ _ hv0]
+  have hGA : algebraMap F[X] (RatFunc F) G ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (Polynomial.Monic.ne_zero (by
+      rw [hGdef]; exact monic_prod_of_monic _ _ (fun π hπ => hmon π hπ)))
+  -- `v′ · ↑D · ↑D = ↑D·↑DN − ↑N·↑DD` (the controlled `field_simp`, only `↑N`/`↑D` denominators).
+  have hclear : v′ * algebraMap F[X] (RatFunc F) D * algebraMap F[X] (RatFunc F) D
+      = algebraMap F[X] (RatFunc F) D * algebraMap F[X] (RatFunc F) DN
+        - algebraMap F[X] (RatFunc F) N * algebraMap F[X] (RatFunc F) DD := by
+    rw [hv'eq, hlogv, hveq]
+    field_simp
+  -- `↑NQ = (↑Rp − v′)·↑G` (from `Q·↑G = ↑NQ` and `↑Rp = v′ + Q`).
+  have hNQval : algebraMap F[X] (RatFunc F) NQ
+      = (algebraMap F[X] (RatFunc F) Rp - v′) * algebraMap F[X] (RatFunc F) G := by
+    rw [hNQ, ← hGdef]
+    have hQval : Q = algebraMap F[X] (RatFunc F) Rp - v′ := by rw [hRp]; ring
+    rw [hQval]
+  -- The cleared polynomial identity: both sides equal `v′·↑D·↑D·↑G` (via `hclear`, `hNQval`).
+  have hpolyid : (D * DN - N * DD) * G = (D * D) * (Rp * G - NQ) := by
+    apply FaithfulSMul.algebraMap_injective F[X] (RatFunc F)
+    simp only [map_mul, map_sub]
+    rw [hNQval]
+    linear_combination (-(algebraMap F[X] (RatFunc F) G)) * hclear
+  -- `D² ∣ (D·DN − N·DD)·G`.
+  have hdvd : D * D ∣ (D * DN - N * DD) * G := ⟨Rp * G - NQ, hpolyid⟩
+  -- Conclude `D = 1` by a per-prime valuation contradiction, hence `v = ↑N`.
+  have hD1 : D = 1 := by
+    by_contra hDne1
+    -- `D` not a unit, so `normalizedFactors D` is nonempty: pick a monic irreducible factor `π`.
+    have hDnu : ¬ IsUnit D := fun hu => hDne1 (hDmon.eq_one_of_isUnit hu)
+    obtain ⟨π, hπmem⟩ := UniqueFactorizationMonoid.exists_mem_normalizedFactors hDne0 hDnu
+    have hπmon : π.Monic := monic_of_mem_normalizedFactors hπmem
+    have hπirr : Irreducible π := UniqueFactorizationMonoid.irreducible_of_normalized_factor _ hπmem
+    have hπdvdD : π ∣ D := UniqueFactorizationMonoid.dvd_of_mem_normalizedFactors hπmem
+    exact absurd hdvd
+      (not_dvd_sq_mul_of_pole u hnd hπmon hπirr hDne0 hcop hπdvdD hmon hirr)
+  rw [hveq, hD1, map_one, div_one]
+  exact ⟨N, rfl⟩
+
 /-- **The simple-pole separation residual** — the *sole* remaining content of the transcendental log
 keystone, sharply isolated.  It says: for `v ∈ RatFunc F`, a finite set `S` of monic irreducible
 `t`-polynomials and *constant* residues `r : F[X] → F`, if the derivative `v′` plus the simple-pole sum
