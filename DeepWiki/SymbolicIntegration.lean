@@ -126,3 +126,4 @@ import DeepWiki.SymbolicIntegration.ComputableGeneralResidues
 import DeepWiki.SymbolicIntegration.ComputableGeneralRationalPart
 import DeepWiki.SymbolicIntegration.ComputableGeneralDerivation
 import DeepWiki.SymbolicIntegration.ComputableGeneralRationalSolve
+import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
