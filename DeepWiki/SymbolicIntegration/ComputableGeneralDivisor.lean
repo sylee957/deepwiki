@@ -81,12 +81,15 @@ def idealIdentity (n : ℕ) : GenDivisor :=
 
 /-- **Reduce every `K(x)`-entry of a fractional-ideal matrix to lowest terms** `qReduceMat I = I.map
 (List.map qReduce)`: apply the **value-preservation-proven** reducer `qReduce` (`ComputableQFunReduce`,
-`toQFunNZG_qReduce` unconditional) entrywise to a `GenDivisor`. Because `qReduce` preserves the `ℚ(x)`
-value of each entry, `qReduceMat` returns the **same** fractional `O`-ideal — but with the matrix entries in
-lowest terms, so the iterated `idealProduct` in the order search stops accumulating un-cancelled common
-factors (the `K(x)` coefficient swell that made the torsion-order search intractable). Inserted at the
-outputs of the swelling ideal operations (`idealProduct`, `idealReduce`); the resulting divisor class is
-unchanged by `toQFunNZG_qReduce`. -/
+`toQFunNZG_qReduce` unconditional, axiom-clean) entrywise to a `GenDivisor`, cancelling `gcd(num, den)` of
+each `ℚ(x)` entry. Because `qReduce` preserves each entry's `ℚ(x)` value, `qReduceMat` returns the **same**
+fractional `O`-ideal (the divisor class is unchanged by `toQFunNZG_qReduce`) — a proven-correct
+canonicalization, replacing the engine's reliance on the *un*-proven `qReduceNZG` at the swelling ideal
+operations' outputs (`idealProduct`'s `n²` cross-product accumulator and product rows, `idealReduce`'s
+reduced rows). It cancels any common *polynomial* factor between numerator and denominator; on entries
+already polynomial-coprime (e.g. the degree-0 scalar `c/d` entries the Hermite-over-`K[x]` read-back
+produces) it is a no-op, so it does not by itself tame a swell that lives purely in the **scalar
+ℚ-coefficient** magnitude (the `commonDenomG` content) — that is a separate normalization. -/
 def qReduceMat (I : GenDivisor) : GenDivisor :=
   I.map (List.map qReduce)
 
@@ -160,8 +163,8 @@ def idealProduct (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))
   match matInvG n B with
   | none => []
   | some Binv =>
-    -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry reduced to lowest terms (`qReduce`,
-    -- value-preserving) so the common denominator `δ` below does not balloon across iterated products
+    -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry put in lowest terms (`qReduceMat`,
+    -- value-preserving) before the common-denominator clearing below
     let cross : List (List (QFunNZG ℚ)) :=
       qReduceMat (I.flatMap (fun gi =>
         J.map (fun gk =>
@@ -170,8 +173,8 @@ def idealProduct (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))
     let δ : CPolyG ℚ := commonDenomG cross
     let N : PolyMatrix ℚ := cross.map (clearRowExact δ)
     let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZeroG)
-    -- read back the first n rows as the fractional ideal (1/δ)·Nhat, then reduce every entry to lowest
-    -- terms (`qReduceMat`, value-preserving) so the product fed back into the next `idealProduct` is flat
+    -- read back the first n rows as the fractional ideal (1/δ)·Nhat, then put every entry in lowest terms
+    -- (`qReduceMat`, value-preserving) so the product fed back into the next `idealProduct` is canonical
     qReduceMat ((List.range n).map (fun i =>
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
