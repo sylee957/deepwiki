@@ -1098,7 +1098,7 @@ irreducible is killed by `D`; if `F` already contains an antiderivative `s` of `
 has `D π = 0` and the statement is **false** — so this residue cannot be discharged from the abstract
 `[Field F] [Differential F] [CharZero F]` alone, and `PoleIndependenceObligation` as literally stated
 (no such guard) is a non-theorem in that degenerate case. -/
-theorem poleIndependence_of_logDerivPoly_ne_zero (u : F) {ιπ : Type} [Fintype ιπ]
+theorem poleIndependence_of_logDerivPoly_ne_zero (u : F) {ιπ : Type*} [Fintype ιπ]
     (π : ιπ → F[X]) (d : ιπ → F[X]) (hmon : ∀ j, (π j).Monic) (hirr : ∀ j, Irreducible (π j))
     (hinj : Function.Injective π) (hdeg : ∀ j, (d j).natDegree < (π j).natDegree)
     (hDne : ∀ j, logDerivPoly u (π j) ≠ 0)
@@ -1175,6 +1175,41 @@ theorem poleIndependenceObligation_of_nondegenerateLog (u : F) (hnd : Nondegener
   intro ιπ _ π d hmon hirr hinj hdeg hpoly
   exact poleIndependence_of_logDerivPoly_ne_zero u π d hmon hirr hinj hdeg
     (fun j => hnd (π j) (hmon j) (hirr j)) hpoly
+
+open scoped algebraMap in
+omit [CharZero F] in
+/-- **Pole-independence over a `Finset` of distinct monic irreducibles, with constant residues**
+(the `MultiLogPoleObligation`-facing form of `PoleIndependenceObligation`).  GIVEN `NondegenerateLog`,
+a finite set `S` of monic irreducible `t`-polynomials and *constant* residues `r : F[X] → F`, if the
+collected simple-pole sum `∑_{π ∈ S} ↑(C (r π)) · logDeriv (algebraMap π)` is a *polynomial*, then
+every residue `r π = 0` (`π ∈ S`).  This packages the abstract `poleIndependence_of_logDerivPoly_ne_zero`
+over the subtype `↥S` (a `Fintype` with injective `Subtype.val`), with each numerator `C (r π)` of
+`t`-degree `0 < deg π` (irreducibles have positive degree). -/
+theorem poleIndependence_finset_const (u : F) (hnd : NondegenerateLog u) (S : Finset F[X])
+    (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π) (r : F[X] → F)
+    (hpoly : letI := logDifferential u
+      (∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
+          * logDeriv (algebraMap F[X] (RatFunc F) π))
+        ∈ (algebraMap F[X] (RatFunc F)).range) :
+    ∀ π ∈ S, r π = 0 := by
+  letI := logDifferential u
+  -- Apply the subtype-indexed pole-independence; `π = Subtype.val`, `d = C ∘ r ∘ val`.
+  have hkey := poleIndependence_of_logDerivPoly_ne_zero u (ιπ := ↥S)
+    (π := fun j => (j : F[X])) (d := fun j => Polynomial.C (r (j : F[X])))
+    (fun j => hmon j j.2) (fun j => hirr j j.2) Subtype.val_injective
+    (fun j => by
+      -- `deg (C (r j)) ≤ 0 < 1 ≤ deg (val j)` (irreducible ⇒ positive degree).
+      calc (Polynomial.C (r (j : F[X]))).natDegree ≤ 0 := (Polynomial.natDegree_C _).le
+        _ < (↑j : F[X]).natDegree := (hirr j j.2).natDegree_pos)
+    (fun j => hnd (↑j) (hmon j j.2) (hirr j j.2))
+    (by
+      -- The subtype-`Fintype` sum equals the `Finset` sum `hpoly`.
+      rw [← Finset.sum_attach S (fun π => algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
+        * logDeriv (algebraMap F[X] (RatFunc F) π))] at hpoly
+      exact hpoly)
+  intro π hπ
+  have hcj := hkey ⟨π, hπ⟩
+  simpa using congrArg (fun q : F[X] => q.coeff 0) hcj
 
 /-- **The multi-term pole-matching obligation** — the full `Σᵢ` analogue of `SingleLogPoleObligation`,
 sharply isolated.  GIVEN `a ∈ F`, constants `cᵢ`, and `wᵢ, v ∈ RatFunc F` with `algebraMap a = ∑ᵢ cᵢ
