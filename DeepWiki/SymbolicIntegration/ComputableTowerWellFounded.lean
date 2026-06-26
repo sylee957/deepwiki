@@ -3,9 +3,6 @@ import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableWellFounded
 import DeepWiki.SymbolicIntegration.ComputableWellFoundedDioph
 import DeepWiki.SymbolicIntegration.ComputableWellFounded2
-import DeepWiki.SymbolicIntegration.ComputableWellFounded3
-import DeepWiki.SymbolicIntegration.ComputableWellFounded4
-import DeepWiki.SymbolicIntegration.ComputableWellFounded5
 
 /-! # Fuel-free (well-founded) GENERIC tower integration engine
 
