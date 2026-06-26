@@ -3,6 +3,9 @@ import DeepWiki.SymbolicIntegration.ComputableRadicalDerivationInvariant
 import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
+import Mathlib.FieldTheory.KummerPolynomial
+import Mathlib.FieldTheory.RatFunc.Degree
+import Mathlib.RingTheory.AdjoinRoot
 
 /-! # Transcendental monomials over an algebraic base: `RadExt` as a Risch base
 The transcendental Risch engine runs the polynomial engine over a **tower** of computable fields, and the
@@ -29,17 +32,22 @@ can dispatch), and equips it with
 With these three, the keystone composes: `QFunNZG (RadExt α n f)` is **automatically** a `CField` (a
 transcendental monomial `t` over the radical `√f`), and `CPolyG (QFunNZG (RadExt …))` reduces in the
 native compiler — the first **transcendental-on-algebraic** carrier (mixed elementary towers,
-Bronstein-1990's "transcendental over algebraic"). The validations exhibit, over `RadExt ℚ(x) 2 (x³+1)`
-(the base radical `√(x³+1)`):
+Bronstein-1990's "transcendental over algebraic"). The `CFieldDomain` hypothesis is **discharged
+concretely** for the worked base `RadExt ℚ(x) 2 (x³+1)`: the noncomputable `CFieldSpec (RadExt α 2 f)`
+toK-bridge into `K = AdjoinRoot (X² − C(toK f))` (a `Field` because `X² − (x³+1)` is **irreducible** over
+ℚ(x) — `x³+1` is not a square, `irreducible_radX3`) feeds the global `instCFieldDomainOfCFieldSpec`, so
+`CFieldDomain RadX3` resolves with **no hypothesis**. The validations exhibit, over `RadExt ℚ(x) 2 (x³+1)`:
 
 * the `RadExt` ring/derivation through the typeclass projections (`CField.mul`, `CDiffField.cderiv`);
-* `QFunNZG (RadExt …)` is a `CField` and `CDiffField` (the composition lands);
-* a **mixed-tower derivation**: `D(t) = t` for `t = exp` over the radical base, and `D` of a
-  rational-in-`t`-over-`√(x³+1)` element — the first derivation computed at *transcendental level over an
-  algebraic base*.
+* a **mixed-tower derivation**: `D(t²) = 2t²` and `D(y·t) = (ℓ+1)·y·t` over the radical base — the first
+  derivative computed at *transcendental level over an algebraic base*;
+* **★ UNCONDITIONALLY** (no `[CFieldDomain]` assumption): `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` is a `CField`
+  *and* `CDiffField`, and `D(t) = 1` / `t · t⁻¹ = 1` compute over it by `native_decide` (the `CFieldDomain`
+  `Prop`-erasure keeps the tower native-compilable) — the first fully-discharged transcendental-on-algebraic
+  computation.
 
-The noncomputable `CFieldSpec (RadExt α n f)` toK-bridge (for abstract correctness) is the documented
-stretch; it is not needed for any of the computations. -/
+The bridge is noncomputable (routes through `AdjoinRoot`), but only the `CFieldDomain` Prop is consumed, so
+the tower stays `native_decide`-able. -/
 
 open Polynomial
 
@@ -80,28 +88,38 @@ def one : RadExt α n f := ⟨radOne⟩
 /-- **The generator `y`** of `RadExt α n f` — the wrapped `radGen` (`[0, 1]`). -/
 def gen : RadExt α n f := ⟨radGen⟩
 
-/-- **Addition** in `RadExt α n f` — componentwise `radAdd` on the underlying lists. -/
-def add (p q : RadExt α n f) : RadExt α n f := ⟨radAdd p.toRad q.toRad⟩
+/-- **Canonicalize a `RadElem` to degree `< n`** `radCanon n f u := cnormG (radReduce n f (len u + 1) u)`
+— fold every `yᵐ` with `m ≥ n` down by `yⁿ = f` and strip trailing zeros, giving a **normalized**
+representative of length `≤ n`. The outer `cnormG` guarantees the result length `≤ n` outright (so the `mk
+∘ toPolyG` bridge into `AdjoinRoot (Xⁿ − f)` is faithful on it). On engine-produced values (already length
+`≤ n`, no trailing zeros) it is a no-op. -/
+def radCanon (n : ℕ) (f : α) (u : RadElem α) : RadElem α :=
+  CPolyG.cnormG (radReduce n f ((u : List α).length + 1) u)
 
-/-- **Negation** in `RadExt α n f` — componentwise `radNeg`. -/
-def neg (p : RadExt α n f) : RadExt α n f := ⟨radNeg p.toRad⟩
+/-- **Addition** in `RadExt α n f` — componentwise `radAdd`, canonicalized to degree `< n`. -/
+def add (p q : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radAdd p.toRad q.toRad)⟩
 
-/-- **Multiplication** in `RadExt α n f` — `radMul n f` (poly-multiply in `y`, reduce `yⁿ → f`). -/
-def mul (p q : RadExt α n f) : RadExt α n f := ⟨radMul n f p.toRad q.toRad⟩
+/-- **Negation** in `RadExt α n f` — componentwise `radNeg`, canonicalized to degree `< n`. -/
+def neg (p : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radNeg p.toRad)⟩
 
-/-- **Inverse** in `RadExt α n f` (for `n = 2`, the field case) — the conjugate-norm reciprocal
-`radInv2 f`: `u⁻¹ = ū/(a² − b²f)` for `u = a + b·y`. The honest `n = 2` field inverse (`radMul 2 f u
-(radInv2 f u) = 1`, validated over ℚ(x)). For `n ≠ 2` `radInv2` reads only the `y⁰`/`y¹` coefficients (the
-extension is a field only for `n = 2` here); the carrier's *ring* structure is `n`-generic. -/
-def inv (p : RadExt α n f) : RadExt α n f := ⟨radInv2 f p.toRad⟩
+/-- **Multiplication** in `RadExt α n f` — `radMul n f` (poly-multiply in `y`, reduce `yⁿ → f`),
+canonicalized (`radMul` already folds, so this is idempotent). -/
+def mul (p q : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radMul n f p.toRad q.toRad)⟩
+
+/-- **Inverse** in `RadExt α n f` (for `n = 2`, the field case) — the **canonicalized** conjugate-norm
+reciprocal: `radInvCanon n f u := radCanon n f (radInv2 f (radCanon n f u))`, reducing the input to a
+degree-`< n` rep `a + b·y` *before* `radInv2` and the output afterward. Canonicalizing the input is what
+makes the inverse faithful — `radInv2` reads only `y⁰`/`y¹`, so it must see the *reduced* `a, b` (an
+over-degree input would have its high terms silently dropped). On the reduced rep, `u⁻¹ = ū/(a² − b²f)` is
+the honest `n = 2` field inverse (`radMul 2 f u (radInv2 f u) = 1`, validated over ℚ(x)). -/
+def inv (p : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radInv2 f (radCanon n f p.toRad))⟩
 
 /-- **Zero test** in `RadExt α n f` — **reduce `mod yⁿ = f` first**, then `radIsZero`: the element is
 zero in `α[y]/(yⁿ − f)` iff its `radReduce`d (degree `< n`) coefficient list vanishes. Reducing first is
 what makes the test agree with the genuine field `AdjoinRoot (Xⁿ − f)` for *every* representative (an
 over-degree `aₘyᵐ` with `m ≥ n` folds to `aₘ·f·y^{m−n}`, not spuriously nonzero); on engine-produced
 values (always length `≤ n`) the reduction is a no-op, so it coincides with `radIsZero`. -/
-def isZero (p : RadExt α n f) : Bool :=
-  radIsZero (radReduce n f ((p.toRad : List α).length + 1) p.toRad)
+def isZero (p : RadExt α n f) : Bool := radIsZero (radCanon n f p.toRad)
 
 end RadExt
 
@@ -297,27 +315,462 @@ theorem cdiffField_qfunNZG_radX3 : Nonempty (CDiffField (QFunNZG RadX3)) := ⟨i
 
 end
 
-/-! ### Stretch (documented, not shipped): the closed `CFieldDomain RadX3` / `CFieldSpec (RadExt …)`
+/-! ### Toward discharging `[CFieldDomain RadX3]`: irreducibility of `y² − (x³+1)` over ℚ(x)
 
-To discharge the `[CFieldDomain RadX3]` hypothesis above with a *concrete* instance — turning the
-composition theorems into closed, `native_decide`-able computations over `QFunNZG RadX3` — one needs the
-radical base to be a genuine integral domain, which it is (`X² − (x³+1)` is irreducible over ℚ(x), so
-`ℚ(x)[√(x³+1)]` is a field). The honest bridge is the noncomputable `CFieldSpec (RadExt α n f)` with
-`K := AdjoinRoot (Xⁿ − C(toK f))` (a `Field` under `[Fact (Irreducible (Xⁿ − C(toK f)))]`) and
-`toK := AdjoinRoot.mk ∘ toPolyG ∘ toRad`; the ring-hom laws are then the proven
-`RadElem.toPolyG_radDeriv_radAdd` / `mk_toPolyG_radMul` of `ComputableRadicalDerivationInvariant`
-(`AdjoinRoot.mk` *is* `Ideal.Quotient.mk (radIdeal n f)`), and `instCFieldDomainOfCFieldSpec` then supplies
-the `CFieldDomain` automatically.
+The `[CFieldDomain RadX3]` hypothesis says the radical base is an integral domain — which it is, because
+`ℚ(x)[√(x³+1)] = ℚ(x)[y]/(y² − (x³+1))` is a **field**: the defining polynomial `y² − (x³+1)` is
+**irreducible** over ℚ(x) (`x³+1` is not a square in ℚ(x) — it has odd `intDegree 3`, whereas every square
+`b²` has even `intDegree 2·intDegree(b)`). That irreducibility is proven here (`irreducible_radX3`), and
+registered as the `Fact` instance the `AdjoinRoot`-bridge route to `CFieldSpec (RadExt …)` (hence
+`CFieldDomain`) consumes. The *concrete* `CFieldDomain RadX3` instance is the residual — see the note after.
 
-The obstruction is **representative canonicity**: `RadExt α n f` admits *any* coefficient list, but the
-`mk ∘ toPolyG` bridge is faithful (and `radInv2` is the genuine inverse) only on **reduced** lists of
-degree `< n` — an over-degree `aₘyᵐ` (`m ≥ n`) makes `toK_inv`/`isZero_iff` disagree with `AdjoinRoot`
-unless the operation reduces first. `isZero` here already reduces (so it would be sound), but `radInv2`
-does not, so the `CFieldSpec.toK_inv` law fails on non-reduced inputs. A sound closed instance therefore
-needs every `RadExt` operation made canonical (reduce-`mod yⁿ` in `inv`, or a reduced-list subtype carrier)
-— a larger refactor than this transcendental-on-algebraic enabler, left as the next step. The
-*computable* milestone (a transcendental monomial differentiating over the radical base) is fully realized
-above without it. -/
+`RadX3`'s base field is `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`; its radicand reads as
+`CFieldSpec.toK radicandX3p1 = algebraMap ℚ[X] (RatFunc ℚ) (1 + x³)` (`toK_radicandX3p1`). -/
+
+open CPolyG in
+/-- **`toK radicandX3p1 = algebraMap (1 + x³)`** in `RatFunc ℚ`: the ℚ(x)-radicand of `RadX3` reads, through
+the tower bridge `toQFunNZG`, as the rational function `algebraMap ℚ[X] (RatFunc ℚ) (1 + x³)` (numerator
+`[1,0,0,1] ↦ 1 + x³`, denominator `[1] ↦ 1`). The identification feeding the irreducibility/degree
+arguments. -/
+theorem toK_radicandX3p1 :
+    CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 3) := by
+  show QFunNZG.toQFunNZG radicandX3p1 = _
+  rw [QFunNZG.toQFunNZG]
+  show QFunNZG.amG ℚ (toPolyG ([1, 0, 0, 1] : CPolyG ℚ))
+      / QFunNZG.amG ℚ (toPolyG ([CField.one] : CPolyG ℚ)) = _
+  have h1 : toPolyG ([1, 0, 0, 1] : CPolyG ℚ) = 1 + X ^ 3 := by
+    simp only [toPolyG_cons, toPolyG_nil]
+    show C (1 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
+    simp; ring
+  have h2 : toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
+    show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
+  rw [h1, h2]
+  show QFunNZG.amG ℚ (1 + X ^ 3) / QFunNZG.amG ℚ 1 = _
+  rw [map_one, div_one]; rfl
+
+/-- **`1 + x³ ≠ 0` in `ℚ[X]`** (it has `natDegree 3`). -/
+theorem X3p1_ne_zero : (1 + X ^ 3 : ℚ[X]) ≠ 0 := by
+  intro h
+  have := congrArg Polynomial.natDegree h
+  rw [add_comm, Polynomial.natDegree_add_eq_left_of_natDegree_lt (by simp), natDegree_X_pow] at this
+  simp at this
+
+/-- **`natDegree (1 + x³) = 3`** in `ℚ[X]` (the leading `x³` dominates the constant `1`). -/
+theorem natDeg_X3p1 : (1 + X ^ 3 : ℚ[X]).natDegree = 3 := by
+  rw [add_comm, Polynomial.natDegree_add_eq_left_of_natDegree_lt (by simp), natDegree_X_pow]
+
+/-- **★ `x³+1` is not a square in `ℚ(x)`**: `∀ b : RatFunc ℚ, b² ≠ algebraMap (1 + x³)`. A square `b²` has
+even `intDegree = 2·intDegree(b)`, but `algebraMap (1 + x³)` has `intDegree = natDegree(1 + x³) = 3` (odd).
+The odd-degree obstruction to `x³+1` being a perfect square — the algebraic content that makes the radical
+extension a field. -/
+theorem not_square_X3p1 :
+    ∀ b : RatFunc ℚ, b ^ 2 ≠ algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 3) := by
+  intro b hb
+  have hrhs_ne : algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 3) ≠ 0 := RatFunc.algebraMap_ne_zero X3p1_ne_zero
+  have hb_ne : b ≠ 0 := by rintro rfl; rw [zero_pow (by norm_num)] at hb; exact hrhs_ne hb.symm
+  have hdeg : (b ^ 2).intDegree = (algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 3)).intDegree := by rw [hb]
+  rw [sq, RatFunc.intDegree_mul hb_ne hb_ne, RatFunc.intDegree_polynomial, natDeg_X3p1] at hdeg
+  omega
+
+/-- **★ `y² − (x³+1)` is irreducible over `ℚ(x)`** — `Irreducible (X² − C(toK radicandX3p1))` in
+`(RatFunc ℚ)[X]`. By `X_pow_sub_C_irreducible_of_prime` (prime `2`) and `x³+1` not-a-square
+(`not_square_X3p1`). So `AdjoinRoot (X² − C(toK radicandX3p1)) = ℚ(x)[√(x³+1)]` is a genuine **field** — the
+algebraic fact underwriting `CFieldDomain RadX3`. -/
+theorem irreducible_radX3 :
+    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ))) := by
+  rw [toK_radicandX3p1]
+  exact X_pow_sub_C_irreducible_of_prime Nat.prime_two not_square_X3p1
+
+/-- **The irreducibility as a `Fact`** — registers `Irreducible (X² − C(toK radicandX3p1))` so Mathlib's
+`AdjoinRoot.instField` resolves `Field (AdjoinRoot (X² − C(toK radicandX3p1)))`, the field
+`ℚ(x)[√(x³+1)]`. The instance the `CFieldSpec (RadExt …)` bridge to that `AdjoinRoot` would consume. -/
+instance fact_irreducible_radX3 :
+    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ)))) :=
+  ⟨irreducible_radX3⟩
+
+/-- **`ℚ(x)[√(x³+1)]` is a field** — `Field (AdjoinRoot (X² − C(toK radicandX3p1)))`, resolved from the
+irreducibility `Fact`. The genuine field the radical base `RadX3` represents; the integral-domain witness
+that `CFieldDomain RadX3` asserts (the discharge is the residual below). -/
+noncomputable example : Field (AdjoinRoot (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ)))) :=
+  inferInstance
+
+/-! ### The `CFieldSpec (RadExt α n f)` bridge into `AdjoinRoot (Xⁿ − C(toK f))`
+
+The noncomputable correctness bridge that turns `irreducible_radX3` into a concrete `CFieldDomain`. The
+target field is `K := AdjoinRoot (Xⁿ − C(toK f))` (Mathlib's `R[X]/(g)`, a `Field` under
+`[Fact (Irreducible g)]`), and `toK p := AdjoinRoot.mk _ (toPolyG (RadExt.radCanon n f p.toRad))` — the **canonical**
+representative, so every law lands on a degree-`< n` rep where `AdjoinRoot.mk ∘ toPolyG` is faithful. The
+ring-hom laws are the proven `mk_toPolyG_radMul` / `toPolyG_caddG` of `ComputableRadicalDerivationInvariant`
+(`AdjoinRoot.mk` *is* `Ideal.Quotient.mk (radIdeal n f)`), the new `RadExt.radCanon` absorbed by
+`mk_toPolyG_radReduce`. The two crux lemmas: `isZero_iff` (the `radReduce` length bound +
+`AdjoinRoot.mk_ne_zero_of_natDegree_lt`) and `toK_inv` (the conjugate-norm identity `q·(ā − b̄y) = N`, a
+unit when `N ≠ 0 ↔ q ≠ 0`). Restricted to `n = 2` (the conjugate inverse `radInv2`). -/
+
+namespace RadElem
+variable {α : Type*} [CField α] {n : ℕ} {f : α}
+
+/-- **`cnormG` does not grow length** — `(cnormG p).length ≤ p.length` (stripping trailing zeros). -/
+theorem cnormG_length_le (p : CPolyG α) : (CPolyG.cnormG p : List α).length ≤ (p : List α).length := by
+  induction p with
+  | nil => simp [CPolyG.cnormG]
+  | cons a as ih =>
+    rw [CPolyG.cnormG]
+    cases h : CPolyG.cnormG as with
+    | nil => by_cases ha : CField.isZero a <;> simp [ha, List.length_cons]
+    | cons b bs =>
+      simp only [List.length_cons]
+      have : (b :: bs : List α).length ≤ (as : List α).length := h ▸ ih
+      simp only [List.length_cons] at this; omega
+
+/-- **`caddG` length is the `max`** — `(caddG p q).length = max p.length q.length` (the shorter is
+zero-extended). -/
+theorem caddG_length (p q : CPolyG α) :
+    (CPolyG.caddG p q : List α).length = max (p : List α).length (q : List α).length := by
+  induction p generalizing q with
+  | nil => simp [CPolyG.caddG]
+  | cons a as ih =>
+    cases q with
+    | nil => simp [CPolyG.caddG]
+    | cons b bs => simp only [CPolyG.caddG, List.length_cons, ih bs]; omega
+
+/-- **`cshiftG` length** — `(cshiftG k p).length = k + p.length` (prepend `k` zeros). -/
+theorem cshiftG_length (k : ℕ) (p : CPolyG α) :
+    (CPolyG.cshiftG k p : List α).length = k + (p : List α).length := by
+  induction k with
+  | zero => simp [CPolyG.cshiftG]
+  | succ m ih => rw [CPolyG.cshiftG]; simp only [List.length_cons, ih]; omega
+
+/-- **The inner `radReduce` reaches `cnormG`-length `≤ n`** (`n ≥ 1`, `fuel ≥ cnormG-length`) — each fold
+strictly drops the normalized length (it replaces a length-`L` list, `L > n`, by one of length `< L`:
+`dropLast` is `L−1` and the `cshiftG (L−1−n)` term is `L−n ≤ L−1`), so the loop hits the `length ≤ n` exit.
+The kernel of both `radCanon` length bounds. -/
+theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : CPolyG α),
+    (CPolyG.cnormG u : List α).length ≤ fuel →
+    (CPolyG.cnormG (radReduce n f fuel u) : List α).length ≤ n := by
+  intro fuel
+  induction fuel with
+  | zero => intro u hub; rw [radReduce]; simp only [Nat.le_zero] at hub; omega
+  | succ fuel ih =>
+    intro u hub
+    rw [radReduce]
+    by_cases hlen : (CPolyG.cnormG u : List α).length ≤ n
+    · simp only [hlen, if_true, CPolyG.cnormG_idem]
+    · simp only [hlen, if_false]; replace hlen := Nat.lt_of_not_le hlen
+      apply ih
+      set q := CPolyG.cnormG u with hq
+      have hstep : (CPolyG.caddG (q : List α).dropLast
+          (CPolyG.cshiftG ((q : List α).length - 1 - n)
+            [CField.mul ((q : List α).getLast?.getD CField.zero) f]) : List α).length
+          < (q : List α).length := by
+        rw [caddG_length, cshiftG_length]
+        simp only [List.length_singleton, List.length_dropLast]; omega
+      have := (cnormG_length_le _).trans_lt hstep; omega
+
+/-- **★ `RadExt.radCanon` has length `≤ n`** (`n ≥ 1`) — `radCanon = cnormG ∘ radReduce` with the inner
+`radReduce` reaching `cnormG`-length `≤ n` (`cnormG_radReduce_length_le`). The length bound that makes
+`isZero_iff` and `toK_inv` faithful: `toPolyG (RadExt.radCanon u)` has `natDegree < n = deg (Xⁿ − C(toK
+f))`, and the inverse reads a degree-`< 2` rep. -/
+theorem radCanon_length_le (hn : 1 ≤ n) (u : CPolyG α) :
+    (RadExt.radCanon n f u : List α).length ≤ n := by
+  rw [RadExt.radCanon]
+  have := cnormG_radReduce_length_le (f := f) hn ((u : List α).length + 1) u (by
+    have := cnormG_length_le u; omega)
+  exact this
+
+/-- **`cnormG (RadExt.radCanon u)` has length `≤ n`** — immediate from `radCanon_length_le` and
+`cnormG_length_le` (the outer `cnormG` of `radCanon` is idempotent). -/
+theorem cnormG_radCanon_length_le (hn : 1 ≤ n) (u : CPolyG α) :
+    (CPolyG.cnormG (RadExt.radCanon n f u) : List α).length ≤ n :=
+  (cnormG_length_le _).trans (radCanon_length_le hn u)
+
+variable [CFieldSpec α]
+
+/-- **The bridge** `toAdj p = mk (toPolyG p.toRad)` into `AdjoinRoot (Xⁿ − C(toK f))` (`mk` *is*
+`Ideal.Quotient.mk (radIdeal n f)`). The `toK` of the `CFieldSpec (RadExt …)` instance, on canonical reps. -/
+noncomputable def toAdj (p : RadExt α n f) : AdjoinRoot (X ^ n - C (CFieldSpec.toK f)) :=
+  AdjoinRoot.mk _ (CPolyG.toPolyG p.toRad)
+
+/-- **`RadExt.radCanon` is absorbed by `mk`** — `mk (toPolyG (RadExt.radCanon n f u)) = mk (toPolyG u)` (the reduction
+changes the polynomial only by a multiple of `Xⁿ − C(toK f)`, `mk_toPolyG_radReduce`). -/
+theorem mk_canon (u : RadElem α) :
+    AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (CPolyG.toPolyG (RadExt.radCanon n f u))
+      = AdjoinRoot.mk _ (CPolyG.toPolyG u) := by
+  show Ideal.Quotient.mk (radIdeal n f) _ = Ideal.Quotient.mk _ _
+  rw [RadExt.radCanon, CPolyG.toPolyG_cnormG, mk_toPolyG_radReduce]
+
+/-- **`toAdj` sends `RadExt.zero` to `0`**. -/
+theorem toAdj_zero : toAdj (RadExt.zero : RadExt α n f) = 0 := by
+  show AdjoinRoot.mk _ (CPolyG.toPolyG ([] : RadElem α)) = 0
+  rw [CPolyG.toPolyG_nil, map_zero]
+
+/-- **`toAdj` sends `RadExt.one` to `1`**. -/
+theorem toAdj_one : toAdj (RadExt.one : RadExt α n f) = 1 := by
+  show AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (CPolyG.toPolyG ([CField.one] : RadElem α)) = 1
+  rw [show CPolyG.toPolyG ([CField.one] : RadElem α) = (1 : (CFieldSpec.K α)[X]) by
+    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]]
+  exact map_one _
+
+/-- **`toAdj` intertwines `RadExt.add` with `+`** — via `toPolyG_caddG` and `RadExt.radCanon` absorption. -/
+theorem toAdj_add (p q : RadExt α n f) : toAdj (RadExt.add p q) = toAdj p + toAdj q := by
+  show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radAdd p.toRad q.toRad))) = _
+  rw [mk_canon]
+  show AdjoinRoot.mk _ (CPolyG.toPolyG (CPolyG.caddG _ _)) = _
+  rw [CPolyG.toPolyG_caddG, map_add]; rfl
+
+/-- **`toAdj` intertwines `RadExt.neg` with `-`** — via `toPolyG_cnegG`. -/
+theorem toAdj_neg (p : RadExt α n f) : toAdj (RadExt.neg p) = - toAdj p := by
+  show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radNeg p.toRad))) = _
+  rw [mk_canon]
+  show AdjoinRoot.mk _ (CPolyG.toPolyG (CPolyG.cnegG _)) = _
+  rw [CPolyG.toPolyG_cnegG, map_neg]; rfl
+
+/-- **★ `toAdj` intertwines `RadExt.mul` with `*`** — the radical product is the quotient product
+(`mk_toPolyG_radMul`, the carrier ring structure `K[X] ⧸ (Xⁿ − C(toK f))`). -/
+theorem toAdj_mul (p q : RadExt α n f) : toAdj (RadExt.mul p q) = toAdj p * toAdj q := by
+  show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radMul n f p.toRad q.toRad))) = _
+  rw [mk_canon]; show Ideal.Quotient.mk (radIdeal n f) _ = _ * _
+  rw [mk_toPolyG_radMul]; rfl
+
+/-- **★ `toAdj` reflects the zero test** — `RadExt.isZero p = true ↔ toAdj p = 0` (`n ≥ 1`). `→`: the
+canonical rep is `cisZeroG`, so `toPolyG (RadExt.radCanon p) = 0`. `←`: `toAdj p = 0` means `(Xⁿ − C(toK f)) ∣
+toPolyG (RadExt.radCanon p)`, but `natDegree (toPolyG (RadExt.radCanon p)) < n` (`cnormG_radCanon_length_le`), so
+`AdjoinRoot.mk_ne_zero_of_natDegree_lt` forces `toPolyG (RadExt.radCanon p) = 0`, i.e. `cisZeroG = true`. The
+faithfulness that makes `toAdj` certify the computable zero test. -/
+theorem isZero_iff (hn : 1 ≤ n) (p : RadExt α n f) : RadExt.isZero p = true ↔ toAdj p = 0 := by
+  rw [RadExt.isZero, toAdj]
+  constructor
+  · intro h
+    have h0 : CPolyG.toPolyG (RadExt.radCanon n f p.toRad) = 0 := (CPolyG.cisZeroG_iff _).mp h
+    rw [← mk_canon (f := f) p.toRad, h0, map_zero]
+  · intro h
+    by_contra hne
+    have hcz : CPolyG.cisZeroG (RadExt.radCanon n f p.toRad) = false := by
+      rw [Bool.eq_false_iff]; exact hne
+    have hp0 : CPolyG.toPolyG (RadExt.radCanon n f p.toRad) ≠ 0 := by
+      rw [Ne, ← CPolyG.cisZeroG_iff, hcz]; exact Bool.false_ne_true
+    have hdeg : (CPolyG.toPolyG (RadExt.radCanon n f p.toRad)).natDegree < n := by
+      have h1 := CPolyG.natDegree_toPolyG_le (RadExt.radCanon n f p.toRad)
+      have h2 := cnormG_radCanon_length_le (f := f) hn p.toRad
+      omega
+    have hmono : (X ^ n - C (CFieldSpec.toK f)).Monic := monic_X_pow_sub_C _ (by omega)
+    have := AdjoinRoot.mk_ne_zero_of_natDegree_lt hmono hp0 (by rw [natDegree_X_pow_sub_C]; exact hdeg)
+    rw [← mk_canon (f := f) p.toRad] at h; exact this h
+
+/-! #### The inverse law (`n = 2`): `toAdj (RadExt.inv p) = (toAdj p)⁻¹`
+
+`radInv2 f q = [a/N, −b/N]` for `q = a + b·y`, `N = a² − b²f` the conjugate norm. In `AdjoinRoot (X² −
+C(toK f))`, `(a + b·root)·(a − b·root) = a² − b²·root² = a² − b²f = N`, so `radInv2 f q` is `q⁻¹` when
+`N ≠ 0` (and both vanish when `N = 0`, i.e. `q = 0`). -/
+
+/-- **`toPolyG (radInv2 f q)` in `K[X]`** — `C(toK(a/N)) − C(toK(b/N))·X` (`a, b` the `radCoeff0/1`,
+`N = radNorm2`). `radInv2` reads only `y⁰`/`y¹`, so this holds for any `q`. -/
+theorem toPolyG_radInv2 (q : RadElem α) :
+    CPolyG.toPolyG (radInv2 f q)
+      = C (CFieldSpec.toK (CField.div (radCoeff0 q) (radNorm2 f q)))
+        - C (CFieldSpec.toK (CField.div (radCoeff1 q) (radNorm2 f q))) * X := by
+  show CPolyG.toPolyG [CField.div (radCoeff0 q) (radNorm2 f q),
+      CField.neg (CField.div (radCoeff1 q) (radNorm2 f q))] = _
+  simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]
+  rw [CFieldSpec.toK_neg, map_neg]; ring
+
+/-- **`toPolyG q = C(toK a) + C(toK b)·X` for a length-`≤ 2` `q`** (`a, b` the `radCoeff0/1`). The Horner
+form of a canonical `n = 2` rep. -/
+theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2) :
+    CPolyG.toPolyG q = C (CFieldSpec.toK (radCoeff0 q)) + C (CFieldSpec.toK (radCoeff1 q)) * X := by
+  match q, hq with
+  | [], _ => simp [radCoeff0, radCoeff1, CFieldSpec.toK_zero]
+  | [a], _ =>
+    show CPolyG.toPolyG [a] = _
+    rw [show radCoeff0 ([a] : RadElem α) = a from rfl,
+      show radCoeff1 ([a] : RadElem α) = CField.zero from rfl]
+    simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]
+    rw [CFieldSpec.toK_zero, map_zero, zero_mul, add_zero]
+  | [a, b], _ =>
+    show CPolyG.toPolyG [a, b] = _
+    rw [show radCoeff0 ([a, b] : RadElem α) = a from rfl, show radCoeff1 ([a, b] : RadElem α) = b from rfl]
+    simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]; ring
+
+/-- **★ The conjugate-norm inverse identity** (`n = 2`, length-`≤ 2` `q`, `N ≠ 0`): `mk (toPolyG q) · mk
+(toPolyG (radInv2 f q)) = 1` in `AdjoinRoot (X² − C(toK f))`. The product `(C A + C B·X)(C(A/N) − C(B/N)·X)
+− 1 = −(C B·C(B/N))·(X² − C F)` lies in the defining ideal (using `A·(A/N) − B·F·(B/N) = N/N = 1`). So
+`radInv2 f q` *is* the field inverse of `q`. -/
+theorem inv_mul_gen (q : RadElem α) (hq : (q : List α).length ≤ 2)
+    (hN : CFieldSpec.toK (radNorm2 f q) ≠ 0) :
+    AdjoinRoot.mk (X ^ 2 - C (CFieldSpec.toK f)) (CPolyG.toPolyG q)
+      * AdjoinRoot.mk _ (CPolyG.toPolyG (radInv2 f q)) = 1 := by
+  set A := CFieldSpec.toK (radCoeff0 q)
+  set B := CFieldSpec.toK (radCoeff1 q)
+  set F := CFieldSpec.toK f
+  set N := CFieldSpec.toK (radNorm2 f q) with hNdef
+  have hNval : N = A * A - B * B * F := by
+    rw [hNdef, radNorm2, CFieldSpec.toK_sub, CFieldSpec.toK_mul, CFieldSpec.toK_mul, CFieldSpec.toK_mul]
+  have hq2 : CPolyG.toPolyG q = C A + C B * X := toPolyG_of_len_le_two q hq
+  have hinv : CPolyG.toPolyG (radInv2 f q) = C (A / N) - C (B / N) * X := by
+    rw [toPolyG_radInv2, CFieldSpec.toK_div, CFieldSpec.toK_div]
+  rw [hq2, hinv, ← map_mul]
+  rw [show (1 : AdjoinRoot (X ^ 2 - C F)) = AdjoinRoot.mk _ 1 from (map_one _).symm, AdjoinRoot.mk_eq_mk]
+  have hconst : A * (A / N) - B * F * (B / N) = 1 := by field_simp; rw [hNval]; ring
+  have hcross : B * (A / N) = A * (B / N) := by ring
+  have hc : C A * C (A / N) - C B * C F * C (B / N) = 1 := by
+    have := congrArg (C : CFieldSpec.K α → (CFieldSpec.K α)[X]) hconst
+    rwa [map_sub, map_mul, map_mul, map_mul, map_one] at this
+  have hcr : C B * C (A / N) = C A * C (B / N) := by
+    have := congrArg (C : CFieldSpec.K α → (CFieldSpec.K α)[X]) hcross
+    rwa [map_mul, map_mul] at this
+  have key : (C A + C B * X) * (C (A / N) - C (B / N) * X) - 1
+      = (- (C B * C (B / N))) * (X ^ 2 - C F) := by linear_combination hc + X * hcr
+  rw [key]; exact dvd_mul_left _ _
+
+/-- **`N = 0` when a reduced `q` vanishes** — `toPolyG q = 0 → toK (radNorm2 f q) = 0` (the coefficients
+`a, b` both vanish, so `N = a² − b²f = 0`). -/
+theorem toK_radNorm2_eq_zero_of_toPolyG_zero (q : RadElem α) (hq : (q : List α).length ≤ 2)
+    (h0 : CPolyG.toPolyG q = 0) : CFieldSpec.toK (radNorm2 f q) = 0 := by
+  rw [toPolyG_of_len_le_two q hq] at h0
+  have hA : CFieldSpec.toK (radCoeff0 q) = 0 := by
+    have := congrArg (Polynomial.coeff · 0) h0; simpa [coeff_C, coeff_X] using this
+  have hB : CFieldSpec.toK (radCoeff1 q) = 0 := by
+    have := congrArg (Polynomial.coeff · 1) h0; simpa [coeff_C, coeff_X, coeff_C_mul] using this
+  rw [radNorm2, CFieldSpec.toK_sub, CFieldSpec.toK_mul, CFieldSpec.toK_mul, CFieldSpec.toK_mul, hA, hB]
+  ring
+
+/-- **A canonical rep with `mk (toPolyG q) = 0` is `0`** — `(q.length ≤ 2) → mk (toPolyG q) = 0 →
+toPolyG q = 0` (degree `< 2 = deg (X² − C(toK f))`, so the only multiple of the defining polynomial of
+that degree is `0`, `AdjoinRoot.mk_ne_zero_of_natDegree_lt`). Needs the irreducibility `Fact` (for the
+`AdjoinRoot` field structure used downstream). -/
+theorem toPolyG_eq_zero_of_mk_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))]
+    (q : RadElem α) (hq : (q : List α).length ≤ 2)
+    (h : AdjoinRoot.mk (X ^ 2 - C (CFieldSpec.toK f)) (CPolyG.toPolyG q) = 0) :
+    CPolyG.toPolyG q = 0 := by
+  by_contra h0
+  have hdeg : (CPolyG.toPolyG q).natDegree < 2 := by
+    have := CPolyG.natDegree_toPolyG_le q
+    have hcn := cnormG_length_le q
+    omega
+  have hmono : (X ^ 2 - C (CFieldSpec.toK f)).Monic := monic_X_pow_sub_C _ (by norm_num)
+  exact AdjoinRoot.mk_ne_zero_of_natDegree_lt hmono h0 (by rw [natDegree_X_pow_sub_C]; exact hdeg) h
+
+/-- **A vanishing conjugate norm forces a canonical rep to `0`** (`n = 2`): for a length-`≤ 2` `q`,
+`toK (radNorm2 f q) = 0 → toPolyG q = 0`. From `N = a² − b²·F = 0`: if `b ≠ 0` then `F = (a/b)²` is a
+square in `K`, contradicting the not-a-square consequence of the irreducibility `Fact`; so `b = 0`, then
+`a² = 0` forces `a = 0`, hence `toPolyG q = C a + C b·X = 0`. The non-degeneracy of the conjugate norm. -/
+theorem toPolyG_eq_zero_of_N_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))]
+    (q : RadElem α) (hq : (q : List α).length ≤ 2)
+    (hN : CFieldSpec.toK (radNorm2 f q) = 0) : CPolyG.toPolyG q = 0 := by
+  set A := CFieldSpec.toK (radCoeff0 q)
+  set B := CFieldSpec.toK (radCoeff1 q)
+  set F := CFieldSpec.toK f
+  have hNval : A * A - B * B * F = 0 := by
+    rw [← hN, radNorm2, CFieldSpec.toK_sub, CFieldSpec.toK_mul, CFieldSpec.toK_mul, CFieldSpec.toK_mul]
+  have hnsq : ∀ c : CFieldSpec.K α, c ^ 2 ≠ F :=
+    (X_pow_sub_C_irreducible_iff_of_prime Nat.prime_two).mp (Fact.out)
+  have hB : B = 0 := by
+    by_contra hBne
+    apply hnsq (A / B)
+    rw [div_pow, sq, sq]
+    field_simp
+    linear_combination hNval
+  have hA : A = 0 := by
+    have : A * A = 0 := by rw [hB] at hNval; linear_combination hNval
+    rcases mul_eq_zero.mp this with h | h <;> exact h
+  rw [toPolyG_of_len_le_two q hq, show CFieldSpec.toK (radCoeff0 q) = A from rfl,
+    show CFieldSpec.toK (radCoeff1 q) = B from rfl, hA, hB]
+  simp
+
+/-- **★ `toAdj` intertwines `RadExt.inv` with `⁻¹`** (`n = 2`): `toAdj (RadExt.inv p) = (toAdj p)⁻¹`.
+`RadExt.inv` canonicalizes its input to a length-`≤ 2` rep `q`, so `radInv2 f q` is the genuine inverse.
+Split on the conjugate norm `N = radNorm2 f q`: when `N ≠ 0`, `inv_mul_gen` gives `mk q · mk (radInv2 f q)
+= 1`, so `mk (radInv2 f q) = (mk q)⁻¹ = (toAdj p)⁻¹` (`eq_inv_of_mul_eq_one_right`); when `N = 0`, then
+`q = 0` (`toPolyG_eq_zero_of_N_zero`, by not-a-square), so both `radInv2 f q = 0` and `toAdj p = 0`, and
+`0 = 0⁻¹`. The field-inverse law of the bridge (needs the irreducibility `Fact`). -/
+theorem toAdj_inv [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))] (p : RadExt α 2 f) :
+    toAdj (RadExt.inv p) = (toAdj p)⁻¹ := by
+  set q := RadExt.radCanon 2 f p.toRad with hq
+  have hqlen : (q : List α).length ≤ 2 := by rw [hq]; exact radCanon_length_le (by norm_num) p.toRad
+  have hpadj : toAdj p = AdjoinRoot.mk _ (CPolyG.toPolyG q) := by rw [toAdj, hq, mk_canon]
+  show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon 2 f (radInv2 f (RadExt.radCanon 2 f p.toRad)))) = _
+  rw [mk_canon, ← hq]
+  by_cases hN : CFieldSpec.toK (radNorm2 f q) = 0
+  · -- `N = 0 ⟹ q = 0 ⟹ radInv2 f q = 0` and `toAdj p = 0`; `0 = 0⁻¹`.
+    have hq0 : CPolyG.toPolyG q = 0 := toPolyG_eq_zero_of_N_zero q hqlen hN
+    have hinv0 : CPolyG.toPolyG (radInv2 f q) = 0 := by
+      rw [toPolyG_radInv2, CFieldSpec.toK_div, CFieldSpec.toK_div, hN, div_zero, div_zero, map_zero]
+      simp
+    rw [hinv0, map_zero, hpadj, hq0, map_zero, inv_zero]
+  · rw [hpadj]
+    exact eq_inv_of_mul_eq_one_right (inv_mul_gen q hqlen hN)
+
+end RadElem
+
+/-! ### ★ `CFieldSpec (RadExt α 2 f)` and the concrete `CFieldDomain`
+
+Assembling the bridge laws gives the noncomputable `CFieldSpec (RadExt α 2 f)` — over `[CFieldSpec α]` and
+the irreducibility `Fact` (so `K = AdjoinRoot (X² − C(toK f))` is a `Field`). Then the **global**
+`instCFieldDomainOfCFieldSpec` supplies `CFieldDomain (RadExt α 2 f)` (a `Prop`-erased instance), which is
+exactly what discharges the `[CFieldDomain RadX3]` hypothesis and makes `QFunNZG (RadExt …)` an
+**unconditional** `CField` + `CDiffField`. -/
+
+/-- **★ `CFieldSpec (RadExt α 2 f)`** — the field-homomorphism bridge into `K = AdjoinRoot (X² − C(toK f))`
+(a `Field` under `[Fact (Irreducible (X² − C(toK f)))]`), with `toK := RadElem.toAdj`. All laws are the
+`RadElem.toAdj_*` bridge theorems (ring-hom from `mk_toPolyG_radMul` / `toPolyG_caddG`, `isZero_iff` from
+the `radCanon` length bound, `toK_inv` from the conjugate-norm identity). Noncomputable (routes through
+`AdjoinRoot`); only the correctness layer depends on it. This certifies the computable `CField (RadExt α 2
+f)` against the genuine field `α[y]/(y² − f)`. -/
+noncomputable instance instCFieldSpecRadExt {α : Type*} [CField α] [CFieldDomain α] [CFieldSpec α]
+    {f : α} [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))] : CFieldSpec (RadExt α 2 f) where
+  K := AdjoinRoot (X ^ 2 - C (CFieldSpec.toK f))
+  toK := RadElem.toAdj
+  toK_zero := RadElem.toAdj_zero
+  toK_one := RadElem.toAdj_one
+  toK_add := RadElem.toAdj_add
+  toK_mul := RadElem.toAdj_mul
+  toK_neg := RadElem.toAdj_neg
+  toK_inv := RadElem.toAdj_inv
+  isZero_iff p := RadElem.isZero_iff (by norm_num) p
+
+/-! ### ★★ Unconditional composition: `QFunNZG (RadExt ℚ(x) 2 (x³+1))` is a `CField` + `CDiffField`
+
+With `CFieldSpec (RadExt …)` in scope, `instCFieldDomainOfCFieldSpec` resolves `CFieldDomain RadX3`
+**concretely** (no hypothesis) — `fact_irreducible_radX3` supplies the irreducibility. So the transcendental
+level `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` is now an **unconditional** `CField` and `CDiffField`, and the
+mixed-tower derivations re-validate with the resolved instances. The first fully-discharged
+**transcendental-on-algebraic** carrier. -/
+
+/-- **★ `CFieldDomain RadX3` — discharged concretely** (no hypothesis): from `instCFieldSpecRadExt` (with
+`fact_irreducible_radX3`) via the global `instCFieldDomainOfCFieldSpec`. The integral-domain witness that
+the radical base is a genuine field, the key that lets the transcendental level stack. -/
+noncomputable example : CFieldDomain RadX3 := inferInstance
+
+/-- **★★ `QFunNZG RadX3` is a `CField`, UNCONDITIONALLY** — `ℚ(x)[√(x³+1)](t)` resolves its `CField`
+outright (the `[CFieldDomain RadX3]` hypothesis of `cfield_qfunNZG_radX3` is now discharged). The
+transcendental monomial `t` stacks on the algebraic base with no outstanding assumption. -/
+theorem cfield_qfunNZG_radX3_unconditional : Nonempty (CField (QFunNZG RadX3)) := ⟨inferInstance⟩
+
+/-- **★★ `QFunNZG RadX3` is a `CDiffField`, UNCONDITIONALLY** — the mixed elementary tower
+`ℚ(x)[√(x³+1)](t)` is a genuine *differential* field with no hypothesis, inheriting `d/dx + radical y' +
+∂/∂t`. The transcendental-over-algebraic tower is fully realized. -/
+theorem cdiffField_qfunNZG_radX3_unconditional : Nonempty (CDiffField (QFunNZG RadX3)) := ⟨inferInstance⟩
+
+/-- The transcendental monomial `t ∈ QFunNZG RadX3 = ℚ(x)[√(x³+1)](t)` (numerator `[0, 1] = t` over the
+radical base `RadX3`, denominator `[1]`). The new independent variable stacked on the algebraic extension;
+its proof of denominator-nonzero is `native_decide` (the `CFieldDomain RadX3` Prop is erased). -/
+def tOverRadX3 : QFunNZG RadX3 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩
+
+/-- **★★ `D(t) = 1` over `ℚ(x)[√(x³+1)](t)`, fully `native_decide`** — the **typeclass** derivation
+`CDiffField.cderiv` on `QFunNZG RadX3` (the tower derivation `towerDerivQFunNZG [1]`, `Dt = 1`) sends the
+new transcendental monomial `t` to `1`, computed in the native compiler over the **algebraic** base. The
+first derivative computed at the transcendental level over an algebraic base with the **concrete**
+(hypothesis-free) instances — the `CFieldDomain RadX3` Prop-erasure keeps it `native_decide`-able. -/
+theorem cderiv_tOverRadX3_eq_one :
+    CField.isZero (CField.sub (CDiffField.cderiv tOverRadX3) (CField.one : QFunNZG RadX3)) = true := by
+  native_decide
+
+/-- **★★ `t · t⁻¹ = 1` over `ℚ(x)[√(x³+1)](t)`, fully `native_decide`** — the **typeclass** field
+operations of `QFunNZG RadX3` (computable, over the now-concrete `CFieldDomain RadX3`) invert the
+transcendental monomial `t` over the algebraic base. The mixed elementary tower is a genuine **field** that
+computes, unconditionally. -/
+theorem mul_inv_tOverRadX3_eq_one :
+    CField.isZero (CField.sub (CField.mul tOverRadX3 (CField.inv tOverRadX3))
+      (CField.one : QFunNZG RadX3)) = true := by native_decide
 
 /-! ### `#print axioms` — the algebraic Risch base computes
 
@@ -338,5 +791,10 @@ Classical.choice, Quot.sound]` plus the `native_decide` compiler axiom — no `s
 -- ★★ The transcendental monomial over the algebraic base: the mixed-tower derivation computes:
 #print axioms radX3_monomialDeriv_t2sq_eq_two_t2sq
 #print axioms radX3_monomialDeriv_genT_eq
+
+-- ★★ UNCONDITIONAL composition + computation over `QFunNZG RadX3 = ℚ(x)[√(x³+1)](t)`:
+#print axioms cfield_qfunNZG_radX3_unconditional
+#print axioms cderiv_tOverRadX3_eq_one
+#print axioms mul_inv_tOverRadX3_eq_one
 
 end DeepWiki.SymbolicIntegration
