@@ -272,4 +272,133 @@ theorem radDeriv_projOne_stays :
         (radDeriv 2 radicandX3p1 (radProj 1 mixedElem))
         (radProj 1 (radDeriv 2 radicandX3p1 (radProj 1 mixedElem)))) = true := by native_decide
 
+/-! ### Case 1 rational-part reduction (Trager Appendix A §2.1, `θ' = 1`)
+
+By §1 we are reduced to integrands `R/y` (rewrite `Syⁱ = R/y^{n−i}`, then choose `y` so the form is
+`R/y`), and by §2 we partial-fraction into `C/(Vᵏy)`, `C/(Wᵏy)`, `C/y`. **Case 1** is the piece
+`C/(Vᵏy)` with `V` coprime to the radicand `f` (here `yⁿ = f ∈ F[θ]`, `θ' = 1` the base variable). The
+Hermite-style step lowers `k`: find a polynomial `B` with
+
+`(Bf/(V^{k−1}y))' − C/(Vᵏy) = D/(V^{k−1}y)`,
+
+and since `(Bf/(V^{k−1}y))' = ((1−k)V'Bf)/(Vᵏy) + (B'f + Bg)/(V^{k−1}y)` (with `g` from `(f/y)' = g/y`),
+this needs `(1−k)V'fB ≡ C (mod V)`, solvable because `gcd((1−k)V'f, V) = 1` (V squarefree, coprime to
+`f`, `k ≥ 2`). The residual is `D = ((1−k)V'fB − C)/V + B'f + Bg`. The congruence is solved by the
+generic Bézout/diophantine solver `cdiophantineG`. Cleared over the common denominator `Vᵏy`, the whole
+step is the **pure `F[θ]` identity** `(1−k)V'fB − C + V(B'f + Bg) = V·D` (no `y`), checkable by
+`cisZeroG` — the model is `cHermiteReduceTower`'s cleared `D(g)+h = f` check.
+
+`g` is read off `(f/y)' = g/y`; for the worked example `f` is a single squarefree θ-factor with `d = 1`,
+so `g = ((n−1)/n)·f'` (Appendix A p. 76, `Σ(1−eᵢ/n)Pᵢ'/Pᵢ` with one `e₁ = 1` factor). -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- **Case-1 cofactor solve** `radCase1Cofactor fuel k V Df f C = B` — the polynomial `B` (degree
+`< deg V`) solving the Case-1 congruence `(1−k)·V'·f·B ≡ C (mod V)` (Trager Appendix A §2.1), via the
+generic diophantine solver `cdiophantineG (((1−k)·V'·f)) V C` (which returns `(B, _)` with `B·((1−k)V'f)
++ c·V = C`). `Df = V'` is passed in (the monomial derivative `V'`, computed by the caller so the base
+derivation is whatever the level uses); `(1−k)` is `cnatCastG (k−1)` negated. Generic over `[CField α]`. -/
+def radCase1Cofactor (fuel : ℕ) (k : ℕ) (V Df f C : CPolyG α) : CPolyG α :=
+  let oneMinusK := cnegG [cnatCastG (k - 1)]                    -- the constant `(1 − k) = −(k−1)`
+  let coeff := cmulG oneMinusK (cmulG Df f)                     -- `(1−k)·V'·f`
+  (cdiophantineG fuel coeff V C).1
+
+/-- **Case-1 residual** `radCase1Residual k V Df f g B C Bder = D` — the lowered-`k` residual numerator
+`D = ((1−k)V'fB − C)/V + B'f + Bg` of the Case-1 step (Trager Appendix A §2.1). `Df = V'`, `Bder = B'`,
+and `g` (from `(f/y)' = g/y`) are passed in (the caller supplies the derivatives at the level's base
+derivation). The exact division by `V` is `cdivG` (`V ∣ (1−k)V'fB − C` by the cofactor congruence).
+Generic over `[CField α]`. -/
+def radCase1Residual (fuel : ℕ) (k : ℕ) (V Df f g B C Bder : CPolyG α) : CPolyG α :=
+  let oneMinusK := cnegG [cnatCastG (k - 1)]
+  let topNum := csubG (cmulG oneMinusK (cmulG Df (cmulG f B))) C  -- `(1−k)V'fB − C`
+  let quotient := cdivG fuel topNum V                             -- `((1−k)V'fB − C)/V`
+  caddG quotient (caddG (cmulG Bder f) (cmulG B g))               -- `… + B'f + Bg`
+
+end CPolyG
+
+/-! #### ★ Case 1 validates: `∫ C/(V²y)` with `y = √x`, `V = x−1` (`native_decide`)
+
+`F = ℚ` (constants), `θ = x` (`θ' = 1`, so `D = d/dx = cderivG` on `ℚ[x]`), radicand `y² = f = x`
+(`n = 2`, `y = √x`), `V = x − 1` (coprime to `f = x`), `k = 2`, `C = 1`. So the integrand is
+`1/((x−1)²√x)`. The cofactor congruence `(1−2)·V'·f·B ≡ C (mod V)` is `−x·B ≡ 1 (mod x−1)`; mod `x−1`,
+`x ≡ 1`, so `B = −1`. The residual `D = ((1−2)·1·x·(−1) − 1)/(x−1) + 0 + (−1)·(1/2) = (x−1)/(x−1) − 1/2
+= 1/2`, a constant (degree `< deg V`), so the multiplicity dropped `2 → 1`. `g = f'/2 = 1/2`. -/
+
+open CPolyG
+
+/-- Case-1 example radicand `f = x` (`y² = x`, `y = √x`), as a `ℚ[x]` polynomial `[0, 1]`. -/
+def case1F : CPolyG ℚ := [0, 1]
+
+/-- Case-1 example squarefree denominator factor `V = x − 1` (coprime to `f = x`), `[−1, 1]`. -/
+def case1V : CPolyG ℚ := [-1, 1]
+
+/-- Case-1 example numerator `C = 1`, `[1]`. -/
+def case1C : CPolyG ℚ := [1]
+
+/-- `V' = (x−1)' = 1` over `ℚ[x]` (`cderivG`, `θ' = 1`, ℚ-constant coefficients). -/
+def case1Vder : CPolyG ℚ := cderivG case1V
+
+/-- `g = ((n−1)/n)·f' = (1/2)·1 = 1/2` for `n = 2`, `f = x` squarefree (`(f/y)' = g/y`), `[1/2]`. -/
+def case1G : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG case1F)
+
+/-- The solved Case-1 cofactor `B` for `−x·B ≡ 1 (mod x−1)` — expected `B = −1`. -/
+def case1B : CPolyG ℚ := radCase1Cofactor 8 2 case1V case1Vder case1F case1C
+
+/-- The Case-1 residual `D` — expected the constant `1/2`. -/
+def case1D : CPolyG ℚ :=
+  radCase1Residual 8 2 case1V case1Vder case1F case1G case1B case1C (cderivG case1B)
+
+/-- **The cofactor is `B = −1`** (`native_decide`): the diophantine solve of `−x·B ≡ 1 (mod x−1)` gives
+`B = −1` (`cisZeroG` of `B − (−1)`). The Case-1 congruence solver runs over `ℚ[x]`. -/
+theorem case1_cofactor_eq :
+    cisZeroG (csubG case1B [(-1 : ℚ)]) = true := by native_decide
+
+/-- **★ The Case-1 congruence holds**: `(1−k)V'fB − C ≡ 0 (mod V)` (`native_decide`) — the numerator
+`(1−2)·V'·f·B − C = −x·(−1) − 1 = x − 1` is divisible by `V = x − 1`, the defining property of the
+cofactor `B`. Checked by `cisZeroG` of the remainder `cmodG ((1−k)V'fB − C) V`. -/
+theorem case1_congruence :
+    cisZeroG (cmodG 8
+      (csubG (cmulG (cnegG [cnatCastG 1]) (cmulG case1Vder (cmulG case1F case1B))) case1C)
+      case1V) = true := by native_decide
+
+/-- **★ The Case-1 cleared Hermite identity** (`native_decide`): the reduction
+`(Bf/(V^{k−1}y))' − C/(Vᵏy) = D/(V^{k−1}y)`, cleared over the common denominator `Vᵏy`, is the pure
+`ℚ[x]` identity `(1−k)V'fB − C + V·(B'f + Bg) = V·D`. With `B = −1`, `D = 1/2`: LHS `= x − 1 + (x−1)·(0
++ (−1)(1/2)) = (x−1) − (x−1)/2 = (x−1)/2`, RHS `= (x−1)·(1/2) = (x−1)/2`. Checked by `cisZeroG` of
+LHS − RHS over `ℚ[x]`. THE CASE-1 RATIONAL REDUCTION COMPUTES — it lowers the multiplicity `k = 2 → 1`
+and `D(reduced) + residual = original` holds exactly. -/
+theorem case1_cleared_identity :
+    cisZeroG (csubG
+      (caddG
+        (csubG (cmulG (cnegG [cnatCastG 1]) (cmulG case1Vder (cmulG case1F case1B))) case1C)
+        (cmulG case1V (caddG (cmulG (cderivG case1B) case1F) (cmulG case1B case1G))))
+      (cmulG case1V case1D)) = true := by native_decide
+
+/-- **The residual `D = 1/2` has degree `< deg V`** (`native_decide`): `D` is the constant `1/2`
+(`cisZeroG` of `D − 1/2`), so the Case-1 step lowered the apparent denominator multiplicity from
+`k = 2` to `k − 1 = 1`, exactly as the Hermite reduction guarantees. -/
+theorem case1_residual_eq :
+    cisZeroG (csubG case1D [(1/2 : ℚ)]) = true := by native_decide
+
+/-! ### `#print axioms` — the headline lemmas
+
+Each headline result carries the standard `[propext, Classical.choice, Quot.sound]` plus its
+`native_decide` compiler axiom — there is no `sorry` and no extra axiom. The radical carrier, the `Tᵢ`
+decoupling, and the Case-1 rational reduction all reduce in the native compiler over the existing
+tower engine. -/
+
+-- Carrier: `y·y = f` and the diagonal `D(y) = (f'/(2f))·y` over ℚ(x):
+#print axioms radGen_sq_eq_radicand
+#print axioms radDeriv_radGen_eq
+
+-- `Tᵢ` decoupling: the derivation-commutation and the `∫(g₀+g₁y)` split:
+#print axioms radProj_one_radDeriv_comm
+#print axioms radDeriv_decouples
+
+-- Case-1 rational reduction: the cofactor congruence and the cleared Hermite identity:
+#print axioms case1_congruence
+#print axioms case1_cleared_identity
+
 end DeepWiki.SymbolicIntegration
