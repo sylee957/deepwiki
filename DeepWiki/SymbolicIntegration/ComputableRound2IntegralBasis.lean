@@ -471,6 +471,59 @@ theorem cusp_secondStep_stable :
     (List.range 2).all (fun i =>
       cisZeroG (csubG (O3.getD i []) (O2.getD i []))) = true := by native_decide
 
+/-! ### ★ A second curve: the NODE `f = y² − x²(x + 1)` enlarges `[1, y] → [1, y/x]` (`native_decide`)
+
+The node (an ordinary double point at the origin) `f(y) = y² − x²(x + 1) = y² − x³ − x²` over `ℚ(x)`:
+`a₀ = −(x³ + x²)`, discriminant `−4a₀ = 4x²(x + 1)`, so `p = x` is the (only) bad prime (`x² | 4x²(x+1)`,
+but `(x+1)² ∤`). The trace matrix is `[[2, 0], [0, 2(x³ + x²)]]`, which at `x = 0` is `[[2, 0], [0, 0]]`;
+the kernel is `(0, 1) = y`, so `I_x = ⟨x, y⟩` and `round2Step` enlarges `[1, y] → [1, y/x]`, exactly as for
+the cusp. Here the new generator is integral with a **different** minimal relation: `(y/x)² = y²/x² =
+(x³ + x²)/x² = x + 1`. So `[1, y/x]` is the maximal order (normalization) of the node too — confirming the
+Round-2 step is curve-generic, not special to `y² − x³`. -/
+
+/-- The node curve `f = y² − x²(x + 1) = y² − x³ − x² ∈ ℚ(x)[y]` (`a₀ = −(x³ + x²)`, `a₁ = 0`, monic), the
+`CPolyG (QFunNZG ℚ)` `[−(x³ + x²), 0, 1]`. An ordinary double point at the origin; `[1, y]` is non-maximal
+at `x` because `y/x` is integral (`(y/x)² = x + 1`). -/
+def nodeF : CPolyG (QFunNZG ℚ) :=
+  [qxOfNum [0, 0, -1, -1], CField.zero, CField.one]
+
+/-- The computed enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x²(x+1))` = the second basis vector of
+`round2Step nodeF` (`= [0, 1/x]` in the `[1, y]` order basis). -/
+def nodeNewGen : CPolyG (QFunNZG ℚ) := (round2Step 12 nodeF).1.getD 1 []
+
+-- Sanity print: the node discriminant numerator (expected `4x²(x+1) = 4x² + 4x³ = [0,0,4,4]`).
+#eval (discNum nodeF : List ℚ)
+
+-- Sanity print: the node bad primes (expected `[x] = [[0,1]]`).
+#eval (badPrimes 12 nodeF).map (fun p => (cmonicG p : List ℚ))
+
+/-- **★ The node bad prime is `x`, and `round2Step` enlarges to `[1, y/x]`** (`native_decide`):
+`badPrimes nodeF = [x]`, the order grows (`.2 = true`), and the new generator is `[0, 1/x] = y/x` while the
+first basis vector stays `1`. Same enlargement as the cusp, on a different curve. -/
+theorem node_round2_newGen_eq :
+    ((badPrimes 12 nodeF).map cmonicG = [([0, 1] : CPolyG ℚ)]
+      && (round2Step 12 nodeF).2
+      && cisZeroG (csubG nodeNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZeroG (csubG ((round2Step 12 nodeF).1.getD 0 []) [CField.one])) = true := by
+  native_decide
+
+/-- **★ The node's enlarged generator is INTEGRAL with relation `(y/x)² = x + 1`** (`native_decide`):
+`afMul f (y/x) (y/x) = x + 1` in `ℚ(x)[y]/(y² − x²(x+1))` — i.e. `(y/x)² = (x³ + x²)/x² = x + 1`, a monic
+integral relation (distinct from the cusp's `(y/x)² = x`). The Round-2 enlargement is genuinely integral on
+this curve too. Checked by `cisZeroG (afMul f (y/x) (y/x) − (x + 1))`. -/
+theorem node_newGen_integral :
+    cisZeroG (csubG (afMul nodeF nodeNewGen nodeNewGen) [qxOfNum [1, 1]]) = true := by native_decide
+
+/-- **★ `[1, y/x]` is the maximal order of the node — a second `round2Step` does not grow it**
+(`native_decide`): the idealizer of the p-trace-radical against the enlarged basis `[1, y/x]` is `[1, y/x]`
+again. The Round-2 iteration reaches its fixed point in one step for the node, as for the cusp. -/
+theorem node_secondStep_stable :
+    let O2 := (round2Step 12 nodeF).1
+    let ip2 := pTraceRadical nodeF [0, 1] 0
+    let O3 := idealizerBasis nodeF O2 ip2
+    (List.range 2).all (fun i =>
+      cisZeroG (csubG (O3.getD i []) (O2.getD i []))) = true := by native_decide
+
 /-! ### The NEXT pieces: the full `integralBasis` iteration (Trager Ch. 2, p. 21, steps 1–5)
 
 `round2Step` is **one** Ford–Zassenhaus enlargement at the first linear bad prime. The full integral-basis
@@ -522,5 +575,10 @@ x` (`cusp_newGen_integral`) and maximal (`cusp_secondStep_stable`). -/
 #print axioms cusp_round2_newGen_eq
 #print axioms cusp_newGen_integral
 #print axioms cusp_secondStep_stable
+
+-- ★ The node `y² − x²(x+1)`: the same enlargement `[1, y] → [1, y/x]`, integral relation `(y/x)² = x+1`:
+#print axioms node_round2_newGen_eq
+#print axioms node_newGen_integral
+#print axioms node_secondStep_stable
 
 end DeepWiki.SymbolicIntegration
