@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableSplitFactorTowerCorrect
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCorrect
+import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 
 /-! # §5 split-factor / canonical-representation correctness at the GENERIC carrier `α = QFunNZG ℚ`
 The QFunNZ nucleus (`ComputableSplitFactorTowerCorrect`) proved

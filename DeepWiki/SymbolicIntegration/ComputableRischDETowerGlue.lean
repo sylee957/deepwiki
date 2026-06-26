@@ -1,0 +1,123 @@
+import DeepWiki.SymbolicIntegration.ComputableGenericBezout
+import DeepWiki.SymbolicIntegration.ComputableFieldGcd
+
+/-! # Generic RDE glue lemmas (`cgcdFF`-free), shared by the `…CorrectG` tower correctness
+
+The handful of carrier-agnostic algebraic glue lemmas the generic `QFunNZG ℚ` RDE correctness
+(`ComputableRischDETowerCorrectG`) consumes. They were originally co-located in the QFunNZ §5/§6
+correctness files (which import `cgcdFF`), but each is **fully generic** — pure-Mathlib `Derivation`
+algebra (`spde_step_glue`/`spde_const_base`/`rdeNormalDenominator_glue`) or generic-engine `toPolyG`
+facts (`dvd_of_cdvdG`/`toPolyG_cdiophantineG`) — so they live here over the `cgcdFF`-free generic engine,
+letting the `…CorrectG` files drop their import of the superseded QFunNZ tower correctness. -/
+
+open Polynomial
+
+namespace DeepWiki.SymbolicIntegration
+
+/-- **The Rothstein `SPDE`-step gluing identity** (commutative-ring `Derivation` algebra): with `D` a
+derivation, divided coefficients `a, b, c`, a Bézout witness `b·r + a·z = c`, and a solution `h` of the
+*reduced* equation `a·D(h) + (b + D(a))·h = z − D(r)`, the reconstruction `q = a·h + r` solves the
+original divided equation `a·D(q) + b·q = c`. Pure `Derivation.leibniz` + `ring`; the algebraic core of
+one `cSPDE` peel (Bronstein Theorem 6.4.1). -/
+theorem spde_step_glue {R : Type*} [CommRing R] (D : Derivation ℤ R R)
+    (a b c r z h : R)
+    (hbez : b * r + a * z = c)
+    (hred : a * D h + (b + D a) * h = z - D r) :
+    a * D (a * h + r) + b * (a * h + r) = c := by
+  have hD : D (a * h + r) = a * D h + D a * h + D r := by
+    rw [map_add, Derivation.leibniz]; simp only [smul_eq_mul]; ring
+  rw [hD]
+  have : a * (a * D h + D a * h + D r) + b * (a * h + r)
+      = a * (a * D h + (b + D a) * h) + (a * D r + b * r) := by ring
+  rw [this, hred]
+  linear_combination hbez
+
+/-- **The constant-`a` base-case scaling identity** (commutative-ring): if `a₀ ≠ 0` is a nonzero scalar
+and `h` solves the reduced `D(h) + (a₀⁻¹·b)·h = a₀⁻¹·c`, then `h` solves `a₀·D(h) + b·h = c` (multiply
+through by `a₀`). The `deg(a) = 0` base case of `cSPDE`, where `α = 1`, `β = 0` (`q = h`). -/
+theorem spde_const_base {K : Type*} [Field K] (D : Derivation ℤ K[X] K[X])
+    (a0 : K) (b c h : K[X]) (ha0 : a0 ≠ 0)
+    (hred : D h + (Polynomial.C a0⁻¹ * b) * h = Polynomial.C a0⁻¹ * c) :
+    Polynomial.C a0 * D h + b * h = c := by
+  have key : Polynomial.C a0 * (D h + (Polynomial.C a0⁻¹ * b) * h)
+      = Polynomial.C a0 * (Polynomial.C a0⁻¹ * c) := by rw [hred]
+  have hinv : Polynomial.C a0 * Polynomial.C a0⁻¹ = 1 := by
+    rw [← Polynomial.C_mul, mul_inv_cancel₀ ha0, Polynomial.C_1]
+  calc Polynomial.C a0 * D h + b * h
+      = Polynomial.C a0 * (D h + (Polynomial.C a0⁻¹ * b) * h)
+          - (Polynomial.C a0 * Polynomial.C a0⁻¹ - 1) * (b * h) := by ring
+    _ = Polynomial.C a0 * (Polynomial.C a0⁻¹ * c) - (1 - 1) * (b * h) := by rw [key, hinv]
+    _ = (Polynomial.C a0 * Polynomial.C a0⁻¹) * c := by ring
+    _ = c := by rw [hinv, one_mul]
+
+/-- **The §6.2 normal-denominator cleared lifting** (commutative-ring `Derivation` core): with `D` a
+derivation, the normal part `DN ≠ 0`, the factorization `A = DN·H` and the two exact-division
+certificates `B·FDEN = A·FNUM − DN·(D H)·FDEN`, `C·GDEN = DN·H²·GNUM`, a solution `Q` of the reduced
+equation `A·D(Q) + B·Q = C` makes `y = Q/H` solve `D(y) + f·y = g` in the cleared form
+`GDEN·FDEN·(D(Q)·H − Q·(D H)) + GDEN·FNUM·Q·H = GNUM·FDEN·H²`. Pure algebra: multiply the reduced
+equation by `FDEN·GDEN`, the whole identity is `DN` times the goal, cancel the nonzero `DN`. -/
+theorem rdeNormalDenominator_glue {R : Type*} [CommRing R] [NoZeroDivisors R]
+    (D : Derivation ℤ R R) (DN H FNUM FDEN GNUM GDEN A B C Q : R)
+    (hDN : DN ≠ 0)
+    (hA : A = DN * H)
+    (hB : B * FDEN = A * FNUM - DN * D H * FDEN)
+    (hC : C * GDEN = DN * H ^ 2 * GNUM)
+    (hred : A * D Q + B * Q = C) :
+    GDEN * FDEN * (D Q * H - Q * D H) + GDEN * FNUM * Q * H = GNUM * FDEN * H ^ 2 := by
+  have hmul : FDEN * GDEN * (A * D Q + B * Q) = FDEN * GDEN * C := by rw [hred]
+  have hkey : DN * (GDEN * FDEN * (D Q * H - Q * D H) + GDEN * FNUM * Q * H)
+      = DN * (GNUM * FDEN * H ^ 2) := by
+    have e1 : FDEN * GDEN * (A * D Q + B * Q)
+        = GDEN * (A * D Q * FDEN) + GDEN * Q * (B * FDEN) := by ring
+    have e2 : FDEN * GDEN * C = FDEN * (C * GDEN) := by ring
+    rw [e1, e2, hB, hC, hA] at hmul
+    linear_combination hmul
+  exact mul_left_cancel₀ hDN hkey
+
+namespace CPolyG
+
+/-- **`cdvdG = true` reads as honest divisibility**: `cdvdG fuel g c = true` and `cnormG g ≠ []` give
+`toPolyG g ∣ toPolyG c` (the zero remainder in the Euclidean identity `c = quo·g + rem`). -/
+theorem dvd_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (g c : CPolyG α)
+    (hg0 : cnormG g ≠ []) (hdvd : cdvdG fuel g c = true) :
+    toPolyG g ∣ toPolyG c := by
+  have hrem0 : toPolyG (cmodG fuel c g) = 0 := (cdvdG_iff fuel g c).mp hdvd
+  have hid := toPolyG_cdivmodG' fuel c g hg0
+  rw [show (cdivmodG fuel c g).2 = cmodG fuel c g from rfl, hrem0, add_zero] at hid
+  rw [hid]
+  exact Dvd.intro_left _ rfl
+
+/-- **Generic Bézout/Diophantine solver correctness through `toPolyG`** over ℚ(x)[t]: when `gcd(p, q)` is
+a nonzero constant (`toPolyG (cgcdExtG fuel p q).1 = C (leadingCoeff)` with that leading coefficient
+nonzero), `cdiophantineG fuel p q rhs = (b, c)` solves `b·p + c·q = rhs`:
+`toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG rhs` in `(RatFunc ℚ)[X]`. The generic mirror of
+`toPoly_cdiophantine`; validates the inner Hermite loop's Bézout step on all inputs. -/
+theorem toPolyG_cdiophantineG {α : Type*} [CField α] [CFieldSpec α]
+    (fuel : ℕ) (p q rhs : CPolyG α) (hq : cnormG q ≠ [])
+    (hg : toPolyG (cgcdExtG fuel p q).1
+      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1)))
+    (hgc : CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1) ≠ 0) :
+    toPolyG (cdiophantineG fuel p q rhs).1 * toPolyG p
+        + toPolyG (cdiophantineG fuel p q rhs).2 * toPolyG q
+      = toPolyG rhs := by
+  rcases hgst : cgcdExtG fuel p q with ⟨g, s, t⟩
+  rw [hgst] at hg hgc
+  have hbez : toPolyG s * toPolyG p + toPolyG t * toPolyG q = toPolyG g := by
+    have h := toPolyG_cgcdExtG fuel p q; rw [hgst] at h; exact h
+  have hginv : CFieldSpec.toK (CField.inv (cleadG g)) = (CFieldSpec.toK (cleadG g))⁻¹ :=
+    CFieldSpec.toK_inv (cleadG g)
+  simp only [cdiophantineG, hgst]
+  rcases hqB : cdivmodG fuel (cscaleG (CField.inv (cleadG g)) (cmulG rhs s)) q with ⟨quo, B⟩
+  have hdiv : toPolyG (cscaleG (CField.inv (cleadG g)) (cmulG rhs s))
+      = toPolyG quo * toPolyG q + toPolyG B := by
+    have h := toPolyG_cdivmodG' fuel (cscaleG (CField.inv (cleadG g)) (cmulG rhs s)) q hq
+    rw [hqB] at h; exact h
+  simp only [toPolyG_cnormG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cscaleG, hginv] at hdiv ⊢
+  have hinv : Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG g = 1 := by
+    rw [hg, ← map_mul, inv_mul_cancel₀ hgc, map_one]
+  linear_combination (-toPolyG p) * hdiv
+    + (Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG rhs) * hbez + toPolyG rhs * hinv
+
+end CPolyG
+
+end DeepWiki.SymbolicIntegration

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerCorrect
+import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorTowerCorrectG
 
 /-! # §6 RDE cleared-identity correctness at the GENERIC carrier `α = QFunNZG ℚ`
