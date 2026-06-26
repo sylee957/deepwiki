@@ -41,11 +41,17 @@ solver `cdiophantineG` and the monomial machinery.
   `v'/v`-weighted bracket `(j+1)·θ' + lcf(g)` and the full monomial derivative `cmonomialDeriv [θ']` for
   `B'`, validated on a genuine 2-level tower `ℚ(x)[log x]`, `y = √(log x)`.
 
-With Cases 1–3 + `θ = log v` the simple-radical **rational part** is complete for the `θ' = 1` and
-`θ = log v` levels.
+* **`θ = exp v`** (Appendix A §2.4) — `radExpCofactor`/`radExpResidual`: the `C/(θᵏy)` step where `θ ∣ θ'`,
+  matching **constant** (θ-degree-`0`) terms `c₀ = b₀g₀ − k·v'·b₀·f₀` (constant-`b₀` slice
+  `b₀ = c₀/(g₀ − kv'f₀)`), cleared identity `(B'f + Bg − kv'Bf) − C = θ·D`, validated on a genuine
+  exponential tower `ℚ(x)[eˣ]`, `y = √(eˣ+1)`.
 
-**Deferred** (documented, not attempted here): the `θ = exp v` case (§2.4 — `θ` divides its own
-derivative, so `θᵏ` factors need special treatment), and the entire LOGARITHMIC part (residues /
+With Cases 1–3 + `θ = log v` + the `θ = exp v` `C/(θᵏy)` step, the simple-radical **rational part** is
+realized across all four `θ`-level kinds (`θ' = 1`, `θ = log v`, `θ = exp v`).
+
+**Deferred** (documented, not attempted here): the general first-order-ODE coefficient solves of the
+`θ = log v` / `θ = exp v` *lower* coefficients (Risch [38], beyond the leading/constant slice shown), the
+`θ = exp v` `C/y` sub-case (eq. 6, same ODE character), and the entire LOGARITHMIC part (residues /
 divisors, Trager Ch. 5–6). -/
 
 open Polynomial
@@ -430,6 +436,46 @@ def radCase3CofactorGen (Dt : α) (f g C : CPolyG α) : CPolyG α :=
     let b := CField.div (cleadG C) denom                          -- `b = lcf(C)/((j+1)θ' + lcf(g))`
     cshiftG jp1 [b]                                                -- `b·θ^{j+1}`
 
+/-! ### `θ = exp v` rational-part reduction (Trager Appendix A §2.4)
+
+For `θ = exp v` the distinguishing feature is that **`θ` divides its own derivative** (`θ' = v'·θ`), so a
+squarefree polynomial need not be coprime to its derivative — only `θᵏ` factors of the denominator need
+special handling. After a partial fraction, the non-`θ` denominators reduce exactly as Cases 1–2; the
+new piece is `C/(θᵏy)`. Here (Trager Appendix A §2.4, p. 79)
+`(Bf/(θᵏy))' = (B'f + Bg − k·v'·B·f)/(θᵏy)`,
+and requiring the numerator `≡ C (mod θ)` is equating **constant** (θ-degree-`0`) terms:
+`c₀ = b₀'·f₀ + b₀·g₀ − k·v'·b₀·f₀` (`θ ∤ f` ⇒ `f₀ ≠ 0`). In general this is a first-order linear ODE for
+`b₀ ∈ F` (Risch [38]); on the **constant-`b₀` slice** (`b₀' = 0`, the common case where the witness lands
+in the field of constants) it collapses to the single field division `b₀ = c₀/(g₀ − k·v'·f₀)`. The
+residual `D = ((B'f + Bg − kv'Bf) − C)/θ` drops `k → k−1`; cleared over `θᵏy` the step is the pure `F[θ]`
+identity `(B'f + Bg − kv'Bf) − C = θ·D`, checkable by `cisZeroG`. (The `C/y` exp sub-case, eq. 6, has the
+same ODE character and is left with the full logarithmic part.) -/
+
+/-- **`θ`-constant coefficient** `radConstCoeff p = ` the `θ⁰` (head) coefficient of `p` (`CField.zero`
+for the zero polynomial) — the residue of `p` modulo `θ`, used by the `θ = exp v` constant-term match. -/
+def radConstCoeff (p : CPolyG α) : α := (p : List α).headD CField.zero
+
+/-- **`θ = exp v` `C/(θᵏy)` constant-coefficient cofactor** `radExpCofactor k vder f g C = B` — the
+constant `B = [b₀]` solving the exp constant-term match `c₀ = b₀g₀ − k·v'·b₀·f₀` (Trager Appendix A §2.4,
+constant-`b₀` slice `b₀' = 0`): `b₀ = c₀ / (g₀ − k·v'·f₀)`, with `f₀, g₀, c₀` the `θ⁰`-coefficients of
+`f, g, C` and `vder = v' ∈ α`. `θ ∤ f` makes `f₀ ≠ 0`, so the denominator `g₀ − kv'f₀` is generically
+nonzero. Generic over `[CField α]`. -/
+def radExpCofactor (k : ℕ) (vder : α) (f g C : CPolyG α) : CPolyG α :=
+  let f0 := radConstCoeff f
+  let g0 := radConstCoeff g
+  let c0 := radConstCoeff C
+  let denom := CField.sub g0 (CField.mul (CField.mul (cnatCastG k) vder) f0)  -- `g₀ − k·v'·f₀`
+  [CField.div c0 denom]                                                       -- `[b₀]`
+
+/-- **`θ = exp v` `C/(θᵏy)` residual** `radExpResidual k vder f g B C Bder = D` — the lowered-`k` residual
+`D = ((B'f + Bg − k·v'·B·f) − C)/θ` of the exp `C/(θᵏy)` step (Trager Appendix A §2.4). `vder = v'`,
+`Bder = B'` (the full `cmonomialDeriv [θ'] B`), and `g` are passed in. The exact division by `θ` is
+`cdivG _ _ [0,1]` (`θ ∣ (B'f + Bg − kv'Bf) − C` by the constant-term match). Generic over `[CField α]`. -/
+def radExpResidual (fuel : ℕ) (k : ℕ) (vder : α) (f g B C Bder : CPolyG α) : CPolyG α :=
+  let kvBf := cmulG [CField.mul (cnatCastG k) vder] (cmulG B f)    -- `k·v'·B·f`
+  let num := csubG (csubG (caddG (cmulG Bder f) (cmulG B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
+  cdivG fuel num [CField.zero, CField.one]                         -- `… / θ`
+
 end CPolyG
 
 /-! #### ★ Case 1 validates: `∫ C/(V²y)` with `y = √x`, `V = x−1` (`native_decide`)
@@ -684,14 +730,84 @@ theorem logCase_residual_eq :
 `ℚ(x)[log x]`. The eq. 5 degree-lowering invariant on the genuine 2-level monomial tower. -/
 theorem logCase_degree_drop : cdegG logD < cdegG logC := by native_decide
 
+/-! #### ★ `θ = exp v` validates: `∫ C/(θy)` over `ℚ(x)[eˣ]`, `y = √(eˣ+1)` (`native_decide`)
+
+The 2-level **exponential** tower: base `F = QFunNZG ℚ ≅ ℚ(x)`, monomial `θ = exp x` (so `v = x`,
+`v' = 1`, `θ' = v'·θ = θ`); `F[θ] = ℚ(x)[eˣ]` is `CPolyG (QFunNZG ℚ)`. Radicand `y² = f = θ + 1 = eˣ + 1`
+(`n = 2`, `θ ∤ f`, `f₀ = 1`, `m = 1`, `P₁ = θ+1`, `e₁ = 1`, θ-power `j = 0`), so `(f/y)' = g/y` with
+`g = (1/2)θ` (the `−j/n·v'` term vanishes as `j = 0`; `g₀ = 0`). The `C/(θᵏy)` step with `k = 1`,
+`C = θ + 1` (so `c₀ = 1`): the **constant-term match** `c₀ = b₀g₀ − k·v'·b₀·f₀` gives
+`b₀ = c₀/(g₀ − kv'f₀) = 1/(0 − 1) = −1` (a genuine constant, `b₀' = 0`), so `B = [−1]`. The residual
+`D = ((B'f + Bg − kv'Bf) − C)/θ = ((1/2)θ + 1 − (θ+1))/θ`... `= (−1/2)`, dropping `k = 1 → 0`. The exp
+feature `θ ∣ θ'` enters through the `−k·v'·B·f` term. -/
+
+/-- The radicand `f = θ + 1 = eˣ + 1 ∈ ℚ(x)[θ]` (`y² = eˣ + 1`, `θ ∤ f`, `f₀ = 1`), `[1, 1]`. -/
+def expF : CPolyG (QFunNZG ℚ) := [CField.one, CField.one]
+
+/-- `g = (1/2)θ ∈ ℚ(x)[θ]` for `f = θ+1`, `θ = exp x` (`(f/y)' = g/y`, `g₀ = 0`), `[0, 1/2]`. -/
+def expG : CPolyG (QFunNZG ℚ) := [CField.zero, qxOfNum [1/2]]
+
+/-- The numerator `C = θ + 1 ∈ ℚ(x)[θ]` (`c₀ = 1`), `[1, 1]`. -/
+def expC : CPolyG (QFunNZG ℚ) := [CField.one, CField.one]
+
+/-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CField.one` of `QFunNZG ℚ`. -/
+def expVder : QFunNZG ℚ := CField.one
+
+/-- `θ' = v'·θ = θ` as the `Dt` polynomial `[0, 1] ∈ ℚ(x)[θ]` for `cmonomialDeriv` (`θ = exp x` is a
+factor of its own derivative). -/
+def expDtPoly : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one]
+
+/-- The solved `θ = exp v` `C/(θy)` cofactor `B = [b₀] = [−1]` (`b₀ = c₀/(g₀ − kv'f₀) = 1/(0−1) = −1`,
+a constant). -/
+def expB : CPolyG (QFunNZG ℚ) := radExpCofactor 1 expVder expF expG expC
+
+/-- The `θ = exp v` `C/(θy)` residual `D = ((B'f + Bg − kv'Bf) − C)/θ`, `B' = cmonomialDeriv [θ] B` —
+expected `−1/2` (the multiplicity dropped `k = 1 → 0`). -/
+def expD : CPolyG (QFunNZG ℚ) :=
+  radExpResidual 8 1 expVder expF expG expB expC (cmonomialDeriv expDtPoly expB)
+
+/-- **The `exp` cofactor is the constant `B = [−1]`** (`native_decide`): the exp constant-term match
+`c₀ = b₀g₀ − k·v'·b₀·f₀` over `ℚ(x)[eˣ]` gives `b₀ = 1/(0 − 1·1·1) = −1` (`cisZeroG` of `B − (−1)`). The
+witness `b₀` is a genuine constant (`b₀' = 0`), the constant-`b₀` slice of the exp reduction. -/
+theorem expCase_cofactor_eq :
+    cisZeroG (csubG expB [(CField.neg CField.one : QFunNZG ℚ)]) = true := by native_decide
+
+/-- **★ The `θ = exp v` constant-term congruence**: `(B'f + Bg − kv'Bf) − C ≡ 0 (mod θ)`
+(`native_decide`) — the numerator `B'f + Bg − kv'Bf − C = ((1/2)θ + 1) − (θ+1) = (−1/2)θ` has vanishing
+`θ⁰`-coefficient (is divisible by `θ`), the defining property of the exp cofactor `b₀`. Checked by
+`cisZeroG` of `cmodG (numerator) θ` over `ℚ(x)[eˣ]`. -/
+theorem expCase_congruence :
+    cisZeroG (cmodG 8
+      (csubG (csubG (caddG (cmulG (cmonomialDeriv expDtPoly expB) expF) (cmulG expB expG))
+          (cmulG [CField.mul (cnatCastG 1) expVder] (cmulG expB expF))) expC)
+      [CField.zero, CField.one]) = true := by native_decide
+
+/-- **★ The `θ = exp v` cleared `C/(θᵏy)` identity** (`native_decide`): the reduction
+`(Bf/(θᵏy))' − C/(θᵏy) = D/(θ^{k−1}y)`, cleared over `θᵏy`, is the pure `ℚ(x)[eˣ]` identity
+`(B'f + Bg − k·v'·B·f) − C = θ·D`. With `B = [−1]`, `D = [−1/2]`: LHS `= (1/2)θ + 1 − (θ+1) = (−1/2)θ`,
+RHS `= θ·(−1/2) = (−1/2)θ`. Checked by `cisZeroG` of LHS − RHS over `ℚ(x)[eˣ]`. THE `θ = exp v` RATIONAL
+REDUCTION COMPUTES on a genuine exponential tower — the `θ ∣ θ'` complication handled via the `−kv'Bf`
+term, lowering the `θ`-power multiplicity `k = 1 → 0`. -/
+theorem expCase_cleared_identity :
+    cisZeroG (csubG
+      (csubG (csubG (caddG (cmulG (cmonomialDeriv expDtPoly expB) expF) (cmulG expB expG))
+          (cmulG [CField.mul (cnatCastG 1) expVder] (cmulG expB expF))) expC)
+      (cmulG [CField.zero, CField.one] expD)) = true := by native_decide
+
+/-- **The `exp` residual `D = −1/2` dropped the `θ`-power** (`native_decide`): `D = −1/2` (`cisZeroG` of
+`D + 1/2`), a `θ`-constant — the exp `C/(θᵏy)` step lowered the `θ`-power multiplicity from `k = 1` to
+`k − 1 = 0`, eliminating the `θ`-factor as Trager's §2.4 reduction guarantees. -/
+theorem expCase_residual_eq :
+    cisZeroG (csubG expD [qxOfNum [-1/2]]) = true := by native_decide
+
 /-! ### `#print axioms` — the headline lemmas
 
 Each headline result carries the standard `[propext, Classical.choice, Quot.sound]` plus its
 `native_decide` compiler axiom — there is no `sorry` and no extra axiom. The radical carrier, the `Tᵢ`
-decoupling, and **all** the rational-part reductions (Cases 1–3 for `θ' = 1`, plus `θ = log v`) reduce in
-the native compiler over the existing tower engine. With Cases 1–3 + `θ = log v` the simple-radical
-**rational part** is complete for the `θ' = 1` and `θ = log v` levels; `θ = exp v` (§2.4) and the
-logarithmic part (Trager Ch. 5–6, residues / divisors) remain. -/
+decoupling, and **all** the rational-part reductions (Cases 1–3 for `θ' = 1`, plus `θ = log v` and the
+`θ = exp v` `C/(θᵏy)` step) reduce in the native compiler over the existing tower engine. The
+simple-radical **rational part** is thus realized across all four `θ`-level kinds; the logarithmic part
+(Trager Ch. 5–6, residues / divisors) and the general first-order-ODE coefficient solves remain. -/
 
 -- Carrier: `y·y = f` and the diagonal `D(y) = (f'/(2f))·y` over ℚ(x):
 #print axioms radGen_sq_eq_radicand
@@ -716,5 +832,9 @@ logarithmic part (Trager Ch. 5–6, residues / divisors) remain. -/
 -- `θ = log v` degree-lowering (2-level tower): the cleared identity and the strict degree drop:
 #print axioms logCase_cleared_identity
 #print axioms logCase_degree_drop
+
+-- `θ = exp v` `C/(θᵏy)` reduction (exponential tower): the constant-term congruence and cleared identity:
+#print axioms expCase_congruence
+#print axioms expCase_cleared_identity
 
 end DeepWiki.SymbolicIntegration
