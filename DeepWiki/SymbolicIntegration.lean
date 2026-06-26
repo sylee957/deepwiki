@@ -116,3 +116,4 @@ import DeepWiki.SymbolicIntegration.ComputableRadicalRationalTower
 import DeepWiki.SymbolicIntegration.ComputableHyperellipticDivisor
 import DeepWiki.SymbolicIntegration.ComputableCantorComposition
 import DeepWiki.SymbolicIntegration.ComputableDivisorOrder
+import DeepWiki.SymbolicIntegration.ComputablePrincipalGenerator
