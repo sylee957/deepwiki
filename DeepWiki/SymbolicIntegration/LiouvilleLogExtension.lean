@@ -278,13 +278,23 @@ what the Risch structure-theorem decision certifies. -/
 def NondegenerateLog (u : F) : Prop :=
   ∀ π : F[X], π.Monic → Irreducible π → logDerivPoly u π ≠ 0
 
+/-- **`NondegenerateLog u` forbids an `F`-antiderivative of `u'/u`** — the operational form of
+"`log u ∉ F`".  If some `s ∈ F` had `s′ = logDeriv u`, then `X − C s` would be a monic irreducible with
+`D (X − C s) = C(u'/u) − C(s′) = 0`, contradicting `NondegenerateLog`.  This is the single contradiction
+both the degree-drop (`logDerivPoly_ne_zero_of_monic`) and the degree-`≤ 1` descent
+(`natDegree_le_one_of_logDerivPoly_natDegree_eq_zero`) reduce to. -/
+lemma not_isAntideriv_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u) {s : F}
+    (hs : s′ = logDeriv u) : False := by
+  refine hnd (X - C s) (monic_X_sub_C s) (irreducible_X_sub_C s) ?_
+  rw [map_sub, logDerivPoly_X, logDerivPoly_C, hs]
+  simp
+
 /-- **No monic `t`-polynomial of positive degree is annihilated by `D`, given `NondegenerateLog`.**
 The key strengthening from irreducibles to *all* monic `d` of degree `m ≥ 1`: if `D d = 0` then the
 coefficient-`(m−1)` relation (`coeff_logDerivPoly`, with `d.coeff m = 1` monic) gives
 `(d.coeff (m−1))′ = −m·(u'/u)`, so `s := −(d.coeff (m−1))/m ∈ F` is an **antiderivative of `u'/u`**
-(`s′ = logDeriv u`).  Then `X − C s` is monic irreducible (degree 1) with `D (X − C s) = C(u'/u) −
-C(s′) = 0`, contradicting `NondegenerateLog`.  (No induction or multiplicity bookkeeping — the
-top-coefficient relation produces the forbidden antiderivative directly.) -/
+(`s′ = logDeriv u`), forbidden by `not_isAntideriv_of_nondegenerateLog`.  (No induction or multiplicity
+bookkeeping — the top-coefficient relation produces the forbidden antiderivative directly.) -/
 lemma logDerivPoly_ne_zero_of_monic [CharZero F] (u : F) (hnd : NondegenerateLog u) {d : F[X]}
     (hm : d.Monic) (hdeg : 1 ≤ d.natDegree) : logDerivPoly u d ≠ 0 := by
   intro hDd
@@ -299,18 +309,12 @@ lemma logDerivPoly_ne_zero_of_monic [CharZero F] (u : F) (hnd : NondegenerateLog
     rw [Nat.cast_sub (by omega : 1 ≤ m), Nat.cast_one]; ring
   rw [hcast, mul_one] at hcoeff
   -- so `(d.coeff (m−1))′ = −m·(u'/u)`; set `s := −(d.coeff (m−1))/m`, then `s′ = u'/u`.
-  set s : F := -(d.coeff (m - 1)) / (m : F) with hsdef
-  have hs' : s′ = logDeriv u := by
-    have hmcast : Differential.deriv (m : F) = 0 := Derivation.map_natCast _ m
-    rw [hsdef,
-      Differential.deriv.leibniz_div_const (-(d.coeff (m - 1))) (m : F) hmcast,
-      smul_eq_mul, map_neg]
-    rw [show (d.coeff (m - 1))′ = -((m : F) * logDeriv u) from by linear_combination -hcoeff]
-    rw [neg_neg, ← mul_assoc, inv_mul_cancel₀ hmF, one_mul]
-  -- `X − C s` is monic irreducible with `D (X − C s) = C(u'/u) − C(s′) = 0`: contradiction.
-  refine hnd (X - C s) (monic_X_sub_C s) (irreducible_X_sub_C s) ?_
-  rw [map_sub, logDerivPoly_X, logDerivPoly_C, hs']
-  simp
+  refine not_isAntideriv_of_nondegenerateLog u hnd (s := -(d.coeff (m - 1)) / (m : F)) ?_
+  have hmcast : Differential.deriv (m : F) = 0 := Derivation.map_natCast _ m
+  rw [Differential.deriv.leibniz_div_const (-(d.coeff (m - 1))) (m : F) hmcast,
+    smul_eq_mul, map_neg]
+  rw [show (d.coeff (m - 1))′ = -((m : F) * logDeriv u) from by linear_combination -hcoeff]
+  rw [neg_neg, ← mul_assoc, inv_mul_cancel₀ hmF, one_mul]
 
 /-- **A monic `t`-polynomial of positive degree does not divide its own derivative `D d`, given
 `NondegenerateLog`.**  Combines `logDerivPoly_ne_zero_of_monic` (`D d ≠ 0`) with the strict pole drop
@@ -320,6 +324,52 @@ pole strictly increases in `1/d`-derivatives and cannot disappear. -/
 lemma not_dvd_logDerivPoly_of_monic [CharZero F] (u : F) (hnd : NondegenerateLog u) {d : F[X]}
     (hm : d.Monic) (hdeg : 1 ≤ d.natDegree) : ¬ d ∣ logDerivPoly u d :=
   not_dvd_logDerivPoly_of_natDegree_lt u hm hdeg (logDerivPoly_ne_zero_of_monic u hnd hm hdeg)
+
+/-- **`D p` constant ⟹ `t`-degree `≤ 1`, given `NondegenerateLog`** — the *corrected* degree descent
+(the formal `PolyVReductionObligation`'s `= 0` is false; the truth is `≤ 1`).  If `(D p).natDegree = 0`
+and `m := p.natDegree ≥ 2`, the top coefficient is constant (`(leadingCoeff p)′ = 0`,
+`coeff_natDegree_logDerivPoly`) and the coefficient-`(m−1)` relation forces `(p.coeff (m−1))′ =
+−m·(leadingCoeff p)·(u'/u)`, so `s := −p.coeff (m−1)/(m·leadingCoeff p) ∈ F` is an antiderivative of
+`u'/u` — forbidden (`not_isAntideriv_of_nondegenerateLog`).  Hence `m ≤ 1`.  (The surviving `t`-linear
+term `b·t` is the *new logarithm* `b·log u`, not an `F`-element — which is exactly why the descent stops
+at `≤ 1`, not `= 0`.) -/
+lemma natDegree_le_one_of_logDerivPoly_natDegree_eq_zero [CharZero F] (u : F)
+    (hnd : NondegenerateLog u) {p : F[X]} (h : (logDerivPoly u p).natDegree = 0) :
+    p.natDegree ≤ 1 := by
+  by_contra hlt
+  rw [not_le] at hlt
+  set m := p.natDegree with hmdef
+  have hm2 : 2 ≤ m := hlt
+  have hlcne : p.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr (by
+    intro h0; rw [h0] at hmdef; simp at hmdef; omega)
+  -- Top coefficient is an `F`-constant: `(leadingCoeff p)′ = 0`.
+  have hlc0 : (p.leadingCoeff)′ = 0 := by
+    have htop := coeff_natDegree_logDerivPoly u p
+    rw [← htop]
+    exact coeff_eq_zero_of_natDegree_lt (by rw [h]; omega)
+  -- Coefficient-`(m−1)` relation: `(p.coeff (m−1))′ = −m·(leadingCoeff p)·(u'/u)`.
+  have hcoeff := coeff_logDerivPoly u p (m - 1)
+  have hzero : (logDerivPoly u p).coeff (m - 1) = 0 :=
+    coeff_eq_zero_of_natDegree_lt (by rw [h]; omega)
+  rw [hzero] at hcoeff
+  have hsucc : m - 1 + 1 = m := by omega
+  have hlc : p.coeff m = p.leadingCoeff := rfl
+  rw [hsucc, hlc] at hcoeff
+  have hcast : ((m - 1 : ℕ) : F) + 1 = (m : F) := by
+    rw [Nat.cast_sub (by omega : 1 ≤ m), Nat.cast_one]; ring
+  rw [hcast] at hcoeff
+  -- `s := −p.coeff (m−1)/(m·leadingCoeff p)` has `s′ = u'/u`: contradiction.
+  have hmlcne : (m : F) * p.leadingCoeff ≠ 0 :=
+    mul_ne_zero (Nat.cast_ne_zero.mpr (by omega)) hlcne
+  have hmlc0 : Differential.deriv ((m : F) * p.leadingCoeff) = 0 := by
+    rw [Derivation.leibniz, Derivation.map_natCast, hlc0, smul_zero, smul_zero, add_zero]
+  refine not_isAntideriv_of_nondegenerateLog u hnd
+    (s := -(p.coeff (m - 1)) / ((m : F) * p.leadingCoeff)) ?_
+  rw [Differential.deriv.leibniz_div_const (-(p.coeff (m - 1))) ((m : F) * p.leadingCoeff) hmlc0,
+    smul_eq_mul, map_neg]
+  rw [show (p.coeff (m - 1))′ = -((m : F) * p.leadingCoeff * logDeriv u) from by
+    linear_combination -hcoeff]
+  rw [neg_neg, ← mul_assoc, inv_mul_cancel₀ hmlcne, one_mul]
 
 /-- **`NondegenerateLog u` forces `logDeriv u ≠ 0`** — a genuine new monomial is non-constant.  The
 monomial `t = X` itself is monic irreducible (`monic_X`, `irreducible_X`) with `D X = C (u'/u)`; if
@@ -759,6 +809,50 @@ theorem rationalToPolyObligation_of_nondegenerateLog (u : F) (hnd : Nondegenerat
   refine ⟨n, ?_⟩
   rw [hveq, hd1, map_one, div_one]
 
+/-- **The CORRECTED `v`-reduction: `v′ ∈ F ⟹ v = v₀ + b·t` (`v₀, b ∈ F`, `b` constant), given
+`NondegenerateLog`.**  Replaces the *false* `mem_range_of_deriv_mem_range` (`v′ ∈ F ⟹ v ∈ F`, refuted by
+`v = log u`).  The correct conclusion is `v ∈ F ⊕ Const·t`: the surviving linear term `b·t = b·log u` is
+a **new logarithm**, not an `F`-element.  Proof: `v′ ∈ F ⊆ F[t]`, so by the proved pole descent
+(`rationalToPolyObligation_of_nondegenerateLog`) `v = ↑p`; then `D p` is a constant
+(`(D p).natDegree = 0`), so `p.natDegree ≤ 1` (`natDegree_le_one_of_logDerivPoly_natDegree_eq_zero`),
+giving `p = C (p.coeff 0) + C (p.coeff 1)·X`; the index-`1` coefficient relation forces `(p.coeff 1)′ =
+0` (the linear coefficient is a constant of `F`).  So `v = ↑(p.coeff 0) + ↑(p.coeff 1)·t` with
+`(p.coeff 1)′ = 0`. -/
+theorem deriv_mem_range_imp_linear (u : F) (hnd : NondegenerateLog u) {v : RatFunc F}
+    (hv : letI := logDifferential u; v′ ∈ (algebraMap F (RatFunc F)).range) :
+    letI := logDifferential u
+    ∃ (v₀ b : F), b′ = 0 ∧
+      v = algebraMap F (RatFunc F) v₀
+        + algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X := by
+  letI := logDifferential u
+  -- `v′ ∈ F ⊆ F[t]`, so by the pole descent `v = ↑p`.
+  obtain ⟨b, hb⟩ := hv
+  have hvpoly : v′ ∈ (algebraMap F[X] (RatFunc F)).range := by
+    refine ⟨Polynomial.C b, ?_⟩
+    rw [← algebraMap_eq_algebraMap_C, hb]
+  obtain ⟨p, hp⟩ := rationalToPolyObligation_of_nondegenerateLog u hnd
+    (logDeriv_ne_zero_of_nondegenerateLog u hnd) v hvpoly
+  -- `D p` is the constant `C b`, so `(D p).natDegree = 0` and `p.natDegree ≤ 1`.
+  have hDpCb : logDerivPoly u p = Polynomial.C b :=
+    FaithfulSMul.algebraMap_injective F[X] (RatFunc F) (by
+      rw [← derivExtends u p, hp, ← hb, algebraMap_eq_algebraMap_C])
+  have hdeg0 : (logDerivPoly u p).natDegree = 0 := by rw [hDpCb]; exact natDegree_C b
+  have hple1 : p.natDegree ≤ 1 := natDegree_le_one_of_logDerivPoly_natDegree_eq_zero u hnd hdeg0
+  -- The linear coefficient is a constant: `(p.coeff 1)′ = 0` (index-`1` coefficient relation).
+  have hb1 : (p.coeff 1)′ = 0 := by
+    have hcoeff := coeff_logDerivPoly u p 1
+    rw [hDpCb] at hcoeff
+    have hc2 : p.coeff 2 = 0 := coeff_eq_zero_of_natDegree_lt (by omega)
+    rw [Polynomial.coeff_C] at hcoeff
+    simp only [show (1 : ℕ) ≠ 0 by decide, if_false] at hcoeff
+    rw [hc2] at hcoeff
+    simpa using hcoeff.symm
+  -- `p = C (p.coeff 1)·X + C (p.coeff 0)` (degree `≤ 1`), so `v = ↑(p.coeff 0) + ↑(p.coeff 1)·t`.
+  refine ⟨p.coeff 0, p.coeff 1, hb1, ?_⟩
+  conv_lhs => rw [← hp, Polynomial.eq_X_add_C_of_natDegree_le_one hple1, map_add, map_mul,
+    ← algebraMap_eq_algebraMap_C, ← algebraMap_eq_algebraMap_C]
+  rw [add_comm]
+
 omit [CharZero F] in
 /-- **The `v ∈ F` reduction on `RatFunc F`, modulo the two residues.**  GIVEN the rational-to-poly
 input (`RationalToPolyObligation`, the partial-fraction "no pole") and the polynomial descent input
@@ -1181,34 +1275,82 @@ theorem keystone (u : F) (hreduction : IsLiouvilleReductionObligation u) :
     IsLiouville F (RatFunc F) :=
   hreduction
 
-/-- **The CORRECTLY-STATED transcendental-log Liouville keystone — conditional on the genuine
-non-degeneracy `NondegenerateLog u`.**  This is the honest completion: `F(log u) = RatFunc F` is a
-Liouville extension of `F` **whenever the log is a genuine new monomial** (`NondegenerateLog u`, i.e.
-`log u ∉ F`, the Risch new-monomial condition the structure-theorem decision certifies) — *plus* the
-two remaining pole-matching residues.  What `NondegenerateLog u` now buys (all PROVED above):
-* `logDeriv u ≠ 0` (`logDeriv_ne_zero_of_nondegenerateLog`);
-* `RationalToPolyObligation u` (`rationalToPolyObligation_of_nondegenerateLog` — the full
-  rational-to-polynomial pole descent, the genuine "a `t`-pole survives `D`" theorem);
-* `PoleIndependenceObligation u` (`poleIndependenceObligation_of_nondegenerateLog`).
-
-So of the original residues only two remain explicit: `MultiLogPoleObligation u` (the genuine
-multi-term `t`-pole-matching heart — the deepest combinatorial content), and `PolyVReductionObligation
-u`.  **Caveat on the latter (a discovered misstatement):** its formal shape `(D p).natDegree = 0 ⟹
-p.natDegree = 0` is *unconditionally false* (witness `p = X`: `D X = C (u'/u)` is a constant, yet
-`X.natDegree = 1`) — it should read `p.natDegree ≤ 1`, because the surviving linear `t`-term `b·t = b·log
-u` is a *new logarithm*, not an `F`-element (indeed `v′ ∈ F` does **not** force `v ∈ F`: `v = log u` has
-`v′ = u'/u ∈ F`).  Its genuine content is therefore subsumed by a correct `MultiLogPoleObligation`; it is
-listed here only to match the existing assembly chain (`isLiouville_of_multiLogPole`).  Discharging
-`MultiLogPoleObligation u` makes this an unconditional `IsLiouville F (RatFunc F)` for every genuine new
-log monomial. -/
-theorem isLiouville_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u)
-    (hmlp : MultiLogPoleObligation u) (hpv : PolyVReductionObligation u) :
+omit [CharZero F] in
+/-- **`t` lifts the log derivative: `(↑b · t)′ = ↑b · ↑(logDeriv u)` for a constant `b` (`b′ = 0`).**
+The `b·t = b·log u` term differentiates to `b·(u'/u)` — exactly a `u`-logarithm with constant
+coefficient.  Proved via `logDeriv` (`(↑b·t)′ = (↑b·t)·logDeriv(↑b·t)`, `logDeriv ↑b = 0` since `b′ = 0`,
+`logDeriv t = ↑(C(u'/u))/t`), sidestepping the `RatFunc`-`Derivation.leibniz` algebra diamond. -/
+theorem deriv_algebraMap_mul_X (u : F) {b : F} (hb : b′ = 0) :
     letI := logDifferential u
     letI := logDifferentialAlgebra u
-    IsLiouville F (RatFunc F) :=
-  isLiouville_of_multiLogPole u hmlp
-    (rationalToPolyObligation_of_nondegenerateLog u hnd) hpv
-    (logDeriv_ne_zero_of_nondegenerateLog u hnd)
+    (algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X)′
+      = algebraMap F (RatFunc F) b * algebraMap F (RatFunc F) (logDeriv u) := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  rcases eq_or_ne b 0 with rfl | hbne
+  · simp
+  have hbA : algebraMap F (RatFunc F) b ≠ 0 := RatFunc.algebraMap_ne_zero (by
+    simpa using (FaithfulSMul.algebraMap_injective F (RatFunc F)).ne hbne)
+  have hXA : algebraMap F[X] (RatFunc F) X ≠ 0 := RatFunc.algebraMap_ne_zero X_ne_zero
+  -- `(↑b·t)′ = (↑b·t)·logDeriv(↑b·t)`, `logDeriv(↑b·t) = logDeriv ↑b + logDeriv t`.
+  have hmulne : algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X ≠ 0 :=
+    mul_ne_zero hbA hXA
+  have hv'eq : (algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X)′
+      = (algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X)
+        * logDeriv (algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X) := by
+    rw [logDeriv, mul_div_cancel₀ _ hmulne]
+  -- `logDeriv ↑b = ↑(logDeriv b) = 0`, `logDeriv t = ↑(C(u'/u))/t`.
+  have hlogb : logDeriv (algebraMap F (RatFunc F) b) = 0 := by
+    rw [logDeriv_algebraMap, logDeriv, hb, zero_div, map_zero]
+  have hlogX : logDeriv (algebraMap F[X] (RatFunc F) X)
+      = algebraMap F (RatFunc F) (logDeriv u) / algebraMap F[X] (RatFunc F) X := by
+    rw [logDeriv_algebraMap_eq u X, logDerivPoly_X, ← algebraMap_eq_algebraMap_C]
+  have hlogmul : logDeriv (algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X)
+      = algebraMap F (RatFunc F) (logDeriv u) / algebraMap F[X] (RatFunc F) X := by
+    rw [Differential.logDeriv_mul _ _ hbA hXA, hlogb, hlogX, zero_add]
+  rw [hv'eq, hlogmul]
+  field_simp
+
+/-- **The transcendental-log Liouville keystone — UNCONDITIONAL modulo `NondegenerateLog` and the
+single multi-term pole-matching residue.**  `F(log u) = RatFunc F` is a Liouville extension of `F`
+whenever the log is a genuine new monomial (`NondegenerateLog u`) and the multi-term `t`-pole-matching
+`MultiLogPoleObligation u` holds.  **The false `PolyVReductionObligation` is GONE:** the corrected
+`v`-reduction `deriv_mem_range_imp_linear` (`v₀′ ∈ F ⟹ v₀ = vF + b·t`, `b` constant) feeds the surviving
+linear term `b·t` back as the *new logarithm* `b·log u` (its derivative is `b·(u'/u)`,
+`deriv_algebraMap_mul_X`), so `v₀′ = (↑vF)′ + b·logDeriv u`.  Packaging over `Option ι` (the extra index
+carrying `b·log u`) yields the `IsLiouville` `F`-data.  Thus only `NondegenerateLog u` (the necessary
+transcendence) and `MultiLogPoleObligation u` (the genuine pole-matching heart) remain — both proved
+*around* it: `RationalToPolyObligation` and `PoleIndependenceObligation` are now theorems from
+`NondegenerateLog`. -/
+theorem isLiouville_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u)
+    (hmlp : MultiLogPoleObligation u) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    IsLiouville F (RatFunc F) := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  refine ⟨fun a ι _ c hc w v h => ?_⟩
+  -- Multi-term pole-matching: log arguments into `F`, leaving a corrected `v₀` with `v₀′ ∈ F`.
+  obtain ⟨w₀, v₀, h₀, hv₀⟩ := hmlp a ι c hc w v h
+  -- Corrected `v`-reduction: `v₀ = ↑vF + ↑b·t` with `b` constant.
+  obtain ⟨vF, b, hbconst, hv₀eq⟩ := deriv_mem_range_imp_linear u hnd hv₀
+  -- `v₀′ = (↑vF)′ + ↑b·logDeriv(↑u)` (additivity + `deriv_algebraMap` + `deriv_algebraMap_mul_X`).
+  have hv₀' : v₀′ = (algebraMap F (RatFunc F) vF)′
+      + algebraMap F (RatFunc F) b * algebraMap F (RatFunc F) (logDeriv u) := by
+    rw [hv₀eq, map_add, deriv_algebraMap_mul_X u hbconst]
+  -- Assemble the fresh `F`-data over `Option ι`: `none ↦ b·log u`, `some x ↦ cₓ·log(w₀ x)`.
+  refine ⟨Option ι, inferInstance, fun x => x.elim b c, ?_, fun x => x.elim u w₀, vF, ?_⟩
+  · rintro (_ | x) <;> simp [hbconst, hc]
+  · apply FaithfulSMul.algebraMap_injective F (RatFunc F)
+    rw [map_add, ← deriv_algebraMap, Fintype.sum_option]
+    simp only [Option.elim, map_add, map_sum]
+    have hsum : ∀ x, algebraMap F (RatFunc F) (c x * logDeriv (w₀ x))
+        = algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x)) := by
+      intro x; rw [map_mul, ← logDeriv_algebraMap]
+    simp_rw [hsum]
+    -- `↑a = ↑b·logDeriv ↑u + ∑ ↑cᵢ logDeriv(↑w₀ᵢ) + (↑vF)′`, matching `h₀` + `hv₀'`.
+    rw [h₀, hv₀', map_mul]
+    ring
 
 -- Restatements pinning the genuine field setup.
 -- `t' = u'/u` on `RatFunc F` itself (the log monomial, on the fraction field):
@@ -1264,15 +1406,14 @@ example (u : F) (hnd : NondegenerateLog u) : RationalToPolyObligation u :=
   rationalToPolyObligation_of_nondegenerateLog u hnd
 example (u : F) (hnd : NondegenerateLog u) : PoleIndependenceObligation u :=
   poleIndependenceObligation_of_nondegenerateLog u hnd
--- The CORRECTLY-STATED keystone: a genuine new log monomial (`NondegenerateLog u`) plus the
--- multi-term pole-matching residue (and the misstated `PolyVReductionObligation`, subsumed by it)
--- yields the real `IsLiouville F (RatFunc F)`.
-example (u : F) (hnd : NondegenerateLog u) (hmlp : MultiLogPoleObligation u)
-    (hpv : PolyVReductionObligation u) :
+-- The keystone: a genuine new log monomial (`NondegenerateLog u`) plus ONLY the multi-term
+-- pole-matching residue (`MultiLogPoleObligation u`) yields the real `IsLiouville F (RatFunc F)` —
+-- the false `PolyVReductionObligation` no longer appears (its `b·t` survivor folds into `b·log u`).
+example (u : F) (hnd : NondegenerateLog u) (hmlp : MultiLogPoleObligation u) :
     letI := logDifferential u
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
-  isLiouville_of_nondegenerateLog u hnd hmlp hpv
+  isLiouville_of_nondegenerateLog u hnd hmlp
 
 end FieldObligations
 
