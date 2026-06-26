@@ -120,3 +120,92 @@ theorem ratFunc_liouville [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
   refine ⟨g, p, r, ?_⟩
   conv_lhs => rw [← RatFunc.num_div_denom f]
   exact hform
+
+/-! ## Flat single-sum form (`∑_{α} cα·logDeriv(X−α)`) and the List form -/
+
+open scoped Differential in
+open Classical in
+/-- **Singleton inner-sum collapse**: in the split form, each singleton root-set `{α}` makes the inner
+Rothstein–Trager sum `∑_{a ∈ {α}.image res} a·logDeriv(Gₐ)` collapse to the single term
+`res(α)·logDeriv(X − α)`, with `res(α) = (r α)(α)` (since `(nodal {α} id)′ = (X−α)′ = 1`). The
+distinct-root residue at a simple root. -/
+theorem singleton_residue_sum_collapse (α : K) (r : K → K[X]) :
+    (∑ a ∈ ({α} : Finset K).image
+        (fun β => (r α).eval β / eval β (derivative (Lagrange.nodal {α} id))),
+        algebraMap K[X] (RatFunc K) (C a)
+          * Differential.logDeriv (algebraMap K[X] (RatFunc K)
+              (∏ β ∈ ({α} : Finset K).filter
+                  (fun β => (r α).eval β / eval β (derivative (Lagrange.nodal {α} id)) = a),
+                (X - C β))))
+      = algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+          * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α)) := by
+  classical
+  rw [Finset.image_singleton, Finset.sum_singleton]
+  have hd1 : eval α (derivative (Lagrange.nodal ({α} : Finset K) id)) = 1 := by
+    rw [nodal_singleton]; simp
+  rw [hd1, div_one]
+  congr 2
+  rw [Finset.filter_singleton, if_pos (by rw [hd1, div_one]), Finset.prod_singleton]
+
+open scoped Differential in
+open Classical in
+/-- **Rational-function Liouville form, flat single-sum shape** (§2.4/§2.5): the split form with each
+singleton inner sum collapsed (`singleton_residue_sum_collapse`), so the logarithmic part is a *single*
+sum over the distinct denominator roots:
+`f = g′ + (∫ p dx)′ + ∑_{α} (rα)(α)·logDeriv(X − α)` — each distinct root `α` contributing one
+logarithm `log(x − α)` with constant coefficient the residue `(rα)(α) ∈ K`. -/
+theorem ratFunc_liouville_flat [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
+    ∃ (g : RatFunc K) (p : K[X]) (r : K → K[X]),
+        f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ α ∈ f.denom.roots.toFinset,
+              algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+                * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α)) := by
+  classical
+  obtain ⟨g, p, r, hform⟩ := ratFunc_liouville f
+  refine ⟨g, p, r, hform.trans ?_⟩
+  congr 1
+  exact Finset.sum_congr rfl fun α _ => singleton_residue_sum_collapse α r
+
+open scoped Differential in
+open Classical in
+/-- **Finset log-sum repackaged as a List sum**: a Finset sum of `algebraMap (C (c i))·logDeriv(u i)`
+equals the List sum `((s.toList).map (i ↦ (c i, u i))).map (cu ↦ cu.1 • logDeriv cu.2) |>.sum`, the
+bridge from the `Finset`-indexed log part to the task's `List (K × K(x))` shape. Uses
+`algebraMap (C a)·x = a • x` (`Algebra.smul_def` + the `K → K[X] → K(x)` scalar tower) and
+`Finset.sum = (toList).sum`. -/
+theorem finsetLogSum_eq_listSum {ι : Type*} (s : Finset ι) (c : ι → K) (u : ι → RatFunc K) :
+    (∑ i ∈ s, algebraMap K[X] (RatFunc K) (C (c i)) * Differential.logDeriv (u i))
+      = (((s.toList).map (fun i => (c i, u i))).map
+          (fun cu => cu.1 • Differential.logDeriv cu.2)).sum := by
+  classical
+  rw [List.map_map]
+  rw [show (∑ i ∈ s, algebraMap K[X] (RatFunc K) (C (c i)) * Differential.logDeriv (u i))
+        = ∑ i ∈ s, c i • Differential.logDeriv (u i) from
+      Finset.sum_congr rfl fun i _ => by
+        rw [Algebra.smul_def, ← Polynomial.algebraMap_eq,
+          ← IsScalarTower.algebraMap_apply K K[X] (RatFunc K)]]
+  rw [Finset.sum_eq_multiset_sum, ← Multiset.coe_toList s.val]
+  simp [Function.comp]
+
+open scoped Differential in
+open Classical in
+/-- **Rational-function Liouville form, List shape** (§2.4/§2.5 — the task's target form): over an
+algebraically closed field of characteristic `0`, *every* `f ∈ K(x)` is
+`f = g′ + ∑_{(c,u) ∈ logs} c·logDeriv(u)` with `g ∈ K(x)`, `logs : List (K × K(x))` a list of
+(constant coefficient, rational argument) pairs — the constructive rational case of Liouville's
+theorem with the polynomial-integral part folded into the rational part `g`
+(`g′ + (∫ p dx)′ = (g + ∫ p dx)′`) and the logarithmic part presented as a list (`X − α` per distinct
+root, coefficient the residue). The scalar `c • logDeriv u = c·logDeriv u` via `Algebra.smul_def`. -/
+theorem ratFunc_liouville_list [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
+    ∃ (g : RatFunc K) (logs : List (K × RatFunc K)),
+        f = g′ + (logs.map (fun cu => cu.1 • Differential.logDeriv cu.2)).sum := by
+  classical
+  obtain ⟨g, p, r, hform⟩ := ratFunc_liouville_flat f
+  refine ⟨g + algebraMap K[X] (RatFunc K) (polyIntegral p),
+    (f.denom.roots.toFinset.toList).map
+      (fun α => ((r α).eval α, algebraMap K[X] (RatFunc K) (X - C α))), hform.trans ?_⟩
+  rw [map_add]
+  congr 1
+  -- the log sum: from the flat Finset sum to the mapped List sum
+  exact finsetLogSum_eq_listSum f.denom.roots.toFinset
+    (fun α => (r α).eval α) (fun α => algebraMap K[X] (RatFunc K) (X - C α))
