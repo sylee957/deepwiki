@@ -460,6 +460,125 @@ theorem radIsZero_radDeriv_radGen_qx :
   rw [radIsZero, radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero,
     radDeriv_radGen_sound_qx]
 
+/-! ### Bridge (i): the `qxOfNum : CPolyG ℚ → QFunNZG ℚ` lift commutes with the derivation
+
+The literal `radIntegrateRational` over `α = QFunNZG ℚ` builds its base-field coefficients by
+`qxOfNum : CPolyG ℚ → QFunNZG ℚ` (`p ↦ ⟨(p, [1]), _⟩`, a polynomial over denominator `1`). Discharging
+the per-step `K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` for a *concrete* driver run needs to push the
+engine's polynomial derivative `cderivG : CPolyG ℚ → CPolyG ℚ` (formal `d/dX` on coefficient lists)
+through `qxOfNum` and `cderiv` (the tower derivation `towerDerivQFunNZG [1]`). This is the substantive
+noncomputable bridge — it lives in the genuine field `RatFunc ℚ` (`= CFieldSpec.K (QFunNZG ℚ)`), read
+through `toQFunNZG = CFieldSpec.toK`.
+
+The chain: `qxOfNum p` reads as the algebra-map image `amG (toPolyG p) = algebraMap ℚ[X] (RatFunc ℚ)
+(toPolyG p)` (denominator `1`); the tower derivation `towerDerivQFunNZG [1]` realizes Mathlib's
+`extendDeriv (implicitDeriv (toPolyG [1]))` (`toQFunNZG_towerDerivQFunNZG`), which on an algebra-map image
+is `algebraMap (baseDerivQ (toPolyG p))` (`extendDeriv_algebraMap`); and `baseDerivQ = implicitDeriv
+(toPolyG [1]) = implicitDeriv 1` is the plain polynomial `derivative` over `ℚ` (the base `Differential ℚ`
+is `⟨0⟩`, so `mapCoeffs = 0`), which matches `toPolyG (cderivG p)` (`toPolyG_cderivG`). -/
+
+/-- **`qxOfNum p` reads as `algebraMap ℚ[X] (RatFunc ℚ) (toPolyG p)`** — the genuine-field image of the
+polynomial-over-`1` element `qxOfNum p = ⟨(p, [1]), _⟩` is `amG (toPolyG p)` (denominator `[1]` reads as
+`1`, so the quotient `amG (toPolyG p) / 1` collapses). The reading that turns the derivation-commutation
+bridge into an `extendDeriv ∘ algebraMap` computation. -/
+theorem toQFunNZG_qxOfNum (p : CPolyG ℚ) :
+    QFunNZG.toQFunNZG (qxOfNum p) = QFunNZG.amG ℚ (CPolyG.toPolyG p) := by
+  show QFunNZG.amG ℚ (CPolyG.toPolyG p) / QFunNZG.amG ℚ (CPolyG.toPolyG ([CField.one] : CPolyG ℚ)) = _
+  have h1 : CPolyG.toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
+    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  rw [h1, map_one, div_one]
+
+/-- **`baseDerivQ` is the plain polynomial derivative over `ℚ`** — `baseDerivQ q = Polynomial.derivative
+q` in `ℚ[X]`. `baseDerivQ = implicitDeriv (toPolyG [1]) = implicitDeriv 1 = mapCoeffs + 1 · derivative'`,
+and over `ℚ` the base `Differential ℚ` is the zero derivation (`instDifferentialQ = ⟨0⟩`), so `mapCoeffs =
+0` and only `derivative'` survives. The base-derivation half of bridge (i). -/
+theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
+    baseDerivQ q = Polynomial.derivative q := by
+  have h1 : CPolyG.toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
+    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  rw [baseDerivQ, h1, Differential.implicitDeriv]
+  -- `mapCoeffs q = 0` (base deriv on ℚ is `0`), leaving `1 • derivative' q = derivative q`
+  have hmc : Differential.mapCoeffs q = 0 := by
+    ext i
+    rw [Differential.coeff_mapCoeffs, Polynomial.coeff_zero]
+    show @Differential.deriv ℚ _ _ (q.coeff i) = 0
+    rfl
+  simp only [Derivation.add_apply, hmc, Derivation.restrictScalars_apply, one_smul, zero_add]
+  rfl
+
+/-- **★ Bridge (i) — the derivation commutes with `qxOfNum`** — `toQFunNZG (cderiv (qxOfNum p)) =
+toQFunNZG (qxOfNum (cderivG p))` in `RatFunc ℚ` (`= CFieldSpec.K (QFunNZG ℚ)`): the polynomial-into-ℚ(x)
+embedding `qxOfNum : CPolyG ℚ → QFunNZG ℚ` is a derivation morphism, i.e. `cderiv ∘ qxOfNum = qxOfNum ∘
+cderivG` read through the genuine field. The substantive noncomputable bridge of the literal-radical
+soundness: `cderiv = towerDerivQFunNZG [1]` realizes `extendDeriv (implicitDeriv (toPolyG [1]))`
+(`toQFunNZG_towerDerivQFunNZG`); on the algebra-map image `qxOfNum p ↦ amG (toPolyG p)`
+(`toQFunNZG_qxOfNum`) this is `algebraMap (baseDerivQ (toPolyG p))` (`extendDeriv_algebraMap`); and
+`baseDerivQ` is the plain `derivative` (`baseDerivQ_apply`), matching `toPolyG (cderivG p)`
+(`toPolyG_cderivG`). -/
+theorem toQFunNZG_cderiv_qxOfNum (p : CPolyG ℚ) :
+    QFunNZG.toQFunNZG (CDiffField.cderiv (qxOfNum p))
+      = QFunNZG.toQFunNZG (qxOfNum (CPolyG.cderivG p)) := by
+  -- `cderiv = towerDerivQFunNZG [1]`; realize it as `extendDeriv (implicitDeriv (toPolyG [1]))`
+  show QFunNZG.toQFunNZG (QFunNZG.towerDerivQFunNZG [CField.one] (qxOfNum p)) = _
+  rw [QFunNZG.toQFunNZG_towerDerivQFunNZG, toQFunNZG_qxOfNum, toQFunNZG_qxOfNum, QFunNZG.amG]
+  -- `extendDeriv (implicitDeriv (toPolyG [1])) (algebraMap (toPolyG p)) = algebraMap (baseDerivQ (toPolyG p))`
+  rw [show Differential.implicitDeriv (CPolyG.toPolyG ([CField.one] : CPolyG ℚ)) = baseDerivQ from rfl,
+    extendDeriv_algebraMap, baseDerivQ_apply, CPolyG.toPolyG_cderivG]
+
+/-! ### Bridge (ii): `g = ℓ·f` in `K` — the integrand IS the diagonal multiplier times the radicand
+
+The rational-part driver's integrand-helper is `g = (1/n)·f'` (the `(f/y)' = g/y` numerator), while the
+diagonal radical derivation `radDeriv n f` carries `ℓ = logDerRadicand n f = f'/(nf)` (`y' = ℓ·y`). These
+two are linked in `K` by `ℓ·f = (1/n)·f' = g`: the same content as the crux scalar identity
+`toK_logDerRadicand_mul` (`n·toK ℓ·toK f = toK f'`), rearranged. So the integrand `g`'s `y`-coefficient
+and the derivation multiplier `ℓ` agree after multiplying by `f` — exactly what makes a `[0, c]`-form
+antiderivative's derivative `(D(c) + c·ℓ)·y` reproduce the integrand `g·y` of the cleared step. -/
+
+namespace RadElem
+
+variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
+
+omit [CDiffFieldSpec α] in
+/-- **★ Bridge (ii) — `ℓ·f = (1/n)·f'` in `K`** — `toK (logDerRadicand n f · f) = (n : K)⁻¹ · toK f'`
+(`ℓ = logDerRadicand n f = f'/(nf)`), valid when `n·toK f ≠ 0`. The integrand-helper `g = (1/n)f'` of the
+rational-part driver IS the diagonal multiplier `ℓ` times the radicand `f`, read in the genuine field.
+Rearranged from the crux scalar identity `toK_logDerRadicand_mul` (`n·toK ℓ·toK f = toK f'`) by dividing
+through by `n`. The denominator-clearing half of the literal-soundness composition. -/
+theorem toK_logDerRadicand_mul_radicand (n : ℕ) (f : α)
+    (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) :
+    CFieldSpec.toK (CField.mul (logDerRadicand n f) f)
+      = (n : CFieldSpec.K α)⁻¹ * CFieldSpec.toK (CDiffField.cderiv f) := by
+  have hn : (n : CFieldSpec.K α) ≠ 0 := by
+    intro h; rw [h, zero_mul] at hnf; exact hnf rfl
+  rw [CFieldSpec.toK_mul, ← toK_logDerRadicand_mul n f hnf]
+  field_simp
+
+end RadElem
+
+/-! ### Bridge (iii): the per-step polynomial cleared identity is definitional
+
+The Case-3 single-step residual `radCase3Residual f g B C Bder = B'f + Bg − C` is the *defining*
+expression `csubG (caddG (cmulG Bder f) (cmulG B g)) C`. The engine's per-step cleared identity is
+`radCase3Residual f g B C (cderivG B) = D` (the next leftover), and reading it through `toPolyG` is the
+polynomial equation `B'·f + B·g − C = D` in `K[X]` — a `rfl`/`cisZeroG` fact, no `radDeriv` reasoning.
+This is the trivial bridge: it just unfolds the definition. -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CDiffField α]
+
+omit [CDiffField α] in
+/-- **Bridge (iii) — `radCase3Residual` is definitionally `B'f + Bg − C`** — `radCase3Residual f g B C
+Bder = csubG (caddG (cmulG Bder f) (cmulG B g)) C`. The per-step polynomial cleared identity is `rfl`: the
+residual the Case-3 iterate negates and recurses on is literally `B'·f + B·g − C` (with `Bder = B'`
+supplied by the caller). No content beyond unfolding — the bridge is definitional. -/
+theorem radCase3Residual_eq (f g B C Bder : CPolyG α) :
+    radCase3Residual f g B C Bder
+      = csubG (caddG (cmulG Bder f) (cmulG B g)) C :=
+  rfl
+
+end CPolyG
+
 /-! ### The GENERAL rational-part soundness: what is now a theorem, and the precise residual
 
 This file proves the **general rational-part soundness as an abstract `K[X]` theorem** —
