@@ -316,6 +316,36 @@ def radCase1Residual (fuel : ℕ) (k : ℕ) (V Df f g B C Bder : CPolyG α) : CP
   let quotient := cdivG fuel topNum V                             -- `((1−k)V'fB − C)/V`
   caddG quotient (caddG (cmulG Bder f) (cmulG B g))               -- `… + B'f + Bg`
 
+/-! ### Case 2 rational-part reduction (Trager Appendix A §2.2, `θ' = 1`)
+
+**Case 2** is the partial-fraction piece `C/(Wᵏy)` where `W = Pⱼ` is a **squarefree factor of the
+radicand `f`** (not coprime to `f`, unlike Case 1). Writing `h = f/W`, the reduction step is
+`(Bf/(Wᵏy))' = (Bg − kW'h)/(Wᵏy) + B'h/(W^{k−1}y)` (Trager Appendix A §2.2), so subtracting `C/(Wᵏy)`
+leaves `D/(W^{k−1}y)` provided
+`Bg − kW'h ≡ C (mod W)`,
+i.e. `B·g ≡ (C + kW'h) (mod W)`. Since `W = Pⱼ` gives `g ≡ (1 − eⱼ/n)W'h (mod W)` and `gcd(g, W) = 1`
+(`W'`, `h` both coprime to the squarefree `W`, `eⱼ < n`), the congruence is solvable for **any `k`**.
+The residual numerator is `D = (Bg − kW'h − C)/W + B'h`. Cleared over the common denominator `Wᵏy`, the
+step is the **pure `F[θ]` identity** `Bg − kW'h − C + W·(B'h) = W·D` (no `y`), checkable by `cisZeroG`.
+Repeated application eliminates every `f`-factor from the integrand's denominator. -/
+
+/-- **Case-2 cofactor solve** `radCase2Cofactor fuel k W g h Wder C = B` — the polynomial `B`
+(degree `< deg W`) solving the Case-2 congruence `B·g ≡ (C + k·W'·h) (mod W)` (Trager Appendix A §2.2),
+via `cdiophantineG g W (C + k·W'·h)` (`gcd(g, W) = 1` since `W = Pⱼ` is a squarefree factor of `f`).
+`h = f/W`, `Wder = W'`, and `g` (from `(f/y)' = g/y`) are passed in. Generic over `[CField α]`. -/
+def radCase2Cofactor (fuel : ℕ) (k : ℕ) (W g h Wder C : CPolyG α) : CPolyG α :=
+  let rhs := caddG C (cmulG [cnatCastG k] (cmulG Wder h))         -- `C + k·W'·h`
+  (cdiophantineG fuel g W rhs).1
+
+/-- **Case-2 residual** `radCase2Residual fuel k W g h Wder B C Bder = D` — the lowered-`k` residual
+numerator `D = (B·g − k·W'·h − C)/W + B'·h` of the Case-2 step (Trager Appendix A §2.2). `h = f/W`,
+`Wder = W'`, `Bder = B'`, and `g` are passed in. The exact division by `W` is `cdivG` (`W ∣ Bg − kW'h − C`
+by the cofactor congruence). Generic over `[CField α]`. -/
+def radCase2Residual (fuel : ℕ) (k : ℕ) (W g h Wder B C Bder : CPolyG α) : CPolyG α :=
+  let topNum := csubG (csubG (cmulG B g) (cmulG [cnatCastG k] (cmulG Wder h))) C  -- `Bg − kW'h − C`
+  let quotient := cdivG fuel topNum W                                            -- `(Bg − kW'h − C)/W`
+  caddG quotient (cmulG Bder h)                                                  -- `… + B'h`
+
 end CPolyG
 
 /-! #### ★ Case 1 validates: `∫ C/(V²y)` with `y = √x`, `V = x−1` (`native_decide`)
@@ -381,6 +411,71 @@ theorem case1_cleared_identity :
 `k = 2` to `k − 1 = 1`, exactly as the Hermite reduction guarantees. -/
 theorem case1_residual_eq :
     cisZeroG (csubG case1D [(1/2 : ℚ)]) = true := by native_decide
+
+/-! #### ★ Case 2 validates: `∫ C/(W²y)` with `y = √(x³−x)`, `W = x` (`native_decide`)
+
+`F = ℚ` (constants), `θ = x` (`θ' = 1`), radicand `y² = f = x³ − x = x(x−1)(x+1)` (`n = 2`, `m = 3`).
+The squarefree factor `W = x` (so `W ∣ f`, `e₁ = 1`), `h = f/W = x² − 1`, `W' = 1`,
+`g = ((n−1)/n)·f' = (1/2)(3x² − 1)` (all `eᵢ = 1`, `d = 1`). Take `k = 2`, `C = 1`, so the integrand is
+`1/(x²√(x³−x))`. The congruence `B·g ≡ C + kW'h (mod W=x)` reads `−(1/2)B ≡ 1 + 2(−1) = −1 (mod x)`, so
+`B = 2`. The residual `D = (Bg − kW'h − C)/W + B'h = (x²)/x + 0 = x`, of degree `< deg W·?`... it lowered
+the multiplicity `k = 2 → 1`. -/
+
+/-- Case-2 example radicand `f = x³ − x = x(x−1)(x+1)` (`y² = f`), as a `ℚ[x]` polynomial `[0,−1,0,1]`. -/
+def case2F : CPolyG ℚ := [0, -1, 0, 1]
+
+/-- Case-2 example squarefree denominator factor `W = x` (a factor of `f`), `[0, 1]`. -/
+def case2W : CPolyG ℚ := [0, 1]
+
+/-- Case-2 example cofactor `h = f/W = x² − 1`, `[−1, 0, 1]`. -/
+def case2H : CPolyG ℚ := [-1, 0, 1]
+
+/-- Case-2 example numerator `C = 1`, `[1]`. -/
+def case2C : CPolyG ℚ := [1]
+
+/-- `W' = x' = 1` over `ℚ[x]` (`cderivG`, `θ' = 1`). -/
+def case2Wder : CPolyG ℚ := cderivG case2W
+
+/-- `g = ((n−1)/n)·f' = (1/2)·(3x² − 1)` for `n = 2`, `f = x³ − x` (`(f/y)' = g/y`). -/
+def case2G : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG case2F)
+
+/-- The solved Case-2 cofactor `B` for `−(1/2)B ≡ −1 (mod x)` — expected `B = 2`. -/
+def case2B : CPolyG ℚ := radCase2Cofactor 8 2 case2W case2G case2H case2Wder case2C
+
+/-- The Case-2 residual `D` — expected the linear `x`. -/
+def case2D : CPolyG ℚ :=
+  radCase2Residual 8 2 case2W case2G case2H case2Wder case2B case2C (cderivG case2B)
+
+/-- **The cofactor is `B = 2`** (`native_decide`): the diophantine solve of `B·g ≡ −1 (mod x)` gives
+`B = 2` (`cisZeroG` of `B − 2`). The Case-2 congruence solver runs over `ℚ[x]`. -/
+theorem case2_cofactor_eq :
+    cisZeroG (csubG case2B [(2 : ℚ)]) = true := by native_decide
+
+/-- **★ The Case-2 congruence holds**: `B·g − k·W'·h − C ≡ 0 (mod W)` (`native_decide`) — the numerator
+`Bg − kW'h − C = 2·(1/2)(3x²−1) − 2(x²−1) − 1 = x²` is divisible by `W = x`, the defining property of
+the cofactor `B`. Checked by `cisZeroG` of `cmodG (Bg − kW'h − C) W`. -/
+theorem case2_congruence :
+    cisZeroG (cmodG 8
+      (csubG (csubG (cmulG case2B case2G) (cmulG [cnatCastG 2] (cmulG case2Wder case2H))) case2C)
+      case2W) = true := by native_decide
+
+/-- **★ The Case-2 cleared Hermite identity** (`native_decide`): the reduction
+`(Bf/(Wᵏy))' − C/(Wᵏy) = D/(W^{k−1}y)`, cleared over the common denominator `Wᵏy`, is the pure `ℚ[x]`
+identity `Bg − kW'h − C + W·(B'h) = W·D`. With `B = 2`, `D = x`: LHS `= x² + x·0 = x²`, RHS `= x·x = x²`.
+Checked by `cisZeroG` of LHS − RHS over `ℚ[x]`. THE CASE-2 RATIONAL REDUCTION COMPUTES — it eliminates
+the `f`-factor `W = x` from the denominator, lowering its multiplicity `k = 2 → 1`. -/
+theorem case2_cleared_identity :
+    cisZeroG (csubG
+      (caddG
+        (csubG (csubG (cmulG case2B case2G) (cmulG [cnatCastG 2] (cmulG case2Wder case2H))) case2C)
+        (cmulG case2W (cmulG (cderivG case2B) case2H)))
+      (cmulG case2W case2D)) = true := by native_decide
+
+/-- **The residual `D = x` has multiplicity dropped** (`native_decide`): `D = x` (`cisZeroG` of `D − x`),
+so the Case-2 step lowered the apparent denominator multiplicity of `W = x` from `k = 2` to `k − 1 = 1`,
+eliminating one `f`-factor exactly as Trager's reduction guarantees. -/
+theorem case2_residual_eq :
+    cisZeroG (csubG case2D [(0 : ℚ), 1]) = true := by native_decide
 
 /-! ### `#print axioms` — the headline lemmas
 
