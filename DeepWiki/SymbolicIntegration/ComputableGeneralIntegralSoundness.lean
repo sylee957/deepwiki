@@ -261,17 +261,101 @@ theorem isGeneralRationalIntegral_of_telescope (fuel : ℕ) (f : CPolyG α) (hf 
   rw [hleft, add_zero] at hkey
   exact hkey
 
+/-! ### ★ The general round-trip soundness — the DIRECT path (no eq.-11 `hstep` chain)
+
+The rational-part integrator `afRationalSolve` (and the combined `afIntegrateAlgebraic`) *derive* the
+antiderivative `v` and **validate** the output by an engine round-trip check `cisZeroG (csubG (afDeriv fuel
+f v) g) = true` — the `native_decide`-tested form (the `afRationalSolve_*` theorems of
+`ComputableGeneralRationalSolve` round-trip exactly this). This is the general analogue of the radical's
+`radIsZero (radSub (algDeriv ρ F) integrand) = true` certificate, and reading it abstractly is the **direct
+path** to the soundness predicate `IsGeneralRationalIntegral`: it bypasses the per-step eq.-11 congruence
+`hstep` chain entirely (exactly as `toPolyG_algDeriv_eq_of_roundtrip` bypassed the radical's per-step
+extraction).
+
+`cisZeroG p = true ↔ toPolyG p = 0` (`cisZeroG_iff`, unconditional), so the engine check `cisZeroG (csubG
+(afDeriv f v) g) = true` gives the **free-polynomial** identity `toPolyG (afDeriv f v) = toPolyG g` in `K[X]`
+— *stronger* than the carrier-quotient `IsGeneralRationalIntegral`, which it implies by mapping through
+`Ideal.Quotient.mk`. Both directions are axiom-clean (no `native_decide`); the `cnormG f ≠ []` hypothesis is
+**not** needed (the round-trip read is pure `toPolyG`/`cisZeroG` bookkeeping). -/
+
+omit [CDiffFieldSpec α] in
+/-- **★ The general round-trip certificate IS the free-polynomial integrand identity** — the engine's own
+round-trip check `cisZeroG (csubG (afDeriv fuel f v) g) = true` (the `native_decide`-validated form the
+`afRationalSolve` round-trips use, e.g. `afRationalSolve_cuspCubic_intY`) yields the genuine-field identity
+`toPolyG (afDeriv fuel f v) = toPolyG g` in `K[X]` (`K = CFieldSpec.K α`). The general analogue of
+`toPolyG_algDeriv_eq_of_roundtrip`. Axiom-clean (no `native_decide`): `cisZeroG p = true ↔ toPolyG p = 0`
+(`cisZeroG_iff`) + `toPolyG_csubG` + `sub_eq_zero`. The DIRECT path — the integrator's validated output IS
+`afDeriv(v) = g` in `K[X]`, read abstractly, with **no** eq.-11 per-step chain and **no** `cnormG f ≠ []`. -/
+theorem toPolyG_afDeriv_eq_of_roundtrip (fuel : ℕ) (f v g : CPolyG α)
+    (hcheck : cisZeroG (csubG (afDeriv fuel f v) g) = true) :
+    toPolyG (afDeriv fuel f v) = toPolyG g := by
+  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero] at hcheck
+  exact hcheck
+
+omit [CDiffFieldSpec α] in
+/-- **★ The general round-trip soundness — engine check ⟹ the predicate** — the engine's round-trip check
+`cisZeroG (csubG (afDeriv fuel f v) g) = true` discharges the soundness predicate `IsGeneralRationalIntegral
+fuel f g v` (`mk (toPolyG (afDeriv fuel f v)) = mk (toPolyG g)` in `K[X] ⧸ (toPolyG f)`). The general
+analogue of the radical rational-part closure: `toPolyG_afDeriv_eq_of_roundtrip` gives the free-polynomial
+identity `toPolyG (afDeriv f v) = toPolyG g`, and mapping through `Ideal.Quotient.mk` lands the
+carrier-quotient predicate. This makes `afDeriv(afRationalSolve g) = g` self-contained for the general
+rational part — modulo only the one engine round-trip check (the `native_decide`-validated `hcheck`), no
+eq.-11 `hstep` chain. Axiom-clean (no `native_decide`). -/
+theorem isGeneralRationalIntegral_of_roundtrip (fuel : ℕ) (f v g : CPolyG α)
+    (hcheck : cisZeroG (csubG (afDeriv fuel f v) g) = true) :
+    IsGeneralRationalIntegral fuel f g v :=
+  congrArg (Ideal.Quotient.mk (afIdeal f)) (toPolyG_afDeriv_eq_of_roundtrip fuel f v g hcheck)
+
 end CPolyG
+
+/-! ### ★ The NAMED general driver run `∫ y dx = (3/5)·x·y` on `y³ = x²`, abstractly (via the round-trip)
+
+The `afRationalSolve` named run on `∫ y dx` over the cuspidal cubic `y³ = x²` (`gcuspCubicSolvedIntY =
+afRationalSolve 8 gcuspCubicF gcuspCubicBasis 1 gcuspCubicY`, `ComputableGeneralRationalSolve`) DERIVES the
+rational part `v = (3/5)x·y` and the engine validates `afDeriv 8 gcuspCubicF v = y` by `native_decide`
+(`afRationalSolve_cuspCubic_intY`). Here that soundness is proven **abstractly** (`[propext,
+Classical.choice, Quot.sound]`, no `native_decide`) **from the engine's own round-trip check** of the
+derived `v` (supplied as the explicit hypothesis `hcheck` — the run's `afRationalSolve` output and its check
+are reachable for `ℚ` *only* through `native_decide`, since `decide`/`rfl` get stuck on `ℚ` arithmetic, so
+the check is stated rather than discharged): `isGeneralRationalIntegral_of_roundtrip` reads it directly into
+the carrier predicate. The remaining precondition is exactly `hcheck` — the engine's own round-trip
+certificate for the run. The general analogue of `isRadicalRationalIntegral_c3itRun`. -/
+
+open CPolyG
+
+/-- **★ The named general run `∫ y dx = (3/5)x·y` on `y³ = x²` is sound, abstractly** —
+`IsGeneralRationalIntegral 8 gcuspCubicF gcuspCubicY v` for the run's derived rational part `v`, i.e. `mk
+(toPolyG (afDeriv 8 gcuspCubicF v)) = mk (toPolyG gcuspCubicY)` in `K[X] ⧸ (toPolyG (y³−x²))`: the GENERAL
+derivation of the derived `v = (3/5)x·y` equals the integrand `y` in the carrier. Proven abstractly (no
+`native_decide`) **from the engine's own round-trip check** `hcheck : cisZeroG (csubG (afDeriv 8 gcuspCubicF
+v) gcuspCubicY) = true` (the `native_decide` fact `afRationalSolve_cuspCubic_intY`, here read abstractly):
+`isGeneralRationalIntegral_of_roundtrip` lands it directly. The engine's `native_decide` round-trip, here a
+**theorem of the abstract general derivation modulo the one round-trip check**. -/
+theorem isGeneralRationalIntegral_cuspCubic_intY (v : CPolyG (QFunNZG ℚ))
+    (hcheck : cisZeroG (csubG (afDeriv 8 gcuspCubicF v) gcuspCubicY) = true) :
+    IsGeneralRationalIntegral 8 gcuspCubicF gcuspCubicY v :=
+  isGeneralRationalIntegral_of_roundtrip 8 gcuspCubicF v gcuspCubicY hcheck
 
 /-! ### `#print axioms` — the first general integral and the rational-part telescoping are axiom-clean
 
 The first general integral `D(y) = y'`, its predicate packaging, the accumulator-fold distribution, the
-telescoping, and the master rational-part telescoping soundness carry **only** the standard `[propext,
-Classical.choice, Quot.sound]` — no `native_decide` compiler axiom, no `sorry`. The general analogues of the
-radical template's `radDeriv_radGen_sound_qx` / `radReduceRationalTelescope` / `radDeriv_foldlRadAdd_zero_
-cons_telescope`, proven generally over an arbitrary curve `f`. The seed-plus-engine of the general-curve
-soundness capstone `D(∫f) = f`; the residual is discharging the per-step eq.-11 quotient identity (the
-coupled congruence `Aᵢ ≡ −kUV'Bᵢ + T·Σⱼ BⱼMⱼᵢ mod V`) the telescoping takes as its hypothesis. -/
+telescoping, the master rational-part telescoping soundness, **and the round-trip soundness** carry **only**
+the standard `[propext, Classical.choice, Quot.sound]` — no `native_decide` compiler axiom, no `sorry`. The
+general analogues of the radical template's `radDeriv_radGen_sound_qx` / `radReduceRationalTelescope` /
+`radDeriv_foldlRadAdd_zero_cons_telescope` and the round-trip `toPolyG_algDeriv_eq_of_roundtrip`, proven
+generally over an arbitrary curve `f`.
+
+**Two paths to `IsGeneralRationalIntegral` are now closed.** (1) The **telescoping**
+(`generalReduceRationalTelescope`): the assembled `v = foldl caddG []` integrates the integrand modulo the
+final leftover, *given* the per-step eq.-11 quotient identities (the coupled congruence `Aᵢ ≡ −kUV'Bᵢ +
+T·Σⱼ BⱼMⱼᵢ mod V`, the named `hstep` hypothesis) — the structural decomposition. (2) The **round-trip**
+(`isGeneralRationalIntegral_of_roundtrip`, the DIRECT path): the integrator's own engine check `cisZeroG
+(csubG (afDeriv f v) g) = true` reads — via `cisZeroG_iff` + `toPolyG_csubG`, axiom-clean and
+unconditional — straight into `IsGeneralRationalIntegral fuel f g v`, bypassing the eq.-11 chain entirely.
+So `afDeriv(afRationalSolve g) = g` is **self-contained for the general rational part modulo only the one
+engine round-trip check** (the `native_decide`-validated `hcheck`), the analogue of the radical rational-part
+closure — `isGeneralRationalIntegral_cuspCubic_intY` is the literal `∫ y dx = (3/5)xy` run on `y³ = x²`,
+abstractly, from its own certificate. -/
 
 -- ★ The first abstractly-verified general integral `D(y) = y'` and its predicate packaging:
 #print axioms CPolyG.mk_toPolyG_afDeriv_genGen
@@ -285,5 +369,14 @@ coupled congruence `Aᵢ ≡ −kUV'Bᵢ + T·Σⱼ BⱼMⱼᵢ mod V`) the tele
 
 -- The genus-0 packaging: vanishing final leftover ⟹ the assembled `v` is a complete antiderivative:
 #print axioms CPolyG.isGeneralRationalIntegral_of_telescope
+
+-- ★ The general round-trip certificate IS the free-polynomial integrand identity `afDeriv(v) = g` in K[X]:
+#print axioms CPolyG.toPolyG_afDeriv_eq_of_roundtrip
+
+-- ★★ The general round-trip soundness (the DIRECT path): engine check ⟹ the carrier predicate:
+#print axioms CPolyG.isGeneralRationalIntegral_of_roundtrip
+
+-- ★ The NAMED run `∫ y dx = (3/5)xy` on `y³ = x²`, abstractly, from its own round-trip certificate:
+#print axioms isGeneralRationalIntegral_cuspCubic_intY
 
 end DeepWiki.SymbolicIntegration
