@@ -253,4 +253,162 @@ def pgThird {p : ℕ} (f : PCurve p) (P Q : PPt p) : PPt p :=
       if d = 0 then ppComb U V 1 0
       else ppComb U V 1 ((-c) * d⁻¹)
 
+/-! ## The non-hyperelliptic group law on the reduced-divisor representation `RedDivNH`
+
+Mirroring `ComputableGeneralPicardGroupLaw`'s `RedDiv` / `pdivAdd` / `picOrder` interface, the reduced
+divisor class is an affine `𝔽_p`-point list `RedDivNH p = List (ZMod p × ZMod p)`, meaning the class
+`[Σ Pᵢ − n·∞]` (base point `∞` = the curve's chosen rational point at infinity, passed as `O`). For a genus-1
+plane cubic the reduced representative is a **single** affine point (or `[]` = the identity class `[∞ − ∞]`).
+The group law is the chord-and-tangent `L(D)` solve in projective coordinates (`nhAddPt`), read back to the
+affine list (`ppToRed`); `nhReduce` folds it over an effective point list; `picMulNH` / `picOrderNH` read an
+individual class's order — the non-hyperelliptic analogues of `picMul` / `picOrder`. -/
+
+/-- **Affine point → projective** `affToPP P = [P.1 : P.2 : 1]` — lift an affine `𝔽_p`-point to homogeneous
+coordinates for the group law. -/
+def affToPP {p : ℕ} (P : ZMod p × ZMod p) : PPt p := (P.1, P.2, 1)
+
+/-- **Projective point → reduced divisor** `ppToRed O P` — read a projective point back as the reduced
+`RedDivNH` representative: `[]` (the identity class `[∞ − ∞]`) if `P` is the base point `O` (`ppEq`), else
+the single affine point `[(x, y)]` of the normalized `P`. The point-list read-off (analogue of `mumToPts`,
+here trivial since the reduced class is one point). -/
+def ppToRed {p : ℕ} (O P : PPt p) : RedDiv p :=
+  if ppEq P O then [] else
+    let Q := ppNorm P
+    [(Q.1, Q.2.1)]
+
+/-- **The projective chord-and-tangent add** `nhAddPt f O P Q = pgThird f (pgThird f P Q) O` — the group law
+`[P − ∞] + [Q − ∞] = −[R − ∞]` with `R = pgThird f P Q` (the line residual, the `L(D)` solve), negated
+through the base `O` (`−[R − ∞] = [pgThird f R O − ∞]`). The projective core of `pdivAdd`'s non-hyperelliptic
+analogue. -/
+def nhAddPt {p : ℕ} (f : PCurve p) (O P Q : PPt p) : PPt p :=
+  pgThird f (pgThird f P Q) O
+
+/-- **Reduce an effective point divisor** `nhReduce f O D` — bring an effective affine divisor
+`D = Σ Pᵢ` (the class `[Σ Pᵢ − n·∞]`) on the plane curve `f` to its reduced `RedDivNH` representative by
+folding the chord-and-tangent group law `nhAddPt` over the points of `D` (each lifted by `affToPP`),
+starting from the identity `O`, then reading the single-point result back (`ppToRed`). The non-hyperelliptic
+analogue of `pdivReduce` — but a pure `𝔽_p`-linear-algebra `L(D)` solve, **no** Mumford round-trip. -/
+def nhReduce {p : ℕ} (f : PCurve p) (O : PPt p) (D : RedDiv p) : RedDiv p :=
+  ppToRed O (D.foldl (fun acc P => nhAddPt f O acc (affToPP P)) O)
+
+/-- **The non-hyperelliptic Picard group law** `nhAdd f O D₁ D₂ = nhReduce f O (D₁ ++ D₂)` — the sum of two
+reduced point divisors as the reduced representative of `[D₁] + [D₂]` in `Pic⁰(C)(𝔽_p)` for the plane curve
+`f` (compose by `++`, reduce by the `L(D)` solve). Identity `[]`; the non-hyperelliptic analogue of
+`pdivAdd`. -/
+def nhAdd {p : ℕ} (f : PCurve p) (O : PPt p) (D₁ D₂ : RedDiv p) : RedDiv p :=
+  nhReduce f O (D₁ ++ D₂)
+
+/-- **The scalar multiple** `picMulNH f O n D = n·D` (the `n`-fold non-hyperelliptic Picard sum), `0·D = []`.
+By `ℕ`-recursion `(n+1)·D = D + n·D`. The non-hyperelliptic analogue of `picMul`. -/
+def picMulNH {p : ℕ} (f : PCurve p) (O : PPt p) : ℕ → RedDiv p → RedDiv p
+  | 0, _ => []
+  | n + 1, D => nhAdd f O D (picMulNH f O n D)
+
+/-- **Order-search loop** `picOrderNHAux f O fuel D acc n`: with `acc = n·D`, test `(n+1)·D = D + acc`
+against the identity `[]` (`pdivEq`); on a hit return `some (n+1)`, else recurse. `fuel` bounds the
+multiples tried. The non-hyperelliptic analogue of `picOrderAux`. -/
+def picOrderNHAux {p : ℕ} (f : PCurve p) (O : PPt p) : ℕ → RedDiv p → RedDiv p → ℕ → Option ℕ
+  | 0, _, _, _ => none
+  | fuel + 1, D, acc, n =>
+    let acc := nhAdd f O D acc
+    if pdivEq p acc [] then some (n + 1)
+    else picOrderNHAux f O fuel D acc (n + 1)
+
+/-- **The individual-class order** `picOrderNH f O fuel D = some m` — the least `m ≥ 1` with `m·D ≈ []` (the
+identity class) in `Pic⁰(C)(𝔽_p)` for the **non-hyperelliptic** plane curve `f` (base point `O`), searching
+`1·D, 2·D, …` up to `fuel` multiples (`pdivEq`). `none` if no `m ≤ fuel` works. The non-hyperelliptic
+analogue of `picOrder` — reading an individual class's order via the `L(D)` `𝔽_p`-linear solve, where
+Cantor/Mumford does not apply. -/
+def picOrderNH {p : ℕ} (f : PCurve p) (O : PPt p) (fuel : ℕ) (D : RedDiv p) : Option ℕ :=
+  picOrderNHAux f O fuel D [] 0
+
+end DeepWiki.SymbolicIntegration
+
+/-! ## ★ Proof-of-concept: the NON-HYPERELLIPTIC Fermat cubic `x³ + y³ = 1` over `𝔽_p` (`native_decide`)
+
+The Fermat cubic `x³ + y³ = 1` is a smooth genus-1 plane cubic of degree **3 in both `x` and `y`** — it is
+**not** a `y² = ρ(x)` hyperelliptic model, so the Mumford/Cantor engine does **not** apply, and its group
+law is exactly the `L((g+1)·∞)` `𝔽_p`-linear solve this file builds. We take `p ≡ 2 mod 3`, where `x ↦ x³`
+is a bijection on `𝔽_p`, so `t³ = −1` has a **single** root and the curve has a **single rational point at
+infinity** `∞ = [1 : τ : 0]` (`τ³ = −1`) — the clean base point `O`, keeping the reduction purely affine.
+
+The rational `ℤ/3`-torsion of the Fermat cubic (the flex differences) survives mod `p`: the flex `(1, 0)`
+gives a class `[(1,0) − ∞]` of order **3**. The `L(D)`-solve `picOrderNH` reads that order, and it divides
+`N_p = |Pic⁰(C)(𝔽_p)|` from `ComputableGeneralTorsionLight` — one validated non-hyperelliptic individual
+order, the proof that the general group law works. -/
+
+namespace DeepWiki.SymbolicIntegration
+
+/-- The base point `∞ = [1 : 10 : 0]` of the Fermat cubic over `𝔽₁₁` (`10³ = 1000 ≡ 10 ≡ −1 mod 11`, the
+unique cube root of `−1`, since `11 ≡ 2 mod 3`). The single rational point at infinity — the identity of
+`Pic⁰(C)(𝔽₁₁)` and the base for the affine `L(D)` reduction. -/
+def fermatInf11 : PPt 11 := (1, 10, 0)
+
+/-- The base point `∞ = [1 : 4 : 0]` of the Fermat cubic over `𝔽₅` (`4³ = 64 ≡ 4 ≡ −1 mod 5`, the unique
+cube root of `−1`, since `5 ≡ 2 mod 3`). The single rational point at infinity. -/
+def fermatInf5 : PPt 5 := (1, 4, 0)
+
+/-- The flex class `(1, 0) − ∞` on the Fermat cubic `x³ + y³ = 1`, as the singleton point divisor
+`[(1, 0)]`. A rational `ℤ/3`-torsion class (the inflection `(1, 0)` is a flex); its order in
+`Pic⁰(C)(𝔽_p)` is `3`. -/
+def fermatFlex10 (p : ℕ) : RedDiv p := [((1 : ZMod p), (0 : ZMod p))]
+
+/-- **★ `2·((1,0) − ∞)` reduces to `(0,1) − ∞` over `𝔽₁₁`** (`native_decide`): the doubling
+`nhReduce [(1,0),(1,0)]` (via the `L(D)` tangent-line solve — the polar `(X², Y², −Z²)`) is the single
+affine point `(0, 1)`, i.e. `2P = (0,1)` in the chord-and-tangent law. The tangent case of the `L(D)`
+reduction producing a genuine reduced divisor. -/
+theorem nhReduce_double_flex10_11 :
+    nhReduce fermatF fermatInf11 (fermatFlex10 11 ++ fermatFlex10 11)
+      = [((0 : ZMod 11), (1 : ZMod 11))] := by native_decide
+
+/-- **★ `(1,0) + (0,1)` reduces to the identity `[]` over `𝔽₁₁`** (`native_decide`): since `(1,0)` has
+order 3 and `2·(1,0) = (0,1)`, we have `(1,0) + (0,1) = 3·(1,0) = ∞`, the identity class — `nhAdd` of the
+two affine points cancels to `[]`. The `L(D)`-solve inverse law: `(0,1)` is the inverse of `(1,0)`. -/
+theorem nhAdd_flex10_inv_11 :
+    pdivEq 11 (nhAdd fermatF fermatInf11 (fermatFlex10 11)
+      [((0 : ZMod 11), (1 : ZMod 11))]) [] = true := by native_decide
+
+/-- **★★ The order of the flex class `(1,0) − ∞` on the NON-HYPERELLIPTIC Fermat cubic `x³ + y³ = 1` over
+`𝔽₁₁`, via the `L(D)` `𝔽_p`-linear solve, is 3** (`native_decide`): `picOrderNH fermatF ∞ 30 [(1,0)] =
+some 3` — the individual-class order read by the chord-and-tangent group law (the `ZMod p` Gaussian-kernel
+`L(D)` solve + binary-cubic residual + `picOrderNH`), on a curve where the Mumford/Cantor engine does
+**not** apply. The general non-hyperelliptic Picard group law reads an individual class's order. -/
+theorem picOrderNH_flex10_11_eq3 :
+    picOrderNH fermatF fermatInf11 30 (fermatFlex10 11) = some 3 := by native_decide
+
+/-- **★ The `L(D)`-solve order of `(1,0) − ∞` divides the point count `N₁₁ = 12`** (`native_decide`): the
+genus-1 group `Pic⁰(C)(𝔽₁₁)` has order `N₁₁ = npFermatCubic 11 (fermatCubic 11) = 12` (the
+`ComputableGeneralTorsionLight` point count), so the order 3 of `(1,0) − ∞` divides it (`12 % 3 = 0`).
+Cross-validates the non-hyperelliptic `L(D)`-solve group law against the flat `𝔽_p` point count. -/
+theorem picOrderNH_flex10_11_divides_Np :
+    picOrderNH fermatF fermatInf11 30 (fermatFlex10 11) = some 3
+      ∧ npFermatCubic 11 (fermatCubic 11) % 3 = 0 := by native_decide
+
+/-- **★ The same flex class has order 3 over `𝔽₅`, dividing `N₅ = 6`** (`native_decide`): on the smaller
+field `𝔽₅` (`5 ≡ 2 mod 3`, single point at infinity), `picOrderNH fermatF ∞ 30 [(1,0)] = some 3` and
+`N₅ = npFermatCubic 5 (fermatCubic 5) = 6`, `6 % 3 = 0`. A second-field confirmation of the
+non-hyperelliptic `L(D)`-solve order. -/
+theorem picOrderNH_flex10_5_eq3 :
+    picOrderNH fermatF fermatInf5 30 (fermatFlex10 5) = some 3
+      ∧ npFermatCubic 5 (fermatCubic 5) % 3 = 0 := by native_decide
+
+/-! ## ★ A non-3-torsion class: the `L(D)` group law reads order 4 over `𝔽₁₁` (`native_decide`)
+
+`Pic⁰(C)(𝔽₁₁)` for the Fermat cubic is cyclic of order `N₁₁ = 12` (`≅ ℤ/12`), so it has classes of order
+`4` as well. The affine point `(2, 5)` (`2³ + 5³ = 8 + 125 = 133 ≡ 1 mod 11`) gives a class of order **4** —
+the `L(D)`-solve group law reads a *non-torsion-of-the-rational-curve* order, exercising several
+chord-and-tangent reductions, and `4 ∣ N₁₁ = 12`. -/
+
+/-- The class `(2, 5) − ∞` on `x³ + y³ = 1` over `𝔽₁₁` (`2³ + 5³ = 133 ≡ 1 mod 11`), as `[(2, 5)]` — a
+class of order 4 in the cyclic `Pic⁰(C)(𝔽₁₁) ≅ ℤ/12`. -/
+def fermatPt25_11 : RedDiv 11 := [((2 : ZMod 11), (5 : ZMod 11))]
+
+/-- **★ The `L(D)`-solve order of `(2,5) − ∞` over `𝔽₁₁` is 4 and divides `N₁₁ = 12`** (`native_decide`):
+`picOrderNH fermatF ∞ 30 [(2,5)] = some 4`, and `12 % 4 = 0` — the non-hyperelliptic chord-and-tangent group
+law reads a higher (order-4) individual class on the Fermat cubic, consistent with the cyclic point count
+`N₁₁ = 12`. Exercises the `L(D)` reduction beyond the 3-torsion flex. -/
+theorem picOrderNH_pt25_11_eq4 :
+    picOrderNH fermatF fermatInf11 30 fermatPt25_11 = some 4
+      ∧ npFermatCubic 11 (fermatCubic 11) % 4 = 0 := by native_decide
+
 end DeepWiki.SymbolicIntegration
