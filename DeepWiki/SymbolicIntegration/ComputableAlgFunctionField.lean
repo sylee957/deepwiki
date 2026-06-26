@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 import DeepWiki.SymbolicIntegration.ComputableHermiteNormalForm
+import DeepWiki.SymbolicIntegration.ComputableBareissEngine
 
 /-! # The general algebraic function field `K(x, y) = K(x)[y]/(f)` — trace and discriminant
 (Trager, *Integration of Algebraic Functions*, Ch. 2 §"Integral Bases", p. 24–26)
@@ -150,10 +151,14 @@ for small `n` this is direct, and the diagonal product of `hermiteRowReduce` giv
 larger `n`. -/
 def fieldDet (M : List (List α)) : α := fieldDetSized M.length M
 
-/-- **The discriminant** of the monic curve `f` over `α`: `det[Tr(ωᵢ·ωⱼ)]` for the power basis
-`[1, y, …, yⁿ⁻¹]` (`fieldDet` of `traceMatrix f (powerBasis f)`). Equals `± Resultant(f, f')`; its
-squarefree part bounds the primes where the equation order is non-maximal (Trager Ch. 2). -/
-def discriminant (f : CPolyG α) : α := fieldDet (traceMatrix f (powerBasis f))
+/-- **The discriminant** of the monic curve `f` over `ℚ(x) = QFunNZG ℚ`: `det[Tr(ωᵢ·ωⱼ)]` for the power
+basis `[1, y, …, yⁿ⁻¹]`, computed **fraction-free** via `qfDet` (clear the `ℚ(x)`-trace-matrix to a common
+denominator over `ℚ[x]`, run Bareiss, read back) — never forming the swelling `ℚ(x)` Laplace expansion that
+the generic `fieldDet` does. Equal to `fieldDet (traceMatrix f (powerBasis f))` (validated by
+`qfDet_eq_fieldDet_*`), hence to `± Resultant(f, f')`; its squarefree part bounds the primes where the
+equation order is non-maximal (Trager Ch. 2). -/
+def discriminant (f : CPolyG (QFunNZG ℚ)) : QFunNZG ℚ :=
+  qfDet 16 (traceMatrix f (powerBasis f))
 
 /-- **`Resultant(f, f')` for the curve `f`** (the alternative discriminant up to sign): `cresultantG`
 of `f` against its formal `y`-derivative `cderivG f`, eliminating `y`. Equal to `± discriminant f`
