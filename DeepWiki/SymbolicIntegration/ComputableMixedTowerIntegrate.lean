@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableTranscendentalOverAlgebraic
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
 
 /-! # The first transcendental INTEGRAL over an algebraic base (Bronstein 1990, mixed tower)
 `ComputableTranscendentalOverAlgebraic` made the radical field `RadX3 = ℚ(x)[√(x³+1)]` a full
@@ -48,7 +49,25 @@ Each integral is validated by `checkIdentityG` (the cleared antiderivative ident
 Everything reduces in the native compiler: `RadX3` is the computable radical carrier (`CFieldDomain`
 `Prop`-erased), `cIntegrateGFull` is list/field arithmetic, the gcd `cgcdExtG` is Euclid over `RadX3[t]`.
 The instantiation is **pure reuse** — the integrator is taken verbatim; only the two missing base
-typeclasses (`CFracGcdCore`/`CRischField`) are supplied for `RadX3`. -/
+typeclasses (`CFracGcdCore`/`CRischField`) are supplied for `RadX3`.
+
+* **★★★ A top-level ∫ whose integration step DESCENDS through the algebraic RDE** (`native_decide`, the
+  airtight end-to-end claim). The poly-driver integrals above never reach `crischDESolve` (their `b = 0`
+  branch is pure term-by-term antidifferentiation); `mixedRde_radx3_descends` showed the *RDE solver*
+  descend through `instCRischFieldRadExt`, but not an *integral*. The **hyperexponential special part**
+  (Bronstein §5.10, `cIntegrateHyperexpLaurentG`, generic) closes this: for `t = exp` over the radical base
+  (`Dt = η·t`, `η = 1`), the Laurent term `∫ a₋₁ t⁻¹` solves its base RDE
+  `crischDESolve ((−1)·η) a₋₁` over `RadX3` with a **nonzero scalar** `(−1)·η = −1`, exactly the slice
+  `instCRischFieldRadExt` scalar-decouples to the two per-`y`-power base RDEs over ℚ(x). So
+  `∫ t⁻¹ = −t⁻¹` (`mixedHyperexpRecip_integral_descends`) and `∫ (t + t⁻¹) = t − t⁻¹`
+  (`mixedHyperexpPolySpec_integral_descends`, a polynomial part *plus* the descending special part) are
+  validated `D(∫f) = f` over the `RadX3` derivation — **an actual integral over the mixed tower whose
+  special-part step recurses `RadX3[t] → crischDESolve over RadX3 → ℚ(x)`**. The descent is fed canonical
+  Laurent coefficients; the full driver `cIntegrateHyperexpG`'s top entry returns `none` over `RadX3`
+  (`mixedHyperexpG_topEntry_none`) because `canonicalRepresentationFastG`'s special part carries
+  non-canonical `RadX3` coefficients the representation-sensitive base ℚ(x) solver rejects — a
+  canonicalization gap (a `QFunNZG ℚ` normalizer is the documented continuation), not a §5.10-engine
+  failure. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -254,6 +273,131 @@ theorem mixedRde_radx3_descends :
             (CPolyG.cmulG mixedRdeG yden))
       | none => false) = true := by native_decide
 
+/-! ### ★★★ A genuine top-level ∫ over `RadX3[t]` that DESCENDS through `instCRischFieldRadExt` — the §5.10
+hyperexponential Laurent integral over the algebraic base (`native_decide`)
+
+The headline this file was reaching for: an actual **integral** (an `∫`-symbol call) over the *mixed* tower
+`RadX3[t] = ℚ(x)[√(x³+1)][t]` whose **integration step descends through the algebraic RDE instance**
+`instCRischFieldRadExt` — making "an actual integral descends through an algebraic level" airtight,
+end-to-end, `D(∫f) = f`.
+
+`mixedRde_radx3_descends` above showed the *RDE solver* `cRischDEG` descend; but an **integral** through the
+poly driver (`cIntegrateGFull`/`cIntegratePolyG`, the `b = 0` branch) never calls `crischDESolve`, so it
+cannot reach the algebraic level. The route that *does* is the **hyperexponential special part** (Bronstein
+§5.10): for a hyperexponential `t` (`Dt = η·t`), the Laurent special integrator
+`cIntegrateHyperexpLaurentG` (`ComputableHyperexpSpecial`, imported) integrates `∫ ∑ⱼ aⱼ tʲ` **term by
+term**, each `∫ aⱼ tʲ` solved as the base RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` via
+`CRischField.crischDESolve (j·η) aⱼ`. That class method is `[CField α] [CDiffField α] [CFracGcdCore α]
+[CRischField α]`-generic, so at **`α = RadX3`** the negative-index term `∫ a₋₁ t⁻¹` calls
+`crischDESolve (−1·η) a₋₁` over `RadX3` with a **nonzero scalar** coefficient `−1·η = −1 : RadX3` — exactly
+the slice the **generic** `instCRischFieldRadExt` decouples (`radExtRischDESolve`) into the two per-`y`-power
+base RDEs over ℚ(x): `Dz₀ − z₀ = (a₋₁)₀` and `Dz₁ + (−1 + ℓ)·z₁ = (a₋₁)₁` (`ℓ = f'/(2f)`), each run by the
+level-1 `CRischField (QFunNZG ℚ)`. THE INTEGRAL'S SPECIAL-PART STEP RECURSES `RadX3[t] →
+crischDESolve over RadX3 → ℚ(x)` — the same descent as `mixedRde_radx3_descends`, but now fired *by an
+integral*.
+
+We integrate `t = exp` over the radical base (`Dt = η·t`, `η = 1`, `Dt = [0, 1]`), feeding the §5.10 Laurent
+integrator the **canonical** Laurent coefficients directly (the clean entry, sidestepping the
+canonical-split bloat noted at the end). Both `∫ t⁻¹ = −t⁻¹` (pure special, the single descending term) and
+`∫ (t + t⁻¹) = t − t⁻¹` (a polynomial part `∫ t` *plus* the descending special part `∫ t⁻¹`) are validated
+`D(∫f) = f` over the `RadX3` diagonal-radical `CDiffField` derivation (`checkIdentityG`). -/
+
+/-- The hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `RadX3[t] = ℚ(x)[√(x³+1)][t]`
+(`t = exp`, `η = 1`): the transcendental-over-algebraic hyperexponential analogue of the primitive
+`mixedDt = [1]`. The §5.10 Laurent integrator reads `η = cExpEtaG Dt = 1` off it. -/
+def mixedHyperexpDt : CPolyG RadX3 := [CField.zero, CField.one]
+
+/-- **`η = Dt/t = 1` over `RadX3`** (`native_decide`): `cExpEtaG` reads the hyperexponential coefficient
+`η = 1 ∈ RadX3` off `Dt = [0, 1]`, so the §5.10 per-term shift `j·η` is just `j` — confirming `t = exp` over
+the algebraic base. -/
+theorem mixedHyperexp_eta_eq_one :
+    CField.isZero (CField.sub (cExpEtaG 12 mixedHyperexpDt) (CField.one : RadX3)) = true := by
+  native_decide
+
+/-- The §5.10 per-term coefficient `(−1)·η = −1 ∈ RadX3` for the `t⁻¹` Laurent term (`j = −1`,
+`cLaurentShiftG η (−1)`): a **nonzero scalar** over the radical base, exactly the coefficient
+`crischDESolve` is handed when the special part descends. -/
+def mixedLaurentShiftNeg1 : RadX3 := CPolyG.cLaurentShiftG (CField.one : RadX3) (-1)
+
+/-- **The descending per-term coefficient `(−1)·η` is a NONZERO SCALAR over `RadX3`** (`native_decide`):
+`RadExt.isScalar ((−1)·η) = true` (no `y`-component, so `radExtRischDESolve` takes the decoupling branch)
+*and* `(−1)·η ≠ 0` (so the solve is genuine algebraic-RDE work, not the retired `f = 0 ∧ g = 0 ↦ 0` stub).
+This is the coefficient the §5.10 `∫ t⁻¹` term forces into `crischDESolve` over the algebraic base. -/
+theorem mixedLaurentShiftNeg1_nonzero_scalar :
+    RadExt.isScalar mixedLaurentShiftNeg1 = true ∧
+    CField.isZero mixedLaurentShiftNeg1 = false := by
+  constructor <;> native_decide
+
+/-- **★ The §5.10 `∫ t⁻¹` term DESCENDS through `instCRischFieldRadExt`** (`native_decide`): the per-term
+base RDE `Dq₋₁ + (−1·η)·q₋₁ = 1` of `∫ 1·t⁻¹` — i.e. `CRischField.crischDESolve ((−1)·η) (1 : RadX3)` over
+`RadX3 = ℚ(x)[√(x³+1)]` — returns `some` via the **generic** `instCRischFieldRadExt`, which (the coefficient
+`(−1)·η = −1` being a nonzero scalar, `mixedLaurentShiftNeg1_nonzero_scalar`) **scalar-decouples** it into
+the two base RDEs over ℚ(x) and dispatches each to the level-1 `CRischField (QFunNZG ℚ)`. THIS IS THE
+ALGEBRAIC DESCENT FIRED BY AN INTEGRAL'S SPECIAL-PART STEP. -/
+theorem mixedLaurentTerm_descends :
+    (CRischField.crischDESolve mixedLaurentShiftNeg1 (CField.one : RadX3)).isSome = true := by
+  native_decide
+
+/-- **★★★ `∫ t⁻¹ = −t⁻¹` over `RadX3[t]` via the §5.10 Laurent integrator, descending through the algebraic
+RDE, and `D(∫f) = f`** (`native_decide`, the headline). The §5.10 hyperexponential Laurent integrator
+`cIntegrateHyperexpLaurentG (η = 1) [] [a₋₁ = 1]` over `RadX3 = ℚ(x)[√(x³+1)]` integrates the single special
+term `∫ 1·t⁻¹` by solving its base RDE `Dq₋₁ − q₋₁ = 1` through `crischDESolve ((−1)·η) 1` — which
+**descends through `instCRischFieldRadExt`** (`mixedLaurentTerm_descends`), decoupling to ℚ(x) — returning
+`q₋₁ = −1`, so `∫ t⁻¹ = −t⁻¹` (rational part `−1/t`). Wrapped as an `IntegralResultG` (no logs) and validated
+`D(−1/t) = 1/t` over the `RadX3` diagonal-radical `CDiffField` derivation (`checkIdentityG`, `f = 1/t`).
+**AN ACTUAL INTEGRAL OVER THE MIXED TOWER, WHOSE INTEGRATION STEP DESCENDS THROUGH THE ALGEBRAIC LEVEL.** -/
+theorem mixedHyperexpRecip_integral_descends :
+    (match CPolyG.cIntegrateHyperexpLaurentG (CField.one : RadX3) 20 [] [CField.one] with
+      | some (num, den) =>
+          CPolyG.checkIdentityG mixedHyperexpDt ⟨(num, den), []⟩ [CField.one] [CField.zero, CField.one]
+      | none => false) = true := by native_decide
+
+/-- **★★★ `∫ (t + t⁻¹) = t − t⁻¹` over `RadX3[t]` via the §5.10 Laurent integrator, the special part
+descending through the algebraic RDE, and `D(∫f) = f`** (`native_decide`, the headline+). A Laurent
+polynomial with a **polynomial part `t`** (positive index `a₁ = 1`) *and* a **special part `t⁻¹`** (negative
+index `a₋₁ = 1`) over the algebraic base. `cIntegrateHyperexpLaurentG (η = 1) [0, 1] [1]` integrates each
+term through its own base RDE over `RadX3`: `∫ t` solves `Dq₁ + (1·η)·q₁ = 1` (`q₁ = 1`), and the
+**descending** `∫ t⁻¹` solves `Dq₋₁ + (−1·η)·q₋₁ = 1` (`crischDESolve` through `instCRischFieldRadExt`,
+decoupling to ℚ(x), `q₋₁ = −1`); recombining gives `t − t⁻¹` (rational part `(t² − 1)/t`). Validated
+`D(t − t⁻¹) = t + t⁻¹` over the `RadX3` `CDiffField` derivation (`checkIdentityG`, `f = (t²+1)/t`). THE
+INTEGRAL OF A POLY-PLUS-SPECIAL LAURENT FORM OVER THE MIXED TOWER, WHOSE SPECIAL-PART STEP DESCENDS THROUGH
+THE ALGEBRAIC LEVEL. -/
+theorem mixedHyperexpPolySpec_integral_descends :
+    (match CPolyG.cIntegrateHyperexpLaurentG (CField.one : RadX3) 20 [CField.zero, CField.one]
+        [CField.one] with
+      | some (num, den) =>
+          CPolyG.checkIdentityG mixedHyperexpDt ⟨(num, den), []⟩
+            [CField.one, CField.zero, CField.one] [CField.zero, CField.one]
+      | none => false) = true := by native_decide
+
+/-! ### ★ The honest wiring gap: `cIntegrateHyperexpG`'s TOP entry does NOT route over `RadX3` (`native_decide`)
+
+Why the descent above is exhibited through the §5.10 Laurent *integrator* (`cIntegrateHyperexpLaurentG`, fed
+canonical Laurent coefficients) rather than the full hyperexponential *driver* `cIntegrateHyperexpG`'s top
+entry: over `RadX3`, the full driver returns **`none`**. The driver's first step is
+`canonicalRepresentationFastG` (the §3.5 canonical split), which over the radical field `RadX3` produces a
+special part `b/dₛ` whose `cHyperexpSpecialNegG` coefficients are **non-canonical `RadX3` representations**
+(e.g. `a₋₁` is mathematically `1` but lands as a bloated `QFunNZG ℚ` fraction, *not* the literal `CField.one`
+— the radical arithmetic `radMul`/`radInv2`/`cnatCastG` over `ℚ(x)` does not reduce fractions to a canonical
+form). The downstream base solve `crischDESolve coeff aⱼ` over ℚ(x) is **representation-sensitive**: it
+succeeds on the canonical `−1`/`1` but fails on the bloated equivalent, so the special-part term solve
+returns `none` and the whole driver returns `none`. The §5.10 *engine* is correct (the Laurent integrator
+descends and validates above); the gap is a **canonicalization mismatch** between
+`canonicalRepresentationFastG`'s `RadX3`-output and the base ℚ(x) RDE solver's input — closing it needs a
+canonical-form normalizer on `QFunNZG ℚ` coefficients (or a `radCanon`-style reduction threaded through
+`cHyperexpSpecialNegG`), the documented continuation. We pin the gap as a `native_decide` fact. -/
+
+/-- **`cIntegrateHyperexpG`'s top entry returns `none` over `RadX3`** (`native_decide`, the honest gap): on
+`f = (t²+1)/t = t + t⁻¹` over `RadX3[t]` the full hyperexponential driver `cIntegrateHyperexpG` returns
+`none` — *not* because the §5.10 engine fails (the Laurent integrator descends and validates the same
+integrand above), but because `canonicalRepresentationFastG`'s special part over the radical field carries
+**non-canonical `RadX3` coefficients** that the representation-sensitive base ℚ(x) `crischDESolve` cannot
+consume. The descent is therefore exhibited through `cIntegrateHyperexpLaurentG` (canonical coefficients);
+routing the top driver needs a `QFunNZG ℚ` canonical-form normalizer, the documented continuation. -/
+theorem mixedHyperexpG_topEntry_none :
+    (CPolyG.cIntegrateHyperexpG mixedHyperexpDt 20 [CField.one, CField.zero, CField.one]
+      [CField.zero, CField.one] [CField.zero, CField.one]).isNone = true := by native_decide
+
 /-! ### `#print axioms` — the transcendental-over-algebraic integrals
 
 Each result carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
@@ -274,5 +418,11 @@ the algebraic-coefficient boundary recorded honestly. -/
 #print axioms mixedY_not_validated
 -- ★★ The multi-level descent: an RDE over RadX3[t] recursing into crischDESolve over RadX3 → ℚ(x):
 #print axioms mixedRde_radx3_descends
+-- ★★★ A top-level ∫ (§5.10 Laurent) over RadX3[t] whose integration step DESCENDS through the
+-- algebraic RDE instCRischFieldRadExt, validated D(∫f) = f:
+#print axioms mixedHyperexpRecip_integral_descends
+#print axioms mixedHyperexpPolySpec_integral_descends
+-- ★ The honest wiring gap: cIntegrateHyperexpG's top entry returns none over RadX3:
+#print axioms mixedHyperexpG_topEntry_none
 
 end DeepWiki.SymbolicIntegration
