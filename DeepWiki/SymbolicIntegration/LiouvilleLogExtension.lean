@@ -252,6 +252,72 @@ example (u : F) {p : F[X]} (hm : p.Monic) (hdeg : 1 ≤ p.natDegree) :
 example (u : F) {p : F[X]} (h : logDerivPoly u p = 0) : (p.leadingCoeff)′ = 0 :=
   leadingCoeff_deriv_eq_zero_of_logDerivPoly_eq_zero u h
 
+/-! ### The `v ∈ F` polynomial descent engine (Obligation 3, the `v`-term reduction)
+
+The half of Rosenlicht's reduction that handles the integral part: in `a = ∑ cᵢ logDeriv wᵢ + v′`
+the term `v` (after the `wᵢ`-poles cancel) has `v′ ∈ F`, and must itself be reduced to `F`.  On the
+polynomial layer this is "if `D p` has `t`-degree `0` then `p` has `t`-degree `≤ 1`, and the linear
+`t`-coefficient is an obstruction solvable only by `t` being algebraic".  The fully-provable core is
+the leading-coefficient/degree descent; the irreducible residue is the same transcendence input as
+`NoDegreeDropObligation` (no `F`-antiderivative of `b·logDeriv u`). -/
+
+/-- **`D p` constant ⟹ `t`-leading coefficient of `p` is an `F`-constant.**  If `(D p).natDegree = 0`
+(the `t`-derivative is a constant polynomial) and `p` has positive `t`-degree, then `(leadingCoeff
+p)′ = 0`: at the top `t`-degree `D p` sees only `F`'s derivation (`coeff_natDegree_logDerivPoly`),
+and that coefficient of a degree-`0` polynomial vanishes.  Fully provable — no transcendence input. -/
+lemma leadingCoeff_deriv_eq_zero_of_natDegree_logDerivPoly_le (u : F) {p : F[X]}
+    (h : (logDerivPoly u p).natDegree = 0) (hdeg : 1 ≤ p.natDegree) :
+    (p.leadingCoeff)′ = 0 := by
+  have htop := coeff_natDegree_logDerivPoly u p
+  rw [← htop]
+  exact coeff_eq_zero_of_natDegree_lt (lt_of_le_of_lt (le_of_eq h) hdeg)
+
+/-- **`D p` constant ⟹ the coefficient just below the top is an `F`-antiderivative obstruction.**
+If `(D p).natDegree = 0` and `n := p.natDegree ≥ 2`, the coefficient-`(n−1)` relation gives
+`(p.coeff (n−1))′ = − n · (leadingCoeff p) · logDeriv u`.  Hence `n · (leadingCoeff p) · logDeriv u`
+*is* a derivative of an `F`-element — exactly the transcendence obstruction (`log u ∉ F`) for the
+`t`-degree to be forced down.  Fully provable as the identity; the *consequence* (degree drop) needs
+the no-`F`-antiderivative input.  (Needs `n ≥ 2` so the index `n − 1 ≥ 1` and `(D p).coeff (n−1) = 0`;
+the `n = 1` case is the residual linear-term `(b·t)′ = b·u'/u` obstruction.) -/
+lemma deriv_coeff_predTop_of_natDegree_logDerivPoly_le (u : F) {p : F[X]}
+    (h : (logDerivPoly u p).natDegree = 0) (hdeg : 2 ≤ p.natDegree) :
+    (p.coeff (p.natDegree - 1))′
+      = - ((p.natDegree : F) * (p.leadingCoeff * logDeriv u)) := by
+  have hcoeff := coeff_logDerivPoly u p (p.natDegree - 1)
+  have hlt : 0 < p.natDegree - 1 := by omega
+  have hzero : (logDerivPoly u p).coeff (p.natDegree - 1) = 0 :=
+    coeff_eq_zero_of_natDegree_lt (lt_of_le_of_lt (le_of_eq h) hlt)
+  rw [hzero] at hcoeff
+  have hsucc : p.natDegree - 1 + 1 = p.natDegree := by omega
+  rw [hsucc] at hcoeff
+  have hlc : p.coeff p.natDegree = p.leadingCoeff := rfl
+  rw [hlc] at hcoeff
+  have hcast : ((p.natDegree - 1 : ℕ) : F) + 1 = (p.natDegree : F) := by
+    rw [Nat.cast_sub (by omega : 1 ≤ p.natDegree), Nat.cast_one]; ring
+  rw [hcast] at hcoeff
+  linear_combination -hcoeff
+
+/-- **The polynomial `v ∈ F` obligation** — the precise transcendence residue for the `v`-term
+reduction.  It records exactly: when `t = log u` is a genuine new transcendental (`logDeriv u ≠ 0`),
+a `t`-polynomial `p` whose `t`-derivative `D p` is a *constant* (`(D p).natDegree = 0`) has
+`t`-degree `≤ 1`.  (For `natDegree p ≥ 2` the `n·lc·logDeriv u` term of
+`deriv_coeff_predTop_of_natDegree_logDerivPoly_le` would have an `F`-antiderivative — impossible for a
+genuine log.  For `natDegree p = 1` the linear `t`-coefficient `b·t` survives with `(b·t)′ = b·u'/u`,
+the same obstruction.)  This is the `v`-analogue of `NoDegreeDropObligation`. -/
+def PolyVReductionObligation (u : F) : Prop :=
+  logDeriv u ≠ 0 →
+    ∀ {p : F[X]}, (logDerivPoly u p).natDegree = 0 → p.natDegree = 0
+
+/-- **GIVEN the transcendence input, `D p` constant ⟹ `p` is an `F`-constant `C b`.**  The full
+polynomial layer of the `v ∈ F` reduction: a `t`-polynomial with constant `t`-derivative is a single
+`C b` (with `b′` the value of `D p`).  Reduces the `v`-term polynomial step to `PolyVReductionObligation`
+(the no-`F`-antiderivative input), everything else discharged here.  (When `natDegree p = 0` directly,
+`p = C (p.coeff 0)`.) -/
+lemma eq_C_of_natDegree_logDerivPoly_le (u : F) (hpv : PolyVReductionObligation u)
+    (hu : logDeriv u ≠ 0) {p : F[X]} (h : (logDerivPoly u p).natDegree = 0) :
+    ∃ b : F, p = C b :=
+  ⟨p.coeff 0, Polynomial.eq_C_of_natDegree_eq_zero (hpv hu h)⟩
+
 end PolynomialSetup
 
 /-! ## Obligation 1 CLOSED — the derivation extends to the fraction field `F(t) = RatFunc F`
