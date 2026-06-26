@@ -6,12 +6,15 @@ integration to combined elementary towers. It proves: if integration in finite t
 an elementary function field, it is solvable in any algebraic extension with logarithmic or
 exponential elements.
 
-Per the project's "double reference" rule, this **per-paper** catalog marks the axis of the
-combined elementary-over-algebraic integration arc even though `DeepWiki.SymbolicIntegration` has
-not yet formalized any of it — the algebraic arc realized so far (`ComputableRadical*` /
-`ComputableAlgebraicResidues`) follows **Trager's thesis** (handle `1721.1/15391`); this paper is
-the next axis. Nothing here is an `alias`/`abbrev`; the coverage is the `## NOT YET FORMALIZED`
-block in `Sources.Doi_10_1016_S0747_7171_08_80027_2.Coverage`. -/
+Per the project's "double reference" rule, this **per-paper** catalog marks the combined
+elementary-over-algebraic integration arc. The CONCRETE grand-unification cases — a simple radical
+running over a transcendental tower (`∫eˣ/√(eˣ+1)dx = 2√(eˣ+1)`, `∫dx/(x√(log x)) = 2√(log x)`) —
+are now formalized (`ComputableRadicalOverTower`) and cataloged as aliases in
+`Sources.Doi_10_1016_S0747_7171_08_80027_2.ElementaryIntegration`; the algebraic arc beneath them
+(`ComputableRadical*` / `ComputableAlgebraicResidues`) follows **Trager's thesis** (handle
+`1721.1/15391`). The research-grade remainder — the general recursion (Thm 1/2 over arbitrary
+towers), the log part over towers, general curves — is the `## NOT YET FORMALIZED` block in
+`Sources.Doi_10_1016_S0747_7171_08_80027_2.Coverage`. -/
 
 namespace DeepWiki.Bie
 
