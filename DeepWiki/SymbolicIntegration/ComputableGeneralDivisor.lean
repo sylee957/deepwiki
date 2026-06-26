@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
 import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
+import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 
 /-! # The GENERAL divisor-class-group: divisors as fractional ideals of the order `O` (= the integral
 basis), `div(g)`, and the ideal product (the Pic group law) — for an ARBITRARY plane curve
@@ -78,6 +79,17 @@ def idealIdentity (n : ℕ) : GenDivisor :=
   (List.range n).map (fun i =>
     (List.range n).map (fun j => if i = j then (CField.one : QFunNZG ℚ) else CField.zero))
 
+/-- **Reduce every `K(x)`-entry of a fractional-ideal matrix to lowest terms** `qReduceMat I = I.map
+(List.map qReduce)`: apply the **value-preservation-proven** reducer `qReduce` (`ComputableQFunReduce`,
+`toQFunNZG_qReduce` unconditional) entrywise to a `GenDivisor`. Because `qReduce` preserves the `ℚ(x)`
+value of each entry, `qReduceMat` returns the **same** fractional `O`-ideal — but with the matrix entries in
+lowest terms, so the iterated `idealProduct` in the order search stops accumulating un-cancelled common
+factors (the `K(x)` coefficient swell that made the torsion-order search intractable). Inserted at the
+outputs of the swelling ideal operations (`idealProduct`, `idealReduce`); the resulting divisor class is
+unchanged by `toQFunNZG_qReduce`. -/
+def qReduceMat (I : GenDivisor) : GenDivisor :=
+  I.map (List.map qReduce)
+
 /-- **Reconstruct a `K(x, y)` element from `[w]`-coordinates** `wToAf basis row = Σⱼ rowⱼ·wⱼ`: the element
 of `K(x, y) = K(x)[y]/(f)` whose integral-basis coordinates are `row` (the inverse of `toOCoords`). Turns a
 `GenDivisor` row (generator in `[w]`-coords) into the `K(x, y)` element it represents, so `afMul` can
@@ -148,21 +160,23 @@ def idealProduct (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))
   match matInvG n B with
   | none => []
   | some Binv =>
-    -- the n² cross-products genᵢ·genₖ in [w]-coords
+    -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry reduced to lowest terms (`qReduce`,
+    -- value-preserving) so the common denominator `δ` below does not balloon across iterated products
     let cross : List (List (QFunNZG ℚ)) :=
-      I.flatMap (fun gi =>
+      qReduceMat (I.flatMap (fun gi =>
         J.map (fun gk =>
-          toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk))))
+          toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))
     -- clear to K[x] at a common denom δ, Hermite-reduce, take the n nonzero rows
     let δ : CPolyG ℚ := commonDenomG cross
     let N : PolyMatrix ℚ := cross.map (clearRowExact δ)
     let nz := (hermiteRowReduce N).filter (fun row => !row.all cisZeroG)
-    -- read back the first n rows as the fractional ideal (1/δ)·Nhat
-    (List.range n).map (fun i =>
+    -- read back the first n rows as the fractional ideal (1/δ)·Nhat, then reduce every entry to lowest
+    -- terms (`qReduceMat`, value-preserving) so the product fed back into the next `idealProduct` is flat
+    qReduceMat ((List.range n).map (fun i =>
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
         let dd := cnormG δ
-        if h : cisZeroG dd = false then qReduceNZG (qxOfFrac num dd h) else CField.zero))
+        if h : cisZeroG dd = false then qReduceNZG (qxOfFrac num dd h) else CField.zero)))
 
 /-! ### Normalization / equality of fractional ideals (`idealHNF`, `idealEq`, `idealIsIntegral`)
 

@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralDivisor
+import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 
 /-! # The GENERAL divisor ORDER (torsion test): is a divisor class `δ ∈ Pic⁰(C)` of finite order, for an
 ARBITRARY plane curve (Trager, *Integration of Algebraic Functions*, Ch. 6 "Principal Divisors and Points of
@@ -152,8 +153,10 @@ def idealReduce (_f : CPolyG (QFunNZG ℚ)) (_basis : List (CPolyG (QFunNZG ℚ)
   let (δ, N) := idealClear I
   let H := canonHNF ((hermiteRowReduce N).filter (fun row => !row.all cisZeroG))
   let dd := cnormG δ
-  H.map (fun row => row.map (fun p =>
-    if h : cisZeroG dd = false then qReduceNZG (qxOfFrac p dd h) else qxOfNum p))
+  -- read back as the fractional ideal (1/δ)·Ĥ, then reduce every entry to lowest terms (`qReduceMat`,
+  -- value-preserving via `toQFunNZG_qReduce`) so the reduced representative carries no swollen factors
+  qReduceMat (H.map (fun row => row.map (fun p =>
+    if h : cisZeroG dd = false then qReduceNZG (qxOfFrac p dd h) else qxOfNum p)))
 
 /-! ### Principality: is the ideal `g·O` (the trivial Pic class)? (`genCandidates`, `isPrincipalIdeal`)
 
