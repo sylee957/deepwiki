@@ -27,11 +27,17 @@ integrand `∫ R/(B·y)` over `y² = ρ` has a denominator `B` whose squarefree 
   `[N₁,…,Nₘ]` with `R/B = Σ Nᵢ/Gᵢ`, `deg Nᵢ < deg Gᵢ`, by iterating the generic Bézout split
   `cdiophantineG`.
 
-* **`radIntegrateRational`** (the multi-case dispatch driver) — squarefree-decomposes `B` (`cSqfreeYunFFG`),
-  partial-fractions `R` across the prime-powers `Bᵢ^{eᵢ}`, **classifies** each `Bᵢ` as `V`/`W`, and
-  dispatches each part `Nᵢ/(Bᵢ^{eᵢ}y)` to `radReduceCase1Iterate` / `radReduceCase2Iterate`. Returns the
-  per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`, from which the total rational part `v = Σ vᵢ`
-  and the leftover `Σ Cremᵢ/(Bᵢy)` are assembled.
+* **`radReduceCase3Iterate`** (Trager Appendix A §2.3, iterated) — the leftover `C/y` (`C` a polynomial,
+  no denominator factor) degree-lowering, iterating `radCase3Cofactor`/`radCase3Residual` until
+  `deg C < deg ρ`. `radDeriv`-validated on `∫ x⁴/√(x³+1)`: `c3itDriver_integrates`.
+
+* **`radIntegrateRational`** (the multi-case dispatch driver) — squarefree-decomposes `B` (`cSqfreeYunFFG`)
+  into `[Bᵢ]` (`Bᵢ` of multiplicity `eᵢ`), **splits** each squarefree factor `Bᵢ = Vᵢ·Wᵢ` into its `V`-part
+  `Vᵢ = Bᵢ/gcd(Bᵢ, ρ)` (coprime to `ρ`, Case 1) and `W`-part `Wᵢ = gcd(Bᵢ, ρ)` (`Wᵢ ∣ ρ`, Case 2) — a
+  single squarefree factor at one multiplicity may carry both — partial-fractions `R` across the resulting
+  prime-powers, and dispatches each part `Nᵢ/(factorᵢ^{eᵢ}y)` to `radReduceCase1Iterate` /
+  `radReduceCase2Iterate`. Returns the per-factor reductions `(isV, factorᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`, from
+  which the total rational part `v = Σ vᵢ` and the leftover `Σ Cremᵢ/(factorᵢ·y)` are assembled.
 
 * **★ The headline multi-case `native_decide`** — over `y² = x` (`ρ = x`), the integrand `1/((x−1)²x²y)`
   has a `V`-factor `(x−1)` (coprime to `ρ = x`, Case 1) AND a `W`-factor `x` (dividing `ρ`, Case 2). The
@@ -41,9 +47,14 @@ integrand `∫ R/(B·y)` over `y² = ρ` has a denominator `B` whose squarefree 
   integrates the rational part of a **general (multi-case-denominator)** simple-radical integrand
   end-to-end, validated by the real radical derivation.
 
-**Deferred** (documented): the `k = 1` lower-coefficient solve (the first-order ODE Trager Appendix A
-defers to Risch [38] — `cRischDEG` glue), the `C/y` Case-3 dispatch, and the entire logarithmic part
-(residues / divisors, Trager Ch. 5–6). -/
+Cases 1, 2 **and** 3 are now realized and `radDeriv`-validated; the multi-case (mixed `V`/`W` denominator)
+front-end dispatches Cases 1–2 end-to-end.
+
+**Deferred** (documented): the `k = 1` lower-coefficient solve — for the base `θ' = 1` algebraic case (these
+examples) this is the **algebraic** logarithmic part (Trager Ch. 5–6 residue / divisor theory, the
+`ComputableAlgebraicResidues` axis), *not* the transcendental `cRischDEG`; `cRischDEG` is the right tool
+only for the `θ = log v` / `θ = exp v` *lower-coefficient* first-order ODEs (Risch [38]), a layer this file
+does not build. The entire (algebraic) logarithmic part is likewise deferred. -/
 
 open Polynomial
 
@@ -93,6 +104,44 @@ squarefree factor of the radicand. Computes `h = ρ/W` and runs the iterated Cas
 `W^{k0}·y`. Master identity: `∫ C/(W^{k0}y) = vNum/(W^{k0}y) + ∫ Crem/(Wy)`. Generic over `[CField α]`. -/
 def radIntegrateCase2 (W ρ : CPolyG α) (k0 : ℕ) (C : CPolyG α) : CPolyG α × CPolyG α :=
   radReduceCase2Iterate W (cdivG (k0 + 8) ρ W) ρ k0 k0 k0 C []
+
+/-! ### The iterated Case-3 (`C/y`) degree-lowering (Trager Appendix A §2.3, iterated)
+
+After Cases 1–2 cleared every denominator factor, the leftover is `C/y` with `C` a polynomial (Trager
+Appendix A §2.3). There is no denominator to lower — instead the single step `radCase3Cofactor`/
+`radCase3Residual` (`θ' = 1`) lowers **`deg C`** by cancelling its leading term with a leading-coefficient
+monomial `B = b·θ^{j+1}`, giving `(Bf/y)' − C/y = D/y` with `deg D < deg C`. So `∫ C/y = Bf/y − ∫ D/y`:
+accumulate `+Bf`, recurse on `−D` (the same sign pattern as Cases 1–2). Every contribution has denominator
+just `y` (no power), so the running rational-part numerator `vNum` is simply `Σ Bᵢf` over the common
+denominator `y`. Iterating bottoms out when `deg C < deg f` (the irreducible rational part, left for the
+logarithmic part). -/
+
+/-- **Iterated Case-3 reduction** `radReduceCase3Iterate der f g fuel C vNum = (Crem, vNumOut)` (Trager
+Appendix A §2.3, iterated). One structural step per unit of `fuel` (call with `fuel = deg C`): while
+`deg C ≥ deg f` it cancels the leading term of `C` with `B = radCase3Cofactor f g C` (the leading-coefficient
+monomial), forms the residual `D = radCase3Residual` (`deg D < deg C`), **accumulates** the contribution
+`B·f` into `vNum` (the numerator of the rational part over the common denominator `y`), and recurses on the
+negated residual `−D`. Bottoms at `deg C < deg f` returning `(C, vNum)` — the irreducible `C/y` leftover and
+the assembled rational-part numerator. `der` is the level's base derivation (`cderivG` for `θ' = 1`); `f`
+the radicand, `g` (from `(f/y)' = g/y`) passed in. Generic over `[CField α]`. -/
+def radReduceCase3Iterate (der : CPolyG α → CPolyG α) (f g : CPolyG α) :
+    ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
+  | 0, C, vNum => (C, vNum)
+  | fuel + 1, C, vNum =>
+    if cisZeroG C || cdegG C < cdegG f then (C, vNum)
+    else
+      let B := radCase3Cofactor f g C
+      let D := radCase3Residual f g B C (der B)
+      radReduceCase3Iterate der f g fuel (cnegG D) (caddG vNum (cmulG B f))
+
+/-- **The simple-radical rational-part driver (Case 3)** `radIntegrateCase3 der f g C = (Crem, vNum)`
+(Trager Appendix A §2.3) — the `∫ C/y` driver over a simple radical `y² = f` for a polynomial numerator
+`C`. Runs the iterated Case-3 degree-lowering `radReduceCase3Iterate` (structural fuel `deg C + 1`),
+returning the irreducible leftover `Crem` (`deg Crem < deg f`) and the accumulated rational-part numerator
+`vNum` over the common denominator `y`. Master identity: `∫ C/y = vNum/y + ∫ Crem/y`. `der = cderivG` for
+`θ' = 1`; `g` read off `(f/y)' = g/y`. Generic over `[CField α]`. -/
+def radIntegrateCase3 (der : CPolyG α → CPolyG α) (f g C : CPolyG α) : CPolyG α × CPolyG α :=
+  radReduceCase3Iterate der f g (cdegG C + 1) C []
 
 /-! ### The partial-fraction front-end and the multi-case dispatch (Trager Appendix A §2)
 
@@ -220,6 +269,51 @@ the real derivation. -/
 theorem c2itDriver_integrates :
     radIsZero (radSub (radDeriv 2 c2itRhoQx c2itVlift) c2itRatLift) = true := by native_decide
 
+/-! ### ★ The iterated Case-3 reduction validates: `∫ x⁴/√(x³+1)` (`native_decide`)
+
+`F = ℚ`, `θ = x` (`θ' = 1`), radicand `y² = ρ = x³ + 1` (`n = 2`, `y = √(x³+1)`), numerator `C = x⁴`
+(`deg C = 4 ≥ deg ρ = 3`), `g = ½ρ' = (3/2)x²` — the integrand `x⁴/√(x³+1)` (a `C/y` Case-3 form, no
+denominator factor). `radIntegrateCase3` runs the degree-lowering until `deg C < 3`, accumulating `vNum`
+over the common denominator `y` and leaving the irreducible residual `Crem` (`deg Crem < 3`). Validated
+end-to-end by the **actual** diagonal derivation `radDeriv 2 (x³+1)`: `radDeriv(vNum/√(x³+1)) = x⁴/√(x³+1) −
+Crem/√(x³+1)`. -/
+
+/-- Case-3-iterate example radicand `ρ = x³ + 1` (`y² = ρ`, `y = √(x³+1)`), `ℚ[x]` `[1,0,0,1]`. -/
+def c3itRho : CPolyG ℚ := [1, 0, 0, 1]
+
+/-- Case-3-iterate example helper `g = ½ρ' = (3/2)x²` (`n = 2`, `(f/y)' = g/y`). -/
+def c3itG : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG c3itRho)
+
+/-- Case-3-iterate example numerator `C = x⁴` (integrand `x⁴/√(x³+1)`, `deg C ≥ deg ρ`), `[0,0,0,0,1]`. -/
+def c3itC : CPolyG ℚ := [0, 0, 0, 0, 1]
+
+/-- **The Case-3-iterate run** `radIntegrateCase3 cderivG ρ g C = (Crem, vNum)` on `∫ x⁴/√(x³+1)` — runs the
+`C/y` degree-lowering, returning the irreducible residual `Crem` (`deg < 3`) and the accumulated
+rational-part numerator `vNum` over the common denominator `y`. -/
+def c3itRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3 cderivG c3itRho c3itG c3itC
+
+/-- The radicand `ρ = x³ + 1` lifted to `ℚ(x)` (`QFunNZG ℚ`), the Picture-B radicand for `radDeriv 2`. -/
+def c3itRhoQx : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
+
+/-- The rational part `v = vNum/y` lifted to `RadElem (QFunNZG ℚ)` — the pure-`y` element `[0, vNum/ρ]` over
+`ℚ(x)` (an `R/y` form is `[0, R/ρ]` since `R/y = (R/ρ)·y`; here the common denominator is just `y`). -/
+def c3itVlift : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum c3itRun.2) (qxOfNum c3itRho)]
+
+/-- The integrand's rational part `C/y − Crem/y` lifted to `RadElem (QFunNZG ℚ)` — the pure-`y` element
+`[0, (C − Crem)/ρ]` over `ℚ(x)`. -/
+def c3itRatLift : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum (csubG c3itC c3itRun.1)) (qxOfNum c3itRho)]
+
+/-- **★ The Case-3 iterate integrates `∫ x⁴/√(x³+1)`: `D(v) = rational part of the integrand`**
+(`native_decide`). Over the genuine radical extension `(QFunNZG ℚ)[y]/(y² − (x³+1))`, the **actual**
+diagonal radical derivation `radDeriv 2 (x³+1)` of the iterated Case-3 rational part `v = vNum/√(x³+1)`
+equals `x⁴/√(x³+1) − Crem/√(x³+1)`, the rational part of `x⁴/√(x³+1)` (the irreducible `C/y` leftover
+subtracted). Checked by `radIsZero` of the difference over `ℚ(x)`. **THE CASE-3 ITERATE INTEGRATES** —
+`D(∫) = rational-part` for the `C/y` degree-lowering, validated by the real derivation. -/
+theorem c3itDriver_integrates :
+    radIsZero (radSub (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true := by native_decide
+
 /-! ### ★ The multi-case dispatch integrates `∫ 1/((x−1)²x²·√x)` end-to-end (`native_decide`)
 
 The headline: a **general** simple-radical rational integrand whose denominator mixes a `V`-factor and a
@@ -324,6 +418,9 @@ terms. -/
 
 -- The iterated Case-2 reduction, validated through the actual `radDeriv`:
 #print axioms c2itDriver_integrates
+
+-- The iterated Case-3 (`C/y`) degree-lowering, validated through the actual `radDeriv`:
+#print axioms c3itDriver_integrates
 
 -- The dispatch classifies the mixed denominator into one `V`- and one `W`-factor:
 #print axioms mcRun_classification
