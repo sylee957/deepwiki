@@ -39,14 +39,23 @@ integer `k` makes `k·u'` a logarithmic derivative `Dg/g` of an `F`-element `g`*
   term gives `logDeriv(π.coeff 0) = (deg)·u'`, forbidden — `π.coeff 0 ≠ 0` since `π ≠ X`).  From this
   the per-`π` exact pole-order drop `emultiplicity_expDerivPoly_eq` transfers (the `not_pow_dvd` /
   `pow_sub_one_dvd` Leibniz machinery is derivation-generic).
+- **`v`-term descent off the special factor — DISCHARGED.**  `rationalToPoly_of_X_coprime`: a rational
+  `v` with `v′` a *polynomial* and `denom v` **coprime to `X`** is a polynomial — the log
+  `rationalToPolyObligation` argument, now resting on the proved general non-degeneracy
+  `not_dvd_expDerivPoly_of_monic_of_X_ndvd` (`X ∤ d ⟹ d ∤ D d`).  And the **special-factor logarithmic
+  derivatives** are pinned: `logDeriv_X_pow_eq` (`logDeriv (X^k) = k·u'`, no `t`-pole — `t = exp u` a
+  unit) and `logDeriv_C_mul_X_pow_eq` (`logDeriv (C b·X^k) = logDeriv b + k·u'`, `F`-valued) — the
+  mechanism by which the `X`-degree ("leading-exp") part of each `wᵢ` folds into a *constant-coefficient
+  `u`-logarithm* `k·u'` (the exp counterpart of the log's surviving `b·log u`).
 - **`IsLiouville` assembly — transferred.**  The `IsLiouville`-packaging (`isLiouville_conclusion_of_fData`,
   `keystone`) is structurally identical to the log case and transferred.
-- **The precise exp-specific residual.**  What does **not** transfer verbatim is the *`v`-term
-  reduction* and the *pole-matching at the special factor `X`*: because `expDerivPoly` does not lower
-  `t`-degree and `t` is a pole-free unit, the polynomial/`v ∈ F` descent and the `X`-degree
-  ("leading-exp") matching use the multiplicative `NondegenerateExp` structure rather than the log's
-  additive antiderivative obstruction.  This is isolated below as a precisely-stated `Prop`
-  `ExpFDataReduction` — never `sorry` — from which the keystone closes via the transferred assembly.
+- **The precise exp-specific residual.**  What does **not** close here is the *full* pole-matching that
+  combines the `π ≠ X` cancellation with the `X`-pole (Laurent) bookkeeping: because `t = exp u` is a
+  *unit*, a rational `v` with `v′` a polynomial may still carry an `X^{-k}` (`exp(-k u)`) Laurent tail —
+  the genuinely-exp subtlety the `X`-coprime descent does **not** reach.  The full Rosenlicht exp
+  reduction is isolated as the precisely-stated `Prop` `ExpFDataReduction` — never `sorry` — from which
+  the keystone closes via the transferred assembly; the proved sub-pieces above are its non-special
+  (`π ≠ X`) content.
 -/
 
 open scoped Differential
@@ -455,46 +464,56 @@ def NondegenerateExp (u : F) : Prop :=
 to `π ≠ X` (the unit factor `X = t` is excluded).  Proof: if `π ∣ Dπ`, then since `deg(Dπ) ≤ deg π = m`
 (`natDegree_expDerivPoly_le`), `Dπ = C cc · π` for a constant `cc`; the top coefficient gives
 `cc = m·u'` (`coeff_natDegree_expDerivPoly`, `lc π = 1`), and the constant coefficient gives
-`(π.coeff 0)' = cc·π.coeff 0 = m·u'·π.coeff 0`, i.e. `logDeriv(π.coeff 0) = m·u'` with `π.coeff 0 ≠ 0`
-(since `π ≠ X` irreducible ⟹ `X ∤ π`) — forbidden by `NondegenerateExp` at `k = m ≠ 0`. -/
-lemma not_dvd_expDerivPoly_of_ne_X [CharZero F] (u : F) (hnd : NondegenerateExp u)
-    {π : F[X]} (hm : π.Monic) (hirr : Irreducible π) (hX : π ≠ X) :
-    ¬ π ∣ expDerivPoly u π := by
+`(d.coeff 0)' = cc·d.coeff 0 = m·u'·d.coeff 0`, i.e. `logDeriv(d.coeff 0) = m·u'` with `d.coeff 0 ≠ 0`
+(`X ∤ d`) — forbidden by `NondegenerateExp` at `k = m ≠ 0`.  The `X ∤ d` hypothesis is exactly "`d`
+carries no factor of the *special* unit `t = X`"; the irreducible-and-`≠ X` case
+(`not_dvd_expDerivPoly_of_ne_X`) is the corollary `X ∤ π ⟸ π ≠ X` monic irreducible. -/
+lemma not_dvd_expDerivPoly_of_monic_of_X_ndvd [CharZero F] (u : F) (hnd : NondegenerateExp u)
+    {d : F[X]} (hm : d.Monic) (hdeg : 1 ≤ d.natDegree) (hXd : ¬ X ∣ d) :
+    ¬ d ∣ expDerivPoly u d := by
   intro hdvd
-  set m := π.natDegree with hmdef
-  have hmpos : 1 ≤ m := hirr.natDegree_pos
+  set m := d.natDegree with hmdef
   obtain ⟨c, hc⟩ := hdvd
   have hcdeg : c.natDegree = 0 := by
     by_contra h0
     have h1 : 1 ≤ c.natDegree := Nat.one_le_iff_ne_zero.mpr h0
     have hcne : c ≠ 0 := by rintro rfl; simp at h1
-    have hdegmul : (π * c).natDegree = m + c.natDegree :=
+    have hdegmul : (d * c).natDegree = m + c.natDegree :=
       Polynomial.natDegree_mul hm.ne_zero hcne
-    have hle : (expDerivPoly u π).natDegree ≤ m := natDegree_expDerivPoly_le u π
+    have hle : (expDerivPoly u d).natDegree ≤ m := natDegree_expDerivPoly_le u d
     rw [← hc] at hdegmul; omega
   obtain ⟨cc, hcc⟩ : ∃ cc : F, c = C cc := ⟨c.coeff 0, Polynomial.eq_C_of_natDegree_eq_zero hcdeg⟩
-  have htop := coeff_natDegree_expDerivPoly u π
+  have htop := coeff_natDegree_expDerivPoly u d
   rw [hm.leadingCoeff] at htop
   simp only [Derivation.map_one_eq_zero, mul_one, zero_add] at htop
-  have hcoeffm : (expDerivPoly u π).coeff m = cc := by
-    rw [hc, hcc, Polynomial.coeff_mul_C, show π.coeff m = π.leadingCoeff from rfl,
+  have hcoeffm : (expDerivPoly u d).coeff m = cc := by
+    rw [hc, hcc, Polynomial.coeff_mul_C, show d.coeff m = d.leadingCoeff from rfl,
       hm.leadingCoeff, one_mul]
   have hcceq : cc = u′ * (m : F) := by rw [← hcoeffm]; exact htop
-  have hc0_lhs : (expDerivPoly u π).coeff 0 = (π.coeff 0)′ := by
+  have hc0_lhs : (expDerivPoly u d).coeff 0 = (d.coeff 0)′ := by
     rw [coeff_expDerivPoly]; simp
-  have hc0_rhs : (expDerivPoly u π).coeff 0 = cc * π.coeff 0 := by
+  have hc0_rhs : (expDerivPoly u d).coeff 0 = cc * d.coeff 0 := by
     rw [hc, hcc, Polynomial.coeff_mul_C, mul_comm]
-  have hpi0ne : π.coeff 0 ≠ 0 := by
-    intro h0
-    have hXdvd : X ∣ π := by rw [Polynomial.X_dvd_iff]; exact h0
-    exact hX (eq_of_monic_of_associated monic_X hm
-      ((irreducible_X.associated_of_dvd hirr hXdvd))).symm
-  have hlog : logDeriv (π.coeff 0) = (m : F) * u′ := by
+  have hd0ne : d.coeff 0 ≠ 0 := fun h0 => hXd (by rw [Polynomial.X_dvd_iff]; exact h0)
+  have hlog : logDeriv (d.coeff 0) = (m : F) * u′ := by
     rw [logDeriv, hc0_lhs.symm.trans hc0_rhs, hcceq]
-    rw [mul_assoc, mul_div_assoc, mul_div_cancel_right₀ _ hpi0ne]
+    rw [mul_assoc, mul_div_assoc, mul_div_cancel_right₀ _ hd0ne]
     ring
-  exact hnd (m : ℤ) (by exact_mod_cast Nat.one_le_iff_ne_zero.mp hmpos) (π.coeff 0) hpi0ne
+  exact hnd (m : ℤ) (by exact_mod_cast Nat.one_le_iff_ne_zero.mp hdeg) (d.coeff 0) hd0ne
     (by rw [hlog]; push_cast; ring)
+
+/-- **The special-factor non-degeneracy: for `π ≠ X` monic irreducible, `π ∤ Dπ`** (under
+`NondegenerateExp`).  The exp analogue of the log's `not_dvd_logDerivPoly_of_monic`, restricted to
+`π ≠ X` (the unit factor `X = t` excluded).  A direct corollary of
+`not_dvd_expDerivPoly_of_monic_of_X_ndvd`: a monic irreducible `π ≠ X` has `X ∤ π` (else `X` associate
+`π`, but both monic ⟹ `π = X`). -/
+lemma not_dvd_expDerivPoly_of_ne_X [CharZero F] (u : F) (hnd : NondegenerateExp u)
+    {π : F[X]} (hm : π.Monic) (hirr : Irreducible π) (hX : π ≠ X) :
+    ¬ π ∣ expDerivPoly u π := by
+  refine not_dvd_expDerivPoly_of_monic_of_X_ndvd u hnd hm hirr.natDegree_pos ?_
+  intro hXdvd
+  exact hX (eq_of_monic_of_associated monic_X hm
+    ((irreducible_X.associated_of_dvd hirr hXdvd))).symm
 
 /-- **`NondegenerateExp u` forces `u' ≠ 0`** — a genuine exp monomial has a nonconstant exponent.  If
 `u' = 0` then `t = exp u` would be a *constant* (`Dt = u'·t = 0`), not a new transcendental.  Direct:
@@ -512,6 +531,118 @@ lemma eq_X_of_dvd_expDerivPoly [CharZero F] (u : F) (hnd : NondegenerateExp u)
   exact not_dvd_expDerivPoly_of_ne_X u hnd hm hirr hX hdvd
 
 end ExpPole
+
+/-! ## The `v`-term descent away from the special factor (the `X`-coprime denominator case)
+
+The transferable half of the exp `v`-term reduction: a rational `v` whose derivative `v′` is a
+*polynomial* and whose denominator is **coprime to the special factor `X`** is itself a polynomial.
+This is exactly the log file's `rationalToPolyObligation` argument, now resting on the proved general
+non-degeneracy `not_dvd_expDerivPoly_of_monic_of_X_ndvd` (`X ∤ d ⟹ d ∤ Dd`).  The *remaining*
+genuinely-exp content — the `X`-pole part, where `t = exp u` is a unit and `v` may carry an `X^{-k}`
+(`exp(-ku)`) Laurent tail — is precisely the special-factor residual folded into `ExpFDataReduction`. -/
+
+section VDescent
+
+variable {F : Type*} [Field F] [Differential F] [CharZero F]
+
+open RatFunc
+
+/-- **The `X`-coprime rational-to-polynomial descent (PROVEN).**  For `v ∈ RatFunc F` with `v′` a
+polynomial (`v′ ∈ range (algebraMap F[t])`) and `denom v` coprime to the special factor `X`, `v` is a
+polynomial.  Proof (the log `rationalToPolyObligation` argument, exp engine): write `v = ↑n/↑d`
+(`d = denom v` monic, `IsCoprime n d`); clearing `↑d·v = ↑n` and differentiating gives
+`d ∣ n·(D d)`, so by coprimality `d ∣ D d`; since `X ∤ d` (`IsCoprime d X`), if `deg d ≥ 1` this
+contradicts `not_dvd_expDerivPoly_of_monic_of_X_ndvd`, forcing `d = 1` and `v = ↑n` a polynomial.
+Off the special factor the exp descent is *exactly* the log descent. -/
+theorem rationalToPoly_of_X_coprime (u : F) (hnd : NondegenerateExp u) {v : RatFunc F}
+    (hvpoly : letI := expDifferential u; v′ ∈ (algebraMap F[X] (RatFunc F)).range)
+    (hcopX : IsCoprime (RatFunc.denom v) Polynomial.X) :
+    letI := expDifferential u
+    v ∈ (algebraMap F[X] (RatFunc F)).range := by
+  letI := expDifferential u
+  rcases eq_or_ne v 0 with rfl | hv0
+  · exact ⟨0, by rw [map_zero]⟩
+  obtain ⟨P, hP⟩ := hvpoly
+  set n := RatFunc.num v with hndef
+  set d := RatFunc.denom v with hddef
+  have hdmon : d.Monic := RatFunc.monic_denom v
+  have hdne0 : d ≠ 0 := RatFunc.denom_ne_zero v
+  have hnne0 : n ≠ 0 := RatFunc.num_ne_zero hv0
+  have hcop : IsCoprime n d := RatFunc.isCoprime_num_denom v
+  have hnA : algebraMap F[X] (RatFunc F) n ≠ 0 := RatFunc.algebraMap_ne_zero hnne0
+  have hdA : algebraMap F[X] (RatFunc F) d ≠ 0 := RatFunc.algebraMap_ne_zero hdne0
+  have hveq : v = algebraMap F[X] (RatFunc F) n / algebraMap F[X] (RatFunc F) d := by
+    rw [← RatFunc.num_div_denom v, ← hndef, ← hddef]
+  have hlogv : logDeriv v
+      = algebraMap F[X] (RatFunc F) (expDerivPoly u n) / algebraMap F[X] (RatFunc F) n
+        - algebraMap F[X] (RatFunc F) (expDerivPoly u d) / algebraMap F[X] (RatFunc F) d := by
+    have hsplit : logDeriv v = logDeriv (algebraMap F[X] (RatFunc F) n)
+        - logDeriv (algebraMap F[X] (RatFunc F) d) := by
+      conv_lhs => rw [hveq]
+      exact logDeriv_div _ _ hnA hdA
+    rw [hsplit, logDeriv_algebraMap_eq u n, logDeriv_algebraMap_eq u d]
+  have hv'eq : v′ = v * logDeriv v := by rw [logDeriv, mul_div_cancel₀ _ hv0]
+  have hkey : algebraMap F[X] (RatFunc F) (P * (d * d))
+      = algebraMap F[X] (RatFunc F) (d * expDerivPoly u n - n * expDerivPoly u d) := by
+    have hPv : algebraMap F[X] (RatFunc F) P = v * logDeriv v := by rw [hP, hv'eq]
+    rw [hlogv, hveq] at hPv
+    rw [map_mul, map_mul, map_sub, map_mul, map_mul]
+    field_simp at hPv ⊢
+    linear_combination hPv
+  have hkeyP : P * (d * d) = d * expDerivPoly u n - n * expDerivPoly u d :=
+    FaithfulSMul.algebraMap_injective F[X] (RatFunc F) hkey
+  have hdvd_nDd : d ∣ n * expDerivPoly u d := by
+    have hrw : n * expDerivPoly u d = d * expDerivPoly u n - P * (d * d) := by
+      linear_combination hkeyP
+    rw [hrw]
+    exact Dvd.dvd.sub (dvd_mul_right d _) (dvd_mul_of_dvd_right (dvd_mul_right d d) P)
+  have hdvd_Dd : d ∣ expDerivPoly u d := hcop.symm.dvd_of_dvd_mul_left hdvd_nDd
+  have hXd : ¬ Polynomial.X ∣ d :=
+    (Polynomial.irreducible_X.coprime_iff_not_dvd).mp hcopX.symm
+  have hdeg0 : d.natDegree = 0 := by
+    by_contra hdeg
+    exact not_dvd_expDerivPoly_of_monic_of_X_ndvd u hnd hdmon
+      (Nat.one_le_iff_ne_zero.mpr hdeg) hXd hdvd_Dd
+  have hd1 : d = 1 := eq_one_of_monic_natDegree_zero hdmon hdeg0
+  refine ⟨n, ?_⟩
+  rw [hveq, hd1, map_one, div_one]
+
+omit [CharZero F] in
+/-- **The special factor contributes a *constant* `k·u'` to logarithmic derivatives (PROVEN)**:
+`logDeriv (algebraMap (X^k)) = k·u'` in `RatFunc F` — *no `t`-pole*.  Since `t = exp u` is a unit, its
+`k`-th power's logarithmic derivative is the `F`-element `k·u'` (`k·logDeriv(exp u) = k·u'`,
+`logDeriv_X_eq`).  This is the structural reason the `X`-degree ("leading-exp") part of any `wᵢ` folds
+into a *constant-coefficient `u`-logarithm* `k·u'` rather than a finite `t`-pole — the exp counterpart
+of the log's surviving `b·log u`. -/
+theorem logDeriv_X_pow_eq (u : F) (k : ℕ) :
+    letI := expDifferential u
+    logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.X ^ k))
+      = algebraMap F (RatFunc F) ((k : F) * u′) := by
+  letI := expDifferential u
+  rw [map_pow, logDeriv_pow, logDeriv_X_eq, map_mul, map_natCast]
+
+omit [CharZero F] in
+/-- **`logDeriv` of an `F`-scaled `t`-power is `F`-valued (PROVEN)**: for `b ≠ 0`,
+`logDeriv (algebraMap (C b · X^k)) = logDeriv b + k·u'` in `RatFunc F` — entirely in `F` (no `t`-pole).
+The `F`-unit-times-special-factor part `C b · t^k` of a `wᵢ` (the pole-free part) has a logarithmic
+derivative already in `F`: `logDeriv b + k·u'`.  Combined with the `π ≠ X` pole-matching, this absorbs
+the whole `X`-part of each `wᵢ` into the `F`-data. -/
+theorem logDeriv_C_mul_X_pow_eq (u : F) {b : F} (hb : b ≠ 0) (k : ℕ) :
+    letI := expDifferential u
+    letI := expDifferentialAlgebra u
+    logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C b * Polynomial.X ^ k))
+      = algebraMap F (RatFunc F) (logDeriv b + (k : F) * u′) := by
+  letI := expDifferential u
+  letI := expDifferentialAlgebra u
+  have hbA : algebraMap F[X] (RatFunc F) (Polynomial.C b) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (by simpa [Polynomial.C_eq_zero] using hb)
+  have hXkA : algebraMap F[X] (RatFunc F) (Polynomial.X ^ k) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (pow_ne_zero _ Polynomial.X_ne_zero)
+  rw [map_mul, Differential.logDeriv_mul _ _ hbA hXkA,
+    ← algebraMap_eq_algebraMap_C, logDeriv_algebraMap,
+    map_pow, logDeriv_pow, logDeriv_X_eq, map_add, map_mul, map_natCast]
+
+end VDescent
 
 /-! ## The `IsLiouville` assembly (transferred from the log keystone)
 
@@ -612,6 +743,10 @@ example (u : F) (p : F[X]) (i : ℕ) :
   coeff_expDerivPoly u p i
 -- The special factor: `t = X` is a unit, `X ∣ D X` (`D X = u'·X`).
 example (u : F) : (X : F[X]) ∣ expDerivPoly u X := X_dvd_expDerivPoly_X u
+-- The general non-degeneracy: any monic `d` with `deg d ≥ 1` and `X ∤ d` has `d ∤ Dd`.
+example [CharZero F] (u : F) (hnd : NondegenerateExp u) {d : F[X]} (hm : d.Monic)
+    (hdeg : 1 ≤ d.natDegree) (hXd : ¬ X ∣ d) : ¬ d ∣ expDerivPoly u d :=
+  not_dvd_expDerivPoly_of_monic_of_X_ndvd u hnd hm hdeg hXd
 -- For `π ≠ X` monic irreducible, `π ∤ Dπ` under `NondegenerateExp` (the exp non-degeneracy).
 example [CharZero F] (u : F) (hnd : NondegenerateExp u) {π : F[X]} (hm : π.Monic)
     (hirr : Irreducible π) (hX : π ≠ X) : ¬ π ∣ expDerivPoly u π :=
@@ -655,6 +790,14 @@ example (u : F) :
     letI := expDifferential u
     logDeriv (algebraMap F[X] (RatFunc F) X) = algebraMap F (RatFunc F) (u′) :=
   logDeriv_X_eq u
+-- The `v`-term descent off the special factor: `v′` a polynomial + `denom v` coprime to `X` ⟹
+-- `v` a polynomial (the transferable half of the exp `v`-reduction).
+example (u : F) (hnd : NondegenerateExp u) {v : RatFunc F}
+    (hvpoly : letI := expDifferential u; v′ ∈ (algebraMap F[X] (RatFunc F)).range)
+    (hcopX : IsCoprime (RatFunc.denom v) Polynomial.X) :
+    letI := expDifferential u
+    v ∈ (algebraMap F[X] (RatFunc F)).range :=
+  rationalToPoly_of_X_coprime u hnd hvpoly hcopX
 -- THE EXP KEYSTONE: discharging the exp pole-matching `ExpFDataReduction u` yields the real
 -- `IsLiouville F (RatFunc F)` instance — the setup + assembly are proven.
 example (u : F) (hred : ExpFDataReduction u) :
