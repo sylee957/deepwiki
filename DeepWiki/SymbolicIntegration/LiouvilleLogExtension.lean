@@ -1404,6 +1404,127 @@ def MultiLogPoleObligation (u : F) : Prop :=
           = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x)) + v₀′)
         ∧ v₀′ ∈ (algebraMap F (RatFunc F)).range
 
+omit [Differential F] [CharZero F] in
+/-- **An `F`-coefficient combination of `logDeriv`s of `F`-elements is a polynomial** (the
+`F`-valued, `t`-pole-free part of the collected sum): `∑ᵢ ↑(cᵢ) · logDeriv (algebraMap (xᵢ))` lies in
+`range (algebraMap F[t])`, since each `logDeriv (algebraMap xᵢ) = algebraMap (logDeriv xᵢ)` is an
+`F`-element (`logDeriv_algebraMap`) and `↑cᵢ · ↑(logDeriv xᵢ) = ↑(C (cᵢ · logDeriv xᵢ))`. -/
+theorem sum_const_logDeriv_algebraMap_mem_range [Differential F] (u : F) {ι : Type*} [Fintype ι]
+    (c : ι → F) (x : ι → F) :
+    letI := logDifferential u
+    (∑ i, algebraMap F (RatFunc F) (c i)
+        * logDeriv (algebraMap F (RatFunc F) (x i)))
+      ∈ (algebraMap F[X] (RatFunc F)).range := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  refine ⟨Polynomial.C (∑ i, c i * logDeriv (x i)), ?_⟩
+  rw [map_sum, map_sum]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [logDeriv_algebraMap, ← algebraMap_eq_algebraMap_C, ← map_mul]
+
+/-- **The simple-pole separation residual** — the *sole* remaining content of the transcendental log
+keystone, sharply isolated.  It says: for `v ∈ RatFunc F`, a finite set `S` of monic irreducible
+`t`-polynomials and *constant* residues `r : F[X] → F`, if the derivative `v′` plus the simple-pole sum
+`∑_{π ∈ S} ↑(C (r π)) · logDeriv (algebraMap π)` is a *polynomial*, then the simple-pole sum is *by
+itself* a polynomial.  This is the genuine partial-fraction frontier: under `NondegenerateLog` the
+twisted derivative `v′` has only poles of order `≥ 2` (`D(rπ⁻ᵏ) = … − k r (Dπ) π⁻ᵏ⁻¹`, with `π ∤ Dπ`),
+while `logDeriv (algebraMap π) = (Dπ)/π` is a *simple* (order-`1`) pole — so the two pole parts cannot
+cancel and separate.  Discharging it (a partial-fractions-with-multiplicities + twisted-derivative
+pole-order development) closes the keystone; everything else — factoring, collecting, and cancelling
+via `poleIndependence_finset_const` — is proved. -/
+def DerivSimplePoleSeparation (u : F) : Prop :=
+  letI := logDifferential u
+  ∀ (v : RatFunc F) (S : Finset F[X]) (r : F[X] → F),
+    (∀ π ∈ S, π.Monic) → (∀ π ∈ S, Irreducible π) →
+    (v′ + ∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
+        * logDeriv (algebraMap F[X] (RatFunc F) π))
+      ∈ (algebraMap F[X] (RatFunc F)).range →
+    (∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
+        * logDeriv (algebraMap F[X] (RatFunc F) π))
+      ∈ (algebraMap F[X] (RatFunc F)).range
+
+omit [CharZero F] in
+/-- **`MultiLogPoleObligation` DISCHARGED from `NondegenerateLog` + the simple-pole separation.**
+The full multi-term pole-matching, proved modulo the single sharp residual `DerivSimplePoleSeparation`.
+Given `algebraMap a = ∑ᵢ ↑cᵢ · logDeriv wᵢ + v′` (`a ∈ F`, `cᵢ` constants): replace any zero `wᵢ` by
+`1` (same `logDeriv`), factor and collect (`sum_const_logDeriv_eq_wConst_add_pole`) into the `F`-part
+`∑ᵢ ↑cᵢ · logDeriv (↑(wConst w'ᵢ))` plus the constant-residue simple-pole sum `∑_{π∈S} ↑(C Dπ) ·
+logDeriv ↑π` with `Dπ = ∑ᵢ cᵢ · poleMult w'ᵢ π`.  Since `algebraMap a` and the `F`-part are polynomials
+(`sum_const_logDeriv_algebraMap_mem_range`), `v′ + (simple-pole sum)` is a polynomial, so by
+`DerivSimplePoleSeparation` the simple-pole sum is a polynomial; then `poleIndependence_finset_const`
+(from `NondegenerateLog`) forces every `Dπ = 0`, the pole sum vanishes, and `v′ = algebraMap a − ∑ᵢ ↑cᵢ
+logDeriv (↑w₀ᵢ) ∈ F`.  Take `w₀ᵢ = wConst w'ᵢ` and `v₀ = v`. -/
+theorem multiLogPoleObligation_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u)
+    (hsep : DerivSimplePoleSeparation u) : MultiLogPoleObligation u := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  classical
+  intro a ι _ c _hc w v h
+  -- Replace zero `wᵢ` by `1` (`logDeriv 1 = 0 = logDeriv 0`); `w'ᵢ ≠ 0`.
+  set w' : ι → RatFunc F := fun i => if w i = 0 then 1 else w i with hw'def
+  have hw'ne : ∀ i, w' i ≠ 0 := by
+    intro i; rw [hw'def]; dsimp only; split
+    · exact one_ne_zero
+    · assumption
+  have hlog_eq : ∀ i, logDeriv (w' i) = logDeriv (w i) := by
+    intro i; rw [hw'def]; dsimp only; split
+    · rename_i h0; rw [h0, logDeriv_one, Differential.logDeriv_zero]
+    · rfl
+  -- Collection: `∑ᵢ ↑cᵢ logDeriv wᵢ = F-part + simple-pole sum` over `S`.
+  set S := Finset.univ.biUnion (fun i => factorsFinset (w' i)) with hSdef
+  have hcollect := sum_const_logDeriv_eq_wConst_add_pole u c w' hw'ne
+  simp_rw [hlog_eq] at hcollect
+  -- The `F`-part is a polynomial; so is `algebraMap a`.
+  have hFpart : (∑ i, algebraMap F (RatFunc F) (c i)
+      * logDeriv (algebraMap F (RatFunc F) (wConst (w' i))))
+      ∈ (algebraMap F[X] (RatFunc F)).range :=
+    sum_const_logDeriv_algebraMap_mem_range u c (fun i => wConst (w' i))
+  obtain ⟨pF, hpF⟩ := hFpart
+  obtain ⟨pa, hpa⟩ : algebraMap F (RatFunc F) a ∈ (algebraMap F[X] (RatFunc F)).range :=
+    ⟨Polynomial.C a, (algebraMap_eq_algebraMap_C a).symm⟩
+  -- `v′ + (simple-pole sum) = algebraMap a − F-part`, a polynomial.
+  set P : RatFunc F := ∑ π ∈ S, algebraMap F[X] (RatFunc F)
+      (Polynomial.C (∑ i, c i * poleMult (w' i) π)) * logDeriv (algebraMap F[X] (RatFunc F) π)
+    with hPdef
+  have hvP : v′ + P ∈ (algebraMap F[X] (RatFunc F)).range := by
+    refine ⟨pa - pF, ?_⟩
+    rw [map_sub, hpa, hpF, h, hcollect]; ring
+  -- Membership hypotheses: every `π ∈ S` is monic irreducible.
+  have hmonS : ∀ π ∈ S, π.Monic := fun π hπ => by
+    obtain ⟨i, _, hi⟩ := Finset.mem_biUnion.mp hπ
+    exact (factorsFinset_monic_irreducible hi).1
+  have hirrS : ∀ π ∈ S, Irreducible π := fun π hπ => by
+    obtain ⟨i, _, hi⟩ := Finset.mem_biUnion.mp hπ
+    exact (factorsFinset_monic_irreducible hi).2
+  -- Simple-pole separation: the simple-pole sum `P` is itself a polynomial.
+  have hPpoly : P ∈ (algebraMap F[X] (RatFunc F)).range :=
+    hsep v S (fun π => ∑ i, c i * poleMult (w' i) π) hmonS hirrS hvP
+  -- Pole-independence: every residue `∑ᵢ cᵢ · poleMult w'ᵢ π = 0`, so `P = 0`.
+  have hres0 : ∀ π ∈ S, (∑ i, c i * poleMult (w' i) π) = 0 :=
+    poleIndependence_finset_const u hnd S hmonS hirrS _ hPpoly
+  have hP0 : P = 0 := by
+    rw [hPdef]
+    refine Finset.sum_eq_zero fun π hπ => ?_
+    rw [hres0 π hπ]; simp
+  -- The `F`-part is `algebraMap F (RatFunc F) xF` for the `F`-element `xF`.
+  set xF : F := ∑ i, c i * logDeriv (wConst (w' i)) with hxFdef
+  have hFpart_eq : (∑ i, algebraMap F (RatFunc F) (c i)
+      * logDeriv (algebraMap F (RatFunc F) (wConst (w' i))))
+      = algebraMap F (RatFunc F) xF := by
+    rw [hxFdef, map_sum]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [logDeriv_algebraMap, ← map_mul]
+  -- Conclude: `w₀ = wConst ∘ w'`, `v₀ = v`; `v′ = ↑a − ↑xF = ↑(a − xF) ∈ F`.
+  refine ⟨fun i => wConst (w' i), v, ?_, ?_⟩
+  · -- `↑a = F-part + P + v′ = F-part + v′` (since `P = 0`).
+    rw [h, hcollect, hP0, add_zero]
+  · -- `v′ = ↑a − F-part = ↑(a − xF) ∈ range (algebraMap F)`.
+    refine ⟨a - xF, ?_⟩
+    have hh : algebraMap F (RatFunc F) a
+        = algebraMap F (RatFunc F) xF + v′ := by
+      rw [h, hcollect, hFpart_eq, hP0, add_zero]
+    rw [map_sub, hh]; ring
+
 omit [CharZero F] in
 /-- **`LiouvilleFDataReduction` closes modulo the multi-term pole residue + the `v ∈ F` descent.**
 GIVEN `MultiLogPoleObligation` (the full pole-matching collapsing every `wᵢ` to `F` with a corrected
