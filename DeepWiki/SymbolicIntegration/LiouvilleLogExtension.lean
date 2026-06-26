@@ -1094,6 +1094,60 @@ theorem logDeriv_eq_wConst_add_sum [DecidableEq F] (u : F) {w : RatFunc F} (hw :
     rw [poleMult, ← hn, ← hd, ← hMn, ← hMd, map_sub, map_sub, sub_mul]
   rw [hpole]; ring
 
+omit [Differential F] [CharZero F] in
+/-- **`poleMult` vanishes off `factorsFinset`** — the support fact merging the per-`wᵢ` sums into the
+global pole-collection: if `π ∉ factorsFinset w` then `poleMult w π = 0` (both `t`-factor counts are
+`0` there). -/
+theorem poleMult_eq_zero_of_notMem [DecidableEq F] {w : RatFunc F} {π : F[X]}
+    (hπ : π ∉ factorsFinset w) : poleMult w π = 0 := by
+  simp only [factorsFinset, Finset.mem_union, Multiset.mem_toFinset, not_or,
+    ← Multiset.count_eq_zero] at hπ
+  rw [poleMult, hπ.1, hπ.2]; simp
+
+omit [CharZero F] in
+/-- **The multi-term `logDeriv`-sum pole-collection** (the multi-term pole-matching engine):
+`∑ᵢ ↑(cᵢ)·logDeriv wᵢ = ∑ᵢ ↑(cᵢ)·logDeriv (↑(wConst wᵢ)) + ∑_{π ∈ S} ↑(C (∑ᵢ cᵢ · poleMult wᵢ π)) ·
+logDeriv (↑π)`, where `S = ⋃ᵢ factorsFinset wᵢ` collects every monic-irreducible `t`-factor and the
+residue `∑ᵢ cᵢ · poleMult wᵢ π` is a *constant* `F`-element.  The first summand is `F`-valued (no
+`t`-pole); the collected sum is the `poleIndependence_finset_const`-ready simple-pole part.  Proof:
+expand each `logDeriv wᵢ` by `logDeriv_eq_wConst_add_sum`, extend each pole sum to `S` (`poleMult`
+vanishes off `factorsFinset`), swap the order of summation, and fold `cᵢ · ↑(C(poleMult)) = ↑(C(cᵢ ·
+poleMult))` into the constant residue. -/
+theorem sum_const_logDeriv_eq_wConst_add_pole [DecidableEq F] (u : F) {ι : Type*} [Fintype ι]
+    (c : ι → F) (w : ι → RatFunc F) (hw : ∀ i, w i ≠ 0) :
+    letI := logDifferential u
+    ∑ i, algebraMap F (RatFunc F) (c i) * logDeriv (w i)
+      = ∑ i, algebraMap F (RatFunc F) (c i)
+            * logDeriv (algebraMap F (RatFunc F) (wConst (w i)))
+        + ∑ π ∈ Finset.univ.biUnion (fun i => factorsFinset (w i)),
+            algebraMap F[X] (RatFunc F)
+                (Polynomial.C (∑ i, c i * poleMult (w i) π))
+              * logDeriv (algebraMap F[X] (RatFunc F) π) := by
+  letI := logDifferential u
+  set S := Finset.univ.biUnion (fun i => factorsFinset (w i)) with hS
+  -- Per-`i`: extend the pole sum to `S`, then `cᵢ·logDeriv wᵢ = cᵢ·logDeriv ↑(wConst) + ∑_S …`.
+  have hsubS : ∀ i, factorsFinset (w i) ⊆ S := fun i =>
+    Finset.subset_biUnion_of_mem (fun i => factorsFinset (w i)) (Finset.mem_univ i)
+  have hper : ∀ i, algebraMap F (RatFunc F) (c i) * logDeriv (w i)
+      = algebraMap F (RatFunc F) (c i) * logDeriv (algebraMap F (RatFunc F) (wConst (w i)))
+        + ∑ π ∈ S, algebraMap F (RatFunc F) (c i)
+            * (algebraMap F[X] (RatFunc F) (Polynomial.C (poleMult (w i) π))
+                * logDeriv (algebraMap F[X] (RatFunc F) π)) := by
+    intro i
+    rw [logDeriv_eq_wConst_add_sum u (hw i), mul_add, Finset.mul_sum]
+    congr 1
+    rw [Finset.sum_subset (hsubS i) (fun π _ hπ => by
+      rw [poleMult_eq_zero_of_notMem hπ]; simp)]
+  -- Sum over `i`, split into the `F`-part and the (swapped) pole part.
+  rw [Finset.sum_congr rfl (fun i _ => hper i), Finset.sum_add_distrib]
+  congr 1
+  -- Swap `∑ᵢ ∑_S` to `∑_S ∑ᵢ` and fold `cᵢ·↑(C(poleMult)) = ↑(C(cᵢ·poleMult))`.
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun π _ => ?_
+  rw [map_sum, map_sum, Finset.sum_mul]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [algebraMap_eq_algebraMap_C, ← mul_assoc, ← map_mul, ← Polynomial.C_mul]
+
 /-- **The single-log pole-independence obligation** — the genuine partial-fraction content of the
 single-logarithm case, sharply isolated.  GIVEN `a ∈ F`, a constant `c ∈ F`, `w v ∈ RatFunc F` with
 `algebraMap a = c · logDeriv w + v′`, there exist `w₀ : F` and `v₀ : RatFunc F` rewriting the same
