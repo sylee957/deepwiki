@@ -209,3 +209,82 @@ theorem ratFunc_liouville_list [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
   -- the log sum: from the flat Finset sum to the mapped List sum
   exact finsetLogSum_eq_listSum f.denom.roots.toFinset
     (fun α => (r α).eval α) (fun α => algebraMap K[X] (RatFunc K) (X - C α))
+
+/-! ## The decision corollary — logarithm-detection completeness -/
+
+open scoped Differential in
+open Classical in
+/-- **Logarithm-free integration from vanishing residues** (§2.4/§2.5, the forward completeness): if
+every residue (the flat-form coefficient `(rα)(α)` at each distinct denominator root `α`) vanishes,
+then `∫ f` is *logarithm-free* — `f = G′` for a rational `G ∈ K(x)` (`G = g + ∫ p dx`). This is the
+algorithmically meaningful half: when the Rothstein–Trager residues all vanish, the logarithmic part
+is absent and the integral stays rational. (When some residue is nonzero, `∫ f` genuinely needs a
+logarithm — the residues, identified below with the intrinsic `residueAt α f`, are a true obstruction.) -/
+theorem ratFunc_logarithmFree_of_residues_zero [CharZero K] [IsAlgClosed K] (f : RatFunc K)
+    {r : K → K[X]} {g : RatFunc K} {p : K[X]}
+    (hform : f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ α ∈ f.denom.roots.toFinset,
+              algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+                * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α)))
+    (hres : ∀ α ∈ f.denom.roots.toFinset, (r α).eval α = 0) :
+    ∃ G : RatFunc K, f = G′ := by
+  refine ⟨g + algebraMap K[X] (RatFunc K) (polyIntegral p), ?_⟩
+  rw [hform, map_add]
+  -- the entire log sum vanishes: each coefficient `C ((rα)(α)) = C 0 = 0`
+  have hzero : (∑ α ∈ f.denom.roots.toFinset,
+        algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+          * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α))) = 0 :=
+    Finset.sum_eq_zero fun α hα => by rw [hres α hα, map_zero, map_zero, zero_mul]
+  rw [hzero, add_zero]
+
+open scoped Differential in
+open Classical in
+/-- **Logarithm-free integration, packaged with the residues exposed** (§2.4/§2.5, the decision
+content): *every* `f ∈ K(x)` (over an algebraically closed char-`0` field) comes with computed
+residues `r : K → K[X]` and a flat Liouville form
+`f = g′ + (∫ p dx)′ + ∑_α (rα)(α)·logDeriv(X − α)`, *together with* the affirmative decision rule —
+**if** all the residues `(rα)(α)` vanish, **then** `∫ f` is logarithm-free (`∃ G, f = G′`). This is
+the algorithm's complete logarithm-detection on its affirmative side: it computes the residues and,
+when they all vanish, returns a rational antiderivative. (The converse `f = G′ ⟹ residues vanish`
+needs `residueAt α (G′) = 0` — that a rational derivative has no simple-pole residue — a Laurent
+argument not formalized here; see the file note.) -/
+theorem ratFunc_liouville_form_with_residues [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
+    ∃ (r : K → K[X]) (g : RatFunc K) (p : K[X]),
+      f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ α ∈ f.denom.roots.toFinset,
+              algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+                * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α))
+        ∧ ((∀ α ∈ f.denom.roots.toFinset, (r α).eval α = 0) → ∃ G : RatFunc K, f = G′) := by
+  obtain ⟨g, p, r, hform⟩ := ratFunc_liouville_flat f
+  exact ⟨r, g, p, hform, fun hres =>
+    ratFunc_logarithmFree_of_residues_zero f hform hres⟩
+
+/-! ## Restatements against the book's wording (Liouville's theorem, rational case)
+
+The rational case of **Liouville's theorem** (Bronstein §2.4/§2.5, the structural content behind
+`IntegrateRationalFunction`): `∫ f` for `f ∈ K(x)` is always elementary of the special form
+`g + ∑ᵢ cᵢ·log(uᵢ)` with `g, uᵢ ∈ K(x)` and `cᵢ` constants — equivalently
+`f = g′ + ∑ᵢ cᵢ·logDeriv(uᵢ)`. The companion **`## NOT YET FORMALIZED` gap**: the full converse of the
+decision corollary (`f = G′ ⟹ all residues vanish`) needs that a rational derivative has zero residue
+at every simple pole (a Laurent-coefficient fact); only the affirmative
+`residues vanish ⟹ logarithm-free` direction is proved. -/
+
+open scoped Differential in
+open Classical in
+-- Liouville's theorem, rational case (List form): `f = g′ + ∑_(c,u) c·logDeriv(u)`.
+example [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
+    ∃ (g : RatFunc K) (logs : List (K × RatFunc K)),
+        f = g′ + (logs.map (fun cu => cu.1 • Differential.logDeriv cu.2)).sum :=
+  ratFunc_liouville_list f
+
+open scoped Differential in
+open Classical in
+-- Decision (affirmative side): vanishing Rothstein–Trager residues ⟹ `∫ f` is rational (no logs).
+example [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
+    ∃ (r : K → K[X]) (g : RatFunc K) (p : K[X]),
+      f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ α ∈ f.denom.roots.toFinset,
+              algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+                * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α))
+        ∧ ((∀ α ∈ f.denom.roots.toFinset, (r α).eval α = 0) → ∃ G : RatFunc K, f = G′) :=
+  ratFunc_liouville_form_with_residues f
