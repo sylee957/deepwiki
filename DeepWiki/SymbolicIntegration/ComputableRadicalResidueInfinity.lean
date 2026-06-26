@@ -128,7 +128,7 @@ end CPolyG
 
 `K = ℚ`. For `∫ dx/√(x² + 1)` on `y² = ρ = x² + 1`: rationalize `1/y = y/ρ`, so `g(x,y) = y`
 (`g₀ = 0, g₁ = 1`) and `D(x) = ρ = x² + 1`. The transform at `∞` gives `(ρ̃, g̃₀, g̃₁, D̃) =
-(1 + t², 0, −1, t(1 + t²))` (the prompt's hand computation), whose `t = 0` place has residue resultant
+(1 + t², 0, −1, t(1 + t²))` (with `dx = −dt/t²`, `ỹ = t·y`), whose `t = 0` place has residue resultant
 `Z² − 1`, residues `±1` — matching the log term `log(x + √(x² + 1)) = arcsinh(x)`. `∫ dx/√(x² − 1)`
 (arccosh) is identical with `ρ = x² − 1`. -/
 
@@ -153,8 +153,8 @@ def arccoshInf_D : CPolyG ℚ := [-1, 0, 1]
 #eval (cnormG (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) : List ℚ)
 
 /-- **★ The `x = 1/t` transform reproduces Trager's normalize-at-infinity data** (`native_decide`). For
-`∫ dx/√(x² + 1)` the transform of `(ρ, g₀, g₁, D) = (x² + 1, 0, 1, x² + 1)` is exactly the prompt's hand
-computation `(ρ̃, g̃₀, g̃₁, D̃) = (1 + t², 0, −1, t(1 + t²))` — the common `t²` correctly cancelled so
+`∫ dx/√(x² + 1)` the transform of `(ρ, g₀, g₁, D) = (x² + 1, 0, 1, x² + 1)` is exactly the
+normalize-at-infinity data `(ρ̃, g̃₀, g̃₁, D̃) = (1 + t², 0, −1, t(1 + t²))` — the common `t²` cancelled so
 `D̃ = t(1 + t²)` keeps the place over `∞` a simple pole. -/
 theorem arcsinhInf_transform_eq :
     radTransformAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D
