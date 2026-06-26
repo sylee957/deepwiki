@@ -265,6 +265,59 @@ theorem radX3_monomialDeriv_genT_runs_coeff :
       (CPolyG.cmonomialDeriv radX3DtExp radX3GenT) radX3GenT) = false) := by
   constructor <;> native_decide
 
+/-! ### ★ The keystone composes: a transcendental level `QFunNZG (RadExt …)` over the algebraic base
+
+The payoff of the `CField`/`CDiffField (RadExt …)` instances: the transcendental-monomial carrier
+`QFunNZG α` is **generic over any `[CField α]`** (`instCFieldQFunNZG` needs `[CField α] [CFieldDomain α]`;
+`instCDiffFieldQFunNZG` adds `[CDiffField α]`). With `α := RadX3` the radical base, those binders are
+exactly the instances built above *plus* a `CFieldDomain RadX3` — so `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)`
+(the fraction field of `RadX3[t]`) is **automatically** a `CField` and a `CDiffField`. We exhibit this by
+instance resolution, under the one outstanding hypothesis `[CFieldDomain RadX3]` (the Prop-erased domain
+facts for the radical base — a genuine field/domain since `X² − (x³+1)` is irreducible over ℚ(x); its
+closed proof needs the `AdjoinRoot` bridge with canonical/reduced representatives, the documented stretch
+below). The resolution succeeding *is* the statement that the keystone composes — a transcendental monomial
+sits on top of the algebraic extension, the first **transcendental-on-algebraic** carrier. -/
+
+section
+variable [CFieldDomain RadX3]
+
+/-- **★ `QFunNZG RadX3` is a `CField`** (given `[CFieldDomain RadX3]`) — the transcendental level
+`ℚ(x)[√(x³+1)](t)` over the algebraic base resolves *automatically* from `instCFieldQFunNZG` (generic over
+`[CField RadX3] [CFieldDomain RadX3]`), since `CField RadX3` is the radical-base instance built above. THE
+KEYSTONE COMPOSES — a transcendental monomial stacks on the radical extension. -/
+theorem cfield_qfunNZG_radX3 : Nonempty (CField (QFunNZG RadX3)) := ⟨inferInstance⟩
+
+/-- **★ `QFunNZG RadX3` is a `CDiffField`** (given `[CFieldDomain RadX3]`) — the transcendental level
+inherits the *full* tower derivation (`d/dx + radical y' + ∂/∂t`) from `instCDiffFieldQFunNZG` (generic over
+`[CField RadX3] [CDiffField RadX3] [CFieldDomain RadX3]`), since `CDiffField RadX3` is the diagonal-radical
+derivation built above. The mixed elementary tower is a *differential* field — transcendental-over-algebraic
+with a genuine derivation. -/
+theorem cdiffField_qfunNZG_radX3 : Nonempty (CDiffField (QFunNZG RadX3)) := ⟨inferInstance⟩
+
+end
+
+/-! ### Stretch (documented, not shipped): the closed `CFieldDomain RadX3` / `CFieldSpec (RadExt …)`
+
+To discharge the `[CFieldDomain RadX3]` hypothesis above with a *concrete* instance — turning the
+composition theorems into closed, `native_decide`-able computations over `QFunNZG RadX3` — one needs the
+radical base to be a genuine integral domain, which it is (`X² − (x³+1)` is irreducible over ℚ(x), so
+`ℚ(x)[√(x³+1)]` is a field). The honest bridge is the noncomputable `CFieldSpec (RadExt α n f)` with
+`K := AdjoinRoot (Xⁿ − C(toK f))` (a `Field` under `[Fact (Irreducible (Xⁿ − C(toK f)))]`) and
+`toK := AdjoinRoot.mk ∘ toPolyG ∘ toRad`; the ring-hom laws are then the proven
+`RadElem.toPolyG_radDeriv_radAdd` / `mk_toPolyG_radMul` of `ComputableRadicalDerivationInvariant`
+(`AdjoinRoot.mk` *is* `Ideal.Quotient.mk (radIdeal n f)`), and `instCFieldDomainOfCFieldSpec` then supplies
+the `CFieldDomain` automatically.
+
+The obstruction is **representative canonicity**: `RadExt α n f` admits *any* coefficient list, but the
+`mk ∘ toPolyG` bridge is faithful (and `radInv2` is the genuine inverse) only on **reduced** lists of
+degree `< n` — an over-degree `aₘyᵐ` (`m ≥ n`) makes `toK_inv`/`isZero_iff` disagree with `AdjoinRoot`
+unless the operation reduces first. `isZero` here already reduces (so it would be sound), but `radInv2`
+does not, so the `CFieldSpec.toK_inv` law fails on non-reduced inputs. A sound closed instance therefore
+needs every `RadExt` operation made canonical (reduce-`mod yⁿ` in `inv`, or a reduced-list subtype carrier)
+— a larger refactor than this transcendental-on-algebraic enabler, left as the next step. The
+*computable* milestone (a transcendental monomial differentiating over the radical base) is fully realized
+above without it. -/
+
 /-! ### `#print axioms` — the algebraic Risch base computes
 
 The `CField (RadExt …)` ring/inverse and the `CDiffField (RadExt …)` derivation, exercised through the
