@@ -257,12 +257,13 @@ def IsLiouvilleObligation [Differential (RatFunc F)]
 *tower* logs).**  GIVEN the extended derivation, every `t`-constant is in `F`:
 `x′ = 0 → x ∈ range (algebraMap F (RatFunc F))`.  This is *not* needed for the single keystone
 `IsLiouville F F(t)`; it is what `IsLiouville.trans` requires to chain a tower `F ⊆ F(log u₁) ⊆
-F(log u₁, log u₂) ⊆ …`.  Crux: a new constant is a non-`F` element of `F(t)` with derivative `0`;
-`coeff_logDerivPoly` / `coeff_natDegree_logDerivPoly` (top `t`-coefficient sees only `F`'s
-derivation) force it to be a single `C b` with `b' = 0`, hence in `F`.  In char 0 this is where
-transcendence of `t` is essential. -/
-def ContainConstantsObligation [Differential (RatFunc F)] : Prop :=
-  Differential.ContainConstants F (RatFunc F)
+F(log u₁, log u₂) ⊆ …`.  The polynomial layer is **already discharged** above
+(`eq_C_of_logDerivPoly_eq_zero`): a `t`-constant is a single `C b` with `b' = 0`, hence in `F` —
+reducing this obligation to `NoDegreeDropObligation u` (the transcendence input "`b·u'/u` has no
+`F`-antiderivative") plus the fraction-field denominator-clearing step.  Carries `logDeriv u ≠ 0`:
+when `u' = 0`, `log u` *is* a new constant and `ContainConstants F F(t)` is genuinely false. -/
+def ContainConstantsObligation (u : F) [Differential (RatFunc F)] : Prop :=
+  logDeriv u ≠ 0 → Differential.ContainConstants F (RatFunc F)
 
 omit [CharZero F] in
 /-- **The keystone, assembled and PROVEN (modulo the two content obligations).**  GIVEN a
