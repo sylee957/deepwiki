@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableWellFounded2
+import DeepWiki.SymbolicIntegration.ComputablePrimPRSWf
 import DeepWiki.SymbolicIntegration.ComputableGcdCorrect
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorCorrect
 
@@ -65,7 +65,7 @@ theorem toPolyG_cdivFFWf (p q : CPolyG QFunNZ) (hq0 : cnormG q ≠ []) :
 
 `cgcdFF fuel p q = cmonicG (liftBPolyToQFunNZ (primPRSgcd fuel P Q))` with `(P, Q)` the `bdeg`-ordered pair
 of `clearDenoms p`, `clearDenoms q` — the fuel goes **only** to `primPRSgcd`. So the fuel-free companion
-substitutes the leaf `primPRSgcdWf` (`ComputableWellFounded2`): `cgcdFFWf p q = cmonicG (liftBPolyToQFunNZ
+substitutes the leaf `primPRSgcdWf` (`ComputablePrimPRSWf`): `cgcdFFWf p q = cmonicG (liftBPolyToQFunNZ
 (primPRSgcdWf P Q))`, with the `clearDenoms`/ordering/lift/monic-normalize all fuel-free already. -/
 
 /-- **Fuel-free fraction-free monic gcd over ℚ(x)[t]** `cgcdFFWf p q`: the fuel-free companion of `cgcdFF`.
