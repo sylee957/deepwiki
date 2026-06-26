@@ -9,13 +9,14 @@ function `f ∈ K(x)` (over an algebraically closed field of characteristic `0`)
 theorem: the decomposition is produced (Hermite reduction + polynomial part + Rothstein–Trager log
 grouping), not merely asserted to exist.
 
-The logarithmic-detection content sits in the **decision corollary**
-`ratFunc_logarithmFree_of_residues_zero`: when all residues vanish, `∫ f` is *logarithm-free*
-(`f = g′` for a rational `g`) — the algorithm's affirmative completeness (vanishing Rothstein–Trager
-residues ⟹ a rational antiderivative). The full converse (`f = g′ ⟹ residues vanish`, i.e. that a
-nonzero residue is a genuine obstruction) needs `residueAt α (g′) = 0` — a rational derivative has no
-simple-pole residue — a Laurent-coefficient fact left as a noted gap (the residue functional
-`residueAt` and its toolkit live in `RecognizingLogDeriv`).
+The logarithmic-detection content is the **decision iff** `ratFunc_logarithmFree_iff_residues_zero`:
+`∫ f` is *logarithm-free* (`f = g′` for a rational `g`) **iff** all the Rothstein–Trager residues
+vanish. The `←` (affirmative) `ratFunc_logarithmFree_of_residues_zero` drops the log part when the
+residues vanish; the `→` (converse) rests on the Laurent fact `residueAt α (g′) = 0` — a rational
+derivative has no simple-pole residue, proved here elementarily (`residueAt_derivative_eq_zero`,
+casing on whether `α` is a pole, no Laurent/Hahn-series machinery) — together with reading the residue
+`(rα)(α)` off the simple-pole log sum (`residueAt_logSum_eq_coeff`). The residue functional `residueAt`
+and its toolkit are imported from `RecognizingLogDeriv`.
 
 This composes the existing rational-integration spine — `integrateRationalFunction_logForm`
 (Hermite + poly part + RT grouping over *split* squarefree denominators) — with a front-end that
@@ -335,6 +336,61 @@ theorem residueAt_derivative_eq_zero [CharZero K] (G : RatFunc K) (α : K) :
     have hNα : N.eval α = 0 := by rw [hN, eval_mul, eval_sub, eval_X, eval_C, sub_self, zero_mul]
     rw [hNα, zero_div]
 
+/-! ## Identifying the flat-form residue with the intrinsic `residueAt α f`
+For the backward direction of the iff, the flat-form coefficient `(rα)(α)` must be recognised as the
+intrinsic residue `residueAt α f`.  Applying `residueAt α` to the flat Liouville form kills `g′` and
+`(∫p dx)′` (`residueAt_derivative_eq_zero`) and reads `(rα)(α)` off the log sum (each
+`cβ·logDeriv(X−β)` has residue `cβ` at `α = β`, `0` elsewhere — additive through pole-free witnesses). -/
+
+open scoped Classical in
+/-- **Pole-free witness for a Finset sum**: if each once-multiplied term `(X − α)·tᵢ = aᵢ/bᵢ` is
+pole-free at `α` (`bᵢ(α) ≠ 0`), the sum `∑ᵢ tᵢ` also has a pole-free witness — `(X − α)·∑ᵢ tᵢ = Aₛ/Bₛ`
+with `Bₛ(α) ≠ 0` and `Aₛ(α)/Bₛ(α) = ∑ᵢ aᵢ(α)/bᵢ(α)`. Finset induction summing fractions over the
+running common denominator; this packages the regular-at-`α` witness `residueAt_sum_of_witnesses`
+consumes. -/
+theorem exists_witness_sum {ι : Type*} (α : K) (s : Finset ι) (t : ι → RatFunc K)
+    (a b : ι → K[X]) (hb : ∀ i ∈ s, (b i).eval α ≠ 0)
+    (hwit : ∀ i ∈ s, algebraMap K[X] (RatFunc K) (X - C α) * t i
+      = algebraMap K[X] (RatFunc K) (a i) / algebraMap K[X] (RatFunc K) (b i)) :
+    ∃ A B : K[X], B.eval α ≠ 0 ∧ A.eval α / B.eval α = ∑ i ∈ s, (a i).eval α / (b i).eval α ∧
+      algebraMap K[X] (RatFunc K) (X - C α) * (∑ i ∈ s, t i)
+        = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) B := by
+  classical
+  induction s using Finset.induction with
+  | empty =>
+    refine ⟨0, 1, by simp, by simp, ?_⟩
+    simp [map_zero, map_one]
+  | insert j s hjs ih =>
+    obtain ⟨A, B, hBα, hval, hAB⟩ :=
+      ih (fun i hi => hb i (Finset.mem_insert_of_mem hi))
+        (fun i hi => hwit i (Finset.mem_insert_of_mem hi))
+    have hbj : (b j).eval α ≠ 0 := hb j (Finset.mem_insert_self j s)
+    have hwitj := hwit j (Finset.mem_insert_self j s)
+    refine ⟨a j * B + A * b j, b j * B, by rw [eval_mul]; exact mul_ne_zero hbj hBα, ?_, ?_⟩
+    · rw [Finset.sum_insert hjs, ← hval, eval_add, eval_mul, eval_mul, eval_mul,
+        div_add_div _ _ hbj hBα, mul_comm (eval α (b j)) (eval α A)]
+    · have hbjne : algebraMap K[X] (RatFunc K) (b j) ≠ 0 :=
+        (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
+          (fun h0 => hbj (by rw [h0, eval_zero]))
+      have hBne : algebraMap K[X] (RatFunc K) B ≠ 0 :=
+        (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
+          (fun h0 => hBα (by rw [h0, eval_zero]))
+      rw [Finset.sum_insert hjs, mul_add, hwitj, hAB, map_add, map_mul, map_mul, map_mul,
+        div_add_div _ _ hbjne hBne, mul_comm (algebraMap K[X] (RatFunc K) A)]
+
+open scoped Classical in
+/-- **Additivity of the residue over a pole-free witness sum**: a Finset sum `∑ᵢ tᵢ` whose each
+once-multiplied term `(X − α)·tᵢ = aᵢ/bᵢ` is pole-free at `α` (`bᵢ(α) ≠ 0`) has residue
+`residueAt α (∑ᵢ tᵢ) = ∑ᵢ aᵢ(α)/bᵢ(α)` — the residue functional is additive on simple-pole terms. The
+sum's own pole-free witness (`exists_witness_sum`) lets `residueAt_of_mul_X_sub_C` read the value. -/
+theorem residueAt_sum_of_witnesses {ι : Type*} (α : K) (s : Finset ι) (t : ι → RatFunc K)
+    (a b : ι → K[X]) (hb : ∀ i ∈ s, (b i).eval α ≠ 0)
+    (hwit : ∀ i ∈ s, algebraMap K[X] (RatFunc K) (X - C α) * t i
+      = algebraMap K[X] (RatFunc K) (a i) / algebraMap K[X] (RatFunc K) (b i)) :
+    residueAt α (∑ i ∈ s, t i) = ∑ i ∈ s, (a i).eval α / (b i).eval α := by
+  obtain ⟨A, B, hBα, hval, hAB⟩ := exists_witness_sum α s t a b hb hwit
+  rw [residueAt_of_mul_X_sub_C α (∑ i ∈ s, t i) A B hBα hAB, hval]
+
 /-! ## The decision corollary — logarithm-detection completeness -/
 
 open scoped Differential in
@@ -362,6 +418,104 @@ theorem ratFunc_logarithmFree_of_residues_zero [CharZero K] [IsAlgClosed K] (f :
     Finset.sum_eq_zero fun α hα => by rw [hres α hα, map_zero, map_zero, zero_mul]
   rw [hzero, add_zero]
 
+open scoped Classical in
+open scoped Differential in
+/-- **Logarithm-free ⟹ all residues vanish** (§2.4/§2.5, the *converse* completeness — intrinsic form):
+if `∫ f` is logarithm-free (`f = G′` for a rational `G ∈ K(x)`), then the residue `residueAt α f` at
+every `α ∈ K` vanishes. Immediate from `residueAt_derivative_eq_zero` (a rational derivative has no
+simple-pole residue): `residueAt α f = residueAt α (G′) = 0`. The genuine obstruction direction — a
+nonzero residue forces a logarithm — completing the logarithm-free decision to an iff
+(`ratFunc_logarithmFree_iff_residueAt_zero`). -/
+theorem ratFunc_residues_zero_of_logarithmFree [CharZero K] (f : RatFunc K)
+    (hf : ∃ G : RatFunc K, f = G′) (α : K) : residueAt α f = 0 := by
+  obtain ⟨G, rfl⟩ := hf
+  exact residueAt_derivative_eq_zero G α
+
+open scoped Classical in
+open scoped Differential in
+/-- **Residue of the flat log-sum picks off its coefficient**: for the Rothstein–Trager log sum
+`∑_{β∈s} cβ·logDeriv(X − β)` (`cβ = (rβ)(β)`) over a Finset `s` of *distinct* points, the residue at a
+member `α ∈ s` is exactly its coefficient `cα` — `residueAt α (∑β cβ·logDeriv(X − β)) = cα`. Each term
+`cβ·logDeriv(X − β) = cβ/(X − β)` has a simple pole, where `residueAt` is exact: the `β = α` term
+cancels to the constant `cα` (witness `cα/1`), every `β ≠ α` term is regular at `α` with value `0`
+(witness `cβ(X − α)/(X − β)`). Summed through `residueAt_sum_of_witnesses`. -/
+theorem residueAt_logSum_eq_coeff (s : Finset K) (r : K → K[X]) (α : K) (hα : α ∈ s) :
+    residueAt α (∑ β ∈ s, algebraMap K[X] (RatFunc K) (C ((r β).eval β))
+        * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C β)))
+      = (r α).eval α := by
+  classical
+  -- per-term pole-free witnesses: `(X−α)·(cβ·logDeriv(X−β)) = aβ/bβ` with `bβ(α) ≠ 0`
+  set a : K → K[X] := fun β => if β = α then C ((r α).eval α) else C ((r β).eval β) * (X - C α)
+    with ha
+  set b : K → K[X] := fun β => if β = α then 1 else X - C β with hb
+  have hbα : ∀ β ∈ s, (b β).eval α ≠ 0 := by
+    intro β _
+    by_cases hβ : β = α
+    · simp [hb, hβ]
+    · simp only [hb, if_neg hβ, eval_sub, eval_X, eval_C]
+      exact sub_ne_zero.mpr (Ne.symm hβ)
+  have hwit : ∀ β ∈ s, algebraMap K[X] (RatFunc K) (X - C α)
+        * (algebraMap K[X] (RatFunc K) (C ((r β).eval β))
+            * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C β)))
+      = algebraMap K[X] (RatFunc K) (a β) / algebraMap K[X] (RatFunc K) (b β) := by
+    intro β _
+    -- `logDeriv(X−β) = 1/(X−β)`
+    have hlog : Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C β))
+        = 1 / algebraMap K[X] (RatFunc K) (X - C β) := by
+      rw [logDeriv_algebraMap_eq, derivative_X_sub_C, map_one]
+    have hXβne : algebraMap K[X] (RatFunc K) (X - C β) ≠ 0 :=
+      (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero β)
+    by_cases hβ : β = α
+    · subst hβ
+      simp only [ha, hb, if_pos rfl, map_one, div_one]
+      rw [hlog, mul_one_div, mul_div_assoc', mul_comm, mul_div_assoc, div_self hXβne, mul_one]
+    · simp only [ha, hb, if_neg hβ]
+      rw [hlog, mul_one_div, map_mul, mul_comm (algebraMap K[X] (RatFunc K) (C ((r β).eval β))),
+        mul_div_assoc]
+  rw [residueAt_sum_of_witnesses α s _ a b hbα hwit]
+  -- evaluate the witness sum: only the `β = α` term is nonzero, contributing `cα`
+  rw [Finset.sum_eq_single α]
+  · simp [ha, hb]
+  · intro β _ hβ
+    simp only [ha, hb, if_neg hβ, eval_mul, eval_sub, eval_X, eval_C, sub_self, mul_zero,
+      zero_div]
+  · intro hαs; exact absurd hα hαs
+
+open scoped Classical in
+open scoped Differential in
+/-- **Logarithm-free ⟹ flat-form residues vanish** (§2.4/§2.5, the *converse* completeness on the
+flat-form coefficients): if `∫ f` is logarithm-free (`f = G′`) and `f` has the canonical flat Liouville
+form with coefficients `cα = (rα)(α)`, then every `cα` (at a denominator root `α`) vanishes. The log
+sum `∑α cα·logDeriv(X − α) = f − g′ − (∫p dx)′ = (G − g − ∫p)′` is itself a rational *derivative*, so
+its residue at each `α` is `0` (`residueAt_derivative_eq_zero`); but that residue equals the
+coefficient `cα` (`residueAt_logSum_eq_coeff`, the log sum having only simple poles). -/
+theorem ratFunc_residues_zero_of_logarithmFree_flat [CharZero K] [IsAlgClosed K] (f : RatFunc K)
+    {r : K → K[X]} {g : RatFunc K} {p : K[X]}
+    (hform : f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ α ∈ f.denom.roots.toFinset,
+              algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+                * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α)))
+    (hf : ∃ G : RatFunc K, f = G′) (α : K) (hα : α ∈ f.denom.roots.toFinset) :
+    (r α).eval α = 0 := by
+  obtain ⟨G, hG⟩ := hf
+  -- the log sum equals the rational derivative `(G − g − ∫p)′`
+  set LogSum := ∑ β ∈ f.denom.roots.toFinset,
+      algebraMap K[X] (RatFunc K) (C ((r β).eval β))
+        * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C β)) with hLogSum
+  have hLogDeriv : LogSum
+      = (G - g - algebraMap K[X] (RatFunc K) (polyIntegral p))′ := by
+    have hd1 : (G - g - algebraMap K[X] (RatFunc K) (polyIntegral p))′
+        = (G - g)′ - (algebraMap K[X] (RatFunc K) (polyIntegral p))′ :=
+      map_sub Differential.deriv _ _
+    have hd2 : (G - g)′ = G′ - g′ := map_sub Differential.deriv _ _
+    rw [hd1, hd2]
+    have : G′ = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′ + LogSum := by
+      rw [← hG, hform]
+    rw [this]; ring
+  -- `cα = residueAt α LogSum = residueAt α (derivative) = 0`
+  rw [← residueAt_logSum_eq_coeff f.denom.roots.toFinset r α hα, ← hLogSum, hLogDeriv,
+    residueAt_derivative_eq_zero]
+
 open scoped Differential in
 open Classical in
 /-- **Logarithm-free integration, packaged with the residues exposed** (§2.4/§2.5, the decision
@@ -370,9 +524,8 @@ residues `r : K → K[X]` and a flat Liouville form
 `f = g′ + (∫ p dx)′ + ∑_α (rα)(α)·logDeriv(X − α)`, *together with* the affirmative decision rule —
 **if** all the residues `(rα)(α)` vanish, **then** `∫ f` is logarithm-free (`∃ G, f = G′`). This is
 the algorithm's complete logarithm-detection on its affirmative side: it computes the residues and,
-when they all vanish, returns a rational antiderivative. (The converse `f = G′ ⟹ residues vanish`
-needs `residueAt α (G′) = 0` — that a rational derivative has no simple-pole residue — a Laurent
-argument not formalized here; see the file note.) -/
+when they all vanish, returns a rational antiderivative. (The full *iff* — `f = G′` ⟺ residues vanish —
+is `ratFunc_logarithmFree_iff_residues_zero`, the converse via `residueAt_derivative_eq_zero`.) -/
 theorem ratFunc_liouville_form_with_residues [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
     ∃ (r : K → K[X]) (g : RatFunc K) (p : K[X]),
       f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
@@ -384,15 +537,37 @@ theorem ratFunc_liouville_form_with_residues [CharZero K] [IsAlgClosed K] (f : R
   exact ⟨r, g, p, hform, fun hres =>
     ratFunc_logarithmFree_of_residues_zero f hform hres⟩
 
+open scoped Differential in
+open Classical in
+/-- **The full rational logarithm-free decision** (§2.4/§2.5, the iff completing the Rothstein–Trager
+detection): *every* `f ∈ K(x)` (over an algebraically closed char-`0` field) comes with computed
+residues `r : K → K[X]` and a flat Liouville form `f = g′ + (∫ p dx)′ + ∑_α (rα)(α)·logDeriv(X − α)`,
+for which `∫ f` is *logarithm-free* (`∃ G, f = G′`) **iff** every residue `(rα)(α)` vanishes. The `←`
+(affirmative) is `ratFunc_logarithmFree_of_residues_zero` — vanishing residues drop the log part; the
+`→` (converse) is `ratFunc_residues_zero_of_logarithmFree_flat` — a nonzero residue is a genuine
+obstruction, since the log sum (`= f − g′ − (∫p)′`, a rational derivative when `f = G′`) has residue
+`(rα)(α)` at each `α` (`residueAt_logSum_eq_coeff`), forced to `0` by `residueAt_derivative_eq_zero`. -/
+theorem ratFunc_logarithmFree_iff_residues_zero [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
+    ∃ (r : K → K[X]) (g : RatFunc K) (p : K[X]),
+      f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ α ∈ f.denom.roots.toFinset,
+              algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+                * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α))
+        ∧ ((∃ G : RatFunc K, f = G′) ↔ (∀ α ∈ f.denom.roots.toFinset, (r α).eval α = 0)) := by
+  obtain ⟨g, p, r, hform⟩ := ratFunc_liouville_flat f
+  refine ⟨r, g, p, hform, ?_, fun hres => ratFunc_logarithmFree_of_residues_zero f hform hres⟩
+  intro hf α hα
+  exact ratFunc_residues_zero_of_logarithmFree_flat f hform hf α hα
+
 /-! ## Restatements against the book's wording (Liouville's theorem, rational case)
 
 The rational case of **Liouville's theorem** (Bronstein §2.4/§2.5, the structural content behind
 `IntegrateRationalFunction`): `∫ f` for `f ∈ K(x)` is always elementary of the special form
 `g + ∑ᵢ cᵢ·log(uᵢ)` with `g, uᵢ ∈ K(x)` and `cᵢ` constants — equivalently
-`f = g′ + ∑ᵢ cᵢ·logDeriv(uᵢ)`. The companion **`## NOT YET FORMALIZED` gap**: the full converse of the
-decision corollary (`f = G′ ⟹ all residues vanish`) needs that a rational derivative has zero residue
-at every simple pole (a Laurent-coefficient fact); only the affirmative
-`residues vanish ⟹ logarithm-free` direction is proved. -/
+`f = g′ + ∑ᵢ cᵢ·logDeriv(uᵢ)`. The **decision is an iff**: `∫ f` is logarithm-free iff all the
+Rothstein–Trager residues vanish — both the affirmative `residues vanish ⟹ logarithm-free` and the
+converse `f = G′ ⟹ residues vanish` directions are proved (the latter on a rational derivative having
+zero residue at every simple pole). -/
 
 open scoped Differential in
 open Classical in
@@ -413,3 +588,21 @@ example [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
                 * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α))
         ∧ ((∀ α ∈ f.denom.roots.toFinset, (r α).eval α = 0) → ∃ G : RatFunc K, f = G′) :=
   ratFunc_liouville_form_with_residues f
+
+open scoped Differential in
+open Classical in
+-- Decision (full iff): `∫ f` logarithm-free (`f = G′`) ⟺ all Rothstein–Trager residues vanish.
+example [CharZero K] [IsAlgClosed K] (f : RatFunc K) :
+    ∃ (r : K → K[X]) (g : RatFunc K) (p : K[X]),
+      f = g′ + (algebraMap K[X] (RatFunc K) (polyIntegral p))′
+          + ∑ α ∈ f.denom.roots.toFinset,
+              algebraMap K[X] (RatFunc K) (C ((r α).eval α))
+                * Differential.logDeriv (algebraMap K[X] (RatFunc K) (X - C α))
+        ∧ ((∃ G : RatFunc K, f = G′) ↔ (∀ α ∈ f.denom.roots.toFinset, (r α).eval α = 0)) :=
+  ratFunc_logarithmFree_iff_residues_zero f
+
+open scoped Differential in
+open Classical in
+-- A rational derivative has no simple-pole residue: `residueAt α (G′) = 0` (the converse ingredient).
+example [CharZero K] (G : RatFunc K) (α : K) : residueAt α (G′) = 0 :=
+  residueAt_derivative_eq_zero G α
