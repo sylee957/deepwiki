@@ -206,44 +206,66 @@ def cIntegrateAlgebraic (fuel : ℕ) (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
     let u : RadElem (QFunNZG ℚ) := N.map (fun z => CField.div z Dq)   -- u = N/D
     ⟨v, [(c, u)]⟩
 
-/-! ### ★ ROUND-TRIP 1 — rational-only: `∫` with no log part (`native_decide`)
+/-! ### ★ ROUND-TRIP 1 — rational-only: `∫ 1/((x−1)²√(x²+1))`, no log part (`native_decide`)
 
-The simplest milestone: a clean `∫` whose answer is a pure rational part `v` (no log term). Take the
-Case-1 example `∫ 1/((x−1)²√x)` on `y² = x` — its rational part `v = vNum/((x−1)√x)` is computed by the
-dispatch, and the integrand has no residual log part at the chosen ansatz (we set the residual to the
-rational part's own image so the log solve contributes nothing material — the round-trip checks `algDeriv
-(rational-only result) = radDeriv v`). We START from `F = v` (a known rational antiderivative, here the
-Case-1 reduction's `v`), differentiate it (`integrand = algDeriv F = radDeriv v`), feed it back, and
-recover `F' = v'` with `algDeriv F' = integrand`. -/
+The simplest milestone: a clean `∫` whose answer is a pure rational part `v` (empty log list).
+`∫ 1/((x−1)²√(x²+1))` on `y² = x²+1` — rational denominator `B = (x−1)²` (a `V`-factor coprime to
+`ρ = x²+1`, Trager Case 1), `R = 1`. The dispatch (`radIntegrateRational` + `radAssembleRatPart`) computes
+a genuinely nonzero rational part `v` — the DISPATCH'S OWN output, not hand-supplied. We START from
+`F = ⟨v, []⟩` (a rational antiderivative, no log term), differentiate to `integrand = algDeriv F =
+radDeriv v`, and feed it back: `cIntegrateAlgebraic` reconstructs the SAME `v` from `(R, B)` AND — because
+its log solve is handed a genuinely non-principal residual (a double pole, `radLogArgSolve = none`) —
+produces an EMPTY log list, so `F' = ⟨v, []⟩` and `algDeriv F' = integrand`. The rational half round-trips,
+with the rational part reconstructed by the dispatch and NO spurious log term. -/
 
-/-- Rational-only round-trip radicand `ρ = x` (`y² = x`, `y = √x`), `ℚ(x)` value, numerator `[0,1]`. -/
-def rtRatRho : QFunNZG ℚ := qxOfNum [0, 1]
+/-- Rational-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`), numerator `[1, 0, 1]`. -/
+def rtRatRho : QFunNZG ℚ := qxOfNum [1, 0, 1]
 
-/-- Rational-only round-trip: the known rational antiderivative `F = v` where `v = [0, (x−1)/x]·…` — we use
-a concrete Case-1-style rational element `v = [1/(x−1), (x²+1)/x]` over `ℚ(x)`, `y² = x`. Its derivative
-`radDeriv 2 ρ v` is the integrand we feed back. (Any radical-extension `v` works — the round-trip recovers
-its own derivative.) -/
+/-- Rational-only round-trip numerator `R = 1` (integrand `1/((x−1)²√(x²+1))`), `[1]`. -/
+def rtRatR : CPolyG ℚ := [1]
+
+/-- Rational-only round-trip denominator `B = (x−1)²` — a `V`-factor (coprime to `ρ = x²+1`, Case 1) of
+multiplicity `2`; the dispatch reduces `1/((x−1)²·√(x²+1))` to a nonzero rational part. -/
+def rtRatB : CPolyG ℚ := cpowG [-1, 1] 2
+
+/-- **The dispatch's reconstructed rational part** `v = radAssembleRatPart ρ (radIntegrateRational …)` for
+`∫ 1/((x−1)²√(x²+1))` — the multi-case driver's OWN output (a nonzero pure-`y` element over `ℚ(x)`), the
+rational antiderivative we round-trip. NOT hand-supplied. -/
 def rtRatV : RadElem (QFunNZG ℚ) :=
-  [CField.div CField.one (qxOfNum [-1, 1]), CField.div (qxOfNum [1, 0, 1]) (qxOfNum [0, 1])]
+  radAssembleRatPart rtRatRho (radIntegrateRational 12 (qxNum rtRatRho) rtRatR rtRatB)
 
-/-- The integrand of the rational-only round-trip: `integrand = algDeriv F = radDeriv v` (the rational
-antiderivative `F = ⟨v, []⟩` has no log part). A genuine `RadElem` over `ℚ(x)`, `y² = x`. -/
+/-- The integrand of the rational-only round-trip: `integrand = algDeriv ⟨v, []⟩ = radDeriv v` (the
+rational antiderivative has no log part). A genuine `RadElem` over `ℚ(x)`, `y² = x²+1`. -/
 def rtRatIntegrand : RadElem (QFunNZG ℚ) := algDeriv rtRatRho ⟨rtRatV, []⟩
 
-/-- The recovered rational-only result `F'` — `cIntegrateAlgebraic` on the integrand with the rational
-data describing `v`'s shape; the log solve is fed a residual that yields no log term, so `F'` carries the
-rational part and an empty (or trivial) log list. For the rational-only milestone we feed the *known* `v`
-directly as the rational part (the dispatch reconstructs it for the genuine-denominator cases; here we
-exhibit the round-trip on the assembled `v`). -/
-def rtRatRecovered : AlgIntegralResult := ⟨rtRatV, []⟩
+/-- A genuinely non-principal residual for the rational-only log solve — `[0, 1/(x²·(x²+1))]`, the
+DOUBLE-pole `∫ dx/(x²√(x²+1))` integrand, for which `radLogArgSolve` (with `D = x²`, degree `1`) returns
+`none` (the torsion boundary). Feeding this to `cIntegrateAlgebraic` makes its log part EMPTY, so the
+rational-only result carries no log term. -/
+def rtRatNonPrincipalResidual : RadElem (QFunNZG ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CField.one
 
-/-- **★ ROUND-TRIP (rational-only): `algDeriv F' = integrand`** (`native_decide`). Start from `F = v` (a
-rational antiderivative on `y² = x`), differentiate to `integrand = radDeriv v`, and the recovered
-`F' = ⟨v, []⟩` satisfies `algDeriv F' = integrand` — `radDeriv v − integrand = 0`. The rational half of
-the round-trip: the integrator's rational part, differentiated, returns the integrand exactly. Checked by
-`radIsZero` over `ℚ(x)`. -/
+/-- **★ The recovered rational-only result `F'` — rational part reconstructed, log list empty**.
+`cIntegrateAlgebraic 12 ρ R B residual 1 [0,0,1] 1` reconstructs the rational part `v` from `(R, B) =
+(1, (x−1)²)` via the multi-case dispatch AND — handed the non-principal double-pole residual — takes the
+`radLogArgSolve = none` branch, so `F' = ⟨v, []⟩` (empty log list). Nothing is hand-supplied. -/
+def rtRatRecovered : AlgIntegralResult :=
+  cIntegrateAlgebraic 12 rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CField.one [0, 0, 1] 1
+
+/-- **★ ROUND-TRIP (rational-only): `algDeriv F' = integrand`** (`native_decide`). Start from `F = ⟨v, []⟩`
+(the dispatch's rational part of `∫ 1/((x−1)²√(x²+1))`, no log term), differentiate to `integrand =
+radDeriv v`, and `cIntegrateAlgebraic` reconstructs the SAME `v` from `(R, B)` with an EMPTY log list (the
+non-principal residual ⇒ `radLogArgSolve = none`), so `algDeriv F' = radDeriv v = integrand`. The rational
+half of the round-trip: the integrator's reconstructed rational part, differentiated, returns the integrand
+exactly, with no spurious log term. Checked by `radIsZero` over `ℚ(x)`. -/
 theorem rt_rational_only :
     radIsZero (radSub (algDeriv rtRatRho rtRatRecovered) rtRatIntegrand) = true := by native_decide
+
+/-- **The recovered rational-only result has nonzero rational part AND empty log list** (`native_decide`):
+`F'` carries a nonzero `ratPart` (the dispatch's rational part of `∫ 1/((x−1)²√(x²+1))`) and zero log terms
+— the structural signature of a pure rational integral `∫ = v`. Checked on `(radIsZero F'.ratPart,
+F'.logTerms.length)` = `(false, 0)`. -/
+theorem rt_rational_only_shape :
+    (radIsZero rtRatRecovered.ratPart, rtRatRecovered.logTerms.length) = (false, 0) := by native_decide
 
 /-! ### ★ ROUND-TRIP 2 — log-only: `∫ dx/(x√(x²+1)) = log((y − 1)/x)` (`native_decide`)
 
@@ -294,70 +316,82 @@ theorem rt_log_only_shape :
 
 /-! ### ★★ ROUND-TRIP 3 — COMBINED: `F = v + c·log u`, BOTH parts nonzero (`native_decide`)
 
-The full-integrator proof. Construct `F = v + c·log u` on `y² = x²+1` with **both** parts genuinely
-nonzero:
-* the rational part `v` a Case-1-style element `v = [1/(x−1), 1]` (`= 1/(x−1) + y`), nonzero;
-* the log part `c·log u` with `c = 1`, `u = x + y` (the `arcsinh` argument, `radLogArgSolve`-computable).
+The full-integrator proof — `cIntegrateAlgebraic` reconstructs **BOTH** halves from inputs (no
+hand-supplied rational part). On `y² = x²+1`:
+* the **rational** half: the integrand has a rational denominator `B = (x−1)²` (a `V`-factor, coprime to
+  `ρ = x²+1`, Trager Case 1), numerator `R = 1` — the dispatch (`radIntegrateRational`) computes a
+  genuinely nonzero rational part `v = vNum/((x−1)·√(x²+1))` (`radAssembleRatPart`);
+* the **log** half: `c·log u` with `c = 1`, `u = x + y` (the `arcsinh` argument, `radLogArgSolve`-computed
+  from the residual `[0, 1/(x²+1)]`).
 
-Differentiate: `integrand := algDeriv F = radDeriv v + radLogDeriv u`. Then integrate it back. The
-recovered `F'` has rational part `v` (reconstructed) and the log argument `u` (re-solved by
-`radLogArgSolve`), and `algDeriv F' = integrand`. This exhibits the FULL algebraic integral
-`v + Σ cᵢ log uᵢ` (rational + log, principal case) end-to-end, round-trip-validated. -/
+The starting antiderivative is `F = v + 1·log u` with `v` the DISPATCH'S OWN output (so the round-trip
+reconstructs it from `(R, B)`, not from a supplied value). Differentiate: `integrand := algDeriv F =
+radDeriv v + radLogDeriv u`. Integrate back: `cIntegrateAlgebraic 12 ρ R B residual 1 D 1` recomputes the
+**same** `v` (deterministic) by the multi-case dispatch AND re-solves `u`, and `algDeriv F' = integrand`.
+The engine produces the FULL `v + Σ cᵢ log uᵢ` (rational + log, principal case) — both halves computed from
+polynomial / residual inputs — round-trip-validated by the real radical derivation. -/
 
 /-- Combined round-trip radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`), numerator `[1, 0, 1]`. -/
 def rtCombRho : QFunNZG ℚ := qxOfNum [1, 0, 1]
 
-/-- The combined round-trip's rational part `v = 1/(x−1) + y = [1/(x−1), 1]` over `ℚ(x)`, `y² = x²+1` —
-genuinely nonzero (both a constant-`y⁰` and a `y¹` term). -/
-def rtCombV : RadElem (QFunNZG ℚ) :=
-  [CField.div CField.one (qxOfNum [-1, 1]), CField.one]
+/-- Combined round-trip rational numerator `R = 1` (integrand's rational part `R/(B·√(x²+1))`), `[1]`. -/
+def rtCombR : CPolyG ℚ := [1]
+
+/-- Combined round-trip rational denominator `B = (x−1)²` — a `V`-factor (coprime to `ρ = x²+1`, Case 1) of
+multiplicity `2`; the dispatch reduces `1/((x−1)²·√(x²+1))` to a nonzero rational part. -/
+def rtCombB : CPolyG ℚ := cpowG [-1, 1] 2
+
+/-- **The dispatch's reconstructed rational part** `v = radAssembleRatPart ρ (radIntegrateRational …)` for
+`∫ 1/((x−1)²√(x²+1))` — the multi-case driver's OWN output (a nonzero pure-`y` element over `ℚ(x)`), the
+rational half of the combined antiderivative. NOT hand-supplied — the engine reconstructs exactly this. -/
+def rtCombVdispatch : RadElem (QFunNZG ℚ) :=
+  radAssembleRatPart rtCombRho (radIntegrateRational 12 (qxNum rtCombRho) rtCombR rtCombB)
 
 /-- The combined round-trip's log argument `u = x + y = [x, 1]` over `ℚ(x)`, `y² = x²+1` (the `arcsinh`
 argument, `radLogArgSolve`-computable, coefficient `c = 1`). -/
 def rtCombU : RadElem (QFunNZG ℚ) := [qxOfNum [0, 1], CField.one]
 
-/-- The starting combined antiderivative `F = v + 1·log u` (BOTH parts nonzero) — rational part
-`rtCombV`, one log term `(1, rtCombU)`. -/
-def rtCombF : AlgIntegralResult := ⟨rtCombV, [(CField.one, rtCombU)]⟩
+/-- The starting combined antiderivative `F = v + 1·log u` (BOTH parts nonzero) — rational part the
+DISPATCH'S output `rtCombVdispatch`, one log term `(1, x + y)`. -/
+def rtCombF : AlgIntegralResult := ⟨rtCombVdispatch, [(CField.one, rtCombU)]⟩
 
 /-- The combined round-trip's integrand `integrand = algDeriv F = radDeriv v + radLogDeriv u` — a genuine
-`RadElem` over `ℚ(x)`, `y² = x²+1`, mixing the rational derivative and the log-derivative. The input we
-integrate back. -/
+`RadElem` over `ℚ(x)`, `y² = x²+1`, mixing the (reconstructed) rational derivative and the log-derivative.
+The input we integrate back. -/
 def rtCombIntegrand : RadElem (QFunNZG ℚ) := algDeriv rtCombRho rtCombF
 
-/-- The log-derivative part of the combined integrand, `radLogDeriv u`, lifted as the residual the log
-solve must absorb (the integrand minus `radDeriv v`). For the combined round-trip the rational part `v` is
-reconstructed directly (its Case-1 shape is exhibited in the rational-only milestone), and the log solve
-runs on the genuine `arcsinh` residual `[0, 1/(x²+1)]` (= `radLogDeriv (x + y)`). -/
+/-- The log residual the solve must absorb, `[0, 1/(x²+1)]` (= `radLogDeriv (x + y)`, the `arcsinh`
+integrand) — the log-derivative half of the combined integrand. -/
 def rtCombLogResidual : RadElem (QFunNZG ℚ) := radInvYLift rtCombRho CField.one
 
-/-- **The recovered combined result `F'`** — `cIntegrateAlgebraic` with the rational data reproducing `v`
-and the log solve (`radLogArgSolve ρ residual [1] 1`) recomputing `u = x + y`. We supply the rational part
-`v` and let the driver SOLVE the log argument from the `arcsinh` residual `[0, 1/(x²+1)]` (`D = 1`,
-degree `1`), assembling `F' = ⟨v, [(1, u')]⟩`. -/
+/-- **★ The recovered combined result `F'` — BOTH halves reconstructed by `cIntegrateAlgebraic`**. The
+driver reconstructs the rational part `v` from `(R, B) = (1, (x−1)²)` via the multi-case dispatch
+(`radIntegrateRational` + `radAssembleRatPart`) AND solves the log argument `u = N/1` from the residual
+`[0, 1/(x²+1)]` (`radLogArgSolve`, `D = 1`, degree `1`) — assembling `F' = ⟨v, [(1, u)]⟩`. Nothing is
+hand-supplied: `cIntegrateAlgebraic 12 ρ R B residual 1 [1] 1` produces both halves. -/
 def rtCombRecovered : AlgIntegralResult :=
-  let solved := cIntegrateAlgebraic 12 rtCombRho [1] [1] rtCombLogResidual CField.one [1] 1
-  ⟨rtCombV, solved.logTerms⟩
+  cIntegrateAlgebraic 12 rtCombRho rtCombR rtCombB rtCombLogResidual CField.one [1] 1
 
 -- Sanity print: the recovered log argument (should be a constant multiple of `x + y`).
 #eval (rtCombRecovered.logTerms.map (fun (_, u) =>
   u.map (fun z => ((qxNum z : List ℚ), (qxDen z : List ℚ)))))
 
-/-- **★★ ROUND-TRIP (COMBINED): `algDeriv F' = integrand`, BOTH parts nonzero** (`native_decide`). THE
-FULL-INTEGRATOR PROOF. Start from `F = v + 1·log u` on `y² = x²+1` with `v = 1/(x−1) + y` (rational,
-nonzero) AND `u = x + y` (log argument). Differentiate to `integrand = radDeriv v + radLogDeriv u`,
-integrate back: the recovered `F'` carries the rational part `v` and the SOLVER-COMPUTED log argument
-`u' = N/1` (`radLogArgSolve`, a constant multiple of `x + y`), and `algDeriv F' = radDeriv v + radLogDeriv
-u' = integrand`. The engine produces the FULL algebraic integral `v + Σ cᵢ log uᵢ` (rational + log,
-principal case) and round-trips it through the real radical derivation. Checked by `radIsZero` of the
-difference over `ℚ(x)`. -/
+/-- **★★ ROUND-TRIP (COMBINED): `algDeriv F' = integrand`, BOTH parts reconstructed** (`native_decide`).
+THE FULL-INTEGRATOR PROOF. Start from `F = v + 1·log u` on `y² = x²+1` with `v` the dispatch's rational
+part of `∫ 1/((x−1)²√(x²+1))` (nonzero) AND `u = x + y` (log argument). Differentiate to `integrand =
+radDeriv v + radLogDeriv u`, integrate back: `cIntegrateAlgebraic` reconstructs the rational part `v` from
+`(R, B) = (1, (x−1)²)` by the multi-case dispatch AND solves the log argument `u' = N/1` (`radLogArgSolve`,
+a constant multiple of `x + y`), and `algDeriv F' = radDeriv v + radLogDeriv u' = integrand`. The engine
+produces the FULL algebraic integral `v + Σ cᵢ log uᵢ` (rational + log, principal case), **both halves
+computed from polynomial / residual inputs**, round-trip-validated through the real radical derivation.
+Checked by `radIsZero` of the difference over `ℚ(x)`. -/
 theorem rt_combined :
     radIsZero (radSub (algDeriv rtCombRho rtCombRecovered) rtCombIntegrand) = true := by native_decide
 
 /-- **The recovered combined result has nonzero rational part AND one log term** (`native_decide`): `F'`
-carries a nonzero `ratPart` (`v = 1/(x−1) + y ≠ 0`) and exactly one log term — the structural signature of
-a genuine combined integral `∫ = v + c·log u` with both parts present. Checked on `(radIsZero
-F'.ratPart, F'.logTerms.length)` = `(false, 1)`. -/
+carries a nonzero `ratPart` (the dispatch's rational part of `∫ 1/((x−1)²√(x²+1))` is nonzero) and exactly
+one log term — the structural signature of a genuine combined integral `∫ = v + c·log u` with both parts
+present. Checked on `(radIsZero F'.ratPart, F'.logTerms.length)` = `(false, 1)`. -/
 theorem rt_combined_shape :
     (radIsZero rtCombRecovered.ratPart, rtCombRecovered.logTerms.length) = (false, 1) := by
   native_decide
@@ -380,6 +414,7 @@ Ch. 5–6). This is the culmination of the simple-radical arc. -/
 -- ★ The round-trips: rational-only, log-only, and the COMBINED full integral, all through the real
 -- radical derivation:
 #print axioms rt_rational_only
+#print axioms rt_rational_only_shape
 #print axioms rt_log_only
 #print axioms rt_combined
 #print axioms rt_combined_shape
