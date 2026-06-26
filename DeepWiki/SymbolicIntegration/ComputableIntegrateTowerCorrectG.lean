@@ -103,4 +103,71 @@ theorem logResidueSumG_cons (Dt : CPolyG α) (cv : α × CPolyG α) (rest : List
         + logResidueSumG Dt rest := by
   simp only [logResidueSumG, List.map_cons, List.sum_cons]
 
+/-! ### The `checkIdentityG` fold computes the residue sum
+
+`checkIdentityG`'s `foldl` accumulates `∑ cᵢ·(Δvᵢ)/vᵢ` as one fraction `(Lnum, Lden)` over `∏ᵢ vᵢ`,
+starting at `([0], [1])` and combining `acc.1/acc.2 + (c·Δv)/v = (acc.1·v + c·Δv·acc.2)/(acc.2·v)`.
+Reading through `amG α`, the running fraction is the seed plus the partial `logResidueSumG`; with all `vᵢ`
+nonzero the seed contributes `0`. The carrier-generic mirror of `checkIdentity_fold_eq`. -/
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The `checkIdentityG` fold computes the residue sum** (field reading): folding from a seed
+`(snum, sden)` (`sden ≠ 0`) over a generic log list whose every argument `v` is nonzero, the running
+fraction `amG(Lnum)/amG(Lden)` equals the seed fraction plus `logResidueSumG`, and the running denominator
+`Lden = sden·∏ᵢ vᵢ` stays nonzero. By induction on the list — the carrier-generic mirror of
+`checkIdentityG_fold_eq`. -/
+theorem checkIdentityG_fold_eq (Dt : CPolyG α) :
+    ∀ (logs : List (α × CPolyG α)) (snum sden : CPolyG α),
+      toPolyG sden ≠ 0 →
+      (∀ cv ∈ logs, toPolyG cv.2 ≠ 0) →
+      let res := logs.foldl
+        (fun (acc : CPolyG α × CPolyG α) (cv : α × CPolyG α) =>
+          let c := cv.1
+          let v := cv.2
+          let Dv := cmonomialDeriv Dt v
+          let termNum := cscaleG c Dv
+          (caddG (cmulG acc.1 v) (cmulG termNum acc.2), cmulG acc.2 v))
+        (snum, sden)
+      toPolyG res.2 ≠ 0 ∧
+        amG α (toPolyG res.1) / amG α (toPolyG res.2)
+          = amG α (toPolyG snum) / amG α (toPolyG sden) + logResidueSumG Dt logs := by
+  intro logs
+  induction logs with
+  | nil =>
+    intro snum sden hsden _
+    refine ⟨hsden, ?_⟩
+    simp only [logResidueSumG_nil, add_zero, List.foldl_nil]
+  | cons cv rest ih =>
+    intro snum sden hsden hv
+    -- the head argument `v` is nonzero
+    have hvne : toPolyG cv.2 ≠ 0 := hv cv List.mem_cons_self
+    -- one fold step: new accumulator
+    set newnum := caddG (cmulG snum cv.2) (cmulG (cscaleG cv.1 (cmonomialDeriv Dt cv.2)) sden)
+      with hnewnum
+    set newden := cmulG sden cv.2 with hnewden
+    have hnewden_ne : toPolyG newden ≠ 0 := by
+      rw [hnewden, toPolyG_cmulG]; exact mul_ne_zero hsden hvne
+    -- the IH applied to the rest with the new seed
+    have hrest : ∀ cv' ∈ rest, toPolyG cv'.2 ≠ 0 := fun cv' hcv' => hv cv' (List.mem_cons_of_mem _ hcv')
+    obtain ⟨hden, heq⟩ := ih newnum newden hnewden_ne hrest
+    refine ⟨?_, ?_⟩
+    · -- the running denominator after the head step is `(newnum, newden)`
+      simp only [List.foldl_cons]
+      exact hden
+    simp only [List.foldl_cons]
+    rw [heq, logResidueSumG_cons]
+    -- the field algebra: `snum/sden + C(c)·(Δv)/v = newnum/newden`
+    have hAsden : amG α (toPolyG sden) ≠ 0 := amG_toPolyG_ne_zero hsden
+    have hAv : amG α (toPolyG cv.2) ≠ 0 := amG_toPolyG_ne_zero hvne
+    have hstep : amG α (toPolyG newnum) / amG α (toPolyG newden)
+        = amG α (toPolyG snum) / amG α (toPolyG sden)
+          + amG α (Polynomial.C (CFieldSpec.toK cv.1))
+              * (amG α (toPolyG (cmonomialDeriv Dt cv.2)) / amG α (toPolyG cv.2)) := by
+      rw [hnewnum, hnewden, toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cscaleG,
+        toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
+      field_simp
+      simp only [map_mul]
+      ring
+    rw [hstep]; ring
+
 end DeepWiki.SymbolicIntegration
