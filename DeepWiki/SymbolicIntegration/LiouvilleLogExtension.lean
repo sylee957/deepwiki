@@ -482,31 +482,84 @@ when `u' = 0`, `log u` *is* a new constant and `ContainConstants F F(t)` is genu
 def ContainConstantsObligation (u : F) [Differential (RatFunc F)] : Prop :=
   logDeriv u ≠ 0 → Differential.ContainConstants F (RatFunc F)
 
+/-- **The F-data reduction residual** — the *sole* mathematical content left in Obligation 3, sharply
+isolated.  It says: any `RatFunc F` representation `a = ∑ cᵢ logDeriv wᵢ + v′` of `a ∈ F` (`wᵢ, v ∈
+F(t)`, `cᵢ` constant) can be re-expressed with the logarithms' arguments and the `v`-term **already
+in `F`** — i.e. there exist `w₀ : ι → F`, `v₀ : F` with `a = ∑ cᵢ logDeriv (w₀ x) + v₀′` *as an
+equation in `RatFunc F`*.  This is exactly the Rosenlicht pole-matching: factor each `wᵢ`, cancel its
+proper `t`-poles (`logDeriv_monic_proper` — none survive since `a ∈ F` has no `t`-pole), and reduce
+`v` to `F` via the top-coefficient/transcendence descent.  Everything *after* this (the final
+`IsLiouville` packaging) is mechanical and **proven** in `isLiouvilleReduction_of_fDataReduction`. -/
+def LiouvilleFDataReduction (u : F) : Prop :=
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  ∀ (a : F) (ι : Type) [Fintype ι] (c : ι → F), (∀ x, (c x)′ = 0) →
+    ∀ (w : ι → RatFunc F) (v : RatFunc F),
+      algebraMap F (RatFunc F) a = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (w x) + v′ →
+      ∃ (w₀ : ι → F) (v₀ : F),
+        algebraMap F (RatFunc F) a
+          = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x))
+              + (algebraMap F (RatFunc F) v₀)′
+
+omit [CharZero F] in
+/-- **The mechanical packaging — PROVEN.**  Given `F`-data for a single representation (the output of
+the pole-matching reduction), `IsLiouville`'s existential conclusion holds: pull the
+already-`F`-valued logarithms and `v`-term back through `algebraMap` injectivity
+(`logDeriv_algebraMap`, `deriv_algebraMap`).  This is the entire "assembly" half of Obligation 3. -/
+theorem isLiouville_conclusion_of_fData [Differential (RatFunc F)]
+    [DifferentialAlgebra F (RatFunc F)]
+    (a : F) (ι : Type) [Fintype ι] (c : ι → F) (hc : ∀ x, (c x)′ = 0)
+    (w₀ : ι → F) (v₀ : F)
+    (h : algebraMap F (RatFunc F) a
+          = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x))
+              + (algebraMap F (RatFunc F) v₀)′) :
+    ∃ (ι₀ : Type) (_ : Fintype ι₀) (c₀ : ι₀ → F) (_ : ∀ x, (c₀ x)′ = 0)
+      (u₀ : ι₀ → F) (v₀' : F), a = ∑ x, c₀ x * logDeriv (u₀ x) + v₀'′ := by
+  refine ⟨ι, inferInstance, c, hc, w₀, v₀, ?_⟩
+  apply FaithfulSMul.algebraMap_injective F (RatFunc F)
+  rw [map_add, map_sum, ← deriv_algebraMap]
+  have hsum : ∀ x, (algebraMap F (RatFunc F)) (c x * logDeriv (w₀ x))
+      = algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x)) := by
+    intro x; rw [map_mul, ← logDeriv_algebraMap]
+  simp_rw [hsum]
+  exact h
+
 /-- **Obligation 3 — the single remaining obligation: the `IsLiouville` reduction** on the genuine
 log extension `RatFunc F` (Rosenlicht's partial-fraction / pole-matching argument, the heart of the
-transcendental case).  If `a ∈ F` is written `a = ∑ cᵢ logDeriv wᵢ + v′` with `wᵢ, v ∈ F(t)`, `cᵢ`
-constants, it must be rewritable with all data in `F`: factor each `wᵢ = (F-elt)·∏(monic
-irreducibles in t)`; `logDeriv` of each monic `t`-factor `π` is *proper* (`deg (D π) < deg π`,
-`natDegree_logDerivPoly_lt_of_monic`), a genuine `t`-pole; matching `t`-pole orders on both sides
-(LHS `a ∈ F` has **none**) cancels every `t`-pole, folding the `t`-parts into a single `logDeriv
-u`-multiple (`logDerivPoly_monomial_eq`) and forcing `v` to have no `t`-pole, hence `v ∈ F[t]` and
-then `v ∈ F` (`leadingCoeff_deriv_eq_zero_of_logDerivPoly_eq_zero`).  The setup
-(`logDifferential`, `logDifferentialAlgebra`) is now fully real, so the **entire** keystone reduces
-to *this one* `Prop`. -/
+transcendental case).  The setup (`logDifferential`, `logDifferentialAlgebra`) is now fully real, so
+the **entire** keystone reduces to this one `Prop`, and *that* reduces further (via the proven
+`isLiouvilleReduction_of_fDataReduction`) to `LiouvilleFDataReduction u` — the pure pole-matching
+content. -/
 def IsLiouvilleReductionObligation (u : F) : Prop :=
   letI := logDifferential u
   letI := logDifferentialAlgebra u
   IsLiouville F (RatFunc F)
 
 omit [CharZero F] in
+/-- **The keystone, reduced to the pure pole-matching content — PROVEN assembly.**  Given
+`LiouvilleFDataReduction u` (the Rosenlicht reduction of any representation to `F`-data),
+`IsLiouville F (RatFunc F)` holds: feed each representation through the reduction, then package via
+`isLiouville_conclusion_of_fData`.  So Obligation 3 ⟺ `LiouvilleFDataReduction u`, with the
+`IsLiouville`-packaging fully discharged here. -/
+theorem isLiouvilleReduction_of_fDataReduction (u : F)
+    (hred : LiouvilleFDataReduction u) : IsLiouvilleReductionObligation u := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  refine ⟨fun a ι _ c hc w v h => ?_⟩
+  obtain ⟨w₀, v₀, h₀⟩ := hred a ι c hc w v h
+  exact isLiouville_conclusion_of_fData a ι c hc w₀ v₀ h₀
+
+omit [CharZero F] in
 /-- **The keystone, assembled and PROVEN modulo the single `IsLiouville` reduction.**  The setup is
 genuine (`logDifferential u` is a real `Differential (RatFunc F)`, `logDifferentialAlgebra u` a real
 `DifferentialAlgebra F (RatFunc F)`, Obligations 1 and 2 *closed* above).  So `F(log u) = RatFunc F`
 is a Liouville extension of `F` **iff** the `IsLiouville` reduction (Obligation 3,
-`IsLiouvilleReductionObligation u`) holds — this theorem is that reduction made into the final
-assembly.  Only the Rosenlicht pole-matching argument now stands between this and an unconditional
-`instance : IsLiouville F (RatFunc F)`.  (Towering several logs additionally needs Obligation 4,
-`ContainConstantsObligation`, via `IsLiouville.trans`.) -/
+`IsLiouvilleReductionObligation u`) holds — which itself reduces (via the proven
+`isLiouvilleReduction_of_fDataReduction`) to the pure pole-matching `LiouvilleFDataReduction u`.
+Only that Rosenlicht reduction-to-`F`-data now stands between this and an unconditional
+`instance : IsLiouville F (RatFunc F)`; everything else (setup + `IsLiouville`-packaging) is proven.
+(Towering several logs additionally needs Obligation 4, `ContainConstantsObligation`, via
+`IsLiouville.trans`.) -/
 theorem keystone (u : F) (hreduction : IsLiouvilleReductionObligation u) :
     letI := logDifferential u
     letI := logDifferentialAlgebra u
