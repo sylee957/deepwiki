@@ -125,3 +125,4 @@ import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
 import DeepWiki.SymbolicIntegration.ComputableGeneralResidues
 import DeepWiki.SymbolicIntegration.ComputableGeneralRationalPart
 import DeepWiki.SymbolicIntegration.ComputableGeneralDerivation
+import DeepWiki.SymbolicIntegration.ComputableGeneralRationalSolve
