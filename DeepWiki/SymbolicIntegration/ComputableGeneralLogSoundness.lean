@@ -486,6 +486,119 @@ theorem genRatLogPart_eq_residue_logDeriv_sum (s : Finset K) (A : K[X]) (hA : A.
 
 end LogResidue
 
+/-! ### ★ The compute-bridge — `genResidueResultant`'s interpolation-uniqueness characterization (engine link)
+
+`roots_genResidueResultant_eq_residues` works on the *abstract* product form `R = C(lc)^N·∏_{α₀} genNorm(α₀, Z)`.
+To discharge its hypothesis `hR` for the ENGINE's `genResidueResultant fuelY fuelD fuelX f g Dder D` (which
+interpolates over the `Z`-nodes `k = 0, …, n·deg_X D`, `n = deg_y f`), the bridge is the **interpolation-
+uniqueness** characterization — the EXACT analogue of the radical's `toPolyG_cAlgResidueResultant_eq_of_eval`:
+the engine's `genResidueResultant` is THE unique polynomial of degree `< n·deg_X D + 2` agreeing at each node
+`Z = (k : ℚ)` with the abstract product form. The outer carrier is `ℚ` (`CFieldSpec.K ℚ = ℚ`, `toK = id`), so
+node distinctness is `Nat.cast` injectivity into `ℚ` (char 0) and the assembly is `eval_toPolyG_cinterpolateG`
++ `degree_toPolyG_cinterpolateG_lt` + `Polynomial.eq_of_degrees_lt_of_eval_index_eq`, with the general
+`n·deg_X D + 1` node count (vs the radical's doubled `2·deg D + 1`). Composed with
+`roots_genResidueResultant_eq_residues`, this connects the abstract roots↔residues theorem to the engine's
+`genResidueResultant` — the compute-bridge CLOSED, axiom-clean. -/
+
+namespace CPolyG
+
+/-- **★ The compute-bridge — the interpolation-uniqueness characterization of `genResidueResultant`** — let
+`R : ℚ[X]` have `degree < cdegG f * cdegG D + 2` (the general `n·deg_X D + 1` node count, `n = deg_y f`), and
+suppose at each node `k ∈ {0, …, cdegG f · cdegG D + 1}` its value is the engine's per-node outer resultant
+`R.eval (k : ℚ) = cresultantG fuelX (resYAtNode fuelY fuelD f g Dder (k : ℚ)) D` (the inner `res_Y` against
+`F` then outer `res_X` against `D`, the values `genResidueResultant` interpolates). Then `toPolyG
+(genResidueResultant fuelY fuelD fuelX f g Dder D) = R`. The compute-bridge CLOSED: the engine's general
+residue resultant is the unique degree-`< n·deg_X D + 2` polynomial with those node values — the EXACT
+`toPolyG_cAlgResidueResultant_eq_of_eval` Lagrange-uniqueness, ported to the general double resultant
+(`genResidueResultant`) over the concrete `ℚ` outer carrier. The node abscissae `(k : ℚ)` are distinct by
+`Nat.cast` injectivity into `ℚ` (char 0), so no separate `InjOn` hypothesis is needed (unlike the radical's
+generic-`α` `cnatCastG` version). Composed with `roots_genResidueResultant_eq_residues` (whose hypothesis `hR`
+is the `resultant_eq_prod_eval` product form), this discharges `hR` for the engine's `genResidueResultant` —
+connecting the abstract roots↔residues milestone to the actual engine. -/
+theorem toPolyG_genResidueResultant_eq_of_eval (fuelY fuelD fuelX : ℕ)
+    (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (D : CPolyG ℚ)
+    (R : ℚ[X])
+    (hRdeg : R.degree < (cdegG f * cdegG D + 2 : ℕ))
+    (hnode : ∀ k ∈ Finset.range (cdegG f * cdegG D + 1 + 1),
+      R.eval ((k : ℚ))
+        = cresultantG fuelX (resYAtNode fuelY fuelD f g Dder ((k : ℚ))) D) :
+    toPolyG (genResidueResultant fuelY fuelD fuelX f g Dder D) = R := by
+  classical
+  -- Lean elaborates the engine's `(range n).map (fun k:ℕ => ((k:ℚ), …))` by lifting the tuple coercion to a
+  -- DOUBLE map `((range n).map Nat.cast).map (fun z:ℚ => (z, …))`. We pin `pts` in exactly that doubly-mapped
+  -- form (so `hpts` is `rfl` against the engine), and the list-shape lemmas compose over the two `List.map`s.
+  -- `zs` = the `ℚ`-node abscissae. Build it via `List.range'` reused through `cnatCastG`-free `map`; pin it
+  -- with `List.Nodup`/`length`/`mem` facts proven by the dedicated `range_map` lemmas (the coercion makes the
+  -- literal `(range).map (↑·)` re-display as a `flatMap`/`do`-block, so we keep the facts, not the syntax).
+  -- `zs` = the `ℚ`-node abscissae, kept as the EXPLICIT cast-map of `range` (`List.map_coe_range`) so the
+  -- coercion does not re-lift into a `flatMap`. Facts proven by the `range`/`map` lemmas via `simp`.
+  set zs : List ℚ := (List.range (cdegG f * cdegG D + 1 + 1)).map (Nat.cast) with hzs
+  have hzs_len : zs.length = cdegG f * cdegG D + 1 + 1 := by
+    rw [hzs, List.length_map, List.length_range]
+  have hzs_nodup : zs.Nodup :=
+    hzs ▸ List.Nodup.map (fun a b hab => Nat.cast_injective hab) List.nodup_range
+  have hzs_mem : ∀ k, k ∈ List.range (cdegG f * cdegG D + 1 + 1) → ((k : ℚ)) ∈ zs := by
+    intro k hk; rw [hzs, List.mem_map]; exact ⟨k, hk, rfl⟩
+  set pts : List (ℚ × ℚ) :=
+    zs.map (fun z => (z, cresultantG fuelX (resYAtNode fuelY fuelD f g Dder z) D))
+    with hpts
+  -- bridge the engine's node list to `pts` STRUCTURALLY (no resultant evaluation): the engine's
+  -- `(range).map (fun k:ℕ => let z:=↑k; (z, …))` and `pts = ((range).map ↑).map (fun z:ℚ => (z, …))` are the
+  -- SAME up to `flatMap_pure_eq_map` (the lifted coercion) + `map_map`.
+  have hcompute : genResidueResultant fuelY fuelD fuelX f g Dder D = cinterpolateG pts := by
+    rw [genResidueResultant, hpts, hzs]
+    congr 1
+    rw [List.map_map]
+    -- the engine's inner `do let a ← range; pure ↑a` IS `range.map Nat.cast` (`flatMap_pure_eq_map`),
+    -- then `map_map` collapses both sides to `range.map ((z,…) ∘ ↑)`
+    rw [show (do let a ← List.range (cdegG f * cdegG D + 1 + 1); pure (↑a : ℚ))
+        = (List.range (cdegG f * cdegG D + 1 + 1)).map (Nat.cast) from
+      List.flatMap_pure_eq_map _ _, List.map_map]
+  have htoK : ∀ q : ℚ, CFieldSpec.toK q = q := fun _ => rfl
+  -- node-abscissa images = `zs`; reusable membership/length/nodup facts over the double map
+  have hmempts : ∀ z, z ∈ zs →
+      (z, cresultantG fuelX (resYAtNode fuelY fuelD f g Dder z) D) ∈ pts := by
+    intro z hz; rw [hpts, List.mem_map]; exact ⟨z, hz, rfl⟩
+  have hfst : pts.map (fun p => CFieldSpec.toK p.1) = zs := by
+    rw [hpts, List.map_map]
+    simp only [htoK]
+    rw [show (fun p : ℚ × ℚ => p.1) ∘ (fun z => (z, cresultantG fuelX
+        (resYAtNode fuelY fuelD f g Dder z) D)) = id from rfl, List.map_id]
+  have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by rw [hfst]; exact hzs_nodup
+  have hne : pts ≠ [] := by
+    rw [hpts, Ne, List.map_eq_nil_iff]
+    intro hzsnil; rw [hzsnil] at hzs_len; simp at hzs_len
+  have hlen : pts.length = cdegG f * cdegG D + 1 + 1 := by
+    rw [hpts, List.length_map, hzs_len]
+  rw [hcompute]
+  -- Lagrange uniqueness: degree `< #nodes` both sides, agreeing at the nodes
+  refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := ℚ) (ι := ℕ)
+    (s := Finset.range (cdegG f * cdegG D + 1 + 1))
+    (v := fun k => (k : ℚ))
+    (f := toPolyG (cinterpolateG pts)) (g := R)
+    (fun a _ b _ hab => Nat.cast_injective hab) ?_ ?_ ?_
+  · -- `degree (toPolyG (cinterpolateG pts)) < #nodes`
+    rw [Finset.card_range, Nat.cast_withBot]
+    have := degree_toPolyG_cinterpolateG_lt pts hne
+    rw [hlen] at this
+    simpa [Nat.cast_withBot] using this
+  · -- `degree R < #nodes`: `cdegG f · cdegG D + 2 = #nodes`
+    rw [Finset.card_range, Nat.cast_withBot]
+    have hcard : (cdegG f * cdegG D + 1 + 1 : ℕ) = (cdegG f * cdegG D + 2 : ℕ) := by ring
+    rw [hcard]
+    exact hRdeg
+  · -- agree at the nodes: `toPolyG(cinterpolateG pts)((k:ℚ)) = node value = R((k:ℚ))`
+    intro k hk
+    -- `(k:ℚ) ∈ zs` since `zs = (range n).map (↑·)` and `k ∈ range n`
+    have hzmem : ((k : ℚ)) ∈ zs := by
+      rw [hzs, List.mem_map]; exact ⟨k, by simpa using hk, rfl⟩
+    have heval := eval_toPolyG_cinterpolateG pts hnodup (hmempts ((k : ℚ)) hzmem)
+    rw [htoK, htoK] at heval
+    rw [heval]
+    exact (hnode k hk).symm
+
+end CPolyG
+
 /-! ### ★ Priority 3 — composing rational + log into the full GENERAL algebraic integral soundness `D(∫f) = f`
 
 The unified general integrator `afIntegrateAlgebraic` returns `(v, u)` (and in general `(v, args)`) — a
@@ -564,9 +677,17 @@ single-log soundness (`isGeneralLogTerm_of_logCert`), the multi-term residue-sum
 `roots_residueResultant_eq_residues` analogue for the GENERAL double resultant), and the full composition
 (`isGeneralAlgebraicIntegral_of_parts`) are general theorems — the LOG half of the general algebraic capstone
 `D(∫f) = f`, with the residue-correctness core mirrored from the radical template as closely as the general
-norm allows. The single remaining mechanical step is the `resultant_eq_prod_eval` instantiation supplying the
-product-form hypothesis of `roots_genResidueResultant_eq_residues` for the engine's `genResidueResultant` (the
-compute-bridge, exactly the single-resultant pattern). -/
+norm allows. **The compute-bridge is now CLOSED** — `toPolyG_genResidueResultant_eq_of_eval` (the
+interpolation-uniqueness characterization, the EXACT `toPolyG_cAlgResidueResultant_eq_of_eval` port to the
+general double resultant `genResidueResultant`) discharges the `hR` product-form hypothesis of
+`roots_genResidueResultant_eq_residues` for the ENGINE's `genResidueResultant`, so the abstract roots↔residues
+milestone connects to the actual engine. With both halves' abstract cores + this engine bridge proven, the
+complete algebraic `D(afIntegrateAlgebraic f) = f` is **self-contained at its mathematical core**, modulo the
+documented `native_decide` engine boundary (the `afIsLogIntegral`/`afRationalSolve` round-trip certificate, the
+`hsplit`/`hnode`/`hrat`/`hlog` preconditions the composition theorems take as hypotheses — exactly as the
+radical capstone's `isAlgebraicIntegral_of_parts` does), and the `resultant_eq_prod_eval` *application* feeding
+the per-node values into `toPolyG_genResidueResultant_eq_of_eval`'s `hnode` (the same factoring
+`rtResultant_eq_prod_roots` already provides for the single resultant). -/
 
 -- The certificate↔predicate bridge: every validated log certificate is the abstract single-log soundness:
 #print axioms CPolyG.isGeneralLogTerm_of_logCert
@@ -588,6 +709,9 @@ compute-bridge, exactly the single-resultant pattern). -/
 
 -- ★★ Obligation 1 MILESTONE (abstract): the general residue resultant's roots ARE the per-place residues:
 #print axioms LogResidue.roots_genResidueResultant_eq_residues
+
+-- ★★ The compute-bridge CLOSED: the interpolation-uniqueness characterization of the engine's `genResidueResultant`:
+#print axioms CPolyG.toPolyG_genResidueResultant_eq_of_eval
 
 -- ★★ Obligation 3 (general framing): the general log-part per-term match IS the algebraic partial fraction:
 #print axioms LogResidue.genRatLogPart_eq_residue_logDeriv_sum
