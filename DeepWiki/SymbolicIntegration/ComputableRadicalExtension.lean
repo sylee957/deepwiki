@@ -193,4 +193,83 @@ theorem radMul_onePlusGen_sq :
         [CField.add CField.one radicandX3p1, CField.add CField.one CField.one]) = true := by
   native_decide
 
+/-! ### The `Tᵢ` decoupling (Trager Appendix A §1)
+
+With `σ(y) = ωy` (ω a primitive `n`-th root of unity) Trager builds the projection operators
+`Tᵢ = (1/n)·Σⱼ σʲ/ωⁱʲ`, which satisfy `Tᵢ(yʲ) = yʲ` if `i = j` else `0`, and **commute with the
+derivation** (`Tᵢ(v') = (Tᵢ v)'`). On the coefficient-list representation `Tᵢ` is just "keep the `yⁱ`
+component, zero the rest" — `radProj i`. The diagonality of `radDeriv` (each `yⁱ`-component maps to a
+`yⁱ`-component) *is* the statement `Tᵢ ∘ D = D ∘ Tᵢ`. Consequence (Appendix A §1): `∫(Σ gᵢyⁱ)`
+**decouples** — `g` integrable iff each `gᵢyⁱ` is, and the rational part of `∫gᵢyⁱ` is `vᵢyⁱ`. -/
+
+namespace RadElem
+
+variable {α : Type*} [CField α]
+
+/-- **The projection `Tᵢ`** `radProj i p` — keep the `yⁱ`-component of `p`, zero every other power:
+the coefficient list with `aᵢ` at index `i` and `CField.zero` elsewhere (length `i+1`, normalized). The
+list realization of Trager's `Tᵢ = (1/n)Σⱼσʲ/ωⁱʲ`, satisfying `Tᵢ(yʲ) = yʲ·[i=j]`. -/
+def radProj (i : ℕ) (p : RadElem α) : RadElem α :=
+  match (p : List α)[i]? with
+  | none => []
+  | some a => CPolyG.cnormG (CPolyG.cshiftG i [a])
+
+end RadElem
+
+/-! #### ★ `Tᵢ` decoupling validates over `√(x³+1)` (`native_decide`)
+
+`Tᵢ(yʲ) = yʲ·[i=j]`, `Tᵢ ∘ D = D ∘ Tᵢ`, and the `∫(g₀+g₁y)` split, exhibited on `α = ℚ(x)`, `n = 2`,
+`f = x³+1`. -/
+
+/-- **`T₁(y) = y`** (`native_decide`): the projection onto the `y`-power fixes `y = √(x³+1)`. -/
+theorem radProj_one_radGen :
+    radIsZero (radSub (radProj 1 (radGen : RadElem (QFunNZG ℚ))) radGen) = true := by native_decide
+
+/-- **`T₀(y) = 0`** (`native_decide`): the projection onto the constant power kills `y` (Trager's
+`Tᵢ(yʲ) = 0` for `i ≠ j`). -/
+theorem radProj_zero_radGen :
+    radIsZero (radProj 0 (radGen : RadElem (QFunNZG ℚ))) = true := by native_decide
+
+/-- **`T₁(1) = 0`** (`native_decide`): the projection onto the `y`-power kills the constant `1`. -/
+theorem radProj_one_radOne :
+    radIsZero (radProj 1 (radOne : RadElem (QFunNZG ℚ))) = true := by native_decide
+
+/-- A mixed element `g = g₀ + g₁y = (x³+1) + 3x²·y ∈ ℚ(x)[y]/(y²−(x³+1))` (`g₀ = f`, `g₁ = f'`), the
+test integrand for the `Tᵢ` decoupling. -/
+def mixedElem : RadElem (QFunNZG ℚ) := [radicandX3p1, radicandDeriv]
+
+/-- **★ `T₁ ∘ D = D ∘ T₁` on the mixed element** (`native_decide`): the projection onto the `y`-power
+commutes with the radical derivation — `T₁(D g) = D(T₁ g)` for `g = (x³+1) + 3x²·y`. This is Trager's
+"`Tᵢ` commutes with the derivation", the engine of the `∫gᵢyⁱ` decoupling, verified by `radIsZero` of
+the difference over ℚ(x). -/
+theorem radProj_one_radDeriv_comm :
+    radIsZero (radSub
+        (radProj 1 (radDeriv 2 radicandX3p1 mixedElem))
+        (radDeriv 2 radicandX3p1 (radProj 1 mixedElem))) = true := by native_decide
+
+/-- **★ `T₀ ∘ D = D ∘ T₀` on the mixed element** (`native_decide`): the projection onto the constant
+power commutes with the radical derivation — `T₀(D g) = D(T₀ g)`. The other half of the commutation. -/
+theorem radProj_zero_radDeriv_comm :
+    radIsZero (radSub
+        (radProj 0 (radDeriv 2 radicandX3p1 mixedElem))
+        (radDeriv 2 radicandX3p1 (radProj 0 mixedElem))) = true := by native_decide
+
+/-- **★ The `∫(g₀+g₁y)` split** (`native_decide`): `D(g) = D(T₀ g) + D(T₁ g)` decomposes additively
+into its `1`-component and `y`-component, and the two pieces share no power of `y` (each `D(Tᵢ g)` lies
+in the `yⁱ`-component, by `radDeriv`'s diagonality). So `∫g` reduces to `∫(g₀) + ∫(g₁y)` *independently*
+(Appendix A §1). Verified by `radIsZero` of `D(g) − (D(T₀ g) + D(T₁ g))` over ℚ(x). -/
+theorem radDeriv_decouples :
+    radIsZero (radSub
+        (radDeriv 2 radicandX3p1 mixedElem)
+        (radAdd (radDeriv 2 radicandX3p1 (radProj 0 mixedElem))
+          (radDeriv 2 radicandX3p1 (radProj 1 mixedElem)))) = true := by native_decide
+
+/-- **The `y`-component of `D(g)` stays in the `y`-component** (`native_decide`): `D(T₁ g) = T₁(D(T₁ g))`
+— the `y`-part of the derivative has no constant term, so its rational part is `v₁·y` (Appendix A §1:
+"the rational part of `∫gᵢyⁱ` is `vᵢyⁱ`"). The diagonality of `radDeriv` made concrete. -/
+theorem radDeriv_projOne_stays :
+    radIsZero (radSub
+        (radDeriv 2 radicandX3p1 (radProj 1 mixedElem))
+        (radProj 1 (radDeriv 2 radicandX3p1 (radProj 1 mixedElem)))) = true := by native_decide
+
 end DeepWiki.SymbolicIntegration
