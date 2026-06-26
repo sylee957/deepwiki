@@ -168,6 +168,47 @@ lemma eq_C_of_logDerivPoly_eq_zero (u : F) (hndd : NoDegreeDropObligation u)
     ∃ b : F, p = C b ∧ b′ = 0 :=
   eq_C_of_logDerivPoly_eq_zero_of_natDegree_eq_zero u h (hndd hu h)
 
+/-! ### The Rosenlicht pole-counting engine (Obligation 3, polynomial layer)
+
+The mechanism behind "matching `t`-pole orders": `logDeriv` of a **monic** `t`-polynomial `π` is a
+*proper* rational function in `t` (`logDeriv π = (D π)/π` with `deg (D π) < deg π`), so it genuinely
+contributes a `t`-pole that can be cancelled **only** by another `wᵢ`'s pole, never by `a ∈ F` (which
+has none).  This is the precise fact that forces the `t`-polynomial parts of the `wᵢ` to combine into
+a single `logDeriv u`-multiple. -/
+
+/-- **`logDeriv` of a monic `t`-polynomial is proper**: for monic `p` with `deg p ≥ 1`, `D p` has
+strictly smaller `t`-degree than `p`.  Hence `logDeriv p = (D p)/p` is a proper rational function of
+`t` (a genuine `t`-pole).  Proof: at the top degree `D p` sees only `(leadingCoeff p)' = (1)' = 0`
+(`coeff_natDegree_logDerivPoly`), so the top coefficient of `D p` vanishes and its degree drops. -/
+lemma natDegree_logDerivPoly_lt_of_monic (u : F) {p : F[X]} (hm : p.Monic)
+    (hdeg : 1 ≤ p.natDegree) : (logDerivPoly u p).natDegree < p.natDegree := by
+  rcases lt_or_eq_of_le (natDegree_logDerivPoly_le u p) with h | h
+  · exact h
+  · exfalso
+    have htop : (logDerivPoly u p).coeff p.natDegree = 0 := by
+      rw [coeff_natDegree_logDerivPoly, hm.leadingCoeff]; simp
+    by_cases hz : logDerivPoly u p = 0
+    · rw [hz, natDegree_zero] at h; omega
+    · have hlc : (logDerivPoly u p).leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hz
+      rw [leadingCoeff, h] at hlc
+      exact hlc htop
+
+/-- **The `t`-polynomial part of a `logDeriv` folds into `logDeriv u`.**  For `w = C b · tⁿ` (a pure
+`t`-power scaled by an `F`-element `b ≠ 0`, `n ≥ 1`), `logDeriv w = logDeriv (C b) + n · logDeriv t`,
+and `logDeriv t = D t / t = C (u'/u) / t`.  This is the "`logDeriv` of the `t`-part contributes only
+`n · t'/(…)`" step (degenerate monomial case): the `t`-power's logarithmic-derivative is
+`n · (u'/u)/t`, a single pole that the global pole-matching cancels into the constants.  (Stated on
+`F[t]`; the `/t` lives in `F(t)`.  The general monic-factor case is `natDegree_logDerivPoly_lt_of_monic`
+above.) -/
+lemma logDerivPoly_monomial_eq (u : F) (n : ℕ) (b : F) :
+    logDerivPoly u (C b * X ^ n)
+      = C b′ * X ^ n + C b * C (logCoeff u) * (n : F[X]) * X ^ (n - 1) := by
+  rw [Derivation.leibniz, logDerivPoly_C]
+  rcases Nat.eq_zero_or_pos n with hn | hn
+  · subst hn; simp
+  · rw [Derivation.leibniz_pow, logDerivPoly_X, nsmul_eq_mul]
+    ring
+
 -- Restatements pinning the log-monomial setup to the book's wording (Rosenlicht §, log case).
 -- `t' = u'/u`: the defining equation of the log monomial `t = log u`.
 example (u : F) : logDerivPoly u (X : F[X]) = C (logDeriv u) := logDerivPoly_X u
