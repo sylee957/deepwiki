@@ -258,6 +258,44 @@ theorem qfInv_eq_matInvG_fracMat3 :
         ((Minv.getD i []).getD j CField.zero)))) = true := by
   native_decide
 
+/-! ### ★ Adjugate / solve sanity over `ℚ(x)` (`native_decide`)
+
+`qfAdjugate` and `qfSolve` route the adjugate / Cramer solve through `bareissAdjugate`/`bareissSolve` on the
+cleared `ℚ[x]`-matrix. Their correctness: `M'·adj(M') = det(M')·I` over `ℚ[x]` (the cleared matrix), and the
+read-back solution `x = sol/det(M')` satisfies the original `M·x = b` over `ℚ(x)` — including on a genuine
+fraction matrix where the solution components are honest `ℚ(x)` fractions. -/
+
+/-- **★ `qfAdjugate` satisfies `M'·adj(M') = det(M')·I`** (`native_decide`): for the cusp `I_x`-basis matrix
+`B`, the cleared `ℚ[x]`-matrix `M' = D·B` and its fraction-free adjugate `adj(M') = (qfAdjugate B).1` satisfy
+the defining identity `M'·adj(M') = det(M')·I` over `ℚ[x]` (off-diagonal entries vanish, diagonal entries
+equal `det(M')`). So `M⁻¹ = D·adj(M')/det(M')` is the correct fraction-free inverse representation. -/
+theorem qfAdjugate_mul_cuspBasis :
+    let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
+    let M' := (qfClearMatrix 16 B).1
+    let A := (qfAdjugate 16 B).1
+    let d := bareissDet M'
+    (List.range 2).all (fun i => (List.range 2).all (fun j =>
+      cisZeroG (csubG
+        ((List.range 2).foldl (fun acc k => caddG acc (cmulG (getEntry M' i k) (getEntry A k j))) [])
+        (if i = j then d else [])))) = true := by native_decide
+
+/-- **★ `qfSolve` solves `M·x = b` over `ℚ(x)` on a genuine fraction matrix** (`native_decide`): for the
+`3×3` fraction matrix `qfFracMat3` and rhs `b = [1, 1, 1]`, the fraction-free `qfSolve` returns `(det(M'),
+det(M')·x)` over `ℚ[x]`; reading `x = (det(M')·x)/det(M')` back into `ℚ(x)` and multiplying `M·x` recovers
+`b`. The Cramer solve is correct on a swelling fraction matrix — one shared `ℚ[x]` denominator, no
+per-component fraction. Checked by `CField.isZero (M·x − b)` entrywise. -/
+theorem qfSolve_fracMat3 :
+    let b : List (QFunNZG ℚ) := [qxOfNum [1], qxOfNum [1], qxOfNum [1]]
+    let ds := qfSolve 16 qfFracMat3 b
+    let xq : List (QFunNZG ℚ) := ds.2.map (fun s => CField.mul (qxOfNum s) (CField.inv (qxOfNum ds.1)))
+    let lhs : List (QFunNZG ℚ) := (List.range 3).map (fun i =>
+      (List.range 3).foldl (fun acc j =>
+        CField.add acc (CField.mul ((qfFracMat3.getD i []).getD j CField.zero) (xq.getD j CField.zero)))
+        CField.zero)
+    (List.range 3).all (fun i =>
+      CField.isZero (CField.sub (lhs.getD i CField.zero) (b.getD i CField.zero))) = true := by
+  native_decide
+
 /-! ### ★★ THE HEAVY SWELL / SPEEDUP BENCHMARK — `qfDet`/`qfInv` vs `fieldDet`/`matInvG` (`native_decide`)
 
 The payoff. On the `3×3` fraction matrix `qfFracMat3` (denominators `x+1, …, x+5` — exactly the shape of
@@ -402,6 +440,10 @@ the fix for the `genDivisorOrder`-over-`ℚ(x)` hang. -/
 -- Agreement of the fraction-free `qfInv` with the fraction-based `matInvG` (the idealizer inverse).
 #print axioms qfInv_eq_matInvG_cuspBasis
 #print axioms qfInv_eq_matInvG_fracMat3
+
+-- The fraction-free adjugate / solve identities `M'·adj = det·I`, `M·x = b` (over `ℚ(x)`).
+#print axioms qfAdjugate_mul_cuspBasis
+#print axioms qfSolve_fracMat3
 
 -- ★★ The swell benchmark: fraction path (det 24 / inv 41) vs flat fraction-free Bareiss.
 #print axioms qfSwellWin
