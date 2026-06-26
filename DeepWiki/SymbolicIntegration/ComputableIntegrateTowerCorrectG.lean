@@ -260,4 +260,60 @@ theorem field_identity_of_checkIdentityG (Dt : CPolyG α) (res : IntegralResultG
   -- assemble: rewrite the field readings back into the goal
   rw [hquot, hLfield', hfield]
 
+/-! ### The self-validating tower integrator — UNCONDITIONAL `D(∫f) = f` (all inputs, all regimes)
+
+A checked wrapper around the full poly/special driver `cIntegrateGFull` (`ComputableTowerRischDE`), guarded
+by the engine's own `checkIdentityG`. Its correctness is **unconditional** (no regime, no residue-set, no
+degree side conditions — the `checkIdentityG` guard supplies everything), via
+`field_identity_of_checkIdentityG`. This is the generic engine's `D(∫f) = f` capstone in the cleanest,
+fully-general form. -/
+
+namespace CPolyG
+
+variable [CFracGcdCore α] [CRischField α]
+
+/-- **The self-validating tower integrator** `cIntegrateGChecked Dt fuel a d cands`: run the full driver
+`cIntegrateGFull`, then **guard** its output by the generic cleared antiderivative check `checkIdentityG`.
+Returns `some res` only when `checkIdentityG Dt res a d = true` (`res` is a genuine antiderivative of
+`f = a/d`), and `none` otherwise — so it never returns a wrong answer. A thin wrapper that does **not**
+modify the engine `cIntegrateGFull`; the carrier-generic mirror of `cIntegrateChecked`. -/
+def cIntegrateGChecked (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
+    Option (IntegralResultG α) :=
+  (cIntegrateGFull Dt fuel a d cands).bind
+    (fun res => if checkIdentityG Dt res a d then some res else none)
+
+end CPolyG
+
+/-- **★ `cIntegrateGChecked f = some res ⟹ D(res) = f`** — the tower engine's UNCONDITIONAL
+integrator-correctness, for ALL inputs and ALL regimes (primitive, polynomial-part, anything the full
+driver lands). If `cIntegrateGChecked Dt fuel a d cands = some res`, then the field-level antiderivative
+identity `towerFractionFieldDerivG Dt (g) + logResidueSumG Dt res.logs = amG a / amG d` holds over the tower
+fraction field `RatFunc (CFieldSpec.K α)`, with `g = amG(res.rational.1)/amG(res.rational.2)`. The only
+side conditions are the structural nonzero-denominator facts (`gden`, `aden`, every log argument `vᵢ`
+nonzero); **no** regime / `fₛ = 0` / residue-set / degree hypothesis is required — the `checkIdentityG`
+guard inside `cIntegrateGChecked` supplies all of it. The carrier-generic mirror of
+`cIntegrateChecked_correct`, immediate from the wrapper definition (`some` forces `checkIdentityG = true`)
+and `field_identity_of_checkIdentityG`. -/
+theorem cIntegrateGChecked_correct [CFracGcdCore α] [CRischField α] (Dt : CPolyG α) (fuel : ℕ)
+    (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (hsome : CPolyG.cIntegrateGChecked Dt fuel a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (hdne : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  -- the wrapper returned `some res`, so the guard `checkIdentityG` fired `true`
+  have hcheck : CPolyG.checkIdentityG Dt res a d = true := by
+    rw [CPolyG.cIntegrateGChecked] at hsome
+    rcases hcinteg : CPolyG.cIntegrateGFull Dt fuel a d cands with _ | res'
+    · rw [hcinteg] at hsome; simp only [Option.bind_none] at hsome; exact absurd hsome (by simp)
+    · rw [hcinteg] at hsome
+      simp only [Option.bind_some] at hsome
+      by_cases hc : CPolyG.checkIdentityG Dt res' a d
+      · simp only [hc, if_true, Option.some.injEq] at hsome
+        rw [← hsome]; exact hc
+      · simp only [hc] at hsome; exact absurd hsome (by simp)
+  -- the bridge turns the guard into the field identity
+  exact field_identity_of_checkIdentityG Dt res a d hgden hdne hlogs hcheck
+
 end DeepWiki.SymbolicIntegration
