@@ -929,6 +929,51 @@ theorem logDeriv_algebraMap_prod_pow (u : F) {ι : Type*} (s : Finset ι) (g : �
   refine Finset.sum_congr rfl fun j _ => ?_
   rw [map_pow, logDeriv_pow]
 
+omit [CharZero F] in
+/-- **`logDeriv` of a polynomial image folds along its UFD factorization** (the multi-term decomposition
+engine): for `p ≠ 0` in `F[t]`, `logDeriv (algebraMap p) = logDeriv (algebraMap (C p.leadingCoeff)) +
+∑_{π ∈ (normalizedFactors p).toFinset} (count π) · logDeriv (algebraMap π)`, the `π` ranging over the
+*distinct monic irreducible* factors of `p` (each weighted by its multiplicity).  The leading-coefficient
+term is an `F`-element (`C lc ∈ range C`), and each `logDeriv (algebraMap π)` is a proper `t`-pole
+(`logDeriv_monic_proper`).  Proof: `p = C lc · ∏ (normalizedFactors p)` (`leadingCoeff_mul_prod_normalizedFactors`),
+then `logDeriv_mul` + `logDeriv_multisetProd` collapse the product, and `Finset.sum_multiset_map_count`
+collects equal factors. -/
+theorem logDeriv_algebraMap_eq_unit_add_sum [DecidableEq F] (u : F) {p : F[X]} (hp : p ≠ 0) :
+    letI := logDifferential u
+    logDeriv (algebraMap F[X] (RatFunc F) p)
+      = logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C p.leadingCoeff))
+        + ∑ π ∈ (UniqueFactorizationMonoid.normalizedFactors p).toFinset,
+            ((UniqueFactorizationMonoid.normalizedFactors p).count π : RatFunc F)
+              * logDeriv (algebraMap F[X] (RatFunc F) π) := by
+  letI := logDifferential u
+  -- Each normalized factor is monic irreducible, in particular nonzero.
+  have hfac_ne : ∀ π ∈ UniqueFactorizationMonoid.normalizedFactors p, π ≠ 0 := fun π hπ =>
+    UniqueFactorizationMonoid.ne_zero_of_mem_normalizedFactors hπ
+  -- `p = C lc · ∏ (normalizedFactors p)`.
+  have hprod : Polynomial.C p.leadingCoeff * (UniqueFactorizationMonoid.normalizedFactors p).prod = p :=
+    Polynomial.leadingCoeff_mul_prod_normalizedFactors p
+  have hlcne : Polynomial.C p.leadingCoeff ≠ 0 := by
+    simpa [Polynomial.C_eq_zero] using Polynomial.leadingCoeff_ne_zero.mpr hp
+  have hprodne : (UniqueFactorizationMonoid.normalizedFactors p).prod ≠ 0 := by
+    intro h0
+    apply hp
+    rw [← hprod, h0, mul_zero]
+  -- Map the factorization to `RatFunc F`, split `logDeriv` of the product.
+  have hAlc : algebraMap F[X] (RatFunc F) (Polynomial.C p.leadingCoeff) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero hlcne
+  have hAprod : algebraMap F[X] (RatFunc F) (UniqueFactorizationMonoid.normalizedFactors p).prod ≠ 0 :=
+    RatFunc.algebraMap_ne_zero hprodne
+  conv_lhs => rw [← hprod, map_mul, Differential.logDeriv_mul _ _ hAlc hAprod]
+  congr 1
+  -- `logDeriv (algebraMap ∏factors) = ∑_{multiset} logDeriv (algebraMap π)`, then collect by count.
+  rw [map_multiset_prod,
+    Differential.logDeriv_multisetProd (UniqueFactorizationMonoid.normalizedFactors p)
+      (f := fun π => algebraMap F[X] (RatFunc F) π)
+      (fun π hπ => RatFunc.algebraMap_ne_zero (hfac_ne π hπ))]
+  rw [Finset.sum_multiset_map_count]
+  refine Finset.sum_congr rfl fun π hπ => ?_
+  rw [nsmul_eq_mul]
+
 /-- **The single-log pole-independence obligation** — the genuine partial-fraction content of the
 single-logarithm case, sharply isolated.  GIVEN `a ∈ F`, a constant `c ∈ F`, `w v ∈ RatFunc F` with
 `algebraMap a = c · logDeriv w + v′`, there exist `w₀ : F` and `v₀ : RatFunc F` rewriting the same
