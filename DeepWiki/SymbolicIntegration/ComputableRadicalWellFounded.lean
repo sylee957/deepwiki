@@ -1,5 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
+import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
 
 /-! # Fuel-free (well-founded) ALGEBRAIC simple-radical rational-part integration
 
@@ -370,6 +372,170 @@ exactly the `(Crem, vNum)` of `c3itRun`, so `c3itDriver_integrates` holds verbat
 theorem radIntegrateCase3Wf_eq_c3itRun :
     radIntegrateCase3Wf cderivG c3itRho c3itG c3itC = c3itRun := by native_decide
 
+/-! ## Part 6 — the FLAT fuel-free top-level: `radIntegrateRationalWf` / `cIntegrateAlgebraicWf`
+
+`radIntegrateRational` and `cIntegrateAlgebraic` have **no recursion of their own** (the descents are all in
+the Part 1–3 iterates), so their fuel-free companions are pure **leaf substitution**: every fuel'd leaf is
+swapped for its fuel-free counterpart, the flat structure is unchanged, and **no `termination_by` is needed**.
+The correspondence is the conjunction of the leaf bridges (the iterate `…_eq` of Parts 1–4, plus the tower's
+`cSqfreeYunFFGgoWf_eq` / `cgcdWf_eq` / `cdivmodWf_eq_of_fuel`), threaded as hypotheses (each independently
+discharged for a concrete run / sufficient fuel — there is no abstract universal degree-drop lemma, the
+recurring tower situation). -/
+
+namespace CPolyG
+
+variable {α : Type*} [CField α]
+
+/-- **The fuel-free multi-case simple-radical rational-part driver** `radIntegrateRationalWf ρ R B` over
+`y² = ρ`, denominator `B` monic, numerator `R` (proper): the fuel-free companion of `radIntegrateRational`,
+by **pure leaf substitution** — `cSqfreeYunFFGWf` for the squarefree factorization (no fuel), `(cgcdWf · ·).1`
+for every gcd, `cdivWf` for every exact division, `radPartialFractionCoprimeWf` for the partial fraction, and
+this file's `radReduceCase{1,2}IterateWf` for the Case-1 / Case-2 dispatch. Same flat structure as
+`radIntegrateRational` (squarefree-decompose `B`, split each factor into its `V`-part / `W`-part, partial-
+fraction `R`, classify and dispatch); returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`.
+**No fuel at runtime**; not self-recursive (no `termination_by`). Needs `[CField α] [CFracGcdCoreWf α]` (the
+latter for the fuel-free squarefree factorization). -/
+def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : CPolyG α) :
+    List (Bool × CPolyG α × ℕ × CPolyG α × CPolyG α × CPolyG α) :=
+  let g : CPolyG α := cscaleG (CField.div CField.one (cnatCastG 2)) (cderivG ρ)   -- `½·ρ'` (n = 2)
+  let factored : List (CPolyG α × ℕ) :=
+    (cSqfreeYunFFGWf B).zipIdx.filterMap (fun (Bi, i) =>
+      if cdegG Bi = 0 then none else some (Bi, i + 1))
+  let split : List (Bool × CPolyG α × ℕ) :=
+    factored.flatMap (fun (Bi, e) =>
+      let Wi := cmonicG (cgcdWf Bi ρ).1
+      let Vi := cdivWf Bi Wi
+      (if cdegG Vi = 0 then [] else [(true, Vi, e)]) ++
+      (if cdegG Wi = 0 then [] else [(false, Wi, e)]))
+  let primePowers : List (CPolyG α) := split.map (fun (_, fi, e) => cpowG fi e)
+  let nums : List (CPolyG α) := radPartialFractionCoprimeWf R primePowers
+  (split.zip nums).map (fun ((isV, fi, e), Ni) =>
+    if isV then
+      let (Crem, vNum) := radReduceCase1IterateWf cderivG fi (cderivG fi) ρ g e e Ni []
+      (true, fi, e, Ni, vNum, Crem)
+    else
+      let (Crem, vNum) := radReduceCase2IterateWf fi (cdivWf ρ fi) ρ e e Ni []
+      (false, fi, e, Ni, vNum, Crem))
+
+/-- **Bridge — `radIntegrateRationalWf` equals `radIntegrateRational` under the leaf agreements.** The
+hypotheses are exactly the per-run leaf bridges of the flat composition (each dischargeable on a concrete
+run / sufficient fuel): `hsqf` the fuel-free squarefree factorization matches (`cSqfreeYunFFGWf B =
+cSqfreeYunFFG fuel B`, from the tower's `cSqfreeYunFFGgoWf_eq` + entry leaves); `hgcd` every gcd matches
+(`(cgcdWf · ·).1 = (cgcdExtG fuel · ·).1`, from `cgcdWf_eq` at the right fuel); `hdiv` every exact division
+matches (`cdivWf · · = cdivG fuel · ·`, from `cdivmodWf_eq_of_fuel` for short-enough inputs); `hpf` the
+partial fraction matches (`radPartialFractionCoprimeWf_eq`); `hc1`/`hc2` the Case-1 / Case-2 iterates match
+at the dispatched multiplicity (`radReduceCase{1,2}IterateWf_eq` at `fuel := k0`, unconditional — the
+dispatch calls each iterate with fuel `= k0`). Under these, the two flat compositions coincide. The fuel
+lives only in the hypotheses; `radIntegrateRationalWf` carries none. -/
+theorem radIntegrateRationalWf_eq [CFracGcdCore α] [CFracGcdCoreWf α] (fuel : ℕ) (ρ R B : CPolyG α)
+    (hsqf : cSqfreeYunFFGWf B = cSqfreeYunFFG fuel B)
+    (hgcd : ∀ a b : CPolyG α, (cgcdWf a b).1 = (cgcdExtG fuel a b).1)
+    (hdiv : ∀ a b : CPolyG α, cdivWf a b = cdivG fuel a b)
+    (hpf : ∀ (R : CPolyG α) (Gs : List (CPolyG α)),
+      radPartialFractionCoprimeWf R Gs = radPartialFractionCoprime fuel R Gs)
+    (hc1 : ∀ (V Df f g : CPolyG α) (k0 k : ℕ) (C vNum : CPolyG α),
+      radReduceCase1IterateWf cderivG V Df f g k0 k C vNum
+        = radReduceCase1Iterate cderivG V Df f g k0 k0 k C vNum)
+    (hc2 : ∀ (W h ρ' : CPolyG α) (k0 k : ℕ) (C vNum : CPolyG α),
+      radReduceCase2IterateWf W h ρ' k0 k C vNum
+        = radReduceCase2Iterate W h ρ' k0 k0 k C vNum) :
+    radIntegrateRationalWf ρ R B = radIntegrateRational fuel ρ R B := by
+  -- unfold both; substitute every leaf via its bridge; the flat structure then coincides
+  simp only [radIntegrateRationalWf, radIntegrateRational, hsqf, hgcd, hdiv, hpf, hc1, hc2]
+
+end CPolyG
+
+/-! ### The fuel-free unified algebraic integrator `cIntegrateAlgebraicWf` (radical top-level)
+
+`cIntegrateAlgebraic` is one flat composition over `radIntegrateRational` (rational part) + `radLogArgSolve`
+(log part). `radLogArgSolve` is itself **non-recursive** (a matrix build `radLogMatrix`, a rational kernel
+`ratKernelVector`, and a `List.foldl` — no fuel of its own), so the only fuel-free substitution one layer up
+is `radIntegrateRationalWf` for `radIntegrateRational`. -/
+
+/-- **The fuel-free unified algebraic integrator** `cIntegrateAlgebraicWf ρ R B residual c D degBound` over
+`y² = ρ`: the fuel-free companion of `cIntegrateAlgebraic`, producing the full `∫ R/(B·y) dx = v + c·log u`
+(principal case). Identical flat structure — computes the rational part `v` by the fuel-free multi-case
+dispatch (`radIntegrateRationalWf` + `radAssembleRatPart`), then SOLVES the log argument on `residual`
+(`radLogArgSolve ρ residual D degBound`, itself non-recursive / fuel-free); on `none` returns just the
+rational part. **No fuel at runtime**; not self-recursive. Needs `[CFracGcdCoreWf (QFunNZG ℚ)]` (via the
+tower's base `[CFracGcdCoreWf ℚ]`) for `radIntegrateRationalWf`'s squarefree factorization. -/
+def cIntegrateAlgebraicWf (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
+    (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ) :
+    AlgIntegralResult :=
+  let ρpoly : CPolyG ℚ := qxNum ρ
+  let runs := CPolyG.radIntegrateRationalWf ρpoly R B
+  let v := radAssembleRatPart ρ runs
+  match radLogArgSolve ρ residual D degBound with
+  | none => ⟨v, []⟩
+  | some N =>
+    let Dq : QFunNZG ℚ := qxOfNum D
+    let u : RadElem (QFunNZG ℚ) := N.map (fun z => CField.div z Dq)
+    ⟨v, [(c, u)]⟩
+
+/-- **Bridge — `cIntegrateAlgebraicWf` equals `cIntegrateAlgebraic` under the rational-part bridge.** The
+only fuel-bearing sub-call is the rational-part driver, so the single hypothesis `hrat`
+(`radIntegrateRationalWf (qxNum ρ) R B = radIntegrateRational fuel (qxNum ρ) R B`, from
+`radIntegrateRationalWf_eq`) makes the two flat compositions coincide — `radLogArgSolve` is shared verbatim
+(non-recursive, no fuel). The fuel lives only in the hypothesis; `cIntegrateAlgebraicWf` carries none. -/
+theorem cIntegrateAlgebraicWf_eq (fuel : ℕ) (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
+    (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ)
+    (hrat : CPolyG.radIntegrateRationalWf (qxNum ρ) R B
+      = radIntegrateRational fuel (qxNum ρ) R B) :
+    cIntegrateAlgebraicWf ρ R B residual c D degBound
+      = cIntegrateAlgebraic fuel ρ R B residual c D degBound := by
+  -- the only fuel-bearing sub-call is the rational part; case-split the (shared) log solve so the
+  -- `match` reduces, then `hrat` makes the two branches identical
+  unfold cIntegrateAlgebraicWf cIntegrateAlgebraic
+  cases radLogArgSolve ρ residual D degBound <;> simp only [hrat]
+
+/-! ## Part 7 — ★ top-level `native_decide` transfer: the radical integrator is fuel-free end-to-end
+
+The fuel-free top-level reproduces the validated `cIntegrateAlgebraic` round-trip **exactly**, so the
+`D(∫f) = f` validation holds of the **fuel-free** output. The rational-only round-trip
+`∫ 1/((x−1)²√(x²+1))` (`ComputableRadicalIntegrateFull`'s `rtRat*` example) is the witness: `radDeriv` of the
+fuel-free integrator's reconstructed `F'` equals the integrand. -/
+
+open RadElem CPolyG
+
+/-- **The fuel-free integrator reproduces the validated rational part** on `∫ 1/((x−1)²√(x²+1))`
+(`native_decide`). The fuel-free top-level (`radIntegrateRationalWf` + the shared `radLogArgSolve`)
+reconstructs the **same** rational antiderivative as the fuel'd `rtRatRecovered`: the `radDeriv` of the
+fuel-free integrator's `.ratPart` equals the `radDeriv` of the fuel'd `.ratPart` (checked by `radIsZero` of
+the difference — `AlgIntegralResult` carries no `DecidableEq`, so the reproduction is stated through the
+derivation). Both also have an empty log list (the non-principal residual ⇒ `radLogArgSolve = none`). -/
+theorem cIntegrateAlgebraicWf_reproduces_rtRatRecovered :
+    radIsZero (radSub
+      (radDeriv 2 rtRatRho
+        (cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CField.one [0, 0, 1] 1).ratPart)
+      (radDeriv 2 rtRatRho rtRatRecovered.ratPart)) = true := by native_decide
+
+/-- **★ The FUEL-FREE radical integrator integrates `∫ 1/((x−1)²√(x²+1))`: `algDeriv F' = integrand`**
+(`native_decide`). The fuel-free `cIntegrateAlgebraicWf` reconstructs the rational antiderivative `F'` from
+`(R, B) = (1, (x−1)²)` (the multi-case dispatch run fuel-free), with an empty log list (the non-principal
+residual ⇒ `radLogArgSolve = none`); the **actual** algebraic derivation `algDeriv` of `F'` equals the
+integrand `radDeriv rtRatV`. The radical integrator now integrates end-to-end **with no `ℕ`-fuel** — the
+rational part reconstructed by the fuel-free dispatch, validated by the real radical derivation. Checked by
+`radIsZero` over `ℚ(x)`. -/
+theorem cIntegrateAlgebraicWf_rtRat_integrates :
+    radIsZero (radSub
+      (algDeriv rtRatRho (cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual
+        CField.one [0, 0, 1] 1))
+      rtRatIntegrand) = true := by native_decide
+
+/-! ## ★ STRETCH note — the LOG part and the `afIntegrateAlgebraic` general-curve next layer
+
+* **The log part is already fuel-free.** `radLogArgSolve` (and hence the `c·log u` half) is **non-recursive**
+  — it builds the linear system `radLogMatrix`, solves it with the rational kernel `ratKernelVector`
+  (Gauss / `ratRref`, non-recursive over the row list), and assembles `a₀, a₁` by a `List.foldl`. It carries
+  no `ℕ`-fuel and needs no `…Wf` companion: `cIntegrateAlgebraicWf` shares it verbatim. So the FULL radical
+  integral `v + c·log u` is fuel-free.
+* **Next layer — `afIntegrateAlgebraic` (general non-radical algebraic curve, `ComputableGeneralLogArg`).**
+  The same mechanical sequence over the integral basis: its rational part recurses with the **same Case-1/2/3
+  measures** (multiplicity `k` for the pole-order descents, degree for the leftover), so the `…IterateWf`
+  shapes of Parts 1–3 transfer directly; its log part is flat (residue resultants `cAlgResidueResultant`
+  bottoming at the fuel-free `cresultantWf`, plus a linear solve). Converting it is the next file, built on
+  this one. -/
+
 /-! ### `#print axioms` — the fuel-free algebraic-integration recursions
 
 The well-founded `…Wf` defs are TOTAL via well-founded recursion (the measure `k` / `cdegG C`), **not** via
@@ -392,5 +558,13 @@ point is fuel-free totality, achieved. -/
 -- ★ The fuel-free iterates reproduce the `radDeriv`-validated runs (native_decide transfer):
 #print axioms radIntegrateCase2Wf_eq_c2itRun
 #print axioms radIntegrateCase3Wf_eq_c3itRun
+
+-- The flat fuel-free top-level bridges (leaf-substitution correspondences):
+#print axioms radIntegrateRationalWf_eq
+#print axioms cIntegrateAlgebraicWf_eq
+
+-- ★★ The FUEL-FREE radical integrator integrates end-to-end (`D(∫f) = f`, native_decide):
+#print axioms cIntegrateAlgebraicWf_reproduces_rtRatRecovered
+#print axioms cIntegrateAlgebraicWf_rtRat_integrates
 
 end DeepWiki.SymbolicIntegration
