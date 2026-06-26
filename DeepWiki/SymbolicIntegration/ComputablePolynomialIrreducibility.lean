@@ -477,12 +477,13 @@ true`, then concludes `Irreducible (toPolyZ (lower ++ [1]))` by `irreducibleByMo
 Primes are tiny (`p ∈ {2,3,5,7}`) and chosen so `f` is already irreducible mod that `p`,
 keeping the finite search fast. -/
 
-/-- `Fact (Nat.Prime 3)` for the mod-3 certificates. -/
-instance : Fact (Nat.Prime 3) := ⟨by decide⟩
+/-- `Fact (Nat.Prime 3)` for the mod-3 certificates (explicitly named to avoid the aggregator
+auto-name clash with `ComputableDivisorOrder`'s anonymous `Fact (Nat.Prime _)` instances). -/
+instance factPrime3_polyIrred : Fact (Nat.Prime 3) := ⟨by decide⟩
 /-- `Fact (Nat.Prime 5)` for the mod-5 certificates. -/
-instance : Fact (Nat.Prime 5) := ⟨by decide⟩
+instance factPrime5_polyIrred : Fact (Nat.Prime 5) := ⟨by decide⟩
 /-- `Fact (Nat.Prime 7)` for the mod-7 certificates. -/
-instance : Fact (Nat.Prime 7) := ⟨by decide⟩
+instance factPrime7_polyIrred : Fact (Nat.Prime 7) := ⟨by decide⟩
 
 /-- `x² + 1 = toPolyZ [1,0,1]` is irreducible over `ℤ` (irreducible mod `3`: no root in 𝔽₃). -/
 theorem irreducible_toPolyZ_X_sq_add_one :
