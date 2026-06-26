@@ -156,6 +156,58 @@ theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
   show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) [a₀, a₁]) = _
   rw [List.headD_cons, toPolyG_radDeriv_linear]
 
+/-! ### Toward the general rational-part soundness: the `C/y`-form single step (capstone reduction)
+
+The multi-case driver `radIntegrateRational` (`ComputableRadicalRationalDriver`) assembles the rational
+part of `∫ R/(B√ρ)` as a sum of `R/y`-form pieces, each lifted to the pure-`y` radical element `[0, c]`
+(`c·y`, with `c = vNum/(denom·ρ)` a base-field element — the `native_decide` `*_integrates` theorems use
+exactly this `[0, R/ρ]` lift, since `R/y = (R/ρ)·y` in `α[y]/(y² − ρ)`). The driver's soundness
+`radDeriv(v) = integrand` therefore rests, piece by piece, on the **`C/y`-form single-step identity**: for
+`v = c·y` and integrand `g = γ·y`, `radDeriv n f v = g` is the *single base-field equation*
+`D(c) + c·ℓ = γ` (`ℓ = logDerRadicand n f`). The next two lemmas make that reduction abstract: the
+`C/y`-form soundness is **equivalent** to that one equation in `K`, and the equation is what each cleared
+Case identity (`case3_cleared_identity` & co., currently `native_decide`) certifies after dividing by the
+common denominator. -/
+
+/-- **The `y`-component reading of a `C/y`-form antiderivative's derivative** —
+`toPolyG (radDeriv n f [zero, c]) = C (toK (D(c) + c·ℓ)) · X` with `ℓ = logDerRadicand n f`: the diagonal
+derivation of `c·y` (`[0, c]`) is `(D(c) + c·ℓ)·y`, a pure `y`-component (`D(c·y) = D(c)·y + c·D(y) =
+D(c)·y + c·ℓ·y`). Specializes `toPolyG_radDeriv_linear` at `a₀ = 0` (the constant component vanishes:
+`D(0) = 0`). The building block of the `C/y`-form soundness. -/
+theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
+    CPolyG.toPolyG (radDeriv n f ([CField.zero, c] : RadElem α))
+      = Polynomial.C (CFieldSpec.toK
+          (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f)))) * X := by
+  rw [toPolyG_radDeriv_linear, CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil,
+    mul_zero, add_zero, CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero]
+  -- the constant component is `D(0) = 0`, leaving only the `y`-component `C (toK (D c + c·ℓ))·X`
+  rw [map_zero, map_zero, zero_add]
+  ring
+
+/-- **★ The `C/y`-form soundness reduces to one base-field equation** — for a base-field witness `c` and
+integrand coefficient `γ`, the radical antiderivative `c·y` integrates `γ·y` (i.e.
+`IsRadicalRationalIntegral n [f] [zero, γ] [zero, c]`) **iff** `D(c) + c·ℓ = γ` in `K`
+(`ℓ = logDerRadicand n f`, read through `toK`). This is the abstract reduction the capstone chains: every
+`R/y`-form piece of the rational-part driver is a `C/y`-form, and its soundness is exactly this single `K`
+equation (the cleared single-step Case identities certify it after clearing the common denominator).
+Proven from `toPolyG_radDeriv_zero_cons` + the injectivity of `C(·)·X ↦ ·` (`C` injective, `X` a
+nonzerodivisor). -/
+theorem isRadicalRationalIntegral_zero_cons_iff (n : ℕ) (f c γ : α) :
+    IsRadicalRationalIntegral n [f] ([CField.zero, γ]) ([CField.zero, c] : RadElem α)
+      ↔ CFieldSpec.toK (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f)))
+          = CFieldSpec.toK γ := by
+  unfold IsRadicalRationalIntegral
+  rw [List.headD_cons, toPolyG_radDeriv_zero_cons, toPolyG_zero_cons]
+  constructor
+  · intro h
+    -- `C a · X = C b · X` with `X` a nonzerodivisor ⟹ `C a = C b` ⟹ `a = b` (`C` injective)
+    have hX : Polynomial.C (CFieldSpec.toK
+          (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f))))
+        = Polynomial.C (CFieldSpec.toK γ) :=
+      mul_right_cancel₀ X_ne_zero h
+    exact Polynomial.C_injective hX
+  · intro h; rw [h]
+
 end RadElem
 
 /-! ### ★ The concrete `√(x³+1)` integral, abstractly: `∫ (3x²/(2(x³+1)))·√(x³+1) dx = √(x³+1)`
@@ -193,13 +245,52 @@ theorem radIsZero_radDeriv_radGen_qx :
   rw [radIsZero, radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero,
     radDeriv_radGen_sound_qx]
 
+/-! ### What the GENERAL rational-part soundness `radDeriv(radIntegrateRational … g) = g` still needs
+
+This file proves the *derivation half* abstractly: `radDeriv` is a genuine derivation (imported keystone),
+and a `C/y`-form antiderivative's soundness collapses to one base-field equation
+(`isRadicalRationalIntegral_zero_cons_iff`). The **general** statement
+`radDeriv n ρ (lift (radIntegrateRational fuel ρ R B)) = lift (R/(B·y))` (rational part, leftover
+subtracted) additionally needs the **algorithm-correctness invariant** of the iterated Hermite /
+undetermined-coefficient reductions — none of which is `radDeriv`-specific arithmetic; all of it is
+*loop-invariant bookkeeping* over the engine's already-cleared single steps:
+
+1. **Single-step cleared-identity ⟹ `radDeriv` step** (per case). Each `radReduceCaseᵢIterate` step has a
+   *cleared polynomial identity* already validated (`case1_cleared_identity`, `case2_cleared_identity`,
+   `case3_cleared_identity`, currently `native_decide`): e.g. Case 3's `B'f + Bg − C = D`. The abstract
+   bridge is: *that polynomial identity, divided by the common denominator, is exactly the `K` equation
+   `isRadicalRationalIntegral_zero_cons_iff` reduces to* — i.e. `radDeriv(Bf/(…y)) = C/(…y) + D/(…y)` as a
+   `radDeriv` statement. Promoting each cleared identity from `native_decide` to an abstract `cisZeroG_iff`
+   (the `D(g)+h = f` pattern is already done abstractly elsewhere in the engine, e.g.
+   `checkIdentityG`/`ComputableIntegrateTowerCorrectG`) is mechanical but per-case.
+
+2. **The fuel-recursion accumulation invariant**. `radReduceCaseᵢIterate … k C vNum` maintains
+   `radDeriv(vNum-lift) + (C-leftover-lift) = (original integrand)` across the descent `k → k−1` (resp.
+   `deg C → deg C − 1`): an induction on the structural `fuel`, with the base case the bottoming `k ≤ 1`
+   (resp. `deg C < deg ρ`) returning the leftover unchanged, and the step case chaining (1) with the
+   inductive hypothesis on the negated residual `−D`. This is the genuine new lemma — a `radDeriv`-level
+   telescoping over the accumulator, reduced to the per-step identity of (1).
+
+3. **The partial-fraction / dispatch front-end**. `radIntegrateRational` squarefree-decomposes `B`, splits
+   each factor into its `V`/`W` parts, partial-fractions `R/B = Σ Nᵢ/Gᵢ`, and sums the per-piece rational
+   parts. Soundness needs `R/B = Σ Nᵢ/Gᵢ` as a `K`-identity (the `cdiophantineG` Bézout-split correctness,
+   already available as `toPolyG_cdiophantineG`-style lemmas) plus additivity of `radDeriv` over the sum
+   (the imported `toPolyG_radDeriv_radAdd`). Then `radDeriv(Σ vᵢ) = Σ radDeriv(vᵢ) = Σ (piece integrand) =
+   integrand − Σ leftover`.
+
+So the capstone reduces to: **(1) per-case abstract cleared identity + (2) one telescoping fuel-induction +
+(3) partial-fraction `K`-identity** — every piece either already abstract in the engine or a mechanical
+lift, with the genuinely new content the accumulation invariant (2). This file is the `k = 0`/base layer:
+the derivation is a derivation, and `D(v) = g` holds abstractly for the generator and every `C/y`-form
+witness. -/
+
 /-! ### `#print axioms` — the algebraic integral is abstractly verified (no `native_decide`)
 
 Each concrete soundness theorem carries **only** the standard `[propext, Classical.choice, Quot.sound]` —
 no `native_decide` compiler axiom, no `sorry`. The simple-radical integral `∫ (f'/(nf))·√f = √f` (and its
-two-term generalization) is `D(v) = g` proven as a general theorem and specialized to the concrete
-elliptic radicand `x³+1` over `ℚ(x)`. The first abstractly-verified algebraic (radical) integral — the
-seed of the soundness capstone `D(∫f) = f`. -/
+two-term generalization, and the `C/y`-form reduction) is `D(v) = g` proven as a general theorem and
+specialized to the concrete elliptic radicand `x³+1` over `ℚ(x)`. The first abstractly-verified algebraic
+(radical) integral — the seed of the soundness capstone `D(∫f) = f`. -/
 
 -- The general algebraic integral `∫ (f'/(nf))·√f = √f` and its soundness-predicate packaging:
 #print axioms RadElem.toPolyG_radDeriv_radGen
@@ -207,6 +298,9 @@ seed of the soundness capstone `D(∫f) = f`. -/
 
 -- The general two-term antiderivative `D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁ℓ)y`:
 #print axioms RadElem.isRadicalRationalIntegral_linear
+
+-- The capstone reduction: the `C/y`-form soundness ⟺ one base-field equation `D(c) + c·ℓ = γ`:
+#print axioms RadElem.isRadicalRationalIntegral_zero_cons_iff
 
 -- ★ The concrete elliptic-radicand integral over ℚ(x), abstractly (the engine's native_decide fact):
 #print axioms radDeriv_radGen_sound_qx
