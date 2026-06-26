@@ -374,14 +374,11 @@ the genuine target is `RatFunc F`, the fraction field of `F[t]`.  Mathlib suppli
 remaining obligation is stated as a *type-checked `Prop`* (so this file builds with only proven
 content), giving a precise roadmap: a follow-up proves these `def`s and the keystone closes.
 
-### Obligation 1 — the derivation extends to `F(t)` (the localization-derivation gap)
+### Obligation 1 — CLOSED above (`fracDeriv` / `fracDeriv_algebraMap`)
 
-A derivation `D : A → A` on a domain `A` extends *uniquely* to its fraction field `K` by the quotient
-rule `D̃(a/b) = (D a · b − a · D b)/b²`.  Mathlib has this for **algebraic** extensions only
-(`Differential.implicitDeriv` → `AdjoinRoot`); for the **transcendental** fraction field it is
-missing.  The well-definedness (independence of the representative `a/b`) is the work — it is a
-clean, Mathlib-contributable lemma "`Derivation A A` extends to `Derivation (FractionRing A)
-(FractionRing A)`".  Statement of what the extension must satisfy on `F(t)`: -/
+The log-monomial derivation `logDerivPoly u` on `F[t]` extends to the genuine fraction field
+`RatFunc F` via `fracDeriv` (built from scratch above), restricting to it on `F[t]`.  This is now a
+*proven theorem* `derivExtends`, not an obligation — the **setup fully closes**. -/
 
 section FieldObligations
 
@@ -389,15 +386,21 @@ variable {F : Type*} [Field F] [Differential F] [CharZero F]
 
 open RatFunc
 
-/-- **Obligation 1 (derivation extension).** There is a `Differential (RatFunc F)` whose derivation
-restricts, on the image of `F[t]`, to the log-monomial derivation `logDerivPoly u`, i.e.
-`(algebraMap F[t] (RatFunc F) p)′ = algebraMap F[t] (RatFunc F) (logDerivPoly u p)`.  This is the
-unique extension of the `F[t]`-derivation to the fraction field by the quotient rule; the proof is
-the missing "derivation extends to `FractionRing`" lemma. -/
-def DerivExtendsObligation (u : F) : Prop :=
-  ∃ _ : Differential (RatFunc F),
+/-- The genuine `Differential (RatFunc F)` for the log monomial `t = log u` (`t' = u'/u`), via the
+fraction-field extension `fracDeriv` of `logDerivPoly u`. -/
+@[reducible]
+noncomputable def logDifferential (u : F) : Differential (RatFunc F) :=
+  fracDifferential (K := RatFunc F) (logDifferentialPoly u)
+
+omit [CharZero F] in
+/-- **Obligation 1, CLOSED.**  The log-monomial derivation on `RatFunc F` (`logDifferential u`)
+restricts to `logDerivPoly u` on the image of `F[t]`:
+`(algebraMap F[t] (RatFunc F) p)′ = algebraMap F[t] (RatFunc F) (logDerivPoly u p)`. -/
+theorem derivExtends (u : F) :
+    letI := logDifferential u
     ∀ p : F[X], (algebraMap F[X] (RatFunc F) p)′
-      = algebraMap F[X] (RatFunc F) (logDerivPoly u p)
+      = algebraMap F[X] (RatFunc F) (logDerivPoly u p) :=
+  fun p => fracDeriv_algebraMap (K := RatFunc F) (logDerivPoly u) p
 
 omit [CharZero F] in
 /-- **Obligation 2 is DISCHARGED conditionally.**  GIVEN any `Differential (RatFunc F)` whose
@@ -419,18 +422,15 @@ theorem differentialAlgebra_of_derivExtends [Differential (RatFunc F)] {u : F}
     rw [IsScalarTower.algebraMap_eq F F[X] (RatFunc F)]
     simp [Polynomial.algebraMap_eq]
 
-/-- **Obligation 3 (the `IsLiouville` reduction — heart of the transcendental case).**  GIVEN the
-extended derivation (and hence `DifferentialAlgebra` by `differentialAlgebra_of_derivExtends`), if
-`a ∈ F` is written `a = ∑ cᵢ logDeriv wᵢ + v′` with `wᵢ, v ∈ F(t)` and `cᵢ` constants, then it can
-be rewritten with all data in `F`.  Rosenlicht's argument: factor each `wᵢ = (F-leading
-coeff)·∏(monic irreducibles in t)`; `logDeriv` of the `t`-part contributes only
-`(deg)·t'/(…) = (deg)·logDeriv u` plus genuine `t`-pole terms; matching the partial-fraction
-`t`-pole orders on both sides (the left side `a ∈ F` has **none**) kills every `t`-pole, so each
-surviving `wᵢ` is in `F` and `v` has no `t`-pole, hence `v ∈ F` after absorbing the `t·const` term.
-This is exactly `IsLiouville F (RatFunc F)` — the keystone. -/
-def IsLiouvilleObligation [Differential (RatFunc F)]
-    [DifferentialAlgebra F (RatFunc F)] : Prop :=
-  IsLiouville F (RatFunc F)
+omit [CharZero F] in
+/-- **Obligation 2, CLOSED.**  `RatFunc F` with the log-monomial derivation is a genuine
+`DifferentialAlgebra F (RatFunc F)` — the **setup is now a real differential field extension**, not
+conditional. -/
+theorem logDifferentialAlgebra (u : F) :
+    letI := logDifferential u
+    DifferentialAlgebra F (RatFunc F) :=
+  letI := logDifferential u
+  differentialAlgebra_of_derivExtends (u := u) (derivExtends u)
 
 /-- **Obligation 4 (`ContainConstants F F(t)`, the transcendence non-degeneracy — needed only to
 *tower* logs).**  GIVEN the extended derivation, every `t`-constant is in `F`:
@@ -444,27 +444,36 @@ when `u' = 0`, `log u` *is* a new constant and `ContainConstants F F(t)` is genu
 def ContainConstantsObligation (u : F) [Differential (RatFunc F)] : Prop :=
   logDeriv u ≠ 0 → Differential.ContainConstants F (RatFunc F)
 
+/-- **Obligation 3 — the single remaining obligation: the `IsLiouville` reduction** on the genuine
+log extension `RatFunc F` (Rosenlicht's partial-fraction / pole-matching argument, the heart of the
+transcendental case).  If `a ∈ F` is written `a = ∑ cᵢ logDeriv wᵢ + v′` with `wᵢ, v ∈ F(t)`, `cᵢ`
+constants, it must be rewritable with all data in `F`: factor each `wᵢ = (F-elt)·∏(monic
+irreducibles in t)`; `logDeriv` of each monic `t`-factor `π` is *proper* (`deg (D π) < deg π`,
+`natDegree_logDerivPoly_lt_of_monic`), a genuine `t`-pole; matching `t`-pole orders on both sides
+(LHS `a ∈ F` has **none**) cancels every `t`-pole, folding the `t`-parts into a single `logDeriv
+u`-multiple (`logDerivPoly_monomial_eq`) and forcing `v` to have no `t`-pole, hence `v ∈ F[t]` and
+then `v ∈ F` (`leadingCoeff_deriv_eq_zero_of_logDerivPoly_eq_zero`).  The setup
+(`logDifferential`, `logDifferentialAlgebra`) is now fully real, so the **entire** keystone reduces
+to *this one* `Prop`. -/
+def IsLiouvilleReductionObligation (u : F) : Prop :=
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  IsLiouville F (RatFunc F)
+
 omit [CharZero F] in
-/-- **The keystone, assembled and PROVEN (modulo the two content obligations).**  GIVEN a
-`Differential (RatFunc F)` (`inst`) whose derivation restricts to `logDerivPoly u` on `F[t]`
-(Obligation 1, hypothesis `hrestrict`) and the `IsLiouville` reduction *for that derivation*
-(Obligation 3, hypothesis `hliouville` — stated against the `DifferentialAlgebra` that
-`differentialAlgebra_of_derivExtends` produces), `F(log u) = RatFunc F` is a Liouville extension of
-`F`.  Obligation 2 (`DifferentialAlgebra`) is discharged inside via
-`differentialAlgebra_of_derivExtends`, so only Obligations 1 and 3 carry mathematical content.  This
-theorem is the mechanical assembly that closes the keystone once those two are supplied.  (Towering
-several logs additionally needs Obligation 4, `ContainConstantsObligation`, via
-`IsLiouville.trans`.) -/
-theorem keystone (u : F) (inst : Differential (RatFunc F))
-    (hrestrict : ∀ p : F[X], (algebraMap F[X] (RatFunc F) p)′
-      = algebraMap F[X] (RatFunc F) (logDerivPoly u p))
-    (hliouville : letI := inst
-      letI := differentialAlgebra_of_derivExtends (u := u) hrestrict
-      IsLiouville F (RatFunc F)) :
-    letI := inst
-    letI := differentialAlgebra_of_derivExtends (u := u) hrestrict
+/-- **The keystone, assembled and PROVEN modulo the single `IsLiouville` reduction.**  The setup is
+genuine (`logDifferential u` is a real `Differential (RatFunc F)`, `logDifferentialAlgebra u` a real
+`DifferentialAlgebra F (RatFunc F)`, Obligations 1 and 2 *closed* above).  So `F(log u) = RatFunc F`
+is a Liouville extension of `F` **iff** the `IsLiouville` reduction (Obligation 3,
+`IsLiouvilleReductionObligation u`) holds — this theorem is that reduction made into the final
+assembly.  Only the Rosenlicht pole-matching argument now stands between this and an unconditional
+`instance : IsLiouville F (RatFunc F)`.  (Towering several logs additionally needs Obligation 4,
+`ContainConstantsObligation`, via `IsLiouville.trans`.) -/
+theorem keystone (u : F) (hreduction : IsLiouvilleReductionObligation u) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
-  hliouville
+  hreduction
 
 end FieldObligations
 
