@@ -45,10 +45,22 @@ The **general** rational-part soundness is then assembled (abstract `K[X]`, gene
   `K`, via the per-step lift `toPolyG_radDeriv_zero_cons_sub_iff`), the assembled antiderivative
   `v = foldl radAdd radZero [0,cBᵢ]` satisfies `radDeriv(v) = integrand − final-leftover` in `K[X]`.
 
-So the soundness capstone is a theorem under the precondition "each cleared step's `K`-equation holds";
-the remaining scoped follow-up is discharging that precondition for the *literal* `radIntegrateRational`
-over `QFunNZG ℚ` (the noncomputable `qxOfNum`/`RatFunc` lift bridges — `cderiv∘qxOfNum = qxOfNum∘cderivG`,
-`g = ℓ·f`), recorded in the closing module docstring. -/
+So the soundness capstone is a theorem under the precondition "each cleared step's `K`-equation holds".
+That precondition is **now discharged for the LITERAL `qxOfNum`-coefficient lifts** the
+`radIntegrateRational` driver produces, via three axiom-clean `QFunNZG ℚ`-specific bridges (none
+`radDeriv`-arithmetic):
+
+* **`toQFunNZG_cderiv_qxOfNum`** (bridge i, the substantive one) — `cderiv (qxOfNum P) = qxOfNum (cderivG
+  P)` read in `RatFunc ℚ`: the polynomial embedding `qxOfNum : CPolyG ℚ → QFunNZG ℚ` commutes with the
+  derivation (`cderiv = towerDerivQFunNZG [1]` realizes `extendDeriv (implicitDeriv (toPolyG [1]))`, which on
+  the algebra-map image is `algebraMap (baseDerivQ ·)`, and `baseDerivQ` is the plain `derivative` over `ℚ`).
+* **`toK_logDerRadicand_mul_radicand`** (bridge ii) — `ℓ·f = (1/n)·f'` in `K` (the integrand `g = (1/n)f'`
+  IS `ℓ·f` with `ℓ = f'/(nf)`).
+* **`radCase3Residual_eq`** (bridge iii) — the per-step polynomial cleared identity `B'f + Bg − C` is `rfl`.
+
+Composed by **`toK_step_qxOfNum_iff`** (each step's cleared polynomial identity ⟺ the telescope's per-step
+`K`-equation) and **`radDeriv_foldlRadAdd_qxOfNum_telescope`** (the **LITERAL** `qxOfNum`-coefficient
+rational-part soundness over `ℚ(x)`), recorded in the closing module docstring. -/
 
 open Polynomial
 
@@ -579,6 +591,136 @@ theorem radCase3Residual_eq (f g B C Bder : CPolyG α) :
 
 end CPolyG
 
+/-! ### ★ Composition (i)+(ii)+(iii): the literal `radDeriv(assembled v) = integrand − leftover` over `ℚ(x)`
+
+With the three `QFunNZG ℚ` bridges in hand, the per-step `K`-equation precondition of
+`radDeriv_foldlRadAdd_zero_cons_telescope` is discharged for the **literal** `radIntegrateRational`
+coefficients — pure-`y` lifts of `qxOfNum`-of-polynomials over the radicand `qxOfNum ρ`. The genuine-field
+`K`-equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` (with `cBᵢ = qxOfNum Bᵢ`, `cCᵢ = qxOfNum Cᵢ`, `ℓ =
+logDerRadicand n (qxOfNum ρ) = ρ'/(nρ)`) clears, via bridges (i) (`cderiv∘qxOfNum = qxOfNum∘cderivG`) and
+(ii) (`ℓ·ρ = (1/n)ρ'`), to the polynomial cleared identity `n·ρ·Bᵢ' + Bᵢ·ρ' = n·ρ·(Cᵢ − Cᵢ₊₁)` in
+`K[X]` — the genuine-field reading of each engine step's `radCase3Residual = 0` (bridge (iii)). Feeding
+the polynomial identities into the telescope yields the literal rational-part soundness over `ℚ(x)`. -/
+
+namespace RadElem
+
+open scoped Polynomial
+
+/-- **`toK (qxOfNum p) = amG (toPolyG p)`** (`CFieldSpec.toK`-flavoured) — the same content as
+`toQFunNZG_qxOfNum`, restated against `CFieldSpec.toK` (definitionally `QFunNZG.toQFunNZG` for `QFunNZG ℚ`)
+so it `rw`s directly in `toK`-expressed goals. -/
+theorem toK_qxOfNum (p : CPolyG ℚ) :
+    CFieldSpec.toK (qxOfNum p) = QFunNZG.amG ℚ (CPolyG.toPolyG p) :=
+  toQFunNZG_qxOfNum p
+
+/-- **`toK (cderiv (qxOfNum p)) = amG (derivative (toPolyG p))`** (`CFieldSpec.toK`-flavoured bridge (i)) —
+the genuine-field reading of `cderiv ∘ qxOfNum`: bridge (i) (`toQFunNZG_cderiv_qxOfNum`) composed with the
+`qxOfNum`-reading and `toPolyG_cderivG`. The `toK`-side form used in the per-step composition. -/
+theorem toK_cderiv_qxOfNum (p : CPolyG ℚ) :
+    CFieldSpec.toK (CDiffField.cderiv (qxOfNum p))
+      = QFunNZG.amG ℚ (derivative (CPolyG.toPolyG p)) := by
+  rw [show CFieldSpec.toK (CDiffField.cderiv (qxOfNum p))
+        = QFunNZG.toQFunNZG (CDiffField.cderiv (qxOfNum p)) from rfl,
+    toQFunNZG_cderiv_qxOfNum, toQFunNZG_qxOfNum, CPolyG.toPolyG_cderivG]
+
+/-- **`toK (logDerRadicand n (qxOfNum ρ)) = amG(ρ') / ((n:K)·amG(ρ))`** — the diagonal multiplier of the
+literal radical derivation, read in `RatFunc ℚ`: `ℓ = ρ'/(nρ)` reads as `amG(derivative ρ̄)/((n:K)·amG ρ̄)`
+(`ρ̄ = toPolyG ρ`). Routes `logDerRadicand`'s `div`/`mul`/`cnatCastG` through the `toK` homomorphism laws
+and the bridge-(i) reading `toK_cderiv_qxOfNum`. -/
+theorem toK_logDerRadicand_qxOfNum (n : ℕ) (ρ : CPolyG ℚ) :
+    CFieldSpec.toK (logDerRadicand n (qxOfNum ρ))
+      = QFunNZG.amG ℚ (derivative (CPolyG.toPolyG ρ))
+        / ((n : RatFunc (CFieldSpec.K ℚ)) * QFunNZG.amG ℚ (CPolyG.toPolyG ρ)) := by
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, toK_cnatCastG, toK_cderiv_qxOfNum,
+    toK_qxOfNum]
+
+/-- **★ The literal per-step `K`-equation reduces to the cleared polynomial identity** — for `qxOfNum`-of-
+polynomial step coefficient `B` and consecutive leftovers `C`, `C'` over the radicand `ρ` (all `CPolyG ℚ`),
+the telescope's per-step base-field equation
+`toK (cderiv (qxOfNum B) + qxOfNum B · logDerRadicand n (qxOfNum ρ)) = toK (qxOfNum C) − toK (qxOfNum C')`
+holds in `RatFunc ℚ` **iff** the cleared polynomial identity
+`(n:K[X])·ρ̄·B̄' + B̄·ρ̄' = (n:K[X])·ρ̄·(C̄ − C̄')` holds in `K[X]` (`ρ̄ = toPolyG ρ` etc.), provided `n ≠ 0`
+and `ρ̄ ≠ 0`. This is the (i)+(ii)+(iii) composition at one step: bridge (i) reads `cderiv∘qxOfNum`, bridge
+(ii) clears `ℓ = ρ'/(nρ)`, and `amG` injectivity descends the `RatFunc` equation to the `K[X]` identity.
+The genuine-field form of `radCase3Residual = 0`. -/
+theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : CPolyG ℚ)
+    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPolyG.toPolyG ρ ≠ 0) :
+    CFieldSpec.toK (CField.add (CDiffField.cderiv (qxOfNum B))
+          (CField.mul (qxOfNum B) (logDerRadicand n (qxOfNum ρ))))
+        = CFieldSpec.toK (qxOfNum C) - CFieldSpec.toK (qxOfNum C')
+      ↔ (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ * derivative (CPolyG.toPolyG B)
+            + CPolyG.toPolyG B * derivative (CPolyG.toPolyG ρ)
+          = (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ
+              * (CPolyG.toPolyG C - CPolyG.toPolyG C') := by
+  -- read every `toK` through `amG` (bridge (i) for `cderiv`, the `ℓ` reading for the multiplier)
+  rw [CFieldSpec.toK_add, CFieldSpec.toK_mul, toK_cderiv_qxOfNum, toK_qxOfNum, toK_qxOfNum,
+    toK_qxOfNum, toK_logDerRadicand_qxOfNum]
+  have hρK : QFunNZG.amG ℚ (CPolyG.toPolyG ρ) ≠ 0 := QFunNZG.amG_toPolyG_ne_zero hρ
+  have hinj := RatFunc.algebraMap_injective (CFieldSpec.K ℚ)
+  -- the `K[X]` identity, pushed through the ring hom `amG`, with the denominator `(n:K)·amG ρ̄ ≠ 0`
+  -- cleared, is exactly the `RatFunc` equation; `amG` injectivity gives the converse.
+  constructor
+  · intro h
+    apply hinj
+    rw [map_add, map_mul, map_mul, map_mul, map_mul, map_mul, map_sub, map_natCast]
+    field_simp [QFunNZG.amG] at h
+    linear_combination h
+  · intro h
+    have h' := congrArg (QFunNZG.amG ℚ) h
+    rw [map_add, map_mul, map_mul, map_mul, map_mul, map_mul, map_sub, map_natCast] at h'
+    field_simp [QFunNZG.amG]
+    linear_combination h'
+
+/-- **★ The LITERAL rational-part soundness over `ℚ(x)`** — for a radicand `ρ`, a list of step-contribution
+polynomials `Bpolys` and a one-longer list of leftover polynomials `Cpolys` (all `CPolyG ℚ`), **if** every
+step's cleared polynomial identity `(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` holds in `K[X]`
+(`ρ̄ = toPolyG ρ` etc. — the genuine-field reading of each engine step's `radCase3Residual = 0`, bridge
+(iii)), **then** the assembled pure-`y` antiderivative `v = (Bpolys.map (qxOfNum · ↦ [0, ·])).foldl radAdd
+radZero` satisfies the soundness identity `radDeriv n (qxOfNum ρ) v + [0, qxOfNum Cpolys.last] = [0,
+qxOfNum Cpolys.head]` in `K[X]` (`radDeriv(v) = integrand − final-leftover`). The (i)+(ii)+(iii) composition
+for the LITERAL `qxOfNum`-coefficient lifts the `radIntegrateRational` driver produces: `toK_step_qxOfNum_iff`
+turns each cleared polynomial identity into the telescope's per-step `K`-equation, then
+`radDeriv_foldlRadAdd_zero_cons_telescope` assembles. Precondition: `n ≠ 0` (in `RatFunc ℚ`), `ρ ≠ 0`
+(`toPolyG ρ ≠ 0`), and the per-step polynomial identities. -/
+theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : CPolyG ℚ) (Bpolys Cpolys : List (CPolyG ℚ))
+    (hlen : Bpolys.length + 1 = Cpolys.length)
+    (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : CPolyG.toPolyG ρ ≠ 0)
+    (hpoly : ∀ i : ℕ, (hi : i < Bpolys.length) →
+      (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ * derivative (CPolyG.toPolyG (Bpolys.get ⟨i, hi⟩))
+          + CPolyG.toPolyG (Bpolys.get ⟨i, hi⟩) * derivative (CPolyG.toPolyG ρ)
+        = (n : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ
+            * (CPolyG.toPolyG (Cpolys.get ⟨i, by omega⟩)
+              - CPolyG.toPolyG (Cpolys.get ⟨i + 1, by omega⟩))) :
+    CPolyG.toPolyG (radDeriv n (qxOfNum ρ)
+          (((Bpolys.map qxOfNum).map (fun cB => ([CField.zero, cB] : RadElem (QFunNZG ℚ)))).foldl
+            radAdd radZero))
+        + CPolyG.toPolyG
+            ([CField.zero, (Cpolys.map qxOfNum).getLastD CField.zero] : RadElem (QFunNZG ℚ))
+      = CPolyG.toPolyG ([CField.zero, (Cpolys.map qxOfNum).headD CField.zero] : RadElem (QFunNZG ℚ)) := by
+  -- the radicand exposed to `radDeriv` is `(qxOfNum ρ).headD = qxOfNum ρ`? no — `radDeriv` takes the
+  -- radicand directly here. Apply the abstract telescope at the `qxOfNum`-lifted coefficient lists.
+  have hlen' : (Bpolys.map qxOfNum).length + 1 = (Cpolys.map qxOfNum).length := by
+    rw [List.length_map, List.length_map]; omega
+  have hkey := radDeriv_foldlRadAdd_zero_cons_telescope (α := QFunNZG ℚ) n (qxOfNum ρ)
+    (Bpolys.map qxOfNum) (Cpolys.map qxOfNum) hlen' ?_
+  · simpa using hkey
+  · -- each step's `K`-equation from the cleared polynomial identity, via `toK_step_qxOfNum_iff`
+    intro i hi
+    have hiB : i < Bpolys.length := by simpa using hi
+    have hiC : i < Cpolys.length := by omega
+    have hiC1 : i + 1 < Cpolys.length := by omega
+    -- rewrite the lifted `get`s back to `qxOfNum` of the polynomial `get`s
+    rw [show (Bpolys.map qxOfNum).get ⟨i, hi⟩ = qxOfNum (Bpolys.get ⟨i, hiB⟩) from by
+        simp [List.get_eq_getElem, List.getElem_map],
+      show (Cpolys.map qxOfNum).get ⟨i, by omega⟩ = qxOfNum (Cpolys.get ⟨i, hiC⟩) from by
+        simp [List.get_eq_getElem, List.getElem_map],
+      show (Cpolys.map qxOfNum).get ⟨i + 1, by omega⟩ = qxOfNum (Cpolys.get ⟨i + 1, hiC1⟩) from by
+        simp [List.get_eq_getElem, List.getElem_map]]
+    exact (toK_step_qxOfNum_iff n ρ (Bpolys.get ⟨i, hiB⟩) (Cpolys.get ⟨i, hiC⟩)
+      (Cpolys.get ⟨i + 1, hiC1⟩) hn hρ).mpr (hpoly i hiB)
+
+end RadElem
+
 /-! ### The GENERAL rational-part soundness: what is now a theorem, and the precise residual
 
 This file proves the **general rational-part soundness as an abstract `K[X]` theorem** —
@@ -605,29 +747,46 @@ It composes the two pieces named in the prior plan, both now landed and axiom-cl
    accumulation invariant; with the seed `radDeriv radZero = 0` it gives
    `radDeriv(accumulated v) + final-leftover = original integrand`. (Done here — the hard new lemma.)
 
-**The precise residual.** What `radDeriv_foldlRadAdd_zero_cons_telescope` takes as its **precondition** —
-the list of per-step `K`-equations `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` — is, for the literal
-`radIntegrateRational` over the concrete base `α = QFunNZG ℚ`, the statement that each iterate step's
-*polynomial* cleared identity `B'f + Bg − C = D` lifts to the field equation on the `R/y ↦ (R/ρ)·y`
-coefficients. Discharging that precondition for a *specific* driver run requires three `QFunNZG ℚ`-specific
-bridges, none of them `radDeriv`-arithmetic: (i) the `qxOfNum : CPolyG ℚ → QFunNZG ℚ` lift is a ring
-homomorphism commuting with the derivation (`cderiv (qxOfNum P) = qxOfNum (cderivG P)`); (ii) the radical's
-helper satisfies `g = ℓ·f` in `K` (`toK g = toK ℓ · toK f`, since `g = (1/n)f'` and `ℓ = f'/(nf)` —
-clean once `toK(nf) ≠ 0`); (iii) the per-step polynomial identity itself (already `rfl` for `radCase3Residual`,
-which is *defined* as `B'f + Bg − C`). The `toK`-into-`RatFunc ℚ` bridge is **noncomputable**, so these are
-genuine `RatFunc`-arithmetic lemmas, not `decide`/`rfl` — that is the scoped follow-up. The abstract
-soundness theorem above is complete and general; only the `QFunNZG ℚ`-specific *discharge of its
-precondition for a concrete run* (re-deriving e.g. `c3itDriver_integrates` without `native_decide`)
-remains. -/
+**★ The precondition is now discharged for the LITERAL `qxOfNum`-coefficient lifts** — what
+`radDeriv_foldlRadAdd_zero_cons_telescope` takes as its **precondition**, the list of per-step `K`-equations
+`D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁`, is, for the literal `radIntegrateRational` over `α = QFunNZG ℚ`, each
+iterate step's *polynomial* cleared identity `B'f + Bg − C = D` lifted to the field equation on the `R/y ↦
+(R/ρ)·y` coefficients. That lift is now a theorem via three `QFunNZG ℚ`-specific bridges, **all landed and
+axiom-clean** (none of them `radDeriv`-arithmetic):
 
-/-! ### `#print axioms` — the general rational-part soundness is abstractly verified (no `native_decide`)
+* (i) **`toQFunNZG_cderiv_qxOfNum`** — `cderiv (qxOfNum P) = qxOfNum (cderivG P)` read in `RatFunc ℚ`: the
+  polynomial embedding `qxOfNum : CPolyG ℚ → QFunNZG ℚ` commutes with the derivation. The substantive
+  bridge: `cderiv = towerDerivQFunNZG [1]` realizes `extendDeriv (implicitDeriv (toPolyG [1]))`, which on
+  the algebra-map image `qxOfNum P ↦ amG (toPolyG P)` is `algebraMap (baseDerivQ (toPolyG P))`, and
+  `baseDerivQ` is the plain `derivative` over `ℚ` (`baseDerivQ_apply`).
+* (ii) **`toK_logDerRadicand_mul_radicand`** — `ℓ·f = (1/n)·f'` in `K` (`toK (logDerRadicand n f · f) =
+  n⁻¹·toK f'`): the integrand-helper `g = (1/n)f'` IS the diagonal multiplier `ℓ = f'/(nf)` times the
+  radicand `f`, rearranged from the crux `toK_logDerRadicand_mul`.
+* (iii) **`radCase3Residual_eq`** — the per-step polynomial cleared identity `B'f + Bg − C` is definitional
+  (`rfl`).
 
-Each soundness theorem carries **only** the standard `[propext, Classical.choice, Quot.sound]` — no
+Composed: **`toK_step_qxOfNum_iff`** turns each step's cleared polynomial identity
+`(n:K[X])·ρ̄·Bᵢ' + Bᵢ·ρ̄' = (n:K[X])·ρ̄·(Cᵢ − Cᵢ₊₁)` into the telescope's per-step `K`-equation (bridges (i)
++(ii) read the `toK`s through `amG`, `amG`-injectivity descends the cleared `RatFunc` equation), and
+**`radDeriv_foldlRadAdd_qxOfNum_telescope`** assembles them into the **LITERAL** rational-part soundness over
+`ℚ(x)`: for `qxOfNum`-of-polynomial step/leftover lists, `radDeriv n (qxOfNum ρ) (assembled v) + [0,
+qxOfNum Cpolys.last] = [0, qxOfNum Cpolys.head]` in `K[X]`, under `n ≠ 0`, `ρ ≠ 0`, and the per-step
+polynomial cleared identities. **The remaining residual is narrow and engine-side**, not `RatFunc`-side:
+extracting, for a *named* driver run (`c3itRun`, `mcRun`), the concrete `Bpolys`/`Cpolys` and their per-step
+polynomial cleared identities `cisZeroG (radCase3Residual …) = true` (the engine's own `native_decide`
+checks, readable abstractly through `cisZeroG_iff` + `toPolyG_csubG`) — bookkeeping over the iterate's
+accumulator, with no further `radDeriv` or `RatFunc` reasoning needed. -/
+
+/-! ### `#print axioms` — the bridges and the literal soundness are abstractly verified (no `native_decide`)
+
+Each soundness theorem and each of the three literal-radical bridges carries **only** the standard
+`[propext, Classical.choice, Quot.sound]` (or, for the definitional bridge (iii), *no* axioms) — no
 `native_decide` compiler axiom, no `sorry`. The simple-radical integral `∫ (f'/(nf))·√f = √f`, its two-term
-generalization, the `C/y`-form reduction, the **telescoping invariant**, and the **general rational-part
-soundness** `radDeriv(assembled v) = integrand − final-leftover` are all general theorems (specialized to
-the concrete elliptic radicand `x³+1` over `ℚ(x)` for the headline). The seed-plus-engine of the soundness
-capstone `D(∫f) = f`. -/
+generalization, the `C/y`-form reduction, the **telescoping invariant**, the **general rational-part
+soundness** `radDeriv(assembled v) = integrand − final-leftover`, the three `QFunNZG ℚ` bridges
+(i)/(ii)/(iii), and the **LITERAL `qxOfNum`-coefficient soundness** `radDeriv_foldlRadAdd_qxOfNum_telescope`
+are all general theorems (specialized to the concrete elliptic radicand `x³+1` over `ℚ(x)` for the
+headline). The seed-plus-engine of the soundness capstone `D(∫f) = f`. -/
 
 -- The general algebraic integral `∫ (f'/(nf))·√f = √f` and its soundness-predicate packaging:
 #print axioms RadElem.toPolyG_radDeriv_radGen
@@ -644,6 +803,21 @@ capstone `D(∫f) = f`. -/
 
 -- ★ The general rational-part soundness: assembled `v` integrates the integrand modulo the final leftover:
 #print axioms RadElem.radDeriv_foldlRadAdd_zero_cons_telescope
+
+-- ★ Bridge (i): the derivation commutes with `qxOfNum` (the substantive `RatFunc ℚ` bridge):
+#print axioms toQFunNZG_cderiv_qxOfNum
+
+-- ★ Bridge (ii): `g = ℓ·f` in `K` (the diagonal multiplier times the radicand is `(1/n)f'`):
+#print axioms RadElem.toK_logDerRadicand_mul_radicand
+
+-- ★ Bridge (iii): the per-step polynomial cleared identity `B'f + Bg − C` is definitional:
+#print axioms CPolyG.radCase3Residual_eq
+
+-- ★ The LITERAL per-step `K`-equation ⟺ cleared polynomial identity (i+ii+iii composed at one step):
+#print axioms RadElem.toK_step_qxOfNum_iff
+
+-- ★★ The LITERAL rational-part soundness over ℚ(x): `radDeriv(assembled qxOfNum-v) = integrand − leftover`:
+#print axioms RadElem.radDeriv_foldlRadAdd_qxOfNum_telescope
 
 -- ★ The concrete elliptic-radicand integral over ℚ(x), abstractly (the engine's native_decide fact):
 #print axioms radDeriv_radGen_sound_qx
