@@ -617,6 +617,94 @@ theorem mem_range_of_deriv_mem_range (u : F) (hrtp : RationalToPolyObligation u)
   rw [← hp]
   exact (algebraMap_poly_mem_range_iff p).mpr ⟨b₀, hb₀⟩
 
+/-! ### The single-logarithm case (Obligation 3, `ι` a singleton)
+
+`a = c · logDeriv w + v′` with `a ∈ F`.  The structural decomposition `logDeriv w =
+logDeriv(num w) − logDeriv(denom w)` splits the logarithm into its numerator/denominator polynomial
+parts; each polynomial's `logDeriv` is a sum of `logDeriv` of monic irreducibles (proper `t`-poles,
+`logDeriv_monic_proper`).  Since `a ∈ F` carries no `t`-pole, those simple poles must cancel — the
+*pole-independence* fact isolated as `SingleLogPoleObligation`.  The decomposition is fully provable;
+the pole-independence is the genuine partial-fraction frontier. -/
+
+omit [CharZero F] in
+/-- **`logDeriv` of a `RatFunc` splits as numerator minus denominator `logDeriv`** (the entry to the
+single-log pole analysis): for `w ≠ 0`, `logDeriv w = logDeriv(algebraMap (num w)) −
+logDeriv(algebraMap (denom w))` in `RatFunc F`, via `w = num w / denom w` and `logDeriv_div`. -/
+theorem logDeriv_eq_num_sub_denom (u : F) {w : RatFunc F} (hw : w ≠ 0) :
+    letI := logDifferential u
+    logDeriv w = logDeriv (algebraMap F[X] (RatFunc F) (RatFunc.num w))
+        - logDeriv (algebraMap F[X] (RatFunc F) (RatFunc.denom w)) := by
+  letI := logDifferential u
+  have hnum : algebraMap F[X] (RatFunc F) (RatFunc.num w) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (RatFunc.num_ne_zero hw)
+  have hden : algebraMap F[X] (RatFunc F) (RatFunc.denom w) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (RatFunc.denom_ne_zero w)
+  conv_lhs => rw [← RatFunc.num_div_denom w]
+  exact logDeriv_div _ _ hnum hden
+
+omit [CharZero F] in
+/-- **`logDeriv` of a polynomial image folds along a factorization** (the single-log decomposition):
+if `p = ∏ⱼ (g j)^(e j)` with each `g j ≠ 0` (e.g. a unit-times-monic-irreducibles factorization in
+`F[t]`), then `logDeriv (algebraMap p) = ∑ⱼ (e j) · logDeriv (algebraMap (g j))` in `RatFunc F`.
+Each factor's `logDeriv` is `logDeriv (algebraMap (g j))`; the monic ones are proper `t`-poles
+(`logDeriv_monic_proper`).  Fully provable from `logDeriv_prod`/`logDeriv_pow`. -/
+theorem logDeriv_algebraMap_prod_pow (u : F) {ι : Type*} (s : Finset ι) (g : ι → F[X])
+    (e : ι → ℕ) (hg : ∀ j ∈ s, g j ≠ 0) :
+    letI := logDifferential u
+    logDeriv (algebraMap F[X] (RatFunc F) (∏ j ∈ s, (g j) ^ (e j)))
+      = ∑ j ∈ s, (e j : RatFunc F) * logDeriv (algebraMap F[X] (RatFunc F) (g j)) := by
+  letI := logDifferential u
+  have hne : ∀ j ∈ s, algebraMap F[X] (RatFunc F) ((g j) ^ (e j)) ≠ 0 :=
+    fun j hj => RatFunc.algebraMap_ne_zero (pow_ne_zero _ (hg j hj))
+  rw [map_prod, logDeriv_prod ι s _ hne]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [map_pow, logDeriv_pow]
+
+/-- **The single-log pole-independence obligation** — the genuine partial-fraction content of the
+single-logarithm case, sharply isolated.  GIVEN `a ∈ F`, a constant `c ∈ F`, `w v ∈ RatFunc F` with
+`algebraMap a = c · logDeriv w + v′`, there exist `w₀ : F` and `v₀ : RatFunc F` rewriting the same
+sum with the logarithm's argument **already in `F`** and `v₀′` the corrected `v`-term.  Content: the
+simple `t`-poles of `logDeriv w` (one per monic-irreducible `t`-factor of `num w`/`denom w`, all of
+residue-order `1` by `logDeriv_monic_proper`) cannot be matched by `a ∈ F` (no pole) nor by `v′`
+(poles of order `≥ 2`), forcing every `t`-factor's exponent to `0`, i.e. `w ∈ F·(t-unit)`.  This is
+the `ι`-singleton instance of the full pole-matching, isolated from the multi-term linear-independence
+(`SharedFactorObligation`). -/
+def SingleLogPoleObligation (u : F) : Prop :=
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  ∀ (a : F) (c : F), c′ = 0 → ∀ (w v : RatFunc F),
+    algebraMap F (RatFunc F) a = algebraMap F (RatFunc F) c * logDeriv w + v′ →
+    ∃ (w₀ : F) (v₀ : RatFunc F),
+      algebraMap F (RatFunc F) a
+        = algebraMap F (RatFunc F) c * logDeriv (algebraMap F (RatFunc F) w₀) + v₀′
+      ∧ v₀′ ∈ (algebraMap F (RatFunc F)).range
+
+omit [CharZero F] in
+/-- **The single-logarithm case closes modulo its two residues** (pole-independence + the `v ∈ F`
+descent).  GIVEN `SingleLogPoleObligation` (the simple-pole independence isolating the log argument
+into `F` with a corrected `v₀` whose derivative is in `F`) and the `v ∈ F` inputs
+(`RationalToPolyObligation`, `PolyVReductionObligation`), any single-log representation `algebraMap a
+= c · logDeriv w + v′` of `a ∈ F` yields `F`-data: `w₀ ∈ F` and a `v₀ ∈ F`.  This is the `ι`-singleton
+instance of `LiouvilleFDataReduction`, with all glue proven and only the stated frontiers open. -/
+theorem singleLog_fData (u : F) (hslp : SingleLogPoleObligation u)
+    (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0)
+    (a : F) (c : F) (hc : c′ = 0) (w v : RatFunc F)
+    (h : letI := logDifferential u; letI := logDifferentialAlgebra u;
+      algebraMap F (RatFunc F) a = algebraMap F (RatFunc F) c * logDeriv w + v′) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    ∃ (w₀ : F) (v₀ : F),
+      algebraMap F (RatFunc F) a
+        = algebraMap F (RatFunc F) c * logDeriv (algebraMap F (RatFunc F) w₀)
+            + (algebraMap F (RatFunc F) v₀)′ := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  -- Pole-independence: pull the log argument into `F`, leaving a corrected `v₀` with `v₀′ ∈ F`.
+  obtain ⟨w₀, v₁, h₁, hv₁⟩ := hslp a c hc w v h
+  -- The corrected `v₁` has derivative in `F`, so by the `v ∈ F` reduction `v₁ ∈ F`.
+  obtain ⟨v₀, hv₀⟩ := mem_range_of_deriv_mem_range u hrtp hpv hu hv₁
+  exact ⟨w₀, v₀, by rw [h₁, hv₀]⟩
+
 /-- **Obligation 4 (`ContainConstants F F(t)`, the transcendence non-degeneracy — needed only to
 *tower* logs).**  GIVEN the extended derivation, every `t`-constant is in `F`:
 `x′ = 0 → x ∈ range (algebraMap F (RatFunc F))`.  This is *not* needed for the single keystone
