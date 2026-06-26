@@ -244,35 +244,37 @@ the cheap one; the swelling fraction path is what exceeds a budget in the torsio
 theorem qfHeavyHeartbeats :
     qfDetFlatDeg < qfDetFracTotalDeg ∧ qfInvFlatMaxDeg < qfInvFracMaxTotalDeg := by native_decide
 
-/-! ### Migration targets — the `fieldDet`/`matInvG`/`gaussElimG`/`kernelBasisG` call sites (do NOT edit here)
+/-! ### Migration status — the `fieldDet`/`matInvG` call sites (do NOT edit the sites from here)
 
-The follow-up migration (a separate deliberate step) replaces the swelling fraction linear algebra at these
-**exact** call sites with the fraction-free `qfDet`/`qfInv`/`qfSolve`/`qfClearMatrix` wrappers. The sites and
-the `native_decide`s they feed:
+**`ComputableAlgFunctionField.lean` — DONE.** `discriminant f := fieldDet (traceMatrix f (powerBasis f))`
+is now `qfDet 16 (traceMatrix f (powerBasis f))` (specialized to the `ℚ(x) = QFunNZG ℚ` type it is consumed
+at). It clears the `ℚ(x)` trace matrix to `ℚ[x]` and runs Bareiss instead of the swelling `ℚ(x)` Laplace
+expansion. The consumers `afNonRad_discriminant_eq`, `afTrig_discriminant_eq`, the `± Res(f, f')` cross-
+checks, and the downstream `discNum`/`badPrimes` (Round-2) all still pass (`qfDet = fieldDet`). `fieldDet`/
+`fieldDetSized` stay `[CField α]`-generic for genuinely-generic small matrices.
 
-**`ComputableAlgFunctionField.lean`** (the discriminant — `fieldDet` over `ℚ(x)`):
-* `discriminant f := fieldDet (traceMatrix f (powerBasis f))` (def, line ~156) → `qfDet`. Feeds
-  `afNonRad_discriminant_eq`, `afNonRad_discriminant_eq_neg_resultant`, `afTrig_discriminant_eq`,
-  `afTrig_discriminant_eq_resultant` (and, downstream, `discNum`/`badPrimes` in Round-2).
-* `fieldDet`/`fieldDetSized` (def, line ~136–151) — the Laplace determinant itself; `qfDet` supersedes it
-  for `ℚ(x)`-entry matrices (the trace matrices), keeping `fieldDet` only for genuinely `[CField α]`-generic
-  small matrices.
+**`ComputableRound2IntegralBasis.lean` `idealizerBasis` — DEFERRED (representation mismatch).** Replacing
+`matInvG n B` / `matInvG n Nhat` by the fraction-free `qfInv` read-back is blocked, NOT by a typo, but by a
+semantic invariant of the existing pipeline: `idealizerBasis` clears the stacked `M = Binv·multMatrix` to
+`ℚ[x]` by `commonDenom` (a **coarse product** of distinct entry denominators) and returns the basis vectors
+**scaled by that `δ`**. `matInvG` happens to return inverse entries in **lowest terms** (e.g. `1`, `0/1`,
+`1/x` for the cusp `B = [[x,0],[0,1]]`), so `δ` stays minimal. The fraction-free `qfInv` returns the same
+inverse as `M⁻¹ = (D·adj)/det` with a **single shared denominator `det` on every entry** (`x/x`, `0/x`, …) —
+field-equal (validated by `qfInv_eq_matInvG_*`), but **unreduced**. Feeding those into `commonDenom`
+over-inflates `δ` (each shared-`det` entry multiplies it again), and the `δ`-scaled output no longer matches
+(`cusp_round2_newGen_eq`/`cusp_newGen_integral`/`node_*` evaluate `false` under `native_decide` — and the
+value genuinely changes, e.g. the first basis coord becomes `1/x²` instead of `1`). The engine has **no**
+`QFunNZG` fraction reducer (`qmulNZG`/`qinvNZG` never cancel), and reducing each entry to lowest terms needs
+a verified `den/gcd ≠ 0` proof (the `[CFieldSpec]` Bézout/exact-division layer) — its own development. Until
+that reducer (or a `commonDenom`-free fraction-free `idealizerBasis` whose `δ`-tracking matches Bareiss)
+lands, `idealizerBasis` stays on `matInvG`. (These cusp/node `B`/`N̂` matrices are tiny `2×2` with no actual
+swell, so the perf cost of staying on `matInvG` here is nil; the swell that motivates Bareiss is the `3×3`
+`B⁻¹·multMatrix` of larger curves — `qfInv`/`qfSolve` are validated and ready for that path once the reducer
+exists.) `kernelBasisG`/`gaussElimG` (via `pTraceRadical`) run over the residue field `ℚ` (no fractions, no
+swell) and need no migration.
 
-**`ComputableRound2IntegralBasis.lean`** (the idealizer — `matInvG`/`matMulG` over `ℚ(x)`, the SWELL):
-* `idealizerBasis` (def, line ~352): `match matInvG n B with …` (invert the `I_p`-basis matrix `B`) and
-  `match matInvG n Nhat with …` (invert the reduced `M̂`) → `qfInv` / `qfSolve`. The two `matInvG`s are the
-  swelling inversions; `Mj := matMulG Binv (multMatrix f ιj)` is the swelling product. Feeds
-  `cusp_round2_grew`, `cusp_round2_newGen_eq`, `cusp_newGen_integral`, `cusp_secondStep_stable`,
-  `node_round2_newGen_eq`, `node_newGen_integral`, `node_secondStep_stable`.
-* `matInvG` / `matMulG` (defs, line ~255–301) — the `ℚ(x)` matrix inverse/product primitives the idealizer
-  calls; `qfInv` (`(det, D·adj)` representation) / a fraction-free `matMul` supersede them.
-* `kernelBasisG` (def, line ~83) and `gaussElimG` (in `ComputableRadicalLogArgGeneric`) are invoked by
-  `pTraceRadical` on the **residue-field `ℚ`-matrix** `traceMatrixAtRoot` — these are over `ℚ` (already a
-  field, no fractions), so they do **not** swell and need **no** migration; only the `ℚ(x)`-entry
-  `matInvG`/`matMulG` in `idealizerBasis` (and `fieldDet` in `discriminant`) are the fraction-swell sites.
-
-The migration is mechanical: clear once with `qfClearMatrix`, call `bareissDet`/`bareissAdjugate`, read back
-— `qfDet`/`qfInv` already package this and are validated to agree with `fieldDet`/`matInvG` above. -/
+The DONE migration is mechanical (`qfDet` already packages clear→Bareiss→read-back and is validated to agree
+with `fieldDet`); the DEFERRED one needs the fraction reducer first. -/
 
 /-! ### `#print axioms` — does the engine now route `ℚ(x)` matrices through fraction-free Bareiss?
 
