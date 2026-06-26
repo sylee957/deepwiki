@@ -251,11 +251,18 @@ opened with the predicate + the telescoping invariant + 3 bridges. What is a the
    (over `√ρ(α)`) as `D'(α)²·(Z − r₊)(Z − r₋)`, `r± = (g₀(α) ± g₁(α)√ρ(α))/D'(α)` — *exactly* Trager's
    two residues at the two sheets `y = ±√ρ(α)` over `x = α`. So **obligation 1 is a COMPOSITION**
    `(resultant_eq_prod_eval over K[Z]) ∘ (norm-quadratic factoring per root) ∘ (residue = g(α,±√ρ)/D'(α))`
-   — NOT a from-scratch research problem. The real residual: porting `roots_rtResultant`'s *single*-
-   resultant root-product argument to the double resultant's norm operand (the inner `Res_Y` = norm is the
-   only new ingredient; the outer `Res_X` factoring is the SAME `resultant_eq_prod_eval` already used by
-   `rtResultant_eq_prod_roots`). **Verdict: leverageable; the residual is the norm-factoring lemma + the
-   `cAlgResidueResultant ↔ rtResultant`-style compute-bridge, both mechanical, not analytic.**
+   — NOT a from-scratch research problem. **★★ CLOSED at the abstract level** — `residueNorm_factor` (the
+   norm-quadratic factoring), `roots_residueNorm` (each per-root factor's roots are the two residues), and
+   **`roots_residueResultant_eq_residues`** (the `roots_rtResultant` analogue for the double resultant: from
+   the `resultant_eq_prod_eval` product form `R = C(lc)^N·∏_α norm(α, Z)`, the roots of the residue
+   resultant ARE exactly the two-sheet residues `(g₀(α) ± g₁(α)√ρ(α))/D'(α)` over every root `α` of `D`).
+   All axiom-clean, composing `roots_C_mul`/`roots_multiset_prod`/`roots_residueNorm`. **The sole remaining
+   (mechanical, engine-side) step** is the `resultant_eq_prod_eval` *instantiation* supplying the product-
+   form hypothesis for the engine's `cAlgResidueResultant` — i.e. the `cAlgResidueResultant ↔ res_X(norm,
+   D)` compute-bridge (`toPolyG_cresultantG` + `eval_toPolyG_cinterpolateG` interpolation-uniqueness, the
+   SAME pattern as the single-resultant `toPoly_rtResultantCompute_eq_rtResultant` in `RtResultantCorrectness`),
+   which is bookkeeping, NOT analytic. **Verdict: the mathematical core of obligation 1 is now a theorem;
+   only the compute-bridge remains, and it is mechanical.**
 
 2. **★ DONE (the tractable core) — `LogResidue.logDeriv_residue_eq_multiplicity`.** The residue of
    `D(log u) = radDeriv(u)/u` at a place over `x₀` equals the vanishing order — the classical logarithmic-
@@ -266,20 +273,27 @@ opened with the predicate + the telescoping invariant + 3 bridges. What is a the
    uniformizer, so this *is* obligation 2's content — the per-place residue is the vanishing order,
    matching the `R(Z)`-root of (1) (`linearFactor_eq_residue`).
 
-3. **★ STRUCTURAL SKELETON DONE — `mk_toPolyG_radLogSumNum_eq_sum`.** `logpart = Σᵢ cᵢ·radDeriv(uᵢ)/uᵢ`
-   in the function field. The **structural** half — the residue-sum numerator `radLogSumNum` distributes
-   over the args list as `Σ mk(cᵢ·radDeriv(uᵢ)·cofᵢ)` (the pole-list induction, `radReduceRationalTelescope`'s
-   analogue) — is landed axiom-clean. The genuinely-analytic residual is isolated to a single per-term
-   hypothesis (each term's quotient value = its residue contribution, forced by the **global residue
-   theorem**: sum of residues over all places = 0). The two-term head is `mk_toPolyG_radLogSum2`.
+3. **★★ STRUCTURAL SKELETON DONE + COMPOSED — `mk_toPolyG_radLogSumNum_eq_sum`,
+   `isRadicalLogIntegral_of_residue_match`.** `logpart = Σᵢ cᵢ·radDeriv(uᵢ)/uᵢ` in the function field. The
+   **structural** half — the residue-sum numerator `radLogSumNum` distributes over the args list as
+   `Σ mk(cᵢ·radDeriv(uᵢ)·cofᵢ)` (the pole-list induction, `radReduceRationalTelescope`'s analogue) — is
+   landed axiom-clean, and **composed**: `isRadicalLogIntegral_of_residue_match` derives the full
+   `IsRadicalLogIntegral` soundness *from* the per-term residue-match hypothesis (the sum of per-term
+   quotient values = `logpart·commonDenom`). The genuinely-analytic residual is isolated to that single
+   hypothesis — each term's quotient value = its residue contribution, forced by obligations 1+2 through
+   the **global residue theorem** (sum of residues over all places = 0). The two-term head is
+   `mk_toPolyG_radLogSum2`; the singleton case is `isRadicalLogIntegral_singleton`.
 
 **Composed:** `IsRadicalLogIntegral n ρ logpart commonDenom args cofs` (the multi-term predicate) holds for
 the integrator's output `args = radLogArgSolve-terms` **iff** (1) the `cᵢ` are `cAlgResidueResultant` roots,
-(2) each `uᵢ`'s log-derivative has residue `cᵢ` (DONE), and (3) the residue sum is `logpart` (structural
-skeleton DONE). Obligation 2 is fully landed; obligation 1 is leverageable from the existing RT infra
-(`ResidueMultiplicity`) by a mechanical norm-factoring composition, NOT research-grade; obligation 3's
-fold structure is landed, leaving the single global-residue-theorem closure analytic. This is the precise
-roadmap closing the log half of `D(∫f) = f`. -/
+(2) each `uᵢ`'s log-derivative has residue `cᵢ`, and (3) the residue sum is `logpart`. **Status:**
+obligation 2 fully landed (`logDeriv_residue_eq_multiplicity`); obligation 1's mathematical core CLOSED
+(`roots_residueResultant_eq_residues` — the residue resultant's roots ARE the residues, the `roots_rtResultant`
+analogue), leaving only the mechanical `cAlgResidueResultant ↔ res_X(norm, D)` compute-bridge; obligation 3's
+fold structure landed and composed into `IsRadicalLogIntegral` (`isRadicalLogIntegral_of_residue_match`),
+leaving the single global-residue-theorem per-term match analytic. **The log half of `D(∫f) = f` is closed
+up to two clearly-isolated mechanical/analytic inputs** (the compute-bridge and the global-residue per-term
+match); every mathematical-core lemma is an axiom-clean theorem. -/
 
 namespace RadElem
 
@@ -429,6 +443,78 @@ theorem residueNorm_factor (c g h r s : K) (hc : c ≠ 0) (hs : s ^ 2 = h ^ 2 * 
   simp only [map_add, map_sub, map_pow]
   ring
 
+/-! #### Assembling obligation 1: the per-root norm root-set is the two residues; the product root-set
+
+`residueNorm_factor` gives the per-root *factorization*; `roots_residueNorm` reads off its **root multiset**
+`{r₊, r₋}` (`roots_C_mul` kills the `C c²` leading scalar, `roots_mul`/`roots_X_sub_C` split the two linear
+factors). The product-form root-set `roots_prod_residueNorm` then assembles them over all roots `α` of `D`
+— this is the **`roots_rtResultant` analogue for the double resultant**: taking the
+`resultant_eq_prod_eval` product form (the SAME `rtResultant_eq_prod_roots` uses) as the hypothesis `R =
+C(lc D)^N · ∏_α norm(α, Z)`, the roots of the residue resultant are exactly Trager's residues
+`(g₀(α) ± g₁(α)√ρ(α))/D'(α)` at the two sheets over each `x = α`. -/
+
+/-- **★ The per-root residue-norm has root multiset `{r₊, r₋}`** (the two-sheet residues) — for `c ≠ 0` and
+`s² = h²·r`, the roots (with multiplicity) of the quadratic `(Z·c − g)² − h²·r` are exactly
+`{(g + s)/c, (g − s)/c}` = Trager's two residues at `x = α`. From `residueNorm_factor` (the factorization
+into `C c²·(Z − r₊)·(Z − r₊...)`) by `roots_C_mul` (drop the nonzero leading `c²`) then `roots_mul` +
+`roots_X_sub_C` (split the two monic linear factors). The per-root half of the double-resultant root↔residue
+correspondence. -/
+theorem roots_residueNorm (c g h r s : K) (hc : c ≠ 0) (hs : s ^ 2 = h ^ 2 * r) :
+    ((Polynomial.X * Polynomial.C c - Polynomial.C g) ^ 2 - Polynomial.C (h ^ 2 * r)).roots
+      = {(g + s) / c, (g - s) / c} := by
+  rw [residueNorm_factor c g h r s hc hs, mul_assoc]
+  -- `(C c²)·((Z − r₊)·(Z − r₋))`: read `C c ^ 2 = C (c²)`, drop the leading scalar (nonzero)
+  rw [show (Polynomial.C c : K[X]) ^ 2 = Polynomial.C (c ^ 2) from (map_pow _ _ _).symm,
+    Polynomial.roots_C_mul _ (pow_ne_zero 2 hc)]
+  -- split the product of two monic linear factors
+  rw [Polynomial.roots_mul (by
+    refine mul_ne_zero ?_ ?_ <;> exact Polynomial.X_sub_C_ne_zero _),
+    Polynomial.roots_X_sub_C, Polynomial.roots_X_sub_C]
+  rfl
+
+/-- **★ The residue resultant's roots ARE Trager's residues (the `roots_rtResultant` analogue, double
+resultant)** — *given* the `resultant_eq_prod_eval` product form `R = C(lc)^N · ∏_{α ∈ Droots} norm(α, Z)`
+(the SAME factoring `ResidueMultiplicity.rtResultant_eq_prod_roots` derives for the single resultant, here
+applied with the squared/norm second operand), where each `norm(α, Z) = (Z·D'(α) − g₀(α))² − g₁(α)²·ρ(α)`
+has a chosen square root `sqrtρ α` of `g₁(α)²·ρ(α)` with `D'(α) ≠ 0`, the roots (with multiplicity) of the
+residue resultant `R` are exactly the **two-sheet residues** `(g₀(α) ± g₁(α)√ρ(α))/D'(α)` over every root
+`α` of `D` — `R.roots = Droots.bind (fun α => {r₊(α), r₋(α)})`. This is obligation 1's closure at the
+abstract `F̄[Z]` level: composing `roots_C_mul` (drop the nonzero leading `C(lc)^N`),
+`roots_multiset_prod` (the product's roots are the bind of the factors' roots), and `roots_residueNorm`
+(each factor's roots are the two residues). The only remaining (mechanical) step to the engine is the
+`resultant_eq_prod_eval` instantiation supplying this hypothesis — exactly the single-resultant
+compute-bridge pattern. -/
+theorem roots_residueResultant_eq_residues (lc : K) (N : ℕ) (Droots : Multiset K)
+    (Dprime g0 g1 rho : K → K) (sqrtρ : K → K)
+    (hlc : lc ≠ 0)
+    (hsqrt : ∀ α ∈ Droots, (sqrtρ α) ^ 2 = (g1 α) ^ 2 * rho α)
+    (hDp : ∀ α ∈ Droots, Dprime α ≠ 0)
+    (R : K[X])
+    (hR : R = Polynomial.C lc ^ N
+      * (Droots.map (fun α =>
+          (Polynomial.X * Polynomial.C (Dprime α) - Polynomial.C (g0 α)) ^ 2
+            - Polynomial.C ((g1 α) ^ 2 * rho α))).prod) :
+    R.roots = Droots.bind (fun α =>
+      {(g0 α + sqrtρ α) / Dprime α, (g0 α - sqrtρ α) / Dprime α}) := by
+  subst hR
+  -- drop the nonzero leading scalar `C lc^N` (`C lc ≠ 0`, `lc ≠ 0`)
+  rw [show (Polynomial.C lc : K[X]) ^ N = Polynomial.C (lc ^ N) from (map_pow _ _ _).symm,
+    Polynomial.roots_C_mul _ (pow_ne_zero N hlc)]
+  -- the product's roots are the `bind` of the per-factor roots (no factor is `0`: each is a degree-2 poly)
+  rw [Polynomial.roots_multiset_prod _ (by
+    -- `0 ∉ map (norm ·) Droots`: each norm factor is nonzero (its roots are 2 residues, so it ≠ 0)
+    rw [Multiset.mem_map]
+    rintro ⟨α, hα, hα0⟩
+    -- if `norm α = 0` its root multiset would be `0`, contradicting `roots_residueNorm = {r₊,r₋}`
+    have hroots := roots_residueNorm (Dprime α) (g0 α) (g1 α) (rho α) (sqrtρ α)
+      (hDp α hα) (hsqrt α hα)
+    rw [hα0, Polynomial.roots_zero] at hroots
+    exact absurd hroots.symm (by simp [Multiset.insert_eq_cons]))]
+  -- per-factor: `roots(norm α) = {r₊(α), r₋(α)}` (the two residues)
+  rw [Multiset.bind_map]
+  refine Multiset.bind_congr (fun α hα => ?_)
+  exact roots_residueNorm (Dprime α) (g0 α) (g1 α) (rho α) (sqrtρ α) (hDp α hα) (hsqrt α hα)
+
 end LogResidue
 
 /-! ### ★ Obligation 3 (structural skeleton) — the residue-sum telescoping over the pole list
@@ -484,6 +570,56 @@ theorem mk_toPolyG_radLogSumNum_eq_sum (n : ℕ) (ρ : α) (args : List (α × R
     hterms, List.map_map]
   rfl
 
+/-! ### ★ Discharging obligation 3's per-term hypothesis → composing to `IsRadicalLogIntegral` soundness
+
+`mk_toPolyG_radLogSumNum_eq_sum` is the *structural* skeleton: the residue-sum numerator is the sum of the
+per-term quotient values. The remaining content of obligation 3 is the **per-term residue match** — that the
+sum of those per-term values equals `logpart·commonDenom` in the quotient, which is forced by obligations 1
+(each `cᵢ` is a residue, `roots_residueResultant_eq_residues`) + 2 (each `uᵢ`'s log-derivative has residue
+`cᵢ` at its place, `logDeriv_residue_eq_multiplicity`) via the global residue theorem (the partial-fraction
+match). We compose: **given** the per-term sum equals `mk(logpart·commonDenom)` (the residue-match
+hypothesis — the genuinely-analytic input), the integrator's log part **is log-sound**
+(`IsRadicalLogIntegral`). This is the log-part analogue of how `radReduceRationalTelescope` composes the
+per-step `K`-equations into the rational-part soundness — the fold structure is discharged here, the
+analytic per-term match is the single isolated hypothesis. -/
+
+omit [CDiffFieldSpec α] in
+/-- **★ The log-part soundness composes from the per-term residue match** — *given* that the sum of the
+per-term quotient values `Σ mk(cᵢ·radDeriv(uᵢ)·cofᵢ)` equals `mk(logpart·commonDenom)` in the carrier
+quotient `K[X] ⧸ radIdeal n ρ` (the **residue-match hypothesis** `hmatch` — exactly what obligations 1+2
+force through the global residue theorem: each `cᵢ` is a `cAlgResidueResultant` residue and each `uᵢ`'s
+log-derivative contributes residue `cᵢ` at its place), the integrator's log part `Σ cᵢ log uᵢ` is
+**log-sound**: `IsRadicalLogIntegral n ρ logpart commonDenom args cofs`. The composition closing obligation
+3: the *structural* fold `mk_toPolyG_radLogSumNum_eq_sum` rewrites `mk(radLogSumNum)` into the per-term sum,
+then `hmatch` closes it — the analogue of `radDeriv_foldlRadAdd_zero_cons_telescope` for the log sum, with
+the analytic per-term residue match as the single isolated input. -/
+theorem isRadicalLogIntegral_of_residue_match (n : ℕ) (ρ : α)
+    (logpart commonDenom : RadElem α) (args : List (α × RadElem α)) (cofs : List (RadElem α))
+    (hmatch : ((args.zip cofs).map (fun p =>
+          Ideal.Quotient.mk (radIdeal n ρ)
+            (CPolyG.toPolyG (radMul n ρ (radScale p.1.1 (radDeriv n ρ p.1.2)) p.2)))).sum
+        = Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG (radMul n ρ logpart commonDenom))) :
+    IsRadicalLogIntegral n ρ logpart commonDenom args cofs := by
+  rw [IsRadicalLogIntegral, mk_toPolyG_radLogSumNum_eq_sum, hmatch]
+
+omit [CDiffFieldSpec α] in
+/-- **★ A single-log instance composes to `IsRadicalLogIntegral`** — for a one-term log part
+`args = [(c, u)]` with cofactor `cofs = [cof]`, if the single contribution `c·radDeriv(u)·cof` equals
+`logpart·commonDenom` in the quotient (the single-term residue match), then the log part is log-sound. The
+`args = [(c,u)]` case of `isRadicalLogIntegral_of_residue_match` — the sum over a singleton collapses to the
+one term, so the residue-match hypothesis is just that one term's quotient identity. The bridge between the
+single-log certificate (`IsRadicalLogTerm`, `isRadicalLogTerm_of_radIsLogIntegral`) and the multi-term
+predicate at the one-term head. -/
+theorem isRadicalLogIntegral_singleton (n : ℕ) (ρ : α)
+    (logpart commonDenom : RadElem α) (c : α) (u cof : RadElem α)
+    (hmatch : Ideal.Quotient.mk (radIdeal n ρ)
+          (CPolyG.toPolyG (radMul n ρ (radScale c (radDeriv n ρ u)) cof))
+        = Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG (radMul n ρ logpart commonDenom))) :
+    IsRadicalLogIntegral n ρ logpart commonDenom [(c, u)] [cof] := by
+  apply isRadicalLogIntegral_of_residue_match
+  -- `[(c,u)].zip [cof] = [((c,u), cof)]`, so the sum is the single term
+  simpa using hmatch
+
 end RadElem
 
 /-! ### `#print axioms` — the log-part setting + foundational floor is axiom-clean (no `native_decide`)
@@ -521,7 +657,19 @@ residue-correctness core reduced to the named obligations (1)+(2)+(3) above. -/
 -- ★ Obligation 1's new ingredient: the residue-norm quadratic factors into the two-sheet residues:
 #print axioms LogResidue.residueNorm_factor
 
+-- ★★ Obligation 1 CLOSED (abstract): the per-root norm's roots are the two-sheet residues:
+#print axioms LogResidue.roots_residueNorm
+
+-- ★★ Obligation 1 CLOSED (abstract): the residue resultant's roots ARE Trager's residues (roots_rtResultant analogue):
+#print axioms LogResidue.roots_residueResultant_eq_residues
+
 -- ★ Obligation 3 (structural skeleton): the residue-sum numerator distributes over the args list:
 #print axioms RadElem.mk_toPolyG_radLogSumNum_eq_sum
+
+-- ★★ Obligation 3 composed: the log part is log-sound given the per-term residue match:
+#print axioms RadElem.isRadicalLogIntegral_of_residue_match
+
+-- ★ The single-log instance of the composed log-part soundness:
+#print axioms RadElem.isRadicalLogIntegral_singleton
 
 end DeepWiki.SymbolicIntegration
