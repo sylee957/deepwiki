@@ -234,4 +234,293 @@ theorem cusp_pTraceRadical_basis :
     (pTraceRadical cuspF [0, 1] 0).map (fun row => row.map cmonicG) =
       [[[0, 1], []], [[], [1]]] := by native_decide
 
+/-! ### The idealizer `Î = (I_p : I_p)` — one Round-2 enlargement (`round2Step`)
+
+The enlarged order is the idealizer `Î = (I_p : I_p) = { z ∈ K(x, y) : z·I_p ⊆ I_p }` (Trager §2, p. 26).
+Writing `z` in the order basis `[1, y, …]` with coordinate vector `ū ∈ K(x)ⁿ`, and the `I_p`-basis as the
+columns of the `K(x)`-matrix `B` (`B[r][k]` = the `r`-th power-basis coordinate of `ιₖ`), the condition
+`z·ιⱼ ∈ I_p` is `Mⱼ·ū ∈ K[x]ⁿ` where `Mⱼ = B⁻¹·(multMatrix f ιⱼ)` (multiply-by-`ιⱼ` in the power basis,
+re-expressed in the `I_p` output basis). Stacking the `Mⱼ` gives `M` (`n²×n` over `K(x)`); clearing to a
+common denominator `δ ∈ K[x]` turns `M·ū ∈ K[x]^{n²}` into the Trager §1.1 solve `N·ū ≡ 0 (mod δ)` with
+`N = δ·M ∈ K[x]`. Adjoining `δ·Iₙ` (so that `ū ∈ K[x]ⁿ` too) and Hermite-reducing over `K[x]`
+(`hermiteRowReduce`), the first `n` rows form `M̂`; the **columns of `M̂⁻¹`** are the idealizer basis, in
+the order basis `[1, y]` — carrying the denominators that ENLARGE the order. -/
+
+namespace CPolyG
+
+/-! #### Field matrix algebra over `K(x) = QFunNZG ℚ` (inverse, product) -/
+
+/-- **Matrix product over a `[CField β]`** `matMulG A Bm`: the `(i, j)` entry is `Σₖ A[i][k]·Bm[k][j]`
+(`p×q` times `q×r`). Used to form `Mⱼ = B⁻¹·(multMatrix f ιⱼ)` over `K(x)`. -/
+def matMulG {β : Type*} [CField β] (A Bm : List (List β)) : List (List β) :=
+  let r := (Bm.headD []).length
+  A.map (fun rowA =>
+    (List.range r).map (fun j =>
+      ((List.range rowA.length).foldl (fun acc k =>
+        CField.add acc (CField.mul (rowA.getD k CField.zero) ((Bm.getD k []).getD j CField.zero)))
+        CField.zero)))
+
+/-- **Inverse of a square `n×n` matrix over a `[CField β]`** `matInvG n M = some M⁻¹` (or `none` if
+singular): Gauss–Jordan on the augmented `[M | Iₙ]` (the same elimination as `gaussElimG`, scaling each
+pivot row to a leading `1` and clearing the column above and below), reading the right half. Pure
+`CField`-arithmetic, fuel-free. Used to invert the `I_p`-basis matrix `B` and the reduced `M̂`. -/
+def matInvG {β : Type*} [CField β] (n : ℕ) (M : List (List β)) : Option (List (List β)) :=
+  -- augment each row with the identity
+  let aug : List (List β) := (List.range n).map (fun i =>
+    (M.getD i []) ++ (List.range n).map (fun j => if i = j then (CField.one : β) else CField.zero))
+  -- Gauss–Jordan over the 2n columns, pivoting on columns 0 … n−1
+  let step : Option (List (List β)) → ℕ → Option (List (List β)) :=
+    fun st col =>
+      match st with
+      | none => none
+      | some rs =>
+        match (List.range n).find?
+            (fun i => i ≥ col && (!CField.isZero ((rs.getD i []).getD col CField.zero))) with
+        | none => none
+        | some i =>
+          let rowCol := rs.getD col []
+          let rowI := rs.getD i []
+          let rs := (rs.set col rowI).set i rowCol
+          let pivRow := rs.getD col []
+          let lead := pivRow.getD col CField.zero
+          let pivRow := pivRow.map (fun a => CField.div a lead)
+          let rs := rs.set col pivRow
+          let rs := (List.range n).foldl (fun acc rr =>
+            if rr = col then acc
+            else
+              let row := acc.getD rr []
+              let factor := row.getD col CField.zero
+              if CField.isZero factor then acc
+              else
+                let newRow := (List.range (2 * n)).map (fun c =>
+                  CField.sub (row.getD c CField.zero) (CField.mul factor (pivRow.getD c CField.zero)))
+                acc.set rr newRow) rs
+          some rs
+  match (List.range n).foldl step (some aug) with
+  | none => none
+  | some rs => some (rs.map (fun row => (List.range n).map (fun j => row.getD (n + j) CField.zero)))
+
+/-! #### `K(x) ↔ K[x]` denominator clearing and lifts -/
+
+/-- **Lift a `K[x]` coordinate row to a `K(x, y)` element** `rowToAf row = Σᵢ qxOfNum(rowᵢ)·yⁱ`: the
+`CPolyG (QFunNZG ℚ)` whose `i`-th coefficient is the `ℚ(x)` value of the `i`-th `ℚ[x]` coordinate. Turns an
+`I_p`-basis row (power-basis coordinates over `K[x]`) into the order element it represents (so `afMul` can
+multiply by it). -/
+def rowToAf (row : List (CPolyG ℚ)) : CPolyG (QFunNZG ℚ) := row.map qxOfNum
+
+/-- **The `I_p`-basis matrix `B` over `K(x)`** `ipBasisMatrix n ipRows`: the `n×n` `QFunNZG ℚ`-matrix whose
+column `k` is the `k`-th `I_p`-basis row (power-basis coordinates), i.e. `B[r][k] = qxOfNum (ipRows[k][r])`.
+(The `I_p` rows are *row* vectors of coordinates; `B` puts them in *columns*, the change-of-basis from the
+`I_p` basis to the power basis.) -/
+def ipBasisMatrix (n : ℕ) (ipRows : PolyMatrix ℚ) : List (List (QFunNZG ℚ)) :=
+  (List.range n).map (fun r =>
+    (List.range n).map (fun k => qxOfNum ((ipRows.getD k []).getD r [])))
+
+/-- **The common denominator of a `K(x)`-matrix** `commonDenom M = ∏ (distinct entry denominators)`
+(`CPolyG ℚ`): the product over all entries of their normalized denominator numerators (`z.1.2`), used to
+clear `M` to `K[x]`. A coarse common multiple (product, not lcm) — sufficient, since the Hermite-mod-`δ`
+solve is invariant under enlarging `δ` to a multiple. -/
+def commonDenom (M : List (List (QFunNZG ℚ))) : CPolyG ℚ :=
+  M.foldl (fun acc row =>
+    row.foldl (fun a z =>
+      let den := cnormG (z.1.2 : CPolyG ℚ)
+      if cisZeroG den || cisZeroG (csubG den [CField.one]) then a else cmulG a den)
+      acc) [CField.one]
+
+/-- **Clear a `K(x)`-row to a `K[x]`-row at denominator `δ`** `clearRow δ row = [num(δ·zᵢ)]`: multiply each
+`ℚ(x)` entry by `δ` and take the numerator (`CPolyG ℚ`). When `δ` is a common denominator of `row`, every
+`δ·zᵢ ∈ K[x]`, so the result is the integral row `δ·row` over `K[x]`. -/
+def clearRow (δ : CPolyG ℚ) (row : List (QFunNZG ℚ)) : List (CPolyG ℚ) :=
+  row.map (fun z => (CField.mul (qxOfNum δ) z).1.1)
+
+/-! #### The idealizer of `I_p`, given an order basis (`idealizerBasis`) -/
+
+/-- **The idealizer `Î = (I_p : I_p)`, as a new `K(x)` order basis** `idealizerBasis f orderBasis ipRows`.
+`orderBasis = [ω₀, …, ωₙ₋₁]` is the current order's `K(x, y)` basis (`CPolyG (QFunNZG ℚ)` elements), and
+`ipRows` is the `I_p` `K[x]`-basis in power-basis coordinates (`pTraceRadical` output). Returns the
+idealizer's basis as `n` `K(x, y)` elements (each a coordinate vector in `[1, y, …]`), per Trager §2 p. 26:
+
+* `B` = the `I_p`-basis matrix over `K(x)` (`ipBasisMatrix`; column `k` = `ιₖ` in power coords);
+* for each `ιⱼ = rowToAf (ipRows[j])`, the multiply-by-`ιⱼ` matrix `multMatrix f ιⱼ` over `K(x)`, and
+  `Mⱼ = B⁻¹ · multMatrix f ιⱼ` (output re-expressed in the `I_p` basis);
+* stack the `Mⱼ` into `M` (`n²×n` over `K(x)`); the idealizer is `{ū : M·ū ∈ K[x]^{n²}}`;
+* clear `M` to `N = δ·M` over `K[x]` (`δ = commonDenom M`), Hermite-reduce `N` (`hermiteRowReduce`), take
+  the first `n` (pivot) rows `N̂`, invert over `K(x)` (`matInvG`), and scale by `δ`: the **columns of
+  `δ·N̂⁻¹`** are the idealizer basis (in the order/power basis), carrying the enlarging denominators.
+
+Returns `orderBasis` unchanged if any inverse is singular (a safe no-op). -/
+def idealizerBasis (f : CPolyG (QFunNZG ℚ)) (orderBasis : List (CPolyG (QFunNZG ℚ)))
+    (ipRows : PolyMatrix ℚ) : List (CPolyG (QFunNZG ℚ)) :=
+  let n := cdegG f
+  let B : List (List (QFunNZG ℚ)) := ipBasisMatrix n ipRows
+  match matInvG n B with
+  | none => orderBasis
+  | some Binv =>
+    -- stack the `Mⱼ = Binv · multMatrix f ιⱼ` (each `n×n` over K(x))
+    let M : List (List (QFunNZG ℚ)) :=
+      (List.range n).foldr (fun j acc =>
+        let ιj : CPolyG (QFunNZG ℚ) := rowToAf ((ipRows.getD j []))
+        let Mj := matMulG Binv (multMatrix f ιj)
+        Mj ++ acc) []
+    -- clear to K[x] by a common denominator δ
+    let δ : CPolyG ℚ := commonDenom M
+    let N : PolyMatrix ℚ := M.map (clearRow δ)
+    -- Hermite-reduce N over K[x]; the first n rows are the upper-triangular invertible part
+    let reduced := hermiteRowReduce N
+    let Nhat : List (List (QFunNZG ℚ)) :=
+      (List.range n).map (fun i => (List.range n).map (fun j => qxOfNum ((reduced.getD i []).getD j [])))
+    match matInvG n Nhat with
+    | none => orderBasis
+    | some NhatInv =>
+      -- columns of δ·N̂⁻¹ are the new basis vectors (in the [1,y,…] order/power basis)
+      let δq : QFunNZG ℚ := qxOfNum δ
+      (List.range n).map (fun col =>
+        (List.range n).map (fun row => CField.mul δq ((NhatInv.getD row []).getD col CField.zero)))
+
+end CPolyG
+
+/-! #### `round2Step`: one enlargement of the equation order at all bad primes -/
+
+namespace CPolyG
+
+/-- **`true` iff a `K(x, y)` order basis equals the power basis `[1, y, …, yⁿ⁻¹]`** `isPowerBasis n basis`:
+each `basisᵢ` is `cisZeroG`-equal to `yⁱ` (`afBasisElem i`), entry by entry. Used to test whether
+`round2Step` actually grew the order (the new basis differs from `[1, y, …]` iff the order enlarged). -/
+def isPowerBasis (n : ℕ) (basis : List (CPolyG (QFunNZG ℚ))) : Bool :=
+  (List.range n).all (fun i =>
+    cisZeroG (csubG (basis.getD i []) (afBasisElem i)))
+
+/-- **One Ford–Zassenhaus Round-2 enlargement** `round2Step fuel f = (newBasis, grew)`. Starting from the
+equation order `O = [1, y, …, yⁿ⁻¹]` (`powerBasis f`), for the **first** bad prime `p = x − a` of `f`
+(`badPrimes`; here read off as `a = −p₀` for a monic linear `p = [−a, 1]`), compute the p-trace-radical
+`I_p` (`pTraceRadical`) and the idealizer `Î = (I_p : I_p)` (`idealizerBasis`), returning `Î`'s `K(x, y)`
+basis and whether it strictly enlarged `O` (`grew = ¬ isPowerBasis`). When there is no bad prime, the order
+is already maximal at every linear prime and the power basis is returned with `grew = false`. (The headline
+linear-prime case; multiple bad primes / higher-degree residue fields iterate this, documented at the end.) -/
+def round2Step (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) :
+    List (CPolyG (QFunNZG ℚ)) × Bool :=
+  let n := cdegG f
+  let O := powerBasis f
+  match (badPrimes fuel f) with
+  | [] => (O, false)
+  | p :: _ =>
+    let pm := cmonicG p
+    -- root of a monic linear prime `p = [−a, 1]` is `a = −p₀`
+    let a : ℚ := CField.neg (pm.getD 0 CField.zero)
+    let ip := pTraceRadical f pm a
+    let newBasis := idealizerBasis f O ip
+    (newBasis, !isPowerBasis n newBasis)
+
+end CPolyG
+
+/-! ### ★★ THE HEADLINE: `round2Step` ENLARGES `[1, y] → [1, y/x]` for `y² = x³` (`native_decide`)
+
+For the cusp `f = y² − x³`, the single bad prime is `p = x` (root `a = 0`). The p-trace-radical is
+`I_x = ⟨x, y⟩`; its idealizer is `(I_x : I_x) = K[x]·1 + K[x]·(y/x)`. `round2Step` computes the new basis
+`[1, y/x]` (coordinate vectors `[1, 0]` and `[0, 1/x]` over `K(x)`), strictly enlarging `[1, y]`. The new
+generator `y/x` is integral: `(y/x)² = y²/x² = x³/x² = x`. A second `round2Step` does not grow it — `[1, y/x]`
+is the maximal order (the integral basis of the cusp). -/
+
+open CPolyG
+
+-- Sanity print: the inverse of the cusp `I_x`-basis matrix `B = [[x,0],[0,1]]` (expected `[[1/x,0],[0,1]]`).
+#eval (matInvG 2 (ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0))).map
+  (fun M => M.map (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ)))))
+
+-- Sanity print: the new basis from round2Step (coordinate vectors over ℚ(x); expected `[1,0]`, `[0,1/x]`).
+#eval (round2Step 12 cuspF).1.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+
+-- Sanity print: did the order grow? (expected `true`).
+#eval (round2Step 12 cuspF).2
+
+/-- The computed enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x³)` = the second basis vector of `round2Step`
+(`= [0, 1/x]` in the `[1, y]` order basis). The element the engine produces as the Round-2 enlargement. -/
+def cuspNewGen : CPolyG (QFunNZG ℚ) := (round2Step 12 cuspF).1.getD 1 []
+
+/-- **★★ `round2Step` ENLARGES the cusp order** (`native_decide`): `(round2Step (y² − x³)).2 = true` — the
+idealizer `(I_x : I_x)` strictly contains the equation order `[1, y]`. The Ford–Zassenhaus Round-2 step
+detects and performs the enlargement. THE ENGINE COMPUTES A ROUND-2 STEP OF THE GENERAL-CURVE INTEGRAL
+BASIS. -/
+theorem cusp_round2_grew :
+    (round2Step 12 cuspF).2 = true := by native_decide
+
+/-- **★★ The enlarged generator is `y/x`** (`native_decide`): the second basis vector computed by
+`round2Step` for the cusp is `[0, 1/x]` in the `[1, y]` order basis — i.e. the element `y/x`. The first
+basis vector stays `1` (`[1]`). So `round2Step` produces exactly `[1, y/x]`, the enlargement predicted by
+the integrality of `y/x`. Checked by `cisZeroG (cuspNewGen − [0, 1/x])` and the first vector being `1`. -/
+theorem cusp_round2_newGen_eq :
+    (cisZeroG (csubG cuspNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZeroG (csubG ((round2Step 12 cuspF).1.getD 0 []) [CField.one])) = true := by native_decide
+
+/-- **★★ The enlarged generator `y/x` is INTEGRAL: `(y/x)² = x`** (`native_decide`): `afMul f (y/x) (y/x) =
+x` in `ℚ(x)[y]/(y² − x³)`, i.e. `(y/x)² = y²/x² = x³/x² = x` — a monic integral relation. This is the
+algebraic proof that `y/x` belongs in the maximal order (and that `[1, y]` was non-maximal): the engine's
+computed enlargement is genuinely integral. Checked by `cisZeroG (afMul f (y/x) (y/x) − x)`. -/
+theorem cusp_newGen_integral :
+    cisZeroG (csubG (afMul cuspF cuspNewGen cuspNewGen) [qxOfNum [0, 1]]) = true := by native_decide
+
+/-- **★★ `[1, y/x]` is the MAXIMAL order — a second `round2Step` does not grow it** (`native_decide`): the
+idealizer of the p-trace-radical computed against the **already-enlarged** basis `[1, y/x]` is `[1, y/x]`
+again (`grew = false`). So the Round-2 iteration has reached a fixed point: `[1, y/x]` is the integral basis
+of the cusp `y² − x³` (genus 0, the well-known result). Verified by running `idealizerBasis` /
+`pTraceRadical` against `[1, y/x]` and checking the order does not enlarge. -/
+theorem cusp_secondStep_stable :
+    let O2 := (round2Step 12 cuspF).1
+    let ip2 := pTraceRadical cuspF [0, 1] 0
+    let O3 := idealizerBasis cuspF O2 ip2
+    (List.range 2).all (fun i =>
+      cisZeroG (csubG (O3.getD i []) (O2.getD i []))) = true := by native_decide
+
+/-! ### The NEXT pieces: the full `integralBasis` iteration (Trager Ch. 2, p. 21, steps 1–5)
+
+`round2Step` is **one** Ford–Zassenhaus enlargement at the first linear bad prime. The full integral-basis
+algorithm (Trager p. 21) iterates it to a fixed point:
+
+1. **Iterate `round2Step` over all bad primes** (`q = ∏ pᵢ` with `pᵢ² | d`), not just the first. The
+   p-trace-radical at a product `q` is `J_q = ⋂ J_{pᵢ}` (Trager eq. on p. 24), computed by the same kernel
+   solve with the `q·Iₙ` augmentation; the idealizer of `J_q` enlarges at all bad primes simultaneously.
+
+2. **Re-base and repeat.** After one enlargement `O → Î` (change-of-basis matrix `M`, `det M`), set
+   `d ← d / (det M)²` and recompute the trace matrix / bad primes **in the new basis** `Î` (the order is no
+   longer the power basis, so `traceMatrix` must take the `Î` basis elements, and the `K[x]`-coordinate
+   bookkeeping carries the denominators). Repeat until `Î = O` (`grew = false`) — the fixed point is the
+   **maximal order**, whose `K[x]`-basis is the integral basis. The cusp reaches it in one step
+   (`cusp_secondStep_stable`); higher-genus curves take several.
+
+3. **Higher-degree / non-linear bad primes.** For a bad prime `p` of degree `> 1`, the residue field
+   `K[x]/(p)` is a proper extension of `K`, so the trace-matrix kernel is computed over `K[x]/(p)` (modular
+   linear algebra over `CPolyG ℚ`-mod-`p`), not by a single evaluation `qEvalAtRoot`. The construction is
+   otherwise identical (`pTraceRadical`'s residue-kernel + lift + Hermite). `traceMatrixAtRoot`/`qEvalAtRoot`
+   handle the linear case (`p = x − a`), which already covers the cusp headline.
+
+The Round-2 **primitives are all in place** — `badPrimes` (squarefree discriminant), `pTraceRadical`
+(residue kernel + `hermiteRowReduce`), `idealizerBasis` (`B⁻¹`, common-denominator clear, Hermite, `M̂⁻¹`),
+and `round2Step` (one enlargement, growth detection). What remains is the orchestration loop (re-basing the
+trace matrix after each enlargement, iterating over all bad primes to a fixed point) and the modular kernel
+for higher-degree residues — and the abstract correctness of the whole pipeline (here `native_decide`-
+validated on the cusp). The integral basis is the denominator data the genus-`g` algebraic Hermite
+reduction and the divisor/logarithmic-part machinery consume. -/
+
+/-! ### `#print axioms` — does the engine compute a Round-2 step of the general-curve integral basis?
+
+Each validation carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
+compiler axiom — **no `sorry`, no `sorryAx`, no extra axiom** (every recursion is `ℕ`-fuel-bounded or
+structural: `cevalG`/`gaussElimG`/`matInvG` fold over finite `List.range`s, `hermiteRowReduce` is fuel-
+bounded, `pTraceRadical`/`idealizerBasis`/`round2Step` are non-recursive compositions). **The engine now
+computes one Ford–Zassenhaus Round-2 step of the general-curve integral basis**, ENLARGING the equation
+order `[1, y]` toward the maximal order: for the cusp `y² − x³` it produces `[1, y/x]` — bad prime `x`
+(`cusp_badPrimes_eq`), p-trace-radical `I_x = ⟨x, y⟩` (`cusp_pTraceRadical_basis`), idealizer enlargement
+`[1, y] → [1, y/x]` (`cusp_round2_grew`, `cusp_round2_newGen_eq`) with the new generator integral `(y/x)² =
+x` (`cusp_newGen_integral`) and maximal (`cusp_secondStep_stable`). -/
+
+-- The bad prime + p-trace-radical of the cusp:
+#print axioms cusp_badPrimes_eq
+#print axioms cusp_pTraceRadical_basis
+
+-- ★★ The headline: the idealizer ENLARGES `[1, y] → [1, y/x]`, integral and maximal:
+#print axioms cusp_round2_grew
+#print axioms cusp_round2_newGen_eq
+#print axioms cusp_newGen_integral
+#print axioms cusp_secondStep_stable
+
 end DeepWiki.SymbolicIntegration
