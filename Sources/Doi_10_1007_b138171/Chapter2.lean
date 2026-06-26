@@ -46,6 +46,12 @@ identity that lowers the power of a squarefree denominator factor — is proved 
 semantics — shared kernel `diophantineSolve` (extended-Euclidean Bézout solve) is in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`.)
 §2.4: Thm 2.4.1(iii) [external: splitting-field minimality, proved in Chaps 4/5].
+§2.4/§2.5: the rational case of **Liouville's theorem** (`∫ f` for `f ∈ K(x)` is always `g + ∑ cᵢ log uᵢ`)
+  is now formalized — catalog `Sources.Doi_10_1007_b138171.Liouville` (`liouville_ratFunc`,
+  `liouville_logarithmFree_of_residues`). The remaining gap is the *full converse* of the logarithm-
+  detection decision: `f = G′ ⟹ all Rothstein–Trager residues vanish` needs that a rational derivative has
+  zero residue at every simple pole (a Laurent-coefficient fact); only the affirmative
+  `residues vanish ⟹ logarithm-free` direction is proved `[deferred]`.
 (Ex 2.3's symbolic content — LRT log part, the degree-8 RT resultant, the monic-in-`x` log argument,
 the Rioboo real form, and the symbolic definite-integral data over `[−2, −2/3]` — is computed and
 `native_decide`-proved (`ex_2_3*`); its "compare with direct numerical integration" sub-part is a

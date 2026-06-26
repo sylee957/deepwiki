@@ -23,7 +23,11 @@ differentials, §9.2 Rosenlicht, and §9.4 Rothstein–Caviness proof machinery 
 §9.1 The Module of Differentials: Def 9.1.1; Thm 9.1.1, Thm 9.1.2; Cor 9.1.1, Cor 9.1.2;
   Lemma 9.1.3. (Mathlib `KaehlerDifferential` is the candidate foundation.)
 §9.2 Rosenlicht's Theorem: Thm 9.2.1; Cor 9.2.1, Cor 9.2.2; Lemma 9.2.1, Lemma 9.2.2, Lemma 9.2.3,
-  Lemma 9.2.4, Lemma 9.2.5.
+  Lemma 9.2.4, Lemma 9.2.5 (the abstract module-of-differentials statement `[research]`). (The
+  *operational* transcendental-logarithmic consequence — that `F(log u)` is a Liouville extension of `F`
+  whenever `log u ∉ F` — is formalized as `liouville_logExtension`, catalog
+  `Sources.Doi_10_1007_b138171.Liouville`, with its full pole-matching/`v`-reduction engine discharged from
+  the new-monomial condition; the abstract Rosenlicht differential-form theorem itself stays deferred.)
 §9.3 The Risch Structure Theorems: Thm 9.3.1, Thm 9.3.2; Cor 9.3.2; Lemma 9.3.1, Lemma 9.3.2,
   Lemma 9.3.3 (abstract correctness; the decision criterion Corollary 9.3.1(i)/(ii) is now computable +
   native_decide-validated over the reachable base `k = ℚ(x)`, the new-log / new-exp tests for a single

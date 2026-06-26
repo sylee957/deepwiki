@@ -2,6 +2,9 @@ import DeepWiki.SymbolicIntegration.ComputableHyperellipticDivisor
 import DeepWiki.SymbolicIntegration.ComputableCantorComposition
 import DeepWiki.SymbolicIntegration.ComputableDivisorOrder
 import DeepWiki.SymbolicIntegration.ComputablePrincipalGenerator
+import DeepWiki.SymbolicIntegration.ComputableGeneralTorsionLight
+import DeepWiki.SymbolicIntegration.ComputableGeneralPicardGroupLaw
+import DeepWiki.SymbolicIntegration.ComputableGeneralPicardNonHyperelliptic
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — Chapter 5 §3 + Chapter 6: Divisors and Points of Finite Order
@@ -39,22 +42,42 @@ examples, not proved in general.
 **The MILESTONE is the divisor REPRESENTATION + RESIDUE-DIVISOR CONSTRUCTION** (Ch. 5 §3) **plus the full
 torsion sub-arc for the order-3 flex** (Ch. 6): the Jacobian group law, the elementarity DECISION (order +
 good-reduction torsion test, both answers), and the principal-generator CONSTRUCTION `g = y − 1` are now
-`native_decide`-validated. What remains (the fully general generator, the higher-genus/non-radical cases,
-and the integrator wiring) is in the block below.
+`native_decide`-validated.
+
+**The general-torsion DECISION now reaches beyond hyperelliptic genus 1** (the `## GENERAL torsion` section
+below). Three lightweight `𝔽_p` engines beat the fractional-ideal HNF compilation wall: (i) the
+good-reduction **point-count torsion ceiling** `gcd_p N_p = gcd_p |Pic⁰(C)(𝔽_p)|` for an *arbitrary* plane
+curve (pure `ZMod p` ring arithmetic), validated on the non-hyperelliptic Fermat cubic (ceiling 3); (ii) the
+light **point-list Picard group law** + individual-class order `picOrder`, reading a *specific* class's order
+on the GENUS-2 curve `y² = x⁵+1` (= 5, matching Cantor); (iii) the **non-hyperelliptic `L(D)` `𝔽_p`-linear
+solve** group law + `picOrderNH`, reading the order on the genuinely non-hyperelliptic Fermat cubic (= 3).
+So the "points of finite order" *order/elementarity decision* is now `native_decide`-readable on genus-2 and
+non-hyperelliptic curves — what the genus-1 hyperelliptic ceiling could not reach.
+
+What remains (the fully general *principal generator* for those higher cases, a self-contained
+non-Mumford reduction, the non-radical *integral basis*, and the integrator wiring) is in the block below.
 
 ## NOT YET FORMALIZED (audit 2026-06-26)
-Ch. 6 §1 The FULLY GENERAL principal generator: for genus `g > 1` (non-constant Cantor step `v`, so a
-  non-constant factor `y − v(x)`) and for composition-step gcd cofactors (the cancelled `(y − v)` parts of
-  `cantorCompose`, the ideal-quotient bookkeeping) — `principalGenerator` recovers `g = y − 1` exactly for
-  the order-3 flex (where the cofactors are trivial), but the general-`v` / composition-cofactor product is
-  the next `native_decide` target (the genus-2 `y² = x⁵+1` examples) `[deferred]`.
+Ch. 6 §1 The FULLY GENERAL principal generator `g` with `div(g) = m·D`: for genus `g > 1` (non-constant
+  Cantor step `v`, so a non-constant factor `y − v(x)`) and for composition-step gcd cofactors (the
+  cancelled `(y − v)` parts of `cantorCompose`, the ideal-quotient bookkeeping) — `principalGenerator`
+  recovers `g = y − 1` exactly for the order-3 flex (where the cofactors are trivial), but the general-`v` /
+  composition-cofactor product is the next `native_decide` target `[deferred]`. (The individual-class
+  *order* on the genus-2 `y² = x⁵+1` is now read by the light point-list `picOrder` — `ch6_general_picOrder`
+  below; only the *generator* construction remains in those higher cases.)
+Ch. 6 §1 A self-contained non-Mumford point-list reduction: `pdivReduce` reduces by round-tripping through
+  the proven Cantor compose/reduce (`ptToMum`/`mumToPts`); a fully self-contained point-list reduction
+  (Hermite/CRT interpolation handling repeated points without the Mumford round-trip) is the natural
+  follow-up `[deferred]`.
 Ch. 5 §3 → integrator: wiring `(c/m, g)` into the non-principal branch — `principalGenerator` returns the
   generator `g`; packaging `(c/m, g)` as an `AlgIntegralResult` log term (the `cIntegrateAlgebraic` branch
   where `radLogArgSolve`/`radLogArgSolveG` returns `none`) closes the simple-radical log part end-to-end
   `[infra]`.
-Ch. 2–4 General algebraic curves (non-radical): the divisor/torsion machinery here is on simple radicals
-  `y² = ρ(x)` (hyperelliptic); the general algebraic-function-field integral basis and normal-basis
-  principal test (Chs. 2–4) are not yet rendered `[infra]`.
+Ch. 2–4 General algebraic curves (non-radical) — the *integral basis*: the divisor-class *order* for a
+  non-hyperelliptic plane curve is now decided (the `L(D)` `𝔽_p`-linear-solve `picOrderNH`, validated on
+  the Fermat cubic — `ch6_nonhyp_picOrder` below); what remains is the general algebraic-function-field
+  *integral basis* and normal-basis principal test (Chs. 2–4), and the higher-genus `L((g+1)·∞ − D)`
+  reduction with a multi-point residual divisor (degree-`g > 1` reduced class), not yet rendered `[infra]`.
 Ch. 6 `n ≥ 3` radicals and odd-degree Puiseux: the Cantor/Mumford layer is genus-from-`y² = ρ`; cube and
   higher roots (`n ≥ 3`) and the odd-degree-place Puiseux expansions at infinity are out of scope here
   `[research]`. -/
@@ -243,5 +266,74 @@ differential passes the log-derivative certificate. The engine now both DECIDES 
 `(1/m)·log g` argument — the two halves of Trager's "points of finite order", completing the
 algebraic-integration decision procedure for simple radicals on this example. -/
 abbrev ch6_principal_generator_validates := @principal_generator_validates
+
+/-! ## GENERAL torsion — beyond hyperelliptic genus 1 (Trager Ch. 6 §2 / good reduction; computational AG)
+
+The elementarity DECISION ("points of finite order") extended past the genus-1 hyperelliptic ceiling, in
+**lightweight `𝔽_p` arithmetic** that `native_decide`-compiles where the general fractional-ideal HNF order
+hits the compilation wall. Three engines: the good-reduction **point-count torsion ceiling** for an
+arbitrary plane curve, the light **point-list Picard group law** reading an individual class's order on a
+genus-2 curve, and the **non-hyperelliptic `L(D)` `𝔽_p`-linear solve** group law on the Fermat cubic. -/
+
+/-- **The good-reduction torsion ceiling** `torsionCeiling nps = gcd_p N_p` (Trager, Chapter 6 §2 / Davenport
+good reduction): the `ℚ`-torsion order of a divisor class divides `|Pic⁰(C)(𝔽_p)|` at every good prime, hence
+divides `gcd_p N_p` over the supplied point counts `N_p = |Pic⁰(C)(𝔽_p)|`. The lightweight ceiling pinning the
+torsion order without any ideal arithmetic — pure `ℕ`-gcd over the point counts. -/
+abbrev ch6_torsion_ceiling := @torsionCeiling
+
+/-- **`N_p = |Pic⁰(C)(𝔽_p)|` by `𝔽_p`-point counting** `npFermatCubic`/`countAffinePoints` (Trager, Chapter
+6 §2): the good-reduction group order of a genus-1 plane curve as the affine `𝔽_p`-grid point count plus the
+points at infinity, in pure `ZMod p` ring arithmetic (no field inverse, no `𝔽_p[x]`, no HNF — the lightest
+curve computation, the wall the fractional-ideal `genDivisorOrder` mod `p` hits). -/
+abbrev ch6_point_count := @npFermatCubic
+
+/-- **★ The non-hyperelliptic Fermat-cubic torsion ceiling is 3** `fermatCubic_torsionCeiling_eq3` (Trager,
+Chapter 6 §2, `native_decide`): for the genuinely **non-hyperelliptic** Fermat cubic `x³ + y³ = 1` (NOT a
+`y² = ρ(x)` model, so Cantor/Mumford does not apply), `gcd(N₅, N₇, N₁₁, N₁₃) = gcd(6, 9, 12, 9) = 3` pins
+the `ℚ`-torsion order to its rational `ℤ/3` (the flex differences) — the torsion-order ceiling decided on a
+non-hyperelliptic curve in lightweight `ZMod p` point-count arithmetic. -/
+abbrev ch6_general_torsion_ceiling := @fermatCubic_torsionCeiling_eq3
+
+/-- **★★ The lightweight general-torsion ceiling computes and beats the fractional-ideal wall**
+`lightweight_general_torsion_validates` (Trager, Chapter 6 §2 / Davenport, `native_decide`): the `𝔽_p`
+point-count ceiling `gcd_p N_p` decides the torsion order for an arbitrary plane curve where the fractional-
+ideal HNF order cannot compile — `3` on the non-hyperelliptic Fermat cubic `x³ + y³ = 1`, and conservatively
+`6`/`1` on the hyperelliptic `y² = x³+1` (torsion `ℤ/6`) / `y² = x³−2` (trivial), reproducing the Cantor
+torsion data. The good-reduction *ceiling* — the piece that makes the order search terminate — in pure
+`ZMod p` ring arithmetic. -/
+abbrev ch6_general_torsion_validates := @lightweight_general_torsion_validates
+
+/-- **The light point-list Picard group law + individual-class order** `picOrder`/`pdivAdd` (Trager, Chapter
+6 §2 / computational AG): a reduced divisor class as an `𝔽_p`-point list `RedDiv p`, the group law
+`pdivAdd = pdivReduce ∘ pdivCompose` (compose by `++`, reduce by a faithful Cantor compose/reduce
+**round-trip** `ptToMum`/`mumToPts` on the point list), and `picOrder` reading a *specific* class's order —
+the general analogue of `cantorOrder`, beyond the genus-1 point-count ceiling, in light `𝔽_p[x]` arithmetic
+(no `𝔽_p[x]` HNF). -/
+abbrev ch6_general_picOrder := @picOrder
+
+/-- **★★ The light point-list group law reads an individual class's order on a GENUS-2 curve, matching
+Cantor** `light_picard_group_law_validates` (Trager, Chapter 6 §2, `native_decide`): on `y² = x⁵+1` (genus 2,
+where `|Pic⁰| ≠ N_p` and Cantor's Mumford engine was the only prior group law) the light `picOrder` reads the
+order of the class `(0,1) − ∞` as **5** and it **equals the Cantor `cantorOrder`** for the same class — the
+individual-class order now `native_decide`-readable on a non-genus-1 curve, cross-validated against Cantor
+(and, on genus-1 `y² = x³+1`, against the point count `N_p`). -/
+abbrev ch6_general_picard_validates := @light_picard_group_law_validates
+
+/-- **The non-hyperelliptic `L(D)` `𝔽_p`-linear-solve group law + order** `picOrderNH`/`nhAdd`/`kernelMat`
+(Trager, Chapter 6 §2 / computational Brill–Noether): for a genuinely **non-hyperelliptic** plane curve
+`f(x, y) = 0` (no `y² = ρ` involution, so Cantor/Mumford does not apply), the group law is the
+`L((g+1)·∞ − D)` Riemann–Roch space solve — a line `h ∈ L(D)` as a nonzero kernel vector of the homogeneous
+`ZMod p` matrix (`kernelMat`, a small Gauss–Jordan elimination over `𝔽_p` — the `native_decide`-LIGHT linear
+algebra, NOT the `𝔽_p[x]` HNF wall), residual zero via the binary cubic (`pgThird`, chord-and-tangent),
+folded into `nhAdd`/`picOrderNH`. The general (non-`y²=ρ`) individual-class-order reader. -/
+abbrev ch6_nonhyp_picOrder := @picOrderNH
+
+/-- **★★ The non-hyperelliptic `L(D)`-solve group law reads an individual class's order on the Fermat cubic**
+`nonhyperelliptic_picard_group_law_validates` (Trager, Chapter 6 §2, `native_decide`): on the genuinely
+non-hyperelliptic Fermat cubic `x³ + y³ = 1` over `𝔽₁₁`/`𝔽₅` (Cantor inapplicable), the `L(D)`-solve
+`picOrderNH` reads the order of the flex class `(1,0) − ∞` as **3** (a genuine `ℤ/3`-torsion class) and a
+higher class `(2,5) − ∞` as **4**, each dividing the point count `N_p` — the individual-class order on a
+curve where the hyperelliptic Cantor round-trip could not reach, via the `𝔽_p`-linear `L(D)` solve. -/
+abbrev ch6_nonhyp_picard_validates := @nonhyperelliptic_picard_group_law_validates
 
 end DeepWiki.Tiaf

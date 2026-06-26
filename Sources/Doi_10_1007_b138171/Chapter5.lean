@@ -16,8 +16,11 @@ the Rothstein–Trager resultant) and is the heart of the book.
 **Computable-vs-abstract.** Each algorithm below is a computable function validated by `native_decide`
 on the book's example (the cleared reduction identity `D(g) + h = f` etc.); the *abstract* correctness
 theorems (that `g` is the integral's rational part, Theorems 5.3.1/5.4.1/5.6.1/5.8.1) are **NOT**
-proved. Liouville's theorem (§5.5), the full hyperexponential case (§5.9), the hypertangent case
-(§5.10), and the structural §5.7/§5.11/§5.12 theory remain unformalized.
+proved. Liouville's theorem (§5.5) is partly formalized — the transcendental *logarithmic* case
+(conditional on the new-monomial condition) and the rational case (§2.4/§2.5) are in catalog
+`Sources.Doi_10_1007_b138171.Liouville`; the exp-extension instance and the general structure theorem
+remain (see the block below). The full hyperexponential case (§5.9), the hypertangent case (§5.10), and the
+structural §5.7/§5.11/§5.12 theory remain unformalized.
 
 **Carrier: the generic ℚ(x).** The §5.3 Hermite and §5.6 residue-criterion reductions are aliased to the
 canonical **generic** engine at `α = QFunNZG ℚ` (the recursive `Frac(ℚ[x])`, every instance bottoming at
@@ -34,7 +37,13 @@ level and instantiable at `QFunNZG ℚ` like the rest of the engine.
   `HermiteReduce` is now computable + native_decide-validated, see `alg_5_3_hermiteReduce`/`ex_5_3_1`).
 §5.4 The Polynomial Reduction: Thm 5.4.2 (abstract correctness; Thm 5.4.1 + algorithm
   `PolynomialReduce` now computable + native_decide-validated, see `alg_5_4_polynomialReduce`/`ex_5_4_1`).
-§5.5 Liouville's Theorem: Thm 5.5.1, Thm 5.5.2, Thm 5.5.3.
+§5.5 Liouville's Theorem: Thm 5.5.2, Thm 5.5.3 (the general structure theorem — every elementary
+  antiderivative is `g + ∑ cᵢ log uᵢ`, and the tower-exhaustiveness "no such form ⟹ not elementary" —
+  `[research]`); the exp-extension Liouville instance `IsLiouville F F(exp u)` `[external]` (in flight).
+  (Thm 5.5.1, the transcendental *logarithmic* case `IsLiouville F F(log u)`, is now formalized
+  CONDITIONAL on the new-monomial condition `log u ∉ F` (the necessary transcendence hypothesis), see
+  catalog `Sources.Doi_10_1007_b138171.Liouville` `liouville_logExtension`; the rational case §2.4/§2.5 is
+  cataloged there too, unconditionally.)
 §5.6 The Residue Criterion: Thm 5.6.1 (abstract correctness); Lemma 5.6.1, Lemma 5.6.2; Ex 5.6.1,
   Ex 5.6.3 (the algorithm `ResidueReduce` / the residue resultant + log argument are now computable +
   native_decide-validated on Ex 5.6.2, see `alg_5_6_residueResultant`/`alg_5_6_logArg`/`ex_5_6_2`).
@@ -51,8 +60,10 @@ level and instantiable at `QFunNZG ℚ` like the rest of the engine.
 Exercises: Ex 5.1, Ex 5.2, Ex 5.3, Ex 5.4, Ex 5.5, Ex 5.6.
 
 The remaining gaps are the **abstract correctness theorems** (the reductions above are computationally
-rendered but not proved correct), Liouville's structure theory (§5.5), the full hyperexponential/
-hypertangent integration (§5.9–§5.10), and the structural §5.7/§5.11/§5.12 results. -/
+rendered but not proved correct), the remainder of Liouville's structure theory (§5.5 — the exp-extension
+instance and the general structure theorem; the rational + transcendental-log cases are formalized, the
+latter conditional on the new-monomial condition, in `Sources.Doi_10_1007_b138171.Liouville`), the full
+hyperexponential/hypertangent integration (§5.9–§5.10), and the structural §5.7/§5.11/§5.12 results. -/
 
 open DeepWiki.SymbolicIntegration DeepWiki.SymbolicIntegration.CPolyG
 
