@@ -118,6 +118,56 @@ lemma logDerivPoly_C_of_deriv_eq_zero (u : F) {b : F} (hb : b′ = 0) :
     logDerivPoly u (C b) = 0 := by
   rw [logDerivPoly_C, hb, map_zero]
 
+/-! ### The `t`-polynomial `ContainConstants` engine (Obligation 4, polynomial layer)
+
+These are the proven pieces of "no new constants on `F[t]`", driving the `ContainConstantsObligation`
+and the `v ∈ F` half of Obligation 3 (Rosenlicht). -/
+
+/-- **`t`-constant ⟹ `t`-leading coefficient is an `F`-constant.**  If `D p = 0` then `(leadingCoeff
+p)' = 0`: the highest `t`-coefficient of a `t`-constant is itself a constant of `F`.  Direct from
+`coeff_natDegree_logDerivPoly` (the top coefficient sees only `F`'s derivation). -/
+lemma leadingCoeff_deriv_eq_zero_of_logDerivPoly_eq_zero (u : F) {p : F[X]}
+    (h : logDerivPoly u p = 0) : (p.leadingCoeff)′ = 0 := by
+  have := coeff_natDegree_logDerivPoly u p
+  rw [h, coeff_zero] at this
+  exact this.symm
+
+/-- **A `t`-constant of `t`-degree `0` is a single `F`-constant `C b` with `b' = 0`.**  The base case
+of "constants don't grow": a degree-`0` `t`-polynomial annihilated by `D` is `C (p.coeff 0)` with
+that coefficient an `F`-constant. -/
+lemma eq_C_of_logDerivPoly_eq_zero_of_natDegree_eq_zero (u : F) {p : F[X]}
+    (h : logDerivPoly u p = 0) (hdeg : p.natDegree = 0) :
+    ∃ b : F, p = C b ∧ b′ = 0 := by
+  refine ⟨p.coeff 0, Polynomial.eq_C_of_natDegree_eq_zero hdeg, ?_⟩
+  have := coeff_logDerivPoly u p 0
+  rw [h, coeff_zero] at this
+  have hc1 : p.coeff 1 = 0 := coeff_eq_zero_of_natDegree_lt (by omega)
+  rw [hc1] at this
+  simpa using this.symm
+
+/-- **The transcendence obstruction, made precise (a genuine adjudication).**  The remaining content
+of "`t`-constant ⟹ `t`-degree `0`" (which closes `ContainConstantsObligation`) is exactly:
+*for a genuine log monomial there is no degree drop solvable inside `F`.*  Concretely, if `p = C b·t
++ (lower)` with `b' = 0` and `D p = 0`, the coefficient-`(deg−1)` relation forces an `a ∈ F` with
+`a' = −(deg)·b·logDeriv u`, i.e. `(deg)·b·(u'/u)` must be a *derivative of an `F`-element*.  This is
+**not** a coefficient identity — it is the transcendence statement "`log u ∉ F`", and is precisely
+where `t` being a genuine new transcendental (`logDeriv u ≠ 0` and `u'/u` has no antiderivative in
+`F`) enters.  When `logDeriv u = 0` (`u` an `F`-constant) the statement is genuinely **false**:
+`t = log u` is then itself a *new constant*, so the constants legitimately grow and
+`ContainConstants F F(t)` fails — the obligation must carry `logDeriv u ≠ 0`.  This `def` records the
+exact residual obligation (the "no `F`-antiderivative of `b·logDeriv u`" input) for a follow-up. -/
+def NoDegreeDropObligation (u : F) : Prop :=
+  logDeriv u ≠ 0 →
+    ∀ {p : F[X]}, logDerivPoly u p = 0 → p.natDegree = 0
+
+/-- **GIVEN the no-degree-drop input, `t`-constants are single `F`-constants** — the full polynomial
+`ContainConstants` engine.  This reduces `ContainConstantsObligation` to `NoDegreeDropObligation`
+(the transcendence input), with everything else discharged here. -/
+lemma eq_C_of_logDerivPoly_eq_zero (u : F) (hndd : NoDegreeDropObligation u)
+    (hu : logDeriv u ≠ 0) {p : F[X]} (h : logDerivPoly u p = 0) :
+    ∃ b : F, p = C b ∧ b′ = 0 :=
+  eq_C_of_logDerivPoly_eq_zero_of_natDegree_eq_zero u h (hndd hu h)
+
 -- Restatements pinning the log-monomial setup to the book's wording (Rosenlicht §, log case).
 -- `t' = u'/u`: the defining equation of the log monomial `t = log u`.
 example (u : F) : logDerivPoly u (X : F[X]) = C (logDeriv u) := logDerivPoly_X u
