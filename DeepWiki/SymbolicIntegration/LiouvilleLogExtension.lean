@@ -736,6 +736,76 @@ def LiouvilleFDataReduction (u : F) : Prop :=
           = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x))
               + (algebraMap F (RatFunc F) v₀)′
 
+/-! ### The multi-term pole-matching residual (the general `Σᵢ` case)
+
+The full reduction beyond the single-logarithm case.  The genuine new content is the *multi-term*
+`t`-pole cancellation: distinct `wᵢ` may **share** irreducible `t`-factors `πⱼ`, so `∑ᵢ cᵢ logDeriv
+wᵢ` collects, at each `πⱼ`, the combination `(∑_{i : πⱼ | wᵢ} cᵢ eᵢⱼ) · logDeriv πⱼ`.  Since the
+simple `t`-poles `{logDeriv πⱼ}` are *`F`-linearly independent modulo polynomials* (the partial-
+fraction `t`-pole independence over `F[t]`) and `a ∈ F` has no pole, each such coefficient sum must
+vanish — which lets the `wᵢ` be replaced by their `F`-parts and `∏ⱼ πⱼ^{…}` regrouped, leaving a
+corrected `v`-term with derivative in `F`.  This residue is isolated below as
+`MultiLogPoleObligation`; the linear-independence input it abstracts is `PoleIndependenceObligation`. -/
+
+omit [CharZero F] in
+/-- **The pole-independence input** — the precise partial-fraction `t`-pole-independence over `F[t]`
+that the multi-term reduction needs, stated abstractly.  It says: if a finite `F`-combination of
+logarithmic derivatives of monic irreducible `t`-polynomials, `∑ⱼ algebraMap (d j) · logDeriv
+(algebraMap (π j))` (the `d j ∈ F[t]` of `t`-degree `< deg π j`, the `π j` distinct monic
+irreducibles), is itself a *polynomial* (lies in `range (algebraMap F[t])`), then every numerator
+`d j` is `0`.  Equivalently: the proper simple `t`-poles `(D πⱼ)/πⱼ` are `F[t]`-linearly independent
+modulo `F[t]`.  This is the engine `logDeriv_monic_proper` upgraded from "each is a pole" to "they
+cannot cancel each other or a polynomial" — the genuine multi-term frontier. -/
+def PoleIndependenceObligation (u : F) : Prop :=
+  letI := logDifferential u
+  ∀ {ιπ : Type} [Fintype ιπ] (π : ιπ → F[X]) (d : ιπ → F[X]),
+    (∀ j, (π j).Monic) → (∀ j, Irreducible (π j)) → Function.Injective π →
+    (∀ j, (d j).natDegree < (π j).natDegree) →
+    (∑ j, algebraMap F[X] (RatFunc F) (d j)
+        * logDeriv (algebraMap F[X] (RatFunc F) (π j)))
+      ∈ (algebraMap F[X] (RatFunc F)).range →
+    ∀ j, d j = 0
+
+/-- **The multi-term pole-matching obligation** — the full `Σᵢ` analogue of `SingleLogPoleObligation`,
+sharply isolated.  GIVEN `a ∈ F`, constants `cᵢ`, and `wᵢ, v ∈ RatFunc F` with `algebraMap a = ∑ᵢ cᵢ
+logDeriv wᵢ + v′`, there exist `F`-arguments `w₀ : ι → F` and a corrected `v₀ : RatFunc F` with the
+same sum (logarithms' arguments **in `F`**) and `v₀′ ∈ F`.  Content: factoring every `wᵢ` and using
+the pole-independence (`PoleIndependenceObligation`), the shared/non-shared `t`-factor exponents
+cancel against `a`'s (absent) pole and `v′`'s (order-`≥ 2`) poles, collapsing each `wᵢ` to its
+`F`-part and absorbing the `t`-polynomial remainder into `v₀`.  Discharging this is the heart of the
+transcendental Liouville theorem. -/
+def MultiLogPoleObligation (u : F) : Prop :=
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  ∀ (a : F) (ι : Type) [Fintype ι] (c : ι → F), (∀ x, (c x)′ = 0) →
+    ∀ (w : ι → RatFunc F) (v : RatFunc F),
+      algebraMap F (RatFunc F) a = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (w x) + v′ →
+      ∃ (w₀ : ι → F) (v₀ : RatFunc F),
+        (algebraMap F (RatFunc F) a
+          = ∑ x, algebraMap F (RatFunc F) (c x) * logDeriv (algebraMap F (RatFunc F) (w₀ x)) + v₀′)
+        ∧ v₀′ ∈ (algebraMap F (RatFunc F)).range
+
+omit [CharZero F] in
+/-- **`LiouvilleFDataReduction` closes modulo the multi-term pole residue + the `v ∈ F` descent.**
+GIVEN `MultiLogPoleObligation` (the full pole-matching collapsing every `wᵢ` to `F` with a corrected
+`v₀`, `v₀′ ∈ F`) and the `v ∈ F` inputs (`RationalToPolyObligation`, `PolyVReductionObligation`), the
+entire Rosenlicht reduction `LiouvilleFDataReduction u` holds: feed each representation through the
+pole-matching, then reduce the corrected `v₀` to `F` via `mem_range_of_deriv_mem_range`.  All the
+glue — chaining pole-matching into the `v`-term descent and repackaging — is proven; only the stated
+frontiers (`MultiLogPoleObligation`, itself resting on `PoleIndependenceObligation`, plus the two
+`v ∈ F` residues) remain.  This is the keystone reduced to its sharpest pole-matching core. -/
+theorem fDataReduction_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u)
+    (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0) :
+    LiouvilleFDataReduction u := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  intro a ι _ c hc w v h
+  -- Multi-term pole-matching: log arguments into `F`, leaving a corrected `v₀` with `v₀′ ∈ F`.
+  obtain ⟨w₀, v₁, h₁, hv₁⟩ := hmlp a ι c hc w v h
+  -- The corrected `v₁` has derivative in `F`, so by the `v ∈ F` reduction `v₁ ∈ F`.
+  obtain ⟨v₀, hv₀⟩ := mem_range_of_deriv_mem_range u hrtp hpv hu hv₁
+  exact ⟨w₀, v₀, by rw [h₁, hv₀]⟩
+
 omit [CharZero F] in
 /-- **The mechanical packaging — PROVEN.**  Given `F`-data for a single representation (the output of
 the pole-matching reduction), `IsLiouville`'s existential conclusion holds: pull the
@@ -793,6 +863,20 @@ theorem isLiouville_of_fDataReduction (u : F) (hred : LiouvilleFDataReduction u)
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   isLiouvilleReduction_of_fDataReduction u hred
+
+omit [CharZero F] in
+/-- **The keystone reduced one further step to the pole-matching core — PROVEN assembly.**  Composing
+`fDataReduction_of_multiLogPole` with `isLiouvilleReduction_of_fDataReduction`: GIVEN the multi-term
+pole residue and the `v ∈ F` inputs, the genuine `IsLiouville F (RatFunc F)` instance holds.  So the
+keystone is unconditional **as soon as** `MultiLogPoleObligation` (+ the three transcendence/partial-
+fraction residues) is discharged — every step after the pole-matching is proven here. -/
+theorem isLiouville_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u)
+    (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    IsLiouville F (RatFunc F) :=
+  isLiouvilleReduction_of_fDataReduction u
+    (fDataReduction_of_multiLogPole u hmlp hrtp hpv hu)
 
 omit [CharZero F] in
 /-- **The keystone, assembled and PROVEN modulo the single `IsLiouville` reduction.**  The setup is
