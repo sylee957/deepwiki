@@ -1727,6 +1727,25 @@ theorem isLiouville_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u)
     rw [h₀, hv₀', map_mul]
     ring
 
+/-- **The transcendental-log Liouville keystone — UNCONDITIONAL modulo `NondegenerateLog` and the
+single simple-pole separation residual.**  `F(log u) = RatFunc F` is a Liouville extension of `F`
+whenever the log is a genuine new monomial (`NondegenerateLog u`, i.e. `log u ∉ F`) and the sharp
+partial-fraction residual `DerivSimplePoleSeparation u` (a twisted-derivative `v′` has no simple
+`t`-pole, so simple poles separate) holds.  **Every other ingredient is proved here:** the corrected
+`v`-reduction `deriv_mem_range_imp_linear`, `RationalToPolyObligation` and `PoleIndependenceObligation`
+(now theorems from `NondegenerateLog`), the UFD factorization fold, the multi-term pole collection, and
+the constant-residue cancellation `poleIndependence_finset_const` — assembled in
+`multiLogPoleObligation_of_nondegenerateLog`, then packaged into `IsLiouville` by
+`isLiouville_of_nondegenerateLog`.  So the transcendental-completeness keystone is unconditional modulo
+exactly two inputs: the necessary transcendence `NondegenerateLog u` and the one residual
+`DerivSimplePoleSeparation u`. -/
+theorem isLiouville_logExtension (u : F) (hnd : NondegenerateLog u)
+    (hsep : DerivSimplePoleSeparation u) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    IsLiouville F (RatFunc F) :=
+  isLiouville_of_nondegenerateLog u hnd (multiLogPoleObligation_of_nondegenerateLog u hnd hsep)
+
 -- Restatements pinning the genuine field setup.
 -- `t' = u'/u` on `RatFunc F` itself (the log monomial, on the fraction field):
 example (u : F) :
@@ -1789,6 +1808,19 @@ example (u : F) (hnd : NondegenerateLog u) (hmlp : MultiLogPoleObligation u) :
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   isLiouville_of_nondegenerateLog u hnd hmlp
+-- `MultiLogPoleObligation` is now a THEOREM from `NondegenerateLog u` plus the single sharp residual
+-- `DerivSimplePoleSeparation u` (the simple poles of `logDeriv` separate from `v′`'s order-`≥ 2` poles).
+example (u : F) (hnd : NondegenerateLog u) (hsep : DerivSimplePoleSeparation u) :
+    MultiLogPoleObligation u :=
+  multiLogPoleObligation_of_nondegenerateLog u hnd hsep
+-- THE KEYSTONE, assembled: a genuine new log monomial (`NondegenerateLog u`) plus ONLY the simple-pole
+-- separation residual (`DerivSimplePoleSeparation u`) yields the real `IsLiouville F (RatFunc F)`.  All
+-- the factoring / collecting / pole-cancellation in between is proved (`isLiouville_logExtension`).
+example (u : F) (hnd : NondegenerateLog u) (hsep : DerivSimplePoleSeparation u) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    IsLiouville F (RatFunc F) :=
+  isLiouville_logExtension u hnd hsep
 
 end FieldObligations
 
