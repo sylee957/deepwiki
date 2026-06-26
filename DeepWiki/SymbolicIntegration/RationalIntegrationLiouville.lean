@@ -8,10 +8,13 @@ function `f ∈ K(x)` (over an algebraically closed field of characteristic `0`)
 theorem: the decomposition is produced (Hermite reduction + polynomial part + Rothstein–Trager log
 grouping), not merely asserted to exist.
 
-The whole logarithmic-detection content sits in the **decision corollary**
-`ratFunc_logarithmFree_iff_residues_zero`: `∫ f` is *logarithm-free* (i.e. `f = g′` for some rational
-`g`) iff all residues vanish — exactly the statement that the algorithm's logarithm-detection is
-*complete* (when a residue is nonzero, `∫ f` is genuinely not rational).
+The logarithmic-detection content sits in the **decision corollary**
+`ratFunc_logarithmFree_of_residues_zero`: when all residues vanish, `∫ f` is *logarithm-free*
+(`f = g′` for a rational `g`) — the algorithm's affirmative completeness (vanishing Rothstein–Trager
+residues ⟹ a rational antiderivative). The full converse (`f = g′ ⟹ residues vanish`, i.e. that a
+nonzero residue is a genuine obstruction) needs `residueAt α (g′) = 0` — a rational derivative has no
+simple-pole residue — a Laurent-coefficient fact left as a noted gap (the residue functional
+`residueAt` and its toolkit live in `RecognizingLogDeriv`).
 
 This composes the existing rational-integration spine — `integrateRationalFunction_logForm`
 (Hermite + poly part + RT grouping over *split* squarefree denominators) — with a front-end that
