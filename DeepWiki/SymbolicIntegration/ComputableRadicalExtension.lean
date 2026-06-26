@@ -29,8 +29,24 @@ solver `cdiophantineG` and the monomial machinery.
   lowering `k`, solving the congruence `(1−k)V'fB ≡ C (mod V)` via `cdiophantineG`, then verifying the
   cleared identity `(Bf/(V^{k−1}y))' − C/(Vᵏy) = D/(V^{k−1}y)` by `cisZeroG`.
 
-**Deferred** (documented, not attempted here): `θ = log v` / `θ = exp v` cases (§2.3–2.4), Cases 2/3,
-and the entire LOGARITHMIC part (residues / divisors, Trager Ch. 5–6). -/
+* **Case 2** (Appendix A §2.2, `C/(Wᵏy)`, `W = Pⱼ` a squarefree factor of `f`) — `radCase2Cofactor`/
+  `radCase2Residual`: solve `Bg − kW'h ≡ C (mod W)` (`h = f/W`) via `cdiophantineG`, eliminating
+  `f`-factors from denominators; cleared identity `Bg − kW'h − C + W·B'h = W·D`.
+
+* **Case 3** (Appendix A §2.3, `C/y`, `θ'=1`) — `radCase3Cofactor`/`radCase3Residual`: degree-lowering
+  by the leading-coefficient match `c_{j+m} = (j+1 + lcf(g))b`, `b = lcf(C)/((j+1)+lcf(g))`; cleared
+  identity `B'f + Bg − C = D` with `deg D < deg C`.
+
+* **`θ = log v`** (Appendix A §2.3 eq. 5) — `radCase3CofactorGen`: the same `C/y` degree-lowering with the
+  `v'/v`-weighted bracket `(j+1)·θ' + lcf(g)` and the full monomial derivative `cmonomialDeriv [θ']` for
+  `B'`, validated on a genuine 2-level tower `ℚ(x)[log x]`, `y = √(log x)`.
+
+With Cases 1–3 + `θ = log v` the simple-radical **rational part** is complete for the `θ' = 1` and
+`θ = log v` levels.
+
+**Deferred** (documented, not attempted here): the `θ = exp v` case (§2.4 — `θ` divides its own
+derivative, so `θᵏ` factors need special treatment), and the entire LOGARITHMIC part (residues /
+divisors, Trager Ch. 5–6). -/
 
 open Polynomial
 
@@ -383,6 +399,37 @@ monomial from `radCase3Cofactor`, `deg D < deg C`. Generic over `[CField α]`. -
 def radCase3Residual (f g B C Bder : CPolyG α) : CPolyG α :=
   csubG (caddG (cmulG Bder f) (cmulG B g)) C                       -- `B'f + Bg − C`
 
+/-! ### `θ = log v` rational-part reduction (Trager Appendix A §2.3 eq. 5)
+
+For `θ = log v` (so `θ' = v'/v ∈ F`, a base-field element, no longer `1`) the `C/y` degree-lowering is
+identical in shape to Case 3 — the derivation identity `(Bf/y)' = (B'f + Bg)/y` holds for any `θ` — but
+the leading-coefficient relation (Trager Appendix A §2.3 eq. 5) becomes
+`c_{j+m} = b_{j+1}((j+1)·v'/v + lcf(g)) + bⱼ'`,
+where `lcf(g) = Σ(1−eᵢ/n)(deg(Pᵢ)v'/v + aᵢ')` is the leading `F`-coefficient of `g`. The coefficient of
+`b_{j+1}` is `(j+1)·v'/v + lcf(g)`, whose `v'/v`-part `(j+1) + Σdeg(Pᵢ)(1−eᵢ/n)` is nonzero for
+`j + 1 ≥ 0`, so the leading constant `b_{j+1}` is uniquely determined. The two differences from Case 3
+are: (i) the bracket carries the field element `θ' = v'/v` in the `(j+1)` term — `radCase3CofactorGen`
+takes it as `Dt`; (ii) `B'` is the **full** monomial derivative `cmonomialDeriv [θ'] B` (the coefficient
+derivative plus the `θ'`-term), not the formal `cderivG` — supplied by the caller. The residual and
+cleared check `B'f + Bg − C = D` are unchanged (`radCase3Residual`). Setting `Dt = 1` (`θ' = 1`,
+`cmonomialDeriv [1] = cderivG` on constant coefficients) recovers Case 3 exactly. -/
+
+/-- **Generalized Case-3 leading-coefficient cofactor** `radCase3CofactorGen Dt f g C = B` — the
+constant-coefficient monomial `B = b·θ^{j+1}` (`j + 1 = deg C − deg f + 1`) cancelling the leading term
+of `C` in the `C/y` degree-lowering, for **any** `θ` with derivative `Dt = θ' ∈ α` (the base-field
+element): `b = lcf(C) / ((j+1)·θ' + lcf(g))` (Trager Appendix A §2.3 eqs. 4–5). For `θ' = 1` this is the
+Case-3 bracket `(j+1) + lcf(g)`; for `θ = log v` it is the `eq. 5` bracket `(j+1)v'/v + lcf(g)`. Returns
+`[]` when `deg C < deg f`. Generic over `[CField α]`. -/
+def radCase3CofactorGen (Dt : α) (f g C : CPolyG α) : CPolyG α :=
+  let dC := cdegG C
+  let dF := cdegG f
+  if cisZeroG C || dC < dF then []
+  else
+    let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
+    let denom := CField.add (CField.mul (cnatCastG jp1) Dt) (cleadG g)  -- `(j+1)·θ' + lcf(g)`
+    let b := CField.div (cleadG C) denom                          -- `b = lcf(C)/((j+1)θ' + lcf(g))`
+    cshiftG jp1 [b]                                                -- `b·θ^{j+1}`
+
 end CPolyG
 
 /-! #### ★ Case 1 validates: `∫ C/(V²y)` with `y = √x`, `V = x−1` (`native_decide`)
@@ -564,12 +611,87 @@ degree-lowering invariant of the `C/y` reduction made explicit — iterating dri
 `m − 1 = 0`, leaving only the irreducible rational part. -/
 theorem case3_degree_drop : cdegG case3D < cdegG case3C := by native_decide
 
+/-! #### ★ `θ = log v` validates: degree-lowering `∫ C/y` over `ℚ(x)[log x]`, `y = √(log x)` (`native_decide`)
+
+A genuine **2-level** tower: base `F = QFunNZG ℚ ≅ ℚ(x)`, monomial `θ = log x` (so `v = x`,
+`θ' = v'/v = 1/x ∈ ℚ(x)`); the ring `F[θ] = ℚ(x)[log x]` is `CPolyG (QFunNZG ℚ)`. Radicand
+`y² = f = θ = log x` (`n = 2`, `m = deg_θ f = 1`, `P₁ = θ`, `e₁ = 1`), so `(f/y)' = g/y` with
+`g = (1/2)·(1/x) = 1/(2x)` (a degree-`0`-in-θ element, `lcf(g) = 1/(2x)`). For `C` whose leading term is
+`(5/(2x))θ²` the eq. 5 bracket is `(j+1)·θ' + lcf(g) = 2·(1/x) + 1/(2x) = 5/(2x)`, so `b = lcf(C)/bracket
+= 1` — a genuine **constant** — and `B = θ²`. The residual `D = B'f + Bg − C` drops `deg_θ C` by one,
+with `B' = cmonomialDeriv [θ'] B` the full log-monomial derivative. -/
+
+/-- A `ℚ(x)` value `num/den` (`QFunNZG ℚ`) from a numerator and a **nonzero** denominator `CPolyG ℚ`;
+the proof obligation `cisZeroG den = false` is discharged by `decide` at each call site. -/
+def qxOfFrac (num den : CPolyG ℚ) (h : CPolyG.cisZeroG den = false) : QFunNZG ℚ := ⟨(num, den), h⟩
+
+/-- `θ' = (log x)' = v'/v = 1/x ∈ ℚ(x)` (numerator `[1]`, denominator `[0,1] = x`), the derivative of
+the monomial `θ = log x`. -/
+def logDt : QFunNZG ℚ := qxOfFrac [1] [0, 1] (by decide)
+
+/-- The ℚ(x) leading coefficient `lcf(g) = g = 1/(2x)` for `f = θ`, `g = (1/2)f'/f·f = 1/(2x)`
+(numerator `[1]`, denominator `[0,2] = 2x`). -/
+def logGlead : QFunNZG ℚ := qxOfFrac [1] [0, 2] (by decide)
+
+/-- The radicand `f = θ = log x ∈ ℚ(x)[θ]` (`y² = log x`), the `θ`-polynomial `[0, 1]`. -/
+def logF : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one]
+
+/-- `g = 1/(2x)` as a degree-`0`-in-θ element of `ℚ(x)[θ]` (`(f/y)' = g/y`), `[1/(2x)]`. -/
+def logG : CPolyG (QFunNZG ℚ) := [logGlead]
+
+/-- The numerator `C = (5/(2x))θ² + θ ∈ ℚ(x)[θ]` (`deg_θ C = 2 ≥ m`), with leading coefficient
+`5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
+def logC : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one, qxOfFrac [5] [0, 2] (by decide)]
+
+/-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `cmonomialDeriv`. -/
+def logDtPoly : CPolyG (QFunNZG ℚ) := [logDt]
+
+/-- The solved `θ = log v` leading-coefficient cofactor `B = b·θ² = 1·θ²` (`b = lcf(C)/bracket =
+(5/(2x))/(5/(2x)) = 1`, a constant). -/
+def logB : CPolyG (QFunNZG ℚ) := radCase3CofactorGen logDt logF logG logC
+
+/-- The `θ = log v` residual `D = B'f + Bg − C`, with `B' = cmonomialDeriv [θ'] B` the full log-monomial
+derivative — expected `−θ` (degree `1 < deg_θ C = 2`). -/
+def logD : CPolyG (QFunNZG ℚ) :=
+  radCase3Residual logF logG logB logC (cmonomialDeriv logDtPoly logB)
+
+/-- **The `log` cofactor is the constant monomial `B = θ²`** (`native_decide`): the eq. 5
+leading-coefficient solve over the 2-level tower `ℚ(x)[log x]` gives `b = (5/(2x))/((2)(1/x) + 1/(2x)) =
+1` at degree `j+1 = 2`, i.e. `B = 1·θ²` (`radIsZero` of `B − θ²` as a `RadElem`). `b` is a genuine
+constant — the integrability witness for the leading coefficient. -/
+theorem logCase_cofactor_eq :
+    cisZeroG (csubG logB [CField.zero, CField.zero, (CField.one : QFunNZG ℚ)]) = true := by
+  native_decide
+
+/-- **★ The `θ = log v` cleared degree-lowering identity** (`native_decide`): the reduction
+`(Bf/y)' − C/y = D/y`, cleared over `y`, is the pure `ℚ(x)[log x]` identity `B'f + Bg − C = D` with
+`B' = cmonomialDeriv [1/x] B` the full log-monomial derivative. With `B = θ²`: `B' = (2/x)θ`,
+`B'f + Bg = (2/x)θ² + (1/(2x))θ² = (5/(2x))θ²`, so `D = (5/(2x))θ² − ((5/(2x))θ² + θ) = −θ`. Checked by
+`cisZeroG` of `(B'f + Bg) − C − D` over `ℚ(x)[log x]`. THE `θ = log v` DEGREE REDUCTION COMPUTES on a
+genuine 2-level monomial tower — the `v'/v`-weighted leading relation (eq. 5) cancels `c_{j+m}`. -/
+theorem logCase_cleared_identity :
+    cisZeroG (csubG
+      (csubG (caddG (cmulG (cmonomialDeriv logDtPoly logB) logF) (cmulG logB logG)) logC)
+      logD) = true := by native_decide
+
+/-- **The `log` residual `D = −θ` has lower degree** (`native_decide`): `D = −θ = −log x` (`cisZeroG` of
+`D + θ`), of `θ`-degree `1`, strictly below `deg_θ C = 2` — the leading `(5/(2x))θ²` is cancelled, the
+eq. 5 `deg C` drop on the log tower. -/
+theorem logCase_residual_eq :
+    cisZeroG (csubG logD [CField.zero, (CField.neg CField.one : QFunNZG ℚ)]) = true := by native_decide
+
+/-- **★ The `θ = log v` step strictly lowers `deg_θ C`** (`native_decide`): `deg D = 1 < deg C = 2` over
+`ℚ(x)[log x]`. The eq. 5 degree-lowering invariant on the genuine 2-level monomial tower. -/
+theorem logCase_degree_drop : cdegG logD < cdegG logC := by native_decide
+
 /-! ### `#print axioms` — the headline lemmas
 
 Each headline result carries the standard `[propext, Classical.choice, Quot.sound]` plus its
 `native_decide` compiler axiom — there is no `sorry` and no extra axiom. The radical carrier, the `Tᵢ`
-decoupling, and the Case-1 rational reduction all reduce in the native compiler over the existing
-tower engine. -/
+decoupling, and **all** the rational-part reductions (Cases 1–3 for `θ' = 1`, plus `θ = log v`) reduce in
+the native compiler over the existing tower engine. With Cases 1–3 + `θ = log v` the simple-radical
+**rational part** is complete for the `θ' = 1` and `θ = log v` levels; `θ = exp v` (§2.4) and the
+logarithmic part (Trager Ch. 5–6, residues / divisors) remain. -/
 
 -- Carrier: `y·y = f` and the diagonal `D(y) = (f'/(2f))·y` over ℚ(x):
 #print axioms radGen_sq_eq_radicand
@@ -582,5 +704,17 @@ tower engine. -/
 -- Case-1 rational reduction: the cofactor congruence and the cleared Hermite identity:
 #print axioms case1_congruence
 #print axioms case1_cleared_identity
+
+-- Case-2 reduction (W ∣ f): the cofactor congruence and the cleared identity:
+#print axioms case2_congruence
+#print axioms case2_cleared_identity
+
+-- Case-3 degree-lowering (C/y, θ'=1): the cleared identity and the strict degree drop:
+#print axioms case3_cleared_identity
+#print axioms case3_degree_drop
+
+-- `θ = log v` degree-lowering (2-level tower): the cleared identity and the strict degree drop:
+#print axioms logCase_cleared_identity
+#print axioms logCase_degree_drop
 
 end DeepWiki.SymbolicIntegration
