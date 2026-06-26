@@ -156,6 +156,110 @@ theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
   show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) [a₀, a₁]) = _
   rw [List.headD_cons, toPolyG_radDeriv_linear]
 
+/-! ### The fuel-recursion TELESCOPING invariant (the genuinely new lemma)
+
+The multi-case driver's `radReduceCaseᵢIterate` is a fuel recursion with an **accumulator** `vNum`: each
+step appends one contribution (`radAdd vNum contrib`) and replaces the leftover integrand by the negated
+residual. Soundness of the assembled `v` rests on the loop invariant
+`radDeriv(vNum) + leftover = original integrand` being preserved across the descent.
+
+Stripped to its mathematical core — which is what makes it provable *generally and abstractly* — the
+invariant is a **telescoping of `radDeriv` over a list of contributions**. Two ingredients:
+
+* **`toPolyG_radDeriv_foldlRadAdd`** — `radDeriv` distributes over the accumulator `foldl radAdd`:
+  `toPolyG (radDeriv n f (cs.foldl radAdd acc)) = toPolyG (radDeriv n f acc) + Σ_{c∈cs} toPolyG (radDeriv
+  n f c)`. The accumulator structure of every `radReduceCaseᵢIterate` is exactly this fold; additivity
+  (`toPolyG_radDeriv_radAdd`) pushed through it.
+
+* **`sum_radDeriv_telescope`** — if each contribution's derivative is the *difference of consecutive
+  leftovers* (`toPolyG (radDeriv n f (cs.get i)) = toPolyG (Ls.get i) − toPolyG (Ls.get (i+1))`, the
+  per-step cleared identity (1) read through `radDeriv`), the sum telescopes to
+  `toPolyG (Ls.head) − toPolyG (Ls.getLast)`.
+
+Composing, the accumulated `v = foldl radAdd radZero cs` satisfies the master soundness
+`toPolyG (radDeriv n f v) + toPolyG (final leftover) = toPolyG (initial integrand)`
+(`radReduceRationalTelescope`): the **general rational-part soundness, as an abstract `K[X]` identity**,
+reduced to the per-step `radDeriv` identity (1) over the engine's already-cleared single steps. -/
+
+variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
+
+/-- **`radDeriv` distributes over the accumulator fold** — `toPolyG (radDeriv n f (cs.foldl radAdd acc))
+= toPolyG (radDeriv n f acc) + (cs.map (fun c => toPolyG (radDeriv n f c))).sum`. The exact accumulator
+structure of every `radReduceCaseᵢIterate` (`vNum ↦ radAdd vNum contrib`), so its accumulated `radDeriv`
+is the sum of the per-step `radDeriv` contributions plus the seed. Proven by list induction on `cs`,
+generalizing the accumulator, with the single step `toPolyG_radDeriv_radAdd`. -/
+theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs : List (RadElem α)) :
+    CPolyG.toPolyG (radDeriv n f (cs.foldl radAdd acc))
+      = CPolyG.toPolyG (radDeriv n f acc)
+        + (cs.map (fun c => CPolyG.toPolyG (radDeriv n f c))).sum := by
+  induction cs generalizing acc with
+  | nil => simp
+  | cons c cs ih =>
+    rw [List.foldl_cons, ih (radAdd acc c), toPolyG_radDeriv_radAdd, List.map_cons, List.sum_cons]
+    ring
+
+omit [CDiffFieldSpec α] in
+/-- **The per-step contributions telescope (head/last form)** — for a head leftover `L₀`, a tail list of
+leftovers `rest`, and contributions `cs` of the same length as `rest`, if each contribution's
+`radDeriv`-image is the difference of consecutive leftovers — phrased as: `cs` zipped against the
+consecutive pairs of `L₀ :: rest` (i.e. `(L₀ :: rest).zip rest`) satisfies, head-to-head,
+`toPolyG (radDeriv n f c) = toPolyG p.1 − toPolyG p.2` (the per-step cleared identity (1)) — then the sum
+of the contributions' `radDeriv`-images is `toPolyG L₀ − toPolyG (rest.getLastD L₀)`. The clean
+telescoping over the fuel descent: each step "moves one piece" from the leftover into the accumulator, the
+sum collapsing to the endpoints. Stated via a parallel `List.Forall₂` recursion to keep the endpoints free
+of index/non-emptiness proof obligations. -/
+theorem sum_radDeriv_telescope (n : ℕ) (f : α) :
+    ∀ (L₀ : RadElem α) (rest : List (RadElem α)) (cs : List (RadElem α)),
+      List.Forall₂ (fun c p => CPolyG.toPolyG (radDeriv n f c)
+            = CPolyG.toPolyG p.1 - CPolyG.toPolyG p.2)
+          cs ((L₀ :: rest).zip rest) →
+      (cs.map (fun c => CPolyG.toPolyG (radDeriv n f c))).sum
+        = CPolyG.toPolyG L₀ - CPolyG.toPolyG (rest.getLastD L₀) := by
+  intro L₀ rest
+  induction rest generalizing L₀ with
+  | nil =>
+    intro cs hforall
+    -- `(L₀ :: []).zip [] = []`, so `cs = []`; sum = 0 and `getLastD L₀ [] = L₀`
+    simp only [List.zip_nil_right] at hforall
+    rw [List.forall₂_nil_right_iff] at hforall
+    subst hforall
+    simp
+  | cons L₁ rest' ih =>
+    intro cs hforall
+    -- `(L₀ :: L₁ :: rest').zip (L₁ :: rest') = (L₀, L₁) :: (L₁ :: rest').zip rest'`
+    rw [List.zip_cons_cons] at hforall
+    -- so `cs = c :: cs'` with the head step `radDeriv c = toPolyG L₀ − toPolyG L₁` + the tail
+    rw [List.forall₂_cons_right_iff] at hforall
+    obtain ⟨c, cs', h0, htail, rfl⟩ := hforall
+    rw [List.map_cons, List.sum_cons, ih L₁ cs' htail, h0]
+    -- `getLastD L₀ (L₁ :: rest') = getLastD L₁ rest'`
+    rw [List.getLastD_cons]
+    ring
+
+/-- **★ The master rational-part telescoping soundness (abstract, general)** — let `cs` be the list of
+per-step contributions a `radReduceCaseᵢIterate` accumulates (each `radAdd`-ed into the running `vNum`,
+from the seed `radZero`), and let `L₀ :: rest` be the chain of leftover integrands it passes through (`L₀`
+the *original* integrand, `rest.getLastD L₀` the *final* leftover). If each contribution's `radDeriv`-image
+is the difference of the consecutive leftovers it sits between (the per-step cleared identity (1), read
+through `radDeriv` and zipped as `(L₀ :: rest).zip rest`), then the accumulated antiderivative
+`v = cs.foldl radAdd radZero` satisfies the master soundness in `K[X]`:
+`toPolyG (radDeriv n f v) + toPolyG (final leftover) = toPolyG (original integrand)`.
+The general rational-part soundness as an abstract `K[X]` identity, reduced exactly to the per-step
+`radDeriv` identity — `radDeriv` distributes over the accumulator fold (`toPolyG_radDeriv_foldlRadAdd`,
+seed `radDeriv radZero = 0`) and the contributions telescope (`sum_radDeriv_telescope`). This is the
+genuinely-new accumulation-invariant lemma; instantiating the hypothesis with the per-case lift gives the
+soundness of `radIntegrateRational`'s assembled `v`. -/
+theorem radReduceRationalTelescope (n : ℕ) (f : α) (L₀ : RadElem α) (rest cs : List (RadElem α))
+    (hstep : List.Forall₂ (fun c p => CPolyG.toPolyG (radDeriv n f c)
+          = CPolyG.toPolyG p.1 - CPolyG.toPolyG p.2)
+        cs ((L₀ :: rest).zip rest)) :
+    CPolyG.toPolyG (radDeriv n f (cs.foldl radAdd radZero))
+        + CPolyG.toPolyG (rest.getLastD L₀)
+      = CPolyG.toPolyG L₀ := by
+  rw [toPolyG_radDeriv_foldlRadAdd, toPolyG_radDeriv_radZero, zero_add,
+    sum_radDeriv_telescope n f L₀ rest cs hstep]
+  ring
+
 /-! ### Toward the general rational-part soundness: the `C/y`-form single step (capstone reduction)
 
 The multi-case driver `radIntegrateRational` (`ComputableRadicalRationalDriver`) assembles the rational
