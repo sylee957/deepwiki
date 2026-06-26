@@ -539,6 +539,84 @@ theorem logDeriv_monic_proper (u : F) {p : F[X]} (hm : p.Monic) (hdeg : 1 ≤ p.
   letI := logDifferential u
   ⟨logDeriv_algebraMap_eq u p, natDegree_logDerivPoly_lt_of_monic u hm hdeg⟩
 
+/-! ### The `v ∈ F` reduction lifted to `RatFunc F` (Obligation 3, the `v`-term)
+
+Lifting the polynomial `v ∈ F` descent (`eq_C_of_natDegree_logDerivPoly_le`) to the fraction field.
+The bridge: `algebraMap F (RatFunc F)` factors through `F[t]` (scalar tower), so an `F`-membership
+question becomes a `C`-image (degree-`0`) question on the polynomial preimage.  The remaining genuine
+content is the *rational-to-polynomial* step (a rational function whose derivative is a polynomial is
+itself a polynomial — the partial-fraction "no `t`-pole survives in the derivative" fact), isolated
+as `RationalToPolyObligation`. -/
+
+omit [Differential F] [CharZero F] in
+/-- **`algebraMap F` factors through `F[t]` as `C`.**  `algebraMap F (RatFunc F) b = algebraMap F[t]
+(RatFunc F) (C b)` (the scalar tower `F → F[t] → RatFunc F`). -/
+theorem algebraMap_eq_algebraMap_C (b : F) :
+    algebraMap F (RatFunc F) b = algebraMap F[X] (RatFunc F) (Polynomial.C b) := by
+  rw [IsScalarTower.algebraMap_eq F F[X] (RatFunc F)]
+  simp [Polynomial.algebraMap_eq]
+
+omit [Differential F] [CharZero F] in
+/-- **`F`-membership of a `t`-polynomial image is degree-`0`.**  `algebraMap F[t] (RatFunc F) p ∈
+range (algebraMap F (RatFunc F))` iff `p ∈ range C`, i.e. `p = C b` for some `b ∈ F`.  Forward by
+`algebraMap`-injectivity (`F[t] ↪ RatFunc F`); backward by `algebraMap_eq_algebraMap_C`. -/
+theorem algebraMap_poly_mem_range_iff (p : F[X]) :
+    algebraMap F[X] (RatFunc F) p ∈ (algebraMap F (RatFunc F)).range
+      ↔ ∃ b : F, p = Polynomial.C b := by
+  constructor
+  · rintro ⟨b, hb⟩
+    refine ⟨b, ?_⟩
+    apply FaithfulSMul.algebraMap_injective F[X] (RatFunc F)
+    rw [← algebraMap_eq_algebraMap_C, hb]
+  · rintro ⟨b, rfl⟩
+    exact ⟨b, (algebraMap_eq_algebraMap_C b).symm⟩
+
+/-- **The rational-to-polynomial obligation** — the partial-fraction "no `t`-pole" content of the
+`v`-term reduction, sharply isolated.  It says: a rational function `v ∈ RatFunc F` whose
+log-monomial derivative `v′` is a *polynomial* (`v′ ∈ range (algebraMap F[t])`) is itself a
+*polynomial* (`v ∈ range (algebraMap F[t])`).  This is the genuine pole-order fact — a `t`-pole of
+order `k ≥ 1` in `v` produces a pole of order `≥ k+1` in `v′`, so `v′` polynomial forces `v` pole-free
+— and is the residual partial-fraction frontier of the `v`-term descent.  (Carries `logDeriv u ≠ 0`:
+the genuine-log hypothesis, kept uniform with the other obligations.) -/
+def RationalToPolyObligation (u : F) : Prop :=
+  letI := logDifferential u
+  logDeriv u ≠ 0 →
+    ∀ v : RatFunc F, v′ ∈ (algebraMap F[X] (RatFunc F)).range →
+      v ∈ (algebraMap F[X] (RatFunc F)).range
+
+omit [CharZero F] in
+/-- **The `v ∈ F` reduction on `RatFunc F`, modulo the two residues.**  GIVEN the rational-to-poly
+input (`RationalToPolyObligation`, the partial-fraction "no pole") and the polynomial descent input
+(`PolyVReductionObligation`, the transcendence "no `F`-antiderivative"), a `v ∈ RatFunc F` whose
+derivative `v′` lies in `F` (`v′ = algebraMap F b`) lies in `F` itself.  All the fraction-field glue
+— pulling `v′ ∈ F` back to a polynomial preimage `v = algebraMap p`, identifying `logDerivPoly u p =
+C b`, and descending `p` to `C b₀` — is discharged here; only the two stated residues remain.  This
+is the full `v`-term reduction modulo its two sharply-isolated frontiers. -/
+theorem mem_range_of_deriv_mem_range (u : F) (hrtp : RationalToPolyObligation u)
+    (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0) :
+    letI := logDifferential u
+    ∀ {v : RatFunc F}, v′ ∈ (algebraMap F (RatFunc F)).range →
+      v ∈ (algebraMap F (RatFunc F)).range := by
+  letI := logDifferential u
+  intro v hv
+  -- `v′ ∈ F ⊆ F[t]`, so by the partial-fraction obligation `v` is a polynomial image.
+  obtain ⟨b, hb⟩ := hv
+  have hvpoly : v′ ∈ (algebraMap F[X] (RatFunc F)).range := by
+    refine ⟨Polynomial.C b, ?_⟩
+    rw [← algebraMap_eq_algebraMap_C, hb]
+  obtain ⟨p, hp⟩ := hrtp hu v hvpoly
+  -- Identify `D p = C b` via injectivity, hence `(D p).natDegree = 0`.
+  have hderiv : algebraMap F[X] (RatFunc F) (logDerivPoly u p)
+      = algebraMap F[X] (RatFunc F) (Polynomial.C b) := by
+    rw [← derivExtends u p, hp, ← hb, algebraMap_eq_algebraMap_C]
+  have hDpCb : logDerivPoly u p = Polynomial.C b :=
+    FaithfulSMul.algebraMap_injective F[X] (RatFunc F) hderiv
+  have hdeg0 : (logDerivPoly u p).natDegree = 0 := by rw [hDpCb]; exact natDegree_C b
+  -- Descend `p` to a constant `C b₀` by the polynomial obligation; conclude `v ∈ F`.
+  obtain ⟨b₀, hb₀⟩ := eq_C_of_natDegree_logDerivPoly_le u hpv hu hdeg0
+  rw [← hp]
+  exact (algebraMap_poly_mem_range_iff p).mpr ⟨b₀, hb₀⟩
+
 /-- **Obligation 4 (`ContainConstants F F(t)`, the transcendence non-degeneracy — needed only to
 *tower* logs).**  GIVEN the extended derivation, every `t`-constant is in `F`:
 `x′ = 0 → x ∈ range (algebraMap F (RatFunc F))`.  This is *not* needed for the single keystone
