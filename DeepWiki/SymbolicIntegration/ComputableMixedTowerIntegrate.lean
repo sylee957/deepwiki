@@ -17,11 +17,14 @@ monomial `t` **over** the algebraic `√(x³+1)`, the first transcendental-on-al
   fraction-free gcd is `(cgcdExtG _).1` over `RadX3[t]`, **exactly** the `ℚ`-base recipe `instCFracGcdCoreQ`
   (a field's content is a unit). This is what `canonicalRepresentationFastG` / the Hermite reduction and
   the residue log part dispatch through.
-* **`CRischField RadX3`** — the base RDE-over-the-field solver. A general RDE over an algebraic function
-  field is hard, so this is the **conservative** solver: the trivial case (`f = 0 ∧ g = 0 ↦ 0`), `none`
-  otherwise. The integrals below run the **`b = 0` primitive branch** of `cPolyRischDEG`
-  (`cIntegratePolyG`, the term-by-term antiderivative), which **never** invokes `crischDESolve` — so the
-  conservative solver is only there to satisfy the typeclass binder.
+* **`CRischField RadX3`** — the base RDE-over-the-field solver, now supplied by the **generic**
+  `instCRischFieldRadExt` (`ComputableTranscendentalOverAlgebraic`, imported here) via
+  `RadX3 = RadExt (QFunNZG ℚ) 2 (x³+1)`: scalar-`B` decoupling of `Dz + B·z = C` into the per-`y`-power
+  base RDEs over ℚ(x) (the coupled-system case, non-scalar `B`, deferred). It replaces the earlier per-base
+  conservative `f = 0 ∧ g = 0 ↦ 0` stub. The integrals below run the **`b = 0` primitive branch** of
+  `cPolyRischDEG` (`cIntegratePolyG`, the term-by-term antiderivative), which **never** invokes
+  `crischDESolve`, so they are unchanged by the swap; the generic instance is the better base solve now in
+  scope for any deeper dispatch.
 
 * **★ The headline** (`native_decide`): over `RadX3[t] = ℚ(x)[√(x³+1)][t]` with `t` primitive (`Dt = 1`),
   `cIntegrateGFull` integrates polynomial parts by the §5.4 primitive-base RDE branch and a normal part by
@@ -51,10 +54,13 @@ namespace DeepWiki.SymbolicIntegration
 
 open CPolyG
 
-/-! ### The two remaining base typeclasses for the radical field `RadX3`
+/-! ### The remaining base typeclass for the radical field `RadX3`
 
 `cIntegrateGFull` needs `[CFracGcdCore α] [CRischField α]` beyond the `[CField α] [CDiffField α]` the
-enabler built. We supply both for `α = RadX3 = ℚ(x)[√(x³+1)]`. -/
+enabler built. We supply `CFracGcdCore RadX3` here; `CRischField RadX3` is now supplied by the **generic**
+`instCRischFieldRadExt` (`ComputableTranscendentalOverAlgebraic`, imported), so the earlier per-base
+conservative stub is retired — the scalar-decoupling solver resolves automatically via
+`RadX3 = RadExt (QFunNZG ℚ) 2 (x³+1)`. -/
 
 /-- **`CFracGcdCore RadX3`** — the raw fraction-free gcd over `RadX3[t]`. `RadX3` is a genuine field
 (`y² − (x³+1)` is irreducible over ℚ(x), `irreducible_radX3`), so — exactly as for the constant base
@@ -64,17 +70,6 @@ Euclidean work is `[CField RadX3]`-only, so it reduces in the native compiler. T
 `canonicalRepresentationFastG`, the Hermite reduction, and the residue log part dispatch through. -/
 instance instCFracGcdCoreRadX3 : CFracGcdCore RadX3 where
   cgcdFFRawCore fuel p q := (CPolyG.cgcdExtG fuel p q).1
-
-/-- **`CRischField RadX3`** — the base Risch-DE solver over the radical field itself, the **conservative**
-form: a general RDE `Dy + f·y = g` over an algebraic function field is hard, so this solves only the
-trivial case (`f = 0 ∧ g = 0 ↦ y = 0`) and returns `none` otherwise. It is present **only** to satisfy the
-`[CRischField RadX3]` binder of `cIntegrateGFull`/`cPolyRischDEG`: the integrals below run the `b = 0`
-primitive branch (`cIntegratePolyG`, the term-by-term antiderivative), which **never** invokes
-`crischDESolve` — so the headline `∫` results do not depend on this solver's strength. (The full
-algebraic-function RDE solver is the documented continuation.) -/
-instance instCRischFieldRadX3 : CRischField RadX3 where
-  crischDESolve f g :=
-    if CField.isZero f then (if CField.isZero g then some CField.zero else none) else none
 
 /-! ### Shared integrand data over `RadX3[t]`
 

@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.ComputableRadicalDerivationInvariant
 import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
+import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import Mathlib.FieldTheory.KummerPolynomial
 import Mathlib.FieldTheory.RatFunc.Degree
 import Mathlib.RingTheory.AdjoinRoot
@@ -28,6 +29,13 @@ can dispatch), and equips it with
   derivation** that extends `α`'s `cderiv` by `y' = (f'/(nf))·y` (Trager's `(f/y)'`). This makes `RadExt`
   a *differential* Risch base; the derivation laws (additive, Leibniz) are the **proven**
   `RadElem.toPolyG_radDeriv_radAdd` / `mk_toPolyG_radDeriv_radMul` (`ComputableRadicalDerivationInvariant`).
+* **`CRischField (RadExt α n f)`** (over `[CDiffField α] [CRischField α]`) — the base RDE-over-the-field
+  solve `Dz + B·z = C` by **scalar decoupling** (`radExtRischDESolve`): the diagonal `radDeriv` splits a
+  *scalar*-`B` equation into the `n` per-`y`-power base RDEs `Dzᵢ + (b₀ + (i:α)·ℓ)·zᵢ = Cᵢ` over `α`
+  (`ℓ = f'/(nf)`), each solved by the base `[CRischField α]`; a non-scalar `B` is the coupled-system case
+  (Bronstein Ch. 8) and returns `none`. This is the method the **§6.6 cancellation cases recurse into** — so
+  the transcendental Risch integrator now recurses *through* the algebraic level, not merely over it. It
+  **generalizes** the per-base `CRischField RadX3` stub into one instance for every `[CField α] …`.
 
 With these three, the keystone composes: `QFunNZG (RadExt α n f)` is **automatically** a `CField` (a
 transcendental monomial `t` over the radical `√f`), and `CPolyG (QFunNZG (RadExt …))` reduces in the
@@ -178,6 +186,69 @@ instance instCDiffFieldRadExt {α : Type*} [CField α] [CFieldDomain α] [CDiffF
     CDiffField (RadExt α n f) where
   cderiv p := ⟨radDeriv n f p.toRad⟩
 
+/-! ### ★ `CRischField (RadExt α n f)` — the algebraic-level RDE by scalar decoupling
+
+The base Risch-DE solve `crischDESolve B C : Option (RadExt α n f)` for `Dz + B·z = C` over the radical
+field itself. This is **what lets the Risch integrator recurse *through* the algebraic level** — every §6.6
+cancellation case over `RadExt α n f` (eq. 6.23 `RischDE(b, lc(c))`) now has a base solve, rather than a
+transcendental integrator merely sitting on top of a fixed algebraic field.
+
+The derivation `radDeriv n f` is **diagonal**: its `yⁱ`-component is `aᵢ ↦ D(aᵢ) + aᵢ·(i·ℓ)`,
+`ℓ = logDerRadicand n f = f'/(nf)`. So when the coefficient `B` is a **scalar** (a `RadExt` whose `toRad`
+is `[b₀]`-shaped — all `y`-components vanish), the product `B·z` is the diagonal scaling `b₀·zᵢ` per
+component, and the RDE `Dz + B·z = C` **decouples** into the `n` independent **base** RDEs over `α`
+
+`Dzᵢ + (b₀ + (i:α)·ℓ)·zᵢ = Cᵢ`   (`i = 0,…,n−1`),
+
+each solved by `CRischField.crischDESolve` over the *base* field `α` — exactly the per-component
+coefficient `b₀ + (cnatCastG i)·ℓ` that the diagonal `radDeriv`'s `i`-component carries. Reassembling
+`z = RadExt.ofRad [z₀,…,z_{n−1}]` (`none` if any component fails) gives the radical-level solution.
+
+A **non-scalar** `B` (genuine `y`-components) couples the components — the coupled-differential-system case
+(Bronstein Ch. 8, `RischDECouple`). That is **honestly deferred**: `crischDESolve` returns `none` when `B`
+is not scalar (its `y`-components do not all vanish), so the solver is *sound* (never returns a wrong
+witness) and *complete on the decoupled (scalar-`B`) slice*. The §6.6 primitive/hyperexponential
+cancellation cases call `crischDESolve b₀ (lc c)` / `crischDESolve (b₀ + m·η) (lc c)` with `b₀, η ∈ α`
+lifted into `RadExt` as scalars, so the scalar branch is exactly the case those cancellations hit. -/
+
+/-- **Scalar test on a `RadExt`** `RadExt.isScalar p`: `true` iff every `y`-component of `p` (everything
+past the `y⁰` head) vanishes — `radIsZero (p.toRad).tail`. The decoupling base solve handles scalar
+coefficients `B` (`b₀ + b₁y + … = b₀`); a non-scalar `B` is the coupled-system case. -/
+def RadExt.isScalar {α : Type*} [CField α] {n : ℕ} {f : α} (p : RadExt α n f) : Bool :=
+  RadElem.radIsZero ((p.toRad : List α).tail)
+
+/-- **Scalar-decoupling base RDE solve** `radExtRischDESolve B C : Option (RadExt α n f)` for
+`Dz + B·z = C` over `RadExt α n f`, using the diagonality of `radDeriv n f`. For a **scalar** `B`
+(`RadExt.isScalar B`, so `B = b₀`), the equation decouples per `y`-power into the `n` base RDEs
+`Dzᵢ + (b₀ + (i:α)·ℓ)·zᵢ = Cᵢ` over `α` (`ℓ = logDerRadicand n f = f'/(nf)`), each solved by
+`CRischField.crischDESolve` — the coefficient `b₀ + (cnatCastG i)·ℓ` matches the diagonal `radDeriv`'s
+`i`-component exactly (`CField.mul (CPolyG.cnatCastG i) ℓ`). The `n` solutions `z₀,…,z_{n−1}` (`Cᵢ` read by
+`getD i CField.zero`) reassemble to `z = RadExt.ofRad [z₀,…]` via `List.mapM` over `Option` (`none` if any
+component is unsolvable). A non-scalar `B` (genuine `y`-coupling) is the coupled-system case (Bronstein
+Ch. 8) and returns `none`. -/
+def radExtRischDESolve {α : Type*} [CField α] [CDiffField α] [CRischField α] {n : ℕ} {f : α}
+    (B C : RadExt α n f) : Option (RadExt α n f) :=
+  if RadExt.isScalar B then
+    let b₀ : α := (B.toRad : List α).headD CField.zero
+    let ℓ : α := RadElem.logDerRadicand n f
+    (((List.range n).mapM fun i =>
+      let coeff : α := CField.add b₀ (CField.mul (CPolyG.cnatCastG i) ℓ)
+      let Ci : α := (C.toRad : List α).getD i CField.zero
+      CRischField.crischDESolve coeff Ci).map RadExt.ofRad)
+  else none
+
+/-- **★ `CRischField (RadExt α n f)`** — the base Risch-DE solver over the radical field, by **scalar
+decoupling** (`radExtRischDESolve`). For a scalar coefficient `B = b₀`, the diagonal `radDeriv` makes
+`Dz + B·z = C` split into the `n` base RDEs `Dzᵢ + (b₀ + (i:α)·ℓ)·zᵢ = Cᵢ` over `α`, each dispatched to
+the base `[CRischField α]` solve; a non-scalar `B` (coupled system, Bronstein Ch. 8) returns `none`.
+Computable (list/field arithmetic + the base `crischDESolve`), so the Risch integrator over `RadExt[t]`
+recurses **through** the algebraic level in the native compiler. This **generalizes** the per-base ad-hoc
+`CRischField RadX3` stub: it is the one instance supplying `CRischField (RadExt α n f)` for *every*
+`[CField α] [CDiffField α] [CFieldDomain α] [CRischField α]`. -/
+instance instCRischFieldRadExt {α : Type*} [CField α] [CDiffField α] [CFieldDomain α] [CRischField α]
+    {n : ℕ} {f : α} : CRischField (RadExt α n f) where
+  crischDESolve := radExtRischDESolve
+
 /-! ### ★ The base radical `√(x³+1)` over `ℚ(x)`, as a `CField`+`CDiffField`
 
 `α = QFunNZG ℚ ≅ ℚ(x)`, `n = 2`, `f = x³+1`. `RadX3 := RadExt (QFunNZG ℚ) 2 radicandX3p1` is the radical
@@ -220,6 +291,72 @@ theorem radX3_cderiv_one_zero :
     CField.isZero (CDiffField.cderiv (CField.one : RadX3)) = true ∧
     CField.isZero (CDiffField.cderiv (CField.zero : RadX3)) = true := by
   constructor <;> native_decide
+
+/-! ### ★★ The generic `CRischField (RadExt …)` solves a GENUINE algebraic RDE (`native_decide`)
+
+The validation that `instCRischFieldRadExt` does **real** algebraic-RDE work — not the retired stub's
+trivial `f = 0 ∧ g = 0 ↦ 0` passthrough. Over `RadX3 = ℚ(x)[√(x³+1)]` we take a **nonzero scalar**
+coefficient `B = 1` and a right-hand side `C` carrying a **genuine `y`-component**, then solve the RDE
+`Dz + B·z = C` by `CRischField.crischDESolve` (which dispatches to `radExtRischDESolve`'s scalar
+decoupling) and certify `radDeriv z + B·z = C` exactly.
+
+`C` is constructed from a chosen target `z = x + 2·y` (`z₀ = x ∈ ℚ(x)`, `z₁ = 2 ∈ ℚ`) as
+`C := radDeriv z + B·z = [1 + x, 2ℓ + 2]` (`ℓ = f'/(2f) = 3x²/(2(x³+1))`, so the `y`-component
+`2ℓ + 2 = 3x²/(x³+1) + 2 ≠ 0`). The decoupling splits the solve into the two **base** RDEs over ℚ(x):
+`Dz₀ + 1·z₀ = 1 + x` (giving `z₀ = x`) and `Dz₁ + (1 + ℓ)·z₁ = 2ℓ + 2` (a genuine **non-constant**
+-coefficient RDE over ℚ(x), giving `z₁ = 2`) — each run by the level-1 `CRischField (QFunNZG ℚ)`. The
+solver returns `some` and the residual `radDeriv z + B·z − C` vanishes. The generic algebraic RDE solver
+DECOUPLES AND SOLVES, with a nonzero `B` and a `y`-component in `C` — genuine work. -/
+
+/-- The scalar coefficient `B = 1 ∈ RadX3` (a `RadExt` with no `y`-component) for the algebraic-RDE
+validation. -/
+def radX3RischB : RadX3 := CField.one
+
+/-- The target solution `z = x + 2·y ∈ RadX3` (constant `y`-coefficient `2`), from which the right-hand
+side `C` is built. `z₁ = 2 ≠ 0`, so `radDeriv`'s diagonal `y`-component makes `C` carry a genuine `y`-term. -/
+def radX3RischZ : RadX3 := ⟨[qxOfNum [0, 1], qxOfNum [2]]⟩
+
+/-- The right-hand side `C = radDeriv z + B·z = [1 + x, 2ℓ + 2] ∈ RadX3` of the algebraic RDE
+`Dz + B·z = C`, constructed from `radX3RischZ`/`radX3RischB`. Carries a genuine `y`-component
+`2ℓ + 2 ≠ 0` (`ℓ = 3x²/(2(x³+1))`). -/
+def radX3RischC : RadX3 :=
+  ⟨RadElem.radAdd (RadElem.radDeriv 2 radicandX3p1 radX3RischZ.toRad)
+    (RadElem.radMul 2 radicandX3p1 radX3RischB.toRad radX3RischZ.toRad)⟩
+
+/-- **The right-hand side `C` has a genuine `y`-component** (`native_decide`): `radIsZero (C.toRad.tail)
+= false` — `C`'s `y¹`-coefficient `2ℓ + 2 ≠ 0`, so the solve is a *real* coupled-looking algebraic RDE
+(not a scalar `α`-equation in disguise), exactly the case the scalar-`B` decoupling must dispose. -/
+theorem radX3Risch_C_has_y_component :
+    RadElem.radIsZero ((radX3RischC.toRad : List (QFunNZG ℚ)).tail) = false := by native_decide
+
+/-- **The generic `crischDESolve` returns `some` on the algebraic RDE** (`native_decide`): over
+`RadX3 = ℚ(x)[√(x³+1)]`, `CRischField.crischDESolve B C` (`B = 1`, `C` with a `y`-component) succeeds —
+the scalar decoupling found a solution to both base RDEs over ℚ(x). -/
+theorem radX3Risch_solve_isSome :
+    (CRischField.crischDESolve radX3RischB radX3RischC).isSome = true := by native_decide
+
+/-- **★★ The generic `CRischField (RadExt …)` solves a genuine algebraic RDE: `radDeriv z + B·z = C`**
+(`native_decide`, the task milestone). `CRischField.crischDESolve B C` over `RadX3 = ℚ(x)[√(x³+1)]` (the
+**generic** `instCRischFieldRadExt`, NOT the retired trivial stub) returns `some z`, and `z` satisfies the
+algebraic RDE `Dz + B·z = C` exactly — checked by `radIsZero` of
+`radDeriv z + B·z − C` (the diagonal radical derivation, the actual `radMul`/`radAdd`/`radSub`). The
+coefficient `B = 1` is a nonzero scalar and `C` carries a genuine `y`-component, so the solve genuinely
+**decouples** the radical RDE into the two base RDEs over ℚ(x) (`Dz₀ + z₀ = 1+x`, `Dz₁ + (1+ℓ)z₁ = 2ℓ+2`)
+and dispatches each to the level-1 `CRischField (QFunNZG ℚ)`. THE GENERIC INSTANCE DOES REAL
+ALGEBRAIC-RDE WORK — the Risch integrator can recurse THROUGH the algebraic level. -/
+theorem radX3Risch_solves_rde :
+    (match CRischField.crischDESolve radX3RischB radX3RischC with
+      | some z => RadElem.radIsZero (RadElem.radSub
+          (RadElem.radAdd (RadElem.radDeriv 2 radicandX3p1 z.toRad)
+            (RadElem.radMul 2 radicandX3p1 radX3RischB.toRad z.toRad)) radX3RischC.toRad)
+      | none => false) = true := by native_decide
+
+/-- **A non-scalar coefficient `B` is honestly deferred** (`native_decide`): with `B = y` (a genuine
+`y`-component, `B.toRad = [0, 1]`, so `RadExt.isScalar B = false`), `crischDESolve B C` returns `none` —
+the coupled-differential-system case (Bronstein Ch. 8) is **not** attempted, keeping the solver sound. The
+scalar branch (above) is exactly the slice the §6.6 cancellation cases hit (`b₀, η ∈ α` lifted as scalars). -/
+theorem radX3Risch_nonscalar_none :
+    CRischField.crischDESolve (radX3Gen : RadX3) radX3RischC = none := by native_decide
 
 /-! ### ★★ A TRANSCENDENTAL MONOMIAL over the algebraic base (`native_decide`)
 
@@ -796,5 +933,9 @@ Classical.choice, Quot.sound]` plus the `native_decide` compiler axiom — no `s
 #print axioms cfield_qfunNZG_radX3_unconditional
 #print axioms cderiv_tOverRadX3_eq_one
 #print axioms mul_inv_tOverRadX3_eq_one
+
+-- ★★ The generic `CRischField (RadExt …)` solves a genuine algebraic RDE (scalar decoupling):
+#print axioms radX3Risch_solves_rde
+#print axioms radX3Risch_nonscalar_none
 
 end DeepWiki.SymbolicIntegration
