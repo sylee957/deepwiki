@@ -118,6 +118,22 @@ lemma logDerivPoly_C_of_deriv_eq_zero (u : F) {b : F} (hb : b′ = 0) :
     logDerivPoly u (C b) = 0 := by
   rw [logDerivPoly_C, hb, map_zero]
 
+-- Restatements pinning the log-monomial setup to the book's wording (Rosenlicht §, log case).
+-- `t' = u'/u`: the defining equation of the log monomial `t = log u`.
+example (u : F) : logDerivPoly u (X : F[X]) = C (logDeriv u) := logDerivPoly_X u
+-- The derivation on `F(t)` restricted to the linear monomial `b·t` (`b ∈ F`) is
+-- `b'·t + b·(u'/u)`: the constant-field part plus the monomial part.
+example (u b : F) :
+    logDerivPoly u (C b * X) = C b′ * X + C b * C (logCoeff u) := by
+  have := (logDerivPoly u).leibniz (C b) X
+  simp only [logDerivPoly_C, logDerivPoly_X] at this
+  rw [this]; ring
+-- The coefficient formula is exactly `(D p).coeff i = (p.coeff i)' + (u'/u)·(i+1)·p.coeff (i+1)`.
+example (u : F) (p : F[X]) (i : ℕ) :
+    (logDerivPoly u p).coeff i
+      = (p.coeff i)′ + logDeriv u * ((i + 1) * p.coeff (i + 1)) :=
+  coeff_logDerivPoly u p i
+
 end PolynomialSetup
 
 /-! ## The field `F(t) = RatFunc F` and the remaining obligations (the keystone roadmap)
