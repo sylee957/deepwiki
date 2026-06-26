@@ -33,12 +33,13 @@ solve returns `none`): expressing such an integral needs the divisor constructio
 principal-divisor test, and the torsion / points-of-finite-order bound (Ch. 6).
 
 ## NOT YET FORMALIZED (audit 2026-06-26)
-Ch. 5 §3 The Divisor Construction: building the divisor of a candidate logarithmic term from a
-  residue (the place-by-place pole/zero data on the curve) `[infra]`.
-Ch. 6 The Principal Divisor Test / Torsion Bound: deciding whether a divisor's integer multiple
-  is principal (good reduction, the points-of-finite-order bound on the Jacobian) — the genuine
+Ch. 5 §3 Cantor composition / reduction + Ch. 6 The Principal Divisor Test / Torsion Bound: the
+  Jacobian arithmetic and the principal-divisor / points-of-finite-order decision — the genuine
   obstruction in the NON-PRINCIPAL case (where the principal-case linear solve `ch5_logArgSolve`
-  returns `none`, e.g. a double pole) `[research]`.
+  returns `none`, e.g. a double pole). The divisor REPRESENTATION (the Mumford pair `(u, v)`) and the
+  residue-divisor CONSTRUCTION of Ch. 5 §3 ARE done — catalog `Sources.Hdl_1721_1_15391.Chapter6`,
+  which carries its own NOT-YET-FORMALIZED list of the deferred Cantor/principal/torsion pieces
+  `[research]`.
 Ch. 5 §2: the general degree bound for the log-argument ansatz (how large `N`/`D` must be taken before
   `ch5_logArgSolve` is guaranteed to find the principal-case kernel) — only fixed worked bounds are
   exercised `[infra]`.

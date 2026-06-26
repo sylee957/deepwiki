@@ -113,3 +113,4 @@ import DeepWiki.SymbolicIntegration.ComputableRadicalOverTower
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogArgGeneric
 import DeepWiki.SymbolicIntegration.ComputableElementaryIntegrate
 import DeepWiki.SymbolicIntegration.ComputableRadicalRationalTower
+import DeepWiki.SymbolicIntegration.ComputableHyperellipticDivisor

@@ -58,6 +58,7 @@ import Sources.Doi_10_1007_b138171.Chapter10
 import Sources.Hdl_1721_1_15391.Source
 import Sources.Hdl_1721_1_15391.Chapter2
 import Sources.Hdl_1721_1_15391.Chapter5
+import Sources.Hdl_1721_1_15391.Chapter6
 import Sources.Hdl_1721_1_15391.AppendixA
 import Sources.Hdl_1721_1_15391.IntegrateFull
 
