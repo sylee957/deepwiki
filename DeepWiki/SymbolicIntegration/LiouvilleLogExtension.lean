@@ -311,6 +311,31 @@ lemma not_pow_dvd_logDerivPoly_of_exact [CharZero F] (u : F) {p q : F[X]} {k : �
     · exact hDq hDq'
   · exact hqm h2
 
+/-- **The `π`-adic valuation of `D p` is exactly one less than that of `p`** (the exact pole-order
+drop, as an `emultiplicity` equality): for monic irreducible `π` with `π ∤ D π` (transcendence),
+`emultiplicity π p = k` with `k ≥ 1` forces `emultiplicity π (logDerivPoly u p) = k − 1`.  Combines
+`pow_sub_one_dvd_logDerivPoly` (the `≥ k−1` half) with `not_pow_dvd_logDerivPoly_of_exact` (the `< k`
+half).  This is the engine of "`v′` has no simple pole": a pole of order `k` in `v` becomes a pole of
+order exactly `k + 1` in `v′`. -/
+lemma emultiplicity_logDerivPoly_eq [CharZero F] (u : F) {p q : F[X]} {k : ℕ}
+    (hq : Irreducible q) (hDq : ¬ q ∣ logDerivPoly u q) (hk : 1 ≤ k)
+    (hmult : emultiplicity q p = (k : ℕ∞)) :
+    emultiplicity q (logDerivPoly u p) = ((k - 1 : ℕ) : ℕ∞) := by
+  -- `q^k ∣ p` and `q^(k+1) ∤ p` from the multiplicity equality.
+  have hdvd : q ^ k ∣ p := pow_dvd_of_le_emultiplicity (by rw [hmult])
+  have hndvd : ¬ q ^ (k + 1) ∣ p := by
+    rw [← emultiplicity_lt_iff_not_dvd, hmult]; exact_mod_cast Nat.lt_succ_self k
+  -- `q^(k-1) ∣ D p` (lower bound) and `q^k ∤ D p` (strict upper bound).
+  have hlo : ((k - 1 : ℕ) : ℕ∞) ≤ emultiplicity q (logDerivPoly u p) :=
+    le_emultiplicity_of_pow_dvd (pow_sub_one_dvd_logDerivPoly u hdvd)
+  have hhi : emultiplicity q (logDerivPoly u p) < (k : ℕ∞) :=
+    emultiplicity_lt_iff_not_dvd.mpr (not_pow_dvd_logDerivPoly_of_exact u hq hDq hk hdvd hndvd)
+  -- `k - 1 ≤ … < k = (k-1)+1` forces `… = k - 1`.
+  have hk1 : (k : ℕ∞) = ((k - 1 : ℕ) : ℕ∞) + 1 := by
+    rw [← ENat.coe_one, ← Nat.cast_add]; congr 1; omega
+  rw [hk1] at hhi
+  exact le_antisymm ((ENat.lt_add_one_iff (ENat.coe_ne_top _)).mp hhi) hlo
+
 /-- **A monic `t`-factor `q` does not divide its own log-monomial derivative `D q`**, *provided*
 `D q ≠ 0` (and `q` has positive degree): since `(D q).natDegree < q.natDegree`
 (`natDegree_logDerivPoly_lt_of_monic`), a nonzero `D q` is too low-degree to be a `q`-multiple.  Hence
