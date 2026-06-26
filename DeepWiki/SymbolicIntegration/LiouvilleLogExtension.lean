@@ -71,6 +71,33 @@ lemma logDerivPoly_differentialAlgebra (u : F) :
   change logDerivPoly u (C a) = C a′
   simp
 
+/-- **The coefficient formula for the log-monomial derivation** (engine of all degree/pole
+comparisons): `(D p).coeff i = (p.coeff i)' + (u'/u)·(i+1)·p.coeff (i+1)`.  The first summand is
+the "constant-field" part (`F`'s derivation on each coefficient); the second is the monomial part
+`t' · (∂p/∂t)`. -/
+lemma coeff_logDerivPoly (u : F) (p : F[X]) (i : ℕ) :
+    (logDerivPoly u p).coeff i
+      = (p.coeff i)′ + logCoeff u * ((i + 1) * p.coeff (i + 1)) := by
+  simp only [logDerivPoly, implicitDeriv, Derivation.coe_add, Pi.add_apply,
+    Derivation.coe_smul, Pi.smul_apply, Derivation.restrictScalars_apply,
+    derivative'_apply, coeff_add, coeff_mapCoeffs, smul_eq_mul, coeff_C_mul,
+    coeff_derivative]
+  ring
+
+/-- The log-monomial derivation does **not raise `t`-degree**: `natDegree (D p) ≤ natDegree p`.
+This is the structural fact behind "the `t`-poles/degree of `a ∈ F` are controlled" in the
+transcendental Liouville argument. -/
+lemma natDegree_logDerivPoly_le (u : F) (p : F[X]) :
+    (logDerivPoly u p).natDegree ≤ p.natDegree := by
+  apply natDegree_le_iff_coeff_eq_zero.mpr
+  intro i hi
+  rw [coeff_logDerivPoly]
+  have h1 : p.coeff i = 0 := coeff_eq_zero_of_natDegree_lt hi
+  have h2 : p.coeff (i + 1) = 0 :=
+    coeff_eq_zero_of_natDegree_lt (lt_of_le_of_lt (le_of_lt hi) (Nat.lt_succ_self i))
+  rw [h1, h2]
+  simp
+
 end PolynomialSetup
 
 end DeepWiki.SymbolicIntegration.LiouvilleLog
