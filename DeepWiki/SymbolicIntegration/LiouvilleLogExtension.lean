@@ -974,6 +974,126 @@ theorem logDeriv_algebraMap_eq_unit_add_sum [DecidableEq F] (u : F) {p : F[X]} (
   refine Finset.sum_congr rfl fun π hπ => ?_
   rw [nsmul_eq_mul]
 
+/-- The `F`-unit part of `w ∈ RatFunc F`: `(num w).leadingCoeff / (denom w).leadingCoeff` — the
+nonzero `F`-scalar `w` differs from a ratio of *monic* `t`-polynomials by.  Its `logDeriv` is the
+`F`-valued part of `logDeriv w` (the `t`-pole-free part). -/
+noncomputable def wConst (w : RatFunc F) : F :=
+  (RatFunc.num w).leadingCoeff / (RatFunc.denom w).leadingCoeff
+
+/-- The signed `t`-pole multiplicity of a monic irreducible `π` in `w ∈ RatFunc F`, as an `F`-element:
+`(count π in factors(num w)) − (count π in factors(denom w))`.  This is the residue that the multi-term
+pole-matching collects across the `wᵢ`. -/
+noncomputable def poleMult [DecidableEq F] (w : RatFunc F) (π : F[X]) : F :=
+  ((UniqueFactorizationMonoid.normalizedFactors (RatFunc.num w)).count π : F)
+    - ((UniqueFactorizationMonoid.normalizedFactors (RatFunc.denom w)).count π : F)
+
+/-- The finite set of monic irreducible `t`-factors of `w ∈ RatFunc F` (numerator and denominator):
+the support of `poleMult w`. -/
+noncomputable def factorsFinset [DecidableEq F] (w : RatFunc F) : Finset F[X] :=
+  (UniqueFactorizationMonoid.normalizedFactors (RatFunc.num w)).toFinset ∪
+    (UniqueFactorizationMonoid.normalizedFactors (RatFunc.denom w)).toFinset
+
+omit [Differential F] [CharZero F] in
+/-- A normalized `t`-factor is monic (`normalize π = π` ⟺ monic over a field). -/
+theorem monic_of_mem_normalizedFactors [DecidableEq F] {a π : F[X]}
+    (hπ : π ∈ UniqueFactorizationMonoid.normalizedFactors a) : π.Monic := by
+  have hne : π ≠ 0 := UniqueFactorizationMonoid.ne_zero_of_mem_normalizedFactors hπ
+  exact (Polynomial.normalize_eq_self_iff_monic hne).mp
+    (UniqueFactorizationMonoid.normalize_normalized_factor π hπ)
+
+omit [Differential F] [CharZero F] in
+/-- Every element of `factorsFinset w` is a monic irreducible `t`-polynomial. -/
+theorem factorsFinset_monic_irreducible [DecidableEq F] {w : RatFunc F} {π : F[X]}
+    (hπ : π ∈ factorsFinset w) : π.Monic ∧ Irreducible π := by
+  rw [factorsFinset, Finset.mem_union, Multiset.mem_toFinset, Multiset.mem_toFinset] at hπ
+  rcases hπ with hπ | hπ <;>
+    exact ⟨monic_of_mem_normalizedFactors hπ,
+      UniqueFactorizationMonoid.irreducible_of_normalized_factor _ hπ⟩
+
+omit [CharZero F] in
+/-- **The `RatFunc` `logDeriv` pole decomposition** (the per-`wᵢ` engine of multi-term pole-matching):
+for `w ≠ 0`, `logDeriv w = logDeriv (algebraMap (wConst w)) + ∑_{π ∈ factorsFinset w}
+algebraMap (C (poleMult w π)) · logDeriv (algebraMap π)`, the first term `F`-valued (no `t`-pole) and
+each numerator `C (poleMult w π)` a *constant* (`t`-degree `0`).  Proof: split `logDeriv w =
+logDeriv ↑(num w) − logDeriv ↑(denom w)` (`logDeriv_eq_num_sub_denom`), fold each by
+`logDeriv_algebraMap_eq_unit_add_sum`, identify the leading-coefficient parts as
+`logDeriv (algebraMap (wConst w))`, cast the `(count)` weights to `C (count)` constants, and merge the
+num/denom sums over the union `factorsFinset w` (`Finset.sum_subset`, counts vanish off-support). -/
+theorem logDeriv_eq_wConst_add_sum [DecidableEq F] (u : F) {w : RatFunc F} (hw : w ≠ 0) :
+    letI := logDifferential u
+    logDeriv w = logDeriv (algebraMap F (RatFunc F) (wConst w))
+      + ∑ π ∈ factorsFinset w,
+          algebraMap F[X] (RatFunc F) (Polynomial.C (poleMult w π))
+            * logDeriv (algebraMap F[X] (RatFunc F) π) := by
+  letI := logDifferential u
+  set n := RatFunc.num w with hn
+  set d := RatFunc.denom w with hd
+  have hnne : n ≠ 0 := RatFunc.num_ne_zero hw
+  have hdne : d ≠ 0 := RatFunc.denom_ne_zero w
+  -- Split, then fold numerator and denominator.
+  rw [logDeriv_eq_num_sub_denom u hw, ← hn, ← hd,
+    logDeriv_algebraMap_eq_unit_add_sum u hnne, logDeriv_algebraMap_eq_unit_add_sum u hdne]
+  -- Notation for the two normalized-factor multisets.
+  set Mn := UniqueFactorizationMonoid.normalizedFactors n with hMn
+  set Md := UniqueFactorizationMonoid.normalizedFactors d with hMd
+  have hlcn : n.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hnne
+  have hlcd : d.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hdne
+  -- The leading-coefficient part is `logDeriv (algebraMap (wConst w))`.
+  have hAn : algebraMap F[X] (RatFunc F) (Polynomial.C n.leadingCoeff) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (by simpa [Polynomial.C_eq_zero] using hlcn)
+  have hAd : algebraMap F[X] (RatFunc F) (Polynomial.C d.leadingCoeff) ≠ 0 :=
+    RatFunc.algebraMap_ne_zero (by simpa [Polynomial.C_eq_zero] using hlcd)
+  have hwconst : logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C n.leadingCoeff))
+      - logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C d.leadingCoeff))
+      = logDeriv (algebraMap F (RatFunc F) (wConst w)) := by
+    rw [wConst, ← hn, ← hd, map_div₀, algebraMap_eq_algebraMap_C, algebraMap_eq_algebraMap_C,
+      logDeriv_div _ _ hAn hAd]
+  -- A `count` weight `(k : RatFunc F)` is the constant `algebraMap (C (k : F))`.
+  have hcast : ∀ (m : Multiset F[X]) (π : F[X]),
+      ((m.count π : ℕ) : RatFunc F)
+        = algebraMap F[X] (RatFunc F) (Polynomial.C ((m.count π : ℕ) : F)) := by
+    intro m π
+    rw [← algebraMap_eq_algebraMap_C, map_natCast]
+  -- Extend each factor sum over the union `factorsFinset w`; off-support counts are `0`.
+  have hsub_n : (Mn.toFinset : Finset F[X]) ⊆ factorsFinset w := by
+    rw [factorsFinset, ← hn]; exact Finset.subset_union_left
+  have hsub_d : (Md.toFinset : Finset F[X]) ⊆ factorsFinset w := by
+    rw [factorsFinset, ← hd]; exact Finset.subset_union_right
+  have hext_n : ∑ π ∈ Mn.toFinset,
+        ((Mn.count π : ℕ) : RatFunc F) * logDeriv (algebraMap F[X] (RatFunc F) π)
+      = ∑ π ∈ factorsFinset w,
+          algebraMap F[X] (RatFunc F) (Polynomial.C ((Mn.count π : ℕ) : F))
+            * logDeriv (algebraMap F[X] (RatFunc F) π) := by
+    rw [Finset.sum_subset hsub_n (fun π _ hπ => by
+      rw [Multiset.mem_toFinset, ← Multiset.count_eq_zero] at hπ
+      rw [hπ]; simp)]
+    exact Finset.sum_congr rfl fun π _ => by rw [hcast]
+  have hext_d : ∑ π ∈ Md.toFinset,
+        ((Md.count π : ℕ) : RatFunc F) * logDeriv (algebraMap F[X] (RatFunc F) π)
+      = ∑ π ∈ factorsFinset w,
+          algebraMap F[X] (RatFunc F) (Polynomial.C ((Md.count π : ℕ) : F))
+            * logDeriv (algebraMap F[X] (RatFunc F) π) := by
+    rw [Finset.sum_subset hsub_d (fun π _ hπ => by
+      rw [Multiset.mem_toFinset, ← Multiset.count_eq_zero] at hπ
+      rw [hπ]; simp)]
+    exact Finset.sum_congr rfl fun π _ => by rw [hcast]
+  -- Assemble: leading-coeff part + (num sum − denom sum) merged into the `poleMult` sum.
+  rw [hext_n, hext_d, ← hwconst]
+  -- Expand the `poleMult` sum on the RHS into a difference of the two count-products.
+  have hpole : ∑ π ∈ factorsFinset w,
+        algebraMap F[X] (RatFunc F) (Polynomial.C (poleMult w π))
+          * logDeriv (algebraMap F[X] (RatFunc F) π)
+      = ∑ π ∈ factorsFinset w,
+          algebraMap F[X] (RatFunc F) (Polynomial.C ((Mn.count π : ℕ) : F))
+            * logDeriv (algebraMap F[X] (RatFunc F) π)
+        - ∑ π ∈ factorsFinset w,
+          algebraMap F[X] (RatFunc F) (Polynomial.C ((Md.count π : ℕ) : F))
+            * logDeriv (algebraMap F[X] (RatFunc F) π) := by
+    rw [← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl fun π _ => ?_
+    rw [poleMult, ← hn, ← hd, ← hMn, ← hMd, map_sub, map_sub, sub_mul]
+  rw [hpole]; ring
+
 /-- **The single-log pole-independence obligation** — the genuine partial-fraction content of the
 single-logarithm case, sharply isolated.  GIVEN `a ∈ F`, a constant `c ∈ F`, `w v ∈ RatFunc F` with
 `algebraMap a = c · logDeriv w + v′`, there exist `w₀ : F` and `v₀ : RatFunc F` rewriting the same
