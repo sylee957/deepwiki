@@ -346,6 +346,43 @@ def radCase2Residual (fuel : ℕ) (k : ℕ) (W g h Wder B C Bder : CPolyG α) : 
   let quotient := cdivG fuel topNum W                                            -- `(Bg − kW'h − C)/W`
   caddG quotient (cmulG Bder h)                                                  -- `… + B'h`
 
+/-! ### Case 3 rational-part reduction (Trager Appendix A §2.3, `θ' = 1`)
+
+**Case 3** is the leftover `C/y` after Cases 1–2 cleared every denominator factor. Here there is no
+denominator to lower; instead we lower **`deg C`**. With `(f/y)' = g/y` clean we have
+`(Bf/y)' = (B'f + Bg)/y`, so `(Bf/y)' − C/y = (B'f + Bg − C)/y`. Taking `B = b·θ^{j+1}` a single
+**constant**-coefficient monomial of degree `j+1 := deg C − deg f + 1` (so `B'f` and `Bg` both top out at
+degree `deg C`), the top-degree relation (Trager Appendix A §2.3 eqs. 3–4, `θ' = 1`) is
+`c_{j+m} = (j + 1 + lcf(g))·b` with `lcf(g) = Σ deg(Pᵢ)(1 − eᵢ/n)` — so the leading coefficient `b`
+is determined (`j + 1 ≥ 0` makes the bracket nonzero), and `deg(B'f + Bg − C) < deg C`. Since `lcf(g)`
+is literally the **leading coefficient of the given `g`**, the solve is the single field division
+`b = lcf(C) / ((j+1) + lcf(g))`. Cleared over `y`, the step is the pure `F[θ]` identity
+`B'f + Bg − C = D` with `deg D < deg C`, checkable by `cisZeroG`. Iterating drops `deg C` below `m − 1`,
+leaving the irreducible rational part. -/
+
+/-- **Case-3 leading-coefficient cofactor** `radCase3Cofactor f g C = B` — the single constant-coefficient
+monomial `B = b·θ^{j+1}` (`j + 1 = deg C − deg f + 1`) cancelling the leading term of `C` in the `C/y`
+degree-lowering (Trager Appendix A §2.3 eq. 4, `θ' = 1`): `b = lcf(C) / ((j+1) + lcf(g))`, with
+`lcf(g) = Σ deg(Pᵢ)(1 − eᵢ/n)` the leading coefficient of the supplied `g` (from `(f/y)' = g/y`). The
+bracket `(j+1) + lcf(g)` is nonzero for `j + 1 ≥ 0`. Returns `[]` when `deg C < deg f` (nothing to
+lower). Generic over `[CField α]`. -/
+def radCase3Cofactor (f g C : CPolyG α) : CPolyG α :=
+  let dC := cdegG C
+  let dF := cdegG f
+  if cisZeroG C || dC < dF then []
+  else
+    let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
+    let denom := CField.add (cnatCastG jp1) (cleadG g)            -- `(j+1) + lcf(g)`
+    let b := CField.div (cleadG C) denom                          -- `b = lcf(C)/((j+1)+lcf(g))`
+    cshiftG jp1 [b]                                                -- `b·θ^{j+1}`
+
+/-- **Case-3 residual** `radCase3Residual f g B C Bder = D` — the lowered-degree numerator
+`D = B'f + Bg − C` of the `C/y` degree-lowering step (Trager Appendix A §2.3), where `(Bf/y)' =
+(B'f + Bg)/y`. `Bder = B'` and `g` (from `(f/y)' = g/y`) are passed in; with `B` the leading-coefficient
+monomial from `radCase3Cofactor`, `deg D < deg C`. Generic over `[CField α]`. -/
+def radCase3Residual (f g B C Bder : CPolyG α) : CPolyG α :=
+  csubG (caddG (cmulG Bder f) (cmulG B g)) C                       -- `B'f + Bg − C`
+
 end CPolyG
 
 /-! #### ★ Case 1 validates: `∫ C/(V²y)` with `y = √x`, `V = x−1` (`native_decide`)
@@ -476,6 +513,56 @@ so the Case-2 step lowered the apparent denominator multiplicity of `W = x` from
 eliminating one `f`-factor exactly as Trager's reduction guarantees. -/
 theorem case2_residual_eq :
     cisZeroG (csubG case2D [(0 : ℚ), 1]) = true := by native_decide
+
+/-! #### ★ Case 3 validates: degree-lowering `∫ (x²+x)/√x` with `y = √x` (`native_decide`)
+
+`F = ℚ` (constants), `θ = x` (`θ' = 1`), radicand `y² = f = x` (`n = 2`, `m = deg f = 1`, single factor
+`P₁ = x`, `e₁ = 1`, so `lcf(g) = deg(P₁)(1 − e₁/n) = 1·(1 − 1/2) = 1/2`, `g = (1/2)f' = 1/2`). The
+integrand is `(x² + x)/√x`, `C = x² + x` (`deg C = 2 ≥ m`). The leading-coefficient solve gives
+`j + 1 = deg C − deg f + 1 = 2`, `b = lcf(C)/((j+1) + lcf(g)) = 1/(2 + 1/2) = 2/5`, so `B = (2/5)x²`. The
+residual `D = B'f + Bg − C = (4/5)x² + (1/5)x² − (x²+x) = −x`, of degree `1 < deg C = 2` — the leading
+`x²` is cancelled, lowering `deg C` by one. (A second Case-3 step on `−x` would finish it to `D = 0`.) -/
+
+/-- Case-3 example radicand `f = x` (`y² = x`, `m = deg f = 1`), as a `ℚ[x]` polynomial `[0, 1]`. -/
+def case3F : CPolyG ℚ := [0, 1]
+
+/-- `g = ((n−1)/n)·f' = (1/2)·1 = 1/2` for `n = 2`, `f = x` (`(f/y)' = g/y`, `lcf(g) = 1/2`), `[1/2]`. -/
+def case3G : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG case3F)
+
+/-- Case-3 example numerator `C = x² + x` (`deg C = 2 ≥ m = 1`), `[0, 1, 1]`. -/
+def case3C : CPolyG ℚ := [0, 1, 1]
+
+/-- The solved Case-3 leading-coefficient cofactor `B = (2/5)x²` (`j+1 = 2`, `b = 1/(2+1/2) = 2/5`). -/
+def case3B : CPolyG ℚ := radCase3Cofactor case3F case3G case3C
+
+/-- The Case-3 residual `D = B'f + Bg − C` — expected `−x` (degree `1 < deg C = 2`). -/
+def case3D : CPolyG ℚ := radCase3Residual case3F case3G case3B case3C (cderivG case3B)
+
+/-- **The cofactor is `B = (2/5)x²`** (`native_decide`): the leading-coefficient solve gives
+`b = lcf(C)/((j+1)+lcf(g)) = 1/(2+1/2) = 2/5` at degree `j+1 = 2` (`cisZeroG` of `B − (2/5)x²`). -/
+theorem case3_cofactor_eq :
+    cisZeroG (csubG case3B [(0 : ℚ), 0, 2/5]) = true := by native_decide
+
+/-- **★ The Case-3 cleared degree-lowering identity** (`native_decide`): the reduction
+`(Bf/y)' − C/y = D/y`, cleared over the denominator `y`, is the pure `ℚ[x]` identity `B'f + Bg − C = D`.
+With `B = (2/5)x²`, `D = −x`: `B'f + Bg = (4/5)x·x + (2/5)x²·(1/2) = (4/5)x² + (1/5)x² = x²`, so
+`x² − (x²+x) = −x = D`. Checked by `cisZeroG` of `(B'f + Bg) − C − D` over `ℚ[x]`. THE CASE-3 DEGREE
+REDUCTION COMPUTES — it cancels the leading `c_{j+m}` term, lowering `deg C`. -/
+theorem case3_cleared_identity :
+    cisZeroG (csubG
+      (csubG (caddG (cmulG (cderivG case3B) case3F) (cmulG case3B case3G)) case3C)
+      case3D) = true := by native_decide
+
+/-- **The residual `D = −x` has lower degree** (`native_decide`): `D = −x` (`cisZeroG` of `D + x`), of
+degree `1`, strictly below `deg C = 2` — the Case-3 step cancelled the leading `x²`, exactly the
+`deg C` drop Trager's leading-coefficient match guarantees. -/
+theorem case3_residual_eq :
+    cisZeroG (csubG case3D [(0 : ℚ), -1]) = true := by native_decide
+
+/-- **★ The Case-3 step strictly lowers `deg C`** (`native_decide`): `deg D = 1 < deg C = 2`. The
+degree-lowering invariant of the `C/y` reduction made explicit — iterating drives `deg C` below
+`m − 1 = 0`, leaving only the irreducible rational part. -/
+theorem case3_degree_drop : cdegG case3D < cdegG case3C := by native_decide
 
 /-! ### `#print axioms` — the headline lemmas
 
