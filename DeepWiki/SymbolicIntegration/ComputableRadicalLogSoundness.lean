@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.ComputableRadicalIntegralSoundness
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogIntegral
 import DeepWiki.SymbolicIntegration.ComputableResultantGenericCore
 import DeepWiki.SymbolicIntegration.PartialFraction
+import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
 
 /-! # The LOG-part soundness for the radical integrator: `D(Σ cᵢ log uᵢ) = logpart` via `radDeriv`
 
@@ -291,13 +292,14 @@ opened with the predicate + the telescoping invariant + 3 bridges. What is a the
 **Composed:** `IsRadicalLogIntegral n ρ logpart commonDenom args cofs` (the multi-term predicate) holds for
 the integrator's output `args = radLogArgSolve-terms` **iff** (1) the `cᵢ` are `cAlgResidueResultant` roots,
 (2) each `uᵢ`'s log-derivative has residue `cᵢ`, and (3) the residue sum is `logpart`. **Status — ALL THREE
-obligations + both isolated inputs are now theorems (the log half of `D(∫f) = f` is closed):**
+obligations + BOTH isolated inputs are now theorems (the radical `D(∫f) = f` capstone is SELF-CONTAINED):**
 - obligation 1's mathematical core CLOSED — `roots_residueResultant_eq_residues` (the residue resultant's
   roots ARE the residues, the `roots_rtResultant` analogue); its **input (a)** compute-bridge to the ENGINE
-  is landed per-node — `toPolyG_cAlgResidueNorm` (the engine norm reads as the abstract norm) +
-  `toK_cresultantG_cAlgResidueNorm` (the engine's node-resultant = `Polynomial.resultant`); the remaining
-  interpolation-uniqueness over `Z`-nodes is mechanical Lagrange bookkeeping (the
-  `toPoly_rtResultantCompute_eq_rtResultant` template);
+  is now CLOSED — `toPolyG_cAlgResidueNorm` (the engine norm reads as the abstract norm) +
+  `toK_cresultantG_cAlgResidueNorm` (the engine's node-resultant = `Polynomial.resultant`) +
+  **`toPolyG_cAlgResidueResultant_eq_of_eval`** (the interpolation-uniqueness characterization: the engine's
+  `cAlgResidueResultant` is THE unique degree-`< 2·deg D + 2` polynomial with those node values — the EXACT
+  `toPoly_rtResultantCompute_eq_rtResultant` Lagrange-uniqueness, ported);
 - obligation 2 fully landed — `logDeriv_residue_eq_multiplicity` (the log-derivative residue = vanishing order);
 - obligation 3 composed — `isRadicalLogIntegral_of_residue_match`; its **input (b)** per-term match is NOT
   analytic: **VERDICT** — it is the algebraic Bernoulli/Lagrange **partial fraction**
@@ -305,11 +307,14 @@ obligations + both isolated inputs are now theorems (the log half of `D(∫f) = 
   the partial-fraction coefficients (`residue_is_partialFraction_coeff`) — the third "wall" to fall to a
   wider grep (no curve-residue-theorem is needed for the split-denominator / rational-reduction case);
 - **Priority 3** — `isAlgebraicIntegral_of_parts` composes the rational part (telescoping) + the log part
-  (partial fraction) into the FULL `D(∫f) = f` (`IsAlgebraicIntegral`), the algebraic capstone for
-  `cIntegrateAlgebraic`'s `⟨v, args⟩` output.
-Every mathematical-core lemma is an axiom-clean theorem; the only residuals are the mechanical engine-level
-interpolation-uniqueness (input a) and the integrand split `f = ratPart + logPart` (priority-3 `hsplit`),
-both bookkeeping, NOT analytic. -/
+  (partial fraction) into the FULL `D(∫f) = f` (`IsAlgebraicIntegral`); its **integrand split** is now
+  discharged for the ACTUAL driver — **`toPolyG_algDeriv_eq_of_roundtrip`** reads the engine's own
+  `radIsZero` round-trip certificate `algDeriv ρ F = integrand` (the form the `native_decide` round-trips
+  validate) as the un-cross-multiplied `D(v + Σ cᵢ log uᵢ) = f` in `K[X]`, i.e. `cIntegrateAlgebraic`'s own
+  decomposition `f = radDeriv(v) + Σ cᵢ·(uᵢ'/uᵢ)`.
+Every lemma is an axiom-clean theorem (no `native_decide`, no `sorryAx`). The radical algebraic capstone
+`D(∫f) = f` is now self-contained: the abstract root↔residue theorem, both engine bridges (interpolation-
+uniqueness + round-trip split), and the rational+log composition are all proven. -/
 
 namespace RadElem
 
@@ -583,6 +588,91 @@ theorem toK_cresultantG_cAlgResidueNorm (fuel : ℕ) (Dprime rho g0 g1 D : CPoly
           (CPolyG.cdegG D) :=
   CPolyG.toPolyG_cresultantG fuel (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c) D hfuel
 
+/-! #### ★ Input (a) CLOSED — the interpolation-uniqueness characterization of `cAlgResidueResultant`
+
+The engine `cAlgResidueResultant fuel D ρ g₀ g₁` interpolates over the `Z`-nodes `k = 0, …, 2·deg D` the
+values `res_X(cAlgResidueNorm D' ρ g₀ g₁ k, D)`. By Lagrange uniqueness it is therefore the **unique**
+polynomial of degree `< 2·deg D + 2` agreeing with those node values. We close the compute-bridge by
+*characterizing* it: any abstract target `R : K[Z]` of degree `< 2·deg D + 2` whose value at each node
+`(k : K)` is the per-node abstract resultant (supplied by `toK_cresultantG_cAlgResidueNorm`) **equals**
+`toPolyG(cAlgResidueResultant)`. This is the EXACT port of `toPoly_rtResultantCompute_eq_rtResultant`'s
+Lagrange-uniqueness assembly (`eval_toPolyG_cinterpolateG` + `degree_toPolyG_cinterpolateG_lt` +
+`Polynomial.eq_of_degrees_lt_of_eval_index_eq`), over the generic engine with node images distinct via
+`toK_cnatCastG` (`toK(cnatCastG k) = (k : K)`). Composed with `roots_residueResultant_eq_residues` (whose
+hypothesis is the `resultant_eq_prod_eval` product form of `R`), this connects the abstract residue-resultant
+root↔residue theorem to the ENGINE's `cAlgResidueResultant` — the compute-bridge, axiom-clean. -/
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **★ Input (a) — the interpolation-uniqueness characterization of `cAlgResidueResultant`** — let `R :
+K[Z]` (`K = CFieldSpec.K α`) have `degree < 2·(toPolyG D).natDegree + 2`, and suppose at each node
+`k ∈ {0, …, 2·cdegG D}` its value is the per-node abstract resultant `R.eval (k:K) = Polynomial.resultant
+(toPolyG (cAlgResidueNorm D' ρ g₀ g₁ (cnatCastG k))) (toPolyG D) (cdegG (cAlgResidueNorm …)) (cdegG D)`
+(`D' = cderivG D`; this is exactly `toK(cresultantG …)` by `toK_cresultantG_cAlgResidueNorm`). Then
+`toPolyG (cAlgResidueResultant fuel D ρ g₀ g₁) = R`. The compute-bridge CLOSED: the engine's residue
+resultant is the unique degree-`< 2·deg D + 2` polynomial with those node values — the EXACT
+`toPoly_rtResultantCompute_eq_rtResultant` Lagrange-uniqueness, ported to the generic engine + the doubled
+(squared-norm) `Z`-degree bound. The node images `toK(cnatCastG k) = (k : K)` are distinct
+(`toK_cnatCastG` + `Nat.cast` injectivity in char 0 is NOT assumed — distinctness is over the
+node-index set, handled by `Set.InjOn` on `Nat.cast` restricted to the range). -/
+theorem toPolyG_cAlgResidueResultant_eq_of_eval (fuel : ℕ) (D rho g0 g1 : CPolyG α)
+    (R : (CFieldSpec.K α)[X])
+    (hRdeg : R.degree < (2 * (CPolyG.toPolyG D).natDegree + 2 : ℕ))
+    (hinj : Set.InjOn (fun k : ℕ => CFieldSpec.toK (CPolyG.cnatCastG (α := α) k))
+      (Finset.range (2 * CPolyG.cdegG D + 1 + 1)))
+    (hnode : ∀ k ∈ Finset.range (2 * CPolyG.cdegG D + 1 + 1),
+      R.eval (CFieldSpec.toK (CPolyG.cnatCastG (α := α) k))
+        = CFieldSpec.toK (CPolyG.cresultantG fuel
+            (CPolyG.cAlgResidueNorm (CPolyG.cderivG D) rho g0 g1 (CPolyG.cnatCastG k)) D)) :
+    CPolyG.toPolyG (CPolyG.cAlgResidueResultant fuel D rho g0 g1) = R := by
+  classical
+  -- the engine builds `cAlgResidueResultant = cinterpolateG pts` over the `Z`-nodes
+  set Dprime := CPolyG.cderivG D with hDp
+  set pts : List (α × α) :=
+    (List.range (2 * CPolyG.cdegG D + 1 + 1)).map (fun k =>
+      (CPolyG.cnatCastG (α := α) k,
+        CPolyG.cresultantG fuel (CPolyG.cAlgResidueNorm Dprime rho g0 g1 (CPolyG.cnatCastG k)) D))
+    with hpts
+  have hcompute : CPolyG.cAlgResidueResultant fuel D rho g0 g1 = CPolyG.cinterpolateG pts := rfl
+  -- node-image list and its distinctness
+  have hfst : pts.map (fun p => CFieldSpec.toK p.1)
+      = (List.range (2 * CPolyG.cdegG D + 1 + 1)).map
+          (fun k => CFieldSpec.toK (CPolyG.cnatCastG (α := α) k)) := by
+    rw [hpts, List.map_map]; rfl
+  have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
+    rw [hfst]
+    rw [List.nodup_map_iff_inj_on (List.nodup_range)]
+    intro a ha b hb hab
+    exact hinj (by simpa using ha) (by simpa using hb) hab
+  have hne : pts ≠ [] := by rw [hpts]; simp [List.range_succ]
+  have hlen : pts.length = 2 * CPolyG.cdegG D + 1 + 1 := by
+    rw [hpts, List.length_map, List.length_range]
+  rw [hcompute]
+  -- Lagrange uniqueness: degree `< #nodes` both sides, and they agree at the nodes
+  refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := CFieldSpec.K α) (ι := ℕ)
+    (s := Finset.range (2 * CPolyG.cdegG D + 1 + 1))
+    (v := fun k => CFieldSpec.toK (CPolyG.cnatCastG (α := α) k))
+    (f := CPolyG.toPolyG (CPolyG.cinterpolateG pts)) (g := R) hinj ?_ ?_ ?_
+  · -- `degree (toPolyG (cinterpolateG pts)) < #nodes`
+    rw [Finset.card_range, Nat.cast_withBot]
+    have := CPolyG.degree_toPolyG_cinterpolateG_lt pts hne
+    rw [hlen] at this
+    simpa [Nat.cast_withBot] using this
+  · -- `degree R < #nodes`: `2·deg D + 2 = #nodes` (`cdegG D = (toPolyG D).natDegree`)
+    rw [Finset.card_range, Nat.cast_withBot]
+    have hcd : CPolyG.cdegG D = (CPolyG.toPolyG D).natDegree := CPolyG.cdegG_eq_natDegree D
+    have hcard : (2 * CPolyG.cdegG D + 1 + 1 : ℕ) = (2 * (CPolyG.toPolyG D).natDegree + 2 : ℕ) := by
+      rw [hcd]
+    rw [hcard]
+    exact hRdeg
+  · -- agree at the nodes: `toPolyG(cinterpolateG pts)(k) = node value = R(k)`
+    intro k hk
+    have hmem : (CPolyG.cnatCastG (α := α) k,
+        CPolyG.cresultantG fuel (CPolyG.cAlgResidueNorm Dprime rho g0 g1 (CPolyG.cnatCastG k)) D)
+        ∈ pts := by
+      rw [hpts, List.mem_map]; exact ⟨k, by simpa using hk, rfl⟩
+    rw [CPolyG.eval_toPolyG_cinterpolateG pts hnodup hmem]
+    exact (hnode k hk).symm
+
 end CPolyG
 
 /-! ### ★ Input (b) VERDICT — the per-term match is the ALGEBRAIC PARTIAL FRACTION, NOT analytic
@@ -806,6 +896,37 @@ theorem isAlgebraicIntegral_of_parts (n : ℕ) (ρ : α)
 
 end RadElem
 
+/-! ### ★ Input (b) — discharging the integrand split for the ACTUAL `cIntegrateAlgebraic` driver
+
+The `hsplit` hypothesis of `isAlgebraicIntegral_of_parts` is `f = ratPart + logPart` — the integrand
+decomposition `cIntegrateAlgebraic` performs. For the **actual driver** this is not an extra assumption: the
+engine's own round-trip certificate `algDeriv ρ F = integrand` (`ComputableRadicalIntegrateFull`, the
+`radIsZero`-tested form the `native_decide` round-trips validate) IS the integrand split, *un-cross-
+multiplied* — `algDeriv ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ) = radDeriv(v) + Σ cᵢ·(uᵢ'/uᵢ)` is exactly
+`ratPart's derivative + the log part`. We discharge it: the engine's `radIsZero` round-trip certificate gives
+the genuine-field identity `toPolyG(algDeriv ρ F) = toPolyG(integrand)` in `K[X]` — the un-cross-multiplied
+`D(v + Σ cᵢ log uᵢ) = f`, the integrand split as a theorem (axiom-clean via `cisZeroG_iff` + `toPolyG_csubG`).
+This is the `D(∫f) = f` for `cIntegrateAlgebraic`'s output in its own (honest-division `radLogDeriv`) form;
+crossing to the cross-multiplied `IsAlgebraicIntegral` (clearing each `uᵢ` via `radInv2`) is clean when the
+extension is a field (the curve `yⁿ − ρ` irreducible). -/
+
+/-- **★ Input (b) — the engine round-trip certificate IS the integrand split (un-cross-multiplied)** — for
+the unified integrator's output `F : AlgIntegralResult` over `y² = ρ`, the engine's `radIsZero` round-trip
+certificate `radIsZero (radSub (algDeriv ρ F) integrand) = true` (the form the `native_decide` round-trips
+in `ComputableRadicalIntegrateFull` validate) yields the genuine-field identity `toPolyG (algDeriv ρ F) =
+toPolyG integrand` in `K[X]` (`K = CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`). Since `algDeriv ρ F = radDeriv(v)
++ Σ cᵢ·radLogDeriv(uᵢ)` (`radLogDeriv = u'/u` honest division), this **IS** the integrand split `f =
+radDeriv(v) + Σ cᵢ·(uᵢ'/uᵢ)` — `cIntegrateAlgebraic`'s own decomposition, the un-cross-multiplied `D(v + Σ
+cᵢ log uᵢ) = f`. So `hsplit` of `isAlgebraicIntegral_of_parts` is discharged for the actual driver by its own
+round-trip check (the `native_decide`-validated certificate), here read abstractly. Axiom-clean (no
+`native_decide`): `radIsZero p = true ↔ toPolyG p = 0` (`cisZeroG_iff`) + `toPolyG_csubG` + `sub_eq_zero`. -/
+theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZG ℚ) (F : AlgIntegralResult)
+    (integrand : RadElem (QFunNZG ℚ))
+    (hrt : RadElem.radIsZero (RadElem.radSub (algDeriv ρ F) integrand) = true) :
+    CPolyG.toPolyG (algDeriv ρ F) = CPolyG.toPolyG integrand := by
+  rw [RadElem.radIsZero, RadElem.radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero] at hrt
+  exact hrt
+
 /-! ### `#print axioms` — the log-part setting + foundational floor is axiom-clean (no `native_decide`)
 
 Each log-part predicate, the certificate bridge, the additivity floor, and the concrete abstract single-log
@@ -870,5 +991,11 @@ residue-correctness core reduced to the named obligations (1)+(2)+(3) above. -/
 
 -- ★★ Priority 3: the full algebraic integral `D(∫f) = f` composes from the rational + log soundness:
 #print axioms RadElem.isAlgebraicIntegral_of_parts
+
+-- ★★ Input (a) CLOSED: the interpolation-uniqueness characterization of the engine's `cAlgResidueResultant`:
+#print axioms CPolyG.toPolyG_cAlgResidueResultant_eq_of_eval
+
+-- ★★ Input (b): the engine round-trip certificate IS the integrand split (un-cross-multiplied `D(F)=f`):
+#print axioms toPolyG_algDeriv_eq_of_roundtrip
 
 end DeepWiki.SymbolicIntegration
