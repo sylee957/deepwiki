@@ -122,3 +122,4 @@ import DeepWiki.SymbolicIntegration.ComputableHermiteNormalForm
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
 import DeepWiki.SymbolicIntegration.ComputableRound2IntegralBasis
 import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
+import DeepWiki.SymbolicIntegration.ComputableGeneralResidues
