@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerReduce
-import DeepWiki.SymbolicIntegration.ComputableWellFounded
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Generic monic-gcd correctness + the `canonicalRepresentationFastG` reconstruction probe
 
@@ -62,7 +62,7 @@ theorem associated_toPolyG_cgcdMonicG (fuel : ℕ) (p q : CPolyG α)
 /-! ### Task 3 — fuel-free generic monic gcd `cgcdMonicGWf`
 
 The generic `cgcdMonicG` carries a `fuel : ℕ`. The fuel-free well-founded extended Euclid `cgcdWf`
-(`ComputableWellFounded`, recursing on `(cnormG b).length`) already exists at the same generic
+(`ComputableFuelFreeGcd`, recursing on `(cnormG b).length`) already exists at the same generic
 `[CField α]` level; we wrap it the same way `cgcdMonicG` wraps `cgcdExtG` and bridge through
 `cgcdWf_eq`. -/
 

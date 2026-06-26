@@ -1,9 +1,9 @@
-import DeepWiki.SymbolicIntegration.ComputableWellFounded
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableResultantGenericCore
 
 /-! # Fuel-free (well-founded) generic resultant `cresultantWf`
 
-This continues the fuel-free conversion of `ComputableWellFounded` to the generic resultant leaf op:
+This continues the fuel-free conversion of `ComputableFuelFreeGcd` to the generic resultant leaf op:
 
 * **`cresultantWf`** (`[CField α]`-only) — the fuel-free companion of the generic Euclidean-PRS
   resultant `cresultantG` (`ComputableGenericBezout`). Its recursion has *two* shapes (a **swap**
@@ -17,7 +17,7 @@ This continues the fuel-free conversion of `ComputableWellFounded` to the generi
   §5.6 residue / `cgcdFF` layer.
 
 The concrete `BPoly` primitive-PRS gcd `primPRSgcdWf` (§3.5, which *does* need the `cgcdFF` layer) lives
-in `ComputablePrimPRSWf`. As in `ComputableWellFounded`, the fuel bounds live only inside the bridge
+in `ComputablePrimPRSWf`. As in `ComputableFuelFreeGcd`, the fuel bounds live only inside the bridge
 proofs; the runtime WF op carries no fuel. -/
 
 open Polynomial

@@ -1,15 +1,15 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
-import DeepWiki.SymbolicIntegration.ComputableWellFounded
-import DeepWiki.SymbolicIntegration.ComputableWellFoundedDioph
-import DeepWiki.SymbolicIntegration.ComputableWellFounded2
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeResultant
 
 /-! # Fuel-free (well-founded) GENERIC tower integration engine
 
 The generic tower engine (`ComputableTowerIntegrate`) — `cIntegrateG`, `cRischDEG`, and their pipeline —
 is `[CField α] [CDiffField α] [CFracGcdCore α]`-generic and gate-clean, but every op carries an explicit
 `fuel : ℕ`. This file builds the **fuel-free** companions `…GWf`, by the same runtime-guard well-founded
-recursion as the `QFunNZ`-specific arc (`ComputableWellFounded*`), now lifted to the generic carrier.
+recursion as the `QFunNZ`-specific arc (`ComputableFuelFreeGcd*`), now lifted to the generic carrier.
 
 Every recursion in the generic pipeline bottoms out at one of THREE fuel-recursive ops; the rest is a flat
 composition over fuel'd leaves:
@@ -25,7 +25,7 @@ composition over fuel'd leaves:
 The flat-composition ops (`canonicalRepresentationFastGWf`, `cHermiteReduceTowerGWf`,
 `cResidueResultantTowerGWf`/`cLogPartGWf`, `cIntegrateReducedGWf`, and the headline `cIntegrateGWf`)
 substitute the fuel-free leaves and are bridged to their fuel'd `…G` originals. The generic leaves
-`cdivmodWf`/`cgcdWf`/`cresultantWf` (`ComputableWellFounded`/`ComputableWellFounded2`) are reused verbatim
+`cdivmodWf`/`cgcdWf`/`cresultantWf` (`ComputableFuelFreeGcd`/`ComputableFuelFreeResultant`) are reused verbatim
 where the pipeline bottoms out at them.
 
 Every `…GWf` def is **`[CField α]`-only on the fuel-free fragment** (plus `[CDiffField α]`/`[CFracGcdCore α]`
@@ -187,7 +187,7 @@ The fuel-free mirror of `CFracGcdCore`, tying the tower with no fuel:
   `GBPolyCore β`, run the **fuel-free** kernel `cprimPRSgcdGenCoreWf` with the level-`β` `cgcdFFRawCoreWf` as
   content-gcd, lift back. Bottoms at `CFracGcdCoreWf ℚ`.
 * **`instance CFracGcdCoreWf QFunNZ`** — the concrete level-1 carrier; its raw fuel-free gcd is the existing
-  QFunNZ-specific `cgcdFFWf` (`ComputableWellFounded3`).
+  QFunNZ-specific `cgcdFFWf` (`ComputableFuelFreeGcd3`).
 
 The public **monic** gcd is `cgcdFFCoreWf := cmonicG ∘ cgcdFFRawCoreWf` (monic-normalize only at the top).
 Every method is `[CField α]`-only (plus the recursion's `[CFieldDomain β]`/`[CFracGcdCoreWf β]`) — no

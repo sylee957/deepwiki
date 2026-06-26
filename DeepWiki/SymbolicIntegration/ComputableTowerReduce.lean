@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
-import DeepWiki.SymbolicIntegration.ComputableWellFounded
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
 
 /-! # A gcd-cancel reduction layer for the tower fraction field `QFunNZG α`
@@ -285,7 +285,7 @@ theorem swellProd_reduced_num_nonzero :
 /-- **★ The swell reduction preserves the field value** (via `toQFunNZG_qreduceG`): `qreduceG 8 swellProd`
 equals `swellProd` as an element of `RatFunc ℚ` — the representation shrank (length 3 → 1, the previous
 `native_decide`s) but the value is unchanged. The termination hypothesis is discharged by
-`cgcdTerminatesG_of_fuel` (`ComputableWellFounded`) from the two length bounds, themselves closed by
+`cgcdTerminatesG_of_fuel` (`ComputableFuelFreeGcd`) from the two length bounds, themselves closed by
 `native_decide` (the gcd run on these concrete degree-≤2 lists terminates well within fuel 8). This is the
 milestone: a **value-preserving** swell reduction. -/
 theorem swellProd_value_preserved :

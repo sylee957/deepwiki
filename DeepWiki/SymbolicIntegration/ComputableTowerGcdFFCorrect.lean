@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFF
 import DeepWiki.SymbolicIntegration.ComputableGcdCorrect
-import DeepWiki.SymbolicIntegration.ComputableWellFounded
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import Mathlib.RingTheory.Polynomial.Content
 
 /-! # Abstract correctness of the GENERIC fraction-free gcd `cgcdFFRawCore` over a tower level

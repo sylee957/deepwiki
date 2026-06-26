@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableWellFounded
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableGenericBezout
 import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 
@@ -7,7 +7,7 @@ import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 
 The fuel-free generic (`[CField α]`-only) Bézout/Diophantine leaves the generic tower integration
 engine reuses verbatim. Each substitutes the fuel-free extended-Euclid `cgcdWf` / quotient `cdivmodWf`
-(`ComputableWellFounded`) for the fuel'd `cgcdExtG`/`cdivmodG` inside the corresponding fuel'd op:
+(`ComputableFuelFreeGcd`) for the fuel'd `cgcdExtG`/`cdivmodG` inside the corresponding fuel'd op:
 
 * **`cbezoutOneWf`** — Bézout cofactors `u·a + w·b = 1` for coprime `a, b` (fuel-free `cbezoutOne`).
 * **`cextendedEuclideanSplitWf`** — the Bézout split `(b, c)` from a cofactor pair (fuel-free

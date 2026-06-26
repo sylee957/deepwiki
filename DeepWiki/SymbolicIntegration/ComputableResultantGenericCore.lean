@@ -13,7 +13,7 @@ the **same** correctness over any `[CFieldSpec α]`.
 
 This file is the **engine-only core** of that correctness — everything that depends only on the generic
 polynomial engine (`ComputableGenericBezout`/`ComputableFieldGcd`), so it can be imported by the
-fuel-free `cresultantWf` (`ComputableWellFounded2`) without pulling the §5.6 residue / `cgcdFF` layer.
+fuel-free `cresultantWf` (`ComputableFuelFreeResultant`) without pulling the §5.6 residue / `cgcdFF` layer.
 The QFunNZ-specific residue-resultant realizations and the `cIntegrate` capstones live downstream in
 `ComputableResultantGeneric`, which imports this core.
 
