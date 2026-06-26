@@ -224,6 +224,13 @@ example (u : F) (p : F[X]) (i : ℕ) :
     (logDerivPoly u p).coeff i
       = (p.coeff i)′ + logDeriv u * ((i + 1) * p.coeff (i + 1)) :=
   coeff_logDerivPoly u p i
+-- `logDeriv` of a monic `t`-polynomial is proper (the pole-matching engine): `deg (D p) < deg p`.
+example (u : F) {p : F[X]} (hm : p.Monic) (hdeg : 1 ≤ p.natDegree) :
+    (logDerivPoly u p).natDegree < p.natDegree :=
+  natDegree_logDerivPoly_lt_of_monic u hm hdeg
+-- A `t`-constant has an `F`-constant `t`-leading coefficient.
+example (u : F) {p : F[X]} (h : logDerivPoly u p = 0) : (p.leadingCoeff)′ = 0 :=
+  leadingCoeff_deriv_eq_zero_of_logDerivPoly_eq_zero u h
 
 end PolynomialSetup
 
