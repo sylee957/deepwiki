@@ -225,7 +225,10 @@ def RadExt.isScalar {α : Type*} [CField α] {n : ℕ} {f : α} (p : RadExt α n
 `i`-component exactly (`CField.mul (CPolyG.cnatCastG i) ℓ`). The `n` solutions `z₀,…,z_{n−1}` (`Cᵢ` read by
 `getD i CField.zero`) reassemble to `z = RadExt.ofRad [z₀,…]` via `List.mapM` over `Option` (`none` if any
 component is unsolvable). A non-scalar `B` (genuine `y`-coupling) is the coupled-system case (Bronstein
-Ch. 8) and returns `none`. -/
+Ch. 8) and returns `none`. The **abstract invariant** — `radExtRischDESolve B C = some z → radDeriv z + B·z
+= C` for scalar `B`, from the diagonal `radDeriv` plus per-component `CRischField α` correctness — follows
+the native_decide-validated tower's design (no `CRischFieldSpec` spec layer exists yet); it is
+native_decide-validated here (`radX3Risch_solves_rde`) and the abstract proof is a follow-up. -/
 def radExtRischDESolve {α : Type*} [CField α] [CDiffField α] [CRischField α] {n : ℕ} {f : α}
     (B C : RadExt α n f) : Option (RadExt α n f) :=
   if RadExt.isScalar B then

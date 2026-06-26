@@ -198,6 +198,62 @@ theorem mixedY_not_validated :
       | some res => CPolyG.checkIdentityG mixedDt res mixedYa mixedD
       | none => false) = false := by native_decide
 
+/-! ### ★★ STRETCH: a MULTI-LEVEL descent — an RDE over `RadX3[t]` that recurses into `crischDESolve`
+over the algebraic `RadX3`, which itself decouples to ℚ(x) (`native_decide`)
+
+The headline multi-level descent. `cIntegrateGFull`'s *polynomial part* runs `cPolyRischDEG Dt fuel [] fp …`
+with `b = 0` — the pure-integration branch `cIntegratePolyG`, which **never** calls `crischDESolve`. So an
+*integral* over `RadX3[t]` cannot, by construction, descend into the algebraic RDE. The genuine descent is
+the full **RDE solver** `cRischDEG` over `RadX3[t]` with a **nonzero** coefficient `f`: then the §6.6
+**primitive-cancellation** branch `cPolyRischDECancelPrimG` fires and recurses into
+`CRischField.crischDESolve b₀ (lc c)` over `RadX3` (eq. 6.23) — and `b₀ = 1 : RadX3` is a nonzero **scalar**,
+so the new `instCRischFieldRadExt` **decouples** it into the per-`y`-power base RDEs over ℚ(x). A genuine
+THREE-level recursion: `RadX3[t]` →(§6.6 cancellation)→ `crischDESolve` over `RadX3` →(scalar decoupling)→
+base RDEs over `ℚ(x)`.
+
+We solve `Dy + 1·y = t + 1` over `RadX3[t]` (`t` primitive, `Dt = 1`), whose solution is `y = t`
+(`D(t) + t = 1 + t`). `f = 1 ≠ 0` routes through cancellation, calling `crischDESolve (1 : RadX3) (lc c)`
+on the new instance. -/
+
+/-- The RDE coefficient `f = 1 ∈ RadX3[t]` (a **nonzero** degree-0 `t`-polynomial), forcing `cRischDEG`'s
+§6.6 primitive-cancellation branch — the path that recurses into `crischDESolve` over `RadX3`. -/
+def mixedRdeF : CPolyG RadX3 := [CField.one]
+
+/-- The RDE coefficient denominator `fden = 1 ∈ RadX3[t]`. -/
+def mixedRdeFden : CPolyG RadX3 := [CField.one]
+
+/-- The RDE right-hand side `g = t + 1 ∈ RadX3[t]` for `Dy + 1·y = t + 1` (solution `y = t`). -/
+def mixedRdeG : CPolyG RadX3 := [CField.one, CField.one]
+
+/-- The RDE right-hand side denominator `gden = 1 ∈ RadX3[t]`. -/
+def mixedRdeGden : CPolyG RadX3 := [CField.one]
+
+/-- **The RDE over `RadX3[t]` is solved (returns `some`)** (`native_decide`): `cRischDEG` over
+`RadX3[t] = ℚ(x)[√(x³+1)][t]` solves `Dy + 1·y = t + 1`, descending through the §6.6 primitive-cancellation
+branch into `crischDESolve (1 : RadX3) (lc c)` over the algebraic base — the new `instCRischFieldRadExt`. -/
+theorem mixedRde_radx3_isSome :
+    (CPolyG.cRischDEG ([CField.one] : CPolyG RadX3) 60
+      mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden).isSome = true := by native_decide
+
+/-- **★★ A MULTI-LEVEL RDE descent: `Dy + 1·y = t + 1` solved over `RadX3[t]`, recursing into the
+algebraic `crischDESolve`** (`native_decide`, the stretch deliverable). `cRischDEG` over `RadX3[t]` returns
+`some (ynum, yden)` with `y = ynum/yden = t`, and the RDE identity `D(ynum) + 1·ynum = (t+1)·yden` holds —
+checked by `cisZeroG` of the cleared form over `RadX3[t]` (the tower derivation `cmonomialDeriv [1]`, `Dt =
+1`, on the `RadX3` coefficients). The nonzero `f = 1` forced the §6.6 **primitive-cancellation** branch
+`cPolyRischDECancelPrimG`, which recursed into `CRischField.crischDESolve (1 : RadX3) (lc c)` over the
+algebraic base `RadX3 = ℚ(x)[√(x³+1)]` — the **generic** `instCRischFieldRadExt`, scalar-decoupling that
+RDE into per-`y`-power base RDEs over ℚ(x). THE RISCH PIPELINE RECURSES THROUGH THE ALGEBRAIC LEVEL:
+`RadX3[t] → crischDESolve over RadX3 → ℚ(x)`. -/
+theorem mixedRde_radx3_descends :
+    (match CPolyG.cRischDEG ([CField.one] : CPolyG RadX3) 60
+        mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden with
+      | some (ynum, yden) =>
+          CPolyG.cisZeroG (CPolyG.csubG
+            (CPolyG.caddG (CPolyG.cmonomialDeriv ([CField.one] : CPolyG RadX3) ynum)
+              (CPolyG.cmulG mixedRdeF ynum))
+            (CPolyG.cmulG mixedRdeG yden))
+      | none => false) = true := by native_decide
+
 /-! ### `#print axioms` — the transcendental-over-algebraic integrals
 
 Each result carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
@@ -216,5 +272,7 @@ the algebraic-coefficient boundary recorded honestly. -/
 #print axioms mixedRecip_integral_eq
 -- ★ The honest boundary: `∫ y dt` does not validate (y is not a D-constant):
 #print axioms mixedY_not_validated
+-- ★★ The multi-level descent: an RDE over RadX3[t] recursing into crischDESolve over RadX3 → ℚ(x):
+#print axioms mixedRde_radx3_descends
 
 end DeepWiki.SymbolicIntegration
