@@ -259,6 +259,58 @@ lemma pow_sub_one_dvd_logDerivPoly (u : F) {p q : F[X]} {n : ℕ} (hdvd : q ^ n 
   rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul]
   exact dvd_add (dvd_mul_of_dvd_left hpow _) (dvd_mul_of_dvd_right hpn _)
 
+/-- **The log-monomial derivative of `q^k · m` factors a clean `q^(k-1)`** (the engine of the *exact*
+pole-order drop): `D(q^k · m) = q^(k-1) · (k · (D q) · m + q · D m)` for `k ≥ 1`.  The bracket carries
+the leading pole term `k · (D q) · m`; combined with `q ∤ D q` (transcendence) and `q ∤ m` (exact
+multiplicity) it makes the pole order drop by *exactly* one. -/
+lemma logDerivPoly_pow_mul (u : F) {q m : F[X]} {k : ℕ} (hk : 1 ≤ k) :
+    logDerivPoly u (q ^ k * m)
+      = q ^ (k - 1) * ((k : F[X]) * logDerivPoly u q * m + q * logDerivPoly u m) := by
+  rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, Derivation.leibniz_pow, nsmul_eq_mul,
+    smul_eq_mul]
+  have hqk : q ^ k = q ^ (k - 1) * q := by
+    rw [← pow_succ]; congr 1; omega
+  rw [hqk]; ring
+
+/-- **A monic irreducible factor `q` does not divide `D p` to its full multiplicity** (the *exact*
+strict pole-order drop, the real content of "`v′` has no simple pole"): if `q ∤ D q` (transcendence),
+`q^k ∣ p` but `q^(k+1) ∤ p` (so `q^k ∣∣ p`, `k ≥ 1`), then `q^k ∤ D p`.  With
+`pow_sub_one_dvd_logDerivPoly` (`q^(k-1) ∣ D p`) this pins `v_q(D p) = k − 1` exactly.  Proof:
+`p = q^k · m` with `q ∤ m`, and `D p = q^(k-1) · (k · (D q) · m + q · D m)` (`logDerivPoly_pow_mul`); since
+`q` is prime and `q` divides none of `↑k` (char 0), `D q` (hyp), `m` (exact), `q ∤ (k·(D q)·m + q·D m)`,
+so `q^k = q^(k-1)·q ∤ D p`. -/
+lemma not_pow_dvd_logDerivPoly_of_exact [CharZero F] (u : F) {p q : F[X]} {k : ℕ}
+    (hq : Irreducible q) (hDq : ¬ q ∣ logDerivPoly u q) (hk : 1 ≤ k)
+    (hdvd : q ^ k ∣ p) (hndvd : ¬ q ^ (k + 1) ∣ p) : ¬ q ^ k ∣ logDerivPoly u p := by
+  obtain ⟨m, rfl⟩ := hdvd
+  -- `q ∤ m` (else `q^(k+1) ∣ q^k·m`).
+  have hqm : ¬ q ∣ m := by
+    rintro ⟨m', rfl⟩
+    exact hndvd ⟨m', by rw [pow_succ]; ring⟩
+  rw [logDerivPoly_pow_mul u (q := q) (m := m) hk]
+  -- `q^k = q^(k-1)·q`; cancel `q^(k-1)` to reduce to `q ∤ (k·Dq·m + q·Dm)`.
+  have hqk : q ^ k = q ^ (k - 1) * q := by rw [← pow_succ]; congr 1; omega
+  rw [hqk]
+  intro hdvd'
+  have hcancel : q ∣ ((k : F[X]) * logDerivPoly u q * m + q * logDerivPoly u m) :=
+    (mul_dvd_mul_iff_left (pow_ne_zero (k - 1) hq.ne_zero)).mp hdvd'
+  -- `q ∣ q·Dm`, so `q ∣ k·Dq·m`; `q` prime divides none of `↑k`, `Dq`, `m`.
+  have hk_part : q ∣ (k : F[X]) * logDerivPoly u q * m :=
+    (dvd_add_right (dvd_mul_right q (logDerivPoly u m))).mp (by rwa [add_comm] at hcancel)
+  have hkne : ¬ q ∣ (k : F[X]) := by
+    intro hdvdk
+    have : q.natDegree ≤ ((k : F[X])).natDegree :=
+      Polynomial.natDegree_le_of_dvd hdvdk (by
+        simpa using (Nat.cast_ne_zero.mpr (by omega : k ≠ 0) : (k : F) ≠ 0))
+    have hkdeg : ((k : F[X])).natDegree = 0 := Polynomial.natDegree_natCast k
+    have := hq.natDegree_pos
+    omega
+  rcases (hq.prime.dvd_mul.mp hk_part) with h1 | h2
+  · rcases (hq.prime.dvd_mul.mp h1) with hk' | hDq'
+    · exact hkne hk'
+    · exact hDq hDq'
+  · exact hqm h2
+
 /-- **A monic `t`-factor `q` does not divide its own log-monomial derivative `D q`**, *provided*
 `D q ≠ 0` (and `q` has positive degree): since `(D q).natDegree < q.natDegree`
 (`natDegree_logDerivPoly_lt_of_monic`), a nonzero `D q` is too low-degree to be a `q`-multiple.  Hence
