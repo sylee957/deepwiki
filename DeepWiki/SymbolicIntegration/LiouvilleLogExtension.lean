@@ -15,8 +15,9 @@ instances — that a simple transcendental *logarithmic* extension `F(t)` with `
 logDeriv u` (`t = log u`, `u ∈ F`) is Liouville over `F` — are exactly what is missing, and they
 are the single piece the whole transcendental Risch *completeness* direction waits on.
 
-This file **builds the full setup** for the log monomial faithfully and **closes everything except
-one named obligation**.
+This file **builds the full setup** for the log monomial faithfully and reduces the keystone to a
+**single sharp partial-fraction residual** (`DerivSimplePoleSeparation`), with the genuine
+transcendence input isolated as `NondegenerateLog u` (`log u ∉ F`).
 
 ## Status (the keystone roadmap)
 
@@ -27,14 +28,22 @@ one named obligation**.
   quotient rule** — a self-derivation `Derivation ℤ K K` for any fraction field `K` of `F[X]`,
   built from scratch here (Mathlib has no such extension — only the Kähler-module-valued
   localization).  This is Mathlib-contributable on its own.
-- **Obligation 3 — assembly PROVEN, reduced to one pole-matching `Prop`.**  `keystone` reduces the
-  *entire* transcendental-log Liouville instance to `IsLiouvilleReductionObligation u`, and the
-  `IsLiouville`-packaging half is **proven** (`isLiouville_conclusion_of_fData`,
-  `isLiouvilleReduction_of_fDataReduction`), leaving the *single* residual `LiouvilleFDataReduction
-  u` — the pure Rosenlicht reduction of any `F(t)`-representation to `F`-data (partial-fraction /
-  `t`-pole-matching).  Its engine is built and proven here (`natDegree_logDerivPoly_lt_of_monic`,
-  `coeff_logDerivPoly`, `logDerivPoly_monomial_eq`, `logDeriv_monic_proper`).  Discharging that one
-  `Prop` makes `IsLiouville F (RatFunc F)` unconditional (`isLiouville_of_fDataReduction`).
+- **The keystone — UNCONDITIONAL modulo `NondegenerateLog u` + one partial-fraction residual.**
+  `isLiouville_logExtension (hnd : NondegenerateLog u) (hsep : DerivSimplePoleSeparation u) :
+  IsLiouville F (RatFunc F)` (axiom-clean: `propext, Classical.choice, Quot.sound`).  The entire
+  Rosenlicht multi-term pole-matching is **proved** here: the corrected `v`-reduction
+  `deriv_mem_range_imp_linear` (`v′ ∈ F ⟹ v = v₀ + b·t`), the UFD factorization fold
+  (`logDeriv_algebraMap_eq_unit_add_sum`), the per-`w` and multi-term pole decompositions
+  (`logDeriv_eq_wConst_add_sum`, `sum_const_logDeriv_eq_wConst_add_pole`), the constant-residue
+  cancellation `poleIndependence_finset_const`, and the assembly
+  `multiLogPoleObligation_of_nondegenerateLog`.  Both `RationalToPolyObligation` and
+  `PoleIndependenceObligation` are now **theorems** from `NondegenerateLog`.  The *sole* remaining
+  content is `DerivSimplePoleSeparation u`: a twisted-derivative `v′` has no *simple* `t`-pole (its
+  poles have order `≥ 2`, since `D(r·π⁻ᵏ) = … − k·r·(Dπ)·π⁻ᵏ⁻¹` with `π ∤ Dπ`), so the order-`1`
+  poles `logDeriv π` separate.  Discharging it (a partial-fractions-with-multiplicities +
+  per-irreducible twisted pole-order development; Mathlib has only the *formal-derivative*,
+  *root*-multiplicity analogue `rootMultiplicity_sub_one_le_derivative_rootMultiplicity`) makes the
+  keystone unconditional modulo `NondegenerateLog` alone.
 - **Obligation 4 (`ContainConstants`, only for towering logs).**  Polynomial layer discharged
   (`eq_C_of_logDerivPoly_eq_zero`); reduces to `NoDegreeDropObligation` (the transcendence input)
   and carries `logDeriv u ≠ 0` (when `u' = 0`, `log u` *is* a new constant — `ContainConstants`
