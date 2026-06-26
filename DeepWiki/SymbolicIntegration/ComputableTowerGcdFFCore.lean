@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableSplitFactorFast
 
 /-! # The generic fraction-free gcd, upstream of the integration pipeline
 `ComputableTowerGcdFF` builds the flat, recursive, fraction-free gcd over an arbitrary tower level
@@ -246,14 +245,5 @@ instance instCFracGcdCoreQFunNZG : CFracGcdCore (QFunNZG β) where
     CPolyG.liftGBPolyCoreG (cprimPRSgcdGenCore (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q)
 
 end
-
-/-- **`CFracGcdCore QFunNZ`** — the *concrete* level-1 carrier (`ComputableField`'s `QFunNZ`, distinct from
-the generic `QFunNZG ℚ`). Its raw fraction-free gcd is the QFunNZ-specific `cgcdFF` (`clearDenoms` into
-`ℚ[x][t]` + primitive PRS), the genuinely-flat kernel hand-built for ℚ(x). `cgcdFF` is already monic, so
-the public wrapper `cgcdFFCore = cmonicG ∘ cgcdFF = cgcdFF` (idempotent). This lets the generic
-integration pipeline (`cIntegrateG`, `cRischDEG`, …) instantiate at `α = QFunNZ` — the level-1 validation
-carrier of `ComputableTowerUnify` — and run **flat** there, matching the specialized `cIntegrate`. -/
-instance instCFracGcdCoreQFunNZ : CFracGcdCore QFunNZ where
-  cgcdFFRawCore fuel p q := CPolyG.cgcdFF fuel p q
 
 end DeepWiki.SymbolicIntegration

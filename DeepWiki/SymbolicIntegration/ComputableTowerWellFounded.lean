@@ -240,13 +240,6 @@ instance instCFracGcdCoreWfQFunNZG : CFracGcdCoreWf (QFunNZG β) where
 
 end
 
-/-- **`CFracGcdCoreWf QFunNZ`** — the *concrete* level-1 carrier (`ComputableField`'s `QFunNZ`). Its raw
-fuel-free fraction-free gcd is the QFunNZ-specific `cgcdFFWf` (`ComputableWellFounded3`). Lets the generic
-fuel-free integration pipeline instantiate at `α = QFunNZ` — the level-1 validation carrier — and run
-**flat and fuel-free** there, matching the specialized `cIntegrateWf`. -/
-instance instCFracGcdCoreWfQFunNZ : CFracGcdCoreWf QFunNZ where
-  cgcdFFRawCoreWf p q := CPolyG.cgcdFFWf p q
-
 /-! ## Part 2 — the integration pipeline's two remaining fuel-recursive bottoms
 
 Besides the fraction-free gcd (Part 1), the generic integration pipeline recurses in exactly two more
@@ -452,29 +445,6 @@ def cIntegrateGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
 
 end CPolyG
 
-/-! ### `native_decide` smoke tests for the fuel-free fraction-free gcd `cgcdFFCoreWf`
-
-The whole fuel-free fraction-free gcd executes in native code over the generic tower carriers — every
-`…Wf` op is `[CField α]`-only, so nothing noncomputable reaches the native compiler. -/
-
-open QFunNZ
-
-/-- `cgcdFFCoreWf` over the concrete level-1 carrier `QFunNZ` (ℚ(x)[t]): `gcd_t(t² − 1, t − 1)` is
-degree-1 (an associate of `t − 1`, normalized length 2) — the whole fuel-free fraction-free gcd runs
-end-to-end over ℚ(x). -/
-example :
-    (CFracGcdCoreWf.cgcdFFCoreWf [(ofConstNZ (-1)), ofConstNZ 0, ofConstNZ 1]
-      [(ofConstNZ (-1)), ofConstNZ 1] : List QFunNZ).length = 2 := by native_decide
-
-/-- `cgcdFFCoreWf` over the concrete level-1 carrier agrees with the fuel'd `cgcdFFCore` on
-`gcd_t(t² − 1, t − 1)` (both monic) — the fuel-free flat fraction-free gcd matches the fuel'd one, tested
-by `cisZeroG` of the difference over ℚ(x)[t] (`QFunNZ` has no `DecidableEq`). -/
-example :
-    CPolyG.cisZeroG (CPolyG.csubG
-      (CFracGcdCoreWf.cgcdFFCoreWf [(ofConstNZ (-1)), ofConstNZ 0, ofConstNZ 1]
-        [(ofConstNZ (-1)), ofConstNZ 1])
-      (CFracGcdCore.cgcdFFCore 4 [(ofConstNZ (-1)), ofConstNZ 0, ofConstNZ 1]
-        [(ofConstNZ (-1)), ofConstNZ 1])) = true := by native_decide
 
 /-! ## Part 4 — bridges of the flat-composition pipeline to the fuel'd `…G` originals
 
@@ -864,11 +834,5 @@ solution (length-0 list) — the fuel-free §6.5 own-loop runs over the tower (`
 example :
     (CPolyG.cPolyRischDENoCancelGWf ([ofConstNZ 0] : CPolyG QFunNZ) [] [] 3).map
       (fun q => (q : List QFunNZ).length) = some 0 := by native_decide
-
-/-- `cSPDEGWf` over `ℚ(x)[t]`: with a negative degree bound and `c = 0`, the short-circuit succeeds with
-the all-zero tuple (its `b̄` component has length 0) — the fuel-free §6.4 own-loop runs over the tower. -/
-example :
-    ((CPolyG.cSPDEGWf ([ofConstNZ 1] : CPolyG QFunNZ) [ofConstNZ 1] [ofConstNZ 1] [] (-1)).map
-      (fun t => (t.1 : List QFunNZ).length)) = some 0 := by native_decide
 
 end DeepWiki.SymbolicIntegration
