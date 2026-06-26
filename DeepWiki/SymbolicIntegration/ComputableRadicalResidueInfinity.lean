@@ -217,6 +217,90 @@ theorem arcsinhInf_residue_theorem :
     ∧ cResiduesMatch (cAlgResidueResultant 30 arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) [0, 0, 0, 0] = true := by
   native_decide
 
+/-! ### ★ STRETCH 1: a differential with BOTH finite and ∞ residues nonzero (`native_decide`)
+
+`∫ √(x² + 1)/(x² − x) dx`, i.e. `f = y/(x² − x)` on `y² = ρ = x² + 1` — `g = y` (`g₀ = 0, g₁ = 1`),
+`D = x² − x = x(x − 1)`. Now both ends contribute: the **finite** eq. 7 resultant is
+`(Z² − 1)(Z² − 2)` — finite residues `±1` (pole `x = 0`, sheets `y = ±1`) and `±√2` (pole `x = 1`,
+`y = ±√2`) — while the residue at ∞ (`f ~ y/x² ~ 1/x` near ∞, a genuine simple pole) is `Z² − 1`,
+residues `±1`. The residue theorem demands the grand total vanish: each resultant's sum of roots is `0`
+(no second-leading term — `Z⁴ + 0·Z³ − 3Z² + 0·Z + 2` and `Z² + 0·Z − 1`), so finite-sum `0` +
+∞-sum `0` = `0`. -/
+
+/-- both-nonzero radicand `ρ = x² + 1`, `ℚ[x]` `[1, 0, 1]`. -/
+def bothInf_rho : CPolyG ℚ := [1, 0, 1]
+/-- both-nonzero numerator `g = y` (`g₀ = 0`). -/
+def bothInf_g0 : CPolyG ℚ := []
+/-- both-nonzero numerator `y`-coefficient `g₁ = 1`. -/
+def bothInf_g1 : CPolyG ℚ := [1]
+/-- both-nonzero denominator `D = x² − x = x(x − 1)`, `ℚ[x]` `[0, −1, 1]`. -/
+def bothInf_D : CPolyG ℚ := [0, -1, 1]
+
+-- Sanity: finite `(Z²−1)(Z²−2) = Z⁴−3Z²+2`, then the ∞ place `Z²−1`.
+#eval (cnormG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ)
+#eval (cnormG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ)
+
+/-- **★ Finite residue resultant of `∫ √(x²+1)/(x²−x) dx` is `(Z²−1)(Z²−2)`** (`native_decide`): the
+finite eq. 7 resultant `cAlgResidueResultant D ρ g₀ g₁ = Z⁴ − 3Z² + 2`, so the finite residues are the
+roots `±1` (pole `x = 0`) and `±√2` (pole `x = 1`) — both nonzero, the `±√2` an irrational residue
+requiring the splitting field `ℚ(√2)`. -/
+theorem bothInf_finite_resultant_eq :
+    cisZeroG (csubG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1)
+      [2, 0, -3, 0, 1]) = true := by native_decide
+
+/-- **★ Residue at infinity of `∫ √(x²+1)/(x²−x) dx` is `±1`** (`native_decide`): the isolated `t = 0`
+place resultant is `Z² − 1` (`f ~ 1/x` at ∞ is a genuine simple pole), residues `±1` — nonzero, so this
+differential has nontrivial residues at **both** the finite poles and infinity. -/
+theorem bothInf_infinity_residue_eq :
+    cisZeroG (csubG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D)
+      [-1, 0, 1]) = true := by native_decide
+
+/-- **★ The residue theorem for `∫ √(x²+1)/(x²−x) dx`: finite + ∞ residues sum to `0`**
+(`native_decide`). With both sides nonzero, the cross-check is Vieta: each resultant has **vanishing**
+second-leading coefficient, so its roots (the residues) sum to `0`. The finite `(Z²−1)(Z²−2) =
+Z⁴ + 0·Z³ − 3Z² + 0·Z + 2` has root-sum `0`; the ∞ `Z² − 1 = Z² + 0·Z − 1` has root-sum `0`; hence
+(finite-sum) + (∞-sum) `= 0 + 0 = 0`. The residue theorem holds with nontrivial contributions from both
+ends — the engine computes the complete residue picture. (Checked: the `Z³` coefficient of the finite
+resultant and the `Z¹` coefficient of the ∞ resultant are both `0`.) -/
+theorem bothInf_residue_theorem :
+    ((cnormG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ).getD 3 0 = 0)
+    ∧ ((cnormG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ).getD 1 0 = 0)
+    ∧ cisZeroG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1) = false
+    ∧ cisZeroG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) = false := by
+  native_decide
+
+/-! ### STRETCH 2: the odd-`deg ρ` case — a branch place at infinity (Puiseux, documented)
+
+When `deg ρ` is **odd**, the point at infinity is a single **branch place** of `y² = ρ` and the transform
+degenerates: `ρ̃ = rev_{2m} ρ` then has `ρ̃(0) = 0` (the leading `t`-coefficient is dropped), so the
+transformed curve `ỹ² = ρ̃` is itself **ramified at `t = 0`** — `ỹ = √(ρ̃) ∼ √t` is a half-integer
+(Puiseux) expansion, not a rational place. The simple-pole residue formula `g/D'` (and the eq. 7 norm at
+a *regular* place) no longer applies directly; reading the residue at this ramified place needs the local
+**Puiseux** parametrization (`t = s²`), i.e. machinery beyond the clean even-degree reduction. Probe on
+`∫ dx/√(x³)` (`ρ = x³`, deg 3, `m = 2`): the transform yields `ρ̃ = t` (deg 1, odd ⇒ ramified) and the
+place computation returns the degenerate `Z²` (a pure `Z`-power, the `−g̃₁(0)²·ρ̃(0)` term vanishing with
+`ρ̃(0) = 0` — no honest residue extracted), flagging exactly this Puiseux obstruction. The **even** case
+(`∫ dx/√(x² ± 1)`, two unramified places or one
+regular place over ∞) is the one the engine resolves; the odd case is documented here as the next step. -/
+
+/-- odd-degree probe radicand `ρ = x³`, `ℚ[x]` `[0, 0, 0, 1]` (deg 3, odd — branch place at ∞). -/
+def oddInf_rho : CPolyG ℚ := [0, 0, 0, 1]
+/-- odd-degree probe denominator `D = x³` (`f = 1/y = y/ρ`), `ℚ[x]` `[0, 0, 0, 1]`. -/
+def oddInf_D : CPolyG ℚ := [0, 0, 0, 1]
+
+-- Probe: `ρ̃ = t` (deg 1, odd ⇒ ramified — `ỹ = √t` Puiseux), place computation degenerates to `−Z²`.
+#eval (radTransformAtInfinity oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ)
+#eval (cnormG (cResidueAtInfinityPlace 30 oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D) : List ℚ)
+
+/-- **The odd-degree transform leaves a ramified radicand** (`native_decide`): `∫ dx/√(x³)` transforms to
+`ρ̃ = t` (the `t = 0` coefficient `ρ̃(0) = 0`), so `ỹ² = ρ̃` is ramified at `t = 0` — `ỹ = √t`, a Puiseux
+(half-integer) place over ∞. This is the documented obstruction: the simple-pole residue resultant does
+not extract an honest residue at a ramified place (the `even`-degree arcsinh/arccosh case is the resolved
+one). The transformed radicand is exactly `[0, 1] = t`. -/
+theorem oddInf_radicand_ramified :
+    (radTransformAtInfinity oddInf_rho arcsinhInf_g0 arcsinhInf_g1 oddInf_D).1 = [0, 1] := by
+  native_decide
+
 /-! ### Restatement and axioms -/
 
 /-- Restatement (the deliverable): the engine computes the **residue at infinity** of `∫ dx/√(x² + 1)`
