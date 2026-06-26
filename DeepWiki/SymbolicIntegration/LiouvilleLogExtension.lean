@@ -26,11 +26,14 @@ one named obligation**.
   quotient rule** — a self-derivation `Derivation ℤ K K` for any fraction field `K` of `F[X]`,
   built from scratch here (Mathlib has no such extension — only the Kähler-module-valued
   localization).  This is Mathlib-contributable on its own.
-- **Obligation 3 (the only remainder) — the `IsLiouville` reduction.**  `keystone` reduces the
-  *entire* transcendental-log Liouville instance to the single `Prop`
-  `IsLiouvilleReductionObligation u` — Rosenlicht's partial-fraction / `t`-pole-matching argument.
-  Its engine is built and proven here (`natDegree_logDerivPoly_lt_of_monic`,
-  `coeff_logDerivPoly`, `logDerivPoly_monomial_eq`).
+- **Obligation 3 — assembly PROVEN, reduced to one pole-matching `Prop`.**  `keystone` reduces the
+  *entire* transcendental-log Liouville instance to `IsLiouvilleReductionObligation u`, and the
+  `IsLiouville`-packaging half is **proven** (`isLiouville_conclusion_of_fData`,
+  `isLiouvilleReduction_of_fDataReduction`), leaving the *single* residual `LiouvilleFDataReduction
+  u` — the pure Rosenlicht reduction of any `F(t)`-representation to `F`-data (partial-fraction /
+  `t`-pole-matching).  Its engine is built and proven here (`natDegree_logDerivPoly_lt_of_monic`,
+  `coeff_logDerivPoly`, `logDerivPoly_monomial_eq`, `logDeriv_monic_proper`).  Discharging that one
+  `Prop` makes `IsLiouville F (RatFunc F)` unconditional (`isLiouville_of_fDataReduction`).
 - **Obligation 4 (`ContainConstants`, only for towering logs).**  Polynomial layer discharged
   (`eq_C_of_logDerivPoly_eq_zero`); reduces to `NoDegreeDropObligation` (the transcendence input)
   and carries `logDeriv u ≠ 0` (when `u' = 0`, `log u` *is* a new constant — `ContainConstants`
@@ -550,6 +553,16 @@ theorem isLiouvilleReduction_of_fDataReduction (u : F)
   exact isLiouville_conclusion_of_fData a ι c hc w₀ v₀ h₀
 
 omit [CharZero F] in
+/-- **The keystone in one step from the single residual** (`LiouvilleFDataReduction u`): the genuine
+`IsLiouville F (RatFunc F)` instance on the log extension.  Discharging `LiouvilleFDataReduction u`
+(the Rosenlicht pole-matching) makes this an unconditional `instance`. -/
+theorem isLiouville_of_fDataReduction (u : F) (hred : LiouvilleFDataReduction u) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    IsLiouville F (RatFunc F) :=
+  isLiouvilleReduction_of_fDataReduction u hred
+
+omit [CharZero F] in
 /-- **The keystone, assembled and PROVEN modulo the single `IsLiouville` reduction.**  The setup is
 genuine (`logDifferential u` is a real `Differential (RatFunc F)`, `logDifferentialAlgebra u` a real
 `DifferentialAlgebra F (RatFunc F)`, Obligations 1 and 2 *closed* above).  So `F(log u) = RatFunc F`
@@ -581,6 +594,13 @@ example (u : F) (a : F) :
   letI := logDifferential u
   letI := logDifferentialAlgebra u
   deriv_algebraMap a
+-- The keystone genuinely closes from the single pole-matching residual: discharging
+-- `LiouvilleFDataReduction u` yields the real `IsLiouville F (RatFunc F)` instance.
+example (u : F) (hred : LiouvilleFDataReduction u) :
+    letI := logDifferential u
+    letI := logDifferentialAlgebra u
+    IsLiouville F (RatFunc F) :=
+  isLiouville_of_fDataReduction u hred
 
 end FieldObligations
 
