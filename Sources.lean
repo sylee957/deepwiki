@@ -61,9 +61,10 @@ import Sources.Hdl_1721_1_15391.Chapter5
 import Sources.Hdl_1721_1_15391.AppendixA
 import Sources.Hdl_1721_1_15391.IntegrateFull
 
--- Bronstein 1990 "Integration of Elementary Functions" (elementary decision over algebraic extensions; coverage pointer, not yet formalized)
+-- Bronstein 1990 "Integration of Elementary Functions" (elementary decision over algebraic extensions; concrete radical-over-tower cases formalized, general recursion deferred)
 import Sources.Doi_10_1016_S0747_7171_08_80027_2.Source
 import Sources.Doi_10_1016_S0747_7171_08_80027_2.Coverage
+import Sources.Doi_10_1016_S0747_7171_08_80027_2.ElementaryIntegration
 
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 import Sources.Doi_10_1007_978_3_642_69956_6.Chapter1
