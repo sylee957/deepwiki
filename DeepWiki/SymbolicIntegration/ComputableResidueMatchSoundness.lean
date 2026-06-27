@@ -251,6 +251,31 @@ theorem monomial_residue_match_of_cancel (s : Finset K) (a v : K[X])
   rw [Finset.sum_congr rfl hterm, Finset.sum_add_distrib, ← map_sum, hc] at *
   rw [hcancel, zero_add, ← ratFunc_eq_sum_residue_div s a hA]
 
+/-! ### Step 6: the primitive case as a corollary — the cancellation is automatic
+
+For a primitive monomial `Dt = C w`, the polynomial part of each term vanishes: `(C w − Cα′) /ₘ (X−Cα) =
+C(w−α′) /ₘ (X−Cα) = 0` (degree `0 < 1`). So `hcancel` holds termwise and `monomial_residue_match_of_cancel`
+applies unconditionally — recovering `primitive_monomial_residue_match`. This exhibits the primitive case
+as the regime where the genuinely-extra `hcancel` content is free. -/
+
+omit [Algebra ℚ K] in
+/-- **Primitive monomials cancel automatically** — for `Dt = C w`, each polynomial part `(C w − Cα′) /ₘ
+(X−Cα)` is `0` (a degree-`0` polynomial over the degree-`1` `X − Cα`), so the cancellation hypothesis
+`hcancel` of `monomial_residue_match_of_cancel` is satisfied termwise. The primitive case is the regime
+where the non-primitive `hcancel` content is automatic. -/
+theorem primitive_cancel (s : Finset K) (a : K[X]) (w : K) :
+    ∑ α ∈ s, algebraMap K[X] (RatFunc K)
+        (C (a.eval α / (Differential.implicitDeriv (C w) (Lagrange.nodal s id)).eval α)
+          * ((C w - C (α′)) /ₘ (X - C α))) = 0 := by
+  apply Finset.sum_eq_zero
+  intro α _
+  have hdeg : (C w - C (α′)).degree < (X - C α).degree := by
+    rw [degree_X_sub_C]
+    calc (C w - C (α′)).degree ≤ max (C w).degree (C (α′)).degree := degree_sub_le _ _
+      _ ≤ 0 := max_le degree_C_le degree_C_le
+      _ < 1 := by decide
+  rw [(divByMonic_eq_zero_iff (monic_X_sub_C α)).mpr hdeg, mul_zero, map_zero]
+
 end ResidueMatchTower
 
 end DeepWiki.SymbolicIntegration
