@@ -704,6 +704,92 @@ theorem irreducible_imp_recombine_nil {f : List ℤ} {n : ℤ} {facs : List (Lis
   by_contra hne
   exact recombine_imp_not_irreducible hmon hne hirr
 
+/-! ## ★★ Recombination COMPLETENESS — the irreducibility direction (`true ⟹ Irreducible`)
+
+The converse of `recombine_imp_not_irreducible`. Where the reducibility direction needs only that
+the trial-division is *sound* (a found candidate really divides), completeness needs that the search
+is *exhaustive enough to find* a factor whenever one exists. We build the full **abstract reduction**:
+the search-side plumbing is proven outright, and the deep number-theoretic content (Hensel-lift
+uniqueness over `ZMod (p^k)` + the Mignotte bound) is isolated into ONE precisely-stated surfacing
+hypothesis `FactorSurfaces`, against which the milestone `true ⟹ Irreducible` is then proven
+axiom-clean.
+
+**What is proven outright (the search plumbing).** `recombine_ne_nil_of_witness`: a *witness*
+sublist whose symmetric-reduced subset-product is a proper-degree exact `ℤ`-divisor forces
+`recombine` non-empty — the exact converse of the extraction in `recombine_imp_not_irreducible`.
+
+**The isolated obstruction (`FactorSurfaces`).** The standard Zassenhaus *surfacing* lemma: when
+`toPolyZ f` is monic of degree `N ≥ 2` and **reducible** over `ℤ`, *some* sublist of the lifted
+mod-`p^k` factors `facs`, after symmetric-range reduction mod `n = p^k`, is a proper-degree exact
+`ℤ`-divisor of `f`. This is precisely "every true `ℤ`-factor is a subset-product of the lifted
+factors", which rests on (a) **Hensel-lift uniqueness over `ZMod (p^k)`** — the mod-`p^k` factors
+are the unique lifts of the mod-`p` irreducibles, so a true factor's reduction is a *sub-product* of
+them — and (b) the **Mignotte bound** `2·‖factor‖ < p^k`, forcing the factor to coincide with the
+symmetric-range representative of that sub-product. Both ingredients are **absent from Mathlib v4.31.0**
+(`Mathlib/RingTheory/Henselian.lean` lifts single *roots*, not coprime *factorizations* — its own
+`TODO` defers factorization-lifting to an étale-morphism API not yet present; and there is no
+coefficient-norm factor bound anywhere), and the project's computational lift `henselLiftStable` /
+`factorModP` carry only `native_decide`-validated correctness (no abstract spec). So `FactorSurfaces`
+is the single, mathematically-faithful residual: the genuine Zassenhaus correctness lemma, stated
+exactly, reducing the milestone to it. -/
+
+/-- **★ Search plumbing (the converse of the extraction).** A *witness* sublist `sub` of `facs` whose
+symmetric-reduced subset-product candidate `recombineCandidate n sub` has **proper** degree
+(`2 ≤ lengthTrim cand` and `lengthTrim cand − 1 < lengthTrim f − 1`) and **exactly divides** `f` over
+`ℤ` forces `recombine f n facs` to be **non-empty** — its `filterMap` emits that candidate's degree.
+The exact converse of the candidate-extraction in `recombine_imp_not_irreducible`; proven outright. -/
+theorem recombine_ne_nil_of_witness {f : List ℤ} {n : ℤ} {facs : List (List ℤ)}
+    {sub : List (List ℤ)} (hmem : sub ∈ facs.sublists)
+    (hdc2 : 2 ≤ lengthTrim (recombineCandidate n sub))
+    (hdclt : lengthTrim (recombineCandidate n sub) - 1 < lengthTrim f - 1)
+    (hdiv : dividesExactly f (recombineCandidate n sub)
+      (lengthTrim (recombineCandidate n sub) - 1) = true) :
+    recombine f n facs ≠ [] := by
+  rw [recombine]
+  simp only [ne_eq, List.filterMap_eq_nil_iff, not_forall]
+  refine ⟨sub, hmem, ?_⟩
+  intro hcontra
+  rw [if_pos ⟨hdc2, hdclt, hdiv⟩] at hcontra
+  exact absurd hcontra (by simp)
+
+/-- **★ The surfacing obstruction, as a precise predicate.** `FactorSurfaces f n facs N` says: if
+`toPolyZ f` is monic of degree `N` and **reducible** (`¬ Irreducible`), then there is a sublist
+`sub` of `facs` whose symmetric-reduced subset-product (mod `n`) is a proper-degree exact `ℤ`-divisor
+of `f`. This is the standard Zassenhaus surfacing lemma — Hensel-lift uniqueness over `ZMod (p^k)`
+plus the Mignotte coefficient bound — isolated as the single residual hypothesis (both ingredients
+absent from Mathlib v4.31.0; see the section docstring). It is the *exact converse plumbing* feeding
+`recombine_ne_nil_of_witness`. -/
+def FactorSurfaces (f : List ℤ) (n : ℤ) (facs : List (List ℤ)) (N : ℕ) : Prop :=
+  IsMonicOfDegree (toPolyZ f) N → ¬ Irreducible (toPolyZ f) →
+    ∃ sub ∈ facs.sublists,
+      2 ≤ lengthTrim (recombineCandidate n sub) ∧
+      lengthTrim (recombineCandidate n sub) - 1 < lengthTrim f - 1 ∧
+      dividesExactly f (recombineCandidate n sub)
+        (lengthTrim (recombineCandidate n sub) - 1) = true
+
+/-- **★★ Recombination completeness (conditional on surfacing).** Given the surfacing hypothesis
+`FactorSurfaces f n facs N`, a **reducible** monic-degree-`N` `toPolyZ f` forces `recombine f n facs`
+**non-empty** — the search finds the surfaced proper `ℤ`-factor. Combines `FactorSurfaces` (the
+witness exists) with `recombine_ne_nil_of_witness` (a witness makes the search non-empty). Axiom-clean;
+the abstract converse of `recombine_imp_not_irreducible`, with the deep content in `FactorSurfaces`. -/
+theorem recombine_complete {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
+    (hsurf : FactorSurfaces f n facs N) (hmon : IsMonicOfDegree (toPolyZ f) N)
+    (hred : ¬ Irreducible (toPolyZ f)) :
+    recombine f n facs ≠ [] := by
+  obtain ⟨sub, hmem, hdc2, hdclt, hdiv⟩ := hsurf hmon hred
+  exact recombine_ne_nil_of_witness hmem hdc2 hdclt hdiv
+
+/-- **★★ Completeness, contrapositive: `recombine empty ⟹ Irreducible`** (conditional on surfacing).
+If the recombination found **no** proper factor yet a witness would have surfaced for any reducible
+`f` (`FactorSurfaces`), then `toPolyZ f` is **irreducible**. This is the irreducibility direction at
+the `recombine` level — the converse of `irreducible_imp_recombine_nil`. -/
+theorem irreducible_of_recombine_nil {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
+    (hsurf : FactorSurfaces f n facs N) (hmon : IsMonicOfDegree (toPolyZ f) N)
+    (hnil : recombine f n facs = []) :
+    Irreducible (toPolyZ f) := by
+  by_contra hred
+  exact recombine_complete hsurf hmon hred hnil
+
 /-- **★ The proven soundness keystone, packaged.** A passing `ℤ`-trial-division
 (`dividesExactly f g dg = true`) yields a *genuine* factorization `toPolyZ f = toPoly g * toPoly q`
 over `ℤ` — so the recombination **never accepts a false factor**. This is the abstract guarantee
