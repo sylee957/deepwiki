@@ -119,9 +119,115 @@ theorem primitive_residue_match_list_engine (Dt : CPolyG α) (s : Finset (CField
   rw [hDt]
   exact ResidueMatchTower.primitive_residue_match_list s a w hA hnorm
 
-/-! ### ★ Status — the list↔Finset bridge, axiom-clean -/
+/-! ### Task 2: discharge the engine's `hmatch` for the PRIMITIVE case (per-root log form)
+
+`logResidueSumG_eq_of_residue_match` / `field_identity_of_cIntegrateReducedG_of_residueMatch` consume the
+`hmatch` hypothesis — the `List.map (...) |>.sum` over the engine's `res.logs` equals the (Hermite leftover)
+simple integrand. The bridge `primitive_residue_match_list_engine` supplies exactly that sum for the
+**per-root log form** `res.logs = s.toList.map (engine-pair-builder)`. The remaining content is purely
+structural: the engine's `res.logs`, read through `(toK cv.1, toPolyG cv.2)`, must BE the per-root list of
+`(residue β, X − C β)` pairs (the `cLogPartG` grouped-GCD output reassembled into Lagrange per-root factors,
+squarefree denominator factored as `∏(t−β)`). We carry that reassembly as the explicit structural hypothesis
+`hform` (the engine's gcd/resultant compute-bridge — the documented mechanical residual), and discharge the
+residue match through it. The primitive specialization where `primitive_cancel` makes the RT polynomial-part
+cancellation automatic, so NO integrability witness is needed. -/
+
+/-- **★ The primitive engine `hmatch`, discharged through the per-root reassembly** — for a primitive
+monomial `toPolyG Dt = C w`, a squarefree `hDen` factored as `∏_{β∈s}(t−β)` (`toPolyG hDen = Lagrange.nodal
+s id`, `deg (toPolyG hNum) < #s`, every root normal), and the engine residue logs `logs` whose
+`(toK cv.1, toPolyG cv.2)`-images ARE the per-root list `s.toList.map (fun β => (residue β, X − C β))`
+(`hform` — the `cLogPartG` grouped-GCD ↔ Lagrange per-root reassembly, the documented engine compute-bridge),
+the engine residue-match sum `∑_{(c,v)∈logs} amG(C(toK c))·(D(log v)) = amG(hNum)/amG(hDen)` over `RatFunc
+(CFieldSpec.K α)`. Rewrites the engine sum through `hform` into the bridge's per-root form, which
+`primitive_residue_match_list_engine` sends to `hNum/hDen`. The RT polynomial-part cancellation is automatic
+in the primitive case (`ResidueMatchTower.primitive_cancel`), so this needs no integrability witness — the
+residue match the reduced-case one-shot consumes, primitive case. -/
+theorem primitive_engine_hmatch (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
+    (hNum hDen : CPolyG α) (w : CFieldSpec.K α) (logs : List (α × CPolyG α))
+    (hDt : toPolyG Dt = C w)
+    (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card) (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : logs.map (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+      = s.toList.map (fun β =>
+          ((toPolyG hNum).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+            X - C β))) :
+    (logs.map (fun cv =>
+          amG α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
+      = amG α (toPolyG hNum) / amG α (toPolyG hDen) := by
+  -- the engine summand factors through `(toK cv.1, toPolyG cv.2)`: rewrite the mapped list by `hform`
+  have hsummand : (logs.map (fun cv =>
+        amG α (Polynomial.C (CFieldSpec.toK cv.1))
+          * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2))))
+      = (logs.map (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))).map
+          (fun p => amG α (Polynomial.C p.1)
+            * (towerFractionFieldDerivG Dt (amG α p.2) / amG α p.2)) := by
+    rw [List.map_map]; rfl
+  rw [hsummand, hform, hden, List.map_map]
+  -- now the per-root form of the bridge `primitive_residue_match_list_engine`
+  have hbridge := primitive_residue_match_list_engine Dt s (toPolyG hNum) w hDt hA hnorm
+  rw [List.map_map] at hbridge
+  exact hbridge
+
+/-! ### Task 2 (assembly): the reduced-case field identity for the PRIMITIVE case
+
+Composing `primitive_engine_hmatch` (the discharged RT residue match) with the Hermite half `hherm` through
+`field_identity_of_reducedG_of_residueMatch` gives the reduced-case field identity `D(g) + logResidueSumG =
+a/d` for the primitive case — gated only on the abstract Hermite telescoping (`hherm`, supplied by
+`cHermiteReduceTowerG_telescope_seed` given the per-power Hermite identities) and the per-root reassembly of
+the residue logs (`hform`, the engine gcd/resultant compute-bridge). The RT polynomial-part cancellation is
+automatic (`primitive_cancel`), so the primitive regime needs no integrability witness. -/
+
+variable [CFracGcdCore α]
+
+/-- **★★ The reduced-case field identity for the PRIMITIVE case** — for the normal-part capstone output
+`res = cIntegrateReducedG Dt fuel a d cands` with a primitive monomial `toPolyG Dt = C w`, **given** the
+Hermite half `hherm` (`D(g) + h = a/d`, leftover `h = (cHermiteReduceTowerG …).2`) and the per-root
+reassembly `hform` of the residue logs (the engine's `cLogPartG` grouped-GCD ↔ Lagrange per-root output, for
+the squarefree Hermite leftover `hDen` factored as `∏_{β∈s}(t−β)`), the reduced-case field identity `D(g) +
+logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc (CFieldSpec.K α)` — **with no engine
+`checkIdentityG` certificate**. The RT residue match is discharged by `primitive_engine_hmatch` (the
+polynomial-part cancellation automatic in the primitive case), composed with `hherm` through
+`field_identity_of_reducedG_of_residueMatch`. The primitive reduced-case one-shot, gated only on the two
+abstract engine inputs (Hermite telescoping + per-root reassembly). -/
+theorem field_identity_of_cIntegrateReducedG_primitive (Dt : CPolyG α) (fuel : ℕ)
+    (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C w)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  field_identity_of_reducedG_of_residueMatch Dt
+    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1
+    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2
+    (cHermiteReduceTowerG Dt fuel a d).2.1 (cHermiteReduceTowerG Dt fuel a d).2.2
+    a d (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hherm
+    (primitive_engine_hmatch Dt s (cHermiteReduceTowerG Dt fuel a d).2.1
+      (cHermiteReduceTowerG Dt fuel a d).2.2 w
+      (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hDt hden hA hnorm hform)
+
+/-! ### ★ Status — the list↔Finset bridge + the primitive reduced-case identity, axiom-clean -/
 
 #print axioms ResidueMatchTower.primitive_residue_match_list
 #print axioms primitive_residue_match_list_engine
+#print axioms primitive_engine_hmatch
+#print axioms field_identity_of_cIntegrateReducedG_primitive
 
 end DeepWiki.SymbolicIntegration
