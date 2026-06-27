@@ -609,4 +609,95 @@ def irreducibleZassenhaus (p : ℕ) [Fact p.Prime] (f : List ℤ) (n : ℕ) : Bo
     -- irreducible iff NO proper ℤ-factor found
     degs.isEmpty
 
+/-! ## ★★ The headline: the complete decider where the mod-`p` test provably fails
+
+The milestone of the whole Zassenhaus campaign. `irreducibleByModP` returns `false` for `x⁴ + 1` at
+**every** prime (`irreducibleByModP_X_pow_four_add_one_false`, since `Φ₈` is reducible mod every
+prime by Frobenius) — a `ℚ`-irreducible polynomial the one-way mod-`p` test can never confirm. The
+**complete** decider `irreducibleZassenhaus` computes it **irreducible** (`native_decide`), going
+through the *full* Hensel pipeline: mod `3` it splits into two degree-`2` factors
+`(x² + x + 2)(x² + 2x + 2)`, Hensel-lifts them past the Mignotte window, and recombination finds
+**no** proper `ℤ`-factor — so the verdict is `true`. The decider succeeds exactly where the mod-`p`
+test is provably incomplete. (`Fact (Nat.Prime _)` instances reused from the irreducibility file.) -/
+
+/-- **★★★ THE HEADLINE.** The complete Zassenhaus decider confirms `x⁴ + 1` **irreducible** over `ℚ`
+(`native_decide`) — via the **full** Hensel-lift + recombination pipeline (mod `3`, two degree-`2`
+factors, no proper `ℤ`-recombination). This is the exact polynomial `irreducibleByModP` returns
+`false` for at every prime: the mod-`p` test is *provably* incomplete here, and the complete decider
+gives the right answer. The capstone of the campaign. -/
+theorem irreducibleZassenhaus_X_pow_four_add_one :
+    irreducibleZassenhaus 3 ([1, 0, 0, 0] ++ [1]) 4 = true := by native_decide
+
+/-- **The contrast, pinned.** The complete decider says `true` (irreducible) where the mod-`p` test
+says `false` (inconclusive) — at `p = 3` — for `x⁴ + 1`. The full pipeline strictly beats the
+one-way mod-`p` test. -/
+theorem zassenhaus_beats_modp_on_X_pow_four_add_one :
+    irreducibleZassenhaus 3 ([1, 0, 0, 0] ++ [1]) 4 = true ∧
+    irreducibleByModP 3 ([1, 0, 0, 0] ++ [1]) 4 = false :=
+  ⟨irreducibleZassenhaus_X_pow_four_add_one,
+    irreducibleByModP_X_pow_four_add_one_false.2.1⟩
+
+/-- `x⁴ + 1` is **also** decided irreducible via mod `5` (again two degree-`2` factors, full
+pipeline): the verdict is prime-robust (`native_decide`). -/
+theorem irreducibleZassenhaus_X_pow_four_add_one_mod5 :
+    irreducibleZassenhaus 5 ([1, 0, 0, 0] ++ [1]) 4 = true := by native_decide
+
+/-- `x² − 2` is decided **irreducible** over `ℚ` by the complete decider (`native_decide`). -/
+theorem irreducibleZassenhaus_X_sq_sub_two :
+    irreducibleZassenhaus 5 ([-2, 0] ++ [1]) 2 = true := by native_decide
+
+/-- `x² − 1` is decided **reducible** over `ℚ` (`native_decide`) — recombination finds the proper
+factor `x + 1` (its cofactor being `x − 1`), so `x² − 1 = (x − 1)(x + 1)`. -/
+theorem irreducibleZassenhaus_X_sq_sub_one_false :
+    irreducibleZassenhaus 5 ([-1, 0] ++ [1]) 2 = false := by native_decide
+
+/-- `x⁴ − 1 = (x − 1)(x + 1)(x² + 1)` is decided **reducible** (`native_decide`): the full pipeline
+(mod `3`) finds a proper `ℤ`-factor. -/
+theorem irreducibleZassenhaus_X_pow_four_sub_one_false :
+    irreducibleZassenhaus 3 ([-1, 0, 0, 0] ++ [1]) 4 = false := by native_decide
+
+/-- `x³ − 2` is decided **irreducible** over `ℚ` (`native_decide`). -/
+theorem irreducibleZassenhaus_X_cube_sub_two :
+    irreducibleZassenhaus 5 ([-2, 0, 0] ++ [1]) 3 = true := by native_decide
+
+/-! ## ★ The factorization the pipeline finds for `x⁴ + 1` mod `3`
+
+The structural content behind the headline: mod `3`, `factorModP` splits `x⁴ + 1` into the two
+genuine degree-`2` irreducibles `x² + x + 2` and `x² + 2x + 2` (the engine `edf` returned this
+**unsplit** — the degree-tag stop the `ddfCorrect` rebuild fixes). The list-level product is
+`x⁴ + 1` (the `factorModP` multiply-back, validated; `toPoly` sends it to the polynomial identity).
+The Hensel lift + recombination then confirm no `ℤ`-recombination of these two halves divides
+`x⁴ + 1`, i.e. it is `ℚ`-irreducible. -/
+
+/-- Mod `3`, `factorModP` splits `x⁴ + 1` into **two** degree-`2` factors (the engine `edf` stalled
+at one; `ddfCorrect` continues through the trivial degree-`1` block) (`native_decide`). -/
+example : (factorModP 3 (reduceCoeffs 3 ([1, 0, 0, 0] ++ [1] : List ℤ))).length = 2 := by
+  native_decide
+
+/-- The two mod-`3` factors of `x⁴ + 1` are `x² + x + 2` and `x² + 2x + 2` (low-to-high coefficient
+lists, with benign trailing zeros from un-trimmed engine output) (`native_decide`). -/
+example : factorModP 3 (reduceCoeffs 3 ([1, 0, 0, 0] ++ [1] : List ℤ))
+    = ([[2, 2, 1, 0, 0, 0], [2, 1, 1]] : List (List (ZMod 3))) := by native_decide
+
+/-! ## Restatements ("it compiled" ≠ "it says the right thing")
+
+The decider verdicts are about the intended polynomials, and the headline contrast holds. -/
+
+-- the headline input list IS `x⁴ + 1`.
+example : toPolyZ ([1, 0, 0, 0] ++ [1]) = X ^ 4 + 1 := toPolyZ_X_pow_four_add_one
+
+-- `x⁴ + 1` is GENUINELY ℚ-irreducible (from the cyclotomic theorem) AND the complete decider
+-- confirms it (`true`), while the mod-`p` test returns `false` — the deeper claim the decider backs.
+example : Irreducible (toPolyZ ([1, 0, 0, 0] ++ [1])) ∧
+    irreducibleZassenhaus 3 ([1, 0, 0, 0] ++ [1]) 4 = true ∧
+    irreducibleByModP 3 ([1, 0, 0, 0] ++ [1]) 4 = false :=
+  ⟨irreducible_toPolyZ_X_pow_four_add_one,
+    irreducibleZassenhaus_X_pow_four_add_one,
+    irreducibleByModP_X_pow_four_add_one_false.2.1⟩
+
+-- the decider has `Bool` type and the keystone soundness brick has the intended factorization type.
+example : ∀ (f g : List ℤ) (dg : ℕ), dividesExactly f g dg = true →
+    toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1 :=
+  fun _ _ _ h => dividesExactly_dvd h
+
 end DeepWiki.SymbolicIntegration
