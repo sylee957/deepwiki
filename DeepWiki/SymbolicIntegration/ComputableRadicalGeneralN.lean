@@ -321,4 +321,85 @@ theorem cube_cderiv_one_zero :
     CField.isZero (CDiffField.cderiv (CField.zero : RadX3root)) = true := by
   constructor <;> native_decide
 
+/-! ### ★ The general-`n` log-derivative `u'/u` and a cube-root integration check
+
+`∫ u'/u = log u` over the cube-root field. The log-derivative `radLogDerivN n f u = (D u)·u⁻¹` uses
+the general-`n` inverse `radInvN` (the `n = 2` `radLogDeriv` uses `radInv2`), so it is the honest
+`RadElem` `u'/u = D(log u)` for **every** `n`. Differentiating a log antiderivative back to its
+integrand is the integration soundness check: `∫ (radLogDerivN u) = log u`. -/
+
+namespace RadElem
+variable {α : Type*} [CField α] [CDiffField α]
+
+/-- **The general-`n` logarithmic derivative** `radLogDerivN n f u = (radDeriv u)·u⁻¹` over
+`α[y]/(yⁿ − f)` — the honest `RadElem` `u'/u = D(log u)`, with the inverse the **extended-Euclid**
+`radInvN n f` (so it is correct for every `n` where `yⁿ − f` is irreducible, not just `n = 2`). The
+`n`-generic companion of `radLogDeriv` (which is `radInv2`-only); the building block of a cube-root
+`v + Σ cᵢ log uᵢ` antiderivative's derivative. -/
+def radLogDerivN (n : ℕ) (f : α) (u : RadElem α) : RadElem α :=
+  radMul n f (radDeriv n f u) (radInvN n f u)
+
+end RadElem
+
+/-- **★ A cube-root log integrand `u'/u` for `u = x + ∛(x²+1)`** (`native_decide`): the general-`n`
+log-derivative `radLogDerivN 3 (x²+1) u` is a genuine **nonzero** element of `ℚ(x)[∛(x²+1)]` — the
+integrand whose antiderivative is `log u`. Confirms `radLogDerivN` produces a real cube-root
+log-derivative (the `∫ u'/u = log u` soundness shape, with `u'/u` an honest cube-root element). -/
+theorem cube_radLogDerivN_nonzero :
+    radIsZero (radLogDerivN 3 cubeRadicand (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root).toRadN)
+      = false := by native_decide
+
+/-- **★ `D(log u) · u = D(u)` over the cube root** (`native_decide`, the integration soundness check):
+for `u = x + ∛(x²+1)`, the log-derivative integrand `(radLogDerivN 3 f u)` times `u` equals `D(u)` —
+i.e. `(u'/u)·u = u'`, certifying that `radLogDerivN` is the honest `u'/u` whose integral is `log u`.
+Checked by `radIsZero` of `radMul (radLogDerivN u) u − radDeriv u`. THE CUBE-ROOT LOG INTEGRAND IS
+CORRECT — `∫ (u'/u) = log u` over `∛(x²+1)`, the general-`n` inverse making the division honest. -/
+theorem cube_radLogDerivN_mul_eq_deriv :
+    radIsZero (radSub
+        (radMul 3 cubeRadicand (radLogDerivN 3 cubeRadicand
+          (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root).toRadN) [qxOfNum [0, 1], CField.one])
+        (radDeriv 3 cubeRadicand [qxOfNum [0, 1], CField.one])) = true := by native_decide
+
+/-! ### ★ The keystone composes at `n = 3`: a transcendental monomial over the CUBE-ROOT base
+
+The payoff of `CField`/`CDiffField (RadExtN α n f)`: `cmonomialDeriv` needs only those two instances,
+so the whole monomial-derivation engine runs over `RadX3root[t]` — a transcendental monomial `t` over
+the **cube-root** base `ℚ(x)[∛(x²+1)]`, the first mixed elementary tower at `n = 3`
+(transcendental-over-algebraic, Bronstein 1990). We exhibit the mixed tower derivation
+`D(y·t) = D(y)·t + y·Dt`: with `y = ∛(x²+1)` (`D(y) = ℓ·y`, `ℓ = 2x/(3(x²+1))`) and `t = eˣ`
+(`Dt = t`), `D(y·t) = ℓ·y·t + y·t = (ℓ+1)·y·t` — both the cube-root coefficient derivation *and* the
+`d/dt` part fire. -/
+
+/-- The transcendental monomial `t = eˣ` over the cube-root base: `Dt = t`, as the
+`RadX3root[t]`-polynomial `[0, 1] = t`. -/
+def cubeDtExp : CPolyG RadX3root := [CField.zero, CField.one]
+
+/-- The `RadX3root[t]`-polynomial `y·t = [0, y]` (cube-root generator `y = ∛(x²+1)` times `t = eˣ`). -/
+def cubeGenT : CPolyG RadX3root := [CField.zero, cubeGen]
+
+/-- The `RadX3root[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected `D(y·t)`
+(`ℓ = f'/(3f) = 2x/(3(x²+1))`): `ℓ·y` the cube-root part `D(y)`, `y` the monomial part `y·Dt = y·t`. -/
+def cubeGenTDeriv : CPolyG RadX3root :=
+  [CField.zero, CField.mul (⟨[CField.zero, CField.add cubeLogDer CField.one]⟩ : RadX3root) CField.one]
+
+/-- **★ `D(y·t) = (ℓ+1)·y·t` over `RadX3root[t] = ℚ(x)[∛(x²+1)][eˣ]`** (`native_decide`): the genuine
+mixed tower derivation at `n = 3`. With `y = ∛(x²+1)` (`D(y) = ℓ·y`, `ℓ = 2x/(3(x²+1))`) and `t = eˣ`
+(`Dt = t`), `cmonomialDeriv` runs **both** the cube-root coefficient derivation (the diagonal
+`radDeriv 3`, contributing `ℓ·y`) and the `d/dt` part (contributing `y`): `D(y·t) = (ℓ+1)·y·t`.
+Checked by `cisZeroG` of the difference. A TRANSCENDENTAL MONOMIAL SITS ON THE CUBE-ROOT BASE — the
+keystone composes at `n = 3`, the first transcendental-on-cube-root computation. -/
+theorem cube_monomialDeriv_genT_eq :
+    CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonomialDeriv cubeDtExp cubeGenT) cubeGenTDeriv) = true := by native_decide
+
+/-- **The mixed cube-root derivation genuinely runs the coefficient derivation** (`native_decide`):
+`D(y·t)` over `RadX3root[t]` is **not** `cisZeroG`-zero and **not** equal to the pure-`d/dt` result
+`y·t` — confirming the cube-root-base `cderiv` contributed the `ℓ·y·t` term (had `cmonomialDeriv` only
+done `d/dt`, the result would be `y·t = cubeGenT`). The coefficient-derivation half is real. -/
+theorem cube_monomialDeriv_genT_runs_coeff :
+    (CPolyG.cisZeroG (CPolyG.cmonomialDeriv cubeDtExp cubeGenT) = false) ∧
+    (CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cmonomialDeriv cubeDtExp cubeGenT) cubeGenT) = false) := by
+  constructor <;> native_decide
+
 end DeepWiki.SymbolicIntegration
