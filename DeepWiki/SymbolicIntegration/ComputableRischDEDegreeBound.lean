@@ -131,4 +131,124 @@ theorem natDegree_le_of_aDominates_nonlinear {v a b c q : K[X]} (ha0 : a ≠ 0)
 
 end AbstractNonlinear
 
+/-! ## The abstract `cRdeBoundDegreeG` formula and `hbound` modulo the cancellation residual
+
+`rdeBoundDegreeAbstract v a b c` is the **non-cancellation** degree bound of Bronstein §6.3, written over
+`K[X]` in `natDegree`s exactly as `cRdeBoundDegreeG` computes it over `cdegG`s; the computable bridge
+`cRdeBoundDegreeG_eq_abstract` identifies the two. The two strict-domination cases discharge the bound for
+the dominant configurations; the **balanced** configurations (`RdeIsBalanced`) — where the two LHS terms
+share a candidate top degree and the leading terms can cancel — are the deep §6.3 `λ`-cancellation gap,
+isolated as the residual. -/
+
+section AbstractBound
+
+variable {K : Type*} [Field K] [CharZero K] [Differential K]
+
+/-- **The abstract non-cancellation degree bound** `rdeBoundDegreeAbstract v a b c` (Bronstein §6.3),
+written over `K[X]` in `natDegree`s exactly as `cRdeBoundDegreeG` computes it over `cdegG`s: with
+`dₐ, d_b, d_c, δ` the degrees of `a, b, c, v`, it is `max(0, d_c − max(dₐ + δ − 1, d_b))` (δ ≥ 2),
+`max(0, d_c − max(d_b, dₐ))` (δ = 1), and `max(0, d_c − d_b)`/`max(0, d_c − dₐ + 1)` (δ = 0, by
+`dₐ < d_b`). -/
+def rdeBoundDegreeAbstract (v a b c : K[X]) : ℕ :=
+  let da : ℤ := (a.natDegree : ℤ)
+  let db : ℤ := (b.natDegree : ℤ)
+  let dc : ℤ := (c.natDegree : ℤ)
+  let δ : ℤ := (v.natDegree : ℤ)
+  let n : ℤ :=
+    if 2 ≤ δ then max 0 (dc - max (da + δ - 1) db)
+    else if δ = 1 then max 0 (dc - max db da)
+    else if da < db then max 0 (dc - db) else max 0 (dc - da + 1)
+  n.toNat
+
+/-- **The balanced (cancellation-prone) configuration** `RdeIsBalanced v a b c`: the two strict-domination
+cases of Bronstein Thm 6.3.1 both fail — neither `b·q` strictly dominates (`deg a + max(0, δ−1) < deg b`
+fails) nor does `a·Dq` strictly dominate in the nonlinear case (`2 ≤ δ ∧ deg b < deg a + δ − 1` fails).
+Concretely the configurations δ ≥ 2 with `deg a + δ − 1 = deg b`, and δ ≤ 1 with `deg b ≤ deg a`: here the
+LHS terms share a candidate top degree, the leading terms can **cancel**, and the true degree bound carries
+the `λ` term `cRdeBoundDegreeG` omits. The precise domain of the deep §6.3 residual. (`c` is carried for
+signature uniformity with `rdeBoundDegreeAbstract`; the balance is a `v, a, b` degree condition.) -/
+def RdeIsBalanced (v a b _c : K[X]) : Prop :=
+  ¬ (a.natDegree + max 0 (v.natDegree - 1) < b.natDegree) ∧
+    ¬ (2 ≤ v.natDegree ∧ b.natDegree < a.natDegree + v.natDegree - 1)
+
+/-- **★ Bronstein Thm 6.3.1 over `K[X]`, modulo the cancellation residual**
+(`natDegree_le_rdeBoundDegreeAbstract_of_balanced`): a nonzero `q` solving `a·Dq + b·q = c` (with `a ≠ 0`)
+has `deg q ≤ rdeBoundDegreeAbstract v a b c`, **provided** that whenever the configuration is balanced
+(`RdeIsBalanced`) the bound is already known to hold (`hbal`). The two strict-domination cases discharge
+all non-balanced configurations unconditionally (`natDegree_le_of_bDominates` /
+`natDegree_le_of_aDominates_nonlinear`); `hbal` supplies exactly the balanced (cancellation) configurations
+the engine's bound does not cover — the precise residual. -/
+theorem natDegree_le_rdeBoundDegreeAbstract_of_balanced {v a b c q : K[X]} (hq : q ≠ 0) (ha0 : a ≠ 0)
+    (heq : a * Differential.implicitDeriv v q + b * q = c)
+    (hbal : RdeIsBalanced v a b c → q.natDegree ≤ rdeBoundDegreeAbstract v a b c) :
+    q.natDegree ≤ rdeBoundDegreeAbstract v a b c := by
+  by_cases hbd : a.natDegree + max 0 (v.natDegree - 1) < b.natDegree
+  · -- b·q strictly dominates: covered unconditionally
+    have hle := natDegree_le_of_bDominates hq heq hbd
+    -- the abstract bound in this configuration is `max(0, dc - db)`, which ≥ dc - db ≥ dq
+    have hb0 : b.natDegree ≠ 0 := by omega
+    refine hle.trans ?_
+    -- show `c.natDegree - b.natDegree ≤ rdeBoundDegreeAbstract v a b c`
+    simp only [rdeBoundDegreeAbstract]
+    split
+    · -- δ ≥ 2: db dominates max(da+δ-1, db) since b dominates ⟹ da+δ-1 < db
+      rename_i hδ
+      have : a.natDegree + (v.natDegree - 1) < b.natDegree := by
+        have : max 0 (v.natDegree - 1) = v.natDegree - 1 := by omega
+        omega
+      have hmax : max (a.natDegree + v.natDegree - 1 : ℤ) (b.natDegree : ℤ) = (b.natDegree : ℤ) := by
+        rw [max_eq_right]; omega
+      rw [hmax]; omega
+    · split
+      · -- δ = 1: max(db, da) = db since da < db (from b dominates with δ-1=0)
+        rename_i hδ1
+        have hda : a.natDegree < b.natDegree := by
+          have : max 0 (v.natDegree - 1) = 0 := by omega
+          omega
+        have hmax : max (b.natDegree : ℤ) (a.natDegree : ℤ) = (b.natDegree : ℤ) := by
+          rw [max_eq_left]; exact_mod_cast hda.le
+        rw [hmax]; omega
+      · -- δ = 0: da < db (from b dominates), so the bound is max(0, dc - db)
+        rename_i hδ0
+        have hda : a.natDegree < b.natDegree := by
+          have : max 0 (v.natDegree - 1) = 0 := by omega
+          omega
+        rw [if_pos (by exact_mod_cast hda)]; omega
+  · by_cases hnl : 2 ≤ v.natDegree ∧ b.natDegree < a.natDegree + v.natDegree - 1
+    · -- a·Dq strictly dominates (nonlinear): covered unconditionally
+      obtain ⟨hv, hgt⟩ := hnl
+      have hle := natDegree_le_of_aDominates_nonlinear ha0 hv heq hgt
+      refine hle.trans ?_
+      simp only [rdeBoundDegreeAbstract]
+      rw [if_pos (by exact_mod_cast hv)]
+      -- max(da+δ-1, db) = da+δ-1 since db < da+δ-1
+      have hmax : max (a.natDegree + v.natDegree - 1 : ℤ) (b.natDegree : ℤ)
+          = (a.natDegree + v.natDegree - 1 : ℤ) := by
+        rw [max_eq_left]; omega
+      rw [hmax]; omega
+    · -- balanced: the residual
+      exact hbal ⟨hbd, hnl⟩
+
+end AbstractBound
+
+/-! ## The computable bridge `cRdeBoundDegreeG ↔ rdeBoundDegreeAbstract`
+
+`cRdeBoundDegreeG` is the same §6.3 formula as `rdeBoundDegreeAbstract`, computed over `cdegG`s; since
+`cdegG p = (toPolyG p).natDegree` (`cdegG_eq_natDegree`), the two coincide term-by-term. -/
+
+section Bridge
+
+variable {α : Type*} [CField α] [CFieldSpec α]
+
+/-- **The computable degree bound equals the abstract one** (`cRdeBoundDegreeG_eq_abstract`):
+`cRdeBoundDegreeG Dt fuel a b c = rdeBoundDegreeAbstract (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c)`
+over `(CFieldSpec.K α)[X]`. Both are the identical Bronstein §6.3 case formula; the only difference is
+`cdegG` vs `natDegree (toPolyG ·)`, identified by `cdegG_eq_natDegree`. -/
+theorem cRdeBoundDegreeG_eq_abstract (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) :
+    cRdeBoundDegreeG Dt fuel a b c
+      = rdeBoundDegreeAbstract (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c) := by
+  simp only [cRdeBoundDegreeG, rdeBoundDegreeAbstract, cdegG_eq_natDegree]
+
+end Bridge
+
 end DeepWiki.SymbolicIntegration
