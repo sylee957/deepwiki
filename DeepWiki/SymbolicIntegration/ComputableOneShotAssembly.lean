@@ -145,6 +145,88 @@ theorem hyperexp_cancel_iff_sum_zero (s : Finset K) (b : K) (hb : b ≠ 0) (c : 
   rw [(map_eq_zero_iff _ (RatFunc.algebraMap_injective K)), Polynomial.C_eq_zero,
     mul_eq_zero, or_iff_right hb]
 
+/-! ### ★ Task 2 (the decomposition): the monomial RT residue sum = `(cancel sum) + a/d` UNCONDITIONALLY
+
+`monomial_residue_match_of_cancel` proves the residue sum `= a/d` *given* `hcancel`. Its proof first rewrites
+the sum into `(∑_α c_α·(v − Cα′) /ₘ (t−α)) + a/d` (`Finset.sum_add_distrib` after the per-term euclidean
+split), then *kills* the first summand with `hcancel`. We expose that intermediate **unconditional**
+decomposition — `residue sum = (cancel sum) + a/d` for ANY monomial `v` — which is the engine-success
+analysis's pivot: the residue match `residue sum = a/d` holds **iff** the cancel sum vanishes. Re-derived in
+this file from the public helpers `extendDeriv_implicitDeriv_logDeriv_X_sub_C`, `algebraMap_div_X_sub_C_split`,
+`residue_mul_eval_sub_eq`, `ratFunc_eq_sum_residue_div` (the same steps as `monomial_residue_match_of_cancel`,
+minus the final `hcancel` rewrite). -/
+
+/-- **★ The unconditional monomial RT decomposition** `residue sum = (cancel sum) + a/d` — for a squarefree
+`d = ∏_{α∈s}(t−α)`, `deg a < #s`, an arbitrary monomial `Dt = v`, every root normal (`v(α) ≠ α′`), the
+monomial RT residue sum `∑_{α∈s} C(c_α)·(D(t−α)/(t−α))` (`c_α = a(α)/(Dd)(α)`, `D = extendDeriv (implicitDeriv
+v)`) equals the **polynomial-part cancel sum** `∑_{α∈s} C(c_α)·((v − Cα′) /ₘ (t−α))` PLUS `a/d`, with **no**
+`hcancel` hypothesis. The proof of `monomial_residue_match_of_cancel` before it applies `hcancel`: each
+summand splits (`algebraMap_div_X_sub_C_split`) into its polynomial part `C(c_α)·((v−Cα′) /ₘ (t−α))` and its
+residue `C(a(α)/d′(α))/(t−α)`; `Finset.sum_add_distrib` separates the two, the residue half reassembles `a/d`
+(`ratFunc_eq_sum_residue_div`). The pivot for the engine-success ⟺ integrability analysis: the residue match
+`= a/d` is equivalent to the cancel sum vanishing. -/
+theorem monomial_residue_sum_eq_cancel_add (s : Finset K) (a v : K[X])
+    (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, v.eval α ≠ α′) :
+    ∑ α ∈ s, algebraMap K[X] (RatFunc K)
+          (C (a.eval α / (Differential.implicitDeriv v (Lagrange.nodal s id)).eval α))
+        * (extendDeriv (Differential.implicitDeriv v)
+              (algebraMap K[X] (RatFunc K) (X - C α))
+            / algebraMap K[X] (RatFunc K) (X - C α))
+      = (∑ α ∈ s, algebraMap K[X] (RatFunc K)
+            (C (a.eval α / (Differential.implicitDeriv v (Lagrange.nodal s id)).eval α)
+              * ((v - C (α′)) /ₘ (X - C α))))
+        + algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) := by
+  -- abbreviation for the RT residue at `α`
+  set c : K → K := fun α => a.eval α / (Differential.implicitDeriv v (Lagrange.nodal s id)).eval α
+    with hc
+  -- rewrite each summand: monomial log-derivative, then euclidean split (verbatim `monomial_residue_match_of_cancel`)
+  have hterm : ∀ α ∈ s,
+      algebraMap K[X] (RatFunc K) (C (c α))
+          * (extendDeriv (Differential.implicitDeriv v) (algebraMap K[X] (RatFunc K) (X - C α))
+              / algebraMap K[X] (RatFunc K) (X - C α))
+        = algebraMap K[X] (RatFunc K) (C (c α) * ((v - C (α′)) /ₘ (X - C α)))
+          + algebraMap K[X] (RatFunc K) (C (a.eval α / (derivative (Lagrange.nodal s id)).eval α))
+              / algebraMap K[X] (RatFunc K) (X - C α) := by
+    intro α hα
+    rw [extendDeriv_implicitDeriv_logDeriv_X_sub_C, algebraMap_div_X_sub_C_split (v - C (α′)) α,
+      mul_add, ← map_mul]
+    congr 1
+    rw [eval_sub, eval_C, ← mul_div_assoc, ← map_mul, ← C_mul]
+    have hroot : (Lagrange.nodal s id).eval α = 0 := by
+      simpa using Lagrange.eval_nodal_at_node (s := s) (v := (id : K → K)) hα
+    rw [hc]
+    rw [residue_mul_eval_sub_eq a v (Lagrange.nodal s id) α hroot (hnorm α hα)]
+  -- separate the polynomial-part sum from the residue sum; the residue sum reassembles `a/d`
+  rw [Finset.sum_congr rfl hterm, Finset.sum_add_distrib]
+  rw [← ratFunc_eq_sum_residue_div s a hA]
+
+/-- **★★ The hyperexp residue match ⟺ `∑ c_α = 0`** — for the hyperexponential monomial `v = C b·X`
+(`Dt = η′·t`, `b = η′ ≠ 0`), the monomial RT residue sum equals `a/d` (the residue match `hmatch` the engine
+consumes) **iff** `∑_{α∈s} c_α = 0` — the integrability condition (`a/d` integrable in the log part alone).
+Composes the unconditional decomposition `monomial_residue_sum_eq_cancel_add` (residue sum = cancel sum + a/d)
+with `hyperexp_cancel_iff_sum_zero` (cancel sum = 0 ⟺ ∑c = 0): `residue sum = a/d ⟺ cancel sum = 0 ⟺ ∑c = 0`.
+The cleanest pin of the hyperexp integrability obstruction — the residue match the §5.6/`cIntegrateGFull`
+log-part needs is GENUINELY EQUIVALENT to the side condition `∑c = 0`, not an engine-success consequence
+(see the closing status: `cIntegrateGFull`'s pure-normal branch returns `some` even when `∑c ≠ 0`). -/
+theorem hyperexp_residue_match_iff_sum_zero (s : Finset K) (a : K[X]) (b : K) (hb : b ≠ 0)
+    (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, (C b * X).eval α ≠ α′) :
+    (∑ α ∈ s, algebraMap K[X] (RatFunc K)
+          (C (a.eval α / (Differential.implicitDeriv (C b * X) (Lagrange.nodal s id)).eval α))
+        * (extendDeriv (Differential.implicitDeriv (C b * X))
+              (algebraMap K[X] (RatFunc K) (X - C α))
+            / algebraMap K[X] (RatFunc K) (X - C α))
+        = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id))
+      ↔ ∑ α ∈ s, a.eval α / (Differential.implicitDeriv (C b * X) (Lagrange.nodal s id)).eval α = 0 := by
+  -- residue sum = (cancel sum) + a/d, so `residue sum = a/d ↔ cancel sum = 0`
+  rw [monomial_residue_sum_eq_cancel_add s a (C b * X) hA hnorm]
+  -- `cancelSum + a/d = a/d ↔ cancelSum = 0` (additive cancellation in the field `RatFunc K`)
+  have hcancel_iff : ∀ x y : RatFunc K, (x + y = y) ↔ (x = 0) := fun x y =>
+    ⟨fun h => add_right_cancel (b := y) (by rw [h, zero_add]), fun h => by rw [h, zero_add]⟩
+  rw [hcancel_iff]
+  -- the cancel sum vanishes ⟺ `∑ c_α = 0` (`hyperexp_cancel_iff_sum_zero`, `c_α` the RT residue)
+  exact hyperexp_cancel_iff_sum_zero s b hb
+    (fun α => a.eval α / (Differential.implicitDeriv (C b * X) (Lagrange.nodal s id)).eval α)
+
 end ResidueMatchTower
 
 /-! ### Task 1 (engine vocabulary): the list↔Finset bridge over `K = CFieldSpec.K α`
