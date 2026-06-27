@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputablePrimPRSRegular
 import DeepWiki.SymbolicIntegration.ComputableRischDEStructural
+import DeepWiki.SymbolicIntegration.ComputableHyperexpFullSoundness
 
 /-! # The fully-abstract transcendental Risch soundness capstone — threading the two PRS witnesses
 
@@ -342,10 +343,121 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
   crischDESolve_field_of_witness_residual f g y hsolve hres
 
+/-! ## Task 5 — the fully-abstract hyperexp normal-part soundness corollary (native-residual-free)
+
+`ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound` is unconditional in `∑c`, reduced to the
+**single** documented native residual `hintR` (`D(∫R) = R`, the base-RDE-oracle's pure-integration
+soundness — `native_decide`-validated, e.g. `nNormInv_baseIntegral_eq_x`). `crischDESolve_zero_intDeriv`
+(`ComputableRischFieldSpec`) discharges exactly that `hintR` from `CRischFieldSpec α` with NO `native_decide`.
+So the headline corollary supplies `[CRischFieldSpec α]` and **removes the native residual** — the §5.9
+hyperexp normal-part soundness becomes native-residual-free, gated only on the abstract engine bridges
+(`hherm`/`hform`/… — the same documented inputs the primitive/hyperexp one-shots take, all algebraic, no
+`native_decide`). At base `α = ℚ` the residual oracle is the unconditional `instCRischFieldSpecQ`; at
+`QFunNZG β` it is the recursive `CRischFieldSpec` (the precise remaining bookkeeping — see the verdict). -/
+
+section FullyAbstract
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CFracGcdCore α] [Algebra ℚ (CFieldSpec.K α)] [CRischField α] [CRischFieldSpec α]
+
+/-- **★★★ The fully-abstract §5.9 hyperexp normal-part soundness** (Task 5 — native-residual-free): for a
+hyperexponential monomial `toPolyG Dt = C b·X`, if the §5.9 normal-part driver returns `some res` and the
+base oracle solves the pure-integration `∫R` (`crischDESolve 0 R = some intR`), then the field-level
+antiderivative identity `D(res) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc (CFieldSpec.K
+α)` — gated only on the abstract engine bridges, **with the base-oracle native residual `hintR` DISCHARGED**
+from `[CRischFieldSpec α]` (via `crischDESolve_zero_intDeriv`). Compared to
+`cIntegrateHyperexpNormalG_sound` (which carries `hintR` as a hypothesis), this corollary removes the single
+`native_decide`-validated residual — transcendental hyperexp soundness with no native residual, conditional
+only on the RDE-oracle spec class. -/
+theorem cIntegrateHyperexpNormalG_sound_of_rischFieldSpec (Dt : CPolyG α) (fuel : ℕ)
+    (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (intR : α)
+    (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C b * X)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
+    (hintRsome : CRischField.crischDESolve (CField.zero : α)
+        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+      = some intR)
+    (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β)))
+    (hRval : amG α (Polynomial.C (CFieldSpec.toK
+            (cHyperexpResidualG (cExpEtaG fuel Dt)
+              (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
+        = amG α (C (b * ∑ β ∈ s,
+            (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  -- the base-oracle native residual `hintR` is now a theorem: `D(∫R) = R` from `CRischFieldSpec α`
+  cIntegrateHyperexpNormalG_sound Dt fuel a d cands res intR s b hDt hgden hintRsome hsome hherm hden
+    hA hnorm hform
+    (crischDESolve_zero_intDeriv Dt
+      (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+      intR hintRsome)
+    hRval
+
+end FullyAbstract
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- ★ Task 5: the §5.9 hyperexp normal-part soundness with the base-oracle native residual DISCHARGED from
+-- the RDE-oracle spec class — native-residual-free, gated only on the abstract engine bridges.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CFracGcdCore α] [Algebra ℚ (CFieldSpec.K α)] [CRischField α] [CRischFieldSpec α]
+    (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (intR : α)
+    (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C b * X)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
+    (hintRsome : CRischField.crischDESolve (CField.zero : α)
+        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+      = some intR)
+    (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β)))
+    (hRval : amG α (Polynomial.C (CFieldSpec.toK
+            (cHyperexpResidualG (cExpEtaG fuel Dt)
+              (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
+        = amG α (C (b * ∑ β ∈ s,
+            (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  cIntegrateHyperexpNormalG_sound_of_rischFieldSpec Dt fuel a d cands res intR s b hDt hgden hintRsome
+    hsome hherm hden hA hnorm hform hRval
+
 /-! ### Axiom audit (the gcd-kernel discharge + the RDE soundness are axiom-clean, no `native_decide`) -/
 
 #print axioms cTowerWitness_assocReg
 #print axioms instCTowerGcdWitnessQ_of_terminates
 #print axioms crischDESolve_field_of_witness_residual
+#print axioms cIntegrateHyperexpNormalG_sound_of_rischFieldSpec
 
 end DeepWiki.SymbolicIntegration
