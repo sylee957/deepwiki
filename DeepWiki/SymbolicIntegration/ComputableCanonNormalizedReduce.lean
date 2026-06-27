@@ -22,9 +22,15 @@ the §6.1 check is invariant under `qReduce`. This file proves it.
   *unreduced* input. No scalar/normalization gap — the re-pin reconciliation is a definitional identity.
 
 The keystone is proved abstractly (by `rfl`, no `native_decide`); axiom-clean
-`[propext, Classical.choice, Quot.sound]`. The full *re-reduce* invariance `cisCanonNormalizedG (qReduce x) =
-cisCanonNormalizedG x` (re-running `cisCanonNormalizedG` on the already-reduced `qReduce x`, which re-reduces its
-denominator) is added next, via `reduceDen`-idempotency-at-lowest-terms. -/
+`[propext, Classical.choice, Quot.sound]`.
+
+* **`cisCanonNormalizedG_qReduce_of_idempotent`** — the full *re-running* invariance `cisCanonNormalizedG
+  (qReduce x) = cisCanonNormalizedG x` (re-running the wrapper check on the already-reduced `qReduce x`), proved
+  **conditional on** `ReduceDenIdempotent x` (`reduceDen (qReduce x) = reduceDen x`), which is the isolated
+  obstruction. The hypothesis holds for every `x` and is `native_decide`-validated at `α = ℚ`; its only *abstract*
+  gap is the concrete `cgcdExtG`-list fact "the Euclidean gcd of an equal-leading-coefficient coprime pair is
+  `[1]`" — *not* an abstract `toPolyG`-level fact (the Bézout API gives only a *unit* `C c`, and `c = 1` is
+  specific to the reduced pair, not generic). The re-pin needs only the keystone, which sidesteps this entirely. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -77,13 +83,85 @@ NO scalar/normalization gap. -/
 theorem cisCanonNormalizedCoreG_qReduce (x : QFunNZG β) :
     cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x := rfl
 
+-- ★ The re-pin reconciliation: the gated core's denominator-direct §6.1 check on the reduced input `qReduce x`
+-- IS the wrapper's §6.1 check on the unreduced input `x`. Definitional (`rfl`); the keystone the production
+-- RDE re-pin's `crischDERawSolveWf_eq` analogue consumes.
+example (x : QFunNZG β) : cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x := rfl
+
 end Bridge
 
-/-! ## Validation (`native_decide`): the denominator-direct check is computable at the tower level
+/-! ## The full re-reduce invariance, isolated to `reduceDen`-idempotency-at-lowest-terms
+
+The keystone above is the form the re-pin actually consumes: the core, holding the *reduced* fraction
+`qReduce ftilde`, runs the §6.1 test on **its** denominator component `(qReduce ftilde).1.2` — and that is,
+definitionally, the wrapper's `cisCanonNormalizedG ftilde`. No implementation re-runs the full
+`cisCanonNormalizedG` (which itself re-reduces) on an already-reduced input.
+
+The *re-running* form `cisCanonNormalizedG (qReduce x) = cisCanonNormalizedG x` is **also true**
+(`native_decide`-validated below), but it does **not** reduce to the keystone: `cisCanonNormalizedG (qReduce x)`
+re-reduces `qReduce x`'s denominator, reading `reduceDen (qReduce x)` rather than `(qReduce x).1.2`. It therefore
+turns entirely on whether **re-reducing an already-reduced denominator is the identity**:
+
+  `reduceDen (qReduce x) = reduceDen x`  (`ReduceDenIdempotent`).
+
+This holds because `qReduce x`'s numerator and denominator are coprime, so the second gcd
+`reduceGcd (qReduce x) = (cgcdExtG _ (reduceNum x) (reduceDen x)).1` is the unit `[1]` and the cancelling
+division is the identity. ★ **The precise sub-obstruction to an *abstract* proof:** the abstract Bézout/`toPolyG`
+API (`cgcdExtG_isUnit_of_divided_gen`) gives only that this re-gcd is a *unit* `C c` — `toPolyG (reduceDen
+(qReduce x)) = c⁻¹ · toPolyG (reduceDen x)` — **not** that `c = 1`. And `c = 1` is *not* generic for an arbitrary
+coprime pair: `cgcdExtG` of coprime monic `(x − 2, x + 3)` is `[-5] ≠ [1]`. It is `[1]` for the *reduced* pair
+only because `reduceNum x` and `reduceDen x` share a leading coefficient (both are `cdivG · (reduceGcd x)`, so
+both scaled by `(cleadG (reduceGcd x))⁻¹`); the `cgcdExtG` Euclidean descent of an **equal-leading-coefficient**
+coprime pair terminates at `[1]`. That is a concrete `cgcdExtG`-list fact (a dedicated Euclidean-list induction),
+not an abstract `toPolyG`-level one — so the re-running invariance is stated here **conditional on**
+`ReduceDenIdempotent` (proved generically, sorry-free) and `native_decide`-validated unconditionally at `α = ℚ`. -/
+
+section ReReduce
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β]
+
+/-- **The `reduceDen`-idempotency-at-lowest-terms hypothesis** `ReduceDenIdempotent x`: re-reducing the
+already-reduced fraction `qReduce x` leaves its denominator unchanged — `reduceDen (qReduce x) = reduceDen x`.
+True for every `x` (the reduced pair is coprime with equal leading coefficient, so the second gcd is `[1]`);
+`native_decide`-validated at `α = ℚ` (`reduceDenIdempotent_examples`). The isolated obstruction to an *abstract*
+proof is the concrete `cgcdExtG`-list fact "Euclidean gcd of an equal-leading-coefficient coprime pair = `[1]`"
+(see the section docstring); the §6.1 re-running invariance `cisCanonNormalizedG_qReduce_of_idempotent` is
+mechanical given it. -/
+def ReduceDenIdempotent (x : QFunNZG β) : Prop :=
+  QFunNZG.reduceDen (qReduce x) = QFunNZG.reduceDen x
+
+/-- **★ The §6.1 check is `qReduce`-invariant under re-running** (`cisCanonNormalizedG_qReduce_of_idempotent`):
+given `ReduceDenIdempotent x` (re-reducing the reduced denominator is the identity),
+`cisCanonNormalizedG (qReduce x) = cisCanonNormalizedG x`. Both unfold to `cisZeroG (normalPart(d) − d)` reading
+`d = reduceDen (qReduce x)` resp. `d = reduceDen x`; the hypothesis rewrites the former to the latter. Mechanical
+once the (isolated) `reduceDen`-idempotency is supplied. -/
+theorem cisCanonNormalizedG_qReduce_of_idempotent (x : QFunNZG β) (hidem : ReduceDenIdempotent x) :
+    cisCanonNormalizedG (qReduce x) = cisCanonNormalizedG x := by
+  show CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel
+        (QFunNZG.reduceDen (qReduce x))).1
+      (QFunNZG.reduceDen (qReduce x)))
+    = CPolyG.cisZeroG (CPolyG.csubG
+      (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel
+        (QFunNZG.reduceDen x)).1
+      (QFunNZG.reduceDen x))
+  rw [show QFunNZG.reduceDen (qReduce x) = QFunNZG.reduceDen x from hidem]
+
+-- The full re-running §6.1 invariance `cisCanonNormalizedG (qReduce x) = cisCanonNormalizedG x`, given the
+-- isolated `reduceDen`-idempotency `reduceDen (qReduce x) = reduceDen x` (true ∀ x, `native_decide`-checked at ℚ).
+example (x : QFunNZG β) (hidem : ReduceDenIdempotent x) :
+    cisCanonNormalizedG (qReduce x) = cisCanonNormalizedG x :=
+  cisCanonNormalizedG_qReduce_of_idempotent x hidem
+
+end ReReduce
+
+/-! ## Validation (`native_decide`): the denominator-direct check is computable at the tower level; the
+re-reduce idempotency and the full re-running invariance hold at `α = ℚ`
 
 `cisCanonNormalizedCoreG` reads only the denominator component (`[CField β]`/`[CDiffField β]`/`[CFracGcdCore β]`
 data), so — unlike `cisCanonNormalizedG`/`qReduce`, whose tower type drags in the noncomputable `[CFieldSpec]` —
-it `native_decide`s at the level-2 carrier `ℚ(x)(t₁)`. -/
+it `native_decide`s at the level-2 carrier `ℚ(x)(t₁)`. The `reduceDen`-idempotency and re-running invariance use
+the computable `α = ℚ` carrier (level 1, `ℚ(x)`). -/
 
 section Validation
 
@@ -96,10 +174,38 @@ theorem cisCanonNormalizedCoreG_witness_false :
       (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG (QFunNZG ℚ)) towerRischDEFuel
         witnessF.1.1 witnessF.1.2))) = false := by native_decide
 
+/-- A swelling `ℚ(x)` fraction `(x² − 1)/(x² + 2x − 3) = (x²−1)/((x−1)(x+3))` (lowest terms `(x+1)/(x+3)`) and a
+non-monic swell `3x²/(2(x+1)(x+2))` — `qReduce`-representative changes on both, so they exercise
+`ReduceDenIdempotent`/the re-running invariance non-trivially. -/
+def reduceDenExamples : List (QFunNZG ℚ) :=
+  [⟨([(-1 : ℚ), 0, 1], [(-3 : ℚ), 2, 1]), by native_decide⟩,
+   ⟨([(0 : ℚ), 0, 3], [(4 : ℚ), 6, 2]), by native_decide⟩,
+   ⟨([(0 : ℚ), 1], [(0 : ℚ), 0, 1]), by native_decide⟩]
+
+/-- **`ReduceDenIdempotent` holds at `α = ℚ`** (`reduceDenIdempotent_examples`, `native_decide`): on each swelling
+`reduceDenExamples` fraction (where `qReduce` genuinely cancels a common factor), `reduceDen (qReduce x) =
+reduceDen x` — re-reducing the reduced denominator is the identity (the second gcd is `[1]`). The unconditional
+confirmation of the obstruction the abstract proof isolates to a `cgcdExtG`-list fact. -/
+theorem reduceDenIdempotent_examples :
+    reduceDenExamples.all (fun x =>
+      (QFunNZG.reduceDen (qReduce x) : List ℚ) == (QFunNZG.reduceDen x : List ℚ)) = true := by
+  native_decide
+
+/-- **The full re-running §6.1 invariance holds at `α = ℚ`** (`cisCanonNormalizedG_qReduce_examples`,
+`native_decide`): on each swelling fraction, `cisCanonNormalizedG (qReduce x) = cisCanonNormalizedG x` — the check
+is unchanged by re-running it on the already-reduced fraction (its denominator re-reduces to itself). The
+unconditional `α = ℚ` instance of `cisCanonNormalizedG_qReduce_of_idempotent`. -/
+theorem cisCanonNormalizedG_qReduce_examples :
+    reduceDenExamples.all (fun x =>
+      cisCanonNormalizedG (qReduce x) == cisCanonNormalizedG x) = true := by
+  native_decide
+
 end Validation
 
-/-! ### Axiom audit (the keystone bridge is axiom-clean, by `rfl`; the validation is `native_decide`) -/
+/-! ### Axiom audit (the keystone bridge + the conditional re-running invariance are axiom-clean; the
+validations are `native_decide`) -/
 
 #print axioms cisCanonNormalizedCoreG_qReduce
+#print axioms cisCanonNormalizedG_qReduce_of_idempotent
 
 end DeepWiki.SymbolicIntegration
