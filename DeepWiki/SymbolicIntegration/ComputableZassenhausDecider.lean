@@ -310,4 +310,94 @@ theorem maxAbsCoeff_le_mignotteBound (f : List ℤ) : maxAbsCoeff f ≤ mignotte
     _ ≤ 2 ^ (f.length + 1) * (maxAbsCoeff f + 1) :=
         Nat.mul_le_mul_right _ (Nat.one_le_two_pow)
 
+/-! ## Recombination, stage 1: the exact `ℤ`-division test (★ the soundness keystone)
+
+The recombination tests each candidate subset-product `g` (monic, degree `dg`) by **trial-dividing**
+`f` over `ℤ`: `divmodByMonic f g dg` (the same monic long division as the `𝔽_p` engine — it works
+over any `CommRing`, here `ℤ`) yields `(q, r)`, and `g` is a genuine factor **iff** the remainder
+`r` reads as the zero polynomial. The test `dividesExactly` checks `lengthTrim r = 0` (decidable,
+computable). **★ Keystone soundness `dividesExactly_dvd`:** when the test passes,
+`toPolyZ f = toPoly g * toPoly q` — an *honest* factorization over `ℤ`, straight from the division
+identity `divmodByMonic_spec` with a vanishing remainder. This is the brick the whole decider's
+soundness rests on (a found factor really divides `f`). -/
+
+/-- The exact-division test of `f` by a monic candidate `g` of degree `dg` over `ℤ`: `true` iff the
+`divmodByMonic` remainder reads as the zero polynomial (`lengthTrim = 0`). Computable. -/
+def dividesExactly (f g : List ℤ) (dg : ℕ) : Bool :=
+  decide (lengthTrim (divmodByMonic f g dg).2 = 0)
+
+/-- **★★ The recombination soundness keystone.** If the exact-division test passes
+(`dividesExactly f g dg = true`), then `g` genuinely divides `f` over `ℤ`:
+`toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1` — an honest factorization, from the
+`divmodByMonic` division identity with the remainder forced to `0` (a vanishing `lengthTrim` reads
+as the zero polynomial). Axiom-clean; the foundation of `irreducibleZassenhaus_sound`. -/
+theorem dividesExactly_dvd {f g : List ℤ} {dg : ℕ} (h : dividesExactly f g dg = true) :
+    toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1 := by
+  rw [dividesExactly, decide_eq_true_eq] at h
+  have hid := divmodByMonic_spec f g dg
+  have hr0 : toPoly (divmodByMonic f g dg).2 = 0 := toPoly_eq_zero_of_lengthTrim_eq_zero h
+  rw [toPolyZ, hid, hr0, add_zero]
+
+/-- A passing exact-division test yields a genuine **divisibility** `toPoly g ∣ toPolyZ f`. -/
+theorem dvd_of_dividesExactly {f g : List ℤ} {dg : ℕ} (h : dividesExactly f g dg = true) :
+    toPoly g ∣ toPolyZ f :=
+  ⟨_, dividesExactly_dvd h⟩
+
+/-! ## Recombination, stage 2: symmetric-range reduction
+
+A lifted factor's coefficients live mod `p^k`; the true `ℤ`-factor's coefficients are their unique
+representatives in the **symmetric** range `(−p^k/2, p^k/2]`. `symModN n` maps each coefficient `a`
+to `a % n` shifted into that range (subtract `n` when `> n/2`). Computable; the reduction the
+candidate products pass through before the `ℤ`-trial-division. (Soundness of the *decider* routes
+through `dividesExactly_dvd` on the reduced candidate, so `symModN` needs no separate congruence
+lemma for the proven core — the trial division is exact over `ℤ` regardless.) -/
+
+/-- Shift `a % n` into the symmetric range `(−n/2, n/2]`: subtract `n` when the residue exceeds
+`n/2`. -/
+def symMod (n a : ℤ) : ℤ :=
+  let r := a % n
+  if r > n / 2 then r - n else r
+
+/-- Apply `symMod n` to every coefficient of a list-poly: the symmetric-range representative. -/
+def symModN (n : ℤ) (l : List ℤ) : List ℤ := l.map (symMod n)
+
+/-! ## Recombination, stage 3: subset products and the search
+
+Enumerate **subsets** of the lifted mod-`p^k` factors, form each subset's product (`mulL`-fold),
+reduce to the symmetric range, prepend the leading coefficient sign, and `ℤ`-trial-divide `f`. A
+factor of `f` is the symmetric-reduced product of a subset whose product divides `f` over `ℤ`. We
+return the list of **degrees** of the true factors found (the data the irreducibility verdict reads:
+`f` is irreducible iff the only factor found is `f` itself, i.e. of full degree). The subset search
+is over `List.sublists` of the factor list; computable and `native_decide`-able for few factors. -/
+
+/-- The product of a list of factor coefficient-lists (`mulL`-fold from `[1]`). -/
+def listProd (fs : List (List ℤ)) : List ℤ :=
+  fs.foldr (fun a acc => mulL a acc) [1]
+
+/-- `toPoly` of a `listProd` is the product of the factors' `toPoly`s. -/
+theorem toPoly_listProd (fs : List (List ℤ)) :
+    toPoly (listProd fs) = (fs.map toPoly).prod := by
+  induction fs with
+  | nil => simp [listProd, toPoly]
+  | cons a as ih =>
+    rw [listProd, List.foldr_cons, toPoly_mulL, List.map_cons, List.prod_cons, ← listProd, ih]
+
+/-- A subset-product candidate of the lifted factors `facs`, symmetric-range-reduced mod `n`: form
+the product of the sublist `sub`, then reduce each coefficient into `(−n/2, n/2]`. The monic
+candidate the `ℤ`-trial-division tests. -/
+def recombineCandidate (n : ℤ) (sub : List (List ℤ)) : List ℤ :=
+  symModN n (listProd sub)
+
+/-- **Recombination search.** Over all sublists of the lifted factors `facs` (mod `n = p^k`), form
+each symmetric-reduced subset-product candidate; keep those whose trim-degree is `≥ 1` and which
+**exactly divide** `f` over `ℤ`, returning their degrees (`lengthTrim − 1`). The verdict data: `f`
+is irreducible iff the only divisor degree found equals `deg f`. -/
+def recombine (f : List ℤ) (n : ℤ) (facs : List (List ℤ)) : List ℕ :=
+  (facs.sublists.filterMap (fun sub =>
+    let cand := recombineCandidate n sub
+    let dc := lengthTrim cand
+    if 1 ≤ dc ∧ dc ≤ lengthTrim f ∧ dividesExactly f cand (dc - 1) then
+      some (dc - 1)
+    else none))
+
 end DeepWiki.SymbolicIntegration
