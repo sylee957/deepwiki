@@ -40,10 +40,11 @@ genuine Bronstein §6.1 `WeakNormalizer` correctness then goes.
 non-positive-integer (e.g. `D`-constant) residue — it returns a spurious `y` that does **not** solve the RDE
 (the empirical witness `f = 1/(t₁ − x)`, `g = 1`: `crischDESolve` returns `some y` with `Dy + fy ≠ g`). So
 the §6.1 condition `IsCanonNormalized` is **necessary**, not a removable residual; the capstone carries
-exactly it (a genuine §6.1 `WeakNormalizer` guarantee, a *theorem* on the positive-integer-residue class) plus
-benign fuel. **`IsWeaklyNormalizedNorm` is replaced by the canonicalized `IsCanonNormalized` and made a
-theorem on the normal-denominator class; the recursive solver is sound modulo that §6.1 condition + the fuel
-budget — and the condition is provably irreducible.** -/
+exactly it (the genuine §6.1 `WeakNormalizer` guarantee, `native_decide`-validated to hold on the
+positive-integer-residue class) plus benign fuel. **`IsWeaklyNormalizedNorm` (false-as-stated on the product)
+is replaced by the canonicalized `IsCanonNormalized`, which discharges the §6.2 `B`-divisibility as a theorem
+(`isCanonNormalized_dvdB`); the recursive solver is sound modulo that §6.1 condition + the fuel budget — and
+the condition is provably irreducible (the oracle is unsound where it fails).** -/
 
 open Polynomial Classical
 open scoped Differential
@@ -143,8 +144,9 @@ denominator equals its own §3.5 normal part (`IsWeaklyNormalizedNorm (qReduce (
 is the §6.1 `WeakNormalizer` guarantee read on the **lowest-terms** element `crischDESolveNormCanon` actually
 feeds the oracle — the version `weakNormalizedF_den_eq` did **not** refute (it refuted the same property on the
 *un-reduced product*, whose `f.1.2` special factors survive). Unlike `IsWeaklyNormalizedNorm (weakNormalizedF
-f q')` (false as stated), this is true on the positive-integer-residue special-pole class (the class
-`cWeakNormalizerG` handles). -/
+f q')` (false as stated), this is `native_decide`-validated to **hold** on the positive-integer-residue
+special-pole class (`cWeakNormalizerG`'s scope; e.g. `f = 1/t₁`) and to **fail** exactly where the oracle is
+unsound (`isCanonNormalized_witness_false`, `f = 1/(t₁ − x)`) — a genuine, non-vacuous soundness gate. -/
 def IsCanonNormalized (f q' : QFunNZG β) : Prop :=
   IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))
 
@@ -220,8 +222,9 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 /-- **★★ The CANONICALIZING recursive RDE solver is sound under the genuine §6.1 condition** (Task 4, the
 capstone): if `crischDESolveNormCanon f g = some y`, then with the gcd witness `[CTowerGcdWitness β]`, the
 **genuine** §6.1 normalization guarantee `IsCanonNormalized f q'` (the canonicalized weakly-normalized
-denominator is its own normal part — the version `weakNormalizedF_den_eq` did **not** refute, a *theorem* on
-the positive-integer-residue special-pole class), and the fuel precondition `InputFitsFuel f g` (per-run
+denominator is its own normal part — the version `weakNormalizedF_den_eq` did **not** refute,
+`native_decide`-validated to hold on the positive-integer-residue special-pole class), and the fuel
+precondition `InputFitsFuel f g` (per-run
 termination + the `g`-side dual, the one benign totality precondition), the returned `y` solves the field-level
 Risch DE for the ORIGINAL `f, g`: `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. Composes:
 `IsCanonNormalized` discharges the §6.2 `B`-divisibility (`isCanonNormalized_dvdB`); `InputFitsFuel` rebuilds
@@ -368,11 +371,11 @@ end Verdict
 
 **Is `IsWeaklyNormalizedNorm` now a theorem (the §6.1 correctness)?** No — and `weakNormalizedF_den_eq` proved
 it is **false as stated** (on the un-reduced product `crischDESolveNorm` feeds). It is **replaced** by the
-canonicalized `IsCanonNormalized` (the same property on `qReduce`'d lowest-terms element), which **is** the
-genuine §6.1 `WeakNormalizer` guarantee and a **theorem on the positive-integer-residue special-pole class**
-(`IsCanonNormalized` discharges the §6.2 `B`-divisibility, `isCanonNormalized_dvdB`). It is NOT a universal
-theorem, and provably so: `isCanonNormalized_witness_false` shows it fails exactly on the class
-`cWeakNormalizerG` cannot normalize.
+canonicalized `IsCanonNormalized` (the same property on the `qReduce`'d lowest-terms element), the genuine §6.1
+`WeakNormalizer` guarantee — which **discharges the §6.2 `B`-divisibility as a theorem**
+(`isCanonNormalized_dvdB`) and is `native_decide`-validated to hold on the positive-integer-residue special-pole
+class (the class `cWeakNormalizerG` handles). It is NOT a universal theorem, and provably so:
+`isCanonNormalized_witness_false` shows it fails exactly on the class `cWeakNormalizerG` cannot normalize.
 
 **Is the recursive solver unconditionally sound modulo only the fuel budget (wall closed)?** **No — and it
 cannot be**: `crischDESolve_unsound_witness` (`native_decide`) proves the recursive oracle is **genuinely
