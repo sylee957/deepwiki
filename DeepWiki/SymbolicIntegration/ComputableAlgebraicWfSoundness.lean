@@ -11,8 +11,7 @@ capstones `isAlgebraicIntegral_of_parts` / `isGeneralAlgebraicIntegral_of_parts`
 in the carrier quotient — *given* three engine inputs: `hrat` (the rational-part telescoping, itself a
 theorem `radDeriv_foldlRadAdd_…_telescope` / `generalReduceRationalTelescope`), `hlog` (the log-part
 partial fraction, `isRadicalLogIntegral_of_residue_match` / `…general…`), and `hsplit` (the integrand split
-`f = ratPart + logPart`). `ComputableUnifiedMixedWfSoundness`'s `cIntegrateMixedWf_algebraic_oneShot` lifted
-that across the fuel-free unified dispatcher — but it too takes `hrat`/`hlog`/`hsplit` as hypotheses.
+`f = ratPart + logPart`) — all three taken as hypotheses.
 
 This file delivers the **FULL one-shot** for the FUEL-FREE algebraic drivers `cIntegrateAlgebraicWf`
 (radical, `y² = ρ`) and `afIntegrateAlgebraicWf` (general curve, `K(x)[y]/(f)`): a clean

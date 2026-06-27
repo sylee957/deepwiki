@@ -28,7 +28,7 @@ This file delivers that one-shot for the **reachable polynomial branch** (Bronst
   level-1 carrier `ℚ(x) = QFunNZG ℚ` as **`field_identity_of_cPolyRischDEG_qfunNZG`** — the deliverable
   (no checker, no `native_decide`, axiom-clean `[propext, choice, Quot.sound]`).
 
-## Precise scope of the FULL mixed one-shot (`cIntegrateMixed = some res ⟹ D(res) = integrand`)
+## Precise scope of the FULL transcendental one-shot (`cIntegrateGFull = some res ⟹ D(res) = integrand`)
 
 The campaign from here is a clear lemma sequence, not a fog. The full transcendental crux
 `cIntegrateGFull = some res ⟹ checkIdentityG = true` decomposes by `cIntegrateGFull`'s structure
@@ -51,9 +51,10 @@ The campaign from here is a clear lemma sequence, not a fog. The full transcende
 * **Constant-base discharge** — the `hconst : mapCoeffs (…) = 0` hypothesis here is the "coefficients are
   differential constants" regime; lifting it from a hypothesis to a derived fact (the tower's base
   derivation) is a small transport, NOT hard.
-* **Algebraic driver** (`cIntegrateMixed`'s algebraic branch) — its `hsplit` round-trip self-discharge
-  is already abstract (`isGeneralRationalIntegral_of_roundtrip`, `toPolyG_afDeriv_eq_of_roundtrip`,
-  `ComputableGeneralIntegralSoundness`); composes per branch via `MixedResultDifferentiatesTo`.
+* **Algebraic driver** (the separate algebraic integrators `cIntegrateAlgebraicWf` / `afIntegrateAlgebraicWf`)
+  — its `hsplit` round-trip self-discharge is already abstract (`isGeneralRationalIntegral_of_roundtrip`,
+  `toPolyG_afDeriv_eq_of_roundtrip`, `ComputableGeneralIntegralSoundness`); its standalone soundness is
+  `cIntegrateAlgebraicWf_sound` (`ComputableAlgebraicWfSoundness`).
 
 So: the poly-branch one-shot is proven (this file); the canonical-split and algebraic-round-trip pieces
 EXIST abstract; the single genuinely-hard remaining piece is an **abstract `cHermiteReduceTowerG` plus

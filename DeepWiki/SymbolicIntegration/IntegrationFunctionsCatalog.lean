@@ -2,8 +2,6 @@ import DeepWiki.SymbolicIntegration.ComputableOneShotAssembly
 import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
 import DeepWiki.SymbolicIntegration.ComputableHyperexpFullSoundness
 import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
-import DeepWiki.SymbolicIntegration.ComputableUnifiedMixedSoundness
-import DeepWiki.SymbolicIntegration.ComputableUnifiedMixedWfSoundness
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveSound
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveSoundWf
 import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
@@ -22,12 +20,6 @@ is documented with (a) what it integrates (coverage) and (b) the name of the sou
 that certifies it — and then REFERENCED by an anonymous `example` that names the theorem, so this catalog
 fails to compile if a referenced guarantee is renamed or removed. The catalog is documentation + verification
 only; it states no new mathematics.
-
-## Second purpose — the Mixed-layer coupling map
-
-Below the index, the `## Mixed-layer coupling` section records, per engine the `cIntegrateMixed*` layer
-dispatches to, whether that engine has a STANDALONE soundness theorem (one NOT phrased through
-`cIntegrateMixedWf`) — the precondition checklist for removing the Mixed layer.
 
 ## Transcendental integrators (Bronstein ch. 5 and 6, over a tower base `CPolyG α`)
 
@@ -80,16 +72,6 @@ dispatches to, whether that engine has a STANDALONE soundness theorem (one NOT p
 * `cIntegrateGeneralCurveDecide` — the self-determining `Option` integrator over an ARBITRARY plane curve.
   Soundness: `cIntegrateGeneralCurveDecide_sound`. Completeness: `cIntegrateGeneralCurveDecide_complete`.
   Decision procedure: `cIntegrateGeneralCurveDecide_decides`, modulo the general `Pic⁰`-torsion frontier.
-
-## Unified integrator — the layer slated for removal
-
-* `cIntegrateMixed` / `cIntegrateMixedWf` — ONE entry over an `IntegrandSpec` tag: a `transcendental` spec
-  routes to `cIntegrateGFull(Wf)`, an `algebraic` spec to `cIntegrateAlgebraic(Wf)`. Fuel'd and fuel-free.
-  Soundness: `cIntegrateMixedWf_sound` (capstone, both arms — COUPLED: takes per-arm hypotheses discharged by
-  the standalone engine theorems); arms `cIntegrateMixedWf_transcendental_oneShot` /
-  `cIntegrateMixedWf_algebraic_oneShot`.
-* `cIntegrateMixedChecked` — the self-validating unified integrator (guards `cIntegrateMixed` by `checkMixed`).
-  Soundness (UNCONDITIONAL): `cIntegrateMixedChecked_sound`; the validator core is `checkMixed_sound`.
 
 ## Legacy integrators (level-1 `QFunNZ`, superseded by the `*G` tower forms)
 
@@ -161,89 +143,5 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @cIntegrateGeneralCurveDecide_sound
 #check @cIntegrateGeneralCurveDecide_complete
 #check @cIntegrateGeneralCurveDecide_decides
-
-/-! ## Verified references — the unified Mixed layer (slated for removal) -/
-
--- `cIntegrateMixedWf`: the both-arms capstone and the two per-arm one-shots.
-#check @cIntegrateMixedWf_sound
-#check @CPolyG.cIntegrateMixedWf_transcendental_oneShot
-#check @cIntegrateMixedWf_algebraic_oneShot
-
--- `cIntegrateMixed` / `cIntegrateMixedChecked`: the self-validating unified soundness and the validator core.
-#check @cIntegrateMixedChecked_sound
-#check @checkMixed_sound
-
-/-! ## Mixed-layer coupling
-
-The precondition checklist for REMOVING the `cIntegrateMixed*` layer: for each engine that layer dispatches
-to, does the engine have a STANDALONE soundness theorem (one NOT phrased through `cIntegrateMixedWf` /
-`cIntegrateMixedChecked`)? If every dispatched engine is standalone-sound, removing the Mixed layer orphans
-no guarantee.
-
-### What the Mixed layer actually dispatches to (verified by the reduction lemmas below)
-
-`cIntegrateMixed` / `cIntegrateMixedWf` is a single `match` on the `IntegrandSpec` top-extension tag — two
-arms, one engine each, no recursion:
-
-* `.transcendental Dt a d cands` → `cIntegrateGFull(Wf) Dt a d cands` (the canonical-split + RDE-oracle poly
-  part + Rothstein-Trager log part driver).
-* `.algebraic ρ R B residual c D degBound` → `cIntegrateAlgebraic(Wf) ρ R B residual c D degBound` (the
-  simple-radical multi-case rational dispatch + principal-case log solve).
-
-The dispatch targets are pinned by `cIntegrateMixedWf_transcendental_eq` (= `.transcendental
-(cIntegrateGFullWf …)`) and `cIntegrateMixedWf_algebraic_eq` (= `.algebraic (cIntegrateAlgebraicWf …)`),
-referenced below. So the Mixed layer dispatches to exactly TWO engines.
-
-### Per-dispatched-engine coupling verdict
-
-* **Transcendental arm — `cIntegrateGFull(Wf)` — ✅ STANDALONE.** Its soundness theorems
-  `cIntegrateGFull_primitive_oneShot` / `cIntegrateGFull_hyperexp_oneShot` are stated and proved about the
-  driver directly (over `RatFunc (CFieldSpec.K α)`), with NO mention of `cIntegrateMixed*`. Indeed the Mixed
-  arm `cIntegrateMixedWf_transcendental_oneShot` is proved BY reducing to `cIntegrateGFull_primitive_oneShot`
-  (the dependency runs Mixed → engine, not the reverse). The guarded `cIntegrateGChecked_correct` is also
-  standalone.
-* **Algebraic arm — `cIntegrateAlgebraic(Wf)` — ✅ STANDALONE.** Its soundness `cIntegrateAlgebraicWf_sound`
-  is stated and proved about the engine directly (`toPolyG (algDeriv ρ (cIntegrateAlgebraicWf …)) = toPolyG
-  integrand`, via `toPolyG_algDeriv_eq_of_roundtrip`), with NO mention of `cIntegrateMixed*`. The Mixed arm
-  `cIntegrateMixedWf_algebraic_oneShot` reuses the abstract `isAlgebraicIntegral_of_parts` (also standalone).
-
-### Engines that are NOT dispatched-to by the Mixed layer (but the prompt lists as algebraic engines)
-
-The self-determining Trager decision integrators `cIntegrateAlgebraicDecide` and
-`cIntegrateGeneralCurveDecide` are SEPARATE top-level entry points; the Mixed layer does not route to them
-(its algebraic arm calls `cIntegrateAlgebraic(Wf)`, not the `*Decide` integrators). Their soundness /
-completeness (`cIntegrateAlgebraicDecide_{sound,complete,decides}`,
-`cIntegrateGeneralCurveDecide_{sound,complete,decides}`) is standalone and independent of the Mixed layer.
-
-### ⚠️ Standalone-soundness GAPS (NOT engines the Mixed layer dispatches to — flagged for the coordinator)
-
-These do NOT block Mixed removal (the Mixed layer never calls them), but the catalog records them as
-soundness gaps in the engine at large:
-
-* `cIntegrateElementaryG` — NO standalone soundness theorem; only `native_decide` round-trip example
-  validations (`algDerivG` against the integrand).
-* `cIntegrateHyperexpG` / `cIntegrateHyperexpLaurentG` / `cIntegrateHyperexpNormalReducedG` — NO direct
-  soundness theorem (correctness flows through `cIntegrateHyperexpNormalG_sound` / `cIntegrateHyperexpFullG_sound`).
-* Legacy `cIntegrate` / `cIntegrateG` / `cIntegrateReduced` — NO standalone soundness theorem (superseded by
-  the `*G` tower forms `cIntegrateGFull` / `cIntegrateGChecked`).
-
-### ★ VERDICT
-
-Both engines the Mixed layer dispatches to — `cIntegrateGFull(Wf)` (transcendental) and
-`cIntegrateAlgebraic(Wf)` (algebraic) — are STANDALONE-sound. The Mixed-layer soundness
-(`cIntegrateMixedWf_sound`, `cIntegrateMixedChecked_sound`) is a thin per-arm dispatch that REUSES these
-standalone engine theorems; it contributes no unique guarantee. Therefore the `cIntegrateMixed*` layer can be
-removed without orphaning any soundness — nothing must be decoupled first. -/
-
--- ★ The dispatch targets, VERIFIED: the Mixed layer routes the transcendental arm to `cIntegrateGFullWf` and
--- the algebraic arm to `cIntegrateAlgebraicWf` (so the coupling audit above is about exactly these two engines).
-#check @CPolyG.cIntegrateMixedWf_transcendental_eq
-#check @cIntegrateMixedWf_algebraic_eq
-
--- ★ Standalone transcendental soundness (about `cIntegrateGFull(Wf)` directly — NOT via Mixed):
-#check @cIntegrateGFull_primitive_oneShot
-#check @cIntegrateGChecked_correct
--- ★ Standalone algebraic soundness (about `cIntegrateAlgebraicWf` directly — NOT via Mixed):
-#check @cIntegrateAlgebraicWf_sound
 
 end DeepWiki.SymbolicIntegration
