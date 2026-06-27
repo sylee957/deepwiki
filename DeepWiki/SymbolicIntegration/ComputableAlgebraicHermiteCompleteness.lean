@@ -116,4 +116,85 @@ theorem pole_condition_infinite_iff_degree {n : ℕ} (δ : Fin n → ℕ) (a : F
 
 end Lemma44
 
+/-! ## The finite-place Hermite uniqueness (Schultz 4.6 / Trager: unique `fᵢ mod V`)
+
+The Hermite congruence (Schultz 4.6, after differentiating and matching `ηᵢ`-coefficients) is
+`aᵢ ≡ −l·U·V'·fᵢ + T·Σⱼ fⱼ Mⱼ,ᵢ  (mod V)`, "which Trager shows has a unique solution for the `fᵢ` modulo
+`V`".  In the **decoupled (hyperelliptic) case** — which is exactly the curve class the engine handles
+(`ComputableGeneralRationalPart`: `M` diagonal ⟺ `K(x,y)` a compositum of single radicals ⟺ hyperelliptic
+`y² = ρ`) — the system decouples per component to `aᵢ ≡ wᵢ·fᵢ  (mod V)` with multiplier `wᵢ = −l·U·V' +
+T·Mᵢ,ᵢ`.  The uniqueness is then the single algebraic fact: **multiplication by a unit of `k[X]/(V)` is a
+bijection**, and the multiplier `−l·U·V'` *is* a unit because `V` is squarefree (`IsCoprime V V'`),
+`gcd(U,V)=1`, and `l ≠ 0` in characteristic `0`.  We prove this kernel and assemble the unique-solution
+statement. -/
+
+section HermiteUniqueness
+
+variable {k : Type*} [Field k]
+
+/-- **A polynomial coprime to `V` is a unit modulo `V`** (`isUnit_mk_of_isCoprime`): if `IsCoprime w V`
+then the image of `w` in the quotient ring `k[X] ⧸ (V)` is a unit (with explicit inverse the image of the
+Bézout cofactor `a` from `a·w + b·V = 1`).  The ring-level core of Trager's Hermite uniqueness: the
+congruence multiplier, being coprime to `V`, is invertible mod `V`. -/
+theorem isUnit_mk_of_isCoprime {w V : k[X]} (h : IsCoprime w V) :
+    IsUnit (Ideal.Quotient.mk (Ideal.span {V}) w) := by
+  obtain ⟨a, b, hab⟩ := h
+  have hbV : Ideal.Quotient.mk (Ideal.span {V}) (b * V) = 0 := by
+    rw [Ideal.Quotient.eq_zero_iff_mem]; exact Ideal.mul_mem_left _ _ (Ideal.subset_span rfl)
+  have hmap : Ideal.Quotient.mk (Ideal.span {V}) (a * w + b * V) = 1 := by rw [hab]; simp
+  rw [map_add, map_mul, hbV, add_zero] at hmap
+  refine isUnit_iff_exists.mpr ⟨Ideal.Quotient.mk (Ideal.span {V}) a, ?_, hmap⟩
+  rw [mul_comm]; exact hmap
+
+/-- **The Hermite congruence has a UNIQUE solution mod `V`** (`hermiteCongruence_exists_unique`): for a
+congruence multiplier `w` coprime to `V` (`IsCoprime w V`), the equation `mk a = mk w * z` in the quotient
+ring `k[X] ⧸ (V)` has a **unique** solution `z` — Trager's "unique `fᵢ` modulo `V`" (Schultz 4.6), in the
+decoupled hyperelliptic case `w = −l·U·V'` (a unit by `isUnit_mk_of_isCoprime`).  Existence and uniqueness
+both follow from multiplication by the unit `mk w` being a bijection. -/
+theorem hermiteCongruence_exists_unique {w V : k[X]} (h : IsCoprime w V) (a : k[X]) :
+    ∃! z : k[X] ⧸ Ideal.span {V},
+      Ideal.Quotient.mk (Ideal.span {V}) a = Ideal.Quotient.mk (Ideal.span {V}) w * z := by
+  obtain ⟨v, hv⟩ := isUnit_mk_of_isCoprime h
+  -- `v * mk w = 1` (left inverse), so the solution is `v * mk a`
+  have hvw : (↑v⁻¹ : k[X] ⧸ Ideal.span {V}) * Ideal.Quotient.mk (Ideal.span {V}) w = 1 := by
+    rw [← hv]; exact v.inv_mul
+  refine ⟨(↑v⁻¹ : k[X] ⧸ Ideal.span {V}) * Ideal.Quotient.mk (Ideal.span {V}) a, ?_, ?_⟩
+  · show Ideal.Quotient.mk (Ideal.span {V}) a
+      = Ideal.Quotient.mk (Ideal.span {V}) w * ((↑v⁻¹ : k[X] ⧸ Ideal.span {V}) *
+        Ideal.Quotient.mk (Ideal.span {V}) a)
+    rw [← mul_assoc, mul_comm (Ideal.Quotient.mk (Ideal.span {V}) w) _, hvw, one_mul]
+  · intro z hz
+    rw [hz, ← mul_assoc, hvw, one_mul]
+
+/-- **The Hermite congruence solution is unique modulo `V`** (`hermiteCongruence_unique`): two solutions
+`f₁, f₂` of `mk a = mk w * mk fⱼ` (with `w` coprime to `V`) are congruent mod `V` (`mk f₁ = mk f₂`).  The
+*uniqueness* half of `hermiteCongruence_exists_unique`, stated directly on representatives — Trager's `fᵢ`
+is determined mod `V`. -/
+theorem hermiteCongruence_unique {w V : k[X]} (h : IsCoprime w V) {a f₁ f₂ : k[X]}
+    (h₁ : Ideal.Quotient.mk (Ideal.span {V}) a
+      = Ideal.Quotient.mk (Ideal.span {V}) w * Ideal.Quotient.mk (Ideal.span {V}) f₁)
+    (h₂ : Ideal.Quotient.mk (Ideal.span {V}) a
+      = Ideal.Quotient.mk (Ideal.span {V}) w * Ideal.Quotient.mk (Ideal.span {V}) f₂) :
+    Ideal.Quotient.mk (Ideal.span {V}) f₁ = Ideal.Quotient.mk (Ideal.span {V}) f₂ := by
+  obtain ⟨z, _, hz⟩ := hermiteCongruence_exists_unique h a
+  rw [hz _ h₁, hz _ h₂]
+
+/-- **The Hermite multiplier `−l·U·V'` is coprime to `V`** (`hermiteMultiplier_isCoprime`): when `V` is
+squarefree (`IsCoprime V V'`, Lemma 4.4(1)), `gcd(U, V) = 1` (`IsCoprime U V`, the `b = U·Vˡ⁺¹` split), and
+`l ≠ 0` (characteristic 0, `l > 0` in the Hermite step), the congruence multiplier `−(C l)·U·V'` is coprime
+to `V` — hence a unit mod `V` and the congruence is uniquely solvable.  This supplies the coprimality
+hypothesis of `hermiteCongruence_exists_unique` from the structural data of the Hermite step (Schultz 4.6:
+`V` squarefree, `gcd(U,V)=1`, `l > 0`). -/
+theorem hermiteMultiplier_isCoprime [CharZero k] {U V : k[X]} (l : ℕ) (hl : l ≠ 0)
+    (hUV : IsCoprime U V) (hVsf : IsCoprime V (derivative V)) :
+    IsCoprime (- (C (l : k)) * (U * derivative V)) V := by
+  have hCl : IsUnit (C (l : k)) := by
+    refine isUnit_C.mpr ?_; rw [isUnit_iff_ne_zero]; exact_mod_cast hl
+  have hUVder : IsCoprime (U * derivative V) V := hUV.mul_left hVsf.symm
+  have hlu : IsCoprime (C (l : k) * (U * derivative V)) V :=
+    (isCoprime_mul_unit_left_left hCl _ _).mpr hUVder
+  simpa [neg_mul] using hlu.neg_left
+
+end HermiteUniqueness
+
 end DeepWiki.SymbolicIntegration.AlgebraicHermite
