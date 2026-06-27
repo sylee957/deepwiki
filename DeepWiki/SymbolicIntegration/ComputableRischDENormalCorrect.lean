@@ -106,4 +106,130 @@ theorem crischDESolve_yden_ne_zero (f g y : QFunNZG β)
 
 end OutputNonzero
 
+/-! ## Task 1 — `hprim` for the recursive monomial `Dt = [CField.one]` (using the gcd witness)
+
+`hprim` asks `cdegG (cSpecialPolyG Dt fuel) = 0` (the primitive special regime). For the recursive instance
+`Dt = [CField.one]` the monomial is primitive, so its special part is the constant `[1]`. This is **not**
+"true by construction" cheaply: `cSpecialPolyG [1] fuel = cmonicG (cSplitFactorFastG [1] fuel [1]).2`, and the
+`cSplitFactorFastG` step computes `S = cdivG (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1]
+(cderivG [1]))` whose first gcd argument is the unit `[1]` but whose degree we can only pin via the gcd
+correctness. With the tower-gcd witness `[CTowerGcdWitness β]` in hand (the same witness the capstone already
+carries), the gcd of the unit `[1]` is associated to `gcd 1 _ = 1`, hence a unit of degree `0`; the step `S`
+is then a constant, the `cSplitFactorFastG` recursion never fires, and the special part is `[1]`. So `hprim`
+**is** a theorem for the recursive instance — given the gcd witness. -/
+
+section Hprim
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β]
+
+omit [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β] in
+/-- **`toPolyG [CField.one] = 1`** — the constant `[1]` reads as the polynomial `1`. -/
+theorem toPolyG_cone_eq_one : toPolyG ([CField.one] : CPolyG β) = 1 := by
+  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+
+omit [CDiffField β] in
+/-- **The public tower gcd of the unit `[1]` is a unit** (`cgcdFFCore_one_isUnit`): under the tower-gcd
+witness, `toPolyG (cgcdFFCore fuel [1] z)` is a unit for any `z`. The raw gcd is `Associated` to
+`gcd (toPolyG [1]) (toPolyG z) = gcd 1 _ = 1` (`CTowerGcdWitness.gcdBCorrect` + `gcd_one_left`), so it is a
+unit; `cgcdFFCore = cmonicG ∘ raw` is `Associated` to the raw via `associated_toPolyG_cmonicG`, hence also a
+unit. -/
+theorem cgcdFFCore_one_isUnit (fuel : ℕ) (z : CPolyG β) :
+    IsUnit (toPolyG (CFracGcdCore.cgcdFFCore (α := β) fuel [CField.one] z)) := by
+  have hcorr := CTowerGcdWitness.gcdBCorrect (α := β) fuel [CField.one] z
+  rw [toPolyG_cone_eq_one, gcd_one_left] at hcorr
+  have hraw : IsUnit (toPolyG (CFracGcdCore.cgcdFFRawCore (α := β) fuel [CField.one] z)) :=
+    associated_one_iff_isUnit.mp hcorr
+  rw [CFracGcdCore.cgcdFFCore]
+  exact (associated_toPolyG_cmonicG _).symm.isUnit hraw
+
+omit [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β] in
+/-- **Division by a degree-0 unit divisor keeps degree 0**: if `cdegG c = 0`, `d` is nonzero of degree `0`,
+and the fuel covers `c`, then `cdegG (cdivG fuel c d) = 0`. The unit divisor has normalized length `1`, so the
+Euclidean remainder is properly reduced to length `< 1`, i.e. `0` (`cmodG_length_lt`); the division identity
+`c = q·d + 0` then forces `natDegree q = natDegree c − natDegree d = 0`. -/
+theorem cdegG_cdivG_zero_of_unit_divisor (fuel : ℕ) (c d : CPolyG β)
+    (hc : cdegG c = 0) (hd0 : CPolyG.cnormG d ≠ []) (hd : cdegG d = 0)
+    (hfuel : (CPolyG.cnormG c : List β).length ≤ fuel) :
+    cdegG (CPolyG.cdivG fuel c d) = 0 := by
+  have hdlen : (CPolyG.cnormG d : List β).length = 1 := by
+    rw [cdegG] at hd
+    have : 0 < (CPolyG.cnormG d : List β).length := List.length_pos_iff.mpr hd0
+    omega
+  have hrem := CPolyG.cmodG_length_lt fuel c d hd0 hfuel
+  rw [hdlen] at hrem
+  have hremnil : CPolyG.cnormG (CPolyG.cmodG fuel c d) = [] := List.length_eq_zero_iff.mp (by omega)
+  have hrem0 : toPolyG (CPolyG.cdivmodG fuel c d).2 = 0 := by
+    rw [show ((CPolyG.cdivmodG fuel c d).2) = CPolyG.cmodG fuel c d from rfl]
+    exact (CPolyG.cnormG_eq_nil_iff _).mp hremnil
+  have hid := CPolyG.toPolyG_cdivmodG' fuel c d hd0
+  rw [show CPolyG.cdivG fuel c d = (CPolyG.cdivmodG fuel c d).1 from rfl]
+  rw [hrem0, add_zero] at hid
+  have hdne : toPolyG d ≠ 0 := fun h => hd0 ((CPolyG.cnormG_eq_nil_iff d).mpr h)
+  have hdnd0 : (toPolyG d).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hd
+  have hcnd0 : (toPolyG c).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hc
+  rw [cdegG_eq_natDegree]
+  by_cases hquo0 : toPolyG (CPolyG.cdivmodG fuel c d).1 = 0
+  · rw [hquo0]; simp
+  · have hnd := congrArg Polynomial.natDegree hid
+    rw [Polynomial.natDegree_mul hquo0 hdne, hdnd0, hcnd0, add_zero] at hnd
+    omega
+
+/-- **The `cSplitFactorFastG` step value is constant on the unit input `[1]`** (`cdegG_step_one`): the step
+`S = cdivG (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1] (cderivG [1]))` has degree `0`. Both
+gcds are units (`cgcdFFCore_one_isUnit`), so `S` is a unit-by-unit division — degree `0`
+(`cdegG_cdivG_zero_of_unit_divisor`). The step never being non-constant is what stops the split recursion. -/
+theorem cdegG_step_one (n : ℕ) :
+    cdegG (CPolyG.cdivG (n + 1)
+        (CFracGcdCore.cgcdFFCore (n + 1) ([CField.one] : CPolyG β)
+          (CPolyG.cmonomialDeriv [CField.one] [CField.one]))
+        (CFracGcdCore.cgcdFFCore (n + 1) ([CField.one] : CPolyG β)
+          (CPolyG.cderivG [CField.one]))) = 0 := by
+  set g1 := CFracGcdCore.cgcdFFCore (n + 1) ([CField.one] : CPolyG β)
+    (CPolyG.cmonomialDeriv [CField.one] [CField.one]) with hg1
+  set g2 := CFracGcdCore.cgcdFFCore (n + 1) ([CField.one] : CPolyG β)
+    (CPolyG.cderivG [CField.one]) with hg2
+  have hd1 : cdegG g1 = 0 := by
+    rw [hg1, cdegG_eq_natDegree]; exact natDegree_eq_zero_of_isUnit (cgcdFFCore_one_isUnit _ _)
+  have hd2 : cdegG g2 = 0 := by
+    rw [hg2, cdegG_eq_natDegree]; exact natDegree_eq_zero_of_isUnit (cgcdFFCore_one_isUnit _ _)
+  have hg2u : IsUnit (toPolyG g2) := by rw [hg2]; exact cgcdFFCore_one_isUnit _ _
+  have hg20 : CPolyG.cnormG g2 ≠ [] := by
+    intro he; have hz : toPolyG g2 = 0 := (CPolyG.cnormG_eq_nil_iff g2).mp he
+    rw [hz] at hg2u; exact not_isUnit_zero hg2u
+  have hfuel : (CPolyG.cnormG g1 : List β).length ≤ n + 1 := by
+    rw [cdegG] at hd1; omega
+  exact cdegG_cdivG_zero_of_unit_divisor (n + 1) g1 g2 hd1 hg20 hd2 hfuel
+
+/-- **The split factorization of `[1]` is trivial** (`cSplitFactorFastG_one_eq`): `cSplitFactorFastG [1] fuel
+[1] = ([1], [1])`. At fuel `0` it is `([1], [1])` definitionally; at `fuel+1` the step `S` is constant
+(`cdegG_step_one`), so the `if cdegG S = 0` branch fires and returns `([1], [1])` without recursing. -/
+theorem cSplitFactorFastG_one_eq (fuel : ℕ) :
+    CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) fuel [CField.one]
+      = ([CField.one], [CField.one]) := by
+  cases fuel with
+  | zero => rfl
+  | succ n => rw [CPolyG.cSplitFactorFastG, if_pos (cdegG_step_one n)]
+
+/-- **★ `hprim` for the recursive monomial** (`cdegG_cSpecialPolyG_one_eq_zero`): `cdegG (cSpecialPolyG [1]
+fuel) = 0`. The special part of the primitive monomial `[1]` is `cmonicG (cSplitFactorFastG [1] fuel [1]).2 =
+cmonicG [1]` (`cSplitFactorFastG_one_eq`), which is `Associated` to `[1]` (`toPolyG = 1`, a unit), hence of
+degree `0`. The `hprim` clause of `RischDESuccessResidual` is a theorem for the recursive instance — discharged
+from the gcd witness, NOT carried as a residual. -/
+theorem cdegG_cSpecialPolyG_one_eq_zero (fuel : ℕ) :
+    cdegG (CPolyG.cSpecialPolyG ([CField.one] : CPolyG β) fuel) = 0 := by
+  rw [CPolyG.cSpecialPolyG, cSplitFactorFastG_one_eq, cdegG_eq_natDegree]
+  have hassoc := associated_toPolyG_cmonicG ([CField.one] : CPolyG β)
+  rw [toPolyG_cone_eq_one] at hassoc
+  exact natDegree_eq_zero_of_isUnit (associated_one_iff_isUnit.mp hassoc)
+
+end Hprim
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- ★ Task 1: the primitive-regime clause `hprim` is a theorem for the recursive monomial `Dt = [1]`,
+-- given the gcd witness.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β]
+    (fuel : ℕ) : cdegG (CPolyG.cSpecialPolyG ([CField.one] : CPolyG β) fuel) = 0 :=
+  cdegG_cSpecialPolyG_one_eq_zero fuel
+
 end DeepWiki.SymbolicIntegration
