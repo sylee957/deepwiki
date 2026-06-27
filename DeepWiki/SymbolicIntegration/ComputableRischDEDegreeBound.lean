@@ -57,21 +57,6 @@ We work over a field `K` with the monomial derivation `D = implicitDeriv v` (`v 
 `a·Dq + b·q = c` with `q ≠ 0`. The reachable cases are the two **strict-domination** configurations: the
 `b·q` term strictly dominates, or (nonlinear) the `a·Dq` term strictly dominates. -/
 
-section Helper
-
-variable {K : Type*} [Field K]
-
-/-- **Helper**: the top coefficient of a product `a·p` at index `dₐ + n`, when `deg p ≤ n`, is
-`lc(a)·(p.coeff n)` — the only surviving term of `coeff_mul` is `(dₐ, n)`. -/
-theorem coeff_mul_natDegree_add_of_natDegree_le {a p : K[X]} {n : ℕ} (hp : p.natDegree ≤ n) :
-    (a * p).coeff (a.natDegree + n) = a.leadingCoeff * p.coeff n := by
-  rcases eq_or_lt_of_le hp with h | h
-  · subst h; rw [natDegree_add_coeff_mul]; rfl
-  · rw [coeff_eq_zero_of_natDegree_lt h, mul_zero]
-    exact coeff_eq_zero_of_natDegree_lt (natDegree_mul_le.trans_lt (by omega))
-
-end Helper
-
 section Abstract
 
 variable {K : Type*} [Field K] [Differential K]
