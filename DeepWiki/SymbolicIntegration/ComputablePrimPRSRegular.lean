@@ -447,6 +447,110 @@ theorem natDegree_gbStepReduce_lt (p q : GBPolyCore β)
   · exact h
   · exfalso; rw [← h] at hcn; rw [hstep] at hstepne; exact (leadingCoeff_ne_zero.mpr hstepne) hcn
 
+/-! ### The inner pseudo-division loop COMPLETES with adequate fuel (the degree drop, no longer assumed)
+
+Iterating the (now-proven-dropping) step, the fuel-bounded `gbpsremainderCore` reaches degree `< deg_t q`
+(or `0`) **as a theorem** once the loop fuel exceeds the `t`-degree of `p`. This converts the
+"fuel-adequacy assumption" of termination into an **explicit, satisfiable fuel bound**: with fuel `60` (as
+the engine uses) and `deg_t p < 60`, the inner pseudo-division degree drop is guaranteed. The only thing
+that could leave it conditional — the loop hitting the fuel floor — is now a transparent numeric bound. -/
+
+omit [CFieldSpec β] in
+/-- **`gbisZeroCore` is `gbnormCore`-invariant**: `gbisZeroCore (gbnormCore p) = gbisZeroCore p`. -/
+theorem gbisZeroCore_gbnormCore (p : GBPolyCore β) : gbisZeroCore (gbnormCore p) = gbisZeroCore p := by
+  rw [gbisZeroCore, gbisZeroCore, gbnormCore_idemp]
+
+omit [CFieldSpec β] in
+/-- **A nonzero `GBPolyCore` normalizes to a nonempty list**: `0 < (gbnormCore q).length` from
+`gbisZeroCore (gbnormCore q) = false`. -/
+theorem gbnormCore_length_pos {q : GBPolyCore β} (hq : gbisZeroCore (gbnormCore q) = false) :
+    0 < (gbnormCore q).length := by
+  have hne : gbnormCore q ≠ [] := by
+    rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem, gbnormCore_idemp] at hq
+    obtain ⟨a, ha⟩ := hq; exact List.ne_nil_of_mem ha
+  exact List.length_pos_iff.mpr hne
+
+/-- **The pseudo-remainder of a zero dividend reads zero**: if `toGBCoeffPoly p = 0` then
+`toGBCoeffPoly (gbpsremainderCore fuel p q) = 0`. (The loop on `p = 0` returns `[]`.) The base of the
+inner-loop degree-drop recursion when a step body vanishes. -/
+theorem toGBCoeffPoly_gbpsremainderCore_eq_zero_of_zero (fuel : ℕ) (p q : GBPolyCore β)
+    (hp : toGBCoeffPoly p = 0) : toGBCoeffPoly (gbpsremainderCore fuel p q) = 0 := by
+  cases fuel with
+  | zero => rw [gbpsremainderCore, toGBCoeffPoly_gbnormCore]; exact hp
+  | succ fuel =>
+    have hpnil : gbnormCore p = [] := by
+      rw [← gbisZeroCore_iff_toGBCoeffPoly, gbisZeroCore, List.isEmpty_iff] at hp; exact hp
+    rw [gbpsremainderCore]; simp only [hpnil, List.length_nil]
+    by_cases hqz : gbisZeroCore (gbnormCore q) = true
+    · simp [hqz]
+    · rw [Bool.not_eq_true] at hqz; simp [hqz, gbnormCore_length_pos hqz]
+
+/-- **★ The inner pseudo-division loop completes (degree drop) with adequate fuel** — UNCONDITIONAL: for
+`q` nonzero and `fuel > deg_t p` (`(toGBCoeffPoly p).natDegree < fuel`), the pseudo-remainder either drops
+below `q`'s `t`-degree or is zero:
+`(toGBCoeffPoly (gbpsremainderCore fuel p q)).natDegree < (toGBCoeffPoly q).natDegree ∨
+toGBCoeffPoly (gbpsremainderCore fuel p q) = 0`. By induction on `fuel`, iterating the single-step drop
+`natDegree_gbStepReduce_lt` (each loop body strictly lowers `deg_t p`, so the bound `deg_t p < fuel`
+descends with the recursion). **This is the engine's missing degree-drop lemma, supplied** — termination's
+only residual is now the satisfiable numeric fuel bound `deg_t p < fuel`, not any per-run regularity. -/
+theorem gbpsremainderCore_degree_lt (q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
+    ∀ (fuel : ℕ) (p : GBPolyCore β), (toGBCoeffPoly p).natDegree < fuel →
+      (toGBCoeffPoly (gbpsremainderCore fuel p q)).natDegree < (toGBCoeffPoly q).natDegree
+        ∨ toGBCoeffPoly (gbpsremainderCore fuel p q) = 0 := by
+  have hqnz : gbisZeroCore q = false := by
+    rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hq
+  have hql : (gbnormCore q).length = (toGBCoeffPoly q).natDegree + 1 :=
+    gbnormCore_length_eq_natDegree_succ hqnz
+  have hqpos : 0 < (gbnormCore q).length := gbnormCore_length_pos hq
+  intro fuel
+  induction fuel with
+  | zero => intro p hlt; omega
+  | succ fuel ih =>
+    intro p hlt
+    rw [gbpsremainderCore]; simp only [hq, Bool.false_eq_true, if_false]
+    by_cases hlen : (gbnormCore p).length < (gbnormCore q).length
+    · -- the loop exits: the (normalized) dividend already has degree below `q` (or is zero)
+      rw [if_pos hlen, toGBCoeffPoly_gbnormCore]
+      by_cases hpz : toGBCoeffPoly p = 0
+      · right; exact hpz
+      · left
+        have hpnz : gbisZeroCore p = false := by
+          rw [Bool.eq_false_iff, Ne, gbisZeroCore_iff_toGBCoeffPoly]; exact hpz
+        have hpl := gbnormCore_length_eq_natDegree_succ hpnz
+        omega
+    · -- the loop steps: recurse on the (strictly lower degree) step body `p'`
+      -- the engine recurses with divisor `gbnormCore q`; normalize it back to `q` for the IH
+      rw [if_neg hlen, ← gbpsremainderCore_gbnormCore_right]
+      have hpnz : gbisZeroCore p = false := by
+        rw [Bool.eq_false_iff, Ne, gbisZeroCore_iff_toGBCoeffPoly]
+        intro hh
+        have hpnil : gbnormCore p = [] := by
+          rw [← gbisZeroCore_iff_toGBCoeffPoly, gbisZeroCore, List.isEmpty_iff] at hh; exact hh
+        rw [hpnil, List.length_nil] at hlen; omega
+      have hpl := gbnormCore_length_eq_natDegree_succ hpnz
+      have hdle : (toGBCoeffPoly (gbnormCore q)).natDegree ≤ (toGBCoeffPoly (gbnormCore p)).natDegree := by
+        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_gbnormCore]; omega
+      set p' := gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q)) (gbnormCore p))
+        (gbscaleCCore (gblcCore (gbnormCore p))
+          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))) with hp'def
+      have hp'read : toGBCoeffPoly p' = toGBCoeffPoly (gbStepReduce (gbnormCore p) (gbnormCore q)) := by
+        rw [hp'def, toGBCoeffPoly_gbnormCore, gbStepReduce, toGBCoeffPoly_gbsubCore,
+          toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbscaleCCore,
+          toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
+          toGBCoeffPoly_gbshiftCore, gbnormCore_idemp, gbnormCore_idemp]
+      by_cases hp'z : toGBCoeffPoly p' = 0
+      · right; rw [toGBCoeffPoly_gbpsremainderCore_eq_zero_of_zero fuel p' q hp'z]
+      · have hpnn : gbisZeroCore (gbnormCore (gbnormCore p)) = false := by
+          rw [gbisZeroCore_gbnormCore, gbisZeroCore_gbnormCore]; exact hpnz
+        have hqnn : gbisZeroCore (gbnormCore (gbnormCore q)) = false := by
+          rw [gbisZeroCore_gbnormCore]; exact hq
+        have hdegstep : (toGBCoeffPoly p').natDegree < (toGBCoeffPoly p).natDegree := by
+          rw [hp'read]
+          have h := natDegree_gbStepReduce_lt (gbnormCore p) (gbnormCore q) hpnn hqnn
+            hdle (by rw [← hp'read]; exact hp'z)
+          rwa [toGBCoeffPoly_gbnormCore] at h
+        exact ih p' (by omega)
+
 /-- **`toGBPolyG` preserves the `t`-degree of `toGBCoeffPoly`**: `(toGBPolyG p).natDegree =
 (toGBCoeffPoly p).natDegree`. The coefficient lift `liftKG = mapRingHom (amG β)` is over the injective
 field embedding `amG β`, so `Polynomial.natDegree_map` applies. -/
@@ -522,6 +626,14 @@ example (p q : GBPolyCore β) (hp : gbisZeroCore (gbnormCore p) = false)
     (toGBCoeffPoly (gbStepReduce p q)).natDegree < (toGBCoeffPoly p).natDegree :=
   natDegree_gbStepReduce_lt p q hp hq hdeg hstepne
 
+-- ★★ The inner pseudo-division loop COMPLETES (degree drop) under the explicit, satisfiable fuel bound
+-- `deg_t p < fuel` — UNCONDITIONAL. Termination's last conditional ingredient is now a numeric bound.
+example (q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false)
+    (fuel : ℕ) (p : GBPolyCore β) (hlt : (toGBCoeffPoly p).natDegree < fuel) :
+    (toGBCoeffPoly (gbpsremainderCore fuel p q)).natDegree < (toGBCoeffPoly q).natDegree
+      ∨ toGBCoeffPoly (gbpsremainderCore fuel p q) = 0 :=
+  gbpsremainderCore_degree_lt q hq fuel p hlt
+
 /-! ## ★ VERDICT — is `CPrimPRSGenAssocReg` unconditional?
 
 **No — it is genuinely conditional, but on a *precisely identified, non-research-grade* residual**, NOT on
@@ -529,14 +641,18 @@ a missing content/GCD-domain theorem. Concretely, `CPrimPRSGenAssocReg cgcdB fue
 (given the transparent per-step fuel side-conditions `CPrimPRSGenFuelOk`) to exactly two per-run witnesses:
 
 1. **PRS termination** — `CPrimPRSGenRegular cgcdB fuel P Q`: the primitive-PRS loop reaches a zero
-   divisor within `fuel`. Its per-step `t`-degree strict drop is now a **theorem**: the single
-   pseudo-division step `lc(q)·p − lc(p)·tᵏ·q` cancels its leading term and strictly drops the `t`-degree
-   over the integral domain `(CFieldSpec.K β)[X]` (`natDegree_gbStepReduce_lt` — exactly the per-step degree
-   fact `ComputableTowerWellFounded` records as missing), and the content strip / list-length translation
-   are degree-neutral (`gbnormGuard_iff_premDegree`). So **no degree drop in the PRS can fail
-   mathematically.** The **single irreducible ingredient** is *fuel-adequacy*: the fuel-bounded pseudo-
-   division (60) and the loop fuel run to completion (reach the `p.length < q.length` exit, not the fuel
-   floor) — per-run bookkeeping over a finite degree budget, not a missing mathematical fact.
+   divisor within `fuel`. Its degree-drop content is now **fully a theorem**, on two levels:
+   * the single pseudo-division step `lc(q)·p − lc(p)·tᵏ·q` cancels its leading term and strictly drops the
+     `t`-degree over the integral domain `(CFieldSpec.K β)[X]` (`natDegree_gbStepReduce_lt` — exactly the
+     per-step degree fact `ComputableTowerWellFounded` records as missing), the content strip / list-length
+     translation being degree-neutral (`gbnormGuard_iff_premDegree`);
+   * iterating it, the **inner pseudo-division loop completes** — `gbpsremainderCore_degree_lt`: under the
+     explicit, satisfiable fuel bound `deg_t p < fuel`, `gbpsremainderCore fuel p q` lands at `t`-degree
+     `< deg_t q` (or `0`), UNCONDITIONALLY.
+
+   So the per-step `CPrimPRSGenRegular` guard is a *theorem* given the numeric bound `deg_t prem < 60`. The
+   residual collapses to **the fuel constants the engine threads exceeding the run's finite degree budget**
+   — a transparent numeric side-condition, not any per-run regularity or missing mathematical fact.
 
 2. **Level-`β` gcd-correctness** — `CgcdBCorrect cgcdB`. On a tower run `cgcdB = cgcdFFRawCore β`, so this
    is the **tower induction hypothesis** (gcd-correctness at level `β` feeds level `QFunNZG β`), bottoming
@@ -551,7 +667,9 @@ a missing content/GCD-domain theorem. Concretely, `CPrimPRSGenAssocReg cgcdB fue
   degree-preservation `natDegree_toGBCoeffPoly_gbprimitivePartCore`, collapsing the termination guard to a
   bare pseudo-remainder degree drop (`gbnormGuard_iff_premDegree`).
 * **The single pseudo-division step `t`-degree drop `natDegree_gbStepReduce_lt`** (the leading-term
-  cancellation) — the per-step degree fact the engine lacked, leaving only loop fuel-adequacy conditional.
+  cancellation) — the per-step degree fact the engine lacked.
+* **The inner pseudo-division loop completion `gbpsremainderCore_degree_lt`** — `deg_t p < fuel` ⟹ the
+  remainder drops below `deg_t q` (or is `0`), turning termination's last residual into a numeric bound.
 
 **Resolution of the memory's tension** ("bookkeeping, not a missing fact" vs. "research-grade ingredient"):
 the *former* is correct. The kernel is NOT research-grade — no Mathlib content/subresultant theorem is
