@@ -266,3 +266,128 @@ polynomial level. -/
 theorem toPoly_monicizeL {R : Type*} [Field R] [DecidableEq R] (f : List R) :
     toPoly (monicizeL f) = C (leadL f)⁻¹ * toPoly f := by
   rw [monicizeL, toPoly_scaleL]
+
+/-- `toPoly f ∣ toPoly (monicizeL f)`: the original divides its monicization (it is
+`C (lead⁻¹) *` it). -/
+theorem dvd_toPoly_monicizeL {R : Type*} [Field R] [DecidableEq R] (f : List R) :
+    toPoly f ∣ toPoly (monicizeL f) := by
+  rw [toPoly_monicizeL]; exact Dvd.intro_left _ rfl
+
+/-! ## `lengthTrim` ↔ degree bridges
+
+To prove the Euclidean gcd terminates and is sound we need `lengthTrim` to track the polynomial
+degree: `degree (toPoly l) < lengthTrim l` (sharper than the `length` bound), the leading
+coefficient `(toPoly l).coeff (lengthTrim l - 1) = leadL l`, and that this leading coefficient is
+nonzero exactly when `toPoly l ≠ 0`. These convert the list-level recursion into a clean
+polynomial-degree decrease. -/
+
+/-- Entries past the trim length are the default `0`: `lengthTrim l ≤ i → l.getD i 0 = 0`. The
+pure-`Nat` core of the degree bound. -/
+theorem getD_eq_zero_of_lengthTrim_le {R : Type*} [Zero R] [DecidableEq R] :
+    ∀ (l : List R) (i : ℕ), lengthTrim l ≤ i → l.getD i 0 = 0
+  | [], i, _ => by simp [List.getD]
+  | a :: as, i, hi => by
+    simp only [lengthTrim] at hi
+    split at hi
+    · rename_i hr
+      -- lengthTrim as = 0
+      cases i with
+      | zero =>
+        -- need the head to be 0; split forced a = 0 (else trim length 1 > 0)
+        split at hi
+        · rename_i ha; simpa [List.getD] using ha
+        · exact absurd hi (by omega)
+      | succ j =>
+        rw [List.getD_cons_succ]
+        exact getD_eq_zero_of_lengthTrim_le as j (by omega)
+    · rename_i hr
+      -- lengthTrim as = r ≠ 0, trim length r + 1 ≤ i
+      cases i with
+      | zero => exact absurd hi (by omega)
+      | succ j =>
+        rw [List.getD_cons_succ]
+        exact getD_eq_zero_of_lengthTrim_le as j (by omega)
+
+/-- Sharper degree bound: `degree (toPoly l) < lengthTrim l` (all coefficients at index
+`≥ lengthTrim l` vanish). -/
+theorem toPoly_degree_lt_lengthTrim {R : Type*} [Semiring R] [DecidableEq R] (l : List R) :
+    (toPoly l).degree < (lengthTrim l : WithBot ℕ) := by
+  rw [degree_lt_iff_coeff_zero]
+  intro i hi
+  rw [coeff_toPoly]
+  exact getD_eq_zero_of_lengthTrim_le l i (by exact_mod_cast hi)
+
+/-- For a nonzero-reading list, the leading coefficient (`leadL`, the entry at `lengthTrim - 1`)
+is exactly `(toPoly l).coeff (lengthTrim l - 1)`. -/
+theorem coeff_lengthTrim_sub_one {R : Type*} [Semiring R] [DecidableEq R] (l : List R) :
+    (toPoly l).coeff (lengthTrim l - 1) = leadL l := by
+  rw [coeff_toPoly, leadL]
+
+/-- The leading entry `leadL l` is nonzero whenever the trim length is positive (the entry at
+`lengthTrim - 1` is by construction the last nonzero one). -/
+theorem leadL_ne_zero_of_lengthTrim_pos {R : Type*} [Zero R] [DecidableEq R] :
+    ∀ {l : List R}, 0 < lengthTrim l → leadL l ≠ 0
+  | [], hpos, _ => by simp [lengthTrim] at hpos
+  | a :: as, hpos, hc => by
+    by_cases hr : lengthTrim as = 0
+    · -- trim of tail is 0, so trim of (a::as) is `if a = 0 then 0 else 1`
+      by_cases ha : a = 0
+      · simp only [lengthTrim, if_pos hr, if_pos ha] at hpos; omega
+      · simp only [leadL, lengthTrim, if_pos hr, if_neg ha, Nat.sub_self,
+          List.getD_cons_zero] at hc
+        exact ha hc
+    · -- trim of tail is r ≠ 0, so trim of (a::as) is r + 1, leading entry is tail's leading
+      have hp : 0 < lengthTrim as := Nat.pos_of_ne_zero hr
+      refine leadL_ne_zero_of_lengthTrim_pos hp ?_
+      simp only [leadL] at hc ⊢
+      simp only [lengthTrim, if_neg hr] at hc
+      rwa [show lengthTrim as + 1 - 1 = (lengthTrim as - 1) + 1 by omega,
+        List.getD_cons_succ] at hc
+
+/-- A list reads as the zero polynomial **iff** its trim length is `0`. -/
+theorem toPoly_eq_zero_iff_lengthTrim {R : Type*} [Semiring R] [DecidableEq R] (l : List R) :
+    toPoly l = 0 ↔ lengthTrim l = 0 := by
+  refine ⟨fun h => ?_, toPoly_eq_zero_of_lengthTrim_eq_zero⟩
+  by_contra hne
+  have hpos : 0 < lengthTrim l := Nat.pos_of_ne_zero hne
+  apply leadL_ne_zero_of_lengthTrim_pos hpos
+  have := coeff_lengthTrim_sub_one l
+  rw [h, coeff_zero] at this
+  exact this.symm
+
+/-- Converse degree bound: a small polynomial degree forces a small trim length. If
+`degree (toPoly l) < d` then `lengthTrim l ≤ d` (else the nonzero leading entry at index
+`lengthTrim l - 1 ≥ d` would witness a coefficient above the degree bound). -/
+theorem lengthTrim_le_of_degree_lt {R : Type*} [Semiring R] [DecidableEq R] {l : List R} {d : ℕ}
+    (h : (toPoly l).degree < (d : WithBot ℕ)) : lengthTrim l ≤ d := by
+  by_contra hle
+  have hlt : d < lengthTrim l := Nat.lt_of_not_le hle
+  have hpos : 0 < lengthTrim l := Nat.lt_of_le_of_lt (Nat.zero_le d) hlt
+  -- leading entry is nonzero
+  have hlead : (toPoly l).coeff (lengthTrim l - 1) ≠ 0 := by
+    rw [coeff_lengthTrim_sub_one]; exact leadL_ne_zero_of_lengthTrim_pos hpos
+  -- but degree < d ≤ lengthTrim l - 1, so that coeff must vanish
+  apply hlead
+  apply coeff_eq_zero_of_degree_lt
+  refine lt_of_lt_of_le h ?_
+  exact_mod_cast Nat.le_sub_one_of_lt hlt
+
+/-! ## Euclidean gcd over `𝔽_p`
+
+`gcdByMonic f g` is the polynomial gcd over the field, normalizing the divisor with `monicizeL`
+at each step so `modByMonicL` (monic divisor) applies. We recurse with explicit fuel; with
+`fuel = g.length + 1` the loop always reaches the `g = 0` base (each remainder strictly drops in
+`lengthTrim`). The carried invariant is **divisibility of both arguments** when fuel suffices:
+`toPoly d ∣ toPoly f` and `toPoly d ∣ toPoly g`. The first is exactly what makes a DDF peel exact
+(remainder `0`), the source of multiply-back soundness. -/
+
+/-- The Euclidean gcd recursion over a field, fueled. `g = 0` → return `f`; otherwise reduce
+`r = f mod (monicize g)` and recurse `gcd (monicize g) r`. -/
+def gcdByMonicFuel {R : Type*} [Field R] [DecidableEq R] : ℕ → List R → List R → List R
+  | 0, f, _ => f
+  | fuel + 1, f, g =>
+    if lengthTrim g = 0 then f
+    else
+      let gm := monicizeL g
+      let r := modByMonicL f gm (lengthTrim g - 1)
+      gcdByMonicFuel fuel gm r
