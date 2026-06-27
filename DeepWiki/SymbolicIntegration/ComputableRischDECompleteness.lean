@@ -16,15 +16,16 @@ import DeepWiki.SymbolicIntegration.ComputableRischDESolveSound
 3. **the lowest-terms reduction fails** — `reduceSoundOpt f̃ = none` (impossible: `reduceSoundOpt_eq`);
 4. **the inner recursive solve fails** — `crischDESolve (qReduce f̃) (q'·g) = none`.
 
-So a `none` result decomposes structurally into these four cases (`crischDESolveSound_eq_none_iff`,
-fully reachable). Completeness — `solvable ⟹ ¬ none` — is then **exactly** the conjunction of four
-stage-completeness facts: a solvable RDE has (1) a non-vanishing weak normalizer, (2) a passing §6.1
-check, (3) a successful reduction (free), and (4) a successful inner solve. Branch (3) is closed
-unconditionally; branches (1), (2), (4) are the genuine §6 completeness content.
+Equivalently, the solver succeeds (`crischDESolveSound_some_iff`) iff the weak normalizer is nonzero, the
+§6.1 check passes, and the inner solve succeeds (branch (3) never blocks). Completeness —
+`solvable ⟹ some` — is then **exactly** the conjunction of these stage-completeness facts: a solvable RDE
+has (1) a non-vanishing weak normalizer, (2) a passing §6.1 check, (3) a successful reduction (free), and
+(4) a successful inner solve. Branch (3) is closed unconditionally; branches (1), (2), (4) are the genuine
+§6 completeness content.
 
 **What is reachable here.**
-* **The structural `none`-characterization** `crischDESolveSound_eq_none_iff` — the exact four-way
-  disjunction a `none` reduces to (the control-flow skeleton, no §6 mathematics).
+* **The structural `some`-characterization** `crischDESolveSound_some_iff` — the exact reading of when the
+  solver succeeds (the three stage tests passing); pure control flow, no §6 mathematics.
 * **The base-field completeness** `rischDE_complete_base` — over the constant base `ℚ` (`D = 0`),
   `crischDESolve` is the direct division `g/b`, so it is **decidably complete**: an RDE `b·y = g`
   has a solution iff `crischDESolve b g = some _` (axiom-clean, no `native_decide`).
