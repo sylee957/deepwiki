@@ -105,4 +105,147 @@ theorem hyperexp_residue_sum_eq_overshoot_add (s : Finset K) (a : K[X]) (b : K)
 
 end ResidueMatchTower
 
+/-! ### Task 1 (engine vocabulary): the overshoot residue match over `K = CFieldSpec.K α`
+
+The hyperexp analog of `hyperexp_residue_match_list_engine`, **without** the `∑c = 0` witness: the
+engine-shaped `List` sum over the per-root list equals `algebraMap(C(b·∑c)) + a/d` — the overshoot, not the
+match. Transports `hyperexp_residue_sum_eq_overshoot_add` through the definitional `amG = algebraMap` and the
+`towerFractionFieldDerivG` unfolding. -/
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **★ The overshoot list↔Finset bridge in the engine's vocabulary** — for a hyperexponential monomial
+`toPolyG Dt = C b·X` (`b = η′`), a squarefree `d = ∏_{β∈s}(t−β)`, `deg a < #s`, every root normal, the
+engine-shaped `List` sum over the per-root list of `(c_β, X − C β)` pairs equals `algebraMap(C(b·∑c)) + a/d`
+over `RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt` — **UNCONDITIONALLY**, no `∑c = 0`.
+The `K[X]`-level `hyperexp_residue_sum_eq_overshoot_add` transported through `amG = algebraMap` and the
+`towerFractionFieldDerivG` unfolding. The overshoot in exactly the `List` shape the engine consumes (the
+hyperexp analog of `hyperexp_residue_match_list_engine`, carrying the residual `R = b·∑c` instead of killing
+it). -/
+theorem hyperexp_overshoot_list_engine (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
+    (a : (CFieldSpec.K α)[X]) (b : CFieldSpec.K α) (hDt : toPolyG Dt = C b * X)
+    (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′) :
+    ((s.toList.map (fun β =>
+          (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+            X - C β))).map
+        (fun cv =>
+          amG α (C cv.1)
+            * (towerFractionFieldDerivG Dt (amG α cv.2) / amG α cv.2))).sum
+      = amG α (C (b * ∑ β ∈ s,
+            a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))
+        + amG α a / amG α (Lagrange.nodal s id) := by
+  show ((s.toList.map (fun β =>
+          (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+            X - C β))).map
+        (fun cv =>
+          algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (C cv.1)
+            * (extendDeriv (Differential.implicitDeriv (toPolyG Dt))
+                  (algebraMap _ (RatFunc (CFieldSpec.K α)) cv.2)
+                / algebraMap _ (RatFunc (CFieldSpec.K α)) cv.2))).sum = _
+  rw [hDt]
+  -- collapse `(s.toList.map f).map g`, then to the `Finset.sum` over `s`, then the K[X]-level overshoot
+  rw [List.map_map, Finset.sum_map_toList]
+  exact ResidueMatchTower.hyperexp_residue_sum_eq_overshoot_add s a b hA hnorm
+
+/-- **★ The hyperexp engine overshoot residue sum** — for a hyperexponential monomial `toPolyG Dt = C b·X`,
+a squarefree `hDen` factored as `∏_{β∈s}(t−β)`, `deg (toPolyG hNum) < #s`, every root normal, and the engine
+residue logs `logs` whose `(toK cv.1, toPolyG cv.2)`-images ARE the per-root list `s.toList.map (fun β =>
+(residue β, X − C β))` (`hform`), the engine residue-match sum `∑_{(c,v)∈logs} amG(C(toK c))·(D(log v))`
+equals `amG(C(b·∑c)) + amG(hNum)/amG(hDen)` over `RatFunc (CFieldSpec.K α)` — **UNCONDITIONALLY**, no
+`∑c = 0`. Rewrites the engine sum through `hform` into the bridge's per-root form, which
+`hyperexp_overshoot_list_engine` sends to `algebraMap(C(b·∑c)) + hNum/hDen`. The hyperexp engine `hmatch`
+carrying the overshoot `R = b·∑c` (the analog of `hyperexp_engine_hmatch` without the integrability
+witness). -/
+theorem hyperexp_engine_overshoot (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
+    (hNum hDen : CPolyG α) (b : CFieldSpec.K α) (logs : List (α × CPolyG α))
+    (hDt : toPolyG Dt = C b * X)
+    (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hform : logs.map (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+      = s.toList.map (fun β =>
+          ((toPolyG hNum).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+            X - C β))) :
+    (logs.map (fun cv =>
+          amG α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
+      = amG α (C (b * ∑ β ∈ s,
+            (toPolyG hNum).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))
+        + amG α (toPolyG hNum) / amG α (toPolyG hDen) := by
+  -- the engine summand factors through `(toK cv.1, toPolyG cv.2)`: rewrite the mapped list by `hform`
+  have hsummand : (logs.map (fun cv =>
+        amG α (Polynomial.C (CFieldSpec.toK cv.1))
+          * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2))))
+      = (logs.map (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))).map
+          (fun p => amG α (Polynomial.C p.1)
+            * (towerFractionFieldDerivG Dt (amG α p.2) / amG α p.2)) := by
+    rw [List.map_map]; rfl
+  rw [hsummand, hform, hden, List.map_map]
+  -- now the per-root form of the bridge `hyperexp_overshoot_list_engine`
+  have hbridge := hyperexp_overshoot_list_engine Dt s (toPolyG hNum) b hDt hA hnorm
+  rw [List.map_map] at hbridge
+  exact hbridge
+
+/-! ### Task 1 (assembly): the reduced-case overshoot field identity `D(g) + logResidueSumG = a/d + R`
+
+Composing the **Hermite half** `hherm` (`D(g) + h = a/d`) with the **overshoot residue sum**
+`hyperexp_engine_overshoot` (`residue sum = R + h`, `R = algebraMap(C(b·∑c))`) gives the reduced-case
+identity `D(g) + logResidueSumG = a/d + R` — UNCONDITIONALLY in `∑c`. The §5.9 raw-log overshoot for the
+actual engine `cIntegrateReducedG`, gated only on the abstract Hermite telescoping + per-root reassembly. -/
+
+variable [CFracGcdCore α]
+
+/-- **★★ The reduced-case overshoot field identity for the hyperexp case** — for `res = cIntegrateReducedG
+Dt fuel a d cands` with a hyperexponential monomial `toPolyG Dt = C b·X`, **given** the Hermite half `hherm`
+(`D(g) + h = a/d`) and the per-root reassembly `hform`, the reduced-case identity `D(g) + logResidueSumG Dt
+res.logs = amG a/amG d + amG(C(b·∑c))` holds over `RatFunc (CFieldSpec.K α)` — **UNCONDITIONALLY** in `∑c`,
+with **no engine `checkIdentityG` certificate**. The raw RT log part overshoots the integrand by `R =
+b·∑c`: the §5.9 content for the actual engine. The overshoot residue sum is supplied by
+`hyperexp_engine_overshoot` (carrying `R`), composed with `hherm` and the reading bridge
+`logResidueSumG_eq_logDeriv_sum`. -/
+theorem field_identity_of_cIntegrateReducedG_hyperexp_overshoot (Dt : CPolyG α) (fuel : ℕ)
+    (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C b * X)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d)
+        + amG α (C (b * ∑ β ∈ s,
+            (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) := by
+  -- read `logResidueSumG` as the log-derivative sum, supply the overshoot match
+  rw [logResidueSumG_eq_logDeriv_sum Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs,
+    hyperexp_engine_overshoot Dt s (cHermiteReduceTowerG Dt fuel a d).2.1
+      (cHermiteReduceTowerG Dt fuel a d).2.2 b
+      (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hDt hden hA hnorm hform]
+  -- `D(g) + (R + h) = (D(g) + h) + R = a/d + R`, a commutative-group rearrangement using `hherm`
+  set Dg := towerFractionFieldDerivG Dt
+    (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+      / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2)) with hDg
+  set h := amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
+    / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2) with hh
+  set R := amG α (C (b * ∑ β ∈ s,
+    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+      / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) with hR
+  -- goal: `Dg + (R + h) = amG a/amG d + R`; `hherm : Dg + h = amG a/amG d`
+  rw [show Dg + (R + h) = (Dg + h) + R by ring, hherm]
+
 end DeepWiki.SymbolicIntegration
