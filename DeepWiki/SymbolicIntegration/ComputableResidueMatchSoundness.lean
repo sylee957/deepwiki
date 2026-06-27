@@ -278,4 +278,76 @@ theorem primitive_cancel (s : Finset K) (a : K[X]) (w : K) :
 
 end ResidueMatchTower
 
+/-! ### Step 7: the primitive RT residue match in the ENGINE's vocabulary
+
+The engine phrases the residue sum over `amG α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))`
+and `towerFractionFieldDerivG Dt = extendDeriv (implicitDeriv (toPolyG Dt))`. Since `amG` is *definitionally*
+that `algebraMap` and `towerFractionFieldDerivG` unfolds to the extended derivation, the `K[X]`-level
+primitive theorem restates directly over the tower carrier `K = CFieldSpec.K α` with `v = toPolyG Dt`. This
+is the Rothstein–Trager residue match in exactly the form the engine's `logResidueSumG_eq_of_residue_match`
+consumes — for a *primitive* monomial (`toPolyG Dt = C w`) and the squarefree denominator factored as
+`∏(t−α)` over its roots. -/
+
+open Compute CPolyG QFunNZG
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **★ The primitive RT residue match in the engine's `amG`/`towerFractionFieldDerivG` vocabulary** — for
+a primitive monomial with `toPolyG Dt = C w` (`w ∈ CFieldSpec.K α`), a squarefree `d = ∏_{α∈s}(t−α)`,
+`deg a < #s`, and every root normal, the engine-shaped residue sum `∑_{α∈s} amG(C(c_α))·(D(t−α)/(t−α)) =
+a/d` over `RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt`. The `K[X]`-level
+`primitive_monomial_residue_match` transported verbatim through the definitional `amG = algebraMap` and the
+`towerFractionFieldDerivG` unfolding — the unconditional `hmatch` for primitive (logarithmic) tower
+extensions, phrased exactly as the engine consumes it. -/
+theorem primitive_monomial_residue_match_engine (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
+    (a : (CFieldSpec.K α)[X]) (w : CFieldSpec.K α) (hDt : toPolyG Dt = C w)
+    (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, w ≠ β′) :
+    ∑ β ∈ s, amG α
+          (C (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))
+        * (towerFractionFieldDerivG Dt (amG α (X - C β)) / amG α (X - C β))
+      = amG α a / amG α (Lagrange.nodal s id) := by
+  show ∑ β ∈ s, algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))
+          (C (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))
+        * (extendDeriv (Differential.implicitDeriv (toPolyG Dt))
+              (algebraMap _ (RatFunc (CFieldSpec.K α)) (X - C β))
+            / algebraMap _ (RatFunc (CFieldSpec.K α)) (X - C β))
+      = _
+  rw [hDt]
+  exact ResidueMatchTower.primitive_monomial_residue_match s a w hA hnorm
+
+/-! ### ★ Status — what is proven, and the precise remaining obstruction
+
+PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, no `native_decide`):
+* The ★ Rothstein–Trager **absorption identity** `(Dd)(α) = d′(α)·(v(α) − α′)` at a simple root
+  (`ResidueMatchTower.eval_implicitDeriv_of_isRoot`) — the monomial-derivation crux (Bronstein Thm 5.6.1),
+  the same gap as the algebraic `isRadicalLogIntegral_of_residue_match`.
+* The **primitive-case `hmatch`** unconditionally: `∑ c_α·D(t−α)/(t−α) = a/d` for `Dt = C w`
+  (`ResidueMatchTower.primitive_monomial_residue_match`, and in engine vocabulary
+  `primitive_monomial_residue_match_engine`). This discharges `hmatch` for primitive (logarithmic) tower
+  extensions.
+* The **general-case `hmatch` modulo cancellation** (`ResidueMatchTower.monomial_residue_match_of_cancel`):
+  for ANY monomial, `∑ c_α·D(t−α)/(t−α) = a/d` GIVEN the polynomial-part cancellation
+  `hcancel : ∑ c_α·((v−Cα′) /ₘ (t−α)) = 0`, with `hcancel` automatic in the primitive case
+  (`ResidueMatchTower.primitive_cancel`).
+
+PRECISE REMAINING OBSTRUCTION (for the FULL unconditional `hmatch`, all monomials):
+1. **The non-primitive polynomial cancellation `∑ c_α·((v−Cα′) /ₘ (t−α)) = 0`** is genuinely extra content,
+   NOT a free identity: for `Dt = η′·t` (hyperexponential) it reduces to `∑_α c_α = 0`, the
+   exponential-case correction that holds *exactly when* `a/d` is integrable in the log part alone. The
+   isolated lemma `monomial_residue_match_of_cancel` pins it; proving it needs the integrability witness the
+   engine carries (the resultant having all roots rational AND the leftover proper), routed through a
+   degree/`t`-power argument — the analogue of Bronstein's reduction of the hyperexp case.
+2. **Engine list↔Finset + grouped-GCD bridge:** the engine's `logResidueSumG_eq_of_residue_match` `hmatch` is
+   a `List` sum over grouped args `vᵢ = gcd(d, a−cᵢDd)` (products of equal-residue factors), vs. the
+   Finset-over-roots form here. Mathlib's `Finset.sum_fiberwise` regrouping (as in
+   `PartialFraction.ratFunc_eq_sum_residue_grouped`) bridges the grouping; the list↔Finset and
+   `d = nodal (roots d)` (splitting-field factorization) are mechanical but unwritten. -/
+
+#print axioms ResidueMatchTower.eval_implicitDeriv_of_isRoot
+#print axioms ResidueMatchTower.primitive_monomial_residue_match
+#print axioms ResidueMatchTower.monomial_residue_match_of_cancel
+#print axioms ResidueMatchTower.primitive_cancel
+#print axioms primitive_monomial_residue_match_engine
+
 end DeepWiki.SymbolicIntegration
