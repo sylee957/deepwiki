@@ -336,6 +336,88 @@ theorem field_identity_of_cPolyRischDEG [CharZero (CFieldSpec.K α)] [Algebra �
   have h := field_identity_cIntegratePolyG_const (α := α) c hconst
   rwa [logResidueSumG_nil, add_zero] at h
 
+/-! ### ★ Discharging the constant-base hypothesis: `mapCoeffs` is inherited from integrand to antiderivative
+
+`field_identity_of_cPolyRischDEG` carries `hconst : mapCoeffs (toPolyG q) = 0` on the algorithm *output*.
+That output-side hypothesis is **not** automatic, but it *is* implied by the corresponding *input*-side
+fact `mapCoeffs (toPolyG c) = 0` (the integrand's coefficients being differential constants): the
+antiderivative's degree-`i+1` coefficient is `cᵢ/(i+1)`, whose base derivative `(cᵢ)′/(i+1)` vanishes
+exactly when `(cᵢ)′` does. So the constant-base condition transports from integrand to antiderivative
+(`cIntegratePolyG_const_coeff`), letting the poly-RDE soundness be keyed on the *input* (the natural
+form). The conduit is the commutation of the two polynomial derivations `mapCoeffs` and `derivative`. -/
+
+/-- **`mapCoeffs` and `derivative` commute on `(CFieldSpec.K α)[X]`**:
+`mapCoeffs (derivative r) = derivative (mapCoeffs r)`. Both are derivations; the coefficientwise check
+(`coeff_mapCoeffs`, `coeff_derivative`) reduces to `(x·(n+1))′ = x′·(n+1)`, true since the nat-cast
+`(n+1 : K)` is a differential constant (`map_natCast`). The conduit for transporting the constant-base
+condition through the antiderivative `cIntegratePolyG`. -/
+theorem mapCoeffs_derivative_commute (r : (CFieldSpec.K α)[X]) :
+    Differential.mapCoeffs (Polynomial.derivative r) =
+      Polynomial.derivative (Differential.mapCoeffs r) := by
+  ext n
+  rw [Differential.coeff_mapCoeffs, coeff_derivative, coeff_derivative,
+    Differential.coeff_mapCoeffs, Derivation.leibniz]
+  have hc : ((↑n + 1 : (CFieldSpec.K α)))′ = 0 := by
+    rw [show ((↑n + 1 : (CFieldSpec.K α))) = ((n + 1 : ℕ) : (CFieldSpec.K α)) by push_cast; ring,
+      Derivation.map_natCast]
+  rw [hc, smul_zero, zero_add, smul_eq_mul, mul_comm]
+
+/-- **★ Constant-base condition transports through `cIntegratePolyG`** (conditional, *not*
+unconditional): if the integrand's coefficients are differential constants
+(`mapCoeffs (toPolyG c) = 0`), then so are the antiderivative's
+(`mapCoeffs (toPolyG (cIntegratePolyG c)) = 0`). NOT free: the converse-style reading shows the output
+condition is *equivalent* to the input one (each output coefficient `cᵢ/(i+1)` is constant iff `cᵢ` is),
+so the hypothesis is genuinely needed. Proof: `Q := mapCoeffs (toPolyG (cIntegratePolyG c))` has
+`derivative Q = mapCoeffs (derivative (toPolyG (cIntegratePolyG c))) = mapCoeffs (toPolyG c) = 0`
+(commute + the atom `derivative_toPolyG_cIntegratePolyG` + hypothesis) and zero constant term
+(`cIntegratePolyG` starts `0 :: …`), so `Q = 0` (`derivative_eq_zero` ⟹ `natDegree 0` ⟹ `C (coeff 0)`). -/
+theorem cIntegratePolyG_const_coeff [CharZero (CFieldSpec.K α)] (c : CPolyG α)
+    (hc : Differential.mapCoeffs (toPolyG c) = 0) :
+    Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0 := by
+  set Q := Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) with hQ
+  -- `derivative Q = 0` by commuting `mapCoeffs`/`derivative` and the formal-derivative atom
+  have hderiv : Polynomial.derivative Q = 0 := by
+    rw [hQ, ← mapCoeffs_derivative_commute, derivative_toPolyG_cIntegratePolyG, hc]
+  -- `coeff Q 0 = 0`: `cIntegratePolyG` has zero constant term (`0 :: …`)
+  have hcoeff0 : Q.coeff 0 = 0 := by
+    rw [hQ, Differential.coeff_mapCoeffs]
+    have : (toPolyG (CPolyG.cIntegratePolyG c)).coeff 0 = 0 := by
+      rw [CPolyG.cIntegratePolyG, toPolyG_cons, coeff_add, coeff_C_zero, CFieldSpec.toK_zero,
+        coeff_X_mul_zero, add_zero]
+    rw [this, map_zero]
+  -- `derivative Q = 0` ⟹ `natDegree Q = 0` ⟹ `Q = C (coeff Q 0) = 0`
+  have hdeg : Q.natDegree = 0 := Polynomial.derivative_eq_zero.mp hderiv
+  rw [eq_C_of_natDegree_eq_zero hdeg, hcoeff0, map_zero]
+
+/-- **★★★ Poly-RDE soundness on the `b = 0` branch, keyed on the integrand** (the honest strongest
+form): if `cPolyRischDEG [CField.one] fuel [] c n = some q` (nonzero `c` within the degree budget,
+primitive base `Dt = 1`) and the integrand is over a **constant base** (`mapCoeffs (toPolyG c) = 0`),
+then the field-level antiderivative identity `towerFractionFieldDerivG [1] (amG(toPolyG q)/amG 1)
+= amG(toPolyG c)/amG 1` holds — **no `checkIdentityG`, no `native_decide`**. Strengthens
+`field_identity_of_cPolyRischDEG` by replacing its *output*-side `mapCoeffs (toPolyG q) = 0` with the
+natural *input*-side `mapCoeffs (toPolyG c) = 0` (via `cIntegratePolyG_const_coeff`). **Regime
+boundary**: `Dt = [CField.one]` is required — the `b = []` branch integrates by the term-by-term
+`cIntegratePolyG`, which inverts the monomial derivation `D(tⁱ) = i·tⁱ⁻¹` only when `D(t) = 1`; for a
+general monomial `D(tⁱ) = i·tⁱ⁻¹·Dt`, so term-by-term integration is no longer the inverse and this
+branch is unreachable (the dispatcher routes `b = 0` here only in the primitive case `δ = 0`). -/
+theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    [CFracGcdCore α] [CRischField α]
+    (fuel : ℕ) (c q : CPolyG α) (n : ℤ)
+    (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
+    (hsome : CPolyG.cPolyRischDEG ([CField.one] : CPolyG α) fuel ([] : CPolyG α) c n = some q)
+    (hconst : Differential.mapCoeffs (toPolyG c) = 0) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG α)
+        (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
+      = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) := by
+  -- `q = cIntegratePolyG c`, so the output-side `mapCoeffs` follows from the input-side via the transport
+  have hq : q = CPolyG.cIntegratePolyG c := by
+    rw [cPolyRischDEG_nil_eq ([CField.one] : CPolyG α) fuel c n hc hdeg] at hsome
+    exact (Option.some.injEq _ _ ▸ hsome).symm
+  subst hq
+  exact field_identity_of_cPolyRischDEG fuel c (CPolyG.cIntegratePolyG c) n hc hdeg
+    (cPolyRischDEG_nil_eq ([CField.one] : CPolyG α) fuel c n hc hdeg)
+    (cIntegratePolyG_const_coeff c hconst)
+
 /-! ### ★ THE DELIVERABLE at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
 
 Instantiating the checker-free polynomial-branch one-shot at the generic level-1 carrier
@@ -405,6 +487,26 @@ example (fuel : ℕ) (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
           / amG (QFunNZG ℚ) (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))) :=
   field_identity_of_cPolyRischDEG_qfunNZG fuel c q n hc hdeg hsome hconst
 
+-- ★ CONSTANT-BASE TRANSPORT (conditional): integrand coefficients differential-constant ⟹ antiderivative
+-- coefficients differential-constant (`mapCoeffs (toPolyG c) = 0 → mapCoeffs (toPolyG (cIntegratePolyG c))
+-- = 0`) — the hypothesis is genuinely needed (the two conditions are equivalent).
+example [CharZero (CFieldSpec.K α)] (c : CPolyG α)
+    (hc : Differential.mapCoeffs (toPolyG c) = 0) :
+    Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0 :=
+  cIntegratePolyG_const_coeff c hc
+
+-- ★ POLY-RDE SOUNDNESS keyed on the INTEGRAND (`b = 0` branch, primitive base): `cPolyRischDEG = some q`
+-- with `mapCoeffs (toPolyG c) = 0` ⟹ `D(amG q/amG 1) = amG c/amG 1`, checker-free.
+example [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] [CRischField α]
+    (fuel : ℕ) (c q : CPolyG α) (n : ℤ)
+    (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
+    (hsome : CPolyG.cPolyRischDEG ([CField.one] : CPolyG α) fuel ([] : CPolyG α) c n = some q)
+    (hconst : Differential.mapCoeffs (toPolyG c) = 0) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG α)
+        (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
+      = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) :=
+  cPolyRischDEG_nil_field_identity fuel c q n hc hdeg hsome hconst
+
 /-! ### Axiom audit — the one-shot rests only on the standard kernel axioms
 (`propext`, `Classical.choice`, `Quot.sound`); no `native_decide`, no `sorry`. -/
 
@@ -415,5 +517,8 @@ example (fuel : ℕ) (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
 #print axioms field_identity_cIntegratePolyG_const
 #print axioms field_identity_of_cPolyRischDEG
 #print axioms field_identity_of_cPolyRischDEG_qfunNZG
+#print axioms mapCoeffs_derivative_commute
+#print axioms cIntegratePolyG_const_coeff
+#print axioms cPolyRischDEG_nil_field_identity
 
 end DeepWiki.SymbolicIntegration
