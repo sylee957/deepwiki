@@ -184,4 +184,69 @@ theorem isWeaklyNormalizedNorm_dvdC (ftilde : QFunNZG β) (h0 : CPolyG β)
 
 end Normality
 
+/-! ## The construction bridges to the field (Task 3 — the round-trip read through `toQFunNZG`)
+
+The solver's `QFunNZG`-level constructions read at the field level (`toQFunNZG`) exactly as the §6.1
+round-trip wants: `weakNormalizedF f q'` reads as `F − D(Q)/Q`, the scaled RHS `q'·g` reads as `Q·G`, and
+the returned `ytilde·q'⁻¹` reads as `Ỹ/Q`. All three are ring-hom computations (`toQFunNZG_q*` +
+`toQFunNZG_towerDerivQFunNZG`); the derivation `D = towerFractionFieldDerivG [1]` agrees with
+`towerDerivQFunNZG [1]` through `toQFunNZG`. -/
+
+section Bridges
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+
+omit [CFracGcdCore β] [CRischField β] in
+/-- **The derivation bridge** `towerFractionFieldDerivG [1] (toQFunNZG x) = toQFunNZG (towerDerivQFunNZG [1]
+x)`: the abstract fraction-field derivation `towerFractionFieldDerivG [1]` agrees with the computable tower
+derivation `towerDerivQFunNZG [1]` through `toQFunNZG`. Just `toQFunNZG_towerDerivQFunNZG` read through
+`towerFractionFieldDerivG = extendDeriv (implicitDeriv (toPolyG ·))`. -/
+theorem towerFractionFieldDerivG_toQFunNZG (x : QFunNZG β) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β) (toQFunNZG x)
+      = toQFunNZG (towerDerivQFunNZG ([CField.one] : CPolyG β) x) := by
+  rw [towerFractionFieldDerivG, toQFunNZG_towerDerivQFunNZG]
+
+omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- **`toQFunNZG q' ≠ 0` from `q ≠ 0`** (`toQFunNZG_qOfPolyNZG_ne_zero`): the lift `q' = q/1` has nonzero
+field image exactly when `q` is nonzero (`toQFunNZG q' = amG(toPolyG q)/amG 1 = amG(toPolyG q)`). The
+`Q ≠ 0` hypothesis the round-trip needs, from the solver's `cisZeroG q = false` guard. -/
+theorem toQFunNZG_qOfPolyNZG_ne_zero (q : CPolyG β) (hq : CPolyG.cisZeroG q = false) :
+    toQFunNZG (qOfPolyNZG q) ≠ 0 := by
+  rw [toQFunNZG]
+  show amG β (toPolyG q) / amG β (toPolyG ([CField.one] : CPolyG β)) ≠ 0
+  rw [toPolyG_cone_eq_one, map_one, div_one]
+  exact amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hq)
+
+omit [CFracGcdCore β] [CRischField β] in
+/-- **`weakNormalizedF` reads as `F − D(Q)/Q`** (`toQFunNZG_weakNormalizedF`, the §6.1 round-trip field
+identity through the construction): `toQFunNZG (weakNormalizedF f q') = toQFunNZG f −
+towerFractionFieldDerivG [1] (toQFunNZG q') / toQFunNZG q'`. The weakly-normalized field element `f̃ = f −
+Dq/q` read at the field level — a ring-hom computation (`toQFunNZG_qsubNZG`/`_qmulNZG`/`_qinvNZG` +
+the derivation bridge). The round-trip correctness for the LHS coefficient, a **theorem**. -/
+theorem toQFunNZG_weakNormalizedF (f q' : QFunNZG β) :
+    toQFunNZG (weakNormalizedF f q')
+      = toQFunNZG f
+        - towerFractionFieldDerivG ([CField.one] : CPolyG β) (toQFunNZG q') / toQFunNZG q' := by
+  rw [weakNormalizedF, toQFunNZG_qsubNZG, toQFunNZG_qmulNZG, toQFunNZG_qinvNZG,
+    towerFractionFieldDerivG_toQFunNZG, div_eq_mul_inv]
+
+omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- **The returned solution reads as `Ỹ/Q`** (`toQFunNZG_solution`): `toQFunNZG (qmulNZG ytilde (qinvNZG
+q')) = toQFunNZG ytilde / toQFunNZG q'`. The §6.1 back-transform `y = ỹ/q` read at the field level
+(`toQFunNZG_qmulNZG`/`_qinvNZG`), a ring-hom computation. -/
+theorem toQFunNZG_solution (ytilde q' : QFunNZG β) :
+    toQFunNZG (qmulNZG ytilde (qinvNZG q'))
+      = toQFunNZG ytilde / toQFunNZG q' := by
+  rw [toQFunNZG_qmulNZG, toQFunNZG_qinvNZG, div_eq_mul_inv]
+
+omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- **The scaled RHS reads as `Q·G`** (`toQFunNZG_scaledRHS`): `toQFunNZG (qmulNZG q' g) = toQFunNZG q' *
+toQFunNZG g`. The §6.1 RHS scaling `g ↦ q·g` read at the field level (`toQFunNZG_qmulNZG`). -/
+theorem toQFunNZG_scaledRHS (q' g : QFunNZG β) :
+    toQFunNZG (qmulNZG q' g) = toQFunNZG q' * toQFunNZG g :=
+  toQFunNZG_qmulNZG q' g
+
+end Bridges
+
 end DeepWiki.SymbolicIntegration
