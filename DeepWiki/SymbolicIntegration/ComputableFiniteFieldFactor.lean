@@ -877,3 +877,87 @@ on each DDF block (degree tag `b.1`, block `b.2`) starting at shift `0`, and fla
 list of factor coefficient-lists. -/
 def edf (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) : List (List (ZMod p)) :=
   (ddf p f).flatMap (fun b => edfBlock p b.1 (b.2.length + 1) 0 b.2)
+
+/-! ## ★ EDF multiply-back soundness
+
+The whole point: the EDF factors multiply back to the input. The engine is the same as DDF — each
+shift split peels an **exact** divisor (`gcdByMonic_dvd_left` ⇒ monic divisor ⇒ zero remainder,
+`toPoly_eq_mul_quotient_of_dvd`), so at every node of `edfBlock` the factor product equals the input,
+and `edf` then telescopes over the DDF blocks (whose own product is `f` by `ddf_prod`). Axiom-clean. -/
+
+/-- `toPoly (edfProduct (xs ++ ys)) = toPoly (edfProduct xs) * toPoly (edfProduct ys)`: the factor
+product is multiplicative over list concatenation (the two halves of a proper split). -/
+theorem toPoly_edfProduct_append {R : Type*} [CommSemiring R] (xs ys : List (List R)) :
+    toPoly (edfProduct (xs ++ ys)) =
+      toPoly (edfProduct xs) * toPoly (edfProduct ys) := by
+  rw [toPoly_edfProduct, toPoly_edfProduct, toPoly_edfProduct, List.map_append, List.prod_append]
+
+/-- **★ EDF per-block multiply-back.** The factors `edfBlock p d fuel a f` produces multiply back to
+`f`: `toPoly (edfProduct (edfBlock p d fuel a f)) = toPoly f`. By induction on `fuel`; the proper-
+split step uses that `gm = monicizeL (edfSplitOne …)` is monic dividing `f` (exact division,
+`f = gm * cof`) plus the two IHs on `gm` and `cof`; the stop and no-split branches are the trivial
+`product = f` cases. Independent of whether the shift sweep actually separates all factors. -/
+theorem edfBlock_prod (p d : ℕ) [Fact p.Prime] :
+    ∀ (fuel a : ℕ) (f : List (ZMod p)),
+      toPoly (edfProduct (edfBlock p d fuel a f)) = toPoly f := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a f
+    simp only [edfBlock, edfProduct, List.foldr_cons, List.foldr_nil, toPoly_mulL, toPoly_cons,
+      toPoly_nil]
+    simp
+  | succ fuel ih =>
+    intro a f
+    rw [edfBlock]
+    simp only
+    split
+    · -- stop branch: [f]
+      simp only [edfProduct, List.foldr_cons, List.foldr_nil, toPoly_mulL, toPoly_cons, toPoly_nil]
+      simp
+    · split
+      · rename_i hsplit
+        -- proper split: recurse on gm and cof
+        set g := edfSplitOne p d f (a : ZMod p) with hgdef
+        set gm := monicizeL g with hgmdef
+        set cof := (divmodByMonic f gm (lengthTrim g - 1)).1 with hcofdef
+        rw [toPoly_edfProduct_append, ih (a + 1) gm, ih (a + 1) cof]
+        -- exact division: toPoly f = toPoly gm * toPoly cof
+        have hgne : lengthTrim g ≠ 0 := by omega
+        have hgmmon : IsMonicOfDegree (toPoly gm) (lengthTrim g - 1) :=
+          isMonicOfDegree_monicizeL hgne
+        have hgdvd : toPoly g ∣ toPoly f := gcdByMonic_dvd_left _ _
+        have hgmdvd : toPoly gm ∣ toPoly f := (toPoly_monicizeL_dvd hgne).trans hgdvd
+        have := toPoly_eq_mul_quotient_of_dvd hgmmon hgmdvd
+        rw [hcofdef]; exact this.symm
+      · -- no split: advance shift, recurse on f unchanged
+        exact ih (a + 1) f
+
+/-- The factor product of a `flatMap` telescopes to the product of the per-element factor products:
+`toPoly (edfProduct (l.flatMap g)) = ∏ toPoly (edfProduct (g b))`. By induction on `l` via the
+concatenation multiplicativity `toPoly_edfProduct_append`. -/
+theorem toPoly_edfProduct_flatMap {R : Type*} [CommSemiring R] {α : Type*}
+    (g : α → List (List R)) (l : List α) :
+    toPoly (edfProduct (l.flatMap g)) =
+      (l.map (fun b => toPoly (edfProduct (g b)))).prod := by
+  induction l with
+  | nil => simp [edfProduct, toPoly]
+  | cons b l ih =>
+    rw [List.flatMap_cons, toPoly_edfProduct_append, ih, List.map_cons, List.prod_cons]
+
+/-- **★ EDF multiply-back.** `toPoly (edfProduct (edf p f)) = toPoly f` (mod `p`): the full
+equal-degree factorization multiplies back to the input. The key structural invariant of EDF — each
+shift split is an exact-division peel (`edfBlock_prod`), and `edf` telescopes over the DDF blocks
+whose product is already `f` (`ddf_prod`). Axiom-clean (`[propext, Classical.choice, Quot.sound]`):
+no `native`, no `sorry`. -/
+theorem edf_prod (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) :
+    toPoly (edfProduct (edf p f)) = toPoly f := by
+  rw [edf, toPoly_edfProduct_flatMap]
+  -- each block's EDF factor product is the block itself
+  have hblk : (fun b : ℕ × List (ZMod p) =>
+      toPoly (edfProduct (edfBlock p b.1 (b.2.length + 1) 0 b.2)))
+        = fun b => toPoly b.2 := by
+    funext b; exact edfBlock_prod p b.1 (b.2.length + 1) 0 b.2
+  rw [hblk]
+  -- ∏ toPoly b.2 over DDF blocks = toPoly (ddfProduct (ddf p f)) = toPoly f
+  rw [← toPoly_ddfProduct, ddf_prod]
