@@ -597,6 +597,43 @@ theorem gcdByMonic_dvd_right {R : Type*} [Field R] [DecidableEq R] (f g : List R
     toPoly (gcdByMonic f g) ∣ toPoly g :=
   (gcdByMonicFuel_dvd (g.length + 1) f g (by have := lengthTrim_le_length g; omega)).2
 
+/-! ## Exact division when the divisor divides the dividend
+
+If a **monic** `g` (degree `dg`) divides `f`, the long division is exact: the remainder is the
+zero polynomial and `toPoly f = toPoly g * toPoly q`. Proof: the carried remainder `r = f mod g`
+satisfies `g ∣ r` (since `g ∣ f` and `g ∣ g*q`) but `degree r < dg = degree g`, so `r = 0` over
+the field (a domain). This is what makes each DDF peel exact, the engine of multiply-back. -/
+
+/-- **★ Exact division.** With `toPoly g` monic of degree `dg` (so `g ≠ 0`) dividing `toPoly f`,
+the division is exact: `toPoly f = toPoly g * toPoly (divmodByMonic f g dg).1` (the remainder
+vanishes). -/
+theorem toPoly_eq_mul_quotient_of_dvd {R : Type*} [Field R] [DecidableEq R]
+    {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg)
+    {f : List R} (hdvd : toPoly g ∣ toPoly f) :
+    toPoly f = toPoly g * toPoly (divmodByMonic f g dg).1 := by
+  -- division identity: f = g*q + r
+  have hid := divmodByMonic_spec f g dg
+  set q := (divmodByMonic f g dg).1
+  set r := (divmodByMonic f g dg).2
+  -- r = f - g*q, so g ∣ r
+  have hgr : toPoly g ∣ toPoly r := by
+    have : toPoly r = toPoly f - toPoly g * toPoly q := by linear_combination -hid
+    rw [this]; exact dvd_sub hdvd (Dvd.dvd.mul_right (dvd_refl _) _)
+  -- degree r < dg = degree g
+  have hgdeg : (toPoly g).degree = (dg : WithBot ℕ) := by
+    rw [degree_eq_natDegree hg.monic.ne_zero, hg.natDegree_eq]
+  have hrbound : lengthTrim r ≤ dg :=
+    lengthTrim_divmodByMonicFuel_snd_le hg (f.length + 1) f
+      (by have := lengthTrim_le_length f; omega)
+  have hrdeg : (toPoly r).degree < (dg : WithBot ℕ) :=
+    lt_of_lt_of_le (toPoly_degree_lt_lengthTrim r) (by exact_mod_cast hrbound)
+  -- r = 0
+  have hr0 : toPoly r = 0 := by
+    refine eq_zero_of_dvd_of_degree_lt hgr ?_
+    rw [hgdeg]; exact hrdeg
+  -- conclude
+  rw [hid, hr0, add_zero]
+
 /-! ## The Frobenius power `X^(p^d) mod f`
 
 Modular multiplication `mulModL f df a b := (a * b) mod f` and binary exponentiation `powModL`
