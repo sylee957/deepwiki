@@ -291,4 +291,217 @@ theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG �
 
 end Divisibility
 
+/-! ## ★ Task 5 — assembling the sharpened residual: the reduced crux + builder + field corollary
+
+The clauses fall into two groups: the **discharged** ones (`hprim` via the gcd witness, `hyden` via the
+solve guard, `hfden`/`hgden`/`hfden0`/`hgden0` via the subtype, `hdvdB`/`hdvdC` reduced to the two
+product-divisibilities) and the **genuinely remaining** ones (the two product-divisibilities themselves
+`hdvdB_dn_h`/`hdvdC_dn_h2`, the normal-part-nonzero `hdn`, the fuel bounds `hfbB`/`hfbC`, the non-gcd
+`CSPDEGClearedInputsGen` chain `hin`, and the dispatcher `hdb`). We bundle exactly the latter as the
+**reduced crux residual** `RischDESuccessResidualCrux`, give a builder `residual_of_crux` rebuilding the full
+`RischDESuccessResidual` from it (discharging the former group), and compose to the field identity
+`crischDESolve_field_of_crux`. The crux is the precise sharpened TRUE residual — the §6.1
+weak-normalization product-divisibilities + per-run termination/fuel, with everything else discharged. -/
+
+section Crux
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β]
+
+/-- **★ The reduced RDE residual crux** `RischDESuccessResidualCrux f g`: exactly the clauses of
+`RischDESuccessResidual` a successful recursive solve does NOT yield — with the discharged clauses
+(`hprim`/`hyden`/`hfden`/`hgden`/`hfden0`/`hgden0`) removed and `hdvdB`/`hdvdC` reduced to their
+product-divisibility essence. Carries, per normal-denominator output `(a0,b0,c0,h0)`: the §6.1
+weak-normalization product-divisibilities `hdvdB_dn_h` (`fden ∣ dₙh`) and `hdvdC_dn_h2` (`gden ∣ dₙh²`), the
+normal-part-nonzero `hdn`, the fuel bounds `hfbB`/`hfbC`, and the non-gcd `CSPDEGClearedInputsGen` chain `hin`
+(whose per-level `Associated`-gcd clauses are supplied separately by `CTowerGcdWitness β`); plus the
+dispatcher `hdb`. The sharpened TRUE residual: NOT engine self-certification, but the genuine §6.1
+weak-normalization precondition + per-run termination/fuel. -/
+structure RischDESuccessResidualCrux (f g : QFunNZG β) : Prop where
+  /-- The normal part `dₙ = (cSplitFactorFastG [1] _ fden).1` of `fden` is nonzero. -/
+  hdn : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+        = some (a0, b0, c0, h0) →
+      toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 ≠ 0
+  /-- §6.1 weak-normalization `B`-divisibility: `fden ∣ dₙ·h0`. -/
+  hdvdB_dn_h : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+        = some (a0, b0, c0, h0) →
+      toPolyG f.1.2 ∣ toPolyG (CPolyG.cmulG
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 h0)
+  /-- §6.1 weak-normalization `C`-divisibility: `gden ∣ dₙ·h0²`. -/
+  hdvdC_dn_h2 : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+        = some (a0, b0, c0, h0) →
+      toPolyG g.1.2 ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 h0) h0)
+  /-- §6.2 fuel bound on the `B`-numerator. -/
+  hfbB : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+        = some (a0, b0, c0, h0) →
+      (CPolyG.cnormG (CPolyG.csubG
+        (CPolyG.cmulG (CPolyG.cmulG
+          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 h0) f.1.1)
+        (CPolyG.cmulG (CPolyG.cmulG
+          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1
+            (CPolyG.cmonomialDeriv ([CField.one] : CPolyG β) h0)) f.1.2)) : List β).length
+        ≤ towerRischDEFuel
+  /-- §6.2 fuel bound on the `C`-numerator. -/
+  hfbC : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+        = some (a0, b0, c0, h0) →
+      (CPolyG.cnormG (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cmulG
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 h0) h0)
+        g.1.1) : List β).length ≤ towerRischDEFuel
+  /-- The §6.4 per-level transparent-input chain `CSPDEGClearedInputsGen` (gcd clauses via the witness). -/
+  hin : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+        = some (a0, b0, c0, h0) →
+      CSPDEGClearedInputsGen ([CField.one] : CPolyG β) towerRischDEFuel
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) towerRischDEFuel
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+  /-- The positive-`deg(bbar)` dispatcher side-condition (Lemma 6.5.1 non-cancellation routing). -/
+  hdb : ∀ a0 b0 c0 bbar cbar : CPolyG β, ∀ m : ℤ, ∀ α' β' : CPolyG β,
+    cSPDEG ([CField.one] : CPolyG β) towerRischDEFuel
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) towerRischDEFuel
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β') → 0 < cdegG bbar
+
+omit [CDiffFieldSpec β] in
+/-- **★ The full residual from the reduced crux** (`residual_of_crux`): given a successful recursive solve
+`crischDESolve f g = some y`, the gcd witness `[CTowerGcdWitness β]`, and the reduced crux
+`RischDESuccessResidualCrux f g`, the full `RischDESuccessResidual f g` holds. The builder discharges the
+removed clauses — `hprim` from `cdegG_cSpecialPolyG_one_eq_zero`, `hyden` from `crischDESolve_yden_ne_zero`,
+`hfden`/`hgden`/`hfden0`/`hgden0` from the subtype, and `hdvdB`/`hdvdC` from the crux's product-divisibilities
+via `hdvdB_of_dvd`/`hdvdC_of_dvd` — and threads the genuinely-remaining clauses through. So the capstone's
+residual hypothesis is exactly the sharpened crux. -/
+theorem residual_of_crux (f g y : QFunNZG β)
+    (hsolve : CRischField.crischDESolve f g = some y)
+    (hcrux : RischDESuccessResidualCrux f g) :
+    RischDESuccessResidual f g where
+  hres a0 b0 c0 h0 hnorm := {
+    hprim := cdegG_cSpecialPolyG_one_eq_zero towerRischDEFuel
+    hdn := hcrux.hdn a0 b0 c0 h0 hnorm
+    hfden0 := qfunNZG_den_cnormG_ne_nil f
+    hgden0 := qfunNZG_den_cnormG_ne_nil g
+    hfbB := hcrux.hfbB a0 b0 c0 h0 hnorm
+    hdvdB := hdvdB_of_dvd ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 h0
+      (hcrux.hdvdB_dn_h a0 b0 c0 h0 hnorm)
+    hfbC := hcrux.hfbC a0 b0 c0 h0 hnorm
+    hdvdC := hdvdC_of_dvd ([CField.one] : CPolyG β) towerRischDEFuel g.1.1 f.1.2 g.1.2 h0
+      (hcrux.hdvdC_dn_h2 a0 b0 c0 h0 hnorm)
+    hin := hcrux.hin a0 b0 c0 h0 hnorm
+  }
+  hdb := hcrux.hdb
+  hyden ynum yden hsucc := crischDESolve_yden_ne_zero f g y hsolve ynum yden hsucc
+  hfden := qfunNZG_den_toPolyG_ne_zero f
+  hgden := qfunNZG_den_toPolyG_ne_zero g
+
+section FieldCorollary
+
+variable [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **★★ The recursive RDE-oracle field identity from the sharpened crux** (`crischDESolve_field_of_crux`): a
+successful recursive solve `crischDESolve f g = some y` over `QFunNZG β`, with the gcd witness
+`[CTowerGcdWitness β]` and the reduced crux `RischDESuccessResidualCrux f g`, yields the field-level Risch-DE
+identity `towerFractionFieldDerivG [1] (Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`
+(`Y = amG y.1.1/amG y.1.2`, etc.). Composes `residual_of_crux` (rebuild the full residual, discharging the
+provable clauses) with the capstone `crischDESolve_field_of_witness_residual`. **No `native_decide`** — the
+discharged clauses are theorems, the gcd half the witness's tower induction, and the only hypothesis is the
+sharpened crux. This is the capstone result with its residual reduced to exactly the §6.1
+weak-normalization product-divisibilities plus per-run termination/fuel. -/
+theorem crischDESolve_field_of_crux (f g y : QFunNZG β)
+    (hsolve : CRischField.crischDESolve f g = some y)
+    (hcrux : RischDESuccessResidualCrux f g) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
+  crischDESolve_field_of_witness_residual f g y hsolve (residual_of_crux f g y hsolve hcrux)
+
+end FieldCorollary
+
+end Crux
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- ★ Task 5: the recursive RDE field identity from the sharpened crux + the gcd witness — no native_decide.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+    (f g y : QFunNZG β) (hsolve : CRischField.crischDESolve f g = some y)
+    (hcrux : RischDESuccessResidualCrux f g) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
+  crischDESolve_field_of_crux f g y hsolve hcrux
+
+/-! ## ★ VERDICT — is the recursive `CRischFieldSpec (QFunNZG β)` now UNCONDITIONAL?
+
+**No — but the residual is now SHARP and most of it is discharged.** The recursive RDE-oracle field identity
+holds for a successful `crischDESolve f g = some y` over `QFunNZG β` modulo exactly the reduced crux
+`RischDESuccessResidualCrux` (`crischDESolve_field_of_crux`), which is strictly smaller than the prior
+`RischDESuccessResidual`: this file discharges six of its clauses and reduces two more.
+
+### What is now DISCHARGED (axiom-clean `[propext, Classical.choice, Quot.sound]`, NO `native_decide`)
+
+* **`hprim`** (`cdegG_cSpecialPolyG_one_eq_zero`) — a theorem for the recursive monomial `Dt = [1]`, via the
+  gcd witness (the gcd of the unit `[1]` is a unit ⟹ the split of `[1]` is trivial ⟹ the special part is the
+  constant `[1]`). NOT "true by construction" cheaply — it genuinely uses `CTowerGcdWitness β`.
+* **`hyden`** (`crischDESolve_yden_ne_zero`) — from the `cisZeroG yden = false` guard a successful
+  `crischDESolve` already passes.
+* **`hfden`/`hgden`/`hfden0`/`hgden0`** (`qfunNZG_den_*`) — from the `QFunNZG β` subtype proof.
+* **`hdvdB`/`hdvdC`** REDUCED (`hdvdB_of_dvd`/`hdvdC_of_dvd`) to the single product-divisibilities
+  `fden ∣ dₙh` and `gden ∣ dₙh²` — the algebraic essence of §6.1 weak normalization.
+
+### The SHARPENED TRUE residual (the precise remaining crux, in `RischDESuccessResidualCrux`)
+
+1. **The §6.1 weak-normalization product-divisibilities** `hdvdB_dn_h` (`fden ∣ dₙh`) and `hdvdC_dn_h2`
+   (`gden ∣ dₙh²`). These are the **crux**, and they are genuinely NOT theorems for arbitrary `f g`: with
+   `fden = dₙ·dₛ` (normal × special), `fden ∣ dₙh ⟺ dₛ ∣ h`, which FAILS for an un-weakly-normalized `f`
+   (e.g. `dₛ` a nontrivial special factor coprime to `h`). They hold for the **post-Hermite,
+   weakly-normalized** RDE input the algorithm assumes; the recursive `crischDESolve` does NOT weak-normalize
+   its raw argument (`cWeakNormalizerG` is the missing pre-step), so the engine computes the `cdivG` clearing
+   unconditionally and never re-validates exactness. **This is the genuine obstruction — a missing
+   precondition, NOT engine self-certification.**
+2. **`hdn`** (normal part nonzero) — rests on the splitting-factorization product `fden = dₙ·dₛ`, which
+   `cSplitFactorFastG` is documented not to establish abstractly (`ComputableTowerUnify`); per-run regularity.
+3. **The fuel bounds** `hfbB`/`hfbC` (`length ≤ 60`) and the **non-gcd `CSPDEGClearedInputsGen` chain** `hin`
+   (per-level fuel, `cdvdG`, `cgcdTerminatesG`) — per-run termination/fuel, NOT unconditional (the gcd
+   clauses *inside* `hin` ARE supplied by `CTowerGcdWitness β`; only the non-gcd ones remain).
+4. **`hdb`** (positive `deg(bbar)`) — the dispatcher routing side-condition.
+
+### Bottom line — is the wall illusory?
+
+**Partly.** The user's two hints were *almost* right and the file acts on them: `hprim` IS dischargeable
+(hint 1 — though it needs the gcd witness, not "construction"); the §6.2 divisibility IS the weak-normalization
+invariant (hint 2). But the divisibility is **not** "a theorem of weak-normalization the engine produces by
+construction" — the engine does NOT weak-normalize, so for the recursive instance (raw `f`) the divisibility
+is a genuine **precondition** that can fail. The TRUE residual is therefore the **§6.1 weak-normalization
+product-divisibilities** (`hdvdB_dn_h`/`hdvdC_dn_h2`) plus per-run termination/fuel — sharper than the prior
+"self-certification wall", and reachable only by *adding the `cWeakNormalizerG` pre-step to the recursive
+`crischDESolve`* (an engine change, out of this file's scope) or by carrying the crux as the residual. The
+recursive `CRischFieldSpec (QFunNZG β)` is **not** unconditional; the boundary is now exactly the named crux. -/
+
+/-! ### Axiom audit (the discharges + the crux corollary are axiom-clean, NO `native_decide`) -/
+
+#print axioms cdegG_cSpecialPolyG_one_eq_zero
+#print axioms crischDESolve_yden_ne_zero
+#print axioms hdvdB_of_dvd
+#print axioms hdvdC_of_dvd
+#print axioms residual_of_crux
+#print axioms crischDESolve_field_of_crux
+
 end DeepWiki.SymbolicIntegration
