@@ -271,4 +271,39 @@ theorem liftStep_congr (p m : ℕ) (f g h s t : List ℤ)
   -- chain: f ≡ g0·h0 ≡ g'·h'
   exact polyCongr_trans hraw (polyCongr_symm hprod)
 
+/-! ## `native_decide` validation of one lifting step
+
+The concrete computational content behind `liftStep_congr`: lift `x² + 1` over `ℤ` from its
+mod-`5` factorization `(x + 3)(x + 2) = x² + 5x + 6 ≡ x² + 1 (mod 5)` one quadratic step to mod
+`5² = 25`, and verify the lifted factors multiply back mod `25`. Bézout: `1·(x + 3) + (−1)·(x + 2)
+= 1`, so `s = [1]`, `t = [−1]`. (`toPoly` is `noncomputable`, so — as in the factor engine — we
+validate the list-level `mulL`/`reduceModN` output, which `toPoly` sends to the polynomial
+congruence `liftStep_congr` proves.) -/
+
+/-- The mod-`5` defect of `x² + 1 = (x + 3)(x + 2)` is `−5x − 5 ≡ 0 (mod 5)`: the factorization is
+exact mod `5` (`native_decide`). -/
+example : reduceModN 5 (defectL [1, 0, 1] [3, 1] [2, 1]) = [0, 0, 0] := by native_decide
+
+/-- The Bézout relation `1·(x + 3) + (−1)·(x + 2) = 1` holds (`s·g + t·h − 1 ≡ 0`, list-level)
+(`native_decide`). -/
+example : subL (addL (mulL [1] [3, 1]) (mulL [-1] [2, 1])) [1] = [0, 0] := by native_decide
+
+/-- One quadratic Hensel step lifts `(x + 3, x + 2)` to `(6x + 8, 21x + 22)` mod `25`
+(`native_decide`). -/
+example : liftStep 5 1 [1, 0, 1] [3, 1] [2, 1] [1] [-1] = ([8, 6, 0], [22, 21, 0]) := by
+  native_decide
+
+/-- **★ Multiply-back mod `25`.** The lifted factors `(6x + 8)(21x + 22)` reduce mod `25` to
+`x² + 1` (the input, with benign trailing zeros from un-trimmed lists; `toPoly` agrees, the
+content of `liftStep_congr`) — the new defect vanishes mod `25` (`native_decide`). -/
+example :
+    (let (g', h') := liftStep 5 1 [1, 0, 1] [3, 1] [2, 1] [1] [-1];
+      reduceModN 25 (mulL g' h')) = [1, 0, 1, 0, 0] := by native_decide
+
+/-- The new defect `f − g'·h'` is `≡ 0 (mod 25)` after one step: quadratic convergence from `mod 5`
+to `mod 25` (`native_decide`). -/
+example :
+    (let (g', h') := liftStep 5 1 [1, 0, 1] [3, 1] [2, 1] [1] [-1];
+      reduceModN 25 (defectL [1, 0, 1] g' h')) = [0, 0, 0, 0, 0] := by native_decide
+
 end DeepWiki.SymbolicIntegration
