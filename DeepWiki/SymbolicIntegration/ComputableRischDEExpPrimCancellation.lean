@@ -213,4 +213,76 @@ theorem cancellation_iff_logDeriv_eq_low {v a b q : K[X]} (ha0 : a ≠ 0) (hq0 :
 
 end AbstractLow
 
+/-! ## ★ The irreducible core: the parametric logarithmic-derivative bound
+
+The δ ≤ 1 cancellation forces `deg q` to satisfy `−lc(b)/lc(a) = (deg q)·η + logDeriv z` for `z = lc q ≠ 0`
+(`cancellation_iff_logDeriv_eq_low`). Bounding `deg q` is therefore the base-field question: **for how many
+`m ∈ ℕ` is `−lc(b)/lc(a) − m·η` a logarithmic derivative of a nonzero base-field element?** This is the
+**parametric logarithmic-derivative** decision (Bronstein §5.12 / §6.1, the very `b = Dz/z` test the
+exp/primitive *solve* `cPolyRischDECancel{Exp,Prim}G` uses degree-by-degree). It is the genuine §6.3
+frontier — the deeper recursion the nonlinear `λ`-bound never enters — and is isolated here as a named
+`Prop`, never `sorry`. -/
+
+section LogDerivativeBound
+
+variable {K : Type*} [Field K] [CharZero K] [Differential K]
+
+/-- **★ The parametric logarithmic-derivative bound** `ExpPrimLogDerivativeBound v a b N`: every natural
+number `m` for which `−lc(b)/lc(a) = m·(v.coeff 1) + logDeriv z` holds for **some** nonzero `z ∈ K` is `≤ N`
+(`v.coeff 1 = η = Dt/t` in the hyperexponential case, `0` in the primitive case). This is the irreducible
+base-field content of the δ ≤ 1 cancellation degree bound: the parametric logarithmic-derivative problem
+(Bronstein §5.12 / §6.1) — exactly the `b = Dz/z` test the engine's exp/primitive cancellation *solve* runs.
+A stated `Prop`, NO `sorry`; the deep §6.3 sub-problem the nonlinear `λ`-recursion does not reach. (`b`'s
+relevant coefficient is `b.coeff (deg a)`, which is `lc(b)` in the genuinely balanced `deg b = deg a` case.)
+-/
+def ExpPrimLogDerivativeBound (v a b : K[X]) (N : ℕ) : Prop :=
+  ∀ m : ℕ, (∃ z : K, z ≠ 0 ∧
+      -(b.coeff a.natDegree) / a.leadingCoeff = (m : K) * v.coeff 1 + Differential.logDeriv z) →
+    m ≤ N
+
+omit [CharZero K] in
+/-- **★ The exp/primitive cancellation bound, modulo the log-derivative bound**
+(`expPrimCancellation_of_logDerivativeBound`): for the balanced exp/primitive configuration (`deg v ≤ 1`,
+`deg b ≤ deg a`), a nonzero `q` solving `a·Dq + b·q = c` (with `a ≠ 0`) has
+`deg q ≤ rdeBoundDegreeWithLambda v a b c N`, **provided** the parametric log-derivative bound
+`ExpPrimLogDerivativeBound v a b N` holds. Either the top coefficient of `c` does not cancel (the existing
+top-coefficient bound applies, landing in `rdeBoundDegreeAbstract ≤ rdeBoundDegreeWithLambda`), or it cancels
+— but then `cancellation_iff_logDeriv_eq_low` exhibits `−lc(b)/lc(a) = (deg q)·η + logDeriv (lc q)` with
+`lc q ≠ 0`, so `ExpPrimLogDerivativeBound` forces `deg q ≤ N ≤ rdeBoundDegreeWithLambda`. This proves
+`RdeBoundExpPrimCancellation` modulo the precisely isolated base-field core. -/
+theorem expPrimCancellation_of_logDerivativeBound {v a b c q : K[X]} (hq : q ≠ 0) (ha0 : a ≠ 0)
+    (hv : v.natDegree ≤ 1) (hble : b.natDegree ≤ a.natDegree)
+    (heq : a * Differential.implicitDeriv v q + b * q = c) {N : ℕ}
+    (hbound : ExpPrimLogDerivativeBound v a b N) :
+    q.natDegree ≤ rdeBoundDegreeWithLambda v a b c N := by
+  by_cases htop : c.coeff (candTopDegree v a b q) = 0
+  · -- cancellation: extract the log-derivative equation and apply the parametric bound
+    refine le_trans ?_ (le_max_right (rdeBoundDegreeAbstract v a b c) N)
+    rcases Nat.eq_zero_or_pos q.natDegree with hdq0 | hdq1
+    · omega
+    · -- the leading coefficient vanishes at the cancelled top degree
+      have hcancel : (a * Differential.implicitDeriv v q + b * q).coeff (candTopDegree v a b q) = 0 := by
+        rw [heq]; exact htop
+      -- the cancellation iff exhibits the witness `z = lc q ≠ 0`
+      have hlog := (cancellation_iff_logDeriv_eq_low ha0 hq hv hdq1 hble).mp hcancel
+      exact hbound q.natDegree ⟨q.leadingCoeff, leadingCoeff_ne_zero.mpr hq, hlog⟩
+  · -- no cancellation: the sharp top-coefficient bound applies directly
+    exact le_trans (natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero heq htop)
+      (rdeBoundDegreeAbstract_le_withLambda v a b c N)
+
+omit [CharZero K] in
+/-- **★ `RdeBoundExpPrimCancellation` is discharged by the log-derivative bound**
+(`rdeBoundExpPrimCancellation_of_logDerivativeBound`): the precise exp/primitive cancellation residual
+`RdeBoundExpPrimCancellation v a b c N` (from `ComputableRischDEDegreeBoundCancellation`) follows from the
+parametric log-derivative bound `ExpPrimLogDerivativeBound v a b N`. So the deepest §6.3 cancellation
+residual reduces to **exactly** the base-field parametric logarithmic-derivative problem — the genuine
+frontier — with everything else proven. -/
+theorem rdeBoundExpPrimCancellation_of_logDerivativeBound (v a b c : K[X]) {N : ℕ}
+    (hbound : ExpPrimLogDerivativeBound v a b N) :
+    RdeBoundExpPrimCancellation v a b c N := by
+  intro q hq ha0 hv hble heq
+  exact expPrimCancellation_of_logDerivativeBound hq ha0 hv hble heq hbound
+
+end LogDerivativeBound
+
 end DeepWiki.SymbolicIntegration
