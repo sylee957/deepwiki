@@ -27,16 +27,19 @@ This file builds the **correct** algorithm — the one the engine should run —
   residual.
 * **★ The capstone** (Task 4): `crischDESolveNorm_field` — the field-level Risch-DE identity for the
   ORIGINAL `f, g` from a successful `crischDESolveNorm`, with `[CTowerGcdWitness β]`, the normalization
-  guarantee (Task 2), and the **per-run termination/fuel residual ONLY** (`RischDESuccessResidualNorm`,
-  the crux with the two divisibility clauses REMOVED — they are discharged by `dvd_dn_h_of_normal`). NO
-  `native_decide`. **So the divisibility crux — the genuine wall — IS closed for the correct (normalized)
-  algorithm, modulo the single normalization-correctness sub-lemma + the generic fuel-boundedness shared by
-  every computable solver.**
+  guarantee (Task 2), and `RischDESuccessResidualNorm` — the crux **with the `B`-divisibility clause
+  `hdvdB_dn_h` REMOVED** (discharged by `dvd_dn_h_of_normal`). NO `native_decide`. **So the `B`-divisibility
+  crux — the §6.2 self-divisibility `dvd_dn_h_of_normal` targets, the wall the diagnosis pinned — IS closed
+  for the correct (normalized) algorithm, modulo the single normalization-correctness sub-lemma.**
 
-★ **Verdict (stated precisely at the end):** the wall (the §6.2 divisibility precondition) was the engine's
-missing weak-normalization step; with it added, the divisibility is a theorem (`dvd_dn_h_of_normal`) given
-the one §6.1 normalization-correctness fact, leaving only per-run fuel/termination — NOT divisibility, and
-the same residual every fuel-bounded engine carries. -/
+★ **Verdict (stated precisely at the end): the wall is illusory FOR THE `B`-DIVISIBILITY** — the §6.2
+self-divisibility `fden ∣ dₙh` that `dvd_dn_h_of_normal` targets was the engine's missing weak-normalization
+step; with `cWeakNormalizerG` added it is a **theorem** given the one §6.1 normalization-correctness fact
+(`IsWeaklyNormalizedNorm`). Precisely beyond that single sub-lemma: (i) the `C`-divisibility `hdvdC_dn_h2`
+(`gden ∣ dₙh0²`) is a **`g`-side cross-divisibility** that `dvd_dn_h_of_normal` provably does NOT reach
+(it is the engine's own `cdvdG` check up to `gden`-vs-`eₙ`, not a self-divisibility), and (ii) the per-run
+fuel/termination (`hdn`/`hfbB`/`hfbC`/`hin`/`hdb`) that every fuel-bounded computable solver carries. Both
+are NOT the `B`-divisibility wall; they are a distinct `g`-side condition + generic fuel-boundedness. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -165,22 +168,15 @@ theorem isWeaklyNormalizedNorm_dvdB (ftilde : QFunNZG β) (h0 : CPolyG β)
     (show toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1
         = toPolyG ftilde.1.2 from hnorm)
 
-omit [CFieldDomain β] in
-/-- **The normalization guarantee discharges the `C`-divisibility crux** (`isWeaklyNormalizedNorm_dvdC`):
-if `f̃`'s denominator is weakly normalized, then `f̃den ∣ dₙ·h0²` for any `h0` (the §6.1 `C`-divisibility),
-again from `dvd_dn_h_of_normal`. The divisibility crux's second clause is also a theorem on normalized
-input. -/
-theorem isWeaklyNormalizedNorm_dvdC (ftilde : QFunNZG β) (h0 : CPolyG β)
-    (hnorm : IsWeaklyNormalizedNorm ftilde) :
-    toPolyG ftilde.1.2 ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG
-      (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0) := by
-  have hd := dvd_dn_h_of_normal ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2
-    (CPolyG.cmulG h0 h0)
-    (show toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1
-        = toPolyG ftilde.1.2 from hnorm)
-  rw [CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG] at hd ⊢
-  rw [← mul_assoc] at hd
-  exact hd
+/-! ### Why the `C`-divisibility crux is NOT closed by `f`-normalization (the precise boundary)
+
+The crux's `C`-divisibility clause `hdvdC_dn_h2` is `gden ∣ dₙ·h0²` where `dₙ = (cSplitFactorFastG [1] _
+fden).1` is the normal part of **`f`'s** denominator. This is a **cross**-divisibility (`g`'s denominator
+into `f`'s normal-part block), NOT the self-divisibility `fden ∣ dₙ·h0` that `dvd_dn_h_of_normal` proves.
+Normalizing `f` (making `fden` its own normal part) gives the `B`-clause but says nothing about `gden`
+dividing `dₙh0²`. So `hdvdC_dn_h2` is genuinely outside `dvd_dn_h_of_normal`'s reach — it stays in the
+per-run residual (it is, in fact, the engine's own `cdvdG eₙ dₙh0²` check up to `gden`-vs-`eₙ`, a `g`-side
+condition). The wall `dvd_dn_h_of_normal` targets is the `B`-divisibility; that one IS closed. -/
 
 end Normality
 
@@ -248,5 +244,211 @@ theorem toQFunNZG_scaledRHS (q' g : QFunNZG β) :
   toQFunNZG_qmulNZG q' g
 
 end Bridges
+
+/-! ## ★ The capstone — the normalized recursive solver is sound, `B`-divisibility wall CLOSED (Task 4)
+
+`RischDESuccessResidualNorm` is the reduced crux `RischDESuccessResidualCrux` **with the `B`-divisibility
+clause `hdvdB_dn_h` REMOVED** — that clause is the §6.2 self-divisibility wall `dvd_dn_h_of_normal` targets,
+discharged by `isWeaklyNormalizedNorm_dvdB` from the §6.1 normalization guarantee `IsWeaklyNormalizedNorm`.
+What remains is the per-run termination/fuel any fuel-bounded computable solver carries (`hdn`
+normal-part-nonzero, `hfbB`/`hfbC` fuel bounds, `hin` the per-level transparent-input chain, `hdb` the
+dispatcher routing) **plus** the `C`-divisibility `hdvdC_dn_h2` (`gden ∣ dₙh0²`, a `g`-side cross condition
+outside `dvd_dn_h_of_normal`'s reach — see the boundary note above). The `B`-divisibility wall is gone.
+
+`crischDESolveNorm_field` composes: (normalization guarantee) discharges the `B`-divisibility crux →
+`residualCrux_of_residualNorm`/`residual_of_crux` rebuild the full residual → `crischDESolve_field_of_crux`
+gives the inner field identity for `f̃ = f − Dq/q`, `g̃ = q·g` → `roundtrip_field` (the §6.1 substitution)
+transforms it back to
+the ORIGINAL `f, g`. NO `native_decide`; axiom-clean `[propext, Classical.choice, Quot.sound]`. -/
+
+section Capstone
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **★ The per-run residual of the NORMALIZED solver** `RischDESuccessResidualNorm f̃ g̃`: the reduced crux
+`RischDESuccessResidualCrux` with **the `B`-divisibility clause `hdvdB_dn_h` REMOVED** — that clause is the
+genuine §6.2 self-divisibility wall `dvd_dn_h_of_normal` targets, discharged by `f`-normalization
+(`isWeaklyNormalizedNorm_dvdB`), so it is NOT part of this residual. What remains is the per-run
+termination/fuel every fuel-bounded computable solver carries — `hdn` (normal part nonzero), `hfbB`/`hfbC`
+(the §6.2 fuel bounds), `hin` (the §6.4 per-level transparent-input chain, gcd clauses via the witness),
+`hdb` (the dispatcher routing) — **plus the `C`-divisibility `hdvdC_dn_h2`** (`gden ∣ dₙh0²`, a `g`-side
+**cross**-divisibility that `dvd_dn_h_of_normal` provably does NOT reach: it is the engine's own `cdvdG`
+check up to `gden`-vs-`eₙ`, not a self-divisibility). The `B`-divisibility wall is removed; the `C`-side
+condition and per-run fuel remain. -/
+structure RischDESuccessResidualNorm (ftilde gtilde : QFunNZG β) : Prop where
+  /-- The normal part `dₙ` of `f̃den` is nonzero. -/
+  hdn : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 ≠ 0
+  /-- §6.2 `C`-divisibility `gden ∣ dₙ·h0²` (the `g`-side cross-divisibility — NOT reached by
+  `f`-normalization; the engine's own `cdvdG` check up to `gden`-vs-`eₙ`). -/
+  hdvdC_dn_h2 : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      toPolyG gtilde.1.2 ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0)
+  /-- §6.2 fuel bound on the `B`-numerator. -/
+  hfbB : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      (CPolyG.cnormG (CPolyG.csubG
+        (CPolyG.cmulG (CPolyG.cmulG
+          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0)
+          ftilde.1.1)
+        (CPolyG.cmulG (CPolyG.cmulG
+          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1
+            (CPolyG.cmonomialDeriv ([CField.one] : CPolyG β) h0)) ftilde.1.2)) : List β).length
+        ≤ towerRischDEFuel
+  /-- §6.2 fuel bound on the `C`-numerator. -/
+  hfbC : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      (CPolyG.cnormG (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cmulG
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0)
+        gtilde.1.1) : List β).length ≤ towerRischDEFuel
+  /-- The §6.4 per-level transparent-input chain `CSPDEGClearedInputsGen` (gcd clauses via the witness). -/
+  hin : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      CSPDEGClearedInputsGen ([CField.one] : CPolyG β) towerRischDEFuel
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) towerRischDEFuel
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+  /-- The positive-`deg(bbar)` dispatcher side-condition (Lemma 6.5.1 non-cancellation routing). -/
+  hdb : ∀ a0 b0 c0 bbar cbar : CPolyG β, ∀ m : ℤ, ∀ α' β' : CPolyG β,
+    cSPDEG ([CField.one] : CPolyG β) towerRischDEFuel
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) towerRischDEFuel
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β') → 0 < cdegG bbar
+
+omit [CDiffFieldSpec β] [CFieldDomain β] [CRischField β] [CTowerGcdWitness β]
+  [Algebra ℚ (CFieldSpec.K β)] in
+/-- **The full crux from the normalized residual + the normalization guarantee**
+(`residualCrux_of_residualNorm`): given the §6.1 normalization guarantee `IsWeaklyNormalizedNorm f̃`, the
+per-run residual `RischDESuccessResidualNorm f̃ g̃` rebuilds the full reduced crux
+`RischDESuccessResidualCrux f̃ g̃` — the missing `B`-divisibility clause `hdvdB_dn_h` supplied by
+`isWeaklyNormalizedNorm_dvdB` (the §6.2 self-divisibility wall, discharged from `f`-normality alone), the
+`C`-divisibility `hdvdC_dn_h2` carried through from the residual (the `g`-side cross condition outside
+`dvd_dn_h_of_normal`'s reach). The `B`-divisibility wall closed from normality. -/
+theorem residualCrux_of_residualNorm (ftilde gtilde : QFunNZG β)
+    (hnorm : IsWeaklyNormalizedNorm ftilde)
+    (hres : RischDESuccessResidualNorm ftilde gtilde) :
+    RischDESuccessResidualCrux ftilde gtilde where
+  hdn := hres.hdn
+  hdvdB_dn_h _ _ _ h0 _ := isWeaklyNormalizedNorm_dvdB ftilde h0 hnorm
+  hdvdC_dn_h2 := hres.hdvdC_dn_h2
+  hfbB := hres.hfbB
+  hfbC := hres.hfbC
+  hin := hres.hin
+  hdb := hres.hdb
+
+/-- **★★ The CORRECT (normalized) recursive RDE solver is sound — `B`-divisibility wall CLOSED** (Task 4,
+the capstone): if the normalized solver succeeds (`crischDESolveNorm f g = some y`), then with the gcd
+witness `[CTowerGcdWitness β]`, the §6.1 normalization guarantee `IsWeaklyNormalizedNorm (weakNormalizedF f
+q')` (the ONE isolated normalization-correctness fact, `q' = cWeakNormalizerG`'s output), and the residual
+`RischDESuccessResidualNorm` (the crux with the §6.2 `B`-divisibility clause `hdvdB_dn_h` REMOVED — the
+`C`-divisibility + per-run fuel remain), the returned `y` solves the field-level Risch DE for the ORIGINAL
+`f, g`: `towerFractionFieldDerivG [1] (Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. Composes: the
+normalization guarantee discharges the §6.2 `B`-divisibility crux (`residualCrux_of_residualNorm` →
+`crischDESolve_field_of_crux`) giving the inner identity for `f̃ = f − Dq/q`, `g̃ = q·g`; `roundtrip_field`
+(the §6.1 substitution `y = ỹ/q`) transforms it back to `f, g`. **No `native_decide`; the `B`-divisibility
+wall — the §6.2 self-divisibility `dvd_dn_h_of_normal` targets — is closed for the correct algorithm,
+modulo only the single normalization-correctness fact (the `C`-divisibility + per-run fuel are a distinct
+`g`-side condition + generic fuel-boundedness, not the wall).** -/
+theorem crischDESolveNorm_field (f g y : QFunNZG β)
+    (hsolve : crischDESolveNorm f g = some y)
+    (hnorm : IsWeaklyNormalizedNorm
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+    (hres : RischDESuccessResidualNorm
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+      (qmulNZG (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g)) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
+  -- abbreviations
+  set q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 with hq
+  set q' : QFunNZG β := qOfPolyNZG q with hq'
+  set ftilde : QFunNZG β := weakNormalizedF f q' with hft
+  set gtilde : QFunNZG β := qmulNZG q' g with hgt
+  -- unfold the solver to its guard-then-match form (`set`s fold the inner `let`s)
+  rw [show crischDESolveNorm f g
+      = (if CPolyG.cisZeroG q then none
+         else match CRischField.crischDESolve ftilde gtilde with
+              | none => none
+              | some ytilde => some (qmulNZG ytilde (qinvNZG q'))) from rfl] at hsolve
+  by_cases hqz : CPolyG.cisZeroG q = true
+  · rw [if_pos hqz] at hsolve; exact absurd hsolve (by simp)
+  · rw [if_neg hqz] at hsolve
+    rcases hinner : CRischField.crischDESolve ftilde gtilde with _ | ytilde <;>
+      rw [hinner] at hsolve
+    · exact absurd hsolve (by simp)
+    · rw [Option.some.injEq] at hsolve
+      -- the inner field identity for `f̃, g̃, ytilde` from the discharged crux
+      have hqfalse : CPolyG.cisZeroG q = false := by simpa using hqz
+      have hQ : toQFunNZG q' ≠ 0 := toQFunNZG_qOfPolyNZG_ne_zero q hqfalse
+      have hcrux : RischDESuccessResidualCrux ftilde gtilde :=
+        residualCrux_of_residualNorm ftilde gtilde hnorm hres
+      have hfield := crischDESolve_field_of_crux ftilde gtilde ytilde hinner hcrux
+      -- read the identity in `toQFunNZG` form (the `amG/toPolyG` division IS `toQFunNZG`)
+      have hfield' : towerFractionFieldDerivG ([CField.one] : CPolyG β) (toQFunNZG ytilde)
+            + toQFunNZG ftilde * toQFunNZG ytilde = toQFunNZG gtilde := hfield
+      -- rewrite the inner identity into the `roundtrip_field` hypothesis form
+      rw [toQFunNZG_weakNormalizedF f q', toQFunNZG_scaledRHS q' g] at hfield'
+      -- apply the §6.1 round-trip: `Y = Ỹ/Q` solves the original
+      have hround := roundtrip_field (towerFractionFieldDerivG ([CField.one] : CPolyG β))
+        (toQFunNZG f) (toQFunNZG g) (toQFunNZG q') (toQFunNZG ytilde) hQ hfield'
+      -- match the goal: `y = ytilde·q'⁻¹`, so `Y = Ỹ/Q`
+      rw [← hsolve]
+      show towerFractionFieldDerivG ([CField.one] : CPolyG β) (toQFunNZG (qmulNZG ytilde (qinvNZG q')))
+          + toQFunNZG f * toQFunNZG (qmulNZG ytilde (qinvNZG q')) = toQFunNZG g
+      rw [toQFunNZG_solution ytilde q']
+      exact hround
+
+end Capstone
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- ★ Task 4: the normalized recursive solver's success ⟹ the ORIGINAL field-level Risch-DE identity, from
+-- the gcd witness + the ONE normalization guarantee + the residual with the B-divisibility wall removed
+-- (no native_decide).
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+    (f g y : QFunNZG β) (hsolve : crischDESolveNorm f g = some y)
+    (hnorm : IsWeaklyNormalizedNorm
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+    (hres : RischDESuccessResidualNorm
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+      (qmulNZG (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g)) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
+  crischDESolveNorm_field f g y hsolve hnorm hres
+
+/-! ### Axiom audit (the capstone is axiom-clean, NO `native_decide`) -/
+
+#print axioms roundtrip_field
+#print axioms residualCrux_of_residualNorm
+#print axioms crischDESolveNorm_field
 
 end DeepWiki.SymbolicIntegration
