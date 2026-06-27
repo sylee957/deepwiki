@@ -124,6 +124,116 @@ theorem weakLiouville_propagates [IsLiouville F K] (g : F)
     (h : ¬ HasWeakLiouvilleForm F F g) : ¬ HasWeakLiouvilleForm F K g :=
   fun hK => h (weakLiouville_descend F K g hK)
 
+/-- **The descent is EQUIVALENT to `IsLiouville` (given the extension).**  For a fixed extension
+`K / F`, "every base element with a `K`-Liouville form has an `F`-Liouville form" is *exactly*
+`IsLiouville F K`.  Confirms the descent core *is* Mathlib's `IsLiouville`, repackaged — nothing more,
+nothing less. -/
+theorem hasWeakLiouvilleForm_descends_iff :
+    IsLiouville F K ↔ ∀ g : F, HasWeakLiouvilleForm F K g → HasWeakLiouvilleForm F F g := by
+  constructor
+  · intro inst g h
+    exact weakLiouville_descend F K g h
+  · intro hdesc
+    refine ⟨fun g ι _ c hc u v hrep => ?_⟩
+    obtain ⟨ι₀, _, c₀, hc₀, u₀, v₀, hrep₀⟩ := hdesc g ⟨ι, inferInstance, c, hc, u, v, hrep⟩
+    refine ⟨ι₀, inferInstance, c₀, hc₀, u₀, v₀, ?_⟩
+    simpa only [Algebra.algebraMap_self_apply] using hrep₀
+
 end Core
+
+/-! ## The Weak Liouville Theorem proper: `g ∈ L`, `g′ ∈ F` ⟹ the Liouville form over `F`
+
+Kaltofen's Thm 3.2 in its native phrasing.  The element `g` lives *up in the tower* `L`, but its
+derivative `g′` lands in the base `F`; the theorem produces the Liouville form for that derivative over
+`F`.  The bridge to the descent core: over `L`, the base element `a := g′ ∈ F` already has a *trivial*
+Liouville form `↑a = (↑g)′` (empty constant family, antiderivative `↑g ∈ L`), because
+`DifferentialAlgebra F L` makes `↑(g′) = (↑g)′`.  Descending that through `IsLiouville F L` gives the
+form over `F`.  This is where "the antiderivative is up the tower, the integrand is in the base" becomes
+"the integrand is a sum of `logDeriv`s and a base derivative". -/
+
+section Theorem
+
+variable (F : Type*) (L : Type*) [Field F] [Field L] [Differential F] [Differential L]
+variable [Algebra F L] [DifferentialAlgebra F L]
+
+omit [DifferentialAlgebra F L] in
+/-- **A base element that is a derivative up the tower has the trivial Liouville form over the tower.**
+If `g ∈ L` and `a ∈ F` with `↑a = (↑g)′` (i.e. `a` is the base-image of `g′`), then `a` has a Liouville
+form over `L` — the empty constant family with antiderivative `g`.  This is the "elementary in `L`"
+side of Liouville's theorem before descent: an antiderivative existing *somewhere up the tower* is
+exactly a (trivial) Liouville form there. -/
+theorem hasWeakLiouvilleForm_tower_of_isDeriv (a : F) (g : L)
+    (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F L a :=
+  ⟨Empty, inferInstance, Empty.elim, fun x => x.elim, Empty.elim, g, by
+    simpa only [Finset.univ_eq_empty, Finset.sum_empty, zero_add] using h⟩
+
+omit [DifferentialAlgebra F L] in
+/-- **Weak Liouville Theorem (Kaltofen Thm 3.2 / Rosenlicht 1972), the descent form.**  If `L / F` is a
+**Liouville** extension and `g ∈ L` has `g′ ∈ F` (witnessed by `a ∈ F` with `↑a = (↑g)′`), then `a`
+has the Liouville form over `F`: `↑a = ∑ᵢ ↑cᵢ · logDeriv vᵢ + v₀′` for constants `cᵢ ∈ F`, `vᵢ, v₀ ∈ F`.
+Equivalently `g′ = v₀′ + Σ cᵢ · vᵢ′/vᵢ` — an antiderivative of `a` is elementary *over the base*.  The
+trivial tower form `↑a = (↑g)′` descends through `IsLiouville F L`. -/
+theorem weakLiouville_of_isLiouville [IsLiouville F L] (a : F) (g : L)
+    (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F F a :=
+  weakLiouville_descend F L a (hasWeakLiouvilleForm_tower_of_isDeriv F L a g h)
+
+end Theorem
+
+/-! ## Case 1 (θ algebraic over `F`): discharged via Mathlib's `isLiouville_of_finiteDimensional`
+
+Kaltofen's **Case 1** of the Thm 3.2 induction — `θ` algebraic over the base — is the trace/norm
+averaging argument `l·g′ = (Σ_σ σv₀)′ + Σ cᵢ (∏_σ σvᵢ)′/(∏_σ σvᵢ)`, which is **exactly** Mathlib's
+`isLiouville_of_finiteDimensional` (every finite-dimensional char-0 extension is Liouville, proved via
+the Galois normal closure + the fixed-field/trace averaging).  So the algebraic case of the Weak
+Liouville Theorem is fully discharged here by instantiating that. -/
+
+section CaseAlgebraic
+
+variable (F : Type*) (L : Type*) [Field F] [Field L] [CharZero F] [Differential F] [Differential L]
+variable [Algebra F L] [DifferentialAlgebra F L]
+
+/-- **Case 1 (algebraic) of the Weak Liouville Theorem — PROVEN via Mathlib.**  For a *finite-dimensional
+algebraic* elementary extension `L / F` (char 0), if `g ∈ L` has `g′ ∈ F` (witnessed by `a` with
+`↑a = (↑g)′`) then `a` has the Liouville form over `F`.  This is Kaltofen's Case 1 (the trace/norm
+average); it rides Mathlib's `isLiouville_of_finiteDimensional` — the *one* case of Liouville's theorem
+already in Mathlib — supplying the `IsLiouville F L` instance the descent needs. -/
+theorem weakLiouville_finiteDimensional [FiniteDimensional F L] (a : F) (g : L)
+    (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F F a := by
+  haveI : IsLiouville F L := isLiouville_of_finiteDimensional
+  exact weakLiouville_of_isLiouville F L a g h
+
+/-- **Case 1 (algebraic), contrapositive: non-elementarity over the base propagates up a finite algebraic
+extension.**  If `a ∈ F` has no Liouville form over `F`, then it has none over a finite-dimensional
+algebraic extension `L / F` — so an algebraic elementary extension can never make a base-non-elementary
+integrand elementary.  Kaltofen Case 1, contrapositive, via `isLiouville_of_finiteDimensional`. -/
+theorem not_weakElementary_finiteDimensional [FiniteDimensional F L] (a : F)
+    (h : ¬ HasWeakLiouvilleForm F F a) : ¬ HasWeakLiouvilleForm F L a := by
+  haveI : IsLiouville F L := isLiouville_of_finiteDimensional
+  exact weakLiouville_propagates F L a h
+
+end CaseAlgebraic
+
+/-! ### Restatements + axiom audit (Case 1 / structural core) -/
+
+section RestatementsCore
+
+-- The Weak Liouville Theorem, descent form: g up the tower with g′ in the base ⟹ Liouville form.
+example (F L : Type*) [Field F] [Field L] [Differential F] [Differential L] [Algebra F L]
+    [DifferentialAlgebra F L] [IsLiouville F L] (a : F) (g : L) (h : (algebraMap F L a) = g′) :
+    HasWeakLiouvilleForm F F a :=
+  weakLiouville_of_isLiouville F L a g h
+
+-- Case 1 (algebraic): finite-dimensional elementary extension ⟹ Weak Liouville form, via Mathlib.
+example (F L : Type*) [Field F] [Field L] [CharZero F] [Differential F] [Differential L]
+    [Algebra F L] [DifferentialAlgebra F L] [FiniteDimensional F L] (a : F) (g : L)
+    (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F F a :=
+  weakLiouville_finiteDimensional F L a g h
+
+end RestatementsCore
+
+#print axioms weakLiouville_descend
+#print axioms weakLiouville_of_isLiouville
+#print axioms weakLiouville_finiteDimensional
+#print axioms not_weakElementary_finiteDimensional
 
 end DeepWiki.SymbolicIntegration.LiouvilleStructure
