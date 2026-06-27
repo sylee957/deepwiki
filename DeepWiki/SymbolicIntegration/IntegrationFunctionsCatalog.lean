@@ -37,7 +37,7 @@ only; it states no new mathematics.
   Soundness (unconditional, no `∑c = 0`): `cIntegrateHyperexpNormalG_sound`.
 * `cIntegrateHyperexpFullG` — the full hyperexponential driver (Laurent special part + normal part).
   Soundness: `cIntegrateHyperexpFullG_sound`.
-* `cIntegrateHyperexpG` / `cIntegrateHyperexpLaurentG` / `cIntegrateHyperexpNormalReducedG` — hyperexponential
+* `cIntegrateHyperexpG` / `cIntegrateHyperexpLaurentG` — hyperexponential
   sub-drivers. Soundness: NO direct theorem — their correctness flows through `cIntegrateHyperexpNormalG_sound`
   / `cIntegrateHyperexpFullG_sound`. (Documented gap, flagged for the coordinator.)
 * `cIntegrateElementaryG` — the unified elementary integrator over a tower base `α = QFunNZG β`.

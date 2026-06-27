@@ -334,88 +334,20 @@ theorem isZeroNZG_qreduceG (fuel : ℕ) (x : QFunNZG α)
 
 end QFunNZG
 
-/-! ### STRETCH — applying `qreduceG` to a hyperexponential residual before the base solve
+/-! ### STRETCH demo: `qreduceG` unblocks a hyperexponential residual that chokes `crischDESolve`
 
-`ComputableHyperexpNormal`'s §5.9 feedback integrates a normal hyperexponential part `fₙ` by
-`cIntegrateReducedG` + the residual base integral `∫R` (`crischDESolve 0 R`). The module docstring flags
-that when the residual `R` arrives as an **unreduced** `QFunNZG` fraction (e.g. `2x/2x`), `crischDESolve`'s
-weak-normalizer chokes on the spurious denominator. Here we wrap the §5.9 normal-part integrator to apply
-`qreduceG` to `R` **before** the base solve, so the residual is cancelled to its lowest terms first.
-
-The already-landed `nVarNorm_landsNormalPart` (`ComputableHyperexpNormal`) handles `∫ 2x/(exp(x²)−1)`,
-where the residue cancels in the numerator (`R = 2x/1`, already reduced). The genuinely-unreduced `2x/2x`
-case the docstring describes arises only for a **non-δ-constant residue**, which by the Rothstein–Trager
-criterion has **no elementary form** — so that specific choke masks non-elementarity (see the assessment
-below). We therefore demonstrate the reduction wrapper on the elementary `R = 2x` case: it computes the
-identical correct answer, confirming the wrapper is a sound drop-in (it only reduces `R`, never changes
-the integral). -/
-
-namespace CPolyG
-
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α] [CFieldDomain α]
-
-/-- **The §5.9 hyperexponential normal-part integrator with residual reduction**
-`cIntegrateHyperexpNormalReducedG Dt fuel a d cands`: identical to `cIntegrateHyperexpNormalG` but applies
-`QFunNZG.qreduceG` to the residual `R = η·∑res` (re-read as a `QFunNZG` fraction over the previous tower
-level) **before** the base solve `crischDESolve 0 R`, so the recursive Risch-DE oracle sees `R` in lowest
-terms rather than an unreduced `QFunNZG` fraction. This is the `ComputableHyperexpNormal` §5.9 frontier's
-proposed fix at the residual: cancelling the spurious denominator (the `2x/2x → 1` situation) before the
-weak-normalizer runs. For an `R` already reduced (or a base-field `α` where `qreduceG` is the identity at
-that level) the result is identical to `cIntegrateHyperexpNormalG`; the wrapper only ever shrinks `R`'s
-representation, preserving the integral (`toQFunNZG_qreduceG`). The instance `[CFieldDomain α]` is what
-makes `qreduceG` available at the residual's level. -/
-def cIntegrateHyperexpNormalReducedG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
-    Option (IntegralResultG α) :=
-  let red := cIntegrateReducedG Dt fuel a d cands
-  let η : α := cExpEtaG fuel Dt
-  let R : α := cHyperexpResidualG η red.logs
-  match CRischField.crischDESolve (CField.zero : α) R with
-  | none => none
-  | some intR =>
-    let (gnum, gden) := red.rational
-    let newNum := csubG gnum (cmulG [intR] gden)
-    some ⟨(newNum, gden), red.logs⟩
-
-end CPolyG
-
-/-! ### STRETCH demo: the reduction wrapper computes the non-constant-residual integral (`native_decide`)
-
-We first re-run the reduction wrapper on `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²` over `ℚ(x)[t]`
-(`t = exp(x²)`, `η = 2x` non-constant) — the genuinely **non-constant-η** hyperexponential normal integral
-from `ComputableHyperexpNormal` — and certify `D(∫f) = f` via `checkIdentityG`. There the residual `R = 2x`
-is already stored reduced (`(2x)/1`, the residue being the δ-constant `1`), so the wrapper produces the
-identical correct answer `log(t−1) − x²`: a sound drop-in.
-
-**★ The decisive choke/unblock.** We then exhibit the EXACT representational frontier the module docstring
-flags: a residual that is the value `1` but stored **unreduced** as `(2x)/(2x)` (built by `qmulNZG (2x/1)
-(1/2x)`, so num and den both length 2). On this unreduced residual `crischDESolve 0 R` **chokes** — its
-weak-normalizer trips on the spurious `2x` denominator and returns `none` (`Rstuck_unreduced_chokes`). But
-`crischDESolve 0 (qreduceG R)` — after the gcd-cancel collapses `(2x)/(2x)` to `1/1` — **solves**,
-recovering `∫1 = x` (`Rstuck_reduced_solves`). So the choke is **purely representational** (the value is the
-elementary δ-constant `1`, not a non-elementary residue), and `qreduceG` genuinely unblocks it. This is the
-non-constant-R unblock the task targets: `qreduceG` on the residual turns a `crischDESolve` `none` into a
-correct `some`. -/
+`ComputableHyperexpNormal`'s §5.9 feedback integrates a normal hyperexponential part `fₙ` via the residual
+base solve `crischDESolve 0 R`. That solve can return `none` not because the residual `R` is
+non-elementary, but because it arrives as an **unreduced** `QFunNZG` fraction whose spurious denominator
+trips the weak-normalizer. We exhibit that representational frontier on a residual that is the value `1`
+stored as `(2x)/(2x)`: `crischDESolve 0 R` **chokes** (`Rstuck_unreduced_chokes`), but after the gcd-cancel
+`qreduceG` collapses it to `1/1` the base solve **succeeds**, recovering `∫1 = x` (`Rstuck_reduced_solves`).
+So the choke is **purely representational** (the value is the elementary δ-constant `1`) and `qreduceG`
+genuinely unblocks it — value-preserving (`toQFunNZG_qreduceG`). -/
 
 namespace QFunNZG
 
 open CPolyG
-
-/-- **★ The residual-reduction wrapper lands `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`, and `D(∫f) = f`**
-(`native_decide`, the non-constant-η stretch). On the hyperexponential **normal** integrand
-`f = 2x/(t−1)` over `ℚ(x)[t]` with `t = exp(x²)` (`Dt = η·t`, `η = 2x` **non-constant**), the reduction
-wrapper `cIntegrateHyperexpNormalReducedG` — which `qreduceG`s the residual `R` before the base solve —
-returns `some res` with the antiderivative identity `D(res) = f` (`checkIdentityG` over ℚ(x)[t]) and
-rational part exactly `−x²`. The wrapper computes the genuinely non-constant-η hyperexponential integral,
-with the residual passed through the gcd-cancel layer. -/
-theorem nVarNorm_reduced_landsNormalPart :
-    (match CPolyG.cIntegrateHyperexpNormalReducedG nVarDt 28 nVarNormA nVarNormD nVarNormCands with
-      | some res =>
-        CPolyG.checkIdentityG nVarDt res nVarNormA nVarNormD
-          && CPolyG.cisZeroG (CPolyG.csubG res.rational.1 [CField.neg nLvl1XSq])
-          && res.logs.length == 1
-      | none => false) = true := by native_decide
-
-#print axioms nVarNorm_reduced_landsNormalPart
 
 /-! #### The decisive choke/unblock: an unreduced residual `crischDESolve` can't solve until `qreduceG`
 
