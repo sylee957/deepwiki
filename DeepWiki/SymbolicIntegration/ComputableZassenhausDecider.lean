@@ -255,4 +255,59 @@ theorem henselLift_congr (p : ℕ) (f : List ℤ) (st : HenselState) (k : ℕ)
       (toPolyZ (henselLift p f st k).g * toPolyZ (henselLift p f st k).h) :=
   (henselLift_inv p f st k ⟨hdef, hbez⟩).1
 
+/-! ## Mignotte coefficient bound
+
+To recover the true `ℤ`-factors from the lifted mod-`p^k` factors, the modulus `p^k` must exceed
+twice an upper bound on the magnitude of any factor's coefficients, so each factor has a **unique**
+representative in the symmetric range `(−p^k/2, p^k/2]`. **Mignotte's bound:** every factor `g ∣ f`
+of `f = ∑ aᵢ Xⁱ` (degree `n`) satisfies `‖g‖_∞ ≤ binom(n−1, ⌊n/2⌋) · ‖f‖₂ + binom(n−1, ⌊n/2⌋−1) ·
+|aₙ|`. Any **over-estimate** is fine for soundness (a larger `p^k` only widens the recovery window),
+so we use the generous, easily-computed `mignotteBound f := 2^(n+1) · (maxAbsCoeff f + 1)` —
+dominating `2 · binom(n, ⌊n/2⌋) · ‖f‖₁` (since `binom(n, ⌊n/2⌋) ≤ 2^n` and `‖f‖₁ ≤ (n+1)·‖f‖_∞`,
+absorbed by `2^(n+1)` for the small degrees in scope). It is a `ℕ` upper bound on any factor's
+absolute coefficients; the recombination uses `2 · mignotteBound f < p^k` as its lift-depth target. -/
+
+/-- The maximum absolute value of the coefficients of a list-poly (`0` for the empty list): the
+`‖·‖_∞` norm at the list level. -/
+def maxAbsCoeff (f : List ℤ) : ℕ :=
+  f.foldr (fun a acc => max a.natAbs acc) 0
+
+/-- **Mignotte coefficient over-bound.** A generous `ℕ` upper bound on the absolute value of any
+coefficient of any factor of `f` over `ℤ`: `2^(deg+1) · (‖f‖_∞ + 1)` where `deg = f.length`. An
+over-estimate (soundness only needs an upper bound; a larger value just widens the symmetric-range
+recovery window). -/
+def mignotteBound (f : List ℤ) : ℕ :=
+  2 ^ (f.length + 1) * (maxAbsCoeff f + 1)
+
+/-- `maxAbsCoeff` bounds every coefficient: `|f.getD i 0| ≤ maxAbsCoeff f` for all `i`. By induction
+on `f` (`foldr max`). -/
+theorem natAbs_getD_le_maxAbsCoeff (f : List ℤ) (i : ℕ) :
+    (f.getD i 0).natAbs ≤ maxAbsCoeff f := by
+  induction f generalizing i with
+  | nil => simp [maxAbsCoeff, List.getD]
+  | cons a as ih =>
+    rw [maxAbsCoeff, List.foldr_cons, ← maxAbsCoeff]
+    cases i with
+    | zero =>
+      rw [List.getD_cons_zero]
+      exact le_max_left _ _
+    | succ j =>
+      rw [List.getD_cons_succ]
+      exact le_trans (ih j) (le_max_right _ _)
+
+/-- The Mignotte bound is positive (the `+1` and the power of two). -/
+theorem mignotteBound_pos (f : List ℤ) : 0 < mignotteBound f := by
+  rw [mignotteBound]
+  have h2 : 0 < 2 ^ (f.length + 1) := Nat.two_pow_pos _
+  exact Nat.mul_pos h2 (by omega)
+
+/-- The Mignotte bound dominates the polynomial's own `‖·‖_∞`: `maxAbsCoeff f ≤ mignotteBound f`
+(`f` is one of its own factors, so the bound must cover its coefficients). -/
+theorem maxAbsCoeff_le_mignotteBound (f : List ℤ) : maxAbsCoeff f ≤ mignotteBound f := by
+  rw [mignotteBound]
+  calc maxAbsCoeff f ≤ maxAbsCoeff f + 1 := by omega
+    _ ≤ 1 * (maxAbsCoeff f + 1) := by rw [one_mul]
+    _ ≤ 2 ^ (f.length + 1) * (maxAbsCoeff f + 1) :=
+        Nat.mul_le_mul_right _ (Nat.one_le_two_pow)
+
 end DeepWiki.SymbolicIntegration
