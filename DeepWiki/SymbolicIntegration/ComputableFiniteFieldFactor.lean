@@ -762,3 +762,28 @@ foundation of factorization correctness. -/
 theorem ddf_prod (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) :
     toPoly (ddfProduct (ddf p f)) = toPoly f :=
   ddfAux_prod p (f.length + 1) 1 f
+
+/-! ## `native_decide` validation of the multiply-back
+
+The concrete computational content behind `ddf_prod`: the **list-level** product of the DDF blocks
+equals the input list (`toPoly` is `noncomputable`, so we validate the engine's `mulL`-fold output
+directly, which `toPoly` then sends to the polynomial identity). Keep `p ≤ 7`, `d` small — `X^(p^d)`
+grows fast. The `Fact (Nat.Prime _)` instances come from `ComputablePolynomialIrreducibility`. -/
+
+/-- DDF blocks of `x² − 1` over `𝔽₃` multiply back to `x² − 1` (list-level, `native_decide`). -/
+example : ddfProduct (ddf 3 ([2, 0, 1] : List (ZMod 3))) = ([2, 0, 1] : List (ZMod 3)) := by
+  native_decide
+
+/-- DDF blocks of `x⁴ − 1` over `𝔽₅` multiply back to `x⁴ − 1` (list-level, `native_decide`). -/
+example : ddfProduct (ddf 5 ([4, 0, 0, 0, 1] : List (ZMod 5)))
+    = ([4, 0, 0, 0, 1] : List (ZMod 5)) := by
+  native_decide
+
+/-- DDF blocks of the `𝔽₃`-irreducible `x² + 1` multiply back to `x² + 1` (list-level,
+`native_decide`): multiply-back holds even when `f` is itself irreducible (a single block). -/
+example : ddfProduct (ddf 3 ([1, 0, 1] : List (ZMod 3))) = ([1, 0, 1] : List (ZMod 3)) := by
+  native_decide
+
+/-- The Frobenius power `X³ mod (x² − 1)` over `𝔽₃` reduces to `X` (`native_decide`). -/
+example : xPowModF 3 1 ([2, 0, 1] : List (ZMod 3)) 2 = ([0, 1, 0, 0] : List (ZMod 3)) := by
+  native_decide
