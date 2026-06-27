@@ -122,4 +122,123 @@ theorem cRischDEG_isSome_iff_stages (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnu
 
 end EngineLayer
 
+/-! ## The reachable base layer: the dispatcher's total sub-cases are exhaustive unconditionally
+
+`cPolyRischDEG`'s `b = 0` branch is **pure integration** — `cIntegratePolyG c`, the term-by-term
+antiderivative, which is *total* and always succeeds once the engine's `deg c + 1 ≤ n` guard holds — and
+`cPolyRischDENoCancelG`'s `c = 0` short-circuit returns `some []` unconditionally. These are the genuine
+*base* sub-cases of the §6.5/§6.6 dispatcher: where the recursion bottoms, exhaustiveness holds with **no**
+solution hypothesis (the engine simply returns the antiderivative / zero). Closed here axiom-clean — the
+base case of the §6.4–6.6 exhaustiveness. -/
+
+section BaseLayerNoCancel
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+
+omit [CFracGcdCore α] in
+/-- **The non-cancellation solve succeeds on `c = 0`** (`cPolyRischDENoCancelG_isSome_of_cZero`): with one
+unit of fuel and `cisZeroG c = true`, the §6.5 non-cancellation loop returns `some []` — the trivial
+solution `q = 0` of `Dq + b·q = 0`. The `c = 0` short-circuit is *total*: no degree guard, no recursion. The
+base case of `cPolyRischDENoCancelG`'s exhaustiveness. -/
+theorem cPolyRischDENoCancelG_isSome_of_cZero (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
+    (hc : cisZeroG c = true) :
+    (cPolyRischDENoCancelG Dt (fuel + 1) b c n).isSome = true := by
+  rw [cPolyRischDENoCancelG, if_pos hc, Option.isSome_some]
+
+end BaseLayerNoCancel
+
+section BaseLayer
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
+
+omit [CFracGcdCore α] in
+/-- **The dispatcher succeeds on `b = 0`, `c = 0`** (`cPolyRischDEG_isSome_of_bZero_cZero`): when both
+`b = 0` and `c = 0` the equation `Dq + b·q = c` is `Dq = 0`, and the dispatcher returns `some []` (the zero
+solution). The `b = 0`-integration branch's total `c = 0` short-circuit. -/
+theorem cPolyRischDEG_isSome_of_bZero_cZero (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
+    (hb : cisZeroG b = true) (hc : cisZeroG c = true) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true := by
+  rw [cPolyRischDEG]
+  simp only [hb, if_true, hc, Option.isSome_some]
+
+omit [CFracGcdCore α] in
+/-- **The dispatcher succeeds on `b = 0` within the integration guard** (`cPolyRischDEG_isSome_of_bZero`):
+when `b = 0` the equation `Dq + b·q = c` is the pure integration `Dq = c`, solved by the *total*
+term-by-term antiderivative `cIntegratePolyG c` — so the dispatcher returns `some` whenever the engine's
+integration guard `cdegG c + 1 ≤ n` holds (`¬ ((cdegG c : ℤ) + 1 > n)`). The `b = 0`-integration branch's
+exhaustiveness: integration never fails inside its degree budget. -/
+theorem cPolyRischDEG_isSome_of_bZero (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
+    (hb : cisZeroG b = true) (hn : ¬ ((cdegG c : ℤ) + 1 > n)) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true := by
+  rw [cPolyRischDEG]
+  simp only [hb, if_true]
+  by_cases hc : cisZeroG c = true
+  · simp only [hc, if_true, Option.isSome_some]
+  · rw [Bool.not_eq_true] at hc
+    simp only [hc, Bool.false_eq_true, if_false, if_neg hn, Option.isSome_some]
+
+end BaseLayer
+
+/-! ## The SPDE control-flow layer: when `cSPDEG.isSome` is forced (reachable, axiom-clean)
+
+`cSPDEG`'s body, at `fuel + 1`, branches: `n < 0` returns `some` iff `cisZeroG c`; otherwise with
+`g = cgcdFFCore fuel a b`, the divisibility gate `cdvdG fuel g c` decides — if it fails, `none` (no solution
+of degree `≤ n`); if it holds, the constant-base sub-case `cdegG (a/g) = 0` returns `some` *directly*, and
+the recursion sub-case `cdegG (a/g) ≠ 0` returns `some` iff the recursive peel succeeds. We read off each
+forcing condition (the **converse** of the soundness peel `cSPDEG_cleared_lifting_gen`'s match-descent).
+Pure control flow; the constant-base case is the genuine SPDE base of exhaustiveness. -/
+
+section SPDELayer
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+
+/-- **`cSPDEG` succeeds on the `n < 0` base with `c = 0`** (`cSPDEG_isSome_of_neg_cZero`): with one unit of
+fuel, `n < 0`, and `cisZeroG c = true`, the SPDE peel returns the all-zero tuple `some ([], [], 0, [], [])`
+— the degenerate "no constraint, zero solution" base. The `n < 0` short-circuit, exhaustive when `c = 0`
+(the only solvable sub-case there). -/
+theorem cSPDEG_isSome_of_neg_cZero (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (n : ℤ)
+    (hn : n < 0) (hc : cisZeroG c = true) :
+    (cSPDEG Dt (fuel + 1) a b c n).isSome = true := by
+  rw [cSPDEG, if_pos hn, if_pos hc, Option.isSome_some]
+
+/-- **`cSPDEG` succeeds in the constant-base case** (`cSPDEG_isSome_of_const_base`): with one unit of fuel,
+`¬ (n < 0)`, the gcd divisibility gate `cdvdG fuel g c = true` (`g = cgcdFFCore fuel a b`), and the divided
+leading coefficient degenerate `cdegG (a/g) = 0`, the SPDE peel returns `some (…)` *directly* (with `α' = 1`,
+`β = 0`, the reduced equation `Dh + (b/g/lc)·h = c/g/lc`). The genuine SPDE **base case** of exhaustiveness:
+once `g ∣ c`, a constant `a/g` needs no recursion. -/
+theorem cSPDEG_isSome_of_const_base (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (n : ℤ)
+    (hn : ¬ (n < 0)) (hdvd : cdvdG fuel (CFracGcdCore.cgcdFFCore fuel a b) c = true)
+    (hdeg : cdegG (cdivG fuel a (CFracGcdCore.cgcdFFCore fuel a b)) = 0) :
+    (cSPDEG Dt (fuel + 1) a b c n).isSome = true := by
+  rw [cSPDEG, if_neg hn]
+  simp only [hdvd, hdeg, if_pos, Option.isSome_some]
+
+/-- **`cSPDEG`'s `isSome` in the recursion case is exactly the sub-call's** (`cSPDEG_isSome_of_recurse`):
+with one unit of fuel, `¬ (n < 0)`, the gcd gate `cdvdG fuel g c = true`, the divided leading coefficient
+**non**-degenerate `cdegG (a/g) ≠ 0`, and the recursive SPDE peel on the reduced equation succeeding, the
+SPDE peel returns `some` — the reassembly `some (bbar, cbar, m, a/g·α', a/g·β + r)` fires. The converse
+control flow of the soundness peel's recursive descent: SPDE exhaustiveness reduces, level by level, to the
+sub-problem's exhaustiveness. -/
+theorem cSPDEG_isSome_of_recurse (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (n : ℤ)
+    (hn : ¬ (n < 0)) (hdvd : cdvdG fuel (CFracGcdCore.cgcdFFCore fuel a b) c = true)
+    (hdeg : cdegG (cdivG fuel a (CFracGcdCore.cgcdFFCore fuel a b)) ≠ 0)
+    (hrec : (cSPDEG Dt fuel (cdivG fuel a (CFracGcdCore.cgcdFFCore fuel a b))
+        (caddG (cdivG fuel b (CFracGcdCore.cgcdFFCore fuel a b))
+          (cmonomialDeriv Dt (cdivG fuel a (CFracGcdCore.cgcdFFCore fuel a b))))
+        (csubG (cdiophantineG fuel (cdivG fuel b (CFracGcdCore.cgcdFFCore fuel a b))
+            (cdivG fuel a (CFracGcdCore.cgcdFFCore fuel a b))
+            (cdivG fuel c (CFracGcdCore.cgcdFFCore fuel a b))).2
+          (cmonomialDeriv Dt (cdiophantineG fuel (cdivG fuel b (CFracGcdCore.cgcdFFCore fuel a b))
+            (cdivG fuel a (CFracGcdCore.cgcdFFCore fuel a b))
+            (cdivG fuel c (CFracGcdCore.cgcdFFCore fuel a b))).1))
+        (n - (cdegG (cdivG fuel a (CFracGcdCore.cgcdFFCore fuel a b)) : ℤ))).isSome = true) :
+    (cSPDEG Dt (fuel + 1) a b c n).isSome = true := by
+  rw [cSPDEG, if_neg hn]
+  -- destructure the recursive `Option` via its `isSome` to a concrete `some`
+  obtain ⟨⟨bbar, cbar, m, α', β⟩, hsome⟩ := Option.isSome_iff_exists.mp hrec
+  -- the gcd gate fires, the constant-base guard fails, the recursive call is `some`, the reassembly fires
+  simp only [hdvd, if_true, hdeg, hsome, if_false, Option.isSome_some]
+
+end SPDELayer
+
 end DeepWiki.SymbolicIntegration
