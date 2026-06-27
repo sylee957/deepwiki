@@ -88,4 +88,102 @@ theorem crischDESolveSound_imp_solvable (f g y : QFunNZG β)
 
 end Solvable
 
+/-! ## The structural `some`/`none`-characterization (the control-flow skeleton, no §6 mathematics)
+
+`crischDESolveSound f g`'s body is a guarded `if/match` chain over three computable tests: the
+weak-normalizer zero test `cisZeroG q`, the §6.1 check `cisCanonNormalizedG f̃`, and the inner solve
+`crischDESolve (qReduce f̃) (q'·g)` (the `reduceSoundOpt` step is total, `reduceSoundOpt_eq`). We read off
+**exactly** when the solver succeeds — `crischDESolveSound_some_iff` — and the converse-useful sufficient
+form `crischDESolveSound_some_of_stages` (the three positive conditions force `some`), the skeleton
+completeness reduces to. Pure control flow; no §6 algorithm correctness. -/
+
+section Structural
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+  [CRischField β]
+
+/-- **The sound solver succeeds iff the three stage tests succeed** (`crischDESolveSound_some_iff`):
+`crischDESolveSound f g = some y` **↔** the weak normalizer `q = cWeakNormalizerG …` is nonzero
+(`cisZeroG q = false`), the §6.1 check passes (`cisCanonNormalizedG f̃ = true`), and the inner recursive
+solve on the lowest-terms pair succeeds with the returned value transformed back — `∃ ỹ,
+crischDESolve (qReduce f̃) (q'·g) = some ỹ ∧ y = ỹ/q'` (`f̃ = weakNormalizedF f q'`, `q' = q/1`). The exact
+control-flow reading of `crischDESolveSound`; the `reduceSoundOpt` step never blocks (`reduceSoundOpt_eq`).
+The skeleton on which completeness (`solvable ⟹ each test passes`) is assembled. -/
+theorem crischDESolveSound_some_iff (f g y : QFunNZG β) :
+    crischDESolveSound f g = some y ↔
+      (CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+          = false
+        ∧ cisCanonNormalizedG (weakNormalizedF f
+            (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+          = true
+        ∧ ∃ ytilde : QFunNZG β,
+            CRischField.crischDESolve
+                (qReduce (weakNormalizedF f
+                  (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel
+                    f.1.1 f.1.2))))
+                (qmulNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel
+                  f.1.1 f.1.2)) g)
+              = some ytilde
+              ∧ y = qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β)
+                  towerRischDEFuel f.1.1 f.1.2)))) := by
+  set q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 with hq
+  set q' : QFunNZG β := qOfPolyNZG q with hq'
+  set ftilde : QFunNZG β := weakNormalizedF f q' with hft
+  rw [show crischDESolveSound f g
+      = (if CPolyG.cisZeroG q then none
+         else if cisCanonNormalizedG ftilde then
+                match reduceSoundOpt ftilde with
+                | none => none
+                | some ftildeR =>
+                  match CRischField.crischDESolve ftildeR (qmulNZG q' g) with
+                  | none => none
+                  | some ytilde => some (qmulNZG ytilde (qinvNZG q'))
+              else none) from rfl]
+  by_cases hqz : CPolyG.cisZeroG q = true
+  · rw [if_pos hqz]
+    simp only [hqz, Bool.true_eq_false, false_and, iff_false]
+    intro h; exact absurd h (by simp)
+  · rw [if_neg hqz]
+    rw [Bool.not_eq_true] at hqz
+    by_cases hck : cisCanonNormalizedG ftilde = true
+    · rw [if_pos hck, reduceSoundOpt_eq]
+      rcases hinner : CRischField.crischDESolve (qReduce ftilde) (qmulNZG q' g) with _ | ytilde
+      · simp only [hinner, hqz, hck, true_and]
+        constructor
+        · intro h; exact absurd h (by simp)
+        · rintro ⟨yt, hyt, _⟩; exact absurd hyt (by simp)
+      · simp only [hinner, hqz, hck, true_and, Option.some.injEq]
+        constructor
+        · intro h; exact ⟨ytilde, rfl, h.symm⟩
+        · rintro ⟨yt, hyt, hy⟩; rw [hy, hyt]
+    · rw [if_neg hck]
+      rw [Bool.not_eq_true] at hck
+      simp only [hck, Bool.false_eq_true, and_false, false_and, iff_false]
+      intro h; exact absurd h (by simp)
+
+/-- **The three stage tests succeed ⟹ the sound solver succeeds** (`crischDESolveSound_some_of_stages`):
+the converse-useful sufficient direction of `crischDESolveSound_some_iff`. If the weak normalizer is
+nonzero, the §6.1 check passes, and the inner recursive solve returns `some ỹ`, then
+`crischDESolveSound f g = some (ỹ/q')`. This is the *positive* control-flow fact completeness builds on:
+each of the three stage-completeness facts (a solvable RDE clears each gate) feeds the corresponding
+hypothesis here, and the solver returns `some`. -/
+theorem crischDESolveSound_some_of_stages (f g ytilde : QFunNZG β)
+    (hq : CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+        = false)
+    (hck : cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+        = true)
+    (hinner : CRischField.crischDESolve
+        (qReduce (weakNormalizedF f
+          (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+        (qmulNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel
+          f.1.1 f.1.2)) g)
+        = some ytilde) :
+    crischDESolveSound f g
+      = some (qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β)
+          towerRischDEFuel f.1.1 f.1.2)))) :=
+  (crischDESolveSound_some_iff f g _).mpr ⟨hq, hck, ytilde, hinner, rfl⟩
+
+end Structural
+
 end DeepWiki.SymbolicIntegration
