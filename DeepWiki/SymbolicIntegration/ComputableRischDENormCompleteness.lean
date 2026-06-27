@@ -185,4 +185,183 @@ theorem cRdeNormalDenominatorG_isSome_of_dvd (Dt : CPolyG α) (fuel : ℕ)
 
 end EngineLayer
 
+/-! ## ★ The §6.2 divisibility residual (Bronstein Thm 6.1.2) and `hnorm` modulo it
+
+The engine layer collapsed `hnorm` to the single mathematical divisibility `eₙ ∣ dₙh²` (plus two benign
+engine side-conditions). That divisibility — *a polynomial solution forces* `eₙ ∣ dₙh²` — is **Bronstein
+Theorem 6.1.2**, the necessity of the normal-denominator condition. It is genuinely deep: the cleared
+identity `IsCRischDEGPolySol` is an equation in the polynomial ring, while `eₙ ∣ dₙh²` is a statement about
+the **denominator's normal-pole structure** (factor `eₙ` into its squarefree normal poles and count the
+order of `y` at each — the valuation-theoretic argument of §6.2). The engine never derives it from a
+cleared identity; the soundness arc only ever *reads it off* a successful `cdvdG`
+(`cRdeNormalDenominatorG_en_dvd`). So it is the irreducible §6.2 frontier, bundled here as
+`RdeNormalDivisibilityResidual` (NEVER `sorry`), with `hnorm` produced modulo it. -/
+
+section DivisibilityResidual
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+  [CRischField α]
+
+/-- **★ The precise §6.2 divisibility residual** `RdeNormalDivisibilityResidual Dt fnum fden gnum gden`:
+the converse facts a polynomial solution clears the §6.2 `none`-gate, all in solvability-implies form.
+`hdvd`: ★ **Bronstein Theorem 6.1.2** — a `cRischDEG`-polynomial solution forces the mathematical
+normal-denominator divisibility `toPolyG eₙ ∣ toPolyG (dₙ·h²)` (`eₙ = rdeNormEn …`, `dₙ = rdeNormDn …`,
+`h = rdeNormH …`); the valuation-theoretic necessity at the normal poles, which the engine does not derive
+from the cleared identity (it only reads it off a successful `cdvdG`) — the single deep §6.2 gap. `hen0`:
+the §6.2 normal part `eₙ` is nonzero (benign: free when `gden ≠ 0` is weakly normalized,
+`cnormG_en_ne_nil_of_normalizedDen`). `hfuel`: `towerRischDEFuel = 60` covers the §6.2 dividend's length
+(benign per-run fuel). A `Prop`-bundle of stated assumptions, NO `sorry`; `hdvd` is the keystone. -/
+structure RdeNormalDivisibilityResidual (Dt fnum fden gnum gden : CPolyG α) : Prop where
+  /-- ★ Bronstein Thm 6.1.2: a polynomial solution forces the §6.2 divisibility `eₙ ∣ dₙh²`. -/
+  hdvd : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    toPolyG (rdeNormEn Dt towerRischDEFuel gden)
+      ∣ toPolyG (rdeNormDnh2 Dt towerRischDEFuel fden gden)
+  /-- The §6.2 normal part `eₙ` of `gden` is nonzero (benign — free for weakly-normalized `gden ≠ 0`). -/
+  hen0 : CPolyG.cnormG (rdeNormEn Dt towerRischDEFuel gden) ≠ []
+  /-- The §6.2 fuel `towerRischDEFuel = 60` covers the dividend `dₙ·h²` (benign per-run fuel). -/
+  hfuel : (CPolyG.cnormG (rdeNormDnh2 Dt towerRischDEFuel fden gden) : List α).length
+    ≤ towerRischDEFuel
+
+omit [CRischField α] in
+/-- **★ `hnorm` from the §6.2 divisibility residual** (`hnorm_of_divisibilityResidual`): under
+`RdeNormalDivisibilityResidual Dt fnum fden gnum gden`, the §6.2 normal-denominator step preserves
+solvability — a polynomial solution makes `cRdeNormalDenominatorG` return `some`,
+`(∃ ynum yden, IsCRischDEGPolySol …) → (cRdeNormalDenominatorG Dt towerRischDEFuel …).isSome = true`. This
+is **exactly** the `hnorm` clause of `RischDEInnerCompleteness`. Feeds the residual's three facts (the deep
+Bronstein-Thm-6.1.2 divisibility + the two benign engine side-conditions) into the fully-proven engine
+bridge `cRdeNormalDenominatorG_isSome_of_dvd`. The §6.2 completeness clause, modulo the precisely isolated
+deep divisibility. -/
+theorem hnorm_of_divisibilityResidual (Dt fnum fden gnum gden : CPolyG α)
+    (hres : RdeNormalDivisibilityResidual Dt fnum fden gnum gden) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true := by
+  intro hsol
+  exact cRdeNormalDenominatorG_isSome_of_dvd Dt towerRischDEFuel fnum fden gnum gden
+    hres.hen0 hres.hfuel (hres.hdvd hsol)
+
+/-! ### When the §6.2 divisibility is FREE (the reachable cases of `hdvd`, unconditional)
+
+The deep clause `hdvd` is *not* vacuous: it is genuinely free — independent of any solution — in the
+structural cases where `eₙ` already divides `dₙ`. Then `eₙ ∣ dₙh²` by multiplying through by `h²`. The
+`g`-side analogue of the soundness file's `dvd_dn_h_of_normal`/`dvd_dn_h_one`. These discharge `hdvd`
+**unconditionally** on those inputs, so on them `hnorm` needs no Bronstein-Thm-6.1.2 input at all. -/
+
+omit [CDiffFieldSpec α] [CRischField α] in
+/-- **`eₙ ∣ dₙ` makes the §6.2 divisibility free** (`dvd_dnh2_of_en_dvd_dn`): if the normal part `eₙ` of
+`gden` divides the normal part `dₙ` of `fden` (`toPolyG eₙ ∣ toPolyG dₙ`), then `eₙ ∣ dₙ·h²` for any `h` —
+multiply the hypothesis by `h²`. The structural case where the §6.2 `cdvdG` guard passes regardless of a
+solution; the `g`-side analogue of `dvd_dn_h_of_normal`. -/
+theorem dvd_dnh2_of_en_dvd_dn (Dt : CPolyG α) (fuel : ℕ) (fden gden : CPolyG α)
+    (hdvd : toPolyG (rdeNormEn Dt fuel gden) ∣ toPolyG (rdeNormDn Dt fuel fden)) :
+    toPolyG (rdeNormEn Dt fuel gden) ∣ toPolyG (rdeNormDnh2 Dt fuel fden gden) := by
+  rw [rdeNormDnh2, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG]
+  exact (hdvd.mul_right _).mul_right _
+
+omit [CRischField α] in
+/-- **`hdvd` is free when `eₙ ∣ dₙ`** (`hdvd_free_of_en_dvd_dn`): if `eₙ ∣ dₙ` then the deep §6.2
+divisibility clause holds **unconditionally** (no solution hypothesis used) — the solution-implication of
+`RdeNormalDivisibilityResidual.hdvd` collapses to `dvd_dnh2_of_en_dvd_dn`. On such inputs `hnorm`'s deep
+keystone vanishes; the §6.2 step's `cdvdG` guard passes structurally. -/
+theorem hdvd_free_of_en_dvd_dn (Dt fnum fden gnum gden : CPolyG α)
+    (hdvd : toPolyG (rdeNormEn Dt towerRischDEFuel gden) ∣ toPolyG (rdeNormDn Dt towerRischDEFuel fden)) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      toPolyG (rdeNormEn Dt towerRischDEFuel gden)
+        ∣ toPolyG (rdeNormDnh2 Dt towerRischDEFuel fden gden) :=
+  fun _ => dvd_dnh2_of_en_dvd_dn Dt towerRischDEFuel fden gden hdvd
+
+end DivisibilityResidual
+
+/-! ## ★ `RischDEInnerCompleteness` from the §6.2/§6.3/§6.4-6.6 residuals assembled
+
+With `hnorm` produced here (`hnorm_of_divisibilityResidual`), `hbound` produced by
+`ComputableRischDEDegreeBound` (modulo a cancellation residual), and `hsolve` the §6.4–6.6 exhaustiveness,
+the full `RischDEInnerCompleteness` is assembled from its three component residuals. We record the
+assembly that *consumes* a produced `hnorm`, so `RischDEInnerCompleteness` now needs only `hbound`
+(nearly done) + `hsolve` (the deep SPDE/poly-RDE core) as the remaining `Prop` inputs. -/
+
+section Assemble
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+  [CRischField α]
+
+/-- **★ `RischDEInnerCompleteness` with `hnorm` discharged from the §6.2 residual**
+(`rischDEInnerCompleteness_of_norm_bound_solve`): given the §6.2 divisibility residual
+`RdeNormalDivisibilityResidual` (which produces `hnorm` via `hnorm_of_divisibilityResidual`) together with
+the `hbound` and `hsolve` clauses, `RischDEInnerCompleteness Dt fnum fden gnum gden` holds. This is the
+assembly point: `hnorm` is **no longer** a residual input — it is produced from the §6.2 divisibility
+residual through the fully-proven engine bridge. `RischDEInnerCompleteness` now reduces to exactly `hbound`
+(nearly done, `ComputableRischDEDegreeBound`) + `hsolve` (the deep §6.4–6.6 core) + the deep §6.2
+divisibility (Bronstein Thm 6.1.2). -/
+theorem rischDEInnerCompleteness_of_norm_bound_solve (Dt fnum fden gnum gden : CPolyG α)
+    (hnormRes : RdeNormalDivisibilityResidual Dt fnum fden gnum gden)
+    (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
+    (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRischDEG Dt towerRischDEFuel fnum fden gnum gden).isSome = true) :
+    RischDEInnerCompleteness Dt fnum fden gnum gden where
+  hnorm := hnorm_of_divisibilityResidual Dt fnum fden gnum gden hnormRes
+  hbound := hbound
+  hsolve := hsolve
+
+end Assemble
+
+/-! ### Restatement against `RischDEInnerCompleteness.hnorm`'s field type (anonymous `example`) -/
+
+-- ★ The produced `hnorm` has exactly `RischDEInnerCompleteness.hnorm`'s type — confirmed by using it as
+-- that field in a partial structure check together with abstract `hbound`/`hsolve`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
+    (hres : RdeNormalDivisibilityResidual Dt fnum fden gnum gden) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true :=
+  hnorm_of_divisibilityResidual Dt fnum fden gnum gden hres
+
+/-! ### Final verdict (stated precisely)
+
+**Is `hnorm` discharged?** **YES — modulo a single, precisely isolated deep divisibility (Bronstein Thm
+6.1.2).** `hnorm_of_divisibilityResidual` produces the **exact** `hnorm` clause of
+`RischDEInnerCompleteness` from `RdeNormalDivisibilityResidual` (confirmed by the field-type `example`).
+The §6.2 transformation loses a solution **only** through its one `cdvdG` divisibility gate, and `hnorm` is
+that gate's completeness.
+
+**What is closed unconditionally (the fully-proven engine layer; NO `native_decide`/`sorry`):**
+* `cRdeNormalDenominatorG_isSome_iff` — the §6.2 step's `isSome` is *exactly* its `cdvdG` guard `eₙ ∣ dₙh²`
+  (definitional control-flow reading);
+* `cdvdG_of_dvd` — the **converse of `dvd_of_cdvdG`**: mathematical `toPolyG q ∣ toPolyG p` (+ `q ≠ 0`,
+  fuel) forces the engine check `cdvdG = true`, via the §6.2 Euclidean division identity and the
+  unique-remainder property — so the §6.2 guard is honest in **both** directions;
+* `cRdeNormalDenominatorG_isSome_of_dvd` — composing them: the *mathematical* §6.2 divisibility `eₙ ∣ dₙh²`
+  makes the §6.2 step return `some`, collapsing `hnorm` to that single divisibility.
+
+**The single deep residual** (`RdeNormalDivisibilityResidual`, NEVER `sorry`): `hdvd` — a polynomial
+solution forces `eₙ ∣ dₙh²` (**Bronstein Thm 6.1.2**, the valuation-theoretic necessity at the normal
+poles), plus two **benign** engine side-conditions (`hen0`: `eₙ ≠ 0`, free for weakly-normalized
+`gden ≠ 0`; `hfuel`: per-run fuel bound). The deep `hdvd` is the one genuinely irreducible piece — it is
+*not* derivable from the cleared identity `IsCRischDEGPolySol` by elementary algebra (the identity lives in
+the polynomial ring, the divisibility is about the denominator's normal-pole structure).
+
+**What `RischDEInnerCompleteness` now reduces to.** With `hnorm` produced here
+(`rischDEInnerCompleteness_of_norm_bound_solve`), `RischDEInnerCompleteness` reduces to: `hbound` (nearly
+done — `ComputableRischDEDegreeBound` produces it modulo a cancellation residual) + `hsolve` (the deep
+§6.4–6.6 SPDE/poly-RDE exhaustiveness) + the deep §6.2 divisibility (Bronstein Thm 6.1.2,
+`RdeNormalDivisibilityResidual.hdvd`). The §6.2 normal-denominator completeness clause is discharged down
+to its single valuation-theoretic keystone, through a fully proven engine layer. -/
+
+/-! ### Axiom audit (the engine layer + the modular assembly are axiom-clean; NO `native_decide`,
+NO `sorry`) -/
+
+#print axioms cRdeNormalDenominatorG_isSome_iff
+#print axioms cdvdG_of_dvd
+#print axioms cRdeNormalDenominatorG_isSome_of_dvd
+#print axioms hnorm_of_divisibilityResidual
+#print axioms rischDEInnerCompleteness_of_norm_bound_solve
+
 end DeepWiki.SymbolicIntegration
