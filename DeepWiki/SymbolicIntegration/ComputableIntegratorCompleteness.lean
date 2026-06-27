@@ -6,7 +6,7 @@ import Mathlib.FieldTheory.Differential.Liouville
 
 This file maps and assembles the **completeness** direction of the transcendental Risch
 integrator: when the integrator returns `none`, the integrand has **no elementary antiderivative**.
-The *soundness* direction (`cIntegrate` returns `Some F ⟹ D F = f`, the algebraic
+The *soundness* direction (`cIntegrateGFull` returns `Some F ⟹ D F = f`, the algebraic
 `D(∫f) = f` capstone) is done elsewhere; this file is about the harder converse, which is
 **Liouville's theorem** (Liouville 1833–41; Rosenlicht, *Integration in finite terms*, 1972).
 

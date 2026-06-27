@@ -113,14 +113,8 @@ special part), solves `Dqₚ = t` by the §5.4 primitive-base branch (`b = 0`, s
 runs over the ALGEBRAIC base ℚ(x)[√(x³+1)], and the result differentiates back to `f`. -/
 
 /-- The integrand `f = t` over `CPolyG RadX3` (numerator `t = [0, 1]`, denominator `1`): a pure polynomial
-part on which the reduced driver `cIntegrateG` returns `none`. -/
+part that the reduced-case capstone leaves undisposed (handled by the full driver `cIntegrateGFull`). -/
 def mixedTa : CPolyG RadX3 := [CField.zero, CField.one]
-
-/-- **The reduced driver `cIntegrateG` returns `none` on `f = t` over `RadX3[t]`** (`native_decide`): its
-polynomial part `fₚ = t` is nonzero, so the conservative reduced-case driver cannot dispose of it —
-exactly the gap the full driver closes over the algebraic base. -/
-theorem mixedT_reduced_none :
-    (CPolyG.cIntegrateG mixedDt 20 mixedTa mixedD mixedCands).isNone = true := by native_decide
 
 /-- **★ `∫ t dt = t²/2` over `RadX3[t] = ℚ(x)[√(x³+1)][t]`, and `D(∫f) = f`** (`native_decide`, the
 milestone). The full driver `cIntegrateGFull` (canonical split + the §5.4 `b = 0` primitive-base RDE solve

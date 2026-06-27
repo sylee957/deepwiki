@@ -5,8 +5,8 @@ import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 
 /-! # The recursive Risch-DE oracle over arbitrary-depth differential towers (Bronstein Ch. 6)
 `ComputableTowerField`/`Deriv`/`Integrate` built the generic tower carrier `QFunNZG α` (the next level
-ℚ(x)(t₁)(t₂)…), its computable derivation, and the generic §3.5/§5 integration pipeline — but the
-integration **driver** `cIntegrateG` is the reduced-case driver, because the §6 Risch-DE oracle
+ℚ(x)(t₁)(t₂)…), its computable derivation, and the generic §3.5/§5 integration pipeline — but that
+pipeline only reaches the **reduced-case capstone** `cIntegrateReducedG` (simple normal part), because the §6 Risch-DE oracle
 `cRischDE` (`ComputableRischDE`) is still `QFunNZ`-hardwired: it bottoms out at the concrete base solve
 `cRationalRDE` over ℚ(x). This file makes the §6 oracle **generic and recursive over the tower**.
 
@@ -651,32 +651,33 @@ theorem towerRde_constBase :
 
 /-! ## STRETCH — the full poly/special integration driver `cIntegrateGFull` (Bronstein §5.4)
 
-The reduced driver `cIntegrateG` (`ComputableTowerIntegrate`) returns `none` whenever the **polynomial
-part** `fₚ` or the **special part** `b/dₛ` of `f = a/d` is nonzero — it only does the simple normal part
-(Hermite + residue logs). With the recursive RDE oracle now in hand we can dispatch the **polynomial
+The reduced-case capstone `cIntegrateReducedG` (`ComputableTowerIntegrate`) only does the simple normal
+part (Hermite + residue logs); it leaves the **polynomial part** `fₚ` and the **special part** `b/dₛ` of
+`f = a/d` undisposed. With the recursive RDE oracle now in hand we can dispatch the **polynomial
 part**: for a primitive monomial (`Dt ∈ α`), `∫ fₚ` is the `b = 0` Risch-DE `Dq = fₚ` over `α[t]`, solved
 by `cPolyRischDEG Dt fuel 0 fₚ (deg fₚ + 1)` (Bronstein §5.4 `IntegratePolynomial`, primitive case — the
-degree-by-degree antiderivative). `cIntegrateGFull` adds this on top of `cIntegrateG`: split `f`, solve
+degree-by-degree antiderivative). `cIntegrateGFull` adds this on top of the canonical split and the
+reduced-case capstone: split `f`, solve
 the polynomial part by the oracle, integrate the normal part by `cIntegrateReducedG`, **combine the two
 rational parts** `qₚ + gₙ/gₙd`, and require the special part to vanish (special-part integration over a
 primitive extension is degenerate — `dₛ = 1` — so this loses nothing in the primitive case; the genuine
 hyperexp/hypertangent special part is the documented continuation). This uses the new
-`CRischField`/`cPolyRischDEG`, so it lands the integrals the reduced driver could not. -/
+`CRischField`/`cPolyRischDEG`, so it lands the integrals the reduced-case capstone could not. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
 
 /-- **The full poly/special tower integral** `cIntegrateGFull Dt fuel a d cands` (Bronstein Ch. 5,
-extending the reduced `cIntegrateG` with the polynomial part). Integrate `f = a/d ∈ α(t)` over
+extending the reduced-case capstone `cIntegrateReducedG` with the polynomial part). Integrate `f = a/d ∈ α(t)` over
 `D = cmonomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`, or
 `none`. Steps: (1) `canonicalRepresentationFastG` splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`; (2) the polynomial
 part `fₚ` is integrated by the **RDE oracle** — `cPolyRischDEG Dt fuel 0 fₚ (deg fₚ + 1)` solves the
 `b = 0` equation `Dqₚ = fₚ` (primitive case); (3) the simple normal part `cₙ/dₙ` by `cIntegrateReducedG`
 (Hermite + residue logs); (4) combine the rational parts `qₚ + gₙ/gₙd = (qₚ·gₙd + gₙ)/gₙd`; require the
 special part `b` to vanish (else `none`, the documented continuation). `[CField α] [CDiffField α]
-[CRischField α]`-generic — runs at any tower level. Lands the polynomial-part integrals on which the
-reduced `cIntegrateG` returns `none`. -/
+[CRischField α]`-generic — runs at any tower level. Lands the polynomial-part integrals that the
+reduced-case capstone `cIntegrateReducedG` leaves undisposed. -/
 def cIntegrateGFull (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
@@ -700,10 +701,10 @@ end CPolyG
 
 /-! ### ★★ STRETCH validation: a polynomial-part tower integral at LEVEL 2 (`native_decide`)
 
-The reduced `cIntegrateG` returns `none` on `f = t₂` over `ℚ(x)(t₁)[t₂]` (its polynomial part `fₚ = t₂`
-is nonzero). The full driver `cIntegrateGFull` lands it: `∫ t₂ = (1/2)t₂²` (the RDE oracle solves
+The reduced-case capstone leaves the polynomial part `fₚ = t₂` of `f = t₂` over `ℚ(x)(t₁)[t₂]`
+undisposed. The full driver `cIntegrateGFull` lands it: `∫ t₂ = (1/2)t₂²` (the RDE oracle solves
 `Dqₚ = t₂` → `qₚ = (1/2)t₂²`, since `D(t₂) = Dt₂ = 1` for the independent monomial `Dt₂ = [1]`), with no
-logarithmic part. We pin both: `cIntegrateG` is `none` here, and `cIntegrateGFull` returns a result whose
+logarithmic part. We pin the result: `cIntegrateGFull` returns a result whose
 antiderivative identity `D(∫f) = f` holds (`checkIdentityG`, cleared of denominators). The whole driver —
 canonical split, the new polynomial-part RDE solve, recombination — *computes* over `ℚ(x)(t₁)[t₂]` at
 level 2. -/
@@ -715,7 +716,7 @@ primitive). -/
 def towerFullLvl2Dt : CPolyG Lvl2 := [CField.one]
 
 /-- The level-2 integrand `f = t₂` over `CPolyG Lvl2` — a pure polynomial part (numerator `t₂`,
-denominator `1`), on which the reduced `cIntegrateG` returns `none`. -/
+denominator `1`) that the reduced-case capstone leaves undisposed. -/
 def towerFullLvl2A : CPolyG Lvl2 := [CField.zero, CField.one]
 
 /-- The level-2 integrand denominator `d = 1` over `CPolyG Lvl2`. -/
@@ -724,17 +725,10 @@ def towerFullLvl2D : CPolyG Lvl2 := [CField.one]
 /-- The level-2 residue candidate set (empty rationals — `f = t₂` has no logarithmic part). -/
 def towerFullLvl2Cands : List Lvl2 := [CField.zero, CField.one]
 
-/-- **The reduced driver `cIntegrateG` returns `none` on `f = t₂`** (`native_decide`): its polynomial part
-`fₚ = t₂` is nonzero, so the conservative reduced-case driver cannot dispose of it — exactly the gap the
-full driver closes. -/
-theorem towerFullLvl2_reduced_none :
-    (CPolyG.cIntegrateG towerFullLvl2Dt 20 towerFullLvl2A towerFullLvl2D
-      towerFullLvl2Cands).isNone = true := by native_decide
-
 /-- **★★ The full driver `cIntegrateGFull` lands `∫ t₂ = (1/2)t₂²` at LEVEL 2, and `D(∫f) = f`**
 (`native_decide`, the stretch deliverable). On the level-2 integrand `f = t₂` over `ℚ(x)(t₁)[t₂]`
-(`= CPolyG (QFunNZG (QFunNZG ℚ))`, `Dt₂ = 1`) — a **pure polynomial part** that the reduced `cIntegrateG`
-returns `none` on — the full driver `cIntegrateGFull` (canonical split + the new RDE-oracle polynomial-part
+(`= CPolyG (QFunNZG (QFunNZG ℚ))`, `Dt₂ = 1`) — a **pure polynomial part** that the reduced-case capstone
+leaves undisposed — the full driver `cIntegrateGFull` (canonical split + the new RDE-oracle polynomial-part
 solve `Dqₚ = t₂` + recombination) returns `some res`, and `res` satisfies the antiderivative identity
 `D(res) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` (`checkIdentityG`, cleared of denominators over ℚ(x)(t₁)[t₂]). The
 returned rational part is `(1/2)t₂²` with no logs. **This is the stretch: the polynomial-part integration

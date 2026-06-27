@@ -6,7 +6,8 @@ import DeepWiki.SymbolicIntegration.ComputableFuelFreeResultant
 
 /-! # Fuel-free (well-founded) GENERIC tower integration engine
 
-The generic tower engine (`ComputableTowerIntegrate`) — `cIntegrateG`, `cRischDEG`, and their pipeline —
+The generic tower engine (`ComputableTowerIntegrate`/`ComputableTowerRischDE`) — `cIntegrateGFull`,
+`cRischDEG`, and their pipeline —
 is `[CField α] [CDiffField α] [CFracGcdCore α]`-generic and gate-clean, but every op carries an explicit
 `fuel : ℕ`. This file builds the **fuel-free** companions `…GWf`, by the same runtime-guard well-founded
 recursion as the `QFunNZ`-specific arc (`ComputableFuelFreeGcd*`), now lifted to the generic carrier.
@@ -23,7 +24,7 @@ composition over fuel'd leaves:
   (the `cSqfreeYunFFgoWf` Yun-exception, structural — sound at skipped multiplicities).
 
 The flat-composition ops (`canonicalRepresentationFastGWf`, `cHermiteReduceTowerGWf`,
-`cResidueResultantTowerGWf`/`cLogPartGWf`, `cIntegrateReducedGWf`, and the headline `cIntegrateGWf`)
+`cResidueResultantTowerGWf`/`cLogPartGWf`, and the reduced-case capstone `cIntegrateReducedGWf`)
 substitute the fuel-free leaves and are bridged to their fuel'd `…G` originals. The generic leaves
 `cdivmodWf`/`cgcdWf`/`cresultantWf` (`ComputableFuelFreeGcd`/`ComputableFuelFreeResultant`) are reused verbatim
 where the pipeline bottoms out at them.
@@ -426,20 +427,6 @@ def cIntegrateReducedGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
   let logs := cLogPartGWf Dt H.2.1 H.2.2 cands
   ⟨(H.1.1, H.1.2), logs⟩
 
-/-- **★ THE HEADLINE — the generic fuel-free tower integral** `cIntegrateGWf Dt a d cands` (Bronstein Ch. 5,
-the reduced-case driver over the tower): the generic, fuel-free companion of `cIntegrateG`. Integrate
-`f = a/d ∈ α(t)` over `D = cmonomialDeriv Dt`, returning `some ⟨(gnum, gden), [(cᵢ, vᵢ)]⟩` with `∫ f =
-gnum/gden + ∑ᵢ cᵢ·log(vᵢ)`, or `none`. Steps: (1) `canonicalRepresentationFastGWf` splits `f = fₚ + fₛ + fₙ`;
-(2) the simple normal part `fₙ = cn/dn` is integrated by `cIntegrateReducedGWf`; (3) if `fₚ` and the special
-part `b/dₛ` both vanish, return the simple-part integral, else `none`. A pure composition over the fuel-free
-pipeline — **no fuel at runtime**; `native_decide`-able over the noncomputable tower.
-`[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic — runs at any tower level. -/
-def cIntegrateGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
-    Option (IntegralResultG α) :=
-  let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
-  let nrm := cIntegrateReducedGWf Dt cn dn cands
-  if cisZeroG fp && cisZeroG b then some nrm else none
-
 end CPolyG
 
 
@@ -447,8 +434,8 @@ end CPolyG
 
 Each flat-composition `…GWf` op mirrors its `…G` original with the fuel dropped, so its bridge to the fuel'd
 version is a pure rewrite that threads the per-leaf sub-agreements (every fuel'd sub-op replaced by its
-fuel-free companion at sufficient fuel). Following the established pattern (`cIntegrateReducedWf_eq`,
-`cIntegrateWf_eq`, `cLogPartWf_eq`), the sub-agreements are taken as **hypotheses** — the fuel bounds they
+fuel-free companion at sufficient fuel). Following the established pattern (`cLogPartGWf_eq`,
+`cIntegrateReducedGWf_eq`), the sub-agreements are taken as **hypotheses** — the fuel bounds they
 carry live only there; the runtime `…GWf` carries none. The recursive-bottom agreements
 (`cSplitFactorFastGWf`/`cSqfreeYunFFGgoWf`/`cgcdFFCoreWf`) feed in through their own regularity gates. -/
 
@@ -495,33 +482,6 @@ theorem cIntegrateReducedGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) 
           (cHermiteReduceTowerG Dt fuel a d).2.2 cands) :
     cIntegrateReducedGWf Dt a d cands = cIntegrateReducedG Dt fuel a d cands := by
   rw [cIntegrateReducedGWf, cIntegrateReducedG, hLog, hHermite]
-
-/-- **★ Bridge — the headline `cIntegrateGWf` equals `cIntegrateG` at any sufficient fuel.** From the two
-sub-bridges that the canonical split (`hcanon : canonicalRepresentationFastGWf Dt a d =
-canonicalRepresentationFastG Dt fuel a d`) feeds — the reduced capstone `hred` on the resulting normal part
-`(cn, dn)` — `cIntegrateGWf Dt a d cands = cIntegrateG Dt fuel a d cands`. The fuel bounds live only in the
-hypotheses; the headline `cIntegrateGWf` carries none. A pure composition rewrite. -/
-theorem cIntegrateGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (hcanon : canonicalRepresentationFastGWf Dt a d = canonicalRepresentationFastG Dt fuel a d)
-    (hred : cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
-        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands
-      = cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands) :
-    cIntegrateGWf Dt a d cands = cIntegrateG Dt fuel a d cands := by
-  rw [cIntegrateGWf, cIntegrateG]
-  -- both sides `match (canonical split) with | (fp,(b,_ds),cn,dn) => …`; the split agrees by `hcanon`,
-  -- and the reduced capstone on the destructured `(cn, dn)` agrees by `hred` (its projections are
-  -- exactly the match's `cn`/`dn`). Rewrite `hred` (a projection identity) then collapse via `hcanon`.
-  simp only [hcanon] at hred ⊢
-  -- after `hcanon` both `match`es are on `canonicalRepresentationFastG fuel a d`; reduce to projections
-  rw [show (canonicalRepresentationFastG Dt fuel a d)
-      = ((canonicalRepresentationFastG Dt fuel a d).1,
-         ((canonicalRepresentationFastG Dt fuel a d).2.1.1,
-          (canonicalRepresentationFastG Dt fuel a d).2.1.2),
-         ((canonicalRepresentationFastG Dt fuel a d).2.2.1,
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2)) from rfl]
-  simp only []
-  rw [hred]
 
 end CPolyG
 
@@ -717,22 +677,6 @@ example :
       (CPolyG.cIntegrateReducedGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands)
       towerIntLvl2Num towerIntLvl2Den = true := by native_decide
-
-/-- **★ The full fuel-free `cIntegrateGWf` driver runs end-to-end at level 2 and `D(∫f) = f`**
-(`native_decide`, the headline deliverable): on the same level-2 simple integrand (a pure normal element,
-`fₚ = fₛ = 0`), the assembled fuel-free top-level `cIntegrateGWf` — canonical split + reduced capstone,
-**no fuel at runtime** — returns `some res`, and `res` satisfies the antiderivative identity `D(res) = f`
-over ℚ(x)(t₁)[t₂]. The assembled GENERIC FUEL-FREE tower integral driver computes at level 2. -/
-theorem towerIntLvl2_driverGWf :
-    (match CPolyG.cIntegrateGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
-        towerIntLvl2Cands with
-      | some res => CPolyG.checkIdentityG towerIntLvl2Dt res towerIntLvl2Num towerIntLvl2Den
-      | none => false) = true := by native_decide
-
--- The headline fuel-free integration-driver bridge carries only the standard axioms (no `native` axiom);
--- the `native_decide` example `towerIntLvl2_driverGWf` carries `Lean.ofReduceBool` separately.
-#print axioms CPolyG.cIntegrateGWf_eq
-#print axioms towerIntLvl2_driverGWf
 
 /-! ## Part 6 — STRETCH: the generic fuel-free RDE recursive bottoms (§6 PolyRischDE / SPDE)
 

@@ -22,8 +22,8 @@ The `j = 0` term `∫ a₀` is the base integration `Dq₀ = a₀` — the *same
 through the existing `cIntegrateReducedG` (Hermite + Rothstein–Trager), exactly as in `cIntegrateGFull`.
 
 **★ The headline `native_decide`** integrates `∫ 1/exp = −1/exp` at a **hyperexponential tower level**
-(`t = exp x` over ℚ(x), `Dt = η·t`, `η = 1`): the special term `t⁻¹` — on which the reduced `cIntegrateG`
-returns `none` — is landed by `cIntegrateHyperexpG` as `−1/t`, with the antiderivative identity
+(`t = exp x` over ℚ(x), `Dt = η·t`, `η = 1`): the special term `t⁻¹` — which the reduced-case capstone
+`cIntegrateReducedG` leaves undisposed — is landed by `cIntegrateHyperexpG` as `−1/t`, with the antiderivative identity
 `D(∫f) = f` certified by `checkIdentityG`. The Laurent coefficient `a₋₁ = 1` drives the base RDE
 `Dq₋₁ + (−1·η)·q₋₁ = 1` (`crischDESolve (−1) 1` over ℚ(x), `q₋₁ = −1`), so `∫ t⁻¹ = −t⁻¹`. Everything stays
 `[CField α]`/`[CDiffField α]`/`[CFieldDomain α]`/`[CRischField α]`-only (`Prop`-erased subtype proofs), so
@@ -181,8 +181,9 @@ in the **special part** (`t` is the hyperexponential special factor), so `fₛ =
 Laurent tail with `a₋₁ = 1`. The §5.10 driver solves the base RDE `Dq₋₁ + (−1·η)·q₋₁ = 1`
 (`crischDESolve (−1) 1` over ℚ(x), `q₋₁ = −1`), giving `∫ t⁻¹ = q₋₁·t⁻¹ = −1/t`.
 
-We pin BOTH: the reduced `cIntegrateG` returns `none` here (its special part `b/dₛ = 1/t ≠ 0`), and the new
-`cIntegrateHyperexpG` returns `some res` whose antiderivative identity `D(res) = f` holds (`checkIdentityG`,
+We pin the result: the special part `b/dₛ = 1/t ≠ 0` (which the reduced-case capstone leaves undisposed) is
+landed by the new `cIntegrateHyperexpG`, which returns `some res` whose antiderivative identity `D(res) = f`
+holds (`checkIdentityG`,
 cleared of denominators over ℚ(x)[t]). All scalars are ℚ-constants lifted into `Lvl1 = ℚ(x)`, so the engine
 genuinely runs the level-1 `CField`/`CDiffField`/`CRischField` instances. The oracle recurses ℚ(x) → ℚ for
 the base RDE; everything is `[CField …]`-computable with `Prop`-erased subtype proofs, so `native_decide`
@@ -214,16 +215,9 @@ def hyperexpInvCands : List Lvl1 := [CField.zero, CField.one]
 theorem hyperexp_eta_eq_one :
     CField.isZero (CField.sub (cExpEtaG 12 hyperexpDt) (CField.one : Lvl1)) = true := by native_decide
 
-/-- **The reduced driver `cIntegrateG` returns `none` on `f = 1/exp`** (`native_decide`): the canonical
-split puts `t` in the special part `b/dₛ = 1/t ≠ 0`, which the conservative reduced-case driver cannot
-dispose of — exactly the §5.10 gap this file closes. -/
-theorem hyperexpInv_reduced_none :
-    (CPolyG.cIntegrateG hyperexpDt 20 hyperexpInvA hyperexpInvD hyperexpInvCands).isNone = true := by
-  native_decide
-
 /-- **★ The §5.10 driver lands `∫ 1/exp = −1/exp`, and `D(∫f) = f`** (`native_decide`, the headline). On
 the hyperexponential integrand `f = 1/t = 1/exp` over `ℚ(x)[t]` (`Dt = η·t`, `η = 1`) — a **pure special
-part** `b/dₛ = 1/t` that the reduced `cIntegrateG` returns `none` on — the §5.10 driver
+part** `b/dₛ = 1/t` that the reduced-case capstone `cIntegrateReducedG` leaves undisposed — the §5.10 driver
 `cIntegrateHyperexpG` (canonical split + Laurent special-part integration, the per-term RDE
 `Dq₋₁ + (−1)·q₋₁ = 1` solved by the oracle to `q₋₁ = −1` + recombination) returns `some res`, and `res`
 satisfies the antiderivative identity `D(res) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` (`checkIdentityG`, cleared of

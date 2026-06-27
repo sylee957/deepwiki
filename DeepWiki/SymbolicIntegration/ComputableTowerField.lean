@@ -19,7 +19,7 @@ denominator-nonzero condition is stated with the `[CField α]`-only `cisZeroG` t
 engine (`cgcdExtG`/`cresultantG`/`cmulG`/`cisZeroG`) at **tower level 2** over `ℚ(x)(t₁)[t₂]`. The
 `CFieldSpec` bridge (and the homomorphism laws) is needed only by the correctness layer.
 
-The QFunNZ-hardwired engines (`cgcdFF`, `cIntegrate`) are *not* generic yet — generalizing them off
+The QFunNZ-hardwired `cgcdFF` is *not* generic yet — generalizing it off
 the concrete `QFunNZ` carrier is the next step; here the validation runs the **generic** engine ops,
 which already accept any `[CField α]`. -/
 
@@ -395,7 +395,7 @@ ops — `[CField α]`-generic, so they already accept any tower level — on con
 `CPolyG (QFunNZG (QFunNZG ℚ))` = `ℚ(x)(t₁)[t₂]` (level 2). The `CField (QFunNZG (QFunNZG ℚ))` instance
 is `[CField …]`-computable (the carrier predicate is the `cisZeroG`-only test, no `CFieldSpec`) and the
 subtype proofs are `Prop`-erased, so nothing noncomputable leaks into the native compiler. (The
-QFunNZ-hardwired `cgcdFF`/`cIntegrate` are not generic yet — that is the documented next step; the
+QFunNZ-hardwired `cgcdFF` is not generic yet — that is the documented next step; the
 validation here uses the already-generic `cgcdExtG`/`cresultantG`/`cmulG`/`cisZeroG`.) -/
 
 /-- Tower level 2 abbreviation: `Lvl2 = QFunNZG (QFunNZG ℚ)`, the field ℚ(x)(t₁). The engine over

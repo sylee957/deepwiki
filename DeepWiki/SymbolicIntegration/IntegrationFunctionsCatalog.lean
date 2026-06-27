@@ -78,8 +78,10 @@ only; it states no new mathematics.
 * `cIntegrate` / `cIntegrateReduced` — **REMOVED** (superseded by `cIntegrateGFull` / `cIntegrateReducedG`;
   the call graph confirmed only their own examples depended on them). Their reusable `cevalG` Horner-eval
   helper survives in `ComputableIntegrate`.
-* `cIntegrateG` / `cIntegrateGWf` — the tower integrator without the self-check guard. Soundness: NO direct
-  theorem (its correctness is the guarded `cIntegrateGChecked_correct` and the one-shots).
+* `cIntegrateG` / `cIntegrateGWf` — **REMOVED** (the pre-RDE reduced-case tower drivers, subsumed by
+  `cIntegrateGFull` / `cIntegrateGFullWf`; the call graph confirmed only their `…Wf_eq` bridge and
+  `native_decide` validations depended on them). The reduced-case capstones `cIntegrateReducedG` /
+  `cIntegrateReducedGWf` survive.
 -/
 
 namespace DeepWiki.SymbolicIntegration

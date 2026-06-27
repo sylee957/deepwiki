@@ -18,7 +18,7 @@ replacing every `cgcdFF fuel p q` with the **flat** generic fraction-free gcd
 `CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) — the recursive primitive-PRS gcd that
 stays polynomial-sized over the tower (it AGREES with `cgcdFF` and the swelling Euclidean `cgcdMonicG`,
 both being the unique monic gcd, but computes it without the fraction-field coefficient swell that made
-`cIntegrateG`-at-`QFunNZ` take ~86 s). Every pipeline def that calls a `t`-gcd therefore carries the
+the integration pipeline at `QFunNZ` take ~86 s). Every pipeline def that calls a `t`-gcd therefore carries the
 `[CFracGcdCore α]` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
 + recursive `CFracGcdCore (QFunNZG β)`).
 
@@ -351,7 +351,7 @@ theorem towerCanRepLvl2_recombines :
 
 #print axioms towerCanRepLvl2_recombines
 
-/-! ## STRETCH — the logarithmic part (Rothstein–Trager §5.6) and the tower integral `cIntegrateG`
+/-! ## STRETCH — the logarithmic part (Rothstein–Trager §5.6) and the reduced-case capstone `cIntegrateReducedG`
 
 The rational part (Hermite) is done. The remaining piece of the elementary integral `∫ f = g + ∑ᵢ
 cᵢ·log(vᵢ)` is the **logarithmic part**: the Rothstein–Trager residue criterion (§5.6). For a simple
@@ -491,14 +491,12 @@ def checkIdentityG (Dt : CPolyG α) (res : IntegralResultG α) (anum aden : CPol
   let rhs := cmulG anum (cmulG gden2 Lden)
   cisZeroG (csubG lhs rhs)
 
-/-! ### The generic reduced-case integration capstone and the tower integral driver
+/-! ### The generic reduced-case integration capstone
 
 `cIntegrateReducedG` integrates a reduced/simple `f = a/d` over the tower: Hermite rational part
-(`cHermiteReduceTowerG`) + Rothstein–Trager residue logs (`cLogPartG`). `cIntegrateG` is the assembled
-top-level driver: canonical split (`canonicalRepresentationFastG`) + reduced capstone on the simple
-normal part, returning `none` when the polynomial/special part is left non-disposed (the conservative
-reduced-case driver — full poly/special handling over the generic tower is the documented continuation).
-Candidates are `α` elements (the generic residue form). -/
+(`cHermiteReduceTowerG`) + Rothstein–Trager residue logs (`cLogPartG`). The assembled top-level driver
+that splits off the polynomial/special part is `cIntegrateGFull` (`ComputableTowerRischDE`), which feeds
+this capstone its simple normal part. Candidates are `α` elements (the generic residue form). -/
 
 /-- **The generic reduced-case integration capstone** `cIntegrateReducedG Dt fuel a d cands`: for
 `f = a/d` reduced/normal (no polynomial or special part), `∫ f = g + ∑ c·log(v)`. Hermite-reduce
@@ -512,20 +510,6 @@ def cIntegrateReducedG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : 
   let logs := cLogPartG Dt fuel hNum hDen cands
   ⟨(gnum, gden), logs⟩
 
-/-- **The generic top-level tower integral** `cIntegrateG Dt fuel a d cands` (Bronstein Ch. 5, the
-reduced-case driver over the tower): integrate `f = a/d ∈ α(t)` over `D = cmonomialDeriv Dt`, returning
-`some ⟨(gnum, gden), [(cᵢ, vᵢ)]⟩` with `∫ f = gnum/gden + ∑ᵢ cᵢ·log(vᵢ)`, or `none`. Steps: (1)
-`canonicalRepresentationFastG` splits `f = fₚ + fₛ + fₙ = q + (b/dₛ) + (c/dₙ)`; (2) the simple normal
-part `fₙ = c/dₙ` is integrated by `cIntegrateReducedG` (Hermite + residue logs from `cands`); (3) if the
-polynomial part `fₚ = q` and the special part `b/dₛ` both vanish, return the simple-part integral, else
-`none` (the conservative reduced-case driver; the generic poly/special engines are the documented
-continuation). `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
-def cIntegrateG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
-    Option (IntegralResultG α) :=
-  let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
-  let nrm := cIntegrateReducedG Dt fuel cn dn cands
-  if cisZeroG fp && cisZeroG b then some nrm else none
-
 end CPolyG
 
 /-! ### ★★ The STRETCH validation: a FULL elementary tower integral at LEVEL 2 (`native_decide`)
@@ -537,7 +521,7 @@ antiderivative** `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = 
 `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)`, assembled as a single fraction `a/d` with `d = (t₂+1)(t₂−1) =
 t₂² − 1`. The residues of `R(z) = res_t(d, a − z·Dd)` are `±1/2` with log arguments `t₂ ± 1`.
 
-The generic tower integrator `cIntegrateG` (canonical split + Hermite rational part + Rothstein–Trager
+The generic reduced-case capstone `cIntegrateReducedG` (Hermite rational part + Rothstein–Trager
 residue logs) runs over `CPolyG Lvl2` and recovers the integral: `g = 0`, residues `±1/2` from the
 candidate set, logs `t₂ ± 1`. The headline check is the **antiderivative identity** `D(∫f) = f`
 (`checkIdentityG`, cleared of denominators, by `cisZeroG`) — the whole elementary tower integral
@@ -598,17 +582,6 @@ theorem towerIntLvl2_fullIntegral :
       (CPolyG.cIntegrateReducedG towerIntLvl2Dt 30 towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands)
       towerIntLvl2Num towerIntLvl2Den = true := by native_decide
-
-/-- **The full `cIntegrateG` driver runs end-to-end at level 2 and `D(∫f) = f`** (`native_decide`): on
-the same level-2 simple integrand (a pure normal element, so `fₚ = fₛ = 0`), the assembled top-level
-`cIntegrateG` — canonical split + reduced capstone — returns `some res`, and `res` satisfies the
-antiderivative identity `D(res) = f` over ℚ(x)(t₁)[t₂]. This pins the assembled tower driver at level 2,
-not just the reduced core. -/
-theorem towerIntLvl2_driver :
-    (match CPolyG.cIntegrateG towerIntLvl2Dt 30 towerIntLvl2Num towerIntLvl2Den
-        towerIntLvl2Cands with
-      | some res => CPolyG.checkIdentityG towerIntLvl2Dt res towerIntLvl2Num towerIntLvl2Den
-      | none => false) = true := by native_decide
 
 #print axioms towerIntLvl2_fullIntegral
 

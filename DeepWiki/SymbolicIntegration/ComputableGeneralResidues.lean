@@ -294,7 +294,7 @@ The remaining pieces (documented, beyond this file):
 3. **The algebraic rational part (Ch. 4)** — the genus-`g` Hermite reduction (the algebraic analogue of
    `cHermiteReduce`) over the integral basis, removing the multiple-pole part before the residues handle
    the simple-pole log part; then wiring residues + rational part into the top-level integrator
-   (`cIntegrate`) for algebraic integrands.
+   for algebraic integrands.
 
 Every input these consume — the residue resultant `R(Z)` (this file), the integral basis
 (`ComputableIntegralBasisFull`), the trace/discriminant (`ComputableAlgFunctionField`) — is now in place;
