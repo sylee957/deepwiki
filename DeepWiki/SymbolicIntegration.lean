@@ -187,3 +187,4 @@ import DeepWiki.SymbolicIntegration.ComputableUnifiedFuelFree
 import DeepWiki.SymbolicIntegration.ComputableUnifiedMixedWfSoundness
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicWfSoundness
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicCompleteness
+import DeepWiki.SymbolicIntegration.ComputableAlgebraicDecide
