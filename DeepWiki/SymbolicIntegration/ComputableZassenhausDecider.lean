@@ -388,16 +388,225 @@ candidate the `ℤ`-trial-division tests. -/
 def recombineCandidate (n : ℤ) (sub : List (List ℤ)) : List ℤ :=
   symModN n (listProd sub)
 
-/-- **Recombination search.** Over all sublists of the lifted factors `facs` (mod `n = p^k`), form
-each symmetric-reduced subset-product candidate; keep those whose trim-degree is `≥ 1` and which
-**exactly divide** `f` over `ℤ`, returning their degrees (`lengthTrim − 1`). The verdict data: `f`
-is irreducible iff the only divisor degree found equals `deg f`. -/
+/-- **Recombination search for PROPER factors.** Over all sublists of the lifted factors `facs`
+(mod `n = p^k`), form each symmetric-reduced subset-product candidate; keep those of **proper**
+degree `1 ≤ d < deg f` (excluding units of degree `0` and the trivial full-degree `f` itself) that
+**exactly divide** `f` over `ℤ`, returning their degrees. `f` is irreducible **iff** this list is
+empty (no proper `ℤ`-factor exists). -/
 def recombine (f : List ℤ) (n : ℤ) (facs : List (List ℤ)) : List ℕ :=
+  let degF := lengthTrim f - 1
   (facs.sublists.filterMap (fun sub =>
     let cand := recombineCandidate n sub
     let dc := lengthTrim cand
-    if 1 ≤ dc ∧ dc ≤ lengthTrim f ∧ dividesExactly f cand (dc - 1) then
+    -- proper factor: degree `dc - 1` in `[1, degF)`, exact divisor over ℤ
+    if 2 ≤ dc ∧ dc - 1 < degF ∧ dividesExactly f cand (dc - 1) then
       some (dc - 1)
     else none))
+
+/-! ## Recombination, stage 4: wiring `𝔽_p` factors into the `ℤ` Hensel lift
+
+The mod-`p` factorization (`edf`, `List (List (ZMod p))`) must feed the `List ℤ` Hensel machinery.
+Two pieces: (a) **lift** a `ZMod p` factor list to `List ℤ` by taking each coefficient's
+representative in `[0, p)` (`ZMod.val`); (b) **Bézout cofactors** over `𝔽_p` via the **extended
+Euclidean algorithm** `xgcdByMonic`, returning `(s, t)` with `s·a + t·b = gcd`. For a coprime pair
+the gcd is a nonzero constant, so dividing through gives `s·a + t·b ≡ 1`. -/
+
+/-- Lift a `ZMod p` coefficient list to `List ℤ` via `ZMod.val` (the representative in `[0, p)`):
+the mod-`p` factor read as an integer polynomial. -/
+def liftZMod {p : ℕ} (l : List (ZMod p)) : List ℤ := l.map (fun a => (a.val : ℤ))
+
+/-- The extended Euclidean algorithm over a field, fueled: returns `(d, s, t)` with
+`s·f + t·g = d = gcd(f, g)`. Mirrors `gcdByMonicFuel`, carrying the Bézout cofactors via the
+quotient at each step. `g = 0` → `(f, 1, 0)`; else reduce `f = gm·q + r` (gm = monicize g) and
+recurse, back-substituting the cofactors. -/
+def xgcdByMonicFuel {R : Type*} [Field R] [DecidableEq R] :
+    ℕ → List R → List R → List R × List R × List R
+  | 0, f, _ => (f, [1], [])
+  | fuel + 1, f, g =>
+    if lengthTrim g = 0 then (f, [1], [])
+    else
+      let lc := (leadL g)⁻¹
+      let gm := monicizeL g
+      let dg := lengthTrim g - 1
+      let qr := divmodByMonic f gm dg
+      let q := qr.1
+      let r := qr.2
+      let res := xgcdByMonicFuel fuel gm r
+      -- res = (d, s', t') with s'·gm + t'·r = d.  r = f − gm·q, gm = lc·g.
+      -- d = s'·gm + t'·(f − gm·q) = t'·f + (s' − t'·q)·gm = t'·f + (s' − t'·q)·lc·g.
+      let d := res.1
+      let s' := res.2.1
+      let t' := res.2.2
+      (d, t', scaleL lc (subL s' (mulL t' q)))
+
+/-- Extended Euclidean gcd with cofactors over `𝔽_p`, fuel `g.length + 1`: returns `(gcd, s, t)`
+with `s·f + t·g = gcd`. -/
+def xgcdByMonic {R : Type*} [Field R] [DecidableEq R] (f g : List R) :
+    List R × List R × List R :=
+  xgcdByMonicFuel (g.length + 1) f g
+
+/-- The Bézout cofactors `(s, t)` over `𝔽_p` for a **coprime** pair `(g, h)` (gcd a nonzero
+constant `c`): `xgcdByMonic` gives `s₀·g + t₀·h = c`, and dividing through by `c` yields
+`s·g + t·h = 1`. Returns `(s, t)`. -/
+def bezoutModP {p : ℕ} [Fact p.Prime] (g h : List (ZMod p)) : List (ZMod p) × List (ZMod p) :=
+  let res := xgcdByMonic g h
+  let c := leadL res.1  -- the gcd is a nonzero constant; its (only) coefficient
+  (scaleL c⁻¹ res.2.1, scaleL c⁻¹ res.2.2)
+
+/-! ## A degree-correct `𝔽_p` factorization (fixing the DDF degree-tag stop)
+
+The engine's `ddf`/`edf` carry a documented gap: the distinct-degree **degree tags** are correct
+only once Frobenius-power correctness is added, and in fact the `ddfAux` *no-peel* branch stops at
+the current `d` (emitting the unfactored residual with a wrong tag) — so e.g. `x⁴ + 1` mod `3`,
+whose factors are both degree `2`, is returned **unsplit** (`edf` gives one factor), because the
+`d = 1` block is trivial and the recursion halts. The `ddf_prod`/`edf_prod` multiply-backs stay
+sound (gcd-divides-first-arg is unconditional), but the *split into irreducibles* needs the recursion
+to **continue** through trivial blocks. We rebuild a degree-correct DDF here over the same engine
+primitives (`xPowModF`, `gcdByMonic`, `divmodByMonic`), then equal-degree-split each block with its
+**true** degree `d` via `edfBlock` — giving the genuine irreducible factorization the recombination
+recombines. (Computed factorizations feed `native_decide`-validated verdicts; the abstract soundness
+keystone is `dividesExactly_dvd`, independent of this factorizer's internals.) -/
+
+/-- Degree-correct distinct-degree factorization over `𝔽_p`, fueled by `d`. At degree `d`: the block
+`gcd(f, X^(p^d) − X)` collects the degree-`d` irreducible factors; if **nontrivial**, peel it
+(monicize, divide out) and recurse with `d + 1` on the cofactor; if **trivial**, advance `d` (do not
+stop) — continuing until the cofactor is a constant. Returns `(d, block)` pairs with **correct**
+degree tags. -/
+def ddfCorrect (p : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List (ℕ × List (ZMod p))
+  | 0, _, _ => []
+  | fuel + 1, d, f =>
+    if lengthTrim f ≤ 1 then []                       -- cofactor is a constant: done
+    else if d + 1 ≥ lengthTrim f then [(lengthTrim f - 1, f)]  -- remainder is itself irreducible
+    else
+      let df := lengthTrim f - 1
+      let sep := subL (xPowModF p d f df) [0, 1]
+      let gd := gcdByMonic f sep
+      if 1 < lengthTrim gd then
+        let gdm := monicizeL gd
+        let cof := (divmodByMonic f gdm (lengthTrim gd - 1)).1
+        (d, gdm) :: ddfCorrect p fuel (d + 1) cof
+      else
+        ddfCorrect p fuel (d + 1) f                   -- trivial block: keep going
+
+/-- Degree-correct full factorization over `𝔽_p`: distinct-degree blocks (`ddfCorrect`) each
+equal-degree-split with its **true** degree `d` (`edfBlock`), flattened to the list of irreducible
+factor coefficient-lists. -/
+def factorModP (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) : List (List (ZMod p)) :=
+  (ddfCorrect p (f.length + 1) 1 f).flatMap (fun b => edfBlock p b.1 (b.2.length + 1) 0 b.2)
+
+/-! ## A degree-stable computational Hensel round
+
+The abstract `henselLift` (above) carries the proven multiply-back congruence `henselLift_congr`,
+but is **degree-unstable** when iterated: the raw quadratic step `g' = g + t·e` lets `deg(t·e)` grow
+each round (the engine's `liftBezout` does not bound the cofactor degrees), so after a couple of
+rounds the lifted factor's degree blows up — fine for the *congruence* (still `≡ f mod p^{2m}`) but
+useless for recombination. For the **computation** we use the textbook *degree-preserving* quadratic
+step, which keeps each factor **monic of its original degree**: with `g, h` monic (degrees `dg, dh`),
+`e = f − g·h`, and Bézout `s·g + t·h ≡ 1`,
+`v := (t·e) mod g` (degree `< dg`), `q := (t·e) div g`, `u := s·e + h·q`;
+then `g' := g + v` (monic, degree `dg`), `h' := h + u` (monic, degree `dh`) satisfy
+`g·u + h·v = e`, so `g'·h' ≡ f (mod p^{2m})` with **stable degrees**. Cofactors are reduced mod the
+factors to stay bounded. All coefficients reduced mod `p^{2m}`. (This computational path backs the
+`native_decide` verdicts; the *abstract* soundness keystone remains the `ℤ`-trial-division
+`dividesExactly_dvd`, which validates the recombination output regardless of how the lift produced
+the candidates.) -/
+
+/-- The number of Hensel doubling rounds to reach modulus `p^{2^k} > 2·mignotteBound f`: search
+`k = 0, 1, …` (capped by `bnd + 1`, ample since `p^{2^k}` grows doubly-exponentially). -/
+def henselRounds (p : ℕ) (f : List ℤ) : ℕ :=
+  let target := 2 * mignotteBound f + 1
+  let rec go : ℕ → ℕ → ℕ
+    | 0, _ => 0
+    | fuel + 1, k => if target ≤ p ^ (2 ^ k) then k else go fuel (k + 1)
+  go (mignotteBound f + 1) 0
+
+/-- A **degree-stable** quadratic Hensel round on `List ℤ` factors. `g, h` monic (degrees `dg, dh`),
+cofactors `s, t`, modulus exponent `m`. Computes `g', h'` monic of the **same** degrees with
+`g'·h' ≡ f (mod p^{2m})`, plus reduced cofactors `s', t'` for the next round. Each coefficient is
+reduced mod `p^{2m}`. -/
+def henselRoundStable (p : ℕ) (f : List ℤ) (m : ℕ) (g h s t : List ℤ) :
+    List ℤ × List ℤ × List ℤ × List ℤ :=
+  let n2 := p ^ (2 * m)
+  let dg := lengthTrim g - 1
+  let dh := lengthTrim h - 1
+  let e := subL f (mulL g h)
+  -- v = (t·e) mod g, q = (t·e) div g  (g monic of degree dg)
+  let te := mulL t e
+  let teqr := divmodByMonic te g dg
+  let q := teqr.1
+  let v := teqr.2
+  -- u = s·e + h·q
+  let u := addL (mulL s e) (mulL h q)
+  let g' := reduceModN n2 (addL g v)
+  let h' := reduceModN n2 (addL h u)
+  -- reduce cofactors mod the new factors to keep them bounded:
+  --   sustain Bézout by re-reducing s mod h', t mod g'
+  let s' := reduceModN n2 (modByMonicL s h' dh)
+  let t' := reduceModN n2 (modByMonicL t g' dg)
+  (g', h', s', t')
+
+/-- Iterate `henselRoundStable` for `k` doubling rounds (modulus exponent `m₀ ↦ 2^k m₀`),
+degree-stable. Returns the lifted factors and cofactors. -/
+def henselLiftStable (p : ℕ) (f : List ℤ) :
+    ℕ → ℕ → List ℤ → List ℤ → List ℤ → List ℤ → List ℤ × List ℤ × List ℤ × List ℤ
+  | 0, _, g, h, s, t => (g, h, s, t)
+  | k + 1, m, g, h, s, t =>
+    let r := henselRoundStable p f m g h s t
+    henselLiftStable p f k (2 * m) r.1 r.2.1 r.2.2.1 r.2.2.2
+
+/-- Lift a **two-factor** mod-`p` split `(g, h)` of `f` to mod `p^{2^k}` (`k = henselRounds p f`),
+returning the lifted `(g', h')` as `List ℤ`, **degree-stable** (`henselLiftStable`). Bézout
+cofactors via `bezoutModP`; starting modulus exponent `1` (mod `p`). -/
+def henselLiftPair {p : ℕ} [Fact p.Prime] (f : List ℤ) (g h : List (ZMod p)) :
+    List ℤ × List ℤ :=
+  let st := bezoutModP g h
+  let k := henselRounds p f
+  let r := henselLiftStable p f k 1 (liftZMod g) (liftZMod h) (liftZMod st.1) (liftZMod st.2)
+  (r.1, r.2.1)
+
+/-- The product of a list of `ZMod p` factors (`mulL`-fold from `[1]`). -/
+def listProdModP {p : ℕ} (fs : List (List (ZMod p))) : List (ZMod p) :=
+  fs.foldr (fun a acc => mulL a acc) [1]
+
+/-- **Multifactor Hensel lift.** Lift a mod-`p` factorization `facs = [g₁, …, gᵣ]` of `f` to mod
+`p^{2^k}` as `List ℤ` factors, by repeatedly two-factor-lifting the head against the product of the
+tail and recursing on the lifted tail. Fueled by the factor count. -/
+def henselLiftMany {p : ℕ} [Fact p.Prime] (f : List ℤ) :
+    ℕ → List (List (ZMod p)) → List (List ℤ)
+  | _, [] => []
+  | _, [g] => [liftZMod g]          -- single factor: lift directly (no Bézout needed)
+  | 0, gs => gs.map liftZMod        -- out of fuel: lift each crudely
+  | fuel + 1, g :: gs =>
+    let h := listProdModP gs        -- product of the rest
+    let gh := henselLiftPair f g h
+    gh.1 :: henselLiftMany f fuel gs
+
+/-! ## ★ The complete Zassenhaus `ℚ`-irreducibility decider
+
+`irreducibleZassenhaus f` decides irreducibility of the monic integer polynomial `toPolyZ f` over
+`ℚ` by the full pipeline: factor `f` mod a good prime `p` (no repeated factors — `f` squarefree,
+which holds for the squarefree-primitive inputs in scope), Hensel-lift the factorization to mod
+`p^k` past the Mignotte window, recombine over the lifted factors by `ℤ`-trial-division, and return
+`true` iff the **only** factor recombination finds is `f` itself (full degree). Computable;
+`native_decide`-able for small inputs (the headline `x⁴ + 1` lifts cheaply mod `3`). -/
+
+/-- **★ The complete Zassenhaus decider.** `irreducibleZassenhaus p f n`: with degree `n` and a good
+prime `p` (one giving a squarefree mod-`p` reduction — no repeated factors), factor `f mod p`
+(`edf`), Hensel-lift to mod `p^{2^k}` (`henselLiftMany`), recombine over the lifted factors
+(`recombine`), and return `true` iff the only `ℤ`-divisor degree found is the full degree `n` (so
+the only factorization is the trivial one). The COMPLETE `ℚ`-irreducibility decision the one-way
+mod-`p` test cannot give. -/
+def irreducibleZassenhaus (p : ℕ) [Fact p.Prime] (f : List ℤ) (n : ℕ) : Bool :=
+  let facp := factorModP p (reduceCoeffs p f)   -- mod-p irreducible factors (degree-correct)
+  -- degree-n guard + a genuine factorization mod p (≥ 1 factor) is required
+  if lengthTrim f ≠ n + 1 ∨ facp.length = 0 then false
+  -- a single mod-p irreducible factor already proves ℚ-irreducibility (the mod-p test)
+  else if facp.length = 1 then true
+  else
+    let pk := (p : ℤ) ^ (2 ^ henselRounds p f)  -- the lift modulus
+    let lifted := henselLiftMany f (facp.length + 1) facp
+    let degs := recombine f pk lifted
+    -- irreducible iff NO proper ℤ-factor found
+    degs.isEmpty
 
 end DeepWiki.SymbolicIntegration
