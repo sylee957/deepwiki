@@ -185,4 +185,113 @@ theorem engine_some_of_torsion_witness :
 
 end Witnesses
 
+/-! ## ★ The precise deep frontier (named `def`s, NEVER `sorry`)
+
+Closing the FULL "`none` ⟹ not elementary" for the algebraic integrator needs exactly two deep ingredients,
+each isolated as an honest `Prop`-valued `def` (never `sorry`).  Trager's algorithm splits `∫ f` into a
+rational part (always elementary, computed by the integral-basis Hermite reduction) and a log part (whose
+elementarity is the divisor-torsion criterion).  The rational-part exhaustiveness and the within-tower
+descent are reachable (above); the two `def`s below name what remains.  Stated abstractly over an arbitrary
+differential extension `K` standing for the curve's function field, since the concrete radical tower's
+differential structure lives in the engine files, not here. -/
+
+section Frontier
+
+variable (F : Type*) [Field F] [Differential F] [CharZero F]
+
+/-- **Frontier piece 1 — Liouville's structure theorem for an algebraic curve's function field**
+(`AlgebraicLiouvilleFrontier`, Bronstein Ch. 6 / Trager Ch. 5–6 / Rosenlicht).  The deep tip: for the
+function field `K` of an algebraic curve over `F`, `∫ f` is **elementary** ⟺ `f = D(v) + Σ cᵢ D(uᵢ)/uᵢ`
+with `v, uᵢ ∈ K` and `cᵢ` constants — i.e. `IsAlgebraicElementary F K f` is the *full* characterization of
+elementary integrability (not just a sufficient form).  Stated as the **completeness** half: an integrand
+non-elementary over the base `F` (`¬ IsAlgebraicElementary F F f`) stays non-elementary over the curve's
+function field `K` (`¬ IsAlgebraicElementary F K f`) — the structure theorem's content that the algorithm's
+search over `K` is *exhaustive*.  Mathlib has only the finite-extension **descent**
+(`isLiouville_of_finiteDimensional`, used above), **not** this structure theorem for a function field; it is
+the genuine Liouville-for-algebraic frontier.  Quantified over every differential algebraic extension `K`
+carrying an `IsLiouville` instance (the descent Mathlib provides for finite extensions; the open part is
+that *the curve's function field is such an extension and the form is exhaustive*). -/
+def AlgebraicLiouvilleFrontier : Prop :=
+  ∀ (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K] [IsLiouville F K]
+    (f : F), ¬ IsAlgebraicElementary F F f → ¬ IsAlgebraicElementary F K f
+
+omit [CharZero F] in
+/-- **Frontier piece 1 is already a THEOREM at the single-extension level** (the descent the structure
+theorem would let one iterate): for *any* Liouville extension `K / F`, base non-elementarity propagates.
+This is exactly `IsLiouville`'s descent quantified over the extension — so `AlgebraicLiouvilleFrontier F`
+holds *given* a Liouville instance per layer (`isLiouville_of_finiteDimensional` supplies it for finite
+algebraic extensions); the open part is purely the structure theorem (the curve's function field *is* a
+Liouville extension and the Trager form is *exhaustive*), not this propagation. -/
+theorem algebraicLiouville_single_extension : AlgebraicLiouvilleFrontier F := by
+  intro K _ _ _ _ _ f h hK
+  obtain ⟨ι, _, c, hc, u, v, hrep⟩ := hK
+  obtain ⟨ι₀, _, c₀, hc₀, u₀, v₀, hrep₀⟩ := IsLiouville.isLiouville f ι c hc u v hrep
+  exact h ⟨ι₀, inferInstance, c₀, hc₀, u₀, v₀, by
+    simpa only [Algebra.algebraMap_self_apply] using hrep₀⟩
+
+end Frontier
+
+/-! ## ★ Frontier piece 2 — the good-reduction divisor-torsion decision correctness
+
+The engine's torsion test `isTorsionDivisor` decides the log-part criterion ("is the residue divisor
+torsion?") by computing the divisor order via Cantor's Jacobian arithmetic, terminating through **good
+reduction mod `p`** (`order_ℚ(D) ∣ order_{𝔽_p}(D)`, the height-swell tip).  Its abstract correctness — that
+the computed answer matches the *true* order in `Jac(ℚ̄)` and that the good-reduction bound is a *valid*
+ceiling — is the second deep frontier.  We state it against the engine's actual `isTorsionDivisor` /
+`elementarityViaTorsion`. -/
+
+section TorsionFrontier
+
+open DeepWiki.SymbolicIntegration
+
+/-- **Frontier piece 2 — the good-reduction torsion-decision correctness**
+(`DivisorTorsionDecisionFrontier`, Trager Ch. 6 §2–3, the height-swell tip).  The engine's torsion test is
+**correct and terminating**: for a residue divisor `D` on `y² = ρq` and a good prime `p`,
+`isTorsionDivisor p cfuel ρq g D = some m` ⟺ `D` is `m`-torsion in the Jacobian (`m·D = O`, the integral
+elementary with a `(1/m)·log` term), and `= none` ⟺ `D` is of infinite order (the integral **not**
+elementary).  The termination rests on good reduction (`order_ℚ(D) ∣ order_{𝔽_p}(reduction)` so the finite
+`Jac(𝔽_p)` order ceilings the otherwise-unbounded ℚ-search).  The engine **computes** this decision
+(`native_decide`-validated on `(0,1)`/`(3,5)` witnesses, `engine_some_of_torsion_witness` /
+`engine_none_of_nonTorsion_witness`), but the abstract correctness of the good-reduction order bound is
+**not** formalized — Mathlib has the abstract Jacobian/divisor class group but no hyperelliptic
+point-counting or good-reduction order-bound theorem.  Stated as: the Boolean decision
+`elementarityViaTorsion` agrees with an abstract torsion predicate `isTorsion` on the divisor, for some good
+prime `p`. -/
+def DivisorTorsionDecisionFrontier
+    (isTorsion : CPolyG.MumfordDivisor ℚ → Prop) : Prop :=
+  ∀ (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ),
+    ∃ (p cfuel : ℕ) (_ : Fact p.Prime),
+      (elementarityViaTorsion p cfuel ρq g D = true ↔ isTorsion D)
+
+/-- **Frontier piece 2 — the engine's two answers are EXCLUSIVE** (`elementarityViaTorsion_iff_some`): the
+Boolean torsion decision `elementarityViaTorsion p cfuel ρq g D = true` is *exactly*
+`∃ m, isTorsionDivisor p cfuel ρq g D = some m` — the engine returns "elementary" iff it found a torsion
+order, and "not elementary" iff `none`.  Pure control flow over `Option.isSome` (no torsion mathematics), so
+unconditional; it pins that the decision is a genuine dichotomy and reduces the frontier
+`DivisorTorsionDecisionFrontier` to "the computed `some m`/`none` matches the *true* order" — the
+good-reduction correctness above. -/
+theorem elementarityViaTorsion_iff_some (p cfuel : ℕ) [Fact p.Prime]
+    (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ) :
+    elementarityViaTorsion p cfuel ρq g D = true
+      ↔ ∃ m, isTorsionDivisor p cfuel ρq g D = some m := by
+  unfold elementarityViaTorsion
+  rw [Option.isSome_iff_exists]
+
+/-- **Frontier piece 2 — the non-principal log branch fires iff the divisor is decided torsion**
+(`torsionLogTerm_isSome_iff`): `torsionLogTerm p cfuel fuel ρ ρq g D` returns a log term (`isSome`) *exactly*
+when the torsion decision returns `some m` — so the engine emits a `(1/m)·log g` term iff
+`isTorsionDivisor = some m`, and emits **nothing** iff `none`.  Pure control flow over the `match` in
+`torsionLogTerm` (no torsion mathematics), unconditional.  This is the engine-side reading the deep frontier
+`DivisorTorsionDecisionFrontier` connects to elementarity: "log term emitted ⟺ torsion decision positive". -/
+theorem torsionLogTerm_isSome_iff (p cfuel fuel : ℕ) [Fact p.Prime]
+    (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ) :
+    (torsionLogTerm p cfuel fuel ρ ρq g D).isSome = true
+      ↔ ∃ m, isTorsionDivisor p cfuel ρq g D = some m := by
+  unfold torsionLogTerm
+  cases h : isTorsionDivisor p cfuel ρq g D with
+  | none => simp
+  | some m => simp
+
+end TorsionFrontier
+
 end DeepWiki.SymbolicIntegration.AlgebraicCompleteness
