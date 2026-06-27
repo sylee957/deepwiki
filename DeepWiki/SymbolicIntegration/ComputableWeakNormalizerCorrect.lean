@@ -273,6 +273,156 @@ theorem towerGcd_assocReg_for_hin (fuel : ℕ) (P Q : GBPolyCore α)
 
 end Fuel
 
+/-! ## ★ Task 4 (honest assembly) — the capstone with the `C`-divisibility DISCHARGED
+
+We assemble as far as the closed pieces allow: a smaller residual `RischDESuccessResidualNormFuel` carrying
+**only** the genuine per-run fuel/termination clauses (`hdn`/`hfbB`/`hfbC`/`hin`/`hdb`) — the `C`-divisibility
+clause `hdvdC_dn_h2` is **REMOVED**, discharged instead from the single `g`-normality fact
+`IsWeaklyNormalizedDen gtilde.1.2` (`residualNorm_hdvdC_of_normalizedDen`). `residualNorm_of_fuel_and_dvdC`
+rebuilds the full `RischDESuccessResidualNorm` from the fuel residual + that `g`-normality fact, and
+`crischDESolveNorm_field_of_fuel` chains to `crischDESolveNorm_field` — so the original-`f,g` field identity
+holds from: the gcd witness, the `f`-normality `IsWeaklyNormalizedNorm` (the one true remainder), the
+`g`-normality `IsWeaklyNormalizedDen` (its dual, also a §6.1 fact), and the genuine fuel residual — with the
+`C`-divisibility no longer a hypothesis. NO `native_decide`. -/
+
+section Assembly
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **The genuine fuel/termination residual** `RischDESuccessResidualNormFuel ftilde gtilde`: exactly the
+per-run fuel/termination clauses of `RischDESuccessResidualNorm` with the `C`-divisibility `hdvdC_dn_h2`
+**removed** (that clause is discharged from `g`-normality). Carries `hdn` (normal part nonzero), the §6.2
+fuel bounds `hfbB`/`hfbC`, the §6.4 transparent-input chain `hin` (gcd clauses via the witness), and the
+dispatcher `hdb`. These are the irreducible per-run fuel-boundedness every fuel-bounded computable solver
+carries — NOT a divisibility precondition. -/
+structure RischDESuccessResidualNormFuel (ftilde gtilde : QFunNZG β) : Prop where
+  /-- The normal part `dₙ` of `f̃den` is nonzero. -/
+  hdn : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 ≠ 0
+  /-- §6.2 fuel bound on the `B`-numerator. -/
+  hfbB : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      (CPolyG.cnormG (CPolyG.csubG
+        (CPolyG.cmulG (CPolyG.cmulG
+          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0)
+          ftilde.1.1)
+        (CPolyG.cmulG (CPolyG.cmulG
+          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1
+            (CPolyG.cmonomialDeriv ([CField.one] : CPolyG β) h0)) ftilde.1.2)) : List β).length
+        ≤ towerRischDEFuel
+  /-- §6.2 fuel bound on the `C`-numerator. -/
+  hfbC : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      (CPolyG.cnormG (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cmulG
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0)
+        gtilde.1.1) : List β).length ≤ towerRischDEFuel
+  /-- The §6.4 per-level transparent-input chain `CSPDEGClearedInputsGen` (gcd clauses via the witness). -/
+  hin : ∀ a0 b0 c0 h0 : CPolyG β,
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+      CSPDEGClearedInputsGen ([CField.one] : CPolyG β) towerRischDEFuel
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) towerRischDEFuel
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+  /-- The positive-`deg(bbar)` dispatcher side-condition (Lemma 6.5.1 non-cancellation routing). -/
+  hdb : ∀ a0 b0 c0 bbar cbar : CPolyG β, ∀ m : ℤ, ∀ α' β' : CPolyG β,
+    cSPDEG ([CField.one] : CPolyG β) towerRischDEFuel
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) towerRischDEFuel
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β') → 0 < cdegG bbar
+
+omit [CDiffFieldSpec β] [CFieldDomain β] [CRischField β] [CTowerGcdWitness β]
+  [Algebra ℚ (CFieldSpec.K β)] in
+/-- **★ The full normalized residual from the fuel residual + `g`-normality**
+(`residualNorm_of_fuel_and_dvdC`): given the genuine fuel residual `RischDESuccessResidualNormFuel ftilde
+gtilde` and the `g`-normality dual `IsWeaklyNormalizedDen gtilde.1.2`, the full
+`RischDESuccessResidualNorm ftilde gtilde` holds — the missing `C`-divisibility clause `hdvdC_dn_h2` is
+supplied by `residualNorm_hdvdC_of_normalizedDen` (a theorem on `g`-normal input + bare success). So the
+`C`-clause is no longer a residual hypothesis; only the fuel/termination + the dual normality fact remain. -/
+theorem residualNorm_of_fuel_and_dvdC (ftilde gtilde : QFunNZG β)
+    (hgnorm : IsWeaklyNormalizedDen gtilde.1.2)
+    (hfuel : RischDESuccessResidualNormFuel ftilde gtilde) :
+    RischDESuccessResidualNorm ftilde gtilde where
+  hdn := hfuel.hdn
+  hdvdC_dn_h2 := residualNorm_hdvdC_of_normalizedDen ftilde gtilde hgnorm
+  hfbB := hfuel.hfbB
+  hfbC := hfuel.hfbC
+  hin := hfuel.hin
+  hdb := hfuel.hdb
+
+/-- **★★ The normalized recursive RDE solver is sound — `C`-divisibility DISCHARGED, `B`-wall closed**
+(Task 4, honest assembly): if `crischDESolveNorm f g = some y`, then with the gcd witness
+`[CTowerGcdWitness β]`, the §6.1 `f`-normality guarantee `IsWeaklyNormalizedNorm (weakNormalizedF f q')`
+(the ONE true remainder — false-as-stated on the un-reduced product, see `weakNormalizedF_den_eq`/the
+verdict), the `g`-normality dual `IsWeaklyNormalizedDen (qmulNZG q' g).1.2`, and the genuine fuel residual
+`RischDESuccessResidualNormFuel` (the `C`-divisibility clause REMOVED), the returned `y` solves the
+field-level Risch DE for the ORIGINAL `f, g`. Composes `residualNorm_of_fuel_and_dvdC` (discharge the
+`C`-clause from `g`-normality) with `crischDESolveNorm_field`. **No `native_decide`.** This is the strongest
+honest assembly: the `C`-side and the witness gcd clauses are closed; what remains is the `f`-normality
+guarantee (the precisely-isolated remainder), its `g`-side dual, and generic per-run fuel. -/
+theorem crischDESolveNorm_field_of_fuel (f g y : QFunNZG β)
+    (hsolve : crischDESolveNorm f g = some y)
+    (hnorm : IsWeaklyNormalizedNorm
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+    (hgnorm : IsWeaklyNormalizedDen
+      (qmulNZG (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2)
+    (hfuel : RischDESuccessResidualNormFuel
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+      (qmulNZG (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g)) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
+  crischDESolveNorm_field f g y hsolve hnorm
+    (residualNorm_of_fuel_and_dvdC _ _ hgnorm hfuel)
+
+end Assembly
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- ★ Task 4 (honest assembly): the normalized solver's success ⟹ the ORIGINAL field-level Risch-DE identity
+-- from the gcd witness + f-normality (the one remainder) + its g-side dual + the genuine fuel residual,
+-- with the C-divisibility DISCHARGED (no longer a hypothesis), no native_decide.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+    (f g y : QFunNZG β) (hsolve : crischDESolveNorm f g = some y)
+    (hnorm : IsWeaklyNormalizedNorm
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+    (hgnorm : IsWeaklyNormalizedDen
+      (qmulNZG (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2)
+    (hfuel : RischDESuccessResidualNormFuel
+      (weakNormalizedF f (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+      (qmulNZG (qOfPolyNZG
+        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g)) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
+  crischDESolveNorm_field_of_fuel f g y hsolve hnorm hgnorm hfuel
+
 /-! ## ★ Task 1 — the precise true remainder: `IsWeaklyNormalizedNorm` is FALSE-as-stated on the un-reduced
 product `crischDESolveNorm` feeds
 
@@ -371,6 +521,8 @@ current locked wrapper. The per-run fuel bounds remain as generic fuel-boundedne
 #print axioms cRdeNormalDenominatorG_en_dvd
 #print axioms residualNorm_hdvdC_of_normalizedDen
 #print axioms towerGcd_assocReg_for_hin
+#print axioms residualNorm_of_fuel_and_dvdC
+#print axioms crischDESolveNorm_field_of_fuel
 #print axioms weakNormalizedF_den_eq
 
 end DeepWiki.SymbolicIntegration
