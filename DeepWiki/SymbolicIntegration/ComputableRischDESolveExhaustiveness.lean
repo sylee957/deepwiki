@@ -241,4 +241,87 @@ theorem cSPDEG_isSome_of_recurse (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG �
 
 end SPDELayer
 
+/-! ## ★ The SPDE per-step solution-preservation (the structural heart, reachable cases)
+
+The SPDE peel's exhaustiveness is the **reverse** of the soundness lifting `cSPDEG_cleared_lifting_gen`:
+a solution `q` of the original `a·Dq + b·q = c` must descend to a solution of the reduced equation, so the
+peel does not lose it. Two reachable layers:
+
+* **The divisibility necessity** (★ the keystone, fully proven): if `g ∣ a` and `g ∣ b` then a solution
+  forces `g ∣ c`. Because `c = a·Dq + b·q` and `g` divides both summands — pure algebra, **no** gcd
+  correctness, no valuation theory. This is exactly what makes the SPDE `cdvdG fuel g c` gate *never reject a
+  true solution*: with `g = gcd(a, b)` the gate's failure is a genuine certificate of unsolvability (the
+  converse of the soundness peel's `g ∣ c` read-off).
+* **The constant-base descent** (fully proven): when `a/g` is a constant (`deg(a/g) = 0`, the SPDE base
+  case), the divided equation `(a/g)·Dq + (b/g)·q = c/g` *is* the reduced equation up to the leading-unit
+  rescale, so `q` itself is the reduced solution `h` (with `α' = 1`, `β = 0`). No diophantine peel, no
+  recursion.
+
+The genuinely deep step — the diophantine degree-peel inverse (`deg(a/g) ≠ 0`: a solution `q` reduces, via
+the Bézout relation `(b/g)·r + (a/g)·z = c/g`, to a *lower-degree* solution `h` with `q = (a/g)·h + r`) —
+is the irreducible recursion residual, isolated below. -/
+
+section Preservation
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+
+/-- **★ The SPDE divisibility necessity** (`dvd_c_of_isReducedRdeSol`, the keystone reachable fact): if a
+divisor `g` divides both leading coefficients (`toPolyG g ∣ toPolyG a`, `toPolyG g ∣ toPolyG b`) and `q`
+solves the §6.3-reduced equation `a·Dq + b·q = c` (`IsReducedRdeSol Dt a b c q`), then `g` divides the
+right-hand side — `toPolyG g ∣ toPolyG c`. Because `toPolyG c = toPolyG a · D(toPolyG q) + toPolyG b ·
+toPolyG q` and `g` divides each summand. Pure algebra: **no** gcd correctness, no valuation theory. This is
+the converse of the soundness peel's `g ∣ c` read-off — exactly what makes the SPDE `cdvdG fuel g c` gate
+never reject a true solution (its failure certifies unsolvability). -/
+theorem dvd_c_of_isReducedRdeSol (Dt a b c q g : CPolyG α)
+    (hga : toPolyG g ∣ toPolyG a) (hgb : toPolyG g ∣ toPolyG b)
+    (hsol : IsReducedRdeSol Dt a b c q) :
+    toPolyG g ∣ toPolyG c := by
+  -- `toPolyG c = toPolyG a · D(toPolyG q) + toPolyG b · toPolyG q`
+  have heq : toPolyG c
+      = toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q :=
+    hsol.symm
+  rw [heq]
+  exact dvd_add (hga.mul_right _) (hgb.mul_right _)
+
+/-- **★ The SPDE constant-base descent** (`isReducedRdeSol_const_base`): when the divided leading
+coefficient `a/g` is a *unit* `Polynomial.C a0` (`a0 ≠ 0`, the `deg(a/g) = 0` SPDE base case) and the three
+exact-division identities `(a/g)·g = a`, `(b/g)·g = b`, `(c/g)·g = c` hold (`g ≠ 0`), a solution `q` of the
+original `a·Dq + b·q = c` solves the **rescaled reduced** equation `Dq + (a0⁻¹·(b/g))·q = a0⁻¹·(c/g)` — i.e.
+`q` is the reduced solution `h` directly (the `α' = 1`, `β = 0` reassembly). The reverse of `spde_const_base`
+(the soundness constant-base step): no diophantine peel, no recursion. -/
+theorem isReducedRdeSol_const_base (Dt a b c q ad bd cd g : CPolyG α) (a0 : CFieldSpec.K α)
+    (ha0 : a0 ≠ 0) (hadC : toPolyG ad = Polynomial.C a0)
+    (hgne : toPolyG g ≠ 0)
+    (hdiva : toPolyG ad * toPolyG g = toPolyG a) (hdivb : toPolyG bd * toPolyG g = toPolyG b)
+    (hdivc : toPolyG cd * toPolyG g = toPolyG c)
+    (hsol : IsReducedRdeSol Dt a b c q) :
+    Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+        + (Polynomial.C a0⁻¹ * toPolyG bd) * toPolyG q
+      = Polynomial.C a0⁻¹ * toPolyG cd := by
+  -- the original equation, abstractly
+  have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q
+      = toPolyG c := hsol
+  -- divide the equation through by `g` (g ≠ 0, cancellation in the polynomial domain)
+  have hdivided : toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+      + toPolyG bd * toPolyG q = toPolyG cd := by
+    have hmulg : (toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+          + toPolyG bd * toPolyG q) * toPolyG g = toPolyG cd * toPolyG g := by
+      rw [hdivc]; rw [← heq, ← hdiva, ← hdivb]; ring
+    exact mul_right_cancel₀ hgne hmulg
+  -- substitute `ad = C a0`, then divide by the unit `a0`
+  rw [hadC] at hdivided
+  -- multiply through by `C a0⁻¹`: `C a0⁻¹ · (C a0 · Dq + bd · q) = C a0⁻¹ · cd`
+  have hscaled : Polynomial.C a0⁻¹ * (Polynomial.C a0 * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+      + toPolyG bd * toPolyG q) = Polynomial.C a0⁻¹ * toPolyG cd := by
+    rw [hdivided]
+  rw [mul_add] at hscaled
+  -- `C a0⁻¹ · C a0 = C 1 = 1`
+  have hCunit : Polynomial.C a0⁻¹ * Polynomial.C a0 = 1 := by
+    rw [← Polynomial.C_mul, inv_mul_cancel₀ ha0, Polynomial.C_1]
+  rw [← mul_assoc, hCunit, one_mul] at hscaled
+  -- the `bd` term is already in the goal's left-associated `C a0⁻¹ * bd * q` form
+  linear_combination hscaled
+
+end Preservation
+
 end DeepWiki.SymbolicIntegration
