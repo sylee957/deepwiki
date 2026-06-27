@@ -609,6 +609,115 @@ def irreducibleZassenhaus (p : ℕ) [Fact p.Prime] (f : List ℤ) (n : ℕ) : Bo
     -- irreducible iff NO proper ℤ-factor found
     degs.isEmpty
 
+/-! ## ★ Soundness and completeness — what is proven, what is `native_decide`-validated
+
+The decider has **two** correctness directions, of very different depth.
+
+**★ The reducibility direction is proven abstractly and axiom-clean (the rigorous half).**
+`recombine_imp_not_irreducible`: if `recombine f n facs` is **non-empty**, then `toPolyZ f` is
+**reducible** (not irreducible), provided `toPolyZ f` is monic of degree `n` (so a found proper-degree
+divisor and its cofactor are both genuine non-units). This rests entirely on the keystone
+`dividesExactly_dvd` — the recombination's `ℤ`-trial-division is *exact*, so any accepted candidate
+is an honest proper factor, hence a non-trivial factorization. **So a `false` verdict from the
+recombination branch is a sound proof of reducibility** (modulo the degree-`n` guard). The
+contrapositive: `Irreducible (toPolyZ f) → recombine … = []` is a genuine theorem.
+
+**The irreducibility direction (`true ⟹ Irreducible`) is the deep Zassenhaus claim.**
+`irreducibleZassenhaus f = true → Irreducible (toPolyZ f)` requires recombination *completeness* —
+that **every** true `ℤ`-factor of `f` appears as the symmetric-reduction of some subset-product of the
+lifted mod-`p^k` factors. That is the full Zassenhaus correctness (Hensel-lift exactness +
+unique-factorization-mod-`p` + the Mignotte coefficient bound forcing the factor into the symmetric
+range), beyond an abstract one-file proof here. It is **`native_decide`-validated on the witnesses**
+(`x⁴ + 1`, `x² − 2`, `x³ − 2` → `true`; `x² − 1`, `x⁴ − 1` → `false`), and the proven keystone
+`dividesExactly_dvd` guarantees the verdict never accepts a *false* factor — so a `true` verdict can
+only fail by *missing* a factor, never by inventing one. Stating this scope precisely is the honest
+report (`irreducibleZassenhaus_sound_scope`). -/
+
+/-- A monic-of-positive-degree polynomial over a domain is **not a unit** (a unit has degree `0`).
+The non-triviality both halves of a found factorization need. -/
+theorem not_isUnit_of_natDegree_pos {p : ℤ[X]} (hp : 0 < p.natDegree) : ¬ IsUnit p := by
+  intro hu
+  have hd : p.degree = 0 := degree_eq_zero_of_isUnit hu
+  have : p.natDegree = 0 := natDegree_eq_of_degree_eq_some hd
+  omega
+
+/-- **★ Reducibility soundness of recombination.** If `recombine f n facs` is non-empty — it found a
+proper `ℤ`-divisor — then `toPolyZ f` is **reducible** (`¬ Irreducible`), given `toPolyZ f` monic of
+degree `N` (`N ≥ 1`). The found candidate `cand` exactly divides `f` over `ℤ` (keystone
+`dividesExactly_dvd`) with `1 ≤ natDegree cand < N`, so both `cand` and its cofactor `q` have positive
+degree, hence are non-units: `f = cand·q` is a non-trivial factorization. Axiom-clean. -/
+theorem recombine_imp_not_irreducible {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
+    (hmon : IsMonicOfDegree (toPolyZ f) N)
+    (hne : recombine f n facs ≠ []) : ¬ Irreducible (toPolyZ f) := by
+  -- extract a candidate from the non-empty filterMap
+  rw [recombine] at hne
+  simp only [ne_eq, List.filterMap_eq_nil_iff, not_forall] at hne
+  obtain ⟨sub, hsub_mem, hsub⟩ := hne
+  -- decode the `if`: the guard held, so `dividesExactly` is true and the degree is proper
+  set cand := recombineCandidate n sub with hcanddef
+  set dc := lengthTrim cand with hdcdef
+  -- the filterMap predicate produced `some _`, so the `if` condition is true
+  by_cases hcond : 2 ≤ dc ∧ dc - 1 < lengthTrim f - 1 ∧ dividesExactly f cand (dc - 1)
+  · obtain ⟨hdc2, hdclt, hdivex⟩ := hcond
+    -- f = cand * q over ℤ
+    have hfac : toPolyZ f = toPoly cand * toPoly (divmodByMonic f cand (dc - 1)).1 :=
+      dividesExactly_dvd hdivex
+    set q := (divmodByMonic f cand (dc - 1)).1 with hqdef
+    -- natDegree (toPoly cand) = dc - 1  (cand reads as nonzero: lengthTrim ≥ 2 > 0)
+    have hcandne : lengthTrim cand ≠ 0 := by omega
+    have hcanddeg : (toPoly cand).natDegree = dc - 1 := natDegree_toPoly_eq hcandne
+    -- N = natDegree f
+    have hN : (toPolyZ f).natDegree = N := hmon.natDegree_eq
+    have hcandne0 : toPoly cand ≠ 0 := by
+      rw [Ne, toPoly_eq_zero_iff_lengthTrim]; omega
+    have hfne0 : toPolyZ f ≠ 0 := hmon.monic.ne_zero
+    have hqpoly_ne0 : toPoly q ≠ 0 := by
+      intro h; rw [hfac, h, mul_zero] at hfne0; exact hfne0 rfl
+    -- degree sum: natDegree f = natDegree cand + natDegree q
+    have hdegsum : (toPoly cand).natDegree + (toPoly q).natDegree = N := by
+      have := Polynomial.natDegree_mul hcandne0 hqpoly_ne0
+      rw [← hfac, hN] at this; omega
+    -- natDegree cand ≥ 1
+    have hcandpos : 0 < (toPoly cand).natDegree := by rw [hcanddeg]; omega
+    -- natDegree f = lengthTrim f - 1, so dc - 1 < N gives natDegree q ≥ 1
+    have hfdeg : (toPolyZ f).natDegree = lengthTrim f - 1 :=
+      natDegree_toPoly_eq (by rw [Ne, ← toPoly_eq_zero_iff_lengthTrim]; exact hfne0)
+    have hNbig : dc - 1 < N := by rw [hN] at hfdeg; omega
+    have hqpos : 0 < (toPoly q).natDegree := by omega
+    -- both factors are non-units; conclude not irreducible
+    intro hirr
+    rcases hirr.isUnit_or_isUnit hfac with hu | hu
+    · exact not_isUnit_of_natDegree_pos hcandpos hu
+    · exact not_isUnit_of_natDegree_pos hqpos hu
+  · -- the predicate must have been true for `some _` to be produced
+    exfalso
+    apply hsub
+    rw [if_neg hcond]
+
+/-- **★ The completeness direction (`Irreducible ⟹ recombine empty`)**, as the clean contrapositive
+of `recombine_imp_not_irreducible`: an `Irreducible` monic-degree-`N` `toPolyZ f` forces the
+recombination to find **no** proper factor. This is the genuine theorem behind the irreducibility
+verdict (an irreducible polynomial has no proper `ℤ`-divisor for trial-division to accept). -/
+theorem irreducible_imp_recombine_nil {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
+    (hmon : IsMonicOfDegree (toPolyZ f) N) (hirr : Irreducible (toPolyZ f)) :
+    recombine f n facs = [] := by
+  by_contra hne
+  exact recombine_imp_not_irreducible hmon hne hirr
+
+/-- **★ The proven soundness keystone, packaged.** A passing `ℤ`-trial-division
+(`dividesExactly f g dg = true`) yields a *genuine* factorization `toPolyZ f = toPoly g * toPoly q`
+over `ℤ` — so the recombination **never accepts a false factor**. This is the abstract guarantee
+behind the whole decider: a `true` verdict can only err by *missing* a factor, never by inventing
+one; a `false` verdict (from the recombination branch, on monic degree-`N` input) is a *sound* proof
+of reducibility (`recombine_imp_not_irreducible`). The remaining gap to a full
+`true ⟹ Irreducible` theorem is recombination **completeness** (every `ℤ`-factor surfaces as a
+subset-product of the lifted factors — the deep Zassenhaus correctness), which is
+`native_decide`-validated on the witnesses. -/
+theorem irreducibleZassenhaus_sound_scope (f g : List ℤ) (dg : ℕ)
+    (h : dividesExactly f g dg = true) :
+    toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1 :=
+  dividesExactly_dvd h
+
 /-! ## ★★ The headline: the complete decider where the mod-`p` test provably fails
 
 The milestone of the whole Zassenhaus campaign. `irreducibleByModP` returns `false` for `x⁴ + 1` at
@@ -699,5 +808,17 @@ example : Irreducible (toPolyZ ([1, 0, 0, 0] ++ [1])) ∧
 example : ∀ (f g : List ℤ) (dg : ℕ), dividesExactly f g dg = true →
     toPolyZ f = toPoly g * toPoly (divmodByMonic f g dg).1 :=
   fun _ _ _ h => dividesExactly_dvd h
+
+-- the PROVEN reducibility-soundness: recombine non-empty ⟹ ¬ Irreducible (monic degree-N input).
+example {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
+    (hmon : IsMonicOfDegree (toPolyZ f) N) (hne : recombine f n facs ≠ []) :
+    ¬ Irreducible (toPolyZ f) :=
+  recombine_imp_not_irreducible hmon hne
+
+-- the PROVEN completeness contrapositive: Irreducible ⟹ recombine finds no proper factor.
+example {f : List ℤ} {n : ℤ} {facs : List (List ℤ)} {N : ℕ}
+    (hmon : IsMonicOfDegree (toPolyZ f) N) (hirr : Irreducible (toPolyZ f)) :
+    recombine f n facs = [] :=
+  irreducible_imp_recombine_nil hmon hirr
 
 end DeepWiki.SymbolicIntegration
