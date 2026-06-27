@@ -60,6 +60,11 @@ import Sources.Doi_10_1007_b138171.Liouville
 import Sources.Doi_10_1007_978_3_030_98767_1.Source
 import Sources.Doi_10_1007_978_3_030_98767_1.Rosenlicht
 
+-- Kaltofen "The Algebraic Theory of Integration" (draft lecture notes, no DOI; Thm 3.2 Weak Liouville
+-- Theorem + Lemmas 3.1a/3.1b degree lemmas)
+import Sources.Kaltofen_AlgebraicIntegration.Source
+import Sources.Kaltofen_AlgebraicIntegration.WeakLiouville
+
 -- Trager 1984 thesis (algebraic-function integration; the algebraic companion to Bronstein above)
 import Sources.Hdl_1721_1_15391.Source
 import Sources.Hdl_1721_1_15391.Chapter2
