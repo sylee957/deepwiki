@@ -823,3 +823,30 @@ exact division — the source of EDF multiply-back soundness; whether it is a *p
 on `a` being a "good" shift (the sweep below tries successive `a`). -/
 def edfSplitOne (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (a : ZMod p) : List (ZMod p) :=
   gcdByMonic f (edfSplitPoly p d f (lengthTrim f - 1) a)
+
+/-! ## The deterministic shift sweep
+
+`edfBlock f d fuel a` splits a DDF degree-`d` block `f` into its degree-`d` irreducible factors by
+sweeping the shift `a = 0, 1, 2, …` deterministically (Lean has no randomness). At each step it
+computes `g = edfSplitOne f d a`; if `g` is a **proper** factor (`1 < lengthTrim g < lengthTrim f`)
+it monicizes `g`, divides it out exactly (`cof = f / gm`), and recurses on **both** `gm` and `cof`
+with the next shift; otherwise it advances `a` and retries. The recursion stops once `f` has degree
+`≤ d` (a single degree-`d` factor, `lengthTrim f ≤ d + 1`) or fuel runs out. Returns the list of
+factor coefficient-lists. Fuel decreases by one on every recursive call (so this is a structural
+recursion); the multiply-back invariant holds at each node regardless of fuel (Task 5). -/
+
+/-- The deterministic Cantor–Zassenhaus shift sweep for a DDF degree-`d` block. Splits `f` until
+every factor has degree `≤ d`, sweeping the shift `a` and recursing on both halves of each proper
+split. Fueled by the recursion budget (decreases by one per call). -/
+def edfBlock (p d : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List (List (ZMod p))
+  | 0, _, f => [f]
+  | fuel + 1, a, f =>
+    if lengthTrim f ≤ d + 1 then [f]
+    else
+      let g := edfSplitOne p d f (a : ZMod p)
+      if 1 < lengthTrim g ∧ lengthTrim g < lengthTrim f then
+        let gm := monicizeL g
+        let cof := (divmodByMonic f gm (lengthTrim g - 1)).1
+        edfBlock p d fuel (a + 1) gm ++ edfBlock p d fuel (a + 1) cof
+      else
+        edfBlock p d fuel (a + 1) f
