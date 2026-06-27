@@ -251,4 +251,52 @@ theorem cRdeBoundDegreeG_eq_abstract (Dt : CPolyG α) (fuel : ℕ) (a b c : CPol
 
 end Bridge
 
+/-! ## ★ The computable degree bound `cdegG q ≤ cRdeBoundDegreeG`, modulo the cancellation residual
+
+Assembling the abstract bound with the bridge: a `CPolyG`-level solution `q` of the §6.3-reduced
+`a·Dq + b·q = c` (`IsReducedRdeSol`) has `cdegG q ≤ cRdeBoundDegreeG …`, discharging the two
+strict-domination configurations unconditionally and reducing exactly to the deep §6.3 cancellation
+residual. The residual domain `toPolyG a = 0 ∨ RdeIsBalanced …` is the precise complement of the clean
+cases: the genuine `λ`-cancellation (`RdeIsBalanced`, where the leading terms cancel and `cRdeBoundDegreeG`
+omits the `λ` term) together with the degenerate `a = 0` (where the equation collapses to `b·q = c` and the
+nonlinear branch is vacuous). This is exactly `RischDEInnerCompleteness.hbound`'s shape. -/
+
+section ComputableBound
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **★ The §6.3 degree bound at the `CPolyG` layer, modulo the cancellation residual**
+(`cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol`): any solution `q` of the §6.3-reduced
+`a·Dq + b·q = c` (`IsReducedRdeSol Dt a b c q`, with `D = implicitDeriv (toPolyG Dt)`) has
+`cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c`, **provided** the residual `hres` discharges the
+cancellation-prone configurations `toPolyG a = 0 ∨ RdeIsBalanced …`. The two strict-domination
+configurations (`toPolyG a ≠ 0` with `b·q` or nonlinear `a·Dq` strictly dominating) are discharged
+unconditionally via `natDegree_le_rdeBoundDegreeAbstract_of_balanced` and the bridge; `q = 0` is trivial.
+This is `RischDEInnerCompleteness.hbound` modulo the precisely isolated deep §6.3 residual (the omitted `λ`
+cancellation term + the degenerate `a = 0`). -/
+theorem cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (fuel : ℕ) (a b c q : CPolyG α)
+    (hsol : IsReducedRdeSol Dt a b c q)
+    (hres : (toPolyG a = 0 ∨
+        RdeIsBalanced (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c)) →
+      cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c) :
+    cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c := by
+  haveI : CharZero (CFieldSpec.K α) := algebraRat.charZero (R := CFieldSpec.K α)
+  -- the equation, read abstractly over `(CFieldSpec.K α)[X]`
+  have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+      + toPolyG b * toPolyG q = toPolyG c := hsol
+  rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
+  by_cases hq0 : toPolyG q = 0
+  · rw [hq0]; simp
+  · by_cases ha0 : toPolyG a = 0
+    · -- degenerate `a = 0`: routed to the residual
+      have := hres (Or.inl ha0)
+      rwa [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract] at this
+    · -- `a ≠ 0`: the abstract bound, balanced → residual
+      refine natDegree_le_rdeBoundDegreeAbstract_of_balanced hq0 ha0 heq (fun hbal => ?_)
+      have := hres (Or.inr hbal)
+      rwa [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract] at this
+
+end ComputableBound
+
 end DeepWiki.SymbolicIntegration
