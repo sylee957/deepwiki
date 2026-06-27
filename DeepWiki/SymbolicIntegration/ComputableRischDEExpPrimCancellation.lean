@@ -423,6 +423,27 @@ example {K : Type*} [Field K] [CharZero K] [Differential K] (v a b c : K[X]) {N 
     RdeBoundExpPrimCancellation v a b c N :=
   rdeBoundExpPrimCancellation_of_logDerivativeBound v a b c hbound
 
+-- ★ The full chain is explicit: the locked `RdeBoundCancellationResidualWithLambda` (the `λ`-augmented
+-- `hbound`) follows from per-config `λ`-witnesses (nonlinear `λ`-recursion ✓) AND per-config parametric
+-- log-derivative bounds (the exp/primitive oracle of this file) — both fed into the cancellation file's
+-- assembly `rdeBoundCancellationResidualWithLambda_of_expPrim`. No extra residual remains in the chain.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    [CRischField α] [CharZero (CFieldSpec.K α)] (Dt fnum fden gnum gden : CPolyG α) {N : ℕ}
+    (hlam : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      (N : CFieldSpec.K α)
+          * (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1).leadingCoeff
+          * (toPolyG Dt).leadingCoeff
+          + (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1).leadingCoeff = 0)
+    (horacle : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ExpPrimLogDerivativeBound (toPolyG Dt)
+        (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
+        (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1) N) :
+    RdeBoundCancellationResidualWithLambda Dt fnum fden gnum gden N :=
+  rdeBoundCancellationResidualWithLambda_of_expPrim Dt fnum fden gnum gden hlam
+    (fun a0 b0 c0 h0 hnorm => rdeBoundExpPrimCancellation_cpolyG _ _ _ _ (horacle a0 b0 c0 h0 hnorm))
+
 /-! ### Final verdict (stated precisely)
 
 **Is the exp/primitive (`δ ≤ 1`) cancellation degree bound proven?** **Reduced to a single, precisely named
