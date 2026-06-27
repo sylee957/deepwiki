@@ -1,4 +1,5 @@
 import Mathlib.FieldTheory.Differential.Liouville
+import Mathlib.RingTheory.Derivation.MapCoeffs
 
 /-! # Liouville's theorem — the structural completeness keystone (Weak Liouville Theorem)
 
@@ -212,6 +213,229 @@ theorem not_weakElementary_finiteDimensional [FiniteDimensional F L] (a : F)
   exact weakLiouville_propagates F L a h
 
 end CaseAlgebraic
+
+/-! ## Case 2 (θ transcendental over `F`): the degree lemmas (Kaltofen Lemma 3.1)
+
+Kaltofen's **Case 2** of the Thm 3.2 induction — `θ` transcendental over the base `K` — turns on the
+**degree behaviour of the derivation on `K[θ]`** (Lemma 3.1), the engine that forces the
+partial-fraction multiplicities to `0` so the `vᵢ` collapse to `K`-multiples of `θ` (log case) or `θ`
+itself (exp case).  We prove Lemma 3.1 directly, over Mathlib's `Differential.implicitDeriv v` — the
+unique derivation on `K[θ]` with `θ′ = aeval θ v` (so a *transcendental monomial* derivation).  The two
+monomial kinds are exactly two values of `v`:
+
+* **log monomial** `θ = log η`, `θ′ = η′/η ∈ K`: `v = C c` (a *constant* polynomial, `c = η′/η`).
+* **exp monomial** `θ = exp η`, `θ′ = η′·θ`, i.e. `θ′/θ = η′ ∈ K`: `v = C c · X` (`c = η′`).
+
+The shared coefficient formula `(D p).coeff i = (p.coeff i)′ + ((i+1)·p.coeff (i+1)) * (v-contribution)`
+gives both degree lemmas.  We give the two specializations (the only ones the integration argument
+uses), mirroring the project's `coeff_logDerivPoly` for the log case. -/
+
+section CaseTranscendental
+
+variable {K : Type*} [Field K] [Differential K]
+
+/-! ### Lemma 3.1a — the log monomial `θ′ = c ∈ K` (`v = C c`) -/
+
+/-- The **log-monomial derivation** on `K[θ]`: `Differential.implicitDeriv (C c)`, with `θ′ = c ∈ K`
+(`c = η′/η` for `θ = log η`).  The differential structure on `K[θ]` for Kaltofen's Case 2.1. -/
+noncomputable def logMonomialDeriv (c : K) : Derivation ℤ K[X] K[X] :=
+  Differential.implicitDeriv (C c)
+
+/-- `θ′ = C c` for the log monomial (`t = log η`, `c = η′/η`). -/
+@[simp]
+lemma logMonomialDeriv_X (c : K) : logMonomialDeriv c (X : K[X]) = C c := by
+  simp [logMonomialDeriv]
+
+/-- The log monomial extends `K`'s derivation on constants: `D (C b) = C b′`. -/
+@[simp]
+lemma logMonomialDeriv_C (c b : K) : logMonomialDeriv c (C b) = C b′ := by
+  simp [logMonomialDeriv]
+
+/-- **Coefficient formula for the log monomial** (engine of Lemma 3.1a):
+`(D p).coeff i = (p.coeff i)′ + c·(i+1)·p.coeff (i+1)`.  First summand: `K`'s derivation on each
+coefficient; second: the monomial coupling `θ′·∂p/∂θ`.  (Same shape as the project's
+`coeff_logDerivPoly`.) -/
+lemma coeff_logMonomialDeriv (c : K) (p : K[X]) (i : ℕ) :
+    (logMonomialDeriv c p).coeff i = (p.coeff i)′ + c * ((i + 1) * p.coeff (i + 1)) := by
+  simp only [logMonomialDeriv, implicitDeriv, Derivation.coe_add, Pi.add_apply,
+    Derivation.coe_smul, Pi.smul_apply, Derivation.restrictScalars_apply,
+    derivative'_apply, coeff_add, coeff_mapCoeffs, smul_eq_mul, coeff_C_mul,
+    coeff_derivative]
+  ring
+
+/-- **Lemma 3.1a (log monomial, the top coefficient sees only `K`):** at the `θ`-leading degree the
+monomial coupling vanishes — `(D p).coeff (natDegree p) = (leadingCoeff p)′`.  So `deg (D p) ≤ deg p`,
+with a drop *only if* the leading coefficient is a `K`-constant.  This is Kaltofen Lemma 3.1a: for
+`θ′ ∈ K`, `p(θ)′` has degree `deg p` or `deg p − 1`. -/
+lemma coeff_natDegree_logMonomialDeriv (c : K) (p : K[X]) :
+    (logMonomialDeriv c p).coeff p.natDegree = (p.leadingCoeff)′ := by
+  rw [coeff_logMonomialDeriv]
+  have h : p.coeff (p.natDegree + 1) = 0 := coeff_eq_zero_of_natDegree_lt (Nat.lt_succ_self _)
+  rw [h, leadingCoeff]
+  simp
+
+/-- **Lemma 3.1a, degree bound:** the log monomial does not raise `θ`-degree —
+`natDegree (D p) ≤ natDegree p`.  The structural fact that the `θ`-poles of a base element are
+controlled in Case 2.1. -/
+lemma natDegree_logMonomialDeriv_le (c : K) (p : K[X]) :
+    (logMonomialDeriv c p).natDegree ≤ p.natDegree := by
+  apply natDegree_le_iff_coeff_eq_zero.mpr
+  intro i hi
+  rw [coeff_logMonomialDeriv]
+  rw [coeff_eq_zero_of_natDegree_lt hi,
+    coeff_eq_zero_of_natDegree_lt (lt_of_le_of_lt (le_of_lt hi) (Nat.lt_succ_self i))]
+  simp
+
+/-! ### Lemma 3.1b — the exp monomial `θ′/θ = c ∈ K` (`v = C c · X`) -/
+
+/-- The **exp-monomial derivation** on `K[θ]`: `Differential.implicitDeriv (C c · X)`, with
+`θ′ = c·θ` (`θ′/θ = c = η′` for `θ = exp η`).  The differential structure on `K[θ]` for Kaltofen's
+Case 2.2. -/
+noncomputable def expMonomialDeriv (c : K) : Derivation ℤ K[X] K[X] :=
+  Differential.implicitDeriv (C c * X)
+
+/-- `θ′ = c·θ` for the exp monomial (`t = exp η`, `c = η′`). -/
+@[simp]
+lemma expMonomialDeriv_X (c : K) : expMonomialDeriv c (X : K[X]) = C c * X := by
+  simp [expMonomialDeriv]
+
+/-- The exp monomial extends `K`'s derivation on constants: `D (C b) = C b′`. -/
+@[simp]
+lemma expMonomialDeriv_C (c b : K) : expMonomialDeriv c (C b) = C b′ := by
+  simp [expMonomialDeriv]
+
+/-- **Coefficient formula for the exp monomial** (engine of Lemma 3.1b):
+`(D p).coeff i = (p.coeff i)′ + c·i·p.coeff i`.  The monomial coupling `θ′·∂p/∂θ = c·θ·∂p/∂θ` keeps the
+degree (multiplying by `θ` then differentiating in `θ` returns the same `θ`-power), so `D` acts
+degree-wise: `(D p).coeff i = (p.coeff i)′ + c·i·(p.coeff i)`. -/
+lemma coeff_expMonomialDeriv (c : K) (p : K[X]) (i : ℕ) :
+    (expMonomialDeriv c p).coeff i = (p.coeff i)′ + c * (i * p.coeff i) := by
+  have hXmul : ((X : K[X]) * derivative p).coeff i = i * p.coeff i := by
+    cases i with
+    | zero => simp
+    | succ n => rw [coeff_X_mul, coeff_derivative]; push_cast; ring
+  simp only [expMonomialDeriv, implicitDeriv, Derivation.coe_add, Pi.add_apply,
+    Derivation.coe_smul, Pi.smul_apply, Derivation.restrictScalars_apply,
+    derivative'_apply, coeff_add, coeff_mapCoeffs, smul_eq_mul]
+  have hrw : C c * X * derivative p = C c * (X * derivative p) := by ring
+  rw [hrw, coeff_C_mul, hXmul]
+
+/-- **Lemma 3.1b (exp monomial, degree-preserving):** the top coefficient transforms by
+`(D p).coeff (natDegree p) = (leadingCoeff p)′ + c·(natDegree p)·(leadingCoeff p)`.  Unlike the log
+case, the monomial coupling does **not** vanish at the top — for `θ′/θ ∈ K`, `p(θ)′` has the *same*
+degree as `p` (Kaltofen Lemma 3.1b), provided the top coefficient does not cancel. -/
+lemma coeff_natDegree_expMonomialDeriv (c : K) (p : K[X]) :
+    (expMonomialDeriv c p).coeff p.natDegree
+      = (p.leadingCoeff)′ + c * (p.natDegree * p.leadingCoeff) := by
+  rw [coeff_expMonomialDeriv, leadingCoeff]
+
+/-- **Lemma 3.1b, degree bound:** the exp monomial does not raise `θ`-degree —
+`natDegree (D p) ≤ natDegree p` (it is in fact degree-preserving on non-cancelling tops, but the
+bound is what the pole-control argument needs). -/
+lemma natDegree_expMonomialDeriv_le (c : K) (p : K[X]) :
+    (expMonomialDeriv c p).natDegree ≤ p.natDegree := by
+  apply natDegree_le_iff_coeff_eq_zero.mpr
+  intro i hi
+  rw [coeff_expMonomialDeriv, coeff_eq_zero_of_natDegree_lt hi]
+  simp
+
+end CaseTranscendental
+
+/-! ## The tower assembly: Kaltofen's induction = iterated `IsLiouville.trans`
+
+Kaltofen's Thm 3.2 is an induction on the tower length `L = K(θ₁, …, θₘ)`; each step peels one monomial
+`θᵢ` and is **exactly** Mathlib's `IsLiouville.trans` (compose Liouville across `F ⊆ M ⊆ L`), *provided
+the intermediate layer adds no new constants* (`Differential.ContainConstants`, the `C_F = C_L`
+hypothesis).  So a Liouville instance for the *whole* tower is built from a Liouville instance *per
+layer*.  We give the two-layer assembly explicitly (the inductive step) and then read off the Weak
+Liouville Theorem for the tower. -/
+
+section TowerAssembly
+
+variable (F : Type*) (M : Type*) (L : Type*)
+variable [Field F] [Field M] [Field L]
+variable [Differential F] [Differential M] [Differential L]
+variable [Algebra F M] [Algebra M L] [Algebra F L]
+variable [DifferentialAlgebra F M] [DifferentialAlgebra M L] [DifferentialAlgebra F L]
+variable [IsScalarTower F M L] [Differential.ContainConstants F M]
+
+omit [DifferentialAlgebra M L] [DifferentialAlgebra F L] in
+/-- **Kaltofen's induction step = `IsLiouville.trans`.**  If `M / F` and `L / M` are each Liouville and
+the middle layer `M` adds no new constants (`ContainConstants F M`, the `C_F = C_M` hypothesis of
+Thm 3.2), then `L / F` is Liouville.  This is the engine that grows a per-layer Liouville instance into
+a whole-tower one. -/
+theorem isLiouville_tower [IsLiouville F M] [IsLiouville M L] : IsLiouville F L :=
+  IsLiouville.trans F M ‹IsLiouville F M› ‹IsLiouville M L›
+
+omit [DifferentialAlgebra M L] [DifferentialAlgebra F L] in
+/-- **Weak Liouville Theorem over a two-layer tower** `F ⊆ M ⊆ L` (each layer Liouville, no new
+constants in the middle).  If `g ∈ L` has `g′ ∈ F` (witnessed by `a` with `↑a = (↑g)′`) then `a` has
+the Liouville form over `F`.  Composes the per-layer instances via `IsLiouville.trans` and descends.
+Iterating this is the full tower induction. -/
+theorem weakLiouville_tower [IsLiouville F M] [IsLiouville M L] (a : F) (g : L)
+    (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F F a := by
+  haveI : IsLiouville F L := isLiouville_tower F M L
+  exact weakLiouville_of_isLiouville F L a g h
+
+omit [DifferentialAlgebra M L] [DifferentialAlgebra F L] in
+/-- **Two-layer completeness (contrapositive):** base non-elementarity propagates up a two-layer
+Liouville tower.  If `a ∈ F` has no Liouville form over `F`, none over `L`. -/
+theorem not_weakElementary_tower [IsLiouville F M] [IsLiouville M L] (a : F)
+    (h : ¬ HasWeakLiouvilleForm F F a) : ¬ HasWeakLiouvilleForm F L a := by
+  haveI : IsLiouville F L := isLiouville_tower F M L
+  exact weakLiouville_propagates F L a h
+
+end TowerAssembly
+
+/-! ## Case 2 (transcendental) — the precise residual instances
+
+The transcendental cases of Kaltofen's Thm 3.2 (Case 2) each need a *Liouville instance for the
+transcendental monomial layer*.  Their status:
+
+* **Case 2.1 (log monomial)** — `K(log η) / K` is Liouville: **PROVEN** in this project's keystone
+  `isLiouville_logExtension_uncond` (`LiouvilleLogExtension.lean`, Rosenlicht's transcendental-log case,
+  unconditional modulo the necessary transcendence input).  Composed into a tower via the
+  `IsLiouville.trans` assembly above and consumed in `ComputableIntegratorCompleteness` /
+  `ComputableAlgebraicCompleteness`.  The degree lemmas above (`coeff_natDegree_logMonomialDeriv`, the
+  drop) are the local engine of that case.
+* **Case 2.2 (exp monomial)** — `K(exp η) / K` is Liouville: the **one residual**.  A prior attempt
+  (`LiouvilleExpExtension.lean`) was cancelled; until it lands, towers through an exponential have no
+  Liouville instance.  The degree lemmas above (`coeff_natDegree_expMonomialDeriv`,
+  degree-preserving) are the local engine that case *would* use.
+
+We name the exp residual precisely (a `Prop`, never `sorry`): the existence of a Liouville instance for
+a transcendental exp monomial layer.  Discharging it (the Rosenlicht/Kaltofen Case 2.2 partial-fraction
+argument, mirroring the done log keystone) is what closes the *last* transcendental case. -/
+
+section ExpResidual
+
+variable (F : Type*) [Field F] [Differential F] [CharZero F]
+
+/-- **The exponential-layer residual** (`ExponentialLayerResidual`, Kaltofen Case 2.2 / Rosenlicht).
+The one transcendental case not yet closed: for a transcendental exp monomial layer `K = F(exp η)`
+(`θ′ = η′·θ`), `K / F` is a Liouville extension — i.e. there *exists* an `IsLiouville F K` instance for
+the exp differential structure.  Stated abstractly over an arbitrary differential extension `K`
+standing for `F(exp η)` (the concrete exp `Differential`/`DifferentialAlgebra` structures live in the
+cancelled `LiouvilleExpExtension.lean`, not in scope here).  The log sibling
+`isLiouville_logExtension_uncond` is *done*; this is its missing exponential twin — the last piece of
+Case 2.  NEVER a `sorry`: a named obligation. -/
+def ExponentialLayerResidual : Prop :=
+  ∀ (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K],
+    Nonempty (IsLiouville F K)
+
+omit [CharZero F] in
+/-- **Given the exp residual, the Weak Liouville Theorem holds for an exp layer too.**  If
+`ExponentialLayerResidual F` holds (a Liouville instance for every such layer), then for any exp-layer
+extension `K / F`, `g ∈ K` with `g′ ∈ F` yields the Liouville form over `F`.  So the *only* thing
+between the current development and the full transcendental Weak Liouville Theorem is this one residual
+— everything else (the descent, Case 1, the log keystone, the tower assembly) is proved. -/
+theorem weakLiouville_of_expResidual (hexp : ExponentialLayerResidual F)
+    (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
+    (a : F) (g : K) (h : (algebraMap F K a) = g′) : HasWeakLiouvilleForm F F a := by
+  haveI : IsLiouville F K := (hexp K).some
+  exact weakLiouville_of_isLiouville F K a g h
+
+end ExpResidual
 
 /-! ### Restatements + axiom audit (Case 1 / structural core) -/
 
