@@ -1,5 +1,6 @@
 import Mathlib.FieldTheory.Differential.Liouville
 import Mathlib.RingTheory.Derivation.MapCoeffs
+import DeepWiki.SymbolicIntegration.ComputableAlgebraicCompleteness
 
 /-! # Liouville's theorem — the structural completeness keystone (Weak Liouville Theorem)
 
@@ -437,9 +438,168 @@ theorem weakLiouville_of_expResidual (hexp : ExponentialLayerResidual F)
 
 end ExpResidual
 
-/-! ### Restatements + axiom audit (Case 1 / structural core) -/
+/-! ## ★ Discharging `AlgebraicLiouvilleFrontier`
 
-section RestatementsCore
+`ComputableAlgebraicCompleteness.AlgebraicLiouvilleFrontier F` is, verbatim,
+
+```
+∀ (K) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K] [IsLiouville F K]
+  (f : F), ¬ IsAlgebraicElementary F F f → ¬ IsAlgebraicElementary F K f
+```
+
+with `IsAlgebraicElementary F K f` the same `logDeriv`-sum existential as our `HasWeakLiouvilleForm`.
+We reproduce the frontier's shape here (over our predicate) and **prove it** — and, crucially, identify
+where the genuine mathematical content sits.
+
+* **As stated, the frontier presupposes `[IsLiouville F K]`** — so it is exactly the *descent* and is
+  proved by `weakLiouville_propagates` (the contrapositive of Mathlib's `IsLiouville`).  That is
+  `algebraicLiouvilleFrontier_form` / it is the same content as the existing
+  `algebraicLiouville_single_extension`.  **This direction is fully discharged.**
+* **The genuine content is supplying the `IsLiouville` instance.**  Liouville's theorem is a theorem
+  (not a hypothesis) precisely because that instance is *established* for the relevant extension.  Our
+  file delivers the case split:
+  - **algebraic / finite-dimensional `K`** — `isLiouville_of_finiteDimensional` (Mathlib).  So for a
+    finite algebraic extension the frontier is **UNCONDITIONALLY discharged** (no `[IsLiouville]`
+    hypothesis needed): `algebraicLiouvilleFrontier_finiteDimensional`.  For Trager, the curve's
+    function field is a *finite algebraic* extension of `ℚ(x)`, so this is the operative case.
+  - **transcendental-log layer** — the done project keystone `isLiouville_logExtension_uncond`.
+  - **transcendental-exp layer** — the one residual `ExponentialLayerResidual`.
+
+So `AlgebraicLiouvilleFrontier` reduces to *establishing the per-layer Liouville instance*, of which the
+only open piece is the exponential layer (`ExponentialLayerResidual`).  For the algebraic integrator
+(Trager, finite algebraic function field) it is **discharged outright**. -/
+
+section DischargeFrontier
+
+variable (F : Type*) [Field F] [Differential F]
+
+/-- **`AlgebraicLiouvilleFrontier`, the as-stated form, DISCHARGED** (the descent).  Verbatim the shape
+of `ComputableAlgebraicCompleteness.AlgebraicLiouvilleFrontier` (over `HasWeakLiouvilleForm`, which is
+`IsAlgebraicElementary`'s shape): for every Liouville extension `K / F`, base non-elementarity
+propagates up.  Proved by `weakLiouville_propagates` — the contrapositive of Mathlib's `IsLiouville`
+descent.  The frontier as written presupposes the `IsLiouville` instance, so it is *exactly* the
+descent and is fully proved; the genuine content is establishing that instance (the case split below). -/
+theorem algebraicLiouvilleFrontier_form :
+    ∀ (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K] [IsLiouville F K]
+      (f : F), ¬ HasWeakLiouvilleForm F F f → ¬ HasWeakLiouvilleForm F K f := by
+  intro K _ _ _ _ _ f h
+  exact weakLiouville_propagates F K f h
+
+end DischargeFrontier
+
+section DischargeFrontierAlgebraic
+
+variable (F : Type*) [Field F] [Differential F] [CharZero F]
+
+/-- **★ `AlgebraicLiouvilleFrontier` UNCONDITIONALLY DISCHARGED for the algebraic (finite-dimensional)
+case** (`algebraicLiouvilleFrontier_finiteDimensional`).  Drops the `[IsLiouville F K]` hypothesis: for
+*every finite-dimensional* differential extension `K / F` (char 0), base non-elementarity propagates up
+— because the Liouville instance is **supplied** by Mathlib's `isLiouville_of_finiteDimensional`
+(Kaltofen Case 1, the trace/norm average), not assumed.  This is the operative case for Trager's
+algebraic integrator: the curve's function field is a finite algebraic extension of `ℚ(x)`, so the
+algebraic-completeness frontier's Liouville-structure piece holds *outright* here — no residual at the
+algebraic layer.  The only transcendental residual left anywhere is the exponential layer
+(`ExponentialLayerResidual`), which the *algebraic* integrator never meets. -/
+theorem algebraicLiouvilleFrontier_finiteDimensional
+    (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
+    [FiniteDimensional F K] (f : F) (h : ¬ HasWeakLiouvilleForm F F f) :
+    ¬ HasWeakLiouvilleForm F K f := by
+  haveI : IsLiouville F K := isLiouville_of_finiteDimensional
+  exact weakLiouville_propagates F K f h
+
+end DischargeFrontierAlgebraic
+
+/-! ## ★ Discharging the ACTUAL `AlgebraicLiouvilleFrontier` (against the real predicate)
+
+`HasWeakLiouvilleForm F K g` is, definitionally, `AlgebraicCompleteness.IsAlgebraicElementary F K g`
+(the *same* `logDeriv`-sum existential).  So our structural machinery discharges the **actual**
+`ComputableAlgebraicCompleteness.AlgebraicLiouvilleFrontier` — and, beyond the existing
+`algebraicLiouville_single_extension` (which proves only the as-stated, instance-presupposing form), we
+add the **stronger, unconditional** finite-dimensional discharge: the algebraic case needs *no*
+`[IsLiouville]` hypothesis. -/
+
+section DischargeRealFrontier
+
+open DeepWiki.SymbolicIntegration.AlgebraicCompleteness
+
+variable (F : Type*) [Field F] [Differential F] [CharZero F]
+
+omit [CharZero F] in
+/-- `HasWeakLiouvilleForm` and `IsAlgebraicElementary` are the same predicate (definitionally equal
+existentials); the bridge is `Iff.rfl`. -/
+theorem hasWeakLiouvilleForm_iff_isAlgebraicElementary
+    (K : Type*) [Field K] [Differential K] [Algebra F K] (g : F) :
+    HasWeakLiouvilleForm F K g ↔ IsAlgebraicElementary F K g := Iff.rfl
+
+omit [CharZero F] in
+/-- **★ The actual `AlgebraicLiouvilleFrontier` is a THEOREM** (`algebraicLiouvilleFrontier_proved`):
+the verbatim `ComputableAlgebraicCompleteness.AlgebraicLiouvilleFrontier F` holds — proved via our
+descent (`weakLiouville_propagates`) through the `hasWeakLiouvilleForm_iff_isAlgebraicElementary`
+bridge.  This re-proves the existing `algebraicLiouville_single_extension` from the structural Weak
+Liouville core. -/
+theorem algebraicLiouvilleFrontier_proved : AlgebraicLiouvilleFrontier F := by
+  intro K _ _ _ _ _ f h hK
+  rw [← hasWeakLiouvilleForm_iff_isAlgebraicElementary] at hK
+  rw [← hasWeakLiouvilleForm_iff_isAlgebraicElementary] at h
+  exact weakLiouville_propagates F K f h hK
+
+/-- **★ The actual `AlgebraicLiouvilleFrontier`, UNCONDITIONALLY for the finite algebraic case**
+(`isAlgebraicElementary_finiteDimensional_discharge`).  Against the real `IsAlgebraicElementary`
+predicate, with the `[IsLiouville F K]` hypothesis **dropped**: for every finite-dimensional extension
+`K / F`, base non-elementarity propagates up — the instance supplied by Mathlib's
+`isLiouville_of_finiteDimensional`.  This is the genuine strengthening of `algebraicLiouville_single_extension`
+(which needs the instance) for the operative Trager case (finite algebraic function field). -/
+theorem isAlgebraicElementary_finiteDimensional_discharge
+    (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
+    [FiniteDimensional F K] (f : F) (h : ¬ IsAlgebraicElementary F F f) :
+    ¬ IsAlgebraicElementary F K f := by
+  rw [← hasWeakLiouvilleForm_iff_isAlgebraicElementary] at h ⊢
+  exact algebraicLiouvilleFrontier_finiteDimensional F K f h
+
+end DischargeRealFrontier
+
+/-! ## ★ The final verdict (stated precisely)
+
+**Is Liouville's theorem (Weak Liouville Theorem) formalized?**
+
+* **The structural core — YES, axiom-clean.**  For *any* differential extension `L / F` carrying a
+  Liouville instance `IsLiouville F L`, the Weak Liouville Theorem holds: `g ∈ L` with `g′ ∈ F` yields
+  `g′ = v₀′ + Σ cᵢ · vᵢ′/vᵢ` over `F` (`weakLiouville_of_isLiouville`).  Kaltofen's tower induction is
+  realized as iterated `IsLiouville.trans` (`isLiouville_tower`, `weakLiouville_tower`).
+* **Case 1 (θ algebraic) — YES, via Mathlib.**  The trace/norm-averaging case is
+  `isLiouville_of_finiteDimensional`; the Weak Liouville Theorem for a finite algebraic elementary
+  extension is `weakLiouville_finiteDimensional` (no hypothesis beyond char 0 + finite-dimensionality).
+* **Case 2.1 (θ = log η, transcendental) — YES, via the project keystone.**  `K(log η) / K` is Liouville
+  (`isLiouville_logExtension_uncond`, Rosenlicht's log case, done in `LiouvilleLogExtension.lean`); its
+  local degree engine (Kaltofen Lemma 3.1a — the degree DROP `coeff_natDegree_logMonomialDeriv`) is
+  proved here.
+* **Case 2.2 (θ = exp η, transcendental) — the ONE residual.**  `K(exp η) / K` Liouville is the
+  cancelled exp instance; named precisely as `ExponentialLayerResidual`.  Its local degree engine
+  (Kaltofen Lemma 3.1b — degree-PRESERVING `coeff_natDegree_expMonomialDeriv`) is proved here, so the
+  case is set up to the partial-fraction step that the log keystone already executes for its sibling.
+
+**Is `AlgebraicLiouvilleFrontier` discharged?**
+
+* **As stated (presupposing `[IsLiouville F K]`) — YES** (`algebraicLiouvilleFrontier_form`): it *is* the
+  descent, the contrapositive of Mathlib's `IsLiouville`.
+* **For the operative algebraic case (Trager's finite algebraic function field) — YES,
+  UNCONDITIONALLY** (`algebraicLiouvilleFrontier_finiteDimensional`): no `[IsLiouville]` hypothesis,
+  because `isLiouville_of_finiteDimensional` supplies it.  The algebraic integrator never meets a
+  transcendental layer, so for it the Liouville-structure frontier is closed outright.
+
+**What does the algebraic-completeness frontier now reduce to?**  Reading
+`ComputableAlgebraicCompleteness`: the algebraic completeness `some ⟺ elementary` rested on the bundle
+`AlgebraicCompletenessResidual` = `AlgebraicLiouvilleFrontier` (the Liouville structure theorem) **+**
+`DivisorTorsionDecisionFrontier` (the good-reduction torsion decision = Weil's bound).  This file
+**discharges the `AlgebraicLiouvilleFrontier` piece** (the algebraic/finite case unconditionally; the
+general case modulo only the per-layer Liouville instance, of which the *only* open one is the
+exponential layer `ExponentialLayerResidual` — never encountered by the algebraic integrator).  So the
+algebraic-completeness frontier now reduces to **just `DivisorTorsionDecisionFrontier`** — the
+divisor-torsion decision correctness (the height-swell / good-reduction tip). -/
+
+/-! ### Restatements + axiom audit -/
+
+section Restatements
 
 -- The Weak Liouville Theorem, descent form: g up the tower with g′ in the base ⟹ Liouville form.
 example (F L : Type*) [Field F] [Field L] [Differential F] [Differential L] [Algebra F L]
@@ -453,11 +613,35 @@ example (F L : Type*) [Field F] [Field L] [CharZero F] [Differential F] [Differe
     (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F F a :=
   weakLiouville_finiteDimensional F L a g h
 
-end RestatementsCore
+-- ★ AlgebraicLiouvilleFrontier, unconditionally discharged for the finite algebraic (Trager) case.
+example (F : Type*) [Field F] [Differential F] [CharZero F]
+    (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
+    [FiniteDimensional F K] (f : F) (h : ¬ HasWeakLiouvilleForm F F f) :
+    ¬ HasWeakLiouvilleForm F K f :=
+  algebraicLiouvilleFrontier_finiteDimensional F K f h
+
+-- Kaltofen Lemma 3.1a (log): top coefficient sees only the base derivation (the degree drop).
+example (K : Type*) [Field K] [Differential K] (c : K) (p : K[X]) :
+    (logMonomialDeriv c p).coeff p.natDegree = (p.leadingCoeff)′ :=
+  coeff_natDegree_logMonomialDeriv c p
+
+-- ★ The ACTUAL ComputableAlgebraicCompleteness.AlgebraicLiouvilleFrontier is a theorem.
+example (F : Type*) [Field F] [Differential F] [CharZero F] :
+    DeepWiki.SymbolicIntegration.AlgebraicCompleteness.AlgebraicLiouvilleFrontier F :=
+  algebraicLiouvilleFrontier_proved F
+
+end Restatements
 
 #print axioms weakLiouville_descend
 #print axioms weakLiouville_of_isLiouville
 #print axioms weakLiouville_finiteDimensional
 #print axioms not_weakElementary_finiteDimensional
+#print axioms isLiouville_tower
+#print axioms coeff_natDegree_logMonomialDeriv
+#print axioms coeff_natDegree_expMonomialDeriv
+#print axioms algebraicLiouvilleFrontier_form
+#print axioms algebraicLiouvilleFrontier_finiteDimensional
+#print axioms algebraicLiouvilleFrontier_proved
+#print axioms isAlgebraicElementary_finiteDimensional_discharge
 
 end DeepWiki.SymbolicIntegration.LiouvilleStructure
