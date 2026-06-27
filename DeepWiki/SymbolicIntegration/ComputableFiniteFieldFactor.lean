@@ -596,3 +596,35 @@ theorem gcdByMonic_dvd_left {R : Type*} [Field R] [DecidableEq R] (f g : List R)
 theorem gcdByMonic_dvd_right {R : Type*} [Field R] [DecidableEq R] (f g : List R) :
     toPoly (gcdByMonic f g) ∣ toPoly g :=
   (gcdByMonicFuel_dvd (g.length + 1) f g (by have := lengthTrim_le_length g; omega)).2
+
+/-! ## The Frobenius power `X^(p^d) mod f`
+
+Modular multiplication `mulModL f df a b := (a * b) mod f` and binary exponentiation `powModL`
+let us compute `X^(p^d) mod f` (`xPowModF`) by repeated squaring of `[0, 1]` (the list of `X`),
+each product reduced mod the **monic** `f`. The reduction `mod f` keeps the intermediate degrees
+bounded, so the values stay small — `native_decide`-able for small `p, d` (keep `p ≤ 7`, `d ≤ 4`:
+`p^d` is the exponent and the squaring count is `log₂(p^d)`). The `mod toPoly f` reading
+(`toPoly (mulModL f df a b) ≡ toPoly a * toPoly b`) follows from the division identity; the full
+`X^(p^d)`-correctness is **not** needed for DDF multiply-back (gcd-divides-first-arg is
+unconditional), only for the per-block degree structure. -/
+
+/-- Modular product over a field: `(a * b) mod f`, with `f` monic of degree `df`. -/
+def mulModL {R : Type*} [Field R] [DecidableEq R] (f : List R) (df : ℕ) (a b : List R) : List R :=
+  modByMonicL (mulL a b) f df
+
+/-- Binary exponentiation `base ^ e mod f` (`f` monic of degree `df`), fueled by the bit length
+of `e`. Squares and conditionally multiplies, reducing mod `f` at each product. -/
+def powModL {R : Type*} [Field R] [DecidableEq R]
+    (f : List R) (df : ℕ) : ℕ → List R → ℕ → List R
+  | 0, _, _ => [1]
+  | fuel + 1, base, e =>
+    if e = 0 then [1]
+    else
+      let half := powModL f df fuel (mulModL f df base base) (e / 2)
+      if e % 2 = 1 then mulModL f df base half else half
+
+/-- The Frobenius power `X^(p^d) mod f` over `𝔽_p`: repeated squaring of `[0, 1]` (the polynomial
+`X`) to the exponent `p ^ d`, reduced mod the monic `f` of degree `df`. Computable; the basis of
+the distinct-degree split `gcd(f, X^(p^d) − X)`. -/
+def xPowModF (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (df : ℕ) : List (ZMod p) :=
+  powModL f df (p ^ d + 1) [0, 1] (p ^ d)
