@@ -710,3 +710,55 @@ def ddfAux (p : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List (�
 `f.length + 1`. -/
 def ddf (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) : List (ℕ × List (ZMod p)) :=
   ddfAux p (f.length + 1) 1 f
+
+/-- **★ DDF multiply-back (recursion).** The blocks of `ddfAux p fuel d f` multiply back to `f`:
+`toPoly (ddfProduct (ddfAux p fuel d f)) = toPoly f`. By induction on `fuel`; the peel step uses
+that the monicized block `gdm` is monic of degree `≥ 1` dividing `f` (so the division is exact,
+`f = gdm * cof`) and the IH `product(rest) = cof`. The key structural soundness of DDF; the trailing
+emit and the no-peel branch are the trivial `product = f` cases. -/
+theorem ddfAux_prod (p : ℕ) [Fact p.Prime] :
+    ∀ (fuel d : ℕ) (f : List (ZMod p)),
+      toPoly (ddfProduct (ddfAux p fuel d f)) = toPoly f := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro d f
+    simp only [ddfAux, ddfProduct, List.foldr_cons, List.foldr_nil, toPoly_mulL, toPoly_cons,
+      toPoly_nil]
+    simp
+  | succ fuel ih =>
+    intro d f
+    rw [ddfAux]
+    simp only
+    split
+    · rename_i hgd
+      -- peel branch
+      set df := lengthTrim f - 1 with hdfdef
+      set sep := subL (xPowModF p d f df) [0, 1] with hsepdef
+      set gd := gcdByMonic f sep with hgddef
+      set gdm := monicizeL gd with hgdmdef
+      set dgd := lengthTrim gd - 1 with hdgddef
+      set cof := (divmodByMonic f gdm dgd).1 with hcofdef
+      -- product = toPoly gdm * toPoly (product of rest)
+      rw [ddfProduct, List.foldr_cons, ← ddfProduct, toPoly_mulL]
+      -- IH: product of rest = cof
+      rw [ih (d + 1) cof]
+      -- now: toPoly gdm * toPoly cof = toPoly f, via exact division
+      have hgdne : lengthTrim gd ≠ 0 := by omega
+      have hgdmmon : IsMonicOfDegree (toPoly gdm) dgd := isMonicOfDegree_monicizeL hgdne
+      -- gdm ∣ f : gd ∣ f and gdm ∣ gd
+      have hgddvd : toPoly gd ∣ toPoly f := gcdByMonic_dvd_left f sep
+      have hgdmdvd : toPoly gdm ∣ toPoly f := (toPoly_monicizeL_dvd hgdne).trans hgddvd
+      have := toPoly_eq_mul_quotient_of_dvd hgdmmon hgdmdvd
+      rw [hcofdef]; exact this.symm
+    · -- no-peel branch: [(d, f)]
+      simp only [ddfProduct, List.foldr_cons, List.foldr_nil, toPoly_mulL, toPoly_cons,
+        toPoly_nil]
+      simp
+
+/-- **★ DDF multiply-back.** `toPoly (ddfProduct (ddf p f)) = toPoly f` (mod `p`): the
+distinct-degree blocks multiply back to the input. The key structural invariant of DDF, the
+foundation of factorization correctness. -/
+theorem ddf_prod (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) :
+    toPoly (ddfProduct (ddf p f)) = toPoly f :=
+  ddfAux_prod p (f.length + 1) 1 f
