@@ -75,9 +75,9 @@ only; it states no new mathematics.
 
 ## Legacy integrators (level-1 `QFunNZ`, superseded by the `*G` tower forms)
 
-* `cIntegrate` — the legacy assembled top-level integrator (level-1). Soundness: NO standalone theorem
-  (use the `*G` tower forms `cIntegrateGFull` / `cIntegrateGChecked`).
-* `cIntegrateReduced` — the legacy reduced-case capstone (level-1). Soundness: NO standalone theorem.
+* `cIntegrate` / `cIntegrateReduced` — **REMOVED** (superseded by `cIntegrateGFull` / `cIntegrateReducedG`;
+  the call graph confirmed only their own examples depended on them). Their reusable `cevalG` Horner-eval
+  helper survives in `ComputableIntegrate`.
 * `cIntegrateG` / `cIntegrateGWf` — the tower integrator without the self-check guard. Soundness: NO direct
   theorem (its correctness is the guarded `cIntegrateGChecked_correct` and the one-shots).
 -/
