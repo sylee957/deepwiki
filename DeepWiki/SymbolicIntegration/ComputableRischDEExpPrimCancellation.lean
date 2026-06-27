@@ -172,6 +172,45 @@ theorem coeff_candTopDegree_low {v a b q : K[X]} (hv : v.natDegree ≤ 1)
       coeff_mul_natDegree_add_of_natDegree_le hble, leadingCoeff, mul_comm]
   rw [hcand, coeff_add, haDq, hbq, coeff_natDegree_implicitDeriv_low hv hdq]
 
+/-! ### The cancellation condition is the logarithmic-derivative equation (Bronstein Lemma 6.3.3 / 6.3.4)
+
+Setting the δ ≤ 1 leading coefficient to `0` and dividing by `lc(a)·lc(q)` (both nonzero) yields the
+Bronstein cancellation condition `−lc(b)/lc(a) = m·η + Dz/z` with `m = deg q`, `η = v.coeff 1` (`= Dt/t` in
+the hyperexponential case, `0` in the primitive case), and `z = lc(q)` (so `Dz/z = logDeriv (lc q)`). -/
+
+omit [CharZero K] in
+/-- **★ The δ ≤ 1 cancellation condition is the logarithmic-derivative equation**
+(`cancellation_iff_logDeriv_eq_low`, Bronstein Lemma 6.3.3 / 6.3.4): in the balanced exp/primitive
+configuration (`deg v ≤ 1`, `deg b ≤ deg a`, `a ≠ 0`, `q ≠ 0`, `1 ≤ deg q`), the leading term of
+`a·Dq + b·q` at the candidate top degree **vanishes iff** `deg q` satisfies the log-derivative equation
+`−(b.coeff (deg a))/lc(a) = (deg q)·(v.coeff 1) + logDeriv (lc q)` — i.e. `−lc(b)/lc(a) = m·η + Dz/z` with
+`m = deg q`, `η = v.coeff 1` (`Dt/t`), `z = lc q`. This is the deep cancellation condition (a
+logarithmic-derivative recursion into the base field `K`), NOT the clean nonlinear `deg q = λ`. -/
+theorem cancellation_iff_logDeriv_eq_low {v a b q : K[X]} (ha0 : a ≠ 0) (hq0 : q ≠ 0)
+    (hv : v.natDegree ≤ 1) (hdq : 1 ≤ q.natDegree) (hble : b.natDegree ≤ a.natDegree) :
+    (a * Differential.implicitDeriv v q + b * q).coeff (candTopDegree v a b q) = 0
+      ↔ -(b.coeff a.natDegree) / a.leadingCoeff
+          = (q.natDegree : K) * v.coeff 1 + Differential.logDeriv q.leadingCoeff := by
+  have hlca : a.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr ha0
+  have hlcq : q.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hq0
+  rw [coeff_candTopDegree_low hv hdq hble, Differential.logDeriv]
+  -- the leading coefficient `E` factors as `lc(a)·lc(q)·R` where `R` is the equation's defect
+  set D := (q.leadingCoeff)′ with hD
+  set η := v.coeff 1 with hη
+  set m := (q.natDegree : K) with hm
+  set bc := b.coeff a.natDegree with hbc
+  have hfac : a.leadingCoeff * (D + m * η * q.leadingCoeff) + bc * q.leadingCoeff
+      = (a.leadingCoeff * q.leadingCoeff) * ((m * η + D / q.leadingCoeff) - (-bc / a.leadingCoeff)) := by
+    field_simp
+    ring
+  rw [hfac, mul_eq_zero, sub_eq_zero]
+  -- `lc(a)·lc(q) ≠ 0`, so the product is `0` iff the defect vanishes; flip to the book's orientation
+  constructor
+  · rintro (hz | heq)
+    · exact absurd hz (mul_ne_zero hlca hlcq)
+    · exact heq.symm
+  · intro heq; exact Or.inr heq.symm
+
 end AbstractLow
 
 end DeepWiki.SymbolicIntegration
