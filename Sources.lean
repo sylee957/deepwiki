@@ -55,6 +55,11 @@ import Sources.Doi_10_1007_b138171.Chapter9
 import Sources.Doi_10_1007_b138171.Chapter10
 import Sources.Doi_10_1007_b138171.Liouville
 
+-- Raab/Singer (eds.) 2022 "Integration in Finite Terms: Fundamental Sources" — Rosenlicht's reprint
+-- (the purely-algebraic proof of Liouville's theorem; structural-completeness spine)
+import Sources.Doi_10_1007_978_3_030_98767_1.Source
+import Sources.Doi_10_1007_978_3_030_98767_1.Rosenlicht
+
 -- Trager 1984 thesis (algebraic-function integration; the algebraic companion to Bronstein above)
 import Sources.Hdl_1721_1_15391.Source
 import Sources.Hdl_1721_1_15391.Chapter2
