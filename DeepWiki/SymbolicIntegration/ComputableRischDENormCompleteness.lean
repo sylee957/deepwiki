@@ -207,7 +207,12 @@ the converse facts a polynomial solution clears the §6.2 `none`-gate, all in so
 `hdvd`: ★ **Bronstein Theorem 6.1.2** — a `cRischDEG`-polynomial solution forces the mathematical
 normal-denominator divisibility `toPolyG eₙ ∣ toPolyG (dₙ·h²)` (`eₙ = rdeNormEn …`, `dₙ = rdeNormDn …`,
 `h = rdeNormH …`); the valuation-theoretic necessity at the normal poles, which the engine does not derive
-from the cleared identity (it only reads it off a successful `cdvdG`) — the single deep §6.2 gap. `hen0`:
+from the cleared identity (it only reads it off a successful `cdvdG`) — the single deep §6.2 gap. The
+actionable route: at each normal pole `p ∣ eₙ` the derivative drops the order by exactly one
+(`p ∤ Dp`, normality), so a pole of `y` at `p` would leave `Dy` unbalanced in `Dy + fy = g`; Mathlib's
+`Polynomial.derivative_rootMultiplicity_of_root_of_mem_nonZeroDivisors` is the per-pole drop, to be lifted
+through `cValuationG`/`rootMultiplicity` over the tower — a full Thm 6.1.2 development, not done here.
+`hen0`:
 the §6.2 normal part `eₙ` is nonzero (benign: free when `gden ≠ 0` is weakly normalized,
 `cnormG_en_ne_nil_of_normalizedDen`). `hfuel`: `towerRischDEFuel = 60` covers the §6.2 dividend's length
 (benign per-run fuel). A `Prop`-bundle of stated assumptions, NO `sorry`; `hdvd` is the keystone. -/
@@ -347,6 +352,13 @@ poles), plus two **benign** engine side-conditions (`hen0`: `eₙ ≠ 0`, free f
 `gden ≠ 0`; `hfuel`: per-run fuel bound). The deep `hdvd` is the one genuinely irreducible piece — it is
 *not* derivable from the cleared identity `IsCRischDEGPolySol` by elementary algebra (the identity lives in
 the polynomial ring, the divisibility is about the denominator's normal-pole structure).
+
+**`hdvd` is reachable in the structural cases, and the deep case has a concrete Mathlib route.**
+`dvd_dnh2_of_en_dvd_dn` / `hdvd_free_of_en_dvd_dn` discharge `hdvd` **unconditionally** when `eₙ ∣ dₙ` (so
+it is non-vacuous, not a hidden `sorry`). The full deep case (arbitrary normal poles) reduces to the
+per-pole order-drop `Polynomial.derivative_rootMultiplicity_of_root_of_mem_nonZeroDivisors` (Mathlib has
+it) lifted through `cValuationG` over the tower — a complete Thm 6.1.2 development, the actionable
+frontier for closing `hdvd` outright.
 
 **What `RischDEInnerCompleteness` now reduces to.** With `hnorm` produced here
 (`rischDEInnerCompleteness_of_norm_bound_solve`), `RischDEInnerCompleteness` reduces to: `hbound` (nearly
