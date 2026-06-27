@@ -276,10 +276,94 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 end Capstone
 
-/-! ### Axiom audit (the capstone + correspondence are axiom-clean, NO `native_decide`) -/
+/-! ## ★ Task 4 — `native_decide` validations: fuel-free, in parity with `crischDESolveSound`
+
+The fuel-free sound solver's behaviour over the level-2 field `ℚ(x)(t₁)`, certified by `native_decide` (the
+inner §6 pipeline runs fuel-free through `cRischDEGWf`):
+
+* **The witness returns `none`.** `crischDESolveSoundWf witnessF 1 = none` — on `f = 1/(t₁ − x)`, `g = 1`, the
+  unsolvable RDE, the fuel-free solver's §6.1 check detects unsolvability and returns `none` (parity with
+  `crischDESolveSound_witness_none`).
+* **Solvable cases still solve.** `Dy = 1 → y = t₁` and `Dy + y = t₁ + 1 → y = t₁` both return the correct
+  `some y` with `D(y) + f·y = g`, checked at the field level (parity with `crischDESolveSound_solves_*`).
+
+These are the fuel-free counterparts of the `crischDESolveSound` validations, confirming the inner-solve swap
+(`cRischDEGWf` for `cRischDEG towerRischDEFuel`) changes no result. -/
+
+section Validation
+
+/-- **★ The fuel-free sound solver returns `none` on the unsoundness witness**
+(`crischDESolveSoundWf_witness_none`, `native_decide`): for `f = 1/(t₁ − x)`, `g = 1` over `ℚ(x)(t₁)` — the RDE
+with NO solution — `crischDESolveSoundWf witnessF 1 = none`, fuel-free. The §6.1 solvability check detects the
+surviving `D`-constant special pole `t₁ − x` and reports unsolvability, exactly as the fuel
+`crischDESolveSound` (`crischDESolveSound_witness_none`) — the inner-solve swap to `cRischDEGWf` preserves the
+fix. -/
+theorem crischDESolveSoundWf_witness_none :
+    crischDESolveSoundWf witnessF (CField.one : Lvl2) = none := by native_decide
+
+/-- **The fuel-free witness result matches the fuel solver** (`crischDESolveSoundWf_witness_parity`):
+`crischDESolveSoundWf witnessF 1 = crischDESolveSound witnessF 1` (both `none`) over `ℚ(x)(t₁)`. Direct parity
+of the fuel-free and fuel sound solvers on the unsolvable witness, composing the two `native_decide`'d `none`
+results (`crischDESolveSoundWf_witness_none` and `crischDESolveSound_witness_none`) — so it needs no
+`DecidableEq` on the carrier. -/
+theorem crischDESolveSoundWf_witness_parity :
+    crischDESolveSoundWf witnessF (CField.one : Lvl2)
+      = crischDESolveSound witnessF (CField.one : Lvl2) := by
+  rw [crischDESolveSoundWf_witness_none, crischDESolveSound_witness_none]
+
+/-- **The fuel-free sound solver still solves `Dy = 1` at level 2** (`crischDESolveSoundWf_solves_Dy_eq_one`,
+`native_decide`): `crischDESolveSoundWf (0 : Lvl2) (1 : Lvl2)` returns `some y` with `D(y) + 0·y = 1`
+(`y = t₁`), checked at the field level by `CField.isZero` of `cderiv y + 0·y − 1`. The fuel-free integration
+path returns the correct solution — parity with `crischDESolveSound_solves_Dy_eq_one`. -/
+theorem crischDESolveSoundWf_solves_Dy_eq_one :
+    (match crischDESolveSoundWf (CField.zero : Lvl2) (CField.one : Lvl2) with
+      | some y =>
+          CField.isZero
+            (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul CField.zero y)) CField.one)
+      | none => false) = true := by native_decide
+
+/-- **The fuel-free sound solver still solves `Dy + y = t₁ + 1` at level 2** (the cancellation path)
+(`crischDESolveSoundWf_solves_Dy_plus_y`, `native_decide`): `crischDESolveSoundWf (1 : Lvl2) (t₁ + 1)` returns
+`some y` with `D(y) + 1·y = t₁ + 1` (`y = t₁`), checked at the field level. Here `f = 1 ≠ 0`, so the §6.6
+primitive-cancellation degree-recursion runs fuel-free (through `cPolyRischDECancelPrimGWf` / the recursive
+`crischDESolve`) — parity with `crischDESolveSound_solves_Dy_plus_y`. -/
+theorem crischDESolveSoundWf_solves_Dy_plus_y :
+    (match crischDESolveSoundWf (CField.one : Lvl2) towerRdeLvl2GPlusOne with
+      | some y =>
+          CField.isZero
+            (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul CField.one y))
+              towerRdeLvl2GPlusOne)
+      | none => false) = true := by native_decide
+
+end Validation
+
+/-! ### Axiom audit (the capstone + correspondence are axiom-clean, NO `native_decide`; the validations are
+`native_decide`) -/
 
 #print axioms crischDERawSolveWf_eq
 #print axioms crischDESolveSoundWf_eq
 #print axioms crischDESolveSoundWf_field
+
+/-! ### Final verdict (Task 5)
+
+**Is the fuel-free sound solver built and proven sound (parity with the fuel version)?** **Yes.**
+
+* **Built fuel-free.** `crischDESolveSoundWf` runs the §6.1-gated sound pipeline (weak-normalize →
+  `cisCanonNormalizedG` check → reduce → solve → transform back) with the inner RDE solve routed through the
+  **fuel-free** `cRischDEGWf` (`crischDERawSolveWf`) in place of the fuel `CRischField.crischDESolve` — no
+  `ℕ`-fuel parameter.
+* **Proven sound, unconditional, axiom-clean.** `crischDESolveSoundWf_field`: a successful solve gives the
+  ORIGINAL field-level Risch-DE identity `D(Y) + F·Y = G`, with NO `IsCanonNormalized` hypothesis (the solver
+  checks it), composing `crischDESolveSoundWf_eq` (fuel-free = fuel on a regular run) with the proven
+  `crischDESolveSound_field`. Axiom-clean `[propext, Classical.choice, Quot.sound]`, NO `native_decide`.
+* **Parity with the fuel version, fuel-free.** The witness `f = 1/(t₁ − x)`, `g = 1` returns `none`
+  (`crischDESolveSoundWf_witness_none`, and `crischDESolveSoundWf_witness_parity` = `crischDESolveSound`), and
+  the solvable cases `Dy = 1` / `Dy + y = t₁ + 1` return the correct `some y` solving the RDE
+  (`crischDESolveSoundWf_solves_*`) — all `native_decide`, fuel-free.
+
+★ **This is the intended fuel-free sound entry point for the production re-pin** — routing the engine's RDE
+solves through `crischDESolveSoundWf` (sound + fuel-free) is a separate coordinated step (it touches the
+locked core), out of this file's scope; this file provides the verified fuel-free sound solver to route
+through. -/
 
 end DeepWiki.SymbolicIntegration
