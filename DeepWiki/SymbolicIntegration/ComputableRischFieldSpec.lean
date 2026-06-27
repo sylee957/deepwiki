@@ -99,4 +99,61 @@ instance instCRischFieldSpecQ : CRischFieldSpec ℚ where
 
 #print axioms instCRischFieldSpecQ
 
+/-! ### ★ Discharging the base-oracle residual `D(∫R) = R` (the hyperexp `hintR`)
+
+`ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound` carries the base-oracle residual as a
+documented hypothesis
+
+  `hintR : towerFractionFieldDerivG Dt (amG α (C (toK intR))) = amG α (C (toK R))`
+
+where `R = cHyperexpResidualG (cExpEtaG fuel Dt) red.logs ∈ α` and `crischDESolve 0 R = some intR` — the
+field-level antiderivative identity `D(∫R) = R` for the pure-integration RDE `Dy = R` (`b = 0`), with the
+constant `∫R = intR ∈ α` embedded into the tower fraction field `RatFunc (CFieldSpec.K α)` as `amG (C (toK
+intR))`. With `CRischFieldSpec α` in hand this is no longer a hypothesis: the spec turns the solve into the
+field identity `(toK intR)′ = toK R` (the `b = 0` case), and `extendDeriv` on a *constant* `algebraMap (C
+k)` reads off as `algebraMap (C k′)` (`extendDeriv_algebraMap` + `implicitDeriv_C`), with `k′` the
+`CDiffFieldSpec` derivation — exactly `toK R`. Proved for an **arbitrary residual `R : α`** (so it
+instantiates verbatim to the hyperexp `cHyperexpResidualG` residual), with NO `native_decide`. -/
+
+section ResidualDischarge
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CRischField α] [CRischFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
+
+omit [CRischField α] [CRischFieldSpec α] in
+/-- **`extendDeriv` of a constant is the constant of its derivative** (over the tower fraction field): for
+`k : CFieldSpec.K α`, `towerFractionFieldDerivG Dt (amG α (C k)) = amG α (C k′)`, with `′` the
+`CDiffFieldSpec` derivation. Since `amG = algebraMap K[X] (RatFunc K)` and `towerFractionFieldDerivG Dt =
+extendDeriv (implicitDeriv (toPolyG Dt))`, this is `extendDeriv_algebraMap` followed by `implicitDeriv_C`
+(`implicitDeriv v (C k) = C k′`). The constant-coefficient reading of the keystone derivation. -/
+theorem towerFractionFieldDerivG_amG_C (Dt : CPolyG α) (k : CFieldSpec.K α) :
+    towerFractionFieldDerivG Dt (amG α (Polynomial.C k))
+      = amG α (Polynomial.C (@Differential.deriv _ _ CDiffFieldSpec.diffK k)) := by
+  rw [towerFractionFieldDerivG, amG, extendDeriv_algebraMap, Differential.implicitDeriv_C]
+
+/-- **★ The base-oracle residual `D(∫R) = R` discharged from `CRischFieldSpec`** (the hyperexp `hintR`):
+for any residual `R : α`, if the base oracle solves the pure-integration RDE `Dy = R`
+(`crischDESolve 0 R = some intR`), then the constant `∫R = intR`, embedded into the tower fraction field as
+`amG (C (toK intR))`, differentiates back to `amG (C (toK R))`:
+
+  `towerFractionFieldDerivG Dt (amG α (C (toK intR))) = amG α (C (toK R))`.
+
+The `b = 0` case of `CRischFieldSpec.crischDESolve_spec` gives `(toK intR)′ + 0·(toK intR) = toK R`, i.e.
+`(toK intR)′ = toK R`; `towerFractionFieldDerivG_amG_C` reads off the constant's derivative. This is
+exactly the `hintR` hypothesis `ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound` carries —
+discharged with NO `native_decide`. -/
+theorem crischDESolve_zero_intDeriv (Dt : CPolyG α) (R intR : α)
+    (hsolve : CRischField.crischDESolve (CField.zero : α) R = some intR) :
+    towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
+      = amG α (Polynomial.C (CFieldSpec.toK R)) := by
+  rw [towerFractionFieldDerivG_amG_C]
+  -- the `b = 0` spec: `(toK intR)′ + (toK 0)·(toK intR) = toK R`, and `toK 0 = 0`.
+  have hspec := CRischFieldSpec.crischDESolve_spec (CField.zero : α) R intR hsolve
+  rw [CFieldSpec.toK_zero, zero_mul, add_zero] at hspec
+  rw [hspec]
+
+end ResidualDischarge
+
+#print axioms crischDESolve_zero_intDeriv
+
 end DeepWiki.SymbolicIntegration
