@@ -310,6 +310,26 @@ theorem rdeCleared_of_success_and_residual (Dt : CPolyG α) (fuel : ℕ)
   rw [hynum, hyden]
   exact hcap
 
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- ★ The structural-decomposition core: a bare `cRischDEG` success factors through the §6.2/§6.4/§6.5
+-- stage successes with the matching output reassembly.
+example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden ynum yden : CPolyG α)
+    (hsucc : cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden)) :
+    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (v : CPolyG α),
+      cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0)
+      ∧ cPolyRischDEG Dt fuel bbar cbar m = some v
+      ∧ yden = h0 := by
+  obtain ⟨a0, b0, c0, h0, bbar, cbar, m, _, _, v, hnorm, _, hdisp, _, hyden⟩ :=
+    cRischDEG_some_imp_stages Dt fuel fnum fden gnum gden ynum yden hsucc
+  exact ⟨a0, b0, c0, h0, bbar, cbar, m, v, hnorm, hdisp, hyden⟩
+
 end Residual
+
+/-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
+
+#print axioms cRischDEG_some_imp_stages
+#print axioms cPolyRischDEG_eq_noCancel_of_primitive
+#print axioms rdeCleared_of_success_and_residual
 
 end DeepWiki.SymbolicIntegration
