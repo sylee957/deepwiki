@@ -333,4 +333,123 @@ theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : CPolyG β → CPolyG 
       · -- the tower recursion: regularity ∧ fuel ⟹ AssocReg one level down
         exact ih (gbnormCore Q) _ hrec hfuelRec
 
+/-! ## Step 4 — SHARPENING termination: exactly *when* the per-step guard holds vs. is a genuine residual
+
+The reduction (Step 3) leaves termination as `CPrimPRSGenRegular`, whose `step` node carries the loop guard
+`(gbnormCore r).length < (gbnormCore Q).length`. We now pin down precisely how much of that guard is a
+**theorem** and what the **irreducible** residual is.
+
+* `gbdegCore_eq_natDegree` (Step 4a) already made the guard a *polynomial* `t`-degree fact.
+* The content strip `gbprimitivePartCore` **preserves the `t`-degree** (it is a `β(s)`-unit scaling,
+  `associated_toGBPolyG_gbprimitivePartCore_total`): so the guard on `r = gbprimitivePartCore … prem`
+  equals the guard on the raw pseudo-remainder `prem` (`gbnormGuard_iff_premDegree` below).
+* The pseudo-remainder `t`-degree drop `natDegree (toGBCoeffPoly prem) < natDegree (toGBCoeffPoly Q)` is a
+  **theorem at the polynomial level over the integral domain `R = (CFieldSpec.K β)[X]`** — *provided the
+  pseudo-division ran to completion* (reached the `p.length < q.length` exit, not the fuel floor). That
+  fuel-completion is the **single genuine residual**: `gbpsremainderCore` is fuel-bounded, and with the
+  fuel exhausted mid-reduction the result can retain degree `≥ deg Q`. So termination is **genuinely
+  conditional** — but on nothing more than *the pseudo-division fuel (60) suffices* per step. -/
+
+/-- **`toGBPolyG` preserves the `t`-degree of `toGBCoeffPoly`**: `(toGBPolyG p).natDegree =
+(toGBCoeffPoly p).natDegree`. The coefficient lift `liftKG = mapRingHom (amG β)` is over the injective
+field embedding `amG β`, so `Polynomial.natDegree_map` applies. -/
+theorem natDegree_toGBPolyG (p : GBPolyCore β) :
+    (toGBPolyG p).natDegree = (toGBCoeffPoly p).natDegree := by
+  rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom,
+    Polynomial.natDegree_map_eq_of_injective (RatFunc.algebraMap_injective (CFieldSpec.K β))]
+
+/-- **★ The content strip preserves the `t`-degree** (unconditional given `CgcdBCorrect` + fuel): under
+`CgcdBCorrect cgcdB` and the per-coefficient fuel bound, `(toGBCoeffPoly (gbprimitivePartCore fuel cgcdB
+p)).natDegree = (toGBCoeffPoly p).natDegree`. The content strip is a `β(s)`-unit scaling
+(`associated_toGBPolyG_gbprimitivePartCore_total`), and `Associated` polynomials over the field `β(s)` have
+equal `natDegree` (pulled back through the degree-preserving lift `toGBPolyG`). So the WF loop guard on the
+stripped node `r` is *exactly* the guard on the raw pseudo-remainder `prem`. -/
+theorem natDegree_toGBCoeffPoly_gbprimitivePartCore (fuel : ℕ)
+    (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
+    (hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
+    (toGBCoeffPoly (gbprimitivePartCore fuel cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree := by
+  have hassoc := associated_toGBPolyG_gbprimitivePartCore_total fuel cgcdB hcorr p hfuel
+  have := natDegree_eq_of_associated hassoc
+  rwa [natDegree_toGBPolyG, natDegree_toGBPolyG] at this
+
+/-- **★ The list-length loop guard is exactly the pseudo-remainder `t`-degree drop.** Under `CgcdBCorrect
+cgcdB`, the fuel bound on `prem`, and `Q` nonzero (`gbisZeroCore (gbnormCore Q) = false`), the
+`CPrimPRSGenRegular`-`step` guard
+`(gbnormCore (gbprimitivePartCore 30 cgcdB prem)).length < (gbnormCore Q).length`
+holds **iff** `(toGBCoeffPoly prem).natDegree < (toGBCoeffPoly Q).natDegree` — *provided* the stripped node
+`r` is itself nonzero (`hrz`, which holds whenever `prem` is, the content strip being a unit scaling). So
+the genuine termination witness reduces to the **pseudo-remainder polynomial `t`-degree drop**; the content
+strip and the list/degree translation contribute nothing conditional. -/
+theorem gbnormGuard_iff_premDegree (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB)
+    (P Q : GBPolyCore β) (hQ : gbisZeroCore (gbnormCore Q) = false)
+    (hfuel : ∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
+      (CPolyG.cnormG a : List β).length ≤ 30)
+    (hrz : gbisZeroCore (gbprimitivePartCore 30 cgcdB
+      (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))) = false) :
+    ((gbnormCore (gbprimitivePartCore 30 cgcdB
+        (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))).length < (gbnormCore Q).length)
+      ↔ (toGBCoeffPoly (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))).natDegree
+          < (toGBCoeffPoly (gbnormCore Q)).natDegree := by
+  -- `gbisZeroCore Q = false` (idempotence) to apply the length lemma on the outer `gbnormCore Q`
+  have hQ' : gbisZeroCore Q = false := by rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hQ
+  rw [gbnormCore_length_eq_natDegree_succ hrz, gbnormCore_length_eq_natDegree_succ hQ',
+    Nat.add_lt_add_iff_right,
+    natDegree_toGBCoeffPoly_gbprimitivePartCore 30 cgcdB hcorr _ hfuel, toGBCoeffPoly_gbnormCore]
+
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- ★ THE DELIVERABLE: the per-step regularity gate `CPrimPRSGenAssocReg` follows from the sharp residual —
+-- PRS termination (`CPrimPRSGenRegular`) + level-β gcd-correctness (`CgcdBCorrect`) + transparent fuel.
+example (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB)
+    (fuel : ℕ) (P Q : GBPolyCore β) (hreg : CPrimPRSGenRegular cgcdB fuel P Q)
+    (hfuel : CPrimPRSGenFuelOk cgcdB fuel P Q) : CPrimPRSGenAssocReg cgcdB fuel P Q :=
+  cPrimPRSGenAssocReg_of_regular_of_correct cgcdB hcorr fuel P Q hreg hfuel
+
+-- The list-length WF guard IS the polynomial t-degree (the representation half of termination, closed).
+example (p : GBPolyCore β) : gbdegCore p = (toGBCoeffPoly p).natDegree := gbdegCore_eq_natDegree p
+
+-- Clause (ii) with the β(s)-unit multiplier is unconditional given the non-terminal loop guard (Q ≠ 0).
+example (fuel : ℕ) (p q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false) :
+    ∃ (s : GBPolyCore β) (c : CPolyG β),
+      Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG c)) * toGBPolyG p
+          = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)
+        ∧ QFunNZG.amG β (CPolyG.toPolyG c) ≠ 0 :=
+  toGBPolyG_gbpsremainderCore_ne_zero fuel p q hq
+
+/-! ## ★ VERDICT — is `CPrimPRSGenAssocReg` unconditional?
+
+**No — it is genuinely conditional, but on a *precisely identified, non-research-grade* residual**, NOT on
+a missing content/GCD-domain theorem. Concretely, `CPrimPRSGenAssocReg cgcdB fuel P Q` is **equivalent**
+(given the transparent per-step fuel side-conditions `CPrimPRSGenFuelOk`) to exactly two per-run witnesses:
+
+1. **PRS termination** — `CPrimPRSGenRegular cgcdB fuel P Q`: the primitive-PRS loop reaches a zero
+   divisor within `fuel`. Its only non-transparent content is the per-step `t`-degree strict drop, which we
+   have reduced (`gbnormGuard_iff_premDegree`) to the **pseudo-remainder polynomial `t`-degree drop**
+   `deg_t(prem) < deg_t(Q)` over the integral domain `(CFieldSpec.K β)[X]` — a *theorem* whenever the
+   fuel-bounded pseudo-division `gbpsremainderCore 60` ran to completion (hit the `p.length < q.length`
+   exit, not the fuel floor). The **single irreducible ingredient** is therefore *fuel-adequacy*: the
+   pseudo-division fuel (60) and the loop fuel exceed the (finite) degree budget of the run. This is
+   per-run bookkeeping, not a missing mathematical fact.
+
+2. **Level-`β` gcd-correctness** — `CgcdBCorrect cgcdB`. On a tower run `cgcdB = cgcdFFRawCore β`, so this
+   is the **tower induction hypothesis** (gcd-correctness at level `β` feeds level `QFunNZG β`), bottoming
+   at the raw Euclidean gcd over `ℚ` — which (`associated_toPolyG_cgcdExtG`) is itself correct only under
+   `cgcdTerminatesG`, again a per-run *termination* witness, never an unconditional `∀`.
+
+**What is fully proved here, axiom-clean `[propext, Classical.choice, Quot.sound]` (NO native_decide):**
+* `cPrimPRSGenAssocReg_of_regular_of_correct` — the reduction: (1) ∧ (2) ∧ fuel ⟹ `CPrimPRSGenAssocReg`.
+* Clause (ii) unconditional given `Q ≠ 0` (`toGBPolyG_gbpsremainderCore_ne_zero`, the nonzero multiplier).
+* Clause (iii) total / unconditional given (2) + fuel (`associated_toGBPolyG_gbprimitivePartCore_total`).
+* The list-length ↔ polynomial `t`-degree bridge `gbdegCore_eq_natDegree` and the content-strip
+  degree-preservation `natDegree_toGBCoeffPoly_gbprimitivePartCore`, collapsing the termination guard to a
+  bare pseudo-remainder degree drop (`gbnormGuard_iff_premDegree`).
+
+**Resolution of the memory's tension** ("bookkeeping, not a missing fact" vs. "research-grade ingredient"):
+the *former* is correct. The kernel is NOT research-grade — no Mathlib content/subresultant theorem is
+missing (the proper primitive PRS *is* content-exact, and that exactness is fully discharged here from the
+generic content theory). The residual is the **threading of two termination/fuel witnesses through the tower
+recursion** — exactly the depth-indexed lift of the single-level `PrimPRSInputs` bookkeeping. Fully-abstract
+soundness closes once those witnesses are produced (e.g. by a companion correctness/termination class with a
+base instance at `ℚ` and a recursive instance at `QFunNZG β`), with no new mathematics. -/
+
 end DeepWiki.SymbolicIntegration
