@@ -790,6 +790,48 @@ theorem irreducible_of_recombine_nil {f : List ℤ} {n : ℤ} {facs : List (List
   by_contra hred
   exact recombine_complete hsurf hmon hred hnil
 
+/-- **★ Verdict decomposition.** A `true` verdict from `irreducibleZassenhaus p f n` arises from
+exactly one of two branches: either the mod-`p` factorization has a **single** irreducible factor
+(`(factorModP p (reduceCoeffs p f)).length = 1` — the mod-`p` test already settles it), or the
+recombination over the lifted factors found **no** proper `ℤ`-factor (`recombine … = []`). The Boolean
+case split the soundness theorem dispatches. -/
+theorem irreducibleZassenhaus_eq_true_cases {p : ℕ} [Fact p.Prime] {f : List ℤ} {n : ℕ}
+    (h : irreducibleZassenhaus p f n = true) :
+    (factorModP p (reduceCoeffs p f)).length = 1 ∨
+    recombine f ((p : ℤ) ^ (2 ^ henselRounds p f))
+      (henselLiftMany f ((factorModP p (reduceCoeffs p f)).length + 1)
+        (factorModP p (reduceCoeffs p f))) = [] := by
+  rw [irreducibleZassenhaus] at h
+  simp only at h
+  split at h
+  · exact absurd h (by simp)
+  · split at h
+    · exact Or.inl (by rename_i hlen; exact hlen)
+    · exact Or.inr (by rw [List.isEmpty_iff] at h; exact h)
+
+/-- **★★ The milestone, conditional on surfacing: `irreducibleZassenhaus = true ⟹ Irreducible`.**
+The decider's irreducibility direction. From a `true` verdict and the monic-degree-`n` precondition,
+`toPolyZ f` is **irreducible** over `ℚ`-equivalently-`ℤ`, provided:
+  * `hsurf` — the surfacing hypothesis `FactorSurfaces` for the recombination branch (the deep
+    Zassenhaus content: Hensel-uniqueness + Mignotte, the single isolated residual), and
+  * `hmodp` — for the single-mod-`p`-factor branch, that a length-`1` `factorModP` confirms
+    irreducibility (the mod-`p` irreducibility test, itself sound but resting on `factorModP` being
+    the genuine factorization — `native_decide`-validated for the witnesses).
+Dispatches `irreducibleZassenhaus_eq_true_cases`, then `irreducible_of_recombine_nil` on the
+recombination branch. Axiom-clean — **NO `native_decide`** — so this is a genuine proof of the
+irreducibility direction modulo the two explicitly-stated residual facts. -/
+theorem irreducibleZassenhaus_sound {p : ℕ} [Fact p.Prime] {f : List ℤ} {n : ℕ}
+    (hmon : IsMonicOfDegree (toPolyZ f) n)
+    (hsurf : FactorSurfaces f ((p : ℤ) ^ (2 ^ henselRounds p f))
+      (henselLiftMany f ((factorModP p (reduceCoeffs p f)).length + 1)
+        (factorModP p (reduceCoeffs p f))) n)
+    (hmodp : (factorModP p (reduceCoeffs p f)).length = 1 → Irreducible (toPolyZ f))
+    (h : irreducibleZassenhaus p f n = true) :
+    Irreducible (toPolyZ f) := by
+  rcases irreducibleZassenhaus_eq_true_cases h with hlen | hnil
+  · exact hmodp hlen
+  · exact irreducible_of_recombine_nil hsurf hmon hnil
+
 /-- **★ The proven soundness keystone, packaged.** A passing `ℤ`-trial-division
 (`dividesExactly f g dg = true`) yields a *genuine* factorization `toPolyZ f = toPoly g * toPoly q`
 over `ℤ` — so the recombination **never accepts a false factor**. This is the abstract guarantee
