@@ -197,4 +197,113 @@ theorem hermiteMultiplier_isCoprime [CharZero k] {U V : k[X]} (l : ℕ) (hl : l 
 
 end HermiteUniqueness
 
+/-! ## The degree bound `deg(fᵢ) ≤ N − δᵢ` (Schultz 4.7–4.9 — the linear system)
+
+After the finite-place Hermite reduction the denominator `b` is squarefree (only simple finite poles).  The
+infinite-place step (Schultz 4.7) seeks `∫Σ(aᵢ/b)ηᵢ = Σ fᵢ ηᵢ + ∫Σ(gᵢ/b)ηᵢ` with `deg(gᵢ) + δᵢ < deg(b)`;
+differentiating gives the per-component relation (diagonal/hyperelliptic case)
+`aᵢ = c·D(fᵢ) + e·fᵢ + gᵢ` (`c = E·T`, `e = T·Mᵢ,ᵢ`, `D` the monomial derivation), and the infinite-place
+order comparison (4.8) yields the degree bound `deg(fᵢ) ≤ N − δᵢ` (4.9) with
+`N = maxᵢ(deg(aᵢ) + δᵢ + 1 − deg(b))`.  The bound on the `fᵢ` (and the constraint `deg(gᵢ) < deg(b) − δᵢ`)
+turns the differentiated relation into a **linear system** in finitely many unknown coefficients — *"if this
+system does not have a solution, the integral is not elementary"* (4.9).
+
+We prove the degree bound by the **same** leading-coefficient/degree-comparison technique as the
+transcendental RDE bound (`natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero`): the candidate top
+degree of `aᵢ` is `deg(c) + deg(fᵢ) + max(0, δ_t − 1)` (the derivation-degree of `c·D(fᵢ)`), and when the
+leading coefficient of `aᵢ` there does not vanish, `deg(fᵢ)` is bounded.  We state the abstract `N` and the
+per-component bound. -/
+
+section DegreeBound
+
+variable {k : Type*} [Field k] [Differential k]
+
+/-- **The Schultz degree-bound `N` for a component** `hermiteBoundN da δ db = deg(aᵢ) + δᵢ + 1 − deg(b)`
+(as `ℤ`), the per-component value whose max over `i` is Schultz's `N = maxᵢ(deg(aᵢ) + δᵢ + 1 − deg(b))`
+(4.9).  The infinite-place order datum: `ord_P(aᵢ/b ηᵢ dx) ≥ −r·N − 1` (4.8), giving `deg(fᵢ) ≤ N − δᵢ`.
+Kept per-component (the global `N` is `Finset.sup'` of these); written in `ℤ` so the subtraction is faithful
+(a negative value forces `fᵢ = 0`). -/
+def hermiteBoundN (da δ db : ℕ) : ℤ := (da : ℤ) + (δ : ℤ) + 1 - (db : ℤ)
+
+/-- **The candidate top degree of `aᵢ` in the differentiated Hermite relation** `hermiteCandTopDegree v c f`
+`= deg(c) + deg(f) + max(0, deg(v) − 1)` — the degree of the dominant term `c·D(f)` (`D = implicitDeriv v`,
+`c = E·T`), via `natDegree_implicitDeriv_le`.  The algebraic analogue of `candTopDegree` in the transcendental
+RDE bound; the degree at which a leading-term cancellation, if any, occurs. -/
+def hermiteCandTopDegree (v c f : k[X]) : ℕ :=
+  c.natDegree + f.natDegree + max 0 (v.natDegree - 1)
+
+/-- **The candidate top degree dominates the differentiated relation** (`natDegree_le_hermiteCandTopDegree`):
+in `a = c·D(f) + e·f + g` (`D = implicitDeriv v`) with the lower-order terms bounded —
+`deg(e·f) ≤ deg(c) + deg(f) + max(0, δ−1)` and `deg(g) ≤` the same — the degree of `a` is at most the
+candidate top degree `hermiteCandTopDegree v c f`.  Both LHS-term bounds are hypotheses (they hold in the
+Hermite step from `deg(e) ≤ deg(c) + max(0,δ−1)` and the proper-rational `deg(g) < deg(b) − δ`); this is the
+upper-bound half of the degree comparison. -/
+theorem natDegree_le_hermiteCandTopDegree {v a c e f g : k[X]}
+    (heq : a = c * Differential.implicitDeriv v f + e * f + g)
+    (hef : (e * f).natDegree ≤ hermiteCandTopDegree v c f)
+    (hg : g.natDegree ≤ hermiteCandTopDegree v c f) :
+    a.natDegree ≤ hermiteCandTopDegree v c f := by
+  rw [heq]
+  refine (natDegree_add_le _ _).trans (max_le ((natDegree_add_le _ _).trans (max_le ?_ hef)) hg)
+  calc (c * Differential.implicitDeriv v f).natDegree
+      ≤ c.natDegree + (Differential.implicitDeriv v f).natDegree := natDegree_mul_le
+    _ ≤ c.natDegree + (f.natDegree + max 0 (v.natDegree - 1)) := by
+        gcongr; exact natDegree_implicitDeriv_le v f
+    _ = hermiteCandTopDegree v c f := by rw [hermiteCandTopDegree]; ring
+
+/-- **★ The Hermite degree bound `deg(f) ≤ N − δ`, sharp top-coefficient form**
+(`natDegree_hermiteNum_le_of_topCoeff_ne_zero`): for the differentiated Hermite relation
+`a = c·D(f) + e·f + g` (`D = implicitDeriv v`, `δ = deg v`) with the lower terms bounded (`deg(e·f), deg(g)
+≤ hermiteCandTopDegree`), **if** the leading coefficient of `a` at the candidate top degree does not vanish
+(`a.coeff (hermiteCandTopDegree v c f) ≠ 0` — no leading-term cancellation), then
+`deg(f) ≤ deg(a) − deg(c) − max(0, δ − 1)`.  This is the exact algebraic mirror of the transcendental
+`natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero`: the nonzero top coefficient pins `deg(a) =
+hermiteCandTopDegree`, so `deg(f)` is bounded; specialized with `deg(c) = deg(E·T)` it is Schultz's
+`deg(fᵢ) ≤ N − δᵢ` (4.9).  The residual is pinned to the precise cancellation `a.coeff(candTop) = 0`. -/
+theorem natDegree_hermiteNum_le_of_topCoeff_ne_zero {v a c e f g : k[X]}
+    (heq : a = c * Differential.implicitDeriv v f + e * f + g)
+    (hef : (e * f).natDegree ≤ hermiteCandTopDegree v c f)
+    (hg : g.natDegree ≤ hermiteCandTopDegree v c f)
+    (htop : a.coeff (hermiteCandTopDegree v c f) ≠ 0) :
+    f.natDegree ≤ a.natDegree - c.natDegree - max 0 (v.natDegree - 1) := by
+  have hub := natDegree_le_hermiteCandTopDegree heq hef hg
+  have hda : a.natDegree = hermiteCandTopDegree v c f :=
+    le_antisymm hub (le_natDegree_of_ne_zero htop)
+  rw [hda, hermiteCandTopDegree]; omega
+
+/-- **★ The Hermite degree bound in Schultz's `N − δ` form** (`natDegree_hermiteNum_le`): packaging
+`natDegree_hermiteNum_le_of_topCoeff_ne_zero` with the infinite-place degree datum `deg(c) = deg(b)` (the
+`c = E·T` with `b = E·T` clearing of Schultz 4.7 — "we multiply the `aᵢ` and `b` by a suitable common factor
+so that there is a polynomial `T` with `b = ET`", supplied as the hypothesis `hcdeg`), the bound reads
+`deg(f) ≤ deg(a) − deg(b) − max(0, δ−1) ≤ deg(a) + 1 − deg(b) = (deg a + δ + 1 − deg b) − δ` — i.e.
+`deg(f) ≤ N − δ` for `N = deg(a) + δ + 1 − deg(b)`, Schultz 4.9 exactly.  Stated as the clean
+`(deg f : ℤ) ≤ hermiteBoundN (deg a) δ (deg b) − δ` so the bound is the literal 4.9 inequality (in `ℤ`,
+faithful to a possibly-negative `N`). -/
+theorem natDegree_hermiteNum_le {v a c e f g b : k[X]} (δ : ℕ)
+    (heq : a = c * Differential.implicitDeriv v f + e * f + g)
+    (hef : (e * f).natDegree ≤ hermiteCandTopDegree v c f)
+    (hg : g.natDegree ≤ hermiteCandTopDegree v c f)
+    (htop : a.coeff (hermiteCandTopDegree v c f) ≠ 0)
+    (hδ : v.natDegree = δ)
+    (hcdeg : c.natDegree = b.natDegree) :
+    (f.natDegree : ℤ) ≤ hermiteBoundN a.natDegree δ b.natDegree - (δ : ℤ) := by
+  -- the nonzero top coefficient pins `deg a = candTop = deg c + deg f + max(0, δ-1)`
+  have hub := natDegree_le_hermiteCandTopDegree heq hef hg
+  have hda : a.natDegree = c.natDegree + f.natDegree + max 0 (v.natDegree - 1) :=
+    le_antisymm hub (by simpa [hermiteCandTopDegree] using le_natDegree_of_ne_zero htop)
+  -- ℤ-cast the `max 0 (deg v - 1)` term through `hδ` (≥ 0, so it only loosens the bound)
+  have hmax : ((max 0 (v.natDegree - 1) : ℕ) : ℤ) = max 0 ((δ : ℤ) - 1) := by
+    rw [hδ]; push_cast; omega
+  have hmax0 : (0 : ℤ) ≤ max 0 ((δ : ℤ) - 1) := le_max_left _ _
+  -- promote the degree equality to ℤ, substitute deg c = deg b, and the bound is arithmetic
+  have hdaℤ : (a.natDegree : ℤ)
+      = (b.natDegree : ℤ) + (f.natDegree : ℤ) + max 0 ((δ : ℤ) - 1) := by
+    have : (a.natDegree : ℤ)
+        = (c.natDegree : ℤ) + (f.natDegree : ℤ) + ((max 0 (v.natDegree - 1) : ℕ) : ℤ) := by
+      exact_mod_cast hda
+    rw [this, hmax, hcdeg]
+  rw [hermiteBoundN]; omega
+
+end DegreeBound
+
 end DeepWiki.SymbolicIntegration.AlgebraicHermite
