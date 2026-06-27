@@ -232,4 +232,186 @@ theorem natDegree_le_rdeBoundDegreeWithLambda {v a b c q : K[X]} (hq : q ≠ 0) 
 
 end AbstractLambda
 
+/-! ## ★ The `λ`-augmented degree bound at the `CPolyG` layer (the true §6.3 bound)
+
+The abstract `λ`-cancellation bound, lifted to `CPolyG` over `(CFieldSpec.K α)[X]`: a §6.3-reduced solution
+`q` has `cdegG q ≤ max(cRdeBoundDegreeG …, N)` for the `λ`-witness `N`. **This is the mathematically correct
+degree bound in the cancellation case** — the engine's `cRdeBoundDegreeG` (the non-cancellation bound)
+*augmented* by the `λ = −lc(b)/(lc(a)·lc(v))` term Bronstein's §6.3 carries. The nonlinear `λ`-recursion is
+discharged unconditionally; only the exp/primitive (`δ ≤ 1`) logarithmic-derivative cancellation needs the
+isolated residual. The base field `(CFieldSpec.K α)` is `CharZero` (the towers are over `ℚ`). -/
+
+section ComputableLambda
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+  [CharZero (CFieldSpec.K α)]
+
+omit [CFracGcdCore α] in
+/-- **★ The §6.3 `λ`-augmented degree bound at the `CPolyG` layer**
+(`cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol`): a §6.3-reduced solution `q` of `a·Dq + b·q = c`
+(`IsReducedRdeSol Dt a b c q`, `toPolyG q ≠ 0`, `toPolyG a ≠ 0`) has
+`cdegG q ≤ max(cRdeBoundDegreeG Dt fuel a b c, N)` for a non-neg-integer `λ`-witness `N`
+(`(N:K)·lc(a)·lc(v) + lc(b) = 0` over `(CFieldSpec.K α)[X]`, `v = toPolyG Dt`), **modulo** the exp/primitive
+cancellation residual `hexp` (the `δ ≤ 1` logarithmic-derivative recursion). This is the *true* degree bound
+in the cancellation case: the engine's non-cancellation bound augmented by the `λ` term. The nonlinear
+`λ`-recursion is proven; `hexp` supplies only the deeper exp/primitive case. -/
+theorem cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (fuel : ℕ) (a b c q : CPolyG α)
+    (hqP : toPolyG q ≠ 0) (ha0 : toPolyG a ≠ 0) (hsol : IsReducedRdeSol Dt a b c q) {N : ℕ}
+    (hlam : (N : CFieldSpec.K α) * (toPolyG a).leadingCoeff * (toPolyG Dt).leadingCoeff
+        + (toPolyG b).leadingCoeff = 0)
+    (hexp : RdeBoundExpPrimCancellation (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c) N) :
+    cdegG q ≤ max (cRdeBoundDegreeG Dt fuel a b c) N := by
+  have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+      + toPolyG b * toPolyG q = toPolyG c := hsol
+  -- the abstract `λ`-bound, transported through the `cdegG`/`cRdeBoundDegreeG` bridges
+  have habs := natDegree_le_rdeBoundDegreeWithLambda hqP ha0 heq hlam hexp
+  rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
+  exact habs
+
+/-- **★ The `CPolyG`-layer `λ`-augmented cancellation residual** `RdeBoundCancellationResidualWithLambda Dt
+fnum fden gnum gden N`: for every §6.2-normal-denominator output and every solution `q` of the
+§6.2-special-cleared §6.3-reduced equation, the **true** degree bound `cdegG q ≤ max(cRdeBoundDegreeG …, N)`
+holds whenever leading-term cancellation occurs — `N` being the non-neg-integer `λ`. Unlike the locked
+`RdeBoundCancellationResidual` (which asks for the engine's `λ`-free bound, *false* when `λ` exceeds it),
+this is the mathematically correct bound: the engine bound augmented by `λ`. A stated `Prop`, NO `sorry`. -/
+def RdeBoundCancellationResidualWithLambda (Dt fnum fden gnum gden : CPolyG α) (N : ℕ) : Prop :=
+  ∀ a0 b0 c0 h0 : CPolyG α,
+    cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+    ∀ q : CPolyG α, toPolyG q ≠ 0 →
+      toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1 ≠ 0 →
+      IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+      (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1).coeff
+          (candTopDegree (toPolyG Dt)
+            (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
+            (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1)
+            (toPolyG q)) = 0 →
+      cdegG q ≤ max (cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1) N
+
+/-- **★ The `λ`-augmented cancellation residual is discharged by the exp/primitive residual**
+(`rdeBoundCancellationResidualWithLambda_of_expPrim`): the true `λ`-augmented degree bound in the
+cancellation case follows from the `λ`-witness `hlam` and the exp/primitive residual `hexp`, with the
+nonlinear `λ`-recursion proven unconditionally. So `RdeBoundCancellationResidualWithLambda` reduces to
+**exactly** the exp/primitive (`δ ≤ 1`) logarithmic-derivative cancellation — the genuine §6.3 frontier; the
+nonlinear `λ`-recursion (the task's central deep content) is closed. -/
+theorem rdeBoundCancellationResidualWithLambda_of_expPrim (Dt fnum fden gnum gden : CPolyG α) {N : ℕ}
+    (hlam : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      (N : CFieldSpec.K α)
+          * (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1).leadingCoeff
+          * (toPolyG Dt).leadingCoeff
+          + (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1).leadingCoeff = 0)
+    (hexp : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      RdeBoundExpPrimCancellation (toPolyG Dt)
+        (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
+        (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1)
+        (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1) N) :
+    RdeBoundCancellationResidualWithLambda Dt fnum fden gnum gden N := by
+  intro a0 b0 c0 h0 hnorm q hq ha0 hsol _hcancel
+  exact cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol Dt towerRischDEFuel _ _ _ q hq ha0 hsol
+    (hlam a0 b0 c0 h0 hnorm) (hexp a0 b0 c0 h0 hnorm)
+
+end ComputableLambda
+
+/-! ## Operational witness: the `λ`-augmented bound on a concrete nonlinear cancellation RDE
+
+A concrete §6.3-reduced *nonlinear* RDE over `ℚ[x]` exhibiting genuine leading-term cancellation, where the
+plain engine bound is correct because the cancellation degree `λ` is small. With `Dt = x²` (so
+`δ = deg(Dt) = 2`, nonlinear, `D = x²·d/dx + κ_D`), `a = 1`, `b = −x` (`deg b = 1 = deg a + δ − 1`,
+balanced), and `q = x`: `D(x) = x²`, so `a·Dq + b·q = x² + (−x)·x = x² − x² = 0`. The leading terms
+**cancel** (`λ = −lc(b)/(lc(a)·lc(v)) = −(−1)/(1·1) = 1 = deg q`). The cancellation is real and `λ = 1`. -/
+
+section Witness
+
+open scoped Differential
+
+/-- **A concrete nonlinear cancellation RDE solution** (`reducedRdeSol_cancellation_witness`): over `ℚ[x]`,
+`q = x` solves `1·Dq + (−x)·q = 0` for the nonlinear monomial `Dt = x²` (`D(x) = x²`) —
+`x² + (−x)·x = x² − x² = 0`, the leading terms canceling exactly. A genuine `IsReducedRdeSol` instance
+witnessing the balanced nonlinear cancellation configuration (`λ = 1 = deg q`). -/
+theorem reducedRdeSol_cancellation_witness :
+    IsReducedRdeSol ([0, 0, 1] : CPolyG ℚ) [1] [0, -1] [0] [0, 1] := by
+  show toPolyG ([1] : CPolyG ℚ)
+        * Differential.implicitDeriv (toPolyG ([0, 0, 1] : CPolyG ℚ)) (toPolyG ([0, 1] : CPolyG ℚ))
+      + toPolyG ([0, -1] : CPolyG ℚ) * toPolyG ([0, 1] : CPolyG ℚ) = toPolyG ([0] : CPolyG ℚ)
+  have h1 : toPolyG ([1] : CPolyG ℚ) = 1 := by simp [toPolyG, CFieldSpec.toK]
+  have hx2 : toPolyG ([0, 0, 1] : CPolyG ℚ) = X ^ 2 := by
+    simp [toPolyG, CFieldSpec.toK]; ring
+  have hx : toPolyG ([0, 1] : CPolyG ℚ) = X := by simp [toPolyG, CFieldSpec.toK]
+  have hb : toPolyG ([0, -1] : CPolyG ℚ) = -X := by
+    simp [toPolyG, CFieldSpec.toK]
+  have h0 : toPolyG ([0] : CPolyG ℚ) = 0 := by simp [toPolyG, CFieldSpec.toK]
+  rw [h1, hx2, hx, hb, h0, Differential.implicitDeriv_X]; ring
+
+/-- **The `λ`-witness for the cancellation RDE** (`lambda_witness_cancellation`): for the nonlinear
+cancellation RDE `1·Dq + (−x)·q = 0` (`Dt = x²`), `λ = 1` satisfies the `λ`-equation
+`(1:ℚ)·lc(a)·lc(v) + lc(b) = 1·1·1 + (−1) = 0` — the leading terms cancel exactly at `deg q = 1`. -/
+theorem lambda_witness_cancellation :
+    ((1 : ℕ) : ℚ) * (toPolyG ([1] : CPolyG ℚ)).leadingCoeff
+        * (toPolyG ([0, 0, 1] : CPolyG ℚ)).leadingCoeff + (toPolyG ([0, -1] : CPolyG ℚ)).leadingCoeff
+      = 0 := by
+  have h1 : toPolyG ([1] : CPolyG ℚ) = 1 := by simp [toPolyG, CFieldSpec.toK]
+  have hx2 : toPolyG ([0, 0, 1] : CPolyG ℚ) = X ^ 2 := by
+    simp [toPolyG, CFieldSpec.toK]; ring
+  have hb : toPolyG ([0, -1] : CPolyG ℚ) = -X := by
+    simp [toPolyG, CFieldSpec.toK]
+  rw [h1, hx2, hb]
+  simp
+
+end Witness
+
+/-! ### Final verdict (stated precisely)
+
+**Is the `λ`-cancellation degree bound proven?** **The genuine `λ`-recursion — the nonlinear balanced case,
+the task's deep content — is PROVEN; the exp/primitive case is precisely isolated.**
+
+* **Closed unconditionally** (axiom-clean, NO `native_decide`/`sorry`): the **nonlinear `λ`-recursion**
+  (`δ = deg v ≥ 2`, balanced `deg b = deg a + δ − 1`). `coeff_candTopDegree_balanced_nonlinear` computes the
+  leading coefficient of `a·Dq + b·q` at the candidate top degree as `(deg(q)·lc(a)·lc(v) + lc(b))·lc(q)`,
+  and `natDegree_le_rdeBoundDegreeWithLambda_of_balanced_nonlinear` shows a solution either has a nonzero top
+  coefficient (no cancellation, the existing bound applies) or `deg q = λ = −lc(b)/(lc(a)·lc(v))` (the unique
+  non-neg-integer `λ`-witness, since `lc(a)·lc(v) ≠ 0`) — so `deg q ≤ max(rdeBoundDegreeAbstract, λ)`. This
+  is exactly Bronstein **Lemma 6.3.5** (the nonlinear cancellation case). `natDegree_le_rdeBoundDegreeWithLambda`
+  folds in the strict-domination cases, leaving only the exp/primitive case; lifted to the `CPolyG` layer
+  over `(CFieldSpec.K α)[X]` as `cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol` (the **true** §6.3 bound,
+  `cdegG q ≤ max(cRdeBoundDegreeG, λ)`).
+
+* **The remaining residual** (`RdeBoundExpPrimCancellation`, NEVER `sorry`). The **exp/primitive** (`δ ≤ 1`,
+  `deg b ≤ deg a`) cancellation: there the cancellation condition is **not** the clean `deg q = λ` but the
+  deeper `−lc(b)/lc(a) = m·η + Dz/z` (Bronstein **Lemma 6.3.3 / 6.3.4**, `η = Dt/t`) — a logarithmic-derivative
+  recursion into the **base field**, requiring a base-field "is this `m·η` plus a logarithmic derivative"
+  oracle (the `ParametricLogarithmicDerivative` problem). This is the genuine §6.3 frontier, beyond the
+  nonlinear `λ`-recursion; precisely isolated.
+
+**Is the locked `RdeBoundCancellationResidual` discharged?** **No — and it is not literally dischargeable**,
+by design: it asks for the engine's `λ`-free `cRdeBoundDegreeG` bound *even in the cancellation case*, which
+is genuinely **false** when `λ` exceeds the engine bound (the engine omits the `λ` term — its own docstring:
+"the cancellation refinements are the documented continuation"). The honest closure is the **`λ`-augmented**
+residual `RdeBoundCancellationResidualWithLambda` (`cdegG q ≤ max(cRdeBoundDegreeG, λ)`, the *correct*
+bound), which `rdeBoundCancellationResidualWithLambda_of_expPrim` discharges modulo **only** the
+exp/primitive case — the nonlinear `λ`-recursion is proven. So the **mathematics** of the cancellation
+degree bound is closed for the nonlinear case (the deepest single piece) and reduced to the exp/primitive
+logarithmic-derivative recursion for `δ ≤ 1`.
+
+**Engine note (no change made here).** Adopting the `λ`-augmented bound `max(cRdeBoundDegreeG, λ)` *in the
+engine* (`cRdeBoundDegreeG`) is a separate, invasive step (it changes the computed bound and ripples through
+the SPDE/poly-RDE solve and every `native_decide` regression); per the task this file does **not** touch the
+engine. The math is established at the abstract + `CPolyG` layers; the engine still computes the
+non-cancellation bound. -/
+
+/-! ### Axiom audit (the nonlinear `λ`-recursion and its `CPolyG` lift are axiom-clean;
+NO `native_decide`, NO `sorry`) -/
+
+#print axioms coeff_candTopDegree_balanced_nonlinear
+#print axioms natDegree_le_rdeBoundDegreeWithLambda_of_balanced_nonlinear
+#print axioms rdeIsBalanced_nonlinear_or_low
+#print axioms natDegree_le_rdeBoundDegreeWithLambda
+#print axioms cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol
+#print axioms rdeBoundCancellationResidualWithLambda_of_expPrim
+
 end DeepWiki.SymbolicIntegration
