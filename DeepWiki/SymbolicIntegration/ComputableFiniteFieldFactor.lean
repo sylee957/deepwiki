@@ -796,3 +796,23 @@ example : ddfProduct (ddf 3 ([1, 0, 1] : List (ZMod 3))) = ([1, 0, 1] : List (ZM
 /-- The Frobenius power `X³ mod (x² − 1)` over `𝔽₃` reduces to `X` (`native_decide`). -/
 example : xPowModF 3 1 ([2, 0, 1] : List (ZMod 3)) 2 = ([0, 1, 0, 0] : List (ZMod 3)) := by
   native_decide
+
+/-! ## Equal-degree factorization (EDF): the Cantor–Zassenhaus split polynomial
+
+A DDF block at degree `d` is a product of `k` **distinct** degree-`d` irreducibles; EDF splits it
+into the `k` factors. For `p` odd the Cantor–Zassenhaus split uses the polynomial
+`(X + a)^((p^d − 1)/2) − 1 mod f` for a shift `a ∈ 𝔽_p`. Over the residue field at each irreducible
+factor, `(X + a)^((p^d − 1)/2)` is `±1` (Euler's criterion: it is a square root of `1`), so the gcd
+of `f` with this polynomial selects exactly the factors on which the value is `+1` — a proper
+factor for a "good" shift `a`. Lean has no randomness, so `a` is swept `0, 1, 2, …` deterministically.
+
+`edfSplitPoly f d a` computes `(X + a)^((p^d − 1)/2) − 1 mod f` via the existing modular
+exponentiation `powModL` (base `[a, 1]` = `X + a`, exponent `(p^d − 1)/2`, reduced mod the monic
+`f`). Keep `p, d` small — the exponent `(p^d − 1)/2` drives the squaring count. -/
+
+/-- The Cantor–Zassenhaus split polynomial `(X + a)^((p^d − 1)/2) − 1 mod f` over `𝔽_p` (`p` odd),
+for a shift `a : ZMod p`, with `f` monic of degree `df`. Computed by modular exponentiation of the
+base `X + a = [a, 1]` to the half-power `(p^d − 1)/2`, then subtracting `1`. -/
+def edfSplitPoly (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (df : ℕ) (a : ZMod p) :
+    List (ZMod p) :=
+  subL (powModL f df ((p ^ d - 1) / 2 + 1) [a, 1] ((p ^ d - 1) / 2)) [1]
