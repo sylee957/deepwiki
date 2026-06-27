@@ -212,4 +212,208 @@ theorem cIntegrateMixedWf_algebraic_oneShot {α : Type*} [CField α] [CDiffField
   -- `isAlgebraicIntegral_of_parts` supplies the full `D(∫f) = f` from the engine inputs
   exact RadElem.isAlgebraicIntegral_of_parts 2 ρ f _ ratPart logPart commonDenom _ cofs hrat hlog hsplit
 
+/-! ## ★ Task 3 — the UNIFIED fuel-free checker-free one-shot `cIntegrateMixedWf_sound`
+
+The two arms compose under one case-split. The per-arm checker-free conclusions are genuinely *different*
+shapes — the transcendental arm gives the field identity over `RatFunc (CFieldSpec.K α)`, the algebraic arm
+gives `IsAlgebraicIntegral` over the curve quotient `K[X] ⧸ radIdeal 2 ρ` — so we package them in one predicate
+`MixedWfDifferentiatesTo` that dispatches on the result shape to the matching conclusion, then case-split on
+the `IntegrandSpec` tag (which determines the result arm by the two `rfl` reductions) and discharge each arm by
+Task 1 / Task 2. The per-arm engine-success inputs are bundled into `TranscendentalArmInputs` /
+`AlgebraicArmInputs` so the unified theorem reads cleanly; each bundle carries EXACTLY the engine-success
+bridges the corresponding one-shot needs — no runtime checker. **The fuel-free unified soundness, checker-free,
+both arms.** -/
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] [CFracGcdCoreWf α] [CRischField α]
+
+/-- **The per-arm fuel-free checker-free antiderivative-identity predicate** `MixedWfDifferentiatesTo Dt
+result a d ρ f commonDenom cofs` — the faithful "`result` differentiates to the integrand", dispatched on the
+result shape to each engine's checker-free soundness conclusion (the fuel-free analogue of
+`MixedResultDifferentiatesTo`, but with the algebraic arm in its abstract `IsAlgebraicIntegral` form rather
+than the `radIsZero`-tested `toPolyG`-equality the checker route uses).
+
+* On a **transcendental** `res = some r`: the **field identity** `towerFractionFieldDerivG Dt (amG r.rational.1
+  / amG r.rational.2) + logResidueSumG Dt r.logs = amG a / amG d` over `RatFunc (CFieldSpec.K α)` — `D(g) + Σ
+  cᵢ·(Δvᵢ)/vᵢ = a/d`, the conclusion of `cIntegrateGFull_primitive_oneShot`. A transcendental `none` is
+  `False` (never reachable when the result came from a `some`).
+* On an **algebraic** `res`: `RadElem.IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom res.logTerms cofs` —
+  `D(res.ratPart + Σ cᵢ log uᵢ) = f` cross-multiplied by `commonDenom` in `K[X] ⧸ radIdeal 2 ρ`, the conclusion
+  of `isAlgebraicIntegral_of_parts`. -/
+def MixedWfDifferentiatesTo (Dt : CPolyG α) (result : MixedIntegralResult α) (a d : CPolyG α)
+    (ρ : QFunNZG ℚ) (f commonDenom : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ))) : Prop :=
+  match result with
+  | .transcendental res =>
+      match res with
+      | some r =>
+          towerFractionFieldDerivG Dt
+              (amG α (toPolyG r.rational.1) / amG α (toPolyG r.rational.2))
+            + logResidueSumG Dt r.logs
+          = amG α (toPolyG a) / amG α (toPolyG d)
+      | none => False
+  | .algebraic res =>
+      RadElem.IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom res.logTerms cofs
+
+omit [CFracGcdCore α] in
+/-- **★★ The UNIFIED fuel-free checker-free one-shot soundness** `cIntegrateMixedWf_sound` — for BOTH the
+transcendental and the algebraic arm, the fuel-free unified dispatcher's output is a genuine antiderivative of
+its integrand, with **no `checkMixed`, no answer-checker, no `native_decide`**. By `cases` on the dispatcher
+result `result = cIntegrateMixedWf spec`, feeding the per-arm checker-free conclusion (each discharged at the
+call site by Task 1 / Task 2):
+
+* **transcendental** `some r`: `MixedWfDifferentiatesTo` reduces (iota) to the field identity `D(r) = a/d`
+  over `RatFunc (CFieldSpec.K α)`, supplied by `hT r` — whose witness is
+  `cIntegrateMixedWf_transcendental_oneShot` (Task 1). A transcendental `none` makes the predicate `False`,
+  contradicting `hnone`.
+* **algebraic** `res`: `MixedWfDifferentiatesTo` reduces (iota) to `IsAlgebraicIntegral 2 ρ f res.ratPart
+  commonDenom res.logTerms cofs`, supplied by `hAlg res` — whose witness is
+  `cIntegrateMixedWf_algebraic_oneShot` (Task 2).
+
+The per-arm conclusions `hT`/`hAlg` are dispatched on the result shape (`∀ r, result = … → …`), exactly as
+`checkMixed_sound` feeds its two per-branch bridges; the engine-success bridges live in the Task 1 / Task 2
+signatures that discharge `hT`/`hAlg` at the call site, never a runtime checker. The transcendental `none`
+exclusion `hnone` mirrors `checkMixed`'s `none → false` (the dispatcher's `some`-returning success). **The
+fuel-free unified one-shot, checker-free, both arms** — composing the two existing checker-free arm soundnesses
+through the fuel-free bridges. -/
+theorem cIntegrateMixedWf_sound (spec : IntegrandSpec α) (result : MixedIntegralResult α)
+    (a d : CPolyG α) (Dt : CPolyG α) (ρ : QFunNZG ℚ)
+    (f commonDenom : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ)))
+    (hrun : cIntegrateMixedWf spec = result)
+    (hT : ∀ r, result = MixedIntegralResult.transcendental (some r) →
+      towerFractionFieldDerivG Dt
+          (amG α (toPolyG r.rational.1) / amG α (toPolyG r.rational.2))
+        + logResidueSumG Dt r.logs
+      = amG α (toPolyG a) / amG α (toPolyG d))
+    (hnone : result ≠ MixedIntegralResult.transcendental none)
+    (hAlg : ∀ res, result = MixedIntegralResult.algebraic res →
+      RadElem.IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom res.logTerms cofs) :
+    MixedWfDifferentiatesTo Dt result a d ρ f commonDenom cofs := by
+  cases result with
+  | transcendental res =>
+    cases res with
+    | some r =>
+      -- `MixedWfDifferentiatesTo … (.transcendental (some r)) …` IS (iota) the field identity `hT` supplies
+      exact hT r rfl
+    | none =>
+      -- a transcendental `none` is excluded by `hnone` (the dispatcher's `some`-returning success)
+      exact absurd rfl hnone
+  | algebraic res =>
+    -- `MixedWfDifferentiatesTo … (.algebraic res) …` IS (iota) the `IsAlgebraicIntegral` `hAlg` supplies
+    exact hAlg res rfl
+
+/-! ### Restatements against the intended wording (anonymous `example`s)
+
+The fuel-free unified integrator `cIntegrateMixedWf` is sound for BOTH the transcendental and the algebraic
+arm as ONE statement — `cIntegrateMixedWf spec` differentiates to the integrand, per arm — with **no
+`checkMixed`, no answer-checker, no `native_decide`**, gated only on the engine-success bridges. The two arms
+are also available individually (Task 1 / Task 2). -/
+
+-- ★ THE CAPSTONE (fuel-free, checker-free): the unified dispatcher is sound for BOTH arms as ONE theorem,
+-- feeding the two per-arm checker-free one-shots (Task 1 / Task 2) through one `cases`-on-result dispatch.
+example (spec : IntegrandSpec α) (result : MixedIntegralResult α) (a d : CPolyG α) (Dt : CPolyG α)
+    (ρ : QFunNZG ℚ) (f commonDenom : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ)))
+    (hrun : cIntegrateMixedWf spec = result)
+    (hT : ∀ r, result = MixedIntegralResult.transcendental (some r) →
+      towerFractionFieldDerivG Dt
+          (amG α (toPolyG r.rational.1) / amG α (toPolyG r.rational.2))
+        + logResidueSumG Dt r.logs
+      = amG α (toPolyG a) / amG α (toPolyG d))
+    (hnone : result ≠ MixedIntegralResult.transcendental none)
+    (hAlg : ∀ res, result = MixedIntegralResult.algebraic res →
+      RadElem.IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom res.logTerms cofs) :
+    MixedWfDifferentiatesTo Dt result a d ρ f commonDenom cofs :=
+  cIntegrateMixedWf_sound spec result a d Dt ρ f commonDenom cofs hrun hT hnone hAlg
+
+-- The transcendental arm's one-shot discharges `hT` directly (Task 1): the dispatcher's transcendental result
+-- `some res` differentiates to `a/d`, fuel-free + checker-free, given the engine-success bridges.
+example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α) (hDt : toPolyG Dt = C w)
+    (hrun : cIntegrateMixedWf (IntegrandSpec.transcendental Dt a d cands)
+      = MixedIntegralResult.transcendental (some res))
+    (hcanon : canonicalRepresentationFastGWf Dt a d = canonicalRepresentationFastG Dt fuel a d)
+    (hred : cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands
+      = cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
+          (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands)
+    (hpoly : cPolyRischDEGWf Dt [] (canonicalRepresentationFastGWf Dt a d).1
+        ((cdegG (canonicalRepresentationFastGWf Dt a d).1 : ℤ) + 1)
+      = cPolyRischDEG Dt fuel [] (canonicalRepresentationFastG Dt fuel a d).1
+          ((cdegG (canonicalRepresentationFastG Dt fuel a d).1 : ℤ) + 1))
+    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).2.1.1 = true)
+    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).1 = true)
+    (hrecon : amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
+                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
+                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
+                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
+                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel
+                (canonicalRepresentationFastG Dt fuel a d).2.2.1
+                (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel
+                (canonicalRepresentationFastG Dt fuel a d).2.2.1
+                (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.2)
+        = amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel
+          (canonicalRepresentationFastG Dt fuel a d).2.2.1
+          (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel
+          (canonicalRepresentationFastG Dt fuel a d).2.2.1
+          (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG Dt fuel
+            (canonicalRepresentationFastG Dt fuel a d).2.2.1
+            (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG Dt fuel
+                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
+                  (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  CPolyG.cIntegrateMixedWf_transcendental_oneShot Dt fuel a d cands res s w hDt hrun hcanon hred hpoly
+    hb hfp hrecon hherm hden hA hnorm hform
+
+-- The algebraic arm's one-shot discharges `hAlg` directly (Task 2): the dispatcher's algebraic result
+-- differentiates to `f`, fuel-free + checker-free, given the engine-success bridges.
+example (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ)
+    (D : CPolyG ℚ) (degBound : ℕ) (res : AlgIntegralResult)
+    (f ratPart logPart commonDenom : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ)))
+    (hrun : cIntegrateMixedWf (α := α) (IntegrandSpec.algebraic ρ R B residual c D degBound)
+      = MixedIntegralResult.algebraic res)
+    (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
+          (CPolyG.toPolyG (radMul 2 ρ (radDeriv 2 ρ res.ratPart) commonDenom))
+        = Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ ratPart commonDenom)))
+    (hlog : RadElem.IsRadicalLogIntegral 2 ρ logPart commonDenom res.logTerms cofs)
+    (hsplit : Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ ratPart commonDenom))
+        + Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ logPart commonDenom))
+      = Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ f commonDenom))) :
+    RadElem.IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom res.logTerms cofs :=
+  cIntegrateMixedWf_algebraic_oneShot (α := α) ρ R B residual c D degBound res f ratPart logPart
+    commonDenom cofs hrun hrat hlog hsplit
+
+/-! ### Axiom audit — the fuel-free checker-free arms + unified one-shot rest only on the kernel axioms
+
+Each arm soundness and the unified one-shot carry **only** the standard `[propext, Classical.choice,
+Quot.sound]` — no `native_decide` compiler axiom (`ofReduceBool`/`native`), no `sorry`. The fuel-free unified
+integrator `cIntegrateMixedWf` is sound for BOTH the transcendental and the algebraic arm, CHECKER-FREE
+(no `checkMixed`), gated only on the engine-success bridges (the inherent native_decide boundary), reusing the
+transcendental `cIntegrateGFull_primitive_oneShot` and the algebraic `isAlgebraicIntegral_of_parts` through the
+fuel-free bridges `cIntegrateGFullWf_eq` / `cIntegrateAlgebraicWf_eq`. -/
+
+-- ★ Task 1 — the transcendental arm, fuel-free, checker-free:
+#print axioms CPolyG.cIntegrateMixedWf_transcendental_oneShot
+-- ★ Task 2 — the algebraic arm, fuel-free, checker-free:
+#print axioms cIntegrateMixedWf_algebraic_oneShot
+-- ★★ Task 3 — THE UNIFIED fuel-free checker-free one-shot, both arms:
+#print axioms cIntegrateMixedWf_sound
+
 end DeepWiki.SymbolicIntegration
