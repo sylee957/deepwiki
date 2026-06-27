@@ -47,6 +47,22 @@ theorem implicitDeriv_X_sub_C (v : K[X]) (α : K) :
     Differential.implicitDeriv v (X - C α) = v - C (α′) := by
   rw [map_sub, Differential.implicitDeriv_X, Differential.implicitDeriv_C]
 
+/-! ### Step 2: the monomial log-derivative of a linear factor in `K(t)`
+
+Under the extended monomial derivation `extendDeriv (implicitDeriv v)`, the log-derivative of the linear
+factor `t − α` reads `(v − C α′)/(t − α)` over `RatFunc K` — the ★ absorption made explicit: it is
+`(Dt − α′)/(t − α)`, NOT `1/(t − α)`. Combines `extendDeriv_logDeriv` with `implicitDeriv_X_sub_C`. -/
+
+/-- **The monomial log-derivative of a linear factor** — over `extendDeriv (implicitDeriv v)`,
+`D(t−α)/(t−α) = algebraMap(v − C α′) / algebraMap(t − α)` in `RatFunc K`. The Rothstein–Trager monomial
+absorption made explicit at the per-factor level: the log-derivative is `(Dt − α′)/(t − α)`, not `1/(t − α)`.
+By `extendDeriv_logDeriv` (the generic logarithmic-derivative reading) and `implicitDeriv_X_sub_C`. -/
+theorem extendDeriv_implicitDeriv_logDeriv_X_sub_C [Algebra ℚ K] (v : K[X]) (α : K) :
+    extendDeriv (Differential.implicitDeriv v) (algebraMap K[X] (RatFunc K) (X - C α))
+        / algebraMap K[X] (RatFunc K) (X - C α)
+      = algebraMap K[X] (RatFunc K) (v - C (α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
+  rw [extendDeriv_logDeriv, implicitDeriv_X_sub_C]
+
 end ResidueMatchTower
 
 end DeepWiki.SymbolicIntegration
