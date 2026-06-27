@@ -111,6 +111,30 @@ theorem rischDEInnerCompleteness_of_decisionFrontier (Dt fnum fden gnum gden : C
     (divisibilityResidual_of_cleared Dt fnum fden gnum gden h.hnorm h.hfuel)
     h.hbound h.hsolve
 
+/-- **The three-tip frontier yields the §6.2–6.6 inner-solve exhaustiveness** (`hinner clause`,
+`cRischDEG_isSome_of_decisionFrontier`): from the consolidated `RischDEInnerDecisionFrontier`, a
+`cRischDEG`-polynomial-solvable RDE makes the assembled §6 solve return `some` —
+`(∃ ynum yden, IsCRischDEGPolySol …) → (cRischDEG Dt towerRischDEFuel …).isSome = true`. This is the
+`hsolve` content (the deep clause (c) of the field-level decision procedure) read straight off the three
+tips, through `rischDEInnerCompleteness_of_decisionFrontier` and `cRischDEG_isSome_of_innerCompleteness`. -/
+theorem cRischDEG_isSome_of_decisionFrontier (Dt fnum fden gnum gden : CPolyG α)
+    (h : RischDEInnerDecisionFrontier Dt fnum fden gnum gden)
+    (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
+    (cRischDEG Dt towerRischDEFuel fnum fden gnum gden).isSome = true :=
+  cRischDEG_isSome_of_innerCompleteness Dt fnum fden gnum gden
+    (rischDEInnerCompleteness_of_decisionFrontier Dt fnum fden gnum gden h) hsol
+
+/-! ### Restatement against the §6 inner-completeness shape (anonymous `example`) -/
+
+-- ★ The three named §6 tips (the `k⟨t⟩` fact + fuel, the §6.3 cancellation residual, the SPDE/poly-RDE
+-- exhaustiveness) genuinely assemble the full §6.2–6.6 inner-solve completeness `RischDEInnerCompleteness`
+-- — the deep `hinner` content of the field-level decision procedure — via the proven assembly.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
+    (h : RischDEInnerDecisionFrontier Dt fnum fden gnum gden) :
+    RischDEInnerCompleteness Dt fnum fden gnum gden :=
+  rischDEInnerCompleteness_of_decisionFrontier Dt fnum fden gnum gden h
+
 end InnerFrontier
 
 /-! ## ★ The field-level decision-procedure frontier and the CAPSTONE
@@ -219,5 +243,6 @@ NO `native_decide`, NO `sorry`) -/
 #print axioms crischDESolveSound_isDecisionProcedure
 #print axioms crischDESolveSound_isDecisionProcedure_mp
 #print axioms rischDEInnerCompleteness_of_decisionFrontier
+#print axioms cRischDEG_isSome_of_decisionFrontier
 
 end DeepWiki.SymbolicIntegration
