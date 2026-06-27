@@ -344,9 +344,8 @@ theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCore α]
 `ComputableOneShotSoundness`), the normal part (`cIntegrateReducedG`, Hermite half abstract here), and the
 recombination — all of which the engine's single `checkIdentityG` validates uniformly. So the cleanest full
 one-shot, covering *every* regime `cIntegrateGFull` lands, is gated on the engine's own `checkIdentityG`
-certificate via the carrier-agnostic bridge `field_identity_of_checkIdentityG`. This is exactly the
-`cIntegrateGChecked_correct` content with the guard made explicit (the algorithm output passes its own
-check). -/
+certificate via the carrier-agnostic bridge `field_identity_of_checkIdentityG` — the algorithm output
+passing its own check. -/
 
 /-- **★★★ The full `cIntegrateGFull` one-shot, gated on the engine's own `checkIdentityG`** — for any
 result `res` the full driver `cIntegrateGFull Dt fuel a d cands` lands (the `fuel`/`cands` regime carried
@@ -356,8 +355,8 @@ reachable by `native_decide` for any concrete run; abstractly the poly branch's
 then the field-level identity `D(res) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc
 (CFieldSpec.K α)`. Covers EVERY regime `cIntegrateGFull` dispatches into (polynomial branch, normal part,
 recombination) through the single carrier-agnostic bridge `field_identity_of_checkIdentityG` — the
-`checkIdentityG` self-certificate alone supplies correctness, exactly the `cIntegrateGChecked_correct`
-content with the guard made explicit (the algorithm output passes its own check). -/
+`checkIdentityG` self-certificate alone supplies correctness, the `field_identity_of_checkIdentityG` bridge
+with the guard made explicit (the algorithm output passes its own check). -/
 theorem field_identity_of_cIntegrateGFull_of_checkIdentityG [CFracGcdCore α] [CRischField α]
     (Dt : CPolyG α) (_fuel : ℕ) (a d : CPolyG α) (_cands : List α) (res : IntegralResultG α)
     (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)

@@ -8,8 +8,8 @@ The rational part of the simple-radical integral is reduced (`ComputableRadicalE
 (`ComputableAlgebraicResidues`, `cAlgResidueResultant`). What is missing between the two is the **actual
 log terms** `Σ cᵢ log vᵢ` — the arguments `vᵢ`. This file closes the loop for the cases where a closed
 form `u` is known: it **VERIFIES** that `∫(integrand) dx = log u` directly, through the engine's real
-diagonal derivation `radDeriv` — the algebraic analogue of the transcendental engine's self-validating
-`cIntegrateGChecked`.
+diagonal derivation `radDeriv` — the algebraic analogue of the transcendental engine's `checkIdentityG`
+self-check bridge (`field_identity_of_checkIdentityG`).
 
 **The logarithmic-derivative certificate.** For a radical-extension element `u ∈ α[y]/(yⁿ − ρ)`,
 `D(log u) = (radDeriv u)/u` (the logarithmic derivative). So `∫(integrand) dx = log u` holds **iff**

@@ -2,9 +2,9 @@ import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
 
 /-! # One-shot (checker-free) algorithm soundness for the integrator's polynomial branch
 
-The integrator's existing soundness is **check-based**: `cIntegrateGChecked_correct`
-(`ComputableIntegrateTowerCorrectG`) guards the driver `cIntegrateGFull`'s output by the runtime
-Boolean `checkIdentityG` and proves `checkIdentityG = true ⟹ D(∫f) = f`. The genuine soundness wanted is
+The integrator's other soundness route is **check-based**: the bridge `field_identity_of_checkIdentityG`
+(`ComputableIntegrateTowerCorrectG`) takes the driver `cIntegrateGFull`'s output, asks the runtime
+Boolean `checkIdentityG`, and proves `checkIdentityG = true ⟹ D(∫f) = f`. The genuine soundness wanted is
 **one-shot**: the algorithm output is provably correct *with the runtime check redundant* — not "check
 passes implies correct" but "the algorithm always passes its own check, so `D(res) = integrand`
 directly".
@@ -218,7 +218,7 @@ emits (recombined over denominator `1`, no logs) — satisfies `checkIdentityG [
 directly. `checkIdentityG` clears denominators and tests `cisZeroG`; with `gden = aden = 1` and no logs
 this collapses (`cisZeroG_iff`) to the polynomial identity `D(cIntegratePolyG c) = c`, which is the atom
 `toPolyG_cmonomialDeriv_cIntegratePolyG_const`. Composing with `field_identity_of_checkIdentityG` then
-gives `D(∫f) = f` checker-free — the guard inside `cIntegrateGChecked` is provably never needed on this
+gives `D(∫f) = f` checker-free — the `checkIdentityG` guard is provably never needed on this
 branch. -/
 
 /-- `toPolyG (cmonomialDeriv [CField.one] [CField.one]) = 0`: the primitive monomial derivation
@@ -342,7 +342,8 @@ Instantiating the checker-free polynomial-branch one-shot at the generic level-1
 `α = QFunNZG ℚ`, where `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ` (genuine `Algebra ℚ` and `CharZero`).
 This is the concrete `cPolyRischDEG = some res → D(res) = integrand` (no checker, no `native_decide`)
 for the polynomial branch over `ℚ(x)(t)`. The two local instances bridge the carrier abbreviation to
-`RatFunc ℚ`, matching the pattern of `cIntegrateGChecked_correct_qfunNZG`. -/
+`RatFunc ℚ`, the standard carrier-specialization pattern for the generic `field_identity_of_checkIdentityG`
+bridge at `α = QFunNZG ℚ`. -/
 
 /-- `CharZero (CFieldSpec.K (QFunNZG ℚ)) = CharZero (RatFunc ℚ)`: re-declared locally so the deliverable
 synthesizes the `CharZero` the polynomial-branch one-shot needs over the carrier abbreviation. -/

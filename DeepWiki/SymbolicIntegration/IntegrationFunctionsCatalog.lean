@@ -27,7 +27,9 @@ only; it states no new mathematics.
   poly part, then Rothstein-Trager log part) over a tower base; fuel'd and fuel-free.
   Soundness (checker-free, gated on engine-success bridges): `cIntegrateGFull_primitive_oneShot` (primitive /
   logarithmic monomial) and `cIntegrateGFull_hyperexp_oneShot` (hyperexponential, conditional on `∑c = 0`).
-  Completeness: via the RDE solver and `cIntegrateGChecked` below — no direct decision procedure on the driver.
+  The carrier-agnostic `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
+  `ComputableIntegrateTowerCorrectG`) gates a result on the engine's own self-check.
+  Completeness: via the RDE solver — no direct decision procedure on the driver.
 * `cIntegratePolyG` / `cIntegratePolyGWf` — the polynomial-part integrator (Bronstein §5.4 / §6).
   Soundness: PARTIAL — `field_identity_cIntegratePolyG_const` covers the constant case only.
 * `cIntegrateReducedG` / `cIntegrateReducedGWf` — the reduced / simple-part capstone (Hermite rational part +
@@ -43,9 +45,6 @@ only; it states no new mathematics.
 * `cIntegrateElementaryG` — the unified elementary integrator over a tower base `α = QFunNZG β`.
   Soundness: NO standalone theorem — only `native_decide` round-trip example validations
   (`algDerivG` against the integrand). (Documented gap, flagged for the coordinator.)
-* `cIntegrateGChecked` — the self-validating tower integrator (runs `cIntegrateGFull`, then guards by
-  `checkIdentityG`). Soundness (UNCONDITIONAL, all regimes): `cIntegrateGChecked_correct` (carrier-generic)
-  and `cIntegrateGChecked_correct_qfunNZG` (at `α = QFunNZG ℚ`).
 
 ## The Risch differential-equation solver (Bronstein §6, the RDE oracle)
 
@@ -110,10 +109,9 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 -- `cIntegrateHyperexpFullG`: the full hyperexponential driver soundness.
 #check @cIntegrateHyperexpFullG_sound
 
--- `cIntegrateGChecked`: the self-validating tower integrator's unconditional correctness
--- (carrier-generic, and at `α = QFunNZG ℚ`).
-#check @cIntegrateGChecked_correct
-#check @cIntegrateGChecked_correct_qfunNZG
+-- `field_identity_of_checkIdentityG`: the carrier-agnostic `checkIdentityG` ⟹ field-identity bridge
+-- (`ComputableIntegrateTowerCorrectG`), consumed by the a-priori one-shots above.
+#check @field_identity_of_checkIdentityG
 
 /-! ## Verified references — the Risch differential-equation solver -/
 

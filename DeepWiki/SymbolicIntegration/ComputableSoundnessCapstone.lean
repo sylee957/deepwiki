@@ -490,8 +490,8 @@ To register `instance CRischFieldSpec (QFunNZG β)` one must prove its spec for 
    `cgcdTerminatesG`). **None is forced by the bare `cRischDEG … = some _`** (this is the
    `ComputableRischDEStructural` structural-decomposition verdict), and none is a gcd fact the witness
    produces. They hold on every regular run but the engine **never re-validates them**, so they are not
-   recoverable from success — exactly the role the self-validating *integrator* `cIntegrateGChecked` solves
-   with its own boolean `checkIdentityG` re-check (the tractable route: a *checked* RDE oracle, an engine
+   recoverable from success — exactly the role the integrator's `checkIdentityG` self-check bridge
+   (`field_identity_of_checkIdentityG`) plays (the tractable route: a *checked* RDE oracle, an engine
    addition out of this file's scope).
 3. **A prerequisite gap**: the `CRischFieldSpec` *class* needs `[CDiffFieldSpec (QFunNZG β)]` to even state
    `(toK y)′`; only the concrete `instCDiffFieldSpecQFunNZG : CDiffFieldSpec (QFunNZG ℚ)` exists — no generic

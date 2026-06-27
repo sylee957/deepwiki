@@ -242,8 +242,9 @@ distinct reasons. The first is fundamental; the second is supplied above.
    *structural decomposition theorem* (every successful `cRischDEG` run factors through successful, regular
    stages). That theorem does not exist; it is the documented continuation. It is the §6 analogue of the
    missing "`cIntegrateG … = some res` ⟹ `checkIdentityG … = true`" forward-threading — which is exactly why
-   the *self-validating* integrator (`cIntegrateGChecked`, `ComputableIntegrateTowerCorrectG`) instead gates on
-   the engine's **own** boolean `checkIdentityG` re-check rather than on a structural decomposition. An
+   the `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
+   `ComputableIntegrateTowerCorrectG`) instead gates on the engine's **own** boolean `checkIdentityG` re-check
+   rather than on a structural decomposition. An
    analogous *checked* RDE oracle — re-validating `cRischDEG`'s output by an engine boolean RDE check and
    bridging *that* — is the tractable route to a `CRischFieldSpec`-style guarantee; it is a separate engine
    addition, out of scope here (it touches `ComputableTowerRischDE`, owned elsewhere).
