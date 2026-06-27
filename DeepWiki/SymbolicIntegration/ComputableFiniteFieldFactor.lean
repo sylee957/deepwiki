@@ -81,6 +81,16 @@ def lengthTrim {R : Type*} [Zero R] [DecidableEq R] : List R → ℕ
     let r := lengthTrim as
     if r = 0 then (if a = 0 then 0 else 1) else r + 1
 
+/-- The trim length never exceeds the list length. -/
+theorem lengthTrim_le_length {R : Type*} [Zero R] [DecidableEq R] :
+    ∀ l : List R, lengthTrim l ≤ l.length
+  | [] => by simp [lengthTrim]
+  | a :: as => by
+    simp only [lengthTrim, List.length_cons]
+    split
+    · split <;> omega
+    · have := lengthTrim_le_length as; omega
+
 /-- A list whose `lengthTrim` is `0` reads as the zero polynomial. -/
 theorem toPoly_eq_zero_of_lengthTrim_eq_zero {R : Type*} [Semiring R] [DecidableEq R]
     {l : List R} (h : lengthTrim l = 0) : toPoly l = 0 := by
@@ -428,11 +438,11 @@ theorem lengthTrim_subL_mulL_lt {R : Type*} [CommRing R] [DecidableEq R]
     rw [hpoly]; exact hdeglt
   omega
 
-/-- **Remainder degree bound.** With `toPoly g` monic of degree `dg ≥ 1` and `fuel ≥ lengthTrim f`,
+/-- **Remainder degree bound.** With `toPoly g` monic of degree `dg` and `fuel ≥ lengthTrim f`,
 the fueled long-division remainder has `lengthTrim ≤ dg` (the loop reaches its `≤ dg` stop before
 running out of fuel, by the per-step decrease). -/
 theorem lengthTrim_divmodByMonicFuel_snd_le {R : Type*} [CommRing R] [DecidableEq R]
-    {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg) (hdg : 1 ≤ dg) :
+    {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg) :
     ∀ (fuel : ℕ) (f : List R), lengthTrim f ≤ fuel →
       lengthTrim (divmodByMonicFuel g dg fuel f).2 ≤ dg := by
   intro fuel
@@ -461,6 +471,35 @@ theorem lengthTrim_divmodByMonicFuel_snd_le {R : Type*} [CommRing R] [DecidableE
       rw [hpair] at this
       simpa using this
 
+/-- For a nonzero-reading list, `natDegree (toPoly l) = lengthTrim l - 1`. -/
+theorem natDegree_toPoly_eq {R : Type*} [Semiring R] [DecidableEq R] {l : List R}
+    (hl : lengthTrim l ≠ 0) : (toPoly l).natDegree = lengthTrim l - 1 := by
+  have hpos : 0 < lengthTrim l := Nat.pos_of_ne_zero hl
+  refine natDegree_eq_of_le_of_coeff_ne_zero ?_ ?_
+  · refine Nat.le_sub_one_of_lt ?_
+    have hd := toPoly_degree_lt_lengthTrim l
+    have hne : toPoly l ≠ 0 := by
+      rw [Ne, toPoly_eq_zero_iff_lengthTrim]; exact hl
+    exact (Polynomial.natDegree_lt_iff_degree_lt hne).2 hd
+  · rw [coeff_lengthTrim_sub_one]; exact leadL_ne_zero_of_lengthTrim_pos hpos
+
+/-- The monicization of a nonzero-reading list is monic of degree `lengthTrim g - 1`
+(scaling by the inverse leading coefficient, a unit). -/
+theorem isMonicOfDegree_monicizeL {R : Type*} [Field R] [DecidableEq R] {g : List R}
+    (hg : lengthTrim g ≠ 0) : IsMonicOfDegree (toPoly (monicizeL g)) (lengthTrim g - 1) := by
+  have hpos : 0 < lengthTrim g := Nat.pos_of_ne_zero hg
+  have hlead : leadL g ≠ 0 := leadL_ne_zero_of_lengthTrim_pos hpos
+  have hgne : toPoly g ≠ 0 := by rw [Ne, toPoly_eq_zero_iff_lengthTrim]; exact hg
+  -- the leading coefficient of `toPoly g` is `leadL g`
+  have hlc : (toPoly g).leadingCoeff = leadL g := by
+    rw [leadingCoeff, natDegree_toPoly_eq hg, coeff_lengthTrim_sub_one]
+  rw [toPoly_monicizeL]
+  refine ⟨?_, ?_⟩
+  · -- natDegree (C lead⁻¹ * toPoly g) = lengthTrim g - 1
+    rw [natDegree_C_mul (by simpa using hlead), natDegree_toPoly_eq hg]
+  · -- monic: (leadL g)⁻¹ * leadingCoeff = 1
+    exact monic_C_mul_of_mul_leadingCoeff_eq_one (by rw [hlc]; exact inv_mul_cancel₀ hlead)
+
 /-! ## Euclidean gcd over `𝔽_p`
 
 `gcdByMonic f g` is the polynomial gcd over the field, normalizing the divisor with `monicizeL`
@@ -469,6 +508,16 @@ at each step so `modByMonicL` (monic divisor) applies. We recurse with explicit 
 `lengthTrim`). The carried invariant is **divisibility of both arguments** when fuel suffices:
 `toPoly d ∣ toPoly f` and `toPoly d ∣ toPoly g`. The first is exactly what makes a DDF peel exact
 (remainder `0`), the source of multiply-back soundness. -/
+
+/-- For a nonzero `g`, the monicization divides `g` (the scaling factor `C (leadL g)⁻¹` is a unit),
+so `g` and `monicizeL g` are associated. -/
+theorem toPoly_monicizeL_dvd {R : Type*} [Field R] [DecidableEq R] {g : List R}
+    (hg : lengthTrim g ≠ 0) : toPoly (monicizeL g) ∣ toPoly g := by
+  have hlead : leadL g ≠ 0 := leadL_ne_zero_of_lengthTrim_pos (Nat.pos_of_ne_zero hg)
+  rw [toPoly_monicizeL]
+  refine ⟨C (leadL g), ?_⟩
+  rw [mul_comm (C (leadL g)⁻¹) (toPoly g), mul_assoc, ← C_mul, inv_mul_cancel₀ hlead, C_1,
+    mul_one]
 
 /-- The Euclidean gcd recursion over a field, fueled. `g = 0` → return `f`; otherwise reduce
 `r = f mod (monicize g)` and recurse `gcd (monicize g) r`. -/
@@ -480,3 +529,70 @@ def gcdByMonicFuel {R : Type*} [Field R] [DecidableEq R] : ℕ → List R → Li
       let gm := monicizeL g
       let r := modByMonicL f gm (lengthTrim g - 1)
       gcdByMonicFuel fuel gm r
+
+/-- **★ Two-sided gcd divisibility.** With sufficient fuel (`lengthTrim g ≤ fuel`), the fueled
+Euclidean gcd divides **both** inputs: `toPoly d ∣ toPoly f ∧ toPoly d ∣ toPoly g`, where
+`d = gcdByMonicFuel fuel f g`. By induction on `fuel`; the step uses the remainder degree bound
+(to keep enough fuel for the recursive call), the remainder identity `f = gm * q + r`, and that
+`gm = monicizeL g` is associated to `g`. The left half is the DDF multiply-back invariant. -/
+theorem gcdByMonicFuel_dvd {R : Type*} [Field R] [DecidableEq R] :
+    ∀ (fuel : ℕ) (f g : List R), lengthTrim g ≤ fuel →
+      toPoly (gcdByMonicFuel fuel f g) ∣ toPoly f ∧
+        toPoly (gcdByMonicFuel fuel f g) ∣ toPoly g := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro f g hfuel
+    -- lengthTrim g = 0, so g reads 0; result is f
+    have hg0 : lengthTrim g = 0 := Nat.le_zero.1 hfuel
+    simp only [gcdByMonicFuel]
+    refine ⟨dvd_rfl, ?_⟩
+    rw [toPoly_eq_zero_of_lengthTrim_eq_zero hg0]; exact dvd_zero _
+  | succ fuel ih =>
+    intro f g hfuel
+    rw [gcdByMonicFuel]
+    split
+    · rename_i hg0
+      refine ⟨dvd_rfl, ?_⟩
+      rw [toPoly_eq_zero_of_lengthTrim_eq_zero hg0]; exact dvd_zero _
+    · rename_i hg0
+      set dg := lengthTrim g - 1 with hdgdef
+      set gm := monicizeL g with hgmdef
+      set r := modByMonicL f gm dg with hrdef
+      -- gm monic of degree dg
+      have hgmmon : IsMonicOfDegree (toPoly gm) dg := isMonicOfDegree_monicizeL hg0
+      -- remainder degree bound: lengthTrim r ≤ dg
+      have hrbound : lengthTrim r ≤ dg := by
+        rw [hrdef, modByMonicL, divmodByMonic]
+        refine lengthTrim_divmodByMonicFuel_snd_le hgmmon (f.length + 1) f ?_
+        have := lengthTrim_le_length f; omega
+      -- so lengthTrim r ≤ fuel for the recursive call (dg = lengthTrim g - 1 < lengthTrim g ≤ fuel+1)
+      have hgpos : 0 < lengthTrim g := Nat.pos_of_ne_zero hg0
+      have hrfuel : lengthTrim r ≤ fuel := by omega
+      obtain ⟨hdgm, hdr⟩ := ih gm r hrfuel
+      refine ⟨?_, ?_⟩
+      · -- d ∣ f : f = gm * q + r
+        have hrem : toPoly f = toPoly gm * toPoly (divmodByMonic f gm dg).1 + toPoly r := by
+          rw [hrdef, modByMonicL]
+          have := divmodByMonic_spec f gm dg
+          linear_combination this
+        rw [hrem]
+        exact dvd_add (hdgm.mul_right _) hdr
+      · -- d ∣ g : d ∣ gm and gm ∣ g (associated)
+        exact hdgm.trans (toPoly_monicizeL_dvd hg0)
+
+/-- Euclidean gcd over `𝔽_p`, with fuel `g.length + 1` (always enough, since
+`lengthTrim g ≤ g.length`). -/
+def gcdByMonic {R : Type*} [Field R] [DecidableEq R] (f g : List R) : List R :=
+  gcdByMonicFuel (g.length + 1) f g
+
+/-- **★ gcd divides its first argument** — the DDF multiply-back invariant.
+`toPoly (gcdByMonic f g) ∣ toPoly f`. -/
+theorem gcdByMonic_dvd_left {R : Type*} [Field R] [DecidableEq R] (f g : List R) :
+    toPoly (gcdByMonic f g) ∣ toPoly f :=
+  (gcdByMonicFuel_dvd (g.length + 1) f g (by have := lengthTrim_le_length g; omega)).1
+
+/-- gcd divides its second argument: `toPoly (gcdByMonic f g) ∣ toPoly g`. -/
+theorem gcdByMonic_dvd_right {R : Type*} [Field R] [DecidableEq R] (f g : List R) :
+    toPoly (gcdByMonic f g) ∣ toPoly g :=
+  (gcdByMonicFuel_dvd (g.length + 1) f g (by have := lengthTrim_le_length g; omega)).2
