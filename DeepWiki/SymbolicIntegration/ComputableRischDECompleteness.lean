@@ -186,4 +186,54 @@ theorem crischDESolveSound_some_of_stages (f g ytilde : QFunNZG β)
 
 end Structural
 
+/-! ## The base-field completeness over the constants `ℚ` (decidably complete, axiom-clean)
+
+The tower recursion bottoms at `CRischField ℚ` (the constant field, `D = 0`), where `crischDESolve b g`
+is the **direct division** `if b = 0 then (if g = 0 then some 0 else none) else some (g/b)`. There the
+RDE `D(y) + b·y = g` collapses to `b·y = g`, which has a solution `y ∈ ℚ` **iff** `b ≠ 0 ∨ g = 0` — and
+that is *exactly* the condition under which `crischDESolve` returns `some`. So the base oracle is a
+genuine **decision procedure**: `b·y = g` solvable ↔ `crischDESolve b g = some _`. This is the
+completeness counterpart of `CRischFieldSpec ℚ`'s soundness, fully reachable (no §6 pipeline), axiom-clean
+— and the base case of any tower-completeness induction. -/
+
+section BaseField
+
+/-- **★ Base-field completeness over `ℚ`** (`rischDE_complete_base`): the constant-field RDE `b·y = g`
+(`D = 0`) is solvable in `ℚ` **iff** the base oracle returns `some` —
+`(∃ y : ℚ, b·y = g) ↔ ∃ y, CRischField.crischDESolve b g = some y`. The forward direction is completeness
+(a solution forces a `some`): if `b ≠ 0` the division `g/b` is the witness; if `b = 0` then `b·y = g`
+forces `g = 0`, and the oracle returns `some 0`. The reverse is soundness (`CRischFieldSpec ℚ`). The base
+oracle is a decision procedure; axiom-clean, no `native_decide`. -/
+theorem rischDE_complete_base (b g : ℚ) :
+    (∃ y : ℚ, b * y = g) ↔ ∃ y, CRischField.crischDESolve b g = some y := by
+  simp only [CRischField.crischDESolve]
+  constructor
+  · rintro ⟨y, hy⟩
+    by_cases hb : b = 0
+    · -- `b = 0` ⟹ `g = 0`, oracle is `some 0`
+      have hg : g = 0 := by rw [← hy, hb, zero_mul]
+      exact ⟨0, by rw [if_pos hb, if_pos hg]⟩
+    · -- `b ≠ 0` ⟹ oracle is `some (g/b)`
+      exact ⟨g / b, by rw [if_neg hb]⟩
+  · rintro ⟨y, hy⟩
+    by_cases hb : b = 0
+    · -- `b = 0`: oracle `some` forces `g = 0`, then `b·0 = 0 = g`
+      rw [if_pos hb] at hy
+      by_cases hg : g = 0
+      · exact ⟨0, by rw [hb, zero_mul, hg]⟩
+      · rw [if_neg hg] at hy; exact absurd hy (by simp)
+    · -- `b ≠ 0`: `y = g/b` solves `b·(g/b) = g`
+      rw [if_neg hb, Option.some.injEq] at hy
+      exact ⟨g / b, mul_div_cancel₀ g hb⟩
+
+/-- **Base-field completeness, the `some`-direction** (`rischDE_complete_base_some`): a solvable
+constant-field RDE `b·y = g` (`D = 0`) makes the base oracle return `some` —
+`(∃ y : ℚ, b·y = g) → ∃ y, CRischField.crischDESolve b g = some y`. The forward half of
+`rischDE_complete_base`; the §6.1-free base case of the recursive completeness. -/
+theorem rischDE_complete_base_some (b g : ℚ) (hsol : ∃ y : ℚ, b * y = g) :
+    ∃ y, CRischField.crischDESolve b g = some y :=
+  (rischDE_complete_base b g).mp hsol
+
+end BaseField
+
 end DeepWiki.SymbolicIntegration
