@@ -294,4 +294,152 @@ theorem torsionLogTerm_isSome_iff (p cfuel fuel : ℕ) [Fact p.Prime]
 
 end TorsionFrontier
 
+/-! ## ★ The algebraic-completeness residual, and the decision-procedure equivalence
+
+Assembling the engine-side control flow (`torsionLogTerm_isSome_iff`) with the two deep frontiers gives the
+completeness equivalence *modulo* a precisely isolated residual, mirroring
+`crischDESolveSound_decides_of_residual`.  For a residue divisor `D` (the log-part data after the rational
+part `v` and the principal-case `radLogArgSolve` are accounted for) and the integrand's elementarity
+predicate `elem`, the residual bundles exactly the two frontier-instances:
+
+* **`htorsion`** — *frontier 2 instance*: the engine's torsion decision is correct on `D` for the chosen good
+  prime `p` — `isTorsionDivisor p cfuel ρq g D = some m ⟺ D is torsion`.
+* **`hcriterion`** — *frontier 1 instance*: the log-part Liouville criterion holds for `D` —
+  `D is torsion ⟺ elem` (the integrand is elementary exactly when its residue divisor is torsion, the Trager
+  structure theorem applied to this curve).
+
+Their conjunction turns the engine's `torsionLogTerm = some _` into `elem`, and `none` into `¬ elem` — the
+completeness equivalence the converse of soundness delivers, modulo the named frontiers. -/
+
+section Assembly
+
+open DeepWiki.SymbolicIntegration
+
+variable (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ)
+
+/-- **★ The precise algebraic-completeness residual** `AlgebraicCompletenessResidual p cfuel ρq g D isTorsion
+elem`: the two deep frontier-instances that turn the engine's non-principal-branch output into the
+integrand's elementarity.  `p`/`cfuel` are the good prime and search budget (parameters); `isTorsion` the
+abstract "the residue divisor is torsion in `Jac(ℚ̄)`" predicate; `elem` the integrand's elementarity
+(`IsAlgebraicElementary` over the curve's function field).  `htorsion` is the *good-reduction
+torsion-decision correctness* on `D` (frontier 2 — `isTorsionDivisor = some m ⟺ isTorsion`), `hcriterion` the
+*Liouville log-part criterion* on `D` (frontier 1 — `isTorsion ⟺ elem`).  A `Prop`-bundle of stated
+assumptions (NOT proved), making the algebraic-completeness boundary citable with NO `sorry`; each clause is
+one of the two named deep frontiers specialized to this divisor. -/
+structure AlgebraicCompletenessResidual (p cfuel : ℕ) [Fact p.Prime]
+    (isTorsion : Prop) (elem : Prop) : Prop where
+  /-- Frontier 2 (good-reduction torsion-decision correctness) on `D`: the engine's decision matches the
+  true torsion status — `isTorsionDivisor = some m ⟺ D is torsion`. -/
+  htorsion : (∃ m, isTorsionDivisor p cfuel ρq g D = some m) ↔ isTorsion
+  /-- Frontier 1 (Liouville log-part criterion) on `D`: the integrand is elementary ⟺ its residue divisor
+  is torsion. -/
+  hcriterion : isTorsion ↔ elem
+
+/-- **★ Algebraic completeness modulo the residual** (`cIntegrateAlgebraicWf_complete_of_residual`,
+`some ⟺ elementary`): under the algebraic-completeness residual (the good-reduction torsion-decision
+correctness + the Liouville log-part criterion on the residue divisor `D`), the engine's non-principal log
+branch `torsionLogTerm` returns a log term **iff** the integrand is elementary —
+`(torsionLogTerm p cfuel fuel ρ ρq g D).isSome = true ↔ elem`.  The chain: `torsionLogTerm = some _ ⟺
+isTorsionDivisor = some m` (the unconditional `torsionLogTerm_isSome_iff`) ⟺ `D is torsion` (frontier 2,
+`htorsion`) ⟺ `elem` (frontier 1, `hcriterion`).  This is the converse of soundness for the algebraic
+integrator's log part, *modulo* the two precisely isolated deep frontiers — the algebraic analogue of
+`crischDESolveSound_decides_of_residual`. -/
+theorem cIntegrateAlgebraicWf_complete_of_residual {isTorsion elem : Prop} (p cfuel fuel : ℕ)
+    [Fact p.Prime] (hres : AlgebraicCompletenessResidual ρq g D p cfuel isTorsion elem) :
+    (torsionLogTerm p cfuel fuel ρ ρq g D).isSome = true ↔ elem := by
+  rw [torsionLogTerm_isSome_iff, hres.htorsion, hres.hcriterion]
+
+/-- **★ Non-elementarity ⟹ the engine emits no log term** (`engine_none_of_not_elementary`, the headline
+"`none` ⟹ not elementary" reading): under the algebraic-completeness residual, if the integrand is **not**
+elementary then the engine's non-principal branch returns `none` —
+`¬ elem → (torsionLogTerm p cfuel fuel ρ ρq g D).isNone = true`.  The contrapositive of
+`cIntegrateAlgebraicWf_complete_of_residual`: a non-elementary integrand has a non-torsion residue divisor
+(frontier 1), which the engine's correct decision reports as `none` (frontier 2), so no `(1/m)·log` term is
+emitted — exactly the completeness verdict for the algebraic integrator's log part. -/
+theorem engine_none_of_not_elementary {isTorsion elem : Prop} (p cfuel fuel : ℕ) [Fact p.Prime]
+    (hres : AlgebraicCompletenessResidual ρq g D p cfuel isTorsion elem) (hne : ¬ elem) :
+    (torsionLogTerm p cfuel fuel ρ ρq g D).isNone = true := by
+  rw [Option.isNone_iff_eq_none, ← Option.not_isSome_iff_eq_none, Bool.not_eq_true]
+  by_contra hcon
+  rw [Bool.not_eq_false] at hcon
+  exact hne ((cIntegrateAlgebraicWf_complete_of_residual ρ ρq g D p cfuel fuel hres).mp hcon)
+
+end Assembly
+
+/-! ## ★ The complete algebraic-completeness map (the final verdict, stated precisely)
+
+**Is the algebraic integrator's elementarity decision complete?**  **Modulo two precisely isolated deep
+frontiers, yes.**  `cIntegrateAlgebraicWf_complete_of_residual` proves `some ⟺ elementary`
+((`torsionLogTerm`'s `isSome`) ↔ `elem`) under `AlgebraicCompletenessResidual`; its contrapositive
+`engine_none_of_not_elementary` is the headline "`none` ⟹ not elementary".  The `⟹` half (soundness) is the
+done `IsAlgebraicIntegral` capstone (`ComputableRadicalLogSoundness`); the `⟸` half (completeness) is this
+file, modulo the residual.
+
+**Which completeness pieces are PROVEN, and which are the two deep frontiers?**
+
+* **Proven (reachable), axiom-clean.**
+  - The **within-tower algebraic descent** (`elementary_base_of_elementary_finiteDim` /
+    `not_elementary_extension_of_not_elementary_base_alg`) — rides Mathlib's `isLiouville_of_finiteDimensional`:
+    a finite algebraic extension never makes a base-non-elementary integrand elementary.
+  - The **engine-side control flow** (`elementarityViaTorsion_iff_some`, `torsionLogTerm_isSome_iff`,
+    `algebraicLiouville_single_extension`) — the decision is a genuine dichotomy and the log term is emitted
+    ⟺ the torsion decision is positive (pure `Option` control flow, unconditional).
+  - The **decision-procedure assembly** (`cIntegrateAlgebraicWf_complete_of_residual`,
+    `engine_none_of_not_elementary`) — `some ⟺ elementary` modulo the residual.
+* **Proven (reachable), `native_decide`.**  The torsion gates are **non-vacuous**: the engine decides the
+  rank-1 `(3,5)` on `y² = x³ − 2` **non-elementary** (`engine_none_of_nonTorsion_witness`) and the torsion
+  flex `(0,1)` on `y² = x³ + 1` **elementary** with a `(1/3)·log` term (`engine_some_of_torsion_witness`).
+* **The two deep frontiers** (named `def`s, NEVER `sorry`).
+  1. **`AlgebraicLiouvilleFrontier`** — Liouville's structure theorem for the curve's function field
+     (`∫ f` elementary ⟺ the Trager torsion form, *exhaustive*).  Mathlib has only the finite-extension
+     descent, not this structure theorem (Bronstein Ch. 6 / Trager Ch. 5–6 / Rosenlicht).
+  2. **`DivisorTorsionDecisionFrontier`** — the engine's `isTorsionDivisor` is correct and terminating via
+     good reduction mod `p` (the height-swell tip).  Mathlib has the abstract Jacobian but no hyperelliptic
+     point-counting / good-reduction order-bound theorem.
+
+So full `some ⟺ elementary` for the algebraic integrator is reached **modulo exactly these two deep
+frontiers** — the Liouville-for-algebraic structure theorem (the log-part criterion) and the good-reduction
+divisor-torsion decision correctness (the height-swell tip).  Both are stated precisely; neither is a
+`sorry`. -/
+
+/-! ### Restatements pinning the algebraic-completeness content (anonymous `example`s) -/
+
+section Restatements
+
+open DeepWiki.SymbolicIntegration
+
+-- The within-tower algebraic descent: elementary over a finite algebraic extension descends to the base.
+example (F K : Type*) [Field F] [Field K] [CharZero F] [Differential F] [Differential K] [Algebra F K]
+    [DifferentialAlgebra F K] [FiniteDimensional F K] (f : F) (h : IsAlgebraicElementary F K f) :
+    IsAlgebraicElementary F F f :=
+  elementary_base_of_elementary_finiteDim F K f h
+
+-- ★ The decision-procedure equivalence: the engine emits a log term iff the integrand is elementary,
+-- modulo the two named deep frontiers (the Liouville criterion + the good-reduction torsion decision).
+example (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ)
+    {isTorsion elem : Prop} (p cfuel fuel : ℕ) [Fact p.Prime]
+    (hres : AlgebraicCompletenessResidual ρq g D p cfuel isTorsion elem) :
+    (torsionLogTerm p cfuel fuel ρ ρq g D).isSome = true ↔ elem :=
+  cIntegrateAlgebraicWf_complete_of_residual ρ ρq g D p cfuel fuel hres
+
+-- ★ The headline "none ⟹ not elementary" for the algebraic integrator's log part, modulo the frontiers.
+example (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ)
+    {isTorsion elem : Prop} (p cfuel fuel : ℕ) [Fact p.Prime]
+    (hres : AlgebraicCompletenessResidual ρq g D p cfuel isTorsion elem) (hne : ¬ elem) :
+    (torsionLogTerm p cfuel fuel ρ ρq g D).isNone = true :=
+  engine_none_of_not_elementary ρ ρq g D p cfuel fuel hres hne
+
+end Restatements
+
+/-! ### Axiom audit (the descent, control-flow readings, and the modular assembly are axiom-clean;
+the witnesses use `native_decide`) -/
+
+#print axioms elementary_base_of_elementary_finiteDim
+#print axioms not_elementary_extension_of_not_elementary_base_alg
+#print axioms algebraicLiouville_single_extension
+#print axioms elementarityViaTorsion_iff_some
+#print axioms torsionLogTerm_isSome_iff
+#print axioms cIntegrateAlgebraicWf_complete_of_residual
+#print axioms engine_none_of_not_elementary
+
 end DeepWiki.SymbolicIntegration.AlgebraicCompleteness
