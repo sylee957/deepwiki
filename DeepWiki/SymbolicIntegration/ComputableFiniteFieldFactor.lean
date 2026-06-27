@@ -665,3 +665,48 @@ def powModL {R : Type*} [Field R] [DecidableEq R]
 the distinct-degree split `gcd(f, X^(p^d) − X)`. -/
 def xPowModF (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (df : ℕ) : List (ZMod p) :=
   powModL f df (p ^ d + 1) [0, 1] (p ^ d)
+
+/-! ## Distinct-degree factorization (DDF)
+
+For `d = 1, 2, …` the degree-`d` block of (squarefree) `f` is `gcd(f, X^(p^d) − X)` — the product
+of all degree-`d` irreducible factors. `ddfAux` peels this block off, monicizes it (`gdm`), divides
+`f` by it (`divmodByMonic`), and recurses on the cofactor with `d + 1`, accumulating `(d, gdm)`. To
+keep the **multiply-back** invariant exact it only peels when the block has positive degree (so the
+monic block has degree `≥ 1` and the division by it is exact, `gdm ∣ f`); otherwise the remaining
+`f` is emitted as a single trailing block. The returned `List (ℕ × List (ZMod p))` is the list of
+blocks (degree tag + coefficient list). -/
+
+/-- The product of DDF blocks (`mulL`-fold of the coefficient lists, from `[1]`). -/
+def ddfProduct {R : Type*} [Zero R] [One R] [Add R] [Mul R]
+    (bs : List (ℕ × List R)) : List R :=
+  bs.foldr (fun b acc => mulL b.2 acc) [1]
+
+/-- `toPoly` of a block product is the product of the blocks' `toPoly`s. -/
+theorem toPoly_ddfProduct {R : Type*} [CommSemiring R] (bs : List (ℕ × List R)) :
+    toPoly (ddfProduct bs) = (bs.map (fun b => toPoly b.2)).prod := by
+  induction bs with
+  | nil => simp [ddfProduct, toPoly]
+  | cons b bs ih =>
+    rw [ddfProduct, List.foldr_cons, toPoly_mulL, List.map_cons, List.prod_cons,
+      ← ddfProduct, ih]
+
+/-- The DDF recursion over `𝔽_p`: at degree `d` with current poly `f`, peel the positive-degree
+block `gcd(f, X^(p^d) − X)`, monicize, divide it out, recurse with `d + 1`; emit the residual as a
+trailing block when no positive-degree block remains. Fueled by recursion depth. -/
+def ddfAux (p : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List (ℕ × List (ZMod p))
+  | 0, _, f => [(0, f)]
+  | fuel + 1, d, f =>
+    let df := lengthTrim f - 1
+    let sep := subL (xPowModF p d f df) [0, 1]
+    let gd := gcdByMonic f sep
+    if 1 < lengthTrim gd then
+      let gdm := monicizeL gd
+      let cof := (divmodByMonic f gdm (lengthTrim gd - 1)).1
+      (d, gdm) :: ddfAux p fuel (d + 1) cof
+    else
+      [(d, f)]
+
+/-- Distinct-degree factorization of `f` over `𝔽_p`, starting at degree `1` with fuel
+`f.length + 1`. -/
+def ddf (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) : List (ℕ × List (ZMod p)) :=
+  ddfAux p (f.length + 1) 1 f
