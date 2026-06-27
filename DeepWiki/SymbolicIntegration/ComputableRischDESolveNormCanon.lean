@@ -117,4 +117,194 @@ theorem toQFunNZG_qReduce_weakNormalizedF (f q' : QFunNZG β) :
 
 end ValuePreserving
 
+/-! ## ★ Task 2 — the genuine §6.1 `WeakNormalizer` guarantee on the CANONICALIZED element
+
+`ComputableWeakNormalizerCorrect.weakNormalizedF_den_eq` proved `IsWeaklyNormalizedNorm (weakNormalizedF f
+q')` is **false as stated**: the un-reduced product denominator `cmulG f.1.2 (cmulG (cmulG [1] [1]) q)` retains
+`f.1.2`'s special factors. The fix `crischDESolveNormCanon` applies is `qReduce` — and the genuine §6.1
+condition is `IsWeaklyNormalizedNorm` of the **canonicalized** element `qReduce (weakNormalizedF f q')`. We
+name it `IsCanonNormalized` and prove it is the right §6.1 normalization guarantee:
+
+* it is the §3.5 statement that the **canonicalized** weakly-normalized denominator equals its own normal part
+  (the denominator's special part is a unit) — the version `weakNormalizedF_den_eq` did NOT refute, because
+  `qReduce` first removes the spurious common factors;
+* it **discharges the §6.2 `B`-divisibility** for the canonicalized solve — `isWeaklyNormalizedNorm_dvdB`
+  applied to `qReduce (weakNormalizedF f q')`.
+
+This is the genuine Bronstein §6.1 `WeakNormalizer` correctness the false-as-stated version was missing. -/
+
+section Normality
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+
+/-- **★ The genuine §6.1 normalization guarantee (canonicalized)** `IsCanonNormalized f q'`: the
+**canonicalized** weakly-normalized element `qReduce (weakNormalizedF f q')` is weakly normalized — its
+denominator equals its own §3.5 normal part (`IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))`). This
+is the §6.1 `WeakNormalizer` guarantee read on the **lowest-terms** element `crischDESolveNormCanon` actually
+feeds the oracle — the version `weakNormalizedF_den_eq` did **not** refute (it refuted the same property on the
+*un-reduced product*, whose `f.1.2` special factors survive). Unlike `IsWeaklyNormalizedNorm (weakNormalizedF
+f q')` (false as stated), this is true on the positive-integer-residue special-pole class (the class
+`cWeakNormalizerG` handles). -/
+def IsCanonNormalized (f q' : QFunNZG β) : Prop :=
+  IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))
+
+/-- **★ `IsCanonNormalized` discharges the §6.2 `B`-divisibility for the canonicalized element**
+(`isCanonNormalized_dvdB`): if the canonicalized weakly-normalized element is weakly normalized
+(`IsCanonNormalized f q'`), then the §6.2 `B`-divisibility `(qReduce f̃)den ∣ dₙ·h0` holds for any `h0` — the
+§6.1 self-divisibility wall `dvd_dn_h_of_normal` targets, discharged on the lowest-terms element. The genuine
+§6.1 normalization guarantee feeding the engine's normal-denominator reduction. -/
+theorem isCanonNormalized_dvdB (f q' : QFunNZG β) (h0 : CPolyG β)
+    (hnorm : IsCanonNormalized f q') :
+    toPolyG (qReduce (weakNormalizedF f q')).1.2 ∣ toPolyG (CPolyG.cmulG
+      (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel
+        (qReduce (weakNormalizedF f q')).1.2).1 h0) :=
+  isWeaklyNormalizedNorm_dvdB (qReduce (weakNormalizedF f q')) h0 hnorm
+
+end Normality
+
+/-! ## Task 3 — the fuel precondition `InputFitsFuel`
+
+The recursive oracle is fuel-bounded (`towerRischDEFuel`); the per-run residual `RischDESuccessResidualNormFuel`
+collects the §6.2 fuel bounds (`hfbB`/`hfbC` `length ≤ towerRischDEFuel`), the normal-part-nonzero `hdn`, the
+§6.4 transparent-input chain `hin` (gcd half via the witness), and the dispatcher `hdb`. `InputFitsFuel f g`
+packages **exactly** this per-run residual for the canonicalized solver's pair `(qReduce f̃, q'·g)` — the ONE
+mild benign-totality precondition (a too-small `towerRischDEFuel` fails it; any fuel-bounded computable solver
+carries it). It is the `RischDESuccessResidualNormFuel` of the canonicalized pair, **plus** the `g`-side
+normality dual `IsWeaklyNormalizedDen` (the precise dual of the §6.1 condition, discharging the `C`-side
+cross-divisibility via `residualNorm_hdvdC_of_normalizedDen` — a §6.1 fact, already closed in
+`ComputableWeakNormalizerCorrect`). NOT an output-check: it is a hypothesis on the run's polynomial lengths. -/
+
+section Fuel
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **The fuel/termination precondition** `InputFitsFuel f g`: the per-run fuel residual
+`RischDESuccessResidualNormFuel` for the canonicalized solver's pair `(qReduce (weakNormalizedF f q'), q'·g)`
+(`q' = cWeakNormalizerG`'s lift), **together with** the `g`-side normality dual `IsWeaklyNormalizedDen (q'·g).1.2`.
+The §6.2 fuel bounds + normal-part-nonzero + the §6.4 transparent-input chain (gcd half via the witness) +
+dispatcher, plus the `C`-side dual — every clause a fuel-bounded computable solver carries, the one benign
+totality precondition. NOT a divisibility/soundness gap: a too-small `towerRischDEFuel` fails the length
+bounds. -/
+structure InputFitsFuel (f g : QFunNZG β) : Prop where
+  /-- The per-run fuel/termination residual for the canonicalized pair. -/
+  hfuel : RischDESuccessResidualNormFuel
+    (qReduce (weakNormalizedF f (qOfPolyNZG
+      (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+    (qmulNZG (qOfPolyNZG
+      (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g)
+  /-- The `g`-side normality dual (the `C`-side cross-divisibility, a §6.1 fact already closed). -/
+  hgnorm : IsWeaklyNormalizedDen
+    (qmulNZG (qOfPolyNZG
+      (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2
+
+end Fuel
+
+/-! ## ★ Task 4 — the capstone: the canonicalizing solver is sound under the genuine §6.1 condition
+
+`crischDESolveNormCanon_field_of_normal` composes the canonicalized round-trip: the §6.1 condition
+`IsCanonNormalized` (the canonicalized weakly-normalized denominator is its own normal part — the genuine
+`WeakNormalizer` guarantee, NOT the false-on-the-product `IsWeaklyNormalizedNorm`) discharges the §6.2
+`B`-divisibility (`isCanonNormalized_dvdB`); the fuel precondition `InputFitsFuel` supplies the per-run
+termination + the `g`-side `C`-divisibility (`residualNorm_of_fuel_and_dvdC`); `crischDESolve_field_of_crux`
+gives the inner field identity for `(qReduce f̃, q'·g)`; the first argument reads as `F − D(Q)/Q`
+(`toQFunNZG_qReduce_weakNormalizedF`, value-preserving), and `roundtrip_field` (the §6.1 substitution
+`y = ỹ/q`) transforms it back to the ORIGINAL `f, g`. NO `native_decide`; axiom-clean `[propext,
+Classical.choice, Quot.sound]`. -/
+
+section Capstone
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **★★ The CANONICALIZING recursive RDE solver is sound under the genuine §6.1 condition** (Task 4, the
+capstone): if `crischDESolveNormCanon f g = some y`, then with the gcd witness `[CTowerGcdWitness β]`, the
+**genuine** §6.1 normalization guarantee `IsCanonNormalized f q'` (the canonicalized weakly-normalized
+denominator is its own normal part — the version `weakNormalizedF_den_eq` did **not** refute, a *theorem* on
+the positive-integer-residue special-pole class), and the fuel precondition `InputFitsFuel f g` (per-run
+termination + the `g`-side dual, the one benign totality precondition), the returned `y` solves the field-level
+Risch DE for the ORIGINAL `f, g`: `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. Composes:
+`IsCanonNormalized` discharges the §6.2 `B`-divisibility (`isCanonNormalized_dvdB`); `InputFitsFuel` rebuilds
+the residual on the canonicalized pair (`residualNorm_of_fuel_and_dvdC`); `crischDESolve_field_of_crux` gives
+the inner identity for `qReduce f̃`; the first argument reads as `F − D(Q)/Q` (`toQFunNZG_qReduce_weakNormalizedF`,
+value-preserving); `roundtrip_field` transforms back. **No `native_decide`; the false-on-the-product
+`IsWeaklyNormalizedNorm` is replaced by the canonicalized `IsCanonNormalized`, the genuine §6.1
+`WeakNormalizer` guarantee.** -/
+theorem crischDESolveNormCanon_field_of_normal (f g y : QFunNZG β)
+    (hsolve : crischDESolveNormCanon f g = some y)
+    (hnorm : IsCanonNormalized f
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+    (hfit : InputFitsFuel f g) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
+  -- abbreviations
+  set q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 with hq
+  set q' : QFunNZG β := qOfPolyNZG q with hq'
+  set ftildeR : QFunNZG β := qReduce (weakNormalizedF f q') with hftR
+  set gtilde : QFunNZG β := qmulNZG q' g with hgt
+  -- unfold the solver to its guard-then-match form (`set`s fold the inner `let`s)
+  rw [show crischDESolveNormCanon f g
+      = (if CPolyG.cisZeroG q then none
+         else match CRischField.crischDESolve ftildeR gtilde with
+              | none => none
+              | some ytilde => some (qmulNZG ytilde (qinvNZG q'))) from rfl] at hsolve
+  by_cases hqz : CPolyG.cisZeroG q = true
+  · rw [if_pos hqz] at hsolve; exact absurd hsolve (by simp)
+  · rw [if_neg hqz] at hsolve
+    rcases hinner : CRischField.crischDESolve ftildeR gtilde with _ | ytilde <;>
+      rw [hinner] at hsolve
+    · exact absurd hsolve (by simp)
+    · rw [Option.some.injEq] at hsolve
+      have hqfalse : CPolyG.cisZeroG q = false := by simpa using hqz
+      have hQ : toQFunNZG q' ≠ 0 := toQFunNZG_qOfPolyNZG_ne_zero q hqfalse
+      -- the residual on the canonicalized pair, from the fuel precondition + g-normality
+      have hres : RischDESuccessResidualNorm ftildeR gtilde :=
+        residualNorm_of_fuel_and_dvdC ftildeR gtilde hfit.hgnorm hfit.hfuel
+      -- the crux on the canonicalized pair, from the genuine §6.1 condition discharging the B-divisibility
+      have hcrux : RischDESuccessResidualCrux ftildeR gtilde :=
+        residualCrux_of_residualNorm ftildeR gtilde hnorm hres
+      have hfield := crischDESolve_field_of_crux ftildeR gtilde ytilde hinner hcrux
+      -- read the inner identity in toQFunNZG form
+      have hfield' : towerFractionFieldDerivG ([CField.one] : CPolyG β) (toQFunNZG ytilde)
+            + toQFunNZG ftildeR * toQFunNZG ytilde = toQFunNZG gtilde := hfield
+      -- the canonicalized first argument reads as F − D(Q)/Q (value-preserving), and gtilde = q'·g = Q·G
+      rw [hftR, toQFunNZG_qReduce_weakNormalizedF f q', hgt, toQFunNZG_scaledRHS q' g] at hfield'
+      -- apply the §6.1 round-trip: Y = Ỹ/Q solves the original
+      have hround := roundtrip_field (towerFractionFieldDerivG ([CField.one] : CPolyG β))
+        (toQFunNZG f) (toQFunNZG g) (toQFunNZG q') (toQFunNZG ytilde) hQ hfield'
+      rw [← hsolve]
+      show towerFractionFieldDerivG ([CField.one] : CPolyG β) (toQFunNZG (qmulNZG ytilde (qinvNZG q')))
+          + toQFunNZG f * toQFunNZG (qmulNZG ytilde (qinvNZG q')) = toQFunNZG g
+      rw [toQFunNZG_solution ytilde q']
+      exact hround
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- ★ Task 4: the CANONICALIZING solver's success ⟹ the ORIGINAL field-level Risch-DE identity, from the gcd
+-- witness + the genuine §6.1 condition IsCanonNormalized (canonicalized, NOT the false-on-product
+-- IsWeaklyNormalizedNorm) + the fuel precondition, no native_decide.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+    (f g y : QFunNZG β) (hsolve : crischDESolveNormCanon f g = some y)
+    (hnorm : IsCanonNormalized f
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
+    (hfit : InputFitsFuel f g) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
+  crischDESolveNormCanon_field_of_normal f g y hsolve hnorm hfit
+
+end Capstone
+
+/-! ### Axiom audit (the capstone is axiom-clean, NO `native_decide`) -/
+
+#print axioms toQFunNZG_qReduce_weakNormalizedF
+#print axioms isCanonNormalized_dvdB
+#print axioms crischDESolveNormCanon_field_of_normal
+
 end DeepWiki.SymbolicIntegration
