@@ -6,42 +6,51 @@ The foundation layer of full Zassenhaus factorization — and hence of a **compl
 irreducibility decider. `ComputablePolynomialIrreducibility` gives a *sound but one-way* mod-`p`
 irreducibility **test**; the wall is `x⁴ + 1`, irreducible over `ℚ` yet reducible mod every
 prime. Going from *testing* to *deciding* needs the full factorization of `f mod p`, then a
-Hensel lift to mod `p^k`, then recombination to `ℤ`-factors. This file builds the **first sub-brick**:
-the monic **long-division primitives** over `𝔽_p` (`divmodByMonic` + the division identity
-`toPoly f = toPoly g * toPoly q + toPoly r`, `divmodByMonic_spec`). The DDF itself, `gcd`, the
-Frobenius power, and the multiply-back soundness described below are the **roadmap — NOT yet in
-the body** (a prior build of those was lost to an infrastructure failure; this commit salvages
-the gate-clean division-primitives brick, to be continued).
+Hensel lift to mod `p^k`, then recombination to `ℤ`-factors. This file builds the **distinct-degree
+factorization (DDF)** layer with its **multiply-back soundness** — the first half of the mod-`p`
+factorization — on top of the monic **long-division primitives** (`divmodByMonic` + the division
+identity `divmodByMonic_spec`). Now **built and gate-clean**: the long division, the
+`lengthTrim`↔degree bridges, the Euclidean `gcd`, the Frobenius power, the DDF, and its
+axiom-clean multiply-back invariant. Equal-degree splitting / Hensel factor-lift / recombination
+remain the documented roadmap (bottom).
 
 **Reused engine.** Polynomials are coefficient `List (ZMod p)`, low-to-high (Horner), with
 `toPoly`/`addL`/`mulL`/`scaleL`/`coeff_toPoly` from `ComputablePolynomialIrreducibility`
 (Mathlib's `Polynomial` `+`/`*` are `noncomputable`, so neither `decide` nor `native_decide`
-reduce them). We add the two missing computable primitives over the field `𝔽_p`:
+reduce them). The computable primitives over the field `𝔽_p`:
 
 * **`divmodByMonic`** — long division of a list-poly by a **monic** divisor (`ZMod p` is a
-  field, so a monic divisor suffices for everything DDF needs). The carried invariant is the
-  **division identity** `toPoly f = toPoly g * toPoly q + toPoly r` — proven directly, since
-  each long-division step rewrites `f` as `(term)·g + (f − term·g)`, an algebraic tautology at
-  the `toPoly` level. This makes the *multiply-back* soundness structural, independent of any
-  degree bookkeeping.
-* **`gcdByMonic`** — the Euclidean gcd, monic-normalized, via `subResL`/`monicizeL`.
-* **`xPowModF`** — the Frobenius power `X^(p^d) mod f` by repeated squaring of the list `[0,1]`,
-  each square reduced `divmodByMonic`-style. Computable, `native_decide`-able for small `p, d`.
+  field, so a monic divisor suffices for everything DDF needs), carrying the **division identity**
+  `toPoly f = toPoly g * toPoly q + toPoly r`. The per-step trim decrease (`lengthTrim_subL_mulL_lt`,
+  top-coefficient cancellation) gives the remainder degree bound and division termination.
+* **`gcdByMonic`** — the Euclidean gcd, monic-normalized each step via `monicizeL`. Soundness
+  `gcdByMonicFuel_dvd`: the result divides **both** inputs (left-divisibility is the DDF
+  multiply-back invariant). When a monic divisor divides the dividend the division is exact
+  (`toPoly_eq_mul_quotient_of_dvd`, remainder vanishes by degree).
+* **`xPowModF`** — the Frobenius power `X^(p^d) mod f` by repeated squaring of the list `[0,1]`
+  (`powModL`/`mulModL`), each product reduced `modByMonicL`-style. Computable,
+  `native_decide`-able for small `p, d`.
 
 **Distinct-degree factorization (`ddf`).** For `d = 1, 2, …`: `gcd(f, X^(p^d) − X)` is the
-product of all degree-`d` irreducible factors of (squarefree) `f`; peel it off, recurse on the
-cofactor. `ddf` returns `List (ℕ × List (ZMod p))`, each entry `(d, gₐ)` a block whose factors
-are exactly the degree-`d` irreducibles.
+product of all degree-`d` irreducible factors of (squarefree) `f`; peel it off (monicize, divide
+out), recurse on the cofactor. `ddf` returns `List (ℕ × List (ZMod p))`, each entry `(d, gₐ)` a
+block. (The *value* `ddf` computes — the block list whose product is `f` — is sound; the degree
+*tag* `d` is correct only once Frobenius-power correctness is added, see scope.)
 
 **★ Soundness — multiply-back (`ddfAux_prod` / `ddf_prod`).** The DDF blocks multiply (via
-`mulL`, mod `p`) **back to** `f`: `toPoly (ddfProduct (ddf f n)) = toPoly f`. This is the key
-structural invariant. It is **axiom-clean** `[propext, Classical.choice, Quot.sound]` (no
-`native`, no `sorry`); the `native_decide` lives only in the concrete examples. The per-block
-**degree** soundness (each block has degree a multiple of its index `d`, being a product of
-degree-`d` irreducibles) is the deeper claim that needs equal-degree splitting for the
-*per-factor* statement — scoped below.
+`mulL`, mod `p`) **back to** `f`: `toPoly (ddfProduct (ddf p f)) = toPoly f`. This is the key
+structural invariant, the engine being that each peel is an **exact** division (`gcd ∣ f`, monic
+divisor ⇒ zero remainder). It is **axiom-clean** `[propext, Classical.choice, Quot.sound]` (no
+`native`, no `sorry`); the `native_decide` lives only in the concrete examples (`x²−1` mod 3,
+`x⁴−1` mod 5, the irreducible `x²+1` mod 3). The per-block **degree** soundness (each block is a
+product of degree-`d` irreducibles, and the per-*factor* irreducibility) is the deeper claim that
+needs Frobenius-power correctness plus equal-degree splitting — scoped below.
 
 **★ The rest of Zassenhaus (scope, for the complete `ℚ`-decider).** After DDF:
+0. **Frobenius-power correctness** (`toPoly (xPowModF p d f df) ≡ X^(p^d) (mod toPoly f)`) makes
+   the DDF degree *tags* correct — the abstract `ddf_prod` multiply-back here does **not** need it
+   (gcd-divides-first-arg is unconditional), but per-block degree structure does. Provable from
+   `divmodByMonic_spec` (each reduction step is `≡ mod f`) by induction over the squaring.
 1. **Equal-degree factorization (EDF)** splits a degree-`d` block (a product of `k` distinct
    degree-`d` irreducibles) into its `k` factors. The Cantor–Zassenhaus split: for `p` odd,
    `gcd(f, (X + a)^((p^d − 1)/2) − 1)` is a nontrivial factor for a "good" shift `a`. Lean has
