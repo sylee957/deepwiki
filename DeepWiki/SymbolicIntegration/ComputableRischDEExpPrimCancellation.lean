@@ -116,6 +116,62 @@ theorem coeff_natDegree_implicitDeriv_low {v q : K[X]} (hv : v.natDegree ≤ 1) 
     ← leadingCoeff]
   ring
 
+omit [CharZero K] [Differential K] in
+/-- **`coeff (a · p) (deg a + i) = lc(a)·(p.coeff i)` when `deg p ≤ i`**
+(`coeff_mul_natDegree_add_of_natDegree_le`): in the product `a · p`, the coefficient at `deg a + i`
+(`i ≥ deg p`) collapses to the single antidiagonal term `(deg a, i)` — every `(j, k)` with `j + k = deg a +
+i` and `j ≠ deg a` has either `j > deg a` (`a.coeff j = 0`) or `k > i ≥ deg p` (`p.coeff k = 0`). -/
+theorem coeff_mul_natDegree_add_of_natDegree_le {a p : K[X]} {i : ℕ} (hp : p.natDegree ≤ i) :
+    (a * p).coeff (a.natDegree + i) = a.leadingCoeff * p.coeff i := by
+  rw [coeff_mul, Finset.sum_eq_single (a.natDegree, i)]
+  · rw [leadingCoeff]
+  · -- non-diagonal indices vanish
+    intro x hx hne
+    obtain ⟨j, k⟩ := x
+    rw [Finset.mem_antidiagonal] at hx
+    by_cases hj : j ≤ a.natDegree
+    · -- then `k ≥ i`; if `k > i` then `p.coeff k = 0`, else `(j,k) = (deg a, i)` (excluded)
+      rcases Nat.lt_or_ge i k with hk | hk
+      · rw [coeff_eq_zero_of_natDegree_lt (lt_of_le_of_lt hp hk), mul_zero]
+      · exfalso; apply hne
+        have hjeq : j = a.natDegree := by omega
+        have hkeq : k = i := by omega
+        rw [hjeq, hkeq]
+    · -- `j > deg a`, so `a.coeff j = 0`
+      rw [coeff_eq_zero_of_natDegree_lt (by omega : a.natDegree < j), zero_mul]
+  · intro hmem
+    exact absurd (Finset.mem_antidiagonal.mpr (rfl : a.natDegree + i = a.natDegree + i)) hmem
+
+omit [CharZero K] in
+/-- **★ The δ ≤ 1 leading-coefficient identity** (`coeff_candTopDegree_low`): in the balanced
+exp/primitive configuration (`deg v ≤ 1`, `deg b ≤ deg a`, `1 ≤ deg q`), the coefficient of `a·Dq + b·q`
+at the candidate top degree `candTopDegree v a b q = deg a + deg q` is
+`lc(a)·[(lc q)′ + (deg q)·(v.coeff 1)·(lc q)] + (b.coeff (deg a))·(lc q)` — the `a·Dq` term (degree `≤ deg a
++ deg q`, top coeff `lc(a)·(Dq).coeff (deg q)`) plus the `b·q` term (`b.coeff (deg a)·lc(q)`, which is
+`lc(b)·lc(q)` when `deg b = deg a` and `0` when `deg b < deg a`). -/
+theorem coeff_candTopDegree_low {v a b q : K[X]} (hv : v.natDegree ≤ 1)
+    (hdq : 1 ≤ q.natDegree) (hble : b.natDegree ≤ a.natDegree) :
+    (a * Differential.implicitDeriv v q + b * q).coeff (candTopDegree v a b q)
+      = a.leadingCoeff * ((q.leadingCoeff)′ + (q.natDegree : K) * v.coeff 1 * q.leadingCoeff)
+        + b.coeff a.natDegree * q.leadingCoeff := by
+  -- the candidate top degree collapses to `da + dq` in the balanced exp/prim configuration
+  have hcand : candTopDegree v a b q = a.natDegree + q.natDegree := by
+    simp only [candTopDegree]
+    rw [show max 0 (v.natDegree - 1) = 0 from by omega, add_zero,
+      show max a.natDegree b.natDegree = a.natDegree from by omega]
+  -- the `a·Dq` term: `Dq` has degree ≤ deg q, so `coeff (a·Dq) (da+dq) = lc(a)·(Dq).coeff dq`
+  have hDqle : (Differential.implicitDeriv v q).natDegree ≤ q.natDegree := by
+    refine (natDegree_implicitDeriv_le v q).trans ?_
+    rw [show max 0 (v.natDegree - 1) = 0 from by omega, add_zero]
+  have haDq : (a * Differential.implicitDeriv v q).coeff (a.natDegree + q.natDegree)
+      = a.leadingCoeff * (Differential.implicitDeriv v q).coeff q.natDegree :=
+    coeff_mul_natDegree_add_of_natDegree_le hDqle
+  -- the `b·q` term: `coeff (b·q) (da+dq) = lc(q)·(b.coeff da)` (b has degree ≤ da)
+  have hbq : (b * q).coeff (a.natDegree + q.natDegree) = b.coeff a.natDegree * q.leadingCoeff := by
+    rw [mul_comm b q, add_comm a.natDegree q.natDegree,
+      coeff_mul_natDegree_add_of_natDegree_le hble, leadingCoeff, mul_comm]
+  rw [hcand, coeff_add, haDq, hbq, coeff_natDegree_implicitDeriv_low hv hdq]
+
 end AbstractLow
 
 end DeepWiki.SymbolicIntegration
