@@ -109,4 +109,207 @@ theorem cRischDEG_some_imp_stages [CRischField α] (Dt : CPolyG α) (fuel : ℕ)
         exact ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v,
           rfl, hspde, hpoly, hynum.symm, hyden.symm⟩
 
+/-! ### The dispatcher → non-cancellation bridge (primitive regime, positive `deg(bbar)`)
+
+The capstone `cRischDEG_rdeCleared_gen` takes `hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v`
+— the §6.5 **non-cancellation** solve — whereas `cRischDEG`'s body (and hence `cRischDEG_some_imp_stages`)
+yields the §6.5/§6.6 **dispatcher** `cPolyRischDEG Dt fuel bbar cbar m = some v`. The dispatcher routes by
+`δ = cdegG Dt` and `db = cdegG bbar` (Lemma 6.5.1): in the **primitive** regime (`δ = 0`) with
+`db > max 0 (δ−1) = 0` (i.e. `bbar` of positive degree) it routes to `cPolyRischDENoCancelG` verbatim. So
+under `cdegG Dt = 0` and `0 < cdegG bbar`, the dispatcher result IS the capstone's non-cancellation result.
+(`bbar = 0` would route to pure integration `cIntegratePolyG`; `db = 0` to the primitive cancellation
+recursion `cPolyRischDECancelPrimG` — neither is `cPolyRischDENoCancelG`, so the bridge needs
+`0 < cdegG bbar`, which the capstone's downstream consumption implicitly assumes.) -/
+
+omit [CFracGcdCore α] in
+/-- **The §6.5/§6.6 dispatcher reduces to the non-cancellation solve** in the primitive regime with
+positive `deg(bbar)`: if `cdegG Dt = 0` (primitive monomial) and `0 < cdegG bbar`, then
+`cPolyRischDEG Dt fuel bbar cbar m = cPolyRischDENoCancelG Dt fuel bbar cbar m`. So a dispatcher success
+`cPolyRischDEG … = some v` (from `cRischDEG_some_imp_stages`) IS the capstone's `hpoly`. The
+`bbar`-nonzero / positive-degree routing condition of Lemma 6.5.1's non-cancellation branch. -/
+theorem cPolyRischDEG_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG α) (fuel : ℕ)
+    (bbar cbar : CPolyG α) (m : ℤ) (hδ : cdegG Dt = 0) (hdb : 0 < cdegG bbar) :
+    cPolyRischDEG Dt fuel bbar cbar m = cPolyRischDENoCancelG Dt fuel bbar cbar m := by
+  rw [cPolyRischDEG]
+  -- `bbar ≠ 0` (positive degree): `cdegG = (cnormG).length - 1` and `cisZeroG = (cnormG).isEmpty`,
+  -- so `0 < cdegG bbar` forces the underlying list nonempty (length ≥ 2), hence `cisZeroG = false`.
+  have hlen : 0 < (cnormG bbar : List α).length := by
+    have := hdb; rw [cdegG] at this; omega
+  have hbne : cisZeroG bbar = false := by
+    rw [cisZeroG, List.isEmpty_eq_false_iff_exists_mem]
+    exact List.exists_mem_of_length_pos hlen
+  -- `δ = 0`, so `max 0 (δ − 1) = 0`, and `db = cdegG bbar > 0` makes the non-cancellation guard fire
+  simp only [hbne, Bool.false_eq_true, if_false, hδ, Nat.cast_zero, zero_sub]
+  rw [if_pos]
+  -- the guard `(cdegG bbar : ℤ) > max 0 (-1) = 0`
+  rw [show (max (0 : ℤ) (-1)) = 0 by norm_num]
+  exact_mod_cast hdb
+
+/-! ### ★ The combined derivable decomposition (primitive regime, positive `deg(bbar)`)
+
+Composing `cRischDEG_some_imp_stages` (the three stage-`some` results) with
+`cPolyRischDEG_eq_noCancel_of_primitive` (the dispatcher → non-cancellation bridge): in the primitive
+regime (`cdegG Dt = 0`) with positive `deg(bbar)`, a bare success `cRischDEG … = some (ynum, yden)` yields
+`hnorm`, `hspde`, **and** the capstone's `hpoly` (`cPolyRischDENoCancelG … = some v`) — three of the
+≈13 hypotheses of `cRischDEG_rdeCleared_gen`, all derived from bare success. The remaining hypotheses are
+the irreducible residual `RischDEStructuralResidual` below. -/
+
+/-- **★ The derivable hypotheses of `cRischDEG_rdeCleared_gen` from bare success** (primitive regime,
+positive `deg(bbar)`): if `cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden)`, `cdegG Dt = 0`, and
+the §6.4 SPDE output `bbar` has positive degree, then the §6.2 `hnorm`, the §6.4 `hspde` (at the bound
+degree on the special-cleared coefficients), and the capstone's §6.5 non-cancellation `hpoly`
+(`cPolyRischDENoCancelG … = some v`) all hold, with the output reading `ynum = (α'·v + β)·h1`, `yden = h0`.
+The structural-decomposition theorem's derivable conclusion — the three stage results threaded through the
+dispatcher bridge. (`hprim`, the §6.2 divisibility/fuel side-conditions, and the per-level `Associated`-gcd
+transparent-input chain `hin` remain the irreducible residual; see `RischDEStructuralResidual`.) -/
+theorem cRischDEG_some_imp_noCancel_of_primitive [CRischField α] (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+    (hsucc : cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden)) :
+    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+      cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0)
+      ∧ cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β)
+      ∧ (0 < cdegG bbar → cPolyRischDENoCancelG Dt fuel bbar cbar m = some v)
+      ∧ ynum = cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2
+      ∧ yden = h0 := by
+  obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hdisp, hynum, hyden⟩ :=
+    cRischDEG_some_imp_stages Dt fuel fnum fden gnum gden ynum yden hsucc
+  refine ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, ?_, hynum, hyden⟩
+  intro hdb
+  rw [← cPolyRischDEG_eq_noCancel_of_primitive Dt fuel bbar cbar m hδ hdb]
+  exact hdisp
+
+/-! ### ★ The precise irreducible residual (what bare success does NOT self-certify)
+
+The structural decomposition above derives `hnorm`, `hspde`, `hpoly` (3 of ≈13). The remaining hypotheses
+of `cRischDEG_rdeCleared_gen` are **not** forced by `cRischDEG … = some _`; each asserts a fact the engine
+does not validate on a successful run. We package them as the explicit residual, with the precise reason
+each is irreducible. (This is a `Prop`-bundle of stated assumptions, NOT proved from success — it makes the
+boundary citable, with NO `sorry`.) -/
+
+section Residual
+
+variable [CFieldSpec α] [CDiffFieldSpec α] [CRischField α]
+
+/-- **The precise irreducible residual of the §6 RDE structural decomposition**
+`RischDEStructuralResidual Dt fuel fnum fden gnum gden a0 b0 c0 h0`: the hypotheses of
+`cRischDEG_rdeCleared_gen` that a bare success `cRischDEG … = some _` does NOT self-certify, bundled with
+the derivable stage results (`cRischDEG_some_imp_stages`) factored out. Three irreducible classes:
+
+* **`hprim`** — `cdegG (cSpecialPolyG Dt fuel) = 0` (primitive regime). `cRischDEG` runs **all** monomial
+  regimes (primitive / hyperexponential / hypertangent); `cRischDEG_rdeCleared_gen` is proved **only** for
+  the primitive special regime (it `rw`s `cRdeSpecialDenominatorG_primitive_eq_gen`). A non-primitive
+  success satisfies a *different* cleared identity, so `hprim` is a genuine regime restriction, not forced.
+* **§6.2 divisibility/fuel side-conditions** (`hdn`, `hfbB`, `hdvdB`, `hfbC`, `hdvdC`). `cRdeNormalDenominatorG`
+  checks **only** `cdvdG fuel en dnh2` before returning `some`; it does NOT check that the normal part `dₙ`
+  is nonzero (`hdn`), that the `B`/`C` numerators are divisible by `fden`/`gden` (`hdvdB`/`hdvdC` — it
+  computes `cdivG` unconditionally, truncating on non-divisibility), or the fuel bounds (`hfbB`/`hfbC`).
+  These hold on regular inputs but are not validated by the `some`-return.
+* **`hin`** — `CSPDEGClearedInputsGen` on the special-cleared coefficients at the bound degree. This bundles,
+  **per recursion level**, the gcd-correctness `Associated (toPolyG (cgcdFFCore …)) (gcd …)` — which
+  `associated_toPolyG_cgcdFFCore` *itself* discharges only from a `CPrimPRSGenAssocReg` per-step
+  content-exactness hypothesis (`ComputableTowerGcdFFCorrect`), a per-run regularity the engine carries as
+  an explicit assumption and **never** decides/self-certifies — plus per-level fuel bounds and
+  nonzero-denominator facts. This is the deep kernel: the §6 pipeline does not re-validate its gcds, so the
+  `Associated` clauses are not recoverable from `cRischDEG … = some _`.
+
+Bundling these (with `hδ : cdegG Dt = 0` and `0 < cdegG bbar` for the dispatcher bridge) and the derivable
+stage results yields the full `cRischDEG_rdeCleared_gen` hypothesis set — see
+`rdeCleared_of_success_and_residual`. -/
+structure RischDEStructuralResidual (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) : Prop where
+  /-- Primitive special regime: `cdegG (cSpecialPolyG Dt fuel) = 0` (the capstone is primitive-only). -/
+  hprim : cdegG (cSpecialPolyG Dt fuel) = 0
+  /-- §6.2: the normal part `dₙ = (cSplitFactorFastG Dt fuel fden).1` is nonzero. -/
+  hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0
+  /-- §6.2: the input denominator `fden` is nonzero. -/
+  hfden0 : cnormG fden ≠ []
+  /-- §6.2: the input denominator `gden` is nonzero. -/
+  hgden0 : cnormG gden ≠ []
+  /-- §6.2 fuel bound on the `B`-numerator. -/
+  hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+      (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+      List α).length ≤ fuel
+  /-- §6.2: `fden` divides the `B`-numerator (the `cdivG` clearing is exact). -/
+  hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+      (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden))
+  /-- §6.2 fuel bound on the `C`-numerator. -/
+  hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+      List α).length ≤ fuel
+  /-- §6.2: `gden` divides the `C`-numerator (the `cdivG` clearing is exact). -/
+  hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum)
+  /-- §6.4: the per-level transparent-input chain `CSPDEGClearedInputsGen` on the special-cleared
+  coefficients at the §6.3 bound degree — bundling the per-level `Associated`-gcd correctness (the
+  `CPrimPRSGenAssocReg` regularity kernel), fuel bounds, and nonzero-denominator facts. -/
+  hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+      (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+      (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+
+/-! ### ★ The boundary theorem: bare success + the residual ⟹ the cleared identity
+
+Composing the derivable decomposition (`cRischDEG_some_imp_noCancel_of_primitive`) with the precise
+residual (`RischDEStructuralResidual`) recovers **exactly** the hypotheses of `cRischDEG_rdeCleared_gen`,
+hence the cleared Risch-DE identity for the returned `y = ynum/yden`. This makes the boundary citable: the
+ONLY assumptions beyond the bare success and the structural side-conditions (`hδ`, positive `deg(bbar)`)
+are those bundled in `RischDEStructuralResidual` — the primitive-regime restriction, the §6.2
+divisibility/fuel side-conditions, and the per-level `Associated`-gcd transparent-input chain (whose
+`CPrimPRSGenAssocReg` kernel the engine never self-certifies). -/
+
+/-- **★ The §6 cleared Risch-DE identity from bare success and the isolated residual** (primitive regime,
+positive `deg(bbar)`): given `cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden)`, `cdegG Dt = 0`,
+the SPDE output `bbar` of positive degree, and the irreducible residual `RischDEStructuralResidual` on the
+matching §6.2 normal-denominator output, the returned `y = ynum/yden` satisfies the cleared identity
+`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²` over `(CFieldSpec.K α)[X]`.
+This is `cRischDEG_rdeCleared_gen` with its ≈13 hypotheses partitioned: the three stage-`some` results
+derived from bare success (`cRischDEG_some_imp_noCancel_of_primitive`), the rest supplied by the residual —
+the precise structural-decomposition boundary. -/
+theorem rdeCleared_of_success_and_residual (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+    (hsucc : cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden))
+    (hres : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      RischDEStructuralResidual Dt fuel fnum fden gnum gden a0 b0 c0 h0)
+    (hdb : ∀ a0 b0 c0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+      cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β) → 0 < cdegG bbar) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 := by
+  -- the three stage `some`-results from bare success (control-flow decomposition)
+  obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hdisp, hynum, hyden⟩ :=
+    cRischDEG_some_imp_stages Dt fuel fnum fden gnum gden ynum yden hsucc
+  have hres' := hres a0 b0 c0 h0 hnorm
+  have hdb' := hdb a0 b0 c0 bbar cbar m α' β hspde
+  -- the dispatcher result is the capstone's `hpoly` (non-cancellation) via the primitive bridge
+  have hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v := by
+    rw [← cPolyRischDEG_eq_noCancel_of_primitive Dt fuel bbar cbar m hδ hdb']; exact hdisp
+  -- the capstone's cleared identity for the reassembled `y = (Q·[1])/h0`
+  have hcap := cRischDEG_rdeCleared_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+    hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hfbB hres'.hdvdB hres'.hfbC hres'.hdvdC
+    hspde hres'.hin hpoly
+  simp only at hcap
+  -- in the primitive regime the special-denominator 4th component `h1` is `[CField.one]`, so our
+  -- `ynum = (Q)·h1` is the capstone's `ynum = (Q)·[1]`; `yden = h0`.
+  have hh1 : (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2 = ([CField.one] : CPolyG α) := by
+    rw [cRdeSpecialDenominatorG_primitive_eq_gen Dt fuel a0 b0 c0 hres'.hprim]
+  rw [hh1] at hynum
+  rw [hynum, hyden]
+  exact hcap
+
+end Residual
+
 end DeepWiki.SymbolicIntegration
