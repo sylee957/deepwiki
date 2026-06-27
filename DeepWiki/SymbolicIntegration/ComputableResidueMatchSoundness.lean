@@ -114,6 +114,61 @@ theorem residue_mul_eval_sub_eq (a v d : K[X]) (α : K) (hα : d.eval α = 0)
   rw [div_mul_eq_mul_div, mul_comm ((derivative d).eval α), ← div_div,
     mul_div_assoc, div_self (sub_ne_zero.mpr hvα), mul_one]
 
+/-! ### Step 4: the monomial RT partial fraction over a PRIMITIVE monomial (`Dt = C w` ∈ base field)
+
+For a **primitive** monomial — `Dt = v = C w` with `w ∈ K` (e.g. `t = log η`, `Dt = η′/η ∈ k`) — the
+monomial derivative of a linear factor is the *constant* `D(t−α) = C(w − α′)`, so the log-derivative
+`D(t−α)/(t−α) = C(w − α′)/(t−α)` has NO polynomial part and the ★ absorption collapses to a constant
+factor. The RT sum then matches `a/d` **term by term** (no high-degree cancellation): each
+`c_α·C(w−α′)/(t−α)` is `C(a(α)/d′(α))/(t−α)`, and `ratFunc_eq_sum_residue_div` reassembles `a/d`.
+
+This is the unconditional primitive-case `hmatch`. (The hyperexponential / hypertangent cases have
+`deg_t v ≥ 1`, where the per-term polynomial parts `c_α·(v /ₘ (t−α))` must cancel in aggregate — the
+genuinely-harder regime, isolated below.) -/
+
+variable [Algebra ℚ K]
+
+/-- **The monomial log-derivative of `t−α` over a primitive monomial** `Dt = C w` reads as the constant
+`C(w − α′)` over `t−α`: `D(t−α)/(t−α) = algebraMap(C(w − α′))/algebraMap(t−α)` in `RatFunc K`. The
+primitive specialization of `extendDeriv_implicitDeriv_logDeriv_X_sub_C` (`v − Cα′ = C w − Cα′ =
+C(w − α′)`). -/
+theorem extendDeriv_implicitDeriv_C_logDeriv_X_sub_C (w α : K) :
+    extendDeriv (Differential.implicitDeriv (C w)) (algebraMap K[X] (RatFunc K) (X - C α))
+        / algebraMap K[X] (RatFunc K) (X - C α)
+      = algebraMap K[X] (RatFunc K) (C (w - α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
+  rw [extendDeriv_implicitDeriv_logDeriv_X_sub_C, ← C_sub]
+
+/-- **★ The primitive-case monomial Rothstein–Trager partial fraction** (Bronstein Thm 5.6.1, primitive
+monomial) — for a squarefree denominator `d = ∏_{α∈s}(t−α)`, `deg a < #s`, a primitive monomial `Dt = C w`,
+and every root `α∈s` *normal* (`w ≠ α′`), the monomial RT residue sum over the roots equals `a/d`:
+`∑_{α∈s} C(c_α)·(D(t−α)/(t−α)) = a/d` with `c_α = a(α)/(Dd)(α)` the RT residue and `D = extendDeriv
+(implicitDeriv (C w))`. Term by term: `D(t−α)/(t−α) = C(w−α′)/(t−α)` (primitive ⇒ constant numerator),
+`c_α·(w−α′) = a(α)/d′(α)` (`residue_mul_eval_sub_eq`), and `ratFunc_eq_sum_residue_div` reassembles `a/d`.
+The unconditional residue match for primitive (logarithmic) tower extensions. -/
+theorem primitive_monomial_residue_match (s : Finset K) (a : K[X]) (w : K)
+    (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, w ≠ α′) :
+    ∑ α ∈ s, algebraMap K[X] (RatFunc K)
+          (C (a.eval α / (Differential.implicitDeriv (C w) (Lagrange.nodal s id)).eval α))
+        * (extendDeriv (Differential.implicitDeriv (C w))
+              (algebraMap K[X] (RatFunc K) (X - C α))
+            / algebraMap K[X] (RatFunc K) (X - C α))
+      = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) := by
+  rw [ratFunc_eq_sum_residue_div s a hA]
+  refine Finset.sum_congr rfl fun α hα => ?_
+  -- per-term: monomial log-derivative is the constant `C(w−α′)/(t−α)`
+  rw [extendDeriv_implicitDeriv_C_logDeriv_X_sub_C]
+  -- fold the residue coefficient into the constant numerator
+  rw [← mul_div_assoc, ← map_mul, ← C_mul]
+  -- `c_α·(w − α′) = a(α)/d′(α)` via residue_mul_eval_sub_eq (with `v = C w`, `v.eval α = w`)
+  have hroot : (Lagrange.nodal s id).eval α = 0 := by
+    have := Lagrange.eval_nodal_at_node (s := s) (v := (id : K → K)) hα
+    simpa using this
+  have h := residue_mul_eval_sub_eq a (C w) (Lagrange.nodal s id) α hroot
+    (by simpa using hnorm α hα)
+  rw [eval_C] at h
+  -- both sides are `algebraMap (C ·) / algebraMap (t − α)`; the constants agree by `h`
+  rw [h]
+
 end ResidueMatchTower
 
 end DeepWiki.SymbolicIntegration
