@@ -356,6 +356,37 @@ theorem primitive_engine_hmatch (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
   rw [List.map_map] at hbridge
   exact hbridge
 
+/-! ### The PRIMITIVE normality side condition `hnorm`, for constant resolvent roots
+
+`primitive_engine_hmatch`/`field_identity_of_cIntegrateReducedG_primitive` take the RT normality side
+condition `hnorm : ∀ β ∈ s, w ≠ β′` — every resolvent root `β` is *normal* for the monomial `t′ = w`.
+Here `β′` is the **field derivation** `Differential.deriv β` of the root *element* `β ∈ CFieldSpec.K α`
+(`CDiffFieldSpec.diffK`), NOT the polynomial derivative of `C w` (which is `0`): so `β′` is genuinely an
+arbitrary field element and `hnorm` is a true side condition, not a tautology — it is exactly Bronstein's
+normality hypothesis (Thm 5.6.1) and is *not* abstractly dischargeable in general (see the closing status).
+
+The one regime where it discharges cheaply: when every resolvent root is a **constant** (`β′ = 0` — the
+generic primitive case, where the RT logarithm coefficients are constants), `hnorm` collapses to `w ≠ 0`,
+the genuine new-monomial condition `t′ = w ≠ 0`. We isolate that reduction. -/
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The primitive normality side condition from constant resolvent roots** — for a primitive monomial
+`t′ = w` with `w ≠ 0`, if every resolvent root `β ∈ s` is a *constant* (`β′ = 0`, the field derivation of
+the root element vanishing), then every root is normal: `∀ β ∈ s, w ≠ β′`. The dischargeable core of the
+RT normality hypothesis `hnorm` — `β′ = 0` makes `w = β′` say `w = 0`, contradicting `w ≠ 0`. The genuine
+remaining content is root-constancy `β′ = 0` (Bronstein §5.6: the primitive log coefficients are constants),
+stated honestly as the hypothesis; `β′` is the field derivation of `β ∈ CFieldSpec.K α`, not a polynomial
+derivative. -/
+theorem primitive_monomial_norm_of_const_roots (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
+    (hw : w ≠ 0) (hconst : ∀ β ∈ s, β′ = 0) : ∀ β ∈ s, w ≠ β′ := by
+  intro β hβ heq
+  exact hw (heq.trans (hconst β hβ))
+
+-- The constant-root normality reduction, against its expected wording.
+example (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
+    (hw : w ≠ 0) (hconst : ∀ β ∈ s, β′ = 0) : ∀ β ∈ s, w ≠ β′ :=
+  primitive_monomial_norm_of_const_roots s w hw hconst
+
 /-! ### Task 2 (hyperexp): the list↔Finset bridge + the engine `hmatch`, GATED on `∑c = 0`
 
 The hyperexponential analog of `primitive_residue_match_list_engine` / `primitive_engine_hmatch`. The ONLY
@@ -1362,6 +1393,7 @@ hypotheses. -/
 #print axioms ResidueMatchTower.primitive_residue_match_list
 #print axioms primitive_residue_match_list_engine
 #print axioms primitive_engine_hmatch
+#print axioms primitive_monomial_norm_of_const_roots
 #print axioms field_identity_of_cIntegrateReducedG_primitive
 #print axioms cIntegrateGFull_primitive_oneShot
 #print axioms cIntegrateGFull_primitive_oneShot_qfunNZG
