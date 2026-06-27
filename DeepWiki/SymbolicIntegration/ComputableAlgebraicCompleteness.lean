@@ -10,7 +10,7 @@ This file maps and assembles the **completeness** direction of the simple-radica
 (`radLogArgSolve = none`) *and* the residue divisor is **not torsion**, the integrand has **no elementary
 antiderivative**.  The *soundness* direction (`cIntegrateAlgebraicWf` produces `⟨v, logs⟩ ⟹ D(v + Σ cᵢ log
 uᵢ) = f`, the `IsAlgebraicIntegral` capstone of `ComputableRadicalLogSoundness` /
-`ComputableUnifiedMixedWfSoundness`) is done elsewhere; this file is the harder converse — **Trager's
+`ComputableAlgebraicWfSoundness`) is done elsewhere; this file is the harder converse — **Trager's
 algorithm** (Trager, *Integration of Algebraic Functions*, MIT 1984; Bronstein, *Symbolic Integration I*,
 Ch. 5–6 / the algebraic Vol. II), riding **Liouville's theorem for algebraic functions**.
 
