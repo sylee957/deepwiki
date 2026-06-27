@@ -76,6 +76,13 @@ import Sources.Doi_10_1016_S0747_7171_08_80027_2.ElementaryIntegration
 import Sources.Doi_10_1016_S0747_7171_08_80027_2.ElementaryIntegrationFull
 import Sources.Doi_10_1016_S0747_7171_08_80027_2.Soundness
 
+-- Schultz "Trager's Algorithm for Integration of Algebraic Functions Revisited" (no DOI; the §4 Hermite
+-- degree bound, §7.1 function-algebra/zero-divisor integration, §4 general-curve decision)
+import Sources.Schultz_TragerRevisited.Source
+import Sources.Schultz_TragerRevisited.HermiteDegreeBound
+import Sources.Schultz_TragerRevisited.FunctionAlgebra
+import Sources.Schultz_TragerRevisited.GeneralCurve
+
 import Sources.Doi_10_1007_978_3_642_69956_6.Source
 import Sources.Doi_10_1007_978_3_642_69956_6.Chapter1
 import Sources.Doi_10_1007_978_3_642_69956_6.Chapter2
