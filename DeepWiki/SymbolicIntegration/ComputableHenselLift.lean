@@ -271,6 +271,124 @@ theorem liftStep_congr (p m : ℕ) (f g h s t : List ℤ)
   -- chain: f ≡ g0·h0 ≡ g'·h'
   exact polyCongr_trans hraw (polyCongr_symm hprod)
 
+/-! ## Lifting the Bézout cofactors (to iterate)
+
+To **iterate** the Hensel step the cofactors `s, t` must lift alongside the factors. With the
+*lifted* factors `g', h'` and the **Bézout defect** `b := s·g' + t·h' − 1` (`≡ 0 (mod p^m)`, since
+`g' ≡ g`, `h' ≡ h (mod p^m)`), set
+`s' := s − s·b`,  `t' := t − t·b`   (reduced mod `p^{2m}`).
+Then
+```
+s'·g' + t'·h' = (s·g' + t·h') − b·(s·g' + t·h') = (1 + b) − b·(1 + b) = 1 − b².
+```
+As `b ≡ 0 (mod p^m)`, `b² ≡ 0 (mod p^{2m})`, so `s'·g' + t'·h' ≡ 1 (mod p^{2m})` — the Bézout
+relation lifts. Soundness `liftBezout_congr` is proven against the *raw* `(s', t')` (the
+coefficient reduction is congruent, cf. `liftStep`); the computable `liftBezout` applies
+`reduceModN`. -/
+
+/-- The **Bézout defect** of cofactors `s, t` for factors `gp, hp`: `s·gp + t·hp − 1`, as a
+coefficient list. Its `toPoly` is `toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp − 1`. -/
+def bezoutDefectL (s t gp hp : List ℤ) : List ℤ :=
+  subL (addL (mulL s gp) (mulL t hp)) [1]
+
+/-- `toPoly (bezoutDefectL s t gp hp) = toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp − 1`. -/
+theorem toPoly_bezoutDefectL (s t gp hp : List ℤ) :
+    toPoly (bezoutDefectL s t gp hp)
+      = toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp - 1 := by
+  rw [bezoutDefectL, toPoly_subL, toPoly_addL, toPoly_mulL, toPoly_mulL, toPolyZ, toPolyZ, toPolyZ,
+    toPolyZ]
+  simp [toPoly]
+
+/-- **Lift the Bézout cofactors** for the lifted factors `gp, hp`: with `b := s·gp + t·hp − 1`,
+`s' := s − s·b`, `t' := t − t·b`, each reduced mod `p^{2m}`. Computable. -/
+def liftBezout (p m : ℕ) (s t gp hp : List ℤ) : List ℤ × List ℤ :=
+  let b := bezoutDefectL s t gp hp
+  let n2 := p ^ (2 * m)
+  (reduceModN n2 (subL s (mulL s b)), reduceModN n2 (subL t (mulL t b)))
+
+/-- **★ Raw Bézout-cofactor lift soundness.** With `b := S·Gp + T·Hp − 1`, the raw lifted
+cofactors `S − S·b`, `T − T·b` satisfy `(S − S·b)·Gp + (T − T·b)·Hp ≡ 1 (mod p^{2m})`, given the
+Bézout defect congruence `S·Gp + T·Hp ≡ 1 (mod p^m)`. The identity is `1 − b²` with `b² ≡ 0`. -/
+theorem liftBezoutRaw_congr (p m : ℕ) (s t gp hp : List ℤ)
+    (hbdef : polyCongr (p ^ m) (toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp) 1) :
+    polyCongr (p ^ (2 * m))
+      ((toPolyZ s - toPolyZ s * (toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp - 1)) * toPolyZ gp
+        + (toPolyZ t - toPolyZ t * (toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp - 1))
+            * toPolyZ hp)
+      1 := by
+  set S := toPolyZ s
+  set T := toPolyZ t
+  set Gp := toPolyZ gp
+  set Hp := toPolyZ hp
+  set b := S * Gp + T * Hp - 1 with hbdef'
+  -- b ≡ 0 (mod p^m)
+  have hb : (C ((p ^ m : ℕ) : ℤ)) ∣ b := by
+    rcases hbdef with ⟨k, hk⟩; exact ⟨k, by rw [hbdef', hk]⟩
+  -- b² ≡ 0 (mod p^{2m})
+  have hbb : (C ((p ^ (2 * m) : ℕ) : ℤ)) ∣ (b * b) := C_pow_two_mul_dvd_mul hb hb
+  -- (S − S·b)·Gp + (T − T·b)·Hp − 1 = −b²
+  rw [polyCongr]
+  have hid : ((S - S * b) * Gp + (T - T * b) * Hp) - 1 = -(b * b) := by
+    show ((S - S * b) * Gp + (T - T * b) * Hp) - 1 = -((S * Gp + T * Hp - 1) * (S * Gp + T * Hp - 1))
+    ring
+  rw [hid]
+  exact (dvd_neg).2 hbb
+
+/-- **★ Bézout-cofactor lift soundness (iteration enabler).** Let
+`(s', t') = liftBezout p m s t gp hp`. Given `s·gp + t·hp ≡ 1 (mod p^m)`, the lifted cofactors keep
+Bézout mod `p^{2m}`: `toPolyZ s' * toPolyZ gp + toPolyZ t' * toPolyZ hp ≡ 1 (mod p^{2m})`. The raw
+lift `liftBezoutRaw_congr` plus the `reduceModN` congruence on `s', t'`. Needed to iterate Hensel.
+Axiom-clean. -/
+theorem liftBezout_congr (p m : ℕ) (s t gp hp : List ℤ)
+    (hbdef : polyCongr (p ^ m) (toPolyZ s * toPolyZ gp + toPolyZ t * toPolyZ hp) 1) :
+    polyCongr (p ^ (2 * m))
+      (toPolyZ (liftBezout p m s t gp hp).1 * toPolyZ gp
+        + toPolyZ (liftBezout p m s t gp hp).2 * toPolyZ hp)
+      1 := by
+  set b := bezoutDefectL s t gp hp with hbdef0
+  set s0 := subL s (mulL s b) with hs0def
+  set t0 := subL t (mulL t b) with ht0def
+  have hfst : (liftBezout p m s t gp hp).1 = reduceModN (p ^ (2 * m)) s0 := rfl
+  have hsnd : (liftBezout p m s t gp hp).2 = reduceModN (p ^ (2 * m)) t0 := rfl
+  rw [hfst, hsnd]
+  -- `toPolyZ` unfolds to `toPoly` (defeq); normalize the goal
+  simp only [toPolyZ]
+  -- reduced cofactors are congruent to the raw ones (mod p^{2m})
+  have hcs : polyCongr (p ^ (2 * m)) (toPoly (reduceModN (p ^ (2 * m)) s0)) (toPoly s0) :=
+    polyCongr_toPoly_reduceModN _ _
+  have hct : polyCongr (p ^ (2 * m)) (toPoly (reduceModN (p ^ (2 * m)) t0)) (toPoly t0) :=
+    polyCongr_toPoly_reduceModN _ _
+  -- raw cofactors as polynomials (in `toPoly` form throughout)
+  have hs0poly : toPoly s0
+      = toPoly s - toPoly s * (toPoly s * toPoly gp + toPoly t * toPoly hp - 1) := by
+    rw [hs0def, toPoly_subL, toPoly_mulL, hbdef0, toPoly_bezoutDefectL, toPolyZ, toPolyZ, toPolyZ,
+      toPolyZ]
+  have ht0poly : toPoly t0
+      = toPoly t - toPoly t * (toPoly s * toPoly gp + toPoly t * toPoly hp - 1) := by
+    rw [ht0def, toPoly_subL, toPoly_mulL, hbdef0, toPoly_bezoutDefectL, toPolyZ, toPolyZ, toPolyZ,
+      toPolyZ]
+  -- the Bézout combination with reduced cofactors ≡ that with raw cofactors (mod p^{2m})
+  have hcomb : polyCongr (p ^ (2 * m))
+      (toPoly (reduceModN (p ^ (2 * m)) s0) * toPoly gp
+        + toPoly (reduceModN (p ^ (2 * m)) t0) * toPoly hp)
+      (toPoly s0 * toPoly gp + toPoly t0 * toPoly hp) := by
+    rcases hcs with ⟨ks, hks⟩
+    rcases hct with ⟨kt, hkt⟩
+    refine ⟨ks * toPoly gp + kt * toPoly hp, ?_⟩
+    have hexpand :
+        (toPoly (reduceModN (p ^ (2 * m)) s0) * toPoly gp
+          + toPoly (reduceModN (p ^ (2 * m)) t0) * toPoly hp)
+          - (toPoly s0 * toPoly gp + toPoly t0 * toPoly hp)
+        = (toPoly (reduceModN (p ^ (2 * m)) s0) - toPoly s0) * toPoly gp
+          + (toPoly (reduceModN (p ^ (2 * m)) t0) - toPoly t0) * toPoly hp := by ring
+    rw [hexpand, hks, hkt]; ring
+  -- raw soundness
+  have hraw := liftBezoutRaw_congr p m s t gp hp hbdef
+  simp only [toPolyZ] at hraw
+  rw [← hs0poly, ← ht0poly] at hraw
+  -- chain: combination(reduced) ≡ combination(raw) ≡ 1
+  exact polyCongr_trans hcomb hraw
+
 /-! ## `native_decide` validation of one lifting step
 
 The concrete computational content behind `liftStep_congr`: lift `x² + 1` over `ℤ` from its
@@ -305,5 +423,56 @@ to `mod 25` (`native_decide`). -/
 example :
     (let (g', h') := liftStep 5 1 [1, 0, 1] [3, 1] [2, 1] [1] [-1];
       reduceModN 25 (defectL [1, 0, 1] g' h')) = [0, 0, 0, 0, 0] := by native_decide
+
+/-- **★ Bézout cofactor lift mod `25`.** Lifting the cofactors `s = 1, t = −1` for the lifted
+factors `(6x + 8, 21x + 22)` gives `(15x + 16, 10x + 9)` mod `25`, keeping the Bézout relation
+`s'·g' + t'·h' ≡ 1 (mod 25)` (the lifted defect vanishes mod `25`; cf. `liftBezout_congr`) — so the
+step is ready to iterate (`native_decide`). -/
+example :
+    (let (s', t') := liftBezout 5 1 [1] [-1] [8, 6, 0] [22, 21, 0];
+      reduceModN 25 (bezoutDefectL s' t' [8, 6, 0] [22, 21, 0])) = [0, 0, 0, 0, 0] := by
+  native_decide
+
+/-! ## Roadmap: from one step to the complete `ℚ`-irreducibility decider
+
+What this file builds, and what remains for full Zassenhaus.
+
+**★ Built here (one quadratic step, axiom-clean).**
+* `liftStep` / `liftStep_congr` — the factor lift `g, h (mod p^m) ↦ g', h' (mod p^{2m})` with
+  `f ≡ g'·h' (mod p^{2m})` (the Newton quadratic identity).
+* `liftBezout` / `liftBezout_congr` — the cofactor lift `s, t (mod p^m) ↦ s', t' (mod p^{2m})`
+  with `s'·g' + t'·h' ≡ 1 (mod p^{2m})`, so the data needed for the *next* step is regenerated:
+  a single iteration `(f, g, h, s, t) ↦ (f, g', h', s', t')` over `mod p^m → mod p^{2m}` is
+  **complete and sound**.
+* `polyCongr` congruence algebra + `reduceModN` (coefficient control) + `native_decide`
+  validation (`x² + 1`, `mod 5 → mod 25`).
+
+**Remaining — the full iteration `mod p → p² → p⁴ → … → p^k`.**
+Iterate the single step `⌈log₂ k⌉` times, doubling the modulus exponent each round
+(`m ↦ 2m`), starting from a coprime mod-`p` factorization (`ddf`/`edf` from
+`ComputableFiniteFieldFactor`, lifted to `List ℤ` by choosing representatives in `[0, p)`, with
+the mod-`p` Bézout cofactors from the extended Euclidean algorithm). The termination target is
+`p^k > 2 · B`, where `B` is the **Mignotte bound** on the coefficients of any factor of `f`
+(`B = (deg f choose ⌊deg f / 2⌋) · ‖f‖₂ · lc(f)`, roughly), so every true `ℤ`-factor has a unique
+representative in the symmetric range `(−p^k/2, p^k/2]`. Engineering: a recursion folding
+`liftStep`/`liftBezout` over the doubling schedule, with the multiply-back/Bézout invariants
+threaded through (each round is `liftStep_congr` ∘ `liftBezout_congr`). The two-factor step here
+generalizes to `r` factors by the standard **multifactor** lift (lift `g` against the product of
+the rest, recursively), or by repeatedly applying the two-factor step on a balanced split.
+
+**Remaining — recombination to `ℤ`-factors (the last Zassenhaus stage).**
+Given the lifted irreducible factors `g₁, …, gᵣ (mod p^k)`, the true `ℤ`-factors are products of
+**subsets** of the `gᵢ` whose coefficients (taken in the symmetric range) are bounded by the
+Mignotte bound and which **actually divide** `f` over `ℤ`. Search subsets in increasing size; each
+candidate is `∏_{i ∈ S} gᵢ (mod p^k)`, symmetric-range-reduced, tested by trial division of `f`
+in `ℤ[X]`. *Mathlib status:* **not present**; an exponential subset search (LLL tames it later).
+The correctness predicate (a subset product divides `f` over `ℤ` and is irreducible) then yields:
+`f` is `ℚ`-irreducible iff recombination returns a single factor — the **complete decider** that
+`ComputablePolynomialIrreducibility`'s one-way mod-`p` test (the `x⁴ + 1` wall) cannot give.
+
+**The campaign.** `ddf` + `edf` (factor mod `p`, `ComputableFiniteFieldFactor`) → **Hensel
+factor-lift (this file)** → multifactor iteration to `mod p^k` → recombination → complete
+`ℚ`-irreducibility decider. The single quadratic step with its multiply-back and Bézout soundness
+is the Mathlib-lacking brick this file contributes. -/
 
 end DeepWiki.SymbolicIntegration
