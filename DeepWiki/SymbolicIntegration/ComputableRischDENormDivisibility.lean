@@ -89,6 +89,29 @@ theorem emultiplicity_le_of_dvd_cleared {en gden gnum dnh2 : R} {p : R} (hp : Pr
   rw [emultiplicity_mul hp, hgnum, add_zero] at hcleared
   rwa [hgden] at hcleared
 
+omit [UniqueFactorizationMonoid R] in
+/-- **The lowest-terms order-zero fact** (`emultiplicity_eq_zero_of_relPrime_of_dvd`): if `gnum` and `gden`
+are relatively prime and a prime `p` divides `gden`, then `emultiplicity p gnum = 0`. A prime dividing both
+`gnum` and `gden` would be a unit (`IsRelPrime`), contradicting primality, so `p ∤ gnum`. This discharges
+the lowest-terms clause `hgnum` of `RdeNormalClearedResidual` from the standard `K[X]` fact that a reduced
+fraction `gnum/gden` has coprime numerator and denominator — reducing that clause to plain coprimality. -/
+theorem emultiplicity_eq_zero_of_relPrime_of_dvd {gnum gden p : R} (hrp : IsRelPrime gnum gden)
+    (hp : Prime p) (hpd : p ∣ gden) :
+    emultiplicity p gnum = 0 :=
+  emultiplicity_eq_zero.2 fun hpn => hp.not_unit (hrp hpn hpd)
+
+/-- **The normal-part order-matching fact** (`emultiplicity_gden_eq_of_splitting`): if `gden = es·en` with
+the special part `es` relatively prime to the normal part `en`, then at any prime `p ∣ en`,
+`emultiplicity p gden = emultiplicity p en` — the special part contributes no `p` (it is coprime to `en`, so
+`p ∤ es`), so `emultiplicity_mul` collapses the `es` summand. This discharges the normal-part clause `hgden`
+of `RdeNormalClearedResidual` from the splitting factorization `gden = es·en` (special/normal coprime),
+reducing that clause to the §3.5 splitting fact the engine's `cSplitFactorFastG` provides. -/
+theorem emultiplicity_gden_eq_of_splitting {gden es en p : R} (hsplit : gden = es * en)
+    (hrp : IsRelPrime es en) (hp : Prime p) (hpd : p ∣ en) :
+    emultiplicity p gden = emultiplicity p en := by
+  have hes : emultiplicity p es = 0 := emultiplicity_eq_zero.2 fun hpe => hp.not_unit (hrp hpe hpd)
+  rw [hsplit, emultiplicity_mul hp, hes, zero_add]
+
 end PolyRingReduction
 
 /-! ## The polynomial-ring layer (2): the Mathlib derivative order-drop at a pole
@@ -235,6 +258,34 @@ structure RdeNormalClearedResidual (Dt fnum fden gnum gden : CPolyG α) : Prop w
   hen0 : toPolyG (rdeNormEn Dt towerRischDEFuel gden) ≠ 0
 
 omit [CRischField α] in
+/-- **★ The cleared residual from splitting + coprimality + the differential-subring fact**
+(`clearedResidual_of_splitting`): build `RdeNormalClearedResidual` from clean `K[X]`-level structural
+hypotheses, isolating the deep content. `hsplit`: `gden = eₛ·eₙ` (the §3.5 splitting, `eₛ` = special part);
+`hrpEs`: `IsRelPrime eₛ eₙ` (special and normal parts coprime); `hrpNum`: `IsRelPrime gnum gden` (lowest
+terms). Under these, the two structural clauses `hgden`/`hgnum` are *discharged*
+(`emultiplicity_gden_eq_of_splitting` / `emultiplicity_eq_zero_of_relPrime_of_dvd`, using `p ∣ eₙ ⟹ p ∣ gden`
+from `hsplit`), leaving only the differential-subring clause `hcleared` (`dₙh²g ∈ k⟨t⟩`) as the genuine
+deep input. So `RdeNormalClearedResidual` reduces to: the §3.5 splitting facts (engine-provided) + the
+single tower-valuation fact `hcleared`. -/
+theorem clearedResidual_of_splitting (Dt fnum fden gnum gden es : CPolyG α)
+    (hsplit : toPolyG gden
+      = toPolyG es * toPolyG (rdeNormEn Dt towerRischDEFuel gden))
+    (hrpEs : IsRelPrime (toPolyG es) (toPolyG (rdeNormEn Dt towerRischDEFuel gden)))
+    (hrpNum : IsRelPrime (toPolyG gnum) (toPolyG gden))
+    (hcleared : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      ∀ p : (CFieldSpec.K α)[X], Prime p → p ∣ toPolyG (rdeNormEn Dt towerRischDEFuel gden) →
+        emultiplicity p (toPolyG gden)
+          ≤ emultiplicity p (toPolyG (rdeNormDnh2 Dt towerRischDEFuel fden gden) * toPolyG gnum))
+    (hen0 : toPolyG (rdeNormEn Dt towerRischDEFuel gden) ≠ 0) :
+    RdeNormalClearedResidual Dt fnum fden gnum gden where
+  hgden _ _p hp hpdvd := emultiplicity_gden_eq_of_splitting hsplit hrpEs hp hpdvd
+  hgnum _ _p hp hpdvd :=
+    -- `p ∣ eₙ ∣ gden` (via the splitting `gden = eₛ·eₙ`), so coprimality of `gnum`/`gden` kills the order.
+    emultiplicity_eq_zero_of_relPrime_of_dvd hrpNum hp (hpdvd.trans (hsplit ▸ Dvd.intro_left _ rfl))
+  hcleared := hcleared
+  hen0 := hen0
+
+omit [CRischField α] in
 /-- **★ The per-pole bound residual from the cleared residual** (`poleOrderResidual_of_clearedResidual`):
 the sharper `RdeNormalClearedResidual` (whose deep clause is the differential-subring fact `dₙh²g ∈ k⟨t⟩`)
 *produces* the per-pole order bound residual `RdeNormalPoleOrderResidual`. At each prime `p ∣ eₙ` the proven
@@ -348,19 +399,26 @@ fuel bound, discharging the keystone `hdvd` (Bronstein Cor 6.1.1(ii)) through th
 * `emultiplicity_le_of_dvd_cleared` — the arithmetic heart: the per-pole bound `νₚ(eₙ) ≤ νₚ(dₙh²)` follows
   from `νₚ(gden) = νₚ(eₙ)`, `νₚ(gnum) = 0`, and `νₚ(dₙh²gnum) ≥ νₚ(gden)` (the cleared product), via
   `emultiplicity_mul`;
-* `poleOrderResidual_of_clearedResidual` / `hdvd_of_clearedResidual` / `divisibilityResidual_of_cleared` —
-  the assembly producing `hdvd` (and the full divisibility residual) from the cleared residual.
+* `emultiplicity_eq_zero_of_relPrime_of_dvd` / `emultiplicity_gden_eq_of_splitting` — the two **structural
+  clauses discharged**: `hgnum` from lowest-terms coprimality (`IsRelPrime gnum gden`), `hgden` from the
+  §3.5 splitting `gden = eₛ·eₙ` with `eₛ`/`eₙ` coprime;
+* `poleOrderResidual_of_clearedResidual` / `hdvd_of_clearedResidual` / `divisibilityResidual_of_cleared` /
+  `clearedResidual_of_splitting` — the assembly producing `hdvd` (and the full divisibility residual) from
+  the cleared residual, and reducing the cleared residual itself to splitting + coprimality + `hcleared`.
 
-**The single remaining residual** (`RdeNormalClearedResidual`, NEVER `sorry`): its three per-pole clauses,
-of which `hgden` (`νₚ(gden) = νₚ(eₙ)`, normal-part structural) and `hgnum` (`νₚ(gnum) = 0`, lowest-terms
-structural) are structural, and `hcleared` (`νₚ(gden) ≤ νₚ(dₙh²gnum)`) is the **one genuinely deep step** —
-the differential-subring fact `dₙh²g ∈ k⟨t⟩` (the cleared (6.2) RHS has nonnegative order at every normal
-pole). This is what the tower's valuation/derivation theory supplies and bare `K[X]` does not.
+**The single remaining residual** (`RdeNormalClearedResidual`, NEVER `sorry`): of its three per-pole
+clauses, `hgden` (`νₚ(gden) = νₚ(eₙ)`, normal-part) and `hgnum` (`νₚ(gnum) = 0`, lowest-terms) are
+structural and **reduce to standard `K[X]` facts** — the §3.5 splitting (`gden = eₛeₙ`, special/normal
+coprime) and lowest-terms coprimality (`gcd(gnum, gden) = 1`) — via `clearedResidual_of_splitting`. The
+**one genuinely deep step** is `hcleared` (`νₚ(gden) ≤ νₚ(dₙh²gnum)`), the differential-subring fact
+`dₙh²g ∈ k⟨t⟩` (the cleared (6.2) RHS has nonnegative order at every normal pole). This is what the tower's
+valuation/derivation theory supplies and bare `K[X]` does not — the precise irreducible §6.1 frontier.
 
-**Frontier effect.** With `hdvd` discharged modulo `RdeNormalClearedResidual`, the §6.2 completeness clause
+**Frontier effect.** With `hdvd` discharged modulo `RdeNormalClearedResidual` (whose deep content is exactly
+`hcleared`, the structural clauses being engine-provided splitting/coprimality), the §6.2 completeness clause
 `hnorm` is produced (`hnorm_of_clearedResidual`); `RischDEInnerCompleteness` reduces to `hbound` (nearly
 done) + `hsolve` (the deep SPDE core) — the third residual `hdvd` is now down to the precisely isolated
-differential-subring step, the genuine remaining §6.1 valuation content. -/
+differential-subring step `dₙh²g ∈ k⟨t⟩`, the genuine remaining §6.1 valuation content. -/
 
 /-! ### Axiom audit (the polynomial-ring + arithmetic layers and the discharge assembly are axiom-clean;
 NO `native_decide`, NO `sorry`) -/
@@ -368,8 +426,11 @@ NO `native_decide`, NO `sorry`) -/
 #print axioms dvd_of_emultiplicity_le_at_factors
 #print axioms rootMultiplicity_gcd_derivative_eq_sub_one
 #print axioms emultiplicity_le_of_dvd_cleared
+#print axioms emultiplicity_eq_zero_of_relPrime_of_dvd
+#print axioms emultiplicity_gden_eq_of_splitting
 #print axioms hdvd_of_poleOrderResidual
 #print axioms hdvd_of_clearedResidual
+#print axioms clearedResidual_of_splitting
 #print axioms divisibilityResidual_of_cleared
 #print axioms hnorm_of_clearedResidual
 
