@@ -816,3 +816,10 @@ base `X + a = [a, 1]` to the half-power `(p^d − 1)/2`, then subtracting `1`. -
 def edfSplitPoly (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (df : ℕ) (a : ZMod p) :
     List (ZMod p) :=
   subL (powModL f df ((p ^ d - 1) / 2 + 1) [a, 1] ((p ^ d - 1) / 2)) [1]
+
+/-- One Cantor–Zassenhaus split attempt: `gcd(f, (X + a)^((p^d − 1)/2) − 1)`, a (possibly trivial)
+factor of `f` for the shift `a`. Always divides `f` (`gcdByMonic_dvd_left`), so peeling it is an
+exact division — the source of EDF multiply-back soundness; whether it is a *proper* factor depends
+on `a` being a "good" shift (the sweep below tries successive `a`). -/
+def edfSplitOne (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (a : ZMod p) : List (ZMod p) :=
+  gcdByMonic f (edfSplitPoly p d f (lengthTrim f - 1) a)
