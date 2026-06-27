@@ -372,6 +372,95 @@ theorem lengthTrim_le_of_degree_lt {R : Type*} [Semiring R] [DecidableEq R] {l :
   refine lt_of_lt_of_le h ?_
   exact_mod_cast Nat.le_sub_one_of_lt hlt
 
+/-! ## The long-division step strictly drops the trim length
+
+The single fact that makes division terminate and gives the remainder its degree bound: when
+`toPoly g` is monic of degree `dg` and `lengthTrim f = n > dg`, subtracting the matching leading
+term `c·X^(n-1-dg)·g` (with `c = f`'s leading entry) **cancels the top coefficient**, so
+`lengthTrim (subL f (mulL term g)) < n`. Proven by showing every coefficient of the difference at
+index `≥ n-1` vanishes (`f` and `term·g` agree there: both `0` above `n-1`, both `c` at `n-1`). -/
+
+/-- **★ Per-step trim decrease.** With `toPoly g` monic of `natDegree dg`, `n := lengthTrim f`,
+`n > dg`, `c := f.getD (n-1) 0`, `term := monomialL c (n-1-dg)`: the long-division residue
+`subL f (mulL term g)` has strictly smaller trim length than `f`. -/
+theorem lengthTrim_subL_mulL_lt {R : Type*} [CommRing R] [DecidableEq R]
+    {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg)
+    {f : List R} (hn : dg < lengthTrim f) :
+    lengthTrim (subL f
+        (mulL (monomialL (f.getD (lengthTrim f - 1) 0) (lengthTrim f - 1 - dg)) g))
+      < lengthTrim f := by
+  set n := lengthTrim f with hndef
+  have hn1 : 1 ≤ n := by omega
+  set c := f.getD (n - 1) 0 with hcdef
+  set k := n - 1 - dg with hkdef
+  set term := monomialL c k with htermdef
+  -- the residue at the polynomial level
+  have hpoly : toPoly (subL f (mulL term g))
+      = toPoly f - C c * X ^ k * toPoly g := by
+    rw [toPoly_subL, toPoly_mulL, toPoly_monomialL]
+  -- it suffices that the residue's degree is < n - 1, since then lengthTrim ≤ n - 1 < n
+  have hdeglt : (toPoly f - C c * X ^ k * toPoly g).degree < ((n - 1 : ℕ) : WithBot ℕ) := by
+    rw [degree_lt_iff_coeff_zero]
+    intro m hm
+    have hmn : n - 1 ≤ m := by exact_mod_cast hm
+    have hkm : k ≤ m := by omega
+    rw [coeff_sub, show C c * X ^ k * toPoly g = C c * (X ^ k * toPoly g) by ring,
+      coeff_C_mul, coeff_X_pow_mul', if_pos hkm]
+    rcases eq_or_lt_of_le hmn with rfl | hmgt
+    · -- m = n - 1 : leading coeffs both = c, cancel
+      have hcf : (toPoly f).coeff (n - 1) = c := by rw [coeff_toPoly]
+      have hmk : (n - 1) - k = dg := by omega
+      have hgc : (toPoly g).coeff dg = 1 := by
+        have := hg.monic.coeff_natDegree; rwa [hg.natDegree_eq] at this
+      rw [hcf, hmk, hgc]
+      ring
+    · -- m > n - 1, i.e. m ≥ n : both coeffs vanish
+      have hfm : (toPoly f).coeff m = 0 := by
+        apply coeff_eq_zero_of_degree_lt
+        refine lt_of_lt_of_le (toPoly_degree_lt_lengthTrim f) ?_
+        rw [← hndef]; exact_mod_cast by omega
+      have hgm : (toPoly g).coeff (m - k) = 0 := by
+        apply coeff_eq_zero_of_natDegree_lt
+        rw [hg.natDegree_eq]; omega
+      rw [hfm, hgm, mul_zero, sub_zero]
+  have hle : lengthTrim (subL f (mulL term g)) ≤ n - 1 := by
+    refine lengthTrim_le_of_degree_lt ?_
+    rw [hpoly]; exact hdeglt
+  omega
+
+/-- **Remainder degree bound.** With `toPoly g` monic of degree `dg ≥ 1` and `fuel ≥ lengthTrim f`,
+the fueled long-division remainder has `lengthTrim ≤ dg` (the loop reaches its `≤ dg` stop before
+running out of fuel, by the per-step decrease). -/
+theorem lengthTrim_divmodByMonicFuel_snd_le {R : Type*} [CommRing R] [DecidableEq R]
+    {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg) (hdg : 1 ≤ dg) :
+    ∀ (fuel : ℕ) (f : List R), lengthTrim f ≤ fuel →
+      lengthTrim (divmodByMonicFuel g dg fuel f).2 ≤ dg := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro f hf
+    simp only [divmodByMonicFuel]
+    omega
+  | succ fuel ih =>
+    intro f hf
+    rw [divmodByMonicFuel]
+    simp only
+    split
+    · rename_i hstop; exact hstop
+    · rename_i hstop
+      -- lengthTrim f > dg, recurse on f' with smaller trim
+      have hgt : dg < lengthTrim f := by omega
+      set f' := subL f (mulL (monomialL (f.getD (lengthTrim f - 1) 0) (lengthTrim f - 1 - dg)) g)
+        with hf'def
+      have hdec : lengthTrim f' < lengthTrim f := lengthTrim_subL_mulL_lt hg hgt
+      have hf'fuel : lengthTrim f' ≤ fuel := by omega
+      have := ih f' hf'fuel
+      -- the returned remainder is the recursive remainder
+      rcases hpair : divmodByMonicFuel g dg fuel f' with ⟨q, r⟩
+      simp only
+      rw [hpair] at this
+      simpa using this
+
 /-! ## Euclidean gcd over `𝔽_p`
 
 `gcdByMonic f g` is the polynomial gcd over the field, normalizing the divisor with `monicizeL`
