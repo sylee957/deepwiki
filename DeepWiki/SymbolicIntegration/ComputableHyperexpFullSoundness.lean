@@ -425,6 +425,107 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fue
   cIntegrateHyperexpNormalG_sound Dt fuel a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
+/-! ### ★★★ Task 3 (the full driver): `cIntegrateHyperexpFullG_sound` (§5.4 + §5.10 + §5.9)
+
+`cIntegrateHyperexpFullG Dt fuel a d cands` combines the §5.10 Laurent special part `fp + b/dₛ` (via
+`cIntegrateHyperexpLaurentG η`) with the §5.9 normal part `cₙ/dₙ` (via `cIntegrateHyperexpNormalG`), returning
+the rational part `(lnum/lden) + (gnum/gden)` with the normal logs. Soundness composes:
+* the Laurent field identity `hLaurField : D(lnum/lden) = amG(fpPart)` — the §5.10 special-part correctness
+  (a documented input; the Laurent special-part soundness is a separate piece, not in scope here);
+* the §5.9 normal-part soundness `cIntegrateHyperexpNormalG_sound` for `D(gnum/gden) + logResidueSumG = cₙ/dₙ`;
+* the canonical reconstruction `hrecon : amG(fpPart) + cₙ/dₙ = a/d` (the `canonicalRepresentationFastG`
+  recombination, documented).
+Then `D(res) + logResidueSumG = D(lnum/lden) + D(gnum/gden) + logResidueSumG = amG(fpPart) + cₙ/dₙ = a/d`.
+The §5.10-special + §5.9-normal hyperexp integral, unconditional in `∑c`, reduced to the Laurent
+special-part identity + the canonical reconstruction + the base-oracle residual. -/
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The full §5.10 + §5.9 driver's output shape** — when `cIntegrateHyperexpFullG Dt fuel a d cands = some
+res` with the Laurent part succeeding (`cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fuel fp neg = some
+(lnum, lden)`, `fp/b/ds/cn/dn` the `canonicalRepresentationFastG` components, `neg = cHyperexpSpecialNegG b
+ds`) and the normal part succeeding (`cIntegrateHyperexpNormalG Dt fuel cn dn cands = some nrm`), the result is
+`res = ⟨(caddG (cmulG lnum gden) (cmulG gnum lden), cmulG lden gden), nrm.logs⟩` with `(gnum, gden) =
+nrm.rational` — the combined rational `lnum/lden + gnum/gden`, the normal logs. Pins the full driver's output:
+the §5.10 Laurent rational part plus the §5.9 normal rational part. -/
+theorem cIntegrateHyperexpFullG_shape (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
+    (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fuel
+        (canonicalRepresentationFastG Dt fuel a d).1
+        (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt fuel a d).2.1.1
+          (canonicalRepresentationFastG Dt fuel a d).2.1.2)
+      = some (lnum, lden))
+    (hNrm : CPolyG.cIntegrateHyperexpNormalG Dt fuel
+        (canonicalRepresentationFastG Dt fuel a d).2.2.1
+        (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands = some nrm)
+    (hsome : CPolyG.cIntegrateHyperexpFullG Dt fuel a d cands = some res) :
+    res = ⟨(caddG (cmulG lnum nrm.rational.2) (cmulG nrm.rational.1 lden), cmulG lden nrm.rational.2),
+          nrm.logs⟩ := by
+  rw [CPolyG.cIntegrateHyperexpFullG] at hsome
+  -- destructure the canonical split so the pattern-match `let` reduces
+  rcases hcrep : canonicalRepresentationFastG Dt fuel a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+  rw [hcrep] at hsome hLaur hNrm
+  simp only [hLaur, hNrm] at hsome
+  -- the `let (gnum, gden) := nrm.rational` match reduces; `nrm.rational.1/.2` are defeq to `nrm.1.1/.1.2`
+  exact (Option.some.injEq _ _ ▸ hsome).symm
+
+/-- **★★★ The full §5.10 + §5.9 hyperexp driver soundness `D(∫f) = f`, UNCONDITIONAL in `∑c`** — for a
+hyperexponential monomial `toPolyG Dt = C b·X` (`Dt = η′·t`), if the full driver returns `some res`
+(`cIntegrateHyperexpFullG Dt fuel a d cands = some res`, both the §5.10 Laurent part and the §5.9 normal part
+succeeding), **given** the Laurent special-part field identity `hLaurField` (`D(lnum/lden) = amG fpPart`, the
+§5.10 correctness — a documented input), the canonical reconstruction `hrecon` (`amG fpPart + amG cn/amG dn =
+amG a/amG d`, the `canonicalRepresentationFastG` recombination), the §5.9 normal-part field identity
+`hNrmField` (`D(gnum/gden) + logResidueSumG Dt nrm.logs = amG cn/amG dn`, from
+`cIntegrateHyperexpNormalG_sound`), and the nonzero denominators, the field-level antiderivative identity
+`D(res) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc (CFieldSpec.K α)` — **with NO `∑c =
+0` side condition, no engine `checkIdentityG` certificate, no native_decide**. The §5.10-special + §5.9-normal
+hyperexp integral both differentiate back to `f`: `D(lnum/lden + gnum/gden) + logResidueSumG = amG fpPart +
+(amG cn/amG dn) = amG a/amG d`. The complete hyperexponential integral (special §5.10 + normal §5.9),
+unconditional in `∑c`, reduced to the Laurent special-part identity + the canonical reconstruction + the
+§5.9-normal soundness (`cIntegrateHyperexpNormalG_sound`, itself reduced to the base-oracle residual). -/
+theorem cIntegrateHyperexpFullG_sound (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
+    (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α) (fpPart : CPolyG α)
+    (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fuel
+        (canonicalRepresentationFastG Dt fuel a d).1
+        (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt fuel a d).2.1.1
+          (canonicalRepresentationFastG Dt fuel a d).2.1.2)
+      = some (lnum, lden))
+    (hNrm : CPolyG.cIntegrateHyperexpNormalG Dt fuel
+        (canonicalRepresentationFastG Dt fuel a d).2.2.1
+        (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands = some nrm)
+    (hsome : CPolyG.cIntegrateHyperexpFullG Dt fuel a d cands = some res)
+    (hLaurField : towerFractionFieldDerivG Dt (amG α (toPolyG lnum) / amG α (toPolyG lden))
+        = amG α (toPolyG fpPart))
+    (hNrmField : towerFractionFieldDerivG Dt
+            (amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2))
+          + logResidueSumG Dt nrm.logs
+        = amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2))
+    (hrecon : amG α (toPolyG fpPart)
+          + amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  -- pin the output shape
+  rw [cIntegrateHyperexpFullG_shape Dt fuel a d cands res lnum lden nrm hLaur hNrm hsome]
+  -- the combined rational `(lnum·gden + gnum·lden)/(lden·gden) = lnum/lden + gnum/gden`
+  have hAlden : amG α (toPolyG lden) ≠ 0 := amG_toPolyG_ne_zero hlden
+  have hAgden : amG α (toPolyG nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hcombine : amG α (toPolyG (caddG (cmulG lnum nrm.rational.2) (cmulG nrm.rational.1 lden)))
+        / amG α (toPolyG (cmulG lden nrm.rational.2))
+      = amG α (toPolyG lnum) / amG α (toPolyG lden)
+        + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
+    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul,
+      map_mul]
+    field_simp
+  -- D of the combined rational splits over `+`; apply the Laurent and normal field identities
+  rw [hcombine, map_add, hLaurField]
+  -- goal: `amG fpPart + D(gnum/gden) + logResidueSumG = amG a/amG d`; regroup and apply `hNrmField`
+  rw [add_assoc, hNrmField]
+  exact hrecon
+
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- ★ THE OVERSHOOT IDENTITY (UNCONDITIONAL, axiom-clean, no native_decide): the raw §5.6 Rothstein–Trager
@@ -442,6 +543,47 @@ example {K : Type*} [Field K] [Differential K] [Algebra ℚ K] (s : Finset K) (a
               a.eval α / (Differential.implicitDeriv (C b * X) (Lagrange.nodal s id)).eval α))
         + algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) :=
   ResidueMatchTower.hyperexp_residue_sum_eq_overshoot_add s a b hA hnorm
+
+-- ★★★ THE §5.9 NORMAL-PART DRIVER SOUNDNESS (UNCONDITIONAL in `∑c`, no native_decide):
+-- `cIntegrateHyperexpNormalG = some res ⟹ D(res) = a/d` for a hyperexp `Dt = η′·t`, gated on the abstract
+-- engine bridges + the base-oracle residual `hintR` + the residual-read bridge `hRval` — NO `∑c = 0`.
+example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (intR : α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hDt : toPolyG Dt = C b * X)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
+    (hintRsome : CRischField.crischDESolve (CField.zero : α)
+        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+      = some intR)
+    (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β)))
+    (hintR : towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
+        = amG α (Polynomial.C (CFieldSpec.toK
+            (cHyperexpResidualG (cExpEtaG fuel Dt)
+              (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs))))
+    (hRval : amG α (Polynomial.C (CFieldSpec.toK
+            (cHyperexpResidualG (cExpEtaG fuel Dt)
+              (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
+        = amG α (C (b * ∑ β ∈ s,
+            (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  cIntegrateHyperexpNormalG_sound Dt fuel a d cands res intR s b hDt hgden hintRsome hsome hherm hden
+    hA hnorm hform hintR hRval
 
 /-! ### ★ Status — the §5.9 hyperexponential driver soundness, UNCONDITIONAL in `∑c`
 
@@ -463,6 +605,12 @@ PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_de
     to the abstract overshoot).
   The §5.9 residual feedback subtracts the base integral: the new rational part `g − ∫R` differentiates to
   `D(g) − D(∫R) = (a/d + R) − R = a/d`, the overshoot `R` cancelled by `hintR`.
+* **★★★ The full §5.10 + §5.9 driver soundness** (`cIntegrateHyperexpFullG_sound`) — for a hyperexponential
+  monomial `toPolyG Dt = C b·X`, `cIntegrateHyperexpFullG = some res ⟹ D(res) = a/d`, **UNCONDITIONAL in
+  `∑c`**, gated on the §5.9-normal soundness (`hNrmField`, from `cIntegrateHyperexpNormalG_sound`), the §5.10
+  Laurent special-part field identity `hLaurField` (a documented input — the Laurent special-part soundness is
+  a separate piece, not in scope), and the canonical reconstruction `hrecon`. Combines special + normal:
+  `D(lnum/lden + gnum/gden) + logResidueSumG = amG fpPart + cₙ/dₙ = a/d`.
 
 ★ IS UNCONDITIONAL HYPEREXP SOUNDNESS PROVEN? **YES — modulo the base-oracle residual, NOT modulo `∑c = 0`.**
 The contrast with `ComputableOneShotAssembly`'s `cIntegrateGFull_hyperexp_oneShot` (gated on the FALSE-in-
@@ -488,5 +636,7 @@ residual the unconditional driver soundness rests on. The OVERSHOOT identity —
 #print axioms cIntegrateHyperexpNormalG_shape
 #print axioms cIntegrateHyperexpNormalG_sound
 #print axioms cIntegrateHyperexpNormalG_sound_qfunNZG
+#print axioms cIntegrateHyperexpFullG_shape
+#print axioms cIntegrateHyperexpFullG_sound
 
 end DeepWiki.SymbolicIntegration
