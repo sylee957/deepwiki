@@ -850,3 +850,30 @@ def edfBlock (p d : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List
         edfBlock p d fuel (a + 1) gm ++ edfBlock p d fuel (a + 1) cof
       else
         edfBlock p d fuel (a + 1) f
+
+/-! ## Full equal-degree factorization
+
+`edf p f` runs the deterministic shift sweep `edfBlock` on **every** DDF block (each `(d, gd)` a
+product of degree-`d` irreducibles) and flattens to the full list of factor coefficient-lists. The
+per-block sweep starts at shift `a = 0` with a fuel budget of the block length (more than enough:
+each proper split strictly drops the degree). `edfProduct` folds the factor lists back with `mulL`
+(the multiply-back target). -/
+
+/-- The product of EDF factors (`mulL`-fold of the coefficient lists, from `[1]`): the multiply-back
+target for `edf` soundness. -/
+def edfProduct {R : Type*} [Zero R] [One R] [Add R] [Mul R] (fs : List (List R)) : List R :=
+  fs.foldr (fun b acc => mulL b acc) [1]
+
+/-- `toPoly` of an EDF factor product is the product of the factors' `toPoly`s. -/
+theorem toPoly_edfProduct {R : Type*} [CommSemiring R] (fs : List (List R)) :
+    toPoly (edfProduct fs) = (fs.map toPoly).prod := by
+  induction fs with
+  | nil => simp [edfProduct, toPoly]
+  | cons b fs ih =>
+    rw [edfProduct, List.foldr_cons, toPoly_mulL, List.map_cons, List.prod_cons, ← edfProduct, ih]
+
+/-- Full equal-degree factorization of `f` over `𝔽_p`: run the deterministic shift sweep `edfBlock`
+on each DDF block (degree tag `b.1`, block `b.2`) starting at shift `0`, and flatten to the complete
+list of factor coefficient-lists. -/
+def edf (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) : List (List (ZMod p)) :=
+  (ddf p f).flatMap (fun b => edfBlock p b.1 (b.2.length + 1) 0 b.2)
