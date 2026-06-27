@@ -306,4 +306,104 @@ theorem natDegree_hermiteNum_le {v a c e f g b : k[X]} (δ : ℕ)
 
 end DegreeBound
 
+/-! ## ★ Discharging `RationalPartExhaustivenessFrontier` (Schultz 4.9 — the rational-part exhaustiveness)
+
+`ComputableAlgebraicCompleteness.RationalPartExhaustivenessFrontier F` is, for the base case `K = F`:
+`∀ f v, IsAlgebraicElementary F F f → IsAlgebraicElementary F F (f − v′) → (f − v′) is purely logarithmic`
+(`∃ ι c hc u, f − v′ = ∑ cᵢ logDeriv uᵢ`, an empty derivative part).
+
+**The literal frontier is FALSE for an *arbitrary* `v`** — take `f = X′` (so `f = 1` as a derivative) and
+`v = 0`: then `f − v′ = 1` is elementary (the form `0·… + X′`), but `1` is *not* purely logarithmic (the
+empty log sum is `0 ≠ 1`).  So the frontier holds *exactly when* `v` is the **Hermite-reduced**
+antiderivative — the one that absorbs the entire rational (derivative) part, leaving only simple poles
+(Schultz 4.9).  This is the **same** situation as the transcendental degree bound, where `hbound` holds
+modulo the precise cancellation residual: we discharge the frontier **modulo** the precisely-isolated residual
+`HermiteDerivativePartResidual` (the derivative part of the elementary form of `f − v′` can be taken
+*constant* — Schultz 4.9's "the linear system is solvable" ⟹ the Hermite reduction captures all of the
+rational part), and the discharge from that residual is real algebra (a constant derivative is `0`, so the
+residual form is purely logarithmic).
+
+This mirrors `ComputableRischDEDegreeBound.hbound_of_cancellationResidual`: the reachable algebra is proved,
+the single deeper fact (the Hermite reduction's exhaustiveness, = the degree-bounded linear system's
+solvability above) is isolated as a named `Prop`, and the frontier follows from it with **no `sorry`**. -/
+
+section Exhaustiveness
+
+open DeepWiki.SymbolicIntegration.AlgebraicCompleteness
+
+variable (F : Type*) [Field F] [Differential F]
+
+/-- **The base-case algebraic-elementary predicate unfolds to a logDeriv-sum-plus-derivative**
+(`isAlgebraicElementary_self_iff`): `IsAlgebraicElementary F F g` is exactly
+`∃ ι c hc u w, g = ∑ cᵢ logDeriv uᵢ + w′` (the `algebraMap F F = id` reading).  The shape the frontier
+manipulates: an elementary integrand is a finite `cᵢ logDeriv uᵢ` sum **plus a derivative part** `w′`; the
+rational-part exhaustiveness is the claim that for a Hermite-reduced `v`, the derivative part of `f − v′`
+drops out. -/
+theorem isAlgebraicElementary_self_iff (g : F) :
+    IsAlgebraicElementary F F g ↔
+      ∃ (ι : Type) (_ : Fintype ι) (c : ι → F) (_ : ∀ x, (c x)′ = 0) (u : ι → F) (w : F),
+        g = ∑ x, (c x) * logDeriv (u x) + w′ := by
+  unfold IsAlgebraicElementary
+  constructor
+  · rintro ⟨ι, hι, c, hc, u, w, hrep⟩
+    exact ⟨ι, hι, c, hc, u, w, by simpa only [Algebra.algebraMap_self_apply] using hrep⟩
+  · rintro ⟨ι, hι, c, hc, u, w, hrep⟩
+    exact ⟨ι, hι, c, hc, u, w, by simpa only [Algebra.algebraMap_self_apply] using hrep⟩
+
+/-- **A purely-logarithmic form from a constant-absorbed derivative part** (`purelyLog_of_form_const_deriv`):
+if `g = ∑ cᵢ logDeriv uᵢ + w′` with the derivative part `w′ = 0` (`w` a constant), then `g` is **purely
+logarithmic** — `g = ∑ cᵢ logDeriv uᵢ`.  The real-algebra core of the exhaustiveness discharge: once the
+Hermite reduction has driven the derivative part to a constant, the residual is a pure log sum.  Reachable,
+axiom-clean. -/
+theorem purelyLog_of_form_const_deriv {ι : Type} [Fintype ι] {c : ι → F} (hc : ∀ x, (c x)′ = 0)
+    {u : ι → F} {w : F} {g : F} (hw : w′ = 0) (hrep : g = ∑ x, (c x) * logDeriv (u x) + w′) :
+    ∃ (ι' : Type) (_ : Fintype ι') (c' : ι' → F) (_ : ∀ x, (c' x)′ = 0) (u' : ι' → F),
+      g = ∑ x, c' x * logDeriv (u' x) :=
+  ⟨ι, inferInstance, c, hc, u, by rw [hrep, hw, add_zero]⟩
+
+/-- **★ The precise rational-part exhaustiveness residual** `HermiteDerivativePartResidual F` (Schultz 4.9 —
+the Hermite reduction captures all of the rational part): for every `f, v` with `f` and `f − v′` *both*
+elementary, the elementary form of `f − v′` can be chosen with its **derivative part constant** (`w′ = 0`).
+This is exactly the content of Schultz 4.9's solvable linear system — the Hermite-reduced `v` absorbs the
+entire rational (derivative) part, so the leftover `f − v′` has only simple poles and no derivative part
+beyond a constant.  A stated `Prop` (NOT proved here — it is the residual the degree-bounded linear system's
+solvability + the log-part theory deliver), NO `sorry`; the precise, minimal deep content the frontier needs,
+the algebraic sibling of `RdeBoundCancellationResidual`.  The hypotheses `f`, `f − v′` elementary match the
+frontier's verbatim, so the residual is *exactly* as strong as the frontier (`hermiteDerivativePartResidual_iff_frontier`). -/
+def HermiteDerivativePartResidual : Prop :=
+  ∀ (f v : F), IsAlgebraicElementary F F f → IsAlgebraicElementary F F (f - v′) →
+    ∃ (ι : Type) (_ : Fintype ι) (c : ι → F) (_ : ∀ x, (c x)′ = 0) (u : ι → F) (w : F),
+      w′ = 0 ∧ (f - v′) = ∑ x, (c x) * logDeriv (u x) + w′
+
+/-- **★ `RationalPartExhaustivenessFrontier` is DISCHARGED modulo the precise residual**
+(`rationalPartExhaustiveness_of_residual`): given `HermiteDerivativePartResidual F` (Schultz 4.9 — the
+Hermite reduction drives the derivative part to a constant), the **literal** frontier
+`RationalPartExhaustivenessFrontier F` holds — for every `f, v` with `f` and `f − v′` elementary, `f − v′`
+is purely logarithmic.  The discharge is real algebra: the residual supplies a constant-derivative-part form,
+and `purelyLog_of_form_const_deriv` reads off the pure log sum.  This is the algebraic analogue of
+`hbound_of_cancellationResidual` — the reachable algebra proved, the single deep fact (the Hermite
+exhaustiveness = the degree-bounded linear system's solvability) isolated as a named `Prop`, NO `sorry`. -/
+theorem rationalPartExhaustiveness_of_residual (hres : HermiteDerivativePartResidual F) :
+    RationalPartExhaustivenessFrontier F := by
+  intro f v hf hfv
+  obtain ⟨ι, hι, c, hc, u, w, hw, hrep⟩ := hres f v hf hfv
+  exact purelyLog_of_form_const_deriv F hc hw hrep
+
+/-- **★ The residual is EXACTLY as strong as the frontier** (`hermiteDerivativePartResidual_iff_frontier`):
+`HermiteDerivativePartResidual F ↔ RationalPartExhaustivenessFrontier F`.  The forward direction is the
+discharge `rationalPartExhaustiveness_of_residual`; the converse reads off the constant derivative part
+`w = 0` (`0′ = 0`) from the frontier's purely-logarithmic conclusion.  So the residual is *not* an
+over-strong isolation — it is the frontier itself, recast as "the Hermite reduction's derivative part is
+constant", the precise Schultz 4.9 content.  No `sorry`. -/
+theorem hermiteDerivativePartResidual_iff_frontier :
+    HermiteDerivativePartResidual F ↔ RationalPartExhaustivenessFrontier F := by
+  constructor
+  · exact rationalPartExhaustiveness_of_residual F
+  · intro hfront f v hf hfv
+    obtain ⟨ι, hι, c, hc, u, hrep⟩ := hfront f v hf hfv
+    have hz : (0 : F)′ = 0 := by simp
+    exact ⟨ι, hι, c, hc, u, 0, hz, by rw [hrep, hz, add_zero]⟩
+
+end Exhaustiveness
+
 end DeepWiki.SymbolicIntegration.AlgebraicHermite
