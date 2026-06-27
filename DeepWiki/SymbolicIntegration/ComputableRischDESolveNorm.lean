@@ -445,6 +445,60 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
   crischDESolveNorm_field f g y hsolve hnorm hres
 
+/-! ## ★ VERDICT — is the normalized recursive solver UNCONDITIONALLY sound? (Task 5)
+
+**The `B`-divisibility wall — the genuine §6.2 obstruction the diagnosis pinned, the self-divisibility
+`fden ∣ dₙh` that `dvd_dn_h_of_normal` targets — IS closed for the CORRECT (weak-normalized) recursive
+solver, modulo exactly ONE precisely-isolated normalization-correctness sub-lemma.** The wall was the
+engine's missing §6.1 weak-normalization step; adding it (`crischDESolveNorm`) makes the `B`-divisibility a
+**theorem** (`isWeaklyNormalizedNorm_dvdB` via `dvd_dn_h_of_normal`). `crischDESolveNorm_field` is the
+field-level Risch-DE soundness of the normalized solver, axiom-clean `[propext, Classical.choice,
+Quot.sound]`, **NO `native_decide`** — confirming the user's diagnosis for the `B`-divisibility.
+
+### The ONE normalization-correctness sub-lemma (the precise residual gap)
+
+`IsWeaklyNormalizedNorm (weakNormalizedF f q')` — the post-normalization `f̃ = f − Dq/q` has a denominator
+equal to its own §3.5 normal part (the special part is a unit). This is exactly the algebraic *guarantee* of
+Bronstein §6.1 `cWeakNormalizerG`: the residue resultant's positive integer roots are exhausted. The engine
+computes `cWeakNormalizerG` and the property holds on every concrete run (`native_decide`-checkable), but
+`cWeakNormalizerG` carries no abstract correctness theorem in the library — so this is the single isolated
+fact, supplied as a hypothesis. (Proving it abstractly = formalizing §6.1 `WeakNormalizer` correctness, a
+self-contained next step over `cWeakNormalizerG`, NOT a property of the recursive RDE oracle.)
+
+### Precisely what is NOT the `B`-divisibility wall (carried in `RischDESuccessResidualNorm`, by design)
+
+1. **The `C`-divisibility `hdvdC_dn_h2`** (`gden ∣ dₙh0²`) — a **`g`-side cross-divisibility**, NOT the
+   `f`-self-divisibility `dvd_dn_h_of_normal` proves. It is the engine's own `cdvdG eₙ dₙh0²` success-check
+   up to `gden`-vs-`eₙ` (`eₙ` = `gden`'s normal part); discharging it needs `g`'s denominator normal +
+   a §6.2 structural lemma `cRdeNormalDenominatorG = some ⟹ eₙ ∣ dₙh0²`, a separate (g-side) step. This is
+   **a different condition than the wall**, kept explicit.
+2. **The per-run termination/fuel** (`hdn`/`hfbB`/`hfbC`/`hin`/`hdb`) — generic fuel-boundedness every
+   computable fuel-bounded solver carries (a too-small `towerRischDEFuel` fails them); the gcd clauses
+   inside `hin` ARE supplied by `[CTowerGcdWitness β]`. NOT a divisibility precondition.
+
+### On the `CRischFieldSpec (QFunNZG β)` instance (Task 5, the instance question)
+
+`crischDESolveNorm_field` is the **standalone** unconditional-modulo-the-one-fact theorem. A literal
+`instance CRischFieldSpec (QFunNZG β)` is still blocked for the reasons `ComputableSoundnessCapstone`'s
+verdict records — there is no generic `CDiffFieldSpec (QFunNZG β)` (only the concrete `QFunNZG ℚ` one), so
+even the *statement* `(toK y)′` of the class is pinned to a concrete level — and the class spec quantifies
+over *every* success, re-importing the per-run fuel. The field-identity form here sidesteps the
+`CDiffFieldSpec` gap (it reads the conclusion in `towerFractionFieldDerivG`/`amG` form). **Engine-rewiring
+note:** the production engine should call `crischDESolveNorm` (not the raw `crischDESolve`) wherever it
+solves an RDE over `QFunNZG β` — i.e. swap the recursive base solve in `cPolyRischDECancelPrimG` /
+`cPolyRischDECancelExpG` (and the integration driver's RDE calls) to route through the §6.1 round-trip. That
+is a one-line change in the core `cRischDEG`/`instCRischFieldQFunNZG` (out of this file's scope — this file
+provides the verified wrapper); with it, the `B`-divisibility precondition holds on every solve by
+construction (the §6.1 weak normalizer is then applied), and the soundness above applies directly.
+
+### Bottom line
+
+The wall (the `B`-divisibility) was **illusory** — it was the engine skipping §6.1 weak normalization. The
+correct (normalized) recursive solver `crischDESolveNorm` is **UNCONDITIONALLY sound modulo the single
+normalization-correctness sub-lemma `IsWeaklyNormalizedNorm` + generic per-run fuel + the distinct `g`-side
+`C`-divisibility** (`crischDESolveNorm_field`, axiom-clean, no `native_decide`). The genuine §6.2
+self-divisibility obstruction is closed. -/
+
 /-! ### Axiom audit (the capstone is axiom-clean, NO `native_decide`) -/
 
 #print axioms roundtrip_field
