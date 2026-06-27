@@ -170,4 +170,110 @@ theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
   rw [liftKG_C] at hl
   simpa [toGBPolyG] using hl
 
+/-! ## Step 3a — the TOTAL clause (iii): content strip is a `β(s)`-unit scaling, on ANY input
+
+`associated_toGBPolyG_gbprimitivePartCore_of_correct` (`ComputableTowerGcdFFCorrect`) discharges clause
+(iii) only when the content is **nonzero** (`hg`/`hgcn`/`hg0`). But the primitive-PRS loop also strips the
+content of the **zero** polynomial (a terminal `P = 0`, or a `prem = 0`): there `gbprimitivePartCore` is
+the identity (`gbnormCore p`, content branch `cisZeroG g`), so the `Associated` is reflexive. Bundling the
+two cases gives the **total** clause (iii) — conditional only on `CgcdBCorrect cgcdB` (the level-`β`
+gcd-correctness) and a transparent per-coefficient fuel bound, with **no** separate nonzero hypothesis. -/
+
+/-- **★ Total clause (iii)** — `gbprimitivePartCore` is a `β(s)`-unit scaling on **any** input: under
+`CgcdBCorrect cgcdB` (the level-`β` gcd-correctness) and a per-`t`-coefficient fuel bound,
+`Associated (toGBPolyG (gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p)`. Splits on whether the content
+`gbcontentCore cgcdB p` is zero: if zero, `gbprimitivePartCore` is the identity `gbnormCore p` (reflexive
+`Associated`); if nonzero, it is the unit scaling of `associated_toGBPolyG_gbprimitivePartCore_of_correct`.
+So clause (iii) needs only the recursion's gcd-correctness plus transparent algorithmics — never a
+content-nonzero assumption. -/
+theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
+    (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
+    (hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
+    Associated (toGBPolyG (gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p) := by
+  by_cases hgz : CPolyG.cisZeroG (gbcontentCore cgcdB p) = true
+  · -- content zero: gbprimitivePartCore is the identity `gbnormCore p`
+    have hid : gbprimitivePartCore fuel cgcdB p = gbnormCore p := by
+      rw [gbprimitivePartCore, gbcontentCore_gbnormCore, if_pos hgz]
+    rw [hid, toGBPolyG_gbnormCore]
+  · -- content nonzero: the unit scaling (Mathlib content + cgcdB-fold-divides)
+    have hg0 : CPolyG.toPolyG (gbcontentCore cgcdB p) ≠ 0 := by
+      rw [Ne, ← CPolyG.cisZeroG_iff]; exact hgz
+    have hgcn : CPolyG.cnormG (gbcontentCore cgcdB p) ≠ [] := by
+      rw [Ne, CPolyG.cnormG_eq_nil_iff]; exact hg0
+    exact associated_toGBPolyG_gbprimitivePartCore_of_correct fuel cgcdB hcorr p hgz hgcn hg0 hfuel
+
+/-! ## Step 3b — the reduction theorem: regularity + correctness + fuel ⟹ `CPrimPRSGenAssocReg`
+
+The transparent per-step **fuel** side-conditions the algorithm self-satisfies on a finite run: every
+`cdivG`-content-strip has fuel `30 ≥` the `cnormG`-length of each `t`-coefficient. We bundle them as an
+inductive predicate mirroring the PRS recursion (one `gbprimitivePartCore` per node), so the reduction
+threads them down with the `CPrimPRSGenRegular` termination witness. -/
+
+/-- **Per-step content-strip fuel bound** `CPrimPRSGenFuelOk fuel P Q`: at each primitive-PRS node, the
+fuel `30` of `gbprimitivePartCore` bounds the `cnormG`-length of every `t`-coefficient it divides — for the
+terminal strip of `P` (`gbnormCore P`) and, at each recursive node, of the pseudo-remainder `prem`.
+Transparent algorithmics (the engine's `cdivG` has enough fuel on a finite run), mirroring the
+`cprimPRSgcdGenCore` recursion so it threads alongside `CPrimPRSGenRegular`. -/
+def CPrimPRSGenFuelOk (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
+    ℕ → GBPolyCore β → GBPolyCore β → Prop
+  | 0, P, _ => ∀ a ∈ gbnormCore P, (CPolyG.cnormG a : List β).length ≤ 30
+  | fuel + 1, P, Q =>
+    if gbisZeroCore (gbnormCore Q) = true then
+      ∀ a ∈ gbnormCore (gbnormCore P), (CPolyG.cnormG a : List β).length ≤ 30
+    else
+      (∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
+          (CPolyG.cnormG a : List β).length ≤ 30)
+        ∧ CPrimPRSGenFuelOk cgcdB fuel (gbnormCore Q)
+            (gbprimitivePartCore 30 cgcdB (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))
+
+/-- **★ The reduction theorem — `CPrimPRSGenAssocReg` from the sharp residual.** Given the genuine per-run
+termination witness `CPrimPRSGenRegular cgcdB fuel P Q` (`ComputableTowerWellFounded`), the level-`β`
+gcd-correctness `CgcdBCorrect cgcdB`, and the transparent per-step content-strip fuel bounds
+`CPrimPRSGenFuelOk cgcdB fuel P Q`, the per-step regularity bundle `CPrimPRSGenAssocReg cgcdB fuel P Q`
+holds. Clause (i) is the `CPrimPRSGenRegular` `stop`-node; clause (ii) is the nonzero-multiplier
+`toGBPolyG_gbpsremainderCore_ne_zero` at a `step`-node; clause (iii) is the total content strip
+`associated_toGBPolyG_gbprimitivePartCore_total`. So the opaque `CPrimPRSGenAssocReg` gate is **exactly**
+PRS termination + level-`β` gcd-correctness (+ transparent fuel) — the precise non-degeneracy. -/
+theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : CPolyG β → CPolyG β → CPolyG β)
+    (hcorr : CgcdBCorrect cgcdB) :
+    ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenRegular cgcdB fuel P Q →
+      CPrimPRSGenFuelOk cgcdB fuel P Q → CPrimPRSGenAssocReg cgcdB fuel P Q := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro P Q hreg hfuel
+    -- at fuel 0, CPrimPRSGenRegular must be a `stop` node (the `step` ctor needs `fuel+1`)
+    rw [CPrimPRSGenAssocReg]
+    refine ⟨?_, ?_⟩
+    · -- clause (i): the `stop`-node gives `gbisZeroCore (gbnormCore Q) = true`; reduce to `gbisZeroCore Q`
+      cases hreg with
+      | stop hz => rw [gbisZeroCore, ← gbnormCore_idemp, ← gbisZeroCore]; exact hz
+    · -- clause (iii) on `P` (terminal strip): total content scaling
+      rw [CPrimPRSGenFuelOk] at hfuel
+      exact associated_toGBPolyG_gbprimitivePartCore_total 30 cgcdB hcorr P hfuel
+  | succ fuel ih =>
+    intro P Q hreg hfuel
+    rw [CPrimPRSGenAssocReg]
+    cases hreg with
+    | stop hz =>
+      -- terminal: left disjunct (Q normalizes to zero) + clause (iii) on `gbnormCore P`
+      refine Or.inl ⟨hz, ?_⟩
+      rw [CPrimPRSGenFuelOk, if_pos hz] at hfuel
+      have h := associated_toGBPolyG_gbprimitivePartCore_total 30 cgcdB hcorr (gbnormCore P) hfuel
+      rwa [toGBPolyG_gbnormCore] at h
+    | step hz hguard hrec =>
+      -- recursive node: right disjunct
+      rw [CPrimPRSGenFuelOk, if_neg (by rw [hz]; simp)] at hfuel
+      obtain ⟨hfuelPrem, hfuelRec⟩ := hfuel
+      refine Or.inr ⟨by rw [hz]; simp, ?_, ?_, ?_⟩
+      · -- clause (ii): the nonzero-multiplier pseudo-division witness
+        obtain ⟨s, c, hrel, hc0⟩ := toGBPolyG_gbpsremainderCore_ne_zero 60 (gbnormCore P)
+          (gbnormCore Q) (by rw [gbnormCore_idemp]; exact hz)
+        exact ⟨s, c, hrel, hc0⟩
+      · -- clause (iii): the total content strip on `prem`
+        exact associated_toGBPolyG_gbprimitivePartCore_total 30 cgcdB hcorr
+          (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)) hfuelPrem
+      · -- the tower recursion: regularity ∧ fuel ⟹ AssocReg one level down
+        exact ih (gbnormCore Q) _ hrec hfuelRec
+
 end DeepWiki.SymbolicIntegration
