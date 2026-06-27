@@ -264,6 +264,30 @@ is the irreducible recursion residual, isolated below. -/
 
 section Preservation
 
+/-- **★ The SPDE peel-step inverse (algebraic core)** `spde_step_glue_inverse`: the **converse** of
+`spde_step_glue`. Over a commutative ring with no zero divisors, given the Bézout relation `b·r + a·z = c`,
+a *nonzero* leading coefficient `a ≠ 0`, and a solution of the divided equation **already in peeled form**
+`a·D(a·h + r) + b·(a·h + r) = c`, the peeled factor `h` solves the **reduced** equation
+`a·Dh + (b + Da)·h = z − Dr`. Pure algebra: expand `D(a·h + r)`, subtract the Bézout `b·r`, and cancel the
+nonzero `a`. This is the exact inverse of the soundness peel atom `spde_step_glue` — the algebraic heart of
+the SPDE peel's solution-preservation, with the **only** remaining deep input being the divisibility that
+writes a solution `q` in the form `a·h + r` (i.e. `a ∣ q − r`). -/
+theorem spde_step_glue_inverse {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R)
+    (a b c r z h : R) (ha : a ≠ 0)
+    (hbez : b * r + a * z = c)
+    (hpeeled : a * D (a * h + r) + b * (a * h + r) = c) :
+    a * D h + (b + D a) * h = z - D r := by
+  -- expand the derivation on the peeled solution
+  have hD : D (a * h + r) = a * D h + D a * h + D r := by
+    rw [map_add, Derivation.leibniz]; simp only [smul_eq_mul]; ring
+  rw [hD] at hpeeled
+  -- `a · (a·Dh + (b + Da)·h - (z - Dr)) = c - (b·r + a·z) = 0`, then cancel the nonzero `a`
+  have hcancel : a * (a * D h + (b + D a) * h - (z - D r)) = 0 := by
+    linear_combination hpeeled - hbez
+  have hzero : a * D h + (b + D a) * h - (z - D r) = 0 :=
+    (mul_eq_zero.mp hcancel).resolve_left ha
+  linear_combination hzero
+
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
 /-- **★ The SPDE divisibility necessity** (`dvd_c_of_isReducedRdeSol`, the keystone reachable fact): if a
@@ -338,12 +362,14 @@ named residual `RischDESolveExhaustiveResidual`, in solvability-implies / staged
 **Why each clause is the irreducible core.**
 
 * **`hspde`** — the §6.4 SPDE peel returns `some` on a solvable input. The reachable layers are proven here:
-  the divisibility necessity (`dvd_c_of_isReducedRdeSol`, so the `cdvdG g c` gate never rejects a solution)
-  and the constant-base descent (`isReducedRdeSol_const_base`). The irreducible residue is the **diophantine
-  degree-peel inverse** (`deg(a/g) ≠ 0`): that a solution `q` of the divided equation reduces, via the
-  Bézout relation `(b/g)·r + (a/g)·z = c/g`, to a *lower-degree* solution `h` of the recursive sub-problem
-  with `q = (a/g)·h + r`. This is the exact converse of the soundness peel `cSPDE_peel_cleared_gen`; the
-  engine never derives it (it only lifts a sub-solution up, never descends a solution down).
+  the divisibility necessity (`dvd_c_of_isReducedRdeSol`, so the `cdvdG g c` gate never rejects a solution),
+  the constant-base descent (`isReducedRdeSol_const_base`), and ★ the **peel-step inverse**
+  (`spde_step_glue_inverse`, the exact converse of the soundness peel atom `spde_step_glue`/
+  `cSPDE_peel_cleared_gen`): once a solution is written in peeled form `q = (a/g)·h + r`, the factor `h`
+  *provably* solves the reduced equation `(a/g)·Dh + ((b/g) + D(a/g))·h = z − Dr`. The irreducible residue is
+  thereby narrowed to the **peeling-divisibility** `(a/g) ∣ (q − r)` (which writes a solution in peeled form,
+  via the Bézout `(b/g)·r + (a/g)·z = c/g`) plus the recursion's degree-descent assembly. The engine never
+  derives these (it only lifts a sub-solution up, never descends a solution down).
 
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. The
   reachable base sub-cases are proven here (`cPolyRischDEG_isSome_of_bZero` integration,
@@ -535,15 +561,18 @@ exhaustiveness.
   constant `a/g` ⟹ `some` directly), `cSPDEG_isSome_of_recurse` (the recursion's `isSome` is the sub-call's);
 * ★ the **SPDE per-step solution-preservation** — `dvd_c_of_isReducedRdeSol` (the **divisibility necessity**:
   g∣a ∧ g∣b ⟹ a solution forces g∣c, so the SPDE `cdvdG` gate never rejects a true solution — pure algebra,
-  no gcd correctness) and `isReducedRdeSol_const_base` (the constant-base descent: q itself is the reduced
-  solution). These are the structural heart, proven for the reachable cases.
+  no gcd correctness), `isReducedRdeSol_const_base` (the constant-base descent: q itself is the reduced
+  solution), and ★ `spde_step_glue_inverse` (the **peel-step inverse**, exact converse of the soundness
+  `spde_step_glue`: a solution in peeled form `q = a·h + r` makes `h` provably solve the reduced equation,
+  by cancelling the nonzero leading `a`). These are the structural heart, proven for the reachable cases.
 
 **The deep residual** (`RischDESolveExhaustiveResidual`, NEVER `sorry`). Two staged converse facts the engine
 does not self-certify:
 * **`hspde`** — the §6.4 SPDE peel returns `some` on a solvable input. Reachable layers proven (divisibility
-  necessity + constant-base descent); the irreducible residue is the **diophantine degree-peel inverse**
-  (`deg(a/g) ≠ 0`): a solution `q` reduces, via the Bézout `(b/g)·r + (a/g)·z = c/g`, to a lower-degree
-  solution `h` with `q = (a/g)·h + r` — the exact converse of the soundness peel `cSPDE_peel_cleared_gen`.
+  necessity + constant-base descent + ★ the **peel-step inverse** `spde_step_glue_inverse`: a solution in
+  peeled form `q = (a/g)·h + r` makes `h` provably solve the reduced equation). The irreducible residue is
+  thereby narrowed to the **peeling-divisibility** `(a/g) ∣ (q − r)` (writing a solution in peeled form, via
+  the Bézout `(b/g)·r + (a/g)·z = c/g`) plus the recursion's degree-descent assembly.
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. Reachable
   base sub-cases proven (b=0/c=0); the irreducible residue is the **cancellation-regime exhaustiveness** (the
   non-cancellation top-down solve and the primitive/hyperexponential cancellation recursions each find a
@@ -566,6 +595,7 @@ are axiom-clean; NO `sorry`; only the `native_decide` operational witnesses use 
 #print axioms cPolyRischDEG_isSome_of_bZero
 #print axioms cSPDEG_isSome_of_const_base
 #print axioms cSPDEG_isSome_of_recurse
+#print axioms spde_step_glue_inverse
 #print axioms dvd_c_of_isReducedRdeSol
 #print axioms isReducedRdeSol_const_base
 #print axioms hsolve_of_exhaustiveResidual
