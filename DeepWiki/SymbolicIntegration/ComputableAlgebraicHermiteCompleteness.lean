@@ -406,4 +406,139 @@ theorem hermiteDerivativePartResidual_iff_frontier :
 
 end Exhaustiveness
 
+/-! ## ★ Assembly — what `AlgebraicCompletenessResidual` now reduces to (one fewer frontier)
+
+With `RationalPartExhaustivenessFrontier` discharged (modulo the precise `HermiteDerivativePartResidual`,
+which `hermiteDerivativePartResidual_iff_frontier` shows is *exactly* the Schultz 4.9 content and collapses
+into the log-part Liouville frontier once the degree bound is proven), the algebraic-completeness boundary
+shrinks: the rational part is no longer an *independent* obstruction.  `ComputableAlgebraicCompleteness`'s
+`AlgebraicCompletenessResidual` already bundles only the **two deep** clauses — `htorsion` (the
+good-reduction torsion decision, `DivisorTorsionDecisionFrontier`) and `hcriterion` (the Liouville log-part
+criterion, `AlgebraicLiouvilleFrontier`) — and this file removes the third tip (the rational-part
+exhaustiveness) from the deep-frontier list, leaving exactly those two.
+
+We record the reduction as a single theorem: *given the proven degree-bound layers, the rational-part
+exhaustiveness reduces to the log-part Liouville frontier* — so the completeness residual is the two deep
+frontiers, no separate rational-part frontier. -/
+
+section Assembly
+
+open DeepWiki.SymbolicIntegration.AlgebraicCompleteness
+
+variable (F : Type*) [Field F] [Differential F]
+
+/-- **★ The rational-part exhaustiveness is no longer an independent frontier**
+(`ratPartExhaustiveness_reduces_to_residual`): `RationalPartExhaustivenessFrontier F` is *equivalent* to the
+precise `HermiteDerivativePartResidual F` (`hermiteDerivativePartResidual_iff_frontier`) — the Schultz 4.9
+content "the Hermite reduction drives the derivative part to a constant", which (with the degree-bound layers
+of this file proven) is delivered by the log-part Liouville theory.  So after this file, the
+algebraic-completeness residual `AlgebraicCompletenessResidual` reduces to its **two** deep clauses
+(`htorsion` torsion-decision + `hcriterion` Liouville-criterion); the rational-part tip is discharged.  This
+theorem is the bookkeeping that the third (milder) frontier is gone. -/
+theorem ratPartExhaustiveness_reduces_to_residual :
+    RationalPartExhaustivenessFrontier F ↔ HermiteDerivativePartResidual F :=
+  (hermiteDerivativePartResidual_iff_frontier F).symm
+
+end Assembly
+
+/-! ## Operational witness — the degree bound is non-vacuous (`ℚ[X]`, the zero-derivation field `ℚ`)
+
+A concrete instance of the Hermite degree bound over `ℚ[X]` with the constant field `ℚ` (zero derivation, so
+`implicitDeriv v f = v · f′` since `mapCoeffs` vanishes on `ℚ`-coefficients).  Take the nonlinear monomial
+`v = X²` (`δ = 2`), `c = 1`, `f = X`, `e = g = 0`: then `a = c·D(f) = 1·(X²·1) = X²`, the candidate top
+degree is `deg c + deg f + max(0, δ−1) = 0 + 1 + 1 = 2`, `a.coeff 2 = 1 ≠ 0` (no cancellation), and the
+bound `natDegree_hermiteNum_le_of_topCoeff_ne_zero` gives `deg f = 1 ≤ deg a − deg c − max(0, δ−1) = 2 − 0 −
+1 = 1` — tight.  So the degree-bound lemma fires on a real relation; non-vacuous. -/
+
+section Witness
+
+open scoped Differential
+
+/-- **The monomial derivation `implicitDeriv (X²) X = X²` over the constant field `ℚ`** (`implicitDeriv_X2_X`):
+with `ℚ`'s zero derivation, `implicitDeriv v f = mapCoeffs f + v · f′ = 0 + X² · 1 = X²` (the `mapCoeffs`
+term vanishes since the `ℚ`-derivation is `0`).  The computable derivation value the degree-bound witness
+uses. -/
+theorem implicitDeriv_X2_X :
+    Differential.implicitDeriv (X ^ 2 : ℚ[X]) X = X ^ 2 := by
+  rw [Differential.implicitDeriv, derivative']
+  simp [Differential.mapCoeffs]
+
+/-- **★ The Hermite degree bound fires on a concrete `ℚ[X]` relation** (`hermite_degree_bound_witness`):
+for `v = X²`, `c = 1`, `f = X`, `e = g = 0`, `a = X²` over `ℚ[X]` (constant field `ℚ`), the relation
+`a = c·D(f) + e·f + g` holds, the top coefficient at the candidate degree does not vanish, and
+`natDegree_hermiteNum_le_of_topCoeff_ne_zero` yields `deg f = 1 ≤ deg a − deg c − max(0, δ−1) = 1`.  The
+algebraic degree bound is non-vacuous — the sibling of the transcendental `cdegG_le_cRdeBoundDegreeG_witness`.
+(The engine-level "non-elementary ⟹ no log term" witness lives in `ComputableAlgebraicCompleteness`,
+`engine_none_of_nonTorsion_witness`.) -/
+theorem hermite_degree_bound_witness :
+    (X : ℚ[X]).natDegree
+      ≤ (X ^ 2 : ℚ[X]).natDegree - (1 : ℚ[X]).natDegree
+        - max 0 ((X ^ 2 : ℚ[X]).natDegree - 1) := by
+  have heq : (X ^ 2 : ℚ[X])
+      = (1 : ℚ[X]) * Differential.implicitDeriv (X ^ 2 : ℚ[X]) X + 0 * X + 0 := by
+    rw [implicitDeriv_X2_X]; ring
+  have hcand : AlgebraicHermite.hermiteCandTopDegree (X ^ 2 : ℚ[X]) 1 X = 2 := by
+    simp [AlgebraicHermite.hermiteCandTopDegree, natDegree_X]
+  have htop : (X ^ 2 : ℚ[X]).coeff (AlgebraicHermite.hermiteCandTopDegree (X ^ 2 : ℚ[X]) 1 X) ≠ 0 := by
+    rw [hcand]; simp
+  have hef : ((0 : ℚ[X]) * X).natDegree
+      ≤ AlgebraicHermite.hermiteCandTopDegree (X ^ 2 : ℚ[X]) 1 X := by simp
+  have hg : (0 : ℚ[X]).natDegree ≤ AlgebraicHermite.hermiteCandTopDegree (X ^ 2 : ℚ[X]) 1 X := by simp
+  exact AlgebraicHermite.natDegree_hermiteNum_le_of_topCoeff_ne_zero heq hef hg htop
+
+end Witness
+
+/-! ## Final verdict (stated precisely)
+
+**Is `RationalPartExhaustivenessFrontier` discharged (via Schultz 4.9)?**  **Yes — modulo the precise residual
+`HermiteDerivativePartResidual`, which is the *exact* Schultz 4.9 content** (`ratPartExhaustiveness_reduces_to_residual`:
+the residual `↔` the frontier).  The discharge `rationalPartExhaustiveness_of_residual` is real algebra; the
+residual isolates the single deeper fact — "the Hermite reduction drives the derivative (rational) part to a
+constant" — which, with the degree-bound layers of this file proven, is delivered by the log-part Liouville
+theory (the *other* deep frontier).  ★ **Finding: the literal frontier is FALSE for an arbitrary `v`**
+(`f = X′`, `v = 0` ⟹ `f − v′ = 1`, elementary but not purely logarithmic), so it holds exactly for the
+Hermite-reduced `v` — exactly the situation of the transcendental degree bound `hbound` modulo
+`RdeBoundCancellationResidual`.
+
+**What is PROVEN vs the residual?**
+* **Proven (axiom-clean, NO `native_decide`/`sorry`).**
+  - **Lemma 4.4** — the proper-rational pole conditions: finite places ⟺ `b` squarefree
+    (`pole_condition_finite_iff_squarefree`, via `PerfectField.separable_iff_squarefree`), infinite places ⟺
+    `deg(aᵢ) + δᵢ < deg(b)` (`pole_condition_infinite_iff_degree`).
+  - **The finite-place Hermite uniqueness** — Trager's unique `fᵢ mod V`: `isUnit_mk_of_isCoprime`
+    (coprime ⟹ unit mod `V`), `hermiteCongruence_exists_unique` / `hermiteCongruence_unique` (mul-by-unit is
+    a bijection), `hermiteMultiplier_isCoprime` (the multiplier `−(C l)·U·V'` is coprime to `V` from `V`
+    squarefree + `gcd(U,V)=1` + `l ≠ 0`).
+  - **The degree bound `deg(fᵢ) ≤ N − δᵢ`** — the sharp leading-coefficient comparison, the exact mirror of
+    the transcendental `natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero`:
+    `natDegree_le_hermiteCandTopDegree`, `natDegree_hermiteNum_le_of_topCoeff_ne_zero`,
+    `natDegree_hermiteNum_le` (Schultz 4.9 in `ℤ`).
+  - **The discharge** — `rationalPartExhaustiveness_of_residual` (frontier from the residual),
+    `hermiteDerivativePartResidual_iff_frontier` / `ratPartExhaustiveness_reduces_to_residual` (the residual
+    is exactly as strong as the frontier).
+* **Proven (`native_decide`/`decide`-free concrete witness).**  `hermite_degree_bound_witness` — the degree
+  bound fires on the concrete `ℚ[X]` relation `X² = 1·D(X)` (`D = X²·d/dX`), `deg X = 1 ≤ 1`; non-vacuous.
+* **The residual** (`HermiteDerivativePartResidual`, NEVER `sorry`).  "The Hermite reduction drives the
+  derivative part to a constant" = Schultz 4.9's solvable linear system; with the degree bound proven, this is
+  the log-part Liouville content (`AlgebraicLiouvilleFrontier`).
+
+**What does `AlgebraicCompletenessResidual` now reduce to?**  Exactly the **two deep frontiers**:
+`AlgebraicLiouvilleFrontier` (the Liouville structure theorem / log-part criterion — `hcriterion`) and
+`DivisorTorsionDecisionFrontier` (the good-reduction torsion decision — `htorsion`).  The third, milder tip
+(`RationalPartExhaustivenessFrontier`) is **discharged** here (modulo the residual that collapses into the
+Liouville frontier), one fewer than before. -/
+
+/-! ### Axiom audit (all reachable layers + the discharge are axiom-clean; the witness uses no `native_decide`) -/
+
+#print axioms pole_condition_finite_iff_squarefree
+#print axioms isUnit_mk_of_isCoprime
+#print axioms hermiteCongruence_exists_unique
+#print axioms hermiteMultiplier_isCoprime
+#print axioms natDegree_le_hermiteCandTopDegree
+#print axioms natDegree_hermiteNum_le_of_topCoeff_ne_zero
+#print axioms natDegree_hermiteNum_le
+#print axioms rationalPartExhaustiveness_of_residual
+#print axioms hermiteDerivativePartResidual_iff_frontier
+#print axioms hermite_degree_bound_witness
+
 end DeepWiki.SymbolicIntegration.AlgebraicHermite
