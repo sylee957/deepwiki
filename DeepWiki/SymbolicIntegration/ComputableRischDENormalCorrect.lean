@@ -289,6 +289,31 @@ theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG �
   rw [CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG] at hdvd ⊢
   exact hdvd.mul_right _
 
+/-! ### When the `B`-divisibility crux VANISHES — normal / polynomial denominators
+
+The `B`-divisibility `fden ∣ dₙh` is the crux's essence; here is exactly when it is *free*. -/
+
+omit [CDiffFieldSpec β] in
+/-- **`fden ∣ dₙh` is free when `fden` is normal** (`dvd_dn_h_of_normal`): if `fden` equals its own normal
+part (`toPolyG (cSplitFactorFastG Dt fuel fden).1 = toPolyG fden`, i.e. the special part is a unit — `fden`
+weakly normalized), then `fden ∣ dₙ·h0` for any `h0`, since `dₙ·h0 = fden·h0`. The precise condition under
+which the §6.2 `B`-divisibility crux disappears: weak normalization of `fden`. -/
+theorem dvd_dn_h_of_normal (Dt : CPolyG β) (fuel : ℕ) (fden h0 : CPolyG β)
+    (hnormal : toPolyG (CPolyG.cSplitFactorFastG Dt fuel fden).1 = toPolyG fden) :
+    toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) := by
+  rw [CPolyG.toPolyG_cmulG, hnormal]; exact Dvd.intro _ rfl
+
+omit [CDiffFieldSpec β] in
+/-- **`fden ∣ dₙh` is free for the polynomial-RDE shape `fden = [1]`** (`dvd_dn_h_one`): when the input
+denominator is the unit `[1]`, the normal part is `[1]` (`cSplitFactorFastG_one_eq`), so the `B`-divisibility
+`[1] ∣ dₙh` is `1 ∣ _` — trivially true. The polynomial RDE (`Dy + f·y = g` with `f` a polynomial) needs no
+weak normalization on `f`'s side. -/
+theorem dvd_dn_h_one [CTowerGcdWitness β] (fuel : ℕ) (h0 : CPolyG β) :
+    toPolyG ([CField.one] : CPolyG β)
+      ∣ toPolyG (CPolyG.cmulG
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) fuel [CField.one]).1 h0) := by
+  rw [cSplitFactorFastG_one_eq, CPolyG.toPolyG_cmulG, toPolyG_cone_eq_one]; exact one_dvd _
+
 end Divisibility
 
 /-! ## ★ Task 5 — assembling the sharpened residual: the reduced crux + builder + field corollary
