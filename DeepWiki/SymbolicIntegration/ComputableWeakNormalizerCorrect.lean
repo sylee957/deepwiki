@@ -241,5 +241,136 @@ theorem residualNorm_hdvdC_of_normalizedDen (ftilde gtilde : QFunNZG β)
     a0 b0 c0 h0 hnorm hen0 hsucc
 
 end CResidualClause
+/-! ## Task 3 — the fuel/termination clauses: the gcd half closed by the witness, the rest a genuine residual
+
+The residual `RischDESuccessResidualNorm` carries, besides the now-closed `C`-divisibility, the per-run
+clauses `hdn`/`hfbB`/`hfbC`/`hin`/`hdb`. We pin precisely how far `[CTowerGcdWitness β]` reaches into them.
+
+`CSPDEGClearedInputsGen` (`hin`'s payload) interleaves, **per recursion level**, the gcd-correctness clause
+`Associated (toPolyG g) (gcd …)` with the non-gcd fuel/termination clauses (`cnormG _ ≠ []`, the three
+`length ≤ fuel` bounds, `cgcdTerminatesG`). `[CTowerGcdWitness β]` discharges the gcd half — for the
+level-`β` content-gcd this is `cTowerWitness_assocReg` (the §6.4 per-step `CPrimPRSGenAssocReg` from the
+witness + the run's own termination + fuel). But the **non-gcd** clauses are genuine per-run termination: the
+constant fuel `towerRischDEFuel = 60` makes `length ≤ 60` **false** on any input whose intermediate
+polynomials exceed 60 list-entries, so `hfbB`/`hfbC`/the `length`-bounds-inside-`hin`/`hdb`/`hdn` are NOT
+`∀`-theorems. They are exactly the fuel-boundedness every fuel-bounded computable solver carries. -/
+
+section Fuel
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CFracGcdCore α] [CTowerGcdWitness α]
+
+/-- **The witness discharges the per-step gcd-correctness inside `hin`** (`towerGcd_assocReg_for_hin`): for
+any level-`α` content-gcd PRS run satisfying its own termination `CPrimPRSGenRegular` and fuel
+`CPrimPRSGenFuelOk` on `(P, Q)`, the per-step regularity bundle `CPrimPRSGenAssocReg` — whose `Associated`
+content is exactly the gcd clause appearing per level in `CSPDEGClearedInputsGen` — holds from
+`[CTowerGcdWitness α]` (`cTowerWitness_assocReg`). The gcd half of the `hin` chain is witness-covered; the
+interleaved non-gcd fuel/termination clauses remain the genuine per-run residual. -/
+theorem towerGcd_assocReg_for_hin (fuel : ℕ) (P Q : GBPolyCore α)
+    (hreg : CPrimPRSGenRegular (CFracGcdCore.cgcdFFRawCore (α := α) fuel) fuel P Q)
+    (hfuel : CPrimPRSGenFuelOk (CFracGcdCore.cgcdFFRawCore (α := α) fuel) fuel P Q) :
+    CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore (α := α) fuel) fuel P Q :=
+  cTowerWitness_assocReg fuel P Q hreg hfuel
+
+end Fuel
+
+/-! ## ★ Task 1 — the precise true remainder: `IsWeaklyNormalizedNorm` is FALSE-as-stated on the un-reduced
+product `crischDESolveNorm` feeds
+
+The capstone's `hnorm` hypothesis is `IsWeaklyNormalizedNorm (weakNormalizedF f q')` — a **strict** equality
+`toPolyG (cSplitFactorFastG [1] _ den).1 = toPolyG den` of `den := (weakNormalizedF f q').1.2` with its own
+§3.5 normal part (the denominator's special part is a unit). The decisive fact: `weakNormalizedF`'s
+denominator is an **un-reduced product** that *contains `fden = f.1.2` as a factor* — `qsubNZG`/`qaddNZG`/
+`qmulNZG`/`towerDerivQFunNZG`/`qinvNZG` cross-multiply with **no gcd cancellation**. So the special part of
+the product is at least the special part of `fden`, which is a non-unit whenever `f` is not already normal —
+hence the strict equality **fails for general `f`**. The genuine §6.1 `WeakNormalizer` guarantee is about the
+**reduced** field element `f − Dq/q` *after* `cCanonicalRepFastG`, which `crischDESolveNorm` does not apply.
+
+We make the obstruction a **theorem** (not an assertion): the denominator factors as `cmulG fden X`. -/
+
+section Remainder
+
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
+
+/-- **★ The un-reduced denominator of `weakNormalizedF` contains `fden` as a factor**
+(`weakNormalizedF_den_eq`): when the weak normalizer is nonzero (`cisZeroG q = false`, the solver's guard),
+the denominator of `weakNormalizedF f (qOfPolyNZG q)` is the **un-cancelled** product
+`cmulG f.1.2 (cmulG (cmulG [1] [1]) q)` — `f`'s original denominator `f.1.2` times the squared
+weak-normalizer denominator times `q`. No gcd reduction happens (`qsubNZG`/`qaddNZG`/`qmulNZG`/`qinvNZG`
+cross-multiply raw), so `f.1.2` (with all its special factors) survives verbatim in the product. The
+structural witness that `IsWeaklyNormalizedNorm (weakNormalizedF f (qOfPolyNZG q))` is **false** whenever
+`f.1.2`'s special part is a non-unit — the precise true remainder. -/
+theorem weakNormalizedF_den_eq (f : QFunNZG β) (q : CPolyG β) (hq : CPolyG.cisZeroG q = false) :
+    (weakNormalizedF f (qOfPolyNZG q)).1.2
+      = CPolyG.cmulG f.1.2 (CPolyG.cmulG (CPolyG.cmulG ([CField.one] : CPolyG β) [CField.one]) q) := by
+  -- unfold the layered constructions; only `qinvNZG`'s branch depends on `cisZeroG q`
+  show CPolyG.cmulG f.1.2 (CPolyG.cmulG
+      (CPolyG.cmulG (qOfPolyNZG q).1.2 (qOfPolyNZG q).1.2) (qinvNZG (qOfPolyNZG q)).1.2)
+    = CPolyG.cmulG f.1.2 (CPolyG.cmulG (CPolyG.cmulG [CField.one] [CField.one]) q)
+  -- `(qOfPolyNZG q).1.2 = [1]`; `(qinvNZG (qOfPolyNZG q)).1.2 = q` on the `cisZeroG q = false` branch
+  have hqfalse : CPolyG.cisZeroG (qOfPolyNZG q).1.1 = false := hq
+  have hinv : (qinvNZG (qOfPolyNZG q)).1.2 = q := by
+    rw [qinvNZG, dif_neg (by rw [hqfalse]; simp : ¬ CPolyG.cisZeroG (qOfPolyNZG q).1.1)]
+    rfl
+  rw [hinv]
+  rfl
+
+end Remainder
+
+/-! ## ★ VERDICT — is the recursive solver FULLY UNCONDITIONALLY sound?
+
+**No — the wall is NOT fully closed; the bar `crischDESolveNorm_field_unconditional` (witness-only) is not
+reachable, and the obstruction is now pinned exactly.** Of the three residual pieces:
+
+### (2) `C`-side cross-divisibility — ✅ CLOSED as a theorem (modulo the `g`-side normality dual)
+
+`hdvdC_dn_h2` (`gden ∣ dₙh²`) is a **theorem** from bare success + the single `g`-normality fact
+`IsWeaklyNormalizedDen gtilde.1.2` (`residualNorm_hdvdC_of_normalizedDen`): the engine's own `cdvdG eₙ dₙh²`
+success-check gives the honest `eₙ ∣ dₙh²` (`cRdeNormalDenominatorG_en_dvd` via `dvd_of_cdvdG`), and
+`gden = eₙ` (its own normal part) upgrades it to `gden ∣ dₙh²`. The `eₙ ≠ 0` side-condition is derived from
+the `QFunNZG` subtype. This is the **exact dual** of the `B`-side `IsWeaklyNormalizedNorm` discharge — the
+`C`-side is now at the same status as the `B`-side, NOT a separate wall.
+
+### (3) Fuel/termination — ✅ gcd half closed by the witness, the non-gcd fuel a genuine per-run residual
+
+`[CTowerGcdWitness β]` discharges the per-step gcd-correctness inside `hin` (`towerGcd_assocReg_for_hin` =
+`cTowerWitness_assocReg`). The **non-gcd** clauses (`hfbB`/`hfbC` `length ≤ 60`, the `length`-bounds and
+`cgcdTerminatesG` interleaved in `hin`, `hdb`, `hdn`) are genuine per-run termination — a too-small constant
+`towerRischDEFuel = 60` falsifies them, so they are NOT `∀`-theorems. This is the fuel-boundedness every
+fuel-bounded computable solver carries, not the divisibility wall.
+
+### (1) ★ `IsWeaklyNormalizedNorm` — the ONE TRUE REMAINDER, now sharper: FALSE-as-stated on the wrapper's input
+
+`crischDESolveNorm_field` needs `IsWeaklyNormalizedNorm (weakNormalizedF f q')`. This is **not a missing
+theorem to be proven — as *stated* it is FALSE for general `f`**: `weakNormalizedF`'s denominator is the
+**un-reduced product** `cmulG f.1.2 (cmulG (cmulG [1] [1]) q)` (`weakNormalizedF_den_eq`, a theorem), which
+retains `f.1.2`'s special factors verbatim, so its §3.5 normal part is a **proper** divisor of the
+denominator whenever `f.1.2` (or `q`) has a non-unit special part — the strict equality
+`toPolyG (cSplitFactorFastG [1] _ den).1 = toPolyG den` then fails. The genuine §6.1 `WeakNormalizer`
+guarantee is about the **canonicalized** `f − Dq/q` (after `cCanonicalRepFastG`), which the wrapper
+`crischDESolveNorm` (a locked file) does **not** apply.
+
+**So the true remainder is structural, not a divisibility wall**: closing it needs **either** (a) a wrapper
+that canonicalizes (`cCanonicalRepFastG`) the weakly-normalized field element before feeding it to
+`cRischDEG` — at which point the denominator IS its own normal part and `IsWeaklyNormalizedNorm` becomes a
+theorem of §6.1 `WeakNormalizer`-after-canonicalize correctness over `cWeakNormalizerG`; **or** (b) the
+abstract §6.1 correctness theorem over `cWeakNormalizerG` *plus* a residual rephrased on the canonical form.
+Both are engine-side (touching the locked `crischDESolveNorm`/`cWeakNormalizerG`), out of this file's scope.
+
+### Bottom line
+
+The recursive transcendental RDE solver is **NOT yet fully unconditionally sound**. Two of the three residual
+pieces close here: the `C`-side cross-divisibility (a theorem, dual to the `B`-side) and the witness-covered
+gcd clauses. The single true remainder is the `f`-normality guarantee `IsWeaklyNormalizedNorm` — and the
+sharper finding is that it is **false as stated on the un-reduced product** `crischDESolveNorm` feeds
+(`weakNormalizedF_den_eq`), so it is closable only by canonicalizing the wrapper input (an engine change) or
+the abstract §6.1 `WeakNormalizer`-after-canonicalize correctness — NOT by any theorem provable over the
+current locked wrapper. The per-run fuel bounds remain as generic fuel-boundedness. -/
+
+/-! ### Axiom audit (every result here is axiom-clean, NO `native_decide`) -/
+
+#print axioms cRdeNormalDenominatorG_en_dvd
+#print axioms residualNorm_hdvdC_of_normalizedDen
+#print axioms towerGcd_assocReg_for_hin
+#print axioms weakNormalizedF_den_eq
 
 end DeepWiki.SymbolicIntegration
