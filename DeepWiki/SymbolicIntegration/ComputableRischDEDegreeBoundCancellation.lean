@@ -230,6 +230,50 @@ theorem natDegree_le_rdeBoundDegreeWithLambda {v a b c q : K[X]} (hq : q ≠ 0) 
     refine (natDegree_le_rdeBoundDegreeAbstract_of_balanced hq ha0 heq ?_).trans (le_max_left _ _)
     exact fun h => absurd h hbal
 
+/-! ### The literal (engine, `λ`-free) bound holds when no integer `λ` exists (nonlinear case)
+
+When **no** non-neg-integer `λ` exists in the nonlinear balanced case, the leading term can **never** cancel
+(a cancellation would *produce* an integer `λ = deg q`), so the cancellation hypothesis is vacuous and the
+engine's own `λ`-free bound `rdeBoundDegreeAbstract` holds. This discharges the **literal**
+`RdeBoundCancellationResidual` shape (the `λ`-free engine bound) for exactly the nonlinear configurations
+where the engine's omission of the `λ` term is harmless. -/
+
+/-- **No leading-term cancellation when no integer `λ` exists**
+(`coeff_candTopDegree_ne_zero_of_no_integer_lambda`): in the nonlinear balanced case, if **no** natural
+number `N` satisfies the `λ`-equation `(N:K)·lc(a)·lc(v) + lc(b) = 0`, then the coefficient of `a·Dq + b·q`
+at the candidate top degree is nonzero — the leading terms cannot cancel (a cancellation would exhibit
+`deg q` as an integer `λ`). -/
+theorem coeff_candTopDegree_ne_zero_of_no_integer_lambda {v a b q : K[X]} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hq0 : q ≠ 0) (hv : 2 ≤ v.natDegree) (hdq : 1 ≤ q.natDegree)
+    (hbal : b.natDegree = a.natDegree + v.natDegree - 1)
+    (hno : ∀ N : ℕ, (N : K) * a.leadingCoeff * v.leadingCoeff + b.leadingCoeff ≠ 0) :
+    (a * Differential.implicitDeriv v q + b * q).coeff (candTopDegree v a b q) ≠ 0 := by
+  rw [coeff_candTopDegree_balanced_nonlinear ha0 hb0 hq0 hv hdq hbal]
+  have hlcq : q.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hq0
+  exact mul_ne_zero (hno q.natDegree) hlcq
+
+/-- **★ The engine `λ`-free bound holds when no integer `λ` exists (nonlinear balanced case)**
+(`natDegree_le_rdeBoundDegreeAbstract_of_balanced_nonlinear_no_integer_lambda`): for a nonlinear monomial
+(`2 ≤ deg v`) in the balanced configuration `deg b = deg a + deg v − 1`, if **no** non-neg-integer satisfies
+the `λ`-equation, a nonzero `q` solving `a·Dq + b·q = c` (with `a ≠ 0`) has the *engine's* `λ`-free bound
+`deg q ≤ rdeBoundDegreeAbstract v a b c`. The leading terms cannot cancel, so the sharp top-coefficient
+bound applies directly — the engine's omission of the `λ` term is harmless precisely here. -/
+theorem natDegree_le_rdeBoundDegreeAbstract_of_balanced_nonlinear_no_integer_lambda
+    {v a b c q : K[X]} (hq : q ≠ 0) (ha0 : a ≠ 0) (hv : 2 ≤ v.natDegree)
+    (hbal : b.natDegree = a.natDegree + v.natDegree - 1)
+    (heq : a * Differential.implicitDeriv v q + b * q = c)
+    (hno : ∀ N : ℕ, (N : K) * a.leadingCoeff * v.leadingCoeff + b.leadingCoeff ≠ 0) :
+    q.natDegree ≤ rdeBoundDegreeAbstract v a b c := by
+  have hb0 : b ≠ 0 := by
+    rintro rfl; simp only [natDegree_zero] at hbal
+    rcases Nat.eq_zero_or_pos a.natDegree with h | h <;> omega
+  rcases Nat.eq_zero_or_pos q.natDegree with hdq0 | hdq1
+  · omega
+  · have htop : c.coeff (candTopDegree v a b q) ≠ 0 := by
+      rw [← heq]
+      exact coeff_candTopDegree_ne_zero_of_no_integer_lambda ha0 hb0 hq hv hdq1 hbal hno
+    exact natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero heq htop
+
 end AbstractLambda
 
 /-! ## ★ The `λ`-augmented degree bound at the `CPolyG` layer (the true §6.3 bound)
@@ -267,6 +311,26 @@ theorem cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (fuel 
   have habs := natDegree_le_rdeBoundDegreeWithLambda hqP ha0 heq hlam hexp
   rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
   exact habs
+
+omit [CFracGcdCore α] in
+/-- **★ The LITERAL engine bound at the `CPolyG` layer, nonlinear no-integer-`λ` case**
+(`cdegG_le_cRdeBoundDegreeG_of_balanced_nonlinear_no_integer_lambda`): a §6.3-reduced solution `q` of
+`a·Dq + b·q = c` in the nonlinear balanced configuration (`2 ≤ deg v`, `deg b = deg a + deg v − 1`) where
+**no** non-neg-integer satisfies the `λ`-equation has the *engine's own* `λ`-free bound
+`cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c`. This **discharges the literal locked
+`RdeBoundCancellationResidual` shape** for exactly these configurations: with no integer `λ` the leading
+terms never cancel, so the engine's omission of the `λ` term is harmless and its bound is correct. -/
+theorem cdegG_le_cRdeBoundDegreeG_of_balanced_nonlinear_no_integer_lambda (Dt : CPolyG α) (fuel : ℕ)
+    (a b c q : CPolyG α) (hqP : toPolyG q ≠ 0) (ha0 : toPolyG a ≠ 0) (hsol : IsReducedRdeSol Dt a b c q)
+    (hv : 2 ≤ (toPolyG Dt).natDegree)
+    (hbal : (toPolyG b).natDegree = (toPolyG a).natDegree + (toPolyG Dt).natDegree - 1)
+    (hno : ∀ N : ℕ, (N : CFieldSpec.K α) * (toPolyG a).leadingCoeff * (toPolyG Dt).leadingCoeff
+        + (toPolyG b).leadingCoeff ≠ 0) :
+    cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c := by
+  have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+      + toPolyG b * toPolyG q = toPolyG c := hsol
+  rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
+  exact natDegree_le_rdeBoundDegreeAbstract_of_balanced_nonlinear_no_integer_lambda hqP ha0 hv hbal heq hno
 
 /-- **★ The `CPolyG`-layer `λ`-augmented cancellation residual** `RdeBoundCancellationResidualWithLambda Dt
 fnum fden gnum gden N`: for every §6.2-normal-denominator output and every solution `q` of the
@@ -388,14 +452,18 @@ the task's deep content — is PROVEN; the exp/primitive case is precisely isola
   oracle (the `ParametricLogarithmicDerivative` problem). This is the genuine §6.3 frontier, beyond the
   nonlinear `λ`-recursion; precisely isolated.
 
-**Is the locked `RdeBoundCancellationResidual` discharged?** **No — and it is not literally dischargeable**,
-by design: it asks for the engine's `λ`-free `cRdeBoundDegreeG` bound *even in the cancellation case*, which
-is genuinely **false** when `λ` exceeds the engine bound (the engine omits the `λ` term — its own docstring:
-"the cancellation refinements are the documented continuation"). The honest closure is the **`λ`-augmented**
-residual `RdeBoundCancellationResidualWithLambda` (`cdegG q ≤ max(cRdeBoundDegreeG, λ)`, the *correct*
-bound), which `rdeBoundCancellationResidualWithLambda_of_expPrim` discharges modulo **only** the
-exp/primitive case — the nonlinear `λ`-recursion is proven. So the **mathematics** of the cancellation
-degree bound is closed for the nonlinear case (the deepest single piece) and reduced to the exp/primitive
+**Is the locked `RdeBoundCancellationResidual` discharged?** **Partially — literally, where it is *true*; in
+full only via the `λ`-augmented form.** It asks for the engine's `λ`-free `cRdeBoundDegreeG` bound *even in
+the cancellation case*, which is genuinely **false** when `λ` exceeds the engine bound (the engine omits the
+`λ` term — its own docstring: "the cancellation refinements are the documented continuation"). So it is *not*
+literally dischargeable in general. But where it *is* true it is now **proven**:
+`cdegG_le_cRdeBoundDegreeG_of_balanced_nonlinear_no_integer_lambda` discharges the **literal** engine bound
+for the nonlinear configurations with **no** non-neg-integer `λ` (there the leading terms never cancel, so
+the engine bound is correct — the genuine vacuity of the cancellation hypothesis). The full closure is the
+**`λ`-augmented** residual `RdeBoundCancellationResidualWithLambda` (`cdegG q ≤ max(cRdeBoundDegreeG, λ)`, the
+*correct* bound), which `rdeBoundCancellationResidualWithLambda_of_expPrim` discharges modulo **only** the
+exp/primitive case — the nonlinear `λ`-recursion is proven. So the **mathematics** of the cancellation degree
+bound is closed for the nonlinear case (the deepest single piece) and reduced to the exp/primitive
 logarithmic-derivative recursion for `δ ≤ 1`.
 
 **Engine note (no change made here).** Adopting the `λ`-augmented bound `max(cRdeBoundDegreeG, λ)` *in the
@@ -411,7 +479,9 @@ NO `native_decide`, NO `sorry`) -/
 #print axioms natDegree_le_rdeBoundDegreeWithLambda_of_balanced_nonlinear
 #print axioms rdeIsBalanced_nonlinear_or_low
 #print axioms natDegree_le_rdeBoundDegreeWithLambda
+#print axioms natDegree_le_rdeBoundDegreeAbstract_of_balanced_nonlinear_no_integer_lambda
 #print axioms cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol
+#print axioms cdegG_le_cRdeBoundDegreeG_of_balanced_nonlinear_no_integer_lambda
 #print axioms rdeBoundCancellationResidualWithLambda_of_expPrim
 
 end DeepWiki.SymbolicIntegration
