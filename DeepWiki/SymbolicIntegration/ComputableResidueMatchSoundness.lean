@@ -206,6 +206,51 @@ theorem algebraMap_div_X_sub_C_split (p : K[X]) (α : K) :
   rw [hmap]
   field_simp
 
+/-- **★★ The general monomial Rothstein–Trager partial fraction, modulo polynomial-part cancellation**
+(Bronstein Thm 5.6.1, general monomial) — for a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, an arbitrary
+monomial `Dt = v`, every root normal (`v(α) ≠ α′`), **and** the polynomial parts cancelling
+(`hcancel : ∑_{α∈s} C(c_α)·((v − Cα′) /ₘ (t−α)) = 0`), the monomial RT residue sum equals `a/d`:
+`∑_{α∈s} C(c_α)·(D(t−α)/(t−α)) = a/d`, `c_α = a(α)/(Dd)(α)`, `D = extendDeriv (implicitDeriv v)`. Per term,
+`algebraMap_div_X_sub_C_split` separates the polynomial part `C(c_α)·((v−Cα′)/ₘ(t−α))` from the residue
+`C(c_α·(v(α)−α′))/(t−α) = C(a(α)/d′(α))/(t−α)` (`residue_mul_eval_sub_eq`); the residues reassemble `a/d`
+(`ratFunc_eq_sum_residue_div`) and the polynomial parts vanish by `hcancel`. The `hcancel` hypothesis is
+the genuine extra content for non-primitive (hyperexp/hypertangent) monomials — it is the
+integrability-encoding cancellation, automatic only in the primitive case (where each quotient is `0`). -/
+theorem monomial_residue_match_of_cancel (s : Finset K) (a v : K[X])
+    (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, v.eval α ≠ α′)
+    (hcancel : ∑ α ∈ s, algebraMap K[X] (RatFunc K)
+        (C (a.eval α / (Differential.implicitDeriv v (Lagrange.nodal s id)).eval α)
+          * ((v - C (α′)) /ₘ (X - C α))) = 0) :
+    ∑ α ∈ s, algebraMap K[X] (RatFunc K)
+          (C (a.eval α / (Differential.implicitDeriv v (Lagrange.nodal s id)).eval α))
+        * (extendDeriv (Differential.implicitDeriv v)
+              (algebraMap K[X] (RatFunc K) (X - C α))
+            / algebraMap K[X] (RatFunc K) (X - C α))
+      = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) := by
+  -- abbreviation for the RT residue at `α`
+  set c : K → K := fun α => a.eval α / (Differential.implicitDeriv v (Lagrange.nodal s id)).eval α
+    with hc
+  -- rewrite each summand: monomial log-derivative, then euclidean split
+  have hterm : ∀ α ∈ s,
+      algebraMap K[X] (RatFunc K) (C (c α))
+          * (extendDeriv (Differential.implicitDeriv v) (algebraMap K[X] (RatFunc K) (X - C α))
+              / algebraMap K[X] (RatFunc K) (X - C α))
+        = algebraMap K[X] (RatFunc K) (C (c α) * ((v - C (α′)) /ₘ (X - C α)))
+          + algebraMap K[X] (RatFunc K) (C (a.eval α / (derivative (Lagrange.nodal s id)).eval α))
+              / algebraMap K[X] (RatFunc K) (X - C α) := by
+    intro α hα
+    rw [extendDeriv_implicitDeriv_logDeriv_X_sub_C, algebraMap_div_X_sub_C_split (v - C (α′)) α,
+      mul_add, ← map_mul]
+    congr 1
+    -- the residue term: `C(c_α)·C((v−Cα′)(α))/(t−α) = C(a(α)/d′(α))/(t−α)`
+    rw [eval_sub, eval_C, ← mul_div_assoc, ← map_mul, ← C_mul]
+    have hroot : (Lagrange.nodal s id).eval α = 0 := by
+      simpa using Lagrange.eval_nodal_at_node (s := s) (v := (id : K → K)) hα
+    rw [hc]
+    rw [residue_mul_eval_sub_eq a v (Lagrange.nodal s id) α hroot (hnorm α hα)]
+  rw [Finset.sum_congr rfl hterm, Finset.sum_add_distrib, ← map_sum, hc] at *
+  rw [hcancel, zero_add, ← ratFunc_eq_sum_residue_div s a hA]
+
 end ResidueMatchTower
 
 end DeepWiki.SymbolicIntegration
