@@ -232,4 +232,63 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore �
     (fuel : ℕ) : cdegG (CPolyG.cSpecialPolyG ([CField.one] : CPolyG β) fuel) = 0 :=
   cdegG_cSpecialPolyG_one_eq_zero fuel
 
+/-! ## ★ Task 3 — the §6.2 divisibility crux: reduced to the weak-normalization product-divisibilities
+
+`hdvdB`/`hdvdC` are the two clauses a bare `cRischDEG … = some _` does NOT self-certify, because
+`cRdeNormalDenominatorG` computes the `B`/`C` clearing `cdivG` **unconditionally** (it checks only one
+`cdvdG`, on `en ∣ dₙh²`, before returning `some` — never the `fden ∣ B` / `gden ∣ C` exactness the cleared
+identity needs). We make their precise content explicit: each reduces to a single product-divisibility of the
+*denominator* into the `normal-part·h` block — the algebraic essence of Bronstein §6.1 **weak normalization**.
+
+With `dₙ = (cSplitFactorFastG Dt fuel fden).1` the normal part of `fden`:
+
+* `hdvdB` (`fden ∣ B = dₙh·fnum − dₙ·Dh·fden`) follows from `fden ∣ dₙh` — the `−dₙ·Dh·fden` summand is
+  divisible by `fden` outright, and `fden ∣ dₙh ⟹ fden ∣ dₙh·fnum` (`hdvdB_of_dvd`).
+* `hdvdC` (`gden ∣ C = dₙh²·gnum`) follows from `gden ∣ dₙh²` (`hdvdC_of_dvd`).
+
+So the §6.2 divisibility crux is **exactly** these two product-divisibilities — NOT engine self-certification,
+but the genuine §6.1 weak-normalization precondition on the (raw, un-normalized) RDE input. For a
+**weakly-normalized** `f` (the post-Hermite RDE input the algorithm assumes) the normal part absorbs the
+denominator and both hold; the recursive `crischDESolve` does not weak-normalize its argument, so they are NOT
+unconditional in `f g`. These are the sharpened TRUE residual. -/
+
+section Divisibility
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β]
+
+omit [CDiffFieldSpec β] in
+/-- **`hdvdB` reduces to `fden ∣ dₙh`** (the §6.2 `B`-divisibility essence): if the denominator `fden`
+divides the normal-part·h block `dₙ·h0` (`dₙ = (cSplitFactorFastG Dt fuel fden).1`), then it divides the full
+`B`-numerator `dₙh·fnum − dₙ·Dh·fden`. The second summand is `fden`-divisible outright; the first is
+`(dₙh)·fnum`, divisible by `fden` from the hypothesis. The clean sufficient condition for the `cdivG`
+`B`-clearing to be exact. -/
+theorem hdvdB_of_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden h0 : CPolyG β)
+    (hdvd : toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0)) :
+    toPolyG fden ∣ toPolyG (CPolyG.csubG
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1
+          (CPolyG.cmonomialDeriv Dt h0)) fden)) := by
+  rw [CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG,
+    CPolyG.toPolyG_cmulG]
+  apply dvd_sub
+  · rw [CPolyG.toPolyG_cmulG] at hdvd
+    exact hdvd.mul_right _
+  · exact Dvd.intro_left _ rfl
+
+omit [CDiffFieldSpec β] in
+/-- **`hdvdC` reduces to `gden ∣ dₙh²`** (the §6.2 `C`-divisibility essence): if the denominator `gden`
+divides the normal-part·h² block `dₙ·h0·h0` (`dₙ = (cSplitFactorFastG Dt fuel fden).1`), then it divides the
+full `C`-numerator `dₙh²·gnum`. Multiplying the hypothesis by `gnum`. The clean sufficient condition for the
+`cdivG` `C`-clearing to be exact. -/
+theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG β)
+    (hdvd : toPolyG gden ∣ toPolyG (CPolyG.cmulG
+      (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0)) :
+    toPolyG gden ∣ toPolyG (CPolyG.cmulG
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) := by
+  rw [CPolyG.toPolyG_cmulG]
+  rw [CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG] at hdvd ⊢
+  exact hdvd.mul_right _
+
+end Divisibility
+
 end DeepWiki.SymbolicIntegration
