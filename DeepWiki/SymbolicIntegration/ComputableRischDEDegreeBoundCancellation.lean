@@ -166,6 +166,53 @@ theorem natDegree_le_rdeBoundDegreeWithLambda_of_balanced_nonlinear {v a b c q :
     exact le_trans (natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero heq htop)
       (le_max_left _ _)
 
+/-- **★ Bronstein Lemma 6.3.5 (nonlinear case), verbatim dichotomy** (`lemma_6_3_5_dichotomy`): for a
+nonlinear monomial (`2 ≤ deg v`) with `a ≠ 0`, `deg b = deg a + deg v − 1`, `deg q > 0`, **either** the LHS
+has the full degree `deg(a·Dq + b·q) = deg b + deg q` (no leading cancellation), **or**
+`−lc(b)/lc(a) = (deg q)·lc(v)`, i.e. `deg q = λ(t)` (`λ(t) = lc(v)`). The exact statement of the book's
+"Lemma 6.3.5" (the nonlinear cancellation dichotomy): the leading term `(deg(q)·lc(a)·lc(v) + lc(b))·lc(q)`
+either is nonzero (giving the full degree) or vanishes (giving the `λ`-equation). -/
+theorem lemma_6_3_5_dichotomy {v a b q : K[X]} (ha0 : a ≠ 0) (hb0 : b ≠ 0) (hq0 : q ≠ 0)
+    (hv : 2 ≤ v.natDegree) (hdq : 1 ≤ q.natDegree)
+    (hbal : b.natDegree = a.natDegree + v.natDegree - 1) :
+    (a * Differential.implicitDeriv v q + b * q).natDegree = b.natDegree + q.natDegree
+      ∨ -b.leadingCoeff / a.leadingCoeff = (q.natDegree : K) * v.leadingCoeff := by
+  have hlca : a.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr ha0
+  have hlcq : q.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hq0
+  have hcoeff := coeff_candTopDegree_balanced_nonlinear ha0 hb0 hq0 hv hdq hbal
+  have hcand : candTopDegree v a b q = b.natDegree + q.natDegree := by
+    simp only [candTopDegree]
+    rw [show max 0 (v.natDegree - 1) = v.natDegree - 1 from by omega,
+      show max (a.natDegree + (v.natDegree - 1)) b.natDegree = b.natDegree from by omega]
+  rw [hcand] at hcoeff
+  by_cases htop : (a * Differential.implicitDeriv v q + b * q).coeff (b.natDegree + q.natDegree) = 0
+  · -- cancellation: derive the `λ`-equation `−lc(b)/lc(a) = (deg q)·lc(v)`
+    right
+    rw [htop] at hcoeff
+    have hfac : (q.natDegree : K) * a.leadingCoeff * v.leadingCoeff + b.leadingCoeff = 0 := by
+      rcases mul_eq_zero.mp hcoeff.symm with h | h
+      · exact h
+      · exact absurd h hlcq
+    rw [div_eq_iff hlca]
+    linear_combination -hfac
+  · -- no cancellation: the LHS has full degree `db + dq` (both terms bounded by `candTopDegree`)
+    left
+    refine le_antisymm ?_ (le_natDegree_of_ne_zero htop)
+    calc (a * Differential.implicitDeriv v q + b * q).natDegree
+        ≤ candTopDegree v a b q := by
+          rw [candTopDegree]
+          refine (natDegree_add_le _ _).trans (max_le ?_ ?_)
+          · calc (a * Differential.implicitDeriv v q).natDegree
+                ≤ a.natDegree + (Differential.implicitDeriv v q).natDegree := natDegree_mul_le
+              _ ≤ a.natDegree + (q.natDegree + max 0 (v.natDegree - 1)) := by
+                  gcongr; exact natDegree_implicitDeriv_le v q
+              _ ≤ _ := by
+                  have := le_max_left (a.natDegree + max 0 (v.natDegree - 1)) b.natDegree; omega
+          · calc (b * q).natDegree ≤ b.natDegree + q.natDegree := natDegree_mul_le
+              _ ≤ _ := by
+                  have := le_max_right (a.natDegree + max 0 (v.natDegree - 1)) b.natDegree; omega
+      _ = b.natDegree + q.natDegree := hcand
+
 /-! ### The exp/primitive cancellation residual (`δ ≤ 1`), and the uniform `RdeIsBalanced` discharge
 
 `RdeIsBalanced` (the locked file's cancellation-prone configuration) splits into exactly two sub-cases: the
@@ -428,6 +475,28 @@ theorem lambda_witness_cancellation :
   simp
 
 end Witness
+
+/-! ### Restatement against Bronstein Lemma 6.3.5's wording (anonymous `example`s)
+
+Confirming the proven theorems say what the book says (compiled ≠ faithful): the nonlinear-case dichotomy
+"either `deg(a·Dq + b·q) = deg b + deg q`, or `−lc(b)/lc(a) = (deg q)·λ(t)`" and the degree bound
+`deg q ≤ max(non-cancellation bound, λ)` it yields. -/
+
+-- ★ Bronstein Lemma 6.3.5 (nonlinear case): the verbatim dichotomy of the leading term.
+example {K : Type*} [Field K] [CharZero K] [Differential K] {v a b q : K[X]} (ha0 : a ≠ 0) (hb0 : b ≠ 0)
+    (hq0 : q ≠ 0) (hv : 2 ≤ v.natDegree) (hdq : 1 ≤ q.natDegree)
+    (hbal : b.natDegree = a.natDegree + v.natDegree - 1) :
+    (a * Differential.implicitDeriv v q + b * q).natDegree = b.natDegree + q.natDegree
+      ∨ -b.leadingCoeff / a.leadingCoeff = (q.natDegree : K) * v.leadingCoeff :=
+  lemma_6_3_5_dichotomy ha0 hb0 hq0 hv hdq hbal
+
+-- ★ The `λ`-cancellation degree bound: `deg q ≤ max(non-cancellation bound, λ)` for the `λ`-witness `N`.
+example {K : Type*} [Field K] [CharZero K] [Differential K] {v a b c q : K[X]} (hq : q ≠ 0) (ha0 : a ≠ 0)
+    (hv : 2 ≤ v.natDegree) (hbal : b.natDegree = a.natDegree + v.natDegree - 1)
+    (heq : a * Differential.implicitDeriv v q + b * q = c) {N : ℕ}
+    (hlam : (N : K) * a.leadingCoeff * v.leadingCoeff + b.leadingCoeff = 0) :
+    q.natDegree ≤ max (rdeBoundDegreeAbstract v a b c) N :=
+  natDegree_le_rdeBoundDegreeWithLambda_of_balanced_nonlinear hq ha0 hv hbal heq hlam
 
 /-! ### Final verdict (stated precisely)
 
