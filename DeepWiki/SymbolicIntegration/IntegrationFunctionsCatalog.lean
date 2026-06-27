@@ -26,7 +26,8 @@ only; it states no new mathematics.
 * `cIntegrateGFull` / `cIntegrateGFullWf` — the full transcendental driver (canonical split, then RDE-oracle
   poly part, then Rothstein-Trager log part) over a tower base; fuel'd and fuel-free.
   Soundness (checker-free, gated on engine-success bridges): `cIntegrateGFull_primitive_oneShot` (primitive /
-  logarithmic monomial) and `cIntegrateGFull_hyperexp_oneShot` (hyperexponential, conditional on `∑c = 0`).
+  logarithmic monomial), `cIntegrateGFull_hyperexp_oneShot` (hyperexponential, conditional on `∑c = 0`), and
+  `cIntegrateGFull_poly_oneShot` (polynomial branch `fp ≠ 0`, gated on the poly-RDE soundness `D(qp) = fp`).
   The carrier-agnostic `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
   `ComputableIntegrateTowerCorrectG`) gates a result on the engine's own self-check.
   Completeness: via the RDE solver — no direct decision procedure on the driver.
@@ -92,9 +93,10 @@ open Compute CPolyG QFunNZG
 Each `#check @<name>` below names a soundness/completeness theorem, so the catalog FAILS to compile if the
 theorem is renamed or removed. Grouped by engine. (`#check` emits info only — no `warning:`/`error:`.) -/
 
--- `cIntegrateGFull` / `cIntegrateGFullWf`: the checker-free transcendental one-shots.
+-- `cIntegrateGFull` / `cIntegrateGFullWf`: the checker-free transcendental one-shots (primitive, hyperexp, poly).
 #check @cIntegrateGFull_primitive_oneShot
 #check @cIntegrateGFull_hyperexp_oneShot
+#check @cIntegrateGFull_poly_oneShot
 
 -- `cIntegratePolyG`: PARTIAL soundness — the constant case only.
 #check @field_identity_cIntegratePolyG_const
