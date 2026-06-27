@@ -357,4 +357,127 @@ theorem cdegG_le_max_cRdeBoundDegreeG_expPrim (Dt : CPolyG α) (fuel : ℕ) (a b
 
 end ComputableExpPrim
 
+/-! ## Operational witness: a concrete hyperexponential (`δ = 1`) cancellation RDE
+
+A concrete §6.3-reduced *hyperexponential* RDE over `ℚ[t]` (`t = e^x`, `Dt = t`, so `η = 1`) exhibiting
+genuine leading-term cancellation: `a = 1`, `b = −1` (`deg b = 0 = deg a`, balanced exp), `q = t`. Then
+`D(t) = t` (`implicitDeriv_X`), so `a·Dq + b·q = t − t = 0`. The leading terms cancel, and the cancellation
+condition reads `−lc(b)/lc(a) = 1 = (deg q)·η + logDeriv (lc q) = 1·1 + logDeriv 1 = 1 + 0`, with `deg q = 1`
+the integer `m`. The base derivation on `ℚ` is trivial (`logDeriv 1 = 0`). -/
+
+section Witness
+
+variable {K : Type*} [Field K] [CharZero K] [Differential K]
+
+/-- **The hyperexponential cancellation condition holds for `q = t`** (`cancellation_witness_exp`): over a
+differential field `K` with the hyperexponential monomial `Dt = X` (`η = X.coeff 1 = 1`), `q = X` (so `lc q =
+1`, `logDeriv 1 = 0`) gives leading-term cancellation for `a = 1`, `b = C(−1)` — the condition
+`−(b.coeff 0)/lc(1) = 1` equals `(deg X)·(X.coeff 1) + logDeriv 1 = 1·1 + 0 = 1`. A genuine instance of the
+δ ≤ 1 cancellation equation `−lc(b)/lc(a) = m·η + Dz/z` with `m = 1`. -/
+theorem cancellation_witness_exp :
+    -((C (-1 : K)).coeff (1 : K[X]).natDegree) / (1 : K[X]).leadingCoeff
+      = ((X : K[X]).natDegree : K) * (X : K[X]).coeff 1 + Differential.logDeriv (X : K[X]).leadingCoeff := by
+  rw [leadingCoeff_X, Differential.logDeriv_one, natDegree_X, coeff_X_one, natDegree_one, coeff_C,
+    leadingCoeff_one]
+  norm_num
+
+/-- **The δ ≤ 1 leading term genuinely cancels for `q = t`** (`coeff_candTopDegree_witness_exp`): over a
+differential field `K`, for the hyperexponential `Dt = X` the LHS `1·D(X) + C(−1)·X = X − X = 0`, so its
+coefficient at the candidate top degree `candTopDegree X 1 (C(−1)) X` is `0` — a real leading-term
+cancellation, matching `cancellation_iff_logDeriv_eq_low` via `cancellation_witness_exp`. -/
+theorem coeff_candTopDegree_witness_exp :
+    ((1 : K[X]) * Differential.implicitDeriv (X : K[X]) (X : K[X]) + C (-1 : K) * X).coeff
+        (candTopDegree (X : K[X]) 1 (C (-1)) X) = 0 :=
+  (cancellation_iff_logDeriv_eq_low (one_ne_zero) (X_ne_zero) (by simp [natDegree_X])
+    (by simp [natDegree_X]) (by simp [natDegree_one])).mpr
+    cancellation_witness_exp
+
+end Witness
+
+/-! ### Restatement against Bronstein Lemma 6.3.3 / 6.3.4's wording (anonymous `example`s)
+
+Confirming the proven theorems say what the book says (compiled ≠ faithful): the δ ≤ 1 cancellation condition
+is the logarithmic-derivative equation `−lc(b)/lc(a) = (deg q)·η + Dz/z` (Lemma 6.3.3 exp / 6.3.4 primitive),
+and the degree bound `deg q ≤ max(non-cancellation bound, N)` it yields modulo the parametric
+log-derivative bound. -/
+
+-- ★ Bronstein Lemma 6.3.3 / 6.3.4: the δ ≤ 1 cancellation condition is `−lc(b)/lc(a) = (deg q)·η + Dz/z`.
+example {K : Type*} [Field K] [CharZero K] [Differential K] {v a b q : K[X]} (ha0 : a ≠ 0) (hq0 : q ≠ 0)
+    (hv : v.natDegree ≤ 1) (hdq : 1 ≤ q.natDegree) (hble : b.natDegree ≤ a.natDegree) :
+    (a * Differential.implicitDeriv v q + b * q).coeff (candTopDegree v a b q) = 0
+      ↔ -(b.coeff a.natDegree) / a.leadingCoeff
+          = (q.natDegree : K) * v.coeff 1 + Differential.logDeriv q.leadingCoeff :=
+  cancellation_iff_logDeriv_eq_low ha0 hq0 hv hdq hble
+
+-- ★ The exp/primitive cancellation degree bound, modulo the parametric log-derivative bound.
+example {K : Type*} [Field K] [CharZero K] [Differential K] {v a b c q : K[X]} (hq : q ≠ 0) (ha0 : a ≠ 0)
+    (hv : v.natDegree ≤ 1) (hble : b.natDegree ≤ a.natDegree)
+    (heq : a * Differential.implicitDeriv v q + b * q = c) {N : ℕ}
+    (hbound : ExpPrimLogDerivativeBound v a b N) :
+    q.natDegree ≤ max (rdeBoundDegreeAbstract v a b c) N :=
+  expPrimCancellation_of_logDerivativeBound hq ha0 hv hble heq hbound
+
+-- ★ The exp/primitive residual `RdeBoundExpPrimCancellation` is discharged modulo the base-field oracle.
+example {K : Type*} [Field K] [CharZero K] [Differential K] (v a b c : K[X]) {N : ℕ}
+    (hbound : ExpPrimLogDerivativeBound v a b N) :
+    RdeBoundExpPrimCancellation v a b c N :=
+  rdeBoundExpPrimCancellation_of_logDerivativeBound v a b c hbound
+
+/-! ### Final verdict (stated precisely)
+
+**Is the exp/primitive (`δ ≤ 1`) cancellation degree bound proven?** **Reduced to a single, precisely named
+base-field oracle — the parametric logarithmic-derivative bound — with all the polynomial-level structure
+proven.** Together with the **nonlinear** `λ`-recursion (proven outright in
+`ComputableRischDEDegreeBoundCancellation`), this leaves the degree-bound half of RDE completeness resting on
+**one** base-field decision (and the orthogonal `hnorm`/`hsolve`).
+
+* **Closed unconditionally** (axiom-clean, NO `native_decide`/`sorry`): the δ ≤ 1 leading-term analysis.
+  `coeff_natDegree_implicitDeriv_low` computes `(Dq).coeff (deg q) = (lc q)′ + (deg q)·(v.coeff 1)·(lc q)`
+  (the derivation does not raise the `t`-degree for `δ ≤ 1`); `coeff_candTopDegree_low` adds the `b·q` term
+  to get the leading coefficient of `a·Dq + b·q` at `deg a + deg q`; and `cancellation_iff_logDeriv_eq_low`
+  shows the leading term vanishes **iff** `−lc(b)/lc(a) = (deg q)·η + logDeriv (lc q)` — exactly Bronstein's
+  `−lc(b)/lc(a) = m·η + Dz/z` (**Lemma 6.3.3** exp, `η = v.coeff 1 = Dt/t`; **Lemma 6.3.4** primitive,
+  `η = 0`). `expPrimCancellation_of_logDerivativeBound` then proves the bound: either no cancellation (the
+  sharp top-coefficient bound applies) or cancellation, which exhibits the log-derivative witness `z = lc q`.
+
+* **The irreducible core** (`ExpPrimLogDerivativeBound`, NEVER `sorry`). Bounding `deg q` in the cancellation
+  branch is **exactly** the base-field question: for how many `m ∈ ℕ` is `−lc(b)/lc(a) − m·η` a logarithmic
+  derivative of a nonzero base-field element? This is the **parametric logarithmic-derivative** decision
+  (Bronstein §5.12 / §6.1) — the same `b = Dz/z` test the engine's exp/primitive *solve*
+  (`cPolyRischDECancel{Exp,Prim}G`, the eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)`) runs
+  degree-by-degree. It is the genuine §6.3 frontier the nonlinear `λ`-recursion never enters, isolated as a
+  named `Prop`. `rdeBoundExpPrimCancellation_of_logDerivativeBound` discharges `RdeBoundExpPrimCancellation`
+  modulo it, lifted to `CPolyG` over `(CFieldSpec.K α)[X]` as `cdegG_le_max_cRdeBoundDegreeG_expPrim`.
+
+* **The primitive sub-case is honestly the harder one** (`cancellation_iff_logDeriv_eq_prim`). For `δ = 0`
+  (`η = 0`) the cancellation condition `−lc(b)/lc(a) = logDeriv (lc q)` is **independent of `deg q`**: the
+  leading term alone does *not* bound the primitive degree. So `ExpPrimLogDerivativeBound` for a primitive
+  configuration is vacuous precisely when `−lc(b)/lc(a)` is *not* a logarithmic derivative; when it *is*, the
+  bound's content lives in the SPDE recursion 6.6.1 (Bronstein §6.6) — outside this leading-term analysis.
+
+**Is the degree-bound completeness half fully closed?** **No — reduced to exactly one base-field oracle.**
+The chain `RdeBoundCancellationResidual` (the locked `hbound` gap) ← **nonlinear `λ`-recursion ✓** (proven) +
+**exp/primitive ← `ExpPrimLogDerivativeBound`** (this file) is now **fully explicit**: every leading-term
+cancellation configuration is handled, the nonlinear one outright and the δ ≤ 1 one modulo the parametric
+logarithmic-derivative bound. The degree-bound half is therefore closed **modulo a single, precisely named
+base-field decision** (`ExpPrimLogDerivativeBound`), with the rest of `RischDEInnerCompleteness` (`hnorm`,
+`hsolve`) the orthogonal residuals.
+
+**Engine note (no change made here).** The engine's `cRdeBoundDegreeG` stays the `λ`-free non-cancellation
+bound; adopting `max(cRdeBoundDegreeG, λ)`/the exp-prim `N` *in the engine* is a separate invasive step (it
+ripples through the SPDE/poly-RDE solve and every `native_decide` regression). This file establishes the
+math at the abstract + `CPolyG` layers without touching the engine. -/
+
+/-! ### Axiom audit (the δ ≤ 1 leading-term analysis and its discharges are axiom-clean;
+NO `native_decide`, NO `sorry`) -/
+
+#print axioms coeff_natDegree_implicitDeriv_low
+#print axioms coeff_candTopDegree_low
+#print axioms cancellation_iff_logDeriv_eq_low
+#print axioms cancellation_iff_logDeriv_eq_prim
+#print axioms expPrimCancellation_of_logDerivativeBound
+#print axioms rdeBoundExpPrimCancellation_of_logDerivativeBound
+#print axioms cdegG_le_max_cRdeBoundDegreeG_expPrim
+#print axioms coeff_candTopDegree_witness_exp
+
 end DeepWiki.SymbolicIntegration
