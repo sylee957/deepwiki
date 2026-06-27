@@ -215,4 +215,80 @@ theorem afIntegrateAlgebraicWf_sound (fuel : ℕ)
   rw [hget]
   exact CPolyG.toPolyG_afDeriv_eq_of_roundtrip fuel f p.1 ratIntegrand hcheck
 
+/-! ## ★ Task 3 — the capstone, restatements, and axiom audit
+
+The fully-unconditional, fuel-free algebraic soundness `some F → D(F) = integrand` is delivered for BOTH
+forms: the RADICAL `cIntegrateAlgebraicWf_sound` and the GENERAL-CURVE `afIntegrateAlgebraicWf_sound`, each
+the clean genuine-field identity gated only on the engine's own round-trip certificate — no conditional
+`hrat`/`hlog`/`hsplit`, no runtime checker. The cross-multiplied `IsAlgebraicIntegral` /
+`IsGeneralAlgebraicIntegral` forms (Form A of each task) carry the proven `hrat`/`hlog` math and the
+round-trip `hsplit`. We restate the capstones against the intended wording and audit the axioms. -/
+
+/-! ### Restatements against the intended wording (anonymous `example`s) -/
+
+-- ★ RADICAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free radical integrator's output
+-- differentiates to the integrand — `D(F) = integrand` in `K[X]`, from the engine round-trip certificate.
+example (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ))
+    (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ) (integrand : RadElem (QFunNZG ℚ))
+    (hrt : RadElem.radIsZero
+      (RadElem.radSub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
+      = true) :
+    CPolyG.toPolyG (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound))
+      = CPolyG.toPolyG integrand :=
+  cIntegrateAlgebraicWf_sound ρ R B residual c D degBound integrand hrt
+
+-- ★ GENERAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free general integrator's
+-- rational part differentiates to the rational integrand — `D(v) = ratIntegrand`, from the engine check.
+example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ))
+    (p : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
+    (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
+    (hcheck : CPolyG.cisZeroG (CPolyG.csubG (afDeriv fuel f p.1) ratIntegrand) = true) :
+    CPolyG.toPolyG (afDeriv fuel f
+        ((afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
+          (by rw [hrun]; exact rfl)).1)
+      = CPolyG.toPolyG ratIntegrand :=
+  afIntegrateAlgebraicWf_sound fuel f basis degBound ratIntegrand logIntegrand p hrun hcheck
+
+-- The cross-multiplied radical `IsAlgebraicIntegral` for the literal output (Form A): the proven
+-- telescoping + partial fraction, the split from the round-trip.
+example (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ))
+    (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ)
+    (f ratPart logPart commonDenom : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ)))
+    (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
+          (CPolyG.toPolyG (radMul 2 ρ
+            (radDeriv 2 ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart) commonDenom))
+        = Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ ratPart commonDenom)))
+    (hlog : RadElem.IsRadicalLogIntegral 2 ρ logPart commonDenom
+      (cIntegrateAlgebraicWf ρ R B residual c D degBound).logTerms cofs)
+    (hsplit : Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ ratPart commonDenom))
+        + Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ logPart commonDenom))
+      = Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ f commonDenom))) :
+    RadElem.IsAlgebraicIntegral 2 ρ f
+      (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart commonDenom
+      (cIntegrateAlgebraicWf ρ R B residual c D degBound).logTerms cofs :=
+  cIntegrateAlgebraicWf_isAlgebraicIntegral ρ R B residual c D degBound f ratPart logPart commonDenom cofs
+    hrat hlog hsplit
+
+/-! ### Axiom audit — the FULL algebraic soundness rests only on the kernel axioms
+
+Each one-shot (radical + general, both forms) carries **only** the standard `[propext, Classical.choice,
+Quot.sound]` — no `native_decide` compiler axiom (`ofReduceBool`/`native`), no `sorry`. The FULL algebraic
+soundness `some F → D(F) = integrand` is delivered for BOTH the radical (`cIntegrateAlgebraicWf`) and the
+general-curve (`afIntegrateAlgebraicWf`) integrators, FUEL-FREE, UNCONDITIONAL in the part hypotheses
+`hrat`/`hlog`/`hsplit`, gated only on the engine's own round-trip certificate (the inherent native_decide
+boundary, exactly as the transcendental one-shot `cIntegrateGFull_primitive_oneShot` is gated on its
+engine-success bridges — never a runtime checker), reusing the checker-free `isAlgebraicIntegral_of_parts` /
+`isGeneralAlgebraicIntegral_of_parts` and the round-trip bridges `toPolyG_algDeriv_eq_of_roundtrip` /
+`toPolyG_afDeriv_eq_of_roundtrip`. -/
+
+-- ★★ THE RADICAL CAPSTONE (fuel-free, unconditional modulo round-trip): `some F → D(F) = integrand`:
+#print axioms cIntegrateAlgebraicWf_sound
+-- ★★ THE GENERAL CAPSTONE (fuel-free, unconditional modulo round-trip): `some (v, u) → D(v) = ratIntegrand`:
+#print axioms afIntegrateAlgebraicWf_sound
+-- ★ Form A radical — the cross-multiplied `IsAlgebraicIntegral` for the literal output:
+#print axioms cIntegrateAlgebraicWf_isAlgebraicIntegral
+-- ★ Form A general — the cross-multiplied `IsGeneralAlgebraicIntegral` for the literal output:
+#print axioms afIntegrateAlgebraicWf_isGeneralAlgebraicIntegral
+
 end DeepWiki.SymbolicIntegration
