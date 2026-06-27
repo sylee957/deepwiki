@@ -227,6 +227,33 @@ theorem hyperexp_residue_match_iff_sum_zero (s : Finset K) (a : K[X]) (b : K) (h
   exact hyperexp_cancel_iff_sum_zero s b hb
     (fun α => a.eval α / (Differential.implicitDeriv (C b * X) (Lagrange.nodal s id)).eval α)
 
+/-- **★ The list↔Finset bridge for the hyperexp residue match (given `∑c = 0`)** — for a squarefree
+`d = ∏_{α∈s}(t−α)`, `deg a < #s`, a hyperexponential monomial `Dt = C b·X` (`b = η′ ≠ 0`), every root normal,
+**and** the integrability witness `hsum : ∑_α c_α = 0`, the engine-shaped **`List` sum** over the per-root
+list `s.toList.map (fun α => (c_α, X − C α))` of `C(c_α)·(D(t−α)/(t−α))` equals `a/d` over `RatFunc K`. The
+`List`-form of `hyperexp_residue_match_iff_sum_zero.mpr`: the per-root `List.sum` equals the `Finset.sum` over
+`s` (`Finset.sum_map_toList`), which the iff (with `hsum`) sends to `a/d`. The residue match in exactly the
+`List` shape `logResidueSumG_eq_of_residue_match`'s `hmatch` consumes — for the hyperexp case, GATED on the
+integrability witness `∑c = 0` (the precise extra content the primitive case `primitive_residue_match_list`
+gets for free). -/
+theorem hyperexp_residue_match_list (s : Finset K) (a : K[X]) (b : K) (hb : b ≠ 0)
+    (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, (C b * X).eval α ≠ α′)
+    (hsum : ∑ α ∈ s, a.eval α / (Differential.implicitDeriv (C b * X) (Lagrange.nodal s id)).eval α
+      = 0) :
+    ((s.toList.map (fun α =>
+          (a.eval α / (Differential.implicitDeriv (C b * X) (Lagrange.nodal s id)).eval α,
+            X - C α))).map
+        (fun cv =>
+          algebraMap K[X] (RatFunc K) (C cv.1)
+            * (extendDeriv (Differential.implicitDeriv (C b * X))
+                  (algebraMap K[X] (RatFunc K) cv.2)
+                / algebraMap K[X] (RatFunc K) cv.2))).sum
+      = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) := by
+  -- collapse `(s.toList.map f).map g = s.toList.map (g ∘ f)`, then to the `Finset.sum` over `s`
+  rw [List.map_map, Finset.sum_map_toList]
+  -- the per-root summand is exactly the Finset residue sum, sent to `a/d` by the iff with `hsum`
+  exact (hyperexp_residue_match_iff_sum_zero s a b hb hA hnorm).mpr hsum
+
 end ResidueMatchTower
 
 /-! ### Task 1 (engine vocabulary): the list↔Finset bridge over `K = CFieldSpec.K α`
@@ -317,6 +344,86 @@ theorem primitive_engine_hmatch (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
   rw [hsummand, hform, hden, List.map_map]
   -- now the per-root form of the bridge `primitive_residue_match_list_engine`
   have hbridge := primitive_residue_match_list_engine Dt s (toPolyG hNum) w hDt hA hnorm
+  rw [List.map_map] at hbridge
+  exact hbridge
+
+/-! ### Task 2 (hyperexp): the list↔Finset bridge + the engine `hmatch`, GATED on `∑c = 0`
+
+The hyperexponential analog of `primitive_residue_match_list_engine` / `primitive_engine_hmatch`. The ONLY
+difference from the primitive case is that the RT polynomial-part cancellation is NOT automatic: it is the
+integrability witness `∑c = 0` (`hsum`), supplied here as an explicit hypothesis (see the closing status for
+why `cIntegrateGFull`'s success cannot supply it). Given `hsum`, the residue match is discharged exactly as in
+the primitive case, through `hyperexp_residue_match_list`. -/
+
+/-- **★ The hyperexp list↔Finset bridge in the engine's vocabulary (given `∑c = 0`)** — for a
+hyperexponential monomial `toPolyG Dt = C b·X` (`b = η′ ≠ 0`), a squarefree `d = ∏_{β∈s}(t−β)`, `deg a < #s`,
+every root normal, **and** the integrability witness `hsum : ∑_β c_β = 0`, the engine-shaped **`List` sum**
+over the per-root list of `(c_β, X − C β)` pairs equals `a/d` over `RatFunc (CFieldSpec.K α)`, with
+`D = towerFractionFieldDerivG Dt`. The `K[X]`-level `hyperexp_residue_match_list` transported through the
+definitional `amG = algebraMap` and the `towerFractionFieldDerivG` unfolding — the residue match in exactly
+the `List` shape the engine consumes, hyperexp case (the integrability witness is the only extra content over
+the primitive `primitive_residue_match_list_engine`). -/
+theorem hyperexp_residue_match_list_engine (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
+    (a : (CFieldSpec.K α)[X]) (b : CFieldSpec.K α) (hb : b ≠ 0) (hDt : toPolyG Dt = C b * X)
+    (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hsum : ∑ β ∈ s, a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β
+      = 0) :
+    ((s.toList.map (fun β =>
+          (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+            X - C β))).map
+        (fun cv =>
+          amG α (C cv.1)
+            * (towerFractionFieldDerivG Dt (amG α cv.2) / amG α cv.2))).sum
+      = amG α a / amG α (Lagrange.nodal s id) := by
+  show ((s.toList.map (fun β =>
+          (a.eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+            X - C β))).map
+        (fun cv =>
+          algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α)) (C cv.1)
+            * (extendDeriv (Differential.implicitDeriv (toPolyG Dt))
+                  (algebraMap _ (RatFunc (CFieldSpec.K α)) cv.2)
+                / algebraMap _ (RatFunc (CFieldSpec.K α)) cv.2))).sum = _
+  rw [hDt] at hsum ⊢
+  exact ResidueMatchTower.hyperexp_residue_match_list s a b hb hA hnorm hsum
+
+/-- **★ The hyperexp engine `hmatch`, discharged through the per-root reassembly (given `∑c = 0`)** — for a
+hyperexponential monomial `toPolyG Dt = C b·X` (`b = η′ ≠ 0`), a squarefree `hDen` factored as
+`∏_{β∈s}(t−β)`, `deg (toPolyG hNum) < #s`, every root normal, the integrability witness
+`hsum : ∑_β c_β = 0`, and the engine residue logs `logs` whose `(toK cv.1, toPolyG cv.2)`-images ARE the
+per-root list `s.toList.map (fun β => (residue β, X − C β))` (`hform`), the engine residue-match sum
+`∑_{(c,v)∈logs} amG(C(toK c))·(D(log v)) = amG(hNum)/amG(hDen)` over `RatFunc (CFieldSpec.K α)`. Rewrites the
+engine sum through `hform` into the bridge's per-root form, which `hyperexp_residue_match_list_engine` (with
+`hsum`) sends to `hNum/hDen`. The hyperexp analog of `primitive_engine_hmatch`: identical structure, with the
+integrability witness `∑c = 0` the only extra hypothesis (the RT cancellation `primitive_cancel` gives the
+primitive case for free is, for hyperexp, exactly `hsum`). -/
+theorem hyperexp_engine_hmatch (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
+    (hNum hDen : CPolyG α) (b : CFieldSpec.K α) (hb : b ≠ 0) (logs : List (α × CPolyG α))
+    (hDt : toPolyG Dt = C b * X)
+    (hden : toPolyG hDen = Lagrange.nodal s id)
+    (hA : (toPolyG hNum).degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hsum : ∑ β ∈ s,
+        (toPolyG hNum).eval β / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β
+      = 0)
+    (hform : logs.map (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+      = s.toList.map (fun β =>
+          ((toPolyG hNum).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+            X - C β))) :
+    (logs.map (fun cv =>
+          amG α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
+      = amG α (toPolyG hNum) / amG α (toPolyG hDen) := by
+  -- the engine summand factors through `(toK cv.1, toPolyG cv.2)`: rewrite the mapped list by `hform`
+  have hsummand : (logs.map (fun cv =>
+        amG α (Polynomial.C (CFieldSpec.toK cv.1))
+          * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2))))
+      = (logs.map (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))).map
+          (fun p => amG α (Polynomial.C p.1)
+            * (towerFractionFieldDerivG Dt (amG α p.2) / amG α p.2)) := by
+    rw [List.map_map]; rfl
+  rw [hsummand, hform, hden, List.map_map]
+  -- now the per-root form of the bridge `hyperexp_residue_match_list_engine` (with the witness `hsum`)
+  have hbridge := hyperexp_residue_match_list_engine Dt s (toPolyG hNum) b hb hDt hA hnorm hsum
   rw [List.map_map] at hbridge
   exact hbridge
 
