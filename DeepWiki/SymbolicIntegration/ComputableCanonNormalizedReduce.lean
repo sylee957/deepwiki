@@ -202,10 +202,66 @@ theorem cisCanonNormalizedG_qReduce_examples :
 
 end Validation
 
-/-! ### Axiom audit (the keystone bridge + the conditional re-running invariance are axiom-clean; the
-validations are `native_decide`) -/
+/-! ## ★ Task 3 — the re-pin corollary (phrased as the gated core consumes it)
+
+The production re-pin routes the core RDE solve through the §6.1 gate. The wrapper `crischDESolveSound` weak-
+normalizes `f` to `ftilde = weakNormalizedF f q'` (`q' = qOfPolyNZG (cWeakNormalizerG [1] towerRischDEFuel f.1.1
+f.1.2)`) and passes the gate `cisCanonNormalizedG ftilde`; the gated core, holding the *reduced* `qReduce ftilde`
+after `reduceSoundOpt ftilde = some (qReduce ftilde)`, runs the denominator-direct gate `cisCanonNormalizedCoreG
+(qReduce ftilde)`. `crischDESolveSound_repin_gate` is the equation that reconciles them — exactly the rewrite the
+re-pin's `crischDERawSolveWf_eq` analogue needs, so the gated-core rewire becomes a 1-step mechanical change. -/
+
+section Repin
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β]
+
+/-- **★ The re-pin gate reconciliation** (`crischDESolveSound_repin_gate`): for the weak-normalized
+`ftilde = weakNormalizedF f q'` (`q'` the lift of the weak normalizer `cWeakNormalizerG [1] towerRischDEFuel
+f.1.1 f.1.2`), the gated core's denominator-direct check on the *reduced* input equals the wrapper's check on the
+pre-reduce input — `cisCanonNormalizedCoreG (qReduce ftilde) = cisCanonNormalizedG ftilde` — **by `rfl`**. This is
+the exact equation the production re-pin's gated core consumes (the `crischDERawSolveWf_eq` analogue): the gate
+the wrapper passes is, definitionally, the gate the core runs on `qReduce ftilde`, so the rewire that routes the
+core through the §6.1 gate is a single mechanical rewrite with no normalization side-condition. -/
+theorem crischDESolveSound_repin_gate (f : QFunNZG β) :
+    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+      = cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))) :=
+  cisCanonNormalizedCoreG_qReduce _
+
+/-- **The re-pin gate decides `IsCanonNormalized`** (`crischDESolveSound_repin_gate_iff`): the gated core's
+denominator-direct check on the reduced input passes iff the §6.1 normalization guarantee `IsCanonNormalized f q'`
+holds — `cisCanonNormalizedCoreG (qReduce ftilde) = true ↔ IsCanonNormalized f q'`. Composes the re-pin gate
+reconciliation (`crischDESolveSound_repin_gate`) with the proven bridge `cisCanonNormalizedG_iff` (the wrapper
+check decides `IsCanonNormalized`). So a gated-core `some` carries `IsCanonNormalized` for free — the soundness the
+re-pinned solver needs is supplied by its own gate, exactly as in the wrapper `crischDESolveSound`. -/
+theorem crischDESolveSound_repin_gate_iff [CFieldDomain β] (f : QFunNZG β) :
+    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))) = true
+      ↔ IsCanonNormalized f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) := by
+  rw [crischDESolveSound_repin_gate]
+  exact cisCanonNormalizedG_iff f _
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- ★ The re-pin corollary: the gated core's denominator-direct §6.1 gate on the reduced weak-normalized input is
+-- the wrapper's §6.1 gate on the pre-reduce input — the equation the production re-pin rewrites by. By `rfl`.
+example (f : QFunNZG β) :
+    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
+      = cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))) :=
+  crischDESolveSound_repin_gate f
+
+end Repin
+
+/-! ### Axiom audit (the keystone bridge, the re-pin corollary, and the conditional re-running invariance are
+axiom-clean; the validations are `native_decide`) -/
 
 #print axioms cisCanonNormalizedCoreG_qReduce
+#print axioms crischDESolveSound_repin_gate
+#print axioms crischDESolveSound_repin_gate_iff
 #print axioms cisCanonNormalizedG_qReduce_of_idempotent
 
 end DeepWiki.SymbolicIntegration
