@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.ComputableLogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogSoundness
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.MonomialExtensions
 
 /-! # The Rothstein–Trager residue-MATCH correctness (Bronstein Thm 5.6.1, abstract)
 
@@ -31,21 +32,14 @@ open Compute CPolyG QFunNZG
 
 namespace ResidueMatchTower
 
-/-! ### Step 1: the monomial log-derivative of a linear factor `t − C α`
+/-! ### Step 1 (reused): the monomial derivative of a linear factor `t − C α`
 
 Over the tower derivation `D = extendDeriv (implicitDeriv v)` with `v = toPolyG Dt`, the implicit
-derivative of a linear factor is `implicitDeriv v (X − C α) = v − C α′` (Mathlib `implicitDeriv_X`,
-`implicitDeriv_C`). This is the structural source of the ★ absorption: the log-derivative of `t − α` is
-`(v − C α′)/(t − α)`, NOT `1/(t − α)`. -/
+derivative of a linear factor is `implicitDeriv v (X − C α) = v − C α′` — `MonomialExtensions`'
+`implicitDeriv_X_sub_C` (the §3.4 root-characterization crux). This is the structural source of the ★
+absorption: the log-derivative of `t − α` is `(v − C α′)/(t − α)`, NOT `1/(t − α)`. -/
 
 variable {K : Type*} [Field K] [Differential K]
-
-/-- **The implicit derivative of a linear factor** `implicitDeriv v (X − C α) = v − C α′` over a
-differential base field `K`. The structural source of the Rothstein–Trager monomial absorption: `D(t−α)`
-is `Dt − α′`, not `1`. By `implicitDeriv_X` and `implicitDeriv_C` (Mathlib). -/
-theorem implicitDeriv_X_sub_C (v : K[X]) (α : K) :
-    Differential.implicitDeriv v (X - C α) = v - C (α′) := by
-  rw [map_sub, Differential.implicitDeriv_X, Differential.implicitDeriv_C]
 
 /-! ### Step 2: the monomial log-derivative of a linear factor in `K(t)`
 
