@@ -62,4 +62,112 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG GBPolyCore
 
+variable {β : Type*} [CField β] [CFieldSpec β]
+
+/-! ## Step 2 — the per-step content lemmas
+
+`ComputableTowerGcdFFCorrect` already proves the two *content* halves of a primitive-PRS step
+unconditionally / from `CgcdBCorrect`:
+* **clause (ii) identity** — `toGBPolyG_gbpsremainderCore`: the pseudo-remainder satisfies the `β(s)[t]`
+  Euclidean relation `C (amG (toPolyG c)) · toGBPolyG p = toGBPolyG s · toGBPolyG q + toGBPolyG prem`;
+* **clause (iii)** — `associated_toGBPolyG_gbprimitivePartCore_of_correct`: under `CgcdBCorrect cgcdB`
+  (the level-`β` gcd-correctness) plus content-nonzero/fuel, the content strip is a `β(s)`-unit scaling,
+  `Associated (toGBPolyG r) (toGBPolyG prem)` — via Mathlib's generic content/`gcd`-fold theory over the
+  `NormalizedGCDMonoid` `(CFieldSpec.K β)[X]` (the same lever the whole FF-gcd correctness uses).
+
+What clause (ii) of `CPrimPRSGenAssocReg` *additionally* demands — and the existing
+`toGBPolyG_gbpsremainderCore` does **not** give — is that the multiplier be a `β(s)`-**unit**
+(`amG (toPolyG c) ≠ 0`). We supply that here. The pseudo-division multiplier accumulated by
+`gbpsremainderCore fuel p q` is a power of `lc(q)` (the divisor `q` is held fixed across the loop; only `p`
+descends), so it is nonzero exactly when `q ≠ 0`. This is **not** a per-run assumption: at a non-terminal
+step the loop guard already gives `q ≠ 0`. So clause (ii) is unconditional given `q ≠ 0`. -/
+
+/-- **The leading `t`-coefficient of a nonzero `GBPolyCore` reads nonzero**: if `gbisZeroCore q = false`
+(`q ≠ 0` in `t`), then `toPolyG (gblcCore q) ≠ 0` in `R = (CFieldSpec.K β)[X]`. The top normalized
+`t`-coefficient is `cnormG`-nonempty, hence `toPolyG`-nonzero (`gbnormCore_getLast?_toPolyG_ne_zero`). -/
+theorem toPolyG_gblcCore_ne_zero {q : GBPolyCore β} (hq : gbisZeroCore q = false) :
+    CPolyG.toPolyG (gblcCore q) ≠ 0 := by
+  -- `gbnormCore q ≠ []` (zero test is `false`), so `getLast?` is `some v` with `toPolyG v ≠ 0`
+  have hne : gbnormCore q ≠ [] := by
+    rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem] at hq
+    obtain ⟨a, ha⟩ := hq
+    exact List.ne_nil_of_mem ha
+  rcases hg : (gbnormCore q).getLast? with _ | v
+  · exact absurd (List.getLast?_eq_none_iff.mp hg) hne
+  · have hlc : gblcCore q = v := by rw [gblcCore, hg, Option.getD_some]
+    rw [hlc]
+    exact gbnormCore_getLast?_toPolyG_ne_zero q v hg
+
+/-- **The multiplier of `gbpsremainderCore` is `toPolyG`-nonzero when the divisor is nonzero.** Mirrors
+`toGBCoeffPoly_gbpsremainderCore` (the pseudo-division identity) but additionally produces a multiplier `c`
+with `toPolyG c ≠ 0`, provided `gbisZeroCore (gbnormCore q) = false`. The divisor `q` is fixed across the
+`gbpsremainderCore` loop, so the accumulated multiplier is a power of `lc(q)` — nonzero exactly because
+`q ≠ 0` (the integral domain `(CFieldSpec.K β)[X]` has no zero divisors, `toPolyG_cmulG`). The
+nonzero-multiplier strengthening of clause (ii) of `CPrimPRSGenAssocReg`. -/
+theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
+    (hq : gbisZeroCore (gbnormCore q) = false) :
+    ∃ (s : GBPolyCore β) (c : CPolyG β),
+      Polynomial.C (CPolyG.toPolyG c) * toGBCoeffPoly p
+          = toGBCoeffPoly s * toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q)
+        ∧ CPolyG.toPolyG c ≠ 0 := by
+  have hone : CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  -- `lc(gbnormCore q)` reads nonzero (the divisor is nonzero)
+  have hlcq : CPolyG.toPolyG (gblcCore (gbnormCore q)) ≠ 0 :=
+    toPolyG_gblcCore_ne_zero hq
+  induction fuel generalizing p with
+  | zero =>
+    exact ⟨[], [CField.one], by simp [gbpsremainderCore, toGBCoeffPoly_gbnormCore, hone],
+      by rw [hone]; exact one_ne_zero⟩
+  | succ fuel ih =>
+    simp only [gbpsremainderCore]
+    split_ifs with hqz hlen
+    · exact ⟨[], [CField.one], by simp [toGBCoeffPoly_gbnormCore, hone],
+        by rw [hone]; exact one_ne_zero⟩
+    · exact ⟨[], [CField.one], by simp [toGBCoeffPoly_gbnormCore, hone],
+        by rw [hone]; exact one_ne_zero⟩
+    · obtain ⟨s', c', hsc, hc'⟩ := ih (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q))
+        (gbnormCore p))
+        (gbscaleCCore (gblcCore (gbnormCore p))
+          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+      have hp' : toGBCoeffPoly (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q))
+          (gbnormCore p))
+          (gbscaleCCore (gblcCore (gbnormCore p))
+            (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) (gbnormCore q)))))
+          = Polynomial.C (CPolyG.toPolyG (gblcCore (gbnormCore q))) * toGBCoeffPoly p
+            - Polynomial.C (CPolyG.toPolyG (gblcCore (gbnormCore p)))
+              * Polynomial.X ^ ((gbnormCore p).length - (gbnormCore q).length) * toGBCoeffPoly q := by
+        rw [toGBCoeffPoly_gbnormCore, toGBCoeffPoly_gbsubCore, toGBCoeffPoly_gbscaleCCore,
+          toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore, toGBCoeffPoly_gbnormCore,
+          toGBCoeffPoly_gbnormCore]
+        ring
+      rw [hp', gbpsremainderCore_gbnormCore_right] at hsc
+      refine ⟨gbaddCore s' (gbscaleCCore (CPolyG.cmulG c' (gblcCore (gbnormCore p)))
+          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CField.one]])),
+          CPolyG.cmulG c' (gblcCore (gbnormCore q)), ?_, ?_⟩
+      · rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
+          toGBCoeffPoly_one, CPolyG.toPolyG_cmulG, map_mul, CPolyG.toPolyG_cmulG, map_mul]
+        linear_combination hsc
+      · rw [CPolyG.toPolyG_cmulG]
+        exact mul_ne_zero hc' hlcq
+
+/-- **`gbpsremainderCore` lifts to a `β(s)[t]` Euclidean relation with a `β(s)`-UNIT multiplier** (clause
+(ii) of `CPrimPRSGenAssocReg`, fully discharged): if `gbisZeroCore (gbnormCore q) = false`, there is a
+quotient `s` and a multiplier `c` with
+`C (amG (toPolyG c)) · toGBPolyG p = toGBPolyG s · toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)`
+**and `amG (toPolyG c) ≠ 0`** in `(RatFunc (CFieldSpec.K β))[X]`. The unconditional (given `q ≠ 0`) clause
+(ii) — the nonzero-multiplier strengthening of `toGBPolyG_gbpsremainderCore`. -/
+theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
+    (hq : gbisZeroCore (gbnormCore q) = false) :
+    ∃ (s : GBPolyCore β) (c : CPolyG β),
+      Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG c)) * toGBPolyG p
+          = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)
+        ∧ QFunNZG.amG β (CPolyG.toPolyG c) ≠ 0 := by
+  obtain ⟨s, c, hsc, hc⟩ := toGBCoeffPoly_gbpsremainderCore_ne_zero fuel p q hq
+  refine ⟨s, c, ?_, QFunNZG.amG_toPolyG_ne_zero hc⟩
+  have hl := congrArg (liftKG β) hsc
+  simp only [map_add, map_mul] at hl
+  rw [liftKG_C] at hl
+  simpa [toGBPolyG] using hl
+
 end DeepWiki.SymbolicIntegration
