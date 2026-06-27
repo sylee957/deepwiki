@@ -202,6 +202,63 @@ theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
       rw [Ne, CPolyG.cnormG_eq_nil_iff]; exact hg0
     exact associated_toGBPolyG_gbprimitivePartCore_of_correct fuel cgcdB hcorr p hgz hgcn hg0 hfuel
 
+/-! ## Step 3a' — the `t`-degree IS the normalized list length (the bridge that makes the WF guard a
+polynomial-degree fact)
+
+The genuine termination question is whether the loop guard `(gbnormCore r).length < (gbnormCore Q).length`
+is a **theorem** (the pseudo-remainder `t`-degree drop) or only a per-run assumption. It is a theorem at
+the **polynomial** level — over the integral domain `R = (CFieldSpec.K β)[X]`, `lc(Q)` is a
+non-zero-divisor, so the pseudo-remainder kills the top `t`-term and `deg_t(prem) < deg_t(Q)`. The bridge
+`gbdegCore p = (toGBCoeffPoly p).natDegree` (the `GBPolyCore` mirror of `cdegG_eq_natDegree`, via the same
+`natDegree ≤ length-1` + `leading-coeff-nonzero` argument over the `NormalizedGCDMonoid` `R`) is what turns
+the list-length WF guard into that polynomial-degree drop — closing the gap
+`ComputableTowerWellFounded` records as "no abstract `gbpsremainderCore` length-drop lemma". -/
+
+/-- **`(toGBCoeffPoly p).natDegree` is bounded by the normalized `t`-length**:
+`(toGBCoeffPoly p).natDegree ≤ (gbnormCore p).length − 1`. The `GBPolyCore` mirror of
+`natDegree_toPolyG_le` — coefficients past `(gbnormCore p).length` read `toPolyG [] = 0`. -/
+theorem natDegree_toGBCoeffPoly_le (p : GBPolyCore β) :
+    (toGBCoeffPoly p).natDegree ≤ (gbnormCore p).length - 1 := by
+  rw [← toGBCoeffPoly_gbnormCore]
+  apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
+  intro m hm
+  rw [toGBCoeffPoly_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega),
+    Option.getD_none, toPolyG_nil]
+
+/-- **★ The `t`-degree IS the normalized list length** `gbdegCore p = (toGBCoeffPoly p).natDegree`: the
+`GBPolyCore` mirror of `cdegG_eq_natDegree`. For nonzero `p`, the top normalized `t`-coefficient
+`gblcCore p` reads nonzero (`gbnormCore_getLast?_toPolyG_ne_zero`), giving the matching lower bound; the
+zero case is `gbdegCore [] = 0 = natDegree 0`. This is the lemma that makes the engine's list-length loop
+guard a *polynomial* `t`-degree statement. -/
+theorem gbdegCore_eq_natDegree (p : GBPolyCore β) : gbdegCore p = (toGBCoeffPoly p).natDegree := by
+  rcases eq_or_ne (gbnormCore p) [] with h | h
+  · have h0 : toGBCoeffPoly p = 0 := by rw [← toGBCoeffPoly_gbnormCore, h, toGBCoeffPoly_nil]
+    rw [gbdegCore, h, h0]; simp
+  · refine le_antisymm ?_ (natDegree_toGBCoeffPoly_le p)
+    apply Polynomial.le_natDegree_of_ne_zero
+    rw [← toPolyG_gblcCore_eq_coeff]
+    -- `gblcCore p` (the top normalized coefficient) reads nonzero
+    have hz : gbisZeroCore p = false := by
+      rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem]
+      obtain ⟨a, ha⟩ := List.exists_mem_of_ne_nil _ h
+      exact ⟨a, ha⟩
+    exact toPolyG_gblcCore_ne_zero hz
+
+/-- **The normalized `t`-length equals `natDegree + 1` for a nonzero `GBPolyCore`**: if
+`gbisZeroCore p = false`, then `(gbnormCore p).length = (toGBCoeffPoly p).natDegree + 1`. (`gbdegCore p =
+length − 1` and `length ≥ 1`, combined with `gbdegCore_eq_natDegree`.) The form the WF length-drop guard
+consumes. -/
+theorem gbnormCore_length_eq_natDegree_succ {p : GBPolyCore β} (hp : gbisZeroCore p = false) :
+    (gbnormCore p).length = (toGBCoeffPoly p).natDegree + 1 := by
+  have hne : gbnormCore p ≠ [] := by
+    rw [gbisZeroCore, List.isEmpty_eq_false_iff_exists_mem] at hp
+    obtain ⟨a, ha⟩ := hp
+    exact List.ne_nil_of_mem ha
+  have hpos : 1 ≤ (gbnormCore p).length := List.length_pos_iff.mpr hne
+  have := gbdegCore_eq_natDegree p
+  rw [gbdegCore] at this
+  omega
+
 /-! ## Step 3b — the reduction theorem: regularity + correctness + fuel ⟹ `CPrimPRSGenAssocReg`
 
 The transparent per-step **fuel** side-conditions the algorithm self-satisfies on a finite run: every
