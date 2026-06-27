@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveSound
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
+import DeepWiki.SymbolicIntegration.ComputableCanonNormalizedReduce
 
 /-! # The FUEL-FREE SOUND recursive Risch-DE solver — `crischDESolveSoundWf`
 
@@ -116,22 +117,25 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
   [CFracGcdCoreWf β] [CRischField β]
 
 omit [CFieldSpec β] in
-/-- **The fuel-free inner solve equals `CRischField.crischDESolve` on a regular run** (`crischDERawSolveWf_eq`):
-if the fuel-free `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel` on the num/den
-components of `(ftilde, gtilde)` (`hwf`, the `cRischDEGWf_eq` agreement a real run meets), then
-`crischDERawSolveWf ftilde gtilde = CRischField.crischDESolve ftilde gtilde`. Both run the same `cRischDE*`
-oracle and re-lift the result with the identical `cisZeroG`-guard `instCRischFieldQFunNZG` uses; `hwf`
-reconciles the two oracle calls. -/
+/-- **The fuel-free inner solve equals `CRischField.crischDESolve` on a regular run, with the §6.1 gate passed**
+(`crischDERawSolveWf_eq`): if the fuel-free `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel`
+on the num/den components of `(ftilde, gtilde)` (`hwf`, the `cRischDEGWf_eq` agreement a real run meets) **and**
+the production §6.1 gate passes on `ftilde` (`hgate : cdenomNormalGateG ftilde = true`), then
+`crischDERawSolveWf ftilde gtilde = CRischField.crischDESolve ftilde gtilde`. The fuel-free
+`crischDERawSolveWf` carries no gate, while the gated `instCRischFieldQFunNZG.crischDESolve` does; `hgate`
+peels the gate (`crischDESolve_eq_solve_of_normal`) so both reduce to the same `cRischDE*`-then-`cisZeroG`-guard
+match, and `hwf` reconciles the two oracle calls. The gate-passes side-condition holds on the canonicalized
+input the sound wrapper feeds (the keystone `crischDESolveSound_repin_gate`), so the soundness transfers. -/
 theorem crischDERawSolveWf_eq (ftilde gtilde : QFunNZG β)
     (hwf : CPolyG.cRischDEGWf ([CField.one] : CPolyG β)
         ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
       = CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel
-        ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2) :
+        ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2)
+    (hgate : cdenomNormalGateG ftilde = true) :
     crischDERawSolveWf ftilde gtilde = CRischField.crischDESolve ftilde gtilde := by
-  rw [crischDERawSolveWf, hwf]
+  rw [crischDERawSolveWf, hwf, crischDESolve_eq_solve_of_normal ftilde gtilde hgate]
   rfl
 
-omit [CFieldSpec β] in
 /-- **★ The fuel-free sound solver equals the fuel sound solver on a regular run** (Task 2,
 `crischDESolveSoundWf_eq`): given the inner-solve regularity `hwf` — the fuel-free `cRischDEGWf` agreeing with
 the fuel `cRischDEG towerRischDEFuel` on the num/den components of the canonicalized inner pair
@@ -187,7 +191,20 @@ theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
     · rw [if_pos hck, if_pos hck]
       rcases hr : reduceSoundOpt ftilde with _ | ftildeR
       · rfl
-      · simp only [crischDERawSolveWf_eq ftildeR (qmulNZG q' g) (hwf ftildeR hr)]
+      · -- the production §6.1 gate passes on the canonicalized input `ftildeR = qReduce ftilde`: by the
+        -- keystone `crischDESolveSound_repin_gate`, `cdenomNormalGateG (qReduce ftilde) = cisCanonNormalizedG
+        -- ftilde = true` (here `cdenomNormalGateG` is defeq to the keystone's `cisCanonNormalizedCoreG`)
+        have hred : ftildeR = qReduce ftilde := by
+          have h := reduceSoundOpt_eq ftilde
+          rw [hr] at h
+          exact (Option.some.injEq _ _).mp h
+        have hgate : cdenomNormalGateG ftildeR = true := by
+          have hkey : cisCanonNormalizedCoreG (qReduce ftilde) = cisCanonNormalizedG ftilde := by
+            rw [hft, hq', hq]; exact crischDESolveSound_repin_gate f
+          rw [hred]
+          show cisCanonNormalizedCoreG (qReduce ftilde) = true
+          rw [hkey]; exact hck
+        simp only [crischDERawSolveWf_eq ftildeR (qmulNZG q' g) (hwf ftildeR hr) hgate]
     · rw [if_neg hck, if_neg hck]
 
 end Correspondence

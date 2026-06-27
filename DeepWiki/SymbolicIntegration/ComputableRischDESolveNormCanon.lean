@@ -304,23 +304,25 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 end Capstone
 
-/-! ## ★ Task 5 — VERDICT: the §6.1 condition is NECESSARY (the recursive oracle is genuinely unsound without
-it), so `crischDESolveNorm_field_unconditional` is a NON-THEOREM — with a proven witness
+/-! ## ★ Task 5 — VERDICT: the §6.1 condition is NECESSARY, and the production gate now ENFORCES it (the
+witness returns `none`)
 
 The diagnosis driving this file was "canonicalize → `IsWeaklyNormalizedNorm` becomes the genuine §6.1
 theorem, then the solver is unconditionally sound modulo fuel". Canonicalizing is right and done
 (`crischDESolveNormCanon`), and the genuine §6.1 condition on the canonicalized element is `IsCanonNormalized`
-(NOT the false-on-the-product `IsWeaklyNormalizedNorm`). But the **unconditional** half is provably
-unreachable: the recursive oracle is **genuinely unsound** on inputs whose weakly-normalized denominator keeps
-a special pole with a non-positive-integer residue — `cWeakNormalizerG` removes only the positive-integer-residue
-poles, and on the rest the oracle returns a spurious `y`.
+(NOT the false-on-the-product `IsWeaklyNormalizedNorm`). The §6.1 condition is genuinely **necessary**: on
+inputs whose weakly-normalized denominator keeps a special pole with a non-positive-integer residue the RDE is
+unsolvable — `cWeakNormalizerG` removes only the positive-integer-residue poles. Before the re-pin the raw
+recursive oracle ignored this and returned a spurious `y` on such inputs; the **production gate**
+`cdenomNormalGateG` (`instCRischFieldQFunNZG`) now performs exactly this §6.1 normality test and returns `none`
+when it fails, so the production oracle is sound.
 
 The witness: `f = 1/(t₁ − x)` over `Lvl2 = ℚ(x)(t₁)` (denominator `t₁ − x`, a `D`-constant: `D(t₁ − x) = 1 − 1
 = 0`, so its residue resultant has NO positive integer roots — `cWeakNormalizerG` correctly leaves it). The
-RDE `Dy + y/(t₁ − x) = 1` has no solution in `ℚ(x)(t₁)`, yet `crischDESolve f 1` returns `some y` with
-`Dy + fy ≠ 1`. So a §6.1 condition that *excludes* such inputs is **necessary** for soundness; it is not a
-removable residual. The capstone `crischDESolveNormCanon_field_of_normal` carries exactly it
-(`IsCanonNormalized`, false on this witness — checked below) plus benign fuel. -/
+RDE `Dy + y/(t₁ − x) = 1` has no solution in `ℚ(x)(t₁)`, and the gated `crischDESolve f 1` now returns
+**`none`** (`crischDESolve_witness_none`); the raw oracle once returned a spurious `some y` with `Dy + fy ≠ 1`.
+The capstone `crischDESolveNormCanon_field_of_normal` still carries the §6.1 condition `IsCanonNormalized`
+(false on this witness — checked below) explicitly, plus benign fuel. -/
 
 section Verdict
 
@@ -332,19 +334,16 @@ denominator is a `D`-constant special factor (`D(t₁ − x) = 0`), a pole with 
 `cWeakNormalizerG` does not remove. -/
 def witnessF : Lvl2 := ⟨([CField.one], [witnessNegX, CField.one]), by native_decide⟩
 
-/-- **★ The recursive oracle is GENUINELY UNSOUND on the special-pole witness** (`crischDESolve_unsound_witness`,
-`native_decide`): for `f = 1/(t₁ − x)`, `g = 1`, the raw recursive `crischDESolve f g` returns `some y`, but
-`y` does **not** solve the RDE — `Dy + f·y − 1 ≠ 0` at the field level (`CField.isZero` is `false`). The RDE
-`Dy + y/(t₁ − x) = 1` has no solution in `ℚ(x)(t₁)` (the `D`-constant pole `t₁ − x` cannot be cancelled). So
-the oracle's success is spurious here — the proof that a §6.1 normalization condition (excluding this input) is
-**necessary** for soundness, NOT a removable residual. This refutes any witness-only
-`crischDESolveNorm_field_unconditional`. -/
-theorem crischDESolve_unsound_witness :
-    (match CRischField.crischDESolve witnessF (CField.one : Lvl2) with
-      | some y =>
-          CField.isZero
-            (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul witnessF y)) (CField.one : Lvl2))
-      | none => true) = false := by native_decide
+/-- **★ The §6.1-gated recursive oracle returns `none` on the special-pole witness** (`crischDESolve_witness_none`,
+`native_decide`): for `f = 1/(t₁ − x)`, `g = 1`, the gated recursive `crischDESolve f g` returns **`none`** —
+the production gate `cdenomNormalGateG` (`instCRischFieldQFunNZG`) detects the surviving `D`-constant special
+pole `t₁ − x` (`D(t₁ − x) = 0`, no positive-integer residue, so `cWeakNormalizerG` cannot remove it) and
+correctly reports unsolvability. The RDE `Dy + y/(t₁ − x) = 1` has **no** solution in `ℚ(x)(t₁)`; before the
+re-pin the raw oracle returned a spurious `some y` with `Dy + f·y ≠ 1` (the soundness bug), and the gate is
+exactly what now turns that garbage `some` into the correct `none`. The production oracle is sound on this
+input. -/
+theorem crischDESolve_witness_none :
+    CRischField.crischDESolve witnessF (CField.one : Lvl2) = none := by native_decide
 
 /-- **★ `IsCanonNormalized` genuinely FAILS on the witness** (`isCanonNormalized_witness_false`,
 `native_decide`): even after weak normalization (`cWeakNormalizerG`) **and** canonicalization (`qReduce`,
@@ -377,21 +376,24 @@ canonicalized `IsCanonNormalized` (the same property on the `qReduce`'d lowest-t
 class (the class `cWeakNormalizerG` handles). It is NOT a universal theorem, and provably so:
 `isCanonNormalized_witness_false` shows it fails exactly on the class `cWeakNormalizerG` cannot normalize.
 
-**Is the recursive solver unconditionally sound modulo only the fuel budget (wall closed)?** **No — and it
-cannot be**: `crischDESolve_unsound_witness` (`native_decide`) proves the recursive oracle is **genuinely
-unsound** on `f = 1/(t₁ − x)`, `g = 1` (returns a spurious `y` with `Dy + fy ≠ g`). A witness-only
-`crischDESolveNorm_field_unconditional` would therefore be a **false theorem**. The §6.1 condition
-`IsCanonNormalized` (excluding such inputs) is **necessary** for soundness, not a removable residual.
+**Is the §6.1 condition necessary, and does the production oracle enforce it?** **Yes to both.** The RDE
+`Dy + y/(t₁ − x) = 1` (`f = 1/(t₁ − x)`, `g = 1`) is genuinely **unsolvable** in `ℚ(x)(t₁)`; before the
+re-pin the raw oracle returned a spurious `y` with `Dy + fy ≠ g` (the soundness bug). The production gate
+`cdenomNormalGateG` (`instCRischFieldQFunNZG`) now performs the §6.1 normality test, so the gated
+`crischDESolve` returns **`none`** on this input (`crischDESolve_witness_none`, `native_decide`). The §6.1
+condition `IsCanonNormalized` (excluding such inputs) is **necessary** for soundness, not a removable residual —
+and is exactly what the gate enforces.
 
 **The precise sub-remainder.** The recursive transcendental RDE solver is sound modulo **exactly** the genuine
 §6.1 normalization condition `IsCanonNormalized` (the canonicalized weakly-normalized denominator is its own
 normal part — a *theorem* wherever all special poles have positive-integer residue, the class `cWeakNormalizerG`
 handles) **plus** the benign fuel budget `InputFitsFuel`. This is `crischDESolveNormCanon_field_of_normal`,
 axiom-clean `[propext, Classical.choice, Quot.sound]`, NO `native_decide`. The condition is irreducible — the
-diagnosis's "unconditional modulo fuel" target is a non-theorem (the oracle is unsound on the excluded class),
-and `IsCanonNormalized` is the precise, minimal, NECESSARY §6.1 gate, with `IsWeaklyNormalizedNorm`
-(false-on-the-product) replaced by it. `InputFitsFuel` alone is the benign totality precondition any
-fuel-bounded computable solver carries. -/
+RDE is genuinely unsolvable on the excluded class (where the raw oracle was unsound), so a witness-only
+"unconditional modulo fuel" wrapper would be a non-theorem; `IsCanonNormalized` is the precise, minimal,
+NECESSARY §6.1 gate, with `IsWeaklyNormalizedNorm` (false-on-the-product) replaced by it. The production gate
+`cdenomNormalGateG` enforces it at the oracle level. `InputFitsFuel` alone is the benign totality precondition
+any fuel-bounded computable solver carries. -/
 
 /-! ### Axiom audit (the capstone is axiom-clean, NO `native_decide`; the witnesses are `native_decide`) -/
 

@@ -2,13 +2,15 @@ import DeepWiki.SymbolicIntegration.ComputableRischDESolveNormCanon
 
 /-! # The SOUND recursive Risch-DE solver — the §6.1 solvability check added (the soundness bug fixed)
 
-`ComputableRischDESolveNormCanon` proved (`crischDESolve_unsound_witness`, `native_decide`) that the raw
-recursive oracle `crischDESolve` is **genuinely unsound**: for `f = 1/(t₁ − x)`, `g = 1` over `ℚ(x)(t₁)` it
-returns `some y` with `Dy + f·y ≠ g`, even though that RDE has **no** solution. It framed this as "a necessary
-precondition `IsCanonNormalized`". The correct reading is sharper: **this is a BUG in the solver**, not a
-precondition on its caller. Bronstein's RDE algorithm (§6.1–6.3) *detects* unsolvability and returns `none`;
-the recursive engine **skips the §6.1 weak-normalization / normal-denominator solvability test** (it feeds raw,
-possibly non-normal input straight into `cRischDEG`), so on an unsolvable RDE it emits a spurious `some`.
+Before the production re-pin the raw recursive oracle `crischDESolve` was **genuinely unsound**: for
+`f = 1/(t₁ − x)`, `g = 1` over `ℚ(x)(t₁)` it returned `some y` with `Dy + f·y ≠ g`, even though that RDE has
+**no** solution. This was framed as "a necessary precondition `IsCanonNormalized`"; the correct reading is
+sharper — **it was a BUG in the solver**, not a precondition on its caller. Bronstein's RDE algorithm
+(§6.1–6.3) *detects* unsolvability and returns `none`; the recursive engine **skipped the §6.1
+weak-normalization / normal-denominator solvability test** (it fed raw, possibly non-normal input straight
+into `cRischDEG`), so on an unsolvable RDE it emitted a spurious `some`. The production oracle
+`instCRischFieldQFunNZG` now carries the §6.1 gate `cdenomNormalGateG`, so the witness returns `none`
+(`crischDESolve_witness_none`).
 
 This file builds the **corrected, genuinely sound** solver `crischDESolveSound` — the one that performs the
 omitted solvability check — and proves it **unconditionally sound**: `some ⟹ correct`, with NO
@@ -316,8 +318,9 @@ The corrected solver's behaviour, certified by `native_decide` over the level-2 
 
 * **The witness now returns `none`.** `crischDESolveSound witnessF 1 = none` — on `f = 1/(t₁ − x)`, `g = 1`,
   the RDE that has no solution, the corrected solver correctly *detects* unsolvability (the `D`-constant
-  special pole `t₁ − x` survives the normality check) and returns `none`. Contrast `crischDESolve_unsound_witness`,
-  where the raw oracle returns a garbage `some`. The bug is fixed.
+  special pole `t₁ − x` survives the normality check) and returns `none`. The gated production oracle now does
+  too (`crischDESolve_witness_none`), where before the re-pin the raw oracle returned a garbage `some`. The bug
+  is fixed.
 * **The solvability check fails on the witness.** `cisCanonNormalizedG (weakNormalizedF witnessF q') = false`
   — the omitted §6.1 test, run by the corrected solver, correctly rejects the unsolvable input.
 * **Solvable cases still solve.** `Dy = 1 → y = t₁` (the integration path) and `Dy + y = t₁ + 1 → y = t₁`
@@ -328,9 +331,9 @@ section Validation
 
 /-- **★ The corrected solver returns `none` on the unsoundness witness** (`crischDESolveSound_witness_none`,
 `native_decide`): for `f = 1/(t₁ − x)`, `g = 1` over `ℚ(x)(t₁)` — the RDE with NO solution, on which the raw
-oracle returned a spurious `some` (`crischDESolve_unsound_witness`) — `crischDESolveSound witnessF 1 = none`.
-The corrected solver's §6.1 solvability check detects the surviving `D`-constant special pole `t₁ − x` and
-correctly reports unsolvability. **The soundness bug is fixed.** -/
+oracle once returned a spurious `some` (now `none` via the production gate, `crischDESolve_witness_none`) —
+`crischDESolveSound witnessF 1 = none`. The corrected solver's §6.1 solvability check detects the surviving
+`D`-constant special pole `t₁ − x` and correctly reports unsolvability. **The soundness bug is fixed.** -/
 theorem crischDESolveSound_witness_none :
     crischDESolveSound witnessF (CField.one : Lvl2) = none := by native_decide
 

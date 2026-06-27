@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 
 /-! # The recursive Risch-DE oracle over arbitrary-depth differential towers (Bronstein Ch. 6)
 `ComputableTowerField`/`Deriv`/`Integrate` built the generic tower carrier `QFunNZG α` (the next level
@@ -496,27 +497,85 @@ supplies the `CField`/`CDiffField (QFunNZG β)` instances, `CRischField β` the 
 `crischDESolve` reduces in the native compiler. There is no resolution loop — `CRischField (QFunNZG β)`
 requires `CRischField β`, strictly one level down. -/
 
-section
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CRischField β]
-
 /-- **The fixed fuel budget** for the recursive tower RDE solve (the class method carries no fuel
 argument). Generous enough for the small-degree level-2 validations; deeper/larger problems take a larger
 constant. -/
 def towerRischDEFuel : ℕ := 60
 
-/-- **★ `CRischField (QFunNZG β)`** — the RDE over `β(s) = QFunNZG β`, **built by running `cRischDEG` over
-`CPolyG β = β[s]`** with the new monomial `s` (`Ds = [1]`) and `[CRischField β]` for the base solve. This
-ties the tower recursion: solving an RDE at level `n+1` runs the full §6 pipeline at level `n` and
-recurses into the level-`n` `crischDESolve`, bottoming at `CRischField ℚ`. Read `f, g ∈ QFunNZG β` as
-num/den pairs over `β[s]` (`f.1.1, f.1.2, g.1.1, g.1.2`), run `cRischDEG [1] fuel …`, and lift the
-returned `(ynum, yden)` back to `QFunNZG β` (guarding the denominator-nonzero membership with the
-`cisZeroG` test). Computable (`Prop`-erased subtype proofs), so the tower oracle `native_decide`s. -/
+section Gate
+variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCore β]
+
+/-- **★ The denominator-direct §6.1 solvability gate** `cdenomNormalGateG a`: `true` iff the §3.5 normal
+part of the denominator **component** `a.1.2` equals `a.1.2` itself — `cisZeroG (normalPart(a.1.2) − a.1.2)`.
+The Bronstein §6.1 normality test the raw recursive oracle **omits**: an unsolvable RDE (a special pole with
+a non-positive-integer residue surviving in the lowest-terms denominator) fails it, so the gated
+`instCRischFieldQFunNZG.crischDESolve` returns `none` rather than a spurious `some`. Reads `a.1.2` directly
+(no re-reduction), the denominator the production solver already holds after reducing its RDE input to lowest
+terms — definitionally the keystone's `cisCanonNormalizedCoreG` (`ComputableCanonNormalizedReduce`), so
+`crischDESolveSound_repin_gate` reconciles the gate with the wrapper's `cisCanonNormalizedG`. `[CField β]`-data
+only (the `Prop`-erased subtype proof aside), so the gated oracle stays `native_decide`-reducible. -/
+def cdenomNormalGateG (a : QFunNZG β) : Bool :=
+  CPolyG.cisZeroG (CPolyG.csubG
+    (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel a.1.2).1
+    a.1.2)
+
+end Gate
+
+section
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CRischField β]
+
+/-- **★ `CRischField (QFunNZG β)`** — the **§6.1-gated, sound** RDE over `β(s) = QFunNZG β`, built by running
+`cRischDEG` over `CPolyG β = β[s]` with the new monomial `s` (`Ds = [1]`) and `[CRischField β]` for the base
+solve, **behind the denominator-normality gate `cdenomNormalGateG`**. This ties the tower recursion: solving
+an RDE at level `n+1` runs the full §6 pipeline at level `n` and recurses into the level-`n` `crischDESolve`,
+bottoming at `CRischField ℚ`. **The gate** (the step the raw oracle skipped, the soundness bug): return `none`
+when the §3.5 normal part of `f`'s lowest-terms denominator is not the denominator itself (an unsolvable RDE
+— a non-positive-integer-residue special pole survives); else read `f, g` as num/den pairs over `β[s]`, run
+`cRischDEG [1] fuel …`, and lift the returned `(ynum, yden)` back to `QFunNZG β` (guarding den-nonzero with
+the `cisZeroG` test). Computable (`Prop`-erased subtype proofs), so the tower oracle `native_decide`s. -/
 instance instCRischFieldQFunNZG : CRischField (QFunNZG β) where
   crischDESolve f g :=
-    match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
-    | none => none
-    | some (ynum, yden) =>
-      if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
+    if cdenomNormalGateG f then
+      match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
+      | none => none
+      | some (ynum, yden) =>
+        if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
+    else none
+
+/-- **The gated oracle reduces to the raw solve when the gate passes** (`crischDESolve_eq_solve_of_normal`):
+if `cdenomNormalGateG f = true` then `instCRischFieldQFunNZG.crischDESolve f g` is the bare
+`cRischDEG [1] fuel`-then-`cisZeroG`-guard match (no gate). The `if_pos` branch of the gate, peeled so the
+downstream soundness reductions reach the raw `cRischDEG` success exactly as before the re-pin. -/
+theorem crischDESolve_eq_solve_of_normal (f g : QFunNZG β) (hgate : cdenomNormalGateG f = true) :
+    CRischField.crischDESolve f g
+      = (match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
+         | none => none
+         | some (ynum, yden) =>
+           if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none) := by
+  rw [show CRischField.crischDESolve f g
+      = (if cdenomNormalGateG f then
+           match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
+           | none => none
+           | some (ynum, yden) =>
+             if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
+         else none) from rfl, if_pos hgate]
+
+/-- **A successful gated solve passed the gate** (`cdenomNormalGateG_of_crischDESolve_isSome`): if
+`instCRischFieldQFunNZG.crischDESolve f g = some y` then `cdenomNormalGateG f = true`. The `else none`
+branch of the gate forces the check: a `some` result can only come from the `if_pos` branch. So the gated
+oracle's success witnesses denominator normality — the soundness gate it now performs. -/
+theorem cdenomNormalGateG_of_crischDESolve_isSome (f g y : QFunNZG β)
+    (hsolve : CRischField.crischDESolve f g = some y) : cdenomNormalGateG f = true := by
+  by_cases hgate : cdenomNormalGateG f = true
+  · exact hgate
+  · rw [show CRischField.crischDESolve f g
+        = (if cdenomNormalGateG f then
+             match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
+             | none => none
+             | some (ynum, yden) =>
+               if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
+           else none) from rfl, if_neg hgate] at hsolve
+    exact absurd hsolve (by simp)
 
 end
 

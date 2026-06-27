@@ -299,12 +299,10 @@ theorem crischDESolve_field_of_witness_residual [CTowerGcdWitness β]
         + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
-  -- the recursive oracle's bare success unfolds to a `cRischDEG [1]` success with `y = ⟨(ynum,yden), _⟩`
-  rw [show CRischField.crischDESolve f g
-      = (match cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
-         | none => none
-         | some (ynum, yden) =>
-           if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none) from rfl] at hsolve
+  -- the §6.1 gate passed (the gated oracle returned `some`), so the gated solve reduces to the bare
+  -- `cRischDEG [1]`-then-guard match — the success unfolds with `y = ⟨(ynum,yden), _⟩`
+  have hgate : cdenomNormalGateG f = true := cdenomNormalGateG_of_crischDESolve_isSome f g y hsolve
+  rw [crischDESolve_eq_solve_of_normal f g hgate] at hsolve
   rcases hsucc : cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
     with _ | ⟨ynum, yden⟩ <;> rw [hsucc] at hsolve
   · exact absurd hsolve (by simp)

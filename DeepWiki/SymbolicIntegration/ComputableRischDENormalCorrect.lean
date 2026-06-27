@@ -92,12 +92,10 @@ theorem crischDESolve_yden_ne_zero (f g y : QFunNZG β)
     (hsucc : cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
       = some (ynum, yden)) :
     toPolyG yden ≠ 0 := by
-  -- unfold the recursive `crischDESolve` to its `cRischDEG`-then-guard form (mirrors the capstone)
-  rw [show CRischField.crischDESolve f g
-      = (match cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
-         | none => none
-         | some (ynum, yden) =>
-           if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none) from rfl] at hsolve
+  -- the §6.1 gate passed (a `some` result), so the gated `crischDESolve` reduces to its `cRischDEG`-then-guard
+  -- form (mirrors the capstone)
+  have hgate : cdenomNormalGateG f = true := cdenomNormalGateG_of_crischDESolve_isSome f g y hsolve
+  rw [crischDESolve_eq_solve_of_normal f g hgate] at hsolve
   rw [hsucc] at hsolve
   simp only at hsolve
   by_cases hyz : CPolyG.cisZeroG yden = false
