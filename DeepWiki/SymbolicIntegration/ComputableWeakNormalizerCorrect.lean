@@ -99,14 +99,16 @@ theorem cRdeNormalDenominatorG_cdvdG (Dt : CPolyG β) (fuel : ℕ) (fnum fden gn
   · rw [if_neg hck] at hsucc
     exact absurd hsucc (by simp)
 
-/-- **The honest `eₙ ∣ dₙh0²` from a successful reduction** (`cRdeNormalDenominatorG_en_dvd`): with `eₙ =
-(cSplitFactorFastG Dt fuel gden).1` nonzero, a successful `cRdeNormalDenominatorG = some (a0, b0, c0, h0)`
-gives the honest divisibility `toPolyG eₙ ∣ toPolyG (dₙ·h0·h0)` — the engine's `cdvdG` check read through
-`dvd_of_cdvdG`. The 4th component `h0` is the engine's `h`, so `dₙh0²` is exactly the checked `dₙhh`. -/
-theorem cRdeNormalDenominatorG_en_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden gnum gden : CPolyG β)
+omit [CFieldSpec β] in
+/-- **The 4th component of a successful reduction is the engine's `h`** (`cRdeNormalDenominatorG_h0_eq`):
+if `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0)`, then `h0 =
+cdivG fuel (cgcdFFCore eₙ eₙ') (cgcdFFCore p p')` — the §6.2 `h = gcd(eₙ, eₙ')/gcd(p, p')`
+(`eₙ = (cSplitFactorFastG Dt fuel gden).1`, `p = gcd(dₙ, eₙ)`). Read off the `some`-branch's tuple, so the
+`h0` quantified in the residual is pinned to the engine's `h` from bare success — no extra hypothesis. -/
+theorem cRdeNormalDenominatorG_h0_eq (Dt : CPolyG β) (fuel : ℕ) (fnum fden gnum gden : CPolyG β)
     (a0 b0 c0 h0 : CPolyG β)
-    (hen0 : CPolyG.cnormG (CPolyG.cSplitFactorFastG Dt fuel gden).1 ≠ [])
-    (hh0 : h0 = CPolyG.cdivG fuel
+    (hsucc : CPolyG.cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0)) :
+    h0 = CPolyG.cdivG fuel
       (CFracGcdCore.cgcdFFCore fuel (CPolyG.cSplitFactorFastG Dt fuel gden).1
         (CPolyG.cderivG (CPolyG.cSplitFactorFastG Dt fuel gden).1))
       (CFracGcdCore.cgcdFFCore fuel
@@ -114,11 +116,34 @@ theorem cRdeNormalDenominatorG_en_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden g
           (CPolyG.cSplitFactorFastG Dt fuel gden).1)
         (CPolyG.cderivG (CFracGcdCore.cgcdFFCore fuel
           (CPolyG.cSplitFactorFastG Dt fuel fden).1
-          (CPolyG.cSplitFactorFastG Dt fuel gden).1))))
+          (CPolyG.cSplitFactorFastG Dt fuel gden).1))) := by
+  rw [CPolyG.cRdeNormalDenominatorG] at hsucc
+  set dn := (CPolyG.cSplitFactorFastG Dt fuel fden).1 with hdn
+  set en := (CPolyG.cSplitFactorFastG Dt fuel gden).1 with hen
+  set p := CFracGcdCore.cgcdFFCore fuel dn en with hp
+  set hh := CPolyG.cdivG fuel (CFracGcdCore.cgcdFFCore fuel en (CPolyG.cderivG en))
+    (CFracGcdCore.cgcdFFCore fuel p (CPolyG.cderivG p)) with hhh
+  set dnh2 := CPolyG.cmulG (CPolyG.cmulG dn hh) hh with hdnh2
+  by_cases hck : CPolyG.cdvdG fuel en dnh2 = true
+  · rw [if_pos hck] at hsucc
+    rw [Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq, Prod.mk.injEq] at hsucc
+    exact hsucc.2.2.2.symm
+  · rw [if_neg hck] at hsucc
+    exact absurd hsucc (by simp)
+
+/-- **The honest `eₙ ∣ dₙh0²` from a successful reduction** (`cRdeNormalDenominatorG_en_dvd`): with `eₙ =
+(cSplitFactorFastG Dt fuel gden).1` nonzero, a successful `cRdeNormalDenominatorG = some (a0, b0, c0, h0)`
+gives the honest divisibility `toPolyG eₙ ∣ toPolyG (dₙ·h0·h0)` — the engine's `cdvdG` check
+(`cRdeNormalDenominatorG_cdvdG`) read through `dvd_of_cdvdG`, with `h0` pinned to the engine's `h`
+(`cRdeNormalDenominatorG_h0_eq`). Driven purely by bare success + `eₙ ≠ 0`. -/
+theorem cRdeNormalDenominatorG_en_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden gnum gden : CPolyG β)
+    (a0 b0 c0 h0 : CPolyG β)
+    (hen0 : CPolyG.cnormG (CPolyG.cSplitFactorFastG Dt fuel gden).1 ≠ [])
     (hsucc : CPolyG.cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0)) :
     toPolyG (CPolyG.cSplitFactorFastG Dt fuel gden).1
       ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0) := by
   have hck := cRdeNormalDenominatorG_cdvdG Dt fuel fnum fden gnum gden a0 b0 c0 h0 hsucc
+  have hh0 := cRdeNormalDenominatorG_h0_eq Dt fuel fnum fden gnum gden a0 b0 c0 h0 hsucc
   -- `cRdeNormalDenominatorG_cdvdG` checks `dₙ·hh·hh` with `hh = h0`; rewrite to the goal's `dₙ·h0·h0`
   rw [← hh0] at hck
   exact CPolyG.dvd_of_cdvdG fuel _ _ hen0 hck
@@ -154,27 +179,67 @@ theorem isWeaklyNormalizedDen_dvdC_dn_h2 (fnum fden gnum gden : CPolyG β)
     (hnorm : IsWeaklyNormalizedDen gden)
     (hen0 : CPolyG.cnormG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden).1
       ≠ [])
-    (hh0 : h0 = CPolyG.cdivG towerRischDEFuel
-      (CFracGcdCore.cgcdFFCore towerRischDEFuel
-        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden).1
-        (CPolyG.cderivG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden).1))
-      (CFracGcdCore.cgcdFFCore towerRischDEFuel
-        (CFracGcdCore.cgcdFFCore towerRischDEFuel
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel fden).1
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden).1)
-        (CPolyG.cderivG (CFracGcdCore.cgcdFFCore towerRischDEFuel
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel fden).1
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden).1))))
     (hsucc : CPolyG.cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel
       fnum fden gnum gden = some (a0, b0, c0, h0)) :
     toPolyG gden ∣ toPolyG (CPolyG.cmulG
       (CPolyG.cmulG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel fden).1 h0)
       h0) := by
   have hdvd := cRdeNormalDenominatorG_en_dvd ([CField.one] : CPolyG β) towerRischDEFuel
-    fnum fden gnum gden a0 b0 c0 h0 hen0 hh0 hsucc
+    fnum fden gnum gden a0 b0 c0 h0 hen0 hsucc
   -- the honest divisibility is `eₙ ∣ dₙh0²`; rewrite `eₙ`'s toPolyG to `gden`'s via normality
   rwa [hnorm] at hdvd
 
+/-- **`eₙ ≠ 0` from `g`-normality + `gden ≠ 0`** (`cnormG_en_ne_nil_of_normalizedDen`): if `gden` is weakly
+normalized (`IsWeaklyNormalizedDen`, so its normal part `eₙ` has `toPolyG eₙ = toPolyG gden`) and `gden ≠ 0`
+(`cnormG gden ≠ []`), then `cnormG eₙ ≠ []`. The `eₙ ≠ 0` side-condition of the `C`-divisibility, derived
+from `g`-normality + the `QFunNZG` subtype proof — so the `C`-clause needs only `IsWeaklyNormalizedDen`. -/
+theorem cnormG_en_ne_nil_of_normalizedDen (gden : CPolyG β)
+    (hnorm : IsWeaklyNormalizedDen gden) (hgden0 : CPolyG.cnormG gden ≠ []) :
+    CPolyG.cnormG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden).1 ≠ [] := by
+  intro he
+  -- `cnormG eₙ = []` ⟹ `toPolyG eₙ = 0` ⟹ (normality) `toPolyG gden = 0` ⟹ `cnormG gden = []`, contra
+  have hez : toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden).1 = 0 :=
+    (CPolyG.cnormG_eq_nil_iff _).mp he
+  rw [hnorm] at hez
+  exact hgden0 ((CPolyG.cnormG_eq_nil_iff gden).mpr hez)
+
 end Cnorm
+
+/-! ## ★ Task 2 (assembled) — the residual's `hdvdC_dn_h2` clause from `g`-normality alone
+
+The `RischDESuccessResidualNorm.hdvdC_dn_h2` field, for the normalized solver's `(ftilde, gtilde)`, is
+exactly the universally-quantified `gtilde.1.2 ∣ dₙh0²` over successful normal-denominator reductions. We
+build it from a *single* `g`-normality hypothesis `IsWeaklyNormalizedDen gtilde.1.2` — `hen0` is derived
+(`cnormG_en_ne_nil_of_normalizedDen` from the `QFunNZG` subtype proof), so the whole `C`-clause is closed by
+bare success + the one dual normality fact, matching the `B`-clause's `IsWeaklyNormalizedNorm` discharge. -/
+
+section CResidualClause
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+
+omit [CFieldDomain β] in
+/-- **★ The residual's `C`-divisibility clause from `g`-normality** (`residualNorm_hdvdC_of_normalizedDen`):
+for the normalized solver's pair `ftilde, gtilde : QFunNZG β`, given `IsWeaklyNormalizedDen gtilde.1.2` (the
+`g`-side normality dual), the `RischDESuccessResidualNorm.hdvdC_dn_h2` clause holds — for every successful
+`cRdeNormalDenominatorG [1] fuel ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (a0,b0,c0,h0)`,
+`gtilde.1.2 ∣ dₙ·h0²`. The `eₙ ≠ 0` side-condition comes from `cnormG_en_ne_nil_of_normalizedDen` (the
+subtype proof `gtilde.2`). So the `C`-clause is closed by bare success + the single dual normality fact,
+exactly mirroring the `B`-clause discharge. -/
+theorem residualNorm_hdvdC_of_normalizedDen (ftilde gtilde : QFunNZG β)
+    (hnorm : IsWeaklyNormalizedDen gtilde.1.2) :
+    ∀ a0 b0 c0 h0 : CPolyG β,
+      CPolyG.cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel
+          ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
+        toPolyG gtilde.1.2 ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG
+          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0) := by
+  intro a0 b0 c0 h0 hsucc
+  have hen0 : CPolyG.cnormG
+      (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gtilde.1.2).1 ≠ [] :=
+    cnormG_en_ne_nil_of_normalizedDen gtilde.1.2 hnorm
+      (cnormG_ne_nil_of_cisZeroG_false gtilde.2)
+  exact isWeaklyNormalizedDen_dvdC_dn_h2 ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+    a0 b0 c0 h0 hnorm hen0 hsucc
+
+end CResidualClause
 
 end DeepWiki.SymbolicIntegration
