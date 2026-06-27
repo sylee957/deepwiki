@@ -356,6 +356,52 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 end Complete
 
+/-! ## ★ Operational completeness witnesses (`native_decide`): the residual is non-vacuous
+
+The residual clauses are non-vacuous: on concrete *solvable* level-2 RDEs the solver genuinely returns
+`some`, and each residual gate (the §6.1 weak normalizer, the §6.1 check, the inner solve) is cleared —
+certified by `native_decide` over `ℚ(x)(t₁)`. These are the completeness counterpart of the soundness
+file's `crischDESolveSound_solves_*` (which check the *value*); here we record that a *solvable* RDE
+produces a `some` at all (the completeness direction operationally), and that the §6.1 gates a solvable
+input passes are exactly the residual's `hwn`/`hck`. (The unsolvable witness `f = 1/(t₁ − x)` returns
+`none` — `crischDESolveSound_witness_none` — so the solver is *not* vacuously `some`.) -/
+
+section OperationalWitnesses
+
+/-- **The solver returns `some` on the solvable `Dy = 1`** (`crischDESolveSound_some_Dy_eq_one`,
+`native_decide`): the integration RDE `Dy = 1` over `ℚ(x)(t₁)` is solvable (`y = t₁`), and the sound
+solver returns `some` — the completeness direction witnessed operationally (a solvable input ⟹ `some`,
+contrasted with the unsolvable witness's `none`). -/
+theorem crischDESolveSound_some_Dy_eq_one :
+    (crischDESolveSound (CField.zero : Lvl2) (CField.one : Lvl2)).isSome = true := by native_decide
+
+/-- **The solver returns `some` on the solvable `Dy + y = t₁ + 1`** (`crischDESolveSound_some_Dy_plus_y`,
+`native_decide`): the cancellation-path RDE `Dy + y = t₁ + 1` over `ℚ(x)(t₁)` is solvable (`y = t₁`), and
+the sound solver returns `some` — operational completeness on the §6.6 primitive-cancellation path
+(`f = 1 ≠ 0`, so the degree recursion runs, not just integration). -/
+theorem crischDESolveSound_some_Dy_plus_y :
+    (crischDESolveSound (CField.one : Lvl2) towerRdeLvl2GPlusOne).isSome = true := by native_decide
+
+/-- **The §6.1 weak normalizer is nonzero on the solvable `Dy + y = t₁ + 1`**
+(`cWeakNormalizer_nonzero_Dy_plus_y`, `native_decide`): for `f = 1` the §6.1 weak normalizer
+`cWeakNormalizerG … = 1 ≠ 0` (`cisZeroG = false`) — the residual clause `hwn` holds concretely on a
+solvable input (`f = 1` is already weakly normalized, so the normalizer is the unit `1`). -/
+theorem cWeakNormalizer_nonzero_Dy_plus_y :
+    CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG (QFunNZG ℚ)) towerRischDEFuel
+      (CField.one : Lvl2).1.1 (CField.one : Lvl2).1.2) = false := by native_decide
+
+/-- **The §6.1 normality check passes on the solvable `Dy + y = t₁ + 1`**
+(`cisCanonNormalizedG_true_Dy_plus_y`, `native_decide`): for `f = 1` the §6.1 check
+`cisCanonNormalizedG (weakNormalizedF f q') = true` — the residual clause `hck` holds concretely on a
+solvable input, contrasting with `cisCanonNormalizedG_witness_false` (the unsolvable witness, where it is
+`false`). The check is a genuine, non-vacuous decision gate. -/
+theorem cisCanonNormalizedG_true_Dy_plus_y :
+    cisCanonNormalizedG (β := QFunNZG ℚ) (weakNormalizedF (CField.one : Lvl2)
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG (QFunNZG ℚ)) towerRischDEFuel
+        (CField.one : Lvl2).1.1 (CField.one : Lvl2).1.2))) = true := by native_decide
+
+end OperationalWitnesses
+
 /-! ### Final verdict (stated precisely)
 
 **Is the RDE solver a verified decision procedure?** **Modulo a precisely isolated deep §6 residual,
