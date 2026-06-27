@@ -453,6 +453,60 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
   cIntegrateHyperexpNormalG_sound_of_rischFieldSpec Dt fuel a d cands res intR s b hDt hgden hintRsome
     hsome hherm hden hA hnorm hform hRval
 
+/-! ## ★ VERDICT — is the recursive `CRischFieldSpec (QFunNZG β)` closed (fully-abstract, native-residual-free)?
+
+**The gcd kernel IS fully discharged from the witness class (Tasks 1–3); the recursive RDE-oracle field
+soundness IS closed up to a precisely-isolated, non-`native_decide` residual (Tasks 4–5). The recursive
+`CRischFieldSpec (QFunNZG β)` is NOT an unconditional instance — and not because of any `native_decide` or
+missing mathematical fact, but because of bookkeeping the *engine does not self-certify*, named exactly
+below.**
+
+### What IS closed (axiom-clean `[propext, Classical.choice, Quot.sound]`, NO `native_decide`)
+
+* **The two PRS witnesses, threaded** (`CTowerGcdWitness`, base `ℚ` + recursive `QFunNZG β` builders):
+  `CTowerGcdWitness.gcdBCorrect` makes level-`α` gcd-correctness `CgcdBCorrect (cgcdFFRawCore fuel)` a tower
+  induction. `cTowerWitness_assocReg` discharges the opaque per-step gate `CPrimPRSGenAssocReg` from the
+  witness + the run's own termination/fuel. **So the kernel A⁗ reduced to bookkeeping is now bookkeeping
+  *carried by a class*** — no longer an open per-step regularity assumption at the gcd level.
+* **The recursive RDE-oracle field identity** (`crischDESolve_field_of_witness_residual`): a successful
+  `crischDESolve f g = some y` over `QFunNZG β` ⟹ the field-level Risch-DE identity
+  `towerFractionFieldDerivG [1] (Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`, given `[CTowerGcdWitness β]`
+  + the isolated `RischDESuccessResidual`. This is the `cRischDEG`-output form of `CRischFieldSpec`'s spec
+  (the `towerFractionFieldDerivG`/`amG` reading the §6 layer uses), with the residual **fully explicit**.
+* **The fully-abstract hyperexp soundness** (`cIntegrateHyperexpNormalG_sound_of_rischFieldSpec`): the §5.9
+  normal-part soundness with the **single** documented native residual `hintR` (`D(∫R) = R`) DISCHARGED from
+  `[CRischFieldSpec α]` (via the already-clean `crischDESolve_zero_intDeriv`). At base `α = ℚ` the residual
+  oracle is the unconditional `instCRischFieldSpecQ`, so this is genuinely `native_decide`-free there.
+
+### The precise remaining bookkeeping (why the recursive instance is NOT unconditional)
+
+To register `instance CRischFieldSpec (QFunNZG β)` one must prove its spec for *every* successful solve. Via
+`rdeCleared_of_success_and_residual` that needs the FULL `RischDEStructuralResidual`, whose clauses split:
+
+1. **The per-level `Associated`-gcd clauses** — SUPPLIED by `CTowerGcdWitness β` (Tasks 1–3). Not a residual.
+2. **The NON-gcd clauses, the genuine remaining bookkeeping** (`RischDESuccessResidual` here): the
+   primitive-regime restriction `hprim` (`cRischDEG` runs *all* monomial regimes; the §6 cleared identity
+   `cRischDEG_rdeCleared_gen` is proved primitive-only), the §6.2 divisibility/fuel side-conditions
+   (`hdn`/`hdvdB`/`hdvdC`/`hfbB`/`hfbC` — `cRdeNormalDenominatorG` checks only one `cdvdG`, truncating the
+   rest), and the non-gcd clauses of `CSPDEGClearedInputsGen` (per-level fuel bounds, `cdvdG`,
+   `cgcdTerminatesG`). **None is forced by the bare `cRischDEG … = some _`** (this is the
+   `ComputableRischDEStructural` structural-decomposition verdict), and none is a gcd fact the witness
+   produces. They hold on every regular run but the engine **never re-validates them**, so they are not
+   recoverable from success — exactly the role the self-validating *integrator* `cIntegrateGChecked` solves
+   with its own boolean `checkIdentityG` re-check (the tractable route: a *checked* RDE oracle, an engine
+   addition out of this file's scope).
+3. **A prerequisite gap**: the `CRischFieldSpec` *class* needs `[CDiffFieldSpec (QFunNZG β)]` to even state
+   `(toK y)′`; only the concrete `instCDiffFieldSpecQFunNZG : CDiffFieldSpec (QFunNZG ℚ)` exists — no generic
+   one. So even the *statement* of the recursive instance is pinned to a concrete level until that generic
+   instance is added (a mechanical lift of `toQFunNZG_towerDerivQFunNZG`). The field identity above sidesteps
+   this by reading the conclusion in `towerFractionFieldDerivG`/`amG` form, which needs no `CDiffFieldSpec`.
+
+**Bottom line:** transcendental soundness is native-residual-free *modulo* the explicitly-named
+`RischDESuccessResidual` (the primitive-regime / §6.2-divisibility / non-gcd-`CSPDEGClearedInputsGen`
+bookkeeping) — NOT modulo any `native_decide`, missing theorem, or the gcd kernel (which is closed). The
+honest residual is the §6 pipeline's *structural-decomposition + self-certification* gap, identical in
+character to the integrator's `checkIdentityG` route, isolated here so the boundary is citable. -/
+
 /-! ### Axiom audit (the gcd-kernel discharge + the RDE soundness are axiom-clean, no `native_decide`) -/
 
 #print axioms cTowerWitness_assocReg
