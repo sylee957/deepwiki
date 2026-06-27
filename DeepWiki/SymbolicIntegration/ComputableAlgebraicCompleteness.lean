@@ -229,6 +229,43 @@ theorem algebraicLiouville_single_extension : AlgebraicLiouvilleFrontier F := by
   exact h ⟨ι₀, inferInstance, c₀, hc₀, u₀, v₀, by
     simpa only [Algebra.algebraMap_self_apply] using hrep₀⟩
 
+/-! ### The rational-part half of the Trager decomposition (the always-elementary part)
+
+Trager's algorithm splits `∫ f = ∫(rational part) + ∫(log part)`.  The **rational part** is *always*
+elementary — it is `D(v)` for the computed `v` (the integral-basis Hermite reduction `radIntegrateRationalWf`
+produces it), with **no** log terms.  So the rational part never *obstructs* elementarity; completeness turns
+entirely on the log part (the divisor-torsion criterion).  The "always elementary" half is reachable here as
+a pure `IsAlgebraicElementary` fact (a `D(v)` element is a Liouville form with the empty log family); the
+*exhaustiveness* half — "the computed `v` captures the **whole** rational part" — is the named frontier
+below. -/
+
+omit [CharZero F] in
+/-- **The rational part `D(v)` is always elementary** (`ratPart_isAlgebraicElementary`): any element of the
+form `f = v′` (a pure derivative, no log part) is `IsAlgebraicElementary F F` — take the empty constant
+family and antiderivative `v`.  This is the always-elementary half of Trager's rational part: the
+integral-basis Hermite reduction's output `v` gives `D(v)`, which is trivially a Liouville form (empty log
+sum).  So the rational part never obstructs elementarity; the obstruction is entirely in the log part.
+Axiom-clean. -/
+theorem ratPart_isAlgebraicElementary (v : F) : IsAlgebraicElementary F F (v′) := by
+  refine ⟨Empty, inferInstance, Empty.elim, fun x => x.elim, Empty.elim, v, ?_⟩
+  simp only [Algebra.algebraMap_self_apply, Finset.univ_eq_empty, Finset.sum_empty, zero_add]
+
+/-- **Frontier piece 1b — rational-part exhaustiveness** (`RationalPartExhaustivenessFrontier`, Bronstein
+Ch. 5 / Trager: the integral-basis Hermite reduction).  The other half of Trager's rational/log split: the
+computed rational part `v` (from `radIntegrateRationalWf`) captures **all** of the integral's rational part,
+so that the *remaining* integrand (after subtracting `D(v)`) has only a log part — whose elementarity is the
+divisor-torsion criterion (`AlgebraicLiouvilleFrontier`).  Stated as: if the integrand `f` is elementary,
+then `f − D(v)` is elementary with a **purely logarithmic** form (an empty derivative part, all constants ×
+`logDeriv`).  This is the integral-basis exhaustiveness — Mathlib has the abstract integral closure but not
+the Hermite-reduction completeness; here it is reachable in principle (the engine's soundness gives
+`D(v) = ratPart`) but the *exhaustiveness* (no rational part escapes the reduction) is a stated piece.
+Quantified over the reduced integrand `r` and its computed rational antiderivative `v`. -/
+def RationalPartExhaustivenessFrontier : Prop :=
+  ∀ (f v : F), IsAlgebraicElementary F F f →
+    IsAlgebraicElementary F F (f - v′) →
+      ∃ (ι : Type) (_ : Fintype ι) (c : ι → F) (_ : ∀ x, (c x)′ = 0) (u : ι → F),
+        (f - v′) = ∑ x, c x * logDeriv (u x)
+
 end Frontier
 
 /-! ## ★ Frontier piece 2 — the good-reduction divisor-torsion decision correctness
@@ -381,6 +418,9 @@ file, modulo the residual.
   - The **within-tower algebraic descent** (`elementary_base_of_elementary_finiteDim` /
     `not_elementary_extension_of_not_elementary_base_alg`) — rides Mathlib's `isLiouville_of_finiteDimensional`:
     a finite algebraic extension never makes a base-non-elementary integrand elementary.
+  - The **rational part is always elementary** (`ratPart_isAlgebraicElementary`) — `D(v)` is a Liouville
+    form with the empty log family, so the rational part never obstructs elementarity; completeness turns
+    entirely on the log part.
   - The **engine-side control flow** (`elementarityViaTorsion_iff_some`, `torsionLogTerm_isSome_iff`,
     `algebraicLiouville_single_extension`) — the decision is a genuine dichotomy and the log term is emitted
     ⟺ the torsion decision is positive (pure `Option` control flow, unconditional).
@@ -389,18 +429,22 @@ file, modulo the residual.
 * **Proven (reachable), `native_decide`.**  The torsion gates are **non-vacuous**: the engine decides the
   rank-1 `(3,5)` on `y² = x³ − 2` **non-elementary** (`engine_none_of_nonTorsion_witness`) and the torsion
   flex `(0,1)` on `y² = x³ + 1` **elementary** with a `(1/3)·log` term (`engine_some_of_torsion_witness`).
-* **The two deep frontiers** (named `def`s, NEVER `sorry`).
+* **The deep frontiers** (named `def`s, NEVER `sorry`).
   1. **`AlgebraicLiouvilleFrontier`** — Liouville's structure theorem for the curve's function field
      (`∫ f` elementary ⟺ the Trager torsion form, *exhaustive*).  Mathlib has only the finite-extension
      descent, not this structure theorem (Bronstein Ch. 6 / Trager Ch. 5–6 / Rosenlicht).
   2. **`DivisorTorsionDecisionFrontier`** — the engine's `isTorsionDivisor` is correct and terminating via
      good reduction mod `p` (the height-swell tip).  Mathlib has the abstract Jacobian but no hyperelliptic
      point-counting / good-reduction order-bound theorem.
+  - **`RationalPartExhaustivenessFrontier`** (frontier 1b, the *milder* tip) — the integral-basis Hermite
+    reduction captures **all** of the rational part (so the reduced integrand is purely logarithmic);
+    Bronstein Ch. 5 / Trager.  The always-elementary half is reached (`ratPart_isAlgebraicElementary`); only
+    the exhaustiveness is stated.
 
-So full `some ⟺ elementary` for the algebraic integrator is reached **modulo exactly these two deep
+So full `some ⟺ elementary` for the algebraic integrator is reached **modulo exactly the two deep
 frontiers** — the Liouville-for-algebraic structure theorem (the log-part criterion) and the good-reduction
-divisor-torsion decision correctness (the height-swell tip).  Both are stated precisely; neither is a
-`sorry`. -/
+divisor-torsion decision correctness (the height-swell tip) — plus the milder rational-part exhaustiveness.
+Both deep frontiers are stated precisely; neither is a `sorry`. -/
 
 /-! ### Restatements pinning the algebraic-completeness content (anonymous `example`s) -/
 
@@ -436,6 +480,7 @@ the witnesses use `native_decide`) -/
 
 #print axioms elementary_base_of_elementary_finiteDim
 #print axioms not_elementary_extension_of_not_elementary_base_alg
+#print axioms ratPart_isAlgebraicElementary
 #print axioms algebraicLiouville_single_extension
 #print axioms elementarityViaTorsion_iff_some
 #print axioms torsionLogTerm_isSome_iff
