@@ -265,4 +265,60 @@ irreducibility `Fact`. The genuine cube-root field the carrier `RadX3root` repre
 noncomputable example : Field (AdjoinRoot (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZG ℚ)))) :=
   inferInstance
 
+/-! ### ★★ The milestone: the engine differentiates/multiplies/inverts a CUBE root (`native_decide`)
+
+Over the cube-root carrier `RadX3root = ℚ(x)[∛(x²+1)]`, exercised **through the typeclass
+projections** (`CField.mul`, `CField.inv`, `CDiffField.cderiv` — confirming `instCFieldRadExtN` /
+`instCDiffFieldRadExtN` dispatch):
+
+* `y·y·y = f` — the cube of `y = ∛(x²+1)` folds `y³ → f = x²+1` (`radMul 3 f`);
+* `D(y) = (f'/(3f))·y` — the diagonal derivation fires for a **cube** root (`radDeriv 3 f`,
+  `ℓ = 2x/(3(x²+1))`);
+* `u · u⁻¹ = 1` — the general-`n` extended-Euclid inverse `radInvN 3 f` is a genuine field inverse.
+
+This is the engine handling a cube root, not just a square root — Trager's algebraic extension at
+`n = 3`. -/
+
+/-- **★★ `y·y·y = f` in `RadX3root` through `CField.mul`** (`native_decide`): the cube of the generator
+`y = ∛(x²+1)` via the **typeclass** product `CField.mul` (dispatching to `radMul 3 (x²+1)`) folds
+`y³ → f = x²+1`. Checked by `CField.isZero` of `y·y·y − f` (`f` lifted to `RadX3root` as
+`⟨[x²+1]⟩`). THE CUBE FOLDS — the `CField (RadExtN …)` instance computes over a cube root. -/
+theorem cube_gen_cubed_eq_radicand :
+    CField.isZero (CField.sub (CField.mul (CField.mul cubeGen cubeGen) cubeGen)
+      (⟨[cubeRadicand]⟩ : RadX3root)) = true := by native_decide
+
+/-- **★★ `D(y) = (f'/(3f))·y` in `RadX3root` through `CDiffField.cderiv`** (`native_decide`): the
+**typeclass** derivation `CDiffField.cderiv` (dispatching to the diagonal `radDeriv 3 (x²+1)`) sends
+`y = ∛(x²+1)` to `ℓ·y`, `ℓ = f'/(3f) = 2x/(3(x²+1))`. Checked by `CField.isZero` of `D(y) − [0, ℓ]`.
+THE CUBE-ROOT CARRIER IS A DIFFERENTIAL FIELD — the diagonal derivation fires for `n = 3`. -/
+theorem cube_cderiv_gen_eq :
+    CField.isZero (CField.sub (CDiffField.cderiv cubeGen)
+      (⟨[CField.zero, cubeLogDer]⟩ : RadX3root)) = true := by native_decide
+
+/-- **★★ `u · u⁻¹ = 1` in `RadX3root` through `CField.mul`/`CField.inv`** (`native_decide`, the
+milestone). For `u = x + y` (`= ⟨[x, 1]⟩`, `y = ∛(x²+1)`), the **typeclass** inverse `CField.inv`
+(the general-`n` extended-Euclid `radInvN 3 (x²+1)`) satisfies `u · u⁻¹ = 1`. THE CUBE-ROOT
+EXTENSION IS A COMPUTABLE FIELD — `radInvN` inverts at `n = 3`, not just `n = 2`. Checked by
+`CField.isZero` of `u · u⁻¹ − 1`. -/
+theorem cube_mul_inv_eq_one :
+    CField.isZero (CField.sub (CField.mul (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root)
+      (CField.inv (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root))) CField.one) = true := by
+  native_decide
+
+/-- **A cube-root inverse with a genuine `y²`-component** (`native_decide`): for `u = 1 + y + y²`
+(`= ⟨[1, 1, 1]⟩`, degree `2` over the cube root), `radInvN 3 (x²+1)` still inverts —
+`CField.mul u u⁻¹ = 1`. The extended-Euclid inverse handles a **full-degree** element of the cube-root
+field, not only a binomial `a + by`; the conjugate-norm `radInv2` could not (it reads only `y⁰`/`y¹`). -/
+theorem cube_mul_inv_eq_one_deg2 :
+    CField.isZero (CField.sub (CField.mul (⟨[CField.one, CField.one, CField.one]⟩ : RadX3root)
+      (CField.inv (⟨[CField.one, CField.one, CField.one]⟩ : RadX3root))) CField.one) = true := by
+  native_decide
+
+/-- **`D(1) = 0` and `D(0) = 0` in `RadX3root`** (`native_decide`): the cube-root derivation
+annihilates the unit and zero (the diagonal `radDeriv`'s `i = 0` component, base `D(1) = 0`). -/
+theorem cube_cderiv_one_zero :
+    CField.isZero (CDiffField.cderiv (CField.one : RadX3root)) = true ∧
+    CField.isZero (CDiffField.cderiv (CField.zero : RadX3root)) = true := by
+  constructor <;> native_decide
+
 end DeepWiki.SymbolicIntegration
