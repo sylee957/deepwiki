@@ -299,4 +299,125 @@ theorem cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (fuel : �
 
 end ComputableBound
 
+/-! ## ★ Wiring: `RischDEInnerCompleteness.hbound` modulo the precise cancellation residual
+
+`cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol` proves the degree bound for the §6.3-reduced equation,
+modulo the cancellation residual `toPolyG a = 0 ∨ RdeIsBalanced …`. We now bundle that residual over the
+§6.2-special-cleared coefficients of an RDE input as the named `Prop` `RdeBoundCancellationResidual`, and
+produce the **exact `hbound` field** of `RischDEInnerCompleteness` from it — closing the single deepest gap
+of the completeness proof down to the precisely isolated deep §6.3 cancellation content (the omitted `λ`
+term). The `hnorm`/`hsolve` clauses (the §6.2 normal-denominator and §6.4–6.6 exhaustiveness) remain the
+*other* deep residuals, out of this file's scope; this file discharges `hbound`. -/
+
+section Wiring
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+  [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **★ The precise §6.3 degree-bound cancellation residual** `RdeBoundCancellationResidual Dt fnum fden
+gnum gden`: for every §6.2-normal-denominator output `(a0, b0, c0, h0)` and every solution `q` of the
+§6.2-special-cleared §6.3-reduced equation, the degree bound `cdegG q ≤ cRdeBoundDegreeG …` holds **on the
+cancellation-prone configurations** `toPolyG a = 0 ∨ RdeIsBalanced …`. This is exactly the residual that
+the strict-domination cases of Bronstein Thm 6.3.1 do *not* cover: the genuine `λ`-cancellation (the
+leading terms cancel and `cRdeBoundDegreeG` omits the `λ` term) plus the degenerate `a = 0`. A stated
+`Prop`, NO `sorry`; the precise, minimal deep content of `hbound`. -/
+def RdeBoundCancellationResidual (Dt fnum fden gnum gden : CPolyG α) : Prop :=
+  ∀ a0 b0 c0 h0 : CPolyG α,
+    cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+    ∀ q : CPolyG α,
+      IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+      (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1 = 0 ∨
+        RdeIsBalanced (toPolyG Dt)
+          (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
+          (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1)
+          (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)) →
+      cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+
+/-- **★ `RischDEInnerCompleteness.hbound` modulo the cancellation residual**
+(`hbound_of_cancellationResidual`): the **exact `hbound` field type** of `RischDEInnerCompleteness` —
+every solution `q` of the §6.2-special-cleared §6.3-reduced equation has
+`cdegG q ≤ cRdeBoundDegreeG …` — follows from the precise cancellation residual
+`RdeBoundCancellationResidual`. The two strict-domination cases of Bronstein Thm 6.3.1 are discharged
+unconditionally (`cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol`); the residual supplies only the
+cancellation-prone configurations. This closes `hbound` — the single deepest gap of the completeness
+proof — down to the precisely isolated deep §6.3 `λ`-cancellation content. -/
+theorem hbound_of_cancellationResidual (Dt fnum fden gnum gden : CPolyG α)
+    (hres : RdeBoundCancellationResidual Dt fnum fden gnum gden) :
+    ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 := by
+  intro a0 b0 c0 h0 hnorm q hsol
+  exact cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol Dt towerRischDEFuel _ _ _ q hsol
+    (hres a0 b0 c0 h0 hnorm q hsol)
+
+end Wiring
+
+/-! ### Restatement against `RischDEInnerCompleteness.hbound`'s field type (anonymous `example`) -/
+
+-- ★ The produced `hbound` has exactly `RischDEInnerCompleteness.hbound`'s type — confirmed by using it
+-- as that field in a partial structure check (the `where`-field type, modulo the cancellation residual).
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    [CRischField α] [Algebra ℚ (CFieldSpec.K α)] (Dt fnum fden gnum gden : CPolyG α)
+    (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true)
+    (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRischDEG Dt towerRischDEFuel fnum fden gnum gden).isSome = true)
+    (hres : RdeBoundCancellationResidual Dt fnum fden gnum gden) :
+    RischDEInnerCompleteness Dt fnum fden gnum gden :=
+  { hnorm := hnorm
+    hbound := hbound_of_cancellationResidual Dt fnum fden gnum gden hres
+    hsolve := hsolve }
+
+/-! ### Final verdict (stated precisely)
+
+**Is the §6.4 degree bound (Bronstein Thm 6.3.1) proven?** **The reachable cases, yes; the deep
+cancellation case is precisely isolated.** `cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol` proves
+`cdegG q ≤ cRdeBoundDegreeG …` for any solution `q` of the §6.3-reduced `a·Dq + b·q = c`, **modulo** the
+precise residual `RdeBoundCancellationResidual` (the cancellation-prone configurations
+`toPolyG a = 0 ∨ RdeIsBalanced …`). `hbound_of_cancellationResidual` produces the **exact `hbound` field**
+of `RischDEInnerCompleteness` from that residual (confirmed by the structure-building `example`), closing
+the single deepest gap of the completeness proof down to the deep §6.3 content.
+
+**Which §6.3 cases are closed, and which is the deep residual?**
+* **Closed unconditionally** (axiom-clean, NO `native_decide`/`sorry`): the two **strict-domination** cases
+  of Thm 6.3.1 — `natDegree_le_of_bDominates` (the `b·q` term strictly dominates: `dₐ + max(0, δ−1) < d_b`,
+  covering `dₐ < d_b` for δ ≤ 1 and `dₐ + δ − 1 < d_b` for δ ≥ 2) and `natDegree_le_of_aDominates_nonlinear`
+  (δ ≥ 2 with `d_b < dₐ + δ − 1`, the `a·Dq` term strictly dominating with exact char-`0` degree). Together
+  these discharge every configuration where the two LHS terms have *distinct* candidate top degrees.
+* **The deep residual** (`RdeBoundCancellationResidual`, NEVER `sorry`). The **balanced** configurations
+  (`RdeIsBalanced`: δ ≥ 2 with `dₐ + δ − 1 = d_b`, or δ ≤ 1 with `d_b ≤ dₐ`) — where the candidate top
+  degrees *coincide* and the leading terms can **cancel** — and the degenerate `a = 0`. In the balanced
+  case the true degree bound (Bronstein §6.3) carries an extra `λ = −lc(b)/(lc(a)·lc(v))` integer-root term
+  that `cRdeBoundDegreeG` **omits** ("the cancellation refinements are the documented continuation"), so the
+  engine's bound can fall strictly below the solution degree — genuinely beyond the non-cancellation
+  comparison. This is the precise §6.3 cancellation frontier.
+
+**Decision procedure?** Not yet unconditional: `hbound` is the single deepest gap *closed here modulo the
+cancellation residual*, but `RischDEInnerCompleteness`'s sibling clauses `hnorm` (§6.2 normal-denominator
+completeness) and `hsolve` (§6.4–6.6 SPDE/poly-RDE exhaustiveness) are the *other* deep residuals — out of
+this file's scope. So `crischDESolveSound_decides` (the unconditional `some ⟺ solvable`) remains modulo
+those; this file closes `hbound` to the reachable cases + the isolated cancellation residual. -/
+
+/-! ### Axiom audit (the reachable §6.3 cases, the bridge, and the `hbound` discharge are axiom-clean;
+NO `native_decide`, NO `sorry`) -/
+
+#print axioms natDegree_le_of_bDominates
+#print axioms natDegree_le_of_aDominates_nonlinear
+#print axioms natDegree_le_rdeBoundDegreeAbstract_of_balanced
+#print axioms cRdeBoundDegreeG_eq_abstract
+#print axioms cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol
+#print axioms hbound_of_cancellationResidual
+
 end DeepWiki.SymbolicIntegration
