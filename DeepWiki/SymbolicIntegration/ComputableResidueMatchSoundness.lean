@@ -94,6 +94,26 @@ theorem eval_implicitDeriv_of_isRoot (v d : K[X]) (α : K) (hα : d.eval α = 0)
   rw [eval_mapCoeffs_of_isRoot d α hα]
   ring
 
+/-! ### Step 3b: the per-place residue value matches the standard residue
+
+The RT residue at the place `t−α` is `c_α = a(α)/(Dd)(α)`. By the absorption identity, multiplying back
+the monomial-log-derivative residue `v(α) − α′` recovers the *standard* residue `a(α)/d′(α)` of `a/d` at
+that place: `c_α·(v(α) − α′) = a(α)/d′(α)`. This is the per-place equality that makes the monomial RT sum
+have the same poles-and-residues as `a/d`. -/
+
+/-- **The RT residue recovers the standard residue at a simple root** — for `d(α) = 0` with
+`v(α) ≠ α′` (the factor is *normal*, so `(Dd)(α) ≠ 0`), the RT residue `c_α = a(α)/(Dd)(α)` satisfies
+`c_α·(v(α) − α′) = a(α)/d′(α)` — the standard residue of `a/d` at `t−α`. The place-wise content of
+Bronstein Thm 5.6.1: the monomial log-derivative `(v − Cα′)/(t−α)` weighted by `c_α` contributes exactly
+the standard residue `a(α)/d′(α)`. From `eval_implicitDeriv_of_isRoot`. -/
+theorem residue_mul_eval_sub_eq (a v d : K[X]) (α : K) (hα : d.eval α = 0)
+    (hvα : v.eval α ≠ α′) :
+    (a.eval α / (Differential.implicitDeriv v d).eval α) * (v.eval α - α′)
+      = a.eval α / (derivative d).eval α := by
+  rw [eval_implicitDeriv_of_isRoot v d α hα]
+  rw [div_mul_eq_mul_div, mul_comm ((derivative d).eval α), ← div_div,
+    mul_div_assoc, div_self (sub_ne_zero.mpr hvα), mul_one]
+
 end ResidueMatchTower
 
 end DeepWiki.SymbolicIntegration
