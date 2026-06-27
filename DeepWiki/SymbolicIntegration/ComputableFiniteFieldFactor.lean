@@ -1,18 +1,20 @@
 import DeepWiki.SymbolicIntegration.ComputablePolynomialIrreducibility
 
-/-! # Computable `𝔽_p` polynomial factorization: distinct-degree factorization (Cantor–Zassenhaus)
+/-! # Computable `𝔽_p` polynomial factorization: distinct- and equal-degree (Cantor–Zassenhaus)
 
 The foundation layer of full Zassenhaus factorization — and hence of a **complete** `ℚ`-
 irreducibility decider. `ComputablePolynomialIrreducibility` gives a *sound but one-way* mod-`p`
 irreducibility **test**; the wall is `x⁴ + 1`, irreducible over `ℚ` yet reducible mod every
 prime. Going from *testing* to *deciding* needs the full factorization of `f mod p`, then a
 Hensel lift to mod `p^k`, then recombination to `ℤ`-factors. This file builds the **distinct-degree
-factorization (DDF)** layer with its **multiply-back soundness** — the first half of the mod-`p`
-factorization — on top of the monic **long-division primitives** (`divmodByMonic` + the division
-identity `divmodByMonic_spec`). Now **built and gate-clean**: the long division, the
-`lengthTrim`↔degree bridges, the Euclidean `gcd`, the Frobenius power, the DDF, and its
-axiom-clean multiply-back invariant. Equal-degree splitting / Hensel factor-lift / recombination
-remain the documented roadmap (bottom).
+factorization (DDF)** and the **equal-degree factorization (EDF)** layers, each with its
+**multiply-back soundness** — together the full mod-`p` factorization into irreducible factors — on
+top of the monic **long-division primitives** (`divmodByMonic` + the division identity
+`divmodByMonic_spec`). Now **built and gate-clean**: the long division, the `lengthTrim`↔degree
+bridges, the Euclidean `gcd`, the Frobenius power, the DDF, the Cantor–Zassenhaus equal-degree
+split and sweep, and both axiom-clean multiply-back invariants (`ddf_prod`, `edf_prod`). The
+deterministic-sweep *completeness* (a good shift always exists), per-factor *irreducibility*, the
+Hensel factor-lift, and recombination remain the documented roadmap (bottom).
 
 **Reused engine.** Polynomials are coefficient `List (ZMod p)`, low-to-high (Horner), with
 `toPoly`/`addL`/`mulL`/`scaleL`/`coeff_toPoly` from `ComputablePolynomialIrreducibility`
@@ -46,30 +48,43 @@ divisor ⇒ zero remainder). It is **axiom-clean** `[propext, Classical.choice, 
 product of degree-`d` irreducibles, and the per-*factor* irreducibility) is the deeper claim that
 needs Frobenius-power correctness plus equal-degree splitting — scoped below.
 
-**★ The rest of Zassenhaus (scope, for the complete `ℚ`-decider).** After DDF:
+**★ Equal-degree factorization (EDF), built here.** A DDF degree-`d` block is a product of `k`
+**distinct** degree-`d` irreducibles; EDF splits it into the `k` factors. The Cantor–Zassenhaus
+split: for `p` odd, `gcd(f, (X + a)^((p^d − 1)/2) − 1)` (`edfSplitOne`) is a (possibly trivial)
+factor for a shift `a`. Lean has **no randomness**, so `a` is iterated **deterministically**
+(`edfBlock` sweeps `a = 0, 1, 2, …`, recursing on both halves of each proper split). The
+**multiply-back soundness** `edf_prod` (`toPoly (edfProduct (edf p f)) = toPoly f`, axiom-clean) is
+built — each split is an exact-division peel, exactly like `ddf_prod`. The two **remaining EDF
+obligations**:
+* **Sweep completeness.** For `k ≥ 2` a "good" shift `a` (one on which the Euler-criterion value
+  `(X + a)^((p^d − 1)/2)` is `+1` on some but not all factors) is *guaranteed to exist* within
+  `ZMod p`, so the deterministic sweep terminates with **all** factors separated. The current
+  `edfBlock` returns a sound (multiplies-back) factorization regardless, but that the swept output
+  is the *fully split* one — every returned list degree exactly `d` — is the open completeness claim
+  (a counting/Chinese-remainder argument over the residue fields). The `p = 2` case instead uses the
+  **trace-map** split `gcd(f, X + X² + X⁴ + ⋯ + X^(2^(d−1)))` (the Cantor–Zassenhaus `p = 2`
+  variant), not yet implemented.
+* **Per-factor irreducibility.** That each fully-split factor is *irreducible* follows from sweep
+  completeness **plus** Frobenius-power correctness (next).
+
+**★ The rest of Zassenhaus (scope, for the complete `ℚ`-decider).** After DDF + EDF:
 0. **Frobenius-power correctness** (`toPoly (xPowModF p d f df) ≡ X^(p^d) (mod toPoly f)`) makes
-   the DDF degree *tags* correct — the abstract `ddf_prod` multiply-back here does **not** need it
-   (gcd-divides-first-arg is unconditional), but per-block degree structure does. Provable from
-   `divmodByMonic_spec` (each reduction step is `≡ mod f`) by induction over the squaring.
-1. **Equal-degree factorization (EDF)** splits a degree-`d` block (a product of `k` distinct
-   degree-`d` irreducibles) into its `k` factors. The Cantor–Zassenhaus split: for `p` odd,
-   `gcd(f, (X + a)^((p^d − 1)/2) − 1)` is a nontrivial factor for a "good" shift `a`. Lean has
-   **no randomness**, so `a` is iterated deterministically (`a = 0, 1, 2, …`); a *good* shift is
-   guaranteed to exist within `ZMod p` for `k ≥ 2`, but the *termination/completeness* of the
-   deterministic sweep is the EDF proof obligation. (`p = 2` uses the trace-map variant.) This
-   layer makes the per-factor irreducibility provable.
-2. **Hensel FACTOR-lift mod `p^k`.** Lift the coprime mod-`p` factorization `f ≡ g·h` to mod
+   the DDF degree *tags* correct and, with EDF sweep completeness, yields per-factor irreducibility
+   — the abstract `ddf_prod`/`edf_prod` multiply-backs do **not** need it (gcd-divides-first-arg is
+   unconditional), but per-block degree structure does. Provable from `divmodByMonic_spec` (each
+   reduction step is `≡ mod f`) by induction over the squaring.
+1. **Hensel FACTOR-lift mod `p^k`.** Lift the coprime mod-`p` factorization `f ≡ g·h` to mod
    `p^k`. *Mathlib status:* `hensels_lemma` (`Mathlib/NumberTheory/Padics/Hensel.lean`) and
    `Mathlib/RingTheory/Henselian.lean` are **root-finding** only — the polynomial *factor*-lift
    (quadratic lift of a coprime factorization, the Zassenhaus form) must be **built**: given
    `f ≡ g·h (mod p^m)` with `s·g + t·h ≡ 1 (mod p)`, produce `g', h'` mod `p^{2m}` with the
    same product. The Bézout cofactors lift alongside.
-3. **Recombination.** Search subsets of the lifted mod-`p^k` factors whose product has small
+2. **Recombination.** Search subsets of the lifted mod-`p^k` factors whose product has small
    enough coefficients (bounded by `p^k / 2`, Mignotte bound) to be a true `ℤ`-factor.
    *Mathlib status:* **not present**; an exponential subset search (LLL later tames it), with a
    factorization-correctness predicate yielding the complete decider.
-So the complete-`ℚ`-decider campaign is: **DDF (here)** → EDF → Hensel-factor-lift →
-recombination. DDF + its multiply-back invariant is the tractable, high-value first brick. -/
+So the complete-`ℚ`-decider campaign is: **DDF + EDF (here)** → Hensel-factor-lift → recombination.
+DDF and EDF with their multiply-back invariants are the tractable, high-value first bricks. -/
 
 open Polynomial
 
