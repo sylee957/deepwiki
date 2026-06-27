@@ -419,7 +419,7 @@ end Wiring
 -- ★ The produced `hbound` has exactly `RischDEInnerCompleteness.hbound`'s type — confirmed by using it
 -- as that field in a partial structure check (the `where`-field type, modulo the cancellation residual).
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
-    [CRischField α] [Algebra ℚ (CFieldSpec.K α)] (Dt fnum fden gnum gden : CPolyG α)
+    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
     (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
       (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true)
     (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
