@@ -154,4 +154,62 @@ theorem cIntegrateMixedWf_transcendental_oneShot (Dt : CPolyG α) (fuel : ℕ) (
 
 end CPolyG
 
+/-! ## Task 2 — the algebraic arm of `cIntegrateMixedWf`, fuel-free, checker-free
+
+`cIntegrateMixedWf (.algebraic ρ R B residual c D degBound)` is, by the `match` defining `cIntegrateMixedWf`,
+definitionally `.algebraic (cIntegrateAlgebraicWf ρ R B residual c D degBound)`. So if the dispatcher returns
+`.algebraic res`, then `res = cIntegrateAlgebraicWf ρ R B residual c D degBound` and its parts are
+`res.ratPart` (the rational part `v`) and `res.logTerms` (the log arguments `args`). The abstract,
+**checker-free** `RadElem.isAlgebraicIntegral_of_parts` (over the curve `y² = ρ`, `n = 2`) then supplies the
+full algebraic soundness `IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom res.logTerms cofs` — `D(v + Σ cᵢ
+log uᵢ) = f` cross-multiplied by `commonDenom = ∏ uⱼ` and read in the carrier quotient `K[X] ⧸ radIdeal 2 ρ`
+— from the rational/log/split engine inputs. No `checkMixed`, no `native_decide` — only the engine-success
+bridges the of_parts composition carries (the algebraic analogue of the transcendental's `hherm`/`hform`). -/
+
+/-- **The Wf algebraic arm IS `cIntegrateAlgebraicWf`** — `cIntegrateMixedWf (.algebraic ρ R B residual c D
+degBound) = MixedIntegralResult.algebraic (cIntegrateAlgebraicWf ρ R B residual c D degBound)`, the
+definitional reduction of the `match` in `cIntegrateMixedWf` on the `algebraic` tag (over a base `α` that
+supplies the fuel-free binders). Pins the dispatcher's output shape on the algebraic arm so an `.algebraic res`
+result extracts `res = cIntegrateAlgebraicWf …`. -/
+theorem cIntegrateMixedWf_algebraic_eq {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+    [CRischField α] (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ))
+    (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ) :
+    cIntegrateMixedWf (α := α) (IntegrandSpec.algebraic ρ R B residual c D degBound)
+      = MixedIntegralResult.algebraic (cIntegrateAlgebraicWf ρ R B residual c D degBound) :=
+  rfl
+
+/-- **★ Task 2 — the algebraic arm of `cIntegrateMixedWf` is sound, FUEL-FREE, CHECKER-FREE** — if the
+fuel-free unified dispatcher returns `.algebraic res` on an `algebraic ρ R B residual c D degBound` spec, then
+**given** the abstract engine-success inputs `RadElem.isAlgebraicIntegral_of_parts` consumes over the curve
+`y² = ρ` (`hrat` rational-part telescoping soundness `radDeriv(v)·cd = ratPart·cd`, `hlog` log-part
+residue-match soundness `IsRadicalLogIntegral`, `hsplit` the integrand split `f = ratPart + logPart`,
+cross-multiplied), the full algebraic-integral soundness `IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom
+res.logTerms cofs` holds — `D(res.ratPart + Σ cᵢ log uᵢ) = f` cross-multiplied by `commonDenom = ∏ uⱼ` in the
+carrier quotient `K[X] ⧸ radIdeal 2 ρ`. The dispatcher reduces (`rfl`) to `res = cIntegrateAlgebraicWf …`,
+exposing `res.ratPart`/`res.logTerms` as the `v`/`args` of `isAlgebraicIntegral_of_parts` (the checker-free
+algebraic capstone composition). **No `checkMixed`, no `native_decide`** — gated only on the engine-success
+bridges (the inherent boundary, NOT a runtime checker). The algebraic arm of the fuel-free unified soundness.
+The `α`-genericity is only the dispatcher's binder; the result lives over the fixed algebraic base `QFunNZG ℚ`. -/
+theorem cIntegrateMixedWf_algebraic_oneShot {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
+    [CRischField α] (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ))
+    (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ) (res : AlgIntegralResult)
+    (f ratPart logPart commonDenom : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ)))
+    (hrun : cIntegrateMixedWf (α := α) (IntegrandSpec.algebraic ρ R B residual c D degBound)
+      = MixedIntegralResult.algebraic res)
+    (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
+          (CPolyG.toPolyG (radMul 2 ρ (radDeriv 2 ρ res.ratPart) commonDenom))
+        = Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ ratPart commonDenom)))
+    (hlog : RadElem.IsRadicalLogIntegral 2 ρ logPart commonDenom res.logTerms cofs)
+    (hsplit : Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ ratPart commonDenom))
+        + Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ logPart commonDenom))
+      = Ideal.Quotient.mk (radIdeal 2 ρ) (CPolyG.toPolyG (radMul 2 ρ f commonDenom))) :
+    RadElem.IsAlgebraicIntegral 2 ρ f res.ratPart commonDenom res.logTerms cofs := by
+  -- the dispatcher reduces (rfl) to `cIntegrateAlgebraicWf …`; the `.algebraic _` wrapper is injective, so
+  -- `res` IS the engine's output `cIntegrateAlgebraicWf …` (subst makes the conclusion genuinely about it)
+  rw [cIntegrateMixedWf_algebraic_eq, MixedIntegralResult.algebraic.injEq] at hrun
+  subst hrun
+  -- `res.ratPart`/`res.logTerms` are the engine's parts; the abstract, checker-free
+  -- `isAlgebraicIntegral_of_parts` supplies the full `D(∫f) = f` from the engine inputs
+  exact RadElem.isAlgebraicIntegral_of_parts 2 ρ f _ ratPart logPart commonDenom _ cofs hrat hlog hsplit
+
 end DeepWiki.SymbolicIntegration
