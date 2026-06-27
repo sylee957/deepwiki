@@ -324,4 +324,130 @@ theorem cIntegrateGeneralCurveDecide_sound
 
 end Soundness
 
+/-! ## Part 4 — ISOLATING the general-`Pic⁰`-torsion core PRECISELY: `GeneralPicTorsionFrontier`
+
+The DEEP residual — the general divisor-class-group (`Pic⁰`) arithmetic beyond the hyperelliptic
+Mumford/Cantor — is isolated here PRECISELY as a single named `Prop`-bundle, the general analogue of the
+hyperelliptic `AlgebraicCompletenessResidual` (`ComputableAlgebraicCompleteness`). It has exactly two clauses:
+
+* **`htorsion`** — the **general-`Pic⁰`-torsion-decision correctness** (the deep gap): the engine's general
+  order test `genDivisorOrder fuel f basis δ` returns `some m` **iff** the residue divisor class `δ` is torsion
+  in `Pic⁰(C)`. `genDivisorOrder` (`ComputableGeneralDivisorOrder`, HAVE) **computes** the order via repeated
+  `idealProduct` (the Pic group law) + the ideal-reduction / principality test over the
+  fractional-ideal-over-the-integral-basis representation — it is sound (`some m ⟹ m·δ` genuinely principal),
+  but its **termination with a definite `none` = non-torsion verdict** needs the *good-reduction torsion
+  ceiling* (reduce `f mod p`, `|Pic⁰(C)(𝔽_p)|` as the fuel bound, the general lift of the hyperelliptic
+  `mumfordReduceModP`). This clause IS that gap — the general fractional-ideal arithmetic + order test + the
+  good-reduction lift, the general analogue of frontier 2.
+* **`hcriterion`** — the **Liouville log-part criterion** (frontier 1, unchanged from the hyperelliptic case,
+  now over the general curve's function field): the integrand is elementary **iff** its residue divisor `δ` is
+  torsion in `Pic⁰(C)` (Trager's structure theorem applied to the general curve).
+
+Their conjunction turns the engine's `genCurveTorsionLogTerm = some _` into `elem` and `none` into `¬ elem` —
+the general-curve completeness equivalence, modulo exactly this isolated deep frontier. -/
+
+section PicTorsion
+
+variable (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
+variable (tin : GeneralCurveTorsionInputs)
+
+/-- **The general-curve torsion term fires iff the order test does** `genCurveTorsionLogTerm_isSome_iff` —
+unconditionally, `(genCurveTorsionLogTerm fuel f basis tin).isSome = true ↔ ∃ m, genDivisorOrder fuel f basis
+tin.divisor = some m`. The general-curve torsion branch emits a `(1/m)·log g` term exactly when the general
+order test `genDivisorOrder` succeeds (the generator oracle `tin.genGen` is then applied). Pure `Option`
+control flow over the `genCurveTorsionLogTerm` match — no frontier needed; the bridge to the completeness
+equivalence. The general lift of the hyperelliptic `torsionLogTerm_isSome_iff`. -/
+theorem genCurveTorsionLogTerm_isSome_iff :
+    (genCurveTorsionLogTerm fuel f basis tin).isSome = true
+      ↔ ∃ m, genDivisorOrder fuel f basis tin.divisor = some m := by
+  unfold genCurveTorsionLogTerm
+  cases hm : genDivisorOrder fuel f basis tin.divisor with
+  | none => simp
+  | some m => simp
+
+/-- **★ The general-`Pic⁰`-torsion frontier** `GeneralPicTorsionFrontier fuel f basis tin isTorsion elem`: the
+two deep frontier-instances that turn the engine's general torsion-branch output into the integrand's
+elementarity, the general analogue of `AlgebraicCompletenessResidual` (`ComputableAlgebraicCompleteness`).
+`isTorsion` is the abstract "the residue divisor class `δ = tin.divisor` is torsion in `Pic⁰(C)`" predicate;
+`elem` the integrand's elementarity over the general curve's function field. A `Prop`-bundle of stated
+assumptions (NOT proved), making the general-`Pic⁰`-torsion boundary citable with NO `sorry`:
+
+* `htorsion` — **the deep general-`Pic⁰`-torsion-decision correctness**: `genDivisorOrder fuel f basis δ`
+  succeeds `⟺ δ` is torsion. `genDivisorOrder` (HAVE) computes the order via the fractional-ideal Pic
+  arithmetic and is sound; this clause closes the gap to a *definite* verdict — the good-reduction torsion
+  ceiling (the general lift of `mumfordReduceModP`), the general fractional-ideal-arithmetic + order-test +
+  good-reduction core, the deepest open algebraic sub-arc;
+* `hcriterion` — the **Liouville log-part criterion** over the general curve: `δ` is torsion `⟺ elem`.
+
+This single bundle IS the precisely-isolated deep residual the task names; the decision is proven modulo it. -/
+structure GeneralPicTorsionFrontier (isTorsion : Prop) (elem : Prop) : Prop where
+  /-- The deep general-`Pic⁰`-torsion-decision correctness: `genDivisorOrder` succeeds ⟺ `δ` is torsion
+  (needs the good-reduction torsion ceiling — the general lift of `mumfordReduceModP`). -/
+  htorsion : (∃ m, genDivisorOrder fuel f basis tin.divisor = some m) ↔ isTorsion
+  /-- The Liouville log-part criterion over the general curve: the integrand is elementary ⟺ `δ` is torsion. -/
+  hcriterion : isTorsion ↔ elem
+
+/-- **★ General-curve completeness modulo the frontier** (`genCurveTorsionLogTerm_complete_of_frontier`,
+`some ⟺ elementary`): under the general-`Pic⁰`-torsion frontier (the deep general torsion-decision correctness
++ the Liouville log-part criterion on `δ`), the engine's general torsion branch `genCurveTorsionLogTerm` emits
+a `(1/m)·log g` term **iff** the integrand is elementary —
+`(genCurveTorsionLogTerm fuel f basis tin).isSome = true ↔ elem`. The chain: `genCurveTorsionLogTerm = some _
+⟺ genDivisorOrder = some m` (the unconditional `genCurveTorsionLogTerm_isSome_iff`) ⟺ `δ` is torsion
+(`htorsion`) ⟺ `elem` (`hcriterion`). The converse of soundness for the general integrator's log part, modulo
+the precisely-isolated deep frontier — the general-curve analogue of
+`cIntegrateAlgebraicWf_complete_of_residual`. -/
+theorem genCurveTorsionLogTerm_complete_of_frontier {isTorsion elem : Prop}
+    (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem) :
+    (genCurveTorsionLogTerm fuel f basis tin).isSome = true ↔ elem := by
+  rw [genCurveTorsionLogTerm_isSome_iff, hres.htorsion, hres.hcriterion]
+
+end PicTorsion
+
+/-! ## Part 5 — REACHABLE layer: COMPLETENESS `none → ¬ elementary` (modulo the frontier)
+
+`cIntegrateGeneralCurveDecide` returns `none` exactly when the rational solve fails OR (there is a log part,
+the principal log solve fails, AND) the torsion decision fails (`genCurveTorsionLogTerm = none`, the residue
+divisor non-torsion). On the **non-principal log path** (rational solve succeeds, log part present, principal
+solve fails — the path the torsion decision governs, the analogue of the hyperelliptic completeness setting),
+`none` is the engine's non-torsion verdict, and the frontier turns it into `¬ elem`. -/
+
+section Completeness
+
+variable (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
+variable (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
+
+/-- **★★ COMPLETENESS of the self-determining GENERAL-curve integrator** (`cIntegrateGeneralCurveDecide_complete`,
+`none → ¬ elementary`, modulo the frontier). On the non-principal log path — the rational solve succeeds
+(`afRationalSolve = some v`), there is a log part (`hasLogPart = true`), the principal log solve fails
+(`afLogArgSolve = none`) — under the general-`Pic⁰`-torsion frontier (the deep general torsion-decision
+correctness + the Liouville criterion on `δ`), a `none` output of `cIntegrateGeneralCurveDecide` certifies the
+integrand is **NOT elementary**. The `none` output then forces the torsion decision to `none` (the non-torsion
+verdict, via the structural reading); the frontier's completeness equivalence turns that into `¬ elem`. This
+re-bases the general-curve completeness onto the `Option` integrator: `none` is the self-determining "not
+elementary" answer, modulo exactly the isolated deep frontier. The general-curve analogue of
+`cIntegrateAlgebraicDecide_complete`. -/
+theorem cIntegrateGeneralCurveDecide_complete {isTorsion elem : Prop} (v : CPolyG (QFunNZG ℚ))
+    (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
+    (hv : afRationalSolve fuel f basis degBound ratIntegrand = some v)
+    (_hlog : afLogArgSolve fuel f basis degBound logIntegrand = none)
+    (hnone : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true
+      = none) :
+    ¬ elem := by
+  -- the `none` output (on this path) forces the torsion branch to `none` (non-torsion verdict)
+  have hcases := genCurveTorsionLogTerm_none_of_decide_none fuel f basis degBound ratIntegrand
+    logIntegrand tin true hnone
+  have hT : (genCurveTorsionLogTerm fuel f basis tin).isNone = true := by
+    rcases hcases with hrat | ⟨_, hT⟩
+    · rw [hv] at hrat; simp at hrat
+    · exact hT
+  -- contrapositive of the completeness equivalence: if `elem` held, the log term would be emitted
+  intro hcon
+  have hsome : (genCurveTorsionLogTerm fuel f basis tin).isSome = true :=
+    (genCurveTorsionLogTerm_complete_of_frontier fuel f basis tin hres).mpr hcon
+  rw [Option.isNone_iff_eq_none] at hT
+  rw [hT] at hsome
+  simp at hsome
+
+end Completeness
+
 end DeepWiki.SymbolicIntegration
