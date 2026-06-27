@@ -243,3 +243,26 @@ theorem toPoly_modByMonicL {R : Type*} [CommRing R] [DecidableEq R] (f g : List 
   rw [modByMonicL]
   have := divmodByMonic_spec f g dg
   linear_combination -this
+
+/-! ## Making a list-poly monic
+
+`leadL f` reads the leading coefficient (`f.getD (lengthTrim f - 1) 0`); `monicizeL f` scales
+`f` by its inverse, so over a field a nonzero `f` becomes monic. The `toPoly` bridge is the
+scale bridge applied to the inverse leading coefficient. The gcd recursion below uses
+`monicizeL` to normalize each divisor so `modByMonicL` (which assumes a monic divisor) applies. -/
+
+/-- The leading coefficient of a list-poly: the entry at `lengthTrim f - 1` (`0` for the zero
+poly). For nonzero `f`, this is `(toPoly f).leadingCoeff`. -/
+def leadL {R : Type*} [Zero R] [DecidableEq R] (f : List R) : R :=
+  f.getD (lengthTrim f - 1) 0
+
+/-- Scale `f` by the inverse of its leading coefficient: over a field, a nonzero `f` becomes
+monic. -/
+def monicizeL {R : Type*} [Zero R] [DecidableEq R] [Inv R] [Mul R] (f : List R) : List R :=
+  scaleL (leadL f)⁻¹ f
+
+/-- `toPoly (monicizeL f) = C (leadL f)⁻¹ * toPoly f`: monicization is `C (lead⁻¹) *` at the
+polynomial level. -/
+theorem toPoly_monicizeL {R : Type*} [Field R] [DecidableEq R] (f : List R) :
+    toPoly (monicizeL f) = C (leadL f)⁻¹ * toPoly f := by
+  rw [monicizeL, toPoly_scaleL]
