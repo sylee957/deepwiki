@@ -961,3 +961,35 @@ theorem edf_prod (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) :
   rw [hblk]
   -- ∏ toPoly b.2 over DDF blocks = toPoly (ddfProduct (ddf p f)) = toPoly f
   rw [← toPoly_ddfProduct, ddf_prod]
+
+/-! ## `native_decide` validation of the equal-degree split
+
+The concrete computational content behind `edf_prod`: a degree-`d` DDF **block** with `k ≥ 2`
+same-degree factors is split into exactly those `k` factors, and the EDF factor product (`edfProduct`,
+the `mulL`-fold) re-multiplies to the input. The reconstructed product list carries a few **trailing
+zeros** (intrinsic to `monicizeL`/`divmodByMonic`, which return un-trimmed lists); these are benign —
+`toPoly` ignores trailing zeros, which is exactly what `edf_prod` proves at the polynomial level.
+Keep `p, d` small: the half-exponent `(p^d − 1)/2` drives the squaring count. -/
+
+/-- The `d = 1` DDF block `(x − 1)(x − 2) = x² + 2x + 2` over `𝔽₅` splits into its two linear
+factors `x − 1 = x + 4` (`[4, 1]`) and `x − 2 = x + 3` (`[3, 1]`) — a `k = 2` same-degree split
+(`native_decide`; trailing zero from un-trimmed monicization). -/
+example : edfBlock 5 1 4 0 ([2, 2, 1] : List (ZMod 5)) = [[4, 1, 0], [3, 1]] := by
+  native_decide
+
+/-- EDF multiply-back for `(x − 1)(x − 2)` over `𝔽₅`: the factor product is `x² + 2x + 2` (the
+input, with a benign trailing zero; `toPoly` agrees, cf. `edf_prod`) (`native_decide`). -/
+example : edfProduct (edf 5 ([2, 2, 1] : List (ZMod 5))) = [2, 2, 1, 0] := by
+  native_decide
+
+/-- The `d = 1` block `x⁴ − 1 = (x−1)(x−2)(x−3)(x−4)` over `𝔽₅` splits into all **four** distinct
+linear factors (roots `{1, 2, 3, 4}`) — a `k = 4` same-degree split (`native_decide`). The trailing
+`[1]` is the constant DDF block; the four `[c, 1]`/`[c, 1, 0]` are the linear factors. -/
+example : edf 5 ([4, 0, 0, 0, 1] : List (ZMod 5))
+    = [[1, 1, 0], [4, 1], [2, 1, 0], [3, 1], [1]] := by
+  native_decide
+
+/-- EDF multiply-back for `x⁴ − 1` over `𝔽₅`: the four linear factors re-multiply to `x⁴ − 1` (the
+input, with benign trailing zeros; `toPoly` agrees, cf. `edf_prod`) (`native_decide`). -/
+example : edfProduct (edf 5 ([4, 0, 0, 0, 1] : List (ZMod 5))) = [4, 0, 0, 0, 1, 0, 0] := by
+  native_decide
