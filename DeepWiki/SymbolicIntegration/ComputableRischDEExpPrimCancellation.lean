@@ -283,6 +283,78 @@ theorem rdeBoundExpPrimCancellation_of_logDerivativeBound (v a b c : K[X]) {N : 
   intro q hq ha0 hv hble heq
   exact expPrimCancellation_of_logDerivativeBound hq ha0 hv hble heq hbound
 
+/-! ### The primitive sub-case (`δ = 0`): the cancellation condition loses its `m`-dependence
+
+For a *primitive* monomial (`deg v = 0`, `v = C w`), `η = v.coeff 1 = 0`, so the cancellation condition
+collapses to `−lc(b)/lc(a) = logDeriv (lc q)` — **independent of `deg q`**. The leading-term analysis alone
+therefore does **not** bound the primitive degree (Bronstein's primitive degree bound comes from the SPDE /
+degree-by-degree recursion 6.6.1, not the top term): `ExpPrimLogDerivativeBound` holds for a primitive
+configuration **iff** `−lc(b)/lc(a)` is *not* a logarithmic derivative (then no `m` qualifies, the bound is
+vacuous for any `N`) — honestly reflecting that the bound's content is elsewhere when it *is*. -/
+
+omit [CharZero K] [Differential K] in
+/-- **The primitive (`δ = 0`) hyperexponential coefficient vanishes** (`coeff_one_eq_zero_of_natDegree_le`):
+for `deg v = 0` the degree-`1` coefficient `η = v.coeff 1` is `0`, so the δ ≤ 1 cancellation condition loses
+its `(deg q)·η` term. -/
+theorem coeff_one_eq_zero_of_natDegree_le {v : K[X]} (hv : v.natDegree = 0) : v.coeff 1 = 0 :=
+  coeff_eq_zero_of_natDegree_lt (by omega)
+
+omit [CharZero K] in
+/-- **★ The primitive cancellation condition is `deg q`-independent** (`cancellation_iff_logDeriv_eq_prim`):
+for a primitive monomial (`deg v = 0`), the δ ≤ 1 leading term of `a·Dq + b·q` at the candidate top degree
+vanishes **iff** `−lc(b)/lc(a) = logDeriv (lc q)` — with **no** `deg q` term. So the primitive degree bound
+cannot be read off the leading term (it is the SPDE recursion 6.6.1, Bronstein §6.6); the leading-term
+condition only constrains `lc q`, not `deg q`. -/
+theorem cancellation_iff_logDeriv_eq_prim {v a b q : K[X]} (ha0 : a ≠ 0) (hq0 : q ≠ 0)
+    (hv : v.natDegree = 0) (hdq : 1 ≤ q.natDegree) (hble : b.natDegree ≤ a.natDegree) :
+    (a * Differential.implicitDeriv v q + b * q).coeff (candTopDegree v a b q) = 0
+      ↔ -(b.coeff a.natDegree) / a.leadingCoeff = Differential.logDeriv q.leadingCoeff := by
+  rw [cancellation_iff_logDeriv_eq_low ha0 hq0 (by omega) hdq hble,
+    coeff_one_eq_zero_of_natDegree_le hv, mul_zero, zero_add]
+
 end LogDerivativeBound
+
+/-! ## ★ The exp/primitive bound at the `CPolyG` layer (the §6.3 frontier over the tower)
+
+Lifting the abstract exp/primitive cancellation discharge to `CPolyG` over `(CFieldSpec.K α)[X]`: a
+§6.3-reduced δ ≤ 1 solution `q` has `cdegG q ≤ max(cRdeBoundDegreeG …, N)` modulo the parametric
+log-derivative bound on `(CFieldSpec.K α)`. Combined with the **nonlinear** `λ`-recursion (proven in
+`ComputableRischDEDegreeBoundCancellation`), this closes the §6.3 cancellation degree bound modulo a single
+base-field oracle — the parametric logarithmic-derivative decision. -/
+
+section ComputableExpPrim
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+
+omit [CFracGcdCore α] in
+/-- **★ `RdeBoundExpPrimCancellation` at the `CPolyG` layer** (`rdeBoundExpPrimCancellation_cpolyG`): the
+exp/primitive cancellation residual over `(CFieldSpec.K α)[X]` follows from the parametric log-derivative
+bound `ExpPrimLogDerivativeBound (toPolyG v) (toPolyG a) (toPolyG b) N`. This is the `CPolyG`-layer
+discharge of the deepest §6.3 cancellation sub-residual, modulo the base-field parametric
+logarithmic-derivative oracle. -/
+theorem rdeBoundExpPrimCancellation_cpolyG (v a b c : CPolyG α) {N : ℕ}
+    (hbound : ExpPrimLogDerivativeBound (toPolyG v) (toPolyG a) (toPolyG b) N) :
+    RdeBoundExpPrimCancellation (toPolyG v) (toPolyG a) (toPolyG b) (toPolyG c) N :=
+  rdeBoundExpPrimCancellation_of_logDerivativeBound (toPolyG v) (toPolyG a) (toPolyG b) (toPolyG c) hbound
+
+omit [CFracGcdCore α] in
+/-- **★ The full §6.3 cancellation degree bound at the `CPolyG` layer, modulo ONE base-field oracle**
+(`cdegG_le_max_cRdeBoundDegreeG_expPrim`): a §6.3-reduced solution `q` of `a·Dq + b·q = c`
+(`IsReducedRdeSol Dt a b c q`, `toPolyG q ≠ 0`, `toPolyG a ≠ 0`) in the δ ≤ 1 balanced configuration has
+`cdegG q ≤ max(cRdeBoundDegreeG Dt fuel a b c, N)`, modulo the parametric log-derivative bound `hbound` on
+`(CFieldSpec.K α)`. With the nonlinear `λ`-recursion (`cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol`),
+this is the **whole** §6.3 cancellation degree bound reduced to a single base-field oracle. -/
+theorem cdegG_le_max_cRdeBoundDegreeG_expPrim (Dt : CPolyG α) (fuel : ℕ) (a b c q : CPolyG α)
+    (hqP : toPolyG q ≠ 0) (ha0 : toPolyG a ≠ 0) (hsol : IsReducedRdeSol Dt a b c q)
+    (hv : (toPolyG Dt).natDegree ≤ 1) (hble : (toPolyG b).natDegree ≤ (toPolyG a).natDegree) {N : ℕ}
+    (hbound : ExpPrimLogDerivativeBound (toPolyG Dt) (toPolyG a) (toPolyG b) N) :
+    cdegG q ≤ max (cRdeBoundDegreeG Dt fuel a b c) N := by
+  have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
+      + toPolyG b * toPolyG q = toPolyG c := hsol
+  have habs := expPrimCancellation_of_logDerivativeBound hqP ha0 hv hble heq hbound
+  rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
+  exact habs
+
+end ComputableExpPrim
 
 end DeepWiki.SymbolicIntegration
