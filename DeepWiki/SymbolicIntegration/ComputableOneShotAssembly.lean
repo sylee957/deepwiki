@@ -78,6 +78,73 @@ theorem primitive_residue_match_list (s : Finset K) (a : K[X]) (w : K)
   -- the per-root summand is exactly `primitive_monomial_residue_match`'s
   exact primitive_monomial_residue_match s a w hA hnorm
 
+/-! ### ★ Task 4 (STRETCH): the general-case `hcancel` for the HYPEREXPONENTIAL monomial reduces to `∑ c_α = 0`
+
+For a NON-primitive monomial the residue match needs `monomial_residue_match_of_cancel`'s extra hypothesis
+`hcancel : ∑_α C(c_α)·((v − Cα′) /ₘ (t−α)) = 0`. The cleanest non-primitive case is the **hyperexponential**
+`Dt = η′·t`, i.e. `v = C b · X` (`b = η′`): then each polynomial part `(C b·X − C α′) /ₘ (X − C α)` is the
+*constant* `C b` (degree-1-over-degree-1 quotient), **independent of α**, so `hcancel` collapses to
+`C b·∑_α C(c_α) = 0`, i.e. (over `RatFunc K`) `b·(∑_α c_α) = 0` — and with `b = η′ ≠ 0` this is exactly the
+integrability condition `∑_α c_α = 0` (the exponential-case correction: `a/d` integrable in the log part
+alone). We prove this reduction, pinning the precise general-case obstruction the engine's integrability
+witness must supply. -/
+
+omit [Differential K] [Algebra ℚ K] in
+/-- **The hyperexp polynomial part is the constant `C b`** — `(C b·X − C e) /ₘ (X − C a) = C b` over a field:
+the degree-1-over-degree-1 quotient of `C b·X − C e` by the monic `X − C a` is the leading coefficient `C b`
+(remainder `C(b·a − e)`, degree `0 < 1`). By `divByMonic` uniqueness from `modByMonic_add_div` (`C b·X − C e
+= (X − C a)·C b + C(b·a − e)`). The per-term polynomial part of the hyperexponential monomial `Dt = η′·t`
+(`v = C b·X`), which is α-independent — the source of the `hcancel` collapse to `∑ c_α = 0`. -/
+theorem divByMonic_C_mul_X_sub_C (b e a : K) :
+    (C b * X - C e) /ₘ (X - C a) = C b := by
+  -- the unique `(quot, rem)` with `f = (X−Ca)·quot + rem`, `deg rem < 1`: `quot = C b`, `rem = C(b·a − e)`
+  refine (div_modByMonic_unique (C b) (C (b * a - e)) (monic_X_sub_C a) ⟨?_, ?_⟩).1
+  · -- `C(b·a − e) + (X − C a)·C b = C b·X − C e`
+    rw [map_sub, map_mul]; ring
+  · -- the remainder `C(b·a − e)` has degree `0 < 1 = deg (X − C a)`
+    rw [degree_X_sub_C]
+    exact lt_of_le_of_lt degree_C_le (by decide)
+
+omit [Algebra ℚ K] in
+/-- **★ The hyperexponential `hcancel` sum is `algebraMap(C(b·∑c_α))`** — for the hyperexponential monomial
+`v = C b·X` (`b = η′`), the `monomial_residue_match_of_cancel` polynomial-part sum
+`∑_{α∈s} algebraMap(C(c_α)·((v − Cα′) /ₘ (t−α)))` equals `algebraMap(C(b·∑_{α∈s} c_α))` over `RatFunc K` —
+each polynomial part is the α-independent constant `C b` (`divByMonic_C_mul_X_sub_C`), so the sum is
+`algebraMap(C(∑_α c_α·b)) = algebraMap(C(b·∑c_α))`. The reduction of the general-case `hcancel` to a single
+scalar `b·∑c_α`. -/
+theorem hyperexp_cancel_sum_eq (s : Finset K) (b : K) (c : K → K) :
+    ∑ α ∈ s, algebraMap K[X] (RatFunc K) (C (c α) * ((C b * X - C (α′)) /ₘ (X - C α)))
+      = algebraMap K[X] (RatFunc K) (C (b * ∑ α ∈ s, c α)) := by
+  -- each polynomial part is the constant `C b`; fold the residue and sum the constants
+  have hterm : ∀ α ∈ s,
+      algebraMap K[X] (RatFunc K) (C (c α) * ((C b * X - C (α′)) /ₘ (X - C α)))
+        = algebraMap K[X] (RatFunc K) (C (c α * b)) := by
+    intro α _
+    rw [divByMonic_C_mul_X_sub_C, ← C_mul]
+  rw [Finset.sum_congr rfl hterm, ← map_sum]
+  -- `∑_α C(c_α·b) = C(∑_α c_α·b) = C(b·∑c_α)`, then the single `algebraMap` of equal polynomials
+  congr 1
+  rw [← map_sum, Finset.mul_sum]
+  exact congrArg C (Finset.sum_congr rfl fun α _ => mul_comm (c α) b)
+
+omit [Algebra ℚ K] in
+/-- **★★ The general-case `hcancel` ⟺ `∑ c_α = 0` for the hyperexponential monomial** (the STRETCH
+obstruction, pinned) — for `v = C b·X` (hyperexponential `Dt = η′·t`, `b = η′ ≠ 0`), the
+`monomial_residue_match_of_cancel` polynomial-part cancellation
+`∑_{α∈s} algebraMap(C(c_α)·((v − Cα′) /ₘ (t−α))) = 0` holds **iff** `∑_{α∈s} c_α = 0` — the integrability
+condition (`a/d` integrable in the log part alone, the exponential-case correction). So for the
+hyperexponential case the general `hcancel` is GENUINELY EXTRA content equivalent to `∑ c_α = 0`, NOT a free
+identity. By `hyperexp_cancel_sum_eq` (the sum is `algebraMap(C(b·∑c_α))`) and `algebraMap`-injectivity:
+`algebraMap(C(b·∑c_α)) = 0 ↔ b·∑c_α = 0 ↔ ∑c_α = 0` (`b ≠ 0`). The precise general-case obstruction the
+engine's integrability witness must discharge. -/
+theorem hyperexp_cancel_iff_sum_zero (s : Finset K) (b : K) (hb : b ≠ 0) (c : K → K) :
+    (∑ α ∈ s, algebraMap K[X] (RatFunc K) (C (c α) * ((C b * X - C (α′)) /ₘ (X - C α))) = 0)
+      ↔ ∑ α ∈ s, c α = 0 := by
+  rw [hyperexp_cancel_sum_eq s b c]
+  -- `algebraMap (C x) = 0 ↔ x = 0` (algebraMap `K[X] → RatFunc K` and `C` both injective)
+  rw [(map_eq_zero_iff _ (RatFunc.algebraMap_injective K)), Polynomial.C_eq_zero,
+    mul_eq_zero, or_iff_right hb]
+
 end ResidueMatchTower
 
 /-! ### Task 1 (engine vocabulary): the list↔Finset bridge over `K = CFieldSpec.K α`
@@ -409,6 +476,14 @@ example {K : Type*} [Field K] [Differential K] [Algebra ℚ K] (s : Finset K) (a
       = algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) :=
   ResidueMatchTower.primitive_residue_match_list s a w hA hnorm
 
+-- ★★ THE GENERAL-CASE STRETCH (hyperexp reduction, PROVEN): for `v = C b·X` (`Dt = η′·t`, `b ≠ 0`) the
+-- `monomial_residue_match_of_cancel` cancellation `hcancel` holds ⟺ `∑ c_α = 0` — the integrability witness,
+-- FALSE in general; the precise general-case obstruction, pinned as a theorem.
+example {K : Type*} [Field K] [Differential K] (s : Finset K) (b : K) (hb : b ≠ 0) (c : K → K) :
+    (∑ α ∈ s, algebraMap K[X] (RatFunc K) (C (c α) * ((C b * X - C (α′)) /ₘ (X - C α))) = 0)
+      ↔ ∑ α ∈ s, c α = 0 :=
+  ResidueMatchTower.hyperexp_cancel_iff_sum_zero s b hb c
+
 -- ★★★ THE MILESTONE at `α = QFunNZG ℚ` (checker-free, no native_decide): `cIntegrateGFull = some res ⟹
 -- D(res) = a/d` over `RatFunc ℚ` for primitive `Dt`, gated only on the abstract engine inputs (canonical
 -- reconstruction + Hermite telescoping + per-root residue-log reassembly; RT cancellation automatic).
@@ -486,16 +561,20 @@ SAME pattern as the algebraic `toPolyG_cAlgResidueResultant_eq_of_eval`). The pr
 RT cancellation, which in the hyperexp/hypertangent case is the integrability witness) is fully discharged
 here by `primitive_cancel` — the primitive regime needs no extra integrability hypothesis.
 
-THE GENERAL-CASE `hcancel` (the documented STRETCH — NOT attempted, precise status): for a NON-primitive
+THE GENERAL-CASE `hcancel` (the STRETCH — hyperexp reduction now PROVEN, precise status): for a NON-primitive
 monomial (`deg_t (toPolyG Dt) ≥ 1`, hyperexponential `Dt = η′·t` / hypertangent), the RT polynomial-part
 cancellation `∑_α c_α·((v − Cα′) /ₘ (t−α)) = 0` (`ResidueMatchTower.monomial_residue_match_of_cancel`'s
-`hcancel`) is GENUINELY EXTRA content — for `Dt = η′·t` it reduces to `∑_α c_α = 0`, the integrability
-condition (`a/d` integrable in the log part alone). The engine discharges it operationally (resultant fully
-split + leftover proper ⟹ `∑ c_α = 0`), but the abstract proof needs the integrability witness routed
-through a `t`-power/degree argument — Bronstein's reduction of the hyperexp case. Precisely: the engine-
-success fact that would discharge it is *the residue resultant `cResidueResultantTowerG` splitting
-completely over the candidate set AND the Hermite leftover `hNum/hDen` being proper* — which forces `∑ c_α =
-0` (the exponential correction). That degree argument is the unwritten general-case piece. -/
+`hcancel`) is GENUINELY EXTRA content. For the hyperexponential case `Dt = η′·t` (`v = C b·X`, `b = η′ ≠ 0`)
+this is **PROVEN HERE** to reduce EXACTLY to `∑_α c_α = 0` (`hyperexp_cancel_iff_sum_zero`, via
+`divByMonic_C_mul_X_sub_C` / `hyperexp_cancel_sum_eq`): the per-term polynomial part is the α-independent
+constant `C b`, so `hcancel ⟺ b·∑c_α = 0 ⟺ ∑c_α = 0` — the integrability condition (`a/d` integrable in the
+log part alone, the exponential correction). So the obstruction is now PINNED as a theorem, not a sketch:
+`hcancel` for hyperexp IS the integrability witness `∑c_α = 0`, FALSE in general. What remains (the genuinely
+unwritten general piece) is the engine-success fact that *forces* `∑c_α = 0` — the residue resultant
+`cResidueResultantTowerG` splitting completely over the candidate set AND the Hermite leftover `hNum/hDen`
+being proper — i.e. that the engine RETURNING a result on a hyperexp input certifies `∑c_α = 0`. That
+degree/`t`-power argument (Bronstein's hyperexp reduction) is the remaining general-case content; the
+hypertangent case is analogous with `v = C b·X² + …`. -/
 
 #print axioms ResidueMatchTower.primitive_residue_match_list
 #print axioms primitive_residue_match_list_engine
@@ -503,5 +582,6 @@ completely over the candidate set AND the Hermite leftover `hNum/hDen` being pro
 #print axioms field_identity_of_cIntegrateReducedG_primitive
 #print axioms cIntegrateGFull_primitive_oneShot
 #print axioms cIntegrateGFull_primitive_oneShot_qfunNZG
+#print axioms ResidueMatchTower.hyperexp_cancel_iff_sum_zero
 
 end DeepWiki.SymbolicIntegration
