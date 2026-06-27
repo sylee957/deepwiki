@@ -169,6 +169,43 @@ theorem primitive_monomial_residue_match (s : Finset K) (a : K[X]) (w : K)
   -- both sides are `algebraMap (C ·) / algebraMap (t − α)`; the constants agree by `h`
   rw [h]
 
+/-! ### Step 5: the general monomial RT partial fraction (modulo the polynomial-part cancellation)
+
+For a NON-primitive monomial (`deg_t v ≥ 1`, e.g. hyperexponential `Dt = η′·t` or hypertangent), the
+monomial log-derivative `D(t−α)/(t−α) = (v − Cα′)/(t−α)` has a *polynomial part* `q_α = v /ₘ (t−α)`
+(degree `deg v − 1 ≥ 0`). Splitting `(v − Cα′)/(t−α) = q_α + (v(α)−α′)/(t−α)` (polynomial division),
+the RT sum becomes `(∑_α c_α·q_α) + a/d` — the second summand by the per-place residue match
+(`residue_mul_eval_sub_eq`) and `ratFunc_eq_sum_residue_div`. So the full identity `∑ c_α D(t−α)/(t−α) =
+a/d` holds **iff the polynomial parts cancel**, `∑_α c_α·q_α = 0`.
+
+This `∑ c_α q_α = 0` is the genuinely-harder content (and is FALSE without an integrability/structure
+condition — e.g. for `Dt = η′·t` it reduces to `∑_α c_α·η′ = 0`, i.e. `∑ c_α = 0`, which is the
+exponential-case correction that holds exactly when `a/d` is integrable in the log part alone). We isolate
+it as an explicit hypothesis `hcancel` and prove the reduction. -/
+
+omit [Differential K] [Algebra ℚ K] in
+/-- **Polynomial over a linear factor splits off its quotient and a simple pole** — in `RatFunc K`,
+`algebraMap p / algebraMap (X − C α) = algebraMap(p /ₘ (X − C α)) + algebraMap(C(p.eval α))/algebraMap(X
+− C α)`. From `modByMonic_add_div` (`p = C(p.eval α) + (X−Cα)·(p /ₘ (X−Cα))`, using
+`modByMonic_X_sub_C_eq_C_eval`). The euclidean split of a proper-or-improper `p/(t−α)` into its polynomial
+part and its residue-over-pole. -/
+theorem algebraMap_div_X_sub_C_split (p : K[X]) (α : K) :
+    algebraMap K[X] (RatFunc K) p / algebraMap K[X] (RatFunc K) (X - C α)
+      = algebraMap K[X] (RatFunc K) (p /ₘ (X - C α))
+        + algebraMap K[X] (RatFunc K) (C (p.eval α)) / algebraMap K[X] (RatFunc K) (X - C α) := by
+  have hsplit : (p : K[X]) = (X - C α) * (p /ₘ (X - C α)) + C (p.eval α) := by
+    have := modByMonic_add_div p (X - C α)
+    rw [modByMonic_X_sub_C_eq_C_eval] at this
+    linear_combination -this
+  have hXα : algebraMap K[X] (RatFunc K) (X - C α) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
+  have hmap : algebraMap K[X] (RatFunc K) p
+      = algebraMap K[X] (RatFunc K) (X - C α) * algebraMap K[X] (RatFunc K) (p /ₘ (X - C α))
+        + algebraMap K[X] (RatFunc K) (C (p.eval α)) := by
+    rw [← map_mul, ← map_add]; exact congrArg _ hsplit
+  rw [hmap]
+  field_simp
+
 end ResidueMatchTower
 
 end DeepWiki.SymbolicIntegration
