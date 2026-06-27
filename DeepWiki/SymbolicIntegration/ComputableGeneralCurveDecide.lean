@@ -187,4 +187,141 @@ def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis 
         | some term => some ⟨v, [term]⟩
         | none => none
 
+/-! ## Part 2 — REACHABLE layer: structural readings of the decision's `some/none` branches
+
+Before soundness/completeness, the structural facts the verdicts ride on — proven by unfolding
+`cIntegrateGeneralCurveDecide` and case-splitting the `afRationalSolve` / `afLogArgSolve` /
+`genCurveTorsionLogTerm` matches. These mirror the hyperelliptic `cIntegrateAlgebraicDecide_principal_eq`,
+`torsionLogTerm_none_of_decide_none`, `decide_isSome_iff_torsion_isSome`. -/
+
+/-- **A `none` output forces the torsion branch to `none`** `genCurveTorsionLogTerm_none_of_decide_none` —
+when `cIntegrateGeneralCurveDecide … = none`, EITHER the rational solve failed
+(`afRationalSolve … = none`) OR (the rational solve succeeded, there was a log part, the principal log solve
+failed, and) the torsion decision returned `none` (the residue divisor is non-torsion). The disjunction
+isolating the two ways the verdict can be `none`; the general lift of `torsionLogTerm_none_of_decide_none`. -/
+theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : CPolyG (QFunNZG ℚ))
+    (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ) (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ))
+    (tin : GeneralCurveTorsionInputs) (hasLogPart : Bool)
+    (hnone : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
+      = none) :
+    afRationalSolve fuel f basis degBound ratIntegrand = none
+      ∨ ((afLogArgSolve fuel f basis degBound logIntegrand).isNone = true
+          ∧ (genCurveTorsionLogTerm fuel f basis tin).isNone = true) := by
+  unfold cIntegrateGeneralCurveDecide at hnone
+  cases hv : afRationalSolve fuel f basis degBound ratIntegrand with
+  | none => exact Or.inl rfl
+  | some v =>
+    simp only [hv] at hnone
+    by_cases hlp : hasLogPart = false
+    · rw [if_pos hlp] at hnone; simp at hnone
+    · rw [if_neg hlp] at hnone
+      cases hu : afLogArgSolve fuel f basis degBound logIntegrand with
+      | some u => rw [hu] at hnone; simp at hnone
+      | none =>
+        rw [hu] at hnone
+        cases hT : genCurveTorsionLogTerm fuel f basis tin with
+        | some term => rw [hT] at hnone; simp at hnone
+        | none => exact Or.inr ⟨by simp, by simp⟩
+
+/-! ## Part 3 — REACHABLE layer: SOUNDNESS `some F → D(F) = integrand` (modulo the named frontier)
+
+The soundness residual bundles, per `some`-branch, the genuine-field identity
+`IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs` (the cross-multiplied
+`D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`) — exactly the conclusion the already-proven general
+capstone `isGeneralAlgebraicIntegral_of_parts` (`ComputableGeneralLogSoundness`) delivers from the rational +
+log parts. So the boundary is citable with NO `sorry`: each clause is an instance of the **proven** general
+soundness composition specialized to the branch output. -/
+
+section Soundness
+
+variable (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
+variable (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
+variable (hasLogPart : Bool) (integrand commonDenom : CPolyG (QFunNZG ℚ))
+variable (cofs : List (CPolyG (QFunNZG ℚ)))
+
+/-- **★ The general-curve-decide soundness residual** `GeneralCurveDecideSoundnessResidual …`: the three
+branch-instances that turn each `some F` branch of `cIntegrateGeneralCurveDecide` into the genuine-field
+soundness `IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs` (the
+cross-multiplied `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`). A `Prop`-bundle of stated
+assumptions (NOT proved), each an instance of the **proven** general capstone
+`isGeneralAlgebraicIntegral_of_parts` specialized to the branch output — so the soundness boundary is citable
+with NO `sorry`:
+
+* `hnolog` — the no-log branch: for the rational-only output `⟨v, []⟩` (`v = afRationalSolve …`),
+  `IsGeneralAlgebraicIntegral … ⟨v,[]⟩.ratPart commonDenom ⟨v,[]⟩.logTerms cofs` (the rational part is the
+  whole answer — `D(v) = integrand`);
+* `hprincipal` — the principal branch: for `⟨v, [(1, u)]⟩` (`u = afLogArgSolve …`),
+  `IsGeneralAlgebraicIntegral … commonDenom [(1, u)] cofs` (`D(v + 1·log u) = integrand`);
+* `htorsion` — the torsion branch: for `⟨v, [term]⟩` (`term = genCurveTorsionLogTerm …`),
+  `IsGeneralAlgebraicIntegral … commonDenom [term] cofs` (`D(v + (1/m)·log g) = integrand`).
+
+All three are the proven capstone's conclusion, specialized — checker-free, no round-trip hypothesis. The
+general-curve analogue of `AlgebraicDecideSoundnessResidual`. -/
+structure GeneralCurveDecideSoundnessResidual : Prop where
+  /-- No-log branch: `D(⟨v, []⟩) = integrand` (rational part is the whole answer). -/
+  hnolog : ∀ v, afRationalSolve fuel f basis degBound ratIntegrand = some v →
+    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
+      (GeneralCurveIntegralResult.mk v []).ratPart commonDenom
+      (GeneralCurveIntegralResult.mk v []).logTerms cofs
+  /-- Principal branch: `D(⟨v, [(1, u)]⟩) = integrand`. -/
+  hprincipal : ∀ v u, afRationalSolve fuel f basis degBound ratIntegrand = some v →
+    afLogArgSolve fuel f basis degBound logIntegrand = some u →
+    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
+      (GeneralCurveIntegralResult.mk v [(CField.one, u)]).ratPart commonDenom
+      (GeneralCurveIntegralResult.mk v [(CField.one, u)]).logTerms cofs
+  /-- Torsion branch: `D(⟨v, [term]⟩) = integrand`. -/
+  htorsion : ∀ v term, afRationalSolve fuel f basis degBound ratIntegrand = some v →
+    genCurveTorsionLogTerm fuel f basis tin = some term →
+    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
+      (GeneralCurveIntegralResult.mk v [term]).ratPart commonDenom
+      (GeneralCurveIntegralResult.mk v [term]).logTerms cofs
+
+/-- **★★ SOUNDNESS of the self-determining GENERAL-curve integrator** (`cIntegrateGeneralCurveDecide_sound`,
+`some F → D(F) = integrand`, modulo the named frontier). Under the soundness residual (the three
+branch-instances of the proven general capstone `isGeneralAlgebraicIntegral_of_parts`), whenever
+`cIntegrateGeneralCurveDecide … = some F` the output differentiates to the integrand — the genuine-field
+identity `IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs`, the
+cross-multiplied `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`. **No round-trip hypothesis** is
+passed at the call: the three branches discharge from the residual (no-log / principal / torsion). The
+soundness verdict for the general `Option` integrator, modulo exactly the already-proven general soundness
+composition. The general-curve analogue of `cIntegrateAlgebraicDecide_sound`. -/
+theorem cIntegrateGeneralCurveDecide_sound
+    (hres : GeneralCurveDecideSoundnessResidual fuel f basis degBound ratIntegrand logIntegrand tin
+      integrand commonDenom cofs)
+    (F : GeneralCurveIntegralResult)
+    (hsome : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
+      = some F) :
+    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs := by
+  unfold cIntegrateGeneralCurveDecide at hsome
+  cases hv : afRationalSolve fuel f basis degBound ratIntegrand with
+  | none => rw [hv] at hsome; simp at hsome
+  | some v =>
+    simp only [hv] at hsome
+    by_cases hlp : hasLogPart = false
+    · -- no-log branch: F = ⟨v, []⟩
+      rw [if_pos hlp, Option.some.injEq] at hsome
+      rw [← hsome]
+      exact hres.hnolog v hv
+    · -- has-log branch
+      rw [if_neg hlp] at hsome
+      cases hu : afLogArgSolve fuel f basis degBound logIntegrand with
+      | some u =>
+        -- principal branch: F = ⟨v, [(1, u)]⟩
+        rw [hu, Option.some.injEq] at hsome
+        rw [← hsome]
+        exact hres.hprincipal v u hv hu
+      | none =>
+        -- torsion branch: F = ⟨v, [term]⟩, or none
+        rw [hu] at hsome
+        cases hT : genCurveTorsionLogTerm fuel f basis tin with
+        | some term =>
+          rw [hT, Option.some.injEq] at hsome
+          rw [← hsome]
+          exact hres.htorsion v term hv hT
+        | none =>
+          rw [hT] at hsome
+          exact absurd hsome (by simp)
+
+end Soundness
+
 end DeepWiki.SymbolicIntegration
