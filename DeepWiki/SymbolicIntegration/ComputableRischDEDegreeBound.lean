@@ -22,22 +22,27 @@ The proof compares the degrees of the two LHS terms `a·Dq` (degree `≤ dₐ + 
 `dq·lc(q)·lc(v)` never vanishes) and `b·q` (degree `d_b + dq`).
 
 **What is proven here (axiom-clean, unconditional).**
-* `natDegree_le_of_bDominates` — the **`b·q`-dominates** case: when `dₐ + max(0, δ−1) < d_b`, the `a·Dq`
-  term is strictly lower degree, so `c = a·Dq + b·q` has degree `d_b + dq`, giving `dq = d_c − d_b`. Covers
-  the `dₐ < d_b` branch (δ ≤ 1) and the `dₐ + δ − 1 < d_b` branch (δ ≥ 2).
-* `natDegree_le_of_aDominates_nonlinear` — the **`a·Dq`-dominates** nonlinear case: δ ≥ 2 with
+* `natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero` — ★ the **sharp top-coefficient bound**: when
+  the leading coefficient of `c` at the candidate maximal degree `candTopDegree = max(dₐ + max(0, δ−1), d_b)
+  + dq` does **not** vanish (no leading-term cancellation), `deg q ≤ rdeBoundDegreeAbstract`, uniformly
+  across **all** δ (no `CharZero`). This is the discharge the computable bound uses.
+* `natDegree_le_of_bDominates` — the explicit **`b·q`-dominates** case: when `dₐ + max(0, δ−1) < d_b`, the
+  `a·Dq` term is strictly lower degree, so `c = a·Dq + b·q` has degree `d_b + dq`, giving `dq = d_c − d_b`.
+* `natDegree_le_of_aDominates_nonlinear` — the explicit **`a·Dq`-dominates** nonlinear case: δ ≥ 2 with
   `dₐ + δ − 1 > d_b`; the `a·Dq` term strictly dominates (exact degree, leading coeff `≠ 0`), giving
-  `dq = d_c − (dₐ + δ − 1)`.
+  `dq = d_c − (dₐ + δ − 1)`. (In both strict cases the dominant term provides a nonzero top coefficient, so
+  they are special cases of the top-coefficient bound.)
 
-**The deep residual (precisely isolated, NEVER `sorry`).** The remaining configurations — δ ≥ 2 with
-`dₐ + δ − 1 = d_b`, and δ ≤ 1 with `dₐ ≥ d_b` — are where the two terms have **equal candidate top
-degree** (or, for δ ≤ 1, where `Dq`'s leading coefficient can vanish): the leading terms can **cancel**,
-and the true degree bound carries an extra `λ = −lc(b)/(lc(a)·lc(v))` term (the integer-root cancellation
-degree, Bronstein §6.3) that `cRdeBoundDegreeG` **omits** (its docstring: "the cancellation refinements
-are the documented continuation"). In these configurations the engine's bound can be strictly below the
-true solution degree, so `hbound` is genuinely beyond the non-cancellation argument; it is bundled as the
-named residual `RdeDegreeBoundCancellationResidual` (a stated `Prop`, NO `sorry`), and `hbound` is proved
-*modulo* it. -/
+**The deep residual (precisely isolated, NEVER `sorry`).** The single uncovered case is **leading-term
+cancellation**: the top coefficient of `c` at the candidate maximal degree **vanishes**
+(`c.coeff (candTopDegree …) = 0`), dropping `deg c` below it. This can fire only in the **balanced**
+configurations (δ ≥ 2 with `dₐ + δ − 1 = d_b`, δ ≤ 1 with `d_b ≤ dₐ`), where the two LHS leading terms can
+cancel and the true degree bound carries an extra `λ = −lc(b)/(lc(a)·lc(v))` term (the integer-root
+cancellation degree, Bronstein §6.3) that `cRdeBoundDegreeG` **omits** (its docstring: "the cancellation
+refinements are the documented continuation"). There the engine's bound can be strictly below the true
+solution degree, so `hbound` is genuinely beyond the non-cancellation argument; it is bundled as the named
+residual `RdeBoundCancellationResidual` (a stated `Prop`, NO `sorry`), and `hbound` is proved *modulo*
+it. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -229,6 +234,73 @@ theorem natDegree_le_rdeBoundDegreeAbstract_of_balanced {v a b c q : K[X]} (hq :
     · -- balanced: the residual
       exact hbal ⟨hbd, hnl⟩
 
+/-! ### The sharp top-coefficient bound (the precise cancellation residual)
+
+A sharper, uniform discharge of the degree bound for **all** δ: the candidate maximal degree of
+`a·Dq + b·q` is `candTopDegree v a b q = max(dₐ + max(0, δ−1), d_b) + dq`; if the leading coefficient of
+`c` *at that degree* does **not** vanish (no cancellation), the bound holds — `deg q ≤
+rdeBoundDegreeAbstract v a b c`. This subsumes both strict-domination cases (there the dominant term
+provides a nonzero top coefficient automatically) and pins the residual to **exactly** the top-coefficient
+cancellation `c.coeff(candTopDegree) = 0` — the precise §6.3 `λ`-cancellation phenomenon, no `CharZero`
+needed. -/
+
+/-- **The candidate maximal degree** `candTopDegree v a b q = max(dₐ + max(0, δ−1), d_b) + dq` of the LHS
+`a·Dq + b·q` (`D = implicitDeriv v`): both terms have degree `≤` this (the `a·Dq` term via
+`natDegree_implicitDeriv_le`, the `b·q` term via `natDegree_mul_le`). The degree at which a leading-term
+cancellation, if any, occurs. -/
+def candTopDegree (v a b q : K[X]) : ℕ :=
+  max (a.natDegree + max 0 (v.natDegree - 1)) b.natDegree + q.natDegree
+
+omit [CharZero K] in
+/-- **★ Bronstein Thm 6.3.1 over `K[X]`, the sharp top-coefficient form**
+(`natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero`): if `q` solves `a·Dq + b·q = c` and the leading
+coefficient of `c` at the candidate maximal degree does **not** vanish
+(`c.coeff (candTopDegree v a b q) ≠ 0` — i.e. the top does not cancel), then
+`deg q ≤ rdeBoundDegreeAbstract v a b c`. Uniform across **all** δ (no `CharZero`), and tight: `c` then has
+degree exactly `candTopDegree`, so `dq = d_c − max(dₐ + max(0, δ−1), d_b)`, which is `≤` the engine's bound
+in every case (with the δ = 0 `+1` absorbed). The residual is pinned to the precise cancellation
+`c.coeff(candTopDegree) = 0`. -/
+theorem natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero {v a b c q : K[X]}
+    (heq : a * Differential.implicitDeriv v q + b * q = c)
+    (htop : c.coeff (candTopDegree v a b q) ≠ 0) :
+    q.natDegree ≤ rdeBoundDegreeAbstract v a b c := by
+  -- upper bound: deg c ≤ candTopDegree (both LHS terms are bounded by it)
+  have hub : c.natDegree ≤ candTopDegree v a b q := by
+    rw [← heq, candTopDegree]
+    refine (natDegree_add_le _ _).trans (max_le ?_ ?_)
+    · calc (a * Differential.implicitDeriv v q).natDegree
+          ≤ a.natDegree + (Differential.implicitDeriv v q).natDegree := natDegree_mul_le
+        _ ≤ a.natDegree + (q.natDegree + max 0 (v.natDegree - 1)) := by
+            gcongr; exact natDegree_implicitDeriv_le v q
+        _ ≤ _ := by
+            have := le_max_left (a.natDegree + max 0 (v.natDegree - 1)) b.natDegree; omega
+    · calc (b * q).natDegree ≤ b.natDegree + q.natDegree := natDegree_mul_le
+        _ ≤ _ := by
+            have := le_max_right (a.natDegree + max 0 (v.natDegree - 1)) b.natDegree; omega
+  -- lower bound from the nonzero top coefficient: deg c = candTopDegree
+  have hdc : c.natDegree = candTopDegree v a b q :=
+    le_antisymm hub (le_natDegree_of_ne_zero htop)
+  -- case on δ, matching the bound's branches
+  simp only [rdeBoundDegreeAbstract, candTopDegree] at hdc ⊢
+  split
+  · -- δ ≥ 2
+    rename_i hδ
+    rw [show max 0 (v.natDegree - 1) = v.natDegree - 1 from by omega] at hdc
+    rw [show max (a.natDegree + v.natDegree - 1 : ℤ) (b.natDegree : ℤ)
+        = ((max (a.natDegree + (v.natDegree - 1)) b.natDegree : ℕ) : ℤ) from by push_cast; omega]
+    omega
+  · split
+    · -- δ = 1
+      rename_i hδ1
+      rw [show max 0 (v.natDegree - 1) = 0 from by omega] at hdc
+      rw [show max (b.natDegree : ℤ) (a.natDegree : ℤ)
+          = ((max (a.natDegree + 0) b.natDegree : ℕ) : ℤ) from by push_cast; omega]
+      omega
+    · -- δ = 0
+      rename_i hδ0
+      rw [show max 0 (v.natDegree - 1) = 0 from by omega] at hdc
+      split <;> omega
+
 end AbstractBound
 
 /-! ## The computable bridge `cRdeBoundDegreeG ↔ rdeBoundDegreeAbstract`
@@ -254,48 +326,41 @@ end Bridge
 /-! ## ★ The computable degree bound `cdegG q ≤ cRdeBoundDegreeG`, modulo the cancellation residual
 
 Assembling the abstract bound with the bridge: a `CPolyG`-level solution `q` of the §6.3-reduced
-`a·Dq + b·q = c` (`IsReducedRdeSol`) has `cdegG q ≤ cRdeBoundDegreeG …`, discharging the two
-strict-domination configurations unconditionally and reducing exactly to the deep §6.3 cancellation
-residual. The residual domain `toPolyG a = 0 ∨ RdeIsBalanced …` is the precise complement of the clean
-cases: the genuine `λ`-cancellation (`RdeIsBalanced`, where the leading terms cancel and `cRdeBoundDegreeG`
-omits the `λ` term) together with the degenerate `a = 0` (where the equation collapses to `b·q = c` and the
-nonlinear branch is vacuous). This is exactly `RischDEInnerCompleteness.hbound`'s shape. -/
+`a·Dq + b·q = c` (`IsReducedRdeSol`) has `cdegG q ≤ cRdeBoundDegreeG …`, discharged uniformly via the sharp
+top-coefficient bound and reducing exactly to the deep §6.3 cancellation residual. The residual condition —
+the leading coefficient of `c` at the candidate maximal degree **vanishes**
+(`(toPolyG c).coeff (candTopDegree …) = 0`) — is the precise §6.3 `λ`-cancellation: when the two LHS
+leading terms cancel, the engine's bound omits the `λ` term and can fall short. No `CharZero`, no `a = 0`
+special case (the top-coefficient lemma covers all configurations). This is exactly
+`RischDEInnerCompleteness.hbound`'s shape. -/
 
 section ComputableBound
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-  [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **★ The §6.3 degree bound at the `CPolyG` layer, modulo the cancellation residual**
 (`cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol`): any solution `q` of the §6.3-reduced
 `a·Dq + b·q = c` (`IsReducedRdeSol Dt a b c q`, with `D = implicitDeriv (toPolyG Dt)`) has
-`cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c`, **provided** the residual `hres` discharges the
-cancellation-prone configurations `toPolyG a = 0 ∨ RdeIsBalanced …`. The two strict-domination
-configurations (`toPolyG a ≠ 0` with `b·q` or nonlinear `a·Dq` strictly dominating) are discharged
-unconditionally via `natDegree_le_rdeBoundDegreeAbstract_of_balanced` and the bridge; `q = 0` is trivial.
-This is `RischDEInnerCompleteness.hbound` modulo the precisely isolated deep §6.3 residual (the omitted `λ`
-cancellation term + the degenerate `a = 0`). -/
+`cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c`, **provided** the residual `hres` discharges the **leading-term
+cancellation** case `(toPolyG c).coeff (candTopDegree …) = 0`. When the top coefficient does *not* vanish
+(no cancellation), the sharp `natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero` discharges the bound
+unconditionally (all δ, including the strict-domination configurations); the residual supplies only the
+genuine cancellation. This is `RischDEInnerCompleteness.hbound` modulo the precisely isolated deep §6.3
+`λ`-cancellation. -/
 theorem cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (fuel : ℕ) (a b c q : CPolyG α)
     (hsol : IsReducedRdeSol Dt a b c q)
-    (hres : (toPolyG a = 0 ∨
-        RdeIsBalanced (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c)) →
+    (hres : (toPolyG c).coeff
+          (candTopDegree (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG q)) = 0 →
       cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c) :
     cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c := by
-  haveI : CharZero (CFieldSpec.K α) := algebraRat.charZero (R := CFieldSpec.K α)
   -- the equation, read abstractly over `(CFieldSpec.K α)[X]`
   have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
       + toPolyG b * toPolyG q = toPolyG c := hsol
-  rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
-  by_cases hq0 : toPolyG q = 0
-  · rw [hq0]; simp
-  · by_cases ha0 : toPolyG a = 0
-    · -- degenerate `a = 0`: routed to the residual
-      have := hres (Or.inl ha0)
-      rwa [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract] at this
-    · -- `a ≠ 0`: the abstract bound, balanced → residual
-      refine natDegree_le_rdeBoundDegreeAbstract_of_balanced hq0 ha0 heq (fun hbal => ?_)
-      have := hres (Or.inr hbal)
-      rwa [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract] at this
+  by_cases htop : (toPolyG c).coeff
+      (candTopDegree (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG q)) = 0
+  · exact hres htop
+  · rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
+    exact natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero heq htop
 
 end ComputableBound
 
@@ -312,15 +377,15 @@ term). The `hnorm`/`hsolve` clauses (the §6.2 normal-denominator and §6.4–6.
 section Wiring
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
-  [Algebra ℚ (CFieldSpec.K α)]
 
 /-- **★ The precise §6.3 degree-bound cancellation residual** `RdeBoundCancellationResidual Dt fnum fden
 gnum gden`: for every §6.2-normal-denominator output `(a0, b0, c0, h0)` and every solution `q` of the
-§6.2-special-cleared §6.3-reduced equation, the degree bound `cdegG q ≤ cRdeBoundDegreeG …` holds **on the
-cancellation-prone configurations** `toPolyG a = 0 ∨ RdeIsBalanced …`. This is exactly the residual that
-the strict-domination cases of Bronstein Thm 6.3.1 do *not* cover: the genuine `λ`-cancellation (the
-leading terms cancel and `cRdeBoundDegreeG` omits the `λ` term) plus the degenerate `a = 0`. A stated
-`Prop`, NO `sorry`; the precise, minimal deep content of `hbound`. -/
+§6.2-special-cleared §6.3-reduced equation, the degree bound `cdegG q ≤ cRdeBoundDegreeG …` holds whenever
+the **leading-term cancellation** occurs — the leading coefficient of `c` at the candidate maximal degree
+vanishes (`(toPolyG c).coeff (candTopDegree …) = 0`). This is exactly the residual that the sharp
+top-coefficient bound does *not* cover: the genuine §6.3 `λ`-cancellation (the two LHS leading terms cancel,
+`cRdeBoundDegreeG` omits the `λ` term, and the engine's bound can fall short). A stated `Prop`, NO `sorry`;
+the precise, minimal deep content of `hbound`. -/
 def RdeBoundCancellationResidual (Dt fnum fden gnum gden : CPolyG α) : Prop :=
   ∀ a0 b0 c0 h0 : CPolyG α,
     cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
@@ -328,11 +393,11 @@ def RdeBoundCancellationResidual (Dt fnum fden gnum gden : CPolyG α) : Prop :=
       IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-      (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1 = 0 ∨
-        RdeIsBalanced (toPolyG Dt)
-          (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
-          (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1)
-          (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)) →
+      (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1).coeff
+          (candTopDegree (toPolyG Dt)
+            (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
+            (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1)
+            (toPolyG q)) = 0 →
       cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
@@ -385,24 +450,30 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 **Is the §6.4 degree bound (Bronstein Thm 6.3.1) proven?** **The reachable cases, yes; the deep
 cancellation case is precisely isolated.** `cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol` proves
 `cdegG q ≤ cRdeBoundDegreeG …` for any solution `q` of the §6.3-reduced `a·Dq + b·q = c`, **modulo** the
-precise residual `RdeBoundCancellationResidual` (the cancellation-prone configurations
-`toPolyG a = 0 ∨ RdeIsBalanced …`). `hbound_of_cancellationResidual` produces the **exact `hbound` field**
-of `RischDEInnerCompleteness` from that residual (confirmed by the structure-building `example`), closing
-the single deepest gap of the completeness proof down to the deep §6.3 content.
+precise residual `RdeBoundCancellationResidual` — the single **leading-term cancellation** case where the
+top coefficient of `c` at the candidate maximal degree vanishes (`(toPolyG c).coeff (candTopDegree …) = 0`).
+`hbound_of_cancellationResidual` produces the **exact `hbound` field** of `RischDEInnerCompleteness` from
+that residual (confirmed by the structure-building `example`), closing the single deepest gap of the
+completeness proof down to the deep §6.3 content.
 
 **Which §6.3 cases are closed, and which is the deep residual?**
-* **Closed unconditionally** (axiom-clean, NO `native_decide`/`sorry`): the two **strict-domination** cases
-  of Thm 6.3.1 — `natDegree_le_of_bDominates` (the `b·q` term strictly dominates: `dₐ + max(0, δ−1) < d_b`,
-  covering `dₐ < d_b` for δ ≤ 1 and `dₐ + δ − 1 < d_b` for δ ≥ 2) and `natDegree_le_of_aDominates_nonlinear`
-  (δ ≥ 2 with `d_b < dₐ + δ − 1`, the `a·Dq` term strictly dominating with exact char-`0` degree). Together
-  these discharge every configuration where the two LHS terms have *distinct* candidate top degrees.
-* **The deep residual** (`RdeBoundCancellationResidual`, NEVER `sorry`). The **balanced** configurations
-  (`RdeIsBalanced`: δ ≥ 2 with `dₐ + δ − 1 = d_b`, or δ ≤ 1 with `d_b ≤ dₐ`) — where the candidate top
-  degrees *coincide* and the leading terms can **cancel** — and the degenerate `a = 0`. In the balanced
-  case the true degree bound (Bronstein §6.3) carries an extra `λ = −lc(b)/(lc(a)·lc(v))` integer-root term
-  that `cRdeBoundDegreeG` **omits** ("the cancellation refinements are the documented continuation"), so the
-  engine's bound can fall strictly below the solution degree — genuinely beyond the non-cancellation
-  comparison. This is the precise §6.3 cancellation frontier.
+* **Closed unconditionally** (axiom-clean, NO `native_decide`/`sorry`): the sharp top-coefficient bound
+  `natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero` — whenever the top coefficient of `c` at the
+  candidate maximal degree `candTopDegree = max(dₐ + max(0, δ−1), d_b) + dq` does **not** vanish (no
+  cancellation), `deg q ≤ rdeBoundDegreeAbstract`, uniformly across **all** δ (no `CharZero`). This subsumes
+  the two explicit **strict-domination** lemmas `natDegree_le_of_bDominates` (the `b·q` term strictly
+  dominates: `dₐ + max(0, δ−1) < d_b`) and `natDegree_le_of_aDominates_nonlinear` (δ ≥ 2 with
+  `d_b < dₐ + δ − 1`, char-`0` exact degree) — in both, the dominant term provides a nonzero top coefficient
+  automatically. Together they discharge every configuration where the two LHS leading terms do not cancel.
+* **The deep residual** (`RdeBoundCancellationResidual`, NEVER `sorry`). The single **leading-term
+  cancellation** case `(toPolyG c).coeff (candTopDegree …) = 0`: the two LHS leading terms cancel at the
+  candidate maximal degree, dropping `deg c` below it. There the true degree bound (Bronstein §6.3) carries
+  an extra `λ = −lc(b)/(lc(a)·lc(v))` integer-root term that `cRdeBoundDegreeG` **omits** ("the cancellation
+  refinements are the documented continuation"), so the engine's bound can fall strictly below the solution
+  degree — genuinely beyond the non-cancellation comparison. This is the precise §6.3 cancellation frontier.
+  (The configurations where this can fire are exactly the **balanced** ones `RdeIsBalanced`: δ ≥ 2 with
+  `dₐ + δ − 1 = d_b`, or δ ≤ 1 with `d_b ≤ dₐ` — recorded as a separate `Prop` with the earlier
+  strict-domination discharge `natDegree_le_rdeBoundDegreeAbstract_of_balanced`.)
 
 **Decision procedure?** Not yet unconditional: `hbound` is the single deepest gap *closed here modulo the
 cancellation residual*, but `RischDEInnerCompleteness`'s sibling clauses `hnorm` (§6.2 normal-denominator
@@ -416,6 +487,7 @@ NO `native_decide`, NO `sorry`) -/
 #print axioms natDegree_le_of_bDominates
 #print axioms natDegree_le_of_aDominates_nonlinear
 #print axioms natDegree_le_rdeBoundDegreeAbstract_of_balanced
+#print axioms natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero
 #print axioms cRdeBoundDegreeG_eq_abstract
 #print axioms cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol
 #print axioms hbound_of_cancellationResidual
