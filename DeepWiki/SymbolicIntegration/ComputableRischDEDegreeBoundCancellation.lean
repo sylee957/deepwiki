@@ -166,6 +166,70 @@ theorem natDegree_le_rdeBoundDegreeWithLambda_of_balanced_nonlinear {v a b c q :
     exact le_trans (natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero heq htop)
       (le_max_left _ _)
 
+/-! ### The exp/primitive cancellation residual (`δ ≤ 1`), and the uniform `RdeIsBalanced` discharge
+
+`RdeIsBalanced` (the locked file's cancellation-prone configuration) splits into exactly two sub-cases: the
+**nonlinear** balanced one (`2 ≤ δ`, forcing `deg b = deg a + δ − 1`), discharged above by the `λ`-recursion;
+and the **exp/primitive** balanced one (`δ ≤ 1`, `deg b ≤ deg a`), whose cancellation condition is the
+deeper `−lc(b)/lc(a) = m·η + Dz/z` (Bronstein Lemma 6.3.3 / 6.3.4, a logarithmic-derivative recursion into
+the base field) rather than the clean `deg q = λ`. The latter is the precisely-isolated remaining residual. -/
+
+omit [CharZero K] [Differential K] in
+/-- **`RdeIsBalanced` splits into nonlinear vs exp/primitive** (`rdeIsBalanced_nonlinear_or_low`): a
+balanced configuration is either nonlinear with `deg b = deg a + δ − 1` (`2 ≤ deg v`), or has `δ ≤ 1` with
+`deg b ≤ deg a` (the exp/primitive case). This is the case split underlying the two cancellation mechanisms:
+the nonlinear one is the clean `λ`-recursion, the `δ ≤ 1` one is the deeper logarithmic-derivative recursion. -/
+theorem rdeIsBalanced_nonlinear_or_low {v a b c : K[X]} (hbal : RdeIsBalanced v a b c) :
+    (2 ≤ v.natDegree ∧ b.natDegree = a.natDegree + v.natDegree - 1)
+      ∨ (v.natDegree ≤ 1 ∧ b.natDegree ≤ a.natDegree) := by
+  obtain ⟨hnb, hna⟩ := hbal
+  rcases le_or_gt 2 v.natDegree with hδ | hδ
+  · refine Or.inl ⟨hδ, ?_⟩
+    -- `¬(da + (δ−1) < db)` gives `db ≤ da+δ−1`; `¬(2≤δ ∧ db < da+δ−1)` with `2≤δ` gives `da+δ−1 ≤ db`
+    have h1 : ¬ (a.natDegree + (v.natDegree - 1) < b.natDegree) := by
+      rw [show max 0 (v.natDegree - 1) = v.natDegree - 1 from by omega] at hnb; exact hnb
+    have h2 : ¬ (b.natDegree < a.natDegree + v.natDegree - 1) := fun h => hna ⟨hδ, h⟩
+    omega
+  · refine Or.inr ⟨by omega, ?_⟩
+    rw [show max 0 (v.natDegree - 1) = 0 from by omega] at hnb; omega
+
+/-- **★ The exp/primitive (`δ ≤ 1`) leading-term cancellation residual** `RdeBoundExpPrimCancellation v a b
+c N`: in the balanced exp/primitive configuration (`deg v ≤ 1`, `deg b ≤ deg a`), a nonzero `q` solving
+`a·Dq + b·q = c` has `deg q ≤ rdeBoundDegreeWithLambda v a b c N`. Unlike the nonlinear case, here the
+cancellation condition is `−lc(b)/lc(a) = m·η + Dz/z` (Bronstein Lemma 6.3.3 / 6.3.4) — a
+logarithmic-derivative recursion into the base field, **not** the clean `deg q = λ`; `N` is the
+non-neg-integer `m` it produces (when it exists). A stated `Prop`, NO `sorry`; the precise, minimal deep
+content of the cancellation bound that the nonlinear `λ`-recursion does not reach (it depends on a base-field
+"is this `m·η + a logarithmic derivative" oracle, the genuine §6.3 frontier). -/
+def RdeBoundExpPrimCancellation (v a b c : K[X]) (N : ℕ) : Prop :=
+  ∀ q : K[X], q ≠ 0 → a ≠ 0 → v.natDegree ≤ 1 → b.natDegree ≤ a.natDegree →
+    a * Differential.implicitDeriv v q + b * q = c →
+    q.natDegree ≤ rdeBoundDegreeWithLambda v a b c N
+
+/-- **★ The full `λ`-cancellation bound over `K[X]`, modulo the exp/primitive residual**
+(`natDegree_le_rdeBoundDegreeWithLambda`): a nonzero `q` solving `a·Dq + b·q = c` (with `a ≠ 0`) has
+`deg q ≤ rdeBoundDegreeWithLambda v a b c N` for a non-neg-integer `λ`-witness `N`
+(`(N:K)·lc(a)·lc(v) + lc(b) = 0`), **provided** the exp/primitive cancellation residual `hexp` covers the
+`δ ≤ 1` balanced configuration. The two strict-domination cases (`natDegree_le_rdeBoundDegreeAbstract_of_*`,
+through `rdeBoundDegreeAbstract ≤ rdeBoundDegreeWithLambda`) and the **nonlinear** balanced case (the proven
+`λ`-recursion) are discharged unconditionally; only the exp/primitive balanced case needs `hexp`. -/
+theorem natDegree_le_rdeBoundDegreeWithLambda {v a b c q : K[X]} (hq : q ≠ 0) (ha0 : a ≠ 0)
+    (heq : a * Differential.implicitDeriv v q + b * q = c) {N : ℕ}
+    (hlam : (N : K) * a.leadingCoeff * v.leadingCoeff + b.leadingCoeff = 0)
+    (hexp : RdeBoundExpPrimCancellation v a b c N) :
+    q.natDegree ≤ rdeBoundDegreeWithLambda v a b c N := by
+  -- non-balanced configs are unconditional (strict-domination → `rdeBoundDegreeAbstract`);
+  -- balanced splits into the proven nonlinear `λ`-recursion and the exp/primitive residual
+  by_cases hbal : RdeIsBalanced v a b c
+  · rcases rdeIsBalanced_nonlinear_or_low hbal with ⟨hv, hbeq⟩ | ⟨hv, hble⟩
+    · -- nonlinear balanced: the proven `λ`-recursion (already lands in `rdeBoundDegreeWithLambda`)
+      exact natDegree_le_rdeBoundDegreeWithLambda_of_balanced_nonlinear hq ha0 hv hbeq heq hlam
+    · -- exp/primitive balanced: the isolated residual (also lands in `rdeBoundDegreeWithLambda`)
+      exact hexp q hq ha0 hv hble heq
+  · -- not balanced: the locked-file strict-domination discharge gives `≤ rdeBoundDegreeAbstract`
+    refine (natDegree_le_rdeBoundDegreeAbstract_of_balanced hq ha0 heq ?_).trans (le_max_left _ _)
+    exact fun h => absurd h hbal
+
 end AbstractLambda
 
 end DeepWiki.SymbolicIntegration
