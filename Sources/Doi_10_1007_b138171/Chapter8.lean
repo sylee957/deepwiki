@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableCoupledDE
+import DeepWiki.SymbolicIntegration.ComputableCoupledDEAssembly
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 8: The Coupled Differential System
@@ -11,11 +12,15 @@ The §8.4 hypertangent case is now rendered as a **computable** solver over `k =
 (book p.265), validated end-to-end on Example 8.4.1.
 
 **Computable-vs-abstract.** Each algorithm below is a computable function over `CPolyG ℚ` (= ℚ(x), the
-base the §8.4 tangent recursion reaches) validated by `native_decide` on Example 8.4.1 (checking the
-returned `(y₁, y₂)`/`(q₁, q₂)` *actually solves* the coupled system via the cleared polynomial identity
-of both rows); the *abstract* correctness (the eq. 8.3 equivalence `Dy + f·y = g ↔` the two rows of
-(8.2)) is **NOT** proved. The §8.1–8.3 denominator/pole bounds on the 2-vector, the §8.2
-hyperexponential coupled case (`CoupledDECancelExp`), and the §8.3 general nonlinear case remain deferred.
+base the §8.4 tangent recursion reaches) validated by `native_decide` on Example 8.4.1. For the **base**
+coupled system the abstract soundness is now **PROVED unconditionally** (`native_decide`-free):
+`cCoupledDESystem_sound` (`ComputableCoupledDEAssembly`) shows a returned `(y₁, y₂)` solves the two
+`ℚ[x]` row identities of (8.2), by discharging the engine's cleared check from the proven
+ℚ-Gaussian-elimination correctness `cConstSolveUniqueQ_sound` + the matrix-assembly faithfulness bridge.
+Still deferred: the §8.4 **tangent** box's abstract correctness (its degree-by-degree telescoping via
+`evalAtI`/`divByTminusI` — base-solve soundness is now one discharged ingredient), the §8.1–8.3
+denominator/pole bounds on the 2-vector, the §8.2 hyperexponential coupled case (`CoupledDECancelExp`),
+and the §8.3 general nonlinear case.
 
 ## NOT YET FORMALIZED (audit 2026-06-24)
 §8.1 The Primitive Case — coupled solver, primitive monomial (the §8.1–8.3 `WeakNormalizer` /
@@ -64,6 +69,14 @@ to **actually solve** the system `(Dy₁; Dy₂) + [[0, −(4x−2)], [4x−2, 0
 ℚ(x) by `coupledClearedCheck` (both cleared row residuals vanish), `native_decide`. *(The book's
 third argument `−8x²+1` is a misprint for `2−8x²` — see the chapter misprint note.)* -/
 abbrev ex_8_4_1_base := @coupledDESystem_example
+
+/-- **Base coupled-system soundness — unconditional** (§8.1/§8.4, eq. 8.2/8.3, `native_decide`-free): a
+returned `cCoupledDESystem` solve `(y₁, y₂)` solves the two `ℚ[x]` row identities
+`D(y₁) + b₁y₁ + a·b₂y₂ = z₁`, `D(y₂) + b₂y₁ + b₁y₂ = z₂`. No cleared-check hypothesis: the engine's check
+is discharged from the proven ℚ-Gaussian-elimination correctness (`cConstSolveUniqueQ_sound`) via the
+matrix-assembly faithfulness bridge (`coupledClearedCheck_of_cCoupledDESystem`). The abstract soundness of
+the §8 base coupled system. -/
+abbrev alg_8_1_coupledDESystem_sound := @cCoupledDESystem_sound
 
 /-! ## §8.4 The Hypertangent Case — the tangent RDE cancellation, computable + validated -/
 

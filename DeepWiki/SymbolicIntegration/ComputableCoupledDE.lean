@@ -437,14 +437,17 @@ def coupledClearedCheck (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) : Bool :=
 
 /-! ### ★ Base coupled-system soundness from the engine's own cleared check (`native_decide`-free)
 
-The base solve `cCoupledDESystem` ends in `cConstSolveUniqueQ` (ℚ-Gaussian elimination, `crref`), whose
-solution-set correctness has **no** abstract lemma in the library (the `crref` invariant is only proven for
-the single-column structural case). So — exactly as the normal-part one-shot is closed through the engine's
-own `checkIdentityG` certificate (`field_identity_of_cIntegrateReducedG_of_checkIdentityG`) rather than
-through Gaussian-elimination correctness — we close the coupled-system soundness through the engine's *own*
-cleared-residual self-check `coupledClearedCheck`. The bridge `coupledClearedCheck = true ⟹ the two field
-identities over ℚ[X]` is `native_decide`-FREE (pure `cisZeroG_iff` + the `toPolyG` ring/derivation homs);
-the self-check itself is `native_decide`-reachable for any concrete run (as in `coupledDESystem_example`). -/
+The base solve `cCoupledDESystem` ends in `cConstSolveUniqueQ` (ℚ-Gaussian elimination, `crref`). We close
+the coupled-system soundness through the engine's *own* cleared-residual self-check `coupledClearedCheck`:
+the bridge `coupledClearedCheck = true ⟹ the two field identities over ℚ[X]` (`coupledClearedCheck_sound`
+below) is `native_decide`-FREE (pure `cisZeroG_iff` + the `toPolyG` ring/derivation homs).
+
+**This self-check is now `native_decide`-FREE *dischargeable*, not merely reachable:**
+`ComputableLinearSolveCorrect` proves `cConstSolveUniqueQ_sound` (abstract ℚ-Gaussian-elimination
+correctness) and `ComputableCoupledDEAssembly` proves the matrix-assembly faithful, giving
+`coupledClearedCheck_of_cCoupledDESystem` (the engine's check always passes on a returned solve) and hence
+the **unconditional** `cCoupledDESystem_sound`. The `*_of_check` lemmas here remain as the self-certifying
+intermediate (and the route the §8.4 tangent box still uses, pending its telescoping correctness). -/
 
 /-- **★ Base coupled-system soundness from the cleared check** (`coupledClearedCheck_sound`,
 `native_decide`-free): if `coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true` then `(y₁, y₂)` solves the base
@@ -475,11 +478,11 @@ theorem coupledClearedCheck_sound (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
 
 /-- **★ Base coupled-system soundness from a self-certifying solve** (`cCoupledDESystem_sound_of_check`,
 `native_decide`-free): if `cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)` AND the returned pair
-passes the engine's own cleared check (`coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true`, the
-`native_decide`-reachable self-certificate), then `(y₁, y₂)` solves the base coupled system at the `ℚ[X]`
-level. Pure composition with `coupledClearedCheck_sound`. The base-solve's `cConstSolveUniqueQ`
-(ℚ-Gaussian elimination) enters only through this self-check — its abstract correctness is the documented
-residual (no `crref` solution-set lemma in the library). -/
+passes the engine's own cleared check (`coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true`), then `(y₁, y₂)`
+solves the base coupled system at the `ℚ[X]` level. Pure composition with `coupledClearedCheck_sound`.
+The cleared check is now *dischargeable* (`coupledClearedCheck_of_cCoupledDESystem`, via the proven
+`cConstSolveUniqueQ_sound`), so the gate-free **`cCoupledDESystem_sound`** (`ComputableCoupledDEAssembly`)
+subsumes this lemma; it is kept as the self-certifying intermediate. -/
 theorem cCoupledDESystem_sound_of_check (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
     (y1 y2 : CPolyG ℚ)
     (_hsome : cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2))
@@ -835,9 +838,11 @@ pair passes the engine's own cleared check (`cancelTanClearedCheck b0 b2 c1 c2 q
 `native_decide`-reachable self-certificate, cf. `rischDE_cancelTan_example`), then `(q₁, q₂)` solves the §8.4
 tangent coupled `t`-polynomial system at the `ℚ[x][t]` level. Pure composition with
 `cancelTanClearedCheck_sound`. The §8.4 degree-by-degree telescoping (each peeled leading pair from the base
-`cCoupledDESystem` solve, then the `t − √−1` RHS reduction) enters only through this self-check — the abstract
-correctness of the per-level base solve (itself the `cConstSolveUniqueQ`/Gaussian-elimination residual) is the
-documented remaining piece. -/
+`cCoupledDESystem` solve, then the `t − √−1` RHS reduction) enters only through this self-check. The per-level
+base solve is now unconditionally sound (`cCoupledDESystem_sound`, `ComputableCoupledDEAssembly`); the
+remaining glue to discharge `cancelTanClearedCheck` is the §8.4 *telescoping* correctness — that the
+`evalAtI` projection mod `t²+1` and the `divByTminusI` reconstruction assemble the per-level base solutions
+into a genuine `k[t]` solution. -/
 theorem cCoupledDECancelTan_sound_of_check (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ)
     (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
     (_hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2))

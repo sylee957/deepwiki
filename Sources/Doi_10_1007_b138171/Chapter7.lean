@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableParametric
+import DeepWiki.SymbolicIntegration.ComputableLinearSolveCorrect
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 7: Parametric Problems
@@ -89,5 +90,15 @@ noncomputable abbrev alg_7_3_paramLogDeriv := @cParamLogDeriv
 (1, 11, 1)`, verified to actually satisfy `n·f = Dv/v + m·(Dθ/θ)` by the cleared difference
 (`native_decide`). -/
 abbrev ex_7_3_2 := @paramLogDeriv_example
+
+/-! ## The constant linear solve `ConstantSystem` (Lemma 7.1.2 over `Const(k) = ℚ`) — abstract correctness -/
+
+/-- **`ConstantSystem` solve correctness** (§7.1, Lemma 7.1.2 specialized to the base constants
+`Const(k) = ℚ`, where the row-echelon reduction is ordinary ℚ-Gaussian elimination): the unique-solution
+solver `cConstSolveUniqueQ Arows urhs ncols` (the `crref` Gauss–Jordan + back-substitution) is **abstractly
+correct** — if it returns `some x` then `x` solves the ℚ-linear system `A·x = b` rowwise. Proved
+`native_decide`-free via the solution-preserving and reduced-echelon `crref` invariants
+(`ComputableLinearSolveCorrect`). The solution-set correctness underlying the §7.1/§7.3 constant solve. -/
+abbrev alg_7_1_constSystem_solve_sound := @CPolyG.cConstSolveUniqueQ_sound
 
 end DeepWiki.Si
