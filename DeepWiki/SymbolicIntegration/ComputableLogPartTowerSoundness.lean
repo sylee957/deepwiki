@@ -132,6 +132,140 @@ theorem roots_residueResultantTowerG_eq_residues (lc : K) (N : ℕ) (droots : Mu
       rw [Multiset.map_map]; rfl,
     Polynomial.roots_multiset_prod_X_sub_C]
 
+/-! ### ★ The residue↔linear-factor bijection — the engine `gcd_t(d, a − c·Dd) = X − β` keystone
+
+The engine's logarithmic part groups the residue logs by **distinct residue value** `c`, pairing each `c`
+with the Rothstein–Trager log argument `gcd_t(d, a − c·Dd)` (`cLogArgTowerG`). For a *squarefree, split*
+denominator `d = ∏_{β∈s}(X − β)` (simple roots `s`) whose residues `a(β)/Dd(β)` are **distinct** across
+`β ∈ s`, each residue `c = a(β)/Dd(β)` belongs to exactly one root `β`, and that root's gcd is the single
+linear factor `X − β`: the difference `g := a − c·Dd` vanishes at `β` (by `c = a(β)/Dd(β)`) and at no other
+root of `d` (distinctness of residues), so `gcd(d, g)` collects exactly the common root `β`. This is the
+algebraic content that turns the grouped-by-residue `cLogPartG` output into the per-root `(c_β, X − β)` form
+that `hform` demands. We prove it abstractly over `K[X]`. -/
+
+/-- **The Rothstein–Trager log argument is the residue's linear factor** — for `d = ∏_{α∈s}(X − α)` squarefree
+(simple roots `s`), a polynomial `a` and a derivative-like polynomial `Dd` with `Dd(α) ≠ 0` on `s` and
+**distinct residues** (`α ≠ β` in `s ⟹ a(α)/Dd(α) ≠ a(β)/Dd(β)`), and a fixed root `β ∈ s` with residue
+`c = a(β)/Dd(β)`, the gcd `gcd(d, a − C c·Dd)` is associate to the single linear factor `X − C β`. The
+difference `a − C c·Dd` is a root at `β` and at no other root of `d` (distinctness), so the gcd's roots are
+exactly `{β}`; with `gcd ∣ d` (squarefree, split) this forces `gcd = c'·(X − C β)`. The keystone behind the
+grouped-`cLogPartG` ↔ per-root-`X − β` reassembly. -/
+theorem residue_gcd_associated_linear_factor [DecidableEq K] (s : Finset K) (a Dd : K[X])
+    (hDd : ∀ α ∈ s, Dd.eval α ≠ 0)
+    (hdist : ∀ α ∈ s, ∀ β ∈ s, α ≠ β → a.eval α / Dd.eval α ≠ a.eval β / Dd.eval β)
+    (β : K) (hβ : β ∈ s) :
+    Associated (gcd (Lagrange.nodal s id) (a - Polynomial.C (a.eval β / Dd.eval β) * Dd))
+      (Polynomial.X - Polynomial.C β) := by
+  set d : K[X] := Lagrange.nodal s id with hd
+  set c : K := a.eval β / Dd.eval β with hc
+  set g : K[X] := a - Polynomial.C c * Dd with hg
+  -- work with `EuclideanDomain.gcd` (where `isRoot_gcd_iff_isRoot_left_right` lives), then bridge:
+  -- the ambient `GCDMonoid.gcd` and `EuclideanDomain.gcd` are associates (both are gcds)
+  set gE : K[X] := EuclideanDomain.gcd d g with hgE
+  have hbridge : Associated (gcd d g) gE :=
+    associated_of_dvd_dvd
+      (EuclideanDomain.dvd_gcd (gcd_dvd_left d g) (gcd_dvd_right d g))
+      (dvd_gcd (EuclideanDomain.gcd_dvd_left d g) (EuclideanDomain.gcd_dvd_right d g))
+  refine hbridge.trans ?_
+  -- `d` is split (a product of linear factors) and nonzero
+  have hd_ne : d ≠ 0 := Lagrange.nodal_ne_zero
+  have hsplit_d : Polynomial.Splits d := by
+    rw [hd, Lagrange.nodal_eq]
+    exact Polynomial.Splits.prod (fun i _ => Polynomial.Splits.X_sub_C _)
+  -- `d.roots = s.val` (simple, split)
+  have hroots_d : d.roots = s.val := by
+    rw [hd, Lagrange.nodal_eq]
+    simpa using Polynomial.roots_prod_X_sub_C s
+  -- `d` is squarefree (separable, since `id` is injective on `s`)
+  have hsep_d : Squarefree d := by
+    rw [hd, Lagrange.nodal_eq]
+    exact (Polynomial.separable_prod_X_sub_C_iff'.mpr
+      (fun x _ y _ h => h)).squarefree
+  -- `g` vanishes at `β`: `a(β) − c·Dd(β) = 0` since `c = a(β)/Dd(β)` and `Dd(β) ≠ 0`
+  have hgβ : g.IsRoot β := by
+    have hDdβ : Dd.eval β ≠ 0 := hDd β hβ
+    simp only [hg, Polynomial.IsRoot.def, Polynomial.eval_sub, Polynomial.eval_mul,
+      Polynomial.eval_C, hc]
+    rw [div_mul_cancel₀ _ hDdβ, sub_self]
+  -- `β` is a root of `d`
+  have hdβ : d.IsRoot β := by
+    rw [← Polynomial.mem_roots hd_ne, hroots_d]; exact hβ
+  -- `gE = EuclideanDomain.gcd d g ∣ d` (nonzero) ⟹ `gE` is nonzero
+  have hgcd_dvd_d : gE ∣ d := EuclideanDomain.gcd_dvd_left d g
+  have hgcd_ne : gE ≠ 0 := fun h => hd_ne (zero_dvd_iff.mp (h ▸ hgcd_dvd_d))
+  -- the roots of `gE` are exactly `{β}`
+  have hgcd_roots : gE.roots = {β} := by
+    -- roots ≤ d.roots = s.val, hence nodup (a sub-multiset of the nodup Finset support)
+    have hle : gE.roots ≤ d.roots := Polynomial.roots.le_of_dvd hd_ne hgcd_dvd_d
+    rw [hroots_d] at hle
+    have hnodup : gE.roots.Nodup := Multiset.nodup_of_le hle s.nodup
+    -- β ∈ roots (common root of `d` and `g`)
+    have hβ_mem : β ∈ gE.roots := by
+      rw [Polynomial.mem_roots hgcd_ne]
+      exact Polynomial.isRoot_gcd_iff_isRoot_left_right.mpr ⟨hdβ, hgβ⟩
+    -- any root α of the gcd equals β (common root of `d`, `g` ⟹ residue α = c ⟹ α = β)
+    have hsub : ∀ α ∈ gE.roots, α = β := by
+      intro α hα_root
+      by_contra hα_ne
+      have hα_in_s : α ∈ s := by
+        have : α ∈ (s.val : Multiset K) := Multiset.mem_of_le hle hα_root
+        simpa using this
+      have hcommon := Polynomial.isRoot_gcd_iff_isRoot_left_right.mp
+        ((Polynomial.mem_roots hgcd_ne).mp hα_root)
+      have hα_g : g.IsRoot α := hcommon.2
+      have hDdα : Dd.eval α ≠ 0 := hDd α hα_in_s
+      have hres_eq : a.eval α / Dd.eval α = c := by
+        simp only [hg, Polynomial.IsRoot.def, Polynomial.eval_sub, Polynomial.eval_mul,
+          Polynomial.eval_C] at hα_g
+        rw [div_eq_iff hDdα]; linear_combination hα_g
+      exact hdist α hα_in_s β hβ hα_ne (by rw [hres_eq, hc])
+    -- nodup + all elements `β` + contains `β` ⟹ `= {β}` (antisymmetry of `≤`)
+    refine le_antisymm (Multiset.le_iff_count.mpr (fun x => ?_))
+      (Multiset.le_iff_count.mpr (fun x => ?_))
+    · -- count x roots ≤ count x {β}
+      rw [Multiset.count_singleton]
+      by_cases hx : x ∈ gE.roots
+      · rw [hsub x hx, Multiset.count_eq_one_of_mem hnodup hβ_mem, if_pos rfl]
+      · rw [Multiset.count_eq_zero_of_notMem hx]; positivity
+    · -- count x {β} ≤ count x roots
+      rw [Multiset.count_singleton]
+      by_cases hx : x = β
+      · rw [if_pos hx, hx, Multiset.count_eq_one_of_mem hnodup hβ_mem]
+      · rw [if_neg hx]; positivity
+  -- gE splits, single root β ⟹ gE = C(leadingCoeff)·(X − C β), hence associate to X − C β
+  have hgcd_split : Polynomial.Splits gE := hsplit_d.of_dvd hd_ne hgcd_dvd_d
+  have heq : gE = Polynomial.C gE.leadingCoeff * (Polynomial.X - Polynomial.C β) :=
+    hgcd_split.eq_X_sub_C_of_single_root hgcd_roots
+  have hlcunit : IsUnit (Polynomial.C gE.leadingCoeff) :=
+    Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Polynomial.leadingCoeff_ne_zero.mpr hgcd_ne))
+  rw [heq]
+  exact associated_unit_mul_left (Polynomial.X - Polynomial.C β)
+    (Polynomial.C gE.leadingCoeff) hlcunit
+
+/-- **The Rothstein–Trager log argument IS the residue's linear factor (literal)** — the monic-normalized
+form of `residue_gcd_associated_linear_factor`. Over `K[X]` the ambient `gcd` is the *normalized* (monic) gcd
+(`Polynomial.normalizedGcdMonoid`), so the `Associated` keystone upgrades to a literal equality
+`gcd(d, a − C c·Dd) = X − C β` (`eq_of_monic_of_associated`: both sides monic). This is the engine-facing
+shape — the engine reads `toPolyG (cgcdFFCore …)` as `Associated` to this normalized `gcd`, and the literal
+`X − C β` is what the per-root `hform` list demands. Same genuine hypotheses: `d = ∏_{α∈s}(X − α)` squarefree
+(simple roots), `Dd(α) ≠ 0` on `s`, **distinct residues**, `β ∈ s`. -/
+theorem residue_gcd_eq_linear_factor [DecidableEq K] (s : Finset K) (a Dd : K[X])
+    (hDd : ∀ α ∈ s, Dd.eval α ≠ 0)
+    (hdist : ∀ α ∈ s, ∀ β ∈ s, α ≠ β → a.eval α / Dd.eval α ≠ a.eval β / Dd.eval β)
+    (β : K) (hβ : β ∈ s) :
+    gcd (Lagrange.nodal s id) (a - Polynomial.C (a.eval β / Dd.eval β) * Dd)
+      = Polynomial.X - Polynomial.C β := by
+  have hassoc := residue_gcd_associated_linear_factor s a Dd hDd hdist β hβ
+  -- the gcd is nonzero (its associate `X − C β` is nonzero)
+  have hne : gcd (Lagrange.nodal s id) (a - Polynomial.C (a.eval β / Dd.eval β) * Dd) ≠ 0 := by
+    intro h; rw [h] at hassoc
+    exact (Polynomial.X_sub_C_ne_zero β) ((associated_zero_iff_eq_zero _).mp hassoc.symm)
+  -- the ambient `gcd` on `K[X]` is monic-normalized (`normalize (gcd) = gcd` ⟹ `Monic` for `≠ 0`)
+  have hmonic : (gcd (Lagrange.nodal s id) (a - Polynomial.C (a.eval β / Dd.eval β) * Dd)).Monic := by
+    have := normalize_gcd (Lagrange.nodal s id) (a - Polynomial.C (a.eval β / Dd.eval β) * Dd)
+    rwa [Polynomial.normalize_eq_self_iff_monic hne] at this
+  exact eq_of_monic_of_associated hmonic (Polynomial.monic_X_sub_C β) hassoc
+
 end LogResidueTower
 
 /-! ### The `logResidueSumG` reading: the residue sum as a sum of monomial log-derivatives
@@ -144,6 +278,101 @@ logarithmic part `∑ cᵢ·log vᵢ` that the integrator returns. -/
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **`toPolyG (cmonicG p)` is monic for `p ≠ 0`** — the missing monicity satellite of `cmonicG` (the
+associate-only `associated_toPolyG_cmonicG` had no monicity claim). `cmonicG p = cscaleG (cleadG p)⁻¹ p`
+scales the leading coefficient to `1`: `toPolyG (cmonicG p) = C((leadingCoeff)⁻¹)·toPolyG p`, whose leading
+coefficient is `(leadingCoeff)⁻¹·leadingCoeff = 1` (`monic_C_mul_of_mul_leadingCoeff_eq_one`). This upgrades
+the engine gcd reading from `Associated` to a *literal* equality with the monic-normalized `gcd`. -/
+theorem monic_toPolyG_cmonicG (p : CPolyG α) (hp : toPolyG p ≠ 0) :
+    (toPolyG (CPolyG.cmonicG p)).Monic := by
+  have hz : cisZeroG (cnormG p) = false := by
+    rw [← Bool.not_eq_true, cisZeroG_iff, toPolyG_cnormG]; exact hp
+  -- closed form: `toPolyG (cmonicG p) = C(toK ((cleadG (cnormG p))⁻¹)) * toPolyG p`
+  have hcform : toPolyG (CPolyG.cmonicG p)
+      = Polynomial.C (CFieldSpec.toK (CField.inv (cleadG (cnormG p)))) * toPolyG p := by
+    rw [CPolyG.cmonicG, if_neg (by rw [hz]; decide), toPolyG_cscaleG, toPolyG_cnormG]
+  rw [hcform]
+  refine monic_C_mul_of_mul_leadingCoeff_eq_one ?_
+  rw [CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, toPolyG_cnormG,
+    inv_mul_cancel₀ (Polynomial.leadingCoeff_ne_zero.mpr hp)]
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **`cAmcDdG` reading** (the missing satellite) — `toPolyG (cAmcDdG Dt a d c) = toPolyG a − C(toK c)·Δd`
+with `Δd = implicitDeriv (toPolyG Dt) (toPolyG d)` the monomial derivative. The `a − c·Dd` polynomial whose
+`t`-gcd with `d` is the Rothstein–Trager log argument, read through `toPolyG`: `cAmcDdG = csubG a (cscaleG c
+(cmonomialDeriv Dt d))` unfolds by `toPolyG_csubG`/`toPolyG_cscaleG`/`toPolyG_cmonomialDeriv`. -/
+theorem toPolyG_cAmcDdG (Dt a d : CPolyG α) (c : α) :
+    toPolyG (cAmcDdG Dt a d c)
+      = toPolyG a - Polynomial.C (CFieldSpec.toK c)
+          * Differential.implicitDeriv (toPolyG Dt) (toPolyG d) := by
+  rw [cAmcDdG, toPolyG_csubG, toPolyG_cscaleG, toPolyG_cmonomialDeriv]
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ The engine log argument is associate to the residue's linear factor** — the engine-vocabulary
+`residue_gcd_eq_linear_factor`. For a residue value `c : α` whose `toK`-image is the residue
+`a(β)/Δd(β)` at a root `β`, **given** the engine gcd-compute reading `hread` (`toPolyG (cLogArgTowerG …)` is
+`Associated` to `gcd (toPolyG d) (toPolyG (cAmcDdG …))`, supplied at `QFunNZG` by
+`associated_toPolyG_cgcdFFCore_reg`), a split squarefree `toPolyG d = ∏_{α∈s}(t−α)` with `Δd(α) ≠ 0` and
+distinct residues, `toPolyG (cLogArgTowerG Dt fuel a d c)` is `Associated` to `X − C β`. Composes `hread`
+with the literal keystone `residue_gcd_eq_linear_factor` through the `cAmcDdG` reading. The grouped-`cLogPartG`
+entry for residue `c` reassembles to the single per-root linear factor `t − β`. -/
+theorem cLogArgTowerG_associated_linear_factor [CFracGcdCore α] [DecidableEq (CFieldSpec.K α)]
+    (Dt a d : CPolyG α) (fuel : ℕ) (c : α) (s : Finset (CFieldSpec.K α)) (β : CFieldSpec.K α)
+    (hread : Associated (toPolyG (cLogArgTowerG Dt fuel a d c))
+      (gcd (toPolyG d) (toPolyG (cAmcDdG Dt a d c))))
+    (hden : toPolyG d = Lagrange.nodal s id)
+    (hDd : ∀ γ ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ ≠ 0)
+    (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
+      (toPolyG a).eval γ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ
+        ≠ (toPolyG a).eval δ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval δ)
+    (hβ : β ∈ s)
+    (hc : CFieldSpec.toK c
+      = (toPolyG a).eval β / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval β) :
+    Associated (toPolyG (cLogArgTowerG Dt fuel a d c)) (Polynomial.X - Polynomial.C β) := by
+  refine hread.trans ?_
+  rw [toPolyG_cAmcDdG, hc]
+  nth_rewrite 1 [hden]
+  exact Associated.of_eq
+    (LogResidueTower.residue_gcd_eq_linear_factor s (toPolyG a)
+      (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) hDd hdist β hβ)
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ The engine log argument IS the residue's linear factor (literal)** — the literal upgrade of
+`cLogArgTowerG_associated_linear_factor`. Since `cLogArgTowerG = cgcdFFCore = cmonicG (raw)`, its `toPolyG` is
+**monic** (`monic_toPolyG_cmonicG`) whenever nonzero; combined with the `Associated`-to-`X − C β` fact (both
+monic), `eq_of_monic_of_associated` gives the literal `toPolyG (cLogArgTowerG Dt fuel a d c) = X − C β`. This
+is the per-entry shape the per-root `hform` list demands — the grouped-`cLogPartG` entry for residue `c`
+reads *exactly* as the single linear factor `t − β`. Same genuine hypotheses as the `Associated` version. -/
+theorem cLogArgTowerG_eq_linear_factor [CFracGcdCore α] [DecidableEq (CFieldSpec.K α)]
+    (Dt a d : CPolyG α) (fuel : ℕ) (c : α) (s : Finset (CFieldSpec.K α)) (β : CFieldSpec.K α)
+    (hread : Associated (toPolyG (cLogArgTowerG Dt fuel a d c))
+      (gcd (toPolyG d) (toPolyG (cAmcDdG Dt a d c))))
+    (hden : toPolyG d = Lagrange.nodal s id)
+    (hDd : ∀ γ ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ ≠ 0)
+    (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
+      (toPolyG a).eval γ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ
+        ≠ (toPolyG a).eval δ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval δ)
+    (hβ : β ∈ s)
+    (hc : CFieldSpec.toK c
+      = (toPolyG a).eval β / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval β) :
+    toPolyG (cLogArgTowerG Dt fuel a d c) = Polynomial.X - Polynomial.C β := by
+  have hassoc := cLogArgTowerG_associated_linear_factor Dt a d fuel c s β hread hden hDd hdist hβ hc
+  -- the log argument is nonzero (associate to nonzero `X − C β`)
+  have hne : toPolyG (cLogArgTowerG Dt fuel a d c) ≠ 0 := by
+    intro h; rw [h] at hassoc
+    exact (Polynomial.X_sub_C_ne_zero β) ((associated_zero_iff_eq_zero _).mp hassoc.symm)
+  -- `cLogArgTowerG = cgcdFFCore = cmonicG (raw)` ⟹ `toPolyG` monic
+  have hmonic : (toPolyG (cLogArgTowerG Dt fuel a d c)).Monic := by
+    rw [cLogArgTowerG, CFracGcdCore.cgcdFFCore]
+    rw [cLogArgTowerG, CFracGcdCore.cgcdFFCore] at hne
+    -- the raw gcd's `toPolyG` is nonzero (associate to the nonzero monic-normalized form)
+    have hraw_ne : toPolyG (CFracGcdCore.cgcdFFRawCore fuel d (cAmcDdG Dt a d c)) ≠ 0 := by
+      intro h
+      exact hne (((associated_toPolyG_cmonicG _).trans (Associated.of_eq h)).eq_zero_iff.mpr rfl)
+    exact monic_toPolyG_cmonicG _ hraw_ne
+  exact eq_of_monic_of_associated hmonic (Polynomial.monic_X_sub_C β) hassoc
 
 /-- **Per-term log-derivative reading** — for a log argument `v` with `toPolyG v ≠ 0`, the residue summand
 `amG(Δv)/amG(v)` (`Δv = toPolyG (cmonomialDeriv Dt v)`) equals the monomial log-derivative
@@ -348,6 +577,16 @@ example {K : Type*} [Field K] (lc : K) (N : ℕ) (droots : Multiset K) (aval ddv
     R.roots = droots.map (fun α => aval α / ddval α) :=
   LogResidueTower.roots_residueResultantTowerG_eq_residues lc N droots aval ddval hlc hDd R hR
 
+-- ★ THE KEYSTONE (Task 1, abstract, no native_decide): the Rothstein–Trager log argument `gcd(d, a − c·Dd)`
+-- IS the residue's linear factor `X − β`, for `d = ∏_{α∈s}(X − α)` squarefree with distinct residues.
+example {K : Type*} [Field K] [DecidableEq K] (s : Finset K) (a Dd : K[X])
+    (hDd : ∀ α ∈ s, Dd.eval α ≠ 0)
+    (hdist : ∀ α ∈ s, ∀ β ∈ s, α ≠ β → a.eval α / Dd.eval α ≠ a.eval β / Dd.eval β)
+    (β : K) (hβ : β ∈ s) :
+    gcd (Lagrange.nodal s id) (a - Polynomial.C (a.eval β / Dd.eval β) * Dd)
+      = Polynomial.X - Polynomial.C β :=
+  LogResidueTower.residue_gcd_eq_linear_factor s a Dd hDd hdist β hβ
+
 -- ★★ THE RT HALF (abstract, checker-free, no native_decide): the residue sum differentiates to the Hermite
 -- leftover, so `D(g) + logResidueSumG = a/d` — given the abstract Hermite telescoping + the residue match.
 example (Dt : CPolyG α) (gnum gden hNum hDen anum aden : CPolyG α) (logs : List (α × CPolyG α))
@@ -368,6 +607,12 @@ axioms (`propext`, `Classical.choice`, `Quot.sound`); no `native_decide`, no `so
 
 #print axioms LogResidueTower.residueLinearFactor_eq
 #print axioms LogResidueTower.roots_residueResultantTowerG_eq_residues
+#print axioms LogResidueTower.residue_gcd_associated_linear_factor
+#print axioms LogResidueTower.residue_gcd_eq_linear_factor
+#print axioms monic_toPolyG_cmonicG
+#print axioms toPolyG_cAmcDdG
+#print axioms cLogArgTowerG_associated_linear_factor
+#print axioms cLogArgTowerG_eq_linear_factor
 #print axioms towerFractionFieldDerivG_logDeriv
 #print axioms logResidueSumG_eq_logDeriv_sum
 #print axioms logResidueSumG_eq_of_residue_match
