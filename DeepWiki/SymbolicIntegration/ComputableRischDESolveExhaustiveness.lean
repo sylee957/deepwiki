@@ -1274,6 +1274,582 @@ theorem cPolyRischDEG_isSome_noCancel_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c 
 
 end NoCancelEngine
 
+/-! ## ★ The §6.6 cancellation-regime exhaustiveness — `hpoly`'s last piece (modulo the base oracle)
+
+`hpoly`'s remaining clause routes — in the **cancellation** regime (`deg b = 0`) — to the §6.6 recursions
+`cPolyRischDECancelPrimG` (`δ = 0`, eq. 6.23) / `cPolyRischDECancelExpG` (`δ = 1`, eq. 6.24). This section
+proves those branches' exhaustiveness *modulo the base-oracle completeness* — the honest tower-induction
+hypothesis — mirroring the just-proven non-cancellation regime.
+
+The two cancellation recursions are **structurally identical** to `cPolyRischDENoCancelG`: degree-by-degree,
+peel the leading monomial `s·tᵐ` (`m = deg c`), subtract `D(s·tᵐ) + b·(s·tᵐ)`, recurse on the lower-degree
+remainder at bound `m − 1`. The **only** difference: the leading coefficient `s` is no longer the forced
+division `lc c / lc b` but comes from the **base RDE oracle** `CRischField.crischDESolve b₀ (lc c)` (eq. 6.23)
+/ `crischDESolve (b₀ + m·η) (lc c)` (eq. 6.24) — which can fail. So the new content is exactly *threading the
+base-oracle hypothesis*.
+
+The structural heart is `cancel_peel_descends`: a *nonzero* solution `q` of `D q + b·q = c` with **no top
+cancellation** (`deg q = deg c = m`, the honest engine-regime boundary — genuine top-cancellation `deg q >
+deg c` is the §6.3-bound regime outside this engine's `m = deg c` search) has its leading term `lc q · tᵐ`
+peeled off by the engine's `s·tᵐ` **whenever the oracle returns the actual leading coefficient**
+(`toK s = lc q`) — the remainder `q − s·tᵐ` is strictly lower degree and solves the engine's reduced `c'`. The
+descent needs **only** this agreement `toK s = lc q` (pure linearity, NOT the base RDE soundness). Iterating
+peels `q` monomial-by-monomial to the `c = 0` short-circuit. The residues are (a) **fuel sufficiency** (as in
+the non-cancellation case) and (b) the **per-step base-oracle hypothesis** `crischDESolve b₀ (lc c) =
+some s ∧ toK s = lc q` — the oracle finds the actual solution's leading coefficient. (b) is exactly the
+**tower-induction IH**: it connects, at the coefficient level, to `crischDESolve`'s own completeness
+(`FieldRDESolvable`-at-α). Threaded through the dispatcher → cancellation bridges, this discharges `hpoly` in
+the cancellation regime, reducing the whole `hsolve` frontier to the tower-oracle completeness. -/
+
+section CancelExhaustiveness
+
+variable {K : Type*} [Field K]
+
+/-- **★ The cancellation leading-monomial peel (the structural core)** `cancel_peel_descends`: the
+**reverse** of one §6.6 `cPolyRischDECancel{Prim,Exp}G` step over `K[X]`. For a derivation `D`, a *nonzero*
+solution `q` of `D q + b·q = c` with **no top cancellation** (`deg q = deg c = m`) and a coefficient `s` that
+agrees with `q`'s leading coefficient (`s = lc q` — the value the base oracle must return), the engine's
+leading monomial `p = C s · Xᵐ` is exactly `q`'s leading term — so the remainder `q − p` is `0` or strictly
+lower degree (`< m`), and `q − p` solves the engine's reduced `c' = c − D p − b·p`. Pure leading-term algebra
+plus linearity (the residual equation is `linear_combination heq`); the base RDE soundness is **not** used.
+The cancellation analogue of `noncancel_peel_descends`, with the oracle agreement `s = lc q` replacing the
+forced quotient `lc c / lc b`. -/
+theorem cancel_peel_descends {D : Derivation ℤ K[X] K[X]} {b c q : K[X]} {s : K} {m : ℕ}
+    (hq : q ≠ 0) (heq : D q + b * q = c) (hm : q.natDegree = m) (hslc : s = q.leadingCoeff) :
+    (q - C s * X ^ m = 0 ∨ (q - C s * X ^ m).degree < (m : WithBot ℕ)) ∧
+      D (q - C s * X ^ m) + b * (q - C s * X ^ m) = c - D (C s * X ^ m) - b * (C s * X ^ m) := by
+  refine ⟨?_, by rw [map_sub]; linear_combination heq⟩
+  by_cases hqp : q - C s * X ^ m = 0
+  · exact Or.inl hqp
+  · right
+    have hslc_ne : s ≠ 0 := by rw [hslc]; exact leadingCoeff_ne_zero.mpr hq
+    set p : K[X] := C s * X ^ m with hpdef
+    have hpnat : p.natDegree = m := by rw [hpdef]; exact natDegree_C_mul_X_pow m _ hslc_ne
+    have hpne : p ≠ 0 := by
+      rw [hpdef]; intro h
+      have := degree_C_mul_X_pow m hslc_ne
+      rw [h, degree_zero] at this; exact absurd this.symm (by simp)
+    have hplc : p.leadingCoeff = q.leadingCoeff := by rw [hpdef, leadingCoeff_C_mul_X_pow, hslc]
+    have hpdeg : p.degree = q.degree := by
+      rw [degree_eq_natDegree hpne, hpnat, degree_eq_natDegree hq, hm]
+    have hd := degree_sub_lt hpdeg.symm hq hplc.symm
+    rw [degree_eq_natDegree hq, hm] at hd
+    exact_mod_cast hd
+
+end CancelExhaustiveness
+
+section CancelEngine
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+  [CRischField α]
+
+omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α] [CRischField α] in
+/-- **The engine peel monomial `cshiftG m [s]` maps to `C (toK s) · Xᵐ`** (`toPolyG_engine_stm`): the §6.6
+cancellation peel `s·tᵐ` (`s ∈ α`) is, under `toPolyG`, the abstract `C (toK s) · X^m` of `cancel_peel_descends`.
+Via `toPolyG_cshiftG` (`X^m·toPolyG _`) and `toPolyG_cons`/`toPolyG_nil`. The bridge tying the engine
+cancellation recursion to the abstract peel. -/
+theorem toPolyG_engine_stm (s : α) (m : ℕ) :
+    toPolyG (cshiftG m [s]) = C (CFieldSpec.toK s) * X ^ m := by
+  rw [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, mul_comm]
+
+/-! ### The primitive cancellation case (`δ = 0`, eq. 6.23)
+
+`cPolyRischDECancelPrimG`'s step calls `crischDESolve (cleadG b) (cleadG c)` for the leading coefficient. -/
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [CFracGcdCore α] in
+/-- **`cPolyRischDECancelPrimG`'s `isSome` in the recursion case is the sub-call's**
+(`cPolyRischDECancelPrimG_isSome_of_recurse`): at `fuel + 1` with `c ≠ 0`, `¬ n < deg c`, and the base oracle
+returning `some s`, the primitive cancellation solve returns `some` exactly when the recursive solve on the
+peeled `c' = c − b·(s·tᵐ) − D(s·tᵐ)` (`m = deg c`) at bound `m − 1` does. The converse control flow of the
+cancellation step's recursive descent. -/
+theorem cPolyRischDECancelPrimG_isSome_of_recurse (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
+    (s : α) (hc : ¬ (cisZeroG c = true)) (hguard : ¬ (n < (cdegG c : ℤ)))
+    (hs : CRischField.crischDESolve (cleadG b) (cleadG c) = some s)
+    (hrec : (cPolyRischDECancelPrimG Dt fuel b
+        (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s]))) (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
+        ((cdegG c : ℤ) - 1)).isSome = true) :
+    (cPolyRischDECancelPrimG Dt (fuel + 1) b c n).isSome = true := by
+  rw [cPolyRischDECancelPrimG]
+  simp only [if_neg hc, if_neg hguard, hs]
+  obtain ⟨q, hq⟩ := Option.isSome_iff_exists.mp hrec
+  simp only [hq, Option.isSome_some]
+
+/-- **The per-step base-oracle hypothesis (primitive, the tower-induction IH)** `CancelPrimBaseOracle Dt b
+c q`: the §6.6 eq. 6.23 base oracle `crischDESolve (cleadG b) (cleadG c)` returns `some s` whose `toK` is the
+abstract solution's leading coefficient — `∃ s, crischDESolve (cleadG b) (cleadG c) = some s ∧ toK s =
+(toPolyG q).leadingCoeff`. This bundles **completeness** (the oracle returns `some`) with **agreement** (it
+returns the actual solution's leading coefficient `lc q`) — exactly what the degree-descent peel consumes. It
+is the honest tower-induction hypothesis: at the coefficient level it is `crischDESolve`'s own completeness on
+the base RDE the leading coefficient `lc q` solves (`FieldRDESolvable`-at-α). -/
+def CancelPrimBaseOracle (b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+  ∃ s : α, CRischField.crischDESolve (cleadG b) (cleadG c) = some s
+    ∧ CFieldSpec.toK s = q.leadingCoeff
+
+/-- **The recursive solvable-inputs predicate for the primitive cancellation solve**
+`CPolyRischDECancelPrimSolvableInputs Dt b fuel c n` (the §6.6 analogue of `CPolyRischDENoCancelSolvableInputs`):
+mirrors `cPolyRischDECancelPrimG`'s recursion carrying at EACH level a bounded abstract `K[X]` solution
+(`IsNoCancelSolK` + `deg ≤ n`) plus, in the non-base branch, the degree guard (`¬ n < deg c`), the **no-top-
+cancellation** equality `deg q = deg c`, the **per-step base-oracle hypothesis** `CancelPrimBaseOracle` (the
+oracle finds `lc q`), and itself on the peeled lower-degree equation. The base `fuel = 0` is `False`. The
+hypothesis the cancellation degree-descent induction consumes; `b` is fixed across the recursion. -/
+def CPolyRischDECancelPrimSolvableInputs (Dt b : CPolyG α) :
+    ℕ → (c : CPolyG α) → (n : ℤ) → Prop
+  | 0, _, _ => False
+  | fuel + 1, c, n =>
+    (∃ q : (CFieldSpec.K α)[X], IsNoCancelSolK Dt b c q ∧ (q = 0 ∨ (q.natDegree : ℤ) ≤ n)) ∧
+    if cisZeroG c then True
+    else
+      ¬ (n < (cdegG c : ℤ))
+        ∧ (∃ q : (CFieldSpec.K α)[X], IsNoCancelSolK Dt b c q ∧ ((q.natDegree : ℤ) = cdegG c)
+            ∧ CancelPrimBaseOracle b c q)
+        ∧ ∀ s : α, CRischField.crischDESolve (cleadG b) (cleadG c) = some s →
+            CPolyRischDECancelPrimSolvableInputs Dt b fuel
+              (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s])))
+                (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
+              ((cdegG c : ℤ) - 1)
+
+omit [CFracGcdCore α] in
+/-- **★ The §6.6 primitive cancellation degree-descent induction**
+(`cPolyRischDECancelPrimG_isSome_of_solvableInputs`): from the recursive solvable-inputs predicate, the
+primitive cancellation solve succeeds — `(cPolyRischDECancelPrimG Dt fuel b c n).isSome = true`. By fuel
+induction, the cancellation analogue of `cPolyRischDENoCancelG_isSome_of_solvableInputs`: the `c = 0`
+short-circuit and the recursion case (through `cPolyRischDECancelPrimG_isSome_of_recurse`, after extracting
+the oracle `some s` from the per-step hypothesis) read off the predicate. The control-flow heart of the
+primitive cancellation `hpoly`. -/
+theorem cPolyRischDECancelPrimG_isSome_of_solvableInputs (Dt b : CPolyG α) :
+    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ),
+      CPolyRischDECancelPrimSolvableInputs Dt b fuel c n →
+      (cPolyRischDECancelPrimG Dt fuel b c n).isSome = true := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro c n hin
+    exact absurd hin (by rw [CPolyRischDECancelPrimSolvableInputs]; exact not_false)
+  | succ fuel ih =>
+    intro c n hin
+    rw [CPolyRischDECancelPrimSolvableInputs] at hin
+    obtain ⟨_, hrest⟩ := hin
+    by_cases hc : cisZeroG c = true
+    · rw [cPolyRischDECancelPrimG, if_pos hc, Option.isSome_some]
+    · rw [if_neg hc] at hrest
+      obtain ⟨hguard, horacle, hrecin⟩ := hrest
+      obtain ⟨q, _, _, s, hs, _⟩ := horacle
+      exact cPolyRischDECancelPrimG_isSome_of_recurse Dt fuel b c n s hc hguard hs (ih _ _ (hrecin s hs))
+
+omit [CFracGcdCore α] in
+/-- **The `c = 0` base of the primitive solvable-inputs predicate**
+(`cPolyRischDECancelPrimSolvableInputs_of_cZero`): when `c = 0` the zero solution `q = 0` and the
+`cisZeroG`-`True` short-circuit give the predicate at any `fuel + 1`. The terminating branch of the
+cancellation degree-descent builder (needs ≥ 1 unit of fuel). -/
+theorem cPolyRischDECancelPrimSolvableInputs_of_cZero (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α)
+    (n : ℤ) (hc : cisZeroG c = true) :
+    CPolyRischDECancelPrimSolvableInputs Dt b (fuel + 1) c n := by
+  rw [CPolyRischDECancelPrimSolvableInputs]
+  refine ⟨⟨0, ?_, Or.inl rfl⟩, ?_⟩
+  · rw [IsNoCancelSolK, map_zero, mul_zero, add_zero, (cisZeroG_iff c).mp hc]
+  · rw [if_pos hc]; trivial
+
+/-- **The uniform base-oracle completeness hypothesis (primitive, the tower-induction IH)**
+`CancelPrimOracleComplete Dt b`: for every `c'` and every degree-matched abstract solution `q'`
+(`IsNoCancelSolK Dt b c' q'`, `deg q' = deg c'`), the eq. 6.23 base oracle finds its leading coefficient
+(`CancelPrimBaseOracle b c' q'`). This is the honest tower-induction hypothesis in uniform form: the base
+RDE solver `crischDESolve` is *complete and agreeing* on the leading-coefficient RDE at every level the
+descent reaches. The single deep frontier the cancellation-regime exhaustiveness reduces to. -/
+def CancelPrimOracleComplete (Dt b : CPolyG α) : Prop :=
+  ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
+    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' → CancelPrimBaseOracle b c' q'
+
+/-- **The no-top-cancellation hypothesis along the descent (the engine-regime boundary)**
+`CancelPrimNoCancel Dt b`: every *nonzero* abstract solution `q'` of `D q' + b·q' = c'` is **degree-matched**
+(`deg q' = deg c'`). This is exactly the regime where the engine's `m = deg c` search is exhaustive: genuine
+top-cancellation (`deg q' > deg c'`, the §6.3-bound regime) is the documented boundary the cancellation
+recursion's `m = deg c` start does not reach. An honest, precisely-named hypothesis (NOT a `sorry`). -/
+def CancelPrimNoCancel (Dt b : CPolyG α) : Prop :=
+  ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
+    IsNoCancelSolK Dt b c' q' → q' ≠ 0 → (q'.natDegree : ℤ) = cdegG c'
+
+omit [CFracGcdCore α] in
+/-- **★ The primitive cancellation solvable-inputs predicate from one bounded solution**
+(`cPolyRischDECancelPrimSolvableInputs_of_sol`): the BUILDER — from a single bounded abstract solution
+`IsNoCancelSolK Dt b c q` (`deg q ≤ n`), the uniform base-oracle completeness `CancelPrimOracleComplete`
+(tower-IH), the no-top-cancellation `CancelPrimNoCancel` (engine-regime boundary), and fuel sufficiency
+`deg q + 1 < fuel`, the recursive predicate `CPolyRischDECancelPrimSolvableInputs Dt b fuel c n` holds. By
+fuel induction, peeling `q` one monomial at a time: the structural core `cancel_peel_descends` (the oracle's
+leading coefficient *is* `q`'s, so the remainder `q − lc q·tᵐ` is lower-degree and solves the engine's `c'`,
+via `toPolyG_engine_stm`), with the degree-match and oracle from the two uniform hypotheses, and the `c = 0`
+base for the `q − lc q·tᵐ = 0` tail. The cancellation analogue of `cPolyRischDENoCancelSolvableInputs_of_sol`;
+the residues are fuel sufficiency + the two named hypotheses. -/
+theorem cPolyRischDECancelPrimSolvableInputs_of_sol (Dt b : CPolyG α)
+    (horacle : CancelPrimOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b) :
+    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X]),
+      IsNoCancelSolK Dt b c q →
+      (q = 0 ∨ (q.natDegree : ℤ) ≤ n) →
+      (q.natDegree : ℤ) + 1 < fuel →
+      CPolyRischDECancelPrimSolvableInputs Dt b fuel c n := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro c n q _ _ hfuel
+    exfalso
+    have : (0:ℤ) ≤ q.natDegree := Int.natCast_nonneg _
+    simp only [Nat.cast_zero] at hfuel; omega
+  | succ fuel ih =>
+    intro c n q hsol hbound hfuel
+    rw [CPolyRischDECancelPrimSolvableInputs]
+    refine ⟨⟨q, hsol, hbound⟩, ?_⟩
+    by_cases hc : cisZeroG c = true
+    · rw [if_pos hc]; trivial
+    · rw [if_neg hc]
+      -- c ≠ 0 ⟹ q ≠ 0
+      have hc0 : toPolyG c ≠ 0 := fun h => hc ((cisZeroG_iff c).mpr h)
+      have hq0 : q ≠ 0 := by
+        rintro rfl
+        rw [IsNoCancelSolK, map_zero, mul_zero, add_zero] at hsol
+        exact hc0 hsol.symm
+      -- degree-match `deg q = deg c` (no top cancellation)
+      have hqdeg : (q.natDegree : ℤ) = cdegG c := hnc c q hsol hq0
+      -- the oracle finds `lc q`
+      obtain ⟨s, hs, hstoK⟩ := horacle c q hsol hqdeg
+      -- the guard `¬ n < deg c`
+      have hguard : ¬ (n < (cdegG c : ℤ)) := by
+        rcases hbound with h0 | hle
+        · exact absurd h0 hq0
+        · rw [← hqdeg]; omega
+      refine ⟨hguard, ⟨q, hsol, hqdeg, s, hs, hstoK⟩, ?_⟩
+      intro s' hs'
+      -- the oracle is deterministic: `s' = s`, so `toK s' = lc q`
+      have hstoK' : CFieldSpec.toK s' = q.leadingCoeff := by
+        have hs'eq : s' = s := by rw [hs] at hs'; exact (Option.some.injEq _ _).mp hs'.symm
+        rw [hs'eq]; exact hstoK
+      -- the engine peel `cshiftG (deg c) [s']` maps to `C (lc q)·X^(deg c)`
+      set m : ℕ := cdegG c with hmdef
+      have hqnat : q.natDegree = m := by have := hqdeg; rw [hmdef] at this ⊢; exact_mod_cast this
+      set c' : CPolyG α := csubG (csubG c (cmulG b (cshiftG m [s']))) (cmonomialDeriv Dt (cshiftG m [s']))
+        with hc'def
+      have htoP : toPolyG (cshiftG m [s']) = C (CFieldSpec.toK s') * X ^ m := toPolyG_engine_stm s' m
+      set pK : (CFieldSpec.K α)[X] := C q.leadingCoeff * X ^ m with hpKdef
+      have htoP' : toPolyG (cshiftG m [s']) = pK := by rw [htoP, hstoK']
+      -- toPolyG c' = c − b·pK − D pK
+      have hc'toP : toPolyG c' = toPolyG c - toPolyG b * pK
+          - Differential.implicitDeriv (toPolyG Dt) pK := by
+        rw [hc'def, toPolyG_csubG, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP']
+      -- the peel descends: q' = q − pK lower-degree, solves c'
+      obtain ⟨hq'bound, hc'eq⟩ :=
+        cancel_peel_descends (D := Differential.implicitDeriv (toPolyG Dt)) (s := q.leadingCoeff)
+          (m := m) hq0 hsol hqnat rfl
+      have hq'sol : IsNoCancelSolK Dt b c' (q - pK) := by
+        rw [IsNoCancelSolK, hc'toP, hpKdef]; linear_combination hc'eq
+      -- fuel ≥ 1 always holds
+      have hfuelpos : 1 ≤ fuel := by
+        have : (0:ℤ) ≤ q.natDegree := Int.natCast_nonneg _
+        have h1 : (q.natDegree : ℤ) + 1 < (fuel : ℤ) + 1 := by exact_mod_cast hfuel
+        omega
+      by_cases hq'0 : q - pK = 0
+      · -- q' = 0 ⟹ c' = 0; use the c'=0 base predicate (needs fuel ≥ 1)
+        obtain ⟨fuel', rfl⟩ : ∃ k, fuel = k + 1 := ⟨fuel - 1, by omega⟩
+        have hc'0 : cisZeroG c' = true := by
+          rw [cisZeroG_iff]
+          have := hq'sol; rw [IsNoCancelSolK, hq'0, map_zero, mul_zero, add_zero] at this
+          exact this.symm
+        exact cPolyRischDECancelPrimSolvableInputs_of_cZero Dt b fuel' c' ((m : ℤ) - 1) hc'0
+      · -- q' ≠ 0 ⟹ degree drops: (q − pK).natDegree < m, so ≤ m − 1
+        have hlt : (q - pK).degree < (m : WithBot ℕ) := by
+          rcases hq'bound with h0 | hlt
+          · exact absurd h0 hq'0
+          · exact hlt
+        have hnd : ((q - pK).natDegree : ℤ) < m := by
+          have := Polynomial.natDegree_lt_natDegree (p := q - pK)
+            (q := (X : (CFieldSpec.K α)[X]) ^ m) hq'0
+          rw [Polynomial.degree_X_pow, Polynomial.natDegree_X_pow] at this
+          exact_mod_cast this hlt
+        have hq'le : q - pK = 0 ∨ ((q - pK).natDegree : ℤ) ≤ (m : ℤ) - 1 := Or.inr (by omega)
+        have hfuel' : ((q - pK).natDegree : ℤ) + 1 < fuel := by
+          have h1 : (q.natDegree : ℤ) + 1 < (fuel : ℤ) + 1 := by exact_mod_cast hfuel
+          rw [hqnat] at h1; omega
+        exact ih c' ((m : ℤ) - 1) (q - pK) hq'sol hq'le hfuel'
+
+omit [CFracGcdCore α] in
+/-- **★ END-TO-END: the §6.6 primitive cancellation solve succeeds on a bounded solution, MODULO the base
+oracle** (`cPolyRischDECancelPrimG_isSome_of_sol`): composes the builder
+`cPolyRischDECancelPrimSolvableInputs_of_sol` with the degree-descent induction
+`cPolyRischDECancelPrimG_isSome_of_solvableInputs`. A bounded abstract solution `IsNoCancelSolK Dt b c q`
+(`deg q ≤ n`), the uniform base-oracle completeness (tower-IH), the no-top-cancellation (engine-regime
+boundary), and fuel sufficiency `deg q + 1 < fuel` make the §6.6 primitive cancellation solve return `some`.
+The primitive cancellation `hpoly` content modulo the base oracle + fuel sufficiency + the engine-regime
+boundary — the tractable reduction of the cancellation frontier to the tower-oracle completeness. -/
+theorem cPolyRischDECancelPrimG_isSome_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (q : (CFieldSpec.K α)[X]) (horacle : CancelPrimOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDECancelPrimG Dt fuel b c n).isSome = true :=
+  cPolyRischDECancelPrimG_isSome_of_solvableInputs Dt b fuel c n
+    (cPolyRischDECancelPrimSolvableInputs_of_sol Dt b horacle hnc fuel c n q hsol hbound hfuel)
+
+/-! ### The hyperexponential cancellation case (`δ = 1`, eq. 6.24)
+
+`cPolyRischDECancelExpG`'s step calls `crischDESolve (b₀ + m·η) (lc c)` with `η = cExpEtaG fuel Dt` and
+`m = deg c`, so the base-RDE coefficient is `expCoeff Dt fuel c b` (fuel- and degree-dependent). The peel and
+the abstract solution are identical to the primitive case; only the oracle argument changes. -/
+
+/-- **The §6.6 eq. 6.24 base-RDE coefficient** `expCoeff Dt fuel c b = b₀ + (deg c)·η` (`b₀ = cleadG b`,
+`η = cExpEtaG fuel Dt`), the first argument the hyperexponential engine `cPolyRischDECancelExpG` passes to
+`crischDESolve` at fuel level `fuel + 1` working degree `deg c`. The `m·η` shift is the `tᵐ` factor's
+hyperexponential contribution (`D(s·tᵐ) = (Ds + m·η·s)·tᵐ`). -/
+def expCoeff (Dt : CPolyG α) (fuel : ℕ) (c b : CPolyG α) : α :=
+  CField.add (cleadG b) (CField.mul (cnatCastG (cdegG c)) (cExpEtaG fuel Dt))
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [CFracGcdCore α] in
+/-- **`cPolyRischDECancelExpG`'s `isSome` in the recursion case is the sub-call's**
+(`cPolyRischDECancelExpG_isSome_of_recurse`): at `fuel + 1` with `c ≠ 0`, `¬ n < deg c`, and the eq. 6.24
+base oracle `crischDESolve (expCoeff Dt fuel c b) (cleadG c)` returning `some s`, the hyperexponential
+cancellation solve returns `some` exactly when the recursive solve on the peeled `c'` at bound `m − 1` does. -/
+theorem cPolyRischDECancelExpG_isSome_of_recurse (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
+    (s : α) (hc : ¬ (cisZeroG c = true)) (hguard : ¬ (n < (cdegG c : ℤ)))
+    (hs : CRischField.crischDESolve (expCoeff Dt fuel c b) (cleadG c) = some s)
+    (hrec : (cPolyRischDECancelExpG Dt fuel b
+        (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s]))) (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
+        ((cdegG c : ℤ) - 1)).isSome = true) :
+    (cPolyRischDECancelExpG Dt (fuel + 1) b c n).isSome = true := by
+  rw [cPolyRischDECancelExpG]
+  simp only [if_neg hc, if_neg hguard, expCoeff] at hs ⊢
+  rw [hs]
+  obtain ⟨q, hq⟩ := Option.isSome_iff_exists.mp hrec
+  simp only [hq, Option.isSome_some]
+
+/-- **The per-step base-oracle hypothesis (hyperexp, the tower-induction IH)** `CancelExpBaseOracle Dt fuel
+b c q`: the §6.6 eq. 6.24 base oracle `crischDESolve (expCoeff Dt fuel c b) (cleadG c)` returns `some s`
+whose `toK` is the abstract solution's leading coefficient. Bundles **completeness** with **agreement**
+(`toK s = lc q`), threading the fuel-dependent shift coefficient `expCoeff Dt fuel c b`. The hyperexp
+analogue of `CancelPrimBaseOracle`. -/
+def CancelExpBaseOracle (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+  ∃ s : α, CRischField.crischDESolve (expCoeff Dt fuel c b) (cleadG c) = some s
+    ∧ CFieldSpec.toK s = q.leadingCoeff
+
+/-- **The recursive solvable-inputs predicate for the hyperexp cancellation solve**
+`CPolyRischDECancelExpSolvableInputs Dt b fuel c n`: mirrors `cPolyRischDECancelExpG`'s recursion, the
+hyperexp analogue of `CPolyRischDECancelPrimSolvableInputs`, carrying at EACH level a bounded abstract
+solution, the guard, the degree-match + per-step eq. 6.24 oracle hypothesis (`CancelExpBaseOracle Dt fuel`,
+fuel-threaded), and itself on the peeled equation. Base `fuel = 0` is `False`. -/
+def CPolyRischDECancelExpSolvableInputs (Dt b : CPolyG α) :
+    ℕ → (c : CPolyG α) → (n : ℤ) → Prop
+  | 0, _, _ => False
+  | fuel + 1, c, n =>
+    (∃ q : (CFieldSpec.K α)[X], IsNoCancelSolK Dt b c q ∧ (q = 0 ∨ (q.natDegree : ℤ) ≤ n)) ∧
+    if cisZeroG c then True
+    else
+      ¬ (n < (cdegG c : ℤ))
+        ∧ (∃ q : (CFieldSpec.K α)[X], IsNoCancelSolK Dt b c q ∧ ((q.natDegree : ℤ) = cdegG c)
+            ∧ CancelExpBaseOracle Dt fuel b c q)
+        ∧ ∀ s : α, CRischField.crischDESolve (expCoeff Dt fuel c b) (cleadG c) = some s →
+            CPolyRischDECancelExpSolvableInputs Dt b fuel
+              (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s])))
+                (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
+              ((cdegG c : ℤ) - 1)
+
+omit [CFracGcdCore α] in
+/-- **★ The §6.6 hyperexp cancellation degree-descent induction**
+(`cPolyRischDECancelExpG_isSome_of_solvableInputs`): from the recursive solvable-inputs predicate, the
+hyperexp cancellation solve succeeds. By fuel induction, the hyperexp analogue of
+`cPolyRischDECancelPrimG_isSome_of_solvableInputs`, through `cPolyRischDECancelExpG_isSome_of_recurse`. -/
+theorem cPolyRischDECancelExpG_isSome_of_solvableInputs (Dt b : CPolyG α) :
+    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ),
+      CPolyRischDECancelExpSolvableInputs Dt b fuel c n →
+      (cPolyRischDECancelExpG Dt fuel b c n).isSome = true := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro c n hin
+    exact absurd hin (by rw [CPolyRischDECancelExpSolvableInputs]; exact not_false)
+  | succ fuel ih =>
+    intro c n hin
+    rw [CPolyRischDECancelExpSolvableInputs] at hin
+    obtain ⟨_, hrest⟩ := hin
+    by_cases hc : cisZeroG c = true
+    · rw [cPolyRischDECancelExpG, if_pos hc, Option.isSome_some]
+    · rw [if_neg hc] at hrest
+      obtain ⟨hguard, horacle, hrecin⟩ := hrest
+      obtain ⟨q, _, _, s, hs, _⟩ := horacle
+      exact cPolyRischDECancelExpG_isSome_of_recurse Dt fuel b c n s hc hguard hs (ih _ _ (hrecin s hs))
+
+omit [CFracGcdCore α] in
+/-- **The `c = 0` base of the hyperexp solvable-inputs predicate**
+(`cPolyRischDECancelExpSolvableInputs_of_cZero`): the zero solution + the `cisZeroG`-`True` short-circuit
+give the predicate at any `fuel + 1`. -/
+theorem cPolyRischDECancelExpSolvableInputs_of_cZero (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α)
+    (n : ℤ) (hc : cisZeroG c = true) :
+    CPolyRischDECancelExpSolvableInputs Dt b (fuel + 1) c n := by
+  rw [CPolyRischDECancelExpSolvableInputs]
+  refine ⟨⟨0, ?_, Or.inl rfl⟩, ?_⟩
+  · rw [IsNoCancelSolK, map_zero, mul_zero, add_zero, (cisZeroG_iff c).mp hc]
+  · rw [if_pos hc]; trivial
+
+/-- **The uniform base-oracle completeness hypothesis (hyperexp, the tower-induction IH)**
+`CancelExpOracleComplete Dt b`: for every `fuel`, `c'`, and every degree-matched solution `q'`, the eq. 6.24
+base oracle `crischDESolve (expCoeff Dt fuel c' b) (cleadG c')` finds its leading coefficient. The hyperexp
+analogue of `CancelPrimOracleComplete`, quantified over `fuel` (the shift coefficient `expCoeff` depends on
+it). The honest tower-induction hypothesis for the hyperexponential cancellation case. -/
+def CancelExpOracleComplete (Dt b : CPolyG α) : Prop :=
+  ∀ (fuel : ℕ) (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
+    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' → CancelExpBaseOracle Dt fuel b c' q'
+
+omit [CFracGcdCore α] in
+/-- **★ The hyperexp cancellation solvable-inputs predicate from one bounded solution**
+(`cPolyRischDECancelExpSolvableInputs_of_sol`): the BUILDER — from a bounded abstract solution, the uniform
+eq. 6.24 base-oracle completeness `CancelExpOracleComplete` (tower-IH), the no-top-cancellation
+`CancelPrimNoCancel` (the engine-regime boundary; identical equation, so the *same* predicate as primitive),
+and fuel sufficiency, the recursive predicate holds. By fuel induction peeling `q` via `cancel_peel_descends`,
+the hyperexp analogue of `cPolyRischDECancelPrimSolvableInputs_of_sol`. -/
+theorem cPolyRischDECancelExpSolvableInputs_of_sol (Dt b : CPolyG α)
+    (horacle : CancelExpOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b) :
+    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X]),
+      IsNoCancelSolK Dt b c q →
+      (q = 0 ∨ (q.natDegree : ℤ) ≤ n) →
+      (q.natDegree : ℤ) + 1 < fuel →
+      CPolyRischDECancelExpSolvableInputs Dt b fuel c n := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro c n q _ _ hfuel
+    exfalso
+    have : (0:ℤ) ≤ q.natDegree := Int.natCast_nonneg _
+    simp only [Nat.cast_zero] at hfuel; omega
+  | succ fuel ih =>
+    intro c n q hsol hbound hfuel
+    rw [CPolyRischDECancelExpSolvableInputs]
+    refine ⟨⟨q, hsol, hbound⟩, ?_⟩
+    by_cases hc : cisZeroG c = true
+    · rw [if_pos hc]; trivial
+    · rw [if_neg hc]
+      have hc0 : toPolyG c ≠ 0 := fun h => hc ((cisZeroG_iff c).mpr h)
+      have hq0 : q ≠ 0 := by
+        rintro rfl
+        rw [IsNoCancelSolK, map_zero, mul_zero, add_zero] at hsol
+        exact hc0 hsol.symm
+      have hqdeg : (q.natDegree : ℤ) = cdegG c := hnc c q hsol hq0
+      obtain ⟨s, hs, hstoK⟩ := horacle fuel c q hsol hqdeg
+      have hguard : ¬ (n < (cdegG c : ℤ)) := by
+        rcases hbound with h0 | hle
+        · exact absurd h0 hq0
+        · rw [← hqdeg]; omega
+      refine ⟨hguard, ⟨q, hsol, hqdeg, s, hs, hstoK⟩, ?_⟩
+      intro s' hs'
+      have hstoK' : CFieldSpec.toK s' = q.leadingCoeff := by
+        have hs'eq : s' = s := by rw [hs] at hs'; exact (Option.some.injEq _ _).mp hs'.symm
+        rw [hs'eq]; exact hstoK
+      set m : ℕ := cdegG c with hmdef
+      have hqnat : q.natDegree = m := by have := hqdeg; rw [hmdef] at this ⊢; exact_mod_cast this
+      set c' : CPolyG α := csubG (csubG c (cmulG b (cshiftG m [s']))) (cmonomialDeriv Dt (cshiftG m [s']))
+        with hc'def
+      have htoP : toPolyG (cshiftG m [s']) = C (CFieldSpec.toK s') * X ^ m := toPolyG_engine_stm s' m
+      set pK : (CFieldSpec.K α)[X] := C q.leadingCoeff * X ^ m with hpKdef
+      have htoP' : toPolyG (cshiftG m [s']) = pK := by rw [htoP, hstoK']
+      have hc'toP : toPolyG c' = toPolyG c - toPolyG b * pK
+          - Differential.implicitDeriv (toPolyG Dt) pK := by
+        rw [hc'def, toPolyG_csubG, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP']
+      obtain ⟨hq'bound, hc'eq⟩ :=
+        cancel_peel_descends (D := Differential.implicitDeriv (toPolyG Dt)) (s := q.leadingCoeff)
+          (m := m) hq0 hsol hqnat rfl
+      have hq'sol : IsNoCancelSolK Dt b c' (q - pK) := by
+        rw [IsNoCancelSolK, hc'toP, hpKdef]; linear_combination hc'eq
+      have hfuelpos : 1 ≤ fuel := by
+        have : (0:ℤ) ≤ q.natDegree := Int.natCast_nonneg _
+        have h1 : (q.natDegree : ℤ) + 1 < (fuel : ℤ) + 1 := by exact_mod_cast hfuel
+        omega
+      by_cases hq'0 : q - pK = 0
+      · obtain ⟨fuel', rfl⟩ : ∃ k, fuel = k + 1 := ⟨fuel - 1, by omega⟩
+        have hc'0 : cisZeroG c' = true := by
+          rw [cisZeroG_iff]
+          have := hq'sol; rw [IsNoCancelSolK, hq'0, map_zero, mul_zero, add_zero] at this
+          exact this.symm
+        exact cPolyRischDECancelExpSolvableInputs_of_cZero Dt b fuel' c' ((m : ℤ) - 1) hc'0
+      · have hlt : (q - pK).degree < (m : WithBot ℕ) := by
+          rcases hq'bound with h0 | hlt
+          · exact absurd h0 hq'0
+          · exact hlt
+        have hnd : ((q - pK).natDegree : ℤ) < m := by
+          have := Polynomial.natDegree_lt_natDegree (p := q - pK)
+            (q := (X : (CFieldSpec.K α)[X]) ^ m) hq'0
+          rw [Polynomial.degree_X_pow, Polynomial.natDegree_X_pow] at this
+          exact_mod_cast this hlt
+        have hq'le : q - pK = 0 ∨ ((q - pK).natDegree : ℤ) ≤ (m : ℤ) - 1 := Or.inr (by omega)
+        have hfuel' : ((q - pK).natDegree : ℤ) + 1 < fuel := by
+          have h1 : (q.natDegree : ℤ) + 1 < (fuel : ℤ) + 1 := by exact_mod_cast hfuel
+          rw [hqnat] at h1; omega
+        exact ih c' ((m : ℤ) - 1) (q - pK) hq'sol hq'le hfuel'
+
+omit [CFracGcdCore α] in
+/-- **★ END-TO-END: the §6.6 hyperexp cancellation solve succeeds on a bounded solution, MODULO the base
+oracle** (`cPolyRischDECancelExpG_isSome_of_sol`): composes the builder with the degree-descent induction —
+the hyperexp analogue of `cPolyRischDECancelPrimG_isSome_of_sol`. The hyperexponential cancellation `hpoly`
+content modulo the eq. 6.24 base oracle + fuel sufficiency + the engine-regime boundary. -/
+theorem cPolyRischDECancelExpG_isSome_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (q : (CFieldSpec.K α)[X]) (horacle : CancelExpOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDECancelExpG Dt fuel b c n).isSome = true :=
+  cPolyRischDECancelExpG_isSome_of_solvableInputs Dt b fuel c n
+    (cPolyRischDECancelExpSolvableInputs_of_sol Dt b horacle hnc fuel c n q hsol hbound hfuel)
+
+/-! ### The dispatcher → cancellation bridges (threading `hpoly`'s cancellation regime)
+
+`cPolyRischDEG`'s body routes `δ = 0, deg b = 0, b ≠ 0` to `cPolyRischDECancelPrimG` and `δ = 1, deg b = 0,
+b ≠ 0` to `cPolyRischDECancelExpG` (Lemma 6.5.1). The bridges below are the routing-arm unfoldings, re-proved
+locally to keep this file self-contained; composing them with the end-to-end cancellation exhaustiveness
+discharges `hpoly` in the cancellation regimes. -/
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [CFracGcdCore α] in
+/-- **The dispatcher reduces to the primitive cancellation solve** (`cPolyRischDEG_eq_cancelPrim_local`): for
+`cdegG Dt = 0`, `cdegG b = 0`, `cisZeroG b = false`, `cPolyRischDEG Dt fuel b c m = cPolyRischDECancelPrimG Dt
+fuel b c m` — the `δ = 0 ∧ deg b = 0` routing arm of Lemma 6.5.1. -/
+theorem cPolyRischDEG_eq_cancelPrim_local (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (m : ℤ)
+    (hδ : cdegG Dt = 0) (hdb : cdegG b = 0) (hb : cisZeroG b = false) :
+    cPolyRischDEG Dt fuel b c m = cPolyRischDECancelPrimG Dt fuel b c m := by
+  rw [cPolyRischDEG]
+  simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero]
+  rw [if_neg (by norm_num), if_pos ⟨trivial, trivial⟩]
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [CFracGcdCore α] in
+/-- **The dispatcher reduces to the hyperexp cancellation solve** (`cPolyRischDEG_eq_cancelExp_local`): for
+`cdegG Dt = 1`, `cdegG b = 0`, `cisZeroG b = false`, `cPolyRischDEG Dt fuel b c m = cPolyRischDECancelExpG Dt
+fuel b c m` — the `δ = 1 ∧ deg b = 0` routing arm of Lemma 6.5.1. -/
+theorem cPolyRischDEG_eq_cancelExp_local (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (m : ℤ)
+    (hδ : cdegG Dt = 1) (hdb : cdegG b = 0) (hb : cisZeroG b = false) :
+    cPolyRischDEG Dt fuel b c m = cPolyRischDECancelExpG Dt fuel b c m := by
+  rw [cPolyRischDEG]
+  simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero, Nat.cast_one]
+  rw [if_neg (by norm_num), if_neg (by norm_num), if_pos ⟨trivial, trivial⟩]
+
+omit [CFracGcdCore α] in
+/-- **★ The dispatcher succeeds on a primitive-cancellation solution** (`cPolyRischDEG_isSome_cancelPrim_of_sol`):
+in the primitive cancellation regime (`cdegG Dt = 0`, `cdegG b = 0`, `b ≠ 0`), a bounded abstract solution
+`IsNoCancelSolK Dt b c q` makes the dispatcher `cPolyRischDEG` return `some` — modulo the uniform base-oracle
+completeness (tower-IH), the no-top-cancellation (engine-regime boundary), and fuel sufficiency. Discharges
+`hpoly`'s **primitive-cancellation branch**. -/
+theorem cPolyRischDEG_isSome_cancelPrim_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (q : (CFieldSpec.K α)[X]) (hδ : cdegG Dt = 0) (hdb : cdegG b = 0) (hb : cisZeroG b = false)
+    (horacle : CancelPrimOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true := by
+  rw [cPolyRischDEG_eq_cancelPrim_local Dt fuel b c n hδ hdb hb]
+  exact cPolyRischDECancelPrimG_isSome_of_sol Dt b fuel c n q horacle hnc hsol hbound hfuel
+
+omit [CFracGcdCore α] in
+/-- **★ The dispatcher succeeds on a hyperexp-cancellation solution** (`cPolyRischDEG_isSome_cancelExp_of_sol`):
+in the hyperexponential cancellation regime (`cdegG Dt = 1`, `cdegG b = 0`, `b ≠ 0`), a bounded abstract
+solution makes the dispatcher return `some` — modulo the uniform eq. 6.24 base-oracle completeness (tower-IH),
+the no-top-cancellation, and fuel sufficiency. Discharges `hpoly`'s **hyperexp-cancellation branch**. -/
+theorem cPolyRischDEG_isSome_cancelExp_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (q : (CFieldSpec.K α)[X]) (hδ : cdegG Dt = 1) (hdb : cdegG b = 0) (hb : cisZeroG b = false)
+    (horacle : CancelExpOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true := by
+  rw [cPolyRischDEG_eq_cancelExp_local Dt fuel b c n hδ hdb hb]
+  exact cPolyRischDECancelExpG_isSome_of_sol Dt b fuel c n q horacle hnc hsol hbound hfuel
+
+end CancelEngine
+
 /-! ## ★ The §6.2/6.3 fractional→reduced bridge — `hspde`'s upstream input (the primitive regime, PROVEN)
 
 The §6.4 degree-descent assembly `cSPDEG_isSome_of_structG_bounded` consumes an **abstract reduced solution**
@@ -1659,7 +2235,11 @@ structure RischDESolveExhaustiveResidual (Dt fnum fden gnum gden : CPolyG α) : 
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)).isSome = true
   /-- ★ §6.5/§6.6: for the SPDE output `(bbar, cbar, m)`, a solution makes the poly-RDE dispatcher return
-  `some` (the cancellation-regime exhaustiveness, deep). -/
+  `some`. ★ Both regimes are now reduced: the **non-cancellation** branch is PROVEN
+  (`cPolyRischDEG_isSome_noCancel_of_sol`, modulo fuel) and the **cancellation** branches likewise PROVEN
+  modulo the base oracle (`cPolyRischDEG_isSome_cancel{Prim,Exp}_of_sol` — the eq. 6.23/6.24 oracle
+  completeness `Cancel{Prim,Exp}OracleComplete` = the tower-induction IH, the no-top-cancellation
+  engine-regime boundary, and fuel). The whole clause reduces to the tower-oracle completeness. -/
   hpoly : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     ∀ a0 b0 c0 h0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
       cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
@@ -1894,14 +2474,44 @@ does not self-certify:
   clause (ii) is thereby **discharged**: residual #3's `hspde` is reduced to the denominator-normalization
   fact + fuel sufficiency.
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. Reachable
-  base sub-cases proven (b=0/c=0); ★ the **non-cancellation regime now PROVEN**
+  base sub-cases proven (b=0/c=0); ★ the **non-cancellation regime PROVEN**
   (`cPolyRischDEG_isSome_noCancel_of_sol`, modulo only fuel sufficiency) — the structural peel core
   `noncancel_peel_descends` + the degree-descent induction + the dispatcher bridge, mirroring the §6.4
-  template. The irreducible residue narrows to the **cancellation-regime exhaustiveness** alone: the
-  primitive/hyperexponential cancellation recursions `cPolyRischDECancel{Prim,Exp}G` (recursing into the
-  level-below base oracle `crischDESolve`) find a bounded solution if one exists — the genuine
-  **tower-oracle-completeness** core (`crischDESolve` complete per level, by tower-induction), the converse
-  of the cancellation cleared identities.
+  template. ★ The **cancellation regime is now PROVEN MODULO THE BASE ORACLE** (the `CancelEngine` section,
+  mirroring the non-cancellation template): `cPolyRischDEG_isSome_cancel{Prim,Exp}_of_sol` — a bounded
+  cancellation solution makes the dispatcher return `some` in the primitive (`δ = 0`) / hyperexponential
+  (`δ = 1`) `deg b = 0` regimes — assembling the cancellation peel core `cancel_peel_descends` (with the
+  oracle returning `q`'s leading coefficient, `q − s·tᵐ` is lower-degree and solves the reduced `c'`, the peel
+  needing only the agreement `toK s = lc q`, NOT the base RDE soundness), the degree-descent inductions
+  `cPolyRischDECancel{Prim,Exp}G_isSome_of_solvableInputs`, the builders
+  `cPolyRischDECancel{Prim,Exp}SolvableInputs_of_sol`, and the dispatcher bridges
+  `cPolyRischDEG_eq_cancel{Prim,Exp}_local` — modulo exactly three honest residues: **(a) fuel sufficiency**
+  (`deg q + 1 < fuel`, as in non-cancellation); **(b) the per-step base-oracle completeness**
+  `Cancel{Prim,Exp}OracleComplete` (the eq. 6.23/6.24 oracle `crischDESolve` finds the leading coefficient of
+  any degree-matched solution — *the honest tower-induction IH*); and **(c) the no-top-cancellation**
+  `CancelPrimNoCancel` (every nonzero solution is degree-matched, `deg q = deg c` — the engine-regime boundary
+  the `m = deg c` search is exhaustive within; genuine top-cancellation `deg q > deg c` is the §6.3-bound
+  regime, the documented continuation).
+
+  **The tower-induction characterization (the unifying research core).** Residue (b)
+  `Cancel{Prim,Exp}OracleComplete Dt b` is precisely where the recursion ties one tower level down: it asserts
+  the base solver `CRischField.crischDESolve` is *complete* on the leading-coefficient RDE
+  `Ds + (b₀ + m·η)·s = lc c` over the coefficient field `α`. Connecting it to `crischDESolve`'s own
+  completeness (`FieldRDESolvable`-at-`α` ⟹ `crischDESolve.isSome`) is the tower induction:
+  - **Base ℚ** (`CRischField ℚ`, `D = 0`): the base RDE collapses to `b₀·s = lc c`, solved trivially and
+    *completely* — `crischDESolve f g = if f = 0 then (if g = 0 then some 0 else none) else some (g/f)` returns
+    `some` exactly when a solution exists (algebraic `y = g/f`), so (b) holds outright (the agreement
+    `toK s = lc q` is then `g/f = lc q`, forced by `b₀·lc q = lc c`). So the base case **closes trivially**.
+  - **Step `n → n+1`** (`CRischField (QFunNZG β)` over `β[s]`): a level-`n+1` `crischDESolve` runs the generic
+    §6 pipeline `cRischDEG`, whose completeness is *this very file's* `hsolve` — whose cancellation clause's (b)
+    recurses into the level-`n` `crischDESolve`. So the step is the clean structural induction "level-`n+1`
+    completeness given level-`n` completeness", i.e. the whole RDE-completeness frontier reduces to threading
+    (b) as the IH up the tower. (The remaining (a) fuel and (c) no-top-cancellation are per-level honest side
+    conditions, not the recursive core.)
+
+  This is the genuine **tower-oracle-completeness** core (`crischDESolve` complete per level, by
+  tower-induction — NOT a Jacobson-rank fact), the converse of the cancellation cleared identities, to which
+  the whole `hpoly` cancellation regime now reduces.
 
 **What `RischDEInnerCompleteness` now reduces to (the complete 3-clause map).** With `hnorm`
 (`ComputableRischDENormCompleteness`, modulo Bronstein Thm 6.1.2 divisibility), `hbound`
@@ -1970,6 +2580,62 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
     (cPolyRischDEG Dt fuel b c n).isSome = true :=
   cPolyRischDEG_isSome_noCancel_of_sol Dt b fuel c n q hb hδ hdb hsol hbound hfuel
+
+/-! ### Restatements of the §6.6 cancellation-regime exhaustiveness (anonymous `example`s) -/
+
+-- ★ The cancellation peel core: with the oracle returning `q`'s leading coefficient (`s = lc q`) and no top
+-- cancellation (`deg q = deg c = m`), the remainder `q − s·Xᵐ` is lower-degree and solves the reduced `c'`.
+example {K : Type*} [Field K] {D : Derivation ℤ K[X] K[X]} {b c q : K[X]} {s : K} {m : ℕ}
+    (hq : q ≠ 0) (heq : D q + b * q = c) (hm : q.natDegree = m) (hslc : s = q.leadingCoeff) :
+    (q - C s * X ^ m = 0 ∨ (q - C s * X ^ m).degree < (m : WithBot ℕ)) ∧
+      D (q - C s * X ^ m) + b * (q - C s * X ^ m) = c - D (C s * X ^ m) - b * (C s * X ^ m) :=
+  cancel_peel_descends hq heq hm hslc
+
+-- ★ The primitive cancellation degree-descent induction: the solvable-inputs predicate forces `isSome`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (h : CPolyRischDECancelPrimSolvableInputs Dt b fuel c n) :
+    (cPolyRischDECancelPrimG Dt fuel b c n).isSome = true :=
+  cPolyRischDECancelPrimG_isSome_of_solvableInputs Dt b fuel c n h
+
+-- ★ The hyperexp cancellation degree-descent induction: the solvable-inputs predicate forces `isSome`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (h : CPolyRischDECancelExpSolvableInputs Dt b fuel c n) :
+    (cPolyRischDECancelExpG Dt fuel b c n).isSome = true :=
+  cPolyRischDECancelExpG_isSome_of_solvableInputs Dt b fuel c n h
+
+-- ★ END-TO-END (primitive): a bounded cancellation solution makes the §6.6 primitive solve succeed, modulo
+-- the base oracle (tower-IH) + no-top-cancellation (engine-regime boundary) + fuel sufficiency.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X])
+    (horacle : CancelPrimOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDECancelPrimG Dt fuel b c n).isSome = true :=
+  cPolyRischDECancelPrimG_isSome_of_sol Dt b fuel c n q horacle hnc hsol hbound hfuel
+
+-- ★ The dispatcher (primitive regime, `deg b = 0`) succeeds on a cancellation solution — `hpoly`'s
+-- primitive-cancellation branch, modulo the base oracle + the engine-regime boundary + fuel.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X])
+    (hδ : cdegG Dt = 0) (hdb : cdegG b = 0) (hb : cisZeroG b = false)
+    (horacle : CancelPrimOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true :=
+  cPolyRischDEG_isSome_cancelPrim_of_sol Dt b fuel c n q hδ hdb hb horacle hnc hsol hbound hfuel
+
+-- ★ The dispatcher (hyperexp regime, `deg b = 0`) succeeds on a cancellation solution — `hpoly`'s
+-- hyperexp-cancellation branch, modulo the eq. 6.24 base oracle + the engine-regime boundary + fuel.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X])
+    (hδ : cdegG Dt = 1) (hdb : cdegG b = 0) (hb : cisZeroG b = false)
+    (horacle : CancelExpOracleComplete Dt b) (hnc : CancelPrimNoCancel Dt b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true :=
+  cPolyRischDEG_isSome_cancelExp_of_sol Dt b fuel c n q hδ hdb hb horacle hnc hsol hbound hfuel
 
 /-! ### Restatements of the §6.2/6.3 fractional→reduced bridge (anonymous `example`s) -/
 
@@ -2076,6 +2742,20 @@ compiler) -/
 #print axioms cPolyRischDENoCancelSolvableInputs_of_sol
 #print axioms cPolyRischDENoCancelG_isSome_of_sol
 #print axioms cPolyRischDEG_isSome_noCancel_of_sol
+#print axioms cancel_peel_descends
+#print axioms toPolyG_engine_stm
+#print axioms cPolyRischDECancelPrimG_isSome_of_recurse
+#print axioms cPolyRischDECancelPrimG_isSome_of_solvableInputs
+#print axioms cPolyRischDECancelPrimSolvableInputs_of_cZero
+#print axioms cPolyRischDECancelPrimSolvableInputs_of_sol
+#print axioms cPolyRischDECancelPrimG_isSome_of_sol
+#print axioms cPolyRischDECancelExpG_isSome_of_recurse
+#print axioms cPolyRischDECancelExpG_isSome_of_solvableInputs
+#print axioms cPolyRischDECancelExpSolvableInputs_of_cZero
+#print axioms cPolyRischDECancelExpSolvableInputs_of_sol
+#print axioms cPolyRischDECancelExpG_isSome_of_sol
+#print axioms cPolyRischDEG_isSome_cancelPrim_of_sol
+#print axioms cPolyRischDEG_isSome_cancelExp_of_sol
 #print axioms hsolve_of_exhaustiveResidual
 #print axioms rischDEInnerCompleteness_of_residuals
 #print axioms rdeNormalDenominator_glue_inverse
