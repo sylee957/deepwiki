@@ -1157,6 +1157,12 @@ the carrier abbreviation to `RatFunc ℚ`. -/
 noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
+/-- `CharZero (CFieldSpec.K (QFunNZG ℚ)) = CharZero (RatFunc ℚ)`: local instance so the poly-branch capstone
+synthesizes the `CharZero` that `cIntegrateGFull_poly_oneShot_base`'s `hpoly` discharge needs over the carrier
+abbreviation. -/
+noncomputable local instance : CharZero (CFieldSpec.K (QFunNZG ℚ)) :=
+  inferInstanceAs (CharZero (RatFunc ℚ))
+
 /-- **★★★ The PRIMITIVE one-shot for `cIntegrateGFull` over `ℚ(x)(t)`** — the milestone at the level-1 carrier
 `α = QFunNZG ℚ` (`CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`): for a primitive monomial `toPolyG Dt = C w`, if the
 full driver returns `some res` on the primitive pure-normal branch, given the canonical reconstruction, the
@@ -1890,10 +1896,161 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
   cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one Dt fuel a d s hDtdeg haProper hv hb hden g hgeq
     hdvd hfuelh hresDen
 
+/-! ### ★★★ The POLY-BRANCH CAPSTONE: the primitive-base poly one-shot at `ℚ(x)(t)` with `hpoly`, `hA` DISCHARGED
+
+The polynomial-branch analogue of `cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG`. The genuine boundary:
+the poly-Risch-DE discharge (`hpoly : D(amG qₚ) = amG fₚ`) holds only under the **primitive base** `Dt =
+[CField.one]` (`D(t) = 1`) — `cIntegratePolyG` is the antiderivative `∑ fₚᵢ tⁱ⁺¹/(i+1)` only when `D(t) = 1`; for
+a general primitive `Dt = C w` with `w ≠ 1` the monomial derivation `D(∫ fₚ) = w·fₚ′ ≠ fₚ`. So the poly capstone
+lands at `Dt = [CField.one]` (which still satisfies `deg Dt ≤ 1`, so the normal part's `hA` discharges via
+`cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one` exactly as the normal-part capstone). This assembles:
+`hpoly` from `cIntegrateGFull_poly_oneShot_base` under the constant-base regime `hconst` (`mapCoeffs fₚ = 0`),
+`hnormal` from `field_identity_of_cIntegrateReducedG_primitive` on `(cₙ, dₙ)` with `hA` discharged, leaving only
+the genuine Bronstein side conditions (`hherm`, `hden`, `hnorm`, `hform`), the additive split reconstruction
+`hrecon` (`amG fₚ + amG cₙ/amG dₙ = amG a/amG d`), `hgden`, the `hpoly` regime `hconst`, and the canonical
+fuel/regularity bundle. -/
+
+/-- **★★★ The PRIMITIVE-BASE poly one-shot at `ℚ(x)(t)` with `hpoly` and `hA` discharged** — over the primitive
+base `Dt = [CField.one]` (`D(t) = 1`, the genuine regime where the poly-Risch-DE oracle's antiderivative
+`cIntegratePolyG` is correct), if `cIntegrateGFull` returns `some res` on the polynomial branch (`cisZeroG b =
+true`, `cisZeroG fp = false`, oracle `some qp`), the field identity `D(res) + logResidueSumG res.logs = amG
+a/amG d` over `RatFunc ℚ` holds **without** the poly-Risch-DE gate `hpoly` (discharged from the constant-base
+regime `hconst : mapCoeffs fₚ = 0` via `cIntegrateGFull_poly_oneShot_base`) and **without** the degree side
+condition `hA` (discharged from input properness + `deg Dt ≤ 1` via
+`cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one`, the normal part `hnormal` then built by
+`field_identity_of_cIntegrateReducedG_primitive`). What genuinely remains: the additive split reconstruction
+`hrecon` (`amG fₚ + amG cₙ/amG dₙ = amG a/amG d`), `hgden`, the `hpoly` regime `hconst`, the Bronstein side
+conditions on the simple part `(cₙ, dₙ)` (Hermite half `hherm`, squarefree spelling `hden`, normality `hnorm`,
+per-root reassembly `hform`), and the canonical-representation fuel/regularity bundle
+(`hreg`/`hfuelA`/`hfuelUR`/`hv`/`hbk`/`g`/`hgeq`/`hdvd`/`hfuelh`/`hresDen`). The milestone: primitive-base
+polynomial-branch soundness at `ℚ(x)(t)` modulo only genuine side conditions + fuel/regularity, completing
+`cIntegrateGFull`'s a-priori `δ ≤ 1` soundness across all three branches (normal capstone + this poly capstone +
+special = none). -/
+theorem cIntegrateGFull_poly_oneShot_inputProper_qfunNZG (fuel : ℕ)
+    (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
+    (qp : CPolyG (QFunNZG ℚ)) (s : Finset (CFieldSpec.K (QFunNZG ℚ)))
+    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.1.1
+        = true)
+    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).1
+        = false)
+    (hsome : CPolyG.cIntegrateGFull ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d cands = some res)
+    (hqp : CPolyG.cPolyRischDEG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel []
+        (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).1
+        ((CPolyG.cdegG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).1 : ℤ) + 1)
+        = some qp)
+    (hgden : amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+          (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+          (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 cands).rational.2)
+        ≠ 0)
+    (hconst : Differential.mapCoeffs
+        (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).1) = 0)
+    (hherm : towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG ℚ))
+            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+                  (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+                  (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
+                  cands).rational.1)
+              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+                  (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+                  (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
+                  cands).rational.2))
+          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+                (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+                (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).2.1)
+            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+                (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+                (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).2.2)
+        = amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1)
+            / amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2))
+    (hden : toPolyG (cHermiteReduceTowerG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+          (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+          (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).2.2
+        = Lagrange.nodal s id)
+    (hnorm : ∀ β ∈ s, (1 : CFieldSpec.K (QFunNZG ℚ)) ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+            (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+            (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+                  (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+                  (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ)))
+                    (Lagrange.nodal s id)).eval β,
+              X - C β)))
+    (hreg : CCanonicalRepFastGRegularQ ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d)
+    (hfuelA : (cnormG a : List (QFunNZG ℚ)).length ≤ fuel)
+    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel d).1
+        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel d).2).1
+        (cdivmodG fuel a d).2) : List (QFunNZG ℚ)).length ≤ fuel)
+    (hv : ∀ p ∈ (cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).zipIdx,
+        ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hbk : ∀ p ∈ (cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).zipIdx,
+        ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
+        (toPolyG (cdiophantineG fuel
+            (cmulG (cdivG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
+              (cpowG p.1 (p.2 + 1))) (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) p.1)) p.1 rhs).1).degree
+          < (toPolyG p.1).degree)
+    (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
+    (hgeq : g = (cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).zipIdx.foldl
+      (fun (gAcc : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) (vi, idx) =>
+        let i := idx + 1
+        if i ≤ 1 then gAcc
+        else
+          let Vi_pow := cpowG vi i
+          let u := cdivG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 Vi_pow
+          let gloc := (cHermiteReduceTowerInner ([CField.one] : CPolyG (QFunNZG ℚ)) fuel vi u (i - 1)
+            (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1 ([CField.zero], [CField.one])).1
+          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+      ([CField.zero], [CField.one]))
+    (hdvd : toPolyG (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 (cmulG g.2 g.2))
+      ∣ toPolyG (cmulG (csubG (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1 (cmulG g.2 g.2))
+          (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
+            (csubG (cmulG (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.1) g.2) (cmulG g.1 (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.2)))))
+        ((cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).foldl
+          (fun acc vi => cmulG acc vi) [CField.one])))
+    (hfuelh : (cnormG (cmulG
+          (csubG (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1 (cmulG g.2 g.2))
+          (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
+            (csubG (cmulG (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.1) g.2) (cmulG g.1 (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.2)))))
+        ((cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).foldl
+          (fun acc vi => cmulG acc vi) [CField.one])) : List (QFunNZG ℚ)).length ≤ fuel)
+    (hresDen : cnormG (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 (cmulG g.2 g.2))
+      ≠ ([] : CPolyG (QFunNZG ℚ)))
+    (hrecon : amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).1)
+          + amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1)
+            / amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2)
+        = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d)) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG ℚ))
+        (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
+        + logResidueSumG ([CField.one] : CPolyG (QFunNZG ℚ)) res.logs
+      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) := by
+  -- `toPolyG [1] = C 1` (primitive base, `w = 1`), so `deg Dt = 0 ≤ 1`
+  have hDt : toPolyG ([CField.one] : CPolyG (QFunNZG ℚ)) = C (1 : CFieldSpec.K (QFunNZG ℚ)) := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]
+  have hDtdeg : (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))).natDegree ≤ 1 := by
+    rw [hDt, Polynomial.natDegree_C]; exact Nat.zero_le 1
+  -- input properness `deg cₙ < deg dₙ`, unconditional at ℚ(x)(t)
+  have haProper := canonicalRepresentationFastG_simple_proper_qfunNZG ([CField.one] : CPolyG (QFunNZG ℚ))
+    fuel a d hreg hfuelA hfuelUR
+  -- discharge `hA` (on the simple part `(cₙ, dₙ)`) from properness + `deg Dt ≤ 1` + exact-division connectors
+  have hA := cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+    (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+    (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 s hDtdeg haProper
+    hv hbk hden g hgeq hdvd hfuelh hresDen
+  -- build `hnormal` (the normal part identity on `(cₙ, dₙ)`) from the primitive reduced-case capstone
+  have hnormal := field_identity_of_cIntegrateReducedG_primitive ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
+    (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
+    (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 cands s
+    (1 : CFieldSpec.K (QFunNZG ℚ)) hDt hherm hden hA hnorm hform
+  -- assemble: `cIntegrateGFull_poly_oneShot_base` discharges `hpoly` from the constant-base regime `hconst`
+  exact cIntegrateGFull_poly_oneShot_base fuel a d cands res qp hb hfp hsome hqp hgden hconst hnormal hrecon
+
 /-! ### Axiom audit — the `hA`-discharged primitive one-shot rests only on the standard kernel axioms. -/
 
 #print axioms cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
 #print axioms cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG
+#print axioms cIntegrateGFull_poly_oneShot_inputProper_qfunNZG
 
 end DeepWiki.SymbolicIntegration
 
