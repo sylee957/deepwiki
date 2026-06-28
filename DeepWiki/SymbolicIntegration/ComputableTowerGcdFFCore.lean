@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerField
 `ComputableTowerGcdFF` builds the flat, recursive, fraction-free gcd over an arbitrary tower level
 (`class CFracGcd`, `cgcdFFGen`), validated against `cgcdFF` and the swell benchmark. But that file sits
 **downstream** of the integration pipeline (it imports `ComputableTowerBench`, which transitively imports
-`ComputableTowerIntegrate`), so the integration engine `cIntegrateG` cannot import it to *use* its flat
+`ComputableTowerIntegrate`), so the integration engine `cIntegrateGFull` cannot import it to *use* its flat
 gcd.
 
 This file lifts the **machinery** of that flat gcd to a position **upstream** of `ComputableTowerIntegrate`

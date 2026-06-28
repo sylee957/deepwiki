@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 The generic §6 RDE pipeline (`ComputableTowerRischDE`) — `cRischDEG` and its stages — is
 `[CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]`-generic and gate-clean, but every op carries an
 explicit `fuel : ℕ`. This file builds the **fuel-free** companions `…GWf`, completing the generic fuel-free
-engine: the integration driver `cIntegrateGWf` (`ComputableTowerWellFounded`) is already fuel-free, and TWO
+engine: the reduced-case driver `cIntegrateReducedGWf` (`ComputableTowerWellFounded`) is already fuel-free, and TWO
 of the RDE recursive bottoms landed there (`cPolyRischDENoCancelGWf` §6.5, `cSPDEGWf` §6.4). Here we finish
 the §6 oracle — the headline `cRischDEGWf`.
 

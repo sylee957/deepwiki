@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 /-! # The FUEL-FREE transcendental top entry `cIntegrateGFullWf` — the fuel-free companion of the
 transcendental driver `cIntegrateGFull`.
 
-The transcendental engine is fuel-free end-to-end in its *core* — `cIntegrateGWf` / `cIntegratePolyGWf` /
+The transcendental engine is fuel-free end-to-end in its *core* — `cIntegrateReducedGWf` / `cIntegratePolyGWf` /
 `cPolyRischDEGWf` (`ComputableTowerWellFounded` / `ComputableTowerRischDEWellFounded`). The one remaining gap
 was the transcendental TOP entry `cIntegrateGFull` (`ComputableTowerRischDE`), which still routed to the fuel
 versions. This file closes it — the transcendental top entry becomes fuel-free.

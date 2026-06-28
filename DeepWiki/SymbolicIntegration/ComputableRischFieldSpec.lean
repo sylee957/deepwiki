@@ -241,7 +241,7 @@ distinct reasons. The first is fundamental; the second is supplied above.
    `CSPDEGClearedInputsGen` transparent-input predicate holds on a real run — i.e. re-derive the §6 pipeline's
    *structural decomposition theorem* (every successful `cRischDEG` run factors through successful, regular
    stages). That theorem does not exist; it is the documented continuation. It is the §6 analogue of the
-   missing "`cIntegrateG … = some res` ⟹ `checkIdentityG … = true`" forward-threading — which is exactly why
+   missing "`cIntegrateGFull … = some res` ⟹ `checkIdentityG … = true`" forward-threading — which is exactly why
    the `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
    `ComputableIntegrateTowerCorrectG`) instead gates on the engine's **own** boolean `checkIdentityG` re-check
    rather than on a structural decomposition. An
