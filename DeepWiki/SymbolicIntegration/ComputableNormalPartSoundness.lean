@@ -961,6 +961,72 @@ theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : CPolyG α) (
   exact toPolyG_residualFraction_proper_of_degree_le_one Dt a d g.1 g.2
     (Polynomial.ne_zero_of_degree_gt hgproper) hDt haProper hgproper
 
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ The residual `a/d − D(g)` is proper for `δ(t) ≥ 2`, gated on the assembled `g`'s `(δ−1)` margin** —
+the `δ(t) ≥ 2` companion of `cHermiteReduceTowerG_residual_proper_of_degree_le_one`. For the engine's
+assembled rational part `g = (gnum, gden)` (the `cHermiteReduceTowerG` `factors.zipIdx.foldl`), the residual
+`resNum = a·gden² − d·(D(gnum)·gden − gnum·D(gden))`, `resDen = d·gden²` is proper (`deg resNum < deg
+resDen`), given the input `a/d` proper (`haProper`), the per-factor keystone/nonzero hypotheses (`hv`/`hb`,
+exactly `cdiophantineG_fst_degree_lt`), AND the **margin** `deg gnum + max(0, δ(t) − 1) < deg gden`
+(`hmargin`) on the *assembled* `g`. The `g`-properness premise is discharged internally
+(`cHermiteReduceTowerG_g_proper`, giving `gden ≠ 0`); the residual step is `toPolyG_residualFraction_proper_of_margin`.
+HONEST about the δ-boundary: the margin (strictly stronger than properness for `δ(t) ≥ 2`) is exactly what
+FAILS for the tangent example (`g = −1/t`, margin `0 + 1 < 1` false), so this gates `hproper` for `δ(t) ≥ 2`
+**only** under the margin — never unconditionally from the generic Hermite output, which is the precise
+content of the `δ ≥ 2` boundary. -/
+theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
+    (factors : List (CPolyG α))
+    (haProper : (toPolyG a).degree < (toPolyG d).degree)
+    (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel
+          (cmulG (cdivG fuel d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+        < (toPolyG p.1).degree)
+    (hmargin :
+      (toPolyG (factors.zipIdx.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivG fuel d Vi_pow
+            let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+              ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+        ([CField.zero], [CField.one])).1).degree
+          + (max 0 ((toPolyG Dt).natDegree - 1) : ℕ)
+        < (toPolyG (factors.zipIdx.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivG fuel d Vi_pow
+            let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+              ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+        ([CField.zero], [CField.one])).2).degree) :
+    let g := factors.zipIdx.foldl
+      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        let i := idx + 1
+        if i ≤ 1 then gAcc
+        else
+          let Vi_pow := cpowG vi i
+          let u := cdivG fuel d Vi_pow
+          let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+            ([CField.zero], [CField.one])).1
+          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+      ([CField.zero], [CField.one])
+    (toPolyG (csubG (cmulG a (cmulG g.2 g.2))
+        (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
+          (cmulG g.1 (cmonomialDeriv Dt g.2)))))).degree
+      < (toPolyG (cmulG d (cmulG g.2 g.2))).degree := by
+  intro g
+  have hgproper : (toPolyG g.1).degree < (toPolyG g.2).degree :=
+    cHermiteReduceTowerG_g_proper Dt fuel a d factors hv hb
+  exact toPolyG_residualFraction_proper_of_margin Dt a d g.1 g.2
+    (Polynomial.ne_zero_of_degree_gt hgproper) haProper hmargin
+
 /-! ### ★★ The normal-part assembly through the engine's own `checkIdentityG` certificate
 
 The full normal-part one-shot `checkIdentityG_cIntegrateReducedG` needs the Hermite half (above) **and**

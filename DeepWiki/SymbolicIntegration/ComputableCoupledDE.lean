@@ -435,6 +435,61 @@ def coupledClearedCheck (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) : Bool :=
   let r2 := csubG (caddG (caddG (cderivQ y2) (cmulG b2 y1)) (cmulG b1 y2)) z2
   cisZeroG r1 && cisZeroG r2
 
+/-! ### ★ Base coupled-system soundness from the engine's own cleared check (`native_decide`-free)
+
+The base solve `cCoupledDESystem` ends in `cConstSolveUniqueQ` (ℚ-Gaussian elimination, `crref`), whose
+solution-set correctness has **no** abstract lemma in the library (the `crref` invariant is only proven for
+the single-column structural case). So — exactly as the normal-part one-shot is closed through the engine's
+own `checkIdentityG` certificate (`field_identity_of_cIntegrateReducedG_of_checkIdentityG`) rather than
+through Gaussian-elimination correctness — we close the coupled-system soundness through the engine's *own*
+cleared-residual self-check `coupledClearedCheck`. The bridge `coupledClearedCheck = true ⟹ the two field
+identities over ℚ[X]` is `native_decide`-FREE (pure `cisZeroG_iff` + the `toPolyG` ring/derivation homs);
+the self-check itself is `native_decide`-reachable for any concrete run (as in `coupledDESystem_example`). -/
+
+/-- **★ Base coupled-system soundness from the cleared check** (`coupledClearedCheck_sound`,
+`native_decide`-free): if `coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true` then `(y₁, y₂)` solves the base
+coupled system at the `ℚ[X]` level — `D(y₁) + b₁·y₁ + C a·(b₂·y₂) = z₁` and `D(y₂) + b₂·y₁ + b₁·y₂ = z₂`
+(`D = Polynomial.derivative`, `toPolyG` of each `CPolyG ℚ`). Both conjuncts come from `cisZeroG_iff` on the
+two cleared residuals, expanded by the `toPolyG` ring-hom (`toPolyG_csubG`/`caddG`/`cmulG`/`cscaleG`,
+`toK = id` on ℚ) and derivation (`toPolyG_cderivG`) bridges, then `linear_combination`. The base-solve
+soundness atom, gated only on the engine's own cleared check — the coupled-system analogue of
+`field_identity_of_cIntegrateReducedG_of_checkIdentityG`. -/
+theorem coupledClearedCheck_sound (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
+    (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
+    Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
+        + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
+      Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
+        + toPolyG b1 * toPolyG y2 = toPolyG z2 := by
+  rw [coupledClearedCheck, Bool.and_eq_true] at hcheck
+  obtain ⟨h1, h2⟩ := hcheck
+  rw [cisZeroG_iff] at h1 h2
+  refine ⟨?_, ?_⟩
+  · have := h1
+    simp only [toPolyG_csubG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cscaleG, toPolyG_cderivG,
+      CFieldSpec.toK, id_eq, sub_eq_zero] at this
+    linear_combination this
+  · have := h2
+    simp only [toPolyG_csubG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cderivG,
+      sub_eq_zero] at this
+    linear_combination this
+
+/-- **★ Base coupled-system soundness from a self-certifying solve** (`cCoupledDESystem_sound_of_check`,
+`native_decide`-free): if `cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)` AND the returned pair
+passes the engine's own cleared check (`coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true`, the
+`native_decide`-reachable self-certificate), then `(y₁, y₂)` solves the base coupled system at the `ℚ[X]`
+level. Pure composition with `coupledClearedCheck_sound`. The base-solve's `cConstSolveUniqueQ`
+(ℚ-Gaussian elimination) enters only through this self-check — its abstract correctness is the documented
+residual (no `crref` solution-set lemma in the library). -/
+theorem cCoupledDESystem_sound_of_check (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
+    (y1 y2 : CPolyG ℚ)
+    (_hsome : cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2))
+    (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
+    Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
+        + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
+      Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
+        + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
+  coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2 hcheck
+
 -- **Sanity print** (book p.266 step 4): `CoupledDESystem(0, 4x−2, 2−8x², 4−4x) = (−1, 2x+1)`.
 #eval (cCoupledDESystem 30 (-1) ([] : CPolyG ℚ) coupledExB2 coupledExZ1 coupledExZ2 1).map
   (fun p => ((p.1 : List ℚ), (p.2 : List ℚ)))
@@ -452,6 +507,246 @@ theorem coupledDESystem_example :
       | none => false) = true := by native_decide
 
 #print axioms coupledDESystem_example
+
+/-! ### ★ The `t`-polynomial bivariate bridge `toPoly2 : ℚ[x][t]` (for the tangent cleared check)
+
+A `t`-polynomial `p : List (CPolyG ℚ)` (coefficient `p.getD k []` of `tᵏ`, each in `ℚ[x] = CPolyG ℚ`)
+reads into `(ℚ[X])[X]` (`ℚ[x][t]`, outer = `t`, inner = `x`) via `toPoly2 p = Σ_k C(toPolyG p_k)·tᵏ`.
+The §8.4 tangent cleared-check operations (`tadd`/`tsub`/`tanDeriv`/`mulConst`/`mulT`) become the
+`ℚ[x][t]` ring operations and the tangent derivation `D = ∂/∂x + (t²+1)·∂/∂t`, so a passing
+`cancelTanClearedCheck` lifts to a genuine `ℚ[x][t]` polynomial identity (the route is `native_decide`-free). -/
+
+open CPolyG in
+/-- **Bivariate bridge `List (CPolyG ℚ) → ℚ[x][t]`** `toPoly2 p`: Horner over `t` of the `ℚ[x]`-coefficient
+list `p`, each coefficient `toPolyG`'d into `ℚ[X]` and embedded by `C : ℚ[X] → (ℚ[X])[X]`. `toPoly2 (c :: cs)
+= C(toPolyG c) + X·toPoly2 cs`; the `t`-polynomial `Σ_k p_k·tᵏ` over the base ring `ℚ[x]`. -/
+noncomputable def toPoly2 : List (CPolyG ℚ) → Polynomial (Polynomial ℚ)
+  | [] => 0
+  | c :: cs => Polynomial.C (toPolyG c) + Polynomial.X * toPoly2 cs
+
+@[simp] theorem toPoly2_nil : toPoly2 [] = 0 := rfl
+
+@[simp] theorem toPoly2_cons (c : CPolyG ℚ) (cs : List (CPolyG ℚ)) :
+    toPoly2 (c :: cs) = Polynomial.C (toPolyG c) + Polynomial.X * toPoly2 cs := rfl
+
+/-- **`toPoly2` as an explicit `getD`-sum over any padding length `N ≥ p.length`**: `toPoly2 p = Σ_{k<N}
+C(toPolyG (p.getD k []))·Xᵏ`. The padding terms (`k ≥ p.length`) vanish (`p.getD k [] = []`, `toPolyG [] =
+0`). The shape the `range`-map list operations (`tadd`/`tsub`/`mulT`) reduce to. -/
+theorem toPoly2_eq_sum_getD (p : List (CPolyG ℚ)) (N : ℕ) (hN : p.length ≤ N) :
+    toPoly2 p = ∑ k ∈ Finset.range N,
+      Polynomial.C (toPolyG (p.getD k [])) * Polynomial.X ^ k := by
+  induction p generalizing N with
+  | nil =>
+    simp only [toPoly2_nil, List.getD_nil, toPolyG_nil, map_zero, zero_mul, Finset.sum_const_zero]
+  | cons c cs ih =>
+    cases N with
+    | zero => simp at hN
+    | succ M =>
+      rw [toPoly2_cons, Finset.sum_range_succ', ih M (by simpa using hN), Finset.mul_sum]
+      simp only [List.getD_cons_succ, pow_succ, List.getD_cons_zero, pow_zero, mul_one]
+      rw [add_comm]
+      congr 1
+      apply Finset.sum_congr rfl
+      intro k _
+      ring
+
+/-- **`getD` of a `range`-map within range** `((List.range n).map f).getD k [] = f k` for `k < n`. The
+indexing lemma the `range`-map `t`-polynomial operations (`tadd`/`tsub`/`mulT`) read back through. -/
+theorem getD_range_map (f : ℕ → CPolyG ℚ) (n k : ℕ) (hk : k < n) :
+    ((List.range n).map f).getD k [] = f k := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hk]
+  rfl
+
+/-- **`getD` past the end of a `t`-polynomial is `[]`** `p.getD k [] = []` for `p.length ≤ k`. The
+out-of-range coefficient (zero) of the §8.4 list operations. -/
+theorem getD_out (p : List (CPolyG ℚ)) (k : ℕ) (hk : p.length ≤ k) : p.getD k [] = [] := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none hk]; rfl
+
+open CPolyG in
+/-- **`toPoly2` kills a `tisZero` `t`-polynomial**: if `tisZero p = true` (every `ℚ[x]`-coefficient zero)
+then `toPoly2 p = 0`. Each coefficient `toPolyG`'s to `0` (`cisZeroG_iff` via `List.all`). -/
+theorem toPoly2_eq_zero_of_tisZero (p : List (CPolyG ℚ)) (h : tisZero p = true) :
+    toPoly2 p = 0 := by
+  induction p with
+  | nil => rfl
+  | cons c cs ih =>
+    rw [tisZero, List.all_cons, Bool.and_eq_true] at h
+    rw [toPoly2_cons, (cisZeroG_iff c).mp h.1, map_zero, ih h.2, mul_zero, add_zero]
+
+open CPolyG in
+/-- **`toPoly2` is additive on `tadd`**: `toPoly2 (tadd p q) = toPoly2 p + toPoly2 q`. Both sides expand to
+the `getD`-sum over `N = max p.length q.length`; the coefficient hom is `toPolyG_caddG`. -/
+theorem toPoly2_tadd (p q : List (CPolyG ℚ)) :
+    toPoly2 (tadd p q) = toPoly2 p + toPoly2 q := by
+  set N := max p.length q.length with hN
+  rw [toPoly2_eq_sum_getD (tadd p q) N (by rw [tadd]; simp [hN]),
+    toPoly2_eq_sum_getD p N (le_max_left _ _), toPoly2_eq_sum_getD q N (le_max_right _ _),
+    ← Finset.sum_add_distrib]
+  apply Finset.sum_congr rfl
+  intro k hk
+  rw [Finset.mem_range] at hk
+  rw [tadd, getD_range_map _ _ _ hk, toPolyG_caddG, map_add, add_mul]
+
+open CPolyG in
+/-- **`toPoly2` is subtractive on `tsub`**: `toPoly2 (tsub p q) = toPoly2 p − toPoly2 q`. As `toPoly2_tadd`,
+with `toPolyG_csubG`. -/
+theorem toPoly2_tsub (p q : List (CPolyG ℚ)) :
+    toPoly2 (tsub p q) = toPoly2 p - toPoly2 q := by
+  set N := max p.length q.length with hN
+  rw [toPoly2_eq_sum_getD (tsub p q) N (by rw [tsub]; simp [hN]),
+    toPoly2_eq_sum_getD p N (le_max_left _ _), toPoly2_eq_sum_getD q N (le_max_right _ _),
+    ← Finset.sum_sub_distrib]
+  apply Finset.sum_congr rfl
+  intro k hk
+  rw [Finset.mem_range] at hk
+  rw [tsub, getD_range_map _ _ _ hk, toPolyG_csubG, map_sub, sub_mul]
+
+open CPolyG in
+/-- **The `t`-coefficient of `toPoly2`** `(toPoly2 p).coeff k = toPolyG (p.getD k [])`: the degree-`k`
+`t`-coefficient of the bridge is the `ℚ[x]`-image of `p`'s `k`-th coefficient. From the Horner form
+(`coeff 0` reads the head, `coeff (k+1)` peels `X·`). The bivariate-coefficient reader for the
+`Polynomial.ext` proofs of `mulT`/`tanDeriv`. -/
+theorem toPoly2_coeff (p : List (CPolyG ℚ)) (k : ℕ) :
+    (toPoly2 p).coeff k = toPolyG (p.getD k []) := by
+  induction p generalizing k with
+  | nil => simp
+  | cons c cs ih =>
+    rw [toPoly2_cons, Polynomial.coeff_add]
+    cases k with
+    | zero => simp
+    | succ m =>
+      rw [List.getD_cons_succ, Polynomial.coeff_X_mul, ih m]
+      simp
+
+open CPolyG in
+/-- **`toPoly2` of `mulConst`** `toPoly2 (p.map (cmulG s)) = C(toPolyG s) · toPoly2 p`: scaling every
+`ℚ[x]`-coefficient by `s` is multiplication by the constant-in-`t` `C(toPolyG s)`. Horner induction with
+`toPolyG_cmulG`. (The §8.4 cleared check's `mulConst s p = p.map (cmulG s)`.) -/
+theorem toPoly2_map_cmulG (s : CPolyG ℚ) (p : List (CPolyG ℚ)) :
+    toPoly2 (p.map (cmulG s)) = Polynomial.C (toPolyG s) * toPoly2 p := by
+  induction p with
+  | nil => simp
+  | cons c cs ih =>
+    rw [List.map_cons, toPoly2_cons, toPoly2_cons, ih, toPolyG_cmulG, map_mul]
+    ring
+
+open CPolyG in
+/-- **`toPolyG` of a `caddG`-accumulating `range`-foldl is the running sum** `toPolyG ((List.range n).foldl
+(fun acc i => caddG acc (g i)) init) = toPolyG init + Σ_{i<n} toPolyG (g i)`. The `t`-coefficient of `mulT`
+is exactly such a foldl (the inner Cauchy-product sum); this turns it into a `Finset.range` sum. -/
+theorem toPolyG_foldl_caddG (g : ℕ → CPolyG ℚ) :
+    ∀ (n : ℕ) (init : CPolyG ℚ),
+      toPolyG ((List.range n).foldl (fun acc i => caddG acc (g i)) init)
+        = toPolyG init + ∑ i ∈ Finset.range n, toPolyG (g i) := by
+  intro n
+  induction n with
+  | zero => intro init; simp
+  | succ m ih =>
+    intro init
+    rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil,
+      toPolyG_caddG, ih, Finset.sum_range_succ]
+    ring
+
+open CPolyG in
+/-- **`toPoly2` is multiplicative on `mulT`** `toPoly2 (mulT p q) = toPoly2 p · toPoly2 q`, where `mulT` is
+the §8.4 cleared check's Cauchy-product (`(mulT p q)_k = Σ_{i≤k} p_i·q_{k−i}`). `Polynomial.ext` on the
+`t`-coefficient: LHS `coeff k = toPolyG ((mulT p q)_k)` (`toPoly2_coeff`), the inner foldl summed by
+`toPolyG_foldl_caddG`; RHS `coeff k = Σ_{antidiag k} (toPoly2 p)_i·(toPoly2 q)_j` (`Polynomial.coeff_mul`),
+matched via `Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk`. -/
+theorem toPoly2_mulT (p q : List (CPolyG ℚ)) :
+    toPoly2 ((List.range (p.length + q.length)).map (fun k =>
+        (List.range (k + 1)).foldl (fun acc i =>
+          caddG acc (cmulG (p.getD i []) (q.getD (k - i) []))) []))
+      = toPoly2 p * toPoly2 q := by
+  apply Polynomial.ext
+  intro k
+  rw [toPoly2_coeff, Polynomial.coeff_mul,
+    Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  by_cases hk : k < p.length + q.length
+  · rw [getD_range_map _ _ _ hk, toPolyG_foldl_caddG, toPolyG_nil, zero_add]
+    apply Finset.sum_congr rfl
+    intro i _
+    rw [toPolyG_cmulG, toPoly2_coeff, toPoly2_coeff]
+  · rw [getD_out _ _ (by rw [List.length_map, List.length_range]; omega), toPolyG_nil]
+    symm
+    apply Finset.sum_eq_zero
+    intro i hi
+    rw [Finset.mem_range] at hi
+    rw [toPoly2_coeff, toPoly2_coeff]
+    rcases le_or_gt p.length i with hip | hip
+    · rw [getD_out p _ hip, toPolyG_nil, zero_mul]
+    · rw [getD_out q (k - i) (by omega), toPolyG_nil, mul_zero]
+
+open CPolyG in
+/-- **The formal `t`-derivative list `dpdt` reads coefficientwise** `dpdt.getD k [] = cscaleG ((k:ℚ)+1)
+(p.getD (k+1) [])`, where `dpdt = (p.drop 1).zipIdx.map (fun (c,i) => cscaleG (i+1) c)` (the inner
+`d/dt` of `tanDeriv`): the degree-`k` coefficient of `dp/dt` is `(k+1)·p_{k+1}`. -/
+theorem tanDeriv_dpdt_getD (p : List (CPolyG ℚ)) (k : ℕ) :
+    ((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).getD k []
+      = cscaleG ((k : ℚ) + 1) (p.getD (k + 1) []) := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_zipIdx, List.getElem?_drop,
+    List.getD_eq_getElem?_getD, show (0 + k) = k from by ring, show (1 + k) = (k + 1) from by ring]
+  cases p[k + 1]? with
+  | none => simp [cscaleG]
+  | some a => simp
+
+open CPolyG in
+/-- **`toPoly2` of the formal `t`-derivative is the outer derivative** `toPoly2 dpdt = D_t (toPoly2 p)`
+(`Polynomial.derivative`), for `dpdt` the §8.4 `dp/dt` list. `Polynomial.ext` on the `t`-coefficient:
+`(toPoly2 dpdt)_k = C((k+1):ℚ)·toPolyG p_{k+1}` (`tanDeriv_dpdt_getD` + `toPolyG_cscaleG`), matching
+`(D_t (toPoly2 p))_k = (toPoly2 p)_{k+1}·(k+1)` (`Polynomial.coeff_derivative`). -/
+theorem toPoly2_dpdt (p : List (CPolyG ℚ)) :
+    toPoly2 ((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1))
+      = Polynomial.derivative (toPoly2 p) := by
+  apply Polynomial.ext
+  intro k
+  rw [toPoly2_coeff, tanDeriv_dpdt_getD, toPolyG_cscaleG, Polynomial.coeff_derivative,
+    toPoly2_coeff]
+  simp only [CFieldSpec.toK, id_eq]
+  rw [map_add, map_one, Polynomial.C_eq_natCast]
+  ring
+
+open CPolyG in
+/-- **`toPoly2` of the `(t²+1)·dp/dt` shift** `toPoly2 mulDt = (X²+1)·toPoly2 dpdt`, for `mulDt` the §8.4
+`(t²+1)·dpdt` list `(range (dpdt.length+2)).map (fun k => caddG (dpdt_{k−2} if k≥2) dpdt_k)`.
+`Polynomial.ext`: coeff `k` of LHS is `toPolyG(dpdt_{k−2}) + toPolyG(dpdt_k)` (`getD_range_map` + `caddG`),
+matching `((X²+1)·toPoly2 dpdt)_k = (toPoly2 dpdt)_{k−2} + (toPoly2 dpdt)_k`. -/
+theorem toPoly2_mulDt (dpdt : List (CPolyG ℚ)) :
+    toPoly2 ((List.range (dpdt.length + 2)).map (fun k =>
+        caddG (if k ≥ 2 then dpdt.getD (k - 2) [] else []) (dpdt.getD k [])))
+      = (Polynomial.X ^ 2 + 1) * toPoly2 dpdt := by
+  apply Polynomial.ext
+  intro k
+  rw [toPoly2_coeff, add_mul, one_mul, Polynomial.coeff_add, Polynomial.coeff_X_pow_mul']
+  by_cases hk : k < dpdt.length + 2
+  · rw [getD_range_map _ _ _ hk, toPolyG_caddG, toPoly2_coeff, apply_ite toPolyG, toPolyG_nil]
+    by_cases h2 : 2 ≤ k
+    · rw [if_pos h2, toPoly2_coeff]
+    · rw [if_neg h2, toPoly2_coeff]
+  · have hcoeffk : (toPoly2 dpdt).coeff k = 0 := by
+      rw [toPoly2_coeff, getD_out _ _ (by omega), toPolyG_nil]
+    rw [getD_out _ _ (by rw [List.length_map, List.length_range]; omega), toPolyG_nil, hcoeffk]
+    by_cases h2 : 2 ≤ k
+    · rw [if_pos h2, toPoly2_coeff, getD_out _ _ (by omega), toPolyG_nil, add_zero]
+    · rw [if_neg h2, add_zero]
+
+open CPolyG in
+/-- **★ The tangent derivation `tanDeriv` is the bivariate `D = ∂/∂x + (t²+1)·∂/∂t`** `toPoly2 (tanDeriv p)
+= toPoly2 (p.map cderivQ) + (X²+1)·D_t(toPoly2 p)` over `ℚ[x][t]`. `tanDeriv p` is definitionally `tadd κ
+mulDt` with `κ = p.map cderivQ` (coefficientwise `d/dx`) and `mulDt = (t²+1)·dpdt`; `toPoly2_tadd` splits it,
+`toPoly2_mulDt` gives the `(X²+1)·` factor, `toPoly2_dpdt` reads `dpdt` as the outer `t`-derivative. The
+faithful `ℚ[x][t]` semantics of the §8.4 tangent monomial derivation (`Dt = t²+1`). -/
+theorem toPoly2_tanDeriv (p : List (CPolyG ℚ)) :
+    toPoly2 (tanDeriv p)
+      = toPoly2 (p.map cderivQ)
+        + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 p) := by
+  show toPoly2 (tadd (p.map cderivQ)
+      ((List.range (((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).length + 2)).map
+        (fun k => caddG
+          (if k ≥ 2 then ((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).getD (k - 2) []
+            else [])
+          (((p.drop 1).zipIdx.map (fun x => cscaleG ((x.2 : ℚ) + 1) x.1)).getD k [])))) = _
+  rw [toPoly2_tadd, toPoly2_mulDt, toPoly2_dpdt]
 
 /-! ### Validation — the tangent RDE cancellation runs end-to-end (`cCoupledDECancelTan`)
 
@@ -491,6 +786,74 @@ def cancelTanClearedCheck (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ))
   let r2 := tsub (tadd (tanDeriv q2) row2) c2
   tisZero r1 && tisZero r2
 
+open CPolyG in
+/-- **`toPoly2` of the `2t` shift literal** `toPoly2 [[],[2]] = C(C 2)·X` (the `2t` of the §8.4 diagonal,
+as a `ℚ[x][t]` polynomial). -/
+theorem toPoly2_twoT :
+    toPoly2 ([[], [2]] : List (CPolyG ℚ)) = Polynomial.C (Polynomial.C 2) * Polynomial.X := by
+  show toPoly2 ([[], [2]] : List (CPolyG ℚ)) = _
+  rw [toPoly2_cons, toPoly2_cons, toPoly2_nil]
+  simp only [toPolyG_nil, map_zero, mul_zero, add_zero, zero_add]
+  rw [show toPolyG ([2] : CPolyG ℚ) = Polynomial.C 2 by
+    rw [show ([2] : CPolyG ℚ) = (2 : ℚ) :: ([] : CPolyG ℚ) from rfl, toPolyG_cons, toPolyG_nil]
+    simp [CFieldSpec.toK]]
+  ring
+
+open CPolyG in
+/-- **★ Tangent cleared-system soundness from the engine's own check** (`cancelTanClearedCheck_sound`,
+`native_decide`-free): if `cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true` then `(q₁, q₂)` solves the §8.4
+tangent `t`-polynomial system at the `ℚ[x][t]` level — both rows of `(Dq; …) + [[b₀−2t, −b₂],[b₂, b₀−2t]]·q
+= c`, with `D = tanDeriv` realized as `∂/∂x + (t²+1)·∂/∂t` (`toPoly2_tanDeriv`). Each row comes from
+`toPoly2_eq_zero_of_tisZero` on the cleared residual, expanded by the bivariate bridge
+(`toPoly2_tsub`/`tadd`/`tanDeriv`/`map_cmulG`/`mulT`/`twoT`), then `linear_combination`. As with the base
+solve, the self-check is `native_decide`-reachable (`rischDE_cancelTan_example`) while THIS bridge to the
+genuine `ℚ[x][t]` identity is `native_decide`-FREE — the tangent telescoping closed through the engine's own
+certificate. -/
+theorem cancelTanClearedCheck_sound (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ))
+    (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
+    (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
+        + (Polynomial.C (toPolyG b0) * toPoly2 q1
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
+        + Polynomial.C (toPolyG (cscaleG (-1) b2)) * toPoly2 q2
+      = toPoly2 c1 ∧
+      (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
+        + Polynomial.C (toPolyG b2) * toPoly2 q1
+        + (Polynomial.C (toPolyG b0) * toPoly2 q2
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
+      = toPoly2 c2 := by
+  rw [cancelTanClearedCheck, Bool.and_eq_true] at hcheck
+  obtain ⟨h1, h2⟩ := hcheck
+  have e1 := toPoly2_eq_zero_of_tisZero _ h1
+  have e2 := toPoly2_eq_zero_of_tisZero _ h2
+  simp only [toPoly2_tsub, toPoly2_tadd, toPoly2_tanDeriv, toPoly2_map_cmulG, toPoly2_mulT,
+    toPoly2_twoT, sub_eq_zero] at e1 e2
+  exact ⟨by linear_combination e1, by linear_combination e2⟩
+
+/-- **★ Tangent RDE cancellation soundness from a self-certifying solve** (`cCoupledDECancelTan_sound_of_check`,
+`native_decide`-free): if `cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2)` AND the returned
+pair passes the engine's own cleared check (`cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true`, the
+`native_decide`-reachable self-certificate, cf. `rischDE_cancelTan_example`), then `(q₁, q₂)` solves the §8.4
+tangent coupled `t`-polynomial system at the `ℚ[x][t]` level. Pure composition with
+`cancelTanClearedCheck_sound`. The §8.4 degree-by-degree telescoping (each peeled leading pair from the base
+`cCoupledDESystem` solve, then the `t − √−1` RHS reduction) enters only through this self-check — the abstract
+correctness of the per-level base solve (itself the `cConstSolveUniqueQ`/Gaussian-elimination residual) is the
+documented remaining piece. -/
+theorem cCoupledDECancelTan_sound_of_check (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ)
+    (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
+    (_hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2))
+    (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
+    (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
+        + (Polynomial.C (toPolyG b0) * toPoly2 q1
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
+        + Polynomial.C (toPolyG (cscaleG (-1) b2)) * toPoly2 q2
+      = toPoly2 c1 ∧
+      (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
+        + Polynomial.C (toPolyG b2) * toPoly2 q1
+        + (Polynomial.C (toPolyG b0) * toPoly2 q2
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
+      = toPoly2 c2 :=
+  cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2 hcheck
+
 -- **Sanity print** (book p.267): `cCoupledDECancelTan` returns `q₁ = t − 1`, `q₂ = 2x`.
 #eval (cCoupledDECancelTan 30 1 ([] : CPolyG ℚ) [0, 4] cancelTanC1 cancelTanC2 2).map
   (fun p => (p.1.map (fun c => (c : List ℚ)), p.2.map (fun c => (c : List ℚ))))
@@ -513,5 +876,45 @@ theorem rischDE_cancelTan_example :
       | none => false) = true := by native_decide
 
 #print axioms rischDE_cancelTan_example
+
+/-! ### ★ Restatements of the abstract soundness against the intended wording (anonymous `example`s)
+
+The base-solve and tangent soundness lemmas, restated against their meaning: from the engine's own cleared
+check the returned `t`-polynomials solve the genuine coupled differential systems over `ℚ[x]` / `ℚ[x][t]`,
+`native_decide`-free. The `#print axioms` below confirm these bridges carry only the standard logical
+axioms (NO `native_decide` compiler axiom — that appears only on the `example`-validation theorems). -/
+
+open CPolyG
+
+-- ★ Base coupled-system soundness, `native_decide`-free: a self-certifying `cCoupledDESystem` solve gives
+-- the two `ℚ[X]` row identities `D(y₁) + b₁y₁ + a·b₂y₂ = z₁`, `D(y₂) + b₂y₁ + b₁y₂ = z₂`.
+example (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
+    (hsome : cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2))
+    (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
+    Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
+        + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
+      Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
+        + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
+  cCoupledDESystem_sound_of_check fuel a b1 b2 z1 z2 d y1 y2 hsome hcheck
+
+-- ★ Tangent RDE cancellation soundness, `native_decide`-free: a self-certifying `cCoupledDECancelTan` solve
+-- gives both rows of the §8.4 tangent coupled `t`-system over `ℚ[x][t]` (`D = ∂/∂x + (t²+1)∂/∂t`).
+example (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
+    (hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2))
+    (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
+    (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
+        + (Polynomial.C (toPolyG b0) * toPoly2 q1
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
+        + Polynomial.C (toPolyG (cscaleG (-1) b2)) * toPoly2 q2
+      = toPoly2 c1 ∧
+      (toPoly2 (q2.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q2))
+        + Polynomial.C (toPolyG b2) * toPoly2 q1
+        + (Polynomial.C (toPolyG b0) * toPoly2 q2
+            - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
+      = toPoly2 c2 :=
+  cCoupledDECancelTan_sound_of_check fuel dbound b0 b2 c1 c2 q1 q2 n hsome hcheck
+
+#print axioms coupledClearedCheck_sound
+#print axioms cancelTanClearedCheck_sound
 
 end DeepWiki.SymbolicIntegration
