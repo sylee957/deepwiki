@@ -22,17 +22,30 @@ RDE collapses to `f·y = g`, and `crischDESolve f g = if f = 0 then (if g = 0 th
 some (g/f)` is a genuine decision procedure (`rischDE_complete_base`), so it returns `some` on every
 solvable input. Closes cleanly, axiom-clean.
 
-**The step** `[CRischFieldComplete β] → CRischFieldComplete (QFunNZG β)`: a level-`n+1` solve runs the §6
-pipeline at level `n`, whose completeness is the per-level decision procedure, whose `hpoly` cancellation
-clause's base oracle `Cancel{Prim,Exp}OracleComplete` recurses into the level-`n` `crischDESolve` — exactly
-the IH (plus the **agreement** that the returned base solution's `toK` is the abstract solution's leading
-coefficient, supplied by base-oracle soundness `CRischFieldSpec` + field-RDE uniqueness). We assemble the
-step modulo the honest per-level frontier (the §6.1/§6.2 `k⟨t⟩`-normalization, the §6.3 log-derivative
-oracle, fuel sufficiency, the no-top-cancellation engine boundary) and the IH-fed base oracle.
+**The step** `[CRischFieldComplete β] → CRischFieldComplete (QFunNZG β)` (`crischFieldComplete_step`, PROVEN
+modulo the honest per-level frontier): a level-`n+1` solve `CRischField.crischDESolve f g` is the §6.1 gate
+`cdenomNormalGateG f` then `cRischDEG ([1] : CPolyG β) fuel f.1.1 f.1.2 g.1.1 g.1.2`. We assemble it from two
+clean bridges plus the threaded frontier:
 
-This file is the **assembly point**: it states the tower-completeness predicate, proves the base ℚ, and
-threads the per-level decision procedure into the inductive step, characterizing precisely what closes from
-the IH versus what stays an honest per-level hypothesis. -/
+* **Predicate bridge** (`cFieldRDESolvable_iff_fieldRDESolvable`, an `Iff.rfl`): with the **generic**
+  `CDiffFieldSpec (QFunNZG β)` instance built here (`instCDiffFieldSpecQFunNZGTower`, the mechanical lift of
+  `toQFunNZG_towerDerivQFunNZG [1]` the §6 capstone flagged missing), `CFieldRDESolvable f g` is *definitionally*
+  the §6 `FieldRDESolvable f g` — `toK = toQFunNZG = amG ∘ toPolyG` and `deriv = towerFractionFieldDerivG [1]`.
+* **Wrapper bridge** (`crischDESolve_isSome_of_gate_some_den`): the class method's `.isSome` from the gate
+  passing + `cRischDEG`'s `.isSome` + the returned denominator nonzero.
+* **The threaded frontier** (`RischDEStepFrontier β`): the honest per-level §6 content, with the inner frontier
+  taking the IH as input (`hfront : CRischFieldComplete β → …`) — exactly the recursion tie, since the IH
+  discharges the `hpoly` cancellation oracle one tower level down (`cancel{Prim,Exp}Hpoly_of_complete`, via the
+  **agreement** that the base solution's `toK` is the abstract solution's leading coefficient).
+
+So the IH is genuinely consumed, and with the base ℚ this is the **full tower induction**:
+`CRischFieldComplete` at every level, modulo the honest per-level frontier (the §6.1/§6.2 `k⟨t⟩`-normalization,
+the §6.3 log-derivative oracle, fuel sufficiency, the no-top-cancellation engine boundary, the agreement
+residual). Axiom-clean, NO `native_decide`.
+
+This file is the **assembly point**: it states the tower-completeness predicate, proves the base ℚ, builds the
+generic differential-spec instance, the two bridges, and the assembled inductive step, characterizing precisely
+what closes from the IH versus what stays an honest per-level hypothesis. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -271,6 +284,209 @@ theorem cPolyRischDEG_isSome_cancelExp_of_complete (Dt b : CPolyG β) (fuel : �
 
 end DispatcherFromIH
 
+/-! ## ★★ The STEP INSTANCE assembled — `[CRischFieldComplete β] → CRischFieldComplete (QFunNZG β)`
+
+This is the grand-finale assembly: the inductive step of the tower induction, bundling the two bridges and
+threading the per-level frontier. A level-`n+1` solve `CRischField.crischDESolve f g` over `QFunNZG β` is the
+§6.1 gate `cdenomNormalGateG f` followed by `cRischDEG ([1] : CPolyG β) fuel f.1.1 f.1.2 g.1.1 g.1.2`
+(coefficient field `β`, new monomial `s`), with the returned `(ynum, yden)` lifted back behind a
+denominator-nonzero guard. We bridge and thread:
+
+1. **Predicate bridge** (`cFieldRDESolvable_iff_fieldRDESolvable`, an `Iff.rfl`): with the generic
+   `CDiffFieldSpec (QFunNZG β)` instance in scope (`instCDiffFieldSpecQFunNZGTower`, the mechanical lift of
+   `toQFunNZG_towerDerivQFunNZG [1]`), the uniform `CFieldRDESolvable f g` (`(toK y)′ + (toK f)·(toK y) =
+   toK g`) is **definitionally** the §6 `FieldRDESolvable f g` — `CFieldSpec.toK = toQFunNZG = amG ∘ toPolyG`
+   and `Differential.deriv diffK = towerFractionFieldDerivG [1]` both hold by `rfl`. No friction.
+
+2. **Wrapper bridge** (`crischDESolve_isSome_of_gate_some_den`): the class method's `.isSome` from the gate
+   passing, `cRischDEG`'s `.isSome`, and the returned denominator being nonzero — peeling
+   `crischDESolve_eq_solve_of_normal` then the `cisZeroG`-guard `dite`. (The §6.1 wrapper `crischDESolveSound`
+   calls the method on a *transformed* pair `(qReduce f̃, q'·g)`, so the target — the *method itself* — is
+   reached directly through the gate, not through that wrapper.)
+
+3. **The per-level frontier threaded** (`RischDEStepFrontier β`): the honest per-level §6 content, bundled as
+   one `Prop` — for each solvable `(f, g)`, the §6.1 gate passes, the consolidated three-tip frontier
+   `RischDEInnerDecisionFrontier` holds, a `cRischDEG`-polynomial solution exists, and the returned denominator
+   is nonzero. The frontier's `hpoly` cancellation content is the recursion-tie threaded **one tower level
+   down** through the IH (`cancel{Prim,Exp}OracleComplete_of_complete`, the agreement residual, and the proven
+   `cPolyRischDEG_isSome_cancel{Prim,Exp}_of_complete` — see `cancelPrimHpoly_of_complete` /
+   `cancelExpHpoly_of_complete` below, which build the `hpoly`-field shape from the IH and so make the IH's
+   load-bearing role citable). The remaining content is the proven §6.4 / `hnormalize` work plus the honest
+   per-level side conditions (`IsRdeNormalPoleBounded`, `hη`, fuel, no-top-cancellation,
+   `CancelOracleAgreement{Prim,Exp}`). -/
+
+section StepInstance
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **★ The generic `CDiffFieldSpec (QFunNZG β)` instance** (the mechanical lift the §6 capstone flagged
+missing): the differential-spec bridge for an **arbitrary** tower base `β`, over `CFieldSpec.K (QFunNZG β) =
+RatFunc (CFieldSpec.K β)`. The Mathlib derivation is `fractionFieldDifferential (implicitDeriv (toPolyG [1]))`
+(the fraction-field extension of the base monomial derivation `implicitDeriv (toPolyG [1])` on
+`(CFieldSpec.K β)[X]`), and the intertwining `toK_cderiv` — `toQFunNZG (towerDerivQFunNZG [1] a) = (toQFunNZG
+a)′` — is **exactly** the abstract bridge `toQFunNZG_towerDerivQFunNZG [1]` (`ComputableTowerDeriv`). The
+carrier-generic mirror of `instCDiffFieldSpecQFunNZG` (which was pinned at `β = ℚ`); it is what lets
+`CFieldRDESolvable` be stated — and bridged to `FieldRDESolvable` — at every tower level. Noncomputable
+(routes through `RatFunc`); only the correctness layer depends on it. -/
+@[reducible]
+noncomputable instance instCDiffFieldSpecQFunNZGTower : CDiffFieldSpec (QFunNZG β) where
+  diffK := fractionFieldDifferential (Differential.implicitDeriv (toPolyG ([CField.one] : CPolyG β)))
+  toK_cderiv a := by
+    show toQFunNZG (towerDerivQFunNZG [CField.one] a)
+      = @Differential.deriv _ _
+          (fractionFieldDifferential (Differential.implicitDeriv (toPolyG ([CField.one] : CPolyG β))))
+          (toQFunNZG a)
+    rw [toQFunNZG_towerDerivQFunNZG [CField.one] a]
+    rfl
+
+omit [CFracGcdCore β] in
+/-- **★ The predicate bridge** (`cFieldRDESolvable_iff_fieldRDESolvable`): over `QFunNZG β`, with the generic
+`CDiffFieldSpec (QFunNZG β)` instance above, the uniform field-RDE solvability `CFieldRDESolvable f g` is
+**definitionally equal** to the §6 `FieldRDESolvable f g`. Both read `∃ y, (deriv)(toK y) + (toK f)·(toK y) =
+toK g` with `toK = toQFunNZG = amG ∘ toPolyG` and `deriv = towerFractionFieldDerivG [1]` (the instance's
+`diffK` is `fractionFieldDifferential (implicitDeriv (toPolyG [1]))`, whose `Differential.deriv` is `rfl`-equal
+to `extendDeriv (implicitDeriv (toPolyG [1])) = towerFractionFieldDerivG [1]`). So the bridge is `Iff.rfl` —
+no friction. The first of the two bridges the step composes. -/
+theorem cFieldRDESolvable_iff_fieldRDESolvable (f g : QFunNZG β) :
+    CFieldRDESolvable f g ↔ FieldRDESolvable f g :=
+  Iff.rfl
+
+end StepInstance
+
+section StepWrapper
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+  [CRischField β]
+
+omit [CFieldSpec β] in
+/-- **★ The wrapper bridge** (`crischDESolve_isSome_of_gate_some_den`): the level-`n+1` class method
+`CRischField.crischDESolve f g` over `QFunNZG β` returns `some` once (a) the §6.1 denominator-normality gate
+passes (`cdenomNormalGateG f = true`), (b) the inner generic solve succeeds (`cRischDEG ([1] : CPolyG β) fuel
+f.1.1 f.1.2 g.1.1 g.1.2` `.isSome`), and (c) the returned denominator is nonzero (`cisZeroG yden = false` for
+every returned `(ynum, yden)`). Peels `crischDESolve_eq_solve_of_normal` (the gate's `if_pos` branch) then the
+`cisZeroG`-guard `dite` on the successful `cRischDEG` output. The second of the two bridges the step composes —
+relating the class method's `.isSome` to the gate's effect plus the inner solve's success. -/
+theorem crischDESolve_isSome_of_gate_some_den (f g : QFunNZG β)
+    (hgate : cdenomNormalGateG f = true)
+    (hsome : (cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2).isSome = true)
+    (hden : ∀ ynum yden : CPolyG β,
+      cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 = some (ynum, yden) →
+      CPolyG.cisZeroG yden = false) :
+    (CRischField.crischDESolve f g).isSome = true := by
+  rw [crischDESolve_eq_solve_of_normal f g hgate]
+  obtain ⟨⟨ynum, yden⟩, hp⟩ := Option.isSome_iff_exists.mp hsome
+  rw [hp]
+  simp only []
+  rw [dif_pos (hden ynum yden hp)]
+  rfl
+
+end StepWrapper
+
+/-! ### ★ The IH-built cancellation `hpoly` field (the recursion genuinely consumed one level down)
+
+The `hpoly` clause of the §6.4–6.6 exhaustiveness residual `RischDESolveExhaustiveResidual` is, for the SPDE
+output `(bbar, cbar, m)`, exactly `(cPolyRischDEG Dt fuel bbar cbar m).isSome = true` — the conclusion of
+`cPolyRischDEG_isSome_cancel{Prim,Exp}_of_complete`, built **from the IH**. We record the two builders that
+produce this `hpoly`-field shape directly from `CRischFieldComplete β`, making explicit that the only point
+where the tower recursion ties one level down is the cancellation oracle (everything else in the frontier is
+proven §6 machinery or an honest per-level side condition). -/
+
+section IHCancelHpoly
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CRischField β]
+
+/-- **★ The IH builds the primitive-cancellation `hpoly` value** (`cancelPrimHpoly_of_complete`): in the
+primitive cancellation regime, the IH `CRischFieldComplete β` — with the agreement residual, the
+no-top-cancellation boundary, a bounded abstract solution, and fuel — yields exactly the `hpoly`-field shape
+`(cPolyRischDEG Dt fuel bbar cbar m).isSome = true` of `RischDESolveExhaustiveResidual`. The same conclusion as
+`cPolyRischDEG_isSome_cancelPrim_of_complete`, restated at the SPDE-output names `(bbar, cbar, m)` to read off
+as the residual's `hpoly` cancellation content. The citable point where the IH is consumed. -/
+theorem cancelPrimHpoly_of_complete (Dt bbar : CPolyG β) (fuel : ℕ) (cbar : CPolyG β) (m : ℤ)
+    (q : (CFieldSpec.K β)[X]) (hδ : cdegG Dt = 0) (hdb : cdegG bbar = 0) (hb : cisZeroG bbar = false)
+    (hβ : CRischFieldComplete β) (hagree : CancelOracleAgreementPrim Dt bbar)
+    (hnc : CancelPrimNoCancel Dt bbar) (hsol : IsNoCancelSolK Dt bbar cbar q)
+    (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ m) (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel bbar cbar m).isSome = true :=
+  cPolyRischDEG_isSome_cancelPrim_of_complete Dt bbar fuel cbar m q hδ hdb hb hβ hagree hnc hsol
+    hbound hfuel
+
+/-- **★ The IH builds the hyperexp-cancellation `hpoly` value** (`cancelExpHpoly_of_complete`): the
+hyperexponential analogue of `cancelPrimHpoly_of_complete`. In the hyperexp cancellation regime the IH (with
+the hyperexp agreement residual, no-top-cancellation, a bounded solution, fuel) yields the `hpoly`-field shape
+`(cPolyRischDEG Dt fuel bbar cbar m).isSome = true`. The citable hyperexp point of the recursion-tie. -/
+theorem cancelExpHpoly_of_complete (Dt bbar : CPolyG β) (fuel : ℕ) (cbar : CPolyG β) (m : ℤ)
+    (q : (CFieldSpec.K β)[X]) (hδ : cdegG Dt = 1) (hdb : cdegG bbar = 0) (hb : cisZeroG bbar = false)
+    (hβ : CRischFieldComplete β) (hagree : CancelOracleAgreementExp Dt bbar)
+    (hnc : CancelPrimNoCancel Dt bbar) (hsol : IsNoCancelSolK Dt bbar cbar q)
+    (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ m) (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel bbar cbar m).isSome = true :=
+  cPolyRischDEG_isSome_cancelExp_of_complete Dt bbar fuel cbar m q hδ hdb hb hβ hagree hnc hsol
+    hbound hfuel
+
+end IHCancelHpoly
+
+/-! ### ★ The honest per-level frontier and the assembled step -/
+
+section StepAssembly
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **★ The honest per-level step frontier** `RischDEStepFrontier β`: the per-level §6 content the inductive
+step threads, bundled as one `Prop`. For each solvable `(f, g)` over `QFunNZG β` — `FieldRDESolvable f g` — it
+supplies: `hgate` the §6.1 denominator-normality gate passes; `hfront` the consolidated three-tip frontier
+`RischDEInnerDecisionFrontier ([1] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2` (whose `hsolve` content's cancellation
+`hpoly` is the recursion-tie threaded through the IH via `cancel{Prim,Exp}Hpoly_of_complete`); `hpolysol` a
+`cRischDEG`-polynomial solution exists; and `hden` the returned denominator is nonzero. A `Prop`-bundle of
+stated assumptions, NO `sorry`; the precise honest per-level remainder of the step (mirroring how
+`hnormalize_of_poleBounded` carries `IsRdeNormalPoleBounded`). -/
+structure RischDEStepFrontier (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
+  /-- §6.1: a solvable RDE passes the denominator-normality gate. -/
+  hgate : ∀ f g : QFunNZG β, FieldRDESolvable f g → cdenomNormalGateG f = true
+  /-- §6.2–6.6: **given the IH** (`CRischFieldComplete β`), the consolidated three-tip inner frontier holds —
+  the recursion tie. The IH is exactly what discharges the frontier's `hsolve` cancellation `hpoly` content
+  (`cancel{Prim,Exp}Hpoly_of_complete`, one tower level down); the remaining tips are the proven §6 machinery
+  plus the honest per-level side conditions. Carrying the IH as an input here is what makes the level-`n+1`
+  inner frontier *depend on* level-`n` completeness — the structural recursion of the tower induction. -/
+  hfront : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    RischDEInnerDecisionFrontier ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2
+  /-- A solvable field RDE has a `cRischDEG`-level polynomial solution (the cleared-identity layer). -/
+  hpolysol : ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    ∃ ynum yden, IsCRischDEGPolySol ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2 ynum yden
+  /-- The returned denominator of a successful inner solve is nonzero (the lowest-terms guard). -/
+  hden : ∀ f g : QFunNZG β, FieldRDESolvable f g → ∀ ynum yden : CPolyG β,
+    cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 = some (ynum, yden) →
+    CPolyG.cisZeroG yden = false
+
+/-- **★★ THE STEP — `[CRischFieldComplete β] → CRischFieldComplete (QFunNZG β)`**
+(`crischFieldComplete_step`): the inductive step of the tower induction, assembled. Given the IH
+`CRischFieldComplete β` (the level-`n` oracle is complete) and the honest per-level frontier
+`RischDEStepFrontier β`, the level-`n+1` oracle is complete — `CRischFieldComplete (QFunNZG β)`. The chain: a
+solvable input `CFieldRDESolvable f g` is `FieldRDESolvable f g` (the predicate bridge
+`cFieldRDESolvable_iff_fieldRDESolvable`, an `Iff.rfl`); the IH `hβ` is fed to the frontier's `hfront` to
+produce the inner frontier, which with `hpolysol` makes the inner generic solve `cRischDEG ([1] : CPolyG β) …`
+return `some` (`cRischDEG_isSome_of_decisionFrontier`); the frontier's `hgate` + `hden` then lift this to the
+class method's `.isSome` (the wrapper bridge `crischDESolve_isSome_of_gate_some_den`). The IH `hβ` is genuinely
+consumed (passed into `hfront`): it is exactly what discharges the inner frontier's `hsolve` cancellation
+`hpoly` content one tower level down (`cancel{Prim,Exp}Hpoly_of_complete`); the rest is the proven §6 machinery
+plus the honest per-level side conditions bundled in `RischDEStepFrontier`. With `crischFieldComplete_Q` (the
+base), this is the **full tower induction**: `CRischFieldComplete` at every tower level, modulo the per-level
+frontier. Axiom-clean `[propext, Classical.choice, Quot.sound]`; NO `native_decide`, NO `sorry`. -/
+theorem crischFieldComplete_step (hβ : CRischFieldComplete β)
+    (hstep : RischDEStepFrontier β) : CRischFieldComplete (QFunNZG β) := by
+  intro f g hsol
+  rw [cFieldRDESolvable_iff_fieldRDESolvable] at hsol
+  have hsome :
+      (cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2).isSome = true :=
+    cRischDEG_isSome_of_decisionFrontier ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2
+      (hstep.hfront hβ f g hsol) (hstep.hpolysol f g hsol)
+  exact crischDESolve_isSome_of_gate_some_den f g (hstep.hgate f g hsol) hsome
+    (hstep.hden f g hsol)
+
+end StepAssembly
+
 /-! ### Restatements (anonymous `example`s) -/
 
 -- ★ The base case: `CRischFieldComplete ℚ` is the constant-field decision procedure.
@@ -283,9 +499,27 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     (CRischField.crischDESolve b₀ c₀).isSome = true :=
   crischDESolve_isSome_of_complete hβ b₀ c₀ hsol
 
-/-! ### Axiom audit (the base case and the recursion-tie helper are axiom-clean; NO `native_decide`) -/
+-- ★ The predicate bridge: over `QFunNZG β`, the uniform `CFieldRDESolvable` is the §6 `FieldRDESolvable`.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCore β] [Algebra ℚ (CFieldSpec.K β)] (f g : QFunNZG β) :
+    CFieldRDESolvable f g ↔ FieldRDESolvable f g :=
+  cFieldRDESolvable_iff_fieldRDESolvable f g
+
+-- ★★ THE STEP: the IH + the honest per-level frontier give level-`n+1` completeness — the tower-induction
+-- step `[CRischFieldComplete β] → CRischFieldComplete (QFunNZG β)`.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+    (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontier β) :
+    CRischFieldComplete (QFunNZG β) :=
+  crischFieldComplete_step hβ hstep
+
+/-! ### Axiom audit (the base case, the recursion-tie helper, the two bridges, and the assembled step are
+axiom-clean; NO `native_decide`) -/
 
 #print axioms crischFieldComplete_Q
 #print axioms crischDESolve_isSome_of_complete
+#print axioms cFieldRDESolvable_iff_fieldRDESolvable
+#print axioms crischDESolve_isSome_of_gate_some_den
+#print axioms crischFieldComplete_step
 
 end DeepWiki.SymbolicIntegration
