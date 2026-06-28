@@ -28,6 +28,10 @@ only; it states no new mathematics.
   Soundness (checker-free, gated on engine-success bridges): `cIntegrateGFull_primitive_oneShot` (primitive /
   logarithmic monomial), `cIntegrateGFull_hyperexp_oneShot` (hyperexponential, conditional on `∑c = 0`), and
   `cIntegrateGFull_poly_oneShot` (polynomial branch `fp ≠ 0`, gated on the poly-RDE soundness `D(qp) = fp`).
+  ★ `cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG` — the primitive normal-part capstone at
+  `α = QFunNZG ℚ`, `deg Dt ≤ 1`, with the abstract degree obstruction `hA` **discharged** (proven
+  Hermite-leftover-properness + unconditional input-properness); leaves only the genuine Bronstein side
+  conditions (`hrecon`/`hden`/`hnorm`).
   The carrier-agnostic `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
   `ComputableIntegrateTowerCorrectG`) gates a result on the engine's own self-check.
   Completeness: via the RDE solver — no direct decision procedure on the driver.
@@ -97,6 +101,8 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @cIntegrateGFull_primitive_oneShot
 #check @cIntegrateGFull_hyperexp_oneShot
 #check @cIntegrateGFull_poly_oneShot
+-- ★ the primitive normal-part capstone: hA discharged for deg Dt ≤ 1 at ℚ(x)(t).
+#check @cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG
 
 -- `cIntegratePolyG`: PARTIAL soundness — the constant case only.
 #check @field_identity_cIntegratePolyG_const
