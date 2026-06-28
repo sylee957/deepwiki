@@ -411,9 +411,9 @@ the engine-carrier **full** inverse of one §6.4 SPDE peel step. Given coprime, 
 `IsReducedRdeSol Dt ad bd cd q`, and the Bézout `bd·r + ad·z = cd`, there is a peel factor `h` with
 `q = ad·h + r` that **provably** solves the reduced equation `ad·Dh + (bd + D(ad))·h = z − Dr` over
 `(CFieldSpec.K α)[X]`. The exact converse of `cSPDE_peel_cleared_gen`: the §6.4 SPDE peel descends a
-solution one level, so it cannot lose it. The remaining §6.4 residue is only the recursion's degree-descent
-assembly (and the gcd-coprimality discharge); the per-step inverse itself — including the peeling
-divisibility — is now proven. -/
+solution one level, so it cannot lose it. The degree-descent recursion built on it is now also proven
+(`cSPDEG_isSome_of_structG_bounded`, `SPDEDegreeDescent` section); the remaining §6.4 residue narrows to
+fuel sufficiency plus the upstream fractional→reduced bridge. -/
 theorem spde_peel_inverse_toPolyG (Dt ad bd cd r z q : CPolyG α)
     (hco : IsCoprime (toPolyG ad) (toPolyG bd)) (had : toPolyG ad ≠ 0)
     (hsol : IsReducedRdeSol Dt ad bd cd q)
@@ -440,6 +440,347 @@ example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R) (a 
 
 end Preservation
 
+/-! ## ★ The §6.4 SPDE degree-descent recursion assembly (the `hspde` structural heart)
+
+The per-step inverse `spde_peel_inverse_toPolyG` descends a solution ONE level; the §6.4 exhaustiveness
+needs the whole degree-descent: iterating it down the strictly-shrinking `deg(a/g)` ladder until `cSPDEG`
+short-circuits, forcing `cSPDEG.isSome`. This section assembles that recursion, mirroring the soundness
+lifting `cSPDEG_cleared_lifting_gen` (`ComputableRischDETowerCorrectG`) IN REVERSE: the same fuel / `cdvdG`
+/ `cdegG` case split, run for the existence (`isSome`) direction.
+
+The reverse direction needs TWO facts the forward (soundness) direction never did, exactly as the
+honest-landing analysis predicted: (a) the **degree-descent bookkeeping** — `deg(h) ≤ n − deg(a/g)` for the
+peeled factor — proven here (`degree_peeled_le`, `cisZeroG_of_isReducedRdeSolK_neg`); the abstract solution
+`spde_peel_inverse_of_isCoprime` produces lives in `K[X]`, so we thread an ABSTRACT `IsReducedRdeSolK`
+witness (no `CPolyG`-lift obligation); and (b) **fuel sufficiency** — the degree ladder must bottom out
+before the fuel runs out (the soundness side is happy with `none` at fuel 0; the existence side is not).
+The whole assembly is therefore PROVEN modulo only fuel sufficiency, isolated as the `fuel = 0 ↦ False`
+base of `CSPDEGStructG`. -/
+
+section SPDEDegreeDescent
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Coprimality of the divided coefficients** (`isCoprime_bd_ad_of_divided`): when `g ~ gcd(a, b)`
+divides both exactly, `gcd(b/g, a/g)` is a unit (`cgcdExtG_isUnit_of_divided_gen`), so dividing the Bézout
+identity by that unit gives `IsCoprime (toPolyG bd) (toPolyG ad)` — the SPDE coprimality invariant. -/
+theorem isCoprime_bd_ad_of_divided [CFracGcdCore α] (fuel : ℕ) (a b ad bd g : CPolyG α)
+    (hgne : toPolyG g ≠ 0)
+    (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
+    (hdiva : toPolyG ad * toPolyG g = toPolyG a)
+    (hdivb : toPolyG bd * toPolyG g = toPolyG b)
+    (hterm : cgcdTerminatesG fuel bd ad) :
+    IsCoprime (toPolyG bd) (toPolyG ad) := by
+  have hunit := cgcdExtG_isUnit_of_divided_gen fuel a b ad bd g hgne hgassoc hdiva hdivb hterm
+  have hbez := toPolyG_cgcdExtG fuel bd ad
+  obtain ⟨u, hu⟩ := hunit
+  refine ⟨↑u⁻¹ * toPolyG (cgcdExtG fuel bd ad).2.1, ↑u⁻¹ * toPolyG (cgcdExtG fuel bd ad).2.2, ?_⟩
+  have hinv : (↑u⁻¹ : (CFieldSpec.K α)[X]) * toPolyG (cgcdExtG fuel bd ad).1 = 1 := by
+    rw [← hu]; exact Units.inv_mul u
+  calc ↑u⁻¹ * toPolyG (cgcdExtG fuel bd ad).2.1 * toPolyG bd
+        + ↑u⁻¹ * toPolyG (cgcdExtG fuel bd ad).2.2 * toPolyG ad
+      = ↑u⁻¹ * (toPolyG (cgcdExtG fuel bd ad).2.1 * toPolyG bd
+          + toPolyG (cgcdExtG fuel bd ad).2.2 * toPolyG ad) := by ring
+    _ = ↑u⁻¹ * toPolyG (cgcdExtG fuel bd ad).1 := by rw [hbez]
+    _ = 1 := hinv
+
+/-- **An ABSTRACT (`K[X]`-valued) reduced-equation solution** `IsReducedRdeSolK Dt a b c q`:
+`toPolyG a · D(q) + toPolyG b · q = toPolyG c` for `q ∈ (CFieldSpec.K α)[X]` — the shape the per-step
+inverse `spde_peel_inverse_of_isCoprime` produces (so the degree-descent threads it without a `CPolyG`
+lift). The `K[X]` analogue of `IsReducedRdeSol`. -/
+def IsReducedRdeSolK (Dt a b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+  toPolyG a * Differential.implicitDeriv (toPolyG Dt) q + toPolyG b * q = toPolyG c
+
+/-- **The `K[X]`-witness divisibility necessity** (`dvd_c_of_isReducedRdeSolK`): if `g` divides both
+leading coefficients and `q : K[X]` solves `a·Dq + b·q = c`, then `g ∣ c` — the `K[X]` analogue of
+`dvd_c_of_isReducedRdeSol` (same `dvd_add` algebra). -/
+theorem dvd_c_of_isReducedRdeSolK (Dt a b c g : CPolyG α) (q : (CFieldSpec.K α)[X])
+    (hga : toPolyG g ∣ toPolyG a) (hgb : toPolyG g ∣ toPolyG b)
+    (hsol : IsReducedRdeSolK Dt a b c q) :
+    toPolyG g ∣ toPolyG c := by
+  have heq : toPolyG c
+      = toPolyG a * Differential.implicitDeriv (toPolyG Dt) q + toPolyG b * q := hsol.symm
+  rw [heq]; exact dvd_add (hga.mul_right _) (hgb.mul_right _)
+
+/-- **The SPDE `cdvdG` gate never rejects a `K[X]` solution** (`cdvdG_g_c_of_isReducedRdeSolK`): with `g ~
+gcd(a, b)` nonzero and the fuel covering `c`, an abstract reduced solution forces `cdvdG fuel g c = true`
+(via `dvd_c_of_isReducedRdeSolK` + `cdvdG_of_dvd`). The reverse of the soundness peel's `g ∣ c` read-off. -/
+theorem cdvdG_g_c_of_isReducedRdeSolK [CFracGcdCore α] (Dt a b c g : CPolyG α)
+    (q : (CFieldSpec.K α)[X]) (fuel : ℕ)
+    (hg0 : cnormG g ≠ []) (hfc : (cnormG c : List α).length ≤ fuel)
+    (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
+    (hsol : IsReducedRdeSolK Dt a b c q) :
+    cdvdG fuel g c = true :=
+  cdvdG_of_dvd fuel g c hg0 hfc (dvd_c_of_isReducedRdeSolK Dt a b c g q
+    (hgassoc.dvd.trans (gcd_dvd_left _ _)) (hgassoc.dvd.trans (gcd_dvd_right _ _)) hsol)
+
+/-- **The recursive solvable-inputs predicate** `CSPDEGSolvableInputsGen Dt fuel a b c n` (the
+existence-direction analogue of `CSPDEGClearedInputsGen`): mirrors `cSPDEG`'s recursion carrying at EACH
+level an abstract `K[X]` reduced solution (the witness `spde_peel_inverse_of_isCoprime` produces) plus, in
+the non-base branch, the gcd `Associated` clause, the fuel bounds, `a ≠ 0`, the Euclidean termination, and
+itself on the peeled reduced equation. The base `fuel = 0` is `False` (a solvable problem needs ≥ 1 unit of
+fuel). The hypothesis the degree-descent induction consumes. -/
+def CSPDEGSolvableInputsGen [CFracGcdCore α] (Dt : CPolyG α) :
+    ℕ → (a b c : CPolyG α) → (n : ℤ) → Prop
+  | 0, _, _, _, _ => False
+  | fuel + 1, a, b, c, n =>
+    (∃ q : (CFieldSpec.K α)[X], IsReducedRdeSolK Dt a b c q) ∧
+    if n < 0 then cisZeroG c = true
+    else
+      let g := CFracGcdCore.cgcdFFCore fuel a b
+      let ad := cdivG fuel a g
+      let bd := cdivG fuel b g
+      (cnormG g ≠ []) ∧ Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))
+        ∧ ((cnormG a : List α).length ≤ fuel)
+        ∧ ((cnormG b : List α).length ≤ fuel)
+        ∧ ((cnormG c : List α).length ≤ fuel)
+        ∧ (cnormG a ≠ [])
+        ∧ (if cdegG ad = 0 then True
+           else
+             let rz := cdiophantineG fuel bd ad (cdivG fuel c g)
+             cgcdTerminatesG fuel bd ad
+               ∧ CSPDEGSolvableInputsGen Dt fuel ad (caddG bd (cmonomialDeriv Dt ad))
+                   (csubG rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdegG ad : ℤ)))
+
+/-- **★ The §6.4 SPDE degree-descent induction** (`cSPDEG_isSome_of_solvableInputs`): from the recursive
+solvable-inputs predicate, the SPDE peel succeeds — `(cSPDEG Dt fuel a b c n).isSome = true`. By fuel
+induction, the exact REVERSE of the soundness lifting `cSPDEG_cleared_lifting_gen`: the `n < 0`/const-base/
+recursion cases dispatched through `cSPDEG_isSome_of_neg_cZero` / `cSPDEG_isSome_of_const_base` /
+`cSPDEG_isSome_of_recurse`, with the `cdvdG` gate discharged by the divisibility necessity
+`cdvdG_g_c_of_isReducedRdeSolK`. The control-flow heart of `hspde`. -/
+theorem cSPDEG_isSome_of_solvableInputs [CFracGcdCore α] (Dt : CPolyG α) :
+    ∀ (fuel : ℕ) (a b c : CPolyG α) (n : ℤ),
+      CSPDEGSolvableInputsGen Dt fuel a b c n →
+      (cSPDEG Dt fuel a b c n).isSome = true := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b c n hin
+    exact absurd hin (by rw [CSPDEGSolvableInputsGen]; exact not_false)
+  | succ fuel ih =>
+    intro a b c n hin
+    rw [CSPDEGSolvableInputsGen] at hin
+    obtain ⟨⟨q, hsol⟩, hrest⟩ := hin
+    by_cases hn : n < 0
+    · rw [if_pos hn] at hrest
+      exact cSPDEG_isSome_of_neg_cZero Dt fuel a b c n hn hrest
+    · rw [if_neg hn] at hrest
+      set g := CFracGcdCore.cgcdFFCore fuel a b with hg
+      set ad := cdivG fuel a g with had
+      set bd := cdivG fuel b g with hbd
+      obtain ⟨hg0, hgassoc, hfa, hfb, hfc, ha0, hrec⟩ := hrest
+      have hdvd : cdvdG fuel g c = true :=
+        cdvdG_g_c_of_isReducedRdeSolK Dt a b c g q fuel hg0 hfc hgassoc hsol
+      by_cases hdeg : cdegG ad = 0
+      · exact cSPDEG_isSome_of_const_base Dt fuel a b c n hn hdvd hdeg
+      · rw [if_neg hdeg] at hrec
+        obtain ⟨hterm, hrecin⟩ := hrec
+        have hrecsome := ih ad (caddG bd (cmonomialDeriv Dt ad))
+          (csubG (cdiophantineG fuel bd ad (cdivG fuel c g)).2
+            (cmonomialDeriv Dt (cdiophantineG fuel bd ad (cdivG fuel c g)).1))
+          (n - (cdegG ad : ℤ)) hrecin
+        exact cSPDEG_isSome_of_recurse Dt fuel a b c n hn hdvd hdeg hrecsome
+
+/-- **★ The per-level peeled reduced witness** (`exists_peeled_reducedSolK`): threading the proven per-step
+inverse `spde_peel_inverse_of_isCoprime` over `K[X]`. From the structural gcd data and an abstract reduced
+solution `q : K[X]` of the current level, there is a peeled factor `h : K[X]` with `q = (a/g)·h + r` that is
+an `IsReducedRdeSolK` solution of the NEXT level's reduced equation. Assembles the divided-coefficient
+exactness, `isCoprime_bd_ad_of_divided`, the divided solution, and the Bézout `toPolyG_cdiophantineG`.
+Produces exactly the `K[X]` witness `CSPDEGSolvableInputsGen` carries — no `CPolyG` lift needed. -/
+theorem exists_peeled_reducedSolK [CFracGcdCore α] (Dt a b c g ad bd : CPolyG α)
+    (q : (CFieldSpec.K α)[X]) (fuel : ℕ)
+    (had : ad = cdivG fuel a g) (hbd : bd = cdivG fuel b g)
+    (hg0 : cnormG g ≠ []) (hfa : (cnormG a : List α).length ≤ fuel)
+    (hfb : (cnormG b : List α).length ≤ fuel) (hfc : (cnormG c : List α).length ≤ fuel)
+    (ha0 : cnormG a ≠ [])
+    (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
+    (hterm : cgcdTerminatesG fuel bd ad)
+    (hsol : IsReducedRdeSolK Dt a b c q) :
+    ∃ h : (CFieldSpec.K α)[X],
+      q = toPolyG ad * h + toPolyG (cdiophantineG fuel bd ad (cdivG fuel c g)).1 ∧
+      IsReducedRdeSolK Dt ad (caddG bd (cmonomialDeriv Dt ad))
+        (csubG (cdiophantineG fuel bd ad (cdivG fuel c g)).2
+          (cmonomialDeriv Dt (cdiophantineG fuel bd ad (cdivG fuel c g)).1)) h := by
+  have hgne : toPolyG g ≠ 0 := fun h => hg0 ((cnormG_eq_nil_iff g).mpr h)
+  have hane : toPolyG a ≠ 0 := fun h => ha0 ((cnormG_eq_nil_iff a).mpr h)
+  have hdiva : toPolyG ad * toPolyG g = toPolyG a := had ▸ cdivG_a_exact_of_gcd fuel a b g hg0 hfa hgassoc
+  have hdivb : toPolyG bd * toPolyG g = toPolyG b := hbd ▸ cdivG_b_exact_of_gcd fuel a b g hg0 hfb hgassoc
+  have hadne : toPolyG ad ≠ 0 := fun h => hane (by rw [← hdiva, h, zero_mul])
+  have hadnil : cnormG ad ≠ [] := fun h => hadne ((cnormG_eq_nil_iff ad).mp h)
+  have hco : IsCoprime (toPolyG ad) (toPolyG bd) :=
+    (isCoprime_bd_ad_of_divided fuel a b ad bd g hgne hgassoc hdiva hdivb hterm).symm
+  have hgc : toPolyG g ∣ toPolyG c :=
+    dvd_c_of_isReducedRdeSolK Dt a b c g q (hgassoc.dvd.trans (gcd_dvd_left _ _))
+      (hgassoc.dvd.trans (gcd_dvd_right _ _)) hsol
+  have hdivc : toPolyG (cdivG fuel c g) * toPolyG g = toPolyG c :=
+    toPolyG_cdivG_exact fuel c g hg0 hfc hgc
+  have hsoldiv : IsReducedRdeSolK Dt ad bd (cdivG fuel c g) q := by
+    unfold IsReducedRdeSolK at hsol ⊢
+    have hmulg : (toPolyG ad * Differential.implicitDeriv (toPolyG Dt) q + toPolyG bd * q) * toPolyG g
+        = toPolyG (cdivG fuel c g) * toPolyG g := by rw [hdivc, ← hsol, ← hdiva, ← hdivb]; ring
+    exact mul_right_cancel₀ hgne hmulg
+  have hgC := toPolyG_cgcdExtG_eq_C_of_divided_gen fuel a b ad bd g hgne hgassoc hdiva hdivb hterm
+  have hgCne := toK_cleadG_cgcdExtG_ne_zero_of_divided_gen fuel a b ad bd g hgne hgassoc hdiva hdivb hterm
+  have hbez0 := toPolyG_cdiophantineG fuel bd ad (cdivG fuel c g) hadnil hgC hgCne
+  have hbez : toPolyG bd * toPolyG (cdiophantineG fuel bd ad (cdivG fuel c g)).1
+      + toPolyG ad * toPolyG (cdiophantineG fuel bd ad (cdivG fuel c g)).2
+      = toPolyG (cdivG fuel c g) := by rw [mul_comm (toPolyG bd), mul_comm (toPolyG ad)]; exact hbez0
+  obtain ⟨h, hqeq, hred⟩ := spde_peel_inverse_of_isCoprime
+    (Differential.implicitDeriv (toPolyG Dt)) (toPolyG ad) (toPolyG bd) (toPolyG (cdivG fuel c g))
+    (toPolyG (cdiophantineG fuel bd ad (cdivG fuel c g)).1)
+    (toPolyG (cdiophantineG fuel bd ad (cdivG fuel c g)).2) q hco hadne hsoldiv hbez
+  refine ⟨h, hqeq, ?_⟩
+  unfold IsReducedRdeSolK
+  rw [toPolyG_caddG, toPolyG_cmonomialDeriv, toPolyG_csubG, toPolyG_cmonomialDeriv]
+  linear_combination hred
+
+/-- **The `n < 0` base obligation** (`cisZeroG_of_isReducedRdeSolK_neg`): a bounded (`deg ≤ n < 0`) abstract
+reduced solution forces the RHS to vanish — `cisZeroG c = true`. Since `natDegree ≥ 0`, the bound is
+impossible, so `q = 0`, whence `toPolyG c = a·D(0) + b·0 = 0`. The degree-descent's terminating-branch
+discharge. -/
+theorem cisZeroG_of_isReducedRdeSolK_neg [CFracGcdCore α] (Dt a b c : CPolyG α)
+    (q : (CFieldSpec.K α)[X]) (n : ℤ) (hn : n < 0)
+    (hsol : IsReducedRdeSolK Dt a b c q) (hq : q = 0 ∨ (q.natDegree : ℤ) ≤ n) :
+    cisZeroG c = true := by
+  have hq0 : q = 0 := by
+    rcases hq with h | h
+    · exact h
+    · have : (0 : ℤ) ≤ q.natDegree := Int.natCast_nonneg q.natDegree
+      omega
+  rw [cisZeroG_iff]
+  have := hsol
+  rw [IsReducedRdeSolK, hq0] at this
+  simpa using this.symm
+
+/-- **★ The degree-descent bookkeeping** (`degree_peeled_le`): from `q = a·h + r` with `deg r < deg a`,
+`a ≠ 0`, and the bound on `q`, the peeled factor `h` satisfies the NEXT level's bound `n − deg a`. The
+degree fact the soundness lifting never needed (it lifts ANY `h`; the existence side must keep `h` bounded
+to feed the recursion's short-circuit). The zero quirk is carried by the `(· = 0 ∨ natDegree ≤ ·)` shape. -/
+theorem degree_peeled_le {K : Type*} [Field K] (ad h r q : K[X]) (n : ℤ)
+    (hadne : ad ≠ 0) (hrlt : r.degree < ad.degree)
+    (hq : q = ad * h + r) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n) :
+    h = 0 ∨ (h.natDegree : ℤ) ≤ n - (ad.natDegree : ℤ) := by
+  by_cases hh : h = 0
+  · exact Or.inl hh
+  · right
+    have hadhne : ad * h ≠ 0 := mul_ne_zero hadne hh
+    have hadle : ad.degree ≤ (ad * h).degree := by
+      rw [Polynomial.degree_mul]
+      exact le_add_of_nonneg_right (Polynomial.zero_le_degree_iff.mpr hh)
+    have hrlt' : r.degree < (ad * h).degree := lt_of_lt_of_le hrlt hadle
+    have hqnat : q.natDegree = ad.natDegree + h.natDegree := by
+      rw [hq, Polynomial.natDegree_add_eq_left_of_degree_lt hrlt', Polynomial.natDegree_mul hadne hh]
+    have hqdeg : q.degree = (ad * h).degree := by
+      rw [hq]; exact Polynomial.degree_add_eq_left_of_degree_lt hrlt'
+    have hqne : q ≠ 0 := by
+      intro h0; exact hadhne (Polynomial.degree_eq_bot.mp (hqdeg ▸ Polynomial.degree_eq_bot.mpr h0))
+    rcases hbound with h0 | hb
+    · exact absurd h0 hqne
+    · rw [hqnat] at hb; push_cast at hb ⊢; omega
+
+/-- **The unconditional structural-gcd predicate** `CSPDEGStructG Dt fuel a b c n`: the data the EXISTENCE
+direction needs to PROVE the `cdvdG` gate (so NOT gated behind `cdvdG`, unlike the soundness
+`CSPDEGClearedInputsGen`). At each non-base level: nonzero gcd `Associated` to `gcd(a, b)`, the fuel bounds,
+`a ≠ 0`, the diophantine cofactor fuel bound (for `deg r < deg(a/g)` via `cdiophantineG_fst_degree_lt`),
+Euclidean termination, and itself on the peeled level for every RHS. Base `fuel = 0` is `False` — FUEL
+SUFFICIENCY, the genuine extra termination fact. -/
+def CSPDEGStructG [CFracGcdCore α] (Dt : CPolyG α) :
+    ℕ → (a b c : CPolyG α) → (n : ℤ) → Prop
+  | 0, _, _, _, _ => False
+  | fuel + 1, a, b, c, n =>
+    if n < 0 then True
+    else
+      let g := CFracGcdCore.cgcdFFCore fuel a b
+      let ad := cdivG fuel a g
+      let bd := cdivG fuel b g
+      (cnormG g ≠ []) ∧ Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))
+        ∧ ((cnormG a : List α).length ≤ fuel)
+        ∧ ((cnormG b : List α).length ≤ fuel)
+        ∧ ((cnormG c : List α).length ≤ fuel)
+        ∧ (cnormG a ≠ [])
+        ∧ (if cdegG ad = 0 then True
+           else
+             ((cnormG (cscaleG (CField.inv (cleadG (cgcdExtG fuel bd ad).1))
+                 (cmulG (cdivG fuel c g) (cgcdExtG fuel bd ad).2.1)) : List α).length ≤ fuel)
+               ∧ cgcdTerminatesG fuel bd ad
+               ∧ ∀ c' : CPolyG α, CSPDEGStructG Dt fuel ad (caddG bd (cmonomialDeriv Dt ad)) c'
+                   (n - (cdegG ad : ℤ)))
+
+/-- **★ The complete §6.4 degree-descent discharge MODULO FUEL SUFFICIENCY**
+(`cSPDEGSolvableInputs_of_structG`): from the unconditional structural data `CSPDEGStructG` and a bounded
+abstract reduced solution, `CSPDEGSolvableInputsGen` holds. Wires ALL the proven pieces — the `K[X]`
+divisibility gate (`cdvdG_g_c_of_isReducedRdeSolK`), the `n < 0` base (`cisZeroG_of_isReducedRdeSolK_neg`),
+the peeled witness (`exists_peeled_reducedSolK`), and the degree bookkeeping (`degree_peeled_le` via
+`cdiophantineG_fst_degree_lt`). NO degree obligation remains; the SOLE residual is the `fuel = 0` base —
+i.e. fuel sufficiency, the genuine extra termination fact the soundness direction never needed. -/
+theorem cSPDEGSolvableInputs_of_structG [CFracGcdCore α] (Dt : CPolyG α) :
+    ∀ (fuel : ℕ) (a b c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X]),
+      CSPDEGStructG Dt fuel a b c n →
+      IsReducedRdeSolK Dt a b c q →
+      (q = 0 ∨ (q.natDegree : ℤ) ≤ n) →
+      CSPDEGSolvableInputsGen Dt fuel a b c n := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro a b c n q hin _ _
+    exact absurd hin (by rw [CSPDEGStructG]; exact not_false)
+  | succ fuel ih =>
+    intro a b c n q hin hsol hq
+    rw [CSPDEGSolvableInputsGen]
+    refine ⟨⟨q, hsol⟩, ?_⟩
+    by_cases hn : n < 0
+    · rw [if_pos hn]
+      exact cisZeroG_of_isReducedRdeSolK_neg Dt a b c q n hn hsol hq
+    · rw [if_neg hn]
+      rw [CSPDEGStructG, if_neg hn] at hin
+      set g := CFracGcdCore.cgcdFFCore fuel a b with hg
+      set ad := cdivG fuel a g with had
+      set bd := cdivG fuel b g with hbd
+      obtain ⟨hg0, hgassoc, hfa, hfb, hfc, ha0, hrest⟩ := hin
+      refine ⟨hg0, hgassoc, hfa, hfb, hfc, ha0, ?_⟩
+      by_cases hdeg : cdegG ad = 0
+      · rw [if_pos hdeg]; trivial
+      · rw [if_neg hdeg] at hrest ⊢
+        obtain ⟨hdiofuel, hterm, hstructrec⟩ := hrest
+        refine ⟨hterm, ?_⟩
+        obtain ⟨h, hqeq, hredsol⟩ := exists_peeled_reducedSolK Dt a b c g ad bd q fuel
+          had hbd hg0 hfa hfb hfc ha0 hgassoc hterm hsol
+        have hadne : toPolyG ad ≠ 0 := by
+          have hgne : toPolyG g ≠ 0 := fun h => hg0 ((cnormG_eq_nil_iff g).mpr h)
+          have hane : toPolyG a ≠ 0 := fun h => ha0 ((cnormG_eq_nil_iff a).mpr h)
+          have hdiva : toPolyG ad * toPolyG g = toPolyG a :=
+            had ▸ cdivG_a_exact_of_gcd fuel a b g hg0 hfa hgassoc
+          exact fun h => hane (by rw [← hdiva, h, zero_mul])
+        have hadnil : cnormG ad ≠ [] := fun h => hadne ((cnormG_eq_nil_iff ad).mp h)
+        have hrlt : (toPolyG (cdiophantineG fuel bd ad (cdivG fuel c g)).1).degree
+            < (toPolyG ad).degree :=
+          cdiophantineG_fst_degree_lt fuel bd ad (cdivG fuel c g) hadnil hdiofuel
+        have hcdeg : (toPolyG ad).natDegree = cdegG ad := (cdegG_eq_natDegree ad).symm
+        have hbound : h = 0 ∨ (h.natDegree : ℤ) ≤ n - (cdegG ad : ℤ) := by
+          have := degree_peeled_le (toPolyG ad) h
+            (toPolyG (cdiophantineG fuel bd ad (cdivG fuel c g)).1) q n hadne hrlt hqeq hq
+          rwa [hcdeg] at this
+        exact ih ad (caddG bd (cmonomialDeriv Dt ad))
+          (csubG (cdiophantineG fuel bd ad (cdivG fuel c g)).2
+            (cmonomialDeriv Dt (cdiophantineG fuel bd ad (cdivG fuel c g)).1))
+          (n - (cdegG ad : ℤ)) h (hstructrec _) hredsol hbound
+
+/-- **★ END-TO-END: the §6.4 SPDE peel succeeds on a bounded reduced solution, MODULO FUEL SUFFICIENCY**
+(`cSPDEG_isSome_of_structG_bounded`): composes the complete discharge `cSPDEGSolvableInputs_of_structG`
+with the degree-descent induction `cSPDEG_isSome_of_solvableInputs`. The §6.4 `hspde` content modulo only
+fuel sufficiency (the `CSPDEGStructG` `fuel = 0 ↦ False` base) and the upstream `IsCRischDEGPolySol →
+∃ q, IsReducedRdeSolK (special-cleared) q` bridge (the §6.2/§6.3 normal+special-denominator chain). -/
+theorem cSPDEG_isSome_of_structG_bounded [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (a b c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X])
+    (hstruct : CSPDEGStructG Dt fuel a b c n) (hsol : IsReducedRdeSolK Dt a b c q)
+    (hq : q = 0 ∨ (q.natDegree : ℤ) ≤ n) :
+    (cSPDEG Dt fuel a b c n).isSome = true :=
+  cSPDEG_isSome_of_solvableInputs Dt fuel a b c n
+    (cSPDEGSolvableInputs_of_structG Dt fuel a b c n q hstruct hsol hq)
+
+end SPDEDegreeDescent
+
 /-! ## ★ The precise §6.4–6.6 exhaustiveness residual, and `hsolve` modulo it (NEVER `sorry`)
 
 The engine layer (`cRischDEG_isSome_of_stages`) reduces `hsolve` — `solvable ⟹ cRischDEG.isSome` — to the
@@ -462,10 +803,17 @@ named residual `RischDESolveExhaustiveResidual`, in solvability-implies / staged
   `IsCoprime.dvd_of_dvd_mul_left` after `(b/g)·(q − r) = (a/g)·(z − Dq)`). Their composite
   `spde_peel_inverse_toPolyG` is the **complete one-step inverse**: a divided-equation solution `q`
   *provably* yields a peel factor `h` with `q = (a/g)·h + r` solving the reduced
-  `(a/g)·Dh + ((b/g) + D(a/g))·h = z − Dr`. The irreducible residue is thereby narrowed to **only** the
-  recursion's degree-descent assembly (re-applying the per-step inverse down the `cdegG(a/g)`-shrinking
-  ladder to force `cSPDEG.isSome`) plus the gcd-coprimality discharge (`gcd(a/g, b/g) = 1` from gcd
-  correctness). The engine never assembles this descent (it only lifts a sub-solution up).
+  `(a/g)·Dh + ((b/g) + D(a/g))·h = z − Dr`. ★ The **degree-descent recursion assembly is now PROVEN** (the
+  `SPDEDegreeDescent` section): `cSPDEG_isSome_of_solvableInputs` runs the soundness lifting
+  `cSPDEG_cleared_lifting_gen` IN REVERSE down the `cdegG(a/g)`-shrinking ladder, threading the per-step
+  inverse over `K[X]` (`exists_peeled_reducedSolK`, so no `CPolyG`-lift obligation), the gcd-coprimality
+  (`isCoprime_bd_ad_of_divided`), the `n < 0` base (`cisZeroG_of_isReducedRdeSolK_neg`), and ★ the
+  **degree-descent bookkeeping** `deg(h) ≤ n − deg(a/g)` (`degree_peeled_le`) — the fact the forward
+  direction never needed. `cSPDEG_isSome_of_structG_bounded` assembles the whole descent
+  (`cSPDEGSolvableInputs_of_structG`) modulo **only fuel sufficiency** (the `CSPDEGStructG` `fuel = 0 ↦
+  False` base — the degree ladder bottoms out before fuel runs out). The residue narrows to fuel
+  sufficiency **plus** the upstream `IsCRischDEGPolySol → ∃ q, IsReducedRdeSolK (special-cleared) q ∧ bound`
+  bridge (the §6.2/§6.3 normal+special-denominator chain), which `hspde` as currently typed still needs.
 
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. The
   reachable base sub-cases are proven here (`cPolyRischDEG_isSome_of_bZero` integration,
@@ -490,8 +838,9 @@ gden`: the two staged converse facts a polynomial solution clears the §6.4 SPDE
 `some` (produced by `ComputableRischDENormCompleteness` — recorded here as the upstream precondition).
 `hspde`: ★ for the §6.2-special-cleared coefficients of a normal-denominator output, a solution makes the
 §6.4 SPDE peel at the §6.3 bound degree return `some` (the divisibility necessity + constant-base descent +
-the **complete per-step inverse** `spde_peel_inverse_toPolyG`, incl. the peeling-divisibility, are proven;
-only the degree-descent recursion assembly remains). `hpoly`: ★ for the SPDE output
+the complete per-step inverse + ★ now the **degree-descent recursion assembly**
+`cSPDEG_isSome_of_structG_bounded` are proven; only fuel sufficiency and the upstream fractional→reduced
+bridge remain). `hpoly`: ★ for the SPDE output
 `(bbar, cbar, m)`, a solution makes the §6.5/§6.6 poly-RDE dispatcher return `some` (the b=0/c=0 base
 sub-cases are proven; the cancellation-regime exhaustiveness is the deep residue). Their conjunction, threaded
 through `cRischDEG_isSome_of_stages`, is exactly `hsolve`. A `Prop`-bundle of stated assumptions, NO
@@ -501,8 +850,8 @@ structure RischDESolveExhaustiveResidual (Dt fnum fden gnum gden : CPolyG α) : 
   hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true
   /-- ★ §6.4: for a normal-denominator output `(a0, b0, c0, h0)`, a solution makes the SPDE peel at the §6.3
-  bound degree on the special-cleared coefficients return `some` (per-step inverse proven; only the
-  degree-descent recursion assembly remains). -/
+  bound degree on the special-cleared coefficients return `some` (per-step inverse AND degree-descent
+  assembly proven; only fuel sufficiency + the upstream fractional→reduced bridge remain). -/
   hspde : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     ∀ a0 b0 c0 h0 : CPolyG α,
       cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
@@ -667,17 +1016,27 @@ exhaustiveness.
   solution forces `(a/g) ∣ q − r` — `IsCoprime.dvd_of_dvd_mul_left` after `(b/g)·(q − r) = (a/g)·(z − Dq)`),
   and their composite ★ `spde_peel_inverse_of_isCoprime` / `spde_peel_inverse_toPolyG` (the **complete one-step
   inverse**: a divided-equation solution `q` yields a peel factor `h` with `q = (a/g)·h + r` solving the
-  reduced equation — the diophantine degree-peel step is no longer a residue).
+  reduced equation — the diophantine degree-peel step is no longer a residue);
+* ★ the **§6.4 degree-descent recursion assembly** (the `SPDEDegreeDescent` section, the structural heart of
+  `hspde`, now *complete* modulo fuel sufficiency) — `cSPDEG_isSome_of_solvableInputs` (the soundness lifting
+  `cSPDEG_cleared_lifting_gen` run IN REVERSE down the `cdegG(a/g)` ladder), `exists_peeled_reducedSolK` (the
+  per-step inverse threaded over `K[X]`, so no `CPolyG`-lift), `isCoprime_bd_ad_of_divided` (the SPDE
+  coprimality from the unit divided-gcd), `cisZeroG_of_isReducedRdeSolK_neg` (the `n < 0 ⟹ q = 0 ⟹ c = 0`
+  base), ★ `degree_peeled_le` (the **degree-descent bookkeeping** `deg h ≤ n − deg(a/g)` — the fact the
+  forward direction never needed), and the assembly `cSPDEGSolvableInputs_of_structG` /
+  `cSPDEG_isSome_of_structG_bounded` (the whole descent, modulo only the `CSPDEGStructG` `fuel = 0 ↦ False`
+  base = fuel sufficiency).
 
 **The deep residual** (`RischDESolveExhaustiveResidual`, NEVER `sorry`). Two staged converse facts the engine
 does not self-certify:
 * **`hspde`** — the §6.4 SPDE peel returns `some` on a solvable input. Reachable layers proven: divisibility
-  necessity + constant-base descent + ★ the **complete one-step inverse** `spde_peel_inverse_toPolyG`
-  (peeling-divisibility `(a/g) ∣ q − r` *now proven* via `peeling_dvd_of_isCoprime` from `gcd(a/g, b/g) = 1`,
-  then the peel `spde_step_glue_inverse`: a divided-equation solution `q` yields `h` with `q = (a/g)·h + r`
-  solving the reduced equation). The irreducible residue is thereby narrowed to **only** the recursion's
-  degree-descent assembly — iterating this per-step inverse down the shrinking `deg(a/g)` ladder to force
-  `cSPDEG.isSome`, together with the gcd-coprimality discharge (`gcd(a/g, b/g) = 1` from gcd correctness).
+  necessity + constant-base descent + the complete one-step inverse + ★ the **degree-descent recursion
+  assembly** `cSPDEG_isSome_of_structG_bounded` (the per-step inverse iterated down the shrinking `deg(a/g)`
+  ladder, with the degree bookkeeping `degree_peeled_le` proven). The residue narrows to **two** facts the
+  forward direction never needed: (i) **fuel sufficiency** — the degree ladder bottoms out before fuel runs
+  out (the `CSPDEGStructG` `fuel = 0 ↦ False` base; soundness is happy with `none` at fuel 0); and (ii) the
+  upstream **fractional→reduced bridge** `IsCRischDEGPolySol → ∃ q, IsReducedRdeSolK (special-cleared) q ∧
+  bound` (the §6.2/§6.3 normal+special-denominator chain), which `hspde` as currently typed consumes.
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. Reachable
   base sub-cases proven (b=0/c=0); the irreducible residue is the **cancellation-regime exhaustiveness** (the
   non-cancellation top-down solve and the primitive/hyperexponential cancellation recursions each find a
@@ -693,8 +1052,26 @@ peeling-divisibility now proven), `rischDEInnerCompleteness_of_residuals` assemb
 mapped to exactly three precisely isolated deep facts, **none** a `sorry`: the §6.2 normal-denominator
 divisibility, the §6.3 degree-bound cancellation, and the §6.4–6.6 SPDE/poly-RDE exhaustiveness. -/
 
-/-! ### Axiom audit (the engine, base, SPDE-control-flow, preservation layers, and the modular assembly
-are axiom-clean; NO `sorry`; only the `native_decide` operational witnesses use the compiler) -/
+/-! ### Restatements of the §6.4 degree-descent assembly (anonymous `example`s) -/
+
+-- ★ The degree-descent induction: the recursive solvable-inputs predicate forces `cSPDEG.isSome`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (n : ℤ)
+    (h : CSPDEGSolvableInputsGen Dt fuel a b c n) :
+    (cSPDEG Dt fuel a b c n).isSome = true :=
+  cSPDEG_isSome_of_solvableInputs Dt fuel a b c n h
+
+-- ★ The end-to-end §6.4 success on a bounded reduced solution, modulo fuel sufficiency (`CSPDEGStructG`).
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X])
+    (hstruct : CSPDEGStructG Dt fuel a b c n) (hsol : IsReducedRdeSolK Dt a b c q)
+    (hq : q = 0 ∨ (q.natDegree : ℤ) ≤ n) :
+    (cSPDEG Dt fuel a b c n).isSome = true :=
+  cSPDEG_isSome_of_structG_bounded Dt fuel a b c n q hstruct hsol hq
+
+/-! ### Axiom audit (the engine, base, SPDE-control-flow, preservation, ★ degree-descent layers, and the
+modular assembly are axiom-clean; NO `sorry`; only the `native_decide` operational witnesses use the
+compiler) -/
 
 #print axioms cRischDEG_isSome_of_stages
 #print axioms cRischDEG_isSome_iff_stages
@@ -708,6 +1085,12 @@ are axiom-clean; NO `sorry`; only the `native_decide` operational witnesses use 
 #print axioms dvd_sub_of_isReducedRdeSol
 #print axioms spde_peel_inverse_toPolyG
 #print axioms isReducedRdeSol_const_base
+#print axioms cSPDEG_isSome_of_solvableInputs
+#print axioms exists_peeled_reducedSolK
+#print axioms degree_peeled_le
+#print axioms cisZeroG_of_isReducedRdeSolK_neg
+#print axioms cSPDEGSolvableInputs_of_structG
+#print axioms cSPDEG_isSome_of_structG_bounded
 #print axioms hsolve_of_exhaustiveResidual
 #print axioms rischDEInnerCompleteness_of_residuals
 
