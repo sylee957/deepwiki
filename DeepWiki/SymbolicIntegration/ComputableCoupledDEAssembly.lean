@@ -22,10 +22,10 @@ base soundness — all `native_decide`-free.
 * **`cCoupledDESystem_sound`** (UNCONDITIONAL): the §8 base coupled-system soundness, with the
   `_of_check` gate removed (`#print axioms`: standard logical axioms only).
 
-The §8.4 *tangent* box `cCoupledDECancelTan` remains gated on its own `cancelTanClearedCheck`: its
-degree-by-degree telescoping (per-level base solve + `evalAtI` projection mod `t²+1` + `divByTminusI`)
-needs the §8.4 *algorithm* correctness — base-solve soundness (now unconditional here) is one
-discharged ingredient; the `evalAtI`/`divByTminusI` reconstruction consistency is the remaining glue. -/
+The §8.4 *tangent* box `cCoupledDECancelTan` is likewise now **unconditional**: its degree-by-degree
+telescoping (per-level base solve + `evalAtI` projection mod `t²+1` + `divByTminusI` synthetic division)
+is proven correct in `ComputableCoupledDETangentReconstruct` (`reconstruct`), discharging its own
+`cancelTanClearedCheck` — base-solve soundness (this file) is the discharged per-level ingredient. -/
 
 
 namespace DeepWiki.SymbolicIntegration.CPolyG

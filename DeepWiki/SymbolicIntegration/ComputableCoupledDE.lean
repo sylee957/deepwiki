@@ -342,9 +342,10 @@ return (h₁t + h₂ + s₁, h₂t − h₁ + s₂)
 ```
 
 `D` is the tangent monomial derivation (`tanDeriv`); the `nη(s₁t+s₂)` etc. terms are formed over `k[t]`
-(`η = 1`). `cCoupledDESystem` does the base solve with ansatz degree `≤ dbound`. The recursion on `n`
-(decremented each level) is also `fuel`-bounded. Returns `some (q₁, q₂)` (the two `t`-polynomials with
-`ℚ[x]`-coefficients), or `none`. -/
+(`η = 1`). `cCoupledDESystem` does the base solve with ansatz degree `≤ dbound`. The recursion is
+**structural on `n`** (decremented each level — this is what bounds it, so it whnf-reduces and admits the
+`cCoupledDECancelTan.induct` recursion principle used by the soundness proof); `fuel` is a spare bound
+threaded unchanged. Returns `some (q₁, q₂)` (the two `t`-polynomials with `ℚ[x]`-coefficients), or `none`. -/
 def cCoupledDECancelTan (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) :
     (c1 c2 : List (CPolyG ℚ)) → (n : ℕ) → Option (List (CPolyG ℚ) × List (CPolyG ℚ))
   | c1, c2, 0 =>
@@ -380,18 +381,15 @@ def cCoupledDECancelTan (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) :
       let quot := divByTminusI cpairs
       let d1 : List (CPolyG ℚ) := quot.map Prod.fst
       let d2 : List (CPolyG ℚ) := quot.map Prod.snd
-      match fuel with
-      | 0 => none
-      | fuel' + 1 =>
-        match cCoupledDECancelTan fuel' dbound b0 (caddG b2 [CField.one]) d1 d2 n with
-        | none => none
-        | some (h1, h2) =>
-          -- return (h₁t + h₂ + s₁, h₂t − h₁ + s₂).
-          let h1t : List (CPolyG ℚ) := [[]] ++ h1     -- h₁·t (shift up by one t-degree)
-          let h2t : List (CPolyG ℚ) := [[]] ++ h2
-          let q1 := tadd (tadd h1t h2) [s1]
-          let q2 := tsub (tadd h2t [s2]) h1
-          some (q1, q2)
+      match cCoupledDECancelTan fuel dbound b0 (caddG b2 [CField.one]) d1 d2 n with
+      | none => none
+      | some (h1, h2) =>
+        -- return (h₁t + h₂ + s₁, h₂t − h₁ + s₂).
+        let h1t : List (CPolyG ℚ) := [[]] ++ h1     -- h₁·t (shift up by one t-degree)
+        let h2t : List (CPolyG ℚ) := [[]] ++ h2
+        let q1 := tadd (tadd h1t h2) [s1]
+        let q2 := tsub (tadd h2t [s2]) h1
+        some (q1, q2)
 
 end CPolyG
 
@@ -838,11 +836,11 @@ pair passes the engine's own cleared check (`cancelTanClearedCheck b0 b2 c1 c2 q
 `native_decide`-reachable self-certificate, cf. `rischDE_cancelTan_example`), then `(q₁, q₂)` solves the §8.4
 tangent coupled `t`-polynomial system at the `ℚ[x][t]` level. Pure composition with
 `cancelTanClearedCheck_sound`. The §8.4 degree-by-degree telescoping (each peeled leading pair from the base
-`cCoupledDESystem` solve, then the `t − √−1` RHS reduction) enters only through this self-check. The per-level
-base solve is now unconditionally sound (`cCoupledDESystem_sound`, `ComputableCoupledDEAssembly`); the
-remaining glue to discharge `cancelTanClearedCheck` is the §8.4 *telescoping* correctness — that the
-`evalAtI` projection mod `t²+1` and the `divByTminusI` reconstruction assemble the per-level base solutions
-into a genuine `k[t]` solution. -/
+`cCoupledDESystem` solve, then the `t − √−1` RHS reduction) enters only through this self-check. **The
+cleared check is now *dischargeable*** (`cancelTanClearedCheck_of_reconstruct`, via the proven telescoping
+reconstruction `reconstruct` in `ComputableCoupledDETangentReconstruct`), so the gate-free **unconditional**
+`cCoupledDECancelTan_sound` (same file) subsumes this lemma at `n = 2`; it is kept as the self-certifying
+intermediate. -/
 theorem cCoupledDECancelTan_sound_of_check (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ)
     (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
     (_hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2))

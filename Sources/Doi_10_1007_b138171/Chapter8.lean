@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableCoupledDE
 import DeepWiki.SymbolicIntegration.ComputableCoupledDEAssembly
+import DeepWiki.SymbolicIntegration.ComputableCoupledDETangentReconstruct
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 8: The Coupled Differential System
@@ -12,15 +13,15 @@ The §8.4 hypertangent case is now rendered as a **computable** solver over `k =
 (book p.265), validated end-to-end on Example 8.4.1.
 
 **Computable-vs-abstract.** Each algorithm below is a computable function over `CPolyG ℚ` (= ℚ(x), the
-base the §8.4 tangent recursion reaches) validated by `native_decide` on Example 8.4.1. For the **base**
-coupled system the abstract soundness is now **PROVED unconditionally** (`native_decide`-free):
-`cCoupledDESystem_sound` (`ComputableCoupledDEAssembly`) shows a returned `(y₁, y₂)` solves the two
-`ℚ[x]` row identities of (8.2), by discharging the engine's cleared check from the proven
-ℚ-Gaussian-elimination correctness `cConstSolveUniqueQ_sound` + the matrix-assembly faithfulness bridge.
-Still deferred: the §8.4 **tangent** box's abstract correctness (its degree-by-degree telescoping via
-`evalAtI`/`divByTminusI` — base-solve soundness is now one discharged ingredient), the §8.1–8.3
-denominator/pole bounds on the 2-vector, the §8.2 hyperexponential coupled case (`CoupledDECancelExp`),
-and the §8.3 general nonlinear case.
+base the §8.4 tangent recursion reaches) validated by `native_decide` on Example 8.4.1. Both the **base**
+coupled system AND the §8.4 **tangent** box now have abstract soundness **PROVED unconditionally**
+(`native_decide`-free): `cCoupledDESystem_sound` (`ComputableCoupledDEAssembly`) for the base solve
+(via `cConstSolveUniqueQ_sound` + matrix-assembly faithfulness), and `cCoupledDECancelTan_sound`
+(`ComputableCoupledDETangentReconstruct`) for the tangent box — its degree-by-degree telescoping
+(`evalAtI` projection mod `t²+1` + `divByTminusI` synthetic division by `t − √−1`) is proven correct in
+the Gaussian extension `AdjoinRoot (X²+1)` over `ℚ[x]` (`reconstruct`), discharging the engine's own
+`cancelTanClearedCheck`. Still deferred: the §8.1–8.3 denominator/pole bounds on the 2-vector, the §8.2
+hyperexponential coupled case (`CoupledDECancelExp`), and the §8.3 general nonlinear case.
 
 ## NOT YET FORMALIZED (audit 2026-06-24)
 §8.1 The Primitive Case — coupled solver, primitive monomial (the §8.1–8.3 `WeakNormalizer` /
@@ -86,9 +87,18 @@ D, n)` box, book p.265), `t = tan(x)`, `Dt = t²+1`, `η = 1`, `a = −1`: the c
 `(Dq₁; Dq₂) + [[b₀ − nηt, −b₂], [b₂, b₀ − nηt]] · (q₁; q₂) = (c₁; c₂)` for `q₁, q₂ ∈ k[t]` of `t`-degree
 `≤ n`, degree-by-degree from the top (project mod `t²+1`, base-solve over ℚ(x) via `cCoupledDESystem`,
 divide by `t − √−1`). This **is** the `PolyRischDECancelTan` that `ComputableRischDE`'s §6.6 dispatcher
-deferred. Computable + `native_decide`-validated; abstract correctness deferred. *(The book's box prints
-the (2,2) entry as `b₀ + nηt` — a misprint for `b₀ − nηt`; see the chapter misprint note.)* -/
+deferred. Computable + `native_decide`-validated; abstract correctness now **PROVED unconditionally**
+(`alg_8_4_cancelTan_sound`). *(The book's box prints the (2,2) entry as `b₀ + nηt` — a misprint for
+`b₀ − nηt`; see the chapter misprint note.)* -/
 def alg_8_4_cancelTan := @cCoupledDECancelTan
+
+/-- **Tangent RDE cancellation soundness — unconditional** (§8.4, book p.265, `native_decide`-free): a
+returned `cCoupledDECancelTan … 2` solve `(q₁, q₂)` solves the §8.4 tangent coupled `t`-polynomial system
+(8.15) at the `ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`, diagonal shift `−2t`). No cleared-check hypothesis:
+the §8.4 degree-by-degree telescoping (`evalAtI` projection mod `t²+1` + `divByTminusI` synthetic division
+by `t − √−1`) is proven correct (`reconstruct`, in `AdjoinRoot (X²+1)` over `ℚ[x]`), discharging the
+engine's own `cancelTanClearedCheck`. The §8.4 tangent box's abstract soundness. -/
+abbrev alg_8_4_cancelTan_sound := @cCoupledDECancelTan_sound
 
 /-- **Example 8.4.1 — the tangent RDE cancellation runs end-to-end** (§8.4, book p.265–267): the case
 `ComputableRischDE`'s §6.6 dispatcher deferred. For the system (8.15) over `t = tan(x)` — `b₀ = 0`,
