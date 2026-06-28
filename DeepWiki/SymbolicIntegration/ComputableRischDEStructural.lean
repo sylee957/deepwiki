@@ -452,6 +452,76 @@ theorem rdeCleared_of_success_and_residual_cancelPrim (Dt : CPolyG α) (fuel : �
   rw [hynum, hyden]
   exact hcap
 
+/-! ### ★ The hyperexponential special regime — the cleared identity from the isolated §6.2 obligation
+
+The primitive paths above (`rdeClearedIdentity_of_polyRDEIdentity`, `rdeCleared_of_success_and_residual*`)
+all `rw` `cRdeSpecialDenominatorG_primitive_eq_gen`, which needs `hprim : cdegG (cSpecialPolyG Dt fuel) = 0`
+— the §6.2 special-denominator stage is the **identity** there (`h₁ = [1]`, SPDE runs on `(a₀,b₀,c₀)`,
+reconstruction `ynum = Q·[1]`). In the **hyperexponential** regime (`cdegG Dt = 1`, special polynomial
+`p = cSpecialPolyG Dt fuel = t`, `cdegG p = 1`), `hprim` is FALSE: the §6.2 special-denominator reduction
+is **non-trivial** (`h₁ = p^{−n} = pᵏ` with `k = −n ≥ 0`), SPDE runs on the special-cleared
+`(ā,b̄,c̄) = (a₀·pᴺ, (b₀ + n·a₀·Dp/p)·pᴺ, c₀·p^{N−n})`, and the reconstruction is `ynum = Q·pᵏ`.
+
+The genuine §6.2 content (Bronstein Lemma 6.2.1/6.2.2) is the **substitution correctness**: that `R = Q·pᵏ`
+solves the *original* `a₀·D(R) + b₀·R = c₀`. By `specialDenominatorSubst_expand` the Leibniz expansion is
+`a₀·D(Q·pᵏ) + b₀·(Q·pᵏ) = (a₀·D(Q) + b₀·Q + k·a₀·E·Q)·pᵏ` (`E = Dp/p = η ∈ k` for hyperexp), so the
+substitution lands on `a₀·D(R) + b₀·R = c₀` **iff** the reduced obligation
+`a₀·D(Q) + b₀·Q + k·a₀·E·Q = c₀/pᵏ` holds — and **that** is exactly the `ν_p`-exponent bookkeeping
+(`n_b = ν_p(b₀)`, `n_c = ν_p(c₀)`, the `N`-shift) whose carrier-level correctness (`cValuationG`
+correctness, the special-part self-derivative divisibility `p ∣ Dp`) is **not yet proven** — the sole
+remaining §6.2 obstruction. We therefore isolate that obligation as the single explicit hypothesis
+`hspecialReduced : a₀·D(R) + b₀·R = c₀` (`R = ynum = Q·h₁`, in the exact form
+`cRdeNormalDenominatorG_cleared_lift_gen` consumes) and discharge **everything else** through the shared
+normal-denominator spine. The cancellation poly-RDE soundness `cPolyRischDEG_cancelExp_field` (already
+proven, base-oracle-free) is what supplies the bar-equation in the CancelExp arm; it is *not* what is
+missing — the missing piece is purely the §6.2 special-denominator substitution correctness above. -/
+
+omit [CRischField α] in
+/-- **★ The §6 special-regime cleared Risch-DE identity from the isolated §6.2 substitution obligation**:
+the non-primitive (hyperexponential `cdegG Dt = 1`, hypertangent `cdegG Dt = 2`) analogue of the primitive
+`rdeClearedIdentity_of_polyRDEIdentity`, stated with the general special-denominator reconstruction
+`ynum = (α'·v+β)·h₁` (`h₁ = pᵏ`, NOT collapsed to `[1]` as in the primitive case). It takes the §6.2
+special-denominator substitution correctness `a₀·D(ynum) + b₀·ynum = c₀` — the exact fact the unproven
+`cValuationG`-correctness would discharge (by `specialDenominatorSubst_expand`, equivalent to the
+`ν_p`-exponent reduced obligation `a₀·D(Q) + b₀·Q + k·a₀·E·Q = c₀/pᵏ`) — as the single explicit hypothesis
+`hspecialReduced`, and lifts it through the shared normal-denominator spine
+`cRdeNormalDenominatorG_cleared_lift_gen` to the full cleared identity
+`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`, `yden = h₀`, over
+`(CFieldSpec.K α)[X]`. Reuses the primitive path's normal-denominator certificates verbatim; the ONLY
+non-primitive-specific input is `hspecialReduced`. -/
+theorem cRischDEG_rdeCleared_gen_hyperexp (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) (α' β v : CPolyG α)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspecialReduced :
+      toPolyG a0
+          * Differential.implicitDeriv (toPolyG Dt)
+              (toPolyG (cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2))
+        + toPolyG b0
+          * toPolyG (cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2)
+      = toPolyG c0) :
+    let ynum := cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 := by
+  intro ynum yden
+  -- the reconstruction `R = ynum = Q·h₁` solves the reduced normal-denominator equation (the isolated
+  -- §6.2 obligation), so the shared normal-denominator spine lifts it to the cleared identity
+  exact cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 ynum
+    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
+
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- ★ The structural-decomposition core: a bare `cRischDEG` success factors through the §6.2/§6.4/§6.5
@@ -489,6 +559,40 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden ynum yden : CPolyG α
       = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
   rdeCleared_of_success_and_residual_cancelPrim Dt fuel fnum fden gnum gden ynum yden hδ hsucc hres hdb0
 
+-- ★ The non-primitive (hyperexp/hypertangent) special-regime cleared identity: the general
+-- reconstruction `ynum = (α'·v+β)·h₁` (`h₁ = pᵏ`) reaches the SAME `cRischDEG`-level cleared identity as
+-- the primitive path, reducing the ENTIRE non-primitive case to the single isolated §6.2 substitution
+-- obligation `a₀·D(ynum) + b₀·ynum = c₀` — exactly the `ν_p`-bookkeeping the unproven `cValuationG`
+-- correctness supplies. Everything else is the shared normal-denominator spine.
+example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) (α' β v : CPolyG α)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspecialReduced :
+      toPolyG a0
+          * Differential.implicitDeriv (toPolyG Dt)
+              (toPolyG (cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2))
+        + toPolyG b0
+          * toPolyG (cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2)
+      = toPolyG c0) :
+    let ynum := cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  cRischDEG_rdeCleared_gen_hyperexp Dt fuel fnum fden gnum gden a0 b0 c0 h0 α' β v
+    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
+
 end Residual
 
 /-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
@@ -498,5 +602,6 @@ end Residual
 #print axioms rdeCleared_of_success_and_residual
 #print axioms rdeClearedIdentity_of_polyRDEIdentity
 #print axioms rdeCleared_of_success_and_residual_cancelPrim
+#print axioms cRischDEG_rdeCleared_gen_hyperexp
 
 end DeepWiki.SymbolicIntegration

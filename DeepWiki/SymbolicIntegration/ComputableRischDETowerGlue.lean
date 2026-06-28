@@ -74,6 +74,34 @@ theorem rdeNormalDenominator_glue {R : Type*} [CommRing R] [NoZeroDivisors R]
     linear_combination hmul
   exact mul_left_cancel₀ hDN hkey
 
+/-- **The §6.2 special-denominator substitution expansion** (commutative-ring `Derivation` core): for a
+special irreducible `p` with `D p = E·p` (the hyperexponential case `p = t`, `E = η ∈ k`), the
+reconstruction `r = q·pᵏ` of the special-denominator stage expands by Leibniz as
+`a·D(r) + b·r = (a·D(q) + b·q + k·a·E·q)·pᵏ`. Pure `Derivation.leibniz` + `Derivation.leibniz_pow`; the
+algebraic heart of Bronstein's §6.2 special-denominator substitution (`r = q·h`, `h = p^{−n} = pᵏ`,
+`k = −n ≥ 0`). -/
+theorem specialDenominatorSubst_expand {R : Type*} [CommRing R] (D : Derivation ℤ R R)
+    (a b p E q : R) (k : ℕ) (hDp : D p = E * p) :
+    a * D (q * p ^ k) + b * (q * p ^ k)
+      = (a * D q + b * q + (k : R) * (a * E) * q) * p ^ k := by
+  rw [Derivation.leibniz, Derivation.leibniz_pow, hDp]
+  cases k with
+  | zero => simp
+  | succ k => simp only [Nat.add_sub_cancel, smul_eq_mul, Nat.cast_succ, pow_succ]; ring
+
+/-- **The §6.2 special-denominator cleared identity from the reduced obligation** (commutative-ring
+`Derivation` core): with `D p = E·p`, if the substitution's *reduced* identity
+`a·D(q) + b·q + k·a·E·q = c` holds — the fact Bronstein's §6.2 valuation bookkeeping (Lemma 6.2.1/6.2.2,
+the `ν_p`-exponent relations) supplies — then `r = q·pᵏ` solves `a·D(r) + b·r = c·pᵏ`. Isolates the single
+missing §6.2 obligation (`hreduced`) from the otherwise-mechanical `Derivation` algebra; the hyperexp
+analogue of how `rdeNormalDenominator_glue` discharges the normal-denominator stage from its reduced
+`a·D(Q) + b·Q = c`. -/
+theorem specialDenominatorSubst_cleared {R : Type*} [CommRing R] (D : Derivation ℤ R R)
+    (a b c p E q : R) (k : ℕ) (hDp : D p = E * p)
+    (hreduced : a * D q + b * q + (k : R) * (a * E) * q = c) :
+    a * D (q * p ^ k) + b * (q * p ^ k) = c * p ^ k := by
+  rw [specialDenominatorSubst_expand D a b p E q k hDp, hreduced]
+
 namespace CPolyG
 
 /-- **`cdvdG = true` reads as honest divisibility**: `cdvdG fuel g c = true` and `cnormG g ≠ []` give
@@ -119,5 +147,17 @@ theorem toPolyG_cdiophantineG {α : Type*} [CField α] [CFieldSpec α]
     + (Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG rhs) * hbez + toPolyG rhs * hinv
 
 end CPolyG
+
+/-! ### Restatement + axiom audit for the §6.2 special-denominator substitution glue -/
+
+-- ★ The §6.2 special-denominator substitution reaches `a·D(r)+b·r = c·pᵏ` from the reduced obligation
+-- `a·D(q)+b·q+k·a·E·q = c` (the `ν_p`-bookkeeping fact), with `r = q·pᵏ` and `Dp = E·p`.
+example {R : Type*} [CommRing R] (D : Derivation ℤ R R) (a b c p E q : R) (k : ℕ)
+    (hDp : D p = E * p) (hreduced : a * D q + b * q + (k : R) * (a * E) * q = c) :
+    a * D (q * p ^ k) + b * (q * p ^ k) = c * p ^ k :=
+  specialDenominatorSubst_cleared D a b c p E q k hDp hreduced
+
+#print axioms specialDenominatorSubst_expand
+#print axioms specialDenominatorSubst_cleared
 
 end DeepWiki.SymbolicIntegration
