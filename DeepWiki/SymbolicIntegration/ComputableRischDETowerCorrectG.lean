@@ -486,6 +486,135 @@ theorem toPolyG_cdivG_exact_mul_gen [CFracGcdCore α] (fuel : ℕ) (p q : CPolyG
     toPolyG (cdivG fuel p q) * toPolyG q = toPolyG p :=
   toPolyG_cdivG_exact fuel p q hq0 hfuel hQdvd
 
+/-! #### ★ `cValuationG`-correctness — the `ν_p` trial-division divides and is sharp (the §6.2 keystone) -/
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **`cValuationG` divides** (carrier-generic): `toPolyG p ^ (cValuationG fuel p x) ∣ toPolyG x` — the
+`ν_p` trial-division power always divides `x`. By `fuel`-induction on the `cValuationG.go` recursion: each
+step divides out one exact factor of `p` (`toPolyG_cdivG_exact`), so `p^(1+k) ∣ p·(x/p) = x` from the
+inductive `p^k ∣ x/p`. The `dvd` half of the §6.2 valuation correctness; no regularity needed. -/
+theorem toPolyG_pow_cValuationG_dvd (fuel : ℕ) (p x : CPolyG α) :
+    toPolyG p ^ (cValuationG fuel p x) ∣ toPolyG x := by
+  rw [cValuationG]
+  induction fuel generalizing x with
+  | zero => rw [cValuationG.go, pow_zero]; exact one_dvd _
+  | succ fuel ih =>
+    rw [cValuationG.go]
+    by_cases hx : cisZeroG x = true
+    · simp only [if_pos hx, pow_zero]; exact one_dvd _
+    · rw [if_neg hx]
+      by_cases hp : cdegG p = 0
+      · simp only [if_pos hp, pow_zero]; exact one_dvd _
+      · rw [if_neg hp]
+        by_cases hdvd : cdvdG fuel p x = true
+        · rw [if_pos hdvd]
+          -- `p ∣ x` exactly: `toPolyG x = toPolyG(x/p)·toPolyG p` (no fuel bound — the remainder is `0`).
+          have hpne : cnormG p ≠ [] := by
+            intro hpe; exact hp (by rw [cdegG, hpe]; rfl)
+          have hrem0 : toPolyG (cmodG fuel x p) = 0 := (cdvdG_iff fuel p x).mp hdvd
+          have hid := toPolyG_cdivmodG' fuel x p hpne
+          rw [show (cdivmodG fuel x p).2 = cmodG fuel x p from rfl, hrem0, add_zero,
+            show (cdivmodG fuel x p).1 = cdivG fuel x p from rfl] at hid
+          -- IH: `p^k ∣ x/p`; multiply by `p` to get `p^(1+k) ∣ (x/p)·p = x`.
+          have hih := ih (cdivG fuel x p)
+          rw [add_comm, pow_add, pow_one, hid]
+          exact mul_dvd_mul hih dvd_rfl
+        · rw [if_neg (by simpa using hdvd), pow_zero]; exact one_dvd _
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **`cdvdG = false` refutes divisibility** (carrier-generic, fuel-covered): with `cnormG p ≠ []` and the
+fuel covering `x`, `cdvdG fuel p x = false` gives `¬ toPolyG p ∣ toPolyG x` — the converse direction of
+`dvd_of_cdvdG`. Contrapositive of `toPolyG_cmodG_eq_zero_of_dvd` + `cdvdG_iff`. -/
+theorem not_dvd_of_cdvdG_false [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α)
+    (hpne : cnormG p ≠ []) (hfuel : (cnormG x : List α).length ≤ fuel)
+    (hdvd : cdvdG fuel p x = false) : ¬ toPolyG p ∣ toPolyG x := by
+  intro hpx
+  have hrem0 : toPolyG (cmodG fuel x p) = 0 := toPolyG_cmodG_eq_zero_of_dvd fuel x p hpne hfuel hpx
+  rw [← cdvdG_iff fuel p x] at hrem0
+  rw [hrem0] at hdvd
+  exact absurd hdvd (by decide)
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **`cValuationG` is sharp** (carrier-generic, fuel-covered): for a non-constant `p` (`cdegG p ≠ 0`) and a
+nonzero `x` (`toPolyG x ≠ 0`) with the fuel strictly covering `x` (`(cnormG x).length < fuel`, so the inner
+`cdvdG`/`cdivG` calls — each at one less fuel — are themselves fuel-covered), `¬ toPolyG p ^ (cValuationG fuel
+p x + 1) ∣ toPolyG x` — the trial-division stops exactly at the multiplicity (one more power does NOT divide).
+By `fuel`-induction mirroring `cValuationG.go`: the terminating non-dividing step refutes `p ∣ remainder`
+(`not_dvd_of_cdvdG_false`); each peeling step cancels one nonzero `p` in the integral domain `(CFieldSpec.K
+α)[X]` to descend to the inductive hypothesis on `x/p` (degree strictly drops on each exact division by a
+non-constant `p`). The strict bound is the §6.2 valuation `sharp`ness half. -/
+theorem cValuationG_sharp [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α)
+    (hp : cdegG p ≠ 0) (hx0 : toPolyG x ≠ 0) (hfuel : (cnormG x : List α).length < fuel) :
+    ¬ toPolyG p ^ (cValuationG fuel p x + 1) ∣ toPolyG x := by
+  have hpne : cnormG p ≠ [] := fun hpe => hp (by rw [cdegG, hpe]; rfl)
+  have hp0 : toPolyG p ≠ 0 := fun h => hpne (by rw [cnormG_eq_nil_iff]; exact h)
+  have hpdeg : 0 < (toPolyG p).natDegree := by rw [← cdegG_eq_natDegree]; omega
+  rw [cValuationG]
+  induction fuel generalizing x with
+  | zero =>
+    -- fuel `0` cannot strictly cover any `x` (`(cnormG x).length < 0` is impossible).
+    exact absurd hfuel (by omega)
+  | succ fuel ih =>
+    rw [cValuationG.go]
+    have hxne : cisZeroG x ≠ true := fun h => hx0 ((cisZeroG_iff x).mp h)
+    have hxlen : (cnormG x : List α).length = (toPolyG x).natDegree + 1 :=
+      length_cnormG_of_ne x (fun he => hx0 (by rw [← toPolyG_cnormG, he, toPolyG_nil]))
+    rw [if_neg hxne, if_neg hp]
+    by_cases hdvd : cdvdG fuel p x = true
+    · rw [if_pos hdvd]
+      -- `p ∣ x` exactly; `x = (x/p)·p`, descend to `x/p` and cancel one `p`.
+      have hrem0 : toPolyG (cmodG fuel x p) = 0 := (cdvdG_iff fuel p x).mp hdvd
+      have hid : toPolyG x = toPolyG (cdivG fuel x p) * toPolyG p := by
+        have h := toPolyG_cdivmodG' fuel x p hpne
+        rw [show (cdivmodG fuel x p).2 = cmodG fuel x p from rfl, hrem0, add_zero,
+          show (cdivmodG fuel x p).1 = cdivG fuel x p from rfl] at h
+        exact h
+      have hq0 : toPolyG (cdivG fuel x p) ≠ 0 := by
+        intro h; apply hx0; rw [hid, h, zero_mul]
+      have hqne : cnormG (cdivG fuel x p) ≠ [] := fun he => hq0 (by rw [cnormG_eq_nil_iff] at he; exact he)
+      have hdeg : (toPolyG (cdivG fuel x p)).natDegree < (toPolyG x).natDegree := by
+        rw [hid, Polynomial.natDegree_mul hq0 hp0]; omega
+      have hfuelq : (cnormG (cdivG fuel x p) : List α).length < fuel := by
+        rw [length_cnormG_of_ne _ hqne]; omega
+      -- IH refutes `p^(go(x/p)+1) ∣ x/p`; cancel one `p` from a hypothetical `p^(1+go+1) ∣ (x/p)·p`.
+      have hihq := ih (cdivG fuel x p) hq0 hfuelq
+      intro hcontra
+      apply hihq
+      rw [hid, show 1 + cValuationG.go p fuel (cdivG fuel x p) + 1
+          = (cValuationG.go p fuel (cdivG fuel x p) + 1) + 1 by ring, pow_succ] at hcontra
+      exact (mul_dvd_mul_iff_right hp0).mp hcontra
+    · rw [if_neg (by simpa using hdvd), zero_add, pow_one]
+      exact not_dvd_of_cdvdG_false fuel p x hpne (by omega) (Bool.not_eq_true _ ▸ hdvd)
+
+/-! #### ★ Special-part self-derivative divisibility — `p ∣ D(p)` for the §6.2 monomial special polynomial -/
+
+open Classical in
+/-- **The special monomial polynomial divides its own monomial derivative** (`α = QFunNZG ℚ`): under a regular
+`cSplitFactorFastG` run on `Dt` (`toPolyG Dt ≠ 0`, fuel covering the `t`-degree), `toPolyG (cSpecialPolyG Dt
+fuel) ∣ toPolyG (cmonomialDeriv Dt (cSpecialPolyG Dt fuel))`. The special part `pₛ` of any `IsSplittingFactorizationGen`
+is `IsSpecial` (`pₛ ∣ pₛ′`, Bronstein Def 3.4.2); `cSpecialPolyG Dt fuel = cmonicG (cSplitFactorFastG Dt fuel
+Dt).2` is `Associated` to that special part, and `IsSpecial` is associate-invariant — so the monic special
+polynomial is special, i.e. divides its `implicitDeriv (toPolyG Dt)`-derivative, which `toPolyG_cmonomialDeriv`
+identifies with `toPolyG (cmonomialDeriv Dt (cSpecialPolyG Dt fuel))`. The §6.2 `Dp = E·p` premise
+(`specialDenominatorSubst_expand`) at the carrier level. -/
+theorem toPolyG_cSpecialPolyG_dvd_cmonomialDeriv (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
+    (hDt : toPolyG Dt ≠ 0) (hdeg : (toPolyG Dt).natDegree ≤ fuel)
+    (hreg : CSplitFactorFastGRegularQ Dt fuel Dt) :
+    toPolyG (cSpecialPolyG Dt fuel)
+      ∣ toPolyG (cmonomialDeriv Dt (cSpecialPolyG Dt fuel)) := by
+  letI : Differential (CFieldSpec.K (QFunNZG ℚ))[X] := ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+  -- the split-factor special part `pₛ = (cSplitFactorFastG Dt fuel Dt).2` is `IsSpecial`
+  have hsplit := cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG Dt fuel Dt hDt hdeg hreg
+  have hspecPs : IsSpecial (toPolyG (cSplitFactorFastG Dt fuel Dt).2) := hsplit.2.1
+  -- `cSpecialPolyG = cmonicG pₛ` is associated to `pₛ`, so it too is `IsSpecial`
+  have hassoc : Associated (toPolyG (cSplitFactorFastG Dt fuel Dt).2)
+      (toPolyG (cSpecialPolyG Dt fuel)) := by
+    rw [cSpecialPolyG]; exact (associated_toPolyG_cmonicG _).symm
+  have hspec : IsSpecial (toPolyG (cSpecialPolyG Dt fuel)) := IsSpecial.of_associated hassoc hspecPs
+  -- `IsSpecial p` is `p ∣ p′` with `p′ = implicitDeriv (toPolyG Dt) p = toPolyG (cmonomialDeriv Dt p)`
+  rw [toPolyG_cmonomialDeriv]
+  exact hspec
+
 /-- **The §6.2 generic normal-denominator cleared lifting through `toPolyG`** (carrier-generic): writing
 `dₙ = (cSplitFactorFastG Dt fuel fden).1`, if `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a, b,
 c, h)`, the normal part is nonzero, the two `cdivG`-clearings are exact, and a polynomial `Q` solves the
@@ -551,6 +680,62 @@ theorem cRdeSpecialDenominatorG_primitive_eq_gen [CFracGcdCore α] (Dt : CPolyG 
     cRdeSpecialDenominatorG Dt fuel a b c = (a, b, c, [CField.one]) := by
   rw [cRdeSpecialDenominatorG]
   simp only [hp, if_pos]
+
+/-- **`negn = 0` predicate for the special-denominator stage** `CSpecialDenomNoClearG Dt fuel b c`: the
+`ν_p`-shift exponent `negn = (−n).toNat` (`n = min(0, ν_p(c) − min(0, ν_p(b)))`) is `0`, i.e. `ν_p(c) ≥
+min(0, ν_p(b))` — the special-denominator reconstruction power `h₁ = pⁿᵉᵍⁿ` is trivial (`[1]`), the
+validated hyperexp sub-regime. -/
+def CSpecialDenomNoClearG [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) : Prop :=
+  min (0 : ℤ) ((cValuationG fuel (cSpecialPolyG Dt fuel) c : ℤ)
+    - min 0 (cValuationG fuel (cSpecialPolyG Dt fuel) b : ℤ)) = 0
+
+omit [CFieldSpec α] [CDiffFieldSpec α] in
+/-- **The special-denominator reconstruction power is trivial in the `negn = 0` sub-regime**: under
+`CSpecialDenomNoClearG` (and a non-constant `p`), the special-denominator stage returns `h₁ = [CField.one]`
+(`pⁿᵉᵍⁿ = p⁰`), so the reconstruction `ynum = Q·h₁` carries no `p`-power. -/
+theorem cRdeSpecialDenominatorG_h1_eq_one_of_noClear [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (a b c : CPolyG α) (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hn : CSpecialDenomNoClearG Dt fuel b c) :
+    (cRdeSpecialDenominatorG Dt fuel a b c).2.2.2 = [CField.one] := by
+  rw [cRdeSpecialDenominatorG]
+  simp only [if_neg hp]
+  rw [CSpecialDenomNoClearG] at hn
+  -- `negn = (−n).toNat` with `n = 0`, so `h = cpowG p 0 = [1]`
+  show cpowG (cSpecialPolyG Dt fuel) (-(min 0 ((cValuationG fuel (cSpecialPolyG Dt fuel) c : ℤ)
+    - min 0 (cValuationG fuel (cSpecialPolyG Dt fuel) b : ℤ)))).toNat = [CField.one]
+  rw [hn]; rfl
+
+omit [CDiffFieldSpec α] in
+/-- **The special-denominator-cleared coefficients factor as `(·)·pᴺ` in the `negn = 0` sub-regime**
+(carrier-generic): under `CSpecialDenomNoClearG` and non-constant `p = cSpecialPolyG Dt fuel`, writing `N =
+max(max 0 (−ν_p b), −ν_p c)`, the three cleared coefficients read through `toPolyG` as `ā = a·pᴺ`, `b̄ = b·pᴺ`
+(the `ν_p`-correction `n·a·Dp/p` vanishes since `n = 0`), `c̄ = c·pᴺ`. The structural input to the `negn = 0`
+special-denominator discharge. -/
+theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (a b c : CPolyG α) (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hn : CSpecialDenomNoClearG Dt fuel b c) :
+    let pN : CPolyG α := cpowG (cSpecialPolyG Dt fuel)
+      (max (max 0 (-(cValuationG fuel (cSpecialPolyG Dt fuel) b : ℤ)))
+        (-(cValuationG fuel (cSpecialPolyG Dt fuel) c : ℤ))).toNat
+    toPolyG (cRdeSpecialDenominatorG Dt fuel a b c).1 = toPolyG a * toPolyG pN
+    ∧ toPolyG (cRdeSpecialDenominatorG Dt fuel a b c).2.1 = toPolyG b * toPolyG pN
+    ∧ toPolyG (cRdeSpecialDenominatorG Dt fuel a b c).2.2.1 = toPolyG c * toPolyG pN := by
+  intro pN
+  rw [CSpecialDenomNoClearG] at hn
+  -- with `n = 0`: `N = max(max 0 (−nb), 0 − nc) = max(max 0 (−nb), −nc)`, `Nminusn = N`, `negn = 0`.
+  have hbterm0 : CFieldSpec.toK (CField.neg (CField.zero : α)) = 0 := by
+    rw [CFieldSpec.toK_neg, CFieldSpec.toK_zero, neg_zero]
+  refine ⟨?_, ?_, ?_⟩
+  · rw [cRdeSpecialDenominatorG]
+    simp only [if_neg hp, hn, toPolyG_cmulG, zero_sub]
+    rfl
+  · rw [cRdeSpecialDenominatorG]
+    simp only [if_neg hp, hn, neg_zero, Int.toNat_zero, cnatCastG, toPolyG_cmulG, toPolyG_caddG,
+      toPolyG_cscaleG, hbterm0, map_zero, zero_mul, add_zero, zero_sub]
+    rfl
+  · rw [cRdeSpecialDenominatorG]
+    simp only [if_neg hp, hn, sub_zero, toPolyG_cmulG, zero_sub]
+    rfl
 
 /-! ### ★ THE CAPSTONE — the generic RDE oracle `cRischDEG` returns a cleared solution (primitive regime) -/
 
@@ -729,9 +914,29 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h
   cRischDEG_rdeCleared_qfunNZG Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
     hprim hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
 
+-- ★ `cValuationG` divides: `p^{ν_p(x)} ∣ x` (the §6.2 valuation `dvd` half), carrier-generic.
+example {α : Type*} [CField α] [CFieldSpec α] [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α) :
+    toPolyG p ^ (cValuationG fuel p x) ∣ toPolyG x :=
+  toPolyG_pow_cValuationG_dvd fuel p x
+
+-- ★ `cValuationG` is sharp: `¬ p^{ν_p(x)+1} ∣ x` for non-constant `p`, nonzero `x`, fuel strictly covering.
+example {α : Type*} [CField α] [CFieldSpec α] [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α)
+    (hp : cdegG p ≠ 0) (hx0 : toPolyG x ≠ 0) (hfuel : (cnormG x : List α).length < fuel) :
+    ¬ toPolyG p ^ (cValuationG fuel p x + 1) ∣ toPolyG x :=
+  cValuationG_sharp fuel p x hp hx0 hfuel
+
+-- ★ The special monomial polynomial divides its own monomial derivative (`Dp = E·p`, §6.2 premise).
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (hDt : toPolyG Dt ≠ 0)
+    (hdeg : (toPolyG Dt).natDegree ≤ fuel) (hreg : CSplitFactorFastGRegularQ Dt fuel Dt) :
+    toPolyG (cSpecialPolyG Dt fuel) ∣ toPolyG (cmonomialDeriv Dt (cSpecialPolyG Dt fuel)) :=
+  toPolyG_cSpecialPolyG_dvd_cmonomialDeriv Dt fuel hDt hdeg hreg
+
 /-! ### Axiom audit (the `QFunNZG ℚ` §6 RDE correctness rests only on the standard kernel axioms) -/
 
 #print axioms cSPDECleared_of_inputs_qfunNZG
 #print axioms cRischDEG_rdeCleared_qfunNZG
+#print axioms toPolyG_pow_cValuationG_dvd
+#print axioms cValuationG_sharp
+#print axioms toPolyG_cSpecialPolyG_dvd_cmonomialDeriv
 
 end DeepWiki.SymbolicIntegration

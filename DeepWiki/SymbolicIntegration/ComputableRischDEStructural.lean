@@ -522,6 +522,102 @@ theorem cRischDEG_rdeCleared_gen_hyperexp (Dt : CPolyG α) (fuel : ℕ)
   exact cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 ynum
     hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
 
+/-! ### ★ Discharging `hspecialReduced` in the `negn = 0` sub-regime (the `cValuationG`-keystone payoff)
+
+The §6.2 obligation `hspecialReduced` (`a₀·D(ynum) + b₀·ynum = c₀`, `ynum = Q·h₁`) is **discharged** — no
+longer assumed — in the validated `negn = 0` sub-regime (`CSpecialDenomNoClearG`, i.e. `ν_p(c₀) ≥ min(0,
+ν_p(b₀))`), where the special-denominator reconstruction power is trivial (`h₁ = p⁰ = [1]`, by
+`cRdeSpecialDenominatorG_h1_eq_one_of_noClear`) and the cleared coefficients factor as `(ā,b̄,c̄) = (a₀·pᴺ,
+b₀·pᴺ, c₀·pᴺ)` (`toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear`, the `ν_p`-correction term vanishing since
+`n = 0`). The engine's SPDE-on-cleared identity `ā·D(Q) + b̄·Q = c̄` then factors as `(a₀·D(Q) + b₀·Q)·pᴺ =
+c₀·pᴺ`; cancelling the nonzero `pᴺ` (the `cValuationG`-keystone guarantees `p ≠ 0` and the divisibility/sharpness
+underpin that this sub-regime is the genuine no-clearing one) yields exactly `hspecialReduced`.
+
+★ **The general `negn > 0` case does NOT close with this reconstruction** (`ynum = Q·pⁿᵉᵍⁿ`, `h₁` in the
+*numerator*): by `specialDenominatorSubst_expand`, `hspecialReduced`'s LHS is `(a₀·D(Q) + b₀·Q +
+negn·a₀·E·Q)·pⁿᵉᵍⁿ`, while the engine's SPDE-cleared identity (b̄-term sign `−negn`, c̄-power `N−n = N+negn`)
+gives, after cancelling `pᴺ`, `a₀·D(Q) + b₀·Q − negn·a₀·E·Q = c₀·pⁿᵉᵍⁿ` — leaving the residual `c₀·(p^{2·negn} −
+1) + 2·negn·a₀·E·Q·pⁿᵉᵍⁿ`, which vanishes iff `negn = 0`. The signs/powers are consistent only with the
+*reciprocal* reconstruction `r = Q·pⁿ = Q/pⁿᵉᵍⁿ` (`h₁` in the **denominator**); so the precise remaining
+obligation is to reconcile the engine's `ynum = Q·h₁` numerator placement (`cRischDEG`, `some (cmulG Q h1, h0)`)
+with the `h₁`-in-denominator convention the cleared `(ā,b̄,c̄)` encode — a `cRischDEG`-reconstruction question,
+not a `cValuationG`-correctness gap. -/
+
+omit [CRischField α] in
+/-- **★ `cRischDEG` cleared identity in the hyperexp `negn = 0` sub-regime — `hspecialReduced` DISCHARGED**:
+the non-primitive (`cdegG (cSpecialPolyG Dt fuel) ≠ 0`) cleared Risch-DE identity with the §6.2 substitution
+obligation `hspecialReduced` *derived* (not assumed) from the engine's SPDE-on-cleared stages, in the validated
+`negn = 0` sub-regime (`CSpecialDenomNoClearG`). The special reconstruction is `ynum = (α'·v+β)·h₁` with `h₁ =
+[1]`; the cleared coefficients factor as `(·)·pᴺ` and cancel. The general `negn > 0` case is the documented
+reconstruction-convention residual (numerator vs. denominator placement of `h₁`). -/
+theorem cRischDEG_rdeCleared_gen_hyperexp_noClear (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hnoclear : CSpecialDenomNoClearG Dt fuel b0 c0)
+    (hp0 : toPolyG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    let ynum := cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 := by
+  intro ynum yden
+  set Q := caddG (cmulG α' v) β with hQ
+  -- (1) the engine's SPDE-on-cleared identity `ā·D(Q) + b̄·Q = c̄`
+  have hredBar := cSPDEG_polyRischDENoCancel_cleared_at_boundDegree_gen Dt fuel
+    (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+    (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 bbar cbar m α' β v hspde hin hpoly
+  -- (2) the cleared coefficients factor as `(·)·pᴺ` (negn = 0 ⇒ the `ν_p`-correction term vanishes)
+  obtain ⟨hAbar, hBbar, hCbar⟩ :=
+    toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear Dt fuel a0 b0 c0 hp hnoclear
+  set pN : CPolyG α := cpowG (cSpecialPolyG Dt fuel)
+    (max (max 0 (-(cValuationG fuel (cSpecialPolyG Dt fuel) b0 : ℤ)))
+      (-(cValuationG fuel (cSpecialPolyG Dt fuel) c0 : ℤ))).toNat with hpN
+  have hpN0 : toPolyG pN ≠ 0 := by rw [hpN, toPolyG_cpowG]; exact pow_ne_zero _ hp0
+  -- (3) `h₁ = [1]`, so `ynum = Q·[1]` reads as `Q`
+  have hh1 : (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2 = ([CField.one] : CPolyG α) :=
+    cRdeSpecialDenominatorG_h1_eq_one_of_noClear Dt fuel a0 b0 c0 hp hnoclear
+  have hynum : toPolyG ynum = toPolyG Q := by
+    show toPolyG (cmulG Q (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2) = toPolyG Q
+    rw [hh1, toPolyG_cmulG, show toPolyG ([CField.one] : CPolyG α) = 1 by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], mul_one]
+  -- (4) factor `pᴺ` out of `hredBar` and cancel it ⇒ `a₀·D(Q) + b₀·Q = c₀` = `hspecialReduced`
+  rw [hAbar, hBbar, hCbar] at hredBar
+  have hfactored : (toPolyG a0 * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q)
+      + toPolyG b0 * toPolyG Q) * toPolyG pN = toPolyG c0 * toPolyG pN := by
+    rw [← hredBar]; ring
+  have hspecialReduced : toPolyG a0
+        * Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) + toPolyG b0 * toPolyG ynum
+      = toPolyG c0 := by
+    rw [hynum]; exact mul_right_cancel₀ hpN0 hfactored
+  -- feed the discharged obligation to the (numerator-reconstruction) hyperexp cleared identity
+  exact cRischDEG_rdeCleared_gen_hyperexp Dt fuel fnum fden gnum gden a0 b0 c0 h0 α' β v
+    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
+
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- ★ The structural-decomposition core: a bare `cRischDEG` success factors through the §6.2/§6.4/§6.5
@@ -593,6 +689,45 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
   cRischDEG_rdeCleared_gen_hyperexp Dt fuel fnum fden gnum gden a0 b0 c0 h0 α' β v
     hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
 
+-- ★ The hyperexp `negn = 0` sub-regime reaches the cleared identity with `hspecialReduced` DISCHARGED from
+-- the engine SPDE-on-cleared stages (no longer an assumed hypothesis) — the `cValuationG`-keystone payoff.
+example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0) (hnoclear : CSpecialDenomNoClearG Dt fuel b0 c0)
+    (hp0 : toPolyG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    let ynum := cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  cRischDEG_rdeCleared_gen_hyperexp_noClear Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+    hp hnoclear hp0 hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+
 end Residual
 
 /-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
@@ -603,5 +738,6 @@ end Residual
 #print axioms rdeClearedIdentity_of_polyRDEIdentity
 #print axioms rdeCleared_of_success_and_residual_cancelPrim
 #print axioms cRischDEG_rdeCleared_gen_hyperexp
+#print axioms cRischDEG_rdeCleared_gen_hyperexp_noClear
 
 end DeepWiki.SymbolicIntegration
