@@ -629,6 +629,212 @@ theorem toPolyG_residualFraction_proper_of_degree_le_one
   toPolyG_resNum_proper a d gden _ haProper
     (toPolyG_gprimeNum_proper_of_degree_le_one Dt gnum gden hden hDt hgproper)
 
+/-! ### ★ The INNER-LOOP `g`-properness — each per-factor `gloc` contribution is proper
+
+The outer Hermite `g`-fold (`foldl_guarded_fracAddG_proper`) needs **each non-skipped squarefree-factor
+contribution `gloc` proper** (`deg gloc.1 < deg gloc.2`). That `gloc` is the *accumulated rational part*
+of `cHermiteReduceTowerInner Dt fuel v u (i−1) a (0/1)` — itself a `fracAddG`-style fold of per-power
+summands `b/vʲ`, seeded at `0/1`. Each per-power summand has numerator `b = (cdiophantineG …).1` (the
+Bézout cofactor, the **keystone** `cdiophantineG_fst_degree_lt`: `deg b < deg v`) over denominator
+`Vpow = vʲ` (so `deg b < deg v ≤ deg vʲ` for `v ≠ 0`). A fuel-counter induction over the inner loop —
+seeded proper, each step a proper `fracAddG` (`toPolyG_fracAddG_proper` with `gloc = (b, vʲ)`) — gives the
+inner `g` proper, taking the per-step keystone (over the evolving numerator `a`, hence ∀-quantified) as
+the hypothesis exactly as the keystone supplies it. -/
+
+/-- **A reduced cofactor is proper for a positive power of the modulus** (abstract, over a field): from
+`deg b < deg v` and `v ≠ 0`, `deg b < deg (v^(n+1))`. The power degree `deg(v^(n+1)) = (n+1)•deg v ≥ deg
+v` (since `deg v ≥ 0` for `v ≠ 0`), so the per-step bound `deg b < deg v` lifts to the per-power
+denominator `vʲ`. The reusable degree core of each inner-Hermite summand `b/vʲ` being proper. -/
+theorem degree_lt_pow_succ_of_degree_lt {K : Type*} [Field K] {b v : K[X]} (n : ℕ)
+    (hbv : b.degree < v.degree) (hv : v ≠ 0) :
+    b.degree < (v ^ (n + 1)).degree := by
+  refine lt_of_lt_of_le hbv ?_
+  rw [Polynomial.degree_pow]
+  calc v.degree = (1 : ℕ) • v.degree := (one_smul _ _).symm
+    _ ≤ (n + 1) • v.degree := by
+        apply nsmul_le_nsmul_left _ (by omega)
+        rw [Polynomial.degree_eq_natDegree hv]; exact_mod_cast Nat.zero_le _
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **One inner-Hermite summand `b/vʲ` is proper** (engine form): the per-power contribution `(b, cpowG v
+(j+1))` is proper — `deg b < deg(v^(j+1))` — given the Bézout-cofactor bound `deg b < deg v` (the
+keystone `cdiophantineG_fst_degree_lt`) and `v ≠ 0`. `toPolyG`-transport of `degree_lt_pow_succ_of_degree_lt`
+through `toPolyG_cpowG`. The per-power summand the inner-loop fold-induction threads. -/
+theorem toPolyG_inner_summand_proper (b v : CPolyG α) (j : ℕ)
+    (hbv : (toPolyG b).degree < (toPolyG v).degree) (hv : toPolyG v ≠ 0) :
+    (toPolyG b).degree < (toPolyG (cpowG v (j + 1))).degree := by
+  rw [toPolyG_cpowG]
+  exact degree_lt_pow_succ_of_degree_lt j hbv hv
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ The inner Hermite loop's accumulated `g` is proper** — `deg (cHermiteReduceTowerInner Dt fuel v u
+j a g).1.1 < deg (…).1.2` for the inner loop over a squarefree factor `v`, **given** the input
+accumulator `g` proper (`hg`), `v ≠ 0` (`hv`), and the per-step Bézout keystone `hb`: for every
+right-hand side `rhs`, the emitted cofactor `(cdiophantineG fuel (u·Dv) v rhs).1` is proper for `v`
+(`deg < deg v`, exactly `cdiophantineG_fst_degree_lt`). Fuel-counter induction generalizing the running
+numerator `a` and accumulator `g`: each step is `g + b/vʲ` (`toPolyG_fracAddG_proper` with the per-power
+summand proper by `hb` + `toPolyG_inner_summand_proper`). The inner half of the assembled `g`'s
+properness. -/
+theorem cHermiteReduceTowerInner_g_proper (Dt : CPolyG α) (fuel : ℕ) (v u : CPolyG α)
+    (hv : toPolyG v ≠ 0)
+    (hb : ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v rhs).1).degree
+        < (toPolyG v).degree) :
+    ∀ (j : ℕ) (a : CPolyG α) (g : CPolyG α × CPolyG α),
+      (toPolyG g.1).degree < (toPolyG g.2).degree →
+      (toPolyG (cHermiteReduceTowerInner Dt fuel v u j a g).1.1).degree
+        < (toPolyG (cHermiteReduceTowerInner Dt fuel v u j a g).1.2).degree := by
+  intro j
+  induction j with
+  | zero => intro a g hg; exact hg
+  | succ j ih =>
+    intro a g hg
+    rw [cHermiteReduceTowerInner]
+    -- the step's summand `(b, cpowG v (j+1))` is proper, so the `fracAddG` step preserves properness.
+    set rhs := cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a with hrhs
+    set b := (cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v rhs).1 with hbdef
+    have hbproper : (toPolyG b).degree
+        < (toPolyG (cpowG v (j + 1))).degree :=
+      toPolyG_inner_summand_proper b v j (hb rhs) hv
+    have hstep : (toPolyG (caddG (cmulG g.1 (cpowG v (j + 1))) (cmulG b g.2))).degree
+        < (toPolyG (cmulG g.2 (cpowG v (j + 1)))).degree :=
+      toPolyG_fracAddG_proper (gAcc := g) (gloc := (b, cpowG v (j + 1))) hg hbproper
+    exact ih _ _ hstep
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The Hermite seed pair `([0], [1])` is proper** under `toPolyG`: `deg (toPolyG [CField.zero]) < deg
+(toPolyG [CField.one])` (`⊥ < 0`). `toPolyG [CField.zero] = 0` (degree `⊥`) and `toPolyG [CField.one] = 1`
+(degree `0`); `⊥ < 0`. The properness base of both Hermite folds. -/
+theorem toPolyG_seedPair_proper :
+    (toPolyG ([CField.zero] : CPolyG α)).degree < (toPolyG ([CField.one] : CPolyG α)).degree := by
+  have hzero : toPolyG ([CField.zero] : CPolyG α) = 0 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero]
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]
+  rw [hzero, hone, Polynomial.degree_zero, Polynomial.degree_one]
+  exact bot_lt_iff_ne_bot.mpr (by simp)
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ Each per-factor `gloc` contribution is proper** — for a squarefree factor `vi` of the outer
+Hermite fold, the inner-loop output `(cHermiteReduceTowerInner Dt fuel vi u j a ([0],[1])).1` is proper
+(`deg .1 < deg .2`), given `vi ≠ 0` (`hv`) and the per-step Bézout keystone `hb` (`∀ rhs, deg
+(cdiophantineG fuel (u·Dvi) vi rhs).1 < deg vi`, exactly `cdiophantineG_fst_degree_lt`). The inner-loop
+properness `cHermiteReduceTowerInner_g_proper` from the proper seed `([0],[1])` (`toPolyG_seedPair_proper`).
+The `∀ gloc`-contribution input the outer fold (`foldl_guarded_fracAddG_proper`) wants. -/
+theorem cHermiteReduceTowerInner_gloc_proper (Dt : CPolyG α) (fuel : ℕ) (vi u : CPolyG α) (j : ℕ)
+    (a : CPolyG α) (hv : toPolyG vi ≠ 0)
+    (hb : ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel (cmulG u (cmonomialDeriv Dt vi)) vi rhs).1).degree
+        < (toPolyG vi).degree) :
+    (toPolyG (cHermiteReduceTowerInner Dt fuel vi u j a ([CField.zero], [CField.one])).1.1).degree
+      < (toPolyG (cHermiteReduceTowerInner Dt fuel vi u j a ([CField.zero], [CField.one])).1.2).degree :=
+  cHermiteReduceTowerInner_g_proper Dt fuel vi u hv hb j a ([CField.zero], [CField.one])
+    toPolyG_seedPair_proper
+
+/-! ### ★★ The assembled `g` is proper — closing the outer Hermite fold
+
+The engine's outer `g`-fold (`cHermiteReduceTowerG`, `factors.zipIdx.foldl` with the `i ≤ 1` skip guard)
+combines each squarefree factor's inner-loop contribution `gloc` by `fracAddG`. Feeding the per-factor
+`gloc`-properness (`cHermiteReduceTowerInner_gloc_proper`) into `foldl_guarded_fracAddG_proper` from the
+proper seed `([0],[1])` gives the assembled `g = gnum/gden` proper — the last open piece of `hproper` for
+`δ(t) ≤ 1`. The fold is instantiated with `β = CPolyG α × ℕ`, `skip (vi, idx) := idx + 1 ≤ 1`, and `glocOf
+(vi, idx)` the factor's inner-loop output `.1`. -/
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ The assembled Hermite rational part `g` is proper** (outer fold) — the engine's `g`-fold
+`factors.zipIdx.foldl (if idx+1 ≤ 1 then gAcc else gAcc + gloc) ([0],[1])` (the `cHermiteReduceTowerG`
+rational-part assembly) is proper, `deg g.1 < deg g.2`, **given** for each factor `(vi, idx) ∈
+factors.zipIdx` that is *not* skipped the factor is nonzero (`hv`) and the per-step Bézout keystone holds
+(`hb`, exactly `cdiophantineG_fst_degree_lt` over the evolving numerator). `foldl_guarded_fracAddG_proper`
+with `glocOf`/`skip` the engine's, the proper seed `toPolyG_seedPair_proper`, and each non-skipped `gloc`
+proper by `cHermiteReduceTowerInner_gloc_proper`. This discharges the "g proper" hypothesis of the
+`hproper`-for-`δ(t) ≤ 1` chain. -/
+theorem cHermiteReduceTowerG_g_proper (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
+    (factors : List (CPolyG α))
+    (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel
+          (cmulG (cdivG fuel d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+        < (toPolyG p.1).degree) :
+    (toPolyG (factors.zipIdx.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivG fuel d Vi_pow
+            let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+              ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+        ([CField.zero], [CField.one])).1).degree
+      < (toPolyG (factors.zipIdx.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivG fuel d Vi_pow
+            let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+              ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+        ([CField.zero], [CField.one])).2).degree :=
+  foldl_guarded_fracAddG_proper
+    (glocOf := fun (p : CPolyG α × ℕ) =>
+      (cHermiteReduceTowerInner Dt fuel p.1 (cdivG fuel d (cpowG p.1 (p.2 + 1))) (p.2 + 1 - 1) a
+        ([CField.zero], [CField.one])).1)
+    (skip := fun (p : CPolyG α × ℕ) => p.2 + 1 ≤ 1)
+    factors.zipIdx ([CField.zero], [CField.one]) toPolyG_seedPair_proper
+    (fun p hp hskip => cHermiteReduceTowerInner_gloc_proper Dt fuel p.1
+      (cdivG fuel d (cpowG p.1 (p.2 + 1))) (p.2 + 1 - 1) a (hv p hp hskip) (hb p hp hskip))
+
+/-! ### ★★★ `hproper` for `δ(t) ≤ 1` — fully closed modulo only input-properness
+
+Composing the now-discharged **`g` proper** (`cHermiteReduceTowerG_g_proper`) with the residual-fraction
+step (`toPolyG_residualFraction_proper_of_degree_le_one`) closes the residual `deg resNum < deg resDen`
+**unconditionally for `δ(t) ≤ 1`** from ONLY the input properness `deg a < deg d` (and the per-factor
+keystone/nonzero hypotheses, themselves `cdiophantineG_fst_degree_lt`). The `g`-proper hypothesis is gone:
+`gden ≠ 0` follows from `g` proper (`ne_zero_of_degree_gt`). This is exactly the `hresProper` feeding
+`cHermiteReduceTowerG_leftover_proper_of_residual`, so it removes the "g proper" premise from the whole
+`hproper`-for-`δ(t) ≤ 1` chain. -/
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★★★ The residual `a/d − D(g)` is proper for `δ(t) ≤ 1`, with `g` proper DISCHARGED** — for the
+engine's assembled rational part `g = (gnum, gden)` (the `cHermiteReduceTowerG` `factors.zipIdx.foldl`),
+the residual `resNum = a·gden² − d·(D(gnum)·gden − gnum·D(gden))`, `resDen = d·gden²` is proper (`deg resNum
+< deg resDen`), given ONLY the input `a/d` proper (`haProper`), `deg Dt ≤ 1` (`hDt`), and the per-factor
+keystone/nonzero hypotheses (`hv`/`hb`, exactly `cdiophantineG_fst_degree_lt`). The assembled `g`'s
+properness is proven internally by `cHermiteReduceTowerG_g_proper` (no longer a hypothesis); `gden ≠ 0`
+follows from it (`ne_zero_of_degree_gt`). This closes `hproper` for `δ(t) ≤ 1` from input-properness alone
+— the last open inner-loop piece removed. -/
+theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
+    (factors : List (CPolyG α)) (hDt : (toPolyG Dt).natDegree ≤ 1)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree)
+    (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel
+          (cmulG (cdivG fuel d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+        < (toPolyG p.1).degree) :
+    let g := factors.zipIdx.foldl
+      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        let i := idx + 1
+        if i ≤ 1 then gAcc
+        else
+          let Vi_pow := cpowG vi i
+          let u := cdivG fuel d Vi_pow
+          let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+            ([CField.zero], [CField.one])).1
+          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+      ([CField.zero], [CField.one])
+    (toPolyG (csubG (cmulG a (cmulG g.2 g.2))
+        (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
+          (cmulG g.1 (cmonomialDeriv Dt g.2)))))).degree
+      < (toPolyG (cmulG d (cmulG g.2 g.2))).degree := by
+  intro g
+  have hgproper : (toPolyG g.1).degree < (toPolyG g.2).degree :=
+    cHermiteReduceTowerG_g_proper Dt fuel a d factors hv hb
+  exact toPolyG_residualFraction_proper_of_degree_le_one Dt a d g.1 g.2
+    (Polynomial.ne_zero_of_degree_gt hgproper) hDt haProper hgproper
+
 /-! ### ★★ The normal-part assembly through the engine's own `checkIdentityG` certificate
 
 The full normal-part one-shot `checkIdentityG_cIntegrateReducedG` needs the Hermite half (above) **and**
@@ -788,6 +994,86 @@ example {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Pro
                 cmulG gAcc.2 (glocOf b).2)) s).2).degree :=
   foldl_guarded_fracAddG_proper glocOf skip xs s hs hmem
 
+-- ★ THE INNER-LOOP `g` PROPER: `cHermiteReduceTowerInner`'s accumulated `g` is proper, given the input
+-- accumulator proper, `v ≠ 0`, and the per-step Bézout keystone (`deg b < deg v` for every `rhs`).
+example (Dt : CPolyG α) (fuel : ℕ) (v u : CPolyG α) (hv : toPolyG v ≠ 0)
+    (hb : ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel (cmulG u (cmonomialDeriv Dt v)) v rhs).1).degree
+        < (toPolyG v).degree)
+    (j : ℕ) (a : CPolyG α) (g : CPolyG α × CPolyG α)
+    (hg : (toPolyG g.1).degree < (toPolyG g.2).degree) :
+    (toPolyG (cHermiteReduceTowerInner Dt fuel v u j a g).1.1).degree
+      < (toPolyG (cHermiteReduceTowerInner Dt fuel v u j a g).1.2).degree :=
+  cHermiteReduceTowerInner_g_proper Dt fuel v u hv hb j a g hg
+
+-- ★ EACH PER-FACTOR `gloc` PROPER: a squarefree factor's inner-loop output (from the seed `0/1`) is proper,
+-- given `vi ≠ 0` and the per-step keystone — the `∀ gloc` input the outer fold wants.
+example (Dt : CPolyG α) (fuel : ℕ) (vi u : CPolyG α) (j : ℕ) (a : CPolyG α) (hv : toPolyG vi ≠ 0)
+    (hb : ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel (cmulG u (cmonomialDeriv Dt vi)) vi rhs).1).degree
+        < (toPolyG vi).degree) :
+    (toPolyG (cHermiteReduceTowerInner Dt fuel vi u j a ([CField.zero], [CField.one])).1.1).degree
+      < (toPolyG (cHermiteReduceTowerInner Dt fuel vi u j a ([CField.zero], [CField.one])).1.2).degree :=
+  cHermiteReduceTowerInner_gloc_proper Dt fuel vi u j a hv hb
+
+-- ★★ THE ASSEMBLED `g` PROPER (outer fold): the engine's `cHermiteReduceTowerG` `g`-fold is proper, given
+-- each non-skipped factor is nonzero + the per-step keystone — discharging the "g proper" hypothesis.
+example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (factors : List (CPolyG α))
+    (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel
+          (cmulG (cdivG fuel d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+        < (toPolyG p.1).degree) :
+    (toPolyG (factors.zipIdx.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivG fuel d Vi_pow
+            let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+              ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+        ([CField.zero], [CField.one])).1).degree
+      < (toPolyG (factors.zipIdx.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivG fuel d Vi_pow
+            let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+              ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+        ([CField.zero], [CField.one])).2).degree :=
+  cHermiteReduceTowerG_g_proper Dt fuel a d factors hv hb
+
+-- ★★★ `hproper` FOR `δ(t) ≤ 1`, `g` PROPER DISCHARGED: the residual `a/d − D(g)` is proper from ONLY input
+-- properness (`deg a < deg d`), `deg Dt ≤ 1`, and the per-factor keystone/nonzero — `g` proper is internal.
+example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (factors : List (CPolyG α))
+    (hDt : (toPolyG Dt).natDegree ≤ 1) (haProper : (toPolyG a).degree < (toPolyG d).degree)
+    (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+      (toPolyG (cdiophantineG fuel
+          (cmulG (cdivG fuel d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+        < (toPolyG p.1).degree) :
+    let g := factors.zipIdx.foldl
+      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+        let i := idx + 1
+        if i ≤ 1 then gAcc
+        else
+          let Vi_pow := cpowG vi i
+          let u := cdivG fuel d Vi_pow
+          let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a
+            ([CField.zero], [CField.one])).1
+          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+      ([CField.zero], [CField.one])
+    (toPolyG (csubG (cmulG a (cmulG g.2 g.2))
+        (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
+          (cmulG g.1 (cmonomialDeriv Dt g.2)))))).degree
+      < (toPolyG (cmulG d (cmulG g.2 g.2))).degree :=
+  cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt fuel a d factors hDt haProper hv hb
+
 -- ★ THE DERIVATIVE-DEGREE STEP (D(g) proper, `deg Dt ≤ 1`): a proper `g = gnum/gden` has proper derivative
 -- numerator `D(gnum)·gden − gnum·D(gden)` for `gden²` when `deg Dt ≤ 1` (base rational / exp / log).
 example (Dt gnum gden : CPolyG α) (hM : toPolyG gden ≠ 0) (hDt : (toPolyG Dt).natDegree ≤ 1)
@@ -865,6 +1151,13 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ)) (c
 #print axioms toPolyG_gprimeNum_proper_of_degree_le_one
 #print axioms toPolyG_resNum_proper
 #print axioms toPolyG_residualFraction_proper_of_degree_le_one
+#print axioms degree_lt_pow_succ_of_degree_lt
+#print axioms toPolyG_inner_summand_proper
+#print axioms cHermiteReduceTowerInner_g_proper
+#print axioms toPolyG_seedPair_proper
+#print axioms cHermiteReduceTowerInner_gloc_proper
+#print axioms cHermiteReduceTowerG_g_proper
+#print axioms cHermiteReduceTowerG_residual_proper_of_degree_le_one
 #print axioms cHermiteReduceTowerG_telescope
 #print axioms cHermiteReduceTowerG_telescope_seed
 #print axioms field_identity_of_cIntegrateReducedG_of_checkIdentityG
