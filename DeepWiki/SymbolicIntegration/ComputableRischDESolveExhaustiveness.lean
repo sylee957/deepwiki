@@ -484,6 +484,23 @@ theorem specialDenominatorSubst_cleared_inverse {R : Type*} [CommRing R] [NoZero
   rw [hexp] at hcleared
   exact mul_right_cancel₀ (pow_ne_zero k hp) hcleared
 
+/-- **★ The reverse special glue in the `negn = 0` (no-clear) sub-regime — `νₚ`-divisibility VACUOUS**
+(`specialDenominatorSubst_cleared_inverse_noClear`): the `k = 0` specialization of
+`specialDenominatorSubst_cleared_inverse`, where the §6.2 special-cleared equation is at power `p⁰ = 1`. Since
+`negn = 0` for ALL inputs (`cSpecialDenomNoClearG_always`), the §6.2 reconstruction power is `pⁿᵉᵍⁿ = p⁰ = 1`
+(`cRdeSpecialDenominatorG_h1_eq_one_always`), so the `νₚ`-bookkeeping divisibility `pⁿᵉᵍⁿ ∣ Q` is the trivial
+`1 ∣ Q` (`one_dvd`): a *special-cleared* solution `Q` is **already** in reconstructed form `Q = Q·p⁰ = Q`,
+and from `a·D(Q·p⁰) + b·(Q·p⁰) = c·p⁰` the reduced equation `a·D(Q) + b·Q = c` carries NO `k·a·E·Q` (here
+`0·a·E·Q`) correction term. The documented `negn > 0` non-primitive continuation is thereby vacuous — the
+hyperexp/hypertangent special-clearing reduces to the same `(a, b, c)`-shape as the primitive regime. -/
+theorem specialDenominatorSubst_cleared_inverse_noClear {R : Type*} [CommRing R] [NoZeroDivisors R]
+    (D : Derivation ℤ R R) (a b c p E Q : R) (hp : p ≠ 0) (hDp : D p = E * p)
+    (hcleared : a * D (Q * p ^ 0) + b * (Q * p ^ 0) = c * p ^ 0) :
+    a * D Q + b * Q = c := by
+  -- the reconstructed form `Q = Q·p⁰` needs only the trivial `1 ∣ Q`; the `0·a·E·Q` correction vanishes
+  have h := specialDenominatorSubst_cleared_inverse D a b c p E Q 0 hp hDp hcleared
+  simpa using h
+
 end Preservation
 
 /-! ## ★ The §6.4 SPDE degree-descent recursion assembly (the `hspde` structural heart)
@@ -820,6 +837,20 @@ def CSPDEGStructG [CFracGcdCore α] (Dt : CPolyG α) :
                ∧ cgcdTerminatesG fuel bd ad
                ∧ ∀ c' : CPolyG α, CSPDEGStructG Dt fuel ad (caddG bd (cmonomialDeriv Dt ad)) c'
                    (n - (cdegG ad : ℤ)))
+
+omit [CDiffFieldSpec α] in
+/-- **★ The degree-descent ladder bottoms out at `n < 0` — fuel sufficiency at the bottom**
+(`cSPDEGStructG_of_neg`): once the bound `n` has descended below `0`, `CSPDEGStructG Dt (fuel + 1) a b c n`
+holds **unconditionally** (the `n < 0 ↦ True` short-circuit), needing NO further fuel. Each non-base peel
+strictly drops `n` by `cdegG (a/g) ≥ 1`, so the descent reaches this base in `≤ n + 1` steps; the residual
+`fuel = 0 ↦ False` base is therefore the ONLY genuine fuel obligation, and it is unreachable once `n < 0`.
+The cheap, honest fuel-sufficiency fact (the full per-input descent needs the engine's per-level gcd data,
+which `CSPDEGStructG` itself bundles — or the fuel-free `cSPDEGWf` engine, which discharges it by
+construction). -/
+theorem cSPDEGStructG_of_neg [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (n : ℤ)
+    (hn : n < 0) :
+    CSPDEGStructG Dt (fuel + 1) a b c n := by
+  rw [CSPDEGStructG, if_pos hn]; trivial
 
 /-- **★ The complete §6.4 degree-descent discharge MODULO FUEL SUFFICIENCY**
 (`cSPDEGSolvableInputs_of_structG`): from the unconditional structural data `CSPDEGStructG` and a bounded
@@ -1555,6 +1586,19 @@ example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R) (a 
     a * D q + b * q + (k : R) * (a * E) * q = c :=
   specialDenominatorSubst_cleared_inverse D a b c p E q k hp hDp hcleared
 
+-- ★ The `negn = 0` (no-clear) reverse special glue: `pⁿᵉᵍⁿ ∣ Q` is the trivial `1 ∣ Q`, no correction term.
+example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R) (a b c p E Q : R)
+    (hp : p ≠ 0) (hDp : D p = E * p)
+    (hcleared : a * D (Q * p ^ 0) + b * (Q * p ^ 0) = c * p ^ 0) :
+    a * D Q + b * Q = c :=
+  specialDenominatorSubst_cleared_inverse_noClear D a b c p E Q hp hDp hcleared
+
+-- ★ The degree-descent ladder bottoms out at `n < 0`: `CSPDEGStructG` holds with no further fuel.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (n : ℤ) (hn : n < 0) :
+    CSPDEGStructG Dt (fuel + 1) a b c n :=
+  cSPDEGStructG_of_neg Dt fuel a b c n hn
+
 -- ★ The bridge produces the EXACT `hspde` field type of `RischDESolveExhaustiveResidual`, used as that field.
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
     [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
@@ -1619,10 +1663,12 @@ compiler) -/
 #print axioms cisZeroG_of_isReducedRdeSolK_neg
 #print axioms cSPDEGSolvableInputs_of_structG
 #print axioms cSPDEG_isSome_of_structG_bounded
+#print axioms cSPDEGStructG_of_neg
 #print axioms hsolve_of_exhaustiveResidual
 #print axioms rischDEInnerCompleteness_of_residuals
 #print axioms rdeNormalDenominator_glue_inverse
 #print axioms specialDenominatorSubst_cleared_inverse
+#print axioms specialDenominatorSubst_cleared_inverse_noClear
 #print axioms isReducedRdeSolK_of_isReducedRdeSol
 #print axioms isReducedRdeSol_of_cleared_normalized
 #print axioms exists_isReducedRdeSol_special_of_fractional

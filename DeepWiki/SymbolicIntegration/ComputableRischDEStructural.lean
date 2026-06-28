@@ -637,6 +637,18 @@ theorem cSpecialDenomNoClearG_always (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG
   have hnc : (0 : ℤ) ≤ (cValuationG fuel (cSpecialPolyG Dt fuel) c : ℤ) := Int.natCast_nonneg _
   omega
 
+omit [CFieldSpec α] [CDiffFieldSpec α] [CRischField α] in
+/-- **★ The special-denominator reconstruction power is trivial for ALL inputs** (`negn = 0` always):
+`(cRdeSpecialDenominatorG …).2.2.2 = pⁿᵉᵍⁿ = [CField.one]` unconditionally — composing
+`cSpecialDenomNoClearG_always` (`negn = 0` by `cValuationG`-`ℕ`-valuedness) with
+`cRdeSpecialDenominatorG_h1_eq_one_of_noClear`. In the non-constant-`p` (hyperexp/hypertangent) regime the
+reconstruction `ynum = Q·pⁿᵉᵍⁿ` carries NO `p`-power, so the §6.2 reverse special glue's `νₚ`-bookkeeping
+divisibility `pⁿᵉᵍⁿ ∣ Q` is the trivial `p⁰ = 1 ∣ Q` — the documented `negn > 0` continuation is vacuous. -/
+theorem cRdeSpecialDenominatorG_h1_eq_one_always (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α)
+    (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0) :
+    (cRdeSpecialDenominatorG Dt fuel a b c).2.2.2 = ([CField.one] : CPolyG α) :=
+  cRdeSpecialDenominatorG_h1_eq_one_of_noClear Dt fuel a b c hp (cSpecialDenomNoClearG_always Dt fuel b c)
+
 omit [CRischField α] in
 /-- **★ `cRischDEG` cleared identity in the hyperexp/CancelExp regime — UNCONDITIONAL**: the non-primitive
 (`cdegG (cSpecialPolyG Dt fuel) ≠ 0`) cleared Risch-DE identity with `hspecialReduced` *derived* from the
@@ -831,6 +843,11 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
   cRischDEG_rdeCleared_gen_hyperexp_cancel Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
     hp hp0 hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
 
+-- ★ The special-denominator reconstruction power is `[1]` for ALL inputs (the `νₚ`-divisibility is vacuous).
+example (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0) :
+    (cRdeSpecialDenominatorG Dt fuel a b c).2.2.2 = ([CField.one] : CPolyG α) :=
+  cRdeSpecialDenominatorG_h1_eq_one_always Dt fuel a b c hp
+
 end Residual
 
 /-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
@@ -843,6 +860,7 @@ end Residual
 #print axioms cRischDEG_rdeCleared_gen_hyperexp
 #print axioms cRischDEG_rdeCleared_gen_hyperexp_noClear
 #print axioms cSpecialDenomNoClearG_always
+#print axioms cRdeSpecialDenominatorG_h1_eq_one_always
 #print axioms cRischDEG_rdeCleared_gen_hyperexp_cancel
 
 end DeepWiki.SymbolicIntegration
