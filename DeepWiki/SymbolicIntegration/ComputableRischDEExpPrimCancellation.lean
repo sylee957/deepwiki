@@ -283,6 +283,122 @@ theorem rdeBoundExpPrimCancellation_of_logDerivativeBound (v a b c : K[X]) {N : 
   intro q hq ha0 hv hble heq
   exact expPrimCancellation_of_logDerivativeBound hq ha0 hv hble heq hbound
 
+/-! ### ★ Characterizing the oracle: when `ExpPrimLogDerivativeBound` is PROVABLE (no §5.12 oracle), and when
+it provably FAILS
+
+`ExpPrimLogDerivativeBound v a b N` is not a free-standing theorem — it is a base-field arithmetic *decision*
+(true for some configurations, false for others), which is exactly why it is the §5.12 parametric
+logarithmic-derivative oracle. The lemmas here pin that down precisely, turning the bare `Prop` into
+characterized content: the structural difference-of-solutions identity, a **proven** sufficient condition under
+which the bound holds outright (the generic hyperexponential case, no oracle needed), the existence of a bound
+in that case, the vacuous case, and a **proven non-theorem** marking the boundary (the primitive case where
+`−lc(b)/lc(a)` is a logarithmic derivative). -/
+
+omit [CharZero K] in
+/-- **★ The difference-of-solutions identity** (`logDeriv_eta_of_two_solutions`): if two degrees `m₁`, `m₂`
+both satisfy the δ ≤ 1 cancellation equation `−lc(b)/lc(a) = mᵢ·η + logDeriv zᵢ` (with `zᵢ ≠ 0`,
+`η = v.coeff 1`), then their difference times `η` is itself a logarithmic derivative:
+`(m₁ − m₂)·η = logDeriv (z₂ / z₁)`. The structural heart of the parametric log-derivative problem — distinct
+qualifying `m` exist **only** when some nonzero-integer multiple of `η` is a logarithmic derivative (the
+genuine §5.12 / §6.1 obstruction). Subtracting the two equations and folding by `logDeriv_div`. -/
+theorem logDeriv_eta_of_two_solutions {v a b : K[X]} {m₁ m₂ : ℕ} {z₁ z₂ : K}
+    (hz₁ : z₁ ≠ 0) (hz₂ : z₂ ≠ 0)
+    (h₁ : -(b.coeff a.natDegree) / a.leadingCoeff = (m₁ : K) * v.coeff 1 + Differential.logDeriv z₁)
+    (h₂ : -(b.coeff a.natDegree) / a.leadingCoeff = (m₂ : K) * v.coeff 1 + Differential.logDeriv z₂) :
+    ((m₁ : K) - (m₂ : K)) * v.coeff 1 = Differential.logDeriv (z₂ / z₁) := by
+  rw [Differential.logDeriv_div z₂ z₁ hz₂ hz₁]
+  have hcombine : (m₁ : K) * v.coeff 1 + Differential.logDeriv z₁
+      = (m₂ : K) * v.coeff 1 + Differential.logDeriv z₂ := h₁ ▸ h₂
+  linear_combination hcombine
+
+omit [CharZero K] in
+/-- **★ The bound is PROVABLE when `η` is not a torsion logarithmic derivative**
+(`expPrimLogDerivativeBound_of_eta_not_logDeriv`): if **no** nonzero-integer multiple of `η = v.coeff 1` is a
+logarithmic derivative of a nonzero base-field element (`∀ d ≠ 0, w ≠ 0, (d:K)·η ≠ logDeriv w`), then a known
+qualifying degree `m₀` (witness `z₀ ≠ 0`) is the bound: `ExpPrimLogDerivativeBound v a b m₀`. By
+`logDeriv_eta_of_two_solutions`, any other qualifying `m` would force `(m − m₀)·η = logDeriv (z₀/z)` — a
+nonzero-integer multiple of `η` as a logarithmic derivative, contradicting the hypothesis; so `m = m₀`. This
+**discharges the §5.12 oracle outright** in the generic hyperexponential regime — no parametric decision
+needed. -/
+theorem expPrimLogDerivativeBound_of_eta_not_logDeriv {v a b : K[X]} {m₀ : ℕ} {z₀ : K}
+    (hz₀ : z₀ ≠ 0)
+    (h₀ : -(b.coeff a.natDegree) / a.leadingCoeff = (m₀ : K) * v.coeff 1 + Differential.logDeriv z₀)
+    (hη : ∀ (d : ℤ) (w : K), d ≠ 0 → w ≠ 0 → (d : K) * v.coeff 1 ≠ Differential.logDeriv w) :
+    ExpPrimLogDerivativeBound v a b m₀ := by
+  intro m ⟨z, hz, hm⟩
+  by_contra hgt
+  have hne : (m : ℤ) - (m₀ : ℤ) ≠ 0 := by omega
+  have hkey : ((m : K) - (m₀ : K)) * v.coeff 1 = Differential.logDeriv (z₀ / z) :=
+    logDeriv_eta_of_two_solutions hz hz₀ hm h₀
+  refine hη ((m : ℤ) - (m₀ : ℤ)) (z₀ / z) hne (div_ne_zero hz₀ hz) ?_
+  push_cast
+  exact hkey
+
+omit [CharZero K] in
+/-- **The bound holds vacuously when the cancellation equation is unsolvable**
+(`expPrimLogDerivativeBound_of_no_solution`): if `−lc(b)/lc(a)` is `m·η + logDeriv z` for **no** `m` and
+nonzero `z`, then no degree qualifies and `ExpPrimLogDerivativeBound v a b 0` holds vacuously. The leading
+term then never cancels (the sharp top-coefficient bound carries the whole degree bound). -/
+theorem expPrimLogDerivativeBound_of_no_solution {v a b : K[X]}
+    (hno : ∀ (m : ℕ) (z : K), z ≠ 0 →
+      -(b.coeff a.natDegree) / a.leadingCoeff ≠ (m : K) * v.coeff 1 + Differential.logDeriv z) :
+    ExpPrimLogDerivativeBound v a b 0 := by
+  intro m ⟨z, hz, hm⟩
+  exact absurd hm (hno m z hz)
+
+omit [CharZero K] in
+/-- **★ A bound EXISTS whenever `η` is not a torsion logarithmic derivative**
+(`exists_expPrimLogDerivativeBound_of_eta_not_logDeriv`): if no nonzero-integer multiple of `η = v.coeff 1` is
+a logarithmic derivative, then `∃ N, ExpPrimLogDerivativeBound v a b N` — proven, no oracle. Either some
+degree qualifies (the unique one is the bound, via `expPrimLogDerivativeBound_of_eta_not_logDeriv`) or none
+does (`N = 0`, vacuous). This is the precise sufficient condition under which the §6.3 exp/primitive
+cancellation residual closes with **no** §5.12 parametric decision — the generic hyperexponential case. -/
+theorem exists_expPrimLogDerivativeBound_of_eta_not_logDeriv {v a b : K[X]}
+    (hη : ∀ (d : ℤ) (w : K), d ≠ 0 → w ≠ 0 → (d : K) * v.coeff 1 ≠ Differential.logDeriv w) :
+    ∃ N : ℕ, ExpPrimLogDerivativeBound v a b N := by
+  by_cases hex : ∃ (m₀ : ℕ) (z₀ : K), z₀ ≠ 0 ∧
+      -(b.coeff a.natDegree) / a.leadingCoeff = (m₀ : K) * v.coeff 1 + Differential.logDeriv z₀
+  · obtain ⟨m₀, z₀, hz₀, h₀⟩ := hex
+    exact ⟨m₀, expPrimLogDerivativeBound_of_eta_not_logDeriv hz₀ h₀ hη⟩
+  · refine ⟨0, expPrimLogDerivativeBound_of_no_solution ?_⟩
+    push Not at hex
+    intro m z hz; exact hex m z hz
+
+omit [CharZero K] in
+/-- **★ The exp/primitive cancellation degree bound, discharged with NO oracle in the generic case**
+(`exists_expPrimCancellation_of_eta_not_logDeriv`): for the balanced exp/primitive configuration, if no
+nonzero-integer multiple of `η = v.coeff 1` is a logarithmic derivative, a nonzero `q` solving `a·Dq + b·q =
+c` (with `a ≠ 0`) has `deg q ≤ rdeBoundDegreeWithLambda v a b c N` for some `N` — **with no §5.12 parametric
+decision**. Combines `exists_expPrimLogDerivativeBound_of_eta_not_logDeriv` (the oracle, discharged) with
+`expPrimCancellation_of_logDerivativeBound` (the degree bound modulo the oracle). The genuine §6.3 frontier is
+thus confined to the *torsion* sub-case `(d:K)·η = logDeriv w`. -/
+theorem exists_expPrimCancellation_of_eta_not_logDeriv {v a b c q : K[X]} (hq : q ≠ 0) (ha0 : a ≠ 0)
+    (hv : v.natDegree ≤ 1) (hble : b.natDegree ≤ a.natDegree)
+    (heq : a * Differential.implicitDeriv v q + b * q = c)
+    (hη : ∀ (d : ℤ) (w : K), d ≠ 0 → w ≠ 0 → (d : K) * v.coeff 1 ≠ Differential.logDeriv w) :
+    ∃ N : ℕ, q.natDegree ≤ rdeBoundDegreeWithLambda v a b c N := by
+  obtain ⟨N, hbound⟩ := exists_expPrimLogDerivativeBound_of_eta_not_logDeriv (a := a) (b := b) hη
+  exact ⟨N, expPrimCancellation_of_logDerivativeBound hq ha0 hv hble heq hbound⟩
+
+omit [CharZero K] in
+/-- **★ The boundary non-theorem: `ExpPrimLogDerivativeBound` FAILS in the primitive log-derivative case**
+(`not_expPrimLogDerivativeBound_prim`): for a primitive monomial (`η = v.coeff 1 = 0`), if `−lc(b)/lc(a) =
+logDeriv z₀` for some `z₀ ≠ 0`, then `ExpPrimLogDerivativeBound v a b N` is **false for every** `N`. With
+`η = 0` the cancellation equation `−lc(b)/lc(a) = m·η + logDeriv z` loses its `m`-dependence, so the *same*
+witness `z₀` qualifies **every** degree `m` (in particular `N + 1 > N`). This is why the primitive degree
+bound cannot come from the leading term (it is the SPDE recursion 6.6.1, Bronstein §6.6) — a proven
+non-theorem fixing the precise boundary of the leading-term analysis. -/
+theorem not_expPrimLogDerivativeBound_prim {v a b : K[X]} {z₀ : K} (hz₀ : z₀ ≠ 0)
+    (hη : v.coeff 1 = 0)
+    (h₀ : -(b.coeff a.natDegree) / a.leadingCoeff = Differential.logDeriv z₀) (N : ℕ) :
+    ¬ ExpPrimLogDerivativeBound v a b N := by
+  intro hbound
+  have hqual : -(b.coeff a.natDegree) / a.leadingCoeff
+      = ((N + 1 : ℕ) : K) * v.coeff 1 + Differential.logDeriv z₀ := by
+    rw [hη, mul_zero, zero_add]; exact h₀
+  have := hbound (N + 1) ⟨z₀, hz₀, hqual⟩
+  omega
+
 /-! ### The primitive sub-case (`δ = 0`): the cancellation condition loses its `m`-dependence
 
 For a *primitive* monomial (`deg v = 0`, `v = C w`), `η = v.coeff 1 = 0`, so the cancellation condition
@@ -444,6 +560,20 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
   rdeBoundCancellationResidualWithLambda_of_expPrim Dt fnum fden gnum gden hlam
     (fun a0 b0 c0 h0 hnorm => rdeBoundExpPrimCancellation_cpolyG _ _ _ _ (horacle a0 b0 c0 h0 hnorm))
 
+-- ★ The §5.12 oracle `ExpPrimLogDerivativeBound` is PROVABLE (no oracle) in the generic hyperexponential
+-- case: if no nonzero-integer multiple of `η` is a logarithmic derivative, a bound exists outright.
+example {K : Type*} [Field K] [CharZero K] [Differential K] {v a b : K[X]}
+    (hη : ∀ (d : ℤ) (w : K), d ≠ 0 → w ≠ 0 → (d : K) * v.coeff 1 ≠ Differential.logDeriv w) :
+    ∃ N : ℕ, ExpPrimLogDerivativeBound v a b N :=
+  exists_expPrimLogDerivativeBound_of_eta_not_logDeriv hη
+
+-- ★ The boundary non-theorem: in the primitive log-derivative case `ExpPrimLogDerivativeBound` is FALSE for
+-- every `N` (the leading-term analysis genuinely does not bound the primitive degree).
+example {K : Type*} [Field K] [CharZero K] [Differential K] {v a b : K[X]} {z₀ : K} (hz₀ : z₀ ≠ 0)
+    (hη : v.coeff 1 = 0) (h₀ : -(b.coeff a.natDegree) / a.leadingCoeff = Differential.logDeriv z₀) (N : ℕ) :
+    ¬ ExpPrimLogDerivativeBound v a b N :=
+  not_expPrimLogDerivativeBound_prim hz₀ hη h₀ N
+
 /-! ### Final verdict (stated precisely)
 
 **Is the exp/primitive (`δ ≤ 1`) cancellation degree bound proven?** **Reduced to a single, precisely named
@@ -461,20 +591,30 @@ proven.** Together with the **nonlinear** `λ`-recursion (proven outright in
   `η = 0`). `expPrimCancellation_of_logDerivativeBound` then proves the bound: either no cancellation (the
   sharp top-coefficient bound applies) or cancellation, which exhibits the log-derivative witness `z = lc q`.
 
-* **The irreducible core** (`ExpPrimLogDerivativeBound`, NEVER `sorry`). Bounding `deg q` in the cancellation
-  branch is **exactly** the base-field question: for how many `m ∈ ℕ` is `−lc(b)/lc(a) − m·η` a logarithmic
-  derivative of a nonzero base-field element? This is the **parametric logarithmic-derivative** decision
-  (Bronstein §5.12 / §6.1) — the same `b = Dz/z` test the engine's exp/primitive *solve*
-  (`cPolyRischDECancel{Exp,Prim}G`, the eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)`) runs
-  degree-by-degree. It is the genuine §6.3 frontier the nonlinear `λ`-recursion never enters, isolated as a
-  named `Prop`. `rdeBoundExpPrimCancellation_of_logDerivativeBound` discharges `RdeBoundExpPrimCancellation`
-  modulo it, lifted to `CPolyG` over `(CFieldSpec.K α)[X]` as `cdegG_le_max_cRdeBoundDegreeG_expPrim`.
+* **The oracle is now CHARACTERIZED, not just stated** (`ExpPrimLogDerivativeBound`, NEVER `sorry`). Bounding
+  `deg q` in the cancellation branch is **exactly** the base-field question: for how many `m ∈ ℕ` is
+  `−lc(b)/lc(a) − m·η` a logarithmic derivative of a nonzero base-field element? This is the **parametric
+  logarithmic-derivative** decision (Bronstein §5.12 / §6.1) — the same `b = Dz/z` test the engine's
+  exp/primitive *solve* (`cPolyRischDECancel{Exp,Prim}G`, the eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)`)
+  runs degree-by-degree. It is genuinely not a free-standing universal theorem (it is true for some
+  configurations and false for others), but this file pins down **precisely** when it holds and when it fails:
+  - **PROVEN (no oracle), the generic hyperexponential case.** `logDeriv_eta_of_two_solutions` shows two
+    distinct qualifying degrees `m₁, m₂` force `(m₁ − m₂)·η = logDeriv (z₂/z₁)`, so if **no** nonzero-integer
+    multiple of `η` is a logarithmic derivative, at most one degree qualifies:
+    `expPrimLogDerivativeBound_of_eta_not_logDeriv` proves the bound outright, and
+    `exists_expPrimLogDerivativeBound_of_eta_not_logDeriv` gives `∃ N, ExpPrimLogDerivativeBound v a b N` from
+    that one hypothesis. `exists_expPrimCancellation_of_eta_not_logDeriv` then closes the whole δ ≤ 1
+    cancellation degree bound **with no §5.12 decision**. The genuine frontier is thus confined to the
+    *torsion* sub-case where some `(d:K)·η` (`d ≠ 0`) **is** a logarithmic derivative.
+  - **PROVEN non-theorem, the primitive boundary.** For `δ = 0` (`η = 0`), `not_expPrimLogDerivativeBound_prim`
+    proves `ExpPrimLogDerivativeBound v a b N` is **false for every `N`** when `−lc(b)/lc(a)` is a logarithmic
+    derivative (the same witness qualifies every degree). So the primitive bound genuinely cannot come from the
+    leading term — it is the SPDE recursion 6.6.1 (Bronstein §6.6) — and `ExpPrimLogDerivativeBound` for a
+    primitive configuration is meaningful (vacuously true via `expPrimLogDerivativeBound_of_no_solution`)
+    **only** when `−lc(b)/lc(a)` is *not* a logarithmic derivative.
 
-* **The primitive sub-case is honestly the harder one** (`cancellation_iff_logDeriv_eq_prim`). For `δ = 0`
-  (`η = 0`) the cancellation condition `−lc(b)/lc(a) = logDeriv (lc q)` is **independent of `deg q`**: the
-  leading term alone does *not* bound the primitive degree. So `ExpPrimLogDerivativeBound` for a primitive
-  configuration is vacuous precisely when `−lc(b)/lc(a)` is *not* a logarithmic derivative; when it *is*, the
-  bound's content lives in the SPDE recursion 6.6.1 (Bronstein §6.6) — outside this leading-term analysis.
+  `rdeBoundExpPrimCancellation_of_logDerivativeBound` discharges `RdeBoundExpPrimCancellation` from a supplied
+  bound, lifted to `CPolyG` over `(CFieldSpec.K α)[X]` as `cdegG_le_max_cRdeBoundDegreeG_expPrim`.
 
 **Is the degree-bound completeness half fully closed?** **No — reduced to exactly one base-field oracle.**
 The chain `RdeBoundCancellationResidual` (the locked `hbound` gap) ← **nonlinear `λ`-recursion ✓** (proven) +
@@ -500,5 +640,10 @@ NO `native_decide`, NO `sorry`) -/
 #print axioms rdeBoundExpPrimCancellation_of_logDerivativeBound
 #print axioms cdegG_le_max_cRdeBoundDegreeG_expPrim
 #print axioms coeff_candTopDegree_witness_exp
+#print axioms logDeriv_eta_of_two_solutions
+#print axioms expPrimLogDerivativeBound_of_eta_not_logDeriv
+#print axioms exists_expPrimLogDerivativeBound_of_eta_not_logDeriv
+#print axioms exists_expPrimCancellation_of_eta_not_logDeriv
+#print axioms not_expPrimLogDerivativeBound_prim
 
 end DeepWiki.SymbolicIntegration
