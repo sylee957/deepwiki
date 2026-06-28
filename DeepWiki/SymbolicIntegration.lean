@@ -74,6 +74,7 @@ import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
 import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
 import DeepWiki.SymbolicIntegration.ComputableParametric
+import DeepWiki.SymbolicIntegration.ComputableLinearSolveCorrect
 import DeepWiki.SymbolicIntegration.ComputableStructure
 import DeepWiki.SymbolicIntegration.ComputableCoupledDE
 import DeepWiki.SymbolicIntegration.ComputableIntegrate
