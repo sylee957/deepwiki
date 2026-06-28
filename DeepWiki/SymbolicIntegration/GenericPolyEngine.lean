@@ -463,6 +463,24 @@ theorem cnormG_eq_nil_iff (p : CPolyG α) : cnormG p = [] ↔ toPolyG p = 0 := b
     rw [toK_cleadG_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
     exact hcl rfl
 
+/-- **Degree bound from normalized-length bound**: a strictly shorter normalized coefficient list (with
+nonzero divisor `q`) is strictly lower degree under `toPolyG` — `length (cnormG p) < length (cnormG q)`
+gives `deg (toPolyG p) < deg (toPolyG q)`. The bridge from the engine's `length`-form remainder bounds
+(`cmodG_length_lt`) to honest `Polynomial.degree`s (via `cdegG_eq_natDegree`); `p = 0` lands `⊥ < deg q`. -/
+theorem toPolyG_degree_lt_of_length_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
+    (hlen : (cnormG p : List α).length < (cnormG q : List α).length) :
+    (toPolyG p).degree < (toPolyG q).degree := by
+  have hq0 : toPolyG q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
+  rcases eq_or_ne (cnormG p) [] with hp | hp
+  · rw [(cnormG_eq_nil_iff p).mp hp, Polynomial.degree_zero]
+    exact bot_lt_iff_ne_bot.mpr (by rwa [Ne, Polynomial.degree_eq_bot])
+  · have hp0 : toPolyG p ≠ 0 := fun h => hp ((cnormG_eq_nil_iff p).mpr h)
+    rw [Polynomial.degree_eq_natDegree hp0, Polynomial.degree_eq_natDegree hq0, Nat.cast_lt,
+      ← cdegG_eq_natDegree, ← cdegG_eq_natDegree, cdegG, cdegG]
+    have hplen : 1 ≤ (cnormG p : List α).length := List.length_pos_iff.mpr hp
+    have hqlen : 1 ≤ (cnormG q : List α).length := List.length_pos_iff.mpr hq
+    omega
+
 /-- **`cisZeroG` reads as `toPolyG = 0`**: `cisZeroG p = true ↔ toPolyG p = 0`. -/
 theorem cisZeroG_iff (p : CPolyG α) : cisZeroG p = true ↔ toPolyG p = 0 := by
   rw [cisZeroG, ← cnormG_eq_nil_iff]

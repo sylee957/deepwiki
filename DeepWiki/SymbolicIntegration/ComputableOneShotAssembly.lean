@@ -595,6 +595,33 @@ theorem cHermiteReduceTowerG_numer_degree_lt (Dt : CPolyG α) (fuel : ℕ)
     (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
   rwa [hden, Lagrange.degree_nodal] at hproper
 
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ `hA` from the RESIDUAL-fraction properness** (the `hproper` hypothesis discharged one layer
+deeper) — the reduced-case degree side condition `(…).2.1.degree < s.card` from the squarefree spelling
+`hden` PLUS the engine leftover-projections (`hnumeq`/`hdeneq`, `toPolyG_cnormG`-provable: `(…).2.1` is
+`cdivG fuel (resNum·Dstar) resDen`, `(…).2.2` is `Dstar`), the exact-division divisibility
+`resDen ∣ resNum·Dstar` (with fuel) and **the residual-fraction properness** `deg resNum < deg resDen`.
+Composes `cHermiteReduceTowerG_leftover_proper_of_residual` (the exact-division degree cancellation) with
+`Lagrange.degree_nodal`, so `hproper` is no longer assumed but **reduced** to the residual properness
+`deg resNum < deg resDen` — i.e. `a/d − D(g)` proper, the documented Large residual. The deepest provable
+form of the `hA` discharge. -/
+theorem cHermiteReduceTowerG_numer_degree_lt_of_residual (Dt : CPolyG α) (fuel : ℕ)
+    (a d : CPolyG α) (s : Finset (CFieldSpec.K α)) (resNum resDen Dstar : CPolyG α)
+    (hnumeq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1
+      = toPolyG (cdivG fuel (cmulG resNum Dstar) resDen))
+    (hdeneq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
+    (hfuel : (cnormG (cmulG resNum Dstar) : List α).length ≤ fuel)
+    (hresDen : cnormG resDen ≠ [])
+    (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
+    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
+  have hDstar : toPolyG Dstar ≠ 0 := by
+    rw [← hdeneq, hden]; exact Lagrange.nodal_ne_zero
+  exact cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden
+    (cHermiteReduceTowerG_leftover_proper_of_residual Dt fuel a d resNum resDen Dstar
+      hnumeq hdeneq hdvd hfuel hresDen hDstar hresProper)
+
 /-- **★★ The reduced-case field identity for the PRIMITIVE case** — for the normal-part capstone output
 `res = cIntegrateReducedG Dt fuel a d cands` with a primitive monomial `toPolyG Dt = C w`, **given** the
 Hermite half `hherm` (`D(g) + h = a/d`, leftover `h = (cHermiteReduceTowerG …).2`) and the per-root
@@ -1577,6 +1604,24 @@ hypotheses. -/
 #print axioms cIntegrateGFull_poly_oneShot
 #print axioms cIntegrateGFull_poly_oneShot_base
 #print axioms cHermiteReduceTowerG_numer_degree_lt
+#print axioms cHermiteReduceTowerG_numer_degree_lt_of_residual
+
+-- ★ `hA` from the residual-fraction properness (one layer deeper than `hproper`): with the leftover
+-- projections + exact-division divisibility + `deg resNum < deg resDen`, `deg h_num < s.card` — `hproper`
+-- reduced to the residual properness `deg resNum < deg resDen` (= `a/d − D(g)` proper).
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
+    (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (resNum resDen Dstar : CPolyG (QFunNZG ℚ))
+    (hnumeq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1
+      = toPolyG (cdivG fuel (cmulG resNum Dstar) resDen))
+    (hdeneq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
+    (hfuel : (cnormG (cmulG resNum Dstar) : List (QFunNZG ℚ)).length ≤ fuel)
+    (hresDen : cnormG resDen ≠ [])
+    (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
+    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card :=
+  cHermiteReduceTowerG_numer_degree_lt_of_residual Dt fuel a d s resNum resDen Dstar
+    hnumeq hdeneq hden hdvd hfuel hresDen hresProper
 
 -- ★ `cHermiteReduceTowerG_numer_degree_lt` discharges `hA` from the squarefree spelling + leftover
 -- properness: `deg h_num < deg h_den` (with `h_den = nodal s id`) gives `deg h_num < s.card`.

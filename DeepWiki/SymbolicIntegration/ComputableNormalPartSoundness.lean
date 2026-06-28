@@ -305,6 +305,81 @@ theorem cHermiteReduceTowerG_telescope_seed (Dt : CPolyG α)
   cHermiteReduceTowerG_telescope Dt (([CField.zero] : CPolyG α), ([CField.one] : CPolyG α))
     L₀ rest glocs toPolyG_seed_den_ne_zero hmem (towerFractionFieldDerivG_amG_seed Dt) hstep
 
+/-! ### ★ The exact-division degree bound — the genuinely-provable half of `hproper`
+
+`cHermiteReduceTowerG` recovers the leftover numerator `h_num = cdivG fuel (resNum·Dstar) resDen` by an
+*exact division* over the squarefree radical `Dstar = ∏ᵢ vᵢ`, leaving `h_den = Dstar`. Properness
+(`deg h_num < deg h_den = deg Dstar`) is *not* pinned by the cleared Hermite identity alone (the
+rational-part numerator can have arbitrary degree) — it is pinned by the residual fraction
+`resNum/resDen = a/d − D(g)` being **proper**. The lemma below isolates the genuinely-provable bridge: an
+abstract polynomial degree-cancellation that, **given** the exact-division identity
+`h_num·resDen = resNum·Dstar` and the residual-fraction properness `deg resNum < deg resDen`, concludes
+`deg h_num < deg Dstar`. The cancellation is `deg(h_num)+deg(resDen) = deg(resNum)+deg(Dstar)` with
+`deg resNum < deg resDen`. This reduces the full `hproper` to (a) the exact-division divisibility
+`resDen ∣ resNum·Dstar` (true in exact arithmetic) and (b) the residual-fraction properness
+`deg resNum < deg resDen` — the residual being precisely the `a/d − D(g)` properness, the documented
+Large remainder. -/
+
+/-- **Abstract polynomial degree cancellation from an exact division** — over a field, from the
+exact-division identity `H·D₂ = N·S` with the proper-fraction bound `deg N < deg D₂` and nonzero divisor
+`S ≠ 0`, the quotient `H` is proper for `S`: `deg H < deg S`. The multiplicative degree law
+`deg(H·D₂) = deg H + deg D₂ = deg N + deg S = deg(N·S)` cancelled: `deg N < deg D₂` forces
+`deg H < deg S`. (If `H = 0` the bound is `⊥ < deg S`, immediate from `S ≠ 0`.) This is the reusable
+core of the Hermite exact-division degree bound `h_num = (resNum·Dstar)/resDen`. -/
+theorem degree_lt_of_exact_div {K : Type*} [Field K] {H D2 N S : K[X]}
+    (hid : H * D2 = N * S) (hND : N.degree < D2.degree) (hS : S ≠ 0) :
+    H.degree < S.degree := by
+  have hD2 : D2 ≠ 0 := by
+    rintro rfl; simp only [Polynomial.degree_zero] at hND; exact absurd hND (by simp)
+  rcases eq_or_ne H 0 with hH | hH
+  · subst hH; rw [Polynomial.degree_zero]
+    exact bot_lt_iff_ne_bot.mpr (by rwa [Ne, Polynomial.degree_eq_bot])
+  · -- `H ≠ 0`, `D₂ ≠ 0` ⟹ `H·D₂ ≠ 0` ⟹ `N·S ≠ 0` ⟹ `N ≠ 0`; all degrees are honest `natDegree`s.
+    have hHD2 : H * D2 ≠ 0 := mul_ne_zero hH hD2
+    rw [hid] at hHD2
+    have hN : N ≠ 0 := fun h => hHD2 (by rw [h, zero_mul])
+    have e1 : H.degree = (H.natDegree : WithBot ℕ) := Polynomial.degree_eq_natDegree hH
+    have e2 : D2.degree = (D2.natDegree : WithBot ℕ) := Polynomial.degree_eq_natDegree hD2
+    have e3 : N.degree = (N.natDegree : WithBot ℕ) := Polynomial.degree_eq_natDegree hN
+    have e4 : S.degree = (S.natDegree : WithBot ℕ) := Polynomial.degree_eq_natDegree hS
+    have hdeg : H.natDegree + D2.natDegree = N.natDegree + S.natDegree := by
+      have hmul : (H * D2).degree = (N * S).degree := by rw [hid]
+      rw [Polynomial.degree_mul, Polynomial.degree_mul, e1, e2, e3, e4,
+        ← Nat.cast_add, ← Nat.cast_add, Nat.cast_inj] at hmul
+      exact hmul
+    rw [e1, e4, Nat.cast_lt]
+    rw [e2, e3, Nat.cast_lt] at hND
+    omega
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ `hproper` for `cHermiteReduceTowerG`, from the residual-fraction properness** — the leftover
+numerator `(…).2.1` is proper for the leftover denominator `(…).2.2`, `deg (…).2.1 < deg (…).2.2`,
+**given** the engine's leftover-projection equations (`hnum`/`hden`, `rfl`-provable at call sites: `(…).2.1`
+is `cnormG (cdivG fuel (resNum·Dstar) resDen)` and `(…).2.2` is `cnormG Dstar`), the exact-division
+divisibility `resDen ∣ resNum·Dstar` with the fuel bound (so the division is exact —
+`toPolyG_cdivG_exact_g`), nonzero radical (`hDstar`) and the **residual-fraction properness**
+`deg resNum < deg resDen`. The exact-division identity `h_num·resDen = resNum·Dstar` plus
+`degree_lt_of_exact_div` cancels `resDen`. This reduces the *unconditional* `hproper` to the residual
+properness `deg resNum < deg resDen` — i.e. `a/d − D(g)` proper, the documented Large remainder. -/
+theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCore α]
+    (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
+    (hnum : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1
+      = toPolyG (cdivG fuel (cmulG resNum Dstar) resDen))
+    (hden : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
+    (hfuel : (cnormG (cmulG resNum Dstar) : List α).length ≤ fuel)
+    (hresDen : cnormG resDen ≠ [])
+    (hDstar : toPolyG Dstar ≠ 0)
+    (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
+    (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1).degree
+      < (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2).degree := by
+  rw [hnum, hden]
+  -- exact division: `h_num · resDen = resNum·Dstar = resNum · Dstar`
+  have hexact : toPolyG (cdivG fuel (cmulG resNum Dstar) resDen) * toPolyG resDen
+      = toPolyG resNum * toPolyG Dstar := by
+    rw [toPolyG_cdivG_exact_g fuel (cmulG resNum Dstar) resDen hresDen hfuel hdvd, toPolyG_cmulG]
+  exact degree_lt_of_exact_div hexact hresProper hDstar
+
 /-! ### ★★ The normal-part assembly through the engine's own `checkIdentityG` certificate
 
 The full normal-part one-shot `checkIdentityG_cIntegrateReducedG` needs the Hermite half (above) **and**
@@ -424,6 +499,29 @@ theorem field_identity_of_cIntegrateGFull_of_checkIdentityG_qfunNZG (Dt : CPolyG
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
+-- ★ THE EXACT-DIVISION DEGREE BOUND (abstract): from `H·D₂ = N·S`, `deg N < deg D₂`, `S ≠ 0`,
+-- the quotient is proper — `deg H < deg S`. The reusable cancellation core of `hproper`.
+example {K : Type*} [Field K] {H D2 N S : K[X]}
+    (hid : H * D2 = N * S) (hND : N.degree < D2.degree) (hS : S ≠ 0) :
+    H.degree < S.degree :=
+  degree_lt_of_exact_div hid hND hS
+
+-- ★ `hproper` REDUCED to the residual-fraction properness: given the leftover projections, the exact
+-- division (divisibility + fuel), nonzero radical, and `deg resNum < deg resDen`, the Hermite leftover is
+-- proper — `deg (…).2.1 < deg (…).2.2`. The genuinely-provable exact-division half of `hproper`.
+example [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
+    (hnum : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1
+      = toPolyG (cdivG fuel (cmulG resNum Dstar) resDen))
+    (hden : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
+    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
+    (hfuel : (cnormG (cmulG resNum Dstar) : List α).length ≤ fuel)
+    (hresDen : cnormG resDen ≠ []) (hDstar : toPolyG Dstar ≠ 0)
+    (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
+    (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1).degree
+      < (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2).degree :=
+  cHermiteReduceTowerG_leftover_proper_of_residual Dt fuel a d resNum resDen Dstar
+    hnum hden hdvd hfuel hresDen hDstar hresProper
+
 -- ★ THE HERMITE HALF (abstract, checker-free, no native_decide): the master telescoping `D(g) + h = a/d`
 -- in the tower fraction field, given the per-power Hermite identities — the transcendental
 -- `generalReduceRationalTelescope`.
@@ -467,6 +565,8 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ)) (c
 #print axioms amG_toPolyG_foldl_fracAddG
 #print axioms towerFractionFieldDerivG_amG_fracAccG
 #print axioms sum_towerFractionFieldDerivG_telescope
+#print axioms degree_lt_of_exact_div
+#print axioms cHermiteReduceTowerG_leftover_proper_of_residual
 #print axioms cHermiteReduceTowerG_telescope
 #print axioms cHermiteReduceTowerG_telescope_seed
 #print axioms field_identity_of_cIntegrateReducedG_of_checkIdentityG
