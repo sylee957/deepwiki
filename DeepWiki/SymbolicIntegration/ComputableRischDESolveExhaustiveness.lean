@@ -926,6 +926,354 @@ theorem cSPDEG_isSome_of_structG_bounded [CFracGcdCore α] (Dt : CPolyG α) (fue
 
 end SPDEDegreeDescent
 
+/-! ## ★ The §6.5 non-cancellation poly-RDE exhaustiveness (`hpoly`'s tractable sub-piece, PROVEN)
+
+`hpoly`'s last clause routes — in the **non-cancellation** regime — to `cPolyRischDENoCancelG` (Bronstein
+§6.5, the degree-by-degree top-down solve of `Dq + b·q = c` for `deg q ≤ n`). This section proves that
+branch's exhaustiveness: *a bounded polynomial solution makes `cPolyRischDENoCancelG` return `some`* — the
+exact **reverse** of the soundness `cPolyRischDENoCancelG_cleared_identity_gen` (`ComputableRischDETowerCorrectG`),
+run down the degree ladder, mirroring the §6.4 degree-descent template `cSPDEG_isSome_of_solvableInputs`.
+
+The structural heart is `noncancel_peel_descends`: under the **non-cancellation** hypothesis
+`(D q).degree < (b·q).degree` (which the engine's branch guarantees), the engine's leading monomial
+`p = (lc c / lc b)·tᵐ` (`m = deg c − deg b`) is **exactly** `q`'s leading monomial — `deg q = m`,
+`lc q = lc c / lc b` — so the remainder `q − p` is strictly lower degree and solves the engine's reduced
+`c' = c − D(p) − b·p`. Iterating this peels `q` monomial-by-monomial down to the `c = 0` short-circuit. The
+sole residue is **fuel sufficiency** (the `q.natDegree + 1 < fuel` clause: the ladder bottoms out before the
+fuel runs out — the `fuel = 0 ↦ False` base, exactly as in the §6.4 `CSPDEGStructG`). Threaded through the
+dispatcher → non-cancellation bridge `cPolyRischDEG_eq_noCancel_of_primitive`, this discharges `hpoly` in the
+**non-cancellation regime**, reducing `hpoly` to ONLY the cancellation-regime (tower-oracle) core. -/
+
+section NoCancelExhaustiveness
+
+variable {K : Type*} [Field K]
+
+/-- **★ The non-cancellation leading-monomial peel (the structural core)** `noncancel_peel_descends`: the
+**reverse** of one §6.5 `cPolyRischDENoCancelG` step over `K[X]`. For a derivation `D`, nonzero `b`, and a
+*nonzero* solution `q` of `D q + b·q = c` under **non-cancellation** `(D q).degree < (b·q).degree`, the
+engine's leading monomial `p = (lc c / lc b)·Xᵐ` (`m = deg c − deg b`) is exactly `q`'s leading term — so
+`deg q = m`, the remainder `q − p` is `0` or strictly lower degree (`< m`), and `q − p` solves the engine's
+reduced `c' = c − D(p) − b·p`. Pure leading-term algebra: non-cancellation forces `deg c = deg b + deg q`
+(`leadingCoeff_add_of_degree_lt`) so `lc q = lc c / lc b`, and `degree_sub_lt` drops the degree. The exact
+converse of the soundness peel atom inside `cPolyRischDENoCancelG_cleared_identity_gen`. -/
+theorem noncancel_peel_descends {D : Derivation ℤ K[X] K[X]} {b c q : K[X]}
+    (hb : b ≠ 0) (hq : q ≠ 0)
+    (heq : D q + b * q = c)
+    (hnc : (D q).degree < (b * q).degree) :
+    q.natDegree = c.natDegree - b.natDegree ∧
+      (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree) = 0 ∨
+        (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree)).degree
+          < ((c.natDegree - b.natDegree : ℕ) : WithBot ℕ)) ∧
+      D (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree))
+          + b * (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree))
+        = c - D (C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree))
+          - b * (C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree)) := by
+  have hbqnat : (b * q).natDegree = b.natDegree + q.natDegree := Polynomial.natDegree_mul hb hq
+  have hcnat : c.natDegree = b.natDegree + q.natDegree := by
+    rw [← heq, Polynomial.natDegree_add_eq_right_of_degree_lt hnc, hbqnat]
+  have hqnat : q.natDegree = c.natDegree - b.natDegree := by omega
+  have hlc : c.leadingCoeff = b.leadingCoeff * q.leadingCoeff := by
+    rw [← heq, Polynomial.leadingCoeff_add_of_degree_lt hnc, Polynomial.leadingCoeff_mul]
+  have hblc : b.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hb
+  have hqlc : q.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hq
+  have hcoeff : c.leadingCoeff / b.leadingCoeff = q.leadingCoeff := by
+    rw [hlc, mul_comm, mul_div_assoc, div_self hblc, mul_one]
+  set m := c.natDegree - b.natDegree with hmdef
+  set p : K[X] := C (c.leadingCoeff / b.leadingCoeff) * X ^ m with hpdef
+  have hcoeff_ne : c.leadingCoeff / b.leadingCoeff ≠ 0 := by rw [hcoeff]; exact hqlc
+  have hpne : p ≠ 0 := by
+    rw [hpdef]; intro h
+    have := Polynomial.degree_C_mul_X_pow m hcoeff_ne
+    rw [h, Polynomial.degree_zero] at this
+    exact absurd this.symm (by simp)
+  have hpnat : p.natDegree = m := by rw [hpdef]; exact Polynomial.natDegree_C_mul_X_pow m _ hcoeff_ne
+  have hplc : p.leadingCoeff = q.leadingCoeff := by
+    rw [hpdef, Polynomial.leadingCoeff_C_mul_X_pow, hcoeff]
+  refine ⟨hqnat, ?_, by rw [map_sub]; linear_combination heq⟩
+  by_cases hqp : q - p = 0
+  · exact Or.inl hqp
+  · right
+    have hpdeg : p.degree = q.degree := by
+      rw [Polynomial.degree_eq_natDegree hpne, hpnat, Polynomial.degree_eq_natDegree hq, hqnat]
+    have hd := Polynomial.degree_sub_lt hpdeg.symm hq (hplc.symm)
+    rw [Polynomial.degree_eq_natDegree hq, hqnat] at hd
+    exact_mod_cast hd
+
+variable [Differential K]
+
+/-- **The stable non-cancellation degree gap** (`noncancel_deg_of_b_dominates`): the engine-natural
+hypothesis `max 0 (δ − 1) < deg b` (`δ = deg v`) — the non-cancellation routing condition, which depends
+only on `b` and the monomial `v`, NOT on `q` — gives, for *every* nonzero `q`, the per-step non-cancellation
+`(D q).degree < (b·q).degree` (`D = implicitDeriv v`). Because `deg(D q) ≤ deg q + max 0 (δ − 1)`
+(`natDegree_implicitDeriv_le`) `< deg b + deg q = deg(b·q)`. Stable across the degree descent (`b`, `v`
+unchanged), so it is threaded once. -/
+theorem noncancel_deg_of_b_dominates {v b q : K[X]} (hb : b ≠ 0) (hq : q ≠ 0)
+    (hnc : max 0 (v.natDegree - 1) < b.natDegree) :
+    (Differential.implicitDeriv v q).degree < (b * q).degree := by
+  apply Polynomial.degree_lt_degree
+  have hDle : (Differential.implicitDeriv v q).natDegree ≤ q.natDegree + max 0 (v.natDegree - 1) :=
+    natDegree_implicitDeriv_le v q
+  have hbq : (b * q).natDegree = b.natDegree + q.natDegree := Polynomial.natDegree_mul hb hq
+  omega
+
+end NoCancelExhaustiveness
+
+section NoCancelEngine
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The engine `p = cshiftG m.toNat [lc c / lc b]` realizes the abstract leading monomial**
+(`toPolyG_engine_p`): with `m = cdegG c − cdegG b ≥ 0`, the engine's peel monomial maps under `toPolyG` to
+`C (lc(toPolyG c)/lc(toPolyG b))·X^(deg c − deg b)` — the abstract `p` of `noncancel_peel_descends`. Via
+`toPolyG_cshiftG` (`X^k·toPolyG _`), `toK_div`, `toK_cleadG_eq_leadingCoeff`, and `m.toNat = deg c − deg b`.
+The bridge that ties the engine recursion to the abstract peel. -/
+theorem toPolyG_engine_p (b c : CPolyG α) (m : ℤ) (hm : 0 ≤ m)
+    (hmeq : m = (cdegG c : ℤ) - (cdegG b : ℤ)) :
+    toPolyG (cshiftG m.toNat [CField.div (cleadG c) (cleadG b)])
+      = C ((toPolyG c).leadingCoeff / (toPolyG b).leadingCoeff)
+        * X ^ ((toPolyG c).natDegree - (toPolyG b).natDegree) := by
+  have hexp : m.toNat = (toPolyG c).natDegree - (toPolyG b).natDegree := by
+    rw [← cdegG_eq_natDegree, ← cdegG_eq_natDegree]; omega
+  rw [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero,
+    CFieldSpec.toK_div, toK_cleadG_eq_leadingCoeff, toK_cleadG_eq_leadingCoeff, hexp,
+    div_eq_mul_inv, mul_comm]
+
+omit [CFieldSpec α] [CDiffFieldSpec α] in
+/-- **`cPolyRischDENoCancelG`'s `isSome` in the recursion case is the sub-call's** (`cPolyRischDENoCancelG_isSome_of_recurse`):
+at `fuel + 1` with `c ≠ 0` and the degree guards holding (`¬(n < 0 ∨ m < 0 ∨ m > n)`,
+`m = cdegG c − cdegG b`), the non-cancellation solve returns `some` exactly when the recursive solve on the
+peeled `c' = c − D(p) − b·p` at bound `m − 1` does. The converse control flow of the soundness step's
+recursive descent. -/
+theorem cPolyRischDENoCancelG_isSome_of_recurse (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
+    (hc : ¬ (cisZeroG c = true))
+    (hguard : ¬ (n < 0 ∨ ((cdegG c : ℤ) - (cdegG b : ℤ)) < 0
+      ∨ ((cdegG c : ℤ) - (cdegG b : ℤ)) > n))
+    (hrec : (cPolyRischDENoCancelG Dt fuel b
+        (csubG (csubG c (cmonomialDeriv Dt
+            (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat [CField.div (cleadG c) (cleadG b)])))
+          (cmulG b (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat
+            [CField.div (cleadG c) (cleadG b)])))
+        (((cdegG c : ℤ) - (cdegG b : ℤ)) - 1)).isSome = true) :
+    (cPolyRischDENoCancelG Dt (fuel + 1) b c n).isSome = true := by
+  rw [cPolyRischDENoCancelG, if_neg hc]
+  simp only [if_neg hguard]
+  obtain ⟨q, hq⟩ := Option.isSome_iff_exists.mp hrec
+  simp only [hq, Option.isSome_some]
+
+/-- **An abstract (`K[X]`-valued) non-cancellation solution** `IsNoCancelSolK Dt b c q`:
+`implicitDeriv (toPolyG Dt) q + toPolyG b · q = toPolyG c` for `q ∈ (CFieldSpec.K α)[X]` — the §6.5 equation
+`Dq + b·q = c` (the post-SPDE shape, with leading coefficient `a = 1`). The non-cancellation analogue of
+`IsReducedRdeSolK`. -/
+def IsNoCancelSolK (Dt b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+  Differential.implicitDeriv (toPolyG Dt) q + toPolyG b * q = toPolyG c
+
+/-- **The recursive solvable-inputs predicate for the non-cancellation solve**
+`CPolyRischDENoCancelSolvableInputs Dt b fuel c n` (the §6.5 analogue of `CSPDEGSolvableInputsGen`): mirrors
+`cPolyRischDENoCancelG`'s recursion carrying at EACH level a bounded abstract `K[X]` solution
+(`IsNoCancelSolK` + `deg ≤ n`) plus, in the non-base branch, the degree guards, the stable non-cancellation
+gap `max 0 (δ − 1) < deg b`, and itself on the peeled lower-degree equation. The base `fuel = 0` is `False`
+(a solvable problem needs ≥ 1 unit of fuel). The hypothesis the degree-descent induction consumes;
+`b` is fixed across the recursion. -/
+def CPolyRischDENoCancelSolvableInputs (Dt b : CPolyG α) :
+    ℕ → (c : CPolyG α) → (n : ℤ) → Prop
+  | 0, _, _ => False
+  | fuel + 1, c, n =>
+    (∃ q : (CFieldSpec.K α)[X], IsNoCancelSolK Dt b c q ∧ (q = 0 ∨ (q.natDegree : ℤ) ≤ n)) ∧
+    if cisZeroG c then True
+    else
+      ¬ (n < 0 ∨ ((cdegG c : ℤ) - (cdegG b : ℤ)) < 0 ∨ ((cdegG c : ℤ) - (cdegG b : ℤ)) > n)
+        ∧ max 0 ((cdegG Dt : ℤ) - 1) < (cdegG b : ℤ)
+        ∧ CPolyRischDENoCancelSolvableInputs Dt b fuel
+            (csubG (csubG c (cmonomialDeriv Dt
+                (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat [CField.div (cleadG c) (cleadG b)])))
+              (cmulG b (cshiftG ((cdegG c : ℤ) - (cdegG b : ℤ)).toNat
+                [CField.div (cleadG c) (cleadG b)])))
+            (((cdegG c : ℤ) - (cdegG b : ℤ)) - 1)
+
+/-- **★ The §6.5 non-cancellation degree-descent induction** (`cPolyRischDENoCancelG_isSome_of_solvableInputs`):
+from the recursive solvable-inputs predicate, the non-cancellation solve succeeds —
+`(cPolyRischDENoCancelG Dt fuel b c n).isSome = true`. By fuel induction, the exact REVERSE of the soundness
+identity `cPolyRischDENoCancelG_cleared_identity_gen`: the `c = 0` short-circuit and the recursion case
+(through `cPolyRischDENoCancelG_isSome_of_recurse`) read off the predicate. The control-flow heart of the
+non-cancellation `hpoly`. -/
+theorem cPolyRischDENoCancelG_isSome_of_solvableInputs (Dt b : CPolyG α) :
+    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ),
+      CPolyRischDENoCancelSolvableInputs Dt b fuel c n →
+      (cPolyRischDENoCancelG Dt fuel b c n).isSome = true := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro c n hin
+    exact absurd hin (by rw [CPolyRischDENoCancelSolvableInputs]; exact not_false)
+  | succ fuel ih =>
+    intro c n hin
+    rw [CPolyRischDENoCancelSolvableInputs] at hin
+    obtain ⟨_, hrest⟩ := hin
+    by_cases hc : cisZeroG c = true
+    · rw [cPolyRischDENoCancelG, if_pos hc, Option.isSome_some]
+    · rw [if_neg hc] at hrest
+      obtain ⟨hguard, _, hrecin⟩ := hrest
+      exact cPolyRischDENoCancelG_isSome_of_recurse Dt fuel b c n hc hguard (ih _ _ hrecin)
+
+/-- **The `c = 0` base of the solvable-inputs predicate** (`cPolyRischDENoCancelSolvableInputs_of_cZero`):
+when `c = 0` the zero solution `q = 0` and the `cisZeroG`-`True` short-circuit give the predicate at any
+`fuel + 1`. The terminating branch of the degree-descent builder (needs ≥ 1 unit of fuel). -/
+theorem cPolyRischDENoCancelSolvableInputs_of_cZero (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α)
+    (n : ℤ) (hc : cisZeroG c = true) :
+    CPolyRischDENoCancelSolvableInputs Dt b (fuel + 1) c n := by
+  rw [CPolyRischDENoCancelSolvableInputs]
+  refine ⟨⟨0, ?_, Or.inl rfl⟩, ?_⟩
+  · rw [IsNoCancelSolK, map_zero, mul_zero, add_zero, (cisZeroG_iff c).mp hc]
+  · rw [if_pos hc]; trivial
+
+/-- **★ The solvable-inputs predicate from one bounded solution** (`cPolyRischDENoCancelSolvableInputs_of_sol`):
+the BUILDER — from a single bounded abstract solution `IsNoCancelSolK Dt b c q` (`deg q ≤ n`), the stable
+non-cancellation gap `max 0 (δ − 1) < deg b`, and fuel sufficiency `deg q + 1 < fuel`, the recursive predicate
+`CPolyRischDENoCancelSolvableInputs Dt b fuel c n` holds. By fuel induction, peeling `q` one monomial at a
+time: the structural core `noncancel_peel_descends` (the engine `p` = `q`'s leading term, via
+`toPolyG_engine_p`; the remainder `q − p` solves the engine's `c'` at bound `m − 1`), the stable
+non-cancellation `noncancel_deg_of_b_dominates`, and the `c = 0` base for the `q − p = 0` tail. The SOLE
+residue is fuel sufficiency (`deg q + 1 < fuel` — the ladder bottoms out before the fuel runs out, exactly
+as in the §6.4 `CSPDEGStructG` `fuel = 0 ↦ False` base). -/
+theorem cPolyRischDENoCancelSolvableInputs_of_sol (Dt b : CPolyG α)
+    (hb : toPolyG b ≠ 0)
+    (hnc : max 0 ((cdegG Dt : ℤ) - 1) < (cdegG b : ℤ)) :
+    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X]),
+      IsNoCancelSolK Dt b c q →
+      (q = 0 ∨ (q.natDegree : ℤ) ≤ n) →
+      (q.natDegree : ℤ) + 1 < fuel →
+      CPolyRischDENoCancelSolvableInputs Dt b fuel c n := by
+  -- δ − 1 < deg b in ℕ (the engine-natural form of `hnc`)
+  have hncN : max 0 ((toPolyG Dt).natDegree - 1) < (toPolyG b).natDegree := by
+    rw [← cdegG_eq_natDegree, ← cdegG_eq_natDegree]; omega
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro c n q _ _ hfuel
+    exfalso
+    have : (0:ℤ) ≤ q.natDegree := Int.natCast_nonneg _
+    simp only [Nat.cast_zero] at hfuel; omega
+  | succ fuel ih =>
+    intro c n q hsol hbound hfuel
+    rw [CPolyRischDENoCancelSolvableInputs]
+    refine ⟨⟨q, hsol, hbound⟩, ?_⟩
+    by_cases hc : cisZeroG c = true
+    · rw [if_pos hc]; trivial
+    · rw [if_neg hc]
+      -- c ≠ 0 ⟹ q ≠ 0
+      have hc0 : toPolyG c ≠ 0 := fun h => hc ((cisZeroG_iff c).mpr h)
+      have hq0 : q ≠ 0 := by
+        rintro rfl
+        rw [IsNoCancelSolK, map_zero, mul_zero, add_zero] at hsol
+        exact hc0 hsol.symm
+      -- per-q non-cancellation
+      have hncq : (Differential.implicitDeriv (toPolyG Dt) q).degree < (toPolyG b * q).degree :=
+        noncancel_deg_of_b_dominates hb hq0 hncN
+      -- the peel descends: q.natDegree = deg c − deg b, q' = q − p lower-degree, solves c'
+      obtain ⟨hqnat, hq'bound, hc'eq⟩ :=
+        noncancel_peel_descends (D := Differential.implicitDeriv (toPolyG Dt)) hb hq0 hsol hncq
+      -- deg c = deg b + deg q (the b·q term dominates)
+      have hcnat : (toPolyG c).natDegree = (toPolyG b).natDegree + q.natDegree := by
+        have hbq : (toPolyG b * q).natDegree = (toPolyG b).natDegree + q.natDegree :=
+          Polynomial.natDegree_mul hb hq0
+        rw [← hsol, Polynomial.natDegree_add_eq_right_of_degree_lt hncq, hbq]
+      -- the engine `p` = the abstract leading monomial
+      set m : ℤ := (cdegG c : ℤ) - (cdegG b : ℤ) with hmdef
+      have hmnat : m = ((toPolyG c).natDegree - (toPolyG b).natDegree : ℕ) := by
+        rw [hmdef, cdegG_eq_natDegree, cdegG_eq_natDegree]; omega
+      have hqdeg_eq_m : (q.natDegree : ℤ) = m := by rw [hmnat, hcnat]; omega
+      have hpbridge : toPolyG (cshiftG m.toNat [CField.div (cleadG c) (cleadG b)])
+          = C ((toPolyG c).leadingCoeff / (toPolyG b).leadingCoeff)
+            * X ^ ((toPolyG c).natDegree - (toPolyG b).natDegree) :=
+        toPolyG_engine_p b c m (by rw [hmnat]; exact_mod_cast (Nat.zero_le _)) hmdef
+      set p : CPolyG α := cshiftG m.toNat [CField.div (cleadG c) (cleadG b)] with hpdef
+      set c' : CPolyG α := csubG (csubG c (cmonomialDeriv Dt p)) (cmulG b p) with hc'def
+      set pK : (CFieldSpec.K α)[X] := C ((toPolyG c).leadingCoeff / (toPolyG b).leadingCoeff)
+        * X ^ ((toPolyG c).natDegree - (toPolyG b).natDegree) with hpKdef
+      have htoP : toPolyG p = pK := hpbridge
+      -- toPolyG c' = c − D pK − b·pK (matches the abstract RHS)
+      have hc'toP : toPolyG c' = toPolyG c
+          - Differential.implicitDeriv (toPolyG Dt) pK - toPolyG b * pK := by
+        rw [hc'def, toPolyG_csubG, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP]
+      have hq'sol : IsNoCancelSolK Dt b c' (q - pK) := by
+        rw [IsNoCancelSolK, hc'toP]; exact hc'eq
+      -- the guards (m = deg q ≥ 0, m ≤ n, n ≥ 0)
+      have hguard : ¬ (n < 0 ∨ m < 0 ∨ m > n) := by
+        rcases hbound with h0 | hle
+        · exact absurd h0 hq0
+        · push Not
+          refine ⟨by have : (0:ℤ) ≤ q.natDegree := Int.natCast_nonneg _; omega,
+            by rw [← hqdeg_eq_m]; exact Int.natCast_nonneg _, by rw [← hqdeg_eq_m]; exact hle⟩
+      refine ⟨hguard, hnc, ?_⟩
+      -- fuel ≥ 1 always holds (deg q + 1 < fuel + 1 and deg q ≥ 0)
+      have hfuelpos : 1 ≤ fuel := by
+        have : (0:ℤ) ≤ q.natDegree := Int.natCast_nonneg _
+        have h1 : (q.natDegree : ℤ) + 1 < (fuel : ℤ) + 1 := by exact_mod_cast hfuel
+        omega
+      by_cases hq'0 : q - pK = 0
+      · -- q' = 0 ⟹ c' = 0; use the c'=0 base predicate (needs fuel ≥ 1)
+        obtain ⟨fuel', rfl⟩ : ∃ k, fuel = k + 1 := ⟨fuel - 1, by omega⟩
+        have hc'0 : cisZeroG c' = true := by
+          rw [cisZeroG_iff]
+          have := hq'sol; rw [IsNoCancelSolK, hq'0, map_zero, mul_zero, add_zero] at this
+          exact this.symm
+        exact cPolyRischDENoCancelSolvableInputs_of_cZero Dt b fuel' c' (m - 1) hc'0
+      · -- q' ≠ 0 ⟹ degree drops: (q − pK).natDegree < m, so ≤ m − 1
+        have hlt : (q - pK).degree < ((toPolyG c).natDegree - (toPolyG b).natDegree : ℕ) := by
+          rcases hq'bound with h0 | hlt
+          · exact absurd h0 hq'0
+          · exact hlt
+        have hnd : ((q - pK).natDegree : ℤ) < m := by
+          rw [hmnat]
+          have := Polynomial.natDegree_lt_natDegree (p := q - pK) (q := (X : (CFieldSpec.K α)[X]) ^
+            ((toPolyG c).natDegree - (toPolyG b).natDegree)) hq'0
+          rw [Polynomial.degree_X_pow, Polynomial.natDegree_X_pow] at this
+          exact_mod_cast this hlt
+        have hq'le : q - pK = 0 ∨ ((q - pK).natDegree : ℤ) ≤ m - 1 := Or.inr (by omega)
+        have hfuel' : ((q - pK).natDegree : ℤ) + 1 < fuel := by
+          have h1 : (q.natDegree : ℤ) + 1 < (fuel : ℤ) + 1 := by exact_mod_cast hfuel
+          omega
+        exact ih c' (m - 1) (q - pK) hq'sol hq'le hfuel'
+
+/-- **★ END-TO-END: the §6.5 non-cancellation solve succeeds on a bounded solution, MODULO FUEL SUFFICIENCY**
+(`cPolyRischDENoCancelG_isSome_of_sol`): composes the builder `cPolyRischDENoCancelSolvableInputs_of_sol`
+with the degree-descent induction `cPolyRischDENoCancelG_isSome_of_solvableInputs`. A bounded abstract
+solution `IsNoCancelSolK Dt b c q` (`deg q ≤ n`), the stable non-cancellation gap `max 0 (δ − 1) < deg b`,
+nonzero `b`, and fuel sufficiency `deg q + 1 < fuel` make the §6.5 non-cancellation solve return `some`.
+The non-cancellation `hpoly` content modulo only fuel sufficiency — the tractable sub-piece of `hpoly`. -/
+theorem cPolyRischDENoCancelG_isSome_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (q : (CFieldSpec.K α)[X]) (hb : toPolyG b ≠ 0)
+    (hnc : max 0 ((cdegG Dt : ℤ) - 1) < (cdegG b : ℤ))
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDENoCancelG Dt fuel b c n).isSome = true :=
+  cPolyRischDENoCancelG_isSome_of_solvableInputs Dt b fuel c n
+    (cPolyRischDENoCancelSolvableInputs_of_sol Dt b hb hnc fuel c n q hsol hbound hfuel)
+
+variable [CRischField α]
+
+/-- **★ The §6.5/6.6 dispatcher succeeds on a non-cancellation solution (primitive regime)**
+(`cPolyRischDEG_isSome_noCancel_of_sol`): threads `cPolyRischDENoCancelG_isSome_of_sol` through the
+dispatcher → non-cancellation bridge `cPolyRischDEG_eq_noCancel_of_primitive`. In the primitive regime
+(`cdegG Dt = 0`) with positive `deg b` (`0 < cdegG b`, the non-cancellation routing), a bounded abstract
+solution `IsNoCancelSolK Dt b c q` makes the dispatcher `cPolyRischDEG` return `some` — discharging
+`hpoly`'s **non-cancellation branch**, reducing `hpoly` to ONLY the cancellation-regime (tower-oracle) core.
+(The non-cancellation gap `max 0 (δ − 1) < deg b` reduces, at `δ = 0`, to exactly `0 < deg b`.) -/
+theorem cPolyRischDEG_isSome_noCancel_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (q : (CFieldSpec.K α)[X]) (hb : toPolyG b ≠ 0)
+    (hδ : cdegG Dt = 0) (hdb : 0 < cdegG b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true := by
+  rw [cPolyRischDEG_eq_noCancel_of_primitive Dt fuel b c n hδ hdb]
+  refine cPolyRischDENoCancelG_isSome_of_sol Dt b fuel c n q hb ?_ hsol hbound hfuel
+  rw [hδ]; simp only [Nat.cast_zero, zero_sub]
+  rw [show (max (0:ℤ) (-1)) = 0 by norm_num]
+  exact_mod_cast hdb
+
+end NoCancelEngine
+
 /-! ## ★ The §6.2/6.3 fractional→reduced bridge — `hspde`'s upstream input (the primitive regime, PROVEN)
 
 The §6.4 degree-descent assembly `cSPDEG_isSome_of_structG_bounded` consumes an **abstract reduced solution**
@@ -1257,12 +1605,21 @@ named residual `RischDESolveExhaustiveResidual`, in solvability-implies / staged
 
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. The
   reachable base sub-cases are proven here (`cPolyRischDEG_isSome_of_bZero` integration,
-  `cPolyRischDENoCancelG_isSome_of_cZero`). The irreducible residue is the **dispatcher exhaustiveness across
-  the cancellation regimes**: the non-cancellation top-down solve (`cPolyRischDENoCancelG`) and the
-  primitive/hyperexponential cancellation recursions (`cPolyRischDECancel{Prim,Exp}G`, which recurse into the
-  level-below base oracle `crischDESolve`) each *find* a bounded solution if one exists. This is the converse
-  of the soundness `cPolyRischDENoCancelG_cleared_identity_gen` and the cancellation cleared identities;
-  unformalized in the engine.
+  `cPolyRischDENoCancelG_isSome_of_cZero`). ★ The **non-cancellation regime is now PROVEN** (the
+  `NoCancelExhaustiveness` / `NoCancelEngine` sections): `cPolyRischDEG_isSome_noCancel_of_sol` — a bounded
+  non-cancellation solution makes the dispatcher return `some` in the primitive regime — assembling the
+  structural peel core `noncancel_peel_descends` (under non-cancellation, the engine's leading monomial *is*
+  `q`'s, so the remainder is lower-degree and solves the reduced `c'`), the degree-descent induction
+  `cPolyRischDENoCancelG_isSome_of_solvableInputs` (the soundness identity
+  `cPolyRischDENoCancelG_cleared_identity_gen` IN REVERSE, mirroring the §6.4 template), the builder
+  `cPolyRischDENoCancelSolvableInputs_of_sol`, and the dispatcher bridge
+  `cPolyRischDEG_eq_noCancel_of_primitive` — modulo only **fuel sufficiency** (`deg q + 1 < fuel`, the
+  `CPolyRischDENoCancelSolvableInputs` `fuel = 0 ↦ False` base, exactly the §6.4 `CSPDEGStructG` situation).
+  The irreducible residue narrows to the **cancellation-regime exhaustiveness**: the
+  primitive/hyperexponential cancellation recursions `cPolyRischDECancel{Prim,Exp}G`, which recurse degree-
+  by-degree into the level-below base oracle `crischDESolve` (eq. 6.23/6.24). Their exhaustiveness is the
+  genuine **tower-oracle-completeness** core — `crischDESolve` complete per level, by tower-induction (NOT a
+  Jacobson-rank fact) — the converse of the cancellation cleared identities.
 
 A `Prop`-bundle of stated assumptions, NO `sorry`; each clause is the converse of a fact the soundness layer
 used forward. -/
@@ -1537,9 +1894,14 @@ does not self-certify:
   clause (ii) is thereby **discharged**: residual #3's `hspde` is reduced to the denominator-normalization
   fact + fuel sufficiency.
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. Reachable
-  base sub-cases proven (b=0/c=0); the irreducible residue is the **cancellation-regime exhaustiveness** (the
-  non-cancellation top-down solve and the primitive/hyperexponential cancellation recursions each find a
-  bounded solution if one exists) — the converse of the cancellation cleared identities.
+  base sub-cases proven (b=0/c=0); ★ the **non-cancellation regime now PROVEN**
+  (`cPolyRischDEG_isSome_noCancel_of_sol`, modulo only fuel sufficiency) — the structural peel core
+  `noncancel_peel_descends` + the degree-descent induction + the dispatcher bridge, mirroring the §6.4
+  template. The irreducible residue narrows to the **cancellation-regime exhaustiveness** alone: the
+  primitive/hyperexponential cancellation recursions `cPolyRischDECancel{Prim,Exp}G` (recursing into the
+  level-below base oracle `crischDESolve`) find a bounded solution if one exists — the genuine
+  **tower-oracle-completeness** core (`crischDESolve` complete per level, by tower-induction), the converse
+  of the cancellation cleared identities.
 
 **What `RischDEInnerCompleteness` now reduces to (the complete 3-clause map).** With `hnorm`
 (`ComputableRischDENormCompleteness`, modulo Bronstein Thm 6.1.2 divisibility), `hbound`
@@ -1567,6 +1929,47 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     (hq : q = 0 ∨ (q.natDegree : ℤ) ≤ n) :
     (cSPDEG Dt fuel a b c n).isSome = true :=
   cSPDEG_isSome_of_structG_bounded Dt fuel a b c n q hstruct hsol hq
+
+/-! ### Restatements of the §6.5 non-cancellation exhaustiveness (anonymous `example`s) -/
+
+-- ★ The non-cancellation peel core: under non-cancellation, the engine leading monomial = `q`'s, so the
+-- remainder is lower-degree and solves the reduced `c'`.
+example {K : Type*} [Field K] {D : Derivation ℤ K[X] K[X]} {b c q : K[X]}
+    (hb : b ≠ 0) (hq : q ≠ 0) (heq : D q + b * q = c) (hnc : (D q).degree < (b * q).degree) :
+    q.natDegree = c.natDegree - b.natDegree ∧
+      (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree) = 0 ∨
+        (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree)).degree
+          < ((c.natDegree - b.natDegree : ℕ) : WithBot ℕ)) ∧
+      D (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree))
+          + b * (q - C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree))
+        = c - D (C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree))
+          - b * (C (c.leadingCoeff / b.leadingCoeff) * X ^ (c.natDegree - b.natDegree)) :=
+  noncancel_peel_descends hb hq heq hnc
+
+-- ★ The non-cancellation degree-descent induction: the solvable-inputs predicate forces `isSome`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ)
+    (h : CPolyRischDENoCancelSolvableInputs Dt b fuel c n) :
+    (cPolyRischDENoCancelG Dt fuel b c n).isSome = true :=
+  cPolyRischDENoCancelG_isSome_of_solvableInputs Dt b fuel c n h
+
+-- ★ END-TO-END: a bounded non-cancellation solution makes the §6.5 solve succeed (modulo fuel sufficiency).
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X])
+    (hb : toPolyG b ≠ 0) (hnc : max 0 ((cdegG Dt : ℤ) - 1) < (cdegG b : ℤ))
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDENoCancelG Dt fuel b c n).isSome = true :=
+  cPolyRischDENoCancelG_isSome_of_sol Dt b fuel c n q hb hnc hsol hbound hfuel
+
+-- ★ The dispatcher (primitive regime) succeeds on a non-cancellation solution — `hpoly`'s non-cancel branch.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+    (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : (CFieldSpec.K α)[X])
+    (hb : toPolyG b ≠ 0) (hδ : cdegG Dt = 0) (hdb : 0 < cdegG b)
+    (hsol : IsNoCancelSolK Dt b c q) (hbound : q = 0 ∨ (q.natDegree : ℤ) ≤ n)
+    (hfuel : (q.natDegree : ℤ) + 1 < fuel) :
+    (cPolyRischDEG Dt fuel b c n).isSome = true :=
+  cPolyRischDEG_isSome_noCancel_of_sol Dt b fuel c n q hb hδ hdb hsol hbound hfuel
 
 /-! ### Restatements of the §6.2/6.3 fractional→reduced bridge (anonymous `example`s) -/
 
@@ -1664,6 +2067,15 @@ compiler) -/
 #print axioms cSPDEGSolvableInputs_of_structG
 #print axioms cSPDEG_isSome_of_structG_bounded
 #print axioms cSPDEGStructG_of_neg
+#print axioms noncancel_peel_descends
+#print axioms noncancel_deg_of_b_dominates
+#print axioms toPolyG_engine_p
+#print axioms cPolyRischDENoCancelG_isSome_of_recurse
+#print axioms cPolyRischDENoCancelG_isSome_of_solvableInputs
+#print axioms cPolyRischDENoCancelSolvableInputs_of_cZero
+#print axioms cPolyRischDENoCancelSolvableInputs_of_sol
+#print axioms cPolyRischDENoCancelG_isSome_of_sol
+#print axioms cPolyRischDEG_isSome_noCancel_of_sol
 #print axioms hsolve_of_exhaustiveResidual
 #print axioms rischDEInnerCompleteness_of_residuals
 #print axioms rdeNormalDenominator_glue_inverse
