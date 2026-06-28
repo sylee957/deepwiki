@@ -438,6 +438,51 @@ example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R) (a 
     ∃ h : R, q = a * h + r ∧ a * D h + (b + D a) * h = z - D r :=
   spde_peel_inverse_of_isCoprime D a b c r z q hco ha hsol hbez
 
+/-- **★ The §6.2 normal-denominator cleared lifting INVERSE (algebraic core)** `rdeNormalDenominator_glue_inverse`:
+the **converse** of `rdeNormalDenominator_glue`. Over a commutative ring with no zero divisors, with the normal
+part `DN ≠ 0`, `FDEN ≠ 0`, `GDEN ≠ 0`, the factorization `A = DN·H` and the two exact-division certificates
+`B·FDEN = A·FNUM − DN·DH·FDEN`, `C·GDEN = DN·H²·GNUM`, a *cleared* solution **already in normalized form**
+`yden = H`, `ynum = Q` (the §6.2 reconstruction `q = y·h`'s denominator equals the clearing factor `H`) —
+`GDEN·FDEN·(D(Q)·H − Q·D(H)) + GDEN·FNUM·Q·H = GNUM·FDEN·H²` — makes `Q` solve the **reduced** equation
+`A·D(Q) + B·Q = C`. Pure algebra: multiply the goal by `FDEN·GDEN`, the whole identity is `DN` times the
+cleared identity, cancel the nonzero `DN·FDEN·GDEN`. The exact inverse of the soundness §6.2 glue
+`rdeNormalDenominator_glue`; the **only** remaining deep input is the denominator-clearing that brings a general
+fractional solution `ynum/yden` to the normalized `yden = H` form (Bronstein Thm 6.1.2(i): `q = yh ∈ k⟨t⟩`). -/
+theorem rdeNormalDenominator_glue_inverse {R : Type*} [CommRing R] [NoZeroDivisors R]
+    (D : Derivation ℤ R R) (DN H FNUM FDEN GNUM GDEN A B C Q : R)
+    (hFDEN : FDEN ≠ 0) (hGDEN : GDEN ≠ 0)
+    (hA : A = DN * H)
+    (hB : B * FDEN = A * FNUM - DN * D H * FDEN)
+    (hC : C * GDEN = DN * H ^ 2 * GNUM)
+    (hcleared : GDEN * FDEN * (D Q * H - Q * D H) + GDEN * FNUM * Q * H = GNUM * FDEN * H ^ 2) :
+    A * D Q + B * Q = C := by
+  apply mul_left_cancel₀ (mul_ne_zero hFDEN hGDEN)
+  linear_combination GDEN * Q * hB - FDEN * hC + DN * hcleared
+    + (FDEN * GDEN * D Q + GDEN * FNUM * Q) * hA
+
+/-- **★ The §6.2 special-denominator substitution INVERSE (algebraic core)**
+`specialDenominatorSubst_cleared_inverse`: the **converse** of `specialDenominatorSubst_cleared`. Over a
+commutative ring with no zero divisors, for a special irreducible `p ≠ 0` with `D p = E·p` (the
+hyperexponential case `p = t`, `E = η ∈ k`), a *special-cleared* solution **already in reconstructed form**
+`r = q·pᵏ` solving `a·D(r) + b·r = c·pᵏ` makes the factor `q` solve the **reduced** equation
+`a·D(q) + b·q + k·a·E·q = c`. Pure algebra: expand by Leibniz (`specialDenominatorSubst_expand`), then cancel
+the nonzero `pᵏ`. The exact inverse of the soundness §6.2 special glue `specialDenominatorSubst_cleared`; the
+remaining deep input is the `νₚ`-bookkeeping divisibility `pᵏ ∣ Q` that writes a reduced solution in the
+reconstructed form `Q = q·pᵏ` (Bronstein Lemma 6.2.x). -/
+theorem specialDenominatorSubst_cleared_inverse {R : Type*} [CommRing R] [NoZeroDivisors R]
+    (D : Derivation ℤ R R) (a b c p E q : R) (k : ℕ) (hp : p ≠ 0) (hDp : D p = E * p)
+    (hcleared : a * D (q * p ^ k) + b * (q * p ^ k) = c * p ^ k) :
+    a * D q + b * q + (k : R) * (a * E) * q = c := by
+  -- Leibniz-expand the cleared LHS as `(reduced)·pᵏ` (mirror of `specialDenominatorSubst_expand`)
+  have hexp : a * D (q * p ^ k) + b * (q * p ^ k)
+      = (a * D q + b * q + (k : R) * (a * E) * q) * p ^ k := by
+    rw [Derivation.leibniz, Derivation.leibniz_pow, hDp]
+    cases k with
+    | zero => simp
+    | succ k => simp only [Nat.add_sub_cancel, smul_eq_mul, Nat.cast_succ, pow_succ]; ring
+  rw [hexp] at hcleared
+  exact mul_right_cancel₀ (pow_ne_zero k hp) hcleared
+
 end Preservation
 
 /-! ## ★ The §6.4 SPDE degree-descent recursion assembly (the `hspde` structural heart)
@@ -491,6 +536,74 @@ inverse `spde_peel_inverse_of_isCoprime` produces (so the degree-descent threads
 lift). The `K[X]` analogue of `IsReducedRdeSol`. -/
 def IsReducedRdeSolK (Dt a b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
   toPolyG a * Differential.implicitDeriv (toPolyG Dt) q + toPolyG b * q = toPolyG c
+
+/-- **A `CPolyG` reduced solution lifts to a `K[X]` one** (`isReducedRdeSolK_of_isReducedRdeSol`): a
+polynomial-carrier solution `IsReducedRdeSol Dt a b c q` is *definitionally* the `K[X]`-witness
+`IsReducedRdeSolK Dt a b c (toPolyG q)` (the same equation, `q` read through `toPolyG`). The trivial bridge
+from the `hbound`-shaped `IsReducedRdeSol` to the degree-descent-shaped `IsReducedRdeSolK`. -/
+theorem isReducedRdeSolK_of_isReducedRdeSol (Dt a b c q : CPolyG α)
+    (hsol : IsReducedRdeSol Dt a b c q) :
+    IsReducedRdeSolK Dt a b c (toPolyG q) :=
+  hsol
+
+/-- **★ The §6.2 normal-denominator cleared lifting INVERSE through `toPolyG`**
+(`isReducedRdeSol_of_cleared_normalized`): the engine-carrier converse of
+`cRdeNormalDenominatorG_cleared_lift_gen`. From `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a,
+b, c, h)`, the §6.2 normal-clear certificates (the same `B/C` exactness `toPolyG_cdivG_exact_mul_gen` the
+soundness lift consumes), `fden, gden ≠ 0`, and a *normalized* cleared solution `IsCRischDEGPolySol Dt fnum
+fden gnum gden Q h` (a fractional solution whose **denominator equals the §6.2 clearing factor** `h = h0`,
+`ynum = Q`), the reconstruction `Q` solves the **reduced** equation — `IsReducedRdeSol Dt a b c Q`. Extracts
+the `A = dₙ·h` / `B·fden = …` / `C·gden = …` certificates exactly as the soundness lift, then runs the
+algebraic inverse `rdeNormalDenominator_glue_inverse`. The exact converse of the §6.2 soundness lift; the
+**only** remaining deep input is the denominator-clearing that brings a general fractional `ynum/yden` to the
+normalized `yden = h` form (Bronstein Thm 6.1.2(i): the solution `q = yh` is a *polynomial*). -/
+theorem isReducedRdeSol_of_cleared_normalized [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a b c h Q : CPolyG α)
+    (hres : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a, b, c, h))
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) h) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) h) gnum))
+    (hcleared : IsCRischDEGPolySol Dt fnum fden gnum gden Q h) :
+    IsReducedRdeSol Dt a b c Q := by
+  set dn := (cSplitFactorFastG Dt fuel fden).1 with hdndef
+  set bNum := csubG (cmulG (cmulG dn h) fnum) (cmulG (cmulG dn (cmonomialDeriv Dt h)) fden) with hbNum
+  set cNum := cmulG (cmulG (cmulG dn h) h) gnum with hcNum
+  rw [cRdeNormalDenominatorG] at hres
+  split at hres
+  · rw [Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq, Prod.mk.injEq] at hres
+    obtain ⟨ha, hb, hc, hh⟩ := hres
+    rw [hh] at ha hb hc
+    have hA : toPolyG a = toPolyG dn * toPolyG h := by rw [← ha, toPolyG_cmulG]
+    have hBexact : toPolyG b * toPolyG fden = toPolyG bNum := by
+      rw [← hb]; exact toPolyG_cdivG_exact_mul_gen fuel bNum fden hfden0 hfbB hdvdB
+    have hBeq : toPolyG bNum = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hbNum, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
+        toPolyG_cmonomialDeriv, ← ha, toPolyG_cmulG]
+    have hCexact : toPolyG c * toPolyG gden = toPolyG cNum := by
+      rw [← hc]; exact toPolyG_cdivG_exact_mul_gen fuel cNum gden hgden0 hfbC hdvdC
+    have hCeq : toPolyG cNum = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hcNum, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]; ring
+    have hBcert : toPolyG b * toPolyG fden = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hBexact]; exact hBeq
+    have hCcert : toPolyG c * toPolyG gden = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hCexact]; exact hCeq
+    have hfden_ne : toPolyG fden ≠ 0 := fun hz => hfden0 ((cnormG_eq_nil_iff fden).mpr hz)
+    have hgden_ne : toPolyG gden ≠ 0 := fun hz => hgden0 ((cnormG_eq_nil_iff gden).mpr hz)
+    unfold IsCRischDEGPolySol at hcleared
+    unfold IsReducedRdeSol
+    exact rdeNormalDenominator_glue_inverse (Differential.implicitDeriv (toPolyG Dt))
+      (toPolyG dn) (toPolyG h) (toPolyG fnum) (toPolyG fden) (toPolyG gnum) (toPolyG gden)
+      (toPolyG a) (toPolyG b) (toPolyG c) (toPolyG Q)
+      hfden_ne hgden_ne hA hBcert hCcert hcleared
+  · exact absurd hres (by simp)
 
 /-- **The `K[X]`-witness divisibility necessity** (`dvd_c_of_isReducedRdeSolK`): if `g` divides both
 leading coefficients and `q : K[X]` solves `a·Dq + b·q = c`, then `g ∣ c` — the `K[X]` analogue of
@@ -781,6 +894,201 @@ theorem cSPDEG_isSome_of_structG_bounded [CFracGcdCore α] (Dt : CPolyG α) (fue
 
 end SPDEDegreeDescent
 
+/-! ## ★ The §6.2/6.3 fractional→reduced bridge — `hspde`'s upstream input (the primitive regime, PROVEN)
+
+The §6.4 degree-descent assembly `cSPDEG_isSome_of_structG_bounded` consumes an **abstract reduced solution**
+`IsReducedRdeSolK (special-cleared) q` plus the degree bound and fuel sufficiency. But the `hspde` clause is
+typed against a **fractional** `IsCRischDEGPolySol` solution. The missing link — flagged as the upstream
+residue of the §6.4 frontier — is the **fractional→reduced bridge** `IsCRischDEGPolySol → ∃ q,
+IsReducedRdeSolK (special-cleared) q ∧ bound`: the §6.2 (normal-denominator) + §6.3 (special-denominator)
+COMPLETENESS reduction.
+
+This section PROVES that bridge in the **primitive regime** (the validated regime, where the special monic
+irreducible is constant, `cdegG (cSpecialPolyG …) = 0`, witnessed operationally by `cRischDEG_isSome_Dy_eq_one`),
+by COMPOSING the proven algebraic reverse-glues with residual #2's degree bound:
+
+* the **reverse normal glue** `isReducedRdeSol_of_cleared_normalized` (the exact converse of the §6.2 soundness
+  lift `cRdeNormalDenominatorG_cleared_lift_gen`, running `rdeNormalDenominator_glue_inverse`): a *normalized*
+  cleared solution (denominator = the §6.2 clearing factor `h0`) gives a reduced `IsReducedRdeSol (a0,b0,c0) Q`;
+* the **primitive special-stage identity** `cRdeSpecialDenominatorG_primitive_eq_gen`
+  (`(a0,b0,c0,1)`), so the special-cleared coefficients *are* `(a0,b0,c0)` and the reverse special glue is the
+  identity;
+* the **trivial `K[X]` lift** `isReducedRdeSolK_of_isReducedRdeSol`, and the degree bound through
+  `cdegG_eq_natDegree` + residual #2's `hbound`.
+
+The bridge is therefore PROVEN modulo a precisely isolated residual `RdeFractionalToReducedResidual` whose
+only deep clause is the **denominator-normalization** `hnormalize` (Bronstein Thm 6.1.2(i): a fractional
+solution `y` has `q = y·h0` a *polynomial*, i.e. some normalized solution exists) — plus the engine-provable
+§6.2 normal-clear certificates `hcerts`. Composing through the §6.4 assembly,
+`cSPDEG_isSome_of_fractional_primitive` discharges the `hspde` content modulo this bridge residual + residual
+#2's bound + fuel sufficiency. The non-primitive (hyperexp/hypertangent) special-clearing — needing the
+reverse special glue `specialDenominatorSubst_cleared_inverse` with the `νₚ`-bookkeeping divisibility
+`pⁿᵉᵍⁿ ∣ Q` — is the documented continuation. -/
+
+section FractionalToReducedBridge
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+
+/-- **The §6.2 normal-clear `B`-numerator certificate polynomial** `rdeNormalBNum Dt fnum fden h0`:
+`dₙ·h0·fnum − dₙ·D(h0)·fden` (`dₙ = (cSplitFactorFastG Dt towerRischDEFuel fden).1`), whose exact
+divisibility by `fden` is the §6.2 `b`-coefficient certificate. The `B` term of
+`isReducedRdeSol_of_cleared_normalized`'s cert hypotheses, named for the residual bundle. -/
+abbrev rdeNormalBNum (Dt fnum fden h0 : CPolyG α) : CPolyG α :=
+  csubG (cmulG (cmulG (cSplitFactorFastG Dt towerRischDEFuel fden).1 h0) fnum)
+    (cmulG (cmulG (cSplitFactorFastG Dt towerRischDEFuel fden).1 (cmonomialDeriv Dt h0)) fden)
+
+/-- **The §6.2 normal-clear `C`-numerator certificate polynomial** `rdeNormalCNum Dt fden gnum h0`:
+`dₙ·h0²·gnum`, whose exact divisibility by `gden` is the §6.2 `c`-coefficient certificate. The `C` term of
+`isReducedRdeSol_of_cleared_normalized`'s cert hypotheses, named for the residual bundle. -/
+abbrev rdeNormalCNum (Dt fden gnum h0 : CPolyG α) : CPolyG α :=
+  cmulG (cmulG (cmulG (cSplitFactorFastG Dt towerRischDEFuel fden).1 h0) h0) gnum
+
+/-- **★ The §6.2/6.3 fractional→reduced bridge residual** `RdeFractionalToReducedResidual Dt fnum fden gnum
+gden`: the precise upstream input the §6.4 `hspde` needs but the engine does not self-certify, in
+solvability-implies form. `hnormalize`: ★ the **single deep clause** (Bronstein Thm 6.1.2(i)) — a fractional
+solution yields one whose **denominator equals the §6.2 clearing factor** `h0` (`∃ Q, IsCRischDEGPolySol … Q
+h0`), i.e. `q = y·h0` is a *polynomial*. `hcerts`: the §6.2 normal-clear certificates (the `B/C` exact
+divisibilities + fuel/nonzero bounds the soundness lift also consumes — engine-provable, bundled honestly).
+A `Prop`-bundle of stated assumptions, NO `sorry`; the irreducible §6.2 denominator-clearing content of the
+fractional→reduced bridge. -/
+structure RdeFractionalToReducedResidual (Dt fnum fden gnum gden : CPolyG α) : Prop where
+  /-- ★ Bronstein Thm 6.1.2(i): a fractional solution yields one with denominator = the clearing factor `h0`
+  (`q = y·h0 ∈ k[t]`). The deep §6.1/6.2 denominator-clearing content. -/
+  hnormalize : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∃ Q : CPolyG α, IsCRischDEGPolySol Dt fnum fden gnum gden Q h0
+  /-- The §6.2 normal-clear certificates (`fden, gden ≠ 0`, the `B/C` exact divisibilities + fuel bounds) —
+  engine-provable from the §6.2 setup, the same facts `cRdeNormalDenominatorG_cleared_lift_gen` consumes. -/
+  hcerts : ∀ a0 b0 c0 h0 : CPolyG α,
+    cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      (cnormG fden ≠ []) ∧ (cnormG gden ≠ [])
+      ∧ ((cnormG (rdeNormalBNum Dt fnum fden h0) : List α).length ≤ towerRischDEFuel)
+      ∧ (toPolyG fden ∣ toPolyG (rdeNormalBNum Dt fnum fden h0))
+      ∧ ((cnormG (rdeNormalCNum Dt fden gnum h0) : List α).length ≤ towerRischDEFuel)
+      ∧ (toPolyG gden ∣ toPolyG (rdeNormalCNum Dt fden gnum h0))
+
+/-- **★ The fractional→reduced bridge in the primitive regime** (`exists_isReducedRdeSol_special_of_fractional`):
+under `RdeFractionalToReducedResidual` and the primitive special regime (`cdegG (cSpecialPolyG …) = 0`), a
+fractional `IsCRischDEGPolySol` solution yields a `Q : CPolyG` solving the **special-cleared** reduced equation
+— `IsReducedRdeSol (cRdeSpecialDenominatorG … a0 b0 c0) Q`. Composes the residual's normalization
+(`hnormalize`) and certs (`hcerts`) through the reverse normal glue `isReducedRdeSol_of_cleared_normalized`,
+then the primitive special-stage identity `cRdeSpecialDenominatorG_primitive_eq_gen` (special-cleared =
+`(a0,b0,c0)`). The §6.2/6.3 completeness reduction, primitive regime, PROVEN modulo only the bridge residual. -/
+theorem exists_isReducedRdeSol_special_of_fractional
+    (Dt fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
+    (hprim : cdegG (cSpecialPolyG Dt towerRischDEFuel) = 0)
+    (hnorm : cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hres : RdeFractionalToReducedResidual Dt fnum fden gnum gden)
+    (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
+    ∃ Q : CPolyG α, IsReducedRdeSol Dt
+      (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+      (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+      (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 Q := by
+  obtain ⟨Q, hQcleared⟩ := hres.hnormalize hsol a0 b0 c0 h0 hnorm
+  obtain ⟨hfden0, hgden0, hfbB, hdvdB, hfbC, hdvdC⟩ := hres.hcerts a0 b0 c0 h0 hnorm
+  have hred : IsReducedRdeSol Dt a0 b0 c0 Q :=
+    isReducedRdeSol_of_cleared_normalized Dt towerRischDEFuel fnum fden gnum gden a0 b0 c0 h0 Q
+      hnorm hfden0 hgden0 hfbB hdvdB hfbC hdvdC hQcleared
+  refine ⟨Q, ?_⟩
+  rw [cRdeSpecialDenominatorG_primitive_eq_gen Dt towerRischDEFuel a0 b0 c0 hprim]
+  exact hred
+
+/-- **★ The §6.4 `hspde` content from the fractional→reduced bridge (primitive regime)**
+(`cSPDEG_isSome_of_fractional_primitive`): END-TO-END discharge of the `hspde` clause's body in the primitive
+regime. From a fractional solution, the bridge residual, residual #2's degree bound `hbound`, and fuel
+sufficiency `CSPDEGStructG` (on the special-cleared coefficients at the §6.3 bound), the §6.4 SPDE peel
+succeeds — `(cSPDEG … (special-cleared) … (bound)).isSome = true`. Composes
+`exists_isReducedRdeSol_special_of_fractional` (the bridge) with the proven §6.4 degree-descent assembly
+`cSPDEG_isSome_of_structG_bounded`: the bridged reduced solution `Q` is bounded (via `hbound` +
+`cdegG_eq_natDegree`) and lifts to `IsReducedRdeSolK`. The exact `hspde` clause MODULO the bridge residual +
+residual #2's bound + fuel sufficiency — discharging residual #3's clause (ii) in the primitive regime. -/
+theorem cSPDEG_isSome_of_fractional_primitive
+    (Dt fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
+    (hprim : cdegG (cSpecialPolyG Dt towerRischDEFuel) = 0)
+    (hnorm : cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hres : RdeFractionalToReducedResidual Dt fnum fden gnum gden)
+    (hbound : ∀ q : CPolyG α,
+      IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+      cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
+    (hstruct : CSPDEGStructG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ))
+    (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
+    (cSPDEG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)).isSome = true := by
+  obtain ⟨Q, hQred⟩ :=
+    exists_isReducedRdeSol_special_of_fractional Dt fnum fden gnum gden a0 b0 c0 h0 hprim hnorm hres hsol
+  have hdeg : (toPolyG Q).natDegree ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+      (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+      (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+      (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 := by
+    have := hbound Q hQred; rwa [cdegG_eq_natDegree] at this
+  exact cSPDEG_isSome_of_structG_bounded Dt towerRischDEFuel _ _ _ _ (toPolyG Q) hstruct
+    (isReducedRdeSolK_of_isReducedRdeSol Dt _ _ _ Q hQred) (Or.inr (by exact_mod_cast hdeg))
+
+/-- **★ The exact `hspde` clause from the fractional→reduced bridge (primitive regime)**
+(`hspde_of_fractionalBridge`): produces the **verbatim** `RischDESolveExhaustiveResidual.hspde` field type from
+the §6.2/6.3 bridge residual, the primitive special regime, residual #2's per-output degree bound `hbound`,
+and per-output fuel sufficiency `hstruct`. For each normal-denominator output `(a0, b0, c0, h0)`, dispatches to
+the end-to-end `cSPDEG_isSome_of_fractional_primitive`. This is the discharge of residual #3's clause (ii):
+`hspde` is no longer an *assumed* converse fact — it is *produced* from the precisely isolated upstream bridge
+residual (deep clause: the §6.1/6.2 denominator-normalization) + residual #2's bound + fuel sufficiency,
+reducing `RischDESolveExhaustiveResidual` to **only** `hpoly` (§6.5/6.6) plus `hnorm` (§6.2, residual #1). -/
+theorem hspde_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG α)
+    (hprim : cdegG (cSpecialPolyG Dt towerRischDEFuel) = 0)
+    (hres : RdeFractionalToReducedResidual Dt fnum fden gnum gden)
+    (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
+    (hstruct : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      CSPDEGStructG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      (cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)).isSome = true := by
+  intro hsol a0 b0 c0 h0 hnorm
+  exact cSPDEG_isSome_of_fractional_primitive Dt fnum fden gnum gden a0 b0 c0 h0 hprim hnorm hres
+    (hbound a0 b0 c0 h0 hnorm) (hstruct a0 b0 c0 h0 hnorm) hsol
+
+end FractionalToReducedBridge
+
 /-! ## ★ The precise §6.4–6.6 exhaustiveness residual, and `hsolve` modulo it (NEVER `sorry`)
 
 The engine layer (`cRischDEG_isSome_of_stages`) reduces `hsolve` — `solvable ⟹ cRischDEG.isSome` — to the
@@ -899,6 +1207,56 @@ theorem hsolve_of_exhaustiveResidual (Dt fnum fden gnum gden : CPolyG α)
   -- assemble through the engine-layer control flow
   exact cRischDEG_isSome_of_stages Dt towerRischDEFuel fnum fden gnum gden
     a0 b0 c0 h0 bbar cbar m α' β v hnorm hspde hpoly
+
+/-- **★ `RischDESolveExhaustiveResidual` from the fractional→reduced bridge (primitive regime)**
+(`exhaustiveResidual_of_fractionalBridge`): builds the §6.4–6.6 exhaustiveness residual from the §6.2/6.3
+bridge residual `RdeFractionalToReducedResidual` (which discharges `hspde` via `hspde_of_fractionalBridge`),
+the §6.2 `hnorm` (residual #1), residual #2's per-output degree bound, the per-output fuel sufficiency, and the
+§6.5/6.6 `hpoly`. The `hspde` clause is no longer assumed — it is *produced* from the precisely isolated
+upstream bridge. So residual #3 (`RischDESolveExhaustiveResidual`) is reduced, in the primitive regime, to
+**only** `hnorm` (§6.2 normal-denominator, = residual #1) + `hpoly` (§6.5/6.6 cancellation-regime
+exhaustiveness) + the upstream bridge residual (deep clause: §6.1/6.2 denominator-normalization) + residual
+#2's bound + fuel sufficiency — clause (ii) `hspde` is closed. -/
+theorem exhaustiveResidual_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG α)
+    (hprim : cdegG (cSpecialPolyG Dt towerRischDEFuel) = 0)
+    (hnormSome : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true)
+    (hbridge : RdeFractionalToReducedResidual Dt fnum fden gnum gden)
+    (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
+    (hstruct : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      CSPDEGStructG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ))
+    (hpolyDispatch : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      ∀ a0 b0 c0 h0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+        cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+        cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+            (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+              (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+              (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+          = some (bbar, cbar, m, α', β) →
+        (cPolyRischDEG Dt towerRischDEFuel bbar cbar m).isSome = true) :
+    RischDESolveExhaustiveResidual Dt fnum fden gnum gden where
+  hnorm := hnormSome
+  hspde := hspde_of_fractionalBridge Dt fnum fden gnum gden hprim hbridge hbound hstruct
+  hpoly := hpolyDispatch
 
 end ExhaustiveResidual
 
@@ -1032,11 +1390,20 @@ does not self-certify:
 * **`hspde`** — the §6.4 SPDE peel returns `some` on a solvable input. Reachable layers proven: divisibility
   necessity + constant-base descent + the complete one-step inverse + ★ the **degree-descent recursion
   assembly** `cSPDEG_isSome_of_structG_bounded` (the per-step inverse iterated down the shrinking `deg(a/g)`
-  ladder, with the degree bookkeeping `degree_peeled_le` proven). The residue narrows to **two** facts the
-  forward direction never needed: (i) **fuel sufficiency** — the degree ladder bottoms out before fuel runs
-  out (the `CSPDEGStructG` `fuel = 0 ↦ False` base; soundness is happy with `none` at fuel 0); and (ii) the
-  upstream **fractional→reduced bridge** `IsCRischDEGPolySol → ∃ q, IsReducedRdeSolK (special-cleared) q ∧
-  bound` (the §6.2/§6.3 normal+special-denominator chain), which `hspde` as currently typed consumes.
+  ladder, with the degree bookkeeping `degree_peeled_le` proven), and ★ now the **fractional→reduced bridge**
+  itself in the primitive regime — `cSPDEG_isSome_of_fractional_primitive` / `hspde_of_fractionalBridge` /
+  `exhaustiveResidual_of_fractionalBridge` (the §6.2 reverse normal glue `rdeNormalDenominator_glue_inverse` /
+  `isReducedRdeSol_of_cleared_normalized`, the primitive special-stage identity, residual #2's bound, and the
+  trivial `K[X]` lift), so the upstream bridge `IsCRischDEGPolySol → ∃ q, IsReducedRdeSolK (special-cleared) q
+  ∧ bound` is PROVEN modulo only its own deep clause. The residue narrows to: (i) **fuel sufficiency** — the
+  degree ladder bottoms out before fuel runs out (the `CSPDEGStructG` `fuel = 0 ↦ False` base; soundness is
+  happy with `none` at fuel 0); (ii) the bridge residual `RdeFractionalToReducedResidual`, whose **single deep
+  clause** is the §6.1/6.2 **denominator-normalization** `hnormalize` (Bronstein Thm 6.1.2(i): `q = y·h0` is a
+  *polynomial*) — the cert clause `hcerts` is engine-provable; and (iii) the **non-primitive** special-clearing
+  (hyperexp/hypertangent), needing the reverse special glue `specialDenominatorSubst_cleared_inverse` (proven)
+  with the `νₚ`-bookkeeping divisibility `pⁿᵉᵍⁿ ∣ Q` — the documented continuation. The algebraic spine of
+  clause (ii) is thereby **discharged**: residual #3's `hspde` is reduced to the denominator-normalization
+  fact + fuel sufficiency.
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. Reachable
   base sub-cases proven (b=0/c=0); the irreducible residue is the **cancellation-regime exhaustiveness** (the
   non-cancellation top-down solve and the primitive/hyperexponential cancellation recursions each find a
@@ -1069,6 +1436,66 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     (cSPDEG Dt fuel a b c n).isSome = true :=
   cSPDEG_isSome_of_structG_bounded Dt fuel a b c n q hstruct hsol hq
 
+/-! ### Restatements of the §6.2/6.3 fractional→reduced bridge (anonymous `example`s) -/
+
+-- ★ The reverse normal glue: the converse of `rdeNormalDenominator_glue` (normalized `yden = H`).
+example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R)
+    (DN H FNUM FDEN GNUM GDEN A B C Q : R) (hFDEN : FDEN ≠ 0) (hGDEN : GDEN ≠ 0)
+    (hA : A = DN * H) (hB : B * FDEN = A * FNUM - DN * D H * FDEN)
+    (hC : C * GDEN = DN * H ^ 2 * GNUM)
+    (hcleared : GDEN * FDEN * (D Q * H - Q * D H) + GDEN * FNUM * Q * H = GNUM * FDEN * H ^ 2) :
+    A * D Q + B * Q = C :=
+  rdeNormalDenominator_glue_inverse D DN H FNUM FDEN GNUM GDEN A B C Q hFDEN hGDEN hA hB hC hcleared
+
+-- ★ The reverse special glue: the converse of `specialDenominatorSubst_cleared` (`Dp = E·p`, cancel `pᵏ`).
+example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R) (a b c p E q : R) (k : ℕ)
+    (hp : p ≠ 0) (hDp : D p = E * p)
+    (hcleared : a * D (q * p ^ k) + b * (q * p ^ k) = c * p ^ k) :
+    a * D q + b * q + (k : R) * (a * E) * q = c :=
+  specialDenominatorSubst_cleared_inverse D a b c p E q k hp hDp hcleared
+
+-- ★ The bridge produces the EXACT `hspde` field type of `RischDESolveExhaustiveResidual`, used as that field.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
+    (hprim : cdegG (cSpecialPolyG Dt towerRischDEFuel) = 0)
+    (hnormSome : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true)
+    (hbridge : RdeFractionalToReducedResidual Dt fnum fden gnum gden)
+    (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
+    (hstruct : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      CSPDEGStructG Dt towerRischDEFuel
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt towerRischDEFuel
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ))
+    (hpolyDispatch : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      ∀ a0 b0 c0 h0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+        cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+        cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
+            (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+              (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+              (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+          = some (bbar, cbar, m, α', β) →
+        (cPolyRischDEG Dt towerRischDEFuel bbar cbar m).isSome = true) :
+    RischDESolveExhaustiveResidual Dt fnum fden gnum gden :=
+  exhaustiveResidual_of_fractionalBridge Dt fnum fden gnum gden hprim hnormSome hbridge hbound
+    hstruct hpolyDispatch
+
 /-! ### Axiom audit (the engine, base, SPDE-control-flow, preservation, ★ degree-descent layers, and the
 modular assembly are axiom-clean; NO `sorry`; only the `native_decide` operational witnesses use the
 compiler) -/
@@ -1093,5 +1520,13 @@ compiler) -/
 #print axioms cSPDEG_isSome_of_structG_bounded
 #print axioms hsolve_of_exhaustiveResidual
 #print axioms rischDEInnerCompleteness_of_residuals
+#print axioms rdeNormalDenominator_glue_inverse
+#print axioms specialDenominatorSubst_cleared_inverse
+#print axioms isReducedRdeSolK_of_isReducedRdeSol
+#print axioms isReducedRdeSol_of_cleared_normalized
+#print axioms exists_isReducedRdeSol_special_of_fractional
+#print axioms cSPDEG_isSome_of_fractional_primitive
+#print axioms hspde_of_fractionalBridge
+#print axioms exhaustiveResidual_of_fractionalBridge
 
 end DeepWiki.SymbolicIntegration
