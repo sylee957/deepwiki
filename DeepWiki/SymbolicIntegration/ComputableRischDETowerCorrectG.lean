@@ -586,7 +586,98 @@ theorem cValuationG_sharp [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α)
     · rw [if_neg (by simpa using hdvd), zero_add, pow_one]
       exact not_dvd_of_cdvdG_false fuel p x hpne (by omega) (Bool.not_eq_true _ ▸ hdvd)
 
-/-! #### ★ Special-part self-derivative divisibility — `p ∣ D(p)` for the §6.2 monomial special polynomial -/
+/-! #### ★ The derivation-generic pole order-drop — the polynomial kernel of Bronstein Lemma 6.1.1 / Thm 4.4.2
+
+The §6.1 normal-denominator necessity (Theorem 6.1.2(i) / Corollary 6.1.1) rests on the valuation fact that
+*a derivation lowers the order of a pole at a **normal** irreducible by exactly one* — `νₚ(D y) = νₚ(y) − 1`
+when `νₚ(y) < 0` and `p ∤ D p` (Bronstein Lemma 6.1.1, via Theorem 4.4.2). Its polynomial kernel — stated for
+an arbitrary `Derivation` `D`, not just `Polynomial.derivative` — is recorded here in two halves:
+
+* `pow_sub_one_dvd_deriv_of_pow_dvd` — the universally-true LOWER bound `q^n ∣ p ⟹ q^{n−1} ∣ D p` (no
+  primality/normality/characteristic needed): the order drops by **at most** one. The `Derivation`-generic
+  analogue of Mathlib's `pow_sub_one_dvd_derivative_of_pow_dvd`.
+* `not_pow_dvd_deriv_of_normal` — the EXACT half at a normal prime: if `pⁿ ∥ f` (`n ≥ 1`, `p ∤ r` for
+  `f = pⁿ·r`), `p` prime, `p ∤ D p` (normal), over a characteristic-zero field, then `pⁿ ∤ D f` — so the
+  order is *exactly* `n − 1`. The Leibniz expansion `D f = p^{n−1}·(n·(Dp)·r + p·Dr)` has `p ∤ n·(Dp)·r`.
+
+Assembled, `emultiplicity_deriv_eq_sub_one_of_normal` gives `emultiplicity p (D f) = emultiplicity p f − 1`
+for a normal prime `p ∣ f`. These are the reusable §6.1 order-drop kernel; the genuine *fractional*-solution
+necessity additionally needs the `K(t)`-valuation lift, weak normalization, and the `k⟨t⟩` differential
+subring (see `hnormalize`'s remaining-obligation note in `ComputableRischDESolveExhaustiveness`). -/
+
+section DerivationPoleOrderDrop
+
+variable {R : Type*} [CommRing R]
+
+/-- **Derivation-generic order-drop, lower bound** (`pow_sub_one_dvd_deriv_of_pow_dvd`): for any
+`Derivation ℤ R R` and `q^n ∣ p`, `q^(n-1) ∣ D p`. The Leibniz expansion of `p = qⁿ·r` is
+`D p = qⁿ·D r + (n • q^{n−1} • D q)·r`, both summands divisible by `q^{n−1}`. The `Derivation`-generic
+analogue of Mathlib's `pow_sub_one_dvd_derivative_of_pow_dvd` (which is pinned to `Polynomial.derivative`) —
+"a derivation drops a pole's order by at most one", needing no primality, normality, or characteristic. -/
+theorem pow_sub_one_dvd_deriv_of_pow_dvd (D : Derivation ℤ R R) {p q : R} {n : ℕ}
+    (hdvd : q ^ n ∣ p) : q ^ (n - 1) ∣ D p := by
+  obtain ⟨r, rfl⟩ := hdvd
+  rw [Derivation.leibniz, Derivation.leibniz_pow, nsmul_eq_mul, smul_eq_mul, smul_eq_mul]
+  -- `D(qⁿ·r) = qⁿ·D r + r·(n·q^{n−1}·D q)`, both divisible by `q^{n−1}`.
+  refine dvd_add ((pow_dvd_pow q (Nat.sub_le n 1)).mul_right _) ?_
+  exact dvd_mul_of_dvd_right (dvd_mul_of_dvd_right (dvd_mul_right _ _) _) _
+
+end DerivationPoleOrderDrop
+
+section DerivationNormalOrderDrop
+
+variable {K : Type*} [Field K] [CharZero K]
+
+/-- **Derivation-generic order-drop, exact half at a normal prime** (`not_pow_dvd_deriv_of_normal`): over a
+characteristic-zero field, for a prime `p` that is normal for the derivation (`¬ p ∣ D p`), if `f = pⁿ·r` with
+`n ≥ 1` and `p ∤ r` (i.e. `pⁿ ∥ f` exactly), then `pⁿ ∤ D f`. Leibniz gives `D f = p^{n−1}·(n·(Dp)·r + p·Dr)`;
+dividing a hypothetical `pⁿ ∣ D f` by `p^{n−1}` forces `p ∣ n·(Dp)·r`, but `p` is prime, `p ∤ Dp` (normal),
+`p ∤ r`, and `(n : K) ≠ 0` (char zero) is a unit — contradiction. With the lower bound, this pins the order
+at exactly `n − 1`: the heart of Bronstein Lemma 6.1.1 / Theorem 4.4.2. -/
+theorem not_pow_dvd_deriv_of_normal (D : Derivation ℤ K[X] K[X]) {p r : K[X]} {n : ℕ}
+    (hp : Prime p) (hnormal : ¬ p ∣ D p) (hn : 1 ≤ n) (hr : ¬ p ∣ r) :
+    ¬ p ^ n ∣ D (p ^ n * r) := by
+  -- write `n = m + 1`; Leibniz gives `D(p^{m+1}·r) = pᵐ·((m+1)·(Dp)·r + p·D r)`.
+  obtain ⟨m, rfl⟩ := Nat.exists_eq_add_of_lt (Nat.lt_of_lt_of_le Nat.zero_lt_one hn)
+  simp only [Nat.zero_add] at *
+  have hexp : D (p ^ (m + 1) * r)
+      = p ^ m * ((m + 1 : ℕ) • (D p * r) + p * D r) := by
+    rw [Derivation.leibniz, Derivation.leibniz_pow, Nat.add_sub_cancel]
+    rw [nsmul_eq_mul, nsmul_eq_mul, smul_eq_mul, pow_succ]
+    push_cast; ring
+  intro hdvd
+  -- cancel `pᵐ` (`K[X]` a domain): `p ∣ (m+1)·(Dp)·r + p·D r`, hence `p ∣ (m+1)·(Dp)·r`.
+  have hpm0 : p ^ m ≠ 0 := pow_ne_zero m hp.ne_zero
+  rw [hexp, pow_succ, mul_dvd_mul_iff_left hpm0] at hdvd
+  have hp_dvd : p ∣ (m + 1 : ℕ) • (D p * r) + p * D r := hdvd
+  have hp_smul : p ∣ (m + 1 : ℕ) • (D p * r) :=
+    (dvd_add_right (dvd_mul_right p (D r))).mp (by rwa [add_comm] at hp_dvd)
+  -- `(m+1 : K) ≠ 0` (char zero) is a unit constant, so `p ∣ Dp·r`.
+  rw [nsmul_eq_mul] at hp_smul
+  have hunit : IsUnit ((m + 1 : ℕ) : K[X]) := by
+    rw [← Polynomial.C_eq_natCast]
+    exact Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr (by exact_mod_cast Nat.succ_ne_zero m))
+  have hp_DpR : p ∣ D p * r := hunit.dvd_mul_left.mp hp_smul
+  -- `p` prime ⟹ `p ∣ Dp` (contradicts normality) or `p ∣ r` (contradicts exactness).
+  rcases (hp.dvd_mul.mp hp_DpR) with h | h
+  · exact hnormal h
+  · exact hr h
+
+/-- **Derivation-generic exact pole order-drop** (`emultiplicity_deriv_eq_sub_one_of_normal`): over a
+characteristic-zero field, for a prime `p` normal for the derivation (`¬ p ∣ D p`), if `f = pⁿ·r` with `n ≥ 1`
+and `p ∤ r` (so `emultiplicity p f = n`), then `emultiplicity p (D f) = n − 1`. Both bounds combine: the
+universal lower bound `p^{n−1} ∣ D f` (`pow_sub_one_dvd_deriv_of_pow_dvd`) and the normal exact bound
+`pⁿ ∤ D f` (`not_pow_dvd_deriv_of_normal`). This is the polynomial-ring statement of Bronstein Lemma 6.1.1 /
+Theorem 4.4.2 — "a derivation drops the order at a normal pole by exactly one" — the kernel the §6.1
+fractional-solution denominator necessity (`hnormalize`) rests on, once lifted to `K(t)` valuations. -/
+theorem emultiplicity_deriv_eq_sub_one_of_normal (D : Derivation ℤ K[X] K[X]) {p r : K[X]} {n : ℕ}
+    (hp : Prime p) (hnormal : ¬ p ∣ D p) (hn : 1 ≤ n) (hr : ¬ p ∣ r) :
+    emultiplicity p (D (p ^ n * r)) = (n - 1 : ℕ) := by
+  apply emultiplicity_eq_of_dvd_of_not_dvd
+  · exact pow_sub_one_dvd_deriv_of_pow_dvd D (Dvd.intro r rfl)
+  · rw [Nat.sub_add_cancel hn]; exact not_pow_dvd_deriv_of_normal D hp hnormal hn hr
+
+end DerivationNormalOrderDrop
 
 open Classical in
 /-- **The special monomial polynomial divides its own monomial derivative** (`α = QFunNZG ℚ`): under a regular
@@ -931,6 +1022,17 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (hDt : toPolyG Dt ≠ 0)
     toPolyG (cSpecialPolyG Dt fuel) ∣ toPolyG (cmonomialDeriv Dt (cSpecialPolyG Dt fuel)) :=
   toPolyG_cSpecialPolyG_dvd_cmonomialDeriv Dt fuel hDt hdeg hreg
 
+-- ★ Derivation-generic pole order-drop, lower bound: `q^n ∣ p ⟹ q^{n−1} ∣ D p` (the §6.1 νₚ kernel half).
+example {R : Type*} [CommRing R] (D : Derivation ℤ R R) {p q : R} {n : ℕ} (hdvd : q ^ n ∣ p) :
+    q ^ (n - 1) ∣ D p :=
+  pow_sub_one_dvd_deriv_of_pow_dvd D hdvd
+
+-- ★ Derivation-generic pole order-drop, exact at a normal prime: `νₚ(D(pⁿ·r)) = n − 1` (Bronstein Lem 6.1.1).
+example {K : Type*} [Field K] [CharZero K] (D : Derivation ℤ K[X] K[X]) {p r : K[X]} {n : ℕ}
+    (hp : Prime p) (hnormal : ¬ p ∣ D p) (hn : 1 ≤ n) (hr : ¬ p ∣ r) :
+    emultiplicity p (D (p ^ n * r)) = (n - 1 : ℕ) :=
+  emultiplicity_deriv_eq_sub_one_of_normal D hp hnormal hn hr
+
 /-! ### Axiom audit (the `QFunNZG ℚ` §6 RDE correctness rests only on the standard kernel axioms) -/
 
 #print axioms cSPDECleared_of_inputs_qfunNZG
@@ -938,5 +1040,8 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (hDt : toPolyG Dt ≠ 0)
 #print axioms toPolyG_pow_cValuationG_dvd
 #print axioms cValuationG_sharp
 #print axioms toPolyG_cSpecialPolyG_dvd_cmonomialDeriv
+#print axioms pow_sub_one_dvd_deriv_of_pow_dvd
+#print axioms not_pow_dvd_deriv_of_normal
+#print axioms emultiplicity_deriv_eq_sub_one_of_normal
 
 end DeepWiki.SymbolicIntegration

@@ -943,14 +943,50 @@ abbrev rdeNormalBNum (Dt fnum fden h0 : CPolyG α) : CPolyG α :=
 abbrev rdeNormalCNum (Dt fden gnum h0 : CPolyG α) : CPolyG α :=
   cmulG (cmulG (cmulG (cSplitFactorFastG Dt towerRischDEFuel fden).1 h0) h0) gnum
 
+/-! ### ★ The `hnormalize` composition verdict and its precise irreducible remainder
+
+**`hnormalize` does NOT compose from the `cValuationG`-correctness keystone.** That keystone
+(`toPolyG_pow_cValuationG_dvd` / `cValuationG_sharp`) is **polynomial** multiplicity — `νₚ` of an element of
+`K[X]` by trial division. `hnormalize` (Bronstein Thm 6.1.2(i)) is a **fraction-field valuation** fact about
+the solution `y = ynum/yden ∈ K(t)` (where `K = CFieldSpec.K α`): the denominator of `y` divides the §6.1
+clearing factor `h0` (so `q = y·h0` is normal-pole-free). Sub-fact map:
+
+* `cValuationG`-correctness `pⁿ ∣ x` + sharpness — EXISTS, but it is the `K[X]`-multiplicity tool used by
+  residual #1's `eₙ ∣ dₙh²` *divisibility* (`ComputableRischDENormDivisibility`), a different clause one level
+  below `hnormalize`'s `K(t)`-valuation claim.
+* the per-prime RDE order bound `νₚ(y) ≥ −νₚ(h0)` for `y ∈ K(t)` — NEW; its math heart is
+  **Bronstein Lemma 6.1.1 / Theorem 4.4.2**, "a derivation drops the order at a normal pole by exactly one"
+  (`νₚ(Dy) = νₚ(y) − 1`). The reusable **polynomial-ring kernel** of that fact is now PROVEN, derivation-
+  generic, in `ComputableRischDETowerCorrectG`: `pow_sub_one_dvd_deriv_of_pow_dvd` (lower bound, universal),
+  `not_pow_dvd_deriv_of_normal` (exact half at a normal prime, char zero), and the assembled
+  `emultiplicity_deriv_eq_sub_one_of_normal`.
+* residual #1's `derivative_rootMultiplicity`/`cValuationG` machinery — partial, the `K[X]` side only.
+
+**The precise irreducible remainder** (what is NOT yet formalized, blocking `hnormalize`):
+1. a **`K(t)`-valuation lift** of the kernel — `νₚ` of `RatFunc` elements (Mathlib has the `Polynomial.idealX`
+   valuation but it is not wired to `toQFunNZG`), with `νₚ(Dy) = νₚ(y) − 1` for `y ∈ K(t)` from the `K[X]`
+   kernel via the quotient rule;
+2. **weak normalization** of `f` (Defn 6.1.1; a hypothesis the residual does not carry but Lemma 6.1.1 needs);
+3. the **`k⟨t⟩` differential-subring** fact (Cor 4.4.1: the cleared (6.2) LHS has no normal poles) — not yet a
+   tower-level statement;
+4. a **non-degeneracy** premise: `IsCRischDEGPolySol` is a *cleared identity*, satisfied vacuously by
+   `yden = 0`, so recovering an actual `y ∈ K(t)` needs `yden ≠ 0` (absent from the hypothesis).
+
+Note also: in the **primitive regime** `cdegG (cSpecialPolyG) = 0` (the regime this bridge is consumed in),
+`k⟨t⟩ = k[t]`, so `q = y·h0 ∈ k[t]` *is* the full Thm 6.1.2(i) there; outside it the conclusion as typed
+(`Q : CPolyG = K[X]` polynomial) additionally needs the special-denominator clearing. -/
+
 /-- **★ The §6.2/6.3 fractional→reduced bridge residual** `RdeFractionalToReducedResidual Dt fnum fden gnum
 gden`: the precise upstream input the §6.4 `hspde` needs but the engine does not self-certify, in
 solvability-implies form. `hnormalize`: ★ the **single deep clause** (Bronstein Thm 6.1.2(i)) — a fractional
 solution yields one whose **denominator equals the §6.2 clearing factor** `h0` (`∃ Q, IsCRischDEGPolySol … Q
-h0`), i.e. `q = y·h0` is a *polynomial*. `hcerts`: the §6.2 normal-clear certificates (the `B/C` exact
-divisibilities + fuel/nonzero bounds the soundness lift also consumes — engine-provable, bundled honestly).
-A `Prop`-bundle of stated assumptions, NO `sorry`; the irreducible §6.2 denominator-clearing content of the
-fractional→reduced bridge. -/
+h0`), i.e. `q = y·h0` is a *polynomial*. Does NOT compose from `cValuationG`-correctness (that is `K[X]`
+multiplicity; this is a `K(t)` valuation fact); its math kernel `νₚ(Dy) = νₚ(y) − 1` is proven derivation-
+generic (`emultiplicity_deriv_eq_sub_one_of_normal`), the irreducible remainder being the `K(t)`-valuation
+lift + weak normalization + `k⟨t⟩` (see the section note above). `hcerts`: the §6.2 normal-clear certificates
+(the `B/C` exact divisibilities + fuel/nonzero bounds the soundness lift also consumes — engine-provable,
+bundled honestly). A `Prop`-bundle of stated assumptions, NO `sorry`; the irreducible §6.2 denominator-
+clearing content of the fractional→reduced bridge. -/
 structure RdeFractionalToReducedResidual (Dt fnum fden gnum gden : CPolyG α) : Prop where
   /-- ★ Bronstein Thm 6.1.2(i): a fractional solution yields one with denominator = the clearing factor `h0`
   (`q = y·h0 ∈ k[t]`). The deep §6.1/6.2 denominator-clearing content. -/
