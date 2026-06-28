@@ -258,9 +258,13 @@ peel does not lose it. Two reachable layers:
   rescale, so `q` itself is the reduced solution `h` (with `α' = 1`, `β = 0`). No diophantine peel, no
   recursion.
 
-The genuinely deep step — the diophantine degree-peel inverse (`deg(a/g) ≠ 0`: a solution `q` reduces, via
-the Bézout relation `(b/g)·r + (a/g)·z = c/g`, to a *lower-degree* solution `h` with `q = (a/g)·h + r`) —
-is the irreducible recursion residual, isolated below. -/
+The diophantine degree-peel step (`deg(a/g) ≠ 0`: a solution `q` reduces, via the Bézout relation
+`(b/g)·r + (a/g)·z = c/g`, to a *lower-degree* solution `h` with `q = (a/g)·h + r`) is **now proven** as the
+per-step inverse `spde_peel_inverse_of_isCoprime` / `spde_peel_inverse_toPolyG` — assembling the keystone
+**peeling-divisibility** `peeling_dvd_of_isCoprime` (`(a/g) ∣ q − r`, from `gcd(a/g, b/g) = 1`) with the
+algebraic peel `spde_step_glue_inverse`. The irreducible recursion residual narrows to **only** the
+degree-descent assembly (iterating this per-step inverse down the shrinking `deg(a/g)` ladder), isolated
+below. -/
 
 section Preservation
 
@@ -287,6 +291,45 @@ theorem spde_step_glue_inverse {R : Type*} [CommRing R] [NoZeroDivisors R] (D : 
   have hzero : a * D h + (b + D a) * h - (z - D r) = 0 :=
     (mul_eq_zero.mp hcancel).resolve_left ha
   linear_combination hzero
+
+/-- **★ The SPDE peeling divisibility (algebraic core)** `peeling_dvd_of_isCoprime`: over a commutative
+ring, if `a` and `b` are **coprime** (`IsCoprime a b`, the SPDE invariant after dividing by `gcd(a, b)`), a
+solution of the divided equation `a·Dq + b·q = c`, and the Bézout relation `b·r + a·z = c`, then `a` divides
+`q − r` — `a ∣ q − r`. Pure algebra: subtracting the two relations gives `b·(q − r) = a·(z − Dq)`, so
+`a ∣ b·(q − r)`, and coprimality cancels `b`. This is the **keystone** that writes a solution `q` in the
+peeled form `q = a·h + r` consumed by `spde_step_glue_inverse` — the divisibility the engine never derives
+(it only lifts a sub-solution up). -/
+theorem peeling_dvd_of_isCoprime {R : Type*} [CommRing R] (D : Derivation ℤ R R)
+    (a b c r z q : R) (hco : IsCoprime a b)
+    (hsol : a * D q + b * q = c)
+    (hbez : b * r + a * z = c) :
+    a ∣ q - r := by
+  -- subtract the two relations: `b·(q − r) = a·(z − Dq)`, so `a ∣ b·(q − r)`
+  have hmul : b * (q - r) = a * (z - D q) := by linear_combination hsol - hbez
+  have hdvd : a ∣ b * (q - r) := ⟨z - D q, hmul⟩
+  exact hco.dvd_of_dvd_mul_left hdvd
+
+/-- **★ The SPDE per-step solution-preservation inverse** `spde_peel_inverse_of_isCoprime`: over a
+commutative ring with no zero divisors, the **full** inverse of one §6.4 SPDE peel step. Given coprime,
+nonzero leading coefficients (`IsCoprime a b`, `a ≠ 0`), a solution of the divided equation
+`a·Dq + b·q = c`, and the Bézout relation `b·r + a·z = c`, there is a peel factor `h` with `q = a·h + r`
+that *provably* solves the **reduced** equation `a·Dh + (b + Da)·h = z − Dr`. Assembles
+`peeling_dvd_of_isCoprime` (writes `q = a·h + r`) with `spde_step_glue_inverse` (descends the solution).
+This is the exact converse of the soundness peel `spde_step_glue`; the irreducible residue of the §6.4 SPDE
+exhaustiveness is thereby narrowed to the recursion's degree-descent assembly plus the gcd-coprimality
+discharge — the peeling divisibility itself is now proven. -/
+theorem spde_peel_inverse_of_isCoprime {R : Type*} [CommRing R] [NoZeroDivisors R]
+    (D : Derivation ℤ R R) (a b c r z q : R) (hco : IsCoprime a b) (ha : a ≠ 0)
+    (hsol : a * D q + b * q = c)
+    (hbez : b * r + a * z = c) :
+    ∃ h : R, q = a * h + r ∧ a * D h + (b + D a) * h = z - D r := by
+  -- the keystone divisibility writes `q = a·h + r`
+  obtain ⟨h, hh⟩ := peeling_dvd_of_isCoprime D a b c r z q hco hsol hbez
+  refine ⟨h, by linear_combination hh, ?_⟩
+  -- substitute `q = a·h + r` into the divided equation, then run the peel-step inverse
+  have hpeeled : a * D (a * h + r) + b * (a * h + r) = c := by
+    rw [show a * h + r = q from by linear_combination -hh]; exact hsol
+  exact spde_step_glue_inverse D a b c r z h ha hbez hpeeled
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
@@ -347,6 +390,54 @@ theorem isReducedRdeSol_const_base (Dt a b c q ad bd cd g : CPolyG α) (a0 : CFi
   -- the `bd` term is already in the goal's left-associated `C a0⁻¹ * bd * q` form
   linear_combination hscaled
 
+/-- **★ The SPDE peeling divisibility through `toPolyG`** (`dvd_sub_of_isReducedRdeSol`): the engine-carrier
+form of `peeling_dvd_of_isCoprime`. If the divided leading coefficients are coprime
+(`IsCoprime (toPolyG ad) (toPolyG bd)`, the SPDE invariant after dividing by `gcd`), `q` solves the divided
+equation `ad·Dq + bd·q = cd` (`IsReducedRdeSol Dt ad bd cd q`), and the Bézout cofactors `r, z` satisfy
+`bd·r + ad·z = cd`, then `ad ∣ q − r` — `toPolyG ad ∣ toPolyG q − toPolyG r`. The keystone that writes a
+divided-equation solution in the peeled form `q = ad·h + r` (`q − r = ad·h`), which the recursion needs and
+the engine never derives. -/
+theorem dvd_sub_of_isReducedRdeSol (Dt ad bd cd r z q : CPolyG α)
+    (hco : IsCoprime (toPolyG ad) (toPolyG bd))
+    (hsol : IsReducedRdeSol Dt ad bd cd q)
+    (hbez : toPolyG bd * toPolyG r + toPolyG ad * toPolyG z = toPolyG cd) :
+    toPolyG ad ∣ toPolyG q - toPolyG r :=
+  peeling_dvd_of_isCoprime (Differential.implicitDeriv (toPolyG Dt))
+    (toPolyG ad) (toPolyG bd) (toPolyG cd) (toPolyG r) (toPolyG z) (toPolyG q) hco hsol hbez
+
+/-- **★ The SPDE per-step solution-preservation inverse through `toPolyG`** (`spde_peel_inverse_toPolyG`):
+the engine-carrier **full** inverse of one §6.4 SPDE peel step. Given coprime, nonzero leading coefficients
+(`IsCoprime (toPolyG ad) (toPolyG bd)`, `toPolyG ad ≠ 0`), a divided-equation solution
+`IsReducedRdeSol Dt ad bd cd q`, and the Bézout `bd·r + ad·z = cd`, there is a peel factor `h` with
+`q = ad·h + r` that **provably** solves the reduced equation `ad·Dh + (bd + D(ad))·h = z − Dr` over
+`(CFieldSpec.K α)[X]`. The exact converse of `cSPDE_peel_cleared_gen`: the §6.4 SPDE peel descends a
+solution one level, so it cannot lose it. The remaining §6.4 residue is only the recursion's degree-descent
+assembly (and the gcd-coprimality discharge); the per-step inverse itself — including the peeling
+divisibility — is now proven. -/
+theorem spde_peel_inverse_toPolyG (Dt ad bd cd r z q : CPolyG α)
+    (hco : IsCoprime (toPolyG ad) (toPolyG bd)) (had : toPolyG ad ≠ 0)
+    (hsol : IsReducedRdeSol Dt ad bd cd q)
+    (hbez : toPolyG bd * toPolyG r + toPolyG ad * toPolyG z = toPolyG cd) :
+    ∃ h : (CFieldSpec.K α)[X],
+      toPolyG q = toPolyG ad * h + toPolyG r ∧
+      toPolyG ad * Differential.implicitDeriv (toPolyG Dt) h
+          + (toPolyG bd + Differential.implicitDeriv (toPolyG Dt) (toPolyG ad)) * h
+        = toPolyG z - Differential.implicitDeriv (toPolyG Dt) (toPolyG r) :=
+  spde_peel_inverse_of_isCoprime (Differential.implicitDeriv (toPolyG Dt))
+    (toPolyG ad) (toPolyG bd) (toPolyG cd) (toPolyG r) (toPolyG z) (toPolyG q) hco had hsol hbez
+
+-- ★ Restatement: the peeling divisibility says *exactly* `a ∣ q − r` from coprimality + the two relations.
+example {R : Type*} [CommRing R] (D : Derivation ℤ R R) (a b c r z q : R)
+    (hco : IsCoprime a b) (hsol : a * D q + b * q = c) (hbez : b * r + a * z = c) :
+    a ∣ q - r :=
+  peeling_dvd_of_isCoprime D a b c r z q hco hsol hbez
+
+-- ★ Restatement: the per-step inverse produces `h` with `q = a·h + r` solving the reduced equation.
+example {R : Type*} [CommRing R] [NoZeroDivisors R] (D : Derivation ℤ R R) (a b c r z q : R)
+    (hco : IsCoprime a b) (ha : a ≠ 0) (hsol : a * D q + b * q = c) (hbez : b * r + a * z = c) :
+    ∃ h : R, q = a * h + r ∧ a * D h + (b + D a) * h = z - D r :=
+  spde_peel_inverse_of_isCoprime D a b c r z q hco ha hsol hbez
+
 end Preservation
 
 /-! ## ★ The precise §6.4–6.6 exhaustiveness residual, and `hsolve` modulo it (NEVER `sorry`)
@@ -363,13 +454,18 @@ named residual `RischDESolveExhaustiveResidual`, in solvability-implies / staged
 
 * **`hspde`** — the §6.4 SPDE peel returns `some` on a solvable input. The reachable layers are proven here:
   the divisibility necessity (`dvd_c_of_isReducedRdeSol`, so the `cdvdG g c` gate never rejects a solution),
-  the constant-base descent (`isReducedRdeSol_const_base`), and ★ the **peel-step inverse**
+  the constant-base descent (`isReducedRdeSol_const_base`), ★ the **peel-step inverse**
   (`spde_step_glue_inverse`, the exact converse of the soundness peel atom `spde_step_glue`/
-  `cSPDE_peel_cleared_gen`): once a solution is written in peeled form `q = (a/g)·h + r`, the factor `h`
-  *provably* solves the reduced equation `(a/g)·Dh + ((b/g) + D(a/g))·h = z − Dr`. The irreducible residue is
-  thereby narrowed to the **peeling-divisibility** `(a/g) ∣ (q − r)` (which writes a solution in peeled form,
-  via the Bézout `(b/g)·r + (a/g)·z = c/g`) plus the recursion's degree-descent assembly. The engine never
-  derives these (it only lifts a sub-solution up, never descends a solution down).
+  `cSPDE_peel_cleared_gen`), and ★ now the **peeling-divisibility** itself
+  (`dvd_sub_of_isReducedRdeSol` / `peeling_dvd_of_isCoprime`: from the SPDE coprimality `gcd(a/g, b/g) = 1`,
+  a divided-equation solution forces `(a/g) ∣ (q − r)`, via the Bézout `(b/g)·r + (a/g)·z = c/g` —
+  `IsCoprime.dvd_of_dvd_mul_left` after `(b/g)·(q − r) = (a/g)·(z − Dq)`). Their composite
+  `spde_peel_inverse_toPolyG` is the **complete one-step inverse**: a divided-equation solution `q`
+  *provably* yields a peel factor `h` with `q = (a/g)·h + r` solving the reduced
+  `(a/g)·Dh + ((b/g) + D(a/g))·h = z − Dr`. The irreducible residue is thereby narrowed to **only** the
+  recursion's degree-descent assembly (re-applying the per-step inverse down the `cdegG(a/g)`-shrinking
+  ladder to force `cSPDEG.isSome`) plus the gcd-coprimality discharge (`gcd(a/g, b/g) = 1` from gcd
+  correctness). The engine never assembles this descent (it only lifts a sub-solution up).
 
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. The
   reachable base sub-cases are proven here (`cPolyRischDEG_isSome_of_bZero` integration,
@@ -393,8 +489,9 @@ gden`: the two staged converse facts a polynomial solution clears the §6.4 SPDE
 `none`-gates, in solvability-implies form. `hnorm`: a solution makes the §6.2 normal-denominator step return
 `some` (produced by `ComputableRischDENormCompleteness` — recorded here as the upstream precondition).
 `hspde`: ★ for the §6.2-special-cleared coefficients of a normal-denominator output, a solution makes the
-§6.4 SPDE peel at the §6.3 bound degree return `some` (the divisibility necessity + constant-base descent are
-proven; the diophantine degree-peel inverse is the deep residue). `hpoly`: ★ for the SPDE output
+§6.4 SPDE peel at the §6.3 bound degree return `some` (the divisibility necessity + constant-base descent +
+the **complete per-step inverse** `spde_peel_inverse_toPolyG`, incl. the peeling-divisibility, are proven;
+only the degree-descent recursion assembly remains). `hpoly`: ★ for the SPDE output
 `(bbar, cbar, m)`, a solution makes the §6.5/§6.6 poly-RDE dispatcher return `some` (the b=0/c=0 base
 sub-cases are proven; the cancellation-regime exhaustiveness is the deep residue). Their conjunction, threaded
 through `cRischDEG_isSome_of_stages`, is exactly `hsolve`. A `Prop`-bundle of stated assumptions, NO
@@ -404,7 +501,8 @@ structure RischDESolveExhaustiveResidual (Dt fnum fden gnum gden : CPolyG α) : 
   hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true
   /-- ★ §6.4: for a normal-denominator output `(a0, b0, c0, h0)`, a solution makes the SPDE peel at the §6.3
-  bound degree on the special-cleared coefficients return `some` (the diophantine degree-peel inverse, deep). -/
+  bound degree on the special-cleared coefficients return `some` (per-step inverse proven; only the
+  degree-descent recursion assembly remains). -/
   hspde : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     ∀ a0 b0 c0 h0 : CPolyG α,
       cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
@@ -559,20 +657,27 @@ exhaustiveness.
   total sub-cases are exhaustive unconditionally;
 * the **SPDE control flow** — `cSPDEG_isSome_of_neg_cZero` (n<0 base), `cSPDEG_isSome_of_const_base` (g∣c +
   constant `a/g` ⟹ `some` directly), `cSPDEG_isSome_of_recurse` (the recursion's `isSome` is the sub-call's);
-* ★ the **SPDE per-step solution-preservation** — `dvd_c_of_isReducedRdeSol` (the **divisibility necessity**:
-  g∣a ∧ g∣b ⟹ a solution forces g∣c, so the SPDE `cdvdG` gate never rejects a true solution — pure algebra,
-  no gcd correctness), `isReducedRdeSol_const_base` (the constant-base descent: q itself is the reduced
-  solution), and ★ `spde_step_glue_inverse` (the **peel-step inverse**, exact converse of the soundness
-  `spde_step_glue`: a solution in peeled form `q = a·h + r` makes `h` provably solve the reduced equation,
-  by cancelling the nonzero leading `a`). These are the structural heart, proven for the reachable cases.
+* ★ the **SPDE per-step solution-preservation** (the structural heart, now *complete* for one peel step) —
+  `dvd_c_of_isReducedRdeSol` (the **divisibility necessity**: g∣a ∧ g∣b ⟹ a solution forces g∣c, so the SPDE
+  `cdvdG` gate never rejects a true solution — pure algebra, no gcd correctness), `isReducedRdeSol_const_base`
+  (the constant-base descent: q itself is the reduced solution), `spde_step_glue_inverse` (the **peel-step
+  inverse**, exact converse of the soundness `spde_step_glue`: a solution in peeled form `q = a·h + r` makes
+  `h` provably solve the reduced equation, by cancelling the nonzero leading `a`), ★ the **peeling-divisibility**
+  `peeling_dvd_of_isCoprime` / `dvd_sub_of_isReducedRdeSol` (from `gcd(a/g, b/g) = 1`, a divided-equation
+  solution forces `(a/g) ∣ q − r` — `IsCoprime.dvd_of_dvd_mul_left` after `(b/g)·(q − r) = (a/g)·(z − Dq)`),
+  and their composite ★ `spde_peel_inverse_of_isCoprime` / `spde_peel_inverse_toPolyG` (the **complete one-step
+  inverse**: a divided-equation solution `q` yields a peel factor `h` with `q = (a/g)·h + r` solving the
+  reduced equation — the diophantine degree-peel step is no longer a residue).
 
 **The deep residual** (`RischDESolveExhaustiveResidual`, NEVER `sorry`). Two staged converse facts the engine
 does not self-certify:
-* **`hspde`** — the §6.4 SPDE peel returns `some` on a solvable input. Reachable layers proven (divisibility
-  necessity + constant-base descent + ★ the **peel-step inverse** `spde_step_glue_inverse`: a solution in
-  peeled form `q = (a/g)·h + r` makes `h` provably solve the reduced equation). The irreducible residue is
-  thereby narrowed to the **peeling-divisibility** `(a/g) ∣ (q − r)` (writing a solution in peeled form, via
-  the Bézout `(b/g)·r + (a/g)·z = c/g`) plus the recursion's degree-descent assembly.
+* **`hspde`** — the §6.4 SPDE peel returns `some` on a solvable input. Reachable layers proven: divisibility
+  necessity + constant-base descent + ★ the **complete one-step inverse** `spde_peel_inverse_toPolyG`
+  (peeling-divisibility `(a/g) ∣ q − r` *now proven* via `peeling_dvd_of_isCoprime` from `gcd(a/g, b/g) = 1`,
+  then the peel `spde_step_glue_inverse`: a divided-equation solution `q` yields `h` with `q = (a/g)·h + r`
+  solving the reduced equation). The irreducible residue is thereby narrowed to **only** the recursion's
+  degree-descent assembly — iterating this per-step inverse down the shrinking `deg(a/g)` ladder to force
+  `cSPDEG.isSome`, together with the gcd-coprimality discharge (`gcd(a/g, b/g) = 1` from gcd correctness).
 * **`hpoly`** — the §6.5/§6.6 poly-RDE dispatcher returns `some` on a solvable reduced equation. Reachable
   base sub-cases proven (b=0/c=0); the irreducible residue is the **cancellation-regime exhaustiveness** (the
   non-cancellation top-down solve and the primitive/hyperexponential cancellation recursions each find a
@@ -581,7 +686,8 @@ does not self-certify:
 **What `RischDEInnerCompleteness` now reduces to (the complete 3-clause map).** With `hnorm`
 (`ComputableRischDENormCompleteness`, modulo Bronstein Thm 6.1.2 divisibility), `hbound`
 (`ComputableRischDEDegreeBound`, modulo the §6.3 `λ`-cancellation), and `hsolve` here (modulo the §6.4–6.6
-diophantine-peel + cancellation-regime residue), `rischDEInnerCompleteness_of_residuals` assembles
+SPDE degree-descent-assembly + cancellation-regime residue — the per-step SPDE inverse incl. its
+peeling-divisibility now proven), `rischDEInnerCompleteness_of_residuals` assembles
 `RischDEInnerCompleteness` **in full** from its three precise residuals. Clause (c) of
 `RischDECompletenessResidual` — and hence the whole §6 decision-procedure completeness `solvable ⟹ some` — is
 mapped to exactly three precisely isolated deep facts, **none** a `sorry`: the §6.2 normal-denominator
@@ -596,7 +702,11 @@ are axiom-clean; NO `sorry`; only the `native_decide` operational witnesses use 
 #print axioms cSPDEG_isSome_of_const_base
 #print axioms cSPDEG_isSome_of_recurse
 #print axioms spde_step_glue_inverse
+#print axioms peeling_dvd_of_isCoprime
+#print axioms spde_peel_inverse_of_isCoprime
 #print axioms dvd_c_of_isReducedRdeSol
+#print axioms dvd_sub_of_isReducedRdeSol
+#print axioms spde_peel_inverse_toPolyG
 #print axioms isReducedRdeSol_const_base
 #print axioms hsolve_of_exhaustiveResidual
 #print axioms rischDEInnerCompleteness_of_residuals
