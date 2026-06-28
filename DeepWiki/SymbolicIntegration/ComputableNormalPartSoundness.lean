@@ -380,6 +380,255 @@ theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCore α]
     rw [toPolyG_cdivG_exact_g fuel (cmulG resNum Dstar) resDen hresDen hfuel hdvd, toPolyG_cmulG]
   exact degree_lt_of_exact_div hexact hresProper hDstar
 
+/-! ### ★ The residual-fraction properness `deg resNum < deg resDen` — closing `hproper` (δ(t) ≤ 1)
+
+The exact-division half above reduces the unconditional `hproper` to (b) `deg resNum < deg resDen`, i.e.
+the residual fraction `resNum/resDen = a/d − D(g)` is **proper**, which (the input `a/d` being proper)
+is exactly **`D(g)` proper**. This section discharges (b). The engine assembles the rational part `g =
+gnum/gden` by a `fracAddG` fold of per-squarefree-factor contributions `gloc`, so the arc is:
+
+* a **fold-induction** that the assembled `g` stays proper (`deg gnum < deg gden`) from each contribution
+  `gloc` being proper (`foldl_fracAddG_proper`, and the engine's actual guarded `zipIdx`-fold form
+  `foldl_guarded_fracAddG_proper`), via the proper-fraction-addition degree law
+  (`degree_fracAdd_lt_of_proper` / `toPolyG_fracAddG_proper`);
+* a **derivative-degree** step that `D(g)`'s numerator `D(gnum)·gden − gnum·D(gden)` is proper for `gden²`
+  (`degree_implicitDeriv_frac_lt_of_margin` / `toPolyG_gprimeNum_proper_of_margin`). The monomial-derivation
+  degree bound `natDegree_implicitDeriv_le` gives `deg(D p) ≤ deg p + max(0, δ(t) − 1)` (`δ(t) = deg Dt`),
+  so the derivative of a proper fraction is proper **with the margin** `deg gnum + max(0, δ(t) − 1) < deg
+  gden`. For `δ(t) ≤ 1` (the base rational case `Dt = 1`, exponentials `Dt = t`, logarithms `Dt` constant —
+  i.e. `max(0, δ(t) − 1) = 0`) the margin **is** plain properness `deg gnum < deg gden`, so the fold-induction
+  closes it directly (`toPolyG_gprimeNum_proper_of_degree_le_one`); for the nonlinear `δ(t) ≥ 2` case
+  (`tan`/`tanh`, `Dt = t² + 1`) the margin needs the sharper leading-coefficient/cancellation analysis (the
+  transcendental `RdeBoundCancellationResidual` technique), the named continuation;
+* the **combination** `resNum = a·gden² − d·(D(g)-numer)`, `resDen = d·gden²`: the difference of two proper
+  fractions is proper (`degree_resNum_lt` / `toPolyG_resNum_proper`), giving (b) and hence `hproper` —
+  unconditional for `δ(t) ≤ 1` (`toPolyG_residualFraction_proper_of_degree_le_one`). -/
+
+/-- **Proper-fraction addition is proper** (abstract, over a field): for `p₁/q₁ + p₂/q₂ = (p₁q₂ +
+p₂q₁)/(q₁q₂)`, if `deg p₁ < deg q₁` and `deg p₂ < deg q₂` then `deg(p₁q₂ + p₂q₁) < deg(q₁q₂)`. The
+multiplicative degree law makes each cross term `pᵢqⱼ` strictly below `q₁q₂`, and `degree_add_le` finishes.
+The reusable degree core of the Hermite `g`-accumulator staying proper. -/
+theorem degree_fracAdd_lt_of_proper {K : Type*} [Field K] {p1 q1 p2 q2 : K[X]}
+    (h1 : p1.degree < q1.degree) (h2 : p2.degree < q2.degree) :
+    (p1 * q2 + p2 * q1).degree < (q1 * q2).degree := by
+  have hq1 : q1 ≠ 0 := by rintro rfl; simp at h1
+  have hq2 : q2 ≠ 0 := by rintro rfl; simp at h2
+  have e1 : (p1 * q2).degree < (q1 * q2).degree := by
+    rw [Polynomial.degree_mul, Polynomial.degree_mul]
+    exact WithBot.add_lt_add_right (by rwa [Ne, Polynomial.degree_eq_bot]) h1
+  have e2 : (p2 * q1).degree < (q1 * q2).degree := by
+    rw [Polynomial.degree_mul, mul_comm q1 q2, Polynomial.degree_mul]
+    exact WithBot.add_lt_add_right (by rwa [Ne, Polynomial.degree_eq_bot]) h2
+  exact lt_of_le_of_lt (Polynomial.degree_add_le _ _) (max_lt e1 e2)
+
+/-- **The residual numerator of a difference of proper fractions is proper** (abstract, over a field): for
+`A/D − GP/GG` with `A/D` proper (`deg A < deg D`) and `GP/GG` proper (`deg GP < deg GG`), the combined
+numerator `A·GG − D·GP` is proper for the combined denominator `D·GG`, `deg(A·GG − D·GP) < deg(D·GG)`. Both
+terms are strictly below `D·GG` by the multiplicative degree law; `degree_sub_le` finishes. The reusable core
+of the Hermite residual `a/d − D(g)` being proper. -/
+theorem degree_resNum_lt {K : Type*} [Field K] {A D GG GP : K[X]}
+    (haProper : A.degree < D.degree) (hgprime : GP.degree < GG.degree) :
+    (A * GG - D * GP).degree < (D * GG).degree := by
+  have hGG : GG ≠ 0 := by rintro h; rw [h] at hgprime; simp at hgprime
+  have hD : D ≠ 0 := by rintro h; rw [h] at haProper; simp at haProper
+  have e1 : (A * GG).degree < (D * GG).degree := by
+    rw [Polynomial.degree_mul, Polynomial.degree_mul]
+    exact WithBot.add_lt_add_right (by rwa [Ne, Polynomial.degree_eq_bot]) haProper
+  have e2 : (D * GP).degree < (D * GG).degree := by
+    rw [Polynomial.degree_mul, Polynomial.degree_mul,
+      WithBot.add_lt_add_iff_left (by rwa [Ne, Polynomial.degree_eq_bot])]
+    exact hgprime
+  exact lt_of_le_of_lt (Polynomial.degree_sub_le _ _) (max_lt e1 e2)
+
+/-- **The monomial derivation of a proper fraction is proper** (abstract, margin form): for `N/M` with `M ≠
+0`, the derivative numerator `D(N)·M − N·D(M)` (`D = implicitDeriv v`) is proper for `M²` — `deg(D(N)·M −
+N·D(M)) < deg(M²)` — **given** the margin `deg N + max(0, deg v − 1) < deg M`. Each term is bounded by
+`natDegree_implicitDeriv_le` (`deg(D p) ≤ deg p + max(0, deg v − 1)`); the margin keeps both strictly below
+`deg M + deg M = deg(M²)`. The `degree`-form margin handles `N = 0` (`deg N = ⊥`) uniformly. For `deg v ≤ 1`
+the margin collapses to plain properness `deg N < deg M`. The reusable core of `D(g)` proper. -/
+theorem degree_implicitDeriv_frac_lt_of_margin {K : Type*} [Field K] [Differential K] {v N M : K[X]}
+    (hM : M ≠ 0) (hmargin : N.degree + (max 0 (v.natDegree - 1) : ℕ) < M.degree) :
+    (Differential.implicitDeriv v N * M - N * Differential.implicitDeriv v M).degree
+      < (M * M).degree := by
+  set δ : ℕ := max 0 (v.natDegree - 1) with hδ
+  have hMdeg : (M * M).degree = M.degree + M.degree := Polynomial.degree_mul
+  have hd1 : (Differential.implicitDeriv v N * M).degree < (M * M).degree := by
+    rw [Polynomial.degree_mul, hMdeg]
+    have hDN : (Differential.implicitDeriv v N).degree ≤ N.degree + (δ : ℕ) := by
+      rcases eq_or_ne (Differential.implicitDeriv v N) 0 with h0 | h0
+      · rw [h0, Polynomial.degree_zero]; exact bot_le
+      · rw [Polynomial.degree_eq_natDegree h0]
+        rcases eq_or_ne N 0 with hN0 | hN0
+        · rw [hN0, map_zero] at h0; exact absurd rfl h0
+        · rw [Polynomial.degree_eq_natDegree hN0]; exact_mod_cast natDegree_implicitDeriv_le v N
+    have hlt : (Differential.implicitDeriv v N).degree < M.degree := lt_of_le_of_lt hDN hmargin
+    exact WithBot.add_lt_add_right (by rwa [Ne, Polynomial.degree_eq_bot]) hlt
+  have hd2 : (N * Differential.implicitDeriv v M).degree < (M * M).degree := by
+    rw [Polynomial.degree_mul, hMdeg]
+    have hDM : (Differential.implicitDeriv v M).degree ≤ M.degree + (δ : ℕ) := by
+      rcases eq_or_ne (Differential.implicitDeriv v M) 0 with h0 | h0
+      · rw [h0, Polynomial.degree_zero]; exact bot_le
+      · rw [Polynomial.degree_eq_natDegree h0, Polynomial.degree_eq_natDegree hM]
+        exact_mod_cast natDegree_implicitDeriv_le v M
+    calc N.degree + (Differential.implicitDeriv v M).degree
+        ≤ N.degree + (M.degree + (δ : ℕ)) := by gcongr
+      _ = (N.degree + (δ : ℕ)) + M.degree := by ring
+      _ < M.degree + M.degree :=
+          WithBot.add_lt_add_right (by rwa [Ne, Polynomial.degree_eq_bot]) hmargin
+  exact lt_of_le_of_lt (Polynomial.degree_sub_le _ _) (max_lt hd1 hd2)
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **One Hermite `g`-fold step preserves properness** (engine form): the cross-multiplied fraction-add
+`(caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)` of two proper fractions `gAcc`,
+`gloc` is proper. `toPolyG`-transport of `degree_fracAdd_lt_of_proper` through the homomorphisms
+`toPolyG_caddG`/`toPolyG_cmulG`. The per-step engine lemma the fold-induction threads. -/
+theorem toPolyG_fracAddG_proper {gAcc gloc : CPolyG α × CPolyG α}
+    (h1 : (toPolyG gAcc.1).degree < (toPolyG gAcc.2).degree)
+    (h2 : (toPolyG gloc.1).degree < (toPolyG gloc.2).degree) :
+    (toPolyG (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2))).degree
+      < (toPolyG (cmulG gAcc.2 gloc.2)).degree := by
+  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
+  exact degree_fracAdd_lt_of_proper h1 h2
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The Hermite `g`-fold stays proper** (engine fold-induction): folding the fraction-add combiner from a
+proper seed `s` over a list `glocs` of proper contributions yields a proper running fraction `deg res.1 <
+deg res.2`. By list induction with `toPolyG_fracAddG_proper`. The degree analogue of
+`amG_toPolyG_foldl_fracAddG` — the assembled rational part `g` stays proper given each per-factor
+contribution is proper. -/
+theorem foldl_fracAddG_proper :
+    ∀ (glocs : List (CPolyG α × CPolyG α)) (s : CPolyG α × CPolyG α),
+      (toPolyG s.1).degree < (toPolyG s.2).degree →
+      (∀ g ∈ glocs, (toPolyG g.1).degree < (toPolyG g.2).degree) →
+      let res := glocs.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) gloc =>
+          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2)) s
+      (toPolyG res.1).degree < (toPolyG res.2).degree := by
+  intro glocs
+  induction glocs with
+  | nil => intro s hs _; exact hs
+  | cons gloc rest ih =>
+    intro s hs hmem
+    have hgloc : (toPolyG gloc.1).degree < (toPolyG gloc.2).degree := hmem gloc List.mem_cons_self
+    have hrest : ∀ g ∈ rest, (toPolyG g.1).degree < (toPolyG g.2).degree :=
+      fun g hg => hmem g (List.mem_cons_of_mem _ hg)
+    set snew : CPolyG α × CPolyG α :=
+      (caddG (cmulG s.1 gloc.2) (cmulG gloc.1 s.2), cmulG s.2 gloc.2) with hsnew
+    have hsnew_proper : (toPolyG snew.1).degree < (toPolyG snew.2).degree := by
+      rw [hsnew]; exact toPolyG_fracAddG_proper hs hgloc
+    simpa only [List.foldl_cons] using ih snew hsnew_proper hrest
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The guarded Hermite `g`-fold stays proper** (the engine's actual fold form): the `cHermiteReduceTowerG`
+`g`-fold iterates `if skip b then gAcc else (gAcc + glocOf b)` — skipping the multiplicity-`1` factors. From a
+proper seed and each non-skipped step's `glocOf b` proper, the running fraction stays proper. By list
+induction casing on the `skip` guard (`if_pos` leaves `gAcc` proper; `if_neg` is one `toPolyG_fracAddG_proper`
+step). The form directly matching the engine `factors.zipIdx.foldl` with its `i ≤ 1` guard. -/
+theorem foldl_guarded_fracAddG_proper {β : Type*} (glocOf : β → CPolyG α × CPolyG α)
+    (skip : β → Prop) [DecidablePred skip] :
+    ∀ (xs : List β) (s : CPolyG α × CPolyG α),
+      (toPolyG s.1).degree < (toPolyG s.2).degree →
+      (∀ b ∈ xs, ¬ skip b → (toPolyG (glocOf b).1).degree < (toPolyG (glocOf b).2).degree) →
+      let res := xs.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+          if skip b then gAcc
+          else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
+                cmulG gAcc.2 (glocOf b).2)) s
+      (toPolyG res.1).degree < (toPolyG res.2).degree := by
+  intro xs
+  induction xs with
+  | nil => intro s hs _; exact hs
+  | cons b rest ih =>
+    intro s hs hmem
+    have hrest : ∀ b' ∈ rest, ¬ skip b' →
+        (toPolyG (glocOf b').1).degree < (toPolyG (glocOf b').2).degree :=
+      fun b' hb' => hmem b' (List.mem_cons_of_mem _ hb')
+    simp only [List.foldl_cons]
+    by_cases hsk : skip b
+    · rw [show (if skip b then s
+          else (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2),
+                cmulG s.2 (glocOf b).2)) = s from if_pos hsk]
+      exact ih s hs hrest
+    · set snew : CPolyG α × CPolyG α :=
+        (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2), cmulG s.2 (glocOf b).2) with hsnew
+      rw [show (if skip b then s
+          else (caddG (cmulG s.1 (glocOf b).2) (cmulG (glocOf b).1 s.2),
+                cmulG s.2 (glocOf b).2)) = snew from if_neg hsk]
+      have hgloc : (toPolyG (glocOf b).1).degree < (toPolyG (glocOf b).2).degree :=
+        hmem b List.mem_cons_self hsk
+      have hsnew_proper : (toPolyG snew.1).degree < (toPolyG snew.2).degree := by
+        rw [hsnew]; exact toPolyG_fracAddG_proper hs hgloc
+      exact ih snew hsnew_proper hrest
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **`D(g)`'s numerator is proper for `gden²`** (engine form, margin): the residual derivative numerator
+`D(gnum)·gden − gnum·D(gden)` (`D = cmonomialDeriv Dt`) is proper for `gden²` — `deg < deg(gden·gden)` —
+given `gden ≠ 0` and the margin `deg gnum + max(0, deg Dt − 1) < deg gden`. `toPolyG`-transport of
+`degree_implicitDeriv_frac_lt_of_margin` through `toPolyG_cmonomialDeriv` (`= implicitDeriv (toPolyG Dt)`).
+The engine `D(g)`-proper lemma, margin form (the margin is plain properness when `deg Dt ≤ 1`). -/
+theorem toPolyG_gprimeNum_proper_of_margin (Dt gnum gden : CPolyG α) (hM : toPolyG gden ≠ 0)
+    (hmargin :
+      (toPolyG gnum).degree + (max 0 ((toPolyG Dt).natDegree - 1) : ℕ) < (toPolyG gden).degree) :
+    (toPolyG (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+        (cmulG gnum (cmonomialDeriv Dt gden)))).degree
+      < (toPolyG (cmulG gden gden)).degree := by
+  rw [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
+    toPolyG_cmonomialDeriv, toPolyG_cmonomialDeriv]
+  exact degree_implicitDeriv_frac_lt_of_margin hM hmargin
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **`D(g)` proper from `g` proper, when `deg Dt ≤ 1`** (engine form): for `deg Dt ≤ 1` (the base rational
+case `Dt = 1`, exponentials `Dt = t`, logarithms `Dt` constant), a proper `g = gnum/gden` (`deg gnum < deg
+gden`) has proper derivative numerator `D(gnum)·gden − gnum·D(gden)` for `gden²`. The margin `max(0, deg Dt −
+1) = 0` collapses to plain properness, discharging `toPolyG_gprimeNum_proper_of_margin`. The unconditional
+`D(g)` proper for non-nonlinear monomials. -/
+theorem toPolyG_gprimeNum_proper_of_degree_le_one (Dt gnum gden : CPolyG α) (hM : toPolyG gden ≠ 0)
+    (hDt : (toPolyG Dt).natDegree ≤ 1)
+    (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
+    (toPolyG (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+        (cmulG gnum (cmonomialDeriv Dt gden)))).degree
+      < (toPolyG (cmulG gden gden)).degree := by
+  refine toPolyG_gprimeNum_proper_of_margin Dt gnum gden hM ?_
+  have hz : max 0 ((toPolyG Dt).natDegree - 1) = 0 := by omega
+  rw [hz, Nat.cast_zero, add_zero]
+  exact hgproper
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The residual numerator `resNum` is proper for `resDen`** (engine form) — the residual fraction
+`resNum/resDen = a/d − D(g)` is proper: `deg(a·gden² − d·gprimeNum) < deg(d·gden²)`, given `a/d` proper
+(`deg a < deg d`) and `D(g)`'s numerator `gprimeNum` proper for `gden²` (`deg gprimeNum < deg(gden·gden)`).
+`toPolyG`-transport of `degree_resNum_lt` through the homomorphisms. The difference-of-proper-fractions step
+assembling the residual-fraction properness `deg resNum < deg resDen`. -/
+theorem toPolyG_resNum_proper (a d gden gprimeNum : CPolyG α)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree)
+    (hgprime : (toPolyG gprimeNum).degree < (toPolyG (cmulG gden gden)).degree) :
+    (toPolyG (csubG (cmulG a (cmulG gden gden)) (cmulG d gprimeNum))).degree
+      < (toPolyG (cmulG d (cmulG gden gden))).degree := by
+  simp only [toPolyG_csubG, toPolyG_cmulG] at hgprime ⊢
+  exact degree_resNum_lt haProper hgprime
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ The residual fraction `a/d − D(g)` is proper (`deg Dt ≤ 1`)** — `deg resNum < deg resDen` for the
+engine's *actual* residual expressions `resNum = a·gden² − d·(D(gnum)·gden − gnum·D(gden))`, `resDen =
+d·gden²` (the `let`-bindings of `cHermiteReduceTowerG`), given the assembled rational part `g = gnum/gden`
+proper (`deg gnum < deg gden`), the input `a/d` proper (`deg a < deg d`), and `deg Dt ≤ 1`. Composes the
+derivative-degree step `toPolyG_gprimeNum_proper_of_degree_le_one` (`D(g)` proper) with the
+difference-of-proper-fractions step `toPolyG_resNum_proper`. This is exactly the residual `hresProper` of
+`cHermiteReduceTowerG_leftover_proper_of_residual`, so it closes `hproper` **unconditionally for `deg Dt ≤
+1`** (base rational / exp / log monomials) from `g` proper — the remaining gap being only the assembled `g`'s
+properness (the per-step `gloc`-properness fold) and the nonlinear `deg Dt ≥ 2` margin. -/
+theorem toPolyG_residualFraction_proper_of_degree_le_one
+    (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
+    (hDt : (toPolyG Dt).natDegree ≤ 1)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree)
+    (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
+    (toPolyG (csubG (cmulG a (cmulG gden gden))
+        (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+          (cmulG gnum (cmonomialDeriv Dt gden)))))).degree
+      < (toPolyG (cmulG d (cmulG gden gden))).degree :=
+  toPolyG_resNum_proper a d gden _ haProper
+    (toPolyG_gprimeNum_proper_of_degree_le_one Dt gnum gden hden hDt hgproper)
+
 /-! ### ★★ The normal-part assembly through the engine's own `checkIdentityG` certificate
 
 The full normal-part one-shot `checkIdentityG_cIntegrateReducedG` needs the Hermite half (above) **and**
@@ -522,6 +771,45 @@ example [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (resNu
   cHermiteReduceTowerG_leftover_proper_of_residual Dt fuel a d resNum resDen Dstar
     hnum hden hdvd hfuel hresDen hDstar hresProper
 
+-- ★ THE FOLD-INDUCTION (g stays proper): the engine's guarded `g`-fold of proper contributions is proper
+-- — the assembled rational part `g = gnum/gden` satisfies `deg gnum < deg gden`.
+example {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Prop) [DecidablePred skip]
+    (xs : List β) (s : CPolyG α × CPolyG α) (hs : (toPolyG s.1).degree < (toPolyG s.2).degree)
+    (hmem : ∀ b ∈ xs, ¬ skip b → (toPolyG (glocOf b).1).degree < (toPolyG (glocOf b).2).degree) :
+    (toPolyG (xs.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+          if skip b then gAcc
+          else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
+                cmulG gAcc.2 (glocOf b).2)) s).1).degree
+      < (toPolyG (xs.foldl
+        (fun (gAcc : CPolyG α × CPolyG α) (b : β) =>
+          if skip b then gAcc
+          else (caddG (cmulG gAcc.1 (glocOf b).2) (cmulG (glocOf b).1 gAcc.2),
+                cmulG gAcc.2 (glocOf b).2)) s).2).degree :=
+  foldl_guarded_fracAddG_proper glocOf skip xs s hs hmem
+
+-- ★ THE DERIVATIVE-DEGREE STEP (D(g) proper, `deg Dt ≤ 1`): a proper `g = gnum/gden` has proper derivative
+-- numerator `D(gnum)·gden − gnum·D(gden)` for `gden²` when `deg Dt ≤ 1` (base rational / exp / log).
+example (Dt gnum gden : CPolyG α) (hM : toPolyG gden ≠ 0) (hDt : (toPolyG Dt).natDegree ≤ 1)
+    (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
+    (toPolyG (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+        (cmulG gnum (cmonomialDeriv Dt gden)))).degree
+      < (toPolyG (cmulG gden gden)).degree :=
+  toPolyG_gprimeNum_proper_of_degree_le_one Dt gnum gden hM hDt hgproper
+
+-- ★ THE RESIDUAL (b) CLOSED (`deg Dt ≤ 1`): the engine's actual `resNum/resDen = a/d − D(g)` is proper —
+-- `deg resNum < deg resDen` — from `g` proper, `a/d` proper, `deg Dt ≤ 1`. This is exactly the `hresProper`
+-- of `cHermiteReduceTowerG_leftover_proper_of_residual`, closing `hproper` unconditionally for `deg Dt ≤ 1`.
+example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
+    (hDt : (toPolyG Dt).natDegree ≤ 1)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree)
+    (hgproper : (toPolyG gnum).degree < (toPolyG gden).degree) :
+    (toPolyG (csubG (cmulG a (cmulG gden gden))
+        (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+          (cmulG gnum (cmonomialDeriv Dt gden)))))).degree
+      < (toPolyG (cmulG d (cmulG gden gden))).degree :=
+  toPolyG_residualFraction_proper_of_degree_le_one Dt a d gnum gden hden hDt haProper hgproper
+
 -- ★ THE HERMITE HALF (abstract, checker-free, no native_decide): the master telescoping `D(g) + h = a/d`
 -- in the tower fraction field, given the per-power Hermite identities — the transcendental
 -- `generalReduceRationalTelescope`.
@@ -567,6 +855,16 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ)) (c
 #print axioms sum_towerFractionFieldDerivG_telescope
 #print axioms degree_lt_of_exact_div
 #print axioms cHermiteReduceTowerG_leftover_proper_of_residual
+#print axioms degree_fracAdd_lt_of_proper
+#print axioms degree_resNum_lt
+#print axioms degree_implicitDeriv_frac_lt_of_margin
+#print axioms toPolyG_fracAddG_proper
+#print axioms foldl_fracAddG_proper
+#print axioms foldl_guarded_fracAddG_proper
+#print axioms toPolyG_gprimeNum_proper_of_margin
+#print axioms toPolyG_gprimeNum_proper_of_degree_le_one
+#print axioms toPolyG_resNum_proper
+#print axioms toPolyG_residualFraction_proper_of_degree_le_one
 #print axioms cHermiteReduceTowerG_telescope
 #print axioms cHermiteReduceTowerG_telescope_seed
 #print axioms field_identity_of_cIntegrateReducedG_of_checkIdentityG
