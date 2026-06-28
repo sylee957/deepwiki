@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDENormCompleteness
 import DeepWiki.SymbolicIntegration.ComputableRischDEDegreeBound
 import DeepWiki.SymbolicIntegration.ComputableRischDEStructural
+import DeepWiki.SymbolicIntegration.ComputableRatFuncValuation
 
 /-! # §6.4–6.6 RDE completeness — the SPDE + poly-RDE solve is exhaustive (`hsolve`)
 
@@ -962,17 +963,30 @@ clearing factor `h0` (so `q = y·h0` is normal-pole-free). Sub-fact map:
   `emultiplicity_deriv_eq_sub_one_of_normal`.
 * residual #1's `derivative_rootMultiplicity`/`cValuationG` machinery — partial, the `K[X]` side only.
 
-**The precise irreducible remainder** (what is NOT yet formalized, blocking `hnormalize`):
-1. a **`K(t)`-valuation lift** of the kernel — `νₚ` of `RatFunc` elements (Mathlib has the `Polynomial.idealX`
-   valuation but it is not wired to `toQFunNZG`), with `νₚ(Dy) = νₚ(y) − 1` for `y ∈ K(t)` from the `K[X]`
-   kernel via the quotient rule;
-2. **weak normalization** of `f` (Defn 6.1.1; a hypothesis the residual does not carry but Lemma 6.1.1 needs);
-3. the **`k⟨t⟩` differential-subring** fact (Cor 4.4.1: the cleared (6.2) LHS has no normal poles) — not yet a
-   tower-level statement;
-4. a **non-degeneracy** premise: `IsCRischDEGPolySol` is a *cleared identity*, satisfied vacuously by
-   `yden = 0`, so recovering an actual `y ∈ K(t)` needs `yden ≠ 0` (absent from the hypothesis).
+**Status of the four pieces** (★ items 1, 4 and the per-prime heart are now PROVEN):
+1. ✅ the **`K(t)`-valuation lift** — `ComputableRatFuncValuation` defines the integer valuation
+   `ratFuncOrd p y = νₚ(num y) − νₚ(denom y)` on `RatFunc K` and PROVES `νₚ(D y) = νₚ(y) − 1` at a normal
+   pole (`ratFuncOrd_extendDeriv_eq_sub_one_of_normal`), lifting the `K[X]` Wronskian kernel
+   (`emultiplicity_wronskian_numerator_eq_of_normal`) through the engine's fraction-field derivation
+   `extendDeriv = towerFractionFieldDerivG` — NOT via `Polynomial.idealX`, but a direct `multiplicity`
+   valuation. The valuation algebra (`ratFuncOrd_mul`, `ratFuncOrd_add_of_lt`) and the **per-prime RDE
+   no-pole bound** `ratFuncOrd_nonneg_of_rde_at_normal` (a pole forces `νₚ(Dy)<νₚ(fy)`, so the sum's order
+   `= νₚ(y)−1 < 0 ≤ νₚ(g)`, contradiction) are PROVEN — the §6.1 pole-cancellation heart.
+4. ✅ the **non-degeneracy** premise — carried explicitly: `rdeFractional_of_isCRischDEGPolySol` takes
+   `fden, gden, yden ≠ 0` and lifts the cleared `IsCRischDEGPolySol` identity to the genuine fraction-field
+   RDE `D Y + F·Y = G` over `RatFunc K`, wiring the valuation calculus to the engine hypothesis.
 
-Note also: in the **primitive regime** `cdegG (cSpecialPolyG) = 0` (the regime this bridge is consumed in),
+What **remains** (the global assembly, blocking the `∃ Q` conclusion):
+2. **weak normalization** as the per-prime hypotheses `νₚ(F) ≥ 0`, `νₚ(G) ≥ 0` for normal `p ∤ h0` — the
+   per-prime bound CONSUMES these (it is stated with them as hyps); relating `h0` (built from `denom(f)`'s
+   normal part) to "`νₚ(F) ≥ 0` for `p ∤ h0`" is the Defn-6.1.1 weak-normalization content, not yet a
+   tower-level lemma;
+3. the **`k⟨t⟩` differential-subring** fact (Cor 4.4.1: the cleared LHS has no *special* poles) — vacuous in
+   the primitive regime `cdegG (cSpecialPolyG) = 0` (no special primes), but the global "per-prime `νₚ(Y)≥0`
+   ⟹ `denom(Y) ∣ h0`" step (a `UniqueFactorizationMonoid` prime-factor recombination) is not yet assembled;
+   with it, the primitive regime gives `Q = Y·h0 ∈ k[t]` = the full Thm 6.1.2(i) there.
+
+Note: in the **primitive regime** `cdegG (cSpecialPolyG) = 0` (the regime this bridge is consumed in),
 `k⟨t⟩ = k[t]`, so `q = y·h0 ∈ k[t]` *is* the full Thm 6.1.2(i) there; outside it the conclusion as typed
 (`Q : CPolyG = K[X]` polynomial) additionally needs the special-denominator clearing. -/
 
@@ -1003,6 +1017,47 @@ structure RdeFractionalToReducedResidual (Dt fnum fden gnum gden : CPolyG α) : 
       ∧ (toPolyG fden ∣ toPolyG (rdeNormalBNum Dt fnum fden h0))
       ∧ ((cnormG (rdeNormalCNum Dt fden gnum h0) : List α).length ≤ towerRischDEFuel)
       ∧ (toPolyG gden ∣ toPolyG (rdeNormalCNum Dt fden gnum h0))
+
+omit [CFracGcdCore α] in
+/-- **★ The cleared-identity → fraction-field RDE bridge** (`rdeFractional_of_isCRischDEGPolySol`): a
+fractional `IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden` (the cleared *polynomial* identity over
+`(CFieldSpec.K α)[X]`) yields the genuine **fraction-field** Risch DE `D Y + F·Y = G` over
+`RatFunc (CFieldSpec.K α)` — with `D = towerFractionFieldDerivG Dt = extendDeriv (implicitDeriv (toPolyG
+Dt))`, `Y = amG ynum / amG yden`, `F = amG fnum / amG fden`, `G = amG gnum / amG gden` — under the honest
+non-degeneracy hypotheses `fden, gden, yden ≠ 0` (the cleared identity is satisfied vacuously by a zero
+denominator; recovering an actual `y ∈ K(t)` needs them nonzero). Expands the derivative via the quotient
+rule (`towerFractionFieldDerivG_div`), clears denominators (all nonzero), and collapses the resulting field
+identity onto `amG` of the `IsCRischDEGPolySol` polynomial identity (`amG` a ring hom). This is the wiring
+that makes the `K(t)`-valuation calculus (`ratFuncOrd_nonneg_of_rde_at_normal`) applicable to the engine's
+`IsCRischDEGPolySol` — the bridge the §6.1 `hnormalize` valuation argument runs over. -/
+theorem rdeFractional_of_isCRischDEGPolySol [Algebra ℚ (CFieldSpec.K α)]
+    (Dt fnum fden gnum gden ynum yden : CPolyG α)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
+    (hsol : IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG ynum) / amG α (toPolyG yden))
+        + amG α (toPolyG fnum) / amG α (toPolyG fden)
+          * (amG α (toPolyG ynum) / amG α (toPolyG yden))
+      = amG α (toPolyG gnum) / amG α (toPolyG gden) := by
+  -- the `amG`-images of the nonzero denominators are nonzero.
+  have hFDne : amG α (toPolyG fden) ≠ 0 := amG_toPolyG_ne_zero hfden
+  have hGDne : amG α (toPolyG gden) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hYDne : amG α (toPolyG yden) ≠ 0 := amG_toPolyG_ne_zero hyden
+  -- expand the derivative via the quotient rule.
+  rw [towerFractionFieldDerivG_div]
+  -- the `amG`-image of the cleared polynomial identity (a ring-hom translation of `hsol`).
+  have hsolF : amG α (toPolyG gden) * amG α (toPolyG fden)
+        * (amG α (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum)) * amG α (toPolyG yden)
+            - amG α (toPolyG ynum) * amG α (Differential.implicitDeriv (toPolyG Dt) (toPolyG yden)))
+      + amG α (toPolyG gden) * amG α (toPolyG fnum) * amG α (toPolyG ynum) * amG α (toPolyG yden)
+      = amG α (toPolyG gnum) * amG α (toPolyG fden) * amG α (toPolyG yden) ^ 2 := by
+    have h := congrArg (amG α) hsol
+    simpa only [map_add, map_mul, map_sub, map_pow] using h
+  -- combine the LHS into a single fraction, then cross-multiply against `Gn/g`.
+  rw [div_mul_div_comm, div_add_div _ _ (pow_ne_zero 2 hYDne) (mul_ne_zero hFDne hYDne),
+    div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hYDne) (mul_ne_zero hFDne hYDne)) hGDne]
+  ring_nf
+  ring_nf at hsolF
+  linear_combination (amG α (toPolyG yden)) * hsolF
 
 /-- **★ The fractional→reduced bridge in the primitive regime** (`exists_isReducedRdeSol_special_of_fractional`):
 under `RdeFractionalToReducedResidual` and the primitive special regime (`cdegG (cSpecialPolyG …) = 0`), a
@@ -1564,5 +1619,20 @@ compiler) -/
 #print axioms cSPDEG_isSome_of_fractional_primitive
 #print axioms hspde_of_fractionalBridge
 #print axioms exhaustiveResidual_of_fractionalBridge
+
+/-! ### ★ The §6.1 `K(t)`-valuation wiring (the new `hnormalize` substrate) -/
+
+-- ★ The cleared `IsCRischDEGPolySol` identity lifts to the genuine fraction-field RDE `D Y + F·Y = G`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+    [Algebra ℚ (CFieldSpec.K α)] (Dt fnum fden gnum gden ynum yden : CPolyG α)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
+    (hsol : IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG ynum) / amG α (toPolyG yden))
+        + amG α (toPolyG fnum) / amG α (toPolyG fden)
+          * (amG α (toPolyG ynum) / amG α (toPolyG yden))
+      = amG α (toPolyG gnum) / amG α (toPolyG gden) :=
+  rdeFractional_of_isCRischDEGPolySol Dt fnum fden gnum gden ynum yden hfden hgden hyden hsol
+
+#print axioms rdeFractional_of_isCRischDEGPolySol
 
 end DeepWiki.SymbolicIntegration
