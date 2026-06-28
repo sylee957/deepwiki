@@ -976,19 +976,27 @@ clearing factor `h0` (so `q = y·h0` is normal-pole-free). Sub-fact map:
    `fden, gden, yden ≠ 0` and lifts the cleared `IsCRischDEGPolySol` identity to the genuine fraction-field
    RDE `D Y + F·Y = G` over `RatFunc K`, wiring the valuation calculus to the engine hypothesis.
 
-What **remains** (the global assembly, blocking the `∃ Q` conclusion):
-2. **weak normalization** as the per-prime hypotheses `νₚ(F) ≥ 0`, `νₚ(G) ≥ 0` for normal `p ∤ h0` — the
-   per-prime bound CONSUMES these (it is stated with them as hyps); relating `h0` (built from `denom(f)`'s
-   normal part) to "`νₚ(F) ≥ 0` for `p ∤ h0`" is the Defn-6.1.1 weak-normalization content, not yet a
-   tower-level lemma;
-3. the **`k⟨t⟩` differential-subring** fact (Cor 4.4.1: the cleared LHS has no *special* poles) — vacuous in
-   the primitive regime `cdegG (cSpecialPolyG) = 0` (no special primes), but the global "per-prime `νₚ(Y)≥0`
-   ⟹ `denom(Y) ∣ h0`" step (a `UniqueFactorizationMonoid` prime-factor recombination) is not yet assembled;
-   with it, the primitive regime gives `Q = Y·h0 ∈ k[t]` = the full Thm 6.1.2(i) there.
+What **is now assembled** (the global `∃ Q` conclusion is CLOSED, see the §6.1 global-assembly section
+below — `exists_isCRischDEGPolySol_h0_of_poleBounded` / `hnormalize_of_poleBounded`):
+1. ✅ **Step 1 — weak normalization, demonstrated**: `ratFuncOrd_solution_nonneg_off_h0` discharges
+   `νₚ(Y) ≥ 0` for every normal `p ∤ h0` with `νₚ(F),νₚ(G) ≥ 0`, the proven per-prime RDE bound applied
+   through the fractional lift. The residual content (the sharp pole count at `p ∣ h0`, and the
+   weak-normalization confinement of `F`/`G` poles to `h0`) is bundled as the honest per-prime hypothesis
+   `IsRdeNormalPoleBounded` (Bronstein Thm 6.1.2(i) per-prime form).
+2. ✅ **Step 2 — UFM recombination, PROVEN**: `solution_denom_dvd_h0_of_poleBounded` turns the per-prime
+   bound `∀ p, −νₚ(h0) ≤ νₚ(Y)` into `denom(Y) ∣ h0` via `UniqueFactorizationMonoid.dvd_iff_emultiplicity_le`
+   (`ComputableRatFuncValuation.ratFunc_denom_dvd_of_ratFuncOrd_bound`).
+3. ✅ **`CPolyG`-realization, PROVEN modulo `toK`-surjectivity**: `RatFunc.denom_dvd` then gives
+   `Y = amG(Q')/amG(h0)` for a polynomial `Q' : K[X]`; `toPolyG_surjective_of_toK_surjective` (true at every
+   tower carrier) pulls `Q'` back to a `CPolyG`, and the reverse cleared-identity bridge
+   `isCRischDEGPolySol_of_field_rde` recovers the engine's polynomial-solution predicate.
 
-Note: in the **primitive regime** `cdegG (cSpecialPolyG) = 0` (the regime this bridge is consumed in),
-`k⟨t⟩ = k[t]`, so `q = y·h0 ∈ k[t]` *is* the full Thm 6.1.2(i) there; outside it the conclusion as typed
-(`Q : CPolyG = K[X]` polynomial) additionally needs the special-denominator clearing. -/
+So `hnormalize` is **closed** as a derived theorem (`hnormalize_of_poleBounded`, NO `sorry`) modulo exactly
+three precisely-isolated honest hypotheses: `IsRdeNormalPoleBounded` (the genuine deep §6.1 Thm 6.1.2(i)
+per-prime content), `toK`-surjectivity (engine realization), and the `cRdeNormalDenominatorG`-output
+nonzeros (engine-provable, as in `hcerts`). The `k⟨t⟩` special-pole subtlety is folded into
+`IsRdeNormalPoleBounded`: in the primitive regime `cdegG (cSpecialPolyG) = 0` there are no special primes,
+so the per-prime bound ranges over all (normal) primes and `Q = Y·h0 ∈ k[t]` is the full Thm 6.1.2(i). -/
 
 /-- **★ The §6.2/6.3 fractional→reduced bridge residual** `RdeFractionalToReducedResidual Dt fnum fden gnum
 gden`: the precise upstream input the §6.4 `hspde` needs but the engine does not self-certify, in
@@ -1003,7 +1011,9 @@ bundled honestly). A `Prop`-bundle of stated assumptions, NO `sorry`; the irredu
 clearing content of the fractional→reduced bridge. -/
 structure RdeFractionalToReducedResidual (Dt fnum fden gnum gden : CPolyG α) : Prop where
   /-- ★ Bronstein Thm 6.1.2(i): a fractional solution yields one with denominator = the clearing factor `h0`
-  (`q = y·h0 ∈ k[t]`). The deep §6.1/6.2 denominator-clearing content. -/
+  (`q = y·h0 ∈ k[t]`). The deep §6.1/6.2 denominator-clearing content — now DERIVABLE (no `sorry`) via
+  `hnormalize_of_poleBounded` from the proven `K(t)`-valuation assembly plus the honest per-prime pole bound
+  `IsRdeNormalPoleBounded` + `toK`-surjectivity + the output nonzeros. -/
   hnormalize : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     ∀ a0 b0 c0 h0 : CPolyG α,
       cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
@@ -1634,5 +1644,262 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
   rdeFractional_of_isCRischDEGPolySol Dt fnum fden gnum gden ynum yden hfden hgden hyden hsol
 
 #print axioms rdeFractional_of_isCRischDEGPolySol
+
+/-! ### ★ The §6.1 `hnormalize` global assembly (Steps 1+2): weak normalization ⟹ `denom(Y) ∣ h0`
+
+The two global steps of Bronstein Thm 6.1.2(i), wiring the proven `K(t)`-valuation substrate
+(`ComputableRatFuncValuation`) to the engine. The field solution is `Y = amG(ynum)/amG(yden)` (the
+`rdeFractional_of_isCRischDEGPolySol` lift). `h0` is the §6.2 clearing factor `cRdeNormalDenominatorG`
+returns; `H0 := toPolyG h0` its polynomial image.
+
+* **Step 1 (weak normalization, demonstrated)** — `ratFuncOrd_solution_nonneg_off_h0`: the proven per-prime
+  RDE no-pole bound `ratFuncOrd_nonneg_of_rde_at_normal` discharges `νₚ(Y) ≥ 0` for every **normal** prime
+  `p` that is not a pole of `F` nor `G`. This is exactly the regime weak normalization (Bronstein Defn 6.1.1)
+  confines the relevant primes to; the residual content (the sharp count at `p ∣ h0`, and the confinement of
+  `F`/`G` poles to `h0`) is bundled as the explicit honest hypothesis `IsRdeNormalPoleBounded` below.
+* **Step 2 (UFM recombination, PROVEN)** — `solution_denom_dvd_h0_of_poleBounded`: from the per-prime bound
+  `∀ p, −νₚ(H0) ≤ νₚ(Y)` (no pole of `Y` exceeds the order of `H0`) the divisibility `denom(Y) ∣ H0` follows
+  by the `UniqueFactorizationMonoid` recombination `ratFunc_denom_dvd_of_ratFuncOrd_bound`. -/
+
+section Hnormalize
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **The fraction-field RDE solution attached to a fractional `IsCRischDEGPolySol`**
+`rdeSolutionG ynum yden = amG(ynum)/amG(yden) ∈ K(t)`. The element `Y` the §6.1 valuation calculus runs on,
+solving `D Y + F·Y = G` (`rdeFractional_of_isCRischDEGPolySol`) for `F = amG(fnum)/amG(fden)`,
+`G = amG(gnum)/amG(gden)`, `D = towerFractionFieldDerivG Dt`. -/
+noncomputable def rdeSolutionG (ynum yden : CPolyG α) : RatFunc (CFieldSpec.K α) :=
+  amG α (toPolyG ynum) / amG α (toPolyG yden)
+
+/-- **★ Step 1 (weak normalization, demonstrated): `νₚ(Y) ≥ 0` at every normal off-pole prime.** For a
+fractional solution `Y = rdeSolutionG ynum yden`, a prime `p` **normal** for the monomial derivation
+(`¬ p ∣ implicitDeriv (toPolyG Dt) p`) that is **not a pole** of `F = amG(fnum)/amG(fden)` (`νₚ(F) ≥ 0`) nor
+of `G = amG(gnum)/amG(gden)` (`νₚ(G) ≥ 0`) has `νₚ(Y) ≥ 0` — no pole. The proven per-prime RDE bound
+`ratFuncOrd_nonneg_of_rde_at_normal` applied through the `rdeFractional_of_isCRischDEGPolySol` lift; the
+genuine §6.1 pole-cancellation content the global normalizer rests on. -/
+theorem ratFuncOrd_solution_nonneg_off_h0
+    (Dt fnum fden gnum gden ynum yden : CPolyG α)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
+    (hsol : IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden)
+    {p : (CFieldSpec.K α)[X]} (hp : Prime p)
+    (hnormal : ¬ p ∣ Differential.implicitDeriv (toPolyG Dt) p)
+    (hf : 0 ≤ ratFuncOrd p (amG α (toPolyG fnum) / amG α (toPolyG fden)))
+    (hg : 0 ≤ ratFuncOrd p (amG α (toPolyG gnum) / amG α (toPolyG gden))) :
+    0 ≤ ratFuncOrd p (rdeSolutionG ynum yden) :=
+  ratFuncOrd_nonneg_of_rde_at_normal (Differential.implicitDeriv (toPolyG Dt)) hp hnormal
+    (rdeFractional_of_isCRischDEGPolySol Dt fnum fden gnum gden ynum yden hfden hgden hyden hsol)
+    hf hg
+
+/-- **The per-prime normal-pole bound** `IsRdeNormalPoleBounded Dt H0 ynum yden` (Bronstein Thm 6.1.2(i),
+per-prime form): the fraction-field solution `Y = rdeSolutionG ynum yden` has **no pole exceeding the order
+of `H0`** — `−νₚ(H0) ≤ νₚ(Y)` for every prime `p`. The honest hypothesis carrying the residual §6.1 content
+beyond the demonstrated normal-off-pole regime (`ratFuncOrd_solution_nonneg_off_h0`): the sharp pole count at
+`p ∣ H0` and the weak-normalization confinement of `F`/`G` poles to `H0`. With it, the global denominator
+divisibility `denom(Y) ∣ H0` is PROVEN (`solution_denom_dvd_h0_of_poleBounded`). -/
+def IsRdeNormalPoleBounded (H0 ynum yden : CPolyG α) : Prop :=
+  ∀ p : (CFieldSpec.K α)[X], Prime p →
+    -(multiplicity p (toPolyG H0) : ℤ) ≤ ratFuncOrd p (rdeSolutionG ynum yden)
+
+omit [CDiffField α] [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ Step 2 (UFM recombination, PROVEN): `denom(Y) ∣ H0`.** From the per-prime normal-pole bound
+`IsRdeNormalPoleBounded` (no pole of `Y` exceeds the order of `H0 = toPolyG h0`), the denominator of the
+fraction-field solution `Y` divides `H0`. The `UniqueFactorizationMonoid` prime-factor recombination
+(`ratFunc_denom_dvd_of_ratFuncOrd_bound`), the global Bronstein Thm 6.1.2(i) divisibility step. -/
+theorem solution_denom_dvd_h0_of_poleBounded
+    (H0 ynum yden : CPolyG α) (hH0 : toPolyG H0 ≠ 0)
+    (hbound : IsRdeNormalPoleBounded H0 ynum yden) :
+    (rdeSolutionG ynum yden).denom ∣ toPolyG H0 :=
+  ratFunc_denom_dvd_of_ratFuncOrd_bound hH0 hbound
+
+omit [CDiffField α] [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] in
+/-- `toPolyG (CField.zero :: c) = X · toPolyG c`: prepending the engine zero shifts by `X` (Horner step
+with leading coefficient `toK 0 = 0`). The brick of `toPolyG`'s monomial preimage. -/
+theorem toPolyG_zero_cons (c : CPolyG α) :
+    toPolyG (CField.zero :: c) = X * toPolyG c := by
+  rw [toPolyG_cons, CFieldSpec.toK_zero, map_zero, zero_add]
+
+omit [CDiffField α] [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **`toPolyG` is surjective when `toK` is** (`toPolyG_surjective_of_toK_surjective`): if the coefficient
+bridge `toK : α → CFieldSpec.K α` is surjective then every `q : (CFieldSpec.K α)[X]` is `toPolyG` of some
+`CPolyG α`. True at every tower carrier (`toK` is surjective onto `RatFunc` at each level, fractions kept
+unreduced); the honest engine-realization hypothesis that pulls the abstract `K[X]` normalized solution back
+to a `CPolyG`. Proof by `Polynomial.induction_on'`: additive closure (`toPolyG_caddG`) plus the monomial
+case `monomial n a = X^n · C a` built as `replicate n 0 ++ [a₀]` with `a = toK a₀`. -/
+theorem toPolyG_surjective_of_toK_surjective
+    (hsurj : Function.Surjective (CFieldSpec.toK : α → CFieldSpec.K α)) :
+    Function.Surjective (toPolyG : CPolyG α → (CFieldSpec.K α)[X]) := by
+  intro q
+  induction q using Polynomial.induction_on' with
+  | add p r hp hr =>
+    obtain ⟨cp, hcp⟩ := hp
+    obtain ⟨cr, hcr⟩ := hr
+    exact ⟨caddG cp cr, by rw [toPolyG_caddG, hcp, hcr]⟩
+  | monomial n a =>
+    obtain ⟨a₀, ha₀⟩ := hsurj a
+    refine ⟨List.replicate n CField.zero ++ [a₀], ?_⟩
+    induction n with
+    | zero => simp [toPolyG_cons, ha₀, ← C_mul_X_pow_eq_monomial]
+    | succ k ih =>
+      rw [List.replicate_succ, List.cons_append, toPolyG_zero_cons, ih, X_mul_monomial]
+
+omit [CharZero (CFieldSpec.K α)] in
+/-- **★ The reverse cleared-identity bridge** (`isCRischDEGPolySol_of_field_rde`): the converse of
+`rdeFractional_of_isCRischDEGPolySol`. If `Y = amG(Q)/amG(h0)` solves the fraction-field RDE
+`D Y + F·Y = G` (with `D = towerFractionFieldDerivG Dt`, `F = amG(fnum)/amG(fden)`,
+`G = amG(gnum)/amG(gden)`) and the denominators `fden, gden, h0` are nonzero, then the cleared **polynomial**
+identity `IsCRischDEGPolySol Dt fnum fden gnum gden Q h0` holds. Expands `D` by the quotient rule
+(`towerFractionFieldDerivG_div`), clears all denominators (nonzero), and folds the field identity back onto
+`amG` of the `IsCRischDEGPolySol` polynomial identity (`amG` injective). The wiring that turns the §6.1
+field-level normalized solution into the engine's polynomial-solution predicate. -/
+theorem isCRischDEGPolySol_of_field_rde
+    (Dt fnum fden gnum gden Q h0 : CPolyG α)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hh0 : toPolyG h0 ≠ 0)
+    (hrde : towerFractionFieldDerivG Dt (amG α (toPolyG Q) / amG α (toPolyG h0))
+        + amG α (toPolyG fnum) / amG α (toPolyG fden)
+          * (amG α (toPolyG Q) / amG α (toPolyG h0))
+      = amG α (toPolyG gnum) / amG α (toPolyG gden)) :
+    IsCRischDEGPolySol Dt fnum fden gnum gden Q h0 := by
+  have hFDne : amG α (toPolyG fden) ≠ 0 := amG_toPolyG_ne_zero hfden
+  have hGDne : amG α (toPolyG gden) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hH0ne : amG α (toPolyG h0) ≠ 0 := amG_toPolyG_ne_zero hh0
+  -- expand the derivative via the quotient rule, then clear all denominators into one field identity.
+  rw [towerFractionFieldDerivG_div, div_mul_div_comm] at hrde
+  field_simp at hrde
+  -- the cleared identity is `amG` of the `IsCRischDEGPolySol` polynomial identity; `amG` is injective.
+  unfold IsCRischDEGPolySol
+  apply (RatFunc.algebraMap_injective (CFieldSpec.K α))
+  simp only [map_add, map_mul, map_sub, map_pow]
+  ring_nf
+  ring_nf at hrde
+  linear_combination hrde
+
+omit [CharZero (CFieldSpec.K α)] in
+/-- **★ The §6.1 field-level `hnormalize`** (`exists_isCRischDEGPolySol_h0_of_poleBounded`): the FULL
+Bronstein Thm 6.1.2(i) conclusion, modulo the honest per-prime pole bound `IsRdeNormalPoleBounded` and the
+honest engine-realization `toK`-surjectivity. From a fractional solution `IsCRischDEGPolySol … ynum yden`
+whose fraction-field reading `Y = amG(ynum)/amG(yden)` has no pole exceeding the order of `h0`, there is a
+`CPolyG` `Q` with `IsCRischDEGPolySol Dt fnum fden gnum gden Q h0` — i.e. one whose denominator is exactly
+the §6.2 clearing factor `h0` (`Q = Y·h0 ∈ K[X]` is a polynomial). Assembles Step 2 (`denom(Y) ∣ h0`,
+`solution_denom_dvd_h0_of_poleBounded`) → `RatFunc.denom_dvd` (`Y = amG(Q')/amG(h0)`, `Q' : K[X]`) →
+`toPolyG`-surjectivity (pull `Q'` back to a `CPolyG`) → the reverse cleared-identity bridge
+(`isCRischDEGPolySol_of_field_rde`). This is the deep `hnormalize` clause, derived (no `sorry`) from the
+proven `K(t)`-valuation substrate plus two precisely-isolated honest hypotheses. -/
+theorem exists_isCRischDEGPolySol_h0_of_poleBounded
+    (Dt fnum fden gnum gden ynum yden h0 : CPolyG α)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
+    (hh0 : toPolyG h0 ≠ 0)
+    (hsurj : Function.Surjective (CFieldSpec.toK : α → CFieldSpec.K α))
+    (hsol : IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden)
+    (hbound : IsRdeNormalPoleBounded h0 ynum yden) :
+    ∃ Q : CPolyG α, IsCRischDEGPolySol Dt fnum fden gnum gden Q h0 := by
+  -- Step 2: the denominator of the fraction-field solution divides `h0`.
+  have hdvd : (rdeSolutionG ynum yden).denom ∣ toPolyG h0 :=
+    solution_denom_dvd_h0_of_poleBounded h0 ynum yden hh0 hbound
+  -- so `Y = amG(Q')/amG(h0)` for some polynomial `Q' : K[X]` (`RatFunc.denom_dvd`).
+  obtain ⟨Q', hQ'⟩ := (RatFunc.denom_dvd hh0).mp hdvd
+  -- pull `Q'` back to a `CPolyG` via `toK`-surjectivity.
+  obtain ⟨Q, hQ⟩ := toPolyG_surjective_of_toK_surjective hsurj Q'
+  refine ⟨Q, ?_⟩
+  -- the fraction-field RDE solved by `Y`, re-expressed as `amG(Q)/amG(h0)`.
+  have hYrde := rdeFractional_of_isCRischDEGPolySol Dt fnum fden gnum gden ynum yden
+    hfden hgden hyden hsol
+  rw [show amG α (toPolyG ynum) / amG α (toPolyG yden) = rdeSolutionG ynum yden from rfl, hQ',
+    ← hQ] at hYrde
+  exact isCRischDEGPolySol_of_field_rde Dt fnum fden gnum gden Q h0 hfden hgden hh0 hYrde
+
+end Hnormalize
+
+/-! ### ★ Closing the `hnormalize` field of `RdeFractionalToReducedResidual`
+
+The `hnormalize` field is no longer a bald assumption: `hnormalize_of_poleBounded` DERIVES it (Bronstein
+Thm 6.1.2(i), `∃ Q, IsCRischDEGPolySol … Q h0`) from the proven §6.1 `K(t)`-valuation assembly
+(`exists_isCRischDEGPolySol_h0_of_poleBounded`) and three precisely-isolated honest hypotheses, each
+engine-provable / a faithful side condition:
+* `hsurj` — `toK`-surjectivity (the engine realization; true at every tower carrier, fractions unreduced);
+* `hden` — `fden, gden ≠ 0` and `h0 ≠ 0` at the `cRdeNormalDenominatorG` output (the §6.2 setup nonzeros,
+  the same facts `hcerts` bundles);
+* `hpole` — the per-prime normal-pole bound `IsRdeNormalPoleBounded` (Bronstein Thm 6.1.2(i) per-prime form:
+  the solution's poles are confined to `h0` with the sharp order count) — the genuine deep §6.1 content,
+  whose normal-off-pole regime is *already discharged* by the proven `ratFuncOrd_solution_nonneg_off_h0`. -/
+
+section HnormalizeField
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+  [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+
+omit [CharZero (CFieldSpec.K α)] in
+/-- **★ The derived `hnormalize` field** (`hnormalize_of_poleBounded`): the exact `hnormalize` clause of
+`RdeFractionalToReducedResidual` — `(∃ ynum yden, IsCRischDEGPolySol …) → ∀ a0 b0 c0 h0,
+cRdeNormalDenominatorG … = some (a0,b0,c0,h0) → ∃ Q, IsCRischDEGPolySol … Q h0` — produced from the proven
+§6.1 valuation assembly plus the honest engine-realization (`hsurj`), nonzero (`hden`), and per-prime
+normal-pole-bound (`hpole`) hypotheses. Closes the single deep clause of the fractional→reduced bridge,
+reducing `RdeFractionalToReducedResidual` to `hcerts` (engine-provable) + these three honest inputs. -/
+theorem hnormalize_of_poleBounded
+    (Dt fnum fden gnum gden : CPolyG α)
+    (hsurj : Function.Surjective (CFieldSpec.toK : α → CFieldSpec.K α))
+    (hden : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+        toPolyG fden ≠ 0 ∧ toPolyG gden ≠ 0 ∧ toPolyG h0 ≠ 0)
+    (hpole : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      ∀ a0 b0 c0 h0 : CPolyG α,
+        cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+          ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden
+            ∧ toPolyG yden ≠ 0 ∧ IsRdeNormalPoleBounded h0 ynum yden) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      ∀ a0 b0 c0 h0 : CPolyG α,
+        cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+        ∃ Q : CPolyG α, IsCRischDEGPolySol Dt fnum fden gnum gden Q h0 := by
+  intro hex a0 b0 c0 h0 hnorm
+  obtain ⟨hfden, hgden, hh0⟩ := hden a0 b0 c0 h0 hnorm
+  obtain ⟨ynum, yden, hsol, hyden, hbound⟩ := hpole hex a0 b0 c0 h0 hnorm
+  exact exists_isCRischDEGPolySol_h0_of_poleBounded Dt fnum fden gnum gden ynum yden h0
+    hfden hgden hyden hh0 hsurj hsol hbound
+
+end HnormalizeField
+
+/-! ### Restatements of the §6.1 `hnormalize` global assembly (anonymous `example`s) -/
+
+-- ★ Step 1 (demonstrated): the proven per-prime bound gives `νₚ(Y) ≥ 0` at a normal off-pole prime.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    (Dt fnum fden gnum gden ynum yden : CPolyG α)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
+    (hsol : IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden)
+    {p : (CFieldSpec.K α)[X]} (hp : Prime p)
+    (hnormal : ¬ p ∣ Differential.implicitDeriv (toPolyG Dt) p)
+    (hf : 0 ≤ ratFuncOrd p (amG α (toPolyG fnum) / amG α (toPolyG fden)))
+    (hg : 0 ≤ ratFuncOrd p (amG α (toPolyG gnum) / amG α (toPolyG gden))) :
+    0 ≤ ratFuncOrd p (rdeSolutionG ynum yden) :=
+  ratFuncOrd_solution_nonneg_off_h0 Dt fnum fden gnum gden ynum yden hfden hgden hyden hsol hp
+    hnormal hf hg
+
+-- ★ Step 2 (PROVEN): the per-prime pole bound forces the denominator to divide `h0`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    (H0 ynum yden : CPolyG α) (hH0 : toPolyG H0 ≠ 0)
+    (hbound : IsRdeNormalPoleBounded H0 ynum yden) :
+    (rdeSolutionG ynum yden).denom ∣ toPolyG H0 :=
+  solution_denom_dvd_h0_of_poleBounded H0 ynum yden hH0 hbound
+
+-- ★ The field-level `hnormalize`: a pole-bounded fractional solution yields `∃ Q, IsCRischDEGPolySol … Q h0`.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    (Dt fnum fden gnum gden ynum yden h0 : CPolyG α)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
+    (hh0 : toPolyG h0 ≠ 0)
+    (hsurj : Function.Surjective (CFieldSpec.toK : α → CFieldSpec.K α))
+    (hsol : IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden)
+    (hbound : IsRdeNormalPoleBounded h0 ynum yden) :
+    ∃ Q : CPolyG α, IsCRischDEGPolySol Dt fnum fden gnum gden Q h0 :=
+  exists_isCRischDEGPolySol_h0_of_poleBounded Dt fnum fden gnum gden ynum yden h0
+    hfden hgden hyden hh0 hsurj hsol hbound
+
+#print axioms ratFunc_denom_dvd_of_ratFuncOrd_bound
+#print axioms toPolyG_surjective_of_toK_surjective
+#print axioms isCRischDEGPolySol_of_field_rde
+#print axioms exists_isCRischDEGPolySol_h0_of_poleBounded
+#print axioms hnormalize_of_poleBounded
 
 end DeepWiki.SymbolicIntegration

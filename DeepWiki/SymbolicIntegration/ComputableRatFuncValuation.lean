@@ -242,6 +242,57 @@ theorem ratFuncOrd_nonneg_of_rde_at_normal {p : K[X]} (hp : Prime p) (hnormal : 
 
 end Lift
 
+/-! ### The UFM recombination: per-prime no-pole bounds ⟹ `denom(x) ∣ q` (Bronstein Thm 6.1.2(i)
+global step). The §6.1 normalizer's `Q = y·h0 ∈ K[X]` conclusion is a `denom(y) ∣ h0` divisibility; this
+section turns the per-prime valuation bounds `νₚ(y) ≥ −νₚ(h0)` (no pole of order exceeding that of `h0`)
+into that divisibility via `UniqueFactorizationMonoid.dvd_iff_emultiplicity_le`. -/
+
+/-- **`denom(x) ∣ q` from per-prime multiplicity bounds** (`ratFunc_denom_dvd_of_multiplicity_le`): for
+`x ∈ K(t)`, `q ∈ K[X]` nonzero, if `multiplicity p x.denom ≤ multiplicity p q` for every prime `p`, then
+`x.denom ∣ q`. The `UniqueFactorizationMonoid` prime-factor recombination (`dvd_iff_emultiplicity_le`),
+lifting the per-prime bound to the global divisibility via the finite-multiplicity `emultiplicity =
+multiplicity` bridge at each prime (both `x.denom, q ≠ 0`). -/
+theorem ratFunc_denom_dvd_of_multiplicity_le {x : RatFunc K} {q : K[X]} (hq : q ≠ 0)
+    (h : ∀ p : K[X], Prime p → multiplicity p x.denom ≤ multiplicity p q) :
+    x.denom ∣ q := by
+  rw [UniqueFactorizationMonoid.dvd_iff_emultiplicity_le (RatFunc.denom_ne_zero x)]
+  intro p hp
+  rw [(FiniteMultiplicity.of_prime_left hp (RatFunc.denom_ne_zero x)).emultiplicity_eq_multiplicity,
+    (FiniteMultiplicity.of_prime_left hp hq).emultiplicity_eq_multiplicity]
+  exact_mod_cast h p hp
+
+/-- **The valuation bound `−νₚ(x) ≤ νₚ(q)` reads as `multiplicity p x.denom ≤ multiplicity p q`**
+(`multiplicity_denom_le_of_ratFuncOrd`): at a prime `p`, `−ratFuncOrd p x ≤ multiplicity p q` forces
+`multiplicity p x.denom ≤ multiplicity p q`. The coprimality of `num`/`denom`
+(`RatFunc.isCoprime_num_denom`) kills the numerator's contribution: when `p ∣ denom`, `p ∤ num` (else `p`
+would be a unit), so `multiplicity p num = 0` and `−νₚ(x) = multiplicity p denom`; when `p ∤ denom`,
+`multiplicity p denom = 0 ≤ multiplicity p q` for free. -/
+theorem multiplicity_denom_le_of_ratFuncOrd {x : RatFunc K} {q : K[X]} (p : K[X]) (hp : Prime p)
+    (h : -ratFuncOrd p x ≤ (multiplicity p q : ℤ)) :
+    multiplicity p x.denom ≤ multiplicity p q := by
+  by_cases hpd : p ∣ x.denom
+  · -- `p ∣ denom` ⟹ `p ∤ num` (coprime), so `multiplicity p num = 0` and `−νₚ(x) = multiplicity p denom`.
+    have hpn : ¬ p ∣ x.num := fun hpnum =>
+      hp.not_unit ((RatFunc.isCoprime_num_denom x).isUnit_of_dvd' hpnum hpd)
+    have hnum0 : multiplicity p x.num = 0 := multiplicity_eq_zero.mpr hpn
+    rw [ratFuncOrd, hnum0] at h
+    push_cast at h ⊢
+    omega
+  · -- `p ∤ denom` ⟹ `multiplicity p denom = 0 ≤ multiplicity p q`.
+    rw [multiplicity_eq_zero.mpr hpd]; exact Nat.zero_le _
+
+/-- **★ The global no-pole-bound ⟹ denominator divisibility** (`ratFunc_denom_dvd_of_ratFuncOrd_bound`):
+for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if every prime `p` satisfies `νₚ(x) ≥ −νₚ(q)` (no pole of `x` exceeds
+the order of `q`), then `x.denom ∣ q`. The Bronstein Thm 6.1.2(i) recombination in valuation form: combines
+the per-prime read `multiplicity_denom_le_of_ratFuncOrd` with the UFM divisibility
+`ratFunc_denom_dvd_of_multiplicity_le`. The `∃ Q, x = amG(Q)/amG(q)` polynomiality of `Q = x·q` then
+follows from `RatFunc.denom_dvd`. -/
+theorem ratFunc_denom_dvd_of_ratFuncOrd_bound {x : RatFunc K} {q : K[X]} (hq : q ≠ 0)
+    (h : ∀ p : K[X], Prime p → -(multiplicity p q : ℤ) ≤ ratFuncOrd p x) :
+    x.denom ∣ q :=
+  ratFunc_denom_dvd_of_multiplicity_le hq fun p hp =>
+    multiplicity_denom_le_of_ratFuncOrd p hp (by have := h p hp; omega)
+
 /-! ### Restatements (the landed `K(t)`-valuation lift) -/
 
 /-- Restatement: `νₚ` reads through any nonzero representation. -/
