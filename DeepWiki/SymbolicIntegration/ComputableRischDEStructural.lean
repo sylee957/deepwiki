@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRischFieldSpec
+import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
 
 /-! # §6 RDE structural decomposition — `cRischDEG = some _` ⟹ the stage `some`-results
 
@@ -310,6 +311,147 @@ theorem rdeCleared_of_success_and_residual (Dt : CPolyG α) (fuel : ℕ)
   rw [hynum, hyden]
   exact hcap
 
+/-! ### ★ The cancellation regime — same cleared identity, same shared residual (primitive case)
+
+The non-cancellation path above feeds the capstone `cRischDEG_rdeCleared_gen` an `hpoly` of the
+**non-cancellation success** form `cPolyRischDENoCancelG … = some v`, which the capstone immediately
+converts (via `cPolyRischDENoCancelG_cleared_identity_gen`) to the poly-RDE field identity
+`D(v) + bbar·v = cbar`. Every downstream stage of the capstone — `cSPDEG_cleared_lifting_of_inputs_gen`
+(takes the identity directly) and `cRdeNormalDenominatorG_cleared_lift_gen` — is **regime-agnostic**:
+it consumes only that poly-RDE identity, never the solver form. So we re-factor the capstone at the
+poly-RDE identity (`rdeClearedIdentity_of_polyRDEIdentity`), then feed it the cancellation poly-RDE
+soundness `cPolyRischDEG_cancelPrim_sound` (base-oracle-free, `ComputableOneShotSoundness`) for the
+**primitive cancellation** regime (`cdegG Dt = 0`, `cdegG bbar = 0`, `bbar ≠ 0`).
+
+The residual is **identical** to the non-cancellation path's `RischDEStructuralResidual`: the cancellation
+poly-RDE soundness carries NO base-oracle hypothesis (`[CRischFieldSpec α]`), so it adds nothing — the
+only change is the §6.5/§6.6 dispatch condition (`cdegG bbar = 0` instead of `0 < cdegG bbar`).
+
+**The hyperexponential cancellation regime (`cdegG Dt = 1`, `cPolyRischDEG_cancelExp_sound`) is NOT
+reachable here**: the capstone is gated on the **primitive special regime** `hprim : cdegG (cSpecialPolyG
+Dt fuel) = 0` (it `rw`s `cRdeSpecialDenominatorG_primitive_eq_gen`), but `cdegG Dt = 1` makes the special
+polynomial `cSpecialPolyG Dt fuel` (the special part of `Dt`, `= t` for hyperexp) have degree `1`, so
+`hprim` cannot hold and the §6.2 special-denominator reduction is non-trivial there. Covering CancelExp
+would need a hyperexponential-special-regime cleared lifting, which does not exist — exactly the
+non-primitive special case the residual docstring flags ("a non-primitive success satisfies a *different*
+cleared identity"). This is the precise, cancellation-specific obstruction. -/
+
+omit [CRischField α] in
+/-- **★ The §6 cleared identity from the residual and the bare poly-RDE identity** (primitive regime): the
+capstone `cRischDEG_rdeCleared_gen` re-factored to take the §6.5/§6.6 poly-RDE field identity
+`D(v) + bbar·v = cbar` (in `cmonomialDeriv`/`toPolyG` form) **directly**, rather than the non-cancellation
+solver-success form `cPolyRischDENoCancelG … = some v`. Given the primitive special regime, the §6.2 normal
+denominator output, its divisibility/fuel certificates, the §6.4 SPDE output under `CSPDEGClearedInputsGen`,
+and `hidentity`, the reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0` satisfies the cleared Risch-DE
+identity over `(CFieldSpec.K α)[X]`. The poly-RDE-identity-keyed spine shared by BOTH regimes — its single
+regime-dependent input is `hidentity`, supplied by the non-cancellation or the cancellation solver. -/
+theorem rdeClearedIdentity_of_polyRDEIdentity (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hprim : cdegG (cSpecialPolyG Dt fuel) = 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hidentity : Differential.implicitDeriv (toPolyG Dt) (toPolyG v) + toPolyG bbar * toPolyG v
+      = toPolyG cbar) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG (cmulG (caddG (cmulG α' v) β) [CField.one]))
+              * toPolyG h0
+            - toPolyG (cmulG (caddG (cmulG α' v) β) [CField.one])
+              * Differential.implicitDeriv (toPolyG Dt) (toPolyG h0))
+        + toPolyG gden * toPolyG fnum * toPolyG (cmulG (caddG (cmulG α' v) β) [CField.one]) * toPolyG h0
+      = toPolyG gnum * toPolyG fden * toPolyG h0 ^ 2 := by
+  set Q := caddG (cmulG α' v) β with hQ
+  -- the primitive special-denominator stage is the identity, so the SPDE was run on `(a0, b0, c0)`
+  have hspecial := cRdeSpecialDenominatorG_primitive_eq_gen Dt fuel a0 b0 c0 hprim
+  rw [hspecial] at hspde hin
+  simp only at hspde hin
+  -- §6.4-§6.5 spine: from the poly-RDE identity for `v`, `Q = α'·v + β` solves the reduced equation
+  have hred : toPolyG a0 * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b0 * toPolyG Q
+      = toPolyG c0 :=
+    cSPDEG_cleared_lifting_of_inputs_gen Dt fuel a0 b0 c0
+      (cRdeBoundDegreeG Dt fuel a0 b0 c0 : ℤ) bbar cbar m α' β hspde hin v hidentity
+  -- `ynum = Q·[1]` has `toPolyG ynum = toPolyG Q`
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  have hynum : toPolyG (cmulG Q [CField.one]) = toPolyG Q := by
+    rw [toPolyG_cmulG, hone, mul_one]
+  -- §6.2 normal-denominator cleared lifting from the reduced solve
+  have hlift := cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 Q
+    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hred
+  rw [hynum]
+  exact hlift
+
+/-- **★ The §6 cleared Risch-DE identity from bare success and the isolated residual — primitive
+cancellation regime** (`rdeCleared_of_success_and_residual_cancelPrim`): the cancellation analogue of
+`rdeCleared_of_success_and_residual`. Given `cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden)`,
+`cdegG Dt = 0`, the same residual `RischDEStructuralResidual`, and the §6.5/§6.6 **cancellation** dispatch
+condition (the SPDE output `bbar` has degree `0` and is nonzero — routing to `cPolyRischDECancelPrimG`), the
+returned `y = ynum/yden` satisfies the cleared identity `gden·fden·(D(ynum)·yden − ynum·D(yden)) +
+gden·fnum·ynum·yden = gnum·fden·yden²` over `(CFieldSpec.K α)[X]`. The §6.5/§6.6 poly step is discharged by
+`cPolyRischDEG_cancelPrim_sound` (base-oracle-free) and fed to `rdeClearedIdentity_of_polyRDEIdentity` —
+**the SAME residual as the non-cancellation path, no cancellation-specific addition**. With
+`rdeCleared_of_success_and_residual`, the `cRischDEG`-level cleared identity now covers both the
+non-cancellation and the primitive-cancellation dispatch arms (modulo the shared gcd-`Associated`
+residual). -/
+theorem rdeCleared_of_success_and_residual_cancelPrim (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+    (hsucc : cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden))
+    (hres : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      RischDEStructuralResidual Dt fuel fnum fden gnum gden a0 b0 c0 h0)
+    (hdb0 : ∀ a0 b0 c0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+      cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β) → cdegG bbar = 0 ∧ cisZeroG bbar = false) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 := by
+  -- the three stage `some`-results from bare success (control-flow decomposition, regime-agnostic)
+  obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hdisp, hynum, hyden⟩ :=
+    cRischDEG_some_imp_stages Dt fuel fnum fden gnum gden ynum yden hsucc
+  have hres' := hres a0 b0 c0 h0 hnorm
+  obtain ⟨hdbarz, hbarne⟩ := hdb0 a0 b0 c0 bbar cbar m α' β hspde
+  -- the dispatcher took the primitive-cancellation arm; its poly-RDE soundness gives `D(v)+bbar·v = cbar`
+  have hpoly : toPolyG (cmonomialDeriv Dt v) + toPolyG bbar * toPolyG v = toPolyG cbar :=
+    cPolyRischDEG_cancelPrim_sound Dt bbar cbar v fuel m hδ hdbarz hbarne hdisp
+  have hidentity : Differential.implicitDeriv (toPolyG Dt) (toPolyG v) + toPolyG bbar * toPolyG v
+      = toPolyG cbar := by rw [← toPolyG_cmonomialDeriv]; exact hpoly
+  -- feed the identity to the regime-agnostic cleared spine; `h1 = [1]` in the primitive regime
+  have hcap := rdeClearedIdentity_of_polyRDEIdentity Dt fuel fnum fden gnum gden a0 b0 c0 h0
+    bbar cbar m α' β v hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hfbB hres'.hdvdB
+    hres'.hfbC hres'.hdvdC hspde hres'.hin hidentity
+  have hh1 : (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2 = ([CField.one] : CPolyG α) := by
+    rw [cRdeSpecialDenominatorG_primitive_eq_gen Dt fuel a0 b0 c0 hres'.hprim]
+  rw [hh1] at hynum
+  rw [hynum, hyden]
+  exact hcap
+
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- ★ The structural-decomposition core: a bare `cRischDEG` success factors through the §6.2/§6.4/§6.5
@@ -324,6 +466,29 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden ynum yden : CPolyG α
     cRischDEG_some_imp_stages Dt fuel fnum fden gnum gden ynum yden hsucc
   exact ⟨a0, b0, c0, h0, bbar, cbar, m, v, hnorm, hdisp, hyden⟩
 
+-- ★ The cancellation regime reaches the SAME `cRischDEG`-level cleared identity as the non-cancellation
+-- path, modulo the SAME `RischDEStructuralResidual` — the §6.5/§6.6 dispatch condition is the only change
+-- (`cdegG bbar = 0` ∧ `bbar ≠ 0`, routing to the primitive cancellation solve).
+example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+    (hsucc : cRischDEG Dt fuel fnum fden gnum gden = some (ynum, yden))
+    (hres : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0) →
+      RischDEStructuralResidual Dt fuel fnum fden gnum gden a0 b0 c0 h0)
+    (hdb0 : ∀ a0 b0 c0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+      cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β) → cdegG bbar = 0 ∧ cisZeroG bbar = false) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  rdeCleared_of_success_and_residual_cancelPrim Dt fuel fnum fden gnum gden ynum yden hδ hsucc hres hdb0
+
 end Residual
 
 /-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
@@ -331,5 +496,7 @@ end Residual
 #print axioms cRischDEG_some_imp_stages
 #print axioms cPolyRischDEG_eq_noCancel_of_primitive
 #print axioms rdeCleared_of_success_and_residual
+#print axioms rdeClearedIdentity_of_polyRDEIdentity
+#print axioms rdeCleared_of_success_and_residual_cancelPrim
 
 end DeepWiki.SymbolicIntegration
