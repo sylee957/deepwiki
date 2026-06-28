@@ -618,6 +618,70 @@ theorem cRischDEG_rdeCleared_gen_hyperexp_noClear (Dt : CPolyG α) (fuel : ℕ)
   exact cRischDEG_rdeCleared_gen_hyperexp Dt fuel fnum fden gnum gden a0 b0 c0 h0 α' β v
     hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
 
+/-! ### ★ `CSpecialDenomNoClearG` is a STRUCTURAL TAUTOLOGY — the `negn > 0` residual is vacuous
+
+`CSpecialDenomNoClearG Dt fuel b c` is `min 0 (ν_p(c) − min 0 (ν_p(b))) = 0`, and `ν_p = cValuationG` is
+`ℕ`-valued, so `ν_p(b), ν_p(c) ≥ 0` as `ℤ`-casts: `min 0 (ν_p b) = 0`, `ν_p(c) − 0 = ν_p(c) ≥ 0`,
+`min 0 (ν_p c) = 0`. The `negn = (−n).toNat` shift exponent is therefore `0` for **all** inputs — the
+"`negn > 0`" sub-regime the §6.2 reconstruction could not close is never reached, so the hyperexp/CancelExp
+cleared identity holds **unconditionally** (at parity with the primitive regime). -/
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [CRischField α] in
+/-- **★ The special-denominator `negn = 0` predicate holds for ALL inputs** (`cValuationG`-`ℕ`-valuedness):
+`CSpecialDenomNoClearG Dt fuel b c` is always true, since `ν_p(b), ν_p(c) ≥ 0` force
+`min 0 (ν_p c − min 0 (ν_p b)) = 0`. The hyperexp cancellation gate is a structural tautology. -/
+theorem cSpecialDenomNoClearG_always (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) :
+    CSpecialDenomNoClearG Dt fuel b c := by
+  rw [CSpecialDenomNoClearG]
+  have hnb : (0 : ℤ) ≤ (cValuationG fuel (cSpecialPolyG Dt fuel) b : ℤ) := Int.natCast_nonneg _
+  have hnc : (0 : ℤ) ≤ (cValuationG fuel (cSpecialPolyG Dt fuel) c : ℤ) := Int.natCast_nonneg _
+  omega
+
+omit [CRischField α] in
+/-- **★ `cRischDEG` cleared identity in the hyperexp/CancelExp regime — UNCONDITIONAL**: the non-primitive
+(`cdegG (cSpecialPolyG Dt fuel) ≠ 0`) cleared Risch-DE identity with `hspecialReduced` *derived* from the
+engine's SPDE-on-cleared stages and the `CSpecialDenomNoClearG` gate *discharged* by
+`cSpecialDenomNoClearG_always` (`negn = 0` always, `cValuationG`-`ℕ`-valuedness). No `negn`-regime
+hypothesis remains: the hyperexp cancellation arm holds for all inputs, at parity with the primitive regime
+(modulo only the shared normal-denominator gcd-`Associated` residual). -/
+theorem cRischDEG_rdeCleared_gen_hyperexp_cancel (Dt : CPolyG α) (fuel : ℕ)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hp0 : toPolyG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    let ynum := cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  cRischDEG_rdeCleared_gen_hyperexp_noClear Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+    hp (cSpecialDenomNoClearG_always Dt fuel b0 c0) hp0 hnorm hdn hfden0 hgden0
+    hfbB hdvdB hfbC hdvdC hspde hin hpoly
+
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- ★ The structural-decomposition core: a bare `cRischDEG` success factors through the §6.2/§6.4/§6.5
@@ -728,6 +792,45 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
   cRischDEG_rdeCleared_gen_hyperexp_noClear Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
     hp hnoclear hp0 hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
 
+-- ★ The hyperexp/CancelExp cleared identity is UNCONDITIONAL — no `CSpecialDenomNoClearG` hypothesis: the
+-- `negn = 0` gate is a structural tautology (`cValuationG`-`ℕ`-valuedness), so the cancellation arm closes
+-- for all inputs at parity with the primitive regime (modulo only the shared normal-denominator residual).
+example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0) (hp0 : toPolyG (cSpecialPolyG Dt fuel) ≠ 0)
+    (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
+        List α).length ≤ fuel)
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
+        List α).length ≤ fuel)
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
+    (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
+    (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
+    let ynum := cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2
+    let yden := h0
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
+  cRischDEG_rdeCleared_gen_hyperexp_cancel Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+    hp hp0 hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+
 end Residual
 
 /-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
@@ -739,5 +842,7 @@ end Residual
 #print axioms rdeCleared_of_success_and_residual_cancelPrim
 #print axioms cRischDEG_rdeCleared_gen_hyperexp
 #print axioms cRischDEG_rdeCleared_gen_hyperexp_noClear
+#print axioms cSpecialDenomNoClearG_always
+#print axioms cRischDEG_rdeCleared_gen_hyperexp_cancel
 
 end DeepWiki.SymbolicIntegration
