@@ -47,15 +47,35 @@ jobs:
           touch .lake/build/doc/references.bib
           DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs
 
+      - name: Render the Risch tutorial (Verso)
+        # Standalone Verso Manual (out of `defaultTargets`); renders the
+        # multi-file HTML to `_out/html-multi/`. Verso doesn't depend on
+        # Mathlib, so this is a cheap, prose-only build.
+        run: |
+          rm -rf _out
+          lake exe tutorial --output _out
+          test -f _out/html-multi/index.html
+
+      - name: Assemble the Pages site
+        # The tutorial Manual lands at the Pages root; the doc-gen4 API
+        # documentation is published under `/api/`.
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          cp -r _out/html-multi/. _site/
+          mkdir -p _site/api
+          cp -r .lake/build/doc/. _site/api/
+
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .lake/build/doc
+          path: _site
 
   deploy:
-    # Publish the doc-gen4 HTML to GitHub Pages on pushes to main
-    # (and manual dispatches); PR runs stop at the build check.
+    # Publish the assembled site (Risch tutorial at root, doc-gen4 API under
+    # /api/) to GitHub Pages on pushes to main (and manual dispatches);
+    # PR runs stop at the build check.
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest

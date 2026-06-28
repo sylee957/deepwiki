@@ -53,11 +53,20 @@ dependency order); `DeepWiki.lean` is the library root. Rendered docs come from
   `references/`, named freely; their DOI is recorded in the paper's `Source.lean`. Same
   sanitized-DOI folder rule as books (`Sources/Doi_10_7146_brics_v2i2_19504/`).
 
-**Do not reintroduce Verso.** This was once a Verso "Manual" book (declarations inside
-elaborated ` ```lean ` blocks); Verso was removed in favour of plain Lean + doc-gen4. No
-`import VersoManual`, `#doc`, or ` ```lean ` blocks. If `Main.lean`, `VersoParse.lean`, an
-`Introduction.lean`, or `"<Chapter> 2.lean"` duplicates reappear, they are stale — delete
-them.
+**Do not reintroduce Verso *into the library*.** The `DeepWiki/` chapters and `Sources/`
+catalogs are plain Lean + doc-gen4: no `import VersoManual`, `#doc`, or ` ```lean ` blocks,
+and no book declarations inside elaborated blocks (the library was once a Verso "Manual" and
+was converted away for build-time reasons). If a root-level `Main.lean`, `VersoParse.lean`,
+an `Introduction.lean`, or `"<Chapter> 2.lean"` duplicate reappears, it is stale — delete it.
+
+**The `Tutorial/` Verso Manual is a separate, intentional exception.** A standalone,
+prose-only Verso "Manual" tutorial for the Risch algorithms lives under `Tutorial/`
+(`import VersoManual`, `#doc (Manual) …`, `{include …}`). It is an explicit lake target
+(`[[lean_lib]] Tutorial` + `[[lean_exe]] tutorial`) kept **out of `defaultTargets`** like
+`wiki`/`tlts`, so the math gate is untouched. Build/render with `lake build Tutorial` /
+`lake exe tutorial --output _out` (multi-file HTML in `_out/html-multi/`). CI renders it to
+the Pages **root** with the doc-gen4 API under **`/api/`**. The no-Verso rule above still
+binds the library — keep Verso *only* in `Tutorial/`.
 
 ## The autoformalization loop
 

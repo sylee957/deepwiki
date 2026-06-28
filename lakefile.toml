@@ -11,6 +11,15 @@ name = "«doc-gen4»"
 git = "https://github.com/leanprover/doc-gen4"
 rev = "v4.31.0"
 
+# Verso (prose-only, Mathlib-free) — powers the standalone Risch-algorithm
+# tutorial Manual. Pinned to the toolchain. The CLAUDE.md "no Verso" rule is
+# about the LIBRARY (chapters stay plain Lean + doc-gen4); this tutorial is a
+# separate, intentional target kept out of `defaultTargets` like `wiki`/`tlts`.
+[[require]]
+name = "verso"
+git = "https://github.com/leanprover/verso"
+rev = "v4.31.0"
+
 [[lean_lib]]
 name = "DeepWiki"
 
@@ -49,3 +58,15 @@ srcDir = "tools"
 name = "minplus"
 srcDir = "tools"
 root = "MinPlusCalc.Main"
+
+# Standalone Verso Manual tutorial for the Risch algorithms (prose-only).
+# Out of `defaultTargets` like the other tooling — the math gate is untouched.
+# Build with `lake build Tutorial`; render with `lake exe tutorial --output _out`.
+[[lean_lib]]
+name = "Tutorial"
+# All `Tutorial.*` submodules (no `Tutorial.lean` root file); `Main` is the exe root.
+globs = ["Tutorial.+"]
+
+[[lean_exe]]
+name = "tutorial"
+root = "Tutorial.Main"

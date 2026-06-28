@@ -3,8 +3,10 @@
 /build/
 /lake-packages/
 
-# Rendered output (doc-gen4 writes under /.lake/; legacy Verso wrote /_out/)
+# Rendered output (doc-gen4 writes under /.lake/; the Verso tutorial writes
+# /_out/; CI assembles the published Pages tree in /_site/)
 /_out/
+/_site/
 
 # Editor
 .DS_Store
