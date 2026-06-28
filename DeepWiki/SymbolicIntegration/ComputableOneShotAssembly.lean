@@ -552,6 +552,49 @@ theorem cIntegrateReducedG_logs_eq_per_root [DecidableEq (CFieldSpec.K α)] (Dt 
     (by rw [hden]; exact hdist) hβ
     (by rw [hden]; exact hcand β hβ)
 
+/-! ### ★ The `hA` discharge — the Hermite leftover is a PROPER fraction (numer degree < denom degree)
+
+Both reduced-case one-shots (`field_identity_of_cIntegrateReducedG_primitive` below and its hyperexp
+analogue) take the degree side condition
+
+  `hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card`
+
+i.e. the Hermite leftover numerator `h_num` has degree `< s.card`, where `s.card` enters as the degree of
+the leftover denominator through the squarefree spelling `hden : toPolyG (…).2.2 = Lagrange.nodal s id` (the
+RT residue factoring). Since `Lagrange.degree_nodal : (nodal s id).degree = #s` over the field
+`CFieldSpec.K α`, `hA` is **exactly** the proper-fraction property `deg h_num < deg h_den`. The lemma below
+turns that equivalence into a one-step bridge: it discharges `hA` from `hden` plus the intrinsic
+proper-fraction property `hproper` (which no longer mentions `s`).
+
+**The residual (verified Large).** The *unconditional* proper-fraction property — Hermite preserves
+properness, a proper input `a/d` (`deg a < deg d`) yielding a proper leftover — is not dischargeable with a
+focused effort: `cHermiteReduceTowerG` recovers `h_num` by an *exact division* over the squarefree radical
+`Dstar = ∏ᵢ vᵢ` after a *multi-factor fold* of `cHermiteReduceTowerInner` (each step a `cdiophantineG`
+Bézout solve, cross-multiplied into the running rational part `g`). Bounding `deg h_num < deg Dstar` requires
+the full abstract correctness of `cHermiteReduceTowerG` (the cleared Hermite identity `D(g) + h = a/d`,
+currently `native_decide`-validated only, never proven abstractly) *plus* a tower analogue of the per-power
+`hermiteReducePower_remainder_degree` induction threaded through that fold and the exact division. It is not
+derivable from the cleared identity alone: the rational-part numerator can have arbitrary degree, so the
+identity does not pin `deg h_num`. So properness is taken as the named hypothesis `hproper`, and the bridge
+is the genuinely-provable half connecting it to the `s.card` form the one-shots consume. -/
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **★ `hA` from the leftover's properness** — discharges the degree side condition
+`(toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card` of the reduced-case one-shots from the
+squarefree spelling `hden : toPolyG (…).2.2 = Lagrange.nodal s id` and the intrinsic proper-fraction property
+`hproper` (leftover numerator degree `<` leftover denominator degree). Since `Lagrange.degree_nodal` gives
+`(nodal s id).degree = #s` over the field `CFieldSpec.K α`, rewriting `hden` into `hproper` turns
+`deg h_num < deg h_den` into `deg h_num < s.card`. The provable half of the `hA` discharge; the
+unconditional properness (Hermite preserves proper fractions through its fold + exact division) needs the
+abstract Hermite correctness — the documented Large residual. -/
+theorem cHermiteReduceTowerG_numer_degree_lt (Dt : CPolyG α) (fuel : ℕ)
+    (a d : CPolyG α) (s : Finset (CFieldSpec.K α))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hproper : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree
+      < (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2).degree) :
+    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
+  rwa [hden, Lagrange.degree_nodal] at hproper
+
 /-- **★★ The reduced-case field identity for the PRIMITIVE case** — for the normal-part capstone output
 `res = cIntegrateReducedG Dt fuel a d cands` with a primitive monomial `toPolyG Dt = C w`, **given** the
 Hermite half `hherm` (`D(g) + h = a/d`, leftover `h = (cHermiteReduceTowerG …).2`) and the per-root
@@ -1533,6 +1576,47 @@ hypotheses. -/
 #print axioms cIntegrateGFull_poly_eq
 #print axioms cIntegrateGFull_poly_oneShot
 #print axioms cIntegrateGFull_poly_oneShot_base
+#print axioms cHermiteReduceTowerG_numer_degree_lt
+
+-- ★ `cHermiteReduceTowerG_numer_degree_lt` discharges `hA` from the squarefree spelling + leftover
+-- properness: `deg h_num < deg h_den` (with `h_den = nodal s id`) gives `deg h_num < s.card`.
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
+    (s : Finset (CFieldSpec.K (QFunNZG ℚ)))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hproper : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree
+      < (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2).degree) :
+    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card :=
+  cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden hproper
+
+-- ★ Composed into the PRIMITIVE one-shot: with `hA` produced by the bridge from leftover properness, the
+-- reduced-case identity `D(g) + logResidueSumG = a/d` holds — `hA` is no longer a free hypothesis but the
+-- proper-fraction property of the Hermite leftover.
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
+    (cands : List (QFunNZG ℚ)) (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (w : CFieldSpec.K (QFunNZG ℚ))
+    (hDt : toPolyG Dt = C w)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
+            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+        = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
+    (hproper : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree
+      < (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2).degree)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt
+        (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
+          / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
+      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
+  field_identity_of_cIntegrateReducedG_primitive Dt fuel a d cands s w hDt hherm hden
+    (cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden hproper) hnorm hform
 
 end DeepWiki.SymbolicIntegration
 
