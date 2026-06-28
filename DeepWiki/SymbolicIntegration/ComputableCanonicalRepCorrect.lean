@@ -94,6 +94,60 @@ theorem toPolyG_cextendedEuclideanSplit (fuel : ℕ) (dn ds r u w : CPolyG α)
   rw [show cmulG u r = ur from rfl] at hkey ⊢
   rw [hkey, hbez, one_mul]
 
+/-- **`cextendedEuclideanSplit`'s first cofactor is proper** — `deg b < deg dₛ`: the first cofactor `b =
+(u·r) mod dₛ` is a Euclidean remainder mod `dₛ` (`cmodG_length_lt` bounds its normalized length below
+`dₛ`'s, `toPolyG_degree_lt_of_length_lt` turns that into the `degree` bound). Needs `dₛ` nonzero (`cnormG ds
+≠ []`) and enough fuel for `u·r`. Mirrors `extendedEuclideanSplit_degree_lt`. -/
+theorem cextendedEuclideanSplit_fst_degree_lt (fuel : ℕ) (dn ds r u w : CPolyG α)
+    (hds : cnormG ds ≠ [])
+    (hfuel : (cnormG (cmulG u r) : List α).length ≤ fuel) :
+    (toPolyG (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).1).degree < (toPolyG ds).degree := by
+  have hfst : (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).1
+      = cmodG fuel (cmulG u r) ds := by rw [CPolyG.cextendedEuclideanSplit]; rfl
+  rw [hfst]
+  refine toPolyG_degree_lt_of_length_lt _ _ hds ?_
+  show (cnormG (cmodG fuel (cmulG u r) ds) : List α).length < _
+  exact cmodG_length_lt fuel _ ds hds hfuel
+
+/-- **★ `cextendedEuclideanSplit`'s second cofactor is proper** — `deg c < deg dₙ`: from the Bézout split
+`b·dₙ + c·dₛ = r` (`toPolyG_cextendedEuclideanSplit`), the first cofactor `deg b < deg dₛ`
+(`cextendedEuclideanSplit_fst_degree_lt`), the denominator split `d = dₛ·dₙ`, and `deg r < deg d`. Then
+`c·dₛ = r − b·dₙ` has `deg(c·dₛ) < deg d = deg dₛ + deg dₙ` (both `deg r` and `deg(b·dₙ) = deg b + deg dₙ`
+are below `deg d`), so `deg c < deg dₙ` cancelling `deg dₛ`. This is the simple-fraction properness the
+canonical representation's simple part `c/dₙ` needs — the second-cofactor analogue of
+`cdiophantineG_fst_degree_lt`, given the split as a hypothesis. -/
+theorem cextendedEuclideanSplit_snd_degree_lt (fuel : ℕ) (dn ds r u w d : CPolyG α)
+    (hds : cnormG ds ≠ []) (hdn : cnormG dn ≠ [])
+    (hsplit : toPolyG d = toPolyG ds * toPolyG dn)
+    (hfuel : (cnormG (cmulG u r) : List α).length ≤ fuel)
+    (hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1)
+    (hr : (toPolyG r).degree < (toPolyG d).degree) :
+    (toPolyG (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).2).degree < (toPolyG dn).degree := by
+  set b := toPolyG (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).1 with hbdef
+  set c := toPolyG (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).2 with hcdef
+  have hds0 : toPolyG ds ≠ 0 := fun h => hds ((cnormG_eq_nil_iff ds).mpr h)
+  have hdn0 : toPolyG dn ≠ 0 := fun h => hdn ((cnormG_eq_nil_iff dn).mpr h)
+  have hspec : b * toPolyG dn + c * toPolyG ds = toPolyG r :=
+    toPolyG_cextendedEuclideanSplit fuel dn ds r u w hds hbez
+  have hbdeg : b.degree < (toPolyG ds).degree :=
+    cextendedEuclideanSplit_fst_degree_lt fuel dn ds r u w hds hfuel
+  -- `deg(b·dₙ) < deg(dₛ·dₙ) = deg d`
+  have hbdn : (b * toPolyG dn).degree < (toPolyG d).degree := by
+    rw [hsplit, Polynomial.degree_mul, Polynomial.degree_mul]
+    exact WithBot.add_lt_add_right (by rwa [Ne, Polynomial.degree_eq_bot]) hbdeg
+  -- `c·dₛ = r − b·dₙ`, so `deg(c·dₛ) < deg d`
+  have hcds : c * toPolyG ds = toPolyG r - b * toPolyG dn := by linear_combination hspec
+  have hcdsdeg : (c * toPolyG ds).degree < (toPolyG d).degree := by
+    rw [hcds]
+    calc (toPolyG r - b * toPolyG dn).degree
+        ≤ max (toPolyG r).degree (b * toPolyG dn).degree := Polynomial.degree_sub_le _ _
+      _ < (toPolyG d).degree := max_lt hr hbdn
+  -- cancel `deg dₛ`: `deg c < deg dₙ`
+  rw [Polynomial.degree_mul, hsplit, Polynomial.degree_mul] at hcdsdeg
+  have hdsdeg : (toPolyG ds).degree ≠ ⊥ := by rwa [Ne, Polynomial.degree_eq_bot]
+  rw [add_comm (toPolyG ds).degree (toPolyG dn).degree] at hcdsdeg
+  exact (WithBot.add_lt_add_iff_right hdsdeg).mp hcdsdeg
+
 /-- **The abstract canonical field identity** over ℚ(x)(t): from the division `a = q·d + r`, the
 denominator split `d = dₛ·dₙ`, and the Bézout split `b·dₙ + c·dₛ = r`, the three pieces recombine to
 `a/d` — `q + b/dₛ + c/dₙ = a/d`. The field-arithmetic core, independent of the computable engine. -/

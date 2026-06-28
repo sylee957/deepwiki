@@ -197,4 +197,68 @@ theorem canonicalRepresentationFastG_reconstructs [CField α] [CDiffField α] [C
     (toPolyG dn) (toPolyG ds) (toPolyG b) (toPolyG c) hd hsplit_dn_ne hsplit_ds_ne hadiv
     hsplit_eq' hbcr
 
+/-! ### The simple part `cₙ/dₙ` is a PROPER fraction — `deg cₙ < deg dₙ`
+
+The canonical split `f = fₚ + b/dₛ + cₙ/dₙ` makes the simple part `cₙ/dₙ` proper. `cₙ` is the **second**
+Bézout cofactor of `cextendedEuclideanSplit` (`c = w·r + (u·r div dₛ)·dₙ`, NOT structurally a remainder
+mod `dₙ`), so `deg cₙ < deg dₙ` is the second-cofactor properness `cextendedEuclideanSplit_snd_degree_lt`:
+it follows from the Bézout split `b·dₙ + c·dₛ = r`, the first cofactor `deg b < deg dₛ`, the denominator
+split `d = dₛ·dₙ`, and `deg r < deg d` (`r = a mod d`). This feeds `hproper`/`haProper` of
+`cHermiteReduceTowerG_residual_proper_of_degree_le_one` — the last open dependency of the §3.5
+split-correctness frontier. Generic over `α`, with the split carried as a hypothesis (the abstract split
+correctness is discharged at `α = QFunNZG ℚ` in `ComputableSplitFactorTowerCorrectG`). -/
+
+/-- **★ The simple part `cₙ/dₙ` of the canonical split is proper** — `deg cₙ < deg dₙ`: for
+`canonicalRepresentationFastG Dt fuel a d = (q, (b, dₛ), (cₙ, dₙ))`, the simple-part numerator `cₙ` has
+degree below `dₙ`. Given the denominator split `d = dₛ·dₙ` (`hsplit_eq`, the abstract split correctness as a
+hypothesis), the coprime Bézout gcd constant (`hgdeg`/`hgne`), `d ≠ 0`, and enough fuel for `a` (`hfuelA`)
+and the rescaled dividend `u·r` (`hfuelUR`). `cₙ = (cextendedEuclideanSplit …).2`, so this is
+`cextendedEuclideanSplit_snd_degree_lt` with `deg r < deg d` discharged from `r = a mod d`
+(`cmodG_length_lt`) and the Bézout identity from `toPolyG_cbezoutOne`. The last open dependency of
+`hproper` for `deg Dt ≤ 1`. -/
+theorem canonicalRepresentationFastG_simple_proper [CField α] [CFieldSpec α] [CDiffField α]
+    [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
+    (hd : toPolyG d ≠ 0)
+    (hsplit_eq : toPolyG d
+      = toPolyG (cSplitFactorFastG Dt fuel d).2 * toPolyG (cSplitFactorFastG Dt fuel d).1)
+    (hsplit_dn_ne : toPolyG (cSplitFactorFastG Dt fuel d).1 ≠ 0)
+    (hsplit_ds_ne : toPolyG (cSplitFactorFastG Dt fuel d).2 ≠ 0)
+    (hgdeg : (toPolyG (cgcdExtG fuel (cSplitFactorFastG Dt fuel d).1
+      (cSplitFactorFastG Dt fuel d).2).1).natDegree = 0)
+    (hgne : toPolyG (cgcdExtG fuel (cSplitFactorFastG Dt fuel d).1
+      (cSplitFactorFastG Dt fuel d).2).1 ≠ 0)
+    (hfuelA : (cnormG a : List α).length ≤ fuel)
+    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel (cSplitFactorFastG Dt fuel d).1
+      (cSplitFactorFastG Dt fuel d).2).1 (cdivmodG fuel a d).2) : List α).length ≤ fuel) :
+    (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.1).degree
+      < (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.2).degree := by
+  set dnds := cSplitFactorFastG Dt fuel d with hdnds
+  set dn := dnds.1 with hdn
+  set ds := dnds.2 with hds
+  set r := (cdivmodG fuel a d).2 with hr
+  set uw := CPolyG.cbezoutOne fuel dn ds with huw
+  set u := uw.1 with hu
+  set w := uw.2 with hw
+  -- canonical-rep components: `cₙ = (cextendedEuclideanSplit …).2`, denominator-part `= dₙ`.
+  have hcn : (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.1
+      = (CPolyG.cextendedEuclideanSplit fuel dn ds r u w).2 := by
+    rw [CPolyG.canonicalRepresentationFastG]
+  have hdnpart : (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.2 = dn := by
+    rw [CPolyG.canonicalRepresentationFastG]
+  rw [hcn, hdnpart]
+  have hds0 : cnormG ds ≠ [] := fun h => hsplit_ds_ne ((cnormG_eq_nil_iff ds).mp h)
+  have hdn0 : cnormG dn ≠ [] := fun h => hsplit_dn_ne ((cnormG_eq_nil_iff dn).mp h)
+  have hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1 := by
+    have := toPolyG_cbezoutOne fuel dn ds hgdeg hgne
+    rw [← hu, ← hw] at this; exact this
+  -- `deg r < deg d`: `r = a mod d`, a remainder mod `d` (no `deg a < deg d` needed).
+  have hdcn : cnormG d ≠ [] := fun h => hd ((cnormG_eq_nil_iff d).mp h)
+  have hrdeg : (toPolyG r).degree < (toPolyG d).degree := by
+    have hrmod : r = cmodG fuel a d := rfl
+    rw [hrmod]
+    refine toPolyG_degree_lt_of_length_lt _ _ hdcn ?_
+    show (cnormG (cmodG fuel a d) : List α).length < _
+    exact cmodG_length_lt fuel a d hdcn hfuelA
+  exact cextendedEuclideanSplit_snd_degree_lt fuel dn ds r u w d hds0 hdn0 hsplit_eq hfuelUR hbez hrdeg
+
 end DeepWiki.SymbolicIntegration

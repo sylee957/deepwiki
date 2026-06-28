@@ -375,6 +375,42 @@ theorem canonicalRepresentationFastG_reconstructs_qfunNZG (Dt : CPolyG (QFunNZG 
   exact canonicalRepresentationFastG_reconstructs Dt fuel a d hd
     (fun _ _ => hsplit_eq) hsplit_dn_ne hsplit_ds_ne hgdeg hgne
 
+/-! ### ★ The simple part `cₙ/dₙ` is proper at `α = QFunNZG ℚ` — split hypothesis DISCHARGED
+
+`canonicalRepresentationFastG_simple_proper` (`ComputableTowerUnify`) gives `deg cₙ < deg dₙ` generic over
+`α`, carrying the denominator split `d = dₛ·dₙ` as a hypothesis. At `α = QFunNZG ℚ` that split is supplied
+by `cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG` (its `.1`), so the simple-part properness becomes
+**unconditional** (modulo only the fuel/regularity bundle) at the integrator's actual carrier — exactly the
+last open dependency of `hproper` for `deg Dt ≤ 1`. -/
+
+/-- **★ The canonical split's simple part `cₙ/dₙ` is proper at `α = QFunNZG ℚ`** — `deg cₙ < deg dₙ`, with
+the denominator-split hypothesis DISCHARGED: for `canonicalRepresentationFastG Dt fuel a d = (q, (b, dₛ),
+(cₙ, dₙ))` over ℚ(x)(t), under the per-node regularity bundle `CCanonicalRepFastGRegularQ` and enough fuel
+for `a` (`hfuelA`) and the rescaled dividend `u·r` (`hfuelUR`), the simple-part numerator `cₙ` has degree
+below `dₙ`. The split `d = dₛ·dₙ` feeding `canonicalRepresentationFastG_simple_proper` is supplied by
+`cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG` (its `.1`) — so this is the **unconditional**
+version. It closes `hproper`/`haProper` of `cHermiteReduceTowerG_residual_proper_of_degree_le_one`, the
+last open dependency of the §3.5 split-correctness frontier for `deg Dt ≤ 1`. -/
+theorem canonicalRepresentationFastG_simple_proper_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
+    (a d : CPolyG (QFunNZG ℚ)) (hreg : CCanonicalRepFastGRegularQ Dt fuel a d)
+    (hfuelA : (cnormG a : List (QFunNZG ℚ)).length ≤ fuel)
+    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFastG Dt fuel d).1
+      (CPolyG.cSplitFactorFastG Dt fuel d).2).1 (cdivmodG fuel a d).2) : List (QFunNZG ℚ)).length
+        ≤ fuel) :
+    (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.1).degree
+      < (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.2).degree := by
+  obtain ⟨hd, hdeg, hsplitreg, hgdeg, hgne⟩ := hreg
+  have hsplit := cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG Dt fuel d hd hdeg hsplitreg
+  have hsplit_eq : toPolyG d
+      = toPolyG (CPolyG.cSplitFactorFastG Dt fuel d).2 * toPolyG (CPolyG.cSplitFactorFastG Dt fuel d).1 :=
+    hsplit.1
+  have hsplit_dn_ne : toPolyG (CPolyG.cSplitFactorFastG Dt fuel d).1 ≠ 0 := by
+    intro h0; exact hd (by rw [hsplit_eq, h0, mul_zero])
+  have hsplit_ds_ne : toPolyG (CPolyG.cSplitFactorFastG Dt fuel d).2 ≠ 0 := by
+    intro h0; exact hd (by rw [hsplit_eq, h0, zero_mul])
+  exact canonicalRepresentationFastG_simple_proper Dt fuel a d hd hsplit_eq hsplit_dn_ne
+    hsplit_ds_ne hgdeg hgne hfuelA hfuelUR
+
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
 -- The headline: the GENERIC fraction-free `cSplitFactorFastG` loop at `α = QFunNZG ℚ`, read over
@@ -407,9 +443,23 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
           / algebraMap (CFieldSpec.K (QFunNZG ℚ))[X] (RatFunc (CFieldSpec.K (QFunNZG ℚ))) (toPolyG d) :=
   canonicalRepresentationFastG_reconstructs_qfunNZG Dt fuel a d hreg
 
+-- The simple-part properness: the canonical split `f = q + b/dₛ + cₙ/dₙ` at `α = QFunNZG ℚ` has a PROPER
+-- simple part — `deg cₙ < deg dₙ` — with the denominator-split hypothesis discharged internally via the
+-- generic split correctness; the last open dependency of `hproper` for `deg Dt ≤ 1`.
+example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
+    (hreg : CCanonicalRepFastGRegularQ Dt fuel a d)
+    (hfuelA : (cnormG a : List (QFunNZG ℚ)).length ≤ fuel)
+    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFastG Dt fuel d).1
+      (CPolyG.cSplitFactorFastG Dt fuel d).2).1 (cdivmodG fuel a d).2) : List (QFunNZG ℚ)).length
+        ≤ fuel) :
+    (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.1).degree
+      < (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.2).degree :=
+  canonicalRepresentationFastG_simple_proper_qfunNZG Dt fuel a d hreg hfuelA hfuelUR
+
 /-! ### Axiom audit (the `QFunNZG ℚ` §5 correctness rests only on the standard kernel axioms) -/
 
 #print axioms cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG
 #print axioms canonicalRepresentationFastG_reconstructs_qfunNZG
+#print axioms canonicalRepresentationFastG_simple_proper_qfunNZG
 
 end DeepWiki.SymbolicIntegration
