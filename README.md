@@ -7,21 +7,12 @@ docstring; the rendered API documentation is exactly what was proved.
 
 **Live API docs:** https://sylee957.github.io/deepwiki/
 
-## Tutorial: The Risch Algorithm, Formalized
-
-A guided, goal-focused tour of the symbolic-integration formalization — from
-differential algebra and the transcendental tower up to the mechanized soundness
-and completeness results. Plain markdown with rendered math, where each
-declaration links to its definition in the source tree.
-
-**→ [Start reading](docs/README.md)**
-
 ## Topics
 
 The library currently spans **Network Calculus** (the (min,plus) dioid algebra
 and deterministic network calculus), **Reactive Systems** (CCS, bisimulation,
 Hennessy–Milner logic, timed CCS), **Time Series** (Brockwell–Davis), **Symbolic
-Integration** (the transcendental Risch algorithm — the tutorial's subject), and
+Integration** (the transcendental Risch algorithm, plus algebraic functions), and
 **Relational Databases** (the relational model and functional dependencies), each
 under `DeepWiki/<Topic>/`.
 
