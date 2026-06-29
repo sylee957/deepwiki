@@ -3,15 +3,14 @@ import DeepWiki.SymbolicIntegration.ComputableFieldGcd
 import DeepWiki.SymbolicIntegration.ComputableLogPartTower
 
 /-! # Arbitrary-depth differential towers: the generic fraction field `QFunNZG α`
-The Risch algorithm runs the polynomial engine over a **tower** ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t₁) ⊂ … . The
-existing `QFunNZ` (`ComputableField`/`ComputableFieldGcd`) builds *one* level — ℚ(x) as a `CField`
-over `CPoly = ℚ[x]`. This file makes that step **generic over the carrier**: given a level `[CField α]`,
+This file builds an arbitrary-depth **tower** of differential fields ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t₁) ⊂ … . The
+single-level `QFunNZ` builds *one* level — ℚ(x) as a `CField` over `CPoly = ℚ[x]`. This file makes that step **generic over the carrier**: given a level `[CField α]`,
 `QFunNZG α` is the fraction field of `CPolyG α = α[t]` (denominator-nonzero fraction pairs), with a
 *computable* `CField (QFunNZG α)` instance (the engine ops); adding `[CFieldSpec α]` gives a
 noncomputable `CFieldSpec (QFunNZG α)` bridge into `RatFunc (CFieldSpec.K α)`. Iterating gives the
 tower: `QFunNZG ℚ ≅ ℚ(x)`, `QFunNZG (QFunNZG ℚ) ≅ ℚ(x)(t₁)`, ….
 
-The keystone `CField`/`CFieldSpec` split (`GenericPolyEngine`) is what makes this work, and the crucial
+The keystone `CField`/`CFieldSpec` split is what makes this work, and the crucial
 design point is that **the carrier `QFunNZG α` and its `CField` instance need only `[CField α]`** — the
 denominator-nonzero condition is stated with the `[CField α]`-only `cisZeroG` test, NOT the `[CFieldSpec
 α]`-valued `toPolyG`. So `QFunNZG (QFunNZG ℚ)` carries no noncomputable dependency, and `CPolyG (QFunNZG
@@ -26,8 +25,6 @@ which already accept any `[CField α]`. -/
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
-
-variable {α : Type*} [CField α]
 
 /-! ### The generic fraction pair `QFunG α` and its computable arithmetic
 
@@ -44,31 +41,31 @@ abbrev QFunG (α : Type*) [CField α] := CPolyG α × CPolyG α
 namespace QFunG
 
 /-- **Generic zero fraction** `0/1` (numerator `[]`, denominator `[1]`). -/
-def qzeroG : QFunG α := ([], [CField.one])
+def qzeroG {α : Type*} [CField α] : QFunG α := ([], [CField.one])
 
 /-- **Generic one fraction** `1/1` (numerator `[1]`, denominator `[1]`). -/
-def qoneG : QFunG α := ([CField.one], [CField.one])
+def qoneG {α : Type*} [CField α] : QFunG α := ([CField.one], [CField.one])
 
 /-- **Generic fraction addition** `a/b + c/d = (a·d + c·b)/(b·d)` (cross-multiply, no gcd reduction). -/
-def qaddG (x y : QFunG α) : QFunG α :=
+def qaddG {α : Type*} [CField α] (x y : QFunG α) : QFunG α :=
   let (a, b) := x
   let (c, d) := y
   (CPolyG.caddG (CPolyG.cmulG a d) (CPolyG.cmulG c b), CPolyG.cmulG b d)
 
 /-- **Generic fraction multiplication** `(a/b)·(c/d) = (a·c)/(b·d)`. -/
-def qmulG (x y : QFunG α) : QFunG α :=
+def qmulG {α : Type*} [CField α] (x y : QFunG α) : QFunG α :=
   (CPolyG.cmulG x.1 y.1, CPolyG.cmulG x.2 y.2)
 
 /-- **Generic fraction negation** `−(a/b) = (−a)/b` (denominator unchanged). -/
-def qnegG (x : QFunG α) : QFunG α := (CPolyG.cnegG x.1, x.2)
+def qnegG {α : Type*} [CField α] (x : QFunG α) : QFunG α := (CPolyG.cnegG x.1, x.2)
 
 /-- **Generic fraction inverse** `(a/b)⁻¹ = b/a`; if the numerator is the zero polynomial the result is
 `qzeroG` (the `0⁻¹ = 0` field convention). -/
-def qinvG (x : QFunG α) : QFunG α :=
+def qinvG {α : Type*} [CField α] (x : QFunG α) : QFunG α :=
   if CPolyG.cisZeroG x.1 then qzeroG else (x.2, x.1)
 
 /-- **Generic fraction subtraction** `a/b − c/d := a/b + (−(c/d))`. -/
-def qsubG (x y : QFunG α) : QFunG α := qaddG x (qnegG y)
+def qsubG {α : Type*} [CField α] (x y : QFunG α) : QFunG α := qaddG x (qnegG y)
 
 end QFunG
 
@@ -137,55 +134,58 @@ noncomputable instance instCFieldDomainOfCFieldSpec {α : Type*} [CField α] [CF
 
 namespace QFunNZG
 
-variable [CFieldDomain α]
-
 /-- **The constant `[1]` is `cisZeroG`-nonzero** (from `CFieldDomain`): the denominator-nonzero witness
 for `qzeroNZG`/`qoneNZG`. -/
-theorem cisZeroG_one_singleton : CPolyG.cisZeroG ([CField.one] : CPolyG α) = false :=
+theorem cisZeroG_one_singleton {α : Type*} [CField α] [CFieldDomain α] :
+    CPolyG.cisZeroG ([CField.one] : CPolyG α) = false :=
   CFieldDomain.nz_one
 
 /-- **The product of two `cisZeroG`-nonzero generic polynomials is `cisZeroG`-nonzero** (from
 `CFieldDomain`): keeps the den-nonzero subtype closed under `qaddNZG`/`qmulNZG`. -/
-theorem cmulG_ne_zero_of {b d : CPolyG α} (hb : CPolyG.cisZeroG b = false)
+theorem cmulG_ne_zero_of {α : Type*} [CField α] [CFieldDomain α] {b d : CPolyG α}
+    (hb : CPolyG.cisZeroG b = false)
     (hd : CPolyG.cisZeroG d = false) : CPolyG.cisZeroG (CPolyG.cmulG b d) = false :=
   CFieldDomain.nz_mul hb hd
 
 /-- `qzeroNZG`: the zero fraction `0/1` as a `QFunNZG` (denominator `[1]` is nonzero). -/
-def qzeroNZG : QFunNZG α := ⟨QFunG.qzeroG, cisZeroG_one_singleton⟩
+def qzeroNZG {α : Type*} [CField α] [CFieldDomain α] : QFunNZG α :=
+  ⟨QFunG.qzeroG, cisZeroG_one_singleton⟩
 
 /-- `qoneNZG`: the one fraction `1/1` as a `QFunNZG` (denominator `[1]` is nonzero). -/
-def qoneNZG : QFunNZG α := ⟨QFunG.qoneG, cisZeroG_one_singleton⟩
+def qoneNZG {α : Type*} [CField α] [CFieldDomain α] : QFunNZG α :=
+  ⟨QFunG.qoneG, cisZeroG_one_singleton⟩
 
 /-- `qaddNZG`: addition on `QFunNZG` (the product denominator `b·d` is nonzero). -/
-def qaddNZG (x y : QFunNZG α) : QFunNZG α :=
+def qaddNZG {α : Type*} [CField α] [CFieldDomain α] (x y : QFunNZG α) : QFunNZG α :=
   ⟨QFunG.qaddG x.1 y.1, by
     obtain ⟨⟨a, b⟩, hb⟩ := x
     obtain ⟨⟨c, d⟩, hd⟩ := y
     exact cmulG_ne_zero_of hb hd⟩
 
 /-- `qmulNZG`: multiplication on `QFunNZG` (the product denominator `b·d` is nonzero). -/
-def qmulNZG (x y : QFunNZG α) : QFunNZG α :=
+def qmulNZG {α : Type*} [CField α] [CFieldDomain α] (x y : QFunNZG α) : QFunNZG α :=
   ⟨QFunG.qmulG x.1 y.1, by
     obtain ⟨⟨a, b⟩, hb⟩ := x
     obtain ⟨⟨c, d⟩, hd⟩ := y
     exact cmulG_ne_zero_of hb hd⟩
 
 /-- `qnegNZG`: negation on `QFunNZG` (denominator unchanged). -/
-def qnegNZG (x : QFunNZG α) : QFunNZG α := ⟨QFunG.qnegG x.1, x.2⟩
+def qnegNZG {α : Type*} [CField α] (x : QFunNZG α) : QFunNZG α := ⟨QFunG.qnegG x.1, x.2⟩
 
 /-- `qinvNZG`: inverse on `QFunNZG`. If the numerator's zero test holds, the result is `qzeroNZG` (the
 `0⁻¹ = 0` convention); otherwise swap numerator and denominator (the new denominator is the old
 numerator, nonzero exactly by `¬ cisZeroG`). -/
-def qinvNZG (x : QFunNZG α) : QFunNZG α :=
+def qinvNZG {α : Type*} [CField α] [CFieldDomain α] (x : QFunNZG α) : QFunNZG α :=
   if h : CPolyG.cisZeroG x.1.1 then qzeroNZG
   else ⟨(x.1.2, x.1.1), Bool.not_eq_true _ ▸ h⟩
 
 /-- `qsubNZG`: subtraction on `QFunNZG`, `x − y := x + (−y)`. -/
-def qsubNZG (x y : QFunNZG α) : QFunNZG α := qaddNZG x (qnegNZG y)
+def qsubNZG {α : Type*} [CField α] [CFieldDomain α] (x y : QFunNZG α) : QFunNZG α :=
+  qaddNZG x (qnegNZG y)
 
 /-- `isZeroNZG`: the zero test on `QFunNZG`, reading `cisZeroG` off the **numerator** (the denominator
 is nonzero by membership, so `x = 0` iff its numerator vanishes). -/
-def isZeroNZG (x : QFunNZG α) : Bool := CPolyG.cisZeroG x.1.1
+def isZeroNZG {α : Type*} [CField α] (x : QFunNZG α) : Bool := CPolyG.cisZeroG x.1.1
 
 end QFunNZG
 
@@ -197,15 +197,12 @@ The tower-level field operations are honest list computations through the generi
 (QFunNZG (…))` reduces one level up. This is exactly the `CField`/`CFieldSpec` split, mirroring the
 concrete `QFunNZ`. -/
 
-section
-variable [CFieldDomain α]
-
 /-- **`CField (QFunNZG α)`**: the next tower level (the fraction field of `α[t]`) as a *computable*
 field (over `[CField α] [CFieldDomain α]`, no `CFieldSpec`). `zero`/`one`/`add`/`mul`/`neg`/`inv` and
 `isZero` are list computations through the generic engine, the membership proofs `Prop`-erased — so the
 engine `caddG`/`cmulG`/`cgcdExtG`/… reduces over `CPolyG (QFunNZG α)` (`native_decide`). Iterating builds
 the differential tower ℚ(x)(t₁)(t₂)…. -/
-instance instCFieldQFunNZG : CField (QFunNZG α) where
+instance instCFieldQFunNZG {α : Type*} [CField α] [CFieldDomain α] : CField (QFunNZG α) where
   zero := QFunNZG.qzeroNZG
   one := QFunNZG.qoneNZG
   add := QFunNZG.qaddNZG
@@ -213,8 +210,6 @@ instance instCFieldQFunNZG : CField (QFunNZG α) where
   neg := QFunNZG.qnegNZG
   inv := QFunNZG.qinvNZG
   isZero := QFunNZG.isZeroNZG
-
-end
 
 /-! ### The bridge `toQFunNZG` into `RatFunc (CFieldSpec.K α)` and its homomorphism laws
 
@@ -228,42 +223,42 @@ the bridge `[CFieldSpec α]` is back in scope (the homomorphism laws reference `
 
 namespace QFunNZG
 
-variable [CFieldSpec α] [CFieldDomain α]
-
-omit [CFieldDomain α] in
 /-- `amG = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))`, the polynomial-into-rational
 embedding for the bridge. -/
 noncomputable abbrev amG (α : Type*) [CField α] [CFieldSpec α] :
     (CFieldSpec.K α)[X] →+* RatFunc (CFieldSpec.K α) :=
   algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))
 
-omit [CFieldDomain α] in
 /-- `amG (toPolyG p) ≠ 0` whenever `toPolyG p ≠ 0` (the embedding `algebraMap K[X] (RatFunc K)` is
 injective). -/
-theorem amG_toPolyG_ne_zero {p : CPolyG α} (hp : CPolyG.toPolyG p ≠ 0) :
+theorem amG_toPolyG_ne_zero {α : Type*} [CField α] [CFieldSpec α] {p : CPolyG α}
+    (hp : CPolyG.toPolyG p ≠ 0) :
     amG α (CPolyG.toPolyG p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective (CFieldSpec.K α))).mpr hp
 
-omit [CFieldDomain α] in
 /-- `cisZeroG b = false` reads as `toPolyG b ≠ 0` (the denominator nonzero criterion through the
 bridge). -/
-theorem toPolyG_ne_zero_of_cisZeroG_false {b : CPolyG α} (hb : CPolyG.cisZeroG b = false) :
+theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CField α] [CFieldSpec α] {b : CPolyG α}
+    (hb : CPolyG.cisZeroG b = false) :
     CPolyG.toPolyG b ≠ 0 := by
   rw [Bool.eq_false_iff, Ne, CPolyG.cisZeroG_iff] at hb; exact hb
 
 /-- **`toQFunNZG` reads a `QFunNZG` into `RatFunc (CFieldSpec.K α)`**: `(num, den) ↦ amG (toPolyG num) /
 amG (toPolyG den)`. The bridge `toK` of the next tower level. -/
-noncomputable def toQFunNZG (x : QFunNZG α) : RatFunc (CFieldSpec.K α) :=
+noncomputable def toQFunNZG {α : Type*} [CField α] [CFieldSpec α] (x : QFunNZG α) :
+    RatFunc (CFieldSpec.K α) :=
   amG α (CPolyG.toPolyG x.1.1) / amG α (CPolyG.toPolyG x.1.2)
 
 /-- **`toQFunNZG` reads `qzeroNZG` as `0`**. -/
-theorem toQFunNZG_qzeroNZG : toQFunNZG (qzeroNZG : QFunNZG α) = 0 := by
+theorem toQFunNZG_qzeroNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] :
+    toQFunNZG (qzeroNZG : QFunNZG α) = 0 := by
   rw [toQFunNZG]
   show amG α (CPolyG.toPolyG ([] : CPolyG α)) / _ = 0
   rw [CPolyG.toPolyG_nil, map_zero, zero_div]
 
 /-- **`toQFunNZG` reads `qoneNZG` as `1`**. -/
-theorem toQFunNZG_qoneNZG : toQFunNZG (qoneNZG : QFunNZG α) = 1 := by
+theorem toQFunNZG_qoneNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] :
+    toQFunNZG (qoneNZG : QFunNZG α) = 1 := by
   rw [toQFunNZG]
   show amG α (CPolyG.toPolyG ([CField.one] : CPolyG α))
       / amG α (CPolyG.toPolyG ([CField.one] : CPolyG α)) = 1
@@ -273,7 +268,7 @@ theorem toQFunNZG_qoneNZG : toQFunNZG (qoneNZG : QFunNZG α) = 1 := by
 
 /-- **`qaddNZG` realizes `+`** on `QFunNZG`: `toQFunNZG (qaddNZG x y) = toQFunNZG x + toQFunNZG y` (the
 denominator-nonzero side-conditions discharged by membership). -/
-theorem toQFunNZG_qaddNZG (x y : QFunNZG α) :
+theorem toQFunNZG_qaddNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : QFunNZG α) :
     toQFunNZG (qaddNZG x y) = toQFunNZG x + toQFunNZG y := by
   obtain ⟨⟨a, b⟩, hb⟩ := x
   obtain ⟨⟨c, d⟩, hd⟩ := y
@@ -290,7 +285,7 @@ theorem toQFunNZG_qaddNZG (x y : QFunNZG α) :
   ring
 
 /-- **`qmulNZG` realizes `*`** on `QFunNZG`: `toQFunNZG (qmulNZG x y) = toQFunNZG x * toQFunNZG y`. -/
-theorem toQFunNZG_qmulNZG (x y : QFunNZG α) :
+theorem toQFunNZG_qmulNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : QFunNZG α) :
     toQFunNZG (qmulNZG x y) = toQFunNZG x * toQFunNZG y := by
   obtain ⟨⟨a, b⟩, hb⟩ := x
   obtain ⟨⟨c, d⟩, hd⟩ := y
@@ -299,9 +294,9 @@ theorem toQFunNZG_qmulNZG (x y : QFunNZG α) :
       * (amG α (CPolyG.toPolyG c) / amG α (CPolyG.toPolyG d))
   rw [CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, map_mul, map_mul, div_mul_div_comm]
 
-omit [CFieldDomain α] in
 /-- **`qnegNZG` realizes `-`** on `QFunNZG`: `toQFunNZG (qnegNZG x) = - toQFunNZG x`. -/
-theorem toQFunNZG_qnegNZG (x : QFunNZG α) : toQFunNZG (qnegNZG x) = - toQFunNZG x := by
+theorem toQFunNZG_qnegNZG {α : Type*} [CField α] [CFieldSpec α] (x : QFunNZG α) :
+    toQFunNZG (qnegNZG x) = - toQFunNZG x := by
   obtain ⟨⟨a, b⟩, hb⟩ := x
   show amG α (CPolyG.toPolyG (CPolyG.cnegG a)) / amG α (CPolyG.toPolyG b)
     = - (amG α (CPolyG.toPolyG a) / amG α (CPolyG.toPolyG b))
@@ -309,7 +304,8 @@ theorem toQFunNZG_qnegNZG (x : QFunNZG α) : toQFunNZG (qnegNZG x) = - toQFunNZG
 
 /-- **`qinvNZG` realizes `⁻¹`** on `QFunNZG`: `toQFunNZG (qinvNZG x) = (toQFunNZG x)⁻¹` (the `0⁻¹ = 0`
 convention matches `RatFunc`). -/
-theorem toQFunNZG_qinvNZG (x : QFunNZG α) : toQFunNZG (qinvNZG x) = (toQFunNZG x)⁻¹ := by
+theorem toQFunNZG_qinvNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x : QFunNZG α) :
+    toQFunNZG (qinvNZG x) = (toQFunNZG x)⁻¹ := by
   rw [qinvNZG]
   by_cases h : CPolyG.cisZeroG x.1.1
   · rw [dif_pos h, toQFunNZG_qzeroNZG]
@@ -323,15 +319,15 @@ theorem toQFunNZG_qinvNZG (x : QFunNZG α) : toQFunNZG (qinvNZG x) = (toQFunNZG 
     rw [inv_div]
 
 /-- **`qsubNZG` realizes `-`** on `QFunNZG`: `toQFunNZG (qsubNZG x y) = toQFunNZG x - toQFunNZG y`. -/
-theorem toQFunNZG_qsubNZG (x y : QFunNZG α) :
+theorem toQFunNZG_qsubNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x y : QFunNZG α) :
     toQFunNZG (qsubNZG x y) = toQFunNZG x - toQFunNZG y := by
   rw [qsubNZG, toQFunNZG_qaddNZG, toQFunNZG_qnegNZG, sub_eq_add_neg]
 
-omit [CFieldDomain α] in
 /-- **`isZeroNZG` is certified against `toQFunNZG = 0`**: `isZeroNZG x = true ↔ toQFunNZG x = 0` — the
 numerator zero test agrees with vanishing in `RatFunc (CFieldSpec.K α)` (denominator nonzero by
 membership). -/
-theorem isZeroNZG_iff (x : QFunNZG α) : isZeroNZG x = true ↔ toQFunNZG x = 0 := by
+theorem isZeroNZG_iff {α : Type*} [CField α] [CFieldSpec α] (x : QFunNZG α) :
+    isZeroNZG x = true ↔ toQFunNZG x = 0 := by
   rw [isZeroNZG, CPolyG.cisZeroG_iff]
   obtain ⟨⟨a, b⟩, hb⟩ := x
   have hbm : amG α (CPolyG.toPolyG b) ≠ 0 :=
@@ -347,15 +343,14 @@ theorem isZeroNZG_iff (x : QFunNZG α) : isZeroNZG x = true ↔ toQFunNZG x = 0 
 
 end QFunNZG
 
-variable [CFieldSpec α]
-
 /-- **`CFieldSpec (QFunNZG α)`**: the field-homomorphism bridge for `CField (QFunNZG α)`, over `K =
 RatFunc (CFieldSpec.K α)` with `toK = toQFunNZG`. The recursive step that builds the tower's
 correctness layer: `CFieldSpec.K (QFunNZG α) = RatFunc (CFieldSpec.K α)`, so iterating gives
 ℚ ↦ RatFunc ℚ ↦ RatFunc (RatFunc ℚ) ↦ …. Its `isZero` is the numerator zero test (no `toK`-injectivity
 needed), generalizing the `QFunNZ` instance. Noncomputable (routes through `RatFunc`), but only the
 correctness layer depends on it. -/
-noncomputable instance instCFieldSpecQFunNZG : CFieldSpec (QFunNZG α) where
+noncomputable instance instCFieldSpecQFunNZG {α : Type*} [CField α] [CFieldSpec α] :
+    CFieldSpec (QFunNZG α) where
   K := RatFunc (CFieldSpec.K α)
   toK := QFunNZG.toQFunNZG
   toK_zero := QFunNZG.toQFunNZG_qzeroNZG
@@ -368,7 +363,7 @@ noncomputable instance instCFieldSpecQFunNZG : CFieldSpec (QFunNZG α) where
 
 /-! ### Tower level 1: `QFunNZG ℚ` and its relationship to the concrete `QFunNZ`
 
-`QFunNZG ℚ` and the concrete `QFunNZ` (`ComputableField`) are **distinct but isomorphic** carriers of
+`QFunNZG ℚ` and the concrete `QFunNZ` are **distinct but isomorphic** carriers of
 ℚ(x): both are denominator-nonzero fraction pairs over `List ℚ`, but `QFunNZ` wraps `Compute.QFun =
 CPoly × CPoly` with the *predicate* `toPoly den ≠ 0`, while `QFunNZG ℚ` wraps `QFunG ℚ = CPolyG ℚ ×
 CPolyG ℚ` with the equivalent `[CField ℚ]`-only predicate `cisZeroG den = false`. Since `CPolyG ℚ` is
