@@ -3,13 +3,12 @@ import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
 import DeepWiki.SymbolicIntegration.ComputableCanonicalRep
 
 /-! # Generic Bézout-split / canonical-field-identity helpers for §3.5 correctness
-The QFunNZ-specific abstract correctness of `cSplitSquarefreeFactorFast` and the
-`canonicalRepresentationFast` capstone that once lived here has been superseded by the generic
-tower-recursive `canonicalRepresentationFastG_reconstructs` (`ComputableTowerUnify`) at `QFunNZG ℚ`.
-What remains are three reusable generic helpers consumed by that generic engine:
-`toPolyG_cbezoutOne` (`u·a + w·b = 1` from the extended-Euclid Bézout), `toPolyG_cextendedEuclideanSplit`
-(`b·dₙ + c·dₛ = r`), and the field-arithmetic `canonicalRepFast_field_identity`
-(`q + b/dₛ + c/dₙ = a/d`). -/
+Abstract correctness of `cSplitSquarefreeFactorFast` and the `canonicalRepresentationFast` capstone over
+a tower level is the generic tower-recursive `canonicalRepresentationFastG_reconstructs`
+(`ComputableTowerUnify`) at `QFunNZG ℚ`. This file holds three reusable generic helpers consumed by that
+generic engine: `toPolyG_cbezoutOne` (`u·a + w·b = 1` from the extended-Euclid Bézout),
+`toPolyG_cextendedEuclideanSplit` (`b·dₙ + c·dₛ = r`), and the field-arithmetic
+`canonicalRepFast_field_identity` (`q + b/dₛ + c/dₙ = a/d`). -/
 
 open Polynomial Classical
 open scoped Differential

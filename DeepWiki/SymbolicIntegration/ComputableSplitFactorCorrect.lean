@@ -2,13 +2,11 @@ import DeepWiki.SymbolicIntegration.ComputableGcdCorrect
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 
 /-! # Generic associate/derivative helpers for the splitting-factorization correctness
-The QFunNZ-specific abstract correctness of the fraction-free `splitFactor` over ℚ(x)[t] that once lived
-here (`cSplitFactorFast_isSplittingFactorizationGen`) has been superseded by the generic tower-recursive
-correctness `cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG`
-(`ComputableSplitFactorTowerCorrectG`) at `QFunNZG ℚ`. What remains are two reusable field- and
-derivation-generic helpers consumed by that generic engine:
-`gcd_derivative_dvd_gcd_implicitDeriv` (the denominator gcd divides the numerator gcd, char `0`) and
-`natDegree_eq_of_associated` (degree is associate-invariant). -/
+Abstract correctness of the fraction-free `splitFactor` over a tower level is the generic tower-recursive
+`cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG` (`ComputableSplitFactorTowerCorrectG`) at
+`QFunNZG ℚ`. This file holds two reusable field- and derivation-generic helpers consumed by that generic
+engine: `gcd_derivative_dvd_gcd_implicitDeriv` (the denominator gcd divides the numerator gcd, char `0`)
+and `natDegree_eq_of_associated` (degree is associate-invariant). -/
 
 open Polynomial Classical
 open scoped Differential
