@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.ComputableCanonicalRepCorrect
+import DeepWiki.SymbolicIntegration.ComputableTowerField
 
 /-! # Extending a base derivation to the fraction field `K(t)` (the integral-correctness keystone)
 The rational-integration correctness identities — the §6.1 weak normalizer, the §5.6 Rothstein–Trager
@@ -222,36 +223,42 @@ end Bundle
 
 /-! ### Specialization to the tower fraction field `RatFunc (RatFunc ℚ)`
 The computable engine's monomial extension uses the base derivation `implicitDeriv (toPolyG Dt)` on
-`(RatFunc ℚ)[X]` (here `K = CFieldSpec.K QFunNZ = RatFunc ℚ`, `t` the monomial variable). Specializing
-`extendDeriv` to it yields the genuine tower fraction-field derivation on `RatFunc (RatFunc ℚ)`,
-extending the monomial derivation by the quotient rule — the substrate on which the §5/§6
-integral-correctness identities (`D(g) + h = f`, `D(∑ aᵢ log gᵢ) = a/d`) are stated. -/
+`(RatFunc ℚ)[X]` (here `K = CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`, `t` the monomial variable).
+Specializing `extendDeriv` to it yields the genuine tower fraction-field derivation on
+`RatFunc (RatFunc ℚ)`, extending the monomial derivation by the quotient rule — the substrate on
+which the §5/§6 integral-correctness identities (`D(g) + h = f`, `D(∑ aᵢ log gᵢ) = a/d`) are stated. -/
 
 open scoped Differential
 open CPolyG
 
-/-- The engine carrier `CFieldSpec.K QFunNZ` is `RatFunc ℚ`, a `ℚ`-algebra (needed for the `ℚ`-route
-bundle). -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K QFunNZ) :=
+/-- The engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra (needed for the
+`ℚ`-route bundle). -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
+
+/-- The engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ`, hence a `Differential` ring under the
+`d/dx` derivation. Local instance so the base derivation `implicitDeriv (toPolyG Dt)` synthesizes the
+`Differential` it needs through the `CFieldSpec.K (QFunNZG ℚ)` carrier abbreviation. -/
+noncomputable local instance : Differential (CFieldSpec.K (QFunNZG ℚ)) :=
+  inferInstanceAs (Differential (RatFunc ℚ))
 
 /-- **The tower fraction-field derivation** on `RatFunc (RatFunc ℚ)` for the monomial extension with
 `Dt`: `extendDeriv (implicitDeriv (toPolyG Dt))`, extending the base monomial derivation
 `implicitDeriv (toPolyG Dt)` on `(RatFunc ℚ)[X]` by the quotient rule. -/
-noncomputable def towerFractionFieldDeriv (Dt : CPolyG QFunNZ) :
-    Derivation ℤ (RatFunc (CFieldSpec.K QFunNZ)) (RatFunc (CFieldSpec.K QFunNZ)) :=
+noncomputable def towerFractionFieldDeriv (Dt : CPolyG (QFunNZG ℚ)) :
+    Derivation ℤ (RatFunc (CFieldSpec.K (QFunNZG ℚ))) (RatFunc (CFieldSpec.K (QFunNZG ℚ))) :=
   extendDeriv (Differential.implicitDeriv (toPolyG Dt))
 
 /-- **The tower derivation extends the monomial derivation**: on `algebraMap (RatFunc ℚ)[X]` images,
 `towerFractionFieldDeriv Dt` agrees with `implicitDeriv (toPolyG Dt)`. -/
-theorem towerFractionFieldDeriv_algebraMap (Dt : CPolyG QFunNZ) (p : (CFieldSpec.K QFunNZ)[X]) :
-    towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) p)
-      = algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) (Differential.implicitDeriv (toPolyG Dt) p) :=
+theorem towerFractionFieldDeriv_algebraMap (Dt : CPolyG (QFunNZG ℚ)) (p : (CFieldSpec.K (QFunNZG ℚ))[X]) :
+    towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K (QFunNZG ℚ))) p)
+      = algebraMap _ (RatFunc (CFieldSpec.K (QFunNZG ℚ))) (Differential.implicitDeriv (toPolyG Dt) p) :=
   extendDeriv_algebraMap _ p
 
 /-- **Quotient rule for the tower derivation**: `(mk p q) ↦ (Δp·q − p·Δq)/q²` with
 `Δ = implicitDeriv (toPolyG Dt)`. -/
-theorem towerFractionFieldDeriv_mk (Dt : CPolyG QFunNZ) (p q : (CFieldSpec.K QFunNZ)[X]) :
+theorem towerFractionFieldDeriv_mk (Dt : CPolyG (QFunNZG ℚ)) (p q : (CFieldSpec.K (QFunNZG ℚ))[X]) :
     towerFractionFieldDeriv Dt (RatFunc.mk p q)
       = RatFunc.mk (Differential.implicitDeriv (toPolyG Dt) p * q
           - p * Differential.implicitDeriv (toPolyG Dt) q) (q ^ 2) :=
@@ -260,9 +267,9 @@ theorem towerFractionFieldDeriv_mk (Dt : CPolyG QFunNZ) (p q : (CFieldSpec.K QFu
 /-- **The log-derivative reading on the tower** (§5.6 Rothstein–Trager building block): the
 log-derivative of `g ∈ (RatFunc ℚ)[X]` under the tower derivation is `(Δg)/g` with
 `Δ = implicitDeriv (toPolyG Dt)`. -/
-theorem towerFractionFieldDeriv_logDeriv (Dt : CPolyG QFunNZ) (g : (CFieldSpec.K QFunNZ)[X]) :
-    towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g)
-        / algebraMap _ (RatFunc (CFieldSpec.K QFunNZ)) g
+theorem towerFractionFieldDeriv_logDeriv (Dt : CPolyG (QFunNZG ℚ)) (g : (CFieldSpec.K (QFunNZG ℚ))[X]) :
+    towerFractionFieldDeriv Dt (algebraMap _ (RatFunc (CFieldSpec.K (QFunNZG ℚ))) g)
+        / algebraMap _ (RatFunc (CFieldSpec.K (QFunNZG ℚ))) g
       = RatFunc.mk (Differential.implicitDeriv (toPolyG Dt) g) g :=
   extendDeriv_logDeriv_mk _ g
 
@@ -272,8 +279,8 @@ for the §5/§6 integral-correctness identities over the genuine tower fraction 
 `fractionFieldDifferential`, whose `restrictScalars`-under-`letI` resolves the `Module ℤ` field
 diamond. -/
 @[reducible]
-noncomputable def towerFractionFieldDifferential (Dt : CPolyG QFunNZ) :
-    Differential (RatFunc (CFieldSpec.K QFunNZ)) :=
+noncomputable def towerFractionFieldDifferential (Dt : CPolyG (QFunNZG ℚ)) :
+    Differential (RatFunc (CFieldSpec.K (QFunNZG ℚ))) :=
   fractionFieldDifferential (Differential.implicitDeriv (toPolyG Dt))
 
 /-- Headline restatement: `extendDeriv d` extends the base derivation `d` on polynomial images. -/
