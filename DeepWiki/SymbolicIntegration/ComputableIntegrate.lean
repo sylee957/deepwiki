@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableCanonicalRep
+import DeepWiki.SymbolicIntegration.GenericPolyEngine
 
 /-! # Horner polynomial evaluation `cevalG`
 `cevalG p c = p(c)` over a `CField` — the generic Horner evaluation of a dense `CPolyG` at a field
@@ -10,8 +10,6 @@ Ch. 5, assembled). That pair was **superseded** by the generic tower integrators
 examples depended on them, so it was removed — only the reusable `cevalG` helper remains here. -/
 
 namespace DeepWiki.SymbolicIntegration
-
-open Compute
 
 namespace CPolyG
 

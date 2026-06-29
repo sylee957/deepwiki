@@ -78,7 +78,7 @@ only; it states no new mathematics.
   Soundness: `cIntegrateGeneralCurveDecide_sound`. Completeness: `cIntegrateGeneralCurveDecide_complete`.
   Decision procedure: `cIntegrateGeneralCurveDecide_decides`, modulo the general `Pic⁰`-torsion frontier.
 
-## Legacy integrators (level-1 `QFunNZ`, superseded by the `*G` tower forms)
+## Legacy integrators (level-1 ℚ(x) = `QFunNZG ℚ`, superseded by the `*G` tower forms)
 
 * `cIntegrate` / `cIntegrateReduced` — **REMOVED** (superseded by `cIntegrateGFull` / `cIntegrateReducedG`;
   the call graph confirmed only their own examples depended on them). Their reusable `cevalG` Horner-eval

@@ -188,8 +188,8 @@ the candidate `log(x+1)` with `1/(x+1) ∉ span_ℚ{1/x}` is a **new** transcend
 
 open CPolyG
 
-/-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element (the validation coefficient builder, mirroring
-`QFunNZ.ofNumDen` one tower level down; `den ≠ 0` by `native_decide`). -/
+/-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element (the validation coefficient builder over the
+generic ℚ(x) carrier; `den ≠ 0` by `native_decide`). -/
 def qFracStructG (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩
 

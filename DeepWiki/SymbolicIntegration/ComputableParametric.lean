@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.ComputableLogPartTower
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 
 /-! # Computable parametric problems over the tower ℚ(x)[t] (Bronstein Chapter 7)
@@ -98,8 +97,8 @@ def qnormPairG (fuel : ℕ) (num den : CPolyG ℚ) : CPolyG ℚ × CPolyG ℚ :=
     let s := (cleadG den')⁻¹
     (cscaleG s num', cscaleG s den')
 
-/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the §7.3 coefficient builder, mirroring
-`QFunNZ.ofConstNZ` one tower level down; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the §7.3 coefficient builder over the generic
+ℚ(x) carrier; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
 def qConstParamG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- **Polynomial part / properness of a base-field element** `cBaseIsProper b`: `true` iff the

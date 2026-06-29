@@ -4,11 +4,10 @@ import DeepWiki.SymbolicIntegration.ComputableFieldGcd
 /-! # Generic RDE glue lemmas (`cgcdFF`-free), shared by the `…CorrectG` tower correctness
 
 The handful of carrier-agnostic algebraic glue lemmas the generic `QFunNZG ℚ` RDE correctness
-(`ComputableRischDETowerCorrectG`) consumes. They were originally co-located in the QFunNZ §5/§6
-correctness files (which import `cgcdFF`), but each is **fully generic** — pure-Mathlib `Derivation`
+(`ComputableRischDETowerCorrectG`) consumes. Each is **fully generic** — pure-Mathlib `Derivation`
 algebra (`spde_step_glue`/`spde_const_base`/`rdeNormalDenominator_glue`) or generic-engine `toPolyG`
-facts (`dvd_of_cdvdG`/`toPolyG_cdiophantineG`) — so they live here over the `cgcdFF`-free generic engine,
-letting the `…CorrectG` files drop their import of the superseded QFunNZ tower correctness. -/
+facts (`dvd_of_cdvdG`/`toPolyG_cdiophantineG`) — so they live here over the generic engine, kept
+self-contained for the `…CorrectG` files. -/
 
 open Polynomial
 

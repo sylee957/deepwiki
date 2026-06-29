@@ -1,31 +1,23 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCorrect
 import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 
-/-! # §5 split-factor / canonical-representation correctness at the GENERIC carrier `α = QFunNZG ℚ`
-The QFunNZ nucleus (`ComputableSplitFactorTowerCorrect`) proved
-`cSplitFactorFastG_isSplittingFactorizationGen` and `canonicalRepresentationFastG_reconstructs_qfunNZ` at
-the carrier `α = QFunNZ`, discharging the loop's gcd-correctness obligation through the **QFunNZ-specific**
-bridge `associated_toPolyG_cgcdFFCore_node` (`cgcdFFCore = cmonicG ∘ cgcdFF`, valid only at `QFunNZ`).
+/-! # §5 split-factor / canonical-representation correctness at the level-1 carrier `α = QFunNZG ℚ`
+This file establishes the §5 split-factor / canonical-representation correctness at the **level-1 carrier**
+`α = QFunNZG ℚ = Frac(ℚ[x])`, discharging the loop's gcd-correctness obligation through the **generic**
+theorem `associated_toPolyG_cgcdFFCore` (`ComputableTowerGcdFFCorrect`), which reads the flat fraction-free
+gcd `CFracGcdCore.cgcdFFCore` over `β(s)[t]` to the polynomial gcd up to associates — at the recursive tower
+instance `instCFracGcdCoreQFunNZG`. The carrier `QFunNZG ℚ` reads through `toPolyG` into the field `RatFunc
+ℚ = CFieldSpec.K (QFunNZG ℚ)`, so the abstract polynomial ring `(RatFunc ℚ)[X]` — and hence the conclusion
+`IsSplittingFactorizationGen` / the reconstruction `f = a/d` — lives over that field.
 
-This file re-establishes the same §5 correctness at the **generic level-1 carrier** `α = QFunNZG ℚ =
-Frac(ℚ[x])`, discharging the gcd-correctness obligation instead through the **generic** theorem
-`associated_toPolyG_cgcdFFCore` (`ComputableTowerGcdFFCorrect`), which reads the flat fraction-free gcd
-`CFracGcdCore.cgcdFFCore` over `β(s)[t]` to the polynomial gcd up to associates with **no `cgcdFF`
-bridge** — at the recursive tower instance `instCFracGcdCoreQFunNZG`. The carriers `QFunNZ` and `QFunNZG ℚ`
-are genuinely different types, but **both read through `toPolyG` into the same field `RatFunc ℚ =
-CFieldSpec.K QFunNZ = CFieldSpec.K (QFunNZG ℚ)`**, so the abstract polynomial ring `(RatFunc ℚ)[X]` — and
-hence the conclusion `IsSplittingFactorizationGen` / the reconstruction `f = a/d` — is identical between
-the two. Only the gcd-correctness discharger changes (`cgcdFF`-based ⤳ `cgcdFFRawCore`-based).
-
-This is the de-risking result of the carrier-migration sweep: with the generic gcd correctness in hand, the
-§5 split-factor / canonical-representation correctness threads at `QFunNZG ℚ` **without touching `cgcdFF`**.
-ADDITIVE: the QFunNZ versions remain; this adds the `QFunNZG ℚ` correctness.
+With the generic gcd correctness in hand, the §5 split-factor / canonical-representation correctness threads
+at `QFunNZG ℚ` through the generic engine's fraction-free gcd `cgcdFFCore`.
 
 * **`cstepGQ`** — the generic `SplitFactor` step `S = cdivG (cgcdFFCore p Dp) (cgcdFFCore p dp/dt)` at
   `QFunNZG ℚ` (the inner `S` of `cSplitFactorFastG`), associated to the abstract `splitFactorStep`.
 * **`cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG`** — the loop output is a book-faithful splitting
-  factorization (same conclusion shape as the QFunNZ version, threaded through the generic gcd correctness).
-* **`canonicalRepresentationFastG_reconstructs_qfunNZG`** — the probe's reconstruction with the
+  factorization, threaded through the generic gcd correctness.
+* **`canonicalRepresentationFastG_reconstructs_qfunNZG`** — the §3.5 reconstruction with the
   denominator-split hypothesis DISCHARGED, at `QFunNZG ℚ`. -/
 
 open Polynomial Classical
@@ -44,7 +36,7 @@ The step proof identifies the second argument of `cgcdFFCore p (cmonomialDeriv D
 here: the genuine Mathlib derivation is `fractionFieldDifferential (implicitDeriv (toPolyG 1))` — the
 fraction-field derivation of the base `implicitDeriv (toPolyG ([1] : CPolyG ℚ))` on `ℚ[X]` — and
 `toK_cderiv` is *exactly* the existing abstract bridge `toQFunNZG_towerDerivQFunNZG [1]` (no extra
-agreement proof). This is the `CDiffFieldSpec (QFunNZG ℚ)` mirror of `instCDiffFieldSpecQFunNZ`. -/
+agreement proof). This is the level-1 `CDiffFieldSpec (QFunNZG ℚ)` differential-spec bridge. -/
 
 /-- **The base derivation `implicitDeriv (toPolyG 1)` on `(CFieldSpec.K ℚ)[X] = ℚ[X]`** (`= d/dx`, since
 the base `Differential ℚ` is the zero derivation of constants): the `Derivation ℤ ℚ[X] ℚ[X]` whose
@@ -59,7 +51,7 @@ generic ℚ(x) carrier. The Mathlib derivation on `CFieldSpec.K (QFunNZG ℚ) = 
 `ℚ[X]`), and the intertwining `toK_cderiv` — `toQFunNZG (towerDerivQFunNZG [1] a) = (toQFunNZG a)′` — is
 exactly the abstract bridge `toQFunNZG_towerDerivQFunNZG [1]` (`ComputableTowerDeriv`). Noncomputable
 (routes through `RatFunc`), but only the correctness layer depends on it; the engine stays computable. The
-`QFunNZG ℚ` mirror of `instCDiffFieldSpecQFunNZ`. -/
+level-1 ℚ(x) differential-spec bridge. -/
 noncomputable instance instCDiffFieldSpecQFunNZG : CDiffFieldSpec (QFunNZG ℚ) where
   diffK := fractionFieldDifferential baseDerivQ
   toK_cderiv a := by
@@ -70,19 +62,17 @@ noncomputable instance instCDiffFieldSpecQFunNZG : CDiffFieldSpec (QFunNZG ℚ) 
 
 /-! ### The gcd-correctness obligation at `QFunNZG ℚ`, packaged as a per-call regularity bundle
 
-The nucleus discharges, at each `cgcdFFCore` call, the obligation `Associated (toPolyG (cgcdFFCore fuel p
-q)) (gcd (toPolyG p) (toPolyG q))`. At `QFunNZ` this comes from a `CgcdFFNodeReg` node-regularity bundle
-(via `cgcdFF`). At `QFunNZG ℚ` the **generic** `associated_toPolyG_cgcdFFCore` discharges it from a
-`CPrimPRSGenAssocReg` regularity on the `gbdegCore`-ordered cleared pair. We package that regularity as
-`CgcdFFCoreRegQ fuel p q` and restate the discharger as `associated_toPolyG_cgcdFFCore_reg` — the
-`QFunNZG ℚ` replacement for `associated_toPolyG_cgcdFFCore_node`. -/
+The split loop discharges, at each `cgcdFFCore` call, the obligation `Associated (toPolyG (cgcdFFCore fuel
+p q)) (gcd (toPolyG p) (toPolyG q))`. At `QFunNZG ℚ` the **generic** `associated_toPolyG_cgcdFFCore`
+discharges it from a `CPrimPRSGenAssocReg` regularity on the `gbdegCore`-ordered cleared pair. We package
+that regularity as `CgcdFFCoreRegQ fuel p q` and restate the discharger as
+`associated_toPolyG_cgcdFFCore_reg`. -/
 
 /-- **Per-`cgcdFFCore`-call regularity bundle at `QFunNZG ℚ`** `CgcdFFCoreRegQ fuel p q`: the
 `CPrimPRSGenAssocReg` regularity of the primitive PRS on the `gbdegCore`-ordered cleared pair of `p`, `q`,
 with content-gcd `CFracGcdCore.cgcdFFRawCore fuel` at level `ℚ` — exactly the hypothesis the generic
-`associated_toPolyG_cgcdFFCore` consumes. The `QFunNZG ℚ` mirror of `CgcdFFNodeReg` (which gated the
-QFunNZ `cgcdFF`); it captures the per-step content-exactness of the fraction-free PRS that holds on real
-runs. -/
+`associated_toPolyG_cgcdFFCore` consumes. It captures the per-step content-exactness of the fraction-free
+PRS that holds on real runs. -/
 def CgcdFFCoreRegQ (fuel : ℕ) (p q : CPolyG (QFunNZG ℚ)) : Prop :=
   CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel
     (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
@@ -95,8 +85,7 @@ def CgcdFFCoreRegQ (fuel : ℕ) (p q : CPolyG (QFunNZG ℚ)) : Prop :=
 /-- **The generic `cgcdFFCore` is associated to the abstract gcd at `QFunNZG ℚ`**, from a `CgcdFFCoreRegQ`
 bundle: `toPolyG (cgcdFFCore fuel p q)` is `Associated` to `gcd (toPolyG p) (toPolyG q)` in `(RatFunc ℚ)[X]
 = (CFieldSpec.K (QFunNZG ℚ))[X]`. The thin wrapper over the generic theorem
-`associated_toPolyG_cgcdFFCore` (NO `cgcdFF`): the `QFunNZG ℚ` replacement for the QFunNZ
-`associated_toPolyG_cgcdFFCore_node`. -/
+`associated_toPolyG_cgcdFFCore`, instantiated at the level-1 carrier `QFunNZG ℚ`. -/
 theorem associated_toPolyG_cgcdFFCore_reg (fuel : ℕ) (p q : CPolyG (QFunNZG ℚ))
     (hreg : CgcdFFCoreRegQ fuel p q) :
     Associated (toPolyG (CFracGcdCore.cgcdFFCore fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
@@ -105,9 +94,8 @@ theorem associated_toPolyG_cgcdFFCore_reg (fuel : ℕ) (p q : CPolyG (QFunNZG �
 /-! ### The generic step `cstepGQ` is associated to the abstract `splitFactorStep` at `QFunNZG ℚ`
 
 `cstepGQ Dt fuel p = cdivG (cgcdFFCore p Dp) (cgcdFFCore p dp/dt)` is the inner `S` of `cSplitFactorFastG`
-at `QFunNZG ℚ`. The proof mirrors `associated_toPolyG_cstepG` (the QFunNZ version) verbatim, with the
-QFunNZ gcd bridge replaced by the generic `associated_toPolyG_cgcdFFCore_reg` and `cdivFF`-exactness
-replaced by the generic `toPolyG_cdivG_exact` (and `cdivFF := cdivG`). -/
+at `QFunNZG ℚ`. The proof uses the generic gcd bridge `associated_toPolyG_cgcdFFCore_reg` for the two
+`cgcdFFCore` calls and the generic exact division `toPolyG_cdivG_exact` to cancel the denominator gcd. -/
 
 /-- **The generic computable `SplitFactor` step at `QFunNZG ℚ`** `cstepGQ Dt fuel p = cdivG (cgcdFFCore p
 (cmonomialDeriv Dt p)) (cgcdFFCore p (cderivG p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p,
@@ -120,7 +108,7 @@ def cstepGQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) 
 /-- **Per-step regularity bundle** `CStepGRegularQ Dt fuel p` for `cstepGQ`: node-regularity of both
 `cgcdFFCore` calls (numerator `gcd(p, Dp)`, denominator `gcd(p, dp/dt)`, via `CgcdFFCoreRegQ`) and a fuel
 bound on the numerator gcd's length so the exact Euclidean division `cdivG` is fully reduced. The
-`QFunNZG ℚ` mirror of the QFunNZ `CStepGRegular`. -/
+per-step regularity bundle at the level-1 carrier `QFunNZG ℚ`. -/
 def CStepGRegularQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) : Prop :=
   CgcdFFCoreRegQ fuel p (cmonomialDeriv Dt p) ∧
   CgcdFFCoreRegQ fuel p (cderivG p) ∧
@@ -174,12 +162,11 @@ theorem associated_toPolyG_cstepGQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (p :
 
 /-! ### The generic loop output is a book-faithful splitting factorization at `QFunNZG ℚ`
 
-By induction on fuel mirroring `cSplitFactorFastG_isSplittingFactorizationGen` (the QFunNZ version): at
-each non-terminal node the generic `S = cstepGQ` divides `toPolyG p` exactly (the abstract step divides,
-transported through `associated_toPolyG_cstepGQ`), exact division keeps the product invariant, and the
-abstract step facts supply `IsSpecial`/`IsNormalSqfree`. Only the per-node regularity (`CgcdFFCoreRegQ`
-via the generic gcd correctness) and the exact-division lemma (`toPolyG_cdivG_exact`) differ from the
-QFunNZ proof; the non-differential induction transports verbatim. -/
+By induction on fuel: at each non-terminal node the generic `S = cstepGQ` divides `toPolyG p` exactly
+(the abstract step divides, transported through `associated_toPolyG_cstepGQ`), exact division keeps the
+product invariant, and the abstract step facts supply `IsSpecial`/`IsNormalSqfree`. The per-node
+regularity is `CgcdFFCoreRegQ` (via the generic gcd correctness) and the exact division is
+`toPolyG_cdivG_exact`. -/
 
 /-- **Recursive loop-regularity bundle** `CSplitFactorFastGRegularQ Dt fuel p` for `cSplitFactorFastG` at
 `QFunNZG ℚ`: mirrors the recursion — at each node the generic step is regular (`CStepGRegularQ`) and the

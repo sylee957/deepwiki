@@ -1,24 +1,23 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
-import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.ComputableGenericHermiteInner
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
 `ComputableTowerField`/`ComputableTowerDeriv` built the generic fraction-field carrier `QFunNZG α`
 (the next tower level ℚ(x)(t₁)(t₂)…) with a *computable* `CField` instance AND a *computable*
-derivation tower (`CDiffField (QFunNZG α)`, `towerDerivQFunNZG`). What was still
-**`QFunNZ`-hardwired** is the §3.5/§5.3 integration pipeline: `cSplitFactorFast`,
-`canonicalRepresentationFast`, `cHermiteReduceTower` (`ComputableSplitFactorFast`/
-`ComputableCanonicalRep`/`ComputableHermiteTower`). Those are already on the **generic** engine ops
-(`caddG`/`cmulG`/`cmonomialDeriv`/`cdivG`/…) — the *only* `QFunNZ`-specific call is the fraction-free
-gcd `cgcdFF` (with its `BPoly = ℚ[x][t]` `clearDenoms` bridge).
+derivation tower (`CDiffField (QFunNZG α)`, `towerDerivQFunNZG`). This file supplies the §3.5/§5.3
+integration pipeline (split/normal factor, canonical representation, transcendental Hermite reduction)
+over that generic carrier. The pipeline runs on the **generic** engine ops
+(`caddG`/`cmulG`/`cmonomialDeriv`/`cdivG`/…); the one operation needing care is the fraction-free
+`t`-gcd.
 
-This file produces **generic copies** (suffix `G`) over `[CField α] [CFieldDomain α] [CDiffField α]`,
-replacing every `cgcdFF fuel p q` with the **flat** generic fraction-free gcd
-`CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) — the recursive primitive-PRS gcd that
-stays polynomial-sized over the tower (it AGREES with `cgcdFF` and the swelling Euclidean `cgcdMonicG`,
-both being the unique monic gcd, but computes it without the fraction-field coefficient swell that made
-the integration pipeline at `QFunNZ` take ~86 s). Every pipeline def that calls a `t`-gcd therefore carries the
+The pipeline defs (suffix `G`) over `[CField α] [CFieldDomain α] [CDiffField α]` take every `t`-gcd from
+the **flat** generic fraction-free gcd `CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) —
+the recursive primitive-PRS gcd that stays polynomial-sized over the tower (it AGREES with the swelling
+Euclidean `cgcdMonicG`, both being the unique monic gcd, but computes it without the fraction-field
+coefficient swell that would make the integration pipeline over a fraction-field carrier blow up). Every
+pipeline def that calls a `t`-gcd therefore carries the
 `[CFracGcdCore α]` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
 + recursive `CFracGcdCore (QFunNZG β)`).
 
@@ -51,16 +50,16 @@ variable {α : Type*} [CField α]
 
 /-! ### The generic monic gcd — the drop-in for `cgcdFF`
 
-`cgcdFF` (the `QFunNZ`-specific fraction-free primitive PRS) and the generic Euclidean
-`cgcdExtG` compute the *same* gcd up to a unit; `cgcdFF` already monic-normalizes. The generic
-replacement is `cmonicG (cgcdExtG fuel p q).1`: the gcd component of the extended Euclidean triple,
+The fraction-free primitive-PRS gcd and the generic Euclidean
+`cgcdExtG` compute the *same* gcd up to a unit, both monic. The Euclidean form is
+`cmonicG (cgcdExtG fuel p q).1`: the gcd component of the extended Euclidean triple,
 monic-normalized over the field. It carries the ℚ(x)-coefficient swell of the field-division kernel
 (that is the documented optimization gap), but is fully `[CField α]`-generic — it runs at any tower
 level (validated at level 2 in `ComputableTowerField`). -/
 
 /-- **Generic monic gcd** `cgcdMonicG fuel p q = monic gcd(p, q)`: the gcd component of the generic
-extended Euclidean `cgcdExtG`, monic-normalized (`cmonicG`). The `[CField α]`-generic drop-in for the
-`QFunNZ`-specific fraction-free `cgcdFF` (same gcd up to a unit, both monic). Runs at any tower
+extended Euclidean `cgcdExtG`, monic-normalized (`cmonicG`). The `[CField α]`-generic monic gcd, equal
+to the fraction-free `CFracGcdCore.cgcdFFCore` (same gcd up to a unit, both monic). Runs at any tower
 level. -/
 def cgcdMonicG (fuel : ℕ) (p q : CPolyG α) : CPolyG α :=
   cmonicG (cgcdExtG fuel p q).1
@@ -359,7 +358,7 @@ cᵢ·log(vᵢ)` is the **logarithmic part**: the Rothstein–Trager residue cri
 the residue resultant.
 
 The generic engine pieces `cevalG`/`cresultantG`/`cinterpolateG` are *already* `[CField α]`-generic. The
-ONLY `QFunNZ`-specific barrier beyond `cgcdFF` is the embedding `ℚ → α` (`ofConstNZ`): the residue
+remaining carrier-specific concern beyond the `t`-gcd is the embedding `ℚ → α`: the residue
 resultant samples `z` at the natural nodes `0, 1, …, n`, and a residue is a field constant. We lift the
 nodes through the existing `cnatCastG : ℕ → α` (`[CField α]`-only), and take the residue **candidates as
 `α` elements** (the natural generic form) — so the whole log part generalizes. `cratCastG` additionally

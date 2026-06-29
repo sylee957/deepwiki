@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.ComputableHermiteTower
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 
 /-! # Computable polynomial reduction + special-part handling over ℚ(x)[t] (Bronstein §5.4, §5.8)
@@ -115,11 +114,11 @@ is the direct `cisZeroG (csubG (caddG (D q) rem) p)`. -/
 
 open CPolyG
 
-/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the validation coefficient builder, mirroring
-`QFunNZ.ofConstNZ` one tower level down; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the validation coefficient builder over the
+generic ℚ(x) carrier; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
 def qConstG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
-/-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element (mirroring `QFunNZ.ofNumDen`; `den ≠ 0` by
+/-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element (the generic ℚ(x) carrier; `den ≠ 0` by
 `native_decide`). -/
 def qFracG (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
   ⟨(num, den), h⟩

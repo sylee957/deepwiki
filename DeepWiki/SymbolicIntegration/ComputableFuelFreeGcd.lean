@@ -44,7 +44,7 @@ recursion on `(cnormG p).length` — **no fuel is computed or passed at runtime*
 structural: the reduce step `p' = reduceStepWf p q` is taken only when the *guard*
 `(cnormG p').length < (cnormG p).length` holds, so the `decreasing_by` is the guard itself (no field
 axiom needed, hence `[CField α]`-only and `native_decide`-able over noncomputable-`CFieldSpec`
-carriers like `QFunNZ`). Over a genuine field the leading term always cancels (`stepG_length_lt`), so
+carriers like `QFunNZG ℚ`). Over a genuine field the leading term always cancels (`stepG_length_lt`), so
 the guard never fails and `cdivmodWf` agrees with `cdivmodG` (the bridge `cdivmodWf_eq_cdivmodG`). -/
 def cdivmodWf (p q : CPolyG α) : CPolyG α × CPolyG α :=
   let pn := cnormG p
@@ -81,7 +81,7 @@ with `cgcdExtG` (`cgcdWf_eq`). -/
 /-- **Fuel-free extended Euclidean algorithm** on `CPolyG`s, `[CField α]`-only: `cgcdWf a b = (g, s, t)`
 with the Bézout relation `s·a + t·b = g` and `g = gcd(a, b)` over `K`. Well-founded on
 `(cnormG b).length` with the structural guard `(cnormG (cmodWf a b)).length < (cnormG b).length`; no
-fuel at runtime. `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZ`). -/
+fuel at runtime. `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZG ℚ`). -/
 def cgcdWf (a b : CPolyG α) : CPolyG α × CPolyG α × CPolyG α :=
   if cisZeroG b then (cnormG a, [CField.one], [])
   else
@@ -318,28 +318,15 @@ theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
 
 /-! ### `native_decide` smoke tests — the WF def reduces in compiled code
 
-`cdivmodWf` is `[CField α]`-only, so these reduce over both `ℚ` and the *noncomputable*-`CFieldSpec`
-tower `QFunNZ` (ℚ(x)) — the well-founded structure carries no fuel and no noncomputable bridge into
-the compiled body. -/
+`cdivmodWf` is `[CField α]`-only, so it reduces in native code; the well-founded structure carries no
+fuel and no noncomputable bridge into the compiled body. -/
 
 /-- `cdivmodWf` over `ℚ`: `(1 + x²) mod (1 + x) = 2`. -/
 example : (CPolyG.cdivmodWf [(1 : ℚ), 0, 1] [(1 : ℚ), 1]).2 = [2] := by native_decide
 
-/-- `cdivmodWf` over the ℚ(x) tower `QFunNZ`: the remainder of `1 + x²` by `1 + x` is a constant
-(length-1 normalized list) — the whole WF division executes in native code over `QFunNZ`. -/
-example :
-    ((CPolyG.cdivmodWf [(CField.one : QFunNZ), CField.zero, CField.one]
-      [CField.one, CField.one]).2 : List QFunNZ).length = 1 := by native_decide
-
 /-- `cgcdWf` over `ℚ`: `gcd(x² − 1, x − 1)` is degree-1 (a `x − 1` associate, normalized length 2). -/
 example :
     ((CPolyG.cgcdWf [(-1 : ℚ), 0, 1] [(-1 : ℚ), 1]).1 : List ℚ).length = 2 := by native_decide
-
-/-- `cgcdWf` over the ℚ(x) tower `QFunNZ`: the whole extended-Euclid loop executes in native code —
-`gcd(x² − 1, x − 1)` is a nonzero (length ≥ 1) polynomial. -/
-example :
-    0 < ((CPolyG.cgcdWf [(CField.neg CField.one : QFunNZ), CField.zero, CField.one]
-      [CField.neg CField.one, CField.one]).1 : List QFunNZ).length := by native_decide
 
 /-- **Fuel-free divisibility test** `cdvdGWf q p = cisZeroG (cmodWf p q)`: the fuel-free companion of
 `cdvdG`, deciding `q ∣ p` (remainder of `p` by `q` is zero) with the leaf fuel-free remainder `cmodWf`

@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.GenericPolyEngine
 /-! # Generic Bézout cofactors and the extended-Euclidean split (`[CField α]`)
 The computable Bézout helpers used by the canonical-representation engine (Bronstein §3.5), kept
 **generic over `[CField α]`** so the tower (`…G`) engine and `native_decide` validations can reuse
-them without the `QFunNZ`-specific denominator-splitting machinery.
+them at any carrier level, with no carrier-pinned denominator-splitting machinery.
 
 * **`cbezoutOne fuel a b = (u, w)`** with `u·a + w·b = 1` for coprime `a, b`: rescale the `cgcdExtG`
   cofactors by the inverse of the (constant) gcd's leading coefficient.

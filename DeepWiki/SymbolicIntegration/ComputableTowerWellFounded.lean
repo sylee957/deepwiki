@@ -10,7 +10,7 @@ The generic tower engine (`ComputableTowerIntegrate`/`ComputableTowerRischDE`) �
 `cRischDEG`, and their pipeline —
 is `[CField α] [CDiffField α] [CFracGcdCore α]`-generic and gate-clean, but every op carries an explicit
 `fuel : ℕ`. This file builds the **fuel-free** companions `…GWf`, by the same runtime-guard well-founded
-recursion as the `QFunNZ`-specific arc (`ComputableFuelFreeGcd*`), now lifted to the generic carrier.
+recursion as the fuel-free gcd (`ComputableFuelFreeGcd*`), over the generic carrier.
 
 Every recursion in the generic pipeline bottoms out at one of THREE fuel-recursive ops; the rest is a flat
 composition over fuel'd leaves:
@@ -186,9 +186,8 @@ The fuel-free mirror of `CFracGcdCore`, tying the tower with no fuel:
   Euclidean gcd `(cgcdWf p q).1` (the fuel-free companion of `(cgcdExtG _).1`).
 * **Recursive `instance CFracGcdCoreWf (QFunNZG β) [CFracGcdCoreWf β]`** — clear denominators into
   `GBPolyCore β`, run the **fuel-free** kernel `cprimPRSgcdGenCoreWf` with the level-`β` `cgcdFFRawCoreWf` as
-  content-gcd, lift back. Bottoms at `CFracGcdCoreWf ℚ`.
-* **`instance CFracGcdCoreWf QFunNZ`** — the concrete level-1 carrier; its raw fuel-free gcd is the existing
-  QFunNZ-specific `cgcdFFWf` (`ComputableFuelFreeGcd3`).
+  content-gcd, lift back. Bottoms at `CFracGcdCoreWf ℚ`. So `CFracGcdCoreWf (QFunNZG ℚ)` is the level-1
+  ℚ(x) carrier's raw fuel-free gcd.
 
 The public **monic** gcd is `cgcdFFCoreWf := cmonicG ∘ cgcdFFRawCoreWf` (monic-normalize only at the top).
 Every method is `[CField α]`-only (plus the recursion's `[CFieldDomain β]`/`[CFracGcdCoreWf β]`) — no
@@ -487,12 +486,11 @@ end CPolyG
 
 /-! ## Part 5 — bridges of the recursive bottoms `cSqfreeYunFFGgoWf` / `cSplitFactorFastGWf`
 
-The two recursive bottoms get bridges to their fuel'd `…G` originals. As with the `QFunNZ` arc
-(`cSqfreeYunFFgoWf_eq`, `cSplitFactorFastWf_eq`), the bridges carry `[CFieldSpec α]` (the fuel'd-leaf
-agreements `cdivmodWf_eq_of_fuel` / `cgcdWf_eq_of_fuel` need a genuine field) — but the **defs** stay
-`[CField α]`-only. The per-node `cgcdFFCoreWf = cgcdFFCore fuel` agreement (which itself threads
+The two recursive bottoms get bridges to their fuel'd `…G` originals. The bridges carry `[CFieldSpec α]`
+(the fuel'd-leaf agreements `cdivmodWf_eq_of_fuel` / `cgcdWf_eq_of_fuel` need a genuine field) — but the
+**defs** stay `[CField α]`-only. The per-node `cgcdFFCoreWf = cgcdFFCore fuel` agreement (which itself threads
 `cprimPRSgcdGenCoreWf_eq` through every tower level) is taken as a per-node hypothesis in the regularity
-gate, exactly the `CgcdFFNodeReg` role in the QFunNZ version. -/
+gate. -/
 
 namespace CPolyG
 
@@ -684,7 +682,7 @@ The §6 RDE pipeline `cRischDEG` (`ComputableTowerRischDE`) is a second large pi
 mirrors the integration one but whose recursive bottoms differ. This part builds the fuel-free companions of
 its two `[CField α]`-generic degree-recursion bottoms — the §6.5 non-cancellation solve
 `cPolyRischDENoCancelG` (recursing on `(cnormG c).length`) and the §6.4 SPDE `cSPDEG` (recursing on
-`(n+1).toNat`) — replaying the `QFunNZ`-specific `cPolyRischDENoCancelWf` / `cSPDEWf` patterns generically.
+`(n+1).toNat`) — the generic fuel-free non-cancellation and SPDE own-loops.
 (The cancellation cases `cPolyRischDECancelPrimG`/`cPolyRischDECancelExpG` carry `[CRischField α]` and the
 top driver `cRischDEG` is a flat composition over these — the documented continuation of the stretch.) -/
 
@@ -761,19 +759,5 @@ termination_by (n + 1).toNat
 decreasing_by assumption
 
 end CPolyG
-
-/-! ### `native_decide` smoke tests for the generic fuel-free RDE bottoms
-
-The whole fuel-free §6.5/§6.4 recursive bottoms execute in native code over the generic tower — `[CField α]`-
-only on the fuel-free fragment, so nothing noncomputable reaches the native compiler. -/
-
-open QFunNZ
-
-/-- `cPolyRischDENoCancelGWf` over `ℚ(x)[t]`: solving `Dq + 0·q = 0` (`c = 0`) succeeds with the zero
-solution (length-0 list) — the fuel-free §6.5 own-loop runs over the tower (`Option.map .length` dodges
-`QFunNZ`'s missing `DecidableEq`). -/
-example :
-    (CPolyG.cPolyRischDENoCancelGWf ([ofConstNZ 0] : CPolyG QFunNZ) [] [] 3).map
-      (fun q => (q : List QFunNZ).length) = some 0 := by native_decide
 
 end DeepWiki.SymbolicIntegration

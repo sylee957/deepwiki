@@ -19,8 +19,8 @@ The §6 pipeline bottoms out at FIVE fuel-recursive ops; two are done in `Comput
 * **`cPolyRischDECancelExpGWf`** — §6.6 hyperexponential cancellation, recursing into the eq. 6.24 base RDE
   `crischDESolve (b₀ + m·η) (lc c)` (`η = cExpEtaG Dt`). Same own-loop on `(cnormG c).length`.
 * **`cValuationGWf`** — the `ν_p` `p`-adic valuation (used by the special-denominator stage), recursing on
-  `(cnormG x).length` by trial division. As with the `QFunNZ` arc (`cValuationWf`, no standalone bridge),
-  it feeds `cRdeSpecialDenominatorGWf` whose agreement is threaded as a whole-stage hypothesis.
+  `(cnormG x).length` by trial division. It has no standalone bridge; it
+  feeds `cRdeSpecialDenominatorGWf` whose agreement is threaded as a whole-stage hypothesis.
 
 The rest is a flat composition over fuel'd leaves: the generic §6.1 weak normalizer, the §6.2
 normal/special denominators, the §6.3 degree bound, the §6.4 SPDE, the §6.5/§6.6 dispatcher, and the
@@ -44,8 +44,8 @@ open Compute
 
 `cPolyRischDECancelPrimGWf` / `cPolyRischDECancelExpGWf` (degree-by-degree own-loops on `(cnormG c).length`,
 carrying `[CRischField α]`) and `cValuationGWf` (trial-division own-loop on `(cnormG x).length`). Each is a
-true well-founded recursion with a structural runtime guard (`decreasing_by := assumption`), replaying the
-`QFunNZ`-specific `cPolyRischDECancelPrimWf` / `cPolyRischDECancelExpWf` / `cValuationWf` patterns generically. -/
+true well-founded recursion with a structural runtime guard (`decreasing_by := assumption`) — the generic
+primitive-cancellation, hyperexponential-cancellation, and valuation own-loops. -/
 
 namespace CPolyG
 
@@ -144,8 +144,8 @@ end CPolyG
 
 /-! ## Part 2 — bridges of the three recursive bottoms to their fuel'd `…G` originals
 
-As with the `QFunNZ` arc (`cPolyRischDECancelPrimWf_eq`, `cPolyRischDECancelExpWf_eq`) and the integration
-fuel-free bottoms (`cSqfreeYunFFGgoWf_eq`), the cancellation bridges carry `[CFieldSpec α]` (so the fuel'd
+Like the integration fuel-free bottoms (`cSqfreeYunFFGgoWf_eq`), the cancellation bridges carry
+`[CFieldSpec α]` (so the fuel'd
 ops reduce) and take a **fuel-regularity predicate** that mirrors the fuel'd recursion with a step budget and
 the per-step WF-guard / base-solve agreement built in. The cancellation own-loops use **no** fuel-bearing
 sub-ops (only `cmonomialDeriv`/`cshiftG`/`crischDESolve`/`cExpEtaG`, all fuel-free) — they recurse on `fuel`
@@ -568,8 +568,8 @@ sufficient fuel). Following the integration pipeline's pattern (`cIntegrateGWf_e
 sub-agreements are taken as **hypotheses** — the fuel bounds they carry live only there; the runtime `…GWf`
 carries none. The recursive-bottom agreements (`cValuationGWf`/`cPolyRischDECancel*GWf`/`cSplitFactorFastGWf`/
 `cgcdFFCoreWf`) feed in through their own regularity gates. The `cWeakNormalizerGWf` / `cRdeNormalDenominator`
-/ `cRdeSpecialDenominator` stage agreements are taken as whole-stage hypotheses (mirroring the QFunNZ
-`cRischDEWfFull_eq`, where `cValuationWf` likewise has no standalone bridge). -/
+/ `cRdeSpecialDenominator` stage agreements are taken as whole-stage hypotheses (the valuation own-loop
+`cValuationGWf` has no standalone bridge, feeding the special-denominator stage instead). -/
 
 namespace CPolyG
 

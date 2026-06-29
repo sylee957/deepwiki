@@ -11,7 +11,7 @@ This continues the fuel-free conversion of `ComputableFuelFreeGcd` to the generi
   composite `cresultantMeasure p q = 2·(len p + len q) + len q` (the swap leaves `len p + len q`
   fixed, hence the `+ len q` tie-breaker). Each recursive call is taken only under its structural
   guard, so `decreasing_by` is `assumption` and the def stays `[CField α]`-only / `native_decide`-able
-  over `QFunNZ`. The Sylvester-resultant identity `toPolyG_cresultantWf` is transported from
+  over `QFunNZG ℚ`. The Sylvester-resultant identity `toPolyG_cresultantWf` is transported from
   `toPolyG_cresultantG` (`ComputableResultantGenericCore`) through the bridge **unconditionally** —
   this file imports only the engine-only resultant core, so the fuel-free resultant stays free of the
   §5.6 residue / `cgcdFF` layer.
@@ -51,7 +51,7 @@ the Euclidean-PRS resultant identity with no fuel at runtime. Base cases match `
 `i = deg p`). The two recursive branches — the **swap** `(p,q)→(q,p)` (when `len p < len q`) and the
 **reduce** `(p,q)→(q, cmodWf p q)` (when `len q ≤ len p`) — are each taken only under the structural
 guard `cresultantMeasure (next) < cresultantMeasure p q`, so `decreasing_by` is `assumption` and the
-def is `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZ`). Over a genuine field
+def is `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZG ℚ`). Over a genuine field
 the guards never fail (`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`), so `cresultantWf`
 agrees with `cresultantG` (`cresultantWf_eq`). -/
 def cresultantWf (p q : CPolyG α) : α :=
@@ -217,12 +217,6 @@ example : CPolyG.cresultantWf [(-1 : ℚ), 0, 1] [(-1 : ℚ), 1] = 0 := by nativ
 
 /-- `cresultantWf` over `ℚ`: `res(x² + 1, x) = 1` (no common root). -/
 example : CPolyG.cresultantWf [(1 : ℚ), 0, 1] [(0 : ℚ), 1] = 1 := by native_decide
-
-/-- `cresultantWf` over the ℚ(x) tower `QFunNZ`: `res(t² − 1, t − 1)` is zero (`CField.isZero`) — the
-whole fuel-free PRS resultant executes in native code over `QFunNZ`. -/
-example :
-    CField.isZero (CPolyG.cresultantWf [(CField.neg CField.one : QFunNZ), CField.zero, CField.one]
-      [CField.neg CField.one, CField.one]) = true := by native_decide
 
 end CPolyG
 

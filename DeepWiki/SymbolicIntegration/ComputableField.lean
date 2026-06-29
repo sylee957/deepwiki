@@ -8,9 +8,10 @@ The standalone generic engine (`CField`/`CFieldSpec`, `CPolyG`, the generic ops 
 the generic correctness, `CField ℚ`/`CFieldSpec ℚ`) lives upstream in `GenericPolyEngine`. This file
 ties it to the concrete `Compute.*` engine (`LogToAtanCompute`, `ComputeCorrectness`) and the computable
 ℚ(x) field `QFun` (`RationalFunctionCompute`): the **coherence lemmas** (`caddG (α := ℚ) = cadd`,
-`toPolyG (α := ℚ) = toPoly`) show the generic engine specializes back to the concrete one, and the
-denominator-nonzero subtype `QFunNZ` is the carrier on which a second `CField` instance lives. The
-coherence equalities are what let a later stage migrate `CPoly := CPolyG ℚ` without breaking consumers. -/
+`toPolyG (α := ℚ) = toPoly`) show the generic engine specializes back to the concrete one. The
+coherence equalities are what let a later stage migrate `CPoly := CPolyG ℚ` without breaking consumers.
+The level-1 field ℚ(x) is the generic `QFunNZG ℚ` (`ComputableTowerField`), the bottom of the
+recursive fraction-field tower; this file keeps only the engine ↔ `Compute.*` coherence. -/
 
 open Polynomial
 
@@ -86,68 +87,5 @@ theorem toPolyG_eq_toPoly : (toPolyG : CPolyG ℚ → ℚ[X]) = Compute.toPoly :
   | cons a as ih => show Polynomial.C (CFieldSpec.toK a) + X * toPolyG as = _; rw [ih]; rfl
 
 end CPolyG
-
-/-! ### The ℚ(x) layer: `CField QFun` and the injectivity obstruction
-
-The second target instance is `CField QFun` over `K = RatFunc ℚ` with `toK = toQFun`. The
-field-homomorphism *laws* are exactly the `toQFun_*` lemmas of `RationalFunctionCompute`; the
-unconditional ones (`qone`/`qneg`/`qmul`/`qinv`/`qdiv`) hold on all of `QFun`, while
-`qadd`/`qsub`/`qeq` carry a denominator-nonzero side-condition. Restricting to the **denominator-
-nonzero subtype** `QFunNZ` clears those side-conditions: `qadd`/`qsub` of two den-nonzero pairs again
-has nonzero denominator, so the laws become unconditional there.
-
-`toQFun` is *not* injective on unreduced pairs (`(1,[1,1])` and `(2,[2,2])` — i.e. `1/(x+1)` and
-`2/(2x+2)` — are distinct pairs with equal image, as are `qzero = (0,1)` and `(0,7)`). This is HARMLESS:
-`CField` does not require `toK` injective — the engine works on representations and tests `K`-equality
-through `isZero`, so `CField QFunNZ` lands with `isZero := cisZero ∘ num` (certified by the
-numerator-zero criterion) without any lowest-terms-uniqueness theorem. The homomorphism laws below are
-the proven core that instance is built from. -/
-
-/-- **Denominator-nonzero rational functions**: the subtype of `QFun` whose denominator is a nonzero
-polynomial. On it the `toQFun_*` homomorphism laws hold *unconditionally* (the den-≠-0 side-conditions
-are discharged by membership). The carrier on which a faithful `CField` instance would live, modulo the
-lowest-terms-uniqueness needed for injectivity. -/
-def QFunNZ : Type := { x : Compute.QFun // Compute.toPoly x.2 ≠ 0 }
-
-namespace QFunNZ
-
-/-- `toQFunNZ` reads a `QFunNZ` into `RatFunc ℚ` (the underlying `toQFun`). -/
-noncomputable def toQFunNZ (x : QFunNZ) : RatFunc ℚ := Compute.toQFun x.1
-
-/-- `qaddNZ`: addition on `QFunNZ` (the product denominator is nonzero). -/
-def qaddNZ (x y : QFunNZ) : QFunNZ :=
-  ⟨Compute.qadd x.1 y.1, by
-    obtain ⟨⟨a, b⟩, hb⟩ := x
-    obtain ⟨⟨c, d⟩, hd⟩ := y
-    show Compute.toPoly (Compute.cmul b d) ≠ 0
-    rw [Compute.toPoly_cmul]; exact mul_ne_zero hb hd⟩
-
-/-- `qmulNZ`: multiplication on `QFunNZ` (the product denominator is nonzero). -/
-def qmulNZ (x y : QFunNZ) : QFunNZ :=
-  ⟨Compute.qmul x.1 y.1, by
-    obtain ⟨⟨a, b⟩, hb⟩ := x
-    obtain ⟨⟨c, d⟩, hd⟩ := y
-    show Compute.toPoly (Compute.cmul b d) ≠ 0
-    rw [Compute.toPoly_cmul]; exact mul_ne_zero hb hd⟩
-
-/-- `qnegNZ`: negation on `QFunNZ` (denominator unchanged). -/
-def qnegNZ (x : QFunNZ) : QFunNZ := ⟨Compute.qneg x.1, x.2⟩
-
-/-- **`qaddNZ` realizes `+`** on `QFunNZ` *unconditionally*: `toQFunNZ (qaddNZ x y) = toQFunNZ x +
-toQFunNZ y` (the `toQFun_qadd` side-conditions are discharged by membership). -/
-theorem toQFunNZ_qaddNZ (x y : QFunNZ) :
-    toQFunNZ (qaddNZ x y) = toQFunNZ x + toQFunNZ y :=
-  Compute.toQFun_qadd x.1 y.1 x.2 y.2
-
-/-- **`qmulNZ` realizes `*`** on `QFunNZ`: `toQFunNZ (qmulNZ x y) = toQFunNZ x * toQFunNZ y`. -/
-theorem toQFunNZ_qmulNZ (x y : QFunNZ) :
-    toQFunNZ (qmulNZ x y) = toQFunNZ x * toQFunNZ y :=
-  Compute.toQFun_qmul x.1 y.1
-
-/-- **`qnegNZ` realizes `-`** on `QFunNZ`: `toQFunNZ (qnegNZ x) = - toQFunNZ x`. -/
-theorem toQFunNZ_qnegNZ (x : QFunNZ) : toQFunNZ (qnegNZ x) = - toQFunNZ x :=
-  Compute.toQFun_qneg x.1
-
-end QFunNZ
 
 end DeepWiki.SymbolicIntegration

@@ -1,14 +1,14 @@
 import DeepWiki.SymbolicIntegration.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.ComputableFieldGcd
-import DeepWiki.SymbolicIntegration.ComputableLogPartTower
+import DeepWiki.SymbolicIntegration.ComputableGenericBezout
 
 /-! # Arbitrary-depth differential towers: the generic fraction field `QFunNZG α`
-This file builds an arbitrary-depth **tower** of differential fields ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t₁) ⊂ … . The
-single-level `QFunNZ` builds *one* level — ℚ(x) as a `CField` over `CPoly = ℚ[x]`. This file makes that step **generic over the carrier**: given a level `[CField α]`,
+This file builds an arbitrary-depth **tower** of differential fields ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t₁) ⊂ … as one
+**generic-over-the-carrier** construction: given a level `[CField α]`,
 `QFunNZG α` is the fraction field of `CPolyG α = α[t]` (denominator-nonzero fraction pairs), with a
 *computable* `CField (QFunNZG α)` instance (the engine ops); adding `[CFieldSpec α]` gives a
 noncomputable `CFieldSpec (QFunNZG α)` bridge into `RatFunc (CFieldSpec.K α)`. Iterating gives the
-tower: `QFunNZG ℚ ≅ ℚ(x)`, `QFunNZG (QFunNZG ℚ) ≅ ℚ(x)(t₁)`, ….
+tower: `QFunNZG ℚ ≅ ℚ(x)` (the level-1 ℚ(x) field), `QFunNZG (QFunNZG ℚ) ≅ ℚ(x)(t₁)`, ….
 
 The keystone `CField`/`CFieldSpec` split is what makes this work, and the crucial
 design point is that **the carrier `QFunNZG α` and its `CField` instance need only `[CField α]`** — the
@@ -18,8 +18,7 @@ denominator-nonzero condition is stated with the `[CField α]`-only `cisZeroG` t
 engine (`cgcdExtG`/`cresultantG`/`cmulG`/`cisZeroG`) at **tower level 2** over `ℚ(x)(t₁)[t₂]`. The
 `CFieldSpec` bridge (and the homomorphism laws) is needed only by the correctness layer.
 
-The QFunNZ-hardwired `cgcdFF` is *not* generic yet — generalizing it off
-the concrete `QFunNZ` carrier is the next step; here the validation runs the **generic** engine ops,
+The validation here runs the **generic** engine ops (`cgcdExtG`/`cresultantG`/`cmulG`/`cisZeroG`),
 which already accept any `[CField α]`. -/
 
 open Polynomial
@@ -194,8 +193,8 @@ end QFunNZG
 The tower-level field operations are honest list computations through the generic engine
 (`qaddNZG`/…/`isZeroNZG`), with the den-nonzero proofs `Prop`-erased. The membership proofs use only
 `[CFieldDomain α]` (the pure-`CField` closure facts), so the instance is **computable** — `CPolyG
-(QFunNZG (…))` reduces one level up. This is exactly the `CField`/`CFieldSpec` split, mirroring the
-concrete `QFunNZ`. -/
+(QFunNZG (…))` reduces one level up. This is exactly the `CField`/`CFieldSpec` split applied to the
+fraction-field carrier. -/
 
 /-- **`CField (QFunNZG α)`**: the next tower level (the fraction field of `α[t]`) as a *computable*
 field (over `[CField α] [CFieldDomain α]`, no `CFieldSpec`). `zero`/`one`/`add`/`mul`/`neg`/`inv` and
@@ -347,7 +346,7 @@ end QFunNZG
 RatFunc (CFieldSpec.K α)` with `toK = toQFunNZG`. The recursive step that builds the tower's
 correctness layer: `CFieldSpec.K (QFunNZG α) = RatFunc (CFieldSpec.K α)`, so iterating gives
 ℚ ↦ RatFunc ℚ ↦ RatFunc (RatFunc ℚ) ↦ …. Its `isZero` is the numerator zero test (no `toK`-injectivity
-needed), generalizing the `QFunNZ` instance. Noncomputable (routes through `RatFunc`), but only the
+needed). Noncomputable (routes through `RatFunc`), but only the
 correctness layer depends on it. -/
 noncomputable instance instCFieldSpecQFunNZG {α : Type*} [CField α] [CFieldSpec α] :
     CFieldSpec (QFunNZG α) where
@@ -361,25 +360,21 @@ noncomputable instance instCFieldSpecQFunNZG {α : Type*} [CField α] [CFieldSpe
   toK_inv := QFunNZG.toQFunNZG_qinvNZG
   isZero_iff := QFunNZG.isZeroNZG_iff
 
-/-! ### Tower level 1: `QFunNZG ℚ` and its relationship to the concrete `QFunNZ`
+/-! ### Tower level 1: `QFunNZG ℚ ≅ ℚ(x)` and its coherence with the concrete `Compute.*` engine
 
-`QFunNZG ℚ` and the concrete `QFunNZ` are **distinct but isomorphic** carriers of
-ℚ(x): both are denominator-nonzero fraction pairs over `List ℚ`, but `QFunNZ` wraps `Compute.QFun =
-CPoly × CPoly` with the *predicate* `toPoly den ≠ 0`, while `QFunNZG ℚ` wraps `QFunG ℚ = CPolyG ℚ ×
-CPolyG ℚ` with the equivalent `[CField ℚ]`-only predicate `cisZeroG den = false`. Since `CPolyG ℚ` is
-the reducible `abbrev` `List ℚ = CPoly`, the *underlying* pair types coincide (`QFunG ℚ = Compute.QFun`,
-`rfl`); the predicates are equivalent by `cisZeroG (α := ℚ) = cisZero` and `cisZero_iff_toPoly_eq_zero`,
-so the two subtypes carry the same fractions. The generic engine at `α = ℚ` agrees with the concrete one
-by the coherence lemmas (`caddG_eq_cadd`/`cmulG_eq_cmul`/`toPolyG_eq_toPoly`). We keep `QFunNZG` as the
-tower carrier (it iterates); `QFunNZ` remains the hand-built level-1 instance the existing pipeline uses. -/
+`QFunNZG ℚ` is the level-1 ℚ(x) carrier — denominator-nonzero fraction pairs over `QFunG ℚ = CPolyG ℚ ×
+CPolyG ℚ` with the `[CField ℚ]`-only predicate `cisZeroG den = false`. Since `CPolyG ℚ` is the reducible
+`abbrev` `List ℚ = CPoly`, the *underlying* pair type coincides with the concrete `Compute.QFun =
+CPoly × CPoly` (`rfl`), and the generic engine at `α = ℚ` agrees with the concrete `Compute.*` engine by
+the coherence lemmas (`caddG_eq_cadd`/`cmulG_eq_cmul`/`toPolyG_eq_toPoly`). So `QFunNZG ℚ` is the single
+level-1 instance the whole pipeline uses, with the concrete engine recoverable by coherence. -/
 
 /-- **Level-1 sanity**: the underlying pair type of `QFunG ℚ` is the concrete `Compute.QFun` (both are
-`List ℚ × List ℚ`, since `CPolyG ℚ` is the `abbrev` `List ℚ = CPoly`). So `QFunNZG ℚ` and `QFunNZ`
-fraction over the same pairs; they differ only by the (equivalent) den-nonzero predicate. -/
+`List ℚ × List ℚ`, since `CPolyG ℚ` is the `abbrev` `List ℚ = CPoly`). -/
 example : QFunG ℚ = Compute.QFun := rfl
 
 /-- **Generic-to-concrete denominator coherence at `α = ℚ`**: `toPolyG (α := ℚ) = toPoly`, so the
-`QFunNZG ℚ` predicate `cisZeroG den = false` is equivalent to the `QFunNZ` predicate `toPoly den ≠ 0`. -/
+`QFunNZG ℚ` predicate `cisZeroG den = false` matches the concrete `toPoly den ≠ 0`. -/
 example (d : CPolyG ℚ) : CPolyG.toPolyG d = Compute.toPoly d :=
   congrFun CPolyG.toPolyG_eq_toPoly d
 
@@ -390,8 +385,7 @@ ops — `[CField α]`-generic, so they already accept any tower level — on con
 `CPolyG (QFunNZG (QFunNZG ℚ))` = `ℚ(x)(t₁)[t₂]` (level 2). The `CField (QFunNZG (QFunNZG ℚ))` instance
 is `[CField …]`-computable (the carrier predicate is the `cisZeroG`-only test, no `CFieldSpec`) and the
 subtype proofs are `Prop`-erased, so nothing noncomputable leaks into the native compiler. (The
-QFunNZ-hardwired `cgcdFF` is not generic yet — that is the documented next step; the
-validation here uses the already-generic `cgcdExtG`/`cresultantG`/`cmulG`/`cisZeroG`.) -/
+validation here uses the generic `cgcdExtG`/`cresultantG`/`cmulG`/`cisZeroG`.) -/
 
 /-- Tower level 2 abbreviation: `Lvl2 = QFunNZG (QFunNZG ℚ)`, the field ℚ(x)(t₁). The engine over
 `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` is the second tower level. -/

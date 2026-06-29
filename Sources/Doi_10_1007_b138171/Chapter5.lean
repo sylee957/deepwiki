@@ -72,9 +72,9 @@ namespace DeepWiki.Si
 /-! ### Generic-carrier input builders (catalog-local)
 
 The §5 smoke examples over the generic ℚ(x) = `QFunNZG ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `CPolyG ℚ = List ℚ`. These builders mirror `QFunNZ.ofConstNZ`/`ofNumDen` one tower
-level down (the `ComputableTowerRefoundProbe` construction). They are catalog infrastructure, not book
-items. -/
+num/den lists over `CPolyG ℚ = List ℚ`. These builders (`qConst5`/`qFrac5`) wrap a num/den pair as a
+`QFunNZG ℚ` element (the `ComputableTowerRefoundProbe` construction). They are catalog infrastructure, not
+book items. -/
 
 /-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (denominator `[1]` nonzero, by
 `cisZeroG_one_singleton`, so it holds under a parametric definition). -/

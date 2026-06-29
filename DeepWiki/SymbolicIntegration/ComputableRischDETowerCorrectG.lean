@@ -1,34 +1,26 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorTowerCorrectG
 
-/-! # §6 RDE cleared-identity correctness at the GENERIC carrier `α = QFunNZG ℚ`
+/-! # §6 RDE cleared-identity correctness at the level-1 carrier `α = QFunNZG ℚ`
 
-`ComputableRischDETowerCorrect` proved the generic §6 RDE oracle `cRischDEG`'s abstract cleared identity
-`Dy + f·y = g` (`cRischDEG_rdeCleared`) and the §6.4 SPDE certificate discharge (`cSPDEGCleared_of_inputs`)
-**pinned at `α = QFunNZ`**: there `CFracGcdCore.cgcdFFCore` resolves to `instCFracGcdCoreQFunNZ`, which is
-`cmonicG ∘ cgcdFF`, so the QFunNZ §6 correctness depends on the hand-built `cgcdFF`.
+This file establishes the §6 RDE cleared chain — the generic §6 RDE oracle `cRischDEG`'s abstract cleared
+identity `Dy + f·y = g` (`cRischDEG_rdeCleared`) and the §6.4 SPDE certificate discharge
+(`cSPDEGCleared_of_inputs`) — at the **level-1 carrier** `α = QFunNZG ℚ = Frac(ℚ[x])`, following the same
+pattern as `ComputableSplitFactorTowerCorrectG` (§5 at `QFunNZG ℚ`). At `QFunNZG ℚ`,
+`CFracGcdCore.cgcdFFCore` resolves to the **recursive** `instCFracGcdCoreQFunNZG`, whose Euclidean work
+bottoms at `cgcdWf` over ℚ. The single gcd-correctness obligation the SPDE discharge needs —
+`Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))` for `g = cgcdFFCore fuel a b` — is discharged through
+the **generic** theorem `associated_toPolyG_cgcdFFCore` (`ComputableTowerGcdFFCorrect`).
 
-This file re-founds the entire §6 RDE cleared chain at the **generic level-1 carrier** `α = QFunNZG ℚ =
-Frac(ℚ[x])`, exactly the chunk-1 pattern of `ComputableSplitFactorTowerCorrectG` (which re-founded §5 at
-`QFunNZG ℚ`). At `QFunNZG ℚ`, `CFracGcdCore.cgcdFFCore` resolves to the **recursive** `instCFracGcdCoreQFunNZG`,
-whose Euclidean work bottoms at `cgcdWf` over ℚ — **never `cgcdFF`**. The single gcd-correctness obligation
-the SPDE discharge needs — `Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))` for `g = cgcdFFCore fuel a
-b` — is discharged through the **generic** theorem `associated_toPolyG_cgcdFFCore`
-(`ComputableTowerGcdFFCorrect`), NOT the QFunNZ `cgcdFF` bridge.
+The carrier `QFunNZG ℚ` reads through `toPolyG` into the field `RatFunc ℚ = CFieldSpec.K (QFunNZG ℚ)`, so the
+abstract conclusions (the cleared polynomial identities over `(RatFunc ℚ)[X]`) live over that field. The
+cleared-lifting *engine* (`cSPDEG_cleared_lifting`-style induction, `rdeNormalDenominator_glue`,
+`spde_const_base`, `cSPDE_peel_cleared`, `toPolyG_cdiophantineG`, `dvd_of_cdvdG`, `toPolyG_cdivG_exact`) is
+gcd-agnostic, so it applies at any tower level; the gcd-discharge route enters through
+`associated_toPolyG_cgcdFFCore`.
 
-The carriers `QFunNZ` and `QFunNZG ℚ` are genuinely different types, but **both read through `toPolyG` into
-the same field `RatFunc ℚ = CFieldSpec.K QFunNZ = CFieldSpec.K (QFunNZG ℚ)`**, so the abstract conclusions
-(the cleared polynomial identities over `(RatFunc ℚ)[X]`) are identical between them — only the gcd-correctness
-discharger changes (`cgcdFF`-based ⤳ `cgcdFFCore`-based). The cleared-lifting *engine*
-(`cSPDEG_cleared_lifting`-style induction, `rdeNormalDenominator_glue`, `spde_const_base`, `cSPDE_peel_cleared`,
-`toPolyG_cdiophantineG`, `dvd_of_cdvdG`, `toPolyG_cdivG_exact`) is gcd-agnostic, so it transports verbatim with
-the carrier swapped; the genuinely new ingredient is the gcd-discharge route.
-
-ADDITIVE: the QFunNZ versions remain; this adds the `QFunNZG ℚ` correctness. With them in hand the QFunNZ §6
-RDE correctness no longer pins `cgcdFF`, leaving only the QFunNZ §5 cluster on `cgcdFF`.
-
-* **Generic helper lemmas** — the QFunNZ-pinned `cgcdExtG`-unit / exact-division / SPDE-peel helpers, lifted
-  to `{α} [CField α] [CFieldSpec α]`-generic (their bodies were already gcd-agnostic, taking the gcd `g`
+* **Generic helper lemmas** — the `cgcdExtG`-unit / exact-division / SPDE-peel helpers, stated
+  `{α} [CField α] [CFieldSpec α]`-generic (their bodies are gcd-agnostic, taking the gcd `g`
   abstractly).
 * **`cSPDECleared_of_inputs_qfunNZG`** — the §6.4 SPDE per-level certificate, discharged from transparent
   inputs, at `α = QFunNZG ℚ` (the gcd obligation via `associated_toPolyG_cgcdFFCore`, NOT `cgcdFF`).
@@ -42,14 +34,13 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-/-! ### Generic helper lemmas (lifting the QFunNZ-pinned §6.4 helpers to any tower level)
+/-! ### Generic helper lemmas (the §6.4 helpers at any tower level)
 
-The §6.4 SPDE certificate discharge needs five engine facts that `ComputableRischDESPDECorrect` proved over
-`CPolyG QFunNZ` but whose proofs only ever touch the gcd `g` **abstractly** (through an `Associated (toPolyG
-g) (gcd …)` hypothesis and the generic `cgcdExtG`/`cdivG`/`cdvdG` API). We re-derive them once, generically
-over `{α} [CField α] [CFieldSpec α]`, so they apply at `QFunNZG ℚ` (and any level). Each reuses the already
-generic `toPolyG_cgcdExtG_dvd` / `toPolyG_cdivG_exact` / `dvd_of_cdvdG` / `spde_const_base` /
-`spde_step_glue`. -/
+The §6.4 SPDE certificate discharge needs five engine facts whose proofs only ever touch the gcd `g`
+**abstractly** (through an `Associated (toPolyG g) (gcd …)` hypothesis and the generic
+`cgcdExtG`/`cdivG`/`cdvdG` API). We state them generically over `{α} [CField α] [CFieldSpec α]`, so they
+apply at `QFunNZG ℚ` (and any level). Each reuses the already generic `toPolyG_cgcdExtG_dvd` /
+`toPolyG_cdivG_exact` / `dvd_of_cdvdG` / `spde_const_base` / `spde_step_glue`. -/
 
 /-- **The divided coefficients' Euclidean gcd is a unit** (generic): if `g ~ gcd(a, b)` (`g ≠ 0`) with the
 exact divisions `toPolyG ad · toPolyG g = toPolyG a`, `toPolyG bd · toPolyG g = toPolyG b`, then under the
@@ -153,11 +144,11 @@ theorem cSPDE_peel_cleared_gen {α : Type*} [CField α] [CFieldSpec α] [CDiffFi
 /-! ### §6.4 — the generic SPDE certificate, lifting, transparent inputs and discharge (any tower level)
 
 The §6.4 cleared-lifting *engine* is gcd-agnostic — the gcd `g = cgcdFFCore fuel a b` is `set`-abstracted and
-read only through the certificate's `Associated (toPolyG g) (gcd …)` clause. We therefore re-state the whole
+read only through the certificate's `Associated (toPolyG g) (gcd …)` clause. We therefore state the whole
 §6.4 chain generically over `{α} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]` (the §6.5
-non-cancellation identity transports the same way). The QFunNZ-specific helpers are replaced by the `_gen`
-versions above; the gcd-correctness discharge enters only in `cSPDECleared_of_inputs_gen` through the per-call
-`Associated` clause (supplied at `QFunNZG ℚ` by `associated_toPolyG_cgcdFFCore`, NOT `cgcdFF`). -/
+non-cancellation identity follows the same way), using the `_gen` helpers above; the gcd-correctness
+discharge enters only in `cSPDECleared_of_inputs_gen` through the per-call `Associated` clause (supplied at
+`QFunNZG ℚ` by `associated_toPolyG_cgcdFFCore`). -/
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 

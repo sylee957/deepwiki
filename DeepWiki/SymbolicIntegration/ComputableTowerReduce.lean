@@ -39,9 +39,8 @@ open Compute
 /-! ### Generic exact division through the bridge: `(p/q)·q = p` when `q ∣ p`
 
 The denominator-preservation proof needs a **generic** exact-division identity: when `toPolyG q` divides
-`toPolyG p` (and `q` is nonzero, fuel suffices), `toPolyG (cdivG fuel p q) · toPolyG q = toPolyG p`. The
-existing `toPolyG_cdivG_exact_mul` (`ComputableHermiteTowerCorrect`) is `QFunNZ`-hardwired (routes through
-`cgcdFF`); here we prove the `[CField α] [CFieldSpec α]`-generic version directly from the Euclidean
+`toPolyG p` (and `q` is nonzero, fuel suffices), `toPolyG (cdivG fuel p q) · toPolyG q = toPolyG p`. We
+prove the `[CField α] [CFieldSpec α]`-generic version directly from the Euclidean
 identity `toPolyG_cdivmodG'` — the remainder is divisible by `q` yet has smaller degree, hence is zero. -/
 
 namespace CPolyG
@@ -84,8 +83,8 @@ theorem toPolyG_cmodG_eq_zero_of_dvd (fuel : ℕ) (p q : CPolyG α) (hq0 : cnorm
 /-- **Generic exact division through `toPolyG`**: if `toPolyG q ∣ toPolyG p`, `q` is nonzero
 (`cnormG q ≠ []`) and the fuel bounds the dividend length, then
 `toPolyG (cdivG fuel p q) · toPolyG q = toPolyG p` — the quotient times the divisor recovers the
-dividend exactly. The `[CField α] [CFieldSpec α]`-generic analogue of `toPolyG_cdivG_exact_mul` (which is
-`QFunNZ`-specific), derived from the Euclidean identity `toPolyG_cdivmodG'` with a zero remainder
+dividend exactly. The `[CField α] [CFieldSpec α]`-generic exact-division identity, derived from the
+Euclidean identity `toPolyG_cdivmodG'` with a zero remainder
 (`toPolyG_cmodG_eq_zero_of_dvd`). -/
 theorem toPolyG_cdivG_exact_g (fuel : ℕ) (p q : CPolyG α) (hq0 : cnormG q ≠ [])
     (hfuel : (cnormG p : List α).length ≤ fuel) (hdvd : toPolyG q ∣ toPolyG p) :

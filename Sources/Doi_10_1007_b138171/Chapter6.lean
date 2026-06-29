@@ -19,9 +19,8 @@ hypertangent cancellation case (`PolyRischDECancelTan`, needs the Ch. 8 coupled 
 
 **Carrier: the generic ℚ(x).** The whole pipeline is aliased to the canonical **generic** engine at
 `α = QFunNZG ℚ` (the recursive `Frac(ℚ[x])`, every instance bottoming at ℚ with no hand-built piece). The
-leading-coefficient base solve of the §6.6 cancellation cases is now the **generic**
-`CRischField.crischDESolve` over `QFunNZG ℚ` (the recursive tower oracle, replacing the `QFunNZ`-specific
-`cRischDEBase`/`cRationalRDE`).
+leading-coefficient base solve of the §6.6 cancellation cases is the **generic**
+`CRischField.crischDESolve` over `QFunNZG ℚ` (the recursive tower oracle, every instance bottoming at ℚ).
 
 ## NOT YET FORMALIZED (audit 2026-06-24)
 §6.1 The Normal Part of the Denominator: Def 6.1.1; Thm 6.1.2; Cor 6.1.1; Lemma 6.1.1; Ex 6.1.1
@@ -59,9 +58,9 @@ namespace DeepWiki.Si
 /-! ### Generic-carrier input builders (catalog-local)
 
 The §6 smoke examples over the generic ℚ(x) = `QFunNZG ℚ` carrier read their ℚ(x) coefficients as
-num/den lists over `CPolyG ℚ = List ℚ`. These builders mirror `QFunNZ.ofConstNZ`/`ofNumDen` one tower
-level down (the `ComputableTowerRefoundProbe` construction). They are catalog infrastructure, not book
-items. -/
+num/den lists over `CPolyG ℚ = List ℚ`. These builders (`qConst6`/`qFrac6`) wrap a num/den pair as a
+`QFunNZG ℚ` element (the `ComputableTowerRefoundProbe` construction). They are catalog infrastructure, not
+book items. -/
 
 /-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (denominator `[1]` nonzero, by
 `cisZeroG_one_singleton`, so it holds under a parametric definition). -/
@@ -247,7 +246,7 @@ noncomputable abbrev alg_6_6_cancelExp := cPolyRischDECancelExpG (α := QFunNZG 
 `CRischField.crischDESolve (α := QFunNZG ℚ) f g = Option (QFunNZG ℚ)` solving `Ds + f·s = g` over
 `k = ℚ(x)` (`D = d/dx`) — the leading-coefficient recursion target of the cancellation cases. The
 recursive `CRischField (QFunNZG ℚ)` instance runs the generic §6 pipeline over `ℚ[x]` and bottoms at the
-`CRischField ℚ` constant solve, replacing the `QFunNZ`-specific `cRischDEBase`. -/
+`CRischField ℚ` constant solve. -/
 noncomputable abbrev alg_6_6_rischDEBase := @CRischField.crischDESolve (QFunNZG ℚ) _ _
 
 /-- **The rational Risch DE over ℚ(x)** (§6.6 eq. 6.23 base solve): the generic tower base solve

@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 /-! # The generic inner Hermite loop over the monomial derivation (`[CField α] [CDiffField α]`)
 `cHermiteReduceTowerInner` runs the `j`-loop of Bronstein's §5.3 `HermiteReduce` over one squarefree
 factor `v`, driven by the **monomial derivation** `cmonomialDeriv Dt`. It is generic over a
-computable differential field `[CField α] [CDiffField α]` — the `QFunNZ`-specific squarefree
+computable differential field `[CField α] [CDiffField α]` — the squarefree
 factorization (`cSqfreeYunFF`) that calls it lives in `ComputableHermiteTower`. -/
 
 namespace DeepWiki.SymbolicIntegration

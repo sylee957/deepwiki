@@ -261,8 +261,8 @@ def cParallelResultDerivQ (Dt : CPolyG ℚ)
 /-- **The cleared antiderivative check** `cParallelCheckQ fuel Dt a d res`: `true` iff the
 parallel-integration result `res = ((b,s), logs)` satisfies `D(b/s + Σ cⱼ log pⱼ) = a/d` as rational
 functions over `ℚ(t)`, decided by `cisZeroG (num·d − a·den)` where `(num, den) =
-cParallelResultDerivQ … res`. This is the faithful `D(∫f) = f` certificate (no `QFunNZ.DecidableEq`
-needed — the polynomial cross-difference is `cisZeroG`-tested over `ℚ`). -/
+cParallelResultDerivQ … res`. This is the faithful `D(∫f) = f` certificate (no equality decision on
+`QFunNZG ℚ` needed — the polynomial cross-difference is `cisZeroG`-tested over `ℚ`). -/
 def cParallelCheckQ (Dt a d : CPolyG ℚ)
     (res : (CPolyG ℚ × CPolyG ℚ) × List (ℚ × CPolyG ℚ)) : Bool :=
   let (num, den) := cParallelResultDerivQ Dt res
@@ -283,8 +283,8 @@ a genuine `x`-dependence returns `none` ("deferred to the tower construction"). 
 
 namespace CPolyG
 
-/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the tower-coefficient builder, mirroring
-`QFunNZ.ofConstNZ` one tower level down; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the tower-coefficient builder, the `ℚ → QFunNZG ℚ`
+constant embedding; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
 def qConstTowerG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- **`QFunNZG ℚ`-coefficient `CPolyG` to a `ℚ`-coefficient one, when every coefficient is a

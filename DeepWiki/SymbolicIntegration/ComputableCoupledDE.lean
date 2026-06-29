@@ -98,7 +98,7 @@ continuation. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZ
+open Compute CPolyG
 
 namespace CPolyG
 

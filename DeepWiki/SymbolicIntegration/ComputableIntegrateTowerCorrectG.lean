@@ -52,8 +52,8 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- **The generic tower fraction-field derivation** `towerFractionFieldDerivG Dt = extendDeriv (implicitDeriv
 (toPolyG Dt))` on `RatFunc (CFieldSpec.K α)`, extending the base monomial derivation `implicitDeriv (toPolyG
-Dt)` on `(CFieldSpec.K α)[X]` by the quotient rule. The carrier-generic mirror of `towerFractionFieldDeriv`
-(which was pinned at `α = QFunNZ`). -/
+Dt)` on `(CFieldSpec.K α)[X]` by the quotient rule. The carrier-generic fraction-field derivation over any
+computable tower `[CField α] [CFieldSpec α]`. -/
 noncomputable def towerFractionFieldDerivG (Dt : CPolyG α) :
     Derivation ℤ (RatFunc (CFieldSpec.K α)) (RatFunc (CFieldSpec.K α)) :=
   extendDeriv (Differential.implicitDeriv (toPolyG Dt))

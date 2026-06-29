@@ -6,9 +6,9 @@ import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 /-! # The recursive Risch-DE oracle over arbitrary-depth differential towers (Bronstein Ch. 6)
 `ComputableTowerField`/`Deriv`/`Integrate` built the generic tower carrier `QFunNZG α` (the next level
 ℚ(x)(t₁)(t₂)…), its computable derivation, and the generic §3.5/§5 integration pipeline — but that
-pipeline only reaches the **reduced-case capstone** `cIntegrateReducedG` (simple normal part), because the §6 Risch-DE oracle
-`cRischDE` (`ComputableRischDE`) is still `QFunNZ`-hardwired: it bottoms out at the concrete base solve
-`cRationalRDE` over ℚ(x). This file makes the §6 oracle **generic and recursive over the tower**.
+pipeline only reaches the **reduced-case capstone** `cIntegrateReducedG` (simple normal part), so this
+file supplies the §6 Risch-DE oracle as **generic and recursive over the tower**, bottoming out at a
+typeclass-carried base solve over the coefficient field rather than a hardwired ℚ(x) solve.
 
 The clean encoding is a **typeclass-carried base solve**:
 
@@ -17,8 +17,8 @@ The clean encoding is a **typeclass-carried base solve**:
   recurses into (eq. 6.23 `RischDE(b, lc(c))`).
 * **`instance : CRischField ℚ`** — the constant-field base (`D = 0`): `b·y = g`, so `y = g/b` (`b ≠ 0`),
   `b = 0` needs `g = 0`.
-* **`cRischDEG`** — the generic §6 pipeline over `CPolyG α = α[t]`, the mechanical generalization of
-  `cRischDE` (`QFunNZ → α`, `cgcdFF → CFracGcdCore.cgcdFFCore`, base solve → `CRischField.crischDESolve`):
+* **`cRischDEG`** — the generic §6 pipeline over `CPolyG α = α[t]` (carrier `α`, `t`-gcd
+  `CFracGcdCore.cgcdFFCore`, base solve `CRischField.crischDESolve`):
   weak normalization + normal/special denominator + degree bound + SPDE + the §6.5/§6.6 PolyRischDE dispatch.
   It reduces an RDE over `α[t]` to RDEs over `α` via `crischDESolve`.
 * **`instance : CRischField (QFunNZG β)`** — the RDE over `β(s) = QFunNZG β`, **built by running
@@ -34,12 +34,11 @@ certified by `native_decide`, the oracle recursing ℚ(x)(t₁) → ℚ(x) → �
 `[CField α]`/`[CDiffField α]`/`[CFieldDomain α]`/`[CRischField α]`-only with `Prop`-erased subtype
 proofs, so nothing noncomputable reaches the native compiler.
 
-**Scope.** The generic pipeline mirrors the **non-cancellation** path and the **primitive/hyperexponential
-cancellation** cases of `cRischDE` exactly (the base solve is now the generic `crischDESolve` rather than
-the `QFunNZ`-bound `cRischDEBase`). The §6.6 hypertangent cancellation (`PolyRischDECancelTan`, needs the
-Ch. 8 coupled system) and the cancellation refinements inside the special-denominator/degree-bound steps
-(needing the full §5.12/§7.3 parametric-log-derivative recognizer) are the documented continuation, exactly
-as in `cRischDE`. -/
+**Scope.** The generic pipeline implements the **non-cancellation** path and the **primitive/hyperexponential
+cancellation** cases, with the base solve the generic `crischDESolve` over the coefficient field. The §6.6
+hypertangent cancellation (`PolyRischDECancelTan`, needs the Ch. 8 coupled system) and the cancellation
+refinements inside the special-denominator/degree-bound steps (needing the full §5.12/§7.3
+parametric-log-derivative recognizer) are the documented continuation. -/
 
 open Polynomial
 
@@ -98,10 +97,9 @@ end CPolyG
 
 /-! ### The generic §6.1 weak normalizer over the tower
 
-`cWeakNormalizerG` mirrors `cWeakNormalizer` (`QFunNZ → α`, `cgcdFF → CFracGcdCore.cgcdFFCore`,
-`cdivFF → cdivG`,
-`ofConstNZ (n : ℚ) → cnatCastG n`, `cResidueResultantTower → cResidueResultantTowerG`). Everything else
-is the already-generic engine. -/
+`cWeakNormalizerG` is the §6.1 weak normalizer over the generic carrier `α` (`t`-gcd
+`CFracGcdCore.cgcdFFCore`, division `cdivG`, natural-cast `cnatCastG`, residue resultant
+`cResidueResultantTowerG`) — the already-generic engine throughout. -/
 
 namespace CPolyG
 
@@ -132,9 +130,8 @@ def cWeakNormalizerG (Dt : CPolyG α) (fuel : ℕ) (fnum fden : CPolyG α)
 
 /-! ### The generic §6.2 normal-denominator reduction over the tower
 
-`cRdeNormalDenominatorG` mirrors `cRdeNormalDenominator` (the same `QFunNZ → α`,
-`cgcdFF → CFracGcdCore.cgcdFFCore`,
-`cdivFF → cdivG` substitutions). Returns `none` ("no solution") or the reduction quadruplet
+`cRdeNormalDenominatorG` is the §6.2 normal-denominator reduction over the generic carrier `α` (`t`-gcd
+`CFracGcdCore.cgcdFFCore`, division `cdivG`). Returns `none` ("no solution") or the reduction quadruplet
 `(a, b, c, h)` reducing `Dy + fy = g` to `a·Dq + b·q = c` with `q = y·h`. -/
 
 /-- **Generic normal-denominator reduction** `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden`
@@ -319,9 +316,9 @@ end CPolyG
 `b ∈ α*`), where `D` does not raise the `t`-degree so the leading terms cancel and the solve recurses
 degree-by-degree into the **base RDE over the coefficient field `α`** — `CRischField.crischDESolve b₀
 (lc c)` (eq. 6.23 `RischDE(b, lc(c))`). This is exactly where the typeclass-carried recursion ties: the
-base solve is no longer the `QFunNZ`-bound `cRischDEBase` but the generic `crischDESolve`. The §5.12
-logarithmic-derivative branch (the `b = Dz/z` optimization) is the documented continuation, exactly as in
-`cPolyRischDECancelPrim` (the general degree-by-degree recursion is sound without it). -/
+base solve is the generic `crischDESolve` over the coefficient field. The §5.12
+logarithmic-derivative branch (the `b = Dz/z` optimization) is the documented continuation
+(the general degree-by-degree recursion is sound without it). -/
 
 namespace CPolyG
 

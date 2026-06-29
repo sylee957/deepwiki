@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableSplitFactorCorrect
-import DeepWiki.SymbolicIntegration.ComputableSplitSquarefree
-import DeepWiki.SymbolicIntegration.ComputableCanonicalRep
+import DeepWiki.SymbolicIntegration.ComputableGenericBezout
 
 /-! # Generic Bézout-split / canonical-field-identity helpers for §3.5 correctness
 Abstract correctness of `cSplitSquarefreeFactorFast` and the `canonicalRepresentationFast` capstone over
