@@ -109,9 +109,13 @@ re-check) and
 `Differential.IsLiouville` for the algebraic case.
 
 The $n = 2$ hyperelliptic case is complete end to end — rational part, log part,
-torsion decision, soundness, and completeness. The one genuine theoretical floor
-is _Weil's bound_ on the order of a torsion point (the ceiling that makes the
-good-reduction search terminate): Mathlib has no Jacobian good-reduction theory, so
-that bound is currently an input rather than a proved lemma — the torsion decision
-itself runs, only its abstract termination ceiling is assumed. Radicals of degree
-$n \ge 3$ and integral bases for general (non-radical) curves are in progress.
+torsion decision, soundness, and completeness. The general-curve case — arbitrary
+plane curves beyond radicals — is realized too, for the principal part and the
+elementarity decision, by
+[`cIntegrateGeneralCurveDecide`](../DeepWiki/SymbolicIntegration/ComputableGeneralCurveDecide.lean#L173).
+The one genuine theoretical floor is _Weil's bound_ on the order of a torsion point
+(the ceiling that makes the good-reduction search terminate): Mathlib has no
+Jacobian good-reduction theory, so that bound is currently an input rather than a
+proved lemma — the torsion decision itself runs, only its abstract termination
+ceiling is assumed. Radicals of degree $n \ge 3$, general-curve integral bases, and
+the general (non-hyperelliptic) torsion case are in progress.

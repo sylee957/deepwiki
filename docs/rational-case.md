@@ -10,10 +10,15 @@ Throughout, a declaration name links to its definition in the local source tree.
 
 ## Hermite reduction
 
-The first stage removes the *repeated* poles. Writing $f = P + A/D$ with $D$
-squarefree-factored as $\prod_i D_i^{\,i}$,
+The first stage removes the *repeated* poles. Writing $f = P + A/D$, the
+denominator $D$ is *squarefree-factored* as $\prod_i D_i^{\,i}$, where each
+[`sqfreeFactPart`](../DeepWiki/SymbolicIntegration/SquarefreeFactorization.lean#L226)
+$D_i$ collects the irreducible factors of multiplicity exactly $i$ and is itself
+squarefree —
+[`sqfreeFactPart_squarefree`](../DeepWiki/SymbolicIntegration/SquarefreeFactorization.lean#L291).
+Against that structure,
 [`hermiteReduce`](../DeepWiki/SymbolicIntegration/HermiteCompute.lean#L84)
-integrates by parts against that structure: it peels off an explicit rational
+integrates by parts: it peels off an explicit rational
 part $g$ and returns a residual whose denominator is squarefree — so everything
 left to integrate has only *simple* poles.
 
