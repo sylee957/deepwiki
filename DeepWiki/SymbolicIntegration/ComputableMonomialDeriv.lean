@@ -3,9 +3,8 @@ import DeepWiki.SymbolicIntegration.ComputableFieldGcd
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 
 /-! # Computable monomial derivation + `splitFactor` over the differential tower ℚ(x)[t]
-Stage D — the payoff of the generic computable-field engine. On top of the `CField`/`CPolyG`
-keystone (`ComputableField`) and the division/gcd layer (`ComputableFieldGcd`) we add the *computable
-derivation* and run it.
+Built on the generic computable-field engine (`CField`/`CPolyG`) and its division/gcd layer, this
+file adds the *computable derivation* and runs it.
 
 * **`CDiffField α`** (over `[CField α]`) carries the one computable operation `cderiv : α → α` (the
   derivation on coefficients), with the companion bridge `CDiffFieldSpec α` certifying `toK (cderiv a)
@@ -16,7 +15,7 @@ derivation* and run it.
   `D = κ_D + Dt·d/dt` on `k[t]` realized over `CPolyG α`. Its correctness `toPolyG_cmonomialDeriv`
   shows it realizes Mathlib's `Differential.implicitDeriv (toPolyG Dt)` exactly — the key bridge.
 
-* **`cSplitFactor Dt fuel p`** = Bronstein's `SplitFactor` (Fig. §3.5): the squarefree-factorization
+* **`cSplitFactor Dt fuel p`** = the `SplitFactor` algorithm: the squarefree-factorization
   loop peeling off the special part `gcd(p, Dp)/gcd(p, dp/dt)`. The payoff is that it **executes**
   over the tower ℚ(x)[t] by `native_decide`. -/
 
@@ -118,23 +117,21 @@ it equals Mathlib's `Differential.implicitDeriv (toPolyG Dt)` (the correctness, 
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α]
-
 /-- **Coefficientwise derivation** `cmapDeriv p = p.map cderiv`: apply `CDiffField.cderiv` to every
 coefficient (the `κ_D` part of the monomial derivation). -/
-def cmapDeriv (p : CPolyG α) : CPolyG α := (p : List α).map CDiffField.cderiv
+def cmapDeriv {α : Type*} [CField α] [CDiffField α] (p : CPolyG α) : CPolyG α :=
+  (p : List α).map CDiffField.cderiv
 
 /-- **Monomial derivation** `cmonomialDeriv Dt p = κ_D(p) + (dp/dt)·Dt`: coefficientwise `cderiv` plus
 the product of the formal `t`-derivative with `Dt`. The derivation on `k[t]` with `Dt` the derivative
 of the monomial `t`. Needs only `[CDiffField α]`, so it reduces. -/
-def cmonomialDeriv (Dt p : CPolyG α) : CPolyG α :=
+def cmonomialDeriv {α : Type*} [CField α] [CDiffField α] (Dt p : CPolyG α) : CPolyG α :=
   caddG (cmapDeriv p) (cmulG (cderivG p) Dt)
-
-variable [CFieldSpec α] [CDiffFieldSpec α]
 
 /-- **`cmapDeriv` realizes `mapCoeffs`**: `toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p)`
 — the coefficientwise computable derivation realizes Mathlib's polynomial coefficient-map derivation. -/
-theorem toPolyG_cmapDeriv (p : CPolyG α) :
+theorem toPolyG_cmapDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
+    (p : CPolyG α) :
     toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p) := by
   induction p with
   | nil => simp [cmapDeriv]
@@ -143,10 +140,11 @@ theorem toPolyG_cmapDeriv (p : CPolyG α) :
     rw [toPolyG_cons, ih, toPolyG_cons, map_add, Differential.mapCoeffs_C, CDiffFieldSpec.toK_cderiv,
       Derivation.leibniz, Differential.mapCoeffs_X, smul_zero, add_zero, smul_eq_mul]
 
-/-- **`cmonomialDeriv` realizes `implicitDeriv`** — the key Stage-D bridge: the computable monomial
+/-- **`cmonomialDeriv` realizes `implicitDeriv`** — the key bridge: the computable monomial
 derivation realizes Mathlib's `Differential.implicitDeriv (toPolyG Dt)` (with `Dt ↦ v = toPolyG Dt`),
 i.e. `toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p)`. -/
-theorem toPolyG_cmonomialDeriv (Dt p : CPolyG α) :
+theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
+    (Dt p : CPolyG α) :
     toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p) := by
   rw [cmonomialDeriv, toPolyG_caddG, toPolyG_cmapDeriv, toPolyG_cmulG, toPolyG_cderivG,
     show Differential.implicitDeriv (toPolyG Dt) (toPolyG p)
@@ -154,20 +152,18 @@ theorem toPolyG_cmonomialDeriv (Dt p : CPolyG α) :
         simp [Differential.implicitDeriv, derivative']]
   ring
 
-/-! ### Computable `splitFactor` (Bronstein §3.5, Fig.)
+/-! ### Computable `splitFactor`
 
 `cSplitFactor Dt fuel p = (pₙ, pₛ)` peels off the special part `pₛ` and the normal part `pₙ` of `p`
-under the monomial derivation `D` (`Dt` the derivative of `t`). Bronstein's loop: `S = gcd(p, Dp) /
+under the monomial derivation `D` (`Dt` the derivative of `t`). The loop: `S = gcd(p, Dp) /
 gcd(p, dp/dt)` is the squarefree special factor of the current `p`; if it is constant (`cdegG = 0`)
 the rest is normal, else recurse on `p/S` and accumulate `S` into the special part. Fuel-bounded. -/
 
-variable {α : Type*} [CField α] [CDiffField α]
-
-/-- **Computable splitting-factorization loop** (Bronstein §3.5): `cSplitFactor Dt fuel p = (pₙ, pₛ)`
+/-- **Computable splitting-factorization loop**: `cSplitFactor Dt fuel p = (pₙ, pₛ)`
 with `pₛ` the special part and `pₙ` the normal part of `p` w.r.t. the monomial derivation `D`
 (`Dt` = `dt/d·`). One step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)`; constant `S` ⇒ `p` is normal,
 else recurse on `p/S`. Fuel-bounded; the engine reduces (`native_decide`). -/
-def cSplitFactor (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
+def cSplitFactor {α : Type*} [CField α] [CDiffField α] (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
   | 0, p => (p, [CField.one])
   | fuel + 1, p =>
     let S := cdivG (fuel + 1) (cgcdExtG (fuel + 1) p (cmonomialDeriv Dt p)).1
@@ -181,7 +177,7 @@ end CPolyG
 
 /-! ### The payoff — the engine **executes** `cSplitFactor` over ℚ(x)[t] (`native_decide`)
 
-These `native_decide` checks are Stage D's deliverable: the splitting-factorization loop, routed
+These `native_decide` checks are the deliverable: the splitting-factorization loop, routed
 through `CField QFunNZ` + `CDiffField QFunNZ`, *reduces* in the native compiler with no dependence on
 the noncomputable `CFieldSpec`/`CDiffFieldSpec`. The worked example takes `k = ℚ(x)` with `ℚ`-constant
 coefficients and the monomial `t` with `Dt = t − 1`: under `D = κ_D + Dt·d/dt`, the root `t = 1` is
@@ -190,7 +186,7 @@ coefficients and the monomial `t` with `Dt = t − 1`: under `D = κ_D + Dt·d/d
 verifies (degrees, and monic-normalized parts equal to the book values via `cisZeroG` of the
 difference — the engine produces them only up to the gcd's scalar ambiguity).
 
-`native_decide` on Bronstein's full **Example 3.5.1** (the degree-5 `p` over `ℚ(x)` with non-constant
+`native_decide` on the full degree-5 `p` over `ℚ(x)` (with non-constant
 coefficients) is the natural next step but is left to a later stage: the `QFunNZ` operations never
 reduce to lowest terms (`qaddNZ`/`qmulNZ` just cross-multiply denominators), so the extended-Euclid /
 division passes over a degree-5 `t`-polynomial blow the rational-function coefficients up
