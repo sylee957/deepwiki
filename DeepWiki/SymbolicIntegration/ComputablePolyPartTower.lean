@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableHermiteTower
+import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 
 /-! # Computable polynomial reduction + special-part handling over ℚ(x)[t] (Bronstein §5.4, §5.8)
 After the rational (`cHermiteReduceTower`, §5.3) and logarithmic (`cResidueResultantTower`/
@@ -24,7 +25,8 @@ the §5.8 **primitive-case** reduced-element integration computable over the tow
 **`native_decide` validations** (`polyReduceTower_example`, `primitivePolyIntegrate_example`):
 PRIMITIVE `t = log x` (`Dt = 1/x`) integrating a polynomial part, and NONLINEAR `t = tan x`
 (`Dt = t² + 1`) reducing one. Each checks the cleared identity `D(q) + rem = p` via
-`cisZeroG (csubG …)` over ℚ(x)[t] (`QFunNZ` has no `DecidableEq`, hence the `cisZeroG∘csubG` form).
+`cisZeroG (csubG …)` over the **generic** ℚ(x)[t] = `CPolyG (QFunNZG ℚ)` (`QFunNZG ℚ` has no
+`DecidableEq`, hence the `cisZeroG∘csubG` form).
 
 The full **integrability test** (deciding whether `∫p` is non-elementary via the residue criterion of
 §5.7 / the Risch differential equation of §5.9, or the general `LimitedIntegrate` of §5.8) is the deep
@@ -108,10 +110,19 @@ end CPolyG
 
 Both checks pin the load-bearing reduction identity `D(q) + rem = p` (with `D = cmonomialDeriv Dt`),
 cleared of denominators and checked by `cisZeroG` of the difference over ℚ(x)[t] — the integrand
-parts are genuine `CPolyG QFunNZ` polynomials (no fractions among `q`, `rem`, `p`), so the identity is
-the direct `cisZeroG (csubG (caddG (D q) rem) p)`. -/
+parts are genuine `CPolyG (QFunNZG ℚ)` polynomials (no fractions among `q`, `rem`, `p`), so the identity
+is the direct `cisZeroG (csubG (caddG (D q) rem) p)`. -/
 
-open CPolyG QFunNZ
+open CPolyG
+
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the validation coefficient builder, mirroring
+`QFunNZ.ofConstNZ` one tower level down; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
+def qConstG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
+
+/-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element (mirroring `QFunNZ.ofNumDen`; `den ≠ 0` by
+`native_decide`). -/
+def qFracG (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_decide) : QFunNZG ℚ :=
+  ⟨(num, den), h⟩
 
 /-! #### Primitive case `t = log x`, `Dt = 1/x` (Bronstein §5.8 setting)
 
@@ -123,15 +134,15 @@ constant (`κ_D((1/3)t³) = 0`) and `D((1/3)t³) = (1/3)·3t²·(1/x) = (1/x)t²
 `D(q) + rem = p`. (`∫ (log x)²/x dx = (log x)³/3`.) -/
 
 /-- Validation monomial derivative for the primitive case: `Dt = 1/x` (a constant in `t`), i.e.
-`t = log x`. As a `CPolyG QFunNZ` it is the single `t⁰`-coefficient `1/x` (`num = [1]`, `den = x`). -/
-def primitivePolyIntegrateExampleDt : CPolyG QFunNZ :=
-  [ofNumDen [1] [0, 1] (by decide)]                               -- the rational function `1/x`
+`t = log x`. As a `CPolyG (QFunNZG ℚ)` it is the single `t⁰`-coefficient `1/x` (`num = [1]`, `den = x`). -/
+def primitivePolyIntegrateExampleDt : CPolyG (QFunNZG ℚ) :=
+  [qFracG [1] [0, 1]]                                             -- the rational function `1/x`
 
 /-- The polynomial part `p = (1/x)·t²` over ℚ(x)[t] (`t = log x`): coefficients `[0, 0, 1/x]`. Its
 primitive under `D = κ_D + (1/x)·d/dt` is `q = (1/3)·t³` (a `ℚ`-constant `1/3` times `t³`), the
 constant-coefficient sub-case, with remainder `0`. -/
-def primitivePolyIntegrateExampleP : CPolyG QFunNZ :=
-  [ofConstNZ 0, ofConstNZ 0, ofNumDen [1] [0, 1] (by decide)]     -- `[0, 0, 1/x]`
+def primitivePolyIntegrateExampleP : CPolyG (QFunNZG ℚ) :=
+  [qConstG 0, qConstG 0, qFracG [1] [0, 1]]                       -- `[0, 0, 1/x]`
 
 /-- **`cPrimitivePolyIntegrate` satisfies `D(q) + rem = p`** (`native_decide`): for the primitive
 monomial `t = log x` (`Dt = 1/x`) and polynomial part `p = (1/x)·t²` over ℚ(x)[t], the computed
@@ -158,10 +169,10 @@ impossible (`deg(−t) = 1 < δ(t) = 2`), so the reduction returns `q = (1/2)t²
 
 /-- Validation monomial derivative for the nonlinear case: `Dt = t² + 1` (`t = tan x`; `δ(t) = 2`,
 `λ(t) = 1`), Bronstein Example 5.4.1 setting. -/
-def polyReduceTowerExampleDt : CPolyG QFunNZ := [ofConstNZ 1, ofConstNZ 0, ofConstNZ 1]
+def polyReduceTowerExampleDt : CPolyG (QFunNZG ℚ) := [qConstG 1, qConstG 0, qConstG 1]
 
 /-- The polynomial part `p = t³` over ℚ(x)[t] (`t = tan x`), to be reduced by §5.4. -/
-def polyReduceTowerExampleP : CPolyG QFunNZ := [ofConstNZ 0, ofConstNZ 0, ofConstNZ 0, ofConstNZ 1]
+def polyReduceTowerExampleP : CPolyG (QFunNZG ℚ) := [qConstG 0, qConstG 0, qConstG 0, qConstG 1]
 
 /-- **`cPolyReduceTower` satisfies `D(q) + r = p` with `deg(r) < δ(t)`** (`native_decide`): for the
 nonlinear monomial `t = tan x` (`Dt = t² + 1`, `δ(t) = 2`) and polynomial part `p = t³` over ℚ(x)[t],

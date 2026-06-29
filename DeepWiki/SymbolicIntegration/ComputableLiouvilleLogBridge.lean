@@ -274,7 +274,7 @@ derivatives" (here: `w ≠ 0`), which is **strictly weaker** than `Nondegenerate
 
 section ComputableEmptyBase
 
-open CPolyG QFunNZ
+open CPolyG
 
 /-- `crref.go` halts immediately once the working column `col` reaches `ncols = 1`, returning the
 accumulated pivot rows/columns reversed.  (The single-column tail of the RREF recursion.) -/
@@ -329,7 +329,7 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
 nonzero polynomial, i.e. (modulo the clearing being faithful) iff `w ≠ 0`.  PROVEN by tracing the
 single-column `crref`/`cNullspaceBasisQ` computation (axiom-clean, no `decide`).  This pins the empty-base
 semantics: the test is "`w ∉ span_ℚ ∅ = {0}`", **not** "`w` has no antiderivative". -/
-theorem cLogIsNewMonomial_nil_eq_col_nonzero (fuel : ℕ) (w : QFunNZ) :
+theorem cLogIsNewMonomial_nil_eq_col_nonzero (fuel : ℕ) (w : QFunNZG ℚ) :
     CPolyG.cLogIsNewMonomial fuel [] w =
       ((CPolyG.cLinearDepData fuel [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
   have hbridge : CPolyG.cLogIsNewMonomial fuel [] w =
@@ -347,7 +347,7 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (fuel : ℕ) (w : QFunNZ) :
 /-- **The exponential structure test is definitionally the logarithmic one** (Bronstein Corollary
 9.3.1(ii) shares the §9.3 ℚ-linear-dependence engine of (i)); so the empty-base semantics transfers
 verbatim. -/
-theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (fuel : ℕ) (ws : List QFunNZ) (b : QFunNZ) :
+theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (fuel : ℕ) (ws : List (QFunNZG ℚ)) (b : QFunNZG ℚ) :
     CPolyG.cExpIsNewMonomial fuel ws b = CPolyG.cLogIsNewMonomial fuel ws b := rfl
 
 end ComputableEmptyBase
@@ -390,7 +390,7 @@ example (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
   isLiouville_of_no_antideriv u hno
 
 -- The empty-base computable test decides only "cleared column nonzero" (≈ `w ≠ 0`).
-example (fuel : ℕ) (w : QFunNZ) :
+example (fuel : ℕ) (w : QFunNZG ℚ) :
     CPolyG.cLogIsNewMonomial fuel [] w =
       ((CPolyG.cLinearDepData fuel [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
   cLogIsNewMonomial_nil_eq_col_nonzero fuel w

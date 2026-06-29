@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableParametric
 import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 import DeepWiki.SymbolicIntegration.ComputableIntegrate
+import DeepWiki.SymbolicIntegration.ComputableTowerField
 
 /-! # Computable parallel (Risch–Norman) integration over ℚ(t) (Bronstein Chapter 10)
 
@@ -71,7 +72,7 @@ default educated guess; an integrand whose denominator factors into squarefree-b
 
 ## What is documented / deferred
 
-The genuine **multivariate tower** `ℚ(x)[t]` (`a d : CPolyG QFunNZ`, the `cParallelIntegrateTower`
+The genuine **multivariate tower** `ℚ(x)[t]` (`a d : CPolyG (QFunNZG ℚ)`, the `cParallelIntegrateTower`
 signature stub) needs the special-polynomial list `S^irr_{K:F}` and irreducible factorization over `F̄`
 (Theorems 10.2.1/10.2.2, Examples 10.3.2/10.3.4) — the documented continuation; the §10.1 multivariate
 `SplitFactor`/`SplitSquarefreeFactor` and the §10.4 simple-differential-field exponent bounds
@@ -81,7 +82,7 @@ its **cleared antiderivative identity** `D(∫f) = f` over `ℚ(t)`. No `sorry`.
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZ
+open Compute CPolyG
 
 namespace CPolyG
 
@@ -271,45 +272,56 @@ end CPolyG
 
 /-! ### The genuine tower `ℚ(x)[t]` — documented signature stub
 
-The prompt's `cParallelIntegrate Dt fuel (a d : CPolyG QFunNZ)` over the genuine differential tower
+The prompt's `cParallelIntegrate Dt fuel (a d : CPolyG (QFunNZG ℚ))` over the genuine differential tower
 `k(t) = ℚ(x)(t)` needs the special-polynomial list `S^irr_{K:F}` (Theorem 10.2.2) and the irreducible
 factorization of `dₙ` over `F̄ = ℚ̄(x)` (Theorem 10.2.1, Examples 10.3.2/10.3.4) before the eq. 10.6 solve
 — the matrix entries then lie in `F = ℚ(x)`, not `Const(k) = ℚ`, so Lemma 7.1.2's row-differentiation
-reduction to a `ℚ`-system precedes `crref` (cf. `ComputableParametric` §7.1). We expose the signature and
-route the base-field case `Dt, a, d ∈ ℚ[t]` (every coefficient a `ℚ`-constant `QFunNZ`) through the
-landed `CPolyG.cParallelIntegrate`; a coefficient with a genuine `x`-dependence returns `none`
-("deferred to the tower construction"). -/
+reduction to a `ℚ`-system precedes `crref` (cf. `ComputableParametric` §7.1). We expose the signature
+(over the **generic** ℚ(x) = `QFunNZG ℚ` carrier) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
+coefficient a `ℚ`-constant `QFunNZG ℚ`) through the landed `CPolyG.cParallelIntegrate`; a coefficient with
+a genuine `x`-dependence returns `none` ("deferred to the tower construction"). -/
 
 namespace CPolyG
 
-/-- **`QFunNZ`-coefficient `CPolyG` to a `ℚ`-coefficient one, when every coefficient is a `ℚ`-constant.**
-`cToRatCoeffsQ fuel p = some q` with `q : CPolyG ℚ` iff each coefficient of `p : CPolyG QFunNZ` reduces
-(`qnorm`) to a `ℚ`-constant (degree-0 numerator and denominator), else `none`. The base-field guard for
-the tower wrapper. -/
-def cToRatCoeffsQ (fuel : ℕ) (p : CPolyG QFunNZ) : Option (CPolyG ℚ) :=
-  (p : List QFunNZ).foldr (fun (z : QFunNZ) acc =>
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the tower-coefficient builder, mirroring
+`QFunNZ.ofConstNZ` one tower level down; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
+def qConstTowerG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
+
+/-- **`QFunNZG ℚ`-coefficient `CPolyG` to a `ℚ`-coefficient one, when every coefficient is a
+`ℚ`-constant.** `cToRatCoeffsQ fuel p = some q` with `q : CPolyG ℚ` iff each coefficient of
+`p : CPolyG (QFunNZG ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
+numerator and denominator), else `none`. The base-field guard for the tower wrapper: the lowest-terms
+reduction divides `(num, den)` by their gcd (`cgcdExtG`/`cdivG`), and a `ℚ`-constant is exactly a
+degree-0 quotient over a degree-0 (nonzero) remainder denominator. -/
+def cToRatCoeffsQ (fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) : Option (CPolyG ℚ) :=
+  (p : List (QFunNZG ℚ)).foldr (fun (z : QFunNZG ℚ) acc =>
     match acc with
     | none => none
     | some qs =>
-      let zn := Compute.qnorm fuel z.1
-      if Compute.cdeg zn.1 = 0 ∧ Compute.cdeg zn.2 = 0 then
-        some (((zn.1.headD 0) / (zn.2.headD 1)) :: qs)
+      let num := z.1.1
+      let den := z.1.2
+      let g := (cgcdExtG fuel num den).1
+      let num' := cdivG fuel num g
+      let den' := cdivG fuel den g
+      if cdegG num' = 0 ∧ cdegG den' = 0 then
+        some ((((num' : List ℚ).headD 0) / ((den' : List ℚ).headD 1)) :: qs)
       else none) (some [])
 
 /-- **Parallel integration over the tower `ℚ(x)[t]`** `cParallelIntegrateTower fuel Dt a d` (Bronstein
-§10.3, `a d : CPolyG QFunNZ`): the genuine-tower signature. The base-field case — `Dt, a, d` all with
-`ℚ`-constant coefficients (so `k = ℚ`, the field `ℚ(t)`) — is routed through `cParallelIntegrate` and the
-result lifted back to `QFunNZ` coefficients (rational part `(b, s)` and log arguments `pⱼ`, with the
-`ℚ`-constants `cⱼ`). A genuine `x`-dependent coefficient (the full tower, needing the §10.2 special-poly
-list + `F̄`-factorization) returns `none` — the documented continuation. -/
-def cParallelIntegrateTower (fuel : ℕ) (Dt a d : CPolyG QFunNZ) :
-    Option ((CPolyG QFunNZ × CPolyG QFunNZ) × List (ℚ × CPolyG QFunNZ)) :=
+§10.3, `a d : CPolyG (QFunNZG ℚ)`): the genuine-tower signature over the generic ℚ(x) = `QFunNZG ℚ`
+carrier. The base-field case — `Dt, a, d` all with `ℚ`-constant coefficients (so `k = ℚ`, the field
+`ℚ(t)`) — is routed through `cParallelIntegrate` and the result lifted back to `QFunNZG ℚ` coefficients
+(rational part `(b, s)` and log arguments `pⱼ`, with the `ℚ`-constants `cⱼ`). A genuine `x`-dependent
+coefficient (the full tower, needing the §10.2 special-poly list + `F̄`-factorization) returns `none` —
+the documented continuation. -/
+def cParallelIntegrateTower (fuel : ℕ) (Dt a d : CPolyG (QFunNZG ℚ)) :
+    Option ((CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) × List (ℚ × CPolyG (QFunNZG ℚ))) :=
   match cToRatCoeffsQ fuel Dt, cToRatCoeffsQ fuel a, cToRatCoeffsQ fuel d with
   | some DtQ, some aQ, some dQ =>
     match cParallelIntegrate fuel DtQ aQ dQ with
     | none => none
     | some ((b, s), logs) =>
-      let lift : CPolyG ℚ → CPolyG QFunNZ := fun p => (p : List ℚ).map QFunNZ.ofConstNZ
+      let lift : CPolyG ℚ → CPolyG (QFunNZG ℚ) := fun p => (p : List ℚ).map qConstTowerG
       some ((lift b, lift s), logs.map (fun (c, p) => (c, lift p)))
   | _, _, _ => none
 
