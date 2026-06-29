@@ -1,60 +1,91 @@
-# Differential Algebra
+# Computational Differential Algebra
 
-The setting for symbolic integration is _differential algebra_: a ring or field
-equipped with a _derivation_ $D$ — an additive map satisfying the Leibniz rule
-$D(ab) = a\,D(b) + b\,D(a)$. Everything the Risch algorithm does is phrased here,
-with no limits or topology: differentiation is the map $D$, and integration is
-the search for a preimage under it.
+The setting for symbolic integration is _differential algebra_, and this project
+makes it _computational_: the carriers are fields with **computable** operations
+and a **computable** derivation, bridged to Mathlib's abstract differential-algebra
+hierarchy by a homomorphism. Below, each mathematical notion is paired with the
+Lean typeclass or theorem that realizes it. We go straight to fields — the
+formalization needs no separate notion of differential _ring_.
 
-Throughout, a declaration name links to its definition in the local source tree.
+## The differential field
 
-## Derivations and constants
+A _differential field_ is a field $K$ with a _derivation_ $D : K \to K$ — an
+additive map satisfying the Leibniz rule $D(ab) = a\,D(b) + b\,D(a)$. Additivity
+and Leibniz already force the familiar calculus identities: $D(1) = 0$, the power
+rule $D(a^n) = n\,a^{n-1} D(a)$, and the quotient rule
+$D(a/b) = (b\,D(a) - a\,D(b))/b^2$.
 
-A _derivation_ on a commutative ring $R$ is an additive map $D : R \to R$ with
-$D(ab) = a\,D(b) + b\,D(a)$. Additivity and Leibniz already force the familiar
-calculus identities — $D(1) = 0$, the power rule $D(a^n) = n\,a^{n-1} D(a)$, and,
-over a field, the quotient rule $D(a/b) = (b\,D(a) - a\,D(b))/b^2$. A
-_differential field_ is a field with a derivation; a _differential field
-extension_ $K \subseteq L$ is one whose derivation restricts to $K$'s.
+_In Mathlib_ this is the `Differential` class (a field carrying a derivation
+$a \mapsto a'$), built on `Derivation`. _In the engine_ it splits into two
+**computable** typeclasses, deliberately free of any abstract field so they reduce
+under `native_decide`:
 
-The _constants_ are the kernel $\mathrm{Const} = \{c : D(c) = 0\}$. They form a
-subring — a subfield when $R$ is a field — and play the structural role that
-$\mathbb{R}$ or $\mathbb{C}$ play in analysis. The running base example is the
-rational functions $\mathbb{Q}(x)$ with $D = d/dx$, whose constants are exactly
-$\mathbb{Q}$. The constants matter because the antiderivative of a given element
-is unique only up to a constant, and because "is this expression a new
-transcendental?" ultimately asks whether it stays inside the existing constants.
+- [`CField`](../DeepWiki/SymbolicIntegration/GenericPolyEngine.lean#L33) — a type with
+  computable field operations (`add`, `mul`, `neg`, `inv`, and a _decidable_
+  `isZero`);
+- [`CDiffField`](../DeepWiki/SymbolicIntegration/ComputableMonomialDeriv.lean#L40) —
+  one further computable operation `cderiv : α → α`, the derivation.
+
+## The bridge to Mathlib: a homomorphism
+
+A computable carrier is deliberately _not_ a Mathlib field — keeping it
+abstraction-free is exactly what lets the engine evaluate. The connection to
+Mathlib's theory is made instead by a _homomorphism_, supplied by a companion
+specification:
+
+- [`CFieldSpec`](../DeepWiki/SymbolicIntegration/GenericPolyEngine.lean#L72) carries a
+  map `toK : α → K` into a genuine Mathlib `Field K` and certifies that it
+  _intertwines every operation_ — `toK_add`, `toK_mul`, `toK_neg`, `toK_inv`,
+  `toK_zero`, `toK_one`, so `toK` is a field homomorphism — together with
+  `isZero_iff`, that the computable zero test is correct ($\mathtt{isZero}\,a$ iff
+  $\mathrm{toK}\,a = 0$). The map need not be injective; the engine computes on
+  representatives.
+- [`CDiffFieldSpec`](../DeepWiki/SymbolicIntegration/ComputableMonomialDeriv.lean#L47)
+  extends the bridge to the derivation: it supplies a Mathlib `Differential K` and
+  certifies `toK_cderiv`, that $\mathrm{toK}(\mathtt{cderiv}\,a) = (\mathrm{toK}\,a)'$
+  — the computable derivation commutes with Mathlib's field derivation through
+  `toK`.
+
+So every identity the engine establishes by computation transfers to Mathlib's
+abstract differential field by pushing it through `toK`. This split — bridge-free
+computable operations on one side, the noncomputable `toK` homomorphism on the
+other — is the keystone that makes the whole tower simultaneously _evaluable_ and
+_provably correct_.
+
+## Constants
+
+The _constants_ are the kernel $\{c : D(c) = 0\}$, a subfield that plays the
+structural role $\mathbb{R}$ or $\mathbb{C}$ play in analysis. The running base is
+the rational functions $\mathbb{Q}(x)$ with $D = d/dx$, whose constants are
+exactly $\mathbb{Q}$. In the engine this base is the `CDiffField ℚ` instance with
+`cderiv := 0` — $\mathbb{Q}$ is a field of constants — whose bridge sends `cderiv`
+to the zero derivation on Mathlib's $\mathbb{Q}$. Constants matter because an
+antiderivative is unique only up to one, and because "is this a genuinely new
+transcendental?" ultimately asks whether an element stays among the existing
+constants.
 
 ## The logarithmic derivative
 
-For a nonzero $a$, the _logarithmic derivative_ is $D(a)/a$. Its defining
-property is that it turns products into sums:
-$D(ab)/(ab) = D(a)/a + D(b)/b$ and $D(a^n)/a^n = n\,D(a)/a$. It is a
-homomorphism from the multiplicative group to the additive group of the field.
+For a nonzero $a$, the _logarithmic derivative_ is $D(a)/a$. It turns products into
+sums — $D(ab)/(ab) = D(a)/a + D(b)/b$ and $D(a^n)/a^n = n\,D(a)/a$ — a homomorphism
+from the multiplicative group to the additive group. _In Mathlib_ this is
+`Differential.logDeriv`, with the homomorphism lemmas `logDeriv_mul`,
+`logDeriv_div`, `logDeriv_pow`.
 
-This single identity is why logarithms and exponentials are the organizing cases
-of the whole algorithm. A logarithm $t = \log u$ is, by definition, an element
-with $D(t) = D(u)/u$ — its derivative _is_ a logarithmic derivative of the base.
-An exponential $t = \exp u$ satisfies $D(t)/t = D(u)$ — its logarithmic
-derivative lands back in the base. So the two transcendental monomials are exactly
-the two ways the logarithmic-derivative map can behave, and the algorithm's case
-split follows that dichotomy.
+This single identity is why logarithms and exponentials organize the whole
+algorithm. A logarithm $t = \log u$ is, by definition, an element with
+$D(t) = D(u)/u$ — its derivative _is_ a logarithmic derivative of the base. An
+exponential $t = \exp u$ satisfies $D(t)/t = D(u)$ — its logarithmic derivative
+lands back in the base. The two transcendental monomials are exactly the two
+behaviours of the logarithmic-derivative map, and the algorithm's case split
+follows that dichotomy.
 
-## Why this is the right setting
+## Elementary functions and the integration problem
 
-"Elementary" has a purely algebraic definition here: a function is elementary over
-a base differential field if it lives in a tower of extensions, each step adjoining
+"Elementary" has a purely algebraic definition: a function is elementary over a
+base differential field if it lives in a tower of extensions, each step adjoining
 an algebraic element, a logarithm, or an exponential. Integration becomes the
-_preimage problem_ for $D$ inside such a tower — find $g$ with $D(g) = f$, or
-prove there is none — and the Risch algorithm is the decision procedure for it. No
+_preimage problem_ for $D$ in such a tower — find $g$ with $D(g) = f$, or prove
+there is none — and the Risch algorithm is the decision procedure for it. No
 analytic notion of "function" is needed; the derivation carries all the structure.
-
-The library builds on Mathlib's differential-algebra hierarchy — the
-`Differential` class, `Derivation`, and `Differential.logDeriv` with its
-homomorphism lemmas (`logDeriv_mul`, `logDeriv_div`, `logDeriv_pow`). On top of
-this, the project's computable carriers carry their own derivations: the generic
-polynomial engine [`CField`](../DeepWiki/SymbolicIntegration/GenericPolyEngine.lean#L33)
-underlies the algebra, the monomial extension is a computable differential field
-[`CDiffField`](../DeepWiki/SymbolicIntegration/ComputableMonomialDeriv.lean#L40), and the
-tower's evaluability rests on the Prop-erased domain class
-[`CFieldDomain`](../DeepWiki/SymbolicIntegration/ComputableTowerField.lean#L111).
+The next chapter builds the computable tower these extensions live in.

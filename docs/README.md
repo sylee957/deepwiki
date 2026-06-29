@@ -10,7 +10,7 @@ honest Risch new-monomial side conditions stated explicitly.
 Read the chapters in order:
 
 1. [Introduction](introduction.md)
-2. [Differential Algebra](differential-algebra.md)
+2. [Computational Differential Algebra](differential-algebra.md)
 3. [The Integration Problem and Liouville's Theorem](integration-problem.md)
 4. [The Rational Case](rational-case.md)
 5. [The Transcendental Tower](transcendental-tower.md)
