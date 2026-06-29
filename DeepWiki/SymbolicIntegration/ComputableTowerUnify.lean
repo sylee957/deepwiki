@@ -88,6 +88,24 @@ theorem cgcdMonicGWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG α)
     cgcdMonicGWf p q = CPolyG.cgcdMonicG fuel p q := by
   rw [cgcdMonicGWf, CPolyG.cgcdMonicG, CPolyG.cgcdWf_eq_of_fuel fuel p q hp hq]
 
+/-- **Abstract correctness of the fuel-free generic monic gcd `cgcdMonicGWf`** — DIRECTLY,
+**UNCONDITIONALLY** (no `cgcdTerminatesG`, no fuel symbol): over the genuine field `K = CFieldSpec.K α`,
+`toPolyG (cgcdMonicGWf p q)` is `Associated` to `gcd (toPolyG p) (toPolyG q)` in `K[X]`. The fuel-free
+mirror of `associated_toPolyG_cgcdMonicG`, but built from the **direct** fuel-free leaf lemmas
+`toPolyG_cgcdWf_dvd` (the raw gcd divides both inputs — unconditional, the WF def always terminates) and
+`toPolyG_dvd_cgcdWf` (the raw gcd is greatest); monic normalization fixes the unit
+(`associated_toPolyG_cmonicG`). Mutual divisibility gives `Associated`. -/
+theorem associated_toPolyG_cgcdMonicGWf (p q : CPolyG α) :
+    Associated (toPolyG (cgcdMonicGWf p q)) (gcd (toPolyG p) (toPolyG q)) := by
+  -- the raw fuel-free extended-Euclid gcd divides both inputs (unconditional) and is greatest.
+  obtain ⟨hdvd_p, hdvd_q⟩ := toPolyG_cgcdWf_dvd p q
+  have hassoc : Associated (toPolyG (cgcdMonicGWf p q)) (toPolyG (cgcdWf p q).1) := by
+    rw [cgcdMonicGWf]; exact associated_toPolyG_cmonicG _
+  refine hassoc.trans ?_
+  apply associated_of_dvd_dvd
+  · exact dvd_gcd hdvd_p hdvd_q
+  · exact toPolyG_dvd_cgcdWf p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+
 /-! ### ★ Task 4 — the generic §3.5 reconstruction `canonicalRepresentationFastG_reconstructs`
 
 The §3.5 capstone correctness, generic over `[CField α] [CFieldSpec α]`: the canonical-representation

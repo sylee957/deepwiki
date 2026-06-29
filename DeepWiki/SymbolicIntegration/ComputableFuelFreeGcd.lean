@@ -335,28 +335,97 @@ theorem cgcdWf_eq (a b : CPolyG α) :
   cgcdWf_eq_of_fuel _ a b (by omega) (by omega)
 
 /-- **Bézout identity through `toPolyG`** for the fuel-free `cgcdWf` (no fuel hypothesis): with
-`(g, s, t) = cgcdWf a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
+`(g, s, t) = cgcdWf a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. Proven by
+**direct well-founded induction on `cgcdWf`'s own recursion** — the base branch is `Bézout 1·a + 0·b =
+a` (`cisZeroG b`), the recursing branch substitutes the Euclidean identity `a = q·b + r` into the IH
+`s·b + t·r = g`, and the unreachable branch is closed by `cmodWf_length_lt`. References no fuel symbol. -/
 theorem toPolyG_cgcdWf (a b : CPolyG α) :
     toPolyG (cgcdWf a b).2.1 * toPolyG a + toPolyG (cgcdWf a b).2.2 * toPolyG b
       = toPolyG (cgcdWf a b).1 := by
-  rw [cgcdWf_eq]; exact toPolyG_cgcdExtG _ a b
+  induction a, b using cgcdWf.induct with
+  | case1 a b =>
+    -- `cisZeroG b`: `cgcdWf a b = (cnormG a, [1], [])`, Bézout `1·a + 0·b = a`
+    rename_i hcz
+    have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hcz
+    have hval : cgcdWf a b = (cnormG a, [CField.one], []) := by
+      rw [cgcdWf.eq_def, if_pos hcz]
+    rw [hval]
+    simp [toPolyG_cnormG, toPolyG_cons, CFieldSpec.toK_one, hb0]
+  | case2 a b =>
+    -- recursing branch: `cgcdWf a b = (g, t, csubG s (cmulG t q))` with `(g,s,t) = cgcdWf b r`,
+    -- `r = cmodWf a b`, `q = cdivWf a b`. IH: `s·b + t·r = g`. Euclid: `a = q·b + r`.
+    -- the `have rr := a.cmodWf b` let-binder is auto-introduced between `hcz` and `hdec`; recover all.
+    rename_i hcz rr hdec g s t hgst ih
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    have hval : cgcdWf a b = (g, t, csubG s (cmulG t (cdivWf a b))) := by
+      rw [cgcdWf.eq_def, if_neg hcz, if_pos hdec]
+      show (let (g, s, t) := cgcdWf b (cmodWf a b); (g, t, csubG s (cmulG t (cdivWf a b)))) = _
+      rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst]
+    have heuclid : toPolyG a = toPolyG (cdivWf a b) * toPolyG b + toPolyG (cmodWf a b) :=
+      toPolyG_cmodWf a b hbne
+    -- IH at the recursive pair `(b, cmodWf a b)`: `s·b + t·r = g`
+    rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst] at ih
+    rw [hval]
+    rw [toPolyG_csubG, toPolyG_cmulG]
+    simp only at ih
+    linear_combination ih + toPolyG t * heuclid
+  | case3 a b =>
+    -- unreachable over a genuine field (`cmodWf_length_lt`)
+    rename_i hcz rr hdec
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    exact absurd (cmodWf_length_lt a b hbne) hdec
 
 /-- **`cgcdWf`'s gcd is greatest among common divisors** (no fuel hypothesis): any `d` dividing both
 `toPolyG a` and `toPolyG b` divides `toPolyG (cgcdWf a b).1`. Immediate from Bézout. -/
 theorem toPolyG_dvd_cgcdWf {d : (CFieldSpec.K α)[X]} (a b : CPolyG α)
     (ha : d ∣ toPolyG a) (hb : d ∣ toPolyG b) :
     d ∣ toPolyG (cgcdWf a b).1 := by
-  rw [cgcdWf_eq]; exact toPolyG_dvd_cgcdExtG _ a b ha hb
+  rw [← toPolyG_cgcdWf a b]
+  exact dvd_add (ha.mul_left _) (hb.mul_left _)
 
 /-- **`cgcdWf`'s gcd divides both inputs — UNCONDITIONALLY** (the WF def always terminates, so no
 `cgcdTerminatesG` hypothesis is needed): `toPolyG (cgcdWf a b).1` divides `toPolyG a` and `toPolyG b`.
-With `toPolyG_dvd_cgcdWf` and Bézout this characterizes `g` as an honest gcd in `K[X]`. -/
+With `toPolyG_dvd_cgcdWf` and Bézout this characterizes `g` as an honest gcd in `K[X]`. Proven by
+**direct well-founded induction on `cgcdWf`'s own recursion**: the base branch gives `g = cnormG a ∣ a`
+(reflexive) and `g ∣ b = 0`; the recursing branch reads off `g ∣ b ∧ g ∣ r` from the IH and combines
+them through the Euclidean identity `a = q·b + r` to get `g ∣ a`. The WF recursion always reaches the
+true base, so divisibility needs **no fuel-termination hypothesis** — references no fuel symbol. -/
 theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
     toPolyG (cgcdWf a b).1 ∣ toPolyG a ∧ toPolyG (cgcdWf a b).1 ∣ toPolyG b := by
-  rw [cgcdWf_eq]
-  refine toPolyG_cgcdExtG_dvd _ a b ?_
-  -- the chosen fuel covers the descent, so `cgcdTerminatesG` holds (via the concrete generic bound)
-  exact cgcdTerminatesG_of_fuel _ a b (by omega) (by omega)
+  induction a, b using cgcdWf.induct with
+  | case1 a b =>
+    -- `cisZeroG b`: `cgcdWf a b = (cnormG a, ...)`, so `g = cnormG a ∣ a` (refl) and `g ∣ b = 0`
+    rename_i hcz
+    have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hcz
+    have hval : (cgcdWf a b).1 = cnormG a := by rw [cgcdWf.eq_def, if_pos hcz]
+    rw [hval, toPolyG_cnormG]
+    exact ⟨dvd_refl _, by rw [hb0]; exact dvd_zero _⟩
+  | case2 a b =>
+    -- recursing branch: `(cgcdWf a b).1 = (cgcdWf b r).1 = g`, IH `g ∣ b ∧ g ∣ r`, Euclid `a = q·b + r`
+    rename_i hcz rr hdec g s t hgst ih
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    have hgfst : (cgcdWf a b).1 = g := by
+      rw [cgcdWf.eq_def, if_neg hcz, if_pos hdec]
+      show (let (g, s, t) := cgcdWf b (cmodWf a b); (g, t, csubG s (cmulG t (cdivWf a b)))).1 = g
+      rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst]
+    rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst] at ih
+    simp only at ih
+    obtain ⟨hgb, hgr⟩ := ih
+    have heuclid : toPolyG a = toPolyG (cdivWf a b) * toPolyG b + toPolyG (cmodWf a b) :=
+      toPolyG_cmodWf a b hbne
+    rw [hgfst]
+    refine ⟨?_, hgb⟩
+    rw [heuclid]
+    exact dvd_add (hgb.mul_left _) hgr
+  | case3 a b =>
+    -- unreachable over a genuine field (`cmodWf_length_lt`)
+    rename_i hcz rr hdec
+    have hbne : cnormG b ≠ [] := by
+      intro h; rw [cisZeroG] at hcz; simp [h] at hcz
+    exact absurd (cmodWf_length_lt a b hbne) hdec
 
 /-! ### `native_decide` smoke tests — the WF def reduces in compiled code
 
@@ -382,6 +451,27 @@ theorem cdvdGWf_eq_of_fuel (fuel : ℕ) (q p : CPolyG α)
     (hfuel : (cnormG p : List α).length ≤ fuel) :
     cdvdGWf q p = CPolyG.cdvdG fuel q p := by
   rw [cdvdGWf, CPolyG.cdvdG, cmodWf, cmodG, cdivmodWf_eq_of_fuel fuel p q hfuel]
+
+/-- **`cdvdGWf` reads as remainder-zero — DIRECTLY** (no fuel hypothesis): `cdvdGWf q p = true ↔
+toPolyG (cmodWf p q) = 0`. Immediate from the definition `cdvdGWf q p = cisZeroG (cmodWf p q)` and
+`cisZeroG_iff`; the fuel-free remainder `cmodWf` carries the Euclidean identity `toPolyG_cmodWf`, so a
+true `cdvdGWf q p` certifies `q ∣ p` in `K[X]`. The fuel-free analogue of `cdvdG_iff`, referencing no
+fuel symbol. -/
+theorem cdvdGWf_iff (q p : CPolyG α) :
+    cdvdGWf q p = true ↔ toPolyG (cmodWf p q) = 0 := by
+  rw [cdvdGWf, cisZeroG_iff]
+
+/-- **A true `cdvdGWf q p` certifies polynomial divisibility** `toPolyG q ∣ toPolyG p` (no fuel
+hypothesis, nonzero divisor `cnormG q ≠ []`): from `cdvdGWf_iff` the remainder `toPolyG (cmodWf p q) = 0`,
+and the Euclidean identity `toPolyG_cmodWf` then makes `toPolyG p = toPolyG (cdivWf p q) · toPolyG q`. The
+fuel-free divisibility certificate. -/
+theorem dvd_of_cdvdGWf (q p : CPolyG α) (hq : cnormG q ≠ []) (h : cdvdGWf q p = true) :
+    toPolyG q ∣ toPolyG p := by
+  have hrem : toPolyG (cmodWf p q) = 0 := (cdvdGWf_iff q p).mp h
+  have heuclid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
+    toPolyG_cmodWf p q hq
+  rw [hrem, add_zero] at heuclid
+  exact ⟨toPolyG (cdivWf p q), by rw [heuclid]; ring⟩
 
 end CPolyG
 

@@ -97,6 +97,135 @@ theorem cdiophantineGWf_eq_of_fuel [CFieldSpec α] (fuel : ℕ) (p q rhs : CPoly
   simp only at hS ⊢
   rw [cdivmodWf_eq_of_fuel fuel _ q hS]
 
+/-! ### Direct (fuel-free) correctness of the Bézout/Diophantine leaves
+
+`cbezoutOneWf`/`cextendedEuclideanSplitWf`/`cdiophantineGWf` solve their Bézout/Diophantine identities
+over `K[X]` **directly** through the fuel-free leaf lemmas `toPolyG_cgcdWf` (Bézout) and
+`toPolyG_cdivmodWf` (Euclidean division) — pure algebraic composition, no fuel symbol. Each mirrors the
+fuel'd `toPolyG_cbezoutOne`/`toPolyG_cextendedEuclideanSplit` proof verbatim with the Wf leaves
+substituted. -/
+
+/-- **`cbezoutOneWf` solves the Bézout identity** `u·a + w·b = 1` over `K[X]` — DIRECTLY (no fuel
+hypothesis): with `(g, s, t) = cgcdWf a b` and `g` a nonzero **constant** (the coprime case), the
+rescaled cofactors `(u, w) = cbezoutOneWf a b` satisfy `toPolyG u · toPolyG a + toPolyG w · toPolyG b =
+1`. From the fuel-free raw Bézout `toPolyG_cgcdWf` divided by the constant `g`. The fuel-free analogue of
+`toPolyG_cbezoutOne`, referencing no fuel symbol. -/
+theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
+    (hgdeg : (toPolyG (cgcdWf a b).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf a b).1 ≠ 0) :
+    toPolyG (cbezoutOneWf a b).1 * toPolyG a
+        + toPolyG (cbezoutOneWf a b).2 * toPolyG b = 1 := by
+  set g := (cgcdWf a b).1 with hg
+  set s := (cgcdWf a b).2.1 with hs
+  set t := (cgcdWf a b).2.2 with ht
+  have hbez : toPolyG s * toPolyG a + toPolyG t * toPolyG b = toPolyG g :=
+    toPolyG_cgcdWf a b
+  set c := (toPolyG g).leadingCoeff with hc
+  have hlead_ne : c ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hgne
+  have hgC : toPolyG g = Polynomial.C c := by
+    conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hgdeg]
+    rw [hc, Polynomial.leadingCoeff, hgdeg]
+  have hu : toPolyG (cbezoutOneWf a b).1 = Polynomial.C c⁻¹ * toPolyG s := by
+    rw [cbezoutOneWf]
+    show toPolyG (cscaleG (CField.inv (cleadG g)) s) = _
+    rw [toPolyG_cscaleG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+  have hw : toPolyG (cbezoutOneWf a b).2 = Polynomial.C c⁻¹ * toPolyG t := by
+    rw [cbezoutOneWf]
+    show toPolyG (cscaleG (CField.inv (cleadG g)) t) = _
+    rw [toPolyG_cscaleG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+  rw [hu, hw]
+  have hcombine : Polynomial.C c⁻¹ * toPolyG s * toPolyG a
+      + Polynomial.C c⁻¹ * toPolyG t * toPolyG b = Polynomial.C c⁻¹ * toPolyG g := by
+    rw [← hbez]; ring
+  rw [hcombine, hgC, ← Polynomial.C_mul, inv_mul_cancel₀ hlead_ne, Polynomial.C_1]
+
+/-- **`cextendedEuclideanSplitWf` solves `b·dₙ + c·dₛ = r`** over `K[X]` — DIRECTLY (no fuel hypothesis):
+with a Bézout pair `u·dₙ + w·dₛ = 1` (read through `toPolyG`), `cextendedEuclideanSplitWf dn ds r u w =
+(b, c)` gives `toPolyG b · toPolyG dn + toPolyG c · toPolyG ds = toPolyG r`. Requires `dₛ` nonzero
+(`cnormG ds ≠ []`). From the fuel-free Euclidean identity `toPolyG_cdivmodWf`. The fuel-free analogue of
+`toPolyG_cextendedEuclideanSplit`, referencing no fuel symbol. -/
+theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
+    (hds0 : cnormG ds ≠ [])
+    (hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1) :
+    toPolyG (cextendedEuclideanSplitWf dn ds r u w).1 * toPolyG dn
+        + toPolyG (cextendedEuclideanSplitWf dn ds r u w).2 * toPolyG ds
+      = toPolyG r := by
+  set ur := cmulG u r with hur
+  -- the fuel-free Euclidean identity `u·r = (u·r div ds)·ds + (u·r mod ds)`.
+  have hdivmod : toPolyG ur
+      = toPolyG (cdivWf ur ds) * toPolyG ds + toPolyG (cmodWf ur ds) :=
+    toPolyG_cmodWf ur ds hds0
+  have hb : (cextendedEuclideanSplitWf dn ds r u w).1 = cmodWf ur ds := by
+    rw [cextendedEuclideanSplitWf]; simp only [cmodWf, hur]
+  have hc : (cextendedEuclideanSplitWf dn ds r u w).2
+      = caddG (cmulG w r) (cmulG (cdivWf ur ds) dn) := by
+    rw [cextendedEuclideanSplitWf]; simp only [cdivWf, hur]
+  rw [hb, hc, toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG]
+  have hrem : toPolyG (cmodWf ur ds)
+      = toPolyG ur - toPolyG (cdivWf ur ds) * toPolyG ds := by
+    rw [hdivmod]; ring
+  rw [hrem, hur, toPolyG_cmulG]
+  have hkey : (toPolyG u * toPolyG r - toPolyG (cdivWf (cmulG u r) ds) * toPolyG ds) * toPolyG dn
+      + (toPolyG w * toPolyG r + toPolyG (cdivWf (cmulG u r) ds) * toPolyG dn) * toPolyG ds
+      = (toPolyG u * toPolyG dn + toPolyG w * toPolyG ds) * toPolyG r := by ring
+  rw [show cmulG u r = ur from rfl] at hkey ⊢
+  rw [hkey, hbez, one_mul]
+
+/-- **`cdiophantineGWf` solves `b·p + c·q = rhs`** over `K[X]` — DIRECTLY (no fuel hypothesis): for
+coprime `p, q` (extended-gcd `cgcdWf p q = (g, s, t)` with `g` a nonzero **constant**), the output
+`(b, c) = cdiophantineGWf p q rhs` satisfies `toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG
+rhs`. From the fuel-free raw Bézout `toPolyG_cgcdWf` (`s·p + t·q = g`) rescaled by `rhs/lc(g)` and the
+fuel-free Euclidean division `toPolyG_cdivmodWf` (`S = quo·q + b`). The fuel-free Diophantine spec,
+referencing no fuel symbol. -/
+theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
+    (hq0 : cnormG q ≠ [])
+    (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf p q).1 ≠ 0) :
+    toPolyG (cdiophantineGWf p q rhs).1 * toPolyG p
+        + toPolyG (cdiophantineGWf p q rhs).2 * toPolyG q = toPolyG rhs := by
+  set g := (cgcdWf p q).1 with hg
+  set s := (cgcdWf p q).2.1 with hs
+  set t := (cgcdWf p q).2.2 with ht
+  have hbez : toPolyG s * toPolyG p + toPolyG t * toPolyG q = toPolyG g := toPolyG_cgcdWf p q
+  set c := (toPolyG g).leadingCoeff with hc
+  have hlead_ne : c ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hgne
+  have hgC : toPolyG g = Polynomial.C c := by
+    conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hgdeg]
+    rw [hc, Polynomial.leadingCoeff, hgdeg]
+  -- the rescaled dividends `S = C(c⁻¹)·rhs·s`, `T = C(c⁻¹)·rhs·t`.
+  set S := cscaleG (CField.inv (cleadG g)) (cmulG rhs s) with hSdef
+  set T := cscaleG (CField.inv (cleadG g)) (cmulG rhs t) with hTdef
+  have hSpoly : toPolyG S = Polynomial.C c⁻¹ * (toPolyG rhs * toPolyG s) := by
+    rw [hSdef, toPolyG_cscaleG, toPolyG_cmulG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+  have hTpoly : toPolyG T = Polynomial.C c⁻¹ * (toPolyG rhs * toPolyG t) := by
+    rw [hTdef, toPolyG_cscaleG, toPolyG_cmulG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+  -- the Euclidean division `S = quo·q + b` (fuel-free).
+  have hdivmod : toPolyG S
+      = toPolyG (cdivmodWf S q).1 * toPolyG q + toPolyG (cdivmodWf S q).2 :=
+    toPolyG_cdivmodWf S q hq0
+  -- the output components `b = cnormG (cdivmodWf S q).2`, `c = cnormG (T + quo·p)`.
+  have hbval : (cdiophantineGWf p q rhs).1 = cnormG (cdivmodWf S q).2 := by
+    rw [cdiophantineGWf]
+  have hcval : (cdiophantineGWf p q rhs).2
+      = cnormG (caddG T (cmulG (cdivmodWf S q).1 p)) := by
+    rw [cdiophantineGWf]
+  rw [hbval, hcval, toPolyG_cnormG, toPolyG_cnormG, toPolyG_caddG, toPolyG_cmulG]
+  -- `b = S − quo·q`, so `b·p + (T + quo·p)·q = S·p + T·q = C(c⁻¹)·rhs·(s·p + t·q) = C(c⁻¹)·rhs·g = rhs`.
+  have hbpoly : toPolyG (cdivmodWf S q).2 = toPolyG S - toPolyG (cdivmodWf S q).1 * toPolyG q := by
+    rw [hdivmod]; ring
+  rw [hbpoly, hSpoly, hTpoly]
+  have hkey : (Polynomial.C c⁻¹ * (toPolyG rhs * toPolyG s) - toPolyG (cdivmodWf S q).1 * toPolyG q)
+        * toPolyG p
+      + (Polynomial.C c⁻¹ * (toPolyG rhs * toPolyG t) + toPolyG (cdivmodWf S q).1 * toPolyG p)
+        * toPolyG q
+      = Polynomial.C c⁻¹ * toPolyG rhs * (toPolyG s * toPolyG p + toPolyG t * toPolyG q) := by ring
+  rw [hkey, hbez, hgC]
+  have hCcancel : Polynomial.C c⁻¹ * Polynomial.C c = 1 := by
+    rw [← Polynomial.C_mul, inv_mul_cancel₀ hlead_ne, Polynomial.C_1]
+  calc Polynomial.C c⁻¹ * toPolyG rhs * Polynomial.C c
+      = (Polynomial.C c⁻¹ * Polynomial.C c) * toPolyG rhs := by ring
+    _ = toPolyG rhs := by rw [hCcancel, one_mul]
+
 end CPolyG
 
 namespace CPolyG
