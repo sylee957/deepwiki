@@ -34,6 +34,7 @@ import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.RationalIntegrationInvXPow
 import DeepWiki.SymbolicIntegration.LaurentCoefficients
 import Sources.Doi_10_1007_b138171.Source
+import Sources.Doi_10_1007_b138171.HermiteExample221
 
 /-! # Symbolic Integration catalog — Chapter 2: Integration of Rational Functions
 Chapter 2 develops the algorithms that compute `∫ f` for `f ∈ K(x)` as a rational part plus a

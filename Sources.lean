@@ -45,6 +45,7 @@ import Sources.Isbn_047193609X.Chapter3
 import Sources.Doi_10_1007_b138171.Source
 import Sources.Doi_10_1007_b138171.Chapter1
 import Sources.Doi_10_1007_b138171.Chapter2
+import Sources.Doi_10_1007_b138171.HermiteExample221
 import Sources.Doi_10_1007_b138171.Chapter3
 import Sources.Doi_10_1007_b138171.Chapter4
 import Sources.Doi_10_1007_b138171.Chapter5

@@ -9,11 +9,11 @@ engine of `Exercise22Compute`/`RtResultantCompute` handles it). Mathlib's `ℚ[X
 carrier `CPoly := List ℚ` (from `LogToAtanCompute`), running the §2.2 *quadratic* Hermite reduction:
 squarefree-factor `D = ∏ Dᵢ^i` (`csqfreeFactor`), and for each factor `(V, i)` with `i ≥ 2`, peel the
 rational pieces `B/V^j` (`j = i−1 … 1`) into `g` via the Bézout solve `B·(U·V') + C·V = −A/j`, lowering
-the multiplicity until only squarefree denominators remain. We `native_decide`-validate it on
-**Example 2.2.1** `f = (x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`, whose book answer is
-`∫ f = 1/x + 6x/(x²+2)² − (x−3)/(x²+2) + ∫ dx/x`: we pin the computed output and the correctness
-identity `g' + B/D* = A/D` (cleared of denominators) by `native_decide` (kernel `decide` stalls on
-GMP-backed `ℚ`). A `ratIntegrate` wires `hermiteReduce` into `lrtLogPart` for the full
+the multiplicity until only squarefree denominators remain. The engine is `native_decide`-validated on
+**Example 2.2.1** `f = (x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`, book answer
+`∫ f = 1/x + 6x/(x²+2)² − (x−3)/(x²+2) + ∫ dx/x` — the worked-example witnesses (pinned output and the
+cleared correctness identity `g' + B/D* = A/D`) live in the source catalog (`Sources/`). A
+`ratIntegrate` wires `hermiteReduce` into `lrtLogPart` for the full
 `∫A/D = rational part + log part`. Correctness against the noncomputable Hermite theory is **proven**
 in `HermiteCorrectness`. -/
 
@@ -106,80 +106,15 @@ def hermiteReduce (fuel : ℕ) (A D : CPoly) : QFun × QFun :=
   let Bres := cdiv fuel (cmul resNum Dstar) resDen
   ((cnorm gnum, cnorm gden), (cnorm Bres, cnorm Dstar))
 
-/-! ### Example 2.2.1 (§2.2, p.40–41):
-`f = (x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`, `D = x²(x²+2)³`,
-`∫ f = 1/x + 6x/(x²+2)² − (x−3)/(x²+2) + ∫ dx/x` -/
-
-/-- **`A = x⁷ − 24x⁴ − 4x² + 8x − 8`** as a `CPoly` (Example 2.2.1 numerator), coefficients low→high:
-`[−8, 8, −4, 0, −24, 0, 0, 1]`. -/
-def cA221 : CPoly := [-8, 8, -4, 0, -24, 0, 0, 1]
-
-/-- **`D = x⁸ + 6x⁶ + 12x⁴ + 8x² = x²(x²+2)³`** as a `CPoly` (Example 2.2.1 denominator),
-coefficients low→high: `[0, 0, 8, 0, 12, 0, 6, 0, 1]`. -/
-def cD221 : CPoly := [0, 0, 8, 0, 12, 0, 6, 0, 1]
-
--- **Example 2.2.1, the squarefree factorization** `D = x²·(x²+2)³`: Yun returns `[(x, 2), (x²+2, 3)]`.
-#eval csqfreeFactor 40 cD221
-
--- **Example 2.2.1, the computed Hermite reduction** `((gnum, gden), (B, Dstar))`. Book answer:
--- `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`, residual `B/Dstar = 1/x` (so `∫ dx/x`),
--- `Dstar = x·(x²+2) = x³+2x`.
-#eval hermiteReduce 40 cA221 cD221
-
-/-- **Example 2.2.1: `D` factors as `x²·(x²+2)³`** (§2.2, p.40): the Yun squarefree factorization of
-`D = x⁸+6x⁶+12x⁴+8x²` is `[(x, 2), (x²+2, 3)]` — the factor `x` of multiplicity `2` and `x²+2` of
-multiplicity `3`. Proved by `native_decide`. -/
-theorem hermite_ex221_factors :
-    csqfreeFactor 40 cD221 = [([0, 1], 2), ([2, 0, 1], 3)] := by native_decide
-
-/-- **Example 2.2.1: the residual log integrand is `(x²+2)/(x³+2x) = 1/x`** (§2.2, p.41): the squarefree
-radical computed is `Dstar = x³ + 2x = x·(x²+2)` (`[0, 2, 0, 1]`) and the residual numerator is
-`B = x² + 2` (`[2, 0, 1]`), so `B/Dstar = (x²+2)/(x(x²+2)) = 1/x` — exactly the book's remaining
-`∫ dx/x`. Proved by `native_decide`. -/
-theorem hermite_ex221_residual :
-    (hermiteReduce 40 cA221 cD221).2 = ([2, 0, 1], [0, 2, 0, 1]) := by native_decide
-
-/-- **Example 2.2.1: the Hermite reduction is correct** (§2.2, p.41) — the polynomial **correctness
-certificate** for `∫ A/D = (gnum/gden) + ∫ B/Dstar`. As rational functions `(gnum/gden)' + B/Dstar =
-A/D`; clearing the common denominator `D·gden²` (using `Dstar ∣ D`) gives the polynomial identity
-`(A·gden² − D·(gnum'·gden − gnum·gden'))·Dstar = B·(D·gden²)`. This certifies, **independently of the
-exact spelling of `g`**, that the computed `g = gnum/gden` is the rational part of `∫A/D` and `B/Dstar`
-the residual purely-logarithmic part. Proved by `native_decide`. -/
-theorem hermite_ex221_cleared_identity :
-    let ((gnum, gden), (B, Dstar)) := hermiteReduce 40 cA221 cD221
-    let gprimeNum := csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))
-    let gden2 := cmul gden gden
-    cnorm (cmul (csub (cmul cA221 gden2) (cmul cD221 gprimeNum)) Dstar)
-      = cnorm (cmul B (cmul cD221 gden2)) := by native_decide
-
-/-- **The book's rational part `g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)`** over the common denominator
-`x·(x²+2)² = x⁵+4x³+4x`: numerator `3x³+8x²+6x+4` (`[4, 6, 8, 3]`), denominator `[0, 4, 0, 4, 0, 1]`. -/
-def cBookG221 : QFun := ([4, 6, 8, 3], [0, 4, 0, 4, 0, 1])
-
-/-- **Example 2.2.1: the computed rational part equals the book's `g`** (§2.2, p.41): the computed
-`g = gnum/gden` from `hermiteReduce` equals — *as a rational function* — the book's explicit
-`g = 1/x + 6x/(x²+2)² − (x−3)/(x²+2)` (`cBookG221`). Cross-multiplied: `gnum·(book den) = (book num)·gden`.
-Proved by `native_decide` — the computed Hermite rational part matches the book exactly. -/
-theorem hermite_ex221_g_eq_book :
-    let ((gnum, gden), _) := hermiteReduce 40 cA221 cD221
-    let (bn, bd) := cBookG221
-    cnorm (cmul gnum bd) = cnorm (cmul bn gden) := by native_decide
-
 /-! ### Full rational integrator: Hermite rational part + LRT log part -/
 
 /-- **Full rational-function integrator** `ratIntegrate fuel A D = ((gnum, gden), logpart)`: combine the
 Hermite rational part `g = gnum/gden` of `∫A/D` (from `hermiteReduce`) with the LRT logarithmic part of
 the residual `∫B/Dstar` (from `lrtLogPart` on the squarefree `Dstar`). So
-`∫ A/D = gnum/gden + ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`, the complete in-field-plus-logarithms integral.
-`#eval`-demonstrated below. -/
+`∫ A/D = gnum/gden + ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`, the complete in-field-plus-logarithms integral. -/
 def ratIntegrate (fuel : ℕ) (A D : CPoly) : QFun × List (CPoly × BPoly) :=
   let ((gnum, gden), (B, Dstar)) := hermiteReduce fuel A D
   ((gnum, gden), lrtLogPart fuel B Dstar)
-
--- **Example 2.2.1 via `ratIntegrate`**: the rational part `g = gnum/gden` plus the LRT log part of the
--- residual `B/Dstar = 1/x`. The residual `∫ dx/x = log(x)` gives a single residue `1` with argument
--- `x`. Prints the full integral data `((gnum, gden), logpart)`.
-#eval ratIntegrate 40 cA221 cD221
 
 /-! ### Correctness against the noncomputable Hermite theory — PROVEN in `HermiteCorrectness`
 Under the `toPoly` bridge, the computable `hermiteReduce` produces a valid Hermite reduction on **all**
@@ -190,9 +125,7 @@ to an additive constant absorbed into the log part. Every piece the algorithm re
 `gcd`-normalizing unit cancels in the fraction `B/Vʲ`); `csqfreeFactor_squarefree`,
 `csqfreeFactor_pairwise_isRelPrime`, and `csqfreeFactor_factor_assoc` match `csqfreeFactor` to the
 abstract Yun/Musser squarefree factorization; and `total_fold_residual_over_D` sums the per-factor
-multi-fold residual (the interference `W ∣ R` discharged via the `IsQRegular` localization). The
-`native_decide` computation on Example 2.2.1 (`hermite_ex221_residual`, `hermite_ex221_cleared_identity`)
-remains as a concrete witness. -/
+multi-fold residual (the interference `W ∣ R` discharged via the `IsQRegular` localization). -/
 
 end Compute
 
