@@ -5,8 +5,8 @@ import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.Tactic
 
 /-! # Differential rings and fields — derivations and their basic calculus
-A *derivation* on a ring `R` is a map `D : R → R` with `D(a + b) = Da + Db` and the Leibniz
-rule `D(ab) = a·Db + b·Da` — defined purely algebraically, with no notion of `function`,
+A *derivation* on a ring `R` is a map `D : R → R` (written `a′`) with `(a + b)′ = a′ + b′` and the
+Leibniz rule `(ab)′ = a·b′ + b·a′` — defined purely algebraically, with no notion of `function`,
 `limit`, or `tangent line`. This is the setting in which integration becomes an *algebraic*
 problem. Building on Mathlib's `Differential` typeclass (`x′` for `D x`, a `Derivation ℤ R R`),
 this file develops the basic calculus: the constant subring `constants R = ker D`, the
@@ -41,20 +41,20 @@ def constants (R : Type*) [CommRing R] [Differential R] : Subring R where
 @[simp] theorem mem_constants {R : Type*} [CommRing R] [Differential R] {a : R} :
     a ∈ constants R ↔ a′ = 0 := Iff.rfl
 
-/-- `D(1) = 0`: the derivative of the multiplicative unit vanishes. -/
+/-- `(1 : R)′ = 0`: the derivative of the multiplicative unit vanishes. -/
 theorem deriv_one {R : Type*} [CommRing R] [Differential R] : (1 : R)′ = 0 :=
   (Differential.deriv : Derivation ℤ R R).map_one_eq_zero
 
-/-- `D(a + b) = D(a) + D(b)`: the derivation is additive. -/
+/-- `(a + b)′ = a′ + b′`: the derivation is additive. -/
 theorem deriv_add {R : Type*} [CommRing R] [Differential R] (a b : R) : (a + b)′ = a′ + b′ := by
   simp only [map_add]
 
-/-- **Constant-linearity**: `D(ca) = c·Da` for a constant `c` (so `D` is `constants R`-linear). -/
+/-- **Constant-linearity**: `(ca)′ = c·a′` for a constant `c` (so `D` is `constants R`-linear). -/
 theorem deriv_const_mul {R : Type*} [CommRing R] [Differential R] {c : R} (a : R) (hc : c′ = 0) :
     (c * a)′ = c * a′ := by
   rw [Derivation.leibniz, hc, smul_zero, add_zero, smul_eq_mul]
 
-/-- **Power rule** (natural exponent): `D(aⁿ) = n·aⁿ⁻¹·Da`. -/
+/-- **Power rule** (natural exponent): `(aⁿ)′ = n·aⁿ⁻¹·a′`. -/
 theorem deriv_pow {R : Type*} [CommRing R] [Differential R] (a : R) (n : ℕ) :
     (a ^ n)′ = (n : R) * a ^ (n - 1) * a′ := by
   rw [Derivation.leibniz_pow]
@@ -62,7 +62,7 @@ theorem deriv_pow {R : Type*} [CommRing R] [Differential R] (a : R) (n : ℕ) :
   ring
 
 /-- **Chain rule** (univariate): if every coefficient of `P` is a constant, then
-`D(P(u)) = P'(u)·Du`. -/
+`(P(u))′ = P'(u)·u′`. -/
 theorem deriv_eval_of_const_coeffs {R : Type*} [CommRing R] [Differential R]
     (p : R[X]) (u : R) (hp : ∀ i, (p.coeff i)′ = 0) :
     (p.eval u)′ = p.derivative.eval u * u′ := by
@@ -75,7 +75,7 @@ def IsDifferentialIdeal {R : Type*} [CommRing R] [Differential R] (I : Ideal R) 
   ∀ a ∈ I, a′ ∈ I
 
 /-- The constants form a *differential subring* of `(R, D)`: the zero ideal `⊥` is a differential
-ideal, and `constants R` is closed under `D` (trivially, since `Da = 0` there). -/
+ideal, and `constants R` is closed under `D` (trivially, since `a′ = 0` there). -/
 theorem isDifferentialIdeal_bot_and_deriv_mem_constants {R : Type*} [CommRing R] [Differential R] :
     IsDifferentialIdeal (⊥ : Ideal R) ∧ ∀ a ∈ constants R, a′ ∈ constants R := by
   refine ⟨fun a ha => ?_, fun a ha => ?_⟩
@@ -83,7 +83,7 @@ theorem isDifferentialIdeal_bot_and_deriv_mem_constants {R : Type*} [CommRing R]
   · simp only [mem_constants] at ha ⊢; simp [ha]
 
 /-- A **linear combination of derivations is a derivation**: `(c·D₁ + D₂)` acts pointwise as
-`a ↦ c·D₁a + D₂a`. The module `Derivation ℤ R R` of all derivations is `derivationModule` below. -/
+`a ↦ c·(D₁ a) + D₂ a`. The module `Derivation ℤ R R` of all derivations is `derivationModule` below. -/
 theorem smul_add_derivation_apply {R : Type*} [CommRing R]
     (c : R) (D₁ D₂ : Derivation ℤ R R) (a : R) :
     (c • D₁ + D₂) a = c * D₁ a + D₂ a := by
@@ -96,7 +96,7 @@ end Ring
 
 section Field
 
-/-- **Quotient rule**: `D(a/b) = (b·Da − a·Db)/b²` in a differential field. -/
+/-- **Quotient rule**: `(a/b)′ = (b·a′ − a·b′)/b²` in a differential field. -/
 theorem deriv_div {F : Type*} [Field F] [Differential F] (a b : F) :
     (a / b)′ = (b * a′ - a * b′) / b ^ 2 := by
   rw [Derivation.leibniz_div]
@@ -104,7 +104,7 @@ theorem deriv_div {F : Type*} [Field F] [Differential F] (a b : F) :
   rw [div_eq_mul_inv, inv_pow]
   ring
 
-/-- **Power rule** (integer exponent, field case): `D(aⁿ) = n·aⁿ⁻¹·Da`. -/
+/-- **Power rule** (integer exponent, field case): `(aⁿ)′ = n·aⁿ⁻¹·a′`. -/
 theorem deriv_zpow {F : Type*} [Field F] [Differential F] (a : F) (n : ℤ) :
     (a ^ n)′ = (n : F) * a ^ (n - 1) * a′ := by
   rw [Derivation.leibniz_zpow]
@@ -135,14 +135,14 @@ theorem logDeriv_div {F : Type*} [Field F] [Differential F] (a b : F) (ha : a �
     Differential.logDeriv (a / b) = Differential.logDeriv a - Differential.logDeriv b :=
   Differential.logDeriv_div a b ha hb
 
-/-- `logDeriv a = 0` iff `a` is a constant (`D(a) = 0`). -/
+/-- `logDeriv a = 0` iff `a` is a constant (`a′ = 0`). -/
 theorem logDeriv_eq_zero {F : Type*} [Field F] [Differential F] (a : F) :
     Differential.logDeriv a = 0 ↔ a′ = 0 :=
   Differential.logDeriv_eq_zero a
 
 /-- The **logarithmic-derivative identity** for a product of powers:
 `logDeriv (∏ uᵢ^{eᵢ}) = ∑ eᵢ · logDeriv uᵢ`, i.e.
-`D(u₁^{e₁} ⋯ uₙ^{eₙ}) / (u₁^{e₁} ⋯ uₙ^{eₙ}) = e₁·Du₁/u₁ + ⋯ + eₙ·Duₙ/uₙ`. -/
+`(u₁^{e₁} ⋯ uₙ^{eₙ})′ / (u₁^{e₁} ⋯ uₙ^{eₙ}) = e₁·u₁′/u₁ + ⋯ + eₙ·uₙ′/uₙ`. -/
 theorem logDeriv_prod_zpow {F : Type*} [Field F] [Differential F] {ι : Type*}
     (s : Finset ι) (u : ι → F) (e : ι → ℤ) (h : ∀ i ∈ s, u i ≠ 0) :
     Differential.logDeriv (∏ i ∈ s, u i ^ e i)

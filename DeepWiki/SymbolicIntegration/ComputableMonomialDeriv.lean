@@ -16,7 +16,7 @@ file adds the *computable derivation* and runs it.
   shows it realizes Mathlib's `Differential.implicitDeriv (toPolyG Dt)` exactly — the key bridge.
 
 * **`cSplitFactor Dt fuel p`** = the `SplitFactor` algorithm: the squarefree-factorization
-  loop peeling off the special part `gcd(p, Dp)/gcd(p, dp/dt)`. The payoff is that it **executes**
+  loop peeling off the special part `gcd(p, p′)/gcd(p, dp/dt)`. The payoff is that it **executes**
   over the tower ℚ(x)[t] by `native_decide`. -/
 
 open Polynomial
@@ -155,13 +155,13 @@ theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldS
 /-! ### Computable `splitFactor`
 
 `cSplitFactor Dt fuel p = (pₙ, pₛ)` peels off the special part `pₛ` and the normal part `pₙ` of `p`
-under the monomial derivation `D` (`Dt` the derivative of `t`). The loop: `S = gcd(p, Dp) /
+under the monomial derivation `D` (`Dt` the derivative of `t`). The loop: `S = gcd(p, p′) /
 gcd(p, dp/dt)` is the squarefree special factor of the current `p`; if it is constant (`cdegG = 0`)
 the rest is normal, else recurse on `p/S` and accumulate `S` into the special part. Fuel-bounded. -/
 
 /-- **Computable splitting-factorization loop**: `cSplitFactor Dt fuel p = (pₙ, pₛ)`
 with `pₛ` the special part and `pₙ` the normal part of `p` w.r.t. the monomial derivation `D`
-(`Dt` = `dt/d·`). One step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)`; constant `S` ⇒ `p` is normal,
+(`Dt` = `dt/d·`). One step extracts `S = gcd(p, p′)/gcd(p, dp/dt)`; constant `S` ⇒ `p` is normal,
 else recurse on `p/S`. Fuel-bounded; the engine reduces (`native_decide`). -/
 def cSplitFactor {α : Type*} [CField α] [CDiffField α] (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
   | 0, p => (p, [CField.one])
