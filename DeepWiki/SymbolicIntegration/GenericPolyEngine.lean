@@ -3,15 +3,22 @@ import Mathlib.Algebra.Polynomial.Degree.Defs
 import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.RingTheory.Polynomial.Basic
 
-/-! # Generic computable field + polynomial engine (the differential-field-tower base)
-The Risch algorithm needs the **same** polynomial engine over a *tower* of differential fields
-ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t) ⊂ …, so this file abstracts the carrier into a `CField` typeclass: a type `α` of
-computable field elements with a bridge `toK : α → K` to a genuine Mathlib `Field K` that intertwines
-the computable `zero`/`one`/`add`/`mul`/`neg`/`inv` with the field operations. The generic polynomial
-engine `CPolyG α := List α` (dense coefficients, index = degree) mirrors a `cadd`/`cmul`/… arithmetic
-over any `CField`, with a generic Horner bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]` proven to
-realize `(CFieldSpec.K α)[X]` arithmetic. This file is **standalone** (imports only Mathlib): the
-coherence with the concrete `CPoly := List ℚ` engine lives downstream in `ComputableField`. -/
+/-! # A generic computable field, and a polynomial engine over it
+
+A `CField` is a type `α` of **computable** field elements: computable
+`zero`/`one`/`add`/`mul`/`neg`/`inv` and a decidable zero test, with no abstract field
+structure attached — so its operations *reduce* (`#eval`/`native_decide`). The meaning of
+those operations is supplied separately by a companion `CFieldSpec`: a homomorphism
+`toK : α → K` into a genuine Mathlib `Field K` that intertwines the computable operations
+with the field ones.
+
+On top of any `CField`, this file builds a dense polynomial engine `CPolyG α := List α`
+(coefficient lists, index = degree, low to high) with computable arithmetic
+`caddG`/`cmulG`/`cdivmodG`/`cgcdExtG`/…, together with a Horner bridge
+`toPolyG : CPolyG α → (CFieldSpec.K α)[X]` proved to realize genuine polynomial arithmetic
+over `K`. The split — bridge-free `CField` on the compute side, the noncomputable `toK`
+bridge on the proof side — is exactly what lets one engine both evaluate and be verified.
+The file is standalone: it imports only Mathlib. -/
 
 open Polynomial
 
@@ -21,15 +28,14 @@ namespace DeepWiki.SymbolicIntegration
 
 `CField α` packages just the **computable** field operations on `α`: `zero`/`one`/`add`/`mul`/`neg`/
 `inv` and the computable zero test `isZero`, plus derived `sub`/`div`. It is deliberately bridge-free,
-so an instance like `CField QFunNZ` whose operations are honest list computations stays *computable*
-even though its companion `CFieldSpec` (the field-homomorphism bridge) is noncomputable. The generic
-polynomial **engine** (`caddG`/`cmulG`/`cdivmodG`/`cgcdExtG`/`cderivG`) needs only `[CField α]`, so it
-reduces (`#eval`/`native_decide`); the **correctness proofs** add `[CFieldSpec α]`. -/
+so an instance whose operations are honest list computations stays *computable* even though its
+companion `CFieldSpec` (the field-homomorphism bridge) is noncomputable. The polynomial **engine**
+(`caddG`/`cmulG`/`cdivmodG`/`cgcdExtG`) needs only `[CField α]`, so it reduces (`#eval`/`native_decide`);
+the **correctness proofs** add `[CFieldSpec α]`. -/
 
 /-- **Computable field operations**: a type `α` with computable `zero`/`one`/`add`/`mul`/`neg`/`inv`
 and a computable zero test `isZero`. Bridge-free, so instances built from honest computations stay
-computable; the field-homomorphism bridge lives in the companion `CFieldSpec`. The base of the
-differential-field tower the Risch algorithm runs the polynomial engine over. -/
+computable; the field-homomorphism bridge lives in the companion `CFieldSpec`. -/
 class CField (α : Type*) where
   /-- Computable zero. -/
   zero : α
@@ -139,12 +145,12 @@ instance : CFieldSpec ℚ where
   toK_inv _ := rfl
   isZero_iff a := by show decide (a = 0) = true ↔ id a = 0; simp
 
-/-! ### Generic polynomial engine `CPolyG α := List α`
+/-! ### The polynomial engine `CPolyG α := List α`
 
-Over any `[CField α]` the dense-coefficient list `CPolyG α` (index = degree, low to high) carries the
-same arithmetic as the concrete `CPoly = List ℚ`, with `ℚ` operations replaced by `CField.add`/`mul`/
-`neg`/`isZero`. The generic Horner bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]` embeds via `toK`
-(so it additionally needs `[CFieldSpec α]`). -/
+Over any `[CField α]`, the dense-coefficient list `CPolyG α` (index = degree, low to high) carries
+polynomial arithmetic, with every operation built from `CField.add`/`mul`/`neg`/`isZero`. The Horner
+bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]` embeds it into genuine polynomials via `toK` (so it
+additionally needs `[CFieldSpec α]`). -/
 
 /-- **Generic dense coefficient list** over a computable field `α` (index = degree, low to high).
 A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
@@ -208,12 +214,13 @@ def cmonicG (p : CPolyG α) : CPolyG α :=
   let p := cnormG p
   if cisZeroG p then [] else cscaleG (CField.inv (cleadG p)) p
 
-/-! ### Generic Euclidean division and extended Euclidean algorithm (engine, `[CField α]`-only)
+/-! ### Euclidean division and the extended Euclidean algorithm (engine, `[CField α]`-only)
 
-`cdivmodG`/`cdivG`/`cmodG`/`cdvdG`/`cgcdExtG` mirror `Compute.cdivmod`/… over any `[CField α]`
-(ℚ-division `clead p / clead q` becomes `CField.div`); only the engine `[CField α]` operations are
-used, so they reduce (`#eval`/`native_decide`). Their correctness (Euclidean identity, Bézout, gcd
-divisibility) lives downstream in `ComputableFieldGcd` where `[CFieldSpec α]` is in scope. -/
+`cdivmodG`/`cdivG`/`cmodG`/`cdvdG`/`cgcdExtG` implement polynomial division, remainder, divisibility,
+and gcd over any `[CField α]`, using only the computable operations (so they reduce,
+`#eval`/`native_decide`); they are fuel-bounded for termination. Their correctness — the Euclidean
+identity, Bézout, gcd divisibility — is proved separately, where the `[CFieldSpec α]` bridge is in
+scope. -/
 
 /-- **Generic Euclidean division** of `CPolyG`s, fuel-bounded: `cdivmodG fuel p q = (quotient,
 remainder)` with `p = quotient · q + remainder` over the field `K` (`q ≠ 0`; one step per degree drop). -/
