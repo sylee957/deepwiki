@@ -18,11 +18,12 @@ step $F_{i+1} = F_i(t)$ adjoining a single new element $t$ of one of these kinds
 - an _exponential_: $D(t)/t = D(u)$ for some $u \in F_i$ — written $t = \exp u$;
 - a _tangent_: $D(t) = D(u)\,(t^2 + 1)$ for some $u \in F_i$ — written $t = \tan u$.
 
-These are the _transcendental_ monomials, and they are exactly what the formalized
-engine builds: towers of logarithms, exponentials, and tangents. (Adjoining an
-algebraic $t$ — a root of a polynomial over $F_i$ — completes the textbook
-definition of "elementary" but is a separate development, not part of this engine.)
-The _integration problem_ is then: given $f$ somewhere in such a tower, produce an
+These are the _transcendental_ monomials — towers of logarithms, exponentials, and
+tangents — and they are what the chapters through Completeness build. The remaining
+kind of extension adjoins an _algebraic_ $t$ (a root of a polynomial over $F_i$,
+such as $\sqrt{x^3+1}$); it completes the definition of "elementary" and is
+developed in [Integrating Algebraic Functions](algebraic-functions.md). The
+_integration problem_ is then: given $f$ somewhere in such a tower, produce an
 elementary $g$ with $D(g) = f$, or prove that no elementary $g$ exists.
 
 ## Liouville's theorem

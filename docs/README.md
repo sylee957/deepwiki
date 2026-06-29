@@ -17,6 +17,7 @@ Read the chapters in order:
 6. [The Risch Differential Equation](risch-differential-equation.md)
 7. [Soundness](soundness.md)
 8. [Completeness](completeness.md)
-9. [Proof Status](proof-status.md)
+9. [Integrating Algebraic Functions](algebraic-functions.md)
+10. [Proof Status](proof-status.md)
 
 Throughout, each declaration name links to its definition in the local source tree.

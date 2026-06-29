@@ -9,10 +9,17 @@ Lean typeclass or theorem that realizes it.
 ## The differential field
 
 A _differential field_ is a field $K$ with a _derivation_ $D : K \to K$ — an
-additive map satisfying the Leibniz rule $D(ab) = a\,D(b) + b\,D(a)$. Additivity
-and Leibniz already force the familiar calculus identities: $D(1) = 0$, the power
-rule $D(a^n) = n\,a^{n-1} D(a)$, and the quotient rule
-$D(a/b) = (b\,D(a) - a\,D(b))/b^2$.
+additive map
+([`deriv_add`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L48)) satisfying
+the Leibniz rule $D(ab) = a\,D(b) + b\,D(a)$
+([`deriv_mul_eq`](../DeepWiki/SymbolicIntegration/MonomialExtensions.lean#L30)).
+Additivity and Leibniz already force the familiar calculus identities, each proved
+in the library: $D(1) = 0$
+([`deriv_one`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L44)), the power
+rule $D(a^n) = n\,a^{n-1} D(a)$
+([`deriv_pow`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L56)), and the
+quotient rule $D(a/b) = (b\,D(a) - a\,D(b))/b^2$
+([`deriv_div`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L99)).
 
 _In Mathlib_ this is the `Differential` class (a field carrying a derivation
 $a \mapsto a'$), built on `Derivation`. _In the engine_ it splits into two
@@ -53,23 +60,27 @@ _provably correct_.
 
 ## Constants
 
-The _constants_ are the kernel $\{c : D(c) = 0\}$, a subfield that plays the
-structural role $\mathbb{R}$ or $\mathbb{C}$ play in analysis. The running base is
-the rational functions $\mathbb{Q}(x)$ with $D = d/dx$, whose constants are
-exactly $\mathbb{Q}$. In the engine this base is the `CDiffField ℚ` instance with
-`cderiv := 0` — $\mathbb{Q}$ is a field of constants — whose bridge sends `cderiv`
-to the zero derivation on Mathlib's $\mathbb{Q}$. Constants matter because an
-antiderivative is unique only up to one, and because "is this a genuinely new
-transcendental?" ultimately asks whether an element stays among the existing
-constants.
+The _constants_ are the kernel $\{c : D(c) = 0\}$ — in the library the subfield
+[`constants`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L24) (with
+membership
+[`mem_constants`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L41)) — which
+plays the structural role $\mathbb{R}$ or $\mathbb{C}$ play in analysis. The running
+base is the rational functions $\mathbb{Q}(x)$ with $D = d/dx$, whose constants are
+exactly $\mathbb{Q}$; in the engine this base is the `CDiffField ℚ` instance with
+`cderiv := 0`. Constants matter because an antiderivative is unique only up to one,
+and because "is this a genuinely new transcendental?" ultimately asks whether an
+element stays among the existing constants.
 
 ## The logarithmic derivative
 
-For a nonzero $a$, the _logarithmic derivative_ is $D(a)/a$. It turns products into
-sums — $D(ab)/(ab) = D(a)/a + D(b)/b$ and $D(a^n)/a^n = n\,D(a)/a$ — a homomorphism
-from the multiplicative group to the additive group. _In Mathlib_ this is
-`Differential.logDeriv`, with the homomorphism lemmas `logDeriv_mul`,
-`logDeriv_div`, `logDeriv_pow`.
+For a nonzero $a$, the _logarithmic derivative_ is $D(a)/a$ (Mathlib's
+`Differential.logDeriv`). It turns products into sums and powers into multiples —
+$D(ab)/(ab) = D(a)/a + D(b)/b$
+([`logDeriv_mul`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L120)) and
+$D(a^n)/a^n = n\,D(a)/a$
+([`logDeriv_pow`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L125)) — a
+homomorphism from the multiplicative group to the additive group (the quotient form
+is [`logDeriv_div`](../DeepWiki/SymbolicIntegration/DifferentialFields.lean#L131)).
 
 This single identity is why logarithms and exponentials organize the whole
 algorithm. A logarithm $t = \log u$ is, by definition, an element with

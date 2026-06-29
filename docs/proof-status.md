@@ -89,6 +89,22 @@ and the algebraic machinery all reduce, and the worked examples are checked by
 split between computable field operations and a non-computable specification
 bridge, which keeps the tower evaluable while still admitting abstract proofs.
 
+## The algebraic case
+
+Alongside the transcendental tower, the project develops the _algebraic_ side —
+integrating $\int y\,dx$ for $y$ algebraic over $\mathbb{Q}(x)$ (Trager/Bronstein,
+realized as computational algebraic geometry rather than abstract Riemann–Roch).
+For the $n = 2$ hyperelliptic case it is complete end to end: the rational part,
+the logarithmic part with its Jacobian-torsion decision (Cantor's algorithm), and
+both soundness
+([`cIntegrateAlgebraicDecide_sound`](../DeepWiki/SymbolicIntegration/ComputableAlgebraicDecide.lean#L184))
+and completeness
+([`cIntegrateAlgebraicDecide_complete`](../DeepWiki/SymbolicIntegration/ComputableAlgebraicDecide.lean#L273)).
+The one assumed input is Weil's torsion-order bound (Mathlib lacks Jacobian good
+reduction); higher-degree radicals and general-curve integral bases are in
+progress. The [Integrating Algebraic Functions](algebraic-functions.md) chapter
+covers it.
+
 ## Beyond the current scope
 
 Two further algorithms are genuinely separate engines, not yet formalized: the

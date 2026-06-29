@@ -40,6 +40,14 @@ def constants (R : Type*) [CommRing R] [Differential R] : Subring R where
 
 @[simp] theorem mem_constants {a : R} : a ∈ constants R ↔ a′ = 0 := Iff.rfl
 
+/-- `D(1) = 0`: the derivative of the multiplicative unit vanishes. -/
+theorem deriv_one : (1 : R)′ = 0 :=
+  (Differential.deriv : Derivation ℤ R R).map_one_eq_zero
+
+/-- `D(a + b) = D(a) + D(b)`: the derivation is additive. -/
+theorem deriv_add (a b : R) : (a + b)′ = a′ + b′ := by
+  simp only [map_add]
+
 /-- **Theorem 3.1.1(i)**: `D(ca) = c·Da` for a constant `c` (`D` is `Const_D R`-linear). -/
 theorem deriv_const_mul {c : R} (a : R) (hc : c′ = 0) : (c * a)′ = c * a′ := by
   rw [Derivation.leibniz, hc, smul_zero, add_zero, smul_eq_mul]
@@ -106,6 +114,28 @@ theorem logDeriv_zpow (a : F) (n : ℤ) (ha : a ≠ 0) :
   have hn : (a ^ n) ≠ 0 := zpow_ne_zero _ ha
   simp only [Differential.logDeriv, deriv_zpow, zpow_sub₀ ha, zpow_one]
   field_simp
+
+/-- `logDeriv (a·b) = logDeriv a + logDeriv b`: the logarithmic derivative sends products to sums
+(a homomorphism from the multiplicative group to the additive group). -/
+theorem logDeriv_mul (a b : F) (ha : a ≠ 0) (hb : b ≠ 0) :
+    Differential.logDeriv (a * b) = Differential.logDeriv a + Differential.logDeriv b :=
+  Differential.logDeriv_mul a b ha hb
+
+/-- `logDeriv (aⁿ) = n · logDeriv a` for a natural exponent. -/
+theorem logDeriv_pow (n : ℕ) (a : F) :
+    Differential.logDeriv (a ^ n) = (n : F) * Differential.logDeriv a :=
+  Differential.logDeriv_pow n a
+
+/-- `logDeriv (a/b) = logDeriv a − logDeriv b`: the logarithmic derivative sends quotients to
+differences. -/
+theorem logDeriv_div (a b : F) (ha : a ≠ 0) (hb : b ≠ 0) :
+    Differential.logDeriv (a / b) = Differential.logDeriv a - Differential.logDeriv b :=
+  Differential.logDeriv_div a b ha hb
+
+/-- `logDeriv a = 0` iff `a` is a constant (`D(a) = 0`). -/
+theorem logDeriv_eq_zero (a : F) :
+    Differential.logDeriv a = 0 ↔ a′ = 0 :=
+  Differential.logDeriv_eq_zero a
 
 /-- **Theorem 3.1.1(v)**: the logarithmic-derivative identity
 `D(u₁^{e₁} ⋯ uₙ^{eₙ}) / (u₁^{e₁} ⋯ uₙ^{eₙ}) = e₁·Du₁/u₁ + ⋯ + eₙ·Duₙ/uₙ`, i.e.
