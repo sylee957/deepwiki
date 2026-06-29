@@ -24,7 +24,7 @@ def IsNormal {R : Type*} [CommRing R] [Differential R] (p : R) : Prop := IsCopri
 /-- `p` is *special* (w.r.t. `D`) if `p ∣ Dp` (so `gcd(p, Dp) = p`). -/
 def IsSpecial {R : Type*} [CommRing R] [Differential R] (p : R) : Prop := p ∣ p′
 
-/-- The derivative of `a` is `Const`-linear over a special divisor: `(p·b)′ = p·b′ + b·p′`. -/
+/-- Leibniz product rule: `(p·b)′ = p·b′ + b·p′`. -/
 theorem deriv_mul_eq {R : Type*} [CommRing R] [Differential R] (p b : R) :
     (p * b)′ = p * b′ + b * p′ := by
   simp only [Derivation.leibniz, smul_eq_mul]
@@ -200,7 +200,7 @@ theorem associated_gcd_deriv_prod {R : Type*} [CommRing R] [Differential R] [Nor
 is itself special. Write `p = πᵉ·h` with `π ∤ h` (`FiniteMultiplicity`); `associated_gcd_deriv_mul`/`_pow` give
 `gcd(p,Dp) ~ πᵉ⁻¹·gcd(π,Dπ)·gcd(h,Dh)`, and `p` special (`gcd(p,Dp) ~ p`) forces, after cancelling
 `πᵉ⁻¹`, `π·h ~ gcd(π,Dπ)·gcd(h,Dh)`; as `π` is prime, `gcd(π,Dπ)` is a unit (impossible: it would
-make `π` a unit) or `~ π`, i.e. `π ∣ Dπ`. Needs the exponent a unit (`IsUnit (eᵉ:R)`, char `0`). -/
+make `π` a unit) or `~ π`, i.e. `π ∣ Dπ`. Needs the exponent a unit (`IsUnit (e:R)`, char `0`). -/
 theorem isSpecial_of_prime_dvd {R : Type*} [CommRing R] [Differential R] [IsDomain R]
     [NormalizedGCDMonoid R] [WfDvdMonoid R] {p π : R} (hπ : Prime π) (hdvd : π ∣ p) (hp0 : p ≠ 0)
     (hp : IsSpecial p) (he : IsUnit ((multiplicity π p : R))) : IsSpecial π := by
@@ -243,7 +243,7 @@ theorem isSpecial_of_prime_dvd {R : Type*} [CommRing R] [Differential R] [IsDoma
 /-- Any factor of a special polynomial is special. Factor
 `q ∣ p` into primes (`induction_on_prime`); each prime factor divides `p` so is special
 (`isSpecial_of_prime_dvd`), and specialness is closed under products (`IsSpecial.mul`) and units.
-Needs every prime factor's multiplicity to be a unit (`IsUnit ((multiplicity:R))`, char `0`). -/
+Needs every prime factor's multiplicity to be a unit (`IsUnit ((multiplicity π p : R))`, char `0`). -/
 theorem isSpecial_of_dvd {R : Type*} [CommRing R] [Differential R] [IsDomain R]
     [NormalizedGCDMonoid R] [UniqueFactorizationMonoid R] {p q : R} (hp0 : p ≠ 0) (hp : IsSpecial p)
     (hmult : ∀ π, Prime π → π ∣ p → IsUnit ((multiplicity π p : R))) (hdvd : q ∣ p) :
