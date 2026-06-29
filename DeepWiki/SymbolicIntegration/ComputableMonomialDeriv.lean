@@ -12,7 +12,7 @@ file adds the *computable derivation* and runs it.
   and `QFunNZ` (`qderivNZ`, the `d/dx` quotient rule — **computable**, `#eval`-able).
 
 * **`cmonomialDeriv Dt p`** = `(coefficientwise cderiv of p) + (dp/dt)·Dt`: the monomial derivation
-  `D = κ_D + Dt·d/dt` on `k[t]` realized over `CPolyG α`. Its correctness `toPolyG_cmonomialDeriv`
+  on `k[t]`, realized over `CPolyG α`. Its correctness `toPolyG_cmonomialDeriv`
   shows it realizes Mathlib's `Differential.implicitDeriv (toPolyG Dt)` exactly — the key bridge.
 
 * **`cSplitFactor Dt fuel p`** = the `SplitFactor` algorithm: the squarefree-factorization
@@ -110,19 +110,19 @@ noncomputable instance instCDiffFieldSpecQFunNZ : CDiffFieldSpec QFunNZ where
 
 /-! ### The monomial derivation on `CPolyG α` (`Dt` a polynomial in `t`)
 
-For a monomial `t` over the coefficient field with `Dt ∈ k[t]`, the derivation on `k[t]` is
-`D p = κ_D(p) + Dt·(dp/dt)` — coefficientwise `cderiv` plus `(dp/dt)·Dt`. `cmonomialDeriv` realizes
+For a monomial `t` over the coefficient field with `Dt ∈ k[t]`, the derivation on `k[t]` sends
+`p` to (coefficientwise `cderiv` of `p`) + `(dp/dt)·Dt`. `cmonomialDeriv` realizes
 this over `CPolyG α` (the engine, needing only `[CDiffField α]`), and `toPolyG_cmonomialDeriv` proves
 it equals Mathlib's `Differential.implicitDeriv (toPolyG Dt)` (the correctness, the **key bridge**). -/
 
 namespace CPolyG
 
 /-- **Coefficientwise derivation** `cmapDeriv p = p.map cderiv`: apply `CDiffField.cderiv` to every
-coefficient (the `κ_D` part of the monomial derivation). -/
+coefficient (the coefficientwise part of the monomial derivation). -/
 def cmapDeriv {α : Type*} [CField α] [CDiffField α] (p : CPolyG α) : CPolyG α :=
   (p : List α).map CDiffField.cderiv
 
-/-- **Monomial derivation** `cmonomialDeriv Dt p = κ_D(p) + (dp/dt)·Dt`: coefficientwise `cderiv` plus
+/-- **Monomial derivation** `cmonomialDeriv Dt p = cmapDeriv p + (dp/dt)·Dt`: coefficientwise `cderiv` plus
 the product of the formal `t`-derivative with `Dt`. The derivation on `k[t]` with `Dt` the derivative
 of the monomial `t`. Needs only `[CDiffField α]`, so it reduces. -/
 def cmonomialDeriv {α : Type*} [CField α] [CDiffField α] (Dt p : CPolyG α) : CPolyG α :=
@@ -180,10 +180,10 @@ end CPolyG
 These `native_decide` checks are the deliverable: the splitting-factorization loop, routed
 through `CField QFunNZ` + `CDiffField QFunNZ`, *reduces* in the native compiler with no dependence on
 the noncomputable `CFieldSpec`/`CDiffFieldSpec`. The worked example takes `k = ℚ(x)` with `ℚ`-constant
-coefficients and the monomial `t` with `Dt = t − 1`: under `D = κ_D + Dt·d/dt`, the root `t = 1` is
+coefficients and the monomial `t` with `Dt = t − 1`: under the monomial derivation `D`, the root `t = 1` is
 *special* (`Dt(1) = 0 = 1′`) and `t = 2` is *normal* (`Dt(2) = 1 ≠ 0 = 2′`). So `cSplitFactor` of
 `p = (t−1)(t−2)` returns normal part `~ (t−2)` and special part `~ (t−1)`, which `native_decide`
-verifies (degrees, and monic-normalized parts equal to the book values via `cisZeroG` of the
+verifies (degrees, and monic-normalized parts equal to the expected values via `cisZeroG` of the
 difference — the engine produces them only up to the gcd's scalar ambiguity).
 
 `native_decide` on the full degree-5 `p` over `ℚ(x)` (with non-constant
@@ -192,7 +192,7 @@ reduce to lowest terms (`qaddNZ`/`qmulNZ` just cross-multiply denominators), so 
 division passes over a degree-5 `t`-polynomial blow the rational-function coefficients up
 super-exponentially and the run does not terminate in budget. The fix is a lowest-terms-reducing
 `CField QFunNZ` (route `qaddNZ`/`qmulNZ`/the division remainders through `Compute.qnorm`), at which
-point the same `cSplitFactor` call computes the book's `pₙ`/`pₛ` directly. -/
+point the same `cSplitFactor` call computes the expected `pₙ`/`pₛ` directly. -/
 
 namespace QFunNZ
 

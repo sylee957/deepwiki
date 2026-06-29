@@ -337,9 +337,9 @@ theorem IsNormal.splittingFactorization {R : Type*} [CommRing R] [Differential R
   ⟨(one_mul p).symm, isSpecial_one, hp⟩
 
 open Polynomial in
-/-- **Monomial-derivation degree bound.** For the derivation
-`D = κ_D + v·d/dX` on `k[X]` with `DX = v` (so the `D`-degree is `δ(X) = deg v`),
-`deg(D p) ≤ deg p + max(0, δ(X) − 1)`. -/
+/-- **Monomial-derivation degree bound.** `implicitDeriv v` on `k[X]` sends
+`p ↦ mapCoeffs p + v · (dp/dX)`, so its output degree is governed by `deg v`:
+`(implicitDeriv v p).natDegree ≤ deg p + max(0, deg v − 1)`. -/
 theorem natDegree_implicitDeriv_le {R : Type*} [CommRing R] [Differential R] (v p : R[X]) :
     (Differential.implicitDeriv v p).natDegree ≤ p.natDegree + max 0 (v.natDegree - 1) := by
   have happly : Differential.implicitDeriv v p = Differential.mapCoeffs p + v * derivative p := by
@@ -370,9 +370,9 @@ theorem natDegree_implicitDeriv_le {R : Type*} [CommRing R] [Differential R] (v 
 
 open Polynomial in
 /-- **Monomial-derivation degree, the *nonlinear* equality case**: over a characteristic-`0`
-field, when the `D`-degree `δ(X) = deg v ≥ 2` and `deg p ≥ 1`, the bound is sharp —
-`deg(D p) = deg p + δ(X) − 1`. (The `v·p′` term has degree `deg v + deg p − 1 > deg p`, so it
-strictly dominates `κ_D(p)` and sets the degree.) -/
+field, when `deg v ≥ 2` and `deg p ≥ 1`, the bound is sharp —
+`(implicitDeriv v p).natDegree = deg p + deg v − 1`. (The `v·p′` term has degree
+`deg v + deg p − 1 > deg p`, so it strictly dominates `mapCoeffs p` and sets the degree.) -/
 theorem natDegree_implicitDeriv_eq {F : Type*} [Field F] [CharZero F] [Differential F]
     (v p : F[X]) (hv : 2 ≤ v.natDegree) (hp : 1 ≤ p.natDegree) :
     (Differential.implicitDeriv v p).natDegree = p.natDegree + (v.natDegree - 1) := by
@@ -447,22 +447,22 @@ theorem squarefree_factorization_pairwise_coprime {K : Type*} [Field K] (s : Fin
     hkk ((Finset.mem_filter.mp ha).2.symm.trans (Finset.mem_filter.mp ha').2))
 
 /-- **Single linear factor, normal**: `X − a` is normal w.r.t. the monomial
-derivation `D` (`DX = v`) iff `Dα ≠ Hₓ(α)` at its root, i.e. `v(a) ≠ a′`. -/
+derivation `D` (`DX = v`) iff `v(a) ≠ a′` at its root `a`. -/
 theorem isCoprime_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X])
     (a : K) :
     IsCoprime (X - C a) (Differential.implicitDeriv v (X - C a)) ↔ v.eval a ≠ a′ := by
   rw [implicitDeriv_X_sub_C, isCoprime_X_sub_C_iff, eval_sub, eval_C, sub_ne_zero]
 
 /-- **Single linear factor, special**: `X − a` is special w.r.t. the monomial
-derivation `D` (`DX = v`) iff `Dα = Hₓ(α)` at its root, i.e. `v(a) = a′` — equivalently
+derivation `D` (`DX = v`) iff `v(a) = a′` at its root `a` — equivalently
 `(X − a) ∣ D(X − a)`. -/
 theorem dvd_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X]) (a : K) :
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ := by
   rw [implicitDeriv_X_sub_C, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
 
 /-- **Linear-factor power, special**: over characteristic `0`, the power
-`(X − a)ⁿ` (`n ≥ 1`) is special w.r.t. the monomial derivation `D` iff `Dα = Hₓ(α)`, i.e.
-`v(a) = a′` — the multiplicity does not matter. (`D((X−a)ⁿ) = n·(X−a)ⁿ⁻¹·D(X−a)`; cancel
+`(X − a)ⁿ` (`n ≥ 1`) is special w.r.t. the monomial derivation `D` iff `v(a) = a′` —
+the multiplicity does not matter. (`D((X−a)ⁿ) = n·(X−a)ⁿ⁻¹·D(X−a)`; cancel
 `(X−a)ⁿ⁻¹` and the unit `n`.) -/
 theorem dvd_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Differential K]
     (v : K[X]) (a : K) {n : ℕ} (hn : 1 ≤ n) :
@@ -480,7 +480,7 @@ theorem dvd_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Di
 
 /-- **Squarefree polynomial, normal**: a squarefree polynomial — written as the
 product `∏_{a∈s} (X − a)` of its distinct linear factors — is normal w.r.t. the monomial
-derivation `D` (`DX = v`) iff `Dα ≠ Hₓ(α)` at *every* root, i.e. `∀ a ∈ s, v(a) ≠ a′`. Forward:
+derivation `D` (`DX = v`) iff `∀ a ∈ s, v(a) ≠ a′` (`v` differs from `a′` at every root). Forward:
 each `X − a` divides the product so is normal (`IsNormal.of_dvd`); backward: the pairwise-coprime
 normal factors multiply to a normal product (`IsNormal.prod`). -/
 theorem isCoprime_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K]
@@ -499,8 +499,8 @@ theorem isCoprime_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differen
     · exact isCoprime_X_sub_C_iff.mpr (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab)
 
 /-- **Squarefree polynomial, special**: a squarefree polynomial `∏_{a∈s}(X − a)`
-is special w.r.t. the monomial derivation `D` (`DX = v`) iff `Dα = Hₓ(α)` at *every* root, i.e.
-`∀ a ∈ s, v(a) = a′`. Backward: special is closed under products (`IsSpecial.prod`); forward: each
+is special w.r.t. the monomial derivation `D` (`DX = v`) iff `∀ a ∈ s, v(a) = a′`
+(`v = a′` at every root). Backward: special is closed under products (`IsSpecial.prod`); forward: each
 `X − a` is a coprime factor of the product, hence special (`IsSpecial.of_mul_coprime`). -/
 theorem dvd_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X])
     (s : Finset K) :
@@ -523,7 +523,7 @@ theorem dvd_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K
 
 /-- **General product, special**: a polynomial `∏_{a∈s}(X − a)^{eₐ}`
 (each `eₐ ≥ 1`, characteristic `0`) is special w.r.t. the monomial derivation `D` (`DX = v`) iff
-`Dα = Hₓ(α)` at every root — `∀ a ∈ s, v(a) = a′`. Backward: `IsSpecial.prod` over the special
+`∀ a ∈ s, v(a) = a′` (`v = a′` at every root). Backward: `IsSpecial.prod` over the special
 prime powers; forward: each `(X − a)^{eₐ}` is a coprime factor (`IsSpecial.of_mul_coprime`). -/
 theorem dvd_prod_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Differential K]
     (v : K[X]) (s : Finset K) (e : K → ℕ) (he : ∀ a ∈ s, 1 ≤ e a) :

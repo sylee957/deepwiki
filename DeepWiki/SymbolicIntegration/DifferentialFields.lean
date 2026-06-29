@@ -20,7 +20,7 @@ namespace DeepWiki.SymbolicIntegration
 
 section Ring
 
-/-- The constants `Const_D R = {a ∈ R | Da = 0}`, as a subring of `R`. -/
+/-- The subring of constants `{a ∈ R | a′ = 0}` (the kernel of the derivation). -/
 def constants (R : Type*) [CommRing R] [Differential R] : Subring R where
   carrier := {a | a′ = 0}
   zero_mem' := by simp
@@ -83,13 +83,13 @@ theorem isDifferentialIdeal_bot_and_deriv_mem_constants {R : Type*} [CommRing R]
   · simp only [mem_constants] at ha ⊢; simp [ha]
 
 /-- A **linear combination of derivations is a derivation**: `(c·D₁ + D₂)` acts pointwise as
-`a ↦ c·D₁a + D₂a`. The module `Ω(R) = Derivation ℤ R R` itself is `derivationModule` below. -/
+`a ↦ c·D₁a + D₂a`. The module `Derivation ℤ R R` of all derivations is `derivationModule` below. -/
 theorem smul_add_derivation_apply {R : Type*} [CommRing R]
     (c : R) (D₁ D₂ : Derivation ℤ R R) (a : R) :
     (c • D₁ + D₂) a = c * D₁ a + D₂ a := by
   simp [smul_eq_mul]
 
-/-- The set `Ω(R)` of all derivations `R → R` is a left `R`-module. -/
+/-- The module `Derivation ℤ R R` of all derivations `R → R` is a left `R`-module. -/
 abbrev derivationModule {R : Type*} [CommRing R] : Module R (Derivation ℤ R R) := inferInstance
 
 end Ring
