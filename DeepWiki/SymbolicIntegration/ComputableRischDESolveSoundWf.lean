@@ -18,8 +18,9 @@ pipeline as `crischDESolveSound`, but with the inner solve routed through the fu
 fuel `cRischDEG`. This is the intended **fuel-free sound entry point** the production engine will be re-pinned
 through (a separate coordinated step).
 
-* **`crischDESolveSoundWf f g`** — the §6.1-gated solver with the inner solve `cRischDEGWf [1] …` (NO `ℕ`-fuel
-  parameter; the weak normalizer / check / reduce stages are shared verbatim with `crischDESolveSound`).
+* **`crischDESolveSoundWf f g`** — the §6.1-gated solver with the **fuel-free** weak normalizer
+  `cWeakNormalizerGWf [1] …` and the inner solve `cRischDEGWf [1] …` (NO `ℕ`-fuel parameter; the check /
+  reduce stages are shared verbatim with `crischDESolveSound`).
 * **`crischDESolveSoundWf_eq`** — the correspondence `crischDESolveSoundWf f g = crischDESolveSound f g` on a
   regular run (the inner `cRischDEGWf = cRischDEG towerRischDEFuel` agreement, via `cRischDEGWf_eq`); the fuel
   bounds live only in the regularity hypothesis, the runtime solver carries none.
@@ -48,7 +49,7 @@ open Compute CPolyG QFunNZG
 `crischDESolveSoundWf f g` is `crischDESolveSound f g` with **only the inner RDE solve** replaced by the
 fuel-free `cRischDEGWf`. The §6.1 pipeline is shared verbatim:
 
-1. compute the weak normalizer `q = cWeakNormalizerG [1] towerRischDEFuel f.1.1 f.1.2`; if `q = 0`, `none`;
+1. compute the **fuel-free** weak normalizer `q = cWeakNormalizerGWf [1] f.1.1 f.1.2`; if `q = 0`, `none`;
 2. lift `q' = q/1`, form the weakly-normalized `f̃ = f − Dq'/q'`;
 3. **the §6.1 solvability check** `cisCanonNormalizedG f̃` (return `none` if it fails);
 4. reduce `f̃` to lowest terms (`reduceSoundOpt`) and solve the inner RDE on `(f̃ᵣ, q'·g)` — but via the
@@ -80,14 +81,14 @@ def crischDERawSolveWf (ftilde gtilde : QFunNZG β) : Option (QFunNZG β) :=
 /-- **★ The FUEL-FREE, genuinely SOUND recursive Risch-DE solver** `crischDESolveSoundWf f g` over
 `QFunNZG β`: `crischDESolveSound` with the inner RDE solve routed through the **fuel-free** `cRischDEGWf`
 (`crischDERawSolveWf`) in place of the fuel `CRischField.crischDESolve`. Weak-normalize `f` to
-`f̃ = f − Dq/q` (`q = cWeakNormalizerG`); if `q = 0` give up; run the §6.1 solvability check
+`f̃ = f − Dq/q` (`q = cWeakNormalizerGWf`, **fuel-free**); if `q = 0` give up; run the §6.1 solvability check
 `cisCanonNormalizedG f̃` (return `none` when the lowest-terms denominator is not normal — an unsolvable RDE);
 else reduce `f̃` to lowest terms (`reduceSoundOpt`) and solve `(f̃ᵣ, q'·g)` via the **fuel-free**
 `crischDERawSolveWf`, transforming back by `y = ỹ/q'`. **No `ℕ`-fuel parameter** — the inner §6 pipeline runs
 fuel-free. The check makes `some ⟹ correct` unconditional (`crischDESolveSoundWf_field`); computable, so it
 `native_decide`s; coincides with `crischDESolveSound` on a regular run (`crischDESolveSoundWf_eq`). -/
 def crischDESolveSoundWf (f g : QFunNZG β) : Option (QFunNZG β) :=
-  let q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2
+  let q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
   if CPolyG.cisZeroG q then none
   else
     let q' : QFunNZG β := qOfPolyNZG q
@@ -137,13 +138,19 @@ theorem crischDERawSolveWf_eq (ftilde gtilde : QFunNZG β)
   rfl
 
 /-- **★ The fuel-free sound solver equals the fuel sound solver on a regular run** (Task 2,
-`crischDESolveSoundWf_eq`): given the inner-solve regularity `hwf` — the fuel-free `cRischDEGWf` agreeing with
-the fuel `cRischDEG towerRischDEFuel` on the num/den components of the canonicalized inner pair
+`crischDESolveSoundWf_eq`): given the weak-normalizer agreement `hqwn` — the fuel-free
+`cWeakNormalizerGWf [1]` matching the fuel `cWeakNormalizerG [1] towerRischDEFuel` on `f` (the
+`cWeakNormalizerGWf`-vs-`cWeakNormalizerG` whole-stage correspondence a real run meets; this is the second
+fuel-free leaf the §6.1 front-end now uses) — and the inner-solve regularity `hwf` — the fuel-free `cRischDEGWf`
+agreeing with the fuel `cRischDEG towerRischDEFuel` on the num/den components of the canonicalized inner pair
 `(reduceSoundOpt f̃, q'·g)` (the `cRischDEGWf_eq` agreement a real run meets) — `crischDESolveSoundWf f g =
-crischDESolveSound f g`. The two solvers share the entire §6.1 pipeline and differ only in the inner solve,
-which `crischDERawSolveWf_eq` reconciles under `hwf`; the fuel bounds live only in `hwf`. So the soundness of
-`crischDESolveSound` transfers to the fuel-free `crischDESolveSoundWf` (`crischDESolveSoundWf_field`). -/
+crischDESolveSound f g`. The two solvers share the entire §6.1 pipeline and differ only in the weak normalizer
+(`hqwn`) and the inner solve (`crischDERawSolveWf_eq` under `hwf`); the fuel bounds live only in the
+hypotheses. So the soundness of `crischDESolveSound` transfers to the fuel-free `crischDESolveSoundWf`
+(`crischDESolveSoundWf_field`). -/
 theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : ∀ ftildeR : QFunNZG β,
       reduceSoundOpt (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))) =
@@ -161,19 +168,31 @@ theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
           (qmulNZG (qOfPolyNZG
             (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2) :
     crischDESolveSoundWf f g = crischDESolveSound f g := by
+  -- the def uses the fuel-free `cWeakNormalizerGWf`; `hqwn` converts it to the fuel form, after which the
+  -- whole §6.1 pipeline (the shared `q'`/`ftilde`) coincides with `crischDESolveSound` and only the inner
+  -- solve differs (reconciled by `crischDERawSolveWf_eq` under `hwf`)
+  rw [show crischDESolveSoundWf f g
+      = (if CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) then none
+         else
+           if cisCanonNormalizedG
+               (weakNormalizedF f
+                 (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) then
+             match reduceSoundOpt
+                 (weakNormalizedF f
+                   (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) with
+             | none => none
+             | some ftildeR =>
+               match crischDERawSolveWf ftildeR
+                   (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g) with
+               | none => none
+               | some ytilde =>
+                 some (qmulNZG ytilde
+                   (qinvNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+           else none) from rfl]
+  rw [hqwn]
   set q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 with hq
   set q' : QFunNZG β := qOfPolyNZG q with hq'
   set ftilde : QFunNZG β := weakNormalizedF f q' with hft
-  rw [show crischDESolveSoundWf f g
-      = (if CPolyG.cisZeroG q then none
-         else if cisCanonNormalizedG ftilde then
-                match reduceSoundOpt ftilde with
-                | none => none
-                | some ftildeR =>
-                  match crischDERawSolveWf ftildeR (qmulNZG q' g) with
-                  | none => none
-                  | some ytilde => some (qmulNZG ytilde (qinvNZG q'))
-              else none) from rfl]
   rw [show crischDESolveSound f g
       = (if CPolyG.cisZeroG q then none
          else if cisCanonNormalizedG ftilde then
@@ -265,6 +284,8 @@ solver.** -/
 theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y)
     (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
     towerFractionFieldDerivG ([CField.one] : CPolyG β)
           (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
@@ -272,7 +293,7 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
   have hsound : crischDESolveSound f g = some y := by
-    rw [← crischDESolveSoundWf_eq f g hwf]; exact hsolve
+    rw [← crischDESolveSoundWf_eq f g hqwn hwf]; exact hsolve
   exact crischDESolveSound_field f g y hsound hfit
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
@@ -283,13 +304,15 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
     towerFractionFieldDerivG ([CField.one] : CPolyG β)
           (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
         + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
-  crischDESolveSoundWf_field f g y hsolve hfit hwf
+  crischDESolveSoundWf_field f g y hsolve hfit hqwn hwf
 
 end Capstone
 

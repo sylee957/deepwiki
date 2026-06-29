@@ -169,11 +169,11 @@ decreasing_by exact Nat.sub_lt (Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.lt_of_no
 
 /-- **The fuel-free simple-radical rational-part driver (Case 2)** `radIntegrateCase2Wf W ρ k0 C = (Crem,
 vNum)` (Trager Appendix A §2.2): the fuel-free companion of `radIntegrateCase2`. Computes `h = ρ/W`
-(`cdivG (k0 + 8) ρ W` — the same `k0 + 8`-bounded exact division the fuel'd entry used) and runs
-`radReduceCase2IterateWf` from multiplicity `k0` down to `1` — **no fuel** in the descent. Master identity
+(`cdivWf ρ W` — the fuel-free exact division, same as the file's other divisions) and runs
+`radReduceCase2IterateWf` from multiplicity `k0` down to `1` — **no fuel** anywhere. Master identity
 `∫ C/(W^{k0}y) = vNum/(W^{k0}y) + ∫ Crem/(Wy)`. `[CField α]`-only. -/
 def radIntegrateCase2Wf (W ρ : CPolyG α) (k0 : ℕ) (C : CPolyG α) : CPolyG α × CPolyG α :=
-  radReduceCase2IterateWf W (cdivG (k0 + 8) ρ W) ρ k0 k0 C []
+  radReduceCase2IterateWf W (cdivWf ρ W) ρ k0 k0 C []
 
 /-- **Bridge — `radReduceCase2IterateWf` equals `radReduceCase2Iterate` for sufficient fuel.** For any fuel
 budget `fuel ≥ k`, `radReduceCase2IterateWf W h ρ k0 k C vNum = radReduceCase2Iterate W h ρ k0 fuel k C
