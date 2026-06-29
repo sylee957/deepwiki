@@ -159,58 +159,56 @@ abbrev CPolyG (α : Type*) := List α
 
 namespace CPolyG
 
-variable {α : Type*} [CField α]
-
 /-- **Normalize** a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
-def cnormG : CPolyG α → CPolyG α
+def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α
   | [] => []
   | a :: as => match cnormG as with
     | [] => if CField.isZero a then [] else [a]
     | r => a :: r
 
 /-- **Coefficientwise addition** of two `CPolyG`s (the shorter is zero-extended implicitly). -/
-def caddG : CPolyG α → CPolyG α → CPolyG α
+def caddG {α : Type*} [CField α] : CPolyG α → CPolyG α → CPolyG α
   | [], q => q
   | p, [] => p
   | a :: as, b :: bs => CField.add a b :: caddG as bs
 
 /-- **Negation** of a `CPolyG`, coefficientwise. -/
-def cnegG (p : CPolyG α) : CPolyG α := (p : List α).map CField.neg
+def cnegG {α : Type*} [CField α] (p : CPolyG α) : CPolyG α := (p : List α).map CField.neg
 
 /-- **Subtraction** of `CPolyG`s, `p − q := p + (−q)`. -/
-def csubG (p q : CPolyG α) : CPolyG α := caddG p (cnegG q)
+def csubG {α : Type*} [CField α] (p q : CPolyG α) : CPolyG α := caddG p (cnegG q)
 
 /-- **Scalar multiplication** of a `CPolyG` by `c : α`, coefficientwise. -/
-def cscaleG (c : α) (p : CPolyG α) : CPolyG α := (p : List α).map (CField.mul c)
+def cscaleG {α : Type*} [CField α] (c : α) (p : CPolyG α) : CPolyG α := (p : List α).map (CField.mul c)
 
 /-- **Degree shift** `cshiftG k p = x^k · p`: prepend `k` zero coefficients. -/
-def cshiftG : ℕ → CPolyG α → CPolyG α
+def cshiftG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α
   | 0, p => p
   | n + 1, p => CField.zero :: cshiftG n p
 
 /-- **Polynomial multiplication** of `CPolyG`s (schoolbook convolution via `cshiftG`/`cscaleG`). -/
-def cmulG : CPolyG α → CPolyG α → CPolyG α
+def cmulG {α : Type*} [CField α] : CPolyG α → CPolyG α → CPolyG α
   | [], _ => []
   | a :: as, q => caddG (cscaleG a q) (CField.zero :: cmulG as q)
 
 /-- **Power** of a `CPolyG` by `ℕ`-recursion (`[1]` at `0`). -/
-def cpowG (p : CPolyG α) : ℕ → CPolyG α
+def cpowG {α : Type*} [CField α] (p : CPolyG α) : ℕ → CPolyG α
   | 0 => [CField.one]
   | n + 1 => cmulG p (cpowG p n)
 
 /-- **Leading coefficient** of a `CPolyG` (top nonzero coefficient; `zero` for the zero polynomial). -/
-def cleadG (p : CPolyG α) : α := ((cnormG p : List α).getLast?.getD CField.zero)
+def cleadG {α : Type*} [CField α] (p : CPolyG α) : α := ((cnormG p : List α).getLast?.getD CField.zero)
 
 /-- **Degree** of a `CPolyG` as a `ℕ`: `(length of normalized p) − 1`, with `cdegG 0 = 0`. -/
-def cdegG (p : CPolyG α) : ℕ := (cnormG p : List α).length - 1
+def cdegG {α : Type*} [CField α] (p : CPolyG α) : ℕ := (cnormG p : List α).length - 1
 
 /-- **Zero test** for a `CPolyG`: `true` iff it normalizes to `[]`. -/
-def cisZeroG (p : CPolyG α) : Bool := (cnormG p : List α).isEmpty
+def cisZeroG {α : Type*} [CField α] (p : CPolyG α) : Bool := (cnormG p : List α).isEmpty
 
 /-- **Make a `CPolyG` monic** (lead coefficient `1`) by scaling by `(clead)⁻¹`; the zero polynomial
 stays `[]`. -/
-def cmonicG (p : CPolyG α) : CPolyG α :=
+def cmonicG {α : Type*} [CField α] (p : CPolyG α) : CPolyG α :=
   let p := cnormG p
   if cisZeroG p then [] else cscaleG (CField.inv (cleadG p)) p
 
@@ -224,7 +222,7 @@ scope. -/
 
 /-- **Generic Euclidean division** of `CPolyG`s, fuel-bounded: `cdivmodG fuel p q = (quotient,
 remainder)` with `p = quotient · q + remainder` over the field `K` (`q ≠ 0`; one step per degree drop). -/
-def cdivmodG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
+def cdivmodG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
   | 0, p, _ => ([], cnormG p)
   | fuel + 1, p, q =>
     let p := cnormG p
@@ -240,18 +238,18 @@ def cdivmodG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
       (caddG term quo, rem)
 
 /-- **Quotient** of generic Euclidean division (`cdivmodG`'s first component). -/
-def cdivG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).1
+def cdivG {α : Type*} [CField α] (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).1
 
 /-- **Remainder** of generic Euclidean division (`cdivmodG`'s second component). -/
-def cmodG (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).2
+def cmodG {α : Type*} [CField α] (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).2
 
 /-- **Generic divisibility test** `cdvdG fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is
 zero). -/
-def cdvdG (fuel : ℕ) (q p : CPolyG α) : Bool := cisZeroG (cmodG fuel p q)
+def cdvdG {α : Type*} [CField α] (fuel : ℕ) (q p : CPolyG α) : Bool := cisZeroG (cmodG fuel p q)
 
 /-- **Generic extended Euclidean algorithm** on `CPolyG`s, fuel-bounded: `cgcdExtG fuel a b =
 (g, s, t)` with `s · a + t · b = g` and `g = gcd(a, b)` over `K`. -/
-def cgcdExtG : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α × CPolyG α
+def cgcdExtG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α × CPolyG α
   | 0, a, _ => (cnormG a, [CField.one], [])
   | fuel + 1, a, b =>
     if cisZeroG b then (cnormG a, [CField.one], [])
@@ -266,24 +264,24 @@ From here on the bridge `[CFieldSpec α]` is in scope: `toPolyG` and every corre
 `CFieldSpec.toK`/`CFieldSpec.K` and so carry the extra binder, while the engine ops above need only
 `[CField α]`. -/
 
-variable [CFieldSpec α]
-
 /-- **Generic bridge to `(CFieldSpec.K α)[X]`**: `toPolyG p` reads a `CPolyG` coefficient list (index =
 degree, low to high) as a `Polynomial (CFieldSpec.K α)` in **Horner form** `p₀ + x·(p₁ + x·(p₂ + …))`,
 each coefficient embedded via `toK`. -/
-noncomputable def toPolyG : CPolyG α → (CFieldSpec.K α)[X]
+noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α → (CFieldSpec.K α)[X]
   | [] => 0
   | a :: p => Polynomial.C (CFieldSpec.toK a) + X * toPolyG p
 
 /-- `toPolyG [] = 0`: the empty coefficient list is the zero polynomial. -/
-@[simp] theorem toPolyG_nil : toPolyG ([] : CPolyG α) = 0 := rfl
+@[simp] theorem toPolyG_nil {α : Type*} [CField α] [CFieldSpec α] :
+    toPolyG ([] : CPolyG α) = 0 := rfl
 
 /-- `toPolyG`'s leading recursion (Horner): `toPolyG (a :: p) = C (toK a) + X · toPolyG p`. -/
-@[simp] theorem toPolyG_cons (a : α) (p : CPolyG α) :
+@[simp] theorem toPolyG_cons {α : Type*} [CField α] [CFieldSpec α] (a : α) (p : CPolyG α) :
     toPolyG (a :: p) = Polynomial.C (CFieldSpec.toK a) + X * toPolyG p := rfl
 
 /-- `toPolyG` is **additive**: `caddG` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
-theorem toPolyG_caddG (p q : CPolyG α) : toPolyG (caddG p q) = toPolyG p + toPolyG q := by
+theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+    toPolyG (caddG p q) = toPolyG p + toPolyG q := by
   induction p generalizing q with
   | nil => simp [caddG]
   | cons a as ih =>
@@ -294,7 +292,8 @@ theorem toPolyG_caddG (p q : CPolyG α) : toPolyG (caddG p q) = toPolyG p + toPo
       ring
 
 /-- `toPolyG` commutes with **negation**: `toPolyG (cnegG p) = − toPolyG p`. -/
-theorem toPolyG_cnegG (p : CPolyG α) : toPolyG (cnegG p) = - toPolyG p := by
+theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    toPolyG (cnegG p) = - toPolyG p := by
   induction p with
   | nil => simp [cnegG]
   | cons a as ih =>
@@ -302,11 +301,12 @@ theorem toPolyG_cnegG (p : CPolyG α) : toPolyG (cnegG p) = - toPolyG p := by
     rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_neg, map_neg]; ring
 
 /-- `toPolyG` realizes **subtraction**: `toPolyG (csubG p q) = toPolyG p − toPolyG q`. -/
-theorem toPolyG_csubG (p q : CPolyG α) : toPolyG (csubG p q) = toPolyG p - toPolyG q := by
+theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+    toPolyG (csubG p q) = toPolyG p - toPolyG q := by
   rw [csubG, toPolyG_caddG, toPolyG_cnegG, sub_eq_add_neg]
 
 /-- `toPolyG` realizes **scalar multiplication**: `toPolyG (cscaleG c p) = C (toK c) · toPolyG p`. -/
-theorem toPolyG_cscaleG (c : α) (p : CPolyG α) :
+theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPolyG α) :
     toPolyG (cscaleG c p) = Polynomial.C (CFieldSpec.toK c) * toPolyG p := by
   induction p with
   | nil => simp [cscaleG]
@@ -315,7 +315,8 @@ theorem toPolyG_cscaleG (c : α) (p : CPolyG α) :
     rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_mul, map_mul]; ring
 
 /-- `toPolyG` realizes the **degree shift**: `toPolyG (cshiftG k p) = X^k · toPolyG p`. -/
-theorem toPolyG_cshiftG (k : ℕ) (p : CPolyG α) : toPolyG (cshiftG k p) = X ^ k * toPolyG p := by
+theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : CPolyG α) :
+    toPolyG (cshiftG k p) = X ^ k * toPolyG p := by
   induction k with
   | zero => simp [cshiftG]
   | succ n ih =>
@@ -323,7 +324,8 @@ theorem toPolyG_cshiftG (k : ℕ) (p : CPolyG α) : toPolyG (cshiftG k p) = X ^ 
     rw [toPolyG_cons, ih, CFieldSpec.toK_zero, map_zero]; ring
 
 /-- `toPolyG` is **multiplicative**: `cmulG` realizes `(CFieldSpec.K α)[X]` multiplication. -/
-theorem toPolyG_cmulG (p q : CPolyG α) : toPolyG (cmulG p q) = toPolyG p * toPolyG q := by
+theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+    toPolyG (cmulG p q) = toPolyG p * toPolyG q := by
   induction p with
   | nil => simp [cmulG]
   | cons a as ih =>
@@ -332,26 +334,24 @@ theorem toPolyG_cmulG (p q : CPolyG α) : toPolyG (cmulG p q) = toPolyG p * toPo
       map_zero]; ring
 
 /-- `toPolyG` realizes the **`ℕ`-power**: `toPolyG (cpowG p n) = (toPolyG p) ^ n`. -/
-theorem toPolyG_cpowG (p : CPolyG α) (n : ℕ) : toPolyG (cpowG p n) = (toPolyG p) ^ n := by
+theorem toPolyG_cpowG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (n : ℕ) :
+    toPolyG (cpowG p n) = (toPolyG p) ^ n := by
   induction n with
   | zero => simp [cpowG, toPolyG_cons, CFieldSpec.toK_one]
   | succ n ih => rw [cpowG, toPolyG_cmulG, ih, pow_succ, mul_comm]
 
 /-! ### Normalization, degree, leading coefficient — generic correctness -/
 
-omit [CFieldSpec α] in
 /-- `cnormG [] = []`. -/
-@[simp] theorem cnormG_nil : cnormG ([] : CPolyG α) = [] := rfl
+@[simp] theorem cnormG_nil {α : Type*} [CField α] : cnormG ([] : CPolyG α) = [] := rfl
 
-omit [CFieldSpec α] in
 /-- `cnormG` on a cons cell, unfolded to its defining `match` (definitional). -/
-theorem cnormG_cons_eq (a : α) (as : CPolyG α) :
+theorem cnormG_cons_eq {α : Type*} [CField α] (a : α) (as : CPolyG α) :
     cnormG (a :: as)
       = (match cnormG as with | [] => if CField.isZero a then [] else [a] | r => a :: r) := rfl
 
-omit [CFieldSpec α] in
 /-- `cnormG` is **idempotent**: stripping trailing zeros twice is the same as once. -/
-@[simp] theorem cnormG_idem (p : CPolyG α) : cnormG (cnormG p) = cnormG p := by
+@[simp] theorem cnormG_idem {α : Type*} [CField α] (p : CPolyG α) : cnormG (cnormG p) = cnormG p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
@@ -364,7 +364,8 @@ omit [CFieldSpec α] in
 
 /-- **`toPolyG` ignores normalization**: `toPolyG (cnormG p) = toPolyG p` — stripping trailing zeros
 does not change the polynomial (the dropped coefficients are zero, via `isZero_iff`). -/
-@[simp] theorem toPolyG_cnormG (p : CPolyG α) : toPolyG (cnormG p) = toPolyG p := by
+@[simp] theorem toPolyG_cnormG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    toPolyG (cnormG p) = toPolyG p := by
   induction p with
   | nil => rfl
   | cons a as ih =>
@@ -387,7 +388,7 @@ does not change the polynomial (the dropped coefficients are zero, via `isZero_i
 
 /-- **Coefficient read**: the `i`-th coefficient of `toPolyG p` is `toK` of the `i`-th list entry
 (`0` past the end). The Horner bridge realizes the dense coefficient list exactly. -/
-theorem toPolyG_coeff (p : CPolyG α) (i : ℕ) :
+theorem toPolyG_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (i : ℕ) :
     (toPolyG p).coeff i = CFieldSpec.toK ((p : List α).getD i CField.zero) := by
   induction p generalizing i with
   | nil => simp [CFieldSpec.toK_zero]
@@ -397,9 +398,8 @@ theorem toPolyG_coeff (p : CPolyG α) (i : ℕ) :
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
-omit [CFieldSpec α] in
 /-- `cnormG` has **no trailing zero**: `(cnormG p).getLast?` is never a zero coefficient. -/
-theorem cnormG_getLast?_ne_some_zero (p : CPolyG α) :
+theorem cnormG_getLast?_ne_some_zero {α : Type*} [CField α] (p : CPolyG α) :
     ∀ v, (cnormG p : List α).getLast? = some v → CField.isZero v = false := by
   induction p with
   | nil => simp
@@ -420,7 +420,8 @@ theorem cnormG_getLast?_ne_some_zero (p : CPolyG α) :
       exact ih v hv
 
 /-- For a normalized nonzero `CPolyG`, the leading coefficient `cleadG` is nonzero (in `K`). -/
-theorem toK_cleadG_ne_zero {p : CPolyG α} (h : cnormG p ≠ []) : CFieldSpec.toK (cleadG p) ≠ 0 := by
+theorem toK_cleadG_ne_zero {α : Type*} [CField α] [CFieldSpec α] {p : CPolyG α} (h : cnormG p ≠ []) :
+    CFieldSpec.toK (cleadG p) ≠ 0 := by
   rw [cleadG]
   rcases hl : (cnormG p : List α).getLast? with _ | v
   · exact absurd (List.getLast?_eq_none_iff.mp hl) h
@@ -431,13 +432,14 @@ theorem toK_cleadG_ne_zero {p : CPolyG α} (h : cnormG p ≠ []) : CFieldSpec.to
     exact absurd this (by simp)
 
 /-- **`cleadG` is the coefficient at the top index**: `toK (cleadG p) = (toPolyG p).coeff (cdegG p)`. -/
-theorem toK_cleadG_eq_coeff (p : CPolyG α) :
+theorem toK_cleadG_eq_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     CFieldSpec.toK (cleadG p) = (toPolyG p).coeff (cdegG p) := by
   rw [cleadG, cdegG, ← toPolyG_cnormG, toPolyG_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
 
 /-- **Degree bound**: `natDegree (toPolyG p) ≤ (cnormG p).length − 1`. -/
-theorem natDegree_toPolyG_le (p : CPolyG α) : (toPolyG p).natDegree ≤ (cnormG p : List α).length - 1 := by
+theorem natDegree_toPolyG_le {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    (toPolyG p).natDegree ≤ (cnormG p : List α).length - 1 := by
   rw [← toPolyG_cnormG]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
   intro m hm
@@ -445,7 +447,8 @@ theorem natDegree_toPolyG_le (p : CPolyG α) : (toPolyG p).natDegree ≤ (cnormG
     CFieldSpec.toK_zero]
 
 /-- **`cdegG` is the honest `natDegree`**: `cdegG p = (toPolyG p).natDegree`. -/
-theorem cdegG_eq_natDegree (p : CPolyG α) : cdegG p = (toPolyG p).natDegree := by
+theorem cdegG_eq_natDegree {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    cdegG p = (toPolyG p).natDegree := by
   rcases eq_or_ne (cnormG p) [] with h | h
   · have h0 : toPolyG p = 0 := by rw [← toPolyG_cnormG, h, toPolyG_nil]
     rw [cdegG, h, h0]; simp
@@ -455,13 +458,14 @@ theorem cdegG_eq_natDegree (p : CPolyG α) : cdegG p = (toPolyG p).natDegree := 
     exact toK_cleadG_ne_zero h
 
 /-- **`toK (cleadG p)` is the honest `leadingCoeff`**: `toK (cleadG p) = (toPolyG p).leadingCoeff`. -/
-theorem toK_cleadG_eq_leadingCoeff (p : CPolyG α) :
+theorem toK_cleadG_eq_leadingCoeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     CFieldSpec.toK (cleadG p) = (toPolyG p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← cdegG_eq_natDegree, ← toK_cleadG_eq_coeff]
 
 /-- `cnormG p = []` iff `toPolyG p = 0` (the list normalizes to empty exactly for the zero
 polynomial). -/
-theorem cnormG_eq_nil_iff (p : CPolyG α) : cnormG p = [] ↔ toPolyG p = 0 := by
+theorem cnormG_eq_nil_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    cnormG p = [] ↔ toPolyG p = 0 := by
   constructor
   · intro h; rw [← toPolyG_cnormG, h, toPolyG_nil]
   · intro h
@@ -474,8 +478,8 @@ theorem cnormG_eq_nil_iff (p : CPolyG α) : cnormG p = [] ↔ toPolyG p = 0 := b
 nonzero divisor `q`) is strictly lower degree under `toPolyG` — `length (cnormG p) < length (cnormG q)`
 gives `deg (toPolyG p) < deg (toPolyG q)`. The bridge from the engine's `length`-form remainder bounds
 (`cmodG_length_lt`) to honest `Polynomial.degree`s (via `cdegG_eq_natDegree`); `p = 0` lands `⊥ < deg q`. -/
-theorem toPolyG_degree_lt_of_length_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
-    (hlen : (cnormG p : List α).length < (cnormG q : List α).length) :
+theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α)
+    (hq : cnormG q ≠ []) (hlen : (cnormG p : List α).length < (cnormG q : List α).length) :
     (toPolyG p).degree < (toPolyG q).degree := by
   have hq0 : toPolyG q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
   rcases eq_or_ne (cnormG p) [] with hp | hp
@@ -489,7 +493,8 @@ theorem toPolyG_degree_lt_of_length_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
     omega
 
 /-- **`cisZeroG` reads as `toPolyG = 0`**: `cisZeroG p = true ↔ toPolyG p = 0`. -/
-theorem cisZeroG_iff (p : CPolyG α) : cisZeroG p = true ↔ toPolyG p = 0 := by
+theorem cisZeroG_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    cisZeroG p = true ↔ toPolyG p = 0 := by
   rw [cisZeroG, ← cnormG_eq_nil_iff]
   exact (List.isEmpty_iff (l := (cnormG p : List α)))
 
