@@ -4,8 +4,7 @@ The setting for symbolic integration is _differential algebra_, and this project
 makes it _computational_: the carriers are fields with **computable** operations
 and a **computable** derivation, bridged to Mathlib's abstract differential-algebra
 hierarchy by a homomorphism. Below, each mathematical notion is paired with the
-Lean typeclass or theorem that realizes it. We go straight to fields — the
-formalization needs no separate notion of differential _ring_.
+Lean typeclass or theorem that realizes it.
 
 ## The differential field
 
@@ -80,12 +79,10 @@ lands back in the base. The two transcendental monomials are exactly the two
 behaviours of the logarithmic-derivative map, and the algorithm's case split
 follows that dichotomy.
 
-## Elementary functions and the integration problem
+## Integration as a preimage problem
 
-"Elementary" has a purely algebraic definition: a function is elementary over a
-base differential field if it lives in a tower of extensions, each step adjoining
-an algebraic element, a logarithm, or an exponential. Integration becomes the
-_preimage problem_ for $D$ in such a tower — find $g$ with $D(g) = f$, or prove
-there is none — and the Risch algorithm is the decision procedure for it. No
-analytic notion of "function" is needed; the derivation carries all the structure.
-The next chapter builds the computable tower these extensions live in.
+In this language integration is a _preimage problem_ for $D$: given $f$, find $g$
+with $D(g) = f$, or prove there is none. No analytic notion of "function" is
+needed — the derivation carries all the structure. The next chapter states which
+$f$ admit an _elementary_ answer (Liouville's theorem); the chapters after build
+the computable tower and the decision procedure that finds $g$.
