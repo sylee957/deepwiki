@@ -195,8 +195,50 @@ theorem cdivmodWf_eq (p q : CPolyG α) :
 theorem toPolyG_cdivmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
     toPolyG p
       = toPolyG (cdivmodWf p q).1 * toPolyG q + toPolyG (cdivmodWf p q).2 := by
-  rw [cdivmodWf_eq]
-  exact toPolyG_cdivmodG' _ p q hq0
+  -- Direct well-founded induction on `cdivmodWf`'s own recursion: the four branches are the divisor-zero
+  -- contradiction, the `deg p < deg q` base, the reduce step (IH on `p'`), and the unreachable branch.
+  induction p using cdivmodWf.induct (q := q) with
+  | case1 p =>
+    -- divisor zero contradicts `cnormG q ≠ []`
+    rename_i hcz
+    have hcz' : cisZeroG (cnormG q) = true := hcz
+    exact absurd (by simpa [cisZeroG, List.isEmpty_iff] using hcz') hq0
+  | case2 p =>
+    -- `deg p < deg q`: `cdivmodWf p q = ([], cnormG p)`
+    rename_i hcz hlen
+    have hcz' : cisZeroG (cnormG q) = false := by simpa using hcz
+    have hlen' : (cnormG p : List α).length < (cnormG q : List α).length := hlen
+    have hval : cdivmodWf p q = ([], cnormG p) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_pos hlen']
+    rw [hval]
+    simp [toPolyG_cnormG]
+  | case3 p =>
+    -- reducing branch: `p = term·q + p'`, then IH `p' = quo·q + rem`
+    rename_i pn qn hcz hlen p' hdec quo rem hqr ih
+    have hcz' : cisZeroG (cnormG q) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG p : List α).length < (cnormG q : List α).length := hlen
+    set term := cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
+      [CField.div (cleadG p) (cleadG q)] with hterm
+    have hval : cdivmodWf p q = (caddG term quo, rem) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_neg hlen', if_pos hdec]
+      simp only [cleadG_cnormG, hterm]
+      rw [show (p.reduceStepWf q).cdivmodWf q = (quo, rem) from hqr]
+    rw [hval]
+    have hstep : toPolyG (reduceStepWf p q) = toPolyG p - toPolyG term * toPolyG q := by
+      rw [reduceStepWf, toPolyG_cnormG, toPolyG_csubG, toPolyG_cnormG, toPolyG_cmulG,
+        toPolyG_cnormG, hterm]
+    have hih : toPolyG (reduceStepWf p q)
+        = toPolyG quo * toPolyG q + toPolyG rem := by
+      rw [ih, hqr]
+    simp only [toPolyG_caddG]
+    rw [hstep] at hih
+    linear_combination hih
+  | case4 p =>
+    -- unreachable over a genuine field (`reduceStepWf_length_lt`)
+    rename_i pn qn hcz hlen p' hdec
+    have hcz' : cisZeroG (cnormG q) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG p : List α).length < (cnormG q : List α).length := hlen
+    exact absurd (reduceStepWf_length_lt p q hcz' hlen') hdec
 
 /-- **Remainder identity through `toPolyG`** for `cmodWf` (no fuel hypothesis). -/
 theorem toPolyG_cmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
