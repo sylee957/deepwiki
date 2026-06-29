@@ -17,23 +17,22 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-variable {R : Type*} [CommRing R] [Differential R]
-
 /-- **Definition 3.4.2** (§3.4): `p` is *normal* (w.r.t. `D`) if `gcd(p, Dp) = 1`, i.e. `p` and
 its derivative `p′` are coprime. -/
-def IsNormal (p : R) : Prop := IsCoprime p p′
+def IsNormal {R : Type*} [CommRing R] [Differential R] (p : R) : Prop := IsCoprime p p′
 
 /-- **Definition 3.4.2** (§3.4): `p` is *special* (w.r.t. `D`) if `p ∣ Dp` (so `gcd(p, Dp) = p`). -/
-def IsSpecial (p : R) : Prop := p ∣ p′
+def IsSpecial {R : Type*} [CommRing R] [Differential R] (p : R) : Prop := p ∣ p′
 
 /-- The derivative of `a` is `Const`-linear over a special divisor: `(p·b)′ = p·b′ + b·p′`. -/
-theorem deriv_mul_eq (p b : R) : (p * b)′ = p * b′ + b * p′ := by
+theorem deriv_mul_eq {R : Type*} [CommRing R] [Differential R] (p b : R) :
+    (p * b)′ = p * b′ + b * p′ := by
   simp only [Derivation.leibniz, smul_eq_mul]
 
 /-- **Lemma 3.4.3** (§3.4, p.92): a special polynomial generates a *differential ideal* — if
 `p ∣ Dp` then `(p)` is closed under `D`. -/
-theorem IsSpecial.isDifferentialIdeal {p : R} (hp : IsSpecial p) :
-    IsDifferentialIdeal (Ideal.span {p}) := by
+theorem IsSpecial.isDifferentialIdeal {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsSpecial p) : IsDifferentialIdeal (Ideal.span {p}) := by
   intro a ha
   rw [Ideal.mem_span_singleton] at ha ⊢
   obtain ⟨b, rfl⟩ := ha
@@ -42,7 +41,8 @@ theorem IsSpecial.isDifferentialIdeal {p : R} (hp : IsSpecial p) :
 
 /-- **Theorem 3.4.1(ii)** (§3.4, p.93): the special polynomials are closed under multiplication
 (`S` is a multiplicative monoid). -/
-theorem IsSpecial.mul {p q : R} (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecial (p * q) := by
+theorem IsSpecial.mul {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecial (p * q) := by
   obtain ⟨s, hs⟩ := hp
   obtain ⟨u, hu⟩ := hq
   refine ⟨u + s, ?_⟩
@@ -50,25 +50,25 @@ theorem IsSpecial.mul {p q : R} (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecia
   ring
 
 /-- `1` is special (the unit of the monoid `S`). -/
-theorem isSpecial_one : IsSpecial (1 : R) := by
+theorem isSpecial_one {R : Type*} [CommRing R] [Differential R] : IsSpecial (1 : R) := by
   simp [IsSpecial]
 
 /-- **Theorem 3.4.1(ii)** (§3.4, p.93), finite form: a finite product of special polynomials is
 special. -/
-theorem IsSpecial.prod {ι : Type*} (s : Finset ι) (f : ι → R) (hf : ∀ i ∈ s, IsSpecial (f i)) :
-    IsSpecial (∏ i ∈ s, f i) :=
+theorem IsSpecial.prod {R : Type*} [CommRing R] [Differential R] {ι : Type*} (s : Finset ι)
+    (f : ι → R) (hf : ∀ i ∈ s, IsSpecial (f i)) : IsSpecial (∏ i ∈ s, f i) :=
   Finset.prod_induction f IsSpecial (fun _ _ ha hb => ha.mul hb) isSpecial_one hf
 
 /-- `1` is normal (`gcd(1, 0) = 1`). -/
-theorem isNormal_one : IsNormal (1 : R) := by
+theorem isNormal_one {R : Type*} [CommRing R] [Differential R] : IsNormal (1 : R) := by
   have h : ((1 : R)′) = 0 := (Differential.deriv : Derivation ℤ R R).map_one_eq_zero
   rw [IsNormal, h]
   exact isCoprime_one_left
 
 /-- **Theorem 3.4.1(i)** (§3.4, p.93): the product of two *coprime normal* polynomials is normal
 (`gcd(pq, D(pq)) = 1` when `p, q` are normal and coprime). -/
-theorem IsNormal.mul {p q : R} (hp : IsNormal p) (hq : IsNormal q) (hpq : IsCoprime p q) :
-    IsNormal (p * q) := by
+theorem IsNormal.mul {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (hp : IsNormal p) (hq : IsNormal q) (hpq : IsCoprime p q) : IsNormal (p * q) := by
   show IsCoprime (p * q) ((p * q)′)
   rw [deriv_mul_eq]
   refine IsCoprime.mul_left ?_ ?_
@@ -77,7 +77,8 @@ theorem IsNormal.mul {p q : R} (hp : IsNormal p) (hq : IsNormal q) (hpq : IsCopr
 
 /-- **Theorem 3.4.1(i)** (§3.4, p.93), finite form: a finite product of pairwise-coprime normal
 polynomials is normal. -/
-theorem IsNormal.prod {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → R)
+theorem IsNormal.prod {R : Type*} [CommRing R] [Differential R] {ι : Type*} [DecidableEq ι]
+    (s : Finset ι) (f : ι → R)
     (hf : ∀ i ∈ s, IsNormal (f i))
     (hco : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (f i) (f j)) :
     IsNormal (∏ i ∈ s, f i) := by
@@ -95,7 +96,8 @@ theorem IsNormal.prod {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → 
         (Finset.mem_insert_of_mem hj) hij
 
 /-- If `p · q` is normal then `p` is normal (coprimality with the derivative descends). -/
-theorem IsNormal.of_mul_left {p q : R} (h : IsNormal (p * q)) : IsNormal p := by
+theorem IsNormal.of_mul_left {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : IsNormal (p * q)) : IsNormal p := by
   have h0 : IsCoprime (p * q) ((p * q)′) := h
   have h1 : IsCoprime p ((p * q)′) := h0.of_mul_left_left
   rw [deriv_mul_eq] at h1
@@ -105,18 +107,21 @@ theorem IsNormal.of_mul_left {p q : R} (h : IsNormal (p * q)) : IsNormal p := by
   exact h2.of_mul_right_right
 
 /-- If `p · q` is normal then `q` is normal (the right factor; by commutativity). -/
-theorem IsNormal.of_mul_right {p q : R} (h : IsNormal (p * q)) : IsNormal q :=
+theorem IsNormal.of_mul_right {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : IsNormal (p * q)) : IsNormal q :=
   IsNormal.of_mul_left (mul_comm p q ▸ h)
 
 /-- **Theorem 3.4.1(i)** (§3.4, p.93), second half: any factor of a normal polynomial is normal. -/
-theorem IsNormal.of_dvd {p q : R} (h : IsNormal p) (hq : q ∣ p) : IsNormal q := by
+theorem IsNormal.of_dvd {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : IsNormal p) (hq : q ∣ p) : IsNormal q := by
   obtain ⟨r, rfl⟩ := hq
   exact h.of_mul_left
 
 /-- **§3.4 consequence** (p.93): a normal polynomial is squarefree — if `x·x ∣ p` then `x` divides
 both `p` and `Dp` (`Dp = x·(…)` by Leibniz), so coprimality of `p, Dp` forces `x` to be a unit.
 Holds for *any* derivation (no field or characteristic hypothesis). -/
-theorem IsNormal.squarefree {p : R} (hp : IsNormal p) : Squarefree p := by
+theorem IsNormal.squarefree {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsNormal p) : Squarefree p := by
   intro x hx
   obtain ⟨r, hr⟩ := hx
   have hxp : x ∣ p := ⟨x * r, by rw [hr]; ring⟩
@@ -127,25 +132,25 @@ theorem IsNormal.squarefree {p : R} (hp : IsNormal p) : Squarefree p := by
     rw [e]; exact dvd_mul_right x _
   exact IsCoprime.isUnit_of_dvd' hp hxp hxp'
 
-variable [GCDMonoid R] in
 /-- **Definition 3.4.2** (§3.4, p.92), gcd form: `p` is special iff `gcd(p, Dp) ~ p`
 (the `gcd(p, Dp) = p` of the book, up to the unit ambiguity of `gcd`). -/
-theorem isSpecial_iff_associated_gcd {p : R} : IsSpecial p ↔ Associated (gcd p p′) p :=
+theorem isSpecial_iff_associated_gcd {R : Type*} [CommRing R] [Differential R] [GCDMonoid R]
+    {p : R} : IsSpecial p ↔ Associated (gcd p p′) p :=
   ⟨fun h => associated_of_dvd_dvd (gcd_dvd_left p p′) (dvd_gcd dvd_rfl h),
    fun h => h.symm.dvd.trans (gcd_dvd_right p p′)⟩
 
-variable [GCDMonoid R] in
 /-- **Definition 3.4.2** (§3.4, p.92), gcd form: a normal `p` has `gcd(p, Dp)` a unit
 (the book's `gcd(p, Dp) = 1`). -/
-theorem IsNormal.isUnit_gcd {p : R} (h : IsNormal p) : IsUnit (gcd p p′) :=
+theorem IsNormal.isUnit_gcd {R : Type*} [CommRing R] [Differential R] [GCDMonoid R] {p : R}
+    (h : IsNormal p) : IsUnit (gcd p p′) :=
   gcd_isUnit_iff_isRelPrime.mpr h.isRelPrime
 
-variable [NormalizedGCDMonoid R] in
 /-- **Lemma 3.4.4** (§3.4, p.94), two-factor base case: for coprime `a, b` (unit `gcd a b`),
 `gcd(a·b, D(a·b)) ~ gcd(a, Da)·gcd(b, Db)`. Expand `D(a·b) = a·Db + b·Da`, split the gcd over
 the coprime factors (`associated_gcd_mul_of_isUnit_gcd`), drop the absorbed multiples
 (`associated_gcd_add_mul`), and cancel the coprime cofactor (`associated_gcd_mul_left_cancel`). -/
-theorem associated_gcd_deriv_mul {a b : R} (hab : IsUnit (gcd a b)) :
+theorem associated_gcd_deriv_mul {R : Type*} [CommRing R] [Differential R] [NormalizedGCDMonoid R]
+    {a b : R} (hab : IsUnit (gcd a b)) :
     Associated (gcd (a * b) ((a * b)′)) (gcd a a′ * gcd b b′) := by
   have hba : IsUnit (gcd b a) := by rwa [gcd_comm]
   rw [deriv_mul_eq]
@@ -154,11 +159,11 @@ theorem associated_gcd_deriv_mul {a b : R} (hab : IsUnit (gcd a b)) :
     exact (associated_gcd_add_mul a (b * a′) b′).trans (associated_gcd_mul_left_cancel hab)
   · exact (associated_gcd_add_mul b (a * b′) a′).trans (associated_gcd_mul_left_cancel hba)
 
-variable [NormalizedGCDMonoid R] in
 /-- **Lemma 3.4.4** (§3.4, p.94), the single-power computation: when the exponent `n ≥ 1` is a
 unit (characteristic `0`), `gcd(pⁿ, D(pⁿ)) ~ pⁿ⁻¹·gcd(p, Dp)`. Uses `D(pⁿ) = n·pⁿ⁻¹·Dp`
 (`leibniz_pow`), factors out `pⁿ⁻¹`, and cancels the unit `n`. -/
-theorem associated_gcd_deriv_pow {p : R} {n : ℕ} (hn : 1 ≤ n) (he : IsUnit (n : R)) :
+theorem associated_gcd_deriv_pow {R : Type*} [CommRing R] [Differential R] [NormalizedGCDMonoid R]
+    {p : R} {n : ℕ} (hn : 1 ≤ n) (he : IsUnit (n : R)) :
     Associated (gcd (p ^ n) ((p ^ n)′)) (p ^ (n - 1) * gcd p p′) := by
   have hd : (p ^ n)′ = (n : R) * (p ^ (n - 1) * p′) := by
     rw [Derivation.leibniz_pow, smul_eq_mul, nsmul_eq_mul]
@@ -168,12 +173,12 @@ theorem associated_gcd_deriv_pow {p : R} {n : ℕ} (hn : 1 ≤ n) (he : IsUnit (
   exact Associated.mul_left _
     (associated_gcd_mul_left_cancel (isUnit_of_dvd_unit (gcd_dvd_right p (n : R)) he))
 
-variable [NormalizedGCDMonoid R] in
 /-- **Lemma 3.4.4** (§3.4, p.94), pairwise-coprime product form: for a finite family of
 pairwise-coprime factors `f i`, `gcd(∏ f i, D ∏ f i) ~ ∏ gcd(f i, D f i)`. Finset induction on the
 two-factor base case `associated_gcd_deriv_mul`, using that a factor stays coprime to the rest of
 the product (`isUnit_gcd_prod`). -/
-theorem associated_gcd_deriv_prod {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → R) :
+theorem associated_gcd_deriv_prod {R : Type*} [CommRing R] [Differential R] [NormalizedGCDMonoid R]
+    {ι : Type*} [DecidableEq ι] (s : Finset ι) (f : ι → R) :
     (∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsUnit (gcd (f i) (f j))) →
     Associated (gcd (∏ i ∈ s, f i) ((∏ i ∈ s, f i)′)) (∏ i ∈ s, gcd (f i) (f i)′) := by
   induction s using Finset.induction_on with
@@ -193,13 +198,13 @@ theorem associated_gcd_deriv_prod {ι : Type*} [DecidableEq ι] (s : Finset ι) 
     intro i hi j hj hij
     exact hco i (Finset.mem_insert_of_mem hi) j (Finset.mem_insert_of_mem hj) hij
 
-variable [IsDomain R] [NormalizedGCDMonoid R] [WfDvdMonoid R] in
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93), key step: a prime factor `π` of a special polynomial `p`
 is itself special. Write `p = πᵉ·h` with `π ∤ h` (`FiniteMultiplicity`); Lemma 3.4.4 gives
 `gcd(p,Dp) ~ πᵉ⁻¹·gcd(π,Dπ)·gcd(h,Dh)`, and `p` special (`gcd(p,Dp) ~ p`) forces, after cancelling
 `πᵉ⁻¹`, `π·h ~ gcd(π,Dπ)·gcd(h,Dh)`; as `π` is prime, `gcd(π,Dπ)` is a unit (impossible: it would
 make `π` a unit) or `~ π`, i.e. `π ∣ Dπ`. Needs the exponent a unit (`IsUnit (eᵉ:R)`, char `0`). -/
-theorem isSpecial_of_prime_dvd {p π : R} (hπ : Prime π) (hdvd : π ∣ p) (hp0 : p ≠ 0)
+theorem isSpecial_of_prime_dvd {R : Type*} [CommRing R] [Differential R] [IsDomain R]
+    [NormalizedGCDMonoid R] [WfDvdMonoid R] {p π : R} (hπ : Prime π) (hdvd : π ∣ p) (hp0 : p ≠ 0)
     (hp : IsSpecial p) (he : IsUnit ((multiplicity π p : R))) : IsSpecial π := by
   have hfin : FiniteMultiplicity π p := FiniteMultiplicity.of_prime_left hπ hp0
   obtain ⟨h, hph, hnd⟩ := hfin.exists_eq_pow_mul_and_not_dvd
@@ -237,12 +242,12 @@ theorem isSpecial_of_prime_dvd {p π : R} (hπ : Prime π) (hdvd : π ∣ p) (hp
       rwa [← hk] at hau
     exact hgπ.symm.dvd.trans (gcd_dvd_right π π′)
 
-variable [IsDomain R] [NormalizedGCDMonoid R] [UniqueFactorizationMonoid R] in
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93): any factor of a special polynomial is special. Factor
 `q ∣ p` into primes (`induction_on_prime`); each prime factor divides `p` so is special
 (`isSpecial_of_prime_dvd`), and specialness is closed under products (`IsSpecial.mul`) and units.
 Needs every prime factor's multiplicity to be a unit (`IsUnit ((multiplicity:R))`, char `0`). -/
-theorem isSpecial_of_dvd {p q : R} (hp0 : p ≠ 0) (hp : IsSpecial p)
+theorem isSpecial_of_dvd {R : Type*} [CommRing R] [Differential R] [IsDomain R]
+    [NormalizedGCDMonoid R] [UniqueFactorizationMonoid R] {p q : R} (hp0 : p ≠ 0) (hp : IsSpecial p)
     (hmult : ∀ π, Prime π → π ∣ p → IsUnit ((multiplicity π p : R))) (hdvd : q ∣ p) :
     IsSpecial q := by
   revert hdvd
@@ -257,8 +262,8 @@ theorem isSpecial_of_dvd {p q : R} (hp0 : p ≠ 0) (hp : IsSpecial p)
 /-- **Theorem 3.4.1(iii)** (§3.4, p.93), coprime case: if `p·q` is special and `p, q` are
 coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`
 gives `p ∣ p′` only when `p ⊥ q`.) -/
-theorem IsSpecial.of_mul_coprime {p q : R} (h : IsSpecial (p * q)) (hco : IsCoprime p q) :
-    IsSpecial p := by
+theorem IsSpecial.of_mul_coprime {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : IsSpecial (p * q)) (hco : IsCoprime p q) : IsSpecial p := by
   have h0 : (p * q) ∣ ((p * q)′) := h
   rw [deriv_mul_eq] at h0
   have hp1 : p ∣ (p * q′ + q * p′) := (dvd_mul_right p q).trans h0
@@ -267,8 +272,8 @@ theorem IsSpecial.of_mul_coprime {p q : R} (h : IsSpecial (p * q)) (hco : IsCopr
 
 /-- **Theorem 3.4.1** (§3.4, p.93): a polynomial that is both normal and special is a unit
 (`(p) = (1)`) — the only normal *and* special polynomials are the units of `k`. -/
-theorem isUnit_of_isNormal_of_isSpecial {p : R} (hn : IsNormal p) (hs : IsSpecial p) :
-    IsUnit p := by
+theorem isUnit_of_isNormal_of_isSpecial {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hn : IsNormal p) (hs : IsSpecial p) : IsUnit p := by
   obtain ⟨w, hw⟩ := hs
   obtain ⟨u, v, huv⟩ := hn
   rw [hw] at huv
@@ -276,42 +281,43 @@ theorem isUnit_of_isNormal_of_isSpecial {p : R} (hn : IsNormal p) (hs : IsSpecia
   exact isUnit_of_dvd_one ⟨u + v * w, h.symm⟩
 
 /-- A unit is normal (`gcd(p, p′) = 1` since `p` is coprime to everything). -/
-theorem isNormal_of_isUnit {p : R} (hu : IsUnit p) : IsNormal p := by
+theorem isNormal_of_isUnit {R : Type*} [CommRing R] [Differential R] {p : R} (hu : IsUnit p) :
+    IsNormal p := by
   obtain ⟨u, rfl⟩ := hu
   exact ⟨↑u⁻¹, 0, by simp⟩
 
 /-- **Theorem 3.4.1** (§3.4, p.93): `p` is both normal and special iff it is a unit. -/
-theorem isNormal_and_isSpecial_iff_isUnit {p : R} :
+theorem isNormal_and_isSpecial_iff_isUnit {R : Type*} [CommRing R] [Differential R] {p : R} :
     (IsNormal p ∧ IsSpecial p) ↔ IsUnit p :=
   ⟨fun ⟨hn, hs⟩ => isUnit_of_isNormal_of_isSpecial hn hs,
    fun hu => ⟨isNormal_of_isUnit hu, hu.dvd⟩⟩
 
 /-- Specialness is invariant under multiplication by a unit: `IsSpecial (u·p) ↔ IsSpecial p`
 (so it depends only on `p` up to associates — used to normalize by the leading coefficient). -/
-theorem IsSpecial.unit_mul_iff {u : R} (hu : IsUnit u) (p : R) :
-    IsSpecial (u * p) ↔ IsSpecial p := by
+theorem IsSpecial.unit_mul_iff {R : Type*} [CommRing R] [Differential R] {u : R} (hu : IsUnit u)
+    (p : R) : IsSpecial (u * p) ↔ IsSpecial p := by
   unfold IsSpecial
   rw [deriv_mul_eq, hu.mul_left_dvd, add_comm, dvd_add_right (dvd_mul_right p u′),
     hu.dvd_mul_left]
 
 /-- Normality is invariant under multiplication by a unit: `IsNormal (u·p) ↔ IsNormal p`
 (so it depends only on `p` up to associates — used to normalize by the leading coefficient). -/
-theorem IsNormal.unit_mul_iff {u : R} (hu : IsUnit u) (p : R) :
-    IsNormal (u * p) ↔ IsNormal p := by
+theorem IsNormal.unit_mul_iff {R : Type*} [CommRing R] [Differential R] {u : R} (hu : IsUnit u)
+    (p : R) : IsNormal (u * p) ↔ IsNormal p := by
   unfold IsNormal
   rw [deriv_mul_eq, isCoprime_mul_unit_left_left hu, IsCoprime.add_mul_left_right_iff,
     isCoprime_mul_unit_left_right hu]
 
 /-- Specialness is an associate invariant: `Associated p q → IsSpecial p → IsSpecial q`. -/
-theorem IsSpecial.of_associated {p q : R} (h : Associated p q) (hp : IsSpecial p) :
-    IsSpecial q := by
+theorem IsSpecial.of_associated {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : Associated p q) (hp : IsSpecial p) : IsSpecial q := by
   obtain ⟨u, rfl⟩ := h
   rw [mul_comm]
   exact (IsSpecial.unit_mul_iff u.isUnit p).mpr hp
 
 /-- Normality is an associate invariant: `Associated p q → IsNormal p → IsNormal q`. -/
-theorem IsNormal.of_associated {p q : R} (h : Associated p q) (hp : IsNormal p) :
-    IsNormal q := by
+theorem IsNormal.of_associated {R : Type*} [CommRing R] [Differential R] {p q : R}
+    (h : Associated p q) (hp : IsNormal p) : IsNormal q := by
   obtain ⟨u, rfl⟩ := h
   rw [mul_comm]
   exact (IsNormal.unit_mul_iff u.isUnit p).mpr hp
@@ -319,24 +325,24 @@ theorem IsNormal.of_associated {p q : R} (h : Associated p q) (hp : IsNormal p) 
 /-- **Definition 3.5.1** (§3.5): a *splitting factorization* of `p` is `p = pₛ · pₙ` with `pₛ`
 special and `pₙ` normal. (By Theorem 3.4.1 — factors of a normal polynomial are normal —
 requiring `pₙ` normal is equivalent to the book's "every squarefree factor of `pₙ` is normal".) -/
-def IsSplittingFactorization (p ps pn : R) : Prop :=
+def IsSplittingFactorization {R : Type*} [CommRing R] [Differential R] (p ps pn : R) : Prop :=
   p = ps * pn ∧ IsSpecial ps ∧ IsNormal pn
 
 /-- A special polynomial splits as `(p, 1)`. -/
-theorem IsSpecial.splittingFactorization {p : R} (hp : IsSpecial p) :
-    IsSplittingFactorization p p 1 :=
+theorem IsSpecial.splittingFactorization {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsSpecial p) : IsSplittingFactorization p p 1 :=
   ⟨(mul_one p).symm, hp, isNormal_one⟩
 
 /-- A normal polynomial splits as `(1, p)`. -/
-theorem IsNormal.splittingFactorization {p : R} (hp : IsNormal p) :
-    IsSplittingFactorization p 1 p :=
+theorem IsNormal.splittingFactorization {R : Type*} [CommRing R] [Differential R] {p : R}
+    (hp : IsNormal p) : IsSplittingFactorization p 1 p :=
   ⟨(one_mul p).symm, isSpecial_one, hp⟩
 
 open Polynomial in
 /-- **Lemma 3.4.2(i)** (§3.4, p.91): the monomial-derivation degree bound. For the derivation
 `D = κ_D + v·d/dX` on `k[X]` with `Dt = v` (so the `D`-degree is `δ(t) = deg v`),
 `deg(D p) ≤ deg p + max(0, δ(t) − 1)`. -/
-theorem natDegree_implicitDeriv_le (v p : R[X]) :
+theorem natDegree_implicitDeriv_le {R : Type*} [CommRing R] [Differential R] (v p : R[X]) :
     (Differential.implicitDeriv v p).natDegree ≤ p.natDegree + max 0 (v.natDegree - 1) := by
   have happly : Differential.implicitDeriv v p = Differential.mapCoeffs p + v * derivative p := by
     simp [Differential.implicitDeriv, derivative']
