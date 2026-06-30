@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableHyperellipticDivisor
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Cantor's algorithm: the hyperelliptic-Jacobian group law (Trager Ch. 6, Cantor 1987)
 
@@ -58,27 +59,27 @@ on Mumford pairs, producing a *semi-reduced* divisor (Cantor 1987; Trager Ch. 6)
 `u = monic(u₁u₂/d²)` and `v = (s₁u₁v₂ + s₂u₂v₁ + s₃(v₁v₂ + ρ))/d mod u`. The exact quotients use `cdivG`
 (`d² ∣ u₁u₂`, `d ∣` the numerator by the Bézout identities), the reduction `cmodG`. Generic over
 `[CField α]`. -/
-def cantorCompose (fuel : ℕ) (ρ : CPolyG α) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
+def cantorCompose (_fuel : ℕ) (ρ : CPolyG α) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
   let u₁ := D₁.u; let v₁ := D₁.v
   let u₂ := D₂.u; let v₂ := D₂.v
   -- first extended gcd: d₁ = gcd(u₁,u₂) = e₁·u₁ + e₂·u₂
-  let (d₁, e₁, e₂) := cgcdExtG fuel u₁ u₂
+  let (d₁, e₁, e₂) := cgcdWf u₁ u₂
   -- second extended gcd: d = gcd(d₁, v₁+v₂) = c₁·d₁ + c₂·(v₁+v₂)
   let vsum := caddG v₁ v₂
-  let (d, c₁, c₂) := cgcdExtG fuel d₁ vsum
+  let (d, c₁, c₂) := cgcdWf d₁ vsum
   -- cofactors of d over (u₁, u₂, v₁+v₂)
   let s₁ := cmulG c₁ e₁
   let s₂ := cmulG c₁ e₂
   let s₃ := c₂
   -- u = u₁·u₂/d²  (monic-normalized)
   let d2 := cmulG d d
-  let u := cmonicG (cdivG fuel (cmulG u₁ u₂) d2)
+  let u := cmonicG (cdivWf (cmulG u₁ u₂) d2)
   -- v numerator = s₁·u₁·v₂ + s₂·u₂·v₁ + s₃·(v₁·v₂ + ρ)
   let vnum :=
     caddG (caddG (cmulG s₁ (cmulG u₁ v₂)) (cmulG s₂ (cmulG u₂ v₁)))
       (cmulG s₃ (caddG (cmulG v₁ v₂) ρ))
   -- v = (vnum / d) mod u
-  let v := cmodG fuel (cdivG fuel vnum d) u
+  let v := cmodWf (cdivWf vnum d) u
   ⟨u, v⟩
 
 /-! ### Cantor reduction (to `deg u ≤ g`)
@@ -90,10 +91,10 @@ representative. Fuel = `deg u` (one step per degree drop). -/
 /-- **One Cantor reduction step** `cantorReduceStep fuel ρ (u, v) = (monic((ρ − v²)/u), (−v) mod u)`.
 Applied while `deg u > g`: `u' = (ρ − v²)/u` (exact since `u ∣ v² − ρ`), monic-normalized; `v' = (−v) mod
 u'`. Lowers `deg u` toward `≤ g`. Generic over `[CField α]`. -/
-def cantorReduceStep (fuel : ℕ) (ρ : CPolyG α) (D : MumfordDivisor α) : MumfordDivisor α :=
+def cantorReduceStep (_fuel : ℕ) (ρ : CPolyG α) (D : MumfordDivisor α) : MumfordDivisor α :=
   let u := D.u; let v := D.v
-  let unew := cmonicG (cdivG fuel (csubG ρ (cmulG v v)) u)
-  let vnew := cmodG fuel (cnegG v) unew
+  let unew := cmonicG (cdivWf (csubG ρ (cmulG v v)) u)
+  let vnew := cmodWf (cnegG v) unew
   ⟨unew, vnew⟩
 
 /-- **Cantor reduction (fuel-bounded)** `cantorReduceAux fuel g ρ (u, v)`: repeatedly apply

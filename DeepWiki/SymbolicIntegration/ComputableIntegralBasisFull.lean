@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRound2IntegralBasis
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
 /-! # The FULL general-curve INTEGRAL BASIS: iterating the Ford–Zassenhaus Round-2 step to the maximal
 order (Trager, *Integration of Algebraic Functions*, Ch. 2 §1–2, p. 18–26)
@@ -257,11 +258,11 @@ def discNumOrder (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) : 
 /-- **The bad primes of an order `O`** `badPrimesOrder fuel f O`: the distinct monic squarefree factors `p`
 of the **order's** reduced discriminant numerator (`discNumOrder`) with `p² | d` — the primes where `O` may
 still be non-maximal. For `O = powerBasis f` this is `badPrimes fuel f`. Drives each pass of the outer loop. -/
-def badPrimesOrder (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
+def badPrimesOrder (_fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
     List (CPolyG ℚ) :=
   let d := discNumOrder f O
-  let distinct := ((cSqfreeYunFFG fuel d).map cmonicG).filter (fun p => 0 < cdegG p)
-  distinct.filter (fun p => cisZeroG (cmodG (d.length + 1) d (cmulG p p)))
+  let distinct := ((cSqfreeYunFFGWf d).map cmonicG).filter (fun p => 0 < cdegG p)
+  distinct.filter (fun p => cisZeroG (cmodWf d (cmulG p p)))
 
 /-- **`true` iff two order bases agree** `orderEq n O1 O2`: each `O1ᵢ` is `cisZeroG`-equal to `O2ᵢ`, entry by
 entry over the `n` power-basis coordinates. The iteration's fixed-point test (whether an enlargement grew the

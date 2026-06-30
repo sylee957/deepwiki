@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableGenericBezout
 import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 /-! # Algebraic-function integration: simple radical extensions (Trager Appendix A)
 The transcendental Risch engine (`ComputableTower*`/`ComputableIntegrate`) integrates elementary
@@ -324,20 +325,20 @@ variable {α : Type*} [CField α]
 generic diophantine solver `cdiophantineG (((1−k)·V'·f)) V C` (which returns `(B, _)` with `B·((1−k)V'f)
 + c·V = C`). `Df = V'` is passed in (the monomial derivative `V'`, computed by the caller so the base
 derivation is whatever the level uses); `(1−k)` is `cnatCastG (k−1)` negated. Generic over `[CField α]`. -/
-def radCase1Cofactor (fuel : ℕ) (k : ℕ) (V Df f C : CPolyG α) : CPolyG α :=
+def radCase1Cofactor (_fuel : ℕ) (k : ℕ) (V Df f C : CPolyG α) : CPolyG α :=
   let oneMinusK := cnegG [cnatCastG (k - 1)]                    -- the constant `(1 − k) = −(k−1)`
   let coeff := cmulG oneMinusK (cmulG Df f)                     -- `(1−k)·V'·f`
-  (cdiophantineG fuel coeff V C).1
+  (cdiophantineGWf coeff V C).1
 
 /-- **Case-1 residual** `radCase1Residual k V Df f g B C Bder = D` — the lowered-`k` residual numerator
 `D = ((1−k)V'fB − C)/V + B'f + Bg` of the Case-1 step (Trager Appendix A §2.1). `Df = V'`, `Bder = B'`,
 and `g` (from `(f/y)' = g/y`) are passed in (the caller supplies the derivatives at the level's base
 derivation). The exact division by `V` is `cdivG` (`V ∣ (1−k)V'fB − C` by the cofactor congruence).
 Generic over `[CField α]`. -/
-def radCase1Residual (fuel : ℕ) (k : ℕ) (V Df f g B C Bder : CPolyG α) : CPolyG α :=
+def radCase1Residual (_fuel : ℕ) (k : ℕ) (V Df f g B C Bder : CPolyG α) : CPolyG α :=
   let oneMinusK := cnegG [cnatCastG (k - 1)]
   let topNum := csubG (cmulG oneMinusK (cmulG Df (cmulG f B))) C  -- `(1−k)V'fB − C`
-  let quotient := cdivG fuel topNum V                             -- `((1−k)V'fB − C)/V`
+  let quotient := cdivWf topNum V                                 -- `((1−k)V'fB − C)/V`
   caddG quotient (caddG (cmulG Bder f) (cmulG B g))               -- `… + B'f + Bg`
 
 /-! ### Case 2 rational-part reduction (Trager Appendix A §2.2, `θ' = 1`, `n = 2`)
@@ -367,21 +368,21 @@ The `½ − k` form here is the faithful one; the `g`-form is not needed and is 
 Appendix A §2.2, `B(1−k−eⱼ/n)W'h ≡ C (mod W)` at `eⱼ = 1, n = 2`), via `cdiophantineG ((½−k)W'h) W C`
 (`gcd((½−k)W'h, W) = 1` since `W = Pⱼ` is a squarefree factor of `f`, coprime to `h = f/W`, and
 `½ − k ≠ 0`). `h = f/W` and `W` are passed in; `W'` is `cderivG W`. Generic over `[CField α]`. -/
-def radCase2Cofactor (fuel : ℕ) (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
+def radCase2Cofactor (_fuel : ℕ) (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
   let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- `½`
   let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- `(½ − k)·W'·h`
-  (cdiophantineG fuel coef W C).1
+  (cdiophantineGWf coef W C).1
 
 /-- **Case-2 residual (n = 2)** `radCase2Residual fuel k W h C B = D` — the lowered-`k` residual numerator
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'` of the `radDeriv`-validated Case-2 step (Trager Appendix A §2.2).
 `h = f/W` and `W` are passed in; `B'` is `cderivG B`, `h'` is `cderivG h`. The exact division by `W` is
 `cdivG` (`W ∣ B·(½−k)W'h − C` by the cofactor congruence). With this `D`,
 `radDeriv(Bf/(Wᵏy)) = C/(Wᵏy) + D/(W^{k−1}y)`. Generic over `[CField α]`. -/
-def radCase2Residual (fuel : ℕ) (k : ℕ) (W h C B : CPolyG α) : CPolyG α :=
+def radCase2Residual (_fuel : ℕ) (k : ℕ) (W h C B : CPolyG α) : CPolyG α :=
   let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- `½`
   let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- `(½ − k)·W'·h`
   let topNum := csubG (cmulG B coef) C                                      -- `B·(½−k)W'h − C`
-  let quotient := cdivG fuel topNum W                                       -- `/W`
+  let quotient := cdivWf topNum W                                           -- `/W`
   caddG quotient (caddG (cmulG (cderivG B) h)                              -- `+ B'h`
     (cmulG half (cmulG B (cderivG h))))                                     -- `+ ½Bh'`
 
@@ -488,10 +489,10 @@ def radExpCofactor (k : ℕ) (vder : α) (f g C : CPolyG α) : CPolyG α :=
 `D = ((B'f + Bg − k·v'·B·f) − C)/θ` of the exp `C/(θᵏy)` step (Trager Appendix A §2.4). `vder = v'`,
 `Bder = B'` (the full `cmonomialDeriv [θ'] B`), and `g` are passed in. The exact division by `θ` is
 `cdivG _ _ [0,1]` (`θ ∣ (B'f + Bg − kv'Bf) − C` by the constant-term match). Generic over `[CField α]`. -/
-def radExpResidual (fuel : ℕ) (k : ℕ) (vder : α) (f g B C Bder : CPolyG α) : CPolyG α :=
+def radExpResidual (_fuel : ℕ) (k : ℕ) (vder : α) (f g B C Bder : CPolyG α) : CPolyG α :=
   let kvBf := cmulG [CField.mul (cnatCastG k) vder] (cmulG B f)    -- `k·v'·B·f`
   let num := csubG (csubG (caddG (cmulG Bder f) (cmulG B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
-  cdivG fuel num [CField.zero, CField.one]                         -- `… / θ`
+  cdivWf num [CField.zero, CField.one]                             -- `… / θ`
 
 end CPolyG
 
