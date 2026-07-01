@@ -1718,7 +1718,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG (QFunNZG ℚ))) :
     (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
   -- the residual `resNum/resDen` is proper for `deg Dt ≤ 1` from input properness
-  have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt fuel a d
+  have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
     (cSqfreeYunFFG fuel d) hDtdeg haProper hv hb
   simp only at hresProper
   subst hgeq

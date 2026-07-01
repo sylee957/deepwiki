@@ -109,8 +109,8 @@ total degree drop. -/
 /-- **One sweep over the rows below the pivot `(j, j)`**: for each `i` with `j < i < nrows`, replace
 `row i` by `row i − q · row j` where `q := cdivWf (M[i][j]) (M[j][j])` (the Euclidean quotient = the
 polynomial part of `M[i][j] / M[j][j]`). Reduces the degree of each below-pivot column entry below the
-pivot's. The first argument is retained as the outer-loop budget; the quotient itself is fuel-free. -/
-def hermiteSweepBelow (_fuel j : ℕ) (M : PolyMatrix α) : PolyMatrix α :=
+pivot's. The quotient itself is fuel-free. -/
+def hermiteSweepBelow (j : ℕ) (M : PolyMatrix α) : PolyMatrix α :=
   let nrows := M.length
   let piv := polyMatGet M j j
   (List.range nrows).foldl (fun acc i =>
@@ -139,7 +139,7 @@ def hermiteClearCol (divFuel : ℕ) (j : ℕ) : ℕ → PolyMatrix α → PolyMa
     | none => M
     | some k =>
       let M := rowSwap M j k
-      let M := hermiteSweepBelow divFuel j M
+      let M := hermiteSweepBelow j M
       if polyMatColZeroBelow M j then M
       else hermiteClearCol divFuel j loopFuel M
 
