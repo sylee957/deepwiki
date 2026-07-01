@@ -3,8 +3,8 @@ import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
 
 /-! # Unconditional soundness of the §5.9 hyperexponential normal-part driver (Bronstein §5.9)
 
-`ComputableOneShotAssembly` proved the **conditional** hyperexp one-shot for the *raw* driver
-`cIntegrateGFull` — `cIntegrateGFull_hyperexp_oneShot`, gated on the integrability witness `∑c = 0`. The
+`ComputableOneShotAssembly` proved the **conditional** hyperexp one-shot for the *raw fuel-free* driver
+`cIntegrateGFullWf` — `cIntegrateGFullWf_hyperexp_oneShot`, gated on the integrability witness `∑c = 0`. The
 genuine obstruction it pinned (closing status): `cIntegrateGFull`'s pure-normal branch emits the raw §5.6
 Rothstein–Trager logs, which **overshoot** a hyperexponential normal part by `R = η·∑c` (the
 `extendDeriv_logPart_eq_div_add_residual` leftover); the §5.9 residual-feedback driver
@@ -907,7 +907,7 @@ PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_de
   `D(lnum/lden + gnum/gden) + logResidueSumG = amG fpPart + cₙ/dₙ = a/d`.
 
 ★ IS UNCONDITIONAL HYPEREXP SOUNDNESS PROVEN? **YES — modulo the base-oracle residual, NOT modulo `∑c = 0`.**
-The contrast with `ComputableOneShotAssembly`'s `cIntegrateGFull_hyperexp_oneShot` (gated on the FALSE-in-
+The contrast with `ComputableOneShotAssembly`'s `cIntegrateGFullWf_hyperexp_oneShot` (gated on the FALSE-in-
 general `∑c = 0`) is the whole point: the §5.9 driver `cIntegrateHyperexpNormalG` ABSORBS the overshoot `R =
 η·∑c` into `∫R = crischDESolve 0 R` and subtracts it, so there is NO `∑c = 0` side condition. The remaining
 input `hintR` is the base oracle's `∫R`-soundness — a GENUINELY DIFFERENT, smaller residual than `∑c = 0`
