@@ -50,7 +50,7 @@ piece). The rational half is now an OUTPUT, not a supplied constant.
 now COMPUTED — no supplied `v`. The unified elementary integral `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))`
 is computed end-to-end over the transcendental tower.
 
-**STRETCH** (`native_decide`): `radIntegrateCase3G cderivG` reduces to the ℚ-base `radIntegrateCase3` behavior
+**STRETCH** (`native_decide`): `radIntegrateCase3G cderivG` reduces to the ℚ-base `radIntegrateCase3Wf` behavior
 at `α = ℚ(x)` (the conservative `θ' = 1` specialization on `∫ x⁴/√(x³+1)`). -/
 
 open Polynomial
@@ -296,11 +296,11 @@ theorem rtFull_ratPart_eq_two_y :
 /-! ### STRETCH: `radIntegrateCase3G cderivG` reduces to the ℚ-base behavior at `α = ℚ(x)` (`native_decide`)
 
 Conservativity: at the ℚ-base (`α = QFunNZG ℚ ≅ ℚ(x)`, `θ = x`, `θ' = 1`), `radIntegrateCase3G cderivG`
-reproduces the original `radIntegrateCase3 cderivG` on `∫ x⁴/√(x³+1)`. The generic leading-term cofactor
+reproduces the fuel-free base `radIntegrateCase3Wf cderivG` on `∫ x⁴/√(x³+1)`. The generic leading-term cofactor
 `radCase3CofactorTower cderivG` specializes back to `radCase3Cofactor`'s `b·θ^{deg C−deg f+1}` (since with
 `der = cderivG`, `g = ½ρ'` has `deg g = deg f − 1`, so `deg B = deg C − deg g = deg C − deg f + 1`). We check
 the two drivers agree exactly on `∫ x⁴/√(x³+1)` (the same `(Crem, vNum)` output as `c3itRun`,
-`ComputableRadicalRationalDriver`). -/
+`ComputableRadicalWellFounded`). -/
 
 /-- Stretch ℚ-base radicand `ρ = x³ + 1 ∈ ℚ(x)` as the `CPolyG ℚ` `[1,0,0,1]` — the same value as `c3itRho`
 (`ComputableRadicalRationalDriver`). -/
@@ -312,14 +312,14 @@ def stretchG : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG stretchRho)
 /-- Stretch ℚ-base numerator `C = x⁴ ∈ ℚ(x)` (`[0,0,0,0,1]`) — the same value as `c3itC`. -/
 def stretchC : CPolyG ℚ := [0, 0, 0, 0, 1]
 
-/-- **★ `radIntegrateCase3G cderivG` agrees with `radIntegrateCase3 cderivG` at the ℚ-base** (`native_decide`)
-— on `∫ x⁴/√(x³+1)` (`θ' = 1`), the generic Case-3-G driver and the original `radIntegrateCase3` produce the
+/-- **★ `radIntegrateCase3G cderivG` agrees with `radIntegrateCase3Wf cderivG` at the ℚ-base** (`native_decide`)
+— on `∫ x⁴/√(x³+1)` (`θ' = 1`), the generic Case-3-G driver and the fuel-free base Case-3 produce the
 **identical** `(Crem, vNum)`. So the ACTUAL-derivation generalization is conservative: with `der = cderivG`
 the leading-term cofactor `radCase3CofactorTower` specializes back to `radCase3Cofactor`, and Case-3-G
 reduces to the ℚ-base Case-3 exactly. Checked by structural equality of the two driver outputs. -/
 theorem stretch_case3G_eq_case3_base :
     radIntegrateCase3G cderivG stretchRho stretchG stretchC
-      = radIntegrateCase3 cderivG stretchRho stretchG stretchC := by native_decide
+      = radIntegrateCase3Wf cderivG stretchRho stretchG stretchC := by native_decide
 
 /-! ### `#print axioms` — is the RATIONAL half now COMPUTED (not supplied) over the tower?
 
@@ -333,7 +333,7 @@ derivation (`cmonomialDeriv [θ]`, `θ' = θ`) via the generic leading-term cofa
 COMPUTED log half (`radLogArgSolveG`), the FULLY-COMPUTED round-trip `algDerivG ⟨2y, [(1, (y−1)/(y+1))]⟩ =
 √(eˣ+1)` holds with **NEITHER** half supplied — the unified elementary integral `∫√(eˣ+1) dx = 2√(eˣ+1) +
 log((y−1)/(y+1))` is now computed end-to-end over the tower. At the ℚ-base (`θ' = 1`) `radIntegrateCase3G
-cderivG` reduces to the original `radIntegrateCase3` exactly (conservative). -/
+cderivG` reduces to `radIntegrateCase3Wf` exactly (conservative). -/
 
 -- ★ Case-3-G COMPUTES the rational-part numerator `vNum = 2ρ` (so `v = 2y`) over the exp tower:
 #print axioms expC3_vNum_eq_two_rho
@@ -348,7 +348,7 @@ cderivG` reduces to the original `radIntegrateCase3` exactly (conservative). -/
 #print axioms rtFull_ratPart_eq_two_y
 #print axioms rtFull_shape
 
--- STRETCH: `radIntegrateCase3G cderivG` reduces to the ℚ-base `radIntegrateCase3` (conservative):
+-- STRETCH: `radIntegrateCase3G cderivG` reduces to the ℚ-base `radIntegrateCase3Wf` (conservative):
 #print axioms stretch_case3G_eq_case3_base
 
 end DeepWiki.SymbolicIntegration
