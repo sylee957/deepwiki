@@ -129,10 +129,9 @@ def polyMatColZeroBelow (M : PolyMatrix α) (j : ℕ) : Bool :=
 
 /-- **The Hermite inner loop on column `j`**, fuel-bounded: bring the minimal-degree nonzero entry to the
 pivot by a swap, then sweep the rows below; repeat while the column is nonzero below the pivot (each
-repetition strictly drops the total below-pivot degree). `loopFuel` bounds the repetitions; `divFuel` is
-retained for API stability while the quotient leaf is `cdivWf`. Returns the matrix with column `j` cleared
-below the pivot. -/
-def hermiteClearCol (divFuel : ℕ) (j : ℕ) : ℕ → PolyMatrix α → PolyMatrix α
+repetition strictly drops the total below-pivot degree). `loopFuel` bounds the repetitions; the quotient leaf
+is `cdivWf`. Returns the matrix with column `j` cleared below the pivot. -/
+def hermiteClearCol (j : ℕ) : ℕ → PolyMatrix α → PolyMatrix α
   | 0, M => M
   | loopFuel + 1, M =>
     match polyMatMinDegPivot M j with
@@ -141,7 +140,7 @@ def hermiteClearCol (divFuel : ℕ) (j : ℕ) : ℕ → PolyMatrix α → PolyMa
       let M := rowSwap M j k
       let M := hermiteSweepBelow j M
       if polyMatColZeroBelow M j then M
-      else hermiteClearCol divFuel j loopFuel M
+      else hermiteClearCol j loopFuel M
 
 /-- **Hermite row reduction** (the Trager p. 25 algorithm): triangularize a `PolyMatrix` over `K[x]` to
 upper-triangular form by Euclidean row operations (swap / scale / subtract a ring multiple — never a row
@@ -153,7 +152,7 @@ def hermiteRowReduce (M : PolyMatrix α) : PolyMatrix α :=
   let ncols := polyMatNCols M
   let degSum := (M.map (fun row => (row.map cdegG).foldl (· + ·) 0)).foldl (· + ·) 0
   let fuel := ncols * (degSum + 2)
-  (List.range ncols).foldl (fun acc j => hermiteClearCol fuel j fuel acc) M
+  (List.range ncols).foldl (fun acc j => hermiteClearCol j fuel acc) M
 
 /-! ### Rank and triangularity readouts
 
