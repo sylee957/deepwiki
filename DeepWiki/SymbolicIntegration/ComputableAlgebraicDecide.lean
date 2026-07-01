@@ -54,8 +54,8 @@ open DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 
 The integrator threads three blocks of data: the **rational-part** inputs `(ρ, R, B)` (always run, fuel-free,
 via `radIntegrateRationalWf` + `radAssembleRatPart`); the **principal-log** inputs `(residual, c, D,
-degBound)` (the linear log-argument solve `radLogArgSolve`); and the **torsion-decision** inputs `(p, cfuel,
-fuel, ρq, gen, Dm)` (the residue divisor `Dm` and good prime `p`, feeding `elementarityViaTorsion` /
+degBound)` (the linear log-argument solve `radLogArgSolve`); and the **torsion-decision** inputs `(p,
+ρq, gen, Dm)` (the residue divisor `Dm` and good prime `p`, feeding `elementarityViaTorsion` /
 `torsionLogTerm`). A Boolean `hasLogPart` discriminates the "no log part" case (the rational part is the
 whole answer) from the cases that need the log machinery. -/
 
@@ -75,7 +75,7 @@ So `none` is returned exactly when the log part is non-torsion — the self-dete
 inputs are `ρq` (radicand as `ℚ[x]`, for Cantor), `gen` (the genus / reduction degree bound), and `Dm` (the
 residue Mumford divisor). Needs `[Fact p.Prime]` for the good-reduction torsion search; fuel-free in the
 rational part. -/
-def cIntegrateAlgebraicDecide (p cfuel fuel : ℕ) [Fact p.Prime]
+def cIntegrateAlgebraicDecide (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
     (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ)
     (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ) (hasLogPart : Bool) :
@@ -92,7 +92,7 @@ def cIntegrateAlgebraicDecide (p cfuel fuel : ℕ) [Fact p.Prime]
       let u : RadElem (QFunNZG ℚ) := N.map (fun z => CField.div z Dq)
       some ⟨v, [(c, u)]⟩
     | none =>
-      match torsionLogTerm p cfuel fuel ρ ρq gen Dm with
+      match torsionLogTerm p ρ ρq gen Dm with
       | some term => some ⟨v, [term]⟩
       | none => none
 
@@ -102,12 +102,12 @@ On the principal/no-log branches (`hasLogPart` and `radLogArgSolve` together exa
 integrator returns the *same* `AlgIntegralResult` the total integrator does, now wrapped in `some` (the
 torsion branch is what is genuinely new). Used to inherit `cIntegrateAlgebraicWf_sound` on the principal
 branch. -/
-theorem cIntegrateAlgebraicDecide_principal_eq (p cfuel fuel : ℕ) [Fact p.Prime]
+theorem cIntegrateAlgebraicDecide_principal_eq (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
     (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ)
     (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
     (hlog : (radLogArgSolve ρ residual D degBound).isSome = true) :
-    cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm true
+    cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true
       = some (cIntegrateAlgebraicWf ρ R B residual c D degBound) := by
   unfold cIntegrateAlgebraicDecide cIntegrateAlgebraicWf
   simp only [Bool.true_eq_false, if_false]
@@ -133,7 +133,7 @@ NOT a round-trip *hypothesis*. -/
 
 section Soundness
 
-variable (p cfuel fuel : ℕ) [Fact p.Prime]
+variable (p : ℕ) [Fact p.Prime]
 variable (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
 variable (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ)
 variable (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ) (hasLogPart : Bool)
@@ -168,7 +168,7 @@ structure AlgebraicDecideSoundnessResidual : Prop where
   /-- Torsion branch (`radTorsionLogTerm`/`principalGenerator` correctness): for the constructed log term
   `term`, `D(⟨v, [term]⟩) = integrand`. -/
   htorsion : ∀ term,
-    torsionLogTerm p cfuel fuel ρ ρq gen Dm = some term →
+    torsionLogTerm p ρ ρq gen Dm = some term →
     CPolyG.toPolyG (algDeriv ρ
         ⟨radAssembleRatPart ρ (CPolyG.radIntegrateRationalWf (qxNum ρ) R B), [term]⟩)
       = CPolyG.toPolyG integrand
@@ -182,9 +182,9 @@ three branches discharge from the residual (no-log via rational exhaustiveness, 
 `cIntegrateAlgebraicWf_sound`, torsion via the `radTorsionLogTerm`/`principalGenerator` correctness). The
 soundness verdict for the `Option` integrator, modulo exactly the already-named frontiers. -/
 theorem cIntegrateAlgebraicDecide_sound
-    (hres : AlgebraicDecideSoundnessResidual p cfuel fuel ρ R B residual c D degBound ρq gen Dm integrand)
+    (hres : AlgebraicDecideSoundnessResidual p ρ R B residual c D degBound ρq gen Dm integrand)
     (F : AlgIntegralResult)
-    (hsome : cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart
+    (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
     CPolyG.toPolyG (algDeriv ρ F) = CPolyG.toPolyG integrand := by
   unfold cIntegrateAlgebraicDecide at hsome
@@ -212,7 +212,7 @@ theorem cIntegrateAlgebraicDecide_sound
     | none =>
       -- torsion branch: F = ⟨v, [term]⟩ from `torsionLogTerm`, or `none`
       rw [hN] at hsome
-      cases hT : torsionLogTerm p cfuel fuel ρ ρq gen Dm with
+      cases hT : torsionLogTerm p ρ ρq gen Dm with
       | some term =>
         rw [hT, Option.some.injEq] at hsome
         rw [← hsome]
@@ -235,7 +235,7 @@ criterion `AlgebraicLiouvilleFrontier` + the good-reduction torsion-decision cor
 
 section Completeness
 
-variable (p cfuel fuel : ℕ) [Fact p.Prime]
+variable (p : ℕ) [Fact p.Prime]
 variable (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
 variable (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ)
 variable (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ) (hasLogPart : Bool)
@@ -246,9 +246,9 @@ variable (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ) (hasLog
 is non-torsion). The structural reading that makes the `none` output exactly the engine's non-torsion
 verdict; the bridge to `engine_none_of_not_elementary`. -/
 theorem torsionLogTerm_none_of_decide_none
-    (hnone : cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart
+    (hnone : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = none) :
-    (torsionLogTerm p cfuel fuel ρ ρq gen Dm).isNone = true := by
+    (torsionLogTerm p ρ ρq gen Dm).isNone = true := by
   unfold cIntegrateAlgebraicDecide at hnone
   by_cases hlp : hasLogPart = false
   · rw [hlp] at hnone; simp at hnone
@@ -257,7 +257,7 @@ theorem torsionLogTerm_none_of_decide_none
     | some N => rw [hN] at hnone; simp at hnone
     | none =>
       rw [hN] at hnone
-      cases hT : torsionLogTerm p cfuel fuel ρ ρq gen Dm with
+      cases hT : torsionLogTerm p ρ ρq gen Dm with
       | some term => rw [hT] at hnone; simp at hnone
       | none => simp
 
@@ -271,17 +271,17 @@ theorem torsionLogTerm_none_of_decide_none
 non-torsion verdict into `¬ elem`. This re-bases the algebraic completeness onto the `Option` integrator:
 `none` is the self-determining "not elementary" answer, modulo exactly the already-named frontier. -/
 theorem cIntegrateAlgebraicDecide_complete {isTorsion : Prop} {elem : Prop}
-    (hres : AlgebraicCompletenessResidual ρq gen Dm p cfuel isTorsion elem)
-    (hnone : cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart
+    (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
+    (hnone : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = none) :
     ¬ elem := by
   -- the `none` output forces the torsion branch to `none` (non-torsion verdict)
-  have hT : (torsionLogTerm p cfuel fuel ρ ρq gen Dm).isNone = true :=
-    torsionLogTerm_none_of_decide_none p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart hnone
+  have hT : (torsionLogTerm p ρ ρq gen Dm).isNone = true :=
+    torsionLogTerm_none_of_decide_none p ρ R B residual c D degBound ρq gen Dm hasLogPart hnone
   -- contrapositive of the completeness equivalence: if `elem` held, the log term would be emitted
   intro hcon
-  have hsome : (torsionLogTerm p cfuel fuel ρ ρq gen Dm).isSome = true :=
-    (cIntegrateAlgebraicWf_complete_of_residual ρ ρq gen Dm p cfuel fuel hres).mpr hcon
+  have hsome : (torsionLogTerm p ρ ρq gen Dm).isSome = true :=
+    (cIntegrateAlgebraicWf_complete_of_residual ρ ρq gen Dm p hres).mpr hcon
   rw [Option.isNone_iff_eq_none] at hT
   rw [hT] at hsome
   simp at hsome
@@ -302,7 +302,7 @@ The cleanest assembly rides the completeness equivalence `cIntegrateAlgebraicWf_
 
 section Decides
 
-variable (p cfuel fuel : ℕ) [Fact p.Prime]
+variable (p : ℕ) [Fact p.Prime]
 variable (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
 variable (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (degBound : ℕ)
 variable (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
@@ -313,11 +313,11 @@ the decision integrator returns `some _` **exactly** when `torsionLogTerm = some
 equivalence isolating the torsion decision as the elementarity gate on this path. -/
 theorem decide_isSome_iff_torsion_isSome
     (hlog : radLogArgSolve ρ residual D degBound = none) :
-    (cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm true).isSome = true
-      ↔ (torsionLogTerm p cfuel fuel ρ ρq gen Dm).isSome = true := by
+    (cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true).isSome = true
+      ↔ (torsionLogTerm p ρ ρq gen Dm).isSome = true := by
   unfold cIntegrateAlgebraicDecide
   simp only [Bool.true_eq_false, if_false, hlog]
-  cases hT : torsionLogTerm p cfuel fuel ρ ρq gen Dm with
+  cases hT : torsionLogTerm p ρ ρq gen Dm with
   | none => simp
   | some term => simp
 
@@ -334,13 +334,13 @@ cIntegrateAlgebraicDecide.isSome` ⟺ `torsionLogTerm.isSome` (the structural
 simple-radical algebraic functions, modulo exactly the named Trager frontiers (Liouville-for-algebraic +
 the good-reduction torsion decision). -/
 theorem cIntegrateAlgebraicDecide_decides {isTorsion : Prop} {elem : Prop}
-    (hres : AlgebraicCompletenessResidual ρq gen Dm p cfuel isTorsion elem)
+    (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
     (hlog : radLogArgSolve ρ residual D degBound = none) :
-    (∃ F, cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm true = some F)
+    (∃ F, cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true = some F)
       ↔ elem := by
   rw [← Option.isSome_iff_exists,
-    decide_isSome_iff_torsion_isSome p cfuel fuel ρ R B residual c D degBound ρq gen Dm hlog]
-  exact cIntegrateAlgebraicWf_complete_of_residual ρ ρq gen Dm p cfuel fuel hres
+    decide_isSome_iff_torsion_isSome p ρ R B residual c D degBound ρq gen Dm hlog]
+  exact cIntegrateAlgebraicWf_complete_of_residual ρ ρq gen Dm p hres
 
 end Decides
 
@@ -368,7 +368,7 @@ def decideNonPrincipalResidual : RadElem (QFunNZG ℚ) :=
 `radLogArgSolve = none`) and whose residue divisor `(3,5)` is non-torsion, so `cIntegrateAlgebraicDecide` is
 expected to return `none`. -/
 def decideWitnessNonTorsion : Option AlgIntegralResult :=
-  cIntegrateAlgebraicDecide 5 24 16 tltRhoX3m2 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
+  cIntegrateAlgebraicDecide 5 tltRhoX3m2 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
     hypRhoX3m2 1 hypPt35 true
 
 /-- **★★ The self-determining integrator returns `none` on the non-torsion `(3,5)`** (`native_decide`):
@@ -386,7 +386,7 @@ principal solve fails (`residual = 0`, `radLogArgSolve = none`) and whose residu
 torsion, so `cIntegrateAlgebraicDecide` is expected to return `some ⟨v, [(1/3, y − 1)]⟩` (the non-principal
 torsion branch). -/
 def decideWitnessTorsion : Option AlgIntegralResult :=
-  cIntegrateAlgebraicDecide 5 16 16 tltRhoX3p1 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
+  cIntegrateAlgebraicDecide 5 tltRhoX3p1 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
     hypRhoX3p1 1 hypPt01 true
 
 /-- **★★ The self-determining integrator returns `some` with a `(1/3)·log` term on the torsion `(0,1)`**
@@ -409,7 +409,7 @@ and a principal `radLogArgSolve = some N`, `cIntegrateAlgebraicDecide` is expect
 principal `1·log(N/D)` term — the divisor inputs (`hypPt35`, here irrelevant) are bypassed because the
 principal solve succeeds first. -/
 def decideWitnessPrincipal : Option AlgIntegralResult :=
-  cIntegrateAlgebraicDecide 5 16 16 rtRatRho [1] [1]
+  cIntegrateAlgebraicDecide 5 rtRatRho [1] [1]
     (radInvYLift rtRatRho CField.one) CField.one [1] 1
     (qxNum rtRatRho) 1 hypPt35 true
 
@@ -456,40 +456,40 @@ theorem self_determining_algebraic_decision_validates :
 section Restatements
 
 -- ★ SOUNDNESS (checker-free, modulo the named frontier): `some F → D(F) = integrand`.
-example (p cfuel fuel : ℕ) [Fact p.Prime]
+example (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ)
     (D : CPolyG ℚ) (degBound : ℕ) (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
     (hasLogPart : Bool) (integrand : RadElem (QFunNZG ℚ))
-    (hres : AlgebraicDecideSoundnessResidual p cfuel fuel ρ R B residual c D degBound ρq gen Dm integrand)
+    (hres : AlgebraicDecideSoundnessResidual p ρ R B residual c D degBound ρq gen Dm integrand)
     (F : AlgIntegralResult)
-    (hsome : cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart
+    (hsome : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = some F) :
     CPolyG.toPolyG (algDeriv ρ F) = CPolyG.toPolyG integrand :=
-  cIntegrateAlgebraicDecide_sound p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart integrand
+  cIntegrateAlgebraicDecide_sound p ρ R B residual c D degBound ρq gen Dm hasLogPart integrand
     hres F hsome
 
 -- ★ COMPLETENESS (modulo the named frontier): `none → ¬ elementary`.
-example (p cfuel fuel : ℕ) [Fact p.Prime]
+example (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ)
     (D : CPolyG ℚ) (degBound : ℕ) (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
     (hasLogPart : Bool) {isTorsion elem : Prop}
-    (hres : AlgebraicCompletenessResidual ρq gen Dm p cfuel isTorsion elem)
-    (hnone : cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart
+    (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
+    (hnone : cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm hasLogPart
       = none) :
     ¬ elem :=
-  cIntegrateAlgebraicDecide_complete p cfuel fuel ρ R B residual c D degBound ρq gen Dm hasLogPart
+  cIntegrateAlgebraicDecide_complete p ρ R B residual c D degBound ρq gen Dm hasLogPart
     hres hnone
 
 -- ★ DECISION PROCEDURE (modulo the named frontier): `(∃ F, … = some F) ⟺ elementary`.
-example (p cfuel fuel : ℕ) [Fact p.Prime]
+example (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ)
     (D : CPolyG ℚ) (degBound : ℕ) (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
     {isTorsion elem : Prop}
-    (hres : AlgebraicCompletenessResidual ρq gen Dm p cfuel isTorsion elem)
+    (hres : AlgebraicCompletenessResidual ρq gen Dm p isTorsion elem)
     (hlog : radLogArgSolve ρ residual D degBound = none) :
-    (∃ F, cIntegrateAlgebraicDecide p cfuel fuel ρ R B residual c D degBound ρq gen Dm true = some F)
+    (∃ F, cIntegrateAlgebraicDecide p ρ R B residual c D degBound ρq gen Dm true = some F)
       ↔ elem :=
-  cIntegrateAlgebraicDecide_decides p cfuel fuel ρ R B residual c D degBound ρq gen Dm hres hlog
+  cIntegrateAlgebraicDecide_decides p ρ R B residual c D degBound ρq gen Dm hres hlog
 
 end Restatements
 

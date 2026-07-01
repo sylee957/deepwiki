@@ -200,7 +200,7 @@ abbrev ch6_cantor_order3 := @cantorMul_pt01_order3
 The order of a divisor and the good-reduction torsion test — deciding whether the simple-radical integral
 is elementary. `cantorOrder` lives in `namespace …CPolyG`; the rest in `namespace …SymbolicIntegration`. -/
 
-/-- **The divisor order** `CPolyG.cantorOrder fuel cfuel ρ g D` (Trager, Chapter 6 §2-3, "Points of Finite
+/-- **The divisor order** `CPolyG.cantorOrder fuel ρ g D` (Trager, Chapter 6 §2-3, "Points of Finite
 Order"): the smallest `m ≥ 1` with `m·D = O` (identity after reduction), found by iterating `cantorMul` —
 `some m` if a torsion order `≤ fuel` exists, else `none`. The order whose existence is the torsion test. -/
 abbrev ch6_divisor_order := @CPolyG.cantorOrder
@@ -211,7 +211,7 @@ divisor over `ℚ` to one over `ZMod p` (coefficient-wise `ℚ → 𝔽_p`), so 
 (`instCFieldZMod` supplies the `CField (ZMod p)` the finite-field Cantor arithmetic needs.) -/
 abbrev ch6_reduce_mod_p := @mumfordReduceModP
 
-/-- **The torsion decision** `isTorsionDivisor p cfuel ρ g D` (Trager, Chapter 6 §2-3, the elementarity
+/-- **The torsion decision** `isTorsionDivisor p ρ g D` (Trager, Chapter 6 §2-3, the elementarity
 test): `some m` iff `D` is `m`-torsion — the order mod `p` (good reduction) caps the ℚ-search, so the
 decision TERMINATES (`none` ⟹ infinite order). The smallest-multiple-is-principal test, made decidable by
 the good-reduction bound `m ∣ |Jac(𝔽_p)|`. (`elementarityViaTorsion` is its Boolean face: `true` ⟹ the
@@ -240,7 +240,7 @@ For a torsion divisor `D` of order `m`, the function `g` with `div(g) = m·D` (t
 `cantorReduceTracked`/`cantorMulTracked` live in `namespace …CPolyG`; `principalGenerator` and the
 `(0,1)` validations in `namespace …SymbolicIntegration`. -/
 
-/-- **The principal generator** `principalGenerator fuel ρ ρq g m D` (Trager, Chapter 6 §1, the
+/-- **The principal generator** `principalGenerator ρ ρq g m D` (Trager, Chapter 6 §1, the
 constructive half): for a torsion divisor `D` of order `m` on `y² = ρ`, recover the function `g` with
 `div(g) = m·D` — so the log term is `(1/m)·log g`. Runs `cantorMulTracked` (`= cantorMul` instrumented to
 emit the `y − v` reduction step-functions) and multiplies the tracked factors into a `RadElem` over the

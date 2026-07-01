@@ -121,14 +121,14 @@ doubling of a repeated point — correctly, which a naive Lagrange interpolation
 a reduced pair back to a point list via `rootsWithMult` + `v`. The reduction *engine* is Cantor's proven
 compose/reduce; the *representation* and the order search stay on the light point list. -/
 
-/-- **Point list → reduced Mumford pair** `ptToMum fuel ρ g pts` — fold Cantor composition over the single
+/-- **Point list → reduced Mumford pair** `ptToMum ρ g pts` — fold Cantor composition over the single
 points `mumfordPoint Pᵢ`, reducing at each step (`cantorReduce ρ g`), starting from `mumfordIdentity`. The
 result is the unique reduced Mumford representative of the class `Σ (Pᵢ − ∞)`. Cantor's composition gets
 **every** multiplicity right (the tangent-line doubling of repeated points), which is why the reduction
 round-trips through it. Generic over `[CField α]`. -/
-def ptToMum {α : Type*} [CField α] (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (pts : List (α × α)) :
+def ptToMum {α : Type*} [CField α] (ρ : CPolyG α) (g : ℕ) (pts : List (α × α)) :
     MumfordDivisor α :=
-  pts.foldl (fun acc P => cantorReduce ρ g (cantorCompose fuel ρ acc (mumfordPoint P.1 P.2)))
+  pts.foldl (fun acc P => cantorReduce ρ g (cantorCompose ρ acc (mumfordPoint P.1 P.2)))
     mumfordIdentity
 
 /-- **Reduced Mumford pair → point list** `mumToPts scan D` — read the support of a reduced Mumford
@@ -147,10 +147,10 @@ def pdivCompose {p : ℕ} (D₁ D₂ : RedDiv p) : RedDiv p := D₁ ++ D₂
 /-- **Reduce a point divisor** `pdivReduce p ρ g D` — bring an effective divisor on `y² = ρ` to its reduced
 representative (`deg ≤ g`) by the round-trip `mumToPts (zmodGrid p) (ptToMum D)` (lift to the reduced
 Mumford pair via Cantor compose/reduce, read the support back), then canonicalise. The point-list analogue
-of `cantorReduce`; light `𝔽_p[x]` arithmetic on short lists — no HNF. The fuel `cdegG ρ + g + 4` bounds
-the per-`cantorCompose` gcd/division; root extraction uses its own structural length bound. -/
+of `cantorReduce`; light `𝔽_p[x]` arithmetic on short lists — no HNF. Root extraction uses its own
+structural length bound. -/
 def pdivReduce (p : ℕ) [CField (ZMod p)] (ρ : CPolyG (ZMod p)) (g : ℕ) (D : RedDiv p) : RedDiv p :=
-  pdivCanon p (mumToPts (zmodGrid p) (ptToMum (cdegG ρ + g + 4) ρ g D))
+  pdivCanon p (mumToPts (zmodGrid p) (ptToMum ρ g D))
 
 /-- **The Picard group law** `pdivAdd p ρ g D₁ D₂ = pdivReduce ρ g (D₁ ++ D₂)` — the sum of two reduced
 point divisors as the reduced representative of `[D₁] + [D₂]` in `Pic⁰(C)(𝔽_p)` (compose by `++`, reduce by
@@ -238,7 +238,7 @@ order the heavy hyperelliptic Mumford/Cantor engine gives, on a GENUS-2 curve. B
 point-list group law reads the correct individual order on a non-genus-1 curve. -/
 theorem picOrder_X5p1_matches_cantor :
     picOrder 30 11 picRhoX5p1Mod11 2 picPt01_X5p1
-      = cantorOrder 200 24 (polyToZMod 11 hypRhoX5p1) 2 (mumfordReduceModP 11 hypG2Pt01) := by
+      = cantorOrder 200 (polyToZMod 11 hypRhoX5p1) 2 (mumfordReduceModP 11 hypG2Pt01) := by
   native_decide
 
 end DeepWiki.SymbolicIntegration
@@ -277,7 +277,7 @@ light point-list group law and the heavy Mumford/Cantor engine give order 6 for 
 the divides-`N_p` check. -/
 theorem picOrder_X3p1_matches_cantor :
     picOrder 30 11 picRhoX3p1Mod11 1 picPt23_X3p1
-      = cantorOrder 60 16 (polyToZMod 11 hypRhoX3p1) 1 (mumfordReduceModP 11 hypPt23) := by
+      = cantorOrder 60 (polyToZMod 11 hypRhoX3p1) 1 (mumfordReduceModP 11 hypPt23) := by
   native_decide
 
 end DeepWiki.SymbolicIntegration
@@ -313,7 +313,7 @@ theorem light_picard_group_law_validates :
     -- ★ genus 2 (y² = x⁵+1 / 𝔽₁₁): light group law reads order 5, matches Cantor
     (picOrder 30 11 picRhoX5p1Mod11 2 picPt01_X5p1 = some 5
       ∧ picOrder 30 11 picRhoX5p1Mod11 2 picPt01_X5p1
-          = cantorOrder 200 24 (polyToZMod 11 hypRhoX5p1) 2 (mumfordReduceModP 11 hypG2Pt01)
+          = cantorOrder 200 (polyToZMod 11 hypRhoX5p1) 2 (mumfordReduceModP 11 hypG2Pt01)
       ∧ (picMul 11 picRhoX5p1Mod11 2 2 picPt01_X5p1).length = 2
       ∧ pdivEq 11 (pdivAdd 11 picRhoX5p1Mod11 2 picPt01_X5p1
           [((0 : ZMod 11), (-1 : ZMod 11))]) [] = true)
@@ -321,7 +321,7 @@ theorem light_picard_group_law_validates :
     ∧ (picOrder 30 11 picRhoX3p1Mod11 1 picPt23_X3p1 = some 6
         ∧ npHypOddDeg 11 (hypCurveX3p1 11) % 6 = 0)
     ∧ picOrder 30 11 picRhoX3p1Mod11 1 picPt23_X3p1
-        = cantorOrder 60 16 (polyToZMod 11 hypRhoX3p1) 1 (mumfordReduceModP 11 hypPt23) := by
+        = cantorOrder 60 (polyToZMod 11 hypRhoX3p1) 1 (mumfordReduceModP 11 hypPt23) := by
   native_decide
 
 /-! ### Deliverable: `#print axioms`

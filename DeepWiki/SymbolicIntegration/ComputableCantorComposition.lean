@@ -52,14 +52,14 @@ The Jacobian group law on Mumford pairs (before reduction). Two extended-gcd ste
 `s₁, s₂, s₃` of `d = gcd(u₁, u₂, v₁ + v₂)` over the three generators `u₁, u₂, v₁ + v₂`; then
 `u = u₁u₂/d²` (monic), `v = (s₁u₁v₂ + s₂u₂v₁ + s₃(v₁v₂ + ρ))/d mod u`. -/
 
-/-- **Cantor composition** `cantorCompose fuel ρ D₁ D₂ = D₁ ⊕ D₂` — the hyperelliptic-Jacobian group law
+/-- **Cantor composition** `cantorCompose ρ D₁ D₂ = D₁ ⊕ D₂` — the hyperelliptic-Jacobian group law
 on Mumford pairs, producing a *semi-reduced* divisor (Cantor 1987; Trager Ch. 6). With
 `d₁ = gcd(u₁, u₂) = e₁u₁ + e₂u₂` (first `cgcdWf`) and `d = gcd(d₁, v₁ + v₂) = c₁d₁ + c₂(v₁ + v₂)`
 (second `cgcdWf`), set `s₁ = c₁e₁`, `s₂ = c₁e₂`, `s₃ = c₂` (so `d = s₁u₁ + s₂u₂ + s₃(v₁ + v₂)`); then
 `u = monic(u₁u₂/d²)` and `v = (s₁u₁v₂ + s₂u₂v₁ + s₃(v₁v₂ + ρ))/d mod u`. The exact quotients use `cdivWf`
 (`d² ∣ u₁u₂`, `d ∣` the numerator by the Bézout identities), the reduction `cmodWf`. Generic over
 `[CField α]`. -/
-def cantorCompose (_fuel : ℕ) (ρ : CPolyG α) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
+def cantorCompose (ρ : CPolyG α) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
   let u₁ := D₁.u; let v₁ := D₁.v
   let u₂ := D₂.u; let v₂ := D₂.v
   -- first extended gcd: d₁ = gcd(u₁,u₂) = e₁·u₁ + e₂·u₂
@@ -88,10 +88,10 @@ The repeated step `u ← monic((ρ − v²)/u)`, `v ← (−v) mod u` strictly l
 `2g+2`, so `deg((ρ − v²)/u) = deg ρ − deg u < deg u` once `deg u > g`), terminating at the unique reduced
 representative. Fuel = `deg u` (one step per degree drop). -/
 
-/-- **One Cantor reduction step** `cantorReduceStep fuel ρ (u, v) = (monic((ρ − v²)/u), (−v) mod u)`.
+/-- **One Cantor reduction step** `cantorReduceStep ρ (u, v) = (monic((ρ − v²)/u), (−v) mod u)`.
 Applied while `deg u > g`: `u' = (ρ − v²)/u` (exact since `u ∣ v² − ρ`), monic-normalized; `v' = (−v) mod
 u'`. Lowers `deg u` toward `≤ g`. Generic over `[CField α]`. -/
-def cantorReduceStep (_fuel : ℕ) (ρ : CPolyG α) (D : MumfordDivisor α) : MumfordDivisor α :=
+def cantorReduceStep (ρ : CPolyG α) (D : MumfordDivisor α) : MumfordDivisor α :=
   let u := D.u; let v := D.v
   let unew := cmonicG (cdivWf (csubG ρ (cmulG v v)) u)
   let vnew := cmodWf (cnegG v) unew
@@ -105,7 +105,7 @@ def cantorReduceAux : ℕ → ℕ → CPolyG α → MumfordDivisor α → Mumfor
   | 0, _, _, D => D
   | fuel + 1, g, ρ, D =>
     if cdegG D.u ≤ g then D
-    else cantorReduceAux fuel g ρ (cantorReduceStep (fuel + 1) ρ D)
+    else cantorReduceAux fuel g ρ (cantorReduceStep ρ D)
 
 /-- **Cantor reduction** `cantorReduce ρ g D` — bring a semi-reduced Mumford pair `(u, v)` to the unique
 **reduced** form `deg u ≤ g` (`g = radGenus ρ`) by the repeated step `u ← monic((ρ − v²)/u)`,
@@ -119,10 +119,9 @@ def cantorReduce (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : MumfordDiv
 /-- **The Jacobian group law** `cantorAdd ρ g D₁ D₂ = cantorReduce ρ g (cantorCompose ρ D₁ D₂)` — the
 sum `D₁ ⊕ D₂` of two reduced divisors on `y² = ρ`, as the unique reduced representative of the class.
 Cantor's algorithm: compose, then reduce to `deg u ≤ g` (`g = radGenus ρ`). Identity `mumfordIdentity =
-(1, 0)`, inverse `mumfordOpposite`. The `fuel` bounds the composition's gcd/division steps. Generic over
-`[CField α]`. -/
-def cantorAdd (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
-  cantorReduce ρ g (cantorCompose fuel ρ D₁ D₂)
+(1, 0)`, inverse `mumfordOpposite`. Generic over `[CField α]`. -/
+def cantorAdd (ρ : CPolyG α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
+  cantorReduce ρ g (cantorCompose ρ D₁ D₂)
 
 /-! ### Normalized equality of Mumford pairs
 
@@ -144,13 +143,13 @@ def mumfordNormEq [DecidableEq α] (D₁ D₂ : MumfordDivisor α) : Bool :=
 The `n`-fold sum `D ⊕ D ⊕ … ⊕ D` (`n` summands), `0·D = O` the identity. The order of `D` is the
 smallest `n ≥ 1` with `n·D = O` — the torsion computation the next sub-arc needs. -/
 
-/-- **The scalar multiple** `cantorMul fuel ρ g n D = n·D` (the `n`-fold Cantor sum
+/-- **The scalar multiple** `cantorMul ρ g n D = n·D` (the `n`-fold Cantor sum
 `D ⊕ D ⊕ … ⊕ D`), with `0·D = mumfordIdentity = (1, 0)`. By `ℕ`-recursion: `(n+1)·D = D ⊕ (n·D)`. The
 order of `D` in the Jacobian is the smallest `n ≥ 1` with `cantorMul … n D = mumfordIdentity` — the
 torsion / point-of-finite-order quantity (Trager Ch. 6). Generic over `[CField α]`. -/
-def cantorMul (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) : ℕ → MumfordDivisor α → MumfordDivisor α
+def cantorMul (ρ : CPolyG α) (g : ℕ) : ℕ → MumfordDivisor α → MumfordDivisor α
   | 0, _ => mumfordIdentity
-  | n + 1, D => cantorAdd fuel ρ g D (cantorMul fuel ρ g n D)
+  | n + 1, D => cantorAdd ρ g D (cantorMul ρ g n D)
 
 end CPolyG
 
@@ -180,7 +179,7 @@ but `(−1, 0)` is a 2-torsion (Weierstrass) point, its own reflection, so the s
 Mumford `(x + 1, 0)`. -/
 
 /-- The Cantor sum `(0,1) ⊕ (2,3)` on `y² = x³+1`, computed via `cantorAdd`. Expected: `(x+1, 0)`. -/
-def cantorSum0123 : MumfordDivisor ℚ := cantorAdd 16 hypRhoX3p1 1 hypPt01 hypPt23
+def cantorSum0123 : MumfordDivisor ℚ := cantorAdd hypRhoX3p1 1 hypPt01 hypPt23
 
 /-- **★ `(0,1) ⊕ (2,3) = (−1,0)` in the elliptic group** (`native_decide`): `cantorAdd hypPt01 hypPt23 =
 (x + 1, 0) = mumfordPoint (−1) 0` (as polynomials, `mumfordNormEq`) — the third intersection of the chord
@@ -211,7 +210,7 @@ Cantor sum reduces to the identity `(1, 0)`: a point plus its reflection cancels
 /-- The Cantor sum `(0,1) ⊕ (0,−1)` of `P = (0,1)` and `−P = mumfordOpposite P`. Expected: identity
 `(1, 0)`. -/
 def cantorSumPoppP : MumfordDivisor ℚ :=
-  cantorAdd 16 hypRhoX3p1 1 hypPt01 (mumfordOpposite hypPt01)
+  cantorAdd hypRhoX3p1 1 hypPt01 (mumfordOpposite hypPt01)
 
 /-- **★ `P ⊕ (−P) = O` (the inverse law)** (`native_decide`): `(0,1) ⊕ (0,−1) = (1, 0) =
 mumfordIdentity` — a point and its opposite (reflection) sum to the Jacobian identity. Cantor's
@@ -234,7 +233,7 @@ computes to a valid reduced divisor and equals `(0, −1)`. -/
 
 /-- The doubling `2·(0,1) = (0,1) ⊕ (0,1)` on `y² = x³+1`, via `cantorAdd`. The point `(0,1)` is an
 inflection point (3-torsion), so `2·(0,1) = (0, −1)`. -/
-def cantorDouble01 : MumfordDivisor ℚ := cantorAdd 16 hypRhoX3p1 1 hypPt01 hypPt01
+def cantorDouble01 : MumfordDivisor ℚ := cantorAdd hypRhoX3p1 1 hypPt01 hypPt01
 
 /-- **★ The doubling `2·(0,1)` is valid and reduced** (`native_decide`): the tangent-line doubling
 produces a valid reduced Mumford divisor (`deg u ≤ g = 1`). -/
@@ -258,9 +257,9 @@ mumfordIdentity`, while `2·(0,1) = (0,−1) ≠ O` and `1·(0,1) = (0,1) ≠ O`
 the Jacobian is `3` — the inflection point of `y² = x³ + 1`. This is the order / point-of-finite-order
 computation (Trager Ch. 6) the torsion bound is built on, here run end-to-end by `cantorMul`. -/
 theorem cantorMul_pt01_order3 :
-    cantorMul 16 hypRhoX3p1 1 3 hypPt01 = mumfordIdentity
-    ∧ cantorMul 16 hypRhoX3p1 1 2 hypPt01 ≠ mumfordIdentity
-    ∧ cantorMul 16 hypRhoX3p1 1 1 hypPt01 = hypPt01 := by native_decide
+    cantorMul hypRhoX3p1 1 3 hypPt01 = mumfordIdentity
+    ∧ cantorMul hypRhoX3p1 1 2 hypPt01 ≠ mumfordIdentity
+    ∧ cantorMul hypRhoX3p1 1 1 hypPt01 = hypPt01 := by native_decide
 
 /-! ## ★ The genus-2 stretch: `y² = x⁵ + 1` (`native_decide`)
 
@@ -292,7 +291,7 @@ theorem hypG2_pts_valid :
 
 /-- The genus-2 Cantor sum `(0,1) ⊕ (−1,0)` on `y² = x⁵ + 1`. Distinct support, distinct sheets — the
 composition gives a degree-2 divisor `u = x(x+1)`, already reduced (`deg u = 2 ≤ g = 2`). -/
-def cantorG2Sum : MumfordDivisor ℚ := cantorAdd 16 hypRhoX5p1 2 hypG2Pt01 hypG2PtM10
+def cantorG2Sum : MumfordDivisor ℚ := cantorAdd hypRhoX5p1 2 hypG2Pt01 hypG2PtM10
 
 /-- **★ The genus-2 Cantor composition `(0,1) ⊕ (−1,0)` is valid and reduced** (`native_decide`): on the
 hyperelliptic curve `y² = x⁵ + 1` (`g = 2`), Cantor's group law produces a valid reduced divisor
@@ -332,8 +331,8 @@ theorem cantor_group_law_validates :
       ∧ mumfordValid hypRhoX3p1 cantorDouble01 = true
       ∧ mumfordIsReduced 1 cantorDouble01 = true)
     -- the order of (0,1) is 3 (a 3-torsion point)
-    ∧ (cantorMul 16 hypRhoX3p1 1 3 hypPt01 = mumfordIdentity
-      ∧ cantorMul 16 hypRhoX3p1 1 2 hypPt01 ≠ mumfordIdentity)
+    ∧ (cantorMul hypRhoX3p1 1 3 hypPt01 = mumfordIdentity
+      ∧ cantorMul hypRhoX3p1 1 2 hypPt01 ≠ mumfordIdentity)
     -- genus-2 composition on y² = x⁵+1
     ∧ (mumfordValid hypRhoX5p1 cantorG2Sum = true
       ∧ mumfordIsReduced 2 cantorG2Sum = true

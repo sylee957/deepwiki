@@ -95,40 +95,40 @@ variable {α : Type*} [CField α] [DecidableEq α]
 
 /-! ### The order search `cantorOrder` (the smallest `m ≥ 1` with `m·D = O`)
 
-`cantorOrder fuel cfuel ρ g D = some m` for the least `m ≥ 1` with `m·D = mumfordIdentity` (compared by
+`cantorOrder fuel ρ g D = some m` for the least `m ≥ 1` with `m·D = mumfordIdentity` (compared by
 `mumfordNormEq`, the polynomial-equality test that ignores trailing-zero list encoding), searching
 `1·D, 2·D, …` by the running accumulator `acc ← cantorAdd D acc`. `fuel` bounds how many multiples are
-tried (the torsion-subgroup-size ceiling); `cfuel` is the per-`cantorAdd` gcd/division fuel. Returns
-`none` if no `m ≤ fuel` is the order (a candidate for an infinite-order point). -/
+tried (the torsion-subgroup-size ceiling). Returns `none` if no `m ≤ fuel` is the order (a candidate for
+an infinite-order point). -/
 
-/-- **Order-search loop** `cantorOrderAux fuel cfuel ρ g D acc n`: with `acc = n·D` already computed,
+/-- **Order-search loop** `cantorOrderAux fuel ρ g D acc n`: with `acc = n·D` already computed,
 test `(n+1)·D = D ⊕ acc` against `mumfordIdentity` (`mumfordNormEq`); on a hit return `some (n+1)`, else
 recurse with the new accumulator. `fuel` bounds the remaining multiples to try. Generic over
 `[CField α] [DecidableEq α]`. -/
-def cantorOrderAux (fuel cfuel : ℕ) (ρ : CPolyG α) (g : ℕ)
+def cantorOrderAux (fuel : ℕ) (ρ : CPolyG α) (g : ℕ)
     (D acc : MumfordDivisor α) (n : ℕ) : Option ℕ :=
   match fuel with
   | 0 => none
   | fuel + 1 =>
-    let acc := cantorAdd cfuel ρ g D acc
+    let acc := cantorAdd ρ g D acc
     if mumfordNormEq acc mumfordIdentity then some (n + 1)
-    else cantorOrderAux fuel cfuel ρ g D acc (n + 1)
+    else cantorOrderAux fuel ρ g D acc (n + 1)
 
-/-- **The divisor order** `cantorOrder fuel cfuel ρ g D = some m` — the smallest `m ≥ 1` with
+/-- **The divisor order** `cantorOrder fuel ρ g D = some m` — the smallest `m ≥ 1` with
 `m·D = O` (`mumfordIdentity`) on the hyperelliptic Jacobian of `y² = ρ`, searching `1·D, 2·D, …` up to
-`fuel` multiples (`mumfordNormEq` comparison; `cfuel` the per-`cantorAdd` fuel). `none` if no `m ≤ fuel`
-works — the order exceeds the fuel (a candidate infinite-order / non-torsion point). The **torsion /
+`fuel` multiples (`mumfordNormEq` comparison). `none` if no `m ≤ fuel` works — the order exceeds the fuel
+(a candidate infinite-order / non-torsion point). The **torsion /
 point-of-finite-order** quantity (Trager Ch. 6): `some m` says `D` is `m`-torsion ⟹ the simple-radical
 integral is elementary with a `(1/m)·log` term. Generic over `[CField α] [DecidableEq α]`; run over
 `α = ZMod p` it computes the order in the finite group `Jac(𝔽_p)`. -/
-def cantorOrder (fuel cfuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : Option ℕ :=
-  cantorOrderAux fuel cfuel ρ g D mumfordIdentity 0
+def cantorOrder (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : Option ℕ :=
+  cantorOrderAux fuel ρ g D mumfordIdentity 0
 
-/-- **Is `D` torsion within `fuel`** `cantorIsTorsion fuel cfuel ρ g D`: `true` iff `cantorOrder` finds a
+/-- **Is `D` torsion within `fuel`** `cantorIsTorsion fuel ρ g D`: `true` iff `cantorOrder` finds a
 finite order `≤ fuel`. A `Bool` view of `cantorOrder` for the decision wrappers. Generic over
 `[CField α] [DecidableEq α]`. -/
-def cantorIsTorsion (fuel cfuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : Bool :=
-  (cantorOrder fuel cfuel ρ g D).isSome
+def cantorIsTorsion (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : Bool :=
+  (cantorOrder fuel ρ g D).isSome
 
 end CPolyG
 
@@ -159,13 +159,13 @@ group `Jac(𝔽_p)` — the **ceiling** bounding (and divided by) the ℚ-order 
 def mumfordReduceModP (p : ℕ) (D : MumfordDivisor ℚ) : MumfordDivisor (ZMod p) :=
   ⟨polyToZMod p D.u, polyToZMod p D.v⟩
 
-/-- **The 𝔽_p order ceiling** `orderModP p fuel cfuel ρ g D` — the order of `D mod p` in `Jac(𝔽_p)`
+/-- **The 𝔽_p order ceiling** `orderModP p fuel ρ g D` — the order of `D mod p` in `Jac(𝔽_p)`
 (`cantorOrder` over `α = ZMod p`). For a good prime `p`, a multiple of the ℚ-order of `D` (the
 reduction-mod-`p` injection, Trager Ch. 6 §2); used as the terminating **ceiling** for the ℚ-order search
 in `isTorsionDivisor`. `none` if even the finite-group order exceeds `fuel`. -/
-def orderModP (p fuel cfuel : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def orderModP (p fuel : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option ℕ :=
-  cantorOrder fuel cfuel (polyToZMod p ρ) g (mumfordReduceModP p D)
+  cantorOrder fuel (polyToZMod p ρ) g (mumfordReduceModP p D)
 
 /-! ## The torsion DECISION (Trager Ch. 6 §2-3, "points of finite order")
 
@@ -174,26 +174,26 @@ torsion `D` has `order_ℚ(D) ∣ order_{𝔽_p}(D)`, so searching the ℚ-order
 suffices. `some m` ⟹ `D` is `m`-torsion ⟹ the integral is **elementary** with a `(1/m)·log` term;
 `none` ⟹ `D` is **non-torsion** ⟹ the integral is **NOT elementary**. -/
 
-/-- **The torsion decision** `isTorsionDivisor p cfuel ρ g D` (Trager Ch. 6 §2-3, "points of finite
+/-- **The torsion decision** `isTorsionDivisor p ρ g D` (Trager Ch. 6 §2-3, "points of finite
 order"): reduce `D` mod the good prime `p`, compute its order `c` in the **finite** `Jac(𝔽_p)`
 (`orderModP`, the terminating ceiling), then search the **ℚ**-order only up to `c`. Returns `some m` (the
 ℚ-order, `D` is `m`-torsion) or `none` (the ℚ-search hit the 𝔽_p ceiling without `O`, so `D` is
 **non-torsion**). The 𝔽_p ceiling `c` (its own search bounded by `p² + 4 > |Jac(𝔽_p)|` for the small
 elliptic examples) is what makes the otherwise-unbounded ℚ-search terminate. `some m` ⟹ elementary with
 `(1/m)·log`; `none` ⟹ not elementary. -/
-def isTorsionDivisor (p cfuel : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def isTorsionDivisor (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option ℕ :=
-  match orderModP p (p ^ 2 + 4) cfuel ρ g D with
+  match orderModP p (p ^ 2 + 4) ρ g D with
   | none => none
-  | some ceil => cantorOrder ceil cfuel ρ g D
+  | some ceil => cantorOrder ceil ρ g D
 
-/-- **The elementarity decision via torsion** `elementarityViaTorsion p cfuel ρ g D`: `true` iff the
+/-- **The elementarity decision via torsion** `elementarityViaTorsion p ρ g D`: `true` iff the
 residue divisor `D` is torsion (`isTorsionDivisor` returns `some m`) — i.e. the simple-radical integral
 **is elementary** (with a `(1/m)·log` term). `false` ⟹ `D` is a point of infinite order ⟹ the integral is
 **not elementary**. The Boolean face of Trager's torsion test (Ch. 6 §2-3). -/
-def elementarityViaTorsion (p cfuel : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def elementarityViaTorsion (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Bool :=
-  (isTorsionDivisor p cfuel ρ g D).isSome
+  (isTorsionDivisor p ρ g D).isSome
 
 /-! ## ★ Validation over `ℚ[x]` and `ZMod p` (`native_decide`)
 
@@ -211,28 +211,28 @@ identity → 1. -/
 /-- **★ The order of `(0,1)` on `y² = x³+1` is 3** (`native_decide`): `cantorOrder hypPt01 = some 3` — the
 inflection point is 3-torsion (`3·(0,1) = O`, `2·(0,1) ≠ O`), recovering `cantorMul_pt01_order3` as a
 single order computation. This is the torsion order ⟹ a `(1/3)·log` term. -/
-theorem cantorOrder_pt01_eq : cantorOrder 8 16 hypRhoX3p1 1 hypPt01 = some 3 := by native_decide
+theorem cantorOrder_pt01_eq : cantorOrder 8 hypRhoX3p1 1 hypPt01 = some 3 := by native_decide
 
 /-- **★ The order of `(−1,0)` on `y² = x³+1` is 2** (`native_decide`): `cantorOrder hypPtM10 = some 2` —
 the Weierstrass point `(−1,0)` (`y = 0`, its own opposite) is 2-torsion (`2·(−1,0) = O`). -/
-theorem cantorOrder_ptM10_eq : cantorOrder 8 16 hypRhoX3p1 1 hypPtM10 = some 2 := by native_decide
+theorem cantorOrder_ptM10_eq : cantorOrder 8 hypRhoX3p1 1 hypPtM10 = some 2 := by native_decide
 
 /-- **★ The order of the identity is 1** (`native_decide`): `cantorOrder mumfordIdentity = some 1` —
 `1·O = O`, the trivial torsion order. -/
 theorem cantorOrder_identity_eq :
-    cantorOrder 8 16 hypRhoX3p1 1 (mumfordIdentity : MumfordDivisor ℚ) = some 1 := by native_decide
+    cantorOrder 8 hypRhoX3p1 1 (mumfordIdentity : MumfordDivisor ℚ) = some 1 := by native_decide
 
 /-- **★ The order of `(2,3)` on `y² = x³+1` is 6** (`native_decide`): `cantorOrder hypPt23 = some 6` —
 `(2,3)` generates the **full** torsion group `ℤ/6ℤ` of `y² = x³+1` (rank 0, torsion `ℤ/6`), so it is
 6-torsion. (The order-3 `(0,1)` is `2·(2,3)`, the order-2 `(−1,0)` is `3·(2,3)`.) -/
-theorem cantorOrder_pt23_eq : cantorOrder 8 16 hypRhoX3p1 1 hypPt23 = some 6 := by native_decide
+theorem cantorOrder_pt23_eq : cantorOrder 8 hypRhoX3p1 1 hypPt23 = some 6 := by native_decide
 
 /-- **★ A too-small fuel returns `none`** (`native_decide`): `cantorOrder` with fuel 4 on `(2,3)` (true
 order 6) returns `none` — the search is bounded, so under-fueling reports "no order within fuel". The
 `isTorsionDivisor` decision picks the fuel as the 𝔽_p order so this never under-reports a genuine
 torsion order. -/
 theorem cantorOrder_pt23_lowfuel_none :
-    cantorOrder 4 16 hypRhoX3p1 1 hypPt23 = none := by native_decide
+    cantorOrder 4 hypRhoX3p1 1 hypPt23 = none := by native_decide
 
 /-! ### Reduction mod `p` and the order in `Jac(𝔽_p)` (`native_decide`)
 
@@ -253,13 +253,13 @@ theorem pt01Mod5_valid : mumfordValid rhoX3p1Mod5 pt01Mod5 = true := by native_d
 order 3 — the torsion point `(0,1)` keeps its ℚ-order 3 under good reduction at 5 (Trager Ch. 6 §2: the
 reduction map is injective on prime-to-5 torsion, so order is preserved here). The ℚ-order 3 divides
 this. -/
-theorem cantorOrder_pt01_mod5 : cantorOrder 40 16 rhoX3p1Mod5 1 pt01Mod5 = some 3 := by native_decide
+theorem cantorOrder_pt01_mod5 : cantorOrder 40 rhoX3p1Mod5 1 pt01Mod5 = some 3 := by native_decide
 
 /-- **★ The order of `(0,1)` mod `7` is also 3** (`native_decide`): over 𝔽₇ (good reduction, 7 ∤ −27) the
 order of `(0,1)` is again 3, confirming the ℚ-order 3 across two good primes (a torsion point reduces to
 the *same* order at every good prime — the reduction-mod-`p` consistency). -/
 theorem cantorOrder_pt01_mod7 :
-    cantorOrder 40 16 (polyToZMod 7 hypRhoX3p1) 1 (mumfordReduceModP 7 hypPt01) = some 3 := by
+    cantorOrder 40 (polyToZMod 7 hypRhoX3p1) 1 (mumfordReduceModP 7 hypPt01) = some 3 := by
   native_decide
 
 /-! ### ★ The torsion DECISION on a torsion point (`native_decide`)
@@ -270,19 +270,19 @@ theorem cantorOrder_pt01_mod7 :
 the good prime `p = 5` bounds the search (𝔽₅ order 3 is the ceiling), and the ℚ-order is found to be 3.
 So the integral is **elementary** with a `(1/3)·log` term (Trager Ch. 6 §3, the principal multiple of the
 residue divisor). -/
-theorem isTorsionDivisor_pt01 : isTorsionDivisor 5 16 hypRhoX3p1 1 hypPt01 = some 3 := by native_decide
+theorem isTorsionDivisor_pt01 : isTorsionDivisor 5 hypRhoX3p1 1 hypPt01 = some 3 := by native_decide
 
 /-- **★ `(−1,0)` is decided torsion of order 2** (`native_decide`): `isTorsionDivisor 7 (−1,0) = some 2` —
 the 2-torsion Weierstrass point, deciding elementary with a `(1/2)·log` term. (Uses `p = 7`; 7 ∤
 disc.) -/
 theorem isTorsionDivisor_ptM10 :
-    isTorsionDivisor 7 16 hypRhoX3p1 1 hypPtM10 = some 2 := by native_decide
+    isTorsionDivisor 7 hypRhoX3p1 1 hypPtM10 = some 2 := by native_decide
 
 /-- **★ `elementarityViaTorsion` says `(0,1)` gives an elementary integral** (`native_decide`): the
 Boolean decision is `true` — `(0,1)` is torsion, so the simple-radical integral over `y² = x³+1` is
 elementary. -/
 theorem elementarityViaTorsion_pt01 :
-    elementarityViaTorsion 5 16 hypRhoX3p1 1 hypPt01 = true := by native_decide
+    elementarityViaTorsion 5 hypRhoX3p1 1 hypPt01 = true := by native_decide
 
 /-! ## ★ The NON-TORSION witness: `(3, 5)` on `y² = x³ − 2` (`native_decide`)
 
@@ -308,7 +308,7 @@ theorem hypPt35_valid : mumfordValid hypRhoX3m2 hypPt35 = true := by native_deci
 `(3,5)` has infinite order on the rank-1 curve `y² = x³−2`, so no multiple `≤ 30` is `O`. The unbounded
 ℚ-search alone cannot conclude "non-torsion" (it could in principle find `O` later); the good-reduction
 ceiling below is what makes the decision terminate. -/
-theorem cantorOrder_pt35_none : cantorOrder 30 24 hypRhoX3m2 1 hypPt35 = none := by native_decide
+theorem cantorOrder_pt35_none : cantorOrder 30 hypRhoX3m2 1 hypPt35 = none := by native_decide
 
 /-- **★ The orders of `(3,5)` mod `5, 7, 11` are `2, 7, 12`** (`native_decide`): `cantorOrder` over
 `α = ZMod p` gives finite orders in each `Jac(𝔽_p)` — but **distinct** ones. A torsion point reduces to
@@ -316,9 +316,9 @@ the *same* order (or a fixed multiple) at every good prime; the spread `2, 7, 12
 **proves** `(3,5)` is non-torsion (Trager Ch. 6 §2: if `(3,5)` were `m`-torsion, `m` would divide each of
 2, 7, 12, forcing `m = 1`, i.e. `(3,5) = O`, false). The reduction-mod-`p` non-torsion certificate. -/
 theorem cantorOrder_pt35_modp :
-    cantorOrder 60 24 (polyToZMod 5 hypRhoX3m2) 1 (mumfordReduceModP 5 hypPt35) = some 2
-    ∧ cantorOrder 60 24 (polyToZMod 7 hypRhoX3m2) 1 (mumfordReduceModP 7 hypPt35) = some 7
-    ∧ cantorOrder 60 24 (polyToZMod 11 hypRhoX3m2) 1 (mumfordReduceModP 11 hypPt35) = some 12 := by
+    cantorOrder 60 (polyToZMod 5 hypRhoX3m2) 1 (mumfordReduceModP 5 hypPt35) = some 2
+    ∧ cantorOrder 60 (polyToZMod 7 hypRhoX3m2) 1 (mumfordReduceModP 7 hypPt35) = some 7
+    ∧ cantorOrder 60 (polyToZMod 11 hypRhoX3m2) 1 (mumfordReduceModP 11 hypPt35) = some 12 := by
   native_decide
 
 /-- **★★ `(3,5)` is decided NON-TORSION** (`native_decide`): `isTorsionDivisor 5 (3,5) = none` — the
@@ -327,13 +327,13 @@ good-reduction ceiling (𝔽₅ order 2) bounds the ℚ-search, which finds `2·
 `y² = x³−2` is **NOT elementary** (Trager Ch. 6: a residue divisor of infinite order has no principal
 multiple, so its `log` argument is not an algebraic function — the integral is non-elementary). The famous
 "points of finite order" decision, here returning the *negative* answer with a terminating certificate. -/
-theorem isTorsionDivisor_pt35_none : isTorsionDivisor 5 24 hypRhoX3m2 1 hypPt35 = none := by native_decide
+theorem isTorsionDivisor_pt35_none : isTorsionDivisor 5 hypRhoX3m2 1 hypPt35 = none := by native_decide
 
 /-- **★ `elementarityViaTorsion` says `(3,5)` gives a NON-elementary integral** (`native_decide`): the
 Boolean decision is `false` — `(3,5)` is non-torsion, so the simple-radical integral over `y² = x³−2` is
 not elementary. The decision terminates (good reduction) where the naive ℚ-search would not. -/
 theorem elementarityViaTorsion_pt35 :
-    elementarityViaTorsion 5 24 hypRhoX3m2 1 hypPt35 = false := by native_decide
+    elementarityViaTorsion 5 hypRhoX3m2 1 hypPt35 = false := by native_decide
 
 /-! ## ★ The divisor-order + torsion-decision milestone (`native_decide`) -/
 
@@ -355,23 +355,23 @@ elementarity decision for the non-principal log case) via Cantor + good reductio
 famous "points of finite order" decision, both answers, with terminating certificates. -/
 theorem divisor_order_torsion_decision_validates :
     -- the order search over ℚ
-    (cantorOrder 8 16 hypRhoX3p1 1 hypPt01 = some 3
-      ∧ cantorOrder 8 16 hypRhoX3p1 1 hypPtM10 = some 2
-      ∧ cantorOrder 8 16 hypRhoX3p1 1 (mumfordIdentity : MumfordDivisor ℚ) = some 1)
+    (cantorOrder 8 hypRhoX3p1 1 hypPt01 = some 3
+      ∧ cantorOrder 8 hypRhoX3p1 1 hypPtM10 = some 2
+      ∧ cantorOrder 8 hypRhoX3p1 1 (mumfordIdentity : MumfordDivisor ℚ) = some 1)
     -- reduction mod p: order preserved at good primes for a torsion point
     ∧ (mumfordValid rhoX3p1Mod5 pt01Mod5 = true
-      ∧ cantorOrder 40 16 rhoX3p1Mod5 1 pt01Mod5 = some 3
-      ∧ cantorOrder 40 16 (polyToZMod 7 hypRhoX3p1) 1 (mumfordReduceModP 7 hypPt01) = some 3)
+      ∧ cantorOrder 40 rhoX3p1Mod5 1 pt01Mod5 = some 3
+      ∧ cantorOrder 40 (polyToZMod 7 hypRhoX3p1) 1 (mumfordReduceModP 7 hypPt01) = some 3)
     -- the torsion DECISION: (0,1) torsion ⟹ elementary
-    ∧ (isTorsionDivisor 5 16 hypRhoX3p1 1 hypPt01 = some 3
-      ∧ elementarityViaTorsion 5 16 hypRhoX3p1 1 hypPt01 = true)
+    ∧ (isTorsionDivisor 5 hypRhoX3p1 1 hypPt01 = some 3
+      ∧ elementarityViaTorsion 5 hypRhoX3p1 1 hypPt01 = true)
     -- the NON-TORSION witness (3,5) on y²=x³−2 ⟹ NOT elementary
     ∧ (mumfordValid hypRhoX3m2 hypPt35 = true
-      ∧ cantorOrder 30 24 hypRhoX3m2 1 hypPt35 = none
-      ∧ cantorOrder 60 24 (polyToZMod 5 hypRhoX3m2) 1 (mumfordReduceModP 5 hypPt35) = some 2
-      ∧ cantorOrder 60 24 (polyToZMod 7 hypRhoX3m2) 1 (mumfordReduceModP 7 hypPt35) = some 7
-      ∧ isTorsionDivisor 5 24 hypRhoX3m2 1 hypPt35 = none
-      ∧ elementarityViaTorsion 5 24 hypRhoX3m2 1 hypPt35 = false) := by native_decide
+      ∧ cantorOrder 30 hypRhoX3m2 1 hypPt35 = none
+      ∧ cantorOrder 60 (polyToZMod 5 hypRhoX3m2) 1 (mumfordReduceModP 5 hypPt35) = some 2
+      ∧ cantorOrder 60 (polyToZMod 7 hypRhoX3m2) 1 (mumfordReduceModP 7 hypPt35) = some 7
+      ∧ isTorsionDivisor 5 hypRhoX3m2 1 hypPt35 = none
+      ∧ elementarityViaTorsion 5 hypRhoX3m2 1 hypPt35 = false) := by native_decide
 
 /-! ### Deliverable: `#print axioms`
 
@@ -391,22 +391,22 @@ order. This sketch records the wiring; the **full function recovery** — comput
 `g` with `div(g) = m·D` (so the log argument is `(1/m)·log g`) — is a further piece (the principal-divisor
 **reconstruction** of Trager Ch. 6 §1, on top of this decision). -/
 
-/-- **The torsion log-term sketch** `radTorsionLogTerm p cfuel ρ g D`: when the residue divisor `D` is
+/-- **The torsion log-term sketch** `radTorsionLogTerm p ρ g D`: when the residue divisor `D` is
 torsion of order `m` (`isTorsionDivisor = some m`), the simple-radical log part contributes a `(1/m)·log`
 term — return `some m` (the log-coefficient denominator) for the integrator's non-principal branch
 (`radLogArgSolveG none`), or `none` (non-torsion ⟹ no elementary log term, the integral is not
 elementary). This is the *decision* half; the **generator** `g` with `div(g) = m·D` (the actual argument
 of `(1/m)·log g`) is the deferred principal-divisor reconstruction (Trager Ch. 6 §1). -/
-def radTorsionLogTerm (p cfuel : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
+def radTorsionLogTerm (p : ℕ) [Fact p.Prime] (ρ : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option ℕ :=
-  isTorsionDivisor p cfuel ρ g D
+  isTorsionDivisor p ρ g D
 
 /-- **★ The torsion log-term sketch fires on `(0,1)`** (`native_decide`): `radTorsionLogTerm 5 (0,1) =
 some 3` — the order-3 residue divisor contributes a `(1/3)·log` term to the integral (the generator of
 `3·(0,1) = O` being the deferred reconstruction). On the non-torsion `(3,5)` it returns `none` (no
 elementary log term). -/
 theorem radTorsionLogTerm_examples :
-    radTorsionLogTerm 5 16 hypRhoX3p1 1 hypPt01 = some 3
-    ∧ radTorsionLogTerm 5 24 hypRhoX3m2 1 hypPt35 = none := by native_decide
+    radTorsionLogTerm 5 hypRhoX3p1 1 hypPt01 = some 3
+    ∧ radTorsionLogTerm 5 hypRhoX3m2 1 hypPt35 = none := by native_decide
 
 end DeepWiki.SymbolicIntegration

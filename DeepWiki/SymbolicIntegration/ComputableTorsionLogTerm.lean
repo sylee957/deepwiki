@@ -48,7 +48,7 @@ open CPolyG RadElem
 
 /-! ## `torsionLogTerm` — the non-principal branch as a usable function
 
-`torsionLogTerm p cfuel fuel ρ ρq g D`: decide whether the residue divisor `D` is torsion (`isTorsionDivisor`);
+`torsionLogTerm p ρ ρq g D`: decide whether the residue divisor `D` is torsion (`isTorsionDivisor`);
 if `some m`, construct the generator `g` of `m·D` (`principalGenerator`) and return the log term
 `(1/m, g)`. The coefficient `1/m` is the head-constant `ℚ(x)` element `qxOfNum [1] / qxOfNum [m]`; the
 argument `g` is the recovered `RadElem (QFunNZG ℚ)`. Returns `none` when `D` is non-torsion — that part of
@@ -58,11 +58,11 @@ the integral is NOT elementary. -/
 `qxOfNum [1] / qxOfNum [m]` (`m` cast to ℚ), the coefficient `cᵢ = 1/m` of the `(1/m)·log g` term. -/
 def oneOverMQ (m : ℕ) : QFunNZG ℚ := CField.div (qxOfNum [1]) (qxOfNum [(m : ℚ)])
 
-/-- **The non-principal `(1/m)·log` branch** `torsionLogTerm p cfuel fuel ρ ρq g D` (Trager Ch. 6 §1-3) —
+/-- **The non-principal `(1/m)·log` branch** `torsionLogTerm p ρ ρq g D` (Trager Ch. 6 §1-3) —
 the integrator branch for the residue divisor `D` with **no single principal generator**
-(`radLogArgSolve = none`). Decide via `isTorsionDivisor p cfuel ρq g D`:
+(`radLogArgSolve = none`). Decide via `isTorsionDivisor p ρq g D`:
 * `some m` — `D` is torsion of order `m`, so `m·D` is principal; construct its generator
-  `g = principalGenerator fuel ρ ρq g m D` (the function with `div(g) = m·D`) and return the **log term**
+  `g = principalGenerator ρ ρq g m D` (the function with `div(g) = m·D`) and return the **log term**
   `some (1/m, g)` — coefficient `1/m ∈ ℚ(x)` (`oneOverMQ`), argument `g ∈ ℚ(x)[y]/(y² − ρ)`, i.e.
   `∫ = … + (1/m)·log g`;
 * `none` — `D` is of infinite order, so its log argument is not an algebraic function: that part of the
@@ -71,12 +71,12 @@ the integrator branch for the residue divisor `D` with **no single principal gen
 `ρ` is the radicand as a `ℚ(x)` element (for the radical-extension generator product), `ρq` the same
 radicand as a `ℚ[x]` polynomial (for the Cantor torsion decision); `g` is the genus (degree bound of the
 reduction). The function the simple-radical integrator calls when its principal log solve returns `none`. -/
-def torsionLogTerm (p cfuel fuel : ℕ) [Fact p.Prime]
+def torsionLogTerm (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : MumfordDivisor ℚ) :
     Option (QFunNZG ℚ × RadElem (QFunNZG ℚ)) :=
-  match isTorsionDivisor p cfuel ρq g D with
+  match isTorsionDivisor p ρq g D with
   | none => none
-  | some m => some (oneOverMQ m, principalGenerator fuel ρ ρq g m D)
+  | some m => some (oneOverMQ m, principalGenerator ρ ρq g m D)
 
 /-! ## ★ The headline round-trip: `(0, 1)` → `(1/3)·log(y − 1)` from the DIVISOR (`native_decide`)
 
@@ -89,9 +89,9 @@ open RadElem
 /-- The radicand `ρ = x³ + 1` as a `ℚ(x)` element (`QFunNZG ℚ`), for the radical-extension generator. -/
 def tltRhoX3p1 : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
 
-/-- The torsion log term `torsionLogTerm 5 16 16 ρ … (0, 1)` on `y² = x³ + 1` — expected `(1/3, y − 1)`. -/
+/-- The torsion log term `torsionLogTerm 5 ρ … (0, 1)` on `y² = x³ + 1` — expected `(1/3, y − 1)`. -/
 def tltTerm01 : Option (QFunNZG ℚ × RadElem (QFunNZG ℚ)) :=
-  torsionLogTerm 5 16 16 tltRhoX3p1 hypRhoX3p1 1 hypPt01
+  torsionLogTerm 5 tltRhoX3p1 hypRhoX3p1 1 hypPt01
 
 /-- The target generator `g = y − 1 = [−1, 1]` over `ℚ(x)` (the flex tangent line). -/
 def tltYm1 : RadElem (QFunNZG ℚ) := [CField.neg CField.one, CField.one]
@@ -152,22 +152,22 @@ The torsion log term `(1/m, g)` slots into `AlgIntegralResult.logTerms` (the `v 
 divisor; `algDeriv` of it returns the differential — the same round-trip the principal integrator uses,
 now closing the non-principal branch. -/
 
-/-- **Assemble the torsion result** `torsionAlgResult p cfuel fuel ρ ρq g v D` — the full
+/-- **Assemble the torsion result** `torsionAlgResult p ρ ρq g v D` — the full
 `∫ = v + (1/m)·log g` as an `AlgIntegralResult`: rational part `v` plus the torsion log term
 (`torsionLogTerm`) appended to `logTerms` (empty if `D` is non-torsion). The non-principal-branch analogue
 of `cIntegrateAlgebraic`'s assembly: where the principal driver packs `(c, u)` from `radLogArgSolve`, this
 packs `(1/m, g)` from the torsion decision + generator. `algDeriv` of the result returns the differential. -/
-def torsionAlgResult (p cfuel fuel : ℕ) [Fact p.Prime]
+def torsionAlgResult (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (v : RadElem (QFunNZG ℚ)) (D : MumfordDivisor ℚ) :
     AlgIntegralResult :=
-  match torsionLogTerm p cfuel fuel ρ ρq g D with
+  match torsionLogTerm p ρ ρq g D with
   | none => ⟨v, []⟩
   | some term => ⟨v, [term]⟩
 
 /-- The assembled torsion result `∫ = 0 + (1/3)·log(y − 1)` (no rational part) for `(0, 1)` on
 `y² = x³ + 1` — `torsionAlgResult` with `v = 0` (`radZero`). Expected `logTerms = [(1/3, y − 1)]`. -/
 def tltResult01 : AlgIntegralResult :=
-  torsionAlgResult 5 16 16 tltRhoX3p1 hypRhoX3p1 1 radZero hypPt01
+  torsionAlgResult 5 tltRhoX3p1 hypRhoX3p1 1 radZero hypPt01
 
 /-- **★ The assembled result has one log term with coefficient `1/3`** (`native_decide`): `torsionAlgResult`
 on `(0, 1)` slots the torsion term `(1/3, y − 1)` into `logTerms`, giving a result with empty rational part
@@ -202,12 +202,12 @@ non-principal branch decides `(3, 5)` non-torsion (`isTorsionDivisor = none`, th
 terminating the search), so it produces **no** log term — that part of the integral over `y² = x³ − 2` is
 **NOT elementary**. The decision propagates through the branch: non-torsion ⟹ `torsionLogTerm = none`. -/
 theorem tltTerm35_none :
-    torsionLogTerm 5 24 16 tltRhoX3m2 hypRhoX3m2 1 hypPt35 = none := by native_decide
+    torsionLogTerm 5 tltRhoX3m2 hypRhoX3m2 1 hypPt35 = none := by native_decide
 
 /-- The assembled result for the non-torsion `(3, 5)` — `torsionAlgResult` with `v = 0`; expected
 `⟨0, []⟩` (empty log list, the non-elementary signature). -/
 def tltResult35 : AlgIntegralResult :=
-  torsionAlgResult 5 24 16 tltRhoX3m2 hypRhoX3m2 1 radZero hypPt35
+  torsionAlgResult 5 tltRhoX3m2 hypRhoX3m2 1 radZero hypPt35
 
 /-- **★ The non-torsion assembled result has an empty log list** (`native_decide`): `torsionAlgResult` on
 `(3, 5)` produces `⟨0, []⟩` — no rational part, **no** log term, the structural signature that this part of
@@ -246,7 +246,7 @@ theorem torsion_log_branch_validates :
         tltResult01.logTerms.head?.map fun t => qEq t.1 (oneOverMQ 3)) = (true, 1, some true)
       ∧ radIsZero (radSub (algDeriv tltRhoX3p1 tltResult01) tltDiff01) = true)
     -- non-torsion (3,5) propagates to none ⟹ NOT elementary
-    ∧ ((torsionLogTerm 5 24 16 tltRhoX3m2 hypRhoX3m2 1 hypPt35).isNone = true
+    ∧ ((torsionLogTerm 5 tltRhoX3m2 hypRhoX3m2 1 hypPt35).isNone = true
       ∧ (radIsZero tltResult35.ratPart, tltResult35.logTerms.length) = (true, 0)) := by native_decide
 
 /-! ### Deliverable: `#print axioms`

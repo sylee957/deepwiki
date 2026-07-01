@@ -51,13 +51,13 @@ Each `cantorReduceStep` on `(u, v)` is driven by the function `y − v(x)`. `can
 returns the reduced pair **and** the `v` of this step (so the caller multiplies in the factor `y − v`);
 `cantorReduceTracked` threads the list of all step `v`s through the whole reduction loop. -/
 
-/-- **One tracked Cantor reduction step** `cantorReduceStepTracked fuel ρ (u, v) = ((u', v'), v)` — the
+/-- **One tracked Cantor reduction step** `cantorReduceStepTracked ρ (u, v) = ((u', v'), v)` — the
 ordinary `cantorReduceStep` (`u' = monic((ρ − v²)/u)`, `v' = (−v) mod u'`) **paired with the `v` of this
 step**, the data of the driving function `y − v(x)` (whose divisor swaps `(u, v)` for its reduced form,
 Trager Ch. 6 §1). Generic over `[CField α]`. -/
-def cantorReduceStepTracked (fuel : ℕ) (ρ : CPolyG α) (D : MumfordDivisor α) :
+def cantorReduceStepTracked (ρ : CPolyG α) (D : MumfordDivisor α) :
     MumfordDivisor α × CPolyG α :=
-  (cantorReduceStep fuel ρ D, D.v)
+  (cantorReduceStep ρ D, D.v)
 
 /-- **Tracked Cantor reduction loop** `cantorReduceTrackedAux fuel g ρ (u, v) acc`: apply
 `cantorReduceStep` until `deg u ≤ g`, accumulating each step's `v` (the `y − v` factor) onto `acc` (newest
@@ -68,7 +68,7 @@ def cantorReduceTrackedAux : ℕ → ℕ → CPolyG α → MumfordDivisor α →
   | 0, _, _, D, acc => (D, acc)
   | fuel + 1, g, ρ, D, acc =>
     if cdegG D.u ≤ g then (D, acc)
-    else cantorReduceTrackedAux fuel g ρ (cantorReduceStep (fuel + 1) ρ D) (acc ++ [D.v])
+    else cantorReduceTrackedAux fuel g ρ (cantorReduceStep ρ D) (acc ++ [D.v])
 
 /-- **Tracked Cantor reduction** `cantorReduceTracked ρ g D = (reduced, vs)` — bring `(u, v)` to reduced
 form `deg u ≤ g` (as `cantorReduce`), **also** returning the list `vs` of every reduction step's `v` (each
@@ -78,25 +78,25 @@ def cantorReduceTracked (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) :
     MumfordDivisor α × List (CPolyG α) :=
   cantorReduceTrackedAux (cdegG D.u + 1) g ρ D []
 
-/-- **Tracked Jacobian group law** `cantorAddTracked fuel ρ g D₁ D₂ = (D₁ ⊕ D₂, vs)` — `cantorAdd` with
+/-- **Tracked Jacobian group law** `cantorAddTracked ρ g D₁ D₂ = (D₁ ⊕ D₂, vs)` — `cantorAdd` with
 the list `vs` of the `y − v` step-functions emitted by the **reduction** of the composite (Trager Ch. 6
 §1). The composition `cantorCompose` is performed first; its reduction to `deg u ≤ g` accumulates the
 `vs`. Generic over `[CField α]`. -/
-def cantorAddTracked (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) :
+def cantorAddTracked (ρ : CPolyG α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) :
     MumfordDivisor α × List (CPolyG α) :=
-  cantorReduceTracked ρ g (cantorCompose fuel ρ D₁ D₂)
+  cantorReduceTracked ρ g (cantorCompose ρ D₁ D₂)
 
-/-- **Tracked scalar multiple** `cantorMulTracked fuel ρ g n D = (n·D, vs)` — the `n`-fold Cantor sum
+/-- **Tracked scalar multiple** `cantorMulTracked ρ g n D = (n·D, vs)` — the `n`-fold Cantor sum
 `n·D` (as `cantorMul`) **with** the accumulated list `vs` of all `y − v` step-functions emitted across the
 `n − 1` additions' reductions (Trager Ch. 6 §1). When `n·D = O` (the identity), `∏ (y − vᵢ)` over `vs` is
 the **principal generator** `g` with `div(g) = n·D`. By `ℕ`-recursion `(n+1)·D = D ⊕ (n·D)`, prepending
 the new addition's `vs` to the carried ones. Generic over `[CField α]`. -/
-def cantorMulTracked (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) :
+def cantorMulTracked (ρ : CPolyG α) (g : ℕ) :
     ℕ → MumfordDivisor α → MumfordDivisor α × List (CPolyG α)
   | 0, _ => (mumfordIdentity, [])
   | n + 1, D =>
-    let (acc, vsAcc) := cantorMulTracked fuel ρ g n D
-    let (res, vsStep) := cantorAddTracked fuel ρ g D acc
+    let (acc, vsAcc) := cantorMulTracked ρ g n D
+    let (res, vsStep) := cantorAddTracked ρ g D acc
     (res, vsAcc ++ vsStep)
 
 end CPolyG
@@ -124,15 +124,15 @@ radical extension (`radMul 2 ρ`), starting from `1` (`radOne`). -/
 def principalGeneratorOfVs (ρ : QFunNZG ℚ) (vs : List (CPolyG ℚ)) : RadElem (QFunNZG ℚ) :=
   vs.foldl (fun acc v => radMul 2 ρ acc (genFactorOfV v)) radOne
 
-/-- **The principal generator of a torsion divisor** `principalGenerator fuel ρ ρq g m D` — for a torsion
+/-- **The principal generator of a torsion divisor** `principalGenerator ρ ρq g m D` — for a torsion
 divisor `D` of order `m` on `y² = ρ` (`m·D = O`), recover the function `g` with `div(g) = m·D` (so the log
-term is `(1/m)·log g`, Trager Ch. 6 §1). Runs `cantorMulTracked fuel ρq g m D` (the order-`m` multiple,
+term is `(1/m)·log g`, Trager Ch. 6 §1). Runs `cantorMulTracked ρq g m D` (the order-`m` multiple,
 tracking the `y − v` reduction step-functions) and multiplies the tracked factors into a
 `RadElem (QFunNZG ℚ)` over `y² = ρ` (`principalGeneratorOfVs`). `ρq` is the radicand as a `ℚ[x]`
 polynomial (for Cantor); `ρ` the same radicand as a `ℚ(x)` element (for the radical-extension product). -/
-def principalGenerator (fuel : ℕ) (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
+def principalGenerator (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
     RadElem (QFunNZG ℚ) :=
-  principalGeneratorOfVs ρ (cantorMulTracked fuel ρq g m D).2
+  principalGeneratorOfVs ρ (cantorMulTracked ρq g m D).2
 
 /-! ## ★ The headline: recovering `g = y − 1` for `(0, 1)` on `y² = x³ + 1` (`native_decide`)
 
@@ -145,7 +145,7 @@ open RadElem
 def pgRhoX3p1 : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
 
 /-- The recovered generator `gen = principalGenerator … (0, 1) 3` for `y² = x³ + 1` — expected `y − 1`. -/
-def pgGen01 : RadElem (QFunNZG ℚ) := principalGenerator 16 pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
+def pgGen01 : RadElem (QFunNZG ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
 
 /-- The target generator `y − 1 = [−1, 1]` over `ℚ(x)` (the constant `v = 1` flex tangent line). -/
 def pgYm1 : RadElem (QFunNZG ℚ) := [CField.neg CField.one, CField.one]
@@ -219,7 +219,7 @@ theorem principal_generator_validates :
     (radIsZero (radSub pgGen01 pgYm1) = true
       ∧ radIsZero (radSub pgGen01 [CField.neg (CField.one : QFunNZG ℚ), CField.one]) = true)
     -- the order of D = (0,1) is 3 (the torsion decision feeding the construction)
-    ∧ cantorOrder 8 16 hypRhoX3p1 1 hypPt01 = some 3
+    ∧ cantorOrder 8 hypRhoX3p1 1 hypPt01 = some 3
     -- the (1/3)·log(y − 1) differential passes the log-derivative certificate
     ∧ (radIsLogIntegral 2 pgRhoX3p1 pgYm1 (radScale (qxOfNum [3]) pgDiff01) = true
       ∧ radIsZero (radSub (radDeriv 2 pgRhoX3p1 pgYm1)
