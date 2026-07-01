@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralWellFounded
 import DeepWiki.SymbolicIntegration.ComputableGeneralResidues
-import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogSoundness
 
 /-! # The LOG-part soundness for the GENERAL-curve integrator: `D(Σ cᵢ log uᵢ) = logpart` via `afDerivWf`

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
-import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
+import DeepWiki.SymbolicIntegration.ComputableGeneralSetup
 import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 
 /-! # The GENERAL divisor-class-group: divisors as fractional ideals of the order `O` (= the integral
