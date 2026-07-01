@@ -565,10 +565,10 @@ end CPolyG
 
 Each flat-composition `…GWf` op mirrors its `…G` original with the fuel dropped, so its bridge is a pure
 rewrite threading the per-leaf sub-agreements (every fuel'd sub-op replaced by its fuel-free companion at
-sufficient fuel). Following the integration pipeline's pattern (`cIntegrateGWf_eq`, `cLogPartGWf_eq`), the
-sub-agreements are taken as **hypotheses** — the fuel bounds they carry live only there; the runtime `…GWf`
-carries none. The recursive-bottom agreements (`cValuationGWf`/`cPolyRischDECancel*GWf`/`cSplitFactorFastGWf`/
-`cgcdFFCoreWf`) feed in through their own regularity gates. The `cWeakNormalizerGWf` / `cRdeNormalDenominator`
+sufficient fuel). The sub-agreements are taken as **hypotheses** — the fuel bounds they carry live only there;
+the runtime `…GWf` carries none. The recursive-bottom agreements
+(`cValuationGWf`/`cPolyRischDECancel*GWf`/`cSplitFactorFastGWf`/`cgcdFFCoreWf`) feed in through their own
+regularity gates. The `cWeakNormalizerGWf` / `cRdeNormalDenominator`
 / `cRdeSpecialDenominator` stage agreements are taken as whole-stage hypotheses (the valuation own-loop
 `cValuationGWf` has no standalone bridge, feeding the special-denominator stage instead). -/
 

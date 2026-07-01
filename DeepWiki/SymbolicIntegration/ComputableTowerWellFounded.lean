@@ -25,14 +25,13 @@ composition over fuel'd leaves:
 
 The flat-composition ops (`canonicalRepresentationFastGWf`, `cHermiteReduceTowerGWf`,
 `cResidueResultantTowerGWf`/`cLogPartGWf`, and the reduced-case capstone `cIntegrateReducedGWf`)
-substitute the fuel-free leaves and are bridged to their fuel'd `…G` originals. The generic leaves
+substitute the fuel-free leaves directly. The generic leaves
 `cdivmodWf`/`cgcdWf`/`cresultantWf` (`ComputableFuelFreeGcd`/`ComputableFuelFreeResultant`) are reused verbatim
 where the pipeline bottoms out at them.
 
 Every `…GWf` def is **`[CField α]`-only on the fuel-free fragment** (plus `[CDiffField α]`/`[CFracGcdCore α]`
 where the pipeline needs the derivation / the fraction-free gcd) — never `[CFieldSpec α]`, which would break
-`native_decide` over the noncomputable tower (the keystone lesson). The fuel bounds live only inside the
-bridge proofs; the runtime ops carry no fuel. -/
+`native_decide` over the noncomputable tower (the keystone lesson). The runtime ops carry no fuel. -/
 
 open Polynomial
 
@@ -428,63 +427,7 @@ def cIntegrateReducedGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
 
 end CPolyG
 
-
-/-! ## Part 4 — bridges of the flat-composition pipeline to the fuel'd `…G` originals
-
-Each flat-composition `…GWf` op mirrors its `…G` original with the fuel dropped, so its bridge to the fuel'd
-version is a pure rewrite that threads the per-leaf sub-agreements (every fuel'd sub-op replaced by its
-fuel-free companion at sufficient fuel). Following the established pattern (`cLogPartGWf_eq`,
-`cIntegrateReducedGWf_eq`), the sub-agreements are taken as **hypotheses** — the fuel bounds they
-carry live only there; the runtime `…GWf` carries none. The recursive-bottom agreements
-(`cSplitFactorFastGWf`/`cSqfreeYunFFGgoWf`/`cgcdFFCoreWf`) feed in through their own regularity gates. -/
-
-namespace CPolyG
-
-section
-variable {α : Type*} [CField α] [CDiffField α]
-
-/-- **Bridge — `cRationalResiduesGWf` equals `cRationalResiduesG` at any sufficient fuel.** When the
-fuel-free residue resultant agrees with the fuel'd one (`hR : cResidueResultantTowerGWf Dt a d =
-cResidueResultantTowerG Dt fuel a d`), the `cHornerG`-root filter predicates coincide, so
-`cRationalResiduesGWf Dt a d cands = cRationalResiduesG Dt fuel a d cands`. -/
-theorem cRationalResiduesGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (hR : cResidueResultantTowerGWf Dt a d = cResidueResultantTowerG Dt fuel a d) :
-    cRationalResiduesGWf Dt a d cands = cRationalResiduesG Dt fuel a d cands := by
-  rw [cRationalResiduesGWf, cRationalResiduesG, hR]
-
-end
-
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCoreWf α]
-
-/-- **Bridge — `cLogPartGWf` equals `cLogPartG` at any sufficient fuel.** From the residue-resultant bridge
-`hR` (so the rational-residue lists coincide, `cRationalResiduesGWf_eq`) and the per-residue log-argument
-bridge `hLogArg` (`cLogArgTowerGWf … c = cLogArgTowerG fuel … c` for every kept residue `c`),
-`cLogPartGWf Dt a d cands = cLogPartG Dt fuel a d cands`. The fuel bounds live only in `hR`/`hLogArg`. -/
-theorem cLogPartGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (hR : cResidueResultantTowerGWf Dt a d = cResidueResultantTowerG Dt fuel a d)
-    (hLogArg : ∀ c ∈ cRationalResiduesGWf Dt a d cands,
-      cLogArgTowerGWf Dt a d c = cLogArgTowerG Dt fuel a d c) :
-    cLogPartGWf Dt a d cands = cLogPartG Dt fuel a d cands := by
-  rw [cLogPartGWf, cLogPartG, ← cRationalResiduesGWf_eq Dt fuel a d cands hR]
-  apply List.map_congr_left
-  intro c hc
-  rw [hLogArg c hc]
-
-/-- **Bridge — `cIntegrateReducedGWf` equals `cIntegrateReducedG` at any sufficient fuel.** From the Hermite
-bridge `hHermite : cHermiteReduceTowerGWf Dt a d = cHermiteReduceTowerG Dt fuel a d` and the log-part bridge
-`hLog` on the resulting simple residual, `cIntegrateReducedGWf Dt a d cands = cIntegrateReducedG Dt fuel a d
-cands`. The fuel bounds live only in `hHermite`/`hLog`. -/
-theorem cIntegrateReducedGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (hHermite : cHermiteReduceTowerGWf Dt a d = cHermiteReduceTowerG Dt fuel a d)
-    (hLog : cLogPartGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 cands
-      = cLogPartG Dt fuel (cHermiteReduceTowerG Dt fuel a d).2.1
-          (cHermiteReduceTowerG Dt fuel a d).2.2 cands) :
-    cIntegrateReducedGWf Dt a d cands = cIntegrateReducedG Dt fuel a d cands := by
-  rw [cIntegrateReducedGWf, cIntegrateReducedG, hLog, hHermite]
-
-end CPolyG
-
-/-! ## Part 5 — bridges of the recursive bottoms `cSqfreeYunFFGgoWf` / `cSplitFactorFastGWf`
+/-! ## Part 4 — bridges of the recursive bottoms `cSqfreeYunFFGgoWf` / `cSplitFactorFastGWf`
 
 The two recursive bottoms get bridges to their fuel'd `…G` originals. The bridges carry the per-node
 `cgcdFFCoreWf = cgcdFFCore fuel` agreement (which itself threads `cprimPRSgcdGenCoreWf_eq` through every
