@@ -1,5 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableGeneralDerivation
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
+import DeepWiki.SymbolicIntegration.ComputableGeneralQuotient
 
 /-! # The general derivation invariant: `afDeriv` is a genuine derivation
 `ComputableGeneralDerivation` builds the GENERAL carrier derivation `afDeriv fuel f` on
@@ -58,44 +57,6 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-! ### The curve ideal `afIdeal f = (toPolyG f)` and `afReduce` preserves its quotient
-
-The carrier `K(x)[y]/(f)` is the quotient `K[X] ⧸ (toPolyG f)`. `afReduce f p = cmodWf p f` is the
-Euclidean remainder of `p` by `f`, so it changes `toPolyG p` only by a multiple of `toPolyG f` (the
-Euclidean identity `toPolyG p = quo·toPolyG f + toPolyG (afReduce f p)`, `toPolyG_cmodWf`). Hence
-`afReduce ≡ id` in the quotient. -/
-
-/-- **The curve ideal** `afIdeal f = (toPolyG f) ⊆ K[X]`: the principal ideal whose quotient is the
-carrier `K[X] ⧸ (toPolyG f) ≅ K(x, y)` with `f(x, y) = 0`. Every `afDeriv`/`afMul` law holds modulo this
-ideal. -/
-noncomputable def afIdeal (f : CPolyG α) : Ideal (CFieldSpec.K α)[X] :=
-  Ideal.span {toPolyG f}
-
-/-- **`c · toPolyG f ∈ afIdeal f`** for any cofactor — the multiples of `toPolyG f` that the Euclidean
-reduction `afReduce`/`afMul` differ by. -/
-theorem mul_curve_mem (f : CPolyG α) (c : (CFieldSpec.K α)[X]) :
-    c * toPolyG f ∈ afIdeal f :=
-  Ideal.mul_mem_left _ _ (Ideal.subset_span (Set.mem_singleton _))
-
-/-- **`afReduce` preserves the quotient `K[X] ⧸ (toPolyG f)`**: `mk (toPolyG (afReduce f p)) = mk (toPolyG
-p)` for a nonzero curve `f` (`cnormG f ≠ []`). `afReduce f p = cmodWf p f`, and the Euclidean identity
-`toPolyG p = quo·toPolyG f + toPolyG (afReduce f p)` puts the difference `toPolyG p − toPolyG (afReduce f
-p) = quo·toPolyG f` in `afIdeal f`. This is what makes `afMul ≡ ·` and `afDeriv ≡` the un-reduced
-derivation in the quotient. -/
-theorem mk_toPolyG_afReduce (f p : CPolyG α) (hf : cnormG f ≠ []) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afReduce f p))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG p) := by
-  rw [← sub_eq_zero, ← map_sub, Ideal.Quotient.eq_zero_iff_mem]
-  -- Euclidean identity: `toPolyG p = quo·toPolyG f + toPolyG (afReduce f p)`
-  have hid := toPolyG_cmodWf p f hf
-  -- `afReduce f p` is definitionally `cmodWf p f`, so the difference is `-quo·toPolyG f`
-  have hsub : toPolyG (afReduce f p) - toPolyG p
-      = - (toPolyG (cdivWf p f) * toPolyG f) := by
-    show toPolyG (cmodWf p f) - toPolyG p = _
-    linear_combination -hid
-  rw [hsub]
-  exact neg_mem (mul_curve_mem f _)
-
 /-! ### The keystone: `afDeriv` realizes `implicitDeriv (toPolyG yprime)` in the quotient
 
 `afDeriv fuel f u = afReduce f (cmonomialDeriv yprime u)` (definitionally — both unfold to `afReduce f
@@ -145,23 +106,6 @@ theorem mk_toPolyG_afDeriv_add (fuel : ℕ) (f a b : CPolyG α) (hf : cnormG f �
   rw [mk_toPolyG_afDeriv fuel f _ hf, mk_toPolyG_afDeriv fuel f a hf, mk_toPolyG_afDeriv fuel f b hf,
     toPolyG_caddG, map_add, map_add]
 
-/-! ### `afMul` realizes the product modulo the curve ideal
-
-`afMul f a b = afReduce f (cmulG a b)`: free polynomial multiply (`cmulG`, realizing `K[X]`-multiplication)
-then reduce `mod f` (`afReduce`, invisible in the quotient). So `afMul ≡ ·` in `K[X] ⧸ (toPolyG f)` —
-the ring structure of the carrier. -/
-
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`afMul` realizes the product modulo the ideal**: `mk (afIdeal f) (toPolyG (afMul f a b)) = mk
-(afIdeal f) (toPolyG a) · mk (afIdeal f) (toPolyG b)`, for a nonzero curve `f`. `afMul = afReduce ∘ cmulG`,
-and `afReduce` preserves the quotient (`mk_toPolyG_afReduce`) while `cmulG` realizes `K[X]`-multiplication
-exactly (`toPolyG_cmulG`). The ring structure of the carrier `K[X] ⧸ (toPolyG f)`. -/
-theorem mk_toPolyG_afMul (f a b : CPolyG α) (hf : cnormG f ≠ []) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f a b))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG a)
-        * Ideal.Quotient.mk (afIdeal f) (toPolyG b) := by
-  rw [afMul, mk_toPolyG_afReduce f _ hf, toPolyG_cmulG, map_mul]
-
 /-! ### The crux `D(toPolyG f) ∈ afIdeal f` and the descent of `D` to the quotient
 
 `D := implicitDeriv (toPolyG yprime)` (the derivation realized by `afDeriv`, `mk_toPolyG_afDeriv`) is a
@@ -172,21 +116,6 @@ mapCoeffs(toPolyG f) + toPolyG yprime·derivative(toPolyG f) = toPolyG f_x + toP
 toPolyG f_x − toPolyG f_x = 0 (mod toPolyG f)`. The non-degeneracy is the curve's **separability**:
 `gcd(f, f_y)` a nonzero constant, the Bézout-solvability of `f_y⁻¹` (the hypotheses of
 `toPolyG_cdiophantineG`). -/
-
-/-- **`mapCoeffs (toPolyG f) = toPolyG (afFx f)`** — `f_x = ∂f/∂x` is the coefficientwise base derivation:
-`afFx f = (f : List α).map cderiv = cmapDeriv f`, which `toPolyG` reads as Mathlib's `mapCoeffs`
-(`toPolyG_cmapDeriv`). The `mapCoeffs`-half of the total derivative `D(toPolyG f)`. -/
-theorem mapCoeffs_toPolyG_eq_afFx (f : CPolyG α) :
-    Differential.mapCoeffs (toPolyG f) = toPolyG (afFx f) := by
-  rw [afFx, ← cmapDeriv, toPolyG_cmapDeriv]
-
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`derivative (toPolyG f) = toPolyG (afFy f)`** — `f_y = ∂f/∂y` is the formal `y`-derivative: `afFy f =
-cderivG f`, which `toPolyG` reads as Mathlib's `derivative` (`toPolyG_cderivG`). The `derivative`-half of
-the total derivative `D(toPolyG f)`. -/
-theorem derivative_toPolyG_eq_afFy (f : CPolyG α) :
-    Polynomial.derivative (toPolyG f) = toPolyG (afFy f) := by
-  rw [afFy, toPolyG_cderivG]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **`f_y⁻¹ · f_y ≡ 1 mod f` (the Bézout cofactor)** — `mk (afIdeal f) (toPolyG (afFyInv fuel f) ·

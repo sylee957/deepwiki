@@ -134,7 +134,7 @@ end FunctionAlgebra
 /-! ## The concrete function algebra `K(x)[y]/(T)` and the engine derivation `afDerivWf`
 
 The carrier quotient of the engine is `Q = K[X] ⧸ afIdeal T` (with the formal variable `X` the generator
-`y`), where `afIdeal T = (toPolyG T)` (`ComputableGeneralDerivationInvariant`). For a **squarefree** `T`
+`y`), where `afIdeal T = (toPolyG T)` (`ComputableGeneralQuotient`). For a **squarefree** `T`
 this is the function algebra `A = k(x)[y]/(T)` of Def 7.1 (an étale algebra — `toPolyG T` squarefree makes
 `Q` reduced). The engine's fuel-free general derivation `afDerivWf T` realizes a genuine Mathlib derivation
 in `Q` (`mk_toPolyG_afDerivWf`, additive `mk_toPolyG_afDerivWf_add`, Leibniz

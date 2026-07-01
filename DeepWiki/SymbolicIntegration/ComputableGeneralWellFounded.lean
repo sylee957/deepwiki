@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
-import DeepWiki.SymbolicIntegration.ComputableGeneralDerivationInvariant
+import DeepWiki.SymbolicIntegration.ComputableGeneralQuotient
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 /-! # Fuel-free GENERAL (non-radical) algebraic-function integration
@@ -93,10 +93,9 @@ variable [CFieldSpec α] [CDiffFieldSpec α]
 
 /-! ### The Wf derivation invariant
 
-The fueled invariant in `ComputableGeneralDerivationInvariant` proves that `afDeriv fuel f` realizes a
-genuine quotient derivation. The same proof works directly for `afDerivWf`, replacing the single
-`cdiophantineG` Bézout leaf by `cdiophantineGWf` and phrasing separability as the fuel-free gcd being a
-nonzero constant. -/
+The shared quotient API lives in `ComputableGeneralQuotient`. The derivation-invariant proof works directly
+for `afDerivWf`, replacing the single `cdiophantineG` Bézout leaf by `cdiophantineGWf` and phrasing
+separability as the fuel-free gcd being a nonzero constant. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 /-- **`afDerivWf = afReduce f ∘ cmonomialDeriv (afYprimeWf f)`** definitionally. -/
