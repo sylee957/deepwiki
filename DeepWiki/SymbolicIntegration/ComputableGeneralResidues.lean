@@ -37,7 +37,7 @@ roots of `D` contributes a `res_Y` factor of `Z`-degree `≤ n`).
 
 * **`resYAtNode f g Dder z`** — the inner `res_Y(z·D' − g, F)` evaluated at the rational node `z`, read
   as a `CPolyG ℚ` (the `K[x]`-polynomial in `x`).
-* **`genResidueResultant fuel f g Dder D`** — the full `R(Z) ∈ ℚ[Z]` by evaluate-`Z`-nodes +
+* **`genResidueResultant fuelY fuelX f g Dder D`** — the full `R(Z) ∈ ℚ[Z]` by evaluate-`Z`-nodes +
   Lagrange-interpolate, the general-`F` analogue of `cAlgResidueResultant`.
 
 **Validation** (`native_decide`): the trigonal curve `F = y³ + x·y + x` (`n = 3`, genuinely
@@ -60,11 +60,11 @@ The inner `res_Y` lands in `α = K(x) = QFunNZG ℚ`. When `F` is monic in `y` t
 literally `1`). `qToPolyQ` recovers the `ℚ[x]`-polynomial by the exact division `numerator / denominator`
 (`cdivWf` over ℚ): when `denominator ∣ numerator` this is the polynomial quotient, here `cscale (c⁻¹)`. -/
 
-/-- **Read a `QFunNZG ℚ` value as a `ℚ[x]`-polynomial** `qToPolyQ fuel v = numerator(v) / denominator(v)`
+/-- **Read a `QFunNZG ℚ` value as a `ℚ[x]`-polynomial** `qToPolyQ v = numerator(v) / denominator(v)`
 (`cdivWf` over ℚ). Faithful exactly when `v` *is* a polynomial — i.e. `denominator(v) ∣ numerator(v)`
 (true here because `res_Y` against a `y`-monic `F` is a polynomial in `x`, with a constant denominator).
 The bridge from the inner `res_Y`'s `K(x)` output to the outer `res_X`'s `K[x] = CPolyG ℚ` input. -/
-def qToPolyQ (_fuel : ℕ) (v : QFunNZG ℚ) : CPolyG ℚ :=
+def qToPolyQ (v : QFunNZG ℚ) : CPolyG ℚ :=
   cdivWf v.1.1 v.1.2
 
 /-! ### The inner `res_Y(Z·D' − g, F)` at a rational `Z`-node (the full bivariate resultant in `y`)
@@ -86,15 +86,15 @@ coefficient is the `y⁰` one (`z·D' − g₀`), so `res_Y` of this against `F`
 def zDderMinusG (g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPolyG (QFunNZG ℚ) :=
   csubG [CField.mul (qxOfNum [z]) Dder] g
 
-/-- **The inner residue resultant at a node** `resYAtNode fuelY fuelD f g Dder z =
+/-- **The inner residue resultant at a node** `resYAtNode fuelY f g Dder z =
 res_Y(z·D'(X) − g(X, Y), F(X, Y))` evaluated at the rational node `Z = z`, read as a `ℚ[X]`-polynomial.
 Trager eq. 7's inner `resultant_Y` for a **general** monic curve `F = f` (degree `n` in `y`) and a
 general `g(x, y)`: the resultant in `y` (`cresultantG fuelY` over the field `α = QFunNZG ℚ`) of
 `z·D' − g` (`zDderMinusG`) against `f`, landing in `K(x)`; since `f` is `y`-monic the result is a
-polynomial in `x`, recovered as `CPolyG ℚ` by `qToPolyQ fuelD`. The full bivariate `resultant_Y` — the
+polynomial in `x`, recovered as `CPolyG ℚ` by `qToPolyQ`. The full bivariate `resultant_Y` — the
 general-curve replacement for the `n = 2` norm `(z·D' − g₀)² − g₁²·ρ`. -/
-def resYAtNode (fuelY fuelD : ℕ) (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPolyG ℚ :=
-  qToPolyQ fuelD (cresultantG fuelY (zDderMinusG g Dder z) f)
+def resYAtNode (fuelY : ℕ) (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPolyG ℚ :=
+  qToPolyQ (cresultantG fuelY (zDderMinusG g Dder z) f)
 
 /-! ### The full general-`F` residue resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`
 
@@ -109,7 +109,7 @@ coefficients). The outer `res_X(·, D)` is `∏` over the `deg_X D` roots of `D`
 `res_Y` factor of `Z`-degree `≤ n`, so `deg_Z R ≤ n · deg_X D`. Hence `n · deg_X D + 1` nodes are exact
 (the hyperelliptic `n = 2` gives `2·deg D`, matching `cAlgResidueResultant`). -/
 
-/-- **The general-curve algebraic-residue resultant** `genResidueResultant fuelY fuelD fuelX f g Dder D
+/-- **The general-curve algebraic-residue resultant** `genResidueResultant fuelY fuelX f g Dder D
 = R(Z) ∈ ℚ[Z]` (Trager Ch. 5 §2 eq. 7, **arbitrary** monic curve `F = f`): the full double resultant
 `R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)), D(X))`, returned as a `CPolyG ℚ` in the residue
 indeterminate `Z`. Computed by **evaluation + interpolation**: for nodes `z = 0, 1, …, n·deg_X D`, the
@@ -120,12 +120,12 @@ gives `R(z) ∈ ℚ`, and `cinterpolateG` recovers `R(Z)`. `deg_Z R ≤ n·deg_X
 hyperelliptic case collapsed the inner `res_Y` to the norm `(z·D' − g₀)² − g₁²·ρ`, here it is the full
 `res_Y`. `Dder = D'(x) ∈ K(x)` (the `x`-derivative of `D`, supplied by the caller — `D` itself is a
 `ℚ[X]`-polynomial). -/
-def genResidueResultant (fuelY fuelD fuelX : ℕ) (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
+def genResidueResultant (fuelY fuelX : ℕ) (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
     (D : CPolyG ℚ) : CPolyG ℚ :=
   let nNodes := cdegG f * cdegG D + 1                        -- `deg_Z R ≤ n · deg_X D`
   let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
     let z : ℚ := (k : ℚ)
-    (z, cresultantG fuelX (resYAtNode fuelY fuelD f g Dder z) D))
+    (z, cresultantG fuelX (resYAtNode fuelY f g Dder z) D))
   cinterpolateG pts
 
 end CPolyG
@@ -168,7 +168,7 @@ def genResTrigDder : QFunNZG ℚ := qxOfNum [1]
 
 /-- The computed general residue resultant `R(Z)` for `∫ (y/(x−1)) dx` on `y³ + xy + x = 0`. -/
 def genResTrigR : CPolyG ℚ :=
-  genResidueResultant 20 20 20 genResTrigF genResTrigG genResTrigDder genResTrigD
+  genResidueResultant 20 20 genResTrigF genResTrigG genResTrigDder genResTrigD
 
 /-- The expected `R(Z) = F(1, Z) = Z³ + Z + 1` (low→high in `Z`, `[1, 1, 0, 1]`): the residues are the
 three roots `y₀` of the curve fiber `F(1, y) = y³ + y + 1`. -/
@@ -194,7 +194,7 @@ sheet. Confirmed via the membership test: `Z = 0` is **not** a residue (`F(1,0) 
 vanishes nowhere rational here (the fiber is irreducible over ℚ) — checked by `cIsResidue R 0 = false`
 and the exact match `R = F(1, ·)` above. -/
 theorem genResTrig_zero_not_residue :
-    cIsResidue 20 genResTrigR (0 : ℚ) = false := by native_decide
+    cIsResidue genResTrigR (0 : ℚ) = false := by native_decide
 
 /-! ### ★ Validation 2: trigonal `g = 1` (constant in `y`) — residue `1` on all three sheets
 
@@ -210,7 +210,7 @@ def genResTrigG1 : CPolyG (QFunNZG ℚ) := [CField.one]
 
 /-- The computed `R(Z)` for `∫ dx/(x − 1)` on the trigonal curve `y³ + xy + x = 0`. -/
 def genResTrigR1 : CPolyG ℚ :=
-  genResidueResultant 20 20 20 genResTrigF genResTrigG1 genResTrigDder genResTrigD
+  genResidueResultant 20 20 genResTrigF genResTrigG1 genResTrigDder genResTrigD
 
 /-- The expected `R(Z) = (Z − 1)³ = Z³ − 3Z² + 3Z − 1` (low→high, `[−1, 3, −3, 1]`): the common residue
 `1` on all three sheets, with multiplicity `n = 3`. -/
@@ -227,7 +227,7 @@ theorem genResTrig1_resultant_eq :
 /-- **The common residue `1` is a root of `R`** (`native_decide`): `cIsResidue R 1 = true` for
 `R(Z) = (Z − 1)³` — confirming the residue `1` of `∫ dx/((x − 1)·…)` on the trigonal curve. -/
 theorem genResTrig1_residue_one :
-    cIsResidue 20 genResTrigR1 (1 : ℚ) = true := by native_decide
+    cIsResidue genResTrigR1 (1 : ℚ) = true := by native_decide
 
 /-! ### ★ Conservativity: hyperelliptic `F = y² − x` reproduces `cAlgResidueResultant` (`native_decide`)
 
@@ -262,7 +262,7 @@ GENERAL ENGINE CONTAINS THE HYPERELLIPTIC CASE — the full `resultant_Y` collap
 when `F = y² − ρ` and `g` is linear in `y`, so the two `R(Z)` agree. -/
 theorem genResHyp_conservativity :
     cisZeroG (csubG
-      (genResidueResultant 20 20 20 genResHypF genResHypG genResHypDder genResHypD)
+      (genResidueResultant 20 20 genResHypF genResHypG genResHypDder genResHypD)
       (cAlgResidueResultant 20 algResExX_D algResExX_rho algResExX_g0 algResExX_g1)) = true := by
   native_decide
 
@@ -272,7 +272,7 @@ F(1, Z)`, whose roots are the residues (the three sheets over the pole `x = 1`) 
 double resultant `res_X(res_Y(Z·D' − g, F), D)` over the constant field ℚ, beyond the hyperelliptic
 norm. -/
 example : cisZeroG (csubG
-    (genResidueResultant 20 20 20 genResTrigF genResTrigG genResTrigDder genResTrigD)
+    (genResidueResultant 20 20 genResTrigF genResTrigG genResTrigDder genResTrigD)
     [1, 1, 0, 1]) = true := by native_decide
 
 /-! ### The NEXT pieces: residues → divisors → the algebraic rational part → the integrator

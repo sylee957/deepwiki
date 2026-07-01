@@ -239,7 +239,7 @@ theorem genLogDeriv_residue_eq_multiplicity (a : K) (m : ℕ) (v : K[X])
 
 /-! ### ★ Obligation 1 — `genResidueResultant` roots = residues (the GENERAL norm factoring, the milestone)
 
-`genResidueResultant fuelY fuelD fuelX f g Dder D = res_X(res_Y(Z·D' − g, F), D)` is the full double resultant
+`genResidueResultant fuelY fuelX f g Dder D = res_X(res_Y(Z·D' − g, F), D)` is the full double resultant
 (`ComputableGeneralResidues`). The outer `res_X(·, D)` is, by `resultant_eq_prod_eval`, `C(lc D)^N · ∏_{α₀ :
 D(α₀)=0} genNorm(α₀, Z)`, where `genNorm(α₀, Z) = res_Y(Z·D'(α₀) − g(α₀, Y), F(α₀, Y))` is the inner norm
 evaluated at the root `α₀` of `D`.
@@ -386,7 +386,7 @@ end LogResidue
 /-! ### ★ The compute-bridge — `genResidueResultant`'s interpolation-uniqueness characterization (engine link)
 
 `roots_genResidueResultant_eq_residues` works on the *abstract* product form `R = C(lc)^N·∏_{α₀} genNorm(α₀, Z)`.
-To discharge its hypothesis `hR` for the ENGINE's `genResidueResultant fuelY fuelD fuelX f g Dder D` (which
+To discharge its hypothesis `hR` for the ENGINE's `genResidueResultant fuelY fuelX f g Dder D` (which
 interpolates over the `Z`-nodes `k = 0, …, n·deg_X D`, `n = deg_y f`), the bridge is the **interpolation-
 uniqueness** characterization — the EXACT analogue of the radical's `toPolyG_cAlgResidueResultant_eq_of_eval`:
 the engine's `genResidueResultant` is THE unique polynomial of degree `< n·deg_X D + 2` agreeing at each node
@@ -402,9 +402,9 @@ namespace CPolyG
 /-- **★ The compute-bridge — the interpolation-uniqueness characterization of `genResidueResultant`** — let
 `R : ℚ[X]` have `degree < cdegG f * cdegG D + 2` (the general `n·deg_X D + 1` node count, `n = deg_y f`), and
 suppose at each node `k ∈ {0, …, cdegG f · cdegG D + 1}` its value is the engine's per-node outer resultant
-`R.eval (k : ℚ) = cresultantG fuelX (resYAtNode fuelY fuelD f g Dder (k : ℚ)) D` (the inner `res_Y` against
+`R.eval (k : ℚ) = cresultantG fuelX (resYAtNode fuelY f g Dder (k : ℚ)) D` (the inner `res_Y` against
 `F` then outer `res_X` against `D`, the values `genResidueResultant` interpolates). Then `toPolyG
-(genResidueResultant fuelY fuelD fuelX f g Dder D) = R`. The compute-bridge CLOSED: the engine's general
+(genResidueResultant fuelY fuelX f g Dder D) = R`. The compute-bridge CLOSED: the engine's general
 residue resultant is the unique degree-`< n·deg_X D + 2` polynomial with those node values — the EXACT
 `toPolyG_cAlgResidueResultant_eq_of_eval` Lagrange-uniqueness, ported to the general double resultant
 (`genResidueResultant`) over the concrete `ℚ` outer carrier. The node abscissae `(k : ℚ)` are distinct by
@@ -412,14 +412,14 @@ residue resultant is the unique degree-`< n·deg_X D + 2` polynomial with those 
 generic-`α` `cnatCastG` version). Composed with `roots_genResidueResultant_eq_residues` (whose hypothesis `hR`
 is the `resultant_eq_prod_eval` product form), this discharges `hR` for the engine's `genResidueResultant` —
 connecting the abstract roots↔residues milestone to the actual engine. -/
-theorem toPolyG_genResidueResultant_eq_of_eval (fuelY fuelD fuelX : ℕ)
+theorem toPolyG_genResidueResultant_eq_of_eval (fuelY fuelX : ℕ)
     (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (D : CPolyG ℚ)
     (R : ℚ[X])
     (hRdeg : R.degree < (cdegG f * cdegG D + 2 : ℕ))
     (hnode : ∀ k ∈ Finset.range (cdegG f * cdegG D + 1 + 1),
       R.eval ((k : ℚ))
-        = cresultantG fuelX (resYAtNode fuelY fuelD f g Dder ((k : ℚ))) D) :
-    toPolyG (genResidueResultant fuelY fuelD fuelX f g Dder D) = R := by
+        = cresultantG fuelX (resYAtNode fuelY f g Dder ((k : ℚ))) D) :
+    toPolyG (genResidueResultant fuelY fuelX f g Dder D) = R := by
   classical
   -- Lean elaborates the engine's `(range n).map (fun k:ℕ => ((k:ℚ), …))` by lifting the tuple coercion to a
   -- DOUBLE map `((range n).map Nat.cast).map (fun z:ℚ => (z, …))`. We pin `pts` in exactly that doubly-mapped
@@ -437,12 +437,12 @@ theorem toPolyG_genResidueResultant_eq_of_eval (fuelY fuelD fuelX : ℕ)
   have hzs_mem : ∀ k, k ∈ List.range (cdegG f * cdegG D + 1 + 1) → ((k : ℚ)) ∈ zs := by
     intro k hk; rw [hzs, List.mem_map]; exact ⟨k, hk, rfl⟩
   set pts : List (ℚ × ℚ) :=
-    zs.map (fun z => (z, cresultantG fuelX (resYAtNode fuelY fuelD f g Dder z) D))
+    zs.map (fun z => (z, cresultantG fuelX (resYAtNode fuelY f g Dder z) D))
     with hpts
   -- bridge the engine's node list to `pts` STRUCTURALLY (no resultant evaluation): the engine's
   -- `(range).map (fun k:ℕ => let z:=↑k; (z, …))` and `pts = ((range).map ↑).map (fun z:ℚ => (z, …))` are the
   -- SAME up to `flatMap_pure_eq_map` (the lifted coercion) + `map_map`.
-  have hcompute : genResidueResultant fuelY fuelD fuelX f g Dder D = cinterpolateG pts := by
+  have hcompute : genResidueResultant fuelY fuelX f g Dder D = cinterpolateG pts := by
     rw [genResidueResultant, hpts, hzs]
     congr 1
     rw [List.map_map]
@@ -454,13 +454,13 @@ theorem toPolyG_genResidueResultant_eq_of_eval (fuelY fuelD fuelX : ℕ)
   have htoK : ∀ q : ℚ, CFieldSpec.toK q = q := fun _ => rfl
   -- node-abscissa images = `zs`; reusable membership/length/nodup facts over the double map
   have hmempts : ∀ z, z ∈ zs →
-      (z, cresultantG fuelX (resYAtNode fuelY fuelD f g Dder z) D) ∈ pts := by
+      (z, cresultantG fuelX (resYAtNode fuelY f g Dder z) D) ∈ pts := by
     intro z hz; rw [hpts, List.mem_map]; exact ⟨z, hz, rfl⟩
   have hfst : pts.map (fun p => CFieldSpec.toK p.1) = zs := by
     rw [hpts, List.map_map]
     simp only [htoK]
     rw [show (fun p : ℚ × ℚ => p.1) ∘ (fun z => (z, cresultantG fuelX
-        (resYAtNode fuelY fuelD f g Dder z) D)) = id from rfl, List.map_id]
+        (resYAtNode fuelY f g Dder z) D)) = id from rfl, List.map_id]
   have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by rw [hfst]; exact hzs_nodup
   have hne : pts ≠ [] := by
     rw [hpts, Ne, List.map_eq_nil_iff]

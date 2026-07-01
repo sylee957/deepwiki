@@ -179,9 +179,12 @@ theorem arcsinhInf_full_resultant_eq :
 /-- **★ `±1` are residues at ∞; `2` is not** (`native_decide`): `cIsResidue` on the isolated place
 resultant `Z² − 1` accepts `Z = ±1` and rejects `Z = 2`. -/
 theorem arcsinhInf_isResidue :
-    cIsResidue 30 (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) (1 : ℚ) = true
-    ∧ cIsResidue 30 (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) (-1 : ℚ) = true
-    ∧ cIsResidue 30 (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) (2 : ℚ) = false := by
+    cIsResidue (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+        (1 : ℚ) = true
+    ∧ cIsResidue (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+        (-1 : ℚ) = true
+    ∧ cIsResidue (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+        (2 : ℚ) = false := by
   native_decide
 
 /-- **★ Residue at infinity of `∫ dx/√(x² − 1)` (arccosh) is `±1`** (`native_decide`). Same as arcsinh

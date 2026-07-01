@@ -103,11 +103,11 @@ def cAlgResidueResultant (fuel : ℕ) (D rho g0 g1 : CPolyG α) : CPolyG α :=
 
 /-! ### Residue membership and the integer-residue failure-test certificate -/
 
-/-- **Residue membership test** `cIsResidue _fuel R c = ((Z − c) ∣ R)` — is the value `c ∈ K` a residue,
+/-- **Residue membership test** `cIsResidue R c = ((Z − c) ∣ R)` — is the value `c ∈ K` a residue,
 i.e. a root of `R(Z)`? Tested by the exact division remainder `cmodWf R (Z − c) = 0` (`(Z − c) ∣ R(Z)`).
 Computable and exact; used to confirm a claimed rational residue (Trager: the roots of `R` are the
 residues divided by their branch orders). Generic over `[CField α]`. -/
-def cIsResidue (_fuel : ℕ) (R : CPolyG α) (c : α) : Bool :=
+def cIsResidue (R : CPolyG α) (c : α) : Bool :=
   cisZeroG (cmodWf R [CField.neg c, CField.one])          -- `R mod (Z − c) = 0`
 
 /-- **Integer-residue / factorization certificate** `cResiduesMatch R factors` — does the residue
@@ -171,14 +171,14 @@ and `Z = −1` divide `R(Z) = Z²(Z − 1)(Z + 1)`, confirming the residues of `
 simple pole `x = 1` (sheets `y = ±1`) are `±1`, exactly Trager's Theorem-2 value `g/D' = (±1)/(2·1−1)`.
 And `Z = 0` is a residue too (the branch place `x = 0`). -/
 theorem algResExX_residues_pm_one :
-    cIsResidue 20 algResExX_R (1 : ℚ) = true
-    ∧ cIsResidue 20 algResExX_R (-1 : ℚ) = true
-    ∧ cIsResidue 20 algResExX_R (0 : ℚ) = true := by native_decide
+    cIsResidue algResExX_R (1 : ℚ) = true
+    ∧ cIsResidue algResExX_R (-1 : ℚ) = true
+    ∧ cIsResidue algResExX_R (0 : ℚ) = true := by native_decide
 
 /-- **`Z = 2` is not a residue** (`native_decide`): `cIsResidue R 2 = false` — `R(2) = 16 − 4 = 12 ≠ 0`,
 so the membership test correctly rejects a non-residue. (A negative control on `cIsResidue`.) -/
 theorem algResExX_two_not_residue :
-    cIsResidue 20 algResExX_R (2 : ℚ) = false := by native_decide
+    cIsResidue algResExX_R (2 : ℚ) = false := by native_decide
 
 /-- **★ All residues are integers** (`native_decide`, Trager's failure test 2). The residue resultant
 factors as `R(Z) = Z·Z·(Z − 1)·(Z + 1)` — a product of **integer** linear factors (`0, 0, 1, −1`) — so

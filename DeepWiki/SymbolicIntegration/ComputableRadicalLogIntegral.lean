@@ -208,15 +208,15 @@ returns `R(Z) = 16·Z⁴(Z² − 1)`, so `Z = ±1` are residues (`cIsResidue R (
 places `x = ±i`). The residue computation **predicts** the log coefficients `cᵢ = ±1` that the
 log-derivative check confirmed for `u = (y − 1)/x`. -/
 theorem radLog_finitePole_residues :
-    cIsResidue 30 radLogResR (1 : ℚ) = true
-    ∧ cIsResidue 30 radLogResR (-1 : ℚ) = true
-    ∧ cIsResidue 30 radLogResR (0 : ℚ) = true := by
+    cIsResidue radLogResR (1 : ℚ) = true
+    ∧ cIsResidue radLogResR (-1 : ℚ) = true
+    ∧ cIsResidue radLogResR (0 : ℚ) = true := by
   native_decide
 
 /-- **`Z = 2` is not a residue** (`native_decide`): `cIsResidue R 2 = false` (`R(2) = 16·16·3 ≠ 0`) — a
 negative control on the finite-pole residue membership. -/
 theorem radLog_finitePole_two_not_residue :
-    cIsResidue 30 radLogResR (2 : ℚ) = false := by
+    cIsResidue radLogResR (2 : ℚ) = false := by
   native_decide
 
 /-- **★ The finite-pole residues are all integers** (`native_decide`, Trager's failure test 2): the
