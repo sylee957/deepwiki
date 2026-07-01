@@ -31,10 +31,9 @@ only; it states no new mathematics.
   (fuel-free primitive / logarithmic monomial), `cIntegrateGFullWf_hyperexp_oneShot` (fuel-free
   hyperexponential, conditional on `∑c = 0`), and `cIntegrateGFullWf_poly_oneShot` (fuel-free polynomial branch
   `fp ≠ 0`, gated on the poly-RDE soundness `D(qp) = fp`).
-  ★ `cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG` — the primitive normal-part capstone at
-  `α = QFunNZG ℚ`, `deg Dt ≤ 1`, with the abstract degree obstruction `hA` **discharged** (proven
-  Hermite-leftover-properness + unconditional input-properness); leaves only the genuine Bronstein side
-  conditions (`hrecon`/`hden`/`hnorm`).
+  ★ `cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG` — the fuel-free primitive normal-part capstone
+  at `α = QFunNZG ℚ`, `deg Dt ≤ 1`, with the abstract degree obstruction `hA` discharged from Wf Hermite
+  leftover properness plus simple-part properness; leaves only the genuine Bronstein side conditions.
   The carrier-agnostic `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
   `ComputableIntegrateTowerCorrectG`) gates a result on the engine's own self-check; the fuel-free top-entry
   bridge is `field_identity_of_cIntegrateGFullWf_of_checkIdentityG`.
@@ -111,7 +110,7 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @cIntegrateGFullWf_poly_oneShot
 #check @field_identity_of_cIntegrateGFullWf_of_checkIdentityG
 -- ★ the primitive normal-part capstone: hA discharged for deg Dt ≤ 1 at ℚ(x)(t).
-#check @cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG
+#check @cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG
 
 -- `cIntegratePolyG`: PARTIAL soundness — the constant case only.
 #check @field_identity_cIntegratePolyG_const
