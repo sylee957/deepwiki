@@ -554,6 +554,50 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fue
   cIntegrateHyperexpNormalG_sound Dt fuel a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
+/-- **★★★ The fuel-free §5.9 driver soundness over `ℚ(x)(t)`, unconditional in `∑c`** — the
+`QFunNZG ℚ` instance of `cIntegrateHyperexpNormalGWf_sound`, with the Wf normal-part driver and Wf Hermite
+data. -/
+theorem cIntegrateHyperexpNormalGWf_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
+    (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
+    (intR : QFunNZG ℚ) (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (b : CFieldSpec.K (QFunNZG ℚ))
+    (hDt : toPolyG Dt = C b * X)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (hintRsome : CRischField.crischDESolve (CField.zero : QFunNZG ℚ)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)
+      = some intR)
+    (hsome : CPolyG.cIntegrateHyperexpNormalGWf Dt a d cands = some res)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+        = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β)))
+    (hintR : towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK intR)))
+        = amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
+            (cHyperexpResidualG (cExpEtaG Dt)
+              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs))))
+    (hRval : amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
+            (cHyperexpResidualG (cExpEtaG Dt)
+              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)))
+        = amG (QFunNZG ℚ) (C (b * ∑ β ∈ s,
+            (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+              / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))) :
+    towerFractionFieldDerivG Dt
+        (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
+  cIntegrateHyperexpNormalGWf_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
+    hA hnorm hform hintR hRval
+
 /-! ### ★★★ Task 3 (the full driver): `cIntegrateHyperexpFullG_sound` (§5.4 + §5.10 + §5.9)
 
 `cIntegrateHyperexpFullG Dt fuel a d cands` combines the §5.10 Laurent special part `fp + b/dₛ` (via
@@ -938,6 +982,7 @@ residual the unconditional driver soundness rests on. The OVERSHOOT identity —
 #print axioms cIntegrateHyperexpNormalG_sound_qfunNZG
 #print axioms cIntegrateHyperexpNormalGWf_shape
 #print axioms cIntegrateHyperexpNormalGWf_sound
+#print axioms cIntegrateHyperexpNormalGWf_sound_qfunNZG
 #print axioms cIntegrateHyperexpFullG_shape
 #print axioms cIntegrateHyperexpFullG_sound
 #print axioms cIntegrateHyperexpFullGWf_shape

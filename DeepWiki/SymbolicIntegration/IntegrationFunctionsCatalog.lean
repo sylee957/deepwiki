@@ -44,12 +44,11 @@ only; it states no new mathematics.
   Rothstein-Trager log part). Soundness: CONDITIONAL fuel-free field-identity lemmas
   `field_identity_of_cIntegrateReducedGWf_primitive` / `_hyperexp` /
   `_of_checkIdentityG` / `_hyperexp_overshoot`.
-* `cIntegrateHyperexpNormalG` / `cIntegrateHyperexpNormalGWf` — the hyperexponential normal-part integrator
-  (§5.9 residual feedback), fuel'd and fuel-free. Soundness (unconditional, no `∑c = 0`):
-  `cIntegrateHyperexpNormalG_sound` / `cIntegrateHyperexpNormalGWf_sound`.
-* `cIntegrateHyperexpFullG` / `cIntegrateHyperexpFullGWf` — the full hyperexponential driver (Laurent special
-  part + normal part), fuel'd and fuel-free. Soundness:
-  `cIntegrateHyperexpFullG_sound` / `cIntegrateHyperexpFullGWf_sound`.
+* `cIntegrateHyperexpNormalGWf` — the fuel-free hyperexponential normal-part integrator (§5.9 residual
+  feedback). Soundness (unconditional, no `∑c = 0`): `cIntegrateHyperexpNormalGWf_sound`, with
+  `cIntegrateHyperexpNormalGWf_sound_qfunNZG` as the level-1 `ℚ(x)(t)` specialization.
+* `cIntegrateHyperexpFullGWf` — the fuel-free full hyperexponential driver (Laurent special part + normal
+  part). Soundness: `cIntegrateHyperexpFullGWf_sound`.
 * `cIntegrateHyperexpG` / `cIntegrateHyperexpLaurentG` — hyperexponential
   sub-drivers. Soundness: NO direct theorem — their correctness flows through the normal/full hyperexp
   soundness theorems. (Documented gap, flagged for the coordinator.)
@@ -120,12 +119,11 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
 #check @field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot
 
--- `cIntegrateHyperexpNormalG` / `cIntegrateHyperexpNormalGWf`: unconditional normal-part soundness.
-#check @cIntegrateHyperexpNormalG_sound
+-- `cIntegrateHyperexpNormalGWf`: unconditional fuel-free normal-part soundness.
 #check @cIntegrateHyperexpNormalGWf_sound
+#check @cIntegrateHyperexpNormalGWf_sound_qfunNZG
 
--- `cIntegrateHyperexpFullG` / `cIntegrateHyperexpFullGWf`: the full hyperexponential driver soundness.
-#check @cIntegrateHyperexpFullG_sound
+-- `cIntegrateHyperexpFullGWf`: the fuel-free full hyperexponential driver soundness.
 #check @cIntegrateHyperexpFullGWf_sound
 
 -- `field_identity_of_checkIdentityG`: the carrier-agnostic `checkIdentityG` ⟹ field-identity bridge
