@@ -11,7 +11,7 @@ one-shot: the **normal part** `cIntegrateReducedG = cHermiteReduceTowerG` (ratio
 cLogPartG` (logarithmic part, Rothstein–Trager §5.6), currently `native_decide`-validated only.
 
 This file delivers the **Hermite half** of that normal part — abstractly, no `native_decide` — by
-transporting the **general rational-part telescoping template** `generalReduceRationalTelescope`
+transporting the **general rational-part telescoping template** `generalReduceRationalTelescopeWf`
 (`ComputableGeneralIntegralSoundness`) from the algebraic carrier `K(x)[y]/(f)` to the **transcendental
 tower** with the monomial derivation `D = cmonomialDeriv Dt`. The mathematical core is identical: the
 Hermite reduction reassembles its rational part `g` as an **accumulator fold** of per-squarefree-factor
@@ -21,16 +21,16 @@ fraction field `RatFunc (CFieldSpec.K α)`.
 * **`towerFractionFieldDerivG_amG_fracAccG`** — the engine's fraction-accumulator (the shape
   `cHermiteReduceTowerG` folds its `g` with: `gAcc + gloc` cross-multiplied) reads through `amG`/the field
   derivation as the sum of the per-step contributions: `D(amG(fold)) = D(amG seed) + ∑ D(amG glocⱼ)`. The
-  transcendental analogue of `mk_toPolyG_afDeriv_foldlCaddG`. Built on `Derivation.map_add` and the
+  transcendental analogue of `mk_toPolyG_afDerivWf_foldlCaddG`. Built on `Derivation.map_add` and the
   fraction-add reading `amG_toPolyG_fracAddG`.
 * **`sum_towerFractionFieldDerivG_telescope`** — if each contribution's field-derivative is the difference
   of consecutive leftovers (the per-power Hermite identity `hermiteInner_spec` supplies, taken as the named
   hypothesis exactly as the template does), the sum telescopes to the endpoints. The transcendental
-  analogue of `sum_mk_toPolyG_afDeriv_telescope`.
+  analogue of `sum_mk_toPolyG_afDerivWf_telescope`.
 * **★ `cHermiteReduceTowerG_telescope`** — the master Hermite telescoping soundness over the tower
   (abstract field identity): the assembled rational part `g` and the final leftover `h` satisfy `D(g) + h =
   a/d` in `RatFunc (CFieldSpec.K α)`, **given** the per-step Hermite identities. The transcendental
-  `generalReduceRationalTelescope`; the **Hermite half** of the normal part. General in `Dt`, `α`.
+  `generalReduceRationalTelescopeWf`; the **Hermite half** of the normal part. General in `Dt`, `α`.
 
 ## The assembly to the full one-shot, and the precise remainder
 
@@ -39,7 +39,7 @@ checkIdentityG = true`) decomposes into the Hermite half (above) **and** the Rot
 residue-log part `cLogPartG` differentiates to the leftover `h`). The RT half — the abstract
 `roots_residueResultantTowerG_eq_residues` residue-sum identity over the tower, all the way to
 `checkIdentityG = true` — is the genuinely-hard remainder (the same gap `ComputableRadicalLogSoundness`
-isolates for the radical case). So, exactly as the template's `isGeneralRationalIntegral_of_roundtrip`
+isolates for the radical case). So, exactly as the template's `isGeneralRationalIntegralWf_of_roundtrip`
 took the engine's own round-trip check as the bridge, we close the assembly through the engine's own
 `checkIdentityG` certificate:
 
@@ -104,7 +104,7 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 fraction-add combiner from a seed `s` (nonzero denominator) over a list `glocs` of contributions (each
 nonzero denominator), the running fraction equals `amG s.1/amG s.2 + ∑ amG glocⱼ.1/amG glocⱼ.2`, and the
 running denominator stays nonzero. By list induction with `amG_toPolyG_fracAddG`. The transcendental
-analogue of the `toQFun_foldl_qadd` / `mk_toPolyG_afDeriv_foldlCaddG` accumulator reading. -/
+analogue of the `toQFun_foldl_qadd` / `mk_toPolyG_afDerivWf_foldlCaddG` accumulator reading. -/
 theorem amG_toPolyG_foldl_fracAddG :
     ∀ (glocs : List (CPolyG α × CPolyG α)) (s : CPolyG α × CPolyG α), toPolyG s.2 ≠ 0 →
       (∀ g ∈ glocs, toPolyG g.2 ≠ 0) →
@@ -141,7 +141,7 @@ theorem amG_toPolyG_foldl_fracAddG :
 (nonzero denominator) and contributions `glocs` (each nonzero denominator), `D(amG(fold).1/amG(fold).2) =
 D(amG s.1/amG s.2) + ∑ⱼ D(amG glocⱼ.1/amG glocⱼ.2)`, where `D = towerFractionFieldDerivG Dt`. The field
 derivation pushed through the accumulator-fold reading `amG_toPolyG_foldl_fracAddG` by `Derivation`
-additivity (`map_add`, `map_list_sum`). The transcendental analogue of `mk_toPolyG_afDeriv_foldlCaddG`. -/
+additivity (`map_add`, `map_list_sum`). The transcendental analogue of `mk_toPolyG_afDerivWf_foldlCaddG`. -/
 theorem towerFractionFieldDerivG_amG_fracAccG (Dt : CPolyG α) (s : CPolyG α × CPolyG α)
     (glocs : List (CPolyG α × CPolyG α)) (hs : toPolyG s.2 ≠ 0)
     (hmem : ∀ g ∈ glocs, toPolyG g.2 ≠ 0) :
@@ -162,7 +162,7 @@ theorem towerFractionFieldDerivG_amG_fracAccG (Dt : CPolyG α) (s : CPolyG α ×
 
 /-! ### The per-step contributions telescope (in the field)
 
-The transcendental analogue of `sum_mk_toPolyG_afDeriv_telescope`: if each per-factor contribution's
+The transcendental analogue of `sum_mk_toPolyG_afDerivWf_telescope`: if each per-factor contribution's
 field-derivative is the difference of the consecutive leftovers it sits between (the per-power Hermite
 identity, read as `D(amG glocⱼ) = amG Lⱼ − amG Lⱼ₊₁`, taken as the named hypothesis exactly as the template
 does), the sum of the contributions' derivatives telescopes to `amG L₀ − amG L_last`. Stated via a
@@ -174,7 +174,7 @@ consecutive pairs of `L₀ :: rest` (i.e. `(L₀ :: rest).zip rest`) satisfies, 
 g.2) = amG p.1.1/amG p.1.2 − amG p.2.1/amG p.2.2` (the per-power Hermite identity, each leftover a
 `CPolyG α × CPolyG α` fraction), then the sum of the contributions' field-derivatives is `amG L₀.1/amG
 L₀.2 − amG (rest.getLastD L₀).1/amG (rest.getLastD L₀).2`. The transcendental analogue of
-`sum_mk_toPolyG_afDeriv_telescope`. -/
+`sum_mk_toPolyG_afDerivWf_telescope`. -/
 theorem sum_towerFractionFieldDerivG_telescope (Dt : CPolyG α) :
     ∀ (L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α)),
       List.Forall₂ (fun g p =>
@@ -209,7 +209,7 @@ Composing the accumulator-fold distribution with the contribution telescoping gi
 of the normal part as an abstract field identity: the assembled rational part `g = foldl … seed` satisfies
 `D(g) + h = a/d` in `RatFunc (CFieldSpec.K α)`, where `h` is the final leftover and `a/d` the original
 integrand — reduced exactly to the per-power Hermite identity over the engine's reduction steps. The
-transcendental `generalReduceRationalTelescope`. -/
+transcendental `generalReduceRationalTelescopeWf`. -/
 
 /-- **★ The master Hermite telescoping soundness over the tower (abstract field identity)** — the
 **Hermite half** of the normal part. Let `glocs` be the list of per-squarefree-factor rational
@@ -221,7 +221,7 @@ fractions the reduction passes through (`L₀` the *original* integrand `a/d`, `
 vanishes, the assembled rational part `g = glocs.foldl (fraction-add) s` satisfies `D(g) + h = a/d` in
 `RatFunc (CFieldSpec.K α)`: the rational part `g` integrates the integrand modulo the final leftover `h`.
 General in `Dt`, `α`; the precondition is the list of per-power Hermite field identities (the
-transcendental mirror of `hermiteInner_spec`), exactly as `generalReduceRationalTelescope` takes its
+transcendental mirror of `hermiteInner_spec`), exactly as `generalReduceRationalTelescopeWf` takes its
 per-step eq.-11 identities. -/
 theorem cHermiteReduceTowerG_telescope (Dt : CPolyG α) (s : CPolyG α × CPolyG α)
     (L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α))
@@ -281,7 +281,7 @@ field, given the per-power Hermite identities, with the seed obligations dischar
 identity (`hstep`) and the chain of leftovers `L₀ :: rest` (`L₀` the integrand `a/d`, `rest.getLastD L₀`
 the residual `h`). The seed obligations (`0/1` nonzero denominator, `D(0/1) = 0`) are discharged by
 `toPolyG_seed_den_ne_zero` / `towerFractionFieldDerivG_amG_seed`. The transcendental
-`generalReduceRationalTelescope` at the engine seed — the Hermite half of the normal-part one-shot, fully
+`generalReduceRationalTelescopeWf` at the engine seed — the Hermite half of the normal-part one-shot, fully
 abstract. -/
 theorem cHermiteReduceTowerG_telescope_seed (Dt : CPolyG α)
     (L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α))
@@ -1032,7 +1032,7 @@ The full normal-part one-shot `checkIdentityG_cIntegrateReducedG` needs the Herm
 the Rothstein–Trager half (the residue-log part `cLogPartG` differentiates to the leftover `h`). The RT
 half — the abstract residue-sum identity, all the way to `checkIdentityG = true` — is the genuinely-hard
 remainder (shared with the `ComputableRadicalLogSoundness` frontier). So, exactly as the template's
-`isGeneralRationalIntegral_of_roundtrip` closed the general rational-part soundness through the engine's
+`isGeneralRationalIntegralWf_of_roundtrip` closed the general rational-part soundness through the engine's
 *own* round-trip check, we close the normal-part assembly through the engine's *own* `checkIdentityG`
 certificate: feeding `checkIdentityG = true` (the `native_decide`-reachable self-check, supplied as the
 hypothesis `hcheck`) into the field bridge `field_identity_of_checkIdentityG` yields `D(res) = a/d`. -/
@@ -1043,7 +1043,7 @@ antiderivative check passes (`checkIdentityG Dt res a d = true` — the Hermite 
 validate this, reachable by `native_decide` for any concrete run), then the field-level antiderivative
 identity `D(g) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc (CFieldSpec.K α)`, with
 `g = amG res.rational.1/amG res.rational.2`. The normal-part `D(∫f) = f`, gated only on the engine's own
-self-certificate — the transcendental analogue of `isGeneralRationalIntegral_of_roundtrip`. Pure
+self-certificate — the transcendental analogue of `isGeneralRationalIntegralWf_of_roundtrip`. Pure
 composition with `field_identity_of_checkIdentityG`. -/
 theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCore α] (Dt : CPolyG α)
     (fuel : ℕ) (a d : CPolyG α) (cands : List α)
@@ -1327,7 +1327,7 @@ example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
 
 -- ★ THE HERMITE HALF (abstract, checker-free, no native_decide): the master telescoping `D(g) + h = a/d`
 -- in the tower fraction field, given the per-power Hermite identities — the transcendental
--- `generalReduceRationalTelescope`.
+-- `generalReduceRationalTelescopeWf`.
 example (Dt : CPolyG α) (s L₀ : CPolyG α × CPolyG α) (rest glocs : List (CPolyG α × CPolyG α))
     (hs : toPolyG s.2 ≠ 0) (hmem : ∀ g ∈ glocs, toPolyG g.2 ≠ 0)
     (hseed : towerFractionFieldDerivG Dt (amG α (toPolyG s.1) / amG α (toPolyG s.2)) = 0)

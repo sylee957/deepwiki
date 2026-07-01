@@ -41,7 +41,7 @@ The campaign from here is a clear lemma sequence, not a fog. The full transcende
   Hermite reduction identity `D(g) + h = a/d` and the Rothstein–Trager residue-log correctness are only
   `native_decide`-validated today (no abstract `cHermiteReduceTowerG`-spec). NEEDS: an abstract
   `cHermiteReduceTowerG` correctness (the per-squarefree-factor Hermite step, telescoped — the
-  generic-curve analogue `generalReduceRationalTelescope` in `ComputableGeneralIntegralSoundness` is the
+  generic-curve analogue `generalReduceRationalTelescopeWf` in `ComputableGeneralIntegralSoundness` is the
   template) and a `cLogPartG` residue-sum correctness. This is the genuinely hard, high-value piece.
 * **Canonical split** (`canonicalRepresentationFastG` reconstructs `f = fₚ + b/dₛ + cₙ/dₙ`) — EXISTS
   abstract at `α = QFunNZG ℚ` (`canonicalRepresentationFastG_reconstructs_qfunNZG`,
@@ -52,8 +52,8 @@ The campaign from here is a clear lemma sequence, not a fog. The full transcende
   differential constants" regime; lifting it from a hypothesis to a derived fact (the tower's base
   derivation) is a small transport, NOT hard.
 * **Algebraic driver** (the separate algebraic integrators `cIntegrateAlgebraicWf` / `afIntegrateAlgebraicWf`)
-  — its `hsplit` round-trip self-discharge is already abstract (`isGeneralRationalIntegral_of_roundtrip`,
-  `toPolyG_afDeriv_eq_of_roundtrip`, `ComputableGeneralIntegralSoundness`); its standalone soundness is
+  — its `hsplit` round-trip self-discharge is already abstract (`isGeneralRationalIntegralWf_of_roundtrip`,
+  `toPolyG_afDerivWf_eq_of_roundtrip`, `ComputableGeneralIntegralSoundness`); its standalone soundness is
   `cIntegrateAlgebraicWf_sound` (`ComputableAlgebraicWfSoundness`).
 
 So: the poly-branch one-shot is proven (this file); the canonical-split and algebraic-round-trip pieces

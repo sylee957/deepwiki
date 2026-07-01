@@ -170,21 +170,21 @@ abbrev sound_afDeriv_mul := @CPolyG.mk_toPolyG_afDeriv_afMul
 
 /-! ## The general-curve rational-part soundness `D(v) = g` (Ch. 4, eq.-11 reduction) -/
 
-/-- **The general rational-integral soundness predicate** `IsGeneralRationalIntegral fuel f g v` (Trager,
+/-- **The general rational-integral soundness predicate** `IsGeneralRationalIntegralWf f g v` (Trager,
 Chapter 4): the carrier element `v` integrates `g` over `K(x)[y]/(f)`, rational part only — the quotient
-identity `afDeriv fuel f v = g` in `K[X] ⧸ (toPolyG f)`. The general analogue of
+identity `afDerivWf f v = g` in `K[X] ⧸ (toPolyG f)`. The general analogue of
 `IsRadicalRationalIntegral`. -/
-abbrev sound_genRationalPredicate := @CPolyG.IsGeneralRationalIntegral
+abbrev sound_genRationalPredicate := @CPolyG.IsGeneralRationalIntegralWf
 
-/-- **★ The first abstractly-verified general integral `D(y) = y'`** `mk_toPolyG_afDeriv_genGen` (Trager,
+/-- **★ The first abstractly-verified general integral `D(y) = y'`** `mk_toPolyG_afDerivWf_genGen` (Trager,
 Chapters 2–4): the carrier generator `y` integrates the implicit derivative `yprime = −f_x/f_y` —
 `afDeriv(y) = yprime` in the quotient, the general analogue of `D(√f) = f'/(nf)·√f` (needs only a nonzero
 curve, no separability). -/
-abbrev sound_genGen := @CPolyG.mk_toPolyG_afDeriv_genGen
+abbrev sound_genGen := @CPolyG.mk_toPolyG_afDerivWf_genGen
 
 /-- **★ The general rational-part telescoping soundness** `generalReduceRationalTelescopeWf` (Trager, Chapter
-4, eq.-11 reduction): given each step's coupled eq.-11 quotient identity `mk(afDeriv cⱼ) = mk Lⱼ − mk Lⱼ₊₁`,
-the assembled antiderivative `v = cs.foldl caddG []` satisfies `afDeriv(v) = integrand − final-leftover` in
+4, eq.-11 reduction): given each step's coupled eq.-11 quotient identity `mk(afDerivWf cⱼ) = mk Lⱼ − mk
+Lⱼ₊₁`, the assembled antiderivative `v = cs.foldl caddG []` satisfies `afDerivWf(v) = integrand − final-leftover` in
 the carrier — the general analogue of the radical `radReduceRationalTelescope`, the per-step eq.-11
 congruence isolated as the named hypothesis. -/
 abbrev sound_genRationalTelescope := @CPolyG.generalReduceRationalTelescopeWf

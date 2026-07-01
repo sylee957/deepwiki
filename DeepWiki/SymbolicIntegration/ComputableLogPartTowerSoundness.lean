@@ -13,7 +13,7 @@ the single remaining piece for the *fully checker-free* one-shot soundness
 This file transports the **algebraic Rothstein–Trager residue identity** — `roots_rtResultant`
 (`ResidueMultiplicity`) and the Lagrange partial fraction `ratFunc_eq_sum_residue_logDeriv`
 (`PartialFraction`) — to the **transcendental tower** with the monomial derivation `D = cmonomialDeriv Dt`,
-the SAME way the Hermite half transported `generalReduceRationalTelescope`. Over the tower the residue
+the SAME way the Hermite half transported `generalReduceRationalTelescopeWf`. Over the tower the residue
 construction is the *single* resultant `res_t(d, a − z·Dd)` (`cResidueResultantTowerG`): the base `k = ℚ(x)`
 is already the coefficient field, so this is the **direct** `roots_rtResultant` analogue — not the
 hyperelliptic double resultant the algebraic curve case needed. The monomial derivative `Dd = cmonomialDeriv
