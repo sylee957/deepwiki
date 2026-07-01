@@ -238,10 +238,10 @@ done once per topic, not per chapter).
   Audit with `grep -n -- '-/' file.lean | grep -vE -- '-/\s*$'`.
 - Treat all linter warnings (unused variables, deprecations) as errors.
 
-## File audit checklist
+## File Audit Checklist
 
-When asked to audit or review a Lean file, check both correctness and documentation-layer
-hygiene. Lead with concrete findings, ordered by severity, and cite file/line references.
+When asked to audit a Lean file, check both correctness and documentation-layer hygiene.
+Lead with concrete findings, ordered by severity, and cite file/line references.
 
 - Identify the layer first: `DeepWiki/<Topic>/` is source-neutral library code;
   `Sources/<slug>/` is the source catalog. Book numbers, §/page references, DOI/source
@@ -250,16 +250,17 @@ hygiene. Lead with concrete findings, ordered by severity, and cite file/line re
   `Bronstein`, `§`, `Lemma 3.3.5`, `Definition ...`, `Exercise ...`, `remaining work`,
   `deferred`, `not yet`, or similar progress/source wording. Replace these with semantic
   API-style descriptions.
-- For `Sources/` files, source references are expected, but docstrings should still explain
-  what Lean declaration is being cataloged and how it maps to Mathlib/DeepWiki terminology.
+- For `Sources/` files, docstrings may cite the book/paper, but should be self-contained
+  enough to explain what Lean declaration is being cataloged and how it maps to
+  Mathlib/DeepWiki terminology.
 - Check every named declaration has a concise one-line docstring; anonymous `example`s do
   not need one.
 - Check module docstrings are current. Do not leave stale progress claims like "converse
   still open" once downstream files or catalog aliases formalize it.
 - Mention section-level `variable` blocks in audits when they obscure the exported signature
-  or when nearby files use explicit declaration signatures.
-- Verify with the affected `scripts/check.sh DeepWiki.<Topic>.<Module>` target and, for
-  catalog-facing changes, the relevant `Sources.<...>` target.
+  or when nearby files are using explicit declaration signatures.
+- Verify with the affected target and, for catalog-facing changes, the relevant
+  `Sources.<...>.Chapter...` target.
 
 ## Naming & style conventions
 
