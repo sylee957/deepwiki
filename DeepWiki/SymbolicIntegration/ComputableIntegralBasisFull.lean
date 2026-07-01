@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRound2IntegralBasis
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
 /-! # The FULL general-curve INTEGRAL BASIS: iterating the Ford–Zassenhaus Round-2 step to the maximal
@@ -56,26 +56,24 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-! ### Reducing `QFunNZG ℚ` fractions to lowest terms (`qReduceNZG`)
+/-! ### Reducing `QFunNZG ℚ` fractions to monic-denominator lowest terms (`qReduceNZG`)
 
 `QFunNZG ℚ ≅ ℚ(x)` is an **unreduced** fraction `num/den` (the engine tests `K`-equality through `isZero`,
 never canonicalizing). Across Round-2 iterations the order's coordinate fractions accumulate spurious common
 factors (e.g. `x⁸/x⁸` for `1`), which blow up the trace-matrix/discriminant computation and starve the
-squarefree factoring of the bad primes. `qReduceNZG` cancels `gcd(num, den)` (the fraction-free gcd
-`cgcdFFCore` over `ℚ[x]`) and normalizes the denominator to monic — the canonical-form step the iteration
-applies after each enlargement (`reduceOrder`) and inside the clearing helpers. -/
+squarefree factoring of the bad primes. `qReduceNZG` reuses the shared fuel-free reducer internals
+(`QFunNZG.reduceNum`/`QFunNZG.reduceDen`, backed by `cgcdMonicWf`) and then normalizes the denominator to
+monic — the canonical-form step the iteration applies after each enlargement (`reduceOrder`) and inside the
+clearing helpers. -/
 
 /-- **Reduce a `ℚ(x)` element to lowest terms** `qReduceNZG z = (num/g)/(den/g)` with `g = gcd(num, den)`
-(`cgcdFFCore` over `ℚ[x]`), then scale numerator and denominator so the denominator is **monic**. Cancels
-the spurious common factors that `QFunNZG`'s unreduced `mul`/`add` accumulate; the canonical form the
-Round-2 iteration relies on (a zero denominator falls back to the input, never reached for nonzero `z`). -/
+(`QFunNZG.reduceGcd`, the shared fuel-free monic gcd), then scale numerator and denominator so the denominator
+is **monic**. Cancels the spurious common factors that `QFunNZG`'s unreduced `mul`/`add` accumulate; the
+canonical form the Round-2 iteration relies on (a zero denominator falls back to the input, never reached for
+nonzero `z`). -/
 def qReduceNZG (z : QFunNZG ℚ) : QFunNZG ℚ :=
-  let num := z.1.1
-  let den := z.1.2
-  let g := CFracGcdCore.cgcdFFCore (num.length + den.length + 2) num den
-  let (num1, den1) := if cisZeroG g then (num, den)
-    else (cdivWf num g, cdivWf den g)
-  let den1 := cnormG den1
+  let num1 := QFunNZG.reduceNum z
+  let den1 := cnormG (QFunNZG.reduceDen z)
   if cisZeroG den1 then z
   else
     let c := CField.inv (cleadG den1)
@@ -243,17 +241,14 @@ open CPolyG
 namespace CPolyG
 
 /-- **The discriminant of an order `O`, numerator reduced to lowest terms** `discNumOrder f O`: the numerator
-of `det(traceMatrix f O) ∈ K(x)` after cancelling `gcd(num, den)` (`cgcdFFCore` over `ℚ[x]`). For `O =
+of `det(traceMatrix f O) ∈ K(x)` after cancelling `gcd(num, den)` through the shared fuel-free reducer. For `O =
 powerBasis f` this is `discNum f`; after an enlargement `O → Î` it is `disc(f)/(det M)²`, which **shrinks by
 the square of the change of basis** — the termination measure. Reducing to lowest terms is essential: the
 unreduced determinant of an enlarged order's trace matrix is a huge polynomial whose squarefree factoring
 fails (and misses the bad primes). -/
 def discNumOrder (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) : CPolyG ℚ :=
   let z := fieldDet (traceMatrix f O)
-  let num := z.1.1
-  let den := z.1.2
-  let g := CFracGcdCore.cgcdFFCore (num.length + den.length + 2) num den
-  if cisZeroG g then cnormG num else cnormG (cdivWf num g)
+  cnormG (QFunNZG.reduceNum z)
 
 /-- **The bad primes of an order `O`** `badPrimesOrder fuel f O`: the distinct monic squarefree factors `p`
 of the **order's** reduced discriminant numerator (`discNumOrder`) with `p² | d` — the primes where `O` may
@@ -501,8 +496,9 @@ poles" decidable and the algebraic-function integral computable for an arbitrary
 Each validation carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
 compiler axiom — **no `sorry`, no `sorryAx`, no extra axiom** (the iteration `integralBasisLoop` is `ℕ`-fuel
 structural recursion; `round2Pass`/`round2StepOrderAt`/`ipOCoords`/`idealizerOCoords` are non-recursive
-compositions over the fuel-bounded engine; `kernelBasisG`/`matInvG`/`hermiteRowReduce`/`cgcdFFCore` fold over
-finite `List.range`s / are fuel-bounded). **The engine now computes the FULL general-curve integral basis** —
+compositions over finite-list kernels; `kernelBasisG`/`matInvG`/`hermiteRowReduce` fold over finite
+`List.range`s, while exact division and fraction cancellation use the fuel-free `cdivWf`/`qReduceNZG` path).
+**The engine now computes the FULL general-curve integral basis** —
 iterating the Ford–Zassenhaus Round-2 step to the maximal order: for the cusp `y² − x³` and node
 `y² − x²(x+1)` it returns `[1, y/x]` in one step (`cusp_integralBasis_eq`, `node_integralBasis_eq`); for the
 **worse cusp** `y² − x⁵` it iterates **twice** to `[1, y/x²]` (`cusp5_integralBasis_eq`,

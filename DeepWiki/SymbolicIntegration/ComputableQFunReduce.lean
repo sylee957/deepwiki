@@ -154,6 +154,27 @@ theorem toQFunNZG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : QFunNZG 
   rw [div_eq_div_iff hDqne hDne, ← hnum, ← hden]
   ring
 
+namespace QFunNZG
+
+variable {α : Type*} [CField α] [CFieldSpec α]
+
+/-- **`qReduce` preserves the zero test** (`isZeroNZG (qReduce x) = isZeroNZG x`), with no fuel or
+termination hypotheses. This is the reusable Boolean corollary of `toQFunNZG_qReduce`: reducing a fraction
+does not change its field value, so the field-faithful zero test sees the same result before and after
+canonicalization. -/
+theorem isZeroNZG_qReduce (x : QFunNZG α) :
+    isZeroNZG (qReduce x) = isZeroNZG x := by
+  have hval : toQFunNZG (qReduce x) = toQFunNZG x := toQFunNZG_qReduce x
+  have h1 := isZeroNZG_iff (qReduce x)
+  have h2 := isZeroNZG_iff x
+  rw [hval] at h1
+  by_cases hz : toQFunNZG x = 0
+  · rw [h1.mpr hz, h2.mpr hz]
+  · rw [Bool.eq_false_iff.mpr (fun h => hz (h1.mp h)),
+      Bool.eq_false_iff.mpr (fun h => hz (h2.mp h))]
+
+end QFunNZG
+
 /-! ### Validation: `qReduce` reduces and preserves value at level 1 (`QFunNZG ℚ ≅ ℚ(x)`)
 
 The `native_decide` floor: `qReduce` runs in the native compiler at `α = ℚ` (the data is `[CField ℚ]`,

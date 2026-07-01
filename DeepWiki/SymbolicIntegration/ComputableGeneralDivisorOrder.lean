@@ -360,8 +360,8 @@ theorem general_divisor_order_validates :
 
 `[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
 axiom). **No `sorry`, no `sorryAx`, no extra axiom** — `idealReduce`/`isPrincipalIdeal`/`genCandidates`/
-`canonHNF`/`canonHNFEq` are non-recursive compositions over the fuel-bounded engine
-(`hermiteRowReduce`/exact division use `cdivWf`, `cgcdFFCore` is fuel-bounded, and
+`canonHNF`/`canonHNFEq` are non-recursive compositions over finite-list kernels
+(`hermiteRowReduce`/exact division use `cdivWf`, `qReduceNZG` uses the shared fuel-free fraction reducer, and
 `matInvG` folds over finite `List.range`s);
 `genDivisorOrder` is `ℕ`-fuel structural recursion (`genDivisorOrderAux`). -/
 

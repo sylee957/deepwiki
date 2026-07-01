@@ -96,22 +96,8 @@ original does. This is the load-bearing fact for the **bake-into-`qaddNZG`/`qmul
 test of the form `CField.isZero (… add/mul …) = true/false` is unaffected by inserting `qReduce` into
 the ops (the value, hence the zero test, is unchanged); only a test pinning a *literal* fraction
 representation could shift, and the tower suite pins outer `CPolyG`-list lengths (degree in the new
-monomial), not the inner coefficient-fraction lists `qReduce` touches. -/
-
-variable {α : Type*} [CField α] [CFieldSpec α]
-
-/-- **`qReduce` preserves the zero test** (`isZeroNZG (qReduce x) = isZeroNZG x`), with no fuel or
-termination hypotheses. -/
-theorem isZeroNZG_qReduce (x : QFunNZG α) :
-    isZeroNZG (qReduce x) = isZeroNZG x := by
-  have hval : toQFunNZG (qReduce x) = toQFunNZG x := toQFunNZG_qReduce x
-  have h1 := isZeroNZG_iff (qReduce x)
-  have h2 := isZeroNZG_iff x
-  rw [hval] at h1
-  by_cases hz : toQFunNZG x = 0
-  · rw [h1.mpr hz, h2.mpr hz]
-  · rw [Bool.eq_false_iff.mpr (fun h => hz (h1.mp h)),
-      Bool.eq_false_iff.mpr (fun h => hz (h2.mp h))]
+monomial), not the inner coefficient-fraction lists `qReduce` touches. The reusable theorem now lives next
+to the reducer as `QFunNZG.isZeroNZG_qReduce`; this file keeps the motivating tower demo and axiom audit. -/
 
 #print axioms swellProd_value_preserved
 #print axioms isZeroNZG_qReduce
