@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.ComputableUnifiedFuelFree
 
 /-! # The unconditional one-shot soundness for the PRIMITIVE (logarithmic) case (Bronstein §5.6)
 
@@ -16,9 +17,10 @@ The engine's `hmatch` is a **`List` sum** over the residue logs `cLogPartG` retu
 `vᵢ = gcd_t(d, a − cᵢ·Dd)`. The proven primitive residue match is the **`Finset`-over-roots** form. This file
 builds the **list↔Finset bridge** connecting them: the per-root list `s.toList.map (fun α => (c_α, t−α))` has
 the SAME `List.sum` as the `Finset.sum` over `s` (`Finset.sum_map_toList`), so the proven Finset identity
-discharges the engine `hmatch` for the per-root log form. Composing with the poly branch gives the milestone
-**`cIntegrateGFull_primitive_oneShot`** — the unconditional, checker-free, axiom-clean one-shot for primitive
-(logarithmic) tower extensions.
+discharges the engine `hmatch` for the per-root log form. Composing with the pure-normal driver branch gives
+**`cIntegrateGFull_primitive_oneShot`** and its fuel-free companion
+**`cIntegrateGFullWf_primitive_oneShot`** — checker-free one-shots for primitive (logarithmic) tower
+extensions.
 
 What this file delivers (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_decide`):
 
@@ -663,6 +665,69 @@ theorem field_identity_of_cIntegrateReducedG_primitive (Dt : CPolyG α) (fuel : 
       (cHermiteReduceTowerG Dt fuel a d).2.2 w
       (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hDt hden hA hnorm hform)
 
+omit [CFracGcdCore α] in
+/-- **★★ The fuel-free reduced-case field identity for the PRIMITIVE case** — the `…GWf` companion of
+`field_identity_of_cIntegrateReducedG_primitive`. For the normal-part capstone output
+`res = cIntegrateReducedGWf Dt a d cands` with a primitive monomial `toPolyG Dt = C w`, the same Hermite
+telescoping and per-root residue-log reassembly hypotheses prove the field-level antiderivative identity
+with no runtime fuel. -/
+theorem field_identity_of_cIntegrateReducedGWf_primitive [CFracGcdCoreWf α] (Dt : CPolyG α)
+    (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C w)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  field_identity_of_reducedG_of_residueMatch Dt
+    (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1
+    (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2
+    (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2
+    a d (CPolyG.cIntegrateReducedGWf Dt a d cands).logs hherm
+    (primitive_engine_hmatch Dt s (cHermiteReduceTowerGWf Dt a d).2.1
+      (cHermiteReduceTowerGWf Dt a d).2.2 w
+      (CPolyG.cIntegrateReducedGWf Dt a d cands).logs hDt hden hA hnorm hform)
+
+example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
+    (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C w)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  field_identity_of_cIntegrateReducedGWf_primitive Dt a d cands s w hDt hherm hden hA hnorm hform
+
 /-- **★★★ The PRIMITIVE reduced-case one-shot with `hform` DISCHARGED from residue data** — composes
 `cIntegrateReducedG_logs_eq_per_root` (the engine `cLogPartG` ↔ per-root bridge) into
 `field_identity_of_cIntegrateReducedG_primitive`, replacing the opaque `hform` hypothesis with its **genuine
@@ -796,6 +861,30 @@ theorem cIntegrateGFull_pureNormal_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPoly
   rw [hcrep] at hb hfp
   simp only [hb, hfp, if_true]
 
+omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+/-- **`cIntegrateGFullWf` pure-normal branch returns the fuel-free reduced capstone** — when the special
+part `b` and polynomial part `fₚ` of the fuel-free canonical split both vanish, the fuel-free full driver
+returns exactly `cIntegrateReducedGWf` on the simple part `(cₙ, dₙ)`. -/
+theorem cIntegrateGFullWf_pureNormal_eq [CFracGcdCoreWf α] (Dt : CPolyG α)
+    (a d : CPolyG α) (cands : List α)
+    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
+    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true) :
+    CPolyG.cIntegrateGFullWf Dt a d cands
+      = some (CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+          (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) := by
+  rw [CPolyG.cIntegrateGFullWf]
+  rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+  rw [hcrep] at hb hfp
+  simp only [hb, hfp, if_true]
+
+example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
+    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
+    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true) :
+    CPolyG.cIntegrateGFullWf Dt a d cands
+      = some (CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+          (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) :=
+  cIntegrateGFullWf_pureNormal_eq Dt a d cands hb hfp
+
 /-- **★★★ The PRIMITIVE one-shot for `cIntegrateGFull` (pure-normal branch), checker-free** — for a primitive
 monomial `toPolyG Dt = C w`, if the full driver returns `some res` on the primitive pure-normal branch
 (`cisZeroG b = true`, `cisZeroG fp = true`, so `res = cIntegrateReducedG Dt fuel cₙ dₙ cands`), **given** the
@@ -863,6 +952,112 @@ theorem cIntegrateGFull_primitive_oneShot (Dt : CPolyG α) (fuel : ℕ) (a d : C
     (canonicalRepresentationFastG Dt fuel a d).2.2.1
     (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands s w hDt hherm hden hA hnorm hform]
   exact hrecon
+
+omit [CFracGcdCore α] in
+/-- **★★★ The fuel-free PRIMITIVE one-shot for `cIntegrateGFullWf` (pure-normal branch), checker-free** —
+the `…Wf` companion of `cIntegrateGFull_primitive_oneShot`. For a primitive monomial, if the fuel-free full
+driver returns `some res` on the pure-normal branch, then the reduced fuel-free primitive identity and the
+fuel-free canonical reconstruction prove `D(res) + logResidueSumG Dt res.logs = a/d` with no engine
+`checkIdentityG` certificate and no runtime fuel. -/
+theorem cIntegrateGFullWf_primitive_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
+    (cands : List α) (res : IntegralResultG α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C w)
+    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
+    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (hrecon : amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt
+                  (canonicalRepresentationFastGWf Dt a d).2.2.1
+                  (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt
+                  (canonicalRepresentationFastGWf Dt a d).2.2.1
+                  (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerGWf Dt
+                (canonicalRepresentationFastGWf Dt a d).2.2.1
+                (canonicalRepresentationFastGWf Dt a d).2.2.2).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt
+                (canonicalRepresentationFastGWf Dt a d).2.2.1
+                (canonicalRepresentationFastGWf Dt a d).2.2.2).2.2)
+        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt
+          (canonicalRepresentationFastGWf Dt a d).2.2.1
+          (canonicalRepresentationFastGWf Dt a d).2.2.2).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerGWf Dt
+          (canonicalRepresentationFastGWf Dt a d).2.2.1
+          (canonicalRepresentationFastGWf Dt a d).2.2.2).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedGWf Dt
+            (canonicalRepresentationFastGWf Dt a d).2.2.1
+            (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerGWf Dt
+                  (canonicalRepresentationFastGWf Dt a d).2.2.1
+                  (canonicalRepresentationFastGWf Dt a d).2.2.2).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  have hres : res = CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+      (canonicalRepresentationFastGWf Dt a d).2.2.2 cands := by
+    rw [cIntegrateGFullWf_pureNormal_eq Dt a d cands hb hfp] at hsome
+    exact (Option.some.injEq _ _ ▸ hsome).symm
+  subst hres
+  rw [field_identity_of_cIntegrateReducedGWf_primitive Dt
+    (canonicalRepresentationFastGWf Dt a d).2.2.1
+    (canonicalRepresentationFastGWf Dt a d).2.2.2 cands s w hDt hherm hden hA hnorm hform]
+  exact hrecon
+
+example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
+    (res : IntegralResultG α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
+    (hDt : toPolyG Dt = C w)
+    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
+    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (hrecon : amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt
+                  (canonicalRepresentationFastGWf Dt a d).2.2.1
+                  (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt
+                  (canonicalRepresentationFastGWf Dt a d).2.2.1
+                  (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerGWf Dt
+                (canonicalRepresentationFastGWf Dt a d).2.2.1
+                (canonicalRepresentationFastGWf Dt a d).2.2.2).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt
+                (canonicalRepresentationFastGWf Dt a d).2.2.1
+                (canonicalRepresentationFastGWf Dt a d).2.2.2).2.2)
+        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt
+          (canonicalRepresentationFastGWf Dt a d).2.2.1
+          (canonicalRepresentationFastGWf Dt a d).2.2.2).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerGWf Dt
+          (canonicalRepresentationFastGWf Dt a d).2.2.1
+          (canonicalRepresentationFastGWf Dt a d).2.2.2).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedGWf Dt
+            (canonicalRepresentationFastGWf Dt a d).2.2.1
+            (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerGWf Dt
+                  (canonicalRepresentationFastGWf Dt a d).2.2.1
+                  (canonicalRepresentationFastGWf Dt a d).2.2.2).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β))) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hb hfp hsome hrecon hherm hden hA hnorm hform
 
 /-! ### ★ The POLYNOMIAL branch of `cIntegrateGFull`: output pin + one-shot
 
@@ -1522,9 +1717,11 @@ PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_de
   cancellation is AUTOMATIC (`ResidueMatchTower.primitive_cancel`), so the primitive regime needs **no
   integrability witness**.
 * **The PRIMITIVE one-shot** (`field_identity_of_cIntegrateReducedG_primitive`,
-  `cIntegrateGFull_primitive_oneShot` / `…_qfunNZG`) — for the primitive pure-normal branch,
-  `cIntegrateGFull = some res ⟹ D(res) = a/d`, checker-free, gated only on the abstract engine inputs
-  (canonical reconstruction `hrecon`, Hermite half `hherm`, per-root reassembly `hform`).
+  `field_identity_of_cIntegrateReducedGWf_primitive`, `cIntegrateGFull_primitive_oneShot` /
+  `cIntegrateGFullWf_primitive_oneShot` / `…_qfunNZG`) — for the primitive pure-normal branch,
+  `cIntegrateGFull = some res` / `cIntegrateGFullWf = some res ⟹ D(res) = a/d`, checker-free, gated only on
+  the abstract engine inputs (canonical reconstruction `hrecon`, Hermite half `hherm`, per-root reassembly
+  `hform`).
 * **★★ NEW — the HYPEREXPONENTIAL one-shot** (`field_identity_of_cIntegrateReducedG_hyperexp`,
   `cIntegrateGFull_hyperexp_oneShot` / `…_qfunNZG`), built on:
   - **`monomial_residue_sum_eq_cancel_add`** — the UNCONDITIONAL decomposition `residue sum = (cancel sum) +
@@ -1579,9 +1776,10 @@ the normal-part one-shot `hnormal`, and the split reconstruction `hrecon`. The p
 rational `(qₚ·gₙd + gₙ)/gₙd = amG qₚ + gₙ/gₙd` (field algebra via `toPolyG_caddG`/`toPolyG_cmulG` + `(x·z +
 y)/z = x + y/z`), splits `D` by `Derivation.map_add`, then chains `hpoly`/`hnormal`/`hrecon`.
 
-★ THE GENERAL ONE-SHOT (Target 3, deferred — shape only). A single `cIntegrateGFull = some res ⟹ D(res) =
-a/d` covering BOTH branches is a `cisZeroG fp` case split: `true` → `cIntegrateGFull_primitive_oneShot` (or its
-hyperexp sibling), `false` → `cIntegrateGFull_poly_oneShot`. It is NOT a clean additive theorem: the two
+★ THE GENERAL ONE-SHOT (Target 3, deferred — shape only). A single full-driver theorem
+(`cIntegrateGFull`/`cIntegrateGFullWf = some res ⟹ D(res) = a/d`) covering BOTH branches is a `cisZeroG fp`
+case split: `true` → `cIntegrateGFullWf_primitive_oneShot` for the fuel-free driver (or the corresponding
+fuelful/hyperexp sibling), `false` → `cIntegrateGFull_poly_oneShot`. It is NOT a clean additive theorem: the two
 branches consume structurally DIFFERENT hypothesis bundles (the pure-normal milestones fold the normal
 one-shot into Hermite `hherm` + per-root reassembly `hform` + reconstruction `hrecon`; the poly branch takes
 the normal one-shot `hnormal` directly with a different split `hrecon`), so a combined statement must carry the
@@ -1594,9 +1792,11 @@ hypotheses. -/
 #print axioms primitive_engine_hmatch
 #print axioms primitive_monomial_norm_of_const_roots
 #print axioms field_identity_of_cIntegrateReducedG_primitive
+#print axioms field_identity_of_cIntegrateReducedGWf_primitive
 #print axioms cIntegrateReducedG_logs_eq_per_root
 #print axioms field_identity_of_cIntegrateReducedG_primitive_of_residueData
 #print axioms cIntegrateGFull_primitive_oneShot
+#print axioms cIntegrateGFullWf_primitive_oneShot
 #print axioms cIntegrateGFull_primitive_oneShot_qfunNZG
 #print axioms ResidueMatchTower.hyperexp_cancel_iff_sum_zero
 #print axioms ResidueMatchTower.monomial_residue_sum_eq_cancel_add
