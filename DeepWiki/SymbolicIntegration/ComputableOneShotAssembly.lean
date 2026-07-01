@@ -360,7 +360,7 @@ theorem primitive_engine_hmatch (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
 
 /-! ### The PRIMITIVE normality side condition `hnorm`, for constant resolvent roots
 
-`primitive_engine_hmatch`/`field_identity_of_cIntegrateReducedG_primitive` take the RT normality side
+`primitive_engine_hmatch`/`field_identity_of_cIntegrateReducedGWf_primitive` take the RT normality side
 condition `hnorm : ∀ β ∈ s, w ≠ β′` — every resolvent root `β` is *normal* for the monomial `t′ = w`.
 Here `β′` is the **field derivation** `Differential.deriv β` of the root *element* `β ∈ CFieldSpec.K α`
 (`CDiffFieldSpec.diffK`), NOT the polynomial derivative of `C w` (which is `0`): so `β′` is genuinely an
@@ -480,86 +480,101 @@ automatic (`primitive_cancel`), so the primitive regime needs no integrability w
 
 variable [CFracGcdCore α]
 
-/-! ### ★ Discharging `hform`: the engine `cLogPartG` ↔ per-root reassembly, and its GENUINE residual
+/-! ### ★ Discharging `hform`: the fuel-free `cLogPartGWf` ↔ per-root reassembly
 
-`hform` asks the engine's residue logs `cIntegrateReducedG.logs = cLogPartG Dt fuel hNum hDen cands` (a
-**`List`** = `(cRationalResiduesG …).map (c ↦ (c, cLogArgTowerG … c))`, **grouped by distinct residue value**)
-to equal, under the `(toK ·, toPolyG ·)` projection, the **per-root** list `s.toList.map (β ↦ (residue β,
-X − β))`. The lemma below derives `hform` from this isolated, **precisely-stated** residual:
+`hform` asks the fuel-free residue logs `cIntegrateReducedGWf.logs = cLogPartGWf Dt hNum hDen cands` to
+equal, under the `(toK ·, toPolyG ·)` projection, the per-root list
+`s.toList.map (β ↦ (residue β, X − β))`. The residual left explicit is the candidate enumeration
+`cRationalResiduesGWf Dt hNum hDen cands = s.toList.map residueCand`; the literal log-argument shape is
+discharged by `cLogArgTowerGWf_eq_linear_factor`. -/
+omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+/-- The fuel-free log argument is literally the residue's linear factor. -/
+theorem cLogArgTowerGWf_eq_linear_factor [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)]
+    (Dt a d : CPolyG α) (c : α) (s : Finset (CFieldSpec.K α)) (β : CFieldSpec.K α)
+    (hread : Associated (toPolyG (cLogArgTowerGWf Dt a d c))
+      (gcd (toPolyG d) (toPolyG (cAmcDdG Dt a d c))))
+    (hden : toPolyG d = Lagrange.nodal s id)
+    (hDd : ∀ γ ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ ≠ 0)
+    (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
+      (toPolyG a).eval γ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ
+        ≠ (toPolyG a).eval δ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval δ)
+    (hβ : β ∈ s)
+    (hc : CFieldSpec.toK c
+      = (toPolyG a).eval β / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval β) :
+    toPolyG (cLogArgTowerGWf Dt a d c) = Polynomial.X - Polynomial.C β := by
+  have hassoc : Associated (toPolyG (cLogArgTowerGWf Dt a d c)) (Polynomial.X - Polynomial.C β) := by
+    refine hread.trans ?_
+    rw [toPolyG_cAmcDdG, hc]
+    nth_rewrite 1 [hden]
+    exact Associated.of_eq
+      (LogResidueTower.residue_gcd_eq_linear_factor s (toPolyG a)
+        (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) hDd hdist β hβ)
+  have hne : toPolyG (cLogArgTowerGWf Dt a d c) ≠ 0 := by
+    intro h
+    rw [h] at hassoc
+    exact (Polynomial.X_sub_C_ne_zero β) ((associated_zero_iff_eq_zero _).mp hassoc.symm)
+  have hmonic : (toPolyG (cLogArgTowerGWf Dt a d c)).Monic := by
+    rw [cLogArgTowerGWf, CFracGcdCoreWf.cgcdFFCoreWf]
+    rw [cLogArgTowerGWf, CFracGcdCoreWf.cgcdFFCoreWf] at hne
+    have hraw_ne : toPolyG (CFracGcdCoreWf.cgcdFFRawCoreWf d (cAmcDdG Dt a d c)) ≠ 0 := by
+      intro h
+      exact hne (((associated_toPolyG_cmonicG _).trans (Associated.of_eq h)).eq_zero_iff.mpr rfl)
+    exact monic_toPolyG_cmonicG _ hraw_ne
+  exact eq_of_monic_of_associated hmonic (Polynomial.monic_X_sub_C β) hassoc
 
-  `hres : cRationalResiduesG Dt fuel hNum hDen cands = s.toList.map residueCand`
-
-i.e. *the engine's filtered residue list IS the per-root candidate enumeration* (a `residueCand : K → α`
-assigning to each root β the candidate whose `toK`-image is the residue at β). **This residual is NOT
-dischargeable from the engine:** `cands` is an arbitrary caller-supplied list, `cRationalResiduesG` is
-`cands.filter (R(·) = 0)` with no order or completeness tie to `s`, so the *list* `hform` genuinely requires
-the candidate list to enumerate the residues, once each, in `s.toList` order. Everything *else* `hform` needs
-— each entry's literal `toPolyG (cLogArgTowerG … c) = X − β` — is supplied by the abstract keystone
-`cLogArgTowerG_eq_linear_factor` (Rothstein–Trager residue↔root, this commit). The two genuine side
-conditions are thus exactly: (1) candidate-enumeration `hres` (caller bookkeeping, engine-external), and (2)
-residue-distinctness `hdist` (a true property of the integrand when the residues separate the roots). -/
-omit [Algebra ℚ (CFieldSpec.K α)] in
-/-- **★ `hform` from the per-root candidate enumeration** — discharges the per-root reassembly `hform` of the
-engine residue logs from the isolated residual `hres` (`cRationalResiduesG … = s.toList.map residueCand`,
-genuine caller bookkeeping) plus, per root β, the candidate hitting the residue (`hcand`) and the keystone
-gcd reading (`hgcdread`), given squarefree-split `hden`, `Dd(β) ≠ 0` (`hDd`) and distinct residues (`hdist`).
-Each engine entry `(residueCand β, cLogArgTowerG … (residueCand β))` projects to `(residue β, X − β)` by
-`cLogArgTowerG_eq_linear_factor`. The engine-bookkeeping bridge linking the grouped `cLogPartG` to the
-Lagrange per-root form — with the candidate-enumeration residual `hres` made explicit (it is not an engine
-consequence). -/
-theorem cIntegrateReducedG_logs_eq_per_root [DecidableEq (CFieldSpec.K α)] (Dt : CPolyG α) (fuel : ℕ)
-    (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (residueCand : CFieldSpec.K α → α)
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hres : CPolyG.cRationalResiduesG Dt fuel (cHermiteReduceTowerG Dt fuel a d).2.1
-        (cHermiteReduceTowerG Dt fuel a d).2.2 cands
+omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+/-- The fuel-free reduced logs reassemble into the per-root Lagrange log form. -/
+theorem cIntegrateReducedGWf_logs_eq_per_root [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)]
+    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
+    (s : Finset (CFieldSpec.K α)) (residueCand : CFieldSpec.K α → α)
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hres : CPolyG.cRationalResiduesGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2 cands
       = s.toList.map residueCand)
     (hDd : ∀ β ∈ s,
       (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β ≠ 0)
     (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
-      (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval γ
+      (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval γ
           / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval γ
-        ≠ (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval δ
+        ≠ (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval δ
           / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval δ)
     (hcand : ∀ β ∈ s, CFieldSpec.toK (residueCand β)
-      = (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+      = (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
         / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)
     (hgcdread : ∀ β ∈ s, Associated
-      (toPolyG (cLogArgTowerG Dt fuel (cHermiteReduceTowerG Dt fuel a d).2.1
-          (cHermiteReduceTowerG Dt fuel a d).2.2 (residueCand β)))
-      (gcd (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
-          (toPolyG (cAmcDdG Dt (cHermiteReduceTowerG Dt fuel a d).2.1
-            (cHermiteReduceTowerG Dt fuel a d).2.2 (residueCand β))))) :
-    (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+      (toPolyG (cLogArgTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+          (cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))
+      (gcd (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+          (toPolyG (cAmcDdG Dt (cHermiteReduceTowerGWf Dt a d).2.1
+            (cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β))))) :
+    (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
         (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
       = s.toList.map (fun β =>
-          ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+          ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
             Polynomial.X - Polynomial.C β)) := by
-  set hNum := (cHermiteReduceTowerG Dt fuel a d).2.1 with hNumdef
-  set hDen := (cHermiteReduceTowerG Dt fuel a d).2.2 with hDendef
-  -- unfold the engine logs into `(cRationalResiduesG …).map (c ↦ (c, cLogArgTowerG … c))`, rewrite by `hres`
-  show ((CPolyG.cRationalResiduesG Dt fuel hNum hDen cands).map
-      (fun c => (c, cLogArgTowerG Dt fuel hNum hDen c))).map
+  set hNum := (cHermiteReduceTowerGWf Dt a d).2.1 with hNumdef
+  set hDen := (cHermiteReduceTowerGWf Dt a d).2.2 with hDendef
+  show ((CPolyG.cRationalResiduesGWf Dt hNum hDen cands).map
+      (fun c => (c, cLogArgTowerGWf Dt hNum hDen c))).map
       (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2)) = _
   rw [hres, List.map_map, List.map_map]
-  -- per-root congruence: each `β ↦ (toK (residueCand β), toPolyG (cLogArgTowerG … (residueCand β)))`
   refine List.map_congr_left (fun β hβmem => ?_)
   have hβ : β ∈ s := Finset.mem_toList.mp hβmem
   simp only [Function.comp_apply]
-  -- the residue coefficient matches (`hcand`); the gcd argument is the linear factor (literal keystone)
   rw [hcand β hβ]
   congr 1
-  exact cLogArgTowerG_eq_linear_factor Dt hNum hDen fuel (residueCand β) s β
+  exact cLogArgTowerGWf_eq_linear_factor Dt hNum hDen (residueCand β) s β
     (hgcdread β hβ) hden (by rw [hden]; exact hDd)
     (by rw [hden]; exact hdist) hβ
     (by rw [hden]; exact hcand β hβ)
 
 /-! ### ★ The `hA` discharge — the Hermite leftover is a PROPER fraction (numer degree < denom degree)
 
-Both reduced-case one-shots (`field_identity_of_cIntegrateReducedG_primitive` below and its hyperexp
-analogue) take the degree side condition
+The fuel-free reduced-case one-shots (`field_identity_of_cIntegrateReducedGWf_primitive` below and its
+hyperexp analogue) take the degree side condition
 
-  `hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card`
+  `hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card`
 
 i.e. the Hermite leftover numerator `h_num` has degree `< s.card`, where `s.card` enters as the degree of
 the leftover denominator through the squarefree spelling `hden : toPolyG (…).2.2 = Lagrange.nodal s id` (the
@@ -671,52 +686,9 @@ theorem cHermiteReduceTowerGWf_numer_degree_lt_of_residual [CFracGcdCoreWf α]
     (cHermiteReduceTowerGWf_leftover_proper_of_residual Dt a d resNum resDen Dstar
       hnumeq hdeneq hdvd hresDen hDstar hresProper)
 
-/-- **★★ The reduced-case field identity for the PRIMITIVE case** — for the normal-part capstone output
-`res = cIntegrateReducedG Dt fuel a d cands` with a primitive monomial `toPolyG Dt = C w`, **given** the
-Hermite half `hherm` (`D(g) + h = a/d`, leftover `h = (cHermiteReduceTowerG …).2`) and the per-root
-reassembly `hform` of the residue logs (the engine's `cLogPartG` grouped-GCD ↔ Lagrange per-root output, for
-the squarefree Hermite leftover `hDen` factored as `∏_{β∈s}(t−β)`), the reduced-case field identity `D(g) +
-logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc (CFieldSpec.K α)` — **with no engine
-`checkIdentityG` certificate**. The RT residue match is discharged by `primitive_engine_hmatch` (the
-polynomial-part cancellation automatic in the primitive case), composed with `hherm` through
-`field_identity_of_reducedG_of_residueMatch`. The primitive reduced-case one-shot, gated only on the two
-abstract engine inputs (Hermite telescoping + per-root reassembly). -/
-theorem field_identity_of_cIntegrateReducedG_primitive (Dt : CPolyG α) (fuel : ℕ)
-    (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
-    (hDt : toPolyG Dt = C w)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
-    (hnorm : ∀ β ∈ s, w ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
-          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
-        = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
-                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
-              X - C β))) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_reducedG_of_residueMatch Dt
-    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1
-    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2
-    (cHermiteReduceTowerG Dt fuel a d).2.1 (cHermiteReduceTowerG Dt fuel a d).2.2
-    a d (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hherm
-    (primitive_engine_hmatch Dt s (cHermiteReduceTowerG Dt fuel a d).2.1
-      (cHermiteReduceTowerG Dt fuel a d).2.2 w
-      (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hDt hden hA hnorm hform)
-
 omit [CFracGcdCore α] in
-/-- **★★ The fuel-free reduced-case field identity for the PRIMITIVE case** — the `…GWf` companion of
-`field_identity_of_cIntegrateReducedG_primitive`. For the normal-part capstone output
-`res = cIntegrateReducedGWf Dt a d cands` with a primitive monomial `toPolyG Dt = C w`, the same Hermite
+/-- **★★ The fuel-free reduced-case field identity for the PRIMITIVE case** — for the normal-part capstone
+output `res = cIntegrateReducedGWf Dt a d cands` with a primitive monomial `toPolyG Dt = C w`, the Hermite
 telescoping and per-root residue-log reassembly hypotheses prove the field-level antiderivative identity
 with no runtime fuel. -/
 theorem field_identity_of_cIntegrateReducedGWf_primitive [CFracGcdCoreWf α] (Dt : CPolyG α)
@@ -776,54 +748,48 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   field_identity_of_cIntegrateReducedGWf_primitive Dt a d cands s w hDt hherm hden hA hnorm hform
 
-/-- **★★★ The PRIMITIVE reduced-case one-shot with `hform` DISCHARGED from residue data** — composes
-`cIntegrateReducedG_logs_eq_per_root` (the engine `cLogPartG` ↔ per-root bridge) into
-`field_identity_of_cIntegrateReducedG_primitive`, replacing the opaque `hform` hypothesis with its **genuine
-residual data**: the candidate-enumeration `hres` (engine-external caller bookkeeping), the residue-distinctness
-`hdist` (a true property of the integrand), and the per-root residue/gcd-reading data (`hcand`, `hgcdread`,
-`hDd`). The Rothstein–Trager residue↔root correspondence (`residue_gcd_eq_linear_factor` →
-`cLogArgTowerG_eq_linear_factor`) is what makes the per-entry projection literal; `hform` is no longer assumed
-but **derived**, leaving exactly the two genuine side conditions (`hres`, `hdist`) explicit. -/
-theorem field_identity_of_cIntegrateReducedG_primitive_of_residueData
-    [DecidableEq (CFieldSpec.K α)] (Dt : CPolyG α) (fuel : ℕ)
+omit [CFracGcdCore α] in
+/-- **The fuel-free primitive reduced identity with `hform` discharged from residue data.** -/
+theorem field_identity_of_cIntegrateReducedGWf_primitive_of_residueData
+    [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (residueCand : CFieldSpec.K α → α)
     (hDt : toPolyG Dt = C w)
     (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
         = amG α (toPolyG a) / amG α (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, w ≠ β′)
-    (hres : CPolyG.cRationalResiduesG Dt fuel (cHermiteReduceTowerG Dt fuel a d).2.1
-        (cHermiteReduceTowerG Dt fuel a d).2.2 cands
+    (hres : CPolyG.cRationalResiduesGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2 cands
       = s.toList.map residueCand)
     (hDd : ∀ β ∈ s,
       (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β ≠ 0)
     (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
-      (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval γ
+      (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval γ
           / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval γ
-        ≠ (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval δ
+        ≠ (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval δ
           / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval δ)
     (hcand : ∀ β ∈ s, CFieldSpec.toK (residueCand β)
-      = (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+      = (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
         / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)
     (hgcdread : ∀ β ∈ s, Associated
-      (toPolyG (cLogArgTowerG Dt fuel (cHermiteReduceTowerG Dt fuel a d).2.1
-          (cHermiteReduceTowerG Dt fuel a d).2.2 (residueCand β)))
-      (gcd (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
-          (toPolyG (cAmcDdG Dt (cHermiteReduceTowerG Dt fuel a d).2.1
-            (cHermiteReduceTowerG Dt fuel a d).2.2 (residueCand β))))) :
+      (toPolyG (cLogArgTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+          (cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))
+      (gcd (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+          (toPolyG (cAmcDdG Dt (cHermiteReduceTowerGWf Dt a d).2.1
+            (cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β))))) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_cIntegrateReducedG_primitive Dt fuel a d cands s w hDt hherm hden hA hnorm
-    (cIntegrateReducedG_logs_eq_per_root Dt fuel a d cands s residueCand hden hres hDd hdist hcand
+  field_identity_of_cIntegrateReducedGWf_primitive Dt a d cands s w hDt hherm hden hA hnorm
+    (cIntegrateReducedGWf_logs_eq_per_root Dt a d cands s residueCand hden hres hDd hdist hcand
       hgcdread)
 
 /-! ### Task 3 (hyperexp): the fuel-free reduced-case field identity, GATED on `∑c = 0`
@@ -1542,8 +1508,8 @@ PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_de
   hypothesis for the primitive case, given the per-root reassembly `hform`. The RT polynomial-part
   cancellation is AUTOMATIC (`ResidueMatchTower.primitive_cancel`), so the primitive regime needs **no
   integrability witness**.
-* **The PRIMITIVE one-shot** (`field_identity_of_cIntegrateReducedG_primitive`,
-  `field_identity_of_cIntegrateReducedGWf_primitive`, `cIntegrateGFullWf_primitive_oneShot` plus the Wf
+* **The PRIMITIVE one-shot** (`field_identity_of_cIntegrateReducedGWf_primitive`,
+  `field_identity_of_cIntegrateReducedGWf_primitive_of_residueData`, `cIntegrateGFullWf_primitive_oneShot` plus the Wf
   `…_qfunNZG` specialization) — for the primitive pure-normal branch,
   `cIntegrateGFullWf = some res ⟹ D(res) = a/d`, checker-free, gated only on
   the abstract engine inputs (canonical reconstruction `hrecon`, Hermite half `hherm`, per-root reassembly
@@ -1620,10 +1586,10 @@ hypotheses. -/
 #print axioms primitive_residue_match_list_engine
 #print axioms primitive_engine_hmatch
 #print axioms primitive_monomial_norm_of_const_roots
-#print axioms field_identity_of_cIntegrateReducedG_primitive
+#print axioms cLogArgTowerGWf_eq_linear_factor
 #print axioms field_identity_of_cIntegrateReducedGWf_primitive
-#print axioms cIntegrateReducedG_logs_eq_per_root
-#print axioms field_identity_of_cIntegrateReducedG_primitive_of_residueData
+#print axioms cIntegrateReducedGWf_logs_eq_per_root
+#print axioms field_identity_of_cIntegrateReducedGWf_primitive_of_residueData
 #print axioms cIntegrateGFullWf_primitive_oneShot
 #print axioms cIntegrateGFullWf_primitive_oneShot_qfunNZG
 #print axioms ResidueMatchTower.hyperexp_cancel_iff_sum_zero
@@ -1668,32 +1634,32 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
 -- ★ Composed into the PRIMITIVE one-shot: with `hA` produced by the bridge from leftover properness, the
 -- reduced-case identity `D(g) + logResidueSumG = a/d` holds — `hA` is no longer a free hypothesis but the
 -- proper-fraction property of the Hermite leftover.
-example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
+example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ))
     (cands : List (QFunNZG ℚ)) (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (w : CFieldSpec.K (QFunNZG ℚ))
     (hDt : toPolyG Dt = C w)
     (hherm : towerFractionFieldDerivG Dt
-            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
         = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hproper : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree
-      < (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2).degree)
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hproper : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree
+      < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).degree)
     (hnorm : ∀ β ∈ s, w ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
+    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
         = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
+            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDerivG Dt
-        (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-          / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
+        (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
       = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
-  field_identity_of_cIntegrateReducedG_primitive Dt fuel a d cands s w hDt hherm hden
-    (cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden hproper) hnorm hform
+  field_identity_of_cIntegrateReducedGWf_primitive Dt a d cands s w hDt hherm hden
+    (cHermiteReduceTowerGWf_numer_degree_lt Dt a d s hden hproper) hnorm hform
 
 /-! ### ★★★ The `hA` discharge for `deg Dt ≤ 1`: reduced to exact-division connectors + input properness
 
