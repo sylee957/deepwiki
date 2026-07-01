@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import Sources.Doi_10_1007_b138171.Source
@@ -86,21 +87,21 @@ def qFrac5 (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_de
 
 /-! ## §5.3 The Hermite Reduction (transcendental) — computable + validated -/
 
-/-- **Algorithm `HermiteReduce`** (§5.3, p.139, quadratic version): the computable transcendental
-Hermite reduction `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden), (h_num, h_den))` (the canonical
-generic engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower ℚ(x)[t], rewriting the normal
-part `f = a/d` as `D(g) + h` with `h_den` squarefree, for the monomial derivation `D = κ_D + Dt·d/dt`.
-Computable + `native_decide`-validated; abstract correctness (Thm 5.3.1) deferred. -/
-noncomputable abbrev alg_5_3_hermiteReduce := cHermiteReduceTowerG (α := QFunNZG ℚ)
+/-- **Algorithm `HermiteReduce`** (§5.3, p.139, quadratic version): the fuel-free computable transcendental
+Hermite reduction `cHermiteReduceTowerGWf Dt a d = ((gnum, gden), (h_num, h_den))` (the canonical generic
+engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower ℚ(x)[t], rewriting the normal part `f = a/d`
+as `D(g) + h` with `h_den` squarefree, for the monomial derivation `D = κ_D + Dt·d/dt`. Computable +
+`native_decide`-validated; abstract correctness (Thm 5.3.1) deferred. -/
+noncomputable abbrev alg_5_3_hermiteReduce := cHermiteReduceTowerGWf (α := QFunNZG ℚ)
 
-/-- **Example 5.3.1** (§5.3, p.139): `cHermiteReduceTowerG` on `f = 1/t²` (`Dt = t²+1`, `t = tan x`)
+/-- **Example 5.3.1** (§5.3, p.139): `cHermiteReduceTowerGWf` on `f = 1/t²` (`Dt = t²+1`, `t = tan x`)
 satisfies the Hermite identity `D(g) + h = f` over the generic ℚ(x)[t] (cleared form, `native_decide`);
 the multiplicity-`2` factor `t` is lowered to the squarefree residual denominator `t`. -/
 theorem ex_5_3_1 :
     (let Dt : CPolyG (QFunNZG ℚ) := [qConst5 1, qConst5 0, qConst5 1]      -- `Dt = t²+1`
      let a : CPolyG (QFunNZG ℚ) := [qConst5 1]                           -- `a = 1`
      let d : CPolyG (QFunNZG ℚ) := [qConst5 0, qConst5 0, qConst5 1]       -- `d = t²`
-     let res := CPolyG.cHermiteReduceTowerG Dt 12 a d
+     let res := CPolyG.cHermiteReduceTowerGWf Dt a d
      let gnum := res.1.1; let gden := res.1.2
      let hNum := res.2.1; let hDen := res.2.2
      let Dgnum := CPolyG.cmonomialDeriv Dt gnum

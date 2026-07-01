@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 import DeepWiki.SymbolicIntegration.ComputableTowerUnify
 import Sources.Doi_10_1007_b138171.Source
 
@@ -7,7 +8,7 @@ Solving `Dy + f·y = g` for `y` in a monomial extension — the engine of the ex
 integration algorithm. The **whole RDE pipeline** is now rendered as a **computable** solver over the
 monomial tower ℚ(x)[t]: weak normalizer + normal denominator (§6.1/§6.2), special denominator (§6.2),
 degree bound (§6.3), SPDE (§6.4), the non-cancellation case (§6.5) and the primitive + hyperexponential
-cancellation cases (§6.6), assembled into the full `cRischDEG` and validated end-to-end on
+cancellation cases (§6.6), assembled into the full fuel-free `cRischDEGWf` and validated end-to-end on
 Examples 6.5.1 / 6.4.1.
 
 **Computable-vs-abstract.** Each stage below is a computable function validated by `native_decide` on the
@@ -192,14 +193,14 @@ noncomputable abbrev alg_6_5_polyRischDENoCancel := cPolyRischDENoCancelG (α :=
 primitive/hyperexponential cancellation solvers by monomial type and `deg(b)` (Lemma 6.5.1). -/
 noncomputable abbrev alg_6_5_polyRischDE := cPolyRischDEG (α := QFunNZG ℚ)
 
-/-- **The full Risch DE solver**: the computable `cRischDEG Dt fuel fnum fden gnum gden` (the canonical
-generic engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower, chaining normal denominator
-(§6.2) → special denominator (§6.2) → degree bound (§6.3) → SPDE (§6.4) → PolyRischDE (§6.5/§6.6),
-reconstructing `y` solving `Dy + f·y = g`, or `none`. The generic mirror has its own cleared-identity
-correctness `cRischDEG_rdeCleared`; validated end-to-end on Ex 6.5.1 / 6.4.1. -/
-noncomputable abbrev alg_6_rischDE := cRischDEG (α := QFunNZG ℚ)
+/-- **The full Risch DE solver**: the fuel-free computable `cRischDEGWf Dt fnum fden gnum gden` (the
+canonical generic engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower, chaining normal
+denominator (§6.2) → special denominator (§6.2) → degree bound (§6.3) → SPDE (§6.4) → PolyRischDE
+(§6.5/§6.6), reconstructing `y` solving `Dy + f·y = g`, or `none`. The generic mirror has its own
+cleared-identity correctness layer; validated end-to-end on Ex 6.5.1 / 6.4.1. -/
+noncomputable abbrev alg_6_rischDE := cRischDEGWf (α := QFunNZG ℚ)
 
-/-- **Example 6.5.1** (§6.5, p.208): the full `cRischDEG` solves
+/-- **Example 6.5.1** (§6.5, p.208): the full `cRischDEGWf` solves
 `Dy + (t²+1)y = t³+(x+1)t²+t+(x+2)` (`t = tan x`) end-to-end, returning `y = t + x`, verified to
 *actually solve* the equation by the cleared polynomial identity over the generic ℚ(x)[t]
 (`native_decide`). -/
@@ -210,11 +211,11 @@ theorem ex_6_5_1 :
      -- `g = t³ + (x+1)t² + t + (x+2)` (low→high in `t`)
      let gnum : CPolyG (QFunNZG ℚ) :=
        [CField.add qX6 (qConst6 2), qConst6 1, CField.add qX6 (qConst6 1), qConst6 1]
-     match CPolyG.cRischDEG Dt 50 fnum fden gnum fden with
+     match CPolyG.cRischDEGWf Dt fnum fden gnum fden with
      | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum fden ynum yden
      | none => false) = true := by native_decide
 
-/-- **Example 6.4.1** (§6.4, p.204): the full `cRischDEG` on `Dy + (t²+1)y = 1/t²` (`t = tan x`) returns
+/-- **Example 6.4.1** (§6.4, p.204): the full `cRischDEGWf` on `Dy + (t²+1)y = 1/t²` (`t = tan x`) returns
 `none` — `SPDE` reaches `n = −1 < 0` with `c ≠ 0`, so `∫ e^{tan x}/tan²x dx` is not elementary over the
 generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_6_4_1 :
@@ -223,7 +224,7 @@ theorem ex_6_4_1 :
      let fden : CPolyG (QFunNZG ℚ) := [qConst6 1]
      let gnum : CPolyG (QFunNZG ℚ) := [qConst6 1]
      let gden : CPolyG (QFunNZG ℚ) := [qConst6 0, qConst6 0, qConst6 1]            -- `1/t²`
-     CPolyG.cRischDEG Dt 50 fnum fden gnum gden).isNone = true := by native_decide
+     CPolyG.cRischDEGWf Dt fnum fden gnum gden).isNone = true := by native_decide
 
 /-! ## §6.6 The Cancellation Cases — primitive + hyperexponential computable + validated -/
 
@@ -290,7 +291,7 @@ theorem ex_6_6_cancelExp :
          | some q1, some q2 => CPolyG.cisZeroG (CPolyG.csubG q1 q2)
          | _, _ => false)) = true := by native_decide
 
-/-- **Example (§6.6 eq. 6.23)**, general non-constant base recursion: `cRischDEG` on
+/-- **Example (§6.6 eq. 6.23)**, general non-constant base recursion: `cRischDEGWf` on
 `Dy + (1/x)y = 2·log(x) + 1` (`t = log x`) drives the primitive cancellation case through the
 non-constant base RDE `RischDE(1/x, 2) = x` over ℚ(x) to `y = x·log(x)`, verified by the cleared
 identity over the generic ℚ(x)[t] (`native_decide`). The eq. 6.23 base solve target — `crischDESolve`
@@ -301,7 +302,7 @@ theorem ex_6_6_baseRecursion :
      let fden : CPolyG (QFunNZG ℚ) := [qConst6 1]
      let gnum : CPolyG (QFunNZG ℚ) := [qConst6 1, qConst6 2]                      -- `g = 2t + 1`
      let gden : CPolyG (QFunNZG ℚ) := [qConst6 1]
-     (match CPolyG.cRischDEG Dt 60 fnum fden gnum gden with
+     (match CPolyG.cRischDEGWf Dt fnum fden gnum gden with
        | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum gden ynum yden
        | none => false)
      && (match CRischField.crischDESolve (qFrac6 [1] [0, 1]) (qConst6 2) with
