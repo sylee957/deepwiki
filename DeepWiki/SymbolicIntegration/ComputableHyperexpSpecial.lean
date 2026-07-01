@@ -59,31 +59,30 @@ def cLaurentShiftG (η : α) (j : ℤ) : α :=
   let nsigned : α := if j < 0 then CField.neg n else n
   CField.mul nsigned η
 
-/-- **One Laurent term's antiderivative coefficient** `cLaurentIntCoeffG η fuel j aⱼ = some qⱼ` with
+/-- **One Laurent term's antiderivative coefficient** `cLaurentIntCoeffG η j aⱼ = some qⱼ` with
 `Dqⱼ + (j·η)·qⱼ = aⱼ` over `α` (the §5.10 per-term solve), or `none` if non-elementary. Routes the base
 RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` to the oracle `CRischField.crischDESolve (cLaurentShiftG η j) aⱼ`; for `j = 0`
-the coefficient is `0`, so this is the base integration `Dq₀ = a₀`. (`fuel` is currently unused — the
-class method `crischDESolve` carries its own fuel — but kept for a uniform signature with the assembler.) -/
-def cLaurentIntCoeffG (η : α) (_fuel : ℕ) (j : ℤ) (aj : α) : Option α :=
+the coefficient is `0`, so this is the base integration `Dq₀ = a₀`. -/
+def cLaurentIntCoeffG (η : α) (j : ℤ) (aj : α) : Option α :=
   CRischField.crischDESolve (cLaurentShiftG η j) aj
 
 /-! ### The §5.10 Laurent special-part integrator over the tower
 
-`cIntegrateHyperexpLaurentG η fuel pos neg` integrates a Laurent polynomial `∑ⱼ aⱼ tʲ` of a
+`cIntegrateHyperexpLaurentG η pos neg` integrates a Laurent polynomial `∑ⱼ aⱼ tʲ` of a
 hyperexponential `t` (`Dt = η·t`), given its coefficients as two lists: `pos : CPolyG α` for the
 non-negative indices (`pos[k] = a_k`, `k ≥ 0`, the polynomial part `fₚ` together with the constant `a₀`)
 and `neg : List α` for the negative indices (`neg[i] = a_{-(i+1)}`, the special tail `fₛ`). It solves each
 `qⱼ` by `cLaurentIntCoeffG` and assembles `∑ⱼ qⱼ tʲ = num/tᵐ` (`m = neg.length`, `num[j+m] = qⱼ`). Returns
 `none` if any coefficient is non-elementary. -/
 
-/-- **The §5.10 hyperexponential Laurent special-part integrator** `cIntegrateHyperexpLaurentG η fuel pos
+/-- **The §5.10 hyperexponential Laurent special-part integrator** `cIntegrateHyperexpLaurentG η pos
 neg = some (num, den)` (Bronstein §5.10): integrate the Laurent polynomial `∑ⱼ aⱼ tʲ` of a hyperexponential
 `t` (`Dt = η·t`), with `pos[k] = a_k` (`k ≥ 0`) and `neg[i] = a_{-(i+1)}`, returning `∫ = num/den` with
 `den = tᵐ` (`m = neg.length`) and `num[j+m] = qⱼ` (`qⱼ` from the per-term RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` via
 `cLaurentIntCoeffG`). `none` if any term is non-elementary. The negatives sit at `num`-indices `0…m−1`
 (index `−(i+1) ↦ m−1−i`), the non-negatives at `m…m+n` (index `k ↦ m+k`). `[CField α] [CDiffField α]
 [CRischField α]`-generic — runs at any tower level. -/
-def cIntegrateHyperexpLaurentG (η : α) (fuel : ℕ) (pos : CPolyG α) (neg : List α) :
+def cIntegrateHyperexpLaurentG (η : α) (pos : CPolyG α) (neg : List α) :
     Option (CPolyG α × CPolyG α) :=
   let m : ℕ := (neg : List α).length
   -- the negative tail: index `−(i+1)` solved with shift `−(i+1)`, placed at `num`-index `m−1−i`.
@@ -92,7 +91,7 @@ def cIntegrateHyperexpLaurentG (η : α) (fuel : ℕ) (pos : CPolyG α) (neg : L
       match acc with
       | none => none
       | some tail =>
-        match cLaurentIntCoeffG η fuel (-(i + 1 : ℤ)) ai with
+        match cLaurentIntCoeffG η (-(i + 1 : ℤ)) ai with
         | none => none
         | some q => some (q :: tail)) (some [])
   -- the non-negative part: index `k` solved with shift `k`, placed at `num`-index `m+k`.
@@ -101,7 +100,7 @@ def cIntegrateHyperexpLaurentG (η : α) (fuel : ℕ) (pos : CPolyG α) (neg : L
       match acc with
       | none => none
       | some tail =>
-        match cLaurentIntCoeffG η fuel (k : ℤ) ak with
+        match cLaurentIntCoeffG η (k : ℤ) ak with
         | none => none
         | some q => some (q :: tail)) (some [])
   match negQ, posQ with
@@ -160,7 +159,7 @@ def cIntegrateHyperexpG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands :
   let η : α := cExpEtaG fuel Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
   let neg : List α := cHyperexpSpecialNegG b ds
-  match cIntegrateHyperexpLaurentG η fuel fp neg with
+  match cIntegrateHyperexpLaurentG η fp neg with
   | none => none
   | some (lnum, lden) =>
     let nrm := cIntegrateReducedG Dt fuel cn dn cands

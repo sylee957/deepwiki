@@ -138,7 +138,7 @@ def cIntegrateHyperexpFullG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (can
   let η : α := cExpEtaG fuel Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
   let neg : List α := cHyperexpSpecialNegG b ds
-  match cIntegrateHyperexpLaurentG η fuel fp neg with
+  match cIntegrateHyperexpLaurentG η fp neg with
   | none => none
   | some (lnum, lden) =>
     match cIntegrateHyperexpNormalG Dt fuel cn dn cands with

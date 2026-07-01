@@ -441,7 +441,7 @@ special-part identity + the canonical reconstruction + the base-oracle residual.
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The full §5.10 + §5.9 driver's output shape** — when `cIntegrateHyperexpFullG Dt fuel a d cands = some
-res` with the Laurent part succeeding (`cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fuel fp neg = some
+res` with the Laurent part succeeding (`cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fp neg = some
 (lnum, lden)`, `fp/b/ds/cn/dn` the `canonicalRepresentationFastG` components, `neg = cHyperexpSpecialNegG b
 ds`) and the normal part succeeding (`cIntegrateHyperexpNormalG Dt fuel cn dn cands = some nrm`), the result is
 `res = ⟨(caddG (cmulG lnum gden) (cmulG gnum lden), cmulG lden gden), nrm.logs⟩` with `(gnum, gden) =
@@ -449,7 +449,7 @@ nrm.rational` — the combined rational `lnum/lden + gnum/gden`, the normal logs
 the §5.10 Laurent rational part plus the §5.9 normal rational part. -/
 theorem cIntegrateHyperexpFullG_shape (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
-    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fuel
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt)
         (canonicalRepresentationFastG Dt fuel a d).1
         (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt fuel a d).2.1.1
           (canonicalRepresentationFastG Dt fuel a d).2.1.2)
@@ -485,7 +485,7 @@ unconditional in `∑c`, reduced to the Laurent special-part identity + the cano
 theorem cIntegrateHyperexpFullG_sound (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α) (fpPart : CPolyG α)
     (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
-    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fuel
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt)
         (canonicalRepresentationFastG Dt fuel a d).1
         (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt fuel a d).2.1.1
           (canonicalRepresentationFastG Dt fuel a d).2.1.2)

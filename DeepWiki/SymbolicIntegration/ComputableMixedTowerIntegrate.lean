@@ -338,7 +338,7 @@ term `∫ 1·t⁻¹` by solving its base RDE `Dq₋₁ − q₋₁ = 1` through 
 `D(−1/t) = 1/t` over the `RadX3` diagonal-radical `CDiffField` derivation (`checkIdentityG`, `f = 1/t`).
 **AN ACTUAL INTEGRAL OVER THE MIXED TOWER, WHOSE INTEGRATION STEP DESCENDS THROUGH THE ALGEBRAIC LEVEL.** -/
 theorem mixedHyperexpRecip_integral_descends :
-    (match CPolyG.cIntegrateHyperexpLaurentG (CField.one : RadX3) 20 [] [CField.one] with
+    (match CPolyG.cIntegrateHyperexpLaurentG (CField.one : RadX3) [] [CField.one] with
       | some (num, den) =>
           CPolyG.checkIdentityG mixedHyperexpDt ⟨(num, den), []⟩ [CField.one] [CField.zero, CField.one]
       | none => false) = true := by native_decide
@@ -354,7 +354,7 @@ decoupling to ℚ(x), `q₋₁ = −1`); recombining gives `t − t⁻¹` (ratio
 INTEGRAL OF A POLY-PLUS-SPECIAL LAURENT FORM OVER THE MIXED TOWER, WHOSE SPECIAL-PART STEP DESCENDS THROUGH
 THE ALGEBRAIC LEVEL. -/
 theorem mixedHyperexpPolySpec_integral_descends :
-    (match CPolyG.cIntegrateHyperexpLaurentG (CField.one : RadX3) 20 [CField.zero, CField.one]
+    (match CPolyG.cIntegrateHyperexpLaurentG (CField.one : RadX3) [CField.zero, CField.one]
         [CField.one] with
       | some (num, den) =>
           CPolyG.checkIdentityG mixedHyperexpDt ⟨(num, den), []⟩

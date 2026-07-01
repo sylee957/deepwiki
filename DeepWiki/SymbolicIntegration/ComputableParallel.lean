@@ -289,12 +289,12 @@ constant embedding; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
 def qConstTowerG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- **`QFunNZG ℚ`-coefficient `CPolyG` to a `ℚ`-coefficient one, when every coefficient is a
-`ℚ`-constant.** `cToRatCoeffsQ fuel p = some q` with `q : CPolyG ℚ` iff each coefficient of
+`ℚ`-constant.** `cToRatCoeffsQ p = some q` with `q : CPolyG ℚ` iff each coefficient of
 `p : CPolyG (QFunNZG ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
 numerator and denominator), else `none`. The base-field guard for the tower wrapper: the lowest-terms
 reduction divides `(num, den)` by their gcd (`cgcdWf`/`cdivWf`), and a `ℚ`-constant is exactly a
 degree-0 quotient over a degree-0 (nonzero) remainder denominator. -/
-def cToRatCoeffsQ (_fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) : Option (CPolyG ℚ) :=
+def cToRatCoeffsQ (p : CPolyG (QFunNZG ℚ)) : Option (CPolyG ℚ) :=
   (p : List (QFunNZG ℚ)).foldr (fun (z : QFunNZG ℚ) acc =>
     match acc with
     | none => none
@@ -317,7 +317,7 @@ coefficient (the full tower, needing the §10.2 special-poly list + `F̄`-factor
 the documented continuation. -/
 def cParallelIntegrateTower (fuel : ℕ) (Dt a d : CPolyG (QFunNZG ℚ)) :
     Option ((CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) × List (ℚ × CPolyG (QFunNZG ℚ))) :=
-  match cToRatCoeffsQ fuel Dt, cToRatCoeffsQ fuel a, cToRatCoeffsQ fuel d with
+  match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>
     match cParallelIntegrate fuel DtQ aQ dQ with
     | none => none
