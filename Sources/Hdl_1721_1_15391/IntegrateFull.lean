@@ -1,19 +1,20 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
+import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — the unified full algebraic integral `∫ = v + Σ cᵢ log uᵢ` (Appendix A + Ch. 5, principal case)
 The culmination of the simple-radical arc. Appendix A (catalog `Sources.Hdl_1721_1_15391.AppendixA`)
 builds the **rational part** `v`; Chapter 5 (catalog `Sources.Hdl_1721_1_15391.Chapter5`) builds the
 **residues** `cᵢ` and **solves** the **log argument** `uᵢ` (`radLogArgSolve`). The
-`DeepWiki.SymbolicIntegration` library unifies them in `ComputableRadicalIntegrateFull`: a single driver
-`cIntegrateAlgebraic` that computes **both** halves and assembles the full `∫ R/(B·y) dx = v + Σ cᵢ log uᵢ`
+`DeepWiki.SymbolicIntegration` library unifies them in `ComputableRadicalWellFounded`: a single fuel-free
+driver `cIntegrateAlgebraicWf` that computes **both** halves and assembles the full
+`∫ R/(B·y) dx = v + Σ cᵢ log uᵢ`
 over a simple radical `y² = ρ`, validated end-to-end by a **round-trip** — start from a known
 antiderivative `F = v + c·log u`, differentiate it to an integrand (through the genuine radical derivation
 `radDeriv` and the in-extension division `radInv2`), integrate back, and `native_decide` that the recovered
 result differentiates to the same integrand.
 
 **Computable-vs-abstract.** Every entry below is a computable function or a `native_decide` round-trip
-witness on a worked integral; the abstract correctness (that `cIntegrateAlgebraic`'s output IS the integral
+witness on a worked integral; the abstract correctness (that `cIntegrateAlgebraicWf`'s output IS the integral
 for every input) is validated by the examples, not proved in general. The driver is honest about its scope:
 on the **principal** case (`radLogArgSolve` returns `some`) it produces the full `v + Σ cᵢ log uᵢ`; on the
 **non-principal / torsion** boundary (`radLogArgSolve` returns `none`) it returns the rational part with an
@@ -60,7 +61,7 @@ abbrev full_radLogDeriv_eq_integrand := @radLogDeriv_eq_integrand_arcsinh
 
 /-- **The full algebraic integral `∫ = v + Σ cᵢ log uᵢ`** (Trager, Appendix A + Ch. 5, principal case):
 the bundle of a rational part `v` (a `RadElem`) and a list of log terms `[(cᵢ, uᵢ)]` (residue coefficient
-`cᵢ ∈ ℚ(x)`, argument `uᵢ` a `RadElem`) — the output of `cIntegrateAlgebraic`, differentiated by
+`cᵢ ∈ ℚ(x)`, argument `uᵢ` a `RadElem`) — the output of `cIntegrateAlgebraicWf`, differentiated by
 `algDeriv`. -/
 abbrev full_integralResult := @AlgIntegralResult
 
@@ -70,53 +71,55 @@ term contributing `cᵢ · (uᵢ'/uᵢ)` via the honest `radLogDeriv`. The round
 abbrev full_algDeriv := @algDeriv
 
 /-- **Assemble the rational part from the multi-case dispatch run** `radAssembleRatPart ρ runs` (Trager,
-Appendix A §2): sum the per-factor rational parts of `radIntegrateRational` into one `RadElem`, each
+Appendix A §2): sum the per-factor rational parts of `radIntegrateRationalWf` into one `RadElem`, each
 `V`-factor (Case 1) over `fi^{e−1}` and `W`-factor (Case 2) over `fi^{e}` contributing an `R/y` term. -/
 abbrev full_assembleRatPart := @radAssembleRatPart
 
 /-! ## ★ The unified algebraic integrator and its end-to-end round-trips -/
 
-/-- **★ The unified algebraic integrator** `cIntegrateAlgebraic fuel ρ R B residual c D degBound` (Trager,
-Appendix A + Ch. 5, principal case): produces the full `∫ R/(B·y) dx = v + c·log u` over `y² = ρ` by
-computing the rational part `v` (multi-case dispatch `radIntegrateRational` + `radAssembleRatPart`) AND
-solving the log argument on the `residual` integrand (`radLogArgSolve`, the principal-case linear solve),
-packing `(c, u/D)`. On the non-principal / torsion boundary (`radLogArgSolve = none`) it returns the
-rational part with an empty log list (a documented partial). Both Appendix A and Ch. 5 §1–§2 in one driver. -/
-abbrev full_integrate := @cIntegrateAlgebraic
+/-- **★ The unified fuel-free algebraic integrator** `cIntegrateAlgebraicWf ρ R B residual c D degBound`
+(Trager, Appendix A + Ch. 5, principal case): produces the full `∫ R/(B·y) dx = v + c·log u` over `y² = ρ`
+by computing the rational part `v` (fuel-free multi-case dispatch `radIntegrateRationalWf` +
+`radAssembleRatPart`) AND solving the log argument on the `residual` integrand (`radLogArgSolve`, the
+principal-case linear solve), packing `(c, u/D)`. On the non-principal / torsion boundary
+(`radLogArgSolve = none`) it returns the rational part with an empty log list (a documented partial). Both
+Appendix A and Ch. 5 §1–§2 in one driver, with no top-level `ℕ` fuel. -/
+abbrev full_integrate := @cIntegrateAlgebraicWf
 
 /-- **★ Round-trip (rational-only): `∫ 1/((x−1)²√(x²+1))`** (Trager, Appendix A §2, `native_decide`): start
 from `F = ⟨v, []⟩` (the dispatch's rational part, no log term), differentiate to `integrand = radDeriv v`,
-and `cIntegrateAlgebraic` reconstructs the SAME `v` from `(R, B) = (1, (x−1)²)` with an EMPTY log list (the
-non-principal residual ⇒ no spurious log term), so `algDeriv F' = integrand`. The rational half closes. -/
-abbrev full_roundtrip_rational := @rt_rational_only
+and `cIntegrateAlgebraicWf` reconstructs a fuel-free antiderivative from `(R, B) = (1, (x−1)²)` with an
+EMPTY log list (the non-principal residual ⇒ no spurious log term), so `algDeriv F' = integrand`. The
+rational half closes without top-level fuel. -/
+abbrev full_roundtrip_rational := @cIntegrateAlgebraicWf_rtRat_integrates
 
 /-- **The rational-only result has nonzero rational part and empty log list** (`native_decide`): the
 structural signature `(radIsZero ratPart, logTerms.length) = (false, 0)` of a pure rational integral
 `∫ = v`. -/
-abbrev full_roundtrip_rational_shape := @rt_rational_only_shape
+abbrev full_roundtrip_rational_shape := @cIntegrateAlgebraicWf_rtRat_shape
 
 /-- **★ Round-trip (log-only): `∫ dx/(x√(x²+1)) = log((y − 1)/x)`** (Trager, Ch. 5 §1, `native_decide`):
-`cIntegrateAlgebraic` computes an empty rational part and one log term `1·log u` with `u = N/x` the
+`cIntegrateAlgebraicWf` computes an empty rational part and one log term `1·log u` with `u = N/x` the
 SOLVER'S output (`radLogArgSolve`, a constant multiple of `y − 1`); `algDeriv F' = integrand`. The log half
-closes. -/
-abbrev full_roundtrip_log := @rt_log_only
+closes without top-level fuel. -/
+abbrev full_roundtrip_log := @cIntegrateAlgebraicWf_rtLog_integrates
 
 /-- **The log-only result has empty rational part and one log term** (`native_decide`): the structural
 signature `(radIsZero ratPart, logTerms.length) = (true, 1)` of a pure log integral `∫ = log u`. -/
-abbrev full_roundtrip_log_shape := @rt_log_only_shape
+abbrev full_roundtrip_log_shape := @cIntegrateAlgebraicWf_rtLog_shape
 
 /-- **★★ Round-trip (COMBINED): `F = v + c·log u`, BOTH parts nonzero** (Trager, Appendix A + Ch. 5,
 `native_decide`): THE FULL-INTEGRATOR PROOF. On `y² = x²+1`, start from `F = v + 1·log u` (`v` the
 dispatch's rational part of `∫ 1/((x−1)²√(x²+1))`, `u = x + y` the arcsinh argument), differentiate to
-`integrand = radDeriv v + radLogDeriv u`, integrate back: `cIntegrateAlgebraic` reconstructs the rational
+`integrand = radDeriv v + radLogDeriv u`, integrate back: `cIntegrateAlgebraicWf` reconstructs the rational
 part `v` from `(R, B)` by the dispatch AND solves the log argument, and `algDeriv F' = integrand`. The
-engine produces the FULL `v + Σ cᵢ log uᵢ` (rational + log, principal case), both halves computed from
-polynomial / residual inputs, round-trip-validated through the real radical derivation. -/
-abbrev full_roundtrip_combined := @rt_combined
+fuel-free engine produces the FULL `v + Σ cᵢ log uᵢ` (rational + log, principal case), both halves computed
+from polynomial / residual inputs, round-trip-validated through the real radical derivation. -/
+abbrev full_roundtrip_combined := @cIntegrateAlgebraicWf_rtComb_integrates
 
 /-- **The combined result has nonzero rational part AND one log term** (`native_decide`): the structural
 signature `(radIsZero ratPart, logTerms.length) = (false, 1)` of a genuine combined integral
 `∫ = v + c·log u` with both parts present. -/
-abbrev full_roundtrip_combined_shape := @rt_combined_shape
+abbrev full_roundtrip_combined_shape := @cIntegrateAlgebraicWf_rtComb_shape
 
 end DeepWiki.Tiaf
