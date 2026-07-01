@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
-import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
 import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
@@ -224,14 +223,14 @@ theorem logIntegral_eq :
 /-! ### Stretch: the generic rational-part DRIVER runs over a tower base (`native_decide`)
 
 The previous sections used a *headline antiderivative* validated through `radDeriv`. This section runs the
-**generic multi-case rational-part driver** (`radIntegrateCase2` / `radIntegrateRationalWf`) over a
+**generic multi-case rational-part driver** (`radIntegrateCase2Wf` / `radIntegrateRationalWf`) over a
 tower-level base field — the drivers are `[CField α]`-generic (with `CFracGcdCoreWf α` at the full-driver
 front end), and `CFracGcdCoreWf (QFunNZG ℚ)` resolves recursively, so they instantiate at
 `α = QFunNZG ℚ ≅ ℚ(x)` with **no** new code. The radical then lives over `ℚ(x)[θ]` (`θ = t₁` an independent
 monomial over ℚ(x), `θ' = 1`), i.e. the **stacked** extension `(ℚ(x)(t₁))[y]/(y² − ρ)`.
 
 Concretely: radicand `ρ = θ³ − θ = θ(θ−1)(θ+1) ∈ ℚ(x)[θ]` (squarefree), `W = θ` (a branch place, `W ∣ ρ`),
-integrand `1/(θ²·√(θ³−θ))`. The driver `radIntegrateCase2` runs two Case-2 Hermite steps (`k = 2 → 1`), and
+integrand `1/(θ²·√(θ³−θ))`. The driver `radIntegrateCase2Wf` runs two Case-2 Hermite steps (`k = 2 → 1`), and
 its output is validated through the **actual** `radDeriv 2` at **level 2** (`α = Lvl2 = ℚ(x)(t₁)`, the
 default independent-`t₁` derivation): `radDeriv(vNum/(θ²√ρ)) = 1/(θ²√ρ) − Crem/(θ√ρ)` — the master identity
 `D(∫) = rational-part`. The full multi-case driver `radIntegrateRationalWf` likewise computes over the
@@ -249,11 +248,12 @@ def drvW : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one]
 /-- Driver-over-tower numerator `C₀ = 1 ∈ ℚ(x)[θ]` (integrand `1/(θ²·√(θ³−θ))`), `[1]`. -/
 def drvC : CPolyG (QFunNZG ℚ) := [CField.one]
 
-/-- **The generic Case-2 driver run over the tower base** `radIntegrateCase2 W ρ 2 C = (Crem, vNum)` on
+/-- **The generic fuel-free Case-2 driver run over the tower base** `radIntegrateCase2Wf W ρ 2 C =
+(Crem, vNum)` on
 `∫ 1/(θ²·√(θ³−θ))` over `α = QFunNZG ℚ ≅ ℚ(x)` — two Case-2 Hermite steps (`k = 2 → 1`), returning the
 `k = 1` residual `Crem` and the accumulated rational-part numerator `vNum` over the common denominator
 `W² = θ²`. The driver is taken **verbatim**; only the base field is the tower level ℚ(x). -/
-def drvRun : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ) := radIntegrateCase2 drvW drvRho 2 drvC
+def drvRun : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ) := radIntegrateCase2Wf drvW drvRho 2 drvC
 
 /-- The radicand `ρ = θ³ − θ` lifted to a level-2 scalar `ρ ∈ ℚ(x)(t₁) = Lvl2` (numerator `ρ` over `[1]`),
 the radicand for `radDeriv 2` at level 2. -/
@@ -279,7 +279,7 @@ def drvRatLift : RadElem Lvl2 :=
 radical extension `(ℚ(x)(t₁))[y]/(y² − (t₁³−t₁))`, the **actual** diagonal derivation `radDeriv 2` (the
 default independent-`t₁` derivation, `t₁' = 1`) of the driver's iterated Case-2 rational part `v =
 vNum/(θ²√ρ)` equals `1/(θ²√ρ) − Crem/(θ√ρ)`, the rational part of `1/(θ²·√(θ³−θ))`. Checked by `radIsZero`
-of the difference at level 2. THE GENERIC MULTI-CASE RATIONAL DRIVER (`radIntegrateCase2`) RUNS — and
+of the difference at level 2. THE GENERIC MULTI-CASE RATIONAL DRIVER (`radIntegrateCase2Wf`) RUNS — and
 `D(∫) = rational-part` holds — OVER A TRANSCENDENTAL TOWER BASE, with no driver code changed: only the
 base field is the tower level ℚ(x). -/
 theorem drvDriver_integrates :
