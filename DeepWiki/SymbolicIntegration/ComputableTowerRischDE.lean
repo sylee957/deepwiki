@@ -226,13 +226,13 @@ def cRdeSpecialDenominatorG (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) :
 `δ = deg(Dt)`. Purely list-degree arithmetic — already `[CField α]`-only; we only swap the binder. The
 cancellation refinements (Ch. 7) are documented but not run, exactly as in `cRdeBoundDegree`. -/
 
-/-- **Generic degree bound** `cRdeBoundDegreeG Dt fuel a b c = n ∈ ℕ` (Bronstein §6.3, book p.198–201),
+/-- **Generic degree bound** `cRdeBoundDegreeG Dt a b c = n ∈ ℕ` (Bronstein §6.3, book p.198–201),
 the generic mirror of `cRdeBoundDegree`: an upper bound on `deg_t(q)` for any polynomial solution
 `q ∈ α[t]` of `a·Dq + b·q = c`. With `d_a, d_b, d_c` the degrees and `δ = deg(Dt)`: nonlinear (`δ ≥ 2`)
 `max(0, d_c − max(d_a + δ − 1, d_b))`; hyperexponential (`δ = 1`) `max(0, d_c − max(d_b, d_a))`;
 primitive (`δ = 0`) `max(0, d_c − d_b)` if `d_b > d_a` else `max(0, d_c − d_a + 1)`. The non-cancellation
 formula reproduced exactly; the cancellation refinements are the documented continuation. -/
-def cRdeBoundDegreeG (Dt : CPolyG α) (_fuel : ℕ) (a b c : CPolyG α) : ℕ :=
+def cRdeBoundDegreeG (Dt : CPolyG α) (a b c : CPolyG α) : ℕ :=
   let da : ℤ := (cdegG a : ℤ)
   let db : ℤ := (cdegG b : ℤ)
   let dc : ℤ := (cdegG c : ℤ)
@@ -358,11 +358,11 @@ base RDE** `Ds + (b + m·η)·s = lc(c)` over `α` — the coefficient shifted b
 contribution `D(s·tᵐ) = (Ds + m·η·s)·tᵐ`). The shift `η = cExpEtaG Dt` makes the base coefficient
 genuinely non-constant, so the base solve `crischDESolve` does real work. -/
 
-/-- **Generic hyperexponential coefficient `η = Dt/t ∈ α`** `cExpEtaG fuel Dt`: for a hyperexponential
+/-- **Generic hyperexponential coefficient `η = Dt/t ∈ α`** `cExpEtaG Dt`: for a hyperexponential
 monomial `Dt = η·t` (`δ = 1`), divide `Dt` by `t` (`cshiftG 1 [1]`) and read the resulting degree-0
-`t`-polynomial's coefficient `η ∈ α`. The exact quotient is computed by `cdivWf`; `fuel` is retained only
-for API compatibility with the recursive dispatcher. Generic mirror of `cExpEta`. -/
-def cExpEtaG (_fuel : ℕ) (Dt : CPolyG α) : α :=
+`t`-polynomial's coefficient `η ∈ α`. The exact quotient is computed by `cdivWf`. Generic mirror of
+`cExpEta`. -/
+def cExpEtaG (Dt : CPolyG α) : α :=
   cleadG (cdivWf Dt (cshiftG 1 [CField.one]))
 
 /-- **Generic Poly-Risch-DE, hyperexponential cancellation case** `cPolyRischDECancelExpG Dt fuel b c n`
@@ -377,7 +377,7 @@ def cPolyRischDECancelExpG (Dt : CPolyG α) : ℕ → (b c : CPolyG α) → (n :
   | 0, _, _, _ => none
   | fuel + 1, b, c, n =>
     let b0 : α := cleadG b
-    let η : α := cExpEtaG fuel Dt
+    let η : α := cExpEtaG Dt
     if cisZeroG c then some []
     else if n < (cdegG c : ℤ) then none
     else
@@ -468,7 +468,7 @@ def cRischDEG (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPolyG α) :
   | none => none
   | some (a0, b0, c0, h0) =>
     let (a, b, c, h1) := cRdeSpecialDenominatorG Dt fuel a0 b0 c0
-    let N := cRdeBoundDegreeG Dt fuel a b c
+    let N := cRdeBoundDegreeG Dt a b c
     match cSPDEG Dt fuel a b c (N : ℤ) with
     | none => none
     | some (bbar, cbar, m, α', β) =>

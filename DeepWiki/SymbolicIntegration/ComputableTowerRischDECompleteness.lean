@@ -206,30 +206,28 @@ theorem cancelPrimOracleComplete_of_complete (Dt b : CPolyG β) (hβ : CRischFie
   exact ⟨s, hs, hag s hs⟩
 
 /-- **The cancellation base-oracle agreement residual (hyperexp)** `CancelOracleAgreementExp Dt b`: the
-hyperexponential analogue of `CancelOracleAgreementPrim`, threading the fuel-dependent eq. 6.24 shift
-coefficient `expCoeff Dt fuel c' b = (cleadG b) + (deg c')·η`. For every `fuel` and degree-matched abstract
-solution `q'`, the base RDE `Ds + (expCoeff Dt fuel c' b)·s = cleadG c'` over `β` is solvable and any oracle
-solution agrees with `q'`'s leading coefficient. The honest per-level remainder of the hyperexp cancellation
-base oracle, quantified over `fuel` (the shift coefficient depends on it). -/
+hyperexponential analogue of `CancelOracleAgreementPrim`, threading the eq. 6.24 shift coefficient
+`expCoeff Dt c' b = (cleadG b) + (deg c')·η`. For every degree-matched abstract solution `q'`, the base RDE
+`Ds + (expCoeff Dt c' b)·s = cleadG c'` over `β` is solvable and any oracle solution agrees with `q'`'s
+leading coefficient. The honest per-level remainder of the hyperexp cancellation base oracle. -/
 def CancelOracleAgreementExp (Dt b : CPolyG β) : Prop :=
-  ∀ (fuel : ℕ) (c' : CPolyG β) (q' : (CFieldSpec.K β)[X]),
+  ∀ (c' : CPolyG β) (q' : (CFieldSpec.K β)[X]),
     IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' →
-      CFieldRDESolvable (expCoeff Dt fuel c' b) (cleadG c') ∧
-      (∀ s : β, CRischField.crischDESolve (expCoeff Dt fuel c' b) (cleadG c') = some s →
+      CFieldRDESolvable (expCoeff Dt c' b) (cleadG c') ∧
+      (∀ s : β, CRischField.crischDESolve (expCoeff Dt c' b) (cleadG c') = some s →
         CFieldSpec.toK s = q'.leadingCoeff)
 
 /-- **★ `CancelExpOracleComplete` from the IH + the agreement residual**
 (`cancelExpOracleComplete_of_complete`): the hyperexp recursion-tie assembled. The level-`β` completeness
 (the IH) and the per-level hyperexp agreement residual `CancelOracleAgreementExp Dt b` together produce the
 uniform hyperexp base-oracle completeness `CancelExpOracleComplete Dt b`. The hyperexp analogue of
-`cancelPrimOracleComplete_of_complete`, threading the fuel-dependent shift `expCoeff Dt fuel c' b` into the
-IH. -/
+`cancelPrimOracleComplete_of_complete`, threading the shift `expCoeff Dt c' b` into the IH. -/
 theorem cancelExpOracleComplete_of_complete (Dt b : CPolyG β) (hβ : CRischFieldComplete β)
     (hagree : CancelOracleAgreementExp Dt b) :
     CancelExpOracleComplete Dt b := by
-  intro fuel c' q' hsol hdeg
-  obtain ⟨hsolv, hag⟩ := hagree fuel c' q' hsol hdeg
-  obtain ⟨s, hs⟩ := Option.isSome_iff_exists.mp (hβ (expCoeff Dt fuel c' b) (cleadG c') hsolv)
+  intro c' q' hsol hdeg
+  obtain ⟨hsolv, hag⟩ := hagree c' q' hsol hdeg
+  obtain ⟨s, hs⟩ := Option.isSome_iff_exists.mp (hβ (expCoeff Dt c' b) (cleadG c') hsolv)
   exact ⟨s, hs, hag s hs⟩
 
 end Step

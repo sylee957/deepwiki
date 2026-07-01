@@ -457,14 +457,14 @@ omit [CFracGcdCore α] in
 /-- **★ The full §6.3 cancellation degree bound at the `CPolyG` layer, modulo ONE base-field oracle**
 (`cdegG_le_max_cRdeBoundDegreeG_expPrim`): a §6.3-reduced solution `q` of `a·Dq + b·q = c`
 (`IsReducedRdeSol Dt a b c q`, `toPolyG q ≠ 0`, `toPolyG a ≠ 0`) in the δ ≤ 1 balanced configuration has
-`cdegG q ≤ max(cRdeBoundDegreeG Dt fuel a b c, N)`, modulo the parametric log-derivative bound `hbound` on
+`cdegG q ≤ max(cRdeBoundDegreeG Dt a b c, N)`, modulo the parametric log-derivative bound `hbound` on
 `(CFieldSpec.K α)`. With the nonlinear `λ`-recursion (`cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol`),
 this is the **whole** §6.3 cancellation degree bound reduced to a single base-field oracle. -/
-theorem cdegG_le_max_cRdeBoundDegreeG_expPrim (Dt : CPolyG α) (fuel : ℕ) (a b c q : CPolyG α)
+theorem cdegG_le_max_cRdeBoundDegreeG_expPrim (Dt : CPolyG α) (a b c q : CPolyG α)
     (hqP : toPolyG q ≠ 0) (ha0 : toPolyG a ≠ 0) (hsol : IsReducedRdeSol Dt a b c q)
     (hv : (toPolyG Dt).natDegree ≤ 1) (hble : (toPolyG b).natDegree ≤ (toPolyG a).natDegree) {N : ℕ}
     (hbound : ExpPrimLogDerivativeBound (toPolyG Dt) (toPolyG a) (toPolyG b) N) :
-    cdegG q ≤ max (cRdeBoundDegreeG Dt fuel a b c) N := by
+    cdegG q ≤ max (cRdeBoundDegreeG Dt a b c) N := by
   have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
       + toPolyG b * toPolyG q = toPolyG c := hsol
   have habs := expPrimCancellation_of_logDerivativeBound hqP ha0 hv hble heq hbound

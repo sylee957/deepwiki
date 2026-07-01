@@ -373,7 +373,7 @@ structure RischDEInnerCompleteness (Dt fnum fden gnum gden : CPolyG α) : Prop w
       IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-      cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+      cdegG q ≤ cRdeBoundDegreeG Dt
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1

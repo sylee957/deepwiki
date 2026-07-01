@@ -154,7 +154,7 @@ theorem ex_6_2_2 :
 /-! ## §6.3 Degree Bounds — computable + validated -/
 
 /-- **Algorithm `RdeBoundDegree`** (§6.3, the `RdeBoundDegree{Base,Prim,Exp,NonLinear}` boxes,
-p.198–201): the computable `cRdeBoundDegreeG Dt fuel a b c = n ∈ ℕ` (the generic engine at `QFunNZG ℚ`)
+p.198–201): the computable `cRdeBoundDegreeG Dt a b c = n ∈ ℕ` (the generic engine at `QFunNZG ℚ`)
 over the tower, an explicit upper bound on `deg_t(q)` for any polynomial solution `q` of
 `a·Dq + b·q = c`, case-split by `δ = deg(Dt)`. Computable + `native_decide`-validated; abstract
 correctness deferred. -/
@@ -168,7 +168,7 @@ theorem ex_6_3_4 :
      let exA : CPolyG (QFunNZG ℚ) := [qConst6 0, qConst6 1]
      let exB : CPolyG (QFunNZG ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]
      let exC : CPolyG (QFunNZG ℚ) := [qConst6 1]
-     CPolyG.cRdeBoundDegreeG Dt 30 exA exB exC) = 0 := by native_decide
+     CPolyG.cRdeBoundDegreeG Dt exA exB exC) = 0 := by native_decide
 
 /-! ## §6.4 The SPDE Algorithm — computable -/
 

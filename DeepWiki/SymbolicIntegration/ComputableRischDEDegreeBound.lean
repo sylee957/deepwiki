@@ -298,11 +298,11 @@ section Bridge
 variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-- **The computable degree bound equals the abstract one** (`cRdeBoundDegreeG_eq_abstract`):
-`cRdeBoundDegreeG Dt fuel a b c = rdeBoundDegreeAbstract (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c)`
+`cRdeBoundDegreeG Dt a b c = rdeBoundDegreeAbstract (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c)`
 over `(CFieldSpec.K α)[X]`. Both are the identical Bronstein §6.3 case formula; the only difference is
 `cdegG` vs `natDegree (toPolyG ·)`, identified by `cdegG_eq_natDegree`. -/
-theorem cRdeBoundDegreeG_eq_abstract (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) :
-    cRdeBoundDegreeG Dt fuel a b c
+theorem cRdeBoundDegreeG_eq_abstract (Dt : CPolyG α) (a b c : CPolyG α) :
+    cRdeBoundDegreeG Dt a b c
       = rdeBoundDegreeAbstract (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c) := by
   simp only [cRdeBoundDegreeG, rdeBoundDegreeAbstract, cdegG_eq_natDegree]
 
@@ -326,18 +326,18 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- **★ The §6.3 degree bound at the `CPolyG` layer, modulo the cancellation residual**
 (`cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol`): any solution `q` of the §6.3-reduced
 `a·Dq + b·q = c` (`IsReducedRdeSol Dt a b c q`, with `D = implicitDeriv (toPolyG Dt)`) has
-`cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c`, **provided** the residual `hres` discharges the **leading-term
+`cdegG q ≤ cRdeBoundDegreeG Dt a b c`, **provided** the residual `hres` discharges the **leading-term
 cancellation** case `(toPolyG c).coeff (candTopDegree …) = 0`. When the top coefficient does *not* vanish
 (no cancellation), the sharp `natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero` discharges the bound
 unconditionally (all δ, including the strict-domination configurations); the residual supplies only the
 genuine cancellation. This is `RischDEInnerCompleteness.hbound` modulo the precisely isolated deep §6.3
 `λ`-cancellation. -/
-theorem cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (fuel : ℕ) (a b c q : CPolyG α)
+theorem cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (a b c q : CPolyG α)
     (hsol : IsReducedRdeSol Dt a b c q)
     (hres : (toPolyG c).coeff
           (candTopDegree (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG q)) = 0 →
-      cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c) :
-    cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c := by
+      cdegG q ≤ cRdeBoundDegreeG Dt a b c) :
+    cdegG q ≤ cRdeBoundDegreeG Dt a b c := by
   -- the equation, read abstractly over `(CFieldSpec.K α)[X]`
   have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
       + toPolyG b * toPolyG q = toPolyG c := hsol
@@ -383,7 +383,7 @@ def RdeBoundCancellationResidual (Dt fnum fden gnum gden : CPolyG α) : Prop :=
             (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
             (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1)
             (toPolyG q)) = 0 →
-      cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+      cdegG q ≤ cRdeBoundDegreeG Dt
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
@@ -404,12 +404,12 @@ theorem hbound_of_cancellationResidual (Dt fnum fden gnum gden : CPolyG α)
         IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+        cdegG q ≤ cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 := by
   intro a0 b0 c0 h0 hnorm q hsol
-  exact cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol Dt towerRischDEFuel _ _ _ q hsol
+  exact cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol Dt _ _ _ q hsol
     (hres a0 b0 c0 h0 hnorm q hsol)
 
 end Wiring
@@ -461,7 +461,7 @@ theorem reducedRdeSol_witness :
 `cdegG q = 1 ≤ cRdeBoundDegreeG [1] 20 [1] [1] [1,1] = 2` — the degree bound is satisfied (the engine's
 primitive `d_c − dₐ + 1 = 1 − 0 + 1 = 2` bound, with `dq = 1`). The bound fires concretely; non-vacuous. -/
 theorem cdegG_le_cRdeBoundDegreeG_witness :
-    cdegG ([0, 1] : CPolyG ℚ) ≤ cRdeBoundDegreeG ([1] : CPolyG ℚ) 20 [1] [1] [1, 1] := by
+    cdegG ([0, 1] : CPolyG ℚ) ≤ cRdeBoundDegreeG ([1] : CPolyG ℚ) [1] [1] [1, 1] := by
   native_decide
 
 end Witness

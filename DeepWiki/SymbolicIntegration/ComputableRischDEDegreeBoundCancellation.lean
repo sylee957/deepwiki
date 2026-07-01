@@ -341,17 +341,17 @@ omit [CFracGcdCore α] in
 /-- **★ The §6.3 `λ`-augmented degree bound at the `CPolyG` layer**
 (`cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol`): a §6.3-reduced solution `q` of `a·Dq + b·q = c`
 (`IsReducedRdeSol Dt a b c q`, `toPolyG q ≠ 0`, `toPolyG a ≠ 0`) has
-`cdegG q ≤ max(cRdeBoundDegreeG Dt fuel a b c, N)` for a non-neg-integer `λ`-witness `N`
+`cdegG q ≤ max(cRdeBoundDegreeG Dt a b c, N)` for a non-neg-integer `λ`-witness `N`
 (`(N:K)·lc(a)·lc(v) + lc(b) = 0` over `(CFieldSpec.K α)[X]`, `v = toPolyG Dt`), **modulo** the exp/primitive
 cancellation residual `hexp` (the `δ ≤ 1` logarithmic-derivative recursion). This is the *true* degree bound
 in the cancellation case: the engine's non-cancellation bound augmented by the `λ` term. The nonlinear
 `λ`-recursion is proven; `hexp` supplies only the deeper exp/primitive case. -/
-theorem cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (fuel : ℕ) (a b c q : CPolyG α)
+theorem cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol (Dt : CPolyG α) (a b c q : CPolyG α)
     (hqP : toPolyG q ≠ 0) (ha0 : toPolyG a ≠ 0) (hsol : IsReducedRdeSol Dt a b c q) {N : ℕ}
     (hlam : (N : CFieldSpec.K α) * (toPolyG a).leadingCoeff * (toPolyG Dt).leadingCoeff
         + (toPolyG b).leadingCoeff = 0)
     (hexp : RdeBoundExpPrimCancellation (toPolyG Dt) (toPolyG a) (toPolyG b) (toPolyG c) N) :
-    cdegG q ≤ max (cRdeBoundDegreeG Dt fuel a b c) N := by
+    cdegG q ≤ max (cRdeBoundDegreeG Dt a b c) N := by
   have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
       + toPolyG b * toPolyG q = toPolyG c := hsol
   -- the abstract `λ`-bound, transported through the `cdegG`/`cRdeBoundDegreeG` bridges
@@ -364,16 +364,16 @@ omit [CFracGcdCore α] in
 (`cdegG_le_cRdeBoundDegreeG_of_balanced_nonlinear_no_integer_lambda`): a §6.3-reduced solution `q` of
 `a·Dq + b·q = c` in the nonlinear balanced configuration (`2 ≤ deg v`, `deg b = deg a + deg v − 1`) where
 **no** non-neg-integer satisfies the `λ`-equation has the *engine's own* `λ`-free bound
-`cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c`. This **discharges the literal locked
+`cdegG q ≤ cRdeBoundDegreeG Dt a b c`. This **discharges the literal locked
 `RdeBoundCancellationResidual` shape** for exactly these configurations: with no integer `λ` the leading
 terms never cancel, so the engine's omission of the `λ` term is harmless and its bound is correct. -/
-theorem cdegG_le_cRdeBoundDegreeG_of_balanced_nonlinear_no_integer_lambda (Dt : CPolyG α) (fuel : ℕ)
+theorem cdegG_le_cRdeBoundDegreeG_of_balanced_nonlinear_no_integer_lambda (Dt : CPolyG α)
     (a b c q : CPolyG α) (hqP : toPolyG q ≠ 0) (ha0 : toPolyG a ≠ 0) (hsol : IsReducedRdeSol Dt a b c q)
     (hv : 2 ≤ (toPolyG Dt).natDegree)
     (hbal : (toPolyG b).natDegree = (toPolyG a).natDegree + (toPolyG Dt).natDegree - 1)
     (hno : ∀ N : ℕ, (N : CFieldSpec.K α) * (toPolyG a).leadingCoeff * (toPolyG Dt).leadingCoeff
         + (toPolyG b).leadingCoeff ≠ 0) :
-    cdegG q ≤ cRdeBoundDegreeG Dt fuel a b c := by
+    cdegG q ≤ cRdeBoundDegreeG Dt a b c := by
   have heq : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q)
       + toPolyG b * toPolyG q = toPolyG c := hsol
   rw [cdegG_eq_natDegree, cRdeBoundDegreeG_eq_abstract]
@@ -398,7 +398,7 @@ def RdeBoundCancellationResidualWithLambda (Dt fnum fden gnum gden : CPolyG α) 
             (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1)
             (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1)
             (toPolyG q)) = 0 →
-      cdegG q ≤ max (cRdeBoundDegreeG Dt towerRischDEFuel
+      cdegG q ≤ max (cRdeBoundDegreeG Dt
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1) N
@@ -424,7 +424,7 @@ theorem rdeBoundCancellationResidualWithLambda_of_expPrim (Dt fnum fden gnum gde
         (toPolyG (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1) N) :
     RdeBoundCancellationResidualWithLambda Dt fnum fden gnum gden N := by
   intro a0 b0 c0 h0 hnorm q hq ha0 hsol _hcancel
-  exact cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol Dt towerRischDEFuel _ _ _ q hq ha0 hsol
+  exact cdegG_le_max_cRdeBoundDegreeG_of_isReducedRdeSol Dt _ _ _ q hq ha0 hsol
     (hlam a0 b0 c0 h0 hnorm) (hexp a0 b0 c0 h0 hnorm)
 
 end ComputableLambda

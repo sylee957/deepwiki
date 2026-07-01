@@ -61,7 +61,7 @@ open Compute CPolyG QFunNZG
 
   `match cRdeNormalDenominatorG … with | some (a0,b0,c0,h0) =>`
   `  let (a,b,c,h1) := cRdeSpecialDenominatorG Dt fuel a0 b0 c0`
-  `  match cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt fuel a b c) with | some (bbar,cbar,m,α',β) =>`
+  `  match cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt a b c) with | some (bbar,cbar,m,α',β) =>`
   `    match cPolyRischDEG Dt fuel bbar cbar m with | some v => some ((α'·v+β)·h1, h0)`
 
 so a `some` output requires (and is forced by) every guarded `match` selecting its `some`-branch.
@@ -85,7 +85,7 @@ theorem cRischDEG_isSome_of_stages (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β))
@@ -107,7 +107,7 @@ theorem cRischDEG_isSome_iff_stages (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnu
         ∧ cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-            (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+            (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
               (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
               (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
           = some (bbar, cbar, m, α', β)
@@ -1574,25 +1574,25 @@ theorem cPolyRischDECancelPrimG_isSome_of_sol (Dt b : CPolyG α) (fuel : ℕ) (c
 
 /-! ### The hyperexponential cancellation case (`δ = 1`, eq. 6.24)
 
-`cPolyRischDECancelExpG`'s step calls `crischDESolve (b₀ + m·η) (lc c)` with `η = cExpEtaG fuel Dt` and
-`m = deg c`, so the base-RDE coefficient is `expCoeff Dt fuel c b` (fuel- and degree-dependent). The peel and
+`cPolyRischDECancelExpG`'s step calls `crischDESolve (b₀ + m·η) (lc c)` with `η = cExpEtaG Dt` and
+`m = deg c`, so the base-RDE coefficient is `expCoeff Dt c b` (degree-dependent). The peel and
 the abstract solution are identical to the primitive case; only the oracle argument changes. -/
 
-/-- **The §6.6 eq. 6.24 base-RDE coefficient** `expCoeff Dt fuel c b = b₀ + (deg c)·η` (`b₀ = cleadG b`,
-`η = cExpEtaG fuel Dt`), the first argument the hyperexponential engine `cPolyRischDECancelExpG` passes to
-`crischDESolve` at fuel level `fuel + 1` working degree `deg c`. The `m·η` shift is the `tᵐ` factor's
+/-- **The §6.6 eq. 6.24 base-RDE coefficient** `expCoeff Dt c b = b₀ + (deg c)·η` (`b₀ = cleadG b`,
+`η = cExpEtaG Dt`), the first argument the hyperexponential engine `cPolyRischDECancelExpG` passes to
+`crischDESolve` at working degree `deg c`. The `m·η` shift is the `tᵐ` factor's
 hyperexponential contribution (`D(s·tᵐ) = (Ds + m·η·s)·tᵐ`). -/
-def expCoeff (Dt : CPolyG α) (fuel : ℕ) (c b : CPolyG α) : α :=
-  CField.add (cleadG b) (CField.mul (cnatCastG (cdegG c)) (cExpEtaG fuel Dt))
+def expCoeff (Dt : CPolyG α) (c b : CPolyG α) : α :=
+  CField.add (cleadG b) (CField.mul (cnatCastG (cdegG c)) (cExpEtaG Dt))
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [CFracGcdCore α] in
 /-- **`cPolyRischDECancelExpG`'s `isSome` in the recursion case is the sub-call's**
 (`cPolyRischDECancelExpG_isSome_of_recurse`): at `fuel + 1` with `c ≠ 0`, `¬ n < deg c`, and the eq. 6.24
-base oracle `crischDESolve (expCoeff Dt fuel c b) (cleadG c)` returning `some s`, the hyperexponential
+base oracle `crischDESolve (expCoeff Dt c b) (cleadG c)` returning `some s`, the hyperexponential
 cancellation solve returns `some` exactly when the recursive solve on the peeled `c'` at bound `m − 1` does. -/
 theorem cPolyRischDECancelExpG_isSome_of_recurse (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
     (s : α) (hc : ¬ (cisZeroG c = true)) (hguard : ¬ (n < (cdegG c : ℤ)))
-    (hs : CRischField.crischDESolve (expCoeff Dt fuel c b) (cleadG c) = some s)
+    (hs : CRischField.crischDESolve (expCoeff Dt c b) (cleadG c) = some s)
     (hrec : (cPolyRischDECancelExpG Dt fuel b
         (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s]))) (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
         ((cdegG c : ℤ) - 1)).isSome = true) :
@@ -1603,20 +1603,20 @@ theorem cPolyRischDECancelExpG_isSome_of_recurse (Dt : CPolyG α) (fuel : ℕ) (
   obtain ⟨q, hq⟩ := Option.isSome_iff_exists.mp hrec
   simp only [hq, Option.isSome_some]
 
-/-- **The per-step base-oracle hypothesis (hyperexp, the tower-induction IH)** `CancelExpBaseOracle Dt fuel
-b c q`: the §6.6 eq. 6.24 base oracle `crischDESolve (expCoeff Dt fuel c b) (cleadG c)` returns `some s`
+/-- **The per-step base-oracle hypothesis (hyperexp, the tower-induction IH)** `CancelExpBaseOracle Dt
+b c q`: the §6.6 eq. 6.24 base oracle `crischDESolve (expCoeff Dt c b) (cleadG c)` returns `some s`
 whose `toK` is the abstract solution's leading coefficient. Bundles **completeness** with **agreement**
-(`toK s = lc q`), threading the fuel-dependent shift coefficient `expCoeff Dt fuel c b`. The hyperexp
-analogue of `CancelPrimBaseOracle`. -/
-def CancelExpBaseOracle (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
-  ∃ s : α, CRischField.crischDESolve (expCoeff Dt fuel c b) (cleadG c) = some s
+(`toK s = lc q`), threading the shift coefficient `expCoeff Dt c b`. The hyperexp analogue of
+`CancelPrimBaseOracle`. -/
+def CancelExpBaseOracle (Dt : CPolyG α) (b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
+  ∃ s : α, CRischField.crischDESolve (expCoeff Dt c b) (cleadG c) = some s
     ∧ CFieldSpec.toK s = q.leadingCoeff
 
 /-- **The recursive solvable-inputs predicate for the hyperexp cancellation solve**
 `CPolyRischDECancelExpSolvableInputs Dt b fuel c n`: mirrors `cPolyRischDECancelExpG`'s recursion, the
 hyperexp analogue of `CPolyRischDECancelPrimSolvableInputs`, carrying at EACH level a bounded abstract
-solution, the guard, the degree-match + per-step eq. 6.24 oracle hypothesis (`CancelExpBaseOracle Dt fuel`,
-fuel-threaded), and itself on the peeled equation. Base `fuel = 0` is `False`. -/
+solution, the guard, the degree-match + per-step eq. 6.24 oracle hypothesis (`CancelExpBaseOracle Dt`), and
+itself on the peeled equation. Base `fuel = 0` is `False`. -/
 def CPolyRischDECancelExpSolvableInputs (Dt b : CPolyG α) :
     ℕ → (c : CPolyG α) → (n : ℤ) → Prop
   | 0, _, _ => False
@@ -1626,8 +1626,8 @@ def CPolyRischDECancelExpSolvableInputs (Dt b : CPolyG α) :
     else
       ¬ (n < (cdegG c : ℤ))
         ∧ (∃ q : (CFieldSpec.K α)[X], IsNoCancelSolK Dt b c q ∧ ((q.natDegree : ℤ) = cdegG c)
-            ∧ CancelExpBaseOracle Dt fuel b c q)
-        ∧ ∀ s : α, CRischField.crischDESolve (expCoeff Dt fuel c b) (cleadG c) = some s →
+            ∧ CancelExpBaseOracle Dt b c q)
+        ∧ ∀ s : α, CRischField.crischDESolve (expCoeff Dt c b) (cleadG c) = some s →
             CPolyRischDECancelExpSolvableInputs Dt b fuel
               (csubG (csubG c (cmulG b (cshiftG (cdegG c) [s])))
                 (cmonomialDeriv Dt (cshiftG (cdegG c) [s])))
@@ -1671,13 +1671,13 @@ theorem cPolyRischDECancelExpSolvableInputs_of_cZero (Dt b : CPolyG α) (fuel : 
   · rw [if_pos hc]; trivial
 
 /-- **The uniform base-oracle completeness hypothesis (hyperexp, the tower-induction IH)**
-`CancelExpOracleComplete Dt b`: for every `fuel`, `c'`, and every degree-matched solution `q'`, the eq. 6.24
-base oracle `crischDESolve (expCoeff Dt fuel c' b) (cleadG c')` finds its leading coefficient. The hyperexp
-analogue of `CancelPrimOracleComplete`, quantified over `fuel` (the shift coefficient `expCoeff` depends on
-it). The honest tower-induction hypothesis for the hyperexponential cancellation case. -/
+`CancelExpOracleComplete Dt b`: for every `c'` and every degree-matched solution `q'`, the eq. 6.24
+base oracle `crischDESolve (expCoeff Dt c' b) (cleadG c')` finds its leading coefficient. The hyperexp
+analogue of `CancelPrimOracleComplete`. The honest tower-induction hypothesis for the hyperexponential
+cancellation case. -/
 def CancelExpOracleComplete (Dt b : CPolyG α) : Prop :=
-  ∀ (fuel : ℕ) (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
-    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' → CancelExpBaseOracle Dt fuel b c' q'
+  ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
+    IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' → CancelExpBaseOracle Dt b c' q'
 
 omit [CFracGcdCore α] in
 /-- **★ The hyperexp cancellation solvable-inputs predicate from one bounded solution**
@@ -1713,7 +1713,7 @@ theorem cPolyRischDECancelExpSolvableInputs_of_sol (Dt b : CPolyG α)
         rw [IsNoCancelSolK, map_zero, mul_zero, add_zero] at hsol
         exact hc0 hsol.symm
       have hqdeg : (q.natDegree : ℤ) = cdegG c := hnc c q hsol hq0
-      obtain ⟨s, hs, hstoK⟩ := horacle fuel c q hsol hqdeg
+      obtain ⟨s, hs, hstoK⟩ := horacle c q hsol hqdeg
       have hguard : ¬ (n < (cdegG c : ℤ)) := by
         rcases hbound with h0 | hle
         · exact absurd h0 hq0
@@ -2053,7 +2053,7 @@ theorem cSPDEG_isSome_of_fractional_primitive
       IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-      cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+      cdegG q ≤ cRdeBoundDegreeG Dt
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
@@ -2061,7 +2061,7 @@ theorem cSPDEG_isSome_of_fractional_primitive
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ))
@@ -2070,13 +2070,13 @@ theorem cSPDEG_isSome_of_fractional_primitive
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)).isSome = true := by
   obtain ⟨Q, hQred⟩ :=
     exists_isReducedRdeSol_special_of_fractional Dt fnum fden gnum gden a0 b0 c0 h0 hprim hnorm hres hsol
-  have hdeg : (toPolyG Q).natDegree ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+  have hdeg : (toPolyG Q).natDegree ≤ cRdeBoundDegreeG Dt
       (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
       (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
       (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 := by
@@ -2101,7 +2101,7 @@ theorem hspde_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG α)
         IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+        cdegG q ≤ cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
@@ -2111,7 +2111,7 @@ theorem hspde_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG α)
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)) :
@@ -2121,7 +2121,7 @@ theorem hspde_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG α)
       (cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-          (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)).isSome = true := by
   intro hsol a0 b0 c0 h0 hnorm
@@ -2216,7 +2216,7 @@ structure RischDESolveExhaustiveResidual (Dt fnum fden gnum gden : CPolyG α) : 
       (cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-          (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)).isSome = true
   /-- ★ §6.5/§6.6: for the SPDE output `(bbar, cbar, m)`, a solution makes the poly-RDE dispatcher return
@@ -2231,7 +2231,7 @@ structure RischDESolveExhaustiveResidual (Dt fnum fden gnum gden : CPolyG α) : 
       cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-          (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
         = some (bbar, cbar, m, α', β) →
@@ -2282,7 +2282,7 @@ theorem exhaustiveResidual_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG 
         IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+        cdegG q ≤ cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
@@ -2292,7 +2292,7 @@ theorem exhaustiveResidual_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG 
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ))
@@ -2302,7 +2302,7 @@ theorem exhaustiveResidual_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG 
         cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-            (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+            (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
               (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
               (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
           = some (bbar, cbar, m, α', β) →
@@ -2362,7 +2362,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
         IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+        cdegG q ≤ cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
@@ -2666,7 +2666,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
         IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-        cdegG q ≤ cRdeBoundDegreeG Dt towerRischDEFuel
+        cdegG q ≤ cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1)
@@ -2676,7 +2676,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt towerRischDEFuel
+        (cRdeBoundDegreeG Dt
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ))
@@ -2686,7 +2686,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
         cSPDEG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
             (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-            (cRdeBoundDegreeG Dt towerRischDEFuel (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+            (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
               (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
               (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
           = some (bbar, cbar, m, α', β) →

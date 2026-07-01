@@ -266,7 +266,7 @@ structure RischDESuccessResidual (f g : QFunNZG β) : Prop where
         (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
         (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
         (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG ([CField.one] : CPolyG β) towerRischDEFuel
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β)
           (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
           (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
@@ -373,7 +373,7 @@ theorem cIntegrateHyperexpNormalG_sound_of_rischFieldSpec (Dt : CPolyG α) (fuel
     (hDt : toPolyG Dt = C b * X)
     (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
       = some intR)
     (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
@@ -392,7 +392,7 @@ theorem cIntegrateHyperexpNormalG_sound_of_rischFieldSpec (Dt : CPolyG α) (fuel
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
     (hRval : amG α (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
         = amG α (C (b * ∑ β ∈ s,
             (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
@@ -404,7 +404,7 @@ theorem cIntegrateHyperexpNormalG_sound_of_rischFieldSpec (Dt : CPolyG α) (fuel
   cIntegrateHyperexpNormalG_sound Dt fuel a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform
     (crischDESolve_zero_intDeriv Dt
-      (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+      (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
       intR hintRsome)
     hRval
 
@@ -421,7 +421,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     (hDt : toPolyG Dt = C b * X)
     (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
       = some intR)
     (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
@@ -440,7 +440,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
     (hRval : amG α (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
         = amG α (C (b * ∑ β ∈ s,
             (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β

@@ -302,7 +302,7 @@ def mixedHyperexpDt : CPolyG RadX3 := [CField.zero, CField.one]
 `η = 1 ∈ RadX3` off `Dt = [0, 1]`, so the §5.10 per-term shift `j·η` is just `j` — confirming `t = exp` over
 the algebraic base. -/
 theorem mixedHyperexp_eta_eq_one :
-    CField.isZero (CField.sub (cExpEtaG 12 mixedHyperexpDt) (CField.one : RadX3)) = true := by
+    CField.isZero (CField.sub (cExpEtaG mixedHyperexpDt) (CField.one : RadX3)) = true := by
   native_decide
 
 /-- The §5.10 per-term coefficient `(−1)·η = −1 ∈ RadX3` for the `t⁻¹` Laurent term (`j = −1`,

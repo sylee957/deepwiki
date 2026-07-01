@@ -419,18 +419,18 @@ theorem cSPDEG_polyRischDENoCancel_cleared_of_inputs_gen [CFracGcdCore α] (Dt :
     (cPolyRischDENoCancelG_cleared_identity_gen Dt bbar fuel cbar m v hpoly)
 
 /-- **The generic §6.4-§6.5 spine instantiated at the §6.3 degree bound** (carrier-generic): the spine holds
-for every `n`, in particular at `n = cRdeBoundDegreeG Dt fuel a b c`. Carrier-generic mirror of
+for every `n`, in particular at `n = cRdeBoundDegreeG Dt a b c`. Carrier-generic mirror of
 `cSPDEG_polyRischDENoCancel_cleared_at_boundDegree`. -/
 theorem cSPDEG_polyRischDENoCancel_cleared_at_boundDegree_gen [CFracGcdCore α] (Dt : CPolyG α)
     (fuel : ℕ) (a b c : CPolyG α) (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
-    (hspde : cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt fuel a b c : ℤ) = some (bbar, cbar, m, α', β))
-    (hin : CSPDEGClearedInputsGen Dt fuel a b c (cRdeBoundDegreeG Dt fuel a b c : ℤ))
+    (hspde : cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt a b c : ℤ) = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGen Dt fuel a b c (cRdeBoundDegreeG Dt a b c : ℤ))
     (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
     toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' v) β))
         + toPolyG b * toPolyG (caddG (cmulG α' v) β)
       = toPolyG c :=
   cSPDEG_polyRischDENoCancel_cleared_of_inputs_gen Dt fuel a b c
-    (cRdeBoundDegreeG Dt fuel a b c : ℤ) bbar cbar m α' β v hspde hin hpoly
+    (cRdeBoundDegreeG Dt a b c : ℤ) bbar cbar m α' β v hspde hin hpoly
 
 /-! ### §6.2 — the generic normal-denominator cleared lifting and special-denominator primitive case -/
 
@@ -864,13 +864,13 @@ theorem cRischDEG_rdeCleared_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β))
     (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
     (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
@@ -942,13 +942,13 @@ theorem cRischDEG_rdeCleared_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β))
     (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
     (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :
@@ -984,13 +984,13 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β))
     (hin : CSPDEGClearedInputsGen Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1
           (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1 : ℤ))
     (hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v) :

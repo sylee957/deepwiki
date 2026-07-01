@@ -105,7 +105,7 @@ Returns `some ⟨(gnum − (∫R)·gden, gden), logs⟩`, or `none` if `∫R` is
 def cIntegrateHyperexpNormalG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let red := cIntegrateReducedG Dt fuel a d cands
-  let η : α := cExpEtaG fuel Dt
+  let η : α := cExpEtaG Dt
   let R : α := cHyperexpResidualG η red.logs
   match CRischField.crischDESolve (CField.zero : α) R with
   | none => none
@@ -135,7 +135,7 @@ normal part overshoots on a hyperexponential monomial). `[CField α] [CDiffField
 α]`-generic — runs at any hyperexponential tower level. -/
 def cIntegrateHyperexpFullG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
-  let η : α := cExpEtaG fuel Dt
+  let η : α := cExpEtaG Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
   let neg : List α := cHyperexpSpecialNegG b ds
   match cIntegrateHyperexpLaurentG η fp neg with
@@ -202,7 +202,7 @@ reduced capstone's logs), confirmed by `CField.isZero (R − 1) = true`. This is
 `D(log(t−1)) − fₙ = t/(t−1) − 1/(t−1) = 1` that the feedback subtracts. -/
 theorem nNormInv_residual_eq_one :
     CField.isZero (CField.sub
-      (cHyperexpResidualG (cExpEtaG 20 nHyperexpDt)
+      (cHyperexpResidualG (cExpEtaG nHyperexpDt)
         (cIntegrateReducedG nHyperexpDt 20 nNormInvA nNormInvD nNormInvCands).logs)
       (CField.one : NLvl1)) = true := by native_decide
 
@@ -348,7 +348,7 @@ a genuine δ-constant, so `∑res = 1` and the §5.9 residual `R = η·∑res = 
 true`. The non-constant overshoot the feedback must integrate. -/
 theorem nVarNorm_residual_eq_twoX :
     CField.isZero (CField.sub
-      (cHyperexpResidualG (cExpEtaG 28 nVarDt)
+      (cHyperexpResidualG (cExpEtaG nVarDt)
         (cIntegrateReducedG nVarDt 28 nVarNormA nVarNormD nVarNormCands).logs)
       nLvl1TwoX) = true := by native_decide
 

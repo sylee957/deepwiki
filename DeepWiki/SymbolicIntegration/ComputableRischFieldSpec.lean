@@ -106,7 +106,7 @@ documented hypothesis
 
   `hintR : towerFractionFieldDerivG Dt (amG α (C (toK intR))) = amG α (C (toK R))`
 
-where `R = cHyperexpResidualG (cExpEtaG fuel Dt) red.logs ∈ α` and `crischDESolve 0 R = some intR` — the
+where `R = cHyperexpResidualG (cExpEtaG Dt) red.logs ∈ α` and `crischDESolve 0 R = some intR` — the
 field-level antiderivative identity `D(∫R) = R` for the pure-integration RDE `Dy = R` (`b = 0`), with the
 constant `∫R = intR ∈ α` embedded into the tower fraction field `RatFunc (CFieldSpec.K α)` as `amG (C (toK
 intR))`. With `CRischFieldSpec α` in hand this is no longer a hypothesis: the spec turns the solve into the

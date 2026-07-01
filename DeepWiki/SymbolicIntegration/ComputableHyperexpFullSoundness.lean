@@ -268,7 +268,7 @@ variable [CRischField α]
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The §5.9 driver's output shape** — when `cIntegrateHyperexpNormalG Dt fuel a d cands = some res` (so
-the base oracle `crischDESolve 0 R = some intR` succeeded, `R = cHyperexpResidualG (cExpEtaG fuel Dt)
+the base oracle `crischDESolve 0 R = some intR` succeeded, `R = cHyperexpResidualG (cExpEtaG Dt)
 red.logs`, `red = cIntegrateReducedG Dt fuel a d cands`), the result is `res = ⟨(csubG gnum (cmulG [intR]
 gden), gden), red.logs⟩` with `(gnum, gden) = red.rational` — the rational part `g − ∫R`, same logs. Pins the
 driver's output: the §5.9 residual feedback subtracts the base integral `intR` from the reduced rational
@@ -276,7 +276,7 @@ part. -/
 theorem cIntegrateHyperexpNormalG_shape (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (intR : α)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
       = some intR)
     (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res) :
     res = ⟨(csubG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1
@@ -305,7 +305,7 @@ theorem cIntegrateHyperexpNormalG_sound (Dt : CPolyG α) (fuel : ℕ) (a d : CPo
     (hDt : toPolyG Dt = C b * X)
     (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
       = some intR)
     (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
@@ -325,10 +325,10 @@ theorem cIntegrateHyperexpNormalG_sound (Dt : CPolyG α) (fuel : ℕ) (a d : CPo
               X - C β)))
     (hintR : towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
         = amG α (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs))))
     (hRval : amG α (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
         = amG α (C (b * ∑ β ∈ s,
             (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
@@ -390,7 +390,7 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fue
     (hDt : toPolyG Dt = C b * X)
     (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : QFunNZG ℚ)
-        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
       = some intR)
     (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
@@ -410,10 +410,10 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fue
               X - C β)))
     (hintR : towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK intR)))
         = amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs))))
     (hRval : amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
         = amG (QFunNZG ℚ) (C (b * ∑ β ∈ s,
             (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
@@ -441,7 +441,7 @@ special-part identity + the canonical reconstruction + the base-oracle residual.
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The full §5.10 + §5.9 driver's output shape** — when `cIntegrateHyperexpFullG Dt fuel a d cands = some
-res` with the Laurent part succeeding (`cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt) fp neg = some
+res` with the Laurent part succeeding (`cIntegrateHyperexpLaurentG (cExpEtaG Dt) fp neg = some
 (lnum, lden)`, `fp/b/ds/cn/dn` the `canonicalRepresentationFastG` components, `neg = cHyperexpSpecialNegG b
 ds`) and the normal part succeeding (`cIntegrateHyperexpNormalG Dt fuel cn dn cands = some nrm`), the result is
 `res = ⟨(caddG (cmulG lnum gden) (cmulG gnum lden), cmulG lden gden), nrm.logs⟩` with `(gnum, gden) =
@@ -449,7 +449,7 @@ nrm.rational` — the combined rational `lnum/lden + gnum/gden`, the normal logs
 the §5.10 Laurent rational part plus the §5.9 normal rational part. -/
 theorem cIntegrateHyperexpFullG_shape (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
-    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt)
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
         (canonicalRepresentationFastG Dt fuel a d).1
         (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt fuel a d).2.1.1
           (canonicalRepresentationFastG Dt fuel a d).2.1.2)
@@ -485,7 +485,7 @@ unconditional in `∑c`, reduced to the Laurent special-part identity + the cano
 theorem cIntegrateHyperexpFullG_sound (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α) (fpPart : CPolyG α)
     (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
-    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG fuel Dt)
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
         (canonicalRepresentationFastG Dt fuel a d).1
         (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt fuel a d).2.1.1
           (canonicalRepresentationFastG Dt fuel a d).2.1.2)
@@ -551,7 +551,7 @@ example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res :
     (intR : α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hDt : toPolyG Dt = C b * X)
     (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG fuel Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)
       = some intR)
     (hsome : CPolyG.cIntegrateHyperexpNormalG Dt fuel a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
@@ -571,10 +571,10 @@ example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res :
               X - C β)))
     (hintR : towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
         = amG α (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs))))
     (hRval : amG α (Polynomial.C (CFieldSpec.toK
-            (cHyperexpResidualG (cExpEtaG fuel Dt)
+            (cHyperexpResidualG (cExpEtaG Dt)
               (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs)))
         = amG α (C (b * ∑ β ∈ s,
             (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β

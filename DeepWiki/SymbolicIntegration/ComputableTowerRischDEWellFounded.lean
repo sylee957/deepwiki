@@ -94,7 +94,7 @@ assumption`. Agrees with `cPolyRischDECancelExpG` on a real run (`cPolyRischDECa
 def cPolyRischDECancelExpGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     Option (CPolyG α) :=
   let b0 : α := cleadG b
-  let η : α := cExpEtaG 30 Dt
+  let η : α := cExpEtaG Dt
   if cisZeroG c then some []
   else if n < (cdegG c : ℤ) then none
   else
@@ -220,10 +220,9 @@ end CPolyG
 
 /-- **Per-run generic hyperexponential-cancellation-loop regularity** `CPolyRischCancelExpGenRegular Dt b c n`
 (nodes conclude at fuel `fuel + 1`): mirrors the `cPolyRischDECancelExpG` recursion. As the primitive case but
-the base solve uses the `m·η` shifted coefficient `b₀ + m·η`; the gate carries `cExpEtaG 30 Dt =
-cExpEtaG fuel Dt` (`hη`, so the fuel-free and fuel'd coefficients coincide). `baseZero`/`baseDeg`/`baseNoSol`
-terminal as before (at the shifted coefficient); `step` carries the base solve at the shifted coefficient (WF
-= fuel'd = `some s`) and the WF guard firing. -/
+the base solve uses the `m·η` shifted coefficient `b₀ + m·η`. `baseZero`/`baseDeg`/`baseNoSol` terminal as
+before (at the shifted coefficient); `step` carries the base solve at the shifted coefficient and the WF guard
+firing. -/
 inductive CPolyRischCancelExpGenRegular {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
     [CRischField α] (Dt : CPolyG α) (b : CPolyG α) : ℕ → CPolyG α → ℤ → Prop
   /-- terminal: `c = 0`, returns `[]`. -/
@@ -232,18 +231,18 @@ inductive CPolyRischCancelExpGenRegular {α : Type*} [CField α] [CDiffField α]
   /-- terminal: `n < deg(c)`, returns `none`. -/
   | baseDeg {fuel : ℕ} {c : CPolyG α} {n : ℤ} (hc : ¬ CPolyG.cisZeroG c = true)
       (hn : n < (CPolyG.cdegG c : ℤ)) : CPolyRischCancelExpGenRegular Dt b (fuel + 1) c n
-  /-- terminal: the base solve at the `m·η`-shifted coefficient returns `none` (`η` reads agree). -/
+  /-- terminal: the base solve at the `m·η`-shifted coefficient returns `none`. -/
   | baseNoSol {fuel : ℕ} {c : CPolyG α} {n : ℤ} (hc : ¬ CPolyG.cisZeroG c = true)
-      (hn : ¬ n < (CPolyG.cdegG c : ℤ)) (hη : CPolyG.cExpEtaG 30 Dt = CPolyG.cExpEtaG fuel Dt)
+      (hn : ¬ n < (CPolyG.cdegG c : ℤ))
       (hs : CRischField.crischDESolve (CField.add (CPolyG.cleadG b)
-          (CField.mul (CPolyG.cnatCastG (CPolyG.cdegG c)) (CPolyG.cExpEtaG 30 Dt)))
+          (CField.mul (CPolyG.cnatCastG (CPolyG.cdegG c)) (CPolyG.cExpEtaG Dt)))
           (CPolyG.cleadG c) = none) :
       CPolyRischCancelExpGenRegular Dt b (fuel + 1) c n
   /-- recursive: the base solve at the shifted coefficient gives `s` (WF = fuel'd), the WF guard fires. -/
   | step {fuel : ℕ} {c : CPolyG α} {n : ℤ} {s : α} (hc : ¬ CPolyG.cisZeroG c = true)
-      (hn : ¬ n < (CPolyG.cdegG c : ℤ)) (hη : CPolyG.cExpEtaG 30 Dt = CPolyG.cExpEtaG fuel Dt)
+      (hn : ¬ n < (CPolyG.cdegG c : ℤ))
       (hs : CRischField.crischDESolve (CField.add (CPolyG.cleadG b)
-          (CField.mul (CPolyG.cnatCastG (CPolyG.cdegG c)) (CPolyG.cExpEtaG 30 Dt)))
+          (CField.mul (CPolyG.cnatCastG (CPolyG.cdegG c)) (CPolyG.cExpEtaG Dt)))
           (CPolyG.cleadG c) = some s)
       (hguard : (CPolyG.cnormG (CPolyG.csubG (CPolyG.csubG c
             (CPolyG.cmulG b (CPolyG.cshiftG (CPolyG.cdegG c) [s])))
@@ -260,10 +259,9 @@ namespace CPolyG
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
 
 /-- **Bridge — `cPolyRischDECancelExpGWf` equals `cPolyRischDECancelExpG` on a regular run.** Under
-`CPolyRischCancelExpGenRegular Dt b (fuel + 1) c n` (the per-step `η` read + shifted base-solve agreement +
-WF-guard-drop a real run meets), `cPolyRischDECancelExpGWf Dt b c n = cPolyRischDECancelExpG Dt (fuel + 1) b
-c n`. The fuel regularity lives only here. By induction on the gate (`hη` reconciles the `η` reads, the base
-solve agrees, the WF guard fires). -/
+`CPolyRischCancelExpGenRegular Dt b (fuel + 1) c n` (the shifted base-solve agreement + WF-guard-drop a real
+run meets), `cPolyRischDECancelExpGWf Dt b c n = cPolyRischDECancelExpG Dt (fuel + 1) b c n`. The fuel
+regularity lives only here. By induction on the gate (the base solve agrees and the WF guard fires). -/
 theorem cPolyRischDECancelExpGWf_eq (Dt : CPolyG α) (b : CPolyG α) :
     ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ), CPolyRischCancelExpGenRegular Dt b fuel c n →
       cPolyRischDECancelExpGWf Dt b c n = cPolyRischDECancelExpG Dt fuel b c n := by
@@ -274,16 +272,14 @@ theorem cPolyRischDECancelExpGWf_eq (Dt : CPolyG α) (b : CPolyG α) :
   | @baseDeg fuel c n hc hn =>
     rw [cPolyRischDECancelExpGWf.eq_def, if_neg hc, if_pos hn,
       cPolyRischDECancelExpG, if_neg hc, if_pos hn]
-  | @baseNoSol fuel c n hc hn hη hs =>
+  | @baseNoSol fuel c n hc hn hs =>
     rw [cPolyRischDECancelExpGWf.eq_def, if_neg hc, if_neg hn,
       cPolyRischDECancelExpG, if_neg hc, if_neg hn]
-    simp only [hη] at hs
-    simp only [hη, hs]
-  | @step fuel c n s hc hn hη hs hguard hrec ih =>
+    simp only [hs]
+  | @step fuel c n s hc hn hs hguard hrec ih =>
     rw [cPolyRischDECancelExpGWf.eq_def, if_neg hc, if_neg hn,
       cPolyRischDECancelExpG, if_neg hc, if_neg hn]
-    simp only [hη] at hs hguard hrec ih
-    simp only [hη, hs, if_pos hguard, ih]
+    simp only [hs, if_pos hguard, ih]
     rfl
 
 end CPolyG
@@ -455,33 +451,6 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-/-- **Generic fuel-free degree bound** `cRdeBoundDegreeGWf Dt a b c = n ∈ ℕ` (Bronstein §6.3, book p.198–201):
-the generic, fuel-free companion of `cRdeBoundDegreeG`. An upper bound on `deg_t(q)` for any polynomial
-solution `q ∈ α[t]` of `a·Dq + b·q = c`, by pure list-degree arithmetic (`cRdeBoundDegreeG` already ignores
-its fuel argument): with `d_a, d_b, d_c` the degrees and `δ = deg(Dt)`, nonlinear (`δ ≥ 2`)
-`max(0, d_c − max(d_a + δ − 1, d_b))`; hyperexponential (`δ = 1`) `max(0, d_c − max(d_b, d_a))`; primitive
-(`δ = 0`) `max(0, d_c − d_b)` if `d_b > d_a` else `max(0, d_c − d_a + 1)`. **No fuel at runtime**. -/
-def cRdeBoundDegreeGWf (Dt : CPolyG α) (a b c : CPolyG α) : ℕ :=
-  let da : ℤ := (cdegG a : ℤ)
-  let db : ℤ := (cdegG b : ℤ)
-  let dc : ℤ := (cdegG c : ℤ)
-  let δ : ℤ := (cdegG Dt : ℤ)
-  let n : ℤ :=
-    if 2 ≤ δ then
-      max 0 (dc - max (da + δ - 1) db)
-    else if δ = 1 then
-      max 0 (dc - max db da)
-    else
-      if da < db then max 0 (dc - db) else max 0 (dc - da + 1)
-  n.toNat
-
-/-- **Generic fuel-free hyperexponential coefficient `η = Dt/t ∈ α`** `cExpEtaGWf Dt`: the generic, fuel-free
-companion of `cExpEtaG`. For a hyperexponential monomial `Dt = η·t` (`δ = 1`), divide `Dt` by `t`
-(`cshiftG 1 [1]`) with the fuel-free `cdivWf` and read the resulting degree-0 `t`-polynomial's coefficient
-`η ∈ α`. **No fuel at runtime**. -/
-def cExpEtaGWf (Dt : CPolyG α) : α :=
-  cleadG (cdivWf Dt (cshiftG 1 [CField.one]))
-
 /-- **Generic fuel-free polynomial antiderivative** `cIntegratePolyGWf c = q` with `Dq = c` and `q(0) = 0`,
 for the canonical primitive monomial (`Dt = 1`) and constant coefficients: termwise
 `∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}` (`cᵢ/(i+1) = CField.div cᵢ (cnatCastG (i+1))`). The fuel-free companion of
@@ -537,7 +506,7 @@ gnum gden` (Bronstein Ch. 6, assembled): the generic, fuel-free companion of `cR
 `g = gnum/gden ∈ α(t)` and the monomial derivation `D = cmonomialDeriv Dt`, returns `some (ynum, yden)` with
 `y = ynum/yden ∈ α(t)` solving `Dy + f·y = g`, or `none`. Stages: §6.2 normal denominator
 (`cRdeNormalDenominatorGWf`) → §6.2 special denominator (`cRdeSpecialDenominatorGWf`) → §6.3 degree bound
-(`cRdeBoundDegreeGWf`) → §6.4 SPDE (`cSPDEGWf`) → §6.5/§6.6 PolyRischDE dispatch (`cPolyRischDEGWf`), with the
+(`cRdeBoundDegreeG`) → §6.4 SPDE (`cSPDEGWf`) → §6.5/§6.6 PolyRischDE dispatch (`cPolyRischDEGWf`), with the
 polynomial unknown `Q = α'·v + β` reassembled to `y = Q·h₁ / h₀`. The cancellation cases recurse into
 `CRischField.crischDESolve` over `α` — at level `n+1` this is the level-`n` oracle. **No fuel at runtime in
 any regime**; `native_decide`-able over the noncomputable tower. `[CField α] [CDiffField α]
@@ -549,7 +518,7 @@ def cRischDEGWf (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
   | none => none
   | some (a0, b0, c0, h0) =>
     let (a, b, c, h1) := cRdeSpecialDenominatorGWf Dt a0 b0 c0
-    let N := cRdeBoundDegreeGWf Dt a b c
+    let N := cRdeBoundDegreeG Dt a b c
     match cSPDEGWf Dt a b c (N : ℤ) with
     | none => none
     | some (bbar, cbar, _m, α', β) =>
@@ -575,21 +544,6 @@ regularity gates. The `cWeakNormalizerGWf` / `cRdeNormalDenominator`
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
-
-omit [CDiffField α] in
-/-- **Bridge — `cExpEtaGWf` equals `cExpEtaG`.** Both read the degree-0 coefficient of the same fuel-free
-quotient `Dt / t`. -/
-theorem cExpEtaGWf_eq (Dt : CPolyG α) (fuel : ℕ) :
-    cExpEtaGWf Dt = cExpEtaG fuel Dt := by
-  rw [cExpEtaGWf, cExpEtaG]
-
-omit [CDiffField α] in
-/-- **Bridge — `cRdeBoundDegreeGWf` equals `cRdeBoundDegreeG` at any fuel** (definitional). Both are the same
-pure list-degree arithmetic (`cRdeBoundDegreeG` ignores its fuel argument), so they coincide unconditionally
-— `cRdeBoundDegreeGWf Dt a b c = cRdeBoundDegreeG Dt fuel a b c`. -/
-theorem cRdeBoundDegreeGWf_eq (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) :
-    cRdeBoundDegreeGWf Dt a b c = cRdeBoundDegreeG Dt fuel a b c := by
-  rw [cRdeBoundDegreeGWf, cRdeBoundDegreeG]
 
 omit [CDiffField α] in
 /-- **Bridge — `cIntegratePolyGWf` equals `cIntegratePolyG`** (definitional). Both are the same termwise
@@ -636,7 +590,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCor
 /-- **★ Bridge — the headline `cRischDEGWf` equals `cRischDEG` at sufficient fuel on any regular run**
 (transparent composition, all regimes). From the §6.2 stage agreements (`hnorm`: the normal denominator;
 `hspec`: the special denominator on the normal-denominator output), the §6.3 degree bound
-(`cRdeBoundDegreeGWf_eq`, already fuel-free), the §6.4 SPDE bridge (`hspde`), and the §6.5/§6.6 polynomial
+(`cRdeBoundDegreeG`, already fuel-free), the §6.4 SPDE bridge (`hspde`), and the §6.5/§6.6 polynomial
 **dispatcher** agreement (`hpoly`: `cPolyRischDEGWf = cPolyRischDEG fuel` on the SPDE output) —
 `cRischDEGWf Dt fnum fden gnum gden = cRischDEG Dt fuel fnum fden gnum gden`. The fuel bounds live only in the
 hypotheses; the headline `cRischDEGWf` carries none. A pure composition rewrite: rewrite each stage to its
@@ -655,9 +609,8 @@ theorem cRischDEGWf_eq (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPol
   · simp only []
     rw [hspec a0 b0 c0]
     rcases hs : cRdeSpecialDenominatorG Dt fuel a0 b0 c0 with ⟨a, b, c, h1⟩
-    simp only [cRdeBoundDegreeGWf_eq Dt fuel a b c,
-      hspde a b c (cRdeBoundDegreeG Dt fuel a b c : ℤ)]
-    rcases hsp : cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt fuel a b c : ℤ) with
+    simp only [hspde a b c (cRdeBoundDegreeG Dt a b c : ℤ)]
+    rcases hsp : cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt a b c : ℤ) with
       _ | ⟨bbar, cbar, m, α', β⟩
     · rfl
     · simp only [hpoly bbar cbar m]

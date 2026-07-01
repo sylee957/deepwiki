@@ -156,7 +156,7 @@ integrated by `cIntegrateHyperexpLaurentG η` (§5.10, each coefficient through 
 [CRischField α]`-generic — runs at any hyperexponential tower level. -/
 def cIntegrateHyperexpG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
-  let η : α := cExpEtaG fuel Dt
+  let η : α := cExpEtaG Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
   let neg : List α := cHyperexpSpecialNegG b ds
   match cIntegrateHyperexpLaurentG η fp neg with
@@ -212,7 +212,7 @@ def hyperexpInvCands : List Lvl1 := [CField.zero, CField.one]
 `cExpEtaG` reads `η = 1 ∈ ℚ(x)`, confirmed by `CField.isZero (η − 1) = true`. The §5.10 driver's shift
 `j·η` is then just `j`. -/
 theorem hyperexp_eta_eq_one :
-    CField.isZero (CField.sub (cExpEtaG 12 hyperexpDt) (CField.one : Lvl1)) = true := by native_decide
+    CField.isZero (CField.sub (cExpEtaG hyperexpDt) (CField.one : Lvl1)) = true := by native_decide
 
 /-- **★ The §5.10 driver lands `∫ 1/exp = −1/exp`, and `D(∫f) = f`** (`native_decide`, the headline). On
 the hyperexponential integrand `f = 1/t = 1/exp` over `ℚ(x)[t]` (`Dt = η·t`, `η = 1`) — a **pure special
