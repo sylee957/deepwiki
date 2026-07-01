@@ -101,7 +101,7 @@ instance instCRischFieldSpecQ : CRischFieldSpec ℚ where
 
 /-! ### ★ Discharging the base-oracle residual `D(∫R) = R` (the hyperexp `hintR`)
 
-`ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound` carries the base-oracle residual as a
+`ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalGWf_sound` carries the base-oracle residual as a
 documented hypothesis
 
   `hintR : towerFractionFieldDerivG Dt (amG α (C (toK intR))) = amG α (C (toK R))`
@@ -140,7 +140,7 @@ for any residual `R : α`, if the base oracle solves the pure-integration RDE `D
 
 The `b = 0` case of `CRischFieldSpec.crischDESolve_spec` gives `(toK intR)′ + 0·(toK intR) = toK R`, i.e.
 `(toK intR)′ = toK R`; `towerFractionFieldDerivG_amG_C` reads off the constant's derivative. This is
-exactly the `hintR` hypothesis `ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound` carries —
+exactly the `hintR` hypothesis `ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalGWf_sound` carries —
 discharged with NO `native_decide`. -/
 theorem crischDESolve_zero_intDeriv (Dt : CPolyG α) (R intR : α)
     (hsolve : CRischField.crischDESolve (CField.zero : α) R = some intR) :
