@@ -97,11 +97,11 @@ part of `1/(θ²·√(θ³−θ))` — the master identity `D(∫) = rational-pa
 no driver code changed (only the base field is the tower level ℚ(x)). -/
 abbrev bie_driver_over_tower := @drvDriver_integrates
 
-/-- **★ The full multi-case driver `radIntegrateRational` computes over the tower base** (Bronstein 1990,
-concrete case; `native_decide`): the squarefree-decomposition + partial-fraction + V/W-classification +
-dispatch pipeline runs over `α = ℚ(x)` (`CFracGcdCore (QFunNZG ℚ)` resolving recursively), producing exactly
-one per-factor record for the single `W`-factor `θ` of `B = θ²`. The entire generic rational-part driver
-instantiates at a tower-level base field. -/
+/-- **★ The full fuel-free multi-case driver `radIntegrateRationalWf` computes over the tower base**
+(Bronstein 1990, concrete case; `native_decide`): the squarefree-decomposition + partial-fraction +
+V/W-classification + dispatch pipeline runs over `α = ℚ(x)` (`CFracGcdCoreWf (QFunNZG ℚ)` resolving
+recursively), producing exactly one per-factor record for the single `W`-factor `θ` of `B = θ²`. The entire
+generic rational-part driver instantiates at a tower-level base field with no top-level fuel. -/
 abbrev bie_full_driver_over_tower := @drvFullRun_length
 
 end DeepWiki.Bie

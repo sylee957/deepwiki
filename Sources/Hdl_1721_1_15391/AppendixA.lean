@@ -16,14 +16,14 @@ diagonal derivation `radDeriv`.
 witness on a worked example); the abstract correctness theorems (that the assembled `v` is the
 integral's rational part) are validated only by `native_decide`, not proved in general. The
 rational part here joins the residue resultant and the principal-case log-argument solve of
-`Sources.Hdl_1721_1_15391.Chapter5` in the unified full integrator `cIntegrateAlgebraic`
+`Sources.Hdl_1721_1_15391.Chapter5` in the unified fuel-free full integrator `cIntegrateAlgebraicWf`
 (catalog `Sources.Hdl_1721_1_15391.IntegrateFull`), which assembles `∫ = v + Σ cᵢ log uᵢ`. Only the
 NON-PRINCIPAL / torsion log part (divisors Ch. 5 §3, the principal-divisor / torsion test Ch. 6) is
 unformalized — see those catalogs and the block below.
 
 ## NOT YET FORMALIZED (audit 2026-06-26)
 App. A §2.1 Case 1 (`C/(Vᵏy)`): the `k = 1` lower-coefficient solve (the residual `Crem/(Vy)`,
-  a Risch first-order ODE) is the deferred `cRischDEG` glue `[deferred]`.
+  a Risch first-order ODE) is the deferred `cRischDEGWf` glue `[deferred]`.
 App. A §2.4 `θ = exp v`: the `C/y` sub-case (eq. 6) and the *lower* (non-leading,
   non-constant) coefficient ODE solves of the `θ = log v` / `θ = exp v` variants
   (Risch first-order ODE for each coefficient) `[deferred]`.

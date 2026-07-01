@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
+import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
@@ -223,18 +224,18 @@ theorem logIntegral_eq :
 /-! ### Stretch: the generic rational-part DRIVER runs over a tower base (`native_decide`)
 
 The previous sections used a *headline antiderivative* validated through `radDeriv`. This section runs the
-**generic multi-case rational-part driver** (`radIntegrateCase2` / `radIntegrateRational` from
-`ComputableRadicalRationalDriver`) over a tower-level base field — the drivers are `[CField α] [CFracGcdCore
-α]`-generic, and `CFracGcdCore (QFunNZG ℚ)` resolves recursively (`instCFracGcdCoreQFunNZG`), so they
-instantiate at `α = QFunNZG ℚ ≅ ℚ(x)` with **no** new code. The radical then lives over `ℚ(x)[θ]` (`θ = t₁`
-an independent monomial over ℚ(x), `θ' = 1`), i.e. the **stacked** extension `(ℚ(x)(t₁))[y]/(y² − ρ)`.
+**generic multi-case rational-part driver** (`radIntegrateCase2` / `radIntegrateRationalWf`) over a
+tower-level base field — the drivers are `[CField α]`-generic (with `CFracGcdCoreWf α` at the full-driver
+front end), and `CFracGcdCoreWf (QFunNZG ℚ)` resolves recursively, so they instantiate at
+`α = QFunNZG ℚ ≅ ℚ(x)` with **no** new code. The radical then lives over `ℚ(x)[θ]` (`θ = t₁` an independent
+monomial over ℚ(x), `θ' = 1`), i.e. the **stacked** extension `(ℚ(x)(t₁))[y]/(y² − ρ)`.
 
 Concretely: radicand `ρ = θ³ − θ = θ(θ−1)(θ+1) ∈ ℚ(x)[θ]` (squarefree), `W = θ` (a branch place, `W ∣ ρ`),
 integrand `1/(θ²·√(θ³−θ))`. The driver `radIntegrateCase2` runs two Case-2 Hermite steps (`k = 2 → 1`), and
 its output is validated through the **actual** `radDeriv 2` at **level 2** (`α = Lvl2 = ℚ(x)(t₁)`, the
 default independent-`t₁` derivation): `radDeriv(vNum/(θ²√ρ)) = 1/(θ²√ρ) − Crem/(θ√ρ)` — the master identity
-`D(∫) = rational-part`. The full multi-case driver `radIntegrateRational` likewise computes over the tower
-base (dispatching the squarefree decomposition through `CFracGcdCore (QFunNZG ℚ)`). -/
+`D(∫) = rational-part`. The full multi-case driver `radIntegrateRationalWf` likewise computes over the
+tower base (dispatching the squarefree decomposition through `CFracGcdCoreWf (QFunNZG ℚ)`). -/
 
 open CPolyG
 
@@ -287,19 +288,20 @@ theorem drvDriver_integrates :
 /-- Full-driver denominator `B = θ² ∈ ℚ(x)[θ]` (the `W`-factor `θ` at multiplicity `2`), `[0, 0, 1]`. -/
 def drvB : CPolyG (QFunNZG ℚ) := [CField.zero, CField.zero, CField.one]
 
-/-- **The full multi-case driver run over the tower base** `radIntegrateRational fuel ρ R B` on
+/-- **The full fuel-free multi-case driver run over the tower base** `radIntegrateRationalWf ρ R B` on
 `∫ 1/(θ²·√(θ³−θ))` over `α = QFunNZG ℚ ≅ ℚ(x)` — squarefree-decomposes `B = θ²`, classifies `θ` as a
-`W`-factor (`θ ∣ ρ`), partial-fractions, and dispatches to the iterated Case-2 reduction, **all** through
-`CFracGcdCore (QFunNZG ℚ)` (resolved recursively). Returns one per-factor record. -/
+`W`-factor (`θ ∣ ρ`), partial-fractions, and dispatches to the fuel-free iterated Case-2 reduction, **all**
+through `CFracGcdCoreWf (QFunNZG ℚ)` (resolved recursively). Returns one per-factor record. -/
 def drvFullRun :
     List (Bool × CPolyG (QFunNZG ℚ) × ℕ × CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) :=
-  radIntegrateRational 16 drvRho drvC drvB
+  radIntegrateRationalWf drvRho drvC drvB
 
-/-- **★ The full multi-case driver `radIntegrateRational` computes over the tower base** (`native_decide`):
-the squarefree-decomposition + partial-fraction + V/W-classification + dispatch pipeline runs over `α =
-ℚ(x)` (the squarefree factorization through the recursive `CFracGcdCore (QFunNZG ℚ)`), producing exactly
-one per-factor record for the single `W`-factor `θ` of `B = θ²`. THE ENTIRE GENERIC RATIONAL-PART DRIVER
-INSTANTIATES AT A TOWER-LEVEL BASE FIELD — `CFracGcdCore` resolving recursively is what makes it run. -/
+/-- **★ The full fuel-free multi-case driver `radIntegrateRationalWf` computes over the tower base**
+(`native_decide`): the squarefree-decomposition + partial-fraction + V/W-classification + dispatch pipeline
+runs over `α = ℚ(x)` (the squarefree factorization through the recursive `CFracGcdCoreWf (QFunNZG ℚ)`),
+producing exactly one per-factor record for the single `W`-factor `θ` of `B = θ²`. THE ENTIRE GENERIC
+RATIONAL-PART DRIVER INSTANTIATES AT A TOWER-LEVEL BASE FIELD — `CFracGcdCoreWf` resolving recursively is
+what makes it run. -/
 theorem drvFullRun_length : drvFullRun.length = 1 := by native_decide
 
 /-! ### `#print axioms` — the headline over-tower results
