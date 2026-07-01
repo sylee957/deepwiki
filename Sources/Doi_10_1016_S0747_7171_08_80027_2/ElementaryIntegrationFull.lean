@@ -140,9 +140,9 @@ integrand) over the tower through the real radical derivation. The unified eleme
 end-to-end over the transcendental tower. -/
 abbrev bie_both_halves_computed := @rtFull_both_halves_computed
 
-/-- **`radIntegrateCase3G cderivG` reduces to the ℚ-base Case-3 driver** (Bronstein 1990, rational part;
-`native_decide`): at the ℚ base (`α ≅ ℚ(x)`, `θ' = 1`) the generic Case-3-G driver and the original
-`radIntegrateCase3` produce the **identical** `(Crem, vNum)` on `∫ x⁴/√(x³+1)` — the ACTUAL-derivation
+/-- **`radIntegrateCase3G cderivG` reduces to the ℚ-base fuel-free Case-3 driver** (Bronstein 1990,
+rational part; `native_decide`): at the ℚ base (`α ≅ ℚ(x)`, `θ' = 1`) the generic Case-3-G driver and
+`radIntegrateCase3Wf` produce the **identical** `(Crem, vNum)` on `∫ x⁴/√(x³+1)` — the ACTUAL-derivation
 generalization is conservative (`radCase3CofactorTower cderivG` specializes back to `radCase3Cofactor`). -/
 abbrev bie_case3_tower_base_conservative := @stretch_case3G_eq_case3_base
 
