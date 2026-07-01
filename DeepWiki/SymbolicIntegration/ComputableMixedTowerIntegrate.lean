@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTranscendentalOverAlgebraic
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.ComputableUnifiedFuelFree
 import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
 
 /-! # The first transcendental INTEGRAL over an algebraic base (Bronstein 1990, mixed tower)
@@ -7,28 +7,29 @@ import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
 `CField`+`CDiffField`+`CFieldDomain` Risch base, **unconditionally** — so a transcendental monomial `t`
 stacks on top of the algebraic `√(x³+1)` and its derivation runs (`radX3_monomialDeriv_t2sq_eq_two_t2sq`,
 `radX3_monomialDeriv_genT_eq`). That gave the **derivative** at transcendental-over-algebraic level. This
-file takes the next step: the **integral**. The full poly/special tower integrator
-`CPolyG.cIntegrateGFull` (`ComputableTowerRischDE`) is `[CField α] [CDiffField α] [CFracGcdCore α]
-[CRischField α]`-generic; with the radical base supplying the first two (built in the enabler), we equip
-`RadX3` with the remaining two and run `cIntegrateGFull` at `α = RadX3` — integrating a transcendental
-monomial `t` **over** the algebraic `√(x³+1)`, the first transcendental-on-algebraic `∫` in DeepWiki.
+file takes the next step: the **integral**. The fuel-free full poly/special tower integrator
+`CPolyG.cIntegrateGFullWf` (`ComputableUnifiedFuelFree`) is `[CField α] [CDiffField α]
+[CFracGcdCoreWf α] [CRischField α]`-generic; with the radical base supplying the first two (built in the
+enabler), we equip `RadX3` with the remaining two and run `cIntegrateGFullWf` at `α = RadX3` — integrating a
+transcendental monomial `t` **over** the algebraic `√(x³+1)`, the first transcendental-on-algebraic `∫` in
+DeepWiki.
 
-* **`CFracGcdCore RadX3`** — `RadX3` is a genuine field (`y² − (x³+1)` is irreducible over ℚ(x),
+* **`CFracGcdCoreWf RadX3`** — `RadX3` is a genuine field (`y² − (x³+1)` is irreducible over ℚ(x),
   `irreducible_radX3`), so its polynomial ring `RadX3[t]` has the ordinary Euclidean gcd; the raw
-  fraction-free gcd is `(cgcdExtG _).1` over `RadX3[t]`, **exactly** the `ℚ`-base recipe `instCFracGcdCoreQ`
-  (a field's content is a unit). This is what `canonicalRepresentationFastG` / the Hermite reduction and
-  the residue log part dispatch through.
+  fuel-free fraction-free gcd is `(cgcdWf _ _).1` over `RadX3[t]`, **exactly** the `ℚ`-base recipe
+  `instCFracGcdCoreWfQ` (a field's content is a unit). This is what `canonicalRepresentationFastGWf` /
+  the Hermite reduction and the residue log part dispatch through.
 * **`CRischField RadX3`** — the base RDE-over-the-field solver, now supplied by the **generic**
   `instCRischFieldRadExt` (`ComputableTranscendentalOverAlgebraic`, imported here) via
   `RadX3 = RadExt (QFunNZG ℚ) 2 (x³+1)`: scalar-`B` decoupling of `Dz + B·z = C` into the per-`y`-power
   base RDEs over ℚ(x) (the coupled-system case, non-scalar `B`, deferred). It replaces the earlier per-base
   conservative `f = 0 ∧ g = 0 ↦ 0` stub. The integrals below run the **`b = 0` primitive branch** of
-  `cPolyRischDEG` (`cIntegratePolyG`, the term-by-term antiderivative), which **never** invokes
+  `cPolyRischDEGWf` (`cIntegratePolyGWf`, the term-by-term antiderivative), which **never** invokes
   `crischDESolve`, so they are unchanged by the swap; the generic instance is the better base solve now in
   scope for any deeper dispatch.
 
 * **★ The headline** (`native_decide`): over `RadX3[t] = ℚ(x)[√(x³+1)][t]` with `t` primitive (`Dt = 1`),
-  `cIntegrateGFull` integrates polynomial parts by the §5.4 primitive-base RDE branch and a normal part by
+  `cIntegrateGFullWf` integrates polynomial parts by the §5.4 primitive-base RDE branch and a normal part by
   Rothstein–Trager, **over the algebraic base** — the whole pipeline (canonical split, gcd over `RadX3[t]`,
   Hermite, residue logs) runs with `α = RadX3`:
   - `∫ t dt = t²/2` — the cleanest, the poly-part driver over the algebraic base, validated `D(∫f) = f`.
@@ -47,9 +48,9 @@ monomial `t` **over** the algebraic `√(x³+1)`, the first transcendental-on-al
 Each integral is validated by `checkIdentityG` (the cleared antiderivative identity `D(∫f) = f` over the
 `RadX3` `CDiffField`), the same diagonal-radical derivation the enabler validated `D(y·t)` with.
 Everything reduces in the native compiler: `RadX3` is the computable radical carrier (`CFieldDomain`
-`Prop`-erased), `cIntegrateGFull` is list/field arithmetic, the gcd `cgcdExtG` is Euclid over `RadX3[t]`.
+`Prop`-erased), `cIntegrateGFullWf` is list/field arithmetic, the gcd `cgcdWf` is Euclid over `RadX3[t]`.
 The instantiation is **pure reuse** — the integrator is taken verbatim; only the two missing base
-typeclasses (`CFracGcdCore`/`CRischField`) are supplied for `RadX3`.
+typeclasses (`CFracGcdCoreWf`/`CRischField`) are supplied for `RadX3`.
 
 * **★★★ A top-level ∫ whose integration step DESCENDS through the algebraic RDE** (`native_decide`, the
   airtight end-to-end claim). The poly-driver integrals above never reach `crischDESolve` (their `b = 0`
@@ -70,10 +71,11 @@ namespace DeepWiki.SymbolicIntegration
 
 open CPolyG
 
-/-! ### The remaining base typeclass for the radical field `RadX3`
+/-! ### The remaining base typeclasses for the radical field `RadX3`
 
-`cIntegrateGFull` needs `[CFracGcdCore α] [CRischField α]` beyond the `[CField α] [CDiffField α]` the
-enabler built. We supply `CFracGcdCore RadX3` here; `CRischField RadX3` is now supplied by the **generic**
+`cIntegrateGFullWf` needs `[CFracGcdCoreWf α] [CRischField α]` beyond the `[CField α] [CDiffField α]` the
+enabler built. We supply `CFracGcdCoreWf RadX3` here (and keep the fueled `CFracGcdCore RadX3` for the
+remaining fueled comparison checks); `CRischField RadX3` is now supplied by the **generic**
 `instCRischFieldRadExt` (`ComputableTranscendentalOverAlgebraic`, imported), so the earlier per-base
 conservative stub is retired — the scalar-decoupling solver resolves automatically via
 `RadX3 = RadExt (QFunNZG ℚ) 2 (x³+1)`. -/
@@ -86,6 +88,13 @@ Euclidean work is `[CField RadX3]`-only, so it reduces in the native compiler. T
 `canonicalRepresentationFastG`, the Hermite reduction, and the residue log part dispatch through. -/
 instance instCFracGcdCoreRadX3 : CFracGcdCore RadX3 where
   cgcdFFRawCore fuel p q := (CPolyG.cgcdExtG fuel p q).1
+
+/-- **`CFracGcdCoreWf RadX3`** — the fuel-free raw fraction-free gcd over `RadX3[t]`. Since `RadX3` is a
+field, the raw content-normalized gcd is the fuel-free Euclidean gcd `(cgcdWf p q).1`, mirroring the base
+`CFracGcdCoreWf ℚ` instance. This is the gcd instance consumed by `cIntegrateGFullWf` over the algebraic
+base. -/
+instance instCFracGcdCoreWfRadX3 : CFracGcdCoreWf RadX3 where
+  cgcdFFRawCoreWf p q := (CPolyG.cgcdWf p q).1
 
 /-! ### Shared integrand data over `RadX3[t]`
 
@@ -104,24 +113,24 @@ def mixedCands : List RadX3 := [CField.zero, CField.one]
 /-! ### ★ `∫ t dt = t²/2` over `RadX3[t] = ℚ(x)[√(x³+1)][t]` (`native_decide`)
 
 The cleanest transcendental-over-algebraic integral: a **pure polynomial part** `f = t` over the radical
-base, `t` primitive (`Dt = 1`). `cIntegrateGFull` splits `f = t` (polynomial part `fₚ = t`, no normal or
-special part), solves `Dqₚ = t` by the §5.4 primitive-base branch (`b = 0`, so `cPolyRischDEG` hits
-`cIntegratePolyG t = [0, 0, 1/2] = (1/2)t²`), and returns `(1/2)t²` with no logs. The poly-part driver
+base, `t` primitive (`Dt = 1`). `cIntegrateGFullWf` splits `f = t` (polynomial part `fₚ = t`, no normal or
+special part), solves `Dqₚ = t` by the §5.4 primitive-base branch (`b = 0`, so `cPolyRischDEGWf` hits
+`cIntegratePolyGWf t = [0, 0, 1/2] = (1/2)t²`), and returns `(1/2)t²` with no logs. The poly-part driver
 runs over the ALGEBRAIC base ℚ(x)[√(x³+1)], and the result differentiates back to `f`. -/
 
 /-- The integrand `f = t` over `CPolyG RadX3` (numerator `t = [0, 1]`, denominator `1`): a pure polynomial
-part that the reduced-case capstone leaves undisposed (handled by the full driver `cIntegrateGFull`). -/
+part that the reduced-case capstone leaves undisposed (handled by the full driver `cIntegrateGFullWf`). -/
 def mixedTa : CPolyG RadX3 := [CField.zero, CField.one]
 
 /-- **★ `∫ t dt = t²/2` over `RadX3[t] = ℚ(x)[√(x³+1)][t]`, and `D(∫f) = f`** (`native_decide`, the
-milestone). The full driver `cIntegrateGFull` (canonical split + the §5.4 `b = 0` primitive-base RDE solve
+milestone). The fuel-free full driver `cIntegrateGFullWf` (canonical split + the §5.4 `b = 0` primitive-base RDE solve
 `Dqₚ = t` + recombination) integrates the pure polynomial part `f = t` over the ALGEBRAIC base
 ℚ(x)[√(x³+1)], returning `some res` whose rational part is `(1/2)t²`, and `res` satisfies the
 antiderivative identity `D(res) = f` (`checkIdentityG`, cleared of denominators, with the `RadX3`
 diagonal-radical `CDiffField` derivation). THE FIRST TRANSCENDENTAL INTEGRAL OVER AN ALGEBRAIC BASE —
-`cIntegrateGFull` instantiated at `α = RadExt`. -/
+`cIntegrateGFullWf` instantiated at `α = RadExt`. -/
 theorem mixedT_integral_eq :
-    (match CPolyG.cIntegrateGFull mixedDt 20 mixedTa mixedD mixedCands with
+    (match CPolyG.cIntegrateGFullWf mixedDt mixedTa mixedD mixedCands with
       | some res => CPolyG.checkIdentityG mixedDt res mixedTa mixedD
       | none => false) = true := by native_decide
 
@@ -138,7 +147,7 @@ def mixedT2a : CPolyG RadX3 := [CField.zero, CField.zero, CField.one]
 the degree-`2` polynomial part `f = t²` over the algebraic base to `t³/3` (`cIntegratePolyG [0,0,1] =
 [0,0,0,1/3]`), and the result differentiates back to `f`. -/
 theorem mixedT2_integral_eq :
-    (match CPolyG.cIntegrateGFull mixedDt 20 mixedT2a mixedD mixedCands with
+    (match CPolyG.cIntegrateGFullWf mixedDt mixedT2a mixedD mixedCands with
       | some res => CPolyG.checkIdentityG mixedDt res mixedT2a mixedD
       | none => false) = true := by native_decide
 
@@ -149,7 +158,7 @@ def mixedLina : CPolyG RadX3 := [CField.one, CField.add CField.one CField.one]
 integrates the mixed-degree polynomial part `f = 2t+1` over the algebraic base to `t²+t`
 (`cIntegratePolyG [1,2] = [0,1,1]`), and the result differentiates back to `f`. -/
 theorem mixedLin_integral_eq :
-    (match CPolyG.cIntegrateGFull mixedDt 20 mixedLina mixedD mixedCands with
+    (match CPolyG.cIntegrateGFullWf mixedDt mixedLina mixedD mixedCands with
       | some res => CPolyG.checkIdentityG mixedDt res mixedLina mixedD
       | none => false) = true := by native_decide
 
@@ -176,7 +185,7 @@ def mixedRecipDen : CPolyG RadX3 := [CField.zero, CField.one]
 (`checkIdentityG`, the log term `1·D(t)/t = 1/t`). THE NORMAL-PART / RESIDUE-LOG PIPELINE RUNS OVER THE
 ALGEBRAIC BASE — a transcendental-over-algebraic integral producing a logarithm. -/
 theorem mixedRecip_integral_eq :
-    (match CPolyG.cIntegrateGFull mixedDt 20 mixedRecipNum mixedRecipDen mixedCands with
+    (match CPolyG.cIntegrateGFullWf mixedDt mixedRecipNum mixedRecipDen mixedCands with
       | some res => CPolyG.checkIdentityG mixedDt res mixedRecipNum mixedRecipDen
       | none => false) = true := by native_decide
 
@@ -187,7 +196,7 @@ coefficients are `D`-constant. The only `D`-constants of `RadX3 = ℚ(x)[√(x³
 `D`-killed needs `D(a) = 0` (so `a ∈ ℚ`) and `D(b) + b·ℓ = 0` (so `b'/b = −ℓ = −f'/(2f)`, i.e. `b ∝ 1/√f ∉
 ℚ(x)`). In particular `y = √(x³+1)` has `D(y) = ℓ·y ≠ 0`. So the would-be antiderivative `y·t` of `f = y`
 has **full-tower** derivative `D(y·t) = D(y)·t + y·Dt = ℓ·y·t + y ≠ y`: the driver's `y·t` is *not* a
-genuine antiderivative of `y`. We pin this: `cIntegrateGFull` returns a result on `f = y` (the poly driver
+genuine antiderivative of `y`. We pin this: `cIntegrateGFullWf` returns a result on `f = y` (the poly driver
 runs), but `checkIdentityG` is **false** — the `D(∫f) = f` identity fails. Hence a transcendental-over-
 algebraic *polynomial* integral keeps ℚ coefficients in the primitive-driver part; the algebraic `y` enters
 validated integrals only through the **log argument** (above), not as a poly coefficient. -/
@@ -197,25 +206,25 @@ coefficient is the radical generator `y = radX3Gen` (which is **not** a `D`-cons
 def mixedYa : CPolyG RadX3 := [radX3Gen]
 
 /-- **★ `∫ y dt` does NOT satisfy `D(∫f) = f`** (`native_decide`, the honest boundary): on `f = y =
-√(x³+1)` the full driver runs the `b = 0` poly branch and returns `some (y·t)`, but `checkIdentityG` is
+√(x³+1)` the fuel-free full driver runs the `b = 0` poly branch and returns `some (y·t)`, but `checkIdentityG` is
 **false** — because `y` is **not** a `D`-constant (`D(y) = ℓ·y ≠ 0`), the full-tower derivative of `y·t` is
 `ℓ·y·t + y ≠ y`. The primitive poly driver is correct only on `D`-constant (ℚ) coefficients; an algebraic
 coefficient `y` breaks the antiderivative identity. This is why validated transcendental-over-algebraic
 *polynomial* integrals (above) keep ℚ poly coefficients, and the algebraic `y` enters a validated integral
 only through the log argument. -/
 theorem mixedY_not_validated :
-    (match CPolyG.cIntegrateGFull mixedDt 20 mixedYa mixedD mixedCands with
+    (match CPolyG.cIntegrateGFullWf mixedDt mixedYa mixedD mixedCands with
       | some res => CPolyG.checkIdentityG mixedDt res mixedYa mixedD
       | none => false) = false := by native_decide
 
 /-! ### ★★ STRETCH: a MULTI-LEVEL descent — an RDE over `RadX3[t]` that recurses into `crischDESolve`
 over the algebraic `RadX3`, which itself decouples to ℚ(x) (`native_decide`)
 
-The headline multi-level descent. `cIntegrateGFull`'s *polynomial part* runs `cPolyRischDEG Dt fuel [] fp …`
+The headline multi-level descent. `cIntegrateGFullWf`'s *polynomial part* runs `cPolyRischDEGWf Dt [] fp …`
 with `b = 0` — the pure-integration branch `cIntegratePolyG`, which **never** calls `crischDESolve`. So an
 *integral* over `RadX3[t]` cannot, by construction, descend into the algebraic RDE. The genuine descent is
-the full **RDE solver** `cRischDEG` over `RadX3[t]` with a **nonzero** coefficient `f`: then the §6.6
-**primitive-cancellation** branch `cPolyRischDECancelPrimG` fires and recurses into
+the full **RDE solver** `cRischDEGWf` over `RadX3[t]` with a **nonzero** coefficient `f`: then the §6.6
+**primitive-cancellation** branch `cPolyRischDECancelPrimGWf` fires and recurses into
 `CRischField.crischDESolve b₀ (lc c)` over `RadX3` (eq. 6.23) — and `b₀ = 1 : RadX3` is a nonzero **scalar**,
 so the new `instCRischFieldRadExt` **decouples** it into the per-`y`-power base RDEs over ℚ(x). A genuine
 THREE-level recursion: `RadX3[t]` →(§6.6 cancellation)→ `crischDESolve` over `RadX3` →(scalar decoupling)→
@@ -225,7 +234,7 @@ We solve `Dy + 1·y = t + 1` over `RadX3[t]` (`t` primitive, `Dt = 1`), whose so
 (`D(t) + t = 1 + t`). `f = 1 ≠ 0` routes through cancellation, calling `crischDESolve (1 : RadX3) (lc c)`
 on the new instance. -/
 
-/-- The RDE coefficient `f = 1 ∈ RadX3[t]` (a **nonzero** degree-0 `t`-polynomial), forcing `cRischDEG`'s
+/-- The RDE coefficient `f = 1 ∈ RadX3[t]` (a **nonzero** degree-0 `t`-polynomial), forcing `cRischDEGWf`'s
 §6.6 primitive-cancellation branch — the path that recurses into `crischDESolve` over `RadX3`. -/
 def mixedRdeF : CPolyG RadX3 := [CField.one]
 
@@ -238,24 +247,24 @@ def mixedRdeG : CPolyG RadX3 := [CField.one, CField.one]
 /-- The RDE right-hand side denominator `gden = 1 ∈ RadX3[t]`. -/
 def mixedRdeGden : CPolyG RadX3 := [CField.one]
 
-/-- **The RDE over `RadX3[t]` is solved (returns `some`)** (`native_decide`): `cRischDEG` over
+/-- **The RDE over `RadX3[t]` is solved (returns `some`)** (`native_decide`): `cRischDEGWf` over
 `RadX3[t] = ℚ(x)[√(x³+1)][t]` solves `Dy + 1·y = t + 1`, descending through the §6.6 primitive-cancellation
 branch into `crischDESolve (1 : RadX3) (lc c)` over the algebraic base — the new `instCRischFieldRadExt`. -/
 theorem mixedRde_radx3_isSome :
-    (CPolyG.cRischDEG ([CField.one] : CPolyG RadX3) 60
+    (CPolyG.cRischDEGWf ([CField.one] : CPolyG RadX3)
       mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden).isSome = true := by native_decide
 
 /-- **★★ A MULTI-LEVEL RDE descent: `Dy + 1·y = t + 1` solved over `RadX3[t]`, recursing into the
-algebraic `crischDESolve`** (`native_decide`, the stretch deliverable). `cRischDEG` over `RadX3[t]` returns
+algebraic `crischDESolve`** (`native_decide`, the stretch deliverable). `cRischDEGWf` over `RadX3[t]` returns
 `some (ynum, yden)` with `y = ynum/yden = t`, and the RDE identity `D(ynum) + 1·ynum = (t+1)·yden` holds —
 checked by `cisZeroG` of the cleared form over `RadX3[t]` (the tower derivation `cmonomialDeriv [1]`, `Dt =
 1`, on the `RadX3` coefficients). The nonzero `f = 1` forced the §6.6 **primitive-cancellation** branch
-`cPolyRischDECancelPrimG`, which recursed into `CRischField.crischDESolve (1 : RadX3) (lc c)` over the
+`cPolyRischDECancelPrimGWf`, which recursed into `CRischField.crischDESolve (1 : RadX3) (lc c)` over the
 algebraic base `RadX3 = ℚ(x)[√(x³+1)]` — the **generic** `instCRischFieldRadExt`, scalar-decoupling that
 RDE into per-`y`-power base RDEs over ℚ(x). THE RISCH PIPELINE RECURSES THROUGH THE ALGEBRAIC LEVEL:
 `RadX3[t] → crischDESolve over RadX3 → ℚ(x)`. -/
 theorem mixedRde_radx3_descends :
-    (match CPolyG.cRischDEG ([CField.one] : CPolyG RadX3) 60
+    (match CPolyG.cRischDEGWf ([CField.one] : CPolyG RadX3)
         mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden with
       | some (ynum, yden) =>
           CPolyG.cisZeroG (CPolyG.csubG
@@ -272,8 +281,8 @@ The headline this file was reaching for: an actual **integral** (an `∫`-symbol
 `instCRischFieldRadExt` — making "an actual integral descends through an algebraic level" airtight,
 end-to-end, `D(∫f) = f`.
 
-`mixedRde_radx3_descends` above showed the *RDE solver* `cRischDEG` descend; but an **integral** through the
-poly driver (`cIntegrateGFull`/`cIntegratePolyG`, the `b = 0` branch) never calls `crischDESolve`, so it
+`mixedRde_radx3_descends` above showed the *RDE solver* `cRischDEGWf` descend; but an **integral** through the
+poly driver (`cIntegrateGFullWf`/`cIntegratePolyGWf`, the `b = 0` branch) never calls `crischDESolve`, so it
 cannot reach the algebraic level. The route that *does* is the **hyperexponential special part** (Bronstein
 §5.10): for a hyperexponential `t` (`Dt = η·t`), the Laurent special integrator
 `cIntegrateHyperexpLaurentG` (`ComputableHyperexpSpecial`, imported) integrates `∫ ∑ⱼ aⱼ tʲ` **term by
@@ -383,7 +392,7 @@ theorem mixedHyperexpG_topEntry_validates :
 /-! ### `#print axioms` — the transcendental-over-algebraic integrals
 
 Each result carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
-compiler axiom (`native`) — no `sorry`, no extra axiom. `cIntegrateGFull` (canonical split + §5.4 primitive
+compiler axiom (`native`) — no `sorry`, no extra axiom. `cIntegrateGFullWf` (canonical split + §5.4 primitive
 poly-part RDE solve + Rothstein–Trager residue logs + recombination) computes over `RadX3[t] =
 ℚ(x)[√(x³+1)][t]`, and each validated result differentiates back to `f` through the `RadX3`
 diagonal-radical `CDiffField` derivation — the first transcendental integrals over an algebraic base, with
