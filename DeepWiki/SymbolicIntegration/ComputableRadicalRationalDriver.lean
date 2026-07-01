@@ -90,8 +90,8 @@ def radReduceCase2Iterate (W h ρ : CPolyG α) (k0 : ℕ) :
   | fuel + 1, k, C, vNum =>
     if k ≤ 1 then (C, vNum)
     else
-      let B := radCase2CofactorC (k0 + 8) k W h C
-      let D := radCase2ResidualC (k0 + 8) k W h C B
+      let B := radCase2CofactorC k W h C
+      let D := radCase2ResidualC k W h C B
       -- contribution `B·ρ/(Wᵏy)` over the common denominator `W^{k0}`: `B·ρ·W^{k0−k}`
       let contrib := cmulG (cmulG B ρ) (cpowG W (k0 - k))
       radReduceCase2Iterate W h ρ k0 fuel (k - 1) (cnegG D) (caddG vNum contrib)

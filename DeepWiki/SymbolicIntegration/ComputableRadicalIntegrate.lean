@@ -77,9 +77,9 @@ def radReduceCase1Iterate (der : CPolyG α → CPolyG α) (V Df f g : CPolyG α)
   | fuel + 1, k, C, vNum =>
     if k ≤ 1 then (C, vNum)
     else
-      let B := radCase1Cofactor (k0 + 8) k V Df f C
+      let B := radCase1Cofactor k V Df f C
       let Bder := der B
-      let D := radCase1Residual (k0 + 8) k V Df f g B C Bder
+      let D := radCase1Residual k V Df f g B C Bder
       -- contribution `B·f/(V^{k−1}y)` over the common denominator `V^{k0−1}`: `B·f·V^{k0−k}`
       let contrib := cmulG (cmulG B f) (cpowG V (k0 - k))
       radReduceCase1Iterate der V Df f g k0 fuel (k - 1) (cnegG D) (caddG vNum contrib)

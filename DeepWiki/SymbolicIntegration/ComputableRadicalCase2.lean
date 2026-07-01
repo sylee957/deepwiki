@@ -45,23 +45,23 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- **Corrected Case-2 cofactor (n = 2)** `radCase2CofactorC fuel k W h C = B` — the polynomial `B`
+/-- **Corrected Case-2 cofactor (n = 2)** `radCase2CofactorC k W h C = B` — the polynomial `B`
 (degree `< deg W`) solving the `radDeriv`-validated Case-2 congruence `B·(½−k)·W'·h ≡ C (mod W)` (Trager
 Appendix A §2.2, `B(1−k−eⱼ/n)W'h ≡ C (mod W)` at `eⱼ = 1, n = 2`), via `cdiophantineGWf ((½−k)W'h) W C`
 (`gcd((½−k)W'h, W) = 1` since `W = Pⱼ` is squarefree, coprime to `h = f/W`, and `½ − k ≠ 0` for
 `k ≥ 1`). `h = f/W` and `W` are passed in (the caller supplies `f/W`); `W'` is `cderivG W`. Generic over
 `[CField α]`. -/
-def radCase2CofactorC (_fuel : ℕ) (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
+def radCase2CofactorC (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
   let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- ½
   let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- (½ − k)·W'·h
   (cdiophantineGWf coef W C).1
 
-/-- **Corrected Case-2 residual (n = 2)** `radCase2ResidualC fuel k W h C B = D` — the lowered-`k`
+/-- **Corrected Case-2 residual (n = 2)** `radCase2ResidualC k W h C B = D` — the lowered-`k`
 residual numerator `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'` of the `radDeriv`-validated Case-2 step. `h = f/W`,
 `W` passed in; `B'` is `cderivG B`, `h'` is `cderivG h`. The exact division by `W` is `cdivWf`
 (`W ∣ B·(½−k)W'h − C` by the cofactor congruence). With this `D`,
 `radDeriv(Bf/(Wᵏy)) = C/(Wᵏy) + D/(W^{k−1}y)`. Generic over `[CField α]`. -/
-def radCase2ResidualC (_fuel : ℕ) (k : ℕ) (W h C B : CPolyG α) : CPolyG α :=
+def radCase2ResidualC (k : ℕ) (W h C B : CPolyG α) : CPolyG α :=
   let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- ½
   let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- (½ − k)·W'·h
   let topNum := csubG (cmulG B coef) C                                      -- B·(½−k)W'h − C
@@ -96,10 +96,10 @@ def case2cH : CPolyG ℚ := [-1, 0, 1]
 def case2cC : CPolyG ℚ := [1]
 
 /-- The corrected Case-2 cofactor `B` for `B·(½−2)·W'·h ≡ 1 (mod x)` — expected `B = 2/3`. -/
-def case2cB : CPolyG ℚ := radCase2CofactorC 8 2 case2cW case2cH case2cC
+def case2cB : CPolyG ℚ := radCase2CofactorC 2 case2cW case2cH case2cC
 
 /-- The corrected Case-2 residual `D` — expected `−x/3` (multiplicity dropped `k = 2 → 1`). -/
-def case2cD : CPolyG ℚ := radCase2ResidualC 8 2 case2cW case2cH case2cC case2cB
+def case2cD : CPolyG ℚ := radCase2ResidualC 2 case2cW case2cH case2cC case2cB
 
 /-- **The corrected cofactor is `B = 2/3`** (`native_decide`): the diophantine solve of
 `B·(½−2)·W'·h ≡ 1 (mod x)` gives `B = 2/3` (`cisZeroG` of `B − 2/3`). -/

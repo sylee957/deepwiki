@@ -78,10 +78,9 @@ variable {α : Type*} [CField α]
 /-- **Fuel-free iterated Case-1 reduction** `radReduceCase1IterateWf der V Df f g k0 k C vNum = (Crem,
 vNumOut)` (Trager Appendix A §2.1): the fuel-free companion of `radReduceCase1Iterate`, recursing **directly
 on the multiplicity `k`** with **no fuel at runtime**. At `k ≥ 2` it solves the Hermite cofactor
-`B = radCase1Cofactor (k0 + 8) k V Df f C`, forms the residual `D = radCase1Residual`, accumulates the
+`B = radCase1Cofactor k V Df f C`, forms the residual `D = radCase1Residual`, accumulates the
 contribution `B·f·V^{k0−k}` into `vNum`, and recurses on `−D` at `k − 1`. Bottoms at `k ≤ 1` returning
-`(C, vNum)`. The inner cofactor/residual leaves keep their internal bound `k0 + 8` (they are leaves, not the
-recursion driver — exactly as the tower's `…Wf` keeps its `cgcdFFCoreWf`/`cdivWf` leaves). True well-founded
+`(C, vNum)`. The inner cofactor/residual leaves are already fuel-free. True well-founded
 recursion on `k`; the single recursive call is at `k − 1 < k` (since `k ≥ 2`), so `decreasing_by` is the
 `Nat.sub_lt` witness. `[CField α]`-only, so it `native_decide`s over the noncomputable `ℚ(x)` tower. -/
 def radReduceCase1IterateWf (der : CPolyG α → CPolyG α) (V Df f g : CPolyG α) (k0 : ℕ) :
@@ -89,9 +88,9 @@ def radReduceCase1IterateWf (der : CPolyG α → CPolyG α) (V Df f g : CPolyG �
   | k, C, vNum =>
     if hk : k ≤ 1 then (C, vNum)
     else
-      let B := radCase1Cofactor (k0 + 8) k V Df f C
+      let B := radCase1Cofactor k V Df f C
       let Bder := der B
-      let D := radCase1Residual (k0 + 8) k V Df f g B C Bder
+      let D := radCase1Residual k V Df f g B C Bder
       let contrib := cmulG (cmulG B f) (cpowG V (k0 - k))
       radReduceCase1IterateWf der V Df f g k0 (k - 1) (cnegG D) (caddG vNum contrib)
 termination_by k => k
@@ -116,7 +115,7 @@ shape and measure are the same. -/
 /-- **Fuel-free iterated Case-2 reduction** `radReduceCase2IterateWf W h ρ k0 k C vNum = (Crem, vNumOut)`
 (Trager Appendix A §2.2): the fuel-free companion of `radReduceCase2Iterate`, recursing **directly on the
 multiplicity `k`** with **no fuel at runtime**. At `k ≥ 2` it solves the corrected Case-2 cofactor
-`B = radCase2CofactorC (k0 + 8) k W h C`, forms the residual `D = radCase2ResidualC`, accumulates the
+`B = radCase2CofactorC k W h C`, forms the residual `D = radCase2ResidualC`, accumulates the
 contribution `B·ρ·W^{k0−k}` into `vNum` (over the common denominator `W^{k0}·y`), and recurses on `−D` at
 `k − 1`. Bottoms at `k ≤ 1` returning `(C, vNum)`. `W` (a squarefree factor of `ρ`), `h = ρ/W`, the
 radicand `ρ` passed in. True well-founded recursion on `k` (`decreasing_by`: `k − 1 < k`). `[CField α]`-only. -/
@@ -125,8 +124,8 @@ def radReduceCase2IterateWf (W h ρ : CPolyG α) (k0 : ℕ) :
   | k, C, vNum =>
     if hk : k ≤ 1 then (C, vNum)
     else
-      let B := radCase2CofactorC (k0 + 8) k W h C
-      let D := radCase2ResidualC (k0 + 8) k W h C B
+      let B := radCase2CofactorC k W h C
+      let D := radCase2ResidualC k W h C B
       let contrib := cmulG (cmulG B ρ) (cpowG W (k0 - k))
       radReduceCase2IterateWf W h ρ k0 (k - 1) (cnegG D) (caddG vNum contrib)
 termination_by k => k
