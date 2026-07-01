@@ -826,61 +826,18 @@ theorem field_identity_of_cIntegrateReducedG_primitive_of_residueData
     (cIntegrateReducedG_logs_eq_per_root Dt fuel a d cands s residueCand hden hres hDd hdist hcand
       hgcdread)
 
-/-! ### Task 3 (hyperexp): the reduced-case field identity for the HYPEREXPONENTIAL case, GATED on `∑c = 0`
+/-! ### Task 3 (hyperexp): the fuel-free reduced-case field identity, GATED on `∑c = 0`
 
-The hyperexponential analog of `field_identity_of_cIntegrateReducedG_primitive`: identical assembly, with the
-RT residue match supplied by `hyperexp_engine_hmatch` (which needs `hb : b ≠ 0` and the integrability witness
-`hsum : ∑c = 0`) instead of `primitive_engine_hmatch` (which discharges the cancellation automatically). -/
-
-/-- **★★ The reduced-case field identity for the HYPEREXPONENTIAL case (given `∑c = 0`)** — for the normal-part
-capstone `res = cIntegrateReducedG Dt fuel a d cands` with a hyperexponential monomial `toPolyG Dt = C b·X`
-(`b = η′ ≠ 0`), **given** the Hermite half `hherm`, the per-root reassembly `hform` of the residue logs, AND
-the integrability witness `hsum` (`∑_β c_β = 0`, the residues of the Hermite leftover summing to zero), the
-reduced-case field identity `D(g) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc
-(CFieldSpec.K α)` — **with no engine `checkIdentityG` certificate**. The RT residue match is discharged by
-`hyperexp_engine_hmatch` (the polynomial-part cancellation `⟺ ∑c = 0` by `hyperexp_residue_match_iff_sum_zero`,
-supplied by `hsum`), composed with `hherm` through `field_identity_of_reducedG_of_residueMatch`. The hyperexp
-reduced-case one-shot, gated on the abstract engine inputs PLUS the integrability witness — exactly the extra
-content over the primitive case (Bronstein §5.9: a hyperexp normal part is integrable in the log part alone
-**iff** `∑c = 0`). -/
-theorem field_identity_of_cIntegrateReducedG_hyperexp (Dt : CPolyG α) (fuel : ℕ)
-    (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hb : b ≠ 0)
-    (hDt : toPolyG Dt = C b * X)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card)
-    (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hsum : ∑ β ∈ s, (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
-          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β = 0)
-    (hform : (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map
-          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
-        = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).eval β
-                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
-              X - C β))) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_reducedG_of_residueMatch Dt
-    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1
-    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2
-    (cHermiteReduceTowerG Dt fuel a d).2.1 (cHermiteReduceTowerG Dt fuel a d).2.2
-    a d (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hherm
-    (hyperexp_engine_hmatch Dt s (cHermiteReduceTowerG Dt fuel a d).2.1
-      (cHermiteReduceTowerG Dt fuel a d).2.2 b hb
-      (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hDt hden hA hnorm hsum hform)
+The hyperexponential analog of `field_identity_of_cIntegrateReducedGWf_primitive`: identical assembly, with
+the RT residue match supplied by `hyperexp_engine_hmatch` (which needs `hb : b ≠ 0` and the integrability
+witness `hsum : ∑c = 0`) instead of `primitive_engine_hmatch` (which discharges the cancellation
+automatically). -/
 
 omit [CFracGcdCore α] in
 /-- **★★ The fuel-free reduced-case field identity for the HYPEREXPONENTIAL case (given `∑c = 0`)** —
-the `…GWf` companion of `field_identity_of_cIntegrateReducedG_hyperexp`, replacing fueled Hermite/reduced
-data by `cHermiteReduceTowerGWf` and `cIntegrateReducedGWf`. -/
+for `res = cIntegrateReducedGWf Dt a d cands`, a hyperexponential monomial `toPolyG Dt = C b·X`, the Hermite
+half, the per-root reassembly, and the integrability witness `hsum : ∑c = 0` prove the reduced-case field
+identity with no runtime fuel. -/
 theorem field_identity_of_cIntegrateReducedGWf_hyperexp [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hb : b ≠ 0)
     (hDt : toPolyG Dt = C b * X)
@@ -1591,8 +1548,8 @@ PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_de
   `cIntegrateGFullWf = some res ⟹ D(res) = a/d`, checker-free, gated only on
   the abstract engine inputs (canonical reconstruction `hrecon`, Hermite half `hherm`, per-root reassembly
   `hform`).
-* **★★ NEW — the fuel-free HYPEREXPONENTIAL one-shot** (`field_identity_of_cIntegrateReducedG_hyperexp`,
-  `field_identity_of_cIntegrateReducedGWf_hyperexp`, `cIntegrateGFullWf_hyperexp_oneShot` plus the Wf
+* **★★ NEW — the fuel-free HYPEREXPONENTIAL one-shot** (`field_identity_of_cIntegrateReducedGWf_hyperexp`,
+  `cIntegrateGFullWf_hyperexp_oneShot` plus the Wf
   `…_qfunNZG` specialization), built on:
   - **`monomial_residue_sum_eq_cancel_add`** — the UNCONDITIONAL decomposition `residue sum = (cancel sum) +
     a/d` for any monomial (the body of `monomial_residue_match_of_cancel` before its `hcancel` rewrite).
@@ -1673,7 +1630,6 @@ hypotheses. -/
 #print axioms ResidueMatchTower.monomial_residue_sum_eq_cancel_add
 #print axioms ResidueMatchTower.hyperexp_residue_match_iff_sum_zero
 #print axioms hyperexp_engine_hmatch
-#print axioms field_identity_of_cIntegrateReducedG_hyperexp
 #print axioms field_identity_of_cIntegrateReducedGWf_hyperexp
 #print axioms cIntegrateGFullWf_hyperexp_oneShot
 #print axioms cIntegrateGFullWf_hyperexp_oneShot_qfunNZG
