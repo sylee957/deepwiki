@@ -1174,50 +1174,19 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hb hfp hsome hrecon hherm hden hA hnorm hform
 
-/-! ### ★ The POLYNOMIAL branch of `cIntegrateGFull`: output pin + one-shot
+/-! ### ★ The fuel-free POLYNOMIAL branch of `cIntegrateGFullWf`: output pin + one-shot
 
-`cIntegrateGFull` splits `f = fₚ + b/dₛ + cₙ/dₙ`, requires `b = 0`, and — when the polynomial part `fₚ` is
-**nonzero** — solves `Dqₚ = fₚ` by the poly-Risch-DE oracle `cPolyRischDEG`, then recombines the polynomial
-solution `qₚ` with the normal-part rational `gₙ/gₙd` into `(qₚ·gₙd + gₙ)/gₙd`. This is the poly branch, the
-companion to the pure-normal branch (`cisZeroG fp = true`) the milestones above cover. We pin its output shape
-(`cIntegrateGFull_poly_eq`) and assemble the a-priori soundness one-shot (`cIntegrateGFull_poly_oneShot`),
-extending the checker-free `cIntegrateGFull = some res ⟹ D(res) = a/d` from the pure-normal to the polynomial
-branch — gated on the poly-Risch-DE frontier `D(qₚ) = fₚ` (`hpoly`, the abstract soundness of the oracle, the
-documented residual), the normal-part one-shot (`hnormal`), and the canonical split (`hrecon`). -/
-
-omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **`cIntegrateGFull` polynomial branch returns the recombined result** — when the special part `b`
-vanishes (`cisZeroG b = true`) but the polynomial part `fₚ` does NOT (`cisZeroG fp = false`), and the poly-
-Risch-DE oracle succeeds (`cPolyRischDEG Dt fuel [] fp (deg fp + 1) = some qp`), `cIntegrateGFull Dt fuel a d
-cands = some ⟨(qₚ·gₙd + gₙ, gₙd), nrm.logs⟩` with `nrm = cIntegrateReducedG Dt fuel cₙ dₙ cands` and
-`(gₙ, gₙd) = nrm.rational`. Pins the driver's output shape on the poly branch: the rational part recombines
-the oracle solution `qₚ` with the normal-part rational over the shared denominator `gₙd`. -/
-theorem cIntegrateGFull_poly_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).1 = false)
-    (hqp : CPolyG.cPolyRischDEG Dt fuel [] (canonicalRepresentationFastG Dt fuel a d).1
-        ((CPolyG.cdegG (canonicalRepresentationFastG Dt fuel a d).1 : ℤ) + 1) = some qp) :
-    CPolyG.cIntegrateGFull Dt fuel a d cands
-      = some ⟨(CPolyG.caddG (CPolyG.cmulG qp
-              (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2)
-            (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1,
-          (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-              (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2),
-        (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-            (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).logs⟩ := by
-  rw [CPolyG.cIntegrateGFull]
-  -- destructure the canonical split so the pattern-match `let`s reduce; rewrite the field facts to components
-  rcases hcrep : canonicalRepresentationFastG Dt fuel a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-  rw [hcrep] at hb hfp hqp
-  simp only [hb, hfp, hqp, if_true, if_neg (by decide : ¬ (false = true))]
+`cIntegrateGFullWf` splits `f = fₚ + b/dₛ + cₙ/dₙ`, requires `b = 0`, and — when the polynomial part `fₚ` is
+**nonzero** — solves `Dqₚ = fₚ` by the fuel-free poly-Risch-DE oracle `cPolyRischDEGWf`, then recombines the
+polynomial solution `qₚ` with the normal-part rational `gₙ/gₙd` into `(qₚ·gₙd + gₙ)/gₙd`. This is the Wf poly
+branch, the companion to the pure-normal branch (`cisZeroG fp = true`) the milestones above cover. We pin its
+output shape (`cIntegrateGFullWf_poly_eq`) and assemble the a-priori soundness one-shot
+(`cIntegrateGFullWf_poly_oneShot`), gated on the poly-Risch-DE frontier `D(qₚ) = fₚ` (`hpoly`), the normal-part
+one-shot (`hnormal`), and the canonical split (`hrecon`). -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
-/-- **`cIntegrateGFullWf` polynomial branch returns the recombined result** — the fuel-free companion of
-`cIntegrateGFull_poly_eq`, using `canonicalRepresentationFastGWf`, `cIntegrateReducedGWf`, and
-`cPolyRischDEGWf`. -/
+/-- **`cIntegrateGFullWf` polynomial branch returns the recombined result** — using
+`canonicalRepresentationFastGWf`, `cIntegrateReducedGWf`, and `cPolyRischDEGWf`. -/
 theorem cIntegrateGFullWf_poly_eq [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (qp : CPolyG α)
     (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
@@ -1256,80 +1225,9 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
             (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs⟩ :=
   cIntegrateGFullWf_poly_eq Dt a d cands qp hb hfp hqp
 
-/-- **★★★ The POLYNOMIAL one-shot for `cIntegrateGFull`, a-priori soundness** — when the driver returns
-`some res` on the polynomial branch (`cisZeroG b = true`, `cisZeroG fp = false`, the poly-Risch-DE oracle
-returning `some qp`), the field-level antiderivative identity `D(res) + logResidueSumG Dt res.logs = amG
-a/amG d` holds over `RatFunc (CFieldSpec.K α)`, **given**: the poly-Risch-DE frontier `hpoly` (`D(amG qₚ) =
-amG fₚ`, the abstract soundness of `cPolyRischDEG`), the normal-part one-shot `hnormal` (`D(gₙ/gₙd) +
-logResidueSumG nrm.logs = amG cₙ/amG dₙ`), the split reconstruction `hrecon` (`amG fₚ + amG cₙ/amG dₙ = amG
-a/amG d`, the `b = fs = 0` case of `canonicalRepresentationFastG_reconstructs`), and `hgden : amG gₙd ≠ 0`.
-Pins `res` via `cIntegrateGFull_poly_eq`, reads the recombined rational `(qₚ·gₙd + gₙ)/gₙd = amG qₚ + gₙ/gₙd`
-(field algebra), splits `D` (`Derivation.map_add`), and chains `hpoly`/`hnormal`/`hrecon`. The checker-free
-`cIntegrateGFull = some res ⟹ D(res) = a/d` for the poly branch, gated on the documented poly-Risch-DE
-residual `hpoly`. -/
-theorem cIntegrateGFull_poly_oneShot (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (res : IntegralResultG α) (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).1 = false)
-    (hsome : CPolyG.cIntegrateGFull Dt fuel a d cands = some res)
-    (hqp : CPolyG.cPolyRischDEG Dt fuel [] (canonicalRepresentationFastG Dt fuel a d).1
-        ((CPolyG.cdegG (canonicalRepresentationFastG Dt fuel a d).1 : ℤ) + 1) = some qp)
-    (hgden : amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-          (canonicalRepresentationFastG Dt fuel a d).2.2.1
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2) ≠ 0)
-    (hpoly : towerFractionFieldDerivG Dt (amG α (toPolyG qp)) = amG α (toPolyG
-        (canonicalRepresentationFastG Dt fuel a d).1))
-    (hnormal : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2))
-          + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel
-              (canonicalRepresentationFastG Dt fuel a d).2.2.1
-              (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).logs
-        = amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2))
-    (hrecon : amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).1)
-          + amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
-  -- pin the output: `res` is the recombined poly-branch result
-  have hres : res = ⟨(CPolyG.caddG (CPolyG.cmulG qp
-            (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-              (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2)
-          (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-              (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1,
-        (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-            (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2),
-      (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).logs⟩ := by
-    rw [cIntegrateGFull_poly_eq Dt fuel a d cands qp hb hfp hqp] at hsome
-    exact (Option.some.injEq _ _ ▸ hsome).symm
-  subst hres
-  -- abbreviations for the normal-part capstone's rational part
-  set gnum := (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-      (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1 with hgnumE
-  set gden := (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-      (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2 with hgdenE
-  -- read the recombined rational `(qₚ·gden + gnum)/gden = amG qₚ + gnum/gden` (field algebra)
-  have hnewrat : amG α (toPolyG (CPolyG.caddG (CPolyG.cmulG qp gden) gnum)) / amG α (toPolyG gden)
-      = amG α (toPolyG qp) + amG α (toPolyG gnum) / amG α (toPolyG gden) := by
-    rw [toPolyG_caddG, toPolyG_cmulG, map_add, map_mul, add_div, mul_div_assoc, div_self hgden,
-      mul_one]
-  -- D of the recombined rational, split by the derivation: `D(amG qₚ + gnum/gden) = D(amG qₚ) + D(gnum/gden)`
-  rw [hnewrat, map_add, hpoly]
-  -- regroup and chain `hnormal` (normal one-shot) then `hrecon` (split)
-  rw [add_assoc, hnormal, hrecon]
-
 omit [CFracGcdCore α] in
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf`, a-priori soundness** — the `…Wf`
-companion of `cIntegrateGFull_poly_oneShot`, using the fuel-free poly-RDE oracle, reduced capstone, and
-canonical split. -/
+one-shot using the fuel-free poly-RDE oracle, reduced capstone, and canonical split. -/
 theorem cIntegrateGFullWf_poly_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
     (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
@@ -1819,61 +1717,6 @@ theorem cIntegrateGFullWf_hyperexp_oneShot_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
--- ★ THE POLY-BRANCH OUTPUT PIN: on the poly branch (`b = 0`, `fp ≠ 0`, oracle returns `some qp`),
--- `cIntegrateGFull` returns the recombined `((qₚ·gₙd + gₙ, gₙd), nrm.logs)`.
-example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).1 = false)
-    (hqp : CPolyG.cPolyRischDEG Dt fuel [] (canonicalRepresentationFastG Dt fuel a d).1
-        ((CPolyG.cdegG (canonicalRepresentationFastG Dt fuel a d).1 : ℤ) + 1) = some qp) :
-    CPolyG.cIntegrateGFull Dt fuel a d cands
-      = some ⟨(CPolyG.caddG (CPolyG.cmulG qp
-              (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2)
-            (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1,
-          (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-              (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2),
-        (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-            (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).logs⟩ :=
-  cIntegrateGFull_poly_eq Dt fuel a d cands qp hb hfp hqp
-
--- ★★★ THE POLY-BRANCH ONE-SHOT (a-priori soundness, checker-free, no native_decide): on the poly branch,
--- `cIntegrateGFull = some res ⟹ D(res) = a/d`, given the poly-Risch-DE frontier `hpoly` (`D(qₚ) = fₚ`), the
--- normal one-shot `hnormal`, the split `hrecon`, and `hgden`.
-example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
-    (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).1 = false)
-    (hsome : CPolyG.cIntegrateGFull Dt fuel a d cands = some res)
-    (hqp : CPolyG.cPolyRischDEG Dt fuel [] (canonicalRepresentationFastG Dt fuel a d).1
-        ((CPolyG.cdegG (canonicalRepresentationFastG Dt fuel a d).1 : ℤ) + 1) = some qp)
-    (hgden : amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-          (canonicalRepresentationFastG Dt fuel a d).2.2.1
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2) ≠ 0)
-    (hpoly : towerFractionFieldDerivG Dt (amG α (toPolyG qp)) = amG α (toPolyG
-        (canonicalRepresentationFastG Dt fuel a d).1))
-    (hnormal : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2))
-          + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel
-              (canonicalRepresentationFastG Dt fuel a d).2.2.1
-              (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).logs
-        = amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2))
-    (hrecon : amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).1)
-          + amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateGFull_poly_oneShot Dt fuel a d cands res qp hb hfp hsome hqp hgden hpoly hnormal hrecon
-
 -- ★ THE LIST↔FINSET BRIDGE: the engine-shaped `List.sum` over the per-root list of `(residue, t−α)` pairs
 -- equals `a/d` over `RatFunc K`, for a primitive monomial `Dt = C w` — the `List` form of the proven Finset
 -- residue match (via `Finset.sum_map_toList`).
@@ -1956,16 +1799,15 @@ unconditionally)". That implication is **FALSE for `cIntegrateGFull`**, for a pr
 The hypertangent case is analogous with `v = C b·X² + …` (the polynomial parts are no longer α-independent, so
 the cancel sum is a different — still integrability-equivalent — condition).
 
-★★ NEW — the POLYNOMIAL branch a-priori soundness (`cIntegrateGFull_poly_eq`,
-`cIntegrateGFullWf_poly_eq`, `cIntegrateGFull_poly_oneShot`, `cIntegrateGFullWf_poly_oneShot`), axiom-clean
-`[propext, choice, Quot.sound]`, **no** `native_decide`. The companion to the pure-normal branch: when the
-polynomial part `fₚ ≠ 0`, the driver solves `Dqₚ = fₚ` by the poly-Risch-DE oracle and recombines
-`qₚ + gₙ/gₙd`. The shape lemmas pin the recombined output `((qₚ·gₙd + gₙ, gₙd), nrm.logs)` for the fueled and
-fuel-free drivers; the one-shots give `cIntegrateGFull = some res` / `cIntegrateGFullWf = some res ⟹ D(res)
-= a/d`, gated on the corresponding poly-Risch-DE FRONTIER `hpoly` (`D(amG qₚ) = amG fₚ`), the normal-part
-one-shot `hnormal`, and the split reconstruction `hrecon`. The proof reads the recombined rational
-`(qₚ·gₙd + gₙ)/gₙd = amG qₚ + gₙ/gₙd`, splits `D` by `Derivation.map_add`, then chains
-`hpoly`/`hnormal`/`hrecon`.
+★★ NEW — the fuel-free POLYNOMIAL branch a-priori soundness (`cIntegrateGFullWf_poly_eq`,
+`cIntegrateGFullWf_poly_oneShot`), axiom-clean `[propext, choice, Quot.sound]`, **no** `native_decide`. The
+companion to the pure-normal branch: when the polynomial part `fₚ ≠ 0`, the driver solves `Dqₚ = fₚ` by the
+fuel-free poly-Risch-DE oracle and recombines `qₚ + gₙ/gₙd`. The shape lemma pins the recombined output
+`((qₚ·gₙd + gₙ, gₙd), nrm.logs)` for the fuel-free driver; the one-shot gives
+`cIntegrateGFullWf = some res ⟹ D(res) = a/d`, gated on the poly-Risch-DE FRONTIER `hpoly`
+(`D(amG qₚ) = amG fₚ`), the normal-part one-shot `hnormal`, and the split reconstruction `hrecon`. The proof
+reads the recombined rational `(qₚ·gₙd + gₙ)/gₙd = amG qₚ + gₙ/gₙd`, splits `D` by `Derivation.map_add`,
+then chains `hpoly`/`hnormal`/`hrecon`.
 The primitive-base `hpoly` discharge now lives only in the fuel-free theorem
 `cIntegrateGFullWf_poly_oneShot_base`.
 
@@ -2000,9 +1842,7 @@ hypotheses. -/
 #print axioms cIntegrateGFull_hyperexp_oneShot
 #print axioms cIntegrateGFullWf_hyperexp_oneShot
 #print axioms cIntegrateGFullWf_hyperexp_oneShot_qfunNZG
-#print axioms cIntegrateGFull_poly_eq
 #print axioms cIntegrateGFullWf_poly_eq
-#print axioms cIntegrateGFull_poly_oneShot
 #print axioms cIntegrateGFullWf_poly_oneShot
 #print axioms cIntegrateGFullWf_poly_oneShot_base
 #print axioms cHermiteReduceTowerG_numer_degree_lt
