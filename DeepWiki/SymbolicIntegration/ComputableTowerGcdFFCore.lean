@@ -114,11 +114,10 @@ coefficient). -/
 def gbcontentCore (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPolyCore B) : CPolyG B :=
   (gbnormCore p).foldl (fun g c => cgcdB g c) []
 
-/-- **Strip the `B[s]`-content in `t`** `gbprimitivePartCore fuel cgcdB p = p / content_t(p)`: divide
+/-- **Strip the `B[s]`-content in `t`** `gbprimitivePartCore cgcdB p = p / content_t(p)`: divide
 every `t`-coefficient by the content (exact fuel-free Euclidean `cdivWf` over `CPolyG B`), giving the
-`B[s]`-primitive part. Leaves `[]` (and content `[]`) unchanged. The `fuel` parameter is retained for the
-surrounding PRS API, but no division fuel is used at runtime. -/
-def gbprimitivePartCore (_fuel : ℕ) (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPolyCore B) :
+`B[s]`-primitive part. Leaves `[]` (and content `[]`) unchanged. -/
+def gbprimitivePartCore (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPolyCore B) :
     GBPolyCore B :=
   let p := gbnormCore p
   let g := gbcontentCore cgcdB p
@@ -139,13 +138,13 @@ Each step takes the primitive part of the pseudo-remainder; the last nonzero pri
 gcd. Requires `gbdegCore P ≥ gbdegCore Q`; fuel-bounded (one step per `t`-degree drop). -/
 def cprimPRSgcdGenCore (cgcdB : CPolyG B → CPolyG B → CPolyG B) :
     ℕ → GBPolyCore B → GBPolyCore B → GBPolyCore B
-  | 0, P, _ => GBPolyCore.gbprimitivePartCore 30 cgcdB P
+  | 0, P, _ => GBPolyCore.gbprimitivePartCore cgcdB P
   | fuel + 1, P, Q =>
     let P := GBPolyCore.gbnormCore P
     let Q := GBPolyCore.gbnormCore Q
-    if GBPolyCore.gbisZeroCore Q then GBPolyCore.gbprimitivePartCore 30 cgcdB P
+    if GBPolyCore.gbisZeroCore Q then GBPolyCore.gbprimitivePartCore cgcdB P
     else
-      let r := GBPolyCore.gbprimitivePartCore 30 cgcdB (GBPolyCore.gbpsremainderCore 60 P Q)
+      let r := GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q)
       cprimPRSgcdGenCore cgcdB fuel Q r
 
 /-! ### Clear denominators `CPolyG (QFunNZG β) ↔ GBPolyCore β` (`β(s)[t] ↔ (β[s])[t]`)

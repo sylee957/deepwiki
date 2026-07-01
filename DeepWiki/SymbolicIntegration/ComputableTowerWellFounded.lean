@@ -83,7 +83,7 @@ fixed). The bivariate analogue of `cnormG_idem`; discharges the `decreasing_by` 
 GBPolyCore B`: the fuel-free companion of `cprimPRSgcdGenCore`. The gcd of `P, Q` in `t` (over the
 coefficient ring `CPolyG B = B[s]`), up to a `B[s]`-content factor, with **no fuel at runtime**. Mirrors
 `cprimPRSgcdGenCore`'s body — normalize `P, Q`; if `Q = 0` return the primitive part of `P`, else take the
-next PRS node `r = gbprimitivePartCore 30 cgcdB (gbpsremainderCore 60 P Q)` and recurse on `(Q, r)`. The
+next PRS node `r = gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)` and recurse on `(Q, r)`. The
 recursion is taken only under the structural guard `(gbnormCore r).length < (gbnormCore Q).length`, so
 `decreasing_by` is `assumption`. `[CField B]`-only (no `[CFieldSpec B]`), so it `native_decide`s over the
 noncomputable-`CFieldSpec` tower. The content-gcd `cgcdB` is passed in (the level-`β` fuel-free
@@ -92,12 +92,12 @@ def cprimPRSgcdGenCoreWf (cgcdB : CPolyG B → CPolyG B → CPolyG B) (P Q : GBP
     GBPolyCore B :=
   let P := gbnormCore P
   let Q := gbnormCore Q
-  if gbisZeroCore Q then gbprimitivePartCore 30 cgcdB P
+  if gbisZeroCore Q then gbprimitivePartCore cgcdB P
   else
-    let r := gbprimitivePartCore 30 cgcdB (gbpsremainderCore 60 P Q)
+    let r := gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)
     if (gbnormCore r).length < (gbnormCore Q).length then
       cprimPRSgcdGenCoreWf cgcdB Q r
-    else gbprimitivePartCore 30 cgcdB P   -- unreachable on a real run (PRS `t`-degree drop)
+    else gbprimitivePartCore cgcdB P   -- unreachable on a real run (PRS `t`-degree drop)
 termination_by (gbnormCore Q).length
 decreasing_by exact Nat.lt_of_lt_of_le ‹_ < _› (le_of_eq (by rw [gbnormCore_idem]))
 
@@ -116,7 +116,7 @@ the runtime `cprimPRSgcdGenCoreWf` carries none. -/
 /-- **Per-run primitive-PRS-kernel fuel-regularity** `CPrimPRSGenRegular cgcdB fuel P Q`: mirrors the
 `cprimPRSgcdGenCore` fuel recursion as an inductive predicate over the structural fuel counter — `stop`
 (any fuel) when the next divisor is zero (`gbisZeroCore (gbnormCore Q)`, the loop ends), or `step`
-(fuel `n+1`) when `Q` is nonzero, the next PRS node `r = gbprimitivePartCore 30 cgcdB (gbpsremainderCore 60
+(fuel `n+1`) when `Q` is nonzero, the next PRS node `r = gbprimitivePartCore cgcdB (gbpsremainderCore 60
 (gbnormCore P) (gbnormCore Q))` strictly drops the normalized `t`-length
 (`(gbnormCore r).length < (gbnormCore Q).length` — the WF guard a real run meets), and the same holds
 recursively on `(gbnormCore Q, r)` at one less fuel. The transparent per-node preconditions a real PRS
@@ -128,11 +128,11 @@ inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : CPolyG B → CPolyG
       CPrimPRSGenRegular cgcdB fuel P Q
   /-- recursive node: `Q` nonzero, the next PRS node drops the `t`-length, recurse on `(gbnormCore Q, r)`. -/
   | step {fuel : ℕ} {P Q : GBPolyCore B} (hz : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = false)
-      (hguard : (GBPolyCore.gbnormCore (GBPolyCore.gbprimitivePartCore 30 cgcdB
+      (hguard : (GBPolyCore.gbnormCore (GBPolyCore.gbprimitivePartCore cgcdB
           (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q)))).length
         < (GBPolyCore.gbnormCore Q).length)
       (hrec : CPrimPRSGenRegular cgcdB fuel (GBPolyCore.gbnormCore Q)
-        (GBPolyCore.gbprimitivePartCore 30 cgcdB
+        (GBPolyCore.gbprimitivePartCore cgcdB
           (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q)))) :
       CPrimPRSGenRegular cgcdB (fuel + 1) P Q
 
@@ -141,18 +141,18 @@ namespace GBPolyCore
 variable {B : Type*} [CField B]
 
 /-- **`gbprimitivePartCore` is `gbnormCore`-invariant in its polynomial argument**
-`gbprimitivePartCore fuel cgcdB (gbnormCore p) = gbprimitivePartCore fuel cgcdB p` (it normalizes its
-argument internally, `gbnormCore_idem`). Reconciles the WF kernel's normalized base with the fuel'd one. -/
-theorem gbprimitivePartCore_gbnorm (fuel : ℕ) (cgcdB : CPolyG B → CPolyG B → CPolyG B)
+`gbprimitivePartCore cgcdB (gbnormCore p) = gbprimitivePartCore cgcdB p` (it normalizes its
+argument internally, `gbnormCore_idem`). Reconciles the WF kernel's normalized base with the recursive one. -/
+theorem gbprimitivePartCore_gbnorm (cgcdB : CPolyG B → CPolyG B → CPolyG B)
     (p : GBPolyCore B) :
-    gbprimitivePartCore fuel cgcdB (gbnormCore p) = gbprimitivePartCore fuel cgcdB p := by
+    gbprimitivePartCore cgcdB (gbnormCore p) = gbprimitivePartCore cgcdB p := by
   rw [gbprimitivePartCore, gbprimitivePartCore, gbnormCore_idem]
 
 /-- **Bridge — `cprimPRSgcdGenCoreWf` equals `cprimPRSgcdGenCore` on a regular run.** Under
 `CPrimPRSGenRegular cgcdB fuel P Q` (the per-step `t`-length-drop a real PRS run meets, with sufficient
 fuel), `cprimPRSgcdGenCoreWf cgcdB P Q = cprimPRSgcdGenCore cgcdB fuel P Q`. The fuel regularity lives only
 here; the WF kernel carries none. By induction on the `CPrimPRSGenRegular` derivation: at a `stop` node both
-return `gbprimitivePartCore 30 cgcdB (gbnormCore P)`; at a `step` node both take the same next PRS node `r`
+return `gbprimitivePartCore cgcdB (gbnormCore P)`; at a `step` node both take the same next PRS node `r`
 and recurse — the WF guard fires (`hguard`) and the fuel'd version (at `fuel+1`) descends. -/
 theorem cprimPRSgcdGenCoreWf_eq (cgcdB : CPolyG B → CPolyG B → CPolyG B) :
     ∀ (fuel : ℕ) (P Q : GBPolyCore B), CPrimPRSGenRegular cgcdB fuel P Q →
@@ -160,7 +160,7 @@ theorem cprimPRSgcdGenCoreWf_eq (cgcdB : CPolyG B → CPolyG B → CPolyG B) :
   intro fuel P Q hreg
   induction hreg with
   | @stop fuel P Q hz =>
-    -- next divisor zero: both return `gbprimitivePartCore 30 cgcdB (gbnormCore P)`
+    -- next divisor zero: both return `gbprimitivePartCore cgcdB (gbnormCore P)`
     rw [cprimPRSgcdGenCoreWf.eq_def, if_pos hz]
     cases fuel with
     | zero => rw [cprimPRSgcdGenCore, gbprimitivePartCore_gbnorm]
@@ -169,7 +169,7 @@ theorem cprimPRSgcdGenCoreWf_eq (cgcdB : CPolyG B → CPolyG B → CPolyG B) :
     -- recursive step: both take the same next PRS node `r`, recurse; the WF guard fires
     rw [cprimPRSgcdGenCoreWf.eq_def, cprimPRSgcdGenCore]
     -- the WF guard compares against `(gbnormCore (gbnormCore Q)).length`; reconcile via idempotence
-    have hguard' : (gbnormCore (gbprimitivePartCore 30 cgcdB
+    have hguard' : (gbnormCore (gbprimitivePartCore cgcdB
           (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))).length
         < (gbnormCore (gbnormCore Q)).length := by rwa [gbnormCore_idem]
     simp only [hz, Bool.false_eq_true, if_false, if_pos hguard']

@@ -13,13 +13,13 @@ theorem** (so the recursive `CRischFieldSpec` and fully-abstract Risch soundness
 
 `cprimPRSgcdGenCore cgcdB fuel P Q` (`ComputableTowerGcdFFCore`) runs a **primitive polynomial-remainder
 sequence** in `t` over the GCD-domain coefficient ring `CPolyG β = β[s]`:
-* if `Q` is zero, return `gbprimitivePartCore 30 cgcdB P` (strip `P`'s content);
-* else set `r := gbprimitivePartCore 30 cgcdB (gbpsremainderCore 60 P Q)` — the **primitive part** of the
+* if `Q` is zero, return `gbprimitivePartCore cgcdB P` (strip `P`'s content);
+* else set `r := gbprimitivePartCore cgcdB (gbpsremainderCore 60 P Q)` — the **primitive part** of the
   **pseudo-remainder** — and recurse on `(Q, r)` with one less fuel.
 
 `CPrimPRSGenAssocReg cgcdB fuel P Q` (`ComputableTowerGcdFFCorrect`) is the inductive bundle the gcd
 invariant of *each step* consumes. At a non-terminal `fuel+1` step (with `Pn = gbnormCore P`, `Qn =
-gbnormCore Q`, `prem = gbpsremainderCore 60 Pn Qn`, `r = gbprimitivePartCore 30 cgcdB prem`) it asks for:
+gbnormCore Q`, `prem = gbpsremainderCore 60 Pn Qn`, `r = gbprimitivePartCore cgcdB prem`) it asks for:
   * **(i) termination** — the recursion reaches `gbisZeroCore Qn = true`;
   * **(ii) a pseudo-division witness** `(s, c)` with
     `C (amG (toPolyG c)) · toGBPolyG Pn = toGBPolyG s · toGBPolyG Qn + toGBPolyG prem` **and the multiplier
@@ -182,7 +182,7 @@ separate nonzero hypothesis. -/
 
 /-- **★ Total clause (iii)** — `gbprimitivePartCore` is a `β(s)`-unit scaling on **any** input: under
 `CgcdBCorrect cgcdB` (the level-`β` gcd-correctness) and the retained per-`t`-coefficient bookkeeping,
-`Associated (toGBPolyG (gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p)`. Splits on whether the content
+`Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p)`. Splits on whether the content
 `gbcontentCore cgcdB p` is zero: if zero, `gbprimitivePartCore` is the identity `gbnormCore p` (reflexive
 `Associated`); if nonzero, it is the unit scaling of `associated_toGBPolyG_gbprimitivePartCore_of_correct`.
 So clause (iii) needs only the recursion's gcd-correctness plus retained algorithmics — never a
@@ -190,10 +190,10 @@ content-nonzero assumption. -/
 theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
     (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
     (hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
-    Associated (toGBPolyG (gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p) := by
+    Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p) := by
   by_cases hgz : CPolyG.cisZeroG (gbcontentCore cgcdB p) = true
   · -- content zero: gbprimitivePartCore is the identity `gbnormCore p`
-    have hid : gbprimitivePartCore fuel cgcdB p = gbnormCore p := by
+    have hid : gbprimitivePartCore cgcdB p = gbnormCore p := by
       rw [gbprimitivePartCore, gbcontentCore_gbnormCore, if_pos hgz]
     rw [hid, toGBPolyG_gbnormCore]
   · -- content nonzero: the unit scaling (Mathlib content + cgcdB-fold-divides)
@@ -268,7 +268,7 @@ content strip now uses fuel-free `cdivWf`, so this predicate is retained as PRS-
 than as runtime division fuel. -/
 
 /-- **Per-step content-strip bookkeeping** `CPrimPRSGenFuelOk fuel P Q`: at each primitive-PRS node, every
-`t`-coefficient entering `gbprimitivePartCore 30` has `cnormG`-length at most `30` — for the terminal strip
+`t`-coefficient entering `gbprimitivePartCore` has `cnormG`-length at most `30` — for the terminal strip
 of `P` (`gbnormCore P`) and, at each recursive node, of the pseudo-remainder `prem`. This mirrors the
 `cprimPRSgcdGenCore` recursion so it threads alongside `CPrimPRSGenRegular`; the content division itself
 is fuel-free. -/
@@ -282,7 +282,7 @@ def CPrimPRSGenFuelOk (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
       (∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
           (CPolyG.cnormG a : List β).length ≤ 30)
         ∧ CPrimPRSGenFuelOk cgcdB fuel (gbnormCore Q)
-            (gbprimitivePartCore 30 cgcdB (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))
+            (gbprimitivePartCore cgcdB (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))
 
 /-- **★ The reduction theorem — `CPrimPRSGenAssocReg` from the sharp residual.** Given the genuine per-run
 termination witness `CPrimPRSGenRegular cgcdB fuel P Q` (`ComputableTowerWellFounded`), the level-`β`
@@ -562,14 +562,14 @@ theorem natDegree_toGBPolyG (p : GBPolyCore β) :
 
 /-- **★ The content strip preserves the `t`-degree** (unconditional given `CgcdBCorrect` plus retained
 bookkeeping): under `CgcdBCorrect cgcdB` and the per-coefficient size bound,
-`(toGBCoeffPoly (gbprimitivePartCore fuel cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree`. The content strip is a `β(s)`-unit scaling
+`(toGBCoeffPoly (gbprimitivePartCore cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree`. The content strip is a `β(s)`-unit scaling
 (`associated_toGBPolyG_gbprimitivePartCore_total`), and `Associated` polynomials over the field `β(s)` have
 equal `natDegree` (pulled back through the degree-preserving lift `toGBPolyG`). So the WF loop guard on the
 stripped node `r` is *exactly* the guard on the raw pseudo-remainder `prem`. -/
 theorem natDegree_toGBCoeffPoly_gbprimitivePartCore (fuel : ℕ)
     (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
     (hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
-    (toGBCoeffPoly (gbprimitivePartCore fuel cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree := by
+    (toGBCoeffPoly (gbprimitivePartCore cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree := by
   have hassoc := associated_toGBPolyG_gbprimitivePartCore_total fuel cgcdB hcorr p hfuel
   have := natDegree_eq_of_associated hassoc
   rwa [natDegree_toGBPolyG, natDegree_toGBPolyG] at this
@@ -577,7 +577,7 @@ theorem natDegree_toGBCoeffPoly_gbprimitivePartCore (fuel : ℕ)
 /-- **★ The list-length loop guard is exactly the pseudo-remainder `t`-degree drop.** Under `CgcdBCorrect
 cgcdB`, the retained size bound on `prem`, and `Q` nonzero (`gbisZeroCore (gbnormCore Q) = false`), the
 `CPrimPRSGenRegular`-`step` guard
-`(gbnormCore (gbprimitivePartCore 30 cgcdB prem)).length < (gbnormCore Q).length`
+`(gbnormCore (gbprimitivePartCore cgcdB prem)).length < (gbnormCore Q).length`
 holds **iff** `(toGBCoeffPoly prem).natDegree < (toGBCoeffPoly Q).natDegree` — *provided* the stripped node
 `r` is itself nonzero (`hrz`, which holds whenever `prem` is, the content strip being a unit scaling). So
 the genuine termination witness reduces to the **pseudo-remainder polynomial `t`-degree drop**; the content
@@ -586,9 +586,9 @@ theorem gbnormGuard_iff_premDegree (cgcdB : CPolyG β → CPolyG β → CPolyG �
     (P Q : GBPolyCore β) (hQ : gbisZeroCore (gbnormCore Q) = false)
     (hfuel : ∀ a ∈ gbnormCore (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)),
       (CPolyG.cnormG a : List β).length ≤ 30)
-    (hrz : gbisZeroCore (gbprimitivePartCore 30 cgcdB
+    (hrz : gbisZeroCore (gbprimitivePartCore cgcdB
       (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))) = false) :
-    ((gbnormCore (gbprimitivePartCore 30 cgcdB
+    ((gbnormCore (gbprimitivePartCore cgcdB
         (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q)))).length < (gbnormCore Q).length)
       ↔ (toGBCoeffPoly (gbpsremainderCore 60 (gbnormCore P) (gbnormCore Q))).natDegree
           < (toGBCoeffPoly (gbnormCore Q)).natDegree := by

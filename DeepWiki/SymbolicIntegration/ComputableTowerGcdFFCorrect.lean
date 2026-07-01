@@ -618,7 +618,7 @@ theorem associated_gcd_right_gbpolyG {A B B' : (RatFunc (CFieldSpec.K β))[X]} (
 /-- **Per-run regularity of the primitive PRS** `CPrimPRSGenAssocReg cgcdB fuel P Q`: the inductive
 predicate collecting exactly what the `gcd` invariant of each `cprimPRSgcdGenCore` step needs — (i) the
 recursion reaches `gbisZeroCore Q = true` (termination), and at every non-terminal step (with `Pn =
-gbnormCore P`, `Qn = gbnormCore Q`, `prem = gbpsremainderCore 60 Pn Qn`, `r = gbprimitivePartCore 30 cgcdB
+gbnormCore P`, `Qn = gbnormCore Q`, `prem = gbpsremainderCore 60 Pn Qn`, `r = gbprimitivePartCore cgcdB
 prem`): (ii) a pseudo-division witness `(s, c)` with `C (amG (toPolyG c)) · toGBPolyG Pn = toGBPolyG s ·
 toGBPolyG Qn + toGBPolyG prem` and the multiplier `amG (toPolyG c)` a β(s)-unit (`≠ 0`), and (iii)
 `gbprimitivePartCore` is a β(s)-unit scaling (`Associated (toGBPolyG r) (toGBPolyG prem)`). These hold for
@@ -628,10 +628,10 @@ def CPrimPRSGenAssocReg (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
   | 0, P, Q =>
     gbisZeroCore Q = true ∧
-      Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore 30 cgcdB P)) (toGBPolyG P)
+      Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB P)) (toGBPolyG P)
   | fuel + 1, P, Q =>
     (gbisZeroCore (GBPolyCore.gbnormCore Q) = true ∧
-      Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore 30 cgcdB (GBPolyCore.gbnormCore P)))
+      Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbnormCore P)))
         (toGBPolyG P)) ∨
       (¬ gbisZeroCore (GBPolyCore.gbnormCore Q) = true ∧
         (∃ (s : GBPolyCore β) (c : CPolyG β),
@@ -640,12 +640,12 @@ def CPrimPRSGenAssocReg (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
               + toGBPolyG (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
                   (GBPolyCore.gbnormCore Q))
           ∧ QFunNZG.amG β (CPolyG.toPolyG c) ≠ 0) ∧
-        Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore 30 cgcdB
+        Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
           (toGBPolyG (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
               (GBPolyCore.gbnormCore Q))) ∧
         CPrimPRSGenAssocReg cgcdB fuel (GBPolyCore.gbnormCore Q)
-          (GBPolyCore.gbprimitivePartCore 30 cgcdB
+          (GBPolyCore.gbprimitivePartCore cgcdB
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
 
 omit [CFieldDomain β] in
@@ -666,7 +666,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPolyG β → CPolyG β
     intro P Q hreg
     obtain ⟨hQ, hprim⟩ := hreg
     have hQ0 : toGBPolyG Q = 0 := (toGBPolyG_eq_zero_iff_gbisZeroCore Q).mpr hQ
-    show Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore 30 cgcdB P))
+    show Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB P))
       (gcd (toGBPolyG P) (toGBPolyG Q))
     rw [hQ0]
     exact hprim.trans (gcd_zero_right' (toGBPolyG P)).symm
@@ -674,9 +674,9 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPolyG β → CPolyG β
     intro P Q hreg
     show Associated (toGBPolyG (
         let P := GBPolyCore.gbnormCore P; let Q := GBPolyCore.gbnormCore Q;
-        if GBPolyCore.gbisZeroCore Q then GBPolyCore.gbprimitivePartCore 30 cgcdB P
+        if GBPolyCore.gbisZeroCore Q then GBPolyCore.gbprimitivePartCore cgcdB P
         else cprimPRSgcdGenCore cgcdB fuel Q
-          (GBPolyCore.gbprimitivePartCore 30 cgcdB (GBPolyCore.gbpsremainderCore 60 P Q))))
+          (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q))))
       (gcd (toGBPolyG P) (toGBPolyG Q))
     simp only
     by_cases hQ : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = true
@@ -695,7 +695,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPolyG β → CPolyG β
       set Pn := GBPolyCore.gbnormCore P with hPn
       set Qn := GBPolyCore.gbnormCore Q with hQn
       set prem := GBPolyCore.gbpsremainderCore 60 Pn Qn with hprem
-      set r := GBPolyCore.gbprimitivePartCore 30 cgcdB prem with hr
+      set r := GBPolyCore.gbprimitivePartCore cgcdB prem with hr
       have hih := ih Qn r hrec
       have hstep : Associated (gcd (toGBPolyG Pn) (toGBPolyG Qn))
           (gcd (toGBPolyG Qn) (toGBPolyG r)) := by
@@ -710,7 +710,7 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPolyG β → CPolyG β
       exact hih.trans hstep.symm
 
 /-! ### Discharging clause (iii) — the content strip is a β(s)-unit scaling
-The content strip `gbprimitivePartCore 30 cgcdB prem` divides every `t`-coefficient by the content
+The content strip `gbprimitivePartCore cgcdB prem` divides every `t`-coefficient by the content
 `g = gbcontentCore cgcdB prem` via `cdivWf`. When the content divides every coefficient (in `R = β[s]`,
 which on a real run follows from the gcd-correctness of `cgcdB = cgcdFFRawCore β` — the TOWER INDUCTION),
 the division is exact and `gbprimitivePartCore` is multiplication by the β(s)-unit `1/g`. We discharge
@@ -754,7 +754,7 @@ open GBPolyCore
 omit [CFieldDomain β] in
 /-- **`gbprimitivePartCore` realizes exact `β[s]`-content division through `toGBCoeffPoly`**: when the
 content `g = gbcontentCore cgcdB p` is nonzero (`hg`) and divides every `t`-coefficient of `gbnormCore p`
-exactly, `C(toPolyG g) · toGBCoeffPoly (gbprimitivePartCore fuel cgcdB p) = toGBCoeffPoly p`. Generic
+exactly, `C(toPolyG g) · toGBCoeffPoly (gbprimitivePartCore cgcdB p) = toGBCoeffPoly p`. Generic
 mirror of `toBPoly_bprimitivePartX_exact`. -/
 theorem toGBCoeffPoly_gbprimitivePartCore_exact (fuel : ℕ)
     (cgcdB : CPolyG β → CPolyG β → CPolyG β) (p : GBPolyCore β)
@@ -763,7 +763,7 @@ theorem toGBCoeffPoly_gbprimitivePartCore_exact (fuel : ℕ)
     (_hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel)
     (hdvd : ∀ a ∈ gbnormCore p, CPolyG.toPolyG (gbcontentCore cgcdB p) ∣ CPolyG.toPolyG a) :
     Polynomial.C (CPolyG.toPolyG (gbcontentCore cgcdB p))
-        * GBPolyCore.toGBCoeffPoly (gbprimitivePartCore fuel cgcdB p)
+        * GBPolyCore.toGBCoeffPoly (gbprimitivePartCore cgcdB p)
       = GBPolyCore.toGBCoeffPoly p := by
   rw [gbprimitivePartCore]
   simp only [gbcontentCore_gbnormCore, hg, Bool.false_eq_true, if_false]
@@ -773,7 +773,7 @@ theorem toGBCoeffPoly_gbprimitivePartCore_exact (fuel : ℕ)
 omit [CFieldDomain β] in
 /-- **Clause (iii) discharged — `gbprimitivePartCore` is a β(s)-unit scaling** (the Mathlib-content half):
 under the content-nonzero and content-divides-each-coefficient hypotheses (with `toPolyG g ≠ 0`),
-`Associated (toGBPolyG (gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p)` over β(s) — stripping the
+`Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p)` over β(s) — stripping the
 `β[s]`-content is a β(s)-unit scaling, preserving the gcd up to associates. The content-divides
 hypotheses hold on a real run by the gcd-correctness of `cgcdB = cgcdFFRawCore β` (the TOWER INDUCTION).
 Generic mirror of `associated_toPolyB_bprimitivePartX`. -/
@@ -784,21 +784,21 @@ theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)
     (hg0 : CPolyG.toPolyG (gbcontentCore cgcdB p) ≠ 0)
     (hfuel : ∀ a ∈ gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel)
     (hdvd : ∀ a ∈ gbnormCore p, CPolyG.toPolyG (gbcontentCore cgcdB p) ∣ CPolyG.toPolyG a) :
-    Associated (toGBPolyG (gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p) := by
+    Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p) := by
   -- lift the toGBCoeffPoly-exact identity through liftKG to a C(amG g)-scaling on toGBPolyG
   have hexact := toGBCoeffPoly_gbprimitivePartCore_exact fuel cgcdB p hg hgcn hfuel hdvd
   have hl := congrArg (liftKG β) hexact
   rw [map_mul, liftKG_C] at hl
   -- hl : C (amG (toPolyG g)) * toGBPolyG (gbprimitivePartCore …) = toGBPolyG p
   have hl' : Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG (gbcontentCore cgcdB p)))
-      * toGBPolyG (gbprimitivePartCore fuel cgcdB p) = toGBPolyG p := by
+      * toGBPolyG (gbprimitivePartCore cgcdB p) = toGBPolyG p := by
     simpa [toGBPolyG] using hl
   refine ⟨(Polynomial.isUnit_C.mpr (QFunNZG.amG_toPolyG_ne_zero hg0).isUnit).unit, ?_⟩
   rw [← hl']
-  show toGBPolyG (gbprimitivePartCore fuel cgcdB p)
+  show toGBPolyG (gbprimitivePartCore cgcdB p)
       * Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG (gbcontentCore cgcdB p)))
     = Polynomial.C (QFunNZG.amG β (CPolyG.toPolyG (gbcontentCore cgcdB p)))
-      * toGBPolyG (gbprimitivePartCore fuel cgcdB p)
+      * toGBPolyG (gbprimitivePartCore cgcdB p)
   ring
 
 /-! ### The content-gcd divides every coefficient — from `cgcdB`'s gcd-correctness (the tower link)
@@ -862,7 +862,7 @@ theorem toPolyG_gbcontentCore_dvd_mem (cgcdB : CPolyG β → CPolyG β → CPoly
 /-- **Clause (iii) discharged from `cgcdB`-correctness alone** (the tower-induction packaging): under
 `CgcdBCorrect cgcdB` (the level-`β` gcd-correctness), content-nonzero, and the retained per-coefficient
 bound threaded by the PRS gate,
-`gbprimitivePartCore fuel cgcdB p` is a β(s)-unit scaling (`Associated (toGBPolyG (gbprimitivePartCore
+`gbprimitivePartCore cgcdB p` is a β(s)-unit scaling (`Associated (toGBPolyG (gbprimitivePartCore
 fuel cgcdB p)) (toGBPolyG p)`) — the content-divides hypotheses of
 `associated_toGBPolyG_gbprimitivePartCore` are now *theorems* via `toPolyG_gbcontentCore_dvd_mem`. So
 clause (iii) of `CPrimPRSGenAssocReg` needs only the recursion's gcd-correctness plus retained
@@ -873,7 +873,7 @@ theorem associated_toGBPolyG_gbprimitivePartCore_of_correct (fuel : ℕ)
     (hgcn : CPolyG.cnormG (GBPolyCore.gbcontentCore cgcdB p) ≠ [])
     (hg0 : CPolyG.toPolyG (GBPolyCore.gbcontentCore cgcdB p) ≠ 0)
     (hfuel : ∀ a ∈ GBPolyCore.gbnormCore p, (CPolyG.cnormG a : List β).length ≤ fuel) :
-    Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p) :=
+    Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB p)) (toGBPolyG p) :=
   associated_toGBPolyG_gbprimitivePartCore fuel cgcdB p hg hgcn hg0 hfuel
     (toPolyG_gbcontentCore_dvd_mem cgcdB hcorr p)
 

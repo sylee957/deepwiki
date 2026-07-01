@@ -129,11 +129,11 @@ every coefficient). -/
 def gbcontent (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : CPolyG B :=
   (gbnorm p).foldl (fun g c => cgcdB g c) []
 
-/-- **Strip the `B[s]`-content in `t`** `gbprimitivePart fuel cgcdB p = p / content_t(p)`: divide every
+/-- **Strip the `B[s]`-content in `t`** `gbprimitivePart cgcdB p = p / content_t(p)`: divide every
 `t`-coefficient by the content (exact fuel-free Euclidean `cdivWf` over `CPolyG B`), giving the `B[s]`-
 primitive part. Leaves `[]` (and content `[]`) unchanged. The generic mirror of `Compute.bprimitivePartX`.
-The `fuel` parameter is retained for the surrounding PRS API, but no division fuel is used at runtime. -/
-def gbprimitivePart (_fuel : ℕ) (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : GBPoly B :=
+No division fuel is used at runtime. -/
+def gbprimitivePart (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : GBPoly B :=
   let p := gbnorm p
   let g := gbcontent cgcdB p
   if CPolyG.cisZeroG g then p else gbnorm (p.map (fun c => CPolyG.cdivWf c g))
@@ -154,13 +154,13 @@ step takes the primitive part of the pseudo-remainder; the last nonzero primitiv
 Requires `gbdeg P ≥ gbdeg Q`; fuel-bounded (one step per `t`-degree drop). The generic mirror of
 `primPRSgcd`, with `cgcdB` the content-gcd. -/
 def cprimPRSgcdGen (cgcdB : CPolyG B → CPolyG B → CPolyG B) : ℕ → GBPoly B → GBPoly B → GBPoly B
-  | 0, P, _ => GBPoly.gbprimitivePart 30 cgcdB P
+  | 0, P, _ => GBPoly.gbprimitivePart cgcdB P
   | fuel + 1, P, Q =>
     let P := GBPoly.gbnorm P
     let Q := GBPoly.gbnorm Q
-    if GBPoly.gbisZero Q then GBPoly.gbprimitivePart 30 cgcdB P
+    if GBPoly.gbisZero Q then GBPoly.gbprimitivePart cgcdB P
     else
-      let r := GBPoly.gbprimitivePart 30 cgcdB (GBPoly.gbpsremainder 60 P Q)
+      let r := GBPoly.gbprimitivePart cgcdB (GBPoly.gbpsremainder 60 P Q)
       cprimPRSgcdGen cgcdB fuel Q r
 
 /-! ### Clear denominators `CPolyG (QFunNZG β) ↔ GBPoly β` (`β(s)[t] ↔ (β[s])[t]`)
