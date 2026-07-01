@@ -80,12 +80,12 @@ structure MumfordDivisor (α : Type*) where
 lists). The first Mumford condition. Generic over `[CField α]`. -/
 def cisMonicG (u : CPolyG α) : Bool := cisZeroG (csubG (cmonicG u) u)
 
-/-- **Mumford validity** `mumfordValid fuel ρ D`: the pair `(D.u, D.v)` is a valid semi-reduced divisor on
+/-- **Mumford validity** `mumfordValid ρ D`: the pair `(D.u, D.v)` is a valid semi-reduced divisor on
 `y² = ρ` — `D.u` is monic (`cisMonicG`), `deg D.v < deg D.u`, and `D.u ∣ (D.v² − ρ)` (`cdvdGWf`). The last
 condition is the on-curve constraint: at every root `xᵢ` of `u`, `v(xᵢ)² = ρ(xᵢ)`. Trager Ch. 5 §3. (When
 `D.u = 1` — the zero divisor / identity — `deg v < deg u` forces `v = 0` and `1 ∣ anything`, so the
 identity `(1, 0)` is valid.) Generic over `[CField α]`. -/
-def mumfordValid (_fuel : ℕ) (ρ : CPolyG α) (D : MumfordDivisor α) : Bool :=
+def mumfordValid (ρ : CPolyG α) (D : MumfordDivisor α) : Bool :=
   cisMonicG D.u
     && (cdegG D.v < cdegG D.u || cisZeroG D.v)
     && cdvdGWf D.u (csubG (cmulG D.v D.v) ρ)
@@ -112,12 +112,12 @@ def mumfordPoint (x0 y0 : α) : MumfordDivisor α := ⟨[CField.neg x0, CField.o
 `−yᵢ` (the curve `y² = ρ` is symmetric under `y ↦ −y`). The `mod u` keeps `deg(−v mod u) < deg u`. This is
 the Jacobian inverse — `D + (−D)` reduces to the identity. -/
 
-/-- **The opposite (negation)** `mumfordOpposite fuel D = (u, (−v) mod u)` — the inverse of `D` in the
+/-- **The opposite (negation)** `mumfordOpposite D = (u, (−v) mod u)` — the inverse of `D` in the
 Jacobian: same support, opposite sheet `yᵢ ↦ −yᵢ` (the curve `y² = ρ` is `y ↦ −y` symmetric). The `(−v)
 mod u` reduction restores `deg < deg u` (here `deg(−v) = deg v < deg u` already, so it is `−v`). Validity
 is preserved: `(−v)² − ρ = v² − ρ`, still divisible by `u`. Trager Ch. 5 §3 (divisor quotients/inverses).
 Generic over `[CField α]`. -/
-def mumfordOpposite (_fuel : ℕ) (D : MumfordDivisor α) : MumfordDivisor α :=
+def mumfordOpposite (D : MumfordDivisor α) : MumfordDivisor α :=
   ⟨D.u, cmodWf (cnegG D.v) D.u⟩
 
 /-! ### Reducedness `deg u ≤ g`
@@ -185,27 +185,27 @@ def hypPtM10 : MumfordDivisor ℚ := mumfordPoint (-1 : ℚ) 0
 
 /-- **★ `(0, 1)` is a valid Mumford divisor on `y² = x³+1`** (`native_decide`): `u = x` is monic,
 `deg v = 0 < 1 = deg u`, and `x ∣ (1² − (x³+1)) = −x³ = x·(−x²)`. The divisor of the point `(0, 1)`. -/
-theorem mumfordValid_pt01 : mumfordValid 12 hypRhoX3p1 hypPt01 = true := by native_decide
+theorem mumfordValid_pt01 : mumfordValid hypRhoX3p1 hypPt01 = true := by native_decide
 
 /-- **★ `(2, 3)` is a valid Mumford divisor on `y² = x³+1`** (`native_decide`): `u = x − 2` monic,
 `deg v = 0 < 1`, and `(x − 2) ∣ (3² − (x³+1)) = 8 − x³`, which vanishes at `x = 2` (`8 − 8 = 0`). The
 divisor of `(2, 3)`. -/
-theorem mumfordValid_pt23 : mumfordValid 12 hypRhoX3p1 hypPt23 = true := by native_decide
+theorem mumfordValid_pt23 : mumfordValid hypRhoX3p1 hypPt23 = true := by native_decide
 
 /-- **★ `(−1, 0)` is a valid Mumford divisor on `y² = x³+1`** (`native_decide`): `u = x + 1` monic,
 `v = 0`, and `(x + 1) ∣ (0 − (x³+1)) = −(x³+1) = −(x+1)(x²−x+1)`. A 2-torsion (Weierstrass) point. -/
-theorem mumfordValid_ptM10 : mumfordValid 12 hypRhoX3p1 hypPtM10 = true := by native_decide
+theorem mumfordValid_ptM10 : mumfordValid hypRhoX3p1 hypPtM10 = true := by native_decide
 
 /-- **A point NOT on the curve is rejected** (`native_decide`): `(0, 2)` has `2² = 4 ≠ 0³+1 = 1`, so
 `x ∤ (4 − (x³+1)) = 3 − x³` (value `3` at `x = 0`). `mumfordValid` correctly returns `false` — the
 on-curve constraint `u ∣ (v² − ρ)` is genuine. (Negative control.) -/
 theorem mumfordValid_offCurve_false :
-    mumfordValid 12 hypRhoX3p1 (mumfordPoint (0 : ℚ) 2) = false := by native_decide
+    mumfordValid hypRhoX3p1 (mumfordPoint (0 : ℚ) 2) = false := by native_decide
 
 /-! ### The opposite `−D` and reducedness (`native_decide`) -/
 
 /-- The opposite of `(0, 1)`, computed: should be `(x, −1)` — the point `(0, −1)`. -/
-def hypPt01opp : MumfordDivisor ℚ := mumfordOpposite 12 hypPt01
+def hypPt01opp : MumfordDivisor ℚ := mumfordOpposite hypPt01
 
 /-- **★ The opposite of `(0, 1)` is `(0, −1)`** (`native_decide`): `mumfordOpposite (x, 1) = (x, −1)` —
 same support `x = 0`, the other sheet `y = −1`. (`u` unchanged, `v ↦ (−v) mod u = −1`.) -/
@@ -214,7 +214,7 @@ theorem mumfordOpposite_pt01_eq :
 
 /-- **★ The opposite `(0, −1)` is also a valid divisor** (`native_decide`): `−D` lies on the curve too
 (`(−1)² = 1 = ρ(0)`), so the Jacobian inverse is a genuine divisor. -/
-theorem mumfordValid_pt01opp : mumfordValid 12 hypRhoX3p1 hypPt01opp = true := by native_decide
+theorem mumfordValid_pt01opp : mumfordValid hypRhoX3p1 hypPt01opp = true := by native_decide
 
 /-- **★ The point divisors are reduced** (`native_decide`): `deg u = 1 ≤ g = 1` for the genus-1 curve, so
 each single-point divisor `(x − x₀, y₀)` is already in reduced form. (`radGenus 8 hypRhoX3p1 = 1`.) -/
@@ -233,7 +233,7 @@ def hypIdentity : MumfordDivisor ℚ := mumfordIdentity
 `1 ∣ (0 − ρ)`, and `deg u = 0 ≤ g`. This is the reduced form of `D + (−D)` (a point plus its opposite
 cancels to the Jacobian identity) — the order-2 relation `(0,1) + (0,−1) = O`. -/
 theorem mumfordIdentity_valid_reduced :
-    mumfordValid 12 hypRhoX3p1 hypIdentity = true
+    mumfordValid hypRhoX3p1 hypIdentity = true
     ∧ mumfordIsReduced (radGenus 8 hypRhoX3p1) hypIdentity = true := by native_decide
 
 /-! ### ★ A two-point reduced divisor on `y² = x³+1` (`native_decide`)
@@ -256,7 +256,7 @@ theorem hypSum0123_eq :
 monic, `deg v = 1 < 2 = deg u`, and `u ∣ (v² − ρ) = (x+1)² − (x³+1) = −x³ + x² + 2x = −x(x−2)(x+1)·…`
 vanishing at both `x = 0` (`1 − 1 = 0`) and `x = 2` (`9 − 9 = 0`). A genus-1 semi-reduced degree-2
 divisor — the form Cantor composition outputs, here built straight from `residueDivisorMumford`. -/
-theorem mumfordValid_sum0123 : mumfordValid 12 hypRhoX3p1 hypSum0123 = true := by native_decide
+theorem mumfordValid_sum0123 : mumfordValid hypRhoX3p1 hypSum0123 = true := by native_decide
 
 /-! ### ★ The residue divisor from `ComputableAlgebraicResidues` (`native_decide`)
 
@@ -287,15 +287,15 @@ theorem hypResDivP1_eq :
 `deg v = 0 < 1`, and `(x − 1) ∣ (1² − x) = 1 − x = −(x − 1)`. The Mumford divisor of the simple pole `x = 1`
 on sheet `y = +1` — the bridge from `cAlgResidueResultant`'s residue `r = +1` to a divisor Cantor's
 algorithm can act on (next step: its order in the Jacobian, the torsion bound). -/
-theorem mumfordValid_resDivP1 : mumfordValid 12 hypRhoX hypResDivP1 = true := by native_decide
+theorem mumfordValid_resDivP1 : mumfordValid hypRhoX hypResDivP1 = true := by native_decide
 
 /-- **★ The `r = −1` residue divisor `(x − 1, −1)` is valid, and is the opposite of the `r = +1` one**
 (`native_decide`): `mumfordOpposite (x−1, 1) = (x−1, −1) = ` the `r = −1` residue divisor — the two simple
 poles `(1, ±1)` of `∫ dx/((x−1)√x)` are opposite places, summing to the identity in the Jacobian (consistent
 with the residues being `±1`, opposite signs). -/
 theorem mumfordOpposite_resDiv :
-    mumfordOpposite 12 hypResDivP1 = hypResDivM1
-    ∧ mumfordValid 12 hypRhoX hypResDivM1 = true := by native_decide
+    mumfordOpposite hypResDivP1 = hypResDivM1
+    ∧ mumfordValid hypRhoX hypResDivM1 = true := by native_decide
 
 /-! ### ★ The end-to-end Mumford-representation milestone (`native_decide`) -/
 
@@ -310,21 +310,21 @@ representation, the on-curve validity test, the point/identity/opposite/reduced 
 (composition + reduction → order → torsion bound) runs on. -/
 theorem mumford_representation_validates :
     -- point divisors on the elliptic curve `y² = x³+1`, valid and reduced
-    (mumfordValid 12 hypRhoX3p1 hypPt01 = true
-      ∧ mumfordValid 12 hypRhoX3p1 hypPt23 = true
-      ∧ mumfordValid 12 hypRhoX3p1 hypPtM10 = true)
+    (mumfordValid hypRhoX3p1 hypPt01 = true
+      ∧ mumfordValid hypRhoX3p1 hypPt23 = true
+      ∧ mumfordValid hypRhoX3p1 hypPtM10 = true)
     ∧ (mumfordIsReduced (radGenus 8 hypRhoX3p1) hypPt01 = true
       ∧ mumfordIsReduced (radGenus 8 hypRhoX3p1) hypPt23 = true)
     -- opposite and identity
     ∧ (hypPt01opp = mumfordPoint (0 : ℚ) (-1)
-      ∧ mumfordValid 12 hypRhoX3p1 hypIdentity = true)
+      ∧ mumfordValid hypRhoX3p1 hypIdentity = true)
     -- two-point divisor (the Cantor-composition output shape)
     ∧ (hypSum0123 = (⟨[0, -2, 1], [1, 1]⟩ : MumfordDivisor ℚ)
-      ∧ mumfordValid 12 hypRhoX3p1 hypSum0123 = true)
+      ∧ mumfordValid hypRhoX3p1 hypSum0123 = true)
     -- residue divisor from `ComputableAlgebraicResidues`
     ∧ (hypResDivP1 = (⟨[-1, 1], [1]⟩ : MumfordDivisor ℚ)
-      ∧ mumfordValid 12 hypRhoX hypResDivP1 = true
-      ∧ mumfordOpposite 12 hypResDivP1 = hypResDivM1) := by native_decide
+      ∧ mumfordValid hypRhoX hypResDivP1 = true
+      ∧ mumfordOpposite hypResDivP1 = hypResDivM1) := by native_decide
 
 /-! ### Deliverable: `#print axioms`
 

@@ -200,7 +200,7 @@ theorem cantorSum0123_raw : cantorSum0123 = (⟨[1, 1], []⟩ : MumfordDivisor �
 group-law output `(x + 1, 0)` is monic, `deg v = 0 < 1 = deg u`, `u ∣ v² − ρ` (`(x+1) ∣ −(x³+1)`), and
 `deg u = 1 ≤ g = 1`. Cantor's algorithm lands inside the valid reduced divisors. -/
 theorem cantorSum0123_valid_reduced :
-    mumfordValid 12 hypRhoX3p1 cantorSum0123 = true
+    mumfordValid hypRhoX3p1 cantorSum0123 = true
     ∧ mumfordIsReduced 1 cantorSum0123 = true := by native_decide
 
 /-! ### ★ `P ⊕ (−P) = O` — the inverse law (`native_decide`)
@@ -211,7 +211,7 @@ Cantor sum reduces to the identity `(1, 0)`: a point plus its reflection cancels
 /-- The Cantor sum `(0,1) ⊕ (0,−1)` of `P = (0,1)` and `−P = mumfordOpposite P`. Expected: identity
 `(1, 0)`. -/
 def cantorSumPoppP : MumfordDivisor ℚ :=
-  cantorAdd 16 hypRhoX3p1 1 hypPt01 (mumfordOpposite 12 hypPt01)
+  cantorAdd 16 hypRhoX3p1 1 hypPt01 (mumfordOpposite hypPt01)
 
 /-- **★ `P ⊕ (−P) = O` (the inverse law)** (`native_decide`): `(0,1) ⊕ (0,−1) = (1, 0) =
 mumfordIdentity` — a point and its opposite (reflection) sum to the Jacobian identity. Cantor's
@@ -221,7 +221,7 @@ theorem cantorSumPoppP_eq : cantorSumPoppP = mumfordIdentity := by native_decide
 /-- **★ `P ⊕ (−P)` is valid and reduced** (`native_decide`): the identity `(1, 0)` is a valid reduced
 divisor (`u = 1` monic, `v = 0`, `deg u = 0 ≤ g`). -/
 theorem cantorSumPoppP_valid_reduced :
-    mumfordValid 12 hypRhoX3p1 cantorSumPoppP = true
+    mumfordValid hypRhoX3p1 cantorSumPoppP = true
     ∧ mumfordIsReduced 1 cantorSumPoppP = true := by native_decide
 
 /-! ### ★ Doubling `2·(0, 1)` — the tangent-line addition (`native_decide`)
@@ -239,7 +239,7 @@ def cantorDouble01 : MumfordDivisor ℚ := cantorAdd 16 hypRhoX3p1 1 hypPt01 hyp
 /-- **★ The doubling `2·(0,1)` is valid and reduced** (`native_decide`): the tangent-line doubling
 produces a valid reduced Mumford divisor (`deg u ≤ g = 1`). -/
 theorem cantorDouble01_valid_reduced :
-    mumfordValid 12 hypRhoX3p1 cantorDouble01 = true
+    mumfordValid hypRhoX3p1 cantorDouble01 = true
     ∧ mumfordIsReduced 1 cantorDouble01 = true := by native_decide
 
 /-- **★ `2·(0,1) = (0, −1) = −(0,1)`** (`native_decide`): `(0,1)` is an inflection point of `y² = x³+1`,
@@ -285,8 +285,8 @@ def hypG2PtM10 : MumfordDivisor ℚ := mumfordPoint (-1 : ℚ) 0
 /-- **★ The genus-2 points are valid Mumford divisors** (`native_decide`): `(0,1)` and `(−1,0)` lie on
 `y² = x⁵ + 1`, giving valid pairs. Each is reduced (`deg u = 1 ≤ g = 2`). -/
 theorem hypG2_pts_valid :
-    mumfordValid 14 hypRhoX5p1 hypG2Pt01 = true
-    ∧ mumfordValid 14 hypRhoX5p1 hypG2PtM10 = true
+    mumfordValid hypRhoX5p1 hypG2Pt01 = true
+    ∧ mumfordValid hypRhoX5p1 hypG2PtM10 = true
     ∧ mumfordIsReduced 2 hypG2Pt01 = true
     ∧ mumfordIsReduced 2 hypG2PtM10 = true := by native_decide
 
@@ -298,7 +298,7 @@ def cantorG2Sum : MumfordDivisor ℚ := cantorAdd 16 hypRhoX5p1 2 hypG2Pt01 hypG
 hyperelliptic curve `y² = x⁵ + 1` (`g = 2`), Cantor's group law produces a valid reduced divisor
 (`deg u ≤ 2`) — the arithmetic works beyond the elliptic case, where no Mathlib group law exists. -/
 theorem cantorG2Sum_valid_reduced :
-    mumfordValid 14 hypRhoX5p1 cantorG2Sum = true
+    mumfordValid hypRhoX5p1 cantorG2Sum = true
     ∧ mumfordIsReduced 2 cantorG2Sum = true := by native_decide
 
 /-- **★ The genus-2 sum `(0,1) ⊕ (−1,0)` is the two-point divisor `(x² + x, …)`** (`native_decide`): the
@@ -324,18 +324,18 @@ computes the hyperelliptic Jacobian group law — the core of the torsion bound 
 theorem cantor_group_law_validates :
     -- elliptic group law on y² = x³+1
     (mumfordNormEq cantorSum0123 (mumfordPoint (-1 : ℚ) 0) = true
-      ∧ mumfordValid 12 hypRhoX3p1 cantorSum0123 = true
+      ∧ mumfordValid hypRhoX3p1 cantorSum0123 = true
       ∧ mumfordIsReduced 1 cantorSum0123 = true)
     ∧ (cantorSumPoppP = mumfordIdentity
-      ∧ mumfordValid 12 hypRhoX3p1 cantorSumPoppP = true)
+      ∧ mumfordValid hypRhoX3p1 cantorSumPoppP = true)
     ∧ (cantorDouble01 = mumfordPoint (0 : ℚ) (-1)
-      ∧ mumfordValid 12 hypRhoX3p1 cantorDouble01 = true
+      ∧ mumfordValid hypRhoX3p1 cantorDouble01 = true
       ∧ mumfordIsReduced 1 cantorDouble01 = true)
     -- the order of (0,1) is 3 (a 3-torsion point)
     ∧ (cantorMul 16 hypRhoX3p1 1 3 hypPt01 = mumfordIdentity
       ∧ cantorMul 16 hypRhoX3p1 1 2 hypPt01 ≠ mumfordIdentity)
     -- genus-2 composition on y² = x⁵+1
-    ∧ (mumfordValid 14 hypRhoX5p1 cantorG2Sum = true
+    ∧ (mumfordValid hypRhoX5p1 cantorG2Sum = true
       ∧ mumfordIsReduced 2 cantorG2Sum = true
       ∧ cantorG2Sum.u = ([0, 1, 1] : CPolyG ℚ)) := by native_decide
 

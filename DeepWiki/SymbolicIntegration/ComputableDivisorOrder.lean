@@ -247,7 +247,7 @@ def pt01Mod5 : MumfordDivisor (ZMod 5) := mumfordReduceModP 5 hypPt01
 
 /-- **★ `(0,1) mod 5` is a valid divisor on `y² = x³+1` over 𝔽₅** (`native_decide`): good reduction at
 `p = 5` (5 ∤ disc(x³+1) = −27) keeps the Mumford pair valid over the finite field. -/
-theorem pt01Mod5_valid : mumfordValid 12 rhoX3p1Mod5 pt01Mod5 = true := by native_decide
+theorem pt01Mod5_valid : mumfordValid rhoX3p1Mod5 pt01Mod5 = true := by native_decide
 
 /-- **★ The order of `(0,1)` mod `5` is 3** (`native_decide`): `cantorOrder` over `α = ZMod 5` gives
 order 3 — the torsion point `(0,1)` keeps its ℚ-order 3 under good reduction at 5 (Trager Ch. 6 §2: the
@@ -302,7 +302,7 @@ def hypPt35 : MumfordDivisor ℚ := mumfordPoint (3 : ℚ) 5
 
 /-- **★ `(3,5)` is a valid divisor on `y² = x³−2`** (`native_decide`): `5² = 25 = 27 − 2`, so the Mumford
 pair `(x − 3, 5)` lies on the curve. -/
-theorem hypPt35_valid : mumfordValid 12 hypRhoX3m2 hypPt35 = true := by native_decide
+theorem hypPt35_valid : mumfordValid hypRhoX3m2 hypPt35 = true := by native_decide
 
 /-- **★ The ℚ-order of `(3,5)` exceeds 30** (`native_decide`): `cantorOrder` with fuel 30 returns `none` —
 `(3,5)` has infinite order on the rank-1 curve `y² = x³−2`, so no multiple `≤ 30` is `O`. The unbounded
@@ -359,14 +359,14 @@ theorem divisor_order_torsion_decision_validates :
       ∧ cantorOrder 8 16 hypRhoX3p1 1 hypPtM10 = some 2
       ∧ cantorOrder 8 16 hypRhoX3p1 1 (mumfordIdentity : MumfordDivisor ℚ) = some 1)
     -- reduction mod p: order preserved at good primes for a torsion point
-    ∧ (mumfordValid 12 rhoX3p1Mod5 pt01Mod5 = true
+    ∧ (mumfordValid rhoX3p1Mod5 pt01Mod5 = true
       ∧ cantorOrder 40 16 rhoX3p1Mod5 1 pt01Mod5 = some 3
       ∧ cantorOrder 40 16 (polyToZMod 7 hypRhoX3p1) 1 (mumfordReduceModP 7 hypPt01) = some 3)
     -- the torsion DECISION: (0,1) torsion ⟹ elementary
     ∧ (isTorsionDivisor 5 16 hypRhoX3p1 1 hypPt01 = some 3
       ∧ elementarityViaTorsion 5 16 hypRhoX3p1 1 hypPt01 = true)
     -- the NON-TORSION witness (3,5) on y²=x³−2 ⟹ NOT elementary
-    ∧ (mumfordValid 12 hypRhoX3m2 hypPt35 = true
+    ∧ (mumfordValid hypRhoX3m2 hypPt35 = true
       ∧ cantorOrder 30 24 hypRhoX3m2 1 hypPt35 = none
       ∧ cantorOrder 60 24 (polyToZMod 5 hypRhoX3m2) 1 (mumfordReduceModP 5 hypPt35) = some 2
       ∧ cantorOrder 60 24 (polyToZMod 7 hypRhoX3m2) 1 (mumfordReduceModP 7 hypPt35) = some 7
