@@ -1,16 +1,9 @@
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 
-/-! # Constants of a monomial extension and base change (Bronstein §3.4)
-For a monomial `t` over `(k, D)` (so `Dt = v ∈ k[t]`), this file relates the *constants* of
-`k(t)` to the *special* polynomials. A constant `c = a/b ∈ Const_D(k(t))` has special numerator
-and denominator (`isSpecial_num_denom_of_const_quotient`), of equal degree when `t` is nonlinear
-(`natDegree_eq_of_special_of_deriv_quotient_num_eq_zero`); these combine into the full
-`isSpecial_and_natDegree_eq_of_const_quotient_nonlinear`. When `Dt ∈ k` a nonzero `p ∈ k[t]` is
-special iff its monic associate is a constant (`isSpecial_iff_deriv_normalize_eq_zero`); this is
-the engine behind the fact that any new constant in `k(t) ∖ k` makes `Sⁱʳʳ` nonempty. We also
-complete the base-change corollary (normal polynomials stay normal under an algebraic extension
-`k ⊆ E`, `isCoprime_map_implicitDeriv_of_isCoprime`), and record the constant-field case `Da = 0`
-(special ↔ `p ∣ Hₜ`, normal ↔ `gcd(p, Hₜ) = 1`). -/
+/-! # Constants of monomial extensions and base change
+
+Relates constants of fraction-field monomial derivations to special polynomials, nonlinear degree
+comparisons, scalar monomial constants, and differential base change. -/
 
 open scoped Differential
 open Polynomial
@@ -22,9 +15,7 @@ variable {k : Type*} [Field k] [Differential k]
 section Coprime
 variable {R : Type*} [CommRing R] [Differential R]
 
-/-- **Lemma 3.4.5 core** (§3.4, p.96): if `a, b` are coprime and the numerator of `D(a/b)`
-vanishes (`b·Da = a·Db`), then both `a` and `b` are special. From `a ∣ b·Da` (`= a·Db`) and
-`IsCoprime a b` we get `a ∣ Da`; symmetrically `b ∣ Db`. -/
+/-- If `a` and `b` are coprime and `b * a′ = a * b′`, then both are special. -/
 theorem isSpecial_of_coprime_of_deriv_quotient_num_eq_zero {a b : R} (hco : IsCoprime a b)
     (h : b * a′ = a * b′) : IsSpecial a ∧ IsSpecial b := by
   refine ⟨hco.dvd_of_dvd_mul_left ?_, hco.symm.dvd_of_dvd_mul_left ?_⟩
@@ -41,10 +32,7 @@ variable {R K : Type*} [CommRing R] [Differential R] [IsDomain R] [Field K] [Alg
   [IsFractionRing R K] [Differential K] [DifferentialAlgebra R K]
 
 omit [IsDomain R] in
-/-- **Lemma 3.4.5** (§3.4, p.96), first part: if `c = a/b ∈ Const_D(k(t))` (i.e. `c′ = 0`) with
-`a, b` coprime and `b ≠ 0`, then both the numerator `a` and the denominator `b` are special in
-`k[t]`. From the quotient rule `0 = Dc = (b·Da − a·Db)/b²` we get `b·Da = a·Db`, and coprimality
-forces `a ∣ Da`, `b ∣ Db` (`isSpecial_of_coprime_of_deriv_quotient_num_eq_zero`). -/
+/-- A constant quotient with coprime numerator and nonzero denominator has special numerator and denominator. -/
 theorem isSpecial_num_denom_of_const_quotient {a b : R} (hco : IsCoprime a b) (hb : b ≠ 0)
     (hconst : (algebraMap R K a / algebraMap R K b)′ = 0) :
     IsSpecial a ∧ IsSpecial b := by
@@ -64,12 +52,10 @@ end FractionConstants
 
 section Nonlinear
 -- A *nonlinear* monomial: `δ(t) = deg(Dt) = deg v ≥ 2`. Here the leading term of `Dp` comes from
--- `v·dp/dt`, so `lc(Dp) = (deg p)·lc(p)·lc(v)` for `deg p ≥ 1` — the engine of Lemma 3.4.5's
--- equal-degree claim.
+-- `v·dp/dt`, so `lc(Dp) = (deg p)·lc(p)·lc(v)` for `deg p ≥ 1`.
 variable {F : Type*} [Field F] [CharZero F] [Differential F]
 
-/-- For a *nonlinear* monomial (`deg v ≥ 2`) and `deg p ≥ 1`, the leading coefficient of `Dp` is
-`(deg p)·lc(p)·lc(v)` — the leading term comes entirely from `v·dp/dt`. -/
+/-- In a nonlinear monomial derivation, the leading coefficient of `implicitDeriv v p` is determined by `p` and `v`. -/
 theorem leadingCoeff_implicitDeriv_nonlinear (v p : F[X]) (hv : 2 ≤ v.natDegree)
     (hp : 1 ≤ p.natDegree) :
     (Differential.implicitDeriv v p).leadingCoeff
@@ -92,10 +78,7 @@ theorem leadingCoeff_implicitDeriv_nonlinear (v p : F[X]) (hv : 2 ≤ v.natDegre
     zero_add, ← leadingCoeff, leadingCoeff_mul, leadingCoeff_derivative]
   ring
 
-/-- For a *nonlinear* monomial (`deg v ≥ 2`), a special divisor cofactor `g = Dp/p` of a nonzero
-`p` reads off the degree of `p`: when `deg p ≥ 1`, `g.leadingCoeff = (deg p)·lc(v)` and
-`deg g = δ(t) − 1`; when `deg p = 0`, `deg g = 0`. (From `Dp = p·g` and the leading-coefficient
-formula for `Dp`.) -/
+/-- A special cofactor for a nonlinear monomial derivation has leading coefficient and degree controlled by `p.natDegree`. -/
 theorem leadingCoeff_cofactor_nonlinear {v p g : F[X]} (hv : 2 ≤ v.natDegree) (hp0 : p ≠ 0)
     (hg : Differential.implicitDeriv v p = p * g) :
     (1 ≤ p.natDegree → g.leadingCoeff = (p.natDegree : F) * v.leadingCoeff
@@ -129,11 +112,7 @@ theorem leadingCoeff_cofactor_nonlinear {v p g : F[X]} (hv : 2 ≤ v.natDegree) 
       rw [hg, natDegree_mul hp0 hgne, natDegree_C] at hDp0
       omega
 
-/-- **Lemma 3.4.5** (§3.4, p.96), second part: for a *nonlinear* monomial (`deg v ≥ 2`), if
-`a, b ∈ k[t]` are nonzero, special, and satisfy the constant-quotient identity `b·Da = a·Db`
-(i.e. `a/b ∈ Const_D(k(t))`, `a/b ≠ 0`), then `a` and `b` have the same degree. Writing
-`Da = a·g`, `Db = b·h`, cancellation gives `g = h`; the leading coefficient of `g` reads off
-`deg a` (`= (deg a)·lc v`) and likewise `deg b`, forcing `deg a = deg b`. -/
+/-- Nonzero special polynomials with zero quotient-derivative numerator have equal `natDegree` in a nonlinear monomial derivation. -/
 theorem natDegree_eq_of_special_of_deriv_quotient_num_eq_zero {v a b : F[X]} (hv : 2 ≤ v.natDegree)
     (ha0 : a ≠ 0) (hb0 : b ≠ 0)
     (hsa : a ∣ Differential.implicitDeriv v a) (hsb : b ∣ Differential.implicitDeriv v b)
@@ -170,11 +149,7 @@ theorem natDegree_eq_of_special_of_deriv_quotient_num_eq_zero {v a b : F[X]} (hv
       have hcast : (a.natDegree : F) = (b.natDegree : F) := mul_right_cancel₀ hlcv this
       exact_mod_cast hcast
 
-/-- **Lemma 3.4.5** (§3.4, p.96), full statement over `k(t) = Frac(k[t])` for a *nonlinear*
-monomial (`Dt = v`, `deg v ≥ 2`): a constant `c = a/b ∈ Const_D(k(t))` with `a, b` coprime,
-`a ≠ 0`, `b ≠ 0` has both numerator and denominator special (`a ∣ Da`, `b ∣ Db`) *and* of the
-*same degree* (`deg a = deg b`). Here `k(t)` is realized as a differential fraction field `K` of
-`F[X] = k[t]` whose derivation extends the monomial derivation `Differential.implicitDeriv v`. -/
+/-- A constant quotient in a nonlinear monomial fraction field has special numerator and denominator of equal `natDegree`. -/
 theorem isSpecial_and_natDegree_eq_of_const_quotient_nonlinear
     {K : Type*} [Field K] [Algebra F[X] K] [IsFractionRing F[X] K] [Differential K]
     {v a b : F[X]} (hv : 2 ≤ v.natDegree) (hco : IsCoprime a b) (ha0 : a ≠ 0) (hb0 : b ≠ 0)
@@ -201,19 +176,16 @@ theorem isSpecial_and_natDegree_eq_of_const_quotient_nonlinear
 end Nonlinear
 
 section ScalarMonomial
--- The base case of §3.4: the monomial derivation with `Dt = w ∈ k`, i.e. the implicit derivation
--- whose `t`-component is the *constant* polynomial `C w`.
+-- The monomial derivation with scalar `t`-component `C w`.
 variable (w : k)
 
-/-- For the monomial derivation with `Dt = w ∈ k` (so `D = κ_D + w·d/dt`), the `t`-component does
-not raise degree: `deg(Dp) ≤ deg p` (`κ_D` preserves degree shape; `w·dp/dt` drops a degree). -/
+/-- A scalar monomial derivation does not increase polynomial `natDegree`. -/
 theorem natDegree_implicitDeriv_C_le (p : k[X]) :
     (Differential.implicitDeriv (C w) p).natDegree ≤ p.natDegree := by
   refine (natDegree_implicitDeriv_le (C w) p).trans ?_
   rw [natDegree_C]; simp
 
-/-- The top coefficient of `Dp` is `D(lc p)`: when `Dt = w ∈ k`, the degree-`deg p` coefficient of
-`Differential.implicitDeriv (C w) p` is the derivative of the leading coefficient of `p`. -/
+/-- In a scalar monomial derivation, the top coefficient of `implicitDeriv (C w) p` is `(p.leadingCoeff)′`. -/
 theorem coeff_natDegree_implicitDeriv_C (p : k[X]) :
     (Differential.implicitDeriv (C w) p).coeff p.natDegree = (p.coeff p.natDegree)′ := by
   have happly : Differential.implicitDeriv (C w) p
@@ -229,8 +201,7 @@ theorem coeff_natDegree_implicitDeriv_C (p : k[X]) :
 
 end ScalarMonomial
 
-/-- For the monomial derivation with `Dt = w ∈ k`, a *monic* polynomial has `deg(Dq) < deg q`
-unless `Dq = 0` (the top coefficient `D(lc q) = D(1) = 0`). -/
+/-- A monic polynomial under a scalar monomial derivation either differentiates to zero or drops `natDegree`. -/
 theorem deriv_monic_eq_zero_or_natDegree_lt {w : k} {q : k[X]} (hq : q.Monic) :
     Differential.implicitDeriv (C w) q = 0
       ∨ (Differential.implicitDeriv (C w) q).natDegree < q.natDegree := by
@@ -244,9 +215,7 @@ theorem deriv_monic_eq_zero_or_natDegree_lt {w : k} {q : k[X]} (hq : q.Monic) :
         (Differential.deriv : Derivation ℤ k k).map_one_eq_zero]
     exact (mt leadingCoeff_eq_zero.mp h0) htop
 
-/-- **Constants vs special, monic-associate form** (§3.4, p.96): with `Dt = w ∈ k`, a *monic*
-`q ∈ k[t]` is special iff it is a constant of `k(t)` — `q ∣ Dq ⟺ Dq = 0`. (Forward: `q ∣ Dq` and
-`deg(Dq) < deg q` force `Dq = 0`; backward: `Dq = 0 ⟹ q ∣ Dq`.) -/
+/-- A monic polynomial is special for a scalar monomial derivation iff its implicit derivative is zero. -/
 theorem isSpecial_iff_deriv_eq_zero_of_monic {w : k} {q : k[X]} (hq : q.Monic) :
     q ∣ Differential.implicitDeriv (C w) q ↔ Differential.implicitDeriv (C w) q = 0 := by
   constructor
@@ -265,10 +234,7 @@ theorem associated_mul_C_inv_leadingCoeff {p : k[X]} (hp : p ≠ 0) :
   refine ⟨(associated_mul_unit_right p _ (isUnit_C.mpr (Ne.isUnit (inv_ne_zero hlc)))),
     monic_mul_C_of_leadingCoeff_mul_eq_one (mul_inv_cancel₀ hlc)⟩
 
-/-- **Constants and special polynomials** (§3.4, p.96, Lemma 3.4.6): when `Dt ∈ k`, a nonzero
-`p ∈ k[t]` is special iff its monic normalization `p/lc(p)` is a constant of `k(t)` —
-`p ∣ Dp ⟺ D(p/lc(p)) = 0`. (Specialness is an associate invariant, reducing to the monic case
-`isSpecial_iff_deriv_eq_zero_of_monic`.) -/
+/-- A nonzero polynomial is special for a scalar monomial derivation iff its monic normalization has zero implicit derivative. -/
 theorem isSpecial_iff_deriv_normalize_eq_zero {w : k} {p : k[X]} (hp : p ≠ 0) :
     p ∣ Differential.implicitDeriv (C w) p
       ↔ Differential.implicitDeriv (C w) (p * C p.leadingCoeff⁻¹) = 0 := by
@@ -278,14 +244,11 @@ theorem isSpecial_iff_deriv_normalize_eq_zero {w : k} {p : k[X]} (hp : p ≠ 0) 
   exact ⟨fun h => IsSpecial.of_associated hassoc h, fun h => IsSpecial.of_associated hassoc.symm h⟩
 
 section AlgebraicExtension
--- `E` an algebraic differential extension of `k`. The *special half* of base change
+-- `E` a differential extension of `k`. The *special half* of base change
 -- (`isSpecial_map_of_isSpecial`) lives in `SpecialFirstKind`; here is the *normal half*.
 variable {E : Type*} [Field E] [Differential E] [Algebra k E] [DifferentialAlgebra k E]
 
-/-- **Corollary 3.4.1** (§3.4, p.95), normal half: a normal polynomial stays normal after an
-algebraic base change — `IsCoprime p (Dp)` in `k[t]` gives `IsCoprime (p.map) (D(p.map))` in `E[t]`
-(coprimality lifts along the ring hom `map`, and `D` commutes with `map` via `implicitDeriv_map`).
-Combined with `isSpecial_map_of_isSpecial`, normal and special polynomials remain such over `E`. -/
+/-- Coprimality of `p` and `implicitDeriv v p` is preserved by differential base change. -/
 theorem isCoprime_map_implicitDeriv_of_isCoprime {v p : k[X]}
     (hp : IsCoprime p (Differential.implicitDeriv v p)) :
     IsCoprime (p.map (algebraMap k E))
@@ -297,21 +260,15 @@ theorem isCoprime_map_implicitDeriv_of_isCoprime {v p : k[X]}
 end AlgebraicExtension
 
 section ConstantField
--- The case `Da = 0` for all `a ∈ k` (the base is its own constant field). Here `Hₜ = Dt = v`,
--- and the special/normal root tests `v(a) = a′` / `v(a) ≠ a′` collapse to `v(a) = 0` / `v(a) ≠ 0`.
+-- The case `Da = 0` for all `a ∈ k`, where special and normal root tests depend only on `v(a)`.
 variable {K : Type*} [Field K] [Differential K]
 
-/-- **Corollary 3.4.2(i)** (§3.4, p.95), linear (monic-irreducible) case: when `Da = 0` for all
-`a ∈ k`, the monic irreducible `X − a` is special w.r.t. the monomial derivation (`Dt = v = Hₜ`)
-iff `(X − a) ∣ Hₜ` — i.e. `a` is a root of `v`. (The special-root test `v(a) = a′` becomes
-`v(a) = 0` since `a′ = 0`.) -/
+/-- If every scalar is constant, then `X - C a` is special for `implicitDeriv v` iff it divides `v`. -/
 theorem dvd_X_sub_C_implicitDeriv_iff_dvd (hconst : ∀ a : K, (a : K)′ = 0) (v : K[X]) (a : K) :
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ (X - C a) ∣ v := by
   rw [dvd_X_sub_C_implicitDeriv_iff, hconst a, dvd_iff_isRoot, IsRoot.def, eq_comm]
 
-/-- **Corollary 3.4.2(i)** (§3.4, p.95), squarefree form: when `Da = 0` for all `a ∈ k`, the
-squarefree `∏_{a∈s}(X − a)` is special w.r.t. the monomial derivation iff it divides `Hₜ = v` —
-every root of `p` is a root of `v` (the special-root test `v(a) = a′` collapses to `v(a) = 0`). -/
+/-- If every scalar is constant, then a product of linear factors is special for `implicitDeriv v` iff it divides `v`. -/
 theorem dvd_prod_X_sub_C_implicitDeriv_iff_dvd (hconst : ∀ a : K, (a : K)′ = 0) (v : K[X])
     (s : Finset K) :
     (∏ a ∈ s, (X - C a)) ∣ Differential.implicitDeriv v (∏ a ∈ s, (X - C a))
@@ -326,10 +283,7 @@ theorem dvd_prod_X_sub_C_implicitDeriv_iff_dvd (hconst : ∀ a : K, (a : K)′ =
     rw [hconst a]
     exact (dvd_iff_isRoot.mp ((Finset.dvd_prod_of_mem _ ha).trans h))
 
-/-- **Corollary 3.4.2(ii)** (§3.4, p.95): when `Da = 0` for all `a ∈ k`, a squarefree
-`∏_{a∈s}(X − a)` is normal w.r.t. the monomial derivation iff it is coprime to `Hₜ = v` —
-`gcd(p, Hₜ) = 1` (the normal-root test `v(a) ≠ a′` collapses to `v(a) ≠ 0`, i.e. no root of `p` is
-a root of `v`). -/
+/-- If every scalar is constant, then a product of linear factors is normal for `implicitDeriv v` iff it is coprime to `v`. -/
 theorem isCoprime_prod_X_sub_C_implicitDeriv_iff_isCoprime (hconst : ∀ a : K, (a : K)′ = 0)
     (v : K[X]) (s : Finset K) :
     IsCoprime (∏ a ∈ s, (X - C a)) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a)))
