@@ -91,7 +91,7 @@ theorem gcusp_integralBasis_eq :
       && cisZeroG (csubG ((integralBasis gcuspF).getD 0 []) [CField.one])
       && cisZeroG (csubG (afMul gcuspF ((integralBasis gcuspF).getD 1 [])
             ((integralBasis gcuspF).getD 1 [])) [qxOfNum [0, 1]])
-      && isMaximalOrder 12 gcuspF (integralBasis gcuspF)) = true := by native_decide
+      && isMaximalOrder gcuspF (integralBasis gcuspF)) = true := by native_decide
 
 /-! ### ★ Target 1: `∫ y dx = (2/5)·x·y` on `y² = x³` (`native_decide`)
 

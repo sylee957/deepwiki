@@ -250,11 +250,11 @@ def discNumOrder (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) : 
   let z := fieldDet (traceMatrix f O)
   cnormG (QFunNZG.reduceNum z)
 
-/-- **The bad primes of an order `O`** `badPrimesOrder fuel f O`: the distinct monic squarefree factors `p`
+/-- **The bad primes of an order `O`** `badPrimesOrder f O`: the distinct monic squarefree factors `p`
 of the **order's** reduced discriminant numerator (`discNumOrder`) with `p² | d` — the primes where `O` may
 still be non-maximal. For `O = powerBasis f` this is the fuel-free divisibility-test analogue of
 `badPrimes fuel f`. Drives each pass of the outer loop. -/
-def badPrimesOrder (_fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
+def badPrimesOrder (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
     List (CPolyG ℚ) :=
   let d := discNumOrder f O
   let distinct := ((cSqfreeYunFFGWf d).map cmonicG).filter (fun p => 0 < cdegG p)
@@ -276,14 +276,14 @@ def round2StepOrderAt (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ)
   let a : ℚ := CField.neg (pm.getD 0 CField.zero)
   reduceOrder (idealizerOCoords f O (ipOCoords f O pm a))
 
-/-- **One full pass of Round-2 over ALL bad primes of `O`** `round2Pass fuel f O = (O', grew)`: fold
+/-- **One full pass of Round-2 over ALL bad primes of `O`** `round2Pass f O = (O', grew)`: fold
 `round2StepOrderAt` over every bad prime of the current order (`badPrimesOrder`), enlarging `O` at each in
 turn, and report whether the pass changed the order (`grew = ¬ orderEq O O'`). Enlarging at all bad primes in
 one pass realizes the product-of-bad-primes enlargement of Trager p. 24 as a sequential fold. -/
-def round2Pass (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
+def round2Pass (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
     List (CPolyG (QFunNZG ℚ)) × Bool :=
   let n := cdegG f
-  let O' := (badPrimesOrder fuel f O).foldl (fun acc p => round2StepOrderAt f acc p) O
+  let O' := (badPrimesOrder f O).foldl (fun acc p => round2StepOrderAt f acc p) O
   (O', !orderEq n O O')
 
 /-- **The Round-2 iteration loop** `integralBasisLoop fuel f O`: run `round2Pass` repeatedly, replacing `O`
@@ -296,7 +296,7 @@ def integralBasisLoop (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) :
     match fuel with
     | 0 => O
     | fuel + 1 =>
-      let (O', grew) := round2Pass (fuel + 1) f O
+      let (O', grew) := round2Pass f O
       if grew then integralBasisLoop fuel f O' else O'
 
 /-- **The general-curve INTEGRAL BASIS** `integralBasis f`: iterate the Ford–Zassenhaus Round-2 step to the
@@ -311,11 +311,11 @@ def integralBasis (f : CPolyG (QFunNZG ℚ)) : List (CPolyG (QFunNZG ℚ)) :=
   let fuel := cdegG (discNum f) + 1
   reduceOrder (integralBasisLoop fuel f (powerBasis f))
 
-/-- **`true` iff `O` is the maximal order** `isMaximalOrder fuel f O`: a Round-2 pass over `O` does not grow
-it (`¬ (round2Pass fuel f O).2`) — the integral-basis termination test. When `true`, `O` is integrally closed
+/-- **`true` iff `O` is the maximal order** `isMaximalOrder f O`: a Round-2 pass over `O` does not grow
+it (`¬ (round2Pass f O).2`) — the integral-basis termination test. When `true`, `O` is integrally closed
 (no finite-pole functions outside it); `integralBasis` returns an order on which this holds. -/
-def isMaximalOrder (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) : Bool :=
-  !(round2Pass fuel f O).2
+def isMaximalOrder (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) : Bool :=
+  !(round2Pass f O).2
 
 end CPolyG
 
@@ -341,7 +341,7 @@ theorem cusp_integralBasis_eq :
     (cisZeroG (csubG cuspIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
       && cisZeroG (csubG ((integralBasis cuspF).getD 0 []) [CField.one])
       && cisZeroG (csubG (afMul cuspF cuspIBGen cuspIBGen) [qxOfNum [0, 1]])
-      && isMaximalOrder 12 cuspF (integralBasis cuspF)) = true := by native_decide
+      && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
 -- Sanity print: the node integral basis (expected `[1,0]`, `[0,1/x]`).
 #eval (integralBasis nodeF).map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
@@ -357,7 +357,7 @@ theorem node_integralBasis_eq :
     (cisZeroG (csubG nodeIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
       && cisZeroG (csubG ((integralBasis nodeF).getD 0 []) [CField.one])
       && cisZeroG (csubG (afMul nodeF nodeIBGen nodeIBGen) [qxOfNum [1, 1]])
-      && isMaximalOrder 12 nodeF (integralBasis nodeF)) = true := by native_decide
+      && isMaximalOrder nodeF (integralBasis nodeF)) = true := by native_decide
 
 /-! ### ★★ A genuinely MULTI-STEP curve: the worse cusp `y² − x⁵`, integral basis `[1, y/x²]` (`native_decide`)
 
@@ -397,7 +397,7 @@ theorem cusp5_oneStep_not_maximal :
     (((round2Step 12 cusp5F).2)
       && cisZeroG (csubG ((round2Step 12 cusp5F).1.getD 1 [])
             [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && !isMaximalOrder 12 cusp5F (reduceOrder (round2Step 12 cusp5F).1)) = true := by native_decide
+      && !isMaximalOrder cusp5F (reduceOrder (round2Step 12 cusp5F).1)) = true := by native_decide
 
 /-- **★★ The FULL iteration reaches `[1, y/x²]` for `y² − x⁵`** (`native_decide`): `integralBasis cusp5F`
 iterates Round-2 **twice** (`[1, y] → [1, y/x] → [1, y/x²]`) to the maximal order, returning the generator
@@ -414,7 +414,7 @@ discriminant `4x⁵/x⁴ = 4x` is squarefree, no bad prime). The two-step iterat
 order. -/
 theorem cusp5_integralBasis_integral_maximal :
     (cisZeroG (csubG (afMul cusp5F cusp5IBGen cusp5IBGen) [qxOfNum [0, 1]])
-      && isMaximalOrder 12 cusp5F (integralBasis cusp5F)) = true := by native_decide
+      && isMaximalOrder cusp5F (integralBasis cusp5F)) = true := by native_decide
 
 /-! ### ★★ A genuinely MULTI-PRIME curve: `y² − x³(x−1)²`, bad at BOTH `x` and `x − 1` (`native_decide`)
 
@@ -462,7 +462,7 @@ theorem biCusp_integralBasis_eq :
     (cisZeroG (csubG biCuspIBGen [CField.zero, qxOfFrac [1] [0, -1, 1] (by decide)])
       && cisZeroG (csubG ((integralBasis biCuspF).getD 0 []) [CField.one])
       && cisZeroG (csubG (afMul biCuspF biCuspIBGen biCuspIBGen) [qxOfNum [0, 1]])
-      && isMaximalOrder 16 biCuspF (integralBasis biCuspF)) = true := by native_decide
+      && isMaximalOrder biCuspF (integralBasis biCuspF)) = true := by native_decide
 
 /-! ### The NEXT piece: higher-degree (non-linear) bad primes, and the genus
 
