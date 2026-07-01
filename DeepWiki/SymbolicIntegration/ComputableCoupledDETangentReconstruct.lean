@@ -586,11 +586,11 @@ theorem toPolyG_scale_one (nN : ℚ) : toPolyG (cscaleG nN [CField.one]) = C nN 
 
 /-- The §8.4 base-case identity (`n = 0`, `q = [s]`): from the base solve's `ℚ[X]` identities,
 the singleton solution solves the level-0 coupled `t`-system. -/
-theorem reconstruct_base (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPolyG ℚ))
+theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPolyG ℚ))
     (s1 s2 : CPolyG ℚ) (hd1 : tdeg c1 = 0) (hd2 : tdeg c2 = 0)
-    (hsolve : cCoupledDESystem fuel (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound = some (s1, s2)) :
+    (hsolve : cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound = some (s1, s2)) :
     TanSolves b0 b2 0 c1 c2 [s1] [s2] := by
-  obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound fuel (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0)
+  obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0)
     dbound s1 s2 hsolve
   refine ⟨?_, ?_⟩
   · rw [toPoly2_tanDeriv_singleton, toPoly2_singleton, toPoly2_singleton, tdeg_zero_toPoly2 c1 hd1]
@@ -613,32 +613,32 @@ theorem reconstruct_base (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List 
 solution solves the §8.4 coupled system at the `ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`). By structural
 induction on `n` (the def is now structural-on-`n`, so it unfolds by `rw`). -/
 theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
-    ∀ (n fuel : ℕ) (b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)),
-      cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2) →
+    ∀ (n : ℕ) (b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)),
+      cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2) →
       TanSolves b0 b2 n c1 c2 q1 q2 := by
   intro n
   induction n with
   | zero =>
-    intro fuel b2 c1 c2 q1 q2 hsome
+    intro b2 c1 c2 q1 q2 hsome
     rw [cCoupledDECancelTan] at hsome
     by_cases hd : (decide (tdeg c1 = 0) && decide (tdeg c2 = 0)) = true
     · rw [hd, if_pos rfl] at hsome
       rw [Bool.and_eq_true, decide_eq_true_eq, decide_eq_true_eq] at hd
-      rcases hm : cCoupledDESystem fuel (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound
+      rcases hm : cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound
         with _ | ⟨s1, s2⟩
       · rw [hm] at hsome; simp at hsome
       · rw [hm, Option.some.injEq, Prod.mk.injEq] at hsome
         obtain ⟨hq1, hq2⟩ := hsome; subst hq1 hq2
-        exact reconstruct_base fuel dbound b0 b2 c1 c2 s1 s2 hd.1 hd.2 hm
+        exact reconstruct_base dbound b0 b2 c1 c2 s1 s2 hd.1 hd.2 hm
     · rw [Bool.not_eq_true] at hd; rw [hd] at hsome; simp at hsome
   | succ m ih =>
-    intro fuel b2 c1 c2 q1 q2 hsome
+    intro b2 c1 c2 q1 q2 hsome
     rw [cCoupledDECancelTan] at hsome
     set nN : ℚ := ((m : ℚ) + 1) with hnN
     set z1 := csubG (evalAtI c1).1 (evalAtI c2).2 with hz1
     set z2 := caddG (evalAtI c1).2 (evalAtI c2).1 with hz2
     set b2shift := csubG b2 (cscaleG nN [CField.one]) with hb2shift
-    rcases hbase : cCoupledDESystem fuel (-1) b0 b2shift z1 z2 dbound with _ | ⟨s1, s2⟩
+    rcases hbase : cCoupledDESystem (-1) b0 b2shift z1 z2 dbound with _ | ⟨s1, s2⟩
     · rw [hbase] at hsome; simp at hsome
     · rw [hbase] at hsome
       simp only at hsome
@@ -647,15 +647,15 @@ theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
       set cpairs := (List.range (max realNum.length imagNum.length)).map
         (fun k => (realNum.getD k [], imagNum.getD k [])) with hcp
       set quot := divByTminusI cpairs with hquot
-      rcases hrec : cCoupledDECancelTan fuel dbound b0 (caddG b2 [CField.one])
+      rcases hrec : cCoupledDECancelTan dbound b0 (caddG b2 [CField.one])
         (quot.map Prod.fst) (quot.map Prod.snd) m with _ | ⟨h1, h2⟩
       · rw [hrec] at hsome; simp at hsome
       · rw [hrec] at hsome
         simp only [Option.some.injEq, Prod.mk.injEq] at hsome
         obtain ⟨hq1, hq2⟩ := hsome; subst hq1 hq2
-        have hih := ih fuel (caddG b2 [CField.one]) (quot.map Prod.fst) (quot.map Prod.snd) h1 h2 hrec
+        have hih := ih (caddG b2 [CField.one]) (quot.map Prod.fst) (quot.map Prod.snd) h1 h2 hrec
         have hred := reduction_real c1 c2 s1 s2 nN realNum imagNum hrN hiN cpairs hcp quot hquot
-        obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound fuel (-1) b0 b2shift z1 z2 dbound s1 s2 hbase
+        obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound (-1) b0 b2shift z1 z2 dbound s1 s2 hbase
         -- Abbreviate.
         set H1 := toPoly2 h1; set H2 := toPoly2 h2
         set D1 := toPoly2 (quot.map Prod.fst) with hD1; set D2 := toPoly2 (quot.map Prod.snd) with hD2
@@ -728,15 +728,15 @@ theorem tisZero_of_toPoly2_zero (p : List (CPolyG ℚ)) (h : toPoly2 p = 0) : ti
   exact hc.symm
 
 /-- **★ The §8.4 tangent cleared check is discharged by `reconstruct` at `n = 2`** (`native_decide`-free):
-if `cCoupledDECancelTan fuel dbound b0 b2 c1 c2 2 = some (q1, q2)` then the engine's own
+if `cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)` then the engine's own
 `cancelTanClearedCheck` passes. The reconstruction (`reconstruct`) gives the genuine `ℚ[x][t]`
 identities at level `n = 2` (where the diagonal shift `C(C 2)·X = toPoly2 [[],[2]]`), whose
 residual `t`-polynomials therefore have `toPoly2 = 0`, hence `tisZero`. -/
-theorem cancelTanClearedCheck_of_reconstruct (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ)
+theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     (c1 c2 q1 q2 : List (CPolyG ℚ))
-    (hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 2 = some (q1, q2)) :
+    (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true := by
-  obtain ⟨hG1, hG2⟩ := reconstruct dbound b0 2 fuel b2 c1 c2 q1 q2 hsome
+  obtain ⟨hG1, hG2⟩ := reconstruct dbound b0 2 b2 c1 c2 q1 q2 hsome
   rw [cancelTanClearedCheck, Bool.and_eq_true]
   constructor
   · apply tisZero_of_toPoly2_zero
@@ -762,16 +762,16 @@ namespace DeepWiki.SymbolicIntegration
 open CPolyG Polynomial
 
 /-- **★★ Tangent RDE cancellation soundness — UNCONDITIONAL** (`cCoupledDECancelTan_sound`,
-`native_decide`-free, no cleared-check hypothesis): if `cCoupledDECancelTan fuel dbound b0 b2 c1 c2 2
+`native_decide`-free, no cleared-check hypothesis): if `cCoupledDECancelTan dbound b0 b2 c1 c2 2
 = some (q1, q2)` then `(q₁, q₂)` solves the §8.4 tangent coupled `t`-polynomial system (8.15) at the
 `ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`, the diagonal shift `−2t`). The engine's own
 `cancelTanClearedCheck` is now *discharged* from the unconditional base solve `cCoupledDESystem_sound`
 plus the §8.4 telescoping reconstruction (`reconstruct`: `evalAtI` projection mod `t²+1` +
 `divByTminusI` synthetic division), via `cancelTanClearedCheck_of_reconstruct`, then fed to
 `cancelTanClearedCheck_sound`. Drops the `_of_check` gate. -/
-theorem cCoupledDECancelTan_sound (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ)
+theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     (c1 c2 q1 q2 : List (CPolyG ℚ))
-    (hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 2 = some (q1, q2)) :
+    (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
         + (Polynomial.C (toPolyG b0) * toPoly2 q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
@@ -783,11 +783,11 @@ theorem cCoupledDECancelTan_sound (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ)
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 :=
   cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2
-    (CPolyG.cancelTanClearedCheck_of_reconstruct fuel dbound b0 b2 c1 c2 q1 q2 hsome)
+    (CPolyG.cancelTanClearedCheck_of_reconstruct dbound b0 b2 c1 c2 q1 q2 hsome)
 
 -- ★ Restatement against the intended wording.
-example (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ))
-    (hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 2 = some (q1, q2)) :
+example (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ))
+    (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
         + (Polynomial.C (toPolyG b0) * toPoly2 q1
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q1)
@@ -798,7 +798,7 @@ example (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ
         + (Polynomial.C (toPolyG b0) * toPoly2 q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 :=
-  cCoupledDECancelTan_sound fuel dbound b0 b2 c1 c2 q1 q2 hsome
+  cCoupledDECancelTan_sound dbound b0 b2 c1 c2 q1 q2 hsome
 
 #print axioms cCoupledDECancelTan_sound
 

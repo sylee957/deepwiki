@@ -57,7 +57,7 @@ namespace DeepWiki.Si
 /-! ## §8.1/§8.4 The base coupled differential system over ℚ(x) — computable + validated -/
 
 /-- **The base coupled differential system `CoupledDESystem`** (§8.1/§8.4, eq. 8.2/8.10, the recursion
-target, book p.257/265): the computable `cCoupledDESystem fuel a b1 b2 z1 z2 d` over `k = ℚ(x)`
+target, book p.257/265): the computable `cCoupledDESystem a b1 b2 z1 z2 d` over `k = ℚ(x)`
 (`D = d/dx`), solving `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]] · (y₁; y₂) = (z₁; z₂)` for `y₁, y₂ ∈ ℚ[x]` of
 degree `≤ d` by a polynomial ansatz reduced to a single ℚ-linear system (`cConstSolveUniqueQ`/`crref`).
 Returns `some (y₁, y₂)` or `none`. Computable + `native_decide`-validated; abstract correctness (the
@@ -83,7 +83,7 @@ abbrev alg_8_1_coupledDESystem_sound := @cCoupledDESystem_sound
 
 /-- **The tangent RDE cancellation `CoupledDECancelTan`** (§8.4, the `CoupledDECancelTan(b₀, b₂, c₁, c₂,
 D, n)` box, book p.265), `t = tan(x)`, `Dt = t²+1`, `η = 1`, `a = −1`: the computable
-`cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n` over `k = ℚ(x)`, solving the `t`-polynomial coupled system
+`cCoupledDECancelTan dbound b0 b2 c1 c2 n` over `k = ℚ(x)`, solving the `t`-polynomial coupled system
 `(Dq₁; Dq₂) + [[b₀ − nηt, −b₂], [b₂, b₀ − nηt]] · (q₁; q₂) = (c₁; c₂)` for `q₁, q₂ ∈ k[t]` of `t`-degree
 `≤ n`, degree-by-degree from the top (project mod `t²+1`, base-solve over ℚ(x) via `cCoupledDESystem`,
 divide by `t − √−1`). This **is** the `PolyRischDECancelTan` that `ComputableRischDE`'s §6.6 dispatcher

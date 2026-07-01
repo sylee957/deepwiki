@@ -438,14 +438,14 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol
   exact heq
 
 /-- **★★ The §8 base coupled-system solve self-certifies its cleared check** (`native_decide`-free):
-if `cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)` then `coupledClearedCheck a b1 b2 z1 z2
+if `cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)` then `coupledClearedCheck a b1 b2 z1 z2
 y1 y2 = true`. Composed with `coupledClearedCheck_sound`, this makes the §8 base coupled-system
 soundness UNCONDITIONAL (drops the cleared-check gate of `cCoupledDESystem_sound_of_check`). Bridges
 `cConstSolveUniqueQ_sound` (abstract ℚ-Gaussian-elimination correctness) through the assembly
 faithfulness lemmas `coupledRow1_coeff_eq`/`coupledRow2_coeff_eq` (`r < nrows`) and the residual
 degree bound `coeff_residual_zero_of_ge` (`r ≥ nrows`), so the residual polynomials vanish identically. -/
-theorem coupledClearedCheck_of_cCoupledDESystem (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
-    (d : ℕ) (hsome : cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)) :
+theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
+    (d : ℕ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true := by
   rw [cCoupledDESystem] at hsome
   set nrows : ℕ :=
@@ -603,32 +603,32 @@ namespace DeepWiki.SymbolicIntegration
 
 open CPolyG in
 /-- **★★ Base coupled-system soundness — UNCONDITIONAL** (`cCoupledDESystem_sound`, `native_decide`-free,
-no cleared-check hypothesis): if `cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)` then `(y₁, y₂)`
+no cleared-check hypothesis): if `cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)` then `(y₁, y₂)`
 solves the base coupled system at the `ℚ[X]` level — `D(y₁) + b₁·y₁ + C a·(b₂·y₂) = z₁` and
 `D(y₂) + b₂·y₁ + b₁·y₂ = z₂`. Drops the `_of_check` gate of `cCoupledDESystem_sound_of_check`: the
 engine's own cleared check is now *discharged* from `cConstSolveUniqueQ_sound` (abstract
 ℚ-Gaussian-elimination correctness) via `coupledClearedCheck_of_cCoupledDESystem`, then fed to
 `coupledClearedCheck_sound`. -/
-theorem cCoupledDESystem_sound (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
-    (y1 y2 : CPolyG ℚ) (hsome : cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)) :
+theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
+    (y1 y2 : CPolyG ℚ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
         + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
       Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
         + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
   coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2
-    (CPolyG.coupledClearedCheck_of_cCoupledDESystem fuel a b1 b2 z1 z2 y1 y2 d hsome)
+    (CPolyG.coupledClearedCheck_of_cCoupledDESystem a b1 b2 z1 z2 y1 y2 d hsome)
 
 /-! ### Restatements against the intended wording (`native_decide`-free) -/
 
 -- ★ The §8 base coupled-system solve UNCONDITIONALLY solves the two `ℚ[X]` row identities — no cleared
 -- check hypothesis (the engine's own check is discharged from `cConstSolveUniqueQ_sound`).
-example (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
-    (hsome : CPolyG.cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)) :
+example (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
+    (hsome : CPolyG.cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (CPolyG.toPolyG y1) + CPolyG.toPolyG b1 * CPolyG.toPolyG y1
         + Polynomial.C a * (CPolyG.toPolyG b2 * CPolyG.toPolyG y2) = CPolyG.toPolyG z1 ∧
       Polynomial.derivative (CPolyG.toPolyG y2) + CPolyG.toPolyG b2 * CPolyG.toPolyG y1
         + CPolyG.toPolyG b1 * CPolyG.toPolyG y2 = CPolyG.toPolyG z2 :=
-  cCoupledDESystem_sound fuel a b1 b2 z1 z2 d y1 y2 hsome
+  cCoupledDESystem_sound a b1 b2 z1 z2 d y1 y2 hsome
 
 -- ★ `cConstSolveUniqueQ` soundness restated: the returned solution solves `A·x = b` rowwise.
 example (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
@@ -641,4 +641,3 @@ example (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
 #print axioms CPolyG.cConstSolveUniqueQ_sound
 
 end DeepWiki.SymbolicIntegration
-

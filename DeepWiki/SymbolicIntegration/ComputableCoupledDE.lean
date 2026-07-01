@@ -36,7 +36,7 @@ leading-coefficient relation (book eq. 8.10) is the **base coupled system in `k`
 
 ## What this file delivers (computable over ℚ(x), `native_decide`-validated)
 
-* **`cCoupledDESystem fuel a b1 b2 z1 z2 dbound`** — the **base coupled system solver** over `k = ℚ(x)`
+* **`cCoupledDESystem a b1 b2 z1 z2 dbound`** — the **base coupled system solver** over `k = ℚ(x)`
   (`D = d/dx`): solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]] · (y₁; y₂) = (z₁; z₂)` for `y₁, y₂ ∈ ℚ(x)`,
   with `a ∈ ℚ` the constant and `b₁, b₂, z₁, z₂ ∈ ℚ[x]` polynomial coefficients (the case the §8.4
   tangent recursion reaches — its leading-coefficient base calls have polynomial data). Implemented by a
@@ -45,7 +45,7 @@ leading-coefficient relation (book eq. 8.10) is the **base coupled system in `k`
   unknowns `uᵢ, vᵢ`, solved exactly by the §7.3 unique-linear-solve `cConstSolveUniqueQ` (`crref`).
   Returns `some (y₁, y₂) : CPolyG ℚ × CPolyG ℚ` (the two solution polynomials), or `none`.
 
-* **`cCoupledDECancelTan fuel b0 b2 c1 c2 dbound nbound`** — the **tangent RDE cancellation** box (book
+* **`cCoupledDECancelTan dbound b0 b2 c1 c2 nbound`** — the **tangent RDE cancellation** box (book
   p.265) over `k = ℚ(x)`, `t = tan(x)`, `η = Dt/(t²+1) = 1` (so the `−nηt`/`+nηt` shifts are `∓n·t`).
   Solves the `t`-polynomial coupled system above for `q₁, q₂ ∈ k[t]` of degree `≤ nbound`,
   degree-by-degree from the top, each step a `cCoupledDESystem` base solve. Returns `some (q₁, q₂)`
@@ -153,7 +153,7 @@ corresponding row of `A` (the unknowns split as `[u₀..u_d | v₀..v_d]`, so ea
 def hcatQ (A B : List (List ℚ)) : List (List ℚ) :=
   List.zipWith (· ++ ·) A B
 
-/-- **Computable base coupled differential system over ℚ(x)** `cCoupledDESystem fuel a b1 b2 z1 z2 d`
+/-- **Computable base coupled differential system over ℚ(x)** `cCoupledDESystem a b1 b2 z1 z2 d`
 (Bronstein Ch. 8, eq. 8.2/8.10, the `CoupledDESystem` recursion target, `D = d/dx`, `k = ℚ(x)`):
 solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]] · (y₁; y₂) = (z₁; z₂)` for `y₁, y₂ ∈ ℚ[x]` of degree `≤ d`,
 with `a ∈ ℚ` the constant (`a = −1` for the tangent reduction) and `b₁, b₂, z₁, z₂ ∈ ℚ[x]`.
@@ -171,7 +171,7 @@ Pick `nrows` large enough to hold every coefficient of `R₁, R₂` (one more th
 `2·nrows × 2(d+1)` ℚ-system `M·(u;v) = rhs` (`rhs` = the `zₖ` coefficients), solved for the **unique**
 `(u;v)` by `cConstSolveUniqueQ`. Returns `some (y₁, y₂)` (the reconstructed polynomials) or `none`
 ("no polynomial solution of degree `≤ d`"). -/
-def cCoupledDESystem (_fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) :
+def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) :
     Option (CPolyG ℚ × CPolyG ℚ) :=
   -- choose enough rows: any residual coefficient lives below this degree.
   let degs : List ℕ := [cdegG b1 + d, cdegG b2 + d, cdegG z1, cdegG z2, d]
@@ -312,7 +312,7 @@ where
   /-- pair addition for the synthetic-division carry. -/
   caddG' (x y : CPolyG ℚ × CPolyG ℚ) : CPolyG ℚ × CPolyG ℚ := (caddG x.1 y.1, caddG x.2 y.2)
 
-/-- **Computable tangent RDE cancellation** `cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n` (Bronstein
+/-- **Computable tangent RDE cancellation** `cCoupledDECancelTan dbound b0 b2 c1 c2 n` (Bronstein
 §8.4, the `CoupledDECancelTan(b₀, b₂, c₁, c₂, D, n)` box, book p.265), over `k = ℚ(x)`, `t = tan(x)`,
 `η = Dt/(t²+1) = 1`, `a = −1`. Given `b₀, b₂ ∈ ℚ[x]`, the `t`-polynomials `c₁, c₂` (coefficients in
 `ℚ[x] = CPolyG ℚ`), the degree-bound `n` (recursed down), and a base-solve degree bound `dbound`,
@@ -344,14 +344,14 @@ return (h₁t + h₂ + s₁, h₂t − h₁ + s₂)
 `D` is the tangent monomial derivation (`tanDeriv`); the `nη(s₁t+s₂)` etc. terms are formed over `k[t]`
 (`η = 1`). `cCoupledDESystem` does the base solve with ansatz degree `≤ dbound`. The recursion is
 **structural on `n`** (decremented each level — this is what bounds it, so it whnf-reduces and admits the
-`cCoupledDECancelTan.induct` recursion principle used by the soundness proof); `fuel` is a spare bound
-threaded unchanged. Returns `some (q₁, q₂)` (the two `t`-polynomials with `ℚ[x]`-coefficients), or `none`. -/
-def cCoupledDECancelTan (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) :
+`cCoupledDECancelTan.induct` recursion principle used by the soundness proof). Returns `some (q₁, q₂)` (the
+two `t`-polynomials with `ℚ[x]`-coefficients), or `none`. -/
+def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : CPolyG ℚ) :
     (c1 c2 : List (CPolyG ℚ)) → (n : ℕ) → Option (List (CPolyG ℚ) × List (CPolyG ℚ))
   | c1, c2, 0 =>
     -- n = 0: c₁, c₂ must be in k (degree-0 in t); solve the base coupled system directly.
     if tdeg c1 = 0 && tdeg c2 = 0 then
-      match cCoupledDESystem fuel (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound with
+      match cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound with
       | none => none
       | some (s1, s2) => some ([s1], [s2])
     else none
@@ -365,7 +365,7 @@ def cCoupledDECancelTan (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) :
     let z2 := caddG e1.2 e2.1
     -- base solve CoupledDESystem(b₀, b₂ − nη, z₁, z₂), η = 1 ⇒ shift b₂ by −(n+1).
     let b2shift := csubG b2 (cscaleG nN [CField.one])
-    match cCoupledDESystem fuel (-1) b0 b2shift z1 z2 dbound with
+    match cCoupledDESystem (-1) b0 b2shift z1 z2 dbound with
     | none => none
     | some (s1, s2) =>
       -- numerator of c·p: real = c₁ − z₁ + nη(s₁t + s₂); imag = c₂ − z₂ + nη(s₂t − s₁).
@@ -381,7 +381,7 @@ def cCoupledDECancelTan (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) :
       let quot := divByTminusI cpairs
       let d1 : List (CPolyG ℚ) := quot.map Prod.fst
       let d2 : List (CPolyG ℚ) := quot.map Prod.snd
-      match cCoupledDECancelTan fuel dbound b0 (caddG b2 [CField.one]) d1 d2 n with
+      match cCoupledDECancelTan dbound b0 (caddG b2 [CField.one]) d1 d2 n with
       | none => none
       | some (h1, h2) =>
         -- return (h₁t + h₂ + s₁, h₂t − h₁ + s₂).
@@ -475,15 +475,15 @@ theorem coupledClearedCheck_sound (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
     linear_combination this
 
 /-- **★ Base coupled-system soundness from a self-certifying solve** (`cCoupledDESystem_sound_of_check`,
-`native_decide`-free): if `cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2)` AND the returned pair
+`native_decide`-free): if `cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)` AND the returned pair
 passes the engine's own cleared check (`coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true`), then `(y₁, y₂)`
 solves the base coupled system at the `ℚ[X]` level. Pure composition with `coupledClearedCheck_sound`.
 The cleared check is now *dischargeable* (`coupledClearedCheck_of_cCoupledDESystem`, via the proven
 `cConstSolveUniqueQ_sound`), so the gate-free **`cCoupledDESystem_sound`** (`ComputableCoupledDEAssembly`)
 subsumes this lemma; it is kept as the self-certifying intermediate. -/
-theorem cCoupledDESystem_sound_of_check (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
+theorem cCoupledDESystem_sound_of_check (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
     (y1 y2 : CPolyG ℚ)
-    (_hsome : cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2))
+    (_hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2))
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
     Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
         + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
@@ -492,7 +492,7 @@ theorem cCoupledDESystem_sound_of_check (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 : CP
   coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2 hcheck
 
 -- **Sanity print** (book p.266 step 4): `CoupledDESystem(0, 4x−2, 2−8x², 4−4x) = (−1, 2x+1)`.
-#eval (cCoupledDESystem 30 (-1) ([] : CPolyG ℚ) coupledExB2 coupledExZ1 coupledExZ2 1).map
+#eval (cCoupledDESystem (-1) ([] : CPolyG ℚ) coupledExB2 coupledExZ1 coupledExZ2 1).map
   (fun p => ((p.1 : List ℚ), (p.2 : List ℚ)))
 
 /-- **Example 8.4.1 base coupled solve — `CoupledDESystem` computes over ℚ(x)** (`native_decide`,
@@ -502,7 +502,7 @@ returning `(s₁, s₂) = (−1, 2x+1)`, the book's value (book p.266 step 4). T
 **actually solve** the system by `coupledClearedCheck` (both cleared row identities vanish), not merely
 pinned. This is the Ch. 8 coupled-system core *computing* over the base field ℚ(x). -/
 theorem coupledDESystem_example :
-    (match cCoupledDESystem 30 (-1) ([] : CPolyG ℚ) coupledExB2 coupledExZ1 coupledExZ2 1 with
+    (match cCoupledDESystem (-1) ([] : CPolyG ℚ) coupledExB2 coupledExZ1 coupledExZ2 1 with
       | some (y1, y2) =>
           coupledClearedCheck (-1) [] coupledExB2 coupledExZ1 coupledExZ2 y1 y2
       | none => false) = true := by native_decide
@@ -831,7 +831,7 @@ theorem cancelTanClearedCheck_sound (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CP
   exact ⟨by linear_combination e1, by linear_combination e2⟩
 
 /-- **★ Tangent RDE cancellation soundness from a self-certifying solve** (`cCoupledDECancelTan_sound_of_check`,
-`native_decide`-free): if `cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2)` AND the returned
+`native_decide`-free): if `cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2)` AND the returned
 pair passes the engine's own cleared check (`cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true`, the
 `native_decide`-reachable self-certificate, cf. `rischDE_cancelTan_example`), then `(q₁, q₂)` solves the §8.4
 tangent coupled `t`-polynomial system at the `ℚ[x][t]` level. Pure composition with
@@ -841,9 +841,9 @@ cleared check is now *dischargeable*** (`cancelTanClearedCheck_of_reconstruct`, 
 reconstruction `reconstruct` in `ComputableCoupledDETangentReconstruct`), so the gate-free **unconditional**
 `cCoupledDECancelTan_sound` (same file) subsumes this lemma at `n = 2`; it is kept as the self-certifying
 intermediate. -/
-theorem cCoupledDECancelTan_sound_of_check (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ)
+theorem cCoupledDECancelTan_sound_of_check (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
-    (_hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2))
+    (_hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
         + (Polynomial.C (toPolyG b0) * toPoly2 q1
@@ -858,7 +858,7 @@ theorem cCoupledDECancelTan_sound_of_check (fuel dbound : ℕ) (b0 b2 : CPolyG �
   cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2 hcheck
 
 -- **Sanity print** (book p.267): `cCoupledDECancelTan` returns `q₁ = t − 1`, `q₂ = 2x`.
-#eval (cCoupledDECancelTan 30 1 ([] : CPolyG ℚ) [0, 4] cancelTanC1 cancelTanC2 2).map
+#eval (cCoupledDECancelTan 1 ([] : CPolyG ℚ) [0, 4] cancelTanC1 cancelTanC2 2).map
   (fun p => (p.1.map (fun c => (c : List ℚ)), p.2.map (fun c => (c : List ℚ))))
 
 /-- **Example 8.4.1 — the tangent RDE cancellation `PolyRischDECancelTan` runs end-to-end**
@@ -873,7 +873,7 @@ system). For the system (8.15) over `t = tan(x)` — `b₀ = 0`, `b₂ = 4x`, th
 pinned. The tangent cancellation that finished the RDE oracle's last gap now **computes** over the
 tower. -/
 theorem rischDE_cancelTan_example :
-    (match cCoupledDECancelTan 30 1 ([] : CPolyG ℚ) [0, 4] cancelTanC1 cancelTanC2 2 with
+    (match cCoupledDECancelTan 1 ([] : CPolyG ℚ) [0, 4] cancelTanC1 cancelTanC2 2 with
       | some (q1, q2) =>
           cancelTanClearedCheck [] [0, 4] cancelTanC1 cancelTanC2 q1 q2
       | none => false) = true := by native_decide
@@ -891,19 +891,19 @@ open CPolyG
 
 -- ★ Base coupled-system soundness, `native_decide`-free: a self-certifying `cCoupledDESystem` solve gives
 -- the two `ℚ[X]` row identities `D(y₁) + b₁y₁ + a·b₂y₂ = z₁`, `D(y₂) + b₂y₁ + b₁y₂ = z₂`.
-example (fuel : ℕ) (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
-    (hsome : cCoupledDESystem fuel a b1 b2 z1 z2 d = some (y1, y2))
+example (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
+    (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2))
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
     Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
         + Polynomial.C a * (toPolyG b2 * toPolyG y2) = toPolyG z1 ∧
       Polynomial.derivative (toPolyG y2) + toPolyG b2 * toPolyG y1
         + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
-  cCoupledDESystem_sound_of_check fuel a b1 b2 z1 z2 d y1 y2 hsome hcheck
+  cCoupledDESystem_sound_of_check a b1 b2 z1 z2 d y1 y2 hsome hcheck
 
 -- ★ Tangent RDE cancellation soundness, `native_decide`-free: a self-certifying `cCoupledDECancelTan` solve
 -- gives both rows of the §8.4 tangent coupled `t`-system over `ℚ[x][t]` (`D = ∂/∂x + (t²+1)∂/∂t`).
-example (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
-    (hsome : cCoupledDECancelTan fuel dbound b0 b2 c1 c2 n = some (q1, q2))
+example (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
+    (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
     (toPoly2 (q1.map cderivQ) + (Polynomial.X ^ 2 + 1) * Polynomial.derivative (toPoly2 q1))
         + (Polynomial.C (toPolyG b0) * toPoly2 q1
@@ -915,7 +915,7 @@ example (fuel dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ
         + (Polynomial.C (toPolyG b0) * toPoly2 q2
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 :=
-  cCoupledDECancelTan_sound_of_check fuel dbound b0 b2 c1 c2 q1 q2 n hsome hcheck
+  cCoupledDECancelTan_sound_of_check dbound b0 b2 c1 c2 q1 q2 n hsome hcheck
 
 #print axioms coupledClearedCheck_sound
 #print axioms cancelTanClearedCheck_sound
