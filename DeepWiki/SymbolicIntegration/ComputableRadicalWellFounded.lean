@@ -11,26 +11,21 @@ an explicit `fuel : ℕ` (a structural counter `fuel + 1 → fuel`, called with 
 initial multiplicity `k₀`, or `deg C + 1`). This file builds the **fuel-free** companions `…Wf` of the
 core algebraic-integration recursions by the same well-founded-recursion technique the TRANSCENDENTAL tower
 uses (`ComputableTowerWellFounded` / `ComputableTowerRischDEWellFounded`): recurse on the genuine decreasing
-measure, with `termination_by`/`decreasing_by`, then a correspondence lemma `…Wf … = …fuel sufficientFuel …`
-that transfers every existing `native_decide` validation.
+measure, with `termination_by`/`decreasing_by`, then validate the Wf top-level directly by the radical
+derivation.
 
 The simple-radical rational part has exactly **three** Hermite descents, each with a transparent measure:
 
 * **`radReduceCase1IterateWf`** (Trager Appendix A §2.1) — the `C/(Vᵏy)` Hermite step `k → k−1`, `V` coprime
   to the radicand. Genuine measure: the **multiplicity `k`** (strictly drops `k → k−1`, bottoms at `k ≤ 1`).
-  `termination_by k`; `decreasing_by` discharges `k − 1 < k` (at `k ≥ 2`). Correspondence
-  `radReduceCase1IterateWf_eq`: agrees with `radReduceCase1Iterate fuel` for `k ≤ fuel` — **unconditional**
-  (no regularity predicate), since `k` decreases in lockstep with the fuel in both versions.
+  `termination_by k`; `decreasing_by` discharges `k − 1 < k` (at `k ≥ 2`).
 * **`radReduceCase2IterateWf`** (Trager Appendix A §2.2) — the `C/(Wᵏy)` Hermite step at a branch place
-  `W ∣ ρ`. Same measure (multiplicity `k`), same unconditional correspondence
-  (`radReduceCase2IterateWf_eq`).
+  `W ∣ ρ`. Same measure (multiplicity `k`).
 * **`radReduceCase3IterateWf`** (Trager Appendix A §2.3) — the leftover `C/y` degree-lowering. Genuine
   measure: the **degree `cdegG C`** (the residual `D` strictly drops it, bottoming at `deg C < deg f`).
   `termination_by (cnormG C).length`, under the structural runtime guard `(cnormG D).length < (cnormG C).length`,
-  so `decreasing_by` is `assumption`. As with the tower's primitive-PRS kernel there is no abstract
-  degree-drop engine lemma, so the correspondence (`radReduceCase3IterateWf_eq`) takes a per-run
-  fuel-regularity predicate `RadCase3Regular` mirroring the fuel recursion with the per-step drop guard
-  built in — the fuel lives only in the predicate / bridge proof, the runtime `…Wf` carries none.
+  so `decreasing_by` is `assumption`. If the guard ever fails, the runtime returns the current state rather
+  than taking an unjustified recursive step.
 
 The wrappers `radIntegrateCase1Wf` / `radIntegrateCase2Wf` / `radIntegrateCase3Wf` are the fuel-free entries
 (they compute the budget internally, like `radIntegrateCase{1,2,3}` did with `k0` / `deg C + 1`), and
@@ -39,8 +34,7 @@ the inner Bézout the fuel-free `cdiophantineGWf`). Every `…Wf` is `[CField α
 (plus `[CFracGcdCore α]` where the multi-case driver's squarefree factorization needs it) — never
 `[CFieldSpec α]`, so the whole arc still `native_decide`s over the noncomputable `ℚ(x)` tower.
 
-**Scope-map of the remaining algebraic-integration path** (each remaining fuel-taking def + its decreasing
-measure / leaf-bridge, so the full conversion is a clear mechanical sequence):
+**Scope-map of the remaining algebraic-integration path**:
 
 * `radIntegrateRational` (`ComputableRadicalRationalDriver`) — **flat composition, no recursion of its own**;
   a fuel-free `radIntegrateRationalWf` only needs to substitute fuel-free leaves: `cSqfreeYunFFGWf` (the
@@ -113,32 +107,6 @@ def radIntegrateCase1Wf (der : CPolyG α → CPolyG α) (V f g : CPolyG α) (k0 
     CPolyG α × CPolyG α :=
   radReduceCase1IterateWf der V (der V) f g k0 k0 C []
 
-/-- **Bridge — `radReduceCase1IterateWf` equals `radReduceCase1Iterate` for sufficient fuel.** For any fuel
-budget `fuel ≥ k` (the multiplicity), `radReduceCase1IterateWf der V Df f g k0 k C vNum =
-radReduceCase1Iterate der V Df f g k0 fuel k C vNum`. **Unconditional** (no regularity predicate): the
-multiplicity `k` drops in lockstep with the fuel in both versions, so as long as `fuel` starts `≥ k` the
-two recursions take exactly the same steps and stop together (both at `k ≤ 1`). The fuel bound lives only
-here; `radReduceCase1IterateWf` carries none. By strong induction on `fuel`, generalizing `k C vNum`. -/
-theorem radReduceCase1IterateWf_eq (der : CPolyG α → CPolyG α) (V Df f g : CPolyG α) (k0 : ℕ) :
-    ∀ (fuel k : ℕ) (C vNum : CPolyG α), k ≤ fuel →
-      radReduceCase1IterateWf der V Df f g k0 k C vNum
-        = radReduceCase1Iterate der V Df f g k0 fuel k C vNum := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro k C vNum hk
-    -- `k ≤ 0` ⇒ `k = 0 ≤ 1`; both return `(C, vNum)` (the fuel'd version's `0`-arm fires)
-    have hk1 : k ≤ 1 := Nat.le_trans hk (Nat.zero_le 1)
-    rw [radReduceCase1IterateWf, dif_pos hk1, radReduceCase1Iterate]
-  | succ fuel ih =>
-    intro k C vNum hk
-    rw [radReduceCase1IterateWf]
-    by_cases hk1 : k ≤ 1
-    · rw [dif_pos hk1, radReduceCase1Iterate, if_pos hk1]
-    · rw [dif_neg hk1, radReduceCase1Iterate, if_neg hk1]
-      -- recurse at `k − 1 ≤ fuel`
-      exact ih (k - 1) _ _ (by omega)
-
 /-! ## Part 2 — the fuel-free Case-2 Hermite descent `radReduceCase2IterateWf`
 
 Identical structure to Case 1 — the branch-place (`W ∣ ρ`) Hermite step `k → k−1`, genuine measure the
@@ -173,37 +141,13 @@ vNum)` (Trager Appendix A §2.2): the fuel-free companion of `radIntegrateCase2`
 def radIntegrateCase2Wf (W ρ : CPolyG α) (k0 : ℕ) (C : CPolyG α) : CPolyG α × CPolyG α :=
   radReduceCase2IterateWf W (cdivWf ρ W) ρ k0 k0 C []
 
-/-- **Bridge — `radReduceCase2IterateWf` equals `radReduceCase2Iterate` for sufficient fuel.** For any fuel
-budget `fuel ≥ k`, `radReduceCase2IterateWf W h ρ k0 k C vNum = radReduceCase2Iterate W h ρ k0 fuel k C
-vNum`. **Unconditional** (the multiplicity `k` decreases in lockstep with the fuel). By strong induction on
-`fuel`, generalizing `k C vNum`. -/
-theorem radReduceCase2IterateWf_eq (W h ρ : CPolyG α) (k0 : ℕ) :
-    ∀ (fuel k : ℕ) (C vNum : CPolyG α), k ≤ fuel →
-      radReduceCase2IterateWf W h ρ k0 k C vNum
-        = radReduceCase2Iterate W h ρ k0 fuel k C vNum := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro k C vNum hk
-    have hk1 : k ≤ 1 := Nat.le_trans hk (Nat.zero_le 1)
-    rw [radReduceCase2IterateWf, dif_pos hk1, radReduceCase2Iterate]
-  | succ fuel ih =>
-    intro k C vNum hk
-    rw [radReduceCase2IterateWf]
-    by_cases hk1 : k ≤ 1
-    · rw [dif_pos hk1, radReduceCase2Iterate, if_pos hk1]
-    · rw [dif_neg hk1, radReduceCase2Iterate, if_neg hk1]
-      exact ih (k - 1) _ _ (by omega)
-
 /-! ## Part 3 — the fuel-free Case-3 (`C/y`) degree-lowering `radReduceCase3IterateWf`
 
 `radReduceCase3Iterate der f g fuel C vNum` lowers `deg C` (cancelling the leading term) until
 `deg C < deg f`. The genuine measure is `cdegG C` (equivalently `(cnormG C).length`), which strictly drops
-each step. Unlike Cases 1–2 (where the measure `k` drops by a fixed `−1`), the degree drop is **data-driven**
-(the engine produces a residual `D` with `deg D < deg C`, but there is no abstract degree-drop *lemma* over
-the generic carrier — the same situation as the tower's primitive-PRS kernel). So the `…Wf` recurses under
-the structural runtime guard `(cnormG D).length < (cnormG C).length` (`decreasing_by assumption`), and the
-correspondence takes a per-run fuel-regularity predicate `RadCase3Regular`. -/
+each successful step. Unlike Cases 1–2 (where the measure `k` drops by a fixed `−1`), the degree drop is
+**data-driven**. The `…Wf` recurses under the structural runtime guard
+`(cnormG D).length < (cnormG C).length` (`decreasing_by assumption`). -/
 
 /-- **Fuel-free iterated Case-3 reduction** `radReduceCase3IterateWf der f g C vNum = (Crem, vNumOut)`
 (Trager Appendix A §2.3): the fuel-free companion of `radReduceCase3Iterate`, recursing on the **degree of
@@ -236,73 +180,6 @@ def radIntegrateCase3Wf (der : CPolyG α → CPolyG α) (f g C : CPolyG α) : CP
 
 end CPolyG
 
-/-! ### Per-run Case-3 fuel-regularity and the correspondence bridge
-
-There is no abstract `radCase3Residual` degree-drop lemma over the generic carrier (the residual of the
-leading-term cancellation strictly drops the degree on a real run, but no engine lemma states it — exactly
-the tower's primitive-PRS / Yun situation). So the bridge takes a **fuel-regularity predicate**
-`RadCase3Regular` that mirrors the `radReduceCase3Iterate` fuel recursion **with the per-step degree-drop
-guard built in**. The WF guard then never fails along a regular run, and the WF def coincides with the
-fuel'd one. The fuel lives only in the predicate / bridge proof; the runtime `radReduceCase3IterateWf`
-carries none. -/
-
-/-- **Per-run Case-3-reduction fuel-regularity** `RadCase3Regular der f g fuel C`: mirrors the
-`radReduceCase3Iterate` fuel recursion as an inductive predicate over the structural fuel counter — `stop`
-(any fuel) when the loop terminates (`cisZeroG C || cdegG C < cdegG f`), or `step` (fuel `n+1`) when the
-loop continues, the residual `D = radCase3Residual f g (radCase3Cofactor f g C) C (der (radCase3Cofactor f
-g C))` strictly drops the normalized length (`(cnormG (cnegG D)).length < (cnormG C).length` — the WF guard
-a real run meets), and the same holds recursively on `cnegG D` at one less fuel. The transparent per-node
-precondition a real Case-3 descent satisfies (the genuine termination witness: the degree strictly drops
-each step). -/
-inductive RadCase3Regular {α : Type*} [CField α] (der : CPolyG α → CPolyG α) (f g : CPolyG α) :
-    ℕ → CPolyG α → Prop
-  /-- terminal node: the loop stops (`C = 0` or `deg C < deg f`), any fuel. -/
-  | stop {fuel : ℕ} {C : CPolyG α}
-      (hstop : (CPolyG.cisZeroG C || CPolyG.cdegG C < CPolyG.cdegG f) = true) :
-      RadCase3Regular der f g fuel C
-  /-- recursive node: the loop continues, the residual drops the length, recurse on `cnegG D` at one less
-  fuel. -/
-  | step {fuel : ℕ} {C : CPolyG α}
-      (hcont : (CPolyG.cisZeroG C || CPolyG.cdegG C < CPolyG.cdegG f) = false)
-      (hguard : (CPolyG.cnormG (CPolyG.cnegG
-            (CPolyG.radCase3Residual f g (CPolyG.radCase3Cofactor f g C) C
-              (der (CPolyG.radCase3Cofactor f g C)))) : List α).length
-        < (CPolyG.cnormG C : List α).length)
-      (hrec : RadCase3Regular der f g fuel
-        (CPolyG.cnegG (CPolyG.radCase3Residual f g (CPolyG.radCase3Cofactor f g C) C
-          (der (CPolyG.radCase3Cofactor f g C))))) :
-      RadCase3Regular der f g (fuel + 1) C
-
-namespace CPolyG
-
-variable {α : Type*} [CField α]
-
-/-- **Bridge — `radReduceCase3IterateWf` equals `radReduceCase3Iterate` on a regular run.** Under
-`RadCase3Regular der f g fuel C` (the per-step degree drop a real Case-3 run meets, with sufficient fuel),
-`radReduceCase3IterateWf der f g C vNum = radReduceCase3Iterate der f g fuel C vNum`. The fuel regularity
-lives only here; the WF def carries none. By induction on the `RadCase3Regular` derivation, generalizing
-`vNum`: at a `stop` node both return `(C, vNum)`; at a `step` node both cancel the same leading term and
-recurse on `−D` — the WF guard fires (`hguard`) and the fuel'd version (at `fuel+1`) descends. -/
-theorem radReduceCase3IterateWf_eq (der : CPolyG α → CPolyG α) (f g : CPolyG α) :
-    ∀ (fuel : ℕ) (C vNum : CPolyG α), RadCase3Regular der f g fuel C →
-      radReduceCase3IterateWf der f g C vNum = radReduceCase3Iterate der f g fuel C vNum := by
-  intro fuel C vNum hreg
-  induction hreg generalizing vNum with
-  | @stop fuel C hstop =>
-    -- loop stops: both return `(C, vNum)`
-    rw [radReduceCase3IterateWf, if_pos hstop]
-    cases fuel with
-    | zero => rw [radReduceCase3Iterate]
-    | succ fuel => rw [radReduceCase3Iterate, if_pos hstop]
-  | @step fuel C hcont hguard hrec ih =>
-    -- loop continues: both cancel the same leading term and recurse on `−D`
-    rw [radReduceCase3IterateWf, radReduceCase3Iterate]
-    -- the loop-stop guard is `false` in both; the WF degree-drop guard `hguard` fires
-    simp only [hcont, Bool.false_eq_true, if_false, if_pos hguard]
-    exact ih (caddG vNum (cmulG (radCase3Cofactor f g C) f))
-
-end CPolyG
-
 /-! ## Part 4 — the fuel-free partial-fraction front-end `radPartialFractionCoprimeWf`
 
 `radPartialFractionCoprime fuel R Gs` recurses **structurally on the list `Gs`** of pairwise-coprime
@@ -327,27 +204,11 @@ def radPartialFractionCoprimeWf : CPolyG α → List (CPolyG α) → List (CPoly
     let (Ni, c) := cdiophantineGWf P G R
     Ni :: radPartialFractionCoprimeWf c rest
 
-/-- **Bridge — `radPartialFractionCoprimeWf` equals `radPartialFractionCoprime`.** The driver-side
-`radPartialFractionCoprime` now threads an ignored fuel argument and uses `cdiophantineGWf` at its only
-Bezout leaf, so the bridge is unconditional. By induction on the list `Gs`, generalizing the ignored fuel. -/
-theorem radPartialFractionCoprimeWf_eq (fuel : ℕ) :
-    ∀ (R : CPolyG α) (Gs : List (CPolyG α)),
-      radPartialFractionCoprimeWf R Gs = radPartialFractionCoprime fuel R Gs := by
-  intro R Gs
-  induction Gs generalizing R fuel with
-  | nil => rfl
-  | cons G rest ih =>
-    rw [radPartialFractionCoprimeWf, radPartialFractionCoprime]
-    -- destructure the (now identical) Bézout pair so both `match`es reduce; the tail recurses on `c`
-    obtain ⟨Ni, c⟩ : CPolyG α × CPolyG α := cdiophantineGWf (radProdList rest) G R
-    dsimp only
-    rw [ih 0 c]
-
 end CPolyG
 
-/-! ## Part 5 — `native_decide` transfer: the fuel-free iterates reproduce the validated runs
+/-! ## Part 5 — `native_decide` validation: the fuel-free iterates reproduce the validated runs
 
-The fuel-free Case-2 and Case-3 iterates produce **exactly** the same `(Crem, vNum)` as the validated fuel'd
+The fuel-free Case-2 and Case-3 iterates produce **exactly** the same `(Crem, vNum)` as the validated fueled
 runs (`c2itRun`, `c3itRun` in `ComputableRadicalRationalDriver`), so every `radDeriv`-validated identity
 there holds verbatim of the fuel-free output. Checked directly by `native_decide` over `ℚ` — the whole arc
 is `[CField α]`-only, nothing noncomputable reaches the native compiler. -/
@@ -370,12 +231,9 @@ theorem radIntegrateCase3Wf_eq_c3itRun :
 /-! ## Part 6 — the FLAT fuel-free top-level: `radIntegrateRationalWf` / `cIntegrateAlgebraicWf`
 
 `radIntegrateRational` and `cIntegrateAlgebraic` have **no recursion of their own** (the descents are all in
-the Part 1–3 iterates), so their fuel-free companions are pure **leaf substitution**: every fuel'd leaf is
+the Part 1–3 iterates), so their fuel-free companions are pure **leaf substitution**: every fueled leaf is
 swapped for its fuel-free counterpart, the flat structure is unchanged, and **no `termination_by` is needed**.
-The correspondence is the conjunction of the leaf bridges (the iterate `…_eq` of Parts 1–4, plus the tower's
-`cSqfreeYunFFGgoWf_eq` / `cgcdWf_eq` / `cdivmodWf_eq_of_fuel`), threaded as hypotheses (each independently
-discharged for a concrete run / sufficient fuel — there is no abstract universal degree-drop lemma, the
-recurring tower situation). -/
+The Wf top-level is validated directly below by differentiating its output. -/
 
 namespace CPolyG
 
@@ -477,26 +335,12 @@ theorem cIntegrateAlgebraicWf_rtRat_integrates :
   bottoming at the fuel-free `cresultantWf`, plus a linear solve). Converting it is the next file, built on
   this one. -/
 
-/-! ### `#print axioms` — the fuel-free algebraic-integration recursions
+/-! ### `#print axioms` — the fuel-free algebraic-integration validations
 
 The well-founded `…Wf` defs are TOTAL via well-founded recursion (the measure `k` / `cdegG C`), **not** via
-fuel — `#print axioms` on the Wf proof surface shows the standard `[propext, Classical.choice, Quot.sound]`
-(plus the `native_decide` compiler axiom on the validation theorems), **no `sorryAx`**: the whole point is
-fuel-free totality, achieved. -/
+fuel. The remaining validation theorems are `native_decide` checks over the Wf outputs, **no `sorryAx`**. -/
 
--- The fuel-free Case-1 Hermite descent, agreeing with the fuel'd version for sufficient fuel:
-#print axioms radReduceCase1IterateWf_eq
-
--- The fuel-free Case-2 Hermite descent (branch place), same:
-#print axioms radReduceCase2IterateWf_eq
-
--- The fuel-free Case-3 (`C/y`) degree-lowering, agreeing on a regular run:
-#print axioms radReduceCase3IterateWf_eq
-
--- The fuel-free partial-fraction front-end:
-#print axioms radPartialFractionCoprimeWf_eq
-
--- ★ The fuel-free iterates reproduce the `radDeriv`-validated runs (native_decide transfer):
+-- ★ The fuel-free iterates reproduce the `radDeriv`-validated runs (native_decide):
 #print axioms radIntegrateCase2Wf_eq_c2itRun
 #print axioms radIntegrateCase3Wf_eq_c3itRun
 
