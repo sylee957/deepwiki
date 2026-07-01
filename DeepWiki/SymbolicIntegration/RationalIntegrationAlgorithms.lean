@@ -8,12 +8,9 @@ import Mathlib.RingTheory.Radical.Basic
 import Mathlib.Algebra.Polynomial.Degree.Units
 import Mathlib.Algebra.Polynomial.PartialFractions
 
-/-! # Rational-function integration algorithms — functional form (Bronstein §2.1–§2.2)
-The book's integration *algorithms* (Bernoulli, Hermite, Horowitz–Ostrogradsky, Rothstein–Trager,
-Lazard–Rioboo–Trager) are formalized as ordinary functional Lean `def`s over `K[X]` paired with a
-correctness theorem, rather than via an operational-semantics interpreter. This file starts the
-shared kernel: the extended-Euclidean **Diophantine solver** `aB + bC = c` for coprime `a, b`, the
-inner step of partial-fraction (§2.1) and Hermite (§2.2) reduction. -/
+/-! # Rational-function integration algorithms
+Functional kernels for rational integration over `K[X]`: Diophantine solves, Hermite reduction,
+resultants, subresultants, polynomial parts, and Horowitz denominator splitting. -/
 
 open Polynomial
 
@@ -22,16 +19,13 @@ namespace DeepWiki.SymbolicIntegration
 variable {K : Type*} [Field K]
 
 open Classical in
-/-- **Diophantine solver** (the extended-Euclidean inner step of §2.1/§2.2): for `a, b ∈ K[X]`,
-return `(B, C)` with `a·B + b·C = c` whenever `a, b` are coprime, computed from the Bézout
-coefficients `gcdA/gcdB` scaled by the inverse of the (constant, unit) `gcd a b`. -/
+/-- Extended-Euclidean solver returning cofactors for `a * B + b * C = c` when `a` and `b` are coprime. -/
 noncomputable def diophantineSolve (a b c : K[X]) : K[X] × K[X] :=
   (c * EuclideanDomain.gcdA a b * C ((EuclideanDomain.gcd a b).coeff 0)⁻¹,
    c * EuclideanDomain.gcdB a b * C ((EuclideanDomain.gcd a b).coeff 0)⁻¹)
 
 open Classical in
-/-- **Correctness of `diophantineSolve`**: for coprime `a, b`, the returned pair `(B, C)` solves the
-Bézout/Diophantine equation `a·B + b·C = c`. -/
+/-- For coprime `a` and `b`, `diophantineSolve a b c` solves `a * B + b * C = c`. -/
 theorem diophantineSolve_spec {a b : K[X]} (hab : IsCoprime a b) (c : K[X]) :
     a * (diophantineSolve a b c).1 + b * (diophantineSolve a b c).2 = c := by
   have hg : IsUnit (EuclideanDomain.gcd a b) := EuclideanDomain.gcd_isUnit_iff.mpr hab
@@ -50,19 +44,13 @@ theorem diophantineSolve_spec {a b : K[X]} (hab : IsCoprime a b) (c : K[X]) :
   rw [← map_mul, inv_mul_cancel₀ hr0, map_one, mul_one]
 
 open Classical in
-/-- **Degree-reduced Diophantine solver** (the §2.2 Hermite variant): like `diophantineSolve`, but
-reduces the first cofactor `B` modulo `b` so that `deg B < deg b`. From `a·B + b·C = c`, writing
-`B = (B / b)·b + B % b`, the adjusted pair `(B % b, C + (B / b)·a)` still solves the Bézout equation
-(`a·(B % b) + b·(C + (B / b)·a) = a·B + b·C = c`) while making the first cofactor proper — exactly the
-`deg B < deg V` the Hermite reduction needs to keep its remainders proper. -/
+/-- Diophantine solver whose first cofactor is reduced modulo `b`. -/
 noncomputable def diophantineSolveReduced (a b c : K[X]) : K[X] × K[X] :=
   ((diophantineSolve a b c).1 % b,
    (diophantineSolve a b c).2 + ((diophantineSolve a b c).1 / b) * a)
 
 open Classical in
-/-- **Correctness of `diophantineSolveReduced`**: for coprime `a, b`, the reduced pair still solves the
-Bézout/Diophantine equation `a·B + b·C = c`. The modular adjustment preserves the identity since
-`a·(B % b) + b·(B / b)·a = a·B` (Euclidean `div_add_mod`). -/
+/-- For coprime `a` and `b`, `diophantineSolveReduced a b c` still solves `a * B + b * C = c`. -/
 theorem diophantineSolveReduced_spec {a b : K[X]} (hab : IsCoprime a b) (c : K[X]) :
     a * (diophantineSolveReduced a b c).1 + b * (diophantineSolveReduced a b c).2 = c := by
   have hbase := diophantineSolve_spec hab c
@@ -72,30 +60,22 @@ theorem diophantineSolveReduced_spec {a b : K[X]} (hab : IsCoprime a b) (c : K[X
   linear_combination hbase + a * hdm
 
 open Classical in
-/-- **Degree bound for `diophantineSolveReduced`**: the first cofactor `B` is proper, `deg B < deg b`,
-whenever `b ≠ 0` — `B = (diophantineSolve …).1 % b` and `Polynomial.degree_mod_lt`. -/
+/-- The first cofactor returned by `diophantineSolveReduced` has degree below `b.degree` when `b ≠ 0`. -/
 theorem diophantineSolveReduced_fst_degree_lt {a b : K[X]} (hb : b ≠ 0) (c : K[X]) :
     (diophantineSolveReduced a b c).1.degree < b.degree := by
   simp only [diophantineSolveReduced]
   exact Polynomial.degree_mod_lt _ hb
 
-/-! ## §2.4 The Rothstein–Trager algorithm (functional core)
-The algorithm computes the logarithmic part `∫ A/D = Σ a·log(Gₐ)` for squarefree `D` from two
-primitives: the resultant `R(t) = resultant_x(D, A − t·D')` (whose roots are the residues) and the
-gcd `Gₐ = gcd(D, A − a·D')` (whose roots are the `D`-roots with residue `a`). Both are functional
-`def`s; correctness reuses the §4.4 residue theory. -/
+/-! ## Rothstein-Trager Primitives
+Resultant and gcd primitives for residue-based logarithmic terms of rational integrals. -/
 
-/-- **Rothstein–Trager resultant** `R(t) = resultant_x(D, A − t·D') ∈ K[t]`: `D, A, D'` are lifted to
-`(K[t])[x]` (coefficients embedded by `C : K → K[t]`) and `t` becomes the constant `C X`; the
-resultant eliminates `x`. Formal `x`-degrees `deg D` and `deg D − 1` (the book's layout). -/
+/-- The Rothstein-Trager resultant `resultant_x(D, A - t * D')` as a polynomial in `t`. -/
 noncomputable def rtResultant (A D : K[X]) : K[X] :=
   Polynomial.resultant (D.map (C : K →+* K[X]))
     (A.map (C : K →+* K[X]) - C Polynomial.X * (derivative D).map (C : K →+* K[X]))
     D.natDegree (D.natDegree - 1)
 
-/-- **Specialization of `rtResultant`**: evaluating `R(t)` at `t = a` recovers the parameter
-resultant `resultant_x(D, A − a·D')` (same formal degrees) — `resultant_map_map` for the coefficient
-evaluation `K[t] → K`, since `(C·)` then `eval a` is the identity on `K`. -/
+/-- Evaluating `rtResultant A D` at `a` gives `resultant_x(D, A - C a * D')`. -/
 theorem rtResultant_eval (A D : K[X]) (a : K) :
     (rtResultant A D).eval a
       = Polynomial.resultant D (A - C a * derivative D) D.natDegree (D.natDegree - 1) := by
@@ -110,33 +90,23 @@ theorem rtResultant_eval (A D : K[X]) (a : K) :
     simp
 
 open Classical in
-/-- **Rothstein–Trager `Gₐ`** `= gcd(D, A − a·D')`, the gcd whose roots are exactly the roots of `D`
-at which the residue of `A/D` equals `a` (its correctness is `isRoot_gcd_iff_residue`). -/
+/-- The residue gcd `gcd(D, A - C a * D')`. -/
 noncomputable def rtLogGcd (A D : K[X]) (a : K) : K[X] :=
   gcd D (A - C a * derivative D)
 
 open Classical in
-/-- **Correctness of `rtLogGcd`** (Rothstein–Trager (ii)): at a point `α` with `D'(α) ≠ 0`, `α` is a
-root of `Gₐ` iff `α` is a root of `D` with residue `a`. -/
+/-- At a simple `D`-root, `rtLogGcd A D a` vanishes exactly when the residue of `A / D` is `a`. -/
 theorem rtLogGcd_isRoot_iff (A D : K[X]) (a α : K) (hα : (derivative D).eval α ≠ 0) :
     (rtLogGcd A D a).IsRoot α ↔ (D.IsRoot α ∧ A.eval α / (derivative D).eval α = a) :=
   isRoot_gcd_iff_residue A D a α hα
 
-/-- **Rothstein–Trager correctness, residues = roots of `R`** (combining the resultant primitive with
-Thm 2.4.1(i)): over an algebraically closed field, for squarefree `D`, if the parameter resultant has
-the book's `x`-degree `deg D − 1` (e.g. `a ≠ 0`), then `R(a) = 0` iff `a` is a residue of `A/D`. -/
+/-- For separable `D`, roots of `rtResultant A D` are residues of `A / D`. -/
 theorem rtResultant_eval_eq_zero_iff [IsAlgClosed K] (A D : K[X]) (hD : D.Separable) (a : K)
     (hdeg : (A - C a * derivative D).natDegree = D.natDegree - 1) :
     (rtResultant A D).eval a = 0 ↔ ∃ α, D.IsRoot α ∧ A.eval α / (derivative D).eval α = a := by
   rw [rtResultant_eval, ← hdeg, ← residue_iff_resultant_eq_zero A D hD a]
 
-/-- **Rothstein–Trager resultant as a product over the roots of `D`** (Bronstein §1.4, Thm 1.4.1
-specialized at `t = a`): over an algebraically closed field, for `deg A < deg D`,
-`R(a) = lc(D)^{deg D − 1} · ∏_{α : D(α)=0} (A(α) − a·D'(α))`. This is `rtResultant_eval` composed with
-Mathlib's `resultant_eq_prod_eval` (the resultant of a split polynomial as a product of the other's
-evaluations at the roots); the degree bound `deg(A − a·D') ≤ deg D − 1` holds since `deg A < deg D` and
-`deg D' ≤ deg D − 1`. This is the formula whose root `a` of multiplicity `i` matches `deg gcd(D, A−aD') = i`
-(the residue-multiplicity count behind Theorem 2.5.1). -/
+/-- `rtResultant A D` evaluates to a leading-coefficient factor times the product over roots of `D`. -/
 theorem rtResultant_eval_eq_prod_roots [IsAlgClosed K] (A D : K[X]) (a : K)
     (hA : A.natDegree < D.natDegree) :
     (rtResultant A D).eval a
@@ -150,26 +120,16 @@ theorem rtResultant_eval_eq_prod_roots [IsAlgClosed K] (A D : K[X]) (a : K)
   exact congrArg (D.leadingCoeff ^ (D.natDegree - 1) * ·)
     (congrArg Multiset.prod (Multiset.map_congr rfl (fun α _ => by simp [eval_sub, eval_mul, eval_C])))
 
-/-! ## §2.5 The Lazard–Rioboo–Trager algorithm (subresultant primitive)
-LRT replaces the per-residue gcd computations of Rothstein–Trager with the *subresultant PRS* of `D` and
-`A − t·D'` (in `x`), computed once over `K[t]`. The `j`-th subresultant `Sⱼ(D, A−tD')`, specialized at a
-root `a` of `R`, yields `Gₐ = gcd(D, A−aD')` (Theorem 2.5.1, which rests on the §1.4/§1.5 subresultant-PRS
-theory). Here is the functional primitive `Sⱼ` and its specialization, the subresultant analog of
-`rtResultant`/`rtResultant_eval`. -/
+/-! ## Lazard-Rioboo-Trager Subresultants
+Functional subresultant primitives used to group logarithmic terms by residue multiplicity. -/
 
-/-- **Lazard–Rioboo–Trager subresultant** `Sⱼ(D, A − t·D') ∈ K[t][x]`: `D, A, D'` lifted to `(K[t])[x]`
-(coefficients embedded by `C : K → K[t]`), `t = C X`, and the `j`-th subresultant taken w.r.t. `x` with the
-book's formal degrees `deg D` and `deg D − 1`. The remainders of this one PRS replace the Rothstein–Trager
-gcds. -/
+/-- The `j`-th subresultant of `D` and `A - t * D'` over coefficient ring `K[t]`. -/
 noncomputable def lrtSubresultant (A D : K[X]) (j : ℕ) : (K[X])[X] :=
   subresultant (D.map (C : K →+* K[X]))
     (A.map (C : K →+* K[X]) - C Polynomial.X * (derivative D).map (C : K →+* K[X]))
     D.natDegree (D.natDegree - 1) j
 
-/-- **Specialization of `lrtSubresultant`**: mapping the `K[t]`-coefficients by `t ↦ a` recovers the
-parameter subresultant `Sⱼ(D, A − a·D')` over `K` — `subresultant_map` for the coefficient evaluation
-`K[t] → K`, since `(C·)` then `eval a` is the identity on `K`. By Theorem 2.5.1 this equals `gcd(D, A−aD')`
-up to its leading coefficient. -/
+/-- Specializing `lrtSubresultant A D j` at `t = a` gives the corresponding parameter subresultant over `K`. -/
 theorem lrtSubresultant_eval (A D : K[X]) (a : K) (j : ℕ) :
     (lrtSubresultant A D j).map (Polynomial.evalRingHom a)
       = subresultant D (A - C a * derivative D) D.natDegree (D.natDegree - 1) j := by
@@ -182,13 +142,7 @@ theorem lrtSubresultant_eval (A D : K[X]) (a : K) (j : ℕ) :
     simp
 
 open Classical in
-/-- **Lazard–Rioboo–Trager algorithm** (§2.5, p.51, `IntRationalLogPart`): the functional log-part
-computation, returning the list of pairs `(Qᵢ, Sᵢ)` whose meaning is the logarithmic part
-`∫ A/D = ∑ᵢ ∑_{a : Qᵢ(a)=0} a·log(Sᵢ(a,x))`. The `Qᵢ` are the squarefree-factorization parts of the
-Rothstein–Trager resultant `R = resultant_x(D, A−tD')` (so `Qᵢ` collects the residues of multiplicity `i`
-in `R`); for each `i` with `deg Qᵢ > 0`, `Sᵢ = D` if `i = deg D`, else the `i`-th subresultant
-`lrtSubresultant A D i` (of `x`-degree `i`). The book's optional `lcₓ`-normalization (making the
-logarithms monic) is omitted — the un-normalized output is equally a valid antiderivative. -/
+/-- The Lazard-Rioboo-Trager log-part data pairs squarefree residue factors with subresultant log arguments. -/
 noncomputable def lazardRiobooTrager (A D : K[X]) : List (K[X] × (K[X])[X]) :=
   (squarefreeFactorization (rtResultant A D)).zipIdx.filterMap fun p =>
     let i := p.2 + 1
@@ -196,12 +150,7 @@ noncomputable def lazardRiobooTrager (A D : K[X]) : List (K[X] × (K[X])[X]) :=
     else some (p.1, if i = D.natDegree then D.map (C : K →+* K[X]) else lrtSubresultant A D i)
 
 open scoped Differential in
-/-- **Hermite reduction step in `K(x)`** (§2.2): the integral-lowering identity for a rational
-function, now a theorem *about rational functions* (using `K(x) = RatFunc K`'s differential structure).
-If `B·V' + Cc·V = A` (the Bézout data the algorithm finds, e.g. from `diophantineSolve`), then writing
-`k = m+2`, `∫ (1−k)A/Vᵏ = B/Vᵏ⁻¹ + ∫ ((1−k)Cc − B')/Vᵏ⁻¹` — the integrand's denominator power drops by
-one. Obtained by applying the abstract `hermite_reduction_step` to the `algebraMap` images in `RatFunc K`
-(`d/dx` on the images is `Polynomial.derivative` by `ratFuncDeriv_algebraMap`). -/
+/-- The Hermite lowering identity transported from a differential field to rational functions `K(x)`. -/
 theorem hermiteReduce_step_ratFunc {A B Cc V : K[X]} (hV : V ≠ 0) (m : ℕ)
     (hrel : B * derivative V + Cc * V = A) :
     (-((m : RatFunc K) + 1) * algebraMap K[X] (RatFunc K) A)
@@ -222,12 +171,7 @@ theorem hermiteReduce_step_ratFunc {A B Cc V : K[X]} (hV : V ≠ 0) (m : ℕ)
   exact key
 
 open Classical in
-/-- **Hermite reduction — the prime-power inner loop** (§2.2): iterate `hermiteReduce_step_ratFunc`
-to reduce an integrand `A/Vᵏ` (with `V` squarefree) to `g + r/V`, lowering the denominator power one
-step at a time. Returns `(g, r)` with `g ∈ K(x)` the accumulated rational part and `r ∈ K[X]` the
-final numerator over the squarefree `V`. At power `k = m+2` it solves `B·V' + Cc·V = -A/(m+1)` (Bézout,
-`diophantineSolve`, since `V ⊥ V'`), emits `B/Vᵐ⁺¹` into `g`, and recurses on `-(m+1)·Cc − B'` over
-`Vᵐ⁺¹`. -/
+/-- Hermite prime-power reduction returning a rational part and a residual numerator over `V`. -/
 noncomputable def hermiteReducePower (V : K[X]) : ℕ → K[X] → RatFunc K × K[X]
   | 0,     A => (0, A)
   | 1,     A => (0, A)
@@ -242,11 +186,7 @@ noncomputable def hermiteReducePower (V : K[X]) : ℕ → K[X] → RatFunc K × 
 
 open scoped Differential in
 open Classical in
-/-- **Correctness of `hermiteReducePower`** (§2.2): for squarefree `V` over a characteristic-`0` field
-and any power `k ≥ 1`, the integrand splits as `A/Vᵏ = g' + r/V` where `(g, r) = hermiteReducePower V k A`
-— i.e. `∫ A/Vᵏ = g + ∫ r/V`, the rational part `g` extracted and the remaining integral having the
-squarefree denominator `V`. Proven by induction on `k`, each step the `hermiteReduce_step_ratFunc`
-identity glued to the recursive tail. -/
+/-- `hermiteReducePower V k A` splits `A / V^k` as a derivative plus a residual over `V`. -/
 theorem hermiteReducePower_spec [CharZero K] (V : K[X]) (hV : Squarefree V) :
     ∀ (k : ℕ), 1 ≤ k → ∀ (A : K[X]),
       algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) V ^ k
@@ -296,8 +236,7 @@ theorem hermiteReducePower_spec [CharZero K] (V : K[X]) (hV : Squarefree V) :
         ← IHr]
       exact key
 
-/-- **Degree cancellation helper**: if `(p · V).degree < ↑n` with `V`'s degree `↑d` and `d ≤ n`, then
-`p.degree < ↑(n − d)` — the multiplicative degree law `degree (p·V) = degree p + degree V` cancelled. -/
+/-- If `(p * V).degree < n` and `V.degree = d`, then `p.degree < n - d`. -/
 private theorem degree_lt_of_mul_degree_lt {p V : K[X]} {d n : ℕ} (hV : V.degree = (d : WithBot ℕ))
     (hd : d ≤ n) (h : (p * V).degree < (n : WithBot ℕ)) : p.degree < ((n - d : ℕ) : WithBot ℕ) := by
   rw [Polynomial.degree_mul, hV] at h
@@ -307,7 +246,7 @@ private theorem degree_lt_of_mul_degree_lt {p V : K[X]} {d n : ℕ} (hV : V.degr
     rw [← Nat.cast_add, Nat.cast_lt] at h
     rw [Nat.cast_lt]; omega
 
-/-- **Strict-to-predecessor degree bound**: `p.degree < ↑d` with `0 < d` gives `p.degree ≤ ↑(d − 1)`. -/
+/-- A strict degree bound below a positive natural degree gives a predecessor non-strict bound. -/
 private theorem degree_le_pred_of_lt {p : K[X]} {d : ℕ} (hd : 0 < d) (h : p.degree < (d : WithBot ℕ)) :
     p.degree ≤ ((d - 1 : ℕ) : WithBot ℕ) := by
   rcases eq_or_ne p 0 with hp | hp
@@ -316,12 +255,7 @@ private theorem degree_le_pred_of_lt {p : K[X]} {d : ℕ} (hd : 0 < d) (h : p.de
     rw [Polynomial.degree_eq_natDegree hp, Nat.cast_lt] at h; omega
 
 open Classical in
-/-- **Hermite reduction keeps the remainder proper** (§2.2): for squarefree `V` (`deg V > 0`) over a
-char-`0` field, if the integrand `A/Vᵏ` is *proper* (`deg A < k·deg V`), then the final remainder
-`(hermiteReducePower V k A).2` is proper for the squarefree `V`: `deg < deg V`. The invariant
-`deg A < k·deg V` is preserved by each reduction step (the reduced Bézout cofactor has `deg B < deg V`,
-forcing `deg Cc < (k−1)·deg V` and `deg r < (k−1)·deg V`), bottoming out at `k = 1` where the loop
-returns its proper input unchanged. This is the properness `integrateRationalFunction_logForm` needs. -/
+/-- Hermite prime-power reduction preserves properness of the final squarefree residual. -/
 theorem hermiteReducePower_remainder_degree [CharZero K] (V : K[X]) (hV : Squarefree V)
     (hdpos : 0 < V.natDegree) :
     ∀ (k : ℕ), 1 ≤ k → ∀ (A : K[X]), A.degree < ((k * V.natDegree : ℕ) : WithBot ℕ) →
@@ -393,11 +327,7 @@ theorem hermiteReducePower_remainder_degree [CharZero K] (V : K[X]) (hV : Square
       exact IH (m + 1) (by omega) (by omega) r hrdeg
 
 open Classical in
-/-- **Two-factor partial fraction in `K(x)`** (§2.2/§2.5, the coprime split): for coprime `P, Q` (both
-nonzero) and any numerator `A`, `A/(P·Q) = B/Q + C/P` where `(B, C) = diophantineSolve P Q A` solves the
-Bézout relation `P·B + Q·C = A`. This is the inductive building block of the multi-factor partial-fraction
-decomposition across a squarefree factorization `D = ∏ᵢ Dᵢ^i` (each `Dᵢ^i` pairwise coprime), which feeds
-the prime-power Hermite loop `hermiteReducePower` on each factor. -/
+/-- For coprime nonzero `P` and `Q`, `A / (P * Q)` splits into `B / Q + C / P`. -/
 theorem ratFunc_partialFraction_coprime {P Q A : K[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
     (hPQ : IsCoprime P Q) :
     algebraMap K[X] (RatFunc K) A
@@ -415,11 +345,7 @@ theorem ratFunc_partialFraction_coprime {P Q A : K[X]} (hP : P ≠ 0) (hQ : Q �
   rw [hspec]; field_simp
 
 open Classical in
-/-- **Multi-factor partial fraction in `K(x)`** (§2.2, the full coprime decomposition): for a nonempty
-finite family of pairwise-coprime nonzero factors `P i` (`i ∈ s`), `A/∏ᵢ Pᵢ = ∑ᵢ Bᵢ/Pᵢ` for some
-numerators `B i` — obtained by iterating the two-factor split `ratFunc_partialFraction_coprime` down the
-family. Specializing `s` to the prime powers `Dᵢ^i` of a squarefree factorization `D = ∏ Dᵢ^i` (pairwise
-coprime) decomposes `A/D` into per-prime-power pieces, each then reduced by `hermiteReducePower`. -/
+/-- A nonempty product of pairwise-coprime nonzero factors admits a partial-fraction decomposition. -/
 theorem ratFunc_partialFraction_prod {ι : Type*} (P : ι → K[X]) :
     ∀ (s : Finset ι), s.Nonempty → (∀ i ∈ s, P i ≠ 0) →
       (∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (P i) (P j)) → ∀ (A : K[X]),
@@ -456,12 +382,7 @@ theorem ratFunc_partialFraction_prod {ι : Type*} (P : ι → K[X]) :
 
 open scoped Differential in
 open Classical in
-/-- **Hermite reduction of a full partial-fraction sum** (§2.2, the outer reduction): for a family of
-squarefree factors `D i` with multiplicities `e i ≥ 1` (char 0), the sum of prime-power fractions reduces
-as `∑ᵢ Aᵢ/Dᵢ^{eᵢ} = (∑ᵢ gᵢ)′ + ∑ᵢ rᵢ/Dᵢ` where `(gᵢ, rᵢ) = hermiteReducePower Dᵢ eᵢ Aᵢ` — i.e.
-`∫ ∑ᵢ Aᵢ/Dᵢ^{eᵢ} = ∑ᵢ gᵢ + ∫ ∑ᵢ rᵢ/Dᵢ`, the rational part collected and the remaining integrand having
-squarefree denominators. Composing with `ratFunc_partialFraction_prod` (which produces the `Aᵢ` from a
-single `A/D`, `D = ∏ Dᵢ^{eᵢ}`) is the complete Hermite reduction. -/
+/-- A sum of prime-power fractions Hermite-reduces to a derivative plus squarefree residuals. -/
 theorem hermiteReduce_sum_spec [CharZero K] {ι : Type*} (s : Finset ι) (D : ι → K[X])
     (e : ι → ℕ) (A : ι → K[X]) (hD : ∀ i ∈ s, Squarefree (D i)) (he : ∀ i ∈ s, 1 ≤ e i) :
     ∑ i ∈ s, algebraMap K[X] (RatFunc K) (A i) / algebraMap K[X] (RatFunc K) (D i) ^ e i
@@ -474,12 +395,7 @@ theorem hermiteReduce_sum_spec [CharZero K] {ι : Type*} (s : Finset ι) (D : ι
 
 open scoped Differential in
 open Classical in
-/-- **Hermite reduction — complete outer algorithm** (§2.2): for a single proper fraction `A/D` whose
-denominator has squarefree factorization `D = ∏ᵢ Dᵢ^{eᵢ}` (the `Dᵢ` squarefree, pairwise coprime,
-`eᵢ ≥ 1`, char 0), there is a rational part `g` and numerators `rᵢ` with
-`A/D = g′ + ∑ᵢ rᵢ/Dᵢ` — i.e. `∫ A/D = g + ∫ ∑ᵢ rᵢ/Dᵢ`, the remaining integrand having squarefree
-denominators. Composes `ratFunc_partialFraction_prod` (decompose `A/D` into `∑ Bᵢ/Dᵢ^{eᵢ}`) with
-`hermiteReduce_sum_spec` (reduce each prime power). -/
+/-- A coprime squarefree-power denominator admits a full Hermite reduction. -/
 theorem hermiteReduce_full [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty)
     (D : ι → K[X]) (e : ι → ℕ) (hD : ∀ i ∈ s, Squarefree (D i)) (he : ∀ i ∈ s, 1 ≤ e i)
     (hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (D i) (D j)) (A : K[X]) :
@@ -492,20 +408,14 @@ theorem hermiteReduce_full [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Non
   simp only [map_pow] at hB
   exact ⟨_, _, hB.trans (hermiteReduce_sum_spec s D e B hD he)⟩
 
-/-! ## §2.5 The polynomial part of `IntegrateRationalFunction` (`∫ Q dx`)
-The top-level algorithm splits `∫ A/D` into a rational part (Hermite), a polynomial part `∫ Q dx`
-(`Q` from polynomial division), and a logarithmic part (LRT). Here is the polynomial antiderivative
-`∫ Q dx` — missing from Mathlib — with its correctness `derivative (polyIntegral Q) = Q`. -/
+/-! ## Polynomial Part
+Termwise polynomial antiderivatives and the polynomial-division split for rational functions. -/
 
-/-- **Polynomial antiderivative** (§2.5, the `∫ Q dx` piece of `IntegrateRationalFunction`):
-`∫ (∑ₙ aₙ xⁿ) dx = ∑ₙ (aₙ/(n+1))·xⁿ⁺¹`, the term-by-term antiderivative of a polynomial. -/
+/-- Termwise polynomial antiderivative `∑ aₙ/(n+1) * X^(n+1)`. -/
 noncomputable def polyIntegral (Q : K[X]) : K[X] :=
   Q.sum fun n a => C (a / ((n : K) + 1)) * X ^ (n + 1)
 
-/-- **Correctness of `polyIntegral`** (§2.5): over a characteristic-`0` field,
-`d/dx (∫ Q dx) = Q` — `polyIntegral` is a genuine antiderivative of `Q`. Each term's derivative is
-`C ((a/(n+1))·(n+1)) · Xⁿ = C a · Xⁿ` (`(n+1 : K) ≠ 0` in char `0`); summing reassembles `Q` via
-`sum_C_mul_X_pow_eq`. -/
+/-- Over a characteristic-zero field, `polyIntegral Q` differentiates to `Q`. -/
 theorem polyIntegral_derivative [CharZero K] (Q : K[X]) : derivative (polyIntegral Q) = Q := by
   rw [polyIntegral, Polynomial.sum_def, derivative_sum]
   rw [show (∑ n ∈ Q.support, derivative (C (Q.coeff n / ((n : K) + 1)) * X ^ (n + 1)))
@@ -518,10 +428,7 @@ theorem polyIntegral_derivative [CharZero K] (Q : K[X]) : derivative (polyIntegr
 -- `∫ Q dx` is a genuine antiderivative of `Q`.
 example [CharZero K] (Q : K[X]) : derivative (polyIntegral Q) = Q := polyIntegral_derivative Q
 
-/-- **Polynomial-division split in `K(x)`** (§2.5, the `PolyDivide` step of `IntegrateRationalFunction`):
-for `Den ≠ 0`, `A/Den = (A / Den) + (A % Den)/Den` in `K(x)` — the improper fraction `A/Den` splits into
-its polynomial quotient `Q = A / Den` and the proper remainder fraction `(A % Den)/Den`
-(Euclidean `div_add_mod`). -/
+/-- In `K(x)`, `A / Den` splits into its polynomial quotient plus remainder fraction. -/
 theorem ratFunc_polyDivide_split (A Den : K[X]) (hDen : Den ≠ 0) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) Den
       = algebraMap K[X] (RatFunc K) (A / Den)
@@ -536,14 +443,7 @@ theorem ratFunc_polyDivide_split (A Den : K[X]) (hDen : Den ≠ 0) :
 
 open scoped Differential in
 open Classical in
-/-- **`IntegrateRationalFunction` reduction** (§2.5, p.52): for a numerator `A` and a denominator given
-in squarefree-factored form `Den = ∏ᵢ Dᵢ^{eᵢ}` (`Dᵢ` squarefree, pairwise coprime, `eᵢ ≥ 1`, char `0`),
-the integrand `A/Den` reduces to a rational derivative `g′`, the derivative of a polynomial integral
-`(∫ p dx)′ = (polyIntegral p)′`, and a sum of proper fractions with squarefree denominators `∑ᵢ rᵢ/Dᵢ`:
-`A/Den = g′ + (polyIntegral p)′ + ∑ᵢ rᵢ/Dᵢ`, i.e. `∫ A/Den = g + ∫ p dx + ∫ ∑ᵢ rᵢ/Dᵢ`. Assembles
-`ratFunc_polyDivide_split` (PolyDivide → polynomial part `p = (A % Den)/Den` quotient + proper remainder),
-`polyIntegral`/`polyIntegral_derivative` (`∫ p dx`), and `hermiteReduce_full` (the proper remainder's
-rational + squarefree-denominator split). The residual `∑ᵢ rᵢ/Dᵢ` is the `IntRationalLogPart` input. -/
+/-- A squarefree-power rational function reduces to derivative, polynomial, and squarefree residual parts. -/
 theorem integrateRationalFunction_reduction [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty)
     (D : ι → K[X]) (e : ι → ℕ) (hD : ∀ i ∈ s, Squarefree (D i)) (he : ∀ i ∈ s, 1 ≤ e i)
     (hcop : ∀ i ∈ s, ∀ j ∈ s, i ≠ j → IsCoprime (D i) (D j)) (A : K[X]) :
@@ -584,15 +484,7 @@ example [CharZero K] {ι : Type*} (s : Finset ι) (hs : s.Nonempty) (D : ι → 
 
 open scoped Differential in
 open Classical in
-/-- **`IntegrateRationalFunction` reduction with proper remainders** (§2.5, p.52): the strengthened
-reduction that *also* exposes the Hermite-reduction properness `deg rᵢ < deg Dᵢ`. For a numerator `A`
-over a *monic* squarefree-factored denominator `Den = ∏ᵢ Dᵢ^{eᵢ}` (`Dᵢ` monic squarefree of positive
-degree, pairwise coprime, `eᵢ ≥ 1`, char `0`), `A/Den = g′ + (polyIntegral p)′ + ∑ᵢ rᵢ/Dᵢ` with every
-`rᵢ` proper (`deg rᵢ < deg Dᵢ`). Uses Mathlib's degree-bounded partial fraction
-`div_prod_eq_quo_add_sum_rem_div` (proper per-factor numerators `Bᵢ`, `deg Bᵢ < deg Dᵢ^{eᵢ}`), then
-`hermiteReduce_sum_spec` (rational + squarefree split) and `hermiteReducePower_remainder_degree` (the
-proper input `deg Bᵢ < eᵢ·deg Dᵢ` forces `deg rᵢ < deg Dᵢ`). This discharges the properness premise that
-`integrateRationalFunction_logForm` previously had to assume. -/
+/-- The rational-function reduction can choose squarefree residual numerators proper below each factor. -/
 theorem integrateRationalFunction_reduction_proper [CharZero K] {ι : Type*} (s : Finset ι)
     (D : ι → K[X]) (e : ι → ℕ) (hmonic : ∀ i ∈ s, (D i).Monic) (hsf : ∀ i ∈ s, Squarefree (D i))
     (hnd : ∀ i ∈ s, 0 < (D i).natDegree) (he : ∀ i ∈ s, 1 ≤ e i)
@@ -641,13 +533,11 @@ theorem integrateRationalFunction_reduction_proper [CharZero K] {ι : Type*} (s 
       rw [ratFuncDeriv_algebraMap (polyIntegral p), polyIntegral_derivative]
     rw [hpi]; ring
 
-/-! ## §2.3 The Horowitz–Ostrogradsky algorithm (denominator split)
-The algorithm writes `∫ A/D = B/D⁻ + ∫ C/D*` with `D⁻ = gcd(D, D')` and `D* = D/D⁻` the squarefree
-part (radical) of `D`; `B, C` then come from a linear system. Here is the functional denominator
-split with its two structural correctness facts: `D⁻·D* = D` and `D*` squarefree. -/
+/-! ## Horowitz-Ostrogradsky Split
+Denominator splitting and rational-function identity for one-shot rational-part extraction. -/
 
 open Classical in
-/-- **Horowitz–Ostrogradsky denominator split** (§2.3): `(D⁻, D*) = (gcd(D, D'), D/gcd(D, D'))`. -/
+/-- Horowitz-Ostrogradsky denominator split `(gcd(D, D'), D / gcd(D, D'))`. -/
 noncomputable def hoSplit (D : K[X]) : K[X] × K[X] :=
   (gcd D (derivative D), D / gcd D (derivative D))
 
@@ -657,14 +547,12 @@ private theorem gcd_derivative_ne_zero {D : K[X]} (hD : D ≠ 0) : gcd D (deriva
   fun h => hD (zero_dvd_iff.mp (h ▸ gcd_dvd_left D (derivative D)))
 
 open Classical in
-/-- **`D⁻·D* = D`**: the Horowitz–Ostrogradsky split factors `D` (since `gcd(D, D') ∣ D`). -/
+/-- The Horowitz-Ostrogradsky split factors `D` when `D ≠ 0`. -/
 theorem hoSplit_mul (D : K[X]) (hD : D ≠ 0) : (hoSplit D).1 * (hoSplit D).2 = D :=
   EuclideanDomain.mul_div_cancel' (gcd_derivative_ne_zero hD) (gcd_dvd_left _ _)
 
 open Classical in
-/-- **`D*` is squarefree** (§2.3): over a characteristic-`0` field, `D* = D/gcd(D, D')` is the radical
-of `D`. Via the §1.6 deflation theory (`squarefreePart_mul_deflation`, `deflation_one_eq_gcd`) it is
-associated to `squarefreePart D = radical D`, which is squarefree (`squarefree_radical`). -/
+/-- In characteristic zero, the second component of `hoSplit D` is squarefree. -/
 theorem hoSplit_snd_squarefree [CharZero K] (D : K[X]) (hD : D ≠ 0) :
     Squarefree (hoSplit D).2 := by
   have hprim : D.IsPrimitive := (isPrimitive_iff_ne_zero D).mpr hD
@@ -690,9 +578,7 @@ theorem hoSplit_snd_squarefree [CharZero K] (D : K[X]) (hD : D ≠ 0) :
   exact UniqueFactorizationMonoid.squarefree_radical
 
 open Classical in
-/-- **Key divisibility for Horowitz–Ostrogradsky** (§2.3): `D⁻ = gcd(D, D')` divides `D⁻′·D*` where
-`D* = D/D⁻`. (From `D' = D⁻′·D* + D⁻·D*'` and `D⁻ ∣ D'`, so `D⁻ ∣ D' − D⁻·D*' = D⁻′·D*`.) This is what
-makes the Horowitz polynomial `E := D⁻′·D*/D⁻` exist, so the reduction stays inside `K[X]`. -/
+/-- The first component of `hoSplit D` divides its derivative times the second component. -/
 theorem hoSplit_fst_dvd_deriv_mul_snd (D : K[X]) (hD : D ≠ 0) :
     (hoSplit D).1 ∣ derivative (hoSplit D).1 * (hoSplit D).2 := by
   have hmul : (hoSplit D).1 * (hoSplit D).2 = D := hoSplit_mul D hD
@@ -706,11 +592,7 @@ theorem hoSplit_fst_dvd_deriv_mul_snd (D : K[X]) (hD : D ≠ 0) :
   rwa [hderiv, add_sub_cancel_right] at key
 
 open scoped Differential in
-/-- **Horowitz–Ostrogradsky reduction step in `K(x)`** (§2.3): the polynomial-level integral identity.
-For a split `D = D⁻·D*` with the Horowitz polynomial `E` (`E·D⁻ = D⁻′·D*`) and numerator data
-`B′·D* − B·E + C·D⁻ = A`, `A/(D⁻·D*) = (B/D⁻)′ + C/D*` in `K(x)`, so `∫ A/D = B/D⁻ + ∫ C/D*`. Obtained
-from the abstract `horowitz_reduction_step` on the `algebraMap` images (`d/dx` on them is
-`Polynomial.derivative`). The algorithm finds `B, C` (degree-bounded) by a linear system. -/
+/-- The Horowitz-Ostrogradsky reduction identity transported to rational functions `K(x)`. -/
 theorem horowitzReduce_step_ratFunc {A B C Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
     (hE : E * Dminus = derivative Dminus * Dstar)
     (hA : derivative B * Dstar - B * E + C * Dminus = A) :
