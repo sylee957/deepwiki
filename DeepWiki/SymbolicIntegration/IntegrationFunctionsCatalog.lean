@@ -40,14 +40,17 @@ only; it states no new mathematics.
   Soundness: PARTIAL — `field_identity_cIntegratePolyG_const` covers the constant case only.
 * `cIntegrateReducedG` / `cIntegrateReducedGWf` — the reduced / simple-part capstone (Hermite rational part +
   Rothstein-Trager log part). Soundness: CONDITIONAL field-identity lemmas
-  `field_identity_of_cIntegrateReducedG_primitive` / `_hyperexp` / `_of_residueMatch` / `_of_checkIdentityG`.
-* `cIntegrateHyperexpNormalG` — the hyperexponential normal-part integrator (§5.9 residual feedback).
-  Soundness (unconditional, no `∑c = 0`): `cIntegrateHyperexpNormalG_sound`.
-* `cIntegrateHyperexpFullG` — the full hyperexponential driver (Laurent special part + normal part).
-  Soundness: `cIntegrateHyperexpFullG_sound`.
+  `field_identity_of_cIntegrateReducedG_primitive` / `_hyperexp` / `_of_residueMatch` / `_of_checkIdentityG`;
+  fuel-free hyperexp overshoot: `field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot`.
+* `cIntegrateHyperexpNormalG` / `cIntegrateHyperexpNormalGWf` — the hyperexponential normal-part integrator
+  (§5.9 residual feedback), fuel'd and fuel-free. Soundness (unconditional, no `∑c = 0`):
+  `cIntegrateHyperexpNormalG_sound` / `cIntegrateHyperexpNormalGWf_sound`.
+* `cIntegrateHyperexpFullG` / `cIntegrateHyperexpFullGWf` — the full hyperexponential driver (Laurent special
+  part + normal part), fuel'd and fuel-free. Soundness:
+  `cIntegrateHyperexpFullG_sound` / `cIntegrateHyperexpFullGWf_sound`.
 * `cIntegrateHyperexpG` / `cIntegrateHyperexpLaurentG` — hyperexponential
-  sub-drivers. Soundness: NO direct theorem — their correctness flows through `cIntegrateHyperexpNormalG_sound`
-  / `cIntegrateHyperexpFullG_sound`. (Documented gap, flagged for the coordinator.)
+  sub-drivers. Soundness: NO direct theorem — their correctness flows through the normal/full hyperexp
+  soundness theorems. (Documented gap, flagged for the coordinator.)
 * `cIntegrateElementaryG` — the unified elementary integrator over a tower base `α = QFunNZG β`.
   Soundness: NO standalone theorem — only `native_decide` round-trip example validations
   (`algDerivG` against the integrand). (Documented gap, flagged for the coordinator.)
@@ -111,12 +114,15 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 -- `cIntegrateReducedG`: the conditional reduced-case field identities.
 #check @field_identity_of_cIntegrateReducedG_primitive
 #check @field_identity_of_cIntegrateReducedG_hyperexp
+#check @field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot
 
--- `cIntegrateHyperexpNormalG`: unconditional normal-part soundness.
+-- `cIntegrateHyperexpNormalG` / `cIntegrateHyperexpNormalGWf`: unconditional normal-part soundness.
 #check @cIntegrateHyperexpNormalG_sound
+#check @cIntegrateHyperexpNormalGWf_sound
 
--- `cIntegrateHyperexpFullG`: the full hyperexponential driver soundness.
+-- `cIntegrateHyperexpFullG` / `cIntegrateHyperexpFullGWf`: the full hyperexponential driver soundness.
 #check @cIntegrateHyperexpFullG_sound
+#check @cIntegrateHyperexpFullGWf_sound
 
 -- `field_identity_of_checkIdentityG`: the carrier-agnostic `checkIdentityG` ⟹ field-identity bridge
 -- (`ComputableIntegrateTowerCorrectG`), consumed by the a-priori one-shots above.
