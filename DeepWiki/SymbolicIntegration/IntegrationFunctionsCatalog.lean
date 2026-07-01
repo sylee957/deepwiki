@@ -40,11 +40,10 @@ only; it states no new mathematics.
   Completeness: via the RDE solver — no direct decision procedure on the driver.
 * `cIntegratePolyG` / `cIntegratePolyGWf` — the polynomial-part integrator (Bronstein §5.4 / §6).
   Soundness: PARTIAL — `field_identity_cIntegratePolyG_const` covers the constant case only.
-* `cIntegrateReducedG` / `cIntegrateReducedGWf` — the reduced / simple-part capstone (Hermite rational part +
-  Rothstein-Trager log part). Soundness: CONDITIONAL field-identity lemmas
-  `field_identity_of_cIntegrateReducedG_primitive` / `_hyperexp` / `_of_residueMatch` / `_of_checkIdentityG`;
-  fuel-free check bridge / hyperexp overshoot: `field_identity_of_cIntegrateReducedGWf_of_checkIdentityG` /
-  `field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot`.
+* `cIntegrateReducedGWf` — the fuel-free reduced / simple-part capstone (Hermite rational part +
+  Rothstein-Trager log part). Soundness: CONDITIONAL fuel-free field-identity lemmas
+  `field_identity_of_cIntegrateReducedGWf_primitive` / `_hyperexp` /
+  `_of_checkIdentityG` / `_hyperexp_overshoot`.
 * `cIntegrateHyperexpNormalG` / `cIntegrateHyperexpNormalGWf` — the hyperexponential normal-part integrator
   (§5.9 residual feedback), fuel'd and fuel-free. Soundness (unconditional, no `∑c = 0`):
   `cIntegrateHyperexpNormalG_sound` / `cIntegrateHyperexpNormalGWf_sound`.
@@ -115,8 +114,8 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 -- `cIntegratePolyG`: PARTIAL soundness — the constant case only.
 #check @field_identity_cIntegratePolyG_const
 
--- `cIntegrateReducedG`: the conditional reduced-case field identities.
-#check @field_identity_of_cIntegrateReducedG_primitive
+-- `cIntegrateReducedGWf`: the conditional fuel-free reduced-case field identities.
+#check @field_identity_of_cIntegrateReducedGWf_primitive
 #check @field_identity_of_cIntegrateReducedGWf_hyperexp
 #check @field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
 #check @field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot
