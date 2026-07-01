@@ -175,4 +175,16 @@ reduction integrates end-to-end, `D(v) = rational-part`, validated with the actu
 the genuine radical extension (`ComputableRadicalCase2`). -/
 abbrev appA_case2cDriver_integrates := @case2cDriver_integrates
 
+/-- **Fuel-free multi-case rational-part driver** (Trager, Appendix A §2, iterated):
+`radIntegrateRationalWf` squarefree-decomposes the rational denominator, splits each factor into its
+`V`-part and `W`-part, partial-fractions the numerator, and dispatches every summand to the fuel-free
+Case-1 or Case-2 reduction without runtime fuel. -/
+abbrev appA_radIntegrateRational := @CPolyG.radIntegrateRationalWf
+
+/-- **Appendix A §2** (fuel-free multi-case capstone, `native_decide`): on
+`∫ 1/((x−1)²x²√x)`, the Wf dispatcher classifies the mixed denominator into one `V` factor and one `W`
+factor, assembles the rational part, and the actual radical derivation satisfies `D(v) = rational-part`
+after subtracting the two `k = 1` leftovers. -/
+abbrev appA_multiCaseDriver_integrates := @mcDriverWf_integrates
+
 end DeepWiki.Tiaf

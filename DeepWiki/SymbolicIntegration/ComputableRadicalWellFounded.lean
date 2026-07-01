@@ -299,6 +299,63 @@ def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : CPolyG α) :
 
 end CPolyG
 
+/-! ### Fuel-free multi-case rational driver validation -/
+
+open CPolyG
+
+/-- **The fuel-free multi-case dispatch run** `radIntegrateRationalWf ρ R B` on
+`∫ 1/((x−1)²x²·√x)` — the no-fuel companion of `mcRun`. -/
+def mcRunWf : List (Bool × CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) :=
+  CPolyG.radIntegrateRationalWf mcRho mcR mcB
+
+/-- **The fuel-free dispatch finds exactly two factors, one `V` and one `W`** (`native_decide`): the Wf
+squarefree/classification path yields the same V/W tags and multiplicities as the old fueled run. -/
+theorem mcRunWf_classification :
+    (mcRunWf.map (fun r => r.1), mcRunWf.map (fun r => r.2.2.1)) = ([true, false], [2, 2]) := by
+  native_decide
+
+/-- Pull the fuel-free `V`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of `mcRunWf`. -/
+def mcVWf : CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ :=
+  (mcRunWf.headD (true, [], 0, [], [], [])).2
+
+/-- Pull the fuel-free `W`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of `mcRunWf`. -/
+def mcWWf : CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ :=
+  (mcRunWf.getD 1 (false, [], 0, [], [], [])).2
+
+/-- **The fuel-free assembled total rational part** `v = v_V + v_W` lifted to `RadElem (QFunNZG ℚ)`. -/
+def mcVliftWf : RadElem (QFunNZG ℚ) :=
+  radAdd
+    [CField.zero, CField.div (qxOfNum mcVWf.2.2.2.1)
+      (qxOfNum (cmulG (cpowG mcVWf.1 (mcVWf.2.1 - 1)) mcRho))]
+    [CField.zero, CField.div (qxOfNum mcWWf.2.2.2.1)
+      (qxOfNum (cmulG (cpowG mcWWf.1 mcWWf.2.1) mcRho))]
+
+/-- **The fuel-free integrand's total rational part** after subtracting the two `k = 1` leftovers. -/
+def mcRatLiftWf : RadElem (QFunNZG ℚ) :=
+  radAdd
+    [CField.zero, CField.sub
+      (CField.div (qxOfNum mcVWf.2.2.1) (qxOfNum (cmulG (cpowG mcVWf.1 mcVWf.2.1) mcRho)))
+      (CField.div (qxOfNum mcVWf.2.2.2.2) (qxOfNum (cmulG mcVWf.1 mcRho)))]
+    [CField.zero, CField.sub
+      (CField.div (qxOfNum mcWWf.2.2.1) (qxOfNum (cmulG (cpowG mcWWf.1 mcWWf.2.1) mcRho)))
+      (CField.div (qxOfNum mcWWf.2.2.2.2) (qxOfNum (cmulG mcWWf.1 mcRho)))]
+
+/-- **The fuel-free assembled rational part agrees with the old fueled benchmark** (`native_decide`):
+`mcVliftWf` and `mcVlift` differ by zero in the radical extension. -/
+theorem mcVliftWf_eq_mcVlift :
+    radIsZero (radSub mcVliftWf mcVlift) = true := by native_decide
+
+/-- **The fuel-free rational-part target agrees with the old fueled benchmark** (`native_decide`):
+`mcRatLiftWf` and `mcRatLift` differ by zero in the radical extension. -/
+theorem mcRatLiftWf_eq_mcRatLift :
+    radIsZero (radSub mcRatLiftWf mcRatLift) = true := by native_decide
+
+/-- **The fuel-free multi-case dispatch integrates `∫ 1/((x−1)²x²·√x)`** (`native_decide`): `radDeriv` of
+the Wf-assembled rational part equals the Wf rational part of the integrand after subtracting the two
+first-order leftovers. -/
+theorem mcDriverWf_integrates :
+    radIsZero (radSub (radDeriv 2 mcRhoQx mcVliftWf) mcRatLiftWf) = true := by native_decide
+
 /-! ### The fuel-free unified algebraic integrator `cIntegrateAlgebraicWf` (radical top-level)
 
 `cIntegrateAlgebraic` is one flat composition over `radIntegrateRational` (rational part) + `radLogArgSolve`
@@ -450,6 +507,10 @@ fuel. The remaining validation theorems are `native_decide` checks over the Wf o
 #print axioms radIntegrateCase3Wf_eq_c3itRun
 #print axioms rtRatVWf_eq_rtRatV
 #print axioms rtCombVdispatchWf_eq_rtCombVdispatch
+#print axioms mcRunWf_classification
+#print axioms mcVliftWf_eq_mcVlift
+#print axioms mcRatLiftWf_eq_mcRatLift
+#print axioms mcDriverWf_integrates
 
 -- ★★ The FUEL-FREE radical integrator integrates end-to-end (`D(∫f) = f`, native_decide):
 #print axioms cIntegrateAlgebraicWf_rtRat_integrates
