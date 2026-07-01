@@ -30,12 +30,13 @@ both the degree and `κ`.
   when `der = cderivG` (`deg g = deg f − 1`); gives `b·θ^{deg C−deg f}` when `der = cmonomialDeriv [θ]`
   (`deg g = deg f`). The `der` is the ACTUAL derivation, NOT formal `cderivG`.
 
-* **`radReduceCase3IterateG`** — `radReduceCase3Iterate` op-for-op with the cofactor swapped to
+* **`radReduceCase3IterateG`** — fuel-free `radReduceCase3Iterate` with the cofactor swapped to
   `radCase3CofactorTower der` (so the ACTUAL derivation drives both `B` and the residual `D = der B·f + Bg −
-  C`). One structural step per fuel; accumulates `B·f` into `vNum`; bottoms at `deg C < deg f`.
+  C`). It recurses directly on the degree of `C`, accumulates `B·f` into `vNum`, and bottoms at
+  `deg C < deg f`.
 
-* **`radIntegrateCase3G`** — the `∫ C/y` driver over the tower base, `radReduceCase3IterateG` from
-  `fuel = deg C + 1`.
+* **`radIntegrateCase3G`** — the `∫ C/y` driver over the tower base, using the fuel-free
+  `radReduceCase3IterateG`.
 
 **★★ THE MILESTONE** (`native_decide`): over `α = ℚ(x)(eˣ)` (the exp tower, `θ' = θ` via `expDt1`),
 `∫√(eˣ+1) dx` integrand `y = ρ/y` (`C = ρ = θ+1`), `radIntegrateCase3G (cmonomialDeriv [θ]) ρ (½ρ') C`
@@ -89,41 +90,45 @@ def radCase3CofactorTower (der : CPolyG α → CPolyG α) (f g C : CPolyG α) : 
 
 /-! ### The iterated Case-3 reduction with the ACTUAL derivation (Trager Appendix A §2.3, generic `der`)
 
-`radReduceCase3IterateG` is `radReduceCase3Iterate` (`ComputableRadicalRationalDriver`) op-for-op, with the
-cofactor swapped from the `θ' = 1`-baked `radCase3Cofactor` to the generic `radCase3CofactorTower der`. The
-`der` is the ACTUAL radicand-level derivation — `cmonomialDeriv [θ]` over the exp tower (`θ' = θ`), or
-`cderivG` over the ℚ-base (`θ' = 1`). Everything else (the residual `radCase3Residual`, the `B·f`
-accumulation, the structural fuel, the `deg C < deg f` bottom) is identical to `radReduceCase3Iterate`; only
-the derivation changes, exactly as `radLogResidualG` routes `CDiffField.cderiv` instead of formal
-`cderivG`. -/
+`radReduceCase3IterateG` is the fuel-free companion of `radReduceCase3Iterate`
+(`ComputableRadicalRationalDriver`), with the cofactor swapped from the `θ' = 1`-baked `radCase3Cofactor` to
+the generic `radCase3CofactorTower der`. The `der` is the ACTUAL radicand-level derivation —
+`cmonomialDeriv [θ]` over the exp tower (`θ' = θ`), or `cderivG` over the ℚ-base (`θ' = 1`). Everything else
+(the residual `radCase3Residual`, the `B·f` accumulation, the `deg C < deg f` bottom) is identical to
+`radReduceCase3Iterate`; only the derivation and termination witness change. The recursion is well-founded
+on `(cnormG C).length`, with a runtime degree-drop guard before the recursive call. -/
 
-/-- **Iterated Case-3 reduction with the ACTUAL derivation** `radReduceCase3IterateG der f g fuel C vNum =
-(Crem, vNumOut)` (Trager Appendix A §2.3, iterated). `radReduceCase3Iterate` op-for-op with the cofactor
-`B := radCase3CofactorTower der f g C` (the generic leading-term cofactor that reads its degree and leading
-coefficient off the ACTUAL `der`), NOT the `θ' = 1`-baked `radCase3Cofactor`. While `deg C ≥ deg f` it
-cancels the leading term of `C` with `B`, forms the residual `D := radCase3Residual f g B C (der B)` (the
+/-- **Fuel-free iterated Case-3 reduction with the ACTUAL derivation** `radReduceCase3IterateG der f g C
+vNum = (Crem, vNumOut)` (Trager Appendix A §2.3, iterated). This is `radReduceCase3Iterate` with the
+cofactor `B := radCase3CofactorTower der f g C` (the generic leading-term cofactor that reads its degree and
+leading coefficient off the ACTUAL `der`), NOT the `θ' = 1`-baked `radCase3Cofactor`. While `deg C ≥ deg f`
+it cancels the leading term of `C` with `B`, forms the residual `D := radCase3Residual f g B C (der B)` (the
 ACTUAL `der B`), **accumulates** the contribution `B·f` into `vNum` (the rational-part numerator over the
-common denominator `y`), and recurses on the negated residual `−D`. Bottoms at `deg C < deg f` returning
-`(C, vNum)`. `der` is the radicand-level derivation: `cmonomialDeriv [θ]` over the exp tower (`θ' = θ`),
-`cderivG` over the ℚ-base (`θ' = 1`). Generic over `[CField α]`. -/
+common denominator `y`), and recurses on the negated residual `−D` under the structural degree-drop guard.
+Bottoms at `deg C < deg f` returning `(C, vNum)`. `der` is the radicand-level derivation:
+`cmonomialDeriv [θ]` over the exp tower (`θ' = θ`), `cderivG` over the ℚ-base (`θ' = 1`). Generic over
+`[CField α]`; no runtime fuel. -/
 def radReduceCase3IterateG (der : CPolyG α → CPolyG α) (f g : CPolyG α) :
-    ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
-  | 0, C, vNum => (C, vNum)
-  | fuel + 1, C, vNum =>
+    CPolyG α → CPolyG α → CPolyG α × CPolyG α
+  | C, vNum =>
     if cisZeroG C || cdegG C < cdegG f then (C, vNum)
     else
       let B := radCase3CofactorTower der f g C
       let D := radCase3Residual f g B C (der B)
-      radReduceCase3IterateG der f g fuel (cnegG D) (caddG vNum (cmulG B f))
+      if (cnormG (cnegG D) : List α).length < (cnormG C : List α).length then
+        radReduceCase3IterateG der f g (cnegG D) (caddG vNum (cmulG B f))
+      else (C, vNum)
+termination_by C => (cnormG C : List α).length
+decreasing_by assumption
 
 /-- **The simple-radical rational-part driver (Case 3) with the ACTUAL derivation** `radIntegrateCase3G der
 f g C = (Crem, vNum)` (Trager Appendix A §2.3) — the `∫ C/y` driver over a simple radical `y² = f` for a
 polynomial numerator `C`, with the radicand-level derivation `der` the ACTUAL one (`cmonomialDeriv [θ]` over
-the exp tower, `θ' = θ`). Runs `radReduceCase3IterateG` (structural fuel `deg C + 1`), returning the
+the exp tower, `θ' = θ`). Runs the fuel-free `radReduceCase3IterateG`, returning the
 irreducible leftover `Crem` (`deg Crem < deg f`) and the accumulated rational-part numerator `vNum` over the
 common denominator `y`. Master identity: `∫ C/y = vNum/y + ∫ Crem/y`. Generic over `[CField α]`. -/
 def radIntegrateCase3G (der : CPolyG α → CPolyG α) (f g C : CPolyG α) : CPolyG α × CPolyG α :=
-  radReduceCase3IterateG der f g (cdegG C + 1) C []
+  radReduceCase3IterateG der f g C []
 
 end CPolyG
 
