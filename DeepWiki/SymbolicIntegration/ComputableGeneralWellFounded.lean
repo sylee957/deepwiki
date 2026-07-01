@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
 import DeepWiki.SymbolicIntegration.ComputableGeneralQuotient
+import DeepWiki.SymbolicIntegration.ComputableGeneralSetup
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 /-! # Fuel-free GENERAL (non-radical) algebraic-function integration
@@ -357,11 +357,18 @@ The fuel-free top-level returns the expected combined integral and the derivativ
 `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y` on `y³ = x²` (`ComputableGeneralLogArg`'s
 `afIntegrateAlgebraic_cuspCubic_combine`) is the witness. -/
 
-/-- **The fuel-free general integrator run** `afIntegrateAlgebraicWf 8…`'s data, on the cuspidal cubic
-`y³ = x²` combined integral `∫ (y + afDeriv(y)/y) dx`. Same arguments as the validated `gcCombineSolved`, with
-the fueled top-level replaced by the fuel-free `afIntegrateAlgebraicWf`. -/
+/-- The rational summand input for the fuel-free cuspidal-cubic combined validation. -/
+def gcCombineRatIntegrandWf : CPolyG (QFunNZG ℚ) := gcuspCubicY
+
+/-- The log-derivative input for the fuel-free cuspidal-cubic combined validation. -/
+def gcCombineLogIntegrandWf : CPolyG (QFunNZG ℚ) :=
+  afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
+    [CField.zero, CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)]
+
+/-- **The fuel-free general integrator run** `afIntegrateAlgebraicWf …`'s data, on the cuspidal cubic
+`y³ = x²` combined integral `∫ (y + afDerivWf(y)/y) dx`. -/
 def gcCombineSolvedWf : Option (CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) :=
-  afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrand gcCombineLogIntegrand
+  afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrandWf gcCombineLogIntegrandWf
 
 /-- **★★ The FUEL-FREE general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`**
 (`native_decide`). The fuel-free `afIntegrateAlgebraicWf` derives the rational part `v = (3/5)x·y`
@@ -375,9 +382,9 @@ theorem afIntegrateAlgebraicWf_cuspCubic_combine :
     (gcCombineSolvedWf.map (fun p =>
       let v := p.1
       let u := p.2
-      cisZeroG (csubG (afDerivWf gcuspCubicF v) gcCombineRatIntegrand)
+      cisZeroG (csubG (afDerivWf gcuspCubicF v) gcCombineRatIntegrandWf)
       && cisZeroG (csubG v [CField.zero, qxOfNum [0, 3/5]])
-      && cisZeroG (afLogResidualWf gcuspCubicF gcCombineLogIntegrand u)
+      && cisZeroG (afLogResidualWf gcuspCubicF gcCombineLogIntegrandWf u)
       && cisZeroG [u.getD 0 CField.zero]
       && !cisZeroG [u.getD 1 CField.zero])) = some true := by native_decide
 

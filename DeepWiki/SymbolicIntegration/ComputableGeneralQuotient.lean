@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableGeneralDerivation
+import DeepWiki.SymbolicIntegration.ComputableGeneralSetup
 import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
 
 /-! # Quotient API for general algebraic-function carriers

@@ -1,5 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
-import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
+import DeepWiki.SymbolicIntegration.ComputableGeneralSetup
 
 /-! # The GENERAL derivation on `K(x, y) = K(x)[y]/(f)` for an arbitrary monic curve, and a genus-0
 NON-HYPERELLIPTIC integral (Trager, *Integration of Algebraic Functions*, Ch. 4 §2 "Algebraic functions",
@@ -63,16 +62,6 @@ For a monic curve `f(x, y) = yⁿ + a_{n−1}(x)·yⁿ⁻¹ + … + a₀(x)` rep
 * `f_x = ∂f/∂x` — the **base derivation `d/dx` applied to each coefficient**: `f.map CDiffField.cderiv`
   (the `K(x)`-derivation `CDiffField.cderiv` on every `aᵢ`, no `y`-power change). Needs `[CDiffField α]`. -/
 
-/-- **`∂f/∂y` of the curve `f`** `afFy f = cderivG f` — the formal `y`-derivative of `f` as a polynomial in
-`y` (`α = K(x)` coefficients): `f_y = n·yⁿ⁻¹ + (n−1)a_{n−1}yⁿ⁻² + …`. For a separable `f` this is a **unit**
-of `K(x)[y]/(f)` (`gcd(f, f_y) = 1`). Needs only `[CField α]`. -/
-def afFy (f : CPolyG α) : CPolyG α := cderivG f
-
-/-- **`∂f/∂x` of the curve `f`** `afFx f = f.map CDiffField.cderiv` — the base derivation `d/dx` applied to
-each `K(x)` coefficient of `f` (no `y`-power change, since `∂(aᵢ yⁱ)/∂x = aᵢ' yⁱ`). For `f = yⁿ + Σ aᵢ yⁱ`
-this is `Σ aᵢ' yⁱ` (the `yⁿ` term has constant coefficient `1`, so `1' = 0`). Needs `[CDiffField α]`. -/
-def afFx (f : CPolyG α) : CPolyG α := (f : List α).map CDiffField.cderiv
-
 /-! ### The implicit derivative `y' = −f_x / f_y mod f` (`afYprime`)
 
 Differentiating `f(x, y) = 0` totally gives `f_x + f_y·y' = 0`, so `y' = −f_x / f_y`. Since `f` is
@@ -125,15 +114,6 @@ has the power basis `[1, y, y²]`; `y³ ≡ x² (mod f)`. The implicit derivativ
 
 open CPolyG
 
-/-- The cuspidal cubic `f = y³ − x² ∈ ℚ(x)[y]` (`a₀ = −x²`, `a₁ = a₂ = 0`, monic, degree `n = 3`), the
-`CPolyG (QFunNZG ℚ)` `[−x², 0, 0, 1]`. **Non-hyperelliptic** (degree `> 2`) and genus 0 (the cusp
-`y = x^{2/3}`). The general derivation `afDeriv` integrates `∫ y dx = (3/5)x·y` on it. -/
-def gcuspCubicF : CPolyG (QFunNZG ℚ) :=
-  [qxOfNum [0, 0, -1], CField.zero, CField.zero, CField.one]
-
-/-- The generator `y` of `ℚ(x)[y]/(y³ − x²)` (`afBasisElem 1 = [0, 1]`). -/
-def gcuspCubicY : CPolyG (QFunNZG ℚ) := afBasisElem 1
-
 /-- **★ The implicit derivative is `y' = (2/(3x))·y` on the cuspidal cubic** (`native_decide`):
 `afYprime (y³ − x²) = 2x·(3y²)⁻¹ mod f = (2/(3x))·y` (the field-inverted `f_y = 3y²` gives `(3y²)⁻¹ =
 y/(3x²)`, so `y' = 2x·y/(3x²) = (2/(3x))·y`). Checked by `cisZeroG` of `y' − [0, 2/(3x)]`. THE IMPLICIT
@@ -160,9 +140,6 @@ rational part is `v = (3/7)x·y² = [0, 0, (3/7)x]` (a genuine `y²`-component, 
 pure-`y` part). The general derivation checks it: `D((3/7)x·y²) = (3/7)(y² + x·2y·y') = (3/7)(y² +
 2x·y·(2/(3x))·y) = (3/7)(y² + (4/3)y²) = (3/7)(7/3)y² = y²` (using `y' = (2/(3x))y`, so
 `2x·y·(2/(3x))·y = (4/3)y²`). -/
-
-/-- The integrand `y²` of `∫ y² dx` on `y³ = x²` (`afBasisElem 2 = [0, 0, 1]`). -/
-def gcuspCubicYsq : CPolyG (QFunNZG ℚ) := afBasisElem 2
 
 /-- **★ The second genus-0 NON-HYPERELLIPTIC integral `∫ y² dx = (3/7)·x·y²` on `y³ = x²`**
 (`native_decide`): the GENERAL derivation `afDeriv (y³ − x²)` of `v = (3/7)x·y² = [0, 0, (3/7)x]` equals

@@ -56,28 +56,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open CPolyG
 
-/-! ### The ansatz monomials `xʲ·wᵢ` over the integral basis (`afRatMonomials`)
-
-The rational-part ansatz `v = Σ_{i,j} c_{ij}·xʲ·wᵢ` ranges over the integral basis `[w₀,…,w_{m−1}]`
-(`basis = integralBasis f`, the functions with no finite poles) and `x`-powers `xʲ` (`j ≤ degBound`). Each
-monomial `xʲ·wᵢ` is the basis vector `wᵢ` scaled by the `K(x)` element `xʲ` (`cscaleG (qxMonomial j) wᵢ`) —
-a `CPolyG (QFunNZG ℚ)`, an element of `K(x)[y]/(f)`. These are the pre-images of the linear system's columns
-(`afDeriv` is applied to each to get the column). The ordering is `(i, j)` with `i` outer, `j` inner, so
-column index `i·(degBound+1) + j` corresponds to `c_{ij}`. -/
-
-/-- **A `ℚ(x)` value `xᵏ`** (`QFunNZG ℚ`) — numerator the `k`-th monomial `[0,…,0,1]`, denominator `1`. The
-`x`-power scalar multiplying a basis vector in the ansatz. -/
-def qxMon (k : ℕ) : QFunNZG ℚ := qxOfNum (cshiftG k [(1 : ℚ)])
-
-/-- **The ansatz monomials `xʲ·wᵢ`** `afRatMonomials basis degBound`: for each basis vector `wᵢ` (`i` outer)
-and `x`-power `j ≤ degBound` (`j` inner), the element `xʲ·wᵢ = cscaleG (xʲ) wᵢ ∈ K(x)[y]/(f)`. The
-`basis.length·(degBound+1)` pre-images of the linear system's columns; `afDeriv f` applied to each gives the
-column (`afRatColumns`). Column index `i·(degBound+1) + j` ↔ unknown `c_{ij}`. -/
-def afRatMonomials (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ) :
-    List (CPolyG (QFunNZG ℚ)) :=
-  basis.flatMap (fun wi =>
-    (List.range (degBound + 1)).map (fun j => cscaleG (qxMon j) wi))
-
 /-! ### The residual columns `[afDeriv f (xʲ wᵢ) …, −integrand]` (`afRatColumns`)
 
 The condition `afDeriv f v = integrand` for `v = Σ c_{ij} xʲ wᵢ` is, by `K`-linearity of `afDeriv`,
@@ -174,10 +152,6 @@ integrand `∫ y dx` is `y = [0, 1]` (`gcuspCubicY`). Ansatz degree `1` (so `xʲ
 `afRationalSolve` builds the `ℚ`-system `Σ c_{ij} afDeriv (xʲ wᵢ) = y` and SOLVES it: the unique (up to the
 RHS normalization) solution is `v = (3/5)x·y` — the basis vector `y` (= `w₁`) times `(3/5)x`. The rational
 part is the solver's OUTPUT. -/
-
-/-- The integral basis of the cuspidal cubic `y³ = x²` (`= [1, y, y²/x]`), the ansatz basis for the
-rational-part solve. -/
-def gcuspCubicBasis : List (CPolyG (QFunNZG ℚ)) := integralBasis gcuspCubicF
 
 /-- The DERIVED rational part of `∫ y dx` on `y³ = x²` — `afRationalSolve` over the integral basis, ansatz
 degree `1`. Expected `v = (3/5)x·y`. -/
