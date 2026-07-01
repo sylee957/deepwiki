@@ -1417,84 +1417,12 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   cIntegrateGFullWf_poly_oneShot Dt a d cands res qp hb hfp hsome hqp hgden hpoly hnormal hrecon
 
-/-! ### ★★★ The POLYNOMIAL one-shot with the poly-RDE frontier `hpoly` DISCHARGED (primitive base)
+/-! ### ★★★ The fuel-free POLYNOMIAL one-shot with `hpoly` discharged (primitive base)
 
-`cIntegrateGFull_poly_oneShot` is gated on `hpoly` (`D(amG qₚ) = amG fₚ`, the poly-Risch-DE oracle
-soundness). For the **primitive base** `Dt = [CField.one]` that gate is now a *theorem*, not a hypothesis:
-the `b = []` branch integrates `fₚ` by the term-by-term `cIntegratePolyG`
-(`cPolyRischDEG_nil_eq` ⟹ `qₚ = cIntegratePolyG fₚ`), whose field-level antiderivative identity is
-`towerFractionFieldDerivG_amG_cIntegratePolyG_const` over a constant base. The remaining condition is
-exactly `mapCoeffs (toPolyG fₚ) = 0` (the integrand's coefficients differential-constant), supplied by
-the integrand-keyed `cPolyRischDEG_nil_field_identity` route (`cIntegratePolyG_const_coeff`). The other
-gates (`hnormal`, `hrecon`, `hgden`) are the separate engine-bridge / canonical-split frontier and stay
-as hypotheses. **Boundary**: only `Dt = [CField.one]` — for a general monomial the `b = []` branch is
-unreachable (term-by-term integration inverts `D(tⁱ) = i·tⁱ⁻¹` only when `D(t) = 1`). -/
-
-/-- **★★★ The POLYNOMIAL one-shot for `cIntegrateGFull` with `hpoly` discharged (primitive base)** —
-over the primitive monomial `Dt = [CField.one]`, if the driver returns `some res` on the polynomial
-branch (`cisZeroG b = true`, `cisZeroG fp = false`, the poly-Risch-DE oracle returning `some qp`) and the
-polynomial part is over a **constant base** (`hconst : mapCoeffs (toPolyG fp) = 0`), then the field-level
-antiderivative identity `D(res) + logResidueSumG res.logs = amG a/amG d` holds — the poly-Risch-DE gate
-`hpoly` of `cIntegrateGFull_poly_oneShot` is now **proven**, not assumed. Discharges `hpoly` by pinning
-`qp = cIntegratePolyG fp` (`cPolyRischDEG_nil_eq`) and applying the abstract polynomial field one-shot
-`towerFractionFieldDerivG_amG_cIntegratePolyG_const` (with the constant-base transport
-`cIntegratePolyG_const_coeff`). The engine-bridge / split gates (`hnormal`, `hrecon`, `hgden`) remain as
-the separate frontier. Checker-free, no `native_decide`. -/
-theorem cIntegrateGFull_poly_oneShot_base [CharZero (CFieldSpec.K α)]
-    (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (res : IntegralResultG α) (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.1.1
-        = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1
-        = false)
-    (hsome : CPolyG.cIntegrateGFull ([CField.one] : CPolyG α) fuel a d cands = some res)
-    (hqp : CPolyG.cPolyRischDEG ([CField.one] : CPolyG α) fuel []
-        (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1
-        ((CPolyG.cdegG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1 : ℤ) + 1)
-        = some qp)
-    (hgden : amG α (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG α) fuel
-          (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-          (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2 cands).rational.2)
-        ≠ 0)
-    (hconst : Differential.mapCoeffs
-        (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1) = 0)
-    (hnormal : towerFractionFieldDerivG ([CField.one] : CPolyG α)
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG α) fuel
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2
-                  cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG α) fuel
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2
-                  cands).rational.2))
-          + logResidueSumG ([CField.one] : CPolyG α) (CPolyG.cIntegrateReducedG
-              ([CField.one] : CPolyG α) fuel
-              (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-              (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2 cands).logs
-        = amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2))
-    (hrecon : amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1)
-          + amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG ([CField.one] : CPolyG α)
-        (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG ([CField.one] : CPolyG α) res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
-  -- the oracle output is exactly `cIntegratePolyG fp` (the `b = []` integration branch)
-  set fp := (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1 with hfpE
-  have hqp_eq : qp = CPolyG.cIntegratePolyG fp := by
-    rw [cPolyRischDEG_nil_eq ([CField.one] : CPolyG α) fuel fp ((CPolyG.cdegG fp : ℤ) + 1) hfp
-      (le_refl _)] at hqp
-    exact (Option.some.injEq _ _ ▸ hqp).symm
-  -- discharge `hpoly` via the abstract polynomial field one-shot over the constant base
-  have hpoly : towerFractionFieldDerivG ([CField.one] : CPolyG α) (amG α (toPolyG qp))
-      = amG α (toPolyG fp) := by
-    rw [hqp_eq]
-    exact towerFractionFieldDerivG_amG_cIntegratePolyG_const fp
-      (cIntegratePolyG_const_coeff fp hconst)
-  exact cIntegrateGFull_poly_oneShot ([CField.one] : CPolyG α) fuel a d cands res qp hb hfp hsome
-    hqp hgden hpoly hnormal hrecon
+`cIntegrateGFullWf_poly_oneShot` is gated on `hpoly` (`D(amG qₚ) = amG fₚ`). For the primitive base
+`Dt = [CField.one]`, the `b = []` branch integrates `fₚ` term by term and the Wf dispatcher pins
+`qₚ = cIntegratePolyGWf fₚ`; since `cIntegratePolyGWf` is defeq to `cIntegratePolyG`, the existing constant
+coefficient field identity discharges `hpoly`. -/
 
 omit [CFracGcdCore α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CRischField α] in
 /-- **`cPolyRischDEGWf` `b = 0` branch returns `cIntegratePolyGWf c`.** -/
@@ -1778,7 +1706,7 @@ noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
 /-- `CharZero (CFieldSpec.K (QFunNZG ℚ)) = CharZero (RatFunc ℚ)`: local instance so the poly-branch capstone
-synthesizes the `CharZero` that `cIntegrateGFull_poly_oneShot_base`'s `hpoly` discharge needs over the carrier
+synthesizes the `CharZero` that `cIntegrateGFullWf_poly_oneShot_base`'s `hpoly` discharge needs over the carrier
 abbreviation. -/
 noncomputable local instance : CharZero (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (CharZero (RatFunc ℚ))
@@ -1946,51 +1874,6 @@ example (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res :
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   cIntegrateGFull_poly_oneShot Dt fuel a d cands res qp hb hfp hsome hqp hgden hpoly hnormal hrecon
 
--- ★★★ THE POLY-BRANCH ONE-SHOT WITH `hpoly` DISCHARGED (primitive base `Dt = [1]`, constant base): the
--- poly-Risch-DE gate is now PROVEN from `mapCoeffs (toPolyG fp) = 0`, so the only remaining inputs are the
--- separate engine-bridge / split frontier (`hnormal`, `hrecon`, `hgden`). Checker-free, no native_decide.
-example [CharZero (CFieldSpec.K α)]
-    (fuel : ℕ) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.1.1
-        = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1
-        = false)
-    (hsome : CPolyG.cIntegrateGFull ([CField.one] : CPolyG α) fuel a d cands = some res)
-    (hqp : CPolyG.cPolyRischDEG ([CField.one] : CPolyG α) fuel []
-        (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1
-        ((CPolyG.cdegG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1 : ℤ) + 1)
-        = some qp)
-    (hgden : amG α (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG α) fuel
-          (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-          (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2 cands).rational.2)
-        ≠ 0)
-    (hconst : Differential.mapCoeffs
-        (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1) = 0)
-    (hnormal : towerFractionFieldDerivG ([CField.one] : CPolyG α)
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG α) fuel
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2
-                  cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG ([CField.one] : CPolyG α) fuel
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-                  (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2
-                  cands).rational.2))
-          + logResidueSumG ([CField.one] : CPolyG α) (CPolyG.cIntegrateReducedG
-              ([CField.one] : CPolyG α) fuel
-              (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1
-              (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2 cands).logs
-        = amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2))
-    (hrecon : amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).1)
-          + amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG α) fuel a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG ([CField.one] : CPolyG α)
-        (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG ([CField.one] : CPolyG α) res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateGFull_poly_oneShot_base fuel a d cands res qp hb hfp hsome hqp hgden hconst hnormal hrecon
-
 -- ★ THE LIST↔FINSET BRIDGE: the engine-shaped `List.sum` over the per-root list of `(residue, t−α)` pairs
 -- equals `a/d` over `RatFunc K`, for a primitive monomial `Dt = C w` — the `List` form of the proven Finset
 -- residue match (via `Finset.sum_map_toList`).
@@ -2083,6 +1966,8 @@ fuel-free drivers; the one-shots give `cIntegrateGFull = some res` / `cIntegrate
 one-shot `hnormal`, and the split reconstruction `hrecon`. The proof reads the recombined rational
 `(qₚ·gₙd + gₙ)/gₙd = amG qₚ + gₙ/gₙd`, splits `D` by `Derivation.map_add`, then chains
 `hpoly`/`hnormal`/`hrecon`.
+The primitive-base `hpoly` discharge now lives only in the fuel-free theorem
+`cIntegrateGFullWf_poly_oneShot_base`.
 
 ★ THE GENERAL ONE-SHOT (Target 3, deferred — shape only). A single full-driver theorem
 (`cIntegrateGFull`/`cIntegrateGFullWf = some res ⟹ D(res) = a/d`) covering BOTH branches is a `cisZeroG fp`
@@ -2119,7 +2004,7 @@ hypotheses. -/
 #print axioms cIntegrateGFullWf_poly_eq
 #print axioms cIntegrateGFull_poly_oneShot
 #print axioms cIntegrateGFullWf_poly_oneShot
-#print axioms cIntegrateGFull_poly_oneShot_base
+#print axioms cIntegrateGFullWf_poly_oneShot_base
 #print axioms cHermiteReduceTowerG_numer_degree_lt
 #print axioms cHermiteReduceTowerG_numer_degree_lt_of_residual
 
