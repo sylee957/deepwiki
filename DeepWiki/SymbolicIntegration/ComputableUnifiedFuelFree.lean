@@ -57,4 +57,36 @@ def cIntegrateGFullWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
 
 end CPolyG
 
+/-! ## Level-2 validation for the fuel-free top entry
+
+The reduced-case capstone leaves the polynomial part `fₚ = t₂` of `f = t₂` over `ℚ(x)(t₁)[t₂]`
+undisposed. The fuel-free full driver `cIntegrateGFullWf` lands it: `∫ t₂ = (1/2)t₂²` (the Wf RDE oracle
+solves `Dqₚ = t₂` → `qₚ = (1/2)t₂²`, since `D(t₂) = Dt₂ = 1` for the independent monomial `Dt₂ = [1]`),
+with no logarithmic part. -/
+
+open CPolyG
+
+/-- Level-2 monomial derivative `Dt₂ = 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]`. -/
+def towerFullLvl2Dt : CPolyG Lvl2 := [CField.one]
+
+/-- The level-2 integrand numerator `f = t₂` over `CPolyG Lvl2`. -/
+def towerFullLvl2A : CPolyG Lvl2 := [CField.zero, CField.one]
+
+/-- The level-2 integrand denominator `d = 1` over `CPolyG Lvl2`. -/
+def towerFullLvl2D : CPolyG Lvl2 := [CField.one]
+
+/-- The level-2 residue candidate set for the no-log polynomial-part example. -/
+def towerFullLvl2Cands : List Lvl2 := [CField.zero, CField.one]
+
+/-- **The fuel-free full driver lands `∫ t₂ = (1/2)t₂²` at level 2** (`native_decide`): `cIntegrateGFullWf`
+returns an antiderivative for the pure polynomial part `t₂`, and `checkIdentityG` verifies
+`D(∫f) = f`. -/
+theorem towerFullLvl2_landsPolynomialPartWf :
+    (match CPolyG.cIntegrateGFullWf towerFullLvl2Dt towerFullLvl2A towerFullLvl2D
+        towerFullLvl2Cands with
+      | some res => CPolyG.checkIdentityG towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
+      | none => false) = true := by native_decide
+
+#print axioms towerFullLvl2_landsPolynomialPartWf
+
 end DeepWiki.SymbolicIntegration

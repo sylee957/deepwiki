@@ -698,47 +698,4 @@ def cIntegrateGFull (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : Lis
 
 end CPolyG
 
-/-! ### ★★ STRETCH validation: a polynomial-part tower integral at LEVEL 2 (`native_decide`)
-
-The reduced-case capstone leaves the polynomial part `fₚ = t₂` of `f = t₂` over `ℚ(x)(t₁)[t₂]`
-undisposed. The full driver `cIntegrateGFull` lands it: `∫ t₂ = (1/2)t₂²` (the RDE oracle solves
-`Dqₚ = t₂` → `qₚ = (1/2)t₂²`, since `D(t₂) = Dt₂ = 1` for the independent monomial `Dt₂ = [1]`), with no
-logarithmic part. We pin the result: `cIntegrateGFull` returns a result whose
-antiderivative identity `D(∫f) = f` holds (`checkIdentityG`, cleared of denominators). The whole driver —
-canonical split, the new polynomial-part RDE solve, recombination — *computes* over `ℚ(x)(t₁)[t₂]` at
-level 2. -/
-
-open CPolyG
-
-/-- Level-2 monomial derivative `Dt₂ = 1` over `CPolyG Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent,
-primitive). -/
-def towerFullLvl2Dt : CPolyG Lvl2 := [CField.one]
-
-/-- The level-2 integrand `f = t₂` over `CPolyG Lvl2` — a pure polynomial part (numerator `t₂`,
-denominator `1`) that the reduced-case capstone leaves undisposed. -/
-def towerFullLvl2A : CPolyG Lvl2 := [CField.zero, CField.one]
-
-/-- The level-2 integrand denominator `d = 1` over `CPolyG Lvl2`. -/
-def towerFullLvl2D : CPolyG Lvl2 := [CField.one]
-
-/-- The level-2 residue candidate set (empty rationals — `f = t₂` has no logarithmic part). -/
-def towerFullLvl2Cands : List Lvl2 := [CField.zero, CField.one]
-
-/-- **★★ The full driver `cIntegrateGFull` lands `∫ t₂ = (1/2)t₂²` at LEVEL 2, and `D(∫f) = f`**
-(`native_decide`, the stretch deliverable). On the level-2 integrand `f = t₂` over `ℚ(x)(t₁)[t₂]`
-(`= CPolyG (QFunNZG (QFunNZG ℚ))`, `Dt₂ = 1`) — a **pure polynomial part** that the reduced-case capstone
-leaves undisposed — the full driver `cIntegrateGFull` (canonical split + the new RDE-oracle polynomial-part
-solve `Dqₚ = t₂` + recombination) returns `some res`, and `res` satisfies the antiderivative identity
-`D(res) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` (`checkIdentityG`, cleared of denominators over ℚ(x)(t₁)[t₂]). The
-returned rational part is `(1/2)t₂²` with no logs. **This is the stretch: the polynomial-part integration
-driver — built on the recursive RDE oracle — computes over the monomial tower at level 2 and
-differentiates back to `f`.** -/
-theorem towerFullLvl2_landsPolynomialPart :
-    (match CPolyG.cIntegrateGFull towerFullLvl2Dt 20 towerFullLvl2A towerFullLvl2D
-        towerFullLvl2Cands with
-      | some res => CPolyG.checkIdentityG towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
-      | none => false) = true := by native_decide
-
-#print axioms towerFullLvl2_landsPolynomialPart
-
 end DeepWiki.SymbolicIntegration
