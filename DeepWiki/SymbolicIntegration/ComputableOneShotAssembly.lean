@@ -39,7 +39,7 @@ What this file delivers (axiom-clean `[propext, Classical.choice, Quot.sound]`, 
   `hyperexp_residue_match_iff_sum_zero` (residue match `= a/d` ⟺ `∑c = 0`), threaded through the engine via
   `hyperexp_engine_hmatch`. So the checker-free one-shot now covers the PRIMITIVE and EXPONENTIAL cases.
 
-★ The hyperexp one-shot is GENUINELY CONDITIONAL on `hsum : ∑c = 0`, NOT unconditional: `cIntegrateGFull`'s
+★ The hyperexp one-shot is GENUINELY CONDITIONAL on `hsum : ∑c = 0`, NOT unconditional: `cIntegrateGFullWf`'s
 pure-normal branch returns `some` even when `∑c ≠ 0` (it emits the §5.6 RT logs that OVERSHOOT a hyperexp
 normal part by `R = η·∑c`; the §5.9 residual feedback that fixes this lives in the SEPARATE driver
 `cIntegrateHyperexpFullG`). So "engine success ⟹ `∑c = 0`" is FALSE for this driver — `∑c = 0` is a true side
@@ -216,9 +216,9 @@ theorem monomial_residue_sum_eq_cancel_add (s : Finset K) (a v : K[X])
 consumes) **iff** `∑_{α∈s} c_α = 0` — the integrability condition (`a/d` integrable in the log part alone).
 Composes the unconditional decomposition `monomial_residue_sum_eq_cancel_add` (residue sum = cancel sum + a/d)
 with `hyperexp_cancel_iff_sum_zero` (cancel sum = 0 ⟺ ∑c = 0): `residue sum = a/d ⟺ cancel sum = 0 ⟺ ∑c = 0`.
-The cleanest pin of the hyperexp integrability obstruction — the residue match the §5.6/`cIntegrateGFull`
+The cleanest pin of the hyperexp integrability obstruction — the residue match the §5.6/`cIntegrateGFullWf`
 log-part needs is GENUINELY EQUIVALENT to the side condition `∑c = 0`, not an engine-success consequence
-(see the closing status: `cIntegrateGFull`'s pure-normal branch returns `some` even when `∑c ≠ 0`). -/
+(see the closing status: `cIntegrateGFullWf`'s pure-normal branch returns `some` even when `∑c ≠ 0`). -/
 theorem hyperexp_residue_match_iff_sum_zero (s : Finset K) (a : K[X]) (b : K) (hb : b ≠ 0)
     (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, (C b * X).eval α ≠ α′) :
     (∑ α ∈ s, algebraMap K[X] (RatFunc K)
@@ -394,7 +394,7 @@ example (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
 The hyperexponential analog of `primitive_residue_match_list_engine` / `primitive_engine_hmatch`. The ONLY
 difference from the primitive case is that the RT polynomial-part cancellation is NOT automatic: it is the
 integrability witness `∑c = 0` (`hsum`), supplied here as an explicit hypothesis (see the closing status for
-why `cIntegrateGFull`'s success cannot supply it). Given `hsum`, the residue match is discharged exactly as in
+why `cIntegrateGFullWf`'s success cannot supply it). Given `hsum`, the residue match is discharged exactly as in
 the primitive case, through `hyperexp_residue_match_list`. -/
 
 /-- **★ The hyperexp list↔Finset bridge in the engine's vocabulary (given `∑c = 0`)** — for a
@@ -943,37 +943,16 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
   field_identity_of_cIntegrateReducedGWf_hyperexp Dt a d cands s b hb hDt hherm hden hA hnorm
     hsum hform
 
-/-! ### Task 3: compose with the poly branch — the PRIMITIVE one-shot for `cIntegrateGFull`
+/-! ### Task 3: compose with the poly branch — the PRIMITIVE one-shot for `cIntegrateGFullWf`
 
-`cIntegrateGFull` splits `f = fₚ + b/dₛ + cₙ/dₙ` (`canonicalRepresentationFastG`), requires `b = 0`, and —
-when the polynomial part `fₚ` vanishes — returns `some nrm` with `nrm = cIntegrateReducedG Dt fuel cₙ dₙ
-cands` (the pure-normal primitive branch; the `fₚ ≠ 0` branch routes through the poly-Risch-DE oracle, whose
-one-shot is `ComputableOneShotSoundness`'s `field_identity_of_cPolyRischDEG`). For this branch the result is
-exactly the reduced-case capstone on `(cₙ, dₙ)`, so the task-2 identity
-`field_identity_of_cIntegrateReducedG_primitive` gives `D(res) + logResidueSumG = amG cₙ/amG dₙ`; the
-canonical reconstruction (`fₚ = b = 0` ⟹ `cₙ/dₙ = a/d`, the `canonicalRepresentationFastG_reconstructs`
-specialization) closes it to `= amG a/amG d`. The genuine checker-free `cIntegrateGFull = some res ⟹ D(res) =
-a/d` for the primitive pure-normal case. -/
+`cIntegrateGFullWf` splits `f = fₚ + b/dₛ + cₙ/dₙ` (`canonicalRepresentationFastGWf`), requires `b = 0`,
+and — when the polynomial part `fₚ` vanishes — returns `some nrm` with
+`nrm = cIntegrateReducedGWf Dt cₙ dₙ cands`. For this branch the result is exactly the fuel-free reduced-case
+capstone on `(cₙ, dₙ)`, so the task-2 identity `field_identity_of_cIntegrateReducedGWf_primitive` gives
+`D(res) + logResidueSumG = amG cₙ/amG dₙ`; the fuel-free canonical reconstruction (`fₚ = b = 0` ⟹
+`cₙ/dₙ = a/d`) closes it to `= amG a/amG d`. -/
 
 variable [CRischField α]
-
-omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **`cIntegrateGFull` pure-normal branch returns the reduced capstone** — when the special part `b` and the
-polynomial part `fₚ` of the canonical split both vanish (`cisZeroG b = true`, `cisZeroG fp = true`),
-`cIntegrateGFull Dt fuel a d cands = some (cIntegrateReducedG Dt fuel cₙ dₙ cands)` with
-`(cₙ, dₙ) = (canonicalRepresentationFastG Dt fuel a d).2.2`. Pins the driver's output shape on the primitive
-pure-normal branch: the result is exactly the normal-part capstone on the simple part `(cₙ, dₙ)`. -/
-theorem cIntegrateGFull_pureNormal_eq (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).1 = true) :
-    CPolyG.cIntegrateGFull Dt fuel a d cands
-      = some (CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands) := by
-  rw [CPolyG.cIntegrateGFull]
-  -- destructure the canonical split so the pattern-match `let` reduces; rewrite `hb`/`hfp` to the components
-  rcases hcrep : canonicalRepresentationFastG Dt fuel a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-  rw [hcrep] at hb hfp
-  simp only [hb, hfp, if_true]
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
 /-- **`cIntegrateGFullWf` pure-normal branch returns the fuel-free reduced capstone** — when the special
@@ -1316,20 +1295,20 @@ theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracG
   exact cIntegrateGFullWf_poly_oneShot ([CField.one] : CPolyG α) a d cands res qp hb hfp hsome
     hqp hgden hpoly hnormal hrecon
 
-/-! ### ★★★ Task 3 milestone: the HYPEREXPONENTIAL one-shot for `cIntegrateGFull`, GATED on `∑c = 0`
+/-! ### ★★★ Task 3 milestone: the HYPEREXPONENTIAL one-shot for `cIntegrateGFullWf`, GATED on `∑c = 0`
 
 The fuel-free hyperexponential pure-normal one-shot follows the same pattern:
 `cIntegrateGFullWf = some res` on the pure-normal branch ⟹ `D(res) = a/d`, for a hyperexponential monomial `Dt = η′·t`. The ONLY extra hypothesis
 over the primitive milestone is the integrability witness `hsum : ∑c = 0` — discharging the general-case
 `hcancel` for hyperexp via `hyperexp_residue_match_iff_sum_zero` inside `hyperexp_engine_hmatch`.
 
-★ WHY `hsum` IS NEEDED (the precise obstruction). `cIntegrateGFull`'s pure-normal branch returns `some nrm`
-**UNCONDITIONALLY** (`cIntegrateGFull_pureNormal_eq` — no `none` exit, no integrability check). It does NOT do
+★ WHY `hsum` IS NEEDED (the precise obstruction). `cIntegrateGFullWf`'s pure-normal branch returns `some nrm`
+**UNCONDITIONALLY** (`cIntegrateGFullWf_pureNormal_eq` — no `none` exit, no integrability check). It does NOT do
 the Bronstein §5.9 residual feedback (that lives in the SEPARATE driver `cIntegrateHyperexpFullG`, which
-overshoots by `R = η·∑c` and absorbs it into `∫R`). So for `cIntegrateGFull` on a hyperexp input, `D(res) =
+overshoots by `R = η·∑c` and absorbs it into `∫R`). So for `cIntegrateGFullWf` on a hyperexp input, `D(res) =
 a/d` holds **iff** `∑c = 0` (`hyperexp_residue_match_iff_sum_zero`), and when `∑c ≠ 0` the driver STILL returns
 `some res` but `D(res) ≠ a/d` (`checkIdentityG = false`, witnessed by `ComputableHyperexpNormal`'s
-`nNormInv_reduced_overshoots`). Hence "engine returns `some` ⟹ `∑c = 0`" is **FALSE** for `cIntegrateGFull`,
+`nNormInv_reduced_overshoots`). Hence "engine returns `some` ⟹ `∑c = 0`" is **FALSE** for `cIntegrateGFullWf`,
 and the hyperexp one-shot is GENUINELY conditional on the integrability witness `hsum` — not derivable from
 engine success. The full unconditional story requires routing through `cIntegrateHyperexpFullG` (a different,
 larger soundness task), whose success encodes `∫R` solvability, NOT `∑c = 0`. -/
@@ -1597,7 +1576,7 @@ example {K : Type*} [Field K] [Differential K] (s : Finset K) (b : K) (hb : b �
       ↔ ∑ α ∈ s, c α = 0 :=
   ResidueMatchTower.hyperexp_cancel_iff_sum_zero s b hb c
 
-/-! ### ★ Status — the PRIMITIVE and HYPEREXPONENTIAL `cIntegrateGFull` one-shots, axiom-clean
+/-! ### ★ Status — the PRIMITIVE and HYPEREXPONENTIAL `cIntegrateGFullWf` one-shots, axiom-clean
 
 PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_decide`, **no** `sorry`):
 * **The list↔Finset bridge** (`primitive_residue_match_list` / `…_engine`) — the engine-shaped `List.sum`
@@ -1622,25 +1601,26 @@ PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_de
   - **`hyperexp_engine_hmatch`** / **`hyperexp_residue_match_list_engine`** — the engine `hmatch`, hyperexp
     case, discharged given `hform` AND the integrability witness `hsum : ∑c = 0`.
 
-  So `cIntegrateGFull = some res ⟹ D(res) = a/d` for a hyperexp `Dt = η′·t` (`toPolyG Dt = C b·X`),
+  So `cIntegrateGFullWf = some res ⟹ D(res) = a/d` for a hyperexp `Dt = η′·t` (`toPolyG Dt = C b·X`),
   checker-free, gated on the abstract engine inputs PLUS `hsum`. **The checker-free one-shot now covers the
   PRIMITIVE and EXPONENTIAL cases — the two main transcendental monomial kinds — modulo the integrability
   witness for the exponential case.**
 
 ★ IS THE HYPEREXP ONE-SHOT UNCONDITIONAL? **NO — and this is a genuine mathematical obstruction, not a missing
 lemma.** The task hoped "engine returns `some` on a hyperexp input ⟹ `∑c = 0` (discharging `hcancel`
-unconditionally)". That implication is **FALSE for `cIntegrateGFull`**, for a precise reason:
+unconditionally)". That implication is **FALSE for `cIntegrateGFullWf`**, for a precise reason:
 
-  `cIntegrateGFull`'s pure-normal branch returns `some nrm = some (cIntegrateReducedG …)` **UNCONDITIONALLY**
-  (`cIntegrateGFull_pureNormal_eq` — no `none` exit, no integrability test). It does **not** perform the
+  `cIntegrateGFullWf`'s pure-normal branch returns `some nrm = some (cIntegrateReducedGWf …)`
+  **UNCONDITIONALLY** (`cIntegrateGFullWf_pureNormal_eq` — no `none` exit, no integrability test). It does
+  **not** perform the
   Bronstein §5.9 residual feedback: it emits the raw §5.6 Rothstein–Trager logs, which **overshoot** a
   hyperexp normal part by `R = η·∑c` (the `extendDeriv_logPart_eq_div_add_residual` leftover). Hence for
-  `cIntegrateGFull` on a hyperexp input, `D(res) = a/d` ⟺ the overshoot vanishes ⟺ `∑c = 0`
+  `cIntegrateGFullWf` on a hyperexp input, `D(res) = a/d` ⟺ the overshoot vanishes ⟺ `∑c = 0`
   (`hyperexp_residue_match_iff_sum_zero`); when `∑c ≠ 0` the driver STILL returns `some res` but `D(res) ≠
   a/d`. This is not hypothetical — `ComputableHyperexpNormal`'s `nNormInv_reduced_overshoots` is a
   `native_decide` witness: on `f = 1/(exp x − 1)` the plain reduced driver returns a result with
   `checkIdentityG = false`. Therefore "success ⟹ `∑c = 0`" cannot hold, and the hyperexp one-shot for
-  `cIntegrateGFull` is **genuinely conditional on the integrability witness `hsum`** — it is the strongest
+  `cIntegrateGFullWf` is **genuinely conditional on the integrability witness `hsum`** — it is the strongest
   TRUE statement of this form for this driver.
 
   Where does the §5.9 correction live? In the SEPARATE driver `cIntegrateHyperexpFullG`
@@ -1669,7 +1649,7 @@ The primitive-base `hpoly` discharge now lives only in the fuel-free theorem
 `cIntegrateGFullWf_poly_oneShot_base`.
 
 ★ THE GENERAL ONE-SHOT (Target 3, deferred — shape only). A single full-driver theorem
-(`cIntegrateGFull`/`cIntegrateGFullWf = some res ⟹ D(res) = a/d`) covering BOTH branches is a `cisZeroG fp`
+(`cIntegrateGFullWf = some res ⟹ D(res) = a/d`) covering BOTH branches is a `cisZeroG fp`
 case split: `true` → `cIntegrateGFullWf_primitive_oneShot` for the fuel-free driver (or the corresponding
 hyperexp sibling), `false` → `cIntegrateGFullWf_poly_oneShot`. It is NOT a clean additive theorem: the two
 branches consume structurally DIFFERENT hypothesis bundles (the pure-normal milestones fold the normal
