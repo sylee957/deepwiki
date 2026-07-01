@@ -329,12 +329,27 @@ def cIntegrateAlgebraicWf (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
 /-! ## Part 7 — ★ top-level `native_decide` validations: the radical integrator is fuel-free end-to-end
 
 The fuel-free top-level is checked directly with the radical derivation, so the `D(∫f) = f` validation holds
-of the **fuel-free** output. The three round-trips from `ComputableRadicalIntegrateFull` are replayed through
-`cIntegrateAlgebraicWf`: rational-only, log-only, and the combined rational + log case. -/
+of the **fuel-free** output. The rational-only and combined examples below build their benchmark rational
+parts with `radIntegrateRationalWf` itself; the old fueled runs are kept only as separate compatibility
+checks. -/
 
 open RadElem CPolyG
 
 /-! ### Rational-only round-trip -/
+
+/-- **The fuel-free dispatch's reconstructed rational part** for `∫ 1/((x−1)²√(x²+1))` — the Wf analogue of
+`rtRatV`, built from `radIntegrateRationalWf` rather than the old fueled dispatcher. -/
+def rtRatVWf : RadElem (QFunNZG ℚ) :=
+  radAssembleRatPart rtRatRho (CPolyG.radIntegrateRationalWf (qxNum rtRatRho) rtRatR rtRatB)
+
+/-- **The fuel-free rational part agrees with the old fueled benchmark** (`native_decide`): `rtRatVWf` and
+`rtRatV` differ by zero in the radical extension. This is compatibility evidence; the Wf round-trip below
+uses `rtRatVWf` directly. -/
+theorem rtRatVWf_eq_rtRatV :
+    radIsZero (radSub rtRatVWf rtRatV) = true := by native_decide
+
+/-- The fuel-free rational-only benchmark integrand: `algDeriv ⟨rtRatVWf, []⟩`. -/
+def rtRatIntegrandWf : RadElem (QFunNZG ℚ) := algDeriv rtRatRho ⟨rtRatVWf, []⟩
 
 /-- **The fuel-free recovered rational-only result** for `∫ 1/((x−1)²√(x²+1))`: the rational part is
 reconstructed by `radIntegrateRationalWf`, and the non-principal residual gives an empty log list. -/
@@ -345,11 +360,11 @@ def rtRatRecoveredWf : AlgIntegralResult :=
 (`native_decide`). The fuel-free `cIntegrateAlgebraicWf` reconstructs the rational antiderivative `F'` from
 `(R, B) = (1, (x−1)²)` (the multi-case dispatch run fuel-free), with an empty log list (the non-principal
 residual ⇒ `radLogArgSolve = none`); the **actual** algebraic derivation `algDeriv` of `F'` equals the
-integrand `radDeriv rtRatV`. The radical integrator now integrates end-to-end **with no `ℕ`-fuel** — the
+integrand `radDeriv rtRatVWf`. The radical integrator now integrates end-to-end **with no `ℕ`-fuel** — the
 rational part reconstructed by the fuel-free dispatch, validated by the real radical derivation. Checked by
 `radIsZero` over `ℚ(x)`. -/
 theorem cIntegrateAlgebraicWf_rtRat_integrates :
-    radIsZero (radSub (algDeriv rtRatRho rtRatRecoveredWf) rtRatIntegrand) = true := by native_decide
+    radIsZero (radSub (algDeriv rtRatRho rtRatRecoveredWf) rtRatIntegrandWf) = true := by native_decide
 
 /-- **The fuel-free rational-only result has nonzero rational part and empty log list** (`native_decide`):
 the structural signature of a pure rational integral `∫ = v`. -/
@@ -377,6 +392,23 @@ theorem cIntegrateAlgebraicWf_rtLog_shape :
 
 /-! ### Combined rational + log round-trip -/
 
+/-- **The fuel-free dispatch's reconstructed rational part** for the combined round-trip — the Wf analogue of
+`rtCombVdispatch`, built from `radIntegrateRationalWf`. -/
+def rtCombVdispatchWf : RadElem (QFunNZG ℚ) :=
+  radAssembleRatPart rtCombRho (CPolyG.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
+
+/-- **The fuel-free combined rational part agrees with the old fueled benchmark** (`native_decide`):
+`rtCombVdispatchWf` and `rtCombVdispatch` differ by zero in the radical extension. This is compatibility
+evidence; the Wf round-trip below uses `rtCombVdispatchWf` directly. -/
+theorem rtCombVdispatchWf_eq_rtCombVdispatch :
+    radIsZero (radSub rtCombVdispatchWf rtCombVdispatch) = true := by native_decide
+
+/-- The fuel-free combined starting antiderivative `F = rtCombVdispatchWf + log(rtCombU)`. -/
+def rtCombFWf : AlgIntegralResult := ⟨rtCombVdispatchWf, [(CField.one, rtCombU)]⟩
+
+/-- The fuel-free combined benchmark integrand: `algDeriv rtCombFWf`. -/
+def rtCombIntegrandWf : RadElem (QFunNZG ℚ) := algDeriv rtCombRho rtCombFWf
+
 /-- **The fuel-free recovered combined result** for `F = v + log(x + y)`: both the rational part and the log
 argument are reconstructed by `cIntegrateAlgebraicWf`. -/
 def rtCombRecoveredWf : AlgIntegralResult :=
@@ -385,7 +417,7 @@ def rtCombRecoveredWf : AlgIntegralResult :=
 /-- **★★ The FUEL-FREE radical integrator integrates the combined rational + log example**
 (`native_decide`): `algDeriv` of the Wf output equals the mixed integrand `radDeriv v + radLogDeriv u`. -/
 theorem cIntegrateAlgebraicWf_rtComb_integrates :
-    radIsZero (radSub (algDeriv rtCombRho rtCombRecoveredWf) rtCombIntegrand) = true := by native_decide
+    radIsZero (radSub (algDeriv rtCombRho rtCombRecoveredWf) rtCombIntegrandWf) = true := by native_decide
 
 /-- **The fuel-free combined result has nonzero rational part and one log term** (`native_decide`): the
 structural signature of a genuine combined algebraic integral `∫ = v + c·log u`. -/
@@ -416,6 +448,8 @@ fuel. The remaining validation theorems are `native_decide` checks over the Wf o
 #print axioms cubeDriverWf_integrates
 #print axioms radIntegrateCase2Wf_eq_c2itRun
 #print axioms radIntegrateCase3Wf_eq_c3itRun
+#print axioms rtRatVWf_eq_rtRatV
+#print axioms rtCombVdispatchWf_eq_rtCombVdispatch
 
 -- ★★ The FUEL-FREE radical integrator integrates end-to-end (`D(∫f) = f`, native_decide):
 #print axioms cIntegrateAlgebraicWf_rtRat_integrates
