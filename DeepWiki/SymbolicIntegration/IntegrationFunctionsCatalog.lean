@@ -41,7 +41,8 @@ only; it states no new mathematics.
 * `cIntegrateReducedG` / `cIntegrateReducedGWf` — the reduced / simple-part capstone (Hermite rational part +
   Rothstein-Trager log part). Soundness: CONDITIONAL field-identity lemmas
   `field_identity_of_cIntegrateReducedG_primitive` / `_hyperexp` / `_of_residueMatch` / `_of_checkIdentityG`;
-  fuel-free hyperexp overshoot: `field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot`.
+  fuel-free check bridge / hyperexp overshoot: `field_identity_of_cIntegrateReducedGWf_of_checkIdentityG` /
+  `field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot`.
 * `cIntegrateHyperexpNormalG` / `cIntegrateHyperexpNormalGWf` — the hyperexponential normal-part integrator
   (§5.9 residual feedback), fuel'd and fuel-free. Soundness (unconditional, no `∑c = 0`):
   `cIntegrateHyperexpNormalG_sound` / `cIntegrateHyperexpNormalGWf_sound`.
@@ -114,6 +115,7 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 -- `cIntegrateReducedG`: the conditional reduced-case field identities.
 #check @field_identity_of_cIntegrateReducedG_primitive
 #check @field_identity_of_cIntegrateReducedG_hyperexp
+#check @field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
 #check @field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot
 
 -- `cIntegrateHyperexpNormalG` / `cIntegrateHyperexpNormalGWf`: unconditional normal-part soundness.

@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
+import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
 /-! # One-shot (checker-free) soundness for the integrator's NORMAL part — the Hermite telescoping
 
@@ -43,9 +44,10 @@ isolates for the radical case). So, exactly as the template's `isGeneralRational
 took the engine's own round-trip check as the bridge, we close the assembly through the engine's own
 `checkIdentityG` certificate:
 
-* **`field_identity_of_cIntegrateReducedG_of_checkIdentityG`** — the reduced-case field identity `D(res) =
-  a/d` from the engine's `checkIdentityG = true` certificate (which the Hermite half + RT half together
-  validate, and which `native_decide` reaches for any concrete run). Pure composition with
+* **`field_identity_of_cIntegrateReducedG_of_checkIdentityG` /
+  `field_identity_of_cIntegrateReducedGWf_of_checkIdentityG`** — the reduced-case field identity `D(res) =
+  a/d`, fuel'd and fuel-free, from the engine's `checkIdentityG = true` certificate (which the Hermite half +
+  RT half together validate, and which `native_decide` reaches for any concrete run). Pure composition with
   `field_identity_of_checkIdentityG`. The `checkIdentityG` guard is the only residual.
 * **`field_identity_of_cIntegrateGFull_of_checkIdentityG`** — the FULL `cIntegrateGFull = some res`
   one-shot `D(res) = a/d`, gated on the engine's own `checkIdentityG = true`, at the level-1 carrier
@@ -1059,6 +1061,24 @@ theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCore α]
   field_identity_of_checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands) a d
     hgden haden hlogs hcheck
 
+/-- **★★ The fuel-free reduced-case field identity from the engine's own `checkIdentityG` certificate** —
+the `…GWf` companion of `field_identity_of_cIntegrateReducedG_of_checkIdentityG`. For the normal-part
+capstone output `res = cIntegrateReducedGWf Dt a d cands`, if the engine's own cleared antiderivative check
+passes, then the field-level antiderivative identity holds with no runtime fuel. -/
+theorem field_identity_of_cIntegrateReducedGWf_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPolyG α)
+    (a d : CPolyG α) (cands : List α)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (haden : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedGWf Dt a d cands).logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands) a d = true) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  field_identity_of_checkIdentityG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands) a d
+    hgden haden hlogs hcheck
+
 /-! ### ★★★ The FULL one-shot `cIntegrateGFull = some res ⟹ D(res) = a/d` (engine-certificate bridge)
 
 `cIntegrateGFull` dispatches to the polynomial branch (`cPolyRischDEG`, one-shot already abstract in
@@ -1347,6 +1367,19 @@ example (Dt : CPolyG α) (s L₀ : CPolyG α × CPolyG α) (rest glocs : List (C
       = amG α (toPolyG L₀.1) / amG α (toPolyG L₀.2) :=
   cHermiteReduceTowerG_telescope Dt s L₀ rest glocs hs hmem hseed hstep
 
+-- ★★ The fuel-free reduced capstone, gated on the engine's own `checkIdentityG` certificate.
+example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (haden : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedGWf Dt a d cands).logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands) a d = true) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  field_identity_of_cIntegrateReducedGWf_of_checkIdentityG Dt a d cands hgden haden hlogs hcheck
+
 -- ★★★ THE FULL ONE-SHOT at `α = QFunNZG ℚ`, gated on the engine's own `checkIdentityG`:
 -- `cIntegrateGFull = some res` + `checkIdentityG = true` ⟹ `D(res) = a/d` over `RatFunc ℚ`.
 example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
@@ -1393,6 +1426,7 @@ example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ)) (res : Integral
 #print axioms cHermiteReduceTowerG_telescope
 #print axioms cHermiteReduceTowerG_telescope_seed
 #print axioms field_identity_of_cIntegrateReducedG_of_checkIdentityG
+#print axioms field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
 #print axioms field_identity_of_cIntegrateGFull_of_checkIdentityG
 #print axioms cHermiteReduceTowerG_telescope_seed_qfunNZG
 #print axioms field_identity_of_cIntegrateGFull_of_checkIdentityG_qfunNZG
