@@ -5,27 +5,25 @@ Guidance for working in this repository.
 ## What this project is
 
 **DeepWiki** — an AI-generated wiki of autoformalized mathematics (lake package
-`deepwiki`). The first topic is a Lean 4 + Mathlib formalization of the **(min,plus)
-dioid algebra** and **deterministic network calculus**; further topics are added as
-sibling chapter sets.
+`deepwiki`). Topics are organized as sibling Lean chapter sets under `DeepWiki/`,
+with source catalogs in `Sources/`.
 
 It is a **plain Lean library**: real `def`/`theorem`/`instance` declarations live in
-`DeepWiki/NetworkCalculus/*.lean` chapter files as ordinary top-level Lean, each with a
-concise one-line `/-- … -/` docstring and a `/-! … -/` module docstring per file.
-`DeepWiki/NetworkCalculus.lean` is the topic aggregator (imports every chapter in
-dependency order); `DeepWiki.lean` is the library root. Rendered docs come from
-**doc-gen4** (standard Lean API documentation).
+`DeepWiki/<Topic>/*.lean` chapter files as ordinary top-level Lean, each with a concise
+one-line `/-- … -/` docstring and a `/-! … -/` module docstring per file. Each topic
+has an aggregator `DeepWiki/<Topic>.lean`; `DeepWiki.lean` is the library root.
+Rendered docs come from **doc-gen4** (standard Lean API documentation).
 
 **Two-layer architecture** (one lake package, two libs):
-- **Topic library** `DeepWiki/NetworkCalculus/` — the book-number-free general theory
-  (the chapter files).
+- **Topic library** `DeepWiki/<Topic>/` — the book-number-free general theory (the
+  chapter files).
 - **Source catalogs** `Sources/<slug>/` — per-book, DOI-keyed. One `alias`/`abbrev` per
   book item, named by its book number (`Dnc.prop_10_1`, `Dnc.def_2_7`), linking to the
   library, with §/page in the docstring and the DOI in `Sources/<slug>/Source.lean`. The
   folder is named by the **sanitized DOI** (`Sources/Doi_10_1002_9781119440284/` — `/`
   and `.` → `_`, `Doi_` prefix because Lean module names can't start with a digit); the
   declaration namespace stays a short slug (`DeepWiki.Dnc`). Book numbers live **only** in
-  the catalog — the library stays number-free. A second topic gets `DeepWiki/<Topic>/` over
+  the catalog — the library stays number-free. Every topic gets `DeepWiki/<Topic>/` over
   the same `Sources/` layer.
   - **The catalog is the complete coverage map.** A **formalized** book item is an
     `alias`/`abbrev`; the **still-missing** items of a chapter are listed in a
@@ -41,8 +39,8 @@ dependency order); `DeepWiki.lean` is the library root. Rendered docs come from
     monograph with no exercises records none; an erratum / non-theorem is cataloged as the
     repaired statement with the misprint noted. **Completion and missing-item status lives in
     the catalog, never in memory** — memory keeps only what the catalog cannot (correctness
-    adjudications, reusable Lean lessons, project context). All four topic catalogs use this block
-    format; keep new ones consistent with it.
+    adjudications, reusable Lean lessons, project context). Keep all topic catalogs consistent
+    with this block format.
 - **Per-paper source catalogs.** A result the library takes from (or a book *defers to*) an
   individual **paper** gets its **own** `Sources/Doi_<sanitized-doi>/` catalog — a
   `Source.lean` (paper DOI + title + authors, short author-slug namespace, e.g.
@@ -59,14 +57,9 @@ and no book declarations inside elaborated blocks (the library was once a Verso 
 was converted away for build-time reasons). If a root-level `Main.lean`, `VersoParse.lean`,
 an `Introduction.lean`, or `"<Chapter> 2.lean"` duplicate reappears, it is stale — delete it.
 
-**The `Tutorial/` Verso Manual is a separate, intentional exception.** A standalone,
-prose-only Verso "Manual" tutorial for the Risch algorithms lives under `Tutorial/`
-(`import VersoManual`, `#doc (Manual) …`, `{include …}`). It is an explicit lake target
-(`[[lean_lib]] Tutorial` + `[[lean_exe]] tutorial`) kept **out of `defaultTargets`** like
-`wiki`/`tlts`, so the math gate is untouched. Build/render with `lake build Tutorial` /
-`lake exe tutorial --output _out` (multi-file HTML in `_out/html-multi/`). CI renders it to
-the Pages **root** with the doc-gen4 API under **`/api/`**. The no-Verso rule above still
-binds the library — keep Verso *only* in `Tutorial/`.
+There is currently no Verso target in `lakefile.toml`. If a standalone prose target is
+reintroduced later, keep it out of `defaultTargets` and update this guidance in the same
+commit.
 
 ## The autoformalization loop
 
@@ -108,14 +101,13 @@ When the user posts a capture/screenshot of a book passage or points at PDF page
   un-imported catalog is **silently skipped by the gate** (it compiles only under an explicit
   `lake build Sources.<mod>`), a false `GATE PASS`. Audit:
   `for d in Sources/*/; do m=$(basename $d); grep -q "import Sources.$m\." Sources.lean || echo "ORPHAN $m"; done`.
-- Build one chapter: `lake build DeepWiki.NetworkCalculus.<Chapter>`. Everything: `lake build`.
-- **Gate: `scripts/check.sh [DeepWiki.NetworkCalculus.<Chapter>]`** — runs the full
+- Build one module: `lake build DeepWiki.<Topic>.<Module>`. Everything: `lake build`.
+- **Gate: `scripts/check.sh [DeepWiki.<Topic>.<Module>]`** — runs the full
   `lake build`, exit `0` = `GATE: PASS`, `1` = `GATE: FAIL`. Treats
   `warning:`/`error:`/`declaration uses 'sorry'` as failure *even when lake itself exits 0*
-  (lake exits 0 on `sorry`), enforcing the warning-/sorry-free requirement. Pass a chapter
+  (lake exits 0 on `sorry`), enforcing the warning-/sorry-free requirement. Pass a module
   target for fast mid-iteration feedback; run bare (all default targets) as the final gate.
-  Floor ~2.4s no-op (lake's manifest/olean-stat over the ~1500-job closure), +0–3s per
-  recompiled chapter, ~5–7s cold.
+  Avoid hard-coding build-size or timing assumptions here; the closure grows with the library.
 - Render docs: `DOCGEN_SRC=file lake build DeepWiki:docs Sources:docs` → `.lake/build/doc/`
   (gitignored). Needs a `references.bib` at the doc root (`touch` an empty one if rendering
   fails on it missing). If doc-gen "Replays" stale HTML, remove its facet markers
@@ -126,7 +118,7 @@ When the user posts a capture/screenshot of a book passage or points at PDF page
 
 A local graph-RAG CLI over the compiled library (`lake exe wiki`; sources in
 `tools/WikiRAG/`, own `README.md`). Extracts the `DeepWiki`+`Sources` environment into
-`.wiki/graph.db` (gitignored): ≈3,150 decl nodes, the *exact* intra-library `uses` edges
+`.wiki/graph.db` (gitignored): declaration nodes, the *exact* intra-library `uses` edges
 (`ConstantInfo.getUsedConstantsAsSet`, over type and value), a module graph, and optional
 local Ollama embeddings. **Prefer it over `grep` for structural questions** — it answers
 exactly rather than by text match.

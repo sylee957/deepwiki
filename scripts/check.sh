@@ -3,12 +3,10 @@
 #
 # Runs the full `lake build` correctness gate over the DeepWiki library and
 # Sources catalog, and reports a single verdict. Mathlib is cached, so this
-# only ever recompiles changed DeepWiki/NetworkCalculus/*.lean chapters (and
-# Sources/*.lean catalog files).
+# only ever recompiles changed DeepWiki topic modules and Sources catalog files.
 #
-# Timing (warm filesystem cache, this machine):
-#   - no-op (nothing changed):            ~2.4s  (lake manifest + olean stat floor)
-#   - one chapter actually recompiled:    ~2.4s + chapter elab (0-3s)
+# Performance depends on library size, target, and cache state; pass a specific
+# module target for faster feedback, then run the full gate before claiming done.
 #
 # Exit codes:
 #   0  build succeeded, no errors / warnings / sorry
@@ -17,7 +15,7 @@
 #
 # Usage:
 #   scripts/check.sh            # full gate over all default targets (DeepWiki + Sources)
-#   scripts/check.sh DeepWiki.NetworkCalculus.Dioids   # gate a single chapter (faster feedback)
+#   scripts/check.sh DeepWiki.<Topic>.<Module>   # gate a single module (faster feedback)
 #   scripts/check.sh Sources    # gate the source catalogs
 
 set -u
