@@ -27,7 +27,7 @@ log-part → capstone` template.
 **Abstract-vs-computable (the honest boundary).** Every entry below is an **abstract** theorem in `K[X]` (or
 its carrier quotient), carrying no `native_decide` axiom — these are the correctness proofs, not the
 `native_decide` validations cataloged elsewhere. They are honest about their scope: the capstone-composition
-theorems (`isAlgebraicIntegral_of_parts` / `isGeneralAlgebraicIntegral_of_parts`) take the rational
+theorems (`isAlgebraicIntegral_of_parts` / `isGeneralAlgebraicIntegralWf_of_parts`) take the rational
 soundness, the log soundness, and the integrand split `f = ratPart + logPart` as **hypotheses** (the engine's
 own `native_decide`-validated round-trip certificate discharges the split for a concrete driver run — the
 library's documented `native_decide` boundary, since the kernel cannot reduce a fuel recursion over `ℚ`); the
@@ -37,14 +37,14 @@ laws, the keystones, the first integrals, the telescoping invariants, and the ab
 
 ## NOT YET FORMALIZED (audit 2026-06-26)
 The capstone-composition `hsplit` (`f = ratPart + logPart`): proven for a concrete driver run only through
-  the engine's `native_decide` round-trip certificate (the kernel cannot reduce the fuel recursion over `ℚ`
+  the engine's `native_decide` round-trip certificate (the kernel cannot reduce the driver recursion over `ℚ`
   by `rfl`/`decide`), supplied as a hypothesis to `isAlgebraicIntegral_of_parts` /
-  `isGeneralAlgebraicIntegral_of_parts` — the irreducible `native_decide`-only kernel residue `[deferred]`.
+  `isGeneralAlgebraicIntegralWf_of_parts` — the irreducible `native_decide`-only kernel residue `[deferred]`.
 The root↔residue `resultant_eq_prod_eval` product-form hypothesis: the engine-side compute-bridge feeding
   `cAlgResidueResultant` / `genResidueResultant`'s per-node values into the abstract
   `roots_{,gen}ResidueResultant_eq_residues`; the abstract roots↔residues core is proven, the per-node
   `resultant_eq_prod_eval` instantiation is the mechanical residual `[deferred]`.
-Per-step eq.-11 quotient identity for the GENERAL curve: `generalReduceRationalTelescope` is proven GIVEN
+Per-step eq.-11 quotient identity for the GENERAL curve: `generalReduceRationalTelescopeWf` is proven GIVEN
   each step's coupled eq.-11 congruence `mk(afDeriv cⱼ) = mk Lⱼ − mk Lⱼ₊₁` (Trager Ch. 4); discharging it
   for a concrete general (non-radical) eq.-11 run is the residual `[deferred]`. (The radical per-step
   `K`-equation IS discharged for the literal `qxOfNum`-coefficient lifts — catalog
@@ -182,27 +182,28 @@ Chapters 2–4): the carrier generator `y` integrates the implicit derivative `y
 curve, no separability). -/
 abbrev sound_genGen := @CPolyG.mk_toPolyG_afDeriv_genGen
 
-/-- **★ The general rational-part telescoping soundness** `generalReduceRationalTelescope` (Trager, Chapter
+/-- **★ The general rational-part telescoping soundness** `generalReduceRationalTelescopeWf` (Trager, Chapter
 4, eq.-11 reduction): given each step's coupled eq.-11 quotient identity `mk(afDeriv cⱼ) = mk Lⱼ − mk Lⱼ₊₁`,
 the assembled antiderivative `v = cs.foldl caddG []` satisfies `afDeriv(v) = integrand − final-leftover` in
 the carrier — the general analogue of the radical `radReduceRationalTelescope`, the per-step eq.-11
 congruence isolated as the named hypothesis. -/
-abbrev sound_genRationalTelescope := @CPolyG.generalReduceRationalTelescope
+abbrev sound_genRationalTelescope := @CPolyG.generalReduceRationalTelescopeWf
 
 /-! ## The general-curve log-part soundness `D(Σ cᵢ log uᵢ) = logpart` (Ch. 5 §1–§2) -/
 
-/-- **The general single-log soundness predicate** `IsGeneralLogTerm fuel f u integrand` (Trager, Chapter 5
+/-- **The general single-log soundness predicate** `IsGeneralLogTermWf f u integrand` (Trager, Chapter 5
 §1): the carrier element `u` is a correct single log argument for `integrand` over `K(x)[y]/(f)` — the
-quotient identity `D(log u) = integrand`, i.e. `afDeriv(u)/u = integrand` cross-multiplied in `K[X] ⧸
+quotient identity `D(log u) = integrand`, i.e. `afDerivWf(u)/u = integrand` cross-multiplied in `K[X] ⧸
 (toPolyG f)`. The general analogue of `IsRadicalLogTerm`. -/
-abbrev sound_genLogPredicate := @CPolyG.IsGeneralLogTerm
+abbrev sound_genLogPredicate := @CPolyG.IsGeneralLogTermWf
 
-/-- **★ The engine's general log certificate IS the single-log soundness** `isGeneralLogTerm_of_logCert`
-(Trager, Chapter 5 §1): the `native_decide`-checkable `afIsLogIntegral fuel f integrand u = true` (the
-division-free `afDeriv f u = afMul f u integrand`) yields the abstract quotient identity `D(log u) =
+/-- **★ The engine's general log certificate IS the single-log soundness** `isGeneralLogTermWf_of_logCert`
+(Trager, Chapter 5 §1): the `native_decide`-checkable
+`cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true` (the division-free
+`afDerivWf f u = afMul f u integrand`) yields the abstract quotient identity `D(log u) =
 integrand`. So every validated general log certificate — the non-hyperelliptic `y³ − x² − 1` arguments `u ∝
 y`, `u ∝ y² + x` — IS, abstractly, the single-log soundness. -/
-abbrev sound_genLogCertificate := @CPolyG.isGeneralLogTerm_of_logCert
+abbrev sound_genLogCertificate := @CPolyG.isGeneralLogTermWf_of_logCert
 
 /-- **★ The GENERAL residue double resultant's roots ARE Trager's per-place residues**
 `roots_genResidueResultant_eq_residues` (Trager, Chapter 5 §2, eq. 7): for an **arbitrary** curve, given the
@@ -214,27 +215,27 @@ the general double resultant. -/
 abbrev sound_genResidueResultant_roots := @LogResidue.roots_genResidueResultant_eq_residues
 
 /-- **★ The general log part is sound given the per-term residue match**
-`isGeneralLogIntegral_of_residue_match` (Trager, Chapter 5 §1–§2): given the per-term residue match (the
+`isGeneralLogIntegralWf_of_residue_match` (Trager, Chapter 5 §1–§2): given the per-term residue match (the
 algebraic partial fraction `A/D = Σ residue·logDeriv(X − α)`), the general integrator's log part satisfies
-`Σ cᵢ·afDeriv(uᵢ)/uᵢ = logpart` in the quotient — the log half of the general capstone, the residue-sum
+`Σ cᵢ·afDerivWf(uᵢ)/uᵢ = logpart` in the quotient — the log half of the general capstone, the residue-sum
 distribution composed with the partial fraction. -/
-abbrev sound_genLogSoundness := @CPolyG.isGeneralLogIntegral_of_residue_match
+abbrev sound_genLogSoundness := @CPolyG.isGeneralLogIntegralWf_of_residue_match
 
 /-! ## The general-curve capstone `D(∫g) = g` (Ch. 4 + Ch. 5) -/
 
-/-- **The full general algebraic-integral soundness predicate** `IsGeneralAlgebraicIntegral fuel f g v
+/-- **The full general algebraic-integral soundness predicate** `IsGeneralAlgebraicIntegralWf f g v
 commonDenom args cofs` (Trager, Chapter 4 + Chapter 5): the unified general integrator's output `(v, args)`
 is a correct antiderivative of `g` over `K(x)[y]/(f)` — `D(v + Σ cᵢ log uᵢ) = g`, splitting `afDeriv(v) + Σ
 cᵢ·afDeriv(uᵢ)/uᵢ` cross-multiplied by `commonDenom` in the carrier quotient. The general analogue of
 `IsAlgebraicIntegral`. -/
-abbrev sound_genCapstonePredicate := @CPolyG.IsGeneralAlgebraicIntegral
+abbrev sound_genCapstonePredicate := @CPolyG.IsGeneralAlgebraicIntegralWf
 
 /-- **★★ THE GENERAL-CURVE CAPSTONE `D(∫g) = g` composes from rational + log soundness**
-`isGeneralAlgebraicIntegral_of_parts` (Trager, Chapter 4 + Chapter 5): given the rational-part soundness
+`isGeneralAlgebraicIntegralWf_of_parts` (Trager, Chapter 4 + Chapter 5): given the rational-part soundness
 (telescoping), the log-part soundness (residue partial fraction), and the integrand split `g = ratPart +
 logPart`, the unified general integrator's output satisfies `D(v + Σ cᵢ log uᵢ) = g` in the carrier quotient
 `K[X] ⧸ (toPolyG f)` — the full algebraic `D(∫g) = g` for an arbitrary curve, the general analogue of
 `isAlgebraicIntegral_of_parts`. -/
-abbrev sound_genCapstone := @CPolyG.isGeneralAlgebraicIntegral_of_parts
+abbrev sound_genCapstone := @CPolyG.isGeneralAlgebraicIntegralWf_of_parts
 
 end DeepWiki.Tiaf

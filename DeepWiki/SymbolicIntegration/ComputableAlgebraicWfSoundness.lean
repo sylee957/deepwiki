@@ -236,7 +236,7 @@ The fully-unconditional, fuel-free algebraic soundness `some F → D(F) = integr
 forms: the RADICAL `cIntegrateAlgebraicWf_sound` and the GENERAL-CURVE `afIntegrateAlgebraicWf_sound`, each
 the clean genuine-field identity gated only on the engine's own round-trip certificate — no conditional
 `hrat`/`hlog`/`hsplit`, no runtime checker. The cross-multiplied `IsAlgebraicIntegral` /
-`IsGeneralAlgebraicIntegral` forms (Form A of each task) carry the proven `hrat`/`hlog` math and the
+`IsGeneralAlgebraicIntegralWf` forms (Form A of each task) carry the proven `hrat`/`hlog` math and the
 round-trip `hsplit`. We restate the capstones against the intended wording and audit the axioms. -/
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/

@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.ComputableGeneralIntegralSoundness
 
 The general algebraic integrator (`afIntegrateAlgebraic`, `ComputableGeneralRationalSolve` /
 `ComputableGeneralLogArg`) and its soundness `D(∫f) = f` (`ComputableGeneralLogSoundness`'s
-`isGeneralAlgebraicIntegral_of_parts`, `ComputableAlgebraicWfSoundness`'s `afIntegrateAlgebraicWf_sound`)
+`isGeneralAlgebraicIntegralWf_of_parts`, `ComputableAlgebraicWfSoundness`'s `afIntegrateAlgebraicWf_sound`)
 work over the carrier `K(x)[y]/(f)` — and are honest as a **field** exactly when the curve `f` is
 **irreducible** (so the carrier is a function field, the "crossing to the cross-multiplied form is clean
 when the extension is a field — the curve irreducible" caveat documented in
@@ -209,7 +209,7 @@ The recombination `F = Σᵢ eᵢ·Fᵢ` over the CRT indicators `eᵢ` and per-
 `F = Σᵢ eᵢ·Fᵢ` of a function algebra `K(x)[y]/(T)`: the `caddG`-fold of the products `afMul T eᵢ Fᵢ` over
 the zipped list of CRT indicators `es = [eᵢ]` and per-component integrals `Fs = [Fᵢ]` (each `Fᵢ = ∫(f|_{Aᵢ})`
 from the existing per-component integrator on the component function field `Aᵢ = K(x)[y]/(Tᵢ)`). Schultz
-§7.2's "combining the component-wise results using the indicator functions". The `afLogSumNum`-style fold;
+§7.2's "combining the component-wise results using the indicator functions". The `afLogSumNumWf`-style fold;
 its soundness is `afIntegrateFunctionAlgebra_sound`. -/
 def afIntegrateFunctionAlgebra (f : CPolyG α) (es Fs : List (CPolyG α)) : CPolyG α :=
   ((es.zip Fs).map (fun p => afMul f p.1 p.2)).foldl caddG ([] : CPolyG α)

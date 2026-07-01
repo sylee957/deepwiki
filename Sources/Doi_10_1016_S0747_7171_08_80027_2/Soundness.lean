@@ -27,11 +27,11 @@ the algebraic integration step Bronstein's combined elementary procedure runs ov
 primarily as `DeepWiki.Tiaf.sound_radCapstone` (`Sources.Hdl_1721_1_15391.Soundness`). -/
 abbrev bie_algebraicCapstone := @RadElem.isAlgebraicIntegral_of_parts
 
-/-- **★★ The algebraic-step capstone `D(∫g) = g` (general curve)** `isGeneralAlgebraicIntegral_of_parts`
+/-- **★★ The algebraic-step capstone `D(∫g) = g` (general curve)** `isGeneralAlgebraicIntegralWf_of_parts`
 (Bronstein 1990, §2–§5, the general-curve algebraic core ≡ Trager thesis Ch. 4 + Ch. 5): the unified
 general-curve integrator's output differentiates back to `g` over `K(x)[y]/(f)` — the correctness of the
 algebraic step for an arbitrary (non-radical) curve beneath the elementary tower. Cataloged primarily as
 `DeepWiki.Tiaf.sound_genCapstone` (`Sources.Hdl_1721_1_15391.Soundness`). -/
-abbrev bie_generalAlgebraicCapstone := @CPolyG.isGeneralAlgebraicIntegral_of_parts
+abbrev bie_generalAlgebraicCapstone := @CPolyG.isGeneralAlgebraicIntegralWf_of_parts
 
 end DeepWiki.Bie
