@@ -101,7 +101,7 @@ numerator is a `CPolyG ℚ = ℚ[x]`. Yun-factoring it (`cSqfreeYunFFG` over `α
 factors `[p₁, p₂, …]` of multiplicity `1, 2, …`. The **bad primes** are those with `p² | d`, i.e. the
 factors of multiplicity `≥ 2` (`cSqfreeYunFFG`'s entries from index `1` on) together with any multiplicity-
 `1` factor that nonetheless squares-divides `d` — equivalently, every distinct prime `p` with `p² | d`. We
-test `p² | d` directly (`cmodG d (p²) = 0`) on the distinct squarefree factors. -/
+test `p² | d` directly (`cmodWf d (p²) = 0`) on the distinct squarefree factors. -/
 
 open CPolyG
 
@@ -112,7 +112,7 @@ def discNum (f : CPolyG (QFunNZG ℚ)) : CPolyG ℚ := (discriminant f).1.1
 
 /-- **The bad primes of `f`** `badPrimes fuel f`: the distinct monic irreducible-or-squarefree factors `p`
 of the discriminant numerator (`cSqfreeYunFFG` Yun factorization over `ℚ[x]`) that satisfy `p² | d`
-(tested by `cisZeroG (cmodG d (p·p))`). Over `ℚ[x]` these are the primes where the equation order
+(tested by `cisZeroG (cmodWf d (p·p))`). Over `ℚ[x]` these are the primes where the equation order
 `O = K[x][y]/(f)` may be non-maximal — the primes Round-2 enlarges the order at. (For the cusp `y² − x³`,
 `d = 4x³`, Yun gives `[…, …, x]` with `x` at multiplicity `3`, and `x² | 4x³`, so `badPrimes = [x]`.) -/
 def badPrimes (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) : List (CPolyG ℚ) :=
@@ -120,7 +120,7 @@ def badPrimes (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) : List (CPolyG ℚ) :=
   let sqf := cSqfreeYunFFG fuel d
   -- distinct nonconstant squarefree factors, each made monic
   let distinct := (sqf.map cmonicG).filter (fun p => 0 < cdegG p)
-  distinct.filter (fun p => cisZeroG (cmodG (d.length + 1) d (cmulG p p)))
+  distinct.filter (fun p => cisZeroG (cmodWf d (cmulG p p)))
 
 /-! ### The cusp `f = y² − x³` over `ℚ(x)` (the headline curve, genus 0)
 

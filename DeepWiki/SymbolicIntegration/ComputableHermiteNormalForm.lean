@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.GenericPolyEngine
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Hermite ROW REDUCTION (Hermite normal form) over the Euclidean domain `K[x] = CPolyG`
 (Trager, *Integration of Algebraic Functions*, Ch. 2 §"Integral Bases", p. 24–25)
@@ -12,7 +12,7 @@ Euclidean-domain analogue of Gaussian elimination that triangularizes a matrix o
 divide; the only legal moves are *swapping* rows, *scaling* a row by a ring element, and *subtracting*
 a ring multiple of one row from another. The reduction is driven by the size function `d = cdegG`
 (`d(0) = ∞`): repeatedly bring the minimal-degree entry of a column to the pivot and reduce the entries
-below it by the **Euclidean quotient** (`cdivG` — the *polynomial part* of `M[i][j] / M[j][j]`, NOT a
+below it by the **Euclidean quotient** (`cdivWf` — the *polynomial part* of `M[i][j] / M[j][j]`, NOT a
 field division), which strictly drops the degree of each lower entry. When the column is zero below the
 pivot, move on; the matrix ends **upper-triangular**.
 
@@ -100,17 +100,17 @@ def polyMatMinDegPivot (M : PolyMatrix α) (j : ℕ) : Option ℕ :=
 
 `hermiteRowReduce` walks the columns `j = 0, 1, …`; for each it runs the inner loop (Trager p. 25):
 bring the minimal-degree nonzero entry to the pivot `(j, j)` by a swap, reduce every lower entry
-`M[i][j]` (`i > j`) by `q := cdivG (M[i][j]) (M[j][j])` via `rowSub i j q`, and — because a single sweep
-of `cdivG` leaves remainders of strictly smaller degree, not necessarily zero — *repeat* the sweep until
+`M[i][j]` (`i > j`) by `q := cdivWf (M[i][j]) (M[j][j])` via `rowSub i j q`, and — because a single sweep
+of `cdivWf` leaves remainders of strictly smaller degree, not necessarily zero — *repeat* the sweep until
 the column is zero below the pivot. Each repetition strictly drops `∑_{i>j} d(M[i][j])`, so the loop is
 finite; we bound the whole reduction by a fuel `= ncols · (1 + ∑ all entry degrees)`, far above the
 total degree drop. -/
 
 /-- **One sweep over the rows below the pivot `(j, j)`**: for each `i` with `j < i < nrows`, replace
-`row i` by `row i − q · row j` where `q := cdivG (M[i][j]) (M[j][j])` (the Euclidean quotient = the
+`row i` by `row i − q · row j` where `q := cdivWf (M[i][j]) (M[j][j])` (the Euclidean quotient = the
 polynomial part of `M[i][j] / M[j][j]`). Reduces the degree of each below-pivot column entry below the
-pivot's. `fuel` is the division fuel passed to `cdivG`. -/
-def hermiteSweepBelow (fuel j : ℕ) (M : PolyMatrix α) : PolyMatrix α :=
+pivot's. The first argument is retained as the outer-loop budget; the quotient itself is fuel-free. -/
+def hermiteSweepBelow (_fuel j : ℕ) (M : PolyMatrix α) : PolyMatrix α :=
   let nrows := M.length
   let piv := polyMatGet M j j
   (List.range nrows).foldl (fun acc i =>
@@ -118,7 +118,7 @@ def hermiteSweepBelow (fuel j : ℕ) (M : PolyMatrix α) : PolyMatrix α :=
       let e := polyMatGet acc i j
       if cisZeroG e then acc
       else
-        let q := cdivG fuel e piv
+        let q := cdivWf e piv
         rowSub acc i j q
     else acc) M
 
@@ -129,8 +129,9 @@ def polyMatColZeroBelow (M : PolyMatrix α) (j : ℕ) : Bool :=
 
 /-- **The Hermite inner loop on column `j`**, fuel-bounded: bring the minimal-degree nonzero entry to the
 pivot by a swap, then sweep the rows below; repeat while the column is nonzero below the pivot (each
-repetition strictly drops the total below-pivot degree). `loopFuel` bounds the repetitions, `divFuel`
-the `cdivG` calls. Returns the matrix with column `j` cleared below the pivot. -/
+repetition strictly drops the total below-pivot degree). `loopFuel` bounds the repetitions; `divFuel` is
+retained for API stability while the quotient leaf is `cdivWf`. Returns the matrix with column `j` cleared
+below the pivot. -/
 def hermiteClearCol (divFuel : ℕ) (j : ℕ) : ℕ → PolyMatrix α → PolyMatrix α
   | 0, M => M
   | loopFuel + 1, M =>
@@ -145,7 +146,7 @@ def hermiteClearCol (divFuel : ℕ) (j : ℕ) : ℕ → PolyMatrix α → PolyMa
 /-- **Hermite row reduction** (the Trager p. 25 algorithm): triangularize a `PolyMatrix` over `K[x]` to
 upper-triangular form by Euclidean row operations (swap / scale / subtract a ring multiple — never a row
 division). Processes columns `0 … ncols−1`, clearing each below its pivot via `hermiteClearCol`. The fuel
-`= ncols · (2 + ∑ entry degrees)` bounds both the per-column repetition count and the `cdivG` divisions
+`= ncols · (2 + ∑ entry degrees)` bounds the per-column repetition count
 (generous: each inner pass strictly drops a below-pivot degree sum). Returns the upper-triangular matrix
 (strictly-lower entries are `cisZeroG`). -/
 def hermiteRowReduce (M : PolyMatrix α) : PolyMatrix α :=
@@ -205,7 +206,7 @@ open CPolyG
 /-- A concrete `2×2` matrix over `ℚ[x]`:
 `[[x² + 1, x], [x³, x + 2]]` (entries low→high coefficient lists). Both columns have nonzero entries,
 so Hermite row reduction does a genuine Euclidean elimination in column `0`
-(`q = cdivG (x³) (x²+1)`). -/
+(`q = cdivWf (x³) (x²+1)`). -/
 def hermiteEx2 : PolyMatrix ℚ :=
   [[[1, 0, 1], [0, 1]],
    [[0, 0, 0, 1], [2, 1]]]
@@ -293,7 +294,7 @@ compiler axiom — no `sorry`, no extra axiom. **The engine now has Hermite row 
 Euclidean domain `K[x] = CPolyG α`** — the matrix-triangularization primitive (swap / ring-scale /
 subtract-a-ring-multiple, never a row division) the general-curve integral basis is built on. Where the
 field `gaussElimG`/`ratRref` divide a row by its pivot (Gauss–Jordan over a *field*), `hermiteRowReduce`
-reduces below-pivot entries by the *Euclidean quotient* `cdivG` (the polynomial part) and repeats the
+reduces below-pivot entries by the *Euclidean quotient* `cdivWf` (the polynomial part) and repeats the
 sweep until the column clears — the genuine domain reduction (Trager p. 25). The next pieces of
 Ford–Zassenhaus Round-2 (the integral basis of `K(x, y) = K(x)[y]/(f)`) build directly on this: the
 **trace map** `Tr : K(x, y) → K(x)` and its **trace matrix** `[Tr(ωᵢ ωⱼ)]`; the **discriminant**

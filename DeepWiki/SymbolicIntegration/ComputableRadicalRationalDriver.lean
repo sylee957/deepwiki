@@ -24,8 +24,8 @@ integrand `∫ R/(B·y)` over `y² = ρ` has a denominator `B` whose squarefree 
 
 * **`radPartialFractionCoprime`** — the partial-fraction front-end: given a numerator `R` and the list of
   pairwise-coprime prime-powers `[G₁,…,Gₘ]` (`Gᵢ = Bᵢ^{eᵢ}`, `∏Gᵢ = B`), returns the numerators
-  `[N₁,…,Nₘ]` with `R/B = Σ Nᵢ/Gᵢ`, `deg Nᵢ < deg Gᵢ`, by iterating the generic Bézout split
-  `cdiophantineG`.
+  `[N₁,…,Nₘ]` with `R/B = Σ Nᵢ/Gᵢ`, `deg Nᵢ < deg Gᵢ`, by iterating the fuel-free generic Bézout split
+  `cdiophantineGWf`.
 
 * **`radReduceCase3Iterate`** (Trager Appendix A §2.3, iterated) — the leftover `C/y` (`C` a polynomial,
   no denominator factor) degree-lowering, iterating `radCase3Cofactor`/`radCase3Residual` until
@@ -98,12 +98,12 @@ def radReduceCase2Iterate (W h ρ : CPolyG α) (k0 : ℕ) :
 
 /-- **The simple-radical rational-part driver (Case 2)** `radIntegrateCase2 W ρ k0 C = (Crem, vNum)`
 (Trager Appendix A §2.2) — the `∫ C/(W^{k0}y)` driver over a simple radical `y² = ρ` with `W ∣ ρ` a
-squarefree factor of the radicand. Computes `h = ρ/W` and runs the iterated Case-2 reduction
+squarefree factor of the radicand. Computes `h = ρ/W` with `cdivWf` and runs the iterated Case-2 reduction
 `radReduceCase2Iterate` from multiplicity `k0` down to `1` (structural fuel `k0`), returning the leftover
 `k = 1` numerator `Crem` and the accumulated rational-part numerator `vNum` over the common denominator
 `W^{k0}·y`. Master identity: `∫ C/(W^{k0}y) = vNum/(W^{k0}y) + ∫ Crem/(Wy)`. Generic over `[CField α]`. -/
 def radIntegrateCase2 (W ρ : CPolyG α) (k0 : ℕ) (C : CPolyG α) : CPolyG α × CPolyG α :=
-  radReduceCase2Iterate W (cdivG (k0 + 8) ρ W) ρ k0 k0 k0 C []
+  radReduceCase2Iterate W (cdivWf ρ W) ρ k0 k0 k0 C []
 
 /-! ### The iterated Case-3 (`C/y`) degree-lowering (Trager Appendix A §2.3, iterated)
 
@@ -158,22 +158,22 @@ def radProdList (ps : List (CPolyG α)) : CPolyG α :=
 
 /-- **Classify a squarefree denominator factor** `radClassifyFactor fuel Bi ρ = true` iff `Bi` is a
 `V`-factor (coprime to the radicand `ρ`, Trager Case 1), i.e. `gcd(Bi, ρ)` is a constant; `false` iff `Bi`
-is a `W`-factor (`Bi ∣ ρ`, Case 2). Reads `cdegG (gcd Bi ρ) = 0` off the generic extended Euclidean
-`cgcdExtG`. Generic over `[CField α]`. -/
-def radClassifyFactor (fuel : ℕ) (Bi ρ : CPolyG α) : Bool :=
-  cdegG (cgcdExtG fuel Bi ρ).1 = 0
+is a `W`-factor (`Bi ∣ ρ`, Case 2). Reads `cdegG (gcd Bi ρ) = 0` off the fuel-free generic extended
+Euclidean algorithm `cgcdWf`. Generic over `[CField α]`; the first argument is retained for API stability. -/
+def radClassifyFactor (_fuel : ℕ) (Bi ρ : CPolyG α) : Bool :=
+  cdegG (cgcdWf Bi ρ).1 = 0
 
 /-- **Partial fraction across coprime prime-powers** `radPartialFractionCoprime fuel R Gs = [N₁,…,Nₘ]`:
 for pairwise-coprime `Gs = [G₁,…,Gₘ]` with `B = ∏Gᵢ` and a **proper** numerator `R` (`deg R < deg B`),
 returns the numerators `Nᵢ` with `R/B = Σᵢ Nᵢ/Gᵢ`, `deg Nᵢ < deg Gᵢ`. One step peels `G₁` off
-`P = ∏_{j>1} Gⱼ` via `cdiophantineG P G₁ R = (Nᵢ, c)` (`Nᵢ·P + c·G₁ = R`, `deg Nᵢ < deg G₁`), giving
+`P = ∏_{j>1} Gⱼ` via `cdiophantineGWf P G₁ R = (Nᵢ, c)` (`Nᵢ·P + c·G₁ = R`, `deg Nᵢ < deg G₁`), giving
 `R/(G₁·P) = Nᵢ/G₁ + c/P`, then recurses on `c` over the remaining factors. Generic over `[CField α]`. -/
-def radPartialFractionCoprime (fuel : ℕ) : CPolyG α → List (CPolyG α) → List (CPolyG α)
+def radPartialFractionCoprime (_fuel : ℕ) : CPolyG α → List (CPolyG α) → List (CPolyG α)
   | _, [] => []
   | R, G :: rest =>
     let P := radProdList rest
-    let (Ni, c) := cdiophantineG fuel P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
-    Ni :: radPartialFractionCoprime fuel c rest
+    let (Ni, c) := cdiophantineGWf P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
+    Ni :: radPartialFractionCoprime 0 c rest
 
 /-- **The multi-case simple-radical rational-part driver** `radIntegrateRational fuel ρ R B` over `y² = ρ`,
 denominator `B` monic, numerator `R` (proper). Squarefree-decomposes `B` with `cSqfreeYunFFG` into
@@ -198,8 +198,8 @@ def radIntegrateRational [CFracGcdCore α] (fuel : ℕ) (ρ R B : CPolyG α) :
   -- surviving part is `(isV, factor, eᵢ)`.
   let split : List (Bool × CPolyG α × ℕ) :=
     factored.flatMap (fun (Bi, e) =>
-      let Wi := cmonicG (cgcdExtG fuel Bi ρ).1
-      let Vi := cdivG fuel Bi Wi
+      let Wi := cmonicG (cgcdWf Bi ρ).1
+      let Vi := cdivWf Bi Wi
       (if cdegG Vi = 0 then [] else [(true, Vi, e)]) ++
       (if cdegG Wi = 0 then [] else [(false, Wi, e)]))
   let primePowers : List (CPolyG α) := split.map (fun (_, fi, e) => cpowG fi e)
@@ -211,7 +211,7 @@ def radIntegrateRational [CFracGcdCore α] (fuel : ℕ) (ρ R B : CPolyG α) :
       (true, fi, e, Ni, vNum, Crem)
     else
       -- `W`-factor → Case 2
-      let (Crem, vNum) := radReduceCase2Iterate fi (cdivG fuel ρ fi) ρ e e e Ni []
+      let (Crem, vNum) := radReduceCase2Iterate fi (cdivWf ρ fi) ρ e e e Ni []
       (false, fi, e, Ni, vNum, Crem))
 
 end CPolyG

@@ -14,7 +14,7 @@ as Gradshteyn–Ryzhik has < 1% of problems outside unnested radicals).
 It builds *entirely* on the existing computable engine — no abstract Riemann–Roch. The base field `F`
 is a tower level `[CField α]` (e.g. `QFunNZG ℚ ≅ ℚ(x)`); the carrier `RadExt α n f` represents
 `α[y]/(yⁿ − f)` as a length-`n` coefficient list. The reductions reuse the generic Bézout/diophantine
-solver `cdiophantineG` and the monomial machinery.
+solver `cdiophantineGWf` and the monomial machinery.
 
 * **`RadExt α n f`** — a `RadElem` is `[a₀,…,a_{n−1}]` for `Σ aᵢyⁱ`. Ring ops: `radAdd` componentwise,
   `radMul` = poly-multiply in `y` then reduce `yⁿ → f`. The derivation `radDeriv` uses Trager's `(f/y)'`
@@ -27,12 +27,12 @@ solver `cdiophantineG` and the monomial machinery.
   `∫g₁y` independently. `native_decide` exhibits the split.
 
 * **Case 1 rational-part reduction** (Appendix A §2.1, `C/(Vᵏy)`, `θ'=1`) — the Hermite-style step
-  lowering `k`, solving the congruence `(1−k)V'fB ≡ C (mod V)` via `cdiophantineG`, then verifying the
+  lowering `k`, solving the congruence `(1−k)V'fB ≡ C (mod V)` via `cdiophantineGWf`, then verifying the
   cleared identity `(Bf/(V^{k−1}y))' − C/(Vᵏy) = D/(V^{k−1}y)` by `cisZeroG`.
 
 * **Case 2** (Appendix A §2.2, `C/(Wᵏy)`, `W = Pⱼ` a squarefree factor of `f`, `n = 2`) —
   `radCase2Cofactor`/`radCase2Residual`: solve the `radDeriv`-validated congruence `B·(½−k)W'h ≡ C
-  (mod W)` (`h = f/W`; the bracket `½−k = 1−k−eⱼ/n` is Trager's, at `eⱼ = 1, n = 2`) via `cdiophantineG`,
+  (mod W)` (`h = f/W`; the bracket `½−k = 1−k−eⱼ/n` is Trager's, at `eⱼ = 1, n = 2`) via `cdiophantineGWf`,
   eliminating `f`-factors from denominators; cleared identity `B·(½−k)W'h − C + W·(B'h + ½Bh') = W·D`,
   with the end-to-end `radDeriv` validation `case2cDriver_integrates` in `ComputableRadicalCase2`.
 
@@ -309,7 +309,7 @@ Hermite-style step lowers `k`: find a polynomial `B` with
 and since `(Bf/(V^{k−1}y))' = ((1−k)V'Bf)/(Vᵏy) + (B'f + Bg)/(V^{k−1}y)` (with `g` from `(f/y)' = g/y`),
 this needs `(1−k)V'fB ≡ C (mod V)`, solvable because `gcd((1−k)V'f, V) = 1` (V squarefree, coprime to
 `f`, `k ≥ 2`). The residual is `D = ((1−k)V'fB − C)/V + B'f + Bg`. The congruence is solved by the
-generic Bézout/diophantine solver `cdiophantineG`. Cleared over the common denominator `Vᵏy`, the whole
+generic Bézout/diophantine solver `cdiophantineGWf`. Cleared over the common denominator `Vᵏy`, the whole
 step is the **pure `F[θ]` identity** `(1−k)V'fB − C + V(B'f + Bg) = V·D` (no `y`), checkable by
 `cisZeroG` — the model is `cHermiteReduceTower`'s cleared `D(g)+h = f` check.
 
@@ -322,7 +322,7 @@ variable {α : Type*} [CField α]
 
 /-- **Case-1 cofactor solve** `radCase1Cofactor fuel k V Df f C = B` — the polynomial `B` (degree
 `< deg V`) solving the Case-1 congruence `(1−k)·V'·f·B ≡ C (mod V)` (Trager Appendix A §2.1), via the
-generic diophantine solver `cdiophantineG (((1−k)·V'·f)) V C` (which returns `(B, _)` with `B·((1−k)V'f)
+generic diophantine solver `cdiophantineGWf (((1−k)·V'·f)) V C` (which returns `(B, _)` with `B·((1−k)V'f)
 + c·V = C`). `Df = V'` is passed in (the monomial derivative `V'`, computed by the caller so the base
 derivation is whatever the level uses); `(1−k)` is `cnatCastG (k−1)` negated. Generic over `[CField α]`. -/
 def radCase1Cofactor (_fuel : ℕ) (k : ℕ) (V Df f C : CPolyG α) : CPolyG α :=
@@ -333,7 +333,7 @@ def radCase1Cofactor (_fuel : ℕ) (k : ℕ) (V Df f C : CPolyG α) : CPolyG α 
 /-- **Case-1 residual** `radCase1Residual k V Df f g B C Bder = D` — the lowered-`k` residual numerator
 `D = ((1−k)V'fB − C)/V + B'f + Bg` of the Case-1 step (Trager Appendix A §2.1). `Df = V'`, `Bder = B'`,
 and `g` (from `(f/y)' = g/y`) are passed in (the caller supplies the derivatives at the level's base
-derivation). The exact division by `V` is `cdivG` (`V ∣ (1−k)V'fB − C` by the cofactor congruence).
+derivation). The exact division by `V` is `cdivWf` (`V ∣ (1−k)V'fB − C` by the cofactor congruence).
 Generic over `[CField α]`. -/
 def radCase1Residual (_fuel : ℕ) (k : ℕ) (V Df f g B C Bder : CPolyG α) : CPolyG α :=
   let oneMinusK := cnegG [cnatCastG (k - 1)]
@@ -365,7 +365,7 @@ The `½ − k` form here is the faithful one; the `g`-form is not needed and is 
 
 /-- **Case-2 cofactor solve (n = 2)** `radCase2Cofactor fuel k W h C = B` — the polynomial `B`
 (degree `< deg W`) solving the `radDeriv`-validated Case-2 congruence `B·(½−k)·W'·h ≡ C (mod W)` (Trager
-Appendix A §2.2, `B(1−k−eⱼ/n)W'h ≡ C (mod W)` at `eⱼ = 1, n = 2`), via `cdiophantineG ((½−k)W'h) W C`
+Appendix A §2.2, `B(1−k−eⱼ/n)W'h ≡ C (mod W)` at `eⱼ = 1, n = 2`), via `cdiophantineGWf ((½−k)W'h) W C`
 (`gcd((½−k)W'h, W) = 1` since `W = Pⱼ` is a squarefree factor of `f`, coprime to `h = f/W`, and
 `½ − k ≠ 0`). `h = f/W` and `W` are passed in; `W'` is `cderivG W`. Generic over `[CField α]`. -/
 def radCase2Cofactor (_fuel : ℕ) (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
@@ -376,7 +376,7 @@ def radCase2Cofactor (_fuel : ℕ) (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
 /-- **Case-2 residual (n = 2)** `radCase2Residual fuel k W h C B = D` — the lowered-`k` residual numerator
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'` of the `radDeriv`-validated Case-2 step (Trager Appendix A §2.2).
 `h = f/W` and `W` are passed in; `B'` is `cderivG B`, `h'` is `cderivG h`. The exact division by `W` is
-`cdivG` (`W ∣ B·(½−k)W'h − C` by the cofactor congruence). With this `D`,
+`cdivWf` (`W ∣ B·(½−k)W'h − C` by the cofactor congruence). With this `D`,
 `radDeriv(Bf/(Wᵏy)) = C/(Wᵏy) + D/(W^{k−1}y)`. Generic over `[CField α]`. -/
 def radCase2Residual (_fuel : ℕ) (k : ℕ) (W h C B : CPolyG α) : CPolyG α :=
   let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- `½`
@@ -488,7 +488,7 @@ def radExpCofactor (k : ℕ) (vder : α) (f g C : CPolyG α) : CPolyG α :=
 /-- **`θ = exp v` `C/(θᵏy)` residual** `radExpResidual k vder f g B C Bder = D` — the lowered-`k` residual
 `D = ((B'f + Bg − k·v'·B·f) − C)/θ` of the exp `C/(θᵏy)` step (Trager Appendix A §2.4). `vder = v'`,
 `Bder = B'` (the full `cmonomialDeriv [θ'] B`), and `g` are passed in. The exact division by `θ` is
-`cdivG _ _ [0,1]` (`θ ∣ (B'f + Bg − kv'Bf) − C` by the constant-term match). Generic over `[CField α]`. -/
+`cdivWf _ [0,1]` (`θ ∣ (B'f + Bg − kv'Bf) − C` by the constant-term match). Generic over `[CField α]`. -/
 def radExpResidual (_fuel : ℕ) (k : ℕ) (vder : α) (f g B C Bder : CPolyG α) : CPolyG α :=
   let kvBf := cmulG [CField.mul (cnatCastG k) vder] (cmulG B f)    -- `k·v'·B·f`
   let num := csubG (csubG (caddG (cmulG Bder f) (cmulG B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
@@ -535,9 +535,9 @@ theorem case1_cofactor_eq :
 
 /-- **★ The Case-1 congruence holds**: `(1−k)V'fB − C ≡ 0 (mod V)` (`native_decide`) — the numerator
 `(1−2)·V'·f·B − C = −x·(−1) − 1 = x − 1` is divisible by `V = x − 1`, the defining property of the
-cofactor `B`. Checked by `cisZeroG` of the remainder `cmodG ((1−k)V'fB − C) V`. -/
+cofactor `B`. Checked by `cisZeroG` of the remainder `cmodWf ((1−k)V'fB − C) V`. -/
 theorem case1_congruence :
-    cisZeroG (cmodG 8
+    cisZeroG (cmodWf
       (csubG (cmulG (cnegG [cnatCastG 1]) (cmulG case1Vder (cmulG case1F case1B))) case1C)
       case1V) = true := by native_decide
 
@@ -599,9 +599,9 @@ theorem case2_cofactor_eq :
 
 /-- **★ The Case-2 congruence holds**: `B·(½−k)·W'·h − C ≡ 0 (mod W)` (`native_decide`) — the numerator
 `B·(½−2)·1·(x²−1) − 1` is divisible by `W = x`, the defining property of the cofactor `B`. Checked by
-`cisZeroG` of `cmodG (B·(½−k)W'h − C) W`. -/
+`cisZeroG` of `cmodWf (B·(½−k)W'h − C) W`. -/
 theorem case2_congruence :
-    cisZeroG (cmodG 8
+    cisZeroG (cmodWf
       (csubG (cmulG case2B
         (cmulG (csubG [CField.div CField.one (cnatCastG 2)] [cnatCastG 2])
           (cmulG case2Wder case2H))) case2C)
@@ -798,9 +798,9 @@ theorem expCase_cofactor_eq :
 /-- **★ The `θ = exp v` constant-term congruence**: `(B'f + Bg − kv'Bf) − C ≡ 0 (mod θ)`
 (`native_decide`) — the numerator `B'f + Bg − kv'Bf − C = ((1/2)θ + 1) − (θ+1) = (−1/2)θ` has vanishing
 `θ⁰`-coefficient (is divisible by `θ`), the defining property of the exp cofactor `b₀`. Checked by
-`cisZeroG` of `cmodG (numerator) θ` over `ℚ(x)[eˣ]`. -/
+`cisZeroG` of `cmodWf (numerator) θ` over `ℚ(x)[eˣ]`. -/
 theorem expCase_congruence :
-    cisZeroG (cmodG 8
+    cisZeroG (cmodWf
       (csubG (csubG (caddG (cmulG (cmonomialDeriv expDtPoly expB) expF) (cmulG expB expG))
           (cmulG [CField.mul (cnatCastG 1) expVder] (cmulG expB expF))) expC)
       [CField.zero, CField.one]) = true := by native_decide

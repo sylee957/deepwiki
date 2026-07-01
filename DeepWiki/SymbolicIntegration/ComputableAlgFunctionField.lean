@@ -16,12 +16,12 @@ the **discriminant** `det[Tr(ωᵢωⱼ)]`, cross-checked against `Resultant(f, 
 The base field is `α = QFunNZG ℚ ≅ ℚ(x)` (or any `[CField α]`); an element of `K(x, y)` is a polynomial
 in `y` of degree `< n` with coefficients in `α`, i.e. a `CPolyG α` reduced `mod f`. Unlike the radical
 carrier (a dedicated `RadElem` list with `yⁿ → ρ` baked into multiplication), the general carrier reuses
-`CPolyG α = α[y]` directly: multiplication is `cmulG` followed by `cmodG · f` (general Euclidean
+`CPolyG α = α[y]` directly: multiplication is `cmulG` followed by `cmodWf · f` (general Euclidean
 reduction, not a single `yⁿ → ρ` fold). For a radical `f = yⁿ − ρ` the two agree (`afMul` and `radMul`
 give the same coset), so this is a strict generalization — confirmed by the conservativity check
 `trace (y² − ρ) y = 0` matching the radical fact `Tr(y) = 0`.
 
-* **`afReduce`/`afMul`/`afPow`** — the ring `α[y]/(f)`: reduce `mod f` (`cmodG`), multiply-then-reduce,
+* **`afReduce`/`afMul`/`afPow`** — the ring `α[y]/(f)`: reduce `mod f` (`cmodWf`), multiply-then-reduce,
   power. `afBasisElem i = yⁱ` is the `i`-th power basis vector.
 * **`multMatrix f w`** — the `n×n` multiplication-by-`w` matrix `M_w` over `α` (column `i` = coeff vector
   of `w·yⁱ mod f`); **`trace f w`** = `Σ diag(M_w)`, the field trace `Tr_{K(x,y)/K(x)}(w)`.
@@ -53,14 +53,14 @@ variable {α : Type*} [CField α]
 
 An element of `K(x, y) = α[y]/(f)` is a `CPolyG α = α[y]` of degree `< n = deg f`. The coset arithmetic
 reuses the generic engine: addition is `caddG`, multiplication is `cmulG` followed by the **general**
-Euclidean reduction `cmodG _ _ f` (for a monic `f` of degree `n` the remainder has degree `< n`, the
+Euclidean reduction `cmodWf _ f` (for a monic `f` of degree `n` the remainder has degree `< n`, the
 canonical coset representative). This is the arbitrary-curve analogue of `RadElem.radMul` — but where
 `radMul` folds the *single* relation `yⁿ → ρ`, `afMul` divides by the *whole* `f`, so it works for any
 monic curve (`y² − xy − x³`, `y³ + xy + x`, …), not just `yⁿ = ρ`. -/
 
-/-- **Reduce a free `y`-polynomial modulo `f`** in `α[y]/(f)`: the Euclidean remainder `cmodG _ p f`
-(degree `< deg f` for monic `f`), the canonical coset representative. Fuel is `len p + 1`. -/
-def afReduce (f p : CPolyG α) : CPolyG α := cmodG ((p : List α).length + 1) p f
+/-- **Reduce a free `y`-polynomial modulo `f`** in `α[y]/(f)`: the fuel-free Euclidean remainder
+`cmodWf p f` (degree `< deg f` for monic `f`), the canonical coset representative. -/
+def afReduce (f p : CPolyG α) : CPolyG α := cmodWf p f
 
 /-- **Multiplication** in `α[y]/(f)`: free polynomial multiply (`cmulG`) then reduce `mod f` (`afReduce`)
 — the general-curve analogue of `RadElem.radMul`, dividing by the whole monic `f` rather than folding a
@@ -306,7 +306,7 @@ theorem afRad_trace_y_eq_zero :
     CField.isZero (trace afRadF (afBasisElem 1)) = true := by native_decide
 
 /-- **`afMul` agrees with the radical relation `y² = ρ`** (`native_decide`): `afMul f y y mod f = ρ =
-x³ + 1` for `f = y² − ρ` — the general Euclidean reduction `cmodG · f` reproduces the radical fold
+x³ + 1` for `f = y² − ρ` — the general Euclidean reduction `cmodWf · f` reproduces the radical fold
 `y² → ρ` (cf. `RadElem.radGen_sq_eq_radicand`). Checked by `cisZeroG` of `afMul f y y − [ρ]`. -/
 theorem afRad_y_sq_eq_radicand :
     cisZeroG (csubG (afMul afRadF (afBasisElem 1) (afBasisElem 1)) [qxOfNum [1, 0, 0, 1]])

@@ -69,13 +69,13 @@ and the above-pivot entries un-reduced, so two matrices with the *same* `K[x]`-r
 same fractional ideal) can have **different** triangular forms (e.g. `[[-4, x⁶−2x³+4], [0, x³]]` vs
 `[[-1, 1], [0, x³]]`, both `= (y−1)·O = P³` on `y² = x³+1`). The **true** Hermite NORMAL form is unique per
 lattice: make each pivot **monic** (scale the row by `1/lead`) and reduce every **above-pivot** entry modulo
-its column's monic pivot (`cmodG`). Then equal lattices have *identical* canonical forms, and entrywise
+its column's monic pivot (`cdivWf` quotient subtraction). Then equal lattices have *identical* canonical forms, and entrywise
 comparison is a sound ideal-equality test (`canonHNFEq`). -/
 
 /-- **Make the triangular matrix's pivots monic and reduce above-pivot entries** `canonHNF M`: on an
 already-upper-triangular `PolyMatrix ℚ` (the `hermiteRowReduce` output, nonzero rows), for each diagonal pivot
 `M[i][i]` scale row `i` by `1/lead(M[i][i])` (pivot becomes monic), then reduce each entry `M[k][i]` strictly
-**above** the pivot (`k < i`) modulo the monic pivot (`cmodG`, subtracting the right `K[x]`-multiple of row
+**above** the pivot (`k < i`) modulo the monic pivot (via `cdivWf`, subtracting the right `K[x]`-multiple of row
 `i`). The result is the **unique** Hermite normal form of the row lattice — two matrices with the same `K[x]`-row
 span have identical `canonHNF`. (Square `n×n` case: the pivots sit on the diagonal.) -/
 def canonHNF (M : PolyMatrix ℚ) : PolyMatrix ℚ :=
@@ -93,7 +93,7 @@ def canonHNF (M : PolyMatrix ℚ) : PolyMatrix ℚ :=
       (List.range n).foldl (fun a k =>
         if k < i then
           let e := polyMatGet a k i
-          let q := cdivG (e.length + 1) e piv
+          let q := cdivWf e piv
           if cisZeroG q then a else rowSub a k i q
         else a) acc) M1
 
@@ -112,7 +112,7 @@ def canonHNFEq (I J : GenDivisor) : Bool :=
       let zz := qReduceNZG z
       let num := zz.1.1
       let den := cnormG zz.1.2
-      cdivG ((cmulG cc num).length + 1) (cmulG cc num) den))
+      cdivWf (cmulG cc num) den))
   let NI := scale (cmulG δI δJ) I
   let NJ := scale (cmulG δI δJ) J
   let HI := canonHNF ((hermiteRowReduce NI).filter (fun row => !row.all cisZeroG))
@@ -361,7 +361,8 @@ theorem general_divisor_order_validates :
 `[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
 axiom). **No `sorry`, no `sorryAx`, no extra axiom** — `idealReduce`/`isPrincipalIdeal`/`genCandidates`/
 `canonHNF`/`canonHNFEq` are non-recursive compositions over the fuel-bounded engine
-(`hermiteRowReduce`/`cgcdFFCore`/`cdivG`/`cmodG`/`matInvG` are fuel-bounded or fold over finite `List.range`s);
+(`hermiteRowReduce`/exact division use `cdivWf`, `cgcdFFCore` is fuel-bounded, and
+`matInvG` folds over finite `List.range`s);
 `genDivisorOrder` is `ℕ`-fuel structural recursion (`genDivisorOrderAux`). -/
 
 #print axioms gdo_divY_principal_order1

@@ -74,7 +74,7 @@ def qReduceNZG (z : QFunNZG ℚ) : QFunNZG ℚ :=
   let den := z.1.2
   let g := CFracGcdCore.cgcdFFCore (num.length + den.length + 2) num den
   let (num1, den1) := if cisZeroG g then (num, den)
-    else (cdivG (num.length + 1) num g, cdivG (den.length + 1) den g)
+    else (cdivWf num g, cdivWf den g)
   let den1 := cnormG den1
   if cisZeroG den1 then z
   else
@@ -167,14 +167,14 @@ def commonDenomG (M : List (List (QFunNZG ℚ))) : CPolyG ℚ :=
 
 /-- **Clear a `K(x)`-row to a `K[x]`-row at `δ` by EXACT division** `clearRowExact δ row = [(δ·numᵢ)/denᵢ]`:
 reduce each entry `numᵢ/denᵢ` (`qReduceNZG`), then compute `(δ·numᵢ)/denᵢ` by **exact** polynomial division
-(`cdivG`, valid since `denᵢ | δ` when `δ` is a common denominator). Unlike a raw-numerator read of `δ·z`
+(`cdivWf`, valid since `denᵢ | δ` when `δ` is a common denominator). Unlike a raw-numerator read of `δ·z`
 (which keeps `z`'s denominator and over-counts), this produces the genuine integral row `δ·row`. -/
 def clearRowExact (δ : CPolyG ℚ) (row : List (QFunNZG ℚ)) : List (CPolyG ℚ) :=
   row.map (fun z =>
     let zz := qReduceNZG z
     let num := zz.1.1
     let den := cnormG zz.1.2
-    cdivG ((cmulG δ num).length + 1) (cmulG δ num) den)
+    cdivWf (cmulG δ num) den)
 
 /-- **The idealizer `Î = (I_p : I_p)` of an order `O`, as a new `K(x)` order basis** `idealizerOCoords f O
 ipO`. `O` is the current order's `K(x, y)` basis and `ipO` is `I_p` in `O`-coordinates (`ipOCoords` output).
@@ -253,11 +253,12 @@ def discNumOrder (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) : 
   let num := z.1.1
   let den := z.1.2
   let g := CFracGcdCore.cgcdFFCore (num.length + den.length + 2) num den
-  if cisZeroG g then cnormG num else cnormG (cdivG (num.length + 1) num g)
+  if cisZeroG g then cnormG num else cnormG (cdivWf num g)
 
 /-- **The bad primes of an order `O`** `badPrimesOrder fuel f O`: the distinct monic squarefree factors `p`
 of the **order's** reduced discriminant numerator (`discNumOrder`) with `p² | d` — the primes where `O` may
-still be non-maximal. For `O = powerBasis f` this is `badPrimes fuel f`. Drives each pass of the outer loop. -/
+still be non-maximal. For `O = powerBasis f` this is the fuel-free divisibility-test analogue of
+`badPrimes fuel f`. Drives each pass of the outer loop. -/
 def badPrimesOrder (_fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
     List (CPolyG ℚ) :=
   let d := discNumOrder f O
@@ -479,7 +480,7 @@ remaining pieces:
    trace-matrix kernel is then linear algebra **over `K[x]/(p)`** — arithmetic on `CPolyG ℚ` reduced mod `p`
    (a degree-`< deg p` representative ring), not a single evaluation at a root. The construction is otherwise
    identical (`ipOCoords`'s residue-kernel in `O`-coords + `idealizerOCoords`): replace `qEvalAtRoot` /
-   `kernelBasisG` over `K` by their `K[x]/(p)`-coefficient analogues (`cmodG · p` arithmetic in the Gauss
+   `kernelBasisG` over `K` by their `K[x]/(p)`-coefficient analogues (`cmodWf · p` arithmetic in the Gauss
    elimination). The linear case here already covers the cusp/node and the multi-step/multi-prime curves
    above (all bad primes `x`, `x − 1`).
 

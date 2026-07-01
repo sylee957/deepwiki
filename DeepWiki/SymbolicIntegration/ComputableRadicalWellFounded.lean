@@ -46,16 +46,16 @@ measure / leaf-bridge, so the full conversion is a clear mechanical sequence):
   a fuel-free `radIntegrateRationalWf` only needs to substitute fuel-free leaves: `cSqfreeYunFFGWf` (the
   tower's squarefree factorization, already fuel-free), `cgcdWf`/`cdivWf` (already fuel-free leaves), this
   file's `radReduceCase{1,2}IterateWf` for the dispatch, and `radPartialFractionCoprimeWf` (here). The
-  correspondence is the conjunction of the leaf bridges (`cSqfreeYunFFGgoWf_eq`, `cdivmodWf_eq_of_fuel`,
-  this file's iterate `…_eq`) — the substantive iterate part is proved here.
+  correspondence is the conjunction of the squarefree-factorization bridge plus this file's iterate `…_eq`
+  bridges — the substantive iterate part is proved here.
 * `cIntegrateAlgebraic` (`ComputableRadicalIntegrateFull`) — flat composition over `radIntegrateRationalWf`
   (above) + `radLogArgSolve`. **No recursion of its own.**
 * `radLogArgSolve` (`ComputableRadicalLogArgument`) — flat composition (`radLogMatrix` + `ratKernelVector`
   + a `List.foldl` over the kernel vector). **No recursion of its own**; fuel-free once its matrix/kernel
   leaves are fuel-free.
 * `radPartialFractionCoprime` — structural recursion on the **list of prime-powers** (`G :: rest → rest`),
-  already structural (the `fuel` it carries is only threaded to the inner `cdiophantineG`); the `…Wf` here
-  swaps in `cdiophantineGWf` and keeps the structural list recursion.
+  already structural and already using the fuel-free `cdiophantineGWf`; the `…Wf` here removes the ignored
+  fuel argument and keeps the structural list recursion.
 * `afIntegrateAlgebraic` (`ComputableGeneralLogArg`, the GENERAL non-radical algebraic curve) — the next
   layer; its rational part recurses with the same multiplicity / degree measures (the Case-1/2/3 analogues
   over the integral basis), its log part is flat (residue resultants + a linear solve). Same mechanical
@@ -308,9 +308,9 @@ end CPolyG
 /-! ## Part 4 — the fuel-free partial-fraction front-end `radPartialFractionCoprimeWf`
 
 `radPartialFractionCoprime fuel R Gs` recurses **structurally on the list `Gs`** of pairwise-coprime
-prime-powers (`G :: rest → rest`); the `fuel` it carries is only threaded to the inner Bézout split
-`cdiophantineG`. The fuel-free companion keeps the structural list recursion verbatim and swaps the inner
-`cdiophantineG fuel` for the generic fuel-free `cdiophantineGWf` (`ComputableFuelFreeDiophantine`). -/
+prime-powers (`G :: rest → rest`); its `fuel` argument is ignored because the inner Bezout split is already
+the generic fuel-free `cdiophantineGWf` (`ComputableFuelFreeDiophantine`). The fuel-free companion keeps the
+same structural list recursion without carrying that argument. -/
 
 namespace CPolyG
 
@@ -329,24 +329,21 @@ def radPartialFractionCoprimeWf : CPolyG α → List (CPolyG α) → List (CPoly
     let (Ni, c) := cdiophantineGWf P G R
     Ni :: radPartialFractionCoprimeWf c rest
 
-/-- **Bridge — `radPartialFractionCoprimeWf` equals `radPartialFractionCoprime` when the inner Bézout
-agrees.** Hypothesis `hdioph`: the fuel-free Bézout `cdiophantineGWf` matches the fuel'd `cdiophantineG fuel`
-at every numerator/cofactor reached during the descent (the single leaf bridge — `cdiophantineGWf` already
-has its own fuel correspondence in `ComputableFuelFreeDiophantine`). The structural list recursions then
-coincide. By induction on the list `Gs`. -/
-theorem radPartialFractionCoprimeWf_eq (fuel : ℕ)
-    (hdioph : ∀ (P G R : CPolyG α), cdiophantineGWf P G R = cdiophantineG fuel P G R) :
+/-- **Bridge — `radPartialFractionCoprimeWf` equals `radPartialFractionCoprime`.** The driver-side
+`radPartialFractionCoprime` now threads an ignored fuel argument and uses `cdiophantineGWf` at its only
+Bezout leaf, so the bridge is unconditional. By induction on the list `Gs`, generalizing the ignored fuel. -/
+theorem radPartialFractionCoprimeWf_eq (fuel : ℕ) :
     ∀ (R : CPolyG α) (Gs : List (CPolyG α)),
       radPartialFractionCoprimeWf R Gs = radPartialFractionCoprime fuel R Gs := by
   intro R Gs
-  induction Gs generalizing R with
+  induction Gs generalizing R fuel with
   | nil => rfl
   | cons G rest ih =>
-    rw [radPartialFractionCoprimeWf, radPartialFractionCoprime, hdioph (radProdList rest) G R]
+    rw [radPartialFractionCoprimeWf, radPartialFractionCoprime]
     -- destructure the (now identical) Bézout pair so both `match`es reduce; the tail recurses on `c`
-    obtain ⟨Ni, c⟩ : CPolyG α × CPolyG α := cdiophantineG fuel (radProdList rest) G R
+    obtain ⟨Ni, c⟩ : CPolyG α × CPolyG α := cdiophantineGWf (radProdList rest) G R
     dsimp only
-    rw [ih c]
+    rw [ih 0 c]
 
 end CPolyG
 
@@ -417,22 +414,14 @@ def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : CPolyG α) :
       let (Crem, vNum) := radReduceCase2IterateWf fi (cdivWf ρ fi) ρ e e Ni []
       (false, fi, e, Ni, vNum, Crem))
 
-/-- **Bridge — `radIntegrateRationalWf` equals `radIntegrateRational` under the leaf agreements.** The
-hypotheses are exactly the per-run leaf bridges of the flat composition (each dischargeable on a concrete
-run / sufficient fuel): `hsqf` the fuel-free squarefree factorization matches (`cSqfreeYunFFGWf B =
-cSqfreeYunFFG fuel B`, from the tower's `cSqfreeYunFFGgoWf_eq` + entry leaves); `hgcd` every gcd matches
-(`(cgcdWf · ·).1 = (cgcdExtG fuel · ·).1`, from `cgcdWf_eq` at the right fuel); `hdiv` every exact division
-matches (`cdivWf · · = cdivG fuel · ·`, from `cdivmodWf_eq_of_fuel` for short-enough inputs); `hpf` the
-partial fraction matches (`radPartialFractionCoprimeWf_eq`); `hc1`/`hc2` the Case-1 / Case-2 iterates match
-at the dispatched multiplicity (`radReduceCase{1,2}IterateWf_eq` at `fuel := k0`, unconditional — the
-dispatch calls each iterate with fuel `= k0`). Under these, the two flat compositions coincide. The fuel
-lives only in the hypotheses; `radIntegrateRationalWf` carries none. -/
+/-- **Bridge — `radIntegrateRationalWf` equals `radIntegrateRational` under the remaining leaf
+agreements.** The fuelful driver already uses `cgcdWf`, `cdivWf`, and the fuel-free partial-fraction split,
+so the only runtime differences are `hsqf` (fuel-free squarefree factorization matches
+`cSqfreeYunFFG fuel B`) and `hc1`/`hc2` (the Case-1 / Case-2 iterates match at the dispatched multiplicity).
+Under these, the two flat compositions coincide. The fuel lives only in the hypotheses;
+`radIntegrateRationalWf` carries none. -/
 theorem radIntegrateRationalWf_eq [CFracGcdCore α] [CFracGcdCoreWf α] (fuel : ℕ) (ρ R B : CPolyG α)
     (hsqf : cSqfreeYunFFGWf B = cSqfreeYunFFG fuel B)
-    (hgcd : ∀ a b : CPolyG α, (cgcdWf a b).1 = (cgcdExtG fuel a b).1)
-    (hdiv : ∀ a b : CPolyG α, cdivWf a b = cdivG fuel a b)
-    (hpf : ∀ (R : CPolyG α) (Gs : List (CPolyG α)),
-      radPartialFractionCoprimeWf R Gs = radPartialFractionCoprime fuel R Gs)
     (hc1 : ∀ (V Df f g : CPolyG α) (k0 k : ℕ) (C vNum : CPolyG α),
       radReduceCase1IterateWf cderivG V Df f g k0 k C vNum
         = radReduceCase1Iterate cderivG V Df f g k0 k0 k C vNum)
@@ -441,7 +430,8 @@ theorem radIntegrateRationalWf_eq [CFracGcdCore α] [CFracGcdCoreWf α] (fuel : 
         = radReduceCase2Iterate W h ρ' k0 k0 k C vNum) :
     radIntegrateRationalWf ρ R B = radIntegrateRational fuel ρ R B := by
   -- unfold both; substitute every leaf via its bridge; the flat structure then coincides
-  simp only [radIntegrateRationalWf, radIntegrateRational, hsqf, hgcd, hdiv, hpf, hc1, hc2]
+  simp only [radIntegrateRationalWf, radIntegrateRational, hsqf,
+    radPartialFractionCoprimeWf_eq fuel, hc1, hc2]
 
 end CPolyG
 

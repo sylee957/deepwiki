@@ -81,14 +81,14 @@ lists). The first Mumford condition. Generic over `[CField α]`. -/
 def cisMonicG (u : CPolyG α) : Bool := cisZeroG (csubG (cmonicG u) u)
 
 /-- **Mumford validity** `mumfordValid fuel ρ D`: the pair `(D.u, D.v)` is a valid semi-reduced divisor on
-`y² = ρ` — `D.u` is monic (`cisMonicG`), `deg D.v < deg D.u`, and `D.u ∣ (D.v² − ρ)` (`cdvdG`). The last
+`y² = ρ` — `D.u` is monic (`cisMonicG`), `deg D.v < deg D.u`, and `D.u ∣ (D.v² − ρ)` (`cdvdGWf`). The last
 condition is the on-curve constraint: at every root `xᵢ` of `u`, `v(xᵢ)² = ρ(xᵢ)`. Trager Ch. 5 §3. (When
 `D.u = 1` — the zero divisor / identity — `deg v < deg u` forces `v = 0` and `1 ∣ anything`, so the
 identity `(1, 0)` is valid.) Generic over `[CField α]`. -/
-def mumfordValid (fuel : ℕ) (ρ : CPolyG α) (D : MumfordDivisor α) : Bool :=
+def mumfordValid (_fuel : ℕ) (ρ : CPolyG α) (D : MumfordDivisor α) : Bool :=
   cisMonicG D.u
     && (cdegG D.v < cdegG D.u || cisZeroG D.v)
-    && cdvdG fuel D.u (csubG (cmulG D.v D.v) ρ)
+    && cdvdGWf D.u (csubG (cmulG D.v D.v) ρ)
 
 /-! ### The divisor of a single affine point, and the identity
 
@@ -117,8 +117,8 @@ Jacobian: same support, opposite sheet `yᵢ ↦ −yᵢ` (the curve `y² = ρ` 
 mod u` reduction restores `deg < deg u` (here `deg(−v) = deg v < deg u` already, so it is `−v`). Validity
 is preserved: `(−v)² − ρ = v² − ρ`, still divisible by `u`. Trager Ch. 5 §3 (divisor quotients/inverses).
 Generic over `[CField α]`. -/
-def mumfordOpposite (fuel : ℕ) (D : MumfordDivisor α) : MumfordDivisor α :=
-  ⟨D.u, cmodG fuel (cnegG D.v) D.u⟩
+def mumfordOpposite (_fuel : ℕ) (D : MumfordDivisor α) : MumfordDivisor α :=
+  ⟨D.u, cmodWf (cnegG D.v) D.u⟩
 
 /-! ### Reducedness `deg u ≤ g`
 

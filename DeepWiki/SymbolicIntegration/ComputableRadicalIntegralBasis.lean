@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicResidues
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Algebraic-function integration: the simple-radical INTEGRAL BASIS (Trager Ch. 2 §5)
 
@@ -127,11 +128,11 @@ def radSquarefreePartIsSquarefree (fuel : ℕ) (ρ : CPolyG α) : Bool :=
 `T² − s/P²` over `ℚ[x]`, but `P² ∤ s` (since `s` is squarefree, no nonconstant square divides it), so
 `s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the MAXIMAL integral element of
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
-(`y/d` itself, which IS integral). Checked by `¬ (P² ∣ s)` via `cdvdG`. `[CField α]
+(`y/d` itself, which IS integral). Checked by `¬ (P² ∣ s)` via `cdvdGWf`. `[CField α]
 [CFracGcdCore α]`-generic. -/
 def radNotIntegralFactor (fuel : ℕ) (ρ P : CPolyG α) : Bool :=
   let s := radSquarefreePart fuel ρ
-  if cdegG P = 0 then false else !(cdvdG fuel (cmulG P P) s)
+  if cdegG P = 0 then false else !(cdvdGWf (cmulG P P) s)
 
 /-! ### Discriminant and genus of the simple-radical basis (Trager Ch. 2 §5, STRETCH)
 

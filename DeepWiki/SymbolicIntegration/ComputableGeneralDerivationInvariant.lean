@@ -60,9 +60,9 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-! ### The curve ideal `afIdeal f = (toPolyG f)` and `afReduce` preserves its quotient
 
-The carrier `K(x)[y]/(f)` is the quotient `K[X] ⧸ (toPolyG f)`. `afReduce f p = cmodG _ p f` is the
+The carrier `K(x)[y]/(f)` is the quotient `K[X] ⧸ (toPolyG f)`. `afReduce f p = cmodWf p f` is the
 Euclidean remainder of `p` by `f`, so it changes `toPolyG p` only by a multiple of `toPolyG f` (the
-Euclidean identity `toPolyG p = quo·toPolyG f + toPolyG (afReduce f p)`, `toPolyG_cdivmodG'`). Hence
+Euclidean identity `toPolyG p = quo·toPolyG f + toPolyG (afReduce f p)`, `toPolyG_cmodWf`). Hence
 `afReduce ≡ id` in the quotient. -/
 
 /-- **The curve ideal** `afIdeal f = (toPolyG f) ⊆ K[X]`: the principal ideal whose quotient is the
@@ -78,7 +78,7 @@ theorem mul_curve_mem (f : CPolyG α) (c : (CFieldSpec.K α)[X]) :
   Ideal.mul_mem_left _ _ (Ideal.subset_span (Set.mem_singleton _))
 
 /-- **`afReduce` preserves the quotient `K[X] ⧸ (toPolyG f)`**: `mk (toPolyG (afReduce f p)) = mk (toPolyG
-p)` for a nonzero curve `f` (`cnormG f ≠ []`). `afReduce f p = cmodG _ p f`, and the Euclidean identity
+p)` for a nonzero curve `f` (`cnormG f ≠ []`). `afReduce f p = cmodWf p f`, and the Euclidean identity
 `toPolyG p = quo·toPolyG f + toPolyG (afReduce f p)` puts the difference `toPolyG p − toPolyG (afReduce f
 p) = quo·toPolyG f` in `afIdeal f`. This is what makes `afMul ≡ ·` and `afDeriv ≡` the un-reduced
 derivation in the quotient. -/
@@ -87,11 +87,11 @@ theorem mk_toPolyG_afReduce (f p : CPolyG α) (hf : cnormG f ≠ []) :
       = Ideal.Quotient.mk (afIdeal f) (toPolyG p) := by
   rw [← sub_eq_zero, ← map_sub, Ideal.Quotient.eq_zero_iff_mem]
   -- Euclidean identity: `toPolyG p = quo·toPolyG f + toPolyG (afReduce f p)`
-  have hid := toPolyG_cdivmodG' ((p : List α).length + 1) p f hf
-  -- `afReduce f p` is definitionally `(cdivmodG (len+1) p f).2`, so the difference is `−quo·toPolyG f`
+  have hid := toPolyG_cmodWf p f hf
+  -- `afReduce f p` is definitionally `cmodWf p f`, so the difference is `-quo·toPolyG f`
   have hsub : toPolyG (afReduce f p) - toPolyG p
-      = - (toPolyG (cdivmodG ((p : List α).length + 1) p f).1 * toPolyG f) := by
-    show toPolyG (cdivmodG ((p : List α).length + 1) p f).2 - toPolyG p = _
+      = - (toPolyG (cdivWf p f) * toPolyG f) := by
+    show toPolyG (cmodWf p f) - toPolyG p = _
     linear_combination -hid
   rw [hsub]
   exact neg_mem (mul_curve_mem f _)
