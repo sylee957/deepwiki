@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableDivisorOrder
-import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
+import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 
 /-! # The PRINCIPAL GENERATOR of a torsion divisor (Trager Ch. 6 §1, the constructive half)
 
@@ -26,7 +26,7 @@ flex `(0, 1)` (`y' = 3x²/(2y) = 0` there, horizontal `y = 1`), which meets `y²
 a triple point — `div(y − 1) = 3·(0, 1) − 3·∞ = 3·D`. The log term is `(1/3)·log(y − 1)`.
 
 **The log-derivative check confirms the recovery.** `radLogDeriv ρ g = g'/g` (the honest `RadElem`
-division via `radInv2`, from `ComputableRadicalIntegrateFull`); the `(1/3)·log g` differential is
+division via `radInv2`, from `ComputableRadicalAssembly`); the `(1/3)·log g` differential is
 `ι = (1/3)·g'/g`, and the cleared certificate `radDeriv g = radMul g (radScale 3 ι)` (`radIsLogIntegral`)
 holds — the recovered `g` *is* the `(1/3)`-log argument. Concretely `g' = radDeriv(y − 1) = ℓ·y` with
 `ℓ = 3x²/(2(x³+1))`, so `ι = (1/3)·ℓ·y/(y − 1) = x²/(2y(y − 1))` — the differential Trager's radical-

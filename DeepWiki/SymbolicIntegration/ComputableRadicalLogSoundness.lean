@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.ComputableRadicalIntegralSoundness
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogIntegral
 import DeepWiki.SymbolicIntegration.ComputableResultantGenericCore
 import DeepWiki.SymbolicIntegration.PartialFraction
-import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
+import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 
 /-! # The LOG-part soundness for the radical integrator: `D(Σ cᵢ log uᵢ) = logpart` via `radDeriv`
 
@@ -900,7 +900,7 @@ end RadElem
 
 The `hsplit` hypothesis of `isAlgebraicIntegral_of_parts` is `f = ratPart + logPart` — the integrand
 decomposition `cIntegrateAlgebraic` performs. For the **actual driver** this is not an extra assumption: the
-engine's own round-trip certificate `algDeriv ρ F = integrand` (`ComputableRadicalIntegrateFull`, the
+engine's own round-trip certificate `algDeriv ρ F = integrand` (`ComputableRadicalAssembly`, in the
 `radIsZero`-tested form the `native_decide` round-trips validate) IS the integrand split, *un-cross-
 multiplied* — `algDeriv ρ F = radDeriv(v) + Σ cᵢ·radLogDeriv(uᵢ) = radDeriv(v) + Σ cᵢ·(uᵢ'/uᵢ)` is exactly
 `ratPart's derivative + the log part`. We discharge it: the engine's `radIsZero` round-trip certificate gives
@@ -913,7 +913,7 @@ extension is a field (the curve `yⁿ − ρ` irreducible). -/
 /-- **★ Input (b) — the engine round-trip certificate IS the integrand split (un-cross-multiplied)** — for
 the unified integrator's output `F : AlgIntegralResult` over `y² = ρ`, the engine's `radIsZero` round-trip
 certificate `radIsZero (radSub (algDeriv ρ F) integrand) = true` (the form the `native_decide` round-trips
-in `ComputableRadicalIntegrateFull` validate) yields the genuine-field identity `toPolyG (algDeriv ρ F) =
+validate) yields the genuine-field identity `toPolyG (algDeriv ρ F) =
 toPolyG integrand` in `K[X]` (`K = CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`). Since `algDeriv ρ F = radDeriv(v)
 + Σ cᵢ·radLogDeriv(uᵢ)` (`radLogDeriv = u'/u` honest division), this **IS** the integrand split `f =
 radDeriv(v) + Σ cᵢ·(uᵢ'/uᵢ)` — `cIntegrateAlgebraic`'s own decomposition, the un-cross-multiplied `D(v + Σ

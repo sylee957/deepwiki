@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
+import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 import DeepWiki.SymbolicIntegration.ComputableRadicalOverTower
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogArgGeneric
 
@@ -15,7 +15,7 @@ tower* base like `α = ℚ(x)(eˣ)`. The two halves already computed over towers
   **computes** log arguments over a tower with the ACTUAL tower derivation (`expArg_compute_verify`:
   `∫dx/√(eˣ+1) = log((y−1)/(y+1))`);
 * the **assembly** `cIntegrateAlgebraic`/`AlgIntegralResult`/`algDeriv`/`radLogDeriv`/`radInv2` over the
-  *single* level `ℚ(x)` (`ComputableRadicalIntegrateFull`).
+  *single* level `ℚ(x)` (`ComputableRadicalAssembly` plus the full driver wrapper).
 
 This file fuses all three over a *tower*. The pieces:
 
@@ -23,7 +23,7 @@ This file fuses all three over a *tower*. The pieces:
   over any base field `α`).
 * **`algDerivG`** — the ACTUAL-derivation derivative `radDeriv v + Σ cᵢ · radLogDeriv uᵢ` over the tower,
   consuming the tower's `[CDiffField α]` (so `θ = eˣ` gets `θ' = θ`, NOT the formal `θ' = 1`). Reuses the
-  generic `radLogDeriv`/`radInv2` (`ComputableRadicalIntegrateFull`).
+  generic `radLogDeriv`/`radInv2` (`ComputableRadicalAssembly`).
 * **`cIntegrateElementaryG`** — the unified driver over `α = QFunNZG β`. Takes the rational part `v` supplied
   (see scope below), the log-solve data `(integrand, residual, D, c, degBound)`, **COMPUTES** the log
   argument on the residual via `radLogArgSolveG` (ACTUAL tower derivation), and assembles `v + c·log(N/D)`.
@@ -65,7 +65,7 @@ open RadElem CPolyG
 
 /-! ### `AlgIntegralResultG` — the tower-generic `v + Σ cᵢ log uᵢ` and its ACTUAL-derivation derivative
 
-The generic analogue of `AlgIntegralResult` (`ComputableRadicalIntegrateFull`, pinned to `QFunNZG ℚ`): a
+The generic analogue of `AlgIntegralResult` (`ComputableRadicalAssembly`, pinned to `QFunNZG ℚ`): a
 rational part `v` (a `RadElem α`) plus a list of log terms `(cᵢ, uᵢ)` over an arbitrary base field `α`. The
 derivative `algDerivG` consumes the tower's `[CDiffField α]`, so the base-field derivation is the genuine
 tower derivation (`θ = eˣ ⇒ θ' = θ`), reusing the generic `radLogDeriv`/`radInv2`. -/

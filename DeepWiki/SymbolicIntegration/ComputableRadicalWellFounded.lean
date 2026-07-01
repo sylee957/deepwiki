@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
-import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
+import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 
 /-! # Fuel-free (well-founded) ALGEBRAIC simple-radical rational-part integration
 
@@ -387,8 +387,7 @@ def cIntegrateAlgebraicWf (ρ : QFunNZG ℚ) (R B : CPolyG ℚ)
 
 The fuel-free top-level is checked directly with the radical derivation, so the `D(∫f) = f` validation holds
 of the **fuel-free** output. The rational-only and combined examples below build their benchmark rational
-parts with `radIntegrateRationalWf` itself; the old fueled runs are kept only as separate compatibility
-checks. -/
+parts with `radIntegrateRationalWf` itself, so these validations no longer depend on the fueled full driver. -/
 
 open RadElem CPolyG
 
@@ -398,12 +397,6 @@ open RadElem CPolyG
 `rtRatV`, built from `radIntegrateRationalWf` rather than the old fueled dispatcher. -/
 def rtRatVWf : RadElem (QFunNZG ℚ) :=
   radAssembleRatPart rtRatRho (CPolyG.radIntegrateRationalWf (qxNum rtRatRho) rtRatR rtRatB)
-
-/-- **The fuel-free rational part agrees with the old fueled benchmark** (`native_decide`): `rtRatVWf` and
-`rtRatV` differ by zero in the radical extension. This is compatibility evidence; the Wf round-trip below
-uses `rtRatVWf` directly. -/
-theorem rtRatVWf_eq_rtRatV :
-    radIsZero (radSub rtRatVWf rtRatV) = true := by native_decide
 
 /-- The fuel-free rational-only benchmark integrand: `algDeriv ⟨rtRatVWf, []⟩`. -/
 def rtRatIntegrandWf : RadElem (QFunNZG ℚ) := algDeriv rtRatRho ⟨rtRatVWf, []⟩
@@ -454,12 +447,6 @@ theorem cIntegrateAlgebraicWf_rtLog_shape :
 def rtCombVdispatchWf : RadElem (QFunNZG ℚ) :=
   radAssembleRatPart rtCombRho (CPolyG.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
 
-/-- **The fuel-free combined rational part agrees with the old fueled benchmark** (`native_decide`):
-`rtCombVdispatchWf` and `rtCombVdispatch` differ by zero in the radical extension. This is compatibility
-evidence; the Wf round-trip below uses `rtCombVdispatchWf` directly. -/
-theorem rtCombVdispatchWf_eq_rtCombVdispatch :
-    radIsZero (radSub rtCombVdispatchWf rtCombVdispatch) = true := by native_decide
-
 /-- The fuel-free combined starting antiderivative `F = rtCombVdispatchWf + log(rtCombU)`. -/
 def rtCombFWf : AlgIntegralResult := ⟨rtCombVdispatchWf, [(CField.one, rtCombU)]⟩
 
@@ -505,8 +492,6 @@ fuel. The remaining validation theorems are `native_decide` checks over the Wf o
 #print axioms cubeDriverWf_integrates
 #print axioms radIntegrateCase2Wf_eq_c2itRun
 #print axioms radIntegrateCase3Wf_eq_c3itRun
-#print axioms rtRatVWf_eq_rtRatV
-#print axioms rtCombVdispatchWf_eq_rtCombVdispatch
 #print axioms mcRunWf_classification
 #print axioms mcVliftWf_eq_mcVlift
 #print axioms mcRatLiftWf_eq_mcRatLift

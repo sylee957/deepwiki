@@ -30,7 +30,7 @@ from the divisor**. On the rank-1 curve `y² = x³ − 2`, the infinite-order po
 
 **Assembling into the integrator's result type.** The torsion log term `(1/m, g)` slots straight into the
 `AlgIntegralResult.logTerms` list (the `v + Σ cᵢ log uᵢ` representation of
-`ComputableRadicalIntegrateFull`), with `cᵢ = 1/m`. `torsionAlgResult` builds that result; `algDeriv` of it
+`ComputableRadicalAssembly`), with `cᵢ = 1/m`. `torsionAlgResult` builds that result; `algDeriv` of it
 returns the differential — the same round-trip the principal integrator uses, now closing the
 **non-principal** branch.
 
@@ -148,7 +148,7 @@ theorem tltTerm01_logderiv :
 /-! ## ★ Assembling the torsion term into an `AlgIntegralResult` (`native_decide`)
 
 The torsion log term `(1/m, g)` slots into `AlgIntegralResult.logTerms` (the `v + Σ cᵢ log uᵢ` shape of
-`ComputableRadicalIntegrateFull`), with `cᵢ = 1/m`. `torsionAlgResult` builds that result from the
+`ComputableRadicalAssembly`), with `cᵢ = 1/m`. `torsionAlgResult` builds that result from the
 divisor; `algDeriv` of it returns the differential — the same round-trip the principal integrator uses,
 now closing the non-principal branch. -/
 

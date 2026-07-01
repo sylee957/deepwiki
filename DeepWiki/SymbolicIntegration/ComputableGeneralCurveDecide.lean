@@ -61,7 +61,7 @@ open CPolyG
 
 /-! ## Part 1 — the general-curve integral result `GeneralCurveIntegralResult` and the decision statement
 
-The general-curve analogue of `AlgIntegralResult` (`ComputableRadicalIntegrateFull`, pinned to the radical
+The general-curve analogue of `AlgIntegralResult` (`ComputableRadicalAssembly`, pinned to the radical
 carrier `RadElem (QFunNZG ℚ)`): a rational part `v` plus log terms `(cᵢ, uᵢ)`, here over the **general curve
 carrier** `K(x)[y]/(f) = CPolyG (QFunNZG ℚ)` (a power-basis coordinate vector), not the radical carrier. The
 output of `cIntegrateGeneralCurveDecide`. -/

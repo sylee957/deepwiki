@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 import DeepWiki.SymbolicIntegration.ComputableRadicalDerivationInvariant
-import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrateFull
+import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
@@ -21,7 +21,7 @@ can dispatch), and equips it with
 * **`CField (RadExt α n f)`** (over `[CField α] [CFieldDomain α]`) — `zero`/`one`/`add`/`mul`/`isZero` from
   `radZero`/`radOne`/`radAdd`/`radMul`/`radIsZero`, `neg` from `radNeg`, and `inv` from the
   conjugate-norm reciprocal `radInv2` (the honest `n = 2` field inverse `u⁻¹ = ū/(a² − b²f)`, with
-  `radMul 2 f u (radInv2 f u) = 1`, validated over ℚ(x) in `ComputableRadicalIntegrateFull`). Computable —
+  `radMul 2 f u (radInv2 f u) = 1`, validated over ℚ(x) in `ComputableRadicalAssembly`). Computable —
   all list/field arithmetic, the `radInv2` denominator a single `α`-element.
 * **`CFieldDomain (RadExt α n f)`** — the Prop-erased domain facts (`cisZeroG [1] = false`, no zero
   divisors), the `native_decide` key that lets the **next** transcendental level stack.
