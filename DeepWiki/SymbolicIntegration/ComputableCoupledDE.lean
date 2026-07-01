@@ -454,7 +454,7 @@ coupled system at the `ℚ[X]` level — `D(y₁) + b₁·y₁ + C a·(b₂·y�
 two cleared residuals, expanded by the `toPolyG` ring-hom (`toPolyG_csubG`/`caddG`/`cmulG`/`cscaleG`,
 `toK = id` on ℚ) and derivation (`toPolyG_cderivG`) bridges, then `linear_combination`. The base-solve
 soundness atom, gated only on the engine's own cleared check — the coupled-system analogue of
-`field_identity_of_cIntegrateReducedG_of_checkIdentityG`. -/
+`field_identity_of_cIntegrateReducedGWf_of_checkIdentityG`. -/
 theorem coupledClearedCheck_sound (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
     (hcheck : coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true) :
     Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1

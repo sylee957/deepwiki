@@ -44,10 +44,9 @@ isolates for the radical case). So, exactly as the template's `isGeneralRational
 took the engine's own round-trip check as the bridge, we close the assembly through the engine's own
 `checkIdentityG` certificate:
 
-* **`field_identity_of_cIntegrateReducedG_of_checkIdentityG` /
-  `field_identity_of_cIntegrateReducedGWf_of_checkIdentityG`** — the reduced-case field identity `D(res) =
-  a/d`, fuel'd and fuel-free, from the engine's `checkIdentityG = true` certificate (which the Hermite half +
-  RT half together validate, and which `native_decide` reaches for any concrete run). Pure composition with
+* **`field_identity_of_cIntegrateReducedGWf_of_checkIdentityG`** — the fuel-free reduced-case field identity
+  `D(res) = a/d`, from the engine's `checkIdentityG = true` certificate (which the Hermite half + RT half
+  together validate, and which `native_decide` reaches for any concrete run). Pure composition with
   `field_identity_of_checkIdentityG`. The `checkIdentityG` guard is the only residual.
 * **`field_identity_of_cIntegrateGFull_of_checkIdentityG`** — the FULL `cIntegrateGFull = some res`
   one-shot `D(res) = a/d`, gated on the engine's own `checkIdentityG = true`, at the level-1 carrier
@@ -1039,32 +1038,10 @@ remainder (shared with the `ComputableRadicalLogSoundness` frontier). So, exactl
 certificate: feeding `checkIdentityG = true` (the `native_decide`-reachable self-check, supplied as the
 hypothesis `hcheck`) into the field bridge `field_identity_of_checkIdentityG` yields `D(res) = a/d`. -/
 
-/-- **★★ The reduced-case field identity from the engine's own `checkIdentityG` certificate** — for the
-normal-part capstone output `res = cIntegrateReducedG Dt fuel a d cands`, if the engine's own cleared
-antiderivative check passes (`checkIdentityG Dt res a d = true` — the Hermite half + RT half together
-validate this, reachable by `native_decide` for any concrete run), then the field-level antiderivative
-identity `D(g) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc (CFieldSpec.K α)`, with
-`g = amG res.rational.1/amG res.rational.2`. The normal-part `D(∫f) = f`, gated only on the engine's own
-self-certificate — the transcendental analogue of `isGeneralRationalIntegralWf_of_roundtrip`. Pure
-composition with `field_identity_of_checkIdentityG`. -/
-theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCore α] (Dt : CPolyG α)
-    (fuel : ℕ) (a d : CPolyG α) (cands : List α)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2 ≠ 0)
-    (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands) a d = true) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands) a d
-    hgden haden hlogs hcheck
-
 /-- **★★ The fuel-free reduced-case field identity from the engine's own `checkIdentityG` certificate** —
-the `…GWf` companion of `field_identity_of_cIntegrateReducedG_of_checkIdentityG`. For the normal-part
-capstone output `res = cIntegrateReducedGWf Dt a d cands`, if the engine's own cleared antiderivative check
-passes, then the field-level antiderivative identity holds with no runtime fuel. -/
+for the normal-part capstone output `res = cIntegrateReducedGWf Dt a d cands`, if the engine's own cleared
+antiderivative check passes (`checkIdentityG Dt res a d = true`), then the field-level antiderivative
+identity `D(g) + logResidueSumG Dt res.logs = amG a/amG d` holds with no runtime fuel. -/
 theorem field_identity_of_cIntegrateReducedGWf_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α)
     (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
@@ -1425,7 +1402,6 @@ example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ)) (res : Integral
 #print axioms cHermiteReduceTowerG_residual_proper_of_degree_le_one
 #print axioms cHermiteReduceTowerG_telescope
 #print axioms cHermiteReduceTowerG_telescope_seed
-#print axioms field_identity_of_cIntegrateReducedG_of_checkIdentityG
 #print axioms field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
 #print axioms field_identity_of_cIntegrateGFull_of_checkIdentityG
 #print axioms cHermiteReduceTowerG_telescope_seed_qfunNZG

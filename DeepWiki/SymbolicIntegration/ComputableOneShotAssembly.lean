@@ -9,8 +9,9 @@ import DeepWiki.SymbolicIntegration.ComputableUnifiedFuelFree
 primitive monomial `Dt = C w` — `primitive_monomial_residue_match` (over `K[X]`) /
 `primitive_monomial_residue_match_engine` (in the engine's `amG`/`towerFractionFieldDerivG` vocabulary):
 `∑_{α∈s} C(c_α)·D(t−α)/(t−α) = a/d` for `d = ∏_{α∈s}(t−α)`. `ComputableLogPartTowerSoundness` reduced the
-checker-free reduced-case one-shot to that residue match (`field_identity_of_cIntegrateReducedG_of_residueMatch`,
-gated on the `List`-sum `hmatch`). `ComputableOneShotSoundness` proved the polynomial branch
+checker-free reduced-case one-shot to that residue match
+(`field_identity_of_cIntegrateReducedGWf_of_residueMatch`, gated on the `List`-sum `hmatch`).
+`ComputableOneShotSoundness` proved the polynomial branch
 (`field_identity_of_cPolyRischDEG_qfunNZG`).
 
 The engine's `hmatch` is a **`List` sum** over the residue logs `cLogPartG` returns — pairs `(cᵢ, vᵢ)` with
@@ -309,7 +310,7 @@ theorem primitive_residue_match_list_engine (Dt : CPolyG α) (s : Finset (CField
 
 /-! ### Task 2: discharge the engine's `hmatch` for the PRIMITIVE case (per-root log form)
 
-`logResidueSumG_eq_of_residue_match` / `field_identity_of_cIntegrateReducedG_of_residueMatch` consume the
+`logResidueSumG_eq_of_residue_match` / `field_identity_of_cIntegrateReducedGWf_of_residueMatch` consume the
 `hmatch` hypothesis — the `List.map (...) |>.sum` over the engine's `res.logs` equals the (Hermite leftover)
 simple integrand. The bridge `primitive_residue_match_list_engine` supplies exactly that sum for the
 **per-root log form** `res.logs = s.toList.map (engine-pair-builder)`. The remaining content is purely

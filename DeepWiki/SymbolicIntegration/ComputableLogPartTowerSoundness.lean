@@ -48,8 +48,9 @@ arguments are the per-residue linear factors of the split simple denominator and
 linear-factor form (the analogue of the algebraic template's `isRadicalLogIntegral_of_residue_match`
 hypothesis — the engine bookkeeping linking the *grouped* RT output to the *Lagrange per-root* form). We
 package that as `logResidueSumG_eq_of_residue_match` (the residue sum equals `a/d` given the match), composing
-with the Hermite half into `field_identity_of_cIntegrateReducedG_of_residueMatch` — the reduced-case field
-identity gated **only** on the abstract residue-match (no engine `checkIdentityG` self-certificate). -/
+with the Hermite half into `field_identity_of_cIntegrateReducedGWf_of_residueMatch` — the fuel-free
+reduced-case field identity gated **only** on the abstract residue-match (no engine `checkIdentityG`
+self-certificate). -/
 
 open Polynomial Classical
 open scoped Differential
@@ -436,7 +437,7 @@ theorem logResidueSumG_eq_of_residue_match (Dt : CPolyG α) (a d : CPolyG α)
 
 /-! ### ★★ Assembly — the reduced-case field identity from the Hermite half + the abstract RT residue match
 
-Composing the **Hermite half** (`field_identity_of_cIntegrateReducedG_of_checkIdentityG`'s underlying
+Composing the **Hermite half** (`field_identity_of_cIntegrateReducedGWf_of_checkIdentityG`'s underlying
 `cHermiteReduceTowerG_telescope`: `D(g) + h = a/d`) with the **RT half** (`logResidueSumG = h`, this file's
 `logResidueSumG_eq_of_residue_match` applied to the Hermite leftover `h`) gives the reduced-case field
 identity `D(g) + logResidueSumG = a/d` **without** the engine's `checkIdentityG` self-certificate — gated only
@@ -466,51 +467,48 @@ theorem field_identity_of_reducedG_of_residueMatch (Dt : CPolyG α)
       = amG α (toPolyG anum) / amG α (toPolyG aden) := by
   rw [logResidueSumG_eq_of_residue_match Dt hNum hDen logs hmatch, hherm]
 
-/-! ### ★★★ The reduced-case one-shot for the ACTUAL engine `cIntegrateReducedG` (no `checkIdentityG`)
+/-! ### ★★★ The fuel-free reduced-case one-shot for `cIntegrateReducedGWf` (no `checkIdentityG`)
 
-`cIntegrateReducedG Dt fuel a d cands` returns `⟨(gnum, gden), logs⟩` with `(gnum, gden)` the Hermite
-rational part (`cHermiteReduceTowerG.1`) and `logs = cLogPartG Dt fuel hNum hDen cands` the residue logs over
-the Hermite leftover `h = hNum/hDen` (`cHermiteReduceTowerG.2`). Reading its fields into
+`cIntegrateReducedGWf Dt a d cands` returns `⟨(gnum, gden), logs⟩` with `(gnum, gden)` the fuel-free Hermite
+rational part (`cHermiteReduceTowerGWf.1`) and `logs = cLogPartGWf Dt hNum hDen cands` the residue logs over
+the Hermite leftover `h = hNum/hDen` (`cHermiteReduceTowerGWf.2`). Reading its fields into
 `field_identity_of_reducedG_of_residueMatch` gives the reduced-case field identity `D(g) + logResidueSumG =
 a/d` **without** the engine's own `checkIdentityG` self-certificate — gated only on the abstract Hermite half
 (`cHermiteReduceTowerG_telescope`, `ComputableNormalPartSoundness`, supplying `hherm`) and the abstract RT
-residue match (`hmatch`). This is `checkIdentityG_cIntegrateReducedG` with the certificate replaced by the two
-*abstract* inputs the certificate validates. -/
+residue match (`hmatch`). This is the fuel-free `checkIdentityG_cIntegrateReducedG` analogue with the
+certificate replaced by the two *abstract* inputs the certificate validates. -/
 
-variable [CFracGcdCore α]
+variable [CFracGcdCoreWf α]
 
-/-- **★★★ The reduced-case one-shot for the actual engine, from the Hermite half + RT residue match** — for
-`res = cIntegrateReducedG Dt fuel a d cands` with rational part `g = res.rational` and log part `res.logs`,
+/-- **★★★ The fuel-free reduced-case one-shot from the Hermite half + RT residue match** — for
+`res = cIntegrateReducedGWf Dt a d cands` with rational part `g = res.rational` and log part `res.logs`,
 **given** the abstract Hermite half `hherm` (`D(g) + h = a/d`, the leftover `h = hNum/hDen` being
-`cHermiteReduceTowerG Dt fuel a d |>.2`) and the abstract RT residue match `hmatch` (the residue logs'
-monomial log-derivative sum equals `h`), the reduced-case field identity `D(g) + logResidueSumG Dt res.logs =
-a/d` holds over `RatFunc (CFieldSpec.K α)` — **with no engine `checkIdentityG` certificate**. The concrete
-engine instance of `field_identity_of_reducedG_of_residueMatch`: `cIntegrateReducedG`'s `res.rational` is the
-Hermite `g`, `res.logs` is `cLogPartG`, so the abstract assembly reads directly into the engine output. The
-RT half completing the checker-free normal-part one-shot for the actual `cIntegrateReducedG`. -/
-theorem field_identity_of_cIntegrateReducedG_of_residueMatch (Dt : CPolyG α) (fuel : ℕ)
+`cHermiteReduceTowerGWf Dt a d |>.2`) and the abstract RT residue match `hmatch` (the residue logs' monomial
+log-derivative sum equals `h`), the reduced-case field identity `D(g) + logResidueSumG Dt res.logs = a/d`
+holds over `RatFunc (CFieldSpec.K α)` — **with no engine `checkIdentityG` certificate**. -/
+theorem field_identity_of_cIntegrateReducedGWf_of_residueMatch (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α)
     (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
         = amG α (toPolyG a) / amG α (toPolyG d))
-    (hmatch : ((CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map (fun cv =>
+    (hmatch : ((CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map (fun cv =>
           amG α (Polynomial.C (CFieldSpec.toK cv.1))
             * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
-        = amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-          / amG α (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)) :
+        = amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+          / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   field_identity_of_reducedG_of_residueMatch Dt
-    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1
-    (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2
-    (cHermiteReduceTowerG Dt fuel a d).2.1 (cHermiteReduceTowerG Dt fuel a d).2.2
-    a d (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs hherm hmatch
+    (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1
+    (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2
+    (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2
+    a d (CPolyG.cIntegrateReducedGWf Dt a d cands).logs hherm hmatch
 
 /-! ### ★ The deliverables at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
 
@@ -538,32 +536,31 @@ theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (QFu
     R.roots = droots.map (fun α => aval α / ddval α) :=
   LogResidueTower.roots_residueResultantTowerG_eq_residues lc N droots aval ddval hlc hDd R hR
 
-/-- **★★★ The reduced-case RT one-shot over `ℚ(x)(t)`, from the Hermite half + RT residue match** — at the
-level-1 carrier `α = QFunNZG ℚ` (`CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`): for `res = cIntegrateReducedG Dt
-fuel a d cands`, given the abstract Hermite half and the abstract RT residue match, the reduced-case field
-identity `D(g) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc ℚ` — **with no engine
-`checkIdentityG` certificate**. The concrete checker-free normal-part one-shot at `ℚ(x)(t)`, gated only on the
-two abstract inputs (the Hermite telescoping + the Rothstein–Trager residue match). -/
-theorem field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
+/-- **★★★ The fuel-free reduced-case RT one-shot over `ℚ(x)(t)`, from the Hermite half + RT residue match** —
+at the level-1 carrier `α = QFunNZG ℚ` (`CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`): for
+`res = cIntegrateReducedGWf Dt a d cands`, given the abstract Hermite half and the abstract RT residue match,
+the reduced-case field identity `D(g) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc ℚ` —
+**with no engine `checkIdentityG` certificate**. -/
+theorem field_identity_of_cIntegrateReducedGWf_of_residueMatch_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ))
     (hherm : towerFractionFieldDerivG Dt
-            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)
+            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
         = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d))
-    (hmatch : ((CPolyG.cIntegrateReducedG Dt fuel a d cands).logs.map (fun cv =>
+    (hmatch : ((CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map (fun cv =>
           amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK cv.1))
             * (towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (toPolyG cv.2))
                 / amG (QFunNZG ℚ) (toPolyG cv.2)))).sum
-        = amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1)
-          / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2)) :
+        = amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+          / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)) :
     towerFractionFieldDerivG Dt
-        (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.1)
-          / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt fuel a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt fuel a d cands).logs
+        (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
       = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
-  field_identity_of_cIntegrateReducedG_of_residueMatch Dt fuel a d cands hherm hmatch
+  field_identity_of_cIntegrateReducedGWf_of_residueMatch Dt a d cands hherm hmatch
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
@@ -617,8 +614,8 @@ axioms (`propext`, `Classical.choice`, `Quot.sound`); no `native_decide`, no `so
 #print axioms logResidueSumG_eq_logDeriv_sum
 #print axioms logResidueSumG_eq_of_residue_match
 #print axioms field_identity_of_reducedG_of_residueMatch
-#print axioms field_identity_of_cIntegrateReducedG_of_residueMatch
+#print axioms field_identity_of_cIntegrateReducedGWf_of_residueMatch
 #print axioms roots_residueResultantTowerG_eq_residues_qfunNZG
-#print axioms field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG
+#print axioms field_identity_of_cIntegrateReducedGWf_of_residueMatch_qfunNZG
 
 end DeepWiki.SymbolicIntegration
