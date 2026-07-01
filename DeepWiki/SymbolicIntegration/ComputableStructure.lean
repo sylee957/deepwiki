@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableParametric
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 
 /-! # Computable structure decision: are exp/log monomials a genuine tower? (Bronstein Chapter 9)
@@ -97,7 +98,7 @@ relation `Σ rⱼ (wⱼ·d) = 0`, i.e. a ℚ-linear relation among these coeffic
 def cClearedNumCoeffs (fuel : ℕ) (d : CPolyG ℚ) (w : QFunNZG ℚ) : CPolyG ℚ :=
   let wn := qnormPairG fuel w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
-  cmulG wn.1 (cdivG fuel d wn.2)
+  cmulG wn.1 (cdivWf d wn.2)
 
 /-- **The ℚ-linear span / dependence engine** `cLinearDepData fuel ws w = (matrix, m)` for the rational
 functions `ws = [w₁,…,wₘ]` and a candidate `w`, over `k = ℚ(x)`. Clears all of `w₁,…,wₘ,w` to the common

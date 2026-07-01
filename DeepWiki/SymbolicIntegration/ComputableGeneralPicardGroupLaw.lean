@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralTorsionLight
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # A LIGHT, `native_decide`-tractable Picard group law over `𝔽_p` for a GENERAL curve — reading an
 INDIVIDUAL divisor class's order beyond the genus-1 ceiling (Trager Ch. 6 / computational AG: a concrete
@@ -89,24 +90,24 @@ def pdivEq (p : ℕ) (D₁ D₂ : RedDiv p) : Bool := pdivCanon p D₁ == pdivCa
 /-! ## Light point-extraction: roots of `u(x)` over `𝔽_p` (`rootsWithMult`)
 
 To read a reduced Mumford pair `(u, v)` back as a point list, scan `𝔽_p` for the roots of `u` (with
-multiplicity) and pair each with `y = v(root)`. Pure short-`𝔽_p[x]` arithmetic (`cevalG`, `cdivG`), the
+multiplicity) and pair each with `y = v(root)`. Pure short-`𝔽_p[x]` arithmetic (`cevalG`, `cdivWf`), the
 same light regime Cantor runs in — NOT the `𝔽_p[x]` HNF wall. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- **Roots with multiplicity** `rootsWithMult fuel scan poly` — for each `r` in the scan list (e.g. all of
+/-- **Roots with multiplicity** `rootsWithMult _fuel scan poly` — for each `r` in the scan list (e.g. all of
 `𝔽_p` via `zmodGrid`), the multiplicity of `r` as a root of `poly`, found by repeatedly dividing out
-`(x − r)` (each exact division by `cdivG`, counted up to `fuel`); emit `r` repeated that many times. The
+`(x − r)` (each exact division by `cdivWf`); emit `r` repeated that many times. The
 independent `𝔽_p` point-extraction reading the support out of a reduced `u(x)`. Generic over `[CField α]`. -/
-def rootsWithMult (fuel : ℕ) (scan : List α) (poly : CPolyG α) : List α :=
+def rootsWithMult (_fuel : ℕ) (scan : List α) (poly : CPolyG α) : List α :=
   scan.foldr (fun r acc =>
     let rec mult : ℕ → CPolyG α → ℕ
       | 0, _ => 0
       | k + 1, q =>
         if cisZeroG q then 0
-        else if CField.isZero (cevalG q r) then 1 + mult k (cdivG fuel q [CField.neg r, CField.one])
+        else if CField.isZero (cevalG q r) then 1 + mult k (cdivWf q [CField.neg r, CField.one])
         else 0
     (List.replicate (mult (poly.length + 1) poly) r) ++ acc) []
 

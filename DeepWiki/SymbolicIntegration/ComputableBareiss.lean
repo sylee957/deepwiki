@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableBareissEngine
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
 
 /-! # Agreement of the fraction-free Bareiss determinant with `fieldDet` (no coefficient swell)
@@ -15,7 +16,7 @@ Forming `ℚ(x)` fractions makes intermediate numerators/denominators **balloon*
 fraction-field swell, exactly the `cgcdExtG`→`cgcdFF` story for the GCD): `fieldDet` of an `n×n` matrix
 over `ℚ(x)` Laplace-expands into `n!` products of fractions, each `qmulNZG` multiplying *unreduced*
 numerator·denominator pairs whose degrees add up. The engine's `bareissDet` stays in polynomials, using
-**exact** division `cdivG`, so entries stay in `ℚ[x]` with **bounded degree** — no swell.
+**exact** division, so entries stay in `ℚ[x]` with **bounded degree** — no swell.
 
 * **`fromQ`** — embed a `ℚ[x]`-matrix into `ℚ(x)` (`qxOfNum`), so `bareissDet M` and `fieldDet (fromQ M)`
   can be compared.
@@ -220,14 +221,14 @@ def bareissCauchyQ : List (List (QFunNZG ℚ)) :=
    [qxOfFrac [1] [3, 1] (by decide), qxOfFrac [1] [4, 1] (by decide), qxOfFrac [1] [5, 1] (by decide)]]
 
 /-- **The Cauchy matrix cleared to `ℚ[x]`** `H[i][j] = D/(x + i + j + 1)` with the common denominator
-`D = (x+1)(x+2)(x+3)(x+4)(x+5)` (degree `5`): each entry is now a degree-`4` polynomial (`cdivG`, exact),
+`D = (x+1)(x+2)(x+3)(x+4)(x+5)` (degree `5`): each entry is now a degree-`4` polynomial (`cdivWf`, exact),
 so `bareissDet` runs entirely over `ℚ[x]` — no fraction. The fraction-free representation of the same
 Cauchy determinant (the cleared determinant equals `D³ · det H`). -/
 def bareissCauchyCleared : List (List (CPolyG ℚ)) :=
   let D : CPolyG ℚ := cmulG (cmulG (cmulG (cmulG [1, 1] [2, 1]) [3, 1]) [4, 1]) [5, 1]
-  [[cdivG 8 D [1, 1], cdivG 8 D [2, 1], cdivG 8 D [3, 1]],
-   [cdivG 8 D [2, 1], cdivG 8 D [3, 1], cdivG 8 D [4, 1]],
-   [cdivG 8 D [3, 1], cdivG 8 D [4, 1], cdivG 8 D [5, 1]]]
+  [[cdivWf D [1, 1], cdivWf D [2, 1], cdivWf D [3, 1]],
+   [cdivWf D [2, 1], cdivWf D [3, 1], cdivWf D [4, 1]],
+   [cdivWf D [3, 1], cdivWf D [4, 1], cdivWf D [5, 1]]]
 
 /-- **The fraction-path total degree** `cdegG num + cdegG den` of the **unreduced** `ℚ(x)` value
 `fieldDet bareissCauchyQ` — the size the **existing** fraction-based `fieldDet` carries for the Cauchy
