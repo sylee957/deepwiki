@@ -97,11 +97,11 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- **Roots with multiplicity** `rootsWithMult _fuel scan poly` — for each `r` in the scan list (e.g. all of
+/-- **Roots with multiplicity** `rootsWithMult scan poly` — for each `r` in the scan list (e.g. all of
 `𝔽_p` via `zmodGrid`), the multiplicity of `r` as a root of `poly`, found by repeatedly dividing out
 `(x − r)` (each exact division by `cdivWf`); emit `r` repeated that many times. The
 independent `𝔽_p` point-extraction reading the support out of a reduced `u(x)`. Generic over `[CField α]`. -/
-def rootsWithMult (_fuel : ℕ) (scan : List α) (poly : CPolyG α) : List α :=
+def rootsWithMult (scan : List α) (poly : CPolyG α) : List α :=
   scan.foldr (fun r acc =>
     let rec mult : ℕ → CPolyG α → ℕ
       | 0, _ => 0
@@ -131,12 +131,12 @@ def ptToMum {α : Type*} [CField α] (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (pt
   pts.foldl (fun acc P => cantorReduce ρ g (cantorCompose fuel ρ acc (mumfordPoint P.1 P.2)))
     mumfordIdentity
 
-/-- **Reduced Mumford pair → point list** `mumToPts fuel scan D` — read the support of a reduced Mumford
+/-- **Reduced Mumford pair → point list** `mumToPts scan D` — read the support of a reduced Mumford
 divisor `(u, v)` back out as a point list: the roots of `u` with multiplicity (`rootsWithMult` over `scan`,
 e.g. `zmodGrid p`), each paired with `y = v(root)` (`cevalG D.v`). The independent `𝔽_p` point-extraction
 half of the round-trip. Generic over `[CField α]`. -/
-def mumToPts {α : Type*} [CField α] (fuel : ℕ) (scan : List α) (D : MumfordDivisor α) : List (α × α) :=
-  (CPolyG.rootsWithMult fuel scan D.u).map (fun r => (r, cevalG D.v r))
+def mumToPts {α : Type*} [CField α] (scan : List α) (D : MumfordDivisor α) : List (α × α) :=
+  (CPolyG.rootsWithMult scan D.u).map (fun r => (r, cevalG D.v r))
 
 /-! ## The group law: compose (`++`) then reduce (round-trip to Cantor), and `picOrder` -/
 
@@ -148,9 +148,9 @@ def pdivCompose {p : ℕ} (D₁ D₂ : RedDiv p) : RedDiv p := D₁ ++ D₂
 representative (`deg ≤ g`) by the round-trip `mumToPts (zmodGrid p) (ptToMum D)` (lift to the reduced
 Mumford pair via Cantor compose/reduce, read the support back), then canonicalise. The point-list analogue
 of `cantorReduce`; light `𝔽_p[x]` arithmetic on short lists — no HNF. The fuel `cdegG ρ + g + 4` bounds
-the per-`cantorCompose` gcd/division and the root scan. -/
+the per-`cantorCompose` gcd/division; root extraction uses its own structural length bound. -/
 def pdivReduce (p : ℕ) [CField (ZMod p)] (ρ : CPolyG (ZMod p)) (g : ℕ) (D : RedDiv p) : RedDiv p :=
-  pdivCanon p (mumToPts (cdegG ρ + g + 4) (zmodGrid p) (ptToMum (cdegG ρ + g + 4) ρ g D))
+  pdivCanon p (mumToPts (zmodGrid p) (ptToMum (cdegG ρ + g + 4) ρ g D))
 
 /-- **The Picard group law** `pdivAdd p ρ g D₁ D₂ = pdivReduce ρ g (D₁ ++ D₂)` — the sum of two reduced
 point divisors as the reduced representative of `[D₁] + [D₂]` in `Pic⁰(C)(𝔽_p)` (compose by `++`, reduce by
@@ -327,8 +327,8 @@ theorem light_picard_group_law_validates :
 /-! ### Deliverable: `#print axioms`
 
 `[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
-axiom). **No `sorry`, no `sorryAx`** — every def (`pdivAdd` / `picMul` / `picOrder` / `picOrderAux` /
-`ptToMum` / `mumToPts` / `rootsWithMult`'s inner `mult`) is `ℕ`-fuel-bounded total structural recursion (no
+axiom). **No `sorry`, no `sorryAx`** — every recursive def (`pdivAdd` / `picMul` / `picOrder` /
+`picOrderAux` / `ptToMum`, plus `rootsWithMult`'s inner `mult`) is total structural recursion (no
 `partial def`) over short `ZMod p[x]` / point lists, pure `ZMod p`/`ℕ` arithmetic. -/
 
 #print axioms picOrder_X5p1_matches_cantor
