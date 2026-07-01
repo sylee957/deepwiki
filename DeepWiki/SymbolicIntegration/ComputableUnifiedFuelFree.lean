@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
+import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
 
 /-! # The FUEL-FREE transcendental top entry `cIntegrateGFullWf` — the fuel-free companion of the
 transcendental driver `cIntegrateGFull`.
@@ -57,6 +58,42 @@ def cIntegrateGFullWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
 
 end CPolyG
 
+/-! ## Check-identity soundness bridge for the fuel-free top entry -/
+
+/-- **The fuel-free full driver field identity from its `checkIdentityG` certificate** — if
+`cIntegrateGFullWf Dt a d cands = some res` and the engine's own cleared antiderivative check passes, then
+`res` satisfies the field-level identity `D(res) + logResidueSumG Dt res.logs = a/d`. -/
+theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
+    [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
+    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
+    towerFractionFieldDerivG Dt
+        (QFunNZG.amG α (toPolyG res.rational.1) / QFunNZG.amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = QFunNZG.amG α (toPolyG a) / QFunNZG.amG α (toPolyG d) :=
+by
+  have _ := hsome
+  exact field_identity_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
+
+/-! ### Restatement against the intended wording -/
+
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
+    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
+    towerFractionFieldDerivG Dt
+        (QFunNZG.amG α (toPolyG res.rational.1) / QFunNZG.amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = QFunNZG.amG α (toPolyG a) / QFunNZG.amG α (toPolyG d) :=
+  field_identity_of_cIntegrateGFullWf_of_checkIdentityG Dt a d cands res hsome hgden haden hlogs hcheck
+
 /-! ## Level-2 validation for the fuel-free top entry
 
 The reduced-case capstone leaves the polynomial part `fₚ = t₂` of `f = t₂` over `ℚ(x)(t₁)[t₂]`
@@ -87,6 +124,7 @@ theorem towerFullLvl2_landsPolynomialPartWf :
       | some res => CPolyG.checkIdentityG towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
       | none => false) = true := by native_decide
 
+#print axioms field_identity_of_cIntegrateGFullWf_of_checkIdentityG
 #print axioms towerFullLvl2_landsPolynomialPartWf
 
 end DeepWiki.SymbolicIntegration

@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.ComputableOneShotAssembly
 import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
 import DeepWiki.SymbolicIntegration.ComputableHyperexpFullSoundness
 import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.ComputableUnifiedFuelFree
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveSound
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveSoundWf
 import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
@@ -34,7 +35,8 @@ only; it states no new mathematics.
   Hermite-leftover-properness + unconditional input-properness); leaves only the genuine Bronstein side
   conditions (`hrecon`/`hden`/`hnorm`).
   The carrier-agnostic `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
-  `ComputableIntegrateTowerCorrectG`) gates a result on the engine's own self-check.
+  `ComputableIntegrateTowerCorrectG`) gates a result on the engine's own self-check; the fuel-free top-entry
+  bridge is `field_identity_of_cIntegrateGFullWf_of_checkIdentityG`.
   Completeness: via the RDE solver — no direct decision procedure on the driver.
 * `cIntegratePolyG` / `cIntegratePolyGWf` — the polynomial-part integrator (Bronstein §5.4 / §6).
   Soundness: PARTIAL — `field_identity_cIntegratePolyG_const` covers the constant case only.
@@ -106,6 +108,7 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @cIntegrateGFull_primitive_oneShot
 #check @cIntegrateGFull_hyperexp_oneShot
 #check @cIntegrateGFull_poly_oneShot
+#check @field_identity_of_cIntegrateGFullWf_of_checkIdentityG
 -- ★ the primitive normal-part capstone: hA discharged for deg Dt ≤ 1 at ℚ(x)(t).
 #check @cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG
 
