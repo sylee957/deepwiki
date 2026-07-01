@@ -27,7 +27,7 @@ Bézout split, assembled by the field identity. Steps **(2), (3), (4), and the a
 lemmas** — `toPolyG_cdivmodWf`, `toPolyG_cbezoutOneWf`, `toPolyG_cextendedEuclideanSplitWf` (all stated over
 `[CField α] [CFieldSpec α]`), and `canonicalRepFast_field_identity` (over any `[Field K]`). The only
 remaining ingredient is the split fact (1), which `cSplitFactorFastG` does not yet prove abstractly (only
-a `native_decide` validator `towerCanRepLvl2_recombines`).
+a fuel-free `native_decide` validator `towerCanRepLvl2_recombinesWf`).
 
 So we state the generic reconstruction **modulo** the split fact (taking `toPolyG d = toPolyG dₛ·dₙ` as a
 hypothesis), and the rest of the proof is entirely generic. The one ingredient a fully abstract collapse

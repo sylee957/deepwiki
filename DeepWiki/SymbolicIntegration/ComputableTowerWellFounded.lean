@@ -581,10 +581,49 @@ rational part + Rothstein–Trager residue logs, with **no fuel at runtime** —
 level 2 and the returned `g + ∑ cᵢ·log(vᵢ)` genuinely differentiates back to `f`. Reuses the level-2 example
 data of `ComputableTowerIntegrate`. -/
 
+/-- **The fuel-free Hermite reducer computes the rational part at level 2** (`native_decide`): for
+`f = 1/t₂²` over `ℚ(x)(t₁)[t₂]` with `Dt₂ = t₂² + 1`, the returned rational part and residual satisfy
+the cleared Hermite identity. -/
+theorem towerHermiteLvl2_rationalPartWf :
+    (let res := CPolyG.cHermiteReduceTowerGWf towerHermiteLvl2Dt
+        towerHermiteLvl2A towerHermiteLvl2D
+      let gnum := res.1.1
+      let gden := res.1.2
+      let hNum := res.2.1
+      let hDen := res.2.2
+      let Dgnum := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gnum
+      let Dgden := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gden
+      let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
+      let gden2 := CPolyG.cmulG gden gden
+      let lhs := CPolyG.cmulG
+        (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) towerHermiteLvl2D
+      let rhs := CPolyG.cmulG towerHermiteLvl2A (CPolyG.cmulG gden2 hDen)
+      CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
+
+/-- **The fuel-free level-2 residual denominator has degree 1** (`native_decide`). -/
+theorem towerHermiteLvl2_residual_degreeWf :
+    CPolyG.cdegG (CPolyG.cHermiteReduceTowerGWf towerHermiteLvl2Dt
+      towerHermiteLvl2A towerHermiteLvl2D).2.2 = 1 := by native_decide
+
+/-- **The fuel-free canonical representation recombines to `f` at level 2** (`native_decide`). -/
+theorem towerCanRepLvl2_recombinesWf :
+    (let res := CPolyG.canonicalRepresentationFastGWf towerCanRepLvl2Dt
+        towerCanRepLvl2A towerCanRepLvl2D
+      let q := res.1
+      let b := res.2.1.1
+      let ds := res.2.1.2
+      let c := res.2.2.1
+      let dn := res.2.2.2
+      let dsdn := CPolyG.cmulG ds dn
+      let num := CPolyG.caddG (CPolyG.caddG (CPolyG.cmulG q dsdn) (CPolyG.cmulG b dn))
+        (CPolyG.cmulG c ds)
+      CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cmulG num towerCanRepLvl2D)
+        (CPolyG.cmulG towerCanRepLvl2A dsdn))) = true := by native_decide
+
 /-- **The fuel-free recovered level-2 logarithmic part has length 2** (`native_decide`): the residue scan
 over `ℚ(x)(t₁)[t₂]` finds exactly the two rational residues `±1/2` (log arguments `t₂ ± 1`) — the fuel-free
 `cIntegrateReducedGWf` capstone's `logs` list has length `2`. -/
-example :
+theorem towerIntLvl2_logs_lengthWf :
     (CPolyG.cIntegrateReducedGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
       towerIntLvl2Cands).logs.length = 2 := by native_decide
 
@@ -594,11 +633,15 @@ fuel-free generic capstone `cIntegrateReducedGWf` — canonical split, Hermite r
 residue logarithms, **no fuel at runtime** — returns an `IntegralResultG` whose antiderivative identity
 `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds exactly (`checkIdentityG`, cleared by `cisZeroG`). The WHOLE
 fuel-free elementary tower integral computes at level 2 and differentiates back to `f`. -/
-example :
+theorem towerIntLvl2_fullIntegralWf :
     CPolyG.checkIdentityG towerIntLvl2Dt
       (CPolyG.cIntegrateReducedGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands)
       towerIntLvl2Num towerIntLvl2Den = true := by native_decide
+
+#print axioms towerHermiteLvl2_rationalPartWf
+#print axioms towerCanRepLvl2_recombinesWf
+#print axioms towerIntLvl2_fullIntegralWf
 
 /-! ## Part 6 — STRETCH: the generic fuel-free RDE recursive bottoms (§6 PolyRischDE / SPDE)
 

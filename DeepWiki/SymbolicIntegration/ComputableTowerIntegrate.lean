@@ -31,10 +31,8 @@ pipeline def that calls a `t`-gcd therefore carries the
   rational `g` + reduced remainder — the RATIONAL PART of the integral), reusing the already-generic
   fuel-free inner loop `cHermiteReduceTowerInnerWf`/`cdiophantineGWf`.
 
-**★ The headline `native_decide`** runs `canonicalRepresentationFastG` + `cHermiteReduceTowerG` on a
-concrete proper fraction over `CPolyG (QFunNZG (QFunNZG ℚ)) = ℚ(x)(t₁)[t₂]` whose denominator has a
-**repeated `t₂`-factor**, and certifies `D(g) + h = f`: tower integration, rational part, executing
-at **level 2**. -/
+This file keeps the fueled generic engine and the shared level-2 example data. The corresponding
+fuel-free `native_decide` validations live in `ComputableTowerWellFounded`. -/
 
 open Polynomial
 
@@ -240,42 +238,7 @@ def towerHermiteLvl2A : CPolyG Lvl2 := [CField.one]
 `Dt₂ = t₂² + 1`, `t₂` is normal and `t₂²` its square), so Hermite lowers the power. -/
 def towerHermiteLvl2D : CPolyG Lvl2 := [CField.zero, CField.zero, CField.one]
 
-/-- **★ `cHermiteReduceTowerG` computes the RATIONAL PART at tower level 2** (`native_decide`): for
-`f = a/d = 1/t₂²` over `ℚ(x)(t₁)[t₂]` (`= CPolyG (QFunNZG (QFunNZG ℚ))`, tower level 2) with the monomial
-derivation `D = cmonomialDeriv Dt`, `Dt₂ = t₂² + 1` (`t₂ = tan`), the computed
-`((gnum, gden), (h_num, h_den))` satisfies the Hermite identity `D(gnum/gden) + h_num/h_den = a/d`. With
-`D(g) = gprimeNum/gden²`, `gprimeNum = D(gnum)·gden − gnum·D(gden)`, equate numerators over `gden²·h_den·d`:
-`(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`, by `cisZeroG` of the difference over ℚ(x)(t₁)[t₂].
-The denominator `d = t₂²` has a repeated normal factor `t₂`, so this exercises the genuine
-multiplicity-lowering step (`g = −1/t₂`, `h = −1`). **This is the deliverable: tower integration, rational
-part, executing at LEVEL 2** — the whole generic engine (`cSqfreeYunFFG`/`CFracGcdCore.cgcdFFCore`/
-`cHermiteReduceTowerInnerWf`/`cmonomialDeriv`) reduces over `ℚ(x)(t₁)[t₂]`. -/
-theorem towerHermiteLvl2_rationalPart :
-    (let res := CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt 12
-        towerHermiteLvl2A towerHermiteLvl2D
-      let gnum := res.1.1
-      let gden := res.1.2
-      let hNum := res.2.1
-      let hDen := res.2.2
-      let Dgnum := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gnum
-      let Dgden := CPolyG.cmonomialDeriv towerHermiteLvl2Dt gden
-      let gprimeNum := CPolyG.csubG (CPolyG.cmulG Dgnum gden) (CPolyG.cmulG gnum Dgden)
-      let gden2 := CPolyG.cmulG gden gden
-      let lhs := CPolyG.cmulG
-        (CPolyG.caddG (CPolyG.cmulG gprimeNum hDen) (CPolyG.cmulG hNum gden2)) towerHermiteLvl2D
-      let rhs := CPolyG.cmulG towerHermiteLvl2A (CPolyG.cmulG gden2 hDen)
-      CPolyG.cisZeroG (CPolyG.csubG lhs rhs)) = true := by native_decide
-
-/-- **The level-2 residual `h` has a squarefree denominator** (`native_decide`): the Hermite reduction
-lowered the multiplicity-2 factor `t₂` of `d = t₂²` to multiplicity 1, so the residual denominator
-`h_den = Dstar = t₂` is squarefree (`t₂`-degree 1) over ℚ(x)(t₁)[t₂], as the reduction guarantees. -/
-theorem towerHermiteLvl2_residual_degree :
-    CPolyG.cdegG (CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt 12
-      towerHermiteLvl2A towerHermiteLvl2D).2.2 = 1 := by native_decide
-
-#print axioms towerHermiteLvl2_rationalPart
-
-/-! ### Level-2 validation of `canonicalRepresentationFastG` — the parts recombine to `f`
+/-! ### Level-2 canonical-representation test data
 
 The canonical-representation companion to the Hermite check, at the same tower level. `f = a/d` with
 `a = t₂³` and the monic `d = (t₂−1)(t₂−2) = t₂² − 3t₂ + 2` over `ℚ(x)(t₁)[t₂]`, monomial `t₂` with
@@ -303,30 +266,7 @@ def towerCanRepLvl2D : CPolyG Lvl2 := [lvl2Two, lvl2NegThree, CField.one]
 /-- Level-2 monomial derivative `Dt₂ = t₂ − 1` (root `t₂ = 1` special, `t₂ = 2` normal). -/
 def towerCanRepLvl2Dt : CPolyG Lvl2 := [lvl2NegOne, CField.one]
 
-/-- **`canonicalRepresentationFastG` recombines to `f` at tower level 2** (`native_decide`): for
-`f = t₂³/((t₂−1)(t₂−2))` over `ℚ(x)(t₁)[t₂]` (`= CPolyG (QFunNZG (QFunNZG ℚ))`, tower level 2) with
-`Dt₂ = t₂ − 1`, the computed parts `(q, (b, dₛ), (c, dₙ))` satisfy the canonical identity
-`q + b/dₛ + c/dₙ = a/d` — checked, after clearing denominators, as
-`(q·dₛ·dₙ + b·dₙ + c·dₛ)·d = a·(dₛ·dₙ)` via `cisZeroG` of the difference over ℚ(x)(t₁)[t₂]. The generic
-canonical-representation engine (`cSplitFactorFastG` denominator split + Bézout) executes over the tower
-at level 2 and its output genuinely reconstructs `f`. -/
-theorem towerCanRepLvl2_recombines :
-    (let res := CPolyG.canonicalRepresentationFastG towerCanRepLvl2Dt 8
-        towerCanRepLvl2A towerCanRepLvl2D
-      let q := res.1
-      let b := res.2.1.1
-      let ds := res.2.1.2
-      let c := res.2.2.1
-      let dn := res.2.2.2
-      let dsdn := CPolyG.cmulG ds dn
-      let num := CPolyG.caddG (CPolyG.caddG (CPolyG.cmulG q dsdn) (CPolyG.cmulG b dn))
-        (CPolyG.cmulG c ds)
-      CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cmulG num towerCanRepLvl2D)
-        (CPolyG.cmulG towerCanRepLvl2A dsdn))) = true := by native_decide
-
-#print axioms towerCanRepLvl2_recombines
-
-/-! ## STRETCH — the logarithmic part (Rothstein–Trager §5.6) and the reduced-case capstone `cIntegrateReducedG`
+/-! ## The logarithmic part (Rothstein-Trager §5.6) and the reduced-case capstone `cIntegrateReducedG`
 
 The rational part (Hermite) is done. The remaining piece of the elementary integral `∫ f = g + ∑ᵢ
 cᵢ·log(vᵢ)` is the **logarithmic part**: the Rothstein–Trager residue criterion (§5.6). For a simple
@@ -488,7 +428,7 @@ def cIntegrateReducedG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : 
 
 end CPolyG
 
-/-! ### ★★ The STRETCH validation: a FULL elementary tower integral at LEVEL 2 (`native_decide`)
+/-! ### Level-2 reduced integration test data
 
 Bronstein's Example 5.6.2 construction lifted to **tower level 2**. Over `CPolyG Lvl2 =
 ℚ(x)(t₁)[t₂]` the monomial `t₂` is independent (`Dt₂ = 1`), and the simple integrand
@@ -502,7 +442,8 @@ residue logs) runs over `CPolyG Lvl2` and recovers the integral: `g = 0`, residu
 candidate set, logs `t₂ ± 1`. The headline check is the **antiderivative identity** `D(∫f) = f`
 (`checkIdentityG`, cleared of denominators, by `cisZeroG`) — the whole elementary tower integral
 executing and differentiating back to `f`, at level 2. All coefficients are ℚ-constants lifted into
-`Lvl2` (via `cratCastG`), so the engine genuinely runs the level-2 `CField`/`CDiffField` instances. -/
+`Lvl2` (via `cratCastG`), so the engine genuinely runs the level-2 `CField`/`CDiffField` instances. The
+fuel-free validations are in `ComputableTowerWellFounded`. -/
 
 open CPolyG
 
@@ -535,30 +476,5 @@ def towerIntLvl2Den : CPolyG Lvl2 := cmulG towerIntLvl2VPlus towerIntLvl2VMinus
 are inside; the rest are rejected by `R(c) ≠ 0`). -/
 def towerIntLvl2Cands : List Lvl2 :=
   [cratCastG (1/2), cratCastG (-1/2), cratCastG 1, cratCastG (-1), cratCastG 0]
-
-/-- **The recovered level-2 logarithmic part has length 2** (`native_decide`): the residue scan over
-`ℚ(x)(t₁)[t₂]` finds exactly the two rational residues `±1/2` (log arguments `t₂ ± 1`), so the capstone's
-`logs` list has length `2`, matching the Rothstein–Trager construction at tower level 2. -/
-theorem towerIntLvl2_logs_length :
-    (CPolyG.cIntegrateReducedG towerIntLvl2Dt 30 towerIntLvl2Num towerIntLvl2Den
-      towerIntLvl2Cands).logs.length = 2 := by native_decide
-
-/-- **★★ A FULL elementary tower integral at LEVEL 2, and `D(∫f) = f`** (`native_decide`, the stretch
-deliverable). For the simple element `f = (1/2)·D(t₂+1)/(t₂+1) − (1/2)·D(t₂−1)/(t₂−1)` over
-ℚ(x)(t₁)(t₂) (`= CPolyG (QFunNZG (QFunNZG ℚ))`, tower **level 2**, `Dt₂ = 1`), whose elementary
-antiderivative is `(1/2)log(t₂+1) − (1/2)log(t₂−1)`, the assembled generic tower integrator
-`cIntegrateReducedG` — canonical split, Hermite rational part, Rothstein–Trager residue logarithms —
-returns an `IntegralResultG` whose **antiderivative identity** `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds
-**exactly**, checked cleared of denominators by `checkIdentityG` (`cisZeroG` of the cleared difference
-over ℚ(x)(t₁)[t₂]). This is the stretch: the WHOLE elementary tower integral — rational part *and*
-logarithmic part — *computes* over the monomial tower ℚ(x)(t₁)[t₂] at level 2, and the returned
-`g + ∑ cᵢ·log(vᵢ)` genuinely differentiates back to `f`. -/
-theorem towerIntLvl2_fullIntegral :
-    CPolyG.checkIdentityG towerIntLvl2Dt
-      (CPolyG.cIntegrateReducedG towerIntLvl2Dt 30 towerIntLvl2Num towerIntLvl2Den
-        towerIntLvl2Cands)
-      towerIntLvl2Num towerIntLvl2Den = true := by native_decide
-
-#print axioms towerIntLvl2_fullIntegral
 
 end DeepWiki.SymbolicIntegration
