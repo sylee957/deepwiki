@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralDerivationInvariant
+import DeepWiki.SymbolicIntegration.ComputableGeneralWellFounded
 import DeepWiki.SymbolicIntegration.ComputableGeneralResidues
 import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogSoundness
@@ -308,6 +309,121 @@ theorem isGeneralLogIntegral_singleton (fuel : ℕ) (f logpart commonDenom : CPo
         = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))) :
     IsGeneralLogIntegral fuel f logpart commonDenom [(c, u)] [cof] := by
   apply isGeneralLogIntegral_of_residue_match
+  simpa using hmatch
+
+/-! ### The fuel-free log-soundness predicate and residue-sum skeleton
+
+The Wf derivation has the same quotient API as `afDeriv`, so the log-part predicates can be restated without
+threading a fuel parameter. The partial-fraction obligations keep the same shape; only each
+`afDeriv fuel f uᵢ` leaf becomes `afDerivWf f uᵢ`. -/
+
+/-- The fuel-free single-log soundness predicate. -/
+def IsGeneralLogTermWf (f u integrand : CPolyG α) : Prop :=
+  Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u))
+    = Ideal.Quotient.mk (afIdeal f) (toPolyG u)
+      * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand)
+
+omit [CDiffFieldSpec α] in
+/-- The Wf engine log-derivative certificate as a `K[X]` equality. -/
+theorem toPolyG_afDerivWf_eq_of_logCert (f u integrand : CPolyG α)
+    (h : cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true) :
+    toPolyG (afDerivWf f u) = toPolyG (afMul f u integrand) := by
+  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero] at h
+  exact h
+
+omit [CDiffFieldSpec α] in
+/-- A Wf log-derivative certificate implies the fuel-free single-log predicate. -/
+theorem isGeneralLogTermWf_of_logCert (f u integrand : CPolyG α) (hf : cnormG f ≠ [])
+    (h : cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true) :
+    IsGeneralLogTermWf f u integrand := by
+  rw [IsGeneralLogTermWf, toPolyG_afDerivWf_eq_of_logCert f u integrand h,
+    mk_toPolyG_afMul f u integrand hf]
+
+/-- The fuel-free two-term log-derivative numerator. -/
+def afLogSum2Wf (f : CPolyG α) (c₁ : α) (u₁ : CPolyG α) (c₂ : α) (u₂ : CPolyG α) :
+    CPolyG α :=
+  caddG (afMul f (cscaleG c₁ (afDerivWf f u₁)) u₂)
+    (afMul f (cscaleG c₂ (afDerivWf f u₂)) u₁)
+
+omit [CDiffFieldSpec α] in
+/-- Two Wf log residues add in quotient form. -/
+theorem mk_toPolyG_afLogSum2Wf (f : CPolyG α) (c₁ : α) (u₁ : CPolyG α) (c₂ : α)
+    (u₂ : CPolyG α) (hf : cnormG f ≠ []) :
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSum2Wf f c₁ u₁ c₂ u₂))
+      = Polynomial.C (CFieldSpec.toK c₁)
+          * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u₁))
+          * Ideal.Quotient.mk (afIdeal f) (toPolyG u₂)
+        + Polynomial.C (CFieldSpec.toK c₂)
+          * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u₂))
+          * Ideal.Quotient.mk (afIdeal f) (toPolyG u₁) := by
+  rw [afLogSum2Wf, toPolyG_caddG, map_add, mk_toPolyG_afMul _ _ _ hf,
+    mk_toPolyG_afMul _ _ _ hf, toPolyG_cscaleG, toPolyG_cscaleG, map_mul, map_mul]
+
+/-- The fuel-free residue-sum numerator over a cofactor list. -/
+def afLogSumNumWf (f : CPolyG α) (args : List (α × CPolyG α)) (cofs : List (CPolyG α)) :
+    CPolyG α :=
+  ((args.zip cofs).map (fun p =>
+    afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)).foldl caddG ([] : CPolyG α)
+
+/-- The fuel-free multi-term log-soundness predicate. -/
+def IsGeneralLogIntegralWf (f logpart commonDenom : CPolyG α)
+    (args : List (α × CPolyG α)) (cofs : List (CPolyG α)) : Prop :=
+  Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
+    = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))
+
+omit [CDiffFieldSpec α] in
+/-- The fuel-free residue-sum numerator of the empty log part is zero in the quotient. -/
+theorem mk_toPolyG_afLogSumNumWf_nil (f : CPolyG α) (cofs : List (CPolyG α)) :
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f [] cofs)) = 0 := by
+  show Ideal.Quotient.mk (afIdeal f) (toPolyG ([] : CPolyG α)) = 0
+  rw [toPolyG_nil, map_zero]
+
+omit [CDiffFieldSpec α] in
+/-- The Wf residue-sum numerator distributes over the args list. -/
+theorem mk_toPolyG_afLogSumNumWf_eq_sum (f : CPolyG α) (args : List (α × CPolyG α))
+    (cofs : List (CPolyG α)) :
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
+      = ((args.zip cofs).map (fun p =>
+          Ideal.Quotient.mk (afIdeal f)
+            (toPolyG (afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)))).sum := by
+  rw [afLogSumNumWf]
+  set terms := (args.zip cofs).map (fun p =>
+    afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2) with hterms
+  have hfold : ∀ (ts : List (CPolyG α)) (acc : CPolyG α),
+      Ideal.Quotient.mk (afIdeal f) (toPolyG (ts.foldl caddG acc))
+        = Ideal.Quotient.mk (afIdeal f) (toPolyG acc)
+          + (ts.map (fun t => Ideal.Quotient.mk (afIdeal f) (toPolyG t))).sum := by
+    intro ts
+    induction ts with
+    | nil => intro acc; simp
+    | cons t ts ih =>
+      intro acc
+      rw [List.foldl_cons, ih (caddG acc t), toPolyG_caddG, map_add, List.map_cons, List.sum_cons]
+      ring
+  rw [hfold terms ([] : CPolyG α)]
+  rw [toPolyG_nil, map_zero, zero_add, hterms, List.map_map]
+  rfl
+
+omit [CDiffFieldSpec α] in
+/-- The fuel-free log part composes from the per-term residue match. -/
+theorem isGeneralLogIntegralWf_of_residue_match (f logpart commonDenom : CPolyG α)
+    (args : List (α × CPolyG α)) (cofs : List (CPolyG α))
+    (hmatch : ((args.zip cofs).map (fun p =>
+          Ideal.Quotient.mk (afIdeal f)
+            (toPolyG (afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)))).sum
+        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))) :
+    IsGeneralLogIntegralWf f logpart commonDenom args cofs := by
+  rw [IsGeneralLogIntegralWf, mk_toPolyG_afLogSumNumWf_eq_sum, hmatch]
+
+omit [CDiffFieldSpec α] in
+/-- A one-term Wf log part composes to `IsGeneralLogIntegralWf`. -/
+theorem isGeneralLogIntegralWf_singleton (f logpart commonDenom : CPolyG α)
+    (c : α) (u cof : CPolyG α)
+    (hmatch : Ideal.Quotient.mk (afIdeal f)
+          (toPolyG (afMul f (cscaleG c (afDerivWf f u)) cof))
+        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))) :
+    IsGeneralLogIntegralWf f logpart commonDenom [(c, u)] [cof] := by
+  apply isGeneralLogIntegralWf_of_residue_match
   simpa using hmatch
 
 end CPolyG
@@ -661,6 +777,27 @@ theorem isGeneralAlgebraicIntegral_of_parts (fuel : ℕ) (f g v ratPart logPart 
   -- `afDeriv(v)·cd = ratPart·cd` (rational) and `afLogSumNum = logPart·cd` (log); sum = `g·cd` (split)
   rw [IsGeneralAlgebraicIntegral, hrat, hlog, hsplit]
 
+/-- The fuel-free full general algebraic-integral soundness predicate. -/
+def IsGeneralAlgebraicIntegralWf (f g v commonDenom : CPolyG α)
+    (args : List (α × CPolyG α)) (cofs : List (CPolyG α)) : Prop :=
+  Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f (afDerivWf f v) commonDenom))
+    + Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
+  = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenom))
+
+omit [CDiffFieldSpec α] in
+/-- The fuel-free full general algebraic integral composes from Wf rational and log soundness. -/
+theorem isGeneralAlgebraicIntegralWf_of_parts (f g v ratPart logPart commonDenom : CPolyG α)
+    (args : List (α × CPolyG α)) (cofs : List (CPolyG α))
+    (hrat : Ideal.Quotient.mk (afIdeal f)
+          (toPolyG (afMul f (afDerivWf f v) commonDenom))
+        = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenom)))
+    (hlog : IsGeneralLogIntegralWf f logPart commonDenom args cofs)
+    (hsplit : Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f ratPart commonDenom))
+        + Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logPart commonDenom))
+      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f g commonDenom))) :
+    IsGeneralAlgebraicIntegralWf f g v commonDenom args cofs := by
+  rw [IsGeneralAlgebraicIntegralWf, hrat, hlog, hsplit]
+
 end CPolyG
 
 /-! ### `#print axioms` — the general-curve log-part setting + foundational floor + obligation 1 milestone
@@ -718,5 +855,12 @@ the per-node values into `toPolyG_genResidueResultant_eq_of_eval`'s `hnode` (the
 
 -- ★★ Priority 3: the full general algebraic integral `D(∫g) = g` composes from the rational + log soundness:
 #print axioms CPolyG.isGeneralAlgebraicIntegral_of_parts
+
+-- The fuel-free log/capstone mirrors, using `afDerivWf` and `afLogSumNumWf`:
+#print axioms CPolyG.isGeneralLogTermWf_of_logCert
+#print axioms CPolyG.mk_toPolyG_afLogSum2Wf
+#print axioms CPolyG.mk_toPolyG_afLogSumNumWf_eq_sum
+#print axioms CPolyG.isGeneralLogIntegralWf_of_residue_match
+#print axioms CPolyG.isGeneralAlgebraicIntegralWf_of_parts
 
 end DeepWiki.SymbolicIntegration

@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralLogArg
+import DeepWiki.SymbolicIntegration.ComputableGeneralDerivationInvariant
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 /-! # Fuel-free GENERAL (non-radical) algebraic-function integration
@@ -86,6 +87,138 @@ fuel-free implicit derivative `afYprimeWf`. **No fuel at runtime** (the one exte
 `native_decide`s. -/
 def afDerivWf (f u : CPolyG α) : CPolyG α :=
   afReduce f (caddG ((u : List α).map CDiffField.cderiv) (cmulG (cderivG u) (afYprimeWf f)))
+
+section WfInvariant
+
+variable [CFieldSpec α] [CDiffFieldSpec α]
+
+/-! ### The Wf derivation invariant
+
+The fueled invariant in `ComputableGeneralDerivationInvariant` proves that `afDeriv fuel f` realizes a
+genuine quotient derivation. The same proof works directly for `afDerivWf`, replacing the single
+`cdiophantineG` Bézout leaf by `cdiophantineGWf` and phrasing separability as the fuel-free gcd being a
+nonzero constant. -/
+
+omit [CFieldSpec α] [CDiffFieldSpec α] in
+/-- **`afDerivWf = afReduce f ∘ cmonomialDeriv (afYprimeWf f)`** definitionally. -/
+theorem afDerivWf_eq_afReduce_cmonomialDeriv (f u : CPolyG α) :
+    afDerivWf f u = afReduce f (cmonomialDeriv (afYprimeWf f) u) := rfl
+
+/-- The Wf keystone: `afDerivWf` realizes `implicitDeriv (toPolyG (afYprimeWf f))` in the quotient. -/
+theorem mk_toPolyG_afDerivWf (f u : CPolyG α) (hf : cnormG f ≠ []) :
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u))
+      = Ideal.Quotient.mk (afIdeal f)
+          (Differential.implicitDeriv (toPolyG (afYprimeWf f)) (toPolyG u)) := by
+  rw [afDerivWf_eq_afReduce_cmonomialDeriv, mk_toPolyG_afReduce f _ hf, toPolyG_cmonomialDeriv]
+
+/-- `afDerivWf` is additive modulo the curve ideal. -/
+theorem mk_toPolyG_afDerivWf_add (f a b : CPolyG α) (hf : cnormG f ≠ []) :
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (caddG a b)))
+      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f a))
+        + Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f b)) := by
+  rw [mk_toPolyG_afDerivWf f _ hf, mk_toPolyG_afDerivWf f a hf,
+    mk_toPolyG_afDerivWf f b hf, toPolyG_caddG, map_add, map_add]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- Fuel-free Bézout inverse of `f_y` in the quotient. -/
+theorem mk_toPolyG_afFyInvWf_mul_afFy (f : CPolyG α) (hf : cnormG f ≠ [])
+    (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0) :
+    Ideal.Quotient.mk (afIdeal f)
+        (toPolyG (afFyInvWf f) * toPolyG (afFy f)) = 1 := by
+  have hbez := toPolyG_cdiophantineGWf (afFy f) f [CField.one] hf hgdeg hgne
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
+  rw [hone] at hbez
+  rw [show toPolyG (afFyInvWf f) * toPolyG (afFy f)
+      = 1 - toPolyG (cdiophantineGWf (afFy f) f [CField.one]).2 * toPolyG f from by
+        rw [afFyInvWf]; linear_combination hbez]
+  have hmem : Ideal.Quotient.mk (afIdeal f)
+      (toPolyG (cdiophantineGWf (afFy f) f [CField.one]).2 * toPolyG f) = 0 :=
+    Ideal.Quotient.eq_zero_iff_mem.mpr (mul_curve_mem f _)
+  rw [map_sub, hmem, map_one, sub_zero]
+
+/-- The Wf implicit derivation kills the curve generator modulo its ideal. -/
+theorem implicitDerivWf_curve_mem (f : CPolyG α) (hf : cnormG f ≠ [])
+    (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0) :
+    Differential.implicitDeriv (toPolyG (afYprimeWf f)) (toPolyG f) ∈ afIdeal f := by
+  rw [← Ideal.Quotient.eq_zero_iff_mem]
+  rw [show Differential.implicitDeriv (toPolyG (afYprimeWf f)) (toPolyG f)
+      = Differential.mapCoeffs (toPolyG f)
+        + toPolyG (afYprimeWf f) * Polynomial.derivative (toPolyG f) from by
+        simp [Differential.implicitDeriv, derivative']]
+  rw [mapCoeffs_toPolyG_eq_afFx, derivative_toPolyG_eq_afFy]
+  have hyp : Ideal.Quotient.mk (afIdeal f) (toPolyG (afYprimeWf f))
+      = Ideal.Quotient.mk (afIdeal f) (- toPolyG (afFx f) * toPolyG (afFyInvWf f)) := by
+    rw [afYprimeWf, mk_toPolyG_afReduce f _ hf, toPolyG_cmulG, toPolyG_cnegG]
+  rw [map_add, map_mul, hyp, ← map_mul]
+  have hfyinv := mk_toPolyG_afFyInvWf_mul_afFy f hf hgdeg hgne
+  rw [show - toPolyG (afFx f) * toPolyG (afFyInvWf f) * toPolyG (afFy f)
+      = - (toPolyG (afFx f) * (toPolyG (afFyInvWf f) * toPolyG (afFy f))) from by ring,
+    map_neg, map_mul, hfyinv, mul_one, add_neg_cancel]
+
+/-- The Wf implicit derivation maps `afIdeal f` into itself. -/
+theorem implicitDerivWf_mem_afIdeal (f : CPolyG α) (hf : cnormG f ≠ [])
+    (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0)
+    {x : (CFieldSpec.K α)[X]} (hx : x ∈ afIdeal f) :
+    Differential.implicitDeriv (toPolyG (afYprimeWf f)) x ∈ afIdeal f := by
+  rw [afIdeal, Ideal.mem_span_singleton'] at hx
+  obtain ⟨c, rfl⟩ := hx
+  rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul]
+  refine Ideal.add_mem _ (Ideal.mul_mem_left _ _ ?_) (Ideal.mul_mem_right _ _ ?_)
+  · exact implicitDerivWf_curve_mem f hf hgdeg hgne
+  · exact Ideal.subset_span (Set.mem_singleton _)
+
+/-- The Wf implicit derivation descends to the quotient by `afIdeal f`. -/
+theorem mk_implicitDerivWf_congr (f : CPolyG α) (hf : cnormG f ≠ [])
+    (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0)
+    {p q : (CFieldSpec.K α)[X]}
+    (hpq : Ideal.Quotient.mk (afIdeal f) p = Ideal.Quotient.mk (afIdeal f) q) :
+    Ideal.Quotient.mk (afIdeal f)
+        (Differential.implicitDeriv (toPolyG (afYprimeWf f)) p)
+      = Ideal.Quotient.mk (afIdeal f)
+        (Differential.implicitDeriv (toPolyG (afYprimeWf f)) q) := by
+  rw [← sub_eq_zero, ← map_sub, ← map_sub, Ideal.Quotient.eq_zero_iff_mem]
+  apply implicitDerivWf_mem_afIdeal f hf hgdeg hgne
+  rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub, hpq, sub_self]
+
+/-- `afDerivWf` is Leibniz modulo the curve ideal. -/
+theorem mk_toPolyG_afDerivWf_afMul (f a b : CPolyG α) (hf : cnormG f ≠ [])
+    (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0) :
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (afMul f a b)))
+      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f (afDerivWf f a) b))
+        + Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f a (afDerivWf f b))) := by
+  set yp := toPolyG (afYprimeWf f) with hyp
+  set A := toPolyG a with hA
+  set B := toPolyG b with hB
+  rw [mk_toPolyG_afDerivWf f _ hf, ← hyp]
+  rw [mk_implicitDerivWf_congr f hf hgdeg hgne (mk_toPolyG_afMul f a b hf)]
+  rw [mk_toPolyG_afMul _ _ _ hf, mk_toPolyG_afMul _ _ _ hf, mk_toPolyG_afDerivWf f a hf,
+    mk_toPolyG_afDerivWf f b hf, ← hyp, ← hA, ← hB]
+  rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, map_add, map_mul, map_mul]
+  ring
+
+/-- `afDerivWf` kills `1` modulo the curve ideal. -/
+theorem mk_toPolyG_afDerivWf_one (f : CPolyG α) (hf : cnormG f ≠ []) :
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f [CField.one])) = 0 := by
+  rw [mk_toPolyG_afDerivWf f _ hf]
+  have h1 : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
+  rw [h1, Derivation.map_one_eq_zero, map_zero]
+
+omit [CDiffFieldSpec α] in
+/-- The `afDerivWf` round-trip certificate is the free-polynomial integrand identity. -/
+theorem toPolyG_afDerivWf_eq_of_roundtrip (f v g : CPolyG α)
+    (hcheck : cisZeroG (csubG (afDerivWf f v) g) = true) :
+    toPolyG (afDerivWf f v) = toPolyG g := by
+  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero] at hcheck
+  exact hcheck
+
+end WfInvariant
 
 /-! ### The leaf-chain correspondences (bottoming at the `cdiophantineGWf` bridge)
 
@@ -366,6 +499,10 @@ shows the standard `[propext, Quot.sound]` (plus `Classical.choice` from the `Op
 
 -- The fuel-free general derivation (the one leaf chain), agreeing under the Bézout-leaf bridge:
 #print axioms CPolyG.afDerivWf_eq
+
+-- The Wf quotient invariant and Leibniz law for the general derivation:
+#print axioms CPolyG.mk_toPolyG_afDerivWf
+#print axioms CPolyG.mk_toPolyG_afDerivWf_afMul
 
 -- The fuel-free flat solvers (rational / log), agreeing under the column bridges:
 #print axioms afRationalSolveWf_eq

@@ -33,8 +33,8 @@ outcomes — `some ⟨v, []⟩` (no log), `some ⟨v, [(1, u)]⟩` (principal), 
 
 **What generalizes cleanly vs. the deep residual.** The residue divisor → divisor representation is DONE
 (`genResidueResultant`, the full double resultant, `ComputableGeneralResidues`); the principal case is DONE
-(`afRationalSolveWf` / `afLogArgSolveWf`); the SOUNDNESS routes through the already-proven general capstone
-`isGeneralAlgebraicIntegral_of_parts` (`ComputableGeneralLogSoundness`) — these all lift. The DEEP residual is
+(`afRationalSolveWf` / `afLogArgSolveWf`); the SOUNDNESS routes through the already-proven fuel-free general
+capstone `isGeneralAlgebraicIntegralWf_of_parts` (`ComputableGeneralLogSoundness`) — these all lift. The DEEP residual is
 the **general-`Pic⁰`-torsion core**: the general divisor-class-group arithmetic + the principal-generator
 construction of `m·δ` + the good-reduction torsion-ceiling lift, the general analogue of the hyperelliptic
 `principalGenerator` / `isTorsionDivisor` / `mumfordReduceModP`. We isolate it PRECISELY as the named residual
@@ -44,7 +44,8 @@ arithmetic but whose termination needs the good-reduction ceiling). NO `sorry`.
 
 Proven (modulo exactly the named frontiers, never re-`sorry`):
 * **SOUNDNESS** (`cIntegrateGeneralCurveDecide_sound`) — `some F → D(F) = integrand` in the carrier quotient
-  `K[X] ⧸ afIdeal f`, checker-free, via the general capstone `isGeneralAlgebraicIntegral_of_parts`;
+  `K[X] ⧸ afIdeal f`, checker-free, via the fuel-free general capstone
+  `isGeneralAlgebraicIntegralWf_of_parts`;
 * **COMPLETENESS** (`cIntegrateGeneralCurveDecide_complete`) — `none → ¬ elementary`, the non-torsion verdict;
 * the **DECISION capstone** (`cIntegrateGeneralCurveDecide_decides`) — `(∃ F, … = some F) ⟺ elementary`,
   mirroring the hyperelliptic `cIntegrateAlgebraicDecide_decides`.
@@ -227,9 +228,9 @@ theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : CPolyG (QFu
 /-! ## Part 3 — REACHABLE layer: SOUNDNESS `some F → D(F) = integrand` (modulo the named frontier)
 
 The soundness residual bundles, per `some`-branch, the genuine-field identity
-`IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs` (the cross-multiplied
+`IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs` (the cross-multiplied
 `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`) — exactly the conclusion the already-proven general
-capstone `isGeneralAlgebraicIntegral_of_parts` (`ComputableGeneralLogSoundness`) delivers from the rational +
+capstone `isGeneralAlgebraicIntegralWf_of_parts` (`ComputableGeneralLogSoundness`) delivers from the rational +
 log parts. So the boundary is citable with NO `sorry`: each clause is an instance of the **proven** general
 soundness composition specialized to the branch output. -/
 
@@ -242,46 +243,46 @@ variable (cofs : List (CPolyG (QFunNZG ℚ)))
 
 /-- **★ The general-curve-decide soundness residual** `GeneralCurveDecideSoundnessResidual …`: the three
 branch-instances that turn each `some F` branch of `cIntegrateGeneralCurveDecide` into the genuine-field
-soundness `IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs` (the
+soundness `IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs` (the
 cross-multiplied `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`). A `Prop`-bundle of stated
 assumptions (NOT proved), each an instance of the **proven** general capstone
-`isGeneralAlgebraicIntegral_of_parts` specialized to the branch output — so the soundness boundary is citable
+`isGeneralAlgebraicIntegralWf_of_parts` specialized to the branch output — so the soundness boundary is citable
 with NO `sorry`:
 
 * `hnolog` — the no-log branch: for the rational-only output `⟨v, []⟩` (`v = afRationalSolveWf …`),
-  `IsGeneralAlgebraicIntegral … ⟨v,[]⟩.ratPart commonDenom ⟨v,[]⟩.logTerms cofs` (the rational part is the
+  `IsGeneralAlgebraicIntegralWf … ⟨v,[]⟩.ratPart commonDenom ⟨v,[]⟩.logTerms cofs` (the rational part is the
   whole answer — `D(v) = integrand`);
 * `hprincipal` — the principal branch: for `⟨v, [(1, u)]⟩` (`u = afLogArgSolveWf …`),
-  `IsGeneralAlgebraicIntegral … commonDenom [(1, u)] cofs` (`D(v + 1·log u) = integrand`);
+  `IsGeneralAlgebraicIntegralWf … commonDenom [(1, u)] cofs` (`D(v + 1·log u) = integrand`);
 * `htorsion` — the torsion branch: for `⟨v, [term]⟩` (`term = genCurveTorsionLogTerm …`),
-  `IsGeneralAlgebraicIntegral … commonDenom [term] cofs` (`D(v + (1/m)·log g) = integrand`).
+  `IsGeneralAlgebraicIntegralWf … commonDenom [term] cofs` (`D(v + (1/m)·log g) = integrand`).
 
 All three are the proven capstone's conclusion, specialized — checker-free, no round-trip hypothesis. The
 general-curve analogue of `AlgebraicDecideSoundnessResidual`. -/
 structure GeneralCurveDecideSoundnessResidual : Prop where
   /-- No-log branch: `D(⟨v, []⟩) = integrand` (rational part is the whole answer). -/
   hnolog : ∀ v, afRationalSolveWf f basis degBound ratIntegrand = some v →
-    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
+    CPolyG.IsGeneralAlgebraicIntegralWf f integrand
       (GeneralCurveIntegralResult.mk v []).ratPart commonDenom
       (GeneralCurveIntegralResult.mk v []).logTerms cofs
   /-- Principal branch: `D(⟨v, [(1, u)]⟩) = integrand`. -/
   hprincipal : ∀ v u, afRationalSolveWf f basis degBound ratIntegrand = some v →
     afLogArgSolveWf f basis degBound logIntegrand = some u →
-    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
+    CPolyG.IsGeneralAlgebraicIntegralWf f integrand
       (GeneralCurveIntegralResult.mk v [(CField.one, u)]).ratPart commonDenom
       (GeneralCurveIntegralResult.mk v [(CField.one, u)]).logTerms cofs
   /-- Torsion branch: `D(⟨v, [term]⟩) = integrand`. -/
   htorsion : ∀ v term, afRationalSolveWf f basis degBound ratIntegrand = some v →
     genCurveTorsionLogTerm fuel f basis tin = some term →
-    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
+    CPolyG.IsGeneralAlgebraicIntegralWf f integrand
       (GeneralCurveIntegralResult.mk v [term]).ratPart commonDenom
       (GeneralCurveIntegralResult.mk v [term]).logTerms cofs
 
 /-- **★★ SOUNDNESS of the self-determining GENERAL-curve integrator** (`cIntegrateGeneralCurveDecide_sound`,
 `some F → D(F) = integrand`, modulo the named frontier). Under the soundness residual (the three
-branch-instances of the proven general capstone `isGeneralAlgebraicIntegral_of_parts`), whenever
+branch-instances of the proven fuel-free general capstone `isGeneralAlgebraicIntegralWf_of_parts`), whenever
 `cIntegrateGeneralCurveDecide … = some F` the output differentiates to the integrand — the genuine-field
-identity `IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs`, the
+identity `IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs`, the
 cross-multiplied `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`. **No round-trip hypothesis** is
 passed at the call: the three branches discharge from the residual (no-log / principal / torsion). The
 soundness verdict for the general `Option` integrator, modulo exactly the already-proven general soundness
@@ -292,7 +293,7 @@ theorem cIntegrateGeneralCurveDecide_sound
     (F : GeneralCurveIntegralResult)
     (hsome : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
       = some F) :
-    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs := by
+    CPolyG.IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs := by
   unfold cIntegrateGeneralCurveDecide at hsome
   cases hv : afRationalSolveWf f basis degBound ratIntegrand with
   | none => rw [hv] at hsome; simp at hsome
@@ -600,8 +601,8 @@ End-to-end through the `Option` integrator, on genuinely general curves:
   self-determined NEGATIVE verdict (non-torsion within budget).
 
 Proven (modulo exactly the named general-`Pic⁰`-torsion frontier, never re-`sorry`):
-**`cIntegrateGeneralCurveDecide_sound`** (`some F → D(F) = integrand`, via the proven general capstone
-`isGeneralAlgebraicIntegral_of_parts`), **`cIntegrateGeneralCurveDecide_complete`** (`none → ¬ elementary`),
+**`cIntegrateGeneralCurveDecide_sound`** (`some F → D(F) = integrand`, via the proven fuel-free general
+capstone `isGeneralAlgebraicIntegralWf_of_parts`), **`cIntegrateGeneralCurveDecide_complete`** (`none → ¬ elementary`),
 and the capstone **`cIntegrateGeneralCurveDecide_decides`** (`(∃ F, … = some F) ⟺ elementary`). The
 general-curve elementary-integration **decision procedure**, self-determining, sound, and complete modulo the
 Liouville-for-algebraic structure theorem and the general good-reduction torsion-decision correctness (the
@@ -627,7 +628,7 @@ example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
     (F : GeneralCurveIntegralResult)
     (hsome : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
       = some F) :
-    CPolyG.IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs :=
+    CPolyG.IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs :=
   cIntegrateGeneralCurveDecide_sound fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
     integrand commonDenom cofs hres F hsome
 

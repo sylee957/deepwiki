@@ -1,5 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableGeneralDerivationInvariant
-import DeepWiki.SymbolicIntegration.ComputableGeneralDerivation
+import DeepWiki.SymbolicIntegration.ComputableGeneralIntegralSoundness
 
 /-! # Integration on a REDUCIBLE curve (function-algebra / zero-divisor) soundness — Schultz §7.1–7.2
 
@@ -25,8 +24,8 @@ integrator** (each `Aᵢ` is a genuine function field), then **recombine** `F = 
 **★ The keystone — the indicators are CONSTANTS.** `eᵢ² = eᵢ` (idempotent), so applying any derivation `D`:
 `2eᵢ·D(eᵢ) = D(eᵢ)`, i.e. `D(eᵢ)·(1 − 2eᵢ) = 0`; and `(1 − 2eᵢ)² = 1 − 4eᵢ + 4eᵢ² = 1` (using `eᵢ² = eᵢ`),
 so `1 − 2eᵢ` is a **unit** (its own inverse), hence not a zero divisor, so **`D(eᵢ) = 0`**. (No need for
-the ring to be reduced, and no `1/2`: the unit `1 − 2eᵢ` does all the work.) This is `derivation_idempotent_eq_zero`
-abstractly and `idempotent_isConstant` for the engine's `afDeriv`.
+the ring to be reduced, and no `1/2`: the unit `1 − 2eᵢ` does all the work.) This is
+`derivation_idempotent_eq_zero` abstractly and `idempotent_isConstant` for the engine's `afDerivWf`.
 
 **★ The soundness (caveat REMOVED).** With `D(eᵢ) = 0`, the recombined integral differentiates back to the
 integrand on the **reducible** curve:
@@ -45,15 +44,16 @@ except the validation examples):
   soundness `D(Σ eᵢ Fᵢ) = g`). The clean soundness FRAMEWORK — fully general, reusable.
 
 * **Concrete carrier soundness** (`namespace CPolyG`, over `K[X] ⧸ afIdeal T`, the function algebra
-  `K(x)[y]/(T)` for a squarefree `T`): `idempotent_isConstant` (`D(eᵢ) = 0` for the engine's `afDeriv`),
+  `K(x)[y]/(T)` for a squarefree `T`): `idempotent_isConstant` (`D(eᵢ) = 0` for the engine's `afDerivWf`),
   the recombination integrator `afIntegrateFunctionAlgebra`, and the **capstone**
   `afIntegrateFunctionAlgebra_sound` — `D(afIntegrateFunctionAlgebra T es Fs) = integrand` in the carrier
   quotient, the function-algebra (zero-divisor) `D(∫f) = f` with the irreducible-curve caveat removed.
 
 * **★ Worked Example 7.2** (`native_decide`): `∫y dx` on `(y²−x)(y³−x) = 0`. The two component integrals
-  `∫y dx = 2xy/3` on `y²−x` and `∫y dx = 3xy/4` on `y³−x` are validated through the general derivation
-  `afDeriv`; the recombination `F = e₁·(2xy/3) + e₂·(3xy/4) = (9x²y + x² − xy³ − 8xy − y⁴)/(12(x−1))`
-  (Schultz eq. 7.2) is the *proven* `afIntegrateFunctionAlgebra_sound`. (The degree-5 `afDeriv` of the
+  `∫y dx = 2xy/3` on `y²−x` and `∫y dx = 3xy/4` on `y³−x` are validated through the fuel-free general
+  derivation `afDerivWf`; the recombination `F = e₁·(2xy/3) + e₂·(3xy/4) = (9x²y + x² − xy³ − 8xy −
+  y⁴)/(12(x−1))` (Schultz eq. 7.2) is the *proven* `afIntegrateFunctionAlgebra_sound`. (The degree-5 Wf
+  derivation of the
   recombined answer over un-reduced `ℚ(x)` is computationally infeasible for `native_decide` — the honest
   boundary — so the recombination is carried by the soundness theorem, with the components validated.) -/
 
@@ -131,13 +131,14 @@ theorem derivation_recombine_eq (pairs : List (Q × Q)) (g : Q)
 
 end FunctionAlgebra
 
-/-! ## The concrete function algebra `K(x)[y]/(T)` and the engine derivation `afDeriv`
+/-! ## The concrete function algebra `K(x)[y]/(T)` and the engine derivation `afDerivWf`
 
 The carrier quotient of the engine is `Q = K[X] ⧸ afIdeal T` (with the formal variable `X` the generator
 `y`), where `afIdeal T = (toPolyG T)` (`ComputableGeneralDerivationInvariant`). For a **squarefree** `T`
 this is the function algebra `A = k(x)[y]/(T)` of Def 7.1 (an étale algebra — `toPolyG T` squarefree makes
-`Q` reduced). The engine's general derivation `afDeriv fuel T` realizes a genuine Mathlib derivation in `Q`
-(`mk_toPolyG_afDeriv`, additive `mk_toPolyG_afDeriv_add`, Leibniz `mk_toPolyG_afDeriv_afMul`), so the
+`Q` reduced). The engine's fuel-free general derivation `afDerivWf T` realizes a genuine Mathlib derivation
+in `Q` (`mk_toPolyG_afDerivWf`, additive `mk_toPolyG_afDerivWf_add`, Leibniz
+`mk_toPolyG_afDerivWf_afMul`), so the
 abstract framework's facts hold here — concretely, in the engine's own vocabulary. -/
 
 namespace CPolyG
@@ -160,33 +161,32 @@ theorem IsAfIdempotent.isIdempotentElem {f e : CPolyG α} (hf : cnormG f ≠ [])
     IsIdempotentElem (Ideal.Quotient.mk (afIdeal f) (toPolyG e)) := by
   rw [IsIdempotentElem, ← mk_toPolyG_afMul f e e hf, he]
 
-/-- **★ The keystone, concrete — the engine's `afDeriv` kills a carrier idempotent** `idempotent_isConstant`:
-for a **separable** curve `T` (the Bézout-cofactor hypotheses `hg`/`hgc`, with `cnormG T ≠ []`) and an
-idempotent `e` of the function algebra `K(x)[y]/(T)` (`IsAfIdempotent T e`), `mk(toPolyG(afDeriv fuel T e))
+/-- **★ The keystone, concrete — the engine's `afDerivWf` kills a carrier idempotent** `idempotent_isConstant`:
+for a **separable** curve `T` (the fuel-free gcd is a nonzero constant, with `cnormG T ≠ []`) and an
+idempotent `e` of the function algebra `K(x)[y]/(T)` (`IsAfIdempotent T e`), `mk(toPolyG(afDerivWf T e))
 = 0` in the carrier quotient `Q = K[X] ⧸ afIdeal T`: **`D(e) = 0`**, the indicator function is a constant.
-The concrete instance of `FunctionAlgebra.derivation_idempotent_eq_zero` for the engine derivation: the
-Leibniz law `mk_toPolyG_afDeriv_afMul` (`D(e·e) = e·D e + e·D e`), the descent of `afDeriv` through the
-idempotency `e² ≡ e` (`mk_toPolyG_afDeriv` + `mk_implicitDeriv_congr`), and the unit `1 − 2ē` (`(1−2ē)²=1`)
-give `D ē = 0` — no `1/2`, no reducedness. The §7.1 fact that the CRT indicators are constants, in the
-engine. -/
-theorem idempotent_isConstant (fuel : ℕ) (f e : CPolyG α) (hf : cnormG f ≠ [])
-    (hg : toPolyG (cgcdExtG fuel (afFy f) f).1
-      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel (afFy f) f).1)))
-    (hgc : CFieldSpec.toK (cleadG (cgcdExtG fuel (afFy f) f).1) ≠ 0)
+The concrete instance of `FunctionAlgebra.derivation_idempotent_eq_zero` for the fuel-free engine derivation:
+the Leibniz law `mk_toPolyG_afDerivWf_afMul` (`D(e·e) = e·D e + e·D e`), the descent of `afDerivWf` through
+the idempotency `e² ≡ e` (`mk_toPolyG_afDerivWf` + `mk_implicitDerivWf_congr`), and the unit `1 − 2ē`
+(`(1−2ē)²=1`) give `D ē = 0` — no `1/2`, no reducedness. The §7.1 fact that the CRT indicators are
+constants, in the engine. -/
+theorem idempotent_isConstant (f e : CPolyG α) (hf : cnormG f ≠ [])
+    (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0)
     (he : IsAfIdempotent f e) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f e)) = 0 := by
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f e)) = 0 := by
   set ē : (CFieldSpec.K α)[X] ⧸ afIdeal f :=
     Ideal.Quotient.mk (afIdeal f) (toPolyG e) with hē
   set dē : (CFieldSpec.K α)[X] ⧸ afIdeal f :=
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f e)) with hdē
-  -- Leibniz at `afDeriv`: `D(e·e) = e·D e + e·D e` (pushed through `mk`)
-  have hleib := mk_toPolyG_afDeriv_afMul fuel f e e hf hg hgc
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f e)) with hdē
+  -- Leibniz at `afDerivWf`: `D(e·e) = e·D e + e·D e` (pushed through `mk`)
+  have hleib := mk_toPolyG_afDerivWf_afMul f e e hf hgdeg hgne
   rw [mk_toPolyG_afMul _ _ _ hf, mk_toPolyG_afMul _ _ _ hf] at hleib
-  -- `afDeriv` descends through `e² ≡ e`: `mk(toPolyG(afDeriv (afMul e e))) = mk(toPolyG(afDeriv e))`
-  have hdesc : Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f (afMul f e e)))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f e)) := by
-    rw [mk_toPolyG_afDeriv fuel f _ hf, mk_toPolyG_afDeriv fuel f e hf]
-    exact mk_implicitDeriv_congr fuel f hf hg hgc he
+  -- `afDerivWf` descends through `e² ≡ e`.
+  have hdesc : Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (afMul f e e)))
+      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f e)) := by
+    rw [mk_toPolyG_afDerivWf f _ hf, mk_toPolyG_afDerivWf f e hf]
+    exact mk_implicitDerivWf_congr f hf hgdeg hgne he
   rw [hdesc, ← hdē, ← hē] at hleib
   -- the idempotency `ē·ē = ē` in `Q`
   have hidem : ē * ē = ē := he.isIdempotentElem hf
@@ -200,10 +200,10 @@ theorem idempotent_isConstant (fuel : ℕ) (f e : CPolyG α) (hf : cnormG f ≠ 
 /-! ### The recombination integrator and its soundness
 
 The recombination `F = Σᵢ eᵢ·Fᵢ` over the CRT indicators `eᵢ` and per-component integrals `Fᵢ` is the
-`caddG`-fold of the products `afMul T eᵢ Fᵢ`. Its derivative telescopes through `afDeriv`'s additivity, and
-each per-term `D(eᵢ·Fᵢ) = eᵢ·D(Fᵢ)` by `idempotent_isConstant` + Leibniz; the per-component soundness
-`eᵢ·D(Fᵢ) = eᵢ·g` and the partition of unity `Σ eᵢ = 1` then reassemble `D(F) = g` — the function-algebra
-`D(∫f) = f`, valid on a **reducible** curve. -/
+`caddG`-fold of the products `afMul T eᵢ Fᵢ`. Its derivative telescopes through the shared
+`mk_toPolyG_afDerivWf_foldlCaddG` additivity theorem, and each per-term `D(eᵢ·Fᵢ) = eᵢ·D(Fᵢ)` by
+`idempotent_isConstant` + Leibniz; the per-component soundness `eᵢ·D(Fᵢ) = eᵢ·g` and the partition of unity
+`Σ eᵢ = 1` then reassemble `D(F) = g` — the function-algebra `D(∫f) = f`, valid on a **reducible** curve. -/
 
 /-- **The recombination integrator** `afIntegrateFunctionAlgebra T es Fs` — the recombined integral
 `F = Σᵢ eᵢ·Fᵢ` of a function algebra `K(x)[y]/(T)`: the `caddG`-fold of the products `afMul T eᵢ Fᵢ` over
@@ -214,58 +214,41 @@ its soundness is `afIntegrateFunctionAlgebra_sound`. -/
 def afIntegrateFunctionAlgebra (f : CPolyG α) (es Fs : List (CPolyG α)) : CPolyG α :=
   ((es.zip Fs).map (fun p => afMul f p.1 p.2)).foldl caddG ([] : CPolyG α)
 
-/-- **`afDeriv` is additive over a `caddG`-fold** `mk_afDeriv_foldl_caddG` — `mk(toPolyG(afDeriv T
-(ts.foldl caddG acc))) = mk(toPolyG(afDeriv T acc)) + Σ mk(toPolyG(afDeriv T tᵢ))` in the carrier quotient,
-for a nonzero curve `T`. The fold version of `mk_toPolyG_afDeriv_add` (the `mk_toPolyG_afLogSumNum_eq_sum`
-analogue for `afDeriv` of a sum), seeding the recombination telescoping. -/
-theorem mk_afDeriv_foldl_caddG (fuel : ℕ) (f : CPolyG α) (hf : cnormG f ≠ [])
-    (ts : List (CPolyG α)) (acc : CPolyG α) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f (ts.foldl caddG acc)))
-      = Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f acc))
-        + (ts.map (fun t => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f t)))).sum := by
-  induction ts generalizing acc with
-  | nil => simp
-  | cons t ts ih =>
-    rw [List.foldl_cons, ih (caddG acc t), mk_toPolyG_afDeriv_add fuel f acc t hf,
-      List.map_cons, List.sum_cons]
-    ring
-
 /-- **★★ THE FUNCTION-ALGEBRA (ZERO-DIVISOR) SOUNDNESS — `afIntegrateFunctionAlgebra_sound`: `D(F) =
 integrand` over a REDUCIBLE curve, the irreducible-curve caveat REMOVED.** For a **separable** curve `T`
-(`hf`/`hg`/`hgc`) — squarefree but **possibly reducible** (a function algebra, Def 7.1: an étale algebra
-with zero divisors) — with CRT indicators `es = [eᵢ]` each idempotent (`hidem`: `IsAfIdempotent T eᵢ`),
+(`hf` plus the fuel-free gcd of `T_y` and `T` being a nonzero constant) — squarefree but **possibly
+reducible** (a function algebra, Def 7.1: an étale algebra with zero divisors) — with CRT indicators
+`es = [eᵢ]` each idempotent (`hidem`: `IsAfIdempotent T eᵢ`),
 per-component integrals `Fs = [Fᵢ]` satisfying the per-component soundness `eᵢ·D(Fᵢ) = eᵢ·integrand`
 (`hcomp` — `Fᵢ = ∫(integrand|_{Aᵢ})` from the existing per-component integrator on the component function
 field `Aᵢ`), and the indicators a **partition of unity** `Σ eᵢ = 1` (`hsum` — the CRT decomposition), the
 recombined integral `F = afIntegrateFunctionAlgebra T es Fs = Σ eᵢ·Fᵢ` satisfies `D(F) = integrand` in the
-carrier quotient `Q = K[X] ⧸ afIdeal T`: `mk(toPolyG(afDeriv fuel T F)) = mk(toPolyG integrand)`.
+carrier quotient `Q = K[X] ⧸ afIdeal T`: `mk(toPolyG(afDerivWf T F)) = mk(toPolyG integrand)`.
 
 This is the §7.1–7.2 soundness `D(∫f) = f` over a curve with **zero divisors** — **removing the
 "clean only when the extension is a field / the curve irreducible" caveat** of the irreducible-curve
 integrator (`ComputableRadicalLogSoundness`). The proof is the concrete `FunctionAlgebra.derivation_recombine_eq`:
-additivity over the fold (`mk_afDeriv_foldl_caddG`), each per-term `D(eᵢ Fᵢ) = eᵢ·D Fᵢ` (Leibniz
-`mk_toPolyG_afDeriv_afMul` + the keystone `idempotent_isConstant` killing `D eᵢ`), the per-component match
+additivity over the fold (`mk_toPolyG_afDerivWf_foldlCaddG`), each per-term `D(eᵢ Fᵢ) = eᵢ·D Fᵢ` (Leibniz
+`mk_toPolyG_afDerivWf_afMul` + the keystone `idempotent_isConstant` killing `D eᵢ`), the per-component match
 `eᵢ·D Fᵢ = eᵢ·integrand` (`hcomp`), and the partition `Σ eᵢ = 1` factoring out `integrand`
 (`List.sum_map_mul_right` + `hsum`). Axiom-clean (no `native_decide`). The honest `D(∫f) = f` on a
 reducible curve. -/
-theorem afIntegrateFunctionAlgebra_sound (fuel : ℕ) (f integrand : CPolyG α)
+theorem afIntegrateFunctionAlgebra_sound (f integrand : CPolyG α)
     (es Fs : List (CPolyG α)) (hf : cnormG f ≠ [])
-    (hg : toPolyG (cgcdExtG fuel (afFy f) f).1
-      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel (afFy f) f).1)))
-    (hgc : CFieldSpec.toK (cleadG (cgcdExtG fuel (afFy f) f).1) ≠ 0)
+    (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0)
     (hidem : ∀ p ∈ es.zip Fs, IsAfIdempotent f p.1)
     (hcomp : ∀ p ∈ es.zip Fs,
       Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
-          * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f p.2))
+          * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f p.2))
         = Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
           * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand))
     (hsum : ((es.zip Fs).map (fun p => Ideal.Quotient.mk (afIdeal f) (toPolyG p.1))).sum = 1) :
-    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f (afIntegrateFunctionAlgebra f es Fs)))
+    Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (afIntegrateFunctionAlgebra f es Fs)))
       = Ideal.Quotient.mk (afIdeal f) (toPolyG integrand) := by
-  rw [afIntegrateFunctionAlgebra, mk_afDeriv_foldl_caddG fuel f hf]
-  -- `afDeriv` of the empty seed is `0` in the quotient
-  rw [show Ideal.Quotient.mk (afIdeal f) (toPolyG (afDeriv fuel f ([] : CPolyG α))) = 0 from by
-    rw [mk_toPolyG_afDeriv fuel f _ hf, toPolyG_nil, map_zero, map_zero], zero_add]
+  rw [afIntegrateFunctionAlgebra, mk_toPolyG_afDerivWf_foldlCaddG f hf]
+  -- `afDerivWf` of the empty seed is `0` in the quotient
+  rw [mk_toPolyG_afDerivWf_nil f hf, zero_add]
   -- fuse the `map ∘ map` over `es.zip Fs`
   rw [List.map_map]
   -- each term `mk(toPolyG(afDeriv (afMul eᵢ Fᵢ))) = ēᵢ·integrand`  (Leibniz + `D eᵢ = 0` + `hcomp`)
@@ -273,9 +256,9 @@ theorem afIntegrateFunctionAlgebra_sound (fuel : ℕ) (f integrand : CPolyG α)
         Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
           * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand)) (fun p hp => by
     simp only [Function.comp_apply]
-    rw [mk_toPolyG_afDeriv_afMul fuel f p.1 p.2 hf hg hgc,
+    rw [mk_toPolyG_afDerivWf_afMul f p.1 p.2 hf hgdeg hgne,
       mk_toPolyG_afMul _ _ _ hf, mk_toPolyG_afMul _ _ _ hf,
-      idempotent_isConstant fuel f p.1 hf hg hgc (hidem p hp), zero_mul, zero_add]
+      idempotent_isConstant f p.1 hf hgdeg hgne (hidem p hp), zero_mul, zero_add]
     exact hcomp p hp)]
   -- `Σ ēᵢ·integrand = (Σ ēᵢ)·integrand = 1·integrand = integrand`
   rw [show (fun p : CPolyG α × CPolyG α =>
@@ -298,7 +281,7 @@ function algebra with two components, `A₁ = ℚ(x)[y]/(y²−x)` (`y = √x`) 
 
 We validate the two **component integrals** by `native_decide` (the inputs to the recombination); the
 recombination soundness `D(F) = y` is the *proven theorem* `afIntegrateFunctionAlgebra_sound` (the degree-5
-`afDeriv` of the recombined answer over un-reduced `ℚ(x)` is computationally infeasible for `native_decide`
+Wf derivation of the recombined answer over un-reduced `ℚ(x)` is computationally infeasible for `native_decide`
 — the honest boundary). -/
 
 namespace CPolyG
@@ -330,7 +313,7 @@ derivation `afDeriv (y²−x)` of `F₁ = (2/3)x·y` equals the integrand `y` ov
 (1/(2x))y` on `y²=x`). Checked by `cisZeroG (afDeriv (y²−x) F₁ − y)`. The first **component** integral of
 Schultz §7.2's function-algebra example — a genuine function-field integral, the input to recombination. -/
 theorem fa72_component1 :
-    cisZeroG (csubG (afDeriv 4 fa72T1 fa72F1) fa72Y) = true := by native_decide
+    cisZeroG (csubG (afDerivWf fa72T1 fa72F1) fa72Y) = true := by native_decide
 
 /-- **★ Example 7.2, component 2 (`native_decide`): `∫y dx = (3/4)·x·y` on `y³ − x = 0`** — the general
 derivation `afDeriv (y³−x)` of `F₂ = (3/4)x·y` equals the integrand `y` over `ℚ(x)`: `D((3/4)xy) =
@@ -340,7 +323,7 @@ Schultz §7.2's function-algebra example. Together with `fa72_component1` and th
 `afIntegrateFunctionAlgebra_sound`, this gives Schultz eq. 7.2's `∫y dx = (9x²y + x² − xy³ − 8xy −
 y⁴)/(12(x−1))` on the **reducible** curve `(y²−x)(y³−x)`. -/
 theorem fa72_component2 :
-    cisZeroG (csubG (afDeriv 4 fa72T2 fa72F2) fa72Y) = true := by native_decide
+    cisZeroG (csubG (afDerivWf fa72T2 fa72F2) fa72Y) = true := by native_decide
 
 end CPolyG
 
@@ -382,7 +365,7 @@ boundary for a concrete computation); the recombination itself is the proven `af
 #print axioms FunctionAlgebra.derivation_idempotent_eq_zero
 -- ★ The abstract recombination soundness — `D(Σ eᵢ Fᵢ) = g` over a partition of unity by idempotents:
 #print axioms FunctionAlgebra.derivation_recombine_eq
--- ★ The concrete keystone — the engine's `afDeriv` kills a carrier idempotent:
+-- ★ The concrete keystone — the engine's `afDerivWf` kills a carrier idempotent:
 #print axioms CPolyG.idempotent_isConstant
 -- ★★ THE FUNCTION-ALGEBRA (ZERO-DIVISOR) SOUNDNESS — `D(F) = integrand` over a REDUCIBLE curve:
 #print axioms CPolyG.afIntegrateFunctionAlgebra_sound

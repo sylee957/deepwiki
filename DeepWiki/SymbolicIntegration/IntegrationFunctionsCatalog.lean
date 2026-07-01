@@ -67,7 +67,7 @@ only; it states no new mathematics.
   Soundness (UNCONDITIONAL modulo the engine round-trip): `cIntegrateAlgebraicWf_sound`.
 * `afIntegrateAlgebraic` / `afIntegrateAlgebraicWf` — the general-curve integrator over `K(x)[y]/(f)`.
   Soundness: `afIntegrateAlgebraicWf_sound` (rational round-trip) and the cross-multiplied
-  `afIntegrateAlgebraicWf_isGeneralAlgebraicIntegral`.
+  `afIntegrateAlgebraicWf_isGeneralAlgebraicIntegralWf`.
 * `afIntegrateFunctionAlgebra` — the function-algebra (zero-divisor / reducible-curve) integrator.
   Soundness: `afIntegrateFunctionAlgebra_sound`.
 * `cIntegrateAlgebraicDecide` — the self-determining `Option` simple-radical integrator (Trager elementarity).
