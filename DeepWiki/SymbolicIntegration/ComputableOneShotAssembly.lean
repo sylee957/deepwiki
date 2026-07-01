@@ -17,10 +17,9 @@ The engine's `hmatch` is a **`List` sum** over the residue logs `cLogPartG` retu
 `vᵢ = gcd_t(d, a − cᵢ·Dd)`. The proven primitive residue match is the **`Finset`-over-roots** form. This file
 builds the **list↔Finset bridge** connecting them: the per-root list `s.toList.map (fun α => (c_α, t−α))` has
 the SAME `List.sum` as the `Finset.sum` over `s` (`Finset.sum_map_toList`), so the proven Finset identity
-discharges the engine `hmatch` for the per-root log form. Composing with the pure-normal driver branch gives
-**`cIntegrateGFull_primitive_oneShot`** and its fuel-free companion
-**`cIntegrateGFullWf_primitive_oneShot`** — checker-free one-shots for primitive (logarithmic) tower
-extensions.
+discharges the engine `hmatch` for the per-root log form. Composing with the fuel-free pure-normal driver
+branch gives **`cIntegrateGFullWf_primitive_oneShot`** — the checker-free one-shot for primitive
+(logarithmic) tower extensions.
 
 What this file delivers (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_decide`):
 
@@ -1000,80 +999,11 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
           (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) :=
   cIntegrateGFullWf_pureNormal_eq Dt a d cands hb hfp
 
-/-- **★★★ The PRIMITIVE one-shot for `cIntegrateGFull` (pure-normal branch), checker-free** — for a primitive
-monomial `toPolyG Dt = C w`, if the full driver returns `some res` on the primitive pure-normal branch
-(`cisZeroG b = true`, `cisZeroG fp = true`, so `res = cIntegrateReducedG Dt fuel cₙ dₙ cands`), **given** the
-canonical reconstruction `hrecon` (`amG cₙ/amG dₙ = amG a/amG d`, the `fₚ = b = 0` specialization of
-`canonicalRepresentationFastG_reconstructs`), the Hermite half `hherm`, and the per-root reassembly `hform`
-of the residue logs (the engine gcd/resultant compute-bridge, RT cancellation automatic by
-`primitive_cancel`), the field-level antiderivative identity `D(res) + logResidueSumG Dt res.logs = amG a/amG
-d` holds over `RatFunc (CFieldSpec.K α)` — **with no engine `checkIdentityG` certificate, no native_decide**.
-The genuine `cIntegrateGFull = some res → D(res) = integrand` for primitive (logarithmic) tower extensions,
-gated only on the abstract engine inputs (canonical reconstruction + Hermite telescoping + per-root
-reassembly). Composes `cIntegrateGFull_pureNormal_eq` (the output shape) with
-`field_identity_of_cIntegrateReducedG_primitive` (the reduced-case identity) and `hrecon`. -/
-theorem cIntegrateGFull_primitive_oneShot (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
-    (cands : List α) (res : IntegralResultG α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
-    (hDt : toPolyG Dt = C w)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastG Dt fuel a d).1 = true)
-    (hsome : CPolyG.cIntegrateGFull Dt fuel a d cands = some res)
-    (hrecon : amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
-          / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d))
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt fuel
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerG Dt fuel
-                (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerG Dt fuel
-                (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.2)
-        = amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastG Dt fuel a d).2.2.2))
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel
-          (canonicalRepresentationFastG Dt fuel a d).2.2.1
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerG Dt fuel
-          (canonicalRepresentationFastG Dt fuel a d).2.2.1
-          (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.1).degree < s.card)
-    (hnorm : ∀ β ∈ s, w ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedG Dt fuel
-            (canonicalRepresentationFastG Dt fuel a d).2.2.1
-            (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands).logs.map
-          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
-        = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerG Dt fuel
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.1
-                  (canonicalRepresentationFastG Dt fuel a d).2.2.2).2.1).eval β
-                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
-              X - C β))) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
-  -- pin the output: `res` is the reduced capstone on the simple part `(cₙ, dₙ)`
-  have hres : res = CPolyG.cIntegrateReducedG Dt fuel (canonicalRepresentationFastG Dt fuel a d).2.2.1
-      (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands := by
-    rw [cIntegrateGFull_pureNormal_eq Dt fuel a d cands hb hfp] at hsome
-    exact (Option.some.injEq _ _ ▸ hsome).symm
-  subst hres
-  -- the reduced-case primitive identity gives `D(g) + logResidueSumG = amG cₙ/amG dₙ`; `hrecon` ⟹ `= a/d`
-  rw [field_identity_of_cIntegrateReducedG_primitive Dt fuel
-    (canonicalRepresentationFastG Dt fuel a d).2.2.1
-    (canonicalRepresentationFastG Dt fuel a d).2.2.2 cands s w hDt hherm hden hA hnorm hform]
-  exact hrecon
-
 omit [CFracGcdCore α] in
 /-- **★★★ The fuel-free PRIMITIVE one-shot for `cIntegrateGFullWf` (pure-normal branch), checker-free** —
-the `…Wf` companion of `cIntegrateGFull_primitive_oneShot`. For a primitive monomial, if the fuel-free full
-driver returns `some res` on the pure-normal branch, then the reduced fuel-free primitive identity and the
-fuel-free canonical reconstruction prove `D(res) + logResidueSumG Dt res.logs = a/d` with no engine
-`checkIdentityG` certificate and no runtime fuel. -/
+for a primitive monomial, if the fuel-free full driver returns `some res` on the pure-normal branch, then the
+reduced fuel-free primitive identity and the fuel-free canonical reconstruction prove
+`D(res) + logResidueSumG Dt res.logs = a/d` with no engine `checkIdentityG` certificate and no runtime fuel. -/
 theorem cIntegrateGFullWf_primitive_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (hDt : toPolyG Dt = C w)
@@ -1388,7 +1318,7 @@ theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracG
 
 /-! ### ★★★ Task 3 milestone: the HYPEREXPONENTIAL one-shot for `cIntegrateGFull`, GATED on `∑c = 0`
 
-The hyperexponential analog of `cIntegrateGFull_primitive_oneShot`: `cIntegrateGFull = some res` on the
+The hyperexponential pure-normal one-shot follows the same pattern: `cIntegrateGFull = some res` on the
 pure-normal branch ⟹ `D(res) = a/d`, for a hyperexponential monomial `Dt = η′·t`. The ONLY extra hypothesis
 over the primitive milestone is the integrability witness `hsum : ∑c = 0` — discharging the general-case
 `hcancel` for hyperexp via `hyperexp_residue_match_iff_sum_zero` inside `hyperexp_engine_hmatch`.
@@ -1410,9 +1340,9 @@ larger soundness task), whose success encodes `∫R` solvability, NOT `∑c = 0`
 reconstruction `hrecon`, the Hermite half `hherm`, the per-root reassembly `hform`, AND the integrability
 witness `hsum` (`∑c = 0`, the residues of the Hermite leftover summing to zero), the field-level
 antiderivative identity `D(res) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc (CFieldSpec.K
-α)` — **with no engine `checkIdentityG` certificate, no native_decide**. The hyperexp analog of
-`cIntegrateGFull_primitive_oneShot`: identical assembly through `cIntegrateGFull_pureNormal_eq` +
-`field_identity_of_cIntegrateReducedG_hyperexp` + `hrecon`, with `hsum` the only extra input. The integrability
+α)` — **with no engine `checkIdentityG` certificate, no native_decide**. It assembles through
+`cIntegrateGFull_pureNormal_eq` + `field_identity_of_cIntegrateReducedG_hyperexp` + `hrecon`, with `hsum` the
+only extra input. The integrability
 witness is NOT a free identity nor an engine-success consequence (see the section docstring): the hyperexp
 one-shot for `cIntegrateGFull` is GENUINELY conditional on `∑c = 0`. The milestone extending the checker-free
 one-shot from the primitive to the exponential case — the two main transcendental monomial kinds — modulo the
@@ -1750,9 +1680,9 @@ PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_de
   cancellation is AUTOMATIC (`ResidueMatchTower.primitive_cancel`), so the primitive regime needs **no
   integrability witness**.
 * **The PRIMITIVE one-shot** (`field_identity_of_cIntegrateReducedG_primitive`,
-  `field_identity_of_cIntegrateReducedGWf_primitive`, `cIntegrateGFull_primitive_oneShot` /
-  `cIntegrateGFullWf_primitive_oneShot` plus the Wf `…_qfunNZG` specialization) — for the primitive pure-normal branch,
-  `cIntegrateGFull = some res` / `cIntegrateGFullWf = some res ⟹ D(res) = a/d`, checker-free, gated only on
+  `field_identity_of_cIntegrateReducedGWf_primitive`, `cIntegrateGFullWf_primitive_oneShot` plus the Wf
+  `…_qfunNZG` specialization) — for the primitive pure-normal branch,
+  `cIntegrateGFullWf = some res ⟹ D(res) = a/d`, checker-free, gated only on
   the abstract engine inputs (canonical reconstruction `hrecon`, Hermite half `hherm`, per-root reassembly
   `hform`).
 * **★★ NEW — the HYPEREXPONENTIAL one-shot** (`field_identity_of_cIntegrateReducedG_hyperexp`,
@@ -1814,7 +1744,7 @@ The primitive-base `hpoly` discharge now lives only in the fuel-free theorem
 ★ THE GENERAL ONE-SHOT (Target 3, deferred — shape only). A single full-driver theorem
 (`cIntegrateGFull`/`cIntegrateGFullWf = some res ⟹ D(res) = a/d`) covering BOTH branches is a `cisZeroG fp`
 case split: `true` → `cIntegrateGFullWf_primitive_oneShot` for the fuel-free driver (or the corresponding
-fuelful/hyperexp sibling), `false` → `cIntegrateGFullWf_poly_oneShot`. It is NOT a clean additive theorem: the two
+hyperexp sibling), `false` → `cIntegrateGFullWf_poly_oneShot`. It is NOT a clean additive theorem: the two
 branches consume structurally DIFFERENT hypothesis bundles (the pure-normal milestones fold the normal
 one-shot into Hermite `hherm` + per-root reassembly `hform` + reconstruction `hrecon`; the poly branch takes
 the normal one-shot `hnormal` directly with a different split `hrecon`), so a combined statement must carry the
@@ -1830,7 +1760,6 @@ hypotheses. -/
 #print axioms field_identity_of_cIntegrateReducedGWf_primitive
 #print axioms cIntegrateReducedG_logs_eq_per_root
 #print axioms field_identity_of_cIntegrateReducedG_primitive_of_residueData
-#print axioms cIntegrateGFull_primitive_oneShot
 #print axioms cIntegrateGFullWf_primitive_oneShot
 #print axioms cIntegrateGFullWf_primitive_oneShot_qfunNZG
 #print axioms ResidueMatchTower.hyperexp_cancel_iff_sum_zero
@@ -1906,8 +1835,8 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
 
 /-! ### ★★★ The `hA` discharge for `deg Dt ≤ 1`: reduced to exact-division connectors + input properness
 
-`cIntegrateGFull_primitive_oneShot` / `…_qfunNZG` carries the degree side condition `hA :
-(cHermiteReduceTowerG …).2.1.degree < s.card` as a **free** hypothesis. For `deg Dt ≤ 1` (the primitive /
+`cIntegrateGFullWf_primitive_oneShot` / `…_qfunNZG` carries the degree side condition `hA :
+(cHermiteReduceTowerGWf …).2.1.degree < s.card` as a **free** hypothesis. For `deg Dt ≤ 1` (the primitive /
 exponential / log regimes) it is no longer free: the §5.3 chain
 `cHermiteReduceTowerG_residual_proper_of_degree_le_one` (residual `a/d − D(g)` proper from input properness
 `deg a < deg d`, `deg Dt ≤ 1`, the per-factor keystone `hb`/`hv`) → `cHermiteReduceTowerG_leftover_proper_of_residual`

@@ -16,8 +16,8 @@ partial fraction, `isRadicalLogIntegral_of_residue_match` / `…general Wf…`),
 This file delivers the **FULL one-shot** for the FUEL-FREE algebraic drivers `cIntegrateAlgebraicWf`
 (radical, `y² = ρ`) and `afIntegrateAlgebraicWf` (general curve, `K(x)[y]/(f)`): a clean
 `<driver> … = (the output) → D(output) = integrand`, with **no conditional `hrat`/`hlog`/`hsplit` passed
-in**, discharged from the engine's own success — exactly the way the transcendental one-shot
-`cIntegrateGFull_primitive_oneShot` is gated only on engine-success bridges, never a runtime checker.
+in**, discharged from the engine's own success — exactly the way the fuel-free transcendental one-shot
+`cIntegrateGFullWf_primitive_oneShot` is gated only on engine-success bridges, never a runtime checker.
 
 **What "fully" means here — and the honest boundary.** The rational telescoping and the log partial
 fraction are *proven math*: they hold as abstract theorems. But for the **literal** driver output, their
@@ -305,7 +305,7 @@ Quot.sound]` — no `native_decide` compiler axiom (`ofReduceBool`/`native`), no
 soundness `some F → D(F) = integrand` is delivered for BOTH the radical (`cIntegrateAlgebraicWf`) and the
 general-curve (`afIntegrateAlgebraicWf`) integrators, FUEL-FREE, UNCONDITIONAL in the part hypotheses
 `hrat`/`hlog`/`hsplit`, gated only on the engine's own round-trip certificate (the inherent native_decide
-boundary, exactly as the transcendental one-shot `cIntegrateGFull_primitive_oneShot` is gated on its
+boundary, exactly as the fuel-free transcendental one-shot `cIntegrateGFullWf_primitive_oneShot` is gated on its
 engine-success bridges — never a runtime checker), reusing the checker-free `isAlgebraicIntegral_of_parts` /
 `isGeneralAlgebraicIntegralWf_of_parts` and the round-trip bridges `toPolyG_algDeriv_eq_of_roundtrip` /
 `toPolyG_afDerivWf_eq_of_roundtrip`. -/
