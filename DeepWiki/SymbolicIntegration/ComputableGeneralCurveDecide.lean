@@ -159,10 +159,10 @@ arbitrary plane curve `K(x)[y]/(f)` (Trager, the elementarity decision, beyond h
 `Option GeneralCurveIntegralResult`:
 
 * compute the rational part `v` via `afRationalSolveWf f basis degBound ratIntegrand` (the general
-  derivation `afDeriv` linear solve over the integral basis); if it fails → `none`;
+  derivation `afDerivWf` linear solve over the integral basis); if it fails → `none`;
 * if `hasLogPart = false` (no log part) → `some ⟨v, []⟩`;
 * else **principal**: `afLogArgSolveWf f basis degBound logIntegrand = some u` (the `K`-linear
-  log-derivative solve `afDeriv f u = afMul f u logIntegrand`) → `some ⟨v, [(1, u)]⟩` (the classic `1·log u`);
+  log-derivative solve `afDerivWf f u = afMul f u logIntegrand`) → `some ⟨v, [(1, u)]⟩` (the classic `1·log u`);
 * else **torsion decision** on the residue divisor via `genCurveTorsionLogTerm`: if the residue divisor is
   `m`-torsion (`genDivisorOrder = some m`) the generator oracle gives `(1/m, g)` → `some ⟨v, [(1/m, g)]⟩`; if
   non-torsion → **`none`** (the integral is NOT elementary).

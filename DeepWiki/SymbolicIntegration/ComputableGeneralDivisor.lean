@@ -48,7 +48,7 @@ integral basis `[1, y, y²/x]` is **NOT** the power basis (the third generator c
 **The engine now represents general-curve divisors as fractional ideals over the integral basis, with
 `div(g)` and the ideal product (the Pic group law).** The remaining torsion pipeline — `idealInverse` /
 `idealReduce` (toward the reduced divisor), the ORDER (smallest `m` with `m·δ` principal, via repeated
-`idealProduct` + an `afLogArgSolve`-style principality test), and the good-reduction bound mod `p` (the
+`idealProduct` + an `afLogArgSolveWf`-style principality test), and the good-reduction bound mod `p` (the
 general lift of `ComputableDivisorOrder`) — is documented at the end as the next pieces. -/
 
 open Polynomial
@@ -400,8 +400,8 @@ the HYPERELLIPTIC Jacobian), in order:
 2. **The ORDER (points of finite order, Trager Ch. 6).** The smallest `m ≥ 1` with `m·δ` **principal** —
    computed by iterating `idealProduct` (`δ, 2δ, 3δ, …` via repeated composition) and, at each `m`, testing
    **principality**: `m·δ` is principal iff its reduced fractional ideal is `g·O` for some `g ∈ K(x, y)`,
-   which is exactly an `afLogArgSolve`-style linear test — does the ideal `m·δ` (reduced) have a single
-   generator `g` with `(m·δ) = g·O`? (`afLogArgSolve`'s kernel solve for `u` with `div(u) = m·δ` over the
+   which is exactly an `afLogArgSolveWf`-style linear test — does the ideal `m·δ` (reduced) have a single
+   generator `g` with `(m·δ) = g·O`? (`afLogArgSolveWf`'s kernel solve for `u` with `div(u) = m·δ` over the
    integral basis is the principality oracle: a nonzero bounded-degree generator exists iff `m·δ` is
    principal.) The order `m` and the generator `g` of `m·δ` give the `(1/m)·log g` term of the non-principal
    integrator branch — the general lift of `ComputablePrincipalGenerator` / `ComputableTorsionLogTerm`.

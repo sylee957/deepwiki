@@ -2,8 +2,8 @@ import DeepWiki.SymbolicIntegration.ComputableGeneralIntegralSoundness
 
 /-! # Integration on a REDUCIBLE curve (function-algebra / zero-divisor) soundness — Schultz §7.1–7.2
 
-The general algebraic integrator (`afIntegrateAlgebraic`, `ComputableGeneralRationalSolve` /
-`ComputableGeneralLogArg`) and its soundness `D(∫f) = f` (`ComputableGeneralLogSoundness`'s
+The fuel-free general algebraic integrator (`afIntegrateAlgebraicWf`) and its soundness `D(∫f) = f`
+(`ComputableGeneralLogSoundness`'s
 `isGeneralAlgebraicIntegralWf_of_parts`, `ComputableAlgebraicWfSoundness`'s `afIntegrateAlgebraicWf_sound`)
 work over the carrier `K(x)[y]/(f)` — and are honest as a **field** exactly when the curve `f` is
 **irreducible** (so the carrier is a function field, the "crossing to the cross-multiplied form is clean
@@ -251,7 +251,7 @@ theorem afIntegrateFunctionAlgebra_sound (f integrand : CPolyG α)
   rw [mk_toPolyG_afDerivWf_nil f hf, zero_add]
   -- fuse the `map ∘ map` over `es.zip Fs`
   rw [List.map_map]
-  -- each term `mk(toPolyG(afDeriv (afMul eᵢ Fᵢ))) = ēᵢ·integrand`  (Leibniz + `D eᵢ = 0` + `hcomp`)
+  -- each term `mk(toPolyG(afDerivWf (afMul eᵢ Fᵢ))) = ēᵢ·integrand`  (Leibniz + `D eᵢ = 0` + `hcomp`)
   rw [List.map_congr_left (g := fun p =>
         Ideal.Quotient.mk (afIdeal f) (toPolyG p.1)
           * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand)) (fun p hp => by
@@ -308,17 +308,17 @@ def fa72F2 : CPolyG (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 3/4]]
 def fa72Y : CPolyG (QFunNZG ℚ) := afBasisElem 1
 
 /-- **★ Example 7.2, component 1 (`native_decide`): `∫y dx = (2/3)·x·y` on `y² − x = 0`** — the general
-derivation `afDeriv (y²−x)` of `F₁ = (2/3)x·y` equals the integrand `y` over `ℚ(x)`: `D((2/3)xy) =
+derivation `afDerivWf (y²−x)` of `F₁ = (2/3)x·y` equals the integrand `y` over `ℚ(x)`: `D((2/3)xy) =
 (2/3)(y + x·y') = (2/3)(y + x·(1/(2x))y) = (2/3)(y + (1/2)y) = (2/3)(3/2)y = y` (with `y' = 1/(2y) =
-(1/(2x))y` on `y²=x`). Checked by `cisZeroG (afDeriv (y²−x) F₁ − y)`. The first **component** integral of
+(1/(2x))y` on `y²=x`). Checked by `cisZeroG (afDerivWf (y²−x) F₁ − y)`. The first **component** integral of
 Schultz §7.2's function-algebra example — a genuine function-field integral, the input to recombination. -/
 theorem fa72_component1 :
     cisZeroG (csubG (afDerivWf fa72T1 fa72F1) fa72Y) = true := by native_decide
 
 /-- **★ Example 7.2, component 2 (`native_decide`): `∫y dx = (3/4)·x·y` on `y³ − x = 0`** — the general
-derivation `afDeriv (y³−x)` of `F₂ = (3/4)x·y` equals the integrand `y` over `ℚ(x)`: `D((3/4)xy) =
+derivation `afDerivWf (y³−x)` of `F₂ = (3/4)x·y` equals the integrand `y` over `ℚ(x)`: `D((3/4)xy) =
 (3/4)(y + x·y') = (3/4)(y + x·(1/(3x))y) = (3/4)(y + (1/3)y) = (3/4)(4/3)y = y` (with `y' = 1/(3y²) =
-(1/(3x))y` on `y³=x`). Checked by `cisZeroG (afDeriv (y³−x) F₂ − y)`. The second **component** integral of
+(1/(3x))y` on `y³=x`). Checked by `cisZeroG (afDerivWf (y³−x) F₂ − y)`. The second **component** integral of
 Schultz §7.2's function-algebra example. Together with `fa72_component1` and the *proven* recombination
 `afIntegrateFunctionAlgebra_sound`, this gives Schultz eq. 7.2's `∫y dx = (9x²y + x² − xy³ − 8xy −
 y⁴)/(12(x−1))` on the **reducible** curve `(y²−x)(y³−x)`. -/

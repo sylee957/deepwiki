@@ -174,7 +174,7 @@ abbrev sound_genRationalPredicate := @CPolyG.IsGeneralRationalIntegralWf
 
 /-- **★ The first abstractly-verified general integral `D(y) = y'`** `mk_toPolyG_afDerivWf_genGen` (Trager,
 Chapters 2–4): the carrier generator `y` integrates the implicit derivative `yprime = −f_x/f_y` —
-`afDeriv(y) = yprime` in the quotient, the general analogue of `D(√f) = f'/(nf)·√f` (needs only a nonzero
+`afDerivWf(y) = yprime` in the quotient, the general analogue of `D(√f) = f'/(nf)·√f` (needs only a nonzero
 curve, no separability). -/
 abbrev sound_genGen := @CPolyG.mk_toPolyG_afDerivWf_genGen
 

@@ -3,8 +3,7 @@ import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
 
 /-! # Quotient API for general algebraic-function carriers
 
-Fuel-independent quotient facts for `K(x)[y]/(f)`, shared by both the fueled `afDeriv`
-proofs and the fuel-free `afDerivWf` proofs.
+Fuel-independent quotient facts for `K(x)[y]/(f)`, used by the fuel-free `afDerivWf` proofs.
 -/
 
 open Polynomial

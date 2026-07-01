@@ -132,7 +132,8 @@ theorem cIntegrateAlgebraicWf_sound
 `afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand : Option (CPolyG (QFunNZG ℚ) × CPolyG
 (QFunNZG ℚ))` is fuel-free (the rational part by `afRationalSolveWf`, the log argument by `afLogArgSolveWf`,
 both through the fuel-free general derivation `afDerivWf`). On success it returns `some (v, u)` — the
-rational part `v` (`afDeriv f v = ratIntegrand`) and a single log argument `u` (`afDeriv f u = afMul f u
+rational part `v` (`afDerivWf f v = ratIntegrand`) and a single log argument `u`
+(`afDerivWf f u = afMul f u
 logIntegrand`). The full general soundness is `D(v + Σ cᵢ log uᵢ) = g` over `K(x)[y]/(f)`. The general-curve
 analogue of Task 1, in the same two forms.
 
@@ -197,7 +198,7 @@ the engine round-trip certificate (the inherent native_decide boundary, exactly 
 `cIntegrateAlgebraicWf_sound` and the transcendental one-shot are gated on their engine-success bridges, not
 a runtime checker). Axiom-clean (no `native_decide`): `toPolyG_afDerivWf_eq_of_roundtrip` (`cisZeroG p = true
 ↔ toPolyG p = 0` + `toPolyG_csubG` + `sub_eq_zero`). The fully-unconditional, fuel-free general algebraic
-rational-part soundness; the log argument's `afDeriv f u = afMul f u logIntegrand` round-trip closes the log
+rational-part soundness; the log argument's `afDerivWf f u = afMul f u logIntegrand` round-trip closes the log
 half symmetrically. -/
 theorem afIntegrateAlgebraicWf_sound
     (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)

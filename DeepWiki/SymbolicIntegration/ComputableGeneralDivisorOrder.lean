@@ -168,7 +168,7 @@ canonical-HNF row is `1 − y` and `div(1 − y) = P³`; on `y³ = x²`, `div(y)
 `x·(y²/x)` and the *second* row `y` is the generator. So we take all canonical-HNF rows as **candidate
 generators** `genCandidates basis I` and test `canonHNFEq I (div g)` for each. This is **sound**: a `true` means
 `I` genuinely equals `div(g)`, hence is principal — the order search never over-reports torsion. (The
-`afLogArgSolve`-style single-generator test: `I = g·O` iff a single `g` generates the whole ideal; here the
+`afLogArgSolveWf`-style single-generator test: `I = g·O` iff a single `g` generates the whole ideal; here the
 candidate `g`s are read off the canonical reduced ideal.) -/
 
 /-- **The candidate single generators of a fractional ideal** `genCandidates basis I`: each **canonical-HNF row**

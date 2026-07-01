@@ -65,7 +65,7 @@ only; it states no new mathematics.
 * `cIntegrateAlgebraic` / `cIntegrateAlgebraicWf` — the simple-radical integrator over `y² = ρ` (multi-case
   rational dispatch + principal-case log solve); fuel'd and fuel-free.
   Soundness (UNCONDITIONAL modulo the engine round-trip): `cIntegrateAlgebraicWf_sound`.
-* `afIntegrateAlgebraic` / `afIntegrateAlgebraicWf` — the general-curve integrator over `K(x)[y]/(f)`.
+* `afIntegrateAlgebraicWf` — the fuel-free general-curve integrator over `K(x)[y]/(f)`.
   Soundness: `afIntegrateAlgebraicWf_sound` (rational round-trip) and the cross-multiplied
   `afIntegrateAlgebraicWf_isGeneralAlgebraicIntegralWf`.
 * `afIntegrateFunctionAlgebra` — the function-algebra (zero-divisor / reducible-curve) integrator.
@@ -149,7 +149,7 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 -- `cIntegrateAlgebraic` / `cIntegrateAlgebraicWf`: unconditional radical soundness.
 #check @cIntegrateAlgebraicWf_sound
 
--- `afIntegrateAlgebraic` / `afIntegrateAlgebraicWf`: the general-curve soundness.
+-- `afIntegrateAlgebraicWf`: the general-curve soundness.
 #check @afIntegrateAlgebraicWf_sound
 
 -- `afIntegrateFunctionAlgebra`: the function-algebra (zero-divisor) soundness.

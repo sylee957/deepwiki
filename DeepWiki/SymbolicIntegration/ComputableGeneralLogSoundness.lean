@@ -92,7 +92,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-! ### The fuel-free log-soundness predicate and residue-sum skeleton
 
-The Wf derivation has the same quotient API as `afDeriv`, so the log-part predicates can be restated without
+The Wf derivation has the expected quotient API, so the log-part predicates can be restated without
 threading a fuel parameter. The partial-fraction obligations keep the same shape; only each
 `afDerivWf f uᵢ` leaf. -/
 
@@ -560,8 +560,8 @@ interpolation-uniqueness characterization, the EXACT `toPolyG_cAlgResidueResulta
 general double resultant `genResidueResultant`) discharges the `hR` product-form hypothesis of
 `roots_genResidueResultant_eq_residues` for the ENGINE's `genResidueResultant`, so the abstract roots↔residues
 milestone connects to the actual engine. With both halves' abstract cores + this engine bridge proven, the
-complete algebraic `D(afIntegrateAlgebraic f) = f` is **self-contained at its mathematical core**, modulo the
-documented `native_decide` engine boundary (the `afIsLogIntegral`/`afRationalSolve` round-trip certificate, the
+complete algebraic `D(afIntegrateAlgebraicWf f) = f` is **self-contained at its mathematical core**, modulo the
+documented `native_decide` engine boundary (the `afLogArgSolveWf`/`afRationalSolveWf` round-trip certificate, the
 `hsplit`/`hnode`/`hrat`/`hlog` preconditions the composition theorems take as hypotheses — exactly as the
 radical capstone's `isAlgebraicIntegral_of_parts` does), and the `resultant_eq_prod_eval` *application* feeding
 the per-node values into `toPolyG_genResidueResultant_eq_of_eval`'s `hnode` (the same factoring

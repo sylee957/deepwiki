@@ -21,7 +21,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 The general analogue of `toPolyG_radGen` (`toPolyG radGen = X`). The carrier generator `y` is `afBasisElem
 1 = cshiftG 1 [1] = [0, 1]`, whose `toPolyG` image is the formal variable `X` (`X¹ · toPolyG [1] = X · 1 =
-X`). The single fact that turns `implicitDeriv … X = …` into a statement about `afDeriv (afBasisElem 1)`. -/
+X`). The single fact that turns `implicitDeriv … X = …` into a statement about `afDerivWf (afBasisElem 1)`. -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **`toPolyG (afBasisElem 1) = X`** — the carrier generator `y` (`afBasisElem 1 = [0, 1]`) reads as the
@@ -35,7 +35,7 @@ theorem toPolyG_afBasisElem_one : toPolyG (afBasisElem 1 : CPolyG α) = X := by
 
 /-! ### The fuel-free rational-integral API
 
-The Wf derivation now has the same quotient API as `afDeriv`, so the rational-part predicate, generator
+The Wf derivation has the expected quotient API, so the rational-part predicate, generator
 example, telescoping, and round-trip closure can be stated without a fuel parameter. -/
 
 /-- The fuel-free general rational-integral soundness predicate. -/

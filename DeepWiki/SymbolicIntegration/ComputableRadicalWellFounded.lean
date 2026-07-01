@@ -48,15 +48,14 @@ with the inner Bézout the fuel-free `cdiophantineGWf`). Every `…Wf` is `[CFie
   leaves are fuel-free.
 * `radPartialFractionCoprime` — structural recursion on the **list of prime-powers** (`G :: rest → rest`),
   already structural and already using the fuel-free `cdiophantineGWf`; no Wf companion is needed.
-* `afIntegrateAlgebraic` (`ComputableGeneralLogArg`, the GENERAL non-radical algebraic curve) — the next
-  layer; its rational part recurses with the same multiplicity / degree measures (the Case-1/2/3 analogues
-  over the integral basis), its log part is flat (residue resultants + a linear solve). Same mechanical
-  sequence once the simple-radical core (this file) is in place.
+* `afIntegrateAlgebraicWf` (`ComputableGeneralWellFounded`, the GENERAL non-radical algebraic curve) — now
+  fuel-free by leaf substitution over the integral-basis linear solves; its log part is flat (residue
+  resultants + a linear solve).
 * The residue resultants (`cAlgResidueResultant`, `ComputableAlgebraicResidues`) bottom out at the generic
   fuel-free `cresultantWf` (`ComputableFuelFreeResultant`) — flat, no descent.
 
-So after this file the **entire** algebraic-integration path is fuel-free modulo the general-curve
-`afIntegrateAlgebraic` layer (same Case-1/2/3 measures). -/
+So after this file the **entire** algebraic-integration path is fuel-free, with the general-curve layer
+handled by `afIntegrateAlgebraicWf`. -/
 
 open Polynomial
 
@@ -345,19 +344,16 @@ theorem cIntegrateAlgebraicWf_rtComb_shape :
     (radIsZero rtCombRecoveredWf.ratPart, rtCombRecoveredWf.logTerms.length) = (false, 1) := by
   native_decide
 
-/-! ## ★ STRETCH note — the LOG part and the `afIntegrateAlgebraic` general-curve next layer
+/-! ## ★ STRETCH note — the LOG part and the `afIntegrateAlgebraicWf` general-curve layer
 
 * **The log part is already fuel-free.** `radLogArgSolve` (and hence the `c·log u` half) is **non-recursive**
   — it builds the linear system `radLogMatrix`, solves it with the rational kernel `ratKernelVector`
   (Gauss / `ratRref`, non-recursive over the row list), and assembles `a₀, a₁` by a `List.foldl`. It carries
   no `ℕ`-fuel and needs no `…Wf` companion: `cIntegrateAlgebraicWf` shares it verbatim. So the FULL radical
   integral `v + c·log u` is fuel-free.
-* **Next layer — `afIntegrateAlgebraic` (general non-radical algebraic curve, `ComputableGeneralLogArg`).**
-  The same mechanical sequence over the integral basis: its rational part recurses with the **same Case-1/2/3
-  measures** (multiplicity `k` for the pole-order descents, degree for the leftover), so the `…IterateWf`
-  shapes of Parts 1–3 transfer directly; its log part is flat (residue resultants `cAlgResidueResultant`
-  bottoming at the fuel-free `cresultantWf`, plus a linear solve). Converting it is the next file, built on
-  this one. -/
+* **General curve layer — `afIntegrateAlgebraicWf` (`ComputableGeneralWellFounded`).** The general
+  non-radical algebraic curve path is fuel-free through the same leaf-substitution strategy: rational and log
+  parts are finite integral-basis linear solves, and the resultants bottom at the fuel-free `cresultantWf`. -/
 
 /-! ### `#print axioms` — the fuel-free algebraic-integration validations
 

@@ -6,19 +6,17 @@ import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 The radical arc (`ComputableRadicalWellFounded`) made the simple-radical integrator fuel-free by converting
 its three Case-1/2/3 Hermite descents to well-founded recursion. The GENERAL (arbitrary plane curve
-`K(x)[y]/(f)`) integrator `afIntegrateAlgebraic` (`ComputableGeneralLogArg`) is a **different shape** — and
-the difference IS the measure subtlety the conversion has to isolate:
+`K(x)[y]/(f)`) integrator is a **different shape** — and the difference IS the measure subtlety the conversion
+has to isolate:
 
 **★ The general engine has NO recursion of its own — no Case-1/2/3 descents, no termination measure.** It
 deliberately **sidesteps** the Hermite/pole-order reduction (that integrand-splitting front-end is deferred)
 and exhibits BOTH the rational part `v` and the log argument `u` as a single **`K`-linear solve over the
-integral basis**: `afRationalSolve` / `afLogArgSolve` build a finite `ℚ`-matrix (`afRatMatrix` / `afLogMatrix`)
+integral basis**: `afRationalSolveWf` / `afLogArgSolveWf` build a finite `ℚ`-matrix (`afRatMatrixWf` /
+`afLogMatrixWf`)
 of the undetermined-coefficient system `afDeriv f (Σ c_{ij} xʲ wᵢ) = integrand` and solve it by the
-non-recursive field solver `kernelBasisG` / `gaussElimG`. A scan confirms it: the five general engine files
-(`ComputableGeneralLogArg`, `ComputableGeneralRationalSolve`, `ComputableGeneralResidues`,
-`ComputableAlgebraicResidues`, `ComputableAlgFunctionField`) contain **zero** `fuel + 1` / `termination_by` /
-`decreasing_by`. So — unlike the radical engine — there are **no `…IterateWf` analogues to build**; the
-entire fuel-free conversion is **pure leaf substitution**.
+non-recursive field solver `kernelBasisG` / `gaussElimG`. So — unlike the radical engine — there are **no
+`…IterateWf` analogues to build**; the entire fuel-free conversion is **pure leaf substitution**.
 
 **The single external-fuel leaf.** The fuel the general pipeline carries is threaded down one chain to exactly
 one external-fuel call: `afDeriv fuel f u` (the general derivation) → `afYprime fuel f` (the implicit
@@ -222,10 +220,10 @@ end CPolyG
 
 /-! ## Part 2 — the fuel-free flat solvers (leaf-substitute `afDerivWf` for `afDeriv`)
 
-`afRationalSolve` / `afLogArgSolve` are flat: build a `ℚ`-matrix and solve it with `kernelBasisG`. The only
-fuel-bearing piece is the columns' `afDeriv` (`afRatColumns` / `afLogColumns` via `afLogResidual`); the matrix
-extraction and `kernelBasisG` are shared verbatim. So each `…Wf` swaps `afDerivWf` for `afDeriv` and reuses
-the rest. The general engine is specialized to `QFunNZG ℚ`, so these are too. -/
+The general rational and log argument solves are flat: build a `ℚ`-matrix and solve it with `kernelBasisG`.
+The old fuel-bearing piece was the columns' `afDeriv`; the Wf path computes those columns with `afDerivWf`.
+The matrix extraction and `kernelBasisG` are shared verbatim. The general engine is specialized to
+`QFunNZG ℚ`, so these are too. -/
 
 /-- **Fuel-free rational-part residual columns** `afRatColumnsWf f basis degBound integrand`: the fuel-free
 companion of `afRatColumns`, the per-monomial derivatives `afDerivWf f (xʲ wᵢ)` followed by the forced
@@ -332,8 +330,8 @@ def afLogArgSolveWf (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
 
 /-! ## Part 3 — the fuel-free top-level `afIntegrateAlgebraicWf` (the general `∫ = v + Σ log u`)
 
-`afIntegrateAlgebraic` is one flat `match` over `afRationalSolve` (rational part) + `afLogArgSolve` (log
-part); both fuel-free now. Pure substitution, not self-recursive. -/
+The general top-level is one flat `match` over `afRationalSolveWf` (rational part) + `afLogArgSolveWf` (log
+part). Pure substitution, not self-recursive. -/
 
 /-- **★ The fuel-free general-curve integrator** `afIntegrateAlgebraicWf f basis degBound ratIntegrand
 logIntegrand = some (v, u)`: the fuel-free companion of `afIntegrateAlgebraic`, producing the general
@@ -353,9 +351,8 @@ def afIntegrateAlgebraicWf (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFu
 /-! ## Part 4 — ★ top-level `native_decide` validation: the GENERAL integrator is fuel-free
 
 The fuel-free top-level returns the expected combined integral and the derivative checks are made with
-`afDerivWf`, so the `D(∫f) = f` validation holds of the **fuel-free** output. The cuspidal-cubic combined integral
-`∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y` on `y³ = x²` (`ComputableGeneralLogArg`'s
-`afIntegrateAlgebraic_cuspCubic_combine`) is the witness. -/
+`afDerivWf`, so the `D(∫f) = f` validation holds of the **fuel-free** output. The cuspidal-cubic combined
+integral `∫ (y + afDerivWf(y)/y) dx = (3/5)xy + log y` on `y³ = x²` is the witness. -/
 
 /-- The rational summand input for the fuel-free cuspidal-cubic combined validation. -/
 def gcCombineRatIntegrandWf : CPolyG (QFunNZG ℚ) := gcuspCubicY
