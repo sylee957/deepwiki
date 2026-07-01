@@ -122,11 +122,11 @@ the image of `X`. Existence of such a derivation on the rational-function field 
 fraction-field construction. -/
 abbrev thm_3_2_2_field_unique := @unique_derivation_rationalFunction
 
-/-- **Theorem 3.2.3** (§3.2, p.83), algebraic-extension existence in Lean form: for a finite
-extension `E/F` in characteristic `0`, Mathlib constructs `differentialAlgebraic : Differential E`
-by the minimal-polynomial formula `Δα = -κ_D(P)(α) / P'(α)`. This alias is the compatibility proof
-that, after installing that structure, `E` is a `DifferentialAlgebra F E`. -/
-abbrev thm_3_2_3 := @differentialAlgebra_algebraic
+/-- **Theorem 3.2.3** (§3.2, p.83), algebraic-extension existence and uniqueness in Lean form:
+for a finite extension `E/F` in characteristic `0`, there is a unique differential structure on
+`E` compatible with the one on `F`. Mathlib constructs the witness by the minimal-polynomial
+formula `Δα = -κ_D(P)(α) / P'(α)`. -/
+abbrev thm_3_2_3 := @existsUnique_differentialAlgebra_algebraic
 
 /-- **Theorem 3.2.3** (§3.2, p.83), uniqueness: the derivation extension to a separable algebraic
 extension is unique. The Lean theorem takes two structures `Δ₁ Δ₂ : Differential E` and proves
@@ -153,9 +153,9 @@ abbrev thm_3_2_4_ii_norm := @trace_logDeriv_eq_logDeriv_norm
 
 /-- **Corollary 3.2.1** (§3.2, p.85): `D` extends uniquely to each finite intermediate field of a
 separable algebraic extension. For `B : IntermediateField F K` with `[FiniteDimensional F B]`, the
-library theorem states `∃! Δ : Differential B, DifferentialAlgebra F B`: Mathlib supplies the
-intermediate-field differential instance, and `unique_differentialAlgebra_algebraic` proves any
-compatible alternative is equal to it. -/
+library theorem states `∃! Δ : Differential B, DifferentialAlgebra F B`, obtained by applying
+the finite-dimensional algebraic-extension package `existsUnique_differentialAlgebra_algebraic`
+to `B/F`. -/
 abbrev cor_3_2_1 := @existsUnique_differentialAlgebra_intermediateField
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):** the
