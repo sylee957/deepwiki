@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableParametric
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 import DeepWiki.SymbolicIntegration.ComputableIntegrate
 import DeepWiki.SymbolicIntegration.ComputableTowerField
@@ -92,20 +93,20 @@ namespace CPolyG
 list of monic squarefree factors `dⱼ` of `p` paired with their multiplicities `j`, so
 `p ~ ∏ⱼ dⱼ^j` and the `dⱼ` are pairwise coprime and squarefree (Bronstein §1.7 `Squarefree`). Computed
 by Yun: `c ← gcd(p, p′)`, `w ← p/c` (product of the distinct factors), then peel `dⱼ = w/gcd(w,c)`,
-`w ← gcd(w,c)`, `c ← c/gcd(w,c)`. Fuel-bounded; constant factors are dropped. -/
+`w ← gcd(w,c)`, `c ← c/gcd(w,c)`. Euclidean leaves are fuel-free; constant factors are dropped. -/
 def cSquarefreeFactorsQ (fuel : ℕ) (p : CPolyG ℚ) : List (CPolyG ℚ × ℕ) :=
   let p := cmonicG p
-  let c0 := cmonicG (cgcdExtG fuel p (cderivG p)).1
-  let w0 := cdivG fuel p c0
+  let c0 := cmonicG (cgcdWf p (cderivG p)).1
+  let w0 := cdivWf p c0
   let rec go : ℕ → CPolyG ℚ → CPolyG ℚ → ℕ → List (CPolyG ℚ × ℕ)
     | 0, _, _, _ => []
     | f + 1, w, c, i =>
       if cdegG c = 0 then
         (if cdegG w = 0 then [] else [(cmonicG w, i)])
       else
-        let y := cmonicG (cgcdExtG fuel w c).1
-        let z := cdivG fuel w y
-        let cnext := cdivG fuel c y
+        let y := cmonicG (cgcdWf w c).1
+        let z := cdivWf w y
+        let cnext := cdivWf c y
         let rest := go f y cnext (i + 1)
         if cdegG z = 0 then rest else (cmonicG z, i) :: rest
   go (fuel + cdegG p + 1) w0 c0 1
@@ -291,18 +292,18 @@ def qConstTowerG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZe
 `ℚ`-constant.** `cToRatCoeffsQ fuel p = some q` with `q : CPolyG ℚ` iff each coefficient of
 `p : CPolyG (QFunNZG ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
 numerator and denominator), else `none`. The base-field guard for the tower wrapper: the lowest-terms
-reduction divides `(num, den)` by their gcd (`cgcdExtG`/`cdivG`), and a `ℚ`-constant is exactly a
+reduction divides `(num, den)` by their gcd (`cgcdWf`/`cdivWf`), and a `ℚ`-constant is exactly a
 degree-0 quotient over a degree-0 (nonzero) remainder denominator. -/
-def cToRatCoeffsQ (fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) : Option (CPolyG ℚ) :=
+def cToRatCoeffsQ (_fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) : Option (CPolyG ℚ) :=
   (p : List (QFunNZG ℚ)).foldr (fun (z : QFunNZG ℚ) acc =>
     match acc with
     | none => none
     | some qs =>
       let num := z.1.1
       let den := z.1.2
-      let g := (cgcdExtG fuel num den).1
-      let num' := cdivG fuel num g
-      let den' := cdivG fuel den g
+      let g := (cgcdWf num den).1
+      let num' := cdivWf num g
+      let den' := cdivWf den g
       if cdegG num' = 0 ∧ cdegG den' = 0 then
         some ((((num' : List ℚ).headD 0) / ((den' : List ℚ).headD 1)) :: qs)
       else none) (some [])

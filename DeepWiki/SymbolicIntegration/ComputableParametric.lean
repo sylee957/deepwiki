@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Computable parametric problems over the tower ℚ(x)[t] (Bronstein Chapter 7)
 
@@ -84,16 +85,16 @@ constant) is provably not a logarithmic derivative — the constant Liouville ob
 specialized at the constant field `ℚ`, the base monomial derivation `D` with `Dx = 1`, `κ_D = 0`). -/
 abbrev cderivQ (p : CPolyG ℚ) : CPolyG ℚ := cderivG p
 
-/-- **Generic lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPairG fuel num den =
-(num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdExtG`); the zero
+/-- **Generic lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPairG _fuel num den =
+(num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
 numerator gives `([], [1])`. The generic mirror of `Compute.qnorm` one tower level down, used to read the
 polynomial part / denominator of a `QFunNZG ℚ`-valued base-field element. -/
-def qnormPairG (fuel : ℕ) (num den : CPolyG ℚ) : CPolyG ℚ × CPolyG ℚ :=
+def qnormPairG (_fuel : ℕ) (num den : CPolyG ℚ) : CPolyG ℚ × CPolyG ℚ :=
   if cisZeroG num then ([], [(1 : ℚ)])
   else
-    let g := (cgcdExtG fuel num den).1
-    let num' := cdivG fuel num g
-    let den' := cdivG fuel den g
+    let g := (cgcdWf num den).1
+    let num' := cdivWf num g
+    let den' := cdivWf den g
     let s := (cleadG den')⁻¹
     (cscaleG s num', cscaleG s den')
 
@@ -291,11 +292,11 @@ We implement the base-monomial case `k = ℚ`, `t` a monomial over `ℚ` with `D
 `cNullspaceBasisQ`. (Over the genuine tower `ℚ(x)[t]` the matrix entries lie in `ℚ(x)` and Lemma 7.1.2's
 row-differentiation reduction to `ℚ` is the documented continuation.) -/
 
-/-- **Polynomial lcm over ℚ** `cLcmQ fuel p q = p·q / gcd(p, q)` (monic), the least common multiple of
+/-- **Polynomial lcm over ℚ** `cLcmQ _fuel p q = p·q / gcd(p, q)` (monic), the least common multiple of
 the denominators `LinearConstraints` clears (`d ← lcm(denominator(gᵢ))`). -/
-def cLcmQ (fuel : ℕ) (p q : CPolyG ℚ) : CPolyG ℚ :=
+def cLcmQ (_fuel : ℕ) (p q : CPolyG ℚ) : CPolyG ℚ :=
   if cisZeroG p ∨ cisZeroG q then []
-  else cmonicG (cdivG fuel (cmulG p q) (cgcdExtG fuel p q).1)
+  else cmonicG (cdivWf (cmulG p q) (cgcdWf p q).1)
 
 /-- **`tⁱ`-coefficient of a `CPolyG ℚ`** `cCoeffQ p i = coefficient(p, tⁱ)` (the `i`-th list entry, `0`
 out of range). The `LinearConstraints` matrix entry `Mᵢⱼ ← coefficient(rⱼ, tⁱ)` (eq. 7.6/7.8). -/
@@ -318,8 +319,8 @@ def cLinearConstraintsQ (fuel : ℕ) (gnums gdens : List (CPolyG ℚ)) :
   let d := gdens.foldl (fun acc den => cLcmQ fuel acc den) [(1 : ℚ)]
   let qrs : List (CPolyG ℚ × CPolyG ℚ) :=
     (List.zip gnums gdens).map (fun (gn, gd) =>
-      let dgi := cmulG gn (cdivG fuel d gd)         -- `d·gᵢ = gnumᵢ·(d/gdenᵢ)`
-      cdivmodG fuel dgi d)                          -- `(qᵢ, rᵢ)`
+      let dgi := cmulG gn (cdivWf d gd)             -- `d·gᵢ = gnumᵢ·(d/gdenᵢ)`
+      cdivmodWf dgi d)                              -- `(qᵢ, rᵢ)`
   let qs := qrs.map Prod.fst
   let rs := qrs.map Prod.snd
   let nrows := cdegG d                              -- rows `i = 0 .. deg(d)−1`
@@ -461,8 +462,8 @@ def paramConstraintCheck (fuel : ℕ) (gnums gdens : List (CPolyG ℚ)) (cs : Li
   let d := gdens.foldl (fun acc den => cLcmQ fuel acc den) [(1 : ℚ)]
   let total : CPolyG ℚ :=
     ((List.zip gnums gdens).zip cs).foldl (fun acc ((gn, gd), c) =>
-      let dgi := cmulG gn (cdivG fuel d gd)
-      let ri := cmodG fuel dgi d
+      let dgi := cmulG gn (cdivWf d gd)
+      let ri := cmodWf dgi d
       caddG acc (cscaleG c ri)) []
   cisZeroG total
 

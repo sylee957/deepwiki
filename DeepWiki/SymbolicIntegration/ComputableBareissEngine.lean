@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 import DeepWiki.SymbolicIntegration.ComputableHermiteNormalForm
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Fraction-free linear algebra ENGINE — the pure Bareiss defs over `ℚ[x]` and `ℚ(x)`
 (Bareiss, *Sylvester's Identity and Multistep Integer-Preserving Gaussian Elimination*, 1968;
@@ -130,23 +131,23 @@ def bareissSolve (M : List (List (CPolyG α))) (b : List (CPolyG α)) : CPolyG �
 
 To clear a `ℚ(x)`-matrix into `ℚ[x]` we need a common multiple of the entry denominators. The **lcm**
 `lcm(a, b) = a·b / gcd(a, b)` keeps the cleared degree minimal (a coarse product would over-inflate `D`,
-re-introducing swell); `gcd` is the Euclidean `cgcdExtG` over `ℚ[x]` (monic). `qfRowDen` folds the lcm
+re-introducing swell); `gcd` is the fuel-free Euclidean `cgcdWf` over `ℚ[x]` (monic). `qfRowDen` folds the lcm
 over a row's denominators, `qfMatDen` over the whole matrix — the common denominator `D` to clear by. -/
 
 /-- **The lcm of two `CPolyG` polynomials over a field** `qfLcm fuel a b = a·b / gcd(a, b)` (monic, gcd via
-the `[CField α]`-only Euclidean `cgcdExtG`), the minimal common multiple — used to combine entry
+the `[CField α]`-only fuel-free Euclidean `cgcdWf`), the minimal common multiple — used to combine entry
 denominators when clearing a `ℚ(x)`-row to `ℚ[x]`. The `0` polynomial on either side returns the other
-(`lcm(a, 0) = a`); `lcm(1, b) = b`. Fuel bounds the gcd and the exact division. Pure engine ops (no
+(`lcm(a, 0) = a`); `lcm(1, b) = b`. Pure engine ops (no
 `CFracGcd`/`CFieldSpec`), so it reduces under `native_decide`. -/
-def qfLcm (fuel : ℕ) (a b : CPolyG α) : CPolyG α :=
+def qfLcm (_fuel : ℕ) (a b : CPolyG α) : CPolyG α :=
   if cisZeroG a then b
   else if cisZeroG b then a
   else
-    let g := (cgcdExtG fuel a b).1
-    cmonicG (cdivG fuel (cmulG a b) g)
+    let g := (cgcdWf a b).1
+    cmonicG (cdivWf (cmulG a b) g)
 
 /-- **The common denominator of a `ℚ(x)`-row** `qfRowDen fuel row = lcm of the entry denominators`
-(`z.1.2` over the row, normalized monic, `cgcdExtG`-lcm-folded). Scaling the row by this `D ∈ ℚ[x]` lands
+(`z.1.2` over the row, normalized monic, `cgcdWf`-lcm-folded). Scaling the row by this `D ∈ ℚ[x]` lands
 every entry in `ℚ[x]` (its denominator divides `D`). Starts from `[1]` (the empty row clears trivially). -/
 def qfRowDen (fuel : ℕ) (row : List (QFunNZG ℚ)) : CPolyG ℚ :=
   row.foldl (fun acc z => qfLcm fuel acc (cmonicG (z.1.2 : CPolyG ℚ))) [CField.one]
@@ -169,8 +170,8 @@ denominator `D = qfMatDen M` (so the scale is the scalar `D`, not a diagonal), r
 the `ℚ[x]` polynomial `D·z` — **exact** because `den(z) | D` (`D` is a common multiple), so `D/den(z) ∈ ℚ[x]`
 and `num(z)·(D/den(z)) = D·z`. (NOT `(qxOfNum D · z).1.1`, which is `D·num(z)` — it ignores that `z`'s
 denominator survives in the *unreduced* product's denominator.) The per-entry clearing primitive. -/
-def qfClearEntry (fuel : ℕ) (D : CPolyG ℚ) (z : QFunNZG ℚ) : CPolyG ℚ :=
-  cmulG (z.1.1 : CPolyG ℚ) (cdivG fuel D (z.1.2 : CPolyG ℚ))
+def qfClearEntry (_fuel : ℕ) (D : CPolyG ℚ) (z : QFunNZG ℚ) : CPolyG ℚ :=
+  cmulG (z.1.1 : CPolyG ℚ) (cdivWf D (z.1.2 : CPolyG ℚ))
 
 /-- **Clear a single `ℚ(x)`-row to `ℚ[x]`** `qfClearRow fuel row = ([D·zᵢ], D)` where `D = qfRowDen row` is
 the lcm of the row's denominators. Each `D·zᵢ = num(zᵢ)·(D/den(zᵢ))` is in `ℚ[x]` (`den(zᵢ) | D`,
