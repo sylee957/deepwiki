@@ -1,14 +1,14 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
-import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrate
 import DeepWiki.SymbolicIntegration.ComputableRadicalCase2
+import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — Appendix A: Simple Radical Extensions
 Trager's practical reductions for a simple radical extension `F(y)` with `yⁿ = f ∈ F` (`F` a
 differential field, char 0) — the most common algebraic case. The `DeepWiki.SymbolicIntegration`
 library renders the appendix's **rational part** as computable algorithms over the generic
-ℚ(x) = `QFunNZG ℚ` carrier (`ComputableRadicalExtension` / `ComputableRadicalIntegrate` /
-`ComputableRadicalCase2`), each `native_decide`-validated on its cleared Hermite identity, and
+ℚ(x) = `QFunNZG ℚ` carrier (`ComputableRadicalExtension` / `ComputableRadicalCase2` /
+`ComputableRadicalWellFounded`), each `native_decide`-validated on its cleared Hermite identity, and
 proves the end-to-end driver capstone `D(v) = (rational part of the integrand)` with the actual
 diagonal derivation `radDeriv`.
 
@@ -146,28 +146,29 @@ abbrev appA_expTheta_cleared_identity := @expCase_cleared_identity
 
 /-! ## The end-to-end rational-part drivers (App. A §2, iterated) -/
 
-/-- **Iterated Case-1 reduction** (Trager, Appendix A §2.1, iterated): `radReduceCase1Iterate`
-runs the single-step `k → k−1` Hermite reduction to completion, accumulating each cofactor
+/-- **Fuel-free iterated Case-1 reduction** (Trager, Appendix A §2.1, iterated):
+`radReduceCase1IterateWf` runs the single-step `k → k−1` Hermite reduction to completion without
+runtime fuel, accumulating each cofactor
 contribution `Bⱼf/(V^{kⱼ−1}y)` into a running numerator `vNum`, with the master identity
 `∫ C/(V^{k₀}y) = vNum/(V^{k₀−1}y) + ∫ Crem/(Vy)`. -/
-abbrev appA_case1_iterate := @radReduceCase1Iterate
+abbrev appA_case1_iterate := @CPolyG.radReduceCase1IterateWf
 
-/-- **The simple-radical rational-part driver** `radIntegrateCase1` (Trager, Appendix A §2): wraps
-`radReduceCase1Iterate`, decoupling the `R/y` integrand, running the iterated Case-1 reduction,
-and assembling the accumulated rational part `v`. -/
-abbrev appA_radIntegrateCase1 := @radIntegrateCase1
+/-- **The fuel-free simple-radical rational-part driver** `radIntegrateCase1Wf` (Trager, Appendix A §2):
+wraps `radReduceCase1IterateWf`, decoupling the `R/y` integrand, running the iterated Case-1 reduction,
+and assembling the accumulated rational part `v` without runtime fuel. -/
+abbrev appA_radIntegrateCase1 := @CPolyG.radIntegrateCase1Wf
 
-/-- **Appendix A §2** (the driver capstone, `native_decide`): for `y² = x`, `V = x−1`, `k₀ = 3`,
-`C₀ = 1` (the integrand `1/((x−1)³√x)`), the driver's accumulated rational part `v` satisfies
+/-- **Appendix A §2** (the fuel-free driver capstone, `native_decide`): for `y² = x`, `V = x−1`, `k₀ = 3`,
+`C₀ = 1` (the integrand `1/((x−1)³√x)`), the Wf driver's accumulated rational part `v` satisfies
 `D(v) = C₀/(V³y) − Crem/(Vy)` checked with the actual diagonal derivation `radDeriv 2 x` over the
 genuine radical extension `(ℚ(x))[y]/(y²−x)` — i.e. the driver actually integrates the rational
 part. -/
-abbrev appA_sqrtxDriver_integrates := @sqrtxDriver_integrates
+abbrev appA_sqrtxDriver_integrates := @sqrtxDriverWf_integrates
 
-/-- **Appendix A §2** (the driver capstone on a second curve, `native_decide`): for `y² = x`,
-`V = x−1`, `f = x³+1`, the driver's accumulated `v` satisfies the analogous `D(v) =
+/-- **Appendix A §2** (the fuel-free driver capstone on a second curve, `native_decide`): for `y² = x³+1`,
+`V = x−1`, the Wf driver's accumulated `v` satisfies the analogous `D(v) =
 rational-part` identity with `radDeriv 2 (x³+1)` over `(ℚ(x))[y]/(y²−(x³+1))`. -/
-abbrev appA_cubeDriver_integrates := @cubeDriver_integrates
+abbrev appA_cubeDriver_integrates := @cubeDriverWf_integrates
 
 /-- **Appendix A §2.2** (the Case-2 driver capstone, `native_decide`): the `C/(Wᵏy)` Case-2
 reduction integrates end-to-end, `D(v) = rational-part`, validated with the actual `radDeriv` on

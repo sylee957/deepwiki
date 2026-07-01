@@ -186,12 +186,61 @@ helper directly. -/
 
 /-! ## Part 5 — `native_decide` validation: the fuel-free iterates reproduce the validated runs
 
-The fuel-free Case-2 and Case-3 iterates produce **exactly** the same `(Crem, vNum)` as the validated fueled
-runs (`c2itRun`, `c3itRun` in `ComputableRadicalRationalDriver`), so every `radDeriv`-validated identity
-there holds verbatim of the fuel-free output. Checked directly by `native_decide` over `ℚ` — the whole arc
-is `[CField α]`-only, nothing noncomputable reaches the native compiler. -/
+The fuel-free Case-1, Case-2, and Case-3 iterates produce **exactly** the same `(Crem, vNum)` as the
+validated fueled runs (`sqrtxRun`/`cubeRun`, `c2itRun`, `c3itRun`), so every `radDeriv`-validated identity
+there holds verbatim of the fuel-free output. Checked directly by `native_decide` over `ℚ` — the whole arc is
+`[CField α]`-only, nothing noncomputable reaches the native compiler. -/
 
 open RadElem CPolyG
+
+/-- **The fuel-free Case-1 run** `radIntegrateCase1Wf cderivG V f g 3 C` on
+`∫ 1/((x−1)³√x)` — the no-fuel companion of `sqrtxRun`. -/
+def sqrtxRunWf : CPolyG ℚ × CPolyG ℚ :=
+  radIntegrateCase1Wf cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
+
+/-- **The fuel-free Case-1 iterate reproduces `sqrtxRun`** (`native_decide`): the Wf descent on
+`∫ 1/((x−1)³√x)` yields exactly the validated `(Crem, vNum)` of the original run. -/
+theorem radIntegrateCase1Wf_eq_sqrtxRun :
+    sqrtxRunWf = sqrtxRun := by native_decide
+
+/-- The fuel-free rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
+def sqrtxVliftWf : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum sqrtxRunWf.2) (qxOfNum (cmulG sqrtxV2 sqrtxF))]
+
+/-- The fuel-free rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
+def sqrtxRatLiftWf : RadElem (QFunNZG ℚ) :=
+  [CField.zero,
+    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmulG sqrtxV3 sqrtxF)))
+      (CField.div (qxOfNum sqrtxRunWf.1) (qxOfNum (cmulG sqrtxV sqrtxF)))]
+
+/-- **The fuel-free Case-1 driver integrates `∫ 1/((x−1)³√x)`** (`native_decide`): `radDeriv` of the Wf
+rational part equals the rational part of the integrand after subtracting the `k = 1` residual. -/
+theorem sqrtxDriverWf_integrates :
+    radIsZero (radSub (radDeriv 2 sqrtxFqx sqrtxVliftWf) sqrtxRatLiftWf) = true := by native_decide
+
+/-- **The fuel-free Case-1 run** on `∫ 1/((x−1)³√(x³+1))` — the no-fuel companion of `cubeRun`. -/
+def cubeRunWf : CPolyG ℚ × CPolyG ℚ :=
+  radIntegrateCase1Wf cderivG cubeV cubeF cubeG 3 cubeC
+
+/-- **The fuel-free Case-1 iterate reproduces `cubeRun`** (`native_decide`): the Wf descent on the
+headline radicand `y² = x³+1` yields exactly the validated `(Crem, vNum)` of the original run. -/
+theorem radIntegrateCase1Wf_eq_cubeRun :
+    cubeRunWf = cubeRun := by native_decide
+
+/-- The fuel-free rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
+def cubeVliftWf : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum cubeRunWf.2) (qxOfNum (cmulG (cpowG cubeV 2) cubeF))]
+
+/-- The fuel-free rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
+def cubeRatLiftWf : RadElem (QFunNZG ℚ) :=
+  [CField.zero,
+    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmulG (cpowG cubeV 3) cubeF)))
+      (CField.div (qxOfNum cubeRunWf.1) (qxOfNum (cmulG cubeV cubeF)))]
+
+/-- **The fuel-free Case-1 driver integrates `∫ 1/((x−1)³√(x³+1))`** (`native_decide`): `radDeriv` of the Wf
+rational part equals the rational part of the integrand after subtracting the `k = 1` residual. -/
+theorem cubeDriverWf_integrates :
+    radIsZero (radSub (radDeriv 2 cubeFqx cubeVliftWf) cubeRatLiftWf) = true := by native_decide
 
 /-- **The fuel-free Case-2 iterate reproduces the validated run** `radIntegrateCase2Wf W ρ 3 C =
 radIntegrateCase2 W ρ 3 C` on `∫ 1/(x³·√(x³−x))` (`native_decide`). The fuel-free descent (recursing on the
@@ -361,6 +410,10 @@ The well-founded `…Wf` defs are TOTAL via well-founded recursion (the measure 
 fuel. The remaining validation theorems are `native_decide` checks over the Wf outputs, **no `sorryAx`**. -/
 
 -- ★ The fuel-free iterates reproduce the `radDeriv`-validated runs (native_decide):
+#print axioms radIntegrateCase1Wf_eq_sqrtxRun
+#print axioms sqrtxDriverWf_integrates
+#print axioms radIntegrateCase1Wf_eq_cubeRun
+#print axioms cubeDriverWf_integrates
 #print axioms radIntegrateCase2Wf_eq_c2itRun
 #print axioms radIntegrateCase3Wf_eq_c3itRun
 
