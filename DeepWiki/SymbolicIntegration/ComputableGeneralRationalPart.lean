@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
+import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
 import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
 
 /-! # The general-curve RATIONAL PART of the algebraic-function integral: the algebraic Hermite
@@ -30,8 +30,8 @@ hence no rational part (the log part, Trager Ch. 5–6, deferred).
 diagonal, i.e. `wᵢ' = Rᵢwᵢ`, i.e. **`K(z,y)` is a compositum of single radical extensions**. The
 hyperelliptic curve `y² = ρ` is precisely this case: its diagonal derivation is the engine's
 `radDeriv n ρ` (Trager's `(ρ/y)' = (ρ'/(2ρ))·y` insight), and the algebraic Hermite reduction over the
-integral basis IS the `radDeriv`-validated Case-1/2/3 reduction (`radIntegrateRational`,
-`radIntegrateCase3`) of `ComputableRadicalRationalDriver`. So for hyperelliptic curves the general
+integral basis IS the `radDeriv`-validated Case-1/2/3 reduction (`radIntegrateRationalWf`,
+`radIntegrateCase3Wf`) of `ComputableRadicalWellFounded`. So for hyperelliptic curves the general
 rational-part reduction is already realized and `radDeriv`-validated; this file connects it to the
 integral-basis pole bound and exhibits the **genus-0** worked targets, where the rational part is the
 ENTIRE integral.
@@ -42,7 +42,7 @@ the integral is fully rational):
 
 * **★ `∫ y dx = (2/5)·x·y`.** Validated two ways: (i) the **actual** diagonal derivation
   `radDeriv 2 (x³) [0, (2/5)x] = [0, 1] = y` (`cusp_intY_radDeriv`); (ii) **derived from the integrand**
-  by the Case-3 `C/y` driver — `y = ρ/y = x³/y`, so `radIntegrateCase3 cderivG (x³) ((3/2)x²) (x³)`
+  by the fuel-free Case-3 `C/y` driver — `y = ρ/y = x³/y`, so `radIntegrateCase3Wf cderivG (x³) ((3/2)x²) (x³)`
   returns `(Crem = 0, vNum = (2/5)x⁴)`, giving `v = vNum/y = (2/5)x⁴/x³ · y = (2/5)x·y` with **zero**
   leftover (`Crem = 0` ⟹ fully rational, no log part), `radDeriv`-validated end-to-end
   (`cusp_intY_driver_integrates`, `cusp_intY_fully_rational`).
@@ -113,12 +113,12 @@ GENUS-0 RATIONAL PART, VALIDATED THROUGH THE REAL DERIVATION** — `∫ y dx = (
 theorem cusp_intY_radDeriv :
     radIsZero (radSub (radDeriv 2 gcuspRho gcuspVY) gcuspY) = true := by native_decide
 
-/-! #### ★ Target 1, DERIVED from the integrand by the Case-3 `C/y` driver (`native_decide`)
+/-! #### ★ Target 1, DERIVED from the integrand by the fuel-free Case-3 `C/y` driver (`native_decide`)
 
 Rather than asserting `v`, **produce** it from the integrand. Since `y·y = ρ`, the integrand `y` equals
 `ρ/y = x³/y` — a `C/y` Case-3 form with `C = ρ = x³` (a polynomial numerator, no denominator factor). The
 algebraic Hermite reduction in the **decoupled hyperelliptic case** (Trager p. 48) is the engine's
-`radIntegrateCase3 cderivG ρ g C` (`g = ½ρ' = (3/2)x²`, the diagonal `(ρ/y)' = g/y`), which lowers
+`radIntegrateCase3Wf cderivG ρ g C` (`g = ½ρ' = (3/2)x²`, the diagonal `(ρ/y)' = g/y`), which lowers
 `deg C` to give `∫ C/y = vNum/y + ∫ Crem/y`. It returns `Crem = 0` (the integral is FULLY rational, genus
 0) and `vNum = (2/5)x⁴`, so `v = vNum/y = (2/5)x⁴/y = (2/5)x⁴·y/ρ = (2/5)x⁴·y/x³ = (2/5)x·y`. -/
 
@@ -129,9 +129,9 @@ def gcuspRhoP : CPolyG ℚ := [0, 0, 0, 1]
 /-- `g = ½ρ' = (3/2)x²` over `ℚ[x]` (`n = 2`, the diagonal `(ρ/y)' = g/y`). -/
 def gcuspGP : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG gcuspRhoP)
 
-/-- The Case-3 driver run on `∫ y dx = ∫ x³/y` (`C = ρ = x³`): `radIntegrateCase3 cderivG ρ g ρ =
+/-- The fuel-free Case-3 driver run on `∫ y dx = ∫ x³/y` (`C = ρ = x³`): `radIntegrateCase3Wf cderivG ρ g ρ =
 (Crem, vNum)`. Expected `Crem = 0` (fully rational), `vNum = (2/5)x⁴` (so `v = vNum/y = (2/5)x·y`). -/
-def gcuspYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3 cderivG gcuspRhoP gcuspGP gcuspRhoP
+def gcuspYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP gcuspRhoP
 
 /-- **The driver derives `Crem = 0` and `vNum = (2/5)x⁴` for `∫ y dx`** (`native_decide`): the Case-3
 `C/y` degree-lowering on `C = x³` returns a **zero** leftover residual (`Crem = 0` — the integral is fully
@@ -189,9 +189,9 @@ genus-0 rational-part target, validated through the real derivation. -/
 theorem cusp_intXY_radDeriv :
     radIsZero (radSub (radDeriv 2 gcuspRho gcuspVXY) gcuspXY) = true := by native_decide
 
-/-- The Case-3 driver run on `∫ x·y dx = ∫ x⁴/y` (`C = x⁴`): `radIntegrateCase3 cderivG ρ g (x⁴) =
+/-- The fuel-free Case-3 driver run on `∫ x·y dx = ∫ x⁴/y` (`C = x⁴`): `radIntegrateCase3Wf cderivG ρ g (x⁴) =
 (Crem, vNum)`. Expected `Crem = 0`, `vNum = (2/7)x⁵` (so `v = (2/7)x⁵/y = (2/7)x²·y`). -/
-def gcuspXYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3 cderivG gcuspRhoP gcuspGP [0, 0, 0, 0, 1]
+def gcuspXYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP [0, 0, 0, 0, 1]
 
 /-- **The driver derives `Crem = 0` and `vNum = (2/7)x⁵` for `∫ x·y dx`** (`native_decide`): the Case-3
 `C/y` degree-lowering on `C = x⁴` returns a zero leftover (`Crem = 0`, fully rational) and rational-part
@@ -234,7 +234,7 @@ where the integral-basis Hermite system (11) collapses to `Aᵢ ≡ −kUV'Bᵢ 
    (`ComputableAlgFunctionField`), and the basis derivatives `wᵢ'` via the total derivative
    `∂f/∂z + (∂f/∂y)·y' = 0` (so `y' = −(∂f/∂z)/(∂f/∂y)`, a `K(x, y)` element reducible by `afReduce`). What
    remains is forming `Mᵢⱼ`, building the eq.-11 coupled congruence, and the Cramer/Bézout solve — the
-   non-diagonal analogue of `radIntegrateRational`. The diagonal case here already covers all
+   non-diagonal analogue of `radIntegrateRationalWf`. The diagonal case here already covers all
    hyperelliptic (in particular all genus-0 and genus-1 `y² = ρ`) curves.
 
 2. **The simple-pole residual → the logarithmic part (genus `g > 0`).** After the reduction, the residual
