@@ -29,8 +29,8 @@ The simple-radical rational part has exactly **three** Hermite descents, each wi
 
 The wrappers `radIntegrateCase1Wf` / `radIntegrateCase2Wf` / `radIntegrateCase3Wf` are the fuel-free entries
 (they compute the budget internally, like `radIntegrateCase{1,2,3}` did with `k0` / `deg C + 1`), and
-`radPartialFractionCoprimeWf` is the fuel-free partial-fraction front-end (structural list recursion, with
-the inner Bézout the fuel-free `cdiophantineGWf`). Every `…Wf` is `[CField α]`-only on the fuel-free fragment
+`radPartialFractionCoprime` is already a fuel-free partial-fraction front-end (structural list recursion,
+with the inner Bézout the fuel-free `cdiophantineGWf`). Every `…Wf` is `[CField α]`-only on the fuel-free fragment
 (plus `[CFracGcdCore α]` where the multi-case driver's squarefree factorization needs it) — never
 `[CFieldSpec α]`, so the whole arc still `native_decide`s over the noncomputable `ℚ(x)` tower.
 
@@ -39,7 +39,7 @@ the inner Bézout the fuel-free `cdiophantineGWf`). Every `…Wf` is `[CField α
 * `radIntegrateRational` (`ComputableRadicalRationalDriver`) — **flat composition, no recursion of its own**;
   a fuel-free `radIntegrateRationalWf` only needs to substitute fuel-free leaves: `cSqfreeYunFFGWf` (the
   tower's squarefree factorization, already fuel-free), `cgcdWf`/`cdivWf` (already fuel-free leaves), this
-  file's `radReduceCase{1,2}IterateWf` for the dispatch, and `radPartialFractionCoprimeWf` (here). The
+  file's `radReduceCase{1,2}IterateWf` for the dispatch, and the shared `radPartialFractionCoprime`. The
   top-level validation below checks the Wf output directly.
 * `cIntegrateAlgebraic` (`ComputableRadicalIntegrateFull`) — flat composition over `radIntegrateRationalWf`
   (above) + `radLogArgSolve`. **No recursion of its own.**
@@ -47,8 +47,7 @@ the inner Bézout the fuel-free `cdiophantineGWf`). Every `…Wf` is `[CField α
   + a `List.foldl` over the kernel vector). **No recursion of its own**; fuel-free once its matrix/kernel
   leaves are fuel-free.
 * `radPartialFractionCoprime` — structural recursion on the **list of prime-powers** (`G :: rest → rest`),
-  already structural and already using the fuel-free `cdiophantineGWf`; the `…Wf` here removes the ignored
-  fuel argument and keeps the structural list recursion.
+  already structural and already using the fuel-free `cdiophantineGWf`; no Wf companion is needed.
 * `afIntegrateAlgebraic` (`ComputableGeneralLogArg`, the GENERAL non-radical algebraic curve) — the next
   layer; its rational part recurses with the same multiplicity / degree measures (the Case-1/2/3 analogues
   over the integral basis), its log part is flat (residue resultants + a linear solve). Same mechanical
@@ -180,31 +179,12 @@ def radIntegrateCase3Wf (der : CPolyG α → CPolyG α) (f g C : CPolyG α) : CP
 
 end CPolyG
 
-/-! ## Part 4 — the fuel-free partial-fraction front-end `radPartialFractionCoprimeWf`
+/-! ## Part 4 — the shared fuel-free partial-fraction front-end
 
-`radPartialFractionCoprime fuel R Gs` recurses **structurally on the list `Gs`** of pairwise-coprime
-prime-powers (`G :: rest → rest`); its `fuel` argument is ignored because the inner Bezout split is already
-the generic fuel-free `cdiophantineGWf` (`ComputableFuelFreeDiophantine`). The fuel-free companion keeps the
-same structural list recursion without carrying that argument. -/
-
-namespace CPolyG
-
-variable {α : Type*} [CField α]
-
-/-- **Fuel-free partial fraction across coprime prime-powers** `radPartialFractionCoprimeWf R Gs =
-[N₁,…,Nₘ]`: the fuel-free companion of `radPartialFractionCoprime`. For pairwise-coprime `Gs = [G₁,…,Gₘ]`
-with `B = ∏Gᵢ` and a proper numerator `R` (`deg R < deg B`), returns the `Nᵢ` with `R/B = Σᵢ Nᵢ/Gᵢ`,
-`deg Nᵢ < deg Gᵢ`. **Structural recursion on the list `Gs`** (no fuel): one step peels `G₁` off `P = ∏_{j>1}
-Gⱼ` via the fuel-free Bézout `cdiophantineGWf P G₁ R = (Nᵢ, c)`, then recurses on `c` over `rest`.
-`[CField α]`-only. -/
-def radPartialFractionCoprimeWf : CPolyG α → List (CPolyG α) → List (CPolyG α)
-  | _, [] => []
-  | R, G :: rest =>
-    let P := radProdList rest
-    let (Ni, c) := cdiophantineGWf P G R
-    Ni :: radPartialFractionCoprimeWf c rest
-
-end CPolyG
+`radPartialFractionCoprime R Gs` recurses **structurally on the list `Gs`** of pairwise-coprime
+prime-powers (`G :: rest → rest`) and carries no fuel argument. Its inner Bezout split is already the
+generic fuel-free `cdiophantineGWf` (`ComputableFuelFreeDiophantine`), so the Wf top-level shares the same
+helper directly. -/
 
 /-! ## Part 5 — `native_decide` validation: the fuel-free iterates reproduce the validated runs
 
@@ -242,7 +222,7 @@ variable {α : Type*} [CField α]
 /-- **The fuel-free multi-case simple-radical rational-part driver** `radIntegrateRationalWf ρ R B` over
 `y² = ρ`, denominator `B` monic, numerator `R` (proper): the fuel-free companion of `radIntegrateRational`,
 by **pure leaf substitution** — `cSqfreeYunFFGWf` for the squarefree factorization (no fuel), `(cgcdWf · ·).1`
-for every gcd, `cdivWf` for every exact division, `radPartialFractionCoprimeWf` for the partial fraction, and
+for every gcd, `cdivWf` for every exact division, `radPartialFractionCoprime` for the partial fraction, and
 this file's `radReduceCase{1,2}IterateWf` for the Case-1 / Case-2 dispatch. Same flat structure as
 `radIntegrateRational` (squarefree-decompose `B`, split each factor into its `V`-part / `W`-part, partial-
 fraction `R`, classify and dispatch); returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`.
@@ -261,7 +241,7 @@ def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : CPolyG α) :
       (if cdegG Vi = 0 then [] else [(true, Vi, e)]) ++
       (if cdegG Wi = 0 then [] else [(false, Wi, e)]))
   let primePowers : List (CPolyG α) := split.map (fun (_, fi, e) => cpowG fi e)
-  let nums : List (CPolyG α) := radPartialFractionCoprimeWf R primePowers
+  let nums : List (CPolyG α) := radPartialFractionCoprime R primePowers
   (split.zip nums).map (fun ((isV, fi, e), Ni) =>
     if isV then
       let (Crem, vNum) := radReduceCase1IterateWf cderivG fi (cderivG fi) ρ g e e Ni []

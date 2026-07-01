@@ -156,24 +156,24 @@ The partial-fraction front-end uses it to form `∏_{j≠i} Gⱼ` (the cofactor 
 def radProdList (ps : List (CPolyG α)) : CPolyG α :=
   ps.foldl (fun acc p => cmulG acc p) [CField.one]
 
-/-- **Classify a squarefree denominator factor** `radClassifyFactor fuel Bi ρ = true` iff `Bi` is a
+/-- **Classify a squarefree denominator factor** `radClassifyFactor Bi ρ = true` iff `Bi` is a
 `V`-factor (coprime to the radicand `ρ`, Trager Case 1), i.e. `gcd(Bi, ρ)` is a constant; `false` iff `Bi`
 is a `W`-factor (`Bi ∣ ρ`, Case 2). Reads `cdegG (gcd Bi ρ) = 0` off the fuel-free generic extended
-Euclidean algorithm `cgcdWf`. Generic over `[CField α]`; the first argument is retained for API stability. -/
-def radClassifyFactor (_fuel : ℕ) (Bi ρ : CPolyG α) : Bool :=
+Euclidean algorithm `cgcdWf`. Generic over `[CField α]`. -/
+def radClassifyFactor (Bi ρ : CPolyG α) : Bool :=
   cdegG (cgcdWf Bi ρ).1 = 0
 
-/-- **Partial fraction across coprime prime-powers** `radPartialFractionCoprime fuel R Gs = [N₁,…,Nₘ]`:
+/-- **Partial fraction across coprime prime-powers** `radPartialFractionCoprime R Gs = [N₁,…,Nₘ]`:
 for pairwise-coprime `Gs = [G₁,…,Gₘ]` with `B = ∏Gᵢ` and a **proper** numerator `R` (`deg R < deg B`),
 returns the numerators `Nᵢ` with `R/B = Σᵢ Nᵢ/Gᵢ`, `deg Nᵢ < deg Gᵢ`. One step peels `G₁` off
 `P = ∏_{j>1} Gⱼ` via `cdiophantineGWf P G₁ R = (Nᵢ, c)` (`Nᵢ·P + c·G₁ = R`, `deg Nᵢ < deg G₁`), giving
 `R/(G₁·P) = Nᵢ/G₁ + c/P`, then recurses on `c` over the remaining factors. Generic over `[CField α]`. -/
-def radPartialFractionCoprime (_fuel : ℕ) : CPolyG α → List (CPolyG α) → List (CPolyG α)
+def radPartialFractionCoprime : CPolyG α → List (CPolyG α) → List (CPolyG α)
   | _, [] => []
   | R, G :: rest =>
     let P := radProdList rest
     let (Ni, c) := cdiophantineGWf P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
-    Ni :: radPartialFractionCoprime 0 c rest
+    Ni :: radPartialFractionCoprime c rest
 
 /-- **The multi-case simple-radical rational-part driver** `radIntegrateRational fuel ρ R B` over `y² = ρ`,
 denominator `B` monic, numerator `R` (proper). Squarefree-decomposes `B` with `cSqfreeYunFFG` into
@@ -203,7 +203,7 @@ def radIntegrateRational [CFracGcdCore α] (fuel : ℕ) (ρ R B : CPolyG α) :
       (if cdegG Vi = 0 then [] else [(true, Vi, e)]) ++
       (if cdegG Wi = 0 then [] else [(false, Wi, e)]))
   let primePowers : List (CPolyG α) := split.map (fun (_, fi, e) => cpowG fi e)
-  let nums : List (CPolyG α) := radPartialFractionCoprime fuel R primePowers
+  let nums : List (CPolyG α) := radPartialFractionCoprime R primePowers
   (split.zip nums).map (fun ((isV, fi, e), Ni) =>
     if isV then
       -- `V`-factor → Case 1

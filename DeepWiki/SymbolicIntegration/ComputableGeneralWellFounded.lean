@@ -27,7 +27,7 @@ f [1]`** (the Bézout cofactor `s` of `s·f_y + t·f = 1`). Everything else is a
 `afMul` carry a **self-computed** bound `cmodG ((p).length + 1) …` (not an external `ℕ`), and the matrix
 extraction (`nums`/`dens`/`cleared`/rows) + `kernelBasisG` are flat. So the whole conversion bottoms at
 swapping `cdiophantineG` for the fuel-free `cdiophantineGWf` (`ComputableFuelFreeDiophantine`, the same leaf
-the radical `radPartialFractionCoprimeWf` used).
+the radical `radPartialFractionCoprime` uses).
 
 This file therefore builds, by leaf substitution:
 
