@@ -51,7 +51,7 @@ of `traceMatrix (y² − xy − x³) (powerBasis …)` over `ℚ(x)` — cleared
 with the existing trace-matrix determinant on the actual `ℚ(x)` curve matrix. -/
 theorem qfDet_eq_fieldDet_afNonRad :
     let T := traceMatrix afNonRadF (powerBasis afNonRadF)
-    CField.isZero (CField.sub (qfDet 16 T) (fieldDet T)) = true := by native_decide
+    CField.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- **★ `qfDet = fieldDet` on the trigonal trace matrix** (`native_decide`): the fraction-free `qfDet` of
 the `3×3` `traceMatrix (y³ + xy + x) (powerBasis …)` over `ℚ(x)` equals the fraction-based `fieldDet`
@@ -59,14 +59,14 @@ the `3×3` `traceMatrix (y³ + xy + x) (powerBasis …)` over `ℚ(x)` equals th
 clearing, and the fraction-free result agrees with the existing discriminant. -/
 theorem qfDet_eq_fieldDet_afTrig :
     let T := traceMatrix afTrigF (powerBasis afTrigF)
-    CField.isZero (CField.sub (qfDet 16 T) (fieldDet T)) = true := by native_decide
+    CField.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- **★ `qfDet = fieldDet` on the cusp trace matrix** (`native_decide`): the fraction-free `qfDet` of
 `traceMatrix (y² − x³) (powerBasis …)` equals `fieldDet` (both the discriminant `4x³`). The cusp is the
 Round-2 headline curve; its trace-matrix determinant computes identically fraction-free. -/
 theorem qfDet_eq_fieldDet_cusp :
     let T := traceMatrix cuspF (powerBasis cuspF)
-    CField.isZero (CField.sub (qfDet 16 T) (fieldDet T)) = true := by native_decide
+    CField.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- A `3×3` `ℚ(x)`-matrix with **genuine fraction entries** (denominators `x+1, …, x+5`, a permuted
 Cauchy-style matrix) — a stress matrix where `fieldDet` carries a ballooning denominator. -/
@@ -81,7 +81,7 @@ fraction entries, denominators `x+1 … x+5`), the fraction-free `qfDet` (clear 
 `fieldDet` carries the result as an unreduced fraction of total degree `24` and `qfDet` as a flat polynomial
 over a single power of `D`. THE FRACTION-FREE DETERMINANT AGREES ON A GENUINE FRACTION MATRIX. -/
 theorem qfDet_eq_fieldDet_fracMat3 :
-    CField.isZero (CField.sub (qfDet 16 qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
+    CField.isZero (CField.sub (qfDet qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
 
 /-! ### ★ The fraction-free inverse agrees with `matInvG` (`native_decide`)
 
@@ -99,7 +99,7 @@ theorem qfInv_eq_matInvG_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
     let Binv := (matInvG 2 B).getD []
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
-      CField.isZero (CField.sub (qfInvEntry 16 B i j) ((Binv.getD i []).getD j CField.zero)))) = true := by
+      CField.isZero (CField.sub (qfInvEntry B i j) ((Binv.getD i []).getD j CField.zero)))) = true := by
   native_decide
 
 /-- **★ `qfInv` agrees with `matInvG` on the `3×3` fraction matrix** (`native_decide`): every entry of the
@@ -110,7 +110,7 @@ THE FRACTION-FREE INVERSE AGREES WITH THE SWELLING `matInvG` ON A GENUINE FRACTI
 theorem qfInv_eq_matInvG_fracMat3 :
     let Minv := (matInvG 3 qfFracMat3).getD []
     (List.range 3).all (fun i => (List.range 3).all (fun j =>
-      CField.isZero (CField.sub (qfInvEntry 16 qfFracMat3 i j)
+      CField.isZero (CField.sub (qfInvEntry qfFracMat3 i j)
         ((Minv.getD i []).getD j CField.zero)))) = true := by
   native_decide
 
@@ -127,8 +127,8 @@ the defining identity `M'·adj(M') = det(M')·I` over `ℚ[x]` (off-diagonal ent
 equal `det(M')`). So `M⁻¹ = D·adj(M')/det(M')` is the correct fraction-free inverse representation. -/
 theorem qfAdjugate_mul_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
-    let M' := (qfClearMatrix 16 B).1
-    let A := (qfAdjugate 16 B).1
+    let M' := (qfClearMatrix B).1
+    let A := (qfAdjugate B).1
     let d := bareissDet M'
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
       cisZeroG (csubG
@@ -142,7 +142,7 @@ det(M')·x)` over `ℚ[x]`; reading `x = (det(M')·x)/det(M')` back into `ℚ(x)
 per-component fraction. Checked by `CField.isZero (M·x − b)` entrywise. -/
 theorem qfSolve_fracMat3 :
     let b : List (QFunNZG ℚ) := [qxOfNum [1], qxOfNum [1], qxOfNum [1]]
-    let ds := qfSolve 16 qfFracMat3 b
+    let ds := qfSolve qfFracMat3 b
     let xq : List (QFunNZG ℚ) := ds.2.map (fun s => CField.mul (qxOfNum s) (CField.inv (qxOfNum ds.1)))
     let lhs : List (QFunNZG ℚ) := (List.range 3).map (fun i =>
       (List.range 3).foldl (fun acc j =>
@@ -186,7 +186,7 @@ def qfDetFracTotalDeg : ℕ :=
 /-- **The fraction-free determinant flat degree** `cdegG num` of `qfDet qfFracMat3` — the degree of the
 single `ℚ[x]` determinant numerator the Bareiss path produces (over the single denominator `D³`), the
 swell-free determinant size. -/
-def qfDetFlatDeg : ℕ := cdegG (qfDet 16 qfFracMat3).1.1
+def qfDetFlatDeg : ℕ := cdegG (qfDet qfFracMat3).1.1
 
 /-- **The fraction-path inverse max total degree** `max over entries of (cdegG num + cdegG den)` of
 `matInvG 3 qfFracMat3` — the largest numerator+denominator degree among the **unreduced** `ℚ(x)` inverse
@@ -203,7 +203,7 @@ def qfInvFracMaxTotalDeg : ℕ :=
 matrix), each over the **single** shared determinant. Bounded by Bareiss's degree bound; no entry carries a
 denominator. -/
 def qfInvFlatMaxDeg : ℕ :=
-  ((((qfInv 16 qfFracMat3).2).map (fun row => row.map cdegG)).flatten).foldl max 0
+  ((((qfInv qfFracMat3).2).map (fun row => row.map cdegG)).flatten).foldl max 0
 
 /-- **★★ THE MEASURED SWELL WIN** (`native_decide`): on the `3×3` fraction matrix, both the fraction-based
 `fieldDet` total degree `qfDetFracTotalDeg` and the `matInvG` inverse max total degree `qfInvFracMaxTotalDeg`
@@ -247,7 +247,7 @@ theorem qfHeavyHeartbeats :
 /-! ### Migration status — the `fieldDet`/`matInvG` call sites (do NOT edit the sites from here)
 
 **`ComputableAlgFunctionField.lean` — DONE.** `discriminant f := fieldDet (traceMatrix f (powerBasis f))`
-is now `qfDet 16 (traceMatrix f (powerBasis f))` (specialized to the `ℚ(x) = QFunNZG ℚ` type it is consumed
+is now `qfDet (traceMatrix f (powerBasis f))` (specialized to the `ℚ(x) = QFunNZG ℚ` type it is consumed
 at). It clears the `ℚ(x)` trace matrix to `ℚ[x]` and runs Bareiss instead of the swelling `ℚ(x)` Laplace
 expansion. The consumers `afNonRad_discriminant_eq`, `afTrig_discriminant_eq`, the `± Res(f, f')` cross-
 checks, and the downstream `discNum`/`badPrimes` (Round-2) all still pass (`qfDet = fieldDet`). `fieldDet`/

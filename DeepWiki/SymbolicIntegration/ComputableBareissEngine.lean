@@ -130,29 +130,29 @@ To clear a `ℚ(x)`-matrix into `ℚ[x]` we need a common multiple of the entry 
 re-introducing swell); `gcd` is the fuel-free Euclidean `cgcdWf` over `ℚ[x]` (monic). `qfRowDen` folds the lcm
 over a row's denominators, `qfMatDen` over the whole matrix — the common denominator `D` to clear by. -/
 
-/-- **The lcm of two `CPolyG` polynomials over a field** `qfLcm fuel a b = a·b / gcd(a, b)` (monic, gcd via
+/-- **The lcm of two `CPolyG` polynomials over a field** `qfLcm a b = a·b / gcd(a, b)` (monic, gcd via
 the `[CField α]`-only fuel-free Euclidean `cgcdWf`), the minimal common multiple — used to combine entry
 denominators when clearing a `ℚ(x)`-row to `ℚ[x]`. The `0` polynomial on either side returns the other
 (`lcm(a, 0) = a`); `lcm(1, b) = b`. Pure engine ops (no
 `CFracGcd`/`CFieldSpec`), so it reduces under `native_decide`. -/
-def qfLcm (_fuel : ℕ) (a b : CPolyG α) : CPolyG α :=
+def qfLcm (a b : CPolyG α) : CPolyG α :=
   if cisZeroG a then b
   else if cisZeroG b then a
   else
     let g := (cgcdWf a b).1
     cmonicG (cdivWf (cmulG a b) g)
 
-/-- **The common denominator of a `ℚ(x)`-row** `qfRowDen fuel row = lcm of the entry denominators`
+/-- **The common denominator of a `ℚ(x)`-row** `qfRowDen row = lcm of the entry denominators`
 (`z.1.2` over the row, normalized monic, `cgcdWf`-lcm-folded). Scaling the row by this `D ∈ ℚ[x]` lands
 every entry in `ℚ[x]` (its denominator divides `D`). Starts from `[1]` (the empty row clears trivially). -/
-def qfRowDen (fuel : ℕ) (row : List (QFunNZG ℚ)) : CPolyG ℚ :=
-  row.foldl (fun acc z => qfLcm fuel acc (cmonicG (z.1.2 : CPolyG ℚ))) [CField.one]
+def qfRowDen (row : List (QFunNZG ℚ)) : CPolyG ℚ :=
+  row.foldl (fun acc z => qfLcm acc (cmonicG (z.1.2 : CPolyG ℚ))) [CField.one]
 
-/-- **The common denominator of a whole `ℚ(x)`-matrix** `qfMatDen fuel M = lcm of every entry denominator`
+/-- **The common denominator of a whole `ℚ(x)`-matrix** `qfMatDen M = lcm of every entry denominator`
 (the lcm over all rows of `qfRowDen`). The single `D ∈ ℚ[x]` to scale the **whole** matrix by so that
 `D·M ∈ ℚ[x]ⁿˣⁿ`; then `det(D·M) = Dⁿ·det M` and `(D·M)⁻¹` reads back the fraction-free inverse. -/
-def qfMatDen (fuel : ℕ) (M : List (List (QFunNZG ℚ))) : CPolyG ℚ :=
-  M.foldl (fun acc row => qfLcm fuel acc (qfRowDen fuel row)) [CField.one]
+def qfMatDen (M : List (List (QFunNZG ℚ))) : CPolyG ℚ :=
+  M.foldl (fun acc row => qfLcm acc (qfRowDen row)) [CField.one]
 
 /-! ### Clearing a `ℚ(x)`-row / matrix into `ℚ[x]` (`qfClearRow`/`qfClearMatrix`)
 
@@ -162,29 +162,29 @@ contribution to the determinant scale). `qfClearMatrix` clears the **whole** mat
 denominator `D = qfMatDen M` (so the scale is the scalar `D`, not a diagonal), returning the
 `ℚ[x]`-matrix `D·M` and `D`; then `det(D·M) = Dⁿ·det M` (`qfDet` divides back by `Dⁿ`). -/
 
-/-- **Clear a single `ℚ(x)` entry by a common denominator `D`** `qfClearEntry fuel D z = num(z)·(D/den(z))`,
+/-- **Clear a single `ℚ(x)` entry by a common denominator `D`** `qfClearEntry D z = num(z)·(D/den(z))`,
 the `ℚ[x]` polynomial `D·z` — **exact** because `den(z) | D` (`D` is a common multiple), so `D/den(z) ∈ ℚ[x]`
 and `num(z)·(D/den(z)) = D·z`. (NOT `(qxOfNum D · z).1.1`, which is `D·num(z)` — it ignores that `z`'s
 denominator survives in the *unreduced* product's denominator.) The per-entry clearing primitive. -/
-def qfClearEntry (_fuel : ℕ) (D : CPolyG ℚ) (z : QFunNZG ℚ) : CPolyG ℚ :=
+def qfClearEntry (D : CPolyG ℚ) (z : QFunNZG ℚ) : CPolyG ℚ :=
   cmulG (z.1.1 : CPolyG ℚ) (cdivWf D (z.1.2 : CPolyG ℚ))
 
-/-- **Clear a single `ℚ(x)`-row to `ℚ[x]`** `qfClearRow fuel row = ([D·zᵢ], D)` where `D = qfRowDen row` is
+/-- **Clear a single `ℚ(x)`-row to `ℚ[x]`** `qfClearRow row = ([D·zᵢ], D)` where `D = qfRowDen row` is
 the lcm of the row's denominators. Each `D·zᵢ = num(zᵢ)·(D/den(zᵢ))` is in `ℚ[x]` (`den(zᵢ) | D`,
 `qfClearEntry`). Returns the cleared `ℚ[x]`-row paired with the clearing factor `D` (the row's
 determinant-scale contribution). -/
-def qfClearRow (fuel : ℕ) (row : List (QFunNZG ℚ)) : List (CPolyG ℚ) × CPolyG ℚ :=
-  let D := qfRowDen fuel row
-  (row.map (qfClearEntry fuel D), D)
+def qfClearRow (row : List (QFunNZG ℚ)) : List (CPolyG ℚ) × CPolyG ℚ :=
+  let D := qfRowDen row
+  (row.map (qfClearEntry D), D)
 
-/-- **Clear a whole `ℚ(x)`-matrix to `ℚ[x]` by a single common denominator** `qfClearMatrix fuel M =
+/-- **Clear a whole `ℚ(x)`-matrix to `ℚ[x]` by a single common denominator** `qfClearMatrix M =
 (D·M, D)` where `D = qfMatDen M` is the lcm of **all** entry denominators. Every entry `D·M[i][j] =
 num·(D/den) ∈ ℚ[x]` (`qfClearEntry`, exact since each denominator divides `D`), so the result is a
 `ℚ[x]`-matrix; the scalar factor `D` tracks the determinant scale `det(D·M) = Dⁿ·det M`. (A single scalar
 `D` — not a per-row diagonal — so the inverse reads back as `M⁻¹ = D·adj(D·M)/det(D·M)`.) -/
-def qfClearMatrix (fuel : ℕ) (M : List (List (QFunNZG ℚ))) : List (List (CPolyG ℚ)) × CPolyG ℚ :=
-  let D := qfMatDen fuel M
-  (M.map (fun row => row.map (qfClearEntry fuel D)), D)
+def qfClearMatrix (M : List (List (QFunNZG ℚ))) : List (List (CPolyG ℚ)) × CPolyG ℚ :=
+  let D := qfMatDen M
+  (M.map (fun row => row.map (qfClearEntry D)), D)
 
 /-! ### The fraction-free determinant / adjugate / inverse / solve over `ℚ(x)` (`qfDet`/`qfAdjugate`/…)
 
@@ -198,54 +198,54 @@ With the clearing in hand, the `ℚ(x)` linear algebra routes through Bareiss ov
   (the `(det(M'), D·adj(M'))` pair, both flat `ℚ[x]`). Each entry `(M⁻¹)[i][j] = D·adj(M')[i][j]/det(M')`.
 * **`qfSolve M b`**: clear `M` and the rhs `b` by `D` and run `bareissSolve` over `ℚ[x]`. -/
 
-/-- **The fraction-free determinant of a `ℚ(x)`-matrix** `qfDet fuel M`: clear `M` to the `ℚ[x]`-matrix
+/-- **The fraction-free determinant of a `ℚ(x)`-matrix** `qfDet M`: clear `M` to the `ℚ[x]`-matrix
 `M' = D·M` (`D = qfMatDen M`), run the fraction-free `bareissDet M'` over `ℚ[x]`, and divide back by `Dⁿ`
 (`det M = det(D·M)/Dⁿ`), returning the `ℚ(x)` value `qxOfNum(bareissDet M') / qxOfNum(Dⁿ)`. **No
 intermediate `ℚ(x)` fraction is ever formed** — the determinant is a single flat `ℚ[x]` polynomial over the
 single denominator `Dⁿ`. Equals `fieldDet M` (validated downstream). -/
-def qfDet (fuel : ℕ) (M : List (List (QFunNZG ℚ))) : QFunNZG ℚ :=
+def qfDet (M : List (List (QFunNZG ℚ))) : QFunNZG ℚ :=
   let n := M.length
-  let (M', D) := qfClearMatrix fuel M
+  let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
   let Dn := cpowG D n
   CField.mul (qxOfNum detPoly) (CField.inv (qxOfNum Dn))
 
-/-- **The fraction-free adjugate `(adj(D·M), D)` of a `ℚ(x)`-matrix** `qfAdjugate fuel M`: clear `M` to
+/-- **The fraction-free adjugate `(adj(D·M), D)` of a `ℚ(x)`-matrix** `qfAdjugate M`: clear `M` to
 `M' = D·M ∈ ℚ[x]`, return the **`ℚ[x]`** adjugate `bareissAdjugate M'` paired with the common denominator
 `D`. The genuine `ℚ(x)`-adjugate is `adj(M') / Dⁿ⁻¹` (since `adj(D·M) = Dⁿ⁻¹·adj M`); keeping the flat
 `ℚ[x]` adjugate avoids fractions. Consumed by `qfInv` (which reads `M⁻¹ = D·adj(M')/det(M')`). -/
-def qfAdjugate (fuel : ℕ) (M : List (List (QFunNZG ℚ))) : List (List (CPolyG ℚ)) × CPolyG ℚ :=
-  let (M', D) := qfClearMatrix fuel M
+def qfAdjugate (M : List (List (QFunNZG ℚ))) : List (List (CPolyG ℚ)) × CPolyG ℚ :=
+  let (M', D) := qfClearMatrix M
   (bareissAdjugate M', D)
 
-/-- **The fraction-free inverse representation of a `ℚ(x)`-matrix** `qfInv fuel M = (det(M'), D·adj(M'))`
+/-- **The fraction-free inverse representation of a `ℚ(x)`-matrix** `qfInv M = (det(M'), D·adj(M'))`
 with `M' = D·M ∈ ℚ[x]`: the pair of **flat `ℚ[x]`** polynomials `(det(D·M), D·adj(D·M))` so that
 `M⁻¹[i][j] = (D·adj(M'))[i][j] / det(M')` — a single shared `ℚ[x]` denominator `det(M')`, no per-entry
 fraction. (Derivation: `M = D⁻¹M'`, so `M⁻¹ = M'⁻¹·D = (adj M'/det M')·D`.) **The fraction-free inverse**:
 where `matInvG` over `ℚ(x)` swells each entry to total degree `~40`, this is one bounded adjugate matrix
 over one determinant. Returns `(detM', adjM'·D)` where `adjM'·D` scales every entry of `adj(M')` by the
 `ℚ[x]` polynomial `D`. -/
-def qfInv (fuel : ℕ) (M : List (List (QFunNZG ℚ))) : CPolyG ℚ × List (List (CPolyG ℚ)) :=
-  let (M', D) := qfClearMatrix fuel M
+def qfInv (M : List (List (QFunNZG ℚ))) : CPolyG ℚ × List (List (CPolyG ℚ)) :=
+  let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
   let adjPoly := bareissAdjugate M'
   (detPoly, adjPoly.map (fun row => row.map (fun e => cmulG D e)))
 
-/-- **A single `ℚ(x)` entry of the fraction-free inverse** `qfInvEntry fuel M i j = (D·adj(M'))[i][j] /
+/-- **A single `ℚ(x)` entry of the fraction-free inverse** `qfInvEntry M i j = (D·adj(M'))[i][j] /
 det(M') : QFunNZG ℚ` — read the `(i, j)` entry of `qfInv` back into `ℚ(x)` (numerator the flat `ℚ[x]`
 polynomial `D·adj(M')[i][j]`, denominator `det(M')`). Used to compare `qfInv` against `matInvG` entrywise. -/
-def qfInvEntry (fuel : ℕ) (M : List (List (QFunNZG ℚ))) (i j : ℕ) : QFunNZG ℚ :=
-  let dn := qfInv fuel M
+def qfInvEntry (M : List (List (QFunNZG ℚ))) (i j : ℕ) : QFunNZG ℚ :=
+  let dn := qfInv M
   CField.mul (qxOfNum (getEntry dn.2 i j)) (CField.inv (qxOfNum dn.1))
 
-/-- **The fraction-free Cramer solve of `M·x = b` over `ℚ(x)`** `qfSolve fuel M b`: clear `M` to `M' = D·M`
+/-- **The fraction-free Cramer solve of `M·x = b` over `ℚ(x)`** `qfSolve M b`: clear `M` to `M' = D·M`
 and the rhs to `D·b`, both in `ℚ[x]`, run `bareissSolve M' (D·b)` (returns `(det M', det M'·x)` over
 `ℚ[x]`). Since `M·x = b ⟺ (D·M)·x = D·b`, the polynomial solution `det(M')·x` and `det(M')` give
 `x = (det M'·x)/det M'` over `ℚ(x)` with one shared denominator — no per-component fraction. -/
-def qfSolve (fuel : ℕ) (M : List (List (QFunNZG ℚ))) (b : List (QFunNZG ℚ)) :
+def qfSolve (M : List (List (QFunNZG ℚ))) (b : List (QFunNZG ℚ)) :
     CPolyG ℚ × List (CPolyG ℚ) :=
-  let (M', D) := qfClearMatrix fuel M
-  let b' := b.map (qfClearEntry fuel D)
+  let (M', D) := qfClearMatrix M
+  let b' := b.map (qfClearEntry D)
   bareissSolve M' b'
 
 end CPolyG

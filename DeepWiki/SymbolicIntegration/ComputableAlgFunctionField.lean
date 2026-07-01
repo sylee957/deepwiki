@@ -158,7 +158,7 @@ the generic `fieldDet` does. Equal to `fieldDet (traceMatrix f (powerBasis f))` 
 `qfDet_eq_fieldDet_*`), hence to `± Resultant(f, f')`; its squarefree part bounds the primes where the
 equation order is non-maximal (Trager Ch. 2). -/
 def discriminant (f : CPolyG (QFunNZG ℚ)) : QFunNZG ℚ :=
-  qfDet 16 (traceMatrix f (powerBasis f))
+  qfDet (traceMatrix f (powerBasis f))
 
 /-- **`Resultant(f, f')` for the curve `f`** (the alternative discriminant up to sign): `cresultantG`
 of `f` against its formal `y`-derivative `cderivG f`, eliminating `y`. Equal to `± discriminant f`
