@@ -23,7 +23,7 @@ through the tower recursion**:
    `∀ fuel, CgcdBCorrect (CFracGcdCore.cgcdFFRawCore fuel)` at every level — the second witness, made an
    honest tower-induction theorem.
 2. **The fuel bound** `CPrimPRSGenFuelOk` is carried as the transparent numeric side-condition the engine
-   self-satisfies (a `30`-bound per `cdivG` content strip on a finite run); it lives only in the witness
+   self-satisfies (a `30`-bound per `cdivWf` content strip on a finite run); it lives only in the witness
    class, never at runtime.
 3. **`CPrimPRSGenAssocReg` discharged** — `cTowerWitness_assocReg` composes (1) + (2) via
    `cPrimPRSGenAssocReg_of_regular_of_correct`, so the opaque per-step regularity gate is a *theorem* from
@@ -35,7 +35,7 @@ through the tower recursion**:
    cleared identity) with the cleared → field bridge `rischDE_field_of_cleared`. The residual's
    per-level `Associated`-gcd clauses are exactly the `CgcdBCorrect` the witness class produces; the
    *remaining* clauses of `RischDEStructuralResidual` (the primitive-regime restriction `hprim`, the §6.2
-   divisibility/fuel side-conditions, the non-gcd `cdvdG`/`cgcdTerminatesG`/fuel clauses of
+   divisibility side-conditions, the non-gcd `cdvdG`/`cgcdTerminatesG`/fuel clauses of
    `CSPDEGClearedInputsGen`) are NOT produced by the two gcd witnesses — they are the precisely-isolated
    *remaining bookkeeping*, carried here as an explicit `RischDESuccessResidual` hypothesis.
 5. **The fully-abstract corollary** — with the cleared identity discharged (no `native_decide`), the
@@ -103,7 +103,7 @@ The recursive content-gcd `cgcdFFRawCore fuel p q` (`instCFracGcdCoreQFunNZG`) r
   `CTowerGcdWitness.gcdBCorrect (α := β) fuel`;
 * the per-run termination `CPrimPRSGenRegular (cgcdFFRawCore fuel) fuel P Q` — carried as `hreg`;
 * the transparent fuel bound `CPrimPRSGenFuelOk (cgcdFFRawCore fuel) fuel P Q` — carried as `hfuel`
-  (the engine's `30`-bound per `cdivG` content strip; satisfiable on a finite run, **Task 2**). -/
+  (the engine's `30`-bound per `cdivWf` content strip; satisfiable on a finite run, **Task 2**). -/
 
 section Recursive
 
@@ -211,7 +211,7 @@ g.1.1 g.1.2 = some (ynum, yden)` over `CPolyG β` (`instCRischFieldQFunNZG`). Th
 `towerFractionFieldDerivG [1] (Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)` (`Y = amG ynum/amG yden`,
 `F = amG f.1.1/amG f.1.2`, `G = amG g.1.1/amG g.1.2`). The residual's per-level `Associated`-gcd clauses are
 exactly the `CgcdBCorrect` the witness `CTowerGcdWitness β` produces; the residual's *other* clauses
-(primitive-regime `hprim`, §6.2 divisibility/fuel, the non-gcd `cdvdG`/`cgcdTerminatesG`/fuel clauses of
+(primitive-regime `hprim`, §6.2 divisibility, the non-gcd `cdvdG`/`cgcdTerminatesG`/fuel clauses of
 `CSPDEGClearedInputsGen`) are the precisely-isolated remaining bookkeeping, carried here. -/
 
 section RDESoundness
@@ -246,7 +246,7 @@ theorem cdegG_one_eq_zero : cdegG ([CField.one] : CPolyG β) = 0 := by
 
 /-- **The §6 RDE residual provider for a successful `QFunNZG β`-solve** `RischDESuccessResidual f g`: the
 precisely-isolated remaining bookkeeping beyond the bare success and the gcd witness — the
-`RischDEStructuralResidual` (primitive-regime restriction, §6.2 divisibility/fuel, the non-gcd
+`RischDEStructuralResidual` (primitive-regime restriction, §6.2 divisibility, the non-gcd
 `CSPDEGClearedInputsGen` clauses) on the level-`β` `cRischDEG [1]` run's normal-denominator output, plus the
 positive-`deg(bbar)` dispatcher side-condition, and the three denominator-nonzero facts the field bridge
 needs. The per-level `Associated`-gcd clauses *inside* `RischDEStructuralResidual` are supplied separately by
@@ -484,9 +484,9 @@ To register `instance CRischFieldSpec (QFunNZG β)` one must prove its spec for 
 1. **The per-level `Associated`-gcd clauses** — SUPPLIED by `CTowerGcdWitness β` (Tasks 1–3). Not a residual.
 2. **The NON-gcd clauses, the genuine remaining bookkeeping** (`RischDESuccessResidual` here): the
    primitive-regime restriction `hprim` (`cRischDEG` runs *all* monomial regimes; the §6 cleared identity
-   `cRischDEG_rdeCleared_gen` is proved primitive-only), the §6.2 divisibility/fuel side-conditions
-   (`hdn`/`hdvdB`/`hdvdC`/`hfbB`/`hfbC` — `cRdeNormalDenominatorG` checks only one `cdvdG`, truncating the
-   rest), and the non-gcd clauses of `CSPDEGClearedInputsGen` (per-level fuel bounds, `cdvdG`,
+   `cRischDEG_rdeCleared_gen` is proved primitive-only), the §6.2 divisibility side-conditions
+   (`hdn`/`hdvdB`/`hdvdC` — `cRdeNormalDenominatorG` checks only one `cdvdG`, truncating the rest), and the
+   non-gcd clauses of `CSPDEGClearedInputsGen` (per-level fuel bounds, `cdvdG`,
    `cgcdTerminatesG`). **None is forced by the bare `cRischDEG … = some _`** (this is the
    `ComputableRischDEStructural` structural-decomposition verdict), and none is a gcd fact the witness
    produces. They hold on every regular run but the engine **never re-validates them**, so they are not

@@ -74,11 +74,11 @@ def rdeNormDn (Dt : CPolyG α) (fuel : ℕ) (fden : CPolyG α) : CPolyG α :=
   (CPolyG.cSplitFactorFastG Dt fuel fden).1
 
 /-- **The §6.2 multiplicity factor `h`** `rdeNormH Dt fuel fden gden`
-(`= cdivG fuel (cgcdFFCore eₙ eₙ') (cgcdFFCore p p')`, `p = cgcdFFCore dₙ eₙ`): the §6.2
+(`= cdivWf (cgcdFFCore eₙ eₙ') (cgcdFFCore p p')`, `p = cgcdFFCore dₙ eₙ`): the §6.2
 `h = gcd(eₙ, eₙ')/gcd(p, p')` of Bronstein p.185, the 4th component returned by a successful
 `cRdeNormalDenominatorG` (`cRdeNormalDenominatorG_h0_eq`). Abbreviation pinning the §6.2 guard's `h`. -/
 def rdeNormH (Dt : CPolyG α) (fuel : ℕ) (fden gden : CPolyG α) : CPolyG α :=
-  CPolyG.cdivG fuel
+  CPolyG.cdivWf
     (CFracGcdCore.cgcdFFCore fuel (rdeNormEn Dt fuel gden) (CPolyG.cderivG (rdeNormEn Dt fuel gden)))
     (CFracGcdCore.cgcdFFCore fuel
       (CFracGcdCore.cgcdFFCore fuel (rdeNormDn Dt fuel fden) (rdeNormEn Dt fuel gden))
@@ -103,29 +103,7 @@ theorem cRdeNormalDenominatorG_isSome_iff (Dt : CPolyG α) (fuel : ℕ) (fnum fd
       CPolyG.cdvdG fuel (rdeNormEn Dt fuel gden) (rdeNormDnh2 Dt fuel fden gden) = true := by
   rw [CPolyG.cRdeNormalDenominatorG]
   simp only [rdeNormDnh2, rdeNormH, rdeNormDn, rdeNormEn]
-  by_cases hck : CPolyG.cdvdG fuel (CPolyG.cSplitFactorFastG Dt fuel gden).1
-      (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1
-        (CPolyG.cdivG fuel
-          (CFracGcdCore.cgcdFFCore fuel (CPolyG.cSplitFactorFastG Dt fuel gden).1
-            (CPolyG.cderivG (CPolyG.cSplitFactorFastG Dt fuel gden).1))
-          (CFracGcdCore.cgcdFFCore fuel
-            (CFracGcdCore.cgcdFFCore fuel (CPolyG.cSplitFactorFastG Dt fuel fden).1
-              (CPolyG.cSplitFactorFastG Dt fuel gden).1)
-            (CPolyG.cderivG (CFracGcdCore.cgcdFFCore fuel
-              (CPolyG.cSplitFactorFastG Dt fuel fden).1
-              (CPolyG.cSplitFactorFastG Dt fuel gden).1)))))
-        (CPolyG.cdivG fuel
-          (CFracGcdCore.cgcdFFCore fuel (CPolyG.cSplitFactorFastG Dt fuel gden).1
-            (CPolyG.cderivG (CPolyG.cSplitFactorFastG Dt fuel gden).1))
-          (CFracGcdCore.cgcdFFCore fuel
-            (CFracGcdCore.cgcdFFCore fuel (CPolyG.cSplitFactorFastG Dt fuel fden).1
-              (CPolyG.cSplitFactorFastG Dt fuel gden).1)
-            (CPolyG.cderivG (CFracGcdCore.cgcdFFCore fuel
-              (CPolyG.cSplitFactorFastG Dt fuel fden).1
-              (CPolyG.cSplitFactorFastG Dt fuel gden).1))))) = true
-  · rw [if_pos hck]; simp [hck]
-  · rw [Bool.not_eq_true] at hck
-    rw [if_neg (by simp [hck])]; simp [hck]
+  split <;> simp_all
 
 omit [CDiffField α] [CFracGcdCore α] in
 /-- **The converse of `dvd_of_cdvdG`: mathematical divisibility forces the engine check**

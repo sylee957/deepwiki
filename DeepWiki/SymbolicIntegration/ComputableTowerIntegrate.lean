@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
-import DeepWiki.SymbolicIntegration.ComputableGenericHermiteInner
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
 `ComputableTowerField`/`ComputableTowerDeriv` built the generic fraction-field carrier `QFunNZG α`
@@ -9,7 +9,7 @@ import DeepWiki.SymbolicIntegration.ComputableGenericHermiteInner
 derivation tower (`CDiffField (QFunNZG α)`, `towerDerivQFunNZG`). This file supplies the §3.5/§5.3
 integration pipeline (split/normal factor, canonical representation, transcendental Hermite reduction)
 over that generic carrier. The pipeline runs on the **generic** engine ops
-(`caddG`/`cmulG`/`cmonomialDeriv`/`cdivG`/…); the one operation needing care is the fraction-free
+(`caddG`/`cmulG`/`cmonomialDeriv`/`cdivWf`/…); the one operation needing care is the fraction-free
 `t`-gcd.
 
 The pipeline defs (suffix `G`) over `[CField α] [CFieldDomain α] [CDiffField α]` take every `t`-gcd from
@@ -26,10 +26,10 @@ pipeline def that calls a `t`-gcd therefore carries the
 * **`cSqfreeYunFFG`** (Yun squarefree factorization in `t`, the formal `dp/dt`) — what the Hermite
   reduction factors the denominator with.
 * **`canonicalRepresentationFastG`** (the `a/d → (fₚ, (b, dₛ), (c, dₙ))` canonical representation),
-  reusing the already-generic Bézout helpers `cbezoutOne`/`cextendedEuclideanSplit`.
+  reusing the already-generic fuel-free Bézout helpers `cbezoutOneWf`/`cextendedEuclideanSplitWf`.
 * **`cHermiteReduceTowerG`** (the transcendental Hermite reduction of the simple normal part →
   rational `g` + reduced remainder — the RATIONAL PART of the integral), reusing the already-generic
-  inner loop `cHermiteReduceTowerInner`/`cdiophantineG`.
+  fuel-free inner loop `cHermiteReduceTowerInnerWf`/`cdiophantineGWf`.
 
 **★ The headline `native_decide`** runs `canonicalRepresentationFastG` + `cHermiteReduceTowerG` on a
 concrete proper fraction over `CPolyG (QFunNZG (QFunNZG ℚ)) = ℚ(x)(t₁)[t₂]` whose denominator has a
@@ -46,7 +46,7 @@ open Compute
 
 `cSplitFactorFastG` is the `[CField α] [CDiffField α]`-generic mirror of `cSplitFactorFast`: Bronstein's
 splitting-factorization loop with the flat fraction-free monic gcd `CFracGcdCore.cgcdFFCore` (for the two
-gcds `gcd(p, Dp)` and `gcd(p, dp/dt)`) and the generic exact division `cdivG`. `Dp = cmonomialDeriv Dt p` is the differential
+gcds `gcd(p, Dp)` and `gcd(p, dp/dt)`) and the fuel-free generic exact division `cdivWf`. `Dp = cmonomialDeriv Dt p` is the differential
 derivation (needs `[CDiffField α]`); `dp/dt = cderivG p` the formal `t`-derivative. -/
 
 namespace CPolyG
@@ -62,11 +62,11 @@ on `p/S` and accumulate `S` into the special part. Fuel-bounded; runs at any tow
 def cSplitFactorFastG (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
   | 0, p => (p, [CField.one])
   | fuel + 1, p =>
-    let S := cdivG (fuel + 1) (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
+    let S := cdivWf (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
       (CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p))
     if cdegG S = 0 then (p, [CField.one])
     else
-      let (qn, qs) := cSplitFactorFastG Dt fuel (cdivG (fuel + 1) p S)
+      let (qn, qs) := cSplitFactorFastG Dt fuel (cdivWf p S)
       (qn, cmulG S qs)
 
 end CPolyG
@@ -92,8 +92,8 @@ def cSqfreeYunFFGgo (fuel : ℕ) : ℕ → CPolyG α → CPolyG α → List (CPo
     if cdegG b = 0 then []
     else
       let p := cmonicG (CFracGcdCore.cgcdFFCore fuel b d)
-      let b' := cdivG fuel b p
-      let d' := csubG (cdivG fuel d p) (cderivG b')
+      let b' := cdivWf b p
+      let d' := csubG (cdivWf d p) (cderivG b')
       p :: cSqfreeYunFFGgo fuel fo b' d'
 
 /-- **Generic Yun squarefree factorization in `t`** `cSqfreeYunFFG fuel p = [p₁, …, pₘ]`: the
@@ -104,8 +104,8 @@ squarefree part of multiplicity `i`. `p` is associate to `∏ᵢ pᵢ^i`.
 `[CField α] [CFracGcdCore α]`-generic — runs at any tower level. -/
 def cSqfreeYunFFG (fuel : ℕ) (p : CPolyG α) : List (CPolyG α) :=
   let g := CFracGcdCore.cgcdFFCore fuel p (cderivG p)
-  let b1 := cdivG fuel p g
-  let d1 := csubG (cdivG fuel (cderivG p) g) (cderivG b1)
+  let b1 := cdivWf p g
+  let d1 := csubG (cdivWf (cderivG p) g) (cderivG b1)
   cSqfreeYunFFGgo fuel fuel b1 d1
 
 end CPolyG
@@ -132,7 +132,7 @@ def cSplitSquarefreeFactorFastG (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α) :
   let ps := cSqfreeYunFFG fuel p
   let parts := ps.map (fun pf =>
     let si := CFracGcdCore.cgcdFFCore fuel pf (cmonomialDeriv Dt pf)
-    let ni := cdivG fuel pf si
+    let ni := cdivWf pf si
     (ni, si))
   (parts.map Prod.fst, parts.map Prod.snd)
 
@@ -152,16 +152,16 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 /-- **Generic `CanonicalRepresentation`** (Bronstein §3.5, p.103) over the tower:
 `canonicalRepresentationFastG Dt fuel (a, d) = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d`
-(`d` monic). Steps: divide `a = q·d + r` (`cdivmodG`); split the denominator `d = dₛ·dₙ`
-(`cSplitFactorFastG`, generic); Bézout-split `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplit`
-with `cbezoutOne`, the already-generic helpers). The reduced part is `b/dₛ`, the simple part `c/dₙ`.
+(`d` monic). Steps: divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ`
+(`cSplitFactorFastG`, generic); Bézout-split `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplitWf`
+with `cbezoutOneWf`, the already-generic fuel-free helpers). The reduced part is `b/dₛ`, the simple part `c/dₙ`.
 `[CField α] [CDiffField α] [CFracGcdCore α]`-generic — runs at any tower level. -/
 def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
     CPolyG α × (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
-  let (q, r) := cdivmodG fuel a d
+  let (q, r) := cdivmodWf a d
   let (dn, ds) := cSplitFactorFastG Dt fuel d
-  let (u, w) := cbezoutOne fuel dn ds
-  let (b, c) := cextendedEuclideanSplit fuel dn ds r u w
+  let (u, w) := cbezoutOneWf dn ds
+  let (b, c) := cextendedEuclideanSplitWf dn ds r u w
   (q, (b, ds), (c, dn))
 
 /-! ### Generic transcendental Hermite reduction over the tower (§5.3) — the RATIONAL PART
@@ -170,7 +170,7 @@ def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
 Bronstein's `HermiteReduce(f, D)` (§5.3, quadratic version) rewrites the normal part `fₙ = a/d` of an
 element of a monomial extension as `D(g) + h` with `h`'s denominator squarefree — `g` is the integral's
 **rational part**. The squarefree factorization uses the generic `cSqfreeYunFFG`; the inner Bézout loop
-reuses the already-generic `cHermiteReduceTowerInner`/`cdiophantineG`. The monomial derivation `D =
+reuses the already-generic fuel-free `cHermiteReduceTowerInnerWf`/`cdiophantineGWf`. The monomial derivation `D =
 cmonomialDeriv Dt` needs `[CDiffField α]`. -/
 
 /-- **Generic transcendental Hermite reduction** `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden),
@@ -179,7 +179,7 @@ squarefree-factorable, `deg a < deg d`), output the rational part `g = gnum/gden
 and the residual `h = h_num/h_den` with `h_den` squarefree, satisfying `D(g) + h = a/d` for the monomial
 derivation `D = cmonomialDeriv Dt`. The generic mirror of `cHermiteReduceTower`: squarefree-factor `d`
 with the generic `cSqfreeYunFFG`; for each factor `(v, i)` of multiplicity `i ≥ 2`, run the already-
-generic `cHermiteReduceTowerInner`; recover `h_num` over the squarefree radical `Dstar = ∏ᵢ vᵢ` exactly
+generic fuel-free `cHermiteReduceTowerInnerWf`; recover `h_num` over the squarefree radical `Dstar = ∏ᵢ vᵢ` exactly
 from `a/d = D(g) + h_num/Dstar`. `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
 def cHermiteReduceTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
     (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
@@ -191,8 +191,8 @@ def cHermiteReduceTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
       if i ≤ 1 then gAcc
       else
         let Vi_pow := cpowG vi i
-        let u := cdivG fuel d Vi_pow
-        let (gloc, _) := cHermiteReduceTowerInner Dt fuel vi u (i - 1) a ([CField.zero], [CField.one])
+        let u := cdivWf d Vi_pow
+        let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])
         (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))  -- gAcc + gloc
     ([CField.zero], [CField.one])
   let (gnum, gden) := g
@@ -201,7 +201,7 @@ def cHermiteReduceTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
   let gden2 := cmulG gden gden
   let resNum := csubG (cmulG a gden2) (cmulG d gprimeNum)
   let resDen := cmulG d gden2
-  let hNum := cdivG fuel (cmulG resNum Dstar) resDen
+  let hNum := cdivWf (cmulG resNum Dstar) resDen
   ((cnormG gnum, cnormG gden), (cnormG hNum, cnormG Dstar))
 
 end CPolyG
@@ -249,7 +249,7 @@ derivation `D = cmonomialDeriv Dt`, `Dt₂ = t₂² + 1` (`t₂ = tan`), the com
 The denominator `d = t₂²` has a repeated normal factor `t₂`, so this exercises the genuine
 multiplicity-lowering step (`g = −1/t₂`, `h = −1`). **This is the deliverable: tower integration, rational
 part, executing at LEVEL 2** — the whole generic engine (`cSqfreeYunFFG`/`CFracGcdCore.cgcdFFCore`/
-`cHermiteReduceTowerInner`/`cmonomialDeriv`) reduces over `ℚ(x)(t₁)[t₂]`. -/
+`cHermiteReduceTowerInnerWf`/`cmonomialDeriv`) reduces over `ℚ(x)(t₁)[t₂]`. -/
 theorem towerHermiteLvl2_rationalPart :
     (let res := CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt 12
         towerHermiteLvl2A towerHermiteLvl2D

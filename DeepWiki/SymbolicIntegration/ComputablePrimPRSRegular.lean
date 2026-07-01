@@ -43,12 +43,12 @@ content/GCD-domain fact — it is exactly TWO per-run non-degeneracy ingredients
    the base: `associated_toPolyG_cgcdExtG` needs `cgcdTerminatesG`, so the base `cgcdFFRawCore ℚ =
    (cgcdExtG _).1` is gcd-correct only on terminating Euclid runs.
 
-Given those two — plus transparent per-step content-nonzero / fuel side-conditions the algorithm self-
-satisfies — clauses (ii) and (iii) of `CPrimPRSGenAssocReg` are **theorems** (clause (ii)'s identity is
+Given those two — plus the retained per-step coefficient-size bookkeeping the algorithm self-satisfies —
+clauses (ii) and (iii) of `CPrimPRSGenAssocReg` are **theorems** (clause (ii)'s identity is
 `toGBPolyG_gbpsremainderCore`, already unconditional; its nonzero-multiplier part is recovered here; clause
 (iii) is `associated_toGBPolyG_gbprimitivePartCore_of_correct`). The deliverable is the **reduction
 theorem** `cPrimPRSGenAssocReg_of_regular_of_correct`: `CPrimPRSGenRegular` + `CgcdBCorrect` + the
-transparent side-conditions ⟹ `CPrimPRSGenAssocReg`. That replaces the opaque 13-hypothesis gate with the
+retained bookkeeping ⟹ `CPrimPRSGenAssocReg`. That replaces the opaque 13-hypothesis gate with the
 **precise** non-degeneracy: *termination* and *level-β gcd-correctness*.
 
 So fully-abstract soundness is **not** closed by an unconditional `CPrimPRSGenAssocReg`; it is closed *up
@@ -177,14 +177,15 @@ theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
 content of the **zero** polynomial (a terminal `P = 0`, or a `prem = 0`): there `gbprimitivePartCore` is
 the identity (`gbnormCore p`, content branch `cisZeroG g`), so the `Associated` is reflexive. Bundling the
 two cases gives the **total** clause (iii) — conditional only on `CgcdBCorrect cgcdB` (the level-`β`
-gcd-correctness) and a transparent per-coefficient fuel bound, with **no** separate nonzero hypothesis. -/
+gcd-correctness) plus the retained per-coefficient bookkeeping threaded by the PRS gate, with **no**
+separate nonzero hypothesis. -/
 
 /-- **★ Total clause (iii)** — `gbprimitivePartCore` is a `β(s)`-unit scaling on **any** input: under
-`CgcdBCorrect cgcdB` (the level-`β` gcd-correctness) and a per-`t`-coefficient fuel bound,
+`CgcdBCorrect cgcdB` (the level-`β` gcd-correctness) and the retained per-`t`-coefficient bookkeeping,
 `Associated (toGBPolyG (gbprimitivePartCore fuel cgcdB p)) (toGBPolyG p)`. Splits on whether the content
 `gbcontentCore cgcdB p` is zero: if zero, `gbprimitivePartCore` is the identity `gbnormCore p` (reflexive
 `Associated`); if nonzero, it is the unit scaling of `associated_toGBPolyG_gbprimitivePartCore_of_correct`.
-So clause (iii) needs only the recursion's gcd-correctness plus transparent algorithmics — never a
+So clause (iii) needs only the recursion's gcd-correctness plus retained algorithmics — never a
 content-nonzero assumption. -/
 theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
     (cgcdB : CPolyG β → CPolyG β → CPolyG β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
@@ -259,18 +260,18 @@ theorem gbnormCore_length_eq_natDegree_succ {p : GBPolyCore β} (hp : gbisZeroCo
   rw [gbdegCore] at this
   omega
 
-/-! ## Step 3b — the reduction theorem: regularity + correctness + fuel ⟹ `CPrimPRSGenAssocReg`
+/-! ## Step 3b — the reduction theorem: regularity + correctness + bookkeeping ⟹ `CPrimPRSGenAssocReg`
 
-The transparent per-step **fuel** side-conditions the algorithm self-satisfies on a finite run: every
-`cdivG`-content-strip has fuel `30 ≥` the `cnormG`-length of each `t`-coefficient. We bundle them as an
-inductive predicate mirroring the PRS recursion (one `gbprimitivePartCore` per node), so the reduction
-threads them down with the `CPrimPRSGenRegular` termination witness. -/
+The legacy per-step **coefficient-size** side-conditions the algorithm self-satisfies on a finite run: at
+each `gbprimitivePartCore` node, every stripped `t`-coefficient has `cnormG`-length at most `30`. The
+content strip now uses fuel-free `cdivWf`, so this predicate is retained as PRS-gate bookkeeping rather
+than as runtime division fuel. -/
 
-/-- **Per-step content-strip fuel bound** `CPrimPRSGenFuelOk fuel P Q`: at each primitive-PRS node, the
-fuel `30` of `gbprimitivePartCore` bounds the `cnormG`-length of every `t`-coefficient it divides — for the
-terminal strip of `P` (`gbnormCore P`) and, at each recursive node, of the pseudo-remainder `prem`.
-Transparent algorithmics (the engine's `cdivG` has enough fuel on a finite run), mirroring the
-`cprimPRSgcdGenCore` recursion so it threads alongside `CPrimPRSGenRegular`. -/
+/-- **Per-step content-strip bookkeeping** `CPrimPRSGenFuelOk fuel P Q`: at each primitive-PRS node, every
+`t`-coefficient entering `gbprimitivePartCore 30` has `cnormG`-length at most `30` — for the terminal strip
+of `P` (`gbnormCore P`) and, at each recursive node, of the pseudo-remainder `prem`. This mirrors the
+`cprimPRSgcdGenCore` recursion so it threads alongside `CPrimPRSGenRegular`; the content division itself
+is fuel-free. -/
 def CPrimPRSGenFuelOk (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
   | 0, P, _ => ∀ a ∈ gbnormCore P, (CPolyG.cnormG a : List β).length ≤ 30
@@ -285,12 +286,12 @@ def CPrimPRSGenFuelOk (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
 
 /-- **★ The reduction theorem — `CPrimPRSGenAssocReg` from the sharp residual.** Given the genuine per-run
 termination witness `CPrimPRSGenRegular cgcdB fuel P Q` (`ComputableTowerWellFounded`), the level-`β`
-gcd-correctness `CgcdBCorrect cgcdB`, and the transparent per-step content-strip fuel bounds
+gcd-correctness `CgcdBCorrect cgcdB`, and the retained per-step content-strip bookkeeping
 `CPrimPRSGenFuelOk cgcdB fuel P Q`, the per-step regularity bundle `CPrimPRSGenAssocReg cgcdB fuel P Q`
 holds. Clause (i) is the `CPrimPRSGenRegular` `stop`-node; clause (ii) is the nonzero-multiplier
 `toGBPolyG_gbpsremainderCore_ne_zero` at a `step`-node; clause (iii) is the total content strip
 `associated_toGBPolyG_gbprimitivePartCore_total`. So the opaque `CPrimPRSGenAssocReg` gate is **exactly**
-PRS termination + level-`β` gcd-correctness (+ transparent fuel) — the precise non-degeneracy. -/
+PRS termination + level-`β` gcd-correctness (+ retained bookkeeping) — the precise non-degeneracy. -/
 theorem cPrimPRSGenAssocReg_of_regular_of_correct (cgcdB : CPolyG β → CPolyG β → CPolyG β)
     (hcorr : CgcdBCorrect cgcdB) :
     ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenRegular cgcdB fuel P Q →
@@ -559,9 +560,9 @@ theorem natDegree_toGBPolyG (p : GBPolyCore β) :
   rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom,
     Polynomial.natDegree_map_eq_of_injective (RatFunc.algebraMap_injective (CFieldSpec.K β))]
 
-/-- **★ The content strip preserves the `t`-degree** (unconditional given `CgcdBCorrect` + fuel): under
-`CgcdBCorrect cgcdB` and the per-coefficient fuel bound, `(toGBCoeffPoly (gbprimitivePartCore fuel cgcdB
-p)).natDegree = (toGBCoeffPoly p).natDegree`. The content strip is a `β(s)`-unit scaling
+/-- **★ The content strip preserves the `t`-degree** (unconditional given `CgcdBCorrect` plus retained
+bookkeeping): under `CgcdBCorrect cgcdB` and the per-coefficient size bound,
+`(toGBCoeffPoly (gbprimitivePartCore fuel cgcdB p)).natDegree = (toGBCoeffPoly p).natDegree`. The content strip is a `β(s)`-unit scaling
 (`associated_toGBPolyG_gbprimitivePartCore_total`), and `Associated` polynomials over the field `β(s)` have
 equal `natDegree` (pulled back through the degree-preserving lift `toGBPolyG`). So the WF loop guard on the
 stripped node `r` is *exactly* the guard on the raw pseudo-remainder `prem`. -/
@@ -574,7 +575,7 @@ theorem natDegree_toGBCoeffPoly_gbprimitivePartCore (fuel : ℕ)
   rwa [natDegree_toGBPolyG, natDegree_toGBPolyG] at this
 
 /-- **★ The list-length loop guard is exactly the pseudo-remainder `t`-degree drop.** Under `CgcdBCorrect
-cgcdB`, the fuel bound on `prem`, and `Q` nonzero (`gbisZeroCore (gbnormCore Q) = false`), the
+cgcdB`, the retained size bound on `prem`, and `Q` nonzero (`gbisZeroCore (gbnormCore Q) = false`), the
 `CPrimPRSGenRegular`-`step` guard
 `(gbnormCore (gbprimitivePartCore 30 cgcdB prem)).length < (gbnormCore Q).length`
 holds **iff** `(toGBCoeffPoly prem).natDegree < (toGBCoeffPoly Q).natDegree` — *provided* the stripped node
@@ -638,7 +639,7 @@ example (q : GBPolyCore β) (hq : gbisZeroCore (gbnormCore q) = false)
 
 **No — it is genuinely conditional, but on a *precisely identified, non-research-grade* residual**, NOT on
 a missing content/GCD-domain theorem. Concretely, `CPrimPRSGenAssocReg cgcdB fuel P Q` is **equivalent**
-(given the transparent per-step fuel side-conditions `CPrimPRSGenFuelOk`) to exactly two per-run witnesses:
+(given the retained per-step bookkeeping `CPrimPRSGenFuelOk`) to exactly two per-run witnesses:
 
 1. **PRS termination** — `CPrimPRSGenRegular cgcdB fuel P Q`: the primitive-PRS loop reaches a zero
    divisor within `fuel`. Its degree-drop content is now **fully a theorem**, on two levels:

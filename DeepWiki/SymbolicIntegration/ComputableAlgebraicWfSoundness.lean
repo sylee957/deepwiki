@@ -54,6 +54,17 @@ namespace DeepWiki.SymbolicIntegration
 open scoped Differential
 open RadElem CPolyG
 
+namespace CPolyG
+
+/-- The `afDerivWf` round-trip certificate is the free-polynomial integrand identity. -/
+theorem toPolyG_afDerivWf_eq_of_roundtrip (f v g : CPolyG (QFunNZG ℚ))
+    (hcheck : cisZeroG (csubG (afDerivWf f v) g) = true) :
+    toPolyG (afDerivWf f v) = toPolyG g := by
+  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero] at hcheck
+  exact hcheck
+
+end CPolyG
+
 /-! ## Task 1 — the RADICAL integrator `cIntegrateAlgebraicWf`, unconditional, fuel-free
 
 `cIntegrateAlgebraicWf ρ R B residual c D degBound : AlgIntegralResult` is fuel-free (the rational part by
@@ -143,8 +154,8 @@ with the proven `hrat` (`generalReduceRationalTelescope`) + `hlog` (the partial 
 about the engine's `v` and the log term `[(c, u)]`.
 
 **Form B** (`afIntegrateAlgebraicWf_sound`): the clean un-cross-multiplied rational round-trip `toPolyG
-(afDeriv fuel f v) = toPolyG ratIntegrand` from the engine's own check `cisZeroG (csubG (afDeriv fuel f v)
-ratIntegrand) = true` ALONE (`toPolyG_afDeriv_eq_of_roundtrip`) — the faithful `D(v) = ratIntegrand` for the
+(afDerivWf f v) = toPolyG ratIntegrand` from the engine's own check `cisZeroG (csubG (afDerivWf f v)
+ratIntegrand) = true` ALONE (`toPolyG_afDerivWf_eq_of_roundtrip`) — the faithful `D(v) = ratIntegrand` for the
 general rational part, unconditional in the part hypotheses, gated only on the engine round-trip bridge. -/
 
 /-- **★ Task 2, Form A — the general integrator's output satisfies the cross-multiplied
@@ -188,23 +199,23 @@ theorem afIntegrateAlgebraicWf_isGeneralAlgebraicIntegral (fuel : ℕ)
 /-- **★★ Task 2, Form B — THE GENERAL CAPSTONE `afIntegrateAlgebraicWf_sound`: `some (v, u) → D(v) =
 ratIntegrand`, FULLY UNCONDITIONAL (modulo the round-trip bridge), FUEL-FREE** — for the fuel-free
 `afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand` returning `some (v, u)`, the engine's
-**own** rational round-trip check `cisZeroG (csubG (afDeriv fuel f v) ratIntegrand) = true` (the
-`native_decide`-validated form the `afRationalSolve` round-trips use) yields the genuine-field identity
-`toPolyG (afDeriv fuel f v) = toPolyG ratIntegrand` in `K[X]` (`K = CFieldSpec.K (QFunNZG ℚ)`) — the
+**own** rational round-trip check `cisZeroG (csubG (afDerivWf f v) ratIntegrand) = true` (the
+`native_decide`-validated form the `afRationalSolveWf` round-trips use) yields the genuine-field identity
+`toPolyG (afDerivWf f v) = toPolyG ratIntegrand` in `K[X]` (`K = CFieldSpec.K (QFunNZG ℚ)`) — the
 faithful `D(v) = ratIntegrand` for the general rational part. **NO `hrat`/`hlog`/`hsplit` passed in** — only
 the engine round-trip certificate (the inherent native_decide boundary, exactly as the radical
 `cIntegrateAlgebraicWf_sound` and the transcendental one-shot are gated on their engine-success bridges, not
-a runtime checker). Axiom-clean (no `native_decide`): `toPolyG_afDeriv_eq_of_roundtrip` (`cisZeroG p = true
+a runtime checker). Axiom-clean (no `native_decide`): `toPolyG_afDerivWf_eq_of_roundtrip` (`cisZeroG p = true
 ↔ toPolyG p = 0` + `toPolyG_csubG` + `sub_eq_zero`). The fully-unconditional, fuel-free general algebraic
 rational-part soundness; the log argument's `afDeriv f u = afMul f u logIntegrand` round-trip closes the log
 half symmetrically. -/
-theorem afIntegrateAlgebraicWf_sound (fuel : ℕ)
+theorem afIntegrateAlgebraicWf_sound
     (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
     (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ))
     (p : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
-    (hcheck : CPolyG.cisZeroG (CPolyG.csubG (afDeriv fuel f p.1) ratIntegrand) = true) :
-    CPolyG.toPolyG (afDeriv fuel f
+    (hcheck : CPolyG.cisZeroG (CPolyG.csubG (afDerivWf f p.1) ratIntegrand) = true) :
+    CPolyG.toPolyG (afDerivWf f
         ((afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
           (by rw [hrun]; exact rfl)).1)
       = CPolyG.toPolyG ratIntegrand := by
@@ -212,7 +223,7 @@ theorem afIntegrateAlgebraicWf_sound (fuel : ℕ)
   have hget : (afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
       (by rw [hrun]; exact rfl) = p := by rw [Option.get_of_mem _ hrun]
   rw [hget]
-  exact CPolyG.toPolyG_afDeriv_eq_of_roundtrip fuel f p.1 ratIntegrand hcheck
+  exact CPolyG.toPolyG_afDerivWf_eq_of_roundtrip f p.1 ratIntegrand hcheck
 
 /-! ## ★ Task 3 — the capstone, restatements, and axiom audit
 
@@ -238,16 +249,16 @@ example (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ))
 
 -- ★ GENERAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free general integrator's
 -- rational part differentiates to the rational integrand — `D(v) = ratIntegrand`, from the engine check.
-example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
+example (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
     (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ))
     (p : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
-    (hcheck : CPolyG.cisZeroG (CPolyG.csubG (afDeriv fuel f p.1) ratIntegrand) = true) :
-    CPolyG.toPolyG (afDeriv fuel f
+    (hcheck : CPolyG.cisZeroG (CPolyG.csubG (afDerivWf f p.1) ratIntegrand) = true) :
+    CPolyG.toPolyG (afDerivWf f
         ((afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand).get
           (by rw [hrun]; exact rfl)).1)
       = CPolyG.toPolyG ratIntegrand :=
-  afIntegrateAlgebraicWf_sound fuel f basis degBound ratIntegrand logIntegrand p hrun hcheck
+  afIntegrateAlgebraicWf_sound f basis degBound ratIntegrand logIntegrand p hrun hcheck
 
 -- The cross-multiplied radical `IsAlgebraicIntegral` for the literal output (Form A): the proven
 -- telescoping + partial fraction, the split from the round-trip.
@@ -279,7 +290,7 @@ general-curve (`afIntegrateAlgebraicWf`) integrators, FUEL-FREE, UNCONDITIONAL i
 boundary, exactly as the transcendental one-shot `cIntegrateGFull_primitive_oneShot` is gated on its
 engine-success bridges — never a runtime checker), reusing the checker-free `isAlgebraicIntegral_of_parts` /
 `isGeneralAlgebraicIntegral_of_parts` and the round-trip bridges `toPolyG_algDeriv_eq_of_roundtrip` /
-`toPolyG_afDeriv_eq_of_roundtrip`. -/
+`toPolyG_afDerivWf_eq_of_roundtrip`. -/
 
 -- ★★ THE RADICAL CAPSTONE (fuel-free, unconditional modulo round-trip): `some F → D(F) = integrand`:
 #print axioms cIntegrateAlgebraicWf_sound

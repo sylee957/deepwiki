@@ -33,7 +33,7 @@ reassembly the capstone consumes. This is exactly the **derivable** bulk of the 
   `hpoly` (which is the §6.5 non-cancellation solve, NOT the dispatcher) is the dispatcher result.
 
 The genuinely **irreducible residual** — `hprim` (primitive-regime restriction; `cRischDEG` runs all
-regimes), the §6.2 divisibility/fuel side-conditions (`hdn`, `hfbB`, `hdvdB`, `hfbC`, `hdvdC`), and the
+regimes), the §6.2 divisibility side-conditions (`hdn`, `hdvdB`, `hdvdC`), and the
 transparent-input chain `hin : CSPDEGClearedInputsGen` (whose per-level `Associated`-gcd clauses are the
 `CPrimPRSGenAssocReg` regularity that `associated_toPolyG_cgcdFFCore` itself takes as a hypothesis, and
 which the engine never self-certifies) — is isolated and named in `RischDEStructuralResidual` below, with
@@ -161,7 +161,7 @@ the §6.4 SPDE output `bbar` has positive degree, then the §6.2 `hnorm`, the §
 degree on the special-cleared coefficients), and the capstone's §6.5 non-cancellation `hpoly`
 (`cPolyRischDENoCancelG … = some v`) all hold, with the output reading `ynum = (α'·v + β)·h1`, `yden = h0`.
 The structural-decomposition theorem's derivable conclusion — the three stage results threaded through the
-dispatcher bridge. (`hprim`, the §6.2 divisibility/fuel side-conditions, and the per-level `Associated`-gcd
+dispatcher bridge. (`hprim`, the §6.2 divisibility side-conditions, and the per-level `Associated`-gcd
 transparent-input chain `hin` remain the irreducible residual; see `RischDEStructuralResidual`.) -/
 theorem cRischDEG_some_imp_noCancel_of_primitive [CRischField α] (Dt : CPolyG α) (fuel : ℕ)
     (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
@@ -206,10 +206,10 @@ the derivable stage results (`cRischDEG_some_imp_stages`) factored out. Three ir
   regimes (primitive / hyperexponential / hypertangent); `cRischDEG_rdeCleared_gen` is proved **only** for
   the primitive special regime (it `rw`s `cRdeSpecialDenominatorG_primitive_eq_gen`). A non-primitive
   success satisfies a *different* cleared identity, so `hprim` is a genuine regime restriction, not forced.
-* **§6.2 divisibility/fuel side-conditions** (`hdn`, `hfbB`, `hdvdB`, `hfbC`, `hdvdC`). `cRdeNormalDenominatorG`
+* **§6.2 divisibility side-conditions** (`hdn`, `hdvdB`, `hdvdC`). `cRdeNormalDenominatorG`
   checks **only** `cdvdG fuel en dnh2` before returning `some`; it does NOT check that the normal part `dₙ`
   is nonzero (`hdn`), that the `B`/`C` numerators are divisible by `fden`/`gden` (`hdvdB`/`hdvdC` — it
-  computes `cdivG` unconditionally, truncating on non-divisibility), or the fuel bounds (`hfbB`/`hfbC`).
+  computes `cdivWf` unconditionally, truncating on non-divisibility).
   These hold on regular inputs but are not validated by the `some`-return.
 * **`hin`** — `CSPDEGClearedInputsGen` on the special-cleared coefficients at the bound degree. This bundles,
   **per recursion level**, the gcd-correctness `Associated (toPolyG (cgcdFFCore …)) (gcd …)` — which
@@ -232,17 +232,10 @@ structure RischDEStructuralResidual (Dt : CPolyG α) (fuel : ℕ)
   hfden0 : cnormG fden ≠ []
   /-- §6.2: the input denominator `gden` is nonzero. -/
   hgden0 : cnormG gden ≠ []
-  /-- §6.2 fuel bound on the `B`-numerator. -/
-  hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-      (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-      List α).length ≤ fuel
-  /-- §6.2: `fden` divides the `B`-numerator (the `cdivG` clearing is exact). -/
+  /-- §6.2: `fden` divides the `B`-numerator (the `cdivWf` clearing is exact). -/
   hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
       (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden))
-  /-- §6.2 fuel bound on the `C`-numerator. -/
-  hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-      List α).length ≤ fuel
-  /-- §6.2: `gden` divides the `C`-numerator (the `cdivG` clearing is exact). -/
+  /-- §6.2: `gden` divides the `C`-numerator (the `cdivWf` clearing is exact). -/
   hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum)
   /-- §6.4: the per-level transparent-input chain `CSPDEGClearedInputsGen` on the special-cleared
   coefficients at the §6.3 bound degree — bundling the per-level `Associated`-gcd correctness (the
@@ -260,7 +253,7 @@ residual (`RischDEStructuralResidual`) recovers **exactly** the hypotheses of `c
 hence the cleared Risch-DE identity for the returned `y = ynum/yden`. This makes the boundary citable: the
 ONLY assumptions beyond the bare success and the structural side-conditions (`hδ`, positive `deg(bbar)`)
 are those bundled in `RischDEStructuralResidual` — the primitive-regime restriction, the §6.2
-divisibility/fuel side-conditions, and the per-level `Associated`-gcd transparent-input chain (whose
+divisibility side-conditions, and the per-level `Associated`-gcd transparent-input chain (whose
 `CPrimPRSGenAssocReg` kernel the engine never self-certifies). -/
 
 /-- **★ The §6 cleared Risch-DE identity from bare success and the isolated residual** (primitive regime,
@@ -300,7 +293,7 @@ theorem rdeCleared_of_success_and_residual (Dt : CPolyG α) (fuel : ℕ)
     rw [← cPolyRischDEG_eq_noCancel_of_primitive Dt fuel bbar cbar m hδ hdb']; exact hdisp
   -- the capstone's cleared identity for the reassembled `y = (Q·[1])/h0`
   have hcap := cRischDEG_rdeCleared_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
-    hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hfbB hres'.hdvdB hres'.hfbC hres'.hdvdC
+    hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hdvdB hres'.hdvdC
     hspde hres'.hin hpoly
   simp only at hcap
   -- in the primitive regime the special-denominator 4th component `h1` is `[CField.one]`, so our
@@ -341,7 +334,7 @@ omit [CRischField α] in
 capstone `cRischDEG_rdeCleared_gen` re-factored to take the §6.5/§6.6 poly-RDE field identity
 `D(v) + bbar·v = cbar` (in `cmonomialDeriv`/`toPolyG` form) **directly**, rather than the non-cancellation
 solver-success form `cPolyRischDENoCancelG … = some v`. Given the primitive special regime, the §6.2 normal
-denominator output, its divisibility/fuel certificates, the §6.4 SPDE output under `CSPDEGClearedInputsGen`,
+denominator output, its divisibility certificates, the §6.4 SPDE output under `CSPDEGClearedInputsGen`,
 and `hidentity`, the reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0` satisfies the cleared Risch-DE
 identity over `(CFieldSpec.K α)[X]`. The poly-RDE-identity-keyed spine shared by BOTH regimes — its single
 regime-dependent input is `hidentity`, supplied by the non-cancellation or the cancellation solver. -/
@@ -352,13 +345,8 @@ theorem rdeClearedIdentity_of_polyRDEIdentity (Dt : CPolyG α) (fuel : ℕ)
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -397,7 +385,7 @@ theorem rdeClearedIdentity_of_polyRDEIdentity (Dt : CPolyG α) (fuel : ℕ)
     rw [toPolyG_cmulG, hone, mul_one]
   -- §6.2 normal-denominator cleared lifting from the reduced solve
   have hlift := cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 Q
-    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hred
+    hnorm hdn hfden0 hgden0 hdvdB hdvdC hred
   rw [hynum]
   exact hlift
 
@@ -444,8 +432,8 @@ theorem rdeCleared_of_success_and_residual_cancelPrim (Dt : CPolyG α) (fuel : �
       = toPolyG cbar := by rw [← toPolyG_cmonomialDeriv]; exact hpoly
   -- feed the identity to the regime-agnostic cleared spine; `h1 = [1]` in the primitive regime
   have hcap := rdeClearedIdentity_of_polyRDEIdentity Dt fuel fnum fden gnum gden a0 b0 c0 h0
-    bbar cbar m α' β v hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hfbB hres'.hdvdB
-    hres'.hfbC hres'.hdvdC hspde hres'.hin hidentity
+    bbar cbar m α' β v hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hdvdB
+    hres'.hdvdC hspde hres'.hin hidentity
   have hh1 : (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.2 = ([CField.one] : CPolyG α) := by
     rw [cRdeSpecialDenominatorG_primitive_eq_gen Dt fuel a0 b0 c0 hres'.hprim]
   rw [hh1] at hynum
@@ -494,13 +482,8 @@ theorem cRischDEG_rdeCleared_gen_hyperexp (Dt : CPolyG α) (fuel : ℕ)
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspecialReduced :
       toPolyG a0
@@ -520,7 +503,7 @@ theorem cRischDEG_rdeCleared_gen_hyperexp (Dt : CPolyG α) (fuel : ℕ)
   -- the reconstruction `R = ynum = Q·h₁` solves the reduced normal-denominator equation (the isolated
   -- §6.2 obligation), so the shared normal-denominator spine lifts it to the cleared identity
   exact cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 ynum
-    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
+    hnorm hdn hfden0 hgden0 hdvdB hdvdC hspecialReduced
 
 /-! ### ★ Discharging `hspecialReduced` in the `negn = 0` sub-regime (the `cValuationG`-keystone payoff)
 
@@ -558,13 +541,8 @@ theorem cRischDEG_rdeCleared_gen_hyperexp_noClear (Dt : CPolyG α) (fuel : ℕ)
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -616,7 +594,7 @@ theorem cRischDEG_rdeCleared_gen_hyperexp_noClear (Dt : CPolyG α) (fuel : ℕ)
     rw [hynum]; exact mul_right_cancel₀ hpN0 hfactored
   -- feed the discharged obligation to the (numerator-reconstruction) hyperexp cleared identity
   exact cRischDEG_rdeCleared_gen_hyperexp Dt fuel fnum fden gnum gden a0 b0 c0 h0 α' β v
-    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
+    hnorm hdn hfden0 hgden0 hdvdB hdvdC hspecialReduced
 
 /-! ### ★ `CSpecialDenomNoClearG` is a STRUCTURAL TAUTOLOGY — the `negn > 0` residual is vacuous
 
@@ -663,13 +641,8 @@ theorem cRischDEG_rdeCleared_gen_hyperexp_cancel (Dt : CPolyG α) (fuel : ℕ)
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -692,7 +665,7 @@ theorem cRischDEG_rdeCleared_gen_hyperexp_cancel (Dt : CPolyG α) (fuel : ℕ)
       = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
   cRischDEG_rdeCleared_gen_hyperexp_noClear Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
     hp (cSpecialDenomNoClearG_always Dt fuel b0 c0) hp0 hnorm hdn hfden0 hgden0
-    hfbB hdvdB hfbC hdvdC hspde hin hpoly
+    hdvdB hdvdC hspde hin hpoly
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
@@ -740,13 +713,8 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspecialReduced :
       toPolyG a0
@@ -763,7 +731,7 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
         + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
       = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
   cRischDEG_rdeCleared_gen_hyperexp Dt fuel fnum fden gnum gden a0 b0 c0 h0 α' β v
-    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspecialReduced
+    hnorm hdn hfden0 hgden0 hdvdB hdvdC hspecialReduced
 
 -- ★ The hyperexp `negn = 0` sub-regime reaches the cleared identity with `hspecialReduced` DISCHARGED from
 -- the engine SPDE-on-cleared stages (no longer an assumed hypothesis) — the `cValuationG`-keystone payoff.
@@ -774,13 +742,8 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -802,7 +765,7 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
         + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
       = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
   cRischDEG_rdeCleared_gen_hyperexp_noClear Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
-    hp hnoclear hp0 hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+    hp hnoclear hp0 hnorm hdn hfden0 hgden0 hdvdB hdvdC hspde hin hpoly
 
 -- ★ The hyperexp/CancelExp cleared identity is UNCONDITIONAL — no `CSpecialDenomNoClearG` hypothesis: the
 -- `negn = 0` gate is a structural tautology (`cValuationG`-`ℕ`-valuedness), so the cancellation arm closes
@@ -813,13 +776,8 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -841,7 +799,7 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG 
         + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
       = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
   cRischDEG_rdeCleared_gen_hyperexp_cancel Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
-    hp hp0 hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+    hp hp0 hnorm hdn hfden0 hgden0 hdvdB hdvdC hspde hin hpoly
 
 -- ★ The special-denominator reconstruction power is `[1]` for ALL inputs (the `νₚ`-divisibility is vacuous).
 example (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) (hp : cdegG (cSpecialPolyG Dt fuel) ≠ 0) :

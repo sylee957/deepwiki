@@ -37,9 +37,9 @@ self-divisibility `fden ∣ dₙh` that `dvd_dn_h_of_normal` targets was the eng
 step; with `cWeakNormalizerG` added it is a **theorem** given the one §6.1 normalization-correctness fact
 (`IsWeaklyNormalizedNorm`). Precisely beyond that single sub-lemma: (i) the `C`-divisibility `hdvdC_dn_h2`
 (`gden ∣ dₙh0²`) is a **`g`-side cross-divisibility** that `dvd_dn_h_of_normal` provably does NOT reach
-(it is the engine's own `cdvdG` check up to `gden`-vs-`eₙ`, not a self-divisibility), and (ii) the per-run
-fuel/termination (`hdn`/`hfbB`/`hfbC`/`hin`/`hdb`) that every fuel-bounded computable solver carries. Both
-are NOT the `B`-divisibility wall; they are a distinct `g`-side condition + generic fuel-boundedness. -/
+	(it is the engine's own `cdvdG` check up to `gden`-vs-`eₙ`, not a self-divisibility), and (ii) the per-run
+	termination data (`hdn`/`hin`/`hdb`) that every computable solver carries. Both are NOT the
+	`B`-divisibility wall; they are a distinct `g`-side condition + generic termination side data. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -250,8 +250,8 @@ end Bridges
 `RischDESuccessResidualNorm` is the reduced crux `RischDESuccessResidualCrux` **with the `B`-divisibility
 clause `hdvdB_dn_h` REMOVED** — that clause is the §6.2 self-divisibility wall `dvd_dn_h_of_normal` targets,
 discharged by `isWeaklyNormalizedNorm_dvdB` from the §6.1 normalization guarantee `IsWeaklyNormalizedNorm`.
-What remains is the per-run termination/fuel any fuel-bounded computable solver carries (`hdn`
-normal-part-nonzero, `hfbB`/`hfbC` fuel bounds, `hin` the per-level transparent-input chain, `hdb` the
+	What remains is the per-run termination data any computable solver carries (`hdn`
+	normal-part-nonzero, `hin` the per-level transparent-input chain, `hdb` the
 dispatcher routing) **plus** the `C`-divisibility `hdvdC_dn_h2` (`gden ∣ dₙh0²`, a `g`-side cross condition
 outside `dvd_dn_h_of_normal`'s reach — see the boundary note above). The `B`-divisibility wall is gone.
 
@@ -270,12 +270,12 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 `RischDESuccessResidualCrux` with **the `B`-divisibility clause `hdvdB_dn_h` REMOVED** — that clause is the
 genuine §6.2 self-divisibility wall `dvd_dn_h_of_normal` targets, discharged by `f`-normalization
 (`isWeaklyNormalizedNorm_dvdB`), so it is NOT part of this residual. What remains is the per-run
-termination/fuel every fuel-bounded computable solver carries — `hdn` (normal part nonzero), `hfbB`/`hfbC`
-(the §6.2 fuel bounds), `hin` (the §6.4 per-level transparent-input chain, gcd clauses via the witness),
+	termination data every computable solver carries — `hdn` (normal part nonzero), `hin` (the §6.4 per-level
+	transparent-input chain, gcd clauses via the witness),
 `hdb` (the dispatcher routing) — **plus the `C`-divisibility `hdvdC_dn_h2`** (`gden ∣ dₙh0²`, a `g`-side
 **cross**-divisibility that `dvd_dn_h_of_normal` provably does NOT reach: it is the engine's own `cdvdG`
 check up to `gden`-vs-`eₙ`, not a self-divisibility). The `B`-divisibility wall is removed; the `C`-side
-condition and per-run fuel remain. -/
+	condition and per-run termination data remain. -/
 structure RischDESuccessResidualNorm (ftilde gtilde : QFunNZG β) : Prop where
   /-- The normal part `dₙ` of `f̃den` is nonzero. -/
   hdn : ∀ a0 b0 c0 h0 : CPolyG β,
@@ -289,25 +289,6 @@ structure RischDESuccessResidualNorm (ftilde gtilde : QFunNZG β) : Prop where
         gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
       toPolyG gtilde.1.2 ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG
         (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0)
-  /-- §6.2 fuel bound on the `B`-numerator. -/
-  hfbB : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
-        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
-      (CPolyG.cnormG (CPolyG.csubG
-        (CPolyG.cmulG (CPolyG.cmulG
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0)
-          ftilde.1.1)
-        (CPolyG.cmulG (CPolyG.cmulG
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1
-            (CPolyG.cmonomialDeriv ([CField.one] : CPolyG β) h0)) ftilde.1.2)) : List β).length
-        ≤ towerRischDEFuel
-  /-- §6.2 fuel bound on the `C`-numerator. -/
-  hfbC : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
-        gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
-      (CPolyG.cnormG (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cmulG
-        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0)
-        gtilde.1.1) : List β).length ≤ towerRischDEFuel
   /-- The §6.4 per-level transparent-input chain `CSPDEGClearedInputsGen` (gcd clauses via the witness). -/
   hin : ∀ a0 b0 c0 h0 : CPolyG β,
     cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
@@ -348,8 +329,6 @@ theorem residualCrux_of_residualNorm (ftilde gtilde : QFunNZG β)
   hdn := hres.hdn
   hdvdB_dn_h _ _ _ h0 _ := isWeaklyNormalizedNorm_dvdB ftilde h0 hnorm
   hdvdC_dn_h2 := hres.hdvdC_dn_h2
-  hfbB := hres.hfbB
-  hfbC := hres.hfbC
   hin := hres.hin
   hdb := hres.hdb
 
@@ -472,9 +451,8 @@ self-contained next step over `cWeakNormalizerG`, NOT a property of the recursiv
    up to `gden`-vs-`eₙ` (`eₙ` = `gden`'s normal part); discharging it needs `g`'s denominator normal +
    a §6.2 structural lemma `cRdeNormalDenominatorG = some ⟹ eₙ ∣ dₙh0²`, a separate (g-side) step. This is
    **a different condition than the wall**, kept explicit.
-2. **The per-run termination/fuel** (`hdn`/`hfbB`/`hfbC`/`hin`/`hdb`) — generic fuel-boundedness every
-   computable fuel-bounded solver carries (a too-small `towerRischDEFuel` fails them); the gcd clauses
-   inside `hin` ARE supplied by `[CTowerGcdWitness β]`. NOT a divisibility precondition.
+	2. **The per-run termination data** (`hdn`/`hin`/`hdb`) — generic computable-solver side data; the gcd clauses
+	   inside `hin` ARE supplied by `[CTowerGcdWitness β]`. NOT a divisibility precondition.
 
 ### On the `CRischFieldSpec (QFunNZG β)` instance (Task 5, the instance question)
 

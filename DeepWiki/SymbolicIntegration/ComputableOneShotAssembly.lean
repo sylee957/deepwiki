@@ -569,7 +569,7 @@ proper-fraction property `hproper` (which no longer mentions `s`).
 **The residual (verified Large).** The *unconditional* proper-fraction property — Hermite preserves
 properness, a proper input `a/d` (`deg a < deg d`) yielding a proper leftover — is not dischargeable with a
 focused effort: `cHermiteReduceTowerG` recovers `h_num` by an *exact division* over the squarefree radical
-`Dstar = ∏ᵢ vᵢ` after a *multi-factor fold* of `cHermiteReduceTowerInner` (each step a `cdiophantineG`
+`Dstar = ∏ᵢ vᵢ` after a *multi-factor fold* of `cHermiteReduceTowerInnerWf` (each step a `cdiophantineGWf`
 Bézout solve, cross-multiplied into the running rational part `g`). Bounding `deg h_num < deg Dstar` requires
 the full abstract correctness of `cHermiteReduceTowerG` (the cleared Hermite identity `D(g) + h = a/d`,
 currently `native_decide`-validated only, never proven abstractly) *plus* a tower analogue of the per-power
@@ -599,8 +599,8 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **★ `hA` from the RESIDUAL-fraction properness** (the `hproper` hypothesis discharged one layer
 deeper) — the reduced-case degree side condition `(…).2.1.degree < s.card` from the squarefree spelling
 `hden` PLUS the engine leftover-projections (`hnumeq`/`hdeneq`, `toPolyG_cnormG`-provable: `(…).2.1` is
-`cdivG fuel (resNum·Dstar) resDen`, `(…).2.2` is `Dstar`), the exact-division divisibility
-`resDen ∣ resNum·Dstar` (with fuel) and **the residual-fraction properness** `deg resNum < deg resDen`.
+`cdivWf (resNum·Dstar) resDen`, `(…).2.2` is `Dstar`), the exact-division divisibility
+`resDen ∣ resNum·Dstar` and **the residual-fraction properness** `deg resNum < deg resDen`.
 Composes `cHermiteReduceTowerG_leftover_proper_of_residual` (the exact-division degree cancellation) with
 `Lagrange.degree_nodal`, so `hproper` is no longer assumed but **reduced** to the residual properness
 `deg resNum < deg resDen` — i.e. `a/d − D(g)` proper, the documented Large residual. The deepest provable
@@ -608,11 +608,10 @@ form of the `hA` discharge. -/
 theorem cHermiteReduceTowerG_numer_degree_lt_of_residual (Dt : CPolyG α) (fuel : ℕ)
     (a d : CPolyG α) (s : Finset (CFieldSpec.K α)) (resNum resDen Dstar : CPolyG α)
     (hnumeq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1
-      = toPolyG (cdivG fuel (cmulG resNum Dstar) resDen))
+      = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
     (hdeneq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
     (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
     (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
-    (hfuel : (cnormG (cmulG resNum Dstar) : List α).length ≤ fuel)
     (hresDen : cnormG resDen ≠ [])
     (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
     (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
@@ -620,7 +619,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_residual (Dt : CPolyG α) (fuel 
     rw [← hdeneq, hden]; exact Lagrange.nodal_ne_zero
   exact cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden
     (cHermiteReduceTowerG_leftover_proper_of_residual Dt fuel a d resNum resDen Dstar
-      hnumeq hdeneq hdvd hfuel hresDen hDstar hresProper)
+      hnumeq hdeneq hdvd hresDen hDstar hresProper)
 
 /-- **★★ The reduced-case field identity for the PRIMITIVE case** — for the normal-part capstone output
 `res = cIntegrateReducedG Dt fuel a d cands` with a primitive monomial `toPolyG Dt = C w`, **given** the
@@ -1618,16 +1617,15 @@ hypotheses. -/
 example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
     (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (resNum resDen Dstar : CPolyG (QFunNZG ℚ))
     (hnumeq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1
-      = toPolyG (cdivG fuel (cmulG resNum Dstar) resDen))
+      = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
     (hdeneq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
     (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
     (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
-    (hfuel : (cnormG (cmulG resNum Dstar) : List (QFunNZG ℚ)).length ≤ fuel)
     (hresDen : cnormG resDen ≠ [])
     (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
     (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card :=
   cHermiteReduceTowerG_numer_degree_lt_of_residual Dt fuel a d s resNum resDen Dstar
-    hnumeq hdeneq hden hdvd hfuel hresDen hresProper
+    hnumeq hdeneq hden hdvd hresDen hresProper
 
 -- ★ `cHermiteReduceTowerG_numer_degree_lt` discharges `hA` from the squarefree spelling + leftover
 -- properness: `deg h_num < deg h_den` (with `h_den = nodal s id`) gives `deg h_num < s.card`.
@@ -1677,16 +1675,16 @@ exponential / log regimes) it is no longer free: the §5.3 chain
 `cHermiteReduceTowerG_residual_proper_of_degree_le_one` (residual `a/d − D(g)` proper from input properness
 `deg a < deg d`, `deg Dt ≤ 1`, the per-factor keystone `hb`/`hv`) → `cHermiteReduceTowerG_leftover_proper_of_residual`
 (exact-division degree cancellation) → `cHermiteReduceTowerG_numer_degree_lt` (squarefree-spelling rewrite)
-proves it. The remaining inputs are the per-factor keystone `hb` (`= cdiophantineG_fst_degree_lt`), nonzero
-`hv`, and the three **exact-division connectors** `hdvd`/`hfuelh`/`hresDen` (the residual·radical exactly
-divides `resDen` with enough fuel, `resDen ≠ 0`) — engine fuel/regularity facts, **not** free side conditions.
+proves it. The remaining inputs are the per-factor keystone `hb` (`= cdiophantineGWf_fst_degree_lt`), nonzero
+`hv`, and the **exact-division connectors** `hdvd`/`hresDen` (the residual·radical exactly divides `resDen`,
+and `resDen ≠ 0`) — engine regularity facts, **not** free side conditions.
 The fold accumulator is exposed as `g`/`hgeq` so the residual `resNum/resDen` projections (`hnumeq`/`hdeneq`)
 reduce by `rfl` (`simp [cHermiteReduceTowerG, toPolyG_cnormG]`). -/
 
 /-- **★★★ `hA` discharged for `deg Dt ≤ 1`** — the Hermite leftover numerator degree bound
 `(cHermiteReduceTowerG Dt fuel a d).2.1.degree < s.card` over `ℚ(x)(t)`, from input properness `deg a < deg d`
 (`haProper`), `deg Dt ≤ 1` (`hDtdeg`), the per-factor keystone `hb`/nonzero `hv`, the squarefree spelling
-`hden`, and the exact-division connectors `hdvd`/`hfuelh`/`hresDen` (with the fold accumulator `g` exposed via
+`hden`, and the exact-division connectors `hdvd`/`hresDen` (with the fold accumulator `g` exposed via
 `hgeq`). Chains `cHermiteReduceTowerG_residual_proper_of_degree_le_one` →
 `cHermiteReduceTowerG_leftover_proper_of_residual` → `cHermiteReduceTowerG_numer_degree_lt`. The provable
 discharge of the one-shot's `hA` for the linear-derivation regimes — `hA` reduced from a free hypothesis to
@@ -1698,29 +1696,25 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hv : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
     (hb : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
-        (toPolyG (cdiophantineG fuel
-            (cmulG (cdivG fuel d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+        (toPolyG (cdiophantineGWf
+            (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPolyG p.1).degree)
     (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
     (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
     (hgeq : g = (cSqfreeYunFFG fuel d).zipIdx.foldl
       (fun (gAcc : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) (vi, idx) =>
-        let i := idx + 1
-        if i ≤ 1 then gAcc
-        else
-          let Vi_pow := cpowG vi i
-          let u := cdivG fuel d Vi_pow
-          let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a ([CField.zero], [CField.one])).1
-          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivWf d Vi_pow
+            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
       ([CField.zero], [CField.one]))
     (hdvd : toPolyG (cmulG d (cmulG g.2 g.2))
       ∣ toPolyG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
           (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
         ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one])))
-    (hfuelh : (cnormG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
-          (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
-        ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one]))
-        : List (QFunNZG ℚ)).length ≤ fuel)
     (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG (QFunNZG ℚ))) :
     (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
   -- the residual `resNum/resDen` is proper for `deg Dt ≤ 1` from input properness
@@ -1742,7 +1736,7 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one])
     (by simp only [cHermiteReduceTowerG, toPolyG_cnormG])
     (by simp only [cHermiteReduceTowerG, toPolyG_cnormG])
-    hdvd hfuelh hresDen hDstar hresProper
+    hdvd hresDen hDstar hresProper
   exact cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden hproper
 
 /-! ### ★★★ The CAPSTONE: the primitive one-shot at `ℚ(x)(t)` with `hA` DISCHARGED
@@ -1752,7 +1746,7 @@ primitive monomial `toPolyG Dt = C w` (so `deg Dt = 0 ≤ 1`) this assembles its
 input-properness `deg cₙ < deg dₙ` (`canonicalRepresentationFastG_simple_proper_qfunNZG`, **unconditional**
 modulo fuel/regularity) and `deg Dt ≤ 1` into `cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one`, leaving
 the genuine Bronstein side conditions (`hrecon`, `hnorm`), the Hermite/per-root engine bridges
-(`hherm`, `hform`), and the per-step keystone `hb`/`hv` + exact-division connectors (`hdvd`/`hfuelh`/`hresDen`)
+(`hherm`, `hform`), and the per-step keystone `hb`/`hv` + exact-division connectors (`hdvd`/`hresDen`)
 + canonical fuel/regularity bundle. `hA` is no longer in the hypothesis list. -/
 
 /-- **★★★ The PRIMITIVE one-shot at `ℚ(x)(t)` with `hA` discharged** — for a primitive monomial
@@ -1763,8 +1757,8 @@ condition `hA` as a free hypothesis: it is discharged from the canonical simple 
 `cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one`. What genuinely remains: the Bronstein side conditions
 (canonical reconstruction `hrecon`, normality `hnorm`, squarefree spelling `hden`), the engine bridges (Hermite
 half `hherm`, per-root reassembly `hform`), the per-step keystone (`hb`/nonzero `hv`) + exact-division
-connectors (`hdvd`/`hfuelh`/`hresDen`), and the canonical-representation fuel/regularity bundle
-(`hreg`/`hfuelA`/`hfuelUR`). The milestone: primitive normal-part soundness for `deg Dt ≤ 1` at `ℚ(x)(t)`
+connectors (`hdvd`/`hresDen`), and the canonical-representation regularity bundle (`hreg`). The milestone:
+primitive normal-part soundness for `deg Dt ≤ 1` at `ℚ(x)(t)`
 modulo only genuine side conditions + fuel/regularity. -/
 theorem cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
@@ -1806,16 +1800,12 @@ theorem cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QFun
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
     (hreg : CCanonicalRepFastGRegularQ Dt fuel a d)
-    (hfuelA : (cnormG a : List (QFunNZG ℚ)).length ≤ fuel)
-    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel
-        (CPolyG.cSplitFactorFastG Dt fuel d).1 (CPolyG.cSplitFactorFastG Dt fuel d).2).1
-        (cdivmodG fuel a d).2) : List (QFunNZG ℚ)).length ≤ fuel)
     (hv : ∀ p ∈ (cSqfreeYunFFG fuel (canonicalRepresentationFastG Dt fuel a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
     (hbk : ∀ p ∈ (cSqfreeYunFFG fuel (canonicalRepresentationFastG Dt fuel a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
-        (toPolyG (cdiophantineG fuel
-            (cmulG (cdivG fuel (canonicalRepresentationFastG Dt fuel a d).2.2.2
+        (toPolyG (cdiophantineGWf
+            (cmulG (cdivWf (canonicalRepresentationFastG Dt fuel a d).2.2.2
               (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPolyG p.1).degree)
     (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
@@ -1825,8 +1815,8 @@ theorem cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QFun
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpowG vi i
-          let u := cdivG fuel (canonicalRepresentationFastG Dt fuel a d).2.2.2 Vi_pow
-          let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1)
+          let u := cdivWf (canonicalRepresentationFastG Dt fuel a d).2.2.2 Vi_pow
+          let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1)
             (canonicalRepresentationFastG Dt fuel a d).2.2.1 ([CField.zero], [CField.one])).1
           (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
       ([CField.zero], [CField.one]))
@@ -1836,12 +1826,6 @@ theorem cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QFun
             (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
         ((cSqfreeYunFFG fuel (canonicalRepresentationFastG Dt fuel a d).2.2.2).foldl
           (fun acc vi => cmulG acc vi) [CField.one])))
-    (hfuelh : (cnormG (cmulG
-          (csubG (cmulG (canonicalRepresentationFastG Dt fuel a d).2.2.1 (cmulG g.2 g.2))
-          (cmulG (canonicalRepresentationFastG Dt fuel a d).2.2.2
-            (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
-        ((cSqfreeYunFFG fuel (canonicalRepresentationFastG Dt fuel a d).2.2.2).foldl
-          (fun acc vi => cmulG acc vi) [CField.one])) : List (QFunNZG ℚ)).length ≤ fuel)
     (hresDen : cnormG (cmulG (canonicalRepresentationFastG Dt fuel a d).2.2.2 (cmulG g.2 g.2))
       ≠ ([] : CPolyG (QFunNZG ℚ))) :
     towerFractionFieldDerivG Dt
@@ -1851,12 +1835,12 @@ theorem cIntegrateGFull_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QFun
   -- `deg Dt ≤ 1` from the primitive shape `toPolyG Dt = C w`
   have hDtdeg : (toPolyG Dt).natDegree ≤ 1 := by rw [hDt, Polynomial.natDegree_C]; exact Nat.zero_le 1
   -- input properness `deg cₙ < deg dₙ`, unconditional at ℚ(x)(t)
-  have haProper := canonicalRepresentationFastG_simple_proper_qfunNZG Dt fuel a d hreg hfuelA hfuelUR
+  have haProper := canonicalRepresentationFastG_simple_proper_qfunNZG Dt fuel a d hreg
   -- discharge `hA` from properness + `deg Dt ≤ 1` + keystone + exact-division connectors
   have hA := cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one Dt fuel
     (canonicalRepresentationFastG Dt fuel a d).2.2.1
     (canonicalRepresentationFastG Dt fuel a d).2.2.2 s hDtdeg haProper hv hbk hden g hgeq
-    hdvd hfuelh hresDen
+    hdvd hresDen
   exact cIntegrateGFull_primitive_oneShot_qfunNZG Dt fuel a d cands res s w hDt hb' hfp hsome hrecon
     hherm hden hA hnorm hform
 
@@ -1868,8 +1852,8 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
     (hDtdeg : (toPolyG Dt).natDegree ≤ 1) (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hv : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
     (hb : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
-        (toPolyG (cdiophantineG fuel
-            (cmulG (cdivG fuel d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+        (toPolyG (cdiophantineGWf
+            (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
           < (toPolyG p.1).degree)
     (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
     (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
@@ -1879,22 +1863,18 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpowG vi i
-          let u := cdivG fuel d Vi_pow
-          let gloc := (cHermiteReduceTowerInner Dt fuel vi u (i - 1) a ([CField.zero], [CField.one])).1
+          let u := cdivWf d Vi_pow
+          let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
           (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
       ([CField.zero], [CField.one]))
     (hdvd : toPolyG (cmulG d (cmulG g.2 g.2))
       ∣ toPolyG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
           (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
         ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one])))
-    (hfuelh : (cnormG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
-          (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
-        ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one]))
-        : List (QFunNZG ℚ)).length ≤ fuel)
     (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG (QFunNZG ℚ))) :
     (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card :=
   cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one Dt fuel a d s hDtdeg haProper hv hb hden g hgeq
-    hdvd hfuelh hresDen
+    hdvd hresDen
 
 /-! ### ★★★ The POLY-BRANCH CAPSTONE: the primitive-base poly one-shot at `ℚ(x)(t)` with `hpoly`, `hA` DISCHARGED
 
@@ -1921,8 +1901,8 @@ condition `hA` (discharged from input properness + `deg Dt ≤ 1` via
 `field_identity_of_cIntegrateReducedG_primitive`). What genuinely remains: the additive split reconstruction
 `hrecon` (`amG fₚ + amG cₙ/amG dₙ = amG a/amG d`), `hgden`, the `hpoly` regime `hconst`, the Bronstein side
 conditions on the simple part `(cₙ, dₙ)` (Hermite half `hherm`, squarefree spelling `hden`, normality `hnorm`,
-per-root reassembly `hform`), and the canonical-representation fuel/regularity bundle
-(`hreg`/`hfuelA`/`hfuelUR`/`hv`/`hbk`/`g`/`hgeq`/`hdvd`/`hfuelh`/`hresDen`). The milestone: primitive-base
+per-root reassembly `hform`), and the canonical-representation regularity/keystone bundle
+(`hreg`/`hv`/`hbk`/`g`/`hgeq`/`hdvd`/`hresDen`). The milestone: primitive-base
 polynomial-branch soundness at `ℚ(x)(t)` modulo only genuine side conditions + fuel/regularity, completing
 `cIntegrateGFull`'s a-priori `δ ≤ 1` soundness across all three branches (normal capstone + this poly capstone +
 special = none). -/
@@ -1978,17 +1958,12 @@ theorem cIntegrateGFull_poly_oneShot_inputProper_qfunNZG (fuel : ℕ)
                     (Lagrange.nodal s id)).eval β,
               X - C β)))
     (hreg : CCanonicalRepFastGRegularQ ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d)
-    (hfuelA : (cnormG a : List (QFunNZG ℚ)).length ≤ fuel)
-    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel
-        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel d).1
-        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel d).2).1
-        (cdivmodG fuel a d).2) : List (QFunNZG ℚ)).length ≤ fuel)
     (hv : ∀ p ∈ (cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
     (hbk : ∀ p ∈ (cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
-        (toPolyG (cdiophantineG fuel
-            (cmulG (cdivG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
+        (toPolyG (cdiophantineGWf
+            (cmulG (cdivWf (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
               (cpowG p.1 (p.2 + 1))) (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) p.1)) p.1 rhs).1).degree
           < (toPolyG p.1).degree)
     (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
@@ -1998,8 +1973,8 @@ theorem cIntegrateGFull_poly_oneShot_inputProper_qfunNZG (fuel : ℕ)
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpowG vi i
-          let u := cdivG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 Vi_pow
-          let gloc := (cHermiteReduceTowerInner ([CField.one] : CPolyG (QFunNZG ℚ)) fuel vi u (i - 1)
+          let u := cdivWf (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 Vi_pow
+          let gloc := (cHermiteReduceTowerInnerWf ([CField.one] : CPolyG (QFunNZG ℚ)) vi u (i - 1)
             (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1 ([CField.zero], [CField.one])).1
           (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
       ([CField.zero], [CField.one]))
@@ -2009,12 +1984,6 @@ theorem cIntegrateGFull_poly_oneShot_inputProper_qfunNZG (fuel : ℕ)
             (csubG (cmulG (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.1) g.2) (cmulG g.1 (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.2)))))
         ((cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).foldl
           (fun acc vi => cmulG acc vi) [CField.one])))
-    (hfuelh : (cnormG (cmulG
-          (csubG (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1 (cmulG g.2 g.2))
-          (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2
-            (csubG (cmulG (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.1) g.2) (cmulG g.1 (cmonomialDeriv ([CField.one] : CPolyG (QFunNZG ℚ)) g.2)))))
-        ((cSqfreeYunFFG fuel (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2).foldl
-          (fun acc vi => cmulG acc vi) [CField.one])) : List (QFunNZG ℚ)).length ≤ fuel)
     (hresDen : cnormG (cmulG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 (cmulG g.2 g.2))
       ≠ ([] : CPolyG (QFunNZG ℚ)))
     (hrecon : amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).1)
@@ -2032,12 +2001,12 @@ theorem cIntegrateGFull_poly_oneShot_inputProper_qfunNZG (fuel : ℕ)
     rw [hDt, Polynomial.natDegree_C]; exact Nat.zero_le 1
   -- input properness `deg cₙ < deg dₙ`, unconditional at ℚ(x)(t)
   have haProper := canonicalRepresentationFastG_simple_proper_qfunNZG ([CField.one] : CPolyG (QFunNZG ℚ))
-    fuel a d hreg hfuelA hfuelUR
+    fuel a d hreg
   -- discharge `hA` (on the simple part `(cₙ, dₙ)`) from properness + `deg Dt ≤ 1` + exact-division connectors
   have hA := cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
     (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
     (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.2 s hDtdeg haProper
-    hv hbk hden g hgeq hdvd hfuelh hresDen
+    hv hbk hden g hgeq hdvd hresDen
   -- build `hnormal` (the normal part identity on `(cₙ, dₙ)`) from the primitive reduced-case capstone
   have hnormal := field_identity_of_cIntegrateReducedG_primitive ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
     (canonicalRepresentationFastG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel a d).2.2.1
@@ -2053,4 +2022,3 @@ theorem cIntegrateGFull_poly_oneShot_inputProper_qfunNZG (fuel : ℕ)
 #print axioms cIntegrateGFull_poly_oneShot_inputProper_qfunNZG
 
 end DeepWiki.SymbolicIntegration
-

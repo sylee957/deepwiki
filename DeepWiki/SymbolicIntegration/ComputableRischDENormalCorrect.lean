@@ -16,11 +16,11 @@ establish — sharpening the prior "self-certification wall" into its precise ma
   (the sharpened crux): `hdvdB`/`hdvdC` (`fden ∣ B`, `gden ∣ C`) are the **weak-normalization invariant** of
   Bronstein §6.1–§6.2 — they hold for the *post-Hermite, weakly-normalized* RDE input, but the recursive
   `crischDESolve` feeds its raw argument straight into `cRischDEG` without weak-normalizing it, and the engine
-  computes the clearing `cdivG` unconditionally (truncating on non-divisibility). `hdn` likewise rests on the
+  computes the clearing `cdivWf` unconditionally (truncating on non-divisibility). `hdn` likewise rests on the
   splitting-factorization product `fden = dₙ·dₛ`, which `cSplitFactorFastG` is documented not to establish
-  abstractly. The fuel bounds (`hfbB`/`hfbC`) and the non-gcd `CSPDEGClearedInputsGen` clauses are per-run
-  regularity. So the recursive `RischDESuccessResidual` is **not** an unconditional `∀ f g` — its precise true
-  content is the §6.1 weak-normalization precondition plus per-run termination/fuel, NOT engine
+  abstractly. The non-gcd `CSPDEGClearedInputsGen` clauses are per-run regularity. So the recursive
+  `RischDESuccessResidual` is **not** an unconditional `∀ f g` — its precise true content is the §6.1
+  weak-normalization precondition plus per-run termination/fuel, NOT engine
   self-certification.
 
 The verdict at the end states precisely which clauses fall and why the rest is a genuine precondition. -/
@@ -109,7 +109,7 @@ end OutputNonzero
 `hprim` asks `cdegG (cSpecialPolyG Dt fuel) = 0` (the primitive special regime). For the recursive instance
 `Dt = [CField.one]` the monomial is primitive, so its special part is the constant `[1]`. This is **not**
 "true by construction" cheaply: `cSpecialPolyG [1] fuel = cmonicG (cSplitFactorFastG [1] fuel [1]).2`, and the
-`cSplitFactorFastG` step computes `S = cdivG (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1]
+`cSplitFactorFastG` step computes `S = cdivWf (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1]
 (cderivG [1]))` whose first gcd argument is the unit `[1]` but whose degree we can only pin via the gcd
 correctness. With the tower-gcd witness `[CTowerGcdWitness β]` in hand (the same witness the capstone already
 carries), the gcd of the unit `[1]` is associated to `gcd 1 _ = 1`, hence a unit of degree `0`; the step `S`
@@ -141,43 +141,42 @@ theorem cgcdFFCore_one_isUnit (fuel : ℕ) (z : CPolyG β) :
   exact (associated_toPolyG_cmonicG _).symm.isUnit hraw
 
 omit [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β] in
-/-- **Division by a degree-0 unit divisor keeps degree 0**: if `cdegG c = 0`, `d` is nonzero of degree `0`,
-and the fuel covers `c`, then `cdegG (cdivG fuel c d) = 0`. The unit divisor has normalized length `1`, so the
-Euclidean remainder is properly reduced to length `< 1`, i.e. `0` (`cmodG_length_lt`); the division identity
-`c = q·d + 0` then forces `natDegree q = natDegree c − natDegree d = 0`. -/
-theorem cdegG_cdivG_zero_of_unit_divisor (fuel : ℕ) (c d : CPolyG β)
-    (hc : cdegG c = 0) (hd0 : CPolyG.cnormG d ≠ []) (hd : cdegG d = 0)
-    (hfuel : (CPolyG.cnormG c : List β).length ≤ fuel) :
-    cdegG (CPolyG.cdivG fuel c d) = 0 := by
+/-- **Division by a degree-0 unit divisor keeps degree 0**: if `cdegG c = 0` and `d` is nonzero of degree
+`0`, then `cdegG (cdivWf c d) = 0`. The unit divisor has normalized length `1`, so the Euclidean remainder is
+properly reduced to length `< 1`, i.e. `0` (`cmodWf_length_lt`); the division identity `c = q·d + 0` then
+forces `natDegree q = natDegree c − natDegree d = 0`. -/
+theorem cdegG_cdivWf_zero_of_unit_divisor (c d : CPolyG β)
+    (hc : cdegG c = 0) (hd0 : CPolyG.cnormG d ≠ []) (hd : cdegG d = 0) :
+    cdegG (CPolyG.cdivWf c d) = 0 := by
   have hdlen : (CPolyG.cnormG d : List β).length = 1 := by
     rw [cdegG] at hd
     have : 0 < (CPolyG.cnormG d : List β).length := List.length_pos_iff.mpr hd0
     omega
-  have hrem := CPolyG.cmodG_length_lt fuel c d hd0 hfuel
+  have hrem := CPolyG.cmodWf_length_lt c d hd0
   rw [hdlen] at hrem
-  have hremnil : CPolyG.cnormG (CPolyG.cmodG fuel c d) = [] := List.length_eq_zero_iff.mp (by omega)
-  have hrem0 : toPolyG (CPolyG.cdivmodG fuel c d).2 = 0 := by
-    rw [show ((CPolyG.cdivmodG fuel c d).2) = CPolyG.cmodG fuel c d from rfl]
+  have hremnil : CPolyG.cnormG (CPolyG.cmodWf c d) = [] := List.length_eq_zero_iff.mp (by omega)
+  have hrem0 : toPolyG (CPolyG.cdivmodWf c d).2 = 0 := by
+    rw [show ((CPolyG.cdivmodWf c d).2) = CPolyG.cmodWf c d from rfl]
     exact (CPolyG.cnormG_eq_nil_iff _).mp hremnil
-  have hid := CPolyG.toPolyG_cdivmodG' fuel c d hd0
-  rw [show CPolyG.cdivG fuel c d = (CPolyG.cdivmodG fuel c d).1 from rfl]
+  have hid := CPolyG.toPolyG_cdivmodWf c d hd0
+  rw [show CPolyG.cdivWf c d = (CPolyG.cdivmodWf c d).1 from rfl]
   rw [hrem0, add_zero] at hid
   have hdne : toPolyG d ≠ 0 := fun h => hd0 ((CPolyG.cnormG_eq_nil_iff d).mpr h)
   have hdnd0 : (toPolyG d).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hd
   have hcnd0 : (toPolyG c).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hc
   rw [cdegG_eq_natDegree]
-  by_cases hquo0 : toPolyG (CPolyG.cdivmodG fuel c d).1 = 0
+  by_cases hquo0 : toPolyG (CPolyG.cdivmodWf c d).1 = 0
   · rw [hquo0]; simp
   · have hnd := congrArg Polynomial.natDegree hid
     rw [Polynomial.natDegree_mul hquo0 hdne, hdnd0, hcnd0, add_zero] at hnd
     omega
 
 /-- **The `cSplitFactorFastG` step value is constant on the unit input `[1]`** (`cdegG_step_one`): the step
-`S = cdivG (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1] (cderivG [1]))` has degree `0`. Both
+`S = cdivWf (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1] (cderivG [1]))` has degree `0`. Both
 gcds are units (`cgcdFFCore_one_isUnit`), so `S` is a unit-by-unit division — degree `0`
-(`cdegG_cdivG_zero_of_unit_divisor`). The step never being non-constant is what stops the split recursion. -/
+(`cdegG_cdivWf_zero_of_unit_divisor`). The step never being non-constant is what stops the split recursion. -/
 theorem cdegG_step_one (n : ℕ) :
-    cdegG (CPolyG.cdivG (n + 1)
+    cdegG (CPolyG.cdivWf
         (CFracGcdCore.cgcdFFCore (n + 1) ([CField.one] : CPolyG β)
           (CPolyG.cmonomialDeriv [CField.one] [CField.one]))
         (CFracGcdCore.cgcdFFCore (n + 1) ([CField.one] : CPolyG β)
@@ -194,9 +193,7 @@ theorem cdegG_step_one (n : ℕ) :
   have hg20 : CPolyG.cnormG g2 ≠ [] := by
     intro he; have hz : toPolyG g2 = 0 := (CPolyG.cnormG_eq_nil_iff g2).mp he
     rw [hz] at hg2u; exact not_isUnit_zero hg2u
-  have hfuel : (CPolyG.cnormG g1 : List β).length ≤ n + 1 := by
-    rw [cdegG] at hd1; omega
-  exact cdegG_cdivG_zero_of_unit_divisor (n + 1) g1 g2 hd1 hg20 hd2 hfuel
+  exact cdegG_cdivWf_zero_of_unit_divisor g1 g2 hd1 hg20 hd2
 
 /-- **The split factorization of `[1]` is trivial** (`cSplitFactorFastG_one_eq`): `cSplitFactorFastG [1] fuel
 [1] = ([1], [1])`. At fuel `0` it is `([1], [1])` definitionally; at `fuel+1` the step `S` is constant
@@ -233,7 +230,7 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore �
 /-! ## ★ Task 3 — the §6.2 divisibility crux: reduced to the weak-normalization product-divisibilities
 
 `hdvdB`/`hdvdC` are the two clauses a bare `cRischDEG … = some _` does NOT self-certify, because
-`cRdeNormalDenominatorG` computes the `B`/`C` clearing `cdivG` **unconditionally** (it checks only one
+`cRdeNormalDenominatorG` computes the `B`/`C` clearing `cdivWf` **unconditionally** (it checks only one
 `cdvdG`, on `en ∣ dₙh²`, before returning `some` — never the `fden ∣ B` / `gden ∣ C` exactness the cleared
 identity needs). We make their precise content explicit: each reduces to a single product-divisibility of the
 *denominator* into the `normal-part·h` block — the algebraic essence of Bronstein §6.1 **weak normalization**.
@@ -258,7 +255,7 @@ omit [CDiffFieldSpec β] in
 /-- **`hdvdB` reduces to `fden ∣ dₙh`** (the §6.2 `B`-divisibility essence): if the denominator `fden`
 divides the normal-part·h block `dₙ·h0` (`dₙ = (cSplitFactorFastG Dt fuel fden).1`), then it divides the full
 `B`-numerator `dₙh·fnum − dₙ·Dh·fden`. The second summand is `fden`-divisible outright; the first is
-`(dₙh)·fnum`, divisible by `fden` from the hypothesis. The clean sufficient condition for the `cdivG`
+`(dₙh)·fnum`, divisible by `fden` from the hypothesis. The clean sufficient condition for the `cdivWf`
 `B`-clearing to be exact. -/
 theorem hdvdB_of_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden h0 : CPolyG β)
     (hdvd : toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0)) :
@@ -277,7 +274,7 @@ omit [CDiffFieldSpec β] in
 /-- **`hdvdC` reduces to `gden ∣ dₙh²`** (the §6.2 `C`-divisibility essence): if the denominator `gden`
 divides the normal-part·h² block `dₙ·h0·h0` (`dₙ = (cSplitFactorFastG Dt fuel fden).1`), then it divides the
 full `C`-numerator `dₙh²·gnum`. Multiplying the hypothesis by `gnum`. The clean sufficient condition for the
-`cdivG` `C`-clearing to be exact. -/
+`cdivWf` `C`-clearing to be exact. -/
 theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG β)
     (hdvd : toPolyG gden ∣ toPolyG (CPolyG.cmulG
       (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0)) :
@@ -319,8 +316,8 @@ end Divisibility
 The clauses fall into two groups: the **discharged** ones (`hprim` via the gcd witness, `hyden` via the
 solve guard, `hfden`/`hgden`/`hfden0`/`hgden0` via the subtype, `hdvdB`/`hdvdC` reduced to the two
 product-divisibilities) and the **genuinely remaining** ones (the two product-divisibilities themselves
-`hdvdB_dn_h`/`hdvdC_dn_h2`, the normal-part-nonzero `hdn`, the fuel bounds `hfbB`/`hfbC`, the non-gcd
-`CSPDEGClearedInputsGen` chain `hin`, and the dispatcher `hdb`). We bundle exactly the latter as the
+`hdvdB_dn_h`/`hdvdC_dn_h2`, the normal-part-nonzero `hdn`, the non-gcd `CSPDEGClearedInputsGen` chain `hin`,
+and the dispatcher `hdb`). We bundle exactly the latter as the
 **reduced crux residual** `RischDESuccessResidualCrux`, give a builder `residual_of_crux` rebuilding the full
 `RischDESuccessResidual` from it (discharging the former group), and compose to the field identity
 `crischDESolve_field_of_crux`. The crux is the precise sharpened TRUE residual — the §6.1
@@ -336,7 +333,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 (`hprim`/`hyden`/`hfden`/`hgden`/`hfden0`/`hgden0`) removed and `hdvdB`/`hdvdC` reduced to their
 product-divisibility essence. Carries, per normal-denominator output `(a0,b0,c0,h0)`: the §6.1
 weak-normalization product-divisibilities `hdvdB_dn_h` (`fden ∣ dₙh`) and `hdvdC_dn_h2` (`gden ∣ dₙh²`), the
-normal-part-nonzero `hdn`, the fuel bounds `hfbB`/`hfbC`, and the non-gcd `CSPDEGClearedInputsGen` chain `hin`
+normal-part-nonzero `hdn`, and the non-gcd `CSPDEGClearedInputsGen` chain `hin`
 (whose per-level `Associated`-gcd clauses are supplied separately by `CTowerGcdWitness β`); plus the
 dispatcher `hdb`. The sharpened TRUE residual: NOT engine self-certification, but the genuine §6.1
 weak-normalization precondition + per-run termination/fuel. -/
@@ -358,24 +355,6 @@ structure RischDESuccessResidualCrux (f g : QFunNZG β) : Prop where
         = some (a0, b0, c0, h0) →
       toPolyG g.1.2 ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG
         (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 h0) h0)
-  /-- §6.2 fuel bound on the `B`-numerator. -/
-  hfbB : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
-        = some (a0, b0, c0, h0) →
-      (CPolyG.cnormG (CPolyG.csubG
-        (CPolyG.cmulG (CPolyG.cmulG
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 h0) f.1.1)
-        (CPolyG.cmulG (CPolyG.cmulG
-          (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1
-            (CPolyG.cmonomialDeriv ([CField.one] : CPolyG β) h0)) f.1.2)) : List β).length
-        ≤ towerRischDEFuel
-  /-- §6.2 fuel bound on the `C`-numerator. -/
-  hfbC : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
-        = some (a0, b0, c0, h0) →
-      (CPolyG.cnormG (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cmulG
-        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel f.1.2).1 h0) h0)
-        g.1.1) : List β).length ≤ towerRischDEFuel
   /-- The §6.4 per-level transparent-input chain `CSPDEGClearedInputsGen` (gcd clauses via the witness). -/
   hin : ∀ a0 b0 c0 h0 : CPolyG β,
     cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
@@ -417,10 +396,8 @@ theorem residual_of_crux (f g y : QFunNZG β)
     hdn := hcrux.hdn a0 b0 c0 h0 hnorm
     hfden0 := qfunNZG_den_cnormG_ne_nil f
     hgden0 := qfunNZG_den_cnormG_ne_nil g
-    hfbB := hcrux.hfbB a0 b0 c0 h0 hnorm
     hdvdB := hdvdB_of_dvd ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 h0
       (hcrux.hdvdB_dn_h a0 b0 c0 h0 hnorm)
-    hfbC := hcrux.hfbC a0 b0 c0 h0 hnorm
     hdvdC := hdvdC_of_dvd ([CField.one] : CPolyG β) towerRischDEFuel g.1.1 f.1.2 g.1.2 h0
       (hcrux.hdvdC_dn_h2 a0 b0 c0 h0 hnorm)
     hin := hcrux.hin a0 b0 c0 h0 hnorm
@@ -496,12 +473,12 @@ holds for a successful `crischDESolve f g = some y` over `QFunNZG β` modulo exa
    `fden = dₙ·dₛ` (normal × special), `fden ∣ dₙh ⟺ dₛ ∣ h`, which FAILS for an un-weakly-normalized `f`
    (e.g. `dₛ` a nontrivial special factor coprime to `h`). They hold for the **post-Hermite,
    weakly-normalized** RDE input the algorithm assumes; the recursive `crischDESolve` does NOT weak-normalize
-   its raw argument (`cWeakNormalizerG` is the missing pre-step), so the engine computes the `cdivG` clearing
+   its raw argument (`cWeakNormalizerG` is the missing pre-step), so the engine computes the `cdivWf` clearing
    unconditionally and never re-validates exactness. **This is the genuine obstruction — a missing
    precondition, NOT engine self-certification.**
 2. **`hdn`** (normal part nonzero) — rests on the splitting-factorization product `fden = dₙ·dₛ`, which
    `cSplitFactorFastG` is documented not to establish abstractly (`ComputableTowerUnify`); per-run regularity.
-3. **The fuel bounds** `hfbB`/`hfbC` (`length ≤ 60`) and the **non-gcd `CSPDEGClearedInputsGen` chain** `hin`
+3. **The non-gcd `CSPDEGClearedInputsGen` chain** `hin`
    (per-level fuel, `cdvdG`, `cgcdTerminatesG`) — per-run termination/fuel, NOT unconditional (the gcd
    clauses *inside* `hin` ARE supplied by `CTowerGcdWitness β`; only the non-gcd ones remain).
 4. **`hdb`** (positive `deg(bbar)`) — the dispatcher routing side-condition.

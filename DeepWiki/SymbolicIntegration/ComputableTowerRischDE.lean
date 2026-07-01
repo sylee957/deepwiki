@@ -98,7 +98,7 @@ end CPolyG
 /-! ### The generic §6.1 weak normalizer over the tower
 
 `cWeakNormalizerG` is the §6.1 weak normalizer over the generic carrier `α` (`t`-gcd
-`CFracGcdCore.cgcdFFCore`, division `cdivG`, natural-cast `cnatCastG`, residue resultant
+`CFracGcdCore.cgcdFFCore`, fuel-free exact division `cdivWf`, natural-cast `cnatCastG`, residue resultant
 `cResidueResultantTowerG`) — the already-generic engine throughout. -/
 
 namespace CPolyG
@@ -108,8 +108,8 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 /-- **Generic weak normalizer** `cWeakNormalizerG Dt fuel fnum fden = q ∈ α[t]` (Bronstein §6.1, book
 p.183) with `f − Dq/q` weakly normalized for `f = fnum/fden`, the `[CField α] [CDiffField α]`-generic
 mirror of `cWeakNormalizer`. Split the denominator into its normal part `dₙ` (`cSplitFactorFastG`), form
-`d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve `ExtendedEuclidean(fden/d₁, d₁, fnum)` for the
-residue numerator `a` (`cdiophantineG`), build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
+  `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve `ExtendedEuclidean(fden/d₁, d₁, fnum)` for the
+  residue numerator `a` (`cdiophantineGWf`), build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
 (`cResidueResultantTowerG`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots
 `nᵢ` of `r` (`cPosIntRootsG`, nodes lifted by `cnatCastG`). For an already-weakly-normalized `f`, `r` has
 no positive integer roots and the result is `q = 1`. -/
@@ -117,10 +117,10 @@ def cWeakNormalizerG (Dt : CPolyG α) (fuel : ℕ) (fnum fden : CPolyG α)
     (boundRoots : ℕ := 16) : CPolyG α :=
   let dn := (cSplitFactorFastG Dt fuel fden).1
   let g := CFracGcdCore.cgcdFFCore fuel dn (cderivG dn)
-  let dstar := cdivG fuel dn g
-  let d1 := cdivG fuel dstar (CFracGcdCore.cgcdFFCore fuel dstar g)
-  let fdenOverD1 := cdivG fuel fden d1
-  let a := (cdiophantineG fuel fdenOverD1 d1 fnum).1
+  let dstar := cdivWf dn g
+  let d1 := cdivWf dstar (CFracGcdCore.cgcdFFCore fuel dstar g)
+  let fdenOverD1 := cdivWf fden d1
+  let a := (cdiophantineGWf fdenOverD1 d1 fnum).1
   let Dd1 := cmonomialDeriv Dt d1
   let r := cResidueResultantTowerG Dt fuel a d1
   let roots := cPosIntRootsG r boundRoots
@@ -131,7 +131,8 @@ def cWeakNormalizerG (Dt : CPolyG α) (fuel : ℕ) (fnum fden : CPolyG α)
 /-! ### The generic §6.2 normal-denominator reduction over the tower
 
 `cRdeNormalDenominatorG` is the §6.2 normal-denominator reduction over the generic carrier `α` (`t`-gcd
-`CFracGcdCore.cgcdFFCore`, division `cdivG`). Returns `none` ("no solution") or the reduction quadruplet
+`CFracGcdCore.cgcdFFCore`, fuel-free exact division `cdivWf`). Returns `none` ("no solution") or the
+reduction quadruplet
 `(a, b, c, h)` reducing `Dy + fy = g` to `a·Dq + b·q = c` with `q = y·h`. -/
 
 /-- **Generic normal-denominator reduction** `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden`
@@ -147,13 +148,13 @@ def cRdeNormalDenominatorG (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : 
   let dn := (cSplitFactorFastG Dt fuel fden).1
   let en := (cSplitFactorFastG Dt fuel gden).1
   let p := CFracGcdCore.cgcdFFCore fuel dn en
-  let h := cdivG fuel (CFracGcdCore.cgcdFFCore fuel en (cderivG en)) (CFracGcdCore.cgcdFFCore fuel p (cderivG p))
+  let h := cdivWf (CFracGcdCore.cgcdFFCore fuel en (cderivG en)) (CFracGcdCore.cgcdFFCore fuel p (cderivG p))
   let dnh2 := cmulG (cmulG dn h) h
   if cdvdG fuel en dnh2 then
     let a := cmulG dn h
     let Dh := cmonomialDeriv Dt h
-    let b := cdivG fuel (csubG (cmulG a fnum) (cmulG (cmulG dn Dh) fden)) fden
-    let c := cdivG fuel (cmulG dnh2 gnum) gden
+    let b := cdivWf (csubG (cmulG a fnum) (cmulG (cmulG dn Dh) fden)) fden
+    let c := cdivWf (cmulG dnh2 gnum) gden
     some (a, b, c, h)
   else none
 
@@ -173,7 +174,7 @@ def cValuationG (fuel : ℕ) (p x : CPolyG α) : ℕ :=
     | fuel + 1, x =>
         if cisZeroG x then 0
         else if cdegG p = 0 then 0
-        else if cdvdG fuel p x then 1 + go fuel (cdivG fuel x p)
+        else if cdvdG fuel p x then 1 + go fuel (cdivWf x p)
         else 0
   go fuel x
 
@@ -211,7 +212,7 @@ def cRdeSpecialDenominatorG (Dt : CPolyG α) (fuel : ℕ) (a b c : CPolyG α) :
     let Nminusn : ℕ := (N - n).toNat
     let pN := cpowG p Nnat
     let abar := cmulG a pN
-    let DpOverp := cdivG fuel (cmonomialDeriv Dt p) p
+    let DpOverp := cdivWf (cmonomialDeriv Dt p) p
     -- `b + n·a·Dp/p` with `n = -negn`: the additive term is `-(negn)·a·(Dp/p)`.
     let bterm := cscaleG (CField.neg (cnatCastG negn)) (cmulG a DpOverp)
     let bbar := cmulG (caddG b bterm) pN
@@ -248,7 +249,7 @@ def cRdeBoundDegreeG (Dt : CPolyG α) (_fuel : ℕ) (a b c : CPolyG α) : ℕ :=
 /-! ### The generic §6.4 SPDE over the tower
 
 `cSPDEG` mirrors `cSPDE` (Rothstein's `gcd(a,b)`-peel). `cgcdFF → CFracGcdCore.cgcdFFCore`,
-`cdivFF → cdivG`,
+`cdivFF → cdivWf`, `cdiophantineG → cdiophantineGWf`,
 `cmonomialDeriv` already generic. -/
 
 /-- **Generic SPDE** `cSPDEG Dt fuel a b c n` (Bronstein §6.4, Rothstein's box, book p.203), the generic
@@ -265,14 +266,14 @@ def cSPDEG (Dt : CPolyG α) : ℕ → (a b c : CPolyG α) → (n : ℤ) →
     else
       let g := CFracGcdCore.cgcdFFCore fuel a b
       if cdvdG fuel g c then
-        let a := cdivG fuel a g
-        let b := cdivG fuel b g
-        let c := cdivG fuel c g
+        let a := cdivWf a g
+        let b := cdivWf b g
+        let c := cdivWf c g
         if cdegG a = 0 then
           let ainv := CField.inv (cleadG a)
           some (cscaleG ainv b, cscaleG ainv c, n, [CField.one], [])
         else
-          let (r, z) := cdiophantineG fuel b a c
+          let (r, z) := cdiophantineGWf b a c
           let Da := cmonomialDeriv Dt a
           let Dr := cmonomialDeriv Dt r
           match cSPDEG Dt fuel a (caddG b Da) (csubG z Dr) (n - (cdegG a : ℤ)) with
@@ -359,9 +360,10 @@ genuinely non-constant, so the base solve `crischDESolve` does real work. -/
 
 /-- **Generic hyperexponential coefficient `η = Dt/t ∈ α`** `cExpEtaG fuel Dt`: for a hyperexponential
 monomial `Dt = η·t` (`δ = 1`), divide `Dt` by `t` (`cshiftG 1 [1]`) and read the resulting degree-0
-`t`-polynomial's coefficient `η ∈ α`. Generic mirror of `cExpEta`. -/
-def cExpEtaG (fuel : ℕ) (Dt : CPolyG α) : α :=
-  cleadG (cdivG fuel Dt (cshiftG 1 [CField.one]))
+`t`-polynomial's coefficient `η ∈ α`. The exact quotient is computed by `cdivWf`; `fuel` is retained only
+for API compatibility with the recursive dispatcher. Generic mirror of `cExpEta`. -/
+def cExpEtaG (_fuel : ℕ) (Dt : CPolyG α) : α :=
+  cleadG (cdivWf Dt (cshiftG 1 [CField.one]))
 
 /-- **Generic Poly-Risch-DE, hyperexponential cancellation case** `cPolyRischDECancelExpG Dt fuel b c n`
 (Bronstein §6.6, book p.213), the `[CRischField α]`-generic mirror of `cPolyRischDECancelExp`. Given the

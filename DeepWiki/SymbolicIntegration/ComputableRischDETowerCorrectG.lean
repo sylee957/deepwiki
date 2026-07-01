@@ -16,11 +16,11 @@ the **generic** theorem `associated_toPolyG_cgcdFFCore` (`ComputableTowerGcdFFCo
 The carrier `QFunNZG ℚ` reads through `toPolyG` into the field `RatFunc ℚ = CFieldSpec.K (QFunNZG ℚ)`, so the
 abstract conclusions (the cleared polynomial identities over `(RatFunc ℚ)[X]`) live over that field. The
 cleared-lifting *engine* (`cSPDEG_cleared_lifting`-style induction, `rdeNormalDenominator_glue`,
-`spde_const_base`, `cSPDE_peel_cleared`, `toPolyG_cdiophantineG`, `dvd_of_cdvdG`, `toPolyG_cdivG_exact`) is
+`spde_const_base`, `cSPDE_peel_cleared`, `toPolyG_cdiophantineGWf`, `dvd_of_cdvdG`, `toPolyG_cdivG_exact`) is
 gcd-agnostic, so it applies at any tower level; the gcd-discharge route enters through
 `associated_toPolyG_cgcdFFCore`.
 
-* **Generic helper lemmas** — the `cgcdExtG`-unit / exact-division / SPDE-peel helpers, stated
+* **Generic helper lemmas** — the `cgcdWf`-unit / exact-division / SPDE-peel helpers, stated
   `{α} [CField α] [CFieldSpec α]`-generic (their bodies are gcd-agnostic, taking the gcd `g`
   abstractly).
 * **`cSPDECleared_of_inputs_qfunNZG`** — the §6.4 SPDE per-level certificate, discharged from transparent
@@ -39,24 +39,20 @@ open Compute CPolyG QFunNZG
 
 The §6.4 SPDE certificate discharge needs five engine facts whose proofs only ever touch the gcd `g`
 **abstractly** (through an `Associated (toPolyG g) (gcd …)` hypothesis and the generic
-`cgcdExtG`/`cdivG`/`cdvdG` API). We state them generically over `{α} [CField α] [CFieldSpec α]`, so they
-apply at `QFunNZG ℚ` (and any level). Each reuses the already generic `toPolyG_cgcdExtG_dvd` /
+`cgcdWf`/`cdivG`/`cdvdG` API). We state them generically over `{α} [CField α] [CFieldSpec α]`, so they
+apply at `QFunNZG ℚ` (and any level). Each reuses the already generic `toPolyG_cgcdWf_dvd` /
 `toPolyG_cdivG_exact` / `dvd_of_cdvdG` / `spde_const_base` / `spde_step_glue`. -/
 
-/-- **The divided coefficients' Euclidean gcd is a unit** (generic): if `g ~ gcd(a, b)` (`g ≠ 0`) with the
-exact divisions `toPolyG ad · toPolyG g = toPolyG a`, `toPolyG bd · toPolyG g = toPolyG b`, then under the
-Euclidean termination `cgcdTerminatesG fuel bd ad` the gcd `G = (cgcdExtG fuel bd ad).1` is a unit of
-`(CFieldSpec.K α)[X]`. Generic mirror of `cgcdExtG_isUnit_of_divided` (taking `g` abstractly, so
-carrier-agnostic). -/
-theorem cgcdExtG_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ)
+/-- **The divided coefficients' fuel-free gcd is a unit** (generic): after dividing `a,b` by a nonzero gcd
+`g`, the Wf gcd of `bd, ad` is a unit. -/
+theorem cgcdWf_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α]
     (a b ad bd g : CPolyG α) (hgne : toPolyG g ≠ 0)
     (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
     (hdiva : toPolyG ad * toPolyG g = toPolyG a)
-    (hdivb : toPolyG bd * toPolyG g = toPolyG b)
-    (hterm : cgcdTerminatesG fuel bd ad) :
-    IsUnit (toPolyG (cgcdExtG fuel bd ad).1) := by
-  obtain ⟨hGbd, hGad⟩ := toPolyG_cgcdExtG_dvd fuel bd ad hterm
-  set G := toPolyG (cgcdExtG fuel bd ad).1 with hGdef
+    (hdivb : toPolyG bd * toPolyG g = toPolyG b) :
+    IsUnit (toPolyG (cgcdWf bd ad).1) := by
+  obtain ⟨hGbd, hGad⟩ := toPolyG_cgcdWf_dvd bd ad
+  set G := toPolyG (cgcdWf bd ad).1 with hGdef
   have hGg_a : G * toPolyG g ∣ toPolyG a := by rw [← hdiva]; exact mul_dvd_mul_right hGad _
   have hGg_b : G * toPolyG g ∣ toPolyG b := by rw [← hdivb]; exact mul_dvd_mul_right hGbd _
   have hGg_gcd : G * toPolyG g ∣ gcd (toPolyG a) (toPolyG b) := dvd_gcd hGg_a hGg_b
@@ -66,63 +62,33 @@ theorem cgcdExtG_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α] 
   have hG1 : G ∣ 1 := ⟨k, mul_left_cancel₀ hgne hcancel⟩
   exact isUnit_of_dvd_one hG1
 
-/-- **The divided coefficients' Euclidean gcd is the constant `C (leadingCoeff)`** (generic): the unit gcd
-`G = (cgcdExtG fuel bd ad).1` of `cgcdExtG_isUnit_of_divided_gen` has degree `0`, so `toPolyG G = C (toK
-(cleadG G))`. Generic mirror of `toPolyG_cgcdExtG_eq_C_of_divided`. -/
-theorem toPolyG_cgcdExtG_eq_C_of_divided_gen {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ)
-    (a b ad bd g : CPolyG α) (hgne : toPolyG g ≠ 0)
-    (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
-    (hdiva : toPolyG ad * toPolyG g = toPolyG a)
-    (hdivb : toPolyG bd * toPolyG g = toPolyG b)
-    (hterm : cgcdTerminatesG fuel bd ad) :
-    toPolyG (cgcdExtG fuel bd ad).1
-      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel bd ad).1)) := by
-  have hunit := cgcdExtG_isUnit_of_divided_gen fuel a b ad bd g hgne hgassoc hdiva hdivb hterm
-  have hnd : (toPolyG (cgcdExtG fuel bd ad).1).natDegree = 0 :=
-    Polynomial.natDegree_eq_zero_of_isUnit hunit
-  rw [toK_cleadG_eq_leadingCoeff, Polynomial.leadingCoeff, hnd]
-  exact Polynomial.eq_C_of_natDegree_eq_zero hnd
-
-/-- **The divided coefficients' Euclidean gcd has nonzero leading coefficient** (generic): a unit is
-nonzero, so `toK (cleadG G) ≠ 0`. Generic mirror of `toK_cleadG_cgcdExtG_ne_zero_of_divided`. -/
-theorem toK_cleadG_cgcdExtG_ne_zero_of_divided_gen {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ)
-    (a b ad bd g : CPolyG α) (hgne : toPolyG g ≠ 0)
-    (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
-    (hdiva : toPolyG ad * toPolyG g = toPolyG a)
-    (hdivb : toPolyG bd * toPolyG g = toPolyG b)
-    (hterm : cgcdTerminatesG fuel bd ad) :
-    CFieldSpec.toK (cleadG (cgcdExtG fuel bd ad).1) ≠ 0 := by
-  have hunit := cgcdExtG_isUnit_of_divided_gen fuel a b ad bd g hgne hgassoc hdiva hdivb hterm
-  rw [toK_cleadG_eq_leadingCoeff]
-  exact Polynomial.leadingCoeff_ne_zero.mpr hunit.ne_zero
-
-/-- **The `a`-exact-division witness** (generic) `toPolyG (cdivG fuel a g) · toPolyG g = toPolyG a` from
-`g ~ gcd(a, b)` (`g ∣ a`), `g ≠ 0`, and the fuel bound. Generic mirror of `cdivFF_a_exact_of_gcd`
-(`cdivFF := cdivG`). -/
-theorem cdivG_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (a b g : CPolyG α)
-    (hg0 : cnormG g ≠ []) (hfuel : (cnormG a : List α).length ≤ fuel)
+/-- **The `a`-exact-division witness** (generic) `toPolyG (cdivWf a g) · toPolyG g = toPolyG a` from
+`g ~ gcd(a, b)` (`g ∣ a`) and `g ≠ 0`. Generic mirror of `cdivFF_a_exact_of_gcd`
+(`cdivFF := cdivWf`). -/
+theorem cdivWf_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : CPolyG α)
+    (hg0 : cnormG g ≠ [])
     (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))) :
-    toPolyG (cdivG fuel a g) * toPolyG g = toPolyG a := by
+    toPolyG (cdivWf a g) * toPolyG g = toPolyG a := by
   have hgdvd : toPolyG g ∣ toPolyG a := hgassoc.dvd.trans (gcd_dvd_left _ _)
-  exact toPolyG_cdivG_exact fuel a g hg0 hfuel hgdvd
+  exact toPolyG_cdivWf_exact a g hg0 hgdvd
 
-/-- **The `b`-exact-division witness** (generic) `toPolyG (cdivG fuel b g) · toPolyG g = toPolyG b` from
+/-- **The `b`-exact-division witness** (generic) `toPolyG (cdivWf b g) · toPolyG g = toPolyG b` from
 `g ~ gcd(a, b)` (`g ∣ b`). Generic mirror of `cdivFF_b_exact_of_gcd`. -/
-theorem cdivG_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (a b g : CPolyG α)
-    (hg0 : cnormG g ≠ []) (hfuel : (cnormG b : List α).length ≤ fuel)
+theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : CPolyG α)
+    (hg0 : cnormG g ≠ [])
     (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))) :
-    toPolyG (cdivG fuel b g) * toPolyG g = toPolyG b := by
+    toPolyG (cdivWf b g) * toPolyG g = toPolyG b := by
   have hgdvd : toPolyG g ∣ toPolyG b := hgassoc.dvd.trans (gcd_dvd_right _ _)
-  exact toPolyG_cdivG_exact fuel b g hg0 hfuel hgdvd
+  exact toPolyG_cdivWf_exact b g hg0 hgdvd
 
-/-- **The `c`-exact-division witness** (generic) `toPolyG (cdivG fuel c g) · toPolyG g = toPolyG c` from the
+/-- **The `c`-exact-division witness** (generic) `toPolyG (cdivWf c g) · toPolyG g = toPolyG c` from the
 `cdvdG fuel g c = true` branch (`g ∣ c`). Generic mirror of `cdivFF_c_exact_of_cdvdG`. -/
-theorem cdivG_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (c g : CPolyG α)
-    (hg0 : cnormG g ≠ []) (hfuel : (cnormG c : List α).length ≤ fuel)
+theorem cdivWf_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (c g : CPolyG α)
+    (hg0 : cnormG g ≠ [])
     (hdvd : cdvdG fuel g c = true) :
-    toPolyG (cdivG fuel c g) * toPolyG g = toPolyG c := by
+    toPolyG (cdivWf c g) * toPolyG g = toPolyG c := by
   have hgdvd : toPolyG g ∣ toPolyG c := dvd_of_cdvdG fuel g c hg0 hdvd
-  exact toPolyG_cdivG_exact fuel c g hg0 hfuel hgdvd
+  exact toPolyG_cdivWf_exact c g hg0 hgdvd
 
 /-- **One `cSPDEG` peel's cleared lifting** (generic) at `D = cmonomialDeriv Dt = implicitDeriv (toPolyG
 Dt)`. Given the divided coefficients `ad, bd, cd`, the Bézout cofactors `r, z` with the certificate
@@ -155,7 +121,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- **Generic per-level certificate predicate for `cSPDEG`** `cSPDEGClearedGen Dt fuel a b c n`: the
 carrier-generic mirror of `cSPDEGCleared`, with `g = cgcdFFCore fuel a b` and the divided coefficients
-`ad = a/g`, `bd = b/g`, `cd = c/g` via `cdivG`. At each non-base level (`n ≥ 0`, `g ∣ c`, `deg(ad) > 0`) it
+`ad = a/g`, `bd = b/g`, `cd = c/g` via `cdivWf`. At each non-base level (`n ≥ 0`, `g ∣ c`, `deg(ad) > 0`) it
 asserts the three exact-division witnesses, the nonzero-leading `toPolyG ad ≠ 0`, and the Bézout
 `toPolyG bd·toPolyG r + toPolyG ad·toPolyG z = toPolyG cd`, then recurses on the reduced equation. Identical
 shape to `cSPDEGCleared` (only the carrier is generic). -/
@@ -167,15 +133,15 @@ def cSPDEGClearedGen [CFracGcdCore α] (Dt : CPolyG α) :
     else
       let g := CFracGcdCore.cgcdFFCore fuel a b
       if cdvdG fuel g c then
-        let ad := cdivG fuel a g
-        let bd := cdivG fuel b g
-        let cd := cdivG fuel c g
+        let ad := cdivWf a g
+        let bd := cdivWf b g
+        let cd := cdivWf c g
         (toPolyG ad * toPolyG g = toPolyG a) ∧ (toPolyG bd * toPolyG g = toPolyG b)
           ∧ (toPolyG cd * toPolyG g = toPolyG c)
           ∧ (toPolyG ad ≠ 0)
           ∧ (if cdegG ad = 0 then True
              else
-               let rz := cdiophantineG fuel bd ad cd
+               let rz := cdiophantineGWf bd ad cd
                (toPolyG bd * toPolyG rz.1 + toPolyG ad * toPolyG rz.2 = toPolyG cd)
                  ∧ cSPDEGClearedGen Dt fuel ad (caddG bd (cmonomialDeriv Dt ad))
                      (csubG rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdegG ad : ℤ)))
@@ -223,9 +189,9 @@ theorem cSPDEG_cleared_lifting_gen [CFracGcdCore α] (Dt : CPolyG α) :
       set g := CFracGcdCore.cgcdFFCore fuel a b with hg
       by_cases hdvd : cdvdG fuel g c = true
       · rw [if_pos hdvd] at hspde hcert
-        set ad := cdivG fuel a g with had
-        set bd := cdivG fuel b g with hbd
-        set cd := cdivG fuel c g with hcd
+        set ad := cdivWf a g with had
+        set bd := cdivWf b g with hbd
+        set cd := cdivWf c g with hcd
         obtain ⟨hdiva, hdivb, hdivc, hadne, hcertrest⟩ := hcert
         by_cases hdeg : cdegG ad = 0
         · rw [if_pos hdeg, Option.some.injEq] at hspde
@@ -255,7 +221,7 @@ theorem cSPDEG_cleared_lifting_gen [CFracGcdCore α] (Dt : CPolyG α) :
           linear_combination toPolyG g * hdivided
         · rw [if_neg hdeg] at hspde
           rw [if_neg hdeg] at hcertrest
-          rcases hrz : cdiophantineG fuel bd ad cd with ⟨r, z⟩
+          rcases hrz : cdiophantineGWf bd ad cd with ⟨r, z⟩
           rw [hrz] at hspde hcertrest
           simp only at hspde hcertrest
           obtain ⟨hbez', hcertrec⟩ := hcertrest
@@ -290,9 +256,9 @@ theorem cSPDEG_cleared_lifting_gen [CFracGcdCore α] (Dt : CPolyG α) :
 /-- **Generic transparent per-level input predicate for the `cSPDEGClearedGen` discharge**
 `CSPDEGClearedInputsGen Dt fuel a b c n`, mirroring `cSPDEG`'s recursion. At each non-base level (`n ≥ 0`,
 `cdvdG fuel g c`), with `g = cgcdFFCore fuel a b`, `ad = a/g`, `bd = b/g`: the gcd is nonzero (`cnormG g ≠
-[]`) and `Associated` to `gcd(toPolyG a, toPolyG b)`, the fuel bounds each exact division, and `a ≠ 0`. In the
-recursion branch (`cdegG ad ≠ 0`) additionally the Euclidean termination `cgcdTerminatesG fuel bd ad` and
-`CSPDEGClearedInputsGen` on the reduced equation. Carrier-generic mirror of `CSPDEGClearedInputs`. -/
+[]`) and `Associated` to `gcd(toPolyG a, toPolyG b)`, the fuel bounds the divisibility checks, and `a ≠ 0`. In
+the recursion branch (`cdegG ad ≠ 0`) it carries `CSPDEGClearedInputsGen` on the reduced equation. Carrier-generic
+mirror of `CSPDEGClearedInputs`. -/
 def CSPDEGClearedInputsGen [CFracGcdCore α] (Dt : CPolyG α) :
     ℕ → (a b c : CPolyG α) → (n : ℤ) → Prop
   | 0, _, _, _, _ => True
@@ -301,8 +267,8 @@ def CSPDEGClearedInputsGen [CFracGcdCore α] (Dt : CPolyG α) :
     else
       let g := CFracGcdCore.cgcdFFCore fuel a b
       if cdvdG fuel g c then
-        let ad := cdivG fuel a g
-        let bd := cdivG fuel b g
+        let ad := cdivWf a g
+        let bd := cdivWf b g
         (cnormG g ≠ []) ∧ Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))
           ∧ ((cnormG a : List α).length ≤ fuel)
           ∧ ((cnormG b : List α).length ≤ fuel)
@@ -310,18 +276,17 @@ def CSPDEGClearedInputsGen [CFracGcdCore α] (Dt : CPolyG α) :
           ∧ (cnormG a ≠ [])
           ∧ (if cdegG ad = 0 then True
              else
-               let rz := cdiophantineG fuel bd ad (cdivG fuel c g)
-               cgcdTerminatesG fuel bd ad
-                 ∧ CSPDEGClearedInputsGen Dt fuel ad (caddG bd (cmonomialDeriv Dt ad))
-                     (csubG rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdegG ad : ℤ)))
+               let rz := cdiophantineGWf bd ad (cdivWf c g)
+               CSPDEGClearedInputsGen Dt fuel ad (caddG bd (cmonomialDeriv Dt ad))
+                 (csubG rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdegG ad : ℤ)))
       else True
 
 omit [CDiffFieldSpec α] in
 /-- **Generic `cSPDEGClearedGen` discharged from transparent inputs**: `CSPDEGClearedInputsGen Dt fuel a b c
 n` implies the per-level certificate `cSPDEGClearedGen Dt fuel a b c n`, over any tower level. By fuel
-induction: the three exact-division witnesses from `cdivG_a`/`cdivG_b`/`cdivG_c` exactness, the nonzero-`ad`
-clause from `ad·g = a` with `a ≠ 0`, and (recursion branch) the Bézout clause from `toPolyG_cdiophantineG`
-with the divided-coefficient gcd shown constant by `toPolyG_cgcdExtG_eq_C_of_divided_gen`. Carrier-generic
+induction: the three exact-division witnesses from `cdivWf_a`/`cdivWf_b`/`cdivWf_c` exactness, the nonzero-`ad`
+clause from `ad·g = a` with `a ≠ 0`, and (recursion branch) the Bézout clause from `toPolyG_cdiophantineGWf`
+with the divided-coefficient Wf gcd shown unit by `cgcdWf_isUnit_of_divided_gen`. Carrier-generic
 mirror of `cSPDEGCleared_of_inputs`. -/
 theorem cSPDEGCleared_of_inputs_gen [CFracGcdCore α] (Dt : CPolyG α) :
     ∀ (fuel : ℕ) (a b c : CPolyG α) (n : ℤ),
@@ -341,15 +306,15 @@ theorem cSPDEGCleared_of_inputs_gen [CFracGcdCore α] (Dt : CPolyG α) :
       set g := CFracGcdCore.cgcdFFCore fuel a b with hg
       by_cases hdvd : cdvdG fuel g c = true
       · rw [if_pos hdvd] at hin ⊢
-        set ad := cdivG fuel a g with had
-        set bd := cdivG fuel b g with hbd
+        set ad := cdivWf a g with had
+        set bd := cdivWf b g with hbd
         obtain ⟨hg0, hgassoc, hfa, hfb, hfc, ha0, hrest⟩ := hin
         have hdiva : toPolyG ad * toPolyG g = toPolyG a :=
-          cdivG_a_exact_of_gcd fuel a b g hg0 hfa hgassoc
+          cdivWf_a_exact_of_gcd a b g hg0 hgassoc
         have hdivb : toPolyG bd * toPolyG g = toPolyG b :=
-          cdivG_b_exact_of_gcd fuel a b g hg0 hfb hgassoc
-        have hdivc : toPolyG (cdivG fuel c g) * toPolyG g = toPolyG c :=
-          cdivG_c_exact_of_cdvdG fuel c g hg0 hfc hdvd
+          cdivWf_b_exact_of_gcd a b g hg0 hgassoc
+        have hdivc : toPolyG (cdivWf c g) * toPolyG g = toPolyG c :=
+          cdivWf_c_exact_of_cdvdG fuel c g hg0 hdvd
         have hane : toPolyG a ≠ 0 := fun h => ha0 ((cnormG_eq_nil_iff a).mpr h)
         have hadne : toPolyG ad ≠ 0 := by
           intro h; apply hane; rw [← hdiva, h, zero_mul]
@@ -358,17 +323,18 @@ theorem cSPDEGCleared_of_inputs_gen [CFracGcdCore α] (Dt : CPolyG α) :
         by_cases hdeg : cdegG ad = 0
         · rw [if_pos hdeg] at hrest ⊢; trivial
         · rw [if_neg hdeg] at hrest ⊢
-          obtain ⟨hterm, hrec⟩ := hrest
+          let hrec := hrest
           have hadnil : cnormG ad ≠ [] := fun h => hadne ((cnormG_eq_nil_iff ad).mp h)
-          have hgC := toPolyG_cgcdExtG_eq_C_of_divided_gen fuel a b ad bd g hgne hgassoc hdiva hdivb hterm
-          have hgCne := toK_cleadG_cgcdExtG_ne_zero_of_divided_gen fuel a b ad bd g hgne hgassoc hdiva
-            hdivb hterm
-          have hbez := toPolyG_cdiophantineG fuel bd ad (cdivG fuel c g) hadnil hgC hgCne
+          have hunitWf := cgcdWf_isUnit_of_divided_gen a b ad bd g hgne hgassoc hdiva hdivb
+          have hgdegWf : (toPolyG (cgcdWf bd ad).1).natDegree = 0 :=
+            Polynomial.natDegree_eq_zero_of_isUnit hunitWf
+          have hgneWf : toPolyG (cgcdWf bd ad).1 ≠ 0 := hunitWf.ne_zero
+          have hbez := toPolyG_cdiophantineGWf bd ad (cdivWf c g) hadnil hgdegWf hgneWf
           refine ⟨?_, ih ad (caddG bd (cmonomialDeriv Dt ad))
-            (csubG (cdiophantineG fuel bd ad (cdivG fuel c g)).2
-              (cmonomialDeriv Dt (cdiophantineG fuel bd ad (cdivG fuel c g)).1))
+            (csubG (cdiophantineGWf bd ad (cdivWf c g)).2
+              (cmonomialDeriv Dt (cdiophantineGWf bd ad (cdivWf c g)).1))
             (n - (cdegG ad : ℤ)) hrec⟩
-          linear_combination hbez
+          simpa [mul_comm] using hbez
       · rw [if_neg (by simpa using hdvd : ¬ cdvdG fuel g c = true)] at hin ⊢; trivial
 
 /-! ### §6.5 — the generic non-cancellation cleared identity `D(q) + b·q = c` (any tower level)
@@ -469,21 +435,21 @@ theorem cSPDEG_polyRischDENoCancel_cleared_at_boundDegree_gen [CFracGcdCore α] 
 /-! ### §6.2 — the generic normal-denominator cleared lifting and special-denominator primitive case -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **Generic exact-division reorientation** `toPolyG (cdivG fuel p q) · toPolyG q = toPolyG p` from `toPolyG
-q ∣ toPolyG p` (nonzero divisor, fuel bound). Carrier-generic mirror of `toPolyG_cdivG_exact_mul`
-(reorienting the already-generic `toPolyG_cdivG_exact`). -/
-theorem toPolyG_cdivG_exact_mul_gen [CFracGcdCore α] (fuel : ℕ) (p q : CPolyG α)
-    (hq0 : cnormG q ≠ []) (hfuel : (cnormG p : List α).length ≤ fuel)
+/-- **Generic exact-division reorientation** `toPolyG (cdivWf p q) · toPolyG q = toPolyG p` from `toPolyG
+q ∣ toPolyG p` (nonzero divisor). Carrier-generic mirror of `toPolyG_cdivG_exact_mul`
+(reorienting the already-generic `toPolyG_cdivWf_exact`). -/
+theorem toPolyG_cdivWf_exact_mul_gen (p q : CPolyG α)
+    (hq0 : cnormG q ≠ [])
     (hQdvd : toPolyG q ∣ toPolyG p) :
-    toPolyG (cdivG fuel p q) * toPolyG q = toPolyG p :=
-  toPolyG_cdivG_exact fuel p q hq0 hfuel hQdvd
+    toPolyG (cdivWf p q) * toPolyG q = toPolyG p :=
+  toPolyG_cdivWf_exact p q hq0 hQdvd
 
 /-! #### ★ `cValuationG`-correctness — the `ν_p` trial-division divides and is sharp (the §6.2 keystone) -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **`cValuationG` divides** (carrier-generic): `toPolyG p ^ (cValuationG fuel p x) ∣ toPolyG x` — the
 `ν_p` trial-division power always divides `x`. By `fuel`-induction on the `cValuationG.go` recursion: each
-step divides out one exact factor of `p` (`toPolyG_cdivG_exact`), so `p^(1+k) ∣ p·(x/p) = x` from the
+step divides out one exact factor of `p` (`toPolyG_cdivWf_exact`), so `p^(1+k) ∣ p·(x/p) = x` from the
 inductive `p^k ∣ x/p`. The `dvd` half of the §6.2 valuation correctness; no regularity needed. -/
 theorem toPolyG_pow_cValuationG_dvd (fuel : ℕ) (p x : CPolyG α) :
     toPolyG p ^ (cValuationG fuel p x) ∣ toPolyG x := by
@@ -500,15 +466,14 @@ theorem toPolyG_pow_cValuationG_dvd (fuel : ℕ) (p x : CPolyG α) :
       · rw [if_neg hp]
         by_cases hdvd : cdvdG fuel p x = true
         · rw [if_pos hdvd]
-          -- `p ∣ x` exactly: `toPolyG x = toPolyG(x/p)·toPolyG p` (no fuel bound — the remainder is `0`).
+          -- `p ∣ x` exactly: `toPolyG x = toPolyG(x/p)·toPolyG p` (no fuel bound).
           have hpne : cnormG p ≠ [] := by
             intro hpe; exact hp (by rw [cdegG, hpe]; rfl)
-          have hrem0 : toPolyG (cmodG fuel x p) = 0 := (cdvdG_iff fuel p x).mp hdvd
-          have hid := toPolyG_cdivmodG' fuel x p hpne
-          rw [show (cdivmodG fuel x p).2 = cmodG fuel x p from rfl, hrem0, add_zero,
-            show (cdivmodG fuel x p).1 = cdivG fuel x p from rfl] at hid
+          have hpx : toPolyG p ∣ toPolyG x := dvd_of_cdvdG fuel p x hpne hdvd
+          have hid : toPolyG x = toPolyG (cdivWf x p) * toPolyG p :=
+            (toPolyG_cdivWf_exact x p hpne hpx).symm
           -- IH: `p^k ∣ x/p`; multiply by `p` to get `p^(1+k) ∣ (x/p)·p = x`.
-          have hih := ih (cdivG fuel x p)
+          have hih := ih (cdivWf x p)
           rw [add_comm, pow_add, pow_one, hid]
           exact mul_dvd_mul hih dvd_rfl
         · rw [if_neg (by simpa using hdvd), pow_zero]; exact one_dvd _
@@ -529,7 +494,7 @@ theorem not_dvd_of_cdvdG_false [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α)
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **`cValuationG` is sharp** (carrier-generic, fuel-covered): for a non-constant `p` (`cdegG p ≠ 0`) and a
 nonzero `x` (`toPolyG x ≠ 0`) with the fuel strictly covering `x` (`(cnormG x).length < fuel`, so the inner
-`cdvdG`/`cdivG` calls — each at one less fuel — are themselves fuel-covered), `¬ toPolyG p ^ (cValuationG fuel
+`cdvdG` calls — each at one less fuel — are themselves fuel-covered), `¬ toPolyG p ^ (cValuationG fuel
 p x + 1) ∣ toPolyG x` — the trial-division stops exactly at the multiplicity (one more power does NOT divide).
 By `fuel`-induction mirroring `cValuationG.go`: the terminating non-dividing step refutes `p ∣ remainder`
 (`not_dvd_of_cdvdG_false`); each peeling step cancels one nonzero `p` in the integral domain `(CFieldSpec.K
@@ -555,25 +520,22 @@ theorem cValuationG_sharp [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α)
     by_cases hdvd : cdvdG fuel p x = true
     · rw [if_pos hdvd]
       -- `p ∣ x` exactly; `x = (x/p)·p`, descend to `x/p` and cancel one `p`.
-      have hrem0 : toPolyG (cmodG fuel x p) = 0 := (cdvdG_iff fuel p x).mp hdvd
-      have hid : toPolyG x = toPolyG (cdivG fuel x p) * toPolyG p := by
-        have h := toPolyG_cdivmodG' fuel x p hpne
-        rw [show (cdivmodG fuel x p).2 = cmodG fuel x p from rfl, hrem0, add_zero,
-          show (cdivmodG fuel x p).1 = cdivG fuel x p from rfl] at h
-        exact h
-      have hq0 : toPolyG (cdivG fuel x p) ≠ 0 := by
+      have hpx : toPolyG p ∣ toPolyG x := dvd_of_cdvdG fuel p x hpne hdvd
+      have hid : toPolyG x = toPolyG (cdivWf x p) * toPolyG p :=
+        (toPolyG_cdivWf_exact x p hpne hpx).symm
+      have hq0 : toPolyG (cdivWf x p) ≠ 0 := by
         intro h; apply hx0; rw [hid, h, zero_mul]
-      have hqne : cnormG (cdivG fuel x p) ≠ [] := fun he => hq0 (by rw [cnormG_eq_nil_iff] at he; exact he)
-      have hdeg : (toPolyG (cdivG fuel x p)).natDegree < (toPolyG x).natDegree := by
+      have hqne : cnormG (cdivWf x p) ≠ [] := fun he => hq0 (by rw [cnormG_eq_nil_iff] at he; exact he)
+      have hdeg : (toPolyG (cdivWf x p)).natDegree < (toPolyG x).natDegree := by
         rw [hid, Polynomial.natDegree_mul hq0 hp0]; omega
-      have hfuelq : (cnormG (cdivG fuel x p) : List α).length < fuel := by
+      have hfuelq : (cnormG (cdivWf x p) : List α).length < fuel := by
         rw [length_cnormG_of_ne _ hqne]; omega
       -- IH refutes `p^(go(x/p)+1) ∣ x/p`; cancel one `p` from a hypothetical `p^(1+go+1) ∣ (x/p)·p`.
-      have hihq := ih (cdivG fuel x p) hq0 hfuelq
+      have hihq := ih (cdivWf x p) hq0 hfuelq
       intro hcontra
       apply hihq
-      rw [hid, show 1 + cValuationG.go p fuel (cdivG fuel x p) + 1
-          = (cValuationG.go p fuel (cdivG fuel x p) + 1) + 1 by ring, pow_succ] at hcontra
+      rw [hid, show 1 + cValuationG.go p fuel (cdivWf x p) + 1
+          = (cValuationG.go p fuel (cdivWf x p) + 1) + 1 by ring, pow_succ] at hcontra
       exact (mul_dvd_mul_iff_right hp0).mp hcontra
     · rw [if_neg (by simpa using hdvd), zero_add, pow_one]
       exact not_dvd_of_cdvdG_false fuel p x hpne (by omega) (Bool.not_eq_true _ ▸ hdvd)
@@ -769,19 +731,14 @@ theorem toPolyG_cSpecialPolyG_dvd_cmonomialDeriv (Dt : CPolyG (QFunNZG ℚ)) (fu
 c, h)`, the normal part is nonzero, the two `cdivG`-clearings are exact, and a polynomial `Q` solves the
 reduced `a·D(Q) + b·Q = c`, then `y = Q/h` solves the cleared `gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h =
 gnum·fden·h²` over `(CFieldSpec.K α)[X]`. Carrier-generic mirror of `cRdeNormalDenominatorG_cleared_lift`
-(`rdeNormalDenominator_glue` is engine-agnostic, the `B/C` certificates via `toPolyG_cdivG_exact_mul_gen`). -/
+(`rdeNormalDenominator_glue` is engine-agnostic, the `B/C` certificates via `toPolyG_cdivWf_exact_mul_gen`). -/
 theorem cRdeNormalDenominatorG_cleared_lift_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
     (fnum fden gnum gden a b c h Q : CPolyG α)
     (hres : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a, b, c, h))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) h) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h) h) gnum))
     (hred : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b * toPolyG Q
       = toPolyG c) :
@@ -800,13 +757,13 @@ theorem cRdeNormalDenominatorG_cleared_lift_gen [CFracGcdCore α] (Dt : CPolyG �
     rw [hh] at ha hb hc
     have hA : toPolyG a = toPolyG dn * toPolyG h := by rw [← ha, toPolyG_cmulG]
     have hBexact : toPolyG b * toPolyG fden = toPolyG bNum := by
-      rw [← hb]; exact toPolyG_cdivG_exact_mul_gen fuel bNum fden hfden0 hfbB hdvdB
+      rw [← hb]; exact toPolyG_cdivWf_exact_mul_gen bNum fden hfden0 hdvdB
     have hBeq : toPolyG bNum = toPolyG a * toPolyG fnum
         - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
       rw [hbNum, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
         toPolyG_cmonomialDeriv, ← ha, toPolyG_cmulG]
     have hCexact : toPolyG c * toPolyG gden = toPolyG cNum := by
-      rw [← hc]; exact toPolyG_cdivG_exact_mul_gen fuel cNum gden hgden0 hfbC hdvdC
+      rw [← hc]; exact toPolyG_cdivWf_exact_mul_gen cNum gden hgden0 hdvdC
     have hCeq : toPolyG cNum = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
       rw [hcNum, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]; ring
     have hBcert : toPolyG b * toPolyG fden = toPolyG a * toPolyG fnum
@@ -902,13 +859,8 @@ theorem cRischDEG_rdeCleared_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List α).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List α).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -943,7 +895,7 @@ theorem cRischDEG_rdeCleared_gen [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ)
       rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
     rw [toPolyG_cmulG, hone, mul_one]
   have hlift := cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 Q
-    hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hred
+    hnorm hdn hfden0 hgden0 hdvdB hdvdC hred
   show toPolyG gden * toPolyG fden
       * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG h0
           - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG h0))
@@ -985,13 +937,8 @@ theorem cRischDEG_rdeCleared_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List (QFunNZG ℚ)).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List (QFunNZG ℚ)).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -1014,7 +961,7 @@ theorem cRischDEG_rdeCleared_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
         + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
       = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
   cRischDEG_rdeCleared_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
-    hprim hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+    hprim hnorm hdn hfden0 hgden0 hdvdB hdvdC hspde hin hpoly
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
@@ -1032,13 +979,8 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)
     (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
-    (hfbB : (cnormG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
-        (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)) :
-        List (QFunNZG ℚ)).length ≤ fuel)
     (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 (cmonomialDeriv Dt h0)) fden)))
-    (hfbC : (cnormG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) :
-        List (QFunNZG ℚ)).length ≤ fuel)
     (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum))
     (hspde : cSPDEG Dt fuel (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).1
         (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.1 (cRdeSpecialDenominatorG Dt fuel a0 b0 c0).2.2.1
@@ -1061,7 +1003,7 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h
         + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
       = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 :=
   cRischDEG_rdeCleared_qfunNZG Dt fuel fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
-    hprim hnorm hdn hfden0 hgden0 hfbB hdvdB hfbC hdvdC hspde hin hpoly
+    hprim hnorm hdn hfden0 hgden0 hdvdB hdvdC hspde hin hpoly
 
 -- ★ `cValuationG` divides: `p^{ν_p(x)} ∣ x` (the §6.2 valuation `dvd` half), carrier-generic.
 example {α : Type*} [CField α] [CFieldSpec α] [CFracGcdCore α] (fuel : ℕ) (p x : CPolyG α) :

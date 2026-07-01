@@ -13,7 +13,7 @@ instance `instCFracGcdCoreQFunNZG`. The carrier `QFunNZG ℚ` reads through `toP
 With the generic gcd correctness in hand, the §5 split-factor / canonical-representation correctness threads
 at `QFunNZG ℚ` through the generic engine's fraction-free gcd `cgcdFFCore`.
 
-* **`cstepGQ`** — the generic `SplitFactor` step `S = cdivG (cgcdFFCore p Dp) (cgcdFFCore p dp/dt)` at
+* **`cstepGQ`** — the generic `SplitFactor` step `S = cdivWf (cgcdFFCore p Dp) (cgcdFFCore p dp/dt)` at
   `QFunNZG ℚ` (the inner `S` of `cSplitFactorFastG`), associated to the abstract `splitFactorStep`.
 * **`cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG`** — the loop output is a book-faithful splitting
   factorization, threaded through the generic gcd correctness.
@@ -93,26 +93,25 @@ theorem associated_toPolyG_cgcdFFCore_reg (fuel : ℕ) (p q : CPolyG (QFunNZG �
 
 /-! ### The generic step `cstepGQ` is associated to the abstract `splitFactorStep` at `QFunNZG ℚ`
 
-`cstepGQ Dt fuel p = cdivG (cgcdFFCore p Dp) (cgcdFFCore p dp/dt)` is the inner `S` of `cSplitFactorFastG`
+`cstepGQ Dt fuel p = cdivWf (cgcdFFCore p Dp) (cgcdFFCore p dp/dt)` is the inner `S` of `cSplitFactorFastG`
 at `QFunNZG ℚ`. The proof uses the generic gcd bridge `associated_toPolyG_cgcdFFCore_reg` for the two
-`cgcdFFCore` calls and the generic exact division `toPolyG_cdivG_exact` to cancel the denominator gcd. -/
+`cgcdFFCore` calls and the generic exact division `toPolyG_cdivWf_exact` to cancel the denominator gcd. -/
 
-/-- **The generic computable `SplitFactor` step at `QFunNZG ℚ`** `cstepGQ Dt fuel p = cdivG (cgcdFFCore p
+/-- **The generic computable `SplitFactor` step at `QFunNZG ℚ`** `cstepGQ Dt fuel p = cdivWf (cgcdFFCore p
 (cmonomialDeriv Dt p)) (cgcdFFCore p (cderivG p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p,
 dp/dt)` computed with the generic flat fraction-free gcd `CFracGcdCore.cgcdFFCore` and the generic exact
-division `cdivG` (the inner `S` of `cSplitFactorFastG` at `QFunNZG ℚ`). -/
+division `cdivWf` (the inner `S` of `cSplitFactorFastG` at `QFunNZG ℚ`). -/
 def cstepGQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) : CPolyG (QFunNZG ℚ) :=
-  cdivG fuel (CFracGcdCore.cgcdFFCore fuel p (cmonomialDeriv Dt p))
+  cdivWf (CFracGcdCore.cgcdFFCore fuel p (cmonomialDeriv Dt p))
     (CFracGcdCore.cgcdFFCore fuel p (cderivG p))
 
 /-- **Per-step regularity bundle** `CStepGRegularQ Dt fuel p` for `cstepGQ`: node-regularity of both
-`cgcdFFCore` calls (numerator `gcd(p, Dp)`, denominator `gcd(p, dp/dt)`, via `CgcdFFCoreRegQ`) and a fuel
-bound on the numerator gcd's length so the exact Euclidean division `cdivG` is fully reduced. The
-per-step regularity bundle at the level-1 carrier `QFunNZG ℚ`. -/
+`cgcdFFCore` calls (numerator `gcd(p, Dp)`, denominator `gcd(p, dp/dt)`, via `CgcdFFCoreRegQ`). Exact
+division is fuel-free (`cdivWf`), so no quotient fuel side condition remains. The per-step regularity bundle
+at the level-1 carrier `QFunNZG ℚ`. -/
 def CStepGRegularQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (p : CPolyG (QFunNZG ℚ)) : Prop :=
   CgcdFFCoreRegQ fuel p (cmonomialDeriv Dt p) ∧
-  CgcdFFCoreRegQ fuel p (cderivG p) ∧
-  (cnormG (CFracGcdCore.cgcdFFCore fuel p (cmonomialDeriv Dt p)) : List (QFunNZG ℚ)).length ≤ fuel
+  CgcdFFCoreRegQ fuel p (cderivG p)
 
 /-- **The generic step is associated to the abstract `splitFactorStep` at `QFunNZG ℚ`**: for `toPolyG p ≠
 0` and a regular generic step (`CStepGRegularQ`), `toPolyG (cstepGQ Dt fuel p)` is `Associated` to
@@ -125,7 +124,7 @@ theorem associated_toPolyG_cstepGQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (p :
     Associated (toPolyG (cstepGQ Dt fuel p))
       (splitFactorStep (toPolyG Dt) (toPolyG p)) := by
   haveI : CharZero (CFieldSpec.K (QFunNZG ℚ)) := inferInstanceAs (CharZero (RatFunc ℚ))
-  obtain ⟨hregN, hregD, hfuelN⟩ := hreg
+  obtain ⟨hregN, hregD⟩ := hreg
   set v := toPolyG Dt with hv
   set P := toPolyG p with hP
   set N := CFracGcdCore.cgcdFFCore fuel p (cmonomialDeriv Dt p) with hN
@@ -149,11 +148,11 @@ theorem associated_toPolyG_cstepGQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (p :
   have hDncn : cnormG Dn ≠ [] := fun h => hDn0 ((cnormG_eq_nil_iff Dn).mp h)
   have hDnNdvd : toPolyG Dn ∣ toPolyG N :=
     (aD.dvd.trans hgDdvd).trans aN.symm.dvd
-  -- exact division: toPolyG N = toPolyG (cstepGQ …) · toPolyG Dn (cstepGQ = cdivG N Dn)
+  -- exact division: toPolyG N = toPolyG (cstepGQ …) · toPolyG Dn (cstepGQ = cdivWf N Dn)
   have hexact : toPolyG N = toPolyG (cstepGQ Dt fuel p) * toPolyG Dn := by
     have hNcn : cnormG Dn ≠ [] := hDncn
-    have := toPolyG_cdivG_exact fuel N Dn hNcn hfuelN hDnNdvd
-    rw [show cstepGQ Dt fuel p = cdivG fuel N Dn from rfl]
+    have := toPolyG_cdivWf_exact N Dn hNcn hDnNdvd
+    rw [show cstepGQ Dt fuel p = cdivWf N Dn from rfl]
     exact this.symm
   -- cancel the denominator gcd: toPolyG (cstepGQ) · toPolyG Dn ~ splitFactorStep · gD, toPolyG Dn ~ gD
   have hmul : Associated (toPolyG (cstepGQ Dt fuel p) * toPolyG Dn) (splitFactorStep v P * gD) := by
@@ -166,21 +165,19 @@ By induction on fuel: at each non-terminal node the generic `S = cstepGQ` divide
 (the abstract step divides, transported through `associated_toPolyG_cstepGQ`), exact division keeps the
 product invariant, and the abstract step facts supply `IsSpecial`/`IsNormalSqfree`. The per-node
 regularity is `CgcdFFCoreRegQ` (via the generic gcd correctness) and the exact division is
-`toPolyG_cdivG_exact`. -/
+`toPolyG_cdivWf_exact`. -/
 
 /-- **Recursive loop-regularity bundle** `CSplitFactorFastGRegularQ Dt fuel p` for `cSplitFactorFastG` at
-`QFunNZG ℚ`: mirrors the recursion — at each node the generic step is regular (`CStepGRegularQ`) and the
-dividend `t`-list is short enough that exact division `cdivG (fuel+1) p S` is fully reduced
-(`(cnormG p).length ≤ fuel + 1`); if the step is non-constant, the same holds recursively on `p/S`. The
-`QFunNZG ℚ` mirror of `CSplitFactorFastGRegular`. -/
+`QFunNZG ℚ`: mirrors the recursion — at each node the generic step is regular (`CStepGRegularQ`); if the
+step is non-constant, the same holds recursively on the fuel-free quotient `p/S = cdivWf p S`. The `QFunNZG
+ℚ` mirror of `CSplitFactorFastGRegular`. -/
 def CSplitFactorFastGRegularQ (Dt : CPolyG (QFunNZG ℚ)) : ℕ → CPolyG (QFunNZG ℚ) → Prop
   | 0, _ => True
   | fuel + 1, p =>
     CStepGRegularQ Dt (fuel + 1) p ∧
-      (cnormG p : List (QFunNZG ℚ)).length ≤ fuel + 1 ∧
       (cdegG (cstepGQ Dt (fuel + 1) p) = 0 ∨
         CSplitFactorFastGRegularQ Dt fuel
-          (cdivG (fuel + 1) p (cstepGQ Dt (fuel + 1) p)))
+          (cdivWf p (cstepGQ Dt (fuel + 1) p)))
 
 /-- `toPolyG [CField.one] = 1` over `QFunNZG ℚ`: the computable unit reads as the polynomial `1`. -/
 theorem toPolyG_cone_qfunNZG : toPolyG ([CField.one] : CPolyG (QFunNZG ℚ)) = 1 := by
@@ -219,7 +216,7 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG :
     exact (isNormal_of_isUnit hunit).isNormalSqfree
   | succ fuel ih =>
     intro p hp hdegp hreg
-    obtain ⟨hstepreg, hpfuel, hbranch⟩ := hreg
+    obtain ⟨hstepreg, hbranch⟩ := hreg
     set S := cstepGQ Dt (fuel + 1) p with hSdef
     -- the generic step is associated to the abstract `splitFactorStep`
     have haS0 : Associated (toPolyG S) (splitFactorStep (toPolyG Dt) (toPolyG p)) :=
@@ -240,8 +237,8 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG :
     -- the computable generic loop step matches `S`
     have hloop : CPolyG.cSplitFactorFastG Dt (fuel + 1) p
         = (if cdegG S = 0 then (p, [CField.one])
-           else ((CPolyG.cSplitFactorFastG Dt fuel (cdivG (fuel + 1) p S)).1,
-                 cmulG S (CPolyG.cSplitFactorFastG Dt fuel (cdivG (fuel + 1) p S)).2)) := by
+           else ((CPolyG.cSplitFactorFastG Dt fuel (cdivWf p S)).1,
+                 cmulG S (CPolyG.cSplitFactorFastG Dt fuel (cdivWf p S)).2)) := by
       conv_lhs => rw [CPolyG.cSplitFactorFastG]
       rfl
     have hcdeg : cdegG S = T.natDegree := hcdeg0
@@ -262,28 +259,28 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG :
         haS.dvd.trans (splitFactorStep_dvd (toPolyG Dt) hp)
       have hSspec : @IsSpecial _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩ T :=
         IsSpecial.of_associated haS.symm (isSpecial_splitFactorStep (toPolyG Dt) hp)
-      -- exact division: `toPolyG p = toPolyG (cdivG p S) · T`
+      -- exact division: `toPolyG p = toPolyG (cdivWf p S) · T`
       have hScn : cnormG S ≠ [] := fun h => hSne (hScn0.mpr h)
       have hSdvd' : toPolyG S ∣ toPolyG p := by rw [hT]; exact hSdvd
-      have hexact : toPolyG p = toPolyG (cdivG (fuel + 1) p S) * T := by
-        have h : toPolyG (cdivG (fuel + 1) p S) * toPolyG S = toPolyG p :=
-          toPolyG_cdivG_exact (fuel + 1) p S hScn hpfuel hSdvd'
+      have hexact : toPolyG p = toPolyG (cdivWf p S) * T := by
+        have h : toPolyG (cdivWf p S) * toPolyG S = toPolyG p :=
+          toPolyG_cdivWf_exact p S hScn hSdvd'
         rw [hT] at h
         exact h.symm
-      have hqne : toPolyG (cdivG (fuel + 1) p S) ≠ 0 := by
+      have hqne : toPolyG (cdivWf p S) ≠ 0 := by
         intro h0; rw [h0, zero_mul] at hexact; exact hp hexact
-      have hqdeg : (toPolyG (cdivG (fuel + 1) p S)).natDegree ≤ fuel := by
-        have hdegdrop : (toPolyG (cdivG (fuel + 1) p S)).natDegree + T.natDegree
+      have hqdeg : (toPolyG (cdivWf p S)).natDegree ≤ fuel := by
+        have hdegdrop : (toPolyG (cdivWf p S)).natDegree + T.natDegree
             = (toPolyG p).natDegree := by
           rw [hexact, Polynomial.natDegree_mul hqne hSne]
         have hSposc : 0 < T.natDegree := by rw [hSnd]; exact hSpos
         omega
       -- the recursive regularity branch (non-terminal: `cdegG S ≠ 0`)
       have hrecreg : CSplitFactorFastGRegularQ Dt fuel
-          (cdivG (fuel + 1) p (cstepGQ Dt (fuel + 1) p)) :=
+          (cdivWf p (cstepGQ Dt (fuel + 1) p)) :=
         hbranch.resolve_left hdeg
       rw [← hSdef] at hrecreg
-      have hih := ih (cdivG (fuel + 1) p S) hqne hqdeg hrecreg
+      have hih := ih (cdivWf p S) hqne hqdeg hrecreg
       obtain ⟨heq, hq2spec, hq1norm⟩ := hih
       refine ⟨?_, ?_, hq1norm⟩
       · -- `toPolyG p = toPolyG (cmulG S qs) · toPolyG qn`
@@ -311,15 +308,15 @@ structure CCanonicalRepFastGRegularQ (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
     (a d : CPolyG (QFunNZG ℚ)) : Prop where
   /-- `d` is nonzero. -/
   hd : toPolyG d ≠ 0
-  /-- fuel exceeds the denominator `t`-degree (so `cSplitFactorFastG`/`cdivmodG` are reduced). -/
+  /-- fuel exceeds the denominator `t`-degree (so `cSplitFactorFastG` is reduced). -/
   hdeg : (toPolyG d).natDegree ≤ fuel
   /-- the denominator split is a regular `cSplitFactorFastG` run. -/
   hsplitreg : CSplitFactorFastGRegularQ Dt fuel d
   /-- the Bézout gcd of the split parts `(dₙ, dₛ)` is a **constant** (coprime case). -/
-  hgdeg : (toPolyG (cgcdExtG fuel (CPolyG.cSplitFactorFastG Dt fuel d).1
+  hgdeg : (toPolyG (cgcdWf (CPolyG.cSplitFactorFastG Dt fuel d).1
     (CPolyG.cSplitFactorFastG Dt fuel d).2).1).natDegree = 0
   /-- the Bézout gcd is nonzero. -/
-  hgne : toPolyG (cgcdExtG fuel (CPolyG.cSplitFactorFastG Dt fuel d).1
+  hgne : toPolyG (cgcdWf (CPolyG.cSplitFactorFastG Dt fuel d).1
     (CPolyG.cSplitFactorFastG Dt fuel d).2).1 ≠ 0
 
 open RatFunc in
@@ -372,18 +369,14 @@ last open dependency of `hproper` for `deg Dt ≤ 1`. -/
 
 /-- **★ The canonical split's simple part `cₙ/dₙ` is proper at `α = QFunNZG ℚ`** — `deg cₙ < deg dₙ`, with
 the denominator-split hypothesis DISCHARGED: for `canonicalRepresentationFastG Dt fuel a d = (q, (b, dₛ),
-(cₙ, dₙ))` over ℚ(x)(t), under the per-node regularity bundle `CCanonicalRepFastGRegularQ` and enough fuel
-for `a` (`hfuelA`) and the rescaled dividend `u·r` (`hfuelUR`), the simple-part numerator `cₙ` has degree
-below `dₙ`. The split `d = dₛ·dₙ` feeding `canonicalRepresentationFastG_simple_proper` is supplied by
+(cₙ, dₙ))` over ℚ(x)(t), under the per-node regularity bundle `CCanonicalRepFastGRegularQ`, the
+simple-part numerator `cₙ` has degree below `dₙ`. The split `d = dₛ·dₙ` feeding
+`canonicalRepresentationFastG_simple_proper` is supplied by
 `cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG` (its `.1`) — so this is the **unconditional**
 version. It closes `hproper`/`haProper` of `cHermiteReduceTowerG_residual_proper_of_degree_le_one`, the
 last open dependency of the §3.5 split-correctness frontier for `deg Dt ≤ 1`. -/
 theorem canonicalRepresentationFastG_simple_proper_qfunNZG (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ)
-    (a d : CPolyG (QFunNZG ℚ)) (hreg : CCanonicalRepFastGRegularQ Dt fuel a d)
-    (hfuelA : (cnormG a : List (QFunNZG ℚ)).length ≤ fuel)
-    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFastG Dt fuel d).1
-      (CPolyG.cSplitFactorFastG Dt fuel d).2).1 (cdivmodG fuel a d).2) : List (QFunNZG ℚ)).length
-        ≤ fuel) :
+    (a d : CPolyG (QFunNZG ℚ)) (hreg : CCanonicalRepFastGRegularQ Dt fuel a d) :
     (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.1).degree
       < (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.2).degree := by
   obtain ⟨hd, hdeg, hsplitreg, hgdeg, hgne⟩ := hreg
@@ -396,7 +389,7 @@ theorem canonicalRepresentationFastG_simple_proper_qfunNZG (Dt : CPolyG (QFunNZG
   have hsplit_ds_ne : toPolyG (CPolyG.cSplitFactorFastG Dt fuel d).2 ≠ 0 := by
     intro h0; exact hd (by rw [hsplit_eq, h0, zero_mul])
   exact canonicalRepresentationFastG_simple_proper Dt fuel a d hd hsplit_eq hsplit_dn_ne
-    hsplit_ds_ne hgdeg hgne hfuelA hfuelUR
+    hsplit_ds_ne hgdeg hgne
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
@@ -434,14 +427,10 @@ example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
 -- simple part — `deg cₙ < deg dₙ` — with the denominator-split hypothesis discharged internally via the
 -- generic split correctness; the last open dependency of `hproper` for `deg Dt ≤ 1`.
 example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
-    (hreg : CCanonicalRepFastGRegularQ Dt fuel a d)
-    (hfuelA : (cnormG a : List (QFunNZG ℚ)).length ≤ fuel)
-    (hfuelUR : (cnormG (cmulG (CPolyG.cbezoutOne fuel (CPolyG.cSplitFactorFastG Dt fuel d).1
-      (CPolyG.cSplitFactorFastG Dt fuel d).2).1 (cdivmodG fuel a d).2) : List (QFunNZG ℚ)).length
-        ≤ fuel) :
+    (hreg : CCanonicalRepFastGRegularQ Dt fuel a d) :
     (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.1).degree
       < (toPolyG (CPolyG.canonicalRepresentationFastG Dt fuel a d).2.2.2).degree :=
-  canonicalRepresentationFastG_simple_proper_qfunNZG Dt fuel a d hreg hfuelA hfuelUR
+  canonicalRepresentationFastG_simple_proper_qfunNZG Dt fuel a d hreg
 
 /-! ### Axiom audit (the `QFunNZG ℚ` §5 correctness rests only on the standard kernel axioms) -/
 

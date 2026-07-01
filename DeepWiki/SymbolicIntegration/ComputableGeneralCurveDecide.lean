@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralLogSoundness
+import DeepWiki.SymbolicIntegration.ComputableGeneralWellFounded
 import DeepWiki.SymbolicIntegration.ComputableGeneralDivisorOrder
 
 /-! # The SELF-DETERMINING GENERAL-curve algebraic integrator: `cIntegrateGeneralCurveDecide`
@@ -16,10 +17,10 @@ This file **LIFTS that decision to an arbitrary irreducible plane curve** `K(x)[
 hyperelliptic torsion machinery with the **general divisor-class-group (`Pic⁰`) arithmetic** over the integral
 basis (`ComputableGeneralDivisor` / `ComputableGeneralDivisorOrder`). The pieces it lifts:
 
-* the **rational part** `v` — `afRationalSolve` over the integral basis through the general derivation `afDeriv`
-  (`ComputableGeneralRationalSolve`, DONE), replacing the radical `radIntegrateRational`;
-* the **principal log part** `1·log u` — `afLogArgSolve`, the `K`-linear log-derivative solve `afDeriv f u =
-  afMul f u integrand` (`ComputableGeneralLogArg`, DONE), replacing the radical `radLogArgSolve`;
+* the **rational part** `v` — `afRationalSolveWf` over the integral basis through the fuel-free general
+  derivation `afDerivWf` (`ComputableGeneralWellFounded`, DONE), replacing the radical `radIntegrateRational`;
+* the **principal log part** `1·log u` — `afLogArgSolveWf`, the `K`-linear log-derivative solve through
+  `afDerivWf` (`ComputableGeneralWellFounded`, DONE), replacing the radical `radLogArgSolve`;
 * the **torsion decision** — `genDivisorOrder fuel f basis δ` (`ComputableGeneralDivisorOrder`, the general lift
   of the hyperelliptic `cantorOrder`: the smallest `m` with `m·δ` principal, via repeated `idealProduct` + an
   ideal-reduction / principality test over the **fractional-ideal-over-the-integral-basis** representation),
@@ -32,7 +33,7 @@ outcomes — `some ⟨v, []⟩` (no log), `some ⟨v, [(1, u)]⟩` (principal), 
 
 **What generalizes cleanly vs. the deep residual.** The residue divisor → divisor representation is DONE
 (`genResidueResultant`, the full double resultant, `ComputableGeneralResidues`); the principal case is DONE
-(`afRationalSolve` / `afLogArgSolve`); the SOUNDNESS routes through the already-proven general capstone
+(`afRationalSolveWf` / `afLogArgSolveWf`); the SOUNDNESS routes through the already-proven general capstone
 `isGeneralAlgebraicIntegral_of_parts` (`ComputableGeneralLogSoundness`) — these all lift. The DEEP residual is
 the **general-`Pic⁰`-torsion core**: the general divisor-class-group arithmetic + the principal-generator
 construction of `m·δ` + the good-reduction torsion-ceiling lift, the general analogue of the hyperelliptic
@@ -147,7 +148,7 @@ def genCurveTorsionLogTerm (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List
 /-! ### The self-determining general-curve decision integrator `cIntegrateGeneralCurveDecide`
 
 The general lift of `cIntegrateAlgebraicDecide`. It threads: the **rational-part** input `ratIntegrand` (run
-through `afRationalSolve`); the **principal-log** input `logIntegrand` + `degBound` (the `afLogArgSolve` linear
+through `afRationalSolveWf`); the **principal-log** input `logIntegrand` + `degBound` (the `afLogArgSolveWf` linear
 log-argument solve); and the **torsion-decision** inputs `tin` (the residue divisor + generator oracle, feeding
 `genCurveTorsionLogTerm`). A Boolean `hasLogPart` discriminates the "no log part" case (the rational part is
 the whole answer) from the cases that need the log machinery. -/
@@ -156,31 +157,31 @@ the whole answer) from the cases that need the log machinery. -/
 arbitrary plane curve `K(x)[y]/(f)` (Trager, the elementarity decision, beyond hyperelliptic). Returns
 `Option GeneralCurveIntegralResult`:
 
-* compute the rational part `v` via `afRationalSolve fuel f basis degBound ratIntegrand` (the general
+* compute the rational part `v` via `afRationalSolveWf f basis degBound ratIntegrand` (the general
   derivation `afDeriv` linear solve over the integral basis); if it fails → `none`;
 * if `hasLogPart = false` (no log part) → `some ⟨v, []⟩`;
-* else **principal**: `afLogArgSolve fuel f basis degBound logIntegrand = some u` (the `K`-linear
+* else **principal**: `afLogArgSolveWf f basis degBound logIntegrand = some u` (the `K`-linear
   log-derivative solve `afDeriv f u = afMul f u logIntegrand`) → `some ⟨v, [(1, u)]⟩` (the classic `1·log u`);
 * else **torsion decision** on the residue divisor via `genCurveTorsionLogTerm`: if the residue divisor is
   `m`-torsion (`genDivisorOrder = some m`) the generator oracle gives `(1/m, g)` → `some ⟨v, [(1/m, g)]⟩`; if
   non-torsion → **`none`** (the integral is NOT elementary).
 
 So `none` is returned exactly when the rational solve fails OR the log part is non-torsion — the
-self-determining verdict. The general lift of `cIntegrateAlgebraicDecide`: `afRationalSolve` for the rational
-part (vs. `radIntegrateRationalWf`), `afLogArgSolve` for the principal log (vs. `radLogArgSolve`),
+self-determining verdict. The general lift of `cIntegrateAlgebraicDecide`: `afRationalSolveWf` for the rational
+part (vs. `radIntegrateRationalWf`), `afLogArgSolveWf` for the principal log (vs. `radLogArgSolve`),
 `genCurveTorsionLogTerm` (= `genDivisorOrder` + the generator oracle) for the torsion decision (vs.
 `torsionLogTerm`). -/
 def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
     (degBound : ℕ) (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ))
     (tin : GeneralCurveTorsionInputs) (hasLogPart : Bool) :
     Option GeneralCurveIntegralResult :=
-  match afRationalSolve fuel f basis degBound ratIntegrand with
+  match afRationalSolveWf f basis degBound ratIntegrand with
   | none => none
   | some v =>
     if hasLogPart = false then
       some ⟨v, []⟩
     else
-      match afLogArgSolve fuel f basis degBound logIntegrand with
+      match afLogArgSolveWf f basis degBound logIntegrand with
       | some u => some ⟨v, [(CField.one, u)]⟩
       | none =>
         match genCurveTorsionLogTerm fuel f basis tin with
@@ -190,13 +191,13 @@ def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis 
 /-! ## Part 2 — REACHABLE layer: structural readings of the decision's `some/none` branches
 
 Before soundness/completeness, the structural facts the verdicts ride on — proven by unfolding
-`cIntegrateGeneralCurveDecide` and case-splitting the `afRationalSolve` / `afLogArgSolve` /
+`cIntegrateGeneralCurveDecide` and case-splitting the `afRationalSolveWf` / `afLogArgSolveWf` /
 `genCurveTorsionLogTerm` matches. These mirror the hyperelliptic `cIntegrateAlgebraicDecide_principal_eq`,
 `torsionLogTerm_none_of_decide_none`, `decide_isSome_iff_torsion_isSome`. -/
 
 /-- **A `none` output forces the torsion branch to `none`** `genCurveTorsionLogTerm_none_of_decide_none` —
 when `cIntegrateGeneralCurveDecide … = none`, EITHER the rational solve failed
-(`afRationalSolve … = none`) OR (the rational solve succeeded, there was a log part, the principal log solve
+(`afRationalSolveWf … = none`) OR (the rational solve succeeded, there was a log part, the principal log solve
 failed, and) the torsion decision returned `none` (the residue divisor is non-torsion). The disjunction
 isolating the two ways the verdict can be `none`; the general lift of `torsionLogTerm_none_of_decide_none`. -/
 theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : CPolyG (QFunNZG ℚ))
@@ -204,18 +205,18 @@ theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : CPolyG (QFu
     (tin : GeneralCurveTorsionInputs) (hasLogPart : Bool)
     (hnone : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
       = none) :
-    afRationalSolve fuel f basis degBound ratIntegrand = none
-      ∨ ((afLogArgSolve fuel f basis degBound logIntegrand).isNone = true
+    afRationalSolveWf f basis degBound ratIntegrand = none
+      ∨ ((afLogArgSolveWf f basis degBound logIntegrand).isNone = true
           ∧ (genCurveTorsionLogTerm fuel f basis tin).isNone = true) := by
   unfold cIntegrateGeneralCurveDecide at hnone
-  cases hv : afRationalSolve fuel f basis degBound ratIntegrand with
+  cases hv : afRationalSolveWf f basis degBound ratIntegrand with
   | none => exact Or.inl rfl
   | some v =>
     simp only [hv] at hnone
     by_cases hlp : hasLogPart = false
     · rw [if_pos hlp] at hnone; simp at hnone
     · rw [if_neg hlp] at hnone
-      cases hu : afLogArgSolve fuel f basis degBound logIntegrand with
+      cases hu : afLogArgSolveWf f basis degBound logIntegrand with
       | some u => rw [hu] at hnone; simp at hnone
       | none =>
         rw [hu] at hnone
@@ -247,10 +248,10 @@ assumptions (NOT proved), each an instance of the **proven** general capstone
 `isGeneralAlgebraicIntegral_of_parts` specialized to the branch output — so the soundness boundary is citable
 with NO `sorry`:
 
-* `hnolog` — the no-log branch: for the rational-only output `⟨v, []⟩` (`v = afRationalSolve …`),
+* `hnolog` — the no-log branch: for the rational-only output `⟨v, []⟩` (`v = afRationalSolveWf …`),
   `IsGeneralAlgebraicIntegral … ⟨v,[]⟩.ratPart commonDenom ⟨v,[]⟩.logTerms cofs` (the rational part is the
   whole answer — `D(v) = integrand`);
-* `hprincipal` — the principal branch: for `⟨v, [(1, u)]⟩` (`u = afLogArgSolve …`),
+* `hprincipal` — the principal branch: for `⟨v, [(1, u)]⟩` (`u = afLogArgSolveWf …`),
   `IsGeneralAlgebraicIntegral … commonDenom [(1, u)] cofs` (`D(v + 1·log u) = integrand`);
 * `htorsion` — the torsion branch: for `⟨v, [term]⟩` (`term = genCurveTorsionLogTerm …`),
   `IsGeneralAlgebraicIntegral … commonDenom [term] cofs` (`D(v + (1/m)·log g) = integrand`).
@@ -259,18 +260,18 @@ All three are the proven capstone's conclusion, specialized — checker-free, no
 general-curve analogue of `AlgebraicDecideSoundnessResidual`. -/
 structure GeneralCurveDecideSoundnessResidual : Prop where
   /-- No-log branch: `D(⟨v, []⟩) = integrand` (rational part is the whole answer). -/
-  hnolog : ∀ v, afRationalSolve fuel f basis degBound ratIntegrand = some v →
+  hnolog : ∀ v, afRationalSolveWf f basis degBound ratIntegrand = some v →
     CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
       (GeneralCurveIntegralResult.mk v []).ratPart commonDenom
       (GeneralCurveIntegralResult.mk v []).logTerms cofs
   /-- Principal branch: `D(⟨v, [(1, u)]⟩) = integrand`. -/
-  hprincipal : ∀ v u, afRationalSolve fuel f basis degBound ratIntegrand = some v →
-    afLogArgSolve fuel f basis degBound logIntegrand = some u →
+  hprincipal : ∀ v u, afRationalSolveWf f basis degBound ratIntegrand = some v →
+    afLogArgSolveWf f basis degBound logIntegrand = some u →
     CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
       (GeneralCurveIntegralResult.mk v [(CField.one, u)]).ratPart commonDenom
       (GeneralCurveIntegralResult.mk v [(CField.one, u)]).logTerms cofs
   /-- Torsion branch: `D(⟨v, [term]⟩) = integrand`. -/
-  htorsion : ∀ v term, afRationalSolve fuel f basis degBound ratIntegrand = some v →
+  htorsion : ∀ v term, afRationalSolveWf f basis degBound ratIntegrand = some v →
     genCurveTorsionLogTerm fuel f basis tin = some term →
     CPolyG.IsGeneralAlgebraicIntegral fuel f integrand
       (GeneralCurveIntegralResult.mk v [term]).ratPart commonDenom
@@ -293,7 +294,7 @@ theorem cIntegrateGeneralCurveDecide_sound
       = some F) :
     CPolyG.IsGeneralAlgebraicIntegral fuel f integrand F.ratPart commonDenom F.logTerms cofs := by
   unfold cIntegrateGeneralCurveDecide at hsome
-  cases hv : afRationalSolve fuel f basis degBound ratIntegrand with
+  cases hv : afRationalSolveWf f basis degBound ratIntegrand with
   | none => rw [hv] at hsome; simp at hsome
   | some v =>
     simp only [hv] at hsome
@@ -304,7 +305,7 @@ theorem cIntegrateGeneralCurveDecide_sound
       exact hres.hnolog v hv
     · -- has-log branch
       rw [if_neg hlp] at hsome
-      cases hu : afLogArgSolve fuel f basis degBound logIntegrand with
+      cases hu : afLogArgSolveWf f basis degBound logIntegrand with
       | some u =>
         -- principal branch: F = ⟨v, [(1, u)]⟩
         rw [hu, Option.some.injEq] at hsome
@@ -418,8 +419,8 @@ variable (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveT
 
 /-- **★★ COMPLETENESS of the self-determining GENERAL-curve integrator** (`cIntegrateGeneralCurveDecide_complete`,
 `none → ¬ elementary`, modulo the frontier). On the non-principal log path — the rational solve succeeds
-(`afRationalSolve = some v`), there is a log part (`hasLogPart = true`), the principal log solve fails
-(`afLogArgSolve = none`) — under the general-`Pic⁰`-torsion frontier (the deep general torsion-decision
+(`afRationalSolveWf = some v`), there is a log part (`hasLogPart = true`), the principal log solve fails
+(`afLogArgSolveWf = none`) — under the general-`Pic⁰`-torsion frontier (the deep general torsion-decision
 correctness + the Liouville criterion on `δ`), a `none` output of `cIntegrateGeneralCurveDecide` certifies the
 integrand is **NOT elementary**. The `none` output then forces the torsion decision to `none` (the non-torsion
 verdict, via the structural reading); the frontier's completeness equivalence turns that into `¬ elem`. This
@@ -428,8 +429,8 @@ elementary" answer, modulo exactly the isolated deep frontier. The general-curve
 `cIntegrateAlgebraicDecide_complete`. -/
 theorem cIntegrateGeneralCurveDecide_complete {isTorsion elem : Prop} (v : CPolyG (QFunNZG ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
-    (hv : afRationalSolve fuel f basis degBound ratIntegrand = some v)
-    (_hlog : afLogArgSolve fuel f basis degBound logIntegrand = none)
+    (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
+    (_hlog : afLogArgSolveWf f basis degBound logIntegrand = none)
     (hnone : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true
       = none) :
     ¬ elem := by
@@ -464,14 +465,14 @@ variable (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG 
 variable (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
 
 /-- **On the non-principal log path, `cIntegrateGeneralCurveDecide = some _` iff the torsion branch fires**
-`decide_isSome_iff_genTorsion_isSome` — with the rational solve succeeding (`afRationalSolve = some v`), a log
-part present (`hasLogPart = true`), and the principal log solve failing (`afLogArgSolve = none`), the decision
+`decide_isSome_iff_genTorsion_isSome` — with the rational solve succeeding (`afRationalSolveWf = some v`), a log
+part present (`hasLogPart = true`), and the principal log solve failing (`afLogArgSolveWf = none`), the decision
 integrator returns `some _` **exactly** when `genCurveTorsionLogTerm = some term`. The structural equivalence
 isolating the general torsion decision as the elementarity gate on this path; the general-curve analogue of
 `decide_isSome_iff_torsion_isSome`. -/
 theorem decide_isSome_iff_genTorsion_isSome (v : CPolyG (QFunNZG ℚ))
-    (hv : afRationalSolve fuel f basis degBound ratIntegrand = some v)
-    (hlog : afLogArgSolve fuel f basis degBound logIntegrand = none) :
+    (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
+    (hlog : afLogArgSolveWf f basis degBound logIntegrand = none) :
     (cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true).isSome = true
       ↔ (genCurveTorsionLogTerm fuel f basis tin).isSome = true := by
   unfold cIntegrateGeneralCurveDecide
@@ -481,8 +482,8 @@ theorem decide_isSome_iff_genTorsion_isSome (v : CPolyG (QFunNZG ℚ))
   | some term => simp
 
 /-- **★★ THE GENERAL-CURVE DECISION-PROCEDURE CAPSTONE** (`cIntegrateGeneralCurveDecide_decides`,
-`(∃ F, … = some F) ⟺ elementary`, modulo the frontier). On the non-principal log path (`afRationalSolve =
-some v`, `hasLogPart = true`, `afLogArgSolve = none` — the path the general torsion decision governs), under
+`(∃ F, … = some F) ⟺ elementary`, modulo the frontier). On the non-principal log path (`afRationalSolveWf =
+some v`, `hasLogPart = true`, `afLogArgSolveWf = none` — the path the general torsion decision governs), under
 the general-`Pic⁰`-torsion frontier (the two isolated deep clauses), the self-determining general-curve
 integrator returns `some F` for some `F` **iff** the integrand is elementary:
 `(∃ F, cIntegrateGeneralCurveDecide … true = some F) ↔ elem`. The chain: `∃ F, … = some F ⟺
@@ -494,8 +495,8 @@ functions over an **arbitrary** plane curve, modulo exactly the named general-`P
 (Liouville-for-algebraic + the general good-reduction torsion decision). -/
 theorem cIntegrateGeneralCurveDecide_decides {isTorsion elem : Prop} (v : CPolyG (QFunNZG ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
-    (hv : afRationalSolve fuel f basis degBound ratIntegrand = some v)
-    (hlog : afLogArgSolve fuel f basis degBound logIntegrand = none) :
+    (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
+    (hlog : afLogArgSolveWf f basis degBound logIntegrand = none) :
     (∃ F, cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true = some F)
       ↔ elem := by
   rw [← Option.isSome_iff_exists,
@@ -534,7 +535,7 @@ def genCurveWitnessTorsionInputs : GeneralCurveTorsionInputs :=
 
 /-- **The general decision on the cuspidal-cubic torsion residue divisor** — a log-part input
 (`hasLogPart = true`) whose rational solve succeeds (`ratIntegrand = 0`), whose principal log solve fails
-(`logIntegrand = 1`, `afLogArgSolve = none`), and whose residue divisor `div(y)` is order-1 torsion, so
+(`logIntegrand = 1`, `afLogArgSolveWf = none`), and whose residue divisor `div(y)` is order-1 torsion, so
 `cIntegrateGeneralCurveDecide` is expected to return `some ⟨v, [(1/1, y)]⟩`. Fuel `8` (≥ `deg f = 3`). -/
 def genCurveWitnessTorsion : Option GeneralCurveIntegralResult :=
   cIntegrateGeneralCurveDecide 8 gcuspCubicF gcuspCubicBasis 2
@@ -635,8 +636,8 @@ example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
     (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
     {isTorsion elem : Prop} (v : CPolyG (QFunNZG ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
-    (hv : afRationalSolve fuel f basis degBound ratIntegrand = some v)
-    (hlog : afLogArgSolve fuel f basis degBound logIntegrand = none)
+    (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
+    (hlog : afLogArgSolveWf f basis degBound logIntegrand = none)
     (hnone : cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true
       = none) :
     ¬ elem :=
@@ -648,8 +649,8 @@ example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
     (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
     {isTorsion elem : Prop} (v : CPolyG (QFunNZG ℚ))
     (hres : GeneralPicTorsionFrontier fuel f basis tin isTorsion elem)
-    (hv : afRationalSolve fuel f basis degBound ratIntegrand = some v)
-    (hlog : afLogArgSolve fuel f basis degBound logIntegrand = none) :
+    (hv : afRationalSolveWf f basis degBound ratIntegrand = some v)
+    (hlog : afLogArgSolveWf f basis degBound logIntegrand = none) :
     (∃ F, cIntegrateGeneralCurveDecide fuel f basis degBound ratIntegrand logIntegrand tin true = some F)
       ↔ elem :=
   cIntegrateGeneralCurveDecide_decides fuel f basis degBound ratIntegrand logIntegrand tin v hres hv hlog

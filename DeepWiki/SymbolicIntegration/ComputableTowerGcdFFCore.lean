@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # The generic fraction-free gcd, upstream of the integration pipeline
 `ComputableTowerGcdFF` builds the flat, recursive, fraction-free gcd over an arbitrary tower level
@@ -105,7 +106,7 @@ def gbpsremainderCore : ℕ → GBPolyCore B → GBPolyCore B → GBPolyCore B
 
 The content-gcd `cgcdB : CPolyG B → CPolyG B → CPolyG B` over the coefficient ring `CPolyG B = B[s]` is
 PASSED IN — for the tower it is the level-`β` fraction-free gcd, recursing one level down. The content
-division is the generic Euclidean `cdivG` over `CPolyG B` (exact: the content divides every
+division is the fuel-free generic Euclidean `cdivWf` over `CPolyG B` (exact: the content divides every
 coefficient). -/
 
 /-- **`B[s]`-content** of a `GBPolyCore` (relative to a content-gcd `cgcdB`): fold `cgcdB` over all the
@@ -114,13 +115,14 @@ def gbcontentCore (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPolyCore B
   (gbnormCore p).foldl (fun g c => cgcdB g c) []
 
 /-- **Strip the `B[s]`-content in `t`** `gbprimitivePartCore fuel cgcdB p = p / content_t(p)`: divide
-every `t`-coefficient by the content (exact generic Euclidean `cdivG` over `CPolyG B`), giving the
-`B[s]`-primitive part. Leaves `[]` (and content `[]`) unchanged. -/
-def gbprimitivePartCore (fuel : ℕ) (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPolyCore B) :
+every `t`-coefficient by the content (exact fuel-free Euclidean `cdivWf` over `CPolyG B`), giving the
+`B[s]`-primitive part. Leaves `[]` (and content `[]`) unchanged. The `fuel` parameter is retained for the
+surrounding PRS API, but no division fuel is used at runtime. -/
+def gbprimitivePartCore (_fuel : ℕ) (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPolyCore B) :
     GBPolyCore B :=
   let p := gbnormCore p
   let g := gbcontentCore cgcdB p
-  if CPolyG.cisZeroG g then p else gbnormCore (p.map (fun c => CPolyG.cdivG fuel c g))
+  if CPolyG.cisZeroG g then p else gbnormCore (p.map (fun c => CPolyG.cdivWf c g))
 
 end GBPolyCore
 

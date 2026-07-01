@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Generic fraction-free gcd over an arbitrary tower level
 The generic Euclidean gcd `cgcdExtG` over the fraction field ℚ(x) suffers **super-exponential**
@@ -119,8 +120,8 @@ def gbpsremainder : ℕ → GBPoly B → GBPoly B → GBPoly B
 
 The content-gcd `cgcdB : CPolyG B → CPolyG B → CPolyG B` over the coefficient ring `CPolyG B = B[s]` is
 PASSED IN — for the tower it is the level-`β` fraction-free gcd `cgcdFFGen`, recursing one level down.
-The content division is the generic Euclidean `cdivG` over `CPolyG B` (exact: the content divides every
-coefficient). -/
+The content division is the fuel-free generic Euclidean `cdivWf` over `CPolyG B` (exact: the content divides
+every coefficient). -/
 
 /-- **`B[s]`-content** of a `GBPoly` (relative to a content-gcd `cgcdB`): fold `cgcdB` over all the
 `t`-coefficients — the common `CPolyG B = B[s]` factor of the polynomial in `t`. The generic mirror of
@@ -129,13 +130,13 @@ def gbcontent (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : CPol
   (gbnorm p).foldl (fun g c => cgcdB g c) []
 
 /-- **Strip the `B[s]`-content in `t`** `gbprimitivePart fuel cgcdB p = p / content_t(p)`: divide every
-`t`-coefficient by the content (exact generic Euclidean `cdivG` over `CPolyG B`), giving the `B[s]`-
-primitive part. Leaves `[]` (and content `[]`) unchanged. The generic mirror of
-`Compute.bprimitivePartX`. -/
-def gbprimitivePart (fuel : ℕ) (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : GBPoly B :=
+`t`-coefficient by the content (exact fuel-free Euclidean `cdivWf` over `CPolyG B`), giving the `B[s]`-
+primitive part. Leaves `[]` (and content `[]`) unchanged. The generic mirror of `Compute.bprimitivePartX`.
+The `fuel` parameter is retained for the surrounding PRS API, but no division fuel is used at runtime. -/
+def gbprimitivePart (_fuel : ℕ) (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : GBPoly B :=
   let p := gbnorm p
   let g := gbcontent cgcdB p
-  if CPolyG.cisZeroG g then p else gbnorm (p.map (fun c => CPolyG.cdivG fuel c g))
+  if CPolyG.cisZeroG g then p else gbnorm (p.map (fun c => CPolyG.cdivWf c g))
 
 end GBPoly
 

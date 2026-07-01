@@ -351,6 +351,7 @@ theorem cValuationGWf_eq (p : CPolyG α) :
     conv_rhs => rw [cValuationG, cValuationG.go, if_neg hx, if_neg hp, hdvd,
       if_pos (by rfl : (true = true))]
     rw [if_pos (by rfl : (true = true)), cValuationG]
+    rw [hdiveq]
 
 end CPolyG
 
@@ -576,13 +577,11 @@ namespace CPolyG
 variable {α : Type*} [CField α] [CDiffField α]
 
 omit [CDiffField α] in
-/-- **Bridge — `cExpEtaGWf` equals `cExpEtaG` at any sufficient fuel.** When the fuel-free division `cdivWf`
-matches the fuel'd `cdivG fuel` on `Dt / t` (`hdiv`, from `cdivmodWf_eq_of_fuel` over `[CFieldSpec α]`),
-`cExpEtaGWf Dt = cExpEtaG fuel Dt`. Both read the degree-0 coefficient of the quotient. -/
-theorem cExpEtaGWf_eq (Dt : CPolyG α) (fuel : ℕ)
-    (hdiv : cdivWf Dt (cshiftG 1 [CField.one]) = cdivG fuel Dt (cshiftG 1 [CField.one])) :
+/-- **Bridge — `cExpEtaGWf` equals `cExpEtaG`.** Both read the degree-0 coefficient of the same fuel-free
+quotient `Dt / t`. -/
+theorem cExpEtaGWf_eq (Dt : CPolyG α) (fuel : ℕ) :
     cExpEtaGWf Dt = cExpEtaG fuel Dt := by
-  rw [cExpEtaGWf, cExpEtaG, hdiv]
+  rw [cExpEtaGWf, cExpEtaG]
 
 omit [CDiffField α] in
 /-- **Bridge — `cRdeBoundDegreeGWf` equals `cRdeBoundDegreeG` at any fuel** (definitional). Both are the same

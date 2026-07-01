@@ -14,7 +14,7 @@ module imports only the polynomial/field-tower floor (`GenericPolyEngine` ops + 
 `bareissDet = fieldDet`, `qfDet = fieldDet`, `qfInv = matInvG` and the swell benchmarks live DOWNSTREAM in
 `ComputableBareiss`/`ComputableBareissQF` (which import this engine plus the curve machinery).
 
-* **`bareissDet`** — the fraction-free determinant over `ℚ[x] = CPolyG α` (`cmulG`/`csubG`/`cdivG`, exact:
+* **`bareissDet`** — the fraction-free determinant over `ℚ[x] = CPolyG α` (`cmulG`/`csubG`/`cdivWf`, exact:
   every Bareiss division is exact by Sylvester's identity, so entries stay flat — no swell).
 * **`bareissAdjugate` / `bareissSolve`** — the adjugate `adj M` and the Cramer solve `(det, det·x)`, the
   fraction-free inverse representation `M⁻¹ = adj M / det M` (the `(det, adjugate)` pair).
@@ -53,29 +53,27 @@ def getEntry (M : List (List (CPolyG α))) (i j : ℕ) : CPolyG α :=
 /-- **One Bareiss fraction-free elimination step** with pivot index `k` and previous pivot `prevPiv`:
 each entry `[i][j]` with `i > k` and `j > k` becomes
 `(M[k][k]·M[i][j] − M[i][k]·M[k][j]) / prevPiv` (the cross-minor divided **exactly** by the previous
-pivot — Bareiss's identity guarantees divisibility, so `cdivG` returns the exact quotient with no
-remainder). Entries with `i ≤ k` or `j ≤ k` are left unchanged. `divFuel` bounds the exact division
-(`len numerator + 1` suffices). -/
-def bareissStep (divFuel : ℕ) (prevPiv : CPolyG α) (k : ℕ) (M : List (List (CPolyG α))) :
+pivot — Bareiss's identity guarantees divisibility, so `cdivWf` returns the exact quotient with no
+remainder). Entries with `i ≤ k` or `j ≤ k` are left unchanged. -/
+def bareissStep (prevPiv : CPolyG α) (k : ℕ) (M : List (List (CPolyG α))) :
     List (List (CPolyG α)) :=
   let mkk := getEntry M k k
   (List.range M.length).map (fun i =>
     (List.range (M.getD i []).length).map (fun j =>
       if k < i ∧ k < j then
         let num := csubG (cmulG mkk (getEntry M i j)) (cmulG (getEntry M i k) (getEntry M k j))
-        cdivG divFuel num prevPiv
+        cdivWf num prevPiv
       else getEntry M i j))
 
 /-- **Bareiss elimination driver**: run `bareissStep` for pivot indices `k = 0, 1, …` carrying the
 previous pivot `prevPiv` (initially `[1]`, then `M[k][k]` after step `k`). `fuel` is the **matrix size**
 (`ℕ`-structural recursion, one step per pivot). Returns the fully reduced (upper-triangular-in-the-
-fraction-free-sense) matrix whose `[n-1][n-1]` entry is `det M`. `divFuel` is passed to each step's exact
-division. -/
-def bareissDrive (divFuel : ℕ) : ℕ → CPolyG α → ℕ → List (List (CPolyG α)) → List (List (CPolyG α))
+fraction-free-sense) matrix whose `[n-1][n-1]` entry is `det M`. -/
+def bareissDrive : ℕ → CPolyG α → ℕ → List (List (CPolyG α)) → List (List (CPolyG α))
   | 0, _, _, M => M
   | fuel + 1, prevPiv, k, M =>
-    let M' := bareissStep divFuel prevPiv k M
-    bareissDrive divFuel fuel (getEntry M' k k) (k + 1) M'
+    let M' := bareissStep prevPiv k M
+    bareissDrive fuel (getEntry M' k k) (k + 1) M'
 
 /-- **The Bareiss fraction-free determinant over `ℚ[x]`** `bareissDet M`: run `bareissDrive` for `n =
 M.length` pivots starting from `prevPiv = [1]`, then read the final pivot `M⁽ⁿ⁾[n-1][n-1]`. Every
@@ -86,9 +84,7 @@ def bareissDet (M : List (List (CPolyG α))) : CPolyG α :=
   let n := M.length
   if n = 0 then [CField.one]
   else
-    -- a division-fuel bound large enough for every cross-minor numerator over the run
-    let divFuel := (M.foldl (fun acc row => acc + row.foldl (fun a p => a + p.length + 1) 0) 0) + n + 2
-    let M' := bareissDrive divFuel n [CField.one] 0 M
+    let M' := bareissDrive n [CField.one] 0 M
     getEntry M' (n - 1) (n - 1)
 
 /-! ### Fraction-free solve and adjugate (the inverse representation `(det, adjugate)`)

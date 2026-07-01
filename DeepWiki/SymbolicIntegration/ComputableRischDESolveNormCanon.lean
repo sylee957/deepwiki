@@ -164,11 +164,11 @@ theorem isCanonNormalized_dvdB (f q' : QFunNZG β) (h0 : CPolyG β)
 
 end Normality
 
-/-! ## Task 3 — the fuel precondition `InputFitsFuel`
+/-! ## Task 3 — the per-run precondition `InputFitsFuel`
 
 The recursive oracle is fuel-bounded (`towerRischDEFuel`); the per-run residual `RischDESuccessResidualNormFuel`
-collects the §6.2 fuel bounds (`hfbB`/`hfbC` `length ≤ towerRischDEFuel`), the normal-part-nonzero `hdn`, the
-§6.4 transparent-input chain `hin` (gcd half via the witness), and the dispatcher `hdb`. `InputFitsFuel f g`
+collects the normal-part-nonzero `hdn`, the §6.4 transparent-input chain `hin` (gcd half via the witness and
+per-level fuel side data), and the dispatcher `hdb`. `InputFitsFuel f g`
 packages **exactly** this per-run residual for the canonicalized solver's pair `(qReduce f̃, q'·g)` — the ONE
 mild benign-totality precondition (a too-small `towerRischDEFuel` fails it; any fuel-bounded computable solver
 carries it). It is the `RischDESuccessResidualNormFuel` of the canonicalized pair, **plus** the `g`-side
@@ -181,13 +181,13 @@ section Fuel
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **The fuel/termination precondition** `InputFitsFuel f g`: the per-run fuel residual
+/-- **The fuel/termination precondition** `InputFitsFuel f g`: the per-run termination residual
 `RischDESuccessResidualNormFuel` for the canonicalized solver's pair `(qReduce (weakNormalizedF f q'), q'·g)`
 (`q' = cWeakNormalizerG`'s lift), **together with** the `g`-side normality dual `IsWeaklyNormalizedDen (q'·g).1.2`.
-The §6.2 fuel bounds + normal-part-nonzero + the §6.4 transparent-input chain (gcd half via the witness) +
-dispatcher, plus the `C`-side dual — every clause a fuel-bounded computable solver carries, the one benign
-totality precondition. NOT a divisibility/soundness gap: a too-small `towerRischDEFuel` fails the length
-bounds. -/
+The normal-part-nonzero + the §6.4 transparent-input chain (gcd half via the witness and per-level fuel side
+data) + dispatcher, plus the `C`-side dual — every clause a fuel-bounded computable solver carries, the one
+benign totality precondition. NOT a divisibility/soundness gap: a too-small `towerRischDEFuel` can still fail
+the `hin` length bounds. -/
 structure InputFitsFuel (f g : QFunNZG β) : Prop where
   /-- The per-run fuel/termination residual for the canonicalized pair. -/
   hfuel : RischDESuccessResidualNormFuel
@@ -347,7 +347,7 @@ theorem crischDESolve_witness_none :
 
 /-- **★ `IsCanonNormalized` genuinely FAILS on the witness** (`isCanonNormalized_witness_false`,
 `native_decide`): even after weak normalization (`cWeakNormalizerG`) **and** canonicalization (`qReduce`,
-inlined here as `cdivG`/`cgcdExtG` to stay computable at level 2), `f = 1/(t₁ − x)`'s denominator does **not**
+inlined here as `cdivWf`/`cgcdExtG` to stay computable at level 2), `f = 1/(t₁ − x)`'s denominator does **not**
 equal its own §3.5 normal part — the special factor `t₁ − x` survives, so
 `cisZeroG (normalPart(den) − den) = false`. The §6.1 condition `IsCanonNormalized` correctly **excludes** the
 unsound witness — confirming it is a genuine, non-vacuous soundness gate, true on the
@@ -359,7 +359,7 @@ theorem isCanonNormalized_witness_false :
       let fuel := (cnormG ftilde.1.1 : List (QFunNZG ℚ)).length
         + (cnormG ftilde.1.2 : List (QFunNZG ℚ)).length + 1
       let gcd := (cgcdExtG fuel ftilde.1.1 ftilde.1.2).1
-      let redDen := cdivG fuel ftilde.1.2 gcd
+      let redDen := cdivWf ftilde.1.2 gcd
       CPolyG.cisZeroG (CPolyG.csubG
         (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG (QFunNZG ℚ)) towerRischDEFuel redDen).1
         redDen)) = false := by native_decide

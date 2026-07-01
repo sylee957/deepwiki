@@ -63,11 +63,8 @@ typeclasses (`CFracGcdCore`/`CRischField`) are supplied for `RadX3`.
   (`mixedHyperexpPolySpec_integral_descends`, a polynomial part *plus* the descending special part) are
   validated `D(∫f) = f` over the `RadX3` derivation — **an actual integral over the mixed tower whose
   special-part step recurses `RadX3[t] → crischDESolve over RadX3 → ℚ(x)`**. The descent is fed canonical
-  Laurent coefficients; the full driver `cIntegrateHyperexpG`'s top entry returns `none` over `RadX3`
-  (`mixedHyperexpG_topEntry_none`) because `canonicalRepresentationFastG`'s special part carries
-  non-canonical `RadX3` coefficients the representation-sensitive base ℚ(x) solver rejects — a
-  canonicalization gap (a `QFunNZG ℚ` normalizer is the documented continuation), not a §5.10-engine
-  failure. -/
+  Laurent coefficients; the full driver `cIntegrateHyperexpG`'s top entry now validates the same mixed-tower
+  integral (`mixedHyperexpG_topEntry_validates`), so the earlier canonicalization-gap smoke test is gone. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -364,33 +361,24 @@ theorem mixedHyperexpPolySpec_integral_descends :
             [CField.one, CField.zero, CField.one] [CField.zero, CField.one]
       | none => false) = true := by native_decide
 
-/-! ### ★ The honest wiring gap: `cIntegrateHyperexpG`'s TOP entry does NOT route over `RadX3` (`native_decide`)
+/-! ### ★ The full `cIntegrateHyperexpG` top entry now routes over `RadX3` (`native_decide`)
 
-Why the descent above is exhibited through the §5.10 Laurent *integrator* (`cIntegrateHyperexpLaurentG`, fed
-canonical Laurent coefficients) rather than the full hyperexponential *driver* `cIntegrateHyperexpG`'s top
-entry: over `RadX3`, the full driver returns **`none`**. The driver's first step is
-`canonicalRepresentationFastG` (the §3.5 canonical split), which over the radical field `RadX3` produces a
-special part `b/dₛ` whose `cHyperexpSpecialNegG` coefficients are **non-canonical `RadX3` representations**
-(e.g. `a₋₁` is mathematically `1` but lands as a bloated `QFunNZG ℚ` fraction, *not* the literal `CField.one`
-— the radical arithmetic `radMul`/`radInv2`/`cnatCastG` over `ℚ(x)` does not reduce fractions to a canonical
-form). The downstream base solve `crischDESolve coeff aⱼ` over ℚ(x) is **representation-sensitive**: it
-succeeds on the canonical `−1`/`1` but fails on the bloated equivalent, so the special-part term solve
-returns `none` and the whole driver returns `none`. The §5.10 *engine* is correct (the Laurent integrator
-descends and validates above); the gap is a **canonicalization mismatch** between
-`canonicalRepresentationFastG`'s `RadX3`-output and the base ℚ(x) RDE solver's input — closing it needs a
-canonical-form normalizer on `QFunNZG ℚ` coefficients (or a `radCanon`-style reduction threaded through
-`cHyperexpSpecialNegG`), the documented continuation. We pin the gap as a `native_decide` fact. -/
+The §5.10 Laurent integrator above is the clean, canonical-coefficient entry point for watching the descent
+step directly. The full hyperexponential driver now succeeds on the same `f = (t²+1)/t = t + t⁻¹` input too:
+`canonicalRepresentationFastG` feeds the special part into `cIntegrateHyperexpG`, the base RDE over `RadX3`
+descends through `instCRischFieldRadExt`, and the returned `IntegralResultG` validates the cleared identity
+`D(∫f) = f`. This removes the old representation-sensitive top-entry gap from this example. -/
 
-/-- **`cIntegrateHyperexpG`'s top entry returns `none` over `RadX3`** (`native_decide`, the honest gap): on
-`f = (t²+1)/t = t + t⁻¹` over `RadX3[t]` the full hyperexponential driver `cIntegrateHyperexpG` returns
-`none` — *not* because the §5.10 engine fails (the Laurent integrator descends and validates the same
-integrand above), but because `canonicalRepresentationFastG`'s special part over the radical field carries
-**non-canonical `RadX3` coefficients** that the representation-sensitive base ℚ(x) `crischDESolve` cannot
-consume. The descent is therefore exhibited through `cIntegrateHyperexpLaurentG` (canonical coefficients);
-routing the top driver needs a `QFunNZG ℚ` canonical-form normalizer, the documented continuation. -/
-theorem mixedHyperexpG_topEntry_none :
-    (CPolyG.cIntegrateHyperexpG mixedHyperexpDt 20 [CField.one, CField.zero, CField.one]
-      [CField.zero, CField.one] [CField.zero, CField.one]).isNone = true := by native_decide
+/-- **`cIntegrateHyperexpG`'s top entry validates over `RadX3`** (`native_decide`): on `f = (t²+1)/t =
+t + t⁻¹` over `RadX3[t]`, the full hyperexponential driver returns `some res` and `checkIdentityG` confirms
+`D(res) = f`. -/
+theorem mixedHyperexpG_topEntry_validates :
+    (match CPolyG.cIntegrateHyperexpG mixedHyperexpDt 20 [CField.one, CField.zero, CField.one]
+        [CField.zero, CField.one] [CField.zero, CField.one] with
+      | some res =>
+          CPolyG.checkIdentityG mixedHyperexpDt res [CField.one, CField.zero, CField.one]
+            [CField.zero, CField.one]
+      | none => false) = true := by native_decide
 
 /-! ### `#print axioms` — the transcendental-over-algebraic integrals
 
@@ -416,7 +404,7 @@ the algebraic-coefficient boundary recorded honestly. -/
 -- algebraic RDE instCRischFieldRadExt, validated D(∫f) = f:
 #print axioms mixedHyperexpRecip_integral_descends
 #print axioms mixedHyperexpPolySpec_integral_descends
--- ★ The honest wiring gap: cIntegrateHyperexpG's top entry returns none over RadX3:
-#print axioms mixedHyperexpG_topEntry_none
+-- ★ The full cIntegrateHyperexpG top entry now validates over RadX3:
+#print axioms mixedHyperexpG_topEntry_validates
 
 end DeepWiki.SymbolicIntegration

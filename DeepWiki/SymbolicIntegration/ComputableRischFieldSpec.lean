@@ -234,8 +234,8 @@ distinct reasons. The first is fundamental; the second is supplied above.
    `hspde : cSPDEG … = some (bbar, cbar, m, α', β)`, the §6.5 non-cancellation success `hpoly :
    cPolyRischDENoCancelG … = some v`, the transparent-input chain `hin : CSPDEGClearedInputsGen …` (which
    itself bundles, *per recursion level*, `Associated`-gcd correctness, fuel bounds, and nonzero-denominator
-   facts), plus the §6.2 divisibility/fuel side-conditions (`hdn`, `hfden0`, `hgden0`, `hfbB`, `hdvdB`, `hfbC`,
-   `hdvdC`). **None of these is derivable from the bare `cRischDEG … = some (ynum, yden)`.** To build the
+   facts), plus the §6.2 divisibility side-conditions (`hdn`, `hfden0`, `hgden0`, `hdvdB`, `hdvdC`).
+   **None of these is derivable from the bare `cRischDEG … = some (ynum, yden)`.** To build the
    instance one must run the pipeline's stages *forward* and prove, from the bare `some`-result, that (a) each
    intermediate stage also returned `some` with the matching reassembly, and (b) the whole
    `CSPDEGClearedInputsGen` transparent-input predicate holds on a real run — i.e. re-derive the §6 pipeline's
