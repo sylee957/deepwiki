@@ -209,7 +209,7 @@ abbrev lem_3_3_4_easy := @subfieldClosure_subset_constants
 
 /-- **Corollary 3.3.1** (§3.3, p.86): a constant of a separable algebraic extension is the root of a
 separable constant-coefficient polynomial — `Const_Δ(E)` is the algebraic closure of `Const_D(F)`. -/
-abbrev cor_3_3_1 := @deriv_eq_zero_iff_isAlgebraicOverConst_separable
+abbrev cor_3_3_1 := @deriv_eq_zero_iff_isAlgebraicOverConst_separable_base
 
 /-- **Lemma 3.3.3** (§3.3, p.87): the constant field of an algebraically closed differential field is
 itself algebraically closed (char `0`). -/

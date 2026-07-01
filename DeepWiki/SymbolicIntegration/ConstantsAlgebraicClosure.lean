@@ -19,9 +19,7 @@ section AlgebraicClosureConstants
 variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
   [DifferentialAlgebra F E]
 
-/-- `IsAlgebraicOverConst c` : the element `c ∈ E` is algebraic over the constants — a root of a
-nonzero polynomial in `E[X]` all of whose coefficients are constants (so the polynomial lies in
-`Const_Δ(E)[X]`, in particular over the image of `Const_D F`). -/
+/-- `c` is a root of a nonzero polynomial over the ambient constant field of `E`. -/
 def IsAlgebraicOverConst (c : E) : Prop :=
   ∃ q : E[X], q ≠ 0 ∧ (∀ i, (q.coeff i)′ = 0) ∧ q.eval c = 0
 
@@ -31,7 +29,7 @@ over `F` since `E/F` is algebraic, then Lemma 3.3.2(i) lifts the witness to cons
 coefficients.) -/
 theorem isAlgebraicOverConst_of_deriv_eq_zero_of_integral {c : E} (hc : c′ = 0)
     (hint : IsIntegral F c) : IsAlgebraicOverConst c :=
-  isAlgebraicOverConst_of_deriv_eq_zero hc hint
+  isAlgebraicOverConst_map_of_deriv_eq_zero hc hint
 
 /-- **Corollary 3.3.1** (§3.3), backward inclusion `C̄ᴱ ⊆ Const_Δ(E)`: an element that is a root of
 a *separable* (`q'(c) ≠ 0`) nonzero polynomial with constant coefficients is itself a constant.
@@ -39,6 +37,38 @@ a *separable* (`q'(c) ≠ 0`) nonzero polynomial with constant coefficients is i
 theorem deriv_eq_zero_of_isAlgebraicOverConst {c : E} (q : E[X]) (hq : ∀ i, (q.coeff i)′ = 0)
     (hroot : q.eval c = 0) (hsep : q.derivative.eval c ≠ 0) : c′ = 0 :=
   deriv_eq_zero_of_separable_algebraic_const q hq hroot hsep
+
+/-- A root of a separable base-constant polynomial is a constant. -/
+theorem deriv_eq_zero_of_base_constant_polynomial {c : E} (p : F[X])
+    (hp : ∀ i, (p.coeff i)′ = 0) (hroot : Polynomial.aeval c p = 0)
+    (hsep : Polynomial.aeval c p.derivative ≠ 0) : c′ = 0 := by
+  refine deriv_eq_zero_of_separable_algebraic_const (p.map (algebraMap F E)) ?_ ?_ ?_
+  · intro i
+    rw [Polynomial.coeff_map, deriv_algebraMap, hp i, map_zero]
+  · rw [Polynomial.eval_map, ← Polynomial.aeval_def]
+    exact hroot
+  · rwa [Polynomial.derivative_map, Polynomial.eval_map, ← Polynomial.aeval_def]
+
+/-- In characteristic zero, constants are exactly roots of separable base-constant polynomials. -/
+theorem deriv_eq_zero_iff_isAlgebraicOverConst_separable_base [CharZero F] {c : E}
+    (hint : IsIntegral F c) :
+    c′ = 0 ↔ ∃ p : F[X], p ≠ 0 ∧ (∀ i, (p.coeff i)′ = 0) ∧
+      Polynomial.aeval c p = 0 ∧ Polynomial.aeval c p.derivative ≠ 0 := by
+  constructor
+  · intro hc
+    set p := minpoly F c with hpdef
+    have hconst : ∀ i, (p.coeff i)′ = 0 := by
+      intro i
+      rw [hpdef]
+      exact minpoly_coeff_deriv_eq_zero_of_deriv_eq_zero hc hint i
+    refine ⟨p, ?_, hconst, ?_, ?_⟩
+    · rw [hpdef]
+      exact (minpoly.monic hint).ne_zero
+    · rw [hpdef, minpoly.aeval]
+    · rw [hpdef]
+      exact (minpoly.irreducible hint).separable.aeval_derivative_ne_zero (minpoly.aeval F c)
+  · rintro ⟨p, _, hp, hroot, hsep⟩
+    exact deriv_eq_zero_of_base_constant_polynomial p hp hroot hsep
 
 /-- **Corollary 3.3.1** (§3.3), the constant-field characterisation `Const_Δ(E) = C̄ᴱ`: in char `0`
 a constant of `E` is exactly an element that is a root of a *separable* nonzero polynomial with
@@ -51,31 +81,19 @@ theorem deriv_eq_zero_iff_isAlgebraicOverConst_separable [CharZero F] {c : E}
       q.derivative.eval c ≠ 0 := by
   constructor
   · intro hc
-    set p := minpoly F c with hpdef
-    have hsep : p.Separable := (minpoly.irreducible hint).separable
+    obtain ⟨p, hpne, hpconst, hroot, hsep⟩ :=
+      (deriv_eq_zero_iff_isAlgebraicOverConst_separable_base hint).mp hc
     have hconst : ∀ i, ((p.map (algebraMap F E)).coeff i)′ = 0 := by
       intro i
       rw [Polynomial.coeff_map, deriv_algebraMap]
-      have hmc0 : (Differential.mapCoeffs p) = 0 := by
-        have hkappa : Polynomial.aeval c (Differential.mapCoeffs p) = 0 := by
-          have hchain := Differential.deriv_aeval_eq (A := F) (R := E) c p
-          rw [minpoly.aeval, map_zero, hc, mul_zero, add_zero] at hchain
-          exact hchain.symm
-        by_contra hne
-        have hle := minpoly.degree_le_of_ne_zero F c hne hkappa
-        rw [← hpdef] at hle
-        exact absurd (lt_of_le_of_lt hle (degree_mapCoeffs_lt (minpoly.monic hint)))
-          (lt_irrefl _)
-      have hci : (p.coeff i)′ = 0 := by
-        have := congrArg (fun r => Polynomial.coeff r i) hmc0
-        rwa [Differential.coeff_mapCoeffs, Polynomial.coeff_zero] at this
-      rw [hci, map_zero]
+      rw [hpconst i, map_zero]
     refine ⟨p.map (algebraMap F E), ?_, hconst, ?_, ?_⟩
     · rw [Ne, Polynomial.map_eq_zero_iff (algebraMap F E).injective]
-      exact (minpoly.monic hint).ne_zero
-    · rw [Polynomial.eval_map, ← Polynomial.aeval_def, minpoly.aeval]
+      exact hpne
+    · rw [Polynomial.eval_map, ← Polynomial.aeval_def]
+      exact hroot
     · rw [Polynomial.derivative_map, Polynomial.eval_map, ← Polynomial.aeval_def]
-      exact hsep.aeval_derivative_ne_zero (minpoly.aeval F c)
+      exact hsep
   · rintro ⟨q, _, hq, hroot, hsep⟩
     exact deriv_eq_zero_of_isAlgebraicOverConst q hq hroot hsep
 
