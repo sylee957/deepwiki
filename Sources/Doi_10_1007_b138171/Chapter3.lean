@@ -72,67 +72,90 @@ abbrev def_3_1_2 := @IsDifferentialIdeal
 
 /-! ## §3.2 Differential Extensions -/
 
-/-- **Definition 3.2.1** (§3.2, p.79), a *differential extension* `(S, Δ)` of `(R, D)`: an algebra
-whose derivation commutes with the structure map (`Δ ∘ algebraMap = algebraMap ∘ D`). Mathlib's
-`DifferentialAlgebra`. -/
+/-- **Definition 3.2.1** (§3.2, p.79), a *differential extension* `(S, Δ)` of `(R, D)`: the
+Mathlib class `DifferentialAlgebra R S`. With `[Algebra R S]` and derivations on both sides, this
+is the compatibility condition `(algebraMap R S a)' = algebraMap R S (a')`, so the derivation on
+`S` really extends the derivation on `R`. -/
 abbrev def_3_2_1 := @DifferentialAlgebra
 
 /-- **Definition 3.2.2** (§3.2, p.80), the *coefficient lifting* `κ_D : R[X] → R[X]`,
-`κ_D(Σ aᵢXⁱ) = Σ (Daᵢ)Xⁱ`; **Lemma 3.2.1** (§3.2, p.80): `κ_D` is a derivation on `R[X]`.
-Mathlib's `Derivation.mapCoeffs` (valued in `PolynomialModule R R ≅ R[X]`) *is* this derivation,
-so being a derivation is automatic from its type. -/
+`κ_D(Σ aᵢXⁱ) = Σ (Daᵢ)Xⁱ`. This aliases Mathlib's `Derivation.mapCoeffs`: applying it to
+`Differential.deriv : Derivation ℤ R R` gives the derivation that differentiates polynomial
+coefficients and leaves powers of `X` fixed. Its codomain is `PolynomialModule R R`, Mathlib's
+module presentation of `R[X]`, so the fact that `κ_D` is a derivation is part of the type. -/
 noncomputable abbrev def_3_2_2 := @Derivation.mapCoeffs
 
 /-- **Lemma 3.2.2** (§3.2, p.81): for a derivation `D` on `R`, `α ∈ R`, `P ∈ R[X]`,
-`D(P(α)) = κ_D(P)(α) + (Dα)·(dP/dX)(α)` — the chain rule for evaluating a polynomial (the general
-form of `thm_3_1_1_vi`, with the `κ_D(P)(α)` term for non-constant coefficients). Mathlib's
-`Derivation.apply_eval_eq`; the `R ⊆ S` extension version is `apply_aeval_eq`. -/
+`D(P(α)) = κ_D(P)(α) + (Dα)·(dP/dX)(α)`. In Lean, `P.eval α` is the value `P(α)`,
+`(Differential.deriv).mapCoeffs P` is `κ_D(P)`, and `PolynomialModule.eval α` evaluates that
+coefficient-derivative polynomial at `α`. This is Mathlib's `Derivation.apply_eval_eq` rewritten
+with multiplication instead of scalar action. -/
 theorem lem_3_2_2 {R : Type*} [CommRing R] [Differential R] (α : R) (P : R[X]) :
     (P.eval α)′ = PolynomialModule.eval α ((Differential.deriv : Derivation ℤ R R).mapCoeffs P)
       + P.derivative.eval α * α′ := by
   simpa [smul_eq_mul] using (Differential.deriv : Derivation ℤ R R).apply_eval_eq α P
 
 /-- **Theorem 3.2.1** (§3.2, p.79), uniqueness: a derivation on the quotient field of an integral
-domain is determined by its restriction to the domain (so the extension, if it exists, is
-unique). -/
+domain is determined by its restriction to the domain. This aliases the library lemma
+`derivation_ext_fractionRing`: for `K` with `[IsFractionRing R K]`, two derivations
+`Derivation ℤ K K` are equal once they agree on every `algebraMap R K a`. It is the uniqueness
+part only, not a construction of the fraction-field derivation. -/
 abbrev thm_3_2_1_unique := @derivation_ext_fractionRing
 
 /-- **Theorem 3.2.2** (§3.2, p.81), polynomial-ring case (existence + uniqueness): there is a
-*unique* derivation on `R[X]` extending `D` on the constants and sending `t = X` to a prescribed
-`w`. (Existence is Mathlib's `Differential.implicitDeriv w`; uniqueness is
-`derivation_polynomial_ext`. The full `F(t)` field version additionally needs the §3.2.1
-fraction-field existence.) -/
+unique derivation on `R[X]` extending `D` on the constants and sending `t = X` to a prescribed
+polynomial `w`. The witness is Mathlib's `Differential.implicitDeriv w`, whose defining equations
+are `implicitDeriv_C` and `implicitDeriv_X`; uniqueness is the library lemma
+`derivation_polynomial_ext`, which says a derivation on `R[X]` is determined by constants and `X`. -/
 abbrev thm_3_2_2_poly := @existsUnique_derivation_polynomial
 
-/-- **Theorem 3.2.1** (§3.2, p.79), existence (given a compatible structure): a derivation on the
-fraction field extending `D` exists and is unique. -/
+/-- **Theorem 3.2.1** (§3.2, p.79), conditional existence plus uniqueness: if the fraction field `K`
+already has `[Differential K]` and `[DifferentialAlgebra R K]`, then `Differential.deriv` is the
+unique derivation on `K` satisfying `Δ (algebraMap R K a) = algebraMap R K (a')`. This packages an
+available compatible structure; it does not build the quotient-rule derivation from scratch. -/
 abbrev thm_3_2_1_exists := @existsUnique_derivation_fractionRing
 
 /-- **Theorem 3.2.2** (§3.2, p.81), field uniqueness: the derivation on `F(t)` extending `D` with a
-prescribed `Δt` is unique. -/
+prescribed `Δt` is unique. In Lean this is stated for any fraction field `K` of `F[X]`: two
+derivations `Derivation ℤ K K` are equal if they agree on the images of all constants `C c` and on
+the image of `X`. Existence of such a derivation on the rational-function field is the deferred
+fraction-field construction. -/
 abbrev thm_3_2_2_field_unique := @unique_derivation_rationalFunction
 
-/-- **Theorem 3.2.3** (§3.2, p.83): a derivation extends to a separable algebraic extension `E/F`
-with `Δα = −κ_D(P)(α)/P′(α)` (`P = minpoly`); existence (char `0`, finite-dimensional). -/
+/-- **Theorem 3.2.3** (§3.2, p.83), algebraic-extension existence in Lean form: for a finite
+extension `E/F` in characteristic `0`, Mathlib constructs `differentialAlgebraic : Differential E`
+by the minimal-polynomial formula `Δα = -κ_D(P)(α) / P'(α)`. This alias is the compatibility proof
+that, after installing that structure, `E` is a `DifferentialAlgebra F E`. -/
 abbrev thm_3_2_3 := @differentialAlgebra_algebraic
 
 /-- **Theorem 3.2.3** (§3.2, p.83), uniqueness: the derivation extension to a separable algebraic
-extension is unique. -/
+extension is unique. The Lean theorem takes two structures `Δ₁ Δ₂ : Differential E` and proves
+`Δ₁ = Δ₂` from two explicit compatibility proofs `DifferentialAlgebra F E`; finite-dimensional
+char-`0` supplies separability through Mathlib. -/
 abbrev thm_3_2_3_unique := @unique_differentialAlgebra_algebraic
 
 /-- **Theorem 3.2.4(i)** (§3.2, p.85): an `F`-automorphism of a separable algebraic extension
-commutes with `D`. -/
+commutes with `D`. The Lean statement is pointwise: for `σ : E ≃ₐ[F] E` and `a : E`,
+`σ (a') = (σ a)'`, using Mathlib's `Differential.algEquiv_deriv'`. -/
 abbrev thm_3_2_4_i := @algEquiv_comm_deriv
 
-/-- **Theorem 3.2.4(ii)** (§3.2, p.85): the trace commutes with `D` on a finite separable extension. -/
+/-- **Theorem 3.2.4(ii)** (§3.2, p.85): the trace commutes with `D` on the finite Galois form used
+by the library, `(Algebra.trace F E a)' = Algebra.trace F E (a')`. The proof expands trace as the
+sum over `F`-automorphisms and uses `thm_3_2_4_i` on each summand. -/
 abbrev thm_3_2_4_ii_trace := @deriv_trace_eq_trace_deriv
 
 /-- **Theorem 3.2.4(ii)** (§3.2, p.85): `Tr(Da/a) = D(N a)/N a` (logarithmic-derivative trace–norm
-relation). -/
+relation) for `a ≠ 0` in the finite Galois form used by the library. The Lean statement is
+`Algebra.trace F E (a' / a) = (Algebra.norm F a)' / Algebra.norm F a`; the proof maps both sides
+into `E`, rewrites norm as the product over automorphisms, and applies the logarithmic-derivative
+product rule. -/
 abbrev thm_3_2_4_ii_norm := @trace_logDeriv_eq_logDeriv_norm
 
 /-- **Corollary 3.2.1** (§3.2, p.85): `D` extends uniquely to each finite intermediate field of a
-separable algebraic extension (and these agree on towers). -/
+separable algebraic extension. For `B : IntermediateField F K` with `[FiniteDimensional F B]`, the
+library theorem states `∃! Δ : Differential B, DifferentialAlgebra F B`: Mathlib supplies the
+intermediate-field differential instance, and `unique_differentialAlgebra_algebraic` proves any
+compatible alternative is equal to it. -/
 abbrev cor_3_2_1 := @existsUnique_differentialAlgebra_intermediateField
 
 -- **Deferred — `DeepWiki.SymbolicIntegration` library work (derivation extensions):** the
