@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicResidues
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Algebraic-function residues for ARBITRARY curves: the full double resultant
 (Trager, *Integration of Algebraic Functions*, Ch. 5 §2, eq. 7 — the general `F`)
@@ -57,14 +58,14 @@ The inner `res_Y` lands in `α = K(x) = QFunNZG ℚ`. When `F` is monic in `y` t
 *polynomial* in `x`, so the `QFunNZG ℚ` value is `numerator/denominator` with the denominator a nonzero
 **constant** (the engine keeps fractions unreduced, so the constant may be any nonzero scalar `c`, not
 literally `1`). `qToPolyQ` recovers the `ℚ[x]`-polynomial by the exact division `numerator / denominator`
-(`cdivG` over ℚ): when `denominator ∣ numerator` this is the polynomial quotient, here `cscale (c⁻¹)`. -/
+(`cdivWf` over ℚ): when `denominator ∣ numerator` this is the polynomial quotient, here `cscale (c⁻¹)`. -/
 
 /-- **Read a `QFunNZG ℚ` value as a `ℚ[x]`-polynomial** `qToPolyQ fuel v = numerator(v) / denominator(v)`
-(`cdivG` over ℚ). Faithful exactly when `v` *is* a polynomial — i.e. `denominator(v) ∣ numerator(v)`
+(`cdivWf` over ℚ). Faithful exactly when `v` *is* a polynomial — i.e. `denominator(v) ∣ numerator(v)`
 (true here because `res_Y` against a `y`-monic `F` is a polynomial in `x`, with a constant denominator).
 The bridge from the inner `res_Y`'s `K(x)` output to the outer `res_X`'s `K[x] = CPolyG ℚ` input. -/
-def qToPolyQ (fuel : ℕ) (v : QFunNZG ℚ) : CPolyG ℚ :=
-  cdivG fuel v.1.1 v.1.2
+def qToPolyQ (_fuel : ℕ) (v : QFunNZG ℚ) : CPolyG ℚ :=
+  cdivWf v.1.1 v.1.2
 
 /-! ### The inner `res_Y(Z·D' − g, F)` at a rational `Z`-node (the full bivariate resultant in `y`)
 

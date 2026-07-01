@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralDerivation
 import DeepWiki.SymbolicIntegration.ComputableGeneralRationalSolve
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 /-! # DERIVING the LOG ARGUMENT `u` (with `∫(integrand) dx = log u`) for an ARBITRARY plane curve, PRINCIPAL
 case, by undetermined coefficients over the integral basis through the general derivation `afDeriv` (Trager,
@@ -253,17 +254,17 @@ theorem afLogArgSolve_nonhyper_intLogY :
 
 A `y²`-mixing target on the same trigonal curve. Take `u = y² + x` (`[x, 0, 1]`), form its log-derivative
 integrand `afDeriv f u / u`, and recover `u` (up to scale). Here `u⁻¹` is a genuine field inverse in
-`K(x)[y]/(f)` (via the Bézout cofactor `cdiophantineG u f [1]`), so the integrand mixes all three power-basis
+`K(x)[y]/(f)` (via the Bezout cofactor `cdiophantineGWf u f [1]`), so the integrand mixes all three power-basis
 coordinates — a stronger test of the `K`-linear log solve than the pure-`y` generator. -/
 
 /-- The second log-argument target `u = y² + x` (`[x, 0, 1]`) on `y³ − x² − 1` — a `y²`-mixing element whose
 log-derivative integrand the solver must recover `u` from. -/
 def gcLogU2 : CPolyG (QFunNZG ℚ) := [qxOfNum [0, 1], CField.zero, CField.one]
 
-/-- The field inverse `u⁻¹ mod f` of `u = y² + x` on `y³ − x² − 1` — the first Bézout cofactor of `s·u + t·f =
-1` (`cdiophantineG 8 u f [1]`), valid since `u` is a unit of `K(x)[y]/(f)` (coprime to the irreducible `f`).
+/-- The field inverse `u⁻¹ mod f` of `u = y² + x` on `y³ − x² − 1` — the first Bezout cofactor of `s·u + t·f =
+1` (`cdiophantineGWf u f [1]`), valid since `u` is a unit of `K(x)[y]/(f)` (coprime to the irreducible `f`).
 Used to build the log-derivative integrand `afDeriv(u)·u⁻¹`. -/
-def gcLogU2Inv : CPolyG (QFunNZG ℚ) := (cdiophantineG 8 gcLogU2 gcLogF [CField.one]).1
+def gcLogU2Inv : CPolyG (QFunNZG ℚ) := (cdiophantineGWf gcLogU2 gcLogF [CField.one]).1
 
 /-- The log-derivative integrand `afDeriv f u / u = afMul f (afDeriv f u) u⁻¹` for `u = y² + x` on `y³ − x² −
 1`. By construction `∫ integrand dx = log(y² + x)` and `afDeriv f u = afMul f u integrand`. The solver's
