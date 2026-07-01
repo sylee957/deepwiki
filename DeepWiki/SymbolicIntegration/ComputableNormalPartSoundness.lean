@@ -357,7 +357,7 @@ numerator `(…).2.1` is proper for the leftover denominator `(…).2.2`, `deg (
 **given** the engine's leftover-projection equations (`hnum`/`hden`, `rfl`-provable at call sites: `(…).2.1`
 is `cnormG (cdivG fuel (resNum·Dstar) resDen)` and `(…).2.2` is `cnormG Dstar`), the exact-division
 divisibility `resDen ∣ resNum·Dstar` with the fuel bound (so the division is exact —
-`toPolyG_cdivG_exact_g`), nonzero radical (`hDstar`) and the **residual-fraction properness**
+`toPolyG_cdivG_exact`), nonzero radical (`hDstar`) and the **residual-fraction properness**
 `deg resNum < deg resDen`. The exact-division identity `h_num·resDen = resNum·Dstar` plus
 `degree_lt_of_exact_div` cancels `resDen`. This reduces the *unconditional* `hproper` to the residual
 properness `deg resNum < deg resDen` — i.e. `a/d − D(g)` proper, the documented Large remainder. -/
@@ -377,7 +377,7 @@ theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCore α]
   -- exact division: `h_num · resDen = resNum·Dstar = resNum · Dstar`
   have hexact : toPolyG (cdivG fuel (cmulG resNum Dstar) resDen) * toPolyG resDen
       = toPolyG resNum * toPolyG Dstar := by
-    rw [toPolyG_cdivG_exact_g fuel (cmulG resNum Dstar) resDen hresDen hfuel hdvd, toPolyG_cmulG]
+    rw [toPolyG_cdivG_exact fuel (cmulG resNum Dstar) resDen hresDen hfuel hdvd, toPolyG_cmulG]
   exact degree_lt_of_exact_div hexact hresProper hDstar
 
 /-! ### ★ The residual-fraction properness `deg resNum < deg resDen` — closing `hproper` (δ(t) ≤ 1)

@@ -1,12 +1,13 @@
 import DeepWiki.SymbolicIntegration.ComputableFieldGcd
+import Mathlib.RingTheory.Polynomial.Content
 
 /-! # Fuel-free (well-founded) generic Euclidean division and gcd
 
 The engine ops `cdivmodG`/`cmodG`/`cgcdExtG` (`GenericPolyEngine`) take an explicit `fuel : ℕ`
 and need a fuel-sufficiency side condition (`cgcdTerminatesG`) for their correctness. This file
-gives **true fuel-free** companions, `cdivmodWf`/`cmodWf`/`cgcdWf`, by structural well-founded
-recursion on the normalized list length (`decreasing_by` discharged from the proven one-step length
-drops `stepG_length_lt`/`cmodWf_length_lt`). No fuel is computed or passed at runtime.
+gives **true fuel-free** companions, `cdivmodWf`/`cmodWf`/`cgcdWf`/`cgcdMonicWf`, by structural
+well-founded recursion on the normalized list length (`decreasing_by` discharged from the proven
+one-step length drops `stepG_length_lt`/`cmodWf_length_lt`). No fuel is computed or passed at runtime.
 
 The ~200 existing correctness theorems are **transported, not re-proven**: each WF op equals its
 fuel'd version at *any* sufficient fuel (`cdivmodWf_eq_of_fuel`/`cgcdWf_eq_of_fuel`), so the bound
@@ -14,7 +15,7 @@ appears only inside the bridge proof, never at runtime. The Euclidean identity, 
 and gcd-divisibility then follow for the WF ops — the last **unconditionally** (a WF def always
 terminates, so no `cgcdTerminatesG` hypothesis survives). -/
 
-open Polynomial
+open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -96,6 +97,10 @@ decreasing_by assumption
 
 /-- **Fuel-free gcd** (`cgcdWf`'s first component). -/
 def cgcdWfGcd (a b : CPolyG α) : CPolyG α := (cgcdWf a b).1
+
+/-- **Fuel-free generic monic gcd**: monic-normalize the gcd component of `cgcdWf`. -/
+def cgcdMonicWf (p q : CPolyG α) : CPolyG α :=
+  cmonicG (cgcdWf p q).1
 
 /-! ### Bridge to the fuel'd `cdivmodG` and transported correctness
 
@@ -426,6 +431,119 @@ theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
     have hbne : cnormG b ≠ [] := by
       intro h; rw [cisZeroG] at hcz; simp [h] at hcz
     exact absurd (cmodWf_length_lt a b hbne) hdec
+
+/-! ### Exact division through `toPolyG`
+
+When a polynomial divides another through the semantic bridge `toPolyG`, Euclidean division has zero
+remainder. Both the fueled and fuel-free APIs live here so downstream reducers do not have to re-prove
+the same degree argument. -/
+
+/-- **Generic exact-modulo from divisibility**: if `toPolyG q ∣ toPolyG p` and fuel bounds `p`'s length,
+the Euclidean remainder vanishes. -/
+theorem toPolyG_cmodG_eq_zero_of_dvd (fuel : ℕ) (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+    (hfuel : (cnormG p : List α).length ≤ fuel) (hdvd : toPolyG q ∣ toPolyG p) :
+    toPolyG (cmodG fuel p q) = 0 := by
+  have hid : toPolyG p
+      = toPolyG (cdivmodG fuel p q).1 * toPolyG q + toPolyG (cdivmodG fuel p q).2 :=
+    toPolyG_cdivmodG' fuel p q hq0
+  have hdvdrem : toPolyG q ∣ toPolyG (cdivmodG fuel p q).2 := by
+    have : toPolyG (cdivmodG fuel p q).2
+        = toPolyG p - toPolyG (cdivmodG fuel p q).1 * toPolyG q := by
+      rw [hid]; ring
+    rw [this]
+    exact dvd_sub hdvd (Dvd.intro_left _ rfl)
+  have hlen : (cnormG (cmodG fuel p q) : List α).length < (cnormG q : List α).length :=
+    cmodG_length_lt fuel p q hq0 hfuel
+  have hmod : cmodG fuel p q = (cdivmodG fuel p q).2 := rfl
+  by_contra hne
+  rw [hmod] at hne hlen
+  have hdeg : (toPolyG q).natDegree ≤ (toPolyG (cdivmodG fuel p q).2).natDegree :=
+    Polynomial.natDegree_le_of_dvd hdvdrem hne
+  have hrn : cnormG (cdivmodG fuel p q).2 ≠ [] := fun h => hne ((cnormG_eq_nil_iff _).mp h)
+  rw [length_cnormG_of_ne _ hrn, length_cnormG_of_ne q hq0] at hlen
+  omega
+
+/-- **Generic exact division through `toPolyG`**: if `toPolyG q ∣ toPolyG p`, then the fueled Euclidean
+quotient times the divisor recovers the dividend. -/
+theorem toPolyG_cdivG_exact (fuel : ℕ) (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+    (hfuel : (cnormG p : List α).length ≤ fuel) (hdvd : toPolyG q ∣ toPolyG p) :
+    toPolyG (cdivG fuel p q) * toPolyG q = toPolyG p := by
+  have hid : toPolyG p
+      = toPolyG (cdivmodG fuel p q).1 * toPolyG q + toPolyG (cdivmodG fuel p q).2 :=
+    toPolyG_cdivmodG' fuel p q hq0
+  have hrem0 : toPolyG (cmodG fuel p q) = 0 :=
+    toPolyG_cmodG_eq_zero_of_dvd fuel p q hq0 hfuel hdvd
+  have hmod : cmodG fuel p q = (cdivmodG fuel p q).2 := rfl
+  rw [hmod] at hrem0
+  rw [cdivG, hid, hrem0, add_zero]
+
+/-- **The fuel-free Euclidean remainder vanishes when the divisor divides the dividend** (through
+`toPolyG`). -/
+theorem toPolyG_cmodWf_eq_zero_of_dvd (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+    (hdvd : toPolyG q ∣ toPolyG p) :
+    toPolyG (cmodWf p q) = 0 := by
+  have hid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
+    toPolyG_cmodWf p q hq0
+  have hdvdrem : toPolyG q ∣ toPolyG (cmodWf p q) := by
+    have : toPolyG (cmodWf p q)
+        = toPolyG p - toPolyG (cdivWf p q) * toPolyG q := by
+      rw [hid]; ring
+    rw [this]
+    exact dvd_sub hdvd (Dvd.intro_left _ rfl)
+  have hlen : (cnormG (cmodWf p q) : List α).length < (cnormG q : List α).length :=
+    cmodWf_length_lt p q hq0
+  by_contra hne
+  have hdeg : (toPolyG q).natDegree ≤ (toPolyG (cmodWf p q)).natDegree :=
+    Polynomial.natDegree_le_of_dvd hdvdrem hne
+  have hrn : cnormG (cmodWf p q) ≠ [] := fun h => hne ((cnormG_eq_nil_iff _).mp h)
+  rw [length_cnormG_of_ne _ hrn, length_cnormG_of_ne q hq0] at hlen
+  omega
+
+/-- **Fuel-free exact division through `toPolyG`**: if `toPolyG q ∣ toPolyG p`, then the fuel-free
+Euclidean quotient times the divisor recovers the dividend. -/
+theorem toPolyG_cdivWf_exact (p q : CPolyG α) (hq0 : cnormG q ≠ [])
+    (hdvd : toPolyG q ∣ toPolyG p) :
+    toPolyG (cdivWf p q) * toPolyG q = toPolyG p := by
+  have hid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
+    toPolyG_cmodWf p q hq0
+  have hrem0 : toPolyG (cmodWf p q) = 0 :=
+    toPolyG_cmodWf_eq_zero_of_dvd p q hq0 hdvd
+  rw [hid, hrem0, add_zero]
+
+/-! ### The fuel-free monic gcd divides both inputs (through `toPolyG`) -/
+
+/-- **The fuel-free monic gcd divides both inputs** (through `toPolyG`), with no termination or fuel
+hypothesis. -/
+theorem toPolyG_cgcdMonicWf_dvd (p q : CPolyG α) :
+    toPolyG (cgcdMonicWf p q) ∣ toPolyG p ∧ toPolyG (cgcdMonicWf p q) ∣ toPolyG q := by
+  obtain ⟨hp, hq⟩ := toPolyG_cgcdWf_dvd p q
+  have hassoc : Associated (toPolyG (cgcdMonicWf p q)) (toPolyG (cgcdWf p q).1) := by
+    rw [cgcdMonicWf]
+    exact associated_toPolyG_cmonicG _
+  exact ⟨hassoc.dvd.trans hp, hassoc.dvd.trans hq⟩
+
+end CPolyG
+
+open CPolyG
+
+/-- **Abstract correctness of the fuel-free generic monic gcd `CPolyG.cgcdMonicWf`**: over the genuine
+field `K = CFieldSpec.K α`, `toPolyG (CPolyG.cgcdMonicWf p q)` is associated to
+`gcd (toPolyG p) (toPolyG q)` in `K[X]`. This is the fuel-free analogue of
+`associated_toPolyG_cgcdExtG`, with no termination or fuel hypothesis. -/
+theorem associated_toPolyG_cgcdMonicWf {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+    Associated (toPolyG (CPolyG.cgcdMonicWf p q)) (gcd (toPolyG p) (toPolyG q)) := by
+  obtain ⟨hdvd_p, hdvd_q⟩ := CPolyG.toPolyG_cgcdWf_dvd p q
+  have hassoc : Associated (toPolyG (CPolyG.cgcdMonicWf p q)) (toPolyG (CPolyG.cgcdWf p q).1) := by
+    rw [CPolyG.cgcdMonicWf]
+    exact associated_toPolyG_cmonicG _
+  refine hassoc.trans ?_
+  apply associated_of_dvd_dvd
+  · exact dvd_gcd hdvd_p hdvd_q
+  · exact CPolyG.toPolyG_dvd_cgcdWf p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
+
+namespace CPolyG
+
+variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-! ### `native_decide` smoke tests — the WF def reduces in compiled code
 

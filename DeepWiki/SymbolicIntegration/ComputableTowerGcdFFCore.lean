@@ -11,7 +11,7 @@ This file lifts the **machinery** of that flat gcd to a position **upstream** of
 — it depends on nothing past `ComputableTowerField` + `ComputableSplitFactorFast`, exactly the two files
 `cgcdFFGen` actually needs. So the generic integration pipeline can import it and run its gcds **flat**
 (`cprimPRSgcdGen` primitive PRS over the GCD-domain `CPolyG β = β[s]`, no fraction-field swell) instead of
-through the super-exponentially-swelling Euclidean `cgcdMonicG`.
+through the super-exponentially-swelling Euclidean field-division gcd.
 
 The content is a faithful copy of `ComputableTowerGcdFF`'s machinery under the names `gb*Core`,
 `cprimPRSgcdGenCore`, `cclearDenomsCoreG`/`liftGBPolyCoreG`, the class `CFracGcdCore` (method
@@ -213,8 +213,8 @@ namespace CFracGcdCore
 variable {α : Type*} [CField α] [CFracGcdCore α]
 
 /-- **The public monic fraction-free gcd** `cgcdFFCore fuel p q := cmonicG (cgcdFFRawCore fuel p q)` over
-`α[t]`: monic-normalize the raw recursive gcd. The flat, `cgcdFF`-agreeing counterpart of `cgcdMonicG` —
-the monic normalization happens once at the top, never inside the recursion. -/
+`α[t]`: monic-normalize the raw recursive gcd. The flat, `cgcdFF`-agreeing counterpart of the Euclidean
+monic gcd — the monic normalization happens once at the top, never inside the recursion. -/
 def cgcdFFCore (fuel : ℕ) (p q : CPolyG α) : CPolyG α := CPolyG.cmonicG (cgcdFFRawCore fuel p q)
 
 end CFracGcdCore

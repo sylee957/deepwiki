@@ -206,7 +206,7 @@ The recursion that ties the tower, mirroring `CRischField` / `instCRischFieldQFu
 * **`class CFracGcd α`** (one method `cgcdFFGen : ℕ → CPolyG α → CPolyG α → CPolyG α`, the fraction-free,
   monic-normalized gcd over `α[t]`).
 * **Base `instance CFracGcd ℚ`** — the bottom. A `t`-polynomial over `ℚ` is `ℚ[t]`; `ℚ` is a field, so the
-  content is trivial and the fraction-free gcd is the monic Euclidean gcd `cgcdMonicG`.
+  content is trivial and the public fraction-free gcd is the monic normalization of raw Euclid.
 * **Recursive `instance CFracGcd (QFunNZG β) [CFracGcd β]`** — clear denominators of both inputs into
   `GBPoly β = (β[s])[t]`, run `cprimPRSgcdGen` with the content-gcd `cgcdB :=` the level-`β` `cgcdFFGen`
   (recursing one level down, over `CPolyG β = β[s]`), lift back, monic-normalize. Bottoms at `CFracGcd ℚ`.
@@ -244,7 +244,7 @@ end CFracGcd
 
 /-- **Base `CFracGcd ℚ`** — the bottom of the tower. A `t`-polynomial over `ℚ` is `ℚ[t]`; since `ℚ` is a
 field the `ℚ`-content is a unit, so the raw fraction-free gcd is the **raw** Euclidean gcd
-`(CPolyG.cgcdExtG _).1` over `ℚ[t]` (NOT the monic `cgcdMonicG` — monic content compounds reciprocal
+`(CPolyG.cgcdExtG _).1` over `ℚ[t]` (NOT a monic gcd — monic content compounds reciprocal
 scalars up the recursion, breaking flatness). Small Euclid, no swell at the constant field. -/
 instance instCFracGcdQ : CFracGcd ℚ where
   cgcdFFRawGen fuel p q := (CPolyG.cgcdExtG fuel p q).1
@@ -559,7 +559,7 @@ generic FF gcd is the documented next step (mirror `ComputableGcdCorrect`'s
 constant. The growth is intrinsic to the **plain primitive PRS**: stripping the `β[s]`-*content* each step
 bounds the common-factor swell (which is what kills naive Euclid), but the *coprime* coefficient **degree**
 in the inner `ℚ(x)` direction still grows through the pseudo-division `lc`-power multiplications (exactly
-the caveat the bench docstring records for the `qreduceG`-in-loop gcd). The cure is the **subresultant PRS**
+the caveat the bench docstring records for the `qReduce`-in-loop gcd). The cure is the **subresultant PRS**
 (Collins–Brown, already implemented over `Compute.BPoly` as `SubresultantCompute.subresPRS` with the exact
 Collins β-divisor division `bdivC`): swapping `cprimPRSgcdGen`'s primitive-PRS body for the subresultant
 recurrence — generalized off `Compute.BPoly` to `GBPoly B` the same way these `gb*` ops were — would bound

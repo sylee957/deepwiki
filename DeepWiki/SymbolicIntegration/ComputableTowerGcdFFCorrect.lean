@@ -86,56 +86,6 @@ theorem associated_toPolyG_cgcdExtG {α : Type*} [CField α] [CFieldSpec α] (fu
   · exact dvd_gcd hda hdb
   · exact toPolyG_dvd_cgcdExtG fuel a b (gcd_dvd_left _ _) (gcd_dvd_right _ _)
 
-/-! ### Generic exact Euclidean division `cdivG` (for the content strip)
-The content strip `gbprimitivePartCore` divides every `t`-coefficient by the content via the generic
-Euclidean `cdivG`. When the content divides the coefficient (in `R = (CFieldSpec.K α)[X]`), the division
-is **exact** — `toPolyG (cdivG fuel c g) · toPolyG g = toPolyG c`. We prove this generically (the engine
-analogues of `cmod_eq_zero_of_dvd_loc` / the `cdiv`-exact certificate), upstream-importable. -/
-
-/-- **Generic exact-modulo from divisibility**: if `toPolyG g ∣ toPolyG c` and fuel bounds `c`'s length,
-the Euclidean remainder vanishes (`toPolyG (cmodG fuel c g) = 0`). The Euclidean identity puts the
-remainder in `(toPolyG g)` and below its degree, forcing it to `0`. Generic mirror of
-`SubresultantCorrectness.cmod_eq_zero_of_dvd_loc`. -/
-theorem toPolyG_cmodG_eq_zero_of_dvd {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (c g : CPolyG α)
-    (hg : cnormG g ≠ []) (hfuel : (cnormG c : List α).length ≤ fuel)
-    (hdvd : toPolyG g ∣ toPolyG c) : toPolyG (cmodG fuel c g) = 0 := by
-  -- toPolyG c = quo · toPolyG g + toPolyG rem, with rem = cmodG, quo = cdivG
-  have hid : toPolyG c = toPolyG (cdivG fuel c g) * toPolyG g + toPolyG (cmodG fuel c g) := by
-    have h := toPolyG_cdivmodG' fuel c g hg
-    rw [cdivG, cmodG]; exact h
-  -- toPolyG g divides the remainder
-  have hdvdrem : toPolyG g ∣ toPolyG (cmodG fuel c g) := by
-    have hsub : toPolyG (cmodG fuel c g) = toPolyG c - toPolyG (cdivG fuel c g) * toPolyG g := by
-      rw [hid]; ring
-    rw [hsub]
-    exact dvd_sub hdvd (Dvd.dvd.mul_left (dvd_refl _) _)
-  -- the remainder has length < deg g; a nonzero multiple of g must reach deg g ⇒ contradiction
-  by_contra hne
-  -- a nonzero remainder has normalized length ≥ 1, so it is degree-bounded below g's
-  have hcmodnil : cnormG (cmodG fuel c g) ≠ [] := fun h => hne ((cnormG_eq_nil_iff _).mp h)
-  have hlen := cmodG_length_lt fuel c g hg hfuel
-  have e1 : (toPolyG (cmodG fuel c g)).natDegree ≤ (cnormG (cmodG fuel c g) : List α).length - 1 :=
-    natDegree_toPolyG_le _
-  have e2 : (toPolyG g).natDegree = (cnormG g : List α).length - 1 := by
-    rw [← cdegG_eq_natDegree, cdegG]
-  have hcmodpos : 1 ≤ (cnormG (cmodG fuel c g) : List α).length :=
-    List.length_pos_iff.mpr hcmodnil
-  -- a nonzero multiple of g reaches at least deg g
-  have hge : (toPolyG g).natDegree ≤ (toPolyG (cmodG fuel c g)).natDegree :=
-    Polynomial.natDegree_le_of_dvd hdvdrem hne
-  omega
-
-/-- **Generic exact `cdivG`-division from divisibility**: if `toPolyG g ∣ toPolyG c` (and fuel/`g`
-nonzero), the Euclidean quotient is exact — `toPolyG (cdivG fuel c g) · toPolyG g = toPolyG c`. From the
-Euclidean identity with the (now zero) remainder. -/
-theorem toPolyG_cdivG_exact {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (c g : CPolyG α)
-    (hg : cnormG g ≠ []) (hfuel : (cnormG c : List α).length ≤ fuel)
-    (hdvd : toPolyG g ∣ toPolyG c) : toPolyG (cdivG fuel c g) * toPolyG g = toPolyG c := by
-  have hid : toPolyG c = toPolyG (cdivG fuel c g) * toPolyG g + toPolyG (cmodG fuel c g) := by
-    have h := toPolyG_cdivmodG' fuel c g hg
-    rw [cdivG, cmodG]; exact h
-  rw [hid, toPolyG_cmodG_eq_zero_of_dvd fuel c g hg hfuel hdvd, add_zero]
-
 /-! ### The bivariate bridge `toGBCoeffPoly : GBPolyCore β → R[X]` (`R = (CFieldSpec.K β)[X] = β[s]`)
 A `GBPolyCore β = List (CPolyG β)` is a `t`-polynomial whose coefficients are `CPolyG β = β[s]`. Reading
 each coefficient through `toPolyG : CPolyG β → R := (CFieldSpec.K β)[X]` and Horner-folding in `t` gives

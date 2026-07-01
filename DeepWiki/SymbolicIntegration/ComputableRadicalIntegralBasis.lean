@@ -121,7 +121,7 @@ integral over `ℚ[x]`" — `(y/d)² = s` is a squarefree polynomial, so `y/d` i
 [CFracGcdCore α]`-generic. -/
 def radSquarefreePartIsSquarefree (fuel : ℕ) (ρ : CPolyG α) : Bool :=
   let s := radSquarefreePart fuel ρ
-  cdegG (cgcdMonicG fuel s (cderivG s)) = 0
+  cdegG (cgcdMonicWf s (cderivG s)) = 0
 
 /-- **`y/(d·P)` is NOT integral** `radNotIntegralFactor fuel ρ P`: for a nonconstant `P`, `P² ∤ s` where
 `s = radSquarefreePart ρ`. The basis-maximality witness — `y/(d·P)` would need minimal polynomial

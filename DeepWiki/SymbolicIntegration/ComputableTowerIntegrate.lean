@@ -15,15 +15,13 @@ over that generic carrier. The pipeline runs on the **generic** engine ops
 The pipeline defs (suffix `G`) over `[CField α] [CFieldDomain α] [CDiffField α]` take every `t`-gcd from
 the **flat** generic fraction-free gcd `CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) —
 the recursive primitive-PRS gcd that stays polynomial-sized over the tower (it AGREES with the swelling
-Euclidean `cgcdMonicG`, both being the unique monic gcd, but computes it without the fraction-field
+fuel-free Euclidean `cgcdMonicWf`, both being the unique monic gcd, but computes it without the fraction-field
 coefficient swell that would make the integration pipeline over a fraction-field carrier blow up). Every
 pipeline def that calls a `t`-gcd therefore carries the
 `[CFracGcdCore α]` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
 + recursive `CFracGcdCore (QFunNZG β)`).
 
-* **`cgcdMonicG`** — the (super-exponentially swelling) monic gcd via the generic extended Euclidean
-  `cgcdExtG`, kept for the `ComputableTowerReduce` correctness layer; the pipeline now calls the flat
-  `CFracGcdCore.cgcdFFCore` instead.
+* **`CFracGcdCore.cgcdFFCore`** — the flat fraction-free monic gcd used by the pipeline.
 * **`cSplitFactorFastG`** (§3.5 special/normal split `p = pₙ·pₛ` via the derivation `D` + gcd).
 * **`cSqfreeYunFFG`** (Yun squarefree factorization in `t`, the formal `dp/dt`) — what the Hermite
   reduction factors the denominator with.
@@ -44,33 +42,11 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute
 
-namespace CPolyG
-
-variable {α : Type*} [CField α]
-
-/-! ### The generic monic gcd — the drop-in for `cgcdFF`
-
-The fraction-free primitive-PRS gcd and the generic Euclidean
-`cgcdExtG` compute the *same* gcd up to a unit, both monic. The Euclidean form is
-`cmonicG (cgcdExtG fuel p q).1`: the gcd component of the extended Euclidean triple,
-monic-normalized over the field. It carries the ℚ(x)-coefficient swell of the field-division kernel
-(that is the documented optimization gap), but is fully `[CField α]`-generic — it runs at any tower
-level (validated at level 2 in `ComputableTowerField`). -/
-
-/-- **Generic monic gcd** `cgcdMonicG fuel p q = monic gcd(p, q)`: the gcd component of the generic
-extended Euclidean `cgcdExtG`, monic-normalized (`cmonicG`). The `[CField α]`-generic monic gcd, equal
-to the fraction-free `CFracGcdCore.cgcdFFCore` (same gcd up to a unit, both monic). Runs at any tower
-level. -/
-def cgcdMonicG (fuel : ℕ) (p q : CPolyG α) : CPolyG α :=
-  cmonicG (cgcdExtG fuel p q).1
-
-end CPolyG
-
 /-! ### Generic `splitFactor` over the tower (§3.5)
 
 `cSplitFactorFastG` is the `[CField α] [CDiffField α]`-generic mirror of `cSplitFactorFast`: Bronstein's
-splitting-factorization loop with the generic monic gcd `cgcdMonicG` (for the two gcds `gcd(p, Dp)` and
-`gcd(p, dp/dt)`) and the generic exact division `cdivG`. `Dp = cmonomialDeriv Dt p` is the differential
+splitting-factorization loop with the flat fraction-free monic gcd `CFracGcdCore.cgcdFFCore` (for the two
+gcds `gcd(p, Dp)` and `gcd(p, dp/dt)`) and the generic exact division `cdivG`. `Dp = cmonomialDeriv Dt p` is the differential
 derivation (needs `[CDiffField α]`); `dp/dt = cderivG p` the formal `t`-derivative. -/
 
 namespace CPolyG
@@ -98,10 +74,10 @@ end CPolyG
 /-! ### Generic Yun squarefree factorization in `t` (the formal derivative)
 
 `cSqfreeYunFFG` is the `[CField α]`-generic mirror of `cSqfreeYunFF`: Yun's squarefree factorization in
-`t` using the *formal* derivative `dp/dt = cderivG` (NOT the differential `D`), with the generic monic
-gcd `cgcdMonicG` everywhere. Returns the position-indexed list `[p₁, …, pₘ]` (`pᵢ` the monic squarefree
-part of multiplicity `i`), so `p` is associate to `∏ᵢ pᵢ^i`. This is what `cHermiteReduceTowerG` factors
-the denominator with. It needs only `[CField α]` (the formal derivative `cderivG` is field-only). -/
+`t` using the *formal* derivative `dp/dt = cderivG` (NOT the differential `D`), with the flat
+fraction-free monic gcd `CFracGcdCore.cgcdFFCore` everywhere. Returns the position-indexed list
+`[p₁, …, pₘ]` (`pᵢ` the monic squarefree part of multiplicity `i`), so `p` is associate to
+`∏ᵢ pᵢ^i`. This is what `cHermiteReduceTowerG` factors the denominator with. -/
 
 namespace CPolyG
 
@@ -272,8 +248,8 @@ derivation `D = cmonomialDeriv Dt`, `Dt₂ = t₂² + 1` (`t₂ = tan`), the com
 `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`, by `cisZeroG` of the difference over ℚ(x)(t₁)[t₂].
 The denominator `d = t₂²` has a repeated normal factor `t₂`, so this exercises the genuine
 multiplicity-lowering step (`g = −1/t₂`, `h = −1`). **This is the deliverable: tower integration, rational
-part, executing at LEVEL 2** — the whole generic engine (`cSqfreeYunFFG`/`cgcdMonicG`/`cHermiteReduceTowerInner`/
-`cmonomialDeriv`) reduces over `ℚ(x)(t₁)[t₂]`. -/
+part, executing at LEVEL 2** — the whole generic engine (`cSqfreeYunFFG`/`CFracGcdCore.cgcdFFCore`/
+`cHermiteReduceTowerInner`/`cmonomialDeriv`) reduces over `ℚ(x)(t₁)[t₂]`. -/
 theorem towerHermiteLvl2_rationalPart :
     (let res := CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt 12
         towerHermiteLvl2A towerHermiteLvl2D
@@ -393,8 +369,9 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
 `cResidueResultantTowerG` mirrors `cResidueResultantTower`: sample `R(zₖ) = res_t(d, a − zₖ·Dd)` at the
 natural nodes `zₖ = cnatCastG k` (`k = 0…deg_t d`, the generic node lift replacing `ofConstNZ (k : ℚ)`)
-and Lagrange-interpolate (`cinterpolateG`). `cLogArgTowerG` is `gcd_t(d, a − c·Dd)` (`cgcdMonicG` for
-`cgcdFF`) for a residue `c : α`. Both reuse the already-generic `cresultantG`/`cmonomialDeriv`. -/
+and Lagrange-interpolate (`cinterpolateG`). `cLogArgTowerG` is `gcd_t(d, a − c·Dd)` via
+`CFracGcdCore.cgcdFFCore` for a residue `c : α`. Both reuse the already-generic
+`cresultantG`/`cmonomialDeriv`. -/
 
 /-- **Generic `a − c·Dd`** `cAmcDdG Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
@@ -415,7 +392,7 @@ def cResidueResultantTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) : CP
   cinterpolateG pts
 
 /-- **Generic log argument** `cLogArgTowerG Dt fuel a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`
-(Bronstein §5.6, the `g_i` inside `log`): the generic monic-in-`t` gcd (`cgcdMonicG`) of `d` and
+(Bronstein §5.6, the `g_i` inside `log`): the flat fraction-free monic-in-`t` gcd of `d` and
 `a − c·Dd`. Together with the residues `c` (roots of `cResidueResultantTowerG`),
 `∑_c c·log(cLogArgTowerG … c)` is the logarithmic part of `∫ a/d`. -/
 def cLogArgTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (c : α) : CPolyG α :=

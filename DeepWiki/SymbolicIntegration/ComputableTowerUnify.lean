@@ -1,14 +1,11 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerReduce
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.ComputableCanonicalRepCorrect
 
-/-! # Generic monic-gcd correctness + the `canonicalRepresentationFastG` reconstruction probe
+/-! # The `canonicalRepresentationFastG` reconstruction probe
 
 Foundation lemmas for the generic tower engine's abstract correctness, over `[CField α] [CFieldSpec α]`:
 
-1. **Generic gcd correctness + fuel-free**: `associated_toPolyG_cgcdMonicG` (the generic monic gcd is
-   the polynomial gcd up to associates) from the generic `cgcdExtG` Bézout / divides theory; plus a
-   fuel-free `cgcdMonicGWf` bridged to `cgcdMonicG` at sufficient fuel.
-2. **The reconstruction probe** `canonicalRepresentationFastG_reconstructs`: the §3.5 capstone's
+1. **The reconstruction probe** `canonicalRepresentationFastG_reconstructs`: the §3.5 capstone's
    reconstruction `toPolyG d = toPolyG dₛ·dₙ ⇒ …`, modulo the denominator split (the abstract
    correctness of that split is filled at `α = QFunNZG ℚ` in `ComputableSplitFactorTowerCorrectG`). -/
 
@@ -18,95 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
 
-/-! ### Task 3 — generic monic-gcd correctness `associated_toPolyG_cgcdMonicG`
-
-The generic monic gcd `cgcdMonicG fuel p q = cmonicG (cgcdExtG fuel p q).1` returns the polynomial gcd
-of the inputs up to associates over the genuine field `K = CFieldSpec.K α`. It is assembled from the EXISTING generic gcd theory:
-
-* `toPolyG_cgcdExtG_dvd` — under termination, the raw gcd divides both inputs (gives `gcd ∣ rawGcd`,
-  via `dvd_gcd`);
-* `toPolyG_dvd_cgcdExtG` — the raw gcd is divisible by *every* common divisor, in particular by
-  `gcd (toPolyG p) (toPolyG q)` (gives `rawGcd ∣ gcd`, via `gcd_dvd_left`/`gcd_dvd_right`);
-* `associated_toPolyG_cmonicG` — monic normalization is a unit-scaling.
-
-Mutual divisibility yields `Associated` (`associated_of_dvd_dvd`). The `gcd` is over `K[X]` with `K` a
-field (the `CFieldSpec.K α` field instance), so the `NormalizedGCDMonoid` structure on `K[X]` is
-available generically. -/
-
-variable {α : Type*} [CField α] [CFieldSpec α]
-
-/-- **Abstract correctness of the generic monic gcd `cgcdMonicG`** (under a terminating run): over the
-genuine field `K = CFieldSpec.K α`, `toPolyG (cgcdMonicG fuel p q)` is `Associated` to
-`gcd (toPolyG p) (toPolyG q)` in `K[X]`. The generic `[CField α] [CFieldSpec α]`-mirror of
-`associated_toPolyG_cgcdFF` — here the proof is purely algebraic (no `PrimPRSRegular` content gate),
-because the generic `cgcdExtG` is the field-division Euclid (gcd is exact every step), so termination
-alone gives both divisibility directions; monic normalization fixes the unit. -/
-theorem associated_toPolyG_cgcdMonicG (fuel : ℕ) (p q : CPolyG α)
-    (hterm : cgcdTerminatesG fuel p q) :
-    Associated (toPolyG (CPolyG.cgcdMonicG fuel p q)) (gcd (toPolyG p) (toPolyG q)) := by
-  -- The raw extended-Euclid gcd divides both inputs (termination), and is the greatest common divisor.
-  obtain ⟨hdvd_p, hdvd_q⟩ := toPolyG_cgcdExtG_dvd fuel p q hterm
-  -- monic-normalization is a unit-scaling of the raw gcd.
-  have hassoc : Associated (toPolyG (CPolyG.cgcdMonicG fuel p q))
-      (toPolyG (cgcdExtG fuel p q).1) := associated_toPolyG_cmonicG _
-  refine hassoc.trans ?_
-  -- Mutual divisibility between the raw gcd and the Mathlib `gcd`.
-  apply associated_of_dvd_dvd
-  · -- rawGcd ∣ gcd : rawGcd divides both p and q (`toPolyG_cgcdExtG_dvd`), so divides their gcd.
-    exact dvd_gcd hdvd_p hdvd_q
-  · -- gcd ∣ rawGcd : the Mathlib gcd is a common divisor, so it divides the (greatest) raw gcd.
-    exact toPolyG_dvd_cgcdExtG fuel p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
-
-/-! ### Task 3 — fuel-free generic monic gcd `cgcdMonicGWf`
-
-The generic `cgcdMonicG` carries a `fuel : ℕ`. The fuel-free well-founded extended Euclid `cgcdWf`
-(`ComputableFuelFreeGcd`, recursing on `(cnormG b).length`) already exists at the same generic
-`[CField α]` level; we wrap it the same way `cgcdMonicG` wraps `cgcdExtG` and bridge through
-`cgcdWf_eq`. -/
-
-/-- **Fuel-free generic monic gcd** `cgcdMonicGWf p q = monic gcd(p, q)`: the gcd component of the
-fuel-free well-founded extended Euclid `cgcdWf`, monic-normalized (`cmonicG`). The `[CField α]`-generic,
-**fuel-free** companion of `cgcdMonicG` — `native_decide`-able over noncomputable-`CFieldSpec`
-carriers, no fuel at runtime. -/
-def cgcdMonicGWf (p q : CPolyG α) : CPolyG α :=
-  CPolyG.cmonicG (CPolyG.cgcdWf p q).1
-
-/-- **Bridge — `cgcdMonicGWf` equals `cgcdMonicG` at the self-sufficient fuel.** With
-`fuel = (cnormG p).length + (cnormG q).length + 1`, the fuel-free `cgcdMonicGWf p q` agrees with
-`cgcdMonicG fuel p q`: both are `cmonicG` of the same gcd component, and `cgcdWf p q = cgcdExtG fuel p q`
-at this fuel (`cgcdWf_eq`). -/
-theorem cgcdMonicGWf_eq (p q : CPolyG α) :
-    cgcdMonicGWf p q
-      = CPolyG.cgcdMonicG ((cnormG p : List α).length + (cnormG q : List α).length + 1) p q := by
-  rw [cgcdMonicGWf, CPolyG.cgcdMonicG, CPolyG.cgcdWf_eq]
-
-/-- **Bridge — `cgcdMonicGWf` equals `cgcdMonicG` at any sufficient fuel.** With
-`(cnormG p).length ≤ fuel` and `(cnormG q).length < fuel`, the fuel-free `cgcdMonicGWf p q` agrees with
-`cgcdMonicG fuel p q` (`cgcdWf_eq_of_fuel`). -/
-theorem cgcdMonicGWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG α)
-    (hp : (cnormG p : List α).length ≤ fuel) (hq : (cnormG q : List α).length < fuel) :
-    cgcdMonicGWf p q = CPolyG.cgcdMonicG fuel p q := by
-  rw [cgcdMonicGWf, CPolyG.cgcdMonicG, CPolyG.cgcdWf_eq_of_fuel fuel p q hp hq]
-
-/-- **Abstract correctness of the fuel-free generic monic gcd `cgcdMonicGWf`** — DIRECTLY,
-**UNCONDITIONALLY** (no `cgcdTerminatesG`, no fuel symbol): over the genuine field `K = CFieldSpec.K α`,
-`toPolyG (cgcdMonicGWf p q)` is `Associated` to `gcd (toPolyG p) (toPolyG q)` in `K[X]`. The fuel-free
-mirror of `associated_toPolyG_cgcdMonicG`, but built from the **direct** fuel-free leaf lemmas
-`toPolyG_cgcdWf_dvd` (the raw gcd divides both inputs — unconditional, the WF def always terminates) and
-`toPolyG_dvd_cgcdWf` (the raw gcd is greatest); monic normalization fixes the unit
-(`associated_toPolyG_cmonicG`). Mutual divisibility gives `Associated`. -/
-theorem associated_toPolyG_cgcdMonicGWf (p q : CPolyG α) :
-    Associated (toPolyG (cgcdMonicGWf p q)) (gcd (toPolyG p) (toPolyG q)) := by
-  -- the raw fuel-free extended-Euclid gcd divides both inputs (unconditional) and is greatest.
-  obtain ⟨hdvd_p, hdvd_q⟩ := toPolyG_cgcdWf_dvd p q
-  have hassoc : Associated (toPolyG (cgcdMonicGWf p q)) (toPolyG (cgcdWf p q).1) := by
-    rw [cgcdMonicGWf]; exact associated_toPolyG_cmonicG _
-  refine hassoc.trans ?_
-  apply associated_of_dvd_dvd
-  · exact dvd_gcd hdvd_p hdvd_q
-  · exact toPolyG_dvd_cgcdWf p q (gcd_dvd_left _ _) (gcd_dvd_right _ _)
-
-/-! ### ★ Task 4 — the generic §3.5 reconstruction `canonicalRepresentationFastG_reconstructs`
+/-! ### The generic §3.5 reconstruction `canonicalRepresentationFastG_reconstructs`
 
 The §3.5 capstone correctness, generic over `[CField α] [CFieldSpec α]`: the canonical-representation
 split `canonicalRepresentationFastG Dt fuel a d = (q, (b, dₛ), (c, dₙ))` recombines to `f = a/d`, i.e.
