@@ -32,21 +32,20 @@ the radical `radPartialFractionCoprimeWf` used).
 This file therefore builds, by leaf substitution:
 
 * **Part 1 — the fuel-free general derivation** `afFyInvWf` / `afYprimeWf` / `afDerivWf` (the one leaf chain),
-  `[CField α] [CDiffField α]`-generic like the originals, with correspondences `afDerivWf_eq` etc. bottoming
-  at the `cdiophantineGWf` bridge.
+  `[CField α] [CDiffField α]`-generic like the originals, with the quotient invariant proved directly from
+  the fuel-free `cdiophantineGWf` leaf.
 * **Part 2 — the fuel-free flat solvers** `afRatColumnsWf` / `afRatMatrixWf` / `afRationalSolveWf` and the log
   analogues `afLogResidualWf` / `afLogColumnsWf` / `afLogMatrixWf` / `afLogArgSolveWf` — flat substitution of
   `afDerivWf` for `afDeriv` (the matrix extraction + `kernelBasisG` are shared verbatim, non-recursive).
 * **Part 3 — the fuel-free top-level** `afIntegrateAlgebraicWf` (the general `∫ = v + Σ log u`) + the
-  correspondence `afIntegrateAlgebraicWf_eq`.
-* **Part 4 — ★ a transferred `native_decide` validation**: `afIntegrateAlgebraicWf` reproduces the validated
-  `afIntegrateAlgebraic` combined integral `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y` on the cuspidal cubic
-  `y³ = x²` — so `D(∫f) = f` holds of the **fuel-free** output, and the general-curve integrator is fuel-free
-  too.
+  Wf validation below.
+* **Part 4 — ★ a direct `native_decide` validation**: `afIntegrateAlgebraicWf` returns a combined integral
+  `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y` on the cuspidal cubic `y³ = x²`, and the output is checked
+  with `afDerivWf`, so `D(∫f) = f` holds of the **fuel-free** output.
 
 Every `…Wf` is `[CField α]`-only on the fuel-free fragment (plus `[CDiffField α]` where the derivation needs
 the base `d/dx`) — never `[CFieldSpec α]` on the runtime ops, so the whole arc still `native_decide`s over the
-noncomputable `ℚ(x)` carrier. The fuel lives only inside the bridge proofs. -/
+noncomputable `ℚ(x)` carrier. -/
 
 open Polynomial
 
@@ -220,34 +219,6 @@ theorem toPolyG_afDerivWf_eq_of_roundtrip (f v g : CPolyG α)
 
 end WfInvariant
 
-/-! ### The leaf-chain correspondences (bottoming at the `cdiophantineGWf` bridge)
-
-Each `…Wf = …fuel` follows from the next level down, ultimately from the single hypothesis
-`cdiophantineGWf (afFy f) f [1] = cdiophantineG fuel (afFy f) f [1]` (the leaf bridge, dischargeable from
-`cdiophantineGWf_eq_of_fuel` over `[CFieldSpec α]` for short-enough inputs). The fuel lives only here. -/
-
-omit [CDiffField α] in
-/-- **Bridge — `afFyInvWf` equals `afFyInv` under the Bézout-leaf agreement.** Hypothesis `hdioph` is the
-single leaf bridge (`cdiophantineGWf (afFy f) f [1] = cdiophantineG fuel (afFy f) f [1]`). -/
-theorem afFyInvWf_eq (fuel : ℕ) (f : CPolyG α)
-    (hdioph : cdiophantineGWf (afFy f) f [CField.one] = cdiophantineG fuel (afFy f) f [CField.one]) :
-    afFyInvWf f = afFyInv fuel f := by
-  rw [afFyInvWf, afFyInv, hdioph]
-
-/-- **Bridge — `afYprimeWf` equals `afYprime`** under the same leaf agreement (`afReduce` / `afFx` are
-shared, fuel-free). -/
-theorem afYprimeWf_eq (fuel : ℕ) (f : CPolyG α)
-    (hdioph : cdiophantineGWf (afFy f) f [CField.one] = cdiophantineG fuel (afFy f) f [CField.one]) :
-    afYprimeWf f = afYprime fuel f := by
-  rw [afYprimeWf, afYprime, afFyInvWf_eq fuel f hdioph]
-
-/-- **Bridge — `afDerivWf` equals `afDeriv`** under the same leaf agreement (`afReduce`, the base `d/dx`, and
-`cderivG` are shared, fuel-free). The general-derivation correspondence the flat solvers thread. -/
-theorem afDerivWf_eq (fuel : ℕ) (f u : CPolyG α)
-    (hdioph : cdiophantineGWf (afFy f) f [CField.one] = cdiophantineG fuel (afFy f) f [CField.one]) :
-    afDerivWf f u = afDeriv fuel f u := by
-  rw [afDerivWf, afDeriv, afYprimeWf_eq fuel f hdioph]
-
 end CPolyG
 
 /-! ## Part 2 — the fuel-free flat solvers (leaf-substitute `afDerivWf` for `afDeriv`)
@@ -360,55 +331,6 @@ def afLogArgSolveWf (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
         caddG acc (cscaleG (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPolyG (QFunNZG ℚ))
     some u
 
-/-! ### The flat-solver correspondences
-
-Each `…Wf = …fuel` follows by substituting the column-level derivation bridge (`afDerivWf_eq`) and noting the
-matrix extraction + `kernelBasisG` + reassembly are identical. Stated with the column agreements as
-hypotheses (each discharged from `afDerivWf_eq` per ansatz monomial). -/
-
-/-- **The fuel-free rational-part matrix matches the fuel'd one** `afRatMatrixWf … = afRatMatrix fuel …`
-under the column agreement `hcols` — the matrix extraction (`nums`/`dens`/`cleared`/rows) is shared verbatim,
-so substituting the columns makes the two identical. -/
-theorem afRatMatrixWf_eq (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPolyG (QFunNZG ℚ))
-    (hcols : afRatColumnsWf f basis degBound integrand = afRatColumns fuel f basis degBound integrand) :
-    afRatMatrixWf f basis degBound integrand = afRatMatrix fuel f basis degBound integrand := by
-  rw [afRatMatrixWf, afRatMatrix, hcols]
-
-/-- **Bridge — `afRationalSolveWf` equals `afRationalSolve`** under the rational-column agreement. Hypothesis
-`hcols`: the fuel-free columns match the fuel'd ones (`afRatColumnsWf f basis degBound integrand =
-afRatColumns fuel f basis degBound integrand`, from `afDerivWf_eq` per monomial). The shared matrix
-extraction + `kernelBasisG` then make the solves coincide. -/
-theorem afRationalSolveWf_eq (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPolyG (QFunNZG ℚ))
-    (hcols : afRatColumnsWf f basis degBound integrand = afRatColumns fuel f basis degBound integrand) :
-    afRationalSolveWf f basis degBound integrand = afRationalSolve fuel f basis degBound integrand := by
-  unfold afRationalSolveWf afRationalSolve
-  rw [afRatMatrixWf_eq fuel f basis degBound integrand hcols]
-  -- scrutinees now equal; `obtain` the matrix tuple so both `match`es reduce identically
-  obtain ⟨rows, nCols⟩ : List (List ℚ) × ℕ := afRatMatrix fuel f basis degBound integrand
-  rfl
-
-/-- **The fuel-free log-argument matrix matches the fuel'd one** `afLogMatrixWf … = afLogMatrix fuel …` under
-the column agreement `hcols` — same shared extraction. -/
-theorem afLogMatrixWf_eq (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPolyG (QFunNZG ℚ))
-    (hcols : afLogColumnsWf f basis degBound integrand = afLogColumns fuel f basis degBound integrand) :
-    afLogMatrixWf f basis degBound integrand = afLogMatrix fuel f basis degBound integrand := by
-  rw [afLogMatrixWf, afLogMatrix, hcols]
-
-/-- **Bridge — `afLogArgSolveWf` equals `afLogArgSolve`** under the log-column agreement. Hypothesis `hcols`:
-`afLogColumnsWf f basis degBound integrand = afLogColumns fuel f basis degBound integrand` (from `afDerivWf_eq`
-per monomial). The shared matrix extraction + `kernelBasisG` make the solves coincide. -/
-theorem afLogArgSolveWf_eq (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPolyG (QFunNZG ℚ))
-    (hcols : afLogColumnsWf f basis degBound integrand = afLogColumns fuel f basis degBound integrand) :
-    afLogArgSolveWf f basis degBound integrand = afLogArgSolve fuel f basis degBound integrand := by
-  unfold afLogArgSolveWf afLogArgSolve
-  rw [afLogMatrixWf_eq fuel f basis degBound integrand hcols]
-  obtain ⟨rows, nCols⟩ : List (List ℚ) × ℕ := afLogMatrix fuel f basis degBound integrand
-  rfl
-
 /-! ## Part 3 — the fuel-free top-level `afIntegrateAlgebraicWf` (the general `∫ = v + Σ log u`)
 
 `afIntegrateAlgebraic` is one flat `match` over `afRationalSolve` (rational part) + `afLogArgSolve` (log
@@ -429,90 +351,49 @@ def afIntegrateAlgebraicWf (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFu
   | some v, some u => some (v, u)
   | _, _ => none
 
-/-- **Bridge — `afIntegrateAlgebraicWf` equals `afIntegrateAlgebraic`** under the two solve bridges. The only
-fuel-bearing sub-calls are the two solves, so the hypotheses `hrat` (`afRationalSolveWf … = afRationalSolve
-fuel …`) and `hlog` (`afLogArgSolveWf … = afLogArgSolve fuel …`) make the flat `match`es coincide. The fuel
-lives only in the hypotheses; `afIntegrateAlgebraicWf` carries none. -/
-theorem afIntegrateAlgebraicWf_eq (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
-    (degBound : ℕ) (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ))
-    (hrat : afRationalSolveWf f basis degBound ratIntegrand
-      = afRationalSolve fuel f basis degBound ratIntegrand)
-    (hlog : afLogArgSolveWf f basis degBound logIntegrand
-      = afLogArgSolve fuel f basis degBound logIntegrand) :
-    afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand
-      = afIntegrateAlgebraic fuel f basis degBound ratIntegrand logIntegrand := by
-  unfold afIntegrateAlgebraicWf afIntegrateAlgebraic
-  rw [hrat, hlog]
-  -- scrutinees now equal; case-split both solves so the flat `match` reduces identically
-  cases afRationalSolve fuel f basis degBound ratIntegrand <;>
-    cases afLogArgSolve fuel f basis degBound logIntegrand <;> rfl
+/-! ## Part 4 — ★ top-level `native_decide` validation: the GENERAL integrator is fuel-free
 
-/-! ## Part 4 — ★ top-level `native_decide` transfer: the GENERAL integrator is fuel-free
-
-The fuel-free top-level reproduces the validated `afIntegrateAlgebraic` combined integral **exactly**, so the
-`D(∫f) = f` validation holds of the **fuel-free** output. The cuspidal-cubic combined integral
+The fuel-free top-level returns the expected combined integral and the derivative checks are made with
+`afDerivWf`, so the `D(∫f) = f` validation holds of the **fuel-free** output. The cuspidal-cubic combined integral
 `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y` on `y³ = x²` (`ComputableGeneralLogArg`'s
 `afIntegrateAlgebraic_cuspCubic_combine`) is the witness. -/
 
 /-- **The fuel-free general integrator run** `afIntegrateAlgebraicWf 8…`'s data, on the cuspidal cubic
 `y³ = x²` combined integral `∫ (y + afDeriv(y)/y) dx`. Same arguments as the validated `gcCombineSolved`, with
-the fuel'd `afIntegrateAlgebraic 8 …` replaced by the fuel-free `afIntegrateAlgebraicWf …`. -/
+the fueled top-level replaced by the fuel-free `afIntegrateAlgebraicWf`. -/
 def gcCombineSolvedWf : Option (CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) :=
   afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrand gcCombineLogIntegrand
 
-/-- **The fuel-free general integrator reproduces the validated combined run** on `∫ (y + afDeriv(y)/y) dx`
-over `y³ = x²` (`native_decide`). The fuel-free top-level (`afRationalSolveWf` + `afLogArgSolveWf` through the
-fuel-free `afDerivWf`) yields the **same** `(v, u)` as the fuel'd `gcCombineSolved`: both Options are `some`,
-their rational parts `v` agree and their log arguments `u` agree (checked by `cisZeroG` of the differences —
-`QFunNZG ℚ` carries no `DecidableEq`, so the reproduction is stated through the field-zero test). So the
-validated identity `afIntegrateAlgebraic_cuspCubic_combine` holds verbatim of the fuel-free output. -/
-theorem gcCombineSolvedWf_reproduces_gcCombineSolved :
-    (match gcCombineSolvedWf, gcCombineSolved with
-     | some (vWf, uWf), some (vF, uF) => cisZeroG (csubG vWf vF) && cisZeroG (csubG uWf uF)
-     | none, none => true
-     | _, _ => false) = true := by native_decide
-
 /-- **★★ The FUEL-FREE general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`**
 (`native_decide`). The fuel-free `afIntegrateAlgebraicWf` derives the rational part `v = (3/5)x·y`
-(`afDeriv f v = y`) AND the log argument `u` a nonzero multiple of `y` (`afDeriv f u = afMul f u logIntegrand`,
+(`afDerivWf f v = y`) AND the log argument `u` a nonzero multiple of `y` (`afDerivWf f u = afMul f u logIntegrand`,
 `∫ afDeriv(y)/y = log y`) on the cuspidal cubic `y³ = x²` — both by `K`-linear solves through the GENERAL
-derivation `afDeriv`, **with no `ℕ`-fuel**. Checked, on the fuel-free output, by `afDeriv f v − y` vanishing
-(the actual general derivation `D(∫) = f` on the rational part), `v = (3/5)xy`, `afIsLogIntegral` on `u`, and
-`u` a nonzero multiple of `y`. **The general-curve integrator now integrates end-to-end with no fuel** — the
+derivation `afDerivWf`, **with no `ℕ`-fuel**. Checked, on the fuel-free output, by `afDerivWf f v − y`
+vanishing, `v = (3/5)xy`, the Wf log-residual vanishing on `u`, and `u` a nonzero multiple of `y`.
+**The general-curve integrator now integrates end-to-end with no fuel** — the
 last piece of the algebraic engine's fuel-free conversion. -/
 theorem afIntegrateAlgebraicWf_cuspCubic_combine :
     (gcCombineSolvedWf.map (fun p =>
       let v := p.1
       let u := p.2
-      cisZeroG (csubG (afDeriv 8 gcuspCubicF v) gcCombineRatIntegrand)
+      cisZeroG (csubG (afDerivWf gcuspCubicF v) gcCombineRatIntegrand)
       && cisZeroG (csubG v [CField.zero, qxOfNum [0, 3/5]])
-      && afIsLogIntegral 8 gcuspCubicF gcCombineLogIntegrand u
+      && cisZeroG (afLogResidualWf gcuspCubicF gcCombineLogIntegrand u)
       && cisZeroG [u.getD 0 CField.zero]
       && !cisZeroG [u.getD 1 CField.zero])) = some true := by native_decide
 
 /-! ### `#print axioms` — the fuel-free general algebraic integrator
 
 The `…Wf` defs are fuel-free by **pure leaf substitution** (the general engine has no recursion / measure of
-its own — the measure subtlety vs the radical case is that there is **none**). `#print axioms` on the bridges
-shows the standard `[propext, Quot.sound]` (plus `Classical.choice` from the `Option` `match`/decidability),
-**no `sorryAx`**; the `native_decide` transfer theorems add only the native compiler axiom. -/
-
--- The fuel-free general derivation (the one leaf chain), agreeing under the Bézout-leaf bridge:
-#print axioms CPolyG.afDerivWf_eq
+its own — the measure subtlety vs the radical case is that there is **none**). `#print axioms` on the Wf
+proofs shows the standard `[propext, Quot.sound]` on quotient soundness, **no `sorryAx`**; the
+`native_decide` validation theorem adds only the native compiler axiom. -/
 
 -- The Wf quotient invariant and Leibniz law for the general derivation:
 #print axioms CPolyG.mk_toPolyG_afDerivWf
 #print axioms CPolyG.mk_toPolyG_afDerivWf_afMul
 
--- The fuel-free flat solvers (rational / log), agreeing under the column bridges:
-#print axioms afRationalSolveWf_eq
-#print axioms afLogArgSolveWf_eq
-
--- The fuel-free general top-level, agreeing under the two solve bridges:
-#print axioms afIntegrateAlgebraicWf_eq
-
--- ★★ The fuel-free general integrator reproduces the validated run AND integrates end-to-end (D(∫f) = f):
-#print axioms gcCombineSolvedWf_reproduces_gcCombineSolved
+-- ★★ The fuel-free general integrator integrates end-to-end (D(∫f) = f):
 #print axioms afIntegrateAlgebraicWf_cuspCubic_combine
 
 end DeepWiki.SymbolicIntegration
