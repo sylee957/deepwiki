@@ -42,14 +42,14 @@ differential equation has a solution in a given differential field. The three bo
   `ConstantSystem` row-echelon reduction of Lemma 7.1.2 is the ordinary ℚ-Gaussian elimination — there
   are no non-constant entries to clear).
 
-* **`cParamLogDeriv Dt fuel fnum fden θnum θden`** (§7.3, generalizing the constant-case
+* **`cParamLogDeriv fval θlogderiv`** (§7.3, generalizing the constant-case
   `cParametricLogDeriv`) — the `ParametricLogarithmicDerivative(f, θ, D)` heuristic (book p.253): from
   the polynomial parts `(p, a)` of `f = p + a/d` and `(q, b)` of `w = Dθ/θ = q + b/e`, the degree-bound
   case-split (`B = max(0, δ−1)`), and the linear solve for `c = m/n` on the `t`-coefficients
   (`deg(q) > B` ⟹ `c·coeff(q,tⁱ) = coeff(p,tⁱ)` over `B+1 ≤ i ≤ C`), returns `(n, m, v)` data or "none".
   The reachable **base-field** case `k = ℚ(x)`, `θ = exp`-monomial (`Dθ/θ ∈ ℚ(x)`) is decided directly.
 
-* **`cParamRischDE Dt fuel f gs`** (§7.1) — the `ParamRischDE(f, [g₁,…,gₘ], D)` pipeline: run the §6
+* **`cParamRischDE gnums gdens`** (§7.1) — the `ParamRischDE(f, [g₁,…,gₘ], D)` pipeline: run the §6
   denominator/degree-bound stages (`cRdeNormalDenominator`/`cRdeSpecialDenominator`/`cRdeBoundDegree`
   generalize unchanged to the parametric right-hand side), then solve the bounded-degree polynomial
   equation `Dq + b·q = Σ cᵢ·qᵢ` as a **parametric linear system over ℚ** (collect the `t`-coefficient
@@ -85,11 +85,11 @@ constant) is provably not a logarithmic derivative — the constant Liouville ob
 specialized at the constant field `ℚ`, the base monomial derivation `D` with `Dx = 1`, `κ_D = 0`). -/
 abbrev cderivQ (p : CPolyG ℚ) : CPolyG ℚ := cderivG p
 
-/-- **Generic lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPairG _fuel num den =
+/-- **Generic lowest-terms reduction of a `(num, den)` fraction over `ℚ[x]`** `qnormPairG num den =
 (num/g, den/g)` scaled so the denominator is monic, where `g = gcd(num, den)` (`cgcdWf`); the zero
 numerator gives `([], [1])`. The generic mirror of `Compute.qnorm` one tower level down, used to read the
 polynomial part / denominator of a `QFunNZG ℚ`-valued base-field element. -/
-def qnormPairG (_fuel : ℕ) (num den : CPolyG ℚ) : CPolyG ℚ × CPolyG ℚ :=
+def qnormPairG (num den : CPolyG ℚ) : CPolyG ℚ × CPolyG ℚ :=
   if cisZeroG num then ([], [(1 : ℚ)])
   else
     let g := (cgcdWf num den).1
@@ -107,11 +107,11 @@ lowest-terms `QFunNZG ℚ` value `b = a/d ∈ ℚ(x)` is *proper*, i.e. `deg(a) 
 polynomial part). A logarithmic derivative `Dz/z` of a `ℚ(x)`-element is always proper, so a `b` that
 fails this is **not** a logarithmic derivative. A nonzero constant `b ∈ ℚ*` (`deg a = deg d = 0`) is
 *not* proper, hence not a logarithmic derivative — the constant obstruction. -/
-def cBaseIsProper (fuel : ℕ) (b : QFunNZG ℚ) : Bool :=
-  let bn := qnormPairG fuel b.1.1 b.1.2
+def cBaseIsProper (b : QFunNZG ℚ) : Bool :=
+  let bn := qnormPairG b.1.1 b.1.2
   cdegG bn.1 < cdegG bn.2 && !cisZeroG bn.1
 
-/-- **Parametric-logarithmic-derivative test over the base field** `cParametricLogDeriv fuel b`
+/-- **Parametric-logarithmic-derivative test over the base field** `cParametricLogDeriv b`
 (Bronstein §5.12 / §7.3, book p.176/253), for `b ∈ k = ℚ(x)`: returns `true` iff `b` *could* be a
 logarithmic derivative of a `ℚ(x)`-radical, i.e. `n·b = Dz/z` for some nonzero `n ∈ ℤ` and `z ∈ ℚ(x)*`
 — and `false` iff `b` is provably **not** of that form. A nonzero element of `ℚ(x)` that is not proper
@@ -122,9 +122,9 @@ reaches. For a proper `b` the full recognizer (squarefree-denominator test + int
 residues + the §7.3 unique-`m/n` linear solve) is the documented continuation; this conservative test
 returns `true` there, so the caller takes the *radical/log-derivative* branch only when it cannot rule
 it out — keeping the **non-radical** branch (eq. 6.23) sound. -/
-def cParametricLogDeriv (fuel : ℕ) (b : QFunNZG ℚ) : Bool :=
+def cParametricLogDeriv (b : QFunNZG ℚ) : Bool :=
   -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
-  CField.isZero b || cBaseIsProper fuel b
+  CField.isZero b || cBaseIsProper b
 
 /-! ### The new ingredient: a dense linear solver over the constant field `Const(k) = ℚ`
 
@@ -232,12 +232,12 @@ def cParamLogDerivCandidate (fval wval : QFunNZG ℚ) : Option ℚ :=
   else
     let r := CField.div fval wval
     -- `r ∈ ℚ` iff its lowest-terms denominator is a (nonzero) constant and numerator degree 0.
-    let rn := qnormPairG 64 r.1.1 r.1.2
+    let rn := qnormPairG r.1.1 r.1.2
     if cdegG rn.1 = 0 ∧ cdegG rn.2 = 0 then
       some (((rn.1 : List ℚ).headD 0) / ((rn.2 : List ℚ).headD 1))
     else none
 
-/-- **Parametric logarithmic derivative recognizer** `cParamLogDeriv fuel fval θlogderiv` (Bronstein §7.3,
+/-- **Parametric logarithmic derivative recognizer** `cParamLogDeriv fval θlogderiv` (Bronstein §7.3,
 the `ParametricLogarithmicDerivative` box, book p.253), over the base field `k = ℚ(x)`. Decides
 `n·f = Dv/v + m·(Dθ/θ)` for integers `n ≠ 0, m` and `v ∈ ℚ(x)*`, with `f = fval` and `Dθ/θ = θlogderiv`
 both in `ℚ(x)`. Returns `some (n, m, v)` (the integers and a witness `v`), or `none` ("no solution"):
@@ -254,7 +254,7 @@ both in `ℚ(x)`. Returns `some (n, m, v)` (the integers and a witness `v`), or 
 
 The *constant* sub-case `f ∈ ℚ*`, `Dθ/θ = η ∈ ℚ*` (the §6.6 reachable branch) returns `some (n, m, 1)`
 with `n/m = η/f` exactly when `f/η ∈ ℚ` (then `n·f = m·η` and `Dv/v = 0`, `v = 1`); otherwise `none`. -/
-def cParamLogDeriv (fuel : ℕ) (fval θlogderiv : QFunNZG ℚ) :
+def cParamLogDeriv (fval θlogderiv : QFunNZG ℚ) :
     Option (ℤ × ℤ × QFunNZG ℚ) :=
   match cParamLogDerivCandidate fval θlogderiv with
   | none =>
@@ -273,7 +273,7 @@ def cParamLogDeriv (fuel : ℕ) (fval θlogderiv : QFunNZG ℚ) :
     -- `resid = 0` (then `v = 1`, `N·f = M·w`, so `n = N, m = M`); the general radical witness (§5.12
     -- construction) is the documented continuation.
     if CField.isZero resid then some (N, M, CField.one)
-    else if !cParametricLogDeriv fuel resid then none
+    else if !cParametricLogDeriv resid then none
     else some (N, M, resid)
 
 /-! ### `cParamRischDE` (Bronstein §7.1, the `ParamRischDE(f, [g₁,…,gₘ], D)` pipeline, book p.217)
@@ -292,9 +292,9 @@ We implement the base-monomial case `k = ℚ`, `t` a monomial over `ℚ` with `D
 `cNullspaceBasisQ`. (Over the genuine tower `ℚ(x)[t]` the matrix entries lie in `ℚ(x)` and Lemma 7.1.2's
 row-differentiation reduction to `ℚ` is the documented continuation.) -/
 
-/-- **Polynomial lcm over ℚ** `cLcmQ _fuel p q = p·q / gcd(p, q)` (monic), the least common multiple of
+/-- **Polynomial lcm over ℚ** `cLcmQ p q = p·q / gcd(p, q)` (monic), the least common multiple of
 the denominators `LinearConstraints` clears (`d ← lcm(denominator(gᵢ))`). -/
-def cLcmQ (_fuel : ℕ) (p q : CPolyG ℚ) : CPolyG ℚ :=
+def cLcmQ (p q : CPolyG ℚ) : CPolyG ℚ :=
   if cisZeroG p ∨ cisZeroG q then []
   else cmonicG (cdivWf (cmulG p q) (cgcdWf p q).1)
 
@@ -302,7 +302,7 @@ def cLcmQ (_fuel : ℕ) (p q : CPolyG ℚ) : CPolyG ℚ :=
 out of range). The `LinearConstraints` matrix entry `Mᵢⱼ ← coefficient(rⱼ, tⁱ)` (eq. 7.6/7.8). -/
 def cCoeffQ (p : CPolyG ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
 
-/-- **Linear constraints over ℚ** `cLinearConstraintsQ fuel a b gnums gdens` (Bronstein §7.1, the
+/-- **Linear constraints over ℚ** `cLinearConstraintsQ gnums gdens` (Bronstein §7.1, the
 `LinearConstraints(a, b, [g₁,…,gₘ], D)` box, book p.223), `D = d/dt`, `k = ℚ`. Given the reduced equation
 `aDp + bp = Σᵢ cᵢ·gᵢ` (eq. 7.5) with `gᵢ = gnumsᵢ/gdensᵢ ∈ ℚ(t)`, returns `(qs, M)` where:
 
@@ -314,9 +314,9 @@ def cCoeffQ (p : CPolyG ℚ) (i : ℕ) : ℚ := (p : List ℚ).getD i 0
 
 `qs = [q₁, …, qₘ]` are the polynomial parts (the reduced right-hand side `Σ cᵢqᵢ` of eq. 7.7). The
 returned `M` is the dense row list fed to `cNullspaceBasisQ`. -/
-def cLinearConstraintsQ (fuel : ℕ) (gnums gdens : List (CPolyG ℚ)) :
+def cLinearConstraintsQ (gnums gdens : List (CPolyG ℚ)) :
     List (CPolyG ℚ) × List (List ℚ) :=
-  let d := gdens.foldl (fun acc den => cLcmQ fuel acc den) [(1 : ℚ)]
+  let d := gdens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
   let qrs : List (CPolyG ℚ × CPolyG ℚ) :=
     (List.zip gnums gdens).map (fun (gn, gd) =>
       let dgi := cmulG gn (cdivWf d gd)             -- `d·gᵢ = gnumᵢ·(d/gdenᵢ)`
@@ -330,7 +330,7 @@ def cLinearConstraintsQ (fuel : ℕ) (gnums gdens : List (CPolyG ℚ)) :
       (List.range m).map (fun j => cCoeffQ (rs.getD j []) i))
   (qs, M)
 
-/-- **Parametric Risch DE over the base monomial ℚ[t]** `cParamRischDE fuel gnums gdens` (Bronstein §7.1,
+/-- **Parametric Risch DE over the base monomial ℚ[t]** `cParamRischDE gnums gdens` (Bronstein §7.1,
 the `ParamRischDE(f, [g₁,…,gₘ], D)` pipeline, book p.217), specialized to `k = ℚ`, `D = d/dt`, the
 **reduced** equation `Dp = Σᵢ cᵢ·gᵢ` (`a = 1, b = 0`, eq. 7.5 after the trivial-over-ℚ RDE stages).
 Returns a **basis** `[c⃗₁, …, c⃗ᵣ]` of the `Const(k) = ℚ`-linear subspace of constant tuples
@@ -344,8 +344,8 @@ Returns a **basis** `[c⃗₁, …, c⃗ᵣ]` of the `Const(k) = ℚ`-linear sub
 The empty kernel (`[]`) means the only solution is `c₁ = … = cₘ = 0`. For each basis tuple `c⃗`, the
 companion polynomial solution `p` solves `Dp = Σ cᵢqᵢ` (eq. 7.7, the reduced polynomial RDE) — recoverable
 by integrating `Σ cᵢqᵢ` (`cIntegratePolyQ`), the `a = 1, b = 0` non-cancellation case. -/
-def cParamRischDE (fuel : ℕ) (gnums gdens : List (CPolyG ℚ)) : List (List ℚ) :=
-  let (_qs, M) := cLinearConstraintsQ fuel gnums gdens
+def cParamRischDE (gnums gdens : List (CPolyG ℚ)) : List (List ℚ) :=
+  let (_qs, M) := cLinearConstraintsQ gnums gdens
   cNullspaceBasisQ M gnums.length
 
 /-! ### `cLimitedIntegrate` (Bronstein §7.2, the `LimitedIntegrate(f, [w₁,…,wₘ], D)` problem, book p.245)
@@ -356,7 +356,7 @@ the parametric Risch DE `Dv + 0·v = f − Σ cᵢ·(Dwᵢ/wᵢ)` — i.e. (7.1)
 equation for `v`"). So it is the `gᵢ = Dwᵢ/wᵢ` specialization of `cParamRischDE`, with `f` appended as the
 forced generator `c₀ = 1`. -/
 
-/-- **Limited integration over the base monomial ℚ[t]** `cLimitedIntegrate fuel fnum fden wnums wdens`
+/-- **Limited integration over the base monomial ℚ[t]** `cLimitedIntegrate fnum fden wnums wdens`
 (Bronstein §7.2, the `LimitedIntegrate(f, [w₁,…,wₘ], D)` problem, book p.245), `k = ℚ`, `D = d/dt`.
 Decides `f = Dv + Σᵢ cᵢ·log(wᵢ)` for `cᵢ ∈ ℚ` and `v ∈ ℚ(t)`, returning the basis of admissible
 `(c₀, c₁, …, cₘ)` tuples (with `c₀` the coefficient of the forced generator `f`, so a genuine solution
@@ -366,7 +366,7 @@ generator list `[f, Dw₁/w₁, …, Dwₘ/wₘ]`. The `wᵢ` arrive as numerato
 `(D(wnumᵢ)·wdenᵢ − wnumᵢ·D(wdenᵢ)) / (wnumᵢ·wdenᵢ)`. The full §7.2 simplification (Corollary 7.2.1's
 sharper `hₙ`-bound and the `c₀ = 1` back-substitution to a nonparametric RDE) is the documented
 refinement. -/
-def cLimitedIntegrate (fuel : ℕ) (fnum fden : CPolyG ℚ) (wnums wdens : List (CPolyG ℚ)) :
+def cLimitedIntegrate (fnum fden : CPolyG ℚ) (wnums wdens : List (CPolyG ℚ)) :
     List (List ℚ) :=
   -- generator `g₀ = f`, then `gᵢ = Dwᵢ/wᵢ` (logarithmic derivative of `wᵢ`).
   let logDerivs : List (CPolyG ℚ × CPolyG ℚ) :=
@@ -376,7 +376,7 @@ def cLimitedIntegrate (fuel : ℕ) (fnum fden : CPolyG ℚ) (wnums wdens : List 
       (num, den))
   let gnums := fnum :: logDerivs.map Prod.fst
   let gdens := fden :: logDerivs.map Prod.snd
-  cParamRischDE fuel gnums gdens
+  cParamRischDE gnums gdens
 
 end CPolyG
 
@@ -396,8 +396,8 @@ def paramLogDerivExampleF : QFunNZG ℚ := CPolyG.qConstParamG 11
 def paramLogDerivExampleW : QFunNZG ℚ := CPolyG.qConstParamG 1
 
 -- **Sanity print.** `cParamLogDeriv` on Example 7.3.2 returns `(n, m, v) = (1, 11, 1)`.
-#eval (CPolyG.cParamLogDeriv 30 paramLogDerivExampleF paramLogDerivExampleW).map
-  (fun (n, m, v) => (n, m, CPolyG.qnormPairG 30 v.1.1 v.1.2))
+#eval (CPolyG.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
+  (fun (n, m, v) => (n, m, CPolyG.qnormPairG v.1.1 v.1.2))
 
 /-- **Example 7.3.2 — the parametric logarithmic derivative recognizer computes** (`native_decide`,
 Bronstein §7.3, the `ParametricLogarithmicDerivative` box, book p.253/254). For `11 = Dv/v + m·Dθ/θ`
@@ -408,7 +408,7 @@ is `n·f − m·(Dθ/θ) = 1·11 − 11·1 = 0`. This is the §7.3 deliverable �
 derivative recognizer that the §6.6 exponential cancellation case and the §5.12 integer-residue test
 reach *computes* over `ℚ(x)`, generalizing the constant-case `cParametricLogDeriv` stub. -/
 theorem paramLogDeriv_example :
-    (match cParamLogDeriv 30 paramLogDerivExampleF paramLogDerivExampleW with
+    (match cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW with
       | some (n, m, v) =>
           -- `n·f − m·(Dθ/θ) − Dv/v` cleared: with `v = 1`, `Dv/v = 0`, so check `n·f − m·w = 0`.
           let nf := CField.mul (CPolyG.qConstParamG ((n : ℚ))) paramLogDerivExampleF
@@ -447,10 +447,10 @@ def paramRischExampleG3den : CPolyG ℚ := [1, 1]
 -- **Sanity prints** (book p.224): `LinearConstraints` returns the eq. 7.6 system (rows = coefficients
 -- of `t⁰, t¹`: `[[1,1,-1],[5,1,1]]`, the book's `[[5,1,1],[1,1,-1]]` up to equation order), and the
 -- kernel basis (one vector, proportional to `(1,-3,-2)`: here `(-1/2, 3/2, 1) = -½·(1,-3,-2)`).
-#eval (CPolyG.cLinearConstraintsQ 40
+#eval (CPolyG.cLinearConstraintsQ
     [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
     [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]).2
-#eval CPolyG.cParamRischDE 40
+#eval CPolyG.cParamRischDE
     [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
     [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]
 
@@ -458,8 +458,8 @@ def paramRischExampleG3den : CPolyG ℚ := [1, 1]
 constant tuple `cs = (c₁,…,cₘ)` satisfies the eq. 7.6 constraint `Σᵢ cᵢ·rᵢ = 0` (the remainders `rᵢ` of
 `d·gᵢ` by `d = lcm(denominators)`), i.e. `Σᵢ cᵢ·(numᵢ·(d/denᵢ) mod d) = 0` — the polynomial identity
 certifying that `(c₁,…,cₘ)` is a genuine solution of the parametric Risch DE's linear constraints. -/
-def paramConstraintCheck (fuel : ℕ) (gnums gdens : List (CPolyG ℚ)) (cs : List ℚ) : Bool :=
-  let d := gdens.foldl (fun acc den => cLcmQ fuel acc den) [(1 : ℚ)]
+def paramConstraintCheck (gnums gdens : List (CPolyG ℚ)) (cs : List ℚ) : Bool :=
+  let d := gdens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
   let total : CPolyG ℚ :=
     ((List.zip gnums gdens).zip cs).foldl (fun acc ((gn, gd), c) =>
       let dgi := cmulG gn (cdivWf d gd)
@@ -487,17 +487,17 @@ theorem paramRischDE_example :
     -- (1) the eq. 7.6 constraint matrix is the system `c₁(5t+1)+c₂(t+1)+c₃(t−1)=0`, i.e. (low→high in
     -- `t`) the rows `t⁰: [1,1,-1]` and `t¹: [5,1,1]` (the book writes the two equations as
     -- `[[5,1,1],[1,1,-1]]`; equating coefficients of `t⁰, t¹` is the same homogeneous system).
-    (decide ((cLinearConstraintsQ 40
+    (decide ((cLinearConstraintsQ
         [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
         [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]).2
       = [[1,1,-1],[5,1,1]])
     -- (2) the kernel basis is one nontrivial vector, each satisfying the eq. 7.6 constraint.
-    && (let basis := cParamRischDE 40
+    && (let basis := cParamRischDE
           [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
           [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]
         decide (basis.length = 1)
           && basis.all (fun cs =>
-              paramConstraintCheck 40
+              paramConstraintCheck
                 [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
                 [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den] cs
                 && !(cs.all (· == 0))))) = true := by native_decide
@@ -521,7 +521,7 @@ def limitedIntExampleFden : CPolyG ℚ := [0, 1]
 
 -- **Sanity print** (book §7.2): `cLimitedIntegrate` finds the relation `f = Dw₁/w₁` (`f = log(t)`),
 -- a one-dimensional kernel `[[-1, 1, 0]]` over generators `[f, Dw₁/w₁, Dw₂/w₂]`.
-#eval CPolyG.cLimitedIntegrate 40 limitedIntExampleFnum limitedIntExampleFden [[0, 1], [1, 1]] [[1], [1]]
+#eval CPolyG.cLimitedIntegrate limitedIntExampleFnum limitedIntExampleFden [[0, 1], [1, 1]] [[1], [1]]
 
 /-- **§7.2 — the limited integration problem reduces to the parametric Risch DE** (`native_decide`,
 Bronstein §7.2, book p.245). For `f = Dv + c₁·log(t) + c₂·log(t+1)` with `f = 1/t` over `k = ℚ`,
@@ -540,10 +540,10 @@ theorem limitedIntegrate_example :
          (csubG (cmulG (cderivQ wn) wd) (cmulG wn (cderivQ wd)), cmulG wn wd))
      let gnums := limitedIntExampleFnum :: logDerivs.map Prod.fst
      let gdens := limitedIntExampleFden :: logDerivs.map Prod.snd
-     let basis := cLimitedIntegrate 40 limitedIntExampleFnum limitedIntExampleFden wnums wdens
+     let basis := cLimitedIntegrate limitedIntExampleFnum limitedIntExampleFden wnums wdens
      decide (0 < basis.length)
        && basis.all (fun cs =>
-            paramConstraintCheck 40 gnums gdens cs && !(cs.all (· == 0)))) = true := by
+            paramConstraintCheck gnums gdens cs && !(cs.all (· == 0)))) = true := by
   native_decide
 
 #print axioms limitedIntegrate_example

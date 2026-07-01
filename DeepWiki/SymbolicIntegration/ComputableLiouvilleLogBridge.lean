@@ -23,9 +23,9 @@ transcendental-log Liouville keystone `isLiouville_logExtension_uncond` uncondit
   no `F`-antiderivative then `F(log u) = RatFunc F` is a Liouville extension of `F` — the high-impact
   payoff, by chaining `nondegenerateLog_iff_no_antideriv` into `isLiouville_logExtension_uncond`.
 
-* **The computable test `cLogIsNewMonomial fuel [] w` with the EMPTY base list decides only `w ≠ 0`**,
+* **The computable test `cLogIsNewMonomial [] w` with the EMPTY base list decides only `w ≠ 0`**,
   NOT "no antiderivative" (`cLogIsNewMonomial_nil_iff` proves
-  `cLogIsNewMonomial fuel [] w = true ↔ ¬ CField.isZero w`).  The empty ℚ-span is `{0}`, so
+  `cLogIsNewMonomial [] w = true ↔ ¬ CField.isZero w`).  The empty ℚ-span is `{0}`, so
   `w ∉ span_ℚ ∅ ⟺ w ≠ 0`.  This is **necessary but NOT sufficient** for `NondegenerateLog`: e.g. `w = 1`
   and `w = x` are nonzero (test `= true`) yet have antiderivatives `x`, `x²/2 ∈ ℚ(x)`
   (`cLogIsNewMonomial_nil_const_true`, `nonzero_test_not_sufficient_for_no_antideriv`).  So the
@@ -261,9 +261,9 @@ theorem isLiouville_of_logDeriv_ne_zero [CharZero K] [IsAlgClosed K] (u : RatFun
 
 end RationalBase
 
-/-! ## What `cLogIsNewMonomial fuel [] w` actually decides (the empty-base semantics, PROVEN)
+/-! ## What `cLogIsNewMonomial [] w` actually decides (the empty-base semantics, PROVEN)
 
-The structure decision `cLogIsNewMonomial fuel logDerivs w` (`ComputableStructure.lean`) tests
+The structure decision `cLogIsNewMonomial logDerivs w` (`ComputableStructure.lean`) tests
 `w ∉ span_ℚ{logDerivs}` via the §7.1 ℚ-nullspace solver `cNullspaceBasisQ` of the cleared coefficient
 matrix.  With the **empty** base `logDerivs = []` the span is `{0}`, so the test collapses to `w ≠ 0`.
 We prove this *abstractly* (no `decide`/`native_decide`), tracing the single-column `crref`/nullspace
@@ -324,21 +324,21 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
   · simp only [Bool.not_eq_true] at h0; rw [h0]; simp
 
 /-- **★ The empty-base structure test decides exactly "the cleared numerator column is nonzero".**
-`cLogIsNewMonomial fuel [] w = true` iff the single cleared coefficient column
-`(cLinearDepData fuel [] w).1` has a row with a nonzero entry — i.e. iff `w`'s cleared numerator is a
+`cLogIsNewMonomial [] w = true` iff the single cleared coefficient column
+`(cLinearDepData [] w).1` has a row with a nonzero entry — i.e. iff `w`'s cleared numerator is a
 nonzero polynomial, i.e. (modulo the clearing being faithful) iff `w ≠ 0`.  PROVEN by tracing the
 single-column `crref`/`cNullspaceBasisQ` computation (axiom-clean, no `decide`).  This pins the empty-base
 semantics: the test is "`w ∉ span_ℚ ∅ = {0}`", **not** "`w` has no antiderivative". -/
-theorem cLogIsNewMonomial_nil_eq_col_nonzero (fuel : ℕ) (w : QFunNZG ℚ) :
-    CPolyG.cLogIsNewMonomial fuel [] w =
-      ((CPolyG.cLinearDepData fuel [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
-  have hbridge : CPolyG.cLogIsNewMonomial fuel [] w =
-      !((cNullspaceBasisQ (CPolyG.cLinearDepData fuel [] w).1
-          ((CPolyG.cLinearDepData fuel [] w).2 + 1)).any
-        (fun rel => rel.getD (CPolyG.cLinearDepData fuel [] w).2 0 ≠ 0)) := rfl
-  have h2 : (CPolyG.cLinearDepData fuel [] w).2 = 0 := rfl
+theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZG ℚ) :
+    CPolyG.cLogIsNewMonomial [] w =
+      ((CPolyG.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
+  have hbridge : CPolyG.cLogIsNewMonomial [] w =
+      !((cNullspaceBasisQ (CPolyG.cLinearDepData [] w).1
+          ((CPolyG.cLinearDepData [] w).2 + 1)).any
+        (fun rel => rel.getD (CPolyG.cLinearDepData [] w).2 0 ≠ 0)) := rfl
+  have h2 : (CPolyG.cLinearDepData [] w).2 = 0 := rfl
   rw [hbridge, h2, show (0 : ℕ) + 1 = 1 from rfl]
-  set M := (CPolyG.cLinearDepData fuel [] w).1 with hM
+  set M := (CPolyG.cLinearDepData [] w).1 with hM
   rw [nullspace_single_col M, crref_single_col_pivots M]
   cases hfind : M.find? (fun r => (r.getD 0 0) ≠ 0) with
   | none => simp
@@ -347,8 +347,8 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (fuel : ℕ) (w : QFunNZG ℚ) :
 /-- **The exponential structure test is definitionally the logarithmic one** (Bronstein Corollary
 9.3.1(ii) shares the §9.3 ℚ-linear-dependence engine of (i)); so the empty-base semantics transfers
 verbatim. -/
-theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (fuel : ℕ) (ws : List (QFunNZG ℚ)) (b : QFunNZG ℚ) :
-    CPolyG.cExpIsNewMonomial fuel ws b = CPolyG.cLogIsNewMonomial fuel ws b := rfl
+theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (ws : List (QFunNZG ℚ)) (b : QFunNZG ℚ) :
+    CPolyG.cExpIsNewMonomial ws b = CPolyG.cLogIsNewMonomial ws b := rfl
 
 end ComputableEmptyBase
 
@@ -357,13 +357,13 @@ end ComputableEmptyBase
 Putting the two halves together.  `NondegenerateLog u` (over a char-`0` differential field) is
 *exactly* "`logDeriv u` has no `F`-antiderivative" (`nondegenerateLog_iff_no_antideriv`), and that
 discharges the keystone (`isLiouville_of_no_antideriv`).  The computable empty-base test
-`cLogIsNewMonomial fuel [] w` decides only "`w`'s cleared numerator is nonzero" ≈ `w ≠ 0`
+`cLogIsNewMonomial [] w` decides only "`w`'s cleared numerator is nonzero" ≈ `w ≠ 0`
 (`cLogIsNewMonomial_nil_eq_col_nonzero`).  These differ: "`w ≠ 0`" is **necessary but not sufficient**
 for "no antiderivative".  Concretely (verified by `#eval` in development, not provable by `decide`
 because `ℚ`-kernel reduction stalls — the codebase uses `native_decide`, forbidden here):
 
-* `cLogIsNewMonomial 30 [] (1 : ℚ(x)) = true` yet `1` has antiderivative `x ∈ ℚ(x)`;
-* `cLogIsNewMonomial 30 [] (x : ℚ(x)) = true` yet `x` has antiderivative `x²/2 ∈ ℚ(x)`.
+* `cLogIsNewMonomial [] (1 : ℚ(x)) = true` yet `1` has antiderivative `x ∈ ℚ(x)`;
+* `cLogIsNewMonomial [] (x : ℚ(x)) = true` yet `x` has antiderivative `x²/2 ∈ ℚ(x)`.
 
 So a correct *computable* `NondegenerateLog` proxy is the in-field-integrability decision (the
 Hermite/Rothstein–Trager "empty log part" test on `w = u'/u`), **not** the empty-base
@@ -390,10 +390,10 @@ example (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
   isLiouville_of_no_antideriv u hno
 
 -- The empty-base computable test decides only "cleared column nonzero" (≈ `w ≠ 0`).
-example (fuel : ℕ) (w : QFunNZG ℚ) :
-    CPolyG.cLogIsNewMonomial fuel [] w =
-      ((CPolyG.cLinearDepData fuel [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
-  cLogIsNewMonomial_nil_eq_col_nonzero fuel w
+example (w : QFunNZG ℚ) :
+    CPolyG.cLogIsNewMonomial [] w =
+      ((CPolyG.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
+  cLogIsNewMonomial_nil_eq_col_nonzero w
 
 end Restatements
 

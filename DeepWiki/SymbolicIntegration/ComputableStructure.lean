@@ -95,32 +95,32 @@ because `d` is a common multiple of `w`'s denominator), via `qnormPairG`-reducin
 `numerator·(d/denom)`.
 The `LinearConstraints`-style clearing (cf. §7.1): a ℚ-relation `Σ rⱼ wⱼ = 0` becomes the polynomial
 relation `Σ rⱼ (wⱼ·d) = 0`, i.e. a ℚ-linear relation among these coefficient lists. -/
-def cClearedNumCoeffs (fuel : ℕ) (d : CPolyG ℚ) (w : QFunNZG ℚ) : CPolyG ℚ :=
-  let wn := qnormPairG fuel w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
+def cClearedNumCoeffs (d : CPolyG ℚ) (w : QFunNZG ℚ) : CPolyG ℚ :=
+  let wn := qnormPairG w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
   cmulG wn.1 (cdivWf d wn.2)
 
-/-- **The ℚ-linear span / dependence engine** `cLinearDepData fuel ws w = (matrix, m)` for the rational
+/-- **The ℚ-linear span / dependence engine** `cLinearDepData ws w = (matrix, m)` for the rational
 functions `ws = [w₁,…,wₘ]` and a candidate `w`, over `k = ℚ(x)`. Clears all of `w₁,…,wₘ,w` to the common
 denominator `d = lcm(all denominators)` (so each `wⱼ·d ∈ ℚ[x]`), assembles the **coefficient matrix**
 `M` whose row `i` is `[coeff(w₁·d, xⁱ), …, coeff(wₘ·d, xⁱ), coeff(w·d, xⁱ)]` (`m+1` columns, one per
 generator with `w` last; rows `i = 0 .. maxdeg`), and returns `(M, m)`. A ℚ-relation `Σ rⱼ wⱼ + r·w = 0`
 is exactly a nullspace vector of `M`; `w ∈ span_ℚ{wⱼ}` iff some nullspace vector has nonzero last
 (`w`-)coordinate. -/
-def cLinearDepData (fuel : ℕ) (ws : List (QFunNZG ℚ)) (w : QFunNZG ℚ) :
+def cLinearDepData (ws : List (QFunNZG ℚ)) (w : QFunNZG ℚ) :
     List (List ℚ) × ℕ :=
   let all := ws ++ [w]
   -- common denominator `d = lcm(denom wⱼ)` over the lowest-terms forms.
-  let dens := all.map (fun u => (qnormPairG fuel u.1.1 u.1.2).2)
-  let d := dens.foldl (fun acc den => cLcmQ fuel acc den) [(1 : ℚ)]
-  let cols : List (CPolyG ℚ) := all.map (fun u => cClearedNumCoeffs fuel d u)
+  let dens := all.map (fun u => (qnormPairG u.1.1 u.1.2).2)
+  let d := dens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
+  let cols : List (CPolyG ℚ) := all.map (fun u => cClearedNumCoeffs d u)
   let nrows := (cols.map cdegG).foldl Nat.max 0 + 1
   let M : List (List ℚ) :=
     (List.range nrows).map (fun i =>
       cols.map (fun c => (cnormG c).getD i 0))
   (M, ws.length)
 
-/-- **The new-logarithm structure decision** `cLogIsNewMonomial fuel logDerivs w` (Bronstein §9.3,
+/-- **The new-logarithm structure decision** `cLogIsNewMonomial logDerivs w` (Bronstein §9.3,
 Corollary 9.3.1(i), eq. 9.8, book p.284/285), over the logarithmic tower `C(x)(log u₁,…,log uₘ)`,
 `k = ℚ(x)`, `Const = ℚ`. Given the logarithmic derivatives `logDerivs = [Du₁/u₁, …, Duₘ/uₘ] ∈ ℚ(x)` of
 the existing log-monomials and a candidate `log(u)`'s logarithmic derivative `w = Du/u ∈ ℚ(x)`, returns
@@ -130,13 +130,13 @@ is **not** the derivative of an element of the field, i.e. iff there are **no** 
 solver: `cNullspaceBasisQ` of the cleared coefficient matrix; `log(u)` is **dependent** (NOT new) iff
 some kernel vector uses the `w`-column (last coordinate) nontrivially. Returns `true` (NEW) when no such
 relation exists. -/
-def cLogIsNewMonomial (fuel : ℕ) (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool :=
-  let (M, m) := cLinearDepData fuel logDerivs w
+def cLogIsNewMonomial (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool :=
+  let (M, m) := cLinearDepData logDerivs w
   let basis := cNullspaceBasisQ M (m + 1)
   -- `log(u)` is a *new* monomial iff NO nullspace relation involves the `w`-column (index `m`).
   !(basis.any (fun rel => rel.getD m 0 ≠ 0))
 
-/-- **The new-exponential structure decision** `cExpIsNewMonomial fuel logDerivs b` (Bronstein §9.3,
+/-- **The new-exponential structure decision** `cExpIsNewMonomial logDerivs b` (Bronstein §9.3,
 Corollary 9.3.1(ii), eq. 9.9, book p.284/285), over `k = ℚ(x)`, `Const = ℚ`. Given a candidate
 `exp(b)`'s exponent derivative `Db ∈ ℚ(x)` and the existing logarithmic derivatives `logDerivs =
 [Du₁/u₁,…]`, returns `true` iff `exp(b)` is a **new transcendental monomial** — i.e. iff `Db` is **not**
@@ -145,23 +145,23 @@ monomials yet to contribute the `E`-part of eq. 9.9) iff there are **no** `rᵢ 
 `Db = Σ rᵢ (Duᵢ/uᵢ)`. This is the *same* ℚ-linear-dependence test as the logarithm case, now applied to
 the exponent derivative `Db` against the existing logarithmic derivatives (eq. 9.9 with the
 exponential-monomial part of the span empty at the base). -/
-def cExpIsNewMonomial (fuel : ℕ) (logDerivs : List (QFunNZG ℚ)) (b : QFunNZG ℚ) : Bool :=
-  cLogIsNewMonomial fuel logDerivs b
+def cExpIsNewMonomial (logDerivs : List (QFunNZG ℚ)) (b : QFunNZG ℚ) : Bool :=
+  cLogIsNewMonomial logDerivs b
 
-/-- **Membership form** `cLogRelationExists fuel logDerivs w = !cLogIsNewMonomial …`: `true` iff
+/-- **Membership form** `cLogRelationExists logDerivs w = !cLogIsNewMonomial …`: `true` iff
 `w = Du/u` **is** a ℚ-linear combination of the existing logarithmic derivatives — i.e. `log(u)` is
 *dependent* (a relation exists, eq. 9.8 solvable). The complement of `cLogIsNewMonomial`, exposed for the
 validation against the worked `log(x²) = 2 log(x)` relation. -/
-def cLogRelationExists (fuel : ℕ) (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool :=
-  !cLogIsNewMonomial fuel logDerivs w
+def cLogRelationExists (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool :=
+  !cLogIsNewMonomial logDerivs w
 
-/-- **The ℚ-relation coefficients (if a single relation pins them)** `cLogRelationCoeffs fuel logDerivs
+/-- **The ℚ-relation coefficients (if a single relation pins them)** `cLogRelationCoeffs logDerivs
 w`: when `cLogRelationExists` and the kernel is one-dimensional with a nonzero `w`-coordinate, returns
 `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` (normalizing the `w`-column coefficient to `−1`, so the
 kernel vector reads `[r₁,…,rₘ, −1]`); else `none`. The explicit `rᵢ ∈ ℚ` of eq. 9.8 — e.g. `[2]` for
 `log(x²) = 2 log(x)`. -/
-def cLogRelationCoeffs (fuel : ℕ) (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Option (List ℚ) :=
-  let (M, m) := cLinearDepData fuel logDerivs w
+def cLogRelationCoeffs (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Option (List ℚ) :=
+  let (M, m) := cLinearDepData logDerivs w
   let basis := cNullspaceBasisQ M (m + 1)
   match basis.find? (fun rel => rel.getD m 0 ≠ 0) with
   | none => none
@@ -206,9 +206,9 @@ def structLogDerivX1 : QFunNZG ℚ := qFracStructG [1] [1, 1]
 -- **Sanity prints.** Against the existing monomial `log(x)` (`logDerivs = [1/x]`):
 --   `log(x²)` (`w = 2/x`) is DEPENDENT (relation `2/x = 2·(1/x)`)  ⟹ `cLogIsNewMonomial = false`;
 --   `log(x+1)` (`w = 1/(x+1)`) is a NEW monomial                  ⟹ `cLogIsNewMonomial = true`.
-#eval CPolyG.cLogIsNewMonomial 30 [structLogDerivX] structLogDerivX2   -- expect false
-#eval CPolyG.cLogIsNewMonomial 30 [structLogDerivX] structLogDerivX1   -- expect true
-#eval CPolyG.cLogRelationCoeffs 30 [structLogDerivX] structLogDerivX2  -- expect some [2]
+#eval CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX2   -- expect false
+#eval CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX1   -- expect true
+#eval CPolyG.cLogRelationCoeffs [structLogDerivX] structLogDerivX2  -- expect some [2]
 
 /-- **Cleared ℚ-relation check** `structRelationCheck fuel logDerivs w rs`: `true` iff the ℚ-coefficients
 `rs = [r₁,…,rₘ]` actually satisfy `w = Σ rᵢ (Duᵢ/uᵢ)` over `ℚ(x)`, by `CField.isZero` of the cleared
@@ -236,12 +236,12 @@ logarithmic derivatives?* — **computes** over `ℚ(x)` as honest ℚ-linear al
 `crref`), with the detected relation verified against the rational-function identity. -/
 theorem structureTheorem_example :
     (-- (1) `log(x²)` is dependent on `log(x)` — relation detected and verified `D(x²)/x² = 2·D(x)/x`.
-     (CPolyG.cLogIsNewMonomial 30 [structLogDerivX] structLogDerivX2 == false)
-     && (match CPolyG.cLogRelationCoeffs 30 [structLogDerivX] structLogDerivX2 with
+     (CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
+     && (match CPolyG.cLogRelationCoeffs [structLogDerivX] structLogDerivX2 with
          | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
          | none => false)
      -- (2) `log(x+1)` is a NEW transcendental monomial over `C(x)(log x)`.
-     && (CPolyG.cLogIsNewMonomial 30 [structLogDerivX] structLogDerivX1 == true)) = true := by
+     && (CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   native_decide
 
 #print axioms structureTheorem_example
@@ -266,11 +266,11 @@ The exponential decision (Corollary 9.3.1(ii)) shares the *same* ℚ-linear-depe
 logarithm decision, applied to the exponent derivative `Db` against the existing logarithmic
 derivatives. -/
 theorem expStructureTheorem_example :
-    ((CPolyG.cExpIsNewMonomial 30 [structLogDerivX] structLogDerivX2 == false)
-     && (match CPolyG.cLogRelationCoeffs 30 [structLogDerivX] structLogDerivX2 with
+    ((CPolyG.cExpIsNewMonomial [structLogDerivX] structLogDerivX2 == false)
+     && (match CPolyG.cLogRelationCoeffs [structLogDerivX] structLogDerivX2 with
          | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
          | none => false)
-     && (CPolyG.cExpIsNewMonomial 30 [structLogDerivX] structLogDerivX1 == true)) = true := by
+     && (CPolyG.cExpIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   native_decide
 
 #print axioms expStructureTheorem_example
@@ -288,8 +288,8 @@ def structLogDerivX2pX : QFunNZG ℚ := qFracStructG [1, 2] [0, 1, 1]
 
 -- **Sanity prints.** Against the 2-element tower `[1/x, 1/(x+1)]`:
 --   `log(x²+x)` (`(2x+1)/(x²+x)`) is DEPENDENT with relation `[1,1]` (`1/x + 1/(x+1)`).
-#eval CPolyG.cLogIsNewMonomial 30 [structLogDerivX, structLogDerivX1] structLogDerivX2pX  -- false
-#eval CPolyG.cLogRelationCoeffs 30 [structLogDerivX, structLogDerivX1] structLogDerivX2pX -- some [1,1]
+#eval CPolyG.cLogIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX  -- false
+#eval CPolyG.cLogRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX -- some [1,1]
 
 /-- **Bronstein §9.3 — multi-monomial structure decision computes** (`native_decide`, Corollary 9.3.1,
 book p.284/285). Over the genuine 2-element logarithmic tower `C(x)(log x, log(x+1))` (`k = ℚ(x)`, the
@@ -305,14 +305,14 @@ This exercises the ℚ-linear-relation engine with `m = 2` generators, confirmin
 scales past the single-generator base. -/
 theorem multiStructureTheorem_example :
     (-- `log(x²+x)` is dependent on `{log x, log(x+1)}` with the verified relation `[1,1]`.
-     (CPolyG.cLogIsNewMonomial 30 [structLogDerivX, structLogDerivX1] structLogDerivX2pX == false)
-     && (match CPolyG.cLogRelationCoeffs 30 [structLogDerivX, structLogDerivX1] structLogDerivX2pX with
+     (CPolyG.cLogIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX == false)
+     && (match CPolyG.cLogRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX with
          | some rs => structRelationCheck [structLogDerivX, structLogDerivX1] structLogDerivX2pX rs
                         && (rs == [1, 1])
          | none => false)
      -- the two generators are independent of each other.
-     && (CPolyG.cLogIsNewMonomial 30 [structLogDerivX1] structLogDerivX == true)
-     && (CPolyG.cLogIsNewMonomial 30 [structLogDerivX] structLogDerivX1 == true)) = true := by
+     && (CPolyG.cLogIsNewMonomial [structLogDerivX1] structLogDerivX == true)
+     && (CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   native_decide
 
 #print axioms multiStructureTheorem_example
