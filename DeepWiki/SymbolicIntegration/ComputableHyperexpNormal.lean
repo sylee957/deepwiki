@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
+import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
 /-! # The hyperexponential normal part via residual feedback (Bronstein §5.9)
 `ComputableHyperexpSpecial` closed the §5.10 **special** part of a hyperexponential integral
@@ -114,6 +115,20 @@ def cIntegrateHyperexpNormalG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (c
     let newNum := csubG gnum (cmulG [intR] gden)
     some ⟨(newNum, gden), red.logs⟩
 
+/-- **The fuel-free §5.9 hyperexponential normal-part integral** `cIntegrateHyperexpNormalGWf Dt a d cands`:
+the residual-feedback normal driver with the reduced capstone replaced by `cIntegrateReducedGWf`. -/
+def cIntegrateHyperexpNormalGWf [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+    Option (IntegralResultG α) :=
+  let red := cIntegrateReducedGWf Dt a d cands
+  let η : α := cExpEtaG Dt
+  let R : α := cHyperexpResidualG η red.logs
+  match CRischField.crischDESolve (CField.zero : α) R with
+  | none => none
+  | some intR =>
+    let (gnum, gden) := red.rational
+    let newNum := csubG gnum (cmulG [intR] gden)
+    some ⟨(newNum, gden), red.logs⟩
+
 /-! ### The full hyperexponential integral driver `cIntegrateHyperexpFullG` (§5.4 + §5.10 + §5.9)
 
 `cIntegrateHyperexpFullG` mirrors `cIntegrateHyperexpG` (§5.10 special part) but routes the normal part
@@ -142,6 +157,24 @@ def cIntegrateHyperexpFullG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (can
   | none => none
   | some (lnum, lden) =>
     match cIntegrateHyperexpNormalG Dt fuel cn dn cands with
+    | none => none
+    | some nrm =>
+      let (gnum, gden) := nrm.rational
+      let num := caddG (cmulG lnum gden) (cmulG gnum lden)
+      let den := cmulG lden gden
+      some ⟨(num, den), nrm.logs⟩
+
+/-- **The fuel-free full hyperexponential integral with normal feedback** `cIntegrateHyperexpFullGWf Dt a d
+cands`: use the fuel-free canonical split and fuel-free §5.9 normal-part driver. -/
+def cIntegrateHyperexpFullGWf [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+    Option (IntegralResultG α) :=
+  let η : α := cExpEtaG Dt
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+  let neg : List α := cHyperexpSpecialNegG b ds
+  match cIntegrateHyperexpLaurentG η fp neg with
+  | none => none
+  | some (lnum, lden) =>
+    match cIntegrateHyperexpNormalGWf Dt cn dn cands with
     | none => none
     | some nrm =>
       let (gnum, gden) := nrm.rational
@@ -203,7 +236,7 @@ reduced capstone's logs), confirmed by `CField.isZero (R − 1) = true`. This is
 theorem nNormInv_residual_eq_one :
     CField.isZero (CField.sub
       (cHyperexpResidualG (cExpEtaG nHyperexpDt)
-        (cIntegrateReducedG nHyperexpDt 20 nNormInvA nNormInvD nNormInvCands).logs)
+        (cIntegrateReducedGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands).logs)
       (CField.one : NLvl1)) = true := by native_decide
 
 /-- **The base residual integral `∫R = ∫1 = x`** (`native_decide`): the §5.9 feedback integrates the
@@ -222,7 +255,7 @@ overshoots `fₙ = 1/(t−1)` by the hyperexponential residual `R = 1`, so the a
 closes (contrast `nNormInv_landsNormalPart`). -/
 theorem nNormInv_reduced_overshoots :
     CPolyG.checkIdentityG nHyperexpDt
-      (cIntegrateReducedG nHyperexpDt 20 nNormInvA nNormInvD nNormInvCands)
+      (cIntegrateReducedGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands)
       nNormInvA nNormInvD = false := by native_decide
 
 /-- **★ The §5.9 driver lands `∫ 1/(exp x − 1) = log(exp x − 1) − x`, and `D(∫f) = f`** (`native_decide`,
@@ -236,7 +269,7 @@ deliverable: the hyperexponential normal part — built on the §5.9 residual fe
 integral — computes and differentiates back to `f`, completing hyperexponential integration (special §5.10
 + normal §5.9).** -/
 theorem nNormInv_landsNormalPart :
-    (match CPolyG.cIntegrateHyperexpNormalG nHyperexpDt 20 nNormInvA nNormInvD nNormInvCands with
+    (match CPolyG.cIntegrateHyperexpNormalGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands with
       | some res => CPolyG.checkIdentityG nHyperexpDt res nNormInvA nNormInvD
       | none => false) = true := by native_decide
 
@@ -245,7 +278,7 @@ theorem nNormInv_landsNormalPart :
 coefficient `−x ∈ ℚ(x)`) and a single logarithm with argument `t − 1` — i.e. `log(t−1) − x`, the textbook
 antiderivative. Pins the *shape*, not just the derivative identity. -/
 theorem nNormInv_result_is_logTMinus1_minus_x :
-    (match CPolyG.cIntegrateHyperexpNormalG nHyperexpDt 20 nNormInvA nNormInvD nNormInvCands with
+    (match CPolyG.cIntegrateHyperexpNormalGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands with
       | some res =>
         CPolyG.cisZeroG (CPolyG.csubG res.rational.1 [CField.neg nLvl1X])
           && res.logs.length == 1
@@ -296,7 +329,7 @@ antiderivative identity `D(res) = f` (`checkIdentityG`, cleared of denominators 
 special-AND-normal hyperexponential integral computes and differentiates back to `f` — the clean mix that
 was the §5.9 frontier in `ComputableHyperexpSpecial`. -/
 theorem nSpecNorm_full_lands :
-    (match CPolyG.cIntegrateHyperexpFullG nHyperexpDt 24 nSpecNormA nSpecNormD nSpecNormCands with
+    (match CPolyG.cIntegrateHyperexpFullGWf nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
       | some res => CPolyG.checkIdentityG nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = true := by native_decide
 
@@ -349,7 +382,7 @@ true`. The non-constant overshoot the feedback must integrate. -/
 theorem nVarNorm_residual_eq_twoX :
     CField.isZero (CField.sub
       (cHyperexpResidualG (cExpEtaG nVarDt)
-        (cIntegrateReducedG nVarDt 28 nVarNormA nVarNormD nVarNormCands).logs)
+        (cIntegrateReducedGWf nVarDt nVarNormA nVarNormD nVarNormCands).logs)
       nLvl1TwoX) = true := by native_decide
 
 /-- **The non-constant base residual integral `∫R = ∫2x = x²`** (`native_decide`): the §5.9 feedback
@@ -370,7 +403,7 @@ part, returning `log(t−1) − x²` (rational part `−x²`, one log `(1, t−1
 `D(res) = f` (`checkIdentityG`, over ℚ(x)[t]). **The residual feedback handles a genuinely non-constant
 base residual** — the §5.9 reduction is not limited to constant `R`. -/
 theorem nVarNorm_landsNormalPart :
-    (match CPolyG.cIntegrateHyperexpNormalG nVarDt 28 nVarNormA nVarNormD nVarNormCands with
+    (match CPolyG.cIntegrateHyperexpNormalGWf nVarDt nVarNormA nVarNormD nVarNormCands with
       | some res =>
         CPolyG.checkIdentityG nVarDt res nVarNormA nVarNormD
           && CPolyG.cisZeroG (CPolyG.csubG res.rational.1 [CField.neg nLvl1XSq])
