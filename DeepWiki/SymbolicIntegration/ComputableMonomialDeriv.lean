@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableField
 import DeepWiki.SymbolicIntegration.ComputableFieldGcd
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 
 /-! # Computable monomial derivation + `splitFactor` over the differential tower ℚ(x)[t]
@@ -126,20 +127,22 @@ theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldS
 `cSplitFactor Dt fuel p = (pₙ, pₛ)` peels off the special part `pₛ` and the normal part `pₙ` of `p`
 under the monomial derivation `D` (`Dt` the derivative of `t`). The loop: `S = gcd(p, p′) /
 gcd(p, dp/dt)` is the squarefree special factor of the current `p`; if it is constant (`cdegG = 0`)
-the rest is normal, else recurse on `p/S` and accumulate `S` into the special part. Fuel-bounded. -/
+the rest is normal, else recurse on `p/S` and accumulate `S` into the special part. The recursive loop is
+fuel-bounded; its Euclidean leaves are fuel-free. -/
 
 /-- **Computable splitting-factorization loop**: `cSplitFactor Dt fuel p = (pₙ, pₛ)`
 with `pₛ` the special part and `pₙ` the normal part of `p` w.r.t. the monomial derivation `D`
 (`Dt` = `dt/d·`). One step extracts `S = gcd(p, p′)/gcd(p, dp/dt)`; constant `S` ⇒ `p` is normal,
-else recurse on `p/S`. Fuel-bounded; the engine reduces (`native_decide`). -/
+else recurse on `p/S`. The loop is fuel-bounded; the gcd/division leaves are fuel-free and reduce
+under `native_decide`. -/
 def cSplitFactor {α : Type*} [CField α] [CDiffField α] (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
   | 0, p => (p, [CField.one])
   | fuel + 1, p =>
-    let S := cdivG (fuel + 1) (cgcdExtG (fuel + 1) p (cmonomialDeriv Dt p)).1
-      (cgcdExtG (fuel + 1) p (cderivG p)).1
+    let S := cdivWf (cgcdWf p (cmonomialDeriv Dt p)).1
+      (cgcdWf p (cderivG p)).1
     if cdegG S = 0 then (p, [CField.one])
     else
-      let (qn, qs) := cSplitFactor Dt fuel (cdivG (fuel + 1) p S)
+      let (qn, qs) := cSplitFactor Dt fuel (cdivWf p S)
       (qn, cmulG S qs)
 
 end CPolyG

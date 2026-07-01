@@ -54,10 +54,10 @@ The Jacobian group law on Mumford pairs (before reduction). Two extended-gcd ste
 
 /-- **Cantor composition** `cantorCompose fuel ρ D₁ D₂ = D₁ ⊕ D₂` — the hyperelliptic-Jacobian group law
 on Mumford pairs, producing a *semi-reduced* divisor (Cantor 1987; Trager Ch. 6). With
-`d₁ = gcd(u₁, u₂) = e₁u₁ + e₂u₂` (first `cgcdExtG`) and `d = gcd(d₁, v₁ + v₂) = c₁d₁ + c₂(v₁ + v₂)`
-(second `cgcdExtG`), set `s₁ = c₁e₁`, `s₂ = c₁e₂`, `s₃ = c₂` (so `d = s₁u₁ + s₂u₂ + s₃(v₁ + v₂)`); then
-`u = monic(u₁u₂/d²)` and `v = (s₁u₁v₂ + s₂u₂v₁ + s₃(v₁v₂ + ρ))/d mod u`. The exact quotients use `cdivG`
-(`d² ∣ u₁u₂`, `d ∣` the numerator by the Bézout identities), the reduction `cmodG`. Generic over
+`d₁ = gcd(u₁, u₂) = e₁u₁ + e₂u₂` (first `cgcdWf`) and `d = gcd(d₁, v₁ + v₂) = c₁d₁ + c₂(v₁ + v₂)`
+(second `cgcdWf`), set `s₁ = c₁e₁`, `s₂ = c₁e₂`, `s₃ = c₂` (so `d = s₁u₁ + s₂u₂ + s₃(v₁ + v₂)`); then
+`u = monic(u₁u₂/d²)` and `v = (s₁u₁v₂ + s₂u₂v₁ + s₃(v₁v₂ + ρ))/d mod u`. The exact quotients use `cdivWf`
+(`d² ∣ u₁u₂`, `d ∣` the numerator by the Bézout identities), the reduction `cmodWf`. Generic over
 `[CField α]`. -/
 def cantorCompose (_fuel : ℕ) (ρ : CPolyG α) (D₁ D₂ : MumfordDivisor α) : MumfordDivisor α :=
   let u₁ := D₁.u; let v₁ := D₁.v

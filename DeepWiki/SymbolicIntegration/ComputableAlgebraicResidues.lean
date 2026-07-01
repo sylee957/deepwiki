@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalCase2
 import DeepWiki.SymbolicIntegration.ComputableIntegrate
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Algebraic-function integration: the log-part residues (Trager Ch. 5 §2, eq. 7)
 
@@ -102,12 +103,12 @@ def cAlgResidueResultant (fuel : ℕ) (D rho g0 g1 : CPolyG α) : CPolyG α :=
 
 /-! ### Residue membership and the integer-residue failure-test certificate -/
 
-/-- **Residue membership test** `cIsResidue fuel R c = ((Z − c) ∣ R)` — is the value `c ∈ K` a residue,
-i.e. a root of `R(Z)`? Tested by the exact division remainder `cmodG R (Z − c) = 0` (`(Z − c) ∣ R(Z)`).
+/-- **Residue membership test** `cIsResidue _fuel R c = ((Z − c) ∣ R)` — is the value `c ∈ K` a residue,
+i.e. a root of `R(Z)`? Tested by the exact division remainder `cmodWf R (Z − c) = 0` (`(Z − c) ∣ R(Z)`).
 Computable and exact; used to confirm a claimed rational residue (Trager: the roots of `R` are the
 residues divided by their branch orders). Generic over `[CField α]`. -/
-def cIsResidue (fuel : ℕ) (R : CPolyG α) (c : α) : Bool :=
-  cisZeroG (cmodG fuel R [CField.neg c, CField.one])      -- `R mod (Z − c) = 0`
+def cIsResidue (_fuel : ℕ) (R : CPolyG α) (c : α) : Bool :=
+  cisZeroG (cmodWf R [CField.neg c, CField.one])          -- `R mod (Z − c) = 0`
 
 /-- **Integer-residue / factorization certificate** `cResiduesMatch R factors` — does the residue
 resultant `R(Z)` equal, up to a `K`-scalar, the product `∏ (Z − cᵢ)` of the claimed residue linear
