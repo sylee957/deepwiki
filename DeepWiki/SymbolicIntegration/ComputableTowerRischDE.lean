@@ -28,11 +28,9 @@ The clean encoding is a **typeclass-carried base solve**:
   RDE over ℚ(x), `CRischField (QFunNZG (QFunNZG ℚ))` the RDE over ℚ(x)(t₁), … — uniformly, with no
   special-cased `cRationalRDE`.
 
-**★ The headline `native_decide`** solves an RDE `Dy + f·y = g` over the **level-2** field `ℚ(x)(t₁)`
-(`= QFunNZG (QFunNZG ℚ)`) by the recursive oracle — `crischDESolve f g = some y` with `D(y) + f·y = g`
-certified by `native_decide`, the oracle recursing ℚ(x)(t₁) → ℚ(x) → ℚ. Everything stays
-`[CField α]`/`[CDiffField α]`/`[CFieldDomain α]`/`[CRischField α]`-only with `Prop`-erased subtype
-proofs, so nothing noncomputable reaches the native compiler.
+This file keeps the fueled generic §6 oracle and shared level-2 RDE data. The corresponding fuel-free
+`native_decide` validations live in `ComputableTowerRischDEWellFounded` and
+`ComputableRischDESolveSoundWf`.
 
 **Scope.** The generic pipeline implements the **non-cancellation** path and the **primitive/hyperexponential
 cancellation** cases, with the base solve the generic `crischDESolve` over the coefficient field. The §6.6
@@ -578,75 +576,13 @@ theorem cdenomNormalGateG_of_crischDESolve_isSome (f g y : QFunNZG β)
 
 end
 
-/-! ### ★ THE HEADLINE: a LEVEL-2 RDE solved by the recursive oracle (`native_decide`)
+/-! ### Shared level-2 RDE data
 
-The deliverable. We solve a Risch differential equation `Dy + f·y = g` over the **level-2** field
-`ℚ(x)(t₁)` (`= QFunNZG (QFunNZG ℚ) = Lvl2`) by the recursive oracle `CRischField.crischDESolve` —
-`crischDESolve f g = some y` with `D(y) + f·y = g` certified by `native_decide`. The oracle **recurses
-ℚ(x)(t₁) → ℚ(x) → ℚ**: the level-2 call runs `cRischDEG` over `ℚ(x)[t₁]` (monomial `t₁`, `Dt₁ = 1`,
-primitive), whose §6.6 primitive-cancellation branch recurses into the level-1 `crischDESolve` over
-ℚ(x) (running `cRischDEG` over `ℚ[x]`, monomial `x`), bottoming at the constant solve `CRischField ℚ`.
-
-We use two instances. **(a)** `f = 0`, `g = 1`: `Dy = 1`, solved by `y = t₁` (`D(t₁) = 1` at level 2) —
-the cleanest *full* triple-level recursion through the integration branch. **(b)** `f = 1`,
-`g = t₁ + 1`: `Dy + y = t₁ + 1`, solved by `y = t₁` (`D(t₁) + t₁ = 1 + t₁`) — a **non-trivial `f`**
-exercising the cancellation degree-recursion with `lc(c)` driving the base solve. Both certify the
-field-level identity `D(y) + f·y − g = 0` via `CField.isZero` of `CDiffField.cderiv y + f·y − g` over
-Lvl2 (the level-2 derivation `towerDerivQFunNZG [1]`). All instances are `[CField …]`/`[CDiffField …]`/
-`[CRischField …]`-computable with `Prop`-erased subtype proofs, so nothing noncomputable reaches the
-native compiler — `native_decide` reduces, the oracle genuinely running the level-2/level-1 pipelines. -/
+The level-2 right-hand side below is reused by the fuel-free RDE and sound-solver validations. -/
 
 /-- The level-2 right-hand side `g = t₁ + 1 ∈ Lvl2 = ℚ(x)(t₁)` for the non-trivial-`f` headline case
 (`lvl2T1` from `ComputableTowerDeriv` is `t₁`). -/
 def towerRdeLvl2GPlusOne : Lvl2 := CField.add lvl2T1 CField.one
-
-/-- **★ The recursive oracle solves a LEVEL-2 RDE `Dy = 1`, recursing ℚ(x)(t₁) → ℚ(x) → ℚ**
-(`native_decide`, the headline). `crischDESolve (0 : Lvl2) (1 : Lvl2)` over the level-2 field ℚ(x)(t₁)
-returns `some y`, and `y` satisfies `D(y) + 0·y = 1` — checked at the field level by `CField.isZero` of
-`cderiv y + 0·y − 1` (the level-2 derivation `towerDerivQFunNZG [1]`). The oracle recurses through all
-three tower levels: the level-2 §6 pipeline reaches the primitive `b = 0` integration branch giving
-`y = t₁`, with the inner constant solves bottoming at `CRischField ℚ`. **This is the deliverable: a
-Risch-DE solved generically over the depth-2 tower by the recursive oracle.** -/
-theorem towerRdeLvl2_solves_Dy_eq_one :
-    (match CRischField.crischDESolve (CField.zero : Lvl2) (CField.one : Lvl2) with
-      | some y =>
-          CField.isZero
-            (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul CField.zero y)) CField.one)
-      | none => false) = true := by native_decide
-
-/-- **★ The recursive oracle solves a LEVEL-2 RDE with NON-TRIVIAL `f`: `Dy + y = t₁ + 1`**
-(`native_decide`). `crischDESolve (1 : Lvl2) (t₁ + 1)` over ℚ(x)(t₁) returns `some y` with `y = t₁`,
-satisfying `D(y) + 1·y = t₁ + 1` — checked at the field level by `CField.isZero` of
-`cderiv y + 1·y − (t₁+1)`. Here `f = 1 ≠ 0`, so the level-2 §6.6 primitive-cancellation branch drives the
-degree-recursion through the base solve `crischDESolve b₀ (lc c)` (eq. 6.23) into the level-1 oracle over
-ℚ(x) — the cancellation path, not just integration. The depth-2 tower recursion solving a genuine RDE. -/
-theorem towerRdeLvl2_solves_Dy_plus_y_eq_t1_plus_one :
-    (match CRischField.crischDESolve (CField.one : Lvl2) towerRdeLvl2GPlusOne with
-      | some y =>
-          CField.isZero
-            (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul CField.one y))
-              towerRdeLvl2GPlusOne)
-      | none => false) = true := by native_decide
-
-/-- **The level-1 oracle solves `Ds = 1` over ℚ(x)** (`native_decide`): the recursion's middle level.
-`crischDESolve (0 : QFunNZG ℚ) (1 : QFunNZG ℚ)` over ℚ(x) returns `some s` with `D(s) + 0·s = 1`
-(`s = x`), checked by `CField.isZero` of `cderiv s + 0·s − 1` (the ℚ(x) derivation `d/dx`). This is the
-level the level-2 cancellation branch recurses into, itself bottoming at the constant solve. -/
-theorem towerRdeLvl1_solves_Ds_eq_one :
-    (match CRischField.crischDESolve (CField.zero : QFunNZG ℚ) (CField.one : QFunNZG ℚ) with
-      | some s =>
-          CField.isZero
-            (CField.sub (CField.add (CDiffField.cderiv s) (CField.mul CField.zero s)) CField.one)
-      | none => false) = true := by native_decide
-
-/-- **The constant base `CRischField ℚ` is reached and correct** (`native_decide`): the bottoming-out
-solve. `crischDESolve (2 : ℚ) (6 : ℚ)` over ℚ (`D = 0`, so `2·y = 6`) returns `some 3` — the linear
-solve `y = g/f` the whole tower recursion ultimately rests on. -/
-theorem towerRde_constBase :
-    CRischField.crischDESolve (2 : ℚ) (6 : ℚ) = some 3 := by native_decide
-
-#print axioms towerRdeLvl2_solves_Dy_eq_one
-#print axioms towerRdeLvl2_solves_Dy_plus_y_eq_t1_plus_one
 
 /-! ## STRETCH — the full poly/special integration driver `cIntegrateGFull` (Bronstein §5.4)
 

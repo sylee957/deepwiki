@@ -660,9 +660,31 @@ theorem towerRdeGWf_solves_Dy_eq_one :
           cisZeroG (csubG lhs rhs)
       | none => false) = true := by native_decide
 
+open CPolyG in
+/-- **The generic fuel-free RDE oracle solves `Dy + y = t₁ + 1` over ℚ(x)(t₁), fuel-free**
+(`native_decide`): this exercises the primitive-cancellation branch of `cRischDEGWf` with nonzero
+coefficient `f = 1`, returning a solution whose cleared RDE identity holds. -/
+theorem towerRdeGWf_solves_Dy_plus_y_eq_t1_plus_one :
+    (match cRischDEGWf towerRdeGWfDt [CField.one] [CField.one]
+        [CField.one, CField.one] [CField.one] with
+      | some (ynum, yden) =>
+          let Dyn := cmonomialDeriv towerRdeGWfDt ynum
+          let Dyd := cmonomialDeriv towerRdeGWfDt yden
+          let fnum : CPolyG (QFunNZG ℚ) := [CField.one]
+          let fden : CPolyG (QFunNZG ℚ) := [CField.one]
+          let gnum : CPolyG (QFunNZG ℚ) := [CField.one, CField.one]
+          let gden : CPolyG (QFunNZG ℚ) := [CField.one]
+          let lhs := caddG
+            (cmulG (cmulG gden fden) (csubG (cmulG Dyn yden) (cmulG ynum Dyd)))
+            (cmulG (cmulG (cmulG gden fnum) ynum) yden)
+          let rhs := cmulG (cmulG gnum fden) (cmulG yden yden)
+          cisZeroG (csubG lhs rhs)
+      | none => false) = true := by native_decide
+
 -- The headline fuel-free RDE-oracle bridge carries only the standard axioms (no fuel, no `sorry`);
 -- the `native_decide` smoke test carries `Lean.ofReduceBool` separately.
 #print axioms CPolyG.cRischDEGWf_eq
 #print axioms towerRdeGWf_solves_Dy_eq_one
+#print axioms towerRdeGWf_solves_Dy_plus_y_eq_t1_plus_one
 
 end DeepWiki.SymbolicIntegration
