@@ -45,7 +45,7 @@ The root↔residue `resultant_eq_prod_eval` product-form hypothesis: the engine-
   `roots_{,gen}ResidueResultant_eq_residues`; the abstract roots↔residues core is proven, the per-node
   `resultant_eq_prod_eval` instantiation is the mechanical residual `[deferred]`.
 Per-step eq.-11 quotient identity for the GENERAL curve: `generalReduceRationalTelescopeWf` is proven GIVEN
-  each step's coupled eq.-11 congruence `mk(afDeriv cⱼ) = mk Lⱼ − mk Lⱼ₊₁` (Trager Ch. 4); discharging it
+  each step's coupled eq.-11 congruence `mk(afDerivWf cⱼ) = mk Lⱼ − mk Lⱼ₊₁` (Trager Ch. 4); discharging it
   for a concrete general (non-radical) eq.-11 run is the residual `[deferred]`. (The radical per-step
   `K`-equation IS discharged for the literal `qxOfNum`-coefficient lifts — catalog
   `Sources.Hdl_1721_1_15391.IntegrateFull` / `AppendixA`.) -/
@@ -150,23 +150,20 @@ abbrev sound_radCapstone := @RadElem.isAlgebraicIntegral_of_parts
 
 /-! ## The general-curve derivation is a derivation (Ch. 2–4, implicit `y' = −f_x/f_y`) -/
 
-/-- **★ The general-derivation keystone** `mk_toPolyG_afDeriv` (Trager, Chapters 2–4): for an arbitrary
-monic curve `f`, `afDeriv fuel f` realizes Mathlib's `implicitDeriv (toPolyG yprime)` in the quotient `K[X]
-⧸ (toPolyG f)`, with `yprime = afYprime fuel f = −f_x·f_y⁻¹` — the implicit-function-theorem total
-derivative (the general analogue of the radical's diagonal `y' = ℓ·y`). The source of the general
-additivity and Leibniz. -/
-abbrev sound_afDeriv_keystone := @CPolyG.mk_toPolyG_afDeriv
+/-- **★ The fuel-free general-derivation keystone** `mk_toPolyG_afDerivWf` (Trager, Chapters 2–4): for an
+arbitrary monic curve `f`, `afDerivWf f` realizes Mathlib's `implicitDeriv (toPolyG yprime)` in the quotient
+`K[X] ⧸ (toPolyG f)`, with `yprime = afYprimeWf f = −f_x·f_y⁻¹` — the implicit-function-theorem total
+derivative without an external fuel parameter. -/
+abbrev sound_afDeriv_keystone := @CPolyG.mk_toPolyG_afDerivWf
 
-/-- **★ `afDeriv` is additive** `mk_toPolyG_afDeriv_add` (Trager, Chapters 2–4): the general curve
-derivation commutes with `caddG` in the quotient `K[X] ⧸ (toPolyG f)` — the ℤ-linearity of `implicitDeriv`,
-the clean floor (every `afDeriv` law is a quotient statement, since `afDeriv` folds `mod f`). -/
-abbrev sound_afDeriv_add := @CPolyG.mk_toPolyG_afDeriv_add
+/-- **★ `afDerivWf` is additive** `mk_toPolyG_afDerivWf_add` (Trager, Chapters 2–4): the general curve
+derivation commutes with `caddG` in the quotient `K[X] ⧸ (toPolyG f)`. -/
+abbrev sound_afDeriv_add := @CPolyG.mk_toPolyG_afDerivWf_add
 
-/-- **★ `afDeriv` is Leibniz** `mk_toPolyG_afDeriv_afMul` (Trager, Chapters 2–4): the product rule for
-`afMul` in the carrier `K[X] ⧸ (toPolyG f)`, valid when the curve is **separable** (`gcd(f, f_y)` a nonzero
-constant, so `f_y` is a unit) — the crux is the general consistency relation `f_x + f_y·y' = 0`. The
-general-curve product-rule derivation axiom. -/
-abbrev sound_afDeriv_mul := @CPolyG.mk_toPolyG_afDeriv_afMul
+/-- **★ `afDerivWf` is Leibniz** `mk_toPolyG_afDerivWf_afMul` (Trager, Chapters 2–4): the product rule for
+`afMul` in the carrier `K[X] ⧸ (toPolyG f)`, valid when the fuel-free gcd of `f_y` and `f` is a nonzero
+constant. -/
+abbrev sound_afDeriv_mul := @CPolyG.mk_toPolyG_afDerivWf_afMul
 
 /-! ## The general-curve rational-part soundness `D(v) = g` (Ch. 4, eq.-11 reduction) -/
 
@@ -225,8 +222,8 @@ abbrev sound_genLogSoundness := @CPolyG.isGeneralLogIntegralWf_of_residue_match
 
 /-- **The full general algebraic-integral soundness predicate** `IsGeneralAlgebraicIntegralWf f g v
 commonDenom args cofs` (Trager, Chapter 4 + Chapter 5): the unified general integrator's output `(v, args)`
-is a correct antiderivative of `g` over `K(x)[y]/(f)` — `D(v + Σ cᵢ log uᵢ) = g`, splitting `afDeriv(v) + Σ
-cᵢ·afDeriv(uᵢ)/uᵢ` cross-multiplied by `commonDenom` in the carrier quotient. The general analogue of
+is a correct antiderivative of `g` over `K(x)[y]/(f)` — `D(v + Σ cᵢ log uᵢ) = g`, splitting `afDerivWf(v) + Σ
+cᵢ·afDerivWf(uᵢ)/uᵢ` cross-multiplied by `commonDenom` in the carrier quotient. The general analogue of
 `IsAlgebraicIntegral`. -/
 abbrev sound_genCapstonePredicate := @CPolyG.IsGeneralAlgebraicIntegralWf
 
