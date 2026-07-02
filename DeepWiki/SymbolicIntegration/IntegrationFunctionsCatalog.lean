@@ -64,7 +64,8 @@ only; it states no new mathematics.
   itself and routes the inner §6 solve through `cRischDEGWf`. Soundness: `crischDESolveSoundWf_field`, under
   the direct Wf soundness certificate `RischDESoundnessWf`. Completeness/decision procedure:
   `crischDESolveSoundWf_isDecisionProcedure`, modulo the Wf-native `RischDEDecisionProcedureFrontierWf` and
-  `RischDESoundnessWf`.
+  `RischDESoundnessWf`. The Wf field frontier can be assembled directly from the Wf inner residual-tip
+  frontier by `decisionProcedureFrontierWf_of_innerFrontier`.
   The older fueled `crischDESolveSound` remains documented for comparison; the public decision theorem uses
   the Wf solver and direct Wf soundness certificate.
 
@@ -143,15 +144,18 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 -- `crischDESolveSoundWf`: the fuel-free sound RDE solver and its Wf-native decision wrapper.
 #check @crischDESolveSoundWf_field
 #check @RischDEDecisionProcedureFrontierWf
+#check @decisionProcedureFrontierWf_of_innerFrontier
 #check @crischDESolveSoundWf_isDecisionProcedure
 
 -- ★ The TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): the old class-oracle
 -- step `crischFieldComplete_step` is still available for `CRischField.crischDESolve`, and the public Wf step
 -- `crischFieldCompleteWf_step` targets `crischDESolveSoundWf` directly, modulo the Wf per-level frontier
--- `RischDEStepFrontierWf` and direct Wf soundness certificates. Separate completeness frontiers, NOT bridged:
--- the tower-case `NondegenerateLog` (multi-level ℚ-linear-dependence structure theorem; the rational base is
--- done, `nondegenerateLog_ratFunc_iff_logDeriv_ne_zero`), the exponential Liouville instance (off-limits), and
--- the tangent §5.10 reduction (a separate engine).
+-- `RischDEStepFrontierWf` and direct Wf soundness certificates. The Wf per-level frontier now exposes the
+-- Wf inner residual-tip frontier and uses `decisionProcedureFrontierWf_of_innerFrontier` to assemble the
+-- field-level decision frontier. Remaining non-RDE completeness frontiers are separate: the tower-case
+-- `NondegenerateLog` (multi-level ℚ-linear-dependence structure theorem; the rational base is done,
+-- `nondegenerateLog_ratFunc_iff_logDeriv_ne_zero`), the exponential Liouville instance (off-limits), and the
+-- tangent §5.10 reduction (a separate engine).
 #check @crischFieldComplete_Q
 #check @crischFieldComplete_step
 #check @RischDEStepFrontierWf
