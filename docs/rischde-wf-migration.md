@@ -151,7 +151,15 @@ as the final gate. Every new `Sources/*` module must be imported into `Sources.l
 > mirror-port of the named fuel'd template in `RischDE/TowerCorrectG.lean`; no Wf version or `_eq` bridge
 > exists yet, so port proof-by-proof):
 > 1. `cPolyRischDENoCancelGWf_cleared_identity` ← `cPolyRischDENoCancelG_cleared_identity_gen`
->    (`cPolyRischDENoCancelGWf` in `Tower/WellFounded.lean:410` mirrors `cPolyRischDENoCancelG`).
+>    (`cPolyRischDENoCancelGWf` in `Tower/WellFounded.lean:410` mirrors `cPolyRischDENoCancelG`). The MATH
+>    mirrors verbatim (base `c=0`; recursive `q = caddG p qrec`, `linear_combination ihrec` after
+>    `toPolyG_c'` expansion). The ONLY friction is the `.induct` plumbing: the fuel'd proof is
+>    `induction fuel`; the Wf one needs `cPolyRischDENoCancelGWf.induct` which generates **5 cases** and
+>    — because the `else` branch has a `let m : ℤ` — binds that `m` among the case hypotheses, so
+>    positional `rename_i` counts differ per case. RECOMMEND: use `fun_induction` (Lean 4.31) or first
+>    `#check @cPolyRischDENoCancelGWf.induct` to read the exact case arities before writing `rename_i`;
+>    unfold each branch with `cPolyRischDENoCancelGWf.eq_def` + `if_pos`/`if_neg` (pattern:
+>    `FuelFreeGcd.lean:115` `toPolyG_cdivmodWf` via `cdivmodWf.induct`).
 > 2. `cSPDEGWf_cleared_lifting_of_inputs` + `cSPDEGWf_polyRischDENoCancel_cleared_at_boundDegree`
 >    ← `cSPDEG_cleared_lifting_of_inputs_gen` (`TowerCorrectG:…`) + `…_at_boundDegree_gen`
 >    (`TowerCorrectG:434`). Uses (1) + the `CSPDEGClearedInputsGen` hypothesis (open-spec kernel — stays
