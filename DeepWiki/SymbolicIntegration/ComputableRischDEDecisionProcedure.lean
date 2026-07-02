@@ -167,9 +167,7 @@ structure RischDEInnerDecisionFrontierWf (Dt fnum fden gnum gden : CPolyG α) : 
 theorem rischDEInnerCompletenessWf_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
     (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
-  rischDEInnerCompletenessWf_of_norm_bound_solve Dt fnum fden gnum gden
-    h.hnorm (hboundWf_of_cancellationResidualWf Dt fnum fden gnum gden h.hbound)
-    (hsolveWf_of_exhaustiveResidualWf Dt fnum fden gnum gden h.hsolve)
+  rischDEInnerCompletenessWf_of_residuals Dt fnum fden gnum gden h.hnorm h.hbound h.hsolve
 
 /-- The Wf inner frontier yields fuel-free inner-solver success on polynomial-solvable inputs. -/
 theorem cRischDEGWf_isSome_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
