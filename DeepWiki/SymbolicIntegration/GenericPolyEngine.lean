@@ -280,7 +280,7 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
     toPolyG (a :: p) = Polynomial.C (CFieldSpec.toK a) + X * toPolyG p := rfl
 
 /-- `toPolyG` is **additive**: `caddG` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
-theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+@[simp] theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (caddG p q) = toPolyG p + toPolyG q := by
   induction p generalizing q with
   | nil => simp [caddG]
@@ -292,7 +292,7 @@ theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α)
       ring
 
 /-- `toPolyG` commutes with **negation**: `toPolyG (cnegG p) = − toPolyG p`. -/
-theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+@[simp] theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     toPolyG (cnegG p) = - toPolyG p := by
   induction p with
   | nil => simp [cnegG]
@@ -301,12 +301,12 @@ theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_neg, map_neg]; ring
 
 /-- `toPolyG` realizes **subtraction**: `toPolyG (csubG p q) = toPolyG p − toPolyG q`. -/
-theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+@[simp] theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (csubG p q) = toPolyG p - toPolyG q := by
   rw [csubG, toPolyG_caddG, toPolyG_cnegG, sub_eq_add_neg]
 
 /-- `toPolyG` realizes **scalar multiplication**: `toPolyG (cscaleG c p) = C (toK c) · toPolyG p`. -/
-theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPolyG α) :
+@[simp] theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPolyG α) :
     toPolyG (cscaleG c p) = Polynomial.C (CFieldSpec.toK c) * toPolyG p := by
   induction p with
   | nil => simp [cscaleG]
@@ -315,7 +315,7 @@ theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : C
     rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_mul, map_mul]; ring
 
 /-- `toPolyG` realizes the **degree shift**: `toPolyG (cshiftG k p) = X^k · toPolyG p`. -/
-theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : CPolyG α) :
+@[simp] theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : CPolyG α) :
     toPolyG (cshiftG k p) = X ^ k * toPolyG p := by
   induction k with
   | zero => simp [cshiftG]
@@ -324,7 +324,7 @@ theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : 
     rw [toPolyG_cons, ih, CFieldSpec.toK_zero, map_zero]; ring
 
 /-- `toPolyG` is **multiplicative**: `cmulG` realizes `(CFieldSpec.K α)[X]` multiplication. -/
-theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+@[simp] theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (cmulG p q) = toPolyG p * toPolyG q := by
   induction p with
   | nil => simp [cmulG]
@@ -334,7 +334,7 @@ theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α)
       map_zero]; ring
 
 /-- `toPolyG` realizes the **`ℕ`-power**: `toPolyG (cpowG p n) = (toPolyG p) ^ n`. -/
-theorem toPolyG_cpowG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (n : ℕ) :
+@[simp] theorem toPolyG_cpowG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (n : ℕ) :
     toPolyG (cpowG p n) = (toPolyG p) ^ n := by
   induction n with
   | zero => simp [cpowG, toPolyG_cons, CFieldSpec.toK_one]
