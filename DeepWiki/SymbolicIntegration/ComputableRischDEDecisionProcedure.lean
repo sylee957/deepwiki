@@ -16,21 +16,21 @@ into a single crisp, citable statement:
   solver returns `some` **iff** the RDE is solvable —
   `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`.
 
-**The consolidated frontier (`RischDEDecisionProcedureFrontierWf`).** The completeness direction reduces to the
-field-level residual `RischDECompletenessResidualWf f g` (the unit
-`crischDESolveSoundWf_decides_of_residualWf` consumes), whose three clauses are the §6 converse facts the
-engine does not self-certify:
+**The consolidated frontier (`RischDEDecisionProcedureFrontierWf`).** The completeness direction is stated
+through the fuel-free field-level stages: the Wf weak-normalizer clauses, the Wf inner input passed to
+`crischDERawSolveWf`, the Wf inner-completeness proof for that input, and the returned-denominator guard
+needed to lift a successful `cRischDEGWf` run through the raw wrapper:
 
 | clause | §6 stage | what a solvable RDE must clear | route to a proof |
 |---|---|---|---|
-| `hwn`  | §6.1 weak-normalizer | `cWeakNormalizerG … ≠ 0` | `WeakNormalizer` never vanishes on a solution |
+| `hwn`  | §6.1 weak-normalizer | `cWeakNormalizerGWf … ≠ 0` | `WeakNormalizer` never vanishes on a solution |
 | `hck`  | §6.1 normality | `cisCanonNormalizedG f̃ = true` | contrapositive of the unsoundness witness |
-| `hinner` | §6.2–6.6 inner solve | the lowest-terms inner solve returns `some` | the three deepest tips below |
+| `hinner` | §6.2-6.6 inner solve | `RischDEInnerCompletenessWf` for the Wf inner input | the three deepest tips below |
 
 The single deep clause `hinner` is itself the composite of the **three irreducible §6 residuals** named by
 this arc — one per §6 stage, each carrying its Bronstein theorem and its actionable proof route. They are
 recorded in `RischDEDecisionProcedureFrontierWf` (and the `## Summary map` below), exactly the deepest tips of
-the proven decomposition `rischDEInnerCompleteness_of_residuals`:
+the proven decompositions `rischDEInnerCompleteness_of_residuals` and `RischDEInnerCompletenessWf`:
 
 | residual (deepest tip) | clause it discharges | Bronstein | route | proven below it |
 |---|---|---|---|---|
@@ -138,7 +138,7 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 
 end InnerFrontier
 
-/-! ## Wf inner input and expanded Wf frontier
+/-! ## Wf inner input and decision frontier
 
 The field-level Wf residual uses the weak-normalized, reduced pair passed to `crischDERawSolveWf`. Naming that
 pair lets the decision-procedure frontier talk about the inner `cRischDEGWf` proof obligation directly, without
@@ -163,11 +163,12 @@ end InnerInputWf
 The field-level decision procedure now targets `crischDESolveSoundWf`, the fuel-free executable wrapper.
 `crischDESolveSoundWf_decides_of_residualWf` consumes the Wf-native residual
 `RischDECompletenessResidualWf f g`, whose clauses are stated directly against `cWeakNormalizerGWf` and
-`crischDERawSolveWf`. We bundle that residual as the field-level frontier and state the capstone:
+`crischDERawSolveWf`. The public frontier below states those clauses through the Wf inner input and
+`RischDEInnerCompletenessWf`, then derives the residual consumed by the capstone:
 `some ⟺ solvable` for the fuel-free solver. The completeness direction is Wf-native; the soundness direction
-still carries the existing Wf/fueled agreement hypotheses until the soundness layer is fully re-proved
-without the fueled transfer. The deep inner clause reduces — one tower level down — to the three named §6
-tips of `RischDEInnerDecisionFrontier`. -/
+still carries the existing Wf/fueled agreement hypotheses until the soundness layer is fully re-proved without
+the fueled transfer. The deep inner clause reduces — one tower level down — to the three named §6 tips of
+`RischDEInnerDecisionFrontier`. -/
 
 section Capstone
 
@@ -175,12 +176,12 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
   [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **Expanded Wf decision-procedure frontier** `RischDEDecisionProcedureStageFrontierWf f g`: a field-level
-frontier whose inner clause is stated through the fuel-free inner API. Besides the two §6.1 completeness
-clauses (`hwn`, `hck`), it supplies a polynomial solution for the Wf inner input, a
+/-- **The Wf decision-procedure frontier** `RischDEDecisionProcedureFrontierWf f g`: a field-level frontier
+whose inner clause is stated through the fuel-free inner API. Besides the two §6.1 completeness clauses
+(`hwn`, `hck`), it supplies a polynomial solution for the Wf inner input, a
 `RischDEInnerCompletenessWf` proof for that input, and the denominator guard needed to lift
 `cRischDEGWf = some _` through `crischDERawSolveWf`. -/
-structure RischDEDecisionProcedureStageFrontierWf (f g : QFunNZG β) : Prop where
+structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
   /-- §6.1/Wf: a solvable RDE has a nonzero fuel-free weak normalizer. -/
   hwn : FieldRDESolvable f g →
     CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
@@ -210,10 +211,10 @@ structure RischDEDecisionProcedureStageFrontierWf (f g : QFunNZG β) : Prop wher
       CPolyG.cisZeroG yden = false
 
 omit [CTowerGcdWitness β] in
-/-- **The expanded Wf frontier produces the Wf completeness residual**: the `hinner` residual clause is
+/-- **The Wf frontier produces the Wf completeness residual**: the `hinner` residual clause is
 obtained by feeding `RischDEInnerCompletenessWf` through the raw fuel-free solver bridge. -/
-theorem residualWf_of_stageFrontierWf (f g : QFunNZG β)
-    (h : RischDEDecisionProcedureStageFrontierWf f g) :
+theorem residualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
+    (h : RischDEDecisionProcedureFrontierWf f g) :
     RischDECompletenessResidualWf f g where
   hwn hsol := h.hwn hsol
   hck hsol := h.hck hsol
@@ -221,15 +222,6 @@ theorem residualWf_of_stageFrontierWf (f g : QFunNZG β)
     simpa [rischDEInnerInputWf] using
       (crischDERawSolveWf_isSome_of_innerCompletenessWf (rischDEInnerInputWf f g).1
         (rischDEInnerInputWf f g).2 (h.hinner hsol) (h.hpolysol hsol) (h.hden hsol))
-
-/-- **★ The Wf field-level decision-procedure frontier** `RischDEDecisionProcedureFrontierWf f g`: the
-precise residual under which `crischDESolveSoundWf` is a verified decision procedure for the field-level
-Risch DE. Its single field is `RischDECompletenessResidualWf f g` — the §6 converse content stated directly
-against the fuel-free weak normalizer and fuel-free inner solve. A `Prop`-bundle of stated assumptions,
-NO `sorry`; the citable fuel-free frontier of the RDE decision procedure. -/
-structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
-  /-- The Wf §6 completeness residual: the three field-level converse clauses (`hwn`/`hck`/`hinner`). -/
-  residual : RischDECompletenessResidualWf f g
 
 /-- **★★ The CAPSTONE — `crischDESolveSoundWf` is a VERIFIED DECISION PROCEDURE**
 (`crischDESolveSoundWf_isDecisionProcedure`): under the Wf-native frontier
@@ -246,18 +238,8 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_decides_of_residualWf f g h.residual hfit hqwn hwf
-
-/-- **Decision procedure from the expanded Wf stage frontier**: the same capstone as
-`crischDESolveSoundWf_isDecisionProcedure`, but with the completeness residual assembled from
-`RischDEDecisionProcedureStageFrontierWf` and `RischDEInnerCompletenessWf`. -/
-theorem crischDESolveSoundWf_isDecisionProcedure_of_stageFrontierWf (f g : QFunNZG β)
-    (h : RischDEDecisionProcedureStageFrontierWf f g) (hfit : InputFitsFuel f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hwf : SoundWfInnerRegular f g) :
-    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_decides_of_residualWf f g (residualWf_of_stageFrontierWf f g h) hfit hqwn hwf
+  crischDESolveSoundWf_decides_of_residualWf f g
+    (residualWf_of_decisionProcedureFrontierWf f g h) hfit hqwn hwf
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
@@ -273,18 +255,6 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_isDecisionProcedure f g h hfit hqwn hwf
-
--- ★ The expanded Wf stage frontier also gives the same decision statement, with the inner clause routed
--- through `RischDEInnerCompletenessWf` and `crischDERawSolveWf`.
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
-    [Algebra ℚ (CFieldSpec.K β)]
-    (f g : QFunNZG β) (h : RischDEDecisionProcedureStageFrontierWf f g) (hfit : InputFitsFuel f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hwf : SoundWfInnerRegular f g) :
-    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_isDecisionProcedure_of_stageFrontierWf f g h hfit hqwn hwf
 
 end Capstone
 
@@ -315,8 +285,9 @@ Wf-native §6 residual and the current Wf/fueled agreement hypotheses used by so
 
 `rischDEInnerCompleteness_of_decisionFrontier` assembles these three into `RischDEInnerCompleteness` (the deep
 `hinner` content) via the proven `rischDEInnerCompleteness_of_residuals`; the Wf field-level capstone consumes
-the §6.1 `hwn`/`hck` + `hinner` through `RischDECompletenessResidualWf`. The cross-level lift of the inner
-completeness into the Wf `hinner` clause is the documented continuation. -/
+the §6.1 `hwn`/`hck` plus the Wf inner-input clauses through `RischDECompletenessResidualWf`. The cross-level
+lift of inner completeness into the Wf raw-solver `hinner` clause is encoded in
+`residualWf_of_decisionProcedureFrontierWf`. -/
 
 /-! ### Axiom audit (the Wf capstone and the three-residual assembly are axiom-clean;
 NO `native_decide`, NO `sorry`) -/
