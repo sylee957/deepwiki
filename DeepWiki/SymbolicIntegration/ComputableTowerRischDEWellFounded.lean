@@ -144,7 +144,7 @@ end CPolyG
 
 /-! ## Part 2 — internal bridges of the three recursive bottoms to their fuel'd `…G` originals
 
-Like the integration fuel-free bottoms (`cSqfreeYunFFGgoWf_eq`), the cancellation bridges carry
+Like the integration fuel-free bottoms, the cancellation bridges carry
 `[CFieldSpec α]` (so the fuel'd
 ops reduce) and take a **fuel-regularity predicate** that mirrors the fuel'd recursion with a step budget and
 the per-step WF-guard / base-solve agreement built in. The cancellation own-loops use **no** fuel-bearing

@@ -143,7 +143,7 @@ variable {B : Type*} [CField B]
 /-- **`gbprimitivePartCore` is `gbnormCore`-invariant in its polynomial argument**
 `gbprimitivePartCore cgcdB (gbnormCore p) = gbprimitivePartCore cgcdB p` (it normalizes its
 argument internally, `gbnormCore_idem`). Reconciles the WF kernel's normalized base with the recursive one. -/
-theorem gbprimitivePartCore_gbnorm (cgcdB : CPolyG B → CPolyG B → CPolyG B)
+private theorem gbprimitivePartCore_gbnorm (cgcdB : CPolyG B → CPolyG B → CPolyG B)
     (p : GBPolyCore B) :
     gbprimitivePartCore cgcdB (gbnormCore p) = gbprimitivePartCore cgcdB p := by
   rw [gbprimitivePartCore, gbprimitivePartCore, gbnormCore_idem]
@@ -154,7 +154,7 @@ fuel), `cprimPRSgcdGenCoreWf cgcdB P Q = cprimPRSgcdGenCore cgcdB fuel P Q`. The
 here; the WF kernel carries none. By induction on the `CPrimPRSGenRegular` derivation: at a `stop` node both
 return `gbprimitivePartCore cgcdB (gbnormCore P)`; at a `step` node both take the same next PRS node `r`
 and recurse — the WF guard fires (`hguard`) and the fuel'd version (at `fuel+1`) descends. -/
-theorem cprimPRSgcdGenCoreWf_eq (cgcdB : CPolyG B → CPolyG B → CPolyG B) :
+private theorem cprimPRSgcdGenCoreWf_eq (cgcdB : CPolyG B → CPolyG B → CPolyG B) :
     ∀ (fuel : ℕ) (P Q : GBPolyCore B), CPrimPRSGenRegular cgcdB fuel P Q →
       cprimPRSgcdGenCoreWf cgcdB P Q = cprimPRSgcdGenCore cgcdB fuel P Q := by
   intro fuel P Q hreg
@@ -427,12 +427,12 @@ def cIntegrateReducedGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
 
 end CPolyG
 
-/-! ## Part 4 — bridges of the recursive bottoms `cSqfreeYunFFGgoWf` / `cSplitFactorFastGWf`
+/-! ## Part 4 — internal bridges of the recursive bottoms `cSqfreeYunFFGgoWf` / `cSplitFactorFastGWf`
 
 The two recursive bottoms get bridges to their fuel'd `…G` originals. The bridges carry the per-node
-`cgcdFFCoreWf = cgcdFFCore fuel` agreement (which itself threads `cprimPRSgcdGenCoreWf_eq` through every
-tower level) as a hypothesis in the regularity gate. Exact division leaves are already fuel-free on both
-sides, so no division-fuel bookkeeping remains here. -/
+`cgcdFFCoreWf = cgcdFFCore fuel` agreement (proved internally through the primitive-PRS bridge at every tower
+level) as a hypothesis in the regularity gate. Exact division leaves are already fuel-free on both sides, so
+no division-fuel bookkeeping remains here. -/
 
 namespace CPolyG
 
@@ -445,7 +445,7 @@ running poly `b` (`cdegG b = 0`), or `step` (budget `n+1`) when the per-step fue
 fuel'd ops — the gcd `cgcdFFCoreWf b d = cgcdFFCore fuel b d` (`hgcd`, the `CgcdFFNodeReg` role) and the two
 exact divisions `cdivWf b p`/`cdivWf d p` are reduced (`(cnormG b).length ≤ fuel`, `(cnormG d).length ≤
 fuel-free exact divisions — and the same holds recursively on the quotient within budget `n`. -/
-inductive CSqfreeYunGoGenRegular (fuel : ℕ) : ℕ → CPolyG α → CPolyG α → Prop
+private inductive CSqfreeYunGoGenRegular (fuel : ℕ) : ℕ → CPolyG α → CPolyG α → Prop
   /-- terminal node: the running poly `b` is constant, the loop stops (any remaining budget). -/
   | stop {n : ℕ} {b d : CPolyG α} (hdeg : cdegG b = 0) : CSqfreeYunGoGenRegular fuel n b d
   /-- recursive node: `b` non-constant, the per-step leaves match the fuel'd ops, recurse within budget. -/
@@ -463,7 +463,7 @@ carries none. By induction on the regularity predicate (the step budget is the g
 the multiplicity counter), generalizing `fo`: at a constant `b` both stop; else the step's WF leaves match
 the only non-definitional leaf is the per-node gcd agreement `hgcd`, and the IH applies within budget
 `n ≤ fo − 1`. -/
-theorem cSqfreeYunFFGgoWf_eq (fuel : ℕ) : ∀ (n : ℕ) (b d : CPolyG α),
+private theorem cSqfreeYunFFGgoWf_eq (fuel : ℕ) : ∀ (n : ℕ) (b d : CPolyG α),
     CSqfreeYunGoGenRegular fuel n b d → ∀ (fo : ℕ), n ≤ fo →
       cSqfreeYunFFGgoWf fo b d = cSqfreeYunFFGgo fuel fo b d := by
   intro n b d hreg
@@ -493,7 +493,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCor
 `S = cdivWf (cgcdFFCore (fuel+1) p (cmonomialDeriv Dt p)) (cgcdFFCore (fuel+1) p (cderivG p))` is the
 inline `cSplitFactorFastG` step after exact divisions became fuel-free. Only the two `cgcdFFCore` calls
 need bridge hypotheses. -/
-theorem cstepGWf_eq (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α)
+private theorem cstepGWf_eq (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α)
     (hgcdN : CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p)
       = CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
     (hgcdD : CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
@@ -511,7 +511,7 @@ theorem cstepGWf_eq (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α)
 and strictly drops the normalized length (`(cnormG (cdivWf p S)).length < (cnormG p).length` — the WF
 guard), with the same holding recursively on `p/S`. The transparent per-node preconditions a real split run
 satisfies. -/
-inductive CSplitFactorGenRegular (Dt : CPolyG α) : ℕ → CPolyG α → Prop
+private inductive CSplitFactorGenRegular (Dt : CPolyG α) : ℕ → CPolyG α → Prop
   /-- terminal node: the special-factor step `S` (matched to the fuel'd inline by `hgcd*`) is constant. -/
   | stop {fuel : ℕ} {p : CPolyG α}
       (hgcdN : CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p)
@@ -534,7 +534,7 @@ inductive CSplitFactorGenRegular (Dt : CPolyG α) : ℕ → CPolyG α → Prop
 `cstepGWf Dt p` (under the step agreements, `cstepGWf_eq`): the loop body is the `if cdegG S = 0` branch on
 `S = cstepGWf Dt p`, recursing on the fuel-free quotient `cdivWf p S`. Folds the inline
 `cdivWf … (cgcdFFCore …) (cgcdFFCore …)` back to `cstepGWf` for a clean case split. -/
-theorem cSplitFactorFastG_succ_shape (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α)
+private theorem cSplitFactorFastG_succ_shape (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α)
     (hgcdN : CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p)
       = CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
     (hgcdD : CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
@@ -555,7 +555,7 @@ sufficient fuel), `cSplitFactorFastGWf Dt p = cSplitFactorFastG Dt fuel p`. The 
 here; the WF loop carries none. By induction on the `CSplitFactorGenRegular` derivation: each node abstracts
 the inline `S` as `cstepGWf` (`cSplitFactorFastG_succ_shape`); at `stop` both return `(p, [one])`; at
 `step` the WF guard fires (`hguard`) and the `G` version descends on the same fuel-free quotient. -/
-theorem cSplitFactorFastGWf_eq (Dt : CPolyG α) :
+private theorem cSplitFactorFastGWf_eq (Dt : CPolyG α) :
     ∀ (fuel : ℕ) (p : CPolyG α), CSplitFactorGenRegular Dt fuel p →
       cSplitFactorFastGWf Dt p = cSplitFactorFastG Dt fuel p := by
   intro fuel p hreg
