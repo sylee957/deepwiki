@@ -144,17 +144,17 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @RischDEDecisionProcedureFrontierWf
 #check @crischDESolveSoundWf_isDecisionProcedure
 
--- ★ The TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): `CRischFieldComplete`
--- (the per-level oracle returns `some` on every solvable RDE) holds at EVERY tower level — base ℚ
--- (`crischFieldComplete_Q`, axiom-clean) + the inductive step (`crischFieldComplete_step`), modulo the honest
--- per-level frontier `RischDEStepFrontier` (the genuine Bronstein §6 side conditions that correctly STAY
--- hypotheses: §6.1/6.2 k⟨t⟩-normalization, §6.3 log-derivative oracle, fuel sufficiency, no-top-cancellation,
--- base-oracle agreement). Separate completeness frontiers, NOT bridged: the tower-case `NondegenerateLog`
--- (multi-level ℚ-linear-dependence structure theorem; the rational base is done,
--- `nondegenerateLog_ratFunc_iff_logDeriv_ne_zero`), the exponential Liouville instance (off-limits), and the
--- tangent §5.10 reduction (a separate engine).
+-- ★ The TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): the old class-oracle
+-- step `crischFieldComplete_step` is still available for `CRischField.crischDESolve`, and the public Wf step
+-- `crischFieldCompleteWf_step` targets `crischDESolveSoundWf` directly, modulo the Wf per-level frontier
+-- `RischDEStepFrontierWf` and direct Wf soundness certificates. Separate completeness frontiers, NOT bridged:
+-- the tower-case `NondegenerateLog` (multi-level ℚ-linear-dependence structure theorem; the rational base is
+-- done, `nondegenerateLog_ratFunc_iff_logDeriv_ne_zero`), the exponential Liouville instance (off-limits), and
+-- the tangent §5.10 reduction (a separate engine).
 #check @crischFieldComplete_Q
 #check @crischFieldComplete_step
+#check @RischDEStepFrontierWf
+#check @crischFieldCompleteWf_step
 
 /-! ## Verified references — algebraic engines -/
 
