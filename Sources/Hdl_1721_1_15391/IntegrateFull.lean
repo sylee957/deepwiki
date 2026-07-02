@@ -86,40 +86,84 @@ principal-case linear solve), packing `(c, u/D)`. On the non-principal / torsion
 Appendix A and Ch. 5 §1–§2 in one driver, with no top-level `ℕ` fuel. -/
 abbrev full_integrate := @cIntegrateAlgebraicWf
 
+/-- The dispatch's reconstructed rational part for `∫ 1/((x−1)²√(x²+1))`, built from
+`radIntegrateRationalWf`. -/
+def full_rtRatV : RadElem (QFunNZG ℚ) :=
+  radAssembleRatPart rtRatRho (CPolyG.radIntegrateRationalWf (qxNum rtRatRho) rtRatR rtRatB)
+
+/-- The rational-only benchmark integrand: `algDeriv ⟨full_rtRatV, []⟩`. -/
+def full_rtRatIntegrand : RadElem (QFunNZG ℚ) := algDeriv rtRatRho ⟨full_rtRatV, []⟩
+
+/-- The recovered rational-only result for `∫ 1/((x−1)²√(x²+1))`: the rational part is reconstructed
+by `radIntegrateRationalWf`, and the non-principal residual gives an empty log list. -/
+def full_rtRatRecovered : AlgIntegralResult :=
+  cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CField.one [0, 0, 1] 1
+
 /-- **★ Round-trip (rational-only): `∫ 1/((x−1)²√(x²+1))`** (Trager, Appendix A §2, `native_decide`): start
 from `F = ⟨v, []⟩` (the dispatch's rational part, no log term), differentiate to `integrand = radDeriv v`,
-and `cIntegrateAlgebraicWf` reconstructs a fuel-free antiderivative from `(R, B) = (1, (x−1)²)` with an
-EMPTY log list (the non-principal residual ⇒ no spurious log term), so `algDeriv F' = integrand`. The
-rational half closes without top-level fuel. -/
-abbrev full_roundtrip_rational := @cIntegrateAlgebraicWf_rtRat_integrates
+and `cIntegrateAlgebraicWf` reconstructs an antiderivative from `(R, B) = (1, (x−1)²)` with an EMPTY log
+list (the non-principal residual ⇒ no spurious log term), so `algDeriv F' = integrand`. -/
+theorem full_roundtrip_rational :
+    radIsZero (radSub (algDeriv rtRatRho full_rtRatRecovered) full_rtRatIntegrand) = true := by
+  native_decide
 
 /-- **The rational-only result has nonzero rational part and empty log list** (`native_decide`): the
 structural signature `(radIsZero ratPart, logTerms.length) = (false, 0)` of a pure rational integral
 `∫ = v`. -/
-abbrev full_roundtrip_rational_shape := @cIntegrateAlgebraicWf_rtRat_shape
+theorem full_roundtrip_rational_shape :
+    (radIsZero full_rtRatRecovered.ratPart, full_rtRatRecovered.logTerms.length) = (false, 0) := by
+  native_decide
+
+/-- The recovered log-only result for `∫ dx/(x√(x²+1))`: empty rational part and one computed
+principal log term. -/
+def full_rtLogRecovered : AlgIntegralResult :=
+  cIntegrateAlgebraicWf rtLogRho [1] [1] rtLogIntegrand CField.one rtLogD 0
 
 /-- **★ Round-trip (log-only): `∫ dx/(x√(x²+1)) = log((y − 1)/x)`** (Trager, Ch. 5 §1, `native_decide`):
 `cIntegrateAlgebraicWf` computes an empty rational part and one log term `1·log u` with `u = N/x` the
-SOLVER'S output (`radLogArgSolve`, a constant multiple of `y − 1`); `algDeriv F' = integrand`. The log half
-closes without top-level fuel. -/
-abbrev full_roundtrip_log := @cIntegrateAlgebraicWf_rtLog_integrates
+SOLVER'S output (`radLogArgSolve`, a constant multiple of `y − 1`); `algDeriv F' = integrand`. -/
+theorem full_roundtrip_log :
+    radIsZero (radSub (algDeriv rtLogRho full_rtLogRecovered) rtLogIntegrand) = true := by
+  native_decide
 
 /-- **The log-only result has empty rational part and one log term** (`native_decide`): the structural
 signature `(radIsZero ratPart, logTerms.length) = (true, 1)` of a pure log integral `∫ = log u`. -/
-abbrev full_roundtrip_log_shape := @cIntegrateAlgebraicWf_rtLog_shape
+theorem full_roundtrip_log_shape :
+    (radIsZero full_rtLogRecovered.ratPart, full_rtLogRecovered.logTerms.length) = (true, 1) := by
+  native_decide
+
+/-- The dispatch's reconstructed rational part for the combined round-trip, built from
+`radIntegrateRationalWf`. -/
+def full_rtCombVdispatch : RadElem (QFunNZG ℚ) :=
+  radAssembleRatPart rtCombRho (CPolyG.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
+
+/-- The combined starting antiderivative `F = full_rtCombVdispatch + log(rtCombU)`. -/
+def full_rtCombF : AlgIntegralResult := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩
+
+/-- The combined benchmark integrand: `algDeriv full_rtCombF`. -/
+def full_rtCombIntegrand : RadElem (QFunNZG ℚ) := algDeriv rtCombRho full_rtCombF
+
+/-- The recovered combined result for `F = v + log(x + y)`: both the rational part and the log
+argument are reconstructed by `cIntegrateAlgebraicWf`. -/
+def full_rtCombRecovered : AlgIntegralResult :=
+  cIntegrateAlgebraicWf rtCombRho rtCombR rtCombB rtCombLogResidual CField.one [1] 1
 
 /-- **★★ Round-trip (COMBINED): `F = v + c·log u`, BOTH parts nonzero** (Trager, Appendix A + Ch. 5,
 `native_decide`): THE FULL-INTEGRATOR PROOF. On `y² = x²+1`, start from `F = v + 1·log u` (`v` the
 dispatch's rational part of `∫ 1/((x−1)²√(x²+1))`, `u = x + y` the arcsinh argument), differentiate to
 `integrand = radDeriv v + radLogDeriv u`, integrate back: `cIntegrateAlgebraicWf` reconstructs the rational
 part `v` from `(R, B)` by the dispatch AND solves the log argument, and `algDeriv F' = integrand`. The
-fuel-free engine produces the FULL `v + Σ cᵢ log uᵢ` (rational + log, principal case), both halves computed
-from polynomial / residual inputs, round-trip-validated through the real radical derivation. -/
-abbrev full_roundtrip_combined := @cIntegrateAlgebraicWf_rtComb_integrates
+engine produces the FULL `v + Σ cᵢ log uᵢ` (rational + log, principal case), both halves computed from
+polynomial / residual inputs, round-trip-validated through the real radical derivation. -/
+theorem full_roundtrip_combined :
+    radIsZero (radSub (algDeriv rtCombRho full_rtCombRecovered) full_rtCombIntegrand) = true := by
+  native_decide
 
 /-- **The combined result has nonzero rational part AND one log term** (`native_decide`): the structural
 signature `(radIsZero ratPart, logTerms.length) = (false, 1)` of a genuine combined integral
 `∫ = v + c·log u` with both parts present. -/
-abbrev full_roundtrip_combined_shape := @cIntegrateAlgebraicWf_rtComb_shape
+theorem full_roundtrip_combined_shape :
+    (radIsZero full_rtCombRecovered.ratPart, full_rtCombRecovered.logTerms.length) = (false, 1) := by
+  native_decide
 
 end DeepWiki.Tiaf

@@ -158,17 +158,49 @@ wraps `radReduceCase1IterateWf`, decoupling the `R/y` integrand, running the ite
 and assembling the accumulated rational part `v` without runtime fuel. -/
 abbrev appA_radIntegrateCase1 := @CPolyG.radIntegrateCase1Wf
 
-/-- **Appendix A §2** (the fuel-free driver capstone, `native_decide`): for `y² = x`, `V = x−1`, `k₀ = 3`,
-`C₀ = 1` (the integrand `1/((x−1)³√x)`), the Wf driver's accumulated rational part `v` satisfies
+/-- The Case-1 driver run `radIntegrateCase1Wf cderivG V f g 3 C` on `∫ 1/((x−1)³√x)`. -/
+def appA_sqrtxRun : CPolyG ℚ × CPolyG ℚ :=
+  radIntegrateCase1Wf cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
+
+/-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
+def appA_sqrtxVlift : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum appA_sqrtxRun.2) (qxOfNum (cmulG sqrtxV2 sqrtxF))]
+
+/-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
+def appA_sqrtxRatLift : RadElem (QFunNZG ℚ) :=
+  [CField.zero,
+    CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmulG sqrtxV3 sqrtxF)))
+      (CField.div (qxOfNum appA_sqrtxRun.1) (qxOfNum (cmulG sqrtxV sqrtxF)))]
+
+/-- **Appendix A §2** (the driver capstone, `native_decide`): for `y² = x`, `V = x−1`, `k₀ = 3`,
+`C₀ = 1` (the integrand `1/((x−1)³√x)`), the driver's accumulated rational part `v` satisfies
 `D(v) = C₀/(V³y) − Crem/(Vy)` checked with the actual diagonal derivation `radDeriv 2 x` over the
 genuine radical extension `(ℚ(x))[y]/(y²−x)` — i.e. the driver actually integrates the rational
 part. -/
-abbrev appA_sqrtxDriver_integrates := @sqrtxDriverWf_integrates
+theorem appA_sqrtxDriver_integrates :
+    radIsZero (radSub (radDeriv 2 sqrtxFqx appA_sqrtxVlift) appA_sqrtxRatLift) = true := by
+  native_decide
 
-/-- **Appendix A §2** (the fuel-free driver capstone on a second curve, `native_decide`): for `y² = x³+1`,
-`V = x−1`, the Wf driver's accumulated `v` satisfies the analogous `D(v) =
-rational-part` identity with `radDeriv 2 (x³+1)` over `(ℚ(x))[y]/(y²−(x³+1))`. -/
-abbrev appA_cubeDriver_integrates := @cubeDriverWf_integrates
+/-- The Case-1 driver run on `∫ 1/((x−1)³√(x³+1))`. -/
+def appA_cubeRun : CPolyG ℚ × CPolyG ℚ :=
+  radIntegrateCase1Wf cderivG cubeV cubeF cubeG 3 cubeC
+
+/-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
+def appA_cubeVlift : RadElem (QFunNZG ℚ) :=
+  [CField.zero, CField.div (qxOfNum appA_cubeRun.2) (qxOfNum (cmulG (cpowG cubeV 2) cubeF))]
+
+/-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
+def appA_cubeRatLift : RadElem (QFunNZG ℚ) :=
+  [CField.zero,
+    CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmulG (cpowG cubeV 3) cubeF)))
+      (CField.div (qxOfNum appA_cubeRun.1) (qxOfNum (cmulG cubeV cubeF)))]
+
+/-- **Appendix A §2** (the driver capstone on a second curve, `native_decide`): for `y² = x³+1`,
+`V = x−1`, the driver's accumulated `v` satisfies the analogous `D(v) = rational-part` identity
+with `radDeriv 2 (x³+1)` over `(ℚ(x))[y]/(y²−(x³+1))`. -/
+theorem appA_cubeDriver_integrates :
+    radIsZero (radSub (radDeriv 2 cubeFqx appA_cubeVlift) appA_cubeRatLift) = true := by
+  native_decide
 
 /-- **Appendix A §2.2** (the Case-2 driver capstone, `native_decide`): the `C/(Wᵏy)` Case-2
 reduction integrates end-to-end, `D(v) = rational-part`, validated with the actual `radDeriv` on
@@ -181,10 +213,47 @@ abbrev appA_case2cDriver_integrates := @case2cDriver_integrates
 Case-1 or Case-2 reduction without runtime fuel. -/
 abbrev appA_radIntegrateRational := @CPolyG.radIntegrateRationalWf
 
-/-- **Appendix A §2** (fuel-free multi-case capstone, `native_decide`): on
-`∫ 1/((x−1)²x²√x)`, the Wf dispatcher classifies the mixed denominator into one `V` factor and one `W`
-factor, assembles the rational part, and the actual radical derivation satisfies `D(v) = rational-part`
-after subtracting the two `k = 1` leftovers. -/
-abbrev appA_multiCaseDriver_integrates := @mcDriverWf_integrates
+/-- The multi-case dispatch run `radIntegrateRationalWf ρ R B` on `∫ 1/((x−1)²x²·√x)`. -/
+def appA_mcRun : List (Bool × CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) :=
+  CPolyG.radIntegrateRationalWf mcRho mcR mcB
+
+/-- **Appendix A §2** (`native_decide`): on `∫ 1/((x−1)²x²·√x)` the dispatcher classifies the mixed
+denominator into one `V` factor and one `W` factor, both of multiplicity `2`. -/
+theorem appA_mcRun_classification :
+    (appA_mcRun.map (fun r => r.1), appA_mcRun.map (fun r => r.2.2.1)) = ([true, false], [2, 2]) := by
+  native_decide
+
+/-- Pull the `V`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of `appA_mcRun`. -/
+def appA_mcV : CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ :=
+  (appA_mcRun.headD (true, [], 0, [], [], [])).2
+
+/-- Pull the `W`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of `appA_mcRun`. -/
+def appA_mcW : CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ :=
+  (appA_mcRun.getD 1 (false, [], 0, [], [], [])).2
+
+/-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (QFunNZG ℚ)`. -/
+def appA_mcVlift : RadElem (QFunNZG ℚ) :=
+  radAdd
+    [CField.zero, CField.div (qxOfNum appA_mcV.2.2.2.1)
+      (qxOfNum (cmulG (cpowG appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
+    [CField.zero, CField.div (qxOfNum appA_mcW.2.2.2.1)
+      (qxOfNum (cmulG (cpowG appA_mcW.1 appA_mcW.2.1) mcRho))]
+
+/-- The integrand's total rational part after subtracting the two `k = 1` leftovers. -/
+def appA_mcRatLift : RadElem (QFunNZG ℚ) :=
+  radAdd
+    [CField.zero, CField.sub
+      (CField.div (qxOfNum appA_mcV.2.2.1) (qxOfNum (cmulG (cpowG appA_mcV.1 appA_mcV.2.1) mcRho)))
+      (CField.div (qxOfNum appA_mcV.2.2.2.2) (qxOfNum (cmulG appA_mcV.1 mcRho)))]
+    [CField.zero, CField.sub
+      (CField.div (qxOfNum appA_mcW.2.2.1) (qxOfNum (cmulG (cpowG appA_mcW.1 appA_mcW.2.1) mcRho)))
+      (CField.div (qxOfNum appA_mcW.2.2.2.2) (qxOfNum (cmulG appA_mcW.1 mcRho)))]
+
+/-- **Appendix A §2** (multi-case capstone, `native_decide`): on `∫ 1/((x−1)²x²√x)`, the dispatcher
+classifies the mixed denominator into one `V` factor and one `W` factor, assembles the rational part,
+and the actual radical derivation satisfies `D(v) = rational-part` after subtracting the two `k = 1`
+leftovers. -/
+theorem appA_multiCaseDriver_integrates :
+    radIsZero (radSub (radDeriv 2 mcRhoQx appA_mcVlift) appA_mcRatLift) = true := by native_decide
 
 end DeepWiki.Tiaf
