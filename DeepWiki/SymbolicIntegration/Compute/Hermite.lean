@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.Exercise22
+import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 
 /-! # Computable Hermite reduction over `ℚ` (Bronstein §2.2, Example 2.2.1, p.40–41)
 Hermite reduction computes the **rational part** of `∫ A/D`: it returns `(g, B, D*)` with

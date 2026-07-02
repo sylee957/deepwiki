@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
+import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 
 /-! # Computing Bronstein Exercise 2.2 with the executable LRT engine (§2.9, p.72)
 **Exercise 2.2** asks to compute, by the Lazard–Rioboo–Trager algorithm,
@@ -27,31 +28,6 @@ it returns the single pair `(R, 1)`. -/
 namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
-
-/-! ### Yun squarefree factorization on `CPoly` (the `Qᵢ` by multiplicity) -/
-
-/-- **Yun squarefree factorization** `csqfreeFactor fuel p = [(Q₁,1),(Q₂,2),…]`: the distinct-degree
-factorization of a `CPoly` over `ℚ` (char 0) into monic squarefree parts `Qᵢ` of multiplicity `i`,
-`p = c·∏ᵢ Qᵢ^i` (units dropped). Yun's recurrence on `g = gcd(p, p')`: with `b₁ = p/g`, `d₁ = p'/g − b₁'`,
-each step yields `Qᵢ = gcd(bᵢ, dᵢ)`, `bᵢ₊₁ = bᵢ/Qᵢ`, `dᵢ₊₁ = dᵢ/Qᵢ − bᵢ₊₁'`. Constant `Qᵢ`
-(multiplicity-`i` absent) are dropped. Fuel-bounded (one step per multiplicity). -/
-def csqfreeFactor (fuel : ℕ) (p : CPoly) : List (CPoly × ℕ) :=
-  let p := cnorm p
-  let (g, _, _) := cgcdExt fuel p (cderiv p)
-  let b1 := cdiv fuel p g
-  let d1 := csub (cdiv fuel (cderiv p) g) (cderiv b1)
-  let rec go : ℕ → CPoly → CPoly → ℕ → List (CPoly × ℕ)
-    | 0, _, _, _ => []
-    | fo + 1, b, d, i =>
-      if b.length ≤ 1 then []   -- `b` constant ⇒ no factors of multiplicity ≥ i remain
-      else
-        let (q, _, _) := cgcdExt fuel b d
-        let q := cmonic q
-        let b' := cdiv fuel b q
-        let d' := csub (cdiv fuel d q) (cderiv b')
-        let rest := go fo b' d' (i + 1)
-        if q.length ≤ 1 then rest else (q, i) :: rest
-  go fuel b1 d1 1
 
 /-! ### The Exercise 2.2 integrand `A/D` -/
 
@@ -102,15 +78,6 @@ def cS1_22 : BPoly := lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22
 linear, as expected for a squarefree degree-10 `D` with distinct residues. Proved by `native_decide`. -/
 theorem ex_2_2_S1_monic_linear :
     cS1_22.length = 2 ∧ blc cS1_22 = [1] := by native_decide
-
-/-- **The assembled LRT logarithmic part** of `∫A/D`: `lrtLogPart fuel A D` returns the list of
-`(Qᵢ, Sᵢ)` pairs meaning `∫A/D = ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`, where `(Qᵢ, i)` are the Yun
-squarefree factors of the RT resultant `R = res_x(D, A − t·D')` and `Sᵢ = lrtGcdCompute fuel i Qᵢ A D`
-the monic-in-`x` log argument at multiplicity `i`. (Assumes `D` squarefree — pure log part, no
-Hermite reduction.) -/
-def lrtLogPart (fuel : ℕ) (A D : CPoly) : List (CPoly × BPoly) :=
-  let R := rtResultantCompute fuel A D
-  (csqfreeFactor fuel R).map (fun (Qi, i) => (Qi, lrtGcdCompute fuel i Qi A D))
 
 -- **Exercise 2.2, the assembled answer** `∫A/D = ∑_{R(a)=0} a·log(x + c₀(a))`: the single
 -- `(Q₁, S₁) = (monic R, x + c₀(t))` pair. The `#eval` prints `c₀(t)` (a degree-9 polynomial in `t`,

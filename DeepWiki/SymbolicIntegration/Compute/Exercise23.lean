@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.Exercise22
+import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 
 /-! # Computing Bronstein Exercise 2.3 with the executable LRT engine (§2.9, p.72)
 **Exercise 2.3** asks to compute, by Rothstein–Trager or Lazard–Rioboo–Trager,
