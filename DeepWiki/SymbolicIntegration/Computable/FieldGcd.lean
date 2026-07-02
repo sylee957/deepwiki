@@ -280,8 +280,8 @@ theorem div_eq_div_rat (a b : ℚ) : CField.div a b = a / b := by
 `cgcdExtG fuel a b = (g, s, t)` with the Bézout relation `s·a + t·b = g` over `K`, mirroring
 `Compute.cgcdExt` (defined upstream in `GenericPolyEngine`, engine `[CField α]`-only). The two
 correctness halves: `toPolyG_cgcdExtG` (Bézout, fuel-independent) and `toPolyG_cgcdExtG_dvd` (the gcd
-divides both inputs, under the termination predicate `cgcdTerminatesG`). The inverse-mod
-`cinvModG c R ≡ c⁻¹ (mod R)` reads off the Bézout cofactor. -/
+divides both inputs, under the termination predicate `cgcdTerminatesG`). An inverse modulo `R`
+(`c⁻¹ mod R`, `c` a unit mod `R`) reads off the Bézout cofactor `s/g`. -/
 
 /-- **Bézout identity through `toPolyG`** for the generic extended Euclidean algorithm (any fuel):
 with `(g, s, t) = cgcdExtG fuel a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
@@ -360,13 +360,6 @@ theorem toPolyG_cgcdExtG_dvd : ∀ (fuel : ℕ) (a b : CPolyG α), cgcdTerminate
       refine ⟨?_, hgb⟩
       rw [hdiv]
       exact dvd_add (hgb.mul_left _) hgr
-
-/-- **Generic inverse modulo `R`** `cinvModG fuel R c = c⁻¹` in `K[X]/(R)` (assumes `gcd(c, R)` is a
-nonzero constant — `c` a unit mod `R`): from the Bézout relation `s·c + ·R = g` (constant `g`),
-`c⁻¹ ≡ s/g (mod R)`. -/
-def cinvModG (fuel : ℕ) (R c : CPolyG α) : CPolyG α :=
-  let (g, s, _) := cgcdExtG fuel c R
-  cmodG fuel (cscaleG (CField.inv (cleadG g)) s) R
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by

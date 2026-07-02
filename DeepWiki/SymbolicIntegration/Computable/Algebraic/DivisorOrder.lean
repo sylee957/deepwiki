@@ -82,11 +82,6 @@ def cantorOrderAux (fuel : ℕ) (ρ : CPolyG α) (g : ℕ)
 def cantorOrder (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : Option ℕ :=
   cantorOrderAux fuel ρ g D mumfordIdentity 0
 
-/-- `cantorIsTorsion fuel ρ g D`: `true` iff `cantorOrder` finds a finite order `≤ fuel` — a `Bool`
-view of `cantorOrder` for the decision wrappers. -/
-def cantorIsTorsion (fuel : ℕ) (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) : Bool :=
-  (cantorOrder fuel ρ g D).isSome
-
 end CPolyG
 
 /-! ## Reduction modulo `p` on Mumford coefficients
