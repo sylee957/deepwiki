@@ -37,8 +37,8 @@ one per §6 stage, each carrying its Bronstein theorem and its actionable proof 
 | `RischDESolveExhaustiveResidual` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
 
 **Soundness is direct at the public boundary.** The `→` of the Wf equivalence is
-`crischDESolveSoundWf_field`, which consumes `RischDESoundnessWf`; the decision theorem no longer exposes the
-fueled bridge. The frontier governs only the *converse*
+`crischDESolveSoundWf_field`, which consumes `RischDESoundnessWf`; the decision theorem exposes only the Wf
+soundness certificate. The frontier governs only the *converse*
 (`solvable ⟹ some`): the fuel-free solver's `none` is certified correct modulo the Wf-native §6 residual. -/
 
 open Polynomial Classical

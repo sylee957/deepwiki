@@ -246,35 +246,15 @@ theorem cisCanonNormalizedG_qReduce_examples :
 
 end Validation
 
-/-! ## ★ Task 3 — the re-pin corollary (phrased as the gated core consumes it)
+/-! ## The Wf re-pin corollary
 
-The production re-pin routes the core RDE solve through the §6.1 gate. The Wf wrapper weak-normalizes `f` to
-`ftilde = weakNormalizedF f q'` (`q' = qOfPolyNZG (cWeakNormalizerGWf [1] f.1.1 f.1.2)`) and passes the gate
-`cisCanonNormalizedG ftilde`; the gated core, holding the *reduced* `qReduce ftilde`
-after `reduceSoundOpt ftilde = some (qReduce ftilde)`, runs the denominator-direct gate `cisCanonNormalizedCoreG
-(qReduce ftilde)`. `cisCanonNormalizedCoreG_qReduce_weakNormalized` is the equation that reconciles them —
-exactly the rewrite the re-pin's raw-solve transfer needs, so the gated-core rewire becomes a 1-step mechanical
-change. -/
+The Wf wrapper weak-normalizes `f` to `ftilde = weakNormalizedF f q'`
+(`q' = qOfPolyNZG (cWeakNormalizerGWf [1] f.1.1 f.1.2)`) and passes the Wf gate
+`cisCanonNormalizedGWf ftilde`. The Wf gated core, holding the reduced `qReduce ftilde`, runs the
+denominator-direct gate `cisCanonNormalizedCoreGWf (qReduce ftilde)`. The following equations reconcile those
+two Wf gates definitionally. -/
 
 section Repin
-
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
-
-/-- **★ The re-pin gate reconciliation** (`cisCanonNormalizedCoreG_qReduce_weakNormalized`): for the weak-normalized
-`ftilde = weakNormalizedF f q'` (`q'` the lift of the weak normalizer `cWeakNormalizerGWf [1] f.1.1 f.1.2`),
-the gated core's denominator-direct check on the *reduced* input equals the wrapper's check on the
-pre-reduce input — `cisCanonNormalizedCoreG (qReduce ftilde) = cisCanonNormalizedG ftilde` — **by `rfl`**. This is
-the exact equation the production re-pin's gated core consumes (the raw-solve transfer): the gate
-the wrapper passes is, definitionally, the gate the core runs on `qReduce ftilde`, so the rewire that routes the
-core through the §6.1 gate is a single mechanical rewrite with no normalization side-condition. -/
-theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : QFunNZG β) :
-    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-      = cisCanonNormalizedG (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
-  cisCanonNormalizedCoreG_qReduce _
-
-section RepinWf
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
@@ -289,32 +269,6 @@ theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized (f : QFunNZG β) :
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreGWf_qReduce _
 
-end RepinWf
-
-section RepinFuel
-
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
-
-/-- **The re-pin gate decides `IsCanonNormalized`** (`cisCanonNormalizedCoreG_qReduce_weakNormalized_iff`): the gated core's
-denominator-direct check on the reduced input passes iff the §6.1 normalization guarantee `IsCanonNormalized f q'`
-holds — `cisCanonNormalizedCoreG (qReduce ftilde) = true ↔ IsCanonNormalized f q'`. Composes the re-pin gate
-reconciliation (`cisCanonNormalizedCoreG_qReduce_weakNormalized`) with the proven bridge `cisCanonNormalizedG_iff` (the wrapper
-check decides `IsCanonNormalized`). So a gated-core `some` carries `IsCanonNormalized` for free — the soundness the
-re-pinned solver needs is supplied by its own gate, exactly as in the wrapper `crischDESolveSound`. -/
-theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
-    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))) = true
-      ↔ IsCanonNormalized f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) := by
-  rw [cisCanonNormalizedCoreG_qReduce_weakNormalized]
-  exact cisCanonNormalizedG_iff f _
-
-end RepinFuel
-
-section RepinWf
-
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
-
 /-- **The Wf re-pin gate decides `IsCanonNormalizedWf`**: the Wf gated core's denominator-direct check on the
 reduced weak-normalized input passes iff the fuel-free §6.1 normalization guarantee holds. -/
 theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
@@ -325,28 +279,7 @@ theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff [CFieldDomain β] (
   rw [cisCanonNormalizedCoreGWf_qReduce_weakNormalized]
   exact cisCanonNormalizedGWf_iff f _
 
-end RepinWf
-
 /-! ### Restatement against the intended wording (anonymous `example`) -/
-
-section RepinFuel
-
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
-
--- ★ The re-pin corollary: the gated core's denominator-direct §6.1 gate on the reduced weak-normalized input is
--- the wrapper's §6.1 gate on the pre-reduce input — the equation the production re-pin rewrites by. By `rfl`.
-example (f : QFunNZG β) :
-    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-      = cisCanonNormalizedG (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
-  cisCanonNormalizedCoreG_qReduce_weakNormalized f
-
-end RepinFuel
-
-section RepinWf
-
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
 -- The same re-pin reconciliation stated entirely on the Wf gate.
 example (f : QFunNZG β) :
@@ -356,16 +289,12 @@ example (f : QFunNZG β) :
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreGWf_qReduce_weakNormalized f
 
-end RepinWf
-
 end Repin
 
 /-! ### Axiom audit (the keystone bridge, the re-pin corollary, and the conditional re-running invariance are
 axiom-clean; the validations are `native_decide`) -/
 
 #print axioms cisCanonNormalizedCoreG_qReduce
-#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized
-#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized_iff
 #print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized
 #print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff
 #print axioms cisCanonNormalizedG_qReduce_of_idempotent
