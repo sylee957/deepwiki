@@ -138,6 +138,26 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 
 end InnerFrontier
 
+/-! ## Wf inner input and expanded Wf frontier
+
+The field-level Wf residual uses the weak-normalized, reduced pair passed to `crischDERawSolveWf`. Naming that
+pair lets the decision-procedure frontier talk about the inner `cRischDEGWf` proof obligation directly, without
+restating the §6.1 normalization expression at every field. -/
+
+section InnerInputWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
+
+/-- **The Wf inner RDE input pair**: after fuel-free weak normalization by `q`, reduce the transformed
+left-hand side and pair it with `q * g`, exactly as `crischDESolveSoundWf` does before calling
+`crischDERawSolveWf`. -/
+def rischDEInnerInputWf (f g : QFunNZG β) : QFunNZG β × QFunNZG β :=
+  let q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+  let q' : QFunNZG β := qOfPolyNZG q
+  (qReduce (weakNormalizedF f q'), qmulNZG q' g)
+
+end InnerInputWf
+
 /-! ## ★ The Wf field-level decision-procedure frontier and the CAPSTONE
 
 The field-level decision procedure now targets `crischDESolveSoundWf`, the fuel-free executable wrapper.
@@ -154,6 +174,53 @@ section Capstone
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
   [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **Expanded Wf decision-procedure frontier** `RischDEDecisionProcedureStageFrontierWf f g`: a field-level
+frontier whose inner clause is stated through the fuel-free inner API. Besides the two §6.1 completeness
+clauses (`hwn`, `hck`), it supplies a polynomial solution for the Wf inner input, a
+`RischDEInnerCompletenessWf` proof for that input, and the denominator guard needed to lift
+`cRischDEGWf = some _` through `crischDERawSolveWf`. -/
+structure RischDEDecisionProcedureStageFrontierWf (f g : QFunNZG β) : Prop where
+  /-- §6.1/Wf: a solvable RDE has a nonzero fuel-free weak normalizer. -/
+  hwn : FieldRDESolvable f g →
+    CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
+  /-- §6.1/Wf: a solvable RDE passes the canon-normality gate after Wf weak normalization. -/
+  hck : FieldRDESolvable f g →
+    cisCanonNormalizedG (weakNormalizedF f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true
+  /-- A solvable field RDE has a polynomial solution for the Wf inner input. -/
+  hpolysol : FieldRDESolvable f g →
+    let ftildeR := (rischDEInnerInputWf f g).1
+    let gtilde := (rischDEInnerInputWf f g).2
+    ∃ ynum yden,
+      IsCRischDEGPolySol ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+        gtilde.1.1 gtilde.1.2 ynum yden
+  /-- The Wf inner completeness frontier for the weak-normalized, reduced input pair. -/
+  hinner : FieldRDESolvable f g →
+    let ftildeR := (rischDEInnerInputWf f g).1
+    let gtilde := (rischDEInnerInputWf f g).2
+    RischDEInnerCompletenessWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+      gtilde.1.1 gtilde.1.2
+  /-- The returned denominator of a successful Wf inner solve is nonzero. -/
+  hden : FieldRDESolvable f g → ∀ ynum yden : CPolyG β,
+    let ftildeR := (rischDEInnerInputWf f g).1
+    let gtilde := (rischDEInnerInputWf f g).2
+    cRischDEGWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+        = some (ynum, yden) →
+      CPolyG.cisZeroG yden = false
+
+omit [CTowerGcdWitness β] in
+/-- **The expanded Wf frontier produces the Wf completeness residual**: the `hinner` residual clause is
+obtained by feeding `RischDEInnerCompletenessWf` through the raw fuel-free solver bridge. -/
+theorem residualWf_of_stageFrontierWf (f g : QFunNZG β)
+    (h : RischDEDecisionProcedureStageFrontierWf f g) :
+    RischDECompletenessResidualWf f g where
+  hwn hsol := h.hwn hsol
+  hck hsol := h.hck hsol
+  hinner hsol := by
+    simpa [rischDEInnerInputWf] using
+      (crischDERawSolveWf_isSome_of_innerCompletenessWf (rischDEInnerInputWf f g).1
+        (rischDEInnerInputWf f g).2 (h.hinner hsol) (h.hpolysol hsol) (h.hden hsol))
 
 /-- **★ The Wf field-level decision-procedure frontier** `RischDEDecisionProcedureFrontierWf f g`: the
 precise residual under which `crischDESolveSoundWf` is a verified decision procedure for the field-level
@@ -181,6 +248,17 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residualWf f g h.residual hfit hqwn hwf
 
+/-- **Decision procedure from the expanded Wf stage frontier**: the same capstone as
+`crischDESolveSoundWf_isDecisionProcedure`, but with the completeness residual assembled from
+`RischDEDecisionProcedureStageFrontierWf` and `RischDEInnerCompletenessWf`. -/
+theorem crischDESolveSoundWf_isDecisionProcedure_of_stageFrontierWf (f g : QFunNZG β)
+    (h : RischDEDecisionProcedureStageFrontierWf f g) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
+  crischDESolveSoundWf_decides_of_residualWf f g (residualWf_of_stageFrontierWf f g h) hfit hqwn hwf
+
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 -- ★ The RDE decision procedure in book terms: the fuel-free recursive Risch-DE solver returns `some` iff the
@@ -195,6 +273,18 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_isDecisionProcedure f g h hfit hqwn hwf
+
+-- ★ The expanded Wf stage frontier also gives the same decision statement, with the inner clause routed
+-- through `RischDEInnerCompletenessWf` and `crischDERawSolveWf`.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
+    [Algebra ℚ (CFieldSpec.K β)]
+    (f g : QFunNZG β) (h : RischDEDecisionProcedureStageFrontierWf f g) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
+  crischDESolveSoundWf_isDecisionProcedure_of_stageFrontierWf f g h hfit hqwn hwf
 
 end Capstone
 
