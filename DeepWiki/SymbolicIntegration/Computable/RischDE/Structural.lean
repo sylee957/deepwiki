@@ -1183,4 +1183,103 @@ theorem cRdeNormalDenominatorGWf_cleared_lift (Dt : CPolyG α) (fnum fden gnum g
 
 end WfNormalDenominator
 
+section WfCapstone
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+
+/-- **Fuel-free mirror of `cSPDEG_cleared_lifting_of_inputs_gen`**: composes `cSPDEGWf_cleared_lifting_gen`
+with `cSPDEGClearedGenWf_of_inputs` to lift under the transparent input predicate directly. -/
+theorem cSPDEGWf_cleared_lifting_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β : CPolyG α)
+    (hspde : cSPDEGWf Dt a b c n = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGenWf Dt a b c n) (h : CPolyG α)
+    (hh : Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h
+      = toPolyG cbar) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' h) β))
+        + toPolyG b * toPolyG (caddG (cmulG α' h) β)
+      = toPolyG c :=
+  cSPDEGWf_cleared_lifting_gen Dt a b c n bbar cbar m α' β hspde
+    (cSPDEGClearedGenWf_of_inputs Dt a b c n hin) h hh
+
+/-- **Fuel-free mirror of `cSPDEG_polyRischDENoCancel_cleared_of_inputs_gen`**: feeds the §6.5
+non-cancellation success through `cPolyRischDENoCancelGWf_cleared_identity` into the SPDE lifting. -/
+theorem cSPDEGWf_polyRischDENoCancel_cleared_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hspde : cSPDEGWf Dt a b c n = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGenWf Dt a b c n)
+    (hpoly : cPolyRischDENoCancelGWf Dt bbar cbar m = some v) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' v) β))
+        + toPolyG b * toPolyG (caddG (cmulG α' v) β)
+      = toPolyG c :=
+  cSPDEGWf_cleared_lifting_of_inputs Dt a b c n bbar cbar m α' β hspde hin v
+    (cPolyRischDENoCancelGWf_cleared_identity Dt bbar cbar m v hpoly)
+
+/-- **Fuel-free mirror of `cSPDEG_polyRischDENoCancel_cleared_at_boundDegree_gen`**: the spine instantiated
+at the §6.3 degree bound `n = cRdeBoundDegreeG Dt a b c`. -/
+theorem cSPDEGWf_polyRischDENoCancel_cleared_at_boundDegree (Dt : CPolyG α) (a b c : CPolyG α)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hspde : cSPDEGWf Dt a b c (cRdeBoundDegreeG Dt a b c : ℤ) = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGenWf Dt a b c (cRdeBoundDegreeG Dt a b c : ℤ))
+    (hpoly : cPolyRischDENoCancelGWf Dt bbar cbar m = some v) :
+    toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' v) β))
+        + toPolyG b * toPolyG (caddG (cmulG α' v) β)
+      = toPolyG c :=
+  cSPDEGWf_polyRischDENoCancel_cleared_of_inputs Dt a b c
+    (cRdeBoundDegreeG Dt a b c : ℤ) bbar cbar m α' β v hspde hin hpoly
+
+/-- **Fuel-free mirror of `rdeClearedIdentity_of_polyRDEIdentity`** (primitive regime): the fuel-free §6
+cleared identity from the residual and the bare poly-RDE identity `D(v) + bbar·v = cbar`, taken directly
+rather than through the non-cancellation solver-success form. Given the primitive special regime, the §6.2
+normal-denominator output, its divisibility certificates, the §6.4 SPDE output under
+`CSPDEGClearedInputsGenWf`, and `hidentity`, the reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0`
+satisfies the cleared Risch-DE identity over `(CFieldSpec.K α)[X]`. -/
+theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPolyG α)
+    (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
+    (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hprim : cdegG (cSpecialPolyGWf Dt) = 0)
+    (hnorm : cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hdn : toPolyG (cSplitFactorFastGWf Dt fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h0) fnum)
+        (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 (cmonomialDeriv Dt h0)) fden)))
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h0) h0) gnum))
+    (hspde : cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1 (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hin : CSPDEGClearedInputsGenWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1 (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ))
+    (hidentity : Differential.implicitDeriv (toPolyG Dt) (toPolyG v) + toPolyG bbar * toPolyG v
+      = toPolyG cbar) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG (cmulG (caddG (cmulG α' v) β) [CField.one]))
+              * toPolyG h0
+            - toPolyG (cmulG (caddG (cmulG α' v) β) [CField.one])
+              * Differential.implicitDeriv (toPolyG Dt) (toPolyG h0))
+        + toPolyG gden * toPolyG fnum * toPolyG (cmulG (caddG (cmulG α' v) β) [CField.one]) * toPolyG h0
+      = toPolyG gnum * toPolyG fden * toPolyG h0 ^ 2 := by
+  set Q := caddG (cmulG α' v) β with hQ
+  have hspecial := cRdeSpecialDenominatorGWf_primitive_eq Dt a0 b0 c0 hprim
+  rw [hspecial] at hspde hin
+  simp only at hspde hin
+  have hred : toPolyG a0 * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b0 * toPolyG Q
+      = toPolyG c0 :=
+    cSPDEGWf_cleared_lifting_of_inputs Dt a0 b0 c0
+      (cRdeBoundDegreeG Dt a0 b0 c0 : ℤ) bbar cbar m α' β hspde hin v hidentity
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  have hynum : toPolyG (cmulG Q [CField.one]) = toPolyG Q := by
+    rw [toPolyG_cmulG, hone, mul_one]
+  have hlift := cRdeNormalDenominatorGWf_cleared_lift Dt fnum fden gnum gden a0 b0 c0 h0 Q
+    hnorm hdn hfden0 hgden0 hdvdB hdvdC hred
+  rw [hynum]
+  exact hlift
+
+end WfCapstone
+
 end DeepWiki.SymbolicIntegration
