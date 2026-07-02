@@ -317,6 +317,108 @@ theorem cRischDEG_isSome_of_innerCompleteness (Dt fnum fden gnum gden : CPolyG �
 
 end InnerSubResidual
 
+/-! ## Fuel-free inner sub-residual
+
+`RischDEInnerCompletenessWf` is the same three-stage completeness frontier as
+`RischDEInnerCompleteness`, but stated against the fuel-free §6 functions. It is the replacement target for
+the Wf wrapper residual: normal denominator, special denominator, SPDE, and the Poly-Risch-DE dispatcher all
+run through the `…GWf` APIs, so no `towerRischDEFuel` hypothesis is present in the statement. -/
+
+section InnerSubResidualWf
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+  [CRischField α]
+
+/-- **The Wf §6 inner-stage completeness sub-residuals** `RischDEInnerCompletenessWf Dt fnum fden gnum gden`:
+the fuel-free counterpart of `RischDEInnerCompleteness`. `hnorm` says the Wf normal-denominator stage succeeds
+on polynomial-solvable inputs; `hbound` states the degree-upper-bound over the Wf special-cleared coefficients;
+`hsolve` says the assembled fuel-free inner solver `cRischDEGWf` succeeds. -/
+structure RischDEInnerCompletenessWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
+  /-- §6.2/Wf: a polynomial-solvable RDE's normal-denominator reduction succeeds. -/
+  hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true
+  /-- §6.4/Wf degree-upper-bound: any reduced polynomial solution has degree at most `cRdeBoundDegreeG`. -/
+  hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+    cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+    ∀ q : CPolyG α,
+      IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+      cdegG q ≤ cRdeBoundDegreeG Dt
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+  /-- §6.2-6.6/Wf: a polynomial-solvable RDE makes the fuel-free inner solver succeed. -/
+  hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    (cRischDEGWf Dt fnum fden gnum gden).isSome = true
+
+/-- **Clause (c), fuel-free form**: `RischDEInnerCompletenessWf` yields `cRischDEGWf = some _` on a
+polynomial-solvable input. -/
+theorem cRischDEGWf_isSome_of_innerCompletenessWf (Dt fnum fden gnum gden : CPolyG α)
+    (hinner : RischDEInnerCompletenessWf Dt fnum fden gnum gden)
+    (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
+    (cRischDEGWf Dt fnum fden gnum gden).isSome = true :=
+  hinner.hsolve hsol
+
+end InnerSubResidualWf
+
+/-! ## Fuel-free raw inner-solver bridge
+
+The Wf wrapper calls `crischDERawSolveWf`, not `cRischDEGWf` directly. These structural bridges move the
+inner-completeness result across the `QFunNZG` denominator guard without reintroducing the fueled solver. -/
+
+section RawInnerWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCoreWf β] [CRischField β]
+
+omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
+/-- **Fuel-free raw solver bridge**: if `cRischDEGWf [1]` succeeds and every returned denominator is nonzero,
+then `crischDERawSolveWf` returns `some`. -/
+theorem crischDERawSolveWf_isSome_of_cRischDEGWf_some_den (ftilde gtilde : QFunNZG β)
+    (hsome : (cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2).isSome = true)
+    (hden : ∀ ynum yden : CPolyG β,
+      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      CPolyG.cisZeroG yden = false) :
+    ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
+  obtain ⟨⟨ynum, yden⟩, hp⟩ := Option.isSome_iff_exists.mp hsome
+  refine ⟨⟨(ynum, yden), hden ynum yden hp⟩, ?_⟩
+  rw [crischDERawSolveWf, hp]
+  simp only []
+  rw [dif_pos (hden ynum yden hp)]
+
+omit [CFieldDomain β] in
+/-- **Fuel-free inner completeness feeds the raw solver**: a Wf inner-completeness residual, a polynomial
+solution, and the denominator guard imply `crischDERawSolveWf` succeeds. -/
+theorem crischDERawSolveWf_isSome_of_innerCompletenessWf (ftilde gtilde : QFunNZG β)
+    (hinner : RischDEInnerCompletenessWf ([CField.one] : CPolyG β)
+      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2)
+    (hsol : ∃ ynum yden,
+      IsCRischDEGPolySol ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 ynum yden)
+    (hden : ∀ ynum yden : CPolyG β,
+      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      CPolyG.cisZeroG yden = false) :
+    ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde :=
+  crischDERawSolveWf_isSome_of_cRischDEGWf_some_den ftilde gtilde
+    (cRischDEGWf_isSome_of_innerCompletenessWf ([CField.one] : CPolyG β)
+      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 hinner hsol)
+    hden
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+example (ftilde gtilde : QFunNZG β)
+    (hinner : RischDEInnerCompletenessWf ([CField.one] : CPolyG β)
+      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2)
+    (hsol : ∃ ynum yden,
+      IsCRischDEGPolySol ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 ynum yden)
+    (hden : ∀ ynum yden : CPolyG β,
+      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      CPolyG.cisZeroG yden = false) :
+    ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde :=
+  crischDERawSolveWf_isSome_of_innerCompletenessWf ftilde gtilde hinner hsol hden
+
+end RawInnerWf
+
 /-! ## Fuel-free completeness wrapper
 
 `RischDECompletenessResidualWf` is the native fuel-free residual: its clauses are stated against
