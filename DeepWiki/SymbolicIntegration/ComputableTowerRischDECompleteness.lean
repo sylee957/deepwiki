@@ -2,14 +2,15 @@ import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
 
 /-! # ★★ The TOWER-INDUCTION for RDE completeness — the grand finale (Bronstein Ch. 6)
 
-The per-level RDE decision procedure is `crischDESolveSound_isDecisionProcedure`
-(`ComputableRischDEDecisionProcedure`): over `QFunNZG β`, the sound solver returns `some` **iff** the
-field-level Risch DE is solvable (`crischDESolveSound f g = some _ ↔ FieldRDESolvable f g`), with soundness
-unconditional, completeness modulo the consolidated frontier `RischDEDecisionProcedureFrontier f g` whose
-deepest tips are the three §6 residuals — among them the §6.6 cancellation `hpoly`, reduced
-(`ComputableRischDESolveExhaustiveness`) to the base-oracle completeness `Cancel{Prim,Exp}OracleComplete`,
-the *per-step recursion into one tower level down*. This file ties that recursion into a single structural
-induction.
+The public Wf-facing RDE decision procedure is `crischDESolveSoundWf_isDecisionProcedure`
+(`ComputableRischDEDecisionProcedure`): over `QFunNZG β`, the fuel-free sound solver returns `some` **iff**
+the field-level Risch DE is solvable (`crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`), modulo the
+Wf-native frontier `RischDEDecisionProcedureFrontierWf f g` and the current Wf/fueled soundness-agreement
+hypotheses. This tower-induction file targets the underlying class oracle `CRischField.crischDESolve`
+directly; its inner frontier still carries the same three §6 residual tips — among them the §6.6 cancellation
+`hpoly`, reduced (`ComputableRischDESolveExhaustiveness`) to the base-oracle completeness
+`Cancel{Prim,Exp}OracleComplete`, the *per-step recursion into one tower level down*. This file ties that
+recursion into a single structural induction.
 
 **The completeness predicate.** `CRischFieldComplete α` (over any `[CField α] [CFieldSpec α] [CDiffField α]
 [CDiffFieldSpec α] [CRischField α]`): the field-level oracle `CRischField.crischDESolve` returns `some` on
@@ -133,14 +134,13 @@ end BaseQ
 /-! ## ★ The STEP — `[CRischFieldComplete β] → CRischFieldComplete (QFunNZG β)`
 
 A level-`n+1` solve `instCRischFieldQFunNZG.crischDESolve f g` is the §6.1-normality gate `cdenomNormalGateG
-f` followed by `cRischDEG [1] fuel f.1.1 f.1.2 g.1.1 g.1.2`. Its completeness is the per-level decision
-procedure `crischDESolveSound_isDecisionProcedure` (the *wrapper* `crischDESolveSound` adds the same gate and
-calls this very class method on the lowest-terms pair), whose completeness rests on the consolidated frontier
-`RischDEDecisionProcedureFrontier`. The deep `hinner` clause of that frontier reduces — one level down — to
-the three tips of `RischDEInnerDecisionFrontier`, of which the §6.6 cancellation `hpoly` is the one carrying
-the recursion: its base oracle `Cancel{Prim,Exp}OracleComplete Dt b` calls `crischDESolve` over `β` (since
-`b : CPolyG β`, `cleadG b : β`), which is the **IH** `CRischFieldComplete β` — modulo the **agreement** that
-the returned base solution's `toK` is the abstract solution's leading coefficient.
+f` followed by `cRischDEG [1] fuel f.1.1 f.1.2 g.1.1 g.1.2`. This step works directly against that class
+method, while the public wrapper capstone is now the Wf theorem `crischDESolveSoundWf_isDecisionProcedure`.
+The deep inner frontier reduces one level down to the three tips of `RischDEInnerDecisionFrontier`, of which
+the §6.6 cancellation `hpoly` is the one carrying the recursion: its base oracle
+`Cancel{Prim,Exp}OracleComplete Dt b` calls `crischDESolve` over `β` (since `b : CPolyG β`, `cleadG b : β`),
+which is the **IH** `CRischFieldComplete β` — modulo the **agreement** that the returned base solution's
+`toK` is the abstract solution's leading coefficient.
 
 We assemble the IH-fed half of the recursion (the base oracle's `.isSome` component from the IH + the field
 RDE the leading coefficient solves) and characterize the agreement + the per-level honest frontier as the

@@ -35,7 +35,8 @@ inputs. We then prove, modulo the **already-named** Trager frontiers (reused ver
   `elementarityViaTorsion = false` = non-torsion), modulo `AlgebraicLiouvilleFrontier`
   (`AlgebraicCompletenessResidual`).
 * **DECISION-PROCEDURE capstone** (`cIntegrateAlgebraicDecide_decides`) — `(∃ F, … = some F) ⟺
-  IsAlgebraicElementary integrand`, mirroring `crischDESolveSound_isDecisionProcedure`.
+  IsAlgebraicElementary integrand`, mirroring the Wf transcendental capstone
+  `crischDESolveSoundWf_isDecisionProcedure`.
 
 The focus is the **radical / hyperelliptic** case, where Trager's torsion decision is complete (the general
 non-radical curve's torsion decision is a deferred sub-arc). The three `native_decide` witnesses run
@@ -292,7 +293,7 @@ end Completeness
 
 Combining soundness (`some ⟹ elementary`, via the soundness residual's torsion correctness pinned to
 elementarity) with completeness (`none ⟹ ¬ elementary`) gives the full decision-procedure equivalence,
-mirroring the transcendental `crischDESolveSound_isDecisionProcedure`. The integrator answers `some _`
+mirroring the transcendental `crischDESolveSoundWf_isDecisionProcedure`. The integrator answers `some _`
 **iff** the integrand is elementary, modulo the bundled named frontier.
 
 The cleanest assembly rides the completeness equivalence `cIntegrateAlgebraicWf_complete_of_residual`
@@ -330,7 +331,7 @@ log path (`hasLogPart = true`, `radLogArgSolve = none` — the path the torsion 
 cIntegrateAlgebraicDecide.isSome` ⟺ `torsionLogTerm.isSome` (the structural
 `decide_isSome_iff_torsion_isSome`) ⟺ `elem` (the completeness equivalence
 `cIntegrateAlgebraicWf_complete_of_residual`). This is the algebraic analogue of the transcendental
-`crischDESolveSound_isDecisionProcedure`: a genuine decision procedure for elementary integrability of
+`crischDESolveSoundWf_isDecisionProcedure`: a genuine decision procedure for elementary integrability of
 simple-radical algebraic functions, modulo exactly the named Trager frontiers (Liouville-for-algebraic +
 the good-reduction torsion decision). -/
 theorem cIntegrateAlgebraicDecide_decides {isTorsion : Prop} {elem : Prop}

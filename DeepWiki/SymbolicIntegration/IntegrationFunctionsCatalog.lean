@@ -62,12 +62,12 @@ only; it states no new mathematics.
 ## The Risch differential-equation solver (Bronstein §6, the RDE oracle)
 
 * `crischDESolveSound` — the corrected recursive RDE solver `D(Y) + F·Y = G`; checks §6.1 solvability itself.
-  Soundness (unconditional, no `IsCanonNormalized` hypothesis): `crischDESolveSound_field`.
-  Completeness: `crischDESolveSound_isDecisionProcedure` — `some ⟺ FieldRDESolvable`, modulo exactly three
-  named §6 residuals; the soundness arrow is `crischDESolveSound_decides_of_residual`.
+  Soundness (unconditional, no `IsCanonNormalized` hypothesis): `crischDESolveSound_field`. The fueled
+  completeness residual remains as a lower-level bridge, but the cataloged decision-procedure capstone is now
+  the Wf solver below.
 * `crischDESolveSoundWf` — the FUEL-FREE RDE solver. Soundness: `crischDESolveSoundWf_field`.
-  Completeness/decision procedure: `crischDESolveSoundWf_decides_of_residualWf`, modulo the Wf-native
-  `RischDECompletenessResidualWf` plus the Wf/fueled agreement hypotheses needed for soundness.
+  Completeness/decision procedure: `crischDESolveSoundWf_isDecisionProcedure`, modulo the Wf-native
+  `RischDEDecisionProcedureFrontierWf` plus the Wf/fueled agreement hypotheses needed for soundness.
 
 ## Algebraic integrators (Bronstein vol. II / Trager, over `RadExt` or a general plane curve)
 
@@ -141,15 +141,13 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 
 /-! ## Verified references — the Risch differential-equation solver -/
 
--- `crischDESolveSound`: unconditional soundness, the decision procedure, and the completeness arrow.
+-- `crischDESolveSound`: fueled soundness remains available.
 #check @crischDESolveSound_field
-#check @crischDESolveSound_isDecisionProcedure
-#check @crischDESolveSound_decides_of_residual
 
--- `crischDESolveSoundWf`: the fuel-free sound RDE solver and its residual decision wrapper.
+-- `crischDESolveSoundWf`: the fuel-free sound RDE solver and its Wf-native decision wrapper.
 #check @crischDESolveSoundWf_field
-#check @RischDECompletenessResidualWf
-#check @crischDESolveSoundWf_decides_of_residualWf
+#check @RischDEDecisionProcedureFrontierWf
+#check @crischDESolveSoundWf_isDecisionProcedure
 
 -- ★ The TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): `CRischFieldComplete`
 -- (the per-level oracle returns `some` on every solvable RDE) holds at EVERY tower level — base ℚ
