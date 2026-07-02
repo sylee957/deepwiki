@@ -475,8 +475,7 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelPrim (Dt b : CPolyG α) :
             rw [Option.some.injEq] at hsolve
             subst hsolve
             have hih := ih _ _ q' hrec
-            simp only [toPolyG_cmonomialDeriv, toPolyG_caddG, toPolyG_csubG, toPolyG_cmulG,
-              map_add] at hih ⊢
+            simp only [denote, map_add] at hih ⊢
             linear_combination hih
 
 /-- **★ Hyperexponential cancellation poly-RDE is sound** (`toPolyG_cmonomialDeriv_cPolyRischDECancelExp`),
@@ -517,8 +516,7 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelExp (Dt b : CPolyG α) :
             rw [Option.some.injEq] at hsolve
             subst hsolve
             have hih := ih _ _ q' hrec
-            simp only [toPolyG_cmonomialDeriv, toPolyG_caddG, toPolyG_csubG, toPolyG_cmulG,
-              map_add] at hih ⊢
+            simp only [denote, map_add] at hih ⊢
             linear_combination hih
 
 /-- **★ Fuel-free primitive cancellation poly-RDE is sound**: if `cPolyRischDECancelPrimGWf Dt b c n =
@@ -542,8 +540,7 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelPrimGWf (Dt b c q : CPolyG α) 
       rw [Option.some.injEq] at hsolve
       subst q
       have hih := ih q' hrec
-      simp only [c', toPolyG_cmonomialDeriv, toPolyG_caddG, toPolyG_csubG, toPolyG_cmulG,
-        map_add] at hih ⊢
+      simp only [c', denote, map_add] at hih ⊢
       linear_combination hih
   | case6 =>
       exact absurd hsolve (by simp)
@@ -569,8 +566,7 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelExpGWf (Dt b c q : CPolyG α) (
       rw [Option.some.injEq] at hsolve
       subst q
       have hih := ih q' hrec
-      simp only [c', toPolyG_cmonomialDeriv, toPolyG_caddG, toPolyG_csubG, toPolyG_cmulG,
-        map_add] at hih ⊢
+      simp only [c', denote, map_add] at hih ⊢
       linear_combination hih
   | case6 =>
       exact absurd hsolve (by simp)
