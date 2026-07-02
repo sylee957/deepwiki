@@ -460,9 +460,10 @@ correctness, the special-part self-derivative divisibility `p ∣ Dp`) is **not 
 remaining §6.2 obstruction. We therefore isolate that obligation as the single explicit hypothesis
 `hspecialReduced : a₀·D(R) + b₀·R = c₀` (`R = ynum = Q·h₁`, in the exact form
 `cRdeNormalDenominatorG_cleared_lift_gen` consumes) and discharge **everything else** through the shared
-normal-denominator spine. The cancellation poly-RDE soundness `cPolyRischDEG_cancelExp_field` (already
-proven, base-oracle-free) is what supplies the bar-equation in the CancelExp arm; it is *not* what is
-missing — the missing piece is purely the §6.2 special-denominator substitution correctness above. -/
+normal-denominator spine. The cancellation poly-RDE soundness now has the fuel-free field-level form
+`cPolyRischDEGWf_cancelExp_field` (with the still-fuel'd structural spine using the polynomial dispatcher
+lemma); that bar-equation is *not* what is missing — the missing piece is purely the §6.2
+special-denominator substitution correctness above. -/
 
 omit [CRischField α] in
 /-- **★ The §6 special-regime cleared Risch-DE identity from the isolated §6.2 substitution obligation**:
