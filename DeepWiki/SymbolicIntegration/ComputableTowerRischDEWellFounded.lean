@@ -284,73 +284,6 @@ private theorem cPolyRischDECancelExpGWf_eq (Dt : CPolyG α) (b : CPolyG α) :
 
 end CPolyG
 
-/-! ### Bridge of `cValuationGWf` to the fuel'd `cValuationG`
-
-`cValuationG fuel p x = cValuationG.go p fuel x` recurses on `fuel` with the per-step `cdvdG`/`cdivG` over the
-GCD-domain; the WF `cValuationGWf` recurses on `(cnormG x).length` with the fuel-free `cdvdGWf`/`cdivWf`. The
-gate `CValuationGenRegular fuel p x` mirrors the fuel'd `.go` recursion with a step budget, carrying the
-per-step leaf agreements (`cdvdGWf p x = cdvdG fuel p x`, `cdivWf x p = cdivG fuel x p`) and the WF guard. -/
-
-/-- **Per-run generic valuation-loop regularity** `CValuationGenRegular fuel p x` (nodes conclude at fuel
-`fuel + 1`): mirrors the `cValuationG.go` recursion. `baseZero` (`x = 0`) / `baseConst` (`deg(p) = 0`) /
-`baseNonDvd` (`p ∤ x`) are terminal; `step` carries the leaf agreements `cdvdGWf p x = cdvdG fuel p x` (`hdvd`,
-and that it is `true`) and `cdivWf x p = cdivG fuel x p` (`hdiv`), the WF guard firing (`(cnormG (x/p)).length
-< (cnormG x).length`), and the same recursively on `x/p` within budget. -/
-private inductive CValuationGenRegular {α : Type*} [CField α] [CFracGcdCore α] [CFieldSpec α] (p : CPolyG α) :
-    ℕ → CPolyG α → Prop
-  /-- terminal: `x = 0`, valuation `0`. -/
-  | baseZero {fuel : ℕ} {x : CPolyG α} (hx : CPolyG.cisZeroG x = true) :
-      CValuationGenRegular p (fuel + 1) x
-  /-- terminal: `p` is constant/unit (`deg p = 0`), valuation `0`. -/
-  | baseConst {fuel : ℕ} {x : CPolyG α} (hx : ¬ CPolyG.cisZeroG x = true) (hp : CPolyG.cdegG p = 0) :
-      CValuationGenRegular p (fuel + 1) x
-  /-- terminal: `p ∤ x`, valuation `0`. -/
-  | baseNonDvd {fuel : ℕ} {x : CPolyG α} (hx : ¬ CPolyG.cisZeroG x = true) (hp : CPolyG.cdegG p ≠ 0)
-      (hdvdlen : (CPolyG.cnormG x : List α).length ≤ fuel)
-      (hdvd : CPolyG.cdvdG fuel p x = false) : CValuationGenRegular p (fuel + 1) x
-  /-- recursive: `p ∣ x`, the WF guard fires, recurse on `x/p` within budget. -/
-  | step {fuel : ℕ} {x : CPolyG α} (hx : ¬ CPolyG.cisZeroG x = true) (hp : CPolyG.cdegG p ≠ 0)
-      (hdvd : CPolyG.cdvdG fuel p x = true)
-      (hdvdlen : (CPolyG.cnormG x : List α).length ≤ fuel)
-      (hguard : (CPolyG.cnormG (CPolyG.cdivG fuel x p) : List α).length
-          < (CPolyG.cnormG x : List α).length)
-      (hrec : CValuationGenRegular p fuel (CPolyG.cdivG fuel x p)) :
-      CValuationGenRegular p (fuel + 1) x
-
-namespace CPolyG
-
-variable {α : Type*} [CField α] [CFracGcdCore α] [CFieldSpec α]
-
-/-- **Bridge — `cValuationGWf` equals `cValuationG` on a regular run.** Under `CValuationGenRegular p fuel x`,
-`cValuationGWf p x = cValuationG fuel p x`. The fuel regularity lives only here; the WF own-loop carries none.
-By induction on the gate (the per-step `cdvdGWf`/`cdivWf` match the fuel'd `cdvdG`/`cdivG` via
-`cdvdGWf_eq_of_fuel` / `cdivmodWf_eq_of_fuel`; the WF guard fires; the fuel'd `.go` descends). -/
-private theorem cValuationGWf_eq (p : CPolyG α) :
-    ∀ (fuel : ℕ) (x : CPolyG α), CValuationGenRegular p fuel x →
-      cValuationGWf p x = cValuationG fuel p x := by
-  intro fuel x hreg
-  induction hreg with
-  | @baseZero fuel x hx =>
-    rw [cValuationGWf.eq_def, if_pos hx, cValuationG, cValuationG.go, if_pos hx]
-  | @baseConst fuel x hx hp =>
-    rw [cValuationGWf.eq_def, if_neg hx, if_pos hp, cValuationG, cValuationG.go,
-      if_neg hx, if_pos hp]
-  | @baseNonDvd fuel x hx hp hdvdlen hdvd =>
-    have hdvdwf : cdvdGWf p x = false := by rw [cdvdGWf_eq_of_fuel fuel p x hdvdlen, hdvd]
-    rw [cValuationGWf.eq_def, if_neg hx, if_neg hp, hdvdwf, if_neg (by decide : ¬ (false = true)),
-      cValuationG, cValuationG.go, if_neg hx, if_neg hp, hdvd, if_neg (by decide : ¬ (false = true))]
-  | @step fuel x hx hp hdvd hdvdlen hguard hrec ih =>
-    have hdvdwf : cdvdGWf p x = true := by rw [cdvdGWf_eq_of_fuel fuel p x hdvdlen, hdvd]
-    have hdiveq : cdivWf x p = cdivG fuel x p := by
-      rw [cdivWf, cdivmodWf_eq_of_fuel fuel x p hdvdlen, cdivG]
-    conv_lhs => rw [cValuationGWf.eq_def, if_neg hx, if_neg hp, hdvdwf, hdiveq, if_pos hguard, ih]
-    conv_rhs => rw [cValuationG, cValuationG.go, if_neg hx, if_neg hp, hdvd,
-      if_pos (by rfl : (true = true))]
-    rw [if_pos (by rfl : (true = true)), cValuationG]
-    rw [hdiveq]
-
-end CPolyG
-
 /-! ## Part 3 — the flat-composition §6 pipeline (fuel-free leaf substitution)
 
 Everything past the five recursive bottoms is a flat composition over fuel'd leaves. The fuel-free companions
@@ -536,10 +469,10 @@ Each flat-composition `…GWf` op mirrors its `…G` original with the fuel drop
 rewrite threading the per-leaf sub-agreements (every fuel'd sub-op replaced by its fuel-free companion at
 sufficient fuel). The sub-agreements are taken as **hypotheses** — the fuel bounds they carry live only there;
 the runtime `…GWf` carries none. The recursive-bottom agreements
-(`cValuationGWf`/`cPolyRischDECancel*GWf`/`cSplitFactorFastGWf`/`cgcdFFCoreWf`) feed in through their own
-regularity gates. The `cWeakNormalizerGWf` / `cRdeNormalDenominator`
-/ `cRdeSpecialDenominator` stage agreements are taken as whole-stage hypotheses (the valuation own-loop
-`cValuationGWf` has no standalone bridge, feeding the special-denominator stage instead). -/
+(`cPolyRischDECancel*GWf`/`cSplitFactorFastGWf`/`cgcdFFCoreWf`) feed in through their own regularity gates.
+The `cWeakNormalizerGWf` / `cRdeNormalDenominator` / `cRdeSpecialDenominator` stage agreements are taken as
+whole-stage hypotheses; the valuation own-loop `cValuationGWf` feeds those stages without a standalone
+compatibility bridge. -/
 
 namespace CPolyG
 
