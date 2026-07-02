@@ -528,7 +528,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Fuel-free coprimality of the divided coefficients** (`isCoprime_bd_ad_of_dividedWf`): when `g ~
 gcd(a, b)` divides both exactly, the fuel-free gcd `cgcdWf bd ad` is a unit, so its Bézout identity gives
 `IsCoprime (toPolyG bd) (toPolyG ad)` without a `cgcdTerminatesG` hypothesis. -/
-theorem isCoprime_bd_ad_of_dividedWf [CFracGcdCore α] (a b ad bd g : CPolyG α)
+theorem isCoprime_bd_ad_of_dividedWf (a b ad bd g : CPolyG α)
     (hgne : toPolyG g ≠ 0)
     (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
     (hdiva : toPolyG ad * toPolyG g = toPolyG a)
@@ -711,7 +711,7 @@ solution `q : K[X]` of the current level, there is a peeled factor `h : K[X]` wi
 an `IsReducedRdeSolK` solution of the NEXT level's reduced equation. Assembles the divided-coefficient
 exactness, `isCoprime_bd_ad_of_dividedWf`, the divided solution, and the Bézout `toPolyG_cdiophantineGWf`.
 Produces exactly the `K[X]` witness `CSPDEGSolvableInputsGen` carries — no `CPolyG` lift needed. -/
-theorem exists_peeled_reducedSolK [CFracGcdCore α] (Dt a b c g ad bd : CPolyG α)
+theorem exists_peeled_reducedSolK (Dt a b c g ad bd : CPolyG α)
     (q : (CFieldSpec.K α)[X]) (fuel : ℕ)
     (had : ad = cdivWf a g) (hbd : bd = cdivWf b g)
     (hg0 : cnormG g ≠ []) (_hfa : (cnormG a : List α).length ≤ fuel)

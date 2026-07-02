@@ -29,9 +29,10 @@ substitute the fuel-free leaves directly. The generic leaves
 `cdivmodWf`/`cgcdWf`/`cresultantWf` (`ComputableFuelFreeGcd`/`ComputableFuelFreeResultant`) are reused verbatim
 where the pipeline bottoms out at them.
 
-Every `…GWf` def is **`[CField α]`-only on the fuel-free fragment** (plus `[CDiffField α]`/`[CFracGcdCore α]`
-where the pipeline needs the derivation / the fraction-free gcd) — never `[CFieldSpec α]`, which would break
-`native_decide` over the noncomputable tower (the keystone lesson). The runtime ops carry no fuel. -/
+Every `…GWf` def is **`[CField α]`-only on the fuel-free fragment** (plus `[CDiffField α]`/
+`[CFracGcdCoreWf α]` where the pipeline needs the derivation / the fraction-free gcd) — never
+`[CFieldSpec α]`, which would break `native_decide` over the noncomputable tower (the keystone lesson).
+The runtime ops carry no fuel. -/
 
 open Polynomial
 
