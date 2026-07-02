@@ -481,6 +481,44 @@ def cRischDEGWf (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
         let Q := caddG (cmulG α' v) β
         some (cmulG Q h1, h0)
 
+/-- **`cRischDEGWf = some _` structurally forces the Wf stage `some`-results.** A successful fuel-free
+§6 RDE run exposes the normal-denominator output, the SPDE output on the Wf special-cleared coefficients,
+the Wf Poly-Risch-DE dispatcher output, and the final numerator/denominator reassembly. -/
+theorem cRischDEGWf_some_imp_stages (Dt : CPolyG α) (fnum fden gnum gden ynum yden : CPolyG α)
+    (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden)) :
+    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0)
+      ∧ cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β)
+      ∧ cPolyRischDEGWf Dt bbar cbar m = some v
+      ∧ ynum = cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.2
+      ∧ yden = h0 := by
+  rw [cRischDEGWf] at hsucc
+  rcases hnorm : cRdeNormalDenominatorGWf Dt fnum fden gnum gden with _ | ⟨a0, b0, c0, h0⟩ <;>
+    rw [hnorm] at hsucc
+  · exact absurd hsucc (by simp)
+  · simp only at hsucc
+    rcases hspecial : cRdeSpecialDenominatorGWf Dt a0 b0 c0 with ⟨a, b, c, h1⟩
+    rw [hspecial] at hsucc
+    rcases hspde : cSPDEGWf Dt a b c (cRdeBoundDegreeG Dt a b c : ℤ) with _ | ⟨bbar, cbar, m, α', β⟩ <;>
+      rw [hspde] at hsucc
+    · exact absurd hsucc (by simp)
+    · simp only at hsucc
+      rcases hpoly : cPolyRischDEGWf Dt bbar cbar m with _ | v <;> rw [hpoly] at hsucc
+      · exact absurd hsucc (by simp)
+      · rw [Option.some.injEq, Prod.mk.injEq] at hsucc
+        obtain ⟨hynum, hyden⟩ := hsucc
+        refine ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, rfl, ?_, hpoly, ?_, hyden.symm⟩
+        · rw [hspecial]
+          exact hspde
+        · rw [hspecial]
+          exact hynum.symm
+
 end CPolyG
 
 /-! ## Part 4 — ★ `native_decide` smoke test: the headline `cRischDEGWf` computes fuel-free
