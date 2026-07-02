@@ -29,7 +29,7 @@ The deliverable:
   Dt))` over `RatFunc (CFieldSpec.K α)`, with the quotient rule `towerFractionFieldDerivG_div`.
 
 The bridge is what the a-priori one-shots (`cIntegrateGFullWf_primitive_oneShot`,
-`field_identity_of_cIntegrateGFull_of_checkIdentityG`) consume to turn an engine self-check into the field
+`field_identity_of_cIntegrateGFullWf_of_checkIdentityG`) consume to turn an engine self-check into the field
 identity `D(∫f) = f` — see `ComputableOneShotSoundness` / `ComputableNormalPartSoundness`. -/
 
 open Polynomial Classical

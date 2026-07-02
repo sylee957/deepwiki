@@ -48,13 +48,9 @@ took the engine's own round-trip check as the bridge, we close the assembly thro
   `D(res) = a/d`, from the engine's `checkIdentityG = true` certificate (which the Hermite half + RT half
   together validate, and which `native_decide` reaches for any concrete run). Pure composition with
   `field_identity_of_checkIdentityG`. The `checkIdentityG` guard is the only residual.
-* **`field_identity_of_cIntegrateGFull_of_checkIdentityG`** — the FULL `cIntegrateGFull = some res`
-  one-shot `D(res) = a/d`, gated on the engine's own `checkIdentityG = true`, at the level-1 carrier
-  `α = QFunNZG ℚ`. This subsumes both the poly branch (`ComputableOneShotSoundness`) and the normal part,
-  through the single bridge.
 
 So the normal part is **Hermite-half abstract** (`cHermiteReduceTowerG_telescope`, axiom-clean) and the
-full `cIntegrateGFull` one-shot is **checker-free modulo the engine's own `checkIdentityG` self-certificate**
+full Wf driver one-shot is **checker-free modulo the engine's own `checkIdentityG` self-certificate**
 — with the precise remaining gap being the **abstract Rothstein–Trager residue-sum identity** that would
 discharge that certificate without `native_decide` (the documented continuation, shared with the radical /
 general log-soundness frontier). -/
@@ -1056,40 +1052,11 @@ theorem field_identity_of_cIntegrateReducedGWf_of_checkIdentityG [CFracGcdCoreWf
   field_identity_of_checkIdentityG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands) a d
     hgden haden hlogs hcheck
 
-/-! ### ★★★ The FULL one-shot `cIntegrateGFull = some res ⟹ D(res) = a/d` (engine-certificate bridge)
-
-`cIntegrateGFull` dispatches to the polynomial branch (`cPolyRischDEG`, one-shot already abstract in
-`ComputableOneShotSoundness`), the normal part (`cIntegrateReducedG`, Hermite half abstract here), and the
-recombination — all of which the engine's single `checkIdentityG` validates uniformly. So the cleanest full
-one-shot, covering *every* regime `cIntegrateGFull` lands, is gated on the engine's own `checkIdentityG`
-certificate via the carrier-agnostic bridge `field_identity_of_checkIdentityG` — the algorithm output
-passing its own check. -/
-
-/-- **★★★ The full `cIntegrateGFull` one-shot, gated on the engine's own `checkIdentityG`** — for any
-result `res` the full driver `cIntegrateGFull Dt fuel a d cands` lands (the `fuel`/`cands` regime carried
-as documentation), if the engine's own cleared check passes (`checkIdentityG Dt res a d = true` —
-reachable by `native_decide` for any concrete run; abstractly the poly branch's
-`checkIdentityG_cIntegratePolyG_const` and the normal part's Hermite + RT validation together supply it),
-then the field-level identity `D(res) + logResidueSumG Dt res.logs = amG a/amG d` holds over `RatFunc
-(CFieldSpec.K α)`. Covers EVERY regime `cIntegrateGFull` dispatches into (polynomial branch, normal part,
-recombination) through the single carrier-agnostic bridge `field_identity_of_checkIdentityG` — the
-`checkIdentityG` self-certificate alone supplies correctness, the `field_identity_of_checkIdentityG` bridge
-with the guard made explicit (the algorithm output passes its own check). -/
-theorem field_identity_of_cIntegrateGFull_of_checkIdentityG [CFracGcdCore α] [CRischField α]
-    (Dt : CPolyG α) (a d : CPolyG α) (res : IntegralResultG α)
-    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
-
 /-! ### ★ The deliverables at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
 
-Instantiating the Hermite half and the full one-shot bridge at `α = QFunNZG ℚ`, where `CFieldSpec.K
-(QFunNZG ℚ) = RatFunc ℚ` (genuine `Algebra ℚ`). These are the concrete normal-part / full one-shot
-statements over `ℚ(x)(t)`. The local instance bridges the carrier abbreviation to `RatFunc ℚ`. -/
+Instantiating the Hermite half at `α = QFunNZG ℚ`, where `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ` (genuine
+`Algebra ℚ`). The full-driver Wf check bridge lives in `ComputableUnifiedFuelFree`; the raw
+carrier-agnostic check bridge is `field_identity_of_checkIdentityG`. -/
 
 /-- The engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
 `QFunNZG ℚ` deliverables synthesize the **same** `Algebra ℚ` the bridge `towerFractionFieldDerivG` uses. -/
@@ -1122,23 +1089,6 @@ theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
           / amG (QFunNZG ℚ) (toPolyG (rest.getLastD L₀).2)
       = amG (QFunNZG ℚ) (toPolyG L₀.1) / amG (QFunNZG ℚ) (toPolyG L₀.2) :=
   cHermiteReduceTowerG_telescope_seed Dt L₀ rest glocs hmem hstep
-
-/-- **★★★ The full `cIntegrateGFull` one-shot over `ℚ(x)(t)`, gated on the engine's own `checkIdentityG`**
-— at the level-1 carrier `α = QFunNZG ℚ` (`CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`): if
-`cIntegrateGFull = some res` and the engine's own check passes (`checkIdentityG Dt res a d = true`), then
-`D(res) + logResidueSumG Dt res.logs = amG a/amG d` over `RatFunc ℚ`. Covers EVERY regime `cIntegrateGFull`
-dispatches into, through the carrier-agnostic bridge. The concrete full one-shot at ℚ(x)(t), modulo the
-engine's own self-certificate. -/
-theorem field_identity_of_cIntegrateGFull_of_checkIdentityG_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
-    (a d : CPolyG (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
-    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
-    towerFractionFieldDerivG Dt
-        (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
-  field_identity_of_cIntegrateGFull_of_checkIdentityG Dt a d res hgden haden hlogs hcheck
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
@@ -1357,19 +1307,6 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   field_identity_of_cIntegrateReducedGWf_of_checkIdentityG Dt a d cands hgden haden hlogs hcheck
 
--- ★★★ THE FULL ONE-SHOT at `α = QFunNZG ℚ`, gated on the engine's own `checkIdentityG`:
--- `cIntegrateGFull = some res` + `checkIdentityG = true` ⟹ `D(res) = a/d` over `RatFunc ℚ`.
-example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
-    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
-    towerFractionFieldDerivG Dt
-        (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
-  field_identity_of_cIntegrateGFull_of_checkIdentityG_qfunNZG Dt a d res
-    hgden haden hlogs hcheck
-
 /-! ### Axiom audit — the Hermite half and the assembly rest only on the standard kernel axioms
 (`propext`, `Classical.choice`, `Quot.sound`); no `native_decide`, no `sorry`. -/
 
@@ -1403,8 +1340,6 @@ example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ)) (res : Integral
 #print axioms cHermiteReduceTowerG_telescope
 #print axioms cHermiteReduceTowerG_telescope_seed
 #print axioms field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
-#print axioms field_identity_of_cIntegrateGFull_of_checkIdentityG
 #print axioms cHermiteReduceTowerG_telescope_seed_qfunNZG
-#print axioms field_identity_of_cIntegrateGFull_of_checkIdentityG_qfunNZG
 
 end DeepWiki.SymbolicIntegration
