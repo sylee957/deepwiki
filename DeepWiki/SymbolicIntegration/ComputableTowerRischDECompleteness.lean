@@ -1,14 +1,18 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
 
-/-! # ★★ The TOWER-INDUCTION for RDE completeness — the grand finale (Bronstein Ch. 6)
+/-! # Wf-first tower induction for RDE completeness
 
 The public Wf-facing RDE decision procedure is `crischDESolveSoundWf_isDecisionProcedure`
 (`ComputableRischDEDecisionProcedure`): over `QFunNZG β`, the fuel-free sound solver returns `some` **iff**
 the field-level Risch DE is solvable (`crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`), modulo the
 Wf-native frontier `RischDEDecisionProcedureFrontierWf f g` and the direct Wf soundness certificate
-`RischDESoundnessWf f g`. This tower-induction file keeps the underlying class-oracle induction and also
-exposes a Wf step for the public `crischDESolveSoundWf` wrapper. Its inner frontier still carries the same
-three §6 residual tips — among them the §6.6 cancellation `hpoly`, reduced
+`RischDESoundnessWf f g`. This tower-induction file exposes that Wf public step as the primary surface:
+`CRischFieldCompleteWf β` says the fuel-free wrapper is complete at the next `QFunNZG β` level, and
+`crischFieldCompleteWf_step` derives it from the Wf per-level frontier.
+
+The older class-oracle induction is retained as a compatibility/internal recursion layer because the
+cancellation subroutines still call the base `CRischField.crischDESolve` one level down. Its inner frontier
+still carries the same three §6 residual tips — among them the §6.6 cancellation `hpoly`, reduced
 (`ComputableRischDESolveExhaustiveness`) to the base-oracle completeness
 `Cancel{Prim,Exp}OracleComplete`, the *per-step recursion into one tower level down*. This file ties that
 recursion into a single structural induction.

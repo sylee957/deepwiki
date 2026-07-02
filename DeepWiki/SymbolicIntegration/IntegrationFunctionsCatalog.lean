@@ -147,17 +147,20 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @decisionProcedureFrontierWf_of_innerFrontier
 #check @crischDESolveSoundWf_isDecisionProcedure
 
--- ★ The TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): the old class-oracle
--- step `crischFieldComplete_step` is still available for `CRischField.crischDESolve`, and the public Wf step
--- `crischFieldCompleteWf_step` targets `crischDESolveSoundWf` directly, modulo the Wf per-level frontier
+-- ★ The Wf-first TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): the public Wf
+-- predicate `CRischFieldCompleteWf` and step `crischFieldCompleteWf_step` target `crischDESolveSoundWf`
+-- directly, modulo the Wf per-level frontier
 -- `RischDEStepFrontierWf` and direct Wf soundness certificates. The Wf per-level frontier now exposes the
 -- Wf inner residual-tip frontier and uses `decisionProcedureFrontierWf_of_innerFrontier` to assemble the
--- field-level decision frontier. Remaining non-RDE completeness frontiers are separate: the tower-case
+-- field-level decision frontier. The older class-oracle step `crischFieldComplete_step` remains available
+-- only for the residual recursion layer that still calls `CRischField.crischDESolve` one level down. Remaining
+-- non-RDE completeness frontiers are separate: the tower-case
 -- `NondegenerateLog` (multi-level ℚ-linear-dependence structure theorem; the rational base is done,
 -- `nondegenerateLog_ratFunc_iff_logDeriv_ne_zero`), the exponential Liouville instance (off-limits), and the
 -- tangent §5.10 reduction (a separate engine).
 #check @crischFieldComplete_Q
 #check @crischFieldComplete_step
+#check @CRischFieldCompleteWf
 #check @RischDEStepFrontierWf
 #check @crischFieldCompleteWf_step
 
