@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableQFunReduce
-import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
+import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.ComputableHyperexpExampleData
 
 /-! # Tower-level demos for the `QFunNZG` gcd-cancel reducer
 The generic tower fraction field `QFunNZG α` (`ComputableTowerField`) keeps fractions **unreduced**:

@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
 import DeepWiki.SymbolicIntegration.ComputableHyperexpNormalCore
-import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
+import DeepWiki.SymbolicIntegration.ComputableHyperexpExampleData
 
 /-! # The hyperexponential normal part via residual feedback (Bronstein §5.9)
 `ComputableHyperexpSpecial` closed the §5.10 **special** part of a hyperexponential integral
@@ -158,15 +158,6 @@ residual feedback. -/
 
 open CPolyG
 
-/-- The base field `Lvl1 = QFunNZG ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits
-(re-exported for this file; same as `ComputableHyperexpSpecial.Lvl1`). -/
-abbrev NLvl1 : Type := QFunNZG ℚ
-
-/-- The base variable `x ∈ Lvl1 = ℚ(x)` (the monomial of ℚ(x) = QFunNZG ℚ), as the unreduced fraction
-`[0, 1]/[1] = x/1`. The base integral `∫1 dx = x`, so `cIntegrateHyperexpNormalG` lands a rational part
-`−x` on the worked example. -/
-def nLvl1X : NLvl1 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩
-
 /-- The hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `CPolyG NLvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`): the coefficient of `t¹` is `η = 1`. -/
 def nHyperexpDt : CPolyG NLvl1 := [CField.zero, CField.one]
@@ -305,12 +296,6 @@ reduced fraction `2x/1` (the numerator-`η` cancellation keeps the residue const
 spurious denominator — unlike the unreduced `2x/2x` of a non-δ-constant residue), so `crischDESolve` over
 ℚ(x) genuinely integrates the non-constant `2x` to `x²`, and `cIntegrateHyperexpNormalG` lands
 `log(t−1) − x²` with `D(∫f) = f`. -/
-
-/-- The base value `x² ∈ Lvl1 = ℚ(x)` (the antiderivative of `2x`), as `x·x`. -/
-def nLvl1XSq : NLvl1 := CField.mul nLvl1X nLvl1X
-
-/-- The hyperexponential coefficient `η = 2x ∈ ℚ(x)` for `t = exp(x²)` (the monomial of ℚ(x) is `x`). -/
-def nLvl1TwoX : NLvl1 := CField.mul (CField.add CField.one CField.one) nLvl1X
 
 /-- The hyperexponential monomial derivative `Dt = η·t = [0, 2x]` over `CPolyG NLvl1 = ℚ(x)[t]`
 (`t = exp(x²)`, `η = 2x`): the coefficient of `t¹` is the **non-constant** `η = 2x ∈ ℚ(x)`. -/
