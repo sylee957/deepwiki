@@ -125,6 +125,26 @@ as the final gate. Every new `Sources/*` module must be imported into `Sources.l
    `Computable/Tower/RischDEInstance.lean` importing `Tower.RischDEWellFounded` (which transitively
    has `Tower.RischDE`), so it sees both `cRischDEGWf` and `QFunNZG`/`cdenomNormalGateG`.
 
+> **P1 FEASIBILITY VERDICT (2026-07-02): GREEN — mechanical mirror-port, not blocked on the open
+> spec.** The fuel'd headline `crischDESolve_field_of_witness_residual`
+> (`Computable/SoundnessCapstone.lean:294`) *derives* the field identity as: gate-reduction →
+> `rdeCleared_of_success_and_residual` (`RischDE/Structural.lean:294`) → `rischDE_field_of_cleared`
+> (`RischFieldSpec.lean:116`, fuel-agnostic — REUSE). The cleared derivation is
+> `cRischDEG_rdeCleared_gen` (`RischDE/TowerCorrectG.lean:769`) fed by the derivable-stages lemma
+> `cRischDEG_some_imp_noCancel_of_primitive` + the residual `RischDEStructuralResidual`. To Wf-ify:
+> the Wf stages (`cRdeNormalDenominatorGWf`, `cRdeSpecialDenominatorGWf`, `cSPDEGWf`,
+> `cPolyRischDENoCancelGWf`) are **structural mirrors** of the fuel'd stages (identical `let`/`if`
+> shape and output formulas; only the split/gcd/dvd sub-ops swap `…G fuel → …GWf`), so the three
+> capstone sub-lemmas port near-verbatim: `cRdeSpecialDenominatorGWf_primitive_eq`
+> (`RischDEWellFounded.lean:294`) ALREADY EXISTS; `cRischDEGWf_some_imp_stages`
+> (`RischDEWellFounded.lean:449`) + `…_structural` (`Structural.lean:123`) ALREADY EXIST. So P1 needs
+> only: (a) a Wf `cRdeNormalDenominatorGWf_cleared_lift`, (b) a Wf
+> `cSPDEGWf_polyRischDENoCancel_cleared_at_boundDegree`, (c) `cPolyRischDEGWf_eq_noCancel_of_primitive`,
+> (d) assemble `cRischDEGWf_rdeCleared_gen` + `RischDEStructuralResidualWf` +
+> `cRischDEGWf_some_imp_noCancel_of_primitive` + the headline. The `hin`/`CSPDEGClearedInputsGen`
+> (open-spec kernel) stays a *hypothesis* in both — P1 does NOT try to close it. Bounded proof-porting,
+> not research.
+
 ### P1 — Prove the Wf instance soundness *standalone* (no switch yet; low-risk, independent commit)
 Before moving anything, make sure the target soundness exists on `cRischDEGWf`. Establish (or
 confirm) a lemma of the exact shape the rebased instance will need — the analogue of

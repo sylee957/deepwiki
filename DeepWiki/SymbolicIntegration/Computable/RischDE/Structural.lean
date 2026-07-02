@@ -173,6 +173,51 @@ theorem cPolyRischDEG_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG α)
   rw [show (max (0 : ℤ) (-1)) = 0 by norm_num]
   exact_mod_cast hdb
 
+omit [CFracGcdCore α] in
+/-- **Fuel-free mirror of `cPolyRischDEG_eq_noCancel_of_primitive`**: in the primitive regime
+(`cdegG Dt = 0`) with positive `deg(bbar)`, the fuel-free dispatcher `cPolyRischDEGWf` reduces to the
+non-cancellation solve `cPolyRischDENoCancelGWf`. Same Lemma-6.5.1 routing as the fuel'd version; the
+dispatcher `cPolyRischDEGWf` is a structural mirror of `cPolyRischDEG`. -/
+theorem cPolyRischDEGWf_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG α)
+    (bbar cbar : CPolyG α) (m : ℤ) (hδ : cdegG Dt = 0) (hdb : 0 < cdegG bbar) :
+    cPolyRischDEGWf Dt bbar cbar m = cPolyRischDENoCancelGWf Dt bbar cbar m := by
+  rw [cPolyRischDEGWf]
+  have hlen : 0 < (cnormG bbar : List α).length := by
+    have := hdb; rw [cdegG] at this; omega
+  have hbne : cisZeroG bbar = false := by
+    rw [cisZeroG, List.isEmpty_eq_false_iff_exists_mem]
+    exact List.exists_mem_of_length_pos hlen
+  simp only [hbne, Bool.false_eq_true, if_false, hδ, Nat.cast_zero, zero_sub]
+  rw [if_pos]
+  rw [show (max (0 : ℤ) (-1)) = 0 by norm_num]
+  exact_mod_cast hdb
+
+omit [CFracGcdCore α] in
+/-- **Fuel-free mirror of `cRischDEG_some_imp_noCancel_of_primitive`**: from a bare `cRischDEGWf`
+success in the primitive regime with positive `deg(bbar)`, the §6.2 `hnorm`, §6.4 `hspde`, and the
+capstone's §6.5 non-cancellation `hpoly` (`cPolyRischDENoCancelGWf … = some v`) all hold. Composes
+`cRischDEGWf_some_imp_stages` with `cPolyRischDEGWf_eq_noCancel_of_primitive`. -/
+theorem cRischDEGWf_some_imp_noCancel_of_primitive [CFracGcdCoreWf α] [CRischField α] (Dt : CPolyG α)
+    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+    (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden)) :
+    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0)
+      ∧ cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1 (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β)
+      ∧ (0 < cdegG bbar → cPolyRischDENoCancelGWf Dt bbar cbar m = some v)
+      ∧ ynum = cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.2
+      ∧ yden = h0 := by
+  obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hdisp, hynum, hyden⟩ :=
+    cRischDEGWf_some_imp_stages Dt fnum fden gnum gden ynum yden hsucc
+  refine ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, ?_, hynum, hyden⟩
+  intro hdb
+  rw [← cPolyRischDEGWf_eq_noCancel_of_primitive Dt bbar cbar m hδ hdb]
+  exact hdisp
+
 /-! ### ★ The combined derivable decomposition (primitive regime, positive `deg(bbar)`)
 
 Composing `cRischDEG_some_imp_stages` (the three stage-`some` results) with
