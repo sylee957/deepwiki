@@ -1357,4 +1357,40 @@ theorem rdeClearedWf_of_success_and_residual (Dt : CPolyG α)
 
 end WfResidual
 
+section WfFieldHeadline
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+  [CRischField α] [Algebra ℚ (CFieldSpec.K α)]
+
+/-- **★ The fuel-free §6 RDE oracle's field-level soundness, from bare success + the isolated residual**
+(primitive regime): composes `rdeClearedWf_of_success_and_residual` (bare `cRischDEGWf` success + the
+residual ⟹ the cleared polynomial identity) with the cleared → field bridge `rischDE_field_of_cleared`.
+The Wf-track analogue of `crischDESolve_field_of_witness_residual`'s field-level conclusion, but for the
+*fuel-free* oracle directly — no tower-gcd witness, no fuel, no `native_decide`. -/
+theorem crischDEWf_field_of_success_and_residual (Dt : CPolyG α)
+    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+    (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden))
+    (hres : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      RischDEStructuralResidualWf Dt fnum fden gnum gden a0 b0 c0 h0)
+    (hdb : ∀ a0 b0 c0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+      cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β) → 0 < cdegG bbar)
+    (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG ynum) / amG α (toPolyG yden))
+        + amG α (toPolyG fnum) / amG α (toPolyG fden)
+          * (amG α (toPolyG ynum) / amG α (toPolyG yden))
+      = amG α (toPolyG gnum) / amG α (toPolyG gden) := by
+  have hcleared := rdeClearedWf_of_success_and_residual Dt fnum fden gnum gden ynum yden hδ hsucc hres hdb
+  have hclam := congrArg (amG α) hcleared
+  simp only [map_add, map_mul, map_sub, map_pow] at hclam
+  exact rischDE_field_of_cleared Dt fnum fden gnum gden ynum yden hfden hgden hyden hclam
+
+end WfFieldHeadline
+
 end DeepWiki.SymbolicIntegration
