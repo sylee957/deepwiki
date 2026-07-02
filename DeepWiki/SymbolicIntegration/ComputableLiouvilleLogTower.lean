@@ -9,7 +9,7 @@ The single-level transcendental-log Liouville keystone is `isLiouville_logExtens
 Liouville steps `F ⊆ K ⊆ A` into `F ⊆ A`.  This file assembles the two into the **multi-level tower**
 `F ⊆ F(log u₁) ⊆ F(log u₁, log u₂) ⊆ …` — Liouville over `F` at every height, modulo only
 `NondegenerateLog uᵢ` at each level.  This is the abstract structure-theorem completeness direction of
-the transcendental Risch algorithm, mirroring the RDE tower-induction `crischFieldComplete_step`.
+the transcendental Risch algorithm, mirroring the Wf RDE tower step `crischFieldCompleteWf_step`.
 
 ## What `IsLiouville.trans` actually requires (verified against Mathlib source)
 

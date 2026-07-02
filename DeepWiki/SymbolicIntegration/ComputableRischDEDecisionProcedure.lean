@@ -27,9 +27,7 @@ to lift a successful `cRischDEGWf` run through the raw wrapper:
 | `hck`  | §6.1 normality | `IsCanonNormalizedWf f q'` | contrapositive of the unsoundness witness |
 | `hinner` | §6.2-6.6 inner solve | `RischDEInnerCompletenessWf` for the Wf inner input | Wf-native inner completeness |
 
-The helper `RischDEInnerDecisionFrontierFueled` records the legacy fueled **three irreducible §6 residuals**
-named by this arc — one per §6 stage, each carrying its Bronstein theorem and its actionable proof route.
-The Wf replacement `RischDEInnerDecisionFrontierWf` keeps the normal-denominator residual fuel-free and feeds
+The inner frontier `RischDEInnerDecisionFrontierWf` keeps the normal-denominator residual fuel-free and feeds
 `RischDEInnerCompletenessWf` directly:
 
 | residual (deepest tip) | clause it discharges | Bronstein | route | proven below it |
@@ -49,98 +47,6 @@ open scoped Differential
 namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
-
-/-! ## Legacy fueled three-residual frontier (one level down: `RischDEInnerCompleteness`)
-
-The legacy fueled map remains here only as an impact-contained bridge for older residual files. The Wf
-decision procedure below does not consume this structure; it consumes `RischDEInnerCompletenessWf` directly.
-The fueled inner-solve completeness `RischDEInnerCompleteness`, whose three clauses (`hnorm`/`hbound`/`hsolve`)
-the proven `rischDEInnerCompleteness_of_residuals` produces from exactly three residuals. We bundle the
-**deepest tips** of those three — pushed as far down each chain as the proven layers reach — into one
-structure: the differential-subring fact (`hnorm`/`hdvd`), the §6.3 cancellation residual whose correct
-deepest tip is the log-derivative oracle (`hbound`), and the SPDE/poly-RDE exhaustiveness (`hsolve`). This is
-the precise, citable fueled §6 frontier while Wf counterparts are taking over the public path. -/
-
-section InnerFrontier
-
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
-  [CRischField α]
-
-/-- **The legacy fueled three-residual §6 inner-completeness frontier**
-`RischDEInnerDecisionFrontierFueled Dt fnum fden gnum gden`: the deepest tips of the three §6 residuals that, by
-the proven `rischDEInnerCompleteness_of_residuals`, assemble the inner-solve completeness
-`RischDEInnerCompleteness` (clause `hinner` of the field-level decision procedure). Exactly three fields, one
-per §6 stage, each the irreducible tip its chain reaches:
-
-* `hnorm` — ★ the §6.2 **`k⟨t⟩` differential-subring fact** `RdeNormalClearedResidual` (Bronstein Cor
-  6.1.1(ii) / Thm 6.1.2): its deep clause `hcleared` is `dₙh²g ∈ k⟨t⟩` (the cleared (6.2) RHS has
-  nonnegative order at every normal pole); the structural clauses are §3.5 splitting / lowest-terms, the UFD
-  per-pole layer is proven. Carries the §6.2 dividend fuel bound `hfuel` (benign per-run).
-* `hbound` — ★ the §6.3 **degree-bound cancellation residual** `RdeBoundCancellationResidual` (Bronstein Thm
-  6.3.1, the `λ`-recursion): the leading-term cancellation case. The non-cancellation bound and the
-  **nonlinear `λ`-recursion** are proven outright; the deepest *correct* tip below it is the **log-derivative
-  oracle** `ExpPrimLogDerivativeBound` (the δ ≤ 1 parametric logarithmic-derivative decision, §5.12).
-* `hsolve` — ★ the §6.4–6.6 **SPDE peeling-divisibility + cancellation-regime exhaustiveness**
-  `RischDESolveExhaustiveResidual`: a polynomial solution survives the SPDE peel and the poly-RDE dispatcher.
-  The peel-step inverse and the base/control-flow layers are proven; the irreducible residue is the peeling
-  divisibility `(a/g) ∣ (q − r)` and the cancellation-regime exhaustiveness.
-
-A `Prop`-bundle of stated assumptions, NO `sorry`; the precise §6 frontier of the decision procedure. -/
-structure RischDEInnerDecisionFrontierFueled (Dt fnum fden gnum gden : CPolyG α) : Prop where
-  /-- ★ §6.2/§6.1 — the `k⟨t⟩` differential-subring fact (`RdeNormalClearedResidual`, deep clause `dₙh²g ∈
-  k⟨t⟩`), discharging the §6.2 normal-denominator completeness `hnorm`/`hdvd` (Bronstein Cor 6.1.1(ii)). -/
-  hnorm : RdeNormalClearedResidual Dt fnum fden gnum gden
-  /-- The §6.2 dividend fuel bound (benign per-run; `towerRischDEFuel = 60` covers `dₙ·h²`). -/
-  hfuel : (CPolyG.cnormG (rdeNormDnh2 Dt towerRischDEFuel fden gden) : List α).length
-    ≤ towerRischDEFuel
-  /-- ★ §6.3 — the degree-bound cancellation residual (`RdeBoundCancellationResidual`, Bronstein Thm 6.3.1
-  `λ`-recursion); deepest correct tip = the log-derivative oracle `ExpPrimLogDerivativeBound` (§5.12). -/
-  hbound : RdeBoundCancellationResidual Dt fnum fden gnum gden
-  /-- ★ §6.4–6.6 — the SPDE peeling-divisibility + poly-RDE cancellation-regime exhaustiveness
-  (`RischDESolveExhaustiveResidual`), discharging the inner-solve exhaustiveness `hsolve`. -/
-  hsolve : RischDESolveExhaustiveResidual Dt fnum fden gnum gden
-
-/-- **The fueled three-residual frontier assembles `RischDEInnerCompleteness`**
-(`rischDEInnerCompleteness_of_decisionFrontierFueled`): the consolidated
-`RischDEInnerDecisionFrontierFueled` produces
-the full §6 inner-solve completeness `RischDEInnerCompleteness Dt fnum fden gnum gden`, via the proven
-assembly `rischDEInnerCompleteness_of_residuals` (with `hnorm` produced from the `k⟨t⟩`-cleared residual
-through `divisibilityResidual_of_cleared` + the benign fuel bound). This is the deep-clause (`hinner`)
-half of the decision procedure, reduced to exactly the three named §6 tips. -/
-theorem rischDEInnerCompleteness_of_decisionFrontierFueled (Dt fnum fden gnum gden : CPolyG α)
-    (h : RischDEInnerDecisionFrontierFueled Dt fnum fden gnum gden) :
-    RischDEInnerCompleteness Dt fnum fden gnum gden :=
-  rischDEInnerCompleteness_of_residuals Dt fnum fden gnum gden
-    (divisibilityResidual_of_cleared Dt fnum fden gnum gden h.hnorm h.hfuel)
-    h.hbound h.hsolve
-
-/-- **The three-tip frontier yields the §6.2–6.6 inner-solve exhaustiveness** (`hinner clause`,
-`cRischDEG_isSome_of_decisionFrontierFueled`): from the consolidated
-`RischDEInnerDecisionFrontierFueled`, a
-`cRischDEG`-polynomial-solvable RDE makes the assembled §6 solve return `some` —
-`(∃ ynum yden, IsCRischDEGPolySol …) → (cRischDEG Dt towerRischDEFuel …).isSome = true`. This is the
-`hsolve` content (the deep clause (c) of the field-level decision procedure) read straight off the three
-tips, through `rischDEInnerCompleteness_of_decisionFrontierFueled` and
-`cRischDEG_isSome_of_innerCompleteness`. -/
-theorem cRischDEG_isSome_of_decisionFrontierFueled (Dt fnum fden gnum gden : CPolyG α)
-    (h : RischDEInnerDecisionFrontierFueled Dt fnum fden gnum gden)
-    (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
-    (cRischDEG Dt towerRischDEFuel fnum fden gnum gden).isSome = true :=
-  cRischDEG_isSome_of_innerCompleteness Dt fnum fden gnum gden
-    (rischDEInnerCompleteness_of_decisionFrontierFueled Dt fnum fden gnum gden h) hsol
-
-/-! ### Restatement against the §6 inner-completeness shape (anonymous `example`) -/
-
--- ★ The three named §6 tips (the `k⟨t⟩` fact + fuel, the §6.3 cancellation residual, the SPDE/poly-RDE
--- exhaustiveness) genuinely assemble the full §6.2–6.6 inner-solve completeness `RischDEInnerCompleteness`
--- — the deep `hinner` content of the field-level decision procedure — via the proven assembly.
-example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
-    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
-    (h : RischDEInnerDecisionFrontierFueled Dt fnum fden gnum gden) :
-    RischDEInnerCompleteness Dt fnum fden gnum gden :=
-  rischDEInnerCompleteness_of_decisionFrontierFueled Dt fnum fden gnum gden h
-
-end InnerFrontier
 
 /-! ## Wf inner frontier
 
@@ -342,23 +248,6 @@ Wf-native §6 frontier and the direct Wf soundness certificate.**
 through `crischDESolveSoundWf_complete_of_residualWf`; the `→` (soundness) is the direct
 `crischDESolveSoundWf_field` certificate application.
 
-**The legacy fueled three irreducible §6 residuals (the deepest tips,
-`RischDEInnerDecisionFrontierFueled`):**
-1. **§6.2/§6.1 — the `k⟨t⟩` differential-subring fact** (`RdeNormalClearedResidual`, deep clause `hcleared` =
-   `dₙh²g ∈ k⟨t⟩`): Bronstein **Cor 6.1.1(ii) / Thm 6.1.2**; route = Mathlib `derivative_rootMultiplicity`
-   per-pole order-drop lifted through `cValuationG`. Below it: the whole UFD/per-pole/arithmetic layer proven,
-   the structural clauses reduced to §3.5 splitting + lowest-terms.
-2. **§6.3 — the degree-bound cancellation residual** (`RdeBoundCancellationResidual`, deepest *correct* tip =
-   the log-derivative oracle `ExpPrimLogDerivativeBound`): Bronstein **Thm 6.3.1 / Lemma 6.3.3–6.3.4** (the
-   `λ`-recursion); route = the parametric logarithmic-derivative decision §5.12. Below it: the
-   non-cancellation bound + the **nonlinear `λ`-recursion** proven outright.
-3. **§6.4–6.6 — the SPDE peeling-divisibility + cancellation-regime exhaustiveness**
-   (`RischDESolveExhaustiveResidual`): Bronstein **§6.4–6.6** (SPDE peel + poly-RDE dispatcher); route = the
-   SPDE peel recursion. Below it: the engine/base/SPDE-control-flow/preservation layers proven, incl. the
-   peel-step inverse.
-
-`rischDEInnerCompleteness_of_decisionFrontierFueled` assembles these three into the original fueled
-`RischDEInnerCompleteness` map. The Wf replacement
 `rischDEInnerCompletenessWf_of_decisionFrontierWf` assembles the fuel-free inner map through
 `RdeNormalDivisibilityResidualWf`, `RdeBoundCancellationResidualWf`, and
 `RischDESolveExhaustiveResidualWf`. The public Wf capstone consumes
@@ -367,13 +256,11 @@ the Wf inner-input clauses through `RischDECompletenessResidualWf`. The lift of 
 the raw-solver `hinner` clause is encoded in
 `completenessResidualWf_of_decisionProcedureFrontierWf`. -/
 
-/-! ### Axiom audit (the Wf capstone and the three-residual assembly are axiom-clean;
+/-! ### Axiom audit (the Wf capstone and inner-frontier assembly are axiom-clean;
 NO `native_decide`, NO `sorry`) -/
 
 #print axioms crischDESolveSoundWf_isDecisionProcedure
 #print axioms decisionProcedureFrontierWf_of_innerFrontier
-#print axioms rischDEInnerCompleteness_of_decisionFrontierFueled
-#print axioms cRischDEG_isSome_of_decisionFrontierFueled
 #print axioms rischDEInnerCompletenessWf_of_decisionFrontierWf
 #print axioms cRischDEGWf_isSome_of_decisionFrontierWf
 
