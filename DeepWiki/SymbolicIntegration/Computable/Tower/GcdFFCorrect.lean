@@ -122,7 +122,7 @@ theorem toGBCoeffPoly_gbaddCore (p q : GBPolyCore β) :
     cases q with
     | nil => simp [gbaddCore]
     | cons b bs =>
-      simp only [gbaddCore, toGBCoeffPoly_cons, ih bs, CPolyG.toPolyG_caddG, map_add]
+      simp only [gbaddCore, toGBCoeffPoly_cons, ih bs, denote, map_add]
       ring
 
 /-- `toGBCoeffPoly` is negation-compatible: `gbnegCore` realizes `R[t]` negation. -/
@@ -132,7 +132,7 @@ theorem toGBCoeffPoly_gbnegCore (p : GBPolyCore β) :
   | nil => simp [gbnegCore]
   | cons a as ih =>
     show toGBCoeffPoly (CPolyG.cnegG a :: gbnegCore as) = _
-    simp only [toGBCoeffPoly_cons, CPolyG.toPolyG_cnegG, map_neg, ih]
+    simp only [toGBCoeffPoly_cons, denote, map_neg, ih]
     ring
 
 /-- `toGBCoeffPoly` is subtraction-compatible: `gbsubCore` realizes `R[t]` subtraction. -/
@@ -148,7 +148,7 @@ theorem toGBCoeffPoly_gbscaleCCore (c : CPolyG β) (p : GBPolyCore β) :
   | nil => simp [gbscaleCCore]
   | cons a as ih =>
     show toGBCoeffPoly (CPolyG.cmulG c a :: gbscaleCCore c as) = _
-    simp only [toGBCoeffPoly_cons, CPolyG.toPolyG_cmulG, map_mul, ih]
+    simp only [toGBCoeffPoly_cons, denote, map_mul, ih]
     ring
 
 /-- `toGBCoeffPoly` realizes the `t`-shift: `gbshiftCore k p` is `tᵏ · toGBCoeffPoly p`. -/

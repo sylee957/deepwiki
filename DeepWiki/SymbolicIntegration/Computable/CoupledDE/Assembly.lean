@@ -577,7 +577,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
       by_cases hr : r < nrows
       · have hrow := coupledRow2_coeff_eq a b1 b2 z1 z2 d sol nrows hsollen hsolve' r hr
         rw [← hu1def, ← hu2def] at hrow
-        simp only [cderivQ, toPolyG_cderivG, toPolyG_cmulG] at hrow
+        simp only [cderivQ, denote] at hrow
         linear_combination hrow
       · rw [not_lt] at hr
         have hz2z : (toPolyG z2).coeff r = 0 :=

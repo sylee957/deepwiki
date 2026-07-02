@@ -740,7 +740,7 @@ theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     -- hG1 (n=2): tanDeriv-part + (C b0 - C(C 2) X) Q1 - C b2 Q2 = C1.
     rw [toPoly2_tanDeriv] at hG1
     simp only [Nat.cast_ofNat] at hG1
-    simp only [toPolyG_cscaleG, CFieldSpec.toK, id_eq, map_mul, map_neg, map_one]
+    simp only [denote, CFieldSpec.toK, id_eq, map_mul, map_neg, map_one]
     linear_combination hG1
   · apply tisZero_of_toPoly2_zero
     rw [toPoly2_tsub, toPoly2_tadd, toPoly2_tanDeriv, toPoly2_tadd, toPoly2_map_cmulG, toPoly2_tsub,

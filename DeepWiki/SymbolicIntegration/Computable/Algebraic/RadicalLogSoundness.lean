@@ -565,7 +565,7 @@ theorem toPolyG_cAlgResidueNorm (Dprime rho g0 g1 : CPolyG α) (c : α) :
     CPolyG.toPolyG (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c)
       = (Polynomial.C (CFieldSpec.toK c) * CPolyG.toPolyG Dprime - CPolyG.toPolyG g0) ^ 2
         - CPolyG.toPolyG g1 ^ 2 * CPolyG.toPolyG rho := by
-  simp only [cAlgResidueNorm, CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cscaleG]
+  simp only [cAlgResidueNorm, denote]
   ring
 
 omit [CDiffField α] [CDiffFieldSpec α] in
