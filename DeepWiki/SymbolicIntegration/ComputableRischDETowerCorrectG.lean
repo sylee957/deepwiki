@@ -90,6 +90,15 @@ theorem cdivWf_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (fuel :
   have hgdvd : toPolyG g ∣ toPolyG c := dvd_of_cdvdG fuel g c hg0 hdvd
   exact toPolyG_cdivWf_exact c g hg0 hgdvd
 
+/-- **The Wf `c`-exact-division witness** (generic) `toPolyG (cdivWf c g) · toPolyG g = toPolyG c`
+from the fuel-free `cdvdGWf g c = true` branch (`g ∣ c`). -/
+theorem cdivWf_c_exact_of_cdvdGWf {α : Type*} [CField α] [CFieldSpec α] (c g : CPolyG α)
+    (hg0 : cnormG g ≠ [])
+    (hdvd : cdvdGWf g c = true) :
+    toPolyG (cdivWf c g) * toPolyG g = toPolyG c := by
+  have hgdvd : toPolyG g ∣ toPolyG c := dvd_of_cdvdGWf g c hg0 hdvd
+  exact toPolyG_cdivWf_exact c g hg0 hgdvd
+
 /-- **One `cSPDEG` peel's cleared lifting** (generic) at `D = cmonomialDeriv Dt = implicitDeriv (toPolyG
 Dt)`. Given the divided coefficients `ad, bd, cd`, the Bézout cofactors `r, z` with the certificate
 `toPolyG bd · toPolyG r + toPolyG ad · toPolyG z = toPolyG cd`, and any `h` solving the reduced equation,

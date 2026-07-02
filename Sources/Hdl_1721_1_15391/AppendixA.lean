@@ -72,7 +72,7 @@ abbrev appA_radDeriv_decouples := @radDeriv_decouples
 /-! ## Case 1 — `C/(Vᵏy)`, `θ' = 1` (App. A §2.1) -/
 
 /-- **Case 1 cofactor** (Trager, Appendix A §2.1, p.75–76): `radCase1Cofactor` solves the
-Hermite congruence `(1−k)V'fB ≡ C (mod V)` via the generic Bézout solver `cdiophantineG`, giving
+Hermite congruence `(1−k)V'fB ≡ C (mod V)` via the fuel-free Bézout solver `cdiophantineGWf`, giving
 the numerator `B` of the lowered term `Bf/(V^{k−1}y)`. -/
 abbrev appA_case1_cofactor := @radCase1Cofactor
 
@@ -89,7 +89,7 @@ abbrev appA_case1_cleared_identity := @case1_cleared_identity
 
 /-- **Case 2 cofactor** (Trager, Appendix A §2.2, p.76–77, `n = 2`): `radCase2Cofactor` solves
 the `radDeriv`-validated congruence `B·(½−k)W'h ≡ C (mod W)` (`h = f/W`; the bracket `½−k =
-1−k−eⱼ/n` is Trager's at `eⱼ = 1, n = 2`) via `cdiophantineG`, clearing `f`-factors from
+1−k−eⱼ/n` is Trager's at `eⱼ = 1, n = 2`) via `cdiophantineGWf`, clearing `f`-factors from
 denominators. -/
 abbrev appA_case2_cofactor := @radCase2Cofactor
 
