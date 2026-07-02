@@ -145,6 +145,31 @@ as the final gate. Every new `Sources/*` module must be imported into `Sources.l
 > (open-spec kernel) stays a *hypothesis* in both — P1 does NOT try to close it. Bounded proof-porting,
 > not research.
 
+> **P1 PROGRESS (2026-07-02, commit after this).** Landed gate-green in `RischDE/Structural.lean`:
+> `cPolyRischDEGWf_eq_noCancel_of_primitive`, `cRischDEGWf_some_imp_noCancel_of_primitive` (both ported
+> VERBATIM from their fuel'd templates — mechanical-mirror confirmed). Remaining P1 sub-lemmas (each a
+> mirror-port of the named fuel'd template in `RischDE/TowerCorrectG.lean`; no Wf version or `_eq` bridge
+> exists yet, so port proof-by-proof):
+> 1. `cPolyRischDENoCancelGWf_cleared_identity` ← `cPolyRischDENoCancelG_cleared_identity_gen`
+>    (`cPolyRischDENoCancelGWf` in `Tower/WellFounded.lean:410` mirrors `cPolyRischDENoCancelG`).
+> 2. `cSPDEGWf_cleared_lifting_of_inputs` + `cSPDEGWf_polyRischDENoCancel_cleared_at_boundDegree`
+>    ← `cSPDEG_cleared_lifting_of_inputs_gen` (`TowerCorrectG:…`) + `…_at_boundDegree_gen`
+>    (`TowerCorrectG:434`). Uses (1) + the `CSPDEGClearedInputsGen` hypothesis (open-spec kernel — stays
+>    a hypothesis). `toPolyG_cdivWf_exact_mul_gen` (`TowerCorrectG:451`) already exists.
+> 3. `cRdeNormalDenominatorGWf_cleared_lift` ← `cRdeNormalDenominatorG_cleared_lift_gen`
+>    (`TowerCorrectG:649`, ~48 lines; unfolds the normal-denom def — `cRdeNormalDenominatorGWf`
+>    (`Tower/WellFounded.lean:242`) mirrors it exactly).
+> 4. Assemble `cRischDEGWf_rdeCleared_gen` ← `cRischDEG_rdeCleared_gen` (`TowerCorrectG:769`) using (1)(2)(3)
+>    + `cRdeSpecialDenominatorGWf_primitive_eq` (already exists, `RischDEWellFounded:294`).
+> 5. `RischDEStructuralResidualWf` (mirror `RischDEStructuralResidual`, `Structural:252`, with the Wf-stage
+>    references) + `rdeClearedWf_of_success_and_residual` (mirror `rdeCleared_of_success_and_residual`,
+>    `Structural:294`, using (4) + `cRischDEGWf_some_imp_noCancel_of_primitive` [DONE]).
+> 6. The headline `crischDESolveWf_field_of_residual` for the gated oracle
+>    `fun f g => if cdenomNormalGateG f then (match cRischDEGWf [1] … with …) else none` — mirror
+>    `crischDESolve_field_of_witness_residual` (`SoundnessCapstone:294`), using (5) +
+>    `rischDE_field_of_cleared` (`RischFieldSpec:116`, REUSE, fuel-agnostic) + the new instance's two
+>    `rfl`-reduction lemmas (built in P2).
+
 ### P1 — Prove the Wf instance soundness *standalone* (no switch yet; low-risk, independent commit)
 Before moving anything, make sure the target soundness exists on `cRischDEGWf`. Establish (or
 confirm) a lemma of the exact shape the rebased instance will need — the analogue of
