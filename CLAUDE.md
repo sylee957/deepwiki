@@ -397,6 +397,17 @@ not just defaults):
   developments (`*Soundness` assemblies) stay separate, but single stray squares
   fold back to their def gradually.
 
+- **`X` / `LawfulX` class pairs (Lean-core `BEq`/`LawfulBEq` idiom).** A computable
+  interface splits into a **Prop-free** class of the computable operations
+  (`native_decide`-friendly — no abstract structure, so its ops *reduce*) and a
+  companion carrying the denotation homomorphism into the abstract carrier plus its
+  laws. Name the companion **`Lawful<X>`** for a computable class `<X>`. The engine's
+  `CField` / `CFieldSpec` (and `CDiffField` / `CDiffFieldSpec`) split *is* this idiom
+  — the `*Spec` names are **grandfathered** (keep them; 1264+ refs), but **new** pairs
+  use `X` / `LawfulX` (e.g. a new `CFoo` gets `LawfulCFoo`, not `CFooSpec`). The
+  Prop-free half never gains a `Prop` field; the abstract carrier is mentioned only in
+  the `Lawful` half. See [[leanproofs-symbolic-integration-reorg]].
+
 - **Arrival curves: `*ArrivalBound` vs `*ArrivalCurve`.**
   `IsMaximalArrivalBound`/`IsMinimalArrivalBound` are the raw inequalities
   `A ≤ A ∗ α` / `A ⊼ α ≤ A`; the book's definitions (α ∈ ℱ↑) are the
