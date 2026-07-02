@@ -1053,6 +1053,78 @@ theorem cSPDEGWf_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar
   | case6 => exact absurd hspde (by simp)
   | case7 a b c n hn g hdvd => exact absurd hspde (by simp)
 
+/-- **Fuel-free mirror of `CSPDEGClearedInputsGen`**: the transparent per-level input predicate for
+`cSPDEGWf`'s cleared-certificate discharge. Fuel-free (no fuel-bound length clauses), well-founded on
+`(n+1).toNat` with the same explicit recursion guard as `cSPDEGClearedGenWf`. -/
+def CSPDEGClearedInputsGenWf (Dt a b c : CPolyG α) (n : ℤ) : Prop :=
+  if n < 0 then True
+  else
+    let g := CFracGcdCoreWf.cgcdFFCoreWf a b
+    if cdvdGWf g c then
+      let ad := cdivWf a g
+      (cnormG g ≠ []) ∧ Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))
+        ∧ (cnormG a ≠ [])
+        ∧ (if cdegG ad = 0 then True
+           else
+             let bd := cdivWf b g
+             let rz := cdiophantineGWf bd ad (cdivWf c g)
+             (if (n - (cdegG ad : ℤ) + 1).toNat < (n + 1).toNat then
+                CSPDEGClearedInputsGenWf Dt ad (caddG bd (cmonomialDeriv Dt ad))
+                  (csubG rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdegG ad : ℤ))
+              else True))
+    else True
+termination_by (n + 1).toNat
+decreasing_by assumption
+
+omit [CDiffFieldSpec α] in
+/-- **Fuel-free mirror of `cSPDEGCleared_of_inputs_gen`**: `CSPDEGClearedInputsGenWf Dt a b c n` implies the
+per-level certificate `cSPDEGClearedGenWf Dt a b c n`. `fun_induction` on the well-founded
+`CSPDEGClearedInputsGenWf` recursion, mirroring the fuel'd fuel-induction proof (exact-division witnesses via
+`cdivWf_a/b_exact_of_gcd` + `cdivWf_c_exact_of_cdvdGWf`, the Bézout clause via `toPolyG_cdiophantineGWf` with
+the divided-coefficient Wf gcd shown unit by `cgcdWf_isUnit_of_divided_gen`). -/
+theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : CPolyG α) (n : ℤ) (hin : CSPDEGClearedInputsGenWf Dt a b c n) :
+    cSPDEGClearedGenWf Dt a b c n := by
+  fun_induction CSPDEGClearedInputsGenWf Dt a b c n with
+  | case1 a b c n hn =>
+    rw [cSPDEGClearedGenWf]
+    rw [if_pos hn]
+    trivial
+  | case2 a b c n hn g hdvd ad ih1 =>
+    have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvdGWf c = true := hdvd
+    rw [cSPDEGClearedGenWf]
+    simp only [hn, hdvd'] at hin ⊢
+    obtain ⟨hg0, hgassoc, ha0, hrest⟩ := hin
+    set bd := cdivWf b g with hbd
+    have hdiva : toPolyG ad * toPolyG g = toPolyG a := cdivWf_a_exact_of_gcd a b g hg0 hgassoc
+    have hdivb : toPolyG bd * toPolyG g = toPolyG b := cdivWf_b_exact_of_gcd a b g hg0 hgassoc
+    have hdivc : toPolyG (cdivWf c g) * toPolyG g = toPolyG c :=
+      cdivWf_c_exact_of_cdvdGWf c g hg0 hdvd'
+    have hane : toPolyG a ≠ 0 := fun h => ha0 ((cnormG_eq_nil_iff a).mpr h)
+    have hadne : toPolyG ad ≠ 0 := by
+      intro h; apply hane; rw [← hdiva, h, zero_mul]
+    have hgne : toPolyG g ≠ 0 := fun h => hg0 ((cnormG_eq_nil_iff g).mpr h)
+    refine ⟨hdiva, hdivb, hdivc, hadne, ?_⟩
+    by_cases hdeg : cdegG ad = 0
+    · rw [if_pos hdeg] at hrest ⊢; trivial
+    · rw [if_neg hdeg] at hrest ⊢
+      have hadnil : cnormG ad ≠ [] := fun h => hadne ((cnormG_eq_nil_iff ad).mp h)
+      have hunitWf := cgcdWf_isUnit_of_divided_gen a b ad bd g hgne hgassoc hdiva hdivb
+      have hgdegWf : (toPolyG (cgcdWf bd ad).1).natDegree = 0 :=
+        Polynomial.natDegree_eq_zero_of_isUnit hunitWf
+      have hgneWf : toPolyG (cgcdWf bd ad).1 ≠ 0 := hunitWf.ne_zero
+      have hbez := toPolyG_cdiophantineGWf bd ad (cdivWf c g) hadnil hgdegWf hgneWf
+      by_cases hguard : (n - (cdegG ad : ℤ) + 1).toNat < (n + 1).toNat
+      · rw [if_pos hguard] at hrest ⊢
+        refine ⟨?_, ih1 hguard hrest⟩
+        simpa [mul_comm] using hbez
+      · rw [if_neg hguard] at hrest ⊢
+        exact ⟨by simpa [mul_comm] using hbez, trivial⟩
+  | case3 a b c n hn g hdvd =>
+    have hdvd' : ¬ (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvdGWf c = true := hdvd
+    rw [cSPDEGClearedGenWf]
+    simp only [hn, if_neg hdvd']
+    trivial
+
 end WfSPDECleared
 
 end DeepWiki.SymbolicIntegration
