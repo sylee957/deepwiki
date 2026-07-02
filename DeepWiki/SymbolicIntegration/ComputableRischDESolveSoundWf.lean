@@ -251,12 +251,12 @@ section Capstone
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **The Wf input-fit precondition** `InputFitsFuelWf f g`: the per-run termination residual for the
+/-- **The Wf sound-input residual** `RischDESoundInputWf f g`: the per-run termination residual for the
 canonicalized Wf solver pair built from `cWeakNormalizerGWf [1] f.1.1 f.1.2`, together with Wf `g`-side
 normality and the one split-transfer equality needed by the old fueled soundness bridge. This is the
 Wf-shaped counterpart of `InputFitsFuel`; it keeps the public Wf soundness API stated on the actual weak
 normalizer used by `crischDESolveSoundWf`. -/
-structure InputFitsFuelWf (f g : QFunNZG β) : Prop where
+structure RischDESoundInputWf (f g : QFunNZG β) : Prop where
   /-- The per-run fuel/termination residual for the Wf canonicalized pair. -/
   hfuel : RischDESuccessResidualNormFuel
     (qReduce (weakNormalizedF f (qOfPolyNZG
@@ -273,9 +273,9 @@ structure InputFitsFuelWf (f g : QFunNZG β) : Prop where
       (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.2
 
 omit [CDiffFieldSpec β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)] in
-/-- **Wf input-fit converts to the old fueled input-fit under weak-normalizer agreement**: the conversion is
-only used by the current transfer proof to call `crischDESolveSound_field`. -/
-theorem inputFitsFuel_of_wf (f g : QFunNZG β) (hfit : InputFitsFuelWf f g)
+/-- **Wf sound-input converts to the old fueled input-fit under weak-normalizer agreement**: the conversion
+is only used by the current transfer proof to call `crischDESolveSound_field`. -/
+theorem inputFitsFuel_of_soundInputWf (f g : QFunNZG β) (hfit : RischDESoundInputWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2) :
     InputFitsFuel f g where
@@ -320,11 +320,11 @@ structure RischDESoundTransferWf (f g : QFunNZG β) : Prop where
   /-- The Wf inner solver agrees with the old fueled inner solver on this canonicalized pair. -/
   hinner : SoundWfInnerRegular f g
 
-/-- **The Wf soundness residual** `RischDESoundResidualWf f g`: Wf input-fit data plus one transfer bundle
+/-- **The Wf soundness residual** `RischDESoundResidualWf f g`: Wf sound-input data plus one transfer bundle
 needed only to reuse the older fueled soundness theorem for a successful `crischDESolveSoundWf f g`. -/
 structure RischDESoundResidualWf (f g : QFunNZG β) : Prop where
-  /-- The Wf-shaped input-fit budget for the canonicalized pair. -/
-  hfit : InputFitsFuelWf f g
+  /-- The Wf-shaped sound-input budget for the canonicalized pair. -/
+  hinput : RischDESoundInputWf f g
   /-- The bundled Wf-to-fueled transfer needed by the current proof bridge. -/
   htransfer : RischDESoundTransferWf f g
 
@@ -334,7 +334,7 @@ omit [CDiffFieldSpec β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)] i
 /-- The Wf soundness residual provides the old fueled input-fit residual for the bridge theorem. -/
 theorem inputFitsFuel {f g : QFunNZG β} (hsound : RischDESoundResidualWf f g) :
     InputFitsFuel f g :=
-  inputFitsFuel_of_wf f g hsound.hfit hsound.htransfer.hqwn
+  inputFitsFuel_of_soundInputWf f g hsound.hinput hsound.htransfer.hqwn
 
 omit [CDiffFieldSpec β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)] in
 /-- The Wf soundness residual turns the Wf sound solver into the old fueled sound solver. -/
