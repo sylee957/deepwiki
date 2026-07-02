@@ -422,7 +422,7 @@ theorem crischDESolveSoundWf_field_of_residual [CTowerGcdWitness β] (f g y : QF
 -- direct Wf soundness certificate — NO IsCanonNormalized hypothesis (the solver checks it).
 -- Fuel-free at runtime. No native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+    [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :
     towerFractionFieldDerivG ([CField.one] : CPolyG β)
