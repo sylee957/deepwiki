@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDECompleteness
 import DeepWiki.SymbolicIntegration.ComputableWeakNormalizerCorrect
+import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 
 /-! # §6.2 RDE completeness — the normal-denominator step preserves solvability (`hnorm`)
 
@@ -163,6 +164,68 @@ theorem cRdeNormalDenominatorG_isSome_of_dvd (Dt : CPolyG α) (fuel : ℕ)
 
 end EngineLayer
 
+/-! ## The fuel-free engine layer: `isSome` is exactly the `cdvdGWf` guard
+
+The Wf normal-denominator stage has the same control-flow shape as the fueled one, but its
+divisibility check is the semantic `cdvdGWf`. Consequently the `dvd ⟹ guard ⟹ some` bridge needs no
+fuel bound. This is the direct fuel-free counterpart of the engine layer above. -/
+
+section WfEngineLayer
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreWf α]
+
+/-- **The Wf §6.2 normal part `eₙ` of the `g`-denominator**. -/
+def rdeNormEnWf (Dt : CPolyG α) (gden : CPolyG α) : CPolyG α :=
+  (CPolyG.cSplitFactorFastGWf Dt gden).1
+
+/-- **The Wf §6.2 normal part `dₙ` of the `f`-denominator**. -/
+def rdeNormDnWf (Dt : CPolyG α) (fden : CPolyG α) : CPolyG α :=
+  (CPolyG.cSplitFactorFastGWf Dt fden).1
+
+/-- **The Wf §6.2 multiplicity factor `h = gcd(eₙ,eₙ')/gcd(p,p')`. -/
+def rdeNormHWf (Dt : CPolyG α) (fden gden : CPolyG α) : CPolyG α :=
+  CPolyG.cdivWf
+    (CFracGcdCoreWf.cgcdFFCoreWf (rdeNormEnWf Dt gden) (CPolyG.cderivG (rdeNormEnWf Dt gden)))
+    (CFracGcdCoreWf.cgcdFFCoreWf
+      (CFracGcdCoreWf.cgcdFFCoreWf (rdeNormDnWf Dt fden) (rdeNormEnWf Dt gden))
+      (CPolyG.cderivG (CFracGcdCoreWf.cgcdFFCoreWf
+        (rdeNormDnWf Dt fden) (rdeNormEnWf Dt gden))))
+
+/-- **The Wf §6.2 dividend `dₙ·h²`. -/
+def rdeNormDnh2Wf (Dt : CPolyG α) (fden gden : CPolyG α) : CPolyG α :=
+  CPolyG.cmulG (CPolyG.cmulG (rdeNormDnWf Dt fden) (rdeNormHWf Dt fden gden))
+    (rdeNormHWf Dt fden gden)
+
+omit [CFieldSpec α] in
+/-- **The Wf §6.2 step's `isSome` is exactly its `cdvdGWf` guard**. -/
+theorem cRdeNormalDenominatorGWf_isSome_iff (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
+    (CPolyG.cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true ↔
+      CPolyG.cdvdGWf (rdeNormEnWf Dt gden) (rdeNormDnh2Wf Dt fden gden) = true := by
+  rw [CPolyG.cRdeNormalDenominatorGWf]
+  simp only [rdeNormDnh2Wf, rdeNormHWf, rdeNormDnWf, rdeNormEnWf]
+  split <;> simp_all
+
+omit [CDiffField α] [CFracGcdCoreWf α] in
+/-- **The converse of `dvd_of_cdvdGWf`: mathematical divisibility forces the Wf engine check**. -/
+theorem cdvdGWf_of_dvd (q p : CPolyG α) (hq0 : CPolyG.cnormG q ≠ [])
+    (hdvd : toPolyG q ∣ toPolyG p) :
+    CPolyG.cdvdGWf q p = true := by
+  by_cases h : CPolyG.cdvdGWf q p = true
+  · exact h
+  · have hfalse : CPolyG.cdvdGWf q p = false := Bool.eq_false_iff.mpr h
+    exact False.elim ((CPolyG.not_dvd_of_cdvdGWf_false q p hq0 hfalse) hdvd)
+
+/-- **The Wf §6.2 step returns `some` from the mathematical §6.2 divisibility**. -/
+theorem cRdeNormalDenominatorGWf_isSome_of_dvd (Dt : CPolyG α)
+    (fnum fden gnum gden : CPolyG α)
+    (hen0 : CPolyG.cnormG (rdeNormEnWf Dt gden) ≠ [])
+    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden)) :
+    (CPolyG.cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true :=
+  (cRdeNormalDenominatorGWf_isSome_iff Dt fnum fden gnum gden).mpr
+    (cdvdGWf_of_dvd _ _ hen0 hdvd)
+
+end WfEngineLayer
+
 /-! ## ★ The §6.2 divisibility residual (Bronstein Thm 6.1.2) and `hnorm` modulo it
 
 The engine layer collapsed `hnorm` to the single mathematical divisibility `eₙ ∣ dₙh²` (plus two benign
@@ -307,6 +370,14 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
       (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true :=
   hnorm_of_divisibilityResidual Dt fnum fden gnum gden hres
 
+-- The Wf engine bridge has the same semantic shape as the fueled bridge, but no fuel side condition.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreWf α]
+    (Dt fnum fden gnum gden : CPolyG α)
+    (hen0 : CPolyG.cnormG (rdeNormEnWf Dt gden) ≠ [])
+    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden)) :
+    (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true :=
+  cRdeNormalDenominatorGWf_isSome_of_dvd Dt fnum fden gnum gden hen0 hdvd
+
 /-! ### Final verdict (stated precisely)
 
 **Is `hnorm` discharged?** **YES — modulo a single, precisely isolated deep divisibility (Bronstein Thm
@@ -323,6 +394,9 @@ that gate's completeness.
   unique-remainder property — so the §6.2 guard is honest in **both** directions;
 * `cRdeNormalDenominatorG_isSome_of_dvd` — composing them: the *mathematical* §6.2 divisibility `eₙ ∣ dₙh²`
   makes the §6.2 step return `some`, collapsing `hnorm` to that single divisibility.
+The Wf counterparts `cRdeNormalDenominatorGWf_isSome_iff`, `cdvdGWf_of_dvd`, and
+`cRdeNormalDenominatorGWf_isSome_of_dvd` close the same engine bridge for `cRdeNormalDenominatorGWf`
+without any fuel bound.
 
 **The single deep residual** (`RdeNormalDivisibilityResidual`, NEVER `sorry`): `hdvd` — a polynomial
 solution forces `eₙ ∣ dₙh²` (**Bronstein Thm 6.1.2**, the valuation-theoretic necessity at the normal
@@ -351,6 +425,9 @@ NO `sorry`) -/
 #print axioms cRdeNormalDenominatorG_isSome_iff
 #print axioms cdvdG_of_dvd
 #print axioms cRdeNormalDenominatorG_isSome_of_dvd
+#print axioms cRdeNormalDenominatorGWf_isSome_iff
+#print axioms cdvdGWf_of_dvd
+#print axioms cRdeNormalDenominatorGWf_isSome_of_dvd
 #print axioms hnorm_of_divisibilityResidual
 #print axioms rischDEInnerCompleteness_of_norm_bound_solve
 
