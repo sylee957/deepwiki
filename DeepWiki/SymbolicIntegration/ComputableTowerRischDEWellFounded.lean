@@ -19,19 +19,19 @@ The §6 pipeline bottoms out at FIVE fuel-recursive ops; two are done in `Comput
 * **`cPolyRischDECancelExpGWf`** — §6.6 hyperexponential cancellation, recursing into the eq. 6.24 base RDE
   `crischDESolve (b₀ + m·η) (lc c)` (`η = cExpEtaG Dt`). Same own-loop on `(cnormG c).length`.
 * **`cValuationGWf`** — the `ν_p` `p`-adic valuation (used by the special-denominator stage), recursing on
-  `(cnormG x).length` by trial division. It has no standalone bridge; it
-  feeds `cRdeSpecialDenominatorGWf` whose agreement is threaded as a whole-stage hypothesis.
+  `(cnormG x).length` by trial division.
 
 The rest is a flat composition over fuel'd leaves: the generic §6.1 weak normalizer, the §6.2
 normal/special denominators, the §6.3 degree bound, the §6.4 SPDE, the §6.5/§6.6 dispatcher, and the
 headline `cRischDEGWf`. Each substitutes the fuel-free leaves — the generic ones reused verbatim
 (`cdivWf`, `cdivmodWf`, `cdiophantineGWf`, `cdvdGWf`, `cgcdWf`) and the new ones (`cgcdFFCoreWf`, the two
-done RDE bottoms, and the three above) — and is bridged to its fuel'd `…G` original.
+done RDE bottoms, and the three above). Internal bridge proofs record agreement with the fuel'd `…G`
+originals without exporting that compatibility scaffolding as the public API.
 
 Every `…GWf` def is **`[CField α]`-only on the fuel-free fragment** (plus `[CDiffField α]`/`[CFracGcdCoreWf α]`/
 `[CRischField α]` where the pipeline needs the derivation / the fraction-free gcd / the base solve) — never
 `[CFieldSpec α]`, which would break `native_decide` over the noncomputable tower (the keystone lesson). The
-fuel bounds live only inside the bridge proofs; the runtime ops carry no fuel. The §6.6 hypertangent
+fuel bounds live only inside the internal bridge proofs; the runtime ops carry no fuel. The §6.6 hypertangent
 cancellation falls back to non-cancellation as in `cRischDEG` (not handled here). -/
 
 open Polynomial
@@ -59,8 +59,8 @@ primitive monomial derivation `D` (`Dt ∈ α`), `b ∈ α*` (a degree-0 `t`-pol
 `s·tᵐ`, remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)` (`D = cmonomialDeriv Dt`). Returns `none` ("no solution of
 degree `≤ n`") or `some q`. True well-founded recursion on `(cnormG c).length` — **no fuel at runtime**; the
 recursion is taken only under the structural guard `(cnormG c').length < (cnormG c).length` (the leading
-monomial cancels `c`'s top), so `decreasing_by` is `assumption`. Agrees with `cPolyRischDECancelPrimG` on a
-real run (`cPolyRischDECancelPrimGWf_eq`). `[CRischField α]`-generic — runs at any tower level. -/
+monomial cancels `c`'s top), so `decreasing_by` is `assumption`. An internal bridge records agreement with
+`cPolyRischDECancelPrimG` on regular runs. `[CRischField α]`-generic — runs at any tower level. -/
 def cPolyRischDECancelPrimGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     Option (CPolyG α) :=
   let b0 : α := cleadG b
@@ -89,7 +89,7 @@ hyperexponential monomial derivation `D` (`η = Dt/t ∈ α`, `δ = 1`), `b ∈ 
 coefficient genuinely non-constant, `η = cExpEtaG Dt`), leading monomial `s·tᵐ`, remainder
 `c' = c − b·(s·tᵐ) − D(s·tᵐ)`. Returns `none` or `some q`. True well-founded recursion on `(cnormG c).length`
 — **no fuel at runtime**; the structural guard `(cnormG c').length < (cnormG c).length` is `decreasing_by :=
-assumption`. Agrees with `cPolyRischDECancelExpG` on a real run (`cPolyRischDECancelExpGWf_eq`).
+assumption`. An internal bridge records agreement with `cPolyRischDECancelExpG` on regular runs.
 `[CRischField α]`-generic — runs at any tower level. -/
 def cPolyRischDECancelExpGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     Option (CPolyG α) :=
@@ -142,7 +142,7 @@ decreasing_by assumption
 
 end CPolyG
 
-/-! ## Part 2 — bridges of the three recursive bottoms to their fuel'd `…G` originals
+/-! ## Part 2 — internal bridges of the three recursive bottoms to their fuel'd `…G` originals
 
 Like the integration fuel-free bottoms (`cSqfreeYunFFGgoWf_eq`), the cancellation bridges carry
 `[CFieldSpec α]` (so the fuel'd
@@ -159,7 +159,7 @@ terminal on `c = 0`/`n < deg(c)`; `baseNoSol` terminal when the base solve `cris
 returns `none`; `step` carries the base solve `crischDESolve (lc b)(lc c) = some s` (the WF op equals the
 fuel'd op — both call the same fuel-free `crischDESolve`), the WF guard firing (`c' = c − b·(s·tᵐ) − D(s·tᵐ)`,
 `m = deg(c)`, `D = cmonomialDeriv Dt`), and the same recursively on `c'` at `m − 1`. -/
-inductive CPolyRischCancelPrimGenRegular {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+private inductive CPolyRischCancelPrimGenRegular {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
     [CRischField α] (Dt : CPolyG α) (b : CPolyG α) : ℕ → CPolyG α → ℤ → Prop
   /-- terminal: `c = 0`, returns `[]`. -/
   | baseZero {fuel : ℕ} {c : CPolyG α} {n : ℤ} (hc : CPolyG.cisZeroG c = true) :
@@ -196,7 +196,7 @@ cancellation run meets, with sufficient fuel), `cPolyRischDECancelPrimGWf Dt b c
 cPolyRischDECancelPrimG Dt (fuel + 1) b c n`. The fuel regularity lives only here; the WF own-loop carries
 none. By induction on the gate (the base solve is the same fuel-free `crischDESolve`; the WF guard fires; the
 fuel'd version at `fuel+1` descends). -/
-theorem cPolyRischDECancelPrimGWf_eq (Dt : CPolyG α) (b : CPolyG α) :
+private theorem cPolyRischDECancelPrimGWf_eq (Dt : CPolyG α) (b : CPolyG α) :
     ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ), CPolyRischCancelPrimGenRegular Dt b fuel c n →
       cPolyRischDECancelPrimGWf Dt b c n = cPolyRischDECancelPrimG Dt fuel b c n := by
   intro fuel c n hreg
@@ -223,7 +223,7 @@ end CPolyG
 the base solve uses the `m·η` shifted coefficient `b₀ + m·η`. `baseZero`/`baseDeg`/`baseNoSol` terminal as
 before (at the shifted coefficient); `step` carries the base solve at the shifted coefficient and the WF guard
 firing. -/
-inductive CPolyRischCancelExpGenRegular {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+private inductive CPolyRischCancelExpGenRegular {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
     [CRischField α] (Dt : CPolyG α) (b : CPolyG α) : ℕ → CPolyG α → ℤ → Prop
   /-- terminal: `c = 0`, returns `[]`. -/
   | baseZero {fuel : ℕ} {c : CPolyG α} {n : ℤ} (hc : CPolyG.cisZeroG c = true) :
@@ -262,7 +262,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField
 `CPolyRischCancelExpGenRegular Dt b (fuel + 1) c n` (the shifted base-solve agreement + WF-guard-drop a real
 run meets), `cPolyRischDECancelExpGWf Dt b c n = cPolyRischDECancelExpG Dt (fuel + 1) b c n`. The fuel
 regularity lives only here. By induction on the gate (the base solve agrees and the WF guard fires). -/
-theorem cPolyRischDECancelExpGWf_eq (Dt : CPolyG α) (b : CPolyG α) :
+private theorem cPolyRischDECancelExpGWf_eq (Dt : CPolyG α) (b : CPolyG α) :
     ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ), CPolyRischCancelExpGenRegular Dt b fuel c n →
       cPolyRischDECancelExpGWf Dt b c n = cPolyRischDECancelExpG Dt fuel b c n := by
   intro fuel c n hreg
@@ -296,7 +296,7 @@ per-step leaf agreements (`cdvdGWf p x = cdvdG fuel p x`, `cdivWf x p = cdivG fu
 `baseNonDvd` (`p ∤ x`) are terminal; `step` carries the leaf agreements `cdvdGWf p x = cdvdG fuel p x` (`hdvd`,
 and that it is `true`) and `cdivWf x p = cdivG fuel x p` (`hdiv`), the WF guard firing (`(cnormG (x/p)).length
 < (cnormG x).length`), and the same recursively on `x/p` within budget. -/
-inductive CValuationGenRegular {α : Type*} [CField α] [CFracGcdCore α] [CFieldSpec α] (p : CPolyG α) :
+private inductive CValuationGenRegular {α : Type*} [CField α] [CFracGcdCore α] [CFieldSpec α] (p : CPolyG α) :
     ℕ → CPolyG α → Prop
   /-- terminal: `x = 0`, valuation `0`. -/
   | baseZero {fuel : ℕ} {x : CPolyG α} (hx : CPolyG.cisZeroG x = true) :
@@ -325,7 +325,7 @@ variable {α : Type*} [CField α] [CFracGcdCore α] [CFieldSpec α]
 `cValuationGWf p x = cValuationG fuel p x`. The fuel regularity lives only here; the WF own-loop carries none.
 By induction on the gate (the per-step `cdvdGWf`/`cdivWf` match the fuel'd `cdvdG`/`cdivG` via
 `cdvdGWf_eq_of_fuel` / `cdivmodWf_eq_of_fuel`; the WF guard fires; the fuel'd `.go` descends). -/
-theorem cValuationGWf_eq (p : CPolyG α) :
+private theorem cValuationGWf_eq (p : CPolyG α) :
     ∀ (fuel : ℕ) (x : CPolyG α), CValuationGenRegular p fuel x →
       cValuationGWf p x = cValuationG fuel p x := by
   intro fuel x hreg
@@ -530,7 +530,7 @@ def cRischDEGWf (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
 
 end CPolyG
 
-/-! ## Part 5 — bridges of the flat-composition pipeline + the headline to the fuel'd `…G` originals
+/-! ## Part 5 — internal bridges of the flat-composition pipeline to the fuel'd `…G` originals
 
 Each flat-composition `…GWf` op mirrors its `…G` original with the fuel dropped, so its bridge is a pure
 rewrite threading the per-leaf sub-agreements (every fuel'd sub-op replaced by its fuel-free companion at
@@ -548,7 +548,7 @@ variable {α : Type*} [CField α] [CDiffField α]
 omit [CDiffField α] in
 /-- **Bridge — `cIntegratePolyGWf` equals `cIntegratePolyG`** (definitional). Both are the same termwise
 antiderivative (neither carries fuel), so `cIntegratePolyGWf c = cIntegratePolyG c`. -/
-theorem cIntegratePolyGWf_eq (c : CPolyG α) : cIntegratePolyGWf c = cIntegratePolyG c := by
+private theorem cIntegratePolyGWf_eq (c : CPolyG α) : cIntegratePolyGWf c = cIntegratePolyG c := by
   rw [cIntegratePolyGWf, cIntegratePolyG]
 
 end CPolyG
@@ -562,7 +562,7 @@ dispatchers share the same case-split on `deg(b)` vs `max(0, δ−1)`, the monom
 integration branch; given the per-branch own-loop agreements (`hnocancel`: the non-cancellation loop;
 `hprim`: the primitive cancellation loop; `hexp`: the hyperexponential cancellation loop), and noting the
 `b = 0` branch agrees definitionally (`cIntegratePolyGWf_eq`), they agree. A pure case-split rewrite. -/
-theorem cPolyRischDEGWf_eq (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
+private theorem cPolyRischDEGWf_eq (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ)
     (hnocancel : cPolyRischDENoCancelGWf Dt b c n = cPolyRischDENoCancelG Dt fuel b c n)
     (hprim : cPolyRischDECancelPrimGWf Dt b c n = cPolyRischDECancelPrimG Dt fuel b c n)
     (hexp : cPolyRischDECancelExpGWf Dt b c n = cPolyRischDECancelExpG Dt fuel b c n) :
@@ -595,7 +595,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCor
 `cRischDEGWf Dt fnum fden gnum gden = cRischDEG Dt fuel fnum fden gnum gden`. The fuel bounds live only in the
 hypotheses; the headline `cRischDEGWf` carries none. A pure composition rewrite: rewrite each stage to its
 fuel'd form and the two drivers collapse. -/
-theorem cRischDEGWf_eq (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPolyG α)
+private theorem cRischDEGWf_eq (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPolyG α)
     (hnorm : cRdeNormalDenominatorGWf Dt fnum fden gnum gden
       = cRdeNormalDenominatorG Dt fuel fnum fden gnum gden)
     (hspec : ∀ a0 b0 c0, cRdeSpecialDenominatorGWf Dt a0 b0 c0
@@ -681,9 +681,7 @@ theorem towerRdeGWf_solves_Dy_plus_y_eq_t1_plus_one :
           cisZeroG (csubG lhs rhs)
       | none => false) = true := by native_decide
 
--- The headline fuel-free RDE-oracle bridge carries only the standard axioms (no fuel, no `sorry`);
--- the `native_decide` smoke test carries `Lean.ofReduceBool` separately.
-#print axioms CPolyG.cRischDEGWf_eq
+-- The `native_decide` smoke tests carry `Lean.ofReduceBool` separately.
 #print axioms towerRdeGWf_solves_Dy_eq_one
 #print axioms towerRdeGWf_solves_Dy_plus_y_eq_t1_plus_one
 

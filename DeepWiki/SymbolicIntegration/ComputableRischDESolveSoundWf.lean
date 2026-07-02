@@ -9,8 +9,8 @@ import DeepWiki.SymbolicIntegration.ComputableCanonNormalizedReduce
 `crischDESolveSound_field` axiom-cleanly. But its inner RDE solve routes through `CRischField.crischDESolve`,
 whose tower instance `instCRischFieldQFunNZG` runs the **`ℕ`-fuel** `cRischDEG [1] towerRischDEFuel …`.
 `ComputableTowerRischDEWellFounded` built the **fuel-free** companion `cRischDEGWf` (true well-founded
-recursion replacing the fuel) together with the `cRischDEGWf = cRischDEG fuel`-on-a-regular-run correspondence
-`cRischDEGWf_eq`.
+recursion replacing the fuel) together with internal correspondence proofs to the fueled `cRischDEG` on
+regular runs.
 
 This file combines the two: the **fuel-free, SOUND** solver `crischDESolveSoundWf` — the same §6.1-gated
 pipeline as `crischDESolveSound`, but with the inner solve routed through the fuel-free `cRischDEGWf` (over
@@ -109,9 +109,10 @@ end Solver
 `crischDESolveSoundWf` and `crischDESolveSound` share the whole §6.1 pipeline (weak normalizer, solvability
 check, lowest-terms reduction); they differ **only** in the inner RDE solve — `crischDERawSolveWf` (the
 fuel-free `cRischDEGWf`) vs `CRischField.crischDESolve` (= `cRischDEG [1] towerRischDEFuel` for the tower
-instance). On a regular run the inner solvers coincide (`cRischDEGWf_eq`), so the whole solvers coincide. The
-fuel bounds live only in the regularity hypothesis; the runtime `crischDESolveSoundWf` carries none. These
-correspondence facts are private implementation details of `crischDESolveSoundWf_field`, not public API. -/
+instance). On a regular run the inner solvers coincide by the equality hypothesis threaded into soundness, so
+the whole solvers coincide. The fuel bounds live only in the regularity hypothesis; the runtime
+`crischDESolveSoundWf` carries none. These correspondence facts are private implementation details of
+`crischDESolveSoundWf_field`, not public API. -/
 
 section Correspondence
 
@@ -235,9 +236,9 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 /-- **The inner-solve regularity for the fuel-free sound solver** `SoundWfInnerRegular f g`: the fuel-free
 `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel` on the num/den components of the
 canonicalized inner pair `(reduceSoundOpt (weakNormalizedF f q'), q'·g)`, for any lowest-terms reduction
-`reduceSoundOpt … = some ftildeR`. The `cRischDEGWf_eq` agreement a real run meets — exactly the hypothesis of
-the private transfer helper, packaged so the capstone reads cleanly. NOT a soundness gap: the WF-vs-fuel
-correspondence the fuel-free routing threads in place of the fuel'd inner call. -/
+`reduceSoundOpt … = some ftildeR`. This packages the regular-run equality needed by the private transfer
+helper so the capstone reads cleanly. NOT a soundness gap: the WF-vs-fuel correspondence the fuel-free routing
+threads in place of the fuel'd inner call. -/
 def SoundWfInnerRegular (f g : QFunNZG β) : Prop :=
   ∀ ftildeR : QFunNZG β,
     reduceSoundOpt (weakNormalizedF f
