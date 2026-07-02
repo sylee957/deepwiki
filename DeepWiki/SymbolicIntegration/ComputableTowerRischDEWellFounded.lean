@@ -324,6 +324,14 @@ def cRdeSpecialDenominatorGWf (Dt : CPolyG α) (a b c : CPolyG α) :
     let h := cpowG p negn
     (abar, bbar, cbar, h)
 
+/-- **The fuel-free special-denominator stage is the identity in the primitive regime**: when the Wf special
+polynomial is constant, `cRdeSpecialDenominatorGWf Dt a b c = (a, b, c, [1])`. -/
+theorem cRdeSpecialDenominatorGWf_primitive_eq (Dt : CPolyG α) (a b c : CPolyG α)
+    (hp : cdegG (cSpecialPolyGWf Dt) = 0) :
+    cRdeSpecialDenominatorGWf Dt a b c = (a, b, c, [CField.one]) := by
+  rw [cRdeSpecialDenominatorGWf]
+  simp only [hp, if_pos]
+
 /-- **Fuel-free special-denominator no-clear predicate**: the Wf special-denominator shift
 `n = min(0, ν_p(c) - min(0, ν_p(b)))` is zero, equivalently the reconstruction power
 `p^{-n}` is trivial. -/
@@ -362,6 +370,33 @@ theorem cRdeSpecialDenominatorGWf_h1_eq_one_always (Dt : CPolyG α) (a b c : CPo
     (cRdeSpecialDenominatorGWf Dt a b c).2.2.2 = [CField.one] :=
   cRdeSpecialDenominatorGWf_h1_eq_one_of_noClear Dt a b c hp
     (cSpecialDenomNoClearGWf_always Dt b c)
+
+/-- **The fuel-free special-denominator coefficients factor as `(·)·pᴺ` in the no-clear regime**: under
+`CSpecialDenomNoClearGWf`, the Wf-cleared coefficients are `a·pᴺ`, `b·pᴺ`, and `c·pᴺ` through `toPolyG`. -/
+theorem toPolyG_cRdeSpecialDenominatorGWf_coeffs_of_noClear [CFieldSpec α] (Dt : CPolyG α)
+    (a b c : CPolyG α) (hp : cdegG (cSpecialPolyGWf Dt) ≠ 0)
+    (hn : CSpecialDenomNoClearGWf Dt b c) :
+    let pN : CPolyG α := cpowG (cSpecialPolyGWf Dt)
+      (max (max 0 (-(cValuationGWf (cSpecialPolyGWf Dt) b : ℤ)))
+        (-(cValuationGWf (cSpecialPolyGWf Dt) c : ℤ))).toNat
+    toPolyG (cRdeSpecialDenominatorGWf Dt a b c).1 = toPolyG a * toPolyG pN
+    ∧ toPolyG (cRdeSpecialDenominatorGWf Dt a b c).2.1 = toPolyG b * toPolyG pN
+    ∧ toPolyG (cRdeSpecialDenominatorGWf Dt a b c).2.2.1 = toPolyG c * toPolyG pN := by
+  intro pN
+  rw [CSpecialDenomNoClearGWf] at hn
+  have hbterm0 : CFieldSpec.toK (CField.neg (CField.zero : α)) = 0 := by
+    rw [CFieldSpec.toK_neg, CFieldSpec.toK_zero, neg_zero]
+  refine ⟨?_, ?_, ?_⟩
+  · rw [cRdeSpecialDenominatorGWf]
+    simp only [if_neg hp, hn, toPolyG_cmulG, zero_sub]
+    rfl
+  · rw [cRdeSpecialDenominatorGWf]
+    simp only [if_neg hp, hn, neg_zero, Int.toNat_zero, cnatCastG, toPolyG_cmulG, toPolyG_caddG,
+      toPolyG_cscaleG, hbterm0, map_zero, zero_mul, add_zero, zero_sub]
+    rfl
+  · rw [cRdeSpecialDenominatorGWf]
+    simp only [if_neg hp, hn, sub_zero, toPolyG_cmulG, zero_sub]
+    rfl
 
 end CPolyG
 
