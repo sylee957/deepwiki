@@ -233,29 +233,29 @@ section Capstone
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **The inner-solve regularity for the fuel-free sound solver** `SoundWfInnerRegular f g`: the fuel-free
+/-- **The Wf inner-solve regularity for the fuel-free sound solver** `SoundWfInnerRegular f g`: the fuel-free
 `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel` on the num/den components of the
-canonicalized inner pair `(reduceSoundOpt (weakNormalizedF f q'), q'·g)`, for any lowest-terms reduction
-`reduceSoundOpt … = some ftildeR`. This packages the regular-run equality needed by the private transfer
-helper so the capstone reads cleanly. NOT a soundness gap: the WF-vs-fuel correspondence the fuel-free routing
-threads in place of the fuel'd inner call. -/
+canonicalized inner pair built from the **Wf** weak normalizer
+`cWeakNormalizerGWf [1] f.1.1 f.1.2`. This packages the regular-run equality needed by the private transfer
+helper, while keeping the public residual stated on the same Wf inner input that `crischDESolveSoundWf`
+actually runs. -/
 def SoundWfInnerRegular (f g : QFunNZG β) : Prop :=
   ∀ ftildeR : QFunNZG β,
     reduceSoundOpt (weakNormalizedF f
-      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))) =
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) =
       some ftildeR →
     CPolyG.cRischDEGWf ([CField.one] : CPolyG β)
         ftildeR.1.1 ftildeR.1.2
         (qmulNZG (qOfPolyNZG
-          (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.1
+          (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.1
         (qmulNZG (qOfPolyNZG
-          (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2
+          (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.2
       = CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel
         ftildeR.1.1 ftildeR.1.2
         (qmulNZG (qOfPolyNZG
-          (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.1
+          (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.1
         (qmulNZG (qOfPolyNZG
-          (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2
+          (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.2
 
 /-- **★★ The FUEL-FREE recursive RDE solver is sound under the current transfer residuals** (Task 3, the capstone,
 `crischDESolveSoundWf_field`): if `crischDESolveSoundWf f g = some y`, then with the gcd witness
@@ -279,8 +279,31 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
         + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
+  have hwfFuel : ∀ ftildeR : QFunNZG β,
+      reduceSoundOpt (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))) =
+        some ftildeR →
+      CPolyG.cRischDEGWf ([CField.one] : CPolyG β)
+          ftildeR.1.1 ftildeR.1.2
+          (qmulNZG (qOfPolyNZG
+            (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.1
+          (qmulNZG (qOfPolyNZG
+            (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2
+        = CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel
+          ftildeR.1.1 ftildeR.1.2
+          (qmulNZG (qOfPolyNZG
+            (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.1
+          (qmulNZG (qOfPolyNZG
+            (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2 := by
+    intro ftildeR hred
+    have hredWf : reduceSoundOpt (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) =
+        some ftildeR := by
+      rw [hqwn]
+      exact hred
+    simpa [hqwn] using hwf ftildeR hredWf
   have hsound : crischDESolveSound f g = some y := by
-    rw [← soundSolverWf_eq f g hqwn hwf]; exact hsolve
+    rw [← soundSolverWf_eq f g hqwn hwfFuel]; exact hsolve
   exact crischDESolveSound_field f g y hsound hfit
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
