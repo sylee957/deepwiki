@@ -596,49 +596,6 @@ derivable from the cleared identity alone: the rational-part numerator can have 
 identity does not pin `deg h_num`. So properness is taken as the named hypothesis `hproper`, and the bridge
 is the genuinely-provable half connecting it to the `s.card` form the one-shots consume. -/
 
-omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **★ `hA` from the leftover's properness** — discharges the degree side condition
-`(toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card` of the reduced-case one-shots from the
-squarefree spelling `hden : toPolyG (…).2.2 = Lagrange.nodal s id` and the intrinsic proper-fraction property
-`hproper` (leftover numerator degree `<` leftover denominator degree). Since `Lagrange.degree_nodal` gives
-`(nodal s id).degree = #s` over the field `CFieldSpec.K α`, rewriting `hden` into `hproper` turns
-`deg h_num < deg h_den` into `deg h_num < s.card`. The provable half of the `hA` discharge; the
-unconditional properness (Hermite preserves proper fractions through its fold + exact division) needs the
-abstract Hermite correctness — the documented Large residual. -/
-theorem cHermiteReduceTowerG_numer_degree_lt (Dt : CPolyG α) (fuel : ℕ)
-    (a d : CPolyG α) (s : Finset (CFieldSpec.K α))
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hproper : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree
-      < (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2).degree) :
-    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
-  rwa [hden, Lagrange.degree_nodal] at hproper
-
-omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **★ `hA` from the RESIDUAL-fraction properness** (the `hproper` hypothesis discharged one layer
-deeper) — the reduced-case degree side condition `(…).2.1.degree < s.card` from the squarefree spelling
-`hden` PLUS the engine leftover-projections (`hnumeq`/`hdeneq`, `toPolyG_cnormG`-provable: `(…).2.1` is
-`cdivWf (resNum·Dstar) resDen`, `(…).2.2` is `Dstar`), the exact-division divisibility
-`resDen ∣ resNum·Dstar` and **the residual-fraction properness** `deg resNum < deg resDen`.
-Composes `cHermiteReduceTowerG_leftover_proper_of_residual` (the exact-division degree cancellation) with
-`Lagrange.degree_nodal`, so `hproper` is no longer assumed but **reduced** to the residual properness
-`deg resNum < deg resDen` — i.e. `a/d − D(g)` proper, the documented Large residual. The deepest provable
-form of the `hA` discharge. -/
-theorem cHermiteReduceTowerG_numer_degree_lt_of_residual (Dt : CPolyG α) (fuel : ℕ)
-    (a d : CPolyG α) (s : Finset (CFieldSpec.K α)) (resNum resDen Dstar : CPolyG α)
-    (hnumeq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1
-      = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hdeneq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
-    (hresDen : cnormG resDen ≠ [])
-    (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
-  have hDstar : toPolyG Dstar ≠ 0 := by
-    rw [← hdeneq, hden]; exact Lagrange.nodal_ne_zero
-  exact cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden
-    (cHermiteReduceTowerG_leftover_proper_of_residual Dt fuel a d resNum resDen Dstar
-      hnumeq hdeneq hdvd hresDen hDstar hresProper)
-
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
 /-- The fuel-free Hermite leftover is proper from residual properness. -/
 theorem cHermiteReduceTowerGWf_leftover_proper_of_residual [CFracGcdCoreWf α]
@@ -1603,35 +1560,6 @@ hypotheses. -/
 #print axioms cIntegrateGFullWf_poly_eq
 #print axioms cIntegrateGFullWf_poly_oneShot
 #print axioms cIntegrateGFullWf_poly_oneShot_base
-#print axioms cHermiteReduceTowerG_numer_degree_lt
-#print axioms cHermiteReduceTowerG_numer_degree_lt_of_residual
-
--- ★ `hA` from the residual-fraction properness (one layer deeper than `hproper`): with the leftover
--- projections + exact-division divisibility + `deg resNum < deg resDen`, `deg h_num < s.card` — `hproper`
--- reduced to the residual properness `deg resNum < deg resDen` (= `a/d − D(g)` proper).
-example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (resNum resDen Dstar : CPolyG (QFunNZG ℚ))
-    (hnumeq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1
-      = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hdeneq : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
-    (hresDen : cnormG resDen ≠ [])
-    (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card :=
-  cHermiteReduceTowerG_numer_degree_lt_of_residual Dt fuel a d s resNum resDen Dstar
-    hnumeq hdeneq hden hdvd hresDen hresProper
-
--- ★ `cHermiteReduceTowerG_numer_degree_lt` discharges `hA` from the squarefree spelling + leftover
--- properness: `deg h_num < deg h_den` (with `h_den = nodal s id`) gives `deg h_num < s.card`.
-example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZG ℚ)))
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (hproper : (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree
-      < (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2).degree) :
-    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card :=
-  cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden hproper
-
 -- ★ Composed into the PRIMITIVE one-shot: with `hA` produced by the bridge from leftover properness, the
 -- reduced-case identity `D(g) + logResidueSumG = a/d` holds — `hA` is no longer a free hypothesis but the
 -- proper-fraction property of the Hermite leftover.
@@ -1668,71 +1596,13 @@ example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ))
 (cHermiteReduceTowerGWf …).2.1.degree < s.card` as a **free** hypothesis. For `deg Dt ≤ 1` (the primitive /
 exponential / log regimes) it is no longer free: the §5.3 chain
 `cHermiteReduceTowerG_residual_proper_of_degree_le_one` (residual `a/d − D(g)` proper from input properness
-`deg a < deg d`, `deg Dt ≤ 1`, the per-factor keystone `hb`/`hv`) → `cHermiteReduceTowerG_leftover_proper_of_residual`
-(exact-division degree cancellation) → `cHermiteReduceTowerG_numer_degree_lt` (squarefree-spelling rewrite)
-proves it. The remaining inputs are the per-factor keystone `hb` (`= cdiophantineGWf_fst_degree_lt`), nonzero
-`hv`, and the **exact-division connectors** `hdvd`/`hresDen` (the residual·radical exactly divides `resDen`,
-and `resDen ≠ 0`) — engine regularity facts, **not** free side conditions.
-The fold accumulator is exposed as `g`/`hgeq` so the residual `resNum/resDen` projections (`hnumeq`/`hdeneq`)
-reduce by `rfl` (`simp [cHermiteReduceTowerG, toPolyG_cnormG]`). -/
-
-/-- **★★★ `hA` discharged for `deg Dt ≤ 1`** — the Hermite leftover numerator degree bound
-`(cHermiteReduceTowerG Dt fuel a d).2.1.degree < s.card` over `ℚ(x)(t)`, from input properness `deg a < deg d`
-(`haProper`), `deg Dt ≤ 1` (`hDtdeg`), the per-factor keystone `hb`/nonzero `hv`, the squarefree spelling
-`hden`, and the exact-division connectors `hdvd`/`hresDen` (with the fold accumulator `g` exposed via
-`hgeq`). Chains `cHermiteReduceTowerG_residual_proper_of_degree_le_one` →
-`cHermiteReduceTowerG_leftover_proper_of_residual` → `cHermiteReduceTowerG_numer_degree_lt`. The provable
-discharge of the one-shot's `hA` for the linear-derivation regimes — `hA` reduced from a free hypothesis to
-fuel/regularity-class engine facts. -/
-theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
-    (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZG ℚ)))
-    (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
-    (haProper : (toPolyG a).degree < (toPolyG d).degree)
-    (hv : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
-    (hb : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
-        (toPolyG (cdiophantineGWf
-            (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
-          < (toPolyG p.1).degree)
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
-    (hgeq : g = (cSqfreeYunFFG fuel d).zipIdx.foldl
-      (fun (gAcc : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) (vi, idx) =>
-          let i := idx + 1
-          if i ≤ 1 then gAcc
-          else
-            let Vi_pow := cpowG vi i
-            let u := cdivWf d Vi_pow
-            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
-            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
-      ([CField.zero], [CField.one]))
-    (hdvd : toPolyG (cmulG d (cmulG g.2 g.2))
-      ∣ toPolyG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
-          (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
-        ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one])))
-    (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG (QFunNZG ℚ))) :
-    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card := by
-  -- the residual `resNum/resDen` is proper for `deg Dt ≤ 1` from input properness
-  have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
-    (cSqfreeYunFFG fuel d) hDtdeg haProper hv hb
-  simp only at hresProper
-  subst hgeq
-  -- `Dstar` (the squarefree radical) is nonzero, from `h_den = nodal s id ≠ 0`
-  have hDstar : toPolyG ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one]) ≠ 0 := by
-    have hd2 : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2
-        = toPolyG ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one]) := by
-      simp only [cHermiteReduceTowerG, toPolyG_cnormG]
-    rw [← hd2, hden]; exact Lagrange.nodal_ne_zero
-  -- `hproper`: the Hermite leftover `h_num/h_den` is proper, via the exact-division degree cancellation
-  have hproper := cHermiteReduceTowerG_leftover_proper_of_residual Dt fuel a d
-    (csubG (cmulG a (cmulG _ _))
-      (cmulG d (csubG (cmulG (cmonomialDeriv Dt _) _) (cmulG _ (cmonomialDeriv Dt _)))))
-    (cmulG d (cmulG _ _))
-    ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one])
-    (by simp only [cHermiteReduceTowerG, toPolyG_cnormG])
-    (by simp only [cHermiteReduceTowerG, toPolyG_cnormG])
-    hdvd hresDen hDstar hresProper
-  exact cHermiteReduceTowerG_numer_degree_lt Dt fuel a d s hden hproper
+`deg a < deg d`, `deg Dt ≤ 1`, the per-factor keystone `hb`/`hv`) →
+`cHermiteReduceTowerGWf_leftover_proper_of_residual` (exact-division degree cancellation) →
+`cHermiteReduceTowerGWf_numer_degree_lt` (squarefree-spelling rewrite) proves it. The remaining inputs are
+the per-factor keystone `hb` (`= cdiophantineGWf_fst_degree_lt`), nonzero `hv`, and the **exact-division
+connectors** `hdvd`/`hresDen` (the residual·radical exactly divides `resDen`, and `resDen ≠ 0`) — engine
+regularity facts, **not** free side conditions. The fold accumulator is exposed as `g`/`hgeq` so the residual
+`resNum/resDen` projections reduce by `rfl` (`simp [cHermiteReduceTowerGWf, toPolyG_cnormG]`). -/
 
 /-- **`hA` discharged for the fuel-free Hermite reducer when `deg Dt ≤ 1`.** -/
 theorem cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one
@@ -1873,38 +1743,6 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QF
   exact cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hb' hfp hsome hrecon
     hherm hden hA hnorm hform
 
--- ★ The `hA` discharge: the Hermite leftover numerator degree bound for `deg Dt ≤ 1` is NOT a free
--- hypothesis — it follows from input properness `deg a < deg d`, `deg Dt ≤ 1`, the per-step keystone, and
--- the exact-division connectors (the fold accumulator `g` exposed via `hgeq`).
-example (Dt : CPolyG (QFunNZG ℚ)) (fuel : ℕ) (a d : CPolyG (QFunNZG ℚ))
-    (s : Finset (CFieldSpec.K (QFunNZG ℚ)))
-    (hDtdeg : (toPolyG Dt).natDegree ≤ 1) (haProper : (toPolyG a).degree < (toPolyG d).degree)
-    (hv : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
-    (hb : ∀ p ∈ (cSqfreeYunFFG fuel d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
-        (toPolyG (cdiophantineGWf
-            (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
-          < (toPolyG p.1).degree)
-    (hden : toPolyG (cHermiteReduceTowerG Dt fuel a d).2.2 = Lagrange.nodal s id)
-    (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
-    (hgeq : g = (cSqfreeYunFFG fuel d).zipIdx.foldl
-      (fun (gAcc : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) (vi, idx) =>
-        let i := idx + 1
-        if i ≤ 1 then gAcc
-        else
-          let Vi_pow := cpowG vi i
-          let u := cdivWf d Vi_pow
-          let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
-          (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
-      ([CField.zero], [CField.one]))
-    (hdvd : toPolyG (cmulG d (cmulG g.2 g.2))
-      ∣ toPolyG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
-          (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
-        ((cSqfreeYunFFG fuel d).foldl (fun acc vi => cmulG acc vi) [CField.one])))
-    (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG (QFunNZG ℚ))) :
-    (toPolyG (cHermiteReduceTowerG Dt fuel a d).2.1).degree < s.card :=
-  cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one Dt fuel a d s hDtdeg haProper hv hb hden g hgeq
-    hdvd hresDen
-
 /-! ### ★★★ The fuel-free POLY-BRANCH CAPSTONE at `ℚ(x)(t)`
 
 The polynomial-branch analogue of the primitive normal-part capstone, now over the fuel-free full driver.
@@ -2033,7 +1871,6 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
 
 /-! ### Axiom audit — the `hA`-discharged primitive one-shot rests only on the standard kernel axioms. -/
 
-#print axioms cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
 #print axioms cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one
 #print axioms cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG
 #print axioms cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
