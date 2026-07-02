@@ -927,4 +927,132 @@ theorem cPolyRischDENoCancelGWf_cleared_identity (Dt b c : CPolyG α) (n : ℤ) 
 
 end WfCleared
 
+section WfSPDECleared
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+
+/-- **Fuel-free mirror of `cSPDEGClearedGen`**: the per-level certificate for `cSPDEGWf`, with
+`g = cgcdFFCoreWf a b` and divided coefficients via `cdivWf`. Fuel-free (no fuel-bound clauses),
+well-founded on `(n+1).toNat` mirroring `cSPDEGWf`'s own recursion structure exactly (same explicit
+`(n − deg ad + 1).toNat < (n+1).toNat` guard, so `decreasing_by assumption` applies verbatim). -/
+def cSPDEGClearedGenWf (Dt a b c : CPolyG α) (n : ℤ) : Prop :=
+  if n < 0 then True
+  else
+    let g := CFracGcdCoreWf.cgcdFFCoreWf a b
+    if cdvdGWf g c then
+      let ad := cdivWf a g
+      let bd := cdivWf b g
+      let cd := cdivWf c g
+      (toPolyG ad * toPolyG g = toPolyG a) ∧ (toPolyG bd * toPolyG g = toPolyG b)
+        ∧ (toPolyG cd * toPolyG g = toPolyG c)
+        ∧ (toPolyG ad ≠ 0)
+        ∧ (if cdegG ad = 0 then True
+           else
+             let rz := cdiophantineGWf bd ad cd
+             (toPolyG bd * toPolyG rz.1 + toPolyG ad * toPolyG rz.2 = toPolyG cd)
+               ∧ (if (n - (cdegG ad : ℤ) + 1).toNat < (n + 1).toNat then
+                    cSPDEGClearedGenWf Dt ad (caddG bd (cmonomialDeriv Dt ad))
+                      (csubG rz.2 (cmonomialDeriv Dt rz.1)) (n - (cdegG ad : ℤ))
+                  else True))
+    else True
+termination_by (n + 1).toNat
+decreasing_by assumption
+
+/-- **Fuel-free mirror of `cSPDEG_cleared_lifting_gen`**: under `cSPDEGClearedGenWf`, if `cSPDEGWf Dt a b c n
+= some (b̄, c̄, m, α, β)` then for every `h` solving the reduced `D(h) + b̄·h = c̄`, the reconstruction `q =
+α·h + β` solves the original `a·D(q) + b·q = c` over `(CFieldSpec.K α)[X]`. `fun_induction` on the
+well-founded `cSPDEGWf` recursion, mirroring the fuel'd fuel-induction proof case-by-case (constant-`a'` base
+via `spde_const_base`, recursive peel via `cSPDE_peel_cleared_gen`). -/
+theorem cSPDEGWf_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar : CPolyG α) (m : ℤ)
+    (α' β : CPolyG α)
+    (hspde : cSPDEGWf Dt a b c n = some (bbar, cbar, m, α', β))
+    (hcert : cSPDEGClearedGenWf Dt a b c n) :
+    ∀ h : CPolyG α,
+      Differential.implicitDeriv (toPolyG Dt) (toPolyG h) + toPolyG bbar * toPolyG h = toPolyG cbar →
+      toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α' h) β))
+          + toPolyG b * toPolyG (caddG (cmulG α' h) β)
+        = toPolyG c := by
+  fun_induction cSPDEGWf Dt a b c n generalizing bbar cbar m α' β with
+  | case1 a b c n hn hc =>
+    intro h hh
+    rw [Option.some.injEq] at hspde
+    simp only [Prod.mk.injEq] at hspde
+    obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
+    subst hα; subst hβ
+    have hcc : toPolyG c = 0 := (cisZeroG_iff c).mp hc
+    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_nil, zero_mul, add_zero, map_zero, mul_zero,
+      mul_zero, add_zero, hcc]
+  | case2 => exact absurd hspde (by simp)
+  | case3 a b c n hn g hdvd a' b' c' hdeg ainv =>
+    intro h hh
+    rw [Option.some.injEq] at hspde
+    simp only [Prod.mk.injEq] at hspde
+    obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
+    subst hα; subst hβ
+    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_nil, add_zero]
+    have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    rw [hone, one_mul]
+    have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvdGWf c = true := hdvd
+    rw [cSPDEGClearedGenWf] at hcert
+    simp only [hn, hdvd'] at hcert
+    obtain ⟨hdiva, hdivb, hdivc, hadne, _⟩ := hcert
+    set a0 : CFieldSpec.K α := CFieldSpec.toK (cleadG a') with ha0def
+    have ha0ne : a0 ≠ 0 := by
+      rw [ha0def, toK_cleadG_eq_leadingCoeff]
+      exact Polynomial.leadingCoeff_ne_zero.mpr hadne
+    have hadC : toPolyG a' = Polynomial.C a0 := by
+      have hnd : (toPolyG a').natDegree = 0 := by rw [← cdegG_eq_natDegree, hdeg]
+      rw [ha0def, toK_cleadG_eq_leadingCoeff, Polynomial.leadingCoeff, hnd]
+      conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hnd]
+    rw [← hbbar, ← hcbar, toPolyG_cscaleG, toPolyG_cscaleG, CFieldSpec.toK_inv, ← ha0def] at hh
+    have hdivided : toPolyG a' * Differential.implicitDeriv (toPolyG Dt) (toPolyG h)
+        + toPolyG b' * toPolyG h = toPolyG c' := by
+      rw [hadC]
+      exact spde_const_base (Differential.implicitDeriv (toPolyG Dt)) a0 (toPolyG b') (toPolyG c')
+        (toPolyG h) ha0ne hh
+    rw [← hdiva, ← hdivb, ← hdivc]
+    linear_combination toPolyG (CFracGcdCoreWf.cgcdFFCoreWf a b) * hdivided
+  | case4 a b c n hn g hdvd a' b' c' hdeg => exact absurd hspde (by simp)
+  | case5 a b c n hn g hdvd a' b' c' hdeg r z hdioph Da Dr hguard bbar' cbar' m' α'' β'' hrec ih =>
+    intro h hh
+    rw [Option.some.injEq] at hspde
+    simp only [Prod.mk.injEq] at hspde
+    obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
+    rw [← hbbar] at hh; rw [← hcbar] at hh
+    have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvdGWf c = true := hdvd
+    have hguard' : (n - ((a.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b)).cdegG : ℤ) + 1).toNat
+        < (n + 1).toNat := hguard
+    rw [cSPDEGClearedGenWf] at hcert
+    simp only [hn, hdvd'] at hcert
+    obtain ⟨hdiva, hdivb, hdivc, _hadne, hcertrest⟩ := hcert
+    rw [if_neg hdeg] at hcertrest
+    obtain ⟨hbez'0, hcertrecOpt⟩ := hcertrest
+    rw [if_pos hguard'] at hcertrecOpt
+    have hdioph' : (b.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b)).cdiophantineGWf
+        (a.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b)) (c.cdivWf (CFracGcdCoreWf.cgcdFFCoreWf a b))
+        = (r, z) := hdioph
+    rw [hdioph'] at hbez'0 hcertrecOpt
+    have hbez' : toPolyG b' * toPolyG r + toPolyG a' * toPolyG z = toPolyG c' := hbez'0
+    have hcertrecOpt' : cSPDEGClearedGenWf Dt a' (caddG b' Da) (csubG z Dr) (n - (cdegG a' : ℤ)) :=
+      hcertrecOpt
+    have hihrec := ih bbar' cbar' m' α'' β'' hrec hcertrecOpt' h hh
+    have hred : toPolyG a' * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG α'' h) β''))
+          + (toPolyG b' + Differential.implicitDeriv (toPolyG Dt) (toPolyG a'))
+              * toPolyG (caddG (cmulG α'' h) β'')
+        = toPolyG z - Differential.implicitDeriv (toPolyG Dt) (toPolyG r) := by
+      simp only [Da, Dr, denote] at hihrec ⊢
+      linear_combination hihrec
+    subst hα; subst hβ
+    have hpeel := cSPDE_peel_cleared_gen Dt a' b' c' r z (caddG (cmulG α'' h) β'') hbez' hred
+    have hqeq : toPolyG (caddG (cmulG (cmulG a' α'') h) (caddG (cmulG a' β'') r))
+        = toPolyG (caddG (cmulG a' (caddG (cmulG α'' h) β'')) r) := by
+      simp only [denote]; ring
+    rw [hqeq, ← hdiva, ← hdivb, ← hdivc]
+    linear_combination toPolyG (CFracGcdCoreWf.cgcdFFCoreWf a b) * hpeel
+  | case6 => exact absurd hspde (by simp)
+  | case7 a b c n hn g hdvd => exact absurd hspde (by simp)
+
+end WfSPDECleared
+
 end DeepWiki.SymbolicIntegration
