@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCorrect
-import DeepWiki.SymbolicIntegration.ComputableTowerUnify
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCorrect
+import DeepWiki.SymbolicIntegration.Computable.Tower.Unify
 
 /-! # §5 split-factor / canonical-representation correctness at the level-1 carrier `α = QFunNZG ℚ`
 This file establishes the §5 split-factor / canonical-representation correctness at the **level-1 carrier**

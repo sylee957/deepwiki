@@ -1,9 +1,9 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 import DeepWiki.SymbolicIntegration.ComputableRadicalDerivationInvariant
 import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
-import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 import Mathlib.FieldTheory.KummerPolynomial
 import Mathlib.FieldTheory.RatFunc.Degree
 import Mathlib.RingTheory.AdjoinRoot

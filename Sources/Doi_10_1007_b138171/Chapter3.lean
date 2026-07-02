@@ -9,8 +9,8 @@ import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields

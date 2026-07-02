@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 
 /-! # Shared hyperexponential tower example data
 

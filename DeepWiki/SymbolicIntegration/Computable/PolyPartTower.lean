@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
 
 /-! # Computable polynomial reduction + special-part handling over ℚ(x)[t] (Bronstein §5.4, §5.8)
 After the rational (`cHermiteReduceTower`, §5.3) and logarithmic (`cResidueResultantTower`/

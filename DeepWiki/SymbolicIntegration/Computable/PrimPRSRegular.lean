@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCorrect
-import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCorrect
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 
 /-! # Is the primitive-PRS content-exactness `CPrimPRSGenAssocReg` unconditional?
 

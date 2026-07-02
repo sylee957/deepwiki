@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers

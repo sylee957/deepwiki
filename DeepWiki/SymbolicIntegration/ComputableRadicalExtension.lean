@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
-import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 
 /-! # Abstract soundness for the tower integrator's normal part
 

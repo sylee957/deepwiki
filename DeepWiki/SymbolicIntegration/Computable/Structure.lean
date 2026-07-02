@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Parametric
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
-import DeepWiki.SymbolicIntegration.ComputableTowerField
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 
 /-! # Structure decision: is a candidate exp/log a new transcendental monomial?
 

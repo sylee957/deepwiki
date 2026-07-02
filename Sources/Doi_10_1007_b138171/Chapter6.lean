@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
-import DeepWiki.SymbolicIntegration.ComputableTowerUnify
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.Unify
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 6: The Risch Differential Equation

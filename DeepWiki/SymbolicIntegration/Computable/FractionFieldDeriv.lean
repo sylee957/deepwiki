@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.Computable.CanonicalRepCorrect
-import DeepWiki.SymbolicIntegration.ComputableTowerField
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 
 /-! # Extending a base derivation to the fraction field `K(t)` (the integral-correctness keystone)
 The rational-integration correctness identities — the §6.1 weak normalizer, the §5.6 Rothstein–Trager

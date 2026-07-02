@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalCase2
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
 
 /-! # Algebraic-function integration: the general simple-radical rational-part integrator (Trager A §2)
 

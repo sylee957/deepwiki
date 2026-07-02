@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 
 /-! # Well-founded generic tower §6 Risch-DE oracle `cRischDEGWf`
 

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerField
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # The generic fraction-free gcd, upstream of the integration pipeline

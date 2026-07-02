@@ -1,8 +1,8 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
-import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
 
 /-! # The grand unification: simple radicals over a TRANSCENDENTAL tower (Bronstein 1990)
 The radical-extension engine (`ComputableRadicalExtension`) integrates **algebraic** functions `F(y)`

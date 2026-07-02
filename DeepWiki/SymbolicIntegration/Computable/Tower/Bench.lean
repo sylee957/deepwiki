@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFF
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFF
 
 /-! # Coefficient-swell benchmark: fraction-free vs naive Euclidean vs `qReduce`-in-the-loop
 The tower integrator can run its `t`-polynomial gcd over `α = QFunNZG ℚ ≅ ℚ(x)` several ways: the

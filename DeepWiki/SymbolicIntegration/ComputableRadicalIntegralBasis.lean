@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicResidues
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 

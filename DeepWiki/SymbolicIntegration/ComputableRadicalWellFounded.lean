@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 
 /-! # Well-founded algebraic simple-radical integration

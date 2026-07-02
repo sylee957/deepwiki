@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RischFieldCore
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Eta

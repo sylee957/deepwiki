@@ -137,17 +137,17 @@ import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Assembly
 import DeepWiki.SymbolicIntegration.Computable.CoupledDE.TangentReconstruct
 
 -- ## Computable engine — arbitrary-depth towers (QFunNZG)
-import DeepWiki.SymbolicIntegration.ComputableTowerBench
-import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
-import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFF
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCorrect
-import DeepWiki.SymbolicIntegration.ComputableTowerReduce
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDECompleteness
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
-import DeepWiki.SymbolicIntegration.ComputableTowerUnify
-import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.Bench
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFF
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCorrect
+import DeepWiki.SymbolicIntegration.Computable.Tower.Reduce
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDECompleteness
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.Unify
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 
 -- ## Computable engine — algebraic functions (RadElem / curves)
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField

@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
+import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant

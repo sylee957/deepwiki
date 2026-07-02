@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.LaurentCore
 
 /-! # The hyperexponential special-part integral — term-by-term Laurent integration (Bronstein §5.10)

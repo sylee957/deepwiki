@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSoundWf
 import DeepWiki.SymbolicIntegration.Computable.RischDE.DecisionProcedure
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDECompleteness
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDECompleteness
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicWfSoundness
 import DeepWiki.SymbolicIntegration.Computable.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicDecide

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Computable.CanonicalRepCorrect
 
 /-! # The `canonicalRepresentationFastG` reconstruction probe
