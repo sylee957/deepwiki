@@ -504,12 +504,37 @@ def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField �
   ∀ f g : QFunNZG β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
 
 /-- **The Wf per-level step frontier**: given the old base-oracle IH one level down, every solvable
-`QFunNZG β` RDE satisfies the Wf decision-procedure frontier and has the direct Wf soundness certificate. -/
+`QFunNZG β` RDE satisfies the Wf weak-normalizer clauses, the Wf inner residual-tip frontier, the polynomial
+solution/denominator guards, and the direct Wf soundness certificate. -/
 structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
-  /-- The Wf decision-procedure frontier for each solvable next-level RDE, threaded through the IH. -/
-  hfront : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
-    RischDEDecisionProcedureFrontierWf f g
+  /-- §6.1/Wf: a solvable RDE has a nonzero fuel-free weak normalizer. -/
+  hwn : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
+  /-- §6.1/Wf: a solvable RDE satisfies the fuel-free canonical-normality guarantee. -/
+  hck : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    IsCanonNormalizedWf f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))
+  /-- A solvable field RDE has a polynomial solution for the Wf inner input. -/
+  hpolysol : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    let ftildeR := (rischDEInnerInputWf f g).1
+    let gtilde := (rischDEInnerInputWf f g).2
+    ∃ ynum yden,
+      IsCRischDEGPolySol ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+        gtilde.1.1 gtilde.1.2 ynum yden
+  /-- §6.2-6.6/Wf: the consolidated inner residual-tip frontier, threaded through the IH. -/
+  hinnerFront : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    let ftildeR := (rischDEInnerInputWf f g).1
+    let gtilde := (rischDEInnerInputWf f g).2
+    RischDEInnerDecisionFrontierWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+      gtilde.1.1 gtilde.1.2
+  /-- The returned denominator of a successful Wf inner solve is nonzero. -/
+  hden : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g → ∀ ynum yden : CPolyG β,
+    let ftildeR := (rischDEInnerInputWf f g).1
+    let gtilde := (rischDEInnerInputWf f g).2
+    cRischDEGWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+        = some (ynum, yden) →
+      CPolyG.cisZeroG yden = false
   /-- The direct Wf soundness certificate for each solvable next-level RDE. -/
   hsound : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     RischDESoundnessWf f g
@@ -519,8 +544,17 @@ public RDE solver complete at the next `QFunNZG` level. -/
 theorem crischFieldCompleteWf_step (hβ : CRischFieldComplete β)
     (hstep : RischDEStepFrontierWf β) : CRischFieldCompleteWf β := by
   intro f g hsol
-  exact (crischDESolveSoundWf_isDecisionProcedure f g (hstep.hfront hβ f g hsol)
-    (hstep.hsound hβ f g hsol)).mpr hsol
+  let hfront : RischDEDecisionProcedureFrontierWf f g :=
+    { hwn := fun hsol' => hstep.hwn hβ f g hsol'
+      hck := fun hsol' => hstep.hck hβ f g hsol'
+      hpolysol := fun hsol' => hstep.hpolysol hβ f g hsol'
+      hinner := fun hsol' =>
+        rischDEInnerCompletenessWf_of_decisionFrontierWf ([CField.one] : CPolyG β)
+          (rischDEInnerInputWf f g).1.1.1 (rischDEInnerInputWf f g).1.1.2
+          (rischDEInnerInputWf f g).2.1.1 (rischDEInnerInputWf f g).2.1.2
+          (hstep.hinnerFront hβ f g hsol')
+      hden := fun hsol' ynum yden => hstep.hden hβ f g hsol' ynum yden }
+  exact (crischDESolveSoundWf_isDecisionProcedure f g hfront (hstep.hsound hβ f g hsol)).mpr hsol
 
 end StepAssemblyWf
 
