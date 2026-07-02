@@ -10,7 +10,6 @@ import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.DifferentialFields
-import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 import DeepWiki.SymbolicIntegration.HorowitzLinearSolve
@@ -53,167 +52,13 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.Subresultants
 
--- ## Concrete `Compute` computations over Mathlib `Polynomial` (base ℚ(x))
-import DeepWiki.SymbolicIntegration.Compute.Correctness
-import DeepWiki.SymbolicIntegration.Compute.Exercise22
-import DeepWiki.SymbolicIntegration.Compute.Exercise23
-import DeepWiki.SymbolicIntegration.Compute.Exercise25
-import DeepWiki.SymbolicIntegration.Compute.Hermite
-import DeepWiki.SymbolicIntegration.Compute.LogToAtan
-import DeepWiki.SymbolicIntegration.Compute.RationalFunction
-import DeepWiki.SymbolicIntegration.Compute.RtResultant
-import DeepWiki.SymbolicIntegration.Compute.Subresultant
-
--- ## Computable engine — generic executable core (CField / CPolyG)
-import DeepWiki.SymbolicIntegration.Computable.CanonNormalizedReduce
-import DeepWiki.SymbolicIntegration.Computable.CanonicalRepCorrect
-import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
-import DeepWiki.SymbolicIntegration.Computable.Field
-import DeepWiki.SymbolicIntegration.Computable.FieldGcd
-import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
-import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
-import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
-import DeepWiki.SymbolicIntegration.Computable.FunctionAlgebraIntegrate
-import DeepWiki.SymbolicIntegration.Computable.GcdCorrect
-import DeepWiki.SymbolicIntegration.Computable.GenericBezout
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.HermiteNormalForm
-import DeepWiki.SymbolicIntegration.Computable.Integrate
-import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
-import DeepWiki.SymbolicIntegration.Computable.IntegrationSpec
-import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleExpBridge
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleLogBridge
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleLogTower
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleStructure
-import DeepWiki.SymbolicIntegration.Computable.MixedTowerIntegrate
-import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
-import DeepWiki.SymbolicIntegration.Computable.Parallel
-import DeepWiki.SymbolicIntegration.Computable.Parametric
-import DeepWiki.SymbolicIntegration.Computable.PolyPartTower
-import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.PrincipalGenerator
-import DeepWiki.SymbolicIntegration.Computable.QFunReduce
-import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
-import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
-import DeepWiki.SymbolicIntegration.Computable.RischFieldCore
-import DeepWiki.SymbolicIntegration.Computable.RischFieldSpec
-import DeepWiki.SymbolicIntegration.Computable.SplitFactorCorrect
-import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
-import DeepWiki.SymbolicIntegration.Computable.Structure
-import DeepWiki.SymbolicIntegration.Computable.TranscendentalOverAlgebraic
-import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
-import DeepWiki.SymbolicIntegration.Computable.WeakNormalizerCorrect
-import DeepWiki.SymbolicIntegration.Computable.IntegrationFunctionsCatalog
-
--- ## Computable engine — base Risch differential equation
-import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
-import DeepWiki.SymbolicIntegration.Computable.RischDE.DecisionProcedure
-import DeepWiki.SymbolicIntegration.Computable.RischDE.DegreeBound
-import DeepWiki.SymbolicIntegration.Computable.RischDE.DegreeBoundCancellation
-import DeepWiki.SymbolicIntegration.Computable.RischDE.ExpPrimCancellation
-import DeepWiki.SymbolicIntegration.Computable.RischDE.NormCompleteness
-import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalCorrect
-import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveExhaustiveness
-import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNorm
-import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNormCanon
-import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSoundWf
-import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
-import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerCorrectG
-import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGlue
-
--- ## Computable engine — hyperexponential case
-import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Eta
-import DeepWiki.SymbolicIntegration.Computable.Hyperexp.ExampleData
-import DeepWiki.SymbolicIntegration.Computable.Hyperexp.FullSoundness
-import DeepWiki.SymbolicIntegration.Computable.Hyperexp.LaurentCore
-import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Normal
-import DeepWiki.SymbolicIntegration.Computable.Hyperexp.NormalCore
-import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
-
--- ## Computable engine — coupled differential systems
-import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Basic
-import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Assembly
-import DeepWiki.SymbolicIntegration.Computable.CoupledDE.TangentReconstruct
-
--- ## Computable engine — arbitrary-depth towers (QFunNZG)
-import DeepWiki.SymbolicIntegration.Computable.Tower.Bench
-import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
-import DeepWiki.SymbolicIntegration.Computable.Tower.Field
-import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFF
-import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
-import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCorrect
-import DeepWiki.SymbolicIntegration.Computable.Tower.Reduce
-import DeepWiki.SymbolicIntegration.Computable.Tower.RischDECompleteness
-import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
-import DeepWiki.SymbolicIntegration.Computable.Tower.Unify
-import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
-
--- ## Computable engine — algebraic functions (RadElem / curves)
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgFunctionField
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicCompleteness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicDecide
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicHermiteCompleteness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResidues
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicWfSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.Bareiss
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissEngine
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissQF
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.CantorComposition
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.DivisorOrder
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.FiniteFieldFactor
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralCurveDecide
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDivisor
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDivisorOrder
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralIntegralSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralLogSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralPicardGroupLaw
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralPicardNonHyperelliptic
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralQuotient
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralRationalPart
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralResidues
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralSetup
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralTorsionLight
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralWellFounded
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.HenselLift
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.HyperellipticDivisor
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.IntegralBasisFull
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.PolynomialIrreducibility
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalAssembly
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalCase2
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalDerivationInvariant
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtension
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalGeneralN
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalGenericExamples
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegralBasis
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegralSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegrate
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegrateFull
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgument
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogIntegral
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalRationalDriver
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalRationalTower
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalResidueInfinity
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalWellFounded
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.Round2IntegralBasis
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.TorsionLogTerm
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.ZassenhausDecider
-
--- ## Computable engine — soundness, completeness & capstone
-import DeepWiki.SymbolicIntegration.Computable.IntegratorCompleteness
-import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
-import DeepWiki.SymbolicIntegration.Computable.NormalPartSoundness
-import DeepWiki.SymbolicIntegration.Computable.OneShotAssembly
-import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
-import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
-import DeepWiki.SymbolicIntegration.Computable.SoundnessCapstone
+-- ## Concrete Compute layer + generic executable Computable engine
+import DeepWiki.SymbolicIntegration.Compute
+import DeepWiki.SymbolicIntegration.Computable
 
 /-! # Symbolic Integration (Bronstein) — topic aggregator
 
-Imports grouped by area: the abstract theory on Mathlib carriers, the concrete `Compute`
-layer over Mathlib `Polynomial`, and the generic executable `Computable` engine (core,
-base Risch DE, hyperexponential, coupled systems, towers, algebraic functions, and the
+The abstract theory on Mathlib carriers, the concrete `Compute` layer over Mathlib
+`Polynomial`, and the generic executable `Computable` Risch engine (core, base Risch DE,
+hyperexponential, coupled systems, towers, algebraic functions, and the
 soundness/completeness capstone). -/
