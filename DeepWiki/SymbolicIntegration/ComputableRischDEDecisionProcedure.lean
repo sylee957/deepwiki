@@ -196,18 +196,6 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_isDecisionProcedure f g h hfit hqwn hwf
 
-/-- **Wf soundness inside the capstone** (`crischDESolveSoundWf_isDecisionProcedure_mp`): the forward half of
-the decision-procedure equivalence — a successful fuel-free solve witnesses solvability — needs no
-completeness frontier, only the current Wf/fueled agreement hypotheses used by
-`crischDESolveSoundWf_field`. -/
-theorem crischDESolveSoundWf_isDecisionProcedure_mp (f g y : QFunNZG β)
-    (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuel f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hwf : SoundWfInnerRegular f g) :
-    FieldRDESolvable f g :=
-  crischDESolveSoundWf_imp_solvable f g y hsolve hfit hqwn hwf
-
 end Capstone
 
 /-! ### Final verdict (stated precisely)
@@ -240,11 +228,10 @@ Wf-native §6 residual and the current Wf/fueled agreement hypotheses used by so
 the §6.1 `hwn`/`hck` + `hinner` through `RischDECompletenessResidualWf`. The cross-level lift of the inner
 completeness into the Wf `hinner` clause is the documented continuation. -/
 
-/-! ### Axiom audit (the Wf capstone, its soundness half, and the three-residual assembly are axiom-clean;
+/-! ### Axiom audit (the Wf capstone and the three-residual assembly are axiom-clean;
 NO `native_decide`, NO `sorry`) -/
 
 #print axioms crischDESolveSoundWf_isDecisionProcedure
-#print axioms crischDESolveSoundWf_isDecisionProcedure_mp
 #print axioms rischDEInnerCompleteness_of_decisionFrontier
 #print axioms cRischDEG_isSome_of_decisionFrontier
 
