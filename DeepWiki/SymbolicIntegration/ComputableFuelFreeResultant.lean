@@ -11,14 +11,12 @@ This continues the fuel-free conversion of `ComputableFuelFreeGcd` to the generi
   composite `cresultantMeasure p q = 2·(len p + len q) + len q` (the swap leaves `len p + len q`
   fixed, hence the `+ len q` tie-breaker). Each recursive call is taken only under its structural
   guard, so `decreasing_by` is `assumption` and the def stays `[CField α]`-only / `native_decide`-able
-  over `QFunNZG ℚ`. The Sylvester-resultant identity `toPolyG_cresultantWf` is transported from
-  `toPolyG_cresultantG` (`ComputableResultantGenericCore`) through the bridge **unconditionally** —
-  this file imports only the engine-only resultant core, so the fuel-free resultant stays free of the
-  §5.6 residue / `cgcdFF` layer.
+  over `QFunNZG ℚ`. The Sylvester-resultant identity `toPolyG_cresultantWf` is proved directly by
+  well-founded induction on this recursion, so the fuel-free resultant stays free of the §5.6 residue /
+  `cgcdFF` layer.
 
 The concrete `BPoly` primitive-PRS gcd `primPRSgcdWf` (§3.5, which *does* need the `cgcdFF` layer) lives
-in `ComputablePrimPRSWf`. As in `ComputableFuelFreeGcd`, the fuel bounds live only inside the bridge
-proofs; the runtime WF op carries no fuel. -/
+in `ComputablePrimPRSWf`. The runtime WF op carries no fuel. -/
 
 open Polynomial
 
@@ -46,14 +44,13 @@ def cresultantMeasure (p q : CPolyG α) : ℕ :=
   2 * ((cnormG p : List α).length + (cnormG q : List α).length) + (cnormG q : List α).length
 
 /-- **Fuel-free generic univariate resultant** `cresultantWf p q = res(p, q) ∈ α`, `[CField α]`-only:
-the Euclidean-PRS resultant identity with no fuel at runtime. Base cases match `cresultantG`'s
-`fuel+1` branch (`q = 0`: `1` if `p` constant else `0`; `q` a nonzero constant `c`: `cⁱ` with
-`i = deg p`). The two recursive branches — the **swap** `(p,q)→(q,p)` (when `len p < len q`) and the
+the Euclidean-PRS resultant identity with no fuel at runtime. Base cases are `q = 0` (`1` if `p` is
+constant, otherwise `0`) and nonzero constant `q = c` (`cⁱ` with `i = deg p`). The two recursive branches
+— the **swap** `(p,q)→(q,p)` (when `len p < len q`) and the
 **reduce** `(p,q)→(q, cmodWf p q)` (when `len q ≤ len p`) — are each taken only under the structural
 guard `cresultantMeasure (next) < cresultantMeasure p q`, so `decreasing_by` is `assumption` and the
 def is `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZG ℚ`). Over a genuine field
-the guards never fail (`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`); an internal bridge
-relates `cresultantWf` to `cresultantG` when a legacy fueled comparison is needed. -/
+the guards never fail (`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`). -/
 def cresultantWf (p q : CPolyG α) : α :=
   let pn := cnormG p
   let qn := cnormG q
@@ -77,13 +74,6 @@ termination_by cresultantMeasure p q
 decreasing_by · assumption
               · assumption
 
-/-! ### Internal bridge of `cresultantWf` to the fuel'd `cresultantG`, and transported correctness
-
-Over a genuine field (`[CFieldSpec α]`) the remainder always strictly shortens (`cmodWf_length_lt`),
-so `cresultantWf`'s structural guards never fail and it coincides with `cresultantG fuel` whenever
-`fuel` covers the descent. The bound lives only in the bridge proof; the runtime `cresultantWf` carries
-no fuel. The Sylvester-resultant identity is then transported from `toPolyG_cresultantG`. -/
-
 variable [CFieldSpec α]
 
 omit [CFieldSpec α] in
@@ -106,86 +96,6 @@ theorem cresultantMeasure_reduce_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
     cmodWf_length_lt p q hq
   simp only [cresultantMeasure, cnormG_idem]
   omega
-
-/-- **Bridge, the no-swap case** `len q ≤ len p`: `cresultantWf p q = cresultantG fuel p q` for
-`(cnormG p).length + (cnormG q).length + 1 ≤ fuel`. The top step is never a swap, so the body's
-recursion (reduce only) descends with strictly smaller `len q`, keeping `len(new q) ≤ len(new p)`. The
-generic analogue of `toPolyG_cresultantG_of_ge`'s fuel accounting; the `+1` margin (one cheaper than the
-general `+2`) is what funds the descent without an extra swap. By strong induction on `fuel`. -/
-private theorem cresultantWf_eq_of_ge : ∀ (fuel : ℕ) (p q : CPolyG α),
-    (cnormG q : List α).length ≤ (cnormG p : List α).length →
-    (cnormG p : List α).length + (cnormG q : List α).length + 1 ≤ fuel →
-      cresultantWf p q = cresultantG fuel p q := by
-  intro fuel
-  induction fuel using Nat.strong_induction_on with
-  | _ fuel ihf =>
-    intro p q hge hfuel
-    cases fuel with
-    | zero => omega
-    | succ fuel =>
-      rw [cresultantWf.eq_def, cresultantG]
-      by_cases h0 : cisZeroG (cnormG q) = true
-      · -- q = 0: both branch on `len p ≤ 1`
-        simp only [h0, if_true]
-      · have hcz : cisZeroG (cnormG q) = false := by simpa using h0
-        have hq : cnormG q ≠ [] := fun h => by simp [cisZeroG, h] at hcz
-        simp only [hcz, Bool.false_eq_true, if_false]
-        by_cases hqc : (cnormG q : List α).length ≤ 1
-        · -- q a nonzero constant: res(p, c) = c^(deg p)
-          simp only [if_pos hqc, cleadG_cnormG, cdegG_cnormG]
-        · -- non-constant divisor, `len q ≤ len p`: the reduce branch (no swap)
-          have hpq : ¬ (cnormG p : List α).length < (cnormG q : List α).length := by omega
-          simp only [if_neg hqc, if_neg hpq]
-          have hmod : cmodWf p q = cmodG (fuel + 1) p q :=
-            cmodWf_eq_cmodG_succ fuel p q (by omega)
-          have hdec := cresultantMeasure_reduce_lt p q hq hpq
-          rw [hmod] at hdec
-          have hrlt : (cnormG (cmodG (fuel + 1) p q) : List α).length
-              < (cnormG q : List α).length := by rw [← hmod]; exact cmodWf_length_lt p q hq
-          rw [hmod]
-          simp only [if_pos hdec, cleadG_cnormG, cdegG_cnormG, cmodG_cnormG_both]
-          -- recurse on `(q, r)` with `len r < len q ≤ len(new p) = len q`
-          have ihstep := ihf fuel (by omega) q (cnormG (cmodG (fuel + 1) p q))
-            (by rw [cnormG_idem]; omega) (by rw [cnormG_idem]; omega)
-          rw [cresultantG_cnormG, ihstep]
-          have hrec : cresultantG fuel q (cnormG (cmodG (fuel + 1) p q))
-              = cresultantG fuel q (cmodG (fuel + 1) p q) := by
-            rw [← cresultantG_cnormG fuel q (cnormG (cmodG (fuel + 1) p q)), cnormG_idem,
-              cresultantG_cnormG]
-          rw [hrec]
-
-/-- **Bridge — `cresultantWf` equals `cresultantG` at any sufficient fuel.** With
-`(cnormG p).length + (cnormG q).length + 2 ≤ fuel`, `cresultantWf p q = cresultantG fuel p q`. The
-fuel bound appears only here; `cresultantWf` carries none. The `len q ≤ len p` case is
-`cresultantWf_eq_of_ge`; the `len p < len q` case swaps once (consuming the extra `+1` of fuel) into it,
-mirroring `toPolyG_cresultantG`'s top swap into `toPolyG_cresultantG_of_ge`. -/
-private theorem cresultantWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG α)
-    (hfuel : (cnormG p : List α).length + (cnormG q : List α).length + 2 ≤ fuel) :
-    cresultantWf p q = cresultantG fuel p q := by
-  by_cases hge : (cnormG q : List α).length ≤ (cnormG p : List α).length
-  · exact cresultantWf_eq_of_ge fuel p q hge (by omega)
-  · have hpq : (cnormG p : List α).length < (cnormG q : List α).length := by omega
-    have hq : cnormG q ≠ [] := by intro h; rw [h, List.length_nil] at hpq; omega
-    have hcz : cisZeroG (cnormG q) = false := by simpa [cisZeroG] using hq
-    obtain ⟨fuel', rfl⟩ : ∃ f, fuel = f + 1 := ⟨fuel - 1, by omega⟩
-    rw [cresultantWf.eq_def, cresultantG]
-    by_cases hqc : (cnormG q : List α).length ≤ 1
-    · -- q a nonzero constant, p = 0: no recursion, both compute `c^(deg p)`
-      simp only [hcz, Bool.false_eq_true, if_false, if_pos hqc, cleadG_cnormG,
-        cdegG_cnormG]
-    · -- swap once into the no-swap bridge
-      have hdec := cresultantMeasure_swap_lt p q hpq
-      simp only [hcz, Bool.false_eq_true, if_false, if_neg hqc, if_pos hpq,
-        if_pos hdec, cdegG_cnormG]
-      rw [cresultantWf_eq_of_ge fuel' q p (le_of_lt hpq) (by omega),
-        ← cresultantG_cnormG fuel' q p]
-
-/-- **Bridge at the self-sufficient fuel**: `cresultantWf p q = cresultantG (max+2) p q` with
-`max = (cnormG p).length + (cnormG q).length`. -/
-private theorem cresultantWf_eq (p q : CPolyG α) :
-    cresultantWf p q
-      = cresultantG ((cnormG p : List α).length + (cnormG q : List α).length + 2) p q :=
-  cresultantWf_eq_of_fuel _ p q le_rfl
 
 /-- **Fuel-free quotient degree**: for a non-constant divisor with `deg q ≤ deg p`,
 `natDegree (cdivWf p q) + natDegree q = natDegree p` (the Euclidean quotient has degree `deg p − deg q`).
