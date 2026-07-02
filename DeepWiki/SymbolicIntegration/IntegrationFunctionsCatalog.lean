@@ -65,7 +65,9 @@ only; it states no new mathematics.
   Soundness (unconditional, no `IsCanonNormalized` hypothesis): `crischDESolveSound_field`.
   Completeness: `crischDESolveSound_isDecisionProcedure` — `some ⟺ FieldRDESolvable`, modulo exactly three
   named §6 residuals; the soundness arrow is `crischDESolveSound_decides_of_residual`.
-* `crischDESolveSoundWf` — the FUEL-FREE sound RDE solver. Soundness: `crischDESolveSoundWf_field`.
+* `crischDESolveSoundWf` — the FUEL-FREE RDE solver. Soundness: `crischDESolveSoundWf_field`.
+  Completeness/decision procedure: `crischDESolveSoundWf_decides_of_residual`, modulo the same §6 residual
+  plus the Wf/fueled agreement hypotheses.
 
 ## Algebraic integrators (Bronstein vol. II / Trager, over `RadExt` or a general plane curve)
 
@@ -144,8 +146,9 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @crischDESolveSound_isDecisionProcedure
 #check @crischDESolveSound_decides_of_residual
 
--- `crischDESolveSoundWf`: the fuel-free sound RDE solver.
+-- `crischDESolveSoundWf`: the fuel-free sound RDE solver and its residual decision wrapper.
 #check @crischDESolveSoundWf_field
+#check @crischDESolveSoundWf_decides_of_residual
 
 -- ★ The TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): `CRischFieldComplete`
 -- (the per-level oracle returns `some` on every solvable RDE) holds at EVERY tower level — base ℚ

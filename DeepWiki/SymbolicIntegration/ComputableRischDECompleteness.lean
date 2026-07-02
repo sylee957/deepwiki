@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveSound
+import DeepWiki.SymbolicIntegration.ComputableRischDESolveSoundWf
 
 /-! # §6 RDE decision-procedure COMPLETENESS — `solvable ⟹ some` (the converse of soundness)
 
@@ -449,6 +450,73 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
   crischDESolveSound_decides_of_residual f g hres hfit
 
 end Complete
+
+/-! ## Fuel-free completeness wrapper
+
+The deep §6 residual is still stated against the fueled structural spine, but the executable solver surface can
+now be the fuel-free `crischDESolveSoundWf`. The bridge hypotheses are exactly the Wf/fueled agreements already
+used by `crischDESolveSoundWf_field`. -/
+
+section CompleteWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
+  [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **Fuel-free soundness, restated as `some ⟹ solvable`**: a successful `crischDESolveSoundWf`
+run witnesses `FieldRDESolvable`, using the same Wf/fueled agreement hypotheses as
+`crischDESolveSoundWf_field`. -/
+theorem crischDESolveSoundWf_imp_solvable (f g y : QFunNZG β)
+    (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    FieldRDESolvable f g :=
+  ⟨y, crischDESolveSoundWf_field f g y hsolve hfit hqwn hwf⟩
+
+omit [CTowerGcdWitness β] in
+/-- **Fuel-free §6 RDE completeness modulo the deep residual**: if the RDE is solvable and the existing
+`RischDECompletenessResidual` holds, then `crischDESolveSoundWf` returns `some`, provided the Wf weak
+normalizer and inner RDE call agree with the fueled run on this input. -/
+theorem crischDESolveSoundWf_complete_of_residual (f g : QFunNZG β)
+    (hsol : FieldRDESolvable f g) (hres : RischDECompletenessResidual f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    ∃ y, crischDESolveSoundWf f g = some y := by
+  obtain ⟨y, hy⟩ := crischDESolveSound_complete_of_residual f g hsol hres
+  refine ⟨y, ?_⟩
+  rw [crischDESolveSoundWf_eq f g hqwn hwf]
+  exact hy
+
+/-- **The fuel-free §6 RDE solver DECIDES solvability modulo the deep residual**:
+`crischDESolveSoundWf f g` returns `some` iff the field-level RDE is solvable, under the existing
+`RischDECompletenessResidual`, the benign fuel budget used by soundness, and the Wf/fueled agreement
+hypotheses. -/
+theorem crischDESolveSoundWf_decides_of_residual (f g : QFunNZG β)
+    (hres : RischDECompletenessResidual f g) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g := by
+  constructor
+  · rintro ⟨y, hy⟩
+    exact crischDESolveSoundWf_imp_solvable f g y hy hfit hqwn hwf
+  · intro hsol
+    exact crischDESolveSoundWf_complete_of_residual f g hsol hres hqwn hwf
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+-- The fuel-free solver returns `some` iff the field-level RDE is solvable, modulo the same deep residual and
+-- Wf/fueled agreement hypotheses.
+example (f g : QFunNZG β) (hres : RischDECompletenessResidual f g) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
+  crischDESolveSoundWf_decides_of_residual f g hres hfit hqwn hwf
+
+end CompleteWf
 
 /-! ## ★ Operational completeness witnesses (`native_decide`): the residual is non-vacuous
 
