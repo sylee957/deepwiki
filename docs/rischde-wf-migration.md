@@ -234,6 +234,38 @@ not refactoring.
    (same results — `cRischDEGWf` computes the same solutions `cRischDEG` did within budget, and
    more beyond it). Commit.
 
+> **P2-PREP DONE (2026-07-02).** The standalone soundness the switch needs is built gate-green in a
+> **fuel-independent** file `RischDE/RawSolveField.lean`: `crischDERawSolveWf_field_of_residual` proves the
+> field-level Risch-DE identity for the fuel-free raw solver `crischDERawSolveWf` (= the exact `match
+> cRischDEGWf [1] … with …` runtime shape the rebased instance body will use) from a bare success + the
+> residual `RawSolveResidualWf`, composing the Phase-P1 headline `crischDEWf_field_of_success_and_residual`.
+> No fuel, no tower-gcd witness, no `native_decide`; axiom-clean. So step-4's "repoint downstream to the
+> Phase-P1 Wf soundness" now has a concrete, proven target to point at.
+>
+> **★ P2 BLAST-RADIUS INVENTORY (empirical, 2026-07-02 — start the P2 session from here):**
+> - **Reduction-lemma consumers = exactly 3 files** (`grep -rln
+>   'crischDESolve_eq_solve_of_normal\|cdenomNormalGateG_of_crischDESolve_isSome'`): `Tower/RischDE.lean`
+>   (self — the defining file), `SoundnessCapstone.lean`, `RischDE/NormalCorrect.lean`. These are the ONLY
+>   files that *unfold the instance body via the reduction lemmas* and so break on the switch; each must
+>   repoint to the Wf reduction lemmas + `crischDERawSolveWf_field_of_residual` (SoundnessCapstone's
+>   `crischDESolve_field_of_witness_residual`) / the Wf raw-solve soundness.
+> - **`CRischField.crischDESolve` on QFunNZG appears in ~24 files** but the vast majority are *runtime
+>   `def` call sites* (they compute a solve; they do NOT reason about the fuel'd body), so they survive the
+>   switch untouched — the body is still `Option (QFunNZG β)`-valued, just fuel-free. Do NOT touch these.
+> - **`[CFracGcdCore β]` (fuel'd, non-Wf) = 48 occurrences across 9 files**, but this cuts across TWO
+>   concerns: (a) the fuel'd **gcd** machinery `cgcdFFCore` (`Tower/GcdFFCore.lean`, `Tower/GcdFFCorrect.lean`,
+>   `WeakNormalizerCorrect.lean`) — genuinely needs `[CFracGcdCore β]`, NOT touched by the RDE switch
+>   (the Wf gcd `cgcdFFCoreWf` is a parallel track); vs (b) the RDE-**instance**-driven requirements in
+>   `Tower/RischDE.lean` / `SoundnessCapstone.lean` / the `RischDE/Solve*.lean` chain — these flip to
+>   `[CFracGcdCoreWf β]`. So the §2.2 propagation is narrower than 48; scope it by "does this signature need
+>   the RDE instance or the fuel'd gcd?" per occurrence.
+> - **The atomic character is real**: the new instance and the old cannot coexist (ambiguous
+>   `CRischField (QFunNZG β)` resolution — §5 hard constraint), and `Tower/RischDEWellFounded.lean` (home of
+>   `cRischDEGWf`) already imports `Tower/RischDE.lean` (home of the old instance), so the new instance file
+>   must sit ABOVE `RischDEWellFounded` in the import DAG and the old instance deleted in the same commit.
+>   The tree is red from the delete until all 3 reduction-consumers + the instance-driven `[CFracGcdCoreWf]`
+>   signatures are repointed — a single focused session, not an end-of-session add-on.
+
 ### P3 — Point the catalog + public surface at the Wf oracle
 Update `Sources/Doi_10_1007_b138171/Chapter6.lean` docstrings/aliases so `alg_6_6_*` describe the
 now-fuel-free `crischDESolve`; ensure `IntegrationFunctionsCatalog` still `#check`s resolve. Gate,
