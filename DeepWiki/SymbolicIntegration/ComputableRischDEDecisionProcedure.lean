@@ -211,8 +211,7 @@ residual. -/
 section Capstone
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
-  [Algebra ℚ (CFieldSpec.K β)]
+  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **The Wf decision-procedure frontier** `RischDEDecisionProcedureFrontierWf f g`: a field-level frontier
 whose inner clause is stated through the fuel-free inner API. Besides the two §6.1 completeness clauses
@@ -248,10 +247,9 @@ structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
         = some (ynum, yden) →
       CPolyG.cisZeroG yden = false
 
-omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **The Wf frontier produces the Wf completeness residual**: the `hinner` residual clause is
 obtained by feeding the Wf inner-completeness proof through the raw fuel-free solver bridge. -/
-theorem residualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
+theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
     (h : RischDEDecisionProcedureFrontierWf f g) :
     RischDECompletenessResidualWf f g where
   hwn hsol := h.hwn hsol
@@ -263,7 +261,6 @@ theorem residualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
         (h.hinner hsol)
         (h.hpolysol hsol) (h.hden hsol))
 
-omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **★★ The CAPSTONE — `crischDESolveSoundWf` is a VERIFIED DECISION PROCEDURE**
 (`crischDESolveSoundWf_isDecisionProcedure`): under the Wf-native frontier
 `RischDEDecisionProcedureFrontierWf f g` and the direct Wf soundness certificate
@@ -277,7 +274,7 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residualWf f g
-    (residualWf_of_decisionProcedureFrontierWf f g h) hsound
+    (completenessResidualWf_of_decisionProcedureFrontierWf f g h) hsound
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
@@ -285,8 +282,7 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
 -- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf §6 completeness frontier + the
 -- direct Wf soundness certificate.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
-    [Algebra ℚ (CFieldSpec.K β)]
+    [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g : QFunNZG β) (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
@@ -323,7 +319,7 @@ helper `rischDEInnerCompletenessWf_of_decisionFrontierWf` transfers that assembl
 `RischDEInnerCompletenessWf` proof now consumed directly by the field-level frontier. The Wf capstone then
 uses the §6.1 `hwn`/`hck` plus the Wf inner-input clauses through `RischDECompletenessResidualWf`. The
 cross-level lift of inner completeness into the Wf raw-solver `hinner` clause is encoded in
-`residualWf_of_decisionProcedureFrontierWf`. -/
+`completenessResidualWf_of_decisionProcedureFrontierWf`. -/
 
 /-! ### Axiom audit (the Wf capstone and the three-residual assembly are axiom-clean;
 NO `native_decide`, NO `sorry`) -/
