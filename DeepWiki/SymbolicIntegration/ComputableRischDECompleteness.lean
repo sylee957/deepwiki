@@ -387,6 +387,33 @@ theorem crischDERawSolveWf_isSome_of_cRischDEGWf_some_den (ftilde gtilde : QFunN
   simp only []
   rw [dif_pos (hden ynum yden hp)]
 
+omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
+/-- **Fuel-free staged raw solver bridge**: Wf inner stage successes plus the returned-denominator guard imply
+`crischDERawSolveWf` succeeds. -/
+theorem crischDERawSolveWf_isSome_of_cRischDEGWf_stages_den (ftilde gtilde : QFunNZG β)
+    (a0 b0 c0 h0 bbar cbar : CPolyG β) (m : ℤ) (α' β' v : CPolyG β)
+    (hnorm : cRdeNormalDenominatorGWf ([CField.one] : CPolyG β)
+      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0))
+    (hspde : cSPDEGWf ([CField.one] : CPolyG β) (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β)
+        a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β)
+          a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β'))
+    (hpoly : cPolyRischDEGWf ([CField.one] : CPolyG β) bbar cbar m = some v)
+    (hden : ∀ ynum yden : CPolyG β,
+      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      CPolyG.cisZeroG yden = false) :
+    ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
+  have hsome : (cRischDEGWf ([CField.one] : CPolyG β)
+      ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2).isSome = true := by
+    rw [cRischDEGWf, hnorm]
+    simp only [hspde, hpoly, Option.isSome_some]
+  exact crischDERawSolveWf_isSome_of_cRischDEGWf_some_den ftilde gtilde hsome hden
+
 omit [CFieldDomain β] in
 /-- **Fuel-free inner completeness feeds the raw solver**: a Wf inner-completeness residual, a polynomial
 solution, and the denominator guard imply `crischDERawSolveWf` succeeds. -/
@@ -529,6 +556,7 @@ axiom-clean; NO `native_decide`, NO `sorry`) -/
 #print axioms crischDESolveSoundWf_some_iff
 #print axioms crischDESolveSoundWf_some_of_stages
 #print axioms rischDE_complete_base
+#print axioms crischDERawSolveWf_isSome_of_cRischDEGWf_stages_den
 #print axioms crischDESolveSoundWf_complete_of_residualWf
 #print axioms crischDESolveSoundWf_decides_of_residualWf
 
