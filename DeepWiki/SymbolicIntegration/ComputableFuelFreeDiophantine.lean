@@ -17,9 +17,9 @@ engine reuses verbatim. Each substitutes the fuel-free extended-Euclid `cgcdWf` 
 * **`cHermiteReduceTowerInnerWf`** — the §5.3 inner Hermite loop over one squarefree factor, structural
   on the downward counter `j`, built on `cdiophantineGWf` and the monomial derivation `cmonomialDeriv`.
 
-The fuel'd-agreement bridges (`*_eq_of_fuel`, `[CFieldSpec α]`) live alongside; the fuel bounds appear
-only in those proofs, the runtime ops carry none. Generic over `[CField α]` (plus `[CDiffField α]` for
-the Hermite inner loop), so they native_decide over the noncomputable tower. -/
+The fuel'd-agreement bridges (`*_eq_of_fuel`, `[CFieldSpec α]`) are private implementation proofs; the
+fuel bounds appear only there, and the runtime ops carry none. Generic over `[CField α]` (plus
+`[CDiffField α]` for the Hermite inner loop), so they native_decide over the noncomputable tower. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -63,7 +63,7 @@ variable [CFieldSpec α]
 /-- **`cbezoutOneWf` equals the fuel'd `cbezoutOne` at any sufficient fuel** — with `(cnormG a).length ≤
 fuel` and `(cnormG b).length < fuel`, `cbezoutOneWf a b = cbezoutOne fuel a b`, since the only fuel'd
 sub-op `cgcdExtG` is bridged by `cgcdWf_eq_of_fuel`. -/
-theorem cbezoutOneWf_eq_of_fuel (fuel : ℕ) (a b : CPolyG α)
+private theorem cbezoutOneWf_eq_of_fuel (fuel : ℕ) (a b : CPolyG α)
     (ha : (cnormG a : List α).length ≤ fuel) (hb : (cnormG b : List α).length < fuel) :
     cbezoutOneWf a b = CPolyG.cbezoutOne fuel a b := by
   rw [cbezoutOneWf, CPolyG.cbezoutOne, cgcdWf_eq_of_fuel fuel a b ha hb]
@@ -71,7 +71,7 @@ theorem cbezoutOneWf_eq_of_fuel (fuel : ℕ) (a b : CPolyG α)
 /-- **`cextendedEuclideanSplitWf` equals the fuel'd `cextendedEuclideanSplit` at any sufficient fuel** —
 with `(cnormG (cmulG u r)).length ≤ fuel`, `cextendedEuclideanSplitWf dn ds r u w = cextendedEuclideanSplit
 fuel dn ds r u w`, since the only fuel'd sub-op `cdivmodG` is bridged by `cdivmodWf_eq_of_fuel`. -/
-theorem cextendedEuclideanSplitWf_eq_of_fuel (fuel : ℕ) (dn ds r u w : CPolyG α)
+private theorem cextendedEuclideanSplitWf_eq_of_fuel (fuel : ℕ) (dn ds r u w : CPolyG α)
     (hur : (cnormG (cmulG u r) : List α).length ≤ fuel) :
     cextendedEuclideanSplitWf dn ds r u w = CPolyG.cextendedEuclideanSplit fuel dn ds r u w := by
   rw [cextendedEuclideanSplitWf, CPolyG.cextendedEuclideanSplit,
@@ -84,7 +84,7 @@ rescaled-reduced dividend `S = cscaleG (cleadG (cgcdWf p q).1)⁻¹ (cmulG rhs (
 (`(cnormG S).length ≤ fuel`, for the `cdivmodWf`), `cdiophantineGWf p q rhs = cdiophantineG fuel p q rhs`.
 The bounds live only here; `cdiophantineGWf` carries no fuel. The extended Euclid is bridged by
 `cgcdWf_eq_of_fuel` and the mod-reduction by `cdivmodWf_eq_of_fuel`. -/
-theorem cdiophantineGWf_eq_of_fuel [CFieldSpec α] (fuel : ℕ) (p q rhs : CPolyG α)
+private theorem cdiophantineGWf_eq_of_fuel [CFieldSpec α] (fuel : ℕ) (p q rhs : CPolyG α)
     (hp : (cnormG p : List α).length ≤ fuel) (hq : (cnormG q : List α).length < fuel)
     (hS : (cnormG (cscaleG (CField.inv (cleadG (cgcdWf p q).1))
         (cmulG rhs (cgcdWf p q).2.1)) : List α).length ≤ fuel) :
