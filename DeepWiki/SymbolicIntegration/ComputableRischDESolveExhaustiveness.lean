@@ -2321,7 +2321,7 @@ With `hsolve` now produced (`hsolve_of_exhaustiveResidual`), all three clauses o
 (`hnorm_of_divisibilityResidual`, `ComputableRischDENormCompleteness`), `hbound` from the §6.3 cancellation
 (`hbound_of_cancellationResidual`, `ComputableRischDEDegreeBound`), `hsolve` from the §6.4–6.6 exhaustiveness
 here. We record the full assembly — `RischDEInnerCompleteness` from the three precise residuals — completing
-the map of clause (c) of `RischDECompletenessResidual` to its three precisely isolated deep facts. -/
+the map of the Wf inner residual clause to its three precisely isolated deep facts. -/
 
 section Assemble
 
@@ -2333,7 +2333,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 `RdeNormalDivisibilityResidual` (which yields `hnorm`), the §6.3 cancellation residual
 `RdeBoundCancellationResidual` (which yields `hbound`), and the §6.4–6.6 exhaustiveness residual
 `RischDESolveExhaustiveResidual` (which yields `hsolve`), the full `RischDEInnerCompleteness Dt fnum fden gnum
-gden` holds. This is the assembly point: clause (c) of `RischDECompletenessResidual` is now reduced **in
+gden` holds. This is the assembly point: the Wf inner residual clause is now reduced **in
 full** to its three precisely isolated deep facts — the §6.2 normal-denominator divisibility (Bronstein Thm
 6.1.2), the §6.3 degree-bound `λ`-cancellation, and the §6.4–6.6 SPDE/poly-RDE exhaustiveness — each a
 stated `Prop`, none a `sorry`. -/
@@ -2503,8 +2503,8 @@ does not self-certify:
 (`ComputableRischDEDegreeBound`, modulo the §6.3 `λ`-cancellation), and `hsolve` here (modulo the §6.4–6.6
 SPDE degree-descent-assembly + cancellation-regime residue — the per-step SPDE inverse incl. its
 peeling-divisibility now proven), `rischDEInnerCompleteness_of_residuals` assembles
-`RischDEInnerCompleteness` **in full** from its three precise residuals. Clause (c) of
-`RischDECompletenessResidual` — and hence the whole §6 decision-procedure completeness `solvable ⟹ some` — is
+`RischDEInnerCompleteness` **in full** from its three precise residuals. The Wf inner residual clause — and
+hence the whole Wf §6 decision-procedure completeness `solvable ⟹ some` — is
 mapped to exactly three precisely isolated deep facts, **none** a `sorry`: the §6.2 normal-denominator
 divisibility, the §6.3 degree-bound cancellation, and the §6.4–6.6 SPDE/poly-RDE exhaustiveness. -/
 

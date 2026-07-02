@@ -335,7 +335,7 @@ end TorsionFrontier
 
 Assembling the engine-side control flow (`torsionLogTerm_isSome_iff`) with the two deep frontiers gives the
 completeness equivalence *modulo* a precisely isolated residual, mirroring
-`crischDESolveSound_decides_of_residual`.  For a residue divisor `D` (the log-part data after the rational
+`crischDESolveSoundWf_decides_of_residualWf`.  For a residue divisor `D` (the log-part data after the rational
 part `v` and the principal-case `radLogArgSolve` are accounted for) and the integrand's elementarity
 predicate `elem`, the residual bundles exactly the two frontier-instances:
 
@@ -380,7 +380,7 @@ branch `torsionLogTerm` returns a log term **iff** the integrand is elementary �
 isTorsionDivisor = some m` (the unconditional `torsionLogTerm_isSome_iff`) ⟺ `D is torsion` (frontier 2,
 `htorsion`) ⟺ `elem` (frontier 1, `hcriterion`).  This is the converse of soundness for the algebraic
 integrator's log part, *modulo* the two precisely isolated deep frontiers — the algebraic analogue of
-`crischDESolveSound_decides_of_residual`. -/
+`crischDESolveSoundWf_decides_of_residualWf`. -/
 theorem cIntegrateAlgebraicWf_complete_of_residual {isTorsion elem : Prop} (p : ℕ)
     [Fact p.Prime] (hres : AlgebraicCompletenessResidual ρq g D p isTorsion elem) :
     (torsionLogTerm p ρ ρq g D).isSome = true ↔ elem := by

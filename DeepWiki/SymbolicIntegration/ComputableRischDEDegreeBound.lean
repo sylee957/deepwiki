@@ -3,8 +3,8 @@ import DeepWiki.SymbolicIntegration.MonomialConstants
 
 /-! # §6.4 degree-upper-bound for the reduced poly-RDE (Bronstein Thm 6.3.1) — the completeness keystone
 
-`ComputableRischDECompleteness` reduced the §6 RDE decision procedure's completeness (`solvable ⟹ some`)
-to the residual `RischDECompletenessResidual`, whose deepest clause is `RischDEInnerCompleteness.hbound`:
+`ComputableRischDECompleteness` reduced the Wf §6 RDE decision procedure's completeness (`solvable ⟹ some`)
+to the residual `RischDECompletenessResidualWf`, whose deepest clause is `RischDEInnerCompleteness.hbound`:
 **any** polynomial solution `q` of the §6.3-reduced linear ODE `a·Dq + b·q = c` has bounded degree
 `deg q ≤ cRdeBoundDegreeG …`. The engine *computes* `cRdeBoundDegreeG` (Bronstein §6.3, the degree
 arithmetic) but never proves it is an upper bound on solutions. This file proves the bound where it is a

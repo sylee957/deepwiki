@@ -52,7 +52,7 @@ open Compute CPolyG QFunNZG
 
 /-! ## ★ The consolidated three-residual frontier (one level down: `RischDEInnerCompleteness`)
 
-The deep §6 content of the decision procedure — the `hinner` clause of `RischDECompletenessResidual` — is
+The deep §6 content of the decision procedure — the `hinner` clause of `RischDECompletenessResidualWf` — is
 the inner-solve completeness `RischDEInnerCompleteness`, whose three clauses (`hnorm`/`hbound`/`hsolve`) the
 proven `rischDEInnerCompleteness_of_residuals` produces from exactly three residuals. We bundle the
 **deepest tips** of those three — pushed as far down each chain as the proven layers reach — into one
