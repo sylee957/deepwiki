@@ -66,8 +66,7 @@ only; it states no new mathematics.
   `crischDESolveSoundWf_isDecisionProcedure`, modulo the Wf-native `RischDEDecisionProcedureFrontierWf` and
   `RischDESoundnessWf`. The Wf field frontier can be assembled directly from the Wf inner residual-tip
   frontier by `decisionProcedureFrontierWf_of_innerFrontier`.
-  The older fueled `crischDESolveSound` remains documented for comparison; the public decision theorem uses
-  the Wf solver and direct Wf soundness certificate.
+  The public decision theorem uses the Wf solver and direct Wf soundness certificate.
 
 ## Algebraic integrators (Bronstein vol. II / Trager, over `RadExt` or a general plane curve)
 
