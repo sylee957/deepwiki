@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
-import DeepWiki.SymbolicIntegration.Compute.Exercise22
+import Sources.Doi_10_1007_b138171.Exercise22
 
 /-! # Exercise 2.2 worked example: the LRT subresultant chain at squarefree index j = 1
 

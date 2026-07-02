@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.Exercise23
+import DeepWiki.SymbolicIntegration.Compute.Subresultant
 
 /-! # Computing Bronstein Exercise 2.5 with the executable LRT engine, over `ℚ(θ)` (§2.9, p.73)
 **Exercise 2.5 ([66]).** Compute, by Lazard–Rioboo–Trager,

@@ -18,10 +18,10 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtanExample
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Compute.RtResultant
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
-import DeepWiki.SymbolicIntegration.Compute.Exercise22
+import Sources.Doi_10_1007_b138171.Exercise22
 import DeepWiki.SymbolicIntegration.Compute.Hermite
-import DeepWiki.SymbolicIntegration.Compute.Exercise23
-import DeepWiki.SymbolicIntegration.Compute.Exercise25
+import Sources.Doi_10_1007_b138171.Exercise23
+import Sources.Doi_10_1007_b138171.Exercise25
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
