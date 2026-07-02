@@ -252,9 +252,10 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **The Wf input-fit precondition** `InputFitsFuelWf f g`: the per-run termination residual for the
-canonicalized Wf solver pair built from `cWeakNormalizerGWf [1] f.1.1 f.1.2`, together with the `g`-side
-normality dual. This is the Wf-shaped counterpart of `InputFitsFuel`; it keeps the public Wf soundness API
-stated on the actual weak normalizer used by `crischDESolveSoundWf`. -/
+canonicalized Wf solver pair built from `cWeakNormalizerGWf [1] f.1.1 f.1.2`, together with Wf `g`-side
+normality and the one split-transfer equality needed by the old fueled soundness bridge. This is the
+Wf-shaped counterpart of `InputFitsFuel`; it keeps the public Wf soundness API stated on the actual weak
+normalizer used by `crischDESolveSoundWf`. -/
 structure InputFitsFuelWf (f g : QFunNZG β) : Prop where
   /-- The per-run fuel/termination residual for the Wf canonicalized pair. -/
   hfuel : RischDESuccessResidualNormFuel
@@ -263,7 +264,11 @@ structure InputFitsFuelWf (f g : QFunNZG β) : Prop where
     (qmulNZG (qOfPolyNZG
       (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
   /-- The Wf `g`-side normality dual for the transformed right-hand side. -/
-  hgnorm : IsWeaklyNormalizedDen
+  hgnorm : IsWeaklyNormalizedDenWf
+    (qmulNZG (qOfPolyNZG
+      (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.2
+  /-- The Wf/fueled split agreement used only to reuse the older normalized soundness theorem. -/
+  hgnormTransfer : IsWeaklyNormalizedDenTransferWf
     (qmulNZG (qOfPolyNZG
       (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.2
 
@@ -277,7 +282,9 @@ theorem inputFitsFuel_of_wf (f g : QFunNZG β) (hfit : InputFitsFuelWf f g)
   hfuel := by
     simpa [hqwn] using hfit.hfuel
   hgnorm := by
-    simpa [hqwn] using hfit.hgnorm
+    have hgnormFuel := isWeaklyNormalizedDen_of_wf_transfer _
+      hfit.hgnorm hfit.hgnormTransfer
+    simpa [hqwn] using hgnormFuel
 
 /-- **The Wf inner-solve regularity for the fuel-free sound solver** `SoundWfInnerRegular f g`: the fuel-free
 `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel` on the num/den components of the
