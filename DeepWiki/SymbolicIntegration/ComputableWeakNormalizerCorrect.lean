@@ -9,7 +9,7 @@ removed (discharged by `isWeaklyNormalizedNorm_dvdB` from the §6.1 normalizatio
 `IsWeaklyNormalizedNorm`). This file attacks the THREE remaining residual pieces, separating what is a
 genuine theorem from the one precisely-isolated true remainder.
 
-* **★ The `C`-side cross-divisibility `hdvdC_dn_h2` (Task 2) — a THEOREM from bare success + `g`-normality.**
+* **The `C`-side cross-divisibility `hdvdC_dn_h2` (Task 2) — a THEOREM from bare success + `g`-normality.**
   The engine's `cRdeNormalDenominatorG` returns `some` **only after** its own `cdvdG eₙ dₙh²` check passes
   (`eₙ` = `gden`'s §3.5 normal part), so on success `eₙ ∣ dₙh²` is honest (`dvd_of_cdvdG`). The residual
   asks `gden ∣ dₙh²`; bridging `eₙ ∣ dₙh²` to `gden ∣ dₙh²` needs exactly `gden ∣ eₙ`, i.e. `gden` equals
@@ -22,7 +22,7 @@ genuine theorem from the one precisely-isolated true remainder.
   (`cTowerWitness_assocReg`); the **non-gcd** fuel/termination clauses still inside `hin` are genuine per-run
   data, NOT `∀`-theorems — a too-small constant `towerRischDEFuel = 60` fails them on a large input. So they
   stay as part of the per-run residual.
-* **★ The one true remainder (Task 1, stated precisely sharper than before).** `IsWeaklyNormalizedNorm
+* **The one true remainder (Task 1, stated precisely sharper than before).** `IsWeaklyNormalizedNorm
   (weakNormalizedF f q')` is, as *stated* (a **strict** equality `toPolyG (cSplitFactorFastG [1] _ den).1 =
   toPolyG den` on the **un-reduced product** denominator that `weakNormalizedF`/`qsubNZG`/`qmulNZG`
   produce), **not a theorem — it is false for general `f`**: `weakNormalizedF f q'`'s denominator is the
@@ -47,7 +47,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG GBPolyCore
 
-/-! ## ★ Task 2 — the `C`-side cross-divisibility `gden ∣ dₙh²` from bare success + `g`-normality
+/-! ## Task 2 — the `C`-side cross-divisibility `gden ∣ dₙh²` from bare success + `g`-normality
 
 `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden` returns `some (a, b, c, h)` **only** in the `then`
 branch of `if cdvdG fuel eₙ (dₙ·h·h) then … else none`, where `eₙ = (cSplitFactorFastG Dt fuel gden).1` is
@@ -61,7 +61,7 @@ section Cside
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β]
 
 omit [CFieldSpec β] in
-/-- **A successful normal-denominator reduction forces its `cdvdG` check** (`cRdeNormalDenominatorG_cdvdG`):
+/-- A successful normal-denominator reduction forces its `cdvdG` check (`cRdeNormalDenominatorG_cdvdG`):
 if `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0)`, then the engine's own
 divisibility check `cdvdG fuel eₙ (dₙ·h0·h0) = true` held (`eₙ = (cSplitFactorFastG Dt fuel gden).1` the
 normal part of `gden`, `dₙ = (cSplitFactorFastG Dt fuel fden).1`), and the returned `h0` is exactly the
@@ -101,7 +101,7 @@ theorem cRdeNormalDenominatorG_cdvdG (Dt : CPolyG β) (fuel : ℕ) (fnum fden gn
     exact absurd hsucc (by simp)
 
 omit [CFieldSpec β] in
-/-- **The 4th component of a successful reduction is the engine's `h`** (`cRdeNormalDenominatorG_h0_eq`):
+/-- The 4th component of a successful reduction is the engine's `h` (`cRdeNormalDenominatorG_h0_eq`):
 if `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0)`, then `h0 =
 cdivWf (cgcdFFCore eₙ eₙ') (cgcdFFCore p p')` — the §6.2 `h = gcd(eₙ, eₙ')/gcd(p, p')`
 (`eₙ = (cSplitFactorFastG Dt fuel gden).1`, `p = gcd(dₙ, eₙ)`). Read off the `some`-branch's tuple, so the
@@ -132,7 +132,7 @@ theorem cRdeNormalDenominatorG_h0_eq (Dt : CPolyG β) (fuel : ℕ) (fnum fden gn
   · rw [if_neg hck] at hsucc
     exact absurd hsucc (by simp)
 
-/-- **The honest `eₙ ∣ dₙh0²` from a successful reduction** (`cRdeNormalDenominatorG_en_dvd`): with `eₙ =
+/-- The honest `eₙ ∣ dₙh0²` from a successful reduction (`cRdeNormalDenominatorG_en_dvd`): with `eₙ =
 (cSplitFactorFastG Dt fuel gden).1` nonzero, a successful `cRdeNormalDenominatorG = some (a0, b0, c0, h0)`
 gives the honest divisibility `toPolyG eₙ ∣ toPolyG (dₙ·h0·h0)` — the engine's `cdvdG` check
 (`cRdeNormalDenominatorG_cdvdG`) read through `dvd_of_cdvdG`, with `h0` pinned to the engine's `h`
@@ -161,7 +161,7 @@ section Cnorm
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β]
 
-/-- **The `g`-denominator normality dual** `IsWeaklyNormalizedDen gden`: `gden` equals its own §3.5 normal
+/-- The `g`-denominator normality dual `IsWeaklyNormalizedDen gden`: `gden` equals its own §3.5 normal
 part `toPolyG (cSplitFactorFastG [1] _ gden).1 = toPolyG gden` (the special part of `gden` is a unit). The
 precise dual of `IsWeaklyNormalizedNorm` on the `g` side; under it the engine's `eₙ ∣ dₙh²` (with
 `eₙ = gden`'s normal part) reads as the residual's `gden ∣ dₙh²`. -/
@@ -175,7 +175,7 @@ section Cnorm
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β]
 
-/-- **★ The `C`-divisibility from bare success + `g`-normality** (`isWeaklyNormalizedDen_dvdC_dn_h2`): if
+/-- The `C`-divisibility from bare success + `g`-normality (`isWeaklyNormalizedDen_dvdC_dn_h2`): if
 `gden = gtilde.1.2` is weakly normalized (`IsWeaklyNormalizedDen`), then a successful normal-denominator
 reduction `cRdeNormalDenominatorG [1] fuel fnum fden gnum gden = some (a0, b0, c0, h0)` yields the residual's
 §6.2 `C`-divisibility `gden ∣ dₙ·h0²` — the engine's honest `eₙ ∣ dₙh0²` (`cRdeNormalDenominatorG_en_dvd`)
@@ -196,7 +196,7 @@ theorem isWeaklyNormalizedDen_dvdC_dn_h2 (fnum fden gnum gden : CPolyG β)
   -- the honest divisibility is `eₙ ∣ dₙh0²`; rewrite `eₙ`'s toPolyG to `gden`'s via normality
   rwa [hnorm] at hdvd
 
-/-- **`eₙ ≠ 0` from `g`-normality + `gden ≠ 0`** (`cnormG_en_ne_nil_of_normalizedDen`): if `gden` is weakly
+/-- `eₙ ≠ 0` from `g`-normality + `gden ≠ 0` (`cnormG_en_ne_nil_of_normalizedDen`): if `gden` is weakly
 normalized (`IsWeaklyNormalizedDen`, so its normal part `eₙ` has `toPolyG eₙ = toPolyG gden`) and `gden ≠ 0`
 (`cnormG gden ≠ []`), then `cnormG eₙ ≠ []`. The `eₙ ≠ 0` side-condition of the `C`-divisibility, derived
 from `g`-normality + the `QFunNZG` subtype proof — so the `C`-clause needs only `IsWeaklyNormalizedDen`. -/
@@ -212,7 +212,7 @@ theorem cnormG_en_ne_nil_of_normalizedDen (gden : CPolyG β)
 
 end Cnorm
 
-/-! ## ★ Task 2 (assembled) — the residual's `hdvdC_dn_h2` clause from `g`-normality alone
+/-! ## Task 2 (assembled) — the residual's `hdvdC_dn_h2` clause from `g`-normality alone
 
 The `RischDESuccessResidualNorm.hdvdC_dn_h2` field, for the normalized solver's `(ftilde, gtilde)`, is
 exactly the universally-quantified `gtilde.1.2 ∣ dₙh0²` over successful normal-denominator reductions. We
@@ -225,7 +225,7 @@ section CResidualClause
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
 
 omit [CFieldDomain β] in
-/-- **★ The residual's `C`-divisibility clause from `g`-normality** (`residualNorm_hdvdC_of_normalizedDen`):
+/-- The residual's `C`-divisibility clause from `g`-normality (`residualNorm_hdvdC_of_normalizedDen`):
 for the normalized solver's pair `ftilde, gtilde : QFunNZG β`, given `IsWeaklyNormalizedDen gtilde.1.2` (the
 `g`-side normality dual), the `RischDESuccessResidualNorm.hdvdC_dn_h2` clause holds — for every successful
 `cRdeNormalDenominatorG [1] fuel ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (a0,b0,c0,h0)`,
@@ -266,7 +266,7 @@ section Fuel
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CFracGcdCore α] [CTowerGcdWitness α]
 
-/-- **The witness discharges the per-step gcd-correctness inside `hin`** (`towerGcd_assocReg_for_hin`): for
+/-- The witness discharges the per-step gcd-correctness inside `hin` (`towerGcd_assocReg_for_hin`): for
 any level-`α` content-gcd PRS run satisfying its own termination `CPrimPRSGenRegular` and fuel
 `CPrimPRSGenFuelOk` on `(P, Q)`, the per-step regularity bundle `CPrimPRSGenAssocReg` — whose `Associated`
 content is exactly the gcd clause appearing per level in `CSPDEGClearedInputsGen` — holds from
@@ -280,7 +280,7 @@ theorem towerGcd_assocReg_for_hin (fuel : ℕ) (P Q : GBPolyCore α)
 
 end Fuel
 
-/-! ## ★ Task 4 (honest assembly) — the capstone with the `C`-divisibility DISCHARGED
+/-! ## Task 4 (honest assembly) — the capstone with the `C`-divisibility DISCHARGED
 
 We assemble as far as the closed pieces allow: a smaller residual `RischDESuccessResidualNormFuel` carrying
 **only** the genuine per-run termination clauses (`hdn`/`hin`/`hdb`) — the `C`-divisibility
@@ -297,7 +297,7 @@ section Assembly
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **The genuine termination residual** `RischDESuccessResidualNormFuel ftilde gtilde`: exactly the per-run
+/-- The genuine termination residual `RischDESuccessResidualNormFuel ftilde gtilde`: exactly the per-run
 termination clauses of `RischDESuccessResidualNorm` with the `C`-divisibility `hdvdC_dn_h2` **removed** (that
 clause is discharged from `g`-normality). Carries `hdn` (normal part nonzero), the §6.4 transparent-input chain
 `hin` (gcd clauses via the witness), and the dispatcher `hdb`. These are the irreducible per-run side data every
@@ -334,7 +334,7 @@ structure RischDESuccessResidualNormFuel (ftilde gtilde : QFunNZG β) : Prop whe
 
 omit [CDiffFieldSpec β] [CFieldDomain β] [CRischField β] [CTowerGcdWitness β]
   [Algebra ℚ (CFieldSpec.K β)] in
-/-- **★ The full normalized residual from the fuel residual + `g`-normality**
+/-- The full normalized residual from the fuel residual + `g`-normality
 (`residualNorm_of_fuel_and_dvdC`): given the genuine fuel residual `RischDESuccessResidualNormFuel ftilde
 gtilde` and the `g`-normality dual `IsWeaklyNormalizedDen gtilde.1.2`, the full
 `RischDESuccessResidualNorm ftilde gtilde` holds — the missing `C`-divisibility clause `hdvdC_dn_h2` is
@@ -349,7 +349,7 @@ theorem residualNorm_of_fuel_and_dvdC (ftilde gtilde : QFunNZG β)
   hin := hfuel.hin
   hdb := hfuel.hdb
 
-/-- **★★ The normalized recursive RDE solver is sound — `C`-divisibility DISCHARGED, `B`-wall closed**
+/-- The normalized recursive RDE solver is sound — `C`-divisibility DISCHARGED, `B`-wall closed
 (Task 4, honest assembly): if `crischDESolveNorm f g = some y`, then with the gcd witness
 `[CTowerGcdWitness β]`, the §6.1 `f`-normality guarantee `IsWeaklyNormalizedNorm (weakNormalizedF f q')`
 (the ONE true remainder — false-as-stated on the un-reduced product, see `weakNormalizedF_den_eq`/the
@@ -384,7 +384,7 @@ end Assembly
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
--- ★ Task 4 (honest assembly): the normalized solver's success ⟹ the ORIGINAL field-level Risch-DE identity
+-- Task 4 (honest assembly): the normalized solver's success ⟹ the ORIGINAL field-level Risch-DE identity
 -- from the gcd witness + f-normality (the one remainder) + its g-side dual + the genuine fuel residual,
 -- with the C-divisibility DISCHARGED (no longer a hypothesis), no native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
@@ -408,7 +408,7 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
   crischDESolveNorm_field_of_fuel f g y hsolve hnorm hgnorm hfuel
 
-/-! ## ★ Task 1 — the precise true remainder: `IsWeaklyNormalizedNorm` is FALSE-as-stated on the un-reduced
+/-! ## Task 1 — the precise true remainder: `IsWeaklyNormalizedNorm` is FALSE-as-stated on the un-reduced
 product `crischDESolveNorm` feeds
 
 The capstone's `hnorm` hypothesis is `IsWeaklyNormalizedNorm (weakNormalizedF f q')` — a **strict** equality
@@ -426,7 +426,7 @@ section Remainder
 
 variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
 
-/-- **★ The un-reduced denominator of `weakNormalizedF` contains `fden` as a factor**
+/-- The un-reduced denominator of `weakNormalizedF` contains `fden` as a factor
 (`weakNormalizedF_den_eq`): when the weak normalizer is nonzero (`cisZeroG q = false`, the solver's guard),
 the denominator of `weakNormalizedF f (qOfPolyNZG q)` is the **un-cancelled** product
 `cmulG f.1.2 (cmulG (cmulG [1] [1]) q)` — `f`'s original denominator `f.1.2` times the squared
@@ -451,7 +451,7 @@ theorem weakNormalizedF_den_eq (f : QFunNZG β) (q : CPolyG β) (hq : CPolyG.cis
 
 end Remainder
 
-/-! ## ★ VERDICT — is the recursive solver FULLY UNCONDITIONALLY sound?
+/-! ## VERDICT — is the recursive solver FULLY UNCONDITIONALLY sound?
 
 **No — the wall is NOT fully closed; the bar `crischDESolveNorm_field_unconditional` (witness-only) is not
 reachable, and the obstruction is now pinned exactly.** Of the three residual pieces:
@@ -473,7 +473,7 @@ the `QFunNZG` subtype. This is the **exact dual** of the `B`-side `IsWeaklyNorma
 are NOT `∀`-theorems. This is the fuel-boundedness every fuel-bounded computable solver carries, not the
 divisibility wall.
 
-### (1) ★ `IsWeaklyNormalizedNorm` — the ONE TRUE REMAINDER, now sharper: FALSE-as-stated on the wrapper's input
+### (1) `IsWeaklyNormalizedNorm` — the ONE TRUE REMAINDER, now sharper: FALSE-as-stated on the wrapper's input
 
 `crischDESolveNorm_field` needs `IsWeaklyNormalizedNorm (weakNormalizedF f q')`. This is **not a missing
 theorem to be proven — as *stated* it is FALSE for general `f`**: `weakNormalizedF`'s denominator is the
@@ -500,14 +500,5 @@ sharper finding is that it is **false as stated on the un-reduced product** `cri
 (`weakNormalizedF_den_eq`), so it is closable only by canonicalizing the wrapper input (an engine change) or
 the abstract §6.1 `WeakNormalizer`-after-canonicalize correctness — NOT by any theorem provable over the
 current locked wrapper. The remaining fuel side data lives inside the per-level transparent-input chain. -/
-
-/-! ### Axiom audit (every result here is axiom-clean, NO `native_decide`) -/
-
-#print axioms cRdeNormalDenominatorG_en_dvd
-#print axioms residualNorm_hdvdC_of_normalizedDen
-#print axioms towerGcd_assocReg_for_hin
-#print axioms residualNorm_of_fuel_and_dvdC
-#print axioms crischDESolveNorm_field_of_fuel
-#print axioms weakNormalizedF_den_eq
 
 end DeepWiki.SymbolicIntegration

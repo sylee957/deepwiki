@@ -38,12 +38,12 @@ the Mumford pair to the fractional-ideal-over-the-integral-basis representation.
   `cantorOrder`.
 
 **Validations** (`native_decide`):
-* **★ HYPERELLIPTIC CONSERVATIVITY** — on `y² = x³ + 1` (integral basis `[1, y]`, where the general
+* **HYPERELLIPTIC CONSERVATIVITY** — on `y² = x³ + 1` (integral basis `[1, y]`, where the general
   fractional-ideal machinery specializes to the hyperelliptic Jacobian): the 3-torsion class of the
   inflection point `(0, 1)` (represented as the fractional ideal of the degree-0 divisor `(0,1) − ∞`) has
   **`genDivisorOrder = 3`** — matching the hyperelliptic `cantorOrder`/`cantorMul_pt01_order3`. The general
   divisor order recovers the hyperelliptic answer.
-* **★ The class `2·δ` is NOT principal, `3·δ` IS** (`isPrincipalIdeal`) — the order-3 ladder
+* **The class `2·δ` is NOT principal, `3·δ` IS** (`isPrincipalIdeal`) — the order-3 ladder
   (`reduced(δ) ≠ O`, `reduced(2δ) ≠ O`, `reduced(3δ) = O`), the torsion witness.
 * **Principal classes have order 1** — `div(g)` (e.g. `div(y)` on the cuspidal cubic `y³ = x²`) is already
   trivial, so `genDivisorOrder (div g) = some 1`; and `O` itself has order 1.
@@ -72,7 +72,7 @@ lattice: make each pivot **monic** (scale the row by `1/lead`) and reduce every 
 its column's monic pivot (`cdivWf` quotient subtraction). Then equal lattices have *identical* canonical forms, and entrywise
 comparison is a sound ideal-equality test (`canonHNFEq`). -/
 
-/-- **Make the triangular matrix's pivots monic and reduce above-pivot entries** `canonHNF M`: on an
+/-- Make the triangular matrix's pivots monic and reduce above-pivot entries `canonHNF M`: on an
 already-upper-triangular `PolyMatrix ℚ` (the `hermiteRowReduce` output, nonzero rows), for each diagonal pivot
 `M[i][i]` scale row `i` by `1/lead(M[i][i])` (pivot becomes monic), then reduce each entry `M[k][i]` strictly
 **above** the pivot (`k < i`) modulo the monic pivot (via `cdivWf`, subtracting the right `K[x]`-multiple of row
@@ -97,7 +97,7 @@ def canonHNF (M : PolyMatrix ℚ) : PolyMatrix ℚ :=
           if cisZeroG q then a else rowSub a k i q
         else a) acc) M1
 
-/-- **`true` iff two fractional ideals have the same canonical HNF** `canonHNFEq I J`: clear both to a common
+/-- `true` iff two fractional ideals have the same canonical HNF `canonHNFEq I J`: clear both to a common
 denominator `δ = δ_I·δ_J` (scaling each cleared generator matrix to that `δ`), `hermiteRowReduce` and `canonHNF`
 both over `K[x]`, and compare the resulting **unique** normal forms entrywise (`cisZeroG` of the difference).
 Sound **ideal** equality (`I = J` as fractional `O`-ideals) — unlike `idealEq` (whose un-canonicalized HNF
@@ -139,7 +139,7 @@ open CPolyG
 
 namespace CPolyG
 
-/-- **The reduced (canonical Hermite-normal-form) representative of a fractional ideal** `idealReduce f basis
+/-- The reduced (canonical Hermite-normal-form) representative of a fractional ideal `idealReduce f basis
 I`: clear `I` to `(δ, N)` (`idealClear`), `hermiteRowReduce` `N` over `K[x]`, and `canonHNF` it (monic pivots,
 above-pivot entries reduced) — the **unique** `K[x]`-row-lattice normal form. Read back as the fractional
 `O`-ideal `(1/δ)·Ĥ` (entries `qReduceNZG (Ĥᵢⱼ / δ)`). The canonical, minimal-`K[x]`-degree representative of
@@ -171,7 +171,7 @@ generators** `genCandidates basis I` and test `canonHNFEq I (div g)` for each. T
 `afLogArgSolveWf`-style single-generator test: `I = g·O` iff a single `g` generates the whole ideal; here the
 candidate `g`s are read off the canonical reduced ideal.) -/
 
-/-- **The candidate single generators of a fractional ideal** `genCandidates basis I`: each **canonical-HNF row**
+/-- The candidate single generators of a fractional ideal `genCandidates basis I`: each **canonical-HNF row**
 of `I`'s cleared integral matrix, reconstructed as a `K(x, y)` element (`wToAf basis (row.map qxOfNum)`) — the
 reduced module generators of `I`. For a **principal** ideal `g·O`, the generator `g` is among these up to a unit
 (some HNF row reconstructs to a unit multiple of `g`); for a non-principal ideal no candidate `g` has `div(g) =
@@ -180,7 +180,7 @@ def genCandidates (basis : List (CPolyG (QFunNZG ℚ))) (I : GenDivisor) : List 
   let H := canonHNF ((hermiteRowReduce (idealClear I).2).filter (fun row => !row.all cisZeroG))
   H.map (fun row => wToAf basis (row.map qxOfNum))
 
-/-- **`true` iff the fractional ideal `I` is principal** `isPrincipalIdeal f basis I`: `I = g·O = div(g)` for
+/-- `true` iff the fractional ideal `I` is principal `isPrincipalIdeal f basis I`: `I = g·O = div(g)` for
 **some** candidate generator `g ∈ genCandidates basis I` (a canonical-HNF row of `I`), tested by `canonHNFEq I
 (principalDivisor f basis g)`. **Sound** — a `true` means `I` genuinely equals `div(g)`, so `[I] = 0` in
 `Pic⁰(C)`. The principality oracle of the torsion test (Trager Ch. 6): `m·δ` is principal iff `isPrincipalIdeal
@@ -199,7 +199,7 @@ multiples are tried (the torsion-subgroup-size ceiling — the good-reduction bo
 with `n·D = O`), on the fractional-ideal representation: `idealProduct` replaces `cantorAdd`, `isPrincipalIdeal`
 replaces `mumfordNormEq · mumfordIdentity`. -/
 
-/-- **Order-search loop** `genDivisorOrderAux fuel f basis δ acc n`: with `acc = n·δ` already computed (`acc`
+/-- Order-search loop `genDivisorOrderAux fuel f basis δ acc n`: with `acc = n·δ` already computed (`acc`
 the running Pic multiple), test `(n+1)·δ = idealProduct δ acc` for principality (`isPrincipalIdeal`); on a hit
 return `some (n+1)`, else recurse with the new accumulator. `fuel` bounds the remaining multiples to try. The
 general analogue of `cantorOrderAux`. -/
@@ -211,7 +211,7 @@ def genDivisorOrderAux (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG
     if isPrincipalIdeal f basis acc then some (n + 1)
     else genDivisorOrderAux f basis δ fuel acc (n + 1)
 
-/-- **The general divisor order** `genDivisorOrder fuel f basis δ = some m` — the smallest `m ≥ 1` with `m·δ`
+/-- The general divisor order `genDivisorOrder fuel f basis δ = some m` — the smallest `m ≥ 1` with `m·δ`
 **principal** (the trivial class = the order `O`) in `Pic⁰(C)` for the arbitrary curve `K(x, y) = K(x)[y]/(f)`,
 searching `1·δ, 2·δ, …` up to `fuel` multiples (each `idealProduct δ ·`, tested by `isPrincipalIdeal`). `none`
 if no `m ≤ fuel` works — the order exceeds the fuel (a non-torsion candidate). The **torsion / point-of-finite-
@@ -223,7 +223,7 @@ def genDivisorOrder (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPoly
     (δ : GenDivisor) : Option ℕ :=
   genDivisorOrderAux f basis δ fuel (idealIdentity (cdegG f)) 0
 
-/-- **Is `δ` torsion within `fuel`** `genIsTorsion fuel f basis δ`: `true` iff `genDivisorOrder` finds a finite
+/-- Is `δ` torsion within `fuel` `genIsTorsion fuel f basis δ`: `true` iff `genDivisorOrder` finds a finite
 order `≤ fuel`. A `Bool` view of `genDivisorOrder` for the decision wrappers. The general analogue of
 `cantorIsTorsion`. -/
 def genIsTorsion (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
@@ -232,7 +232,7 @@ def genIsTorsion (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (
 
 end CPolyG
 
-/-! ## ★ Validation: principal classes have order 1 (`native_decide`)
+/-! ## Validation: principal classes have order 1 (`native_decide`)
 
 On the cuspidal cubic `y³ = x²` (`gcuspCubicF`, integral basis `[1, y, y²/x]`), the principal divisors `div(y)`,
 `div(y²)` and the identity `O` are all **trivial** Pic classes (`[div g] = 0`), so `isPrincipalIdeal` is `true`
@@ -241,7 +241,7 @@ generator. -/
 
 open CPolyG
 
-/-- **★ `div(y)` is principal and has order 1 on `y³ = x²`** (`native_decide`): `isPrincipalIdeal (div y) =
+/-- `div(y)` is principal and has order 1 on `y³ = x²` (`native_decide`): `isPrincipalIdeal (div y) =
 true` (one candidate generator `genCandidates` recovers `y` up to a unit — the second canonical-HNF row of
 `y·O` is `y` — so `canonHNFEq (div y) (div y)`), and `genDivisorOrder (div y) = some 1` (`1·div(y) = div(y)` is
 already principal). A principal class is trivial in `Pic⁰(C)` ⟹ order 1. -/
@@ -249,14 +249,14 @@ theorem gdo_divY_principal_order1 :
     (isPrincipalIdeal gcuspCubicF gcuspCubicBasis gdDivY
       && (genDivisorOrder 4 gcuspCubicF gcuspCubicBasis gdDivY == some 1)) = true := by native_decide
 
-/-- **★ The identity `O` has order 1 on `y³ = x²`** (`native_decide`): `isPrincipalIdeal O = true` (`O = div(1)`
+/-- The identity `O` has order 1 on `y³ = x²` (`native_decide`): `isPrincipalIdeal O = true` (`O = div(1)`
 is principal) and `genDivisorOrder O = some 1` — the trivial torsion order of the Pic neutral element, the
 general analogue of `cantorOrder mumfordIdentity = some 1`. -/
 theorem gdo_identity_order1 :
     (isPrincipalIdeal gcuspCubicF gcuspCubicBasis gdIdentity
       && (genDivisorOrder 4 gcuspCubicF gcuspCubicBasis gdIdentity == some 1)) = true := by native_decide
 
-/-! ## ★★ Hyperelliptic conservativity: the 3-torsion `(0,1) − ∞` on `y² = x³ + 1` (`native_decide`)
+/-! ## Hyperelliptic conservativity: the 3-torsion `(0,1) − ∞` on `y² = x³ + 1` (`native_decide`)
 
 The headline validation: the GENERAL divisor order **recovers the hyperelliptic answer**. On the elliptic curve
 `y² = x³ + 1` (which the general fractional-ideal machinery handles as the degree-2 case — its integral basis
@@ -300,7 +300,7 @@ def hcubeTorsionDiv : GenDivisor :=
 #eval (idealReduce hcubeF hcubeBasis hcubeTorsionDiv).map
   (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
 
-/-- **★ `δ = P` is NOT principal, `δ²` is NOT principal, but `δ³` IS principal on `y² = x³+1`** (`native_decide`):
+/-- `δ = P` is NOT principal, `δ²` is NOT principal, but `δ³` IS principal on `y² = x³+1` (`native_decide`):
 the order-3 ladder via `isPrincipalIdeal` on the repeated `idealProduct` powers — `P` and `P² = idealProduct δ δ`
 are non-principal (`false`), while `P³ = idealProduct δ (idealProduct δ δ)` **is** principal (`true`), because
 `P³ = div(y − 1)` (the function `y − 1` realizes `3·(0,1) − 3·∞`). The torsion witness: `3` is the smallest
@@ -314,8 +314,8 @@ theorem hcube_torsion_ladder :
               (idealProduct hcubeF hcubeBasis hcubeTorsionDiv hcubeTorsionDiv)) == true) = true := by
   native_decide
 
-/-- **★★ HYPERELLIPTIC CONSERVATIVITY: `genDivisorOrder δ = some 3` for the 3-torsion `(0,1) − ∞` on
-`y² = x³+1`** (`native_decide`): the GENERAL divisor order, run on the fractional-ideal representation `δ = P =
+/-- HYPERELLIPTIC CONSERVATIVITY: `genDivisorOrder δ = some 3` for the 3-torsion `(0,1) − ∞` on
+`y² = x³+1` (`native_decide`): the GENERAL divisor order, run on the fractional-ideal representation `δ = P =
 (x, y − 1)·O` of the inflection-point class `[(0,1) − ∞]`, returns **`some 3`** — matching the hyperelliptic
 `cantorOrder hypPt01 = some 3` / `cantorMul_pt01_order3` exactly. The search composes `δ, 2δ, 3δ` by repeated
 `idealProduct` (the Pic group law) and finds `3δ = div(y − 1)` is the first principal multiple
@@ -324,9 +324,9 @@ handle.** -/
 theorem hcube_genDivisorOrder_eq3 :
     genDivisorOrder 8 hcubeF hcubeBasis hcubeTorsionDiv = some 3 := by native_decide
 
-/-! ## ★ The general-divisor-order milestone (`native_decide`) -/
+/-! ## The general-divisor-order milestone (`native_decide`) -/
 
-/-- **★★ THE GENERAL DIVISOR ORDER (TORSION TEST) COMPUTES AND VALIDATES** (Trager Ch. 6, "Principal Divisors
+/-- THE GENERAL DIVISOR ORDER (TORSION TEST) COMPUTES AND VALIDATES (Trager Ch. 6, "Principal Divisors
 and Points of Finite Order", `native_decide`). The general lift of the hyperelliptic `cantorOrder`
 (`ComputableDivisorOrder`) onto the **fractional-ideal-over-the-integral-basis** representation
 (`ComputableGeneralDivisor`): `idealReduce` (the canonical Hermite-normal-form reduced representative),
@@ -356,24 +356,7 @@ theorem general_divisor_order_validates :
             (idealProduct hcubeF hcubeBasis hcubeTorsionDiv hcubeTorsionDiv)) = true := by
   native_decide
 
-/-! ### Deliverable: `#print axioms`
-
-`[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
-axiom). **No `sorry`, no `sorryAx`, no extra axiom** — `idealReduce`/`isPrincipalIdeal`/`genCandidates`/
-`canonHNF`/`canonHNFEq` are non-recursive compositions over finite-list kernels
-(`hermiteRowReduce`/exact division use `cdivWf`, `qReduceNZG` uses the shared fuel-free fraction reducer, and
-`matInvG` folds over finite `List.range`s);
-`genDivisorOrder` is `ℕ`-fuel structural recursion (`genDivisorOrderAux`). -/
-
-#print axioms gdo_divY_principal_order1
-#print axioms gdo_identity_order1
--- ★★ Hyperelliptic conservativity: the general divisor order recovers cantorOrder = 3:
-#print axioms hcube_torsion_ladder
-#print axioms hcube_genDivisorOrder_eq3
--- ★★ The end-to-end milestone:
-#print axioms general_divisor_order_validates
-
-/-! ## The deferred NEXT piece: the good-reduction torsion BOUND (termination)
+/-! ## The remaining piece: the good-reduction torsion bound (termination)
 
 `genDivisorOrder` searches `m = 1, 2, …` for the first principal multiple `m·δ`, **fuel-bounded**. To make the
 search **terminate with a definite "non-torsion"** answer (rather than "no order within fuel"), the fuel must be

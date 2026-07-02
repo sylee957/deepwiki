@@ -66,7 +66,7 @@ carrier `RadElem (QFunNZG ℚ)`): a rational part `v` plus log terms `(cᵢ, u�
 carrier** `K(x)[y]/(f) = CPolyG (QFunNZG ℚ)` (a power-basis coordinate vector), not the radical carrier. The
 output of `cIntegrateGeneralCurveDecide`. -/
 
-/-- **The full general-curve algebraic integral `∫ = v + Σ cᵢ log uᵢ`** `GeneralCurveIntegralResult` — the
+/-- The full general-curve algebraic integral `∫ = v + Σ cᵢ log uᵢ` `GeneralCurveIntegralResult` — the
 rational part `v` (a carrier element `CPolyG (QFunNZG ℚ)` of `K(x)[y]/(f)`) plus the log terms `logTerms =
 [(c₁, u₁), …]` (coefficient `cᵢ ∈ ℚ(x) = QFunNZG ℚ`, argument `uᵢ ∈ K(x)[y]/(f)`). The general-curve analogue
 of `AlgIntegralResult`, over the curve carrier instead of the radical carrier; the OUTPUT of
@@ -94,7 +94,7 @@ given the torsion order `m`, returns the principal generator of `m·δ`. The tor
 single citable object (the soundness/completeness theorems quantify over the abstract elementarity `Prop`
 modulo it). The order itself, `genDivisorOrder` (`ComputableGeneralDivisorOrder`), is what we HAVE. -/
 
-/-- **★ The general-`Pic⁰`-torsion inputs** `GeneralCurveTorsionInputs` — the two oracle outputs the torsion
+/-- The general-`Pic⁰`-torsion inputs `GeneralCurveTorsionInputs` — the two oracle outputs the torsion
 branch of `cIntegrateGeneralCurveDecide` consumes that lie beyond the principal case and the order test
 `genDivisorOrder`:
 
@@ -123,13 +123,13 @@ the residue divisor `δ` via `genDivisorOrder` (the general fractional-ideal Pic
 frontier oracle); on `none` (non-torsion within fuel) return `none` (NOT elementary). The coefficient `1/m`
 is the local `genOneOverM` (the general-curve file is decoupled from the hyperelliptic torsion file). -/
 
-/-- **The general-curve torsion log-term coefficient** `genOneOverM m = 1/m ∈ ℚ(x) = QFunNZG ℚ` — the
+/-- The general-curve torsion log-term coefficient `genOneOverM m = 1/m ∈ ℚ(x) = QFunNZG ℚ` — the
 constant-field element `qxOfNum [1] / qxOfNum [m]` (`m` cast to ℚ), the coefficient `cᵢ = 1/m` of the
 `(1/m)·log g` term. The general-curve analogue of `ComputableTorsionLogTerm`'s `oneOverMQ`, defined locally so
 this file does not depend on the hyperelliptic torsion machinery. -/
 def genOneOverM (m : ℕ) : QFunNZG ℚ := CField.div (qxOfNum [1]) (qxOfNum [(m : ℚ)])
 
-/-- **The general-curve torsion log term** `genCurveTorsionLogTerm fuel f basis tin` (the general analogue of
+/-- The general-curve torsion log term `genCurveTorsionLogTerm fuel f basis tin` (the general analogue of
 the hyperelliptic `torsionLogTerm`) — decide the order of the residue divisor `δ = tin.divisor` via
 `genDivisorOrder fuel f basis δ` (the general fractional-ideal `Pic⁰` order test, `ComputableGeneralDivisorOrder`):
 
@@ -154,7 +154,7 @@ log-argument solve); and the **torsion-decision** inputs `tin` (the residue divi
 `genCurveTorsionLogTerm`). A Boolean `hasLogPart` discriminates the "no log part" case (the rational part is
 the whole answer) from the cases that need the log machinery. -/
 
-/-- **The self-determining GENERAL-curve algebraic integrator** `cIntegrateGeneralCurveDecide` over an
+/-- The self-determining GENERAL-curve algebraic integrator `cIntegrateGeneralCurveDecide` over an
 arbitrary plane curve `K(x)[y]/(f)` (Trager, the elementarity decision, beyond hyperelliptic). Returns
 `Option GeneralCurveIntegralResult`:
 
@@ -196,7 +196,7 @@ Before soundness/completeness, the structural facts the verdicts ride on — pro
 `genCurveTorsionLogTerm` matches. These mirror the hyperelliptic `cIntegrateAlgebraicDecide_principal_eq`,
 `torsionLogTerm_none_of_decide_none`, `decide_isSome_iff_torsion_isSome`. -/
 
-/-- **A `none` output forces the torsion branch to `none`** `genCurveTorsionLogTerm_none_of_decide_none` —
+/-- A `none` output forces the torsion branch to `none` `genCurveTorsionLogTerm_none_of_decide_none` —
 when `cIntegrateGeneralCurveDecide … = none`, EITHER the rational solve failed
 (`afRationalSolveWf … = none`) OR (the rational solve succeeded, there was a log part, the principal log solve
 failed, and) the torsion decision returned `none` (the residue divisor is non-torsion). The disjunction
@@ -241,7 +241,7 @@ variable (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveT
 variable (hasLogPart : Bool) (integrand commonDenom : CPolyG (QFunNZG ℚ))
 variable (cofs : List (CPolyG (QFunNZG ℚ)))
 
-/-- **★ The general-curve-decide soundness residual** `GeneralCurveDecideSoundnessResidual …`: the three
+/-- The general-curve-decide soundness residual `GeneralCurveDecideSoundnessResidual …`: the three
 branch-instances that turn each `some F` branch of `cIntegrateGeneralCurveDecide` into the genuine-field
 soundness `IsGeneralAlgebraicIntegralWf f integrand F.ratPart commonDenom F.logTerms cofs` (the
 cross-multiplied `D(v + Σ cᵢ log uᵢ) = integrand` in `K[X] ⧸ afIdeal f`). A `Prop`-bundle of stated
@@ -278,7 +278,7 @@ structure GeneralCurveDecideSoundnessResidual : Prop where
       (GeneralCurveIntegralResult.mk v [term]).ratPart commonDenom
       (GeneralCurveIntegralResult.mk v [term]).logTerms cofs
 
-/-- **★★ SOUNDNESS of the self-determining GENERAL-curve integrator** (`cIntegrateGeneralCurveDecide_sound`,
+/-- SOUNDNESS of the self-determining GENERAL-curve integrator (`cIntegrateGeneralCurveDecide_sound`,
 `some F → D(F) = integrand`, modulo the named frontier). Under the soundness residual (the three
 branch-instances of the proven fuel-free general capstone `isGeneralAlgebraicIntegralWf_of_parts`), whenever
 `cIntegrateGeneralCurveDecide … = some F` the output differentiates to the integrand — the genuine-field
@@ -353,7 +353,7 @@ section PicTorsion
 variable (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
 variable (tin : GeneralCurveTorsionInputs)
 
-/-- **The general-curve torsion term fires iff the order test does** `genCurveTorsionLogTerm_isSome_iff` —
+/-- The general-curve torsion term fires iff the order test does `genCurveTorsionLogTerm_isSome_iff` —
 unconditionally, `(genCurveTorsionLogTerm fuel f basis tin).isSome = true ↔ ∃ m, genDivisorOrder fuel f basis
 tin.divisor = some m`. The general-curve torsion branch emits a `(1/m)·log g` term exactly when the general
 order test `genDivisorOrder` succeeds (the generator oracle `tin.genGen` is then applied). Pure `Option`
@@ -367,7 +367,7 @@ theorem genCurveTorsionLogTerm_isSome_iff :
   | none => simp
   | some m => simp
 
-/-- **★ The general-`Pic⁰`-torsion frontier** `GeneralPicTorsionFrontier fuel f basis tin isTorsion elem`: the
+/-- The general-`Pic⁰`-torsion frontier `GeneralPicTorsionFrontier fuel f basis tin isTorsion elem`: the
 two deep frontier-instances that turn the engine's general torsion-branch output into the integrand's
 elementarity, the general analogue of `AlgebraicCompletenessResidual` (`ComputableAlgebraicCompleteness`).
 `isTorsion` is the abstract "the residue divisor class `δ = tin.divisor` is torsion in `Pic⁰(C)`" predicate;
@@ -389,7 +389,7 @@ structure GeneralPicTorsionFrontier (isTorsion : Prop) (elem : Prop) : Prop wher
   /-- The Liouville log-part criterion over the general curve: the integrand is elementary ⟺ `δ` is torsion. -/
   hcriterion : isTorsion ↔ elem
 
-/-- **★ General-curve completeness modulo the frontier** (`genCurveTorsionLogTerm_complete_of_frontier`,
+/-- General-curve completeness modulo the frontier (`genCurveTorsionLogTerm_complete_of_frontier`,
 `some ⟺ elementary`): under the general-`Pic⁰`-torsion frontier (the deep general torsion-decision correctness
 + the Liouville log-part criterion on `δ`), the engine's general torsion branch `genCurveTorsionLogTerm` emits
 a `(1/m)·log g` term **iff** the integrand is elementary —
@@ -418,7 +418,7 @@ section Completeness
 variable (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
 variable (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
 
-/-- **★★ COMPLETENESS of the self-determining GENERAL-curve integrator** (`cIntegrateGeneralCurveDecide_complete`,
+/-- COMPLETENESS of the self-determining GENERAL-curve integrator (`cIntegrateGeneralCurveDecide_complete`,
 `none → ¬ elementary`, modulo the frontier). On the non-principal log path — the rational solve succeeds
 (`afRationalSolveWf = some v`), there is a log part (`hasLogPart = true`), the principal log solve fails
 (`afLogArgSolveWf = none`) — under the general-`Pic⁰`-torsion frontier (the deep general torsion-decision
@@ -465,7 +465,7 @@ section Decides
 variable (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
 variable (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
 
-/-- **On the non-principal log path, `cIntegrateGeneralCurveDecide = some _` iff the torsion branch fires**
+/-- On the non-principal log path, `cIntegrateGeneralCurveDecide = some _` iff the torsion branch fires
 `decide_isSome_iff_genTorsion_isSome` — with the rational solve succeeding (`afRationalSolveWf = some v`), a log
 part present (`hasLogPart = true`), and the principal log solve failing (`afLogArgSolveWf = none`), the decision
 integrator returns `some _` **exactly** when `genCurveTorsionLogTerm = some term`. The structural equivalence
@@ -482,7 +482,7 @@ theorem decide_isSome_iff_genTorsion_isSome (v : CPolyG (QFunNZG ℚ))
   | none => simp
   | some term => simp
 
-/-- **★★ THE GENERAL-CURVE DECISION-PROCEDURE CAPSTONE** (`cIntegrateGeneralCurveDecide_decides`,
+/-- THE GENERAL-CURVE DECISION-PROCEDURE CAPSTONE (`cIntegrateGeneralCurveDecide_decides`,
 `(∃ F, … = some F) ⟺ elementary`, modulo the frontier). On the non-principal log path (`afRationalSolveWf =
 some v`, `hasLogPart = true`, `afLogArgSolveWf = none` — the path the general torsion decision governs), under
 the general-`Pic⁰`-torsion frontier (the two isolated deep clauses), the self-determining general-curve
@@ -506,7 +506,7 @@ theorem cIntegrateGeneralCurveDecide_decides {isTorsion elem : Prop} (v : CPolyG
 
 end Decides
 
-/-! ## Part 7 — ★ end-to-end `native_decide` witnesses (general / non-hyperelliptic curves, both verdicts)
+/-! ## Part 7 — end-to-end `native_decide` witnesses (general / non-hyperelliptic curves, both verdicts)
 
 Two runs *through `cIntegrateGeneralCurveDecide`* exercise the general fractional-ideal `Pic⁰` torsion
 decision on genuinely general curves:
@@ -527,14 +527,14 @@ open CPolyG
 
 /-! ### Witness A — the torsion residue divisor `div(y)` on the non-hyperelliptic cuspidal cubic `y³ = x²` -/
 
-/-- **The torsion inputs on the cuspidal cubic** `genCurveWitnessTorsionInputs` — residue divisor `δ = div(y)`
+/-- The torsion inputs on the cuspidal cubic `genCurveWitnessTorsionInputs` — residue divisor `δ = div(y)`
 (`gdDivY`, principal ⟹ order 1 in `Pic⁰`) on the non-hyperelliptic `y³ = x²`, with the principal-generator
 oracle returning `y` (`gcuspCubicY`) for every order. The witness data feeding the torsion branch of the
 general decision. -/
 def genCurveWitnessTorsionInputs : GeneralCurveTorsionInputs :=
   ⟨gdDivY, fun _ => gcuspCubicY⟩
 
-/-- **The general decision on the cuspidal-cubic torsion residue divisor** — a log-part input
+/-- The general decision on the cuspidal-cubic torsion residue divisor — a log-part input
 (`hasLogPart = true`) whose rational solve succeeds (`ratIntegrand = 0`), whose principal log solve fails
 (`logIntegrand = 1`, `afLogArgSolveWf = none`), and whose residue divisor `div(y)` is order-1 torsion, so
 `cIntegrateGeneralCurveDecide` is expected to return `some ⟨v, [(1/1, y)]⟩`. Fuel `8` (≥ `deg f = 3`). -/
@@ -542,7 +542,7 @@ def genCurveWitnessTorsion : Option GeneralCurveIntegralResult :=
   cIntegrateGeneralCurveDecide 8 gcuspCubicF gcuspCubicBasis 2
     ([] : CPolyG (QFunNZG ℚ)) ([CField.one] : CPolyG (QFunNZG ℚ)) genCurveWitnessTorsionInputs true
 
-/-- **★★ The general decision returns `some` with a `(1/m)·log` term on the non-hyperelliptic cuspidal cubic**
+/-- The general decision returns `some` with a `(1/m)·log` term on the non-hyperelliptic cuspidal cubic
 (`native_decide`): end-to-end through `cIntegrateGeneralCurveDecide`, on `y³ = x²` (a genuinely
 non-hyperelliptic curve, integral basis `[1, y, y²/x]`) the residue divisor `div(y)` drives the principal log
 solve to `none` and the general fractional-ideal `Pic⁰` order test (`genDivisorOrder`) to `some 1` (principal
@@ -558,14 +558,14 @@ theorem genCurveWitnessTorsion_some :
 
 /-! ### Witness B — the non-torsion (within fuel) order-3 divisor on `y² = x³ + 1` -/
 
-/-- **The non-torsion (within fuel) inputs** `genCurveWitnessNonTorsionInputs` — residue divisor `δ = P =
+/-- The non-torsion (within fuel) inputs `genCurveWitnessNonTorsionInputs` — residue divisor `δ = P =
 (x, y − 1)·O` (`hcubeTorsionDiv`, order 3 in `Pic⁰`) on `y² = x³ + 1`, with an (irrelevant) generator oracle.
 With the order search starved to `fuel = 2 < 3`, `genDivisorOrder` returns `none` — the non-torsion-within-budget
 verdict. -/
 def genCurveWitnessNonTorsionInputs : GeneralCurveTorsionInputs :=
   ⟨hcubeTorsionDiv, fun _ => gcuspCubicY⟩
 
-/-- **The general decision on the order-3 divisor, order search starved to fuel 2** — a log-part input whose
+/-- The general decision on the order-3 divisor, order search starved to fuel 2 — a log-part input whose
 rational solve succeeds (`ratIntegrand = 0`) and principal log solve fails (`logIntegrand = 1`), whose residue
 divisor `P` is order 3, but with `fuel = 2 < 3` the general order test times out, so
 `cIntegrateGeneralCurveDecide` is expected to return `none`. Fuel `2` (still ≥ `deg f = 2` for the linear
@@ -574,7 +574,7 @@ def genCurveWitnessNonTorsion : Option GeneralCurveIntegralResult :=
   cIntegrateGeneralCurveDecide 2 hcubeF hcubeBasis 2
     ([] : CPolyG (QFunNZG ℚ)) ([CField.one] : CPolyG (QFunNZG ℚ)) genCurveWitnessNonTorsionInputs true
 
-/-- **★★ The general decision returns `none` on the order-3 divisor with the search starved to fuel 2**
+/-- The general decision returns `none` on the order-3 divisor with the search starved to fuel 2
 (`native_decide`): end-to-end through `cIntegrateGeneralCurveDecide`, the order-3 residue divisor `P = (x, y −
 1)·O` on `y² = x³ + 1` drives the principal log solve to `none`, and with the order search budget `fuel = 2 <
 3` the general fractional-ideal `Pic⁰` order test (`genDivisorOrder`) does not reach the principal multiple
@@ -585,9 +585,9 @@ torsion ceiling — the `GeneralPicTorsionFrontier.htorsion` clause — is what 
 into a *definite* non-torsion verdict.) -/
 theorem genCurveWitnessNonTorsion_none : genCurveWitnessNonTorsion = none := by native_decide
 
-/-! ## ★★ The self-determining general-curve algebraic decision-procedure milestone (`native_decide`) -/
+/-! ## The self-determining general-curve algebraic decision-procedure milestone (`native_decide`) -/
 
-/-- **★★ THE SELF-DETERMINING GENERAL-CURVE ALGEBRAIC INTEGRATOR DECIDES ELEMENTARITY** (Trager, the
+/-- THE SELF-DETERMINING GENERAL-CURVE ALGEBRAIC INTEGRATOR DECIDES ELEMENTARITY (Trager, the
 decision, arbitrary plane curve, `native_decide`). `cIntegrateGeneralCurveDecide` lifts the hyperelliptic
 `cIntegrateAlgebraicDecide` to an arbitrary curve `K(x)[y]/(f)`: it returns `some F` when the integral is
 elementary (no log part; principal `1·log u`; or the residue divisor torsion ⟹ `(1/m)·log g`) and **`none`**
@@ -619,7 +619,7 @@ theorem self_determining_general_curve_decision_validates :
 
 section Restatements
 
--- ★ SOUNDNESS (modulo the named frontier): `some F → D(F) = integrand`.
+-- SOUNDNESS (modulo the named frontier): `some F → D(F) = integrand`.
 example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
     (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
     (hasLogPart : Bool) (integrand commonDenom : CPolyG (QFunNZG ℚ)) (cofs : List (CPolyG (QFunNZG ℚ)))
@@ -632,7 +632,7 @@ example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
   cIntegrateGeneralCurveDecide_sound fuel f basis degBound ratIntegrand logIntegrand tin hasLogPart
     integrand commonDenom cofs hres F hsome
 
--- ★ COMPLETENESS (modulo the named frontier): `none → ¬ elementary` (non-principal path).
+-- COMPLETENESS (modulo the named frontier): `none → ¬ elementary` (non-principal path).
 example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
     (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
     {isTorsion elem : Prop} (v : CPolyG (QFunNZG ℚ))
@@ -645,7 +645,7 @@ example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
   cIntegrateGeneralCurveDecide_complete fuel f basis degBound ratIntegrand logIntegrand tin v hres hv
     hlog hnone
 
--- ★ DECISION PROCEDURE (modulo the named frontier): `(∃ F, … = some F) ⟺ elementary`.
+-- DECISION PROCEDURE (modulo the named frontier): `(∃ F, … = some F) ⟺ elementary`.
 example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ))) (degBound : ℕ)
     (ratIntegrand logIntegrand : CPolyG (QFunNZG ℚ)) (tin : GeneralCurveTorsionInputs)
     {isTorsion elem : Prop} (v : CPolyG (QFunNZG ℚ))
@@ -661,11 +661,5 @@ end Restatements
 /-! ### Axiom audit — the decision/soundness/completeness/capstone are axiom-clean
 (`[propext, Classical.choice, Quot.sound]`); the witnesses use `native_decide` (`Lean.ofReduceBool`). -/
 
-#print axioms cIntegrateGeneralCurveDecide_sound
-#print axioms cIntegrateGeneralCurveDecide_complete
-#print axioms cIntegrateGeneralCurveDecide_decides
-#print axioms genCurveWitnessTorsion_some
-#print axioms genCurveWitnessNonTorsion_none
-#print axioms self_determining_general_curve_decision_validates
 
 end DeepWiki.SymbolicIntegration

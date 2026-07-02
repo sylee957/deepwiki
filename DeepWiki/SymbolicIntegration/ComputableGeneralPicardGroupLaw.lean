@@ -46,7 +46,7 @@ representation, the analogue of the Mumford pair `(u, v)`.
   `ℕ`-fuel-bounded. The general analogue of `cantorMul` / `cantorOrder` — reading a *specific* class's
   order on the point-list representation, beyond the genus-1 point-count ceiling.
 
-★ **Proof-of-concept** (`native_decide`, all under a second): on `y² = x⁵ + 1` (genus **2**, where
+**Proof-of-concept** (`native_decide`, all under a second): on `y² = x⁵ + 1` (genus **2**, where
 `|Pic⁰| ≠ N_p` and Cantor's Mumford engine is the only prior group law) `picOrder` reads the order of the
 class `(0,1) − ∞` (= 5) on the **point-list** representation, and it **equals the Cantor `cantorOrder`** for
 the same class — the individual-class order is now `native_decide`-readable on a NON-genus-1 curve. Plus the
@@ -63,27 +63,27 @@ open CPolyG
 
 /-! ## The reduced-divisor representation `RedDiv p` (a sorted `𝔽_p`-point list) -/
 
-/-- **A reduced point divisor over `𝔽_p`** `RedDiv p = List (ZMod p × ZMod p)`: an effective affine divisor
+/-- A reduced point divisor over `𝔽_p` `RedDiv p = List (ZMod p × ZMod p)`: an effective affine divisor
 `D = Σ Pᵢ` as a list of `𝔽_p`-points (multiplicity = repetition), the positive part of a degree-0 class
 `D − (deg D)·∞`. The light analogue of the hyperelliptic Mumford pair — only `ZMod p` pairs, no `𝔽_p[x]`
 state. -/
 abbrev RedDiv (p : ℕ) : Type := List (ZMod p × ZMod p)
 
-/-- **Degree of a point divisor** `pdivDeg D = D.length` — affine points counted with multiplicity. The
+/-- Degree of a point divisor `pdivDeg D = D.length` — affine points counted with multiplicity. The
 reduction target is `pdivDeg D ≤ g`. -/
 def pdivDeg {p : ℕ} (D : RedDiv p) : ℕ := D.length
 
-/-- **`ZMod p × ZMod p` point key** `ptKey p P = P.1.val * p + P.2.val : ℕ` — a collision-free `ℕ` code for
+/-- `ZMod p × ZMod p` point key `ptKey p P = P.1.val * p + P.2.val : ℕ` — a collision-free `ℕ` code for
 an `𝔽_p`-point (both coordinates `< p`), used to sort/compare point divisors canonically. -/
 def ptKey (p : ℕ) (P : ZMod p × ZMod p) : ℕ := P.1.val * p + P.2.val
 
-/-- **Canonical form of a point divisor** `pdivCanon p D` — sort `D` by `ptKey` so two divisors with the
+/-- Canonical form of a point divisor `pdivCanon p D` — sort `D` by `ptKey` so two divisors with the
 same points-with-multiplicity become the *same* list (the analogue of `cnormG` / `mumfordNormEq`). Sorting
 (not set-dedup) preserves multiplicity. -/
 def pdivCanon (p : ℕ) (D : RedDiv p) : RedDiv p :=
   D.mergeSort (fun P Q => ptKey p P ≤ ptKey p Q)
 
-/-- **Canonical equality of point divisors** `pdivEq p D₁ D₂` — `true` iff `pdivCanon`-equal, i.e. the same
+/-- Canonical equality of point divisors `pdivEq p D₁ D₂` — `true` iff `pdivCanon`-equal, i.e. the same
 multiset of `𝔽_p`-points. The identity-test primitive for `picOrder` (analogue of `mumfordNormEq`). -/
 def pdivEq (p : ℕ) (D₁ D₂ : RedDiv p) : Bool := pdivCanon p D₁ == pdivCanon p D₂
 
@@ -97,7 +97,7 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- **Roots with multiplicity** `rootsWithMult scan poly` — for each `r` in the scan list (e.g. all of
+/-- Roots with multiplicity `rootsWithMult scan poly` — for each `r` in the scan list (e.g. all of
 `𝔽_p` via `zmodGrid`), the multiplicity of `r` as a root of `poly`, found by repeatedly dividing out
 `(x − r)` (each exact division by `cdivWf`); emit `r` repeated that many times. The
 independent `𝔽_p` point-extraction reading the support out of a reduced `u(x)`. Generic over `[CField α]`. -/
@@ -121,7 +121,7 @@ doubling of a repeated point — correctly, which a naive Lagrange interpolation
 a reduced pair back to a point list via `rootsWithMult` + `v`. The reduction *engine* is Cantor's proven
 compose/reduce; the *representation* and the order search stay on the light point list. -/
 
-/-- **Point list → reduced Mumford pair** `ptToMum ρ g pts` — fold Cantor composition over the single
+/-- Point list → reduced Mumford pair `ptToMum ρ g pts` — fold Cantor composition over the single
 points `mumfordPoint Pᵢ`, reducing at each step (`cantorReduce ρ g`), starting from `mumfordIdentity`. The
 result is the unique reduced Mumford representative of the class `Σ (Pᵢ − ∞)`. Cantor's composition gets
 **every** multiplicity right (the tangent-line doubling of repeated points), which is why the reduction
@@ -131,7 +131,7 @@ def ptToMum {α : Type*} [CField α] (ρ : CPolyG α) (g : ℕ) (pts : List (α 
   pts.foldl (fun acc P => cantorReduce ρ g (cantorCompose ρ acc (mumfordPoint P.1 P.2)))
     mumfordIdentity
 
-/-- **Reduced Mumford pair → point list** `mumToPts scan D` — read the support of a reduced Mumford
+/-- Reduced Mumford pair → point list `mumToPts scan D` — read the support of a reduced Mumford
 divisor `(u, v)` back out as a point list: the roots of `u` with multiplicity (`rootsWithMult` over `scan`,
 e.g. `zmodGrid p`), each paired with `y = v(root)` (`cevalG D.v`). The independent `𝔽_p` point-extraction
 half of the round-trip. Generic over `[CField α]`. -/
@@ -140,11 +140,11 @@ def mumToPts {α : Type*} [CField α] (scan : List α) (D : MumfordDivisor α) :
 
 /-! ## The group law: compose (`++`) then reduce (round-trip to Cantor), and `picOrder` -/
 
-/-- **Compose two point divisors** `pdivCompose D₁ D₂ = D₁ ++ D₂` — add the effective divisors as formal
+/-- Compose two point divisors `pdivCompose D₁ D₂ = D₁ ++ D₂` — add the effective divisors as formal
 point sums (analogue of `cantorCompose`). Degree adds; reduction follows. -/
 def pdivCompose {p : ℕ} (D₁ D₂ : RedDiv p) : RedDiv p := D₁ ++ D₂
 
-/-- **Reduce a point divisor** `pdivReduce p ρ g D` — bring an effective divisor on `y² = ρ` to its reduced
+/-- Reduce a point divisor `pdivReduce p ρ g D` — bring an effective divisor on `y² = ρ` to its reduced
 representative (`deg ≤ g`) by the round-trip `mumToPts (zmodGrid p) (ptToMum D)` (lift to the reduced
 Mumford pair via Cantor compose/reduce, read the support back), then canonicalise. The point-list analogue
 of `cantorReduce`; light `𝔽_p[x]` arithmetic on short lists — no HNF. Root extraction uses its own
@@ -152,20 +152,20 @@ structural length bound. -/
 def pdivReduce (p : ℕ) [CField (ZMod p)] (ρ : CPolyG (ZMod p)) (g : ℕ) (D : RedDiv p) : RedDiv p :=
   pdivCanon p (mumToPts (zmodGrid p) (ptToMum ρ g D))
 
-/-- **The Picard group law** `pdivAdd p ρ g D₁ D₂ = pdivReduce ρ g (D₁ ++ D₂)` — the sum of two reduced
+/-- The Picard group law `pdivAdd p ρ g D₁ D₂ = pdivReduce ρ g (D₁ ++ D₂)` — the sum of two reduced
 point divisors as the reduced representative of `[D₁] + [D₂]` in `Pic⁰(C)(𝔽_p)` (compose by `++`, reduce by
 the Cantor round-trip). Identity `[]` (the class of `0·∞`); the analogue of `cantorAdd`. -/
 def pdivAdd (p : ℕ) [CField (ZMod p)] (ρ : CPolyG (ZMod p)) (g : ℕ) (D₁ D₂ : RedDiv p) : RedDiv p :=
   pdivReduce p ρ g (pdivCompose D₁ D₂)
 
-/-- **The scalar multiple** `picMul p ρ g n D = n·D` (the `n`-fold Picard sum), `0·D = []` (the identity).
+/-- The scalar multiple `picMul p ρ g n D = n·D` (the `n`-fold Picard sum), `0·D = []` (the identity).
 By `ℕ`-recursion `(n+1)·D = D + n·D`. The order of `D` is the least `n ≥ 1` with `picMul … n D ≈ []` — the
 analogue of `cantorMul`. -/
 def picMul (p : ℕ) [CField (ZMod p)] (ρ : CPolyG (ZMod p)) (g : ℕ) : ℕ → RedDiv p → RedDiv p
   | 0, _ => []
   | n + 1, D => pdivAdd p ρ g D (picMul p ρ g n D)
 
-/-- **Order-search loop** `picOrderAux fuel p ρ g D acc n`: with `acc = n·D`, test `(n+1)·D = D + acc`
+/-- Order-search loop `picOrderAux fuel p ρ g D acc n`: with `acc = n·D`, test `(n+1)·D = D + acc`
 against the identity `[]` (`pdivEq`); on a hit return `some (n+1)`, else recurse. `fuel` bounds the
 multiples tried (the finite group order is the ceiling). The analogue of `cantorOrderAux`. -/
 def picOrderAux : ℕ → (p : ℕ) → [CField (ZMod p)] → CPolyG (ZMod p) → ℕ → RedDiv p → RedDiv p → ℕ →
@@ -176,7 +176,7 @@ def picOrderAux : ℕ → (p : ℕ) → [CField (ZMod p)] → CPolyG (ZMod p) �
     if pdivEq p acc [] then some (n + 1)
     else picOrderAux fuel p ρ g D acc (n + 1)
 
-/-- **The individual-class order** `picOrder fuel p ρ g D = some m` — the least `m ≥ 1` with `m·D ≈ []` (the
+/-- The individual-class order `picOrder fuel p ρ g D = some m` — the least `m ≥ 1` with `m·D ≈ []` (the
 identity class) in `Pic⁰(C)(𝔽_p)` for `y² = ρ`, searching `1·D, 2·D, …` up to `fuel` multiples (`pdivEq`).
 `none` if no `m ≤ fuel` works. The general analogue of `cantorOrder` — reading the order of a *specific*
 class on the point-list representation, beyond the genus-1 point-count ceiling. -/
@@ -185,7 +185,7 @@ def picOrder (fuel p : ℕ) [CField (ZMod p)] (ρ : CPolyG (ZMod p)) (g : ℕ) (
 
 end DeepWiki.SymbolicIntegration
 
-/-! ## ★ Proof-of-concept I: the GENUS-2 curve `y² = x⁵ + 1` over `𝔽₁₁` (`native_decide`)
+/-! ## Proof-of-concept I: the GENUS-2 curve `y² = x⁵ + 1` over `𝔽₁₁` (`native_decide`)
 
 The hyperelliptic curve `y² = x⁵ + 1` has genus **2** — `|Pic⁰(C)(𝔽_p)| ≠ N_p` (the flat point count alone
 does NOT pin an individual class's order), and Cantor's Mumford engine is the only prior group law. Here the
@@ -208,7 +208,7 @@ def picRhoX5p1Mod11 : CPolyG (ZMod 11) := polyToZMod 11 hypRhoX5p1
 light-representation analogue of the Mumford point `(x, 1)`. -/
 def picPt01_X5p1 : RedDiv 11 := [((0 : ZMod 11), (1 : ZMod 11))]
 
-/-- **★ `(0,1) + (0,−1)` reduces to the identity over `𝔽₁₁`** (`native_decide`): `pdivAdd` of `(0,1)` and
+/-- `(0,1) + (0,−1)` reduces to the identity over `𝔽₁₁` (`native_decide`): `pdivAdd` of `(0,1)` and
 its opposite `(0,−1)` cancels to `[]` — a point plus its hyperelliptic opposite is principal (`P + ιP ~
 2·∞`), the inverse law on the light point-list representation (analogue of `cantorSumPoppP`). The reduction
 collapsing an opposite pair. -/
@@ -216,7 +216,7 @@ theorem pdivAdd_pt01_opp_X5p1 :
     pdivEq 11 (pdivAdd 11 picRhoX5p1Mod11 2 picPt01_X5p1 [((0 : ZMod 11), (-1 : ZMod 11))]) [] = true := by
   native_decide
 
-/-- **★ The double `2·((0,1) − ∞)` is a genuine degree-2 reduced divisor** (`native_decide`): `picMul 2`
+/-- The double `2·((0,1) − ∞)` is a genuine degree-2 reduced divisor (`native_decide`): `picMul 2`
 gives a divisor of length 2 (`deg = g = 2`), NOT a single point — on the genus-2 curve the reduced
 representative of `2·((0,1) − ∞)` has degree `g = 2` (on a genus-1 curve the double collapses to one
 point). The reduction (via the Cantor tangent-doubling round-trip) producing a real degree-2 reduced
@@ -224,14 +224,14 @@ divisor. -/
 theorem picMul_two_pt01_X5p1_deg :
     (picMul 11 picRhoX5p1Mod11 2 2 picPt01_X5p1).length = 2 := by native_decide
 
-/-- **★ The order of the class `(0,1) − ∞` on `y² = x⁵+1` over `𝔽₁₁`, via the LIGHT point-list group law, is
-5** (`native_decide`): `picOrder 30 11 ρ 2 [(0,1)] = some 5` — the individual-class order read by `pdivAdd`
+/-- The order of the class `(0,1) − ∞` on `y² = x⁵+1` over `𝔽₁₁`, via the LIGHT point-list group law, is
+5 (`native_decide`): `picOrder 30 11 ρ 2 [(0,1)] = some 5` — the individual-class order read by `pdivAdd`
 (compose + Cantor-round-trip reduce) + `picOrder`, on a GENUS-2 curve where the point count `N_p` alone does
 NOT pin it. The light `𝔽_p` group law reads the individual order beyond genus 1. -/
 theorem picOrder_pt01_X5p1_eq :
     picOrder 30 11 picRhoX5p1Mod11 2 picPt01_X5p1 = some 5 := by native_decide
 
-/-- **★★ The light point-list order of `(0,1) − ∞` MATCHES the Cantor `cantorOrder` over `𝔽₁₁`**
+/-- The light point-list order of `(0,1) − ∞` MATCHES the Cantor `cantorOrder` over `𝔽₁₁`
 (`native_decide`) — the individual-class order read on the light **point-list** representation equals the
 order the heavy hyperelliptic Mumford/Cantor engine gives, on a GENUS-2 curve. Both compute the order of
 `(0,1) − ∞` in `Pic⁰(C)(𝔽₁₁) = Jac(C)(𝔽₁₁)` (`= 5`); they agree — the cross-validation that the light
@@ -243,7 +243,7 @@ theorem picOrder_X5p1_matches_cantor :
 
 end DeepWiki.SymbolicIntegration
 
-/-! ## ★ Proof-of-concept II: genus-1 cross-check against the point count `N_p` (`native_decide`)
+/-! ## Proof-of-concept II: genus-1 cross-check against the point count `N_p` (`native_decide`)
 
 On a **genus-1** curve `Pic⁰(C)(𝔽_p)` is cyclic of order `N_p = |Pic⁰(C)(𝔽_p)|`, so the light group law's
 individual-class order must **divide `N_p`**. We cross-check the light `picOrder` against
@@ -262,8 +262,8 @@ def picRhoX3p1Mod11 : CPolyG (ZMod 11) := polyToZMod 11 hypRhoX3p1
 of the full `ℤ/6` torsion (over ℚ); here its order in `Pic⁰(C)(𝔽₁₁)`. -/
 def picPt23_X3p1 : RedDiv 11 := [((2 : ZMod 11), (3 : ZMod 11))]
 
-/-- **★ The light group-law order of `(2,3) − ∞` on `y² = x³+1` over `𝔽₁₁` is 6 and DIVIDES the point count
-`N₁₁ = 12`** (`native_decide`): for the GENUS-1 curve `Pic⁰(C)(𝔽₁₁)` is cyclic of order `N₁₁ = npHypOddDeg
+/-- The light group-law order of `(2,3) − ∞` on `y² = x³+1` over `𝔽₁₁` is 6 and DIVIDES the point count
+`N₁₁ = 12` (`native_decide`): for the GENUS-1 curve `Pic⁰(C)(𝔽₁₁)` is cyclic of order `N₁₁ = npHypOddDeg
 11 (hypCurveX3p1 11)` (the `ComputableGeneralTorsionLight` point count), so any class's order divides `N₁₁`
 — the light `picOrder = some 6` is consistent with the flat point count (`12 % 6 = 0`). Cross-validates the
 light group law against the torsion-light `N_p`. -/
@@ -271,7 +271,7 @@ theorem picOrder_pt23_X3p1_divides_Np :
     picOrder 30 11 picRhoX3p1Mod11 1 picPt23_X3p1 = some 6
       ∧ npHypOddDeg 11 (hypCurveX3p1 11) % 6 = 0 := by native_decide
 
-/-- **★ The light order of `(2,3) − ∞` matches the Cantor order over `𝔽₁₁`** (`native_decide`): both the
+/-- The light order of `(2,3) − ∞` matches the Cantor order over `𝔽₁₁` (`native_decide`): both the
 light point-list group law and the heavy Mumford/Cantor engine give order 6 for `(2,3) − ∞` in
 `Pic⁰(C)(𝔽₁₁)` on `y² = x³+1` — the genus-1 cross-check of the light group law against Cantor, complementing
 the divides-`N_p` check. -/
@@ -282,14 +282,14 @@ theorem picOrder_X3p1_matches_cantor :
 
 end DeepWiki.SymbolicIntegration
 
-/-! ## ★ The light-general-Picard-group-law milestone (`native_decide`) -/
+/-! ## The light-general-Picard-group-law milestone (`native_decide`) -/
 
 namespace DeepWiki.SymbolicIntegration
 
 open CPolyG
 
-/-- **★★ THE LIGHT `𝔽_p` POINT-LIST PICARD GROUP LAW + INDIVIDUAL-CLASS ORDER `picOrder` READ THE ORDER OF
-A SPECIFIC DIVISOR CLASS BEYOND THE GENUS-1 CEILING** (Trager Ch. 6 / computational AG, `native_decide`).
+/-- THE LIGHT `𝔽_p` POINT-LIST PICARD GROUP LAW + INDIVIDUAL-CLASS ORDER `picOrder` READ THE ORDER OF
+A SPECIFIC DIVISOR CLASS BEYOND THE GENUS-1 CEILING (Trager Ch. 6 / computational AG, `native_decide`).
 Where `ComputableGeneralTorsionLight`'s flat point count pins the order only for genus 1 (cyclic `Pic⁰` of
 order `N_p`), the **light point-list group law** — `RedDiv p = List (ZMod p × ZMod p)` (reduced divisor),
 `pdivAdd = pdivReduce ∘ pdivCompose` (compose by `++`, reduce by a faithful Cantor compose/reduce
@@ -310,30 +310,19 @@ order `N_p`), the **light point-list group law** — `RedDiv p = List (ZMod p ×
 The light `𝔽_p` point-list group law + `picOrder` make the **individual-class order** `native_decide`-
 readable on a genuinely non-genus-1 curve — the follow-up the point-count ceiling could not reach. -/
 theorem light_picard_group_law_validates :
-    -- ★ genus 2 (y² = x⁵+1 / 𝔽₁₁): light group law reads order 5, matches Cantor
+    -- genus 2 (y² = x⁵+1 / 𝔽₁₁): light group law reads order 5, matches Cantor
     (picOrder 30 11 picRhoX5p1Mod11 2 picPt01_X5p1 = some 5
       ∧ picOrder 30 11 picRhoX5p1Mod11 2 picPt01_X5p1
           = cantorOrder 200 (polyToZMod 11 hypRhoX5p1) 2 (mumfordReduceModP 11 hypG2Pt01)
       ∧ (picMul 11 picRhoX5p1Mod11 2 2 picPt01_X5p1).length = 2
       ∧ pdivEq 11 (pdivAdd 11 picRhoX5p1Mod11 2 picPt01_X5p1
           [((0 : ZMod 11), (-1 : ZMod 11))]) [] = true)
-    -- ★ genus 1 (y² = x³+1 / 𝔽₁₁): light order 6 divides N_p and matches Cantor
+    -- genus 1 (y² = x³+1 / 𝔽₁₁): light order 6 divides N_p and matches Cantor
     ∧ (picOrder 30 11 picRhoX3p1Mod11 1 picPt23_X3p1 = some 6
         ∧ npHypOddDeg 11 (hypCurveX3p1 11) % 6 = 0)
     ∧ picOrder 30 11 picRhoX3p1Mod11 1 picPt23_X3p1
         = cantorOrder 60 (polyToZMod 11 hypRhoX3p1) 1 (mumfordReduceModP 11 hypPt23) := by
   native_decide
-
-/-! ### Deliverable: `#print axioms`
-
-`[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
-axiom). **No `sorry`, no `sorryAx`** — every recursive def (`pdivAdd` / `picMul` / `picOrder` /
-`picOrderAux` / `ptToMum`, plus `rootsWithMult`'s inner `mult`) is total structural recursion (no
-`partial def`) over short `ZMod p[x]` / point lists, pure `ZMod p`/`ℕ` arithmetic. -/
-
-#print axioms picOrder_X5p1_matches_cantor
-#print axioms picOrder_pt23_X3p1_divides_Np
-#print axioms light_picard_group_law_validates
 
 /-! ## Verdict & scope
 

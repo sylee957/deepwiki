@@ -40,7 +40,7 @@ ENTIRE integral.
 `integralBasis (y²−x³) = [1, y/x]`, both integrands polynomial in basis coordinates ⟹ no finite poles ⟹
 the integral is fully rational):
 
-* **★ `∫ y dx = (2/5)·x·y`.** Validated two ways: (i) the **actual** diagonal derivation
+* **`∫ y dx = (2/5)·x·y`.** Validated two ways: (i) the **actual** diagonal derivation
   `radDeriv 2 (x³) [0, (2/5)x] = [0, 1] = y` (`cusp_intY_radDeriv`); (ii) **derived from the integrand**
   by the fuel-free Case-3 `C/y` driver — `y = ρ/y = x³/y`, so `radIntegrateCase3Wf cderivG (x³) ((3/2)x²) (x³)`
   returns `(Crem = 0, vNum = (2/5)x⁴)`, giving `v = vNum/y = (2/5)x⁴/x³ · y = (2/5)x·y` with **zero**
@@ -81,7 +81,7 @@ def gcuspF : CPolyG (QFunNZG ℚ) := cuspF
 derivation `radDeriv 2 ρ`. -/
 def gcuspRho : QFunNZG ℚ := qxOfNum [0, 0, 0, 1]
 
-/-- **The cusp integral basis is `[1, y/x]`, integral and maximal** (`native_decide`): `integralBasis
+/-- The cusp integral basis is `[1, y/x]`, integral and maximal (`native_decide`): `integralBasis
 (y² − x³)` is `[1, y/x]` with `(y/x)² = x` and `isMaximalOrder` true — the Ford–Zassenhaus maximal order
 bounding the finite poles (this is the genus-0 normalization that makes `y`, `x·y` finite-pole-free). The
 integral-basis datum the algebraic Hermite reduction consumes; reproduced here as the entry point for the
@@ -93,7 +93,7 @@ theorem gcusp_integralBasis_eq :
             ((integralBasis gcuspF).getD 1 [])) [qxOfNum [0, 1]])
       && isMaximalOrder gcuspF (integralBasis gcuspF)) = true := by native_decide
 
-/-! ### ★ Target 1: `∫ y dx = (2/5)·x·y` on `y² = x³` (`native_decide`)
+/-! ### Target 1: `∫ y dx = (2/5)·x·y` on `y² = x³` (`native_decide`)
 
 The genus-0 milestone. The integrand is `y = [0, 1]` (the pure-`y` `RadElem`). The rational part is
 `v = (2/5)·x·y = [0, (2/5)x]`. The **actual** diagonal radical derivation confirms `radDeriv 2 (x³) v = y`:
@@ -106,14 +106,14 @@ def gcuspVY : RadElem (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 2/5]]
 /-- The integrand `y = [0, 1]` as `RadElem (QFunNZG ℚ)`. -/
 def gcuspY : RadElem (QFunNZG ℚ) := [CField.zero, CField.one]
 
-/-- **★ `∫ y dx = (2/5)·x·y` on `y² = x³`** (`native_decide`): the **actual** diagonal radical derivation
+/-- `∫ y dx = (2/5)·x·y` on `y² = x³` (`native_decide`): the **actual** diagonal radical derivation
 `radDeriv 2 (x³)` of the rational part `v = (2/5)·x·y` equals the integrand `y` — `D((2/5)xy) = (2/5 +
 (2/5)x·3/(2x))·y = (2/5 + 3/5)·y = y`. Checked by `radIsZero` of `radDeriv 2 ρ v − y` over `ℚ(x)`. **THE
 GENUS-0 RATIONAL PART, VALIDATED THROUGH THE REAL DERIVATION** — `∫ y dx = (2/5)xy` on the cusp. -/
 theorem cusp_intY_radDeriv :
     radIsZero (radSub (radDeriv 2 gcuspRho gcuspVY) gcuspY) = true := by native_decide
 
-/-! #### ★ Target 1, DERIVED from the integrand by the fuel-free Case-3 `C/y` driver (`native_decide`)
+/-! #### Target 1, DERIVED from the integrand by the fuel-free Case-3 `C/y` driver (`native_decide`)
 
 Rather than asserting `v`, **produce** it from the integrand. Since `y·y = ρ`, the integrand `y` equals
 `ρ/y = x³/y` — a `C/y` Case-3 form with `C = ρ = x³` (a polynomial numerator, no denominator factor). The
@@ -133,7 +133,7 @@ def gcuspGP : CPolyG ℚ := cscaleG (1/2 : ℚ) (cderivG gcuspRhoP)
 (Crem, vNum)`. Expected `Crem = 0` (fully rational), `vNum = (2/5)x⁴` (so `v = vNum/y = (2/5)x·y`). -/
 def gcuspYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP gcuspRhoP
 
-/-- **The driver derives `Crem = 0` and `vNum = (2/5)x⁴` for `∫ y dx`** (`native_decide`): the Case-3
+/-- The driver derives `Crem = 0` and `vNum = (2/5)x⁴` for `∫ y dx` (`native_decide`): the Case-3
 `C/y` degree-lowering on `C = x³` returns a **zero** leftover residual (`Crem = 0` — the integral is fully
 rational, no log part) and the rational-part numerator `vNum = (2/5)x⁴`. Checked by `cisZeroG` of `Crem`
 and of `vNum − (2/5)x⁴`. The rational part `v = (2/5)x⁴/y = (2/5)x·y` is PRODUCED from the integrand, not
@@ -153,7 +153,7 @@ leftover). -/
 def gcuspYRatLift : RadElem (QFunNZG ℚ) :=
   [CField.zero, CField.div (qxOfNum (csubG gcuspRhoP gcuspYRun.1)) gcuspRho]
 
-/-- **★ The Case-3 driver integrates `∫ y dx` end-to-end: `radDeriv(v) = integrand`** (`native_decide`).
+/-- The Case-3 driver integrates `∫ y dx` end-to-end: `radDeriv(v) = integrand` (`native_decide`).
 Over the genuine radical extension `(QFunNZG ℚ)[y]/(y² − x³)`, the **actual** diagonal radical derivation
 `radDeriv 2 (x³)` of the driver-produced rational part `v = vNum/y = (2/5)x·y` equals the integrand's
 rational part `(C − Crem)/y = x³/x³·y = y` (the leftover `Crem = 0` is subtracted, leaving the whole `y`).
@@ -163,7 +163,7 @@ this is the COMPLETE integral (genus 0). -/
 theorem cusp_intY_driver_integrates :
     radIsZero (radSub (radDeriv 2 gcuspRho gcuspVYlift) gcuspYRatLift) = true := by native_decide
 
-/-- **★ `∫ y dx` is FULLY rational (genus 0): the leftover is zero** (`native_decide`): the Case-3
+/-- `∫ y dx` is FULLY rational (genus 0): the leftover is zero (`native_decide`): the Case-3
 reduction of `∫ y dx` leaves `Crem = 0`, so there is **no** simple-pole residual and **no** logarithmic
 part — the integral is `(2/5)x·y` exactly. The genus-0 hallmark: the rational part is the whole integral.
 Checked by `cisZeroG gcuspYRun.1`. -/
@@ -182,7 +182,7 @@ def gcuspVXY : RadElem (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 0, 2/7]]
 /-- The integrand `x·y = [0, x]` as `RadElem (QFunNZG ℚ)`. -/
 def gcuspXY : RadElem (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 1]]
 
-/-- **★ `∫ x·y dx = (2/7)·x²·y` on `y² = x³`** (`native_decide`): the **actual** diagonal radical
+/-- `∫ x·y dx = (2/7)·x²·y` on `y² = x³` (`native_decide`): the **actual** diagonal radical
 derivation `radDeriv 2 (x³)` of `v = (2/7)·x²·y` equals `x·y` — `D((2/7)x²y) = ((4/7)x + (2/7)x²·3/(2x))·y
 = ((4/7)x + (3/7)x)·y = x·y`. Checked by `radIsZero` of `radDeriv 2 ρ v − xy` over `ℚ(x)`. A second
 genus-0 rational-part target, validated through the real derivation. -/
@@ -193,7 +193,7 @@ theorem cusp_intXY_radDeriv :
 (Crem, vNum)`. Expected `Crem = 0`, `vNum = (2/7)x⁵` (so `v = (2/7)x⁵/y = (2/7)x²·y`). -/
 def gcuspXYRun : CPolyG ℚ × CPolyG ℚ := radIntegrateCase3Wf cderivG gcuspRhoP gcuspGP [0, 0, 0, 0, 1]
 
-/-- **The driver derives `Crem = 0` and `vNum = (2/7)x⁵` for `∫ x·y dx`** (`native_decide`): the Case-3
+/-- The driver derives `Crem = 0` and `vNum = (2/7)x⁵` for `∫ x·y dx` (`native_decide`): the Case-3
 `C/y` degree-lowering on `C = x⁴` returns a zero leftover (`Crem = 0`, fully rational) and rational-part
 numerator `vNum = (2/7)x⁵`, so `v = (2/7)x⁵/x³·y = (2/7)x²·y` is produced from the integrand. Checked by
 `cisZeroG` of `Crem` and of `vNum − (2/7)x⁵`. -/
@@ -211,7 +211,7 @@ over `ℚ(x)`. With `Crem = 0` this is `[0, x⁴/x³] = [0, x] = x·y`. -/
 def gcuspXYRatLift : RadElem (QFunNZG ℚ) :=
   [CField.zero, CField.div (qxOfNum (csubG [0, 0, 0, 0, 1] gcuspXYRun.1)) gcuspRho]
 
-/-- **★ The Case-3 driver integrates `∫ x·y dx` end-to-end: `radDeriv(v) = integrand`** (`native_decide`).
+/-- The Case-3 driver integrates `∫ x·y dx` end-to-end: `radDeriv(v) = integrand` (`native_decide`).
 The **actual** diagonal radical derivation `radDeriv 2 (x³)` of the driver-produced `v = (2/7)x²·y` equals
 the integrand `x·y` (leftover `Crem = 0` subtracted). Checked by `radIsZero` of the difference over
 `ℚ(x)`. The second genus-0 integral computed FROM the integrand and validated by the real derivation —
@@ -252,33 +252,5 @@ where the integral-basis Hermite system (11) collapses to `Aᵢ ≡ −kUV'Bᵢ 
 The **integral basis is the finite-pole datum** the whole reduction consumes (a function has a finite
 pole exactly where it leaves the maximal order); with it, "reduce to simple finite poles, accumulating
 the rational part" is the computation realized here for hyperelliptic curves, fully for genus 0. -/
-
-/-! ### `#print axioms` — does the engine compute/validate the general-curve rational part?
-
-Each validation carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
-compiler axiom — **no `sorry`, no `sorryAx`, no extra axiom**. **The engine now computes/validates the
-general-curve rational part** (the algebraic Hermite reduction over the integral basis), realized through
-the diagonal radical reduction for hyperelliptic curves with the integral basis bounding the finite poles.
-The **genus-0** integrals are obtained FULLY: `∫ y dx = (2/5)·x·y` on the cusp `y² = x³`
-(`cusp_intY_radDeriv` by the real derivation, `cusp_intY_driver_integrates`/`cusp_intY_driver_eq` derived
-from the integrand with `Crem = 0` ⟹ `cusp_intY_fully_rational`), and the second target
-`∫ x·y dx = (2/7)·x²·y` (`cusp_intXY_radDeriv`, `cusp_intXY_driver_integrates`,
-`cusp_intXY_driver_eq`) — the rational part PRODUCED from the integrand and validated by `radDeriv`, the
-whole integral for these genus-0 curves. The integral basis `[1, y/x]` (`gcusp_integralBasis_eq`) is the
-finite-pole bound the reduction consumes. -/
-
--- The cusp integral basis `[1, y/x]` (the finite-pole bound the reduction consumes):
-#print axioms gcusp_integralBasis_eq
-
--- ★ Target 1 `∫ y dx = (2/5)xy`: validated by the real derivation, derived from the integrand, fully rational:
-#print axioms cusp_intY_radDeriv
-#print axioms cusp_intY_driver_eq
-#print axioms cusp_intY_driver_integrates
-#print axioms cusp_intY_fully_rational
-
--- The second genus-0 target `∫ x·y dx = (2/7)x²y`: validated and derived from the integrand:
-#print axioms cusp_intXY_radDeriv
-#print axioms cusp_intXY_driver_eq
-#print axioms cusp_intXY_driver_integrates
 
 end DeepWiki.SymbolicIntegration

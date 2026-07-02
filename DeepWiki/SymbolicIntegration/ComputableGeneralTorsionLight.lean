@@ -42,13 +42,13 @@ curves where the fractional-ideal order cannot.
 * **`torsionCeiling`** — `gcd` of `N_p` over a list of good primes: the good-reduction ceiling on the
   `ℚ`-torsion order. The lightweight general analogue of `orderModP` / `isTorsionDivisor`'s ceiling.
 
-**★ Proof-of-concept** — the genuinely **non-hyperelliptic** Fermat cubic `x³ + y³ = 1` (`fermatCubic`,
+**Proof-of-concept** — the genuinely **non-hyperelliptic** Fermat cubic `x³ + y³ = 1` (`fermatCubic`,
 degree 3 in *both* `x` and `y`, NOT a `y² = ρ(x)` hyperelliptic model, so the Mumford/Cantor engine does
 **not** apply): its point counts `N_p` over `p = 5, 7, 11, 13, 17, 19, 23, 31` are
 `6, 9, 12, 9, 18, 27, 24, 36`, with `gcd = 3` — exactly the rational 3-torsion of the Fermat cubic (the
 inflection points / flexes `(0, 1), (1, 0), …` and the points at infinity form `ℤ/3`). The lightweight
 point-count ceiling **decides the torsion order = 3 on a non-hyperelliptic curve**, where the
-fractional-ideal `genDivisorOrder` mod `p` will not compile. **★ Hyperelliptic conservativity**: the same
+fractional-ideal `genDivisorOrder` mod `p` will not compile. **Hyperelliptic conservativity**: the same
 point count, applied to `y² = x³ + 1` (torsion `ℤ/6`) and `y² = x³ − 2` (rank 1, trivial torsion), gives
 `gcd_p N_p = 6` and `1` — consistent with the Cantor answers `cantorOrder hypPt23 = some 6` and the `(3,5)`
 non-torsion witness. The lightweight ceiling reproduces the hyperelliptic torsion data.
@@ -76,13 +76,13 @@ needed — point counting tests `f = 0`, which is a ring computation). -/
 
 variable {R : Type*} [CommRing R]
 
-/-- **Univariate Horner evaluation** `evalUniR p c = p(c)` of a `List R` (dense coefficients, low→high) at
+/-- Univariate Horner evaluation `evalUniR p c = p(c)` of a `List R` (dense coefficients, low→high) at
 `c ∈ R`, via `R`'s `+`/`*` only. Over `R = ZMod p` it is pure finite-field ring arithmetic (no inverse) —
 works for every `p`, no `[Fact p.Prime]`. The primitive behind the bivariate on-curve test. -/
 def evalUniR (p : List R) (c : R) : R :=
   p.foldr (fun coeff acc => coeff + c * acc) 0
 
-/-- **Bivariate Horner evaluation** `curveEval2 f x₀ y₀ = f(x₀, y₀)` of a plane curve `f = Σᵢ fᵢ(x)·yⁱ`
+/-- Bivariate Horner evaluation `curveEval2 f x₀ y₀ = f(x₀, y₀)` of a plane curve `f = Σᵢ fᵢ(x)·yⁱ`
 (a list `f` of `y`-coefficient polynomials `fᵢ ∈ List R`, low→high in `y`) at `(x₀, y₀) ∈ R²`: evaluate
 each `fᵢ(x₀)` (`evalUniR`), then Horner-fold the resulting list in `y₀`. Pure `[CommRing R]` arithmetic;
 over `R = ZMod p` this is the lightest curve evaluation — no field inverse, no `𝔽_p[x]` polynomial
@@ -90,7 +90,7 @@ arithmetic, no ideal/HNF machinery, no `[Fact p.Prime]`. -/
 def curveEval2 (f : List (List R)) (x0 y0 : R) : R :=
   (f.map (fun fi => evalUniR fi x0)).foldr (fun coeff acc => coeff + y0 * acc) 0
 
-/-- **On-curve test** `onCurve2 f x₀ y₀`: `true` iff `f(x₀, y₀) = 0` (decidable equality of `curveEval2`
+/-- On-curve test `onCurve2 f x₀ y₀`: `true` iff `f(x₀, y₀) = 0` (decidable equality of `curveEval2`
 to `0`). The `ZMod p` membership predicate for the affine point scan. Needs only `[CommRing R]` with
 `[DecidableEq R]` (both hold for `ZMod p`, every `p`). -/
 def onCurve2 [DecidableEq R] (f : List (List R)) (x0 y0 : R) : Bool :=
@@ -106,11 +106,11 @@ short Horner fold — tiny for the small primes a good-reduction torsion bound n
 
 open CPolyG
 
-/-- **The `𝔽_p` grid** `zmodGrid p = [0, 1, …, p−1] : List (ZMod p)` — every element of the finite field,
+/-- The `𝔽_p` grid `zmodGrid p = [0, 1, …, p−1] : List (ZMod p)` — every element of the finite field,
 as `ZMod p` casts. The scan domain for the affine point count. -/
 def zmodGrid (p : ℕ) : List (ZMod p) := (List.range p).map (fun k => (k : ZMod p))
 
-/-- **Affine point count over `𝔽_p`** `countAffinePoints p f = #{(x, y) ∈ 𝔽_p² : f(x, y) = 0}`: the number
+/-- Affine point count over `𝔽_p` `countAffinePoints p f = #{(x, y) ∈ 𝔽_p² : f(x, y) = 0}`: the number
 of affine `𝔽_p`-points of the plane curve `f(x, y) = Σᵢ fᵢ(x)·yⁱ` (`f` a list of `CPolyG (ZMod p)`), by a
 double scan over `zmodGrid p` testing `onCurve2`. Pure `ZMod p` ring arithmetic — the lightweight
 good-reduction count, no ideal/HNF machinery. For a genus-1 curve `|Pic⁰(C)(𝔽_p)| = (this) + (#points at
@@ -132,20 +132,20 @@ proof-of-concept curves:
 
 `countInfCubeRootsOfNegOne` handles the Fermat case; the hyperelliptic case adds the constant `1`. -/
 
-/-- **Points at infinity of a Fermat-type cubic** `countInfCubeRootsNegOne p = #{ t ∈ 𝔽_p : t³ + 1 = 0 }`:
+/-- Points at infinity of a Fermat-type cubic `countInfCubeRootsNegOne p = #{ t ∈ 𝔽_p : t³ + 1 = 0 }`:
 the number of cube roots of `−1` in `𝔽_p` — exactly the points `[1 : t : 0]` at infinity of the cubic
 `x³ + y³ = z³` (the leading form `X³ + Y³` vanishes when `(Y/X)³ = −1`). Pure `ZMod p` arithmetic. (For
 `p ≡ 1 mod 3` there are 3 such roots, else 1.) -/
 def countInfCubeRootsNegOne (p : ℕ) : ℕ :=
   (zmodGrid p).foldl (fun acc t => acc + (if t ^ 3 + 1 = 0 then 1 else 0)) 0
 
-/-- **`N_p` of a Fermat-type cubic** `npFermatCubic p f = (affine count) + (#points at ∞)` =
+/-- `N_p` of a Fermat-type cubic `npFermatCubic p f = (affine count) + (#points at ∞)` =
 `|Pic⁰(C)(𝔽_p)|` for the genus-1 cubic `f` (here `f = x³ + y³ − 1`). The lightweight good-reduction group
 order. -/
 def npFermatCubic (p : ℕ) (f : List (List (ZMod p))) : ℕ :=
   countAffinePoints p f + countInfCubeRootsNegOne p
 
-/-- **`N_p` of a hyperelliptic curve with one point at infinity** `npHypOddDeg p f = (affine count) + 1` =
+/-- `N_p` of a hyperelliptic curve with one point at infinity `npHypOddDeg p f = (affine count) + 1` =
 `|Jac(C)(𝔽_p)|` for the genus-1 curve `y² = ρ(x)`, `deg ρ` odd (here `= 3`, so a single point at ∞). The
 lightweight good-reduction group order, matching the Cantor `cantorOrder`-over-`𝔽_p` count. -/
 def npHypOddDeg (p : ℕ) (f : List (List (ZMod p))) : ℕ :=
@@ -159,7 +159,7 @@ The `ℚ`-torsion order divides `|Pic⁰(C)(𝔽_p)|` at every good prime `p`, s
 search: instead of running the order machinery over `𝔽_p`, we read the ceiling straight off the point
 counts. -/
 
-/-- **The good-reduction torsion ceiling** `torsionCeiling nps = gcd_p N_p` over a list `nps` of
+/-- The good-reduction torsion ceiling `torsionCeiling nps = gcd_p N_p` over a list `nps` of
 good-prime point counts: the `ℚ`-torsion order divides each `N_p = |Pic⁰(C)(𝔽_p)|`, hence divides their
 `gcd`. The lightweight ceiling on the divisor torsion order — pure `ℕ`-gcd over the point counts, no ideal
 arithmetic. (`gcd` of the empty list is `0`; supply at least two good primes.) -/
@@ -167,7 +167,7 @@ def torsionCeiling (nps : List ℕ) : ℕ := nps.foldr Nat.gcd 0
 
 end DeepWiki.SymbolicIntegration
 
-/-! ## ★ Proof-of-concept: the NON-HYPERELLIPTIC Fermat cubic `x³ + y³ = 1` (`native_decide`)
+/-! ## Proof-of-concept: the NON-HYPERELLIPTIC Fermat cubic `x³ + y³ = 1` (`native_decide`)
 
 The Fermat cubic `f(x, y) = x³ + y³ − 1` is a smooth genus-1 plane curve of degree **3 in both `x` and
 `y`** — it is **not** a `y² = ρ(x)` hyperelliptic model, so the Mumford/Cantor engine
@@ -189,7 +189,7 @@ open CPolyG
 hyperelliptic `y² = ρ(x)` model, so the Mumford/Cantor engine does not apply. Its `ℚ`-torsion is `ℤ/3`. -/
 def fermatCubic (p : ℕ) : List (List (ZMod p)) := [[-1, 0, 0, 1], [], [], [1]]
 
-/-- **★ The Fermat-cubic point counts `N_p = 6, 9, 12, 9` over `p = 5, 7, 11, 13`** (`native_decide`):
+/-- The Fermat-cubic point counts `N_p = 6, 9, 12, 9` over `p = 5, 7, 11, 13` (`native_decide`):
 `npFermatCubic p (fermatCubic p) = |Pic⁰(C)(𝔽_p)|` for the genus-1 non-hyperelliptic curve `x³ + y³ = 1`,
 computed by the lightweight `𝔽_p`-grid scan + cube-roots-of-`−1` at infinity. Pure `ZMod p` ring
 arithmetic. -/
@@ -198,7 +198,7 @@ theorem fermatCubic_Np :
       npFermatCubic 11 (fermatCubic 11), npFermatCubic 13 (fermatCubic 13)) = (6, 9, 12, 9) := by
   native_decide
 
-/-- **★★ The Fermat-cubic torsion ceiling is `3`** (`native_decide`): `torsionCeiling [N₅, N₇, N₁₁, N₁₃] =
+/-- The Fermat-cubic torsion ceiling is `3` (`native_decide`): `torsionCeiling [N₅, N₇, N₁₁, N₁₃] =
 gcd(6, 9, 12, 9) = 3` — the good-reduction bound pins the `ℚ`-torsion order of the **non-hyperelliptic**
 Fermat cubic `x³ + y³ = 1` to exactly **3** (its rational `ℤ/3` torsion, the flex differences). This is the
 torsion-order **decision on a genuinely non-hyperelliptic curve**, in lightweight `ZMod p` point-count
@@ -209,7 +209,7 @@ theorem fermatCubic_torsionCeiling_eq3 :
       npFermatCubic 11 (fermatCubic 11), npFermatCubic 13 (fermatCubic 13)] = 3 := by
   native_decide
 
-/-- **★ Every good prime forces `3 ∣ N_p` for the Fermat cubic** (`native_decide`): over
+/-- Every good prime forces `3 ∣ N_p` for the Fermat cubic (`native_decide`): over
 `p = 5, 7, 11, 13, 17, 19, 31` each `N_p = |Pic⁰(C)(𝔽_p)|` is divisible by `3` (the `N_p mod 3` tuple is
 all-zero) — the structural fingerprint of the **persistent** rational `ℤ/3` torsion (it injects into
 `Pic⁰(C)(𝔽_p)` at *every* good prime, so `3 ∣ N_p` always), confirming the ceiling `3` is genuine and not a
@@ -221,7 +221,7 @@ theorem fermatCubic_three_divides_Np :
       npFermatCubic 31 (fermatCubic 31) % 3) = (0, 0, 0, 0, 0, 0, 0) := by
   native_decide
 
-/-! ## ★ Hyperelliptic conservativity: the lightweight ceiling reproduces the Cantor torsion data
+/-! ## Hyperelliptic conservativity: the lightweight ceiling reproduces the Cantor torsion data
 (`native_decide`)
 
 The same point count, run on the hyperelliptic curves the Mumford/Cantor engine *does* handle, recovers
@@ -242,7 +242,7 @@ def hypCurveX3p1 (p : ℕ) : List (List (ZMod p)) := [[1, 0, 0, 1], [], [-1]]
 curve `hypRhoX3m2` of the `(3, 5)` non-torsion witness; trivial torsion. -/
 def hypCurveX3m2 (p : ℕ) : List (List (ZMod p)) := [[-2, 0, 0, 1], [], [-1]]
 
-/-- **★ Hyperelliptic conservativity, `ℤ/6` case: `gcd_p N_p = 6` for `y² = x³ + 1`** (`native_decide`):
+/-- Hyperelliptic conservativity, `ℤ/6` case: `gcd_p N_p = 6` for `y² = x³ + 1` (`native_decide`):
 the lightweight point count over `p = 5, 7, 11, 13, 17` gives `N_p = 6, 12, 12, 12, 18`, `gcd = 6` —
 reproducing the Cantor answer `cantorOrder hypPt23 = some 6` (the full `ℤ/6` torsion order). The
 point-count ceiling matches the Mumford/Cantor torsion data on a curve both handle. -/
@@ -252,7 +252,7 @@ theorem hypCurveX3p1_torsionCeiling_eq6 :
       npHypOddDeg 17 (hypCurveX3p1 17)] = 6 := by
   native_decide
 
-/-- **★ Hyperelliptic conservativity, trivial-torsion case: `gcd_p N_p = 1` for `y² = x³ − 2`**
+/-- Hyperelliptic conservativity, trivial-torsion case: `gcd_p N_p = 1` for `y² = x³ − 2`
 (`native_decide`): the point count over `p = 5, 7, 11, 13` gives `N_p = 6, 7, 12, 19`, `gcd = 1` — the
 rank-1 curve has **no** rational torsion, reproducing the `(3, 5)` non-torsion witness
 (`isTorsionDivisor … = none`). The ceiling correctly reports "no torsion beyond the identity". -/
@@ -261,10 +261,10 @@ theorem hypCurveX3m2_torsionCeiling_eq1 :
       npHypOddDeg 11 (hypCurveX3m2 11), npHypOddDeg 13 (hypCurveX3m2 13)] = 1 := by
   native_decide
 
-/-! ## ★ The lightweight-general-torsion milestone (`native_decide`) -/
+/-! ## The lightweight-general-torsion milestone (`native_decide`) -/
 
-/-- **★★ THE LIGHTWEIGHT GENERAL-TORSION CEILING (POINT COUNTING OVER `𝔽_p`) COMPUTES AND BEATS THE
-FRACTIONAL-IDEAL COMPILATION WALL** (Trager Ch. 6 §2 / Davenport good reduction, `native_decide`). Where
+/-- THE LIGHTWEIGHT GENERAL-TORSION CEILING (POINT COUNTING OVER `𝔽_p`) COMPUTES AND BEATS THE
+FRACTIONAL-IDEAL COMPILATION WALL (Trager Ch. 6 §2 / Davenport good reduction, `native_decide`). Where
 the general fractional-ideal order `genDivisorOrder` mod `p` (HNF over `𝔽_p[x]`, `idealProduct`,
 `canonHNF`) is too heavy to `native_decide`-compile (exit-137), the **lightweight `𝔽_p` point count** —
 pure `ZMod p` ring arithmetic, no ideals / no HNF / no `𝔽_p[x]` / no `[Fact p.Prime]` — computes the
@@ -281,28 +281,18 @@ The lighter representation that beats the wall is **`𝔽_p` point counting** (t
 not the fractional-ideal HNF — it computes the torsion order for an arbitrary plane curve in `native_decide`-
 tractable `ZMod p` arithmetic. -/
 theorem lightweight_general_torsion_validates :
-    -- ★ the non-hyperelliptic Fermat cubic: torsion ceiling 3
+    -- the non-hyperelliptic Fermat cubic: torsion ceiling 3
     (npFermatCubic 5 (fermatCubic 5), npFermatCubic 7 (fermatCubic 7),
         npFermatCubic 11 (fermatCubic 11), npFermatCubic 13 (fermatCubic 13)) = (6, 9, 12, 9)
     ∧ torsionCeiling [npFermatCubic 5 (fermatCubic 5), npFermatCubic 7 (fermatCubic 7),
         npFermatCubic 11 (fermatCubic 11), npFermatCubic 13 (fermatCubic 13)] = 3
-    -- ★ hyperelliptic conservativity: ℤ/6 and trivial torsion
+    -- hyperelliptic conservativity: ℤ/6 and trivial torsion
     ∧ torsionCeiling [npHypOddDeg 5 (hypCurveX3p1 5), npHypOddDeg 7 (hypCurveX3p1 7),
         npHypOddDeg 11 (hypCurveX3p1 11), npHypOddDeg 13 (hypCurveX3p1 13),
         npHypOddDeg 17 (hypCurveX3p1 17)] = 6
     ∧ torsionCeiling [npHypOddDeg 5 (hypCurveX3m2 5), npHypOddDeg 7 (hypCurveX3m2 7),
         npHypOddDeg 11 (hypCurveX3m2 11), npHypOddDeg 13 (hypCurveX3m2 13)] = 1 := by
   native_decide
-
-/-! ### Deliverable: `#print axioms`
-
-`[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
-axiom). **No `sorry`, no `sorryAx`** — `curveEval2`/`countAffinePoints`/`npFermatCubic`/`torsionCeiling`
-are non-recursive folds over finite `List.range`s (`zmodGrid p`) in pure `ZMod p`/`ℕ` arithmetic. -/
-
-#print axioms fermatCubic_torsionCeiling_eq3
-#print axioms hypCurveX3p1_torsionCeiling_eq6
-#print axioms lightweight_general_torsion_validates
 
 /-! ## Verdict & the remaining piece
 

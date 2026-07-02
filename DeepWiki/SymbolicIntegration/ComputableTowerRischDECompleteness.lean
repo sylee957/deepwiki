@@ -50,7 +50,7 @@ section Predicate
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
 
-/-- **Uniform field-level RDE solvability** `CFieldRDESolvable f g`: there is `y : α` solving the
+/-- Uniform field-level RDE solvability `CFieldRDESolvable f g`: there is `y : α` solving the
 field-level Risch differential equation `Dy + f·y = g`, read through the bridge `toK` into `K = CFieldSpec.K
 α` — `(toK y)′ + (toK f)·(toK y) = toK g`, with `′ = Differential.deriv` the `CDiffFieldSpec` derivation.
 The exact "solvable" side `CRischFieldSpec`'s soundness conclusion uses, uniform over the tower: over the
@@ -60,7 +60,7 @@ def CFieldRDESolvable (f g : α) : Prop :=
       + CFieldSpec.toK f * CFieldSpec.toK y
     = CFieldSpec.toK g
 
-/-- **Per-level RDE completeness** `CRischFieldComplete α`: the field-level oracle
+/-- Per-level RDE completeness `CRischFieldComplete α`: the field-level oracle
 `CRischField.crischDESolve` returns `some` on every solvable field RDE — `∀ f g, CFieldRDESolvable f g →
 (crischDESolve f g).isSome = true`. The decision-procedure (completeness half) of the base solve at one
 tower level; the predicate the tower induction propagates from level `n` to level `n+1`. -/
@@ -70,7 +70,7 @@ def CRischFieldComplete (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
 
 end Predicate
 
-/-! ## ★ The BASE ℚ — `CRischFieldComplete ℚ` (PROVEN, axiom-clean)
+/-! ## The BASE ℚ — `CRischFieldComplete ℚ` (PROVEN, axiom-clean)
 
 The tower bottoms at the constants `ℚ` (`D = 0`, `toK = id`, `K = ℚ`): the field RDE `Dy + f·y = g`
 collapses to `f·y = g`, and the base oracle `crischDESolve f g = if f = 0 then (if g = 0 then some 0 else
@@ -79,7 +79,7 @@ makes the oracle return `some`. This is the base case of the tower induction. -/
 
 section BaseQ
 
-/-- **`CFieldRDESolvable` over `ℚ` is `∃ y, f·y = g`** (`cFieldRDESolvable_Q_iff`): the constants `ℚ` have
+/-- `CFieldRDESolvable` over `ℚ` is `∃ y, f·y = g` (`cFieldRDESolvable_Q_iff`): the constants `ℚ` have
 `toK = id` and the zero derivation, so the uniform field-RDE solvability collapses to the bare linear
 equation `f·y = g`. The bridge from the abstract `CFieldRDESolvable` to the concrete `rischDE_complete_base`
 hypothesis at the base. -/
@@ -101,7 +101,7 @@ theorem cFieldRDESolvable_Q_iff (f g : ℚ) :
     rw [hderiv y, zero_add]
     exact hy
 
-/-- **★★ BASE ℚ: `CRischFieldComplete ℚ`** (`crischFieldComplete_Q`): the constant-field base of the tower
+/-- BASE ℚ: `CRischFieldComplete ℚ` (`crischFieldComplete_Q`): the constant-field base of the tower
 induction. A solvable field RDE over `ℚ` — `Dy + f·y = g` collapsing to `f·y = g` (`D = 0`) — makes the
 base oracle `crischDESolve f g` return `some`, because over `ℚ` it is the direct division `g/f` (`f ≠ 0`) /
 `0` (`f = 0 ∧ g = 0`), a genuine decision procedure (`rischDE_complete_base`). Closes cleanly; axiom-clean,
@@ -130,7 +130,7 @@ section Step
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CRischField β]
 
-/-- **The IH yields the base oracle's `.isSome` on a solvable leading-coefficient RDE**
+/-- The IH yields the base oracle's `.isSome` on a solvable leading-coefficient RDE
 (`crischDESolve_isSome_of_complete`): the recursion-tie helper. If the level-`β` oracle is complete
 (`CRischFieldComplete β`, the IH) and the leading-coefficient RDE `Db₀ + b₀·s = c₀` is solvable over `β`
 (`CFieldRDESolvable b₀ c₀`), then the base oracle returns `some` — `(crischDESolve b₀ c₀).isSome = true`.
@@ -154,7 +154,7 @@ leading coefficient), the deep coefficient-level fact: the leading coefficient `
 solvability + agreement — as the precise per-level residual `CancelOracleAgreement`, so the recursion-tie is
 "IH (existence) + agreement (this residual) ⟹ `Cancel{Prim,Exp}OracleComplete`". -/
 
-/-- **The cancellation base-oracle agreement residual (primitive)** `CancelOracleAgreementPrim Dt b`: for
+/-- The cancellation base-oracle agreement residual (primitive) `CancelOracleAgreementPrim Dt b`: for
 every degree-matched abstract solution `q'` of the §6.5 equation (`IsNoCancelSolK Dt b c' q'`, `deg q' = deg
 c'`), the eq. 6.23 base RDE `Ds + (cleadG b)·s = cleadG c'` over `β` is solvable (`CFieldRDESolvable (cleadG
 b) (cleadG c')`) **and** any oracle solution agrees with `q'`'s leading coefficient (`crischDESolve (cleadG
@@ -168,7 +168,7 @@ def CancelOracleAgreementPrim (Dt b : CPolyG β) : Prop :=
       (∀ s : β, CRischField.crischDESolve (cleadG b) (cleadG c') = some s →
         CFieldSpec.toK s = q'.leadingCoeff)
 
-/-- **★ `CancelPrimOracleComplete` from the IH + the agreement residual**
+/-- `CancelPrimOracleComplete` from the IH + the agreement residual
 (`cancelPrimOracleComplete_of_complete`): the recursion-tie assembled. The level-`β` completeness
 `CRischFieldComplete β` (the IH, giving the base oracle's existence) and the per-level agreement residual
 `CancelOracleAgreementPrim Dt b` (the leading-coefficient solvability + agreement) together produce the
@@ -185,7 +185,7 @@ theorem cancelPrimOracleComplete_of_complete (Dt b : CPolyG β) (hβ : CRischFie
   obtain ⟨s, hs⟩ := Option.isSome_iff_exists.mp (hβ (cleadG b) (cleadG c') hsolv)
   exact ⟨s, hs, hag s hs⟩
 
-/-- **The cancellation base-oracle agreement residual (hyperexp)** `CancelOracleAgreementExp Dt b`: the
+/-- The cancellation base-oracle agreement residual (hyperexp) `CancelOracleAgreementExp Dt b`: the
 hyperexponential analogue of `CancelOracleAgreementPrim`, threading the eq. 6.24 shift coefficient
 `expCoeff Dt c' b = (cleadG b) + (deg c')·η`. For every degree-matched abstract solution `q'`, the base RDE
 `Ds + (expCoeff Dt c' b)·s = cleadG c'` over `β` is solvable and any oracle solution agrees with `q'`'s
@@ -197,7 +197,7 @@ def CancelOracleAgreementExp (Dt b : CPolyG β) : Prop :=
       (∀ s : β, CRischField.crischDESolve (expCoeff Dt c' b) (cleadG c') = some s →
         CFieldSpec.toK s = q'.leadingCoeff)
 
-/-- **★ `CancelExpOracleComplete` from the IH + the agreement residual**
+/-- `CancelExpOracleComplete` from the IH + the agreement residual
 (`cancelExpOracleComplete_of_complete`): the hyperexp recursion-tie assembled. The level-`β` completeness
 (the IH) and the per-level hyperexp agreement residual `CancelOracleAgreementExp Dt b` together produce the
 uniform hyperexp base-oracle completeness `CancelExpOracleComplete Dt b`. The hyperexp analogue of
@@ -223,13 +223,13 @@ section StepAssemblyWf
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **Wf per-level RDE completeness**: the fuel-free public solver returns `some` on every solvable
+/-- Wf per-level RDE completeness: the fuel-free public solver returns `some` on every solvable
 field-level RDE over `QFunNZG β`. -/
 def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
   ∀ f g : QFunNZG β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
 
-/-- **The Wf per-level step frontier**: given the old base-oracle IH one level down, every solvable
+/-- The Wf per-level step frontier: given the old base-oracle IH one level down, every solvable
 `QFunNZG β` RDE satisfies the Wf weak-normalizer clauses, the Wf inner residual-tip frontier, the polynomial
 solution/denominator guards, and the direct Wf soundness certificate. -/
 structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
@@ -265,7 +265,7 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
   hsound : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     RischDESoundnessWf f g
 
-/-- **Wf step**: a complete base oracle one level down plus the Wf per-level frontier makes the fuel-free
+/-- Wf step: a complete base oracle one level down plus the Wf per-level frontier makes the fuel-free
 public RDE solver complete at the next `QFunNZG` level. -/
 theorem crischFieldCompleteWf_step (hβ : CRischFieldComplete β)
     (hstep : RischDEStepFrontierWf β) : CRischFieldCompleteWf β := by
@@ -283,17 +283,17 @@ end StepAssemblyWf
 
 /-! ### Restatements (anonymous `example`s) -/
 
--- ★ The base case: `CRischFieldComplete ℚ` is the constant-field decision procedure.
+-- The base case: `CRischFieldComplete ℚ` is the constant-field decision procedure.
 example : CRischFieldComplete ℚ := crischFieldComplete_Q
 
--- ★ The recursion tie: the IH (level-`β` completeness) makes the base oracle return `some` on a solvable
+-- The recursion tie: the IH (level-`β` completeness) makes the base oracle return `some` on a solvable
 -- leading-coefficient RDE — the `.isSome` half of `Cancel{Prim,Exp}BaseOracle`.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CRischField β]
     (hβ : CRischFieldComplete β) (b₀ c₀ : β) (hsol : CFieldRDESolvable b₀ c₀) :
     (CRischField.crischDESolve b₀ c₀).isSome = true :=
   crischDESolve_isSome_of_complete hβ b₀ c₀ hsol
 
--- ★★ Wf STEP: the IH + the Wf per-level frontier give fuel-free wrapper completeness at level `n+1`.
+-- Wf STEP: the IH + the Wf per-level frontier give fuel-free wrapper completeness at level `n+1`.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontierWf β) :
@@ -303,8 +303,5 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 /-! ### Axiom audit (the base case, the recursion-tie helper, and the Wf assembled step are
 axiom-clean; NO `native_decide`) -/
 
-#print axioms crischFieldComplete_Q
-#print axioms crischDESolve_isSome_of_complete
-#print axioms crischFieldCompleteWf_step
 
 end DeepWiki.SymbolicIntegration

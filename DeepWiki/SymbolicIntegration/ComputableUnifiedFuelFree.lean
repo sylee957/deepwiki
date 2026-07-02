@@ -28,7 +28,7 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
-/-- **The fuel-free full poly/special tower integral** `cIntegrateGFullWf Dt a d cands` — the generic,
+/-- The fuel-free full poly/special tower integral `cIntegrateGFullWf Dt a d cands` — the generic,
 fuel-free companion of `cIntegrateGFull`. Integrate `f = a/d ∈ α(t)` over `D = cmonomialDeriv Dt`, returning
 `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`, or `none`. A pure **leaf substitution** of the
 flat-wrapper `cIntegrateGFull`: (1) `canonicalRepresentationFastGWf` splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`;
@@ -61,7 +61,7 @@ end CPolyG
 
 /-! ## Check-identity soundness bridge for the fuel-free top entry -/
 
-/-- **The fuel-free full driver field identity from its `checkIdentityG` certificate** — if
+/-- The fuel-free full driver field identity from its `checkIdentityG` certificate — if
 `cIntegrateGFullWf Dt a d cands = some res` and the engine's own cleared antiderivative check passes, then
 `res` satisfies the field-level identity `D(res) + logResidueSumG Dt res.logs = a/d`. -/
 theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
@@ -80,8 +80,8 @@ by
   have _ := hsome
   exact field_identity_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
 
-/-- **The fuel-free full driver satisfies the semantic integral-result spec from its `checkIdentityG`
-certificate.** This is the spec-first wrapper around
+/-- The fuel-free full driver satisfies the semantic integral-result spec from its `checkIdentityG`
+certificate. This is the spec-first wrapper around
 `field_identity_of_cIntegrateGFullWf_of_checkIdentityG`: downstream proofs can target
 `IsIntegralResultG` rather than the expanded field identity. -/
 theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
@@ -132,7 +132,7 @@ def towerFullLvl2D : CPolyG Lvl2 := [CField.one]
 /-- The level-2 residue candidate set for the no-log polynomial-part example. -/
 def towerFullLvl2Cands : List Lvl2 := [CField.zero, CField.one]
 
-/-- **The fuel-free full driver lands `∫ t₂ = (1/2)t₂²` at level 2** (`native_decide`): `cIntegrateGFullWf`
+/-- The fuel-free full driver lands `∫ t₂ = (1/2)t₂²` at level 2 (`native_decide`): `cIntegrateGFullWf`
 returns an antiderivative for the pure polynomial part `t₂`, and `checkIdentityG` verifies
 `D(∫f) = f`. -/
 theorem towerFullLvl2_landsPolynomialPartWf :
@@ -141,7 +141,5 @@ theorem towerFullLvl2_landsPolynomialPartWf :
       | some res => CPolyG.checkIdentityG towerFullLvl2Dt res towerFullLvl2A towerFullLvl2D
       | none => false) = true := by native_decide
 
-#print axioms field_identity_of_cIntegrateGFullWf_of_checkIdentityG
-#print axioms towerFullLvl2_landsPolynomialPartWf
 
 end DeepWiki.SymbolicIntegration
