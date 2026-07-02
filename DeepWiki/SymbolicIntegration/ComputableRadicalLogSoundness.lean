@@ -173,8 +173,8 @@ theorem mk_toPolyG_radLogSum2 (n : ℕ) (ρ : α) (c₁ : α) (u₁ : RadElem α
         + Polynomial.C (CFieldSpec.toK c₂)
           * Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG (radDeriv n ρ u₂))
           * Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG u₁) := by
-  rw [radLogSum2, radAdd, CPolyG.toPolyG_caddG, map_add, mk_toPolyG_radMul, mk_toPolyG_radMul,
-    radScale, radScale, CPolyG.toPolyG_cscaleG, CPolyG.toPolyG_cscaleG, map_mul, map_mul]
+  simp only [radLogSum2, radAdd, CPolyG.toPolyG_caddG, map_add, mk_toPolyG_radMul, radScale,
+    CPolyG.toPolyG_cscaleG, map_mul]
 
 end RadElem
 
@@ -565,8 +565,7 @@ theorem toPolyG_cAlgResidueNorm (Dprime rho g0 g1 : CPolyG α) (c : α) :
     CPolyG.toPolyG (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c)
       = (Polynomial.C (CFieldSpec.toK c) * CPolyG.toPolyG Dprime - CPolyG.toPolyG g0) ^ 2
         - CPolyG.toPolyG g1 ^ 2 * CPolyG.toPolyG rho := by
-  rw [cAlgResidueNorm, CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_csubG,
-    CPolyG.toPolyG_cscaleG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG]
+  simp only [cAlgResidueNorm, CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cscaleG]
   ring
 
 omit [CDiffField α] [CDiffFieldSpec α] in

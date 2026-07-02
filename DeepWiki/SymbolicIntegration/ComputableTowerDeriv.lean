@@ -215,9 +215,7 @@ theorem toQFunNZG_towerDerivQFunNZG (Dt : CPolyG α) (x : QFunNZG α) :
   show amG α (CPolyG.toPolyG (CPolyG.csubG
         (CPolyG.cmulG (CPolyG.cmonomialDeriv Dt n) d) (CPolyG.cmulG n (CPolyG.cmonomialDeriv Dt d))))
       / amG α (CPolyG.toPolyG (CPolyG.cmulG d d)) = _
-  rw [CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG,
-    CPolyG.toPolyG_cmonomialDeriv, CPolyG.toPolyG_cmonomialDeriv, map_sub, map_mul, map_mul, map_mul,
-    pow_two]
+  simp [CPolyG.toPolyG_cmonomialDeriv, map_sub, map_mul, pow_two]
 
 end QFunNZG
 

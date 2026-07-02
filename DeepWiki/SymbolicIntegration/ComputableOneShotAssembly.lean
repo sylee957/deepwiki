@@ -1040,8 +1040,7 @@ theorem cIntegrateGFullWf_poly_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d
       (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2 with hgdenE
   have hnewrat : amG α (toPolyG (CPolyG.caddG (CPolyG.cmulG qp gden) gnum)) / amG α (toPolyG gden)
       = amG α (toPolyG qp) + amG α (toPolyG gnum) / amG α (toPolyG gden) := by
-    rw [toPolyG_caddG, toPolyG_cmulG, map_add, map_mul, add_div, mul_div_assoc, div_self hgden,
-      mul_one]
+    simp [map_add, map_mul, add_div, mul_div_assoc, div_self hgden]
   rw [hnewrat, map_add, hpoly]
   rw [add_assoc, hnormal, hrecon]
 

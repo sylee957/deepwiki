@@ -1232,7 +1232,7 @@ theorem cPolyRischDENoCancelSolvableInputs_of_sol (Dt b : CPolyG α)
       -- toPolyG c' = c − D pK − b·pK (matches the abstract RHS)
       have hc'toP : toPolyG c' = toPolyG c
           - Differential.implicitDeriv (toPolyG Dt) pK - toPolyG b * pK := by
-        rw [hc'def, toPolyG_csubG, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP]
+        simp only [hc'def, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP]
       have hq'sol : IsNoCancelSolK Dt b c' (q - pK) := by
         rw [IsNoCancelSolK, hc'toP]; exact hc'eq
       -- the guards (m = deg q ≥ 0, m ≤ n, n ≥ 0)
@@ -1569,7 +1569,7 @@ theorem cPolyRischDECancelPrimSolvableInputs_of_sol (Dt b : CPolyG α)
       -- toPolyG c' = c − b·pK − D pK
       have hc'toP : toPolyG c' = toPolyG c - toPolyG b * pK
           - Differential.implicitDeriv (toPolyG Dt) pK := by
-        rw [hc'def, toPolyG_csubG, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP']
+        simp only [hc'def, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP']
       -- the peel descends: q' = q − pK lower-degree, solves c'
       obtain ⟨hq'bound, hc'eq⟩ :=
         cancel_peel_descends (D := Differential.implicitDeriv (toPolyG Dt)) (s := q.leadingCoeff)
@@ -1782,7 +1782,7 @@ theorem cPolyRischDECancelExpSolvableInputs_of_sol (Dt b : CPolyG α)
       have htoP' : toPolyG (cshiftG m [s']) = pK := by rw [htoP, hstoK']
       have hc'toP : toPolyG c' = toPolyG c - toPolyG b * pK
           - Differential.implicitDeriv (toPolyG Dt) pK := by
-        rw [hc'def, toPolyG_csubG, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP']
+        simp only [hc'def, toPolyG_csubG, toPolyG_cmonomialDeriv, toPolyG_cmulG, htoP']
       obtain ⟨hq'bound, hc'eq⟩ :=
         cancel_peel_descends (D := Differential.implicitDeriv (toPolyG Dt)) (s := q.leadingCoeff)
           (m := m) hq0 hsol hqnat rfl

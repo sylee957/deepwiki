@@ -263,8 +263,7 @@ theorem hdvdB_of_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden h0 : CPolyG β)
         (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) fnum)
         (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1
           (CPolyG.cmonomialDeriv Dt h0)) fden)) := by
-  rw [CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG,
-    CPolyG.toPolyG_cmulG]
+  simp only [CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG]
   apply dvd_sub
   · rw [CPolyG.toPolyG_cmulG] at hdvd
     exact hdvd.mul_right _
@@ -280,8 +279,7 @@ theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG �
       (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0)) :
     toPolyG gden ∣ toPolyG (CPolyG.cmulG
         (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) := by
-  rw [CPolyG.toPolyG_cmulG]
-  rw [CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG] at hdvd ⊢
+  simp only [CPolyG.toPolyG_cmulG] at hdvd ⊢
   exact hdvd.mul_right _
 
 /-! ### When the `B`-divisibility crux VANISHES — normal / polynomial denominators

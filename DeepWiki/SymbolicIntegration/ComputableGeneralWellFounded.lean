@@ -211,8 +211,7 @@ omit [CDiffFieldSpec α] in
 theorem toPolyG_afDerivWf_eq_of_roundtrip (f v g : CPolyG α)
     (hcheck : cisZeroG (csubG (afDerivWf f v) g) = true) :
     toPolyG (afDerivWf f v) = toPolyG g := by
-  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero] at hcheck
-  exact hcheck
+  simpa [cisZeroG_iff, sub_eq_zero] using hcheck
 
 end WfInvariant
 

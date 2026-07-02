@@ -107,8 +107,7 @@ omit [CDiffFieldSpec α] in
 theorem toPolyG_afDerivWf_eq_of_logCert (f u integrand : CPolyG α)
     (h : cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true) :
     toPolyG (afDerivWf f u) = toPolyG (afMul f u integrand) := by
-  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero] at h
-  exact h
+  simpa [cisZeroG_iff, sub_eq_zero] using h
 
 omit [CDiffFieldSpec α] in
 /-- A Wf log-derivative certificate implies the fuel-free single-log predicate. -/

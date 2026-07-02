@@ -250,8 +250,7 @@ theorem mk_toPolyG_radReduce_step (n : ℕ) (f : α) (q : RadElem α)
         (CPolyG.cshiftG ((q : List α).length - 1 - n) [CField.mul am f]))
       = CPolyG.toPolyG (q : List α).dropLast
         + X ^ (m - n) * (Polynomial.C (CFieldSpec.toK am) * Polynomial.C (CFieldSpec.toK f)) := by
-    rw [hkeq, CPolyG.toPolyG_caddG, CPolyG.toPolyG_cshiftG, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil,
-      mul_zero, add_zero, CFieldSpec.toK_mul, map_mul]
+    rw [hkeq]; simp [CFieldSpec.toK_mul]
   -- the `X^m` term of `toPolyG q` collapses, in the quotient, to `X^(m−n)·C(toK f)` (since `X^n ≡ C f`)
   have hXm : Ideal.Quotient.mk (radIdeal n f) (X ^ m)
       = Ideal.Quotient.mk (radIdeal n f) (X ^ (m - n)) * Ideal.Quotient.mk (radIdeal n f)

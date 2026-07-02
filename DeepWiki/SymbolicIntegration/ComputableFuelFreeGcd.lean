@@ -219,8 +219,7 @@ theorem toPolyG_cdivmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
       rw [show (p.reduceStepWf q).cdivmodWf q = (quo, rem) from hqr]
     rw [hval]
     have hstep : toPolyG (reduceStepWf p q) = toPolyG p - toPolyG term * toPolyG q := by
-      rw [reduceStepWf, toPolyG_cnormG, toPolyG_csubG, toPolyG_cnormG, toPolyG_cmulG,
-        toPolyG_cnormG, hterm]
+      simp [reduceStepWf, hterm]
     have hih : toPolyG (reduceStepWf p q)
         = toPolyG quo * toPolyG q + toPolyG rem := by
       rw [ih, hqr]

@@ -483,8 +483,7 @@ theorem toPolyG_fracAddG_proper {gAcc gloc : CPolyG α × CPolyG α}
     (h2 : (toPolyG gloc.1).degree < (toPolyG gloc.2).degree) :
     (toPolyG (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2))).degree
       < (toPolyG (cmulG gAcc.2 gloc.2)).degree := by
-  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
-  exact degree_fracAdd_lt_of_proper h1 h2
+  simpa using degree_fracAdd_lt_of_proper h1 h2
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The Hermite `g`-fold stays proper** (engine fold-induction): folding the fraction-add combiner from a
@@ -682,8 +681,7 @@ theorem toPolyG_fracAddG_margin {gAcc gloc : CPolyG α × CPolyG α} (m : ℕ)
     (h2 : (toPolyG gloc.1).degree + (m : ℕ) < (toPolyG gloc.2).degree) :
     (toPolyG (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2))).degree + (m : ℕ)
       < (toPolyG (cmulG gAcc.2 gloc.2)).degree := by
-  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
-  exact degree_fracAdd_lt_of_margin m h1 h2
+  simpa using degree_fracAdd_lt_of_margin m h1 h2
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **The guarded Hermite `g`-fold preserves the `(δ−1)` margin** (the engine's actual fold form) — the
@@ -785,8 +783,7 @@ through `toPolyG_cpowG`. The per-power summand the inner-loop fold-induction thr
 theorem toPolyG_inner_summand_proper (b v : CPolyG α) (j : ℕ)
     (hbv : (toPolyG b).degree < (toPolyG v).degree) (hv : toPolyG v ≠ 0) :
     (toPolyG b).degree < (toPolyG (cpowG v (j + 1))).degree := by
-  rw [toPolyG_cpowG]
-  exact degree_lt_pow_succ_of_degree_lt j hbv hv
+  simpa using degree_lt_pow_succ_of_degree_lt j hbv hv
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **★ The inner Hermite loop's accumulated `g` is proper** — `deg (cHermiteReduceTowerInnerWf Dt v u

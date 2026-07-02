@@ -578,11 +578,8 @@ def TanSolves (b0 b2 : CPolyG ℚ) (n : ℕ) (c1 c2 q1 q2 : List (CPolyG ℚ)) :
 
 /-- `toPolyG (cscaleG nN [1]) = C nN`. -/
 theorem toPolyG_scale_one (nN : ℚ) : toPolyG (cscaleG nN [CField.one]) = C nN := by
-  rw [toPolyG_cscaleG, show ([CField.one] : CPolyG ℚ) = (CField.one : ℚ) :: [] from rfl,
-    toPolyG_cons, toPolyG_nil]
-  rw [show CFieldSpec.toK (CField.one : ℚ) = 1 from rfl,
-    show CFieldSpec.toK nN = nN from rfl, map_one]
-  simp
+  simp [show CFieldSpec.toK (CField.one : ℚ) = 1 from rfl,
+    show CFieldSpec.toK nN = nN from rfl]
 
 /-- The §8.4 base-case identity (`n = 0`, `q = [s]`): from the base solve's `ℚ[X]` identities,
 the singleton solution solves the level-0 coupled `t`-system. -/
@@ -662,10 +659,7 @@ theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
         set DH1 := toPoly2 (tanDeriv h1); set DH2 := toPoly2 (tanDeriv h2)
         -- b2+1 in ℚ[X].
         have hb2p1 : toPolyG (caddG b2 [CField.one]) = toPolyG b2 + 1 := by
-          rw [toPolyG_caddG, show ([CField.one] : CPolyG ℚ) = (CField.one:ℚ)::[] from rfl,
-            toPolyG_cons, toPolyG_nil]
-          simp only [mul_zero, add_zero]
-          rw [show CFieldSpec.toK (CField.one:ℚ) = 1 from rfl, map_one]
+          simp [show CFieldSpec.toK (CField.one:ℚ) = 1 from rfl]
         -- IH conjuncts in toPoly2 form.
         rw [TanSolves, hb2p1] at hih
         obtain ⟨hI1, hI2⟩ := hih
@@ -746,8 +740,7 @@ theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     -- hG1 (n=2): tanDeriv-part + (C b0 - C(C 2) X) Q1 - C b2 Q2 = C1.
     rw [toPoly2_tanDeriv] at hG1
     simp only [Nat.cast_ofNat] at hG1
-    rw [toPolyG_cscaleG]
-    simp only [CFieldSpec.toK, id_eq, map_mul, map_neg, map_one]
+    simp only [toPolyG_cscaleG, CFieldSpec.toK, id_eq, map_mul, map_neg, map_one]
     linear_combination hG1
   · apply tisZero_of_toPoly2_zero
     rw [toPoly2_tsub, toPoly2_tadd, toPoly2_tanDeriv, toPoly2_tadd, toPoly2_map_cmulG, toPoly2_tsub,

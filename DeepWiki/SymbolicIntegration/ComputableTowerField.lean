@@ -279,8 +279,8 @@ theorem toQFunNZG_qaddNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain
       / amG α (CPolyG.toPolyG (CPolyG.cmulG b d))
     = amG α (CPolyG.toPolyG a) / amG α (CPolyG.toPolyG b)
       + amG α (CPolyG.toPolyG c) / amG α (CPolyG.toPolyG d)
-  rw [CPolyG.toPolyG_caddG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG,
-    map_add, map_mul, map_mul, map_mul, div_add_div _ _ hb' hd']
+  simp only [CPolyG.toPolyG_caddG, CPolyG.toPolyG_cmulG, map_add, map_mul,
+    div_add_div _ _ hb' hd']
   ring
 
 /-- **`qmulNZG` realizes `*`** on `QFunNZG`: `toQFunNZG (qmulNZG x y) = toQFunNZG x * toQFunNZG y`. -/
