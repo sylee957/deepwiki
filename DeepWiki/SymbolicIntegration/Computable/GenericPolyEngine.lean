@@ -368,7 +368,7 @@ theorem cnormG_cons_eq {α : Type*} [CField α] (a : α) (as : CPolyG α) :
 
 /-- `toPolyG` ignores normalization: `toPolyG (cnormG p) = toPolyG p` — stripping trailing zeros
 does not change the polynomial (the dropped coefficients are zero, via `isZero_iff`). -/
-@[simp] theorem toPolyG_cnormG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+@[simp, denote] theorem toPolyG_cnormG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     toPolyG (cnormG p) = toPolyG p := by
   induction p with
   | nil => rfl

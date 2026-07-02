@@ -40,7 +40,7 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 /-! ### Generic quotient-degree and constant-power helpers -/
 
 /-- **Generic constant power realizes `K`-power**: `toK (cfpow c n) = (toK c) ^ n`. -/
-theorem toK_cfpow (c : α) (n : ℕ) : CFieldSpec.toK (cfpow c n) = (CFieldSpec.toK c) ^ n := by
+@[denote] theorem toK_cfpow (c : α) (n : ℕ) : CFieldSpec.toK (cfpow c n) = (CFieldSpec.toK c) ^ n := by
   induction n with
   | zero => simp [cfpow, CFieldSpec.toK_one]
   | succ n ih => rw [cfpow, CFieldSpec.toK_mul, ih, pow_succ']

@@ -86,7 +86,7 @@ def cmonomialDeriv {α : Type*} [CField α] [CDiffField α] (Dt p : CPolyG α) :
 
 /-- `toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p)`: the coefficientwise computable
 derivation realizes Mathlib's polynomial coefficient-map derivation. -/
-theorem toPolyG_cmapDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
+@[denote] theorem toPolyG_cmapDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
     (p : CPolyG α) :
     toPolyG (cmapDeriv p) = Differential.mapCoeffs (toPolyG p) := by
   induction p with
@@ -98,11 +98,12 @@ theorem toPolyG_cmapDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec �
 
 /-- `toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p)`: the
 computable monomial derivation realizes Mathlib's `implicitDeriv`. -/
-theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
+@[denote] theorem toPolyG_cmonomialDeriv {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
     (Dt p : CPolyG α) :
     toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p) := by
-  rw [cmonomialDeriv, toPolyG_caddG, toPolyG_cmapDeriv, toPolyG_cmulG, toPolyG_cderivG,
-    show Differential.implicitDeriv (toPolyG Dt) (toPolyG p)
+  rw [cmonomialDeriv]
+  simp only [denote]
+  rw [show Differential.implicitDeriv (toPolyG Dt) (toPolyG p)
       = Differential.mapCoeffs (toPolyG p) + toPolyG Dt * Polynomial.derivative (toPolyG p) from by
         simp [Differential.implicitDeriv, derivative']]
   ring

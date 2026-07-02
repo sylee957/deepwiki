@@ -32,7 +32,7 @@ def nsmulG : ℕ → α → α
   | k + 1, a => CField.add a (nsmulG k a)
 
 /-- `toK (nsmulG k a) = k • toK a` in `K`. -/
-theorem toK_nsmulG (k : ℕ) (a : α) : CFieldSpec.toK (nsmulG k a) = k • CFieldSpec.toK a := by
+@[denote] theorem toK_nsmulG (k : ℕ) (a : α) : CFieldSpec.toK (nsmulG k a) = k • CFieldSpec.toK a := by
   induction k with
   | zero => rw [nsmulG, CFieldSpec.toK_zero, zero_smul]
   | succ n ih => rw [nsmulG, CFieldSpec.toK_add, ih, succ_nsmul']
@@ -50,7 +50,7 @@ where
 
 /-- **`cderivG` realizes the `K[X]` derivative**: `toPolyG (cderivG p) = Polynomial.derivative
 (toPolyG p)`. -/
-theorem toPolyG_cderivG (p : CPolyG α) :
+@[denote] theorem toPolyG_cderivG (p : CPolyG α) :
     toPolyG (cderivG p) = Polynomial.derivative (toPolyG p) := by
   suffices h : ∀ (as : CPolyG α) (k : ℕ),
       toPolyG (cderivG.go k as)
