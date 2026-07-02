@@ -121,7 +121,7 @@ quotient subtlety enters. -/
 toPolyG (radDeriv n f b)` in `K[X]`. Exact (neither `radAdd` nor `radDeriv` touches the `yⁿ = f`
 reduction); from the keystone `toPolyG_radDeriv` and the additivity of `implicitDeriv` (`toPolyG (radAdd a
 b) = toPolyG a + toPolyG b` via `toPolyG_caddG`). The first derivation axiom. -/
-theorem toPolyG_radDeriv_radAdd (n : ℕ) (f : α) (a b : RadElem α) :
+@[denote] theorem toPolyG_radDeriv_radAdd (n : ℕ) (f : α) (a b : RadElem α) :
     CPolyG.toPolyG (radDeriv n f (radAdd a b))
       = CPolyG.toPolyG (radDeriv n f a) + CPolyG.toPolyG (radDeriv n f b) := by
   rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, radAdd, CPolyG.toPolyG_caddG, map_add]
@@ -386,13 +386,13 @@ exactly as a derivation must. Both are immediate from the keystone `toPolyG_radD
 
 /-- **`radDeriv` kills `radZero`** — `toPolyG (radDeriv n f radZero) = 0` in `K[X]` (`radZero = []`,
 `toPolyG [] = 0`, and `implicitDeriv v 0 = 0`). -/
-theorem toPolyG_radDeriv_radZero (n : ℕ) (f : α) :
+@[denote] theorem toPolyG_radDeriv_radZero (n : ℕ) (f : α) :
     CPolyG.toPolyG (radDeriv n f (radZero : RadElem α)) = 0 := by
   rw [toPolyG_radDeriv, show (radZero : RadElem α) = [] from rfl, CPolyG.toPolyG_nil, map_zero]
 
 /-- **`radDeriv` kills `radOne`** — `toPolyG (radDeriv n f radOne) = 0` in `K[X]` (`radOne = [1]`,
 `toPolyG [1] = 1`, and `implicitDeriv v 1 = 0`: a derivation annihilates the unit). -/
-theorem toPolyG_radDeriv_radOne (n : ℕ) (f : α) :
+@[denote] theorem toPolyG_radDeriv_radOne (n : ℕ) (f : α) :
     CPolyG.toPolyG (radDeriv n f (radOne : RadElem α)) = 0 := by
   rw [toPolyG_radDeriv]
   have h1 : CPolyG.toPolyG (radOne : RadElem α) = 1 := by

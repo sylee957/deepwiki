@@ -195,7 +195,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpe
 /-- **`toPolyG (radDeriv n f radGen) = C(toK ℓ)·X`** — the generator's derivative is `ℓ·y` (`ℓ =
 logDerRadicand n f`), a pure `y`-component, read through `toPolyG` (`toPolyG_radDeriv_radGen` +
 `toPolyG_zero_cons`). The numerator of `D(log √f) = radDeriv(√f)/√f`. -/
-theorem toPolyG_radDeriv_radGen_eq (n : ℕ) (f : α) :
+@[denote] theorem toPolyG_radDeriv_radGen_eq (n : ℕ) (f : α) :
     CPolyG.toPolyG (radDeriv n f (radGen : RadElem α))
       = Polynomial.C (CFieldSpec.toK (logDerRadicand n f)) * X := by
   rw [toPolyG_radDeriv_radGen, toPolyG_zero_cons]

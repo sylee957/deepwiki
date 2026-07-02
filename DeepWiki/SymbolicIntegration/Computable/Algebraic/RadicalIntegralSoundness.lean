@@ -83,7 +83,7 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **`toPolyG radGen = X`** — the radical generator `y = √f` (`radGen = [0, 1]`) reads as the formal
 variable `X` under the Horner bridge (`toK 0 = 0`, `toK 1 = 1`). The single fact that turns
 `implicitDeriv … X = …` into a statement about `radDeriv radGen`. -/
-theorem toPolyG_radGen : CPolyG.toPolyG (radGen : RadElem α) = X := by
+@[denote] theorem toPolyG_radGen : CPolyG.toPolyG (radGen : RadElem α) = X := by
   show CPolyG.toPolyG [CField.zero, CField.one] = X
   rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
     CFieldSpec.toK_zero, CFieldSpec.toK_one, map_zero, map_one, zero_add, mul_one]
