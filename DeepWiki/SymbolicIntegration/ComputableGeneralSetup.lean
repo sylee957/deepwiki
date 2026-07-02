@@ -2,9 +2,8 @@ import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
 
 /-! # Shared setup for general algebraic-function computations
 
-Fuel-independent partial derivatives, ansatz monomials, and common validation
-curves reused by the fueled and well-founded general algebraic-function modules.
--/
+Partial derivatives, ansatz monomials, and common validation curves shared by
+the general algebraic-function modules. -/
 
 namespace DeepWiki.SymbolicIntegration
 

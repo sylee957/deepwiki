@@ -1,41 +1,14 @@
 import DeepWiki.SymbolicIntegration.ComputableDivisorOrder
 import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 
-/-! # The PRINCIPAL GENERATOR of a torsion divisor (Trager Ch. 6 §1, the constructive half)
+/-! # Principal generator of a torsion divisor
 
-The torsion **decision** is done (`ComputableDivisorOrder`): `cantorOrder` / `isTorsionDivisor` decide
-whether the residue divisor `D` is torsion of order `m` (so `m·D = O`, the integral is elementary with a
-`(1/m)·log` term) or of infinite order (not elementary). This file is the **constructive finish**: when
-`m·D = O`, recover the actual function `g` with `div(g) = m·D`, so the log term is `(1/m)·log g`.
-
-**The reduction-tracking algorithm (Trager Ch. 6 §1).** A principal Mumford divisor reduces to the
-identity `(1, 0)` through Cantor's reduction, and the generator `g` is the **product of the functions used
-in the reduction**. Cantor's reduction step `u ← monic((ρ − v²)/u)`, `v ← (−v) mod u` is driven by the
-function `(y − v(x))`: its divisor on `y² = ρ` is exactly `(y − v)(y + v) = ρ − v² = u·u_new`, so
-multiplying by `(y − v)` swaps the divisor `(u, v)` for its reduced form. **Tracking these `(y − v)`
-step-functions** (as the `RadElem` `[−v, 1]`, i.e. `y − v`) through the `m·D → O` reduction multiplies up
-to the generator `g`.
-
-**The worked example fixes the target** (`y² = x³ + 1`, `D = (0, 1)`, `m = 3`). `(0, 1)` is a 3-torsion
-flex. Computing `3·D` step by step: `2·D = D ⊕ D` *composes* to `(x², 1)` (the doubling, `v = 1`), then a
-single reduction step `u ← monic((ρ − 1)/x²) = monic(x) = x`, `v ← −1` reduces it to `(0, −1)`; this
-reduction step has `v = 1`, contributing the factor **`y − 1`**. Then `3·D = D ⊕ (2·D) = (0, 1) ⊕ (0, −1)`
-*composes directly* to the identity `(1, 0)` (the support `x = 0` cancels in the gcd), with **no** further
-reduction step. So the accumulated tracked product is exactly `g = y − 1`. This is the tangent line at the
-flex `(0, 1)` (`y' = 3x²/(2y) = 0` there, horizontal `y = 1`), which meets `y² = x³ + 1` only at `x³ = 0`,
-a triple point — `div(y − 1) = 3·(0, 1) − 3·∞ = 3·D`. The log term is `(1/3)·log(y − 1)`.
-
-**The log-derivative check confirms the recovery.** `radLogDeriv ρ g = g'/g` (the honest `RadElem`
-division via `radInv2`, from `ComputableRadicalAssembly`); the `(1/3)·log g` differential is
-`ι = (1/3)·g'/g`, and the cleared certificate `radDeriv g = radMul g (radScale 3 ι)` (`radIsLogIntegral`)
-holds — the recovered `g` *is* the `(1/3)`-log argument. Concretely `g' = radDeriv(y − 1) = ℓ·y` with
-`ℓ = 3x²/(2(x³+1))`, so `ι = (1/3)·ℓ·y/(y − 1) = x²/(2y(y − 1))` — the differential Trager's radical-
-extension derivation predicts, with the right residues at the divisor.
-
-Mathlib has the abstract divisor class group but **no hyperelliptic principal-generator recovery**, so —
-like the rest of this arc — we build it **computationally**, `native_decide`-validated over `ℚ[x]` /
-`ℚ(x)`. This is the **constructive half** of Trager's "points of finite order": the decision (elementary
-or not) plus the construction (the actual `(1/m)·log g` argument). -/
+For a torsion residue divisor `D` of order `m` on `y² = ρ` (Trager Ch. 6 §1), recover the function
+`g` with `div(g) = m·D` — so the log term of the integral is `(1/m)·log g` — by tracking the `y − v`
+step-functions of Cantor's reduction through the `m·D → O` computation: each reduction step
+`u ← monic((ρ − v²)/u)`, `v ← (−v) mod u` is driven by `y − v(x)`, whose divisor swaps `(u, v)` for
+its reduced form, so the product of the tracked factors is the generator. `native_decide`-validated
+on `y² = x³ + 1` with the order-3 flex `D = (0, 1)`, where `g = y − 1` (the flex tangent line). -/
 
 open Polynomial
 
@@ -51,18 +24,16 @@ Each `cantorReduceStep` on `(u, v)` is driven by the function `y − v(x)`. `can
 returns the reduced pair **and** the `v` of this step (so the caller multiplies in the factor `y − v`);
 `cantorReduceTracked` threads the list of all step `v`s through the whole reduction loop. -/
 
-/-- **One tracked Cantor reduction step** `cantorReduceStepTracked ρ (u, v) = ((u', v'), v)` — the
-ordinary `cantorReduceStep` (`u' = monic((ρ − v²)/u)`, `v' = (−v) mod u'`) **paired with the `v` of this
-step**, the data of the driving function `y − v(x)` (whose divisor swaps `(u, v)` for its reduced form,
-Trager Ch. 6 §1). Generic over `[CField α]`. -/
+/-- One tracked Cantor reduction step `cantorReduceStepTracked ρ (u, v) = ((u', v'), v)`: the
+ordinary `cantorReduceStep` (`u' = monic((ρ − v²)/u)`, `v' = (−v) mod u'`) paired with the `v` of
+this step, the data of the driving function `y − v(x)`. -/
 def cantorReduceStepTracked (ρ : CPolyG α) (D : MumfordDivisor α) :
     MumfordDivisor α × CPolyG α :=
   (cantorReduceStep ρ D, D.v)
 
-/-- **Tracked Cantor reduction loop** `cantorReduceTrackedAux fuel g ρ (u, v) acc`: apply
-`cantorReduceStep` until `deg u ≤ g`, accumulating each step's `v` (the `y − v` factor) onto `acc` (newest
-last). Mirrors `cantorReduceAux`; the structural recursion guarantees termination. Generic over
-`[CField α]`. -/
+/-- Tracked Cantor reduction loop `cantorReduceTrackedAux fuel g ρ (u, v) acc`: apply
+`cantorReduceStep` until `deg u ≤ g`, accumulating each step's `v` (the `y − v` factor) onto `acc`
+(newest last), stopping when the structural `fuel` counter is exhausted. -/
 def cantorReduceTrackedAux : ℕ → ℕ → CPolyG α → MumfordDivisor α → List (CPolyG α) →
     MumfordDivisor α × List (CPolyG α)
   | 0, _, _, D, acc => (D, acc)
@@ -70,27 +41,24 @@ def cantorReduceTrackedAux : ℕ → ℕ → CPolyG α → MumfordDivisor α →
     if cdegG D.u ≤ g then (D, acc)
     else cantorReduceTrackedAux fuel g ρ (cantorReduceStep ρ D) (acc ++ [D.v])
 
-/-- **Tracked Cantor reduction** `cantorReduceTracked ρ g D = (reduced, vs)` — bring `(u, v)` to reduced
-form `deg u ≤ g` (as `cantorReduce`), **also** returning the list `vs` of every reduction step's `v` (each
-the data of a `y − v` factor of the principal function, Trager Ch. 6 §1). The product `∏ (y − vᵢ)` is the
-function swapping `D` for its reduced form. Generic over `[CField α]`. -/
+/-- Tracked Cantor reduction `cantorReduceTracked ρ g D = (reduced, vs)`: bring `(u, v)` to reduced
+form `deg u ≤ g` (as `cantorReduce`), also returning the list `vs` of every reduction step's `v`.
+The product `∏ (y − vᵢ)` is the function swapping `D` for its reduced form. -/
 def cantorReduceTracked (ρ : CPolyG α) (g : ℕ) (D : MumfordDivisor α) :
     MumfordDivisor α × List (CPolyG α) :=
   cantorReduceTrackedAux (cdegG D.u + 1) g ρ D []
 
-/-- **Tracked Jacobian group law** `cantorAddTracked ρ g D₁ D₂ = (D₁ ⊕ D₂, vs)` — `cantorAdd` with
-the list `vs` of the `y − v` step-functions emitted by the **reduction** of the composite (Trager Ch. 6
-§1). The composition `cantorCompose` is performed first; its reduction to `deg u ≤ g` accumulates the
-`vs`. Generic over `[CField α]`. -/
+/-- Tracked Jacobian group law `cantorAddTracked ρ g D₁ D₂ = (D₁ ⊕ D₂, vs)`: `cantorAdd` with the
+list `vs` of the `y − v` step-functions emitted by the reduction of the composite. The composition
+`cantorCompose` is performed first; its reduction to `deg u ≤ g` accumulates the `vs`. -/
 def cantorAddTracked (ρ : CPolyG α) (g : ℕ) (D₁ D₂ : MumfordDivisor α) :
     MumfordDivisor α × List (CPolyG α) :=
   cantorReduceTracked ρ g (cantorCompose ρ D₁ D₂)
 
-/-- **Tracked scalar multiple** `cantorMulTracked ρ g n D = (n·D, vs)` — the `n`-fold Cantor sum
-`n·D` (as `cantorMul`) **with** the accumulated list `vs` of all `y − v` step-functions emitted across the
-`n − 1` additions' reductions (Trager Ch. 6 §1). When `n·D = O` (the identity), `∏ (y − vᵢ)` over `vs` is
-the **principal generator** `g` with `div(g) = n·D`. By `ℕ`-recursion `(n+1)·D = D ⊕ (n·D)`, prepending
-the new addition's `vs` to the carried ones. Generic over `[CField α]`. -/
+/-- Tracked scalar multiple `cantorMulTracked ρ g n D = (n·D, vs)`: the `n`-fold Cantor sum `n·D`
+(as `cantorMul`) with the accumulated list `vs` of all `y − v` step-functions emitted across the
+`n − 1` additions' reductions. When `n·D = O`, `∏ (y − vᵢ)` over `vs` is the principal generator `g`
+with `div(g) = n·D`. By `ℕ`-recursion `(n+1)·D = D ⊕ (n·D)`. -/
 def cantorMulTracked (ρ : CPolyG α) (g : ℕ) :
     ℕ → MumfordDivisor α → MumfordDivisor α × List (CPolyG α)
   | 0, _ => (mumfordIdentity, [])
@@ -110,17 +78,15 @@ together (in `(QFunNZG ℚ)[y]/(y² − ρ)`) into the generator `g`. -/
 
 open CPolyG RadElem
 
-/-- **Lift a base-constant `v` to a `y − v` factor over `ℚ(x)`** `genFactorOfV v = [−(v as ℚ(x)), 1]` — the
+/-- Lift a base `v` to a `y − v` factor over `ℚ(x)`: `genFactorOfV v = [−(v as ℚ(x)), 1]`, the
 `RadElem (QFunNZG ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
-embedded into `ℚ(x)` (the head coefficient via `qxOfNum`). The building block of the principal generator.
-(For the empty `v = []` — a zero `v`, the factor `y` — this is `[0, 1]`.) -/
+embedded into `ℚ(x)` via `qxOfNum`. For the empty `v = []` (the factor `y`) this is `[0, 1]`. -/
 def genFactorOfV (v : CPolyG ℚ) : RadElem (QFunNZG ℚ) :=
   [CField.neg (qxOfNum v), CField.one]
 
-/-- **The principal generator from tracked `v`s** `principalGeneratorOfVs ρ vs = ∏ᵢ (y − vᵢ)` — multiply
-the `y − vᵢ` step-functions (`genFactorOfV`) of a `cantorMulTracked` run into one `RadElem (QFunNZG ℚ)`
-over `y² = ρ`, the generator `g` with `div(g) = m·D` (Trager Ch. 6 §1). The product is taken in the
-radical extension (`radMul 2 ρ`), starting from `1` (`radOne`). -/
+/-- The principal generator from tracked `v`s: `principalGeneratorOfVs ρ vs = ∏ᵢ (y − vᵢ)`, the
+product of the `y − vᵢ` step-functions (`genFactorOfV`) of a `cantorMulTracked` run, taken in the
+radical extension (`radMul 2 ρ`) starting from `radOne`. -/
 def principalGeneratorOfVs (ρ : QFunNZG ℚ) (vs : List (CPolyG ℚ)) : RadElem (QFunNZG ℚ) :=
   vs.foldl (fun acc v => radMul 2 ρ acc (genFactorOfV v)) radOne
 

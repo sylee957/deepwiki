@@ -1,42 +1,12 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 
-/-! # Algebraic-function integration: the UNIFIED full integral `∫ = v + Σ cᵢ log uᵢ` (principal case)
+/-! # The unified simple-radical integrator `∫ = v + Σ cᵢ log uᵢ` (principal case)
 
-The simple-radical arc built each half of the algebraic integral separately: the **rational part** `v`
-(`ComputableRadicalRationalDriver`, `radIntegrateRational`, the multi-case `V`/`W` dispatch), the
-**log argument** `uᵢ` (`ComputableRadicalLogArgument`, `radLogArgSolve`, the principal-case linear
-solve), the **residue coefficients** `cᵢ` (`ComputableAlgebraicResidues`, `cAlgResidueResultant`), and
-the **log-derivative certificate** (`ComputableRadicalLogIntegral`, `radIsLogIntegral`). This file is the
-**culmination**: one driver `cIntegrateAlgebraic` that computes **BOTH** the rational part `v` AND the
-log part `Σ cᵢ log uᵢ`, assembling the full `∫ = v + Σ cᵢ log uᵢ`, and a **ROUND-TRIP** validation that
-closes the loop end-to-end.
-
-**The round-trip** (`native_decide`). Start from a known antiderivative `F = v + c·log(u)` (`v, u`
-radical-extension elements over `ℚ(x)`, `y² = ρ`). Differentiate it — `integrand := algDeriv F = radDeriv
-v + c·(radDeriv u / u)`, a genuine `RadElem` (the log-derivative `u'/u` is honest division in the field
-`ℚ(x)[y]/(y² − ρ)`, computed by `radInv2`). Feed `integrand` to `cIntegrateAlgebraic`, recover an `F'`,
-and `native_decide` that `algDeriv F' = integrand` (via `radIsZero` of the difference). Three milestones:
-
-* **rational-only** — `∫` with no log part (a Case-1 rational `v`): `algDeriv (cIntegrateAlgebraic …) =
-  integrand`, recovering the rational part exactly.
-* **log-only** — `∫ dx/(x√(x²+1))`: the rational part is `0`, the log part `c·log u` with `u = (y−1)/x`
-  computed by `radLogArgSolve`; `algDeriv = integrand`.
-* **★ COMBINED** — `F = v + c·log u` with BOTH parts nonzero (`v` a rational part on `y² = x²+1`,
-  `u = x + y`): differentiate, integrate back, and `native_decide` that `cIntegrateAlgebraic` recovers an
-  `F'` with `algDeriv F' = integrand`. This is the full-integrator proof.
-
-**The key division-in-the-extension `radInv2`.** For `n = 2`, `α[y]/(y² − ρ)` is a field (`ρ` a
-non-square): `(a + b·y)⁻¹ = (a − b·y)/(a² − b²·ρ)` (rationalizing by the conjugate `a − b·y`). So
-`radLogDeriv u = radDeriv u · u⁻¹` is a genuine `RadElem`, and `algDeriv` of a full
-`v + Σ cᵢ log uᵢ` is the honest `RadElem` `radDeriv v + Σ cᵢ · radLogDeriv uᵢ` — the round-trip compares
-two `RadElem`s by `radIsZero`, no cross-multiplication bookkeeping.
-
-**Honest scope.** The PRINCIPAL case (a bounded `N/D` log-argument ansatz exists, `radLogArgSolve` returns
-`some`): the engine produces the FULL algebraic integral `v + Σ cᵢ log uᵢ`, round-trip-validated by the
-real radical derivation. The NON-PRINCIPAL / torsion boundary (`radLogArgSolve` returns `none` — Trager
-Ch. 5 §3 divisors / Ch. 6 points-of-finite-order) is deferred: `cIntegrateAlgebraic` then returns the
-rational part with an empty log list (a documented partial), exactly the principal-case frontier of
-`ComputableRadicalLogArgument`. -/
+`cIntegrateAlgebraic` computes both the rational part `v` (`radIntegrateRational` +
+`radAssembleRatPart`) and the log part `Σ cᵢ log uᵢ` (`radLogArgSolve`) of a simple-radical integral
+over `y² = ρ`, with `native_decide` round-trip validations `algDeriv F' = integrand` on rational-only,
+log-only, and combined targets. In the non-principal / torsion case (`radLogArgSolve = none`) the
+driver returns the rational part with an empty log list. -/
 
 open Polynomial
 

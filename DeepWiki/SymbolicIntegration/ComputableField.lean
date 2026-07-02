@@ -4,14 +4,11 @@ import DeepWiki.SymbolicIntegration.ComputeCorrectness
 import DeepWiki.SymbolicIntegration.RationalFunctionCompute
 
 /-! # Coherence of the generic polynomial engine with the concrete `CPoly := List ℚ` engine
-The standalone generic engine (`CField`/`CFieldSpec`, `CPolyG`, the generic ops `caddG`/…, `toPolyG`,
-the generic correctness, `CField ℚ`/`CFieldSpec ℚ`) lives upstream in `GenericPolyEngine`. This file
-ties it to the concrete `Compute.*` engine (`LogToAtanCompute`, `ComputeCorrectness`) and the computable
-ℚ(x) field `QFun` (`RationalFunctionCompute`): the **coherence lemmas** (`caddG (α := ℚ) = cadd`,
-`toPolyG (α := ℚ) = toPoly`) show the generic engine specializes back to the concrete one. The
-coherence equalities are what let a later stage migrate `CPoly := CPolyG ℚ` without breaking consumers.
-The level-1 field ℚ(x) is the generic `QFunNZG ℚ` (`ComputableTowerField`), the bottom of the
-recursive fraction-field tower; this file keeps only the engine ↔ `Compute.*` coherence. -/
+
+Coherence lemmas (`caddG (α := ℚ) = cadd`, …, `toPolyG (α := ℚ) = toPoly`) showing the generic
+engine of `GenericPolyEngine` specializes at `ℚ` back to the concrete `Compute.*` engine
+(`LogToAtanCompute`, `ComputeCorrectness`) — the equalities that let `CPoly := CPolyG ℚ` be
+substituted without breaking consumers. -/
 
 open Polynomial
 

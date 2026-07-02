@@ -2,22 +2,13 @@ import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableGenericBezout
 import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
 
-/-! # Fuel-free generic Bézout/Diophantine helpers (`cbezoutOneWf`, `cextendedEuclideanSplitWf`,
-`cdiophantineGWf`, `cHermiteReduceTowerInnerWf`)
+/-! # Generic Bézout/Diophantine helpers
 
-The fuel-free generic (`[CField α]`-only) Bézout/Diophantine leaves the generic tower integration
-engine reuses verbatim. Each is built directly from the fuel-free extended-Euclid `cgcdWf` / quotient
-`cdivmodWf` (`ComputableFuelFreeGcd`):
-
-* **`cbezoutOneWf`** — fuel-free Bézout cofactors `u·a + w·b = 1` for coprime `a, b`.
-* **`cextendedEuclideanSplitWf`** — fuel-free Bézout split `(b, c)` from a cofactor pair.
-* **`cdiophantineGWf`** — fuel-free Diophantine solve `b·p + c·q = rhs` with `deg b < deg q`.
-* **`cHermiteReduceTowerInnerWf`** — the §5.3 inner Hermite loop over one squarefree factor, structural
-  on the downward counter `j`, built on `cdiophantineGWf` and the monomial derivation `cmonomialDeriv`.
-
-The runtime ops carry no fuel. The public correctness API below proves the Wf leaves directly over
-`K[X]`, and the definitions remain generic over `[CField α]` (plus `[CDiffField α]` for the Hermite
-inner loop), so they native_decide over the noncomputable tower. -/
+Bézout cofactors (`cbezoutOneWf`), the extended-Euclidean split (`cextendedEuclideanSplitWf`), the
+Diophantine solve (`cdiophantineGWf`), and the inner Hermite loop over one squarefree factor
+(`cHermiteReduceTowerInnerWf`), built on `cgcdWf`/`cdivmodWf`. The defs are `[CField α]`-only (plus
+`[CDiffField α]` for the Hermite loop), so they `native_decide` over noncomputable-`CFieldSpec`
+carriers; correctness is proved through `toPolyG` over `K[X]`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -25,28 +16,25 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- **Fuel-free Bézout cofactors** `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`.
-Runs the **fuel-free** extended-Euclid `cgcdWf` to get `(g, s, t)` with
-`s·a + t·b = g` (a nonzero constant, since `a, b` coprime), then rescales by `g⁻¹` — **no fuel at runtime**. -/
+/-- Bézout cofactors `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`: run
+`cgcdWf` to get `(g, s, t)` with `s·a + t·b = g` (a nonzero constant, since `a, b` coprime),
+then rescale by `g⁻¹`. -/
 def cbezoutOneWf (a b : CPolyG α) : CPolyG α × CPolyG α :=
   let (g, s, t) := cgcdWf a b
   let ginv := CField.inv (cleadG g)
   (cscaleG ginv s, cscaleG ginv t)
 
-/-- **Fuel-free Bézout split** `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)`. With a Bézout pair
-`u·dₙ + w·dₛ = 1`, returns `b = (u·r) mod dₛ` and `c = w·r +
-(u·r div dₛ)·dₙ` via the **fuel-free** `cdivmodWf` — **no fuel at runtime**. -/
+/-- Bézout split `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)`: with a Bézout pair
+`u·dₙ + w·dₛ = 1`, returns `b = (u·r) mod dₛ` and `c = w·r + (u·r div dₛ)·dₙ` via `cdivmodWf`. -/
 def cextendedEuclideanSplitWf (dn ds r u w : CPolyG α) : CPolyG α × CPolyG α :=
   let ur := cmulG u r
   let (quo, rem) := cdivmodWf ur ds
   (rem, caddG (cmulG w r) (cmulG quo dn))
 
-/-- **Fuel-free generic Diophantine/Bézout solver** `cdiophantineGWf p q rhs = (b, c)` solving
-`b·p + c·q = rhs` with `deg b < deg q`, for **coprime** `p, q`. From the **fuel-free** extended Euclid
-`cgcdWf p q = (g, s, t)` with `s·p + t·q = g` (a nonzero constant),
-rescale `(s,t)` by `rhs/g`, reduce the first cofactor mod `q` (`S = quo·q + b`, via the **fuel-free**
-`cdivmodWf`), and absorb `quo·p` into the second (`c = T + quo·p`) — **no fuel at runtime**. Generic over
-`[CField α]`. -/
+/-- Generic Diophantine/Bézout solver `cdiophantineGWf p q rhs = (b, c)` solving `b·p + c·q = rhs`
+with `deg b < deg q`, for coprime `p, q`: from `cgcdWf p q = (g, s, t)` with `s·p + t·q = g`
+(a nonzero constant), rescale `(s, t)` by `rhs/g`, reduce the first cofactor mod `q`
+(`S = quo·q + b` via `cdivmodWf`), and absorb `quo·p` into the second (`c = T + quo·p`). -/
 def cdiophantineGWf (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
   let (g, s, t) := cgcdWf p q
   let ginv := CField.inv (cleadG g)
@@ -58,16 +46,14 @@ def cdiophantineGWf (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
 
 variable [CFieldSpec α]
 
-/-! ### Direct (fuel-free) correctness of the Bézout/Diophantine leaves
+/-! ### Correctness of the Bézout/Diophantine leaves
 
-`cbezoutOneWf`/`cextendedEuclideanSplitWf`/`cdiophantineGWf` solve their Bézout/Diophantine identities
-over `K[X]` **directly** through the fuel-free leaf lemmas `toPolyG_cgcdWf` (Bézout) and
-`toPolyG_cdivmodWf` (Euclidean division) — pure algebraic composition, no fuel symbol. -/
+The Bézout/Diophantine identities over `K[X]`, from the leaf lemmas `toPolyG_cgcdWf` (Bézout) and
+`toPolyG_cdivmodWf` (Euclidean division). -/
 
-/-- **`cbezoutOneWf` solves the Bézout identity** `u·a + w·b = 1` over `K[X]` — DIRECTLY (no fuel
-hypothesis): with `(g, s, t) = cgcdWf a b` and `g` a nonzero **constant** (the coprime case), the
-rescaled cofactors `(u, w) = cbezoutOneWf a b` satisfy `toPolyG u · toPolyG a + toPolyG w · toPolyG b =
-1`. From the fuel-free raw Bézout `toPolyG_cgcdWf` divided by the constant `g`, with no fuel symbol. -/
+/-- `cbezoutOneWf` solves the Bézout identity `u·a + w·b = 1` over `K[X]`: with
+`(g, s, t) = cgcdWf a b` and `g` a nonzero constant (the coprime case), the rescaled cofactors
+`(u, w) = cbezoutOneWf a b` satisfy `toPolyG u · toPolyG a + toPolyG w · toPolyG b = 1`. -/
 theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
     (hgdeg : (toPolyG (cgcdWf a b).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf a b).1 ≠ 0) :
@@ -97,10 +83,10 @@ theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
     rw [← hbez]; ring
   rw [hcombine, hgC, ← Polynomial.C_mul, inv_mul_cancel₀ hlead_ne, Polynomial.C_1]
 
-/-- **`cextendedEuclideanSplitWf` solves `b·dₙ + c·dₛ = r`** over `K[X]` — DIRECTLY (no fuel hypothesis):
-with a Bézout pair `u·dₙ + w·dₛ = 1` (read through `toPolyG`), `cextendedEuclideanSplitWf dn ds r u w =
-(b, c)` gives `toPolyG b · toPolyG dn + toPolyG c · toPolyG ds = toPolyG r`. Requires `dₛ` nonzero
-(`cnormG ds ≠ []`). From the fuel-free Euclidean identity `toPolyG_cdivmodWf`, with no fuel symbol. -/
+/-- `cextendedEuclideanSplitWf` solves `b·dₙ + c·dₛ = r` over `K[X]`: with a Bézout pair
+`u·dₙ + w·dₛ = 1` (read through `toPolyG`), `cextendedEuclideanSplitWf dn ds r u w = (b, c)` gives
+`toPolyG b · toPolyG dn + toPolyG c · toPolyG ds = toPolyG r`. Requires `dₛ` nonzero
+(`cnormG ds ≠ []`). -/
 theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
     (hds0 : cnormG ds ≠ [])
     (hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1) :
@@ -128,8 +114,8 @@ theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
   rw [show cmulG u r = ur from rfl] at hkey ⊢
   rw [hkey, hbez, one_mul]
 
-/-- **`cextendedEuclideanSplitWf`'s first cofactor is proper** — `deg b < deg dₛ`: the first cofactor
-`b = (u·r) mod dₛ` is a fuel-free Euclidean remainder mod `dₛ`. -/
+/-- `cextendedEuclideanSplitWf`'s first cofactor is proper (`deg b < deg dₛ`): the first cofactor
+`b = (u·r) mod dₛ` is a Euclidean remainder mod `dₛ`. -/
 theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : CPolyG α)
     (hds : cnormG ds ≠ []) :
     (toPolyG (cextendedEuclideanSplitWf dn ds r u w).1).degree < (toPolyG ds).degree := by
@@ -140,8 +126,8 @@ theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : CPolyG α)
   show (cnormG (cmodWf (cmulG u r) ds) : List α).length < _
   exact cmodWf_length_lt (cmulG u r) ds hds
 
-/-- **`cextendedEuclideanSplitWf`'s second cofactor is proper** — `deg c < deg dₙ`: from the Wf Bézout split,
-the first-cofactor remainder bound, the denominator split `d = dₛ·dₙ`, and `deg r < deg d`. -/
+/-- `cextendedEuclideanSplitWf`'s second cofactor is proper (`deg c < deg dₙ`): from the Bézout
+split, the first-cofactor remainder bound, the denominator split `d = dₛ·dₙ`, and `deg r < deg d`. -/
 theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPolyG α)
     (hds : cnormG ds ≠ []) (hdn : cnormG dn ≠ [])
     (hsplit : toPolyG d = toPolyG ds * toPolyG dn)
@@ -170,12 +156,10 @@ theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPolyG α)
   rw [add_comm (toPolyG ds).degree (toPolyG dn).degree] at hcdsdeg
   exact (WithBot.add_lt_add_iff_right hdsdeg).mp hcdsdeg
 
-/-- **`cdiophantineGWf` solves `b·p + c·q = rhs`** over `K[X]` — DIRECTLY (no fuel hypothesis): for
-coprime `p, q` (extended-gcd `cgcdWf p q = (g, s, t)` with `g` a nonzero **constant**), the output
-`(b, c) = cdiophantineGWf p q rhs` satisfies `toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG
-rhs`. From the fuel-free raw Bézout `toPolyG_cgcdWf` (`s·p + t·q = g`) rescaled by `rhs/lc(g)` and the
-fuel-free Euclidean division `toPolyG_cdivmodWf` (`S = quo·q + b`). The fuel-free Diophantine spec,
-referencing no fuel symbol. -/
+/-- `cdiophantineGWf` solves `b·p + c·q = rhs` over `K[X]`: for coprime `p, q` (extended-gcd
+`cgcdWf p q = (g, s, t)` with `g` a nonzero constant), the output `(b, c) = cdiophantineGWf p q rhs`
+satisfies `toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG rhs`. From the raw Bézout
+`toPolyG_cgcdWf` rescaled by `rhs/lc(g)` and the Euclidean division `toPolyG_cdivmodWf`. -/
 theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
     (hq0 : cnormG q ≠ [])
     (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
@@ -225,9 +209,9 @@ theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
       = (Polynomial.C c⁻¹ * Polynomial.C c) * toPolyG rhs := by ring
     _ = toPolyG rhs := by rw [hCcancel, one_mul]
 
-/-- **`cdiophantineGWf`'s first cofactor is proper** — the fuel-free per-step Hermite keystone:
-`deg (cdiophantineGWf p q rhs).1 < deg q` for nonzero `q`. The first cofactor is the normalized
-`cmodWf` remainder of the rescaled Bézout dividend, so no fuel adequacy hypothesis is needed. -/
+/-- `cdiophantineGWf`'s first cofactor is proper: `deg (cdiophantineGWf p q rhs).1 < deg q` for
+nonzero `q`. The first cofactor is the normalized `cmodWf` remainder of the rescaled Bézout
+dividend. -/
 theorem cdiophantineGWf_fst_degree_lt (p q rhs : CPolyG α) (hq : cnormG q ≠ []) :
     (toPolyG (cdiophantineGWf p q rhs).1).degree < (toPolyG q).degree := by
   set g := (cgcdWf p q).1 with hg
@@ -247,12 +231,10 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-/-- **Fuel-free inner Hermite loop** over a squarefree factor `v` (multiplicity `i`, `u = d/vⁱ`), driven
-by the downward counter `j` (§5.3, quadratic version, p.139). Each step solves `b·(u·Dv) + c·v = −a/j` with
-the **fuel-free** Bézout solver
-`cdiophantineGWf` (`Dv = cmonomialDeriv Dt v` the *monomial* derivation), accumulates the rational summand
-`b/vʲ` into `g`, and updates `a ← −j·c − u·Db`. The recursion is **structural** on `j` (no fuel measure —
-`cmonomialDeriv` carries no fuel, the Bézout solve is fuel-free), so **no fuel at runtime**. -/
+/-- Inner Hermite loop over a squarefree factor `v` (multiplicity `i`, `u = d/vⁱ`), driven by the
+downward counter `j`: each step solves `b·(u·Dv) + c·v = −a/j` with `cdiophantineGWf`
+(`Dv = cmonomialDeriv Dt v` the monomial derivation), accumulates the rational summand `b/vʲ`
+into `g`, and updates `a ← −j·c − u·Db`. Structural recursion on `j`. -/
 def cHermiteReduceTowerInnerWf (Dt : CPolyG α) (v u : CPolyG α) :
     ℕ → CPolyG α → CPolyG α × CPolyG α → (CPolyG α × CPolyG α) × CPolyG α
   | 0, a, g => (g, a)

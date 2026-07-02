@@ -1,45 +1,12 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 
 /-! # The radical derivation invariant: `radDeriv` is a genuine derivation
-`ComputableRadicalExtension` builds the simple-radical carrier `RadExt α n f = α[y]/(yⁿ − f)` with the
-ring ops `radAdd`/`radMul` and the **diagonal** derivation `radDeriv` (Trager Appendix A's `(f/y)'`
-form), and *validates* the derivation on examples by `native_decide`. This file makes
-"`radDeriv` is a derivation" a **general theorem** — additive and Leibniz — over an arbitrary base
-`[CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]`.
 
-Because the engine classes `CField`/`CDiffField` carry *no* algebraic laws (the ring/derivation
-identities live only in the `CFieldSpec`/`CDiffFieldSpec` bridges via `toK : α → K`), the faithful
-statement is the one **in the genuine field** `K = CFieldSpec.K α`, read through the Horner bridge
-`toPolyG : RadElem α → K[X]` (treating the formal variable `X` as the radical generator `y`). The
-keystone is
-
-* **`toPolyG_radDeriv`** — `toPolyG (radDeriv n f p) = implicitDeriv (C (toK ℓ) · X) (toPolyG p)` with
-  `ℓ = logDerRadicand n f = f'/(nf)`: the computable diagonal derivation realizes Mathlib's
-  `Differential.implicitDeriv` for the rule `y' = ℓ·y` (`implicitDeriv (C(toK ℓ)·X) X = C(toK ℓ)·X`,
-  i.e. `X' = (toK ℓ)·y`). This is Trager's `(f/y)'` insight as an honest `K[X]` identity.
-
-From the keystone, since `implicitDeriv v` is a Mathlib `Derivation` (hence ℤ-linear and Leibniz):
-
-* **`toPolyG_radDeriv_radAdd`** (additivity) — `radDeriv` commutes with `radAdd` in `K[X]`:
-  `toPolyG (radDeriv n f (radAdd a b)) = toPolyG (radDeriv n f a) + toPolyG (radDeriv n f b)`. Clean and
-  exact (no `yⁿ = f` reduction is involved in either `radAdd` or `radDeriv`).
-* **`mk_toPolyG_radDeriv_radMul`** (Leibniz, in the carrier) — the product rule for `radMul` holds in the
-  carrier `K[X] ⧸ (Xⁿ − C(toK f))`, i.e. modulo the defining ideal `radIdeal n f = (Xⁿ − C(toK f))`,
-  whenever `n·toK f ≠ 0` (a genuine radical extension: `n ≥ 1`, `f ≠ 0`). The pieces: (i)
-  `radReduce`/`radMul` change a polynomial only by a multiple of `Xⁿ − C(toK f)`
-  (`mk_toPolyG_radReduce`, `mk_toPolyG_radMul`), so `radMul ≡ ·` in the quotient; (ii) the crux
-  `implicitDeriv_radicand_mem`: `D(Xⁿ − C(toK f)) ∈ radIdeal n f` — `n·X^{n−1}·(ℓ·X) − D(C(toK f)) ≡ 0`
-  via the defining `n·ℓ·f = f'` (`toK_logDerRadicand_mul`) — so `D` descends to the quotient
-  (`mk_implicitDeriv_congr`); (iii) the free-polynomial Leibniz of the Mathlib derivation `implicitDeriv`.
-
-Both `radDeriv_add` (here `toPolyG_radDeriv_radAdd`, exact in `K[X]`) and `radDeriv_mul` (here
-`mk_toPolyG_radDeriv_radMul`, in the carrier quotient — `radMul` *is* a quotient operation, so its
-product rule is necessarily a quotient statement) are proven **generally** and **axiom-clean** (`[propext,
-Classical.choice, Quot.sound]`, no `native_decide`, no `sorry`).
-
-These are the derivation axioms underwriting the eventual **soundness capstone** `D(∫f) = f`: once the
-integrator returns `v + Σ cᵢ log uᵢ`, `D(v + Σ cᵢ log uᵢ) = radDeriv v + Σ cᵢ·radDeriv(uᵢ)/uᵢ` only
-*means* anything once `radDeriv` is proven additive and Leibniz. -/
+The diagonal radical derivation `radDeriv` is additive and Leibniz, as general theorems in the
+genuine field `K = CFieldSpec.K α` through the Horner bridge `toPolyG : RadElem α → K[X]`: the
+keystone `toPolyG_radDeriv` identifies it with Mathlib's `Differential.implicitDeriv` for `y' = ℓ·y`
+(`ℓ = f'/(nf)`), additivity is exact in `K[X]`, and the product rule holds modulo the defining ideal
+`radIdeal n f = (Xⁿ − C(toK f))` whenever `n·toK f ≠ 0`. -/
 
 open Polynomial
 
@@ -53,13 +20,12 @@ variable {α : Type*} [CField α]
 
 /-! ### `toK (cnatCastG k) = (k : K)` — the natural-cast bridge
 
-`cnatCastG k = 1 + 1 + … + 1` (`k` times) over `[CField α]` reads through `toK` as the genuine `(k : K)`.
-The index-`i` diagonal multiplier `i·ℓ` of `radDeriv` uses `cnatCastG i`, so we need this to identify the
-derivation with Mathlib's `derivative` (whose `i`-th coefficient scaling is `(i : K)`). -/
+`cnatCastG k = 1 + 1 + … + 1` (`k` times) over `[CField α]` reads through `toK` as the genuine
+`(k : K)`, identifying `radDeriv`'s `cnatCastG i` index-multiplier with `(i : K)`. -/
 
 variable [CFieldSpec α]
 
-/-- **`toK (cnatCastG k) = (k : K)`**: the `k`-fold `CField.one` sum reads as the genuine natural cast in
+/-- `toK (cnatCastG k) = (k : K)`: the `k`-fold `CField.one` sum reads as the genuine natural cast in
 `K`. The bridge that turns `radDeriv`'s `cnatCastG i` index-multiplier into `(i : K)`. -/
 theorem toK_cnatCastG (k : ℕ) : CFieldSpec.toK (CPolyG.cnatCastG k : α) = (k : CFieldSpec.K α) := by
   induction k with
@@ -82,7 +48,7 @@ namespace RadElem
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
-/-- **The index-generalized diagonal map** `radDerivFrom ℓ k p` = `(List.zipIdx p k).map (fun (a,i) ↦
+/-- The index-generalized diagonal map `radDerivFrom ℓ k p` = `(List.zipIdx p k).map (fun (a,i) ↦
 D(a) + a·(i·ℓ))`: the body of `radDeriv` with the `zipIdx` start index exposed as `k` (so `radDeriv n f =
 radDerivFrom (logDerRadicand n f) 0`). Generalizing `k` is what lets the closed-form `toPolyG` recursion
 go through. -/
@@ -91,15 +57,15 @@ def radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) : RadElem α :=
     CField.add (CDiffField.cderiv a.1) (CField.mul a.1 (CField.mul (CPolyG.cnatCastG a.2) ℓ)))
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
-/-- **`radDeriv` is `radDerivFrom` from index `0`** — `radDeriv n f p = radDerivFrom (logDerRadicand n
-f) 0 p`. Unfolds `radDeriv`'s `zipIdx` (`List.zipIdx p = List.zipIdx p 0`) to the index-generalized form. -/
+/-- `radDeriv n f p = radDerivFrom (logDerRadicand n f) 0 p`: unfolds `radDeriv`'s `zipIdx`
+(`List.zipIdx p = List.zipIdx p 0`) to the index-generalized form. -/
 theorem radDeriv_eq_radDerivFrom (n : ℕ) (f : α) (p : RadElem α) :
     radDeriv n f p = radDerivFrom (logDerRadicand n f) 0 p := by
   rw [radDeriv, radDerivFrom]
 
-/-- **The closed `K[X]` form of the index-generalized diagonal map**: `toPolyG (radDerivFrom ℓ k p) =
+/-- The closed `K[X]` form of the index-generalized diagonal map: `toPolyG (radDerivFrom ℓ k p) =
 mapCoeffs(toPolyG p) + C(toK ℓ)·(X·derivative(toPolyG p) + (k:K[X])·toPolyG p)`. The `(k:K[X])·toPolyG p`
-term is the contribution of the running `zipIdx` index. Proven by induction on `p`. -/
+term is the contribution of the running `zipIdx` index. -/
 theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
     CPolyG.toPolyG (radDerivFrom ℓ k p)
       = Differential.mapCoeffs (CPolyG.toPolyG p)
@@ -129,12 +95,10 @@ theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
     simp only [map_add, map_mul, Polynomial.C_eq_natCast, Nat.cast_succ]
     ring
 
-/-- **★ The keystone — `radDeriv` realizes `implicitDeriv (C (toK ℓ) · X)`**: through the Horner bridge
-`toPolyG` (with `X` the radical generator `y`), `toPolyG (radDeriv n f p) = Differential.implicitDeriv (C
-(toK ℓ) · X) (toPolyG p)` with `ℓ = logDerRadicand n f = f'/(nf)`. The computable diagonal derivation IS
-Mathlib's `implicitDeriv` for the rule `y' = ℓ·y` (`implicitDeriv (C(toK ℓ)·X) X = C(toK ℓ)·X`, i.e. `X'
-= (toK ℓ)·y`). Trager's `(f/y)'` insight as an honest `K[X]` identity; the source of additivity and
-Leibniz. -/
+/-- `toPolyG (radDeriv n f p) = Differential.implicitDeriv (C (toK ℓ) · X) (toPolyG p)` with
+`ℓ = logDerRadicand n f = f'/(nf)`: through the Horner bridge `toPolyG` (with `X` the radical
+generator `y`), the computable diagonal derivation realizes Mathlib's `implicitDeriv` for the rule
+`y' = ℓ·y`. The source of additivity and Leibniz. -/
 theorem toPolyG_radDeriv (n : ℕ) (f : α) (p : RadElem α) :
     CPolyG.toPolyG (radDeriv n f p)
       = Differential.implicitDeriv

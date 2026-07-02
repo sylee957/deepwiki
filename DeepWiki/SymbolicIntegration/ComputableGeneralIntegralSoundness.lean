@@ -1,11 +1,11 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralWellFounded
 
-/-! # Fuel-free general rational integral soundness
+/-! # General rational integral soundness
 
-The Wf derivation gives the general carrier `K(x)[y]/(f)` a fuel-free rational-part soundness API:
-the generator identity `D(y) = y'`, the accumulator telescoping invariant, and the round-trip closure from
-the engine's own `cisZeroG` certificate. Faithful statements live in the quotient
-`K[X] ⧸ (toPolyG f) = afIdeal f`, read through `toPolyG` and `Ideal.Quotient.mk`. -/
+Rational-part soundness API for the general carrier `K(x)[y]/(f)` through `afDerivWf`: the generator
+identity `D(y) = y'`, the accumulator telescoping invariant, and the round-trip closure from the engine's
+`cisZeroG` certificate. Statements live in the quotient `K[X] ⧸ (toPolyG f) = afIdeal f`, read through
+`toPolyG` and `Ideal.Quotient.mk`. -/
 
 open Polynomial
 
@@ -19,37 +19,34 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-! ### The generator reading `toPolyG (afBasisElem 1) = X`
 
-The general analogue of `toPolyG_radGen` (`toPolyG radGen = X`). The carrier generator `y` is `afBasisElem
-1 = cshiftG 1 [1] = [0, 1]`, whose `toPolyG` image is the formal variable `X` (`X¹ · toPolyG [1] = X · 1 =
-X`). The single fact that turns `implicitDeriv … X = …` into a statement about `afDerivWf (afBasisElem 1)`. -/
+The carrier generator `y` is `afBasisElem 1 = [0, 1]`, whose `toPolyG` image is the formal variable `X` —
+the fact that turns `implicitDeriv … X` into a statement about `afDerivWf (afBasisElem 1)`. -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`toPolyG (afBasisElem 1) = X`** — the carrier generator `y` (`afBasisElem 1 = [0, 1]`) reads as the
-formal variable `X` under the Horner bridge: `afBasisElem 1 = cshiftG 1 [1]`, so `toPolyG = X¹ · toPolyG
-[1] = X · 1 = X`. The general analogue of `toPolyG_radGen`; the fact behind `D(y) = yprime`. -/
+/-- `toPolyG (afBasisElem 1) = X`: the carrier generator `y` reads as the formal variable `X` under the
+Horner bridge. -/
 theorem toPolyG_afBasisElem_one : toPolyG (afBasisElem 1 : CPolyG α) = X := by
   rw [afBasisElem, toPolyG_cshiftG, pow_one]
   have h1 : toPolyG ([CField.one] : CPolyG α) = 1 := by
     rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
   rw [h1, mul_one]
 
-/-! ### The fuel-free rational-integral API
+/-! ### The rational-integral API
 
-The Wf derivation has the expected quotient API, so the rational-part predicate, generator
-example, telescoping, and round-trip closure can be stated without a fuel parameter. -/
+The rational-part predicate, generator identity, telescoping, and round-trip closure over `afDerivWf`. -/
 
-/-- The fuel-free general rational-integral soundness predicate. -/
+/-- General rational-integral soundness predicate: `D(v) = g` modulo the curve ideal `afIdeal f`. -/
 def IsGeneralRationalIntegralWf (f g v : CPolyG α) : Prop :=
   Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f v))
     = Ideal.Quotient.mk (afIdeal f) (toPolyG g)
 
-/-- The fuel-free generator identity `D(y) = y'` in the quotient. -/
+/-- The generator identity `D(y) = y'` in the quotient. -/
 theorem mk_toPolyG_afDerivWf_genGen (f : CPolyG α) (hf : cnormG f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f (afBasisElem 1)))
       = Ideal.Quotient.mk (afIdeal f) (toPolyG (afYprimeWf f)) := by
   rw [mk_toPolyG_afDerivWf f _ hf, toPolyG_afBasisElem_one, Differential.implicitDeriv_X]
 
-/-- The fuel-free generator identity packaged as `IsGeneralRationalIntegralWf`. -/
+/-- The generator identity packaged as `IsGeneralRationalIntegralWf`. -/
 theorem isGeneralRationalIntegralWf_gen (f : CPolyG α) (hf : cnormG f ≠ []) :
     IsGeneralRationalIntegralWf f (afYprimeWf f) (afBasisElem 1) :=
   mk_toPolyG_afDerivWf_genGen f hf
@@ -75,7 +72,7 @@ theorem mk_toPolyG_afDerivWf_foldlCaddG (f : CPolyG α) (hf : cnormG f ≠ [])
     ring
 
 omit [CDiffFieldSpec α] in
-/-- The fuel-free per-step contributions telescope in the quotient. -/
+/-- The per-step contributions telescope in the quotient. -/
 theorem sum_mk_toPolyG_afDerivWf_telescope (f : CPolyG α) :
     ∀ (L₀ : CPolyG α) (rest : List (CPolyG α)) (cs : List (CPolyG α)),
       List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c))
@@ -102,7 +99,7 @@ theorem sum_mk_toPolyG_afDerivWf_telescope (f : CPolyG α) :
     rw [List.getLastD_cons]
     ring
 
-/-- The fuel-free master rational-part telescoping soundness. -/
+/-- The master rational-part telescoping soundness. -/
 theorem generalReduceRationalTelescopeWf (f : CPolyG α) (hf : cnormG f ≠ [])
     (L₀ : CPolyG α) (rest cs : List (CPolyG α))
     (hstep : List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c))
@@ -116,7 +113,7 @@ theorem generalReduceRationalTelescopeWf (f : CPolyG α) (hf : cnormG f ≠ [])
     sum_mk_toPolyG_afDerivWf_telescope f L₀ rest cs hstep]
   ring
 
-/-- The fuel-free telescoping predicate when the final leftover vanishes. -/
+/-- The telescoping yields `IsGeneralRationalIntegralWf` when the final leftover vanishes. -/
 theorem isGeneralRationalIntegralWf_of_telescope (f : CPolyG α) (hf : cnormG f ≠ [])
     (L₀ : CPolyG α) (rest cs : List (CPolyG α))
     (hstep : List.Forall₂ (fun c p => Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f c))
@@ -140,8 +137,8 @@ end CPolyG
 
 /-! ### The named general driver run on `y³ = x²`
 
-The Wf round-trip theorem turns a fuel-free engine certificate into rational-part soundness for the
-cuspidal-cubic run. -/
+The round-trip theorem turns an engine certificate into rational-part soundness for the cuspidal-cubic
+run. -/
 
 open CPolyG
 
@@ -150,22 +147,5 @@ theorem isGeneralRationalIntegralWf_cuspCubic_intY (v : CPolyG (QFunNZG ℚ))
     (hcheck : cisZeroG (csubG (afDerivWf gcuspCubicF v) gcuspCubicY) = true) :
     CPolyG.IsGeneralRationalIntegralWf gcuspCubicF gcuspCubicY v :=
   CPolyG.isGeneralRationalIntegralWf_of_roundtrip gcuspCubicF v gcuspCubicY hcheck
-
-/-! ### `#print axioms`
-
-The Wf rational predicate, generator identity, accumulator-fold distribution, telescoping, and round-trip
-soundness carry only the standard quotient axioms and do not depend on `native_decide`. -/
-
--- The fuel-free rational predicate and Wf telescoping path:
-#print axioms CPolyG.isGeneralRationalIntegralWf_gen
-#print axioms CPolyG.mk_toPolyG_afDerivWf_foldlCaddG
-#print axioms CPolyG.generalReduceRationalTelescopeWf
-#print axioms CPolyG.isGeneralRationalIntegralWf_of_telescope
-
--- The fuel-free round-trip soundness (the DIRECT path): engine check ⟹ the carrier predicate:
-#print axioms CPolyG.isGeneralRationalIntegralWf_of_roundtrip
-
--- ★ The NAMED run `∫ y dx = (3/5)xy` on `y³ = x²`, abstractly, from its own round-trip certificate:
-#print axioms isGeneralRationalIntegralWf_cuspCubic_intY
 
 end DeepWiki.SymbolicIntegration

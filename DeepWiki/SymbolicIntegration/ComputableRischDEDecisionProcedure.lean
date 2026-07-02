@@ -1,44 +1,11 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveExhaustiveness
 import DeepWiki.SymbolicIntegration.ComputableRischDEExpPrimCancellation
 
-/-! # ★ The CAPSTONE: `crischDESolveSoundWf` is a VERIFIED DECISION PROCEDURE modulo Wf §6 residuals
+/-! # The Risch-DE decision procedure
 
-This file is the **consolidation** of the §6 Risch-DE completeness arc. The corrected recursive solver
-now has a fuel-free wrapper `crischDESolveSoundWf`. Its completeness direction (`solvable ⟹ some`) is stated
-against Wf-native stage clauses (`cWeakNormalizerGWf`, `crischDERawSolveWf`); its soundness direction consumes
-the direct Wf soundness certificate `RischDESoundnessWf`. Here those pieces compose
-into a single crisp, citable statement:
-
-  **`crischDESolveSoundWf` decides field-level RDE solvability**
-  (`crischDESolveSoundWf_isDecisionProcedure`): modulo the consolidated Wf frontier
-  `RischDEDecisionProcedureFrontierWf f g` and `RischDESoundnessWf f g`, the fuel-free
-  solver returns `some` **iff** the RDE is solvable —
-  `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`.
-
-**The consolidated frontier (`RischDEDecisionProcedureFrontierWf`).** The completeness direction is stated
-through the fuel-free field-level stages: the Wf weak-normalizer clauses, the Wf inner input passed to
-`crischDERawSolveWf`, the Wf inner completeness proof for that input, and the returned-denominator guard needed
-to lift a successful `cRischDEGWf` run through the raw wrapper:
-
-| clause | §6 stage | what a solvable RDE must clear | route to a proof |
-|---|---|---|---|
-| `hwn`  | §6.1 weak-normalizer | `cWeakNormalizerGWf … ≠ 0` | `WeakNormalizer` never vanishes on a solution |
-| `hck`  | §6.1 normality | `IsCanonNormalizedWf f q'` | contrapositive of the unsoundness witness |
-| `hinner` | §6.2-6.6 inner solve | `RischDEInnerCompletenessWf` for the Wf inner input | Wf-native inner completeness |
-
-The inner frontier `RischDEInnerDecisionFrontierWf` keeps the normal-denominator residual fuel-free and feeds
-`RischDEInnerCompletenessWf` directly:
-
-| residual (deepest tip) | clause it discharges | Bronstein | route | proven below it |
-|---|---|---|---|---|
-| `RdeNormalClearedResidual` (`hcleared` = `dₙh²g ∈ k⟨t⟩`, the differential-subring fact) | `hnorm` / `hdvd` | Cor 6.1.1(ii) / Thm 6.1.2 | Mathlib `derivative_rootMultiplicity`, per-pole order via `cValuationG` | the whole UFD/per-pole/arithmetic layer; structural clauses from splitting |
-| `RdeBoundCancellationResidual` (deepest correct tip = `ExpPrimLogDerivativeBound`, the log-deriv oracle) | `hbound` | §6.3 Thm 6.3.1 / Lemma 6.3.3-6.3.4 (`λ`-recursion) | log-derivative decision §5.12 | non-cancellation bound + the **nonlinear `λ`-recursion** (proven outright) |
-| `RischDESolveExhaustiveResidual{Wf}` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
-
-**Soundness is direct at the public boundary.** The `→` of the Wf equivalence is
-`crischDESolveSoundWf_field`, which consumes `RischDESoundnessWf`; the decision theorem exposes only the Wf
-soundness certificate. The frontier governs only the *converse*
-(`solvable ⟹ some`): the fuel-free solver's `none` is certified correct modulo the Wf-native §6 residual. -/
+`crischDESolveSoundWf_isDecisionProcedure`: modulo the completeness frontier
+`RischDEDecisionProcedureFrontierWf f g` and the soundness certificate `RischDESoundnessWf f g`,
+the recursive Risch-DE solver returns `some` iff the field-level RDE is solvable. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -47,34 +14,32 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-/-! ## Wf inner frontier
+/-! ## Inner frontier
 
-This is the replacement inner frontier for the public Wf decision path. It keeps both the normal-denominator
-and degree-bound residuals fuel-free (`RdeNormalDivisibilityResidualWf`,
-`RdeBoundCancellationResidualWf`) and consumes the Wf solver-exhaustiveness residual
-`RischDESolveExhaustiveResidualWf`. -/
+Bundles the normal-denominator, degree-bound, and solver-exhaustiveness residuals into the
+inner-completeness frontier. -/
 
 section InnerFrontierWf
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
   [CRischField α]
 
-/-- The Wf §6 inner-completeness frontier, with no `towerRischDEFuel` side condition. -/
+/-- The §6 inner-completeness frontier: the three residual clauses feeding `RischDEInnerCompletenessWf`. -/
 structure RischDEInnerDecisionFrontierWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
-  /-- §6.2/Wf normal-denominator divisibility residual. -/
+  /-- Normal-denominator divisibility residual. -/
   hnorm : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden
-  /-- §6.3/Wf degree-bound cancellation residual on the Wf special-cleared coefficients. -/
+  /-- Degree-bound cancellation residual on the special-cleared coefficients. -/
   hbound : RdeBoundCancellationResidualWf Dt fnum fden gnum gden
-  /-- §6.2-6.6/Wf inner solver exhaustiveness residual. -/
+  /-- Inner solver exhaustiveness residual. -/
   hsolve : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden
 
-/-- The Wf inner frontier assembles `RischDEInnerCompletenessWf`. -/
+/-- The inner frontier assembles `RischDEInnerCompletenessWf`. -/
 theorem rischDEInnerCompletenessWf_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
     (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
   rischDEInnerCompletenessWf_of_residuals Dt fnum fden gnum gden h.hnorm h.hbound h.hsolve
 
-/-- The Wf inner frontier yields fuel-free inner-solver success on polynomial-solvable inputs. -/
+/-- The inner frontier yields inner-solver success on polynomial-solvable inputs. -/
 theorem cRischDEGWf_isSome_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
     (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden)
     (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :

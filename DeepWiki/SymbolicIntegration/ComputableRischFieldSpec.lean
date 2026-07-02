@@ -1,34 +1,11 @@
 import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
 
-/-! # The base RDE-oracle abstract soundness `CRischFieldSpec` (Bronstein Ch. 6, the keystone)
+/-! # Abstract soundness spec `CRischFieldSpec` for the field-level RDE oracle
 
-`ComputableTowerRischDE` introduced the field-level Risch-DE oracle as a bare typeclass method
-`CRischField.crischDESolve : α → α → Option α` (solving `Dy + f·y = g` over the field `α`), with a
-constant base instance `CRischField ℚ` and a recursive tower instance `CRischField (QFunNZG β)` (run the
-generic §6 pipeline `cRischDEG` over `CPolyG β = β[s]`). The oracle is only `native_decide`-validated:
-there is no abstract spec connecting `crischDESolve b g = some y` to the field-level identity
-`D(y) + b·y = g`. This file supplies that spec — `CRischFieldSpec` — and proves the **constant base
-instance** `CRischFieldSpec ℚ` axiom-cleanly.
-
-* **`class CRischFieldSpec α`** — the abstract spec: `crischDESolve b g = some y` implies the field-level
-  RDE identity `(toK y)′ + (toK b)·(toK y) = toK g` over `K = CFieldSpec.K α`, with `′` the
-  `CDiffFieldSpec` derivation (so the spec reads results exactly as the engine's correctness layer does,
-  through `CFieldSpec.toK`). This is the abstract face of the leading-coefficient recursion target every
-  §6 cancellation case calls (Bronstein eq. 6.23).
-* **`instance CRischFieldSpec ℚ`** — the constant base (`D = 0`, `toK = id`): `crischDESolve b g = g/b`
-  (`b ≠ 0`) / `0` (`g = 0`), so the identity collapses to the direct division soundness `b·(g/b) = g`.
-  Axiom-clean (`[propext, Classical.choice, Quot.sound]`, no `native_decide`).
-* **The discharged hyperexp residual** `crischDESolve_zero_intDeriv` — for the pure-integration RDE
-  `Dy = R` (`b = 0`), `crischDESolve 0 R = some intR` gives `D(∫R) = R` lifted to the tower fraction
-  field: `towerFractionFieldDerivG Dt (amG (C (toK intR))) = amG (C (toK R))`. This is exactly the
-  base-oracle residual `hintR` that `ComputableHyperexpFullSoundness` carries as a documented hypothesis
-  — discharged here from `CRischFieldSpec` (no `native_decide`), one step toward fully-abstract
-  hyperexp soundness.
-
-The **recursive instance `CRischFieldSpec (QFunNZG β)`** is the documented layer-bridge obstruction (the
-section docstring below records it precisely): the §6 correctness `cRischDEG_rdeCleared_gen` is conditional
-on the entire pipeline's intermediate `some`-results plus a transparent-input chain, none of which is
-derivable from the bare `crischDESolve b g = some y`. -/
+`CRischFieldSpec α` asserts that a successful `CRischField.crischDESolve b g = some y` yields the
+field-level Risch-DE identity `(toK y)′ + (toK b)·(toK y) = toK g` over `K = CFieldSpec.K α`. Provides
+the constant base instance over `ℚ`, the discharged pure-integration residual `D(∫R) = R`
+(`crischDESolve_zero_intDeriv`), and the cleared-to-field layer bridge `rischDE_field_of_cleared`. -/
 
 open Polynomial
 
@@ -36,21 +13,15 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-/-! ### The `CRischFieldSpec` class — the abstract soundness of the field-level RDE oracle
+/-! ### The `CRischFieldSpec` class
 
-`crischDESolve_spec b g y` asserts that a *successful* solve `crischDESolve b g = some y` returns a
-genuine solution of the field-level Risch differential equation `Dy + b·y = g`, read through the
-correctness bridge `CFieldSpec.toK` into the genuine field `K = CFieldSpec.K α`: `(toK y)′ + (toK b)·(toK
-y) = toK g`, with `′` the `CDiffFieldSpec` derivation. (Phrasing through `toK`/`Differential.deriv`
-matches how the §6 pipeline's `cRischDEG_rdeCleared_gen` and the integral-soundness layer read engine
-results — see `CDiffFieldSpec.toK_cderiv`.) -/
+The abstract soundness of the field-level RDE oracle, read through `CFieldSpec.toK` into the genuine
+field `K = CFieldSpec.K α` with `′` the `CDiffFieldSpec` derivation. -/
 
-/-- **Abstract soundness of the field-level RDE oracle** `CRischField.crischDESolve`: whenever
-`crischDESolve b g = some y`, the returned `y` solves the Risch differential equation `Dy + b·y = g`
-over the genuine field `K = CFieldSpec.K α`, read through the bridge `toK`: `(toK y)′ + (toK b)·(toK y) =
-toK g`, with `′ = Differential.deriv` the `CDiffFieldSpec` derivation. The abstract face of the §6.6
-leading-coefficient recursion target (Bronstein eq. 6.23); carried as a typeclass so the tower recursion
-threads it (base `ℚ`, recursive `QFunNZG β`). -/
+/-- Abstract soundness of the field-level RDE oracle `CRischField.crischDESolve`: whenever
+`crischDESolve b g = some y`, the returned `y` solves `Dy + b·y = g` over `K = CFieldSpec.K α`,
+read through `toK`: `(toK y)′ + (toK b)·(toK y) = toK g`, with `′` the `CDiffFieldSpec`
+derivation. Carried as a typeclass so the tower recursion threads it. -/
 class CRischFieldSpec (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CRischField α] where
   /-- A successful solve returns a genuine field-level RDE solution `(toK y)′ + (toK b)·(toK y) = toK g`. -/
@@ -59,17 +30,11 @@ class CRischFieldSpec (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [
         + CFieldSpec.toK b * CFieldSpec.toK y
       = CFieldSpec.toK g
 
-/-! ### The constant base instance `CRischFieldSpec ℚ`
+/-! ### The constant base instance `CRischFieldSpec ℚ` -/
 
-At the constants `ℚ` (`D = 0`, `toK = id`, `CFieldSpec.K ℚ = ℚ`) the oracle is the direct division
-`crischDESolve b g = g/b` (`b ≠ 0`), `0` (`b = 0 ∧ g = 0`), and the spec `0 + b·y = g` is the soundness
-of that division: `b·(g/b) = g` for `b ≠ 0`, and `b·0 = 0 = g` for `b = 0`. The base of the whole tower
-recursion, axiom-clean. -/
-
-/-- **`CRischFieldSpec ℚ`** — the constant-field base soundness: `crischDESolve b g = some y` over `ℚ`
-(`D = 0`) means `y = g/b` (`b ≠ 0`) or `y = 0` (`b = 0 ∧ g = 0`), and the field identity `0 + b·y = g`
-is the direct division soundness `b·(g/b) = g`. The bottoming-out spec of the tower recursion;
-axiom-clean (`[propext, Classical.choice, Quot.sound]`, no `native_decide`). -/
+/-- `CRischFieldSpec ℚ`, the constant-field base soundness: over `ℚ` (`D = 0`, `toK = id`) the
+oracle is `crischDESolve b g = g/b` (`b ≠ 0`) or `0` (`b = 0 ∧ g = 0`), and the spec `0 + b·y = g`
+is the division soundness `b·(g/b) = g`. -/
 instance instCRischFieldSpecQ : CRischFieldSpec ℚ where
   crischDESolve_spec b g y hsolve := by
     -- `crischDESolve b g = if b = 0 then (if g = 0 then some 0 else none) else some (g / b)`.
@@ -95,25 +60,11 @@ instance instCRischFieldSpecQ : CRischFieldSpec ℚ where
       rw [if_neg hb, Option.some.injEq] at hsolve
       rw [← hsolve, mul_div_cancel₀ g hb]
 
-/-! ### Axiom audit (the constant base is axiom-clean) -/
+/-! ### The pure-integration residual `D(∫R) = R`
 
-#print axioms instCRischFieldSpecQ
-
-/-! ### ★ Discharging the base-oracle residual `D(∫R) = R` (the hyperexp `hintR`)
-
-`ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalGWf_sound` carries the base-oracle residual as a
-documented hypothesis
-
-  `hintR : towerFractionFieldDerivG Dt (amG α (C (toK intR))) = amG α (C (toK R))`
-
-where `R = cHyperexpResidualG (cExpEtaG Dt) red.logs ∈ α` and `crischDESolve 0 R = some intR` — the
-field-level antiderivative identity `D(∫R) = R` for the pure-integration RDE `Dy = R` (`b = 0`), with the
-constant `∫R = intR ∈ α` embedded into the tower fraction field `RatFunc (CFieldSpec.K α)` as `amG (C (toK
-intR))`. With `CRischFieldSpec α` in hand this is no longer a hypothesis: the spec turns the solve into the
-field identity `(toK intR)′ = toK R` (the `b = 0` case), and `extendDeriv` on a *constant* `algebraMap (C
-k)` reads off as `algebraMap (C k′)` (`extendDeriv_algebraMap` + `implicitDeriv_C`), with `k′` the
-`CDiffFieldSpec` derivation — exactly `toK R`. Proved for an **arbitrary residual `R : α`** (so it
-instantiates verbatim to the hyperexp `cHyperexpResidualG` residual), with NO `native_decide`. -/
+For the pure-integration RDE `Dy = R` (`b = 0`), a successful base-oracle solve gives the
+antiderivative identity `D(∫R) = R` lifted to the tower fraction field, for an arbitrary
+residual `R : α`. -/
 
 section ResidualDischarge
 
@@ -121,27 +72,17 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [CRischField α] [CRischFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CRischField α] [CRischFieldSpec α] in
-/-- **`extendDeriv` of a constant is the constant of its derivative** (over the tower fraction field): for
-`k : CFieldSpec.K α`, `towerFractionFieldDerivG Dt (amG α (C k)) = amG α (C k′)`, with `′` the
-`CDiffFieldSpec` derivation. Since `amG = algebraMap K[X] (RatFunc K)` and `towerFractionFieldDerivG Dt =
-extendDeriv (implicitDeriv (toPolyG Dt))`, this is `extendDeriv_algebraMap` followed by `implicitDeriv_C`
-(`implicitDeriv v (C k) = C k′`). The constant-coefficient reading of the keystone derivation. -/
+/-- `towerFractionFieldDerivG Dt (amG α (C k)) = amG α (C k′)`: the tower fraction-field derivation
+of a constant is the constant of its `CDiffFieldSpec` derivative. -/
 theorem towerFractionFieldDerivG_amG_C (Dt : CPolyG α) (k : CFieldSpec.K α) :
     towerFractionFieldDerivG Dt (amG α (Polynomial.C k))
       = amG α (Polynomial.C (@Differential.deriv _ _ CDiffFieldSpec.diffK k)) := by
   rw [towerFractionFieldDerivG, amG, extendDeriv_algebraMap, Differential.implicitDeriv_C]
 
-/-- **★ The base-oracle residual `D(∫R) = R` discharged from `CRischFieldSpec`** (the hyperexp `hintR`):
-for any residual `R : α`, if the base oracle solves the pure-integration RDE `Dy = R`
-(`crischDESolve 0 R = some intR`), then the constant `∫R = intR`, embedded into the tower fraction field as
-`amG (C (toK intR))`, differentiates back to `amG (C (toK R))`:
-
-  `towerFractionFieldDerivG Dt (amG α (C (toK intR))) = amG α (C (toK R))`.
-
-The `b = 0` case of `CRischFieldSpec.crischDESolve_spec` gives `(toK intR)′ + 0·(toK intR) = toK R`, i.e.
-`(toK intR)′ = toK R`; `towerFractionFieldDerivG_amG_C` reads off the constant's derivative. This is
-exactly the `hintR` hypothesis `ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalGWf_sound` carries —
-discharged with NO `native_decide`. -/
+/-- The pure-integration residual `D(∫R) = R`: if `crischDESolve 0 R = some intR`, the constant
+`intR` embedded into the tower fraction field as `amG (C (toK intR))` differentiates back to
+`amG (C (toK R))`. Discharges the base-oracle hypothesis `hintR` of
+`ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalGWf_sound`. -/
 theorem crischDESolve_zero_intDeriv (Dt : CPolyG α) (R intR : α)
     (hsolve : CRischField.crischDESolve (CField.zero : α) R = some intR) :
     towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
@@ -154,25 +95,11 @@ theorem crischDESolve_zero_intDeriv (Dt : CPolyG α) (R intR : α)
 
 end ResidualDischarge
 
-#print axioms crischDESolve_zero_intDeriv
+/-! ### The cleared-to-field layer bridge for the RDE oracle
 
-/-! ### The cleared → field layer-bridge for the §6 RDE oracle (the genuinely-new half of Task 3)
-
-The §6 correctness `cRischDEG_rdeCleared_gen` (`ComputableRischDETowerCorrectG`) outputs the **cleared**
-polynomial identity over `(CFieldSpec.K α)[X]`
-
-  `GD·FD·(D ynum·yden − ynum·D yden) + GD·FN·ynum·yden = GN·FD·yden²`
-
-(`D = implicitDeriv (toPolyG Dt)`, all terms `toPolyG`-images). The field-level RDE spec wants instead
-
-  `extendDeriv D (Y) + F·Y = G`     (`Y = amG ynum/amG yden`, `F = amG fnum/amG fden`, `G = amG gnum/amG gden`)
-
-over `RatFunc (CFieldSpec.K α)`. The bridge between the two layers is the `amG`/quotient-rule manipulation:
-lift the cleared identity through the injective `amG`, read `extendDeriv D Y = (amG(D ynum)·amG yden −
-amG ynum·amG(D yden))/amG yden²` (`towerFractionFieldDerivG_div`), and divide through the nonzero
-`amG gden·amG fden·amG yden²`. This mirrors `field_identity_of_checkIdentityG`'s cleared → field dance
-(`div_add_div`/`div_eq_div_iff`/`linear_combination`). We prove this half of the layer-bridge generically;
-the obstruction note below records why it does *not* yet compose into the full recursive instance. -/
+Translates the cleared polynomial identity over `(CFieldSpec.K α)[X]` (the shape
+`cRischDEG_rdeCleared_gen` outputs) into the field-level RDE identity over
+`RatFunc (CFieldSpec.K α)`, via the quotient rule `towerFractionFieldDerivG_div`. -/
 
 section ClearedToField
 
@@ -181,16 +108,11 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 open CPolyG
 
-/-- **★ The cleared → field layer-bridge for the §6 RDE oracle**: given the **cleared** polynomial
-identity that `cRischDEG_rdeCleared_gen` produces (its conclusion verbatim, with `D = implicitDeriv (toPolyG
-Dt)`), together with the denominators `fden`, `gden`, `yden` nonzero, the **field-level Risch-DE identity**
-
-  `towerFractionFieldDerivG Dt (amG ynum/amG yden) + (amG fnum/amG fden)·(amG ynum/amG yden) = amG gnum/amG gden`
-
-holds over `RatFunc (CFieldSpec.K α)`. The genuinely-new half of the field↔poly layer-bridge: it reads the
-quotient rule off `towerFractionFieldDerivG_div` and divides the cleared identity through the nonzero
-`amG gden·amG fden·amG yden²` (the `field_identity_of_checkIdentityG` cleared → field technique applied to
-the RDE shape). -/
+/-- Cleared-to-field layer bridge for the RDE oracle: given the cleared polynomial identity of
+`cRischDEG_rdeCleared_gen` (with `D = implicitDeriv (toPolyG Dt)`) and the denominators `fden`,
+`gden`, `yden` nonzero, the field-level Risch-DE identity
+`towerFractionFieldDerivG Dt (amG ynum/amG yden) + (amG fnum/amG fden)·(amG ynum/amG yden)
+= amG gnum/amG gden` holds over `RatFunc (CFieldSpec.K α)`. -/
 theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : CPolyG α)
     (hfden : toPolyG fden ≠ 0) (hgden : toPolyG gden ≠ 0) (hyden : toPolyG yden ≠ 0)
     (hcleared : amG α (toPolyG gden) * amG α (toPolyG fden)

@@ -8,12 +8,12 @@ import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 (the next tower level ℚ(x)(t₁)(t₂)…) with a *computable* `CField` instance AND a *computable*
 derivation tower (`CDiffField (QFunNZG α)`, `towerDerivQFunNZG`). This file supplies the §3.5/§5.3
 integration pipeline (split/normal factor, canonical representation, transcendental Hermite reduction)
-over that generic carrier. The pipeline runs on the **generic** engine ops
+over that generic carrier. The pipeline runs on the generic engine ops
 (`caddG`/`cmulG`/`cmonomialDeriv`/`cdivWf`/…); the one operation needing care is the fraction-free
 `t`-gcd.
 
 The pipeline defs (suffix `G`) over `[CField α] [CFieldDomain α] [CDiffField α]` take every `t`-gcd from
-the **flat** generic fraction-free gcd `CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) —
+the flat generic fraction-free gcd `CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) —
 the recursive primitive-PRS gcd that stays polynomial-sized over the tower (it AGREES with the swelling
 fuel-free Euclidean `cgcdMonicWf`, both being the unique monic gcd, but computes it without the fraction-field
 coefficient swell that would make the integration pipeline over a fraction-field carrier blow up). Every
@@ -21,13 +21,13 @@ pipeline def that calls a `t`-gcd therefore carries the
 `[CFracGcdCore α]` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
 + recursive `CFracGcdCore (QFunNZG β)`).
 
-* **`CFracGcdCore.cgcdFFCore`** — the flat fraction-free monic gcd used by the pipeline.
-* **`cSplitFactorFastG`** (§3.5 special/normal split `p = pₙ·pₛ` via the derivation `D` + gcd).
-* **`cSqfreeYunFFG`** (Yun squarefree factorization in `t`, the formal `dp/dt`) — what the Hermite
+* `CFracGcdCore.cgcdFFCore` — the flat fraction-free monic gcd used by the pipeline.
+* `cSplitFactorFastG` (§3.5 special/normal split `p = pₙ·pₛ` via the derivation `D` + gcd).
+* `cSqfreeYunFFG` (Yun squarefree factorization in `t`, the formal `dp/dt`) — what the Hermite
   reduction factors the denominator with.
-* **`canonicalRepresentationFastG`** (the `a/d → (fₚ, (b, dₛ), (c, dₙ))` canonical representation),
+* `canonicalRepresentationFastG` (the `a/d → (fₚ, (b, dₛ), (c, dₙ))` canonical representation),
   reusing the already-generic fuel-free Bézout helpers `cbezoutOneWf`/`cextendedEuclideanSplitWf`.
-* **`cHermiteReduceTowerG`** (the transcendental Hermite reduction of the simple normal part →
+* `cHermiteReduceTowerG` (the transcendental Hermite reduction of the simple normal part →
   rational `g` + reduced remainder — the RATIONAL PART of the integral), reusing the already-generic
   fuel-free inner loop `cHermiteReduceTowerInnerWf`/`cdiophantineGWf`.
 
@@ -51,7 +51,7 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
-/-- **Generic splitting-factorization loop** (Bronstein §3.5): `cSplitFactorFastG Dt fuel p =
+/-- Generic splitting-factorization loop (Bronstein §3.5): `cSplitFactorFastG Dt fuel p =
 (pₙ, pₛ)`, the same recursion as `cSplitFactorFast` but on a generic `[CField α] [CDiffField α]`
 carrier with the flat fraction-free gcd `CFracGcdCore.cgcdFFCore` for the two gcds `gcd(p, Dp)` and
 `gcd(p, dp/dt)`. One step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)` (`Dp = cmonomialDeriv Dt p` the
@@ -94,7 +94,7 @@ def cSqfreeYunFFGgo (fuel : ℕ) : ℕ → CPolyG α → CPolyG α → List (CPo
       let d' := csubG (cdivWf d p) (cderivG b')
       p :: cSqfreeYunFFGgo fuel fo b' d'
 
-/-- **Generic Yun squarefree factorization in `t`** `cSqfreeYunFFG fuel p = [p₁, …, pₘ]`: the
+/-- Generic Yun squarefree factorization in `t` `cSqfreeYunFFG fuel p = [p₁, …, pₘ]`: the
 purely-algebraic squarefree factorization in `t` (the formal derivative `dp/dt = cderivG`), with the flat
 fraction-free gcd `CFracGcdCore.cgcdFFCore` for `cgcdFF`. With `g = CFracGcdCore.cgcdFFCore p (cderivG p)`,
 `b₁ = p/g`, `d₁ = p'/g − b₁'`, the recurrence `pᵢ = CFracGcdCore.cgcdFFCore bᵢ dᵢ` peels the monic
@@ -119,11 +119,11 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
-/-- **Generic `SplitSquarefreeFactor`** (Bronstein §3.5, p.102) over the tower:
+/-- Generic `SplitSquarefreeFactor` (Bronstein §3.5, p.102) over the tower:
 `cSplitSquarefreeFactorFastG Dt fuel p = ((N₁,…,Nₘ), (S₁,…,Sₘ))`. First `(p₁,…,pₘ) ← cSqfreeYunFFG p`
 (squarefree factorization in `t`); then for each `i`, `Sᵢ = CFracGcdCore.cgcdFFCore pᵢ (cmonomialDeriv Dt
-pᵢ)` is the **special** part (the DIFFERENTIAL derivation `D = cmonomialDeriv Dt`) and `Nᵢ = pᵢ/Sᵢ` the
-**normal** part. The `[CField α] [CDiffField α] [CFracGcdCore α]`-generic mirror of
+pᵢ)` is the special part (the DIFFERENTIAL derivation `D = cmonomialDeriv Dt`) and `Nᵢ = pᵢ/Sᵢ` the
+normal part. The `[CField α] [CDiffField α] [CFracGcdCore α]`-generic mirror of
 `cSplitSquarefreeFactorFast` — runs at any tower level. -/
 def cSplitSquarefreeFactorFastG (Dt : CPolyG α) (fuel : ℕ) (p : CPolyG α) :
     List (CPolyG α) × List (CPolyG α) :=
@@ -141,14 +141,14 @@ end CPolyG
 `canonicalRepresentationFastG` is the `[CField α] [CDiffField α]`-generic mirror of
 `canonicalRepresentationFast`: it splits `f = a/d` (d monic) into `(fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))`.
 The denominator split `d = dₛ·dₙ` uses the generic `cSplitFactorFastG`; the Bézout-split of the
-remainder reuses the **already-generic** `cbezoutOne`/`cextendedEuclideanSplit` from
+remainder reuses the already-generic `cbezoutOne`/`cextendedEuclideanSplit` from
 `ComputableCanonicalRep` (those need only `[CField α]`). -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
-/-- **Generic `CanonicalRepresentation`** (Bronstein §3.5, p.103) over the tower:
+/-- Generic `CanonicalRepresentation` (Bronstein §3.5, p.103) over the tower:
 `canonicalRepresentationFastG Dt fuel (a, d) = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d`
 (`d` monic). Steps: divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ`
 (`cSplitFactorFastG`, generic); Bézout-split `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplitWf`
@@ -167,11 +167,11 @@ def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
 `cHermiteReduceTowerG` is the `[CField α] [CDiffField α]`-generic mirror of `cHermiteReduceTower`:
 Bronstein's `HermiteReduce(f, D)` (§5.3, quadratic version) rewrites the normal part `fₙ = a/d` of an
 element of a monomial extension as `D(g) + h` with `h`'s denominator squarefree — `g` is the integral's
-**rational part**. The squarefree factorization uses the generic `cSqfreeYunFFG`; the inner Bézout loop
+rational part. The squarefree factorization uses the generic `cSqfreeYunFFG`; the inner Bézout loop
 reuses the already-generic fuel-free `cHermiteReduceTowerInnerWf`/`cdiophantineGWf`. The monomial derivation `D =
 cmonomialDeriv Dt` needs `[CDiffField α]`. -/
 
-/-- **Generic transcendental Hermite reduction** `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden),
+/-- Generic transcendental Hermite reduction `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden),
 (h_num, h_den))` (Bronstein §5.3, p.139) over the tower: input `f = a/d` reduced/normal (`d` monic,
 squarefree-factorable, `deg a < deg d`), output the rational part `g = gnum/gden` (already integrated)
 and the residual `h = h_num/h_den` with `h_den` squarefree, satisfying `D(g) + h = a/d` for the monomial
@@ -204,13 +204,13 @@ def cHermiteReduceTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
 
 end CPolyG
 
-/-! ### ★ The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
+/-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 
 This is the headline. We run `cHermiteReduceTowerG` over `CPolyG (QFunNZG (QFunNZG ℚ)) =
-ℚ(x)(t₁)[t₂]` (tower **level 2**, the new monomial `t₂`) on a concrete proper fraction whose
-denominator has a **repeated `t₂`-factor**, and certify `D(g) + h = f`. The setting is Bronstein's
+ℚ(x)(t₁)[t₂]` (tower level 2, the new monomial `t₂`) on a concrete proper fraction whose
+denominator has a repeated `t₂`-factor, and certify `D(g) + h = f`. The setting is Bronstein's
 Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt₂ = t₂² + 1`), and
-`f = a/d = 1/t₂²`, whose denominator `d = t₂²` has the **normal factor `t₂` of multiplicity 2**
+`f = a/d = 1/t₂²`, whose denominator `d = t₂²` has the normal factor `t₂` of multiplicity 2
 (`t₂` is normal: `gcd(t₂, Dt₂) = gcd(t₂, t₂²+1) = 1`). The reduction lowers the multiplicity:
 `g = −1/t₂`, `h = −1` (squarefree denominator `t₂`), with `D(−1/t₂) = (t₂²+1)/t₂²` so
 `D(g) + h = (t₂²+1)/t₂² − 1 = 1/t₂² = f`.
@@ -269,22 +269,22 @@ def towerCanRepLvl2Dt : CPolyG Lvl2 := [lvl2NegOne, CField.one]
 /-! ## The logarithmic part (Rothstein-Trager §5.6) and the reduced-case capstone `cIntegrateReducedG`
 
 The rational part (Hermite) is done. The remaining piece of the elementary integral `∫ f = g + ∑ᵢ
-cᵢ·log(vᵢ)` is the **logarithmic part**: the Rothstein–Trager residue criterion (§5.6). For a simple
+cᵢ·log(vᵢ)` is the logarithmic part: the Rothstein–Trager residue criterion (§5.6). For a simple
 `h = a/d` (`d` squarefree), `∫ h = ∑_{R(c)=0} c·log(gcd_t(d, a − c·Dd))` with `R(z) = res_t(d, a − z·Dd)`
 the residue resultant.
 
 The generic engine pieces `cevalG`/`cresultantG`/`cinterpolateG` are *already* `[CField α]`-generic. The
 remaining carrier-specific concern beyond the `t`-gcd is the embedding `ℚ → α`: the residue
 resultant samples `z` at the natural nodes `0, 1, …, n`, and a residue is a field constant. We lift the
-nodes through the existing `cnatCastG : ℕ → α` (`[CField α]`-only), and take the residue **candidates as
-`α` elements** (the natural generic form) — so the whole log part generalizes. `cratCastG` additionally
+nodes through the existing `cnatCastG : ℕ → α` (`[CField α]`-only), and take the residue candidates as
+`α` elements (the natural generic form) — so the whole log part generalizes. `cratCastG` additionally
 gives the `ℚ → α` embedding for convenience. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- **Rational into a `CField`** `cratCastG q = (sign · cnatCastG |num|) / cnatCastG den`: embed `q ∈ ℚ`
+/-- Rational into a `CField` `cratCastG q = (sign · cnatCastG |num|) / cnatCastG den`: embed `q ∈ ℚ`
 into any `[CField α]` via the numerator/denominator natural casts (`cnatCastG`) and a sign, all from
 `CField` ops. The generic `ℚ → α` constant embedding (the generic `ofConstNZ` at the scalar level). -/
 def cratCastG (q : ℚ) : α :=
@@ -292,7 +292,7 @@ def cratCastG (q : ℚ) : α :=
   let nsigned : α := if q.num < 0 then CField.neg n else n
   CField.mul nsigned (CField.inv (cnatCastG q.den))
 
-/-- **Generic Horner evaluation** `cHornerG p c = p(c) ∈ α`: evaluate the dense coefficient list `p`
+/-- Generic Horner evaluation `cHornerG p c = p(c) ∈ α`: evaluate the dense coefficient list `p`
 (index = degree, low→high) at `c ∈ α` by Horner's rule. The generic mirror of `cevalG`
 (`ComputableIntegrate`), redefined here to avoid that heavy import. Used to test whether a candidate
 residue `c` is a root of the residue resultant `R(c) = 0`. Needs only `[CField α]`. -/
@@ -313,12 +313,12 @@ and Lagrange-interpolate (`cinterpolateG`). `cLogArgTowerG` is `gcd_t(d, a − c
 `CFracGcdCore.cgcdFFCore` for a residue `c : α`. Both reuse the already-generic
 `cresultantG`/`cmonomialDeriv`. -/
 
-/-- **Generic `a − c·Dd`** `cAmcDdG Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
+/-- Generic `a − c·Dd` `cAmcDdG Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
 def cAmcDdG (Dt a d : CPolyG α) (c : α) : CPolyG α :=
   csubG a (cscaleG c (cmonomialDeriv Dt d))
 
-/-- **Generic residue resultant** `cResidueResultantTowerG Dt fuel a d = R(z) = res_t(d, a − z·Dd)`,
+/-- Generic residue resultant `cResidueResultantTowerG Dt fuel a d = R(z) = res_t(d, a − z·Dd)`,
 returned as a `CPolyG α` whose variable is the residue indeterminate `z` (Bronstein §5.6). Sample
 `R(zₖ) = res_t(d, a − zₖ·Dd)` (`cresultantG`) at the natural nodes `zₖ = cnatCastG k` for
 `k = 0, …, deg_t d` (the generic node lift, replacing `ofConstNZ (k : ℚ)`), then Lagrange-interpolate
@@ -331,7 +331,7 @@ def cResidueResultantTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) : CP
     (zk, cresultantG fuel d (cAmcDdG Dt a d zk)))
   cinterpolateG pts
 
-/-- **Generic log argument** `cLogArgTowerG Dt fuel a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`
+/-- Generic log argument `cLogArgTowerG Dt fuel a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`
 (Bronstein §5.6, the `g_i` inside `log`): the flat fraction-free monic-in-`t` gcd of `d` and
 `a − c·Dd`. Together with the residues `c` (roots of `cResidueResultantTowerG`),
 `∑_c c·log(cLogArgTowerG … c)` is the logarithmic part of `∫ a/d`. -/
@@ -341,10 +341,10 @@ def cLogArgTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (c : α) : CPo
 /-! ### The generic rational-residue scan and logarithmic part
 
 `cRationalResiduesG`/`cLogPartG` mirror `cRationalResidues`/`cLogPart`, but take the residue candidates
-**as `α` elements** `cands : List α` (the generic form — a residue is a field constant). Keep those `c`
+as `α` elements `cands : List α` (the generic form — a residue is a field constant). Keep those `c`
 with `R(c) = 0` (`cHornerG R c`, `[CField α]`-generic Horner), and pair each with its log argument. -/
 
-/-- **Generic rational/field residues** `cRationalResiduesG Dt fuel a d cands`: from the candidate list
+/-- Generic rational/field residues `cRationalResiduesG Dt fuel a d cands`: from the candidate list
 `cands : List α`, keep those `c` that are roots of the residue resultant `R(z) =
 cResidueResultantTowerG Dt fuel a d`, i.e. `R(c) = 0` (tested by `CField.isZero (cHornerG R c)`, the
 generic Horner evaluation). The residues of the simple element `a/d` whose logarithmic part is
@@ -353,7 +353,7 @@ def cRationalResiduesG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : 
   let R := cResidueResultantTowerG Dt fuel a d
   cands.filter (fun c => CField.isZero (cHornerG R c))
 
-/-- **Generic logarithmic part** `cLogPartG Dt fuel a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈
+/-- Generic logarithmic part `cLogPartG Dt fuel a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈
 residues]`: pair each residue `c : α` (from `cRationalResiduesG`) with its log argument
 `cLogArgTowerG Dt fuel a d c`, so `∑ (c, v) ∈ cLogPartG, c·log(v)` is the residue logarithmic part of
 `∫ a/d`. `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
@@ -369,7 +369,7 @@ plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments 
 `checkIdentityG` verifies the antiderivative identity `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f`, cleared of
 denominators — the generic mirror of `IntegralResult.checkIdentity`. -/
 
-/-- **The generic integral result**: `∫ f = rational + ∑ᵢ coeff·log(arg)` over the tower, with
+/-- The generic integral result: `∫ f = rational + ∑ᵢ coeff·log(arg)` over the tower, with
 `rational = (num, den)` the rational part `g = num/den ∈ α(t)` and `logs = [(cᵢ, vᵢ)]` the logarithmic
 part (each `cᵢ : α`, each `vᵢ : CPolyG α`). The generic mirror of `IntegralResult`. -/
 structure IntegralResultG (α : Type*) [CField α] where
@@ -382,7 +382,7 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
-/-- **The generic antiderivative identity, cleared of denominators** `checkIdentityG Dt res anum aden`:
+/-- The generic antiderivative identity, cleared of denominators `checkIdentityG Dt res anum aden`:
 `true` iff `res` is a genuine antiderivative of `f = anum/aden`, i.e. `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` for
 `D = cmonomialDeriv Dt`. Accumulate `∑ᵢ cᵢ·D(vᵢ)/vᵢ` as a single fraction `(Lnum, Lden)` over `∏ᵢ vᵢ`,
 add `D(g) = (D(gnum)·gden − gnum·D(gden))/gden²`, and equate with `f` over `gden²·Lden·aden`:
@@ -414,7 +414,7 @@ def checkIdentityG (Dt : CPolyG α) (res : IntegralResultG α) (anum aden : CPol
 that splits off the polynomial/special part is `cIntegrateGFull` (`ComputableTowerRischDE`), which feeds
 this capstone its simple normal part. Candidates are `α` elements (the generic residue form). -/
 
-/-- **The generic reduced-case integration capstone** `cIntegrateReducedG Dt fuel a d cands`: for
+/-- The generic reduced-case integration capstone `cIntegrateReducedG Dt fuel a d cands`: for
 `f = a/d` reduced/normal (no polynomial or special part), `∫ f = g + ∑ c·log(v)`. Hermite-reduce
 (`cHermiteReduceTowerG`) to the rational part `g = gnum/gden` and the simple residual `h = h_num/h_den`
 (squarefree denominator), then take the residue log part of `h` (`cLogPartG`, residues drawn from
@@ -430,16 +430,16 @@ end CPolyG
 
 /-! ### Level-2 reduced integration test data
 
-Bronstein's Example 5.6.2 construction lifted to **tower level 2**. Over `CPolyG Lvl2 =
+Bronstein's Example 5.6.2 construction lifted to tower level 2. Over `CPolyG Lvl2 =
 ℚ(x)(t₁)[t₂]` the monomial `t₂` is independent (`Dt₂ = 1`), and the simple integrand
-`f = (1/2)·D(t₂+1)/(t₂+1) − (1/2)·D(t₂−1)/(t₂−1)` over ℚ(x)(t₁)(t₂) has the **known elementary
-antiderivative** `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = Dt₂ = 1`, the integrand is
+`f = (1/2)·D(t₂+1)/(t₂+1) − (1/2)·D(t₂−1)/(t₂−1)` over ℚ(x)(t₁)(t₂) has the known elementary
+antiderivative `(1/2)log(t₂+1) − (1/2)log(t₂−1)`. Since `D(t₂±1) = Dt₂ = 1`, the integrand is
 `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)`, assembled as a single fraction `a/d` with `d = (t₂+1)(t₂−1) =
 t₂² − 1`. The residues of `R(z) = res_t(d, a − z·Dd)` are `±1/2` with log arguments `t₂ ± 1`.
 
 The generic reduced-case capstone `cIntegrateReducedG` (Hermite rational part + Rothstein–Trager
 residue logs) runs over `CPolyG Lvl2` and recovers the integral: `g = 0`, residues `±1/2` from the
-candidate set, logs `t₂ ± 1`. The headline check is the **antiderivative identity** `D(∫f) = f`
+candidate set, logs `t₂ ± 1`. The headline check is the antiderivative identity `D(∫f) = f`
 (`checkIdentityG`, cleared of denominators, by `cisZeroG`) — the whole elementary tower integral
 executing and differentiating back to `f`, at level 2. All coefficients are ℚ-constants lifted into
 `Lvl2` (via `cratCastG`), so the engine genuinely runs the level-2 `CField`/`CDiffField` instances. The

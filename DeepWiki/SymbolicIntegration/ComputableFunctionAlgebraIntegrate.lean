@@ -1,61 +1,13 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralIntegralSoundness
 
-/-! # Integration on a REDUCIBLE curve (function-algebra / zero-divisor) soundness — Schultz §7.1–7.2
+/-! # Integration on a reducible curve: function-algebra soundness
 
-The fuel-free general algebraic integrator (`afIntegrateAlgebraicWf`) and its soundness `D(∫f) = f`
-(`ComputableGeneralLogSoundness`'s
-`isGeneralAlgebraicIntegralWf_of_parts`, `ComputableAlgebraicWfSoundness`'s `afIntegrateAlgebraicWf_sound`)
-work over the carrier `K(x)[y]/(f)` — and are honest as a **field** exactly when the curve `f` is
-**irreducible** (so the carrier is a function field, the "crossing to the cross-multiplied form is clean
-when the extension is a field — the curve irreducible" caveat documented in
-`ComputableRadicalLogSoundness`). This file **removes that caveat** for a curve that is squarefree but
-**possibly reducible**: a **function algebra** `A = k(x)[y]/(T)` (Schultz, *Trager's Algorithm for
-Integration of Algebraic Functions Revisited*, §7.1, Def 7.1 — an *étale* `k(x)`-algebra: a
-finite-dimensional commutative `k(x)`-algebra with **no nonzero nilpotents**, equivalently `T` squarefree
-but not necessarily irreducible).
-
-**The math (Schultz §7.1–7.2).** When `T = T₁···Tₘ` factors into coprime squarefree (absolutely
-irreducible) factors, CRT gives `A ≅ ∏ᵢ Aᵢ` with `Aᵢ = k(x)[y]/(Tᵢ)` the irreducible-component **function
-fields** (the *components*, Lemma 7.4). The **indicator functions** `e₁,…,eₘ` (Lemma 7.4, Lemma 7.5's
-basis of constants) are the CRT **idempotents**: `eᵢ = 1` on `Aᵢ`, `0` on the other components, `Σ eᵢ = 1`.
-To integrate `f ∈ A`: integrate each restriction `Fᵢ = ∫(f|_{Aᵢ})` with the **existing per-component
-integrator** (each `Aᵢ` is a genuine function field), then **recombine** `F = Σᵢ eᵢ·Fᵢ`.
-
-**★ The keystone — the indicators are CONSTANTS.** `eᵢ² = eᵢ` (idempotent), so applying any derivation `D`:
-`2eᵢ·D(eᵢ) = D(eᵢ)`, i.e. `D(eᵢ)·(1 − 2eᵢ) = 0`; and `(1 − 2eᵢ)² = 1 − 4eᵢ + 4eᵢ² = 1` (using `eᵢ² = eᵢ`),
-so `1 − 2eᵢ` is a **unit** (its own inverse), hence not a zero divisor, so **`D(eᵢ) = 0`**. (No need for
-the ring to be reduced, and no `1/2`: the unit `1 − 2eᵢ` does all the work.) This is
-`derivation_idempotent_eq_zero` abstractly and `idempotent_isConstant` for the engine's `afDerivWf`.
-
-**★ The soundness (caveat REMOVED).** With `D(eᵢ) = 0`, the recombined integral differentiates back to the
-integrand on the **reducible** curve:
-`D(F) = D(Σ eᵢ Fᵢ) = Σ (D(eᵢ)·Fᵢ + eᵢ·D(Fᵢ)) = Σ eᵢ·D(Fᵢ) = Σ eᵢ·(f|_i) = (Σ eᵢ)·f = f`,
-the last steps using the per-component soundness `eᵢ·D(Fᵢ) = eᵢ·f` (`Fᵢ` integrates `f` on `Aᵢ`) and the
-CRT partition `Σ eᵢ = 1`. This is `derivation_recombine_eq` abstractly and
-`afIntegrateFunctionAlgebra_sound` for the engine — `D(F) = integrand` over a curve with **zero divisors**,
-removing the irreducible-curve restriction.
-
-What this file delivers (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_decide`,
-except the validation examples):
-
-* **Abstract framework** (`namespace FunctionAlgebra`, over any commutative ring with a Mathlib
-  `Derivation`): `derivation_idempotent_eq_zero` (the keystone, `D e = 0` for an idempotent `e`),
-  `derivation_eIdx_mul` (`D(e·F) = e·D(F)`), and `derivation_recombine_eq` (the full recombination
-  soundness `D(Σ eᵢ Fᵢ) = g`). The clean soundness FRAMEWORK — fully general, reusable.
-
-* **Concrete carrier soundness** (`namespace CPolyG`, over `K[X] ⧸ afIdeal T`, the function algebra
-  `K(x)[y]/(T)` for a squarefree `T`): `idempotent_isConstant` (`D(eᵢ) = 0` for the engine's `afDerivWf`),
-  the recombination integrator `afIntegrateFunctionAlgebra`, and the **capstone**
-  `afIntegrateFunctionAlgebra_sound` — `D(afIntegrateFunctionAlgebra T es Fs) = integrand` in the carrier
-  quotient, the function-algebra (zero-divisor) `D(∫f) = f` with the irreducible-curve caveat removed.
-
-* **★ Worked Example 7.2** (`native_decide`): `∫y dx` on `(y²−x)(y³−x) = 0`. The two component integrals
-  `∫y dx = 2xy/3` on `y²−x` and `∫y dx = 3xy/4` on `y³−x` are validated through the fuel-free general
-  derivation `afDerivWf`; the recombination `F = e₁·(2xy/3) + e₂·(3xy/4) = (9x²y + x² − xy³ − 8xy −
-  y⁴)/(12(x−1))` (Schultz eq. 7.2) is the *proven* `afIntegrateFunctionAlgebra_sound`. (The degree-5 Wf
-  derivation of the
-  recombined answer over un-reduced `ℚ(x)` is computationally infeasible for `native_decide` — the honest
-  boundary — so the recombination is carried by the soundness theorem, with the components validated.) -/
+`D(∫f) = f` over a squarefree but possibly reducible curve `T` — the function algebra
+`A = k(x)[y]/(T)`, an étale algebra with zero divisors. When `T = T₁···Tₘ`, CRT gives `A ≅ ∏ᵢ Aᵢ`
+with idempotent indicators `eᵢ` (`Σ eᵢ = 1`); a derivation kills idempotents
+(`derivation_idempotent_eq_zero`), so the recombined integral `F = Σᵢ eᵢ·Fᵢ` of per-component
+integrals `Fᵢ` satisfies `D(F) = f` (`derivation_recombine_eq` abstractly,
+`afIntegrateFunctionAlgebra_sound` for the engine's `afDerivWf` over `K[X] ⧸ afIdeal T`). -/
 
 open Polynomial
 
@@ -63,26 +15,22 @@ namespace DeepWiki.SymbolicIntegration
 
 open scoped Differential
 
-/-! ## The abstract soundness framework: a derivation kills idempotents, so recombination is sound
+/-! ## The abstract framework: a derivation kills idempotents, so recombination is sound
 
-The whole §7.1 argument is, abstractly, three facts about a derivation `D` on a commutative ring: (1) a
-derivation kills any idempotent; (2) hence `D(e·F) = e·D(F)` for an idempotent `e`; (3) a sum `Σ eᵢ·Fᵢ`
-over a partition of unity by idempotents (the CRT indicators) with per-component soundness
-`eᵢ·D(Fᵢ) = eᵢ·g` differentiates to `g`. These hold over **any** commutative ring with a Mathlib
-`Derivation` — no field, no reducedness, no irreducibility — so they are the clean, reusable framework
-underwriting the concrete function-algebra soundness. -/
+Three facts about a derivation `D` on any commutative ring: a derivation kills any idempotent;
+hence `D(e·F) = e·D(F)` for an idempotent `e`; and a sum `Σ eᵢ·Fᵢ` over a partition of unity by
+idempotents with per-component soundness `eᵢ·D(Fᵢ) = eᵢ·g` differentiates to `g`. No field,
+reducedness, or irreducibility hypotheses. -/
 
 namespace FunctionAlgebra
 
 variable {R Q : Type*} [CommRing R] [CommRing Q] [Algebra R Q] (D : Derivation R Q Q)
 
-/-- **★ The keystone — a derivation kills an idempotent** `derivation_idempotent_eq_zero`: for any
-`Derivation R Q Q` on a commutative ring `Q` and any idempotent `e` (`e * e = e`), `D e = 0`. Proof: from
-`e² = e`, Leibniz gives `D e = D(e·e) = e·D e + e·D e = 2·(e·D e)`, so `D e · (1 − 2e) = 0`; and
-`(1 − 2e)² = 1 − 4e + 4e² = 1` (using `e² = e`), so `1 − 2e` is a **unit** (its own inverse), hence
-`D e = D e · (1 − 2e)² = (D e · (1 − 2e)) · (1 − 2e) = 0`. **No `1/2` and no reducedness needed** — the
-unit `1 − 2e` carries the argument. The CRT indicator functions of a function algebra are idempotents
-(Lemma 7.4), so this is precisely "the indicators are constants" — the engine of the §7.1 soundness. -/
+/-- A derivation kills an idempotent: for any `Derivation R Q Q` on a commutative ring `Q` and any
+idempotent `e` (`e * e = e`), `D e = 0`. From `e² = e`, Leibniz gives `D e = 2·(e·D e)`, so
+`D e · (1 − 2e) = 0`; and `(1 − 2e)² = 1`, so `1 − 2e` is a unit — no `1/2` and no reducedness
+needed. The CRT indicator functions of a function algebra are idempotents, so this says the
+indicators are constants. -/
 theorem derivation_idempotent_eq_zero (e : Q) (he : IsIdempotentElem e) : D e = 0 := by
   -- `D e = 2·(e·D e)`, i.e. `D e · (1 − 2e) = 0`
   have h1 : D (e * e) = e * D e + e * D e := by rw [Derivation.leibniz]; simp [smul_eq_mul]
@@ -94,23 +42,19 @@ theorem derivation_idempotent_eq_zero (e : Q) (he : IsIdempotentElem e) : D e = 
     _ = (D e * (1 - 2 * e)) * (1 - 2 * e) := by ring
     _ = 0 := by rw [h2, zero_mul]
 
-/-- **`D(e·F) = e·D(F)` for an idempotent `e`** `derivation_eIdx_mul` — Leibniz `D(e·F) = e·D F + F·D e`
-with `D e = 0` (`derivation_idempotent_eq_zero`) drops the `F·D e` term. The per-component step: on the
-`i`-th component the indicator `eᵢ` passes through `D` as a constant scalar. -/
+/-- `D(e·F) = e·D(F)` for an idempotent `e`: Leibniz `D(e·F) = e·D F + F·D e` with `D e = 0`
+(`derivation_idempotent_eq_zero`) drops the `F·D e` term — the indicator passes through `D` as a
+constant scalar. -/
 theorem derivation_eIdx_mul (e F : Q) (he : IsIdempotentElem e) : D (e * F) = e * D F := by
   rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, derivation_idempotent_eq_zero D e he, mul_zero,
     add_zero]
 
-/-- **★ The recombination soundness (abstract)** `derivation_recombine_eq` — for a list of
-`(indicator, component-integral)` pairs over `Q`, with each indicator `eᵢ` idempotent (`hidem`), the
-per-component soundness `eᵢ·D(Fᵢ) = eᵢ·g` (`hcomp` — `Fᵢ` integrates `g` on the `i`-th component), and the
-indicators a **partition of unity** `Σ eᵢ = 1` (`hsum` — the CRT decomposition), the recombined integral
-`F = Σ eᵢ·Fᵢ` satisfies `D(F) = g`. The whole §7.1 soundness in three lines:
-`D(Σ eᵢ Fᵢ) = Σ D(eᵢ Fᵢ) = Σ eᵢ D Fᵢ = Σ eᵢ g = (Σ eᵢ) g = g`, via `map_list_sum` (additivity),
-`derivation_eIdx_mul` (each `eᵢ` constant), `hcomp`, `List.sum_map_mul_right` (factor `g`), and `hsum`.
-**This removes the irreducible-curve caveat abstractly**: it is `D(∫g) = g` for an integral assembled from
-component integrals over a (possibly reducible) curve, depending only on the indicators being idempotent —
-never on the carrier being a field. -/
+/-- Abstract recombination soundness: for a list of `(indicator, component-integral)` pairs over
+`Q`, with each indicator `eᵢ` idempotent (`hidem`), the per-component soundness `eᵢ·D(Fᵢ) = eᵢ·g`
+(`hcomp`), and the indicators a partition of unity `Σ eᵢ = 1` (`hsum`), the recombined integral
+`F = Σ eᵢ·Fᵢ` satisfies `D(F) = g`:
+`D(Σ eᵢ Fᵢ) = Σ D(eᵢ Fᵢ) = Σ eᵢ D Fᵢ = Σ eᵢ g = (Σ eᵢ) g = g`. Depends only on the indicators
+being idempotent, never on the carrier being a field. -/
 theorem derivation_recombine_eq (pairs : List (Q × Q)) (g : Q)
     (hidem : ∀ p ∈ pairs, IsIdempotentElem p.1)
     (hcomp : ∀ p ∈ pairs, p.1 * D p.2 = p.1 * g)
@@ -133,43 +77,37 @@ end FunctionAlgebra
 
 /-! ## The concrete function algebra `K(x)[y]/(T)` and the engine derivation `afDerivWf`
 
-The carrier quotient of the engine is `Q = K[X] ⧸ afIdeal T` (with the formal variable `X` the generator
-`y`), where `afIdeal T = (toPolyG T)` (`ComputableGeneralQuotient`). For a **squarefree** `T`
-this is the function algebra `A = k(x)[y]/(T)` of Def 7.1 (an étale algebra — `toPolyG T` squarefree makes
-`Q` reduced). The engine's fuel-free general derivation `afDerivWf T` realizes a genuine Mathlib derivation
-in `Q` (`mk_toPolyG_afDerivWf`, additive `mk_toPolyG_afDerivWf_add`, Leibniz
-`mk_toPolyG_afDerivWf_afMul`), so the
-abstract framework's facts hold here — concretely, in the engine's own vocabulary. -/
+The carrier quotient is `Q = K[X] ⧸ afIdeal T` (the formal variable `X` is the generator `y`),
+where `afIdeal T = (toPolyG T)`. For a squarefree `T` this is the function algebra `A = k(x)[y]/(T)`
+(an étale algebra — `toPolyG T` squarefree makes `Q` reduced). The engine derivation `afDerivWf T`
+realizes a genuine derivation in `Q` (`mk_toPolyG_afDerivWf`, `mk_toPolyG_afDerivWf_add`,
+`mk_toPolyG_afDerivWf_afMul`), so the abstract framework applies. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-/-- **An element `e` of the carrier is idempotent (carrier form)** `IsAfIdempotent T e` — `mk(toPolyG(afMul
-T e e)) = mk(toPolyG e)` in `Q = K[X] ⧸ afIdeal T`, i.e. `e² = e` in the function algebra `K(x)[y]/(T)`.
-The CRT indicator functions of the function algebra satisfy this (Lemma 7.4). -/
+/-- Carrier-form idempotency `IsAfIdempotent T e`: `mk(toPolyG(afMul T e e)) = mk(toPolyG e)` in
+`Q = K[X] ⧸ afIdeal T`, i.e. `e² = e` in the function algebra `K(x)[y]/(T)`. The CRT indicator
+functions satisfy this. -/
 def IsAfIdempotent (f e : CPolyG α) : Prop :=
   Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f e e))
     = Ideal.Quotient.mk (afIdeal f) (toPolyG e)
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`IsAfIdempotent` as a Mathlib `IsIdempotentElem` in the quotient** — `IsAfIdempotent T e` gives
-`IsIdempotentElem (mk(toPolyG e))` in `Q = K[X] ⧸ afIdeal T`, by pushing `afMul` through `mk`
-(`mk_toPolyG_afMul`). The bridge from the carrier idempotency predicate to the abstract framework. -/
+/-- `IsAfIdempotent T e` gives `IsIdempotentElem (mk(toPolyG e))` in `Q = K[X] ⧸ afIdeal T`, by
+pushing `afMul` through `mk` (`mk_toPolyG_afMul`): the bridge from the carrier idempotency
+predicate to the abstract framework. -/
 theorem IsAfIdempotent.isIdempotentElem {f e : CPolyG α} (hf : cnormG f ≠ [])
     (he : IsAfIdempotent f e) :
     IsIdempotentElem (Ideal.Quotient.mk (afIdeal f) (toPolyG e)) := by
   rw [IsIdempotentElem, ← mk_toPolyG_afMul f e e hf, he]
 
-/-- **★ The keystone, concrete — the engine's `afDerivWf` kills a carrier idempotent** `idempotent_isConstant`:
-for a **separable** curve `T` (the fuel-free gcd is a nonzero constant, with `cnormG T ≠ []`) and an
-idempotent `e` of the function algebra `K(x)[y]/(T)` (`IsAfIdempotent T e`), `mk(toPolyG(afDerivWf T e))
-= 0` in the carrier quotient `Q = K[X] ⧸ afIdeal T`: **`D(e) = 0`**, the indicator function is a constant.
-The concrete instance of `FunctionAlgebra.derivation_idempotent_eq_zero` for the fuel-free engine derivation:
-the Leibniz law `mk_toPolyG_afDerivWf_afMul` (`D(e·e) = e·D e + e·D e`), the descent of `afDerivWf` through
-the idempotency `e² ≡ e` (`mk_toPolyG_afDerivWf` + `mk_implicitDerivWf_congr`), and the unit `1 − 2ē`
-(`(1−2ē)²=1`) give `D ē = 0` — no `1/2`, no reducedness. The §7.1 fact that the CRT indicators are
-constants, in the engine. -/
+/-- The engine's `afDerivWf` kills a carrier idempotent: for a separable curve `T` (the gcd
+`cgcdWf (afFy T) T` is a nonzero constant, with `cnormG T ≠ []`) and an idempotent `e`
+(`IsAfIdempotent T e`), `mk(toPolyG(afDerivWf T e)) = 0` in `Q = K[X] ⧸ afIdeal T` — the indicator
+function is a constant. The concrete instance of
+`FunctionAlgebra.derivation_idempotent_eq_zero` for the engine derivation. -/
 theorem idempotent_isConstant (f e : CPolyG α) (hf : cnormG f ≠ [])
     (hgdeg : (toPolyG (cgcdWf (afFy f) f).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0)

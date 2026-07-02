@@ -1,23 +1,11 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 
-/-! # Rioboo's `LogToReal` specializes well — coprimality of the real/imaginary parts (Bronstein §2.8, Thm 2.8.4)
-Theorem 2.8.4 (Rioboo, p.67–68) guarantees that Rioboo's arctangent reduction `φ(u,v,x)` specializes
-without division by `0`: when `R = P + i·Q` is a squarefree factor of the Rothstein–Trager resultant
-of `C/D` and `S = A + i·B` is the LRT gcd, then for every `a, b ∈ K̄` solving `P(a,b) = Q(a,b) = 0`
-with `b ≠ 0`, the real/imaginary parts `A(a,b,x), B(a,b,x)` are **coprime** in `K(a,b)[x]` — so the
-arctan numerator `(A·D + B·C)/(B·D − A·C)` has a nonzero denominator.
+/-! # Coprimality of the real and imaginary parts of the LRT gcd
 
-The proof is **purely algebraic** (Bézout); the real closure is only the setting for `a, b`. We take
-the LRT gcd-cofactor factorizations as hypotheses (the faithful "`A+iB` is a common divisor of
-`C − (a+i·b)·D'` and `D`" content):
-* (2.27) `C − (a+i·b)·D' = (E₁ + i·E₂)·(A + i·B)`
-* (2.28) `D = (F₁ + i·F₂)·(A + i·B)`
-and derive, by **equating `i`-free and `i`-components through a conjugation `σ` (`σ i = −i`)**:
-* (2.29) `−b·D' = E₁·B + E₂·A`   (imaginary part of (2.27); `C, D'` are `i`-free, `Im(−(a+ib)D') = −b·D'`)
-* (2.30) `D = F₁·A − F₂·B`        (real part of (2.28)).
-Then `D` squarefree (`IsCoprime D D'`) gives `G₁·D + G₂·D' = 1`, and
-`b = b·(G₁D + G₂D') = (bG₁F₁ − G₂E₂)·A − (bG₁F₂ + G₂E₁)·B`, so `b ∈ span {A, B}`; with `b` a unit
-this is `IsCoprime A B`. -/
+Rioboo's specialization guarantee: from the LRT gcd-cofactor factorizations
+`C − (a+i·b)·D' = (E₁+i·E₂)·(A+i·B)` and `D = (F₁+i·F₂)·(A+i·B)`, with `D` squarefree and `b ≠ 0`,
+the real and imaginary parts `A, B` of the LRT gcd are coprime (`rioboo_coprime`) — so the arctan
+numerator `(A·D + B·C)/(B·D − A·C)` has a nonzero denominator. -/
 
 open Polynomial
 

@@ -1,11 +1,10 @@
 import DeepWiki.SymbolicIntegration.ComputableFieldGcd
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 
-/-! # `filter_prod_mul` — a generic finite-product combinatorial lemma
-Abstract correctness of the fraction-free gcd over a tower level is the generic tower-recursive
-`associated_toPolyG_cgcdFFCore` (`ComputableTowerGcdFFCorrect`) at `QFunNZG ℚ`. This file holds the
-single reusable generic helper `filter_prod_mul` (over any `[CommMonoid M]`), consumed by the generic
-gcd-content theory. -/
+/-! # `filter_prod_mul` — a finite-product combinatorial lemma
+
+The generic helper `filter_prod_mul` (over any `[CommMonoid M]`): pulling one indexed factor out of
+a `zipIdx`-filtered product recovers the full product. Consumed by the generic gcd-content theory. -/
 
 open Polynomial Classical
 

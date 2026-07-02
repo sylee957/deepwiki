@@ -1,36 +1,12 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import DeepWiki.SymbolicIntegration.ComputableRischDETowerCorrectG
 
-/-! # The `checkIdentityG` ⟹ field-identity BRIDGE at the carrier `α = QFunNZG ℚ`
-The generic tower engine certifies every integral with the cleared antiderivative check `checkIdentityG`
-(`ComputableTowerIntegrate`): a Boolean self-check that clears `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) − f` of
-denominators and tests it `= 0` (`cisZeroG`). This file gives the **field ⇔ engine bridge** through that
-guard: when `checkIdentityG f result = true`, the field-level identity `D(∫f) = f` holds over the tower
-fraction field `RatFunc (CFieldSpec.K α)`.
+/-! # The `checkIdentityG` ⟹ field-identity bridge
 
-The bridge is the per-instance certificate the guard supplies — it does **not** need the full integrator
-field identity `cIntegrateG_field_identity` (the whole §5 Hermite/canonical-split chain). The guard
-`checkIdentityG` *never calls the gcd*: it only folds the residue terms `cᵢ·D(vᵢ)/vᵢ` and clears
-denominators, so the whole field ⇒ Boolean clearing bridge is **carrier-agnostic** — built once,
-generically, over `{α} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]`, with the field algebra
-map `amG α` (`ComputableTowerField`) and the fraction-field derivation
-`extendDeriv (implicitDeriv (toPolyG Dt))` (`ComputableFractionFieldDeriv`). It specializes at the generic
-level-1 carrier `α = QFunNZG ℚ = Frac(ℚ[x])`, where `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ` and the engine
-runs the recursive tower instances — `cgcdFF`-free, exactly the chunk-1 pattern of
-`ComputableSplitFactorTowerCorrectG` / `ComputableRischDETowerCorrectG`.
-
-The deliverable:
-
-* **`logResidueSumG`** — the generic residue sum `∑_{(c,v)} amG(C(toK c))·(Δv)/v` (the symbolic derivative
-  of the generic logarithmic part `∑ c·log v`), and the fold reading `checkIdentityG_fold_eq`.
-* **`field_identity_of_checkIdentityG`** — the field ⟸ engine bridge: the engine's boolean self-check being
-  `true` implies the field identity `D(∫f) = f` (no regime / residue-set / degree hypothesis).
-* **`towerFractionFieldDerivG`** — the generic fraction-field derivation `extendDeriv (implicitDeriv (toPolyG
-  Dt))` over `RatFunc (CFieldSpec.K α)`, with the quotient rule `towerFractionFieldDerivG_div`.
-
-The bridge is what the a-priori one-shots (`cIntegrateGFullWf_primitive_oneShot`,
-`field_identity_of_cIntegrateGFullWf_of_checkIdentityG`) consume to turn an engine self-check into the field
-identity `D(∫f) = f` — see `ComputableOneShotSoundness` / `ComputableNormalPartSoundness`. -/
+`checkIdentityG = true` implies the field identity `D(∫f) = f` over the tower fraction field
+`RatFunc (CFieldSpec.K α)`: the residue sum `logResidueSumG`, its fold reading
+`checkIdentityG_fold_eq`, the derivation `towerFractionFieldDerivG`, and the bridge
+`field_identity_of_checkIdentityG`. Carrier-generic (the check never calls the gcd). -/
 
 open Polynomial Classical
 open scoped Differential
@@ -39,29 +15,20 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-/-! ### The generic field algebra map and fraction-field derivation
-
-The field-level identity lives over `RatFunc (CFieldSpec.K α)`. The polynomial-into-rational embedding is
-the generic `amG α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))` (`ComputableTowerField`),
-and the derivation is `extendDeriv (implicitDeriv (toPolyG Dt))` — the fraction-field extension of the
-monomial derivation by the quotient rule. We package the derivation as `towerFractionFieldDerivG` and give
-it the quotient-rule reading on fractions of polynomial images. -/
+/-! ### The generic fraction-field derivation -/
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **The generic tower fraction-field derivation** `towerFractionFieldDerivG Dt = extendDeriv (implicitDeriv
-(toPolyG Dt))` on `RatFunc (CFieldSpec.K α)`, extending the base monomial derivation `implicitDeriv (toPolyG
-Dt)` on `(CFieldSpec.K α)[X]` by the quotient rule. The carrier-generic fraction-field derivation over any
-computable tower `[CField α] [CFieldSpec α]`. -/
+/-- The tower fraction-field derivation `towerFractionFieldDerivG Dt = extendDeriv (implicitDeriv
+(toPolyG Dt))` on `RatFunc (CFieldSpec.K α)`: the base monomial derivation on `(CFieldSpec.K α)[X]`
+extended by the quotient rule. -/
 noncomputable def towerFractionFieldDerivG (Dt : CPolyG α) :
     Derivation ℤ (RatFunc (CFieldSpec.K α)) (RatFunc (CFieldSpec.K α)) :=
   extendDeriv (Differential.implicitDeriv (toPolyG Dt))
 
-/-- **Quotient-rule reading of `D(gnum/gden)` over the generic tower field**: with `g = amG(gnum)/amG(gden)`,
-`towerFractionFieldDerivG Dt g = (amG(Δ gnum)·amG(gden) − amG(gnum)·amG(Δ gden)) / (amG(gden))²`, where
-`Δ = implicitDeriv (toPolyG Dt)`. The quotient rule for the keystone derivation on a fraction of polynomial
-images — the carrier-generic mirror of `towerFractionFieldDeriv_div`. -/
+/-- Quotient rule on a fraction of polynomial images: `towerFractionFieldDerivG Dt (amG gnum / amG gden)
+= (amG(Δ gnum)·amG(gden) − amG(gnum)·amG(Δ gden)) / (amG gden)²`, `Δ = implicitDeriv (toPolyG Dt)`. -/
 theorem towerFractionFieldDerivG_div (Dt : CPolyG α) (gnum gden : (CFieldSpec.K α)[X]) :
     towerFractionFieldDerivG Dt (amG α gnum / amG α gden)
       = (amG α (Differential.implicitDeriv (toPolyG Dt) gnum) * amG α gden
@@ -70,18 +37,11 @@ theorem towerFractionFieldDerivG_div (Dt : CPolyG α) (gnum gden : (CFieldSpec.K
   rw [towerFractionFieldDerivG, ← RatFunc.mk_eq_div, extendDeriv_mk, RatFunc.mk_eq_div, map_sub,
     map_mul, map_mul, map_pow]
 
-/-! ### The generic logarithmic-part residue sum (over `α`-valued coefficients)
+/-! ### The logarithmic-part residue sum -/
 
-The generic checker `checkIdentityG` folds the logarithmic part `∑ᵢ cᵢ·log(vᵢ)` (coefficients `cᵢ : α`)
-into its symbolic derivative `∑ᵢ cᵢ·(Δvᵢ)/vᵢ` (the log-derivative `D(log v) = (Δv)/v`), accumulated as a
-single fraction `(Lnum, Lden)` over `∏ᵢ vᵢ`. We give it as a genuine field element `logResidueSumG` over
-`RatFunc (CFieldSpec.K α)`, with the residue coefficient `c : α` embedded as the constant `amG(C(toK c))`. -/
-
-/-- **The generic logarithmic-part residue sum** `logResidueSumG Dt logs = ∑_{(c,v)∈logs}
-amG(C(toK c))·(Δv)/v` over the tower fraction field `RatFunc (CFieldSpec.K α)`, with `Δ = implicitDeriv
-(toPolyG Dt)` (so `Δv = toPolyG (cmonomialDeriv Dt v)`). The symbolic derivative of the generic logarithmic
-part `∑ᵢ cᵢ·log(vᵢ)` (`cᵢ : α`) — exactly the residue sum `checkIdentityG` clears against `f`. The
-carrier-generic mirror of `logResidueSum`/`logResidueSumG`. -/
+/-- Logarithmic-part residue sum `logResidueSumG Dt logs = ∑_{(c,v)∈logs} amG(C(toK c))·(Δv)/v` over
+`RatFunc (CFieldSpec.K α)`, with `Δ = implicitDeriv (toPolyG Dt)`: the symbolic derivative of the
+logarithmic part `∑ᵢ cᵢ·log(vᵢ)` — the residue sum `checkIdentityG` clears against `f`. -/
 noncomputable def logResidueSumG (Dt : CPolyG α) (logs : List (α × CPolyG α)) :
     RatFunc (CFieldSpec.K α) :=
   (logs.map (fun cv =>
@@ -103,19 +63,13 @@ theorem logResidueSumG_cons (Dt : CPolyG α) (cv : α × CPolyG α) (rest : List
         + logResidueSumG Dt rest := by
   simp only [logResidueSumG, List.map_cons, List.sum_cons]
 
-/-! ### The `checkIdentityG` fold computes the residue sum
-
-`checkIdentityG`'s `foldl` accumulates `∑ cᵢ·(Δvᵢ)/vᵢ` as one fraction `(Lnum, Lden)` over `∏ᵢ vᵢ`,
-starting at `([0], [1])` and combining `acc.1/acc.2 + (c·Δv)/v = (acc.1·v + c·Δv·acc.2)/(acc.2·v)`.
-Reading through `amG α`, the running fraction is the seed plus the partial `logResidueSumG`; with all `vᵢ`
-nonzero the seed contributes `0`. The carrier-generic mirror of `checkIdentity_fold_eq`. -/
+/-! ### The `checkIdentityG` fold computes the residue sum -/
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **The `checkIdentityG` fold computes the residue sum** (field reading): folding from a seed
-`(snum, sden)` (`sden ≠ 0`) over a generic log list whose every argument `v` is nonzero, the running
-fraction `amG(Lnum)/amG(Lden)` equals the seed fraction plus `logResidueSumG`, and the running denominator
-`Lden = sden·∏ᵢ vᵢ` stays nonzero. By induction on the list — the carrier-generic mirror of
-`checkIdentityG_fold_eq`. -/
+/-- The `checkIdentityG` fold computes the residue sum: folding from a seed `(snum, sden)` (`sden ≠ 0`)
+over a log list whose every argument `v` is nonzero, the running fraction `amG(Lnum)/amG(Lden)` equals
+the seed fraction plus `logResidueSumG`, and the running denominator `Lden = sden·∏ᵢ vᵢ` stays
+nonzero. -/
 theorem checkIdentityG_fold_eq (Dt : CPolyG α) :
     ∀ (logs : List (α × CPolyG α)) (snum sden : CPolyG α),
       toPolyG sden ≠ 0 →
@@ -170,24 +124,13 @@ theorem checkIdentityG_fold_eq (Dt : CPolyG α) :
       ring
     rw [hstep]; ring
 
-/-! ### The `checkIdentityG` ⟹ field-identity bridge
+/-! ### The `checkIdentityG` ⟹ field-identity bridge -/
 
-`checkIdentityG Dt res anum aden = true` is (via `cisZeroG_iff`) the cleared polynomial identity
-`(GP·LD + LN·GD²)·AD = AN·(GD²·LD)` over `(CFieldSpec.K α)[X]`, where `GP = toPolyG gprimeNum`,
-`(LN, LD) = fold-result`, etc. Dividing through the nonzero `GD²·LD·AD` and reading
-`D(gnum/gden) = GP/GD²` (quotient rule) and `LN/LD = logResidueSumG` (the fold bridge), this is exactly the
-field identity `D(gnum/gden) + logResidueSumG = anum/aden`. The carrier-generic mirror of
-`field_identity_of_checkIdentity`; the gcd never enters. -/
-
-/-- **`checkIdentityG = true ⟹ field identity`** (the engine ⟹ field bridge, the carrier-generic mirror of
-`field_identity_of_checkIdentity`): if the generic cleared antiderivative check
+/-- `checkIdentityG = true ⟹ field identity`: if the cleared antiderivative check
 `checkIdentityG Dt res anum aden = true` holds, with the denominators `gden = res.rational.2`, `aden`
-nonzero and every log argument `vᵢ` nonzero, then the field-level antiderivative identity
+nonzero and every log argument `vᵢ` nonzero, then
 `towerFractionFieldDerivG Dt (amG gnum / amG gden) + logResidueSumG Dt res.logs = amG anum / amG aden`
-holds over `RatFunc (CFieldSpec.K α)`. Runs the forward clearing backwards: `cisZeroG_iff` turns the check
-into the cleared polynomial identity, the injective `amG` lifts it, and dividing by the nonzero `GD²·LD·AD`
-with `GP/GD² = D(g)` and `LN/LD = logResidueSumG` recovers the field identity. The generic engine's
-`D(∫f) = f`, in field form, gated only on `checkIdentityG = true`. -/
+over `RatFunc (CFieldSpec.K α)` — the engine's `D(∫f) = f` in field form. -/
 theorem field_identity_of_checkIdentityG (Dt : CPolyG α) (res : IntegralResultG α)
     (anum aden : CPolyG α)
     (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG aden ≠ 0)
@@ -259,11 +202,5 @@ theorem field_identity_of_checkIdentityG (Dt : CPolyG α) (res : IntegralResultG
     linear_combination hcheck
   -- assemble: rewrite the field readings back into the goal
   rw [hquot, hLfield', hfield]
-
-/-! ### Axiom audit (the bridge rests only on the standard kernel axioms) -/
-
-#print axioms logResidueSumG
-#print axioms checkIdentityG_fold_eq
-#print axioms field_identity_of_checkIdentityG
 
 end DeepWiki.SymbolicIntegration

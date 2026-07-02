@@ -8,7 +8,7 @@ import Mathlib.RingTheory.Polynomial.Content
 This file proves the abstract correctness of the tower kernel fraction-free gcd `cgcdFFRawCore`
 (`ComputableTowerGcdFFCore`), which runs over an arbitrary level
 `α = QFunNZG β = Frac(CPolyG β = β[s])`: clear denominators into `GBPolyCore β = (β[s])[t]`, run the
-primitive PRS over the GCD-domain coefficient ring `CPolyG β = β[s]` stripping the **content** each step
+primitive PRS over the GCD-domain coefficient ring `CPolyG β = β[s]` stripping the content each step
 (via the level-`β` gcd `cgcdFFRawCore` as the content-gcd), and lift back. Over the field ℚ(x) this is the
 familiar clear-denominators / primitive-PRS / lift-back strategy; here it is established at every tower
 level.
@@ -16,8 +16,8 @@ level.
 The proof: the `gb*Core` engine (`gbnormCore`/`gbpsremainderCore`/`gbcontentXCore`/`gbprimitivePartXCore`)
 reads through the bridge `toGBPolyG`, and each homomorphism / PRS lemma is derived over `GBPolyCore β` — the
 `clearDenoms` unit-scaling bridge, the Euclidean-step gcd invariant, the primitive-part unit scaling. The
-key ingredient is the **content recursion**: the generic content-gcd is the level-`β` `cgcdFFRawCore`
-*passed in*, so its content-exactness is the **tower induction hypothesis** — the gcd-correctness at level
+key ingredient is the content recursion: the generic content-gcd is the level-`β` `cgcdFFRawCore`
+*passed in*, so its content-exactness is the tower induction hypothesis — the gcd-correctness at level
 `β` feeds the gcd-correctness at `QFunNZG β`, bottoming at the raw Euclidean gcd over `ℚ`. Mathlib's generic
 content theory
 (`Mathlib/RingTheory/Polynomial/Content.lean`, over `(CFieldSpec.K β)[X]` which is a
@@ -42,14 +42,14 @@ them generically over `[Field F]`'s `F[X]` (a `NormalizedGCDMonoid` / Euclidean 
 
 variable {F : Type*} [Field F]
 
-/-- **gcd is invariant under an associated right argument** in `F[X]`. -/
+/-- gcd is invariant under an associated right argument in `F[X]`. -/
 theorem associated_gcd_right_field {A B B' : F[X]} (h : Associated B B') :
     Associated (gcd A B) (gcd A B') := by
   apply associated_of_dvd_dvd
   · exact dvd_gcd (gcd_dvd_left A B) ((gcd_dvd_right A B).trans h.dvd)
   · exact dvd_gcd (gcd_dvd_left A B') ((gcd_dvd_right A B').trans h.symm.dvd)
 
-/-- **The Euclidean-step gcd invariant** in `F[X]`: if `cu` is a unit and `cu · A = R + S · B`
+/-- The Euclidean-step gcd invariant in `F[X]`: if `cu` is a unit and `cu · A = R + S · B`
 (a pseudo-division step up to the unit content `cu`), then `gcd A B` and `gcd B R` are associates — the
 classic invariant `gcd(A,B) = gcd(B, A mod B)` over the field. -/
 theorem associated_gcd_euclid_step_field {A B R S cu : F[X]} (hu : IsUnit cu)
@@ -67,13 +67,13 @@ theorem associated_gcd_euclid_step_field {A B R S cu : F[X]} (hu : IsUnit cu)
 
 /-! ### The base case `CFracGcdCore ℚ`: the raw Euclidean gcd computes the gcd up to associates
 At the bottom of the tower `cgcdFFRawCore = (cgcdExtG _).1` over `ℚ[t]`. We package the gcd-correctness
-of the **raw** generic Euclidean gcd `(cgcdExtG fuel a b).1` over any `[CField α] [CFieldSpec α]` level:
+of the raw generic Euclidean gcd `(cgcdExtG fuel a b).1` over any `[CField α] [CFieldSpec α]` level:
 it is associated to the abstract `gcd` in `(CFieldSpec.K α)[X]`, from the proven Bézout
 (`toPolyG_cgcdExtG`/`toPolyG_dvd_cgcdExtG`) and divides (`toPolyG_cgcdExtG_dvd`, under termination)
 halves of the engine. This is the bottom of the tower induction (and reused for the *content*-gcd at any
 level, since the content-gcd over `CPolyG β = β[s]` is itself a level-`β` `cgcdFFRawCore`). -/
 
-/-- **The raw generic Euclidean gcd is associated to the abstract gcd** (under termination): for any
+/-- The raw generic Euclidean gcd is associated to the abstract gcd (under termination): for any
 `[CField α] [CFieldSpec α]`, if `cgcdExtG fuel a b` terminates (`cgcdTerminatesG`), then
 `toPolyG (cgcdExtG fuel a b).1` is `Associated` to `gcd (toPolyG a) (toPolyG b)` in `(CFieldSpec.K α)[X]`.
 Combines the gcd-divides direction (`toPolyG_cgcdExtG_dvd`) with the greatest-common-divisor direction
@@ -98,7 +98,7 @@ namespace GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
-/-- **Bivariate bridge** `toGBCoeffPoly : GBPolyCore β → ((CFieldSpec.K β)[X])[X]`: read a `GBPolyCore β`
+/-- Bivariate bridge `toGBCoeffPoly : GBPolyCore β → ((CFieldSpec.K β)[X])[X]`: read a `GBPolyCore β`
 (list of `CPolyG β = β[s]` `t`-coefficients, low→high) as an honest `R[t]` polynomial `R = (CFieldSpec.K
 β)[X]` in Horner form in `t`, each `t`-coefficient embedded via `toPolyG`. The generic mirror of
 `Compute.toBPoly`. -/
@@ -113,7 +113,7 @@ noncomputable def toGBCoeffPoly : GBPolyCore β → ((CFieldSpec.K β)[X])[X]
 @[simp] theorem toGBCoeffPoly_cons (a : CPolyG β) (p : GBPolyCore β) :
     toGBCoeffPoly (a :: p) = Polynomial.C (CPolyG.toPolyG a) + Polynomial.X * toGBCoeffPoly p := rfl
 
-/-- `toGBCoeffPoly` is **additive**: `gbaddCore` realizes `R[t]` addition. -/
+/-- `toGBCoeffPoly` is additive: `gbaddCore` realizes `R[t]` addition. -/
 theorem toGBCoeffPoly_gbaddCore (p q : GBPolyCore β) :
     toGBCoeffPoly (gbaddCore p q) = toGBCoeffPoly p + toGBCoeffPoly q := by
   induction p generalizing q with
@@ -125,7 +125,7 @@ theorem toGBCoeffPoly_gbaddCore (p q : GBPolyCore β) :
       simp only [gbaddCore, toGBCoeffPoly_cons, ih bs, CPolyG.toPolyG_caddG, map_add]
       ring
 
-/-- `toGBCoeffPoly` is **negation-compatible**: `gbnegCore` realizes `R[t]` negation. -/
+/-- `toGBCoeffPoly` is negation-compatible: `gbnegCore` realizes `R[t]` negation. -/
 theorem toGBCoeffPoly_gbnegCore (p : GBPolyCore β) :
     toGBCoeffPoly (gbnegCore p) = - toGBCoeffPoly p := by
   induction p with
@@ -135,12 +135,12 @@ theorem toGBCoeffPoly_gbnegCore (p : GBPolyCore β) :
     simp only [toGBCoeffPoly_cons, CPolyG.toPolyG_cnegG, map_neg, ih]
     ring
 
-/-- `toGBCoeffPoly` is **subtraction-compatible**: `gbsubCore` realizes `R[t]` subtraction. -/
+/-- `toGBCoeffPoly` is subtraction-compatible: `gbsubCore` realizes `R[t]` subtraction. -/
 theorem toGBCoeffPoly_gbsubCore (p q : GBPolyCore β) :
     toGBCoeffPoly (gbsubCore p q) = toGBCoeffPoly p - toGBCoeffPoly q := by
   simp [gbsubCore, toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbnegCore, sub_eq_add_neg]
 
-/-- `toGBCoeffPoly` realizes **scaling by a `β[s]` coefficient**: `gbscaleCCore c p` is
+/-- `toGBCoeffPoly` realizes scaling by a `β[s]` coefficient: `gbscaleCCore c p` is
 `C (toPolyG c) · toGBCoeffPoly p`. -/
 theorem toGBCoeffPoly_gbscaleCCore (c : CPolyG β) (p : GBPolyCore β) :
     toGBCoeffPoly (gbscaleCCore c p) = Polynomial.C (CPolyG.toPolyG c) * toGBCoeffPoly p := by
@@ -151,7 +151,7 @@ theorem toGBCoeffPoly_gbscaleCCore (c : CPolyG β) (p : GBPolyCore β) :
     simp only [toGBCoeffPoly_cons, CPolyG.toPolyG_cmulG, map_mul, ih]
     ring
 
-/-- `toGBCoeffPoly` realizes the **`t`-shift**: `gbshiftCore k p` is `tᵏ · toGBCoeffPoly p`. -/
+/-- `toGBCoeffPoly` realizes the `t`-shift: `gbshiftCore k p` is `tᵏ · toGBCoeffPoly p`. -/
 theorem toGBCoeffPoly_gbshiftCore (k : ℕ) (p : GBPolyCore β) :
     toGBCoeffPoly (gbshiftCore k p) = Polynomial.X ^ k * toGBCoeffPoly p := by
   induction k with
@@ -174,7 +174,7 @@ theorem gbnormCore_cons_eq (a : CPolyG β) (as : GBPolyCore β) :
           | r => CPolyG.cnormG a :: r) := rfl
 
 omit [CFieldSpec β] in
-/-- `gbnormCore` is **idempotent**. (Named `gbnormCore_idemp` to avoid clashing with the identical
+/-- `gbnormCore` is idempotent. (Named `gbnormCore_idemp` to avoid clashing with the identical
 `@[simp]` `GBPolyCore.gbnormCore_idem` defined downstream in `ComputableTowerWellFounded`, which this file
 sits upstream of and so cannot import — the lemma's natural home is `ComputableTowerGcdFFCore`.) -/
 @[simp] theorem gbnormCore_idemp (p : GBPolyCore β) : gbnormCore (gbnormCore p) = gbnormCore p := by
@@ -188,7 +188,7 @@ sits upstream of and so cannot import — the lemma's natural home is `Computabl
       rw [h] at ih
       simp only [gbnormCore_cons_eq, cnormG_idem, ih]
 
-/-- **`toGBCoeffPoly` ignores normalization**: `toGBCoeffPoly (gbnormCore p) = toGBCoeffPoly p`. -/
+/-- `toGBCoeffPoly` ignores normalization: `toGBCoeffPoly (gbnormCore p) = toGBCoeffPoly p`. -/
 @[simp] theorem toGBCoeffPoly_gbnormCore (p : GBPolyCore β) :
     toGBCoeffPoly (gbnormCore p) = toGBCoeffPoly p := by
   induction p with
@@ -211,7 +211,7 @@ sits upstream of and so cannot import — the lemma's natural home is `Computabl
       rw [h] at ih
       simp only [toGBCoeffPoly_cons, toPolyG_cnormG, ih]
 
-/-- **Coefficient read** of `toGBCoeffPoly`: `(toGBCoeffPoly p).coeff i = toPolyG (p.getD i [])`. The
+/-- Coefficient read of `toGBCoeffPoly`: `(toGBCoeffPoly p).coeff i = toPolyG (p.getD i [])`. The
 Horner bridge realizes the dense `t`-coefficient list exactly (mirror of `toBPoly_coeff`). -/
 theorem toGBCoeffPoly_coeff (p : GBPolyCore β) (i : ℕ) :
     (toGBCoeffPoly p).coeff i = CPolyG.toPolyG (p.getD i ([] : CPolyG β)) := by
@@ -223,7 +223,7 @@ theorem toGBCoeffPoly_coeff (p : GBPolyCore β) (i : ℕ) :
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
-/-- `gbnormCore` has **no trailing `toPolyG`-zero**: the last coefficient of `gbnormCore p` reads to a
+/-- `gbnormCore` has no trailing `toPolyG`-zero: the last coefficient of `gbnormCore p` reads to a
 nonzero `R = (CFieldSpec.K β)[X]` (its `cnormG` is nonempty, hence `toPolyG ≠ 0`). Mirror of
 `SubresultantCorrectness.bnorm_getLast?_toPoly_ne_zero`. -/
 theorem gbnormCore_getLast?_toPolyG_ne_zero (p : GBPolyCore β) :
@@ -251,14 +251,14 @@ theorem gbnormCore_getLast?_toPolyG_ne_zero (p : GBPolyCore β) :
       rw [List.getLast?_cons_cons] at hv
       exact ih v hv
 
-/-- `gblcCore` is the **`t`-coefficient at the top index**: `toPolyG (gblcCore p) =
+/-- `gblcCore` is the `t`-coefficient at the top index: `toPolyG (gblcCore p) =
 (toGBCoeffPoly p).coeff (gbdegCore p)`. -/
 theorem toPolyG_gblcCore_eq_coeff (p : GBPolyCore β) :
     CPolyG.toPolyG (gblcCore p) = (toGBCoeffPoly p).coeff (gbdegCore p) := by
   rw [gblcCore, gbdegCore, ← toGBCoeffPoly_gbnormCore, toGBCoeffPoly_coeff,
     List.getD_eq_getElem?_getD, ← List.getLast?_eq_getElem?]
 
-/-- **`gbisZeroCore` reads as `toGBCoeffPoly = 0`**: `gbisZeroCore p = true ↔ toGBCoeffPoly p = 0` (the
+/-- `gbisZeroCore` reads as `toGBCoeffPoly = 0`: `gbisZeroCore p = true ↔ toGBCoeffPoly p = 0` (the
 list normalizes to empty exactly for the zero polynomial in `t`). Generic mirror of
 `SubresultantCorrectness.bisZero_iff_toBPoly_eq_zero`. -/
 theorem gbisZeroCore_iff_toGBCoeffPoly (p : GBPolyCore β) :
@@ -295,7 +295,7 @@ noncomputable abbrev liftKG (β : Type*) [CField β] [CFieldSpec β] :
     ((CFieldSpec.K β)[X])[X] →+* (RatFunc (CFieldSpec.K β))[X] :=
   Polynomial.mapRingHom (QFunNZG.amG β)
 
-/-- **The β(s)[t] reading of a `GBPolyCore β`** `toGBPolyG p`: read the `(β[s])[t]` polynomial
+/-- The β(s)[t] reading of a `GBPolyCore β` `toGBPolyG p`: read the `(β[s])[t]` polynomial
 `toGBCoeffPoly p` over the field `β(s) = RatFunc (CFieldSpec.K β)` via the coefficient embedding
 `amG β`. Lives in the same `(RatFunc (CFieldSpec.K β))[X] = (CFieldSpec.K (QFunNZG β))[X]` as
 `toPolyG`. The generic mirror of `ComputableGcdCorrect.toPolyB`. -/
@@ -313,7 +313,7 @@ theorem liftKG_C (c : (CFieldSpec.K β)[X]) :
     liftKG β (Polynomial.C c) = Polynomial.C (QFunNZG.amG β c) := by
   simp [liftKG, Polynomial.coe_mapRingHom, Polynomial.map_C]
 
-/-- **The lift-back bridge** `toPolyG (liftGBPolyCoreG p) = toGBPolyG p`: reading a `GBPolyCore β`
+/-- The lift-back bridge `toPolyG (liftGBPolyCoreG p) = toGBPolyG p`: reading a `GBPolyCore β`
 (`(β[s])[t]`) coefficientwise as the fraction `c/1 ∈ QFunNZG β` (`liftGBPolyCoreG`) and then through
 `toPolyG` gives the SAME `β(s)[t]` polynomial as the coefficient-ring embedding `toGBPolyG` — both send
 the `i`-th coefficient to `amG (toPolyG cᵢ)`. -/
@@ -340,7 +340,7 @@ theorem toPolyG_liftGBPolyCoreG (p : GBPolyCore β) :
 `cclearDenomsCoreG p` multiplies the `t`-polynomial `p ∈ β(s)[t]` through by the product of its
 β(s)-coefficient denominators, landing a `GBPolyCore β ∈ (β[s])[t]` whose `i`-th coefficient is
 `numᵢ · ∏_{j≠i} denⱼ`. Read back over the field `β(s)` (`toGBPolyG`), this equals `C s · toPolyG p` for
-the **common denominator scalar** `s = ∏_j denⱼ ∈ β(s)` (nonzero, a unit). So the cleared polynomial is,
+the common denominator scalar `s = ∏_j denⱼ ∈ β(s)` (nonzero, a unit). So the cleared polynomial is,
 over β(s), a unit multiple of `toPolyG p` (`Associated`). The generic mirror of
 `ComputableGcdCorrect.toPolyB_clearDenoms` — and structurally `cclearDenomsCoreG` is *identical* to the
 concrete `clearDenoms` (same `zipIdx.map` + `filter`-fold), so the combinatorial core (`filter_prod_mul`)
@@ -365,7 +365,7 @@ theorem toPolyG_qdenCoeffCoreG_ne_zero (c : QFunNZG β) :
   obtain ⟨⟨a, b⟩, hb⟩ := c
   exact QFunNZG.toPolyG_ne_zero_of_cisZeroG_false hb
 
-/-- **The common-denominator scalar** `commonDenG p ∈ R = (CFieldSpec.K β)[X]`: the product of all the
+/-- The common-denominator scalar `commonDenG p ∈ R = (CFieldSpec.K β)[X]`: the product of all the
 `β[s]`-denominators of `p`'s β(s)-coefficients, `∏_j toPolyG (qdenCoeffCoreG (p.get j))`. The (nonzero)
 β(s)-unit by which `cclearDenomsCoreG` scales `toPolyG p`. The generic mirror of
 `ComputableGcdCorrect.commonDen`. -/
@@ -427,7 +427,7 @@ theorem toPolyG_coeff_eq_zero_of_length_leG (p : CPolyG (QFunNZG β)) {i : ℕ} 
   show CFieldSpec.toK (CField.zero : QFunNZG β) = 0
   rw [CFieldSpec.toK_zero]
 
-/-- **Per-coefficient `cclearDenomsCoreG` identity**: `(toGBPolyG (cclearDenomsCoreG p)).coeff i =
+/-- Per-coefficient `cclearDenomsCoreG` identity: `(toGBPolyG (cclearDenomsCoreG p)).coeff i =
 amG (commonDenG p) · (toPolyG p).coeff i` — the cleared `i`-th coefficient `amG (numᵢ · ∏_{j≠i} denⱼ)`
 equals the common-denominator scalar `amG (∏_j denⱼ)` times `amG numᵢ / amG denᵢ`. Generic mirror of
 `toPolyB_clearDenoms_coeff`. -/
@@ -473,7 +473,7 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPolyG (QFunNZG β)) (i : ℕ) :
       List.getElem?_eq_none (by rw [cclearDenomsCoreG_length]; exact hi), Option.getD_none,
       toPolyG_nil, map_zero, toPolyG_coeff_eq_zero_of_length_leG p hi, mul_zero]
 
-/-- **The `cclearDenomsCoreG` bridge** (exact form): over the field β(s), the cleared polynomial
+/-- The `cclearDenomsCoreG` bridge (exact form): over the field β(s), the cleared polynomial
 `toGBPolyG (cclearDenomsCoreG p)` is the common-denominator scalar `C (amG (commonDenG p))` times
 `toPolyG p`. Generic mirror of `toPolyB_clearDenoms`. -/
 theorem toGBPolyG_cclearDenomsCoreG (p : CPolyG (QFunNZG β)) :
@@ -481,8 +481,8 @@ theorem toGBPolyG_cclearDenomsCoreG (p : CPolyG (QFunNZG β)) :
   ext i
   rw [toGBPolyG_cclearDenomsCoreG_coeff, Polynomial.coeff_C_mul]
 
-/-- **The `cclearDenomsCoreG` bridge** (`Associated` form): over the field β(s), the cleared `(β[s])[t]`
-polynomial and `toPolyG p` are **associates** in `(RatFunc (CFieldSpec.K β))[X]` — they differ by the
+/-- The `cclearDenomsCoreG` bridge (`Associated` form): over the field β(s), the cleared `(β[s])[t]`
+polynomial and `toPolyG p` are associates in `(RatFunc (CFieldSpec.K β))[X]` — they differ by the
 unit `C (amG (commonDenG p))`. The fraction-clearing is a unit-scaling over the field, so it preserves
 the gcd up to associates. Generic mirror of `associated_toPolyB_clearDenoms`. -/
 theorem associated_toGBPolyG_cclearDenomsCoreG (p : CPolyG (QFunNZG β)) :
@@ -505,7 +505,7 @@ namespace GBPolyCore
 variable {β : Type*} [CField β] [CFieldSpec β]
 
 omit [CFieldSpec β] in
-/-- `gbpsremainderCore` **normalizes its divisor**: `gbpsremainderCore fuel p q = gbpsremainderCore fuel p
+/-- `gbpsremainderCore` normalizes its divisor: `gbpsremainderCore fuel p q = gbpsremainderCore fuel p
 (gbnormCore q)`. Mirror of `bpsremainder_bnorm_right`. -/
 theorem gbpsremainderCore_gbnormCore_right (fuel : ℕ) (p q : GBPolyCore β) :
     gbpsremainderCore fuel p q = gbpsremainderCore fuel p (gbnormCore q) := by
@@ -520,7 +520,7 @@ theorem gbpsremainderCore_gbnormCore_right (fuel : ℕ) (p q : GBPolyCore β) :
     show CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 by
       rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], map_one]
 
-/-- **Pseudo-division identity through `toGBCoeffPoly`** (any fuel): there is a multiplier `c ∈ β[s]`
+/-- Pseudo-division identity through `toGBCoeffPoly` (any fuel): there is a multiplier `c ∈ β[s]`
 (a product of leading `t`-coefficients of `q`) and a quotient `s` with `C (toPolyG c) · toGBCoeffPoly p =
 toGBCoeffPoly s · toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q)` in `R[t]`. The computable
 pseudo-remainder realizes the honest `R[t]` pseudo-division relation `lc(q)ᵏ·p = s·q + prem` (the
@@ -565,7 +565,7 @@ end GBPolyCore
 open GBPolyCore
 
 omit [CFieldDomain β] in
-/-- **`gbpsremainderCore` lifts to a β(s)[t] Euclidean relation**: there is a quotient `s` and a
+/-- `gbpsremainderCore` lifts to a β(s)[t] Euclidean relation: there is a quotient `s` and a
 multiplier `c ∈ β[s]` with `C (amG (toPolyG c)) · toGBPolyG p = toGBPolyG s · toGBPolyG q +
 toGBPolyG (gbpsremainderCore fuel p q)` in `(RatFunc (CFieldSpec.K β))[X]` — the lift of
 `toGBCoeffPoly_gbpsremainderCore` through the field embedding `amG`. Generic mirror of
@@ -582,7 +582,7 @@ theorem toGBPolyG_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
   simpa [toGBPolyG] using hl
 
 omit [CFieldDomain β] in
-/-- **`toGBPolyG` ignores normalization**: `toGBPolyG (gbnormCore p) = toGBPolyG p`. -/
+/-- `toGBPolyG` ignores normalization: `toGBPolyG (gbnormCore p) = toGBPolyG p`. -/
 @[simp] theorem toGBPolyG_gbnormCore (p : GBPolyCore β) :
     toGBPolyG (gbnormCore p) = toGBPolyG p := by
   rw [toGBPolyG, toGBCoeffPoly_gbnormCore, ← toGBPolyG]
@@ -610,12 +610,12 @@ content-strip-is-unit at level `β` follows from the gcd-correctness of `cgcdB =
 `β`). This is the same gating shape as `ComputableGcdCorrect.PrimPRSRegular`. -/
 
 omit [CFieldDomain β] in
-/-- **gcd is invariant under an associated right argument** in `(RatFunc (CFieldSpec.K β))[X]`. -/
+/-- gcd is invariant under an associated right argument in `(RatFunc (CFieldSpec.K β))[X]`. -/
 theorem associated_gcd_right_gbpolyG {A B B' : (RatFunc (CFieldSpec.K β))[X]} (h : Associated B B') :
     Associated (gcd A B) (gcd A B') :=
   associated_gcd_right_field h
 
-/-- **Per-run regularity of the primitive PRS** `CPrimPRSGenAssocReg cgcdB fuel P Q`: the inductive
+/-- Per-run regularity of the primitive PRS `CPrimPRSGenAssocReg cgcdB fuel P Q`: the inductive
 predicate collecting exactly what the `gcd` invariant of each `cprimPRSgcdGenCore` step needs — (i) the
 recursion reaches `gbisZeroCore Q = true` (termination), and at every non-terminal step (with `Pn =
 gbnormCore P`, `Qn = gbnormCore Q`, `prem = gbpsremainderCore 60 Pn Qn`, `r = gbprimitivePartCore cgcdB
@@ -649,9 +649,9 @@ def CPrimPRSGenAssocReg (cgcdB : CPolyG β → CPolyG β → CPolyG β) :
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
 
 omit [CFieldDomain β] in
-/-- **Step 2 — the primitive-PRS gcd invariant** (the crux): for a regular run
+/-- Step 2 — the primitive-PRS gcd invariant (the crux): for a regular run
 (`CPrimPRSGenAssocReg cgcdB fuel P Q`), the last nonzero primitive remainder
-`cprimPRSgcdGenCore cgcdB fuel P Q` is, over the field β(s), **associated to the polynomial gcd** of the
+`cprimPRSgcdGenCore cgcdB fuel P Q` is, over the field β(s), associated to the polynomial gcd of the
 inputs: `Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPolyG P) (toGBPolyG Q))` in
 `(RatFunc (CFieldSpec.K β))[X]`. The classic Euclidean invariant `gcd(P,Q) ~ gcd(Q, prem(P,Q))` carried
 along the primitive PRS, bottoming at `gcd(P, 0) ~ P`. Generic mirror of
@@ -728,7 +728,7 @@ theorem gbcontentCore_gbnormCore (cgcdB : CPolyG β → CPolyG β → CPolyG β)
     gbcontentCore cgcdB (gbnormCore p) = gbcontentCore cgcdB p := by
   rw [gbcontentCore, gbcontentCore, gbnormCore_idemp]
 
-/-- **`toGBCoeffPoly` of a coefficient-wise exact division**: if dividing every `t`-coefficient `a` of `p`
+/-- `toGBCoeffPoly` of a coefficient-wise exact division: if dividing every `t`-coefficient `a` of `p`
 by the `β[s]` content `g` is exact (`toPolyG g ∣ toPolyG a`), then
 `C(toPolyG g) · toGBCoeffPoly (p.map (cdivWf · g)) = toGBCoeffPoly p` — the content `C(toPolyG g)`
 factors back out of the divided `t`-coefficient list. Generic mirror of
@@ -752,7 +752,7 @@ end GBPolyCore
 open GBPolyCore
 
 omit [CFieldDomain β] in
-/-- **`gbprimitivePartCore` realizes exact `β[s]`-content division through `toGBCoeffPoly`**: when the
+/-- `gbprimitivePartCore` realizes exact `β[s]`-content division through `toGBCoeffPoly`: when the
 content `g = gbcontentCore cgcdB p` is nonzero (`hg`) and divides every `t`-coefficient of `gbnormCore p`
 exactly, `C(toPolyG g) · toGBCoeffPoly (gbprimitivePartCore cgcdB p) = toGBCoeffPoly p`. Generic
 mirror of `toBPoly_bprimitivePartX_exact`. -/
@@ -771,7 +771,7 @@ theorem toGBCoeffPoly_gbprimitivePartCore_exact (fuel : ℕ)
     (gbcontentCore cgcdB p) hgcn hdvd, toGBCoeffPoly_gbnormCore]
 
 omit [CFieldDomain β] in
-/-- **Clause (iii) discharged — `gbprimitivePartCore` is a β(s)-unit scaling** (the Mathlib-content half):
+/-- Clause (iii) discharged — `gbprimitivePartCore` is a β(s)-unit scaling (the Mathlib-content half):
 under the content-nonzero and content-divides-each-coefficient hypotheses (with `toPolyG g ≠ 0`),
 `Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p)` over β(s) — stripping the
 `β[s]`-content is a β(s)-unit scaling, preserving the gcd up to associates. The content-divides
@@ -805,10 +805,10 @@ theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)
 The content `gbcontentCore cgcdB p` folds the content-gcd `cgcdB` over the `t`-coefficients. When `cgcdB`
 computes the gcd up to associates in `R = β[s]` (`CgcdBCorrect` — on a real run this is the
 gcd-correctness of `cgcdFFRawCore` at level `β`, the tower induction hypothesis), the running fold
-**divides each coefficient** in `R`. This is the divisibility clause (iii) needs, now reduced to the
+divides each coefficient in `R`. This is the divisibility clause (iii) needs, now reduced to the
 level-`β` gcd-correctness. Generic mirror of `ComputableGcdCorrect.toPoly_foldl_cgcdExt_dvd`. -/
 
-/-- **The content-gcd `cgcdB` is gcd-correct** `CgcdBCorrect cgcdB`: for all `a b ∈ β[s]`,
+/-- The content-gcd `cgcdB` is gcd-correct `CgcdBCorrect cgcdB`: for all `a b ∈ β[s]`,
 `toPolyG (cgcdB a b)` is `Associated` to `gcd (toPolyG a) (toPolyG b)` in `R = (CFieldSpec.K β)[X]`. On a
 real tower run this is supplied by `associated_toPolyG_cgcdFFRawCore` at level `β` (the recursion). -/
 def CgcdBCorrect {β : Type*} [CField β] [CFieldSpec β] (cgcdB : CPolyG β → CPolyG β → CPolyG β) : Prop :=
@@ -817,7 +817,7 @@ def CgcdBCorrect {β : Type*} [CField β] [CFieldSpec β] (cgcdB : CPolyG β →
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
-/-- **The content `cgcdB`-fold divides each input** (over `R = β[s]`): for the running content
+/-- The content `cgcdB`-fold divides each input (over `R = β[s]`): for the running content
 `g = l.foldl (fun g c => cgcdB g c) acc`, under `CgcdBCorrect cgcdB`, `toPolyG g` divides `toPolyG acc`
 and `toPolyG a` for every `a ∈ l`. Each step's gcd (up to associates) divides the previous accumulator
 and the new coefficient; divisibility transports through the fold. Generic mirror of
@@ -847,7 +847,7 @@ theorem toPolyG_foldl_cgcdB_dvd (cgcdB : CPolyG β → CPolyG β → CPolyG β) 
     · exact hfg₁.trans hg₁c
     · exact hfmem a hl
 
-/-- **The content divides each `t`-coefficient** of `gbnormCore p` (over `R = β[s]`): under
+/-- The content divides each `t`-coefficient of `gbnormCore p` (over `R = β[s]`): under
 `CgcdBCorrect cgcdB`, `toPolyG (gbcontentCore cgcdB p) ∣ toPolyG a` for every `a ∈ gbnormCore p`. The
 `[]`-seeded specialization of `toPolyG_foldl_cgcdB_dvd`. This is the content-divides hypothesis clause
 (iii) needs, supplied entirely by the level-`β` gcd-correctness. -/
@@ -859,7 +859,7 @@ theorem toPolyG_gbcontentCore_dvd_mem (cgcdB : CPolyG β → CPolyG β → CPoly
   rw [hbc]
   exact (toPolyG_foldl_cgcdB_dvd cgcdB hcorr [] (GBPolyCore.gbnormCore p)).2
 
-/-- **Clause (iii) discharged from `cgcdB`-correctness alone** (the tower-induction packaging): under
+/-- Clause (iii) discharged from `cgcdB`-correctness alone (the tower-induction packaging): under
 `CgcdBCorrect cgcdB` (the level-`β` gcd-correctness), content-nonzero, and the retained per-coefficient
 bound threaded by the PRS gate,
 `gbprimitivePartCore cgcdB p` is a β(s)-unit scaling (`Associated (toGBPolyG (gbprimitivePartCore
@@ -889,7 +889,7 @@ recursive tower instance `instCFracGcdCoreQFunNZG`. -/
 section
 variable [CFracGcdCore β]
 
-/-- **Step 3 — abstract correctness of the recursive `cgcdFFRawCore` over β(s)[t]** (under a regular
+/-- Step 3 — abstract correctness of the recursive `cgcdFFRawCore` over β(s)[t] (under a regular
 run): over the field β(s) = `RatFunc (CFieldSpec.K β)`, the raw fraction-free gcd
 `cgcdFFRawCore fuel p q` (`instCFracGcdCoreQFunNZG`, with content-gcd `CFracGcdCore.cgcdFFRawCore` at
 level `β`) computes the polynomial gcd of the inputs — `toPolyG (cgcdFFRawCore fuel p q)` is `Associated`
@@ -937,7 +937,7 @@ theorem associated_toPolyG_cgcdFFRawCore (fuel : ℕ) (p q : CPolyG (QFunNZG β)
   · simp only [if_neg hlt] at hreg ⊢
     exact key _ _ hreg hbridge
 
-/-- **The public monic `cgcdFFCore` correct over β(s)[t]** (under a regular run): the public monic
+/-- The public monic `cgcdFFCore` correct over β(s)[t] (under a regular run): the public monic
 fraction-free gcd `cgcdFFCore fuel p q = cmonicG (cgcdFFRawCore fuel p q)` reads through `toPolyG` to the
 polynomial gcd up to associates — composing the raw correctness `associated_toPolyG_cgcdFFRawCore` with
 the monic unit-scaling `associated_toPolyG_cmonicG`. So the generic flat gcd the engine actually calls
@@ -994,7 +994,7 @@ end
 
 /-! ### Verdict and the precise remaining gap
 
-**Verdict: the fraction-free-gcd correctness holds at every tower level.**
+Verdict: the fraction-free-gcd correctness holds at every tower level.
 The spine (clear-denominators unit-scaling, Euclidean-step gcd invariant, primitive-part unit scaling,
 the `filter_prod_mul` combinatorics) runs over `CFieldSpec.K β` via the `gb*Core` engine and the
 `toGBPolyG` bridge. NO `ℚ[x]`/`ℚ`-specific fact is needed: every content step is a Mathlib
@@ -1002,7 +1002,7 @@ generic-content / field-generic step (the `(CFieldSpec.K β)[X]` is a `Normalize
 domain, and `RatFunc (CFieldSpec.K β)` is a field), and `filter_prod_mul` applies verbatim. So the
 algorithm's "almost-purely-mechanical" generalization is matched by an almost-purely-mechanical proof.
 
-**What is fully proved (axiom-clean, `[propext, Classical.choice, Quot.sound]`):**
+What is fully proved (axiom-clean, `[propext, Classical.choice, Quot.sound]`):
 * `associated_toPolyG_cgcdFFRawCore` / `associated_toPolyG_cgcdFFCore` — THE deliverable: the recursive
   tower fraction-free gcd computes the polynomial gcd up to associates over β(s)[t], gated on the
   per-step regularity bundle `CPrimPRSGenAssocReg` (the generic mirror of `PrimPRSRegular`).
@@ -1012,22 +1012,22 @@ algorithm's "almost-purely-mechanical" generalization is matched by an almost-pu
   (`associated_toGBPolyG_gbprimitivePartCore_of_correct`).
 * The base case `associated_toPolyG_cgcdExtG` (the bottom of the tower, and the content-gcd at any level).
 
-**The precise remaining gap (toward a fully *unconditional* tower induction):**
-1. **Clause (i) termination** of `CPrimPRSGenAssocReg` is still assumed. Discharging it from a `t`-degree
+The precise remaining gap (toward a fully *unconditional* tower induction):
+1. Clause (i) termination of `CPrimPRSGenAssocReg` is still assumed. Discharging it from a `t`-degree
    bound via the strict per-step `bdeg`-decrease needs the `gb*Core` analogue of `bdegree_reduce_step_lt` /
    `primPRSstep_length_lt` (a mechanical derivation, not a new idea).
-2. **The tower recursion** must thread `CgcdBCorrect (cgcdFFRawCore β)` as the induction hypothesis. This
+2. The tower recursion must thread `CgcdBCorrect (cgcdFFRawCore β)` as the induction hypothesis. This
    is NOT a plain structural induction: `CFracGcdCore` is a depth-free typeclass, so it needs a companion
    correctness class (`CFracGcdCoreCorrect`, with a base instance at `ℚ` and a recursive instance at
    `QFunNZG β`) capturing "this level's `cgcdFFRawCore` is gcd-correct on terminating runs". The genuine
-   subtlety found: **`CgcdBCorrect` (unconditional over all inputs) does NOT hold for the base
-   `cgcdFFRawCore ℚ = (cgcdExtG _).1`** — `associated_toPolyG_cgcdExtG` needs `cgcdTerminatesG` — so the
+   subtlety found: `CgcdBCorrect` (unconditional over all inputs) does NOT hold for the base
+   `cgcdFFRawCore ℚ = (cgcdExtG _).1` — `associated_toPolyG_cgcdExtG` needs `cgcdTerminatesG` — so the
    recursion must carry the fuel/termination side-conditions (`cgcdTerminatesG`/`ContentFoldTerminates`),
    not a clean `∀`-correctness.
 
-So the residual obstruction is **not** a missing Mathlib/GCD-domain fact (the content lever closed every
-`ℚ[x]`-specific step) — it is the **bookkeeping of the fuel-termination side-conditions through the tower
-recursion**, exactly the machinery `ComputableGcdCorrect`'s `PrimPRSInputs`/`primPRSInputs_of_nodeRegular`
+So the residual obstruction is not a missing Mathlib/GCD-domain fact (the content lever closed every
+`ℚ[x]`-specific step) — it is the bookkeeping of the fuel-termination side-conditions through the tower
+recursion, exactly the machinery `ComputableGcdCorrect`'s `PrimPRSInputs`/`primPRSInputs_of_nodeRegular`
 layer carries at the single concrete level, now to be lifted to the depth-indexed tower. -/
 
 #print axioms associated_toPolyG_cgcdExtG

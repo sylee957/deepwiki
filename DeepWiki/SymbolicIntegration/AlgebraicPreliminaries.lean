@@ -3,18 +3,16 @@ import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.Tactic
 
 /-! # Algebraic preliminaries — the gcd predicate and the resultant–root corollary
-Bronstein's Chapter 1 is standard constructive algebra, almost all of which is Mathlib's. The
-one notion the book states as a *predicate* — rather than a chosen operation, as in Mathlib's
-`GCDMonoid` — is the greatest common divisor of Definition 1.1.4. We add it here with its
-satellite API and the uniqueness-up-to-units property (Theorem 1.1.1), the resultant–root
-corollary of §1.4 (`res = 0 ⟺` a common root), and a gcd-multiplicativity lemma feeding §3.4. -/
+The greatest-common-divisor *predicate* `IsGCD` (as opposed to Mathlib's chosen-operation
+`GCDMonoid`) with its satellite API and uniqueness up to units, the resultant–root corollary
+(`res = 0 ⟺` a common root), and gcd-multiplicativity/coprime-cancellation lemmas. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommMonoidWithZero R]
 
-/-- **Definition 1.1.4** (gcd): `z` is a greatest common divisor of `x` and `y` if it divides
-both and every common divisor of `x` and `y` divides it. -/
+/-- `z` is a greatest common divisor of `x` and `y`: it divides both, and every common divisor
+of `x` and `y` divides it. -/
 def IsGCD (x y z : R) : Prop := z ∣ x ∧ z ∣ y ∧ ∀ t, t ∣ x → t ∣ y → t ∣ z
 
 /-- A gcd divides its first argument. -/
@@ -31,16 +29,15 @@ theorem IsGCD.dvd {x y z t : R} (h : IsGCD x y z) (hx : t ∣ x) (hy : t ∣ y) 
 theorem IsGCD.symm {x y z : R} (h : IsGCD x y z) : IsGCD y x z :=
   ⟨h.2.1, h.1, fun t hy hx => h.2.2 t hx hy⟩
 
-/-- **Theorem 1.1.1**: a gcd is unique up to multiplication by a unit (i.e. two gcds of the same
-pair are `Associated`). -/
+/-- A gcd is unique up to multiplication by a unit: two gcds of the same pair are `Associated`. -/
 theorem IsGCD.associated [IsCancelMulZero R] {x y z t : R} (hz : IsGCD x y z) (ht : IsGCD x y t) :
     Associated z t :=
   associated_of_dvd_dvd (ht.dvd hz.dvd_left hz.dvd_right) (hz.dvd ht.dvd_left ht.dvd_right)
 
 open Polynomial in
-/-- **Corollary 1.4.1** (§1.4): for a nonzero `f` that splits, `res(f, g) = 0` iff `f` and `g`
-share a root — some root `α` of `f` has `g(α) = 0`. Falls out of `res = lc(f)ⁿ·∏_α g(α)`
-(`resultant_eq_prod_eval`) since `lc(f)ⁿ ≠ 0` in a domain and a product vanishes iff a factor does. -/
+/-- For a nonzero `f` that splits, `res(f, g) = 0` iff `f` and `g` share a root — some root `α`
+of `f` has `g(α) = 0`. Falls out of `res = lc(f)ⁿ·∏_α g(α)` (`resultant_eq_prod_eval`) since
+`lc(f)ⁿ ≠ 0` in a domain and a product vanishes iff a factor does. -/
 theorem resultant_eq_zero_iff_exists_root {S : Type*} [CommRing S] [IsDomain S] {f g : S[X]}
     (n : ℕ) (hg : g.natDegree ≤ n) (hf : f.Splits) (hf0 : f ≠ 0) :
     Polynomial.resultant f g f.natDegree n = 0 ↔ ∃ α ∈ f.roots, g.eval α = 0 := by
@@ -51,10 +48,10 @@ theorem resultant_eq_zero_iff_exists_root {S : Type*} [CommRing S] [IsDomain S] 
 section GCDMonoid
 variable {R : Type*} [CommMonoidWithZero R] [NormalizedGCDMonoid R]
 
-/-- The gcd is *multiplicative in its first argument across coprime factors*:
-if `gcd a b` is a unit then `gcd (a·b) c` is associated to `gcd a c · gcd b c`. (Infrastructure
-toward §3.4's **Lemma 3.4.4** `gcd(p, Dp) = ∏ gcd(pᵢ^eᵢ, D pᵢ^eᵢ)`, whose two-factor base case
-this is; Mathlib has only the one-direction `gcd_mul_dvd_mul_gcd`.) -/
+/-- The gcd is multiplicative in its first argument across coprime factors: if `gcd a b` is a
+unit then `gcd (a·b) c` is associated to `gcd a c · gcd b c`. (The two-factor base case of
+`gcd(p, Dp) = ∏ gcd(pᵢ^eᵢ, D pᵢ^eᵢ)`; Mathlib has only the one-direction
+`gcd_mul_dvd_mul_gcd`.) -/
 theorem associated_gcd_mul_of_isUnit_gcd {a b : R} (hab : IsUnit (gcd a b)) (c : R) :
     Associated (gcd (a * b) c) (gcd a c * gcd b c) := by
   refine associated_of_dvd_dvd ?_ ?_

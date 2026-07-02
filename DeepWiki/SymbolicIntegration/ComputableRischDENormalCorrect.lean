@@ -1,29 +1,12 @@
 import DeepWiki.SymbolicIntegration.ComputableSoundnessCapstone
 
-/-! # Discharging the recursive RDE residual `RischDESuccessResidual` — what falls, and the sharpened crux
+/-! # Reducing the recursive RDE residual to its weak-normalization crux
 
-`ComputableSoundnessCapstone.crischDESolve_field_of_witness_residual` closes the recursive RDE-oracle field
-identity over `QFunNZG β` *up to* the explicit `RischDESuccessResidual` bundle. This file re-attacks that
-bundle clause by clause for the recursive instance (`Dt = [CField.one]`, the primitive monomial), separating
-the clauses that are genuine theorems from those that are a real precondition the recursive oracle does not
-establish — sharpening the prior "self-certification wall" into its precise mathematical content.
-
-* **The denominator-nonzero clauses are theorems**: `hfden`/`hgden` and the `cnormG _ ≠ []` clauses
-  `hfden0`/`hgden0` come directly from the `QFunNZG β` subtype proof `cisZeroG _ = false`; `hyden` comes
-  from the `cisZeroG yden = false` guard a successful `crischDESolve` already passes
-  (`crischDESolve_yden_ne_zero`).
-* **The §6.2 divisibility / fuel / `CSPDEGClearedInputsGen` clauses are NOT theorems for arbitrary `f g`**
-  (the sharpened crux): `hdvdB`/`hdvdC` (`fden ∣ B`, `gden ∣ C`) are the **weak-normalization invariant** of
-  Bronstein §6.1–§6.2 — they hold for the *post-Hermite, weakly-normalized* RDE input, but the recursive
-  `crischDESolve` feeds its raw argument straight into `cRischDEG` without weak-normalizing it, and the engine
-  computes the clearing `cdivWf` unconditionally (truncating on non-divisibility). `hdn` likewise rests on the
-  splitting-factorization product `fden = dₙ·dₛ`, which `cSplitFactorFastG` is documented not to establish
-  abstractly. The non-gcd `CSPDEGClearedInputsGen` clauses are per-run regularity. So the recursive
-  `RischDESuccessResidual` is **not** an unconditional `∀ f g` — its precise true content is the §6.1
-  weak-normalization precondition plus per-run termination/fuel, NOT engine
-  self-certification.
-
-The verdict at the end states precisely which clauses fall and why the rest is a genuine precondition. -/
+Discharges the provable clauses of `RischDESuccessResidual` for the recursive instance
+(`Dt = [CField.one]`) — denominator-nonzero from the `QFunNZG β` subtype, `hyden` from the solve
+guard, `hprim` from the gcd witness — and reduces `hdvdB`/`hdvdC` to two product-divisibilities
+(`fden ∣ dₙh`, `gden ∣ dₙh²`), the weak-normalization precondition on the RDE input. The remainder
+is bundled as `RischDESuccessResidualCrux`, with the field identity `crischDESolve_field_of_crux`. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -32,61 +15,46 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG GBPolyCore
 
-/-! ## The denominator-nonzero clauses (`hfden`/`hgden`/`hfden0`/`hgden0`/`hyden`) — genuine theorems
-
-These four-plus-one clauses of `RischDESuccessResidual` are NOT part of the crux: they follow from the
-`QFunNZG β` subtype invariant `cisZeroG _ = false` (for the input denominators `f.1.2`, `g.1.2`) and from the
-`cisZeroG yden = false` guard a successful `crischDESolve` passes (for the output denominator). We discharge
-all of them here. -/
+/-! ## The input denominator-nonzero clauses, from the `QFunNZG β` subtype invariant -/
 
 section Nonzero
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
-/-- **`cisZeroG p = false` reads as `toPolyG p ≠ 0`** — the contrapositive of `cisZeroG_iff`. The bridge
-turning the `QFunNZG β` subtype's denominator-nonzero proof into the `≠ 0` polynomial fact the field bridge
-wants. -/
+/-- `cisZeroG p = false` gives `toPolyG p ≠ 0` — the contrapositive of `cisZeroG_iff`. -/
 theorem toPolyG_ne_zero_of_cisZeroG_false {p : CPolyG β} (h : CPolyG.cisZeroG p = false) :
     toPolyG p ≠ 0 := by
   intro h0
   rw [(CPolyG.cisZeroG_iff p).mpr h0] at h
   exact absurd h (by simp)
 
-/-- **`cisZeroG p = false` gives `cnormG p ≠ []`** — the list-level form of denominator-nonzero. From
-`toPolyG_ne_zero_of_cisZeroG_false` via `cnormG_eq_nil_iff`. -/
+/-- `cisZeroG p = false` gives `cnormG p ≠ []` — the list-level form of nonzero. -/
 theorem cnormG_ne_nil_of_cisZeroG_false {p : CPolyG β} (h : CPolyG.cisZeroG p = false) :
     CPolyG.cnormG p ≠ [] := by
   intro he
   exact toPolyG_ne_zero_of_cisZeroG_false h ((CPolyG.cnormG_eq_nil_iff p).mp he)
 
-/-- **The input denominator of a `QFunNZG β`-fraction is nonzero** (`hfden`/`hgden`): for `f : QFunNZG β`,
-`toPolyG f.1.2 ≠ 0` — directly from the subtype proof `f.2 : cisZeroG f.1.2 = false`. -/
+/-- The denominator of a `QFunNZG β`-fraction is nonzero: `toPolyG f.1.2 ≠ 0`, from the subtype
+proof `f.2 : cisZeroG f.1.2 = false`. -/
 theorem qfunNZG_den_toPolyG_ne_zero (f : QFunNZG β) : toPolyG f.1.2 ≠ 0 :=
   toPolyG_ne_zero_of_cisZeroG_false f.2
 
-/-- **The input denominator of a `QFunNZG β`-fraction has nonempty normal form** (`hfden0`/`hgden0`):
-`cnormG f.1.2 ≠ []` — from the subtype proof. -/
+/-- The denominator of a `QFunNZG β`-fraction has nonempty normal form: `cnormG f.1.2 ≠ []`. -/
 theorem qfunNZG_den_cnormG_ne_nil (f : QFunNZG β) : CPolyG.cnormG f.1.2 ≠ [] :=
   cnormG_ne_nil_of_cisZeroG_false f.2
 
 end Nonzero
 
-/-! ## The output denominator (`hyden`) — from the `crischDESolve` success guard
-
-A successful recursive solve `crischDESolve f g = some y` unfolds (over `QFunNZG β`,
-`instCRischFieldQFunNZG`) to `cRischDEG [1] fuel f.1.1 f.1.2 g.1.1 g.1.2 = some (ynum, yden)` *together with*
-the boolean guard `cisZeroG yden = false` (the `dif_pos` branch that wraps the pair into the `QFunNZG β`
-output). So the output denominator `yden` is nonzero — `hyden` is forced by the success, not a residual. -/
+/-! ## The output denominator (`hyden`), from the `crischDESolve` success guard -/
 
 section OutputNonzero
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
   [CFracGcdCore β] [CRischField β]
 
-/-- **A successful recursive solve forces `cisZeroG yden = false`** (and hence `toPolyG yden ≠ 0`): if
-`crischDESolve f g = some y` over `QFunNZG β` and the inner oracle returned `(ynum, yden)`, then the boolean
-guard wrapping the pair into the `QFunNZG β` output was `cisZeroG yden = false`, so `toPolyG yden ≠ 0`. This
-discharges the `hyden` clause of `RischDESuccessResidual` from the bare success — no residual. -/
+/-- A successful recursive solve forces `toPolyG yden ≠ 0`: the `dif_pos` guard wrapping the inner
+`cRischDEG` output pair into a `QFunNZG β` value is `cisZeroG yden = false`. Discharges the `hyden`
+clause of `RischDESuccessResidual`. -/
 theorem crischDESolve_yden_ne_zero (f g y : QFunNZG β)
     (hsolve : CRischField.crischDESolve f g = some y) (ynum yden : CPolyG β)
     (hsucc : cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
@@ -104,33 +72,23 @@ theorem crischDESolve_yden_ne_zero (f g y : QFunNZG β)
 
 end OutputNonzero
 
-/-! ## Task 1 — `hprim` for the recursive monomial `Dt = [CField.one]` (using the gcd witness)
+/-! ## `hprim` for the recursive monomial `Dt = [CField.one]`
 
-`hprim` asks `cdegG (cSpecialPolyG Dt fuel) = 0` (the primitive special regime). For the recursive instance
-`Dt = [CField.one]` the monomial is primitive, so its special part is the constant `[1]`. This is **not**
-"true by construction" cheaply: `cSpecialPolyG [1] fuel = cmonicG (cSplitFactorFastG [1] fuel [1]).2`, and the
-`cSplitFactorFastG` step computes `S = cdivWf (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1]
-(cderivG [1]))` whose first gcd argument is the unit `[1]` but whose degree we can only pin via the gcd
-correctness. With the tower-gcd witness `[CTowerGcdWitness β]` in hand (the same witness the capstone already
-carries), the gcd of the unit `[1]` is associated to `gcd 1 _ = 1`, hence a unit of degree `0`; the step `S`
-is then a constant, the `cSplitFactorFastG` recursion never fires, and the special part is `[1]`. So `hprim`
-**is** a theorem for the recursive instance — given the gcd witness. -/
+Under the tower-gcd witness `[CTowerGcdWitness β]`, the gcds of the unit `[1]` are units, the
+`cSplitFactorFastG` step is constant, so the special part of `[1]` is the constant `[1]`. -/
 
 section Hprim
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β]
 
 omit [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β] in
-/-- **`toPolyG [CField.one] = 1`** — the constant `[1]` reads as the polynomial `1`. -/
+/-- `toPolyG [CField.one] = 1`: the constant `[1]` reads as the polynomial `1`. -/
 theorem toPolyG_cone_eq_one : toPolyG ([CField.one] : CPolyG β) = 1 := by
   rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
 
 omit [CDiffField β] in
-/-- **The public tower gcd of the unit `[1]` is a unit** (`cgcdFFCore_one_isUnit`): under the tower-gcd
-witness, `toPolyG (cgcdFFCore fuel [1] z)` is a unit for any `z`. The raw gcd is `Associated` to
-`gcd (toPolyG [1]) (toPolyG z) = gcd 1 _ = 1` (`CTowerGcdWitness.gcdBCorrect` + `gcd_one_left`), so it is a
-unit; `cgcdFFCore = cmonicG ∘ raw` is `Associated` to the raw via `associated_toPolyG_cmonicG`, hence also a
-unit. -/
+/-- Under the tower-gcd witness, `toPolyG (cgcdFFCore fuel [1] z)` is a unit for any `z`: the raw
+gcd is `Associated` to `gcd 1 _ = 1`, and `cgcdFFCore = cmonicG ∘ raw` preserves associates. -/
 theorem cgcdFFCore_one_isUnit (fuel : ℕ) (z : CPolyG β) :
     IsUnit (toPolyG (CFracGcdCore.cgcdFFCore (α := β) fuel [CField.one] z)) := by
   have hcorr := CTowerGcdWitness.gcdBCorrect (α := β) fuel [CField.one] z
@@ -141,10 +99,8 @@ theorem cgcdFFCore_one_isUnit (fuel : ℕ) (z : CPolyG β) :
   exact (associated_toPolyG_cmonicG _).symm.isUnit hraw
 
 omit [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β] in
-/-- **Division by a degree-0 unit divisor keeps degree 0**: if `cdegG c = 0` and `d` is nonzero of degree
-`0`, then `cdegG (cdivWf c d) = 0`. The unit divisor has normalized length `1`, so the Euclidean remainder is
-properly reduced to length `< 1`, i.e. `0` (`cmodWf_length_lt`); the division identity `c = q·d + 0` then
-forces `natDegree q = natDegree c − natDegree d = 0`. -/
+/-- Division by a nonzero degree-0 divisor keeps degree 0: if `cdegG c = 0`, `cnormG d ≠ []`, and
+`cdegG d = 0`, then `cdegG (cdivWf c d) = 0`. -/
 theorem cdegG_cdivWf_zero_of_unit_divisor (c d : CPolyG β)
     (hc : cdegG c = 0) (hd0 : CPolyG.cnormG d ≠ []) (hd : cdegG d = 0) :
     cdegG (CPolyG.cdivWf c d) = 0 := by
@@ -171,10 +127,9 @@ theorem cdegG_cdivWf_zero_of_unit_divisor (c d : CPolyG β)
     rw [Polynomial.natDegree_mul hquo0 hdne, hdnd0, hcnd0, add_zero] at hnd
     omega
 
-/-- **The `cSplitFactorFastG` step value is constant on the unit input `[1]`** (`cdegG_step_one`): the step
-`S = cdivWf (cgcdFFCore [1] (cmonomialDeriv [1] [1])) (cgcdFFCore [1] (cderivG [1]))` has degree `0`. Both
-gcds are units (`cgcdFFCore_one_isUnit`), so `S` is a unit-by-unit division — degree `0`
-(`cdegG_cdivWf_zero_of_unit_divisor`). The step never being non-constant is what stops the split recursion. -/
+/-- The `cSplitFactorFastG` step on the unit input `[1]` has degree `0`: both gcds are units
+(`cgcdFFCore_one_isUnit`), so the step is a unit-by-unit division. A constant step stops the split
+recursion. -/
 theorem cdegG_step_one (n : ℕ) :
     cdegG (CPolyG.cdivWf
         (CFracGcdCore.cgcdFFCore (n + 1) ([CField.one] : CPolyG β)
@@ -195,9 +150,8 @@ theorem cdegG_step_one (n : ℕ) :
     rw [hz] at hg2u; exact not_isUnit_zero hg2u
   exact cdegG_cdivWf_zero_of_unit_divisor g1 g2 hd1 hg20 hd2
 
-/-- **The split factorization of `[1]` is trivial** (`cSplitFactorFastG_one_eq`): `cSplitFactorFastG [1] fuel
-[1] = ([1], [1])`. At fuel `0` it is `([1], [1])` definitionally; at `fuel+1` the step `S` is constant
-(`cdegG_step_one`), so the `if cdegG S = 0` branch fires and returns `([1], [1])` without recursing. -/
+/-- `cSplitFactorFastG [1] fuel [1] = ([1], [1])`: the split factorization of the unit `[1]` is
+trivial at every fuel (the step is constant, so the recursion never fires). -/
 theorem cSplitFactorFastG_one_eq (fuel : ℕ) :
     CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) fuel [CField.one]
       = ([CField.one], [CField.one]) := by
@@ -205,11 +159,8 @@ theorem cSplitFactorFastG_one_eq (fuel : ℕ) :
   | zero => rfl
   | succ n => rw [CPolyG.cSplitFactorFastG, if_pos (cdegG_step_one n)]
 
-/-- **★ `hprim` for the recursive monomial** (`cdegG_cSpecialPolyG_one_eq_zero`): `cdegG (cSpecialPolyG [1]
-fuel) = 0`. The special part of the primitive monomial `[1]` is `cmonicG (cSplitFactorFastG [1] fuel [1]).2 =
-cmonicG [1]` (`cSplitFactorFastG_one_eq`), which is `Associated` to `[1]` (`toPolyG = 1`, a unit), hence of
-degree `0`. The `hprim` clause of `RischDESuccessResidual` is a theorem for the recursive instance — discharged
-from the gcd witness, NOT carried as a residual. -/
+/-- `cdegG (cSpecialPolyG [1] fuel) = 0`: the special part of the primitive monomial `[1]` is
+constant, discharging the `hprim` clause of `RischDESuccessResidual` for the recursive instance. -/
 theorem cdegG_cSpecialPolyG_one_eq_zero (fuel : ℕ) :
     cdegG (CPolyG.cSpecialPolyG ([CField.one] : CPolyG β) fuel) = 0 := by
   rw [CPolyG.cSpecialPolyG, cSplitFactorFastG_one_eq, cdegG_eq_natDegree]
@@ -219,44 +170,28 @@ theorem cdegG_cSpecialPolyG_one_eq_zero (fuel : ℕ) :
 
 end Hprim
 
-/-! ### Restatement against the intended wording (anonymous `example`) -/
+/-! ### Restatement -/
 
--- ★ Task 1: the primitive-regime clause `hprim` is a theorem for the recursive monomial `Dt = [1]`,
--- given the gcd witness.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CTowerGcdWitness β]
     (fuel : ℕ) : cdegG (CPolyG.cSpecialPolyG ([CField.one] : CPolyG β) fuel) = 0 :=
   cdegG_cSpecialPolyG_one_eq_zero fuel
 
-/-! ## ★ Task 3 — the §6.2 divisibility crux: reduced to the weak-normalization product-divisibilities
+/-! ## The divisibility clauses, reduced to the weak-normalization product-divisibilities
 
-`hdvdB`/`hdvdC` are the two clauses a bare `cRischDEG … = some _` does NOT self-certify, because
-`cRdeNormalDenominatorG` computes the `B`/`C` clearing `cdivWf` **unconditionally** (it checks only one
-`cdvdG`, on `en ∣ dₙh²`, before returning `some` — never the `fden ∣ B` / `gden ∣ C` exactness the cleared
-identity needs). We make their precise content explicit: each reduces to a single product-divisibility of the
-*denominator* into the `normal-part·h` block — the algebraic essence of Bronstein §6.1 **weak normalization**.
-
-With `dₙ = (cSplitFactorFastG Dt fuel fden).1` the normal part of `fden`:
-
-* `hdvdB` (`fden ∣ B = dₙh·fnum − dₙ·Dh·fden`) follows from `fden ∣ dₙh` — the `−dₙ·Dh·fden` summand is
-  divisible by `fden` outright, and `fden ∣ dₙh ⟹ fden ∣ dₙh·fnum` (`hdvdB_of_dvd`).
-* `hdvdC` (`gden ∣ C = dₙh²·gnum`) follows from `gden ∣ dₙh²` (`hdvdC_of_dvd`).
-
-So the §6.2 divisibility crux is **exactly** these two product-divisibilities — NOT engine self-certification,
-but the genuine §6.1 weak-normalization precondition on the (raw, un-normalized) RDE input. For a
-**weakly-normalized** `f` (the post-Hermite RDE input the algorithm assumes) the normal part absorbs the
-denominator and both hold; the recursive `crischDESolve` does not weak-normalize its argument, so they are NOT
-unconditional in `f g`. These are the sharpened TRUE residual. -/
+`cRdeNormalDenominatorG` computes the `B`/`C` clearing `cdivWf` unconditionally, so `hdvdB`/`hdvdC`
+are not self-certified by a `some` result. Each reduces to a single product-divisibility of the
+denominator into the normal-part·`h` block (`fden ∣ dₙh`, `gden ∣ dₙh²`) — the weak-normalization
+precondition on the RDE input, which the recursive `crischDESolve` does not establish for a raw
+argument. -/
 
 section Divisibility
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β]
 
 omit [CDiffFieldSpec β] in
-/-- **`hdvdB` reduces to `fden ∣ dₙh`** (the §6.2 `B`-divisibility essence): if the denominator `fden`
-divides the normal-part·h block `dₙ·h0` (`dₙ = (cSplitFactorFastG Dt fuel fden).1`), then it divides the full
-`B`-numerator `dₙh·fnum − dₙ·Dh·fden`. The second summand is `fden`-divisible outright; the first is
-`(dₙh)·fnum`, divisible by `fden` from the hypothesis. The clean sufficient condition for the `cdivWf`
-`B`-clearing to be exact. -/
+/-- If `fden ∣ dₙ·h0` (`dₙ = (cSplitFactorFastG Dt fuel fden).1`), then `fden` divides the full
+`B`-numerator `dₙh·fnum − dₙ·Dh·fden` — the sufficient condition for the `cdivWf` `B`-clearing to
+be exact. -/
 theorem hdvdB_of_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden h0 : CPolyG β)
     (hdvd : toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0)) :
     toPolyG fden ∣ toPolyG (CPolyG.csubG
@@ -270,10 +205,8 @@ theorem hdvdB_of_dvd (Dt : CPolyG β) (fuel : ℕ) (fnum fden h0 : CPolyG β)
   · exact Dvd.intro_left _ rfl
 
 omit [CDiffFieldSpec β] in
-/-- **`hdvdC` reduces to `gden ∣ dₙh²`** (the §6.2 `C`-divisibility essence): if the denominator `gden`
-divides the normal-part·h² block `dₙ·h0·h0` (`dₙ = (cSplitFactorFastG Dt fuel fden).1`), then it divides the
-full `C`-numerator `dₙh²·gnum`. Multiplying the hypothesis by `gnum`. The clean sufficient condition for the
-`cdivWf` `C`-clearing to be exact. -/
+/-- If `gden ∣ dₙ·h0·h0`, then `gden` divides the full `C`-numerator `dₙh²·gnum` — the sufficient
+condition for the `cdivWf` `C`-clearing to be exact. -/
 theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG β)
     (hdvd : toPolyG gden ∣ toPolyG (CPolyG.cmulG
       (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0)) :
@@ -282,25 +215,19 @@ theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG �
   simp only [CPolyG.toPolyG_cmulG] at hdvd ⊢
   exact hdvd.mul_right _
 
-/-! ### When the `B`-divisibility crux VANISHES — normal / polynomial denominators
-
-The `B`-divisibility `fden ∣ dₙh` is the crux's essence; here is exactly when it is *free*. -/
+/-! ### When the `B`-divisibility is free: normal or polynomial denominators -/
 
 omit [CDiffFieldSpec β] in
-/-- **`fden ∣ dₙh` is free when `fden` is normal** (`dvd_dn_h_of_normal`): if `fden` equals its own normal
-part (`toPolyG (cSplitFactorFastG Dt fuel fden).1 = toPolyG fden`, i.e. the special part is a unit — `fden`
-weakly normalized), then `fden ∣ dₙ·h0` for any `h0`, since `dₙ·h0 = fden·h0`. The precise condition under
-which the §6.2 `B`-divisibility crux disappears: weak normalization of `fden`. -/
+/-- `fden ∣ dₙh` holds when `fden` equals its own normal part
+(`toPolyG (cSplitFactorFastG Dt fuel fden).1 = toPolyG fden`, i.e. `fden` weakly normalized). -/
 theorem dvd_dn_h_of_normal (Dt : CPolyG β) (fuel : ℕ) (fden h0 : CPolyG β)
     (hnormal : toPolyG (CPolyG.cSplitFactorFastG Dt fuel fden).1 = toPolyG fden) :
     toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) := by
   rw [CPolyG.toPolyG_cmulG, hnormal]; exact Dvd.intro _ rfl
 
 omit [CDiffFieldSpec β] in
-/-- **`fden ∣ dₙh` is free for the polynomial-RDE shape `fden = [1]`** (`dvd_dn_h_one`): when the input
-denominator is the unit `[1]`, the normal part is `[1]` (`cSplitFactorFastG_one_eq`), so the `B`-divisibility
-`[1] ∣ dₙh` is `1 ∣ _` — trivially true. The polynomial RDE (`Dy + f·y = g` with `f` a polynomial) needs no
-weak normalization on `f`'s side. -/
+/-- `fden ∣ dₙh` holds for the polynomial-RDE shape `fden = [1]`: the normal part of the unit `[1]`
+is `[1]`, so the divisibility is `1 ∣ _`. -/
 theorem dvd_dn_h_one [CTowerGcdWitness β] (fuel : ℕ) (h0 : CPolyG β) :
     toPolyG ([CField.one] : CPolyG β)
       ∣ toPolyG (CPolyG.cmulG
@@ -309,32 +236,18 @@ theorem dvd_dn_h_one [CTowerGcdWitness β] (fuel : ℕ) (h0 : CPolyG β) :
 
 end Divisibility
 
-/-! ## ★ Task 5 — assembling the sharpened residual: the reduced crux + builder + field corollary
-
-The clauses fall into two groups: the **discharged** ones (`hprim` via the gcd witness, `hyden` via the
-solve guard, `hfden`/`hgden`/`hfden0`/`hgden0` via the subtype, `hdvdB`/`hdvdC` reduced to the two
-product-divisibilities) and the **genuinely remaining** ones (the two product-divisibilities themselves
-`hdvdB_dn_h`/`hdvdC_dn_h2`, the normal-part-nonzero `hdn`, the non-gcd `CSPDEGClearedInputsGen` chain `hin`,
-and the dispatcher `hdb`). We bundle exactly the latter as the
-**reduced crux residual** `RischDESuccessResidualCrux`, give a builder `residual_of_crux` rebuilding the full
-`RischDESuccessResidual` from it (discharging the former group), and compose to the field identity
-`crischDESolve_field_of_crux`. The crux is the precise sharpened TRUE residual — the §6.1
-weak-normalization product-divisibilities + per-run termination/fuel, with everything else discharged. -/
+/-! ## The reduced crux residual, its builder, and the field corollary -/
 
 section Crux
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β]
 
-/-- **★ The reduced RDE residual crux** `RischDESuccessResidualCrux f g`: exactly the clauses of
-`RischDESuccessResidual` a successful recursive solve does NOT yield — with the discharged clauses
-(`hprim`/`hyden`/`hfden`/`hgden`/`hfden0`/`hgden0`) removed and `hdvdB`/`hdvdC` reduced to their
-product-divisibility essence. Carries, per normal-denominator output `(a0,b0,c0,h0)`: the §6.1
-weak-normalization product-divisibilities `hdvdB_dn_h` (`fden ∣ dₙh`) and `hdvdC_dn_h2` (`gden ∣ dₙh²`), the
-normal-part-nonzero `hdn`, and the non-gcd `CSPDEGClearedInputsGen` chain `hin`
-(whose per-level `Associated`-gcd clauses are supplied separately by `CTowerGcdWitness β`); plus the
-dispatcher `hdb`. The sharpened TRUE residual: NOT engine self-certification, but the genuine §6.1
-weak-normalization precondition + per-run termination/fuel. -/
+/-- The reduced RDE residual crux `RischDESuccessResidualCrux f g`: the clauses of
+`RischDESuccessResidual` that remain after the discharges of this file — per normal-denominator
+output `(a0,b0,c0,h0)`, the weak-normalization product-divisibilities `hdvdB_dn_h` (`fden ∣ dₙh`)
+and `hdvdC_dn_h2` (`gden ∣ dₙh²`), the normal-part-nonzero `hdn`, and the non-gcd
+`CSPDEGClearedInputsGen` chain `hin`; plus the dispatcher side-condition `hdb`. -/
 structure RischDESuccessResidualCrux (f g : QFunNZG β) : Prop where
   /-- The normal part `dₙ = (cSplitFactorFastG [1] _ fden).1` of `fden` is nonzero. -/
   hdn : ∀ a0 b0 c0 h0 : CPolyG β,
@@ -378,13 +291,10 @@ structure RischDESuccessResidualCrux (f g : QFunNZG β) : Prop where
       = some (bbar, cbar, m, α', β') → 0 < cdegG bbar
 
 omit [CDiffFieldSpec β] in
-/-- **★ The full residual from the reduced crux** (`residual_of_crux`): given a successful recursive solve
-`crischDESolve f g = some y`, the gcd witness `[CTowerGcdWitness β]`, and the reduced crux
-`RischDESuccessResidualCrux f g`, the full `RischDESuccessResidual f g` holds. The builder discharges the
-removed clauses — `hprim` from `cdegG_cSpecialPolyG_one_eq_zero`, `hyden` from `crischDESolve_yden_ne_zero`,
-`hfden`/`hgden`/`hfden0`/`hgden0` from the subtype, and `hdvdB`/`hdvdC` from the crux's product-divisibilities
-via `hdvdB_of_dvd`/`hdvdC_of_dvd` — and threads the genuinely-remaining clauses through. So the capstone's
-residual hypothesis is exactly the sharpened crux. -/
+/-- A successful recursive solve plus the reduced crux `RischDESuccessResidualCrux f g` rebuilds the
+full `RischDESuccessResidual f g`: `hprim` from `cdegG_cSpecialPolyG_one_eq_zero`, `hyden` from
+`crischDESolve_yden_ne_zero`, the denominator clauses from the subtype, and `hdvdB`/`hdvdC` via
+`hdvdB_of_dvd`/`hdvdC_of_dvd`. -/
 theorem residual_of_crux (f g y : QFunNZG β)
     (hsolve : CRischField.crischDESolve f g = some y)
     (hcrux : RischDESuccessResidualCrux f g) :
@@ -409,15 +319,11 @@ section FieldCorollary
 
 variable [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **★★ The recursive RDE-oracle field identity from the sharpened crux** (`crischDESolve_field_of_crux`): a
-successful recursive solve `crischDESolve f g = some y` over `QFunNZG β`, with the gcd witness
-`[CTowerGcdWitness β]` and the reduced crux `RischDESuccessResidualCrux f g`, yields the field-level Risch-DE
-identity `towerFractionFieldDerivG [1] (Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`
-(`Y = amG y.1.1/amG y.1.2`, etc.). Composes `residual_of_crux` (rebuild the full residual, discharging the
-provable clauses) with the capstone `crischDESolve_field_of_witness_residual`. **No `native_decide`** — the
-discharged clauses are theorems, the gcd half the witness's tower induction, and the only hypothesis is the
-sharpened crux. This is the capstone result with its residual reduced to exactly the §6.1
-weak-normalization product-divisibilities plus per-run termination/fuel. -/
+/-- The recursive RDE-oracle field identity from the reduced crux: a successful solve
+`crischDESolve f g = some y` over `QFunNZG β`, with `[CTowerGcdWitness β]` and
+`RischDESuccessResidualCrux f g`, yields `towerFractionFieldDerivG [1] Y + F·Y = G` over
+`RatFunc (CFieldSpec.K β)` (`Y = amG y.1.1/amG y.1.2`, etc.). Composes `residual_of_crux` with the
+capstone `crischDESolve_field_of_witness_residual`; no `native_decide`. -/
 theorem crischDESolve_field_of_crux (f g y : QFunNZG β)
     (hsolve : CRischField.crischDESolve f g = some y)
     (hcrux : RischDESuccessResidualCrux f g) :
@@ -432,9 +338,8 @@ end FieldCorollary
 
 end Crux
 
-/-! ### Restatement against the intended wording (anonymous `example`) -/
+/-! ### Restatement -/
 
--- ★ Task 5: the recursive RDE field identity from the sharpened crux + the gcd witness — no native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : CRischField.crischDESolve f g = some y)

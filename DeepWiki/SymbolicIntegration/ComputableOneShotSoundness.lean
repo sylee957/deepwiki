@@ -1,67 +1,12 @@
 import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 
-/-! # One-shot (checker-free) algorithm soundness for the integrator's polynomial branch
+/-! # Checker-free soundness of the integrator's polynomial branch
 
-The integrator's other soundness route is **check-based**: the bridge `field_identity_of_checkIdentityG`
-(`ComputableIntegrateTowerCorrectG`) takes the driver `cIntegrateGFull`'s output, asks the runtime
-Boolean `checkIdentityG`, and proves `checkIdentityG = true ⟹ D(∫f) = f`. The genuine soundness wanted is
-**one-shot**: the algorithm output is provably correct *with the runtime check redundant* — not "check
-passes implies correct" but "the algorithm always passes its own check, so `D(res) = integrand`
-directly".
-
-This file delivers that one-shot for the **reachable polynomial branch** (Bronstein §5.4 / §6, the
-`b = 0` primitive-integration arm of `cPolyRischDEG`, `Dt = 1` over a constant base — the regime
-`cIntegrateGFull` runs the polynomial part `∫ fₚ` in). The spine:
-
-* **`derivative_toPolyG_cIntegratePolyG`** — the *abstract algorithm-correctness atom*, UNCONDITIONAL
-  (mod characteristic zero, needed to divide by `i+1`): the engine's term-by-term antiderivative
-  `cIntegratePolyG c` has formal derivative exactly `c`, `D(toPolyG (cIntegratePolyG c)) = toPolyG c`.
-  No runtime check. (`derivative_Xpow_mul_toPolyG_integrateTail` is its inductive heart.)
-* **`toPolyG_cmonomialDeriv_cIntegratePolyG_const`** — the same under the engine derivation
-  `cmonomialDeriv [1] = κ_D + d/dt = mapCoeffs + derivative`, over a constant base (`mapCoeffs = 0`).
-* **`checkIdentityG_cIntegratePolyG_const`** — ★ THE CRUX (the task's missing link): the
-  polynomial-branch output *passes* `checkIdentityG` abstractly (`= true`, no check executed). The
-  `algorithm-output ⟹ check-passes` direction, proven.
-* **`field_identity_cIntegratePolyG_const` / `field_identity_of_cPolyRischDEGWf`** — composing the crux
-  with the bridge `field_identity_of_checkIdentityG` gives the checker-free one-shot `D(∫f) = f`; the
-  latter keyed on the fuel-free algorithm `cPolyRischDEGWf [1] [] c n = some q`. Specialized to the
-  level-1 carrier `ℚ(x) = QFunNZG ℚ` as **`field_identity_of_cPolyRischDEGWf_qfunNZG`** — the deliverable
-  (no checker, no `native_decide`, axiom-clean `[propext, choice, Quot.sound]`).
-
-## Precise scope of the FULL transcendental one-shot (`cIntegrateGFull = some res ⟹ D(res) = integrand`)
-
-The campaign from here is a clear lemma sequence, not a fog. The full transcendental crux
-`cIntegrateGFull = some res ⟹ checkIdentityG = true` decomposes by `cIntegrateGFull`'s structure
-(canonical split via `canonicalRepresentationFastG` ⟹ special-part `cisZeroG b` test ⟹ normal part
-`cIntegrateReducedG` plus poly part `cPolyRischDEG`):
-
-* **Poly part (`cPolyRischDEG`, `b = 0`)** — DONE here (`checkIdentityG_cIntegratePolyG_const`), the atom
-  `derivative_toPolyG_cIntegratePolyG`. EXISTS, abstract, axiom-clean.
-* **Normal part (`cIntegrateReducedG` = `cHermiteReduceTowerG` + `cLogPartG`)** — NOT yet abstract: the
-  Hermite reduction identity `D(g) + h = a/d` and the Rothstein–Trager residue-log correctness are only
-  `native_decide`-validated today (no abstract `cHermiteReduceTowerG`-spec). NEEDS: an abstract
-  `cHermiteReduceTowerG` correctness (the per-squarefree-factor Hermite step, telescoped — the
-  generic-curve analogue `generalReduceRationalTelescopeWf` in `ComputableGeneralIntegralSoundness` is the
-  template) and a `cLogPartG` residue-sum correctness. This is the genuinely hard, high-value piece.
-* **Canonical split** (`canonicalRepresentationFastG` reconstructs `f = fₚ + b/dₛ + cₙ/dₙ`) — EXISTS
-  abstract at `α = QFunNZG ℚ` (`canonicalRepresentationFastG_reconstructs_qfunNZG`,
-  `ComputableSplitFactorTowerCorrectG`); needs threading into the assembly.
-* **Special part** (`b = 0` required by `cIntegrateGFull`) — degenerate over a primitive extension
-  (`dₛ = 1`); the genuine hyperexp / hypertangent special part is the documented continuation.
-* **Constant-base discharge** — the `hconst : mapCoeffs (…) = 0` hypothesis here is the "coefficients are
-  differential constants" regime; lifting it from a hypothesis to a derived fact (the tower's base
-  derivation) is a small transport, NOT hard.
-* **Algebraic driver** (the separate algebraic integrators `cIntegrateAlgebraicWf` / `afIntegrateAlgebraicWf`)
-  — its `hsplit` round-trip self-discharge is already abstract (`isGeneralRationalIntegralWf_of_roundtrip`,
-  `toPolyG_afDerivWf_eq_of_roundtrip`, `ComputableGeneralIntegralSoundness`); its standalone soundness is
-  `cIntegrateAlgebraicWf_sound` (`ComputableAlgebraicWfSoundness`).
-
-So: the poly-branch one-shot is proven (this file); the canonical-split and algebraic-round-trip pieces
-EXIST abstract; the single genuinely-hard remaining piece is an **abstract `cHermiteReduceTowerG` plus
-`cLogPartG` correctness** (the normal part). Once that lands, the assembly
-`cIntegrateGFull = some res ⟹ checkIdentityG = true` (then `⟹ D = integrand` via the bridge) is
-mechanical. -/
+Abstract correctness of the `b = 0` primitive-integration arm and the §6.6 cancellation cases of the
+poly-Risch-DE dispatcher: the antiderivative `cIntegratePolyG` differentiates back to its integrand,
+the output passes `checkIdentityG` provably (never executed), and the field-level identity
+`D(∫fₚ) = fₚ` follows through `field_identity_of_checkIdentityG`. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -73,9 +18,8 @@ open Compute CPolyG QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`toK (cnatCastG k) = (k : K)`**: the `k`-fold `CField.one` sum reads as the genuine natural cast
-in `K = CFieldSpec.K α` (`cnatCastG` is the engine's `ℕ`-cast). A 4-line `toK`-homomorphism induction,
-inlined here so this file's only import is `ComputableIntegrateTowerCorrectG`. -/
+/-- `toK (cnatCastG k) = (k : K)`: the engine's `ℕ`-cast reads as the natural cast in
+`K = CFieldSpec.K α`. -/
 theorem toK_cnatCastG_oneShot (k : ℕ) :
     CFieldSpec.toK (CPolyG.cnatCastG k : α) = (k : CFieldSpec.K α) := by
   induction k with
@@ -84,10 +28,8 @@ theorem toK_cnatCastG_oneShot (k : ℕ) :
       add_comm]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **Shifted antiderivative-tail derivative law** (the inductive heart): for the index-`k`-started
-integration tail `L_k = (c.zipIdx k).map (fun (a,i) => a/(i+1))`,
-`D(X^{k+1} · toPolyG L_k) = X^k · toPolyG c`. By induction on `c` peeling `C(a/(k+1))·X^{k+1}`, whose
-derivative `(k+1)·C(a/(k+1))·X^k = C(toK a)·X^k` recovers the term (`(k+1)·(a/(k+1)) = a` over the field). -/
+/-- Shifted antiderivative-tail derivative law: for the index-`k`-started integration tail
+`L_k = (c.zipIdx k).map (fun (a,i) => a/(i+1))`, `D(X^{k+1} · toPolyG L_k) = X^k · toPolyG c`. -/
 theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (c : CPolyG α) :
     ∀ k : ℕ, Polynomial.derivative
         (X ^ (k + 1) *
@@ -128,20 +70,15 @@ theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (
     rw [hhead, htail, mul_add]
     ring
 
-/-! ### The `cIntegratePolyG` formal-derivative correctness (unconditional, abstract)
+/-! ### The `cIntegratePolyG` formal-derivative correctness
 
 `cIntegratePolyG c = 0 :: (c.zipIdx.map (fun (a,i) => a/(i+1)))` is the engine's term-by-term
-antiderivative `∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}` (the `b = 0` primitive branch of `cPolyRischDEG`).
-Its **formal** derivative `cderivG` (`= Polynomial.derivative` under `toPolyG`) inverts it exactly — the
-`k = 0` instance of the shifted law, with `X^1 = X`, `X^0 = 1`. This is the genuine
-*algorithm-correctness atom*: the antiderivative is right, with **no runtime check**. Needs only
-characteristic zero (to divide by `i+1`), nothing about the derivation. -/
+antiderivative `∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}`; its formal derivative inverts it exactly.
+Needs only characteristic zero (to divide by `i+1`). -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **★ `cIntegratePolyG` is correct (formal-derivative form), checker-free**:
-`D(toPolyG (cIntegratePolyG c)) = toPolyG c` over `(CFieldSpec.K α)[X]`, where `D = Polynomial.derivative`.
-The engine's term-by-term antiderivative differentiates back to its integrand — proven, no `checkIdentityG`.
-Immediate from `derivative_Xpow_mul_toPolyG_integrateTail` at `k = 0`. -/
+/-- `D(toPolyG (cIntegratePolyG c)) = toPolyG c` over `(CFieldSpec.K α)[X]`,
+`D = Polynomial.derivative`: the term-by-term antiderivative differentiates back to its integrand. -/
 theorem derivative_toPolyG_cIntegratePolyG [CharZero (CFieldSpec.K α)] (c : CPolyG α) :
     Polynomial.derivative (toPolyG (CPolyG.cIntegratePolyG c)) = toPolyG c := by
   have h := derivative_Xpow_mul_toPolyG_integrateTail c 0
@@ -150,23 +87,13 @@ theorem derivative_toPolyG_cIntegratePolyG [CharZero (CFieldSpec.K α)] (c : CPo
 
 /-! ### The `cmonomialDeriv [1]` (monomial-derivation) form over a constant base
 
-The engine's actual derivation is `cmonomialDeriv Dt = κ_D + Dt·d/dt` (`= implicitDeriv (toPolyG Dt)`
-under `toPolyG`). For the **canonical primitive monomial** `Dt = [CField.one]` (`D(t) = 1`),
-`toPolyG [CField.one] = 1`, so `implicitDeriv 1 = mapCoeffs + derivative`: the formal `t`-derivative
-*plus* the coefficientwise base derivation `κ_D`. The term-by-term antiderivative `cIntegratePolyG c`
-therefore differentiates back to `c` exactly when the coefficient-derivation term `mapCoeffs` vanishes
-— i.e. over a **constant base** (`κ_D = 0` on the coefficients), the regime `cIntegrateGFull` runs the
-polynomial part in (Bronstein §5.4, primitive case). We carry that as the explicit hypothesis
-`hconst : mapCoeffs (toPolyG (cIntegratePolyG c)) = 0` (which holds whenever every coefficient is a
-differential constant). This is the genuine `D(∫ fₚ) = fₚ` for the polynomial part — checker-free. -/
+For the primitive monomial `Dt = [CField.one]`, `implicitDeriv 1 = mapCoeffs + derivative`, so the
+antiderivative differentiates back exactly when the coefficient-derivation term `mapCoeffs` vanishes;
+that constant-base regime is carried as the explicit hypothesis `hconst`. -/
 
-/-- **★ `cIntegratePolyG` differentiates back under the primitive monomial derivation** (`Dt = 1`),
-checker-free: if the coefficientwise-derivation term vanishes (`mapCoeffs (toPolyG (cIntegratePolyG c))
-= 0`, the constant-base regime), then `toPolyG (cmonomialDeriv [CField.one] (cIntegratePolyG c)) =
-toPolyG c` over `(CFieldSpec.K α)[X]`. Routes the engine derivation through
-`toPolyG_cmonomialDeriv` (`= implicitDeriv (toPolyG [1]) = implicitDeriv 1 = mapCoeffs + derivative`),
-kills `mapCoeffs` by `hconst`, and finishes with the formal-derivative atom
-`derivative_toPolyG_cIntegratePolyG`. The polynomial-part `D(∫ fₚ) = fₚ`, abstract. -/
+/-- `cIntegratePolyG` differentiates back under the primitive monomial derivation (`Dt = 1`): if
+`mapCoeffs (toPolyG (cIntegratePolyG c)) = 0` (constant base), then
+`toPolyG (cmonomialDeriv [CField.one] (cIntegratePolyG c)) = toPolyG c` over `(CFieldSpec.K α)[X]`. -/
 theorem toPolyG_cmonomialDeriv_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : CPolyG α)
     (hconst : Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0) :
     toPolyG (CPolyG.cmonomialDeriv ([CField.one] : CPolyG α) (CPolyG.cIntegratePolyG c))
@@ -180,24 +107,12 @@ theorem toPolyG_cmonomialDeriv_cIntegratePolyG_const [CharZero (CFieldSpec.K α)
   rw [Derivation.smul_apply, one_smul, Derivation.restrictScalars_apply]
   exact derivative_toPolyG_cIntegratePolyG c
 
-/-! ### ★ The checker-free FIELD identity `D(∫ fₚ) = fₚ` for the polynomial part
+/-! ### The field identity `D(∫ fₚ) = fₚ` for the polynomial part -/
 
-We now assemble the genuine one-shot for the polynomial branch — **no `checkIdentityG`**. The full
-driver `cIntegrateGFull` integrates a polynomial part `fₚ` (a `b = 0` primitive Risch-DE) by
-`cIntegratePolyG`, recombining it into the rational part with denominator `1`. The resulting
-antiderivative `g = amG(toPolyG (cIntegratePolyG c)) / amG 1` satisfies the field-level identity
-`towerFractionFieldDerivG [1] g = amG(toPolyG c) / amG 1` directly: the tower derivation on a
-polynomial image is the image of the monomial derivation (`extendDeriv_algebraMap`), which the
-abstract atom `toPolyG_cmonomialDeriv_cIntegratePolyG_const` sends to `toPolyG c`. The `checkIdentityG`
-guard is **redundant** here — the algorithm output is provably correct without it. -/
-
-/-- **★★ Checker-free field one-shot `D(∫ fₚ) = fₚ` (polynomial part, primitive monomial)**: over a
-constant base (`hconst : mapCoeffs (toPolyG (cIntegratePolyG c)) = 0`), the tower fraction-field
-derivation sends the antiderivative `amG(toPolyG (cIntegratePolyG c))` to `amG(toPolyG c)` exactly:
+/-- Field-level polynomial-part identity: over a constant base (`hconst`), the tower fraction-field
+derivation sends the antiderivative to the integrand,
 `towerFractionFieldDerivG [CField.one] (amG (toPolyG (cIntegratePolyG c))) = amG (toPolyG c)` over
-`RatFunc (CFieldSpec.K α)`. **No `checkIdentityG`** — `extendDeriv_algebraMap` pushes the field
-derivation onto the polynomial image, and the abstract monomial-derivation atom finishes it. This is
-the genuine `D(∫f) = f` for the polynomial part, with the runtime check provably redundant. -/
+`RatFunc (CFieldSpec.K α)`. -/
 theorem towerFractionFieldDerivG_amG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (c : CPolyG α)
     (hconst : Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0) :
@@ -209,22 +124,10 @@ theorem towerFractionFieldDerivG_amG_cIntegratePolyG_const [CharZero (CFieldSpec
   -- which the abstract atom identifies with `toPolyG c`
   rw [toPolyG_cmonomialDeriv_cIntegratePolyG_const c hconst]
 
-/-! ### ★ THE CRUX: the polynomial-branch output PASSES `checkIdentityG` (algorithm self-discharge)
-
-The task's missing link, for the reachable polynomial branch: the engine **always passes its own
-check** here, so the runtime guard is redundant. We show the directly-built pure-polynomial result
-`⟨(cIntegratePolyG c, [CField.one]), []⟩` — the shape `cPolyRischDEG`'s `b = 0` integration branch
-emits (recombined over denominator `1`, no logs) — satisfies `checkIdentityG [CField.one] · c
-[CField.one] = true` **without any check being run**: the abstract atoms compute the cleared identity
-directly. `checkIdentityG` clears denominators and tests `cisZeroG`; with `gden = aden = 1` and no logs
-this collapses (`cisZeroG_iff`) to the polynomial identity `D(cIntegratePolyG c) = c`, which is the atom
-`toPolyG_cmonomialDeriv_cIntegratePolyG_const`. Composing with `field_identity_of_checkIdentityG` then
-gives `D(∫f) = f` checker-free — the `checkIdentityG` guard is provably never needed on this
-branch. -/
+/-! ### The polynomial-branch output passes `checkIdentityG` abstractly -/
 
 /-- `toPolyG (cmonomialDeriv [CField.one] [CField.one]) = 0`: the primitive monomial derivation
-annihilates the constant `1` (`D(1) = 0`). Both the coefficient-derivation part (`mapCoeffs 1 =
-C(D 1) = 0`) and the formal-`t`-derivative part (`derivative 1 = 0`) vanish. -/
+annihilates the constant `1`. -/
 theorem toPolyG_cmonomialDeriv_one : toPolyG
     (CPolyG.cmonomialDeriv ([CField.one] : CPolyG α) ([CField.one] : CPolyG α)) = 0 := by
   rw [toPolyG_cmonomialDeriv]
@@ -233,14 +136,10 @@ theorem toPolyG_cmonomialDeriv_one : toPolyG
   rw [hone]
   exact Derivation.map_one_eq_zero _
 
-/-- **★★ THE CRUX (polynomial branch): the integration output passes `checkIdentityG` abstractly**,
-checker-free. Over a constant base (`hconst`), the pure-polynomial result
-`⟨(cIntegratePolyG c, [CField.one]), []⟩` satisfies `checkIdentityG [CField.one] · c [CField.one] =
-true` — proven by the abstract atoms, with **no runtime check executed**. This is the missing link
-`algorithm-output ⟹ check-passes`: the engine's `b = 0` integration branch *always* validates, so the
-`checkIdentityG` guard is redundant on it. Reduce `checkIdentityG` to `cisZeroG (csubG …)`, clear via
-`cisZeroG_iff` (denominators `gden = aden = 1`, empty-log fold seed `0/1`), and finish with
-`toPolyG_cmonomialDeriv_cIntegratePolyG_const` (`D q = c`) and `toPolyG_cmonomialDeriv_one` (`D 1 = 0`). -/
+/-- Over a constant base (`hconst`), the pure-polynomial result
+`⟨(cIntegratePolyG c, [CField.one]), []⟩` satisfies
+`checkIdentityG [CField.one] · c [CField.one] = true`, proven abstractly with no runtime check
+executed: the `b = 0` integration branch always passes its own check. -/
 theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : CPolyG α)
     (hconst : Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0) :
     CPolyG.checkIdentityG ([CField.one] : CPolyG α)

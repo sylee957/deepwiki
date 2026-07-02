@@ -2,80 +2,48 @@ import DeepWiki.SymbolicIntegration.ComputableBareissEngine
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
 
-/-! # Agreement of the fraction-free Bareiss determinant with `fieldDet` (no coefficient swell)
-(Bareiss, *Sylvester's Identity and Multistep Integer-Preserving Gaussian Elimination*, 1968;
-the polynomial form, e.g. Geddes–Czapor–Labahn §9.3)
+/-! # Agreement of the fraction-free Bareiss determinant with `fieldDet`
+(Bareiss 1968, polynomial form)
 
-`ComputableBareissEngine` defines the **pure** fraction-free linear-algebra primitives over `ℚ[x] =
-CPolyG α` — `bareissDet`/`bareissAdjugate`/`bareissSolve` (and the `ℚ(x)` wrappers). This file pairs them
-with the general algebraic-curve `fieldDet` over `QFunNZG ℚ ≅ ℚ(x)`: it **embeds** a `ℚ[x]`-matrix into
-`ℚ(x)` (`fromQ`) and **validates** that the fraction-free `bareissDet M` equals the fraction-based
-`fieldDet (fromQ M)` on concrete curves, then records the **swell benchmark**.
-
-Forming `ℚ(x)` fractions makes intermediate numerators/denominators **balloon** (the classic
-fraction-field swell, exactly the `cgcdExtG`→`cgcdFF` story for the GCD): `fieldDet` of an `n×n` matrix
-over `ℚ(x)` Laplace-expands into `n!` products of fractions, each `qmulNZG` multiplying *unreduced*
-numerator·denominator pairs whose degrees add up. The engine's `bareissDet` stays in polynomials, using
-**exact** division, so entries stay in `ℚ[x]` with **bounded degree** — no swell.
-
-* **`fromQ`** — embed a `ℚ[x]`-matrix into `ℚ(x)` (`qxOfNum`), so `bareissDet M` and `fieldDet (fromQ M)`
-  can be compared.
-
-**Validation** (`native_decide`): `bareissDet M = fieldDet (fromQ M)` on the `2×2`/`3×3` `traceMatrix`
-curves of `ComputableAlgFunctionField` (`y² − xy − x³` → `x² + 4x³`, `y³ + xy + x` → `−4x³ − 27x²`) and
-a `4×4` Vandermonde, and `bareissSolve`/`bareissAdjugate` satisfy `M·adj = det·I`. **The swell
-benchmark** (`bareissSwellWin`): on a `3×3` Cauchy matrix, the `ℚ(x)`-fraction path's `fieldDet` reaches
-denominator+numerator total degree in the dozens while every Bareiss entry stays a single polynomial of
-degree `≤` the final determinant degree — a measured swell reduction recorded at the end. -/
+`native_decide` validations that `bareissDet M = fieldDet (fromQ M)` on the trace-matrix curves and a
+`4×4` Vandermonde, that `bareissAdjugate`/`bareissSolve` satisfy `M·adj = det·I` and Cramer's rule, and
+the measured swell benchmark `bareissSwellWin` (the `ℚ(x)`-fraction path's total degree strictly exceeds
+the fraction-free flat degree on a `3×3` Cauchy matrix). -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ### Embedding `ℚ[x]` matrices into `ℚ(x)` (`fromQ`) — to compare against `fieldDet`
+/-! ### Embedding `ℚ[x]` matrices into `ℚ(x)` (`fromQ`)
 
-The existing general-curve determinant `fieldDet` runs over `QFunNZG ℚ ≅ ℚ(x)` (the fraction field). To
-state the agreement `bareissDet M = fieldDet (fromQ M)` we embed a `ℚ[x]`-matrix entrywise into `ℚ(x)`
-via `qxOfNum` (numerator `p`, denominator `1`). The result of `fieldDet` is a `ℚ(x)` value; the result
-of `bareissDet` is a `ℚ[x]` polynomial — equal as `ℚ(x)` elements iff `fieldDet (fromQ M) − qxOfNum
-(bareissDet M)` is zero (`CField.isZero`, which on `QFunNZG ℚ` tests the reduced numerator). -/
+The agreement `bareissDet M = fieldDet (fromQ M)` is stated by embedding a `ℚ[x]`-matrix entrywise into
+`ℚ(x)` via `qxOfNum` and testing the difference with `CField.isZero`. -/
 
 open CPolyG
 
-/-- **Embed a `ℚ[x]`-matrix into `ℚ(x)`** `fromQ M`: replace each polynomial entry `p : CPolyG ℚ` by the
-`ℚ(x)` value `qxOfNum p = p/1 : QFunNZG ℚ`. The bridge for comparing the fraction-free `bareissDet M`
-(over `ℚ[x]`) against the fraction-based `fieldDet (fromQ M)` (over `ℚ(x)`). -/
+/-- Embed a `ℚ[x]`-matrix into `ℚ(x)`: `fromQ M` replaces each polynomial entry `p : CPolyG ℚ` by the
+`ℚ(x)` value `qxOfNum p = p/1 : QFunNZG ℚ`. -/
 def fromQ (M : List (List (CPolyG ℚ))) : List (List (QFunNZG ℚ)) :=
   M.map (fun row => row.map qxOfNum)
 
-/-! ### ★ Agreement: `bareissDet = fieldDet` on the trace-matrix curves (`native_decide`)
+/-! ### Agreement: `bareissDet = fieldDet` on the trace-matrix curves
 
-The fraction-free `bareissDet` over `ℚ[x]` equals the fraction-based `fieldDet` over `ℚ(x)` on concrete
-matrices. We use the `2×2`/`3×3` trace matrices `T = traceMatrix f (powerBasis f)` of the worked curves
-in `ComputableAlgFunctionField` — except those live over `ℚ(x)` already; for the fraction-free comparison
-we feed the **`ℚ[x]`** matrices whose entries are the numerator polynomials (monic curves: trace-matrix
-entries are polynomials in `x`, denominator `1`). The check is `CField.isZero (fieldDet (fromQ M) −
-qxOfNum (bareissDet M))` over `QFunNZG ℚ`. -/
+The `2×2`/`3×3` trace matrices of the worked curves in `ComputableAlgFunctionField`, fed as the `ℚ[x]`
+matrices of their numerator polynomials (monic curves: trace-matrix entries lie in `ℚ[x]`). -/
 
 /-- A `2×2` `ℚ[x]`-matrix `[[2, x], [x, x² + 2x³]]` — the trace matrix of the non-radical curve
-`y² − xy − x³` (`ComputableAlgFunctionField.afNonRad_traceMatrix_entries`), but with **polynomial**
-entries (the monic curve's trace-matrix entries lie in `ℚ[x]`). Its determinant is the discriminant
-`x² + 4x³`. -/
+`y² − xy − x³` with polynomial entries. Its determinant is the discriminant `x² + 4x³`. -/
 def bareissNonRadT : List (List (CPolyG ℚ)) :=
   [[[2], [0, 1]], [[0, 1], [0, 0, 1, 2]]]
 
-/-- **★ `bareissDet = fieldDet` on the `2×2` trace matrix** (`native_decide`): the fraction-free Bareiss
-determinant over `ℚ[x]` of `[[2, x], [x, x² + 2x³]]` equals the fraction-based `fieldDet` over `ℚ(x)` of
-its `ℚ(x)`-embedding — both the discriminant `x² + 4x³`. The fraction-free result agrees with the
-existing determinant. Checked by `CField.isZero (fieldDet (fromQ M) − qxOfNum (bareissDet M))`. -/
+/-- `bareissDet = fieldDet ∘ fromQ` on the `2×2` trace matrix `[[2, x], [x, x² + 2x³]]` — both the
+discriminant `x² + 4x³` (`native_decide`). -/
 theorem bareiss_eq_fieldDet_nonRad :
     CField.isZero (CField.sub (fieldDet (fromQ bareissNonRadT))
       (qxOfNum (bareissDet bareissNonRadT))) = true := by native_decide
 
-/-- **`bareissDet` of the `2×2` trace matrix is the discriminant `x² + 4x³`** (`native_decide`): the
-fraction-free determinant `2·(x²+2x³) − x·x = x² + 4x³`, computed entirely over `ℚ[x]` (the single
-Bareiss division `/p₋₁ = /1` is the trivial one for `n = 2`), matching
-`afNonRad_discriminant_eq`. -/
+/-- `bareissDet` of the `2×2` trace matrix is the discriminant `x² + 4x³`
+(`2·(x²+2x³) − x·x`, computed over `ℚ[x]`; `native_decide`). -/
 theorem bareissDet_nonRad_eq :
     cisZeroG (csubG (bareissDet bareissNonRadT) [0, 0, 1, 4]) = true := by native_decide
 
@@ -87,32 +55,25 @@ def bareissTrigT : List (List (CPolyG ℚ)) :=
    [[], [0, -2], [0, -3]],
    [[0, -2], [0, -3], [0, 0, 2]]]
 
-/-- **★ `bareissDet = fieldDet` on the `3×3` trace matrix** (`native_decide`): the fraction-free Bareiss
-determinant over `ℚ[x]` of the trigonal trace matrix equals the fraction-based `fieldDet` over `ℚ(x)` of
-its embedding — the discriminant `−4x³ − 27x²`. The `n = 3` case exercises a **genuine** exact Bareiss
-division (`/p₀`, the first pivot), and the polynomial quotient agrees with the `ℚ(x)` Laplace
-determinant. THE FRACTION-FREE DETERMINANT AGREES WITH THE EXISTING ONE ON A `3×3` CURVE. -/
+/-- `bareissDet = fieldDet ∘ fromQ` on the `3×3` trigonal trace matrix — both the discriminant
+`−4x³ − 27x²`; the `n = 3` case exercises a genuine exact Bareiss division (`native_decide`). -/
 theorem bareiss_eq_fieldDet_trig :
     CField.isZero (CField.sub (fieldDet (fromQ bareissTrigT))
       (qxOfNum (bareissDet bareissTrigT))) = true := by native_decide
 
-/-- **`bareissDet` of the `3×3` trace matrix is the discriminant `−4x³ − 27x²`** (`native_decide`):
-the fraction-free determinant of the trigonal trace matrix, computed over `ℚ[x]` with one exact Bareiss
-division, equals the depressed-cubic discriminant `−4x³ − 27x²`, matching `afTrig_discriminant_eq`. -/
+/-- `bareissDet` of the `3×3` trigonal trace matrix is the discriminant `−4x³ − 27x²`
+(`native_decide`). -/
 theorem bareissDet_trig_eq :
     cisZeroG (csubG (bareissDet bareissTrigT) [0, 0, -27, -4]) = true := by native_decide
 
-/-! ### ★ A `4×4` Vandermonde over `ℚ[x]` — exercising several exact Bareiss divisions (`native_decide`)
+/-! ### A `4×4` Vandermonde over `ℚ[x]`
 
-The Vandermonde matrix `V[i][j] = nodeⱼⁱ` has the closed-form determinant `∏_{i<j} (nodeⱼ − nodeᵢ)`. With
-polynomial nodes `node = [x, x+1, x+2, x+3]` (degree-1 in `x`) the determinant is `∏_{i<j}(j−i) =
-1·2·3·1·2·1 = 12` (a constant — the `x` cancels), and the **intermediate** Bareiss entries are genuine
-degree-`>1` polynomials in `x` that the exact divisions reduce. A `4×4` matrix runs **three** Bareiss
-pivots (`/1`, `/p₀`, `/p₁`), so every branch of the recurrence is exercised. -/
+A `4×4` matrix runs three Bareiss pivots (`/1`, `/p₀`, `/p₁`), exercising every branch of the
+recurrence; the intermediate entries are genuine degree-`>1` polynomials reduced by the exact
+divisions. -/
 
 /-- A `4×4` Vandermonde `ℚ[x]`-matrix with nodes `[x, x+1, x+2, x+3]`: row `i` is `[xⁱ, (x+1)ⁱ, (x+2)ⁱ,
-(x+3)ⁱ]`. Determinant `∏_{i<j}(nodeⱼ − nodeᵢ) = 12` (constant; the `x` cancels). Entries are degree-`i`
-polynomials, so intermediate Bareiss entries are degree-`>1` and the exact divisions do real work. -/
+(x+3)ⁱ]`. Determinant `∏_{i<j}(nodeⱼ − nodeᵢ) = 12` (constant; the `x` cancels). -/
 def bareissVander4 : List (List (CPolyG ℚ)) :=
   [[[1], [1], [1], [1]],
    [[0, 1], [1, 1], [2, 1], [3, 1]],

@@ -5,7 +5,7 @@ import Mathlib.RingTheory.Polynomial.Basic
 
 /-! # A generic computable field, and a polynomial engine over it
 
-A `CField` is a type `α` of **computable** field elements: computable
+A `CField` is a type `α` of computable field elements: computable
 `zero`/`one`/`add`/`mul`/`neg`/`inv` and a decidable zero test, with no abstract field
 structure attached — so its operations *reduce* (`#eval`/`native_decide`). The meaning of
 those operations is supplied separately by a companion `CFieldSpec`: a homomorphism
@@ -26,14 +26,14 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The `CField` typeclass (computable operations only)
 
-`CField α` packages just the **computable** field operations on `α`: `zero`/`one`/`add`/`mul`/`neg`/
+`CField α` packages just the computable field operations on `α`: `zero`/`one`/`add`/`mul`/`neg`/
 `inv` and the computable zero test `isZero`, plus derived `sub`/`div`. It is deliberately bridge-free,
 so an instance whose operations are honest list computations stays *computable* even though its
-companion `CFieldSpec` (the field-homomorphism bridge) is noncomputable. The polynomial **engine**
+companion `CFieldSpec` (the field-homomorphism bridge) is noncomputable. The polynomial engine
 (`caddG`/`cmulG`/`cdivmodG`/`cgcdExtG`) needs only `[CField α]`, so it reduces (`#eval`/`native_decide`);
-the **correctness proofs** add `[CFieldSpec α]`. -/
+the correctness proofs add `[CFieldSpec α]`. -/
 
-/-- **Computable field operations**: a type `α` with computable `zero`/`one`/`add`/`mul`/`neg`/`inv`
+/-- Computable field operations: a type `α` with computable `zero`/`one`/`add`/`mul`/`neg`/`inv`
 and a computable zero test `isZero`. Bridge-free, so instances built from honest computations stay
 computable; the field-homomorphism bridge lives in the companion `CFieldSpec`. -/
 class CField (α : Type*) where
@@ -54,10 +54,10 @@ class CField (α : Type*) where
 
 namespace CField
 
-/-- **Computable subtraction** `a - b := a + (-b)`, derived from `add`/`neg`. -/
+/-- Computable subtraction `a - b := a + (-b)`, derived from `add`/`neg`. -/
 def sub {α : Type*} [CField α] (a b : α) : α := add a (neg b)
 
-/-- **Computable division** `a / b := a * b⁻¹`, derived from `mul`/`inv`. -/
+/-- Computable division `a / b := a * b⁻¹`, derived from `mul`/`inv`. -/
 def div {α : Type*} [CField α] (a b : α) : α := mul a (inv b)
 
 end CField
@@ -71,7 +71,7 @@ representations and tests `K`-equality through `isZero`, so multiple representat
 element are fine (e.g. unreduced rational functions). Keeping this separate from `CField` is what lets
 the engine compute while only the *correctness layer* depends on the bridge. -/
 
-/-- **Computable-field specification**: the field-homomorphism bridge for `[CField α]`. Carries
+/-- Computable-field specification: the field-homomorphism bridge for `[CField α]`. Carries
 `toK : α → K` into a Mathlib `Field K` intertwining `zero`/`one`/`add`/`mul`/`neg`/`inv`, plus the
 certification `isZero_iff` of `CField.isZero` against `toK a = 0`. Noncomputable in general; required
 only by the correctness proofs, not by the engine. -/
@@ -121,7 +121,7 @@ end CFieldSpec
 equality, and the bridge is `K = ℚ`, `toK = id` with every law `rfl`. The simplest instance — and the
 one that validates the whole abstraction. -/
 
-/-- **`CField ℚ`**: rationals as a computable field with `ℚ`'s own operations and
+/-- `CField ℚ`: rationals as a computable field with `ℚ`'s own operations and
 `isZero a := decide (a = 0)`. -/
 instance : CField ℚ where
   zero := 0
@@ -132,7 +132,7 @@ instance : CField ℚ where
   inv := (·⁻¹)
   isZero a := decide (a = 0)
 
-/-- **`CFieldSpec ℚ`**: the trivial bridge `K = ℚ`, `toK = id`; all homomorphism laws are `rfl` and
+/-- `CFieldSpec ℚ`: the trivial bridge `K = ℚ`, `toK = id`; all homomorphism laws are `rfl` and
 `isZero_iff` is decidable-equality. -/
 instance : CFieldSpec ℚ where
   K := ℚ
@@ -152,14 +152,14 @@ polynomial arithmetic, with every operation built from `CField.add`/`mul`/`neg`/
 bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]` embeds it into genuine polynomials via `toK` (so it
 additionally needs `[CFieldSpec α]`). -/
 
-/-- **Generic dense coefficient list** over a computable field `α` (index = degree, low to high).
+/-- Generic dense coefficient list over a computable field `α` (index = degree, low to high).
 A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
 ℚ-specialization `CPoly := CPolyG ℚ` stays defeq to `List ℚ`. -/
 abbrev CPolyG (α : Type*) := List α
 
 namespace CPolyG
 
-/-- **Normalize** a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
+/-- Normalize a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
 def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α
   | [] => []
@@ -167,46 +167,46 @@ def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α
     | [] => if CField.isZero a then [] else [a]
     | r => a :: r
 
-/-- **Coefficientwise addition** of two `CPolyG`s (the shorter is zero-extended implicitly). -/
+/-- Coefficientwise addition of two `CPolyG`s (the shorter is zero-extended implicitly). -/
 def caddG {α : Type*} [CField α] : CPolyG α → CPolyG α → CPolyG α
   | [], q => q
   | p, [] => p
   | a :: as, b :: bs => CField.add a b :: caddG as bs
 
-/-- **Negation** of a `CPolyG`, coefficientwise. -/
+/-- Negation of a `CPolyG`, coefficientwise. -/
 def cnegG {α : Type*} [CField α] (p : CPolyG α) : CPolyG α := (p : List α).map CField.neg
 
-/-- **Subtraction** of `CPolyG`s, `p − q := p + (−q)`. -/
+/-- Subtraction of `CPolyG`s, `p − q := p + (−q)`. -/
 def csubG {α : Type*} [CField α] (p q : CPolyG α) : CPolyG α := caddG p (cnegG q)
 
-/-- **Scalar multiplication** of a `CPolyG` by `c : α`, coefficientwise. -/
+/-- Scalar multiplication of a `CPolyG` by `c : α`, coefficientwise. -/
 def cscaleG {α : Type*} [CField α] (c : α) (p : CPolyG α) : CPolyG α := (p : List α).map (CField.mul c)
 
-/-- **Degree shift** `cshiftG k p = x^k · p`: prepend `k` zero coefficients. -/
+/-- Degree shift `cshiftG k p = x^k · p`: prepend `k` zero coefficients. -/
 def cshiftG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α
   | 0, p => p
   | n + 1, p => CField.zero :: cshiftG n p
 
-/-- **Polynomial multiplication** of `CPolyG`s (schoolbook convolution via `cshiftG`/`cscaleG`). -/
+/-- Polynomial multiplication of `CPolyG`s (schoolbook convolution via `cshiftG`/`cscaleG`). -/
 def cmulG {α : Type*} [CField α] : CPolyG α → CPolyG α → CPolyG α
   | [], _ => []
   | a :: as, q => caddG (cscaleG a q) (CField.zero :: cmulG as q)
 
-/-- **Power** of a `CPolyG` by `ℕ`-recursion (`[1]` at `0`). -/
+/-- Power of a `CPolyG` by `ℕ`-recursion (`[1]` at `0`). -/
 def cpowG {α : Type*} [CField α] (p : CPolyG α) : ℕ → CPolyG α
   | 0 => [CField.one]
   | n + 1 => cmulG p (cpowG p n)
 
-/-- **Leading coefficient** of a `CPolyG` (top nonzero coefficient; `zero` for the zero polynomial). -/
+/-- Leading coefficient of a `CPolyG` (top nonzero coefficient; `zero` for the zero polynomial). -/
 def cleadG {α : Type*} [CField α] (p : CPolyG α) : α := ((cnormG p : List α).getLast?.getD CField.zero)
 
-/-- **Degree** of a `CPolyG` as a `ℕ`: `(length of normalized p) − 1`, with `cdegG 0 = 0`. -/
+/-- Degree of a `CPolyG` as a `ℕ`: `(length of normalized p) − 1`, with `cdegG 0 = 0`. -/
 def cdegG {α : Type*} [CField α] (p : CPolyG α) : ℕ := (cnormG p : List α).length - 1
 
-/-- **Zero test** for a `CPolyG`: `true` iff it normalizes to `[]`. -/
+/-- Zero test for a `CPolyG`: `true` iff it normalizes to `[]`. -/
 def cisZeroG {α : Type*} [CField α] (p : CPolyG α) : Bool := (cnormG p : List α).isEmpty
 
-/-- **Make a `CPolyG` monic** (lead coefficient `1`) by scaling by `(clead)⁻¹`; the zero polynomial
+/-- Make a `CPolyG` monic (lead coefficient `1`) by scaling by `(clead)⁻¹`; the zero polynomial
 stays `[]`. -/
 def cmonicG {α : Type*} [CField α] (p : CPolyG α) : CPolyG α :=
   let p := cnormG p
@@ -220,7 +220,7 @@ and gcd over any `[CField α]`, using only the computable operations (so they re
 identity, Bézout, gcd divisibility — is proved separately, where the `[CFieldSpec α]` bridge is in
 scope. -/
 
-/-- **Generic Euclidean division** of `CPolyG`s, fuel-bounded: `cdivmodG fuel p q = (quotient,
+/-- Generic Euclidean division of `CPolyG`s, fuel-bounded: `cdivmodG fuel p q = (quotient,
 remainder)` with `p = quotient · q + remainder` over the field `K` (`q ≠ 0`; one step per degree drop). -/
 def cdivmodG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α
   | 0, p, _ => ([], cnormG p)
@@ -237,17 +237,17 @@ def cdivmodG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α → CPol
       let (quo, rem) := cdivmodG fuel p' q
       (caddG term quo, rem)
 
-/-- **Quotient** of generic Euclidean division (`cdivmodG`'s first component). -/
+/-- Quotient of generic Euclidean division (`cdivmodG`'s first component). -/
 def cdivG {α : Type*} [CField α] (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).1
 
-/-- **Remainder** of generic Euclidean division (`cdivmodG`'s second component). -/
+/-- Remainder of generic Euclidean division (`cdivmodG`'s second component). -/
 def cmodG {α : Type*} [CField α] (fuel : ℕ) (p q : CPolyG α) : CPolyG α := (cdivmodG fuel p q).2
 
-/-- **Generic divisibility test** `cdvdG fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is
+/-- Generic divisibility test `cdvdG fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is
 zero). -/
 def cdvdG {α : Type*} [CField α] (fuel : ℕ) (q p : CPolyG α) : Bool := cisZeroG (cmodG fuel p q)
 
-/-- **Generic extended Euclidean algorithm** on `CPolyG`s, fuel-bounded: `cgcdExtG fuel a b =
+/-- Generic extended Euclidean algorithm on `CPolyG`s, fuel-bounded: `cgcdExtG fuel a b =
 (g, s, t)` with `s · a + t · b = g` and `g = gcd(a, b)` over `K`. -/
 def cgcdExtG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α → CPolyG α × CPolyG α × CPolyG α
   | 0, a, _ => (cnormG a, [CField.one], [])
@@ -264,8 +264,8 @@ From here on the bridge `[CFieldSpec α]` is in scope: `toPolyG` and every corre
 `CFieldSpec.toK`/`CFieldSpec.K` and so carry the extra binder, while the engine ops above need only
 `[CField α]`. -/
 
-/-- **Generic bridge to `(CFieldSpec.K α)[X]`**: `toPolyG p` reads a `CPolyG` coefficient list (index =
-degree, low to high) as a `Polynomial (CFieldSpec.K α)` in **Horner form** `p₀ + x·(p₁ + x·(p₂ + …))`,
+/-- Generic bridge to `(CFieldSpec.K α)[X]`: `toPolyG p` reads a `CPolyG` coefficient list (index =
+degree, low to high) as a `Polynomial (CFieldSpec.K α)` in Horner form `p₀ + x·(p₁ + x·(p₂ + …))`,
 each coefficient embedded via `toK`. -/
 noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α → (CFieldSpec.K α)[X]
   | [] => 0
@@ -279,7 +279,7 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
 @[simp] theorem toPolyG_cons {α : Type*} [CField α] [CFieldSpec α] (a : α) (p : CPolyG α) :
     toPolyG (a :: p) = Polynomial.C (CFieldSpec.toK a) + X * toPolyG p := rfl
 
-/-- `toPolyG` is **additive**: `caddG` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
+/-- `toPolyG` is additive: `caddG` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
 @[simp] theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (caddG p q) = toPolyG p + toPolyG q := by
   induction p generalizing q with
@@ -291,7 +291,7 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
       simp only [caddG, toPolyG_cons, ih bs, CFieldSpec.toK_add, map_add]
       ring
 
-/-- `toPolyG` commutes with **negation**: `toPolyG (cnegG p) = − toPolyG p`. -/
+/-- `toPolyG` commutes with negation: `toPolyG (cnegG p) = − toPolyG p`. -/
 @[simp] theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     toPolyG (cnegG p) = - toPolyG p := by
   induction p with
@@ -300,12 +300,12 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
     show toPolyG (CField.neg a :: cnegG as) = -toPolyG (a :: as)
     rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_neg, map_neg]; ring
 
-/-- `toPolyG` realizes **subtraction**: `toPolyG (csubG p q) = toPolyG p − toPolyG q`. -/
+/-- `toPolyG` realizes subtraction: `toPolyG (csubG p q) = toPolyG p − toPolyG q`. -/
 @[simp] theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (csubG p q) = toPolyG p - toPolyG q := by
   rw [csubG, toPolyG_caddG, toPolyG_cnegG, sub_eq_add_neg]
 
-/-- `toPolyG` realizes **scalar multiplication**: `toPolyG (cscaleG c p) = C (toK c) · toPolyG p`. -/
+/-- `toPolyG` realizes scalar multiplication: `toPolyG (cscaleG c p) = C (toK c) · toPolyG p`. -/
 @[simp] theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPolyG α) :
     toPolyG (cscaleG c p) = Polynomial.C (CFieldSpec.toK c) * toPolyG p := by
   induction p with
@@ -314,7 +314,7 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
     show toPolyG (CField.mul c a :: cscaleG c as) = Polynomial.C (CFieldSpec.toK c) * toPolyG (a :: as)
     rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_mul, map_mul]; ring
 
-/-- `toPolyG` realizes the **degree shift**: `toPolyG (cshiftG k p) = X^k · toPolyG p`. -/
+/-- `toPolyG` realizes the degree shift: `toPolyG (cshiftG k p) = X^k · toPolyG p`. -/
 @[simp] theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : CPolyG α) :
     toPolyG (cshiftG k p) = X ^ k * toPolyG p := by
   induction k with
@@ -323,7 +323,7 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
     show toPolyG (CField.zero :: cshiftG n p) = X ^ (n + 1) * toPolyG p
     rw [toPolyG_cons, ih, CFieldSpec.toK_zero, map_zero]; ring
 
-/-- `toPolyG` is **multiplicative**: `cmulG` realizes `(CFieldSpec.K α)[X]` multiplication. -/
+/-- `toPolyG` is multiplicative: `cmulG` realizes `(CFieldSpec.K α)[X]` multiplication. -/
 @[simp] theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (cmulG p q) = toPolyG p * toPolyG q := by
   induction p with
@@ -333,7 +333,7 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
     rw [toPolyG_caddG, toPolyG_cscaleG, toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_zero,
       map_zero]; ring
 
-/-- `toPolyG` realizes the **`ℕ`-power**: `toPolyG (cpowG p n) = (toPolyG p) ^ n`. -/
+/-- `toPolyG` realizes the `ℕ`-power: `toPolyG (cpowG p n) = (toPolyG p) ^ n`. -/
 @[simp] theorem toPolyG_cpowG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (n : ℕ) :
     toPolyG (cpowG p n) = (toPolyG p) ^ n := by
   induction n with
@@ -350,7 +350,7 @@ theorem cnormG_cons_eq {α : Type*} [CField α] (a : α) (as : CPolyG α) :
     cnormG (a :: as)
       = (match cnormG as with | [] => if CField.isZero a then [] else [a] | r => a :: r) := rfl
 
-/-- `cnormG` is **idempotent**: stripping trailing zeros twice is the same as once. -/
+/-- `cnormG` is idempotent: stripping trailing zeros twice is the same as once. -/
 @[simp] theorem cnormG_idem {α : Type*} [CField α] (p : CPolyG α) : cnormG (cnormG p) = cnormG p := by
   induction p with
   | nil => rfl
@@ -362,7 +362,7 @@ theorem cnormG_cons_eq {α : Type*} [CField α] (a : α) (as : CPolyG α) :
       rw [h] at ih
       simp only [cnormG_cons_eq, ih]
 
-/-- **`toPolyG` ignores normalization**: `toPolyG (cnormG p) = toPolyG p` — stripping trailing zeros
+/-- `toPolyG` ignores normalization: `toPolyG (cnormG p) = toPolyG p` — stripping trailing zeros
 does not change the polynomial (the dropped coefficients are zero, via `isZero_iff`). -/
 @[simp] theorem toPolyG_cnormG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     toPolyG (cnormG p) = toPolyG p := by
@@ -386,7 +386,7 @@ does not change the polynomial (the dropped coefficients are zero, via `isZero_i
       rw [h] at ih
       simp only [toPolyG_cons, ih]
 
-/-- **Coefficient read**: the `i`-th coefficient of `toPolyG p` is `toK` of the `i`-th list entry
+/-- Coefficient read: the `i`-th coefficient of `toPolyG p` is `toK` of the `i`-th list entry
 (`0` past the end). The Horner bridge realizes the dense coefficient list exactly. -/
 theorem toPolyG_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (i : ℕ) :
     (toPolyG p).coeff i = CFieldSpec.toK ((p : List α).getD i CField.zero) := by
@@ -398,7 +398,7 @@ theorem toPolyG_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
-/-- `cnormG` has **no trailing zero**: `(cnormG p).getLast?` is never a zero coefficient. -/
+/-- `cnormG` has no trailing zero: `(cnormG p).getLast?` is never a zero coefficient. -/
 theorem cnormG_getLast?_ne_some_zero {α : Type*} [CField α] (p : CPolyG α) :
     ∀ v, (cnormG p : List α).getLast? = some v → CField.isZero v = false := by
   induction p with
@@ -431,13 +431,13 @@ theorem toK_cleadG_ne_zero {α : Type*} [CField α] [CFieldSpec α] {p : CPolyG 
     rw [(CFieldSpec.isZero_iff v).mpr hv] at this
     exact absurd this (by simp)
 
-/-- **`cleadG` is the coefficient at the top index**: `toK (cleadG p) = (toPolyG p).coeff (cdegG p)`. -/
+/-- `cleadG` is the coefficient at the top index: `toK (cleadG p) = (toPolyG p).coeff (cdegG p)`. -/
 theorem toK_cleadG_eq_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     CFieldSpec.toK (cleadG p) = (toPolyG p).coeff (cdegG p) := by
   rw [cleadG, cdegG, ← toPolyG_cnormG, toPolyG_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
 
-/-- **Degree bound**: `natDegree (toPolyG p) ≤ (cnormG p).length − 1`. -/
+/-- Degree bound: `natDegree (toPolyG p) ≤ (cnormG p).length − 1`. -/
 theorem natDegree_toPolyG_le {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     (toPolyG p).natDegree ≤ (cnormG p : List α).length - 1 := by
   rw [← toPolyG_cnormG]
@@ -446,7 +446,7 @@ theorem natDegree_toPolyG_le {α : Type*} [CField α] [CFieldSpec α] (p : CPoly
   rw [toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega), Option.getD_none,
     CFieldSpec.toK_zero]
 
-/-- **`cdegG` is the honest `natDegree`**: `cdegG p = (toPolyG p).natDegree`. -/
+/-- `cdegG` is the honest `natDegree`: `cdegG p = (toPolyG p).natDegree`. -/
 theorem cdegG_eq_natDegree {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     cdegG p = (toPolyG p).natDegree := by
   rcases eq_or_ne (cnormG p) [] with h | h
@@ -457,7 +457,7 @@ theorem cdegG_eq_natDegree {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG 
     rw [← toK_cleadG_eq_coeff]
     exact toK_cleadG_ne_zero h
 
-/-- **`toK (cleadG p)` is the honest `leadingCoeff`**: `toK (cleadG p) = (toPolyG p).leadingCoeff`. -/
+/-- `toK (cleadG p)` is the honest `leadingCoeff`: `toK (cleadG p) = (toPolyG p).leadingCoeff`. -/
 theorem toK_cleadG_eq_leadingCoeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     CFieldSpec.toK (cleadG p) = (toPolyG p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← cdegG_eq_natDegree, ← toK_cleadG_eq_coeff]
@@ -474,7 +474,7 @@ theorem cnormG_eq_nil_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG �
     rw [toK_cleadG_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
     exact hcl rfl
 
-/-- **Degree bound from normalized-length bound**: a strictly shorter normalized coefficient list (with
+/-- Degree bound from normalized-length bound: a strictly shorter normalized coefficient list (with
 nonzero divisor `q`) is strictly lower degree under `toPolyG` — `length (cnormG p) < length (cnormG q)`
 gives `deg (toPolyG p) < deg (toPolyG q)`. The bridge from the engine's `length`-form remainder bounds
 (`cmodG_length_lt`) to honest `Polynomial.degree`s (via `cdegG_eq_natDegree`); `p = 0` lands `⊥ < deg q`. -/
@@ -492,7 +492,7 @@ theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CField α] [CFieldSpec α] 
     have hqlen : 1 ≤ (cnormG q : List α).length := List.length_pos_iff.mpr hq
     omega
 
-/-- **`cisZeroG` reads as `toPolyG = 0`**: `cisZeroG p = true ↔ toPolyG p = 0`. -/
+/-- `cisZeroG` reads as `toPolyG = 0`: `cisZeroG p = true ↔ toPolyG p = 0`. -/
 theorem cisZeroG_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     cisZeroG p = true ↔ toPolyG p = 0 := by
   rw [cisZeroG, ← cnormG_eq_nil_iff]

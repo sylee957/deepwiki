@@ -2,10 +2,10 @@ import DeepWiki.SymbolicIntegration.ComputableHyperexpLaurentCore
 import DeepWiki.SymbolicIntegration.ComputableHyperexpEta
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
-/-! # Core fuel-free hyperexponential normal-part drivers
+/-! # Core hyperexponential normal-part drivers
 
-The §5.9 residual-feedback normal and full hyperexponential drivers, separated from the concrete
-`native_decide` examples and from the fueled §5.10-only driver.
+The residual-feedback normal and full hyperexponential integration drivers
+(`cIntegrateHyperexpNormalGWf` / `cIntegrateHyperexpFullGWf`), separated from the concrete examples.
 -/
 
 open Polynomial
@@ -16,34 +16,33 @@ open Compute
 
 namespace CPolyG
 
-/-! ### The hyperexponential residual `R = η · ∑ᵢ cᵢ` (Bronstein §5.9, the overshoot)
+/-! ### The hyperexponential residual `R = η · ∑ᵢ cᵢ`
 
-For a hyperexponential `t` (`Dt = η·t`), the §5.6 logarithmic construction `∑ᵢ cᵢ·log(vᵢ)` of a normal
-part `fₙ` has derivative `fₙ + R` with `R = C(η·∑ res α) ∈ k` (the `extendDeriv_logPart_eq_div_add_residual`
-residual). The residue coefficients `cᵢ` ARE the §5.6 residues `res α`, so `∑ res α = ∑ᵢ cᵢ` is the sum
-of the `logs` coefficients and `R = η · ∑ᵢ cᵢ ∈ α` is a constant in `t` — a base-field element. -/
+For a hyperexponential `t` (`Dt = η·t`), the Rothstein–Trager logarithmic construction
+`∑ᵢ cᵢ·log(vᵢ)` of a normal part `fₙ` has derivative `fₙ + R` with the residual
+`R = η · ∑ᵢ cᵢ ∈ α` — a constant in `t`, a base-field element. -/
 
 variable {α : Type*} [CField α]
 
-/-- **The hyperexponential normal-part residual** `cHyperexpResidualG η logs = η · ∑ᵢ cᵢ ∈ α` (Bronstein
-§5.9): the explicit residual `R = C(η·∑ res)` by which the §5.6 Rothstein–Trager log part `∑ᵢ cᵢ·log(vᵢ)`
-overshoots the normal integrand on a hyperexponential monomial (`η = Dt/t`). The §5.6 residues `res α` are
-the `logs` coefficients `cᵢ`, so `∑ res = ∑ᵢ cᵢ` (the fold of `logs.map .1`), and `R = η · ∑ᵢ cᵢ`. A
-constant in `t`, hence a base-field (`k = α`-level) element — itself elementary-integrable as a function of
-the previous tower variable. -/
+/-- Hyperexponential normal-part residual `cHyperexpResidualG η logs = η · ∑ᵢ cᵢ ∈ α`: the residual
+`R` by which the Rothstein–Trager log part `∑ᵢ cᵢ·log(vᵢ)` overshoots the normal integrand on a
+hyperexponential monomial (`η = Dt/t`, `cᵢ` the `logs` coefficients). A constant in `t`, hence a
+base-field element. -/
 def cHyperexpResidualG (η : α) (logs : List (α × CPolyG α)) : α :=
   CField.mul η (logs.foldl (fun acc cv => CField.add acc cv.1) CField.zero)
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
-/-! ### The fuel-free §5.9 normal-part integrator `∫ fₙ = logPart − ∫R`
+/-! ### The normal-part integrator `∫ fₙ = logPart − ∫R`
 
-`cIntegrateHyperexpNormalGWf` integrates a **normal** part `fₙ = a/d` of a hyperexponential monomial by
-running the fuel-free reduced capstone, reading the residual `R = η·∑res`, integrating the base residual
+`cIntegrateHyperexpNormalGWf` integrates a normal part `fₙ = a/d` of a hyperexponential monomial by
+running the reduced capstone, reading the residual `R = η·∑res`, integrating the base residual
 `∫R` over `α` by `CRischField.crischDESolve 0 R`, and subtracting `∫R` from the rational part. -/
 
-/-- **The fuel-free §5.9 hyperexponential normal-part integral** `cIntegrateHyperexpNormalGWf Dt a d cands`:
-the residual-feedback normal driver with the reduced capstone replaced by `cIntegrateReducedGWf`. -/
+/-- Hyperexponential normal-part integral `cIntegrateHyperexpNormalGWf Dt a d cands`: run
+`cIntegrateReducedGWf`, read the residual `R = η·∑ᵢ cᵢ`, integrate `∫R` over the base by
+`crischDESolve 0 R`, and subtract `∫R` from the rational part (same logs); `none` if `∫R` is
+non-elementary. -/
 def cIntegrateHyperexpNormalGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let red := cIntegrateReducedGWf Dt a d cands
@@ -56,8 +55,10 @@ def cIntegrateHyperexpNormalGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List
     let newNum := csubG gnum (cmulG [intR] gden)
     some ⟨(newNum, gden), red.logs⟩
 
-/-- **The fuel-free full hyperexponential integral with normal feedback** `cIntegrateHyperexpFullGWf Dt a d
-cands`: use the fuel-free canonical split and fuel-free §5.9 normal-part driver. -/
+/-- Full hyperexponential integral with normal feedback `cIntegrateHyperexpFullGWf Dt a d cands`:
+canonical-split `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part `fₚ + b/dₛ` by
+`cIntegrateHyperexpLaurentG`, the normal part by `cIntegrateHyperexpNormalGWf`, and combine the
+rational parts; `none` if either step is non-elementary. -/
 def cIntegrateHyperexpFullGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let η : α := cExpEtaG Dt

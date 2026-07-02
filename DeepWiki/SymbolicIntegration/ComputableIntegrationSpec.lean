@@ -18,7 +18,7 @@ namespace CPolyG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **Semantic tower integral-result specification.** `IsIntegralResultG Dt anum aden res` says the
+/-- Semantic tower integral-result specification: `IsIntegralResultG Dt anum aden res` says the
 rational part and logarithmic terms stored in `res` differentiate to the integrand `anum / aden` in the
 tower fraction field. This is the Prop-level contract that certified algorithms should expose. -/
 def IsIntegralResultG (Dt anum aden : CPolyG α) (res : IntegralResultG α) : Prop :=

@@ -5,40 +5,15 @@ import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 import DeepWiki.SymbolicIntegration.ComputableRischFieldCore
 import DeepWiki.SymbolicIntegration.ComputableHyperexpEta
 
-/-! # The recursive Risch-DE oracle over arbitrary-depth differential towers (Bronstein Ch. 6)
-`ComputableTowerField`/`Deriv`/`Integrate` built the generic tower carrier `QFunNZG α` (the next level
-ℚ(x)(t₁)(t₂)…), its computable derivation, and the generic §3.5/§5 integration pipeline — but that
-pipeline only reaches the **reduced-case capstone** `cIntegrateReducedG` (simple normal part), so this
-file supplies the §6 Risch-DE oracle as **generic and recursive over the tower**, bottoming out at a
-typeclass-carried base solve over the coefficient field rather than a hardwired ℚ(x) solve.
+/-! # The recursive Risch-DE oracle over arbitrary-depth differential towers
 
-The clean encoding is a **typeclass-carried base solve**:
-
-* **`class CRischField α`** — one method `crischDESolve : α → α → Option α` (solve `Dy + f·y = g` over
-  the FIELD `α` itself). This is the "RDE over the coefficient field" that every §6 cancellation case
-  recurses into (eq. 6.23 `RischDE(b, lc(c))`).
-* **`instance : CRischField ℚ`** — the constant-field base (`D = 0`): `b·y = g`, so `y = g/b` (`b ≠ 0`),
-  `b = 0` needs `g = 0`.
-* **`cRischDEG`** — the generic §6 pipeline over `CPolyG α = α[t]` (carrier `α`, `t`-gcd
-  `CFracGcdCore.cgcdFFCore`, base solve `CRischField.crischDESolve`):
-  weak normalization + normal/special denominator + degree bound + SPDE + the §6.5/§6.6 PolyRischDE dispatch.
-  It reduces an RDE over `α[t]` to RDEs over `α` via `crischDESolve`.
-* **`instance : CRischField (QFunNZG β)`** — the RDE over `β(s) = QFunNZG β`, **built by running
-  `cRischDEG` over `CPolyG β = β[s]`** with the new monomial `s` (`Ds = [1]`) and `[CRischField β]` for
-  the base solve. This ties the recursion: the level-`n+1` oracle runs the §6 pipeline at level `n`,
-  recursing to the level-`n` oracle, bottoming at `CRischField ℚ`. So `CRischField (QFunNZG ℚ)` is the
-  RDE over ℚ(x), `CRischField (QFunNZG (QFunNZG ℚ))` the RDE over ℚ(x)(t₁), … — uniformly, with no
-  special-cased `cRationalRDE`.
-
-This file keeps the fueled generic §6 oracle and shared level-2 RDE data. The corresponding fuel-free
-`native_decide` validations live in `ComputableTowerRischDEWellFounded` and
-`ComputableRischDESolveSoundWf`.
-
-**Scope.** The generic pipeline implements the **non-cancellation** path and the **primitive/hyperexponential
-cancellation** cases, with the base solve the generic `crischDESolve` over the coefficient field. The §6.6
-hypertangent cancellation (`PolyRischDECancelTan`, needs the Ch. 8 coupled system) and the cancellation
-refinements inside the special-denominator/degree-bound steps (needing the full §5.12/§7.3
-parametric-log-derivative recognizer) are the documented continuation. -/
+The generic Risch differential-equation pipeline `cRischDEG` over `CPolyG α = α[t]` — weak
+normalization, normal/special denominator, degree bound, SPDE, and the PolyRischDE dispatch — with
+the base solve carried by the typeclass `CRischField α`. The instance `CRischField (QFunNZG β)`
+runs `cRischDEG` one level down and recurses into `[CRischField β]`, bottoming at `CRischField ℚ`,
+so one oracle serves every tower level ℚ(x)(t₁)(t₂)…. Implements the non-cancellation path and the
+primitive/hyperexponential cancellation cases; hypertangent cancellation falls back to the
+non-cancellation loop. -/
 
 open Polynomial
 
@@ -46,26 +21,23 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
 
-/-! ### Generic polynomial evaluation at a `CField` constant (positive-integer-root test)
+/-! ### Positive-integer-root test for residue resultants
 
-`cevalConstG p c = p(c) ∈ α` for `c : α` lifted from `ℕ` by `cnatCastG`. The §6.1 `WeakNormalizer` step
-needs the positive integer roots of the residue resultant `r ∈ α[z]`; over the generic tower the nodes
-`n` are lifted by `cnatCastG n : α` (the `[CField α]`-only natural cast), replacing `ofConstNZ (n : ℚ)`. -/
+The weak normalizer needs the positive integer roots of the residue resultant `r ∈ α[z]`; the nodes
+`n : ℕ` are lifted by the `[CField α]`-only natural cast `cnatCastG`. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- **Evaluate `r ∈ α[z]` at `cnatCastG n`** `cisRootNatG r n`: `true` iff `r(cnatCastG n) = 0` in `α`
-(Horner via `cHornerG`). Decides whether the natural number `n`, lifted to `α`, is a root of the residue
-resultant `r` — the generic mirror of `cisRootConst r (n : ℚ)`. -/
+/-- `cisRootNatG r n = true` iff `r(cnatCastG n) = 0` in `α` (Horner via `cHornerG`): whether the
+natural number `n`, lifted to `α`, is a root of `r`. -/
 def cisRootNatG (r : CPolyG α) (n : ℕ) : Bool :=
   CField.isZero (cHornerG r (cnatCastG n))
 
-/-- **Positive integer roots of `r ∈ α[z]` up to a bound** `cPosIntRootsG r bound = [n ∈ {1,…,bound} :
-r(cnatCastG n) = 0]` (the §6.1 step). The residue resultant's positive integer roots are the
-multiplicities `nᵢ` of the `WeakNormalizer` product; for an already-weakly-normalized `f` this is empty.
-Generic mirror of `cPosIntRoots`. -/
+/-- `cPosIntRootsG r bound = [n ∈ {1,…,bound} : r(cnatCastG n) = 0]`: the positive integer roots of
+`r` up to `bound` — the multiplicities of the weak-normalizer product; empty for an
+already-weakly-normalized input. -/
 def cPosIntRootsG (r : CPolyG α) (bound : ℕ) : List ℕ :=
   (List.range bound).filterMap (fun k =>
     let n : ℕ := k + 1
@@ -73,24 +45,18 @@ def cPosIntRootsG (r : CPolyG α) (bound : ℕ) : List ℕ :=
 
 end CPolyG
 
-/-! ### The generic §6.1 weak normalizer over the tower
-
-`cWeakNormalizerG` is the §6.1 weak normalizer over the generic carrier `α` (`t`-gcd
-`CFracGcdCore.cgcdFFCore`, fuel-free exact division `cdivWf`, natural-cast `cnatCastG`, residue resultant
-`cResidueResultantTowerG`) — the already-generic engine throughout. -/
+/-! ### The generic weak normalizer over the tower -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
-/-- **Generic weak normalizer** `cWeakNormalizerG Dt fuel fnum fden = q ∈ α[t]` (Bronstein §6.1, book
-p.183) with `f − Dq/q` weakly normalized for `f = fnum/fden`, the `[CField α] [CDiffField α]`-generic
-mirror of `cWeakNormalizer`. Split the denominator into its normal part `dₙ` (`cSplitFactorFastG`), form
-  `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve `ExtendedEuclidean(fden/d₁, d₁, fnum)` for the
-  residue numerator `a` (`cdiophantineGWf`), build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
-(`cResidueResultantTowerG`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots
-`nᵢ` of `r` (`cPosIntRootsG`, nodes lifted by `cnatCastG`). For an already-weakly-normalized `f`, `r` has
-no positive integer roots and the result is `q = 1`. -/
+/-- Weak normalizer `cWeakNormalizerG Dt fuel fnum fden = q ∈ α[t]` with `f − Dq/q` weakly
+normalized for `f = fnum/fden` (`fuel` bounds the split/gcd sub-ops). Split the denominator into its
+normal part `dₙ`, form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve the Diophantine
+equation for the residue numerator `a`, build the residue resultant `r = res_t(a − z·Dd₁, d₁)`, and
+return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots `nᵢ` of `r`. For an
+already-weakly-normalized `f` the result is `q = 1`. -/
 def cWeakNormalizerG (Dt : CPolyG α) (fuel : ℕ) (fnum fden : CPolyG α)
     (boundRoots : ℕ := 16) : CPolyG α :=
   let dn := (cSplitFactorFastG Dt fuel fden).1
@@ -106,21 +72,13 @@ def cWeakNormalizerG (Dt : CPolyG α) (fuel : ℕ) (fnum fden : CPolyG α)
     let gi := CFracGcdCore.cgcdFFCore fuel (csubG a (cscaleG (cnatCastG n) Dd1)) d1
     cmulG acc (cpowG gi n)) [CField.one]
 
-/-! ### The generic §6.2 normal-denominator reduction over the tower
+/-! ### The generic normal-denominator reduction over the tower -/
 
-`cRdeNormalDenominatorG` is the §6.2 normal-denominator reduction over the generic carrier `α` (`t`-gcd
-`CFracGcdCore.cgcdFFCore`, fuel-free exact division `cdivWf`). Returns `none` ("no solution") or the
-reduction quadruplet
-`(a, b, c, h)` reducing `Dy + fy = g` to `a·Dq + b·q = c` with `q = y·h`. -/
-
-/-- **Generic normal-denominator reduction** `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden`
-(Bronstein §6.2, book p.185), the `[CField α] [CDiffField α]`-generic mirror of `cRdeNormalDenominator`,
-for weakly normalized `f = fnum/fden`, `g = gnum/gden`. Returns `none` ("no solution") or
-`some (a, b, c, h)` with `a, h ∈ α[t]`, `b, c` the numerator polynomials over `fden`/`gden`, such that
-every solution `y` of `Dy + fy = g` has `q = y·h` solving `a·Dq + b·q = c`. Steps: split the
-denominators into normal parts `dₙ, eₙ` (`cSplitFactorFastG`); `p = gcd(dₙ, eₙ)`,
-`h = gcd(eₙ, eₙ')/gcd(p, p')`; if `eₙ ∤ dₙh²` then `none`; else `a = dₙh`,
-`b = (dₙh·fnum − dₙ·Dh·fden)/fden`, `c = dₙh²·gnum/gden`. -/
+/-- Normal-denominator reduction `cRdeNormalDenominatorG Dt fuel fnum fden gnum gden` for weakly
+normalized `f = fnum/fden`, `g = gnum/gden`. Returns `none` ("no solution") or `some (a, b, c, h)`
+such that every solution `y` of `Dy + fy = g` has `q = y·h` solving `a·Dq + b·q = c`. Split the
+denominators into normal parts `dₙ, eₙ`; `p = gcd(dₙ, eₙ)`, `h = gcd(eₙ, eₙ')/gcd(p, p')`; if
+`eₙ ∤ dₙh²` then `none`; else `a = dₙh`, `b = (dₙh·fnum − dₙ·Dh·fden)/fden`, `c = dₙh²·gnum/gden`. -/
 def cRdeNormalDenominatorG (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPolyG α) :
     Option (CPolyG α × CPolyG α × CPolyG α × CPolyG α) :=
   let dn := (cSplitFactorFastG Dt fuel fden).1

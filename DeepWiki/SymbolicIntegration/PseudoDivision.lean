@@ -15,7 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R] [IsDomain R]
 
-/-- **Pseudo-division existence** (§1.2): for `B ≠ 0` there are a power `n`, a pseudo-quotient `Q`
+/-- Pseudo-division existence (§1.2): for `B ≠ 0` there are a power `n`, a pseudo-quotient `Q`
 and pseudo-remainder `Rem` with `lc(B)ⁿ · A = B·Q + Rem` and `deg Rem < deg B`. The minimal such
 `n` is `max(0, deg A − deg B + 1)`; this `∃ n` form is the mathematical content of the
 `PolyPseudoDivide` algorithm. -/
@@ -83,7 +83,7 @@ theorem pseudoDivision_exists (A B : R[X]) (hB : B ≠ 0) :
           _ = (B * Q₁ + R₁) + C b ^ n₁ * q := by rw [hEq]
           _ = B * (Q₁ + C b ^ n₁ * C a * X ^ δ) + R₁ := by rw [hq]; ring
 
-/-- **Similarity** (§1.5): `A` is *similar* to `B` over `D[x]` when `a · A = b · B` for some
+/-- Similarity (§1.5): `A` is *similar* to `B` over `D[x]` when `a · A = b · B` for some
 nonzero scalars `a, b ∈ D` (the relation whose classes the PRS gcd-tower preserves). -/
 def IsSimilar (A B : R[X]) : Prop := ∃ a b : R, a ≠ 0 ∧ b ≠ 0 ∧ C a * A = C b * B
 
@@ -109,7 +109,7 @@ theorem IsSimilar.trans {A B C₀ : R[X]} (h₁ : IsSimilar A B) (h₂ : IsSimil
     _ = C b * (C d * C₀) := by rw [hcd]
     _ = C (b * d) * C₀ := by rw [C_mul]; ring
 
-/-- **Similarity is an equivalence relation** (§1.5, Exercise 1.11). -/
+/-- Similarity is an equivalence relation (§1.5, Exercise 1.11). -/
 theorem isSimilar_equivalence : Equivalence (IsSimilar (R := R)) :=
   ⟨IsSimilar.refl, fun h => h.symm, fun h₁ h₂ => h₁.trans h₂⟩
 
@@ -132,7 +132,7 @@ theorem isPseudoRemainder_exists (A B : R[X]) (hB : B ≠ 0) :
   obtain ⟨n, Q, Rem, hEq, hdeg⟩ := pseudoDivision_exists A B hB
   exact ⟨Rem, n, Q, hEq, hdeg⟩
 
-/-- **Polynomial Remainder Sequence** (§1.5, Definition 1.5.1): a sequence `Rs` with `Rs 0 = A`,
+/-- Polynomial Remainder Sequence (§1.5, Definition 1.5.1): a sequence `Rs` with `Rs 0 = A`,
 `Rs 1 = B`, where each nonzero `Rs (i+1)` makes `C (β (i+1)) · Rs (i+2)` a pseudo-remainder of
 `Rs i` by `Rs (i+1)` (with the scalar `β (i+1) ≠ 0`), and a zero divisor forces the next term to
 vanish. The choice of the nonzero `β`-sequence selects the PRS variant (Euclidean, primitive, …). -/
@@ -148,7 +148,7 @@ theorem IsSimilar.of_associated {x y : R[X]} (h : Associated x y) : IsSimilar x 
   obtain ⟨r, hr, hru⟩ := Polynomial.isUnit_iff.mp u.isUnit
   exact ⟨r, 1, hr.ne_zero, one_ne_zero, by rw [← hru, map_one]; ring⟩
 
-/-- **PRS gcd-invariance step** (§1.5, the core of Theorem 1.5.1): consecutive gcds of a PRS are
+/-- PRS gcd-invariance step (§1.5, the core of Theorem 1.5.1): consecutive gcds of a PRS are
 similar, `gcd(Rᵢ, Rᵢ₊₁) ~ gcd(Rᵢ₊₁, Rᵢ₊₂)`. From `lc(Rᵢ₊₁)ᵏ·Rᵢ = Rᵢ₊₁·Q + β·Rᵢ₊₂` one gets
 `H ∣ lc·G` and `G ∣ β·H`; cancelling shows the two cofactors multiply to a nonzero constant, so
 each is a nonzero constant, giving the scalar similarity. -/
@@ -195,7 +195,7 @@ theorem isSimilar_gcd_step [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β
   · intro h; exact hQ₁0 (by rw [hQ₁C, h, map_zero])
   · rw [hQ₁]; nth_rewrite 1 [hQ₁C]; ring
 
-/-- **Theorem 1.5.1** (§1.5): the last nonzero element `Rₖ` of a PRS of `A, B` is similar to
+/-- Theorem 1.5.1 (§1.5): the last nonzero element `Rₖ` of a PRS of `A, B` is similar to
 `gcd(A, B)`. The consecutive gcds form a similarity chain from `gcd(A,B) = gcd(R₀,R₁)` to
 `gcd(Rₖ, Rₖ₊₁) = gcd(Rₖ, 0) ~ Rₖ`, using `isSimilar_gcd_step` at each link. -/
 theorem IsPRS.isSimilar_gcd [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β : ℕ → R}

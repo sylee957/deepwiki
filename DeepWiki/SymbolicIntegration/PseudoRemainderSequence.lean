@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.SubresultantPRS
 /-! # The Euclidean pseudo-remainder sequence — a concrete `IsPRS` (Bronstein §1.5)
 The abstract subresultant ↔ gcd theory (`SubresultantPRS.lean`) is stated over an arbitrary p.r.s.
 `F : ℕ → R[X]`. To *apply* it (e.g. for the Lazard–Rioboo–Trager correctness, Thm 2.5.1) one needs a
-concrete p.r.s. This file constructs the **Euclidean pseudo-remainder sequence** `R₀ = A`, `R₁ = B`,
+concrete p.r.s. This file constructs the Euclidean pseudo-remainder sequence `R₀ = A`, `R₁ = B`,
 `R_{i+2} = prem(Rᵢ, R_{i+1})` (β-scalars all `1`), proves it satisfies `IsPRS`, that its degrees strictly
 decrease, and that it terminates — yielding a last nonzero element similar to `gcd(A, B)`. -/
 
@@ -15,7 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 variable {R : Type*} [CommRing R] [IsDomain R]
 
 open Classical in
-/-- The **Euclidean pseudo-remainder sequence** of `A, B`: `R₀ = A`, `R₁ = B`, and `R_{i+2}` is a chosen
+/-- The Euclidean pseudo-remainder sequence of `A, B`: `R₀ = A`, `R₁ = B`, and `R_{i+2}` is a chosen
 pseudo-remainder of `Rᵢ` by `R_{i+1}` (or `0` once `R_{i+1} = 0`). The `β`-scalars are all `1`. -/
 noncomputable def euclideanPRS (A B : R[X]) : ℕ → R[X]
   | 0 => A
@@ -90,7 +90,7 @@ theorem exists_euclideanPRS_eq_zero (A B : R[X]) :
   have := euclideanPRS_natDegree_add_le A B (B.natDegree + 1) hall
   omega
 
-/-- The **last nonzero element**: there is `k ≥ 1` with `R_{k+1} = 0` and `R₁, …, R_k ≠ 0`. `R_k` is the
+/-- The last nonzero element: there is `k ≥ 1` with `R_{k+1} = 0` and `R₁, …, R_k ≠ 0`. `R_k` is the
 last nonzero term — by Theorem 1.5.1 it is similar to `gcd(A, B)`. -/
 theorem exists_last_euclideanPRS_nonzero (A B : R[X]) (hB : B ≠ 0) :
     ∃ k, 1 ≤ k ∧ euclideanPRS A B (k + 1) = 0 ∧ ∀ j, 1 ≤ j → j ≤ k → euclideanPRS A B j ≠ 0 := by
@@ -127,7 +127,7 @@ theorem euclideanPRS_natDegree_strictAnti (A B : R[X]) {k : ℕ}
         (euclideanPRS_degree_lt A B a' (hknz (a' + 1) (by omega) (by omega)))
 
 set_option maxHeartbeats 1000000 in
-/-- **Subresultant ↔ gcd, concretely** (Thm 2.5.1, step 2c): for the Euclidean p.r.s. of `A, B`
+/-- Subresultant ↔ gcd, concretely (Thm 2.5.1, step 2c): for the Euclidean p.r.s. of `A, B`
 (`deg B ≤ deg A`) with last nonzero element `R_k` (`k ≥ 2`), the subresultant of `A, B` of degree
 `deg R_k` (`= deg gcd`) is similar to `gcd(A, B)`. Instantiates `subresultant_isSimilar_gcd` on
 `euclideanPRS A B`: the `IsPRS` relation supplies `α = lc^e, β = 1, Q`; the strict degree decrease supplies
@@ -212,7 +212,7 @@ theorem isSimilar_of_dvd_of_natDegree_eq {K : Type*} [Field K] {g p : K[X]}
   have hc : c ≠ 0 := by rintro rfl; simp at hq
   exact ⟨c, 1, hc, one_ne_zero, by rw [map_one, one_mul, mul_comm]⟩
 
-/-- **One-step termination ⇒ divisibility**: over a field, if the Euclidean p.r.s. of `D, E` vanishes
+/-- One-step termination ⇒ divisibility: over a field, if the Euclidean p.r.s. of `D, E` vanishes
 at index `2` (`R₂ = prem(D, E) = 0`) with `E ≠ 0`, then `E ∣ D`. From `IsPseudoRemainder D E 0`,
 `C (lc E)^k · D = E·Q` with `C (lc E)^k` a unit (field, `lc E ≠ 0`). -/
 theorem dvd_of_euclideanPRS_two_eq_zero {K : Type*} [Field K] (D E : K[X]) (hE : E ≠ 0)
@@ -225,7 +225,7 @@ theorem dvd_of_euclideanPRS_two_eq_zero {K : Type*} [Field K] (D E : K[X]) (hE :
   have hEd : E ∣ C E.leadingCoeff ^ k * D := hEq ▸ Dvd.intro Q rfl
   exact (hu.dvd_mul_left).mp hEd
 
-/-- **One-step termination ⇒ `gcd(D, E) ~ E`**: over a field, if `R₂ = prem(D, E) = 0` (so `E ∣ D`)
+/-- One-step termination ⇒ `gcd(D, E) ~ E`: over a field, if `R₂ = prem(D, E) = 0` (so `E ∣ D`)
 with `E ≠ 0`, then `gcd(D, E)` is *similar* to `E` (they divide each other, hence are associated).
 This is the `k = 1` boundary of Theorem 2.5.1(ii): the p.r.s. terminates in one step, `R₁ = E` is the
 last nonzero element, and `R₁ ~ gcd(D, E)`. -/
@@ -243,7 +243,7 @@ example {K : Type*} [Field K] [GCDMonoid K[X]] (D E : K[X]) (hE : E ≠ 0)
     (h0 : euclideanPRS D E 2 = 0) : IsSimilar (gcd D E) E :=
   isSimilar_gcd_right_of_euclideanPRS_two_eq_zero D E hE h0
 
-/-- **Theorem 2.5.1, part (i)** (the `n = deg C` case): when `gcd(C, E)` has the full degree `deg C`, it is
+/-- Theorem 2.5.1, part (i) (the `n = deg C` case): when `gcd(C, E)` has the full degree `deg C`, it is
 similar to `C` (the book's "`gcd(C, A−αB) = C`"), since `gcd(C, E) ∣ C`. -/
 theorem isSimilar_gcd_left_of_natDegree_eq {K : Type*} [Field K] [GCDMonoid K[X]] {C E : K[X]}
     (hC : C ≠ 0) (hdeg : (gcd C E).natDegree = C.natDegree) : IsSimilar (gcd C E) C :=

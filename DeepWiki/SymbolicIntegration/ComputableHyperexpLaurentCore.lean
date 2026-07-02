@@ -25,18 +25,18 @@ is `cnatCastG |j| · η` with the sign of `j` (so `j = 0` gives coefficient `0` 
 
 variable {α : Type*} [CField α] [CRischField α]
 
-/-- **The signed scalar `j·η ∈ α`** `cLaurentShiftG η j`: lift the (signed) Laurent index `j : ℤ`
-via `cnatCastG |j|`, negate for `j < 0`, and multiply by `η`. The base-RDE coefficient of the §5.10
+/-- The signed scalar `cLaurentShiftG η j = j·η ∈ α`: lift the (signed) Laurent index `j : ℤ`
+via `cnatCastG |j|`, negate for `j < 0`, and multiply by `η`. The base-RDE coefficient of the
 per-term equation `Dqⱼ + (j·η)·qⱼ = aⱼ`; `j = 0` gives `0` (pure integration `Dq₀ = a₀`). -/
 def cLaurentShiftG (η : α) (j : ℤ) : α :=
   let n : α := cnatCastG j.natAbs
   let nsigned : α := if j < 0 then CField.neg n else n
   CField.mul nsigned η
 
-/-- **One Laurent term's antiderivative coefficient** `cLaurentIntCoeffG η j aⱼ = some qⱼ` with
-`Dqⱼ + (j·η)·qⱼ = aⱼ` over `α` (the §5.10 per-term solve), or `none` if non-elementary. Routes the base
-RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` to the oracle `CRischField.crischDESolve (cLaurentShiftG η j) aⱼ`; for `j = 0`
-the coefficient is `0`, so this is the base integration `Dq₀ = a₀`. -/
+/-- One Laurent term's antiderivative coefficient `cLaurentIntCoeffG η j aⱼ = some qⱼ` with
+`Dqⱼ + (j·η)·qⱼ = aⱼ` over `α`, or `none` if non-elementary. Routes the base RDE to the oracle
+`CRischField.crischDESolve (cLaurentShiftG η j) aⱼ`; for `j = 0` the coefficient is `0`, so this is
+the base integration `Dq₀ = a₀`. -/
 def cLaurentIntCoeffG (η : α) (j : ℤ) (aj : α) : Option α :=
   CRischField.crischDESolve (cLaurentShiftG η j) aj
 
@@ -49,13 +49,12 @@ and `neg : List α` for the negative indices (`neg[i] = a_{-(i+1)}`, the special
 `qⱼ` by `cLaurentIntCoeffG` and assembles `∑ⱼ qⱼ tʲ = num/tᵐ` (`m = neg.length`, `num[j+m] = qⱼ`). Returns
 `none` if any coefficient is non-elementary. -/
 
-/-- **The §5.10 hyperexponential Laurent special-part integrator** `cIntegrateHyperexpLaurentG η pos
-neg = some (num, den)` (Bronstein §5.10): integrate the Laurent polynomial `∑ⱼ aⱼ tʲ` of a hyperexponential
-`t` (`Dt = η·t`), with `pos[k] = a_k` (`k ≥ 0`) and `neg[i] = a_{-(i+1)}`, returning `∫ = num/den` with
-`den = tᵐ` (`m = neg.length`) and `num[j+m] = qⱼ` (`qⱼ` from the per-term RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` via
-`cLaurentIntCoeffG`). `none` if any term is non-elementary. The negatives sit at `num`-indices `0…m−1`
-(index `−(i+1) ↦ m−1−i`), the non-negatives at `m…m+n` (index `k ↦ m+k`). `[CField α] [CDiffField α]
-[CRischField α]`-generic — runs at any tower level. -/
+/-- Hyperexponential Laurent special-part integrator `cIntegrateHyperexpLaurentG η pos neg =
+some (num, den)`: integrate the Laurent polynomial `∑ⱼ aⱼ tʲ` of a hyperexponential `t` (`Dt = η·t`),
+with `pos[k] = a_k` (`k ≥ 0`) and `neg[i] = a_{-(i+1)}`, returning `∫ = num/den` with `den = tᵐ`
+(`m = neg.length`) and `num[j+m] = qⱼ` (`qⱼ` from the per-term RDE via `cLaurentIntCoeffG`). `none` if
+any term is non-elementary. The negatives sit at `num`-indices `0…m−1` (index `−(i+1) ↦ m−1−i`), the
+non-negatives at `m…m+n` (index `k ↦ m+k`). Runs at any tower level. -/
 def cIntegrateHyperexpLaurentG (η : α) (pos : CPolyG α) (neg : List α) :
     Option (CPolyG α × CPolyG α) :=
   let m : ℕ := (neg : List α).length
@@ -93,7 +92,7 @@ special irreducible), i.e. `dₛ = c·tᵐ` — a single nonzero coefficient `c`
 `b/dₛ = ∑_{k=0}^{m-1} (b_k / c) t^{k-m}`, so the coefficient of `t^{-(i+1)}` (`i = 0…m−1`) is
 `b_{m-1-i} / c`. `cHyperexpSpecialNegG` produces this `neg`-list. -/
 
-/-- **Negative Laurent coefficients of the hyperexponential special part** `cHyperexpSpecialNegG b ds =
+/-- Negative Laurent coefficients of the hyperexponential special part `cHyperexpSpecialNegG b ds =
 [a₋₁, a₋₂, …, a₋ₘ]` (the `neg`-list for `cIntegrateHyperexpLaurentG`): for `dₛ = c·tᵐ` (a power of `t`,
 the hyperexponential special factor; `m = cdegG ds`, `c = cleadG ds`), the special part `b/dₛ =
 ∑_{k=0}^{m-1} (b_k / c) t^{k-m}`, so `a_{-(i+1)} = b_{m-1-i} / c`. Returns the list indexed by

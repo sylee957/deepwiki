@@ -2,83 +2,11 @@ import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 import Mathlib.FieldTheory.Differential.Liouville
 
-/-! # Completeness of the integrator — the "`none` ⟹ not elementary" frontier
+/-! # Integrator completeness: non-elementarity propagation
 
-This file maps and assembles the **completeness** direction of the transcendental Risch
-integrator: when the integrator returns `none`, the integrand has **no elementary antiderivative**.
-The *soundness* direction (`cIntegrateGFull` returns `Some F ⟹ D F = f`, the algebraic
-`D(∫f) = f` capstone) is done elsewhere; this file is about the harder converse, which is
-**Liouville's theorem** (Liouville 1833–41; Rosenlicht, *Integration in finite terms*, 1972).
-
-## What "elementary integral" means here (and why there is no `IsElementary` in Mathlib)
-
-Mathlib has **no** `IsElementary`/`IsElementaryIntegral` predicate.  What it *does* have is the
-**structural Liouville condition** `Differential.IsLiouville F K`
-(`Mathlib/FieldTheory/Differential/Liouville.lean`): a differential field extension `K / F` is
-*Liouville* when every `a ∈ F` that can be written as
-`a = ∑ᵢ cᵢ · logDeriv uᵢ + v′` with `uᵢ, v ∈ K` and `cᵢ ∈ F` constant, can **already** be written
-that way with everything in `F`.  This is exactly the engine of Liouville's theorem: the literal
-content of "`∫ a` is elementary" is "`a` has the Liouville form `a = v′ + ∑ cᵢ logDeriv uᵢ` over
-some elementary extension tower" (constants in the base field's constant subfield, the rest up the
-tower), and `IsLiouville` is the inductive step that pushes that form down one extension layer.
-Iterated down the whole tower (`IsLiouville.trans`), it collapses an elementary antiderivative
-*anywhere up the tower* to the Liouville form *over the base field*.
-
-So in this development the **elementary-integral predicate is a `logDeriv`-sum existential**
-(`HasLiouvilleForm` below, in the faithful *relative* shape: constants in the base, arguments up the
-tower), and `IsLiouville F K` is **precisely** the statement "elementary over `K` ⟹ elementary over
-`F`" for base-field integrands.  Its **contrapositive** is the completeness criterion this file
-delivers: *not elementary over `F` ⟹ not elementary over the extension `K`* — non-elementarity
-**propagates up** the tower.
-
-## What is reachable now (assembled here, axiom-clean)
-
-- **The abstract completeness reformulation.** `isLiouville_iff_descends` /
-  `not_elementary_extension_of_not_elementary_base`: `IsLiouville F K` ⟺ "Liouville-form-over-`K`
-  descends to Liouville-form-over-`F`", and its contrapositive is the non-elementarity-propagation
-  criterion.  These are pure repackagings of Mathlib's `IsLiouville`, so they are immediate and
-  hold for **every** Liouville extension (logarithmic, algebraic, and — once available —
-  exponential).
-- **The single logarithmic-tower completeness — UNCONDITIONAL.**
-  `logExtension_completeness` / `not_elementary_logExtension_of_not_elementary_base`: for a genuine
-  new log monomial `t = log u` (`NondegenerateLog u`, i.e. `log u ∉ F`), an integrand `a ∈ F` that
-  is elementary in `F(log u) = RatFunc F` is *already* elementary in `F`; contrapositively, a
-  base-field integrand with no `F`-Liouville form has none over `F(log u)`.  This rides directly on
-  the **done** keystone `isLiouville_logExtension_uncond` (Rosenlicht's transcendental-log case,
-  proved unconditionally in `LiouvilleLogExtension.lean`).  This is the genuine reachable milestone.
-- **The composite log-then-algebraic tower.** `logAlgebraic_tower_completeness`: chaining the log
-  keystone with Mathlib's algebraic case `isLiouville_of_finiteDimensional` via `IsLiouville.trans`
-  gives completeness for a tower `F ⊆ F(log u) ⊆ A`, `A / F(log u)` finite algebraic.  This needs
-  the *towering* hypothesis `ContainConstants F (RatFunc F)` (the log adds no new constants) and the
-  scalar-tower differential compatibility, which are **stated** in `LiouvilleLogExtension.lean`
-  (`ContainConstantsObligation`, polynomial layer discharged) but not fully closed there; so this
-  composite carries them as explicit, honest hypotheses.
-
-## What the FULL mixed-tower completeness still needs (the precise frontier)
-
-1. **The exponential case** (`IsLiouville F K` for `K = F(exp u)`, `t' = u'·t`).  This is the
-   missing transcendental sibling of the log keystone.  A prior attempt
-   (`LiouvilleExpExtension.lean`) was **cancelled** by the user; this file does **not** depend on
-   finishing it.  Status: the setup and the `v ∈ F` step are done there, but the full
-   `IsLiouville F (RatFunc F)` for the exp monomial is **not** proved.  Until it is, towers that
-   pass through an exponential have no completeness here.
-2. **Tower exhaustiveness** (research-grade).  Even with a Liouville instance for *each* monomial
-   kind, "the integrator returned `none`" must be turned into "no elementary tower exists *at all*".
-   That requires: (a) every elementary extension is a finite tower of log/exp/algebraic monomials
-   (the *structure theorem* for elementary fields), and (b) the integrator's `none` is equivalent
-   to the non-solvability of the Risch differential equation at each layer (algorithm⟷Liouville
-   correspondence).  Neither is formalized; (a) is the genuine research frontier.
-3. **A base-field obstruction** for a *concrete* witness (e.g. `∫ e^{x²}`, `∫ (sin x)/x`).  A fully
-   concrete `¬ HasLiouvilleForm` requires proving that **no** Liouville form exists over the *base*
-   field — the Rosenlicht residue/partial-fraction computation, here only available for the rational
-   base (`RationalIntegrationLiouville.lean`, the `residueAt (G′) = 0` obstruction).
-   `not_elementary_witness_criterion` below packages exactly this reduction; supplying the base
-   obstruction (and, for `e^{x²}`, the cancelled exp instance) closes a concrete witness.
-
-In short: **non-elementarity-propagation across a logarithmic (and log-then-algebraic) tower is
-proven and axiom-clean here.  The remaining frontier is the exp-case Liouville instance (cancelled),
-tower exhaustiveness (research), and a base-field obstruction for a concrete witness.**
--/
+The Liouville-form existential `HasLiouvilleForm`, its equivalence with Mathlib's
+`Differential.IsLiouville` (`isLiouville_iff_descends`), and non-elementarity propagation up
+logarithmic and log-then-algebraic towers, via the log keystone `isLiouville_logExtension_uncond`. -/
 
 open scoped Differential
 open Polynomial Differential algebraMap
@@ -91,13 +19,10 @@ section Abstract
 variable (F : Type*) (K : Type*) [Field F] [Field K] [Differential F] [Differential K]
 variable [Algebra F K]
 
-/-- **The "elementary integral of Liouville form exists over the tower `K`" predicate (faithful,
-relative shape).**  A base-field integrand `a ∈ F` has an *elementary antiderivative of Liouville
-form over `K`* when (viewed in `K`) `↑a = ∑ᵢ ↑cᵢ · logDeriv uᵢ + v′` for some finite family of
-**constants `cᵢ ∈ F`** (`(cᵢ)′ = 0`), arguments `uᵢ ∈ K`, and `v ∈ K`.  This is the literal meaning
-of "`∫ a` is elementary in the field `K`" in Liouville's theorem (`∫ a = v + ∑ cᵢ log uᵢ`, constants
-in the base constant field, the rest up the tower) — and is *exactly* the hypothesis shape of
-`Differential.IsLiouville.isLiouville`.  The all-in-`F` base case is `HasLiouvilleForm F F a`. -/
+/-- `HasLiouvilleForm F K a`: the base-field integrand `a ∈ F` satisfies, viewed in `K`,
+`↑a = ∑ᵢ ↑cᵢ · logDeriv uᵢ + v′` for finitely many constants `cᵢ ∈ F` (`(cᵢ)′ = 0`), arguments
+`uᵢ ∈ K`, and `v ∈ K` — the Liouville form of "`∫ a` is elementary in `K`"
+(`∫ a = v + ∑ cᵢ log uᵢ`). The all-in-`F` base case is `HasLiouvilleForm F F a`. -/
 def HasLiouvilleForm (a : F) : Prop :=
   ∃ (ι : Type) (_ : Fintype ι) (c : ι → F) (_ : ∀ x, (c x)′ = 0) (u : ι → K) (v : K),
     (a : K) = ∑ x, (c x : K) * logDeriv (u x) + v′

@@ -39,7 +39,7 @@ theorem IsSpecial.isDifferentialIdeal {R : Type*} [CommRing R] [Differential R] 
   rw [deriv_mul_eq]
   exact dvd_add (dvd_mul_right p b′) (hp.mul_left b)
 
-/-- The special polynomials are **closed under multiplication** (`S` is a multiplicative
+/-- The special polynomials are closed under multiplication (`S` is a multiplicative
 monoid). -/
 theorem IsSpecial.mul {R : Type*} [CommRing R] [Differential R] {p q : R}
     (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecial (p * q) := by
@@ -115,7 +115,7 @@ theorem IsNormal.of_dvd {R : Type*} [CommRing R] [Differential R] {p q : R}
   obtain ⟨r, rfl⟩ := hq
   exact h.of_mul_left
 
-/-- A normal polynomial is **squarefree**: if `x·x ∣ p` then `x` divides both `p` and `p′`
+/-- A normal polynomial is squarefree: if `x·x ∣ p` then `x` divides both `p` and `p′`
 (`p′ = x·(…)` by Leibniz), so coprimality of `p, p′` forces `x` to be a unit. Holds for *any*
 derivation (no field or characteristic hypothesis). -/
 theorem IsNormal.squarefree {R : Type*} [CommRing R] [Differential R] {p : R}
@@ -130,20 +130,20 @@ theorem IsNormal.squarefree {R : Type*} [CommRing R] [Differential R] {p : R}
     rw [e]; exact dvd_mul_right x _
   exact IsCoprime.isUnit_of_dvd' hp hxp hxp'
 
-/-- **gcd form of special**: `p` is special iff `gcd(p, p′) ~ p` (the `gcd(p, p′) = p`
+/-- gcd form of special: `p` is special iff `gcd(p, p′) ~ p` (the `gcd(p, p′) = p`
 characterization, up to the unit ambiguity of `gcd`). -/
 theorem isSpecial_iff_associated_gcd {R : Type*} [CommRing R] [Differential R] [GCDMonoid R]
     {p : R} : IsSpecial p ↔ Associated (gcd p p′) p :=
   ⟨fun h => associated_of_dvd_dvd (gcd_dvd_left p p′) (dvd_gcd dvd_rfl h),
    fun h => h.symm.dvd.trans (gcd_dvd_right p p′)⟩
 
-/-- **gcd form of normal**: a normal `p` has `gcd(p, p′)` a unit (the `gcd(p, p′) = 1`
+/-- gcd form of normal: a normal `p` has `gcd(p, p′)` a unit (the `gcd(p, p′) = 1`
 characterization). -/
 theorem IsNormal.isUnit_gcd {R : Type*} [CommRing R] [Differential R] [GCDMonoid R] {p : R}
     (h : IsNormal p) : IsUnit (gcd p p′) :=
   gcd_isUnit_iff_isRelPrime.mpr h.isRelPrime
 
-/-- **gcd of a derivative, two-factor base case**: for coprime `a, b` (unit `gcd a b`),
+/-- gcd of a derivative, two-factor base case: for coprime `a, b` (unit `gcd a b`),
 `gcd(a·b, (a·b)′) ~ gcd(a, a′)·gcd(b, b′)`. Expand `(a·b)′ = a·b′ + b·a′`, split the gcd over
 the coprime factors (`associated_gcd_mul_of_isUnit_gcd`), drop the absorbed multiples
 (`associated_gcd_add_mul`), and cancel the coprime cofactor (`associated_gcd_mul_left_cancel`). -/
@@ -157,7 +157,7 @@ theorem associated_gcd_deriv_mul {R : Type*} [CommRing R] [Differential R] [Norm
     exact (associated_gcd_add_mul a (b * a′) b′).trans (associated_gcd_mul_left_cancel hab)
   · exact (associated_gcd_add_mul b (a * b′) a′).trans (associated_gcd_mul_left_cancel hba)
 
-/-- **gcd of a derivative, prime-power case**: when the exponent `n ≥ 1` is a
+/-- gcd of a derivative, prime-power case: when the exponent `n ≥ 1` is a
 unit (characteristic `0`), `gcd(pⁿ, (pⁿ)′) ~ pⁿ⁻¹·gcd(p, p′)`. Uses `(pⁿ)′ = n·pⁿ⁻¹·p′`
 (`leibniz_pow`), factors out `pⁿ⁻¹`, and cancels the unit `n`. -/
 theorem associated_gcd_deriv_pow {R : Type*} [CommRing R] [Differential R] [NormalizedGCDMonoid R]
@@ -171,7 +171,7 @@ theorem associated_gcd_deriv_pow {R : Type*} [CommRing R] [Differential R] [Norm
   exact Associated.mul_left _
     (associated_gcd_mul_left_cancel (isUnit_of_dvd_unit (gcd_dvd_right p (n : R)) he))
 
-/-- **gcd of a derivative, pairwise-coprime product form**: for a finite family of
+/-- gcd of a derivative, pairwise-coprime product form: for a finite family of
 pairwise-coprime factors `f i`, `gcd(∏ f i, (∏ f i)′) ~ ∏ gcd(f i, (f i)′)`. Finset induction on the
 two-factor base case `associated_gcd_deriv_mul`, using that a factor stays coprime to the rest of
 the product (`isUnit_gcd_prod`). -/
@@ -196,7 +196,7 @@ theorem associated_gcd_deriv_prod {R : Type*} [CommRing R] [Differential R] [Nor
     intro i hi j hj hij
     exact hco i (Finset.mem_insert_of_mem hi) j (Finset.mem_insert_of_mem hj) hij
 
-/-- **Key step**: a prime factor `π` of a special polynomial `p`
+/-- Key step: a prime factor `π` of a special polynomial `p`
 is itself special. Write `p = πᵉ·h` with `π ∤ h` (`FiniteMultiplicity`); `associated_gcd_deriv_mul`/`_pow` give
 `gcd(p,p′) ~ πᵉ⁻¹·gcd(π,π′)·gcd(h,h′)`, and `p` special (`gcd(p,p′) ~ p`) forces, after cancelling
 `πᵉ⁻¹`, `π·h ~ gcd(π,π′)·gcd(h,h′)`; as `π` is prime, `gcd(π,π′)` is a unit (impossible: it would
@@ -257,7 +257,7 @@ theorem isSpecial_of_dvd {R : Type*} [CommRing R] [Differential R] [IsDomain R]
     have hcp : c ∣ p := (dvd_mul_left c π).trans hπc
     exact (isSpecial_of_prime_dvd hπ hπp hp0 hp (hmult π hπ hπp)).mul (ih hcp)
 
-/-- **Coprime case**: if `p·q` is special and `p, q` are
+/-- Coprime case: if `p·q` is special and `p, q` are
 coprime, then `p` is special. (Unlike the normal case, the coprimality is needed: `p ∣ q·p′`
 gives `p ∣ p′` only when `p ⊥ q`.) -/
 theorem IsSpecial.of_mul_coprime {R : Type*} [CommRing R] [Differential R] {p q : R}
@@ -268,7 +268,7 @@ theorem IsSpecial.of_mul_coprime {R : Type*} [CommRing R] [Differential R] {p q 
   have hp2 : p ∣ q * p′ := (dvd_add_right (dvd_mul_right p q′)).mp hp1
   exact hco.dvd_of_dvd_mul_left hp2
 
-/-- A polynomial that is **both normal and special is a unit**
+/-- A polynomial that is both normal and special is a unit
 (`(p) = (1)`) — the only normal *and* special polynomials are the units of `k`. -/
 theorem isUnit_of_isNormal_of_isSpecial {R : Type*} [CommRing R] [Differential R] {p : R}
     (hn : IsNormal p) (hs : IsSpecial p) : IsUnit p := by
@@ -284,7 +284,7 @@ theorem isNormal_of_isUnit {R : Type*} [CommRing R] [Differential R] {p : R} (hu
   obtain ⟨u, rfl⟩ := hu
   exact ⟨↑u⁻¹, 0, by simp⟩
 
-/-- `p` is **both normal and special iff it is a unit**. -/
+/-- `p` is both normal and special iff it is a unit. -/
 theorem isNormal_and_isSpecial_iff_isUnit {R : Type*} [CommRing R] [Differential R] {p : R} :
     (IsNormal p ∧ IsSpecial p) ↔ IsUnit p :=
   ⟨fun ⟨hn, hs⟩ => isUnit_of_isNormal_of_isSpecial hn hs,
@@ -337,7 +337,7 @@ theorem IsNormal.splittingFactorization {R : Type*} [CommRing R] [Differential R
   ⟨(one_mul p).symm, isSpecial_one, hp⟩
 
 open Polynomial in
-/-- **Monomial-derivation degree bound.** `implicitDeriv v` on `k[X]` sends
+/-- Monomial-derivation degree bound. `implicitDeriv v` on `k[X]` sends
 `p ↦ mapCoeffs p + v · (dp/dX)`, so its output degree is governed by `deg v`:
 `(implicitDeriv v p).natDegree ≤ deg p + max(0, deg v − 1)`. -/
 theorem natDegree_implicitDeriv_le {R : Type*} [CommRing R] [Differential R] (v p : R[X]) :
@@ -369,7 +369,7 @@ theorem natDegree_implicitDeriv_le {R : Type*} [CommRing R] [Differential R] (v 
       _ ≤ p.natDegree + max 0 (v.natDegree - 1) := by omega
 
 open Polynomial in
-/-- **Monomial-derivation degree, the *nonlinear* equality case**: over a characteristic-`0`
+/-- Monomial-derivation degree, the *nonlinear* equality case: over a characteristic-`0`
 field, when `deg v ≥ 2` and `deg p ≥ 1`, the bound is sharp —
 `(implicitDeriv v p).natDegree = deg p + deg v − 1`. (The `v·p′` term has degree
 `deg v + deg p − 1 > deg p`, so it strictly dominates `mapCoeffs p` and sets the degree.) -/
@@ -446,21 +446,21 @@ theorem squarefree_factorization_pairwise_coprime {K : Type*} [Field K] (s : Fin
   isCoprime_prod_X_sub_C_of_disjoint (Finset.disjoint_left.mpr fun _ ha ha' =>
     hkk ((Finset.mem_filter.mp ha).2.symm.trans (Finset.mem_filter.mp ha').2))
 
-/-- **Single linear factor, normal**: `X − a` is normal w.r.t. the monomial
+/-- Single linear factor, normal: `X − a` is normal w.r.t. the monomial
 derivation `D` (`X′ = v`) iff `v(a) ≠ a′` at its root `a`. -/
 theorem isCoprime_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X])
     (a : K) :
     IsCoprime (X - C a) (Differential.implicitDeriv v (X - C a)) ↔ v.eval a ≠ a′ := by
   rw [implicitDeriv_X_sub_C, isCoprime_X_sub_C_iff, eval_sub, eval_C, sub_ne_zero]
 
-/-- **Single linear factor, special**: `X − a` is special w.r.t. the monomial
+/-- Single linear factor, special: `X − a` is special w.r.t. the monomial
 derivation `D` (`X′ = v`) iff `v(a) = a′` at its root `a` — equivalently
 `(X − a) ∣ (X − a)′`. -/
 theorem dvd_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v : K[X]) (a : K) :
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ := by
   rw [implicitDeriv_X_sub_C, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
 
-/-- **Linear-factor power, special**: over characteristic `0`, the power
+/-- Linear-factor power, special: over characteristic `0`, the power
 `(X − a)ⁿ` (`n ≥ 1`) is special w.r.t. the monomial derivation `D` iff `v(a) = a′` —
 the multiplicity does not matter. (`((X−a)ⁿ)′ = n·(X−a)ⁿ⁻¹·(X−a)′`; cancel
 `(X−a)ⁿ⁻¹` and the unit `n`.) -/
@@ -478,7 +478,7 @@ theorem dvd_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Di
     mul_dvd_mul_iff_left (pow_ne_zero (n - 1) (X_sub_C_ne_zero a)),
     hnu.dvd_mul_left, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
 
-/-- **Squarefree polynomial, normal**: a squarefree polynomial — written as the
+/-- Squarefree polynomial, normal: a squarefree polynomial — written as the
 product `∏_{a∈s} (X − a)` of its distinct linear factors — is normal w.r.t. the monomial
 derivation `D` (`X′ = v`) iff `∀ a ∈ s, v(a) ≠ a′` (`v` differs from `a′` at every root). Forward:
 each `X − a` divides the product so is normal (`IsNormal.of_dvd`); backward: the pairwise-coprime
@@ -498,7 +498,7 @@ theorem isCoprime_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differen
     · exact (isCoprime_X_sub_C_implicitDeriv_iff v a).mpr (h a ha)
     · exact isCoprime_X_sub_C_iff.mpr (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab)
 
-/-- **Squarefree polynomial, special**: a squarefree polynomial `∏_{a∈s}(X − a)`
+/-- Squarefree polynomial, special: a squarefree polynomial `∏_{a∈s}(X − a)`
 is special w.r.t. the monomial derivation `D` (`X′ = v`) iff `∀ a ∈ s, v(a) = a′`
 (`v = a′` at every root). Backward: special is closed under products (`IsSpecial.prod`); forward: each
 `X − a` is a coprime factor of the product, hence special (`IsSpecial.of_mul_coprime`). -/
@@ -521,7 +521,7 @@ theorem dvd_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K
     exact IsSpecial.prod s (fun a => X - C a)
       (fun a ha => (dvd_X_sub_C_implicitDeriv_iff v a).mpr (h a ha))
 
-/-- **General product, special**: a polynomial `∏_{a∈s}(X − a)^{eₐ}`
+/-- General product, special: a polynomial `∏_{a∈s}(X − a)^{eₐ}`
 (each `eₐ ≥ 1`, characteristic `0`) is special w.r.t. the monomial derivation `D` (`X′ = v`) iff
 `∀ a ∈ s, v(a) = a′` (`v = a′` at every root). Backward: `IsSpecial.prod` over the special
 prime powers; forward: each `(X − a)^{eₐ}` is a coprime factor (`IsSpecial.of_mul_coprime`). -/
@@ -544,7 +544,7 @@ theorem dvd_prod_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K
       (fun a ha => (dvd_X_sub_C_pow_implicitDeriv_iff v a (he a ha)).mpr (h a ha))
 
 open Classical in
-/-- **Splitting factorization of a squarefree polynomial**: `∏_{a∈s}(X − a)` factors as its
+/-- Splitting factorization of a squarefree polynomial: `∏_{a∈s}(X − a)` factors as its
 special part (roots with `v(a) = a′`) times its normal part (roots with `v(a) ≠ a′`), the first
 special and the second normal w.r.t. the monomial derivation `D`. Immediate from the squarefree
 normal/special characterizations applied to the two halves of the root partition. -/
@@ -563,7 +563,7 @@ theorem splittingFactorization_prod_X_sub_C {K : Type*} [Field K] [Differential 
    (isCoprime_prod_X_sub_C_implicitDeriv_iff v _).mpr fun _ ha => (Finset.mem_filter.mp ha).2⟩
 
 open Classical in
-/-- **Special-part extraction for a *general* (non-squarefree) product**: `∏_{a∈s}(X − a)^{eₐ}`
+/-- Special-part extraction for a *general* (non-squarefree) product: `∏_{a∈s}(X − a)^{eₐ}`
 factors as its special part (roots with `v(a)=a′`, with multiplicity) times the rest, the special
 part being special w.r.t. `D`. (The complementary factor is not normal once `eₐ > 1`; the full
 canonical representation handles those multiplicities via the rational-function reduction.) -/
@@ -581,7 +581,7 @@ theorem isSpecial_special_part {K : Type*} [Field K] [CharZero K] [Differential 
      fun _ ha => (Finset.mem_filter.mp ha).2⟩
 
 open Classical in
-/-- **Squarefree gcd formula**: the special part of a squarefree
+/-- Squarefree gcd formula: the special part of a squarefree
 polynomial is exactly `gcd(p, p′)` — `gcd(∏_{a∈s}(X − a), (∏)′) ~ ∏_{a : v(a)=a′}(X − a)`. The gcd
 splits over the linear factors; each `gcd(X − a, (X − a)′)` is `~ (X − a)` when
 `a` is a special root (`v(a)=a′`) and a unit otherwise. -/
@@ -603,7 +603,7 @@ theorem gcd_prod_X_sub_C_implicitDeriv {K : Type*} [Field K] [Differential K] (v
       (IsNormal.isUnit_gcd ((isCoprime_X_sub_C_implicitDeriv_iff v a).mpr h))
 
 open Classical in
-/-- **General gcd formula**: for `p = ∏_{a∈s}(X − a)^{eₐ}` (each
+/-- General gcd formula: for `p = ∏_{a∈s}(X − a)^{eₐ}` (each
 `eₐ ≥ 1`, char `0`), `gcd(p, p′) ~ (∏_a (X − a)^{eₐ−1}) · ∏_{a : v(a)=a′}(X − a)` — the multiplicity
 defect `∏(X − a)^{eₐ−1}` times the squarefree special part. Over the prime powers,
 the per-power computation `gcd((X − a)^{eₐ}, ((X − a)^{eₐ})′) ~ (X − a)^{eₐ−1}·gcd(X − a, (X − a)′)`, and the
@@ -634,7 +634,7 @@ theorem gcd_prod_X_sub_C_pow_implicitDeriv {K : Type*} [Field K] [CharZero K] [D
       (IsNormal.isUnit_gcd ((isCoprime_X_sub_C_implicitDeriv_iff v a).mpr h))
 
 open Classical in
-/-- **The `d/dX` companion**: for `p = ∏_{a∈s}(X − a)^{eₐ}` (each
+/-- The `d/dX` companion: for `p = ∏_{a∈s}(X − a)^{eₐ}` (each
 `eₐ ≥ 1`, char `0`), `gcd(p, dp/dX) ~ ∏_a (X − a)^{eₐ−1}` — the pure multiplicity defect (no
 special bias, since `d(X − a)/dX = 1`). Combined with the `gcd(p, p′)` formula this gives the
 special part `pₛ = gcd(p, p′)/gcd(p, dp/dX) ~ ∏_{special}(X − a)`. -/
@@ -658,7 +658,7 @@ theorem gcd_prod_X_sub_C_pow_derivative {K : Type*} [Field K] [CharZero K] (s : 
   exact (associated_mul_unit_right _ _ hg1).symm
 
 open Classical in
-/-- **Squarefree part / radical**: over characteristic `0`, the squarefree part
+/-- Squarefree part / radical: over characteristic `0`, the squarefree part
 `A* = A/gcd(A, dA/dx)` of `A = ∏_{a∈s}(X − a)^{eₐ}` is its radical `∏_{a∈s}(X − a)` — stated
 multiplicatively, `A ~ gcd(A, dA/dx) · ∏(X − a)`. (`gcd(A, dA/dx)` is the multiplicity defect
 `∏(X − a)^{eₐ−1}`; multiplying back the radical recovers `A`.) -/
@@ -675,7 +675,7 @@ theorem prod_X_sub_C_pow_associated_gcd_mul_radical {K : Type*} [Field K] [CharZ
   rwa [hsplit] at key
 
 open Classical in
-/-- **The special-part formula** `pₛ = gcd(p, p′)/gcd(p, dp/dX)` in
+/-- The special-part formula `pₛ = gcd(p, p′)/gcd(p, dp/dX)` in
 multiplicative form: for `p = ∏_{a∈s}(X − a)^{eₐ}` (char `0`),
 `gcd(p, p′) ~ gcd(p, dp/dX) · ∏_{a : v(a)=a′}(X − a)`. So the special part of `p` (the cofactor
 `gcd(p, p′)/gcd(p, dp/dX)`) is exactly the squarefree product of its special roots. -/

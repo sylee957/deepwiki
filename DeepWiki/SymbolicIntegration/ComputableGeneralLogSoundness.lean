@@ -2,83 +2,12 @@ import DeepWiki.SymbolicIntegration.ComputableGeneralWellFounded
 import DeepWiki.SymbolicIntegration.ComputableGeneralResidues
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogSoundness
 
-/-! # The LOG-part soundness for the GENERAL-curve integrator: `D(Σ cᵢ log uᵢ) = logpart` via `afDerivWf`
+/-! # General-curve log-part soundness
 
-`ComputableGeneralIntegralSoundness` proves the **rational** half of the general algebraic soundness capstone
-`D(∫f) = f` for an arbitrary curve `K(x)[y]/(f)` — the rational-part telescoping
-`generalReduceRationalTelescopeWf` through the fuel-free general derivation `afDerivWf`
-(`mk_toPolyG_afDerivWf`). This file opens the **logarithmic** half: the general integrator
-(`afLogArgSolveWf`, `afIntegrateAlgebraicWf`) returns `∫f = v + Σ cᵢ log uᵢ`, and the log part is sound when the log-argument
-outputs carry the right residues, i.e. when
-
-  **`Σ cᵢ · afDerivWf(uᵢ)/uᵢ = (the log part of f)`**.
-
-It is the general-curve analogue of the radical-log template `ComputableRadicalLogSoundness` — the SAME
-`predicate → certificate-bridge → residue-correctness core` shape, with the diagonal `radDeriv n ρ` /
-`radMul n ρ` / `radIdeal n ρ` replaced by the general `afDerivWf f` / `afMul f` / `afIdeal f`, and the
-hyperelliptic two-sheet norm replaced by the general double resultant `genResidueResultant`
-(`ComputableGeneralResidues`).
-
-**The log-derivative is `afDerivWf(u)/u`.** For a carrier element `u ∈ K(x)[y]/(f)`, `D(log u) = afDerivWf(u)/u`
-*by definition* of the logarithmic derivative. So the log-part soundness is a **statement about residues**,
-not a new derivation law: it asks that the integrator's chosen `uᵢ` have log-derivatives summing to the
-integrand's log part. The single-term certificate is the fuel-free round-trip form
-`cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true`, the *division-free* form
-`afDerivWf f u = afMul f u integrand` (since `D(log u)·u = afDerivWf u`).
-
-**The faithful setting: the carrier quotient** `K[X] ⧸ afIdeal f = K[X] ⧸ (toPolyG f)` — the coordinate ring
-of the curve `f(x, y) = 0` over `K = CFieldSpec.K α`. The engine's `afMul` is the quotient product (Euclidean
-reduction `mod f`), so the honest reading of `afDerivWf f u = afMul f u integrand` lives in this quotient
-(exactly as the Wf derivation invariant's Leibniz law `mk_toPolyG_afDerivWf_afMul` does). The single-term
-log-derivative equation `D(log u) = integrand` is therefore `mk(toPolyG(afDerivWf f u)) = mk(toPolyG u)·
-mk(toPolyG integrand)` in `K[X] ⧸ afIdeal f`.
-
-What this file delivers (axiom-clean `[propext, Classical.choice, Quot.sound]`, **no** `native_decide`):
-
-* **`IsGeneralLogTermWf f u integrand`** — the *single*-log soundness predicate (`cᵢ = 1`): the quotient
-  identity `mk(toPolyG(afDerivWf f u)) = mk(toPolyG u)·mk(toPolyG integrand)`, the faithful "`D(log u) =
-  integrand`". `IsGeneralLogIntegralWf f logpart commonDenom args cofs` — the multi-term predicate: the
-  **log-derivative sum** `Σ_{(c,u)∈args} c · afDerivWf(u)/u` equals `logpart` in the quotient, cross-multiplied
-  by the common denominator. (Both read `afDerivWf(u)/u` as the cross-multiplied quotient equation, no division.)
-
-* **The certificate↔predicate bridge** `isGeneralLogTermWf_of_logCert` — the engine's boolean check
-  `cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true` **implies**
-  `IsGeneralLogTermWf f u integrand` (the quotient
-  identity), via `cisZeroG_iff` + `toPolyG_csubG` + `mk_toPolyG_afMul`. So every `native_decide`-validated
-  `afIsLogIntegral` (the non-hyperelliptic `y³ − x² − 1` log arguments `u ∝ y`, `u ∝ y² + x`; the arcsinh
-  conservativity) IS, abstractly, the single-log soundness — read in the genuine quotient field.
-
-* **Additivity of the log-derivative sum** — `mk_toPolyG_afLogSumNumWf_eq_sum`: `D(Σ cᵢ log uᵢ)`, read as the
-  numerator `Σ cᵢ·afDerivWf(uᵢ)·cofᵢ` over the common denominator, distributes over the `args` list.
-
-**Obligation 2 (the tractable core)** is the base-field logarithmic-derivative residue theorem
-`LogResidue.logDeriv_residue_eq_multiplicity` (already proven, generic over the base field, in the radical
-template): the residue of `afDerivWf(u)/u` at a place over `x₀` equals the vanishing order. In the general
-setting `afDerivWf(u)/u` localizes (through `toPolyG`) to exactly this base-field log-derivative on the place's
-uniformizer, so the base-field core IS obligation 2's content for the general carrier too — restated here as
-the general framing.
-
-**Obligation 1 (the milestone) — `genResidueResultant` roots = residues.** `genResidueResultant` is the full
-double resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`; the inner `res_Y` is the **norm** of `Z·D' − g(x, y)`
-to `K(x)` (eliminating `y` against `F`), the outer `res_X` is the transcendental Rothstein–Trager
-(`ResidueMultiplicity.roots_rtResultant`) on that norm against `D`. Using the SAME `resultant_eq_prod_eval`
-product form `R = C(lc)^N · ∏_α genNorm(α, Z)`, the general norm's per-root factoring replaces the radical's
-two-sheet `√ρ` quadratic: for arbitrary `F` the per-place residues are `g(α)/F_y(α)` over the roots `α` of
-`F` (the places over `x = α₀`). We prove **`genNormFactor`** (the general norm at a root factors as
-`lc·∏_β(Z − g(β)/F_y(β))` over the curve fiber `β`) and **`roots_genResidueResultant_eq_residues`** (the
-double resultant's roots ARE the residues — the `roots_residueResultant_eq_residues` analogue for the general
-double resultant). The general norm is a `deg_y F = n`-degree product (not the radical's quadratic), so this
-is the heavier per-root factoring; it lands at the abstract product-form level exactly as the radical's did.
-
-**Obligation 3 (the partial fraction)** reuses `LogResidue.ratLogPart_eq_residue_logDeriv_sum` — the
-Bernoulli/Lagrange partial fraction `A/D = Σ residue·logDeriv(X − α)`, **algebraic** (NOT analytic, the
-radical case confirmed this): after rationalizing to `ℚ(x)`, the general log part is a rational function and
-the residue-sum IS its partial fraction.
-
-**Composed:** `isGeneralLogIntegralWf_of_residue_match` — given the per-term residue match (the partial
-fraction), the general integrator's log part is log-sound; `isGeneralAlgebraicIntegralWf_of_parts` composes the
-general rational part (`generalReduceRationalTelescopeWf`, the other half) + this log part into the full general
-`D(∫f) = f`. -/
+Log-part soundness `D(Σ cᵢ log uᵢ) = logpart` for the general-curve integrator, via `afDerivWf` in the
+carrier quotient `K[X] ⧸ afIdeal f`: the single- and multi-term predicates, the engine certificate bridge,
+the residue-correctness core (`genNormFactor`, `roots_genResidueResultant_eq_residues`, the interpolation
+compute-bridge), and the composition with the rational part into the full `D(∫f) = f` predicate. -/
 
 open Polynomial
 
@@ -90,41 +19,41 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-/-! ### The fuel-free log-soundness predicate and residue-sum skeleton
+/-! ### The log-soundness predicates and residue-sum skeleton
 
-The Wf derivation has the expected quotient API, so the log-part predicates can be restated without
-threading a fuel parameter. The partial-fraction obligations keep the same shape; only each
-`afDerivWf f uᵢ` leaf. -/
+For a carrier element `u ∈ K(x)[y]/(f)`, `D(log u) = afDerivWf(u)/u`; the predicates read this as the
+cross-multiplied (division-free) quotient equation in `K[X] ⧸ afIdeal f`. -/
 
-/-- The fuel-free single-log soundness predicate. -/
+/-- Single-log soundness predicate: `D(log u) = integrand`, read as
+`mk(toPolyG(afDerivWf f u)) = mk(toPolyG u)·mk(toPolyG integrand)` in the quotient. -/
 def IsGeneralLogTermWf (f u integrand : CPolyG α) : Prop :=
   Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u))
     = Ideal.Quotient.mk (afIdeal f) (toPolyG u)
       * Ideal.Quotient.mk (afIdeal f) (toPolyG integrand)
 
 omit [CDiffFieldSpec α] in
-/-- The Wf engine log-derivative certificate as a `K[X]` equality. -/
+/-- The engine log-derivative certificate as a `K[X]` equality. -/
 theorem toPolyG_afDerivWf_eq_of_logCert (f u integrand : CPolyG α)
     (h : cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true) :
     toPolyG (afDerivWf f u) = toPolyG (afMul f u integrand) := by
   simpa [cisZeroG_iff, sub_eq_zero] using h
 
 omit [CDiffFieldSpec α] in
-/-- A Wf log-derivative certificate implies the fuel-free single-log predicate. -/
+/-- An engine log-derivative certificate implies the single-log predicate. -/
 theorem isGeneralLogTermWf_of_logCert (f u integrand : CPolyG α) (hf : cnormG f ≠ [])
     (h : cisZeroG (csubG (afDerivWf f u) (afMul f u integrand)) = true) :
     IsGeneralLogTermWf f u integrand := by
   rw [IsGeneralLogTermWf, toPolyG_afDerivWf_eq_of_logCert f u integrand h,
     mk_toPolyG_afMul f u integrand hf]
 
-/-- The fuel-free two-term log-derivative numerator. -/
+/-- The two-term log-derivative numerator `c₁·D(u₁)·u₂ + c₂·D(u₂)·u₁`. -/
 def afLogSum2Wf (f : CPolyG α) (c₁ : α) (u₁ : CPolyG α) (c₂ : α) (u₂ : CPolyG α) :
     CPolyG α :=
   caddG (afMul f (cscaleG c₁ (afDerivWf f u₁)) u₂)
     (afMul f (cscaleG c₂ (afDerivWf f u₂)) u₁)
 
 omit [CDiffFieldSpec α] in
-/-- Two Wf log residues add in quotient form. -/
+/-- Two log-derivative terms add in quotient form. -/
 theorem mk_toPolyG_afLogSum2Wf (f : CPolyG α) (c₁ : α) (u₁ : CPolyG α) (c₂ : α)
     (u₂ : CPolyG α) (hf : cnormG f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSum2Wf f c₁ u₁ c₂ u₂))
@@ -137,27 +66,28 @@ theorem mk_toPolyG_afLogSum2Wf (f : CPolyG α) (c₁ : α) (u₁ : CPolyG α) (c
   rw [afLogSum2Wf, toPolyG_caddG, map_add, mk_toPolyG_afMul _ _ _ hf,
     mk_toPolyG_afMul _ _ _ hf, toPolyG_cscaleG, toPolyG_cscaleG, map_mul, map_mul]
 
-/-- The fuel-free residue-sum numerator over a cofactor list. -/
+/-- The residue-sum numerator `Σ cᵢ·afDerivWf(uᵢ)·cofᵢ` over a cofactor list. -/
 def afLogSumNumWf (f : CPolyG α) (args : List (α × CPolyG α)) (cofs : List (CPolyG α)) :
     CPolyG α :=
   ((args.zip cofs).map (fun p =>
     afMul f (cscaleG p.1.1 (afDerivWf f p.1.2)) p.2)).foldl caddG ([] : CPolyG α)
 
-/-- The fuel-free multi-term log-soundness predicate. -/
+/-- Multi-term log-soundness predicate: `Σ cᵢ·afDerivWf(uᵢ)/uᵢ = logpart` in the quotient,
+cross-multiplied by the common denominator. -/
 def IsGeneralLogIntegralWf (f logpart commonDenom : CPolyG α)
     (args : List (α × CPolyG α)) (cofs : List (CPolyG α)) : Prop :=
   Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
     = Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f logpart commonDenom))
 
 omit [CDiffFieldSpec α] in
-/-- The fuel-free residue-sum numerator of the empty log part is zero in the quotient. -/
+/-- The residue-sum numerator of the empty log part is zero in the quotient. -/
 theorem mk_toPolyG_afLogSumNumWf_nil (f : CPolyG α) (cofs : List (CPolyG α)) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f [] cofs)) = 0 := by
   show Ideal.Quotient.mk (afIdeal f) (toPolyG ([] : CPolyG α)) = 0
   rw [toPolyG_nil, map_zero]
 
 omit [CDiffFieldSpec α] in
-/-- The Wf residue-sum numerator distributes over the args list. -/
+/-- The residue-sum numerator distributes over the args list. -/
 theorem mk_toPolyG_afLogSumNumWf_eq_sum (f : CPolyG α) (args : List (α × CPolyG α))
     (cofs : List (CPolyG α)) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afLogSumNumWf f args cofs))
@@ -183,7 +113,7 @@ theorem mk_toPolyG_afLogSumNumWf_eq_sum (f : CPolyG α) (args : List (α × CPol
   rfl
 
 omit [CDiffFieldSpec α] in
-/-- The fuel-free log part composes from the per-term residue match. -/
+/-- The log part composes from the per-term residue match. -/
 theorem isGeneralLogIntegralWf_of_residue_match (f logpart commonDenom : CPolyG α)
     (args : List (α × CPolyG α)) (cofs : List (CPolyG α))
     (hmatch : ((args.zip cofs).map (fun p =>
@@ -194,7 +124,7 @@ theorem isGeneralLogIntegralWf_of_residue_match (f logpart commonDenom : CPolyG 
   rw [IsGeneralLogIntegralWf, mk_toPolyG_afLogSumNumWf_eq_sum, hmatch]
 
 omit [CDiffFieldSpec α] in
-/-- A one-term Wf log part composes to `IsGeneralLogIntegralWf`. -/
+/-- A one-term log part composes to `IsGeneralLogIntegralWf`. -/
 theorem isGeneralLogIntegralWf_singleton (f logpart commonDenom : CPolyG α)
     (c : α) (u cof : CPolyG α)
     (hmatch : Ideal.Quotient.mk (afIdeal f)
@@ -206,28 +136,19 @@ theorem isGeneralLogIntegralWf_singleton (f logpart commonDenom : CPolyG α)
 
 end CPolyG
 
-/-! ### ★ Obligation 2 — the logarithmic-derivative residue, general-carrier framing
+/-! ### The logarithmic-derivative residue, general-carrier framing
 
-Obligation 2 — *the residue of `D(log u) = afDerivWf(u)/u` at a place over `x₀` equals the vanishing order of
-`u` there* — is the classical **logarithmic-derivative residue theorem**, and its algebraic heart is a pure
-`K[X]` fact (`LogResidue.logDeriv_residue_eq_multiplicity`, already proven in the radical template, generic
-over the base field `K`): if `u = (X − a)^m · v` with `v(a) ≠ 0`, then `u'/u = m/(X − a) + v'/v`, so the
-residue of `u'/u` at `a` is **exactly `m`**. In the general setting, `afDerivWf(u)/u` at a place over `x₀`
-localizes (through `toPolyG`) to exactly this base-field log-derivative on the place's uniformizer — so the
-base-field core is *the* content of obligation 2 for the general carrier too. We restate the value form as the
-general framing (the same lemma, recorded as obligation 2 for the general-curve log part). -/
+The residue of `D(log u) = afDerivWf(u)/u` at a place over `x₀` equals the vanishing order of `u` there:
+in the general setting `afDerivWf(u)/u` localizes (through `toPolyG`) to the base-field log-derivative on
+the place's uniformizer, so the base-field `logDeriv_residue_eq_multiplicity` carries the content. -/
 
 namespace LogResidue
 
 variable {K : Type*} [Field K]
 
-/-- **★ Obligation 2 (general framing) — the logarithmic-derivative residue is the multiplicity** — for `u =
-(X − a)^m·v` with `m ≥ 1` and `v(a) ≠ 0`, the residue of `u'/u` at `a`, read as the value of the numerator
-`((X − a)·u')` over `u`'s cofactor at `a`, equals `(m : K)`. The general-carrier obligation 2: the per-place
-residue of `afDerivWf(u)/u` is the vanishing order (matching the `R(Z)`-root of obligation 1). This IS the
-base-field `LogResidue.logDeriv_residue_eq_multiplicity` — generic over `K`, so it serves the general carrier
-identically to the radical one (the local log-derivative on a place's uniformizer is base-field). Recorded
-here as obligation 2 of the general-curve log soundness. -/
+/-- The logarithmic-derivative residue is the multiplicity: for `u = (X − a)^m·v` with `v(a) ≠ 0`, the
+residue of `u'/u` at `a` — read as the value of the numerator `(X − a)·u'` over `u`'s cofactor at `a` —
+equals `(m : K)`. The general-carrier framing of `logDeriv_residue_eq_multiplicity`. -/
 theorem genLogDeriv_residue_eq_multiplicity (a : K) (m : ℕ) (v : K[X])
     (hv : v.eval a ≠ 0) :
     (Polynomial.C (m : K) * v + (Polynomial.X - Polynomial.C a) * derivative v).eval a / v.eval a

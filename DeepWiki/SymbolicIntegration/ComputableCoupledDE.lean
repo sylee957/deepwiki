@@ -1,100 +1,16 @@
 import DeepWiki.SymbolicIntegration.ComputableParametric
 
-/-! # The Coupled Differential System and the tangent RDE cancellation (Bronstein Chapter 8)
+/-! # The coupled differential system and the tangent RDE cancellation
 
-Bronstein's **coupled differential system** problem (Ch. 8, *Symbolic Integration I*, 2005, p.257):
-given a differential field `K` of characteristic `0`, `f₁, f₂, g₁, g₂ ∈ K`, and a constant
-`a ∈ Const_D(K)` with `√a ∉ K`, decide whether the system
-
-```
-  (Dy₁; Dy₂) + [[f₁, a·f₂], [f₂, f₁]] · (y₁; y₂) = (g₁; g₂)                            (8.2)
-```
-
-has a solution `(y₁, y₂) ∈ K × K`, and find one. Writing `y = y₁ + y₂√a`, `f = f₁ + f₂√a`,
-`g = g₁ + g₂√a`, the system (8.2) is **equivalent** (Bronstein eq. 8.3, since `D√a = 0`) to the single
-Risch differential equation `Dy + f·y = g` over `K(√a)` — its real and imaginary parts are exactly the
-two rows of (8.2). This is *the* engine that finishes the RDE oracle's last gap: the **tangent
-cancellation case** `PolyRischDECancelTan` (book p.215, `t = tan(x)`, `Dt = t²+1`, `δ = 2`), which the
-§6.6 dispatcher in `ComputableRischDE` deferred, recurses precisely into this coupled system over the
-**base** field `k` rather than into a Risch DE over the isomorphic copy `k(√−1)` (the whole point of
-Ch. 8 — keeping the recursion over `k`, book p.258).
-
-## The tangent reduction (Bronstein §8.4, the hypertangent case)
-
-For `t = tan(x)` (`Dt/(t²+1) = η ∈ k`, `δ = 2`), the cancellation case of the degree-bounded polynomial
-equation `Dq + b·q = c` has `b₂ ∈ k`, `b₁ = b₀ − nηt` (`n` = the degree bound, `b₀ ∈ k`). The
-`CoupledDECancelTan(b₀, b₂, c₁, c₂, D, n)` box (book p.265) solves the `t`-polynomial system
-
-```
-  (Dq₁; Dq₂) + [[b₀ − nηt, −b₂], [b₂, b₀ + nηt]] · (q₁; q₂) = (c₁; c₂)
-```
-
-(`a = −1`) for `q₁, q₂ ∈ k[t]` of degree `≤ n`, degree-by-degree from the top: at each degree `m` the
-leading-coefficient relation (book eq. 8.10) is the **base coupled system in `k`**
-`CoupledDESystem(b₀, b₂, coeff(c₁,tᵐ), coeff(c₂,tᵐ))`, then `c₁, c₂` are reduced and the degree drops
-(book p.265, the trace of Example 8.4.1).
-
-## What this file delivers (computable over ℚ(x), `native_decide`-validated)
-
-* **`cCoupledDESystem a b1 b2 z1 z2 dbound`** — the **base coupled system solver** over `k = ℚ(x)`
-  (`D = d/dx`): solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]] · (y₁; y₂) = (z₁; z₂)` for `y₁, y₂ ∈ ℚ(x)`,
-  with `a ∈ ℚ` the constant and `b₁, b₂, z₁, z₂ ∈ ℚ[x]` polynomial coefficients (the case the §8.4
-  tangent recursion reaches — its leading-coefficient base calls have polynomial data). Implemented by a
-  **polynomial ansatz** `y₁ = Σ uᵢxⁱ`, `y₂ = Σ vᵢxⁱ` of degree `≤ dbound`: the two rows of (8.2) become
-  polynomial identities, whose coefficient-wise vanishing is a single ℚ-linear system in the `2(dbound+1)`
-  unknowns `uᵢ, vᵢ`, solved exactly by the §7.3 unique-linear-solve `cConstSolveUniqueQ` (`crref`).
-  Returns `some (y₁, y₂) : CPolyG ℚ × CPolyG ℚ` (the two solution polynomials), or `none`.
-
-* **`cCoupledDECancelTan dbound b0 b2 c1 c2 nbound`** — the **tangent RDE cancellation** box (book
-  p.265) over `k = ℚ(x)`, `t = tan(x)`, `η = Dt/(t²+1) = 1` (so the `−nηt`/`+nηt` shifts are `∓n·t`).
-  Solves the `t`-polynomial coupled system above for `q₁, q₂ ∈ k[t]` of degree `≤ nbound`,
-  degree-by-degree from the top, each step a `cCoupledDESystem` base solve. Returns `some (q₁, q₂)`
-  (`q₁, q₂` as `t`-polynomials with `ℚ[x]`-coefficients), or `none`. This *is* the `PolyRischDECancelTan`
-  that `ComputableRischDE`'s §6.6 dispatcher deferred.
-
-## Validation (`native_decide`) — Bronstein Example 8.4.1 (book p.265–267)
-
-`k = ℚ(x)`, `D = d/dx`, `t = tan(x)`, the coupled system (8.11)
-
-```
-  (Dy₁; Dy₂) + [[0, −4x], [4x, 0]] · (y₁; y₂) = (−(t²−2t+8x²−1)/(t²+1); 2(1−2x)/(t²+1))
-```
-
-which arises from `∫ −((tan²x−2tan x+8x²−1)tan(x²)+4x−2)/((tan²x+1)(tan²x²+1)) dx` (8.12). After the §6.x
-reduction (book p.266) the equation becomes (8.14), equivalent to the `t`-polynomial system (8.15)
-
-```
-  (Dq₁; Dq₂) + [[−2t, −4x], [4x, −2t]] · (q₁; q₂) = (−t²+2t−8x²+1; 2(1−2x))
-```
-
-with degree bound `n = 2`. Running `cCoupledDECancelTan` on `b₀ = 0, b₂ = 4x, c₁ = −t²+2t−8x²+1,
-c₂ = 2−2x, n = 2` returns the book's solution `q₁ = t − 1`, `q₂ = −1 + 2x + 1 = 2x` (book eq. before
-p.267's conclusion: `q₁ = h₁t + h₂ + s₁ = t − 1`, `q₂ = h₂t − h₁ + s₂ = 2x`), so
-
-```
-  y₁ = (t − 1)/(t²+1)   and   y₂ = 2x/(t²+1)
-```
-
-(book p.267). `coupledDESystem_example` pins the base-case solve `CoupledDESystem(0, 4x−2, −8x²+1, 4−4x)
-= (−1, 2x+1)` (book p.266 step 4, `a = −1`) by the cleared system identity (`cisZeroG` of each row's
-residual), and `rischDE_cancelTan_example` runs the full `cCoupledDECancelTan` and checks the returned
-`(q₁, q₂)` *actually solves* the system (8.15) by clearing the polynomial identity of both rows — the
-tangent RDE cancellation case that `ComputableRischDE` left deferred now **computes** its solution. No
-`sorry`; the headline carries only the native-compiler axioms (`#print axioms`).
-
-## What is deferred (honest, documented)
-
-The `cCoupledDESystem` base solve is implemented for **polynomial** coefficient data over ℚ(x) via the
-degree-bounded ansatz — exactly the data the §8.4 tangent recursion produces. The full Ch. 8 algorithm's
-**denominator / pole bounds on the pair** (the §8.1–8.3 `WeakNormalizer` / `RdeNormalDenominator` /
-`RdeBoundDegree` analogues for the 2-vector, book p.257–264) — which would handle a coupled system with
-genuine rational-function poles in `t` and reduce it to the polynomial ansatz — are documented but not
-run; the ansatz degree bound `dbound` is supplied by the caller (the tangent recursion uses the
-right-hand-side degree, which suffices on the worked example). The §8.3 **nonlinear** case for general
-`δ ≥ 2` monomials (other than the hypertangent `t²+1`, where `√−1` generates a usable irreducible) has
-no general algorithm in the book itself (book p.263); only the hypertangent specialization is realized.
-The §8.2 **hyperexponential** coupled case (`CoupledDECancelExp`, book p.261) is the symmetric
-continuation. -/
+The coupled differential system `(Dy₁; Dy₂) + [[f₁, a·f₂], [f₂, f₁]]·(y₁; y₂) = (g₁; g₂)` — the real
+form of the Risch differential equation `Dy + f·y = g` over `K(√a)`, kept over the base field.
+`cCoupledDESystem` solves the base system over `k = ℚ(x)` (polynomial data) by a degree-bounded
+undetermined-coefficient ansatz reduced to one ℚ-linear solve; `cCoupledDECancelTan` is the
+hypertangent RDE cancellation box (`t = tan(x)`, `Dt = t²+1`, `δ = 2`), solving the `t`-polynomial
+coupled system degree-by-degree, each level a base solve plus a `t − √−1` reduction. The cleared-check
+soundness bridges lift passing self-checks to genuine `ℚ[X]` / `ℚ[x][t]` identities. The base solve
+handles polynomial coefficient data only (the data the tangent recursion produces); the ansatz degree
+bound `dbound` is supplied by the caller. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -102,29 +18,20 @@ open Compute CPolyG
 
 namespace CPolyG
 
-/-! ### The base coupled differential system over ℚ(x) (`cCoupledDESystem`, Bronstein eq. 8.2/8.10)
+/-! ### The base coupled differential system over ℚ(x) (`cCoupledDESystem`)
 
-`CoupledDESystem(b₁, b₂, z₁, z₂)` solves `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]](y₁; y₂) = (z₁; z₂)` for
-`y₁, y₂ ∈ k = ℚ(x)`, `D = d/dx`. For the polynomial coefficient data the §8.4 tangent recursion feeds
-it (`b₁, b₂, z₁, z₂ ∈ ℚ[x]`), a polynomial solution `y₁, y₂ ∈ ℚ[x]` of bounded degree exists when the
-system is solvable, found by undetermined coefficients. The two rows expand to:
+Solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]](y₁; y₂) = (z₁; z₂)` over `k = ℚ(x)`, `D = d/dx`, for
+polynomial data `b₁, b₂, z₁, z₂ ∈ ℚ[x]`: with the ansatz `y₁ = Σ_{i≤d} uᵢxⁱ`, `y₂ = Σ_{i≤d} vᵢxⁱ`,
+every coefficient of the two residual polynomials is a ℚ-linear form in `u₀..u_d, v₀..v_d`, so the
+system is one ℚ-linear solve (`cConstSolveUniqueQ`). -/
 
-```
-  Dy₁ + b₁·y₁ + a·b₂·y₂ = z₁
-  Dy₂ + b₂·y₁ + b₁·y₂ = z₂
-```
-
-With `y₁ = Σ_{i≤d} uᵢxⁱ`, `y₂ = Σ_{i≤d} vᵢxⁱ`, every coefficient of the two residual polynomials is a
-ℚ-linear form in `u₀..u_d, v₀..v_d`; setting them all to zero is one ℚ-linear system, solved by
-`cConstSolveUniqueQ`. -/
-
-/-- **ℚ-coefficient vector of a `CPolyG ℚ` padded to length `n`** `padCoeffsQ p n`: the low→high
-coefficient list of `p`, truncated/zero-extended to exactly `n` entries. Used to read each residual
+/-- ℚ-coefficient vector of a `CPolyG ℚ` padded to length `n` `padCoeffsQ p n`: the low→high
+coefficient list of `p`, truncated/zero-extended to exactly `n` entries. Reads each residual
 polynomial's coefficients as the rows of the ℚ-linear system for the coupled-system ansatz. -/
 def padCoeffsQ (p : CPolyG ℚ) (n : ℕ) : List ℚ :=
   (List.range n).map (fun i => (p : List ℚ).getD i 0)
 
-/-- **Linear map "multiply the degree-`d` ansatz `Σ xⁱ` by `m`, as a coefficient matrix"**
+/-- Multiplication by `m` on the degree-`d` ansatz, as a coefficient matrix
 `mulMatrixQ m d nrows`: the `nrows × (d+1)` ℚ-matrix whose column `i` is the coefficient vector
 (length `nrows`) of `m · xⁱ`, for the unknowns `u₀..u_d`. Row `r`, column `i` is the `x^r`-coefficient
 of `m·xⁱ`, i.e. `coeff(m, r − i)`. Multiplying the unknown vector `(u₀,…,u_d)` by this matrix gives the
@@ -134,43 +41,33 @@ def mulMatrixQ (m : CPolyG ℚ) (d nrows : ℕ) : List (List ℚ) :=
     (List.range (d + 1)).map (fun i =>
       if r ≥ i then (m : List ℚ).getD (r - i) 0 else 0))
 
-/-- **Linear map "`D(Σ uᵢxⁱ) = Σ i·uᵢ·x^{i−1}`, as a coefficient matrix"** `derivMatrixQ d nrows`:
+/-- The derivation `D(Σ uᵢxⁱ) = Σ i·uᵢ·x^{i−1}` as a coefficient matrix `derivMatrixQ d nrows`:
 the `nrows × (d+1)` ℚ-matrix whose action on `(u₀,…,u_d)` gives the coefficient vector of
 `d/dx(Σ uᵢxⁱ) = Σ_{i≥1} i·uᵢ·x^{i−1}`. Row `r`, column `i` is `i` when `i = r+1`, else `0`. -/
 def derivMatrixQ (d nrows : ℕ) : List (List ℚ) :=
   (List.range nrows).map (fun r =>
     (List.range (d + 1)).map (fun i => if (i : ℕ) = r + 1 then ((i : ℚ)) else (0 : ℚ)))
 
-/-- **Entrywise sum of two equally-shaped ℚ-matrices** `matAddQ A B`: row- and column-wise `+`. The
+/-- Entrywise sum of two equally-shaped ℚ-matrices `matAddQ A B`: row- and column-wise `+`. The
 coupled-system rows are sums of a `derivMatrixQ` block and `mulMatrixQ` blocks, assembled before the
 ℚ-linear solve. -/
 def matAddQ (A B : List (List ℚ)) : List (List ℚ) :=
   List.zipWith (fun ra rb => List.zipWith (· + ·) ra rb) A B
 
-/-- **Horizontal block-concatenation of two ℚ-matrices** `hcatQ A B`: append each row of `B` to the
+/-- Horizontal block-concatenation of two ℚ-matrices `hcatQ A B`: append each row of `B` to the
 corresponding row of `A` (the unknowns split as `[u₀..u_d | v₀..v_d]`, so each equation's row is the
 `u`-block beside the `v`-block). -/
 def hcatQ (A B : List (List ℚ)) : List (List ℚ) :=
   List.zipWith (· ++ ·) A B
 
-/-- **Computable base coupled differential system over ℚ(x)** `cCoupledDESystem a b1 b2 z1 z2 d`
-(Bronstein Ch. 8, eq. 8.2/8.10, the `CoupledDESystem` recursion target, `D = d/dx`, `k = ℚ(x)`):
-solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]] · (y₁; y₂) = (z₁; z₂)` for `y₁, y₂ ∈ ℚ[x]` of degree `≤ d`,
-with `a ∈ ℚ` the constant (`a = −1` for the tangent reduction) and `b₁, b₂, z₁, z₂ ∈ ℚ[x]`.
-
-Polynomial ansatz `y₁ = Σ_{i≤d} uᵢxⁱ`, `y₂ = Σ_{i≤d} vᵢxⁱ`. The two rows become the residuals
-
-```
-  R₁ = D y₁ + b₁·y₁ + (a·b₂)·y₂ − z₁ = 0
-  R₂ = D y₂ + b₂·y₁ + b₁·y₂ − z₂ = 0
-```
-
-Pick `nrows` large enough to hold every coefficient of `R₁, R₂` (one more than the max degree among
-`D(xᵈ)`, `b₁·xᵈ`, `b₂·xᵈ`, `z₁`, `z₂`). The coefficient of `x^r` in each `Rₖ` is a ℚ-linear form in
-`(u₀..u_d, v₀..v_d)`; stacking row `R₁`'s `nrows` coefficient-equations above `R₂`'s gives a
-`2·nrows × 2(d+1)` ℚ-system `M·(u;v) = rhs` (`rhs` = the `zₖ` coefficients), solved for the **unique**
-`(u;v)` by `cConstSolveUniqueQ`. Returns `some (y₁, y₂)` (the reconstructed polynomials) or `none`
-("no polynomial solution of degree `≤ d`"). -/
+/-- Computable base coupled differential system over ℚ(x) `cCoupledDESystem a b1 b2 z1 z2 d`
+(`D = d/dx`): solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]] · (y₁; y₂) = (z₁; z₂)` for `y₁, y₂ ∈ ℚ[x]`
+of degree `≤ d`, with `a ∈ ℚ` the constant (`a = −1` for the tangent reduction) and
+`b₁, b₂, z₁, z₂ ∈ ℚ[x]`. With the ansatz `y₁ = Σ_{i≤d} uᵢxⁱ`, `y₂ = Σ_{i≤d} vᵢxⁱ`, the coefficients
+of the two residuals `R₁ = D y₁ + b₁y₁ + ab₂y₂ − z₁`, `R₂ = D y₂ + b₂y₁ + b₁y₂ − z₂` form a
+`2·nrows × 2(d+1)` ℚ-system `M·(u;v) = rhs` (`nrows` chosen past every term's degree), solved for
+the unique `(u;v)` by `cConstSolveUniqueQ`. Returns `some (y₁, y₂)` or `none` (no polynomial
+solution of degree `≤ d`). -/
 def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) :
     Option (CPolyG ℚ × CPolyG ℚ) :=
   -- choose enough rows: any residual coefficient lives below this degree.
@@ -196,22 +93,15 @@ def cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) :
     let y2 : CPolyG ℚ := (List.range (d + 1)).map (fun i => sol.getD ((d + 1) + i) 0)
     some (cnormG y1, cnormG y2)
 
-/-! ### The tangent RDE cancellation `cCoupledDECancelTan` (Bronstein §8.4, book p.265)
+/-! ### The tangent RDE cancellation `cCoupledDECancelTan`
 
 `t = tan(x)`, `Dt = t²+1`, `η = Dt/(t²+1) = 1`. The cancellation case of `Dq + b·q = c` (`δ = 2`) has
-`b = b₁ + b₂√−1` with `b₂ ∈ k`, `b₁ = b₀ − n·η·t`. The `CoupledDECancelTan` box solves the `t`-polynomial
-system (book p.265)
+`b = b₁ + b₂√−1` with `b₂ ∈ k`, `b₁ = b₀ − n·η·t`; the box solves the `t`-polynomial coupled system
+(`a = −1`) for `q₁, q₂ ∈ k[t]` of degree `≤ n`, degree-by-degree from the top: at each degree the
+leading coefficients solve a base `cCoupledDESystem` call, then `c₁, c₂` are reduced and the degree
+drops. The monomial coefficients are in `k = ℚ(x)`, carried as `CPolyG ℚ`. -/
 
-```
-  (Dq₁; Dq₂) + [[b₀ − nηt, −b₂], [b₂, b₀ + nηt]] · (q₁; q₂) = (c₁; c₂)
-```
-
-(`a = −1`) for `q₁, q₂ ∈ k[t]` of degree `≤ n`, degree-by-degree from the top: at degree `m`, the
-leading coefficients (book eq. 8.10) solve the base `CoupledDESystem(b₀, b₂, coeff(c₁,tᵐ),
-coeff(c₂,tᵐ))`, then `c₁, c₂` are reduced and the degree drops. Here the monomial coefficients are in
-`k = ℚ(x)`, carried as `CPolyG ℚ` (we run over polynomial `b₀, b₂, c₁, c₂`, the worked-example data). -/
-
-/-- **`t`-monomial derivation `D = κ_D + (t²+1)·d/dt` over `ℚ[x][t]`** `tanDeriv p`: the derivation of a
+/-- `t`-monomial derivation `D = κ_D + (t²+1)·d/dt` over `ℚ[x][t]` `tanDeriv p`: the derivation of a
 `t`-polynomial `p` (coefficients in `ℚ[x]`, themselves `CPolyG ℚ`) for the tangent monomial `Dt = t²+1`.
 Coefficientwise `d/dx` plus `(t²+1)·dp/dt`. The `t = tan(x)` analogue of `cmonomialDeriv`, over the
 concrete coefficient field `ℚ(x)` represented as `CPolyG ℚ`. -/
@@ -230,38 +120,36 @@ def tanDeriv (p : List (CPolyG ℚ)) : List (CPolyG ℚ) :=
   let n := max kappa.length mulDt.length
   (List.range n).map (fun k => caddG (kappa.getD k []) (mulDt.getD k []))
 
-/-- **`tᵐ`-coefficient of a `t`-polynomial** `tcoeff p m`: the degree-`m` coefficient (an element of
-`ℚ(x)`, here `CPolyG ℚ`), `[]` (zero) past the end. The `coefficient(c, tᵐ)` of the §8.4 box. -/
+/-- `tᵐ`-coefficient of a `t`-polynomial `tcoeff p m`: the degree-`m` coefficient (an element of
+`ℚ(x)`, here `CPolyG ℚ`), `[]` (zero) past the end. -/
 def tcoeff (p : List (CPolyG ℚ)) (m : ℕ) : CPolyG ℚ := p.getD m []
 
-/-- **`t`-degree of a `t`-polynomial over `ℚ(x)`** `tdeg p`: the highest index with a nonzero
-(`ℚ(x)`-)coefficient, or `0` for the zero polynomial. The `deg(c)` of the §8.4 loop. -/
+/-- `t`-degree of a `t`-polynomial over `ℚ(x)` `tdeg p`: the highest index with a nonzero
+(`ℚ(x)`-)coefficient, or `0` for the zero polynomial. -/
 def tdeg (p : List (CPolyG ℚ)) : ℕ :=
   ((p.zipIdx.filter (fun (c, _) => ¬ cisZeroG c)).map (fun (_, i) => i)).foldl max 0
 
-/-- **`t`-polynomial is zero** `tisZero p`: every `ℚ(x)`-coefficient is zero. The `c = 0` test. -/
+/-- `t`-polynomial zero test `tisZero p`: every `ℚ(x)`-coefficient is zero. -/
 def tisZero (p : List (CPolyG ℚ)) : Bool := p.all cisZeroG
 
-/-- **Scale a `t`-polynomial coefficientwise by `s·tᵐ`** `tshiftScale s m`: the single-term
-`t`-polynomial `s·tᵐ` (`s ∈ ℚ(x) = CPolyG ℚ`), as the list `[0,…,0,s]` with `m` leading zeros. The
-`q ← q + sₖtᵐ` accumulation step. -/
+/-- Single-term `t`-polynomial `tshiftScale s m = s·tᵐ` (`s ∈ ℚ(x) = CPolyG ℚ`), as the list
+`[0,…,0,s]` with `m` leading zeros. -/
 def tshiftScale (s : CPolyG ℚ) (m : ℕ) : List (CPolyG ℚ) :=
   (List.replicate m ([] : CPolyG ℚ)) ++ [s]
 
-/-- **Coefficientwise subtraction of `t`-polynomials over `ℚ(x)`** `tsub p q`: `pₖ − qₖ` per `t`-degree.
-The `c ← c − …` reduction step. -/
+/-- Coefficientwise subtraction of `t`-polynomials over `ℚ(x)` `tsub p q`: `pₖ − qₖ` per
+`t`-degree. -/
 def tsub (p q : List (CPolyG ℚ)) : List (CPolyG ℚ) :=
   let n := max p.length q.length
   (List.range n).map (fun k => csubG (p.getD k []) (q.getD k []))
 
-/-- **Coefficientwise addition of `t`-polynomials over `ℚ(x)`** `tadd p q`: `pₖ + qₖ`. -/
+/-- Coefficientwise addition of `t`-polynomials over `ℚ(x)` `tadd p q`: `pₖ + qₖ`. -/
 def tadd (p q : List (CPolyG ℚ)) : List (CPolyG ℚ) :=
   let n := max p.length q.length
   (List.range n).map (fun k => caddG (p.getD k []) (q.getD k []))
 
-/-- **Scale a `t`-polynomial over `ℚ(x)` by a `ℚ`-constant** `cscaleListQ s p`: multiply every
-`ℚ[x]`-coefficient of the `t`-polynomial `p` by the scalar `s ∈ ℚ`. The `nη·(…)` scaling step of the
-§8.4 box (`η = 1`, so `nη = n`). -/
+/-- Scale a `t`-polynomial over `ℚ(x)` by a `ℚ`-constant `cscaleListQ s p`: multiply every
+`ℚ[x]`-coefficient of the `t`-polynomial `p` by the scalar `s ∈ ℚ`. -/
 def cscaleListQ (s : ℚ) (p : List (CPolyG ℚ)) : List (CPolyG ℚ) := p.map (cscaleG s)
 
 /-! #### Projection mod `t²+1` and division by `t − √−1` over `k(√−1)[t]`

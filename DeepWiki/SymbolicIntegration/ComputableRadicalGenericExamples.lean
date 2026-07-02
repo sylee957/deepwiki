@@ -1,40 +1,11 @@
 import DeepWiki.SymbolicIntegration.ComputableTranscendentalOverAlgebraic
 
-/-! # The radical/mixed-tower engine over a FAMILY of radicands (`x³+1` is one witness)
+/-! # The radical/mixed-tower engine over a family of radicands
 
-The `CFieldSpec (RadExt α 2 f)` bridge (`ComputableTranscendentalOverAlgebraic`,
-`instCFieldSpecRadExt`) is **generic in the radicand `f`** — it takes only
-`[Fact (Irreducible (X² − C(CFieldSpec.toK f)))]`, and from that single `Fact` the global
-`instCFieldDomainOfCFieldSpec` supplies `CFieldDomain (RadExt α 2 f)`, hence the whole
-transcendental-on-algebraic tower (`QFunNZG (RadExt α 2 f)` as `CField` + `CDiffField`,
-`CRischField (RadExt α 2 f)` by scalar decoupling). The ONLY `x³+1`-specific pieces over there are
-`not_square_X3p1 → irreducible_radX3 → fact_irreducible_radX3` — the concrete discharge of that one
-`Fact`. So new radical bases just need a *not-a-square* proof.
-
-This file demonstrates the genericity by:
-
-* **A generic irreducibility helper.** `not_isSquare_algebraMap_of_odd_natDegree` — *any* ℚ(x)-radicand
-  that is `algebraMap ℚ[X] (RatFunc ℚ) p` with `p.natDegree` **odd** is not a square (generalizing
-  `not_square_X3p1`'s parity argument: a square `b²` has even `intDegree = 2·intDegree b`, an odd-degree
-  polynomial cannot); then `irreducible_radDeg2_of_not_isSquare` — *any* non-square radicand `f` gives
-  `Irreducible (X² − C(toK f))` by `X_pow_sub_C_irreducible_of_prime Nat.prime_two`. So ONE generic lemma
-  turns any non-square radicand into the `Fact`, hence the full carrier.
-
-* **Three distinct radicands**, each ODD degree (so non-square is one line): `x³ − 2`, `x⁵ − x − 1`,
-  `x³ + x`. For each we register the `Fact` and let the generic `CFieldSpec`/`CFieldDomain` fire, so the
-  carrier `RadExt (QFunNZG ℚ) 2 g` and the tower `QFunNZG (RadExt (QFunNZG ℚ) 2 g)` resolve as `CField`
-  and `CDiffField` with **no bespoke work**.
-
-* **★ A `native_decide` mixed-tower integral over EACH radicand** — the SAME computation that works over
-  `x³+1` (here: `D(t²) = 2t²` over the transcendental monomial `t = eˣ` stacked on the radical base, the
-  `d/dt` half; and the mixed `D(y·t) = (ℓ+1)·y·t` where both the radical `D(y) = ℓ·y` and the monomial
-  `D(t) = t` fire) now validated over `√(x³−2)`, `√(x⁵−x−1)`, `√(x³+x)`. The engine integrates over a
-  *family* of radical extensions — `x³+1` is one member.
-
-The general-`n` scope is documented at the end: Mathlib's `X_pow_sub_C_irreducible_iff_of_prime` reaches
-`RadExt α p f` for **prime** `n = p` from "`f` not a perfect `p`-th power"; a cube root (`n = 3`) is
-*irreducibility*-reachable now, but the **computable** `CField (RadExt α n f)` `inv` is the `n = 2`
-conjugate-norm `radInv2`, so the field carrier itself is `n = 2` until a general-`n` inverse is built. -/
+A generic non-square ⟹ irreducible pipeline (`not_isSquare_algebraMap_of_odd_natDegree` +
+`irreducible_radDeg2_of_not_isSquare`) instantiates the carrier `RadExt (QFunNZG ℚ) 2 g` and its mixed
+tower `QFunNZG (RadExt (QFunNZG ℚ) 2 g)` for three odd-degree radicands (`x³−2`, `x⁵−x−1`, `x³+x`),
+with `native_decide` mixed-tower derivation checks over each. -/
 
 open Polynomial
 
@@ -42,19 +13,14 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem CPolyG
 
-/-! ### The generic irreducibility helper (off `x³+1`)
+/-! ### The generic irreducibility helper
 
-`not_square_X3p1` proved `x³+1` is not a square via the *odd intDegree* obstruction. We generalize that
-parity argument to **any** odd-`natDegree` polynomial radicand, then funnel it through the **same**
-Mathlib lemma `irreducible_radX3` uses (`X_pow_sub_C_irreducible_of_prime Nat.prime_two`). The result:
-ANY non-square radicand `f` (in particular any odd-degree polynomial one) gets `Irreducible (X² − C(toK
-f))` from ONE lemma — hence the `Fact`, hence `CFieldSpec`/`CFieldDomain`/the whole tower. -/
+The odd-`intDegree` parity obstruction shows any odd-`natDegree` polynomial radicand is not a square in
+`ℚ(x)`; `X_pow_sub_C_irreducible_of_prime Nat.prime_two` then gives `Irreducible (X² − C(toK f))` for
+any non-square radicand `f` — hence the `Fact`, hence `CFieldSpec`/`CFieldDomain` for the tower. -/
 
-/-- **★ An odd-degree polynomial is not a square in `ℚ(x)`** — `∀ b : RatFunc ℚ, b² ≠ algebraMap ℚ[X]
-(RatFunc ℚ) p` whenever `p.natDegree` is **odd**. The generalization of `not_square_X3p1`'s parity
-argument off `x³+1`: a square `b²` has even `intDegree = 2·intDegree b`, but `algebraMap p` has
-`intDegree = p.natDegree`, which is odd — contradiction. (`p ≠ 0` follows from odd `natDegree`.) The
-algebraic content making *any* odd-degree radical extension a field. -/
+/-- `∀ b : RatFunc ℚ, b² ≠ algebraMap ℚ[X] (RatFunc ℚ) p` whenever `p.natDegree` is odd: a square `b²`
+has even `intDegree = 2·intDegree b`, but `algebraMap p` has odd `intDegree = p.natDegree`. -/
 theorem not_isSquare_algebraMap_of_odd_natDegree {p : ℚ[X]} (hodd : Odd p.natDegree) :
     ∀ b : RatFunc ℚ, b ^ 2 ≠ algebraMap (ℚ[X]) (RatFunc ℚ) p := by
   intro b hb
@@ -66,11 +32,8 @@ theorem not_isSquare_algebraMap_of_odd_natDegree {p : ℚ[X]} (hodd : Odd p.natD
   rw [sq, RatFunc.intDegree_mul hb_ne hb_ne, RatFunc.intDegree_polynomial, hk] at hdeg
   omega
 
-/-- **★ A non-square radicand gives an irreducible `X² − C(toK f)`** — for `f : QFunNZG ℚ` with
-`¬ IsSquare`-style hypothesis `∀ b, b² ≠ toK f`, `Irreducible (X² − C(toK f))` over `ℚ(x)`. Literally
-`X_pow_sub_C_irreducible_of_prime Nat.prime_two h` — the SAME lemma `irreducible_radX3` uses, now
-abstracted off `x³+1`. So ANY non-square radicand gets irreducibility (hence the `Fact`, hence
-`CFieldSpec`/`CFieldDomain`) from this ONE generic lemma. -/
+/-- For `f : QFunNZG ℚ` with `∀ b, b² ≠ toK f`, `Irreducible (X² − C(toK f))` over `ℚ(x)` — the
+`X_pow_sub_C_irreducible_of_prime Nat.prime_two` instance abstracted over the radicand. -/
 theorem irreducible_radDeg2_of_not_isSquare {f : QFunNZG ℚ}
     (h : ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK f) :
     Irreducible (X ^ 2 - C (CFieldSpec.toK f)) :=
@@ -78,14 +41,11 @@ theorem irreducible_radDeg2_of_not_isSquare {f : QFunNZG ℚ}
 
 /-! ### Reading a `qxOfNum` radicand into `ℚ(x)` and its `natDegree`
 
-To apply the helper to a concrete `qxOfNum num` radicand we read `CFieldSpec.toK (qxOfNum num) =
-algebraMap ℚ[X] (RatFunc ℚ) (toPolyG num)` (the tower bridge on a denominator-`1` ℚ(x)-value), then
-compute `(toPolyG num).natDegree`. The reading lemma is generic in `num`; the `natDegree` is computed
-per radicand (each an explicit odd value). -/
+`CFieldSpec.toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPolyG num)` (generic in `num`), plus a
+per-radicand `natDegree` computation. -/
 
-/-- **`toK (qxOfNum num) = algebraMap (toPolyG num)`** — a denominator-`1` ℚ(x)-value `qxOfNum num`
-reads, through the tower bridge, as `algebraMap ℚ[X] (RatFunc ℚ) (toPolyG num)` (numerator `toPolyG num`,
-denominator `toPolyG [1] = 1`). The generic version of `toK_radicandX3p1`, for any numerator list. -/
+/-- `toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPolyG num)`: a denominator-`1` ℚ(x)-value reads
+through the tower bridge as the algebra-map image of its numerator (denominator `toPolyG [1] = 1`). -/
 theorem toK_qxOfNum (num : CPolyG ℚ) :
     CFieldSpec.toK (qxOfNum num : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPolyG num) := by
   show QFunNZG.toQFunNZG (qxOfNum num) = _

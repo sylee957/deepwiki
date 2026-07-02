@@ -2,76 +2,13 @@ import DeepWiki.SymbolicIntegration.ComputableParametric
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 
-/-! # Computable structure decision: are exp/log monomials a genuine tower? (Bronstein Chapter 9)
+/-! # Structure decision: is a candidate exp/log a new transcendental monomial?
 
-Bronstein, *Symbolic Integration I*, Chapter 9 ("Structure Theorems", book p.269–296) decides the
-**algebraic structure** of a set of exp/log monomials over a differential field: whether a candidate
-`log(u)` or `exp(u)` is a *new transcendental monomial* over the field already built, or whether it
-satisfies a relation (so it is algebraic / redundant). The two structure theorems and their decision
-corollaries are:
-
-* **§9.3 The Risch Structure Theorem** (Theorem 9.3.1, book p.283, after Risch [77]). Let `C` be a
-  field, `x` transcendental over `C`, and `(K, D)` an elementary extension of `(C(x), d/dx)` with
-  `Const_D(K) = C`. Write `K = C(x)(t₁,…,tₙ)`, with the index sets (eq. 9.6/9.7, book p.282)
-  ```
-    E_{K/C(x)} = {i : tᵢ transcendental over C(x)(t₁,…,t_{i-1}), Dtᵢ/tᵢ = Daᵢ, aᵢ ∈ …}   (exponentials)
-    L_{K/C(x)} = {i : tᵢ transcendental over C(x)(t₁,…,t_{i-1}), Dtᵢ  = Daᵢ/aᵢ, aᵢ ∈ …*}  (logarithms)
-  ```
-  If there are `v ∈ K` and `u ∈ K*` with `Dv = Du/u`, then there are `rᵢ ∈ ℚ` with
-  `v + Σ_{i∈L} rᵢtᵢ + Σ_{i∈E} rᵢaᵢ ∈ C` (where `tᵢ = exp(aᵢ)` for `i ∈ E`).
-
-* **Corollary 9.3.1** (book p.284, the **decision criterion**). For `a ∈ K*`, `b ∈ K`:
-  - **(i)** `Da/a` is the derivative of an element of `K` **iff** there are `rᵢ ∈ ℚ` with
-    `Σ_{i∈L} rᵢ Dtᵢ + Σ_{i∈E} rᵢ (Dtᵢ/tᵢ) = Da/a`                                            (9.8)
-  - **(ii)** `Db` is the logarithmic derivative of a `K`-radical **iff** there are `rᵢ ∈ ℚ` with
-    `Σ_{i∈L} rᵢ Dtᵢ + Σ_{i∈E} rᵢ (Dtᵢ/tᵢ) = Db`                                              (9.9)
-
-  The algorithms follow (book p.285, via Theorems 5.1.1/5.1.2): a new **logarithm** `log(a)` (`Dt =
-  Da/a`) is a *new monomial* over `K` (transcendental, same constants) **unless** `Da/a` is the
-  derivative of an element of `K` — i.e. unless (9.8) has a ℚ-solution; a new **exponential** `exp(b)`
-  (`Dt/t = Db`) is a *new monomial* **unless** `Db` is the logarithmic derivative of a `K`-radical —
-  i.e. unless (9.9) has a ℚ-solution.
-
-* **§9.4 The Rothstein–Caviness Structure Theorem** (Theorem 9.4.1, book p.293, after Rothstein &
-  Caviness [84]). The **same** statement and decision corollary (Corollary 9.4.1, eq. 9.21/9.22 ≡
-  9.8/9.9) for *log-explicit Liouvillian* extensions (the book: "The proof and corresponding algorithms
-  are exactly the same than for Corollary 9.3.1"). It lifts the Risch structure decision off
-  *elementary* towers onto the wider Liouvillian class the integration algorithm actually meets.
-
-## The computable core delivered here (over `k = ℚ(x)`, the reachable base; `native_decide`-validated)
-
-For a **logarithmic tower** `C(x)(log u₁, …, log uₘ)` — every `tᵢ ∈ L`, no exponentials — the new-log
-test (9.8) collapses to a **ℚ-linear-dependence test among the logarithmic derivatives** `wᵢ = Duᵢ/uᵢ ∈
-ℚ(x)`: a candidate `log(u)` (`w = Du/u`) is a *new transcendental monomial* over `C(x)(log u₁,…,log uₘ)`
-**iff** `w ∉ span_ℚ{w₁,…,wₘ}` (there are no `rᵢ ∈ ℚ` with `Du/u = Σ rᵢ Duᵢ/uᵢ`). That is exactly the
-worked relation `log(x²) = 2 log(x)` ⟺ `D(x²)/x² = 2·D(x)/x` (dependent) versus `log(x), log(x+1)`
-(independent). The `span_ℚ` test is *honest computable ℚ-linear algebra*: clear the rational functions
-`{w₁,…,wₘ,w}` to a common denominator, equate numerator coefficients, and run the §7.1 nullspace solver
-`cNullspaceBasisQ` (`crref` over ℚ) — `w` is dependent iff a relation has nonzero `w`-coefficient.
-
-* **`cLogIsNewMonomial`** — decides whether a candidate `log(u)` is a *new* monomial vs. a ℚ-linear
-  relation among the existing logarithmic derivatives, per Corollary 9.3.1(i). The arguments arrive as
-  the logarithmic derivatives `Duᵢ/uᵢ` (already reduced `QFunNZG ℚ` values), which the caller builds from
-  the `uᵢ`.
-* **`cExpIsNewMonomial`** — the exponential analogue (Corollary 9.3.1(ii)): a candidate `exp(b)` is a
-  *new* monomial **unless** `Db` is the logarithmic derivative of a `K`-radical, i.e. (over the
-  reachable base, where there are no exponential monomials to combine with) unless `Db ∈ span_ℚ{Duᵢ/uᵢ}`
-  — the *same* ℚ-linear-dependence test, now on `Db` against the existing logarithmic derivatives.
-
-## What is documented / deferred
-
-The **full** Risch / Rothstein–Caviness structure theorem keeps both index sets `E` and `L`
-simultaneously and the general nested tower `C(x)(t₁,…,tₙ)`: the test (9.8)/(9.9) ranges over
-`Σ_{i∈L} rᵢ Dtᵢ + Σ_{i∈E} rᵢ (Dtᵢ/tᵢ)`, so over a genuine tower the matrix entries lie in the *upper*
-field `C(x)(t₁,…,t_{i-1})` and one recurses level by level (the "algorithms following Corollary 9.3.1",
-book p.285, threading the §5.1 integration result `Dv = Du/u`). The reachable base case `k = ℚ(x)` (a
-*single* level of log/exp monomials over `ℚ(x)`, `Const = ℚ`) is what lands here, the level the §5.12 /
-§6.6 callers actually reach. The general multi-level recursion, the `exp`-of-radical witness
-construction (the §5.12 in-field integration), the √−1 / arc-tangent tower of Lemmas 9.3.2/9.3.3, and
-the §9.1 module of differentials (`Ω_{K/k}`, Mathlib `KaehlerDifferential`) underpinning the proofs are
-the documented continuation. No abstract correctness is proved (the structure theorem `Dv = Du/u ↔ …` is
-not formalized); every landed decision is `native_decide`-validated on its cleared ℚ-linear relation.
-No `sorry`. -/
+The Risch / Rothstein–Caviness structure decision over a logarithmic tower `C(x)(log u₁,…,log uₘ)`
+with base `k = ℚ(x)`: a candidate `log(u)` (or `exp(b)`) is a new transcendental monomial iff its
+(logarithmic) derivative is not a ℚ-linear combination of the existing logarithmic derivatives
+`Duᵢ/uᵢ ∈ ℚ(x)` — decided by clearing to a common denominator and running the ℚ-nullspace solver
+`cNullspaceBasisQ`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -81,32 +18,21 @@ namespace CPolyG
 
 /-! ### The ℚ-linear-dependence test among rational-function logarithmic derivatives
 
-Corollary 9.3.1(i)/(ii) (eq. 9.8/9.9) reduce, for a *logarithmic* tower over `ℚ(x)` (the reachable
-base), to: is the rational function `w` in the ℚ-linear span of `w₁,…,wₘ`? A ℚ-relation
-`r·w = Σ rᵢ wᵢ` (`r, rᵢ ∈ ℚ`) holds **iff**, after clearing all the `wⱼ ∈ ℚ(x)` to a common denominator
-`d = lcm(denominators)` so each becomes a numerator polynomial `nⱼ = wⱼ·d ∈ ℚ[x]`, the *coefficient
-vectors* of `{n₁,…,nₘ, n}` are ℚ-linearly dependent with a relation that uses `n` (the last column)
-nontrivially. We assemble the coefficient matrix (one **column** per `wⱼ`, one **row** per `x`-power up
-to the max degree) and run the §7.1 nullspace solver `cNullspaceBasisQ`. -/
+A ℚ-relation `r·w = Σ rᵢ wᵢ` holds iff, after clearing all `wⱼ ∈ ℚ(x)` to a common denominator
+`d = lcm(denominators)`, the coefficient vectors of the numerators `wⱼ·d ∈ ℚ[x]` are ℚ-linearly
+dependent with a relation using the `w`-column nontrivially. -/
 
-/-- **Coefficient column of a `QFunNZG ℚ` cleared to a common denominator.** `cClearedNumCoeffs d w`
-returns the dense `ℚ`-coefficient list of the polynomial `w·d ∈ ℚ[x]` (well-defined as a polynomial
-because `d` is a common multiple of `w`'s denominator), via `qnormPairG`-reducing `w` first then
-`numerator·(d/denom)`.
-The `LinearConstraints`-style clearing (cf. §7.1): a ℚ-relation `Σ rⱼ wⱼ = 0` becomes the polynomial
-relation `Σ rⱼ (wⱼ·d) = 0`, i.e. a ℚ-linear relation among these coefficient lists. -/
+/-- `cClearedNumCoeffs d w`: the dense `ℚ`-coefficient list of `w·d ∈ ℚ[x]` (well-defined because `d`
+is a common multiple of `w`'s denominator), via `qnormPairG`-reducing `w` then `numerator·(d/denom)`. -/
 def cClearedNumCoeffs (d : CPolyG ℚ) (w : QFunNZG ℚ) : CPolyG ℚ :=
   let wn := qnormPairG w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
   cmulG wn.1 (cdivWf d wn.2)
 
-/-- **The ℚ-linear span / dependence engine** `cLinearDepData ws w = (matrix, m)` for the rational
-functions `ws = [w₁,…,wₘ]` and a candidate `w`, over `k = ℚ(x)`. Clears all of `w₁,…,wₘ,w` to the common
-denominator `d = lcm(all denominators)` (so each `wⱼ·d ∈ ℚ[x]`), assembles the **coefficient matrix**
-`M` whose row `i` is `[coeff(w₁·d, xⁱ), …, coeff(wₘ·d, xⁱ), coeff(w·d, xⁱ)]` (`m+1` columns, one per
-generator with `w` last; rows `i = 0 .. maxdeg`), and returns `(M, m)`. A ℚ-relation `Σ rⱼ wⱼ + r·w = 0`
-is exactly a nullspace vector of `M`; `w ∈ span_ℚ{wⱼ}` iff some nullspace vector has nonzero last
-(`w`-)coordinate. -/
+/-- `cLinearDepData ws w = (M, m)`: clear `w₁,…,wₘ,w` to the common denominator `d = lcm(denominators)`
+and assemble the coefficient matrix `M` with row `i` = `[coeff(w₁·d, xⁱ), …, coeff(wₘ·d, xⁱ),
+coeff(w·d, xⁱ)]` (`w` last). A ℚ-relation `Σ rⱼ wⱼ + r·w = 0` is exactly a nullspace vector of `M`;
+`w ∈ span_ℚ{wⱼ}` iff some nullspace vector has nonzero last coordinate. -/
 def cLinearDepData (ws : List (QFunNZG ℚ)) (w : QFunNZG ℚ) :
     List (List ℚ) × ℕ :=
   let all := ws ++ [w]
@@ -120,16 +46,10 @@ def cLinearDepData (ws : List (QFunNZG ℚ)) (w : QFunNZG ℚ) :
       cols.map (fun c => (cnormG c).getD i 0))
   (M, ws.length)
 
-/-- **The new-logarithm structure decision** `cLogIsNewMonomial logDerivs w` (Bronstein §9.3,
-Corollary 9.3.1(i), eq. 9.8, book p.284/285), over the logarithmic tower `C(x)(log u₁,…,log uₘ)`,
-`k = ℚ(x)`, `Const = ℚ`. Given the logarithmic derivatives `logDerivs = [Du₁/u₁, …, Duₘ/uₘ] ∈ ℚ(x)` of
-the existing log-monomials and a candidate `log(u)`'s logarithmic derivative `w = Du/u ∈ ℚ(x)`, returns
-`true` iff `log(u)` is a **new transcendental monomial** over `C(x)(log u₁,…,log uₘ)` — i.e. iff `Du/u`
-is **not** the derivative of an element of the field, i.e. iff there are **no** `rᵢ ∈ ℚ` with
-`Du/u = Σ rᵢ (Duᵢ/uᵢ)` (eq. 9.8 with the exponential part `E` empty). Decided by the §7.1 ℚ-nullspace
-solver: `cNullspaceBasisQ` of the cleared coefficient matrix; `log(u)` is **dependent** (NOT new) iff
-some kernel vector uses the `w`-column (last coordinate) nontrivially. Returns `true` (NEW) when no such
-relation exists. -/
+/-- `cLogIsNewMonomial logDerivs w = true` iff a candidate `log(u)` with logarithmic derivative
+`w = Du/u ∈ ℚ(x)` is a new transcendental monomial over `C(x)(log u₁,…,log uₘ)` (`logDerivs =
+[Du₁/u₁, …, Duₘ/uₘ]`) — i.e. iff there are no `rᵢ ∈ ℚ` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)`, decided by
+`cNullspaceBasisQ` on the cleared coefficient matrix. -/
 def cLogIsNewMonomial (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool :=
   let (M, m) := cLinearDepData logDerivs w
   let basis := cNullspaceBasisQ M (m + 1)

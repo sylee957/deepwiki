@@ -1,12 +1,11 @@
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 
-/-! # Worked differential-algebra facts (Bronstein Ch 3 exercises)
-A handful of self-contained differential-algebra statements: the logarithmic-derivative identity
-for finite products, the coefficient-lifting derivation `κ_D` on a polynomial ring, and Rao's
-denominator-cleared formulation of normal/special polynomials in a simple transcendental
-extension — `b·Δp = b·κ_D(p) + a·(dp/dt)` for `Δt = a/b`, with the corresponding root
-characterizations of normality and specialness. -/
+/-! # Worked differential-algebra facts
+The logarithmic-derivative identity for finite products, the coefficient-lifting derivation
+`κ_D` on a polynomial ring, and Rao's denominator-cleared formulation of normal/special
+polynomials in a simple transcendental extension — `b·Δp = b·κ_D(p) + a·(dp/dt)` for
+`Δt = a/b`, with the root characterizations of normality and specialness. -/
 
 open scoped Differential
 open Polynomial
@@ -39,15 +38,14 @@ theorem kappaD_mul (p q : R[X]) : kappaD R (p * q) = p * kappaD R q + q * kappaD
 
 end KappaD
 
-/-! ## The logarithmic-derivative identity for a finite product (Exercise 3.1) -/
+/-! ## The logarithmic-derivative identity for a finite product -/
 
 section LogDerivIdentity
 variable {F : Type*} [Field F] [Differential F]
 
-/-- **Exercise 3.1** (§3.3): the logarithmic-derivative identity for a finite product of units with
-integer exponents, `D(∏ᵢ uᵢ^{eᵢ}) / (∏ᵢ uᵢ^{eᵢ}) = ∑ᵢ eᵢ·(Duᵢ/uᵢ)`, i.e.
-`logDeriv (∏ uᵢ^{eᵢ}) = ∑ eᵢ·logDeriv uᵢ`. (The general-product form is `logDeriv_prod_zpow`; this
-restates it in the explicit `D(P)/P` shape of the book.) -/
+/-- Logarithmic-derivative identity for a finite product with integer exponents:
+`D(∏ᵢ uᵢ^{eᵢ}) / (∏ᵢ uᵢ^{eᵢ}) = ∑ᵢ eᵢ·(Duᵢ/uᵢ)` — `logDeriv_prod_zpow` in explicit `D(P)/P`
+shape. -/
 theorem logDeriv_prod_zpow_div {ι : Type*} (s : Finset ι) (u : ι → F) (e : ι → ℤ)
     (h : ∀ i ∈ s, u i ≠ 0) :
     (∏ i ∈ s, u i ^ e i)′ / (∏ i ∈ s, u i ^ e i)
@@ -59,7 +57,7 @@ theorem logDeriv_prod_zpow_div {ι : Type*} (s : Finset ι) (u : ι → F) (e : 
 
 end LogDerivIdentity
 
-/-! ## Logarithm/arc-tangent combination is a constant (Exercise 3.4) -/
+/-! ## A logarithm/arc-tangent combination is a constant -/
 
 section LogArctan
 variable {E : Type*} [Field E] [Differential E] [CharZero E]
@@ -76,7 +74,7 @@ theorem deriv_eq_zero_of_sq_eq_neg_one {i : E} (hi : i ^ 2 = -1) : i′ = 0 := b
   rw [this] at hd
   exact (mul_eq_zero.mp hd).resolve_left (mul_ne_zero h2 hine)
 
-/-- **Exercise 3.4** (§3.3): the combination of a logarithm of `v = (u + i)/(u − i)` and an
+/-- The combination of a logarithm of `v = (u + i)/(u − i)` and an
 arc-tangent of `u` is a constant. With `i² = −1`, `u² + 1 ≠ 0`, `Δt₁ = Δv/v` (logarithm of `v`),
 and `Δt₂ = Δu/(1 + u²)` (arc-tangent of `u`), the combination `t₁·i − 2·t₂` has zero derivative:
 `i·Δv/v = 2·Δu/(1+u²)` (since `Δv/v = −2i·Δu/(u²+1)` and `i² = −1`), cancelling `2·Δt₂`. -/
@@ -117,13 +115,13 @@ theorem deriv_log_arctan_combination_eq_zero {i u v t₁ t₂ : E} (hi : i ^ 2 =
 
 end LogArctan
 
-/-! ## Rao's normal/special polynomials in a simple transcendental extension (§3.4, Exercises 3.7–3.11)
+/-! ## Rao's normal/special polynomials in a simple transcendental extension
 For a derivation `Δ` on `k(t)` (`t` transcendental) with `Δt = a/b` in lowest terms
 (`gcd(a, b) = 1`, `b ≠ 0`), and `p ∈ k[t]`, the chain rule gives
-`Δp = κ_D(p) + (dp/dt)·Δt = κ_D(p) + (dp/dt)·a/b`, so `b·Δp = b·κ_D(p) + a·(dp/dt)` is a
-*polynomial* in `k[t]` — this is `bDeriv a b p` below (Exercise 3.7). Rao then defines `p` to be
-*normal* if `gcd(p, b·Δp) = 1` and *special* if `p ∣ b·Δp`, and Exercises 3.9–3.11 give the
-root characterizations and the coprimality `gcd(p, b) = 1` for special `p`. -/
+`Δp = κ_D(p) + (dp/dt)·Δt`, so `b·Δp = b·κ_D(p) + a·(dp/dt)` is a *polynomial* in `k[t]` —
+this is `bDeriv a b p` below. Rao defines `p` to be *normal* if `gcd(p, b·Δp) = 1` and
+*special* if `p ∣ b·Δp`; the root characterizations and the coprimality `gcd(p, b) = 1` for
+special `p` follow. -/
 
 section Rao
 variable {k : Type*} [Field k] [Differential k]
@@ -134,7 +132,7 @@ coefficient derivation and `t`-differentiation, mirroring `Differential.implicit
 noncomputable def bDerivation (a b : k[X]) : Derivation ℤ k[X] k[X] :=
   b • kappaD k + a • (derivative' (R := k)).restrictScalars ℤ
 
-/-- **Exercise 3.7** (§3.4): the denominator-cleared derivative `b·Δp = b·κ_D(p) + a·(dp/dt)` for
+/-- The denominator-cleared derivative `b·Δp = b·κ_D(p) + a·(dp/dt)` for
 the derivation with `Δt = a/b`. This is a *polynomial* in `k[t]` (no division), the polynomial
 representative of `b·Δp`; Rao's normal/special are stated through it. -/
 noncomputable def bDeriv (a b p : k[X]) : k[X] := bDerivation a b p
@@ -156,7 +154,7 @@ theorem bDeriv_X (a b : k[X]) : bDeriv a b X = a := by
 theorem bDeriv_add (a b p q : k[X]) : bDeriv a b (p + q) = bDeriv a b p + bDeriv a b q :=
   map_add (bDerivation a b) p q
 
-/-- **Exercise 3.7** (§3.4), Leibniz form: `b·Δ(p·q) = p·(b·Δq) + q·(b·Δp)`. The product rule
+/-- Leibniz form: `b·Δ(p·q) = p·(b·Δq) + q·(b·Δp)`. The product rule
 survives multiplication by the denominator `b`. -/
 theorem bDeriv_mul (a b p q : k[X]) :
     bDeriv a b (p * q) = p * bDeriv a b q + q * bDeriv a b p := by
@@ -166,11 +164,11 @@ theorem bDeriv_mul (a b p q : k[X]) :
 locally (via `letI`) to reuse the generic monomial-extension `IsNormal`/`IsSpecial` API. -/
 @[reducible] noncomputable def bDifferential (a b : k[X]) : Differential k[X] := ⟨bDerivation a b⟩
 
-/-- **Definition (Rao, §3.4)**: `p` is *normal* w.r.t. `Δt = a/b` if `gcd(p, b·Δp) = 1`, i.e.
+/-- Rao's normality: `p` is *normal* w.r.t. `Δt = a/b` if `gcd(p, b·Δp) = 1`, i.e.
 `p` and the cleared derivative `b·Δp` are coprime. (Definitionally `IsNormal p` under `b·Δ`.) -/
 def IsNormalRao (a b p : k[X]) : Prop := IsCoprime p (bDeriv a b p)
 
-/-- **Definition (Rao, §3.4)**: `p` is *special* w.r.t. `Δt = a/b` if `p ∣ b·Δp`. (Definitionally
+/-- Rao's specialness: `p` is *special* w.r.t. `Δt = a/b` if `p ∣ b·Δp`. (Definitionally
 `IsSpecial p` under `b·Δ`.) -/
 def IsSpecialRao (a b p : k[X]) : Prop := p ∣ bDeriv a b p
 
@@ -181,7 +179,7 @@ theorem bDeriv_X_sub_C (a b : k[X]) (α : k) : bDeriv a b (X - C α) = a - b * C
   rw [map_sub]; show bDeriv a b X - bDeriv a b (C α) = _
   rw [bDeriv_X, bDeriv_C]
 
-/-- **Exercise 3.10** (§3.4), single linear factor: `t − α` is *special* w.r.t. `Δt = a/b` iff
+/-- Single linear factor: `t − α` is *special* w.r.t. `Δt = a/b` iff
 `b(α)·Δα = a(α)` at its root — i.e. `a.eval α = b.eval α · α′`. (Specialize `b·Δ(t−α) = a − b·C(α′)`
 and read off the root condition `(t − α) ∣ b·Δ(t − α)`.) -/
 theorem isSpecialRao_X_sub_C_iff (a b : k[X]) (α : k) :
@@ -189,13 +187,13 @@ theorem isSpecialRao_X_sub_C_iff (a b : k[X]) (α : k) :
   rw [IsSpecialRao, bDeriv_X_sub_C, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_mul, eval_C,
     sub_eq_zero]
 
-/-- **Exercise 3.9** (§3.4), single linear factor: `t − α` is *normal* w.r.t. `Δt = a/b` iff
+/-- Single linear factor: `t − α` is *normal* w.r.t. `Δt = a/b` iff
 `b(α)·Δα ≠ a(α)` at its root — i.e. `a.eval α ≠ b.eval α · α′`. -/
 theorem isNormalRao_X_sub_C_iff (a b : k[X]) (α : k) :
     IsNormalRao a b (X - C α) ↔ a.eval α ≠ b.eval α * α′ := by
   rw [IsNormalRao, bDeriv_X_sub_C, isCoprime_X_sub_C_iff, eval_sub, eval_mul, eval_C, sub_ne_zero]
 
-/-- **Exercise 3.9** (§3.4), squarefree form: a squarefree polynomial `∏_{α∈s}(t − α)` is *normal*
+/-- Squarefree form: a squarefree polynomial `∏_{α∈s}(t − α)` is *normal*
 w.r.t. `Δt = a/b` iff `b(α)·Δα ≠ a(α)` at *every* root — `∀ α ∈ s, a.eval α ≠ b.eval α · α′`.
 Forward: each `t − α` divides the product so inherits normality (`IsNormal.of_dvd`); backward: the
 pairwise-coprime normal factors multiply to a normal product (`IsNormal.prod`), reusing the generic
@@ -216,7 +214,7 @@ theorem isNormalRao_prod_X_sub_C_iff (a b : k[X]) (s : Finset k) :
     · exact (isNormalRao_X_sub_C_iff a b α).mpr (h α hα)
     · exact isCoprime_X_sub_C_iff.mpr (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hαβ)
 
-/-- **Exercise 3.10** (§3.4), squarefree form: a squarefree polynomial `∏_{α∈s}(t − α)` is *special*
+/-- Squarefree form: a squarefree polynomial `∏_{α∈s}(t − α)` is *special*
 w.r.t. `Δt = a/b` iff `b(α)·Δα = a(α)` at *every* root — `∀ α ∈ s, a.eval α = b.eval α · α′`.
 Backward: special is closed under products (`IsSpecial.prod`); forward: each `t − α` is a coprime
 factor of the product, hence special (`IsSpecial.of_mul_coprime`). -/
@@ -239,7 +237,7 @@ theorem isSpecialRao_prod_X_sub_C_iff (a b : k[X]) (s : Finset k) :
     exact IsSpecial.prod s (fun α => X - C α)
       (fun α hα => (hbridge _).mp ((isSpecialRao_X_sub_C_iff a b α).mpr (h α hα)))
 
-/-- **Exercise 3.11** (§3.4), prime case: if `Δt = a/b` is in lowest terms (`gcd(a, b) = 1`) and a
+/-- Prime case: if `Δt = a/b` is in lowest terms (`gcd(a, b) = 1`) and a
 prime (irreducible) `π ∈ k[t]` is *special* (`π ∣ b·Δπ`), then `gcd(π, b) = 1`. Suppose `π ∣ b`;
 then from `π ∣ b·κ_D(π) + a·(dπ/dt)` and `π ∣ b·κ_D(π)` we get `π ∣ a·(dπ/dt)`. Primality forces
 `π ∣ a` (impossible: `π ∣ gcd(a, b) = 1`) or `π ∣ dπ/dt` (impossible: an irreducible over a char-`0`
@@ -260,7 +258,7 @@ theorem isCoprime_of_isSpecialRao_prime [CharZero k] {a b π : k[X]} (hab : IsCo
     have hsep : IsCoprime π (derivative π) := (separable_def π).mp (hπ.irreducible).separable
     exact hπ.not_unit (hsep.isUnit_of_dvd' dvd_rfl hdπ')
 
-/-- **Exercise 3.11** (§3.4), squarefree case: if `Δt = a/b` is in lowest terms and a *special*
+/-- Squarefree case: if `Δt = a/b` is in lowest terms and a *special*
 squarefree `p ∈ k[t]` is written as the product `∏_{α∈s}(t − α)` of its distinct linear factors,
 then `gcd(p, b) = 1` — equivalently `b.eval α ≠ 0` at every root `α`. Each `t − α` is special
 (`isSpecialRao_X_sub_C_iff`), so `a(α) = b(α)·α′`; if `b(α) = 0` then `a(α) = 0` too, contradicting
@@ -276,46 +274,42 @@ theorem eval_ne_zero_of_isSpecialRao_prod_X_sub_C {a b : k[X]} (hab : IsCoprime 
   have hdb : (X - C α) ∣ b := dvd_iff_isRoot.mpr hbα
   exact (prime_X_sub_C α).not_unit (hab.isUnit_of_dvd' hda hdb)
 
-/-! ### Exercise 3.8 — Theorem 3.4.1 transfers to Rao's definition
+/-! ### The generic normal/special theory transfers to Rao's definition
 With `b·Δ = bDerivation a b` installed as the differential structure on `k[t]`, `IsNormalRao`/
-`IsSpecialRao` are *definitionally* `IsNormal`/`IsSpecial`, so every part of Theorem 3.4.1 holds
-verbatim for Rao's normal/special. -/
+`IsSpecialRao` are *definitionally* `IsNormal`/`IsSpecial`, so the generic normal/special
+closure facts hold verbatim for Rao's normal/special. -/
 
-/-- **Exercise 3.8 / Theorem 3.4.1(ii)** (§3.4): Rao-special polynomials are closed under
-multiplication. -/
+/-- Rao-special polynomials are closed under multiplication. -/
 theorem IsSpecialRao.mul {a b p q : k[X]} (hp : IsSpecialRao a b p) (hq : IsSpecialRao a b q) :
     IsSpecialRao a b (p * q) := by
   letI : Differential k[X] := bDifferential a b
   exact IsSpecial.mul (R := k[X]) hp hq
 
-/-- **Exercise 3.8 / Theorem 3.4.1(i)** (§3.4): the product of two coprime Rao-normal polynomials is
-Rao-normal. -/
+/-- The product of two coprime Rao-normal polynomials is Rao-normal. -/
 theorem IsNormalRao.mul {a b p q : k[X]} (hp : IsNormalRao a b p) (hq : IsNormalRao a b q)
     (hpq : IsCoprime p q) : IsNormalRao a b (p * q) := by
   letI : Differential k[X] := bDifferential a b
   exact IsNormal.mul (R := k[X]) hp hq hpq
 
-/-- **Exercise 3.8 / Theorem 3.4.1(i)** (§3.4): any factor of a Rao-normal polynomial is
-Rao-normal. -/
+/-- Any factor of a Rao-normal polynomial is Rao-normal. -/
 theorem IsNormalRao.of_dvd {a b p q : k[X]} (hp : IsNormalRao a b p) (hq : q ∣ p) :
     IsNormalRao a b q := by
   letI : Differential k[X] := bDifferential a b
   exact IsNormal.of_dvd (R := k[X]) hp hq
 
-/-- **Exercise 3.8** (§3.4): a Rao-normal polynomial is squarefree. -/
+/-- A Rao-normal polynomial is squarefree. -/
 theorem IsNormalRao.squarefree {a b p : k[X]} (hp : IsNormalRao a b p) : Squarefree p := by
   letI : Differential k[X] := bDifferential a b
   exact IsNormal.squarefree (R := k[X]) hp
 
-/-- **Exercise 3.8 / Theorem 3.4.1(iii)** (§3.4), coprime case: if `p·q` is Rao-special and `p, q`
-are coprime, then `p` is Rao-special. -/
+/-- If `p·q` is Rao-special and `p, q` are coprime, then `p` is Rao-special. -/
 theorem IsSpecialRao.of_mul_coprime {a b p q : k[X]} (h : IsSpecialRao a b (p * q))
     (hco : IsCoprime p q) : IsSpecialRao a b p := by
   letI : Differential k[X] := bDifferential a b
   exact IsSpecial.of_mul_coprime (R := k[X]) h hco
 
-/-- **Exercise 3.8 / Theorem 3.4.1** (§3.4): a polynomial that is both Rao-normal and Rao-special is
-a unit (the only normal-and-special polynomials are the units of `k`). -/
+/-- A polynomial that is both Rao-normal and Rao-special is a unit (the only
+normal-and-special polynomials are the units of `k`). -/
 theorem isUnit_of_isNormalRao_of_isSpecialRao {a b p : k[X]} (hn : IsNormalRao a b p)
     (hs : IsSpecialRao a b p) : IsUnit p := by
   letI : Differential k[X] := bDifferential a b

@@ -3,15 +3,11 @@ import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 
-/-! # Worked differential-algebra examples (Bronstein Ch 3)
-Concrete instances of the §3.1–§3.2 differential-field machinery, formalized faithfully against
-the book's wording: the induced derivation `Δ = κ_D + X·d/dX` on a polynomial ring `R[X]` and the
-substitution-quotient `R[X]/(X) ≃ R` (§3.1), the uniqueness of the transcendental derivation
-extension pinned by the value at `x`/`t` (§3.2), and the fact that an element algebraic over the
-constant field of a characteristic-`0` differential field is itself a constant (§3.2). The
-symbolic `SplitFactor`/`SplitSquarefreeFactor` traces of §3.5 are illustrations of the already
-proven general correctness theorems (`splitFactor_isSplittingFactorization`) over the
-noncomputable rational-function field `ℚ(x)`, so they are not re-run here. -/
+/-! # Worked differential-algebra examples
+Concrete instances of the differential-field machinery: the induced derivation
+`Δ = κ_D + X·d/dX` on `R[X]` and its restriction to the substitution quotient `R[X]/(X) ≃ R`,
+the differential ideals of `(K[X], d/dX)`, the fraction-field uniqueness of derivation
+extensions, and constancy of elements algebraic over the constants in characteristic `0`. -/
 
 open scoped Differential
 open Polynomial
@@ -21,9 +17,9 @@ namespace DeepWiki.SymbolicIntegration
 section PolynomialDerivation
 variable {R : Type*} [CommRing R] [Differential R]
 
-/-- **Example 3.1.3** (§3.1): the induced derivation `Δ = κ_D + X·d/dX` on `R[X]` — the unique
-derivation `Differential.implicitDeriv X` extending `D` on the constants with `Δ X = X` — acts on a
-monomial `a·Xⁿ` by `Δ(a·Xⁿ) = (Da + n·a)·Xⁿ`, i.e. `Δ(∑ aₙ Xⁿ) = ∑ (Daₙ + n·aₙ) Xⁿ`. -/
+/-- The induced derivation `Δ = κ_D + X·d/dX` on `R[X]` (`Differential.implicitDeriv X`, the
+unique derivation extending `D` with `Δ X = X`) acts on a monomial by
+`Δ(a·Xⁿ) = (Da + n·a)·Xⁿ`. -/
 theorem implicitDeriv_X_monomial (n : ℕ) (a : R) :
     Differential.implicitDeriv (X : R[X]) (Polynomial.monomial n a)
       = Polynomial.monomial n (a′ + n * a) := by
@@ -39,11 +35,8 @@ theorem implicitDeriv_X_monomial (n : ℕ) (a : R) :
     push_cast
     ring
 
-/-- **Example 3.1.3** (§3.1), the induced derivation on the substitution quotient `R[X]/(X) ≃ R`:
-`Δ = Differential.implicitDeriv X` reduces, on constant coefficients, to `D` — the constant term of
-`Δ p` is the `D`-derivative of the constant term of `p`, `(Δ p)(0)′-style: (Δ p).coeff 0 = (p.coeff
-0)′`. Under `π : R[X] → R[X]/(X) ≃ R` (the substitution `X ↦ 0`) this says the induced `Δ*` equals
-`D` on `R`. -/
+/-- `(Δ p).coeff 0 = (p.coeff 0)′` for `Δ = Differential.implicitDeriv X`: on the substitution
+quotient `R[X]/(X) ≃ R` (the substitution `X ↦ 0`) the induced derivation equals `D`. -/
 theorem implicitDeriv_X_coeff_zero (p : R[X]) :
     (Differential.implicitDeriv (X : R[X]) p).coeff 0 = (p.coeff 0)′ := by
   rw [Differential.implicitDeriv]
@@ -71,10 +64,9 @@ theorem iterate_derivative_natDegree_eq_C (p : K[X]) :
   simp only [zero_add, Nat.descFactorial_self]
   rw [Polynomial.coeff_natDegree]
 
-/-- **Example 3.1.2** (§3.1): the only differential ideals of `(K[X], d/dX)` over a
-characteristic-`0` field `K` (in particular `K = ℚ`) are `(0) = ⊥` and `(1) = ⊤`. An ideal `I`
-closed under `d/dX` either is `⊥`, or contains a nonzero `p`, whose `(deg p)`-fold derivative
-`(deg p)! · lc(p)` is a nonzero constant — hence a unit in `I` — forcing `I = ⊤`. -/
+/-- The only differential ideals of `(K[X], d/dX)` over a characteristic-`0` field `K` are
+`⊥` and `⊤`: an ideal closed under `d/dX` containing a nonzero `p` contains the nonzero constant
+`(deg p)! · lc(p)`, a unit. -/
 theorem differentialIdeal_eq_bot_or_top [CharZero K] (I : Ideal K[X])
     (hI : ∀ p ∈ I, Polynomial.derivative p ∈ I) : I = ⊥ ∨ I = ⊤ := by
   rcases eq_or_ne I ⊥ with h | h
@@ -94,9 +86,8 @@ theorem differentialIdeal_eq_bot_or_top [CharZero K] (I : Ideal K[X])
     exact Ideal.eq_top_of_isUnit_mem I hmem
       (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc))
 
-/-- **Example 3.1.2** (§3.1), the trivial direction: `⊥` and `⊤` *are* differential ideals of
-`(K[X], d/dX)` — both are (vacuously / fully) closed under `d/dX`. With
-`differentialIdeal_eq_bot_or_top` this says the differential ideals are *exactly* `{⊥, ⊤}`. -/
+/-- `⊥` and `⊤` are differential ideals of `(K[X], d/dX)`; with
+`differentialIdeal_eq_bot_or_top` the differential ideals are exactly `{⊥, ⊤}`. -/
 theorem differentialIdeal_bot_and_top :
     (∀ p ∈ (⊥ : Ideal K[X]), Polynomial.derivative p ∈ (⊥ : Ideal K[X])) ∧
       (∀ p ∈ (⊤ : Ideal K[X]), Polynomial.derivative p ∈ (⊤ : Ideal K[X])) :=
@@ -108,11 +99,10 @@ end DifferentialIdealsPolynomial
 section TranscendentalExtension
 variable {R K : Type*} [CommRing R] [IsDomain R] [Field K] [Algebra R K] [IsFractionRing R K]
 
-/-- **Example 3.2.1 / 3.2.2** (§3.2): on the fraction field `K` of `R`, a derivation is determined
-by its restriction to `R`. Hence a derivation on `F(x)` (resp. `F(t)`) is the *unique* one with a
-prescribed restriction — `Example 3.2.1` is `(F, 0_F)` extended by `Dx = 1` (only `d/dx`),
-`Example 3.2.2` is `(F, D)` extended by `Δt = 0` (only `κ_D`). This is the fraction-field uniqueness
-`derivation_ext_fractionRing` restated as the example. -/
+/-- On the fraction field `K` of `R`, a derivation is determined by its restriction to `R` — so a
+derivation on `F(x)`/`F(t)` with a prescribed restriction is unique (e.g. `d/dx` as the extension
+of `0_F` with `Dx = 1`, and `κ_D` as the extension of `D` with `Δt = 0`); restates
+`derivation_ext_fractionRing`. -/
 theorem derivation_fractionRing_unique_of_restrict {Δ₁ Δ₂ : Derivation ℤ K K}
     (h : ∀ a : R, Δ₁ (algebraMap R K a) = Δ₂ (algebraMap R K a)) : Δ₁ = Δ₂ :=
   derivation_ext_fractionRing h
@@ -123,19 +113,15 @@ section AlgebraicOverConstants
 variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
   [DifferentialAlgebra F E]
 
-/-- **Example 3.2.3** (§3.2): in a characteristic-`0` differential field, *any algebraic element
-over the constants is itself a constant*. If `α ∈ E` is integral over `F` and is a root of a
-separable nonzero polynomial `q` with constant coefficients (the minimal polynomial of `α` over the
-constants, separable in char `0`), then `α′ = 0`. (Differentiate `q(α) = 0`: `0 = q'(α)·α′`, and
-`q'(α) ≠ 0` by separability.) -/
+/-- An element algebraic over the constants is itself a constant: if `α` is a root of a
+polynomial `q` with constant coefficients and `q'(α) ≠ 0` (separability), then `α′ = 0`. -/
 theorem deriv_eq_zero_of_separable_root_const_coeffs {α : E} (q : E[X]) (hq : ∀ i, (q.coeff i)′ = 0)
     (hroot : q.eval α = 0) (hsep : q.derivative.eval α ≠ 0) : α′ = 0 :=
   deriv_eq_zero_of_isAlgebraicOverConst q hq hroot hsep
 
-/-- **Example 3.2.3** (§3.2), the char-`0` characterisation: an element `α ∈ E` integral over `F` is
-a constant **iff** it is a root of a separable nonzero polynomial with constant coefficients —
-specialising `deriv_eq_zero_iff_isAlgebraicOverConst_separable`. So "algebraic over the constants"
-(via the separable minimal polynomial) is equivalent to "is a constant". -/
+/-- Char-`0` characterisation: an element `α ∈ E` integral over `F` is a constant iff it is a
+root of a separable nonzero polynomial with constant coefficients — specialises
+`deriv_eq_zero_iff_isAlgebraicOverConst_separable`. -/
 theorem deriv_eq_zero_iff_separable_root_const_coeffs [CharZero F] {α : E} (hint : IsIntegral F α) :
     α′ = 0 ↔ ∃ q : E[X], q ≠ 0 ∧ (∀ i, (q.coeff i)′ = 0) ∧ q.eval α = 0 ∧
       q.derivative.eval α ≠ 0 :=
