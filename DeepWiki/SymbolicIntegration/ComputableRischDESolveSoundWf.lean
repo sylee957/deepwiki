@@ -114,6 +114,79 @@ def crischDESolveSoundWf (f g : QFunNZG β) : Option (QFunNZG β) :=
 
 end Solver
 
+/-! ## Structural facts about successful Wf solves
+
+Successful `crischDESolveSoundWf` runs expose the same control-flow facts as the older fueled sound solver,
+but stated directly against the Wf weak normalizer and Wf canonical-normality gate. These facts let downstream
+proofs consume the fuel-free solver without unfolding it back into the old fueled surface. -/
+
+section Reductions
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
+  [CRischField β]
+
+omit [CFieldSpec β] in
+/-- A successful Wf sound solve has a nonzero Wf weak normalizer. -/
+theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : QFunNZG β)
+    (hsolve : crischDESolveSoundWf f g = some y) :
+    CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false := by
+  set q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
+  set q' : QFunNZG β := qOfPolyNZG q with hq'
+  set ftilde : QFunNZG β := weakNormalizedF f q' with hft
+  rw [show crischDESolveSoundWf f g
+      = (if CPolyG.cisZeroG q then none
+         else if cisCanonNormalizedGWf ftilde then
+                match reduceSoundOpt ftilde with
+                | none => none
+                | some ftildeR =>
+                  match crischDERawSolveWf ftildeR (qmulNZG q' g) with
+                  | none => none
+                  | some ytilde => some (qmulNZG ytilde (qinvNZG q'))
+              else none) from rfl] at hsolve
+  by_cases hqz : CPolyG.cisZeroG q = true
+  · rw [if_pos hqz] at hsolve
+    exact absurd hsolve (by simp)
+  · exact by
+      rw [Bool.not_eq_true] at hqz
+      simpa [hq] using hqz
+
+omit [CFieldSpec β] in
+/-- A successful Wf sound solve passed the fuel-free §6.1 canonical-normality check. -/
+theorem crischDESolveSoundWf_check (f g y : QFunNZG β)
+    (hsolve : crischDESolveSoundWf f g = some y) :
+    cisCanonNormalizedGWf (weakNormalizedF f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true := by
+  set q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
+  set q' : QFunNZG β := qOfPolyNZG q with hq'
+  set ftilde : QFunNZG β := weakNormalizedF f q' with hft
+  rw [show crischDESolveSoundWf f g
+      = (if CPolyG.cisZeroG q then none
+         else if cisCanonNormalizedGWf ftilde then
+                match reduceSoundOpt ftilde with
+                | none => none
+                | some ftildeR =>
+                  match crischDERawSolveWf ftildeR (qmulNZG q' g) with
+                  | none => none
+                  | some ytilde => some (qmulNZG ytilde (qinvNZG q'))
+              else none) from rfl] at hsolve
+  by_cases hqz : CPolyG.cisZeroG q = true
+  · rw [if_pos hqz] at hsolve
+    exact absurd hsolve (by simp)
+  · rw [if_neg hqz] at hsolve
+    by_cases hck : cisCanonNormalizedGWf ftilde = true
+    · simpa [hq, hq', hft] using hck
+    · rw [if_neg hck] at hsolve
+      exact absurd hsolve (by simp)
+
+/-- A successful Wf sound solve supplies the Wf canonical-normality proposition. -/
+theorem crischDESolveSoundWf_isCanonNormalized (f g y : QFunNZG β)
+    (hsolve : crischDESolveSoundWf f g = some y) :
+    IsCanonNormalizedWf f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) :=
+  (cisCanonNormalizedGWf_iff f _).mp (crischDESolveSoundWf_check f g y hsolve)
+
+end Reductions
+
 /-! ## ★★ Task 3 — the capstone: the FUEL-FREE sound solver is sound under a Wf certificate
 
 `crischDESolveSoundWf_field`: a successful `crischDESolveSoundWf f g = some y` gives the field-level Risch-DE
