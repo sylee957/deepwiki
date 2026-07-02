@@ -21,14 +21,11 @@ through (a separate coordinated step).
 * **`crischDESolveSoundWf f g`** — the §6.1-gated solver with the **fuel-free** weak normalizer
   `cWeakNormalizerGWf [1] …` and the inner solve `cRischDEGWf [1] …` (NO `ℕ`-fuel parameter; the check /
   reduce stages are shared verbatim with `crischDESolveSound`).
-* **`crischDESolveSoundWf_eq`** — the correspondence `crischDESolveSoundWf f g = crischDESolveSound f g` on a
-  regular run (the inner `cRischDEGWf = cRischDEG towerRischDEFuel` agreement, via `cRischDEGWf_eq`); the fuel
-  bounds live only in the regularity hypothesis, the runtime solver carries none.
 * **★ `crischDESolveSoundWf_field`** — the capstone: a successful `crischDESolveSoundWf f g = some y` gives the
   field-level Risch-DE identity `D(Y) + F·Y = G` for the ORIGINAL `f, g`, under the current Wf/fueled transfer
   assumptions (`InputFitsFuel`, weak-normalizer agreement, and inner-solve agreement), **fuel-free at
-  runtime**, NO `IsCanonNormalized` hypothesis (the solver checks it), composing `crischDESolveSoundWf_eq`
-  with the proven `crischDESolveSound_field`. Axiom-clean `[propext, Classical.choice, Quot.sound]`, NO
+  runtime**, NO `IsCanonNormalized` hypothesis (the solver checks it), internally transferring to the proven
+  `crischDESolveSound_field`. Axiom-clean `[propext, Classical.choice, Quot.sound]`, NO
   `native_decide`.
 * **The validations** (`native_decide`): the unsolvable witness `f = 1/(t₁ − x)`, `g = 1` returns `none` under
   `crischDESolveSoundWf`, and the solvable cases (`Dy = 1 → y = t₁`, `Dy + y = t₁ + 1 → y = t₁`) return the
@@ -59,8 +56,8 @@ fuel-free `cRischDEGWf`. The §6.1 pipeline is shared verbatim:
    `y = ỹ/q'`.
 
 The single difference from `crischDESolveSound` is step 4's inner solver — `cRischDEGWf` (no `ℕ`-fuel) in
-place of `CRischField.crischDESolve` (= `cRischDEG [1] towerRischDEFuel`). On a real run the two coincide
-(`crischDESolveSoundWf_eq`), so the soundness transfers. -/
+place of `CRischField.crischDESolve` (= `cRischDEG [1] towerRischDEFuel`). On a real run the two coincide by a
+private transfer lemma, so the soundness transfers. -/
 
 section Solver
 
@@ -71,8 +68,8 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 of `instCRischFieldQFunNZG.crischDESolve` — run the **fuel-free** `cRischDEGWf ([1] : CPolyG β)` over
 `CPolyG β = β[s]` (monomial `s`, `Ds = [1]`) on the num/den components of `ftilde, gtilde`, and re-lift the
 returned `(ynum, yden)` to `QFunNZG β` with the same `cisZeroG`-guard the tower instance uses. **No `ℕ`-fuel** —
-the inner §6 pipeline runs fuel-free. Agrees with `CRischField.crischDESolve` on a regular run
-(`crischDERawSolveWf_eq`). -/
+the inner §6 pipeline runs fuel-free. Its agreement with `CRischField.crischDESolve` is kept as an internal
+transfer lemma for the current soundness proof. -/
 def crischDERawSolveWf (ftilde gtilde : QFunNZG β) : Option (QFunNZG β) :=
   match CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
   | none => none
@@ -88,8 +85,8 @@ else reduce `f̃` to lowest terms (`reduceSoundOpt`) and solve `(f̃ᵣ, q'·g)`
 `crischDERawSolveWf`, transforming back by `y = ỹ/q'`. **No `ℕ`-fuel parameter** — the inner §6 pipeline runs
 fuel-free. The check removes any external `IsCanonNormalized` hypothesis from soundness; the remaining
 soundness assumptions are the current Wf/fueled transfer residuals (`crischDESolveSoundWf_field`).
-Computable, so it `native_decide`s; coincides with `crischDESolveSound` on a regular run
-(`crischDESolveSoundWf_eq`). -/
+Computable, so it `native_decide`s; the regular-run correspondence with `crischDESolveSound` is internal to the
+soundness proof. -/
 def crischDESolveSoundWf (f g : QFunNZG β) : Option (QFunNZG β) :=
   let q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
   if CPolyG.cisZeroG q then none
@@ -107,13 +104,14 @@ def crischDESolveSoundWf (f g : QFunNZG β) : Option (QFunNZG β) :=
 
 end Solver
 
-/-! ## Task 2 — the correspondence `crischDESolveSoundWf = crischDESolveSound` on a regular run
+/-! ## Internal transfer lemmas for the current soundness proof
 
 `crischDESolveSoundWf` and `crischDESolveSound` share the whole §6.1 pipeline (weak normalizer, solvability
 check, lowest-terms reduction); they differ **only** in the inner RDE solve — `crischDERawSolveWf` (the
 fuel-free `cRischDEGWf`) vs `CRischField.crischDESolve` (= `cRischDEG [1] towerRischDEFuel` for the tower
 instance). On a regular run the inner solvers coincide (`cRischDEGWf_eq`), so the whole solvers coincide. The
-fuel bounds live only in the regularity hypothesis; the runtime `crischDESolveSoundWf` carries none. -/
+fuel bounds live only in the regularity hypothesis; the runtime `crischDESolveSoundWf` carries none. These
+correspondence facts are private implementation details of `crischDESolveSoundWf_field`, not public API. -/
 
 section Correspondence
 
@@ -121,17 +119,8 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
   [CFracGcdCoreWf β] [CRischField β]
 
 omit [CFieldSpec β] in
-/-- **The fuel-free inner solve equals `CRischField.crischDESolve` on a regular run, with the §6.1 gate passed**
-(`crischDERawSolveWf_eq`): if the fuel-free `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel`
-on the num/den components of `(ftilde, gtilde)` (`hwf`, the `cRischDEGWf_eq` agreement a real run meets) **and**
-the production §6.1 gate passes on `ftilde` (`hgate : cdenomNormalGateG ftilde = true`), then
-`crischDERawSolveWf ftilde gtilde = CRischField.crischDESolve ftilde gtilde`. The fuel-free
-`crischDERawSolveWf` carries no gate, while the gated `instCRischFieldQFunNZG.crischDESolve` does; `hgate`
-peels the gate (`crischDESolve_eq_solve_of_normal`) so both reduce to the same `cRischDE*`-then-`cisZeroG`-guard
-match, and `hwf` reconciles the two oracle calls. The gate-passes side-condition holds on the canonicalized
-input the sound wrapper feeds (the keystone `cisCanonNormalizedCoreG_qReduce_weakNormalized`), so the soundness
-transfers. -/
-theorem crischDERawSolveWf_eq (ftilde gtilde : QFunNZG β)
+/-- The fuel-free inner solve equals `CRischField.crischDESolve` on a regular run with the §6.1 gate passed. -/
+private theorem rawSolveWf_eq (ftilde gtilde : QFunNZG β)
     (hwf : CPolyG.cRischDEGWf ([CField.one] : CPolyG β)
         ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
       = CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel
@@ -141,18 +130,8 @@ theorem crischDERawSolveWf_eq (ftilde gtilde : QFunNZG β)
   rw [crischDERawSolveWf, hwf, crischDESolve_eq_solve_of_normal ftilde gtilde hgate]
   rfl
 
-/-- **★ The fuel-free sound solver equals the fuel sound solver on a regular run** (Task 2,
-`crischDESolveSoundWf_eq`): given the weak-normalizer agreement `hqwn` — the fuel-free
-`cWeakNormalizerGWf [1]` matching the fuel `cWeakNormalizerG [1] towerRischDEFuel` on `f` (the
-`cWeakNormalizerGWf`-vs-`cWeakNormalizerG` whole-stage correspondence a real run meets; this is the second
-fuel-free leaf the §6.1 front-end now uses) — and the inner-solve regularity `hwf` — the fuel-free `cRischDEGWf`
-agreeing with the fuel `cRischDEG towerRischDEFuel` on the num/den components of the canonicalized inner pair
-`(reduceSoundOpt f̃, q'·g)` (the `cRischDEGWf_eq` agreement a real run meets) — `crischDESolveSoundWf f g =
-crischDESolveSound f g`. The two solvers share the entire §6.1 pipeline and differ only in the weak normalizer
-(`hqwn`) and the inner solve (`crischDERawSolveWf_eq` under `hwf`); the fuel bounds live only in the
-hypotheses. So the soundness of `crischDESolveSound` transfers to the fuel-free `crischDESolveSoundWf`
-(`crischDESolveSoundWf_field`). -/
-theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
+/-- The fuel-free sound solver equals the fueled sound solver on a regular run. -/
+private theorem soundSolverWf_eq (f g : QFunNZG β)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : ∀ ftildeR : QFunNZG β,
@@ -174,7 +153,7 @@ theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
     crischDESolveSoundWf f g = crischDESolveSound f g := by
   -- the def uses the fuel-free `cWeakNormalizerGWf`; `hqwn` converts it to the fuel form, after which the
   -- whole §6.1 pipeline (the shared `q'`/`ftilde`) coincides with `crischDESolveSound` and only the inner
-  -- solve differs (reconciled by `crischDERawSolveWf_eq` under `hwf`)
+  -- solve differs (reconciled by `rawSolveWf_eq` under `hwf`)
   rw [show crischDESolveSoundWf f g
       = (if CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) then none
          else
@@ -231,7 +210,7 @@ theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
           rw [hred]
           show cisCanonNormalizedCoreG (qReduce ftilde) = true
           rw [hkey]; exact hck
-        simp only [crischDERawSolveWf_eq ftildeR (qmulNZG q' g) (hwf ftildeR hr) hgate]
+        simp only [rawSolveWf_eq ftildeR (qmulNZG q' g) (hwf ftildeR hr) hgate]
     · rw [if_neg hck, if_neg hck]
 
 end Correspondence
@@ -240,9 +219,8 @@ end Correspondence
 
 `crischDESolveSoundWf_field`: a successful `crischDESolveSoundWf f g = some y` gives the field-level Risch-DE
 identity `D(Y) + F·Y = G` for the ORIGINAL `f, g`, **fuel-free**, **NO `IsCanonNormalized` hypothesis** (the
-solver checks it). It composes the two proven pieces: `crischDESolveSoundWf_eq` (the fuel-free solver equals
-the fuel solver on a regular run) turns the `crischDESolveSoundWf`-success into a `crischDESolveSound`-success,
-and the proven `crischDESolveSound_field` (the fuel solver's unconditional soundness) closes it. The
+solver checks it). It internally turns the `crischDESolveSoundWf` success into a `crischDESolveSound` success
+under the Wf/fueled agreement residuals, then uses the proven `crischDESolveSound_field`. The
 hypotheses are exactly those of `crischDESolveSound_field` (the gcd witness `[CTowerGcdWitness β]` + the
 benign fuel budget `InputFitsFuel`) **plus** the inner-solve `cRischDEGWf = cRischDEG towerRischDEFuel`
 regularity `hwf` and the weak-normalizer agreement `hqwn` (the WF-vs-fuel correspondences the fuel-free
@@ -258,7 +236,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel` on the num/den components of the
 canonicalized inner pair `(reduceSoundOpt (weakNormalizedF f q'), q'·g)`, for any lowest-terms reduction
 `reduceSoundOpt … = some ftildeR`. The `cRischDEGWf_eq` agreement a real run meets — exactly the hypothesis of
-`crischDESolveSoundWf_eq`, packaged so the capstone reads cleanly. NOT a soundness gap: the WF-vs-fuel
+the private transfer helper, packaged so the capstone reads cleanly. NOT a soundness gap: the WF-vs-fuel
 correspondence the fuel-free routing threads in place of the fuel'd inner call. -/
 def SoundWfInnerRegular (f g : QFunNZG β) : Prop :=
   ∀ ftildeR : QFunNZG β,
@@ -286,10 +264,9 @@ the inner-solve regularity
 the inner pair — the WF-vs-fuel correspondence the fuel-free routing threads), the returned `y` solves the
 field-level Risch DE for the ORIGINAL `f, g`: `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. **Fuel-free**,
 **NO `IsCanonNormalized` hypothesis** — the solver's own §6.1 solvability check supplies it. Composes the two
-proven pieces: `crischDESolveSoundWf_eq` (fuel-free = fuel on a regular run) turns the success into a
-`crischDESolveSound`-success; the proven `crischDESolveSound_field` (the fuel solver's unconditional soundness)
-closes it. NO `native_decide`; axiom-clean `[propext, Classical.choice, Quot.sound]`. **★ The fuel-free sound
-solver.** -/
+proof pieces: a private regular-run transfer turns the success into a `crischDESolveSound` success, then the
+proven `crischDESolveSound_field` closes it. NO `native_decide`; axiom-clean
+`[propext, Classical.choice, Quot.sound]`. **★ The fuel-free sound solver.** -/
 theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y)
     (hfit : InputFitsFuel f g)
@@ -302,7 +279,7 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
   have hsound : crischDESolveSound f g = some y := by
-    rw [← crischDESolveSoundWf_eq f g hqwn hwf]; exact hsolve
+    rw [← soundSolverWf_eq f g hqwn hwf]; exact hsolve
   exact crischDESolveSound_field f g y hsound hfit
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
@@ -375,8 +352,6 @@ end Validation
 /-! ### Axiom audit (the capstone + correspondence are axiom-clean, NO `native_decide`; the validations are
 `native_decide`) -/
 
-#print axioms crischDERawSolveWf_eq
-#print axioms crischDESolveSoundWf_eq
 #print axioms crischDESolveSoundWf_field
 
 /-! ### Final verdict (Task 5)
@@ -389,8 +364,8 @@ end Validation
   `ℕ`-fuel parameter.
 * **Proven sound through the current transfer residuals, axiom-clean.** `crischDESolveSoundWf_field`: a
   successful solve gives the ORIGINAL field-level Risch-DE identity `D(Y) + F·Y = G`, with NO
-  `IsCanonNormalized` hypothesis (the solver checks it), composing `crischDESolveSoundWf_eq` (fuel-free =
-  fuel on a regular run) with the proven `crischDESolveSound_field`. Axiom-clean
+  `IsCanonNormalized` hypothesis (the solver checks it), internally transferring through the existing fueled
+  soundness proof under the Wf/fueled agreement residuals. Axiom-clean
   `[propext, Classical.choice, Quot.sound]`, NO `native_decide`.
 * **Fuel-free validations.** The witness `f = 1/(t₁ − x)`, `g = 1` returns `none`
   (`crischDESolveSoundWf_witness_none`), and the solvable cases `Dy = 1` / `Dy + y = t₁ + 1` return the

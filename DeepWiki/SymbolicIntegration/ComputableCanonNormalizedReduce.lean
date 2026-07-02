@@ -84,7 +84,7 @@ theorem cisCanonNormalizedCoreG_qReduce (x : QFunNZG β) :
 
 -- ★ The re-pin reconciliation: the gated core's denominator-direct §6.1 check on the reduced input `qReduce x`
 -- IS the wrapper's §6.1 check on the unreduced input `x`. Definitional (`rfl`); the keystone the production
--- RDE re-pin's `crischDERawSolveWf_eq` analogue consumes.
+-- RDE re-pin's raw-solve transfer consumes.
 example (x : QFunNZG β) : cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x := rfl
 
 end Bridge
@@ -201,8 +201,8 @@ The production re-pin routes the core RDE solve through the §6.1 gate. The Wf w
 `cisCanonNormalizedG ftilde`; the gated core, holding the *reduced* `qReduce ftilde`
 after `reduceSoundOpt ftilde = some (qReduce ftilde)`, runs the denominator-direct gate `cisCanonNormalizedCoreG
 (qReduce ftilde)`. `cisCanonNormalizedCoreG_qReduce_weakNormalized` is the equation that reconciles them —
-exactly the rewrite the re-pin's `crischDERawSolveWf_eq` analogue needs, so the gated-core rewire becomes a
-1-step mechanical change. -/
+exactly the rewrite the re-pin's raw-solve transfer needs, so the gated-core rewire becomes a 1-step mechanical
+change. -/
 
 section Repin
 
@@ -212,7 +212,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore 
 `ftilde = weakNormalizedF f q'` (`q'` the lift of the weak normalizer `cWeakNormalizerGWf [1] f.1.1 f.1.2`),
 the gated core's denominator-direct check on the *reduced* input equals the wrapper's check on the
 pre-reduce input — `cisCanonNormalizedCoreG (qReduce ftilde) = cisCanonNormalizedG ftilde` — **by `rfl`**. This is
-the exact equation the production re-pin's gated core consumes (the `crischDERawSolveWf_eq` analogue): the gate
+the exact equation the production re-pin's gated core consumes (the raw-solve transfer): the gate
 the wrapper passes is, definitionally, the gate the core runs on `qReduce ftilde`, so the rewire that routes the
 core through the §6.1 gate is a single mechanical rewrite with no normalization side-condition. -/
 theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : QFunNZG β) :
