@@ -559,9 +559,14 @@ end Complete
 
 /-! ## Fuel-free completeness wrapper
 
-The deep §6 residual is still stated against the fueled structural spine, but the executable solver surface can
-now be the fuel-free `crischDESolveSoundWf`. The bridge hypotheses are exactly the Wf/fueled agreements already
-used by `crischDESolveSoundWf_field`. -/
+The Wf solver now has two completeness routes:
+
+* `RischDECompletenessResidualWf` is the native fuel-free residual: its clauses are stated against
+  `cWeakNormalizerGWf` and `crischDERawSolveWf`, so the completeness direction goes straight through
+  `crischDESolveSoundWf_some_of_stages`.
+* The older `RischDECompletenessResidual` route is retained as a bridge from the fueled structural spine to
+  the fuel-free executable surface, using the Wf/fueled agreement hypotheses already required by
+  `crischDESolveSoundWf_field`. -/
 
 section CompleteWf
 
@@ -579,6 +584,59 @@ theorem crischDESolveSoundWf_imp_solvable (f g y : QFunNZG β)
     (hwf : SoundWfInnerRegular f g) :
     FieldRDESolvable f g :=
   ⟨y, crischDESolveSoundWf_field f g y hsolve hfit hqwn hwf⟩
+
+/-! ### Wf-native completeness residual -/
+
+/-- **Fuel-free §6 completeness residual** `RischDECompletenessResidualWf f g`: the three Wf stage-completeness
+facts consumed directly by `crischDESolveSoundWf_some_of_stages`. `hwn`: a solvable RDE has nonzero
+`cWeakNormalizerGWf`. `hck`: the Wf weak-normalized input passes the §6.1 canon-normality gate. `hinner`:
+the fuel-free inner solver `crischDERawSolveWf` succeeds on the reduced pair. This is the Wf-native analogue
+of `RischDECompletenessResidual`; a `Prop`-bundle of stated §6 completeness assumptions, NO `sorry`. -/
+structure RischDECompletenessResidualWf (f g : QFunNZG β) : Prop where
+  /-- §6.1/Wf: a solvable RDE has a nonzero fuel-free weak normalizer. -/
+  hwn : FieldRDESolvable f g →
+    CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
+  /-- §6.1/Wf: a solvable RDE passes the canon-normality gate after Wf weak normalization. -/
+  hck : FieldRDESolvable f g →
+    cisCanonNormalizedG (weakNormalizedF f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true
+  /-- §6.2–6.6/Wf: a solvable RDE makes the fuel-free inner solve succeed on the reduced pair. -/
+  hinner : FieldRDESolvable f g →
+    ∃ ytilde : QFunNZG β,
+      crischDERawSolveWf
+          (qReduce (weakNormalizedF f
+            (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+          (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+        = some ytilde
+
+omit [CTowerGcdWitness β] in
+/-- **Fuel-free §6 RDE completeness modulo the Wf-native residual**: if the RDE is solvable and
+`RischDECompletenessResidualWf` holds, then `crischDESolveSoundWf` returns `some`. Unlike
+`crischDESolveSoundWf_complete_of_residual`, this completeness direction does not rewrite through the fueled
+solver. -/
+theorem crischDESolveSoundWf_complete_of_residualWf (f g : QFunNZG β)
+    (hsol : FieldRDESolvable f g) (hres : RischDECompletenessResidualWf f g) :
+    ∃ y, crischDESolveSoundWf f g = some y := by
+  obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
+  exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) (hres.hck hsol) hinner⟩
+
+/-- **The fuel-free §6 RDE solver DECIDES solvability modulo the Wf-native residual**:
+`crischDESolveSoundWf f g` returns `some` iff the field-level RDE is solvable. The completeness direction is
+Wf-native; the soundness direction still uses the existing Wf/fueled agreement hypotheses of
+`crischDESolveSoundWf_field`. -/
+theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
+    (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g := by
+  constructor
+  · rintro ⟨y, hy⟩
+    exact crischDESolveSoundWf_imp_solvable f g y hy hfit hqwn hwf
+  · intro hsol
+    exact crischDESolveSoundWf_complete_of_residualWf f g hsol hres
+
+/-! ### Fueled-residual bridge retained for compatibility inside this library -/
 
 omit [CTowerGcdWitness β] in
 /-- **Fuel-free §6 RDE completeness modulo the deep residual**: if the RDE is solvable and the existing
@@ -621,6 +679,14 @@ example (f g : QFunNZG β) (hres : RischDECompletenessResidual f g) (hfit : Inpu
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residual f g hres hfit hqwn hwf
+
+-- The Wf-native residual gives the same decision statement with a fuel-free completeness direction.
+example (f g : QFunNZG β) (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuel f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hwf : SoundWfInnerRegular f g) :
+    (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
+  crischDESolveSoundWf_decides_of_residualWf f g hres hfit hqwn hwf
 
 end CompleteWf
 
@@ -673,36 +739,41 @@ end OperationalWitnesses
 /-! ### Final verdict (stated precisely)
 
 **Is the RDE solver a verified decision procedure?** **Modulo a precisely isolated deep §6 residual,
-yes.** `crischDESolveSound_decides_of_residual` proves `some ⟺ solvable` (`crischDESolveSound f g = some _
-↔ FieldRDESolvable f g`) under `RischDECompletenessResidual f g` + the benign fuel budget `InputFitsFuel`.
-The `⟹` half (soundness) is **unconditional** (the proven `crischDESolveSound_field`); the `⟸` half
-(completeness) is `crischDESolveSound_complete_of_residual`, modulo the residual.
+yes.** The fueled surface has `crischDESolveSound_decides_of_residual`; the fuel-free surface has
+`crischDESolveSoundWf_decides_of_residualWf`, whose completeness direction uses the Wf-native residual
+`RischDECompletenessResidualWf` and the Wf structural skeleton directly. The `⟹` half (soundness) is the
+proven soundness theorem; the `⟸` half is completeness modulo the residual.
 
 **Which completeness stages are closed, and which is the deep residual?**
-* **Closed unconditionally.** The structural reduction `crischDESolveSound_some_iff` /
-  `crischDESolveSound_some_of_stages` (completeness ⟺ the three stage tests passing — pure control flow);
+* **Closed unconditionally.** The structural reductions `crischDESolveSound_some_iff` /
+  `crischDESolveSound_some_of_stages` and `crischDESolveSoundWf_some_iff` /
+  `crischDESolveSoundWf_some_of_stages` (completeness ⟺ the three stage tests passing — pure control flow);
   the lowest-terms reduction gate (never blocks, `reduceSoundOpt_eq`); the **base-field completeness**
   `rischDE_complete_base` (the constant-field oracle over `ℚ` is a genuine decision procedure, `b·y = g`
   solvable ↔ `some`).
-* **The deep residual** (`RischDECompletenessResidual`, NEVER `sorry`). Three converse facts the engine
-  does not self-certify: (a) the §6.1 weak normalizer is nonzero on a solvable input; (b) the §6.1
-  normality check passes on a solvable input (contrapositive: a non-normalizable denominator's RDE is
-  unsolvable); (c) the **§6.2–6.6 inner solve succeeds on a solvable input** — the research-grade core,
-  needing the §6.4 degree bound to be a provable upper bound on any solution's degree and the SPDE/poly-RDE
-  solve to be exhaustive within it, *neither of which is formalized in the engine* (the §6 files prove only
-  `some ⟹ cleared-identity`, never a degree-upper-bound or an exhaustiveness lemma).
+* **The deep residual** (`RischDECompletenessResidual` / `RischDECompletenessResidualWf`, NEVER `sorry`).
+  Three converse facts the engine does not self-certify: (a) the §6.1 weak normalizer is nonzero on a
+  solvable input; (b) the §6.1 normality check passes on a solvable input (contrapositive: a non-normalizable
+  denominator's RDE is unsolvable); (c) the **§6.2–6.6 inner solve succeeds on a solvable input** — the
+  research-grade core, needing the §6.4 degree bound to be a provable upper bound on any solution's degree
+  and the SPDE/poly-RDE solve to be exhaustive within it, *neither of which is formalized in the engine*
+  (the §6 files prove only `some ⟹ cleared-identity`, never a degree-upper-bound or an exhaustiveness lemma).
 
-So full `some ⟺ solvable` is reached **modulo the precise §6 completeness residual** — the degree-bound +
-SPDE/poly-RDE exhaustiveness (clause c) being the genuinely deep, unformalized core; the §6.1 clauses
-(a, b) the converse of the §6.1 soundness facts. -/
+So full `some ⟺ solvable` is reached **modulo the precise §6 completeness residual** on both fueled and
+fuel-free surfaces — the degree-bound + SPDE/poly-RDE exhaustiveness (clause c) being the genuinely deep,
+unformalized core; the §6.1 clauses (a, b) the converse of the §6.1 soundness facts. -/
 
 /-! ### Axiom audit (the structural skeleton, base-field completeness, and the modular assembly are
 axiom-clean; NO `native_decide`, NO `sorry`) -/
 
 #print axioms crischDESolveSound_some_iff
 #print axioms crischDESolveSound_some_of_stages
+#print axioms crischDESolveSoundWf_some_iff
+#print axioms crischDESolveSoundWf_some_of_stages
 #print axioms rischDE_complete_base
 #print axioms crischDESolveSound_complete_of_residual
 #print axioms crischDESolveSound_decides_of_residual
+#print axioms crischDESolveSoundWf_complete_of_residualWf
+#print axioms crischDESolveSoundWf_decides_of_residualWf
 
 end DeepWiki.SymbolicIntegration
