@@ -10,7 +10,7 @@ modulo explicit §6 residual clauses.
 **The Wf structure of completeness.** `crischDESolveSoundWf f g` produces `none` on exactly four branches:
 
 1. **§6.1 weak-normalizer vanishes** — `cWeakNormalizerGWf … = 0` (`cisZeroG q`);
-2. **§6.1 normality check fails** — `cisCanonNormalizedG f̃ = false`;
+2. **§6.1 normality check fails** — `cisCanonNormalizedGWf f̃ = false`;
 3. **the lowest-terms reduction fails** — `reduceSoundOpt f̃ = none` (impossible: `reduceSoundOpt_eq`);
 4. **the fuel-free inner solve fails** — `crischDERawSolveWf (qReduce f̃) (q'·g) = none`.
 
@@ -80,6 +80,7 @@ section StructuralWf
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
   [CFracGcdCoreWf β] [CRischField β]
 
+omit [CFracGcdCore β] in
 /-- **The fuel-free sound solver succeeds iff its three Wf stage tests succeed**
 (`crischDESolveSoundWf_some_iff`): `crischDESolveSoundWf f g = some y` iff the fuel-free weak normalizer
 is nonzero, the §6.1 canon-normality gate passes on the weak-normalized input, and the fuel-free inner solve
@@ -88,7 +89,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
     crischDESolveSoundWf f g = some y ↔
       (CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
           = false
-        ∧ cisCanonNormalizedG (weakNormalizedF f
+        ∧ cisCanonNormalizedGWf (weakNormalizedF f
             (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
           = true
         ∧ ∃ ytilde : QFunNZG β,
@@ -104,7 +105,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
   set ftilde : QFunNZG β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if CPolyG.cisZeroG q then none
-         else if cisCanonNormalizedG ftilde then
+         else if cisCanonNormalizedGWf ftilde then
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
@@ -118,7 +119,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
     intro h; exact absurd h (by simp)
   · rw [if_neg hqz]
     rw [Bool.not_eq_true] at hqz
-    by_cases hck : cisCanonNormalizedG ftilde = true
+    by_cases hck : cisCanonNormalizedGWf ftilde = true
     · rw [if_pos hck, reduceSoundOpt_eq]
       rcases hinner : crischDERawSolveWf (qReduce ftilde) (qmulNZG q' g) with _ | ytilde
       · simp only [hinner, hqz, hck, true_and]
@@ -134,13 +135,14 @@ theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
       simp only [hck, Bool.false_eq_true, and_false, false_and, iff_false]
       intro h; exact absurd h (by simp)
 
+omit [CFracGcdCore β] in
 /-- **The three Wf stage tests succeed ⟹ the fuel-free sound solver succeeds**
 (`crischDESolveSoundWf_some_of_stages`): if the Wf weak normalizer is nonzero, the §6.1 gate passes, and
 `crischDERawSolveWf` returns `some ỹ`, then `crischDESolveSoundWf f g = some (ỹ/q')`. -/
 theorem crischDESolveSoundWf_some_of_stages (f g ytilde : QFunNZG β)
     (hq : CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
         = false)
-    (hck : cisCanonNormalizedG (weakNormalizedF f
+    (hck : cisCanonNormalizedGWf (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
         = true)
     (hinner : crischDERawSolveWf
@@ -158,7 +160,7 @@ theorem crischDESolveSoundWf_some_of_stages (f g ytilde : QFunNZG β)
 example (f g ytilde : QFunNZG β)
     (hq : CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
         = false)
-    (hck : cisCanonNormalizedG (weakNormalizedF f
+    (hck : cisCanonNormalizedGWf (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
         = true)
     (hinner : crischDERawSolveWf
@@ -438,9 +440,10 @@ theorem crischDESolveSoundWf_imp_solvable (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hgateReg : SoundWfGateRegular f)
     (hwf : SoundWfInnerRegular f g) :
     FieldRDESolvable f g :=
-  ⟨y, crischDESolveSoundWf_field f g y hsolve hfit hqwn hwf⟩
+  ⟨y, crischDESolveSoundWf_field f g y hsolve hfit hqwn hgateReg hwf⟩
 
 /-! ### Wf-native completeness residual -/
 
@@ -455,7 +458,7 @@ structure RischDECompletenessResidualWf (f g : QFunNZG β) : Prop where
     CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
   /-- §6.1/Wf: a solvable RDE passes the canon-normality gate after Wf weak normalization. -/
   hck : FieldRDESolvable f g →
-    cisCanonNormalizedG (weakNormalizedF f
+    cisCanonNormalizedGWf (weakNormalizedF f
       (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true
   /-- §6.2–6.6/Wf: a solvable RDE makes the fuel-free inner solve succeed on the reduced pair. -/
   hinner : FieldRDESolvable f g →
@@ -466,7 +469,7 @@ structure RischDECompletenessResidualWf (f g : QFunNZG β) : Prop where
           (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
         = some ytilde
 
-omit [CTowerGcdWitness β] in
+omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **Fuel-free §6 RDE completeness modulo the Wf-native residual**: if the RDE is solvable and
 `RischDECompletenessResidualWf` holds, then `crischDESolveSoundWf` returns `some`. This completeness
 direction uses the Wf structural skeleton directly and does not rewrite through the fueled solver. -/
@@ -484,11 +487,12 @@ theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
     (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hgateReg : SoundWfGateRegular f)
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g := by
   constructor
   · rintro ⟨y, hy⟩
-    exact crischDESolveSoundWf_imp_solvable f g y hy hfit hqwn hwf
+    exact crischDESolveSoundWf_imp_solvable f g y hy hfit hqwn hgateReg hwf
   · intro hsol
     exact crischDESolveSoundWf_complete_of_residualWf f g hsol hres
 
@@ -498,9 +502,10 @@ theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
 example (f g : QFunNZG β) (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hgateReg : SoundWfGateRegular f)
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_decides_of_residualWf f g hres hfit hqwn hwf
+  crischDESolveSoundWf_decides_of_residualWf f g hres hfit hqwn hgateReg hwf
 
 end CompleteWf
 

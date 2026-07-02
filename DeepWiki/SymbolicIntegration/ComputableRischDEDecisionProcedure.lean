@@ -24,7 +24,7 @@ needed to lift a successful `cRischDEGWf` run through the raw wrapper:
 | clause | §6 stage | what a solvable RDE must clear | route to a proof |
 |---|---|---|---|
 | `hwn`  | §6.1 weak-normalizer | `cWeakNormalizerGWf … ≠ 0` | `WeakNormalizer` never vanishes on a solution |
-| `hck`  | §6.1 normality | `cisCanonNormalizedG f̃ = true` | contrapositive of the unsoundness witness |
+| `hck`  | §6.1 normality | `cisCanonNormalizedGWf f̃ = true` | contrapositive of the unsoundness witness |
 | `hinner` | §6.2-6.6 inner solve | `RischDEInnerCompletenessWf` for the Wf inner input | the three deepest tips below |
 
 The single deep clause `hinner` is itself the composite of the **three irreducible §6 residuals** named by
@@ -38,10 +38,10 @@ the proven decompositions `rischDEInnerCompleteness_of_residuals` and `RischDEIn
 | `RdeBoundCancellationResidual` (deepest correct tip = `ExpPrimLogDerivativeBound`, the log-deriv oracle) | `hbound` | §6.3 Thm 6.3.1 / Lemma 6.3.3-6.3.4 (`λ`-recursion) | log-derivative decision §5.12 | non-cancellation bound + the **nonlinear `λ`-recursion** (proven outright) |
 | `RischDESolveExhaustiveResidual` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
 
-**Soundness still has a fueled-transfer dependency.** The `→` of the Wf equivalence is
-`crischDESolveSoundWf_field`, which currently assumes weak-normalizer and inner-solve agreement with the
-fueled solver. The frontier governs only the *converse* (`solvable ⟹ some`): the fuel-free solver's `none` is
-certified correct modulo the Wf-native §6 residual. -/
+**Soundness still has fueled-transfer dependencies.** The `→` of the Wf equivalence is
+`crischDESolveSoundWf_field`, which currently assumes weak-normalizer, normality-gate, and inner-solve agreement
+with the fueled solver. The frontier governs only the *converse* (`solvable ⟹ some`): the fuel-free solver's
+`none` is certified correct modulo the Wf-native §6 residual. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -187,7 +187,7 @@ structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
     CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
   /-- §6.1/Wf: a solvable RDE passes the canon-normality gate after Wf weak normalization. -/
   hck : FieldRDESolvable f g →
-    cisCanonNormalizedG (weakNormalizedF f
+    cisCanonNormalizedGWf (weakNormalizedF f
       (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true
   /-- A solvable field RDE has a polynomial solution for the Wf inner input. -/
   hpolysol : FieldRDESolvable f g →
@@ -210,7 +210,7 @@ structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
         = some (ynum, yden) →
       CPolyG.cisZeroG yden = false
 
-omit [CTowerGcdWitness β] in
+omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **The Wf frontier produces the Wf completeness residual**: the `hinner` residual clause is
 obtained by feeding `RischDEInnerCompletenessWf` through the raw fuel-free solver bridge. -/
 theorem residualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
@@ -236,10 +236,11 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
     (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hgateReg : SoundWfGateRegular f)
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residualWf f g
-    (residualWf_of_decisionProcedureFrontierWf f g h) hfit hqwn hwf
+    (residualWf_of_decisionProcedureFrontierWf f g h) hfit hqwn hgateReg hwf
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
@@ -252,9 +253,10 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     (f g : QFunNZG β) (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
+    (hgateReg : SoundWfGateRegular f)
     (hwf : SoundWfInnerRegular f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_isDecisionProcedure f g h hfit hqwn hwf
+  crischDESolveSoundWf_isDecisionProcedure f g h hfit hqwn hgateReg hwf
 
 end Capstone
 
