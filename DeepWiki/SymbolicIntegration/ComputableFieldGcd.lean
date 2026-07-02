@@ -300,11 +300,6 @@ theorem cdivmodG_eq_cdivmod (fuel : ℕ) :
     simp only [cnormG_eq_cnorm, cisZeroG_eq_cisZero, cleadG_eq_clead, div_eq_div_rat,
       cshiftG_eq_cshift, cmulG_eq_cmul, csubG_eq_csub, congrFun (congrFun caddG_eq_cadd _) _, ih]
 
-/-- `cdivG` at `ℚ` is the concrete `cdiv`. -/
-theorem cdivG_eq_cdiv (fuel : ℕ) :
-    (cdivG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cdiv fuel := by
-  funext p q; rw [cdivG, Compute.cdiv, cdivmodG_eq_cdivmod]
-
 /-- `cmodG` at `ℚ` is the concrete `cmod`. -/
 theorem cmodG_eq_cmod (fuel : ℕ) :
     (cmodG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cmod fuel := by

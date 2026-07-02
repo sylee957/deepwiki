@@ -400,17 +400,6 @@ theorem toPolyG_cmodG_eq_zero_of_dvd (fuel : ℕ) (p q : CPolyG α) (hq0 : cnorm
   rw [← hmod]
   exact toPolyG_cmodWf_eq_zero_of_dvd p q hq0 hdvd
 
-/-- **Generic exact division through `toPolyG`**: if `toPolyG q ∣ toPolyG p`, then the fueled Euclidean
-quotient times the divisor recovers the dividend. This is the fuel-free theorem transported across the
-private divmod bridge. -/
-theorem toPolyG_cdivG_exact (fuel : ℕ) (p q : CPolyG α) (hq0 : cnormG q ≠ [])
-    (hfuel : (cnormG p : List α).length ≤ fuel) (hdvd : toPolyG q ∣ toPolyG p) :
-    toPolyG (cdivG fuel p q) * toPolyG q = toPolyG p := by
-  have hdiv : cdivWf p q = cdivG fuel p q := by
-    rw [cdivWf, cdivG, cdivmodWf_eq_of_fuel fuel p q hfuel]
-  rw [← hdiv]
-  exact toPolyG_cdivWf_exact p q hq0 hdvd
-
 /-! ### The fuel-free monic gcd divides both inputs (through `toPolyG`) -/
 
 /-- **The fuel-free monic gcd divides both inputs** (through `toPolyG`), with no termination or fuel

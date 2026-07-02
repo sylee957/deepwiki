@@ -116,37 +116,6 @@ theorem dvd_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (g c 
   rw [hid]
   exact Dvd.intro_left _ rfl
 
-/-- **Generic Bézout/Diophantine solver correctness through `toPolyG`** over ℚ(x)[t]: when `gcd(p, q)` is
-a nonzero constant (`toPolyG (cgcdExtG fuel p q).1 = C (leadingCoeff)` with that leading coefficient
-nonzero), `cdiophantineG fuel p q rhs = (b, c)` solves `b·p + c·q = rhs`:
-`toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG rhs` in `(RatFunc ℚ)[X]`. The generic mirror of
-`toPoly_cdiophantine`; validates the inner Hermite loop's Bézout step on all inputs. -/
-theorem toPolyG_cdiophantineG {α : Type*} [CField α] [CFieldSpec α]
-    (fuel : ℕ) (p q rhs : CPolyG α) (hq : cnormG q ≠ [])
-    (hg : toPolyG (cgcdExtG fuel p q).1
-      = Polynomial.C (CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1)))
-    (hgc : CFieldSpec.toK (cleadG (cgcdExtG fuel p q).1) ≠ 0) :
-    toPolyG (cdiophantineG fuel p q rhs).1 * toPolyG p
-        + toPolyG (cdiophantineG fuel p q rhs).2 * toPolyG q
-      = toPolyG rhs := by
-  rcases hgst : cgcdExtG fuel p q with ⟨g, s, t⟩
-  rw [hgst] at hg hgc
-  have hbez : toPolyG s * toPolyG p + toPolyG t * toPolyG q = toPolyG g := by
-    have h := toPolyG_cgcdExtG fuel p q; rw [hgst] at h; exact h
-  have hginv : CFieldSpec.toK (CField.inv (cleadG g)) = (CFieldSpec.toK (cleadG g))⁻¹ :=
-    CFieldSpec.toK_inv (cleadG g)
-  simp only [cdiophantineG, hgst]
-  rcases hqB : cdivmodG fuel (cscaleG (CField.inv (cleadG g)) (cmulG rhs s)) q with ⟨quo, B⟩
-  have hdiv : toPolyG (cscaleG (CField.inv (cleadG g)) (cmulG rhs s))
-      = toPolyG quo * toPolyG q + toPolyG B := by
-    have h := toPolyG_cdivmodG' fuel (cscaleG (CField.inv (cleadG g)) (cmulG rhs s)) q hq
-    rw [hqB] at h; exact h
-  simp only [toPolyG_cnormG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cscaleG, hginv] at hdiv ⊢
-  have hinv : Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG g = 1 := by
-    rw [hg, ← map_mul, inv_mul_cancel₀ hgc, map_one]
-  linear_combination (-toPolyG p) * hdiv
-    + (Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG rhs) * hbez + toPolyG rhs * hinv
-
 /-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
 example {α : Type*} [CField α] [CFieldSpec α] (q p : CPolyG α)
     (hq : cnormG q ≠ []) (hdvd : cdvdGWf q p = true) :
