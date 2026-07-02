@@ -39,8 +39,9 @@ proven decompositions plus the stage equalities that transfer them to `RischDEIn
 | `RischDESolveExhaustiveResidual` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
 
 **Soundness still has fueled-transfer dependencies.** The `→` of the Wf equivalence is
-`crischDESolveSoundWf_field`, which currently consumes `RischDESoundResidualWf` bundling weak-normalizer,
-normality-gate, and inner-solve agreement with the fueled solver. The frontier governs only the *converse*
+`crischDESolveSoundWf_field`, which currently consumes `RischDESoundResidualWf`: a Wf sound-input residual
+plus a bundled Wf-to-fueled transfer for the weak normalizer, normality gate, and inner solver. The frontier
+governs only the *converse*
 (`solvable ⟹ some`): the fuel-free solver's `none` is certified correct modulo the Wf-native §6 residual. -/
 
 open Polynomial Classical
