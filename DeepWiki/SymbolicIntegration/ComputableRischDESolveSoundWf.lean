@@ -219,7 +219,10 @@ theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
           exact (Option.some.injEq _ _).mp h
         have hgate : cdenomNormalGateG ftildeR = true := by
           have hkey : cisCanonNormalizedCoreG (qReduce ftilde) = cisCanonNormalizedG ftilde := by
-            rw [hft, hq', hq]; exact crischDESolveSound_repin_gate f
+            have hqwf : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 = q := by
+              exact hqwn
+            rw [hft, hq', ← hqwf]
+            exact crischDESolveSound_repin_gate f
           rw [hred]
           show cisCanonNormalizedCoreG (qReduce ftilde) = true
           rw [hkey]; exact hck
