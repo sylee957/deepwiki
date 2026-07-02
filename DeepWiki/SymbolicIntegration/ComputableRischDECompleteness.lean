@@ -25,8 +25,8 @@ these Wf stage-completeness facts.
   `crischDESolve` is the direct division `g/b`, so it is **decidably complete**: an RDE `b·y = g`
   has a solution iff `crischDESolve b g = some _` (axiom-clean, no `native_decide`).
 * **The Wf residual reduction** — `crischDESolveSoundWf_complete_of_residualWf`: modulo
-  `RischDECompletenessResidualWf`, `solvable ⟹ some`; with Wf soundness this gives
-  `crischDESolveSoundWf_decides_of_residualWf`.
+  `RischDECompletenessResidualWf`, `solvable ⟹ some`; with the direct Wf soundness certificate
+  `RischDESoundnessWf` this gives `crischDESolveSoundWf_decides_of_residualWf`.
 
 **The deep §6 residual (precisely isolated, NEVER `sorry`).** The genuine content of completeness — that a
 solvable RDE survives every Wf §6 `none`-gate — is bundled in `RischDECompletenessResidualWf`. Its clauses are
@@ -491,12 +491,13 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
   [Algebra ℚ (CFieldSpec.K β)]
 
+omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **Fuel-free soundness, restated as `some ⟹ solvable`**: a successful `crischDESolveSoundWf`
-run witnesses `FieldRDESolvable`, using the same Wf soundness transfer residual as
+run witnesses `FieldRDESolvable`, using the direct Wf soundness certificate consumed by
 `crischDESolveSoundWf_field`. -/
 theorem crischDESolveSoundWf_imp_solvable (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y)
-    (hsound : RischDESoundResidualWf f g) :
+    (hsound : RischDESoundnessWf f g) :
     FieldRDESolvable f g :=
   ⟨y, crischDESolveSoundWf_field f g y hsolve hsound⟩
 
@@ -534,13 +535,13 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : QFunNZG β)
   obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
   exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) (hres.hck hsol) hinner⟩
 
+omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **The fuel-free §6 RDE solver DECIDES solvability modulo the Wf-native residual**:
 `crischDESolveSoundWf f g` returns `some` iff the field-level RDE is solvable. The completeness direction is
-Wf-native; the soundness direction still uses the bundled Wf soundness transfer residual consumed by
-`crischDESolveSoundWf_field`. -/
+Wf-native; the soundness direction consumes the direct `RischDESoundnessWf` certificate. -/
 theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
     (hres : RischDECompletenessResidualWf f g)
-    (hsound : RischDESoundResidualWf f g) :
+    (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g := by
   constructor
   · rintro ⟨y, hy⟩
@@ -552,7 +553,7 @@ theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
 
 -- The Wf-native residual gives the same decision statement with a fuel-free completeness direction.
 example (f g : QFunNZG β) (hres : RischDECompletenessResidualWf f g)
-    (hsound : RischDESoundResidualWf f g) :
+    (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residualWf f g hres hsound
 
@@ -563,7 +564,7 @@ end CompleteWf
 **Is the RDE solver a verified decision procedure?** **Modulo a precisely isolated deep §6 residual,
 yes.** The fuel-free surface has `crischDESolveSoundWf_decides_of_residualWf`, whose completeness direction
 uses the Wf-native residual `RischDECompletenessResidualWf` and the Wf structural skeleton directly. The `⟹`
-half (soundness) is the proven soundness theorem; the `⟸` half is completeness modulo the residual.
+half consumes the direct `RischDESoundnessWf` certificate; the `⟸` half is completeness modulo the residual.
 
 **Which completeness stages are closed, and which is the deep residual?**
 * **Closed unconditionally.** The structural reductions `crischDESolveSoundWf_some_iff` /

@@ -62,9 +62,9 @@ only; it states no new mathematics.
 
 * `crischDESolveSoundWf` — the cataloged FUEL-FREE RDE solver for `D(Y) + F·Y = G`; checks §6.1 solvability
   itself and routes the inner §6 solve through `cRischDEGWf`. Soundness: `crischDESolveSoundWf_field`, under
-  the bundled Wf soundness residual `RischDESoundResidualWf`. Completeness/decision procedure:
+  the direct Wf soundness certificate `RischDESoundnessWf`. Completeness/decision procedure:
   `crischDESolveSoundWf_isDecisionProcedure`, modulo the Wf-native `RischDEDecisionProcedureFrontierWf` and
-  `RischDESoundResidualWf`.
+  `RischDESoundnessWf`.
   The older fueled `crischDESolveSound` remains only as the internal soundness bridge used by the Wf theorem.
 
 ## Algebraic integrators (Bronstein vol. II / Trager, over `RadExt` or a general plane curve)
