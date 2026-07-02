@@ -313,3 +313,30 @@ migration to span multiple sessions; do not start P2 without P1 green.
 - [ ] `Sources/…/Chapter6.lean` `native_decide` examples pass unchanged; catalog `#check`s resolve.
 - [ ] Bare `scripts/check.sh` → `GATE: PASS`; Sources orphan audit clean.
 - [ ] One gate-green commit per phase; no `sorry`/axiom bridge introduced.
+
+## P2-EXEC — the atomic switch execution plan (2026-07-03, take-the-risk run)
+
+Grinding the full switch to green across loop turns (broken tree persists between turns; commit only when
+the whole `lake build` passes). Steps 1–4 verified green twice already:
+
+1. **Relocate instance** → `Tower/RischDEInstance.lean` (fuel-free, `cRischDEGWf` + `cdenomNormalGateGWf`,
+   `[CFracGcdCoreWf β]`) + its two reduction lemmas `crischDESolveWf_eq_solve_of_normal` /
+   `cdenomNormalGateGWf_of_crischDESolve_isSome`. ✓
+2. **Delete old instance** from `Tower/RischDE.lean`; **relocate** the `cRischDEGWf` native_decide
+   validations from `Tower/RischDEWellFounded.lean` up to the instance file; **wire 7 imports**
+   (aggregator `Tower.lean` + the 6 synth-failure files: Hyperexp/Special, Tower/Reduce, Chapter6,
+   OneShotSoundness, UnifiedFuelFree, TranscendentalOverAlgebraic). ✓
+3. **Port `SoundnessCapstone`** — `RischDESuccessResidual`→`RischDESuccessResidualWf` (Wf stage-fns, drop
+   `hyden`/`CTowerGcdWitness`), capstone `crischDESolveWf_field_of_witness_residual` via the P1 headline
+   `crischDEWf_field_of_success_and_residual`; add `[CFracGcdCoreWf β]` to the section block. ✓
+4. **Port `NormalCorrect`** — `crischDESolveWf_yden_ne_zero`, `RischDESuccessResidualCrux`→Wf,
+   `residual_of_crux`→builds `RischDESuccessResidualWf` (using `cdegG_cSpecialPolyGWf_one_eq_zero`,
+   `hdvdB_of_dvd_wf`, `hdvdC_of_dvd_wf` from `TowerGcdWitnessWf`), `crischDESolve_field_of_crux`→Wf. ✓
+5. **Port `SolveNorm`** — add `[CFracGcdCoreWf β]` to Solver/Normality/Bridges/Capstone blocks; port the
+   Normality section (`IsWeaklyNormalizedNorm`→Wf via `cSplitFactorFastGWf`, `isWeaklyNormalizedNorm_dvdB`→
+   `dvd_dn_h_of_normal_wf`) and the Capstone that builds the now-Wf crux.
+6. **Port `SolveNormCanon`** (4 `crischDESolve`/crux refs).
+7. **Port `WeakNormalizerCorrect`** (instance-synth `[CFracGcdCoreWf β]` fixes; it reasons about functions).
+8. **Port `NormCompleteness`** (instance-synth fixes).
+9. Gate bare → PASS; commit. Then P4 (delete the orphaned fuel'd `cRischDEG`/`towerRischDEFuel`/special-denom
+   cluster + fuel'd `SoundnessCapstone` residual) once `grep cRischDEG` is empty.

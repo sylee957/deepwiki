@@ -495,60 +495,7 @@ def cdenomNormalGateGWf (a : QFunNZG β) : Bool :=
 
 end Gate
 
-/-! ## `native_decide` validation: `cRischDEGWf` computes over the tower
-
-Solve a small Risch differential equation over `CPolyG (QFunNZG ℚ) = ℚ(x)[t₁]` with the primitive monomial
-`t₁` (`Dt₁ = [1]`, `D(t₁) = 1`): `Dy + 0·y = 1` (`f = 0/1`, `g = 1/1`), whose solution is `y = t₁`. The
-oracle — normal denominator → special denominator → degree bound → SPDE → the §6.5/§6.6 dispatch (here the
-`b = 0` primitive-integration branch) — returns `some (ynum, yden)`, and the returned `y = ynum/yden` is
-verified to actually solve the equation by the cleared polynomial identity
-`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²` reading to `0`
-(`cisZeroG`, the generic analogue of `rdeClearedCheck`). -/
-
-open CPolyG in
-/-- The level-1 monomial derivative `Dt₁ = 1` over `CPolyG (QFunNZG ℚ) = ℚ(x)[t₁]` (`t₁` primitive). -/
-def towerRdeGWfDt : CPolyG (QFunNZG ℚ) := [CField.one]
-
-open CPolyG in
-/-- The generic RDE oracle `cRischDEGWf` solves `Dy = 1` over ℚ(x)(t₁) (`native_decide`). `cRischDEGWf [1]
-0 1 1 1` over `CPolyG (QFunNZG ℚ) = ℚ(x)[t₁]` (monomial `t₁`, `Dt₁ = 1`, primitive) returns
-`some (ynum, yden)`, and the returned `y = ynum/yden` is verified to actually solve `Dy + 0·y = 1` by the
-cleared polynomial identity (`= 0` via `cisZeroG`) — the solution `y = t₁`. -/
-theorem towerRdeGWf_solves_Dy_eq_one :
-    (match cRischDEGWf towerRdeGWfDt ([] : CPolyG (QFunNZG ℚ)) [CField.one] [CField.one] [CField.one] with
-      | some (ynum, yden) =>
-          let Dyn := cmonomialDeriv towerRdeGWfDt ynum
-          let Dyd := cmonomialDeriv towerRdeGWfDt yden
-          let fnum : CPolyG (QFunNZG ℚ) := []
-          let fden : CPolyG (QFunNZG ℚ) := [CField.one]
-          let gnum : CPolyG (QFunNZG ℚ) := [CField.one]
-          let gden : CPolyG (QFunNZG ℚ) := [CField.one]
-          let lhs := caddG
-            (cmulG (cmulG gden fden) (csubG (cmulG Dyn yden) (cmulG ynum Dyd)))
-            (cmulG (cmulG (cmulG gden fnum) ynum) yden)
-          let rhs := cmulG (cmulG gnum fden) (cmulG yden yden)
-          cisZeroG (csubG lhs rhs)
-      | none => false) = true := by native_decide
-
-open CPolyG in
-/-- The generic RDE oracle solves `Dy + y = t₁ + 1` over ℚ(x)(t₁) (`native_decide`): exercises the
-primitive-cancellation branch of `cRischDEGWf` with nonzero coefficient `f = 1`, returning a solution
-whose cleared RDE identity holds. -/
-theorem towerRdeGWf_solves_Dy_plus_y_eq_t1_plus_one :
-    (match cRischDEGWf towerRdeGWfDt [CField.one] [CField.one]
-        [CField.one, CField.one] [CField.one] with
-      | some (ynum, yden) =>
-          let Dyn := cmonomialDeriv towerRdeGWfDt ynum
-          let Dyd := cmonomialDeriv towerRdeGWfDt yden
-          let fnum : CPolyG (QFunNZG ℚ) := [CField.one]
-          let fden : CPolyG (QFunNZG ℚ) := [CField.one]
-          let gnum : CPolyG (QFunNZG ℚ) := [CField.one, CField.one]
-          let gden : CPolyG (QFunNZG ℚ) := [CField.one]
-          let lhs := caddG
-            (cmulG (cmulG gden fden) (csubG (cmulG Dyn yden) (cmulG ynum Dyd)))
-            (cmulG (cmulG (cmulG gden fnum) ynum) yden)
-          let rhs := cmulG (cmulG gnum fden) (cmulG yden yden)
-          cisZeroG (csubG lhs rhs)
-      | none => false) = true := by native_decide
+/-! The `native_decide` validations of `cRischDEGWf` at `QFunNZG ℚ` were **relocated** to
+`Tower/RischDEInstance.lean` (they need the `CRischField (QFunNZG ℚ)` instance, now above this file). -/
 
 end DeepWiki.SymbolicIntegration

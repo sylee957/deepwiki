@@ -8,6 +8,7 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Computable.Tower.Reduce
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDECompleteness
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
 import DeepWiki.SymbolicIntegration.Computable.Tower.Unify
 import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded

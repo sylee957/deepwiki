@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.FullSoundness
 
 /-! # The fully-abstract transcendental Risch soundness capstone — threading the two PRS witnesses
@@ -217,9 +218,9 @@ exactly the `CgcdBCorrect` the witness `CTowerGcdWitness β` produces; the resid
 section RDESoundness
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
-omit [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β]
+omit [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β]
   [Algebra ℚ (CFieldSpec.K β)] in
 /-- **`cdegG [1] = 0`** over a `CFieldDomain`: the monomial derivative `Ds = [CField.one]` the recursive
 RDE solve uses (`instCRischFieldQFunNZG`) is a constant, so it is in the **primitive** regime. From
@@ -244,84 +245,62 @@ theorem cdegG_one_eq_zero : cdegG ([CField.one] : CPolyG β) = 0 := by
     · rw [if_neg (by simpa using h1)]
   rw [cdegG, hcn]; rfl
 
-/-- **The §6 RDE residual provider for a successful `QFunNZG β`-solve** `RischDESuccessResidual f g`: the
-precisely-isolated remaining bookkeeping beyond the bare success and the gcd witness — the
-`RischDEStructuralResidual` (primitive-regime restriction, §6.2 divisibility, the non-gcd
-`CSPDEGClearedInputsGen` clauses) on the level-`β` `cRischDEG [1]` run's normal-denominator output, plus the
-positive-`deg(bbar)` dispatcher side-condition, and the three denominator-nonzero facts the field bridge
-needs. The per-level `Associated`-gcd clauses *inside* `RischDEStructuralResidual` are supplied separately by
-`CTowerGcdWitness β`; this bundle is everything else `rdeCleared_of_success_and_residual` +
-`rischDE_field_of_cleared` consume. -/
-structure RischDESuccessResidual (f g : QFunNZG β) : Prop where
-  /-- The §6 structural residual on the level-`β` run (`RischDEStructuralResidual`), for the matching
-  normal-denominator output. -/
+/-- **The fuel-free §6 RDE residual provider** `RischDESuccessResidualWf f g`: the isolated remaining
+bookkeeping beyond bare success — the `RischDEStructuralResidualWf` on the level-`β` `cRischDEGWf` run's
+normal-denominator output, the positive-`deg(bbar)` dispatcher side-condition, and the two
+input-denominator-nonzero facts. Fuel-free rebase of `RischDESuccessResidual` (`hyden`/`CTowerGcdWitness`
+dropped: the `Associated` clause lives in the Wf residual, `yden ≠ 0` derived from the gate). -/
+structure RischDESuccessResidualWf (f g : QFunNZG β) : Prop where
+  /-- The fuel-free §6 structural residual on the level-`β` run, for the matching normal-denominator output. -/
   hres : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+    cRdeNormalDenominatorGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2
         = some (a0, b0, c0, h0) →
-      RischDEStructuralResidual ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
-        a0 b0 c0 h0
+      RischDEStructuralResidualWf ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2 a0 b0 c0 h0
   /-- The positive-`deg(bbar)` dispatcher side-condition (Lemma 6.5.1 non-cancellation routing). -/
   hdb : ∀ a0 b0 c0 bbar cbar : CPolyG β, ∀ m : ℤ, ∀ α' β' : CPolyG β,
-    cSPDEG ([CField.one] : CPolyG β) towerRischDEFuel
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+    cSPDEGWf ([CField.one] : CPolyG β)
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
         (cRdeBoundDegreeG ([CField.one] : CPolyG β)
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β') → 0 < cdegG bbar
-  /-- The output numerator's denominator (the special-denominator 4th component `h0` = `yden`) is nonzero. -/
-  hyden : ∀ ynum yden : CPolyG β,
-    cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 = some (ynum, yden) →
-      toPolyG yden ≠ 0
   /-- The input `f`'s denominator is nonzero. -/
   hfden : toPolyG f.1.2 ≠ 0
   /-- The input `g`'s denominator is nonzero. -/
   hgden : toPolyG g.1.2 ≠ 0
 
-/-- **★ The recursive RDE-oracle field-level soundness, from bare success + the gcd witness + the isolated
-residual** (Task 4, the capstone — native-residual-free up to the named residual): if the recursive oracle
-solves the Risch DE over `QFunNZG β` (`crischDESolve f g = some y`), then with the tower-gcd witness
-`[CTowerGcdWitness β]` (supplying the per-level `Associated`-gcd correctness) and the isolated residual
-`RischDESuccessResidual f g` (the primitive-regime / §6.2 divisibility-fuel / non-gcd `CSPDEGClearedInputsGen`
-clauses the engine does not self-certify), the returned `y = ynum/yden` solves the field-level Risch DE
-`towerFractionFieldDerivG [1] (amG ynum/amG yden) + (amG f.1.1/amG f.1.2)·(amG ynum/amG yden) =
-amG g.1.1/amG g.1.2` over `RatFunc (CFieldSpec.K β)`. Composes the §6 boundary
-`rdeCleared_of_success_and_residual` (bare success + residual ⟹ cleared identity, primitive regime via
-`cdegG_one_eq_zero`) with the cleared → field bridge `rischDE_field_of_cleared`. **No `native_decide`** — the
-gcd half is the witness's tower induction, the rest the explicit residual. -/
-theorem crischDESolve_field_of_witness_residual [CTowerGcdWitness β]
+omit [CFracGcdCore β] in
+/-- **★ The fuel-free recursive RDE-oracle field-level soundness, from bare success + the isolated residual**:
+if `crischDESolve f g = some y` over `QFunNZG β`, then under `RischDESuccessResidualWf f g` the returned
+`y = ynum/yden` solves the field-level Risch DE over `RatFunc (CFieldSpec.K β)`. Composes the fuel-free
+boundary `crischDEWf_field_of_success_and_residual` through the new instance's gate reduction. No
+`native_decide`, no fuel, no tower-gcd witness. -/
+theorem crischDESolveWf_field_of_witness_residual
     (f g y : QFunNZG β) (hsolve : CRischField.crischDESolve f g = some y)
-    (hres : RischDESuccessResidual f g) :
+    (hres : RischDESuccessResidualWf f g) :
     towerFractionFieldDerivG ([CField.one] : CPolyG β)
           (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
         + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
-  -- the §6.1 gate passed (the gated oracle returned `some`), so the gated solve reduces to the bare
-  -- `cRischDEG [1]`-then-guard match — the success unfolds with `y = ⟨(ynum,yden), _⟩`
-  have hgate : cdenomNormalGateG f = true := cdenomNormalGateG_of_crischDESolve_isSome f g y hsolve
-  rw [crischDESolve_eq_solve_of_normal f g hgate] at hsolve
-  rcases hsucc : cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2
+  have hgate : cdenomNormalGateGWf f = true := cdenomNormalGateGWf_of_crischDESolve_isSome f g y hsolve
+  rw [crischDESolveWf_eq_solve_of_normal f g hgate] at hsolve
+  rcases hsucc : cRischDEGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2
     with _ | ⟨ynum, yden⟩ <;> rw [hsucc] at hsolve
   · exact absurd hsolve (by simp)
-  · -- read off `y.1.1 = ynum`, `y.1.2 = yden` from the `dif` success
-    simp only at hsolve
+  · simp only at hsolve
     by_cases hyz : CPolyG.cisZeroG yden = false
     · rw [dif_pos hyz, Option.some.injEq] at hsolve
       have hy1 : y.1.1 = ynum := by rw [← hsolve]
       have hy2 : y.1.2 = yden := by rw [← hsolve]
+      have hydenne : toPolyG yden ≠ 0 := by
+        intro h; exact absurd ((cisZeroG_iff yden).mpr h) (by simpa using hyz)
       rw [hy1, hy2]
-      -- the cleared polynomial RDE identity from bare success + the isolated residual (primitive regime)
-      have hcleared := rdeCleared_of_success_and_residual ([CField.one] : CPolyG β) towerRischDEFuel
-        f.1.1 f.1.2 g.1.1 g.1.2 ynum yden cdegG_one_eq_zero hsucc hres.hres hres.hdb
-      -- lift the cleared identity through the ring hom `amG β` to the `amG`-image shape the bridge wants
-      have hclam := congrArg (amG β) hcleared
-      simp only [map_add, map_mul, map_sub, map_pow] at hclam
-      -- the field bridge: cleared identity (amG-image) ⟹ the field-level RDE identity
-      exact rischDE_field_of_cleared ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2 ynum yden
-        hres.hfden hres.hgden (hres.hyden ynum yden hsucc) hclam
+      exact crischDEWf_field_of_success_and_residual ([CField.one] : CPolyG β) f.1.1 f.1.2 g.1.1 g.1.2
+        ynum yden cdegG_one_eq_zero hsucc hres.hres hres.hdb hres.hfden hres.hgden hydenne
     · rw [dif_neg hyz] at hsolve; exact absurd hsolve (by simp)
 
 end RDESoundness
@@ -331,15 +310,15 @@ end RDESoundness
 -- ★ Task 4: the recursive RDE oracle's success over QFunNZG β gives the field-level Risch-DE identity,
 -- from the gcd witness + the isolated residual — no native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] [CTowerGcdWitness β]
+    [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : CRischField.crischDESolve f g = some y)
-    (hres : RischDESuccessResidual f g) :
+    (hres : RischDESuccessResidualWf f g) :
     towerFractionFieldDerivG ([CField.one] : CPolyG β)
           (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
         + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
-  crischDESolve_field_of_witness_residual f g y hsolve hres
+  crischDESolveWf_field_of_witness_residual f g y hsolve hres
 
 /-! ## Task 5 — the fully-abstract hyperexp normal-part soundness corollary (native-residual-free)
 
@@ -504,7 +483,7 @@ character to the integrator's `checkIdentityG` route, isolated here so the bound
 
 #print axioms cTowerWitness_assocReg
 #print axioms instCTowerGcdWitnessQ_of_terminates
-#print axioms crischDESolve_field_of_witness_residual
+#print axioms crischDESolveWf_field_of_witness_residual
 #print axioms cIntegrateHyperexpNormalGWf_sound_of_rischFieldSpec
 
 end DeepWiki.SymbolicIntegration

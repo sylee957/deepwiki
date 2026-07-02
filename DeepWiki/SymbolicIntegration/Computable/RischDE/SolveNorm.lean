@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGcdWitnessWf
 import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalCorrect
 
 /-! # The CORRECT (weak-normalized) recursive Risch-DE solver — closing the divisibility wall
@@ -124,7 +125,7 @@ end Helpers
 
 section Solver
 
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CRischField β]
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β]
 
 /-- **★ The correct (weak-normalized) recursive Risch-DE solver** `crischDESolveNorm f g` over
 `QFunNZG β` (Task 1): the §6.1 round-trip around the production `crischDESolve`. Compute the weak normalizer
@@ -175,7 +176,7 @@ the single isolated normalization-correctness fact, supplied as a hypothesis at 
 
 section Normality
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β]
 
 /-- **The weak-normalization guarantee** `IsWeaklyNormalizedNorm h`: the `QFunNZG β` `h` has a
 **weakly-normalized denominator** — its denominator equals its own §3.5 normal part
@@ -184,10 +185,10 @@ is a unit). The output `f̃ = f − Dq/q` of Bronstein §6.1 weak normalization 
 it is the precise condition under which `dvd_dn_h_of_normal` discharges the §6.2 divisibility crux. The
 single isolated normalization-correctness fact (the engine validates it per run; no abstract theorem). -/
 def IsWeaklyNormalizedNorm (h : QFunNZG β) : Prop :=
-  toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel h.1.2).1
+  toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) h.1.2).1
     = toPolyG h.1.2
 
-omit [CFieldDomain β] in
+omit [CFieldDomain β] [CFracGcdCore β] in
 /-- **The normalization guarantee discharges the `B`-divisibility crux** (`isWeaklyNormalizedNorm_dvdB`):
 if `f̃`'s denominator is weakly normalized (`IsWeaklyNormalizedNorm f̃`), then the crux's §6.1
 `B`-divisibility `f̃den ∣ dₙ·h0` holds for any `h0` — directly from `dvd_dn_h_of_normal`. The
@@ -195,9 +196,9 @@ divisibility crux's first clause becomes a theorem on normalized input. -/
 theorem isWeaklyNormalizedNorm_dvdB (ftilde : QFunNZG β) (h0 : CPolyG β)
     (hnorm : IsWeaklyNormalizedNorm ftilde) :
     toPolyG ftilde.1.2 ∣ toPolyG (CPolyG.cmulG
-      (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) :=
-  dvd_dn_h_of_normal ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2 h0
-    (show toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1
+      (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) ftilde.1.2).1 h0) :=
+  dvd_dn_h_of_normal_wf ([CField.one] : CPolyG β) ftilde.1.2 h0
+    (show toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) ftilde.1.2).1
         = toPolyG ftilde.1.2 from hnorm)
 
 /-! ### Why the `C`-divisibility crux is NOT closed by `f`-normalization (the precise boundary)
@@ -297,7 +298,7 @@ the ORIGINAL `f, g`. NO `native_decide`; axiom-clean `[propext, Classical.choice
 section Capstone
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitnessWf β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **★ The per-run residual of the NORMALIZED solver** `RischDESuccessResidualNorm f̃ g̃`: the reduced crux
 `RischDESuccessResidualCrux` with **the `B`-divisibility clause `hdvdB_dn_h` REMOVED** — that clause is the
@@ -312,41 +313,41 @@ check up to `gden`-vs-`eₙ`, not a self-divisibility). The `B`-divisibility wal
 structure RischDESuccessResidualNorm (ftilde gtilde : QFunNZG β) : Prop where
   /-- The normal part `dₙ` of `f̃den` is nonzero. -/
   hdn : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+    cRdeNormalDenominatorGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2
         gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
-      toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 ≠ 0
+      toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) ftilde.1.2).1 ≠ 0
   /-- §6.2 `C`-divisibility `gden ∣ dₙ·h0²` (the `g`-side cross-divisibility — NOT reached by
   `f`-normalization; the engine's own `cdvdG` check up to `gden`-vs-`eₙ`). -/
   hdvdC_dn_h2 : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+    cRdeNormalDenominatorGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2
         gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
       toPolyG gtilde.1.2 ∣ toPolyG (CPolyG.cmulG (CPolyG.cmulG
-        (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.2).1 h0) h0)
+        (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) ftilde.1.2).1 h0) h0)
   /-- The §6.4 per-level transparent-input chain `CSPDEGClearedInputsGen` (gcd clauses via the witness). -/
   hin : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel ftilde.1.1 ftilde.1.2
+    cRdeNormalDenominatorGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2
         gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0) →
-      CSPDEGClearedInputsGen ([CField.one] : CPolyG β) towerRischDEFuel
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+      CSPDEGClearedInputsGenWf ([CField.one] : CPolyG β)
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
         (cRdeBoundDegreeG ([CField.one] : CPolyG β)
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
   /-- The positive-`deg(bbar)` dispatcher side-condition (Lemma 6.5.1 non-cancellation routing). -/
   hdb : ∀ a0 b0 c0 bbar cbar : CPolyG β, ∀ m : ℤ, ∀ α' β' : CPolyG β,
-    cSPDEG ([CField.one] : CPolyG β) towerRischDEFuel
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
-        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1
+    cSPDEGWf ([CField.one] : CPolyG β)
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
         (cRdeBoundDegreeG ([CField.one] : CPolyG β)
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).1
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.1
-          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) towerRischDEFuel a0 b0 c0).2.2.1 : ℤ)
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β') → 0 < cdegG bbar
 
-omit [CDiffFieldSpec β] [CFieldDomain β] [CRischField β] [CTowerGcdWitness β]
+omit [CDiffFieldSpec β] [CFieldDomain β] [CRischField β] [CTowerGcdWitnessWf β] [CFracGcdCore β]
   [Algebra ℚ (CFieldSpec.K β)] in
 /-- **The full crux from the normalized residual + the normalization guarantee**
 (`residualCrux_of_residualNorm`): given the §6.1 normalization guarantee `IsWeaklyNormalizedNorm f̃`, the
@@ -440,7 +441,7 @@ end Capstone
 -- the gcd witness + the ONE normalization guarantee + the residual with the B-divisibility wall removed
 -- (no native_decide).
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitnessWf β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : crischDESolveNorm f g = some y)
     (hnorm : IsWeaklyNormalizedNorm
       (weakNormalizedF f (qOfPolyNZG

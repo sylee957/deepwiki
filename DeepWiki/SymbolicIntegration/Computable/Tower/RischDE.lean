@@ -450,63 +450,9 @@ def cdenomNormalGateG (a : QFunNZG β) : Bool :=
 
 end Gate
 
-section
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CRischField β]
-
-/-- **★ `CRischField (QFunNZG β)`** — the **§6.1-gated, sound** RDE over `β(s) = QFunNZG β`, built by running
-`cRischDEG` over `CPolyG β = β[s]` with the new monomial `s` (`Ds = [1]`) and `[CRischField β]` for the base
-solve, **behind the denominator-normality gate `cdenomNormalGateG`**. This ties the tower recursion: solving
-an RDE at level `n+1` runs the full §6 pipeline at level `n` and recurses into the level-`n` `crischDESolve`,
-bottoming at `CRischField ℚ`. **The gate** (the step the raw oracle skipped, the soundness bug): return `none`
-when the §3.5 normal part of `f`'s lowest-terms denominator is not the denominator itself (an unsolvable RDE
-— a non-positive-integer-residue special pole survives); else read `f, g` as num/den pairs over `β[s]`, run
-`cRischDEG [1] fuel …`, and lift the returned `(ynum, yden)` back to `QFunNZG β` (guarding den-nonzero with
-the `cisZeroG` test). Computable (`Prop`-erased subtype proofs), so the tower oracle `native_decide`s. -/
-instance instCRischFieldQFunNZG : CRischField (QFunNZG β) where
-  crischDESolve f g :=
-    if cdenomNormalGateG f then
-      match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
-      | none => none
-      | some (ynum, yden) =>
-        if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
-    else none
-
-/-- **The gated oracle reduces to the raw solve when the gate passes** (`crischDESolve_eq_solve_of_normal`):
-if `cdenomNormalGateG f = true` then `instCRischFieldQFunNZG.crischDESolve f g` is the bare
-`cRischDEG [1] fuel`-then-`cisZeroG`-guard match (no gate). The `if_pos` branch of the gate, peeled so the
-downstream soundness reductions reach the raw `cRischDEG` success exactly as before the re-pin. -/
-theorem crischDESolve_eq_solve_of_normal (f g : QFunNZG β) (hgate : cdenomNormalGateG f = true) :
-    CRischField.crischDESolve f g
-      = (match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
-         | none => none
-         | some (ynum, yden) =>
-           if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none) := by
-  rw [show CRischField.crischDESolve f g
-      = (if cdenomNormalGateG f then
-           match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
-           | none => none
-           | some (ynum, yden) =>
-             if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
-         else none) from rfl, if_pos hgate]
-
-/-- **A successful gated solve passed the gate** (`cdenomNormalGateG_of_crischDESolve_isSome`): if
-`instCRischFieldQFunNZG.crischDESolve f g = some y` then `cdenomNormalGateG f = true`. The `else none`
-branch of the gate forces the check: a `some` result can only come from the `if_pos` branch. So the gated
-oracle's success witnesses denominator normality — the soundness gate it now performs. -/
-theorem cdenomNormalGateG_of_crischDESolve_isSome (f g y : QFunNZG β)
-    (hsolve : CRischField.crischDESolve f g = some y) : cdenomNormalGateG f = true := by
-  by_cases hgate : cdenomNormalGateG f = true
-  · exact hgate
-  · rw [show CRischField.crischDESolve f g
-        = (if cdenomNormalGateG f then
-             match CPolyG.cRischDEG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2 g.1.1 g.1.2 with
-             | none => none
-             | some (ynum, yden) =>
-               if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
-           else none) from rfl, if_neg hgate] at hsolve
-    exact absurd hsolve (by simp)
-
-end
+/-! The `CRischField (QFunNZG β)` instance and its two reduction lemmas were **relocated** to
+`Tower/RischDEInstance.lean` and rebased onto the fuel-free `cRischDEGWf` (`docs/rischde-wf-migration.md`
+Phase P2). The fuel'd gate def `cdenomNormalGateG` above is now orphaned, slated for Phase-P4 deletion. -/
 
 /-! ### Shared level-2 RDE data
 

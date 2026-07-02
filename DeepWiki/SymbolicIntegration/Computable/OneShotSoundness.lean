@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEInstance
 
 /-! # Checker-free soundness of the integrator's polynomial branch
 

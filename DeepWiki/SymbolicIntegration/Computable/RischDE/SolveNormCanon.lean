@@ -69,7 +69,7 @@ The single difference from `crischDESolveNorm` is step 3's `qReduce` — the mis
 
 section Solver
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β]
   [CRischField β]
 
 /-- **★ The canonicalizing weak-normalized recursive Risch-DE solver** `crischDESolveNormCanon f g` over
@@ -136,7 +136,7 @@ This is the genuine Bronstein §6.1 `WeakNormalizer` correctness the false-as-st
 
 section Normality
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β]
 
 /-- **★ The genuine §6.1 normalization guarantee (canonicalized)** `IsCanonNormalized f q'`: the
 **canonicalized** weakly-normalized element `qReduce (weakNormalizedF f q')` is weakly normalized — its
@@ -150,6 +150,7 @@ unsound (`isCanonNormalized_witness_false`, `f = 1/(t₁ − x)`) — a genuine,
 def IsCanonNormalized (f q' : QFunNZG β) : Prop :=
   IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))
 
+omit [CFracGcdCore β] in
 /-- **★ `IsCanonNormalized` discharges the §6.2 `B`-divisibility for the canonicalized element**
 (`isCanonNormalized_dvdB`): if the canonicalized weakly-normalized element is weakly normalized
 (`IsCanonNormalized f q'`), then the §6.2 `B`-divisibility `(qReduce f̃)den ∣ dₙ·h0` holds for any `h0` — the
@@ -158,7 +159,7 @@ def IsCanonNormalized (f q' : QFunNZG β) : Prop :=
 theorem isCanonNormalized_dvdB (f q' : QFunNZG β) (h0 : CPolyG β)
     (hnorm : IsCanonNormalized f q') :
     toPolyG (qReduce (weakNormalizedF f q')).1.2 ∣ toPolyG (CPolyG.cmulG
-      (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel
+      (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β)
         (qReduce (weakNormalizedF f q')).1.2).1 h0) :=
   isWeaklyNormalizedNorm_dvdB (qReduce (weakNormalizedF f q')) h0 hnorm
 
@@ -179,7 +180,7 @@ cross-divisibility via `residualNorm_hdvdC_of_normalizedDen` — a §6.1 fact, a
 section Fuel
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitnessWf β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **The fuel/termination precondition** `InputFitsFuel f g`: the per-run termination residual
 `RischDESuccessResidualNormFuel` for the canonicalized solver's pair `(qReduce (weakNormalizedF f q'), q'·g)`
@@ -217,7 +218,7 @@ Classical.choice, Quot.sound]`. -/
 section Capstone
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitnessWf β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **★★ The CANONICALIZING recursive RDE solver is sound under the genuine §6.1 condition** (Task 4, the
 capstone): if `crischDESolveNormCanon f g = some y`, then with the gcd witness `[CTowerGcdWitness β]`, the
@@ -290,7 +291,7 @@ theorem crischDESolveNormCanon_field_of_normal (f g y : QFunNZG β)
 -- witness + the genuine §6.1 condition IsCanonNormalized (canonicalized, NOT the false-on-product
 -- IsWeaklyNormalizedNorm) + the fuel precondition, no native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitnessWf β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : crischDESolveNormCanon f g = some y)
     (hnorm : IsCanonNormalized f
       (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))

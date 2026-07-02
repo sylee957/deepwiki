@@ -53,7 +53,7 @@ reads through the noncomputable `toPolyG`. -/
 
 section Check
 
-variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
 
 /-- **★ The computable §6.1 solvability check** `cisCanonNormalizedG ftilde`: `true` iff the §3.5 normal part
 of the *reduced* (lowest-terms) denominator `reduceDen ftilde` equals the denominator itself —
@@ -65,7 +65,7 @@ the positive-integer-residue class (`f = 1/t₁`), `false` exactly where the ora
 (`f = 1/(t₁ − x)`). -/
 def cisCanonNormalizedG (ftilde : QFunNZG β) : Bool :=
   CPolyG.cisZeroG (CPolyG.csubG
-    (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel
+    (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β)
       (QFunNZG.reduceDen ftilde)).1
     (QFunNZG.reduceDen ftilde))
 
@@ -81,8 +81,9 @@ q'))`. So a successful check **supplies** the §6.1 normality the soundness want
 
 section Bridge
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β]
 
+omit [CFracGcdCore β] in
 /-- **★ The Boolean check decides the §6.1 normality** (`cisCanonNormalizedG_iff`):
 `cisCanonNormalizedG (weakNormalizedF f q') = true ↔ IsCanonNormalized f q'`. The engine's `cisZeroG` test
 on `normalPart(reduceDen) − reduceDen` (axiom-clean `cisZeroG_iff` + `toPolyG_csubG` + `sub_eq_zero`) is
@@ -115,7 +116,7 @@ genuine solution (the check forces `IsCanonNormalized`, which the capstone needs
 
 section Solver
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β]
   [CRischField β]
 
 /-- **★ The corrected, genuinely SOUND recursive Risch-DE solver** `crischDESolveSound f g` over
@@ -151,7 +152,7 @@ solver's success — *and* witnesses that the check passed. The two facts togeth
 
 section Reductions
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β]
   [CRischField β]
 
 /-- **A successful sound solve reduces to the canonicalizing solve** (`crischDESolveSound_to_normCanon`):
@@ -233,7 +234,7 @@ detects unsolvability and returns `none` — not because the input is assumed no
 section Capstone
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitnessWf β] [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **★★ The corrected recursive RDE solver is UNCONDITIONALLY sound** (`crischDESolveSound_field`, the
 capstone): if `crischDESolveSound f g = some y`, then with the gcd witness `[CTowerGcdWitness β]` and the
@@ -265,7 +266,7 @@ theorem crischDESolveSound_field (f g y : QFunNZG β)
 -- ★ The corrected solver's success ⟹ the ORIGINAL field-level Risch-DE identity, from the gcd witness +
 -- the benign fuel budget ONLY — NO IsCanonNormalized hypothesis (the solver checks it). No native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitnessWf β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : crischDESolveSound f g = some y) (hfit : InputFitsFuel f g) :
     towerFractionFieldDerivG ([CField.one] : CPolyG β)
           (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
