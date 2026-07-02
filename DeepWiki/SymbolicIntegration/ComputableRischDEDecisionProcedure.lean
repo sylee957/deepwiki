@@ -27,10 +27,8 @@ to lift a successful `cRischDEGWf` run through the raw wrapper:
 | `hck`  | §6.1 normality | `IsCanonNormalizedWf f q'` | contrapositive of the unsoundness witness |
 | `hinner` | §6.2-6.6 inner solve | `RischDEInnerCompletenessWf` for the Wf inner input | Wf-native inner completeness |
 
-The helper `RischDEInnerDecisionFrontierWf` still records the **three irreducible §6 residuals** named by
-this arc — one per §6 stage, each carrying its Bronstein theorem and its actionable proof route — plus the
-stage equalities that transfer them to the Wf-native `RischDEInnerCompletenessWf` consumed by the public
-field-level frontier:
+The helper `RischDEInnerDecisionFrontier` records the **three irreducible §6 residuals** named by this arc —
+one per §6 stage, each carrying its Bronstein theorem and its actionable proof route:
 
 | residual (deepest tip) | clause it discharges | Bronstein | route | proven below it |
 |---|---|---|---|---|
@@ -39,9 +37,8 @@ field-level frontier:
 | `RischDESolveExhaustiveResidual` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
 
 **Soundness is direct at the public boundary.** The `→` of the Wf equivalence is
-`crischDESolveSoundWf_field`, which consumes `RischDESoundnessWf`. The current transfer residual
-`RischDESoundResidualWf` still constructs that certificate one layer down, but the decision theorem no longer
-exposes the fueled bridge. The frontier governs only the *converse*
+`crischDESolveSoundWf_field`, which consumes `RischDESoundnessWf`; the decision theorem no longer exposes the
+fueled bridge. The frontier governs only the *converse*
 (`solvable ⟹ some`): the fuel-free solver's `none` is certified correct modulo the Wf-native §6 residual. -/
 
 open Polynomial Classical
@@ -139,43 +136,6 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 
 end InnerFrontier
 
-/-! ## ★ Wf inner decision frontier
-
-`RischDEInnerDecisionFrontier` captures the deepest §6 facts for the original fueled inner solver. The Wf
-decision procedure also needs the stage-agreement residual that turns that fueled assembly into
-`RischDEInnerCompletenessWf`. Bundling both gives the field-level frontier a Wf-facing inner clause while still
-reusing the already assembled deep §6 map. -/
-
-section InnerFrontierWf
-
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
-  [CFracGcdCoreWf α] [CRischField α]
-
-/-- **The Wf inner decision frontier**: deepest fueled §6 tips plus Wf/fueled stage transfer. -/
-structure RischDEInnerDecisionFrontierWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
-  /-- The deepest §6 tips assembling the fueled inner completeness proof. -/
-  hfrontier : RischDEInnerDecisionFrontier Dt fnum fden gnum gden
-  /-- The stage-agreement residual transferring the fueled proof to the Wf inner solver. -/
-  htransfer : RischDEInnerCompletenessTransferWf Dt fnum fden gnum gden
-
-/-- **The Wf inner decision frontier assembles Wf inner completeness.** -/
-theorem rischDEInnerCompletenessWf_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
-    (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
-    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
-  rischDEInnerCompletenessWf_of_transfer Dt fnum fden gnum gden
-    (rischDEInnerCompleteness_of_decisionFrontier Dt fnum fden gnum gden h.hfrontier)
-    h.htransfer
-
-/-! ### Restatement against the Wf inner-completeness shape (anonymous `example`) -/
-
--- The Wf inner frontier gives the exact Wf inner-completeness proof consumed by the field-level frontier.
-example (Dt fnum fden gnum gden : CPolyG α)
-    (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
-    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
-  rischDEInnerCompletenessWf_of_decisionFrontierWf Dt fnum fden gnum gden h
-
-end InnerFrontierWf
-
 /-! ## Wf inner input and decision frontier
 
 The field-level Wf residual uses the weak-normalized, reduced pair passed to `crischDERawSolveWf`. Naming that
@@ -204,9 +164,7 @@ The field-level decision procedure now targets `crischDESolveSoundWf`, the fuel-
 `crischDERawSolveWf`. The public frontier below states those clauses through the Wf inner input and a direct
 `RischDEInnerCompletenessWf` proof, then derives the residual consumed by the capstone:
 `some ⟺ solvable` for the fuel-free solver. The completeness direction is Wf-native; the soundness direction
-is supplied by the direct `RischDESoundnessWf` certificate. The optional inner-frontier helper reduces the Wf
-inner-completeness proof one tower level down to the three named §6 tips plus the inner stage-transfer
-residual. -/
+is supplied by the direct `RischDESoundnessWf` certificate. -/
 
 section Capstone
 
@@ -314,11 +272,11 @@ through `crischDESolveSoundWf_complete_of_residualWf`; the `→` (soundness) is 
    SPDE peel recursion. Below it: the engine/base/SPDE-control-flow/preservation layers proven, incl. the
    peel-step inverse.
 
-`rischDEInnerCompleteness_of_decisionFrontier` assembles these three into `RischDEInnerCompleteness`; the
-helper `rischDEInnerCompletenessWf_of_decisionFrontierWf` transfers that assembly to the Wf-native
-`RischDEInnerCompletenessWf` proof now consumed directly by the field-level frontier. The Wf capstone then
-uses the §6.1 `hwn`/`hck` plus the Wf inner-input clauses through `RischDECompletenessResidualWf`. The
-cross-level lift of inner completeness into the Wf raw-solver `hinner` clause is encoded in
+`rischDEInnerCompleteness_of_decisionFrontier` assembles these three into the original fueled
+`RischDEInnerCompleteness` map. The public Wf capstone consumes `RischDEInnerCompletenessWf` directly through
+the field-level frontier, then uses the §6.1 `hwn`/`hck` plus the Wf inner-input clauses through
+`RischDECompletenessResidualWf`. The lift of Wf inner completeness into the raw-solver `hinner` clause is
+encoded in
 `completenessResidualWf_of_decisionProcedureFrontierWf`. -/
 
 /-! ### Axiom audit (the Wf capstone and the three-residual assembly are axiom-clean;
