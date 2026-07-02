@@ -1127,4 +1127,60 @@ theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : CPolyG α) (n : ℤ) (hin : CSP
 
 end WfSPDECleared
 
+section WfNormalDenominator
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+
+/-- **Fuel-free mirror of `cRdeNormalDenominatorG_cleared_lift_gen`**: writing `dₙ = (cSplitFactorFastGWf Dt
+fden).1`, if `cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a, b, c, h)`, the normal part is
+nonzero, the two `cdivWf`-clearings are exact, and a polynomial `Q` solves the reduced `a·D(Q) + b·Q = c`,
+then `y = Q/h` solves the cleared `gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h = gnum·fden·h²` over
+`(CFieldSpec.K α)[X]`. Fuel-free mirror, reusing the fuel-agnostic `rdeNormalDenominator_glue` /
+`toPolyG_cdivWf_exact_mul_gen` verbatim. -/
+theorem cRdeNormalDenominatorGWf_cleared_lift (Dt : CPolyG α) (fnum fden gnum gden a b c h Q : CPolyG α)
+    (hres : cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a, b, c, h))
+    (hdn : toPolyG (cSplitFactorFastGWf Dt fden).1 ≠ 0)
+    (hfden0 : cnormG fden ≠ []) (hgden0 : cnormG gden ≠ [])
+    (hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h) fnum)
+        (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 (cmonomialDeriv Dt h)) fden)))
+    (hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h) h) gnum))
+    (hred : toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) + toPolyG b * toPolyG Q
+      = toPolyG c) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG Q) * toPolyG h
+            - toPolyG Q * Differential.implicitDeriv (toPolyG Dt) (toPolyG h))
+        + toPolyG gden * toPolyG fnum * toPolyG Q * toPolyG h
+      = toPolyG gnum * toPolyG fden * toPolyG h ^ 2 := by
+  set dn := (cSplitFactorFastGWf Dt fden).1 with hdndef
+  set bNum := csubG (cmulG (cmulG dn h) fnum) (cmulG (cmulG dn (cmonomialDeriv Dt h)) fden) with hbNum
+  set cNum := cmulG (cmulG (cmulG dn h) h) gnum with hcNum
+  rw [cRdeNormalDenominatorGWf] at hres
+  split at hres
+  · rw [Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq, Prod.mk.injEq] at hres
+    obtain ⟨ha, hb, hc, hh⟩ := hres
+    rw [hh] at ha hb hc
+    have hA : toPolyG a = toPolyG dn * toPolyG h := by rw [← ha, toPolyG_cmulG]
+    have hBexact : toPolyG b * toPolyG fden = toPolyG bNum := by
+      rw [← hb]; exact toPolyG_cdivWf_exact_mul_gen bNum fden hfden0 hdvdB
+    have hBeq : toPolyG bNum = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hbNum, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
+        toPolyG_cmonomialDeriv, ← ha, toPolyG_cmulG]
+    have hCexact : toPolyG c * toPolyG gden = toPolyG cNum := by
+      rw [← hc]; exact toPolyG_cdivWf_exact_mul_gen cNum gden hgden0 hdvdC
+    have hCeq : toPolyG cNum = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hcNum, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]; ring
+    have hBcert : toPolyG b * toPolyG fden = toPolyG a * toPolyG fnum
+        - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
+      rw [hBexact]; exact hBeq
+    have hCcert : toPolyG c * toPolyG gden = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
+      rw [hCexact]; exact hCeq
+    have hglue := rdeNormalDenominator_glue (Differential.implicitDeriv (toPolyG Dt))
+      (toPolyG dn) (toPolyG h) (toPolyG fnum) (toPolyG fden) (toPolyG gnum) (toPolyG gden)
+      (toPolyG a) (toPolyG b) (toPolyG c) (toPolyG Q) hdn hA hBcert hCcert hred
+    linear_combination hglue
+  · exact absurd hres (by simp)
+
+end WfNormalDenominator
+
 end DeepWiki.SymbolicIntegration
