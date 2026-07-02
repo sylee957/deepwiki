@@ -317,6 +317,55 @@ theorem hdvd_free_of_en_dvd_dn (Dt fnum fden gnum gden : CPolyG α)
 
 end DivisibilityResidual
 
+/-! ## ★ The Wf §6.2 divisibility residual and `hnorm`
+
+The Wf normal-denominator bridge above lets the same valuation-theoretic residual discharge the
+fuel-free `RischDEInnerCompletenessWf.hnorm` clause directly. Unlike the fueled residual, the Wf bundle
+does not carry a fuel-length side condition: the semantic `cdvdGWf` bridge is `dvd ⟹ cdvdGWf` outright. -/
+
+section DivisibilityResidualWf
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+  [CRischField α]
+
+/-- **The precise Wf §6.2 divisibility residual**: a polynomial solution forces the mathematical Wf
+normal-denominator divisibility, and the Wf normal part `eₙ` is nonzero. No fuel side condition is present. -/
+structure RdeNormalDivisibilityResidualWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
+  /-- Bronstein Thm 6.1.2, Wf form: a polynomial solution forces `eₙ ∣ dₙh²`. -/
+  hdvd : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden)
+  /-- The Wf §6.2 normal part `eₙ` of `gden` is nonzero. -/
+  hen0 : CPolyG.cnormG (rdeNormEnWf Dt gden) ≠ []
+
+omit [CRischField α] in
+/-- **`hnorm` from the Wf §6.2 divisibility residual**: the fuel-free normal-denominator step preserves
+solvability, with no fuel side condition. -/
+theorem hnormWf_of_divisibilityResidualWf (Dt fnum fden gnum gden : CPolyG α)
+    (hres : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true := by
+  intro hsol
+  exact cRdeNormalDenominatorGWf_isSome_of_dvd Dt fnum fden gnum gden
+    hres.hen0 (hres.hdvd hsol)
+
+omit [CDiffFieldSpec α] [CRischField α] in
+/-- **`eₙ ∣ dₙ` makes the Wf §6.2 divisibility free**. -/
+theorem dvd_dnh2Wf_of_en_dvd_dn (Dt : CPolyG α) (fden gden : CPolyG α)
+    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnWf Dt fden)) :
+    toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden) := by
+  rw [rdeNormDnh2Wf, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG]
+  exact (hdvd.mul_right _).mul_right _
+
+omit [CRischField α] in
+/-- **The Wf `hdvd` clause is free when `eₙ ∣ dₙ`**. -/
+theorem hdvdWf_free_of_en_dvd_dn (Dt fnum fden gnum gden : CPolyG α)
+    (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnWf Dt fden)) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden) :=
+  fun _ => dvd_dnh2Wf_of_en_dvd_dn Dt fden gden hdvd
+
+end DivisibilityResidualWf
+
 /-! ## ★ `RischDEInnerCompleteness` from the §6.2/§6.3/§6.4-6.6 residuals assembled
 
 With `hnorm` produced here (`hnorm_of_divisibilityResidual`), `hbound` produced by
@@ -359,6 +408,38 @@ theorem rischDEInnerCompleteness_of_norm_bound_solve (Dt fnum fden gnum gden : C
 
 end Assemble
 
+/-! ## Wf assembly from the Wf normal-denominator residual
+
+The Wf assembly mirrors `rischDEInnerCompleteness_of_norm_bound_solve`, but its `hnorm` field is
+discharged from `RdeNormalDivisibilityResidualWf` and the remaining clauses use the Wf §6 functions. -/
+
+section AssembleWf
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+  [CRischField α]
+
+/-- **`RischDEInnerCompletenessWf` with `hnorm` discharged from the Wf §6.2 residual**. -/
+theorem rischDEInnerCompletenessWf_of_norm_bound_solve (Dt fnum fden gnum gden : CPolyG α)
+    (hnormRes : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden)
+    (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1)
+    (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRischDEGWf Dt fnum fden gnum gden).isSome = true) :
+    RischDEInnerCompletenessWf Dt fnum fden gnum gden where
+  hnorm := hnormWf_of_divisibilityResidualWf Dt fnum fden gnum gden hnormRes
+  hbound := hbound
+  hsolve := hsolve
+
+end AssembleWf
+
 /-! ### Restatement against `RischDEInnerCompleteness.hnorm`'s field type (anonymous `example`) -/
 
 -- ★ The produced `hnorm` has exactly `RischDEInnerCompleteness.hnorm`'s type — confirmed by using it as
@@ -377,6 +458,14 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreWf
     (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden)) :
     (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true :=
   cRdeNormalDenominatorGWf_isSome_of_dvd Dt fnum fden gnum gden hen0 hdvd
+
+-- The Wf residual produces exactly the `RischDEInnerCompletenessWf.hnorm` field shape.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
+    (hres : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true :=
+  hnormWf_of_divisibilityResidualWf Dt fnum fden gnum gden hres
 
 /-! ### Final verdict (stated precisely)
 
@@ -397,6 +486,9 @@ that gate's completeness.
 The Wf counterparts `cRdeNormalDenominatorGWf_isSome_iff`, `cdvdGWf_of_dvd`, and
 `cRdeNormalDenominatorGWf_isSome_of_dvd` close the same engine bridge for `cRdeNormalDenominatorGWf`
 without any fuel bound.
+The Wf residual `RdeNormalDivisibilityResidualWf` and assembly
+`rischDEInnerCompletenessWf_of_norm_bound_solve` now feed this bridge directly into
+`RischDEInnerCompletenessWf`.
 
 **The single deep residual** (`RdeNormalDivisibilityResidual`, NEVER `sorry`): `hdvd` — a polynomial
 solution forces `eₙ ∣ dₙh²` (**Bronstein Thm 6.1.2**, the valuation-theoretic necessity at the normal
@@ -429,6 +521,8 @@ NO `sorry`) -/
 #print axioms cdvdGWf_of_dvd
 #print axioms cRdeNormalDenominatorGWf_isSome_of_dvd
 #print axioms hnorm_of_divisibilityResidual
+#print axioms hnormWf_of_divisibilityResidualWf
 #print axioms rischDEInnerCompleteness_of_norm_bound_solve
+#print axioms rischDEInnerCompletenessWf_of_norm_bound_solve
 
 end DeepWiki.SymbolicIntegration
