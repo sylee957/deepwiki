@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.ComputableIntegrationSpec
 
 /-! # The FUEL-FREE transcendental top entry `cIntegrateGFullWf` — the fuel-free companion of the
 transcendental driver `cIntegrateGFull`.
@@ -78,6 +79,22 @@ theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
 by
   have _ := hsome
   exact field_identity_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
+
+/-- **The fuel-free full driver satisfies the semantic integral-result spec from its `checkIdentityG`
+certificate.** This is the spec-first wrapper around
+`field_identity_of_cIntegrateGFullWf_of_checkIdentityG`: downstream proofs can target
+`IsIntegralResultG` rather than the expanded field identity. -/
+theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
+    [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
+    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (hgden : toPolyG res.rational.2 ≠ 0) (haden : toPolyG d ≠ 0)
+    (hlogs : ∀ cv ∈ res.logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt res a d = true) :
+    CPolyG.IsIntegralResultG Dt a d res := by
+  have _ := hsome
+  exact CPolyG.isIntegralResultG_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
 
 /-! ### Restatement against the intended wording -/
 
