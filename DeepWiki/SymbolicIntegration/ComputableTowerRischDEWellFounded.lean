@@ -117,7 +117,7 @@ end CPolyG
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CFracGcdCore α]
+variable {α : Type*} [CField α]
 
 /-- **Generic fuel-free `p`-adic valuation** `cValuationGWf p x = ν_p(x)`: the generic, fuel-free companion of
 `cValuationG`, the multiplicity of the monic irreducible `p` dividing `x` (largest `k` with `pᵏ ∣ x`), by
@@ -138,6 +138,95 @@ def cValuationGWf (p x : CPolyG α) : ℕ :=
   else 0
 termination_by (cnormG x).length
 decreasing_by assumption
+
+variable [CFieldSpec α]
+
+/-- **`cValuationGWf` divides**: `toPolyG p ^ cValuationGWf p x ∣ toPolyG x`. Each recursive Wf
+step peels one exact `p` factor using the fuel-free exact-division theorem; terminal branches return the
+unit power. -/
+theorem toPolyG_pow_cValuationGWf_dvd (p x : CPolyG α) :
+    toPolyG p ^ cValuationGWf p x ∣ toPolyG x := by
+  induction x using cValuationGWf.induct p with
+  | case1 x hx =>
+      rw [cValuationGWf.eq_def, if_pos hx, pow_zero]
+      exact one_dvd _
+  | case2 x hx hp =>
+      rw [cValuationGWf.eq_def, if_neg hx, if_pos hp, pow_zero]
+      exact one_dvd _
+  | case3 x hx hp hdvd _xq hguard ih =>
+      rw [cValuationGWf.eq_def, if_neg hx, if_neg hp, if_pos hdvd, if_pos hguard]
+      have hpne : cnormG p ≠ [] := fun hpe => hp (by rw [cdegG, hpe]; rfl)
+      have hpx : toPolyG p ∣ toPolyG x := dvd_of_cdvdGWf p x hpne hdvd
+      have hid : toPolyG x = toPolyG (cdivWf x p) * toPolyG p :=
+        (toPolyG_cdivWf_exact x p hpne hpx).symm
+      rw [add_comm, pow_add, pow_one, hid]
+      exact mul_dvd_mul ih dvd_rfl
+  | case4 x hx hp hdvd _xq hguard =>
+      rw [cValuationGWf.eq_def, if_neg hx, if_neg hp, if_pos hdvd, if_neg hguard, pow_zero]
+      exact one_dvd _
+  | case5 x hx hp hdvd =>
+      rw [cValuationGWf.eq_def, if_neg hx, if_neg hp, if_neg hdvd, pow_zero]
+      exact one_dvd _
+
+/-- **`cValuationGWf` is sharp**: for nonconstant `p` and nonzero `x`, one more `p` factor than
+`cValuationGWf p x` does not divide `x`. The proof is Wf-native and uses `cdvdGWf`'s false-case
+converse at the terminal non-dividing branch. -/
+theorem cValuationGWf_sharp (p x : CPolyG α)
+    (hp : cdegG p ≠ 0) (hx0 : toPolyG x ≠ 0) :
+    ¬ toPolyG p ^ (cValuationGWf p x + 1) ∣ toPolyG x := by
+  have hpne : cnormG p ≠ [] := fun hpe => hp (by rw [cdegG, hpe]; rfl)
+  have hp0 : toPolyG p ≠ 0 := fun h => hpne (by rw [cnormG_eq_nil_iff]; exact h)
+  have hpdeg : 0 < (toPolyG p).natDegree := by
+    rw [← cdegG_eq_natDegree]
+    omega
+  revert hx0
+  induction x using cValuationGWf.induct p with
+  | case1 x hx =>
+      intro hx0
+      exact False.elim (hx0 ((cisZeroG_iff x).mp hx))
+  | case2 x hx hdeg =>
+      intro _hx0
+      exact False.elim (hp hdeg)
+  | case3 x hx hdeg hdvd _xq hguard ih =>
+      intro hx0
+      rw [cValuationGWf.eq_def, if_neg hx, if_neg hdeg, if_pos hdvd, if_pos hguard]
+      have hpx : toPolyG p ∣ toPolyG x := dvd_of_cdvdGWf p x hpne hdvd
+      have hid : toPolyG x = toPolyG (cdivWf x p) * toPolyG p :=
+        (toPolyG_cdivWf_exact x p hpne hpx).symm
+      have hq0 : toPolyG (cdivWf x p) ≠ 0 := by
+        intro h
+        apply hx0
+        rw [hid, h, zero_mul]
+      have hihq := ih hq0
+      intro hcontra
+      apply hihq
+      rw [hid, show 1 + cValuationGWf p (cdivWf x p) + 1 =
+          (cValuationGWf p (cdivWf x p) + 1) + 1 by ring, pow_succ] at hcontra
+      exact (mul_dvd_mul_iff_right hp0).mp hcontra
+  | case4 x hx hdeg hdvd _xq hguard =>
+      intro hx0
+      have hpx : toPolyG p ∣ toPolyG x := dvd_of_cdvdGWf p x hpne hdvd
+      have hid : toPolyG x = toPolyG (cdivWf x p) * toPolyG p :=
+        (toPolyG_cdivWf_exact x p hpne hpx).symm
+      have hq0 : toPolyG (cdivWf x p) ≠ 0 := by
+        intro h
+        apply hx0
+        rw [hid, h, zero_mul]
+      have hxne : cnormG x ≠ [] := fun he => hx0 (by rw [← toPolyG_cnormG, he, toPolyG_nil])
+      have hqne : cnormG (cdivWf x p) ≠ [] := fun he =>
+        hq0 (by rw [cnormG_eq_nil_iff] at he; exact he)
+      have hdegdrop : (toPolyG (cdivWf x p)).natDegree < (toPolyG x).natDegree := by
+        rw [hid, Polynomial.natDegree_mul hq0 hp0]
+        omega
+      have hlen : (cnormG (cdivWf x p) : List α).length < (cnormG x : List α).length := by
+        rw [length_cnormG_of_ne _ hqne, length_cnormG_of_ne _ hxne]
+        omega
+      exact False.elim (hguard hlen)
+  | case5 x hx hdeg hdvd =>
+      intro _hx0
+      have hfalse : cdvdGWf p x = false := Bool.eq_false_iff.mpr hdvd
+      rw [cValuationGWf.eq_def, if_neg hx, if_neg hdeg, if_neg hdvd, zero_add, pow_one]
+      exact not_dvd_of_cdvdGWf_false p x hpne hfalse
 
 end CPolyG
 

@@ -485,6 +485,18 @@ theorem dvd_of_cdvdGWf (q p : CPolyG α) (hq : cnormG q ≠ []) (h : cdvdGWf q p
   rw [hrem, add_zero] at heuclid
   exact ⟨toPolyG (cdivWf p q), by rw [heuclid]; ring⟩
 
+/-- **A false `cdvdGWf q p` refutes polynomial divisibility** `¬ toPolyG q ∣ toPolyG p` (no fuel
+hypothesis, nonzero divisor `cnormG q ≠ []`). This is the fuel-free converse used by Wf valuation
+sharpness: if semantic divisibility held, the fuel-free exact-remainder theorem would force
+`cdvdGWf q p = true`. -/
+theorem not_dvd_of_cdvdGWf_false (q p : CPolyG α) (hq : cnormG q ≠ [])
+    (h : cdvdGWf q p = false) : ¬ toPolyG q ∣ toPolyG p := by
+  intro hdvd
+  have hrem : toPolyG (cmodWf p q) = 0 := toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd
+  have htrue : cdvdGWf q p = true := (cdvdGWf_iff q p).mpr hrem
+  rw [htrue] at h
+  exact Bool.noConfusion h
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
