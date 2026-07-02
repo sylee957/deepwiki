@@ -521,6 +521,18 @@ theorem cRischDEGWf_some_imp_stages (Dt : CPolyG α) (fnum fden gnum gden ynum y
 
 end CPolyG
 
+section Gate
+
+variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
+
+/-- The fuel-free denominator-direct normality gate for tower RDE inputs. -/
+def cdenomNormalGateGWf (a : QFunNZG β) : Bool :=
+  CPolyG.cisZeroG (CPolyG.csubG
+    (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) a.1.2).1
+    a.1.2)
+
+end Gate
+
 /-! ## Part 4 — ★ `native_decide` smoke test: the headline `cRischDEGWf` computes fuel-free
 
 The deliverable: the generic fuel-free RDE oracle `cRischDEGWf` *runs in native code* over the tower. We solve

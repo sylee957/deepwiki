@@ -62,6 +62,23 @@ def cisCanonNormalizedCoreG (a : QFunNZG β) : Bool :=
 
 end Core
 
+section CoreWf
+
+variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
+
+/-- The fuel-free denominator-direct canonical-normality check. -/
+def cisCanonNormalizedCoreGWf (a : QFunNZG β) : Bool :=
+  cdenomNormalGateGWf a
+
+/-- The fuel-free wrapper canonical-normality check on the reduced denominator. -/
+def cisCanonNormalizedGWf (ftilde : QFunNZG β) : Bool :=
+  CPolyG.cisZeroG (CPolyG.csubG
+    (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β)
+      (QFunNZG.reduceDen ftilde)).1
+    (QFunNZG.reduceDen ftilde))
+
+end CoreWf
+
 /-! ## ★ The keystone bridge (by `rfl`): the core check on `qReduce x` is the wrapper check on `x`
 
 `cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x`. The wrapper's `cisCanonNormalizedG x` is, by
@@ -82,12 +99,48 @@ NO scalar/normalization gap. -/
 theorem cisCanonNormalizedCoreG_qReduce (x : QFunNZG β) :
     cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x := rfl
 
+omit [CFracGcdCore β] in
+/-- The fuel-free core check on `qReduce x` is the fuel-free wrapper check on `x`. -/
+theorem cisCanonNormalizedCoreGWf_qReduce [CFracGcdCoreWf β] (x : QFunNZG β) :
+    cisCanonNormalizedCoreGWf (qReduce x) = cisCanonNormalizedGWf x := rfl
+
 -- ★ The re-pin reconciliation: the gated core's denominator-direct §6.1 check on the reduced input `qReduce x`
 -- IS the wrapper's §6.1 check on the unreduced input `x`. Definitional (`rfl`); the keystone the production
 -- RDE re-pin's raw-solve transfer consumes.
 example (x : QFunNZG β) : cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x := rfl
 
+example [CFracGcdCoreWf β] (x : QFunNZG β) :
+    cisCanonNormalizedCoreGWf (qReduce x) = cisCanonNormalizedGWf x := rfl
+
 end Bridge
+
+/-! ## Fuel-free canonical-normality propositions
+
+The Wf propositions mirror the existing fueled normality gates, but read the normal part through
+`cSplitFactorFastGWf`. They are kept separate until the remaining correspondence lemmas eliminate the old
+fueled bridge assumptions from the public soundness API. -/
+
+section NormalityWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
+
+/-- The fuel-free weak-normalization guarantee for a rational function denominator. -/
+def IsWeaklyNormalizedNormWf (h : QFunNZG β) : Prop :=
+  toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) h.1.2).1
+    = toPolyG h.1.2
+
+/-- The fuel-free canonicalized weak-normalization guarantee. -/
+def IsCanonNormalizedWf (f q' : QFunNZG β) : Prop :=
+  IsWeaklyNormalizedNormWf (qReduce (weakNormalizedF f q'))
+
+/-- The fuel-free Boolean check decides `IsCanonNormalizedWf`. -/
+theorem cisCanonNormalizedGWf_iff (f q' : QFunNZG β) :
+    cisCanonNormalizedGWf (weakNormalizedF f q') = true ↔ IsCanonNormalizedWf f q' := by
+  unfold cisCanonNormalizedGWf IsCanonNormalizedWf IsWeaklyNormalizedNormWf
+  rw [CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero]
+  rfl
+
+end NormalityWf
 
 /-! ## The full re-reduce invariance, isolated to `reduceDen`-idempotency-at-lowest-terms
 
