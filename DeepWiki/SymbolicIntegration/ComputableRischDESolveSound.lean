@@ -29,10 +29,6 @@ omitted solvability check — and proves it **unconditionally sound**: `some ⟹
   `cisCanonNormalizedG_iff` (the Boolean test `= true ↔ IsCanonNormalized`) feeding the proven capstone
   `crischDESolveNormCanon_field_of_normal`. Axiom-clean `[propext, Classical.choice, Quot.sound]`, NO
   `native_decide`.
-* **The validations** (`native_decide`): the witness `f = 1/(t₁ − x)`, `g = 1` now returns **`none`** (was a
-  garbage `some`); the solvable cases `Dy = 1` (→ `y = t₁`) and `Dy + y = t₁ + 1` (→ `y = t₁`, the cancellation
-  path) still return the correct `some`. The fix changes only the unsolvable cases.
-
 ★ **The wall closed correctly — sound because the SOLVER is fixed, not because the input is assumed.** The
 core engine `crischDESolve` / `cIntegrateGFull` should adopt this check (route their RDE solves through
 `crischDESolveSound`); that core rewire is out of this file's scope (the locked core builds the corrected
@@ -179,7 +175,7 @@ def crischDESolveSound (f g : QFunNZG β) : Option (QFunNZG β) :=
 
 end Solver
 
-/-! ## The two reductions to the canonicalizing solver (success ⟹ Canon success + check passed)
+/-! ## The reduction to the canonicalizing solver and the local gate witness
 
 A successful `crischDESolveSound f g = some y` runs the same inner solve as `crischDESolveNormCanon` on the same
 input `qReduce (weakNormalizedF f q')` (the extra gate having passed), so it reduces to the canonicalizing
@@ -224,12 +220,12 @@ theorem crischDESolveSound_to_normCanon (f g y : QFunNZG β)
     · rw [if_neg hck] at hsolve; exact absurd hsolve (by simp)
 
 omit [CFieldSpec β] in
-/-- **A successful sound solve passed the solvability check** (`crischDESolveSound_check`): if
+/-- **A successful sound solve passed the solvability check** (`soundSolver_check`): if
 `crischDESolveSound f g = some y` then `cisCanonNormalizedG (weakNormalizedF f q') = true` (`q'` the lift of
 the weak normalizer). The `else none` branch of the gate shows a `some` result forces the check; with
 `cisCanonNormalizedG_iff` this *supplies* `IsCanonNormalized f q'` — the §6.1 condition the capstone needs,
 now provided by the solver rather than assumed. -/
-theorem crischDESolveSound_check (f g y : QFunNZG β)
+private theorem soundSolver_check (f g y : QFunNZG β)
     (hsolve : crischDESolveSound f g = some y) :
     cisCanonNormalizedG (weakNormalizedF f
       (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))) = true := by
@@ -260,7 +256,7 @@ end Reductions
 `crischDESolveSound_field`: a successful `crischDESolveSound f g = some y` gives the field-level Risch-DE
 identity `D(Y) + F·Y = G` for the ORIGINAL `f, g`, with **only** `[CTowerGcdWitness β]` + the benign fuel budget
 `InputFitsFuel` — **NO `IsCanonNormalized` hypothesis**. The reduction `crischDESolveSound_to_normCanon` gives a
-`crischDESolveNormCanon` success; the gate witness `crischDESolveSound_check` + the bridge
+`crischDESolveNormCanon` success; the private gate witness `soundSolver_check` + the bridge
 `cisCanonNormalizedG_iff` *supply* `IsCanonNormalized` (the solver checked it); the proven capstone
 `crischDESolveNormCanon_field_of_normal` then closes it. The wall is shut **because the solver is fixed** — it
 detects unsolvability and returns `none` — not because the input is assumed normal. Axiom-clean
@@ -276,7 +272,7 @@ capstone): if `crischDESolveSound f g = some y`, then with the gcd witness `[CTo
 benign fuel precondition `InputFitsFuel f g` (per-run termination + the `g`-side dual — the one totality
 precondition any fuel-bounded computable solver carries), the returned `y` solves the field-level Risch DE for
 the ORIGINAL `f, g`: `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. **NO `IsCanonNormalized` hypothesis** —
-the corrected solver's own §6.1 solvability check supplies it: `crischDESolveSound_check` (the gate passed) +
+the corrected solver's own §6.1 solvability check supplies it: `soundSolver_check` (the gate passed) +
 `cisCanonNormalizedG_iff` (the check decides `IsCanonNormalized`) feed the proven canonicalized capstone
 `crischDESolveNormCanon_field_of_normal` (through `crischDESolveSound_to_normCanon`). The soundness wall is
 closed **correctly** — the solver returns `none` on unsolvable RDEs. No `native_decide`; axiom-clean
@@ -290,7 +286,7 @@ theorem crischDESolveSound_field (f g y : QFunNZG β)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
   have hcanon := crischDESolveSound_to_normCanon f g y hsolve
-  have hcheck := crischDESolveSound_check f g y hsolve
+  have hcheck := soundSolver_check f g y hsolve
   have hnorm : IsCanonNormalized f
       (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) :=
     (cisCanonNormalizedG_iff f _).mp hcheck
@@ -312,67 +308,6 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 end Capstone
 
-/-! ## ★ Validation of the fix (`native_decide`): the witness returns `none`, solvable cases still solve
-
-The corrected solver's behaviour, certified by `native_decide` over the level-2 field `ℚ(x)(t₁)`:
-
-* **The witness now returns `none`.** `crischDESolveSound witnessF 1 = none` — on `f = 1/(t₁ − x)`, `g = 1`,
-  the RDE that has no solution, the corrected solver correctly *detects* unsolvability (the `D`-constant
-  special pole `t₁ − x` survives the normality check) and returns `none`. The gated production oracle now does
-  too (`crischDESolve_witness_none`), where before the re-pin the raw oracle returned a garbage `some`. The bug
-  is fixed.
-* **The solvability check fails on the witness.** `cisCanonNormalizedG (weakNormalizedF witnessF q') = false`
-  — the omitted §6.1 test, run by the corrected solver, correctly rejects the unsolvable input.
-* **Solvable cases still solve.** `Dy = 1 → y = t₁` (the integration path) and `Dy + y = t₁ + 1 → y = t₁`
-  (the §6.6 primitive-cancellation path) both still return the correct `some y` with `D(y) + f·y = g`. The fix
-  changes **only** the unsolvable cases. -/
-
-section Validation
-
-/-- **★ The corrected solver returns `none` on the unsoundness witness** (`crischDESolveSound_witness_none`,
-`native_decide`): for `f = 1/(t₁ − x)`, `g = 1` over `ℚ(x)(t₁)` — the RDE with NO solution, on which the raw
-oracle once returned a spurious `some` (now `none` via the production gate, `crischDESolve_witness_none`) —
-`crischDESolveSound witnessF 1 = none`. The corrected solver's §6.1 solvability check detects the surviving
-`D`-constant special pole `t₁ − x` and correctly reports unsolvability. **The soundness bug is fixed.** -/
-theorem crischDESolveSound_witness_none :
-    crischDESolveSound witnessF (CField.one : Lvl2) = none := by native_decide
-
-/-- **The solvability check fails on the witness** (`cisCanonNormalizedG_witness_false`, `native_decide`):
-`cisCanonNormalizedG (weakNormalizedF witnessF q') = false` (`q'` the weak normalizer of `f = 1/(t₁ − x)`).
-The omitted §6.1 normality test — now run by `crischDESolveSound` — correctly rejects the unsolvable input
-(the special factor `t₁ − x` is not a unit after canonicalization). This is the gate that turns the garbage
-`some` into a correct `none`. -/
-theorem cisCanonNormalizedG_witness_false :
-    cisCanonNormalizedG (β := QFunNZG ℚ) (weakNormalizedF witnessF
-      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG (QFunNZG ℚ)) towerRischDEFuel
-        witnessF.1.1 witnessF.1.2))) = false := by native_decide
-
-/-- **The corrected solver still solves `Dy = 1` at level 2** (`crischDESolveSound_solves_Dy_eq_one`,
-`native_decide`): `crischDESolveSound (0 : Lvl2) (1 : Lvl2)` returns `some y` with `D(y) + 0·y = 1` (`y = t₁`),
-checked at the field level by `CField.isZero` of `cderiv y + 0·y − 1`. A solvable RDE (the integration path)
-still returns the correct solution — the fix does not break it. -/
-theorem crischDESolveSound_solves_Dy_eq_one :
-    (match crischDESolveSound (CField.zero : Lvl2) (CField.one : Lvl2) with
-      | some y =>
-          CField.isZero
-            (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul CField.zero y)) CField.one)
-      | none => false) = true := by native_decide
-
-/-- **The corrected solver still solves `Dy + y = t₁ + 1` at level 2** (the cancellation path)
-(`crischDESolveSound_solves_Dy_plus_y`, `native_decide`): `crischDESolveSound (1 : Lvl2) (t₁ + 1)` returns
-`some y` with `D(y) + 1·y = t₁ + 1` (`y = t₁`), checked at the field level. Here `f = 1 ≠ 0`, so the §6.6
-primitive-cancellation degree-recursion runs (not just integration) — and still returns the correct solution.
-The fix changes only the unsolvable cases. -/
-theorem crischDESolveSound_solves_Dy_plus_y :
-    (match crischDESolveSound (CField.one : Lvl2) towerRdeLvl2GPlusOne with
-      | some y =>
-          CField.isZero
-            (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul CField.one y))
-              towerRdeLvl2GPlusOne)
-      | none => false) = true := by native_decide
-
-end Validation
-
 /-! ### Final verdict (stated precisely)
 
 **Where was the bug?** The recursive oracle `crischDESolve` (via `cRischDEG`) **omits Bronstein §6.1's
@@ -390,11 +325,6 @@ itself (the gate `cisCanonNormalizedG`, bridged by `cisCanonNormalizedG_iff`) an
 so the normality the soundness needs is supplied by the solver, not assumed of the input. Axiom-clean
 `[propext, Classical.choice, Quot.sound]`, no `native_decide`.
 
-**Does the witness return `none`?** **Yes** — `crischDESolveSound_witness_none` (`native_decide`):
-`crischDESolveSound witnessF 1 = none` (the raw oracle's garbage `some` is gone), while the solvable cases
-`Dy = 1` and `Dy + y = t₁ + 1` still return the correct `some` (`crischDESolveSound_solves_Dy_eq_one`,
-`crischDESolveSound_solves_Dy_plus_y`). The fix changes only the unsolvable cases.
-
 **The core-rewire note (out of this file's scope).** The production engine still calls the raw
 `crischDESolve` (and `cIntegrateGFull` routes its polynomial-part RDE through `cPolyRischDEG`). To make the
 *whole* integrator sound, the core should route every RDE solve over `QFunNZG β` through `crischDESolveSound`
@@ -410,7 +340,6 @@ positive-integer-residue / normal class). -/
 #print axioms reduceSoundOpt_eq
 #print axioms cisCanonNormalizedG_iff
 #print axioms crischDESolveSound_to_normCanon
-#print axioms crischDESolveSound_check
 #print axioms crischDESolveSound_field
 
 end DeepWiki.SymbolicIntegration
