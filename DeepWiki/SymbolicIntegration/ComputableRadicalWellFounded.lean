@@ -187,21 +187,14 @@ helper directly. -/
 /-! ## Part 5 — `native_decide` validation: fuel-free radical iterates
 
 The fuel-free Case-1, Case-2, and Case-3 iterates are validated directly by differentiating their Wf outputs.
-Private `native_decide` regression checks keep the old benchmark runs aligned without exporting fueled
-compatibility facts as API. The whole arc is `[CField α]`-only, nothing noncomputable reaches the native
-compiler. -/
+The whole arc is `[CField α]`-only, nothing noncomputable reaches the native compiler. -/
 
 open RadElem CPolyG
 
 /-- **The fuel-free Case-1 run** `radIntegrateCase1Wf cderivG V f g 3 C` on
-`∫ 1/((x−1)³√x)` — the no-fuel companion of `sqrtxRun`. -/
+`∫ 1/((x−1)³√x)`. -/
 def sqrtxRunWf : CPolyG ℚ × CPolyG ℚ :=
   radIntegrateCase1Wf cderivG sqrtxV sqrtxF sqrtxG 3 sqrtxC
-
-/-- **The fuel-free Case-1 iterate reproduces `sqrtxRun`** (`native_decide`): the Wf descent on
-`∫ 1/((x−1)³√x)` yields exactly the validated `(Crem, vNum)` of the original run. -/
-private theorem radIntegrateCase1Wf_eq_sqrtxRun :
-    sqrtxRunWf = sqrtxRun := by native_decide
 
 /-- The fuel-free rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
 def sqrtxVliftWf : RadElem (QFunNZG ℚ) :=
@@ -218,14 +211,9 @@ rational part equals the rational part of the integrand after subtracting the `k
 theorem sqrtxDriverWf_integrates :
     radIsZero (radSub (radDeriv 2 sqrtxFqx sqrtxVliftWf) sqrtxRatLiftWf) = true := by native_decide
 
-/-- **The fuel-free Case-1 run** on `∫ 1/((x−1)³√(x³+1))` — the no-fuel companion of `cubeRun`. -/
+/-- **The fuel-free Case-1 run** on `∫ 1/((x−1)³√(x³+1))`. -/
 def cubeRunWf : CPolyG ℚ × CPolyG ℚ :=
   radIntegrateCase1Wf cderivG cubeV cubeF cubeG 3 cubeC
-
-/-- **The fuel-free Case-1 iterate reproduces `cubeRun`** (`native_decide`): the Wf descent on the
-headline radicand `y² = x³+1` yields exactly the validated `(Crem, vNum)` of the original run. -/
-private theorem radIntegrateCase1Wf_eq_cubeRun :
-    cubeRunWf = cubeRun := by native_decide
 
 /-- The fuel-free rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
 def cubeVliftWf : RadElem (QFunNZG ℚ) :=
@@ -241,19 +229,6 @@ def cubeRatLiftWf : RadElem (QFunNZG ℚ) :=
 rational part equals the rational part of the integrand after subtracting the `k = 1` residual. -/
 theorem cubeDriverWf_integrates :
     radIsZero (radSub (radDeriv 2 cubeFqx cubeVliftWf) cubeRatLiftWf) = true := by native_decide
-
-/-- **The fuel-free Case-2 iterate reproduces the validated run** `radIntegrateCase2Wf W ρ 3 C =
-radIntegrateCase2 W ρ 3 C` on `∫ 1/(x³·√(x³−x))` (`native_decide`). The fuel-free descent (recursing on the
-multiplicity `k = 3 → 2 → 1`) yields exactly the `(Crem, vNum)` of `c2itRun`, so the `radDeriv`-validated
-identity `c2itDriver_integrates` holds verbatim of the fuel-free output. -/
-private theorem radIntegrateCase2Wf_eq_c2itRun :
-    radIntegrateCase2Wf c2itW c2itRho 3 c2itC = c2itRun := by native_decide
-
-/-- **The fuel-free Case-3 iterate reproduces the validated run** `radIntegrateCase3Wf cderivG ρ g C =
-radIntegrateCase3 cderivG ρ g C` on `∫ x⁴/√(x³+1)` (`native_decide`). The fuel-free degree-lowering yields
-exactly the `(Crem, vNum)` of `c3itRun`, so `c3itDriver_integrates` holds verbatim of the fuel-free output. -/
-private theorem radIntegrateCase3Wf_eq_c3itRun :
-    radIntegrateCase3Wf cderivG c3itRho c3itG c3itC = c3itRun := by native_decide
 
 /-! ## Part 6 — the FLAT fuel-free top-level: `radIntegrateRationalWf` / `cIntegrateAlgebraicWf`
 
@@ -339,16 +314,6 @@ def mcRatLiftWf : RadElem (QFunNZG ℚ) :=
     [CField.zero, CField.sub
       (CField.div (qxOfNum mcWWf.2.2.1) (qxOfNum (cmulG (cpowG mcWWf.1 mcWWf.2.1) mcRho)))
       (CField.div (qxOfNum mcWWf.2.2.2.2) (qxOfNum (cmulG mcWWf.1 mcRho)))]
-
-/-- **The fuel-free assembled rational part agrees with the old fueled benchmark** (`native_decide`):
-`mcVliftWf` and `mcVlift` differ by zero in the radical extension. -/
-private theorem mcVliftWf_eq_mcVlift :
-    radIsZero (radSub mcVliftWf mcVlift) = true := by native_decide
-
-/-- **The fuel-free rational-part target agrees with the old fueled benchmark** (`native_decide`):
-`mcRatLiftWf` and `mcRatLift` differ by zero in the radical extension. -/
-private theorem mcRatLiftWf_eq_mcRatLift :
-    radIsZero (radSub mcRatLiftWf mcRatLift) = true := by native_decide
 
 /-- **The fuel-free multi-case dispatch integrates `∫ 1/((x−1)²x²·√x)`** (`native_decide`): `radDeriv` of
 the Wf-assembled rational part equals the Wf rational part of the integrand after subtracting the two
