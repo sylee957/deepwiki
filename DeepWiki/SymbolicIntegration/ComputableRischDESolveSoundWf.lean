@@ -15,8 +15,8 @@ regular runs.
 This file combines the two: the **fuel-free, SOUND** solver `crischDESolveSoundWf` — the same §6.1-gated
 pipeline as `crischDESolveSound`, but with the inner solve routed through the fuel-free `cRischDEGWf` (over
 `CPolyG β`, re-lifted to `QFunNZG β` with the same `cisZeroG`-guard the tower instance uses) instead of the
-fuel `cRischDEG`. This is the intended **fuel-free sound entry point** the production engine will be re-pinned
-through (a separate coordinated step).
+fuel `cRischDEG`. This is the public **fuel-free sound entry point** used by the Wf decision-procedure and
+tower-completeness frontiers.
 
 * **`crischDESolveSoundWf f g`** — the §6.1-gated solver with the **fuel-free** weak normalizer
   `cWeakNormalizerGWf [1] …`, Wf normality gate `cisCanonNormalizedGWf`, and inner solve
@@ -68,6 +68,25 @@ def crischDERawSolveWf (ftilde gtilde : QFunNZG β) : Option (QFunNZG β) :=
   | none => none
   | some (ynum, yden) =>
     if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
+
+omit [CFieldSpec β] [CFieldDomain β] [CFracGcdCore β] in
+/-- `crischDERawSolveWf` returns `some y` exactly when `cRischDEGWf [1]` returns a pair with nonzero
+denominator and `y` is its `QFunNZG` lift. -/
+theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZG β) :
+    crischDERawSolveWf ftilde gtilde = some y ↔
+      ∃ ynum yden, ∃ hden : CPolyG.cisZeroG yden = false,
+        CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+            = some (ynum, yden) ∧
+          ⟨(ynum, yden), hden⟩ = y := by
+  cases h :
+      CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
+  | none =>
+      simp [crischDERawSolveWf, h]
+  | some ypair =>
+      rcases ypair with ⟨ynum, yden⟩
+      by_cases hden : CPolyG.cisZeroG yden = false
+      · simp [crischDERawSolveWf, h, hden]
+      · simp [crischDERawSolveWf, h, hden]
 
 /-- **★ The FUEL-FREE, genuinely SOUND recursive Risch-DE solver** `crischDESolveSoundWf f g` over
 `QFunNZG β`: `crischDESolveSound` with the inner RDE solve routed through the **fuel-free** `cRischDEGWf`
@@ -202,6 +221,7 @@ end Validation
 /-! ### Axiom audit (the capstone is axiom-clean, NO `native_decide`; the validations are `native_decide`) -/
 
 #print axioms crischDESolveSoundWf_field
+#print axioms crischDERawSolveWf_some_iff
 
 /-! ### Final verdict (Task 5)
 
@@ -219,9 +239,7 @@ end Validation
   (`crischDESolveSoundWf_witness_none`), and the solvable cases `Dy = 1` / `Dy + y = t₁ + 1` return the
   correct `some y` solving the RDE (`crischDESolveSoundWf_solves_*`) — all `native_decide`, fuel-free.
 
-★ **This is the intended fuel-free sound entry point for the production re-pin** — routing the engine's RDE
-solves through `crischDESolveSoundWf` (sound + fuel-free) is a separate coordinated step (it touches the
-locked core), out of this file's scope; this file provides the verified fuel-free sound solver to route
-through. -/
+★ **This is the public fuel-free sound entry point** for the Wf RDE decision-procedure and tower-completeness
+frontiers. -/
 
 end DeepWiki.SymbolicIntegration

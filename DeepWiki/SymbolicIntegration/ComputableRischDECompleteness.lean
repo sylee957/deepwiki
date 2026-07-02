@@ -383,9 +383,8 @@ theorem crischDERawSolveWf_isSome_of_cRischDEGWf_some_den (ftilde gtilde : QFunN
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
   obtain ⟨⟨ynum, yden⟩, hp⟩ := Option.isSome_iff_exists.mp hsome
   refine ⟨⟨(ynum, yden), hden ynum yden hp⟩, ?_⟩
-  rw [crischDERawSolveWf, hp]
-  simp only []
-  rw [dif_pos (hden ynum yden hp)]
+  exact (crischDERawSolveWf_some_iff ftilde gtilde _).mpr
+    ⟨ynum, yden, hden ynum yden hp, hp, rfl⟩
 
 omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
 /-- **Fuel-free staged raw solver bridge**: Wf inner stage successes plus the returned-denominator guard imply
