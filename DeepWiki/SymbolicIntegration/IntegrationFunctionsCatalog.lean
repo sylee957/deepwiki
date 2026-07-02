@@ -3,7 +3,6 @@ import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
 import DeepWiki.SymbolicIntegration.ComputableHyperexpFullSoundness
 import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.ComputableUnifiedFuelFree
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveSound
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveSoundWf
 import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
 import DeepWiki.SymbolicIntegration.ComputableRischDECompleteness
@@ -61,13 +60,11 @@ only; it states no new mathematics.
 
 ## The Risch differential-equation solver (Bronstein §6, the RDE oracle)
 
-* `crischDESolveSound` — the corrected recursive RDE solver `D(Y) + F·Y = G`; checks §6.1 solvability itself.
-  Soundness (unconditional, no `IsCanonNormalized` hypothesis): `crischDESolveSound_field`. The fueled
-  completeness residual remains as a lower-level bridge, but the cataloged decision-procedure capstone is now
-  the Wf solver below.
-* `crischDESolveSoundWf` — the FUEL-FREE RDE solver. Soundness: `crischDESolveSoundWf_field`.
-  Completeness/decision procedure: `crischDESolveSoundWf_isDecisionProcedure`, modulo the Wf-native
-  `RischDEDecisionProcedureFrontierWf` plus the Wf/fueled agreement hypotheses needed for soundness.
+* `crischDESolveSoundWf` — the cataloged FUEL-FREE RDE solver for `D(Y) + F·Y = G`; checks §6.1 solvability
+  itself and routes the inner §6 solve through `cRischDEGWf`. Soundness: `crischDESolveSoundWf_field`, under
+  the current Wf/fueled transfer hypotheses. Completeness/decision procedure:
+  `crischDESolveSoundWf_isDecisionProcedure`, modulo the Wf-native `RischDEDecisionProcedureFrontierWf`.
+  The older fueled `crischDESolveSound` remains only as the internal soundness bridge used by the Wf theorem.
 
 ## Algebraic integrators (Bronstein vol. II / Trager, over `RadExt` or a general plane curve)
 
@@ -140,9 +137,6 @@ theorem is renamed or removed. Grouped by engine. (`#check` emits info only — 
 #check @field_identity_of_checkIdentityG
 
 /-! ## Verified references — the Risch differential-equation solver -/
-
--- `crischDESolveSound`: fueled soundness remains available.
-#check @crischDESolveSound_field
 
 -- `crischDESolveSoundWf`: the fuel-free sound RDE solver and its Wf-native decision wrapper.
 #check @crischDESolveSoundWf_field
