@@ -188,6 +188,112 @@ theorem crischDESolveSound_some_of_stages (f g ytilde : QFunNZG β)
 
 end Structural
 
+/-! ## Fuel-free structural `some`/`none`-characterization
+
+The Wf solver has the same outer control flow as the fueled sound solver, but its two fuel-sensitive stage
+calls are the fuel-free weak normalizer `cWeakNormalizerGWf` and the fuel-free inner solve
+`crischDERawSolveWf`. These lemmas give the Wf entry point its own structural success API, so later
+completeness refactors can target `crischDESolveSoundWf` directly instead of rewriting through the fueled
+solver first. -/
+
+section StructuralWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+  [CFracGcdCoreWf β] [CRischField β]
+
+/-- **The fuel-free sound solver succeeds iff its three Wf stage tests succeed**
+(`crischDESolveSoundWf_some_iff`): `crischDESolveSoundWf f g = some y` iff the fuel-free weak normalizer
+is nonzero, the §6.1 canon-normality gate passes on the weak-normalized input, and the fuel-free inner solve
+`crischDERawSolveWf` succeeds on the reduced pair, with the returned value transformed back by `q⁻¹`. -/
+theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
+    crischDESolveSoundWf f g = some y ↔
+      (CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
+          = false
+        ∧ cisCanonNormalizedG (weakNormalizedF f
+            (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+          = true
+        ∧ ∃ ytilde : QFunNZG β,
+            crischDERawSolveWf
+                (qReduce (weakNormalizedF f
+                  (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+                (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+              = some ytilde
+              ∧ y = qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β)
+                  f.1.1 f.1.2)))) := by
+  set q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
+  set q' : QFunNZG β := qOfPolyNZG q with hq'
+  set ftilde : QFunNZG β := weakNormalizedF f q' with hft
+  rw [show crischDESolveSoundWf f g
+      = (if CPolyG.cisZeroG q then none
+         else if cisCanonNormalizedG ftilde then
+                match reduceSoundOpt ftilde with
+                | none => none
+                | some ftildeR =>
+                  match crischDERawSolveWf ftildeR (qmulNZG q' g) with
+                  | none => none
+                  | some ytilde => some (qmulNZG ytilde (qinvNZG q'))
+              else none) from rfl]
+  by_cases hqz : CPolyG.cisZeroG q = true
+  · rw [if_pos hqz]
+    simp only [hqz, Bool.true_eq_false, false_and, iff_false]
+    intro h; exact absurd h (by simp)
+  · rw [if_neg hqz]
+    rw [Bool.not_eq_true] at hqz
+    by_cases hck : cisCanonNormalizedG ftilde = true
+    · rw [if_pos hck, reduceSoundOpt_eq]
+      rcases hinner : crischDERawSolveWf (qReduce ftilde) (qmulNZG q' g) with _ | ytilde
+      · simp only [hinner, hqz, hck, true_and]
+        constructor
+        · intro h; exact absurd h (by simp)
+        · rintro ⟨yt, hyt, _⟩; exact absurd hyt (by simp)
+      · simp only [hinner, hqz, hck, true_and, Option.some.injEq]
+        constructor
+        · intro h; exact ⟨ytilde, rfl, h.symm⟩
+        · rintro ⟨yt, hyt, hy⟩; rw [hy, hyt]
+    · rw [if_neg hck]
+      rw [Bool.not_eq_true] at hck
+      simp only [hck, Bool.false_eq_true, and_false, false_and, iff_false]
+      intro h; exact absurd h (by simp)
+
+/-- **The three Wf stage tests succeed ⟹ the fuel-free sound solver succeeds**
+(`crischDESolveSoundWf_some_of_stages`): if the Wf weak normalizer is nonzero, the §6.1 gate passes, and
+`crischDERawSolveWf` returns `some ỹ`, then `crischDESolveSoundWf f g = some (ỹ/q')`. -/
+theorem crischDESolveSoundWf_some_of_stages (f g ytilde : QFunNZG β)
+    (hq : CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
+        = false)
+    (hck : cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+        = true)
+    (hinner : crischDERawSolveWf
+        (qReduce (weakNormalizedF f
+          (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+        (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+        = some ytilde) :
+    crischDESolveSoundWf f g
+      = some (qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β)
+          f.1.1 f.1.2)))) :=
+  (crischDESolveSoundWf_some_iff f g _).mpr ⟨hq, hck, ytilde, hinner, rfl⟩
+
+/-! ### Restatement against the intended wording (anonymous `example`) -/
+
+example (f g ytilde : QFunNZG β)
+    (hq : CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
+        = false)
+    (hck : cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+        = true)
+    (hinner : crischDERawSolveWf
+        (qReduce (weakNormalizedF f
+          (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+        (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+        = some ytilde) :
+    crischDESolveSoundWf f g
+      = some (qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β)
+          f.1.1 f.1.2)))) :=
+  crischDESolveSoundWf_some_of_stages f g ytilde hq hck hinner
+
+end StructuralWf
+
 /-! ## The base-field completeness over the constants `ℚ` (decidably complete, axiom-clean)
 
 The tower recursion bottoms at `CRischField ℚ` (the constant field, `D = 0`), where `crischDESolve b g`
