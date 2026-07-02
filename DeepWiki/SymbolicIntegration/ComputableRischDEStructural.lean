@@ -455,9 +455,10 @@ solves the *original* `a₀·D(R) + b₀·R = c₀`. By `specialDenominatorSubst
 `a₀·D(Q·pᵏ) + b₀·(Q·pᵏ) = (a₀·D(Q) + b₀·Q + k·a₀·E·Q)·pᵏ` (`E = Dp/p = η ∈ k` for hyperexp), so the
 substitution lands on `a₀·D(R) + b₀·R = c₀` **iff** the reduced obligation
 `a₀·D(Q) + b₀·Q + k·a₀·E·Q = c₀/pᵏ` holds — and **that** is exactly the `ν_p`-exponent bookkeeping
-(`n_b = ν_p(b₀)`, `n_c = ν_p(c₀)`, the `N`-shift) whose carrier-level correctness (`cValuationG`
-correctness, the special-part self-derivative divisibility `p ∣ Dp`) is **not yet proven** — the sole
-remaining §6.2 obstruction. We therefore isolate that obligation as the single explicit hypothesis
+(`n_b = ν_p(b₀)`, `n_c = ν_p(c₀)`, the `N`-shift). The Wf polynomial valuation facts
+(`toPolyG_pow_cValuationGWf_dvd` / `cValuationGWf_sharp`) exist; what is not assembled here is the fueled
+special-denominator reconstruction bookkeeping plus the special-part self-derivative divisibility `p ∣ Dp`.
+This is the remaining §6.2 obstruction. We therefore isolate that obligation as the single explicit hypothesis
 `hspecialReduced : a₀·D(R) + b₀·R = c₀` (`R = ynum = Q·h₁`, in the exact form
 `cRdeNormalDenominatorG_cleared_lift_gen` consumes) and discharge **everything else** through the shared
 normal-denominator spine. The cancellation poly-RDE soundness now has the fuel-free field-level form
@@ -470,8 +471,8 @@ omit [CRischField α] in
 the non-primitive (hyperexponential `cdegG Dt = 1`, hypertangent `cdegG Dt = 2`) analogue of the primitive
 `rdeClearedIdentity_of_polyRDEIdentity`, stated with the general special-denominator reconstruction
 `ynum = (α'·v+β)·h₁` (`h₁ = pᵏ`, NOT collapsed to `[1]` as in the primitive case). It takes the §6.2
-special-denominator substitution correctness `a₀·D(ynum) + b₀·ynum = c₀` — the exact fact the unproven
-`cValuationG`-correctness would discharge (by `specialDenominatorSubst_expand`, equivalent to the
+special-denominator substitution correctness `a₀·D(ynum) + b₀·ynum = c₀` — the exact reconstruction fact
+the §6.2 exponent bookkeeping should discharge (by `specialDenominatorSubst_expand`, equivalent to the
 `ν_p`-exponent reduced obligation `a₀·D(Q) + b₀·Q + k·a₀·E·Q = c₀/pᵏ`) — as the single explicit hypothesis
 `hspecialReduced`, and lifts it through the shared normal-denominator spine
 `cRdeNormalDenominatorG_cleared_lift_gen` to the full cleared identity
@@ -506,7 +507,7 @@ theorem cRischDEG_rdeCleared_gen_hyperexp (Dt : CPolyG α) (fuel : ℕ)
   exact cRdeNormalDenominatorG_cleared_lift_gen Dt fuel fnum fden gnum gden a0 b0 c0 h0 ynum
     hnorm hdn hfden0 hgden0 hdvdB hdvdC hspecialReduced
 
-/-! ### ★ Discharging `hspecialReduced` in the `negn = 0` sub-regime (the `cValuationG`-keystone payoff)
+/-! ### ★ Discharging `hspecialReduced` in the `negn = 0` sub-regime (the valuation-bookkeeping payoff)
 
 The §6.2 obligation `hspecialReduced` (`a₀·D(ynum) + b₀·ynum = c₀`, `ynum = Q·h₁`) is **discharged** — no
 longer assumed — in the validated `negn = 0` sub-regime (`CSpecialDenomNoClearG`, i.e. `ν_p(c₀) ≥ min(0,
@@ -514,8 +515,9 @@ longer assumed — in the validated `negn = 0` sub-regime (`CSpecialDenomNoClear
 `cRdeSpecialDenominatorG_h1_eq_one_of_noClear`) and the cleared coefficients factor as `(ā,b̄,c̄) = (a₀·pᴺ,
 b₀·pᴺ, c₀·pᴺ)` (`toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear`, the `ν_p`-correction term vanishing since
 `n = 0`). The engine's SPDE-on-cleared identity `ā·D(Q) + b̄·Q = c̄` then factors as `(a₀·D(Q) + b₀·Q)·pᴺ =
-c₀·pᴺ`; cancelling the nonzero `pᴺ` (the `cValuationG`-keystone guarantees `p ≠ 0` and the divisibility/sharpness
-underpin that this sub-regime is the genuine no-clearing one) yields exactly `hspecialReduced`.
+c₀·pᴺ`; cancelling the nonzero `pᴺ` (the valuation bookkeeping guarantees `p ≠ 0` and the
+divisibility/sharpness underpin that this sub-regime is the genuine no-clearing one) yields exactly
+`hspecialReduced`.
 
 ★ **The general `negn > 0` case does NOT close with this reconstruction** (`ynum = Q·pⁿᵉᵍⁿ`, `h₁` in the
 *numerator*): by `specialDenominatorSubst_expand`, `hspecialReduced`'s LHS is `(a₀·D(Q) + b₀·Q +
@@ -525,7 +527,7 @@ gives, after cancelling `pᴺ`, `a₀·D(Q) + b₀·Q − negn·a₀·E·Q = c�
 *reciprocal* reconstruction `r = Q·pⁿ = Q/pⁿᵉᵍⁿ` (`h₁` in the **denominator**); so the precise remaining
 obligation is to reconcile the engine's `ynum = Q·h₁` numerator placement (`cRischDEG`, `some (cmulG Q h1, h0)`)
 with the `h₁`-in-denominator convention the cleared `(ā,b̄,c̄)` encode — a `cRischDEG`-reconstruction question,
-not a `cValuationG`-correctness gap. -/
+not a polynomial-valuation gap. -/
 
 omit [CRischField α] in
 /-- **★ `cRischDEG` cleared identity in the hyperexp `negn = 0` sub-regime — `hspecialReduced` DISCHARGED**:
@@ -708,8 +710,8 @@ example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden ynum yden : CPolyG α
 -- ★ The non-primitive (hyperexp/hypertangent) special-regime cleared identity: the general
 -- reconstruction `ynum = (α'·v+β)·h₁` (`h₁ = pᵏ`) reaches the SAME `cRischDEG`-level cleared identity as
 -- the primitive path, reducing the ENTIRE non-primitive case to the single isolated §6.2 substitution
--- obligation `a₀·D(ynum) + b₀·ynum = c₀` — exactly the `ν_p`-bookkeeping the unproven `cValuationG`
--- correctness supplies. Everything else is the shared normal-denominator spine.
+-- obligation `a₀·D(ynum) + b₀·ynum = c₀` — exactly the remaining §6.2 special-denominator bookkeeping.
+-- Everything else is the shared normal-denominator spine.
 example (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) (α' β v : CPolyG α)
     (hnorm : cRdeNormalDenominatorG Dt fuel fnum fden gnum gden = some (a0, b0, c0, h0))
     (hdn : toPolyG (cSplitFactorFastG Dt fuel fden).1 ≠ 0)

@@ -1945,8 +1945,9 @@ so the per-prime bound ranges over all (normal) primes and `Q = Y·h0 ∈ k[t]` 
 gden`: the precise upstream input the §6.4 `hspde` needs but the engine does not self-certify, in
 solvability-implies form. `hnormalize`: ★ the **single deep clause** (Bronstein Thm 6.1.2(i)) — a fractional
 solution yields one whose **denominator equals the §6.2 clearing factor** `h0` (`∃ Q, IsCRischDEGPolySol … Q
-h0`), i.e. `q = y·h0` is a *polynomial*. Does NOT compose from `cValuationG`-correctness (that is `K[X]`
-multiplicity; this is a `K(t)` valuation fact); its math kernel `νₚ(Dy) = νₚ(y) − 1` is proven derivation-
+h0`), i.e. `q = y·h0` is a *polynomial*. Does NOT compose from the Wf polynomial valuation facts
+(`toPolyG_pow_cValuationGWf_dvd` / `cValuationGWf_sharp`; those are `K[X]` multiplicity, while this is a
+`K(t)` valuation fact); its math kernel `νₚ(Dy) = νₚ(y) − 1` is proven derivation-
 generic (`emultiplicity_deriv_eq_sub_one_of_normal`), the irreducible remainder being the `K(t)`-valuation
 lift + weak normalization + `k⟨t⟩` (see the section note above). `hcerts`: the §6.2 normal-clear certificates
 (the `B/C` exact divisibilities + nonzero bounds the soundness lift also consumes — engine-provable,
