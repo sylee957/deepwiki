@@ -597,25 +597,6 @@ identity does not pin `deg h_num`. So properness is taken as the named hypothesi
 is the genuinely-provable half connecting it to the `s.card` form the one-shots consume. -/
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
-/-- The fuel-free Hermite leftover is proper from residual properness. -/
-theorem cHermiteReduceTowerGWf_leftover_proper_of_residual [CFracGcdCoreWf α]
-    (Dt : CPolyG α) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
-    (hnum : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
-      = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hden : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 = toPolyG Dstar)
-    (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
-    (hresDen : cnormG resDen ≠ [])
-    (hDstar : toPolyG Dstar ≠ 0)
-    (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).degree
-      < (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).degree := by
-  rw [hnum, hden]
-  have hexact : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
-      = toPolyG resNum * toPolyG Dstar := by
-    rw [toPolyG_cdivWf_exact (cmulG resNum Dstar) resDen hresDen hdvd, toPolyG_cmulG]
-  exact degree_lt_of_exact_div hexact hresProper hDstar
-
-omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
 /-- The fuel-free reduced one-shot degree side condition follows from leftover properness. -/
 theorem cHermiteReduceTowerGWf_numer_degree_lt [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (s : Finset (CFieldSpec.K α))

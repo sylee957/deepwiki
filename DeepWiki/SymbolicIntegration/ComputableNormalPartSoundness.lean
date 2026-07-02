@@ -353,7 +353,7 @@ theorem degree_lt_of_exact_div {K : Type*} [Field K] {H D2 N S : K[X]}
     omega
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **★ `hproper` for `cHermiteReduceTowerG`, from the residual-fraction properness** — the leftover
+/-- **★ `hproper` for `cHermiteReduceTowerGWf`, from the residual-fraction properness** — the leftover
 numerator `(…).2.1` is proper for the leftover denominator `(…).2.2`, `deg (…).2.1 < deg (…).2.2`,
 **given** the engine's leftover-projection equations (`hnum`/`hden`, `rfl`-provable at call sites: `(…).2.1`
 is `cnormG (cdivWf (resNum·Dstar) resDen)` and `(…).2.2` is `cnormG Dstar`), the exact-division
@@ -362,17 +362,17 @@ divisibility `resDen ∣ resNum·Dstar` (so the division is exact by `toPolyG_cd
 `deg resNum < deg resDen`. The exact-division identity `h_num·resDen = resNum·Dstar` plus
 `degree_lt_of_exact_div` cancels `resDen`. This reduces the *unconditional* `hproper` to the residual
 properness `deg resNum < deg resDen` — i.e. `a/d − D(g)` proper, the documented Large remainder. -/
-theorem cHermiteReduceTowerG_leftover_proper_of_residual [CFracGcdCore α]
-    (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
-    (hnum : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1
+theorem cHermiteReduceTowerGWf_leftover_proper_of_residual [CFracGcdCoreWf α]
+    (Dt : CPolyG α) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
+    (hnum : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
       = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hden : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
+    (hden : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 = toPolyG Dstar)
     (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
     (hresDen : cnormG resDen ≠ [])
     (hDstar : toPolyG Dstar ≠ 0)
     (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1).degree
-      < (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2).degree := by
+    (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).degree
+      < (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).degree := by
   rw [hnum, hden]
   -- exact division: `h_num · resDen = resNum·Dstar = resNum · Dstar`
   have hexact : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
@@ -614,7 +614,7 @@ d·gden²` (the `let`-bindings of `cHermiteReduceTowerG`), given the assembled r
 proper (`deg gnum < deg gden`), the input `a/d` proper (`deg a < deg d`), and `deg Dt ≤ 1`. Composes the
 derivative-degree step `toPolyG_gprimeNum_proper_of_degree_le_one` (`D(g)` proper) with the
 difference-of-proper-fractions step `toPolyG_resNum_proper`. This is exactly the residual `hresProper` of
-`cHermiteReduceTowerG_leftover_proper_of_residual`, so it closes `hproper` **unconditionally for `deg Dt ≤
+`cHermiteReduceTowerGWf_leftover_proper_of_residual`, so it closes `hproper` **unconditionally for `deg Dt ≤
 1`** (base rational / exp / log monomials) from `g` proper — the remaining gap being only the assembled `g`'s
 properness (the per-step `gloc`-properness fold) and the nonlinear `deg Dt ≥ 2` margin. -/
 theorem toPolyG_residualFraction_proper_of_degree_le_one
@@ -920,7 +920,7 @@ step (`toPolyG_residualFraction_proper_of_degree_le_one`) closes the residual `d
 **unconditionally for `δ(t) ≤ 1`** from ONLY the input properness `deg a < deg d` (and the per-factor
 keystone/nonzero hypotheses, themselves `cdiophantineGWf_fst_degree_lt`). The `g`-proper hypothesis is gone:
 `gden ≠ 0` follows from `g` proper (`ne_zero_of_degree_gt`). This is exactly the `hresProper` feeding
-`cHermiteReduceTowerG_leftover_proper_of_residual`, so it removes the "g proper" premise from the whole
+`cHermiteReduceTowerGWf_leftover_proper_of_residual`, so it removes the "g proper" premise from the whole
 `hproper`-for-`δ(t) ≤ 1` chain. -/
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
@@ -1150,18 +1150,18 @@ example {K : Type*} [Field K] {H D2 N S : K[X]}
   degree_lt_of_exact_div hid hND hS
 
 -- ★ `hproper` REDUCED to the residual-fraction properness: given the leftover projections, the exact
-  -- division (divisibility), nonzero radical, and `deg resNum < deg resDen`, the Hermite leftover is
+-- division (divisibility), nonzero radical, and `deg resNum < deg resDen`, the Wf Hermite leftover is
 -- proper — `deg (…).2.1 < deg (…).2.2`. The genuinely-provable exact-division half of `hproper`.
-example [CFracGcdCore α] (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
-    (hnum : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1
+example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
+    (hnum : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
       = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hden : toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2 = toPolyG Dstar)
+    (hden : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 = toPolyG Dstar)
     (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
     (hresDen : cnormG resDen ≠ []) (hDstar : toPolyG Dstar ≠ 0)
     (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.1).degree
-      < (toPolyG (CPolyG.cHermiteReduceTowerG Dt fuel a d).2.2).degree :=
-  cHermiteReduceTowerG_leftover_proper_of_residual Dt fuel a d resNum resDen Dstar
+    (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).degree
+      < (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).degree :=
+  cHermiteReduceTowerGWf_leftover_proper_of_residual Dt a d resNum resDen Dstar
     hnum hden hdvd hresDen hDstar hresProper
 
 -- ★ THE FOLD-INDUCTION (g stays proper): the engine's guarded `g`-fold of proper contributions is proper
@@ -1311,7 +1311,7 @@ example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
 
 -- ★ THE RESIDUAL (b) CLOSED (`deg Dt ≤ 1`): the engine's actual `resNum/resDen = a/d − D(g)` is proper —
 -- `deg resNum < deg resDen` — from `g` proper, `a/d` proper, `deg Dt ≤ 1`. This is exactly the `hresProper`
--- of `cHermiteReduceTowerG_leftover_proper_of_residual`, closing `hproper` unconditionally for `deg Dt ≤ 1`.
+-- of `cHermiteReduceTowerGWf_leftover_proper_of_residual`, closing `hproper` unconditionally for `deg Dt ≤ 1`.
 example (Dt a d gnum gden : CPolyG α) (hden : toPolyG gden ≠ 0)
     (hDt : (toPolyG Dt).natDegree ≤ 1)
     (haProper : (toPolyG a).degree < (toPolyG d).degree)
@@ -1378,7 +1378,7 @@ example (Dt : CPolyG (QFunNZG ℚ)) (a d : CPolyG (QFunNZG ℚ)) (res : Integral
 #print axioms towerFractionFieldDerivG_amG_fracAccG
 #print axioms sum_towerFractionFieldDerivG_telescope
 #print axioms degree_lt_of_exact_div
-#print axioms cHermiteReduceTowerG_leftover_proper_of_residual
+#print axioms cHermiteReduceTowerGWf_leftover_proper_of_residual
 #print axioms degree_fracAdd_lt_of_proper
 #print axioms degree_fracAdd_lt_of_margin
 #print axioms toPolyG_fracAddG_margin
