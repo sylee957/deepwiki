@@ -1888,15 +1888,16 @@ abbrev rdeNormalCNum (Dt fden gnum h0 : CPolyG α) : CPolyG α :=
 
 /-! ### ★ The `hnormalize` composition verdict and its precise irreducible remainder
 
-**`hnormalize` does NOT compose from the `cValuationG`-correctness keystone.** That keystone
-(`toPolyG_pow_cValuationG_dvd` / `cValuationG_sharp`) is **polynomial** multiplicity — `νₚ` of an element of
-`K[X]` by trial division. `hnormalize` (Bronstein Thm 6.1.2(i)) is a **fraction-field valuation** fact about
+**`hnormalize` does NOT compose from the polynomial valuation-correctness keystone.** That keystone
+(`toPolyG_pow_cValuationGWf_dvd` / `cValuationGWf_sharp`) is **polynomial** multiplicity — `νₚ` of an element
+of `K[X]` by fuel-free trial division. `hnormalize` (Bronstein Thm 6.1.2(i)) is a **fraction-field valuation** fact about
 the solution `y = ynum/yden ∈ K(t)` (where `K = CFieldSpec.K α`): the denominator of `y` divides the §6.1
 clearing factor `h0` (so `q = y·h0` is normal-pole-free). Sub-fact map:
 
-* `cValuationG`-correctness `pⁿ ∣ x` + sharpness — EXISTS, but it is the `K[X]`-multiplicity tool used by
+* `cValuationGWf` correctness `pⁿ ∣ x` + sharpness — EXISTS, but it is the `K[X]`-multiplicity tool used by
   residual #1's `eₙ ∣ dₙh²` *divisibility* (`ComputableRischDENormDivisibility`), a different clause one level
-  below `hnormalize`'s `K(t)`-valuation claim.
+  below `hnormalize`'s `K(t)`-valuation claim. The older fueled `cValuationG` remains only in fueled runtime
+  formulas.
 * the per-prime RDE order bound `νₚ(y) ≥ −νₚ(h0)` for `y ∈ K(t)` — NEW; its math heart is
   **Bronstein Lemma 6.1.1 / Theorem 4.4.2**, "a derivation drops the order at a normal pole by exactly one"
   (`νₚ(Dy) = νₚ(y) − 1`). The reusable **polynomial-ring kernel** of that fact is now PROVEN, derivation-
