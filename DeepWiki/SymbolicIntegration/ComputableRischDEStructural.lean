@@ -27,6 +27,9 @@ reassembly the capstone consumes. This is exactly the **derivable** bulk of the 
   some (bbar,cbar,m,α',β)` at the bound degree on the special-cleared coefficients), the §6.5/§6.6
   dispatcher result `cPolyRischDEG … = some v`, and the output identification `ynum = (α'·v+β)·h1`,
   `yden = h0`. The three stage-`some`-results derived from bare success.
+* **`cRischDEGWf_some_imp_stages_structural`** — the same structural reading for `cRischDEGWf`, exported
+  from this structural module so Wf proofs can use one structural API instead of reaching into the runtime
+  well-founded module for control-flow facts.
 * **`cPolyRischDEG_some_imp_noCancel_of_primitive`** — the dispatcher → non-cancellation bridge in the
   primitive regime: when `Dt` is primitive (`cdegG Dt = 0`) and `bbar ≠ 0` (`db > max 0 (δ−1) = 0`),
   `cPolyRischDEG Dt fuel bbar cbar m = cPolyRischDENoCancelG Dt fuel bbar cbar m`, so the capstone's
@@ -109,6 +112,30 @@ theorem cRischDEG_some_imp_stages [CRischField α] (Dt : CPolyG α) (fuel : ℕ)
         -- are the reassembly equations.
         exact ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v,
           rfl, hspde, hpoly, hynum.symm, hyden.symm⟩
+
+/-! ### Fuel-free structural decomposition
+
+The well-founded runtime module defines the same control-flow reading for `cRischDEGWf`. This wrapper exposes
+it from the structural layer, matching the legacy fueled API location. -/
+
+omit [CFracGcdCore α] in
+/-- **Wf structural decomposition**: `cRischDEGWf = some _` forces the Wf stage `some`-results. -/
+theorem cRischDEGWf_some_imp_stages_structural [CFracGcdCoreWf α] [CRischField α] (Dt : CPolyG α)
+    (fnum fden gnum gden ynum yden : CPolyG α)
+    (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden)) :
+    ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0)
+      ∧ cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β)
+      ∧ cPolyRischDEGWf Dt bbar cbar m = some v
+      ∧ ynum = cmulG (caddG (cmulG α' v) β) (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.2
+      ∧ yden = h0 :=
+  cRischDEGWf_some_imp_stages Dt fnum fden gnum gden ynum yden hsucc
 
 /-! ### The dispatcher → non-cancellation bridge (primitive regime, positive `deg(bbar)`)
 
@@ -814,6 +841,7 @@ end Residual
 /-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
 
 #print axioms cRischDEG_some_imp_stages
+#print axioms cRischDEGWf_some_imp_stages_structural
 #print axioms cPolyRischDEG_eq_noCancel_of_primitive
 #print axioms rdeCleared_of_success_and_residual
 #print axioms rdeClearedIdentity_of_polyRDEIdentity

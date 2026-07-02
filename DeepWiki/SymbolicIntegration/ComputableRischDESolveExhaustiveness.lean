@@ -149,6 +149,29 @@ theorem cRischDEGWf_isSome_of_stages (Dt : CPolyG α) (fnum fden gnum gden : CPo
   rw [cRischDEGWf, hnorm]
   simp only [hspde, hpoly, Option.isSome_some]
 
+/-- The fuel-free assembled solve succeeds iff its three Wf stages succeed. -/
+theorem cRischDEGWf_isSome_iff_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
+    (cRischDEGWf Dt fnum fden gnum gden).isSome = true ↔
+      ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
+        cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0)
+        ∧ cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+            (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+              (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+              (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+          = some (bbar, cbar, m, α', β)
+        ∧ cPolyRischDEGWf Dt bbar cbar m = some v := by
+  constructor
+  · intro h
+    obtain ⟨⟨ynum, yden⟩, hy⟩ := Option.isSome_iff_exists.mp h
+    obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly, _, _⟩ :=
+      cRischDEGWf_some_imp_stages_structural Dt fnum fden gnum gden ynum yden hy
+    exact ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly⟩
+  · rintro ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly⟩
+    exact cRischDEGWf_isSome_of_stages Dt fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+      hnorm hspde hpoly
+
 end EngineLayerWf
 
 /-! ## The reachable base layer: the dispatcher's total sub-cases are exhaustive unconditionally
@@ -2830,6 +2853,7 @@ compiler) -/
 #print axioms cRischDEG_isSome_of_stages
 #print axioms cRischDEG_isSome_iff_stages
 #print axioms cRischDEGWf_isSome_of_stages
+#print axioms cRischDEGWf_isSome_iff_stages
 #print axioms cPolyRischDEG_isSome_of_bZero
 #print axioms cSPDEG_isSome_of_const_base
 #print axioms cSPDEG_isSome_of_recurse
