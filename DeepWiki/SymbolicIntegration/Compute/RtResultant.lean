@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 
-/-! # Computable Rothstein–Trager resultant over `ℚ` (Bronstein §2.4, Example 2.4.1, p.47–48)
+/-! # Computable Rothstein–Trager resultant over `ℚ`
 The noncomputable `rtResultant A D = res_x(D, A − t·D') ∈ ℚ[t]` (in
 `DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`) is the heart of the Rothstein–Trager /
 LRT logarithmic part — its roots are the residues. Mathlib's `ℚ[X]` resultant is **noncomputable**
@@ -12,8 +12,8 @@ identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q, r)` 
 out at `res(p, c) = c^(deg p)` for constant `c`. The bivariate Rothstein–Trager resultant `R(t) =
 res_x(D, A − t·D')` is recovered, staying in univariate `CPoly`, by **evaluation + Lagrange
 interpolation**: sample `R(aₖ) = cresultant D (A − aₖ·D')` at `aₖ = k` for `k = 0,…,deg D` and
-interpolate (`cinterpolate`). We `#eval`/`native_decide` it on **Example 2.4.1**
-`A = x⁴−3x²+6, D = x⁶−5x⁴+5x²+4`, recovering the book's `R(t) = 4t²+1` up to a nonzero rational scalar.
+interpolate (`cinterpolate`). The result is genuinely `#eval`-able and `native_decide`-checkable on
+concrete numerators/denominators.
 `cderiv` is the computable coefficient-shift derivative; everything reuses `LogToAtanCompute`'s `CPoly`
 algebra and the `toPoly : CPoly → ℚ[X]` bridge. -/
 
@@ -144,8 +144,8 @@ def cmonic (p : CPoly) : CPoly :=
   if cisZero p then [] else cscale (clead p)⁻¹ p
 
 /-- **Squarefree part** of a `CPoly` over `ℚ`, made monic: `csqfreePart fuel p = monic(p / gcd(p, p'))`,
-the radical of `p` (each irreducible factor with multiplicity 1). For the Example 2.4.1 resultant
-`45796·(4t²+1)³` this returns `t² + 1/4` = monic `4t²+1`. -/
+the radical of `p` (each irreducible factor with multiplicity 1); e.g. it sends `45796·(4t²+1)³`
+to the monic `t² + 1/4`. -/
 def csqfreePart (fuel : ℕ) (p : CPoly) : CPoly :=
   let p := cnorm p
   let (g, _, _) := cgcdExt fuel p (cderiv p)
@@ -159,9 +159,7 @@ reconciliation), and `toPoly (rtResultantCompute …)` equals the noncomputable 
 `rtResultant` (`RtResultantCorrectness.toPoly_rtResultantCompute_eq_rtResultant`, for monic `D` and
 `deg A < deg D`): both have degree `< deg D + 1` and agree at the `deg D + 1` integer nodes
 (`cinterpolate` correctness `toPoly_cinterpolate_eval` + the column-degree bound
-`natDegree_rtResultant_le`), hence are equal by `Lagrange.eq_of_degrees_lt_of_eval_index_eq`. The
-`native_decide` computation on Example 2.4.1 (`rtResultant_ex241`, `rtResultant_ex241_normalized`)
-remains as a concrete witness. -/
+`natDegree_rtResultant_le`), hence are equal by `Lagrange.eq_of_degrees_lt_of_eval_index_eq`. -/
 
 /-- **Agreement with the noncomputable `rtResultant` — PROVEN.** Under the `toPoly` bridge, the
 computable `rtResultantCompute` equals the noncomputable `DeepWiki.SymbolicIntegration.rtResultant`

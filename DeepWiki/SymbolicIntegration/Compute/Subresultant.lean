@@ -13,10 +13,9 @@ whose coefficients are `CPoly := List ℚ` (`= ℚ[t]`), index = `x`-degree low�
 are the `BPoly` algebra (coefficient ops through `RtResultantCompute`/`LogToAtanCompute`'s `CPoly`
 arithmetic); `bpsremainder` is the **pseudo-remainder** `prem(p,q)` (multiply by `lc(q)` powers, no
 `ℚ[t]` division); `bsubresultantGcd` runs the pseudo-PRS, taking the last nonzero remainder — the
-`gcd_x` up to a `ℚ[t]` content factor. On **Example 2.4.1** `A = x⁴−3x²+6, D = x⁶−5x⁴+5x²+4` this
-returns the LRT log argument `x³ + 2t·x² − 3x − 4t` (the Czichowski/Gröbner basis element of
-Example 2.6.1, `B = {4t²+1, x³+2tx²−3x−4t}`), pinned by `native_decide`. Agreement with the
-noncomputable `lrtSubresultant` is **proven** in `SubresultantCorrectness`. -/
+`gcd_x` up to a `ℚ[t]` content factor — the LRT log argument, `#eval`-able and `native_decide`-checkable
+on concrete inputs. Agreement with the noncomputable `lrtSubresultant` is **proven** in
+`SubresultantCorrectness`. -/
 
 namespace DeepWiki.SymbolicIntegration
 

@@ -6,7 +6,7 @@ import Mathlib.Algebra.Polynomial.SpecificDegree
 /-! # Bridging the computable subresultant PRS to the abstract subresultant (Bronstein §1.5/§2.5)
 The computable bivariate engine (`SubresultantCompute`: `BPoly := List CPoly = ℚ[t][x]`, with
 `bpsremainder` the pseudo-remainder and `subresPRS` the Collins–Brown subresultant chain) is validated
-*pointwise* by `native_decide` (`lrtGcd_ex241`). This file connects it to the **abstract** subresultant
+*pointwise* by `native_decide` on concrete instances. This file connects it to the **abstract** subresultant
 theory (`Subresultants`/`SubresultantPRS`, the Sylvester-submatrix `subresultant A B n m j`) through the
 already-proven `toBPoly : BPoly → (ℚ[X])[X]` homomorphism bridge of `ComputeCorrectness`.
 
@@ -1718,7 +1718,7 @@ The headline `lrtGcdCompute_isSimilar_lrtSubresultant` pushes a `ℚ[t]`-similar
 `isSimilar_mapRingHom`, whose hypothesis `hne` quantifies over **all** witness pairs `(a, b)` of the
 similarity and demands `φ a ≠ 0 ∧ φ b ≠ 0`. That hypothesis is **unsatisfiable** whenever `φ` has a
 nontrivial kernel: if `(a₀, b₀)` is one witness pair, so is `(q·a₀, q·b₀)` for any `q ≠ 0`, and taking
-`q = toPoly cR241` (which `φ` kills) gives a pair with `φ (q·a₀) = 0` — refuting `hne`. So `_concrete`
+`q = f` (the modulus, which `φ` kills) gives a pair with `φ (q·a₀) = 0` — refuting `hne`. So `_concrete`
 cannot be instantiated to its (true) conclusion through that path.
 
 The fix: push through using only the **gcd-reduced** witness pair. For `φ = AdjoinRoot.mk f` with `f`

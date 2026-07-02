@@ -16,9 +16,9 @@ the `toPoly` bridge, on all inputs:
 * `toPoly_rtResultantCompute_eq_rtResultant`: the two polynomials agree (degree `< deg D + 1`, equal at
   `deg D + 1` nodes, hence equal by `Lagrange.eq_of_degrees_lt_of_eval_index_eq`).
 
-It then discharges the single remaining hypothesis `hLne` of Example 2.4.1's LRT closure, via the honest
-`ℚ[t]` equation `rtResultant (toPoly cA241)(toPoly cD241) = 45796·(4t²+1)³` and the multiplicity-3
-regularity of the LRT subresultant at the residue `α = i/2`. -/
+It also provides the reusable base-change lemmas (`rtResultant_map_of_injective`,
+`rootMultiplicity_C_mul_pow_of_separable`, `lrtSubresultant_map_of_injective`,
+`map_eval_lrtSubresultant_map`) used to establish residue regularity. -/
 
 open Polynomial
 
