@@ -222,29 +222,13 @@ theorem rischDE_complete_base_some (b g : ℚ) (hsol : ∃ y : ℚ, b * y = g) :
 
 end BaseField
 
-/-! ## ★ The Wf inner clause decomposed: the three §6 inner-stage completeness sub-residuals
+/-! ## The `cRischDEG`-level polynomial-solution predicates
 
-The inner clause of `RischDECompletenessResidualWf` — the §6.2–6.6 inner-solve completeness — is itself the
-composite of the three §6 pipeline stages a polynomial solution must clear (the converse of the soundness
-decomposition `cRischDEG_some_imp_stages`). We pinpoint the frontier by naming each sub-stage precisely as
-its own `Prop`, against `cRischDEG`'s actual stage functions, with the Bronstein theorem that would
-discharge it:
-
-* **`cRdeNormalDenominatorG_complete`** — §6.2 normal-denominator reduction completeness: a solvable RDE's
-  §6.2 reduction returns `some` (Bronstein Thm 6.1.2 / §6.2 — the normal-denominator stage succeeds on a
-  normalized input). The §6.1 normality (`hck`) is exactly its precondition.
-* **`cRdeBoundDegree_isUpperBound`** — ★ the §6.4 degree-bound *upper-bound* property: **any** polynomial
-  solution `q` of the reduced `a·Dq + b·q = c` has `deg q ≤ cRdeBoundDegreeG …` (Bronstein Thm 6.3.1, the
-  degree bound). This is the **research-grade keystone**: the engine *computes* the bound `cRdeBoundDegreeG`
-  by degree arithmetic but never proves it bounds solutions — there is no `deg_le` lemma anywhere.
-* **`cSPDE_polyRischDE_complete`** — §6.4 SPDE + §6.5/6.6 poly-RDE *exhaustiveness within the bound*: given
-  a solution of degree ≤ the bound, the SPDE peel and the bounded polynomial solve **find** it (Bronstein
-  §6.4–6.6). Also unformalized — only the cleared-identity soundness of these stages is proved.
-
-A `cRischDEG`-level polynomial solution clearing all three forces `cRischDEG = some` (the converse of
-`cRischDEG_some_imp_stages`), which lifts to the Wf inner residual clause. Each sub-residual is a stated
-`Prop`, NO `sorry`; together they are clause (c)'s exact content, with the §6.4 degree-upper-bound the single
-deepest gap. -/
+`IsCRischDEGPolySol` and `IsReducedRdeSol` are the shared hypothesis vocabulary the §6 inner-stage
+completeness sub-residuals (fuel-free `RischDEInnerCompletenessWf` below, and the degree-bound cancellation
+residuals in `ComputableRischDEDegreeBound`) are stated against: the cleared polynomial RDE-solution
+identity at the `cRischDEG` layer, and the reduced-equation polynomial solution predicate feeding the §6.4
+degree-upper-bound (Bronstein Thm 6.3.1). -/
 
 section InnerSubResidual
 
@@ -270,49 +254,6 @@ Thm 6.3.1): the bound `cRdeBoundDegreeG a b c` is asserted to bound `deg q` for 
 def IsReducedRdeSol (Dt a b c q : CPolyG α) : Prop :=
   toPolyG a * Differential.implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q
     = toPolyG c
-
-/-- **★ The three §6 inner-stage completeness sub-residuals** `RischDEInnerCompleteness Dt fnum fden gnum
-gden`: the Wf inner residual clause, decomposed into the precise §6.2/6.4/6.5-6.6 converse
-facts. `hnorm`: the §6.2 normal-denominator reduction returns `some` whenever a polynomial solution exists
-(Bronstein §6.2). `hbound`: ★ **any** polynomial solution `q` of the §6.3-reduced `a·Dq + b·q = c` has
-`deg q ≤ cRdeBoundDegreeG` (Bronstein Thm 6.3.1 — the degree-upper-bound, the deepest unformalized gap: the
-engine computes the bound but never proves it bounds solutions). `hsolve`: the §6.4 SPDE + §6.5/6.6
-poly-RDE solve returns `some` whenever a polynomial solution exists (Bronstein §6.4–6.6 exhaustiveness).
-Their conjunction is exactly clause (c)'s content — the converse of the soundness decomposition
-`cRischDEG_some_imp_stages`. A `Prop`-bundle of stated assumptions, NO `sorry`; the finest isolation of
-clause (c), with `hbound` the single deepest gap. -/
-structure RischDEInnerCompleteness (Dt fnum fden gnum gden : CPolyG α) : Prop where
-  /-- §6.2: a polynomial-solvable RDE's normal-denominator reduction succeeds. -/
-  hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    (cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden).isSome = true
-  /-- ★ §6.4 degree-upper-bound (Bronstein Thm 6.3.1): any polynomial solution `q` of the §6.3-reduced
-  `a·Dq + b·q = c` (on the special-cleared coefficients) has `deg q ≤ cRdeBoundDegreeG` — the engine
-  computes the bound but never proves it bounds solutions (the deepest unformalized gap). -/
-  hbound : ∀ a0 b0 c0 h0 : CPolyG α,
-    cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden = some (a0, b0, c0, h0) →
-    ∀ q : CPolyG α,
-      IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
-          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
-          (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q →
-      cdegG q ≤ cRdeBoundDegreeG Dt
-        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
-        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
-        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1
-  /-- §6.4 SPDE + §6.5/6.6 poly-RDE exhaustiveness: a polynomial-solvable RDE's bounded solve succeeds. -/
-  hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    (cRischDEG Dt towerRischDEFuel fnum fden gnum gden).isSome = true
-
-/-- **Clause (c) follows from the inner sub-residuals** (`cRischDEG_isSome_of_innerCompleteness`): the
-`hsolve` clause of `RischDEInnerCompleteness` is *exactly* "a `cRischDEG`-polynomial-solvable RDE makes
-`cRischDEG` return `some`" — so a polynomial solution forces `cRischDEG … = some _`. (The `hnorm`/`hbound`
-clauses are the §6.2/§6.4 sub-facts whose composition *justifies* `hsolve` in Bronstein's proof; here they
-are recorded alongside to pinpoint the frontier, while `hsolve` is the conclusion clause (c) consumes.)
-This is the bridge from the finest decomposition back to clause (c). -/
-theorem cRischDEG_isSome_of_innerCompleteness (Dt fnum fden gnum gden : CPolyG α)
-    (hinner : RischDEInnerCompleteness Dt fnum fden gnum gden)
-    (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
-    (cRischDEG Dt towerRischDEFuel fnum fden gnum gden).isSome = true :=
-  hinner.hsolve hsol
 
 end InnerSubResidual
 
