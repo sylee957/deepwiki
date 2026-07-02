@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableQFunReduce
+import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFF
 
 /-! # Coefficient-swell benchmark: fraction-free vs naive Euclidean vs `qReduce`-in-the-loop

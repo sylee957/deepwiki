@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRound2IntegralBasis
-import DeepWiki.SymbolicIntegration.ComputableQFunReduce
+import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
 /-! # The FULL general-curve INTEGRAL BASIS: iterating the Ford–Zassenhaus Round-2 step to the maximal

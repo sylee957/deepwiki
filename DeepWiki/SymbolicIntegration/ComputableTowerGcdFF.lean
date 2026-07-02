@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Generic fraction-free gcd over an arbitrary tower level
 

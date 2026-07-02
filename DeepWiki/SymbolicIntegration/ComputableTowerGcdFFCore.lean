@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # The generic fraction-free gcd, upstream of the integration pipeline
 `ComputableTowerGcdFF` builds the flat, recursive, fraction-free gcd over an arbitrary tower level

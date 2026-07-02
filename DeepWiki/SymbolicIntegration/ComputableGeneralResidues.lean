@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicResidues
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Algebraic-function residues for arbitrary curves: the full double resultant
 

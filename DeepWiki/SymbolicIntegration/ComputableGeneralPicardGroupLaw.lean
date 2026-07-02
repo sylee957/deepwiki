@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralTorsionLight
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # A LIGHT, `native_decide`-tractable Picard group law over `𝔽_p` for a GENERAL curve — reading an
 INDIVIDUAL divisor class's order beyond the genus-1 ceiling (Trager Ch. 6 / computational AG: a concrete

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Hermite ROW REDUCTION (Hermite normal form) over the Euclidean domain `K[x] = CPolyG`
 (Trager, *Integration of Algebraic Functions*, Ch. 2 §"Integral Bases", p. 24–25)

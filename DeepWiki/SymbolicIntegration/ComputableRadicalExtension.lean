@@ -1,8 +1,8 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
-import DeepWiki.SymbolicIntegration.ComputableGenericBezout
-import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.GenericBezout
+import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # Algebraic-function integration: simple radical extensions (Trager Appendix A)
 The transcendental Risch engine (`ComputableTower*`/`ComputableIntegrate`) integrates elementary

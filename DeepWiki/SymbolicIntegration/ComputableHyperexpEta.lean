@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Hyperexponential coefficient reader
 

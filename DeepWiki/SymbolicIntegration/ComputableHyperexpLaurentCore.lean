@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableRischFieldCore
+import DeepWiki.SymbolicIntegration.Computable.RischFieldCore
 
 /-! # Core hyperexponential Laurent integration helpers
 

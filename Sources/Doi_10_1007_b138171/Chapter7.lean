@@ -1,12 +1,12 @@
-import DeepWiki.SymbolicIntegration.ComputableParametric
-import DeepWiki.SymbolicIntegration.ComputableLinearSolveCorrect
+import DeepWiki.SymbolicIntegration.Computable.Parametric
+import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 7: Parametric Problems
 The parametric Risch differential equation, the limited-integration problem, and the parametric
 logarithmic-derivative problem (used for coupled systems and for deciding elementarity). The three
 boxes of this chapter are now rendered as **computable** algorithms over the base monomial ℚ[t] / the
-tower (`DeepWiki.SymbolicIntegration.ComputableParametric`), each with `native_decide` evidence on a
+tower (`DeepWiki.SymbolicIntegration.Computable.Parametric`), each with `native_decide` evidence on a
 worked book example.
 
 **Computable-vs-abstract.** Each algorithm below is a computable function (the parametric solve

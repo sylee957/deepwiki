@@ -1,8 +1,8 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeResultant
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 
 /-! # Well-founded generic tower integration engine
 

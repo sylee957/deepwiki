@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 

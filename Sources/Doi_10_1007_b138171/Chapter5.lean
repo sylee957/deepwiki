@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputablePolyPartTower
+import DeepWiki.SymbolicIntegration.Computable.PolyPartTower
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTranscendentalOverAlgebraic
+import DeepWiki.SymbolicIntegration.Computable.TranscendentalOverAlgebraic
 
 /-! # The radical/mixed-tower engine over a family of radicands
 

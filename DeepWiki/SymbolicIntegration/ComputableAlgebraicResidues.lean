@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalCase2
-import DeepWiki.SymbolicIntegration.ComputableIntegrate
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.Integrate
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Log-part residues of algebraic-function integrals
 

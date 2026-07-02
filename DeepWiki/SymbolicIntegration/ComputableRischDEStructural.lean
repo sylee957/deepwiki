@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableRischFieldSpec
-import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
+import DeepWiki.SymbolicIntegration.Computable.RischFieldSpec
+import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 
 /-! # §6 RDE structural decomposition — `cRischDEG = some _` ⟹ the stage `some`-results
 

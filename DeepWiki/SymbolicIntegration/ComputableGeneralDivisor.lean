@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableIntegralBasisFull
 import DeepWiki.SymbolicIntegration.ComputableGeneralSetup
-import DeepWiki.SymbolicIntegration.ComputableQFunReduce
+import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 
 /-! # Divisors on a general plane curve as fractional ideals
 

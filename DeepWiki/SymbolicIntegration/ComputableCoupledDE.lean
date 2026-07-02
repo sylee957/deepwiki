@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableParametric
+import DeepWiki.SymbolicIntegration.Computable.Parametric
 
 /-! # The coupled differential system and the tangent RDE cancellation
 

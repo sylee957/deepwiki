@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableBareissEngine
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableAlgFunctionField
 
 /-! # Agreement of the fraction-free Bareiss determinant with `fieldDet`

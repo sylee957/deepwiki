@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableElementaryIntegrate
+import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
 
 /-! # COMPUTING the RATIONAL half over a TRANSCENDENTAL tower (the grand unification, rational part)
 

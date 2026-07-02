@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalDerivationInvariant
-import DeepWiki.SymbolicIntegration.ComputableSplitFactorTowerCorrectG
+import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 import DeepWiki.SymbolicIntegration.ComputableRadicalRationalDriver
 
 /-! # The first abstractly-verified algebraic (radical) integral — `D(v) = g` via `radDeriv`

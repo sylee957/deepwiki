@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralQuotient
 import DeepWiki.SymbolicIntegration.ComputableGeneralSetup
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # General (non-radical) algebraic-function integration
 

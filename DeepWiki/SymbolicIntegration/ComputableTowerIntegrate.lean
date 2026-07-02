@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
 `ComputableTowerField`/`ComputableTowerDeriv` built the generic fraction-field carrier `QFunNZG α`

@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
 import DeepWiki.SymbolicIntegration.ComputableHermiteNormalForm
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Fraction-free linear algebra ENGINE — the pure Bareiss defs over `ℚ[x]` and `ℚ(x)`
 (Bareiss, *Sylvester's Identity and Multistep Integer-Preserving Gaussian Elimination*, 1968;

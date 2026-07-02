@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableQFunReduce
+import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import DeepWiki.SymbolicIntegration.ComputableHyperexpExampleData
 

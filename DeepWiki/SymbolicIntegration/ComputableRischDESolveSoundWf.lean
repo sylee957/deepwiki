@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRischDESolveNormCanon
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
-import DeepWiki.SymbolicIntegration.ComputableCanonNormalizedReduce
+import DeepWiki.SymbolicIntegration.Computable.CanonNormalizedReduce
 
 /-! # The sound recursive Risch-DE solver `crischDESolveSoundWf`
 

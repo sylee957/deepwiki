@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
-import DeepWiki.SymbolicIntegration.GenericPolyEngine
+import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 
 /-! # Computable `LogToAtan` over `ℚ` (Bronstein §2.8, Example 2.8.1, p.63–64)
 Mathlib's `ℚ[X]` arithmetic is **noncomputable** (`Polynomial` wraps `Finsupp`/`AddMonoidAlgebra`,

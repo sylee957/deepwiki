@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableSoundnessCapstone
+import DeepWiki.SymbolicIntegration.Computable.SoundnessCapstone
 
 /-! # Reducing the recursive RDE residual to its weak-normalization crux
 

@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.GenericPolyEngine
-import DeepWiki.SymbolicIntegration.ComputableFieldGcd
-import DeepWiki.SymbolicIntegration.ComputableGenericBezout
+import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
+import DeepWiki.SymbolicIntegration.Computable.FieldGcd
+import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 
 /-! # Arbitrary-depth differential towers: the generic fraction field `QFunNZG α`
 This file builds an arbitrary-depth **tower** of differential fields ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t₁) ⊂ … as one

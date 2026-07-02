@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableGenericBezout
-import DeepWiki.SymbolicIntegration.ComputableFieldGcd
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.GenericBezout
+import DeepWiki.SymbolicIntegration.Computable.FieldGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # Generic RDE glue lemmas (`cgcdFF`-free), shared by the `…CorrectG` tower correctness
 

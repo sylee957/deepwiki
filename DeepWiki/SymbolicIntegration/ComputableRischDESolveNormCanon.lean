@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableWeakNormalizerCorrect
-import DeepWiki.SymbolicIntegration.ComputableQFunReduce
+import DeepWiki.SymbolicIntegration.Computable.WeakNormalizerCorrect
+import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 
 /-! # The CANONICALIZING weak-normalized recursive Risch-DE solver — §6.1 `WeakNormalizer` correctness
 

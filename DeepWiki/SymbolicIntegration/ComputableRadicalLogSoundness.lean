@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalIntegralSoundness
 import DeepWiki.SymbolicIntegration.ComputableRadicalLogIntegral
-import DeepWiki.SymbolicIntegration.ComputableResultantGenericCore
+import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
 

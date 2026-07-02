@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableRadicalIntegrate
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # Algebraic-function integration: Case 2 reduction, validated through `radDeriv` (Trager A §2.2)
 

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableCoupledDE
-import DeepWiki.SymbolicIntegration.ComputableLinearSolveCorrect
+import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
 
 /-! # The §8 coupled-system matrix assembly is faithful — unconditional base soundness
 

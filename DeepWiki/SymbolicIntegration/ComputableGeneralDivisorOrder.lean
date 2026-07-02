@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralDivisor
-import DeepWiki.SymbolicIntegration.ComputableQFunReduce
+import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 
 /-! # The GENERAL divisor ORDER (torsion test): is a divisor class `δ ∈ Pic⁰(C)` of finite order, for an
 ARBITRARY plane curve (Trager, *Integration of Algebraic Functions*, Ch. 6 "Principal Divisors and Points of

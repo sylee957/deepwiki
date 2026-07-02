@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerField
-import DeepWiki.SymbolicIntegration.ComputableMonomialDeriv
-import DeepWiki.SymbolicIntegration.ComputableFractionFieldDeriv
+import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
+import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
 
 /-! # The derivation tower: a computable derivation on `QFunNZG α` (Risch tower step)
 `ComputableTowerField` built the generic fraction-field carrier `QFunNZG α` (the next tower level,

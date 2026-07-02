@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableAlgebraicResidues
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Algebraic-function integration: the simple-radical INTEGRAL BASIS (Trager Ch. 2 §5)
 

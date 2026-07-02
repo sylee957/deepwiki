@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableHyperellipticDivisor
-import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Cantor's algorithm: the hyperelliptic-Jacobian group law (Trager Ch. 6, Cantor 1987)
 
