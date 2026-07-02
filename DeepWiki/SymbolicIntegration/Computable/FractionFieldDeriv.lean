@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
-import DeepWiki.SymbolicIntegration.Computable.CanonicalRepCorrect
+import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
 import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 
 /-! # Extending a base derivation to the fraction field `K(t)` (the integral-correctness keystone)

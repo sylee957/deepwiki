@@ -1,11 +1,11 @@
-import DeepWiki.SymbolicIntegration.Computable.SplitFactorCorrect
+import DeepWiki.SymbolicIntegration.Computable.SplitFactorHelpers
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 
-/-! # Canonical-field-identity helper for §3.5 correctness
+/-! # The canonical field identity `q + b/dₛ + c/dₙ = a/d`
 
-The fuel-free Bézout and split helpers now live in `ComputableFuelFreeDiophantine`. This file keeps the
-abstract field-arithmetic recombination lemma used by the generic canonical-representation proof:
-`q + b/dₛ + c/dₙ = a/d`. -/
+The abstract field-arithmetic recombination lemma over `RatFunc K` used by the generic
+canonical-representation proof: from the division, denominator split, and Bézout split, the three
+pieces recombine to `a/d`. Pure Layer-0 math, independent of the computable engine. -/
 
 open Polynomial Classical
 open scoped Differential

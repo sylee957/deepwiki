@@ -383,6 +383,20 @@ not just defaults):
   gets re-proved verbatim (the `rateLatency_coe` lesson). Satellites live in
   the file that defines the object, not where its first consumer sits.
 
+- **Refinement discipline (the executable engine).** Abstract math lives on
+  Mathlib carriers (Layer 0), named for what it *states* — never in a retrofitted
+  `*Correct`/`*Sound` file (those masquerading as engine correctness get renamed
+  to their concept, e.g. `GcdCorrect`→`FilterProdMul`, `CanonicalRepCorrect`→
+  `CanonicalFieldIdentity`, `SplitFactorCorrect`→`SplitFactorHelpers`). The
+  `Computable/` engine's only theorems are **commuting squares through a
+  denotation**: for a computable `f`, the *one* satellite `⟦f x⟧ = F ⟦x⟧` (RHS a
+  Layer-0 notion; a `_sound`/`_complete` pair for option-valued deciders) lives in
+  the file that *defines* `f` and is tagged `@[denote]` (see `Computable/Denote.lean`
+  and [[leanproofs-symbolic-integration-reorg]]). A new algorithm ships its square
+  in its own file — not a separate `*Correct` file; existing end-to-end soundness
+  developments (`*Soundness` assemblies) stay separate, but single stray squares
+  fold back to their def gradually.
+
 - **Arrival curves: `*ArrivalBound` vs `*ArrivalCurve`.**
   `IsMaximalArrivalBound`/`IsMinimalArrivalBound` are the raw inequalities
   `A ≤ A ∗ α` / `A ⊼ α ≤ A`; the book's definitions (α ∈ ℱ↑) are the

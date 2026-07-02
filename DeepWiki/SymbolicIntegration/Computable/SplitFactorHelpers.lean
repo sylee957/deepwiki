@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.GcdCorrect
+import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 
 /-! # Generic associate/derivative helpers for the splitting-factorization correctness
