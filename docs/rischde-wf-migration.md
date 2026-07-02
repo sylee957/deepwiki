@@ -145,9 +145,17 @@ as the final gate. Every new `Sources/*` module must be imported into `Sources.l
 > (open-spec kernel) stays a *hypothesis* in both — P1 does NOT try to close it. Bounded proof-porting,
 > not research.
 
-> **P1 PROGRESS (2026-07-02, commit after this).** Landed gate-green in `RischDE/Structural.lean`:
-> `cPolyRischDEGWf_eq_noCancel_of_primitive`, `cRischDEGWf_some_imp_noCancel_of_primitive` (both ported
-> VERBATIM from their fuel'd templates — mechanical-mirror confirmed). Remaining P1 sub-lemmas (each a
+> **P1 PROGRESS (2026-07-02).** Landed gate-green in `RischDE/Structural.lean`:
+> `cPolyRischDEGWf_eq_noCancel_of_primitive` + `cRischDEGWf_some_imp_noCancel_of_primitive` (verbatim
+> ports) AND `cPolyRischDENoCancelGWf_cleared_identity` (checklist item 1 — the hardest, a WF-induction
+> proof). ★ METHOD PROVEN: the WF sub-lemmas port via **`fun_induction cFooWf … generalizing q with`**
+> (NOT `.induct` — that mis-binds the `let`-values; `fun_induction` matches the sibling pattern at
+> `OneShotSoundness.lean:528` for `cPolyRischDECancelPrimGWf`). Recursive case closes with
+> `simp only [c', p, denote, map_add] at hih ⊢; linear_combination hih`. So the remaining sub-lemmas are
+> de-risked bounded ports. Sizes (fuel'd templates in `TowerCorrectG.lean`): `cSPDEG_cleared_lifting_gen`
+> (:165, 106 lines, WF on `(n+1).toNat` → `fun_induction cSPDEGWf`), `cSPDEGCleared_of_inputs_gen`
+> (:301, 58 lines), `cRdeNormalDenominatorG_cleared_lift_gen` (:649, 48 lines — NON-recursive straight-line
+> def, so a plain unfold+algebra port, no induction). Remaining P1 sub-lemmas (each a
 > mirror-port of the named fuel'd template in `RischDE/TowerCorrectG.lean`; no Wf version or `_eq` bridge
 > exists yet, so port proof-by-proof):
 > 1. `cPolyRischDENoCancelGWf_cleared_identity` ← `cPolyRischDENoCancelG_cleared_identity_gen`
