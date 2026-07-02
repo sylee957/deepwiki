@@ -44,6 +44,59 @@ theorem rtResultant_ex241_eq :
   rw [← toPoly_rtResultantCompute_eq_rtResultant cA241 cD241 30 monic_toPoly_cD241
     natDegree_cA241_lt_cD241 (by native_decide), rtResultant_ex241, toPoly_ex241_value]
 
+/-! ### Closing Example 2.4.1: the residue ring `ℚ[t]/(4t²+1)` and `IsDomain`
+The concrete agreement `lrtGcdCompute_isSimilar_lrtSubresultant_concrete` needs a residue map
+`φ : ℚ[X] →+* S` killing `toPoly R` with `S` a domain. For Example 2.4.1 the modulus is `R = 4t²+1`
+(`cR241`); since `4X²+1` is **irreducible over ℚ** (degree 2, no rational root: `4x²+1 ≥ 1 > 0`),
+`S = AdjoinRoot (toPoly cR241) ≅ ℚ(i/2)` is a **field**, hence a domain. The quotient map
+`φ = AdjoinRoot.mk (toPoly cR241)` kills `toPoly cR241` by `AdjoinRoot.mk_self`. -/
+
+/-- **`toPoly cR241 = 1 + 4·X²`**: the Rothstein–Trager modulus `R = 4t²+1` read into `ℚ[X]`
+(here `X` is the `t`-indeterminate). -/
+theorem toPoly_cR241 : toPoly cR241 = 1 + 4 * X ^ 2 := by
+  show toPoly [(1 : ℚ), 0, 4] = _
+  rw [toPoly_cons, toPoly_cons, toPoly_cons, toPoly_nil]
+  simp only [map_zero, map_one, mul_zero, add_zero, map_ofNat]
+  ring
+
+/-- **`toPoly cR241` has degree 2**: `(toPoly cR241).natDegree = 2`. -/
+theorem natDegree_toPoly_cR241 : (toPoly cR241).natDegree = 2 := by
+  rw [toPoly_cR241]
+  compute_degree!
+
+/-- **`4X²+1` has no rational root**: `4x²+1 ≥ 1 > 0` for every `x : ℚ`, so it is never zero. -/
+theorem toPoly_cR241_not_isRoot (x : ℚ) : ¬ (toPoly cR241).IsRoot x := by
+  rw [Polynomial.IsRoot.def, toPoly_cR241]
+  simp only [Polynomial.eval_add, Polynomial.eval_one, Polynomial.eval_mul, Polynomial.eval_ofNat,
+    Polynomial.eval_pow, Polynomial.eval_X]
+  have : (0 : ℚ) ≤ 4 * x ^ 2 := by positivity
+  intro h
+  linarith
+
+/-- **`4X²+1` (i.e. `toPoly cR241`) is irreducible over `ℚ`**: degree 2 with no rational root
+(`irreducible_of_degree_le_three_of_not_isRoot`). -/
+theorem irreducible_toPoly_cR241 : Irreducible (toPoly cR241) := by
+  apply Polynomial.irreducible_of_degree_le_three_of_not_isRoot
+  · rw [natDegree_toPoly_cR241]; decide
+  · exact toPoly_cR241_not_isRoot
+
+/-- **`ℚ[t]/(4t²+1)` is a field** (`Fact (Irreducible (toPoly cR241))` ⟹ `AdjoinRoot.instField`). -/
+noncomputable instance : Fact (Irreducible (toPoly cR241)) := ⟨irreducible_toPoly_cR241⟩
+
+/-- **The residue ring** `R241 := AdjoinRoot (toPoly cR241) = ℚ[t]/(4t²+1)` of Example 2.4.1 — a field
+(hence a domain), over which the LRT log argument is normalized. -/
+noncomputable abbrev R241 : Type := AdjoinRoot (toPoly cR241)
+
+/-- **The residue map** `φ241 := AdjoinRoot.mk (toPoly cR241) : ℚ[X] →+* R241` (the quotient map). -/
+noncomputable abbrev φ241 : ℚ[X] →+* R241 := AdjoinRoot.mk (toPoly cR241)
+
+/-- **`φ241` kills `toPoly cR241`**: `φ241 (toPoly cR241) = 0` (`AdjoinRoot.mk_self`). -/
+theorem φ241_toPoly_cR241 : φ241 (toPoly cR241) = 0 := AdjoinRoot.mk_self
+
+/-- **`φ241 x = 0 ↔ (4t²+1) ∣ x`**: the kernel of the quotient map `φ241 = AdjoinRoot.mk (toPoly cR241)`
+is exactly the multiples of `toPoly cR241` (`AdjoinRoot.mk_eq_zero`). -/
+theorem φ241_eq_zero_iff (x : ℚ[X]) : φ241 x = 0 ↔ toPoly cR241 ∣ x := AdjoinRoot.mk_eq_zero
+
 /-! ### The decidable chain regularity for Example 2.4.1 (`native_decide`)
 The concrete chain `subresPRS 30 (liftCtoBPoly cD241) (bArgAmtD' cA241 cD241)` has `x`-degrees
 `[6,5,4,3,2,1,0]` (indices 0..6), then index 7 is zero. The book's LRT log argument is the **degree-3**
