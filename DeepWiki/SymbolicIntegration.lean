@@ -83,6 +83,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerGcdFFCore
+import DeepWiki.SymbolicIntegration.ComputableHyperexpLaurentCore
 import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
 import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
 import DeepWiki.SymbolicIntegration.ComputableTowerReduce
