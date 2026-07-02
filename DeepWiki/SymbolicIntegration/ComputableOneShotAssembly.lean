@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.ComputableOneShotSoundness
-import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
 import DeepWiki.SymbolicIntegration.ComputableUnifiedFuelFree
 
 /-! # The unconditional one-shot soundness for the PRIMITIVE (logarithmic) case (Bronstein §5.6)
@@ -479,8 +478,6 @@ a/d` for the primitive case — gated only on the abstract Hermite telescoping (
 the residue logs (`hform`, the engine gcd/resultant compute-bridge). The RT polynomial-part cancellation is
 automatic (`primitive_cancel`), so the primitive regime needs no integrability witness. -/
 
-variable [CFracGcdCore α]
-
 /-! ### ★ Discharging `hform`: the fuel-free `cLogPartGWf` ↔ per-root reassembly
 
 `hform` asks the fuel-free residue logs `cIntegrateReducedGWf.logs = cLogPartGWf Dt hNum hDen cands` to
@@ -488,7 +485,7 @@ equal, under the `(toK ·, toPolyG ·)` projection, the per-root list
 `s.toList.map (β ↦ (residue β, X − β))`. The residual left explicit is the candidate enumeration
 `cRationalResiduesGWf Dt hNum hDen cands = s.toList.map residueCand`; the literal log-argument shape is
 discharged by `cLogArgTowerGWf_eq_linear_factor`. -/
-omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free log argument is literally the residue's linear factor. -/
 theorem cLogArgTowerGWf_eq_linear_factor [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)]
     (Dt a d : CPolyG α) (c : α) (s : Finset (CFieldSpec.K α)) (β : CFieldSpec.K α)
@@ -523,7 +520,7 @@ theorem cLogArgTowerGWf_eq_linear_factor [CFracGcdCoreWf α] [DecidableEq (CFiel
     exact monic_toPolyG_cmonicG _ hraw_ne
   exact eq_of_monic_of_associated hmonic (Polynomial.monic_X_sub_C β) hassoc
 
-omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free reduced logs reassemble into the per-root Lagrange log form. -/
 theorem cIntegrateReducedGWf_logs_eq_per_root [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)]
     (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
@@ -596,7 +593,7 @@ derivable from the cleared identity alone: the rational-part numerator can have 
 identity does not pin `deg h_num`. So properness is taken as the named hypothesis `hproper`, and the bridge
 is the genuinely-provable half connecting it to the `s.card` form the one-shots consume. -/
 
-omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free reduced one-shot degree side condition follows from leftover properness. -/
 theorem cHermiteReduceTowerGWf_numer_degree_lt [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (s : Finset (CFieldSpec.K α))
@@ -606,7 +603,7 @@ theorem cHermiteReduceTowerGWf_numer_degree_lt [CFracGcdCoreWf α] (Dt : CPolyG 
     (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card := by
   rwa [hden, Lagrange.degree_nodal] at hproper
 
-omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free reduced one-shot degree side condition from residual properness. -/
 theorem cHermiteReduceTowerGWf_numer_degree_lt_of_residual [CFracGcdCoreWf α]
     (Dt : CPolyG α) (a d : CPolyG α) (s : Finset (CFieldSpec.K α))
@@ -625,7 +622,6 @@ theorem cHermiteReduceTowerGWf_numer_degree_lt_of_residual [CFracGcdCoreWf α]
     (cHermiteReduceTowerGWf_leftover_proper_of_residual Dt a d resNum resDen Dstar
       hnumeq hdeneq hdvd hresDen hDstar hresProper)
 
-omit [CFracGcdCore α] in
 /-- **★★ The fuel-free reduced-case field identity for the PRIMITIVE case** — for the normal-part capstone
 output `res = cIntegrateReducedGWf Dt a d cands` with a primitive monomial `toPolyG Dt = C w`, the Hermite
 telescoping and per-root residue-log reassembly hypotheses prove the field-level antiderivative identity
@@ -687,7 +683,6 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   field_identity_of_cIntegrateReducedGWf_primitive Dt a d cands s w hDt hherm hden hA hnorm hform
 
-omit [CFracGcdCore α] in
 /-- **The fuel-free primitive reduced identity with `hform` discharged from residue data.** -/
 theorem field_identity_of_cIntegrateReducedGWf_primitive_of_residueData
     [CFracGcdCoreWf α] [DecidableEq (CFieldSpec.K α)] (Dt : CPolyG α)
@@ -738,7 +733,6 @@ the RT residue match supplied by `hyperexp_engine_hmatch` (which needs `hb : b �
 witness `hsum : ∑c = 0`) instead of `primitive_engine_hmatch` (which discharges the cancellation
 automatically). -/
 
-omit [CFracGcdCore α] in
 /-- **★★ The fuel-free reduced-case field identity for the HYPEREXPONENTIAL case (given `∑c = 0`)** —
 for `res = cIntegrateReducedGWf Dt a d cands`, a hyperexponential monomial `toPolyG Dt = C b·X`, the Hermite
 half, the per-root reassembly, and the integrability witness `hsum : ∑c = 0` prove the reduced-case field
@@ -816,7 +810,7 @@ capstone on `(cₙ, dₙ)`, so the task-2 identity `field_identity_of_cIntegrate
 
 variable [CRischField α]
 
-omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **`cIntegrateGFullWf` pure-normal branch returns the fuel-free reduced capstone** — when the special
 part `b` and polynomial part `fₚ` of the fuel-free canonical split both vanish, the fuel-free full driver
 returns exactly `cIntegrateReducedGWf` on the simple part `(cₙ, dₙ)`. -/
@@ -840,7 +834,6 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
           (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) :=
   cIntegrateGFullWf_pureNormal_eq Dt a d cands hb hfp
 
-omit [CFracGcdCore α] in
 /-- **★★★ The fuel-free PRIMITIVE one-shot for `cIntegrateGFullWf` (pure-normal branch), checker-free** —
 for a primitive monomial, if the fuel-free full driver returns `some res` on the pure-normal branch, then the
 reduced fuel-free primitive identity and the fuel-free canonical reconstruction prove
@@ -955,7 +948,7 @@ output shape (`cIntegrateGFullWf_poly_eq`) and assemble the a-priori soundness o
 (`cIntegrateGFullWf_poly_oneShot`), gated on the poly-Risch-DE frontier `D(qₚ) = fₚ` (`hpoly`), the normal-part
 one-shot (`hnormal`), and the canonical split (`hrecon`). -/
 
-omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] in
+omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **`cIntegrateGFullWf` polynomial branch returns the recombined result** — using
 `canonicalRepresentationFastGWf`, `cIntegrateReducedGWf`, and `cPolyRischDEGWf`. -/
 theorem cIntegrateGFullWf_poly_eq [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
@@ -996,7 +989,6 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
             (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs⟩ :=
   cIntegrateGFullWf_poly_eq Dt a d cands qp hb hfp hqp
 
-omit [CFracGcdCore α] in
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf`, a-priori soundness** — the `…Wf`
 one-shot using the fuel-free poly-RDE oracle, reduced capstone, and canonical split. -/
 theorem cIntegrateGFullWf_poly_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
@@ -1093,7 +1085,6 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
 `qₚ = cIntegratePolyGWf fₚ`; since `cIntegratePolyGWf` is defeq to `cIntegratePolyG`, the existing constant
 coefficient field identity discharges `hpoly`. -/
 
-omit [CFracGcdCore α] in
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf` with `hpoly` discharged
 (primitive base).** -/
 theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
@@ -1166,7 +1157,6 @@ and the hyperexp one-shot is GENUINELY conditional on the integrability witness 
 engine success. The full unconditional story requires routing through `cIntegrateHyperexpFullG` (a different,
 larger soundness task), whose success encodes `∫R` solvability, NOT `∑c = 0`. -/
 
-omit [CFracGcdCore α] in
 /-- **★★★ The fuel-free HYPEREXPONENTIAL one-shot for `cIntegrateGFullWf` (pure-normal branch), checker-free,
 GATED on `∑c = 0`** — it pins the fuel-free driver output to `cIntegrateReducedGWf`, applies
 `field_identity_of_cIntegrateReducedGWf_hyperexp`, and closes
