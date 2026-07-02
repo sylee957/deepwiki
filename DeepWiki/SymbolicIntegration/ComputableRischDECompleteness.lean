@@ -500,18 +500,18 @@ theorem crischDESolveSoundWf_imp_solvable (f g y : QFunNZG β)
 /-! ### Wf-native completeness residual -/
 
 /-- **Fuel-free §6 completeness residual** `RischDECompletenessResidualWf f g`: the three Wf
-stage-completeness facts consumed directly by `crischDESolveSoundWf_some_of_stages`. `hwn`: a solvable RDE
-has nonzero `cWeakNormalizerGWf`. `hck`: the Wf weak-normalized input passes the §6.1 canon-normality gate.
+stage-completeness facts consumed by `crischDESolveSoundWf_some_of_stages`. `hwn`: a solvable RDE has nonzero
+`cWeakNormalizerGWf`. `hck`: the Wf weak-normalized input satisfies the §6.1 canonical-normality proposition.
 `hinner`: the fuel-free inner solver `crischDERawSolveWf` succeeds on the reduced pair. This is a
 `Prop`-bundle of stated §6 completeness assumptions, NO `sorry`. -/
 structure RischDECompletenessResidualWf (f g : QFunNZG β) : Prop where
   /-- §6.1/Wf: a solvable RDE has a nonzero fuel-free weak normalizer. -/
   hwn : FieldRDESolvable f g →
     CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
-  /-- §6.1/Wf: a solvable RDE passes the canon-normality gate after Wf weak normalization. -/
+  /-- §6.1/Wf: a solvable RDE satisfies the fuel-free canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
-    cisCanonNormalizedGWf (weakNormalizedF f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true
+    IsCanonNormalizedWf f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))
   /-- §6.2–6.6/Wf: a solvable RDE makes the fuel-free inner solve succeed on the reduced pair. -/
   hinner : FieldRDESolvable f g →
     ∃ ytilde : QFunNZG β,
@@ -528,7 +528,10 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : QFunNZG β)
     (hsol : FieldRDESolvable f g) (hres : RischDECompletenessResidualWf f g) :
     ∃ y, crischDESolveSoundWf f g = some y := by
   obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
-  exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) (hres.hck hsol) hinner⟩
+  have hck : cisCanonNormalizedGWf (weakNormalizedF f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true :=
+    (cisCanonNormalizedGWf_iff f _).mpr (hres.hck hsol)
+  exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) hck hinner⟩
 
 /-- **The fuel-free §6 RDE solver DECIDES solvability modulo the Wf-native residual**:
 `crischDESolveSoundWf f g` returns `some` iff the field-level RDE is solvable. The completeness direction is

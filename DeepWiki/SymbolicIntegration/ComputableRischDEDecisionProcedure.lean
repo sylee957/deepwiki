@@ -253,7 +253,7 @@ theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
     (h : RischDEDecisionProcedureFrontierWf f g) :
     RischDECompletenessResidualWf f g where
   hwn hsol := h.hwn hsol
-  hck hsol := (cisCanonNormalizedGWf_iff f _).mpr (h.hck hsol)
+  hck hsol := h.hck hsol
   hinner hsol := by
     simpa [rischDEInnerInputWf] using
       (crischDERawSolveWf_isSome_of_innerCompletenessWf (rischDEInnerInputWf f g).1
