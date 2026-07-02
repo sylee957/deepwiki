@@ -116,9 +116,8 @@ end Bridge
 
 /-! ## Fuel-free canonical-normality propositions
 
-The Wf propositions mirror the existing fueled normality gates, but read the normal part through
-`cSplitFactorFastGWf`. They are kept separate until the remaining correspondence lemmas eliminate the old
-fueled bridge assumptions from the public soundness API. -/
+The Wf propositions are the fuel-free normality gates: they read the normal part through
+`cSplitFactorFastGWf` and are the predicates consumed by the Wf soundness API. -/
 
 section NormalityWf
 
@@ -275,7 +274,10 @@ theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : QFunNZG β) :
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreG_qReduce _
 
-omit [CFracGcdCore β] in
+section RepinWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+
 /-- **The Wf re-pin gate reconciliation** (`cisCanonNormalizedCoreGWf_qReduce_weakNormalized`): for the
 weak-normalized `ftilde = weakNormalizedF f q'` (`q'` the lift of the fuel-free weak normalizer
 `cWeakNormalizerGWf [1] f.1.1 f.1.2`), the Wf gated core's denominator-direct check on the reduced input
@@ -286,6 +288,12 @@ theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized (f : QFunNZG β) :
       = cisCanonNormalizedGWf (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreGWf_qReduce _
+
+end RepinWf
+
+section RepinFuel
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
 
 /-- **The re-pin gate decides `IsCanonNormalized`** (`cisCanonNormalizedCoreG_qReduce_weakNormalized_iff`): the gated core's
 denominator-direct check on the reduced input passes iff the §6.1 normalization guarantee `IsCanonNormalized f q'`
@@ -301,7 +309,12 @@ theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f 
   rw [cisCanonNormalizedCoreG_qReduce_weakNormalized]
   exact cisCanonNormalizedG_iff f _
 
-omit [CFracGcdCore β] in
+end RepinFuel
+
+section RepinWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+
 /-- **The Wf re-pin gate decides `IsCanonNormalizedWf`**: the Wf gated core's denominator-direct check on the
 reduced weak-normalized input passes iff the fuel-free §6.1 normalization guarantee holds. -/
 theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
@@ -312,7 +325,13 @@ theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff [CFieldDomain β] (
   rw [cisCanonNormalizedCoreGWf_qReduce_weakNormalized]
   exact cisCanonNormalizedGWf_iff f _
 
+end RepinWf
+
 /-! ### Restatement against the intended wording (anonymous `example`) -/
+
+section RepinFuel
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
 
 -- ★ The re-pin corollary: the gated core's denominator-direct §6.1 gate on the reduced weak-normalized input is
 -- the wrapper's §6.1 gate on the pre-reduce input — the equation the production re-pin rewrites by. By `rfl`.
@@ -323,6 +342,12 @@ example (f : QFunNZG β) :
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreG_qReduce_weakNormalized f
 
+end RepinFuel
+
+section RepinWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+
 -- The same re-pin reconciliation stated entirely on the Wf gate.
 example (f : QFunNZG β) :
     cisCanonNormalizedCoreGWf (qReduce (weakNormalizedF f
@@ -330,6 +355,8 @@ example (f : QFunNZG β) :
       = cisCanonNormalizedGWf (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreGWf_qReduce_weakNormalized f
+
+end RepinWf
 
 end Repin
 
