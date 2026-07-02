@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 
 /-! # Hyperexponential coefficient reader
 
