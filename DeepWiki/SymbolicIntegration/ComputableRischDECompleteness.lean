@@ -364,6 +364,64 @@ theorem cRischDEGWf_isSome_of_innerCompletenessWf (Dt fnum fden gnum gden : CPol
 
 end InnerSubResidualWf
 
+/-! ## Fueled-to-Wf inner completeness transfer
+
+The deep §6 residuals were first assembled for the old fueled inner solver. The public Wf decision procedure
+should not expose the fueled functions directly, so this section isolates the exact transfer equalities needed
+to reuse that assembly as a Wf inner-completeness proof. -/
+
+section InnerTransferWf
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+  [CFracGcdCoreWf α] [CRischField α]
+
+/-- **The inner Wf transfer residual**: Wf and fueled §6 inner stages agree on the current input. -/
+structure RischDEInnerCompletenessTransferWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
+  /-- The Wf normal-denominator stage agrees with the old fueled normal-denominator stage. -/
+  hnorm : cRdeNormalDenominatorGWf Dt fnum fden gnum gden
+    = cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden
+  /-- The Wf special-denominator stage agrees with the old fueled special-denominator stage. -/
+  hspecial : ∀ a b c : CPolyG α,
+    cRdeSpecialDenominatorGWf Dt a b c = cRdeSpecialDenominatorG Dt towerRischDEFuel a b c
+  /-- The Wf assembled inner solver agrees with the old fueled assembled inner solver. -/
+  hsolve : cRischDEGWf Dt fnum fden gnum gden
+    = cRischDEG Dt towerRischDEFuel fnum fden gnum gden
+
+/-- **Transfer fueled inner completeness to Wf inner completeness** using the stage-agreement residual. -/
+theorem rischDEInnerCompletenessWf_of_transfer (Dt fnum fden gnum gden : CPolyG α)
+    (hinner : RischDEInnerCompleteness Dt fnum fden gnum gden)
+    (htransfer : RischDEInnerCompletenessTransferWf Dt fnum fden gnum gden) :
+    RischDEInnerCompletenessWf Dt fnum fden gnum gden where
+  hnorm hsol := by
+    rw [htransfer.hnorm]
+    exact hinner.hnorm hsol
+  hbound a0 b0 c0 h0 hnormWf q hred := by
+    have hnormFuel : cRdeNormalDenominatorG Dt towerRischDEFuel fnum fden gnum gden =
+        some (a0, b0, c0, h0) := by
+      rw [← htransfer.hnorm]
+      exact hnormWf
+    have hspecial := htransfer.hspecial a0 b0 c0
+    have hredFuel : IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt towerRischDEFuel a0 b0 c0).2.2.1 q := by
+      simpa [hspecial] using hred
+    have hboundFuel := hinner.hbound a0 b0 c0 h0 hnormFuel q hredFuel
+    simpa [hspecial] using hboundFuel
+  hsolve hsol := by
+    rw [htransfer.hsolve]
+    exact hinner.hsolve hsol
+
+/-! ### Restatement against the Wf inner-completeness shape (anonymous `example`) -/
+
+-- A fueled inner-completeness proof plus the stage-agreement residual supplies the Wf inner-completeness proof.
+example (Dt fnum fden gnum gden : CPolyG α)
+    (hinner : RischDEInnerCompleteness Dt fnum fden gnum gden)
+    (htransfer : RischDEInnerCompletenessTransferWf Dt fnum fden gnum gden) :
+    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
+  rischDEInnerCompletenessWf_of_transfer Dt fnum fden gnum gden hinner htransfer
+
+end InnerTransferWf
+
 /-! ## Fuel-free raw inner-solver bridge
 
 The Wf wrapper calls `crischDERawSolveWf`, not `cRischDEGWf` directly. These structural bridges move the
