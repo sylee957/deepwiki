@@ -36,7 +36,7 @@ The Wf replacement `RischDEInnerDecisionFrontierWf` keeps the normal-denominator
 |---|---|---|---|---|
 | `RdeNormalClearedResidual` (`hcleared` = `dₙh²g ∈ k⟨t⟩`, the differential-subring fact) | `hnorm` / `hdvd` | Cor 6.1.1(ii) / Thm 6.1.2 | Mathlib `derivative_rootMultiplicity`, per-pole order via `cValuationG` | the whole UFD/per-pole/arithmetic layer; structural clauses from splitting |
 | `RdeBoundCancellationResidual` (deepest correct tip = `ExpPrimLogDerivativeBound`, the log-deriv oracle) | `hbound` | §6.3 Thm 6.3.1 / Lemma 6.3.3-6.3.4 (`λ`-recursion) | log-derivative decision §5.12 | non-cancellation bound + the **nonlinear `λ`-recursion** (proven outright) |
-| `RischDESolveExhaustiveResidual` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
+| `RischDESolveExhaustiveResidual{Wf}` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
 
 **Soundness is direct at the public boundary.** The `→` of the Wf equivalence is
 `crischDESolveSoundWf_field`, which consumes `RischDESoundnessWf`; the decision theorem exposes only the Wf
@@ -146,8 +146,8 @@ end InnerFrontier
 
 This is the replacement inner frontier for the public Wf decision path. It keeps both the normal-denominator
 and degree-bound residuals fuel-free (`RdeNormalDivisibilityResidualWf`,
-`RdeBoundCancellationResidualWf`) and states the remaining solver-exhaustiveness clause directly against
-the assembled `cRischDEGWf` API. -/
+`RdeBoundCancellationResidualWf`) and consumes the Wf solver-exhaustiveness residual
+`RischDESolveExhaustiveResidualWf`. -/
 
 section InnerFrontierWf
 
@@ -160,16 +160,16 @@ structure RischDEInnerDecisionFrontierWf (Dt fnum fden gnum gden : CPolyG α) : 
   hnorm : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden
   /-- §6.3/Wf degree-bound cancellation residual on the Wf special-cleared coefficients. -/
   hbound : RdeBoundCancellationResidualWf Dt fnum fden gnum gden
-  /-- §6.2-6.6/Wf inner solver exhaustiveness. -/
-  hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    (cRischDEGWf Dt fnum fden gnum gden).isSome = true
+  /-- §6.2-6.6/Wf inner solver exhaustiveness residual. -/
+  hsolve : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden
 
 /-- The Wf inner frontier assembles `RischDEInnerCompletenessWf`. -/
 theorem rischDEInnerCompletenessWf_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
     (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
   rischDEInnerCompletenessWf_of_norm_bound_solve Dt fnum fden gnum gden
-    h.hnorm (hboundWf_of_cancellationResidualWf Dt fnum fden gnum gden h.hbound) h.hsolve
+    h.hnorm (hboundWf_of_cancellationResidualWf Dt fnum fden gnum gden h.hbound)
+    (hsolveWf_of_exhaustiveResidualWf Dt fnum fden gnum gden h.hsolve)
 
 /-- The Wf inner frontier yields fuel-free inner-solver success on polynomial-solvable inputs. -/
 theorem cRischDEGWf_isSome_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
@@ -327,7 +327,8 @@ through `crischDESolveSoundWf_complete_of_residualWf`; the `→` (soundness) is 
 `rischDEInnerCompleteness_of_decisionFrontierFueled` assembles these three into the original fueled
 `RischDEInnerCompleteness` map. The Wf replacement
 `rischDEInnerCompletenessWf_of_decisionFrontierWf` assembles the fuel-free inner map through
-`RdeNormalDivisibilityResidualWf`, `RdeBoundCancellationResidualWf`, and the Wf solver clause. The public Wf capstone consumes
+`RdeNormalDivisibilityResidualWf`, `RdeBoundCancellationResidualWf`, and
+`RischDESolveExhaustiveResidualWf`. The public Wf capstone consumes
 `RischDEInnerCompletenessWf` directly through the field-level frontier, then uses the §6.1 `hwn`/`hck` plus
 the Wf inner-input clauses through `RischDECompletenessResidualWf`. The lift of Wf inner completeness into
 the raw-solver `hinner` clause is encoded in

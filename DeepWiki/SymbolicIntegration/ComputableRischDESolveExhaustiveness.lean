@@ -124,6 +124,33 @@ theorem cRischDEG_isSome_iff_stages (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnu
 
 end EngineLayer
 
+/-! ## Wf engine layer: `cRischDEGWf.isSome` from Wf stage `some`s
+
+The fuel-free solver has the same nested control flow as `cRischDEG`, but its stages are the Wf normal
+denominator, Wf SPDE, and Wf poly-RDE dispatcher. -/
+
+section EngineLayerWf
+
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
+
+/-- The Wf stage `some`s force `cRischDEGWf.isSome`. -/
+theorem cRischDEGWf_isSome_of_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α)
+    (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
+    (hnorm : cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hspde : cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+      = some (bbar, cbar, m, α', β))
+    (hpoly : cPolyRischDEGWf Dt bbar cbar m = some v) :
+    (cRischDEGWf Dt fnum fden gnum gden).isSome = true := by
+  rw [cRischDEGWf, hnorm]
+  simp only [hspde, hpoly, Option.isSome_some]
+
+end EngineLayerWf
+
 /-! ## The reachable base layer: the dispatcher's total sub-cases are exhaustive unconditionally
 
 `cPolyRischDEG`'s `b = 0` branch is **pure integration** — `cIntegratePolyG c`, the term-by-term
@@ -2316,6 +2343,61 @@ theorem exhaustiveResidual_of_fractionalBridge (Dt fnum fden gnum gden : CPolyG 
 
 end ExhaustiveResidual
 
+/-! ## Wf §6.4–6.6 exhaustiveness residual
+
+This is the fuel-free counterpart of `RischDESolveExhaustiveResidual`: a solution forces the Wf
+normal-denominator stage, the Wf SPDE stage, and the Wf poly-RDE dispatcher to succeed. The resulting bridge
+is the exact `RischDEInnerCompletenessWf.hsolve` field. -/
+
+section ExhaustiveResidualWf
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+  [CRischField α]
+
+/-- The Wf §6.4–6.6 exhaustiveness residual. -/
+structure RischDESolveExhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
+  /-- §6.2/Wf: a polynomial solution makes the Wf normal-denominator step return `some`. -/
+  hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true
+  /-- §6.4/Wf: a solution makes the Wf SPDE peel return `some`. -/
+  hspde : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      (cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)).isSome = true
+  /-- §6.5/§6.6/Wf: for the Wf SPDE output, a solution makes the Wf poly-RDE dispatcher return `some`. -/
+  hpoly : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+    ∀ a0 b0 c0 h0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β) →
+      (cPolyRischDEGWf Dt bbar cbar m).isSome = true
+
+/-- The Wf exhaustiveness residual produces the exact Wf `hsolve` clause. -/
+theorem hsolveWf_of_exhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α)
+    (hres : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
+    (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRischDEGWf Dt fnum fden gnum gden).isSome = true := by
+  intro hsol
+  obtain ⟨⟨a0, b0, c0, h0⟩, hnorm⟩ := Option.isSome_iff_exists.mp (hres.hnorm hsol)
+  obtain ⟨⟨bbar, cbar, m, α', β⟩, hspde⟩ :=
+    Option.isSome_iff_exists.mp (hres.hspde hsol a0 b0 c0 h0 hnorm)
+  obtain ⟨v, hpoly⟩ :=
+    Option.isSome_iff_exists.mp (hres.hpoly hsol a0 b0 c0 h0 bbar cbar m α' β hnorm hspde)
+  exact cRischDEGWf_isSome_of_stages Dt fnum fden gnum gden
+    a0 b0 c0 h0 bbar cbar m α' β v hnorm hspde hpoly
+
+end ExhaustiveResidualWf
+
 /-! ## ★ `RischDEInnerCompleteness` fully assembled from its three component residuals
 
 With `hsolve` now produced (`hsolve_of_exhaustiveResidual`), all three clauses of
@@ -2703,6 +2785,7 @@ compiler) -/
 
 #print axioms cRischDEG_isSome_of_stages
 #print axioms cRischDEG_isSome_iff_stages
+#print axioms cRischDEGWf_isSome_of_stages
 #print axioms cPolyRischDEG_isSome_of_bZero
 #print axioms cSPDEG_isSome_of_const_base
 #print axioms cSPDEG_isSome_of_recurse
@@ -2744,6 +2827,7 @@ compiler) -/
 #print axioms cPolyRischDEG_isSome_cancelPrim_of_sol
 #print axioms cPolyRischDEG_isSome_cancelExp_of_sol
 #print axioms hsolve_of_exhaustiveResidual
+#print axioms hsolveWf_of_exhaustiveResidualWf
 #print axioms rischDEInnerCompleteness_of_residuals
 #print axioms rdeNormalDenominator_glue_inverse
 #print axioms specialDenominatorSubst_cleared_inverse
