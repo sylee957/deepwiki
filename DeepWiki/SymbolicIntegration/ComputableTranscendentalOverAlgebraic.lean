@@ -49,9 +49,9 @@ toK-bridge into `K = AdjoinRoot (X² − C(toK f))` (a `Field` because `X² − 
 * the `RadExt` ring/derivation through the typeclass projections (`CField.mul`, `CDiffField.cderiv`);
 * a **mixed-tower derivation**: `D(t²) = 2t²` and `D(y·t) = (ℓ+1)·y·t` over the radical base — the first
   derivative computed at *transcendental level over an algebraic base*;
-* **★ UNCONDITIONALLY** (no `[CFieldDomain]` assumption): `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` is a `CField`
-  *and* `CDiffField`, and `D(t) = 1` / `t · t⁻¹ = 1` compute over it by `native_decide` (the `CFieldDomain`
-  `Prop`-erasure keeps the tower native-compilable) — the first fully-discharged transcendental-on-algebraic
+* unconditionally (no `[CFieldDomain]` assumption): `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` is a `CField`
+  and `CDiffField`, and `D(t) = 1` / `t · t⁻¹ = 1` compute over it by `native_decide` (the `CFieldDomain`
+  Prop-erasure keeps the tower native-compilable) — the first fully-discharged transcendental-on-algebraic
   computation.
 
 The bridge is noncomputable (routes through `AdjoinRoot`), but only the `CFieldDomain` Prop is consumed, so
@@ -72,7 +72,7 @@ carries `n : ℕ` and `f : α`; the instances then read `n`/`f` off the type and
 The structure inherits nothing (like the min-plus carriers), so the `CField` algebra is attached
 explicitly. -/
 
-/-- **The simple-radical-extension carrier as a type** `RadExt α n f = α[y]/(yⁿ − f)`: a one-field
+/-- The simple-radical-extension carrier as a type `RadExt α n f = α[y]/(yⁿ − f)`: a one-field
 structure wrapping a `RadElem α` (`= List α`, the coefficient list `[a₀,…,a_{n−1}]` for `Σ aᵢyⁱ`), with
 the degree `n` and radicand `f` carried by the **type** so typeclass resolution can find the radical
 `CField`/`CDiffField` instances. `ofRad ::`/`toRad` are the constructor/projection (uniform with the
@@ -87,16 +87,16 @@ namespace RadExt
 
 variable {α : Type*} [CField α] {n : ℕ} {f : α}
 
-/-- **Zero** of `RadExt α n f` — the wrapped `radZero` (`[]`). -/
+/-- Zero of `RadExt α n f` — the wrapped `radZero` (`[]`). -/
 def zero : RadExt α n f := ⟨radZero⟩
 
-/-- **One** of `RadExt α n f` — the wrapped `radOne` (`[1]`). -/
+/-- One of `RadExt α n f` — the wrapped `radOne` (`[1]`). -/
 def one : RadExt α n f := ⟨radOne⟩
 
-/-- **The generator `y`** of `RadExt α n f` — the wrapped `radGen` (`[0, 1]`). -/
+/-- The generator `y` of `RadExt α n f` — the wrapped `radGen` (`[0, 1]`). -/
 def gen : RadExt α n f := ⟨radGen⟩
 
-/-- **Canonicalize a `RadElem` to degree `< n`** `radCanon n f u := cnormG (radReduce n f (len u + 1) u)`
+/-- Canonicalize a `RadElem` to degree `< n` `radCanon n f u := cnormG (radReduce n f (len u + 1) u)`
 — fold every `yᵐ` with `m ≥ n` down by `yⁿ = f` and strip trailing zeros, giving a **normalized**
 representative of length `≤ n`. The outer `cnormG` guarantees the result length `≤ n` outright (so the `mk
 ∘ toPolyG` bridge into `AdjoinRoot (Xⁿ − f)` is faithful on it). On engine-produced values (already length
@@ -104,17 +104,17 @@ representative of length `≤ n`. The outer `cnormG` guarantees the result lengt
 def radCanon (n : ℕ) (f : α) (u : RadElem α) : RadElem α :=
   CPolyG.cnormG (radReduce n f ((u : List α).length + 1) u)
 
-/-- **Addition** in `RadExt α n f` — componentwise `radAdd`, canonicalized to degree `< n`. -/
+/-- Addition in `RadExt α n f` — componentwise `radAdd`, canonicalized to degree `< n`. -/
 def add (p q : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radAdd p.toRad q.toRad)⟩
 
-/-- **Negation** in `RadExt α n f` — componentwise `radNeg`, canonicalized to degree `< n`. -/
+/-- Negation in `RadExt α n f` — componentwise `radNeg`, canonicalized to degree `< n`. -/
 def neg (p : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radNeg p.toRad)⟩
 
-/-- **Multiplication** in `RadExt α n f` — `radMul n f` (poly-multiply in `y`, reduce `yⁿ → f`),
+/-- Multiplication in `RadExt α n f` — `radMul n f` (poly-multiply in `y`, reduce `yⁿ → f`),
 canonicalized (`radMul` already folds, so this is idempotent). -/
 def mul (p q : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radMul n f p.toRad q.toRad)⟩
 
-/-- **Inverse** in `RadExt α n f` (for `n = 2`, the field case) — the **canonicalized** conjugate-norm
+/-- Inverse in `RadExt α n f` (for `n = 2`, the field case) — the **canonicalized** conjugate-norm
 reciprocal: `radInvCanon n f u := radCanon n f (radInv2 f (radCanon n f u))`, reducing the input to a
 degree-`< n` rep `a + b·y` *before* `radInv2` and the output afterward. Canonicalizing the input is what
 makes the inverse faithful — `radInv2` reads only `y⁰`/`y¹`, so it must see the *reduced* `a, b` (an
@@ -122,7 +122,7 @@ over-degree input would have its high terms silently dropped). On the reduced re
 the honest `n = 2` field inverse (`radMul 2 f u (radInv2 f u) = 1`, validated over ℚ(x)). -/
 def inv (p : RadExt α n f) : RadExt α n f := ⟨radCanon n f (radInv2 f (radCanon n f p.toRad))⟩
 
-/-- **Zero test** in `RadExt α n f` — **reduce `mod yⁿ = f` first**, then `radIsZero`: the element is
+/-- Zero test in `RadExt α n f` — **reduce `mod yⁿ = f` first**, then `radIsZero`: the element is
 zero in `α[y]/(yⁿ − f)` iff its `radReduce`d (degree `< n`) coefficient list vanishes. Reducing first is
 what makes the test agree with the genuine field `AdjoinRoot (Xⁿ − f)` for *every* representative (an
 over-degree `aₘyᵐ` with `m ≥ n` folds to `aₘ·f·y^{m−n}`, not spuriously nonzero); on engine-produced
@@ -139,7 +139,7 @@ honest radical-carrier computations (`radZero`/…/`radIsZero`), `inv` the conju
 `CField`/`CFieldSpec` split that keeps the tower `native_decide`-able. This is the instance that lets a
 transcendental monomial stack on top of the radical (`QFunNZG (RadExt α n f)`). -/
 
-/-- **`CField (RadExt α n f)`**: the simple-radical extension `α[y]/(yⁿ − f)` as a *computable* field
+/-- `CField (RadExt α n f)`: the simple-radical extension `α[y]/(yⁿ − f)` as a *computable* field
 (over `[CField α] [CFieldDomain α]`). `zero`/`one`/`add`/`mul`/`neg`/`inv`/`isZero` are the radical-carrier
 ops (`radZero`/`radOne`/`radAdd`/`radMul`/`radNeg`/`radInv2`/`radIsZero`), all list/field arithmetic, so
 the instance is computable — `CPolyG (RadExt …)` reduces. The `CFieldDomain α` binder is carried so the
@@ -176,7 +176,7 @@ generally in `ComputableRadicalDerivationInvariant` (`toPolyG_radDeriv_radAdd`,
 structure. This is the heart: with it, `RadExt` is a differential Risch base, and a transcendental
 monomial over it inherits the full tower derivation. -/
 
-/-- **`CDiffField (RadExt α n f)`**: the radical extension as a *computable differential* field (over
+/-- `CDiffField (RadExt α n f)`: the radical extension as a *computable differential* field (over
 `[CField α] [CDiffField α]`). `cderiv := radDeriv n f` is the **diagonal** derivation extending `α`'s
 `cderiv` by `y' = (f'/(nf))·y` (Trager's `(f/y)'`); its additivity and Leibniz law are the proven general
 theorems `RadElem.toPolyG_radDeriv_radAdd` / `RadElem.mk_toPolyG_radDeriv_radMul`. Computable (`cderiv` is
@@ -186,7 +186,7 @@ instance instCDiffFieldRadExt {α : Type*} [CField α] [CFieldDomain α] [CDiffF
     CDiffField (RadExt α n f) where
   cderiv p := ⟨radDeriv n f p.toRad⟩
 
-/-! ### ★ `CRischField (RadExt α n f)` — the algebraic-level RDE by scalar decoupling
+/-! ### `CRischField (RadExt α n f)` — the algebraic-level RDE by scalar decoupling
 
 The base Risch-DE solve `crischDESolve B C : Option (RadExt α n f)` for `Dz + B·z = C` over the radical
 field itself. This is **what lets the Risch integrator recurse *through* the algebraic level** — every §6.6
@@ -211,13 +211,13 @@ witness) and *complete on the decoupled (scalar-`B`) slice*. The §6.6 primitive
 cancellation cases call `crischDESolve b₀ (lc c)` / `crischDESolve (b₀ + m·η) (lc c)` with `b₀, η ∈ α`
 lifted into `RadExt` as scalars, so the scalar branch is exactly the case those cancellations hit. -/
 
-/-- **Scalar test on a `RadExt`** `RadExt.isScalar p`: `true` iff every `y`-component of `p` (everything
+/-- Scalar test on a `RadExt` `RadExt.isScalar p`: `true` iff every `y`-component of `p` (everything
 past the `y⁰` head) vanishes — `radIsZero (p.toRad).tail`. The decoupling base solve handles scalar
 coefficients `B` (`b₀ + b₁y + … = b₀`); a non-scalar `B` is the coupled-system case. -/
 def RadExt.isScalar {α : Type*} [CField α] {n : ℕ} {f : α} (p : RadExt α n f) : Bool :=
   RadElem.radIsZero ((p.toRad : List α).tail)
 
-/-- **Scalar-decoupling base RDE solve** `radExtRischDESolve B C : Option (RadExt α n f)` for
+/-- Scalar-decoupling base RDE solve `radExtRischDESolve B C : Option (RadExt α n f)` for
 `Dz + B·z = C` over `RadExt α n f`, using the diagonality of `radDeriv n f`. For a **scalar** `B`
 (`RadExt.isScalar B`, so `B = b₀`), the equation decouples per `y`-power into the `n` base RDEs
 `Dzᵢ + (b₀ + (i:α)·ℓ)·zᵢ = Cᵢ` over `α` (`ℓ = logDerRadicand n f = f'/(nf)`), each solved by
@@ -240,7 +240,7 @@ def radExtRischDESolve {α : Type*} [CField α] [CDiffField α] [CRischField α]
       CRischField.crischDESolve coeff Ci).map RadExt.ofRad)
   else none
 
-/-- **★ `CRischField (RadExt α n f)`** — the base Risch-DE solver over the radical field, by **scalar
+/-- `CRischField (RadExt α n f)` — the base Risch-DE solver over the radical field, by **scalar
 decoupling** (`radExtRischDESolve`). For a scalar coefficient `B = b₀`, the diagonal `radDeriv` makes
 `Dz + B·z = C` split into the `n` base RDEs `Dzᵢ + (b₀ + (i:α)·ℓ)·zᵢ = Cᵢ` over `α`, each dispatched to
 the base `[CRischField α]` solve; a non-scalar `B` (coupled system, Bronstein Ch. 8) returns `none`.
@@ -252,7 +252,7 @@ instance instCRischFieldRadExt {α : Type*} [CField α] [CDiffField α] [CFieldD
     {n : ℕ} {f : α} : CRischField (RadExt α n f) where
   crischDESolve := radExtRischDESolve
 
-/-! ### ★ The base radical `√(x³+1)` over `ℚ(x)`, as a `CField`+`CDiffField`
+/-! ### The base radical `√(x³+1)` over `ℚ(x)`, as a `CField`+`CDiffField`
 
 `α = QFunNZG ℚ ≅ ℚ(x)`, `n = 2`, `f = x³+1`. `RadX3 := RadExt (QFunNZG ℚ) 2 radicandX3p1` is the radical
 field `ℚ(x)[√(x³+1)]`. We exhibit the ring and derivation through the **typeclass projections** (`CField.mul`,
@@ -264,42 +264,40 @@ abbrev RadX3 : Type := RadExt (QFunNZG ℚ) 2 radicandX3p1
 /-- The generator `y = √(x³+1)` as an element of `RadX3` (through the carrier `RadExt.gen`). -/
 def radX3Gen : RadX3 := RadExt.gen
 
-/-- **★ `y·y = f` in `RadX3` through `CField.mul`** (`native_decide`): squaring the generator `y =
-√(x³+1)` via the **typeclass** product `CField.mul` (which dispatches to `radMul 2 (x³+1)`) reduces `y² →
-f = x³+1`. Checked by `CField.isZero` of `y·y − f` (`f` lifted to `RadX3` as `⟨[x³+1]⟩`). THE `CField
-(RadExt …)` INSTANCE DISPATCHES AND COMPUTES. -/
+/-- `y·y = f` in `RadX3` through `CField.mul` (`native_decide`): squaring the generator `y =
+√(x³+1)` via the typeclass product `CField.mul` (which dispatches to `radMul 2 (x³+1)`) reduces `y² →
+f = x³+1`. Checked by `CField.isZero` of `y·y − f` (`f` lifted to `RadX3` as `⟨[x³+1]⟩`). -/
 theorem radX3_gen_sq_eq_radicand :
     CField.isZero (CField.sub (CField.mul radX3Gen radX3Gen) (⟨[radicandX3p1]⟩ : RadX3)) = true := by
   native_decide
 
-/-- **★ `D(y) = (f'/(2f))·y` in `RadX3` through `CDiffField.cderiv`** (`native_decide`): the **typeclass**
+/-- `D(y) = (f'/(2f))·y` in `RadX3` through `CDiffField.cderiv` (`native_decide`): the typeclass
 derivation `CDiffField.cderiv` (dispatching to the diagonal `radDeriv 2 (x³+1)`) sends `y = √(x³+1)` to
-`ℓ·y` with `ℓ = f'/(2f) = 3x²/(2(x³+1))`. Checked by `CField.isZero` of `D(y) − [0, ℓ]`. THE `CDiffField
-(RadExt …)` INSTANCE DISPATCHES — `RadExt` is a DIFFERENTIAL Risch base. -/
+`ℓ·y` with `ℓ = f'/(2f) = 3x²/(2(x³+1))`. Checked by `CField.isZero` of `D(y) − [0, ℓ]`. -/
 theorem radX3_cderiv_gen_eq :
     CField.isZero (CField.sub (CDiffField.cderiv radX3Gen)
       (⟨[CField.zero, radicandLogDer]⟩ : RadX3)) = true := by native_decide
 
-/-- **★ `u · u⁻¹ = 1` in `RadX3` through `CField.mul`/`CField.inv`** (`native_decide`): for `u = x + y`
-(`= ⟨[x, 1]⟩`), the **typeclass** inverse `CField.inv` (conjugate-norm `radInv2`) satisfies `u · u⁻¹ = 1`.
-The field `inv` of the `CField (RadExt …)` instance is genuine — `RadExt` is a (computable) FIELD, not just
+/-- `u · u⁻¹ = 1` in `RadX3` through `CField.mul`/`CField.inv` (`native_decide`): for `u = x + y`
+(`= ⟨[x, 1]⟩`), the typeclass inverse `CField.inv` (conjugate-norm `radInv2`) satisfies `u · u⁻¹ = 1`.
+The field `inv` of the `CField (RadExt …)` instance is genuine — `RadExt` is a computable field, not just
 a ring. Checked by `CField.isZero` of `u · u⁻¹ − 1`. -/
 theorem radX3_mul_inv_eq_one :
     CField.isZero (CField.sub (CField.mul (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3)
       (CField.inv (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3))) CField.one) = true := by native_decide
 
-/-- **`D(1) = 0` and `D(0) = 0` in `RadX3`** (`native_decide`): the typeclass derivation annihilates the
+/-- `D(1) = 0` and `D(0) = 0` in `RadX3` (`native_decide`): the typeclass derivation annihilates the
 unit and zero, as a derivation must (the diagonal `radDeriv`'s `i = 0` component, base `D(1) = 0`). -/
 theorem radX3_cderiv_one_zero :
     CField.isZero (CDiffField.cderiv (CField.one : RadX3)) = true ∧
     CField.isZero (CDiffField.cderiv (CField.zero : RadX3)) = true := by
   constructor <;> native_decide
 
-/-! ### ★★ The generic `CRischField (RadExt …)` solves a GENUINE algebraic RDE (`native_decide`)
+/-! ### The generic `CRischField (RadExt …)` solves a genuine algebraic RDE (`native_decide`)
 
-The validation that `instCRischFieldRadExt` does **real** algebraic-RDE work — not the retired stub's
-trivial `f = 0 ∧ g = 0 ↦ 0` passthrough. Over `RadX3 = ℚ(x)[√(x³+1)]` we take a **nonzero scalar**
-coefficient `B = 1` and a right-hand side `C` carrying a **genuine `y`-component**, then solve the RDE
+The validation that `instCRischFieldRadExt` does real algebraic-RDE work — not a trivial
+`f = 0 ∧ g = 0 ↦ 0` passthrough. Over `RadX3 = ℚ(x)[√(x³+1)]` we take a nonzero scalar
+coefficient `B = 1` and a right-hand side `C` carrying a genuine `y`-component, then solve the RDE
 `Dz + B·z = C` by `CRischField.crischDESolve` (which dispatches to `radExtRischDESolve`'s scalar
 decoupling) and certify `radDeriv z + B·z = C` exactly.
 
@@ -326,27 +324,25 @@ def radX3RischC : RadX3 :=
   ⟨RadElem.radAdd (RadElem.radDeriv 2 radicandX3p1 radX3RischZ.toRad)
     (RadElem.radMul 2 radicandX3p1 radX3RischB.toRad radX3RischZ.toRad)⟩
 
-/-- **The right-hand side `C` has a genuine `y`-component** (`native_decide`): `radIsZero (C.toRad.tail)
+/-- The right-hand side `C` has a genuine `y`-component (`native_decide`): `radIsZero (C.toRad.tail)
 = false` — `C`'s `y¹`-coefficient `2ℓ + 2 ≠ 0`, so the solve is a *real* coupled-looking algebraic RDE
 (not a scalar `α`-equation in disguise), exactly the case the scalar-`B` decoupling must dispose. -/
 theorem radX3Risch_C_has_y_component :
     RadElem.radIsZero ((radX3RischC.toRad : List (QFunNZG ℚ)).tail) = false := by native_decide
 
-/-- **The generic `crischDESolve` returns `some` on the algebraic RDE** (`native_decide`): over
+/-- The generic `crischDESolve` returns `some` on the algebraic RDE (`native_decide`): over
 `RadX3 = ℚ(x)[√(x³+1)]`, `CRischField.crischDESolve B C` (`B = 1`, `C` with a `y`-component) succeeds —
 the scalar decoupling found a solution to both base RDEs over ℚ(x). -/
 theorem radX3Risch_solve_isSome :
     (CRischField.crischDESolve radX3RischB radX3RischC).isSome = true := by native_decide
 
-/-- **★★ The generic `CRischField (RadExt …)` solves a genuine algebraic RDE: `radDeriv z + B·z = C`**
-(`native_decide`, the task milestone). `CRischField.crischDESolve B C` over `RadX3 = ℚ(x)[√(x³+1)]` (the
-**generic** `instCRischFieldRadExt`, NOT the retired trivial stub) returns `some z`, and `z` satisfies the
-algebraic RDE `Dz + B·z = C` exactly — checked by `radIsZero` of
-`radDeriv z + B·z − C` (the diagonal radical derivation, the actual `radMul`/`radAdd`/`radSub`). The
-coefficient `B = 1` is a nonzero scalar and `C` carries a genuine `y`-component, so the solve genuinely
-**decouples** the radical RDE into the two base RDEs over ℚ(x) (`Dz₀ + z₀ = 1+x`, `Dz₁ + (1+ℓ)z₁ = 2ℓ+2`)
-and dispatches each to the level-1 `CRischField (QFunNZG ℚ)`. THE GENERIC INSTANCE DOES REAL
-ALGEBRAIC-RDE WORK — the Risch integrator can recurse THROUGH the algebraic level. -/
+/-- The generic `CRischField (RadExt …)` solves a genuine algebraic RDE: `radDeriv z + B·z = C`
+(`native_decide`). `CRischField.crischDESolve B C` over `RadX3 = ℚ(x)[√(x³+1)]` returns `some z`, and `z`
+satisfies the algebraic RDE `Dz + B·z = C` exactly — checked by `radIsZero` of `radDeriv z + B·z − C` (the
+diagonal radical derivation). The coefficient `B = 1` is a nonzero scalar and `C` carries a genuine
+`y`-component, so the solve decouples the radical RDE into the two base RDEs over ℚ(x)
+(`Dz₀ + z₀ = 1+x`, `Dz₁ + (1+ℓ)z₁ = 2ℓ+2`) and dispatches each to the level-1 `CRischField (QFunNZG ℚ)` —
+the Risch integrator recursing through the algebraic level. -/
 theorem radX3Risch_solves_rde :
     (match CRischField.crischDESolve radX3RischB radX3RischC with
       | some z => RadElem.radIsZero (RadElem.radSub
@@ -354,27 +350,26 @@ theorem radX3Risch_solves_rde :
             (RadElem.radMul 2 radicandX3p1 radX3RischB.toRad z.toRad)) radX3RischC.toRad)
       | none => false) = true := by native_decide
 
-/-- **A non-scalar coefficient `B` is honestly deferred** (`native_decide`): with `B = y` (a genuine
+/-- A non-scalar coefficient `B` is honestly deferred (`native_decide`): with `B = y` (a genuine
 `y`-component, `B.toRad = [0, 1]`, so `RadExt.isScalar B = false`), `crischDESolve B C` returns `none` —
 the coupled-differential-system case (Bronstein Ch. 8) is **not** attempted, keeping the solver sound. The
 scalar branch (above) is exactly the slice the §6.6 cancellation cases hit (`b₀, η ∈ α` lifted as scalars). -/
 theorem radX3Risch_nonscalar_none :
     CRischField.crischDESolve (radX3Gen : RadX3) radX3RischC = none := by native_decide
 
-/-! ### ★★ A TRANSCENDENTAL MONOMIAL over the algebraic base (`native_decide`)
+/-! ### A transcendental monomial over the algebraic base (`native_decide`)
 
-The milestone: a new **transcendental** monomial `t` stacks on top of the radical base `RadX3 =
-ℚ(x)[√(x³+1)]`. The ring `RadX3[t] = CPolyG RadX3` (polynomials in `t` over the radical extension) is the
-first **mixed elementary tower** — transcendental over algebraic (Bronstein-1990's "transcendental over
-algebraic"). It needs *only* the `CField (RadExt …)` and `CDiffField (RadExt …)` instances built above —
-both supplied — so the whole monomial-derivation engine `cmonomialDeriv` runs over `RadX3[t]` in the
-native compiler. The genuine tower derivation `D = κ_D + Dt·d/dt` differentiates **both** the `t`-structure
-*and* the `RadX3` coefficients (the diagonal radical derivation `radDeriv` on each coefficient). We exhibit:
+A new transcendental monomial `t` stacks on top of the radical base `RadX3 = ℚ(x)[√(x³+1)]`. The ring
+`RadX3[t] = CPolyG RadX3` (polynomials in `t` over the radical extension) is a mixed elementary tower —
+transcendental over algebraic (Bronstein-1990's "transcendental over algebraic"). It needs only the
+`CField (RadExt …)` and `CDiffField (RadExt …)` instances built above, so the whole monomial-derivation
+engine `cmonomialDeriv` runs over `RadX3[t]` in the native compiler. The genuine tower derivation
+`D = κ_D + Dt·d/dt` differentiates both the `t`-structure and the `RadX3` coefficients (the diagonal
+radical derivation `radDeriv` on each coefficient). We exhibit:
 
 * `t = exp` (so `Dt = t`, `Dt = [0, 1]`): `D(t²) = 2t²` — the `d/dt` half, over the radical base.
 * the mixing `D(y·t)` for `y = √(x³+1)` and `t = exp` — both `D(y) = ℓ·y` (radical) and `D(t) = t`
-  (monomial) fire: `D(y·t) = ℓ·y·t + y·t = (ℓ+1)·y·t`. The **first derivative computed at transcendental
-  level over an algebraic base**. -/
+  (monomial) fire: `D(y·t) = ℓ·y·t + y·t = (ℓ+1)·y·t`. -/
 
 /-- The transcendental monomial `t = eˣ` over the radical base: its derivative `Dt = t`, as the
 `RadX3[t]`-polynomial `[0, 1] = t` (the independent exponential, `Dt = t`). -/
@@ -386,11 +381,10 @@ def radX3T2sq : CPolyG RadX3 := [CField.zero, CField.zero, CField.one]
 /-- The `RadX3[t]`-polynomial `2·t² = [0, 0, 2]` (`2 = 1 + 1`), the expected `D(t²)` for `t = eˣ`. -/
 def radX3TwoT2sq : CPolyG RadX3 := [CField.zero, CField.zero, CField.add CField.one CField.one]
 
-/-- **★★ `D(t²) = 2t²` over `RadX3[t] = ℚ(x)[√(x³+1)][eˣ]`** (`native_decide`): the monomial derivation
+/-- `D(t²) = 2t²` over `RadX3[t] = ℚ(x)[√(x³+1)][eˣ]` (`native_decide`): the monomial derivation
 `cmonomialDeriv` (with `t = eˣ`, `Dt = t`, and the radical-base coefficient derivation
-`CDiffField.cderiv = radDeriv 2 (x³+1)`) computes `D(t²) = 2t·Dt = 2t·t = 2t²` over the ALGEBRAIC base.
-Checked by `cisZeroG` of the difference. THE TRANSCENDENTAL-MONOMIAL DERIVATION ENGINE RUNS OVER A RADICAL
-BASE — the first transcendental-on-algebraic computation. -/
+`CDiffField.cderiv = radDeriv 2 (x³+1)`) computes `D(t²) = 2t·Dt = 2t·t = 2t²` over the algebraic base.
+Checked by `cisZeroG` of the difference. -/
 theorem radX3_monomialDeriv_t2sq_eq_two_t2sq :
     CPolyG.cisZeroG (CPolyG.csubG
       (CPolyG.cmonomialDeriv radX3DtExp radX3T2sq) radX3TwoT2sq) = true := by native_decide
@@ -404,49 +398,45 @@ def radX3GenT : CPolyG RadX3 := [CField.zero, radX3Gen]
 def radX3GenTDeriv : CPolyG RadX3 :=
   [CField.zero, CField.mul (⟨[CField.zero, CField.add radicandLogDer CField.one]⟩ : RadX3) CField.one]
 
-/-- **★★ `D(y·t) = (ℓ+1)·y·t` over `RadX3[t]`** (`native_decide`): the genuine mixed tower derivation. With
+/-- `D(y·t) = (ℓ+1)·y·t` over `RadX3[t]` (`native_decide`): the genuine mixed tower derivation. With
 `y = √(x³+1)` (radical generator, `D(y) = ℓ·y`, `ℓ = 3x²/(2(x³+1))`) and `t = eˣ` (monomial, `Dt = t`), the
-product rule gives `D(y·t) = D(y)·t + y·Dt = ℓ·y·t + y·t = (ℓ+1)·y·t`. So `cmonomialDeriv` ran **both** the
+product rule gives `D(y·t) = D(y)·t + y·Dt = ℓ·y·t + y·t = (ℓ+1)·y·t`. So `cmonomialDeriv` ran both the
 radical-base coefficient derivation (the diagonal `radDeriv`, contributing `ℓ·y`) and the `d/dt` part
-(contributing `y`). Checked by `cisZeroG` of the difference over `RadX3[t]`. BOTH HALVES OF THE MIXED
-TOWER DERIVATION FIRE — `d/dx + (radical y') + ∂/∂t` at transcendental-over-algebraic level. -/
+(contributing `y`). Checked by `cisZeroG` of the difference over `RadX3[t]`. -/
 theorem radX3_monomialDeriv_genT_eq :
     CPolyG.cisZeroG (CPolyG.csubG
       (CPolyG.cmonomialDeriv radX3DtExp radX3GenT) radX3GenTDeriv) = true := by native_decide
 
-/-- **The mixed derivation genuinely runs the coefficient derivation** (`native_decide`): `D(y·t)` over
-`RadX3[t]` is **not** `cisZeroG`-zero and **not** equal to the pure-`d/dt` result `y·t` — confirming the
+/-- The mixed derivation genuinely runs the coefficient derivation (`native_decide`): `D(y·t)` over
+`RadX3[t]` is not `cisZeroG`-zero and not equal to the pure-`d/dt` result `y·t` — confirming the
 radical-base `cderiv` contributed the `ℓ·y·t` term (had `cmonomialDeriv` only done `d/dt`, the result
-would be `y·t = radX3GenT`). The coefficient-derivation half is real, not a no-op. -/
+would be `y·t = radX3GenT`). -/
 theorem radX3_monomialDeriv_genT_runs_coeff :
     (CPolyG.cisZeroG (CPolyG.cmonomialDeriv radX3DtExp radX3GenT) = false) ∧
     (CPolyG.cisZeroG (CPolyG.csubG
       (CPolyG.cmonomialDeriv radX3DtExp radX3GenT) radX3GenT) = false) := by
   constructor <;> native_decide
 
-/-! ### ★ The keystone composes: a transcendental level `QFunNZG (RadExt …)` over the algebraic base
+/-! ### The keystone composes: a transcendental level `QFunNZG (RadExt …)` over the algebraic base
 
 The payoff of the `CField`/`CDiffField (RadExt …)` instances: the transcendental-monomial carrier
-`QFunNZG α` is **generic over any `[CField α]`** (`instCFieldQFunNZG` needs `[CField α] [CFieldDomain α]`;
+`QFunNZG α` is generic over any `[CField α]` (`instCFieldQFunNZG` needs `[CField α] [CFieldDomain α]`;
 `instCDiffFieldQFunNZG` adds `[CDiffField α]`). With `α := RadX3` the radical base, those binders are
-exactly the instances built above *plus* a `CFieldDomain RadX3` — so `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)`
-(the fraction field of `RadX3[t]`) is **automatically** a `CField` and a `CDiffField`. We exhibit this by
+exactly the instances built above plus a `CFieldDomain RadX3` — so `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)`
+(the fraction field of `RadX3[t]`) is automatically a `CField` and a `CDiffField`. We exhibit this by
 instance resolution, under the one outstanding hypothesis `[CFieldDomain RadX3]` (the Prop-erased domain
 facts for the radical base — a genuine field/domain since `X² − (x³+1)` is irreducible over ℚ(x); its
-closed proof needs the `AdjoinRoot` bridge with canonical/reduced representatives, the documented stretch
-below). The resolution succeeding *is* the statement that the keystone composes — a transcendental monomial
-sits on top of the algebraic extension, the first **transcendental-on-algebraic** carrier. -/
+closed proof needs the `AdjoinRoot` bridge with canonical/reduced representatives, below). -/
 
 section
 variable [CFieldDomain RadX3]
 
-/-- **★ `QFunNZG RadX3` is a `CField`** (given `[CFieldDomain RadX3]`) — the transcendental level
-`ℚ(x)[√(x³+1)](t)` over the algebraic base resolves *automatically* from `instCFieldQFunNZG` (generic over
-`[CField RadX3] [CFieldDomain RadX3]`), since `CField RadX3` is the radical-base instance built above. THE
-KEYSTONE COMPOSES — a transcendental monomial stacks on the radical extension. -/
+/-- `QFunNZG RadX3` is a `CField` (given `[CFieldDomain RadX3]`) — the transcendental level
+`ℚ(x)[√(x³+1)](t)` over the algebraic base resolves automatically from `instCFieldQFunNZG` (generic over
+`[CField RadX3] [CFieldDomain RadX3]`), since `CField RadX3` is the radical-base instance built above. -/
 theorem cfield_qfunNZG_radX3 : Nonempty (CField (QFunNZG RadX3)) := ⟨inferInstance⟩
 
-/-- **★ `QFunNZG RadX3` is a `CDiffField`** (given `[CFieldDomain RadX3]`) — the transcendental level
+/-- `QFunNZG RadX3` is a `CDiffField` (given `[CFieldDomain RadX3]`) — the transcendental level
 inherits the *full* tower derivation (`d/dx + radical y' + ∂/∂t`) from `instCDiffFieldQFunNZG` (generic over
 `[CField RadX3] [CDiffField RadX3] [CFieldDomain RadX3]`), since `CDiffField RadX3` is the diagonal-radical
 derivation built above. The mixed elementary tower is a *differential* field — transcendental-over-algebraic
@@ -468,7 +458,7 @@ registered as the `Fact` instance the `AdjoinRoot`-bridge route to `CFieldSpec (
 `CFieldSpec.toK radicandX3p1 = algebraMap ℚ[X] (RatFunc ℚ) (1 + x³)` (`toK_radicandX3p1`). -/
 
 open CPolyG in
-/-- **`toK radicandX3p1 = algebraMap (1 + x³)`** in `RatFunc ℚ`: the ℚ(x)-radicand of `RadX3` reads, through
+/-- `toK radicandX3p1 = algebraMap (1 + x³)` in `RatFunc ℚ`: the ℚ(x)-radicand of `RadX3` reads, through
 the tower bridge `toQFunNZG`, as the rational function `algebraMap ℚ[X] (RatFunc ℚ) (1 + x³)` (numerator
 `[1,0,0,1] ↦ 1 + x³`, denominator `[1] ↦ 1`). The identification feeding the irreducibility/degree
 arguments. -/
@@ -488,18 +478,18 @@ theorem toK_radicandX3p1 :
   show QFunNZG.amG ℚ (1 + X ^ 3) / QFunNZG.amG ℚ 1 = _
   rw [map_one, div_one]; rfl
 
-/-- **`1 + x³ ≠ 0` in `ℚ[X]`** (it has `natDegree 3`). -/
+/-- `1 + x³ ≠ 0` in `ℚ[X]` (it has `natDegree 3`). -/
 theorem X3p1_ne_zero : (1 + X ^ 3 : ℚ[X]) ≠ 0 := by
   intro h
   have := congrArg Polynomial.natDegree h
   rw [add_comm, Polynomial.natDegree_add_eq_left_of_natDegree_lt (by simp), natDegree_X_pow] at this
   simp at this
 
-/-- **`natDegree (1 + x³) = 3`** in `ℚ[X]` (the leading `x³` dominates the constant `1`). -/
+/-- `natDegree (1 + x³) = 3` in `ℚ[X]` (the leading `x³` dominates the constant `1`). -/
 theorem natDeg_X3p1 : (1 + X ^ 3 : ℚ[X]).natDegree = 3 := by
   rw [add_comm, Polynomial.natDegree_add_eq_left_of_natDegree_lt (by simp), natDegree_X_pow]
 
-/-- **★ `x³+1` is not a square in `ℚ(x)`**: `∀ b : RatFunc ℚ, b² ≠ algebraMap (1 + x³)`. A square `b²` has
+/-- `x³+1` is not a square in `ℚ(x)`: `∀ b : RatFunc ℚ, b² ≠ algebraMap (1 + x³)`. A square `b²` has
 even `intDegree = 2·intDegree(b)`, but `algebraMap (1 + x³)` has `intDegree = natDegree(1 + x³) = 3` (odd).
 The odd-degree obstruction to `x³+1` being a perfect square — the algebraic content that makes the radical
 extension a field. -/
@@ -512,7 +502,7 @@ theorem not_square_X3p1 :
   rw [sq, RatFunc.intDegree_mul hb_ne hb_ne, RatFunc.intDegree_polynomial, natDeg_X3p1] at hdeg
   omega
 
-/-- **★ `y² − (x³+1)` is irreducible over `ℚ(x)`** — `Irreducible (X² − C(toK radicandX3p1))` in
+/-- `y² − (x³+1)` is irreducible over `ℚ(x)` — `Irreducible (X² − C(toK radicandX3p1))` in
 `(RatFunc ℚ)[X]`. By `X_pow_sub_C_irreducible_of_prime` (prime `2`) and `x³+1` not-a-square
 (`not_square_X3p1`). So `AdjoinRoot (X² − C(toK radicandX3p1)) = ℚ(x)[√(x³+1)]` is a genuine **field** — the
 algebraic fact underwriting `CFieldDomain RadX3`. -/
@@ -521,14 +511,14 @@ theorem irreducible_radX3 :
   rw [toK_radicandX3p1]
   exact X_pow_sub_C_irreducible_of_prime Nat.prime_two not_square_X3p1
 
-/-- **The irreducibility as a `Fact`** — registers `Irreducible (X² − C(toK radicandX3p1))` so Mathlib's
+/-- The irreducibility as a `Fact` — registers `Irreducible (X² − C(toK radicandX3p1))` so Mathlib's
 `AdjoinRoot.instField` resolves `Field (AdjoinRoot (X² − C(toK radicandX3p1)))`, the field
 `ℚ(x)[√(x³+1)]`. The instance the `CFieldSpec (RadExt …)` bridge to that `AdjoinRoot` would consume. -/
 instance fact_irreducible_radX3 :
     Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ)))) :=
   ⟨irreducible_radX3⟩
 
-/-- **`ℚ(x)[√(x³+1)]` is a field** — `Field (AdjoinRoot (X² − C(toK radicandX3p1)))`, resolved from the
+/-- `ℚ(x)[√(x³+1)]` is a field — `Field (AdjoinRoot (X² − C(toK radicandX3p1)))`, resolved from the
 irreducibility `Fact`. The genuine field the radical base `RadX3` represents; the integral-domain witness
 that `CFieldDomain RadX3` asserts (the discharge is the residual below). -/
 noncomputable example : Field (AdjoinRoot (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ)))) :=
@@ -549,7 +539,7 @@ unit when `N ≠ 0 ↔ q ≠ 0`). Restricted to `n = 2` (the conjugate inverse `
 namespace RadElem
 variable {α : Type*} [CField α] {n : ℕ} {f : α}
 
-/-- **`cnormG` does not grow length** — `(cnormG p).length ≤ p.length` (stripping trailing zeros). -/
+/-- `cnormG` does not grow length — `(cnormG p).length ≤ p.length` (stripping trailing zeros). -/
 theorem cnormG_length_le (p : CPolyG α) : (CPolyG.cnormG p : List α).length ≤ (p : List α).length := by
   induction p with
   | nil => simp [CPolyG.cnormG]
@@ -562,7 +552,7 @@ theorem cnormG_length_le (p : CPolyG α) : (CPolyG.cnormG p : List α).length �
       have : (b :: bs : List α).length ≤ (as : List α).length := h ▸ ih
       simp only [List.length_cons] at this; omega
 
-/-- **`caddG` length is the `max`** — `(caddG p q).length = max p.length q.length` (the shorter is
+/-- `caddG` length is the `max` — `(caddG p q).length = max p.length q.length` (the shorter is
 zero-extended). -/
 theorem caddG_length (p q : CPolyG α) :
     (CPolyG.caddG p q : List α).length = max (p : List α).length (q : List α).length := by
@@ -573,14 +563,14 @@ theorem caddG_length (p q : CPolyG α) :
     | nil => simp [CPolyG.caddG]
     | cons b bs => simp only [CPolyG.caddG, List.length_cons, ih bs]; omega
 
-/-- **`cshiftG` length** — `(cshiftG k p).length = k + p.length` (prepend `k` zeros). -/
+/-- `cshiftG` length — `(cshiftG k p).length = k + p.length` (prepend `k` zeros). -/
 theorem cshiftG_length (k : ℕ) (p : CPolyG α) :
     (CPolyG.cshiftG k p : List α).length = k + (p : List α).length := by
   induction k with
   | zero => simp [CPolyG.cshiftG]
   | succ m ih => rw [CPolyG.cshiftG]; simp only [List.length_cons, ih]; omega
 
-/-- **The inner `radReduce` reaches `cnormG`-length `≤ n`** (`n ≥ 1`, `fuel ≥ cnormG-length`) — each fold
+/-- The inner `radReduce` reaches `cnormG`-length `≤ n` (`n ≥ 1`, `fuel ≥ cnormG-length`) — each fold
 strictly drops the normalized length (it replaces a length-`L` list, `L > n`, by one of length `< L`:
 `dropLast` is `L−1` and the `cshiftG (L−1−n)` term is `L−n ≤ L−1`), so the loop hits the `length ≤ n` exit.
 The kernel of both `radCanon` length bounds. -/
@@ -606,7 +596,7 @@ theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : CPolyG
         simp only [List.length_singleton, List.length_dropLast]; omega
       have := (cnormG_length_le _).trans_lt hstep; omega
 
-/-- **★ `RadExt.radCanon` has length `≤ n`** (`n ≥ 1`) — `radCanon = cnormG ∘ radReduce` with the inner
+/-- `RadExt.radCanon` has length `≤ n` (`n ≥ 1`) — `radCanon = cnormG ∘ radReduce` with the inner
 `radReduce` reaching `cnormG`-length `≤ n` (`cnormG_radReduce_length_le`). The length bound that makes
 `isZero_iff` and `toK_inv` faithful: `toPolyG (RadExt.radCanon u)` has `natDegree < n = deg (Xⁿ − C(toK
 f))`, and the inverse reads a degree-`< 2` rep. -/
@@ -617,7 +607,7 @@ theorem radCanon_length_le (hn : 1 ≤ n) (u : CPolyG α) :
     have := cnormG_length_le u; omega)
   exact this
 
-/-- **`cnormG (RadExt.radCanon u)` has length `≤ n`** — immediate from `radCanon_length_le` and
+/-- `cnormG (RadExt.radCanon u)` has length `≤ n` — immediate from `radCanon_length_le` and
 `cnormG_length_le` (the outer `cnormG` of `radCanon` is idempotent). -/
 theorem cnormG_radCanon_length_le (hn : 1 ≤ n) (u : CPolyG α) :
     (CPolyG.cnormG (RadExt.radCanon n f u) : List α).length ≤ n :=
@@ -625,12 +615,12 @@ theorem cnormG_radCanon_length_le (hn : 1 ≤ n) (u : CPolyG α) :
 
 variable [CFieldSpec α]
 
-/-- **The bridge** `toAdj p = mk (toPolyG p.toRad)` into `AdjoinRoot (Xⁿ − C(toK f))` (`mk` *is*
+/-- The bridge `toAdj p = mk (toPolyG p.toRad)` into `AdjoinRoot (Xⁿ − C(toK f))` (`mk` *is*
 `Ideal.Quotient.mk (radIdeal n f)`). The `toK` of the `CFieldSpec (RadExt …)` instance, on canonical reps. -/
 noncomputable def toAdj (p : RadExt α n f) : AdjoinRoot (X ^ n - C (CFieldSpec.toK f)) :=
   AdjoinRoot.mk _ (CPolyG.toPolyG p.toRad)
 
-/-- **`RadExt.radCanon` is absorbed by `mk`** — `mk (toPolyG (RadExt.radCanon n f u)) = mk (toPolyG u)` (the reduction
+/-- `RadExt.radCanon` is absorbed by `mk` — `mk (toPolyG (RadExt.radCanon n f u)) = mk (toPolyG u)` (the reduction
 changes the polynomial only by a multiple of `Xⁿ − C(toK f)`, `mk_toPolyG_radReduce`). -/
 theorem mk_canon (u : RadElem α) :
     AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (CPolyG.toPolyG (RadExt.radCanon n f u))
@@ -638,40 +628,40 @@ theorem mk_canon (u : RadElem α) :
   show Ideal.Quotient.mk (radIdeal n f) _ = Ideal.Quotient.mk _ _
   rw [RadExt.radCanon, CPolyG.toPolyG_cnormG, mk_toPolyG_radReduce]
 
-/-- **`toAdj` sends `RadExt.zero` to `0`**. -/
+/-- `toAdj` sends `RadExt.zero` to `0`. -/
 theorem toAdj_zero : toAdj (RadExt.zero : RadExt α n f) = 0 := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG ([] : RadElem α)) = 0
   rw [CPolyG.toPolyG_nil, map_zero]
 
-/-- **`toAdj` sends `RadExt.one` to `1`**. -/
+/-- `toAdj` sends `RadExt.one` to `1`. -/
 theorem toAdj_one : toAdj (RadExt.one : RadExt α n f) = 1 := by
   show AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (CPolyG.toPolyG ([CField.one] : RadElem α)) = 1
   rw [show CPolyG.toPolyG ([CField.one] : RadElem α) = (1 : (CFieldSpec.K α)[X]) by
     rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]]
   exact map_one _
 
-/-- **`toAdj` intertwines `RadExt.add` with `+`** — via `toPolyG_caddG` and `RadExt.radCanon` absorption. -/
+/-- `toAdj` intertwines `RadExt.add` with `+` — via `toPolyG_caddG` and `RadExt.radCanon` absorption. -/
 theorem toAdj_add (p q : RadExt α n f) : toAdj (RadExt.add p q) = toAdj p + toAdj q := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radAdd p.toRad q.toRad))) = _
   rw [mk_canon]
   show AdjoinRoot.mk _ (CPolyG.toPolyG (CPolyG.caddG _ _)) = _
   rw [CPolyG.toPolyG_caddG, map_add]; rfl
 
-/-- **`toAdj` intertwines `RadExt.neg` with `-`** — via `toPolyG_cnegG`. -/
+/-- `toAdj` intertwines `RadExt.neg` with `-` — via `toPolyG_cnegG`. -/
 theorem toAdj_neg (p : RadExt α n f) : toAdj (RadExt.neg p) = - toAdj p := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radNeg p.toRad))) = _
   rw [mk_canon]
   show AdjoinRoot.mk _ (CPolyG.toPolyG (CPolyG.cnegG _)) = _
   rw [CPolyG.toPolyG_cnegG, map_neg]; rfl
 
-/-- **★ `toAdj` intertwines `RadExt.mul` with `*`** — the radical product is the quotient product
+/-- **`toAdj` intertwines `RadExt.mul` with `*`** — the radical product is the quotient product
 (`mk_toPolyG_radMul`, the carrier ring structure `K[X] ⧸ (Xⁿ − C(toK f))`). -/
 theorem toAdj_mul (p q : RadExt α n f) : toAdj (RadExt.mul p q) = toAdj p * toAdj q := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radMul n f p.toRad q.toRad))) = _
   rw [mk_canon]; show Ideal.Quotient.mk (radIdeal n f) _ = _ * _
   rw [mk_toPolyG_radMul]; rfl
 
-/-- **★ `toAdj` reflects the zero test** — `RadExt.isZero p = true ↔ toAdj p = 0` (`n ≥ 1`). `→`: the
+/-- `toAdj` reflects the zero test — `RadExt.isZero p = true ↔ toAdj p = 0` (`n ≥ 1`). `→`: the
 canonical rep is `cisZeroG`, so `toPolyG (RadExt.radCanon p) = 0`. `←`: `toAdj p = 0` means `(Xⁿ − C(toK f)) ∣
 toPolyG (RadExt.radCanon p)`, but `natDegree (toPolyG (RadExt.radCanon p)) < n` (`cnormG_radCanon_length_le`), so
 `AdjoinRoot.mk_ne_zero_of_natDegree_lt` forces `toPolyG (RadExt.radCanon p) = 0`, i.e. `cisZeroG = true`. The
@@ -702,7 +692,7 @@ theorem isZero_iff (hn : 1 ≤ n) (p : RadExt α n f) : RadExt.isZero p = true �
 C(toK f))`, `(a + b·root)·(a − b·root) = a² − b²·root² = a² − b²f = N`, so `radInv2 f q` is `q⁻¹` when
 `N ≠ 0` (and both vanish when `N = 0`, i.e. `q = 0`). -/
 
-/-- **`toPolyG (radInv2 f q)` in `K[X]`** — `C(toK(a/N)) − C(toK(b/N))·X` (`a, b` the `radCoeff0/1`,
+/-- `toPolyG (radInv2 f q)` in `K[X]` — `C(toK(a/N)) − C(toK(b/N))·X` (`a, b` the `radCoeff0/1`,
 `N = radNorm2`). `radInv2` reads only `y⁰`/`y¹`, so this holds for any `q`. -/
 theorem toPolyG_radInv2 (q : RadElem α) :
     CPolyG.toPolyG (radInv2 f q)
@@ -713,7 +703,7 @@ theorem toPolyG_radInv2 (q : RadElem α) :
   simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]
   rw [CFieldSpec.toK_neg, map_neg]; ring
 
-/-- **`toPolyG q = C(toK a) + C(toK b)·X` for a length-`≤ 2` `q`** (`a, b` the `radCoeff0/1`). The Horner
+/-- `toPolyG q = C(toK a) + C(toK b)·X` for a length-`≤ 2` `q` (`a, b` the `radCoeff0/1`). The Horner
 form of a canonical `n = 2` rep. -/
 theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2) :
     CPolyG.toPolyG q = C (CFieldSpec.toK (radCoeff0 q)) + C (CFieldSpec.toK (radCoeff1 q)) * X := by
@@ -730,7 +720,7 @@ theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2)
     rw [show radCoeff0 ([a, b] : RadElem α) = a from rfl, show radCoeff1 ([a, b] : RadElem α) = b from rfl]
     simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]; ring
 
-/-- **★ The conjugate-norm inverse identity** (`n = 2`, length-`≤ 2` `q`, `N ≠ 0`): `mk (toPolyG q) · mk
+/-- The conjugate-norm inverse identity (`n = 2`, length-`≤ 2` `q`, `N ≠ 0`): `mk (toPolyG q) · mk
 (toPolyG (radInv2 f q)) = 1` in `AdjoinRoot (X² − C(toK f))`. The product `(C A + C B·X)(C(A/N) − C(B/N)·X)
 − 1 = −(C B·C(B/N))·(X² − C F)` lies in the defining ideal (using `A·(A/N) − B·F·(B/N) = N/N = 1`). So
 `radInv2 f q` *is* the field inverse of `q`. -/
@@ -761,7 +751,7 @@ theorem inv_mul_gen (q : RadElem α) (hq : (q : List α).length ≤ 2)
       = (- (C B * C (B / N))) * (X ^ 2 - C F) := by linear_combination hc + X * hcr
   rw [key]; exact dvd_mul_left _ _
 
-/-- **`N = 0` when a reduced `q` vanishes** — `toPolyG q = 0 → toK (radNorm2 f q) = 0` (the coefficients
+/-- `N = 0` when a reduced `q` vanishes — `toPolyG q = 0 → toK (radNorm2 f q) = 0` (the coefficients
 `a, b` both vanish, so `N = a² − b²f = 0`). -/
 theorem toK_radNorm2_eq_zero_of_toPolyG_zero (q : RadElem α) (hq : (q : List α).length ≤ 2)
     (h0 : CPolyG.toPolyG q = 0) : CFieldSpec.toK (radNorm2 f q) = 0 := by
@@ -773,7 +763,7 @@ theorem toK_radNorm2_eq_zero_of_toPolyG_zero (q : RadElem α) (hq : (q : List α
   rw [radNorm2, CFieldSpec.toK_sub, CFieldSpec.toK_mul, CFieldSpec.toK_mul, CFieldSpec.toK_mul, hA, hB]
   ring
 
-/-- **A canonical rep with `mk (toPolyG q) = 0` is `0`** — `(q.length ≤ 2) → mk (toPolyG q) = 0 →
+/-- A canonical rep with `mk (toPolyG q) = 0` is `0` — `(q.length ≤ 2) → mk (toPolyG q) = 0 →
 toPolyG q = 0` (degree `< 2 = deg (X² − C(toK f))`, so the only multiple of the defining polynomial of
 that degree is `0`, `AdjoinRoot.mk_ne_zero_of_natDegree_lt`). Needs the irreducibility `Fact` (for the
 `AdjoinRoot` field structure used downstream). -/
@@ -789,7 +779,7 @@ theorem toPolyG_eq_zero_of_mk_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK
   have hmono : (X ^ 2 - C (CFieldSpec.toK f)).Monic := monic_X_pow_sub_C _ (by norm_num)
   exact AdjoinRoot.mk_ne_zero_of_natDegree_lt hmono h0 (by rw [natDegree_X_pow_sub_C]; exact hdeg) h
 
-/-- **A vanishing conjugate norm forces a canonical rep to `0`** (`n = 2`): for a length-`≤ 2` `q`,
+/-- A vanishing conjugate norm forces a canonical rep to `0` (`n = 2`): for a length-`≤ 2` `q`,
 `toK (radNorm2 f q) = 0 → toPolyG q = 0`. From `N = a² − b²·F = 0`: if `b ≠ 0` then `F = (a/b)²` is a
 square in `K`, contradicting the not-a-square consequence of the irreducibility `Fact`; so `b = 0`, then
 `a² = 0` forces `a = 0`, hence `toPolyG q = C a + C b·X = 0`. The non-degeneracy of the conjugate norm. -/
@@ -816,7 +806,7 @@ theorem toPolyG_eq_zero_of_N_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK 
     show CFieldSpec.toK (radCoeff1 q) = B from rfl, hA, hB]
   simp
 
-/-- **★ `toAdj` intertwines `RadExt.inv` with `⁻¹`** (`n = 2`): `toAdj (RadExt.inv p) = (toAdj p)⁻¹`.
+/-- `toAdj` intertwines `RadExt.inv` with `⁻¹` (`n = 2`): `toAdj (RadExt.inv p) = (toAdj p)⁻¹`.
 `RadExt.inv` canonicalizes its input to a length-`≤ 2` rep `q`, so `radInv2 f q` is the genuine inverse.
 Split on the conjugate norm `N = radNorm2 f q`: when `N ≠ 0`, `inv_mul_gen` gives `mk q · mk (radInv2 f q)
 = 1`, so `mk (radInv2 f q) = (mk q)⁻¹ = (toAdj p)⁻¹` (`eq_inv_of_mul_eq_one_right`); when `N = 0`, then
@@ -841,7 +831,7 @@ theorem toAdj_inv [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))] (p : RadEx
 
 end RadElem
 
-/-! ### ★ `CFieldSpec (RadExt α 2 f)` and the concrete `CFieldDomain`
+/-! ### `CFieldSpec (RadExt α 2 f)` and the concrete `CFieldDomain`
 
 Assembling the bridge laws gives the noncomputable `CFieldSpec (RadExt α 2 f)` — over `[CFieldSpec α]` and
 the irreducibility `Fact` (so `K = AdjoinRoot (X² − C(toK f))` is a `Field`). Then the **global**
@@ -849,7 +839,7 @@ the irreducibility `Fact` (so `K = AdjoinRoot (X² − C(toK f))` is a `Field`).
 exactly what discharges the `[CFieldDomain RadX3]` hypothesis and makes `QFunNZG (RadExt …)` an
 **unconditional** `CField` + `CDiffField`. -/
 
-/-- **★ `CFieldSpec (RadExt α 2 f)`** — the field-homomorphism bridge into `K = AdjoinRoot (X² − C(toK f))`
+/-- `CFieldSpec (RadExt α 2 f)` — the field-homomorphism bridge into `K = AdjoinRoot (X² − C(toK f))`
 (a `Field` under `[Fact (Irreducible (X² − C(toK f)))]`), with `toK := RadElem.toAdj`. All laws are the
 `RadElem.toAdj_*` bridge theorems (ring-hom from `mk_toPolyG_radMul` / `toPolyG_caddG`, `isZero_iff` from
 the `radCanon` length bound, `toK_inv` from the conjugate-norm identity). Noncomputable (routes through
@@ -867,7 +857,7 @@ noncomputable instance instCFieldSpecRadExt {α : Type*} [CField α] [CFieldDoma
   toK_inv := RadElem.toAdj_inv
   isZero_iff p := RadElem.isZero_iff (by norm_num) p
 
-/-! ### ★★ Unconditional composition: `QFunNZG (RadExt ℚ(x) 2 (x³+1))` is a `CField` + `CDiffField`
+/-! ### Unconditional composition: `QFunNZG (RadExt ℚ(x) 2 (x³+1))` is a `CField` + `CDiffField`
 
 With `CFieldSpec (RadExt …)` in scope, `instCFieldDomainOfCFieldSpec` resolves `CFieldDomain RadX3`
 **concretely** (no hypothesis) — `fact_irreducible_radX3` supplies the irreducibility. So the transcendental
@@ -875,19 +865,19 @@ level `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` is now an **unconditional** `CFi
 mixed-tower derivations re-validate with the resolved instances. The first fully-discharged
 **transcendental-on-algebraic** carrier. -/
 
-/-- **★ `CFieldDomain RadX3` — discharged concretely** (no hypothesis): from `instCFieldSpecRadExt` (with
+/-- `CFieldDomain RadX3` — discharged concretely (no hypothesis): from `instCFieldSpecRadExt` (with
 `fact_irreducible_radX3`) via the global `instCFieldDomainOfCFieldSpec`. The integral-domain witness that
 the radical base is a genuine field, the key that lets the transcendental level stack. -/
 noncomputable example : CFieldDomain RadX3 := inferInstance
 
-/-- **★★ `QFunNZG RadX3` is a `CField`, UNCONDITIONALLY** — `ℚ(x)[√(x³+1)](t)` resolves its `CField`
+/-- `QFunNZG RadX3` is a `CField`, unconditionally — `ℚ(x)[√(x³+1)](t)` resolves its `CField`
 outright (the `[CFieldDomain RadX3]` hypothesis of `cfield_qfunNZG_radX3` is now discharged). The
 transcendental monomial `t` stacks on the algebraic base with no outstanding assumption. -/
 theorem cfield_qfunNZG_radX3_unconditional : Nonempty (CField (QFunNZG RadX3)) := ⟨inferInstance⟩
 
-/-- **★★ `QFunNZG RadX3` is a `CDiffField`, UNCONDITIONALLY** — the mixed elementary tower
-`ℚ(x)[√(x³+1)](t)` is a genuine *differential* field with no hypothesis, inheriting `d/dx + radical y' +
-∂/∂t`. The transcendental-over-algebraic tower is fully realized. -/
+/-- `QFunNZG RadX3` is a `CDiffField`, unconditionally — the mixed elementary tower
+`ℚ(x)[√(x³+1)](t)` is a genuine differential field with no hypothesis, inheriting `d/dx + radical y' +
+∂/∂t`. -/
 theorem cdiffField_qfunNZG_radX3_unconditional : Nonempty (CDiffField (QFunNZG RadX3)) := ⟨inferInstance⟩
 
 /-- The transcendental monomial `t ∈ QFunNZG RadX3 = ℚ(x)[√(x³+1)](t)` (numerator `[0, 1] = t` over the
@@ -895,7 +885,7 @@ radical base `RadX3`, denominator `[1]`). The new independent variable stacked o
 its proof of denominator-nonzero is `native_decide` (the `CFieldDomain RadX3` Prop is erased). -/
 def tOverRadX3 : QFunNZG RadX3 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩
 
-/-- **★★ `D(t) = 1` over `ℚ(x)[√(x³+1)](t)`, fully `native_decide`** — the **typeclass** derivation
+/-- `D(t) = 1` over `ℚ(x)[√(x³+1)](t)`, fully `native_decide` — the **typeclass** derivation
 `CDiffField.cderiv` on `QFunNZG RadX3` (the tower derivation `towerDerivQFunNZG [1]`, `Dt = 1`) sends the
 new transcendental monomial `t` to `1`, computed in the native compiler over the **algebraic** base. The
 first derivative computed at the transcendental level over an algebraic base with the **concrete**
@@ -904,41 +894,12 @@ theorem cderiv_tOverRadX3_eq_one :
     CField.isZero (CField.sub (CDiffField.cderiv tOverRadX3) (CField.one : QFunNZG RadX3)) = true := by
   native_decide
 
-/-- **★★ `t · t⁻¹ = 1` over `ℚ(x)[√(x³+1)](t)`, fully `native_decide`** — the **typeclass** field
+/-- `t · t⁻¹ = 1` over `ℚ(x)[√(x³+1)](t)`, fully `native_decide` — the **typeclass** field
 operations of `QFunNZG RadX3` (computable, over the now-concrete `CFieldDomain RadX3`) invert the
 transcendental monomial `t` over the algebraic base. The mixed elementary tower is a genuine **field** that
 computes, unconditionally. -/
 theorem mul_inv_tOverRadX3_eq_one :
     CField.isZero (CField.sub (CField.mul tOverRadX3 (CField.inv tOverRadX3))
       (CField.one : QFunNZG RadX3)) = true := by native_decide
-
-/-! ### `#print axioms` — the algebraic Risch base computes
-
-The `CField (RadExt …)` ring/inverse and the `CDiffField (RadExt …)` derivation, exercised through the
-**typeclass projections** over the base radical `√(x³+1)`, plus the **transcendental-monomial derivation
-over the radical base** (`cmonomialDeriv` over `RadX3[t]`), each carry only the standard `[propext,
-Classical.choice, Quot.sound]` plus the `native_decide` compiler axiom — no `sorry`, no extra axiom. The
-`Prop`-erased domain facts keep everything native-`decide`-able. `RadExt` is now a computable
-`CField`+`CDiffField` Risch **base**, and a transcendental monomial stacks on it (mixed elementary tower). -/
-
--- The `CField (RadExt …)` instance: the ring product and the field inverse:
-#print axioms radX3_gen_sq_eq_radicand
-#print axioms radX3_mul_inv_eq_one
-
--- The `CDiffField (RadExt …)` instance: the diagonal derivation through `CDiffField.cderiv`:
-#print axioms radX3_cderiv_gen_eq
-
--- ★★ The transcendental monomial over the algebraic base: the mixed-tower derivation computes:
-#print axioms radX3_monomialDeriv_t2sq_eq_two_t2sq
-#print axioms radX3_monomialDeriv_genT_eq
-
--- ★★ UNCONDITIONAL composition + computation over `QFunNZG RadX3 = ℚ(x)[√(x³+1)](t)`:
-#print axioms cfield_qfunNZG_radX3_unconditional
-#print axioms cderiv_tOverRadX3_eq_one
-#print axioms mul_inv_tOverRadX3_eq_one
-
--- ★★ The generic `CRischField (RadExt …)` solves a genuine algebraic RDE (scalar decoupling):
-#print axioms radX3Risch_solves_rde
-#print axioms radX3Risch_nonscalar_none
 
 end DeepWiki.SymbolicIntegration
