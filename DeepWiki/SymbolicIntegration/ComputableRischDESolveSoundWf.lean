@@ -129,7 +129,8 @@ the production §6.1 gate passes on `ftilde` (`hgate : cdenomNormalGateG ftilde 
 `crischDERawSolveWf` carries no gate, while the gated `instCRischFieldQFunNZG.crischDESolve` does; `hgate`
 peels the gate (`crischDESolve_eq_solve_of_normal`) so both reduce to the same `cRischDE*`-then-`cisZeroG`-guard
 match, and `hwf` reconciles the two oracle calls. The gate-passes side-condition holds on the canonicalized
-input the sound wrapper feeds (the keystone `crischDESolveSound_repin_gate`), so the soundness transfers. -/
+input the sound wrapper feeds (the keystone `cisCanonNormalizedCoreG_qReduce_weakNormalized`), so the soundness
+transfers. -/
 theorem crischDERawSolveWf_eq (ftilde gtilde : QFunNZG β)
     (hwf : CPolyG.cRischDEGWf ([CField.one] : CPolyG β)
         ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
@@ -214,8 +215,9 @@ theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
       rcases hr : reduceSoundOpt ftilde with _ | ftildeR
       · rfl
       · -- the production §6.1 gate passes on the canonicalized input `ftildeR = qReduce ftilde`: by the
-        -- keystone `crischDESolveSound_repin_gate`, `cdenomNormalGateG (qReduce ftilde) = cisCanonNormalizedG
-        -- ftilde = true` (here `cdenomNormalGateG` is defeq to the keystone's `cisCanonNormalizedCoreG`)
+        -- keystone `cisCanonNormalizedCoreG_qReduce_weakNormalized`, `cdenomNormalGateG (qReduce ftilde) =
+        -- cisCanonNormalizedG ftilde = true` (here `cdenomNormalGateG` is defeq to the keystone's
+        -- `cisCanonNormalizedCoreG`)
         have hred : ftildeR = qReduce ftilde := by
           have h := reduceSoundOpt_eq ftilde
           rw [hr] at h
@@ -225,7 +227,7 @@ theorem crischDESolveSoundWf_eq (f g : QFunNZG β)
             have hqwf : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 = q := by
               exact hqwn
             rw [hft, hq', ← hqwf]
-            exact crischDESolveSound_repin_gate f
+            exact cisCanonNormalizedCoreG_qReduce_weakNormalized f
           rw [hred]
           show cisCanonNormalizedCoreG (qReduce ftilde) = true
           rw [hkey]; exact hck

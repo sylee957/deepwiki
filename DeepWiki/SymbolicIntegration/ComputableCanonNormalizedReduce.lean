@@ -200,39 +200,40 @@ The production re-pin routes the core RDE solve through the §6.1 gate. The Wf w
 `ftilde = weakNormalizedF f q'` (`q' = qOfPolyNZG (cWeakNormalizerGWf [1] f.1.1 f.1.2)`) and passes the gate
 `cisCanonNormalizedG ftilde`; the gated core, holding the *reduced* `qReduce ftilde`
 after `reduceSoundOpt ftilde = some (qReduce ftilde)`, runs the denominator-direct gate `cisCanonNormalizedCoreG
-(qReduce ftilde)`. `crischDESolveSound_repin_gate` is the equation that reconciles them — exactly the rewrite the
-re-pin's `crischDERawSolveWf_eq` analogue needs, so the gated-core rewire becomes a 1-step mechanical change. -/
+(qReduce ftilde)`. `cisCanonNormalizedCoreG_qReduce_weakNormalized` is the equation that reconciles them —
+exactly the rewrite the re-pin's `crischDERawSolveWf_eq` analogue needs, so the gated-core rewire becomes a
+1-step mechanical change. -/
 
 section Repin
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
 
-/-- **★ The re-pin gate reconciliation** (`crischDESolveSound_repin_gate`): for the weak-normalized
+/-- **★ The re-pin gate reconciliation** (`cisCanonNormalizedCoreG_qReduce_weakNormalized`): for the weak-normalized
 `ftilde = weakNormalizedF f q'` (`q'` the lift of the weak normalizer `cWeakNormalizerGWf [1] f.1.1 f.1.2`),
 the gated core's denominator-direct check on the *reduced* input equals the wrapper's check on the
 pre-reduce input — `cisCanonNormalizedCoreG (qReduce ftilde) = cisCanonNormalizedG ftilde` — **by `rfl`**. This is
 the exact equation the production re-pin's gated core consumes (the `crischDERawSolveWf_eq` analogue): the gate
 the wrapper passes is, definitionally, the gate the core runs on `qReduce ftilde`, so the rewire that routes the
 core through the §6.1 gate is a single mechanical rewrite with no normalization side-condition. -/
-theorem crischDESolveSound_repin_gate (f : QFunNZG β) :
+theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : QFunNZG β) :
     cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
       = cisCanonNormalizedG (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreG_qReduce _
 
-/-- **The re-pin gate decides `IsCanonNormalized`** (`crischDESolveSound_repin_gate_iff`): the gated core's
+/-- **The re-pin gate decides `IsCanonNormalized`** (`cisCanonNormalizedCoreG_qReduce_weakNormalized_iff`): the gated core's
 denominator-direct check on the reduced input passes iff the §6.1 normalization guarantee `IsCanonNormalized f q'`
 holds — `cisCanonNormalizedCoreG (qReduce ftilde) = true ↔ IsCanonNormalized f q'`. Composes the re-pin gate
-reconciliation (`crischDESolveSound_repin_gate`) with the proven bridge `cisCanonNormalizedG_iff` (the wrapper
+reconciliation (`cisCanonNormalizedCoreG_qReduce_weakNormalized`) with the proven bridge `cisCanonNormalizedG_iff` (the wrapper
 check decides `IsCanonNormalized`). So a gated-core `some` carries `IsCanonNormalized` for free — the soundness the
 re-pinned solver needs is supplied by its own gate, exactly as in the wrapper `crischDESolveSound`. -/
-theorem crischDESolveSound_repin_gate_iff [CFieldDomain β] (f : QFunNZG β) :
+theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
     cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))) = true
       ↔ IsCanonNormalized f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) := by
-  rw [crischDESolveSound_repin_gate]
+  rw [cisCanonNormalizedCoreG_qReduce_weakNormalized]
   exact cisCanonNormalizedG_iff f _
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
@@ -244,7 +245,7 @@ example (f : QFunNZG β) :
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
       = cisCanonNormalizedG (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
-  crischDESolveSound_repin_gate f
+  cisCanonNormalizedCoreG_qReduce_weakNormalized f
 
 end Repin
 
@@ -252,8 +253,8 @@ end Repin
 axiom-clean; the validations are `native_decide`) -/
 
 #print axioms cisCanonNormalizedCoreG_qReduce
-#print axioms crischDESolveSound_repin_gate
-#print axioms crischDESolveSound_repin_gate_iff
+#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized
+#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized_iff
 #print axioms cisCanonNormalizedG_qReduce_of_idempotent
 
 end DeepWiki.SymbolicIntegration
