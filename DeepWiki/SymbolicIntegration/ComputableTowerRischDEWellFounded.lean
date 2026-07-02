@@ -324,6 +324,45 @@ def cRdeSpecialDenominatorGWf (Dt : CPolyG α) (a b c : CPolyG α) :
     let h := cpowG p negn
     (abar, bbar, cbar, h)
 
+/-- **Fuel-free special-denominator no-clear predicate**: the Wf special-denominator shift
+`n = min(0, ν_p(c) - min(0, ν_p(b)))` is zero, equivalently the reconstruction power
+`p^{-n}` is trivial. -/
+def CSpecialDenomNoClearGWf (Dt : CPolyG α) (b c : CPolyG α) : Prop :=
+  let p := cSpecialPolyGWf Dt
+  min (0 : ℤ) ((cValuationGWf p c : ℤ) - min 0 (cValuationGWf p b : ℤ)) = 0
+
+/-- **The fuel-free special-denominator no-clear predicate holds for all inputs**:
+`cValuationGWf` is natural-valued, so both valuations are nonnegative after casting to `ℤ`. -/
+theorem cSpecialDenomNoClearGWf_always (Dt : CPolyG α) (b c : CPolyG α) :
+    CSpecialDenomNoClearGWf Dt b c := by
+  rw [CSpecialDenomNoClearGWf]
+  have hnb : (0 : ℤ) ≤ (cValuationGWf (cSpecialPolyGWf Dt) b : ℤ) := Int.natCast_nonneg _
+  have hnc : (0 : ℤ) ≤ (cValuationGWf (cSpecialPolyGWf Dt) c : ℤ) := Int.natCast_nonneg _
+  omega
+
+/-- **The fuel-free special-denominator reconstruction power is trivial under no-clear**:
+if `CSpecialDenomNoClearGWf Dt b c` and the Wf special polynomial is nonconstant, then
+`cRdeSpecialDenominatorGWf` returns `h = [1]`. -/
+theorem cRdeSpecialDenominatorGWf_h1_eq_one_of_noClear (Dt : CPolyG α) (a b c : CPolyG α)
+    (hp : cdegG (cSpecialPolyGWf Dt) ≠ 0) (hn : CSpecialDenomNoClearGWf Dt b c) :
+    (cRdeSpecialDenominatorGWf Dt a b c).2.2.2 = [CField.one] := by
+  rw [cRdeSpecialDenominatorGWf]
+  simp only [if_neg hp]
+  rw [CSpecialDenomNoClearGWf] at hn
+  show cpowG (cSpecialPolyGWf Dt) (-(min 0
+    ((cValuationGWf (cSpecialPolyGWf Dt) c : ℤ)
+      - min 0 (cValuationGWf (cSpecialPolyGWf Dt) b : ℤ)))).toNat = [CField.one]
+  rw [hn]
+  rfl
+
+/-- **The fuel-free special-denominator reconstruction power is always trivial** in the nonconstant
+special-polynomial regime. -/
+theorem cRdeSpecialDenominatorGWf_h1_eq_one_always (Dt : CPolyG α) (a b c : CPolyG α)
+    (hp : cdegG (cSpecialPolyGWf Dt) ≠ 0) :
+    (cRdeSpecialDenominatorGWf Dt a b c).2.2.2 = [CField.one] :=
+  cRdeSpecialDenominatorGWf_h1_eq_one_of_noClear Dt a b c hp
+    (cSpecialDenomNoClearGWf_always Dt b c)
+
 end CPolyG
 
 namespace CPolyG
