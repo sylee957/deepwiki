@@ -103,7 +103,7 @@ theorem toPolyG_cdivmodG (fuel : ℕ) (p q : CPolyG α) (hqn : cnormG q = q) (hq
           (cmulG (cshiftG ((cnormG p : List α).length - (q : List α).length)
             [CField.div (cleadG (cnormG p)) (cleadG q)]) q)))
       rw [hqr] at hih
-      simp only [toPolyG_caddG, toPolyG_cnormG, toPolyG_csubG, toPolyG_cmulG] at hih ⊢
+      simp only [denote] at hih ⊢
       linear_combination hih
 
 omit [CFieldSpec α] in
@@ -305,7 +305,7 @@ theorem toPolyG_cgcdExtG (fuel : ℕ) (a b : CPolyG α) :
         rw [hqr] at h; rw [hrmod]; exact h
       have hih := ih b (cmodG (fuel + 1) a b)
       rw [hg] at hih
-      simp only [toPolyG_csubG, toPolyG_cmulG]
+      simp only [denote]
       linear_combination hih + toPolyG t * hdiv
 
 /-- **`cgcdExtG`'s gcd is greatest among common divisors**: any `d` dividing both `toPolyG a` and

@@ -354,12 +354,10 @@ theorem coupledClearedCheck_sound (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
   rw [cisZeroG_iff] at h1 h2
   refine ⟨?_, ?_⟩
   · have := h1
-    simp only [toPolyG_csubG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cscaleG, toPolyG_cderivG,
-      CFieldSpec.toK, id_eq, sub_eq_zero] at this
+    simp only [denote, CFieldSpec.toK, id_eq, sub_eq_zero] at this
     linear_combination this
   · have := h2
-    simp only [toPolyG_csubG, toPolyG_caddG, toPolyG_cmulG, toPolyG_cderivG,
-      sub_eq_zero] at this
+    simp only [denote, sub_eq_zero] at this
     linear_combination this
 
 /-- **★ Base coupled-system soundness from a self-certifying solve** (`cCoupledDESystem_sound_of_check`,

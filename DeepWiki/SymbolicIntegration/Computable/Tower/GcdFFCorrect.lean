@@ -306,7 +306,7 @@ noncomputable def toGBPolyG {β : Type*} [CField β] [CFieldSpec β] (p : GBPoly
 variable {β : Type*} [CField β] [CFieldSpec β]
 
 /-- `toGBPolyG [] = 0`. -/
-@[simp] theorem toGBPolyG_nil : toGBPolyG ([] : GBPolyCore β) = 0 := by simp [toGBPolyG]
+@[simp, denote] theorem toGBPolyG_nil : toGBPolyG ([] : GBPolyCore β) = 0 := by simp [toGBPolyG]
 
 /-- `liftKG (C c) = C (amG c)`: the lift sends a constant `β[s]`-coefficient to its `β(s)` embedding. -/
 theorem liftKG_C (c : (CFieldSpec.K β)[X]) :
@@ -583,7 +583,7 @@ theorem toGBPolyG_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
 
 omit [CFieldDomain β] in
 /-- `toGBPolyG` ignores normalization: `toGBPolyG (gbnormCore p) = toGBPolyG p`. -/
-@[simp] theorem toGBPolyG_gbnormCore (p : GBPolyCore β) :
+@[simp, denote] theorem toGBPolyG_gbnormCore (p : GBPolyCore β) :
     toGBPolyG (gbnormCore p) = toGBPolyG p := by
   rw [toGBPolyG, toGBCoeffPoly_gbnormCore, ← toGBPolyG]
 

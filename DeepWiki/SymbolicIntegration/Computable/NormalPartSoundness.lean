@@ -492,7 +492,7 @@ theorem toPolyG_resNum_proper (a d gden gprimeNum : CPolyG α)
     (hgprime : (toPolyG gprimeNum).degree < (toPolyG (cmulG gden gden)).degree) :
     (toPolyG (csubG (cmulG a (cmulG gden gden)) (cmulG d gprimeNum))).degree
       < (toPolyG (cmulG d (cmulG gden gden))).degree := by
-  simp only [toPolyG_csubG, toPolyG_cmulG] at hgprime ⊢
+  simp only [denote] at hgprime ⊢
   exact degree_resNum_lt haProper hgprime
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
