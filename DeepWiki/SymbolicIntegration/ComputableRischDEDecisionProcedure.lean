@@ -7,12 +7,12 @@ import DeepWiki.SymbolicIntegration.ComputableRischDEExpPrimCancellation
 This file is the **consolidation** of the §6 Risch-DE completeness arc. The corrected recursive solver
 now has a fuel-free wrapper `crischDESolveSoundWf`. Its completeness direction (`solvable ⟹ some`) is stated
 against Wf-native stage clauses (`cWeakNormalizerGWf`, `crischDERawSolveWf`); its soundness direction still
-uses the existing Wf/fueled agreement hypotheses from `crischDESolveSoundWf_field`. Here those pieces compose
+uses the bundled Wf soundness transfer residual from `crischDESolveSoundWf_field`. Here those pieces compose
 into a single crisp, citable statement:
 
   **`crischDESolveSoundWf` decides field-level RDE solvability**
   (`crischDESolveSoundWf_isDecisionProcedure`): modulo the consolidated Wf frontier
-  `RischDEDecisionProcedureFrontierWf f g` and the current soundness-agreement hypotheses, the fuel-free
+  `RischDEDecisionProcedureFrontierWf f g` and `RischDESoundResidualWf f g`, the fuel-free
   solver returns `some` **iff** the RDE is solvable —
   `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`.
 
@@ -39,9 +39,9 @@ the proven decompositions `rischDEInnerCompleteness_of_residuals` and `RischDEIn
 | `RischDESolveExhaustiveResidual` (SPDE peeling-divisibility + cancellation-regime exhaustiveness) | `hsolve` | §6.4-6.6 SPDE / poly-RDE | the SPDE peel recursion (peel-step inverse proven) | the engine/base/SPDE-control-flow/preservation layers |
 
 **Soundness still has fueled-transfer dependencies.** The `→` of the Wf equivalence is
-`crischDESolveSoundWf_field`, which currently assumes weak-normalizer, normality-gate, and inner-solve agreement
-with the fueled solver. The frontier governs only the *converse* (`solvable ⟹ some`): the fuel-free solver's
-`none` is certified correct modulo the Wf-native §6 residual. -/
+`crischDESolveSoundWf_field`, which currently consumes `RischDESoundResidualWf` bundling weak-normalizer,
+normality-gate, and inner-solve agreement with the fueled solver. The frontier governs only the *converse*
+(`solvable ⟹ some`): the fuel-free solver's `none` is certified correct modulo the Wf-native §6 residual. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -166,8 +166,8 @@ The field-level decision procedure now targets `crischDESolveSoundWf`, the fuel-
 `crischDERawSolveWf`. The public frontier below states those clauses through the Wf inner input and
 `RischDEInnerCompletenessWf`, then derives the residual consumed by the capstone:
 `some ⟺ solvable` for the fuel-free solver. The completeness direction is Wf-native; the soundness direction
-still carries the existing Wf/fueled agreement hypotheses until the soundness layer is fully re-proved without
-the fueled transfer. The deep inner clause reduces — one tower level down — to the three named §6 tips of
+still carries the bundled Wf soundness residual until the soundness layer is fully re-proved without the fueled
+transfer. The deep inner clause reduces — one tower level down — to the three named §6 tips of
 `RischDEInnerDecisionFrontier`. -/
 
 section Capstone
@@ -225,49 +225,42 @@ theorem residualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
 
 /-- **★★ The CAPSTONE — `crischDESolveSoundWf` is a VERIFIED DECISION PROCEDURE**
 (`crischDESolveSoundWf_isDecisionProcedure`): under the Wf-native frontier
-`RischDEDecisionProcedureFrontierWf f g`, the Wf-shaped benign input-fit budget `InputFitsFuelWf f g`, and the current
-Wf/fueled agreement hypotheses needed by soundness, the fuel-free recursive solver returns `some` **iff**
-the field-level Risch DE is solvable — `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`.
+`RischDEDecisionProcedureFrontierWf f g` and the bundled Wf soundness transfer residual
+`RischDESoundResidualWf f g`, the fuel-free recursive solver returns `some` **iff** the field-level Risch DE is
+solvable — `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`.
 
 The `←` half is Wf-native (`crischDESolveSoundWf_complete_of_residualWf`). The `→` half is the existing
 fuel-free soundness wrapper `crischDESolveSoundWf_imp_solvable`, which still transfers through the fueled
-soundness theorem via `hqwn` and `hwf`. -/
+soundness theorem via `RischDESoundResidualWf`. -/
 theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
-    (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuelWf f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hgateReg : SoundWfGateRegular f)
-    (hwf : SoundWfInnerRegular f g) :
+    (h : RischDEDecisionProcedureFrontierWf f g)
+    (hsound : RischDESoundResidualWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_decides_of_residualWf f g
-    (residualWf_of_decisionProcedureFrontierWf f g h) hfit hqwn hgateReg hwf
+    (residualWf_of_decisionProcedureFrontierWf f g h) hsound
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 -- ★ The RDE decision procedure in book terms: the fuel-free recursive Risch-DE solver returns `some` iff the
 -- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf §6 completeness frontier + the
--- current Wf/fueled soundness-agreement hypotheses.
+-- bundled Wf soundness transfer residual.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
     [Algebra ℚ (CFieldSpec.K β)]
-    (f g : QFunNZG β) (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuelWf f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hgateReg : SoundWfGateRegular f)
-    (hwf : SoundWfInnerRegular f g) :
+    (f g : QFunNZG β) (h : RischDEDecisionProcedureFrontierWf f g)
+    (hsound : RischDESoundResidualWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_isDecisionProcedure f g h hfit hqwn hgateReg hwf
+  crischDESolveSoundWf_isDecisionProcedure f g h hsound
 
 end Capstone
 
 /-! ### Final verdict (stated precisely)
 
 **Is `crischDESolveSoundWf` a verified decision procedure?** **YES — `some ⟺ solvable`, modulo the
-Wf-native §6 residual and the current Wf/fueled agreement hypotheses used by soundness.**
+Wf-native §6 frontier and the bundled Wf soundness residual.**
 `crischDESolveSoundWf_isDecisionProcedure` proves
 `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g` under the Wf consolidated frontier
-`RischDEDecisionProcedureFrontierWf f g`, the Wf-shaped benign input-fit budget, and the existing agreement hypotheses
-`hqwn`/`SoundWfInnerRegular`. The `←` (completeness) is Wf-native through
+`RischDEDecisionProcedureFrontierWf f g` and `RischDESoundResidualWf f g`. The `←` (completeness) is Wf-native through
 `crischDESolveSoundWf_complete_of_residualWf`; the `→` (soundness) still transfers through
 `crischDESolveSoundWf_field`.
 

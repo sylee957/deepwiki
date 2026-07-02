@@ -5,8 +5,8 @@ import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
 The public Wf-facing RDE decision procedure is `crischDESolveSoundWf_isDecisionProcedure`
 (`ComputableRischDEDecisionProcedure`): over `QFunNZG β`, the fuel-free sound solver returns `some` **iff**
 the field-level Risch DE is solvable (`crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`), modulo the
-Wf-native frontier `RischDEDecisionProcedureFrontierWf f g` and the current Wf/fueled soundness-agreement
-hypotheses. This tower-induction file targets the underlying class oracle `CRischField.crischDESolve`
+Wf-native frontier `RischDEDecisionProcedureFrontierWf f g` and the bundled Wf soundness residual
+`RischDESoundResidualWf f g`. This tower-induction file targets the underlying class oracle `CRischField.crischDESolve`
 directly; its inner frontier still carries the same three §6 residual tips — among them the §6.6 cancellation
 `hpoly`, reduced (`ComputableRischDESolveExhaustiveness`) to the base-oracle completeness
 `Cancel{Prim,Exp}OracleComplete`, the *per-step recursion into one tower level down*. This file ties that

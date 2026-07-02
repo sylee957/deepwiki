@@ -434,16 +434,13 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **Fuel-free soundness, restated as `some ⟹ solvable`**: a successful `crischDESolveSoundWf`
-run witnesses `FieldRDESolvable`, using the same Wf/fueled agreement hypotheses as
+run witnesses `FieldRDESolvable`, using the same Wf soundness transfer residual as
 `crischDESolveSoundWf_field`. -/
 theorem crischDESolveSoundWf_imp_solvable (f g y : QFunNZG β)
-    (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuelWf f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hgateReg : SoundWfGateRegular f)
-    (hwf : SoundWfInnerRegular f g) :
+    (hsolve : crischDESolveSoundWf f g = some y)
+    (hsound : RischDESoundResidualWf f g) :
     FieldRDESolvable f g :=
-  ⟨y, crischDESolveSoundWf_field f g y hsolve hfit hqwn hgateReg hwf⟩
+  ⟨y, crischDESolveSoundWf_field f g y hsolve hsound⟩
 
 /-! ### Wf-native completeness residual -/
 
@@ -481,31 +478,25 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : QFunNZG β)
 
 /-- **The fuel-free §6 RDE solver DECIDES solvability modulo the Wf-native residual**:
 `crischDESolveSoundWf f g` returns `some` iff the field-level RDE is solvable. The completeness direction is
-Wf-native; the soundness direction still uses the existing Wf/fueled agreement hypotheses of
+Wf-native; the soundness direction still uses the bundled Wf soundness transfer residual consumed by
 `crischDESolveSoundWf_field`. -/
 theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
-    (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuelWf f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hgateReg : SoundWfGateRegular f)
-    (hwf : SoundWfInnerRegular f g) :
+    (hres : RischDECompletenessResidualWf f g)
+    (hsound : RischDESoundResidualWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g := by
   constructor
   · rintro ⟨y, hy⟩
-    exact crischDESolveSoundWf_imp_solvable f g y hy hfit hqwn hgateReg hwf
+    exact crischDESolveSoundWf_imp_solvable f g y hy hsound
   · intro hsol
     exact crischDESolveSoundWf_complete_of_residualWf f g hsol hres
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 -- The Wf-native residual gives the same decision statement with a fuel-free completeness direction.
-example (f g : QFunNZG β) (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuelWf f g)
-    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
-      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
-    (hgateReg : SoundWfGateRegular f)
-    (hwf : SoundWfInnerRegular f g) :
+example (f g : QFunNZG β) (hres : RischDECompletenessResidualWf f g)
+    (hsound : RischDESoundResidualWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
-  crischDESolveSoundWf_decides_of_residualWf f g hres hfit hqwn hgateReg hwf
+  crischDESolveSoundWf_decides_of_residualWf f g hres hsound
 
 end CompleteWf
 
