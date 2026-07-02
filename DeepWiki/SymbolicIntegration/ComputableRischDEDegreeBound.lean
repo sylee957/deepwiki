@@ -415,6 +415,52 @@ theorem hbound_of_cancellationResidual (Dt fnum fden gnum gden : CPolyG α)
 
 end Wiring
 
+/-! ## Wf wiring: `RischDEInnerCompletenessWf.hbound` modulo the cancellation residual
+
+The fuel-free inner frontier uses the same degree arithmetic after the Wf normal and special denominator
+stages. This section names the Wf residual and proves the exact Wf `hbound` field from it. -/
+
+section WiringWf
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+
+/-- The Wf §6.3 degree-bound cancellation residual over Wf special-cleared coefficients. -/
+def RdeBoundCancellationResidualWf (Dt fnum fden gnum gden : CPolyG α) : Prop :=
+  ∀ a0 b0 c0 h0 : CPolyG α,
+    cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+    ∀ q : CPolyG α,
+      IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+      (toPolyG (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1).coeff
+          (candTopDegree (toPolyG Dt)
+            (toPolyG (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1)
+            (toPolyG (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1)
+            (toPolyG q)) = 0 →
+      cdegG q ≤ cRdeBoundDegreeG Dt
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+
+/-- The Wf `hbound` field follows from the Wf cancellation residual. -/
+theorem hboundWf_of_cancellationResidualWf (Dt fnum fden gnum gden : CPolyG α)
+    (hres : RdeBoundCancellationResidualWf Dt fnum fden gnum gden) :
+    ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 := by
+  intro a0 b0 c0 h0 hnorm q hsol
+  exact cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol Dt _ _ _ q hsol
+    (hres a0 b0 c0 h0 hnorm q hsol)
+
+end WiringWf
+
 /-! ### Restatement against `RischDEInnerCompleteness.hbound`'s field type (anonymous `example`) -/
 
 -- ★ The produced `hbound` has exactly `RischDEInnerCompleteness.hbound`'s type — confirmed by using it
@@ -429,6 +475,19 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     RischDEInnerCompleteness Dt fnum fden gnum gden :=
   { hnorm := hnorm
     hbound := hbound_of_cancellationResidual Dt fnum fden gnum gden hres
+    hsolve := hsolve }
+
+-- The Wf residual has exactly `RischDEInnerCompletenessWf.hbound`'s field shape.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
+    (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true)
+    (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRischDEGWf Dt fnum fden gnum gden).isSome = true)
+    (hres : RdeBoundCancellationResidualWf Dt fnum fden gnum gden) :
+    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
+  { hnorm := hnorm
+    hbound := hboundWf_of_cancellationResidualWf Dt fnum fden gnum gden hres
     hsolve := hsolve }
 
 /-! ## Operational witness: the degree bound is non-vacuous on a concrete primitive RDE
@@ -513,5 +572,6 @@ NO `native_decide`, NO `sorry`) -/
 #print axioms cRdeBoundDegreeG_eq_abstract
 #print axioms cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol
 #print axioms hbound_of_cancellationResidual
+#print axioms hboundWf_of_cancellationResidualWf
 
 end DeepWiki.SymbolicIntegration

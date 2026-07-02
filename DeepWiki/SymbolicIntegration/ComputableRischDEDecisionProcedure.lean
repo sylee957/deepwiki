@@ -144,9 +144,10 @@ end InnerFrontier
 
 /-! ## Wf inner frontier
 
-This is the replacement inner frontier for the public Wf decision path. It keeps the normal-denominator
-residual fuel-free (`RdeNormalDivisibilityResidualWf`) and states the remaining two clauses directly against
-the Wf special-denominator and assembled `cRischDEGWf` APIs. -/
+This is the replacement inner frontier for the public Wf decision path. It keeps both the normal-denominator
+and degree-bound residuals fuel-free (`RdeNormalDivisibilityResidualWf`,
+`RdeBoundCancellationResidualWf`) and states the remaining solver-exhaustiveness clause directly against
+the assembled `cRischDEGWf` API. -/
 
 section InnerFrontierWf
 
@@ -157,17 +158,8 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 structure RischDEInnerDecisionFrontierWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
   /-- §6.2/Wf normal-denominator divisibility residual. -/
   hnorm : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden
-  /-- §6.4/Wf degree-bound clause on the Wf special-cleared coefficients. -/
-  hbound : ∀ a0 b0 c0 h0 : CPolyG α,
-    cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
-    ∀ q : CPolyG α,
-      IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
-      cdegG q ≤ cRdeBoundDegreeG Dt
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+  /-- §6.3/Wf degree-bound cancellation residual on the Wf special-cleared coefficients. -/
+  hbound : RdeBoundCancellationResidualWf Dt fnum fden gnum gden
   /-- §6.2-6.6/Wf inner solver exhaustiveness. -/
   hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     (cRischDEGWf Dt fnum fden gnum gden).isSome = true
@@ -177,7 +169,7 @@ theorem rischDEInnerCompletenessWf_of_decisionFrontierWf (Dt fnum fden gnum gden
     (h : RischDEInnerDecisionFrontierWf Dt fnum fden gnum gden) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
   rischDEInnerCompletenessWf_of_norm_bound_solve Dt fnum fden gnum gden
-    h.hnorm h.hbound h.hsolve
+    h.hnorm (hboundWf_of_cancellationResidualWf Dt fnum fden gnum gden h.hbound) h.hsolve
 
 /-- The Wf inner frontier yields fuel-free inner-solver success on polynomial-solvable inputs. -/
 theorem cRischDEGWf_isSome_of_decisionFrontierWf (Dt fnum fden gnum gden : CPolyG α)
@@ -335,7 +327,7 @@ through `crischDESolveSoundWf_complete_of_residualWf`; the `→` (soundness) is 
 `rischDEInnerCompleteness_of_decisionFrontierFueled` assembles these three into the original fueled
 `RischDEInnerCompleteness` map. The Wf replacement
 `rischDEInnerCompletenessWf_of_decisionFrontierWf` assembles the fuel-free inner map through
-`RdeNormalDivisibilityResidualWf` and Wf stage clauses. The public Wf capstone consumes
+`RdeNormalDivisibilityResidualWf`, `RdeBoundCancellationResidualWf`, and the Wf solver clause. The public Wf capstone consumes
 `RischDEInnerCompletenessWf` directly through the field-level frontier, then uses the §6.1 `hwn`/`hck` plus
 the Wf inner-input clauses through `RischDECompletenessResidualWf`. The lift of Wf inner completeness into
 the raw-solver `hinner` clause is encoded in
