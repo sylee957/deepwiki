@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
-import DeepWiki.SymbolicIntegration.ComputableHyperexpNormalCore
-import DeepWiki.SymbolicIntegration.ComputableHyperexpExampleData
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.NormalCore
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.ExampleData
 
 /-! # The hyperexponential normal part via residual feedback
 

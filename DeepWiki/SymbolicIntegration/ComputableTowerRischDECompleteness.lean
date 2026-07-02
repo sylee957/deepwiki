@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
+import DeepWiki.SymbolicIntegration.Computable.RischDE.DecisionProcedure
 
 /-! # Wf-first tower induction for RDE completeness
 

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDECompleteness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
 import DeepWiki.SymbolicIntegration.Computable.WeakNormalizerCorrect
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 

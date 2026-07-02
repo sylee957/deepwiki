@@ -107,34 +107,34 @@ import DeepWiki.SymbolicIntegration.Computable.WeakNormalizerCorrect
 import DeepWiki.SymbolicIntegration.Computable.IntegrationFunctionsCatalog
 
 -- ## Computable engine — base Risch differential equation
-import DeepWiki.SymbolicIntegration.ComputableRischDECompleteness
-import DeepWiki.SymbolicIntegration.ComputableRischDEDecisionProcedure
-import DeepWiki.SymbolicIntegration.ComputableRischDEDegreeBound
-import DeepWiki.SymbolicIntegration.ComputableRischDEDegreeBoundCancellation
-import DeepWiki.SymbolicIntegration.ComputableRischDEExpPrimCancellation
-import DeepWiki.SymbolicIntegration.ComputableRischDENormCompleteness
-import DeepWiki.SymbolicIntegration.ComputableRischDENormalCorrect
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveExhaustiveness
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveNorm
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveNormCanon
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveSoundWf
-import DeepWiki.SymbolicIntegration.ComputableRischDEStructural
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerCorrectG
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
+import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.DecisionProcedure
+import DeepWiki.SymbolicIntegration.Computable.RischDE.DegreeBound
+import DeepWiki.SymbolicIntegration.Computable.RischDE.DegreeBoundCancellation
+import DeepWiki.SymbolicIntegration.Computable.RischDE.ExpPrimCancellation
+import DeepWiki.SymbolicIntegration.Computable.RischDE.NormCompleteness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalCorrect
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveExhaustiveness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNorm
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNormCanon
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSoundWf
+import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
+import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerCorrectG
+import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGlue
 
 -- ## Computable engine — hyperexponential case
-import DeepWiki.SymbolicIntegration.ComputableHyperexpEta
-import DeepWiki.SymbolicIntegration.ComputableHyperexpExampleData
-import DeepWiki.SymbolicIntegration.ComputableHyperexpFullSoundness
-import DeepWiki.SymbolicIntegration.ComputableHyperexpLaurentCore
-import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
-import DeepWiki.SymbolicIntegration.ComputableHyperexpNormalCore
-import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Eta
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.ExampleData
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.FullSoundness
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.LaurentCore
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Normal
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.NormalCore
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
 
 -- ## Computable engine — coupled differential systems
-import DeepWiki.SymbolicIntegration.ComputableCoupledDE
-import DeepWiki.SymbolicIntegration.ComputableCoupledDEAssembly
-import DeepWiki.SymbolicIntegration.ComputableCoupledDETangentReconstruct
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Basic
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Assembly
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.TangentReconstruct
 
 -- ## Computable engine — arbitrary-depth towers (QFunNZG)
 import DeepWiki.SymbolicIntegration.ComputableTowerBench

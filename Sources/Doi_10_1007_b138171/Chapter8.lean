@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableCoupledDE
-import DeepWiki.SymbolicIntegration.ComputableCoupledDEAssembly
-import DeepWiki.SymbolicIntegration.ComputableCoupledDETangentReconstruct
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Basic
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Assembly
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.TangentReconstruct
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 8: The Coupled Differential System
@@ -8,7 +8,7 @@ Solving the coupled system `Dy₁ + f·y₁ − g·y₂ = h₁`, `Dy₂ + g·y�
 split of a complex Risch DE `Dy + f·y = g` over `K(√a)`) — the engine that finishes the RDE oracle's
 last gap, the **tangent cancellation case** `PolyRischDECancelTan` that the §6.6 dispatcher deferred.
 The §8.4 hypertangent case is now rendered as a **computable** solver over `k = ℚ(x)`, `t = tan(x)`
-(`DeepWiki.SymbolicIntegration.ComputableCoupledDE`): the base coupled system `cCoupledDESystem`
+(`DeepWiki.SymbolicIntegration.Computable.CoupledDE.Basic`): the base coupled system `cCoupledDESystem`
 (eq. 8.2/8.10, polynomial ansatz over ℚ(x)) and the degree-recursive tangent box `cCoupledDECancelTan`
 (book p.265), validated end-to-end on Example 8.4.1.
 

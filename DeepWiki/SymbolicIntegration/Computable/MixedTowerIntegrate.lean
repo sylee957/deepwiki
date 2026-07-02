@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.TranscendentalOverAlgebraic
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
-import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
 
 /-! # The first transcendental INTEGRAL over an algebraic base (Bronstein 1990, mixed tower)
 `ComputableTranscendentalOverAlgebraic` made the radical field `RadX3 = ℚ(x)[√(x³+1)]` a full

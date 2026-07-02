@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableHyperexpLaurentCore
-import DeepWiki.SymbolicIntegration.ComputableHyperexpEta
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.LaurentCore
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Eta
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
 /-! # Core hyperexponential normal-part drivers

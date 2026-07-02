@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
-import DeepWiki.SymbolicIntegration.ComputableHyperexpLaurentCore
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.LaurentCore
 
 /-! # The hyperexponential special-part integral — term-by-term Laurent integration (Bronstein §5.10)
 `ComputableTowerIntegrate`/`ComputableTowerRischDE` built the generic tower integration pipeline and the

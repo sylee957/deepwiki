@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerCorrectG
+import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerCorrectG
 
 /-! # The `K(t)`-valuation lift of Bronstein Lemma 6.1.1 (the §6.1 normal-denominator pole calculus)
 

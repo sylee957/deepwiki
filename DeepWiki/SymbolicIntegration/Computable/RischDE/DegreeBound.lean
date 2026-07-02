@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDECompleteness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
 import DeepWiki.SymbolicIntegration.MonomialConstants
 
 /-! # §6.4 degree-upper-bound for the reduced poly-RDE (Bronstein Thm 6.3.1) — the completeness keystone

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveNorm
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNorm
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 
 /-! # The fuel-free §6.1 normality check is `qReduce`-invariant

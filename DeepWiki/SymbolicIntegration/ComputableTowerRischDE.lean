@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RischFieldCore
-import DeepWiki.SymbolicIntegration.ComputableHyperexpEta
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Eta
 
 /-! # The recursive Risch-DE oracle over arbitrary-depth differential towers
 

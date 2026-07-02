@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDEDegreeBoundCancellation
+import DeepWiki.SymbolicIntegration.Computable.RischDE.DegreeBoundCancellation
 
 /-! # §6.3 exp/primitive (`δ ≤ 1`) leading-term cancellation degree bound (Bronstein Lemma 6.3.3 / 6.3.4)
 

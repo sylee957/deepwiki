@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDENormalCorrect
+import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalCorrect
 
 /-! # The CORRECT (weak-normalized) recursive Risch-DE solver — closing the divisibility wall
 

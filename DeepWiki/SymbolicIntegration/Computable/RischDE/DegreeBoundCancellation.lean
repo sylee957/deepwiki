@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDEDegreeBound
+import DeepWiki.SymbolicIntegration.Computable.RischDE.DegreeBound
 
 /-! # §6.3 leading-term-cancellation degree bound for the reduced poly-RDE (Bronstein, the `λ`-recursion)
 

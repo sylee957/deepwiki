@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
+import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGlue
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 
 /-! # §6 RDE cleared-identity correctness at the level-1 carrier `α = QFunNZG ℚ`

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveSoundWf
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSoundWf
 
 /-! # §6 RDE decision-procedure completeness — Wf `solvable ⟹ some`
 

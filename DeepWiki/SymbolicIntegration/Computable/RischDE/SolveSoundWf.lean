@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveNormCanon
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNormCanon
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 import DeepWiki.SymbolicIntegration.Computable.CanonNormalizedReduce
 

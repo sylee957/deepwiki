@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableCoupledDEAssembly
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Assembly
 import Mathlib.RingTheory.AdjoinRoot
 
 /-! # §8.4 tangent telescoping reconstruction — unconditional `cCoupledDECancelTan_sound`

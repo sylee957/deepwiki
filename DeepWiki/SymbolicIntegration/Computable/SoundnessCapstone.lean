@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular
-import DeepWiki.SymbolicIntegration.ComputableRischDEStructural
-import DeepWiki.SymbolicIntegration.ComputableHyperexpFullSoundness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.FullSoundness
 
 /-! # The fully-abstract transcendental Risch soundness capstone — threading the two PRS witnesses
 

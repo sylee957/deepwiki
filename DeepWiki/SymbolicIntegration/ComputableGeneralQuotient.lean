@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableGeneralSetup
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerGlue
+import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGlue
 
 /-! # Quotient API for general algebraic-function carriers
 

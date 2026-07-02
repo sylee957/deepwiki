@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveExhaustiveness
-import DeepWiki.SymbolicIntegration.ComputableRischDEExpPrimCancellation
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveExhaustiveness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.ExpPrimCancellation
 
 /-! # The Risch-DE decision procedure
 

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDE
-import DeepWiki.SymbolicIntegration.ComputableRischDETowerCorrectG
+import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerCorrectG
 
 /-! # The `checkIdentityG` ⟹ field-identity bridge
 

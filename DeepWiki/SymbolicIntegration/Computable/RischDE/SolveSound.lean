@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveNormCanon
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNormCanon
 
 /-! # The SOUND recursive Risch-DE solver — the §6.1 solvability check added (the soundness bug fixed)
 

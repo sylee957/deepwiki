@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDENormCompleteness
-import DeepWiki.SymbolicIntegration.ComputableRischDEDegreeBound
-import DeepWiki.SymbolicIntegration.ComputableRischDEStructural
+import DeepWiki.SymbolicIntegration.Computable.RischDE.NormCompleteness
+import DeepWiki.SymbolicIntegration.Computable.RischDE.DegreeBound
+import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
 
 /-! # §6.4–6.6 RDE completeness — the Wf SPDE + poly-RDE solve is exhaustive (`hsolveWf`)

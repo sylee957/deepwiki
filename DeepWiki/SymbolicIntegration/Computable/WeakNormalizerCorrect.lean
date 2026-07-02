@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveNorm
+import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNorm
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 
 /-! # Closing the residual pieces of the normalized recursive RDE solver — `C`-side + the precise remainder
