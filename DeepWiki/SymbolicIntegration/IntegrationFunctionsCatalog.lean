@@ -65,7 +65,8 @@ only; it states no new mathematics.
   the direct Wf soundness certificate `RischDESoundnessWf`. Completeness/decision procedure:
   `crischDESolveSoundWf_isDecisionProcedure`, modulo the Wf-native `RischDEDecisionProcedureFrontierWf` and
   `RischDESoundnessWf`.
-  The older fueled `crischDESolveSound` remains only as the internal soundness bridge used by the Wf theorem.
+  The older fueled `crischDESolveSound` remains documented for comparison; the public decision theorem uses
+  the Wf solver and direct Wf soundness certificate.
 
 ## Algebraic integrators (Bronstein vol. II / Trager, over `RadExt` or a general plane curve)
 

@@ -4,11 +4,12 @@ import DeepWiki.SymbolicIntegration.MonomialConstants
 /-! # §6.4 degree-upper-bound for the reduced poly-RDE (Bronstein Thm 6.3.1) — the completeness keystone
 
 `ComputableRischDECompleteness` reduced the Wf §6 RDE decision procedure's completeness (`solvable ⟹ some`)
-to the residual `RischDECompletenessResidualWf`, whose deepest clause is `RischDEInnerCompleteness.hbound`:
-**any** polynomial solution `q` of the §6.3-reduced linear ODE `a·Dq + b·q = c` has bounded degree
-`deg q ≤ cRdeBoundDegreeG …`. The engine *computes* `cRdeBoundDegreeG` (Bronstein §6.3, the degree
-arithmetic) but never proves it is an upper bound on solutions. This file proves the bound where it is a
-straightforward leading-term comparison, and isolates the genuinely deep cancellation case precisely.
+to the fuel-free residual `RischDECompletenessResidualWf`, whose inner proof obligation is
+`RischDEInnerCompletenessWf`. The deepest degree-bound clause says: **any** polynomial solution `q` of the
+§6.3-reduced linear ODE `a·Dq + b·q = c` has bounded degree `deg q ≤ cRdeBoundDegreeG …`. The engine
+*computes* `cRdeBoundDegreeG` (Bronstein §6.3, the degree arithmetic) but never proves it is an upper bound on
+solutions. This file proves the bound where it is a straightforward leading-term comparison, and isolates the
+genuinely deep cancellation case precisely.
 
 **The degree bound (Bronstein Thm 6.3.1) and its cases.** With `D = implicitDeriv v` the monomial
 derivation (`v = Dt`, so the `D`-degree is `δ = deg v`), and `dₐ = deg a`, `d_b = deg b`, `d_c = deg c`,
