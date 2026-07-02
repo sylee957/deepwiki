@@ -897,4 +897,34 @@ end Residual
 #print axioms cRdeSpecialDenominatorG_h1_eq_one_always
 #print axioms cRischDEG_rdeCleared_gen_hyperexp_cancel
 
+/-! ## Fuel-free cleared-identity ports (Phase P1 of the RischDE Wf migration) -/
+
+section WfCleared
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+
+/-- **Fuel-free mirror of `cPolyRischDENoCancelG_cleared_identity_gen`**: a `cPolyRischDENoCancelGWf`
+success `= some q` yields the §6.5 non-cancellation identity `D(q) + b·q = c` over `(CFieldSpec.K α)[X]`.
+`fun_induction` on the well-founded `cPolyRischDENoCancelGWf` recursion, mirroring the fuel'd fuel-induction
+proof (base `c = 0`; recursive `q = p + qrec`, closed by `linear_combination` on the IH). -/
+theorem cPolyRischDENoCancelGWf_cleared_identity (Dt b c : CPolyG α) (n : ℤ) (q : CPolyG α)
+    (hsolve : cPolyRischDENoCancelGWf Dt b c n = some q) :
+    Differential.implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q = toPolyG c := by
+  fun_induction cPolyRischDENoCancelGWf Dt b c n generalizing q with
+  | case1 c _n hc =>
+    rw [Option.some.injEq] at hsolve
+    subst q
+    rw [(cisZeroG_iff c).mp hc, toPolyG_nil, map_zero, mul_zero, add_zero]
+  | case2 => exact absurd hsolve (by simp)
+  | case3 => exact absurd hsolve (by simp)
+  | case4 _c _n _hc _hguard _m _coeff p c' _hlen q' hrec ih =>
+    rw [Option.some.injEq] at hsolve
+    subst q
+    have hih := ih q' hrec
+    simp only [c', p, denote, map_add] at hih ⊢
+    linear_combination hih
+  | case5 => exact absurd hsolve (by simp)
+
+end WfCleared
+
 end DeepWiki.SymbolicIntegration
