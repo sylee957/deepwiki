@@ -508,8 +508,8 @@ The Bronstein §6.1 normality test the raw recursive oracle **omits**: an unsolv
 a non-positive-integer residue surviving in the lowest-terms denominator) fails it, so the gated
 `instCRischFieldQFunNZG.crischDESolve` returns `none` rather than a spurious `some`. Reads `a.1.2` directly
 (no re-reduction), the denominator the production solver already holds after reducing its RDE input to lowest
-terms — definitionally the keystone's `cisCanonNormalizedCoreG` (`ComputableCanonNormalizedReduce`), so
-`cisCanonNormalizedCoreG_qReduce` reconciles the gate with the wrapper's `cisCanonNormalizedG`.
+terms. The fuel-free API now exposes the corresponding Wf reconciliation in
+`ComputableCanonNormalizedReduce`.
 `[CField β]`-data only (the `Prop`-erased subtype proof aside), so the gated oracle stays
 `native_decide`-reducible. -/
 def cdenomNormalGateG (a : QFunNZG β) : Bool :=
