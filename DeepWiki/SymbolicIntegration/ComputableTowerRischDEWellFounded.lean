@@ -49,7 +49,7 @@ primitive-cancellation, hyperexponential-cancellation, and valuation own-loops. 
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
 /-- **Generic fuel-free primitive cancellation Poly-Risch-DE** (Bronstein §6.6, book p.212)
 `cPolyRischDECancelPrimGWf Dt b c n`: the generic, fuel-free companion of `cPolyRischDECancelPrimG`. Given the
@@ -241,7 +241,7 @@ original op-for-op with the fuel dropped — a pure composition, no new recursio
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCoreWf α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- **Generic fuel-free weak normalizer** `cWeakNormalizerGWf Dt fnum fden = q ∈ α[t]` (Bronstein §6.1, book
 p.183): the generic, fuel-free companion of `cWeakNormalizerG`. Split the denominator into its normal part
@@ -378,7 +378,7 @@ so a *level-`n+1`* call recurses into the *level-`n`* `crischDESolve`. -/
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCoreWf α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
 /-- **★ THE HEADLINE — the generic fuel-free Risch differential equation solver** `cRischDEGWf Dt fnum fden
 gnum gden` (Bronstein Ch. 6, assembled): the generic, fuel-free companion of `cRischDEG`. For `f = fnum/fden`,
