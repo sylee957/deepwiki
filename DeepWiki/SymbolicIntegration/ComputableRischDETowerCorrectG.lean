@@ -16,7 +16,8 @@ the **generic** theorem `associated_toPolyG_cgcdFFCore` (`ComputableTowerGcdFFCo
 The carrier `QFunNZG ℚ` reads through `toPolyG` into the field `RatFunc ℚ = CFieldSpec.K (QFunNZG ℚ)`, so the
 abstract conclusions (the cleared polynomial identities over `(RatFunc ℚ)[X]`) live over that field. The
 cleared-lifting *engine* (`cSPDEG_cleared_lifting`-style induction, `rdeNormalDenominator_glue`,
-`spde_const_base`, `cSPDE_peel_cleared`, `toPolyG_cdiophantineGWf`, `dvd_of_cdvdG`, `toPolyG_cdivG_exact`) is
+`spde_const_base`, `cSPDE_peel_cleared`, `toPolyG_cdiophantineGWf`, the `dvd_of_cdvdG`/`dvd_of_cdvdGWf`
+read-offs, and `toPolyG_cdivWf_exact`) is
 gcd-agnostic, so it applies at any tower level; the gcd-discharge route enters through
 `associated_toPolyG_cgcdFFCore`.
 
@@ -39,9 +40,9 @@ open Compute CPolyG QFunNZG
 
 The §6.4 SPDE certificate discharge needs five engine facts whose proofs only ever touch the gcd `g`
 **abstractly** (through an `Associated (toPolyG g) (gcd …)` hypothesis and the generic
-`cgcdWf`/`cdivG`/`cdvdG` API). We state them generically over `{α} [CField α] [CFieldSpec α]`, so they
+`cgcdWf`/`cdivWf`/`cdvdG`/`cdvdGWf` API). We state them generically over `{α} [CField α] [CFieldSpec α]`, so they
 apply at `QFunNZG ℚ` (and any level). Each reuses the already generic `toPolyG_cgcdWf_dvd` /
-`toPolyG_cdivG_exact` / `dvd_of_cdvdG` / `spde_const_base` / `spde_step_glue`. -/
+`toPolyG_cdivWf_exact` / divisibility read-offs / `spde_const_base` / `spde_step_glue`. -/
 
 /-- **The divided coefficients' fuel-free gcd is a unit** (generic): after dividing `a,b` by a nonzero gcd
 `g`, the Wf gcd of `bd, ad` is a unit. -/
