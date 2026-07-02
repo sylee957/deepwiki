@@ -6,9 +6,10 @@ The public Wf-facing RDE decision procedure is `crischDESolveSoundWf_isDecisionP
 (`ComputableRischDEDecisionProcedure`): over `QFunNZG β`, the fuel-free sound solver returns `some` **iff**
 the field-level Risch DE is solvable (`crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`), modulo the
 Wf-native frontier `RischDEDecisionProcedureFrontierWf f g` and the direct Wf soundness certificate
-`RischDESoundnessWf f g`. This tower-induction file targets the underlying class oracle `CRischField.crischDESolve`
-directly; its inner frontier still carries the same three §6 residual tips — among them the §6.6 cancellation
-`hpoly`, reduced (`ComputableRischDESolveExhaustiveness`) to the base-oracle completeness
+`RischDESoundnessWf f g`. This tower-induction file keeps the underlying class-oracle induction and also
+exposes a Wf step for the public `crischDESolveSoundWf` wrapper. Its inner frontier still carries the same
+three §6 residual tips — among them the §6.6 cancellation `hpoly`, reduced
+(`ComputableRischDESolveExhaustiveness`) to the base-oracle completeness
 `Cancel{Prim,Exp}OracleComplete`, the *per-step recursion into one tower level down*. This file ties that
 recursion into a single structural induction.
 
@@ -485,6 +486,44 @@ theorem crischFieldComplete_step (hβ : CRischFieldComplete β)
 
 end StepAssembly
 
+/-! ### Wf-facing per-level step
+
+The public solver over `QFunNZG β` is `crischDESolveSoundWf`. The cancellation subroutines still recurse into
+the base field through `CRischField.crischDESolve`, so the induction hypothesis remains
+`CRischFieldComplete β`; the next-level conclusion, however, is now a fuel-free wrapper result. -/
+
+section StepAssemblyWf
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+
+/-- **Wf per-level RDE completeness**: the fuel-free public solver returns `some` on every solvable
+field-level RDE over `QFunNZG β`. -/
+def CRischFieldCompleteWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop :=
+  ∀ f g : QFunNZG β, FieldRDESolvable f g → ∃ y, crischDESolveSoundWf f g = some y
+
+/-- **The Wf per-level step frontier**: given the old base-oracle IH one level down, every solvable
+`QFunNZG β` RDE satisfies the Wf decision-procedure frontier and has the direct Wf soundness certificate. -/
+structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
+  /-- The Wf decision-procedure frontier for each solvable next-level RDE, threaded through the IH. -/
+  hfront : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    RischDEDecisionProcedureFrontierWf f g
+  /-- The direct Wf soundness certificate for each solvable next-level RDE. -/
+  hsound : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
+    RischDESoundnessWf f g
+
+/-- **Wf step**: a complete base oracle one level down plus the Wf per-level frontier makes the fuel-free
+public RDE solver complete at the next `QFunNZG` level. -/
+theorem crischFieldCompleteWf_step (hβ : CRischFieldComplete β)
+    (hstep : RischDEStepFrontierWf β) : CRischFieldCompleteWf β := by
+  intro f g hsol
+  exact (crischDESolveSoundWf_isDecisionProcedure f g (hstep.hfront hβ f g hsol)
+    (hstep.hsound hβ f g hsol)).mpr hsol
+
+end StepAssemblyWf
+
 /-! ### Restatements (anonymous `example`s) -/
 
 -- ★ The base case: `CRischFieldComplete ℚ` is the constant-field decision procedure.
@@ -511,6 +550,13 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     CRischFieldComplete (QFunNZG β) :=
   crischFieldComplete_step hβ hstep
 
+-- ★★ Wf STEP: the IH + the Wf per-level frontier give fuel-free wrapper completeness at level `n+1`.
+example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
+    [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+    (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontierWf β) :
+    CRischFieldCompleteWf β :=
+  crischFieldCompleteWf_step hβ hstep
+
 /-! ### Axiom audit (the base case, the recursion-tie helper, the two bridges, and the assembled step are
 axiom-clean; NO `native_decide`) -/
 
@@ -519,5 +565,6 @@ axiom-clean; NO `native_decide`) -/
 #print axioms cFieldRDESolvable_iff_fieldRDESolvable
 #print axioms crischDESolve_isSome_of_gate_some_den
 #print axioms crischFieldComplete_step
+#print axioms crischFieldCompleteWf_step
 
 end DeepWiki.SymbolicIntegration
