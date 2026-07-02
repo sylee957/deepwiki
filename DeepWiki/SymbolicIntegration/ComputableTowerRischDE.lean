@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerField
 import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableQFunReduce
+import DeepWiki.SymbolicIntegration.ComputableRischFieldCore
 
 /-! # The recursive Risch-DE oracle over arbitrary-depth differential towers (Bronstein Ch. 6)
 `ComputableTowerField`/`Deriv`/`Integrate` built the generic tower carrier `QFunNZG α` (the next level
@@ -43,28 +44,6 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
-
-/-! ### The `CRischField` class — the base Risch-DE solve over the field itself
-
-`crischDESolve f g` solves `Dy + f·y = g` for `y ∈ α`, where `D` is `α`'s own derivation
-(`CDiffField.cderiv`). This is the leading-coefficient recursion target of every §6.6 cancellation case
-(eq. 6.23). The recursion is carried by the *instances*: `CRischField ℚ` is the constant base, and
-`CRischField (QFunNZG β)` runs the generic §6 pipeline over `β[s]` with `[CRischField β]`. -/
-
-/-- **Base Risch-DE solver over the field `α`**: `crischDESolve f g = some y` with `y ∈ α` solving
-`Dy + f·y = g` (`D = α`'s own derivation), or `none`. The leading-coefficient recursion target of the
-§6.6 cancellation cases (Bronstein eq. 6.23). Carried as a typeclass so the tower recursion is
-structural: `CRischField (QFunNZG β)` runs the §6 pipeline over `β[s]` and recurses to
-`CRischField β`, bottoming at `CRischField ℚ`. -/
-class CRischField (α : Type*) [CField α] where
-  /-- Solve `Dy + f·y = g` over the field `α` (`D = α`'s own derivation); `none` if unsolvable. -/
-  crischDESolve : α → α → Option α
-
-/-- **`CRischField ℚ`** — the constant-field base (`D = 0`): `Dy + f·y = g` collapses to `f·y = g`
-(`Dy = 0` for constant `y`), so `y = g/f` when `f ≠ 0`; `f = 0` needs `g = 0` (then `y = 0`). The
-bottoming-out solve of the whole tower recursion. -/
-instance instCRischFieldQ : CRischField ℚ where
-  crischDESolve f g := if f = 0 then (if g = 0 then some 0 else none) else some (g / f)
 
 /-! ### Generic polynomial evaluation at a `CField` constant (positive-integer-root test)
 
