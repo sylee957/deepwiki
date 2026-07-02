@@ -1602,15 +1602,15 @@ theorem cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one
       ≠ 0 := by
     have hd2 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
         = toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one]) := by
-      simp only [cHermiteReduceTowerGWf, toPolyG_cnormG]
+      simp only [cHermiteReduceTowerGWf, denote]
     rw [← hd2, hden]; exact Lagrange.nodal_ne_zero
   have hproper := cHermiteReduceTowerGWf_leftover_proper_of_residual Dt a d
     (csubG (cmulG a (cmulG _ _))
       (cmulG d (csubG (cmulG (cmonomialDeriv Dt _) _) (cmulG _ (cmonomialDeriv Dt _)))))
     (cmulG d (cmulG _ _))
     ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one])
-    (by simp only [cHermiteReduceTowerGWf, toPolyG_cnormG])
-    (by simp only [cHermiteReduceTowerGWf, toPolyG_cnormG])
+    (by simp only [cHermiteReduceTowerGWf, denote])
+    (by simp only [cHermiteReduceTowerGWf, denote])
     hdvd hresDen hDstar hresProper
   exact cHermiteReduceTowerGWf_numer_degree_lt Dt a d s hden hproper
 

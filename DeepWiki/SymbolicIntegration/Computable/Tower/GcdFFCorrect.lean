@@ -209,7 +209,7 @@ sits upstream of and so cannot import — the lemma's natural home is `Computabl
       | false => simp [toGBCoeffPoly_cons, toPolyG_cnormG, has]
     | cons b bs =>
       rw [h] at ih
-      simp only [toGBCoeffPoly_cons, toPolyG_cnormG, ih]
+      simp only [toGBCoeffPoly_cons, denote, ih]
 
 /-- Coefficient read of `toGBCoeffPoly`: `(toGBCoeffPoly p).coeff i = toPolyG (p.getD i [])`. The
 Horner bridge realizes the dense `t`-coefficient list exactly (mirror of `toBPoly_coeff`). -/

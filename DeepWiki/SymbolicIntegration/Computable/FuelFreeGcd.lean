@@ -144,7 +144,7 @@ theorem toPolyG_cdivmodWf (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
     have hih : toPolyG (reduceStepWf p q)
         = toPolyG quo * toPolyG q + toPolyG rem := by
       rw [ih, hqr]
-    simp only [toPolyG_caddG]
+    simp only [denote]
     rw [hstep] at hih
     linear_combination hih
   | case4 p =>
