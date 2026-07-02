@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableOneShotAssembly
-import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
+import DeepWiki.SymbolicIntegration.ComputableHyperexpNormalCore
 
 /-! # Unconditional soundness of the §5.9 hyperexponential normal-part driver (Bronstein §5.9)
 

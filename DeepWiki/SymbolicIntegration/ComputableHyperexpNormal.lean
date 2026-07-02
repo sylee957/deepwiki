@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableHyperexpSpecial
+import DeepWiki.SymbolicIntegration.ComputableHyperexpNormalCore
 import DeepWiki.SymbolicIntegration.ComputableTowerWellFounded
 
 /-! # The hyperexponential normal part via residual feedback (Bronstein §5.9)
@@ -64,21 +65,6 @@ part `fₙ` has derivative `fₙ + R` with `R = C(η·∑ res α) ∈ k` (the `e
 residual). The residue coefficients `cᵢ` ARE the §5.6 residues `res α`, so `∑ res α = ∑ᵢ cᵢ` is the sum
 of the `logs` coefficients and `R = η · ∑ᵢ cᵢ ∈ α` is a constant in `t` — a base-field element. -/
 
-variable {α : Type*} [CField α] [CDiffField α]
-
-/-- **The hyperexponential normal-part residual** `cHyperexpResidualG η logs = η · ∑ᵢ cᵢ ∈ α` (Bronstein
-§5.9): the explicit residual `R = C(η·∑ res)` by which the §5.6 Rothstein–Trager log part `∑ᵢ cᵢ·log(vᵢ)`
-overshoots the normal integrand on a hyperexponential monomial (`η = Dt/t`). The §5.6 residues `res α` are
-the `logs` coefficients `cᵢ`, so `∑ res = ∑ᵢ cᵢ` (the fold of `logs.map .1`), and `R = η · ∑ᵢ cᵢ`. A
-constant in `t`, hence a base-field (`k = α`-level) element — itself elementary-integrable as a function of
-the previous tower variable. -/
-def cHyperexpResidualG (η : α) (logs : List (α × CPolyG α)) : α :=
-  CField.mul η (logs.foldl (fun acc cv => CField.add acc cv.1) CField.zero)
-
-end CPolyG
-
-namespace CPolyG
-
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
 
 /-! ### The §5.9 normal-part integrator `∫ fₙ = logPart − ∫R`
@@ -106,20 +92,6 @@ Returns `some ⟨(gnum − (∫R)·gden, gden), logs⟩`, or `none` if `∫R` is
 def cIntegrateHyperexpNormalG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let red := cIntegrateReducedG Dt fuel a d cands
-  let η : α := cExpEtaG Dt
-  let R : α := cHyperexpResidualG η red.logs
-  match CRischField.crischDESolve (CField.zero : α) R with
-  | none => none
-  | some intR =>
-    let (gnum, gden) := red.rational
-    let newNum := csubG gnum (cmulG [intR] gden)
-    some ⟨(newNum, gden), red.logs⟩
-
-/-- **The fuel-free §5.9 hyperexponential normal-part integral** `cIntegrateHyperexpNormalGWf Dt a d cands`:
-the residual-feedback normal driver with the reduced capstone replaced by `cIntegrateReducedGWf`. -/
-def cIntegrateHyperexpNormalGWf [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
-    Option (IntegralResultG α) :=
-  let red := cIntegrateReducedGWf Dt a d cands
   let η : α := cExpEtaG Dt
   let R : α := cHyperexpResidualG η red.logs
   match CRischField.crischDESolve (CField.zero : α) R with
@@ -157,24 +129,6 @@ def cIntegrateHyperexpFullG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (can
   | none => none
   | some (lnum, lden) =>
     match cIntegrateHyperexpNormalG Dt fuel cn dn cands with
-    | none => none
-    | some nrm =>
-      let (gnum, gden) := nrm.rational
-      let num := caddG (cmulG lnum gden) (cmulG gnum lden)
-      let den := cmulG lden gden
-      some ⟨(num, den), nrm.logs⟩
-
-/-- **The fuel-free full hyperexponential integral with normal feedback** `cIntegrateHyperexpFullGWf Dt a d
-cands`: use the fuel-free canonical split and fuel-free §5.9 normal-part driver. -/
-def cIntegrateHyperexpFullGWf [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
-    Option (IntegralResultG α) :=
-  let η : α := cExpEtaG Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
-  let neg : List α := cHyperexpSpecialNegG b ds
-  match cIntegrateHyperexpLaurentG η fp neg with
-  | none => none
-  | some (lnum, lden) =>
-    match cIntegrateHyperexpNormalGWf Dt cn dn cands with
     | none => none
     | some nrm =>
       let (gnum, gden) := nrm.rational

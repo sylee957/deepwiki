@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.ComputableTowerDeriv
 import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableQFunReduce
 import DeepWiki.SymbolicIntegration.ComputableRischFieldCore
+import DeepWiki.SymbolicIntegration.ComputableHyperexpEta
 
 /-! # The recursive Risch-DE oracle over arbitrary-depth differential towers (Bronstein Ch. 6)
 `ComputableTowerField`/`Deriv`/`Integrate` built the generic tower carrier `QFunNZG α` (the next level
@@ -334,13 +335,6 @@ def cPolyRischDECancelPrimG (Dt : CPolyG α) : ℕ → (b c : CPolyG α) → (n 
 base RDE** `Ds + (b + m·η)·s = lc(c)` over `α` — the coefficient shifted by `m·η` (the `tᵐ` factor's
 contribution `D(s·tᵐ) = (Ds + m·η·s)·tᵐ`). The shift `η = cExpEtaG Dt` makes the base coefficient
 genuinely non-constant, so the base solve `crischDESolve` does real work. -/
-
-/-- **Generic hyperexponential coefficient `η = Dt/t ∈ α`** `cExpEtaG Dt`: for a hyperexponential
-monomial `Dt = η·t` (`δ = 1`), divide `Dt` by `t` (`cshiftG 1 [1]`) and read the resulting degree-0
-`t`-polynomial's coefficient `η ∈ α`. The exact quotient is computed by `cdivWf`. Generic mirror of
-`cExpEta`. -/
-def cExpEtaG (Dt : CPolyG α) : α :=
-  cleadG (cdivWf Dt (cshiftG 1 [CField.one]))
 
 /-- **Generic Poly-Risch-DE, hyperexponential cancellation case** `cPolyRischDECancelExpG Dt fuel b c n`
 (Bronstein §6.6, book p.213), the `[CRischField α]`-generic mirror of `cPolyRischDECancelExp`. Given the
