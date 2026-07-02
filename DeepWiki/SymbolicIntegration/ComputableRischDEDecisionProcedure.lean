@@ -225,7 +225,7 @@ theorem residualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
 
 /-- **★★ The CAPSTONE — `crischDESolveSoundWf` is a VERIFIED DECISION PROCEDURE**
 (`crischDESolveSoundWf_isDecisionProcedure`): under the Wf-native frontier
-`RischDEDecisionProcedureFrontierWf f g`, the benign fuel budget `InputFitsFuel f g`, and the current
+`RischDEDecisionProcedureFrontierWf f g`, the Wf-shaped benign input-fit budget `InputFitsFuelWf f g`, and the current
 Wf/fueled agreement hypotheses needed by soundness, the fuel-free recursive solver returns `some` **iff**
 the field-level Risch DE is solvable — `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`.
 
@@ -233,7 +233,7 @@ The `←` half is Wf-native (`crischDESolveSoundWf_complete_of_residualWf`). The
 fuel-free soundness wrapper `crischDESolveSoundWf_imp_solvable`, which still transfers through the fueled
 soundness theorem via `hqwn` and `hwf`. -/
 theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
-    (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuel f g)
+    (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
@@ -249,7 +249,7 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
     [Algebra ℚ (CFieldSpec.K β)]
-    (f g : QFunNZG β) (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuel f g)
+    (f g : QFunNZG β) (h : RischDEDecisionProcedureFrontierWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
@@ -264,7 +264,7 @@ end Capstone
 Wf-native §6 residual and the current Wf/fueled agreement hypotheses used by soundness.**
 `crischDESolveSoundWf_isDecisionProcedure` proves
 `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g` under the Wf consolidated frontier
-`RischDEDecisionProcedureFrontierWf f g`, the benign fuel budget, and the existing agreement hypotheses
+`RischDEDecisionProcedureFrontierWf f g`, the Wf-shaped benign input-fit budget, and the existing agreement hypotheses
 `hqwn`/`SoundWfInnerRegular`. The `←` (completeness) is Wf-native through
 `crischDESolveSoundWf_complete_of_residualWf`; the `→` (soundness) still transfers through
 `crischDESolveSoundWf_field`.

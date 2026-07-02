@@ -435,7 +435,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 run witnesses `FieldRDESolvable`, using the same Wf/fueled agreement hypotheses as
 `crischDESolveSoundWf_field`. -/
 theorem crischDESolveSoundWf_imp_solvable (f g y : QFunNZG β)
-    (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuel f g)
+    (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
@@ -481,7 +481,7 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : QFunNZG β)
 Wf-native; the soundness direction still uses the existing Wf/fueled agreement hypotheses of
 `crischDESolveSoundWf_field`. -/
 theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
-    (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuel f g)
+    (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
@@ -495,7 +495,7 @@ theorem crischDESolveSoundWf_decides_of_residualWf (f g : QFunNZG β)
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 -- The Wf-native residual gives the same decision statement with a fuel-free completeness direction.
-example (f g : QFunNZG β) (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuel f g)
+example (f g : QFunNZG β) (hres : RischDECompletenessResidualWf f g) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :

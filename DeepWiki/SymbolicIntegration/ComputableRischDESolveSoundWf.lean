@@ -233,6 +233,34 @@ section Capstone
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
 
+/-- **The Wf input-fit precondition** `InputFitsFuelWf f g`: the per-run termination residual for the
+canonicalized Wf solver pair built from `cWeakNormalizerGWf [1] f.1.1 f.1.2`, together with the `g`-side
+normality dual. This is the Wf-shaped counterpart of `InputFitsFuel`; it keeps the public Wf soundness API
+stated on the actual weak normalizer used by `crischDESolveSoundWf`. -/
+structure InputFitsFuelWf (f g : QFunNZG β) : Prop where
+  /-- The per-run fuel/termination residual for the Wf canonicalized pair. -/
+  hfuel : RischDESuccessResidualNormFuel
+    (qReduce (weakNormalizedF f (qOfPolyNZG
+      (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+    (qmulNZG (qOfPolyNZG
+      (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+  /-- The Wf `g`-side normality dual for the transformed right-hand side. -/
+  hgnorm : IsWeaklyNormalizedDen
+    (qmulNZG (qOfPolyNZG
+      (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g).1.2
+
+omit [CDiffFieldSpec β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- **Wf input-fit converts to the old fueled input-fit under weak-normalizer agreement**: the conversion is
+only used by the current transfer proof to call `crischDESolveSound_field`. -/
+theorem inputFitsFuel_of_wf (f g : QFunNZG β) (hfit : InputFitsFuelWf f g)
+    (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+      = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2) :
+    InputFitsFuel f g where
+  hfuel := by
+    simpa [hqwn] using hfit.hfuel
+  hgnorm := by
+    simpa [hqwn] using hfit.hgnorm
+
 /-- **The Wf inner-solve regularity for the fuel-free sound solver** `SoundWfInnerRegular f g`: the fuel-free
 `cRischDEGWf [1]` agrees with the fuel `cRischDEG [1] towerRischDEFuel` on the num/den components of the
 canonicalized inner pair built from the **Wf** weak normalizer
@@ -270,7 +298,7 @@ proven `crischDESolveSound_field` closes it. NO `native_decide`; axiom-clean
 `[propext, Classical.choice, Quot.sound]`. **★ The fuel-free sound solver.** -/
 theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y)
-    (hfit : InputFitsFuel f g)
+    (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
@@ -304,7 +332,7 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
     simpa [hqwn] using hwf ftildeR hredWf
   have hsound : crischDESolveSound f g = some y := by
     rw [← soundSolverWf_eq f g hqwn hwfFuel]; exact hsolve
-  exact crischDESolveSound_field f g y hsound hfit
+  exact crischDESolveSound_field f g y hsound (inputFitsFuel_of_wf f g hfit hqwn)
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
@@ -313,7 +341,7 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
 -- IsCanonNormalized hypothesis (the solver checks it). Fuel-free at runtime. No native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
-    (f g y : QFunNZG β) (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuel f g)
+    (f g y : QFunNZG β) (hsolve : crischDESolveSoundWf f g = some y) (hfit : InputFitsFuelWf f g)
     (hqwn : cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
       = cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)
     (hwf : SoundWfInnerRegular f g) :
