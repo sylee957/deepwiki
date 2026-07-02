@@ -254,6 +254,41 @@ structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
         = some (ynum, yden) →
       CPolyG.cisZeroG yden = false
 
+/-- **Assemble the field-level Wf frontier from its Wf inner residual-tip frontier.** -/
+theorem decisionProcedureFrontierWf_of_innerFrontier (f g : QFunNZG β)
+    (hwn : FieldRDESolvable f g →
+      CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false)
+    (hck : FieldRDESolvable f g →
+      IsCanonNormalizedWf f
+        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+    (hpolysol : FieldRDESolvable f g →
+      let ftildeR := (rischDEInnerInputWf f g).1
+      let gtilde := (rischDEInnerInputWf f g).2
+      ∃ ynum yden,
+        IsCRischDEGPolySol ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+          gtilde.1.1 gtilde.1.2 ynum yden)
+    (hinnerFront : FieldRDESolvable f g →
+      let ftildeR := (rischDEInnerInputWf f g).1
+      let gtilde := (rischDEInnerInputWf f g).2
+      RischDEInnerDecisionFrontierWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
+        gtilde.1.1 gtilde.1.2)
+    (hden : FieldRDESolvable f g → ∀ ynum yden : CPolyG β,
+      let ftildeR := (rischDEInnerInputWf f g).1
+      let gtilde := (rischDEInnerInputWf f g).2
+      cRischDEGWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+          = some (ynum, yden) →
+        CPolyG.cisZeroG yden = false) :
+    RischDEDecisionProcedureFrontierWf f g where
+  hwn := hwn
+  hck := hck
+  hpolysol := hpolysol
+  hinner hsol :=
+    rischDEInnerCompletenessWf_of_decisionFrontierWf ([CField.one] : CPolyG β)
+      (rischDEInnerInputWf f g).1.1.1 (rischDEInnerInputWf f g).1.1.2
+      (rischDEInnerInputWf f g).2.1.1 (rischDEInnerInputWf f g).2.1.2
+      (hinnerFront hsol)
+  hden := hden
+
 /-- **The Wf frontier produces the Wf completeness residual**: the `hinner` residual clause is
 obtained by feeding the Wf inner-completeness proof through the raw fuel-free solver bridge. -/
 theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
@@ -336,6 +371,7 @@ the raw-solver `hinner` clause is encoded in
 NO `native_decide`, NO `sorry`) -/
 
 #print axioms crischDESolveSoundWf_isDecisionProcedure
+#print axioms decisionProcedureFrontierWf_of_innerFrontier
 #print axioms rischDEInnerCompleteness_of_decisionFrontierFueled
 #print axioms cRischDEG_isSome_of_decisionFrontierFueled
 #print axioms rischDEInnerCompletenessWf_of_decisionFrontierWf

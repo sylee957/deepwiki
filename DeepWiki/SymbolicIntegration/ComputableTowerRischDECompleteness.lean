@@ -545,15 +545,12 @@ theorem crischFieldCompleteWf_step (hβ : CRischFieldComplete β)
     (hstep : RischDEStepFrontierWf β) : CRischFieldCompleteWf β := by
   intro f g hsol
   let hfront : RischDEDecisionProcedureFrontierWf f g :=
-    { hwn := fun hsol' => hstep.hwn hβ f g hsol'
-      hck := fun hsol' => hstep.hck hβ f g hsol'
-      hpolysol := fun hsol' => hstep.hpolysol hβ f g hsol'
-      hinner := fun hsol' =>
-        rischDEInnerCompletenessWf_of_decisionFrontierWf ([CField.one] : CPolyG β)
-          (rischDEInnerInputWf f g).1.1.1 (rischDEInnerInputWf f g).1.1.2
-          (rischDEInnerInputWf f g).2.1.1 (rischDEInnerInputWf f g).2.1.2
-          (hstep.hinnerFront hβ f g hsol')
-      hden := fun hsol' ynum yden => hstep.hden hβ f g hsol' ynum yden }
+    decisionProcedureFrontierWf_of_innerFrontier f g
+      (fun hsol' => hstep.hwn hβ f g hsol')
+      (fun hsol' => hstep.hck hβ f g hsol')
+      (fun hsol' => hstep.hpolysol hβ f g hsol')
+      (fun hsol' => hstep.hinnerFront hβ f g hsol')
+      (fun hsol' ynum yden => hstep.hden hβ f g hsol' ynum yden)
   exact (crischDESolveSoundWf_isDecisionProcedure f g hfront (hstep.hsound hβ f g hsol)).mpr hsol
 
 end StepAssemblyWf
