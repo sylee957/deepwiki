@@ -1282,4 +1282,79 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPolyG α)
 
 end WfCapstone
 
+section WfResidual
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+  [CRischField α]
+
+/-- **Fuel-free mirror of `RischDEStructuralResidual`**: the irreducible residual of the fuel-free §6 RDE
+structural decomposition — the hypotheses of `rdeClearedIdentityWf_of_polyRDEIdentity` that a bare
+`cRischDEGWf` success does NOT self-certify (the primitive-regime restriction, the §6.2 divisibility
+side-conditions, and the per-level transparent-input chain `CSPDEGClearedInputsGenWf`). -/
+structure RischDEStructuralResidualWf (Dt : CPolyG α) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) :
+    Prop where
+  /-- Primitive special regime: `cdegG (cSpecialPolyGWf Dt) = 0` (the capstone is primitive-only). -/
+  hprim : cdegG (cSpecialPolyGWf Dt) = 0
+  /-- §6.2: the normal part `dₙ = (cSplitFactorFastGWf Dt fden).1` is nonzero. -/
+  hdn : toPolyG (cSplitFactorFastGWf Dt fden).1 ≠ 0
+  /-- §6.2: the input denominator `fden` is nonzero. -/
+  hfden0 : cnormG fden ≠ []
+  /-- §6.2: the input denominator `gden` is nonzero. -/
+  hgden0 : cnormG gden ≠ []
+  /-- §6.2: `fden` divides the `B`-numerator (the `cdivWf` clearing is exact). -/
+  hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h0) fnum)
+      (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 (cmonomialDeriv Dt h0)) fden))
+  /-- §6.2: `gden` divides the `C`-numerator (the `cdivWf` clearing is exact). -/
+  hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h0) h0) gnum)
+  /-- §6.4: the per-level transparent-input chain `CSPDEGClearedInputsGenWf` on the special-cleared
+  coefficients at the §6.3 bound degree. -/
+  hin : CSPDEGClearedInputsGenWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+      (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1 (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+      (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+
+/-- **Fuel-free mirror of `rdeCleared_of_success_and_residual`**: given `cRischDEGWf Dt fnum fden gnum gden
+= some (ynum, yden)`, `cdegG Dt = 0`, the SPDE output `bbar` of positive degree, and the irreducible
+residual `RischDEStructuralResidualWf` on the matching §6.2 normal-denominator output, the returned `y =
+ynum/yden` satisfies the cleared identity `gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden =
+gnum·fden·yden²` over `(CFieldSpec.K α)[X]` — with NO fuel dependency anywhere in the statement or proof. -/
+theorem rdeClearedWf_of_success_and_residual (Dt : CPolyG α)
+    (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
+    (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden))
+    (hres : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      RischDEStructuralResidualWf Dt fnum fden gnum gden a0 b0 c0 h0)
+    (hdb : ∀ a0 b0 c0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
+      cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+        = some (bbar, cbar, m, α', β) → 0 < cdegG bbar) :
+    toPolyG gden * toPolyG fden
+        * (Differential.implicitDeriv (toPolyG Dt) (toPolyG ynum) * toPolyG yden
+            - toPolyG ynum * Differential.implicitDeriv (toPolyG Dt) (toPolyG yden))
+        + toPolyG gden * toPolyG fnum * toPolyG ynum * toPolyG yden
+      = toPolyG gnum * toPolyG fden * toPolyG yden ^ 2 := by
+  obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hdisp, hynum, hyden⟩ :=
+    cRischDEGWf_some_imp_stages Dt fnum fden gnum gden ynum yden hsucc
+  have hres' := hres a0 b0 c0 h0 hnorm
+  have hdb' := hdb a0 b0 c0 bbar cbar m α' β hspde
+  have hpoly : cPolyRischDENoCancelGWf Dt bbar cbar m = some v := by
+    rw [← cPolyRischDEGWf_eq_noCancel_of_primitive Dt bbar cbar m hδ hdb']; exact hdisp
+  have hidentity : Differential.implicitDeriv (toPolyG Dt) (toPolyG v) + toPolyG bbar * toPolyG v
+      = toPolyG cbar := cPolyRischDENoCancelGWf_cleared_identity Dt bbar cbar m v hpoly
+  have hcap := rdeClearedIdentityWf_of_polyRDEIdentity Dt fnum fden gnum gden a0 b0 c0 h0
+    bbar cbar m α' β v hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hdvdB
+    hres'.hdvdC hspde hres'.hin hidentity
+  have hh1 : (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.2 = ([CField.one] : CPolyG α) := by
+    rw [cRdeSpecialDenominatorGWf_primitive_eq Dt a0 b0 c0 hres'.hprim]
+  rw [hh1] at hynum
+  rw [hynum, hyden]
+  exact hcap
+
+end WfResidual
+
 end DeepWiki.SymbolicIntegration
