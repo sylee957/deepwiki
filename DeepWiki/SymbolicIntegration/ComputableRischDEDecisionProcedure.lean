@@ -24,7 +24,7 @@ to lift a successful `cRischDEGWf` run through the raw wrapper:
 | clause | §6 stage | what a solvable RDE must clear | route to a proof |
 |---|---|---|---|
 | `hwn`  | §6.1 weak-normalizer | `cWeakNormalizerGWf … ≠ 0` | `WeakNormalizer` never vanishes on a solution |
-| `hck`  | §6.1 normality | `cisCanonNormalizedGWf f̃ = true` | contrapositive of the unsoundness witness |
+| `hck`  | §6.1 normality | `IsCanonNormalizedWf f q'` | contrapositive of the unsoundness witness |
 | `hinner` | §6.2-6.6 inner solve | `RischDEInnerCompletenessWf` for the Wf inner input | Wf-native inner completeness |
 
 The helper `RischDEInnerDecisionFrontierWf` still records the **three irreducible §6 residuals** named by
@@ -222,10 +222,10 @@ structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
   /-- §6.1/Wf: a solvable RDE has a nonzero fuel-free weak normalizer. -/
   hwn : FieldRDESolvable f g →
     CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
-  /-- §6.1/Wf: a solvable RDE passes the canon-normality gate after Wf weak normalization. -/
+  /-- §6.1/Wf: a solvable RDE satisfies the fuel-free canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
-    cisCanonNormalizedGWf (weakNormalizedF f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true
+    IsCanonNormalizedWf f
+      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the Wf inner input. -/
   hpolysol : FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
@@ -253,7 +253,7 @@ theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
     (h : RischDEDecisionProcedureFrontierWf f g) :
     RischDECompletenessResidualWf f g where
   hwn hsol := h.hwn hsol
-  hck hsol := h.hck hsol
+  hck hsol := (cisCanonNormalizedGWf_iff f _).mpr (h.hck hsol)
   hinner hsol := by
     simpa [rischDEInnerInputWf] using
       (crischDERawSolveWf_isSome_of_innerCompletenessWf (rischDEInnerInputWf f g).1
