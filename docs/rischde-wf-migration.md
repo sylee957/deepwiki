@@ -185,6 +185,21 @@ as the final gate. Every new `Sources/*` module must be imported into `Sources.l
 >    `crischDESolve_field_of_witness_residual` (`SoundnessCapstone:294`), using (5) +
 >    `rischDE_field_of_cleared` (`RischFieldSpec:116`, REUSE, fuel-agnostic) + the new instance's two
 >    `rfl`-reduction lemmas (built in P2).
+>
+> **★★ P1 DONE (2026-07-02).** All 6 checklist items landed gate-green in `RischDE/Structural.lean`
+> (6 commits, bare `lake build` PASS at the end): items 1-3 as above; item 4 assembled as
+> `rdeClearedIdentityWf_of_polyRDEIdentity` (takes the bare poly-RDE identity directly rather than the
+> solver-success form, via three thin composition wrappers `cSPDEGWf_cleared_lifting_of_inputs` /
+> `_polyRischDENoCancel_cleared_of_inputs` / `_at_boundDegree`); item 5 as `RischDEStructuralResidualWf` +
+> `rdeClearedWf_of_success_and_residual`; item 6 as `crischDEWf_field_of_success_and_residual` — the
+> carrier-generic field-level headline (no tower-gcd witness, no fuel, no `native_decide`), proved by
+> composing (5) with the already fuel-agnostic `rischDE_field_of_cleared`. **The research-gate question is
+> answered YES**: the fuel-free `cRischDEGWf` track supports the *exact same* field-level Risch-DE
+> soundness as the fuel'd track, with no dependency on the open tower-spec (`CSPDEGClearedInputsGenWf`
+> stays a hypothesis throughout, same as the fuel'd `CSPDEGClearedInputsGen`). **P2 (relocate + rebase the
+> tower instance) is unblocked** — the target shape it must produce (`crischDESolveWf` + a
+> `cdenomNormalGateG`-gated wrapper matching `crischDEWf_field_of_success_and_residual`'s hypotheses) now
+> exists and is proven.
 
 ### P1 — Prove the Wf instance soundness *standalone* (no switch yet; low-risk, independent commit)
 Before moving anything, make sure the target soundness exists on `cRischDEGWf`. Establish (or
