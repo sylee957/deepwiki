@@ -129,4 +129,58 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf
 #print axioms cgcdFFCoreWf_one_isUnit
 #print axioms cdegG_cSpecialPolyGWf_one_eq_zero
 
+/-! ## The fuel-free §6.2 divisibility clauses, reduced to the weak-normalization product-divisibilities
+
+The fuel-free analogue of `RischDE/NormalCorrect.lean`'s Divisibility section: `cRdeNormalDenominatorGWf`
+computes the `B`/`C` clearing `cdivWf` unconditionally, so the exactness side-conditions `hdvdB`/`hdvdC` are
+not self-certified by a `some` result. Each reduces to a single product-divisibility of the denominator into
+the normal-part·`h` block (`fden ∣ dₙh`, `gden ∣ dₙh²`) — the weak-normalization precondition. -/
+
+section Divisibility
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+
+/-- If `fden ∣ dₙ·h0` (`dₙ = (cSplitFactorFastGWf Dt fden).1`), then `fden` divides the full `B`-numerator
+`dₙh·fnum − dₙ·Dh·fden` — the sufficient condition for the fuel-free `cdivWf` `B`-clearing to be exact.
+Fuel-free mirror of `hdvdB_of_dvd`. -/
+theorem hdvdB_of_dvd_wf (Dt : CPolyG β) (fnum fden h0 : CPolyG β)
+    (hdvd : toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0)) :
+    toPolyG fden ∣ toPolyG (CPolyG.csubG
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) fnum)
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1
+          (CPolyG.cmonomialDeriv Dt h0)) fden)) := by
+  simp only [CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG]
+  apply dvd_sub
+  · rw [CPolyG.toPolyG_cmulG] at hdvd
+    exact hdvd.mul_right _
+  · exact Dvd.intro_left _ rfl
+
+/-- If `gden ∣ dₙ·h0·h0`, then `gden` divides the full `C`-numerator `dₙh²·gnum` — the sufficient
+condition for the fuel-free `cdivWf` `C`-clearing to be exact. Fuel-free mirror of `hdvdC_of_dvd`. -/
+theorem hdvdC_of_dvd_wf (Dt : CPolyG β) (gnum fden gden h0 : CPolyG β)
+    (hdvd : toPolyG gden ∣ toPolyG (CPolyG.cmulG
+      (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) h0)) :
+    toPolyG gden ∣ toPolyG (CPolyG.cmulG
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) h0) gnum) := by
+  simp only [denote] at hdvd ⊢
+  exact hdvd.mul_right _
+
+/-- `fden ∣ dₙh` holds when `fden` equals its own normal part
+(`toPolyG (cSplitFactorFastGWf Dt fden).1 = toPolyG fden`, i.e. `fden` weakly normalized). Fuel-free mirror
+of `dvd_dn_h_of_normal`. -/
+theorem dvd_dn_h_of_normal_wf (Dt : CPolyG β) (fden h0 : CPolyG β)
+    (hnormal : toPolyG (CPolyG.cSplitFactorFastGWf Dt fden).1 = toPolyG fden) :
+    toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) := by
+  rw [CPolyG.toPolyG_cmulG, hnormal]; exact Dvd.intro _ rfl
+
+end Divisibility
+
+/-- `fden ∣ dₙh` holds for the polynomial-RDE shape `fden = [1]`: the normal part of the unit `[1]` is `[1]`
+(`cSplitFactorFastGWf_one_eq`), so the divisibility is `1 ∣ _`. Fuel-free mirror of `dvd_dn_h_one`. -/
+theorem dvd_dn_h_one_wf {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+    [CTowerGcdWitnessWf β] (h0 : CPolyG β) :
+    toPolyG ([CField.one] : CPolyG β)
+      ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) [CField.one]).1 h0) := by
+  rw [cSplitFactorFastGWf_one_eq, CPolyG.toPolyG_cmulG, toPolyG_cone_eq_one_wf]; exact one_dvd _
+
 end DeepWiki.SymbolicIntegration
