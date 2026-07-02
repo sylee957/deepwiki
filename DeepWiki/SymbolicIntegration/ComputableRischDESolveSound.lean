@@ -71,38 +71,6 @@ def cisCanonNormalizedG (ftilde : QFunNZG β) : Bool :=
 
 end Check
 
-/-! ## The computable lowest-terms reduction `reduceSoundOpt` (a `[CField β]`-only `qReduce`)
-
-`qReduce` is computable in data (`reduceNum`/`reduceDen` need only `[CField β]`), but its **type** carries the
-`[CFieldSpec β]` instance (to discharge the `Prop`-erased denominator-nonzero proof), and at the tower carrier
-`QFunNZG ℚ` that instance is **noncomputable** — so a `def` calling `qReduce` will not `native_decide`.
-`reduceSoundOpt` rebuilds the same `QFunNZG β` value from the `[CField β]`-only data `(reduceNum, reduceDen)`,
-discharging den-nonzero with the local `cisZeroG`-guard, so the sound solver stays `native_decide`-reducible;
-`reduceSoundOpt a = some (qReduce a)` (the guard always passes, by `cisZeroG_reduceDen`). -/
-
-section Reduce
-
-variable {β : Type*} [CField β] [CFieldSpec β]
-
-/-- **A `[CField β]`-only lowest-terms reducer** `reduceSoundOpt a`: build `(reduceNum a)/(reduceDen a)`
-(the `qReduce` data, needing only `[CField β]`) and guard den-nonzero with the local `cisZeroG` test
-(`some` when it holds, `none` otherwise). Avoids the noncomputable `[CFieldSpec β]` instance that `qReduce`'s
-type drags in at `QFunNZG ℚ`, so the sound solver `native_decide`s. The guard always passes
-(`cisZeroG_reduceDen`), so `reduceSoundOpt a = some (qReduce a)` (`reduceSoundOpt_eq`). -/
-def reduceSoundOpt (a : QFunNZG β) : Option (QFunNZG β) :=
-  let rd := QFunNZG.reduceDen a
-  if h : CPolyG.cisZeroG rd = false then some ⟨(QFunNZG.reduceNum a, rd), h⟩ else none
-
-/-- **`reduceSoundOpt a = some (qReduce a)`** (`reduceSoundOpt_eq`): the `[CField β]`-only reducer rebuilds
-exactly `qReduce a` — same data `(reduceNum a, reduceDen a)`, the den-nonzero guard discharged by
-`cisZeroG_reduceDen` (always true), and proof irrelevance on the subtype's `Prop` field. The bridge letting the
-computable sound solver chain into the `qReduce`-based capstone `crischDESolveNormCanon_field_of_normal`. -/
-theorem reduceSoundOpt_eq (a : QFunNZG β) : reduceSoundOpt a = some (qReduce a) := by
-  unfold reduceSoundOpt qReduce
-  rw [dif_pos (QFunNZG.cisZeroG_reduceDen a)]
-
-end Reduce
-
 /-! ## The bridge: the Boolean check decides `IsCanonNormalized` (`cisCanonNormalizedG_iff`)
 
 `cisCanonNormalizedG (weakNormalizedF f q') = true ↔ IsCanonNormalized f q'`. The Boolean test is the engine's

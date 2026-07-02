@@ -131,6 +131,26 @@ def crischDESolveNorm (f g : QFunNZG β) : Option (QFunNZG β) :=
 
 end Solver
 
+/-! ## The computable lowest-terms reduction `reduceSoundOpt`
+
+`reduceSoundOpt` is the shared `[CField β]`-data reducer used by both the fueled and Wf sound wrappers. -/
+
+section Reduce
+
+variable {β : Type*} [CField β] [CFieldSpec β]
+
+/-- A `[CField β]`-data lowest-terms reducer that rebuilds the `qReduce` representative. -/
+def reduceSoundOpt (a : QFunNZG β) : Option (QFunNZG β) :=
+  let rd := QFunNZG.reduceDen a
+  if h : CPolyG.cisZeroG rd = false then some ⟨(QFunNZG.reduceNum a, rd), h⟩ else none
+
+/-- `reduceSoundOpt a` is exactly `some (qReduce a)`. -/
+theorem reduceSoundOpt_eq (a : QFunNZG β) : reduceSoundOpt a = some (qReduce a) := by
+  unfold reduceSoundOpt qReduce
+  rw [dif_pos (QFunNZG.cisZeroG_reduceDen a)]
+
+end Reduce
+
 /-! ## The normalization-correctness sub-lemma (Task 2)
 
 `IsWeaklyNormalizedNorm h` is the precise property of a `QFunNZG β` that makes the §6.2 divisibility crux

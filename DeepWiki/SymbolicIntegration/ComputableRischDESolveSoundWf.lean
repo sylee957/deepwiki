@@ -1,27 +1,15 @@
-import DeepWiki.SymbolicIntegration.ComputableRischDESolveSound
+import DeepWiki.SymbolicIntegration.ComputableRischDESolveNormCanon
 import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 import DeepWiki.SymbolicIntegration.ComputableCanonNormalizedReduce
 
 /-! # The FUEL-FREE SOUND recursive Risch-DE solver — `crischDESolveSoundWf`
 
-`ComputableRischDESolveSound` built the §6.1-gated, **unconditionally sound** solver `crischDESolveSound`
-(weak-normalize → `cisCanonNormalizedG` solvability check → reduce → solve → transform back), proving
-`crischDESolveSound_field` axiom-cleanly. But its inner RDE solve routes through `CRischField.crischDESolve`,
-whose tower instance `instCRischFieldQFunNZG` runs the **`ℕ`-fuel** `cRischDEG [1] towerRischDEFuel …`.
-`ComputableTowerRischDEWellFounded` built the **fuel-free** companion `cRischDEGWf` (true well-founded
-recursion replacing the fuel) together with internal correspondence proofs to the fueled `cRischDEG` on
-regular runs.
-
-This file combines the two: the **fuel-free, SOUND** solver `crischDESolveSoundWf` — the same §6.1-gated
-pipeline as `crischDESolveSound`, but with the inner solve routed through the fuel-free `cRischDEGWf` (over
-`CPolyG β`, re-lifted to `QFunNZG β` with the same `cisZeroG`-guard the tower instance uses) instead of the
-fuel `cRischDEG`. This is the public **fuel-free sound entry point** used by the Wf decision-procedure and
-tower-completeness frontiers.
+This file exposes the public Wf RDE wrapper. It uses the shared weak-normalization and lowest-terms helpers,
+then routes the inner RDE solve through the fuel-free `cRischDEGWf` rather than the old fueled tower instance.
 
 * **`crischDESolveSoundWf f g`** — the §6.1-gated solver with the **fuel-free** weak normalizer
   `cWeakNormalizerGWf [1] …`, Wf normality gate `cisCanonNormalizedGWf`, and inner solve
-  `cRischDEGWf [1] …` (NO `ℕ`-fuel parameter; the lowest-terms reduction is shared verbatim with
-  `crischDESolveSound`).
+  `cRischDEGWf [1] …` (NO `ℕ`-fuel parameter).
 * **★ `crischDESolveSoundWf_field`** — the capstone: a successful `crischDESolveSoundWf f g = some y` gives the
   field-level Risch-DE identity `D(Y) + F·Y = G` for the ORIGINAL `f, g`, under the direct Wf soundness
   certificate `RischDESoundnessWf`, **fuel-free at runtime**, NO `IsCanonNormalized` hypothesis (the solver
@@ -42,8 +30,7 @@ open Compute CPolyG QFunNZG
 
 /-! ## ★ The fuel-free SOUND solver `crischDESolveSoundWf` (the inner solve made fuel-free)
 
-`crischDESolveSoundWf f g` is `crischDESolveSound f g` with the Wf runtime pieces installed. The §6.1
-pipeline is:
+`crischDESolveSoundWf f g` is the Wf §6.1 pipeline:
 
 1. compute the **fuel-free** weak normalizer `q = cWeakNormalizerGWf [1] f.1.1 f.1.2`; if `q = 0`, `none`;
 2. lift `q' = q/1`, form the weakly-normalized `f̃ = f − Dq'/q'`;
@@ -89,8 +76,7 @@ theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZG β) :
       · simp [crischDERawSolveWf, h, hden]
 
 /-- **★ The FUEL-FREE, genuinely SOUND recursive Risch-DE solver** `crischDESolveSoundWf f g` over
-`QFunNZG β`: `crischDESolveSound` with the inner RDE solve routed through the **fuel-free** `cRischDEGWf`
-(`crischDERawSolveWf`) in place of the fuel `CRischField.crischDESolve`. Weak-normalize `f` to
+`QFunNZG β`: weak-normalize `f` to
 `f̃ = f − Dq/q` (`q = cWeakNormalizerGWf`, **fuel-free**); if `q = 0` give up; run the fuel-free §6.1
 solvability check `cisCanonNormalizedGWf f̃` (return `none` when the lowest-terms denominator is not normal);
 else reduce `f̃` to lowest terms (`reduceSoundOpt`) and solve `(f̃ᵣ, q'·g)` via the **fuel-free**
