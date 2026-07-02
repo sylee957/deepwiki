@@ -12,6 +12,83 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
+/-! ### Example 2.4.1 concrete data and native_decide validations -/
+
+/-! ### Example 2.4.1 (§2.4, p.48): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
+`res_x(D, A−t·D') = 45796·(4t²+1)³`, primitive part `R = 4t²+1` -/
+
+/-- **`x⁴ − 3x² + 6`** as a `CPoly` (Example 2.4.1's `A`): coefficients `[6, 0, −3, 0, 1]`. -/
+def cA241 : CPoly := [6, 0, -3, 0, 1]
+
+/-- **`x⁶ − 5x⁴ + 5x² + 4`** as a `CPoly` (Example 2.4.1's `D`): coefficients `[4, 0, 5, 0, −5, 0, 1]`. -/
+def cD241 : CPoly := [4, 0, 5, 0, -5, 0, 1]
+
+-- **Example 2.4.1, `D' = cderiv D`** should be `6x⁵ − 20x³ + 10x` = `[0, 10, 0, −20, 0, 6]`.
+#eval cderiv cD241
+
+-- **Example 2.4.1, the computed RT resultant** `R(t) = res_x(D, A − t·D')`. The book (p.48) states
+-- this is exactly `45796·(4t²+1)³ = [45796, 0, 549552, 0, 2198208, 0, 2930944]`; its primitive
+-- squarefree part is the book's `R = 4t²+1`.
+#eval rtResultantCompute 30 cA241 cD241
+
+-- **Example 2.4.1, the squarefree part** `R / gcd(R, R')`, normalized: the book's `4t²+1` (up to scalar).
+#eval csqfreePart 30 (rtResultantCompute 30 cA241 cD241)
+
+/-- **Example 2.4.1, the proved RT-resultant computation** (§2.4, p.48): `rtResultantCompute` on
+`A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4` evaluates (by `native_decide`; kernel `decide` stalls on the
+GMP-backed `ℚ` arithmetic) to `[45796, 0, 549552, 0, 2198208, 0, 2930944]`, which is **exactly the
+book's** `res_x(D, A−t·D') = 45796·(4t²+1)³` (eq 2.7, p.48): `(4t²+1)³ = 64t⁶+48t⁴+12t²+1`, and
+`45796·[1,12,48,64] = [45796, 549552, 2198208, 2930944]` in the even-degree slots. This demonstrates
+the computable Rothstein–Trager resultant engine actually runs and returns the book's resultant. -/
+theorem rtResultant_ex241 :
+    rtResultantCompute 30 cA241 cD241 = [45796, 0, 549552, 0, 2198208, 0, 2930944] := by
+  native_decide
+
+/-- **Example 2.4.1, the primitive part is the book's `R = 4t²+1`** (§2.4, p.48): the squarefree
+(monic radical) part of the resultant `45796·(4t²+1)³` is `t² + 1/4` = `[1/4, 0, 1]` (monic `4t²+1`),
+exactly the book's `R(t) = 4t²+1` up to the leading-coefficient scalar. Proved by `native_decide`. -/
+theorem rtResultant_ex241_sqfree :
+    csqfreePart 30 (rtResultantCompute 30 cA241 cD241) = [1/4, 0, 1] := by
+  native_decide
+
+/-! ### Example 2.4.1 (§2.4/§2.6, p.48/54): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
+LRT log argument `S(t,x) = x³ + 2t·x² − 3x − 4t` (Czichowski/Gröbner `B = {4t²+1, x³+2tx²−3x−4t}`). -/
+
+/-- **The Rothstein–Trager resultant factor `R(t) = 4t²+1`** of Example 2.4.1 as a `CPoly`
+(`[1, 0, 4]` = `1 + 4t²`); the residues are its roots, and `ℚ[t]/(R)` is the residue ring the LRT log
+argument is normalized over. (Up to the leading scalar this is the squarefree part `csqfreePart` of the
+full resultant `45796·(4t²+1)³`.) -/
+def cR241 : CPoly := [1, 0, 4]
+
+-- **Example 2.4.1, the lifted `A − t·D'`** (sanity print): `A − t·(6x⁵−20x³+10x)`.
+#eval bArgAmtD' cA241 cD241
+
+-- **Example 2.4.1, the subresultant PRS `x`-degrees** `[6,5,4,3,2,1,0]` (the degree-0 tail is the
+-- resultant `45796·(4t²+1)³`, matching `rtResultant_ex241`).
+#eval (subresPRS 30 (liftCtoBPoly cD241) (bArgAmtD' cA241 cD241)).map bdeg
+
+-- **Example 2.4.1, the degree-3 subresultant** `S₃`, `ℚ[t]`-primitive in `x`: the LRT log argument up
+-- to a `ℚ[t]` cofactor. Its raw (pre-primitive) form `[[-16,0,792],[0,32,0,-2440],[7,0,-400],
+-- [0,-14,0,800]]` satisfies `S₃ ≡ −214t·(x³+2tx²−3x−4t) mod 4t²+1`; `bprimitivePartX` strips a constant.
+#eval lrtSubresultantCompute 30 3 cA241 cD241
+
+-- **Example 2.4.1, the normalized LRT log argument** `S(t,x)` = `S₃` mod `4t²+1`, monic in `x`:
+-- the book's `x³ + 2t·x² − 3x − 4t = [[0,-4], [-3], [0,2], [1]]`.
+#eval lrtGcdCompute 30 3 cR241 cA241 cD241
+
+/-- **Example 2.4.1, the proved LRT log-argument computation** (§2.4/§2.6, p.48/54): the degree-3
+bivariate subresultant `S₃(D, A − t·D')` of `D = x⁶−5x⁴+5x²+4` and `A − t·D'` (`A = x⁴−3x²+6`), reduced
+modulo the resultant factor `R(t) = 4t²+1` and made monic in `x` over `ℚ[t]/(R)`, evaluates (by
+`native_decide`) to `[[0, -4], [-3], [0, 2], [1]]` = `x³ + 2t·x² − 3x − 4t`. This is **exactly** the
+book's LRT log argument — the Czichowski/Gröbner basis element `x³+2tx²−3x−4t` of Example 2.6.1
+(`B = {4t²+1, x³+2tx²−3x−4t}`), with `4t²+1` the RT resultant `R(t)` of `rtResultant_ex241_sqfree`. The
+raw subresultant `S₃` carries the `ℚ[t]` cofactor `−214t` (`S₃ ≡ −214t·(x³+2tx²−3x−4t) mod R`), stripped
+by the Exercise 2.7 monic-in-`x` normalization (`bmonicXmodR`). This demonstrates the computable
+bivariate LRT log-argument engine actually runs and returns the book's `S(t,x)`. -/
+theorem lrtGcd_ex241 :
+    lrtGcdCompute 30 3 cR241 cA241 cD241 = [[0, -4], [-3], [0, 2], [1]] := by
+  native_decide
+
 /-! ### Example 2.4.1: the honest `ℚ[t]` Rothstein–Trager resultant `= 45796·(4t²+1)³` -/
 
 open Polynomial in

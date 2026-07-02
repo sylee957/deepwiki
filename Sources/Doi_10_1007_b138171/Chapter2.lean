@@ -22,6 +22,7 @@ import Sources.Doi_10_1007_b138171.Exercise22
 import DeepWiki.SymbolicIntegration.Compute.Hermite
 import Sources.Doi_10_1007_b138171.Exercise23
 import Sources.Doi_10_1007_b138171.Exercise25
+import Sources.Doi_10_1007_b138171.SubresultantExample241
 import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion

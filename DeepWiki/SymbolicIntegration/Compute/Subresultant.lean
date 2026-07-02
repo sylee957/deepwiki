@@ -231,55 +231,6 @@ of `∫ A/D = ∑_{R(a)=0} a·log(S(a,x))` — the per-residue gcd `Gₐ` expres
 def lrtGcdCompute (fuel : ℕ) (j : ℕ) (R A D : CPoly) : BPoly :=
   bmonicXmodR fuel R (lrtSubresultantCompute fuel j A D)
 
-/-! ### Example 2.4.1 (§2.4/§2.6, p.48/54): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
-LRT log argument `S(t,x) = x³ + 2t·x² − 3x − 4t` (Czichowski/Gröbner `B = {4t²+1, x³+2tx²−3x−4t}`). -/
-
-/-- **The Rothstein–Trager resultant factor `R(t) = 4t²+1`** of Example 2.4.1 as a `CPoly`
-(`[1, 0, 4]` = `1 + 4t²`); the residues are its roots, and `ℚ[t]/(R)` is the residue ring the LRT log
-argument is normalized over. (Up to the leading scalar this is the squarefree part `csqfreePart` of the
-full resultant `45796·(4t²+1)³`.) -/
-def cR241 : CPoly := [1, 0, 4]
-
--- **Example 2.4.1, the lifted `A − t·D'`** (sanity print): `A − t·(6x⁵−20x³+10x)`.
-#eval bArgAmtD' cA241 cD241
-
--- **Example 2.4.1, the subresultant PRS `x`-degrees** `[6,5,4,3,2,1,0]` (the degree-0 tail is the
--- resultant `45796·(4t²+1)³`, matching `rtResultant_ex241`).
-#eval (subresPRS 30 (liftCtoBPoly cD241) (bArgAmtD' cA241 cD241)).map bdeg
-
--- **Example 2.4.1, the degree-3 subresultant** `S₃`, `ℚ[t]`-primitive in `x`: the LRT log argument up
--- to a `ℚ[t]` cofactor. Its raw (pre-primitive) form `[[-16,0,792],[0,32,0,-2440],[7,0,-400],
--- [0,-14,0,800]]` satisfies `S₃ ≡ −214t·(x³+2tx²−3x−4t) mod 4t²+1`; `bprimitivePartX` strips a constant.
-#eval lrtSubresultantCompute 30 3 cA241 cD241
-
--- **Example 2.4.1, the normalized LRT log argument** `S(t,x)` = `S₃` mod `4t²+1`, monic in `x`:
--- the book's `x³ + 2t·x² − 3x − 4t = [[0,-4], [-3], [0,2], [1]]`.
-#eval lrtGcdCompute 30 3 cR241 cA241 cD241
-
-/-- **Example 2.4.1, the proved LRT log-argument computation** (§2.4/§2.6, p.48/54): the degree-3
-bivariate subresultant `S₃(D, A − t·D')` of `D = x⁶−5x⁴+5x²+4` and `A − t·D'` (`A = x⁴−3x²+6`), reduced
-modulo the resultant factor `R(t) = 4t²+1` and made monic in `x` over `ℚ[t]/(R)`, evaluates (by
-`native_decide`) to `[[0, -4], [-3], [0, 2], [1]]` = `x³ + 2t·x² − 3x − 4t`. This is **exactly** the
-book's LRT log argument — the Czichowski/Gröbner basis element `x³+2tx²−3x−4t` of Example 2.6.1
-(`B = {4t²+1, x³+2tx²−3x−4t}`), with `4t²+1` the RT resultant `R(t)` of `rtResultant_ex241_sqfree`. The
-raw subresultant `S₃` carries the `ℚ[t]` cofactor `−214t` (`S₃ ≡ −214t·(x³+2tx²−3x−4t) mod R`), stripped
-by the Exercise 2.7 monic-in-`x` normalization (`bmonicXmodR`). This demonstrates the computable
-bivariate LRT log-argument engine actually runs and returns the book's `S(t,x)`. -/
-theorem lrtGcd_ex241 :
-    lrtGcdCompute 30 3 cR241 cA241 cD241 = [[0, -4], [-3], [0, 2], [1]] := by
-  native_decide
-
-/-! ### Bridge back to `ℚ[t][x]` and agreement — PROVEN in `SubresultantCorrectness`
-`bsubresultantGcd`/`lrtGcdCompute` agrees (up to a `ℚ[t]` unit, i.e. `IsSimilar`) with the noncomputable
-`lrtSubresultant A D` (in `LazardRiobooTragerCorrectness`), the LRT subresultant primitive whose
-`t ↦ a` specializations are the per-residue Rothstein–Trager gcds `Gₐ = gcd(D, A − a·D')`. All the
-pieces are in place: `lrtGcdCompute_isSimilar_lrtSubresultant` (the residue-ring closure through the
-coprime-witness bridge `isSimilar_mapRingHom_of_irreducible`), with the chain matched to the subresultant
-PRS via `isSimilar_subresPRS_telescope`/`subresultant_prs_telescope`, the bivariate bridge
-`toBPoly : BPoly → ℚ[t][x]` (`toBPoly_bdivC_exact` for the Collins β-divisor exact division), and the
-`goState` mirror of the `let rec subresPRS.go`. Concretely `isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241`
-is hypothesis-free over `ℚ[t]`, and `lrtGcdCompute_ex241_isSimilar_lrtSubresultant_closed` closes
-Example 2.4.1 (`lrtGcd_ex241`) over the residue ring `ℚ[t]/(4t²+1)` with no hypotheses. -/
 
 end Compute
 
