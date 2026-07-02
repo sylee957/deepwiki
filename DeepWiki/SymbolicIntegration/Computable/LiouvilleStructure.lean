@@ -1,6 +1,6 @@
 import Mathlib.FieldTheory.Differential.Liouville
 import Mathlib.RingTheory.Derivation.MapCoeffs
-import DeepWiki.SymbolicIntegration.ComputableAlgebraicCompleteness
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicCompleteness
 
 /-! # Liouville's theorem — the structural completeness keystone (Weak Liouville Theorem)
 

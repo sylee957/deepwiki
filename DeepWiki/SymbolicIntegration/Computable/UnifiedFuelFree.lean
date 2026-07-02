@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalWellFounded
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.IntegrationSpec

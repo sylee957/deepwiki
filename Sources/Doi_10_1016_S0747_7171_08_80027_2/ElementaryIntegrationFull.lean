@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalLogArgGeneric
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric
 import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
-import DeepWiki.SymbolicIntegration.ComputableRadicalRationalTower
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalRationalTower
 
 /-! # Bronstein-1990 catalog — the FULL elementary integral `v + Σ log u` over a tower, both halves COMPUTED
 The completion of the concrete grand-unification arc cataloged in
@@ -11,14 +11,14 @@ log part `Σ cᵢ log uᵢ`) of an algebraic-radical integrand over a transcende
 **both** halves COMPUTED by the engine — Bronstein 1990's "elementary = transcendental + algebraic" for a
 concrete `∫`, the principal case:
 
-* `DeepWiki.SymbolicIntegration.ComputableRadicalLogArgGeneric` — **computes the log argument** `u` over a
+* `DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric` — **computes the log argument** `u` over a
   tower via a `[CField β]`-generic Gaussian elimination (`gaussElimG`/`kernelVectorG`/`radLogArgSolveG`), the
   whole linear solve running over the tower field `β = ℚ(x)`; headline `∫ dx/√(eˣ+1) = log((y−1)/(y+1))` over
   ℚ(x)(eˣ).
 * `DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate` — the **unified integrator**
   `cIntegrateElementaryG` assembling `v + Σ cᵢ log uᵢ` (output `AlgIntegralResultG`, differentiated by the
   ACTUAL-tower-derivation `algDerivG`); round-trip `∫√(eˣ+1) dx = 2√(eˣ+1) + log((y−1)/(y+1))`.
-* `DeepWiki.SymbolicIntegration.ComputableRadicalRationalTower` — the **rational half COMPUTED over a tower**
+* `DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalRationalTower` — the **rational half COMPUTED over a tower**
   (`radIntegrateCase3G` with the actual `θ' = θ` derivation), closing the last supplied gap so BOTH halves
   are the engine's output (`rtFull_both_halves_computed`).
 

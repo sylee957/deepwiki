@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableAlgebraicHermiteCompleteness
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicHermiteCompleteness
 import Sources.Schultz_TragerRevisited.Source
 
 /-! # Schultz §4 (Hermite reduction) — catalog

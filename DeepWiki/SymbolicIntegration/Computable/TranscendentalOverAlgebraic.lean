@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalExtension
-import DeepWiki.SymbolicIntegration.ComputableRadicalDerivationInvariant
-import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtension
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalDerivationInvariant
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalAssembly
 import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalWellFounded
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalWellFounded
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — the unified full algebraic integral `∫ = v + Σ cᵢ log uᵢ` (Appendix A + Ch. 5, principal case)

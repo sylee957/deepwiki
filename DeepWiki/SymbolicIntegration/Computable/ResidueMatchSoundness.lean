@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
-import DeepWiki.SymbolicIntegration.ComputableRadicalLogSoundness
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.MonomialExtensions

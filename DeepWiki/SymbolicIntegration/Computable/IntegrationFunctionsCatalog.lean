@@ -7,10 +7,10 @@ import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSoundWf
 import DeepWiki.SymbolicIntegration.Computable.RischDE.DecisionProcedure
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDECompleteness
-import DeepWiki.SymbolicIntegration.ComputableAlgebraicWfSoundness
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicWfSoundness
 import DeepWiki.SymbolicIntegration.Computable.FunctionAlgebraIntegrate
-import DeepWiki.SymbolicIntegration.ComputableAlgebraicDecide
-import DeepWiki.SymbolicIntegration.ComputableGeneralCurveDecide
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicDecide
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralCurveDecide
 import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
 
 /-!

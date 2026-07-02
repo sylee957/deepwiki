@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputableGeneralIntegralSoundness
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralIntegralSoundness
 
 /-! # Integration on a reducible curve: function-algebra soundness
 

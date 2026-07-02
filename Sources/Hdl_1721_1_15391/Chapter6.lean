@@ -1,10 +1,10 @@
-import DeepWiki.SymbolicIntegration.ComputableHyperellipticDivisor
-import DeepWiki.SymbolicIntegration.ComputableCantorComposition
-import DeepWiki.SymbolicIntegration.ComputableDivisorOrder
-import DeepWiki.SymbolicIntegration.ComputablePrincipalGenerator
-import DeepWiki.SymbolicIntegration.ComputableGeneralTorsionLight
-import DeepWiki.SymbolicIntegration.ComputableGeneralPicardGroupLaw
-import DeepWiki.SymbolicIntegration.ComputableGeneralPicardNonHyperelliptic
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.HyperellipticDivisor
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.CantorComposition
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.DivisorOrder
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.PrincipalGenerator
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralTorsionLight
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralPicardGroupLaw
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralPicardNonHyperelliptic
 import Sources.Hdl_1721_1_15391.Source
 
 /-! # Trager catalog — Chapter 5 §3 + Chapter 6: Divisors and Points of Finite Order

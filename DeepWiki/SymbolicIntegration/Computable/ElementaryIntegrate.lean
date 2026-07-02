@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputableRadicalAssembly
-import DeepWiki.SymbolicIntegration.ComputableRadicalOverTower
-import DeepWiki.SymbolicIntegration.ComputableRadicalLogArgGeneric
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalAssembly
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric
 
 /-! # Unified elementary integration over a transcendental tower
 
