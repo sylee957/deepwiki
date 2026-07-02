@@ -1,6 +1,6 @@
-import DeepWiki.SymbolicIntegration.ComputeCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.SubresultantPRS
-import DeepWiki.SymbolicIntegration.Exercise22Compute
+import DeepWiki.SymbolicIntegration.Compute.Exercise22
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.Algebra.Polynomial.SpecificDegree
 

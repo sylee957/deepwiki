@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.SubresultantCompute
+import DeepWiki.SymbolicIntegration.Compute.Subresultant
 
 /-! # Computing Bronstein Exercise 2.2 with the executable LRT engine (§2.9, p.72)
 **Exercise 2.2** asks to compute, by the Lazard–Rioboo–Trager algorithm,

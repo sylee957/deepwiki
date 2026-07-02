@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.RtResultantCompute
+import DeepWiki.SymbolicIntegration.Compute.RtResultant
 
 /-! # Computable bivariate subresultant gcd / LRT log argument over `ℚ[t]` (Bronstein §2.5/§2.6)
 The Lazard–Rioboo–Trager logarithmic part puts `S(t,x) = gcd_x(D(x), A(x) − t·D'(x))` inside the

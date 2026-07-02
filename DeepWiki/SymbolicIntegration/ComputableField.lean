@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.GenericPolyEngine
-import DeepWiki.SymbolicIntegration.LogToAtanCompute
-import DeepWiki.SymbolicIntegration.ComputeCorrectness
-import DeepWiki.SymbolicIntegration.RationalFunctionCompute
+import DeepWiki.SymbolicIntegration.Compute.LogToAtan
+import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 
 /-! # Coherence of the generic polynomial engine with the concrete `CPoly := List ℚ` engine
 

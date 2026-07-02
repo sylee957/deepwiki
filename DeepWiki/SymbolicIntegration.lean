@@ -54,15 +54,15 @@ import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.Subresultants
 
 -- ## Concrete `Compute` computations over Mathlib `Polynomial` (base ℚ(x))
-import DeepWiki.SymbolicIntegration.ComputeCorrectness
-import DeepWiki.SymbolicIntegration.Exercise22Compute
-import DeepWiki.SymbolicIntegration.Exercise23Compute
-import DeepWiki.SymbolicIntegration.Exercise25Compute
-import DeepWiki.SymbolicIntegration.HermiteCompute
-import DeepWiki.SymbolicIntegration.LogToAtanCompute
-import DeepWiki.SymbolicIntegration.RationalFunctionCompute
-import DeepWiki.SymbolicIntegration.RtResultantCompute
-import DeepWiki.SymbolicIntegration.SubresultantCompute
+import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.SymbolicIntegration.Compute.Exercise22
+import DeepWiki.SymbolicIntegration.Compute.Exercise23
+import DeepWiki.SymbolicIntegration.Compute.Exercise25
+import DeepWiki.SymbolicIntegration.Compute.Hermite
+import DeepWiki.SymbolicIntegration.Compute.LogToAtan
+import DeepWiki.SymbolicIntegration.Compute.RationalFunction
+import DeepWiki.SymbolicIntegration.Compute.RtResultant
+import DeepWiki.SymbolicIntegration.Compute.Subresultant
 
 -- ## Computable engine — generic executable core (CField / CPolyG)
 import DeepWiki.SymbolicIntegration.ComputableCanonNormalizedReduce

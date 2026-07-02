@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.HermiteCompute
+import DeepWiki.SymbolicIntegration.Compute.Hermite
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
 /-! # Computable rational functions ℚ(x) (the field layer)

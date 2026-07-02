@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.HermiteCompute
+import DeepWiki.SymbolicIntegration.Compute.Hermite
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 

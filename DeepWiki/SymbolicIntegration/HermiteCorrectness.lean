@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.ComputeCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LogToAtanCompute
+import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 
 /-! # Computable Rothstein–Trager resultant over `ℚ` (Bronstein §2.4, Example 2.4.1, p.47–48)
