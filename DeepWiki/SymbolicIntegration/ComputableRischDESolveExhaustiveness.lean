@@ -2405,7 +2405,7 @@ With `hsolve` now produced (`hsolve_of_exhaustiveResidual`), all three clauses o
 (`hnorm_of_divisibilityResidual`, `ComputableRischDENormCompleteness`), `hbound` from the §6.3 cancellation
 (`hbound_of_cancellationResidual`, `ComputableRischDEDegreeBound`), `hsolve` from the §6.4–6.6 exhaustiveness
 here. We record the full assembly — `RischDEInnerCompleteness` from the three precise residuals — completing
-the map of the Wf inner residual clause to its three precisely isolated deep facts. -/
+the map of the legacy fueled inner residual clause to its three precisely isolated deep facts. -/
 
 section Assemble
 
@@ -2432,6 +2432,29 @@ theorem rischDEInnerCompleteness_of_residuals (Dt fnum fden gnum gden : CPolyG �
 
 end Assemble
 
+/-! ## ★ `RischDEInnerCompletenessWf` fully assembled from its three Wf component residuals
+
+The Wf path now has the same residual-level assembly as the legacy fueled path, but every component is stated
+against the fuel-free APIs: `RdeNormalDivisibilityResidualWf`, `RdeBoundCancellationResidualWf`, and
+`RischDESolveExhaustiveResidualWf`. This is the reusable proof object consumed by the Wf decision frontier. -/
+
+section AssembleWf
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+  [CRischField α]
+
+/-- **★ `RischDEInnerCompletenessWf` from its three Wf component residuals**. -/
+theorem rischDEInnerCompletenessWf_of_residuals (Dt fnum fden gnum gden : CPolyG α)
+    (hnormRes : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden)
+    (hboundRes : RdeBoundCancellationResidualWf Dt fnum fden gnum gden)
+    (hsolveRes : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
+    RischDEInnerCompletenessWf Dt fnum fden gnum gden where
+  hnorm := hnormWf_of_divisibilityResidualWf Dt fnum fden gnum gden hnormRes
+  hbound := hboundWf_of_cancellationResidualWf Dt fnum fden gnum gden hboundRes
+  hsolve := hsolveWf_of_exhaustiveResidualWf Dt fnum fden gnum gden hsolveRes
+
+end AssembleWf
+
 /-! ### Restatement against `RischDEInnerCompleteness.hsolve`'s field type (anonymous `example`) -/
 
 -- ★ The produced `hsolve` has exactly `RischDEInnerCompleteness.hsolve`'s type — confirmed by using it as
@@ -2455,6 +2478,27 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
   { hnorm := hnorm
     hbound := hbound
     hsolve := hsolve_of_exhaustiveResidual Dt fnum fden gnum gden hres }
+
+-- The Wf solve residual fits directly into the Wf inner-completeness assembly.
+example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
+    [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
+    (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
+      (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true)
+    (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
+      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      ∀ q : CPolyG α,
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+        cdegG q ≤ cRdeBoundDegreeG Dt
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1)
+    (hres : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
+    RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
+  { hnorm := hnorm
+    hbound := hbound
+    hsolve := hsolveWf_of_exhaustiveResidualWf Dt fnum fden gnum gden hres }
 
 /-! ## Operational witnesses: the reachable exhaustiveness layers fire concretely (`native_decide`)
 
@@ -2829,6 +2873,7 @@ compiler) -/
 #print axioms hsolve_of_exhaustiveResidual
 #print axioms hsolveWf_of_exhaustiveResidualWf
 #print axioms rischDEInnerCompleteness_of_residuals
+#print axioms rischDEInnerCompletenessWf_of_residuals
 #print axioms rdeNormalDenominator_glue_inverse
 #print axioms specialDenominatorSubst_cleared_inverse
 #print axioms specialDenominatorSubst_cleared_inverse_noClear
