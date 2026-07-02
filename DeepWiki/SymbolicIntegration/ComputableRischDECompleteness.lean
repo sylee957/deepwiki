@@ -52,7 +52,7 @@ procedure: Wf soundness says `some ⟹ FieldRDESolvable`, Wf completeness says `
 section Solvable
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CRischField β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)]
+  [Algebra ℚ (CFieldSpec.K β)]
 
 /-- **Field-level RDE solvability** `FieldRDESolvable f g`: there exists `y : QFunNZG β` solving the
 field-level Risch differential equation `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`, read through
@@ -77,10 +77,9 @@ solver first. -/
 
 section StructuralWf
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
   [CFracGcdCoreWf β] [CRischField β]
 
-omit [CFracGcdCore β] in
 /-- **The fuel-free sound solver succeeds iff its three Wf stage tests succeed**
 (`crischDESolveSoundWf_some_iff`): `crischDESolveSoundWf f g = some y` iff the fuel-free weak normalizer
 is nonzero, the §6.1 canon-normality gate passes on the weak-normalized input, and the fuel-free inner solve
@@ -135,7 +134,6 @@ theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
       simp only [hck, Bool.false_eq_true, and_false, false_and, iff_false]
       intro h; exact absurd h (by simp)
 
-omit [CFracGcdCore β] in
 /-- **The three Wf stage tests succeed ⟹ the fuel-free sound solver succeeds**
 (`crischDESolveSoundWf_some_of_stages`): if the Wf weak normalizer is nonzero, the §6.1 gate passes, and
 `crischDERawSolveWf` returns `some ỹ`, then `crischDESolveSoundWf f g = some (ỹ/q')`. -/
@@ -488,10 +486,8 @@ end RawInnerWf
 section CompleteWf
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
-  [Algebra ℚ (CFieldSpec.K β)]
+  [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
-omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **Fuel-free soundness, restated as `some ⟹ solvable`**: a successful `crischDESolveSoundWf`
 run witnesses `FieldRDESolvable`, using the direct Wf soundness certificate consumed by
 `crischDESolveSoundWf_field`. -/
@@ -525,7 +521,6 @@ structure RischDECompletenessResidualWf (f g : QFunNZG β) : Prop where
           (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
         = some ytilde
 
-omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **Fuel-free §6 RDE completeness modulo the Wf-native residual**: if the RDE is solvable and
 `RischDECompletenessResidualWf` holds, then `crischDESolveSoundWf` returns `some`. This completeness
 direction uses the Wf structural skeleton directly and does not rewrite through the fueled solver. -/
@@ -535,7 +530,6 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : QFunNZG β)
   obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
   exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) (hres.hck hsol) hinner⟩
 
-omit [CFracGcdCore β] [CTowerGcdWitness β] in
 /-- **The fuel-free §6 RDE solver DECIDES solvability modulo the Wf-native residual**:
 `crischDESolveSoundWf f g` returns `some` iff the field-level RDE is solvable. The completeness direction is
 Wf-native; the soundness direction consumes the direct `RischDESoundnessWf` certificate. -/
