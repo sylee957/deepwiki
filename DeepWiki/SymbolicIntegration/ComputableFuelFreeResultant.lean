@@ -1,22 +1,12 @@
 import DeepWiki.SymbolicIntegration.ComputableFuelFreeGcd
 import DeepWiki.SymbolicIntegration.ComputableResultantGenericCore
 
-/-! # Fuel-free (well-founded) generic resultant `cresultantWf`
+/-! # Well-founded generic resultant `cresultantWf`
 
-This continues the fuel-free conversion of `ComputableFuelFreeGcd` to the generic resultant leaf op:
-
-* **`cresultantWf`** (`[CField α]`-only) — the fuel-free companion of the generic Euclidean-PRS
-  resultant `cresultantG` (`ComputableGenericBezout`). Its recursion has *two* shapes (a **swap**
-  `(p,q)→(q,p)` and a **reduce** `(p,q)→(q, cmodWf p q)`), so the well-founded measure is the
-  composite `cresultantMeasure p q = 2·(len p + len q) + len q` (the swap leaves `len p + len q`
-  fixed, hence the `+ len q` tie-breaker). Each recursive call is taken only under its structural
-  guard, so `decreasing_by` is `assumption` and the def stays `[CField α]`-only / `native_decide`-able
-  over `QFunNZG ℚ`. The Sylvester-resultant identity `toPolyG_cresultantWf` is proved directly by
-  well-founded induction on this recursion, so the fuel-free resultant stays free of the §5.6 residue /
-  `cgcdFF` layer.
-
-The concrete `BPoly` primitive-PRS gcd `primPRSgcdWf` (§3.5, which *does* need the `cgcdFF` layer) lives
-in `ComputablePrimPRSWf`. The runtime WF op carries no fuel. -/
+The Euclidean-PRS resultant on `CPolyG`, by well-founded recursion on the composite measure
+`cresultantMeasure`. The def is `[CField α]`-only (so it reduces under `native_decide` over
+noncomputable-`CFieldSpec` carriers); the Sylvester-resultant identity `toPolyG_cresultantWf` is
+proved by well-founded induction on its own recursion. -/
 
 open Polynomial
 
@@ -26,31 +16,23 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-! ### Target A — the fuel-free generic resultant `cresultantWf`
+/-! ### The generic resultant `cresultantWf`
 
-`cresultantWf p q = res(p, q) ∈ α`, the fuel-free companion of `cresultantG`
-(`ComputableLogPartTower`). The recursion has *two* shapes: a **swap** `(p, q) → (q, p)` taken when
-`len p < len q` (q non-constant), and a **reduce** `(p, q) → (q, cmodWf p q)` taken when
-`len q ≤ len p`. Neither single-argument length strictly drops on the swap, so the well-founded measure
-is `cresultantMeasure p q = 2·(len p + len q) + len q`: the swap drops it by `len p − len q < 0` (sic),
-the reduce by `2·(len r − len p) + (len r − len q) < 0`. Each recursive call is taken only under its
-structural guard, so the `decreasing_by` is `assumption` and the def stays `[CField α]`-only. -/
+The recursion has two shapes — a swap `(p, q) → (q, p)` and a reduce `(p, q) → (q, cmodWf p q)` —
+so termination is by the composite measure `cresultantMeasure`, strictly dropped by both
+(`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`). -/
 
-/-- **Well-founded measure for `cresultantWf`** `cresultantMeasure p q = 2·(len p + len q) + len q`,
-where `len` is the normalized-list length. Chosen so *both* the swap `(p,q)→(q,p)` (drops by
-`len p − len q`) and the reduce `(p,q)→(q, cmodWf p q)` (drops by `2(len r − len p) + (len r − len q)`)
+/-- Well-founded measure for `cresultantWf`: `cresultantMeasure p q = 2·(len p + len q) + len q`,
+`len` the normalized-list length. Both the swap `(p,q)→(q,p)` and the reduce `(p,q)→(q, cmodWf p q)`
 strictly decrease it; the swap alone leaves `len p + len q` fixed, hence the `+ len q` tie-breaker. -/
 def cresultantMeasure (p q : CPolyG α) : ℕ :=
   2 * ((cnormG p : List α).length + (cnormG q : List α).length) + (cnormG q : List α).length
 
-/-- **Fuel-free generic univariate resultant** `cresultantWf p q = res(p, q) ∈ α`, `[CField α]`-only:
-the Euclidean-PRS resultant identity with no fuel at runtime. Base cases are `q = 0` (`1` if `p` is
-constant, otherwise `0`) and nonzero constant `q = c` (`cⁱ` with `i = deg p`). The two recursive branches
-— the **swap** `(p,q)→(q,p)` (when `len p < len q`) and the
-**reduce** `(p,q)→(q, cmodWf p q)` (when `len q ≤ len p`) — are each taken only under the structural
-guard `cresultantMeasure (next) < cresultantMeasure p q`, so `decreasing_by` is `assumption` and the
-def is `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZG ℚ`). Over a genuine field
-the guards never fail (`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`). -/
+/-- Generic univariate resultant `cresultantWf p q = res(p, q) ∈ α` by the Euclidean PRS. Base cases
+are `q = 0` (`1` if `p` is constant, otherwise `0`) and nonzero constant `q = c` (`c^(deg p)`); the
+swap and reduce branches recurse only under the `cresultantMeasure` drop guard, so the def stays
+`[CField α]`-only (hence `native_decide`-able over noncomputable-`CFieldSpec` carriers like
+`QFunNZG ℚ`). Over a genuine field the guards always hold. -/
 def cresultantWf (p q : CPolyG α) : α :=
   let pn := cnormG p
   let qn := cnormG q
@@ -77,18 +59,17 @@ decreasing_by · assumption
 variable [CFieldSpec α]
 
 omit [CFieldSpec α] in
-/-- **The swap guard never fails**: when `len p < len q`, `cresultantMeasure q p < cresultantMeasure p q`
-(it drops by `len q − len p ≥ 1`). Pure measure arithmetic — discharges the swap branch's structural
-guard, so the swap is always taken. -/
+/-- The swap strictly drops the measure: when `len p < len q`,
+`cresultantMeasure q p < cresultantMeasure p q`. Discharges the swap branch's structural guard. -/
 theorem cresultantMeasure_swap_lt (p q : CPolyG α)
     (hpq : (cnormG p : List α).length < (cnormG q : List α).length) :
     cresultantMeasure q p < cresultantMeasure p q := by
   simp only [cresultantMeasure]
   omega
 
-/-- **The reduce guard never fails** over `[CFieldSpec α]`: for a non-constant divisor `q` with
-`len q ≤ len p`, the remainder `r = cnormG (cmodWf p q)` has `len r < len q`, so
-`cresultantMeasure q r < cresultantMeasure p q`. Discharges the reduce branch's structural guard. -/
+/-- The reduce strictly drops the measure (over `[CFieldSpec α]`): for a nonzero divisor `q` with
+`len q ≤ len p`, `cresultantMeasure q (cnormG (cmodWf p q)) < cresultantMeasure p q`. Discharges the
+reduce branch's structural guard. -/
 theorem cresultantMeasure_reduce_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
     (hpq : ¬ (cnormG p : List α).length < (cnormG q : List α).length) :
     cresultantMeasure q (cnormG (cmodWf p q)) < cresultantMeasure p q := by
@@ -97,11 +78,9 @@ theorem cresultantMeasure_reduce_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
   simp only [cresultantMeasure, cnormG_idem]
   omega
 
-/-- **Fuel-free quotient degree**: for a non-constant divisor with `deg q ≤ deg p`,
-`natDegree (cdivWf p q) + natDegree q = natDegree p` (the Euclidean quotient has degree `deg p − deg q`).
-The fuel-free analogue of `cdivG_natDegree_add`, built from the fuel-free Euclidean identity
-`toPolyG_cmodWf` and the fuel-free remainder bound `cmodWf_length_lt` — supplies
-`resultant_add_mul_right`'s degree side-condition in the reduce case. References no fuel symbol. -/
+/-- Quotient degree: for a non-constant divisor with `deg q ≤ deg p`,
+`natDegree (cdivWf p q) + natDegree q = natDegree p` (the Euclidean quotient has degree
+`deg p − deg q`). Supplies `resultant_add_mul_right`'s degree side-condition in the reduce case. -/
 theorem cdivWf_natDegree_add (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
     (hq2 : 2 ≤ (cnormG q : List α).length) (hpq : (cnormG q : List α).length ≤ (cnormG p : List α).length) :
     (toPolyG (cdivWf p q)).natDegree + (toPolyG q).natDegree = (toPolyG p).natDegree := by
@@ -131,14 +110,8 @@ theorem cdivWf_natDegree_add (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnor
     rw [heq, natDegree_sub_eq_left_of_natDegree_lt (lt_of_lt_of_le hr hpq')]
   rwa [Polynomial.natDegree_mul hquo hQ] at key
 
-/-- **Sylvester-resultant identity through `toPolyG`** for the fuel-free `cresultantWf` — DIRECTLY (no
-fuel hypothesis): `toK (cresultantWf p q) = Polynomial.resultant (toPolyG p) (toPolyG q) (deg p) (deg q)`.
-Proven by **direct well-founded induction on `cresultantWf`'s own recursion**: the base branches are
-`resultant_zero_right(_deg)` (`q = 0`) and `res(p, c) = c^(deg p)` (`q` constant), the swap branch is
-`resultant_comm`, and the reduce branch replays `resultant_comm ∘ resultant_add_mul_right ∘
-resultant_add_right_deg` on the fuel-free Euclidean step (`toPolyG_cmodWf` + `cdivWf_natDegree_add`); the
-unreachable branches are closed by `cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`. References
-no fuel symbol. -/
+/-- Sylvester-resultant identity for `cresultantWf`:
+`toK (cresultantWf p q) = Polynomial.resultant (toPolyG p) (toPolyG q) (deg p) (deg q)`. -/
 theorem toPolyG_cresultantWf (p q : CPolyG α) :
     CFieldSpec.toK (cresultantWf p q)
       = Polynomial.resultant (toPolyG p) (toPolyG q) (cdegG p) (cdegG q) := by
@@ -264,29 +237,6 @@ theorem toPolyG_cresultantWf (p q : CPolyG α) :
     have hdec' : ¬ cresultantMeasure q (cnormG (cmodWf p q)) < cresultantMeasure p q := hdec
     have hq : cnormG q ≠ [] := fun h => by simp [cisZeroG, h] at hcz'
     exact absurd (cresultantMeasure_reduce_lt p q hq hpqlen) hdec'
-
-/-- Restatement: the fuel-free generic resultant `cresultantWf` is the honest Sylvester resultant under
-the Horner bridge `toPolyG`, **with no fuel hypothesis**. -/
-example (p q : CPolyG α) :
-    CFieldSpec.toK (cresultantWf p q)
-      = Polynomial.resultant (toPolyG p) (toPolyG q) (cdegG p) (cdegG q) :=
-  toPolyG_cresultantWf p q
-
-end CPolyG
-
--- The fuel-free resultant headline carries only the standard axioms (no `native` axiom): the
--- `native_decide` smoke tests below carry `Lean.ofReduceBool` separately.
-#print axioms CPolyG.toPolyG_cresultantWf
-
-/-! ### `native_decide` smoke tests for `cresultantWf` -/
-
-namespace CPolyG
-
-/-- `cresultantWf` over `ℚ`: `res(x² − 1, x − 1) = 0` (they share the root `x = 1`). -/
-example : CPolyG.cresultantWf [(-1 : ℚ), 0, 1] [(-1 : ℚ), 1] = 0 := by native_decide
-
-/-- `cresultantWf` over `ℚ`: `res(x² + 1, x) = 1` (no common root). -/
-example : CPolyG.cresultantWf [(1 : ℚ), 0, 1] [(0 : ℚ), 1] = 1 := by native_decide
 
 end CPolyG
 
