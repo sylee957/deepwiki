@@ -167,11 +167,6 @@ theorem thm_1_1_9_exists (k : Type*) [Field k] : IsAlgClosure k (AlgebraicClosur
 `F`-isomorphic. -/
 noncomputable abbrev thm_1_1_9_unique := @IsAlgClosure.equiv
 
-/-- **Theorem 1.1.11** (§1.1, p.8), Hilbert's Nullstellensatz over an algebraically closed field:
-`vanishingIdeal (zeroLocus I) = √I`; equivalently, if `p` vanishes on `V(I)` then `pᵐ ∈ I` for
-some `m > 0`. -/
-abbrev thm_1_1_11 := @MvPolynomial.vanishingIdeal_zeroLocus_eq_radical
-
 /-- **Theorem 1.1.10** (§1.1, p.8), the weak Nullstellensatz: over an algebraically closed field,
 `V(I) = ∅ ⟺ 1 ∈ I`. -/
 theorem thm_1_1_10 {k : Type*} [Field k] [IsAlgClosed k] {σ : Type*} [Finite σ]
@@ -186,6 +181,11 @@ theorem thm_1_1_10 {k : Type*} [Field k] [IsAlgClosed k] {σ : Type*} [Finite σ
     exact Ideal.radical_eq_top.mp key.symm
   · intro h
     rw [h, MvPolynomial.zeroLocus_top (K := k), Set.bot_eq_empty]
+
+/-- **Theorem 1.1.11** (§1.1, p.8), Hilbert's Nullstellensatz over an algebraically closed field:
+`vanishingIdeal (zeroLocus I) = √I`; equivalently, if `p` vanishes on `V(I)` then `pᵐ ∈ I` for
+some `m > 0`. -/
+abbrev thm_1_1_11 := @MvPolynomial.vanishingIdeal_zeroLocus_eq_radical
 
 /-! ### Worked examples (§1.1) -/
 
@@ -203,6 +203,10 @@ example : ∃ A B : GL (Fin 2) ℚ, A * B ≠ B * A := by
   exact ⟨S.toGL, T.toGL,
     fun h => hST (SpecialLinearGroup.toGL_injective (by rw [map_mul, map_mul, h]))⟩
 
+/-- **Example 1.1.2** (§1.1, p.2): the 2×2 rational matrices form a commutative group under
+addition. -/
+example : AddCommGroup (Matrix (Fin 2) (Fin 2) ℚ) := inferInstance
+
 open Matrix in
 /-- **Example 1.1.3** (§1.1, p.2): `M₂(ℚ)` is a ring but *not* commutative. -/
 example : ∃ A B : Matrix (Fin 2) (Fin 2) ℚ, A * B ≠ B * A := by
@@ -210,10 +214,6 @@ example : ∃ A B : Matrix (Fin 2) (Fin 2) ℚ, A * B ≠ B * A := by
   intro h
   have := congrFun (congrFun h 0) 0
   simp [Matrix.mul_apply, Fin.sum_univ_two] at this
-
-/-- **Example 1.1.2** (§1.1, p.2): the 2×2 rational matrices form a commutative group under
-addition. -/
-example : AddCommGroup (Matrix (Fin 2) (Fin 2) ℚ) := inferInstance
 
 /-- **Example 1.1.4** (§1.1, p.3): `ℤ₆ = ZMod 6` is a commutative ring of characteristic `6`
 with zero divisors — `2 · 3 = 0` while `2 ≠ 0` and `3 ≠ 0`. -/
@@ -233,6 +233,42 @@ example : IsDomain (Zsqrtd (-5)) := by
     · exact Or.inl ((Zsqrtd.norm_eq_zero_iff (by norm_num) a).mp h)
     · exact Or.inr ((Zsqrtd.norm_eq_zero_iff (by norm_num) b).mp h)⟩
   exact NoZeroDivisors.to_isDomain _
+
+/-- If `u ∣ v` in `ℤ[√d]` then `N(u) ∣ N(v)` in `ℤ` (norm multiplicativity). -/
+private theorem zsqrtd_norm_dvd_norm {d : ℤ} {u v : Zsqrtd d} (h : u ∣ v) : u.norm ∣ v.norm := by
+  obtain ⟨w, rfl⟩ := h; rw [Zsqrtd.norm_mul]; exact dvd_mul_right _ _
+
+/-- **Example 1.1.6** (§1.1, p.3): `6` and `2 + 2√−5` have *no* gcd in `ℤ[√−5]`. If `z` were a gcd
+then `N(z) ∣ gcd(N 6, N(2+2√−5)) = gcd(36, 24) = 12`; but `2` and `1+√−5` are common divisors, so
+`N(2)=4 ∣ N(z)` and `N(1+√−5)=6 ∣ N(z)`, forcing `N(z) = 12` — impossible, as `a²+5b² = 12` has no
+solution (`12 ≡ 2 (mod 5)`, a non-square). This is the concrete failure of unique factorization. -/
+example : ¬ ∃ z : Zsqrtd (-5), IsGCD (⟨6, 0⟩ : Zsqrtd (-5)) (⟨2, 2⟩ : Zsqrtd (-5)) z := by
+  rintro ⟨z, hzx, hzy, hmax⟩
+  have h2x : (⟨2, 0⟩ : Zsqrtd (-5)) ∣ ⟨6, 0⟩ :=
+    ⟨⟨3, 0⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have h2y : (⟨2, 0⟩ : Zsqrtd (-5)) ∣ ⟨2, 2⟩ :=
+    ⟨⟨1, 1⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have hsx : (⟨1, 1⟩ : Zsqrtd (-5)) ∣ ⟨6, 0⟩ :=
+    ⟨⟨1, -1⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have hsy : (⟨1, 1⟩ : Zsqrtd (-5)) ∣ ⟨2, 2⟩ :=
+    ⟨⟨2, 0⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
+  have hn36 : z.norm ∣ 36 := by have := zsqrtd_norm_dvd_norm hzx; simpa [Zsqrtd.norm_def] using this
+  have hn24 : z.norm ∣ 24 := by have := zsqrtd_norm_dvd_norm hzy; simpa [Zsqrtd.norm_def] using this
+  have h4n : (4 : ℤ) ∣ z.norm := by
+    have := zsqrtd_norm_dvd_norm (hmax _ h2x h2y); simpa [Zsqrtd.norm_def] using this
+  have h6n : (6 : ℤ) ∣ z.norm := by
+    have := zsqrtd_norm_dvd_norm (hmax _ hsx hsy); simpa [Zsqrtd.norm_def] using this
+  have hge : 0 ≤ z.norm := Zsqrtd.norm_nonneg (by norm_num) z
+  have hn12 : z.norm ∣ 12 := by simpa using dvd_sub hn36 hn24
+  have h12n : (12 : ℤ) ∣ z.norm := by omega
+  have hn : z.norm = 12 := Int.dvd_antisymm hge (by norm_num) hn12 h12n
+  have hmod : (z.norm : ZMod 5) = (z.re : ZMod 5) * (z.re : ZMod 5) := by
+    rw [Zsqrtd.norm_def]; push_cast
+    have h5 : (5 : ZMod 5) = 0 := by decide
+    ring_nf; rw [h5]; ring
+  rw [hn] at hmod
+  have hsq : ∀ a : ZMod 5, a * a ≠ ((12 : ℤ) : ZMod 5) := by decide
+  exact hsq _ hmod.symm
 
 /-- No element of `ℤ[√−5]` has norm `2` or `3`: `N(a+b√−5) = a² + 5b² ≡ a² (mod 5)`, and `2, 3`
 are not squares mod `5`. -/
@@ -282,42 +318,6 @@ example : Irreducible (⟨1, 1⟩ : Zsqrtd (-5)) :=
   zsqrtNeg5_irreducible_of_norm _ (Or.inr (Or.inl (by rw [Zsqrtd.norm_def]; norm_num)))
 example : Irreducible (⟨1, -1⟩ : Zsqrtd (-5)) :=
   zsqrtNeg5_irreducible_of_norm _ (Or.inr (Or.inl (by rw [Zsqrtd.norm_def]; norm_num)))
-
-/-- If `u ∣ v` in `ℤ[√d]` then `N(u) ∣ N(v)` in `ℤ` (norm multiplicativity). -/
-private theorem zsqrtd_norm_dvd_norm {d : ℤ} {u v : Zsqrtd d} (h : u ∣ v) : u.norm ∣ v.norm := by
-  obtain ⟨w, rfl⟩ := h; rw [Zsqrtd.norm_mul]; exact dvd_mul_right _ _
-
-/-- **Example 1.1.6** (§1.1, p.3): `6` and `2 + 2√−5` have *no* gcd in `ℤ[√−5]`. If `z` were a gcd
-then `N(z) ∣ gcd(N 6, N(2+2√−5)) = gcd(36, 24) = 12`; but `2` and `1+√−5` are common divisors, so
-`N(2)=4 ∣ N(z)` and `N(1+√−5)=6 ∣ N(z)`, forcing `N(z) = 12` — impossible, as `a²+5b² = 12` has no
-solution (`12 ≡ 2 (mod 5)`, a non-square). This is the concrete failure of unique factorization. -/
-example : ¬ ∃ z : Zsqrtd (-5), IsGCD (⟨6, 0⟩ : Zsqrtd (-5)) (⟨2, 2⟩ : Zsqrtd (-5)) z := by
-  rintro ⟨z, hzx, hzy, hmax⟩
-  have h2x : (⟨2, 0⟩ : Zsqrtd (-5)) ∣ ⟨6, 0⟩ :=
-    ⟨⟨3, 0⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
-  have h2y : (⟨2, 0⟩ : Zsqrtd (-5)) ∣ ⟨2, 2⟩ :=
-    ⟨⟨1, 1⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
-  have hsx : (⟨1, 1⟩ : Zsqrtd (-5)) ∣ ⟨6, 0⟩ :=
-    ⟨⟨1, -1⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
-  have hsy : (⟨1, 1⟩ : Zsqrtd (-5)) ∣ ⟨2, 2⟩ :=
-    ⟨⟨2, 0⟩, by ext <;> simp [Zsqrtd.re_mul, Zsqrtd.im_mul]⟩
-  have hn36 : z.norm ∣ 36 := by have := zsqrtd_norm_dvd_norm hzx; simpa [Zsqrtd.norm_def] using this
-  have hn24 : z.norm ∣ 24 := by have := zsqrtd_norm_dvd_norm hzy; simpa [Zsqrtd.norm_def] using this
-  have h4n : (4 : ℤ) ∣ z.norm := by
-    have := zsqrtd_norm_dvd_norm (hmax _ h2x h2y); simpa [Zsqrtd.norm_def] using this
-  have h6n : (6 : ℤ) ∣ z.norm := by
-    have := zsqrtd_norm_dvd_norm (hmax _ hsx hsy); simpa [Zsqrtd.norm_def] using this
-  have hge : 0 ≤ z.norm := Zsqrtd.norm_nonneg (by norm_num) z
-  have hn12 : z.norm ∣ 12 := by simpa using dvd_sub hn36 hn24
-  have h12n : (12 : ℤ) ∣ z.norm := by omega
-  have hn : z.norm = 12 := Int.dvd_antisymm hge (by norm_num) hn12 h12n
-  have hmod : (z.norm : ZMod 5) = (z.re : ZMod 5) * (z.re : ZMod 5) := by
-    rw [Zsqrtd.norm_def]; push_cast
-    have h5 : (5 : ZMod 5) = 0 := by decide
-    ring_nf; rw [h5]; ring
-  rw [hn] at hmod
-  have hsq : ∀ a : ZMod 5, a * a ≠ ((12 : ℤ) : ZMod 5) := by decide
-  exact hsq _ hmod.symm
 
 /-- **Example 1.1.8** (§1.1, p.4): `ℚ[X, Y]` (here `ℚ[X][Y]`) is a unique factorization
 domain. -/
@@ -448,10 +448,6 @@ abbrev thm_1_4_1_prod := @Polynomial.resultant_eq_prod_eval
 /-- **Theorem 1.4.1** (§1.4, p.19), multiplicativity: `res(A₁·A₂, B) = res(A₁, B) · res(A₂, B)`. -/
 abbrev thm_1_4_1_mul := @Polynomial.resultant_mul_left
 
-/-- **Corollary 1.4.2** (§1.4, p.19), field case: `res(A,B) = 0 ⟺ A, B` are not coprime — i.e.
-`deg gcd(A,B) > 0` — provided `A` and `B` are not both zero. -/
-abbrev cor_1_4_2 := @Polynomial.resultant_eq_zero_iff
-
 /-- **Corollary 1.4.1** (§1.4, p.19): for nonzero `A` that splits, `res(A, B) = 0` iff `A` and `B`
 have a common root (some root `α` of `A` with `B(α) = 0`) — the vanishing of `res = lc(A)^{deg B}·∏
 B(αᵢ)` in a domain. -/
@@ -462,10 +458,33 @@ abbrev cor_1_4_1 := @resultant_eq_zero_iff_exists_root
 identity). -/
 abbrev thm_1_4_2 := @Polynomial.exists_mul_add_mul_eq_C_resultant
 
+/-- **Corollary 1.4.2** (§1.4, p.19), field case: `res(A,B) = 0 ⟺ A, B` are not coprime — i.e.
+`deg gcd(A,B) > 0` — provided `A` and `B` are not both zero. -/
+abbrev cor_1_4_2 := @Polynomial.resultant_eq_zero_iff
+
+/-- **Example 1.4.1** (§1.4, p.18): the Sylvester matrix of `A = 3tx² − t³ − 4` and
+`B = x² + t³x − 9` in `ℤ[t][x]`, and its determinant — the resultant
+`res(A,B) = −3t¹⁰ − 12t⁷ + t⁶ − 54t⁴ + 8t³ + 729t² − 216t + 16`. -/
+theorem ex_1_4_1 :
+    bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2
+        = !![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9]
+      ∧ (bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2).det
+        = -3 * X ^ 10 - 12 * X ^ 7 + X ^ 6 - 54 * X ^ 4 + 8 * X ^ 3 + 729 * X ^ 2 - 216 * X + 16 := by
+  have hM : bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2
+      = !![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9] := by
+    refine Matrix.ext fun i l => ?_
+    fin_cases i <;> fin_cases l <;>
+      simp [bSylvester, coeff_sub, coeff_add, coeff_C_mul, coeff_X_pow, coeff_C, coeff_X,
+        -map_mul, -map_pow] <;> ring
+  refine ⟨hM, ?_⟩
+  rw [hM, det_fin_four]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val, Matrix.of_apply]
+  ring
+
 /-- **Example 1.4.2** (§1.4, p.19): `res(x²+1, x²−1) = 4` in `ℤ[x]`, the determinant of the `4×4`
 Sylvester matrix (here in Mathlib's column layout: the two `x²−1`-columns then the two
 `x²+1`-columns). The first subresultant `S₁ = −2` is *defective* — that part needs the
-subresultant operator (Definition 1.4.2), deferred below. -/
+subresultant operator (Definition 1.4.2), below. -/
 theorem ex_1_4_2 :
     Polynomial.sylvester (X ^ 2 + 1 : ℤ[X]) (X ^ 2 - 1) 2 2
         = !![-1, 0, 1, 0; 0, -1, 0, 1; 1, 0, 1, 0; 0, 1, 0, 1]
@@ -482,15 +501,15 @@ theorem ex_1_4_2 :
 `S₀ = det(Sylvester) = res(A,B)` is `subresultant_zero`. -/
 noncomputable abbrev def_1_4_2 := @subresultant
 
-/-- **Theorem 1.4.3** (§1.4, p.21), degree-preserving case ("Note in particular"): subresultants
-commute with a coefficient ring homomorphism, `Sⱼ(σ̄A, σ̄B) = σ̄(Sⱼ(A,B))` (the library
-`subresultant_map`). -/
-abbrev thm_1_4_3 := @subresultant_map
-
 /-- **Theorem 1.4.3** (§1.4, p.21), general scaling case: when `σ` preserves `deg A` but lowers
 `deg B`, the subresultant specializes up to `σ(lc A)^(deg B − deg σ̄B)` — `σ̄(Sⱼ(A,B)) =
 σ(lc A)^(deg B − deg σ̄B)·Sⱼ(σ̄A, σ̄B)` (the library `subresultant_map_lt`). -/
 abbrev thm_1_4_3_lt := @subresultant_map_lt
+
+/-- **Theorem 1.4.3** (§1.4, p.21), degree-preserving case ("Note in particular"): subresultants
+commute with a coefficient ring homomorphism, `Sⱼ(σ̄A, σ̄B) = σ̄(Sⱼ(A,B))` (the library
+`subresultant_map`). -/
+abbrev thm_1_4_3 := @subresultant_map
 
 /-- **Example 1.4.3** (§1.4, p.21): specializing `t ↦ 1` (`σ : ℤ[t] → ℤ`) sends
 `A = 3tx²−t³−4 ↦ 3x²−5` and `B = x²+t³x−9 ↦ x²+x−9`; by Theorem 1.4.3 (`thm_1_4_3`) their
@@ -513,30 +532,6 @@ theorem ex_1_4_3 :
     rw [hM, hd0, hd1]
     simp only [pow_zero, mul_one, pow_one, map_neg, map_ofNat]
     ring
-
-/-- **Example 1.4.1** (§1.4, p.18): the Sylvester matrix of `A = 3tx² − t³ − 4` and
-`B = x² + t³x − 9` in `ℤ[t][x]`, and its determinant — the resultant
-`res(A,B) = −3t¹⁰ − 12t⁷ + t⁶ − 54t⁴ + 8t³ + 729t² − 216t + 16`. -/
-theorem ex_1_4_1 :
-    bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2
-        = !![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9]
-      ∧ (bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2).det
-        = -3 * X ^ 10 - 12 * X ^ 7 + X ^ 6 - 54 * X ^ 4 + 8 * X ^ 3 + 729 * X ^ 2 - 216 * X + 16 := by
-  have hM : bSylvester (C (3 * X) * X ^ 2 - C (X ^ 3 + 4) : (ℤ[X])[X]) (X ^ 2 + C (X ^ 3) * X - C 9) 2 2
-      = !![3 * X, 0, -X ^ 3 - 4, 0; 0, 3 * X, 0, -X ^ 3 - 4; 1, X ^ 3, -9, 0; 0, 1, X ^ 3, -9] := by
-    refine Matrix.ext fun i l => ?_
-    fin_cases i <;> fin_cases l <;>
-      simp [bSylvester, coeff_sub, coeff_add, coeff_C_mul, coeff_X_pow, coeff_C, coeff_X,
-        -map_mul, -map_pow] <;> ring
-  refine ⟨hM, ?_⟩
-  rw [hM, det_fin_four]
-  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val, Matrix.of_apply]
-  ring
-
--- **Deferred — not in Mathlib (library work):** the *general* Theorem 1.4.3 with the
--- `σ(lc A)^(deg B − deg σ̄B)` scaling factor when `σ` lowers `deg B` (subresultants of different
--- sizes). [Theorem 1.4.2 = `thm_1_4_2`; Definition 1.4.2 = `def_1_4_2`; degree-preserving 1.4.3 =
--- `thm_1_4_3`.]
 
 /-! ## §1.5 Polynomial Remainder Sequences -/
 
@@ -694,23 +689,6 @@ abbrev def_1_6_1_decomp := @Polynomial.eq_C_content_mul_primPart
 `content(AB) = content(A) · content(B)`. -/
 abbrev lem_1_6_1 := @Polynomial.content_mul
 
-/-- **Theorem 1.6.1(i)** (§1.6, p.27): a prime factor divides the derivative one less time —
-if `Pⁿ⁺¹ ∣ A` then `Pⁿ ∣ gcd(A, dA/dx)` (for any gcd `G` of `A` and its derivative). -/
-abbrev thm_1_6_1_i := @pow_dvd_gcd_of_pow_succ_dvd
-
-/-- **Theorem 1.6.1(ii)** (§1.6, p.27): the characteristic-`0` converse — for a prime `P` of
-positive degree and `n > 0`, if `Pⁿ` divides both `A` and `dA/dx` then `Pⁿ⁺¹ ∣ A`. -/
-abbrev thm_1_6_1_ii := @pow_succ_dvd_of_pow_dvd_derivative
-
-/-- **Theorem 1.6.1** (§1.6, p.27), combined: in characteristic `0`, for a prime `P` of positive
-degree and `n > 0`, `Pⁿ⁺¹ ∣ A ⟺ Pⁿ ∣ A ∧ Pⁿ ∣ dA/dx`. -/
-abbrev thm_1_6_1 := @pow_succ_dvd_iff
-
-/-- **Equation 1.14** (§1.6, p.28): the squarefree part `A* = A/gcd(A, dA/dx)` of `A` is its
-radical. For `A = ∏_{a∈s}(X − a)^{eₐ}` (char `0`), stated multiplicatively,
-`A ~ gcd(A, dA/dx) · ∏_{a∈s}(X − a)` — so `A*` is the squarefree product `∏(X − a)`. -/
-abbrev eq_1_14 := @prod_X_sub_C_pow_associated_gcd_mul_radical
-
 /-- **Definition 1.6.2** (§1.6, p.26): the *squarefree part* `A* = ∏ Pᵢ` (the library
 `squarefreePart`). -/
 noncomputable abbrev def_1_6_2_squarefreePart := @squarefreePart
@@ -728,6 +706,23 @@ abbrev rel_1_12 := @deflation_succ
 /-- **Relation (1.13)** (§1.6, p.27): `A⁻⁽ᵏ⁺¹⁾ = A⁻ᵏ / (A⁻ᵏ)*` (multiplicative form,
 up to associates). -/
 abbrev rel_1_13 := @squarefreePart_mul_deflation_succ
+
+/-- **Theorem 1.6.1(i)** (§1.6, p.27): a prime factor divides the derivative one less time —
+if `Pⁿ⁺¹ ∣ A` then `Pⁿ ∣ gcd(A, dA/dx)` (for any gcd `G` of `A` and its derivative). -/
+abbrev thm_1_6_1_i := @pow_dvd_gcd_of_pow_succ_dvd
+
+/-- **Theorem 1.6.1(ii)** (§1.6, p.27): the characteristic-`0` converse — for a prime `P` of
+positive degree and `n > 0`, if `Pⁿ` divides both `A` and `dA/dx` then `Pⁿ⁺¹ ∣ A`. -/
+abbrev thm_1_6_1_ii := @pow_succ_dvd_of_pow_dvd_derivative
+
+/-- **Theorem 1.6.1** (§1.6, p.27), combined: in characteristic `0`, for a prime `P` of positive
+degree and `n > 0`, `Pⁿ⁺¹ ∣ A ⟺ Pⁿ ∣ A ∧ Pⁿ ∣ dA/dx`. -/
+abbrev thm_1_6_1 := @pow_succ_dvd_iff
+
+/-- **Equation 1.14** (§1.6, p.28): the squarefree part `A* = A/gcd(A, dA/dx)` of `A` is its
+radical. For `A = ∏_{a∈s}(X − a)^{eₐ}` (char `0`), stated multiplicatively,
+`A ~ gcd(A, dA/dx) · ∏_{a∈s}(X − a)` — so `A*` is the squarefree product `∏(X − a)`. -/
+abbrev eq_1_14 := @prod_X_sub_C_pow_associated_gcd_mul_radical
 
 /-! ## §1.7 Squarefree Factorization -/
 
