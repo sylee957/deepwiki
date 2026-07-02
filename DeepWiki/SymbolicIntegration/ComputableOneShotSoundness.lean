@@ -680,28 +680,8 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelExpGWf (Dt b c q : CPolyG α) (
 
 `cPolyRischDEGWf` routes by `δ = deg(Dt)` and `deg(b)`. With `b ≠ 0` of degree `0`: the primitive regime
 (`δ = 0`) goes to `cPolyRischDECancelPrimGWf`, the hyperexponential regime (`δ = 1`) to
-`cPolyRischDECancelExpGWf`. Fuel'd route lemmas are retained below only for the still-fuel'd structural
-`cRischDEG` layer. -/
-
-omit [CFieldSpec α] [CDiffFieldSpec α] in
-/-- **The fuel-free §6.5/§6.6 dispatcher reduces to the primitive cancellation solve** in the primitive
-regime with `deg(b) = 0`, `b ≠ 0`. -/
-theorem cPolyRischDEGWf_eq_cancelPrim (Dt b c : CPolyG α) (m : ℤ)
-    (hδ : CPolyG.cdegG Dt = 0) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false) :
-    CPolyG.cPolyRischDEGWf Dt b c m = CPolyG.cPolyRischDECancelPrimGWf Dt b c m := by
-  rw [CPolyG.cPolyRischDEGWf]
-  simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero]
-  rw [if_neg (by norm_num), if_pos ⟨trivial, trivial⟩]
-
-omit [CFieldSpec α] [CDiffFieldSpec α] in
-/-- **The fuel-free §6.5/§6.6 dispatcher reduces to the hyperexponential cancellation solve** in the
-hyperexponential regime with `deg(b) = 0`, `b ≠ 0`. -/
-theorem cPolyRischDEGWf_eq_cancelExp (Dt b c : CPolyG α) (m : ℤ)
-    (hδ : CPolyG.cdegG Dt = 1) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false) :
-    CPolyG.cPolyRischDEGWf Dt b c m = CPolyG.cPolyRischDECancelExpGWf Dt b c m := by
-  rw [CPolyG.cPolyRischDEGWf]
-  simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero, Nat.cast_one]
-  rw [if_neg (by norm_num), if_neg (by norm_num), if_pos ⟨trivial, trivial⟩]
+`cPolyRischDECancelExpGWf`. The fuel-free soundness proofs inline this case split; named route lemmas remain
+only for the still-fueled structural `cRischDEG` layer. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 /-- **The §6.5/§6.6 dispatcher reduces to the primitive cancellation solve** in the primitive regime with
@@ -757,8 +737,12 @@ theorem cPolyRischDEGWf_cancelPrim_sound (Dt b c q : CPolyG α) (m : ℤ)
     (hδ : CPolyG.cdegG Dt = 0) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false)
     (hsome : CPolyG.cPolyRischDEGWf Dt b c m = some q) :
     toPolyG (CPolyG.cmonomialDeriv Dt q) + toPolyG b * toPolyG q = toPolyG c := by
-  rw [cPolyRischDEGWf_eq_cancelPrim Dt b c m hδ hdb hb] at hsome
-  exact toPolyG_cmonomialDeriv_cPolyRischDECancelPrimGWf Dt b c q m hsome
+  have hbranch : CPolyG.cPolyRischDECancelPrimGWf Dt b c m = some q := by
+    rw [CPolyG.cPolyRischDEGWf] at hsome
+    simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero] at hsome
+    rw [if_neg (by norm_num), if_pos ⟨trivial, trivial⟩] at hsome
+    exact hsome
+  exact toPolyG_cmonomialDeriv_cPolyRischDECancelPrimGWf Dt b c q m hbranch
 
 /-- **★ Fuel-free dispatcher-keyed hyperexponential-cancellation soundness**: in the hyperexponential regime
 (`cdegG Dt = 1`, `deg(b) = 0`, `b ≠ 0`), a `cPolyRischDEGWf` success solves `Dq + b·q = c` at the polynomial
@@ -767,8 +751,12 @@ theorem cPolyRischDEGWf_cancelExp_sound (Dt b c q : CPolyG α) (m : ℤ)
     (hδ : CPolyG.cdegG Dt = 1) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false)
     (hsome : CPolyG.cPolyRischDEGWf Dt b c m = some q) :
     toPolyG (CPolyG.cmonomialDeriv Dt q) + toPolyG b * toPolyG q = toPolyG c := by
-  rw [cPolyRischDEGWf_eq_cancelExp Dt b c m hδ hdb hb] at hsome
-  exact toPolyG_cmonomialDeriv_cPolyRischDECancelExpGWf Dt b c q m hsome
+  have hbranch : CPolyG.cPolyRischDECancelExpGWf Dt b c m = some q := by
+    rw [CPolyG.cPolyRischDEGWf] at hsome
+    simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero, Nat.cast_one] at hsome
+    rw [if_neg (by norm_num), if_neg (by norm_num), if_pos ⟨trivial, trivial⟩] at hsome
+    exact hsome
+  exact toPolyG_cmonomialDeriv_cPolyRischDECancelExpGWf Dt b c q m hbranch
 
 /-! ### ★ The field-level lift of the cancellation soundness
 
