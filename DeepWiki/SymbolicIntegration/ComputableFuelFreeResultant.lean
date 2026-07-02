@@ -52,8 +52,8 @@ the Euclidean-PRS resultant identity with no fuel at runtime. Base cases match `
 **reduce** `(p,q)→(q, cmodWf p q)` (when `len q ≤ len p`) — are each taken only under the structural
 guard `cresultantMeasure (next) < cresultantMeasure p q`, so `decreasing_by` is `assumption` and the
 def is `native_decide`-able over noncomputable-`CFieldSpec` carriers (`QFunNZG ℚ`). Over a genuine field
-the guards never fail (`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`), so `cresultantWf`
-agrees with `cresultantG` (`cresultantWf_eq`). -/
+the guards never fail (`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`); an internal bridge
+relates `cresultantWf` to `cresultantG` when a legacy fueled comparison is needed. -/
 def cresultantWf (p q : CPolyG α) : α :=
   let pn := cnormG p
   let qn := cnormG q
@@ -77,7 +77,7 @@ termination_by cresultantMeasure p q
 decreasing_by · assumption
               · assumption
 
-/-! ### Bridge of `cresultantWf` to the fuel'd `cresultantG`, and transported correctness
+/-! ### Internal bridge of `cresultantWf` to the fuel'd `cresultantG`, and transported correctness
 
 Over a genuine field (`[CFieldSpec α]`) the remainder always strictly shortens (`cmodWf_length_lt`),
 so `cresultantWf`'s structural guards never fail and it coincides with `cresultantG fuel` whenever
@@ -112,7 +112,7 @@ theorem cresultantMeasure_reduce_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
 recursion (reduce only) descends with strictly smaller `len q`, keeping `len(new q) ≤ len(new p)`. The
 generic analogue of `toPolyG_cresultantG_of_ge`'s fuel accounting; the `+1` margin (one cheaper than the
 general `+2`) is what funds the descent without an extra swap. By strong induction on `fuel`. -/
-theorem cresultantWf_eq_of_ge : ∀ (fuel : ℕ) (p q : CPolyG α),
+private theorem cresultantWf_eq_of_ge : ∀ (fuel : ℕ) (p q : CPolyG α),
     (cnormG q : List α).length ≤ (cnormG p : List α).length →
     (cnormG p : List α).length + (cnormG q : List α).length + 1 ≤ fuel →
       cresultantWf p q = cresultantG fuel p q := by
@@ -159,7 +159,7 @@ theorem cresultantWf_eq_of_ge : ∀ (fuel : ℕ) (p q : CPolyG α),
 fuel bound appears only here; `cresultantWf` carries none. The `len q ≤ len p` case is
 `cresultantWf_eq_of_ge`; the `len p < len q` case swaps once (consuming the extra `+1` of fuel) into it,
 mirroring `toPolyG_cresultantG`'s top swap into `toPolyG_cresultantG_of_ge`. -/
-theorem cresultantWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG α)
+private theorem cresultantWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG α)
     (hfuel : (cnormG p : List α).length + (cnormG q : List α).length + 2 ≤ fuel) :
     cresultantWf p q = cresultantG fuel p q := by
   by_cases hge : (cnormG q : List α).length ≤ (cnormG p : List α).length
@@ -182,7 +182,7 @@ theorem cresultantWf_eq_of_fuel (fuel : ℕ) (p q : CPolyG α)
 
 /-- **Bridge at the self-sufficient fuel**: `cresultantWf p q = cresultantG (max+2) p q` with
 `max = (cnormG p).length + (cnormG q).length`. -/
-theorem cresultantWf_eq (p q : CPolyG α) :
+private theorem cresultantWf_eq (p q : CPolyG α) :
     cresultantWf p q
       = cresultantG ((cnormG p : List α).length + (cnormG q : List α).length + 2) p q :=
   cresultantWf_eq_of_fuel _ p q le_rfl
