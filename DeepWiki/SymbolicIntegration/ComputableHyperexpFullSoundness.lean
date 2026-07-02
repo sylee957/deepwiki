@@ -637,7 +637,7 @@ typeclass method with **no abstract spec layer** (`CRischFieldSpec` does not exi
 `ℚ(x)` runs the §6 pipeline one tower level down over `ℚ[x]`, recursing to `ℚ`), so its soundness is only
 `native_decide`-validated today (`nNormInv_baseIntegral_eq_x`, `nVarNorm_baseIntegral_eq_xSq`). Building the
 abstract `crischDESolve` spec (the bridge `instCRischFieldQFunNZG`-unfold → `cRischDEG` field-level soundness
-→ reuse `field_identity_of_cPolyRischDEG`) is a separate, larger task; until then `hintR` is the documented
+→ reuse `field_identity_of_cPolyRischDEGWf`) is a separate, larger task; until then `hintR` is the documented
 residual the unconditional driver soundness rests on. The OVERSHOOT identity — the genuine §5.9 new content
 — is fully proven, axiom-clean. -/
 

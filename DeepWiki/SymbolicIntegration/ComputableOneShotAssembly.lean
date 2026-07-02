@@ -12,7 +12,7 @@ primitive monomial `Dt = C w` — `primitive_monomial_residue_match` (over `K[X]
 checker-free reduced-case one-shot to that residue match
 (`field_identity_of_cIntegrateReducedGWf_of_residueMatch`, gated on the `List`-sum `hmatch`).
 `ComputableOneShotSoundness` proved the polynomial branch
-(`field_identity_of_cPolyRischDEG_qfunNZG`).
+(`field_identity_of_cPolyRischDEGWf_qfunNZG`).
 
 The engine's `hmatch` is a **`List` sum** over the residue logs `cLogPartG` returns — pairs `(cᵢ, vᵢ)` with
 `vᵢ = gcd_t(d, a − cᵢ·Dd)`. The proven primitive residue match is the **`Finset`-over-roots** form. This file
@@ -1092,15 +1092,6 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
 `Dt = [CField.one]`, the `b = []` branch integrates `fₚ` term by term and the Wf dispatcher pins
 `qₚ = cIntegratePolyGWf fₚ`; since `cIntegratePolyGWf` is defeq to `cIntegratePolyG`, the existing constant
 coefficient field identity discharges `hpoly`. -/
-
-omit [CFracGcdCore α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CRischField α] in
-/-- **`cPolyRischDEGWf` `b = 0` branch returns `cIntegratePolyGWf c`.** -/
-theorem cPolyRischDEGWf_nil_eq [CRischField α] (Dt : CPolyG α) (c : CPolyG α) (n : ℤ)
-    (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n) :
-    CPolyG.cPolyRischDEGWf Dt ([] : CPolyG α) c n = some (CPolyG.cIntegratePolyGWf c) := by
-  have hb : CPolyG.cisZeroG ([] : CPolyG α) = true := by rw [cisZeroG_iff, toPolyG_nil]
-  simp only [CPolyG.cPolyRischDEGWf, hb, if_true, hc, Bool.false_eq_true, if_false]
-  rw [if_neg (by omega : ¬ (CPolyG.cdegG c : ℤ) + 1 > n)]
 
 omit [CFracGcdCore α] in
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf` with `hpoly` discharged

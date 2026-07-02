@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.ComputableIntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.ComputableTowerRischDEWellFounded
 
 /-! # One-shot (checker-free) algorithm soundness for the integrator's polynomial branch
 
@@ -22,10 +23,10 @@ This file delivers that one-shot for the **reachable polynomial branch** (Bronst
 * **`checkIdentityG_cIntegratePolyG_const`** — ★ THE CRUX (the task's missing link): the
   polynomial-branch output *passes* `checkIdentityG` abstractly (`= true`, no check executed). The
   `algorithm-output ⟹ check-passes` direction, proven.
-* **`field_identity_cIntegratePolyG_const` / `field_identity_of_cPolyRischDEG`** — composing the crux
+* **`field_identity_cIntegratePolyG_const` / `field_identity_of_cPolyRischDEGWf`** — composing the crux
   with the bridge `field_identity_of_checkIdentityG` gives the checker-free one-shot `D(∫f) = f`; the
-  latter keyed on the genuine algorithm `cPolyRischDEG [1] fuel [] c n = some q`. Specialized to the
-  level-1 carrier `ℚ(x) = QFunNZG ℚ` as **`field_identity_of_cPolyRischDEG_qfunNZG`** — the deliverable
+  latter keyed on the fuel-free algorithm `cPolyRischDEGWf [1] [] c n = some q`. Specialized to the
+  level-1 carrier `ℚ(x) = QFunNZG ℚ` as **`field_identity_of_cPolyRischDEGWf_qfunNZG`** — the deliverable
   (no checker, no `native_decide`, axiom-clean `[propext, choice, Quot.sound]`).
 
 ## Precise scope of the FULL transcendental one-shot (`cIntegrateGFull = some res ⟹ D(res) = integrand`)
@@ -300,45 +301,48 @@ exactly `some (cIntegratePolyG c)`. So the field identity holds for whatever the
 check executed. -/
 
 omit [CDiffFieldSpec α] in
-/-- **`cPolyRischDEG` `b = 0` branch returns `cIntegratePolyG c`** (for nonzero `c` within the degree
-budget). When `cisZeroG c = false` and `deg c + 1 ≤ n`, `cPolyRischDEG Dt fuel [] c n = some
-(cIntegratePolyG c)`: the pure-integration arm of the dispatcher. Pins the algorithm's output shape. -/
-theorem cPolyRischDEG_nil_eq [CFracGcdCore α] [CRischField α] (Dt : CPolyG α) (fuel : ℕ)
-    (c : CPolyG α) (n : ℤ)
+/-- **`cPolyRischDEGWf` `b = 0` branch returns `cIntegratePolyGWf c`** (for nonzero `c` within the degree
+budget). When `cisZeroG c = false` and `deg c + 1 ≤ n`, `cPolyRischDEGWf Dt [] c n = some
+(cIntegratePolyGWf c)`: the pure-integration arm of the fuel-free dispatcher. Pins the algorithm's output
+shape. -/
+theorem cPolyRischDEGWf_nil_eq [CRischField α] (Dt : CPolyG α) (c : CPolyG α) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n) :
-    CPolyG.cPolyRischDEG Dt fuel ([] : CPolyG α) c n = some (CPolyG.cIntegratePolyG c) := by
+    CPolyG.cPolyRischDEGWf Dt ([] : CPolyG α) c n = some (CPolyG.cIntegratePolyGWf c) := by
   have hb : CPolyG.cisZeroG ([] : CPolyG α) = true := by rw [cisZeroG_iff, toPolyG_nil]
-  simp only [CPolyG.cPolyRischDEG, hb, if_true, hc, Bool.false_eq_true, if_false]
+  simp only [CPolyG.cPolyRischDEGWf, hb, if_true, hc, Bool.false_eq_true, if_false]
   rw [if_neg (by omega : ¬ (CPolyG.cdegG c : ℤ) + 1 > n)]
 
-/-- **★★★ Checker-free one-shot keyed on `cPolyRischDEG`**: if the Poly-Risch-DE dispatcher's `b = 0`
-integration branch returns `some q` (`cPolyRischDEG [CField.one] fuel [] c n = some q`, nonzero `c`
+/-- **★★★ Checker-free one-shot keyed on `cPolyRischDEGWf`**: if the Poly-Risch-DE dispatcher's `b = 0`
+integration branch returns `some q` (`cPolyRischDEGWf [CField.one] [] c n = some q`, nonzero `c`
 within the degree budget, constant base), then the field-level antiderivative identity
 `towerFractionFieldDerivG [1] (amG(toPolyG q)/amG 1) + … = amG(toPolyG c)/amG 1` holds — **no
 `checkIdentityG` executed**. The genuine `algorithm = some res → D(res) = integrand` for the polynomial
-branch: the runtime guard is provably redundant. (`q = cIntegratePolyG c` by `cPolyRischDEG_nil_eq`,
+branch: the runtime guard is provably redundant. (`q = cIntegratePolyGWf c` by `cPolyRischDEGWf_nil_eq`,
 then `field_identity_cIntegratePolyG_const`.) -/
-theorem field_identity_of_cPolyRischDEG [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
-    [CFracGcdCore α] [CRischField α]
-    (fuel : ℕ) (c q : CPolyG α) (n : ℤ)
+theorem field_identity_of_cPolyRischDEGWf [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    [CRischField α]
+    (c q : CPolyG α) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
-    (hsome : CPolyG.cPolyRischDEG ([CField.one] : CPolyG α) fuel ([] : CPolyG α) c n = some q)
+    (hsome : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG α) ([] : CPolyG α) c n = some q)
     (hconst : Differential.mapCoeffs (toPolyG q) = 0) :
     towerFractionFieldDerivG ([CField.one] : CPolyG α)
         (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
       = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) := by
-  -- the algorithm output is exactly `cIntegratePolyG c`
-  have hq : q = CPolyG.cIntegratePolyG c := by
-    rw [cPolyRischDEG_nil_eq ([CField.one] : CPolyG α) fuel c n hc hdeg] at hsome
+  -- the algorithm output is exactly `cIntegratePolyGWf c`
+  have hq : q = CPolyG.cIntegratePolyGWf c := by
+    rw [cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) c n hc hdeg] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hq
+  have hconst' : Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0 := by
+    rwa [show CPolyG.cIntegratePolyGWf c = CPolyG.cIntegratePolyG c by rfl] at hconst
   -- empty logs ⇒ `logResidueSumG … [] = 0`, so the field-identity is exactly the bridge output
-  have h := field_identity_cIntegratePolyG_const (α := α) c hconst
+  have h := field_identity_cIntegratePolyG_const (α := α) c hconst'
+  rw [show CPolyG.cIntegratePolyGWf c = CPolyG.cIntegratePolyG c by rfl]
   rwa [logResidueSumG_nil, add_zero] at h
 
 /-! ### ★ Discharging the constant-base hypothesis: `mapCoeffs` is inherited from integrand to antiderivative
 
-`field_identity_of_cPolyRischDEG` carries `hconst : mapCoeffs (toPolyG q) = 0` on the algorithm *output*.
+`field_identity_of_cPolyRischDEGWf` carries `hconst : mapCoeffs (toPolyG q) = 0` on the algorithm *output*.
 That output-side hypothesis is **not** automatic, but it *is* implied by the corresponding *input*-side
 fact `mapCoeffs (toPolyG c) = 0` (the integrand's coefficients being differential constants): the
 antiderivative's degree-`i+1` coefficient is `cᵢ/(i+1)`, whose base derivative `(cᵢ)′/(i+1)` vanishes
@@ -389,40 +393,42 @@ theorem cIntegratePolyG_const_coeff [CharZero (CFieldSpec.K α)] (c : CPolyG α)
   have hdeg : Q.natDegree = 0 := Polynomial.derivative_eq_zero.mp hderiv
   rw [eq_C_of_natDegree_eq_zero hdeg, hcoeff0, map_zero]
 
-/-- **★★★ Poly-RDE soundness on the `b = 0` branch, keyed on the integrand** (the honest strongest
-form): if `cPolyRischDEG [CField.one] fuel [] c n = some q` (nonzero `c` within the degree budget,
+/-- **★★★ Fuel-free Poly-RDE soundness on the `b = 0` branch, keyed on the integrand** (the honest strongest
+form): if `cPolyRischDEGWf [CField.one] [] c n = some q` (nonzero `c` within the degree budget,
 primitive base `Dt = 1`) and the integrand is over a **constant base** (`mapCoeffs (toPolyG c) = 0`),
 then the field-level antiderivative identity `towerFractionFieldDerivG [1] (amG(toPolyG q)/amG 1)
 = amG(toPolyG c)/amG 1` holds — **no `checkIdentityG`, no `native_decide`**. Strengthens
-`field_identity_of_cPolyRischDEG` by replacing its *output*-side `mapCoeffs (toPolyG q) = 0` with the
+`field_identity_of_cPolyRischDEGWf` by replacing its *output*-side `mapCoeffs (toPolyG q) = 0` with the
 natural *input*-side `mapCoeffs (toPolyG c) = 0` (via `cIntegratePolyG_const_coeff`). **Regime
 boundary**: `Dt = [CField.one]` is required — the `b = []` branch integrates by the term-by-term
 `cIntegratePolyG`, which inverts the monomial derivation `D(tⁱ) = i·tⁱ⁻¹` only when `D(t) = 1`; for a
 general monomial `D(tⁱ) = i·tⁱ⁻¹·Dt`, so term-by-term integration is no longer the inverse and this
 branch is unreachable (the dispatcher routes `b = 0` here only in the primitive case `δ = 0`). -/
-theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
-    [CFracGcdCore α] [CRischField α]
-    (fuel : ℕ) (c q : CPolyG α) (n : ℤ)
+theorem cPolyRischDEGWf_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    [CRischField α]
+    (c q : CPolyG α) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
-    (hsome : CPolyG.cPolyRischDEG ([CField.one] : CPolyG α) fuel ([] : CPolyG α) c n = some q)
+    (hsome : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG α) ([] : CPolyG α) c n = some q)
     (hconst : Differential.mapCoeffs (toPolyG c) = 0) :
     towerFractionFieldDerivG ([CField.one] : CPolyG α)
         (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
       = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) := by
-  -- `q = cIntegratePolyG c`, so the output-side `mapCoeffs` follows from the input-side via the transport
-  have hq : q = CPolyG.cIntegratePolyG c := by
-    rw [cPolyRischDEG_nil_eq ([CField.one] : CPolyG α) fuel c n hc hdeg] at hsome
+  -- `q = cIntegratePolyGWf c`, so the output-side `mapCoeffs` follows from the input-side via the transport
+  have hq : q = CPolyG.cIntegratePolyGWf c := by
+    rw [cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) c n hc hdeg] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hq
-  exact field_identity_of_cPolyRischDEG fuel c (CPolyG.cIntegratePolyG c) n hc hdeg
-    (cPolyRischDEG_nil_eq ([CField.one] : CPolyG α) fuel c n hc hdeg)
-    (cIntegratePolyG_const_coeff c hconst)
+  exact field_identity_of_cPolyRischDEGWf c (CPolyG.cIntegratePolyGWf c) n hc hdeg
+    (cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) c n hc hdeg)
+    (by
+      rw [show CPolyG.cIntegratePolyGWf c = CPolyG.cIntegratePolyG c by rfl]
+      exact cIntegratePolyG_const_coeff c hconst)
 
 /-! ### ★ THE DELIVERABLE at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
 
 Instantiating the checker-free polynomial-branch one-shot at the generic level-1 carrier
 `α = QFunNZG ℚ`, where `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ` (genuine `Algebra ℚ` and `CharZero`).
-This is the concrete `cPolyRischDEG = some res → D(res) = integrand` (no checker, no `native_decide`)
+This is the concrete `cPolyRischDEGWf = some res → D(res) = integrand` (no checker, no `native_decide`)
 for the polynomial branch over `ℚ(x)(t)`. The two local instances bridge the carrier abbreviation to
 `RatFunc ℚ`, the standard carrier-specialization pattern for the generic `field_identity_of_checkIdentityG`
 bridge at `α = QFunNZG ℚ`. -/
@@ -437,24 +443,24 @@ deliverable synthesizes the **same** `Algebra ℚ` the bridge `towerFractionFiel
 noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- **★★★ Checker-free one-shot at `α = QFunNZG ℚ`** — the deliverable: if the Poly-Risch-DE
+/-- **★★★ Fuel-free checker-free one-shot at `α = QFunNZG ℚ`** — the deliverable: if the Poly-Risch-DE
 dispatcher's `b = 0` integration branch returns `some q` over the level-1 carrier `ℚ(x) = QFunNZG ℚ`
-(`cPolyRischDEG [CField.one] fuel [] c n = some q`, nonzero `c` within the degree budget, constant
+(`cPolyRischDEGWf [CField.one] [] c n = some q`, nonzero `c` within the degree budget, constant
 base), then the field-level antiderivative identity `towerFractionFieldDerivG [1] (amG(toPolyG q)/amG 1)
 = amG(toPolyG c)/amG 1` holds over `RatFunc ℚ` — with **no `checkIdentityG` executed**, no
 `native_decide`. The genuine `algorithm = some res → D(res) = integrand` for the polynomial branch at
 ℚ(x): the runtime guard is provably redundant. The `QFunNZG ℚ` instance of
-`field_identity_of_cPolyRischDEG`. -/
-theorem field_identity_of_cPolyRischDEG_qfunNZG (fuel : ℕ) (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
+`field_identity_of_cPolyRischDEGWf`. -/
+theorem field_identity_of_cPolyRischDEGWf_qfunNZG (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
-    (hsome : CPolyG.cPolyRischDEG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
-        ([] : CPolyG (QFunNZG ℚ)) c n = some q)
+    (hsome : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG (QFunNZG ℚ)) ([] : CPolyG (QFunNZG ℚ)) c n
+        = some q)
     (hconst : Differential.mapCoeffs (toPolyG q) = 0) :
     towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG ℚ))
         (amG (QFunNZG ℚ) (toPolyG q) / amG (QFunNZG ℚ) (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))))
       = amG (QFunNZG ℚ) (toPolyG c)
           / amG (QFunNZG ℚ) (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))) :=
-  field_identity_of_cPolyRischDEG fuel c q n hc hdeg hsome hconst
+  field_identity_of_cPolyRischDEGWf c q n hc hdeg hsome hconst
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
@@ -474,18 +480,18 @@ example [CharZero (CFieldSpec.K α)] (c : CPolyG α)
       = true :=
   checkIdentityG_cIntegratePolyG_const c hconst
 
--- ★ THE DELIVERABLE at `α = QFunNZG ℚ`: `cPolyRischDEG = some q ⟹ D(res) = integrand` over `RatFunc ℚ`,
+-- ★ THE DELIVERABLE at `α = QFunNZG ℚ`: `cPolyRischDEGWf = some q ⟹ D(res) = integrand` over `RatFunc ℚ`,
 -- checker-free (the `checkIdentityG` guard is never run; no native_decide).
-example (fuel : ℕ) (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
+example (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
-    (hsome : CPolyG.cPolyRischDEG ([CField.one] : CPolyG (QFunNZG ℚ)) fuel
-        ([] : CPolyG (QFunNZG ℚ)) c n = some q)
+    (hsome : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG (QFunNZG ℚ)) ([] : CPolyG (QFunNZG ℚ)) c n
+        = some q)
     (hconst : Differential.mapCoeffs (toPolyG q) = 0) :
     towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG ℚ))
         (amG (QFunNZG ℚ) (toPolyG q) / amG (QFunNZG ℚ) (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))))
       = amG (QFunNZG ℚ) (toPolyG c)
           / amG (QFunNZG ℚ) (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))) :=
-  field_identity_of_cPolyRischDEG_qfunNZG fuel c q n hc hdeg hsome hconst
+  field_identity_of_cPolyRischDEGWf_qfunNZG c q n hc hdeg hsome hconst
 
 -- ★ CONSTANT-BASE TRANSPORT (conditional): integrand coefficients differential-constant ⟹ antiderivative
 -- coefficients differential-constant (`mapCoeffs (toPolyG c) = 0 → mapCoeffs (toPolyG (cIntegratePolyG c))
@@ -495,17 +501,17 @@ example [CharZero (CFieldSpec.K α)] (c : CPolyG α)
     Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0 :=
   cIntegratePolyG_const_coeff c hc
 
--- ★ POLY-RDE SOUNDNESS keyed on the INTEGRAND (`b = 0` branch, primitive base): `cPolyRischDEG = some q`
+-- ★ POLY-RDE SOUNDNESS keyed on the INTEGRAND (`b = 0` branch, primitive base): `cPolyRischDEGWf = some q`
 -- with `mapCoeffs (toPolyG c) = 0` ⟹ `D(amG q/amG 1) = amG c/amG 1`, checker-free.
-example [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCore α] [CRischField α]
-    (fuel : ℕ) (c q : CPolyG α) (n : ℤ)
+example [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] [CRischField α]
+    (c q : CPolyG α) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
-    (hsome : CPolyG.cPolyRischDEG ([CField.one] : CPolyG α) fuel ([] : CPolyG α) c n = some q)
+    (hsome : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG α) ([] : CPolyG α) c n = some q)
     (hconst : Differential.mapCoeffs (toPolyG c) = 0) :
     towerFractionFieldDerivG ([CField.one] : CPolyG α)
         (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
       = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) :=
-  cPolyRischDEG_nil_field_identity fuel c q n hc hdeg hsome hconst
+  cPolyRischDEGWf_nil_field_identity c q n hc hdeg hsome hconst
 
 /-! ## ★★ The §6.6 CANCELLATION-case soundness (the broader poly-RDE, `b ≠ 0`, `deg b = 0`)
 
@@ -757,11 +763,11 @@ end Cancellation
 #print axioms towerFractionFieldDerivG_amG_cIntegratePolyG_const
 #print axioms checkIdentityG_cIntegratePolyG_const
 #print axioms field_identity_cIntegratePolyG_const
-#print axioms field_identity_of_cPolyRischDEG
-#print axioms field_identity_of_cPolyRischDEG_qfunNZG
+#print axioms field_identity_of_cPolyRischDEGWf
+#print axioms field_identity_of_cPolyRischDEGWf_qfunNZG
 #print axioms mapCoeffs_derivative_commute
 #print axioms cIntegratePolyG_const_coeff
-#print axioms cPolyRischDEG_nil_field_identity
+#print axioms cPolyRischDEGWf_nil_field_identity
 #print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelPrim
 #print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelExp
 #print axioms cPolyRischDEG_cancelPrim_field
