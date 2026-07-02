@@ -171,43 +171,6 @@ def IsWeaklyNormalizedDen (gden : CPolyG β) : Prop :=
 
 end Cnorm
 
-/-! ## The Wf `g`-side normality dual and transfer to the fueled residual
-
-The normalized soundness residual still reuses the older fueled `C`-divisibility theorem. This section lets
-callers state the `g`-denominator normality on the actual fuel-free split, then transfer it only at the bridge
-point where the old theorem is consumed. -/
-
-section CnormWf
-
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β] [CFracGcdCoreWf β]
-
-/-- The fuel-free `g`-denominator normality dual. -/
-def IsWeaklyNormalizedDenWf (gden : CPolyG β) : Prop :=
-  toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) gden).1 = toPolyG gden
-
-/-- The Wf-to-fueled split transfer residual for a single `g`-denominator. -/
-structure IsWeaklyNormalizedDenTransferWf (gden : CPolyG β) : Prop where
-  /-- The fuel-free split agrees with the old fueled split on this denominator. -/
-  hsplit : CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) gden
-    = CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) towerRischDEFuel gden
-
-/-- Transfer Wf `g`-denominator normality to the older fueled normality proposition. -/
-theorem isWeaklyNormalizedDen_of_wf_transfer (gden : CPolyG β)
-    (hgnorm : IsWeaklyNormalizedDenWf gden)
-    (htransfer : IsWeaklyNormalizedDenTransferWf gden) :
-    IsWeaklyNormalizedDen gden := by
-  simpa [IsWeaklyNormalizedDen, IsWeaklyNormalizedDenWf, htransfer.hsplit] using hgnorm
-
-/-! ### Restatement against the old fueled normality shape (anonymous `example`) -/
-
--- A Wf denominator normality fact plus the per-denominator split agreement supplies the old fueled fact.
-example (gden : CPolyG β) (hgnorm : IsWeaklyNormalizedDenWf gden)
-    (htransfer : IsWeaklyNormalizedDenTransferWf gden) :
-    IsWeaklyNormalizedDen gden :=
-  isWeaklyNormalizedDen_of_wf_transfer gden hgnorm htransfer
-
-end CnormWf
-
 section Cnorm
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCore β]
@@ -386,17 +349,6 @@ theorem residualNorm_of_fuel_and_dvdC (ftilde gtilde : QFunNZG β)
   hin := hfuel.hin
   hdb := hfuel.hdb
 
-omit [CDiffFieldSpec β] [CFieldDomain β] [CRischField β] [CTowerGcdWitness β]
-  [Algebra ℚ (CFieldSpec.K β)] in
-/-- The full normalized residual from Wf `g`-normality plus the Wf-to-fueled split transfer. -/
-theorem residualNorm_of_wf_fuel_and_dvdC [CFracGcdCoreWf β] (ftilde gtilde : QFunNZG β)
-    (hgnorm : IsWeaklyNormalizedDenWf gtilde.1.2)
-    (htransfer : IsWeaklyNormalizedDenTransferWf gtilde.1.2)
-    (hfuel : RischDESuccessResidualNormFuel ftilde gtilde) :
-    RischDESuccessResidualNorm ftilde gtilde :=
-  residualNorm_of_fuel_and_dvdC ftilde gtilde
-    (isWeaklyNormalizedDen_of_wf_transfer gtilde.1.2 hgnorm htransfer) hfuel
-
 /-- **★★ The normalized recursive RDE solver is sound — `C`-divisibility DISCHARGED, `B`-wall closed**
 (Task 4, honest assembly): if `crischDESolveNorm f g = some y`, then with the gcd witness
 `[CTowerGcdWitness β]`, the §6.1 `f`-normality guarantee `IsWeaklyNormalizedNorm (weakNormalizedF f q')`
@@ -428,31 +380,6 @@ theorem crischDESolveNorm_field_of_fuel (f g y : QFunNZG β)
   crischDESolveNorm_field f g y hsolve hnorm
     (residualNorm_of_fuel_and_dvdC _ _ hgnorm hfuel)
 
-/-- The normalized soundness assembly with the `g`-side normality stated on the Wf split. -/
-theorem crischDESolveNorm_field_of_wf_fuel [CFracGcdCoreWf β] (f g y : QFunNZG β)
-    (hsolve : crischDESolveNorm f g = some y)
-    (hnorm : IsWeaklyNormalizedNorm
-      (weakNormalizedF f (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
-    (hgnorm : IsWeaklyNormalizedDenWf
-      (qmulNZG (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2)
-    (hgnormTransfer : IsWeaklyNormalizedDenTransferWf
-      (qmulNZG (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2)
-    (hfuel : RischDESuccessResidualNormFuel
-      (weakNormalizedF f (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
-      (qmulNZG (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g)) :
-    towerFractionFieldDerivG ([CField.one] : CPolyG β)
-          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
-        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
-          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
-      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
-  crischDESolveNorm_field f g y hsolve hnorm
-    (residualNorm_of_wf_fuel_and_dvdC _ _ hgnorm hgnormTransfer hfuel)
-
 end Assembly
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
@@ -480,32 +407,6 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
   crischDESolveNorm_field_of_fuel f g y hsolve hnorm hgnorm hfuel
-
--- Same assembly, but the `g`-side normality is stated on the Wf split and transferred only at the bridge.
-example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-    [CFracGcdCore β] [CFracGcdCoreWf β] [CRischField β] [CTowerGcdWitness β]
-    [Algebra ℚ (CFieldSpec.K β)]
-    (f g y : QFunNZG β) (hsolve : crischDESolveNorm f g = some y)
-    (hnorm : IsWeaklyNormalizedNorm
-      (weakNormalizedF f (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))))
-    (hgnorm : IsWeaklyNormalizedDenWf
-      (qmulNZG (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2)
-    (hgnormTransfer : IsWeaklyNormalizedDenTransferWf
-      (qmulNZG (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g).1.2)
-    (hfuel : RischDESuccessResidualNormFuel
-      (weakNormalizedF f (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)))
-      (qmulNZG (qOfPolyNZG
-        (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2)) g)) :
-    towerFractionFieldDerivG ([CField.one] : CPolyG β)
-          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
-        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
-          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
-      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
-  crischDESolveNorm_field_of_wf_fuel f g y hsolve hnorm hgnorm hgnormTransfer hfuel
 
 /-! ## ★ Task 1 — the precise true remainder: `IsWeaklyNormalizedNorm` is FALSE-as-stated on the un-reduced
 product `crischDESolveNorm` feeds
