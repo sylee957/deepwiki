@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.ComputableQFunReduce
-import DeepWiki.SymbolicIntegration.ComputableTowerIntegrate
 import DeepWiki.SymbolicIntegration.ComputableHyperexpNormal
 
 /-! # Tower-level demos for the `QFunNZG` gcd-cancel reducer
