@@ -2,6 +2,7 @@ import Mathlib.Algebra.Polynomial.Basic
 import Mathlib.Algebra.Polynomial.Degree.Defs
 import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.RingTheory.Polynomial.Basic
+import DeepWiki.SymbolicIntegration.Computable.Denote
 
 /-! # A generic computable field, and a polynomial engine over it
 
@@ -18,7 +19,7 @@ On top of any `CField`, this file builds a dense polynomial engine `CPolyG α :=
 `toPolyG : CPolyG α → (CFieldSpec.K α)[X]` proved to realize genuine polynomial arithmetic
 over `K`. The split — bridge-free `CField` on the compute side, the noncomputable `toK`
 bridge on the proof side — is exactly what lets one engine both evaluate and be verified.
-The file is standalone: it imports only Mathlib. -/
+It imports Mathlib plus the topic's `Denote` simp-attribute registration. -/
 
 open Polynomial
 
@@ -101,15 +102,19 @@ class CFieldSpec (α : Type*) [CField α] where
 instance instFieldK (α : Type*) [CField α] [CFieldSpec α] : Field (CFieldSpec.K α) :=
   CFieldSpec.instField
 
+-- The base `toK` homomorphism laws are the leaf denotation squares.
+attribute [denote] CFieldSpec.toK_zero CFieldSpec.toK_one CFieldSpec.toK_add
+  CFieldSpec.toK_mul CFieldSpec.toK_neg CFieldSpec.toK_inv
+
 namespace CFieldSpec
 
 /-- `toK` intertwines derived `sub` with `-`. -/
-theorem toK_sub {α : Type*} [CField α] [CFieldSpec α] (a b : α) :
+@[denote] theorem toK_sub {α : Type*} [CField α] [CFieldSpec α] (a b : α) :
     toK (CField.sub a b) = toK a - toK b := by
   rw [CField.sub, toK_add, toK_neg, sub_eq_add_neg]
 
 /-- `toK` intertwines derived `div` with `/`. -/
-theorem toK_div {α : Type*} [CField α] [CFieldSpec α] (a b : α) :
+@[denote] theorem toK_div {α : Type*} [CField α] [CFieldSpec α] (a b : α) :
     toK (CField.div a b) = toK a / toK b := by
   rw [CField.div, toK_mul, toK_inv, div_eq_mul_inv]
 
@@ -272,15 +277,15 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
   | a :: p => Polynomial.C (CFieldSpec.toK a) + X * toPolyG p
 
 /-- `toPolyG [] = 0`: the empty coefficient list is the zero polynomial. -/
-@[simp] theorem toPolyG_nil {α : Type*} [CField α] [CFieldSpec α] :
+@[simp, denote] theorem toPolyG_nil {α : Type*} [CField α] [CFieldSpec α] :
     toPolyG ([] : CPolyG α) = 0 := rfl
 
 /-- `toPolyG`'s leading recursion (Horner): `toPolyG (a :: p) = C (toK a) + X · toPolyG p`. -/
-@[simp] theorem toPolyG_cons {α : Type*} [CField α] [CFieldSpec α] (a : α) (p : CPolyG α) :
+@[simp, denote] theorem toPolyG_cons {α : Type*} [CField α] [CFieldSpec α] (a : α) (p : CPolyG α) :
     toPolyG (a :: p) = Polynomial.C (CFieldSpec.toK a) + X * toPolyG p := rfl
 
 /-- `toPolyG` is additive: `caddG` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
-@[simp] theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+@[simp, denote] theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (caddG p q) = toPolyG p + toPolyG q := by
   induction p generalizing q with
   | nil => simp [caddG]
@@ -288,56 +293,55 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
     cases q with
     | nil => simp [caddG]
     | cons b bs =>
-      simp only [caddG, toPolyG_cons, ih bs, CFieldSpec.toK_add, map_add]
+      simp only [caddG, ih bs, denote, map_add]
       ring
 
 /-- `toPolyG` commutes with negation: `toPolyG (cnegG p) = − toPolyG p`. -/
-@[simp] theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+@[simp, denote] theorem toPolyG_cnegG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     toPolyG (cnegG p) = - toPolyG p := by
   induction p with
   | nil => simp [cnegG]
   | cons a as ih =>
     show toPolyG (CField.neg a :: cnegG as) = -toPolyG (a :: as)
-    rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_neg, map_neg]; ring
+    simp only [denote, ih, map_neg]; ring
 
 /-- `toPolyG` realizes subtraction: `toPolyG (csubG p q) = toPolyG p − toPolyG q`. -/
-@[simp] theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+@[simp, denote] theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (csubG p q) = toPolyG p - toPolyG q := by
   rw [csubG, toPolyG_caddG, toPolyG_cnegG, sub_eq_add_neg]
 
 /-- `toPolyG` realizes scalar multiplication: `toPolyG (cscaleG c p) = C (toK c) · toPolyG p`. -/
-@[simp] theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPolyG α) :
+@[simp, denote] theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPolyG α) :
     toPolyG (cscaleG c p) = Polynomial.C (CFieldSpec.toK c) * toPolyG p := by
   induction p with
   | nil => simp [cscaleG]
   | cons a as ih =>
     show toPolyG (CField.mul c a :: cscaleG c as) = Polynomial.C (CFieldSpec.toK c) * toPolyG (a :: as)
-    rw [toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_mul, map_mul]; ring
+    simp only [denote, ih, map_mul]; ring
 
 /-- `toPolyG` realizes the degree shift: `toPolyG (cshiftG k p) = X^k · toPolyG p`. -/
-@[simp] theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : CPolyG α) :
+@[simp, denote] theorem toPolyG_cshiftG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (p : CPolyG α) :
     toPolyG (cshiftG k p) = X ^ k * toPolyG p := by
   induction k with
   | zero => simp [cshiftG]
   | succ n ih =>
     show toPolyG (CField.zero :: cshiftG n p) = X ^ (n + 1) * toPolyG p
-    rw [toPolyG_cons, ih, CFieldSpec.toK_zero, map_zero]; ring
+    simp only [denote, ih, map_zero]; ring
 
 /-- `toPolyG` is multiplicative: `cmulG` realizes `(CFieldSpec.K α)[X]` multiplication. -/
-@[simp] theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
+@[simp, denote] theorem toPolyG_cmulG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (cmulG p q) = toPolyG p * toPolyG q := by
   induction p with
   | nil => simp [cmulG]
   | cons a as ih =>
     show toPolyG (caddG (cscaleG a q) (CField.zero :: cmulG as q)) = toPolyG (a :: as) * toPolyG q
-    rw [toPolyG_caddG, toPolyG_cscaleG, toPolyG_cons, toPolyG_cons, ih, CFieldSpec.toK_zero,
-      map_zero]; ring
+    simp only [denote, ih, map_zero]; ring
 
 /-- `toPolyG` realizes the `ℕ`-power: `toPolyG (cpowG p n) = (toPolyG p) ^ n`. -/
-@[simp] theorem toPolyG_cpowG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (n : ℕ) :
+@[simp, denote] theorem toPolyG_cpowG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (n : ℕ) :
     toPolyG (cpowG p n) = (toPolyG p) ^ n := by
   induction n with
-  | zero => simp [cpowG, toPolyG_cons, CFieldSpec.toK_one]
+  | zero => simp [cpowG, denote]
   | succ n ih => rw [cpowG, toPolyG_cmulG, ih, pow_succ, mul_comm]
 
 /-! ### Normalization, degree, leading coefficient — generic correctness -/
