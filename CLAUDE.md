@@ -142,9 +142,18 @@ Each chapter: imports first, then a `/-! … -/` module docstring, then declarat
 `namespace DeepWiki` (sub-namespace `Deviation` for the backlog/delay theory, whose short
 names would clash with the curve catalog). Chapters `import` earlier chapters to form the
 dependency DAG; `DeepWiki/NetworkCalculus.lean` is the live ordered chapter list (don't
-duplicate it here). **Flat layout** — no subdirectories; a second topic gets its own sibling
-`DeepWiki/<Topic>/` library (module renames touch every import and doc-gen URL, so this is
-done once per topic, not per chapter).
+duplicate it here). **Flat layout** is the default *while a topic is small*; a second topic
+gets its own sibling `DeepWiki/<Topic>/` library (module renames touch every import and
+doc-gen URL, so this is done once per topic, not per chapter). A topic that outgrows flat
+(≳50 files) may adopt **one to two levels of concept subdirectories**, with the renames
+batched into dedicated `git mv`-only commits (imports + aggregators only, zero declaration
+changes); `DeepWiki/SymbolicIntegration/` is the precedent. Its placement grammar:
+**directories encode the carrier-level area** (`Compute/`, `Computable/`, and under the
+engine `Computable/{RischDE,Hyperexp,CoupledDE,Tower,Algebraic}/`), **leaf names encode
+stage + kind**, and **dead historical markers are dropped opportunistically** (never the
+directory-implied `Computable` prefix). Kind suffixes: `Sound` / `Complete` / `Spec` /
+`Bench` / `Examples`. A subdirectory gets an aggregator `Foo.lean` alongside `Foo/`, and the
+topic root imports the area aggregators rather than every leaf.
 
 - **Chapter names:** base concept first, qualifiers appended as suffixes so siblings sort
   together alphabetically — `ServiceCurveStrict`, `ArrivalCurvesShaper`,
