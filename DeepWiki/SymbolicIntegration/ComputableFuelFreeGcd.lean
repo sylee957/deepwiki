@@ -9,9 +9,9 @@ gives **true fuel-free** companions, `cdivmodWf`/`cmodWf`/`cgcdWf`/`cgcdMonicWf`
 well-founded recursion on the normalized list length (`decreasing_by` discharged from the proven
 one-step length drops `stepG_length_lt`/`cmodWf_length_lt`). No fuel is computed or passed at runtime.
 
-The fuel-free correctness API is proved directly over the WF recursions: Euclidean division,
-Bézout, and gcd-divisibility carry no fuel hypothesis. A small private bridge remains only where
-legacy fueled exact-division theorems still need to compare with `cdivmodG`. -/
+The fuel-free correctness API is proved directly over the WF recursions, by well-founded induction on
+each def's own recursion: Euclidean division, Bézout, and gcd-divisibility carry no fuel hypothesis and
+reference no fuel'd symbol. -/
 
 open Polynomial Classical
 
@@ -97,12 +97,9 @@ def cgcdWfGcd (a b : CPolyG α) : CPolyG α := (cgcdWf a b).1
 def cgcdMonicWf (p q : CPolyG α) : CPolyG α :=
   cmonicG (cgcdWf p q).1
 
-/-! ### Internal bridge to the fuel'd `cdivmodG`
+/-! ### The reduce step strictly shortens
 
-Over a genuine field (`[CFieldSpec α]`) the leading term always cancels, so `cdivmodWf`'s structural
-guard never fails and the WF def coincides with `cdivmodG fuel` for **any** sufficient fuel
-(`cdivmodWf_eq_of_fuel`). The bound `(cnormG p).length ≤ fuel` lives only in this private proof; the
-runtime `cdivmodWf` carries no fuel. -/
+The per-step length drop that discharges `cdivmodWf`'s own structural termination guard. -/
 
 variable [CFieldSpec α]
 
@@ -122,67 +119,6 @@ theorem reduceStepWf_length_lt (p q : CPolyG α) (hcz : cisZeroG (cnormG q) = fa
     (by simpa using hpn) (by simpa using hq) (by simpa using hle)
   rw [reduceStepWf]
   simpa only [cnormG_idem, cleadG_cnormG] using hstep
-
-omit [CFieldSpec α] in
-/-- **`cdivmodG`'s reducing branch is driven by `reduceStepWf`**: in the non-base branch
-`cdivmodG (fuel+1) p q = (term + (cdivmodG fuel (reduceStepWf p q) q).1, (cdivmodG fuel … ).2)`. The
-recursive divisor is normalized to `cnormG q` by `cdivmodG`, re-folded with `cdivmodG_cnormG_right`. -/
-private theorem cdivmodG_succ_reducing (fuel : ℕ) (p q : CPolyG α) (hcz : cisZeroG (cnormG q) = false)
-    (hlen : ¬ (cnormG p : List α).length < (cnormG q : List α).length) :
-    cdivmodG (fuel + 1) p q =
-      ((cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
-            [CField.div (cleadG p) (cleadG q)]).caddG (cdivmodG fuel (reduceStepWf p q) q).1,
-        (cdivmodG fuel (reduceStepWf p q) q).2) := by
-  rw [cdivmodG]
-  rw [if_neg (by rw [← cisZeroG_cnormG]; simpa using hcz), if_neg (by simpa using hlen)]
-  simp only [cleadG_cnormG]
-  rw [show cnormG (csubG (cnormG p)
-        (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
-          [CField.div (cleadG p) (cleadG q)]) (cnormG q))) = reduceStepWf p q from rfl,
-    ← cdivmodG_cnormG_right]
-
-/-- **Bridge — `cdivmodWf` equals `cdivmodG` at any sufficient fuel.** For `fuel ≥ (cnormG p).length`,
-`cdivmodWf p q = cdivmodG fuel p q`. The fuel bound appears only here; `cdivmodWf` carries none. By
-strong induction on `fuel`. -/
-private theorem cdivmodWf_eq_of_fuel : ∀ (fuel : ℕ) (p q : CPolyG α),
-    (cnormG p : List α).length ≤ fuel → cdivmodWf p q = cdivmodG fuel p q := by
-  intro fuel
-  induction fuel using Nat.strong_induction_on with
-  | _ fuel ihf =>
-    intro p q hfuel
-    rw [cdivmodWf.eq_def]
-    by_cases hcz : cisZeroG (cnormG q) = true
-    · -- divisor zero: both return `([], [])`
-      simp only [hcz, if_true]
-      cases fuel with
-      | zero =>
-        simp only [Nat.le_zero] at hfuel
-        have hp0 : cnormG p = [] := List.length_eq_zero_iff.mp hfuel
-        rw [cdivmodG]; rw [hp0]
-      | succ fuel =>
-        rw [cdivmodG]
-        rw [if_pos (by rw [← cisZeroG_cnormG]; simpa using hcz)]
-    · have hcz' : cisZeroG (cnormG q) = false := by simpa using hcz
-      by_cases hlen : (cnormG p : List α).length < (cnormG q : List α).length
-      · -- deg p < deg q: both return `([], cnormG p)`
-        simp only [hcz', Bool.false_eq_true, if_false, hlen, if_true]
-        cases fuel with
-        | zero =>
-          -- `cdivmodG 0 p q = ([], cnormG p)`
-          rw [cdivmodG]
-        | succ fuel =>
-          rw [cdivmodG]
-          rw [if_neg (by rw [← cisZeroG_cnormG]; simpa using hcz), if_pos (by simpa using hlen)]
-      · -- reducing branch
-        have hdec := reduceStepWf_length_lt p q hcz' hlen
-        have hpne : cnormG p ≠ [] := by
-          intro h; rw [h, List.length_nil] at hdec; exact absurd hdec (by simp)
-        have hpos : 0 < (cnormG p : List α).length := List.length_pos_iff.mpr hpne
-        obtain ⟨fuel', rfl⟩ : ∃ f, fuel = f + 1 := ⟨fuel - 1, by omega⟩
-        have hfuel' : (cnormG (reduceStepWf p q) : List α).length ≤ fuel' := by omega
-        have ihstep := ihf fuel' (by omega) (reduceStepWf p q) q hfuel'
-        rw [cdivmodG_succ_reducing fuel' p q hcz' hlen]
-        simp only [hcz', Bool.false_eq_true, if_false, hlen, if_pos hdec, ihstep, cleadG_cnormG]
 
 /-- **Euclidean-division identity through `toPolyG`** for the fuel-free `cdivmodWf` (nonzero divisor,
 **no fuel hypothesis**): `toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
@@ -244,18 +180,44 @@ Over `[CFieldSpec α]`, the fuel-free remainder strictly shortens below a nonzer
 gcd-divisibility theorems below are proved directly by well-founded induction on `cgcdWf`, so no
 `cgcdTerminatesG` or fuel bound survives in the Wf API. -/
 
-/-- `cmodWf` agrees with the fuel'd `cmodG` at any sufficient fuel. -/
-private theorem cmodWf_eq_cmodG_succ (fuel : ℕ) (a b : CPolyG α)
-    (hfuel : (cnormG a : List α).length ≤ fuel + 1) :
-    cmodWf a b = cmodG (fuel + 1) a b := by
-  rw [cmodWf, cmodG, cdivmodWf_eq_of_fuel (fuel + 1) a b hfuel]
-
 /-- **The remainder strictly shortens** below `(cnormG b).length` for a nonzero divisor: discharges
-`cgcdWf`'s structural guard, so over a genuine field the recursing branch is always taken. -/
+`cgcdWf`'s structural guard, so over a genuine field the recursing branch is always taken. Proven by
+**direct well-founded induction on `cdivmodWf`'s own recursion** (mirroring `toPolyG_cdivmodWf`), no
+fuel symbol referenced. -/
 theorem cmodWf_length_lt (a b : CPolyG α) (hb : cnormG b ≠ []) :
     (cnormG (cmodWf a b) : List α).length < (cnormG b : List α).length := by
-  rw [cmodWf_eq_cmodG_succ ((cnormG a : List α).length) a b (by omega)]
-  exact cmodG_length_lt _ a b hb (by omega)
+  rw [cmodWf]
+  induction a using cdivmodWf.induct (q := b) with
+  | case1 a =>
+    rename_i hcz
+    have hcz' : cisZeroG (cnormG b) = true := hcz
+    exact absurd (by simpa [cisZeroG, List.isEmpty_iff] using hcz') hb
+  | case2 a =>
+    rename_i hcz hlen
+    have hcz' : cisZeroG (cnormG b) = false := by simpa using hcz
+    have hlen' : (cnormG a : List α).length < (cnormG b : List α).length := hlen
+    have hval : cdivmodWf a b = ([], cnormG a) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_pos hlen']
+    rw [hval, cnormG_idem]
+    exact hlen'
+  | case3 a =>
+    rename_i pn qn hcz hlen a' hdec quo rem hqr ih
+    have hcz' : cisZeroG (cnormG b) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG a : List α).length < (cnormG b : List α).length := hlen
+    set term := cshiftG ((cnormG a : List α).length - (cnormG b : List α).length)
+      [CField.div (cleadG a) (cleadG b)] with hterm
+    have hval : cdivmodWf a b = (caddG term quo, rem) := by
+      rw [cdivmodWf.eq_def, if_neg (by simp [hcz']), if_neg hlen', if_pos hdec]
+      simp only [cleadG_cnormG, hterm]
+      rw [show (a.reduceStepWf b).cdivmodWf b = (quo, rem) from hqr]
+    rw [hval]
+    rw [hqr] at ih
+    exact ih
+  | case4 a =>
+    rename_i pn qn hcz hlen a' hdec
+    have hcz' : cisZeroG (cnormG b) = false := by simpa using hcz
+    have hlen' : ¬ (cnormG a : List α).length < (cnormG b : List α).length := hlen
+    exact absurd (reduceStepWf_length_lt a b hcz' hlen') hdec
 
 /-- **Bézout identity through `toPolyG`** for the fuel-free `cgcdWf` (no fuel hypothesis): with
 `(g, s, t) = cgcdWf a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. Proven by
@@ -353,8 +315,7 @@ theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
 /-! ### Exact division through `toPolyG`
 
 When a polynomial divides another through the semantic bridge `toPolyG`, Euclidean division has zero
-remainder. The fuel-free API carries the proof; the fueled API below is retained for remaining fueled
-callers and is backed by the private divmod bridge. -/
+remainder. -/
 
 /-- **The fuel-free Euclidean remainder vanishes when the divisor divides the dividend** (through
 `toPolyG`). -/
@@ -388,17 +349,6 @@ theorem toPolyG_cdivWf_exact (p q : CPolyG α) (hq0 : cnormG q ≠ [])
   have hrem0 : toPolyG (cmodWf p q) = 0 :=
     toPolyG_cmodWf_eq_zero_of_dvd p q hq0 hdvd
   rw [hid, hrem0, add_zero]
-
-/-- **Generic exact-modulo from divisibility**: if `toPolyG q ∣ toPolyG p` and fuel bounds `p`'s length,
-the fueled Euclidean remainder vanishes. This is the fuel-free theorem transported across the private
-divmod bridge. -/
-theorem toPolyG_cmodG_eq_zero_of_dvd (fuel : ℕ) (p q : CPolyG α) (hq0 : cnormG q ≠ [])
-    (hfuel : (cnormG p : List α).length ≤ fuel) (hdvd : toPolyG q ∣ toPolyG p) :
-    toPolyG (cmodG fuel p q) = 0 := by
-  have hmod : cmodWf p q = cmodG fuel p q := by
-    rw [cmodWf, cmodG, cdivmodWf_eq_of_fuel fuel p q hfuel]
-  rw [← hmod]
-  exact toPolyG_cmodWf_eq_zero_of_dvd p q hq0 hdvd
 
 /-! ### The fuel-free monic gcd divides both inputs (through `toPolyG`) -/
 

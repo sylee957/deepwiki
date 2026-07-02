@@ -275,36 +275,6 @@ theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
 theorem div_eq_div_rat (a b : ℚ) : CField.div a b = a / b := by
   rw [CField.div]; show a * b⁻¹ = a / b; rw [div_eq_mul_inv]
 
-/-- `cdivmodG` at `ℚ` is the concrete `cdivmod`. -/
-theorem cdivmodG_eq_cdivmod (fuel : ℕ) :
-    (cdivmodG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ × CPolyG ℚ) = Compute.cdivmod fuel := by
-  induction fuel with
-  | zero =>
-    funext p q
-    show (([], cnormG p) : CPolyG ℚ × CPolyG ℚ) = ([], Compute.cnorm p)
-    have : (cnormG p : CPolyG ℚ) = Compute.cnorm p := congrFun cnormG_eq_cnorm p
-    rw [this]
-  | succ fuel ih =>
-    funext p q
-    show (let p := cnormG p; let q := cnormG q;
-        if cisZeroG q then ([], [])
-        else if (p : List ℚ).length < (q : List ℚ).length then ([], p)
-        else
-          let c := CField.div (cleadG p) (cleadG q)
-          let k := (p : List ℚ).length - (q : List ℚ).length
-          let term := cshiftG k [c]
-          let p' := cnormG (csubG p (cmulG term q))
-          let (quo, rem) := cdivmodG fuel p' q
-          (caddG term quo, rem)) = _
-    rw [Compute.cdivmod]
-    simp only [cnormG_eq_cnorm, cisZeroG_eq_cisZero, cleadG_eq_clead, div_eq_div_rat,
-      cshiftG_eq_cshift, cmulG_eq_cmul, csubG_eq_csub, congrFun (congrFun caddG_eq_cadd _) _, ih]
-
-/-- `cmodG` at `ℚ` is the concrete `cmod`. -/
-theorem cmodG_eq_cmod (fuel : ℕ) :
-    (cmodG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cmod fuel := by
-  funext p q; rw [cmodG, Compute.cmod, cdivmodG_eq_cdivmod]
-
 /-! ### Correctness of the generic extended Euclidean algorithm `cgcdExtG`
 
 `cgcdExtG fuel a b = (g, s, t)` with the Bézout relation `s·a + t·b = g` over `K`, mirroring
@@ -397,45 +367,6 @@ nonzero constant — `c` a unit mod `R`): from the Bézout relation `s·c + ·R 
 def cinvModG (fuel : ℕ) (R c : CPolyG α) : CPolyG α :=
   let (g, s, _) := cgcdExtG fuel c R
   cmodG fuel (cscaleG (CField.inv (cleadG g)) s) R
-
-/-- `cgcdExtG` at `ℚ` is the concrete `cgcdExt`. -/
-theorem cgcdExtG_eq_cgcdExt (fuel : ℕ) :
-    (cgcdExtG fuel : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) = Compute.cgcdExt fuel := by
-  induction fuel with
-  | zero =>
-    funext a b
-    show ((cnormG a, [CField.one], []) : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) = (Compute.cnorm a, [1], [])
-    rw [show (cnormG a : CPolyG ℚ) = Compute.cnorm a from congrFun cnormG_eq_cnorm a]
-    rfl
-  | succ fuel ih =>
-    funext a b
-    by_cases hb : cisZeroG (b : CPolyG ℚ) = true
-    · have hb' : Compute.cisZero b = true := by rw [← cisZeroG_eq_cisZero]; exact hb
-      show (if cisZeroG b then ((cnormG a, [CField.one], []) : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ)
-          else _) = _
-      rw [if_pos hb, Compute.cgcdExt, if_pos hb',
-        show (cnormG a : CPolyG ℚ) = Compute.cnorm a from congrFun cnormG_eq_cnorm a]
-      rfl
-    · have hb' : Compute.cisZero b ≠ true := by rw [← cisZeroG_eq_cisZero]; exact hb
-      -- Pin the concrete divmod, and the generic ones equal it componentwise.
-      rcases hcd : Compute.cdivmod (fuel + 1) a b with ⟨q, r⟩
-      have hdm : (cdivmodG (fuel + 1) a b : CPolyG ℚ × CPolyG ℚ) = (q, r) := by
-        rw [congrFun (congrFun (cdivmodG_eq_cdivmod _) a) b, hcd]
-      have hmod : (cmodG (fuel + 1) a b : CPolyG ℚ) = r := by rw [cmodG, hdm]
-      rcases hgst : Compute.cgcdExt fuel b r with ⟨g, s, t⟩
-      have hge : (cgcdExtG fuel b (cmodG (fuel + 1) a b) : CPolyG ℚ × CPolyG ℚ × CPolyG ℚ)
-          = (g, s, t) := by rw [hmod, congrFun (congrFun (ih) b) r, hgst]
-      -- LHS reduces to (g, t, csubG s (cmulG t q)); RHS via the concrete cgcdExt body.
-      have hlhs : (cgcdExtG (fuel + 1) (a : CPolyG ℚ) b) = (g, t, csubG s (cmulG t q)) := by
-        conv_lhs => rw [cgcdExtG]
-        rw [if_neg hb, hdm, hge]
-      have hrhs : Compute.cgcdExt (fuel + 1) a b = (g, t, Compute.csub s (Compute.cmul t q)) := by
-        conv_lhs => rw [Compute.cgcdExt]
-        rw [if_neg hb', hcd]
-        show (match Compute.cgcdExt fuel b r with | (g, s, t) => (g, t, Compute.csub s (Compute.cmul t q)))
-          = _
-        rw [hgst]
-      rw [hlhs, hrhs, congrFun (congrFun csubG_eq_csub _) _, congrFun (congrFun cmulG_eq_cmul _) _]
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by
