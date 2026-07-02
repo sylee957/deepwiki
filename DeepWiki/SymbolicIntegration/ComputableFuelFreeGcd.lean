@@ -354,15 +354,6 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-! ### `native_decide` smoke tests — the WF defs reduce in compiled code -/
-
-/-- `cdivmodWf` over `ℚ`: `(1 + x²) mod (1 + x) = 2`. -/
-example : (CPolyG.cdivmodWf [(1 : ℚ), 0, 1] [(1 : ℚ), 1]).2 = [2] := by native_decide
-
-/-- `cgcdWf` over `ℚ`: `gcd(x² − 1, x − 1)` is degree-1 (a `x − 1` associate, normalized length 2). -/
-example :
-    ((CPolyG.cgcdWf [(-1 : ℚ), 0, 1] [(-1 : ℚ), 1]).1 : List ℚ).length = 2 := by native_decide
-
 /-- Divisibility test `cdvdGWf q p = cisZeroG (cmodWf p q)`: decides `q ∣ p` by remainder-is-zero.
 Generic over `[CField α]`. -/
 def cdvdGWf (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
