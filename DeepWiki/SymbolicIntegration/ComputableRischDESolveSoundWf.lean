@@ -42,7 +42,7 @@ open Compute CPolyG QFunNZG
 
 section Solver
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
   [CFracGcdCoreWf β] [CRischField β]
 
 /-- **The fuel-free inner RDE solve** `crischDERawSolveWf ftilde gtilde` over `QFunNZG β`: the fuel-free mirror
@@ -56,7 +56,7 @@ def crischDERawSolveWf (ftilde gtilde : QFunNZG β) : Option (QFunNZG β) :=
   | some (ynum, yden) =>
     if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
 
-omit [CFieldSpec β] [CFieldDomain β] [CFracGcdCore β] in
+omit [CFieldSpec β] [CFieldDomain β] in
 /-- `crischDERawSolveWf` returns `some y` exactly when `cRischDEGWf [1]` returns a pair with nonzero
 denominator and `y` is its `QFunNZG` lift. -/
 theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZG β) :

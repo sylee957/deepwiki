@@ -96,9 +96,9 @@ Computable over `QFunNZG β` (everything routes through the engine; subtype proo
 solve, normal-denominator reduction, etc., are exactly the production `crischDESolve` — this wrapper only
 adds the missing §6.1 pre-step. -/
 
-section Solver
+section Lift
 
-variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CRischField β]
+variable {β : Type*} [CField β] [CFieldDomain β]
 
 /-- **Lift a polynomial `q : CPolyG β` to `QFunNZG β` as `q/1`** `qOfPolyNZG q`: numerator `q`, denominator
 `[1]` (always nonzero). When `q` itself is zero the lift is still well-formed (`0/1`); the solver guards
@@ -107,12 +107,24 @@ output (a `CPolyG β`) into a `QFunNZG β` field element. -/
 def qOfPolyNZG (q : CPolyG β) : QFunNZG β :=
   ⟨(q, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
+end Lift
+
+section Helpers
+
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
+
 /-- **The weakly-normalized field element** `weakNormalizedF f q' = f − Dq'/q'` over `QFunNZG β`
 (`D = towerDerivQFunNZG [1]`, the level derivation): subtract the logarithmic derivative `Dq'/q'` of the
 weak normalizer from `f`. By Bronstein §6.1 this is weakly normalized for `q' = cWeakNormalizerG`'s output.
 The first argument of the inner `crischDESolve`. -/
 def weakNormalizedF (f q' : QFunNZG β) : QFunNZG β :=
   qsubNZG f (qmulNZG (towerDerivQFunNZG ([CField.one] : CPolyG β) q') (qinvNZG q'))
+
+end Helpers
+
+section Solver
+
+variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CRischField β]
 
 /-- **★ The correct (weak-normalized) recursive Risch-DE solver** `crischDESolveNorm f g` over
 `QFunNZG β` (Task 1): the §6.1 round-trip around the production `crischDESolve`. Compute the weak normalizer
@@ -223,7 +235,8 @@ theorem towerFractionFieldDerivG_toQFunNZG (x : QFunNZG β) :
       = toQFunNZG (towerDerivQFunNZG ([CField.one] : CPolyG β) x) := by
   rw [towerFractionFieldDerivG, toQFunNZG_towerDerivQFunNZG]
 
-omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
+omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β]
+  [Algebra ℚ (CFieldSpec.K β)] in
 /-- **`toQFunNZG q' ≠ 0` from `q ≠ 0`** (`toQFunNZG_qOfPolyNZG_ne_zero`): the lift `q' = q/1` has nonzero
 field image exactly when `q` is nonzero (`toQFunNZG q' = amG(toPolyG q)/amG 1 = amG(toPolyG q)`). The
 `Q ≠ 0` hypothesis the round-trip needs, from the solver's `cisZeroG q = false` guard. -/
