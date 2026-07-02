@@ -212,7 +212,7 @@ theorem hdvdC_of_dvd (Dt : CPolyG β) (fuel : ℕ) (gnum fden gden h0 : CPolyG �
       (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0)) :
     toPolyG gden ∣ toPolyG (CPolyG.cmulG
         (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastG Dt fuel fden).1 h0) h0) gnum) := by
-  simp only [CPolyG.toPolyG_cmulG] at hdvd ⊢
+  simp only [denote] at hdvd ⊢
   exact hdvd.mul_right _
 
 /-! ### When the `B`-divisibility is free: normal or polynomial denominators -/

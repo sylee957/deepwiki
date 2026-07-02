@@ -251,13 +251,13 @@ theorem cSPDEG_cleared_lifting_gen [CFracGcdCore α] (Dt : CPolyG α) :
                 + (toPolyG bd + Differential.implicitDeriv (toPolyG Dt) (toPolyG ad))
                     * toPolyG (caddG (cmulG α'' h) β'')
                 = toPolyG z - Differential.implicitDeriv (toPolyG Dt) (toPolyG r) := by
-              simp only [toPolyG_caddG, toPolyG_cmonomialDeriv, toPolyG_csubG] at hihrec ⊢
+              simp only [denote] at hihrec ⊢
               linear_combination hihrec
             subst hα; subst hβ
             have hpeel := cSPDE_peel_cleared_gen Dt ad bd cd r z (caddG (cmulG α'' h) β'') hbez' hred
             have hqeq : toPolyG (caddG (cmulG (cmulG ad α'') h) (caddG (cmulG ad β'') r))
                 = toPolyG (caddG (cmulG ad (caddG (cmulG α'' h) β'')) r) := by
-              simp only [toPolyG_caddG, toPolyG_cmulG]; ring
+              simp only [denote]; ring
             rw [hqeq, ← hdiva, ← hdivb, ← hdivc]
             linear_combination toPolyG g * hpeel
       · rw [if_neg hdvd] at hspde
