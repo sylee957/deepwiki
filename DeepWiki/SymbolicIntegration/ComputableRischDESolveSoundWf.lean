@@ -236,16 +236,14 @@ private theorem soundSolverWf_eq (f g : QFunNZG β)
 
 end Correspondence
 
-/-! ## ★★ Task 3 — the capstone: the FUEL-FREE sound solver is sound under transfer residuals
+/-! ## ★★ Task 3 — the capstone: the FUEL-FREE sound solver is sound under a Wf residual
 
 `crischDESolveSoundWf_field`: a successful `crischDESolveSoundWf f g = some y` gives the field-level Risch-DE
 identity `D(Y) + F·Y = G` for the ORIGINAL `f, g`, **fuel-free**, **NO `IsCanonNormalized` hypothesis** (the
 solver checks it). It internally turns the `crischDESolveSoundWf` success into a `crischDESolveSound` success
-under the Wf/fueled agreement residuals, then uses the proven `crischDESolveSound_field`. The
-hypotheses are exactly those of `crischDESolveSound_field` (the gcd witness `[CTowerGcdWitness β]` + the
-benign fuel budget `InputFitsFuel`) **plus** the inner-solve `cRischDEGWf = cRischDEG towerRischDEFuel`
-regularity `hwf` and the weak-normalizer agreement `hqwn` (the WF-vs-fuel correspondences the fuel-free
-routing threads in place of the fuel'd calls). NO `native_decide`; axiom-clean
+through the bundled `RischDESoundResidualWf`, then uses the proven `crischDESolveSound_field`. The residual
+owns both bridge conversions, so downstream Wf APIs do not thread the individual fueled-transfer assumptions.
+NO `native_decide`; axiom-clean
 `[propext, Classical.choice, Quot.sound]`. -/
 
 section Capstone
@@ -320,22 +318,18 @@ structure RischDESoundResidualWf (f g : QFunNZG β) : Prop where
   /-- The Wf inner solver agrees with the old fueled inner solver on this canonicalized pair. -/
   hinner : SoundWfInnerRegular f g
 
-/-- **★★ The FUEL-FREE recursive RDE solver is sound under the current transfer residuals** (Task 3, the capstone,
-`crischDESolveSoundWf_field`): if `crischDESolveSoundWf f g = some y`, then with the gcd witness
-`[CTowerGcdWitness β]` and the Wf soundness transfer residual `RischDESoundResidualWf f g`, the returned `y`
-solves the field-level Risch DE for the ORIGINAL `f, g`: `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`.
-**Fuel-free**, **NO `IsCanonNormalized` hypothesis** — the solver's own §6.1 solvability check supplies it.
-Composes the two proof pieces: a private regular-run transfer turns the success into a `crischDESolveSound`
-success, then the proven `crischDESolveSound_field` closes it. NO `native_decide`; axiom-clean
-`[propext, Classical.choice, Quot.sound]`. **★ The fuel-free sound solver.** -/
-theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
-    (hsolve : crischDESolveSoundWf f g = some y)
-    (hsound : RischDESoundResidualWf f g) :
-    towerFractionFieldDerivG ([CField.one] : CPolyG β)
-          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
-        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
-          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
-      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
+namespace RischDESoundResidualWf
+
+omit [CDiffFieldSpec β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- The Wf soundness residual provides the old fueled input-fit residual for the bridge theorem. -/
+theorem inputFitsFuel {f g : QFunNZG β} (hsound : RischDESoundResidualWf f g) :
+    InputFitsFuel f g :=
+  inputFitsFuel_of_wf f g hsound.hfit hsound.hqwn
+
+omit [CDiffFieldSpec β] [CTowerGcdWitness β] [Algebra ℚ (CFieldSpec.K β)] in
+/-- The Wf soundness residual turns the Wf sound solver into the old fueled sound solver. -/
+theorem soundSolver_eq {f g : QFunNZG β} (hsound : RischDESoundResidualWf f g) :
+    crischDESolveSoundWf f g = crischDESolveSound f g := by
   have hwfFuel : ∀ ftildeR : QFunNZG β,
       reduceSoundOpt (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) towerRischDEFuel f.1.1 f.1.2))) =
@@ -359,10 +353,29 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
       rw [hsound.hqwn]
       exact hred
     simpa [hsound.hqwn] using hsound.hinner ftildeR hredWf
+  exact soundSolverWf_eq f g hsound.hqwn hsound.hgate hwfFuel
+
+end RischDESoundResidualWf
+
+/-- **★★ The FUEL-FREE recursive RDE solver is sound under the Wf residual** (Task 3, the capstone,
+`crischDESolveSoundWf_field`): if `crischDESolveSoundWf f g = some y`, then with the gcd witness
+`[CTowerGcdWitness β]` and the Wf soundness transfer residual `RischDESoundResidualWf f g`, the returned `y`
+solves the field-level Risch DE for the ORIGINAL `f, g`: `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`.
+**Fuel-free**, **NO `IsCanonNormalized` hypothesis** — the solver's own §6.1 solvability check supplies it.
+The residual bridge turns the success into a `crischDESolveSound` success, then the proven
+`crischDESolveSound_field` closes it. NO `native_decide`; axiom-clean
+`[propext, Classical.choice, Quot.sound]`. **★ The fuel-free sound solver.** -/
+theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
+    (hsolve : crischDESolveSoundWf f g = some y)
+    (hsound : RischDESoundResidualWf f g) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG β)
+          (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+        + amG β (toPolyG f.1.1) / amG β (toPolyG f.1.2)
+          * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
+      = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) := by
   have hsolveFuel : crischDESolveSound f g = some y := by
-    rw [← soundSolverWf_eq f g hsound.hqwn hsound.hgate hwfFuel]; exact hsolve
-  exact crischDESolveSound_field f g y hsolveFuel
-    (inputFitsFuel_of_wf f g hsound.hfit hsound.hqwn)
+    rw [← hsound.soundSolver_eq]; exact hsolve
+  exact crischDESolveSound_field f g y hsolveFuel hsound.inputFitsFuel
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
