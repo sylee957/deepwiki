@@ -1,12 +1,14 @@
 import DeepWiki.SymbolicIntegration.ComputableGenericBezout
 import DeepWiki.SymbolicIntegration.ComputableFieldGcd
+import DeepWiki.SymbolicIntegration.ComputableFuelFreeDiophantine
 
 /-! # Generic RDE glue lemmas (`cgcdFF`-free), shared by the `…CorrectG` tower correctness
 
 The handful of carrier-agnostic algebraic glue lemmas the generic `QFunNZG ℚ` RDE correctness
 (`ComputableRischDETowerCorrectG`) consumes. Each is **fully generic** — pure-Mathlib `Derivation`
 algebra (`spde_step_glue`/`spde_const_base`/`rdeNormalDenominator_glue`) or generic-engine `toPolyG`
-facts (`dvd_of_cdvdG`/`toPolyG_cdiophantineG`) — so they live here over the generic engine, kept
+facts (`dvd_of_cdvdG`/`toPolyG_cdiophantineG`) plus their fuel-free companions
+(`dvd_of_cdvdGWf`/`toPolyG_cdiophantineGWf`) — so they live here over the generic engine, kept
 self-contained for the `…CorrectG` files. -/
 
 open Polynomial
@@ -144,6 +146,21 @@ theorem toPolyG_cdiophantineG {α : Type*} [CField α] [CFieldSpec α]
     rw [hg, ← map_mul, inv_mul_cancel₀ hgc, map_one]
   linear_combination (-toPolyG p) * hdiv
     + (Polynomial.C (CFieldSpec.toK (cleadG g))⁻¹ * toPolyG rhs) * hbez + toPolyG rhs * hinv
+
+/-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
+example {α : Type*} [CField α] [CFieldSpec α] (q p : CPolyG α)
+    (hq : cnormG q ≠ []) (hdvd : cdvdGWf q p = true) :
+    toPolyG q ∣ toPolyG p :=
+  dvd_of_cdvdGWf q p hq hdvd
+
+/-- Restatement: the fuel-free generic Diophantine solver satisfies the Bézout identity. -/
+example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : CPolyG α)
+    (hq0 : cnormG q ≠ [])
+    (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf p q).1 ≠ 0) :
+    toPolyG (cdiophantineGWf p q rhs).1 * toPolyG p
+        + toPolyG (cdiophantineGWf p q rhs).2 * toPolyG q = toPolyG rhs :=
+  toPolyG_cdiophantineGWf p q rhs hq0 hgdeg hgne
 
 end CPolyG
 
