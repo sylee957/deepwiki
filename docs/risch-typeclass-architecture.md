@@ -28,7 +28,9 @@ Layer 2  Shared stages (generic)   canonicalRep · Hermite · residueLogPart    
            + one commuting-square lemma each, @[denote]
 Layer 3  Case typeclass            CMonomialCase α        (Prop-free hooks)               (NEW)
            + LawfulCMonomialCase α (the hook soundness laws)                              (NEW)
-Layer 4  Generic assembler         cIntegrate [CMonomialCase α]                           (NEW)
+         Residue source            CResidueSource α       (automates `cands`)             (NEW)
+           + LawfulCResidueSource α (the completeness law only)                           (NEW)
+Layer 4  Generic assembler         cIntegrate [CMonomialCase α] [CResidueSource α]        (NEW)
            + cIntegrate_sound  [LawfulCMonomialCase α]   (proven ONCE)
 Layer 5  Instances                 Primitive · Hyperexp · Hypertangent                    (thin)
 Layer 6  Tower recursion           CMonomialCase (QFunNZG β)  from  [… β]                 (the descent)
@@ -58,16 +60,50 @@ Instances: `instPrimitiveCase` (special = poly-RDE, `reducedResidual = pure`), `
 `cIntegrateHyperexpNormalGWf`), `instHypertangentCase` (coupled-DE). These are *thin* — each names existing
 functions.
 
+## Layer 3b — automated residue candidates (`CResidueSource`)
+
+Today `cands : List α` is a manual parameter: the residues are the roots of the Rothstein–Trager resultant
+`R(z) = cResidueResultantTowerGWf Dt cn dn`, so they depend on the integrand, and the Prop-free engine has
+no root/factor oracle — so the caller supplies candidates and `cRationalResiduesGWf` **filters** them to the
+genuine roots (`R(c)=0`). Candidate generation is a property of the **constant field of `α`**, independent of
+the monomial case, so it is its own class keyed on `α`:
+
+```lean
+/-- Computable source of residue candidates: given the RT resultant `R ∈ α[z]`, produce candidates `c ∈ α`. -/
+class CResidueSource (α : Type*) [CField α] where
+  residueCandidates : CPolyG α → List α
+```
+
+Because `cRationalResiduesGWf` filters to genuine roots, **soundness holds for any source** — a wrong or
+partial list can only drop terms, never fabricate one. So the source's only law is a **completeness**
+obligation (return every constant root of `R`):
+
+```lean
+class LawfulCResidueSource (α) [CField α] [CFieldSpec α] [CResidueSource α] : Prop where
+  residueCandidates_complete : ∀ R (c : α),
+    IsConstant c → (⟦R⟧).eval ⟦c⟧ = 0 → c ∈ residueCandidates R
+```
+
+Instances: `CResidueSource ℚ` = rational-root enumeration on `R`
+(`±(divisors of constant-coeff numerator)/(divisors of leading)`) — sound always, `Lawful` for the
+rational-residue slice (what the `native_decide` examples exercise); `CResidueSource (QFunNZG β)` reads the
+constant part of `R`'s `ℚ(x)`-coefficients and delegates to the ℚ enumerator. **Frontier:** irrational
+algebraic residues (roots of `R` in an extension of ℚ) need Bronstein's `factor(R)` + symbolic `K(α)`
+arithmetic — a richer instance you swap in; the default ℚ instance is sound-but-incomplete there, and
+`LawfulCResidueSource` documents exactly where completeness holds.
+
 ## Layer 4 — the generic assembler + one soundness proof
 
 ```lean
-variable {α} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CMonomialCase α]
+variable {α} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CMonomialCase α] [CResidueSource α]
 
-/-- One-level Risch integration, generic in the monomial case. -/
-def cIntegrate (a d : CPolyG α) (cands : List α) : Option (IntegralResultG α) :=
+/-- One-level Risch integration, generic in the monomial case. No manual `cands`. -/
+def cIntegrate (a d : CPolyG α) : Option (IntegralResultG α) :=
   let Dt := CMonomialCase.Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d   -- SHARED
-  let nrm := cIntegrateReducedGWf Dt cn dn cands                          -- SHARED (Hermite + residue logs)
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d    -- SHARED
+  let R     := cResidueResultantTowerGWf Dt cn dn                         -- SHARED (compute the resultant)
+  let cands := CResidueSource.residueCandidates R                         -- AUTOMATED — no caller param
+  let nrm   := cIntegrateReducedGWf Dt cn dn cands                        -- SHARED (Hermite + residue logs)
   match CMonomialCase.reducedResidual nrm with                           -- CASE hook
   | none => none
   | some nrm' =>
@@ -76,7 +112,9 @@ def cIntegrate (a d : CPolyG α) (cands : List α) : Option (IntegralResultG α)
     | some (snum, sden) => some (combineRational nrm' snum sden)          -- SHARED
 ```
 
-The companion carries the commuting squares:
+`cIntegrateReducedGWf` keeps its explicit `cands` internally (it is the mechanism); the source supplies it
+at the top, so the ~50 soundness signatures that thread `cands` are untouched — only the public entry drops
+it. The companion carries the commuting squares:
 
 ```lean
 class LawfulCMonomialCase (α) [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
@@ -91,13 +129,15 @@ and the **single** generic theorem — the thing that today is re-derived per dr
 `OneShotAssembly` / `Hyperexp/FullSoundness`:
 
 ```lean
-theorem cIntegrate_sound [LawfulCMonomialCase α] (a d : CPolyG α) (cands : List α)
-    (res : IntegralResultG α) (h : cIntegrate a d cands = some res) (…side conds…) :
+theorem cIntegrate_sound [LawfulCMonomialCase α] (a d : CPolyG α)
+    (res : IntegralResultG α) (h : cIntegrate a d = some res) (…side conds…) :
     towerFractionFieldDerivG Dt ⟦res.rational⟧ + logResidueSumG Dt res.logs = ⟦a⟧/⟦d⟧ := …
 ```
 
 proven from: `canonicalRepresentationFastGWf` faithful (Layer 2 lemma) + `cIntegrateReducedGWf` sound
-(Layer 2, the Hermite + Rothstein–Trager squares) + the two hook laws. No per-case reproof.
+(Layer 2, the Hermite + Rothstein–Trager squares) + the two hook laws. **Note it needs no
+`LawfulCResidueSource`** — the residue filter makes soundness independent of the candidate source;
+`LawfulCResidueSource` is consumed only by the *completeness* theorem (Layer, below).
 
 ## Layer 6 — the tower descent (unchanged in spirit)
 
@@ -105,6 +145,8 @@ The recursion `k(t) → k` is already the `CRischField (QFunNZG β)` instance (`
 `CMonomialCase (QFunNZG β)` is built from the level-`β` structure the same way; the assembler at level `n+1`
 calls the shared stages over `QFunNZG β` and the hooks recurse into level `n`. Termination bottoms at
 `CMonomialCase ℚ` (rational base case, `integrateSpecial = pure`, `reducedResidual = pure`).
+`CResidueSource (QFunNZG β)` likewise delegates to `CResidueSource ℚ` — residues are constants in `C = ℚ`
+regardless of tower depth, so the ℚ enumerator is the single base of that descent too.
 
 ## Completeness — the parallel pair
 
@@ -133,9 +175,13 @@ Cost / risk (honest):
 
 ## Phases
 
-- [ ] P1 — `CMonomialCase` + `instPrimitiveCase`/`instHyperexpCase`, generic `cIntegrate`; prove
-  `cIntegrateGFullWf = @cIntegrate _ _ instPrimitiveCase` and
-  `cIntegrateHyperexpFullGWf = @cIntegrate _ _ instHyperexpCase` (bridge lemmas).
+- [ ] P0 — `CResidueSource α` + `CResidueSource ℚ` (rational-root enumeration) + `CResidueSource (QFunNZG β)`
+  (delegate to ℚ). Self-contained and additive: gives "no manual `cands`" ergonomics via a top wrapper
+  `cIntegrateGFullAutoWf a d := cIntegrateGFullWf a d (residueCandidates (cResidueResultantTowerGWf …))`
+  *before* any assembler work; validate it reproduces the hand-built `cands` on the existing examples.
+- [ ] P1 — `CMonomialCase` + `instPrimitiveCase`/`instHyperexpCase`, generic `cIntegrate` (consuming
+  `CResidueSource`); prove `cIntegrateGFullWf a d cands = @cIntegrate _ _ instPrimitiveCase a d` when
+  `cands` covers the residues, and likewise for `cIntegrateHyperexpFullGWf` (bridge lemmas).
 - [ ] P2 — `LawfulCMonomialCase` + `cIntegrate_sound`; re-derive the two drivers' soundness as corollaries.
-- [ ] P3 — `CDecidesElementary` / completeness assembly.
+- [ ] P3 — `CDecidesElementary` + `LawfulCResidueSource`-consuming completeness assembly.
 - [ ] P4 — retire the bespoke assemblies; `instHypertangentCase` folds the CoupledDE arc in too.
