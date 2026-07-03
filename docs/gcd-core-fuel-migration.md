@@ -48,3 +48,21 @@ and the fuel'd Algebraic residue machinery), migrating every consumer to the fue
   GenericPolyEngine once all consumers are gone. Final grep `(fuel : ℕ)` in the gcd core empty.
 
 Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per phase, commit per phase.
+
+## Progress log
+- **G1** ✅ benchmarks `cgcdExtG`→`cgcdWf`.
+- **G2a** ✅ built `cSplitSquarefreeFactorFastGWf`. (Resultant twin `cresultantWf` already existed.)
+- **G3a** ✅ `cIntegrateHyperexpG` made fully fuel-free (re-point to `canonicalRepresentationFastGWf` +
+  drop `fuel`; 6 native_decide sites updated) — removed `canonicalRepresentationFastG`'s last runtime pin.
+- **G3b** ✅ re-cataloged Ch3 (`ex_3_5_1/2`) + Ch5 (`alg_5_6_*`, `ex_5_6_2`) to the Wf Tower API.
+- **G4** ✅ retired the fuel'd residue engine: the fuel'd `cLogArgTowerG` soundness was a DEAD LEAF island
+  (`cLogArgTowerG_eq_linear_factor` only in `#print axioms`; superseded by `cLogArgTowerGWf_eq_linear_factor`
+  in OneShotAssembly) — deleted the 2 theorems, orphaning + deleting `cLogArgTowerG` + `cResidueResultantTowerG`.
+  Kept shared `cAmcDdG`.
+- **G6a** ✅ deleted orphaned `cSplitSquarefreeFactorFastG`.
+- **REMAINING:** `cSplitFactorFastG`/`canonicalRepresentationFastG` — pinned by the SplitFactorTowerCorrectG
+  correctness track, which is NOT a closed island (`cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG`
+  used by SplitFactorHelpers; SplitFactorTowerCorrectG imported by RadicalIntegralSoundness + RischDE/
+  TowerCorrectG). Needs a multi-file trace: does the LIVE soundness depend on the fuel'd split correctness
+  or on a Wf one? If a Wf split-correctness exists/can replace, migrate then delete; else this track stays.
+  Then G5 (Algebraic `cSqfreeYunFFG`/`cresultantG`/`cbezoutOne`) and G7 (Euclidean base) remain.
