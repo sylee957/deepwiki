@@ -5,6 +5,7 @@ import DeepWiki.SymbolicIntegration.Computable.Hyperexp.FullSoundness
 import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 
 /-! # Assemblable one-level Risch integrator
 
@@ -183,6 +184,28 @@ theorem canonicalReconstruction (Dt a d : CPolyG α)
   rw [hone, div_one]
   exact canonicalRepFast_field_identity (toPolyG a) (toPolyG d) (toPolyG qr.1) (toPolyG qr.2)
     (toPolyG sn.1) (toPolyG sn.2) (toPolyG bc.1) (toPolyG bc.2) hd hdn hds hadiv hsplit hbcr
+
+omit [CRischField α] in
+/-- **The reduced normal part is an integral result**, modulo the reduced-stage frontier: from the Hermite
+half (`hherm`) and the Rothstein–Trager residue match (`hmatch`), `cIntegrateReducedGWf Dt a d cands`
+satisfies the antiderivative predicate. A restatement of
+`field_identity_of_cIntegrateReducedGWf_of_residueMatch` as `IsIntegralResultG`; `hherm`/`hmatch` are the
+`cHermiteReduceTowerGWf` / RT-residue `native_decide` frontier. It discharges `hNrmField`. -/
+theorem cIntegrateReducedGWf_isIntegralResult (Dt a d : CPolyG α) (cands : List α)
+    (hherm : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (cIntegrateReducedGWf Dt a d cands).rational.1)
+              / amG α (toPolyG (cIntegrateReducedGWf Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d))
+    (hmatch : ((cIntegrateReducedGWf Dt a d cands).logs.map (fun cv =>
+          amG α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
+        = amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+          / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)) :
+    IsIntegralResultG Dt a d (cIntegrateReducedGWf Dt a d cands) := by
+  simp only [IsIntegralResultG]
+  exact field_identity_of_cIntegrateReducedGWf_of_residueMatch Dt a d cands hherm hmatch
 
 omit [CRischField α] in
 /-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving
