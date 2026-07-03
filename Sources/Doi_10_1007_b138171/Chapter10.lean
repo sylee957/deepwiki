@@ -44,12 +44,12 @@ namespace DeepWiki.Si
 /-! ## §10.3 The Integration Method `ParallelIntegrate` — computable + validated -/
 
 /-- **Yun squarefree factorization over `ℚ[t]`** (§10.3 step 2, the `(d₁,…,dₑ)` of the candidate log
-arguments): the computable `cSquarefreeFactorsQ fuel p = [(d₁,1),…,(dₑ,e)]`, the monic squarefree factors
+arguments): the computable `cSquarefreeFactorsQ p = [(d₁,1),…,(dₑ,e)]`, the monic squarefree factors
 of `p` with their multiplicities, `p ~ ∏ⱼ dⱼ^j`, pairwise coprime and squarefree. -/
 def alg_10_3_squarefreeFactors := @cSquarefreeFactorsQ
 
 /-- **Parallel (Risch–Norman) integration over `ℚ(t)`** (§10.3, the `ParallelIntegrate(f, D)` box, book
-p.309): the computable `cParallelIntegrate fuel Dt a d` over `k = ℚ`, the monomial `t` with derivative
+p.309): the computable `cParallelIntegrate Dt a d` over `k = ℚ`, the monomial `t` with derivative
 `Dt ∈ ℚ[t]`, `D = Dt·d/dt`. For `f = a/d ∈ ℚ(t)` it builds the ansatz `∫f = b/s + Σⱼ cⱼ log(pⱼ)`
 (`{pⱼ}` = squarefree factors of `d`, `s = ∏ dⱼ^{j-1}`, `b` a bounded-degree undetermined numerator),
 forms the eq. 10.6 inhomogeneous linear system and solves it (`cConstSolveAnyQ`). Returns
@@ -59,7 +59,7 @@ correctness deferred. -/
 def alg_10_3_parallelIntegrate := @cParallelIntegrate
 
 /-- **Parallel integration over the tower `ℚ(x)[t]`** (§10.3, the genuine-tower signature): the
-computable `cParallelIntegrateTower fuel Dt a d` over `a d : CPolyG (QFunNZG ℚ)`. The base-field case (`Dt, a,
+computable `cParallelIntegrateTower Dt a d` over `a d : CPolyG (QFunNZG ℚ)`. The base-field case (`Dt, a,
 d` all with `ℚ`-constant coefficients, so `k = ℚ`) is routed through `cParallelIntegrate` and lifted back
 to `QFunNZG ℚ` coefficients; a genuine `x`-dependent coefficient (the full tower, needing the §10.2
 special-polynomial list + `F̄`-factorization) returns `none` — the documented continuation. -/

@@ -94,7 +94,7 @@ list of monic squarefree factors `dⱼ` of `p` paired with their multiplicities 
 `p ~ ∏ⱼ dⱼ^j` and the `dⱼ` are pairwise coprime and squarefree (Bronstein §1.7 `Squarefree`). Computed
 by Yun: `c ← gcd(p, p′)`, `w ← p/c` (product of the distinct factors), then peel `dⱼ = w/gcd(w,c)`,
 `w ← gcd(w,c)`, `c ← c/gcd(w,c)`. Euclidean leaves are fuel-free; constant factors are dropped. -/
-def cSquarefreeFactorsQ (fuel : ℕ) (p : CPolyG ℚ) : List (CPolyG ℚ × ℕ) :=
+def cSquarefreeFactorsQ (p : CPolyG ℚ) : List (CPolyG ℚ × ℕ) :=
   let p := cmonicG p
   let c0 := cmonicG (cgcdWf p (cderivG p)).1
   let w0 := cdivWf p c0
@@ -109,7 +109,7 @@ def cSquarefreeFactorsQ (fuel : ℕ) (p : CPolyG ℚ) : List (CPolyG ℚ × ℕ)
         let cnext := cdivWf c y
         let rest := go f y cnext (i + 1)
         if cdegG z = 0 then rest else (cmonicG z, i) :: rest
-  go (fuel + cdegG p + 1) w0 c0 1
+  go (cdegG p + 1) w0 c0 1
 
 /-! ### The base monomial derivation and small helpers -/
 
@@ -159,9 +159,9 @@ from `f = a/d` (over `ℚ(t)`, `D = Dt·d/dt`) build the candidate `∫f = b/s +
   widened to absorb a polynomial part of `f`: `nU = max(deg s, deg a − deg d + deg s) + 2`).
 
 `d` need not be monic; the caller's `a` is rescaled by `1/lc(d)` in `cParallelSystemQ`. -/
-def cParallelAnsatzQ (fuel : ℕ) (d : CPolyG ℚ) (degA : ℤ) :
+def cParallelAnsatzQ (d : CPolyG ℚ) (degA : ℤ) :
     List (CPolyG ℚ) × CPolyG ℚ × ℕ :=
-  let sf := cSquarefreeFactorsQ fuel d
+  let sf := cSquarefreeFactorsQ d
   let ps := sf.map Prod.fst
   let s := cProductQ (sf.map (fun (p, e) => cpowG p (e - 1)))
   let degS : ℤ := (cdegG s : ℤ)
@@ -169,7 +169,7 @@ def cParallelAnsatzQ (fuel : ℕ) (d : CPolyG ℚ) (degA : ℤ) :
   let bound : ℤ := max degS (degA - degD + degS) + 1
   (ps, s, bound.toNat + 1)
 
-/-- **The eq. 10.6 inhomogeneous linear system** `cParallelSystemQ fuel Dt a d = (rows, rhs, nU, m)`
+/-- **The eq. 10.6 inhomogeneous linear system** `cParallelSystemQ Dt a d = (rows, rhs, nU, m)`
 (Bronstein §10.3 step 4). Substituting the ansatz `∫(a/d) = b/s + Σⱼ cⱼ·log(pⱼ)` (with `b = Σ uᵢ tⁱ`,
 `{pⱼ}` the squarefree factors of `d`, `s = ∏ dⱼ^{j-1}`) into `f = D(b/s) + Σⱼ cⱼ·Dpⱼ/pⱼ` and clearing
 the common denominator `M = s²·∏pⱼ` (which `monic(d)` divides, `M/d = s`) yields the polynomial identity
@@ -179,11 +179,11 @@ the common denominator `M = s²·∏pⱼ` (which `monic(d)` divides, `M/d = s`) 
 (with `a` first rescaled to make `d` monic, `D = Dt·d/dt`). Equating `tⁱ`-coefficients gives the dense
 matrix `rows` and right-hand side `rhs = coeffs(a·s)` over the unknowns `(u₀,…,u_{nU-1}, c₁,…,c_m)`
 (`nU` numerator coefficients then `m = #squarefree factors` log coefficients). Fed to `cConstSolveAnyQ`. -/
-def cParallelSystemQ (fuel : ℕ) (Dt a d : CPolyG ℚ) :
+def cParallelSystemQ (Dt a d : CPolyG ℚ) :
     List (List ℚ) × List ℚ × ℕ × ℕ :=
   let lcd := cleadG d
   let a := cscaleG (1 / lcd) a                                   -- make `d` monic: `f = a/d` unchanged
-  let (ps, s, nU) := cParallelAnsatzQ fuel d (cdegG a : ℤ)
+  let (ps, s, nU) := cParallelAnsatzQ d (cdegG a : ℤ)
   let m := ps.length
   let prodPs := cProductQ ps
   let s2 := cmulG s s
@@ -220,10 +220,10 @@ undetermined numerator), forms the eq. 10.6 linear system (`cParallelSystemQ`), 
 
 Validated on transcendental integrands (`t = exp x`, `t = tan x`) and rational ones via the cleared
 identity `D(∫f) = f`. -/
-def cParallelIntegrate (fuel : ℕ) (Dt a d : CPolyG ℚ) :
+def cParallelIntegrate (Dt a d : CPolyG ℚ) :
     Option ((CPolyG ℚ × CPolyG ℚ) × List (ℚ × CPolyG ℚ)) :=
-  let (rows, rhs, nU, m) := cParallelSystemQ fuel Dt a d
-  let (ps, s, _) := cParallelAnsatzQ fuel d (cdegG (cscaleG (1 / cleadG d) a) : ℤ)
+  let (rows, rhs, nU, m) := cParallelSystemQ Dt a d
+  let (ps, s, _) := cParallelAnsatzQ d (cdegG (cscaleG (1 / cleadG d) a) : ℤ)
   match cConstSolveAnyQ rows rhs (nU + m) with
   | none => none
   | some sol =>
@@ -315,11 +315,11 @@ carrier. The base-field case — `Dt, a, d` all with `ℚ`-constant coefficients
 (rational part `(b, s)` and log arguments `pⱼ`, with the `ℚ`-constants `cⱼ`). A genuine `x`-dependent
 coefficient (the full tower, needing the §10.2 special-poly list + `F̄`-factorization) returns `none` —
 the documented continuation. -/
-def cParallelIntegrateTower (fuel : ℕ) (Dt a d : CPolyG (QFunNZG ℚ)) :
+def cParallelIntegrateTower (Dt a d : CPolyG (QFunNZG ℚ)) :
     Option ((CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) × List (ℚ × CPolyG (QFunNZG ℚ))) :=
   match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>
-    match cParallelIntegrate fuel DtQ aQ dQ with
+    match cParallelIntegrate DtQ aQ dQ with
     | none => none
     | some ((b, s), logs) =>
       let lift : CPolyG ℚ → CPolyG (QFunNZG ℚ) := fun p => (p : List ℚ).map qConstTowerG
@@ -347,7 +347,7 @@ def parallelExampleLogD : CPolyG ℚ := [1, 0, 1]
 
 -- **Sanity print.** `cParallelIntegrate` on `∫ 2t/(t²+1)` returns rational part `0/1` and one log
 -- `(1, t²+1)`, i.e. `log(t²+1)`.
-#eval CPolyG.cParallelIntegrate 40 [1] parallelExampleLogA parallelExampleLogD
+#eval CPolyG.cParallelIntegrate [1] parallelExampleLogA parallelExampleLogD
 
 /-- **Pure-log parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
 `∫ 2t/(t²+1) dt` over `ℚ(t)` (`D = d/dt`), `cParallelIntegrate` returns `some res` whose reconstructed
@@ -355,7 +355,7 @@ antiderivative `b/s + Σ cⱼ log pⱼ` is verified to **actually satisfy** `D(r
 cleared identity `cParallelCheckQ` (`num·d − a·den = 0`). The Risch–Norman ansatz (squarefree-factor log
 candidates + linear solve) recovers `log(t²+1)`. -/
 theorem parallelIntegrate_log_example :
-    (match cParallelIntegrate 40 [1] parallelExampleLogA parallelExampleLogD with
+    (match cParallelIntegrate [1] parallelExampleLogA parallelExampleLogD with
       | some res => cParallelCheckQ [1] parallelExampleLogA parallelExampleLogD res
       | none => false) = true := by native_decide
 
@@ -373,7 +373,7 @@ def parallelExampleExpD : CPolyG ℚ := [1, 2, 1]
 def parallelExampleExpDt : CPolyG ℚ := [0, 1]
 
 -- **Sanity print.** `∫ t/(t+1)²` with `t = exp x`: rational part `−1/(t+1)` (`b = −1`, `s = t+1`), no log.
-#eval CPolyG.cParallelIntegrate 40 parallelExampleExpDt parallelExampleExpA parallelExampleExpD
+#eval CPolyG.cParallelIntegrate parallelExampleExpDt parallelExampleExpA parallelExampleExpD
 
 /-- **Transcendental parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
 `∫ exp(x)/(exp(x)+1)² dx` — `f = t/(t+1)²` over the genuine transcendental field `ℚ(exp x)` with the
@@ -382,7 +382,7 @@ verified to **actually satisfy** `D(res) = t/(t+1)²` by `cParallelCheckQ`. This
 the Risch–Norman ansatz + linear solve recovers an elementary antiderivative over a nontrivial monomial
 extension (`Dt ≠ 1`), exactly the "parallel" virtue of handling the generator `t = exp x` directly. -/
 theorem parallelIntegrate_exp_example :
-    (match cParallelIntegrate 40 parallelExampleExpDt parallelExampleExpA parallelExampleExpD with
+    (match cParallelIntegrate parallelExampleExpDt parallelExampleExpA parallelExampleExpD with
       | some res => cParallelCheckQ parallelExampleExpDt parallelExampleExpA parallelExampleExpD res
       | none => false) = true := by native_decide
 
@@ -397,7 +397,7 @@ log simultaneously — the full Risch–Norman shape. `D(−1/(t+1) + log(t+1)) 
 def parallelExampleMixA : CPolyG ℚ := [0, 2, 1]
 
 -- **Sanity print.** `∫ (t²+2t)/(t+1)²` with `t = exp x`: rational part `−1/(t+1)` **and** log `(1, t+1)`.
-#eval CPolyG.cParallelIntegrate 40 parallelExampleExpDt parallelExampleMixA parallelExampleExpD
+#eval CPolyG.cParallelIntegrate parallelExampleExpDt parallelExampleMixA parallelExampleExpD
 
 /-- **Mixed rational + log parallel integration computes** (`native_decide`, Bronstein §10.3, book
 p.309). For `∫ (exp(x)²+2exp(x))/(exp(x)+1)² dx` — `f = (t²+2t)/(t+1)²` over `ℚ(exp x)`, `Dt = t` — the
@@ -406,7 +406,7 @@ single linear solve of `cParallelIntegrate` produces **both** the rational part 
 exhibits the full Liouville shape (10.1) `f = Dv + Σ cⱼ Duⱼ/uⱼ` recovered in one parallel linear-algebra
 step — the chapter's headline. -/
 theorem parallelIntegrate_mixed_example :
-    (match cParallelIntegrate 40 parallelExampleExpDt parallelExampleMixA parallelExampleExpD with
+    (match cParallelIntegrate parallelExampleExpDt parallelExampleMixA parallelExampleExpD with
       | some res => cParallelCheckQ parallelExampleExpDt parallelExampleMixA parallelExampleExpD res
       | none => false) = true := by native_decide
 
@@ -425,7 +425,7 @@ def parallelExampleFailA : CPolyG ℚ := [1]
 def parallelExampleFailD : CPolyG ℚ := [1, 1]
 
 -- **Sanity print.** `cParallelIntegrate` returns `none`: the ansatz cannot capture `∫ dx/(eˣ+1)`.
-#eval CPolyG.cParallelIntegrate 40 parallelExampleExpDt parallelExampleFailA parallelExampleFailD
+#eval CPolyG.cParallelIntegrate parallelExampleExpDt parallelExampleFailA parallelExampleFailD
 
 /-- **The parallel heuristic fails on a non-(ansatz-)elementary integrand** (`native_decide`, Bronstein
 §10.3, book p.298). `∫ 1/(exp(x)+1) dx` has antiderivative `x − log(exp x+1)`, which is **not** in the
@@ -434,7 +434,7 @@ field). `cParallelIntegrate` returns `none` — the linear system is inconsisten
 key caveat: the method is *heuristic*, and `none` means "no elementary integral **in this guess**", not a
 proof of non-elementarity. -/
 theorem parallelIntegrate_failure_example :
-    cParallelIntegrate 40 parallelExampleExpDt parallelExampleFailA parallelExampleFailD = none := by
+    cParallelIntegrate parallelExampleExpDt parallelExampleFailA parallelExampleFailD = none := by
   native_decide
 
 #print axioms parallelIntegrate_failure_example
