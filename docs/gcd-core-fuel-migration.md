@@ -139,6 +139,24 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   load-bearing everywhere) — do with fresh focus + gate after every file. Order: delete the fuel'd correctness
   theorems first (they consume the ops), then the ops, then the class+instances last.
 
+## G7 base-deletion ATTEMPT + entanglement finding (do NOT retry naively)
+Attempted the surgical base-op-correctness deletion (Field re-point + delete the fuel'd correctness theorems
+from TowerGlue/ResultantGenericCore/GcdFFCorrect/FieldGcd/GcdFF). It BUILT PARTIALLY then broke + was fully
+reverted (tree green at HEAD). Two lessons:
+1. **GcdFF benchmarks are a cluster** — deleting `cgcdFFGen`/`gBenchFFGcd` orphans `benchFFGcd2_lt_benchExtGcd2`
+   etc.; the whole fuel'd FF-gcd + swell-benchmark cluster must go together (or none).
+2. **The fuel'd correctness is an ENTANGLED WEB via HYPOTHESES** — `cgcdTerminatesG` (FieldGcd) is used as a
+   `(hterm : cgcdTerminatesG …)` HYPOTHESIS in `GcdFFCorrect`:887 + referenced by `PrimPRSRegular` — invisible
+   to an ops-reference scan. Deleting a fuel'd correctness lemma requires mapping its FULL transitive closure
+   (everything using it as hypothesis or term), then deleting the whole closure coordinately.
+- ★ CORRECT G7-finish approach (fresh session): (a) build the complete fuel'd-correctness dependency graph
+  (nodes = decls in FieldGcd/GcdFFCorrect/ResultantGenericCore/GenericBezout/GcdFF that mention ANY of
+  cdivmodG/cmodG/cdivG/cdvdG/cgcdExtG/cgcdFFCore/cgcdFFGen/cgcdTerminatesG/the fuel'd instances — via term OR
+  hypothesis), close it transitively, VERIFY the closure has no live (Wf/soundness) consumer; (b) delete the
+  whole closure + the GcdFF benchmark cluster + the ops + class/instances in ONE coordinated pass, gate.
+- The base ops are now DEAD (no live runtime/soundness consumer — only their own entangled correctness web),
+  so leaving them is harmless; the deletion is the "100%-fuel-free" completion, needing the closure approach.
+
 ## Status after G6b: CLEAN WINS EXHAUSTED (superseded — see G5 above; more clean wins were found + landed)
 The entire fuel'd §5/§6 Tower API is retired (split-factor, canonical-rep, squarefree-split, residue engine,
 hyperexp driver). A full 0-consumer scan finds NO remaining clean fuel'd deletions. The three remaining
