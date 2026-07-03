@@ -278,7 +278,7 @@ cannot reach the algebraic level. The route that *does* is the **hyperexponentia
 §5.10): for a hyperexponential `t` (`Dt = η·t`), the Laurent special integrator
 `cIntegrateHyperexpLaurentG` (`ComputableHyperexpSpecial`, imported) integrates `∫ ∑ⱼ aⱼ tʲ` **term by
 term**, each `∫ aⱼ tʲ` solved as the base RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` via
-`CRischField.crischDESolve (j·η) aⱼ`. That class method is `[CField α] [CDiffField α] [CFracGcdCore α]
+`CRischField.crischDESolve (j·η) aⱼ`. That class method is `[CField α] [CDiffField α]
 [CRischField α]`-generic, so at **`α = RadX3`** the negative-index term `∫ a₋₁ t⁻¹` calls
 `crischDESolve (−1·η) a₋₁` over `RadX3` with a **nonzero scalar** coefficient `−1·η = −1 : RadX3` — exactly
 the slice the **generic** `instCRischFieldRadExt` decouples (`radExtRischDESolve`) into the two per-`y`-power

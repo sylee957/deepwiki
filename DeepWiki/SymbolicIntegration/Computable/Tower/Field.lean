@@ -419,7 +419,7 @@ example :
 t₂` is nonzero, so its `cisZeroG` is `false` — `cgcdExtG` executes end to end at **tower level 2**.
 This is the headline: the full gcd engine runs over `ℚ(x)(t₁)[t₂]`. -/
 example :
-    CPolyG.cisZeroG (CPolyG.cgcdExtG 8 [(CField.zero : Lvl2), CField.one]
+    CPolyG.cisZeroG (CPolyG.cgcdWf [(CField.zero : Lvl2), CField.one]
       [(CField.zero : Lvl2), CField.one]).1 = false := by native_decide
 
 /-- **★ The generic resultant reduces over `CPolyG Lvl2` = `ℚ(x)(t₁)[t₂]`**: `res(t₂, 1 + t₂) = 1`

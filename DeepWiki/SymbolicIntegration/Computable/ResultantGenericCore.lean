@@ -45,48 +45,7 @@ variable {α : Type*} [CField α] [CFieldSpec α]
   | zero => simp [cfpow, CFieldSpec.toK_one]
   | succ n ih => rw [cfpow, CFieldSpec.toK_mul, ih, pow_succ']
 
-/-- **Generic quotient degree**: for a non-constant divisor with `deg q ≤ deg p` and enough fuel,
-`natDegree (cdivG …) + natDegree q = natDegree p` (the Euclidean quotient has degree `deg p − deg q`).
-Supplies `resultant_add_mul_right`'s degree side-condition. The generic analogue of `cdiv_natDegree_add`. -/
-theorem cdivG_natDegree_add (fuel : ℕ) (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
-    (hq2 : 2 ≤ (cnormG q : List α).length) (hpq : (cnormG q : List α).length ≤ (cnormG p : List α).length)
-    (hfuel : (cnormG p : List α).length ≤ fuel) :
-    (toPolyG (cdivG fuel p q)).natDegree + (toPolyG q).natDegree = (toPolyG p).natDegree := by
-  have hP : toPolyG p ≠ 0 := fun h => hp ((cnormG_eq_nil_iff p).mpr h)
-  have hQ : toPolyG q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
-  have hdiv : toPolyG p = toPolyG (cdivG fuel p q) * toPolyG q + toPolyG (cmodG fuel p q) := by
-    have h := toPolyG_cdivmodG' fuel p q hq
-    rw [cdivG, cmodG]; exact h
-  have hr : (toPolyG (cmodG fuel p q)).natDegree < (toPolyG q).natDegree := by
-    have hlen := cmodG_length_lt fuel p q hq hfuel
-    have e1 := cdegG_eq_natDegree (cmodG fuel p q)
-    have e2 := cdegG_eq_natDegree q
-    simp only [cdegG] at e1 e2
-    omega
-  have hpq' : (toPolyG q).natDegree ≤ (toPolyG p).natDegree := by
-    have e1 := cdegG_eq_natDegree p
-    have e2 := cdegG_eq_natDegree q
-    simp only [cdegG] at e1 e2
-    omega
-  have hquo : toPolyG (cdivG fuel p q) ≠ 0 := by
-    intro h0
-    rw [h0, zero_mul, zero_add] at hdiv
-    rw [hdiv] at hpq'
-    omega
-  have key : (toPolyG (cdivG fuel p q) * toPolyG q).natDegree = (toPolyG p).natDegree := by
-    have heq : toPolyG (cdivG fuel p q) * toPolyG q = toPolyG p - toPolyG (cmodG fuel p q) := by
-      rw [hdiv]; ring
-    rw [heq, natDegree_sub_eq_left_of_natDegree_lt (lt_of_lt_of_le hr hpq')]
-  rwa [Polynomial.natDegree_mul hquo hQ] at key
-
 /-! ### `cresultantG` invariances (mirroring `cresultant_cnorm`/`cdeg_cnorm`/`cmod_cnorm_both`) -/
-
-omit [CFieldSpec α] in
-theorem cmodG_cnormG_both (fuel : ℕ) (p q : CPolyG α) :
-    cmodG fuel (cnormG p) (cnormG q) = cmodG fuel p q := by
-  cases fuel with
-  | zero => simp [cmodG, cdivmodG, cnormG_idem]
-  | succ fuel => simp only [cmodG, cdivmodG, cnormG_idem]
 
 /-- **`clagNumG` realizes `∏ (X − C (toK zⱼ))`**: the Horner bridge sends the generic basis numerator to
 the abstract product of linear factors. -/

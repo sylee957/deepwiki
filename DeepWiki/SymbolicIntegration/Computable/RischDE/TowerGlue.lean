@@ -105,17 +105,6 @@ theorem specialDenominatorSubst_cleared {R : Type*} [CommRing R] (D : Derivation
 
 namespace CPolyG
 
-/-- **`cdvdG = true` reads as honest divisibility**: `cdvdG fuel g c = true` and `cnormG g ≠ []` give
-`toPolyG g ∣ toPolyG c` (the zero remainder in the Euclidean identity `c = quo·g + rem`). -/
-theorem dvd_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (g c : CPolyG α)
-    (hg0 : cnormG g ≠ []) (hdvd : cdvdG fuel g c = true) :
-    toPolyG g ∣ toPolyG c := by
-  have hrem0 : toPolyG (cmodG fuel c g) = 0 := (cdvdG_iff fuel g c).mp hdvd
-  have hid := toPolyG_cdivmodG' fuel c g hg0
-  rw [show (cdivmodG fuel c g).2 = cmodG fuel c g from rfl, hrem0, add_zero] at hid
-  rw [hid]
-  exact Dvd.intro_left _ rfl
-
 /-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
 example {α : Type*} [CField α] [CFieldSpec α] (q p : CPolyG α)
     (hq : cnormG q ≠ []) (hdvd : cdvdGWf q p = true) :

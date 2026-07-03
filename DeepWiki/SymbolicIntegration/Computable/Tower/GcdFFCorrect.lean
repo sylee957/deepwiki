@@ -73,19 +73,6 @@ it is associated to the abstract `gcd` in `(CFieldSpec.K α)[X]`, from the prove
 halves of the engine. This is the bottom of the tower induction (and reused for the *content*-gcd at any
 level, since the content-gcd over `CPolyG β = β[s]` is itself a level-`β` `cgcdFFRawCore`). -/
 
-/-- The raw generic Euclidean gcd is associated to the abstract gcd (under termination): for any
-`[CField α] [CFieldSpec α]`, if `cgcdExtG fuel a b` terminates (`cgcdTerminatesG`), then
-`toPolyG (cgcdExtG fuel a b).1` is `Associated` to `gcd (toPolyG a) (toPolyG b)` in `(CFieldSpec.K α)[X]`.
-Combines the gcd-divides direction (`toPolyG_cgcdExtG_dvd`) with the greatest-common-divisor direction
-(`toPolyG_dvd_cgcdExtG`, from Bézout) via `associated_of_dvd_dvd`. -/
-theorem associated_toPolyG_cgcdExtG {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (a b : CPolyG α)
-    (hterm : cgcdTerminatesG fuel a b) :
-    Associated (toPolyG (cgcdExtG fuel a b).1) (gcd (toPolyG a) (toPolyG b)) := by
-  obtain ⟨hda, hdb⟩ := toPolyG_cgcdExtG_dvd fuel a b hterm
-  apply associated_of_dvd_dvd
-  · exact dvd_gcd hda hdb
-  · exact toPolyG_dvd_cgcdExtG fuel a b (gcd_dvd_left _ _) (gcd_dvd_right _ _)
-
 /-! ### The bivariate bridge `toGBCoeffPoly : GBPolyCore β → R[X]` (`R = (CFieldSpec.K β)[X] = β[s]`)
 A `GBPolyCore β = List (CPolyG β)` is a `t`-polynomial whose coefficients are `CPolyG β = β[s]`. Reading
 each coefficient through `toPolyG : CPolyG β → R := (CFieldSpec.K β)[X]` and Horner-folding in `t` gives
@@ -886,85 +873,8 @@ inputs. This is the *raw* gcd (no `cmonicG`); the public monic `cgcdFFCore = cmo
 reads through `associated_toPolyG_cmonicG`. The generic mirror of `associated_toPolyG_cgcdFF`, at the
 recursive tower instance `instCFracGcdCoreQFunNZG`. -/
 
-section
-variable [CFracGcdCore β]
-
-/-- Step 3 — abstract correctness of the recursive `cgcdFFRawCore` over β(s)[t] (under a regular
-run): over the field β(s) = `RatFunc (CFieldSpec.K β)`, the raw fraction-free gcd
-`cgcdFFRawCore fuel p q` (`instCFracGcdCoreQFunNZG`, with content-gcd `CFracGcdCore.cgcdFFRawCore` at
-level `β`) computes the polynomial gcd of the inputs — `toPolyG (cgcdFFRawCore fuel p q)` is `Associated`
-to `gcd (toPolyG p) (toPolyG q)` in `(CFieldSpec.K (QFunNZG β))[X] = (RatFunc (CFieldSpec.K β))[X]`. The
-`CPrimPRSGenAssocReg` hypothesis is on the `gbdegCore`-ordered cleared pair (the same ordering the instance
-uses) with content-gcd `CFracGcdCore.cgcdFFRawCore fuel`; it captures the per-step content-exactness of
-the primitive PRS, which on real runs follows from the gcd-correctness of `cgcdFFRawCore` at level `β`
-(the tower induction). Generic mirror of `associated_toPolyG_cgcdFF`. -/
-theorem associated_toPolyG_cgcdFFRawCore (fuel : ℕ) (p q : CPolyG (QFunNZG β))
-    (hreg : CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel
-      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
-          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
-        then CPolyG.cclearDenomsCoreG q else CPolyG.cclearDenomsCoreG p)
-      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
-          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
-        then CPolyG.cclearDenomsCoreG p else CPolyG.cclearDenomsCoreG q)) :
-    Associated (toPolyG (CFracGcdCore.cgcdFFRawCore fuel p q))
-      (gcd (toPolyG p) (toPolyG q)) := by
-  -- the engine output, with the cleared pair lifted back through liftGBPolyCoreG
-  have key : ∀ P Q : GBPolyCore β, CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q →
-      Associated (gcd (toGBPolyG P) (toGBPolyG Q)) (gcd (toPolyG p) (toPolyG q)) →
-      Associated (toPolyG (CPolyG.liftGBPolyCoreG
-          (cprimPRSgcdGenCore (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q)))
-        (gcd (toPolyG p) (toPolyG q)) := by
-    intro P Q hr hgcd
-    rw [toPolyG_liftGBPolyCoreG]
-    exact (associated_toGBPolyG_cprimPRSgcdGenCore (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q hr).trans
-      hgcd
-  have hbridge : Associated (gcd (toGBPolyG (CPolyG.cclearDenomsCoreG p))
-      (toGBPolyG (CPolyG.cclearDenomsCoreG q))) (gcd (toPolyG p) (toPolyG q)) :=
-    (associated_toGBPolyG_cclearDenomsCoreG p).gcd (associated_toGBPolyG_cclearDenomsCoreG q)
-  -- unfold the instance: cgcdFFRawCore = liftGBPolyCoreG (cprimPRSgcdGenCore … P Q) with the deg-order
-  show Associated (toPolyG (
-      let P := CPolyG.cclearDenomsCoreG p
-      let Q := CPolyG.cclearDenomsCoreG q
-      let (P, Q) := if GBPolyCore.gbdegCore P < GBPolyCore.gbdegCore Q then (Q, P) else (P, Q)
-      CPolyG.liftGBPolyCoreG (cprimPRSgcdGenCore (CFracGcdCore.cgcdFFRawCore fuel) fuel P Q)))
-    (gcd (toPolyG p) (toPolyG q))
-  simp only
-  by_cases hlt : GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
-      < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
-  · simp only [if_pos hlt] at hreg ⊢
-    refine key _ _ hreg ?_
-    rw [gcd_comm]; exact hbridge
-  · simp only [if_neg hlt] at hreg ⊢
-    exact key _ _ hreg hbridge
-
-/-- The public monic `cgcdFFCore` correct over β(s)[t] (under a regular run): the public monic
-fraction-free gcd `cgcdFFCore fuel p q = cmonicG (cgcdFFRawCore fuel p q)` reads through `toPolyG` to the
-polynomial gcd up to associates — composing the raw correctness `associated_toPolyG_cgcdFFRawCore` with
-the monic unit-scaling `associated_toPolyG_cmonicG`. So the generic flat gcd the engine actually calls
-(`cgcdFFCore`) is the abstract gcd up to associates, with NO `cgcdFF` bridge. -/
-theorem associated_toPolyG_cgcdFFCore (fuel : ℕ) (p q : CPolyG (QFunNZG β))
-    (hreg : CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel
-      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
-          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
-        then CPolyG.cclearDenomsCoreG q else CPolyG.cclearDenomsCoreG p)
-      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
-          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
-        then CPolyG.cclearDenomsCoreG p else CPolyG.cclearDenomsCoreG q)) :
-    Associated (toPolyG (CFracGcdCore.cgcdFFCore fuel p q)) (gcd (toPolyG p) (toPolyG q)) := by
-  rw [CFracGcdCore.cgcdFFCore]
-  exact (associated_toPolyG_cmonicG _).trans (associated_toPolyG_cgcdFFRawCore fuel p q hreg)
-
-end
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
-
--- The base case: the raw generic Euclidean gcd computes the abstract gcd up to associates (under
--- termination), over ANY tower level — the bottom of the tower (α = ℚ, cgcdFFRawCore = (cgcdExtG _).1)
--- and the content-gcd at any level both read through this.
-example {α : Type*} [CField α] [CFieldSpec α] (fuel : ℕ) (a b : CPolyG α)
-    (hterm : cgcdTerminatesG fuel a b) :
-    Associated (toPolyG (cgcdExtG fuel a b).1) (gcd (toPolyG a) (toPolyG b)) :=
-  associated_toPolyG_cgcdExtG fuel a b hterm
 
 -- The crux: under a regular PRS run, the generic primitive PRS computes the gcd up to associates over
 -- β(s) = RatFunc (CFieldSpec.K β).
@@ -973,24 +883,6 @@ example (cgcdB : CPolyG β → CPolyG β → CPolyG β) (fuel : ℕ) (P Q : GBPo
     Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPolyG P) (toGBPolyG Q)) :=
   associated_toGBPolyG_cprimPRSgcdGenCore cgcdB fuel P Q hreg
 
-section
-variable [CFracGcdCore β]
-
--- THE DELIVERABLE: the recursive tower fraction-free gcd `cgcdFFRawCore` computes the polynomial gcd of
--- the inputs up to associates over β(s)[t] = (CFieldSpec.K (QFunNZG β))[X], under the per-step
--- `CPrimPRSGenAssocReg` bundle a real run satisfies.
-example (fuel : ℕ) (p q : CPolyG (QFunNZG β))
-    (hreg : CPrimPRSGenAssocReg (CFracGcdCore.cgcdFFRawCore fuel) fuel
-      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
-          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
-        then CPolyG.cclearDenomsCoreG q else CPolyG.cclearDenomsCoreG p)
-      (if GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG p)
-          < GBPolyCore.gbdegCore (CPolyG.cclearDenomsCoreG q)
-        then CPolyG.cclearDenomsCoreG p else CPolyG.cclearDenomsCoreG q)) :
-    Associated (toPolyG (CFracGcdCore.cgcdFFRawCore fuel p q)) (gcd (toPolyG p) (toPolyG q)) :=
-  associated_toPolyG_cgcdFFRawCore fuel p q hreg
-
-end
 
 /-! ### Verdict and the precise remaining gap
 
@@ -1030,9 +922,6 @@ So the residual obstruction is not a missing Mathlib/GCD-domain fact (the conten
 recursion, exactly the machinery `ComputableGcdCorrect`'s `PrimPRSInputs`/`primPRSInputs_of_nodeRegular`
 layer carries at the single concrete level, now to be lifted to the depth-indexed tower. -/
 
-#print axioms associated_toPolyG_cgcdExtG
 #print axioms associated_toGBPolyG_cprimPRSgcdGenCore
-#print axioms associated_toPolyG_cgcdFFRawCore
-#print axioms associated_toPolyG_cgcdFFCore
 
 end DeepWiki.SymbolicIntegration

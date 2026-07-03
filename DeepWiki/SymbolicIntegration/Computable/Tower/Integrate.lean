@@ -18,7 +18,7 @@ the recursive primitive-PRS gcd that stays polynomial-sized over the tower (it A
 fuel-free Euclidean `cgcdMonicWf`, both being the unique monic gcd, but computes it without the fraction-field
 coefficient swell that would make the integration pipeline over a fraction-field carrier blow up). Every
 pipeline def that calls a `t`-gcd therefore carries the
-`[CFracGcdCore α]` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
+`` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
 + recursive `CFracGcdCore (QFunNZG β)`).
 
 * `CFracGcdCore.cgcdFFCore` — the flat fraction-free monic gcd used by the pipeline.

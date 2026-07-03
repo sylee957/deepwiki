@@ -50,10 +50,6 @@ def benchP (k : ℕ) : CPolyG (QFunNZG ℚ) := gBenchP k
 `gcd(benchP k, benchQ k) = gCommonFactor` (degree 2), reusing `BenchG.gBenchQ`. -/
 def benchQ (k : ℕ) : CPolyG (QFunNZG ℚ) := gBenchQ k
 
-/-- The generic fraction-free gcd of the benchmark pair over `QFunNZG ℚ` (the fast kernel,
-`CFracGcd.cgcdFFGen`). -/
-def benchFFGcd (k : ℕ) : CPolyG (QFunNZG ℚ) := gBenchFFGcd k
-
 /-- The naive generic Euclidean gcd of the benchmark pair, monic-normalized (the swelling kernel);
 the fuel-free `cgcdWf` naive Euclidean over the fraction field, which swells identically. -/
 def benchExtGcd (k : ℕ) : CPolyG (QFunNZG ℚ) := cmonicG (cgcdWf (benchP k) (benchQ k)).1
@@ -110,22 +106,6 @@ def benchNormGcd (k : ℕ) : CPolyG (QFunNZG ℚ) :=
 /-- The raw stored size of a whole `CPolyG (QFunNZG ℚ)` (`BenchG.gGcdSizeRaw`). Forcing it fully
 evaluates the gcd, so a timing harness cannot hide cost behind laziness. -/
 def gcdSizeRaw (g : CPolyG (QFunNZG ℚ)) : ℕ := gGcdSizeRaw g
-
-/-- **The benchmark gcd is degree 2** for the fraction-free kernel (`native_decide`): `gcd(p, q)` is the
-associate of `gCommonFactor`, so the cofactor scaling does not change the *answer* — only the intermediate
-coefficient size, which is what the swell witnesses measure. -/
-theorem benchFFGcd_deg_two : cdegG (benchFFGcd 2) = 2 := by native_decide
-
-/-- **The fraction-free and `qReduce`-loop kernels compute the same monic gcd** (`native_decide`): their
-monic normalizations agree (`cisZeroG` of the difference), so `benchNormGcd` is a correct gcd — the
-swell control is a pure performance variant, not a different answer. -/
-theorem benchNormGcd_agrees_cgcdFFGen :
-    cisZeroG (csubG (cmonicG (benchFFGcd 2)) (cmonicG (benchNormGcd 2))) = true := by native_decide
-
-/-- **Fraction-free result size stays flat** (`native_decide`): the raw stored coefficient size of
-`benchFFGcd` is `36` at total degree 3 **and** `36` at total degree 4 — no swell. -/
-theorem benchFFGcd_size_flat :
-    gcdSizeRaw (benchFFGcd 1) = 36 ∧ gcdSizeRaw (benchFFGcd 2) = 36 := by native_decide
 
 /-- **The naive Euclidean result swells super-exponentially** (`native_decide`): the raw stored
 coefficient size of `benchExtGcd` is `147` at total degree 3 but `258 261 011 921` (~2.6·10¹¹) at total

@@ -80,53 +80,6 @@ where
 `toPolyG p = toPolyG q · toPolyG (cdivG…) + toPolyG (cmodG…)` and a strict normalized-length / degree
 drop. The leading-term match `c = clead p / clead q` is `CField.div`. -/
 
-/-- **Euclidean-division identity through `toPolyG`** (`q` already normalized and nonzero, any fuel):
-`toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
-theorem toPolyG_cdivmodG (fuel : ℕ) (p q : CPolyG α) (hqn : cnormG q = q) (hq0 : q ≠ []) :
-    toPolyG p
-      = toPolyG (cdivmodG fuel p q).1 * toPolyG q + toPolyG (cdivmodG fuel p q).2 := by
-  induction fuel generalizing p with
-  | zero => simp [cdivmodG, toPolyG_cnormG]
-  | succ fuel ih =>
-    have hcz : cisZeroG q = false := by
-      rw [cisZeroG, hqn]; exact List.isEmpty_eq_false_iff.mpr hq0
-    rw [cdivmodG]
-    simp only [hqn, hcz, Bool.false_eq_true, if_false]
-    by_cases hlen : (cnormG p : List α).length < (q : List α).length
-    · simp [hlen, toPolyG_cnormG]
-    · simp only [hlen, if_false]
-      rcases hqr : cdivmodG fuel (cnormG (csubG (cnormG p)
-          (cmulG (cshiftG ((cnormG p : List α).length - (q : List α).length)
-            [CField.div (cleadG (cnormG p)) (cleadG q)]) q))) q
-        with ⟨quo, rem⟩
-      have hih := ih (cnormG (csubG (cnormG p)
-          (cmulG (cshiftG ((cnormG p : List α).length - (q : List α).length)
-            [CField.div (cleadG (cnormG p)) (cleadG q)]) q)))
-      rw [hqr] at hih
-      simp only [denote] at hih ⊢
-      linear_combination hih
-
-omit [CFieldSpec α] in
-/-- `cdivmodG` **normalizes its divisor**: `cdivmodG fuel p q = cdivmodG fuel p (cnormG q)`. -/
-theorem cdivmodG_cnormG_right (fuel : ℕ) (p q : CPolyG α) :
-    cdivmodG fuel p q = cdivmodG fuel p (cnormG q) := by
-  cases fuel with
-  | zero => rfl
-  | succ fuel => simp only [cdivmodG, cnormG_idem]
-
-/-- **Euclidean-division identity through `toPolyG`** for an arbitrary nonzero divisor (`cnormG q ≠ []`,
-any fuel): `toPolyG p = toPolyG (quotient) · toPolyG q + toPolyG (remainder)`. -/
-theorem toPolyG_cdivmodG' (fuel : ℕ) (p q : CPolyG α) (hq0 : cnormG q ≠ []) :
-    toPolyG p
-      = toPolyG (cdivmodG fuel p q).1 * toPolyG q + toPolyG (cdivmodG fuel p q).2 := by
-  rw [cdivmodG_cnormG_right]
-  simpa [toPolyG_cnormG] using toPolyG_cdivmodG fuel p (cnormG q) (cnormG_idem q) hq0
-
-/-- **`cdvdG` reads as remainder-zero**: `cdvdG fuel q p = true ↔ toPolyG (cmodG fuel p q) = 0`. -/
-theorem cdvdG_iff (fuel : ℕ) (q p : CPolyG α) :
-    cdvdG fuel q p = true ↔ toPolyG (cmodG fuel p q) = 0 := by
-  rw [cdvdG, cisZeroG_iff]
-
 /-! #### Degree-drop / termination for `cdivmodG`
 
 The remainder loop strictly shortens the normalized list (`stepG_length_lt`), so `cmodG fuel p q`
@@ -222,42 +175,6 @@ theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q 
     rw [length_cnormG_of_ne _ hne, length_cnormG_of_ne p hp]
     omega
 
-/-- **Generic remainder degree bound**: with enough fuel and a nonzero divisor, `cmodG fuel p q` has
-strictly smaller normalized length than `q` — the Euclidean remainder is properly reduced. -/
-theorem cmodG_length_lt (fuel : ℕ) (p q : CPolyG α) (hq : cnormG q ≠ [])
-    (hfuel : (cnormG p : List α).length ≤ fuel) :
-    (cnormG (cmodG fuel p q) : List α).length < (cnormG q : List α).length := by
-  induction fuel generalizing p with
-  | zero =>
-    have hp0 : cnormG p = [] := List.length_eq_zero_iff.mp (by omega)
-    have h2 : cmodG 0 p q = [] := by simp [cmodG, cdivmodG, hp0]
-    rw [h2]; simpa using List.length_pos_iff.mpr hq
-  | succ fuel ih =>
-    have hcz : cisZeroG (cnormG q) = false := by
-      rw [cisZeroG_cnormG, cisZeroG]; exact List.isEmpty_eq_false_iff.mpr hq
-    by_cases hlen : (cnormG p : List α).length < (cnormG q : List α).length
-    · have h2 : cmodG (fuel + 1) p q = cnormG p := by
-        rw [cmodG, cdivmodG]
-        simp only [hcz, Bool.false_eq_true, if_false, if_pos hlen]
-      rw [h2, cnormG_idem]; exact hlen
-    · have hp : cnormG p ≠ [] := by
-        rintro h
-        rw [h, List.length_nil] at hlen
-        exact hlen (List.length_pos_iff.mpr hq)
-      have hstep := stepG_length_lt p q hp hq (by omega)
-      have key : cmodG (fuel + 1) p q
-          = cmodG fuel (cnormG (csubG (cnormG p)
-              (cmulG (cshiftG ((cnormG p : List α).length - (cnormG q : List α).length)
-                [CField.div (cleadG p) (cleadG q)])
-                (cnormG q)))) q := by
-        rw [cmodG, cdivmodG]
-        simp only [hcz, Bool.false_eq_true, if_false, if_neg hlen, cleadG_cnormG, cmodG,
-          ← cdivmodG_cnormG_right]
-      rw [key]
-      apply ih
-      rw [cnormG_idem]
-      omega
-
 /-! ### Coherence of the generic ops with the concrete `Compute.*` engine at `α = ℚ` -/
 
 /-- `csubG` at `ℚ` is the concrete `csub`. -/
@@ -282,84 +199,6 @@ theorem div_eq_div_rat (a b : ℚ) : CField.div a b = a / b := by
 correctness halves: `toPolyG_cgcdExtG` (Bézout, fuel-independent) and `toPolyG_cgcdExtG_dvd` (the gcd
 divides both inputs, under the termination predicate `cgcdTerminatesG`). An inverse modulo `R`
 (`c⁻¹ mod R`, `c` a unit mod `R`) reads off the Bézout cofactor `s/g`. -/
-
-/-- **Bézout identity through `toPolyG`** for the generic extended Euclidean algorithm (any fuel):
-with `(g, s, t) = cgcdExtG fuel a b`, `toPolyG s · toPolyG a + toPolyG t · toPolyG b = toPolyG g`. -/
-theorem toPolyG_cgcdExtG (fuel : ℕ) (a b : CPolyG α) :
-    toPolyG (cgcdExtG fuel a b).2.1 * toPolyG a + toPolyG (cgcdExtG fuel a b).2.2 * toPolyG b
-      = toPolyG (cgcdExtG fuel a b).1 := by
-  induction fuel generalizing a b with
-  | zero => simp [cgcdExtG, toPolyG_cnormG, toPolyG_cons, CFieldSpec.toK_one]
-  | succ fuel ih =>
-    rw [cgcdExtG]
-    cases hb : cisZeroG b with
-    | true => simp [toPolyG_cnormG, toPolyG_cons, CFieldSpec.toK_one]
-    | false =>
-      simp only [Bool.false_eq_true, if_false]
-      rcases hqr : cdivmodG (fuel + 1) a b with ⟨q, r⟩
-      rcases hg : cgcdExtG fuel b (cmodG (fuel + 1) a b) with ⟨g, s, t⟩
-      have hrmod : cmodG (fuel + 1) a b = r := by rw [cmodG, hqr]
-      have hdiv : toPolyG a = toPolyG q * toPolyG b + toPolyG (cmodG (fuel + 1) a b) := by
-        have h := toPolyG_cdivmodG' (fuel + 1) a b
-          (by intro hc; rw [cisZeroG, hc] at hb; simp at hb)
-        rw [hqr] at h; rw [hrmod]; exact h
-      have hih := ih b (cmodG (fuel + 1) a b)
-      rw [hg] at hih
-      simp only [denote]
-      linear_combination hih + toPolyG t * hdiv
-
-/-- **`cgcdExtG`'s gcd is greatest among common divisors**: any `d` dividing both `toPolyG a` and
-`toPolyG b` divides `toPolyG (cgcdExtG fuel a b).1` (immediate from Bézout). Fuel-independent. -/
-theorem toPolyG_dvd_cgcdExtG {d : (CFieldSpec.K α)[X]} (fuel : ℕ) (a b : CPolyG α)
-    (ha : d ∣ toPolyG a) (hb : d ∣ toPolyG b) :
-    d ∣ toPolyG (cgcdExtG fuel a b).1 := by
-  rw [← toPolyG_cgcdExtG fuel a b]
-  exact dvd_add (ha.mul_left _) (hb.mul_left _)
-
-/-- **Termination predicate** for `cgcdExtG`: the remainder sequence reaches `0` within `fuel`. -/
-def cgcdTerminatesG : ℕ → CPolyG α → CPolyG α → Prop
-  | 0, _, b => cisZeroG b = true
-  | fuel + 1, a, b => cisZeroG b = true ∨ cgcdTerminatesG fuel b (cmodG (fuel + 1) a b)
-
-/-- **`cgcdExtG`'s gcd divides both inputs** when the algorithm terminates: under `cgcdTerminatesG`,
-`toPolyG (cgcdExtG fuel a b).1` divides `toPolyG a` and `toPolyG b`. With `toPolyG_dvd_cgcdExtG`
-(greatest) and Bézout this characterizes `g` as an honest gcd of `a, b` in `K[X]`. -/
-theorem toPolyG_cgcdExtG_dvd : ∀ (fuel : ℕ) (a b : CPolyG α), cgcdTerminatesG fuel a b →
-    toPolyG (cgcdExtG fuel a b).1 ∣ toPolyG a ∧ toPolyG (cgcdExtG fuel a b).1 ∣ toPolyG b := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro a b hterm
-    simp only [cgcdTerminatesG] at hterm
-    rw [cgcdExtG]
-    have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hterm
-    exact ⟨by simp [toPolyG_cnormG], by simp [hb0]⟩
-  | succ fuel ih =>
-    intro a b hterm
-    rw [cgcdExtG]
-    cases hb : cisZeroG b with
-    | true =>
-      have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hb
-      exact ⟨by simp [toPolyG_cnormG], by simp [hb0]⟩
-    | false =>
-      simp only [Bool.false_eq_true, if_false]
-      rcases hqr : cdivmodG (fuel + 1) a b with ⟨q, r⟩
-      rcases hg : cgcdExtG fuel b (cmodG (fuel + 1) a b) with ⟨g, s, t⟩
-      have hterm' : cgcdTerminatesG fuel b (cmodG (fuel + 1) a b) := by
-        rw [cgcdTerminatesG] at hterm
-        rcases hterm with h | h
-        · rw [hb] at h; simp at h
-        · exact h
-      obtain ⟨hgb, hgr⟩ := ih b (cmodG (fuel + 1) a b) hterm'
-      rw [hg] at hgb hgr
-      have hrmod : cmodG (fuel + 1) a b = r := by rw [cmodG, hqr]
-      have hdiv : toPolyG a = toPolyG q * toPolyG b + toPolyG (cmodG (fuel + 1) a b) := by
-        have h := toPolyG_cdivmodG' (fuel + 1) a b
-          (by intro hc; rw [cisZeroG, hc] at hb; simp at hb)
-        rw [hqr] at h; rw [hrmod]; exact h
-      refine ⟨?_, hgb⟩
-      rw [hdiv]
-      exact dvd_add (hgb.mul_left _) hgr
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by

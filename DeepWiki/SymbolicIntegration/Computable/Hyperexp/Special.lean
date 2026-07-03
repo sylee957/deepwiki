@@ -44,7 +44,7 @@ open Compute
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCoreWf α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
 /-! ### The full hyperexponential integral driver `cIntegrateHyperexpG` (Bronstein §5.4 + §5.10)
 

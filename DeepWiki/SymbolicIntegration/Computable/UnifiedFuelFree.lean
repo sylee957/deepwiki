@@ -17,7 +17,7 @@ versions. This file closes it — the transcendental top entry becomes fuel-free
   part to the `b = 0` RDE oracle `cPolyRischDEG`. So the fuel-free version is a pure **leaf substitution** —
   `canonicalRepresentationFastG → canonicalRepresentationFastGWf`, `cIntegrateReducedG →
   cIntegrateReducedGWf`, `cPolyRischDEG → cPolyRischDEGWf` — with NO `termination_by` (all recursion lives in
-  the already-fuel-free leaves). `[CFracGcdCoreWf α]` replaces `[CFracGcdCore α]`. -/
+  the already-fuel-free leaves). `[CFracGcdCoreWf α]` replaces ``. -/
 
 namespace DeepWiki.SymbolicIntegration
 
