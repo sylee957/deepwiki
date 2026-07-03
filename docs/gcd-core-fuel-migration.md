@@ -67,7 +67,31 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   Wf twins carry all runtime. Kept the Yun squarefree section (`cSqfreeYunFFG`, still used by G5).
 - **cleanup** ✅ deleted dead legacy `cSplitFactor` (MonomialDeriv, 0 consumers).
 
-## Status after G6b: CLEAN WINS EXHAUSTED
+## G5 Algebraic — cSqfreeYunFFG arc COMPLETE (G5a–e)
+- **G5a** ✅ radical integral-basis family (`radSquarePart`…`radGenus`) made fuel-free (re-point to
+  `cSqfreeYunFFGWf`, drop fuel; downstream CantorComposition/HyperellipticDivisor + ch2 docstrings fixed).
+- **G5b** ✅ deleted the redundant fuel'd `cIntegrateAlgebraic` island (RadicalIntegrateFull, 15 decls,
+  superseded by `cIntegrateAlgebraicWf` which the Hdl catalog already uses).
+- **G5c** ✅ deleted the orphaned fuel'd `radIntegrateRational` + its mc-dispatch validation (redundant with
+  `radIntegrateRationalWf`); kept shared `mcRho/mcR/mcB/mcRhoQx` (Sources AppendixA uses them — build cross-check
+  caught a missed `mcRhoQx`).
+- **G5d** ✅ made `badPrimes`/`round2Step` fuel-free (the PRODUCTION path `integralBasisLoop→round2Pass→
+  badPrimesOrder` was ALREADY fuel-free — `badPrimesOrder` uses `cSqfreeYunFFGWf`, `integralBasisLoop`'s fuel is a
+  STRUCTURAL iteration bound; only the standalone example versions still threaded gcd-fuel).
+- **G5e** ✅ deleted the now-orphaned fuel'd `cSqfreeYunFFG` + `cSqfreeYunFFGgo`.
+- ★★ KEY DISTINCTION: **GCD-fuel** (threads to `cSqfreeYunFFG`/`cgcdFFCore` — REMOVE) vs **STRUCTURAL fuel**
+  (`integralBasisLoop`'s `deg(disc)+1` iteration bound, `radReduceCase*Iterate`'s multiplicity counter — KEEP;
+  they're meaningful termination bounds, not the "fuel ran out" ugliness). Not all `(fuel : ℕ)` is gcd-fuel.
+
+## G5 REMAINING — cresultantG + cbezoutOne (deeper: proof-migration, not mechanical)
+- `cresultantG` → `cAlgResidueResultant`/`genResidueResultant`/`resYAtNode`/`discResultant` + a real CORRECTNESS
+  layer (`toPolyG_cresultantG`, `toPolyG_cAlgResidueResultant_eq_of_eval`, the residue-soundness theorems in
+  AlgebraicResidues/GeneralResidues/RadicalLogSoundness/GeneralLogSoundness). Wf correctness EXISTS
+  (`toPolyG_cresultantWf`, FuelFreeResultant:115), so it's tractable, but re-pointing needs re-routing those
+  soundness proofs through the Wf lemma — genuine proof-migration, do fresh.
+- `cbezoutOne` → `radInvN` (RadicalGeneralN); `cbezoutOneWf` exists — check if a clean re-point.
+
+## Status after G6b: CLEAN WINS EXHAUSTED (superseded — see G5 above; more clean wins were found + landed)
 The entire fuel'd §5/§6 Tower API is retired (split-factor, canonical-rep, squarefree-split, residue engine,
 hyperexp driver). A full 0-consumer scan finds NO remaining clean fuel'd deletions. The three remaining
 phases are LARGE interdependent cataloged-API cascades — deliberate focused sessions, not autonomous nibbles:
