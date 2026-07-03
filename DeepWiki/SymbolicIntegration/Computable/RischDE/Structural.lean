@@ -49,14 +49,13 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+variable {α : Type*} [CField α] [CDiffField α]
 
 /-! ### Fuel-free structural decomposition
 
 The well-founded runtime module defines the same control-flow reading for `cRischDEGWf`. This wrapper exposes
 it from the structural layer, matching the legacy fueled API location. -/
 
-omit [CFracGcdCore α] in
 /-- **Wf structural decomposition**: `cRischDEGWf = some _` forces the Wf stage `some`-results. -/
 theorem cRischDEGWf_some_imp_stages_structural [CFracGcdCoreWf α] [CRischField α] (Dt : CPolyG α)
     (fnum fden gnum gden ynum yden : CPolyG α)
@@ -87,7 +86,6 @@ under `cdegG Dt = 0` and `0 < cdegG bbar`, the dispatcher result IS the capstone
 recursion `cPolyRischDECancelPrimG` — neither is `cPolyRischDENoCancelG`, so the bridge needs
 `0 < cdegG bbar`, which the capstone's downstream consumption implicitly assumes.) -/
 
-omit [CFracGcdCore α] in
 /-- **Fuel-free mirror of `cPolyRischDEG_eq_noCancel_of_primitive`**: in the primitive regime
 (`cdegG Dt = 0`) with positive `deg(bbar)`, the fuel-free dispatcher `cPolyRischDEGWf` reduces to the
 non-cancellation solve `cPolyRischDENoCancelGWf`. Same Lemma-6.5.1 routing; a structural mirror of the
@@ -106,7 +104,6 @@ theorem cPolyRischDEGWf_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG �
   rw [show (max (0 : ℤ) (-1)) = 0 by norm_num]
   exact_mod_cast hdb
 
-omit [CFracGcdCore α] in
 /-- **Fuel-free mirror of `cRischDEG_some_imp_noCancel_of_primitive`**: from a bare `cRischDEGWf`
 success in the primitive regime with positive `deg(bbar)`, the §6.2 `hnorm`, §6.4 `hspde`, and the
 capstone's §6.5 non-cancellation `hpoly` (`cPolyRischDENoCancelGWf … = some v`) all hold. Composes

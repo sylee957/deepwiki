@@ -118,7 +118,7 @@ the completeness IH one level down. -/
 
 section CancelPredicate
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CRischField α]
 
 /-- **The per-step base-oracle hypothesis (primitive, the tower-induction IH)** `CancelPrimBaseOracle Dt b
@@ -132,7 +132,6 @@ def CancelPrimBaseOracle (b c : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
   ∃ s : α, CRischField.crischDESolve (cleadG b) (cleadG c) = some s
     ∧ CFieldSpec.toK s = q.leadingCoeff
 
-omit [CFracGcdCore α] in
 /-- **The uniform base-oracle completeness hypothesis (primitive, the tower-induction IH)**
 `CancelPrimOracleComplete Dt b`: for every `c'` and every degree-matched abstract solution `q'`
 (`IsNoCancelSolK Dt b c' q'`, `deg q' = deg c'`), the eq. 6.23 base oracle finds its leading coefficient
@@ -143,7 +142,7 @@ def CancelPrimOracleComplete (Dt b : CPolyG α) : Prop :=
   ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
     IsNoCancelSolK Dt b c' q' → (q'.natDegree : ℤ) = cdegG c' → CancelPrimBaseOracle b c' q'
 
-omit [CFracGcdCore α] [CRischField α] in
+omit [CRischField α] in
 /-- **The no-top-cancellation hypothesis along the descent (the engine-regime boundary)**
 `CancelPrimNoCancel Dt b`: every *nonzero* abstract solution `q'` of `D q' + b·q' = c'` is **degree-matched**
 (`deg q' = deg c'`). This is exactly the regime where the engine's `m = deg c` search is exhaustive: genuine
@@ -153,7 +152,6 @@ def CancelPrimNoCancel (Dt b : CPolyG α) : Prop :=
   ∀ (c' : CPolyG α) (q' : (CFieldSpec.K α)[X]),
     IsNoCancelSolK Dt b c' q' → q' ≠ 0 → (q'.natDegree : ℤ) = cdegG c'
 
-omit [CFracGcdCore α] in
 /-- **The §6.6 eq. 6.24 base-RDE coefficient** `expCoeff Dt c b = b₀ + (deg c)·η` (`b₀ = cleadG b`,
 `η = cExpEtaG Dt`), the first argument the hyperexponential engine `cPolyRischDECancelExpG` passes to
 `crischDESolve` at working degree `deg c`. The `m·η` shift is the `tᵐ` factor's
@@ -170,7 +168,6 @@ def CancelExpBaseOracle (Dt : CPolyG α) (b c : CPolyG α) (q : (CFieldSpec.K α
   ∃ s : α, CRischField.crischDESolve (expCoeff Dt c b) (cleadG c) = some s
     ∧ CFieldSpec.toK s = q.leadingCoeff
 
-omit [CFracGcdCore α] in
 /-- **The uniform base-oracle completeness hypothesis (hyperexp, the tower-induction IH)**
 `CancelExpOracleComplete Dt b`: for every `c'` and every degree-matched solution `q'`, the eq. 6.24
 base oracle `crischDESolve (expCoeff Dt c' b) (cleadG c')` finds its leading coefficient. The hyperexp

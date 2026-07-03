@@ -139,7 +139,7 @@ end CPolyG
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+variable {α : Type*} [CField α] [CDiffField α]
 
 /-! ### The generic Rothstein–Trager numerator `a − c·Dd`
 
@@ -172,7 +172,7 @@ structure IntegralResultG (α : Type*) [CField α] where
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
+variable {α : Type*} [CField α] [CDiffField α]
 
 /-- The generic antiderivative identity, cleared of denominators `checkIdentityG Dt res anum aden`:
 `true` iff `res` is a genuine antiderivative of `f = anum/aden`, i.e. `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` for

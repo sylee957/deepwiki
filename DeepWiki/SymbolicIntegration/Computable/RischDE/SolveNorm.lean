@@ -156,7 +156,7 @@ the single isolated normalization-correctness fact, supplied as a hypothesis at 
 
 section Normality
 
-variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCore β] [CFracGcdCoreWf β]
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
 /-- **The weak-normalization guarantee** `IsWeaklyNormalizedNorm h`: the `QFunNZG β` `h` has a
 **weakly-normalized denominator** — its denominator equals its own §3.5 normal part
@@ -181,9 +181,9 @@ the returned `ytilde·q'⁻¹` reads as `Ỹ/Q`. All three are ring-hom computat
 section Bridges
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
-  [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
+  [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
-omit [CFracGcdCore β] [CRischField β] in
+omit [CRischField β] in
 /-- **The derivation bridge** `towerFractionFieldDerivG [1] (toQFunNZG x) = toQFunNZG (towerDerivQFunNZG [1]
 x)`: the abstract fraction-field derivation `towerFractionFieldDerivG [1]` agrees with the computable tower
 derivation `towerDerivQFunNZG [1]` through `toQFunNZG`. Just `toQFunNZG_towerDerivQFunNZG` read through
@@ -193,7 +193,7 @@ theorem towerFractionFieldDerivG_toQFunNZG (x : QFunNZG β) :
       = toQFunNZG (towerDerivQFunNZG ([CField.one] : CPolyG β) x) := by
   rw [towerFractionFieldDerivG, toQFunNZG_towerDerivQFunNZG]
 
-omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β]
+omit [CDiffField β] [CDiffFieldSpec β] [CRischField β]
   [Algebra ℚ (CFieldSpec.K β)] in
 /-- **`toQFunNZG q' ≠ 0` from `q ≠ 0`** (`toQFunNZG_qOfPolyNZG_ne_zero`): the lift `q' = q/1` has nonzero
 field image exactly when `q` is nonzero (`toQFunNZG q' = amG(toPolyG q)/amG 1 = amG(toPolyG q)`). The
@@ -205,7 +205,7 @@ theorem toQFunNZG_qOfPolyNZG_ne_zero (q : CPolyG β) (hq : CPolyG.cisZeroG q = f
   rw [toPolyG_cone_eq_one, map_one, div_one]
   exact amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hq)
 
-omit [CFracGcdCore β] [CRischField β] in
+omit [CRischField β] in
 /-- **`weakNormalizedF` reads as `F − D(Q)/Q`** (`toQFunNZG_weakNormalizedF`, the §6.1 round-trip field
 identity through the construction): `toQFunNZG (weakNormalizedF f q') = toQFunNZG f −
 towerFractionFieldDerivG [1] (toQFunNZG q') / toQFunNZG q'`. The weakly-normalized field element `f̃ = f −
@@ -218,7 +218,7 @@ theorem toQFunNZG_weakNormalizedF (f q' : QFunNZG β) :
   rw [weakNormalizedF, toQFunNZG_qsubNZG, toQFunNZG_qmulNZG, toQFunNZG_qinvNZG,
     towerFractionFieldDerivG_toQFunNZG, div_eq_mul_inv]
 
-omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
+omit [CDiffField β] [CDiffFieldSpec β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
 /-- **The returned solution reads as `Ỹ/Q`** (`toQFunNZG_solution`): `toQFunNZG (qmulNZG ytilde (qinvNZG
 q')) = toQFunNZG ytilde / toQFunNZG q'`. The §6.1 back-transform `y = ỹ/q` read at the field level
 (`toQFunNZG_qmulNZG`/`_qinvNZG`), a ring-hom computation. -/
@@ -227,7 +227,7 @@ theorem toQFunNZG_solution (ytilde q' : QFunNZG β) :
       = toQFunNZG ytilde / toQFunNZG q' := by
   rw [toQFunNZG_qmulNZG, toQFunNZG_qinvNZG, div_eq_mul_inv]
 
-omit [CDiffField β] [CDiffFieldSpec β] [CFracGcdCore β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
+omit [CDiffField β] [CDiffFieldSpec β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
 /-- **The scaled RHS reads as `Q·G`** (`toQFunNZG_scaledRHS`): `toQFunNZG (qmulNZG q' g) = toQFunNZG q' *
 toQFunNZG g`. The §6.1 RHS scaling `g ↦ q·g` read at the field level (`toQFunNZG_qmulNZG`). -/
 theorem toQFunNZG_scaledRHS (q' g : QFunNZG β) :

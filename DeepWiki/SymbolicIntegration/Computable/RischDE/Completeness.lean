@@ -232,7 +232,7 @@ degree-upper-bound (Bronstein Thm 6.3.1). -/
 
 section InnerSubResidual
 
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCore α]
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CRischField α]
 
 /-- **A `cRischDEG`-level polynomial RDE solution** `IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden`:
