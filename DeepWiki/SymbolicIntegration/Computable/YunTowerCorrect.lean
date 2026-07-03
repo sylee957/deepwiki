@@ -260,4 +260,66 @@ theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
   rw [heqb, heqd]
   exact YunInv_smul A 1 (yunInv_base A hp0 hpp) (inv_ne_zero hk0)
 
+/-- `yunLoopAbs`'s spec parameters `A` and `i` are phantom: the emitted list depends only on the pair
+and step count. -/
+theorem yunLoopAbs_irrelevant {K : Type*} [Field K] (A A' : K[X]) :
+    ∀ (n : ℕ) (p : K[X] × K[X]) (i j : ℕ), yunLoopAbs A p i n = yunLoopAbs A' p j n := by
+  intro n
+  induction n with
+  | zero => intro p i j; rfl
+  | succ n ih => intro p i j; obtain ⟨b, d⟩ := p; simp only [yunLoopAbs]; rw [ih _ (i + 1) (j + 1)]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The tower go-loop denotes the abstract `yunLoopAbs`** (run for its own length): the deflated
+state matches `yunLoopAbs`'s recursion (`yunDeflate_fst`/`_snd`) and the emitted factor is the monic
+gcd (`yunEmit_eq_gcd`). Under the gcd frontier; `i` phantom so any start index works. -/
+theorem map_toPolyG_cSqfreeYunFFGgoWf_eq (hgcd : GcdFFCorrect (α := α)) :
+    ∀ (fo : ℕ) (b d : CPolyG α),
+      (cSqfreeYunFFGgoWf fo b d).map toPolyG
+        = yunLoopAbs (0 : (CFieldSpec.K α)[X]) (toPolyG b, toPolyG d) 1
+            (cSqfreeYunFFGgoWf fo b d).length := by
+  intro fo
+  induction fo with
+  | zero => intro b d; simp [cSqfreeYunFFGgoWf, yunLoopAbs]
+  | succ fo ih =>
+    intro b d
+    rw [cSqfreeYunFFGgoWf]
+    by_cases hdeg : cdegG b = 0
+    · rw [if_pos hdeg]; simp [yunLoopAbs]
+    · rw [if_neg hdeg]
+      have hbne : toPolyG b ≠ 0 := fun h => hdeg (by rw [cdegG_eq_natDegree, h, natDegree_zero])
+      rw [List.map_cons, List.length_cons, toPolyG_yunEmit_eq_gcd hgcd b d]
+      -- unfold one `yunLoopAbs` step on the RHS.
+      simp only [yunLoopAbs]
+      -- head gcds agree; tails via the deflate bridges + IH + `i`-irrelevance.
+      congr 1
+      rw [ih (cdivWf b (cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+            (csubG (cdivWf d (cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+              (cderivG (cdivWf b (cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d))))),
+        toPolyG_yunDeflate_fst hgcd b d hbne, toPolyG_yunDeflate_snd hgcd b d hbne]
+      exact yunLoopAbs_irrelevant _ _ _ _ _ _
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The tower Yun factors correspond to `sqfreeFactPart`.** Under the gcd frontier, the factors of
+`cSqfreeYunFFGWf p` are `Forall₂ Associated` to `[sqfreeFactPart A 1, sqfreeFactPart A 2, …]`
+(`A = toPolyG p`) — the tower Yun factorization denotes the abstract one. Combines the go-loop
+denotation (`map_toPolyG_cSqfreeYunFFGgoWf_eq`) with abstract loop correctness (`yunLoopAbs_forall₂`),
+launched from the entry invariant (`toPolyG_yunEntry_YunInv`). -/
+theorem cSqfreeYunFFGWf_forall₂ [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0) :
+    List.Forall₂ Associated ((cSqfreeYunFFGWf p).map toPolyG)
+      ((List.range (cSqfreeYunFFGWf p).length).map
+        (fun j => sqfreeFactPart (toPolyG p) (1 + j))) := by
+  rw [cSqfreeYunFFGWf]
+  set b₁ := cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)) with hb1
+  set d₁ := csubG (cdivWf (cderivG p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)))
+    (cderivG (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)))) with hd1
+  set L := (cSqfreeYunFFGgoWf (cyunBoundG p) b₁ d₁).length with hL
+  have hinv : YunInv (toPolyG p) 1 (toPolyG b₁) (toPolyG d₁) :=
+    toPolyG_yunEntry_YunInv hgcd p hp0 hpp
+  have hmap := map_toPolyG_cSqfreeYunFFGgoWf_eq hgcd (cyunBoundG p) b₁ d₁
+  rw [← hL] at hmap
+  rw [hmap, yunLoopAbs_irrelevant (0 : (CFieldSpec.K α)[X]) (toPolyG p) L (toPolyG b₁, toPolyG d₁) 1 1]
+  exact yunLoopAbs_forall₂ (toPolyG p) hpp L 1 (toPolyG b₁) (toPolyG d₁) (le_refl 1) hinv
+
 end DeepWiki.SymbolicIntegration
