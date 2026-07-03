@@ -60,9 +60,15 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   in OneShotAssembly) — deleted the 2 theorems, orphaning + deleting `cLogArgTowerG` + `cResidueResultantTowerG`.
   Kept shared `cAmcDdG`.
 - **G6a** ✅ deleted orphaned `cSplitSquarefreeFactorFastG`.
-- **REMAINING:** `cSplitFactorFastG`/`canonicalRepresentationFastG` — pinned by the SplitFactorTowerCorrectG
-  correctness track, which is NOT a closed island (`cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG`
-  used by SplitFactorHelpers; SplitFactorTowerCorrectG imported by RadicalIntegralSoundness + RischDE/
-  TowerCorrectG). Needs a multi-file trace: does the LIVE soundness depend on the fuel'd split correctness
-  or on a Wf one? If a Wf split-correctness exists/can replace, migrate then delete; else this track stays.
-  Then G5 (Algebraic `cSqfreeYunFFG`/`cresultantG`/`cbezoutOne`) and G7 (Euclidean base) remain.
+- **REMAINING — split-factor correctness (G6b):** `SplitFactorTowerCorrectG` (10 decls) + `Tower/Unify`
+  (2 decls) are a DECL-DEAD island — NO other file uses any of their decls in code (the one apparent hit was
+  a docstring). BUT they are **import waypoints**: deleting them breaks RadicalIntegralSoundness et al., which
+  rely on *transitive* imports flowing through them (`SplitFactorTowerCorrectG`→`GcdFFCorrect`+`Unify`;
+  `Unify`→`Integrate`+`CanonicalFieldIdentity` — the derivation/`toPolyG` lemmas). ★ A naive delete-and-remove-import
+  attempt broke the build (RadicalIntegralSoundness:461 `radDeriv_radGen_sound_qx`, OneShotSoundness) and was
+  reverted. CORRECT procedure: (1) for EACH importer of the two files, add DIRECT imports of what it used
+  transitively (candidates: `Tower.GcdFFCorrect`, `Tower.Integrate`, `CanonicalFieldIdentity`) — verify by
+  building each importer green with the waypoint import removed but the file still present; (2) once all
+  importers are self-sufficient, delete `SplitFactorTowerCorrectG.lean` + `Tower/Unify.lean` + remove the
+  now-safe imports; (3) that orphans `cSplitFactorFastG`+`canonicalRepresentationFastG` (Tower/Integrate) →
+  delete. Then G5 (Algebraic `cSqfreeYunFFG`/`cresultantG`/`cbezoutOne`) and G7 (Euclidean base) remain.
