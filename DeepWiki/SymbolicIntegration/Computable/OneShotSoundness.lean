@@ -436,90 +436,6 @@ section Cancellation
 
 variable [CRischField α]
 
-/-- **★ Primitive cancellation poly-RDE is sound** (`toPolyG_cmonomialDeriv_cPolyRischDECancelPrim`),
-checker-free and base-oracle-free: if `cPolyRischDECancelPrimG Dt fuel b c n = some q` then the assembled
-`q` solves `Dq + b·q = c` at the polynomial level — `toPolyG (cmonomialDeriv Dt q) + toPolyG b · toPolyG q
-= toPolyG c` over `(CFieldSpec.K α)[X]`. Fuel induction: the base (`cisZeroG c`, `q = []`) gives
-`0 = toPolyG c` (`cisZeroG_iff`); the step assembles `q = s·tᵐ + q'` with the IH `Dq' + b·q' = c'` and
-`c' = c − b·(s·tᵐ) − D(s·tᵐ)`, telescoping to `Dq + b·q = c` by `linear_combination` (the derivation
-`cmonomialDeriv = implicitDeriv` is additive). The base solve `crischDESolve b₀ (lc c) = some s` enters as
-an OPAQUE witness — its correctness is irrelevant to the identity (only to termination), so NO
-`[CRischFieldSpec α]`. -/
-theorem toPolyG_cmonomialDeriv_cPolyRischDECancelPrim (Dt b : CPolyG α) :
-    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : CPolyG α),
-      CPolyG.cPolyRischDECancelPrimG Dt fuel b c n = some q →
-      toPolyG (CPolyG.cmonomialDeriv Dt q) + toPolyG b * toPolyG q = toPolyG c := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro c n q hsolve
-    rw [CPolyG.cPolyRischDECancelPrimG] at hsolve
-    exact absurd hsolve (by simp)
-  | succ fuel ih =>
-    intro c n q hsolve
-    rw [CPolyG.cPolyRischDECancelPrimG] at hsolve
-    simp only at hsolve
-    by_cases hc : CPolyG.cisZeroG c = true
-    · rw [if_pos hc, Option.some.injEq] at hsolve
-      subst hsolve
-      rw [(cisZeroG_iff c).mp hc, toPolyG_cmonomialDeriv, toPolyG_nil, map_zero, mul_zero, add_zero]
-    · rw [if_neg hc] at hsolve
-      by_cases hn : n < (CPolyG.cdegG c : ℤ)
-      · rw [if_pos hn] at hsolve; exact absurd hsolve (by simp)
-      · rw [if_neg hn] at hsolve
-        split at hsolve
-        · exact absurd hsolve (by simp)
-        · rename_i s _hbase
-          split at hsolve
-          · exact absurd hsolve (by simp)
-          · rename_i q' hrec
-            rw [Option.some.injEq] at hsolve
-            subst hsolve
-            have hih := ih _ _ q' hrec
-            simp only [denote, map_add] at hih ⊢
-            linear_combination hih
-
-/-- **★ Hyperexponential cancellation poly-RDE is sound** (`toPolyG_cmonomialDeriv_cPolyRischDECancelExp`),
-checker-free and base-oracle-free: if `cPolyRischDECancelExpG Dt fuel b c n = some q` then `Dq + b·q = c`
-at the polynomial level — `toPolyG (cmonomialDeriv Dt q) + toPolyG b · toPolyG q = toPolyG c` over
-`(CFieldSpec.K α)[X]`. Identical telescoping fuel induction to the primitive case
-(`toPolyG_cmonomialDeriv_cPolyRischDECancelPrim`); the only algorithmic difference is the base RDE's shifted
-coefficient `b₀ + m·η` (eq. 6.24), but the returned `s` again enters opaquely, so the per-step subtraction
-`c ← c − b·(s·tᵐ) − D(s·tᵐ)` telescopes the same way. NO `[CRischFieldSpec α]` hypothesis. -/
-theorem toPolyG_cmonomialDeriv_cPolyRischDECancelExp (Dt b : CPolyG α) :
-    ∀ (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : CPolyG α),
-      CPolyG.cPolyRischDECancelExpG Dt fuel b c n = some q →
-      toPolyG (CPolyG.cmonomialDeriv Dt q) + toPolyG b * toPolyG q = toPolyG c := by
-  intro fuel
-  induction fuel with
-  | zero =>
-    intro c n q hsolve
-    rw [CPolyG.cPolyRischDECancelExpG] at hsolve
-    exact absurd hsolve (by simp)
-  | succ fuel ih =>
-    intro c n q hsolve
-    rw [CPolyG.cPolyRischDECancelExpG] at hsolve
-    simp only at hsolve
-    by_cases hc : CPolyG.cisZeroG c = true
-    · rw [if_pos hc, Option.some.injEq] at hsolve
-      subst hsolve
-      rw [(cisZeroG_iff c).mp hc, toPolyG_cmonomialDeriv, toPolyG_nil, map_zero, mul_zero, add_zero]
-    · rw [if_neg hc] at hsolve
-      by_cases hn : n < (CPolyG.cdegG c : ℤ)
-      · rw [if_pos hn] at hsolve; exact absurd hsolve (by simp)
-      · rw [if_neg hn] at hsolve
-        split at hsolve
-        · exact absurd hsolve (by simp)
-        · rename_i s _hbase
-          split at hsolve
-          · exact absurd hsolve (by simp)
-          · rename_i q' hrec
-            rw [Option.some.injEq] at hsolve
-            subst hsolve
-            have hih := ih _ _ q' hrec
-            simp only [denote, map_add] at hih ⊢
-            linear_combination hih
-
 /-- **★ Fuel-free primitive cancellation poly-RDE is sound**: if `cPolyRischDECancelPrimGWf Dt b c n =
 some q`, then `q` solves `Dq + b·q = c` at the polynomial level. This is the direct Wf analogue of
 `toPolyG_cmonomialDeriv_cPolyRischDECancelPrim`; the runtime length guard only adds terminal `none` cases. -/
@@ -578,53 +494,6 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelExpGWf (Dt b c q : CPolyG α) (
 (`δ = 0`) goes to `cPolyRischDECancelPrimGWf`, the hyperexponential regime (`δ = 1`) to
 `cPolyRischDECancelExpGWf`. The fuel-free soundness proofs inline this case split; named route lemmas remain
 only for the still-fueled structural `cRischDEG` layer. -/
-
-omit [CFieldSpec α] [CDiffFieldSpec α] in
-/-- **The §6.5/§6.6 dispatcher reduces to the primitive cancellation solve** in the primitive regime with
-`deg(b) = 0`, `b ≠ 0`: if `cdegG Dt = 0`, `cdegG b = 0`, `cisZeroG b = false` then
-`cPolyRischDEG Dt fuel b c m = cPolyRischDECancelPrimG Dt fuel b c m`. The `δ = 0 ∧ deg(b) = 0` routing arm
-of Lemma 6.5.1. -/
-theorem cPolyRischDEG_eq_cancelPrim (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (m : ℤ)
-    (hδ : CPolyG.cdegG Dt = 0) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false) :
-    CPolyG.cPolyRischDEG Dt fuel b c m = CPolyG.cPolyRischDECancelPrimG Dt fuel b c m := by
-  rw [CPolyG.cPolyRischDEG]
-  simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero]
-  rw [if_neg (by norm_num), if_pos ⟨trivial, trivial⟩]
-
-omit [CFieldSpec α] [CDiffFieldSpec α] in
-/-- **The §6.5/§6.6 dispatcher reduces to the hyperexponential cancellation solve** in the
-hyperexponential regime with `deg(b) = 0`, `b ≠ 0`: if `cdegG Dt = 1`, `cdegG b = 0`, `cisZeroG b = false`
-then `cPolyRischDEG Dt fuel b c m = cPolyRischDECancelExpG Dt fuel b c m`. The `δ = 1 ∧ deg(b) = 0` routing
-arm of Lemma 6.5.1. -/
-theorem cPolyRischDEG_eq_cancelExp (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (m : ℤ)
-    (hδ : CPolyG.cdegG Dt = 1) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false) :
-    CPolyG.cPolyRischDEG Dt fuel b c m = CPolyG.cPolyRischDECancelExpG Dt fuel b c m := by
-  rw [CPolyG.cPolyRischDEG]
-  simp only [hb, Bool.false_eq_true, if_false, hδ, hdb, Nat.cast_zero, Nat.cast_one]
-  rw [if_neg (by norm_num), if_neg (by norm_num), if_pos ⟨trivial, trivial⟩]
-
-/-- **★ Dispatcher-keyed primitive-cancellation soundness** (`cPolyRischDEG_cancelPrim_sound`): in the
-primitive regime (`cdegG Dt = 0`, `deg(b) = 0`, `b ≠ 0`), a dispatcher success
-`cPolyRischDEG Dt fuel b c m = some q` solves `Dq + b·q = c` at the polynomial level. Composes the routing
-`cPolyRischDEG_eq_cancelPrim` with the cancellation soundness
-`toPolyG_cmonomialDeriv_cPolyRischDECancelPrim`. -/
-theorem cPolyRischDEG_cancelPrim_sound (Dt b c q : CPolyG α) (fuel : ℕ) (m : ℤ)
-    (hδ : CPolyG.cdegG Dt = 0) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false)
-    (hsome : CPolyG.cPolyRischDEG Dt fuel b c m = some q) :
-    toPolyG (CPolyG.cmonomialDeriv Dt q) + toPolyG b * toPolyG q = toPolyG c := by
-  rw [cPolyRischDEG_eq_cancelPrim Dt fuel b c m hδ hdb hb] at hsome
-  exact toPolyG_cmonomialDeriv_cPolyRischDECancelPrim Dt b fuel c m q hsome
-
-/-- **★ Dispatcher-keyed hyperexponential-cancellation soundness** (`cPolyRischDEG_cancelExp_sound`): in
-the hyperexponential regime (`cdegG Dt = 1`, `deg(b) = 0`, `b ≠ 0`), a dispatcher success
-`cPolyRischDEG Dt fuel b c m = some q` solves `Dq + b·q = c` at the polynomial level. Composes the routing
-`cPolyRischDEG_eq_cancelExp` with `toPolyG_cmonomialDeriv_cPolyRischDECancelExp`. -/
-theorem cPolyRischDEG_cancelExp_sound (Dt b c q : CPolyG α) (fuel : ℕ) (m : ℤ)
-    (hδ : CPolyG.cdegG Dt = 1) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false)
-    (hsome : CPolyG.cPolyRischDEG Dt fuel b c m = some q) :
-    toPolyG (CPolyG.cmonomialDeriv Dt q) + toPolyG b * toPolyG q = toPolyG c := by
-  rw [cPolyRischDEG_eq_cancelExp Dt fuel b c m hδ hdb hb] at hsome
-  exact toPolyG_cmonomialDeriv_cPolyRischDECancelExp Dt b fuel c m q hsome
 
 /-- **★ Fuel-free dispatcher-keyed primitive-cancellation soundness**: in the primitive regime
 (`cdegG Dt = 0`, `deg(b) = 0`, `b ≠ 0`), a `cPolyRischDEGWf` success solves `Dq + b·q = c` at the
@@ -714,13 +583,6 @@ theorem cPolyRischDEGWf_cancelExp_field (Dt b c q : CPolyG α) (m : ℤ)
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
--- ★ Primitive cancellation poly-RDE soundness, checker-free and base-oracle-free: `cPolyRischDECancelPrimG
--- = some q ⟹ Dq + b·q = c` over `(CFieldSpec.K α)[X]`, NO `[CRischFieldSpec α]`.
-example (Dt b : CPolyG α) (fuel : ℕ) (c : CPolyG α) (n : ℤ) (q : CPolyG α)
-    (h : CPolyG.cPolyRischDECancelPrimG Dt fuel b c n = some q) :
-    toPolyG (CPolyG.cmonomialDeriv Dt q) + toPolyG b * toPolyG q = toPolyG c :=
-  toPolyG_cmonomialDeriv_cPolyRischDECancelPrim Dt b fuel c n q h
-
 -- ★★ Field-level primitive-cancellation soundness via the fuel-free dispatcher, checker-free,
 -- base-oracle-free: `cPolyRischDEGWf = some q` ⟹ `D(amG q) + amG b · amG q = amG c`.
 example (Dt b c q : CPolyG α) (m : ℤ)
@@ -746,8 +608,6 @@ end Cancellation
 #print axioms mapCoeffs_derivative_commute
 #print axioms cIntegratePolyG_const_coeff
 #print axioms cPolyRischDEGWf_nil_field_identity
-#print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelPrim
-#print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelExp
 #print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelPrimGWf
 #print axioms toPolyG_cmonomialDeriv_cPolyRischDECancelExpGWf
 #print axioms cPolyRischDEGWf_cancelPrim_field
