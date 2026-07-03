@@ -64,11 +64,18 @@ This is the painful part (foldr + reversed lists + negative-index arithmetic); i
   - Supporting: `toK_cnatCastG_laurent` (inline), `toK_cLaurentShiftG_{nat,neg}Cast`.
   Both take the `Dt = C(toK η)·X` hypothesis (the hyperexp monomial).
 - [~] M3 — sum assembly.
-  - [x] **Kernel DONE** (`towerFractionFieldDerivG_laurent_pos_sum`, commit 8a9c074a): `D_tower` distributes
-    over a solved-term list, `D_tower(∑ₖ ⟦qₖtᵏ⟧) = ∑ₖ ⟦aₖtᵏ⟧` (`map_list_sum` + `List.map_congr_left` +
-    M2). The reusable assembly mechanism.
-  - [ ] **num/den plumbing remaining** (the tedious, math-free part): (1) a `posQ`/`negQ` foldr spec —
-    from `posQ pos = some posCoeffs`, extract `∀ k, cLaurentIntCoeffG η k pos[k] = some posCoeffs[k]` and
-    `length`; (2) a Horner decomposition `amG(toPolyG p) = ∑ₖ amG(toPolyG(cshiftG k [p.getD k 0]))`;
-    (3) assemble `⟦num/den⟧ = ∑ⱼ ⟦qⱼtʲ⟧` (neg via `reverse`/`den = tᵐ`) and apply the kernel + neg-term M2,
-    landing `hLaurField`. All three are list inductions — no new mathematics.
+  - [x] Kernel (`towerFractionFieldDerivG_laurent_pos_sum`, 8a9c074a): `D_tower(∑ₖ ⟦qₖtᵏ⟧) = ∑ₖ ⟦aₖtᵏ⟧`.
+  - [x] **Non-negative solve-loop** (`laurentPosGo_sound`, 0ac6f4d6): offset-generalized induction —
+    `posQ` foldr over `pos.zipIdx s` ⟹ `D_tower(⟦tˢ·coeffs⟧) = ⟦tˢ·pos⟧`. Threads the shift through
+    `zipIdx`'s start index; sidesteps the offset pain. **KEY technique: generalize over the `zipIdx` start.**
+  - [x] **Polynomial case DONE** (`cIntegrateHyperexpLaurentG_pos_sound`, e18c5797): full
+    `cIntegrateHyperexpLaurentG η pos [] = some (num,den) ⟹ D_tower(⟦num/den⟧) = ⟦pos⟧`. Unfolds the
+    integrator (`neg=[]` ⟹ `den = t⁰ = 1`), extracts `posQ` via `split`, applies `laurentPosGo_sound`.
+    **This discharges `hLaurField` whenever the special part `b = 0`.**
+  - [ ] **Negative side remaining** (for the general `b ≠ 0` discharge): the symmetric `laurentNegGo_sound`
+    — `D_tower(⟦negCoeffs.reverse⟧/⟦tᵐ⟧) = ⟦neg.reverse⟧/⟦tᵐ⟧` via the neg-term M2 (fraction case). Harder
+    than pos because of `reverse` (cons → append) + `den = tᵐ` (length-dependent): induct with the `/X`
+    shift, `(c::cs).reverse = cs.reverse ++ [c]`, `toPolyG_append`, reindexing `X^{i+1}→X^{i+2}`. Then the
+    full `cIntegrateHyperexpLaurentG` soundness = `toPolyG_append` split of `num = negCoeffs.reverse ++
+    posCoeffs` over `den = tᵐ` into the neg-reverse part (`laurentNegGo_sound`) + the pos part
+    (`laurentPosGo_sound`). No new mathematics — the neg-term identity is already proven.
