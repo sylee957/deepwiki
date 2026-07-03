@@ -174,4 +174,45 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     -- glue: M1 (power drop) + recursion tail.
     linear_combination hstep + ihA
 
+/-! ### M3-bridge — the whole-step field identity from exact division
+
+`cHermiteReduceTowerGWf Dt a d = ((gnum,gden),(hNum,Dstar))` computes the residual `hNum/Dstar` so
+that it equals `a/d - D(g)` by construction: `resNum/resDen = (a·gden² - d·gp)/(d·gden²)` with
+`gp = D(gnum)·gden - gnum·D(gden)` the quotient numerator, and `hNum = (resNum·Dstar)/resDen`. So the
+step identity `D(⟦g⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧` is a clean algebraic assembly reducing to the single
+**exact-division** relation `hNum·resDen = resNum·Dstar` (Hermite's pole-cancellation guarantee, which
+M1/M2 + Yun discharge). Mirrors `canonicalReconstruction`. -/
+
+/-- **The whole-step Hermite field identity.** For the tower derivation `D`, given `d, gden, Dstar ≠ 0`
+and the exact-division relation `⟦hNum⟧·⟦d·gden²⟧ = ⟦resNum⟧·⟦Dstar⟧` (with `resNum = a·gden² - d·gp`,
+`gp = D(gnum)·gden - gnum·D(gden)`), the reduced part telescopes:
+`D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. Reduces `hherm` to the exact-division frontier. -/
+theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPolyG α)
+    (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
+    (hDstar : amG α (toPolyG Dstar) ≠ 0)
+    (hexact : amG α (toPolyG hNum)
+          * amG α (toPolyG (cmulG d (cmulG gden gden)))
+        = amG α (toPolyG (csubG (cmulG a (cmulG gden gden))
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+              (cmulG gnum (cmonomialDeriv Dt gden))))))
+          * amG α (toPolyG Dstar)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
+        + amG α (toPolyG hNum) / amG α (toPolyG Dstar)
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  rw [towerFractionFieldDerivG_div]
+  simp only [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmonomialDeriv, map_sub, map_mul] at hexact ⊢
+  set Dg := Differential.implicitDeriv (toPolyG Dt)
+  -- `⟦hNum/Dstar⟧ = ⟦resNum/resDen⟧` from the exact-division relation.
+  have hgden2 : amG α (toPolyG gden) ^ 2 ≠ 0 := pow_ne_zero _ hgden
+  have hkey : amG α (toPolyG hNum) / amG α (toPolyG Dstar)
+      = (amG α (toPolyG a) * (amG α (toPolyG gden) * amG α (toPolyG gden))
+          - amG α (toPolyG d) * (amG α (Dg (toPolyG gnum)) * amG α (toPolyG gden)
+              - amG α (toPolyG gnum) * amG α (Dg (toPolyG gden))))
+        / (amG α (toPolyG d) * (amG α (toPolyG gden) * amG α (toPolyG gden))) := by
+    rw [div_eq_div_iff hDstar (mul_ne_zero hd (mul_ne_zero hgden hgden))]
+    linear_combination hexact
+  rw [hkey]
+  field_simp
+  ring
+
 end DeepWiki.SymbolicIntegration
