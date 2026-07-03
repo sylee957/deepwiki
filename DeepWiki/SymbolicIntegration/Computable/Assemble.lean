@@ -109,21 +109,71 @@ theorem cIntegrateCase_hyperexp_specNorm :
       | some res => checkIdentityG hyperexpDt res hyperexpSpecNormA hyperexpSpecNormD
       | none => false) = true := by native_decide
 
-/-! ### Soundness transported through the `rfl` bridge (P2 slice)
+/-! ### Generic soundness — one proof, both cases (P2)
 
-Because `cIntegrateCase hyperexpCase` is definitionally `cIntegrateHyperexpFullGWf`, the driver's full
-field-identity soundness applies to the assembler verbatim — no re-proof. -/
+`cIntegrateCase_sound` proves the field identity for the generic assembler from the two abstract hook
+field-identities (`hSpecField` for `integrateSpecial`, `hNrmField` for `reducedCorrect`) and the canonical
+reconstruction. The concrete cases instantiate it; the hyperexp corollary below shows it subsumes the
+driver's own soundness. -/
 
 open QFunNZG Polynomial
 open scoped Differential
 
-/-- **The assembler's hyperexp case is sound.** Same field-identity conclusion as
-`cIntegrateHyperexpFullGWf_sound`, transported through the `rfl` bridge: if `cIntegrateCase hyperexpCase`
-returns `res` with the Laurent/normal sub-solves and their field identities, then
-`D(res.rational) + logResidueSum res.logs = a/d`. -/
-theorem cIntegrateCase_hyperexp_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
-    [CDiffFieldSpec α] [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
-    (Dt a d : CPolyG α)
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+
+omit [CRischField α] in
+/-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving
+`(snum, sden)` (whose fraction differentiates to `specialVal`) and the corrected normal part `nrm` (whose
+rational-plus-logs field identity is `hNrmField`), and the two parts reconstruct `a/d` (`hrecon`), then
+`D(res.rational) + logResidueSum res.logs = a/d`. Proven once, from the hook field-identities. -/
+theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands : List α)
+    (res : IntegralResultG α) (snum sden : CPolyG α) (nrm : IntegralResultG α)
+    (specialVal : RatFunc (CFieldSpec.K α))
+    (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
+    (hSpec : C.integrateSpecial Dt (canonicalRepresentationFastGWf Dt a d).1
+        (canonicalRepresentationFastGWf Dt a d).2.1.1
+        (canonicalRepresentationFastGWf Dt a d).2.1.2 = some (snum, sden))
+    (hCorr : C.reducedCorrect Dt (cIntegrateReducedGWf Dt
+        (canonicalRepresentationFastGWf Dt a d).2.2.1
+        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) = some nrm)
+    (hsome : cIntegrateCase C Dt a d cands = some res)
+    (hSpecField : towerFractionFieldDerivG Dt (amG α (toPolyG snum) / amG α (toPolyG sden)) = specialVal)
+    (hNrmField : towerFractionFieldDerivG Dt
+            (amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2))
+          + logResidueSumG Dt nrm.logs
+        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
+    (hrecon : specialVal + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  have hshape : res = combineSN snum sden nrm := by
+    rw [cIntegrateCase] at hsome
+    rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rw [hcrep] at hsome hSpec hCorr
+    simp only [hSpec, hCorr] at hsome
+    exact (Option.some.injEq _ _ ▸ hsome).symm
+  rw [hshape]
+  show towerFractionFieldDerivG Dt
+      (amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
+        / amG α (toPolyG (cmulG sden nrm.rational.2))) + logResidueSumG Dt nrm.logs = _
+  have hAsden : amG α (toPolyG sden) ≠ 0 := amG_toPolyG_ne_zero hsden
+  have hAgden : amG α (toPolyG nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hcombine : amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
+        / amG α (toPolyG (cmulG sden nrm.rational.2))
+      = amG α (toPolyG snum) / amG α (toPolyG sden)
+        + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
+    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
+    field_simp
+  rw [hcombine, map_add, hSpecField, add_assoc, hNrmField]
+  exact hrecon
+
+/-- **The hyperexp case, as a corollary of the generic soundness** (not the driver): the special value is
+the polynomial part `⟦fpPart⟧`, `integrateSpecial`/`reducedCorrect` are the Laurent/normal solves. -/
+theorem cIntegrateCase_hyperexp_sound (Dt a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
     (fpPart : CPolyG α) (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
@@ -149,7 +199,7 @@ theorem cIntegrateCase_hyperexp_sound {α : Type*} [CField α] [CFieldSpec α] [
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateHyperexpFullGWf_sound Dt a d cands res lnum lden nrm fpPart hlden hgden hLaur hNrm hsome
-    hLaurField hNrmField hrecon
+  cIntegrateCase_sound hyperexpCase Dt a d cands res lnum lden nrm (amG α (toPolyG fpPart))
+    hlden hgden hLaur hNrm hsome hLaurField hNrmField hrecon
 
 end DeepWiki.SymbolicIntegration
