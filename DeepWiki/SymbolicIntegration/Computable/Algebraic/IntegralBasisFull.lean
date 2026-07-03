@@ -383,7 +383,7 @@ def cusp5IBGen : CPolyG (QFunNZG ℚ) := (integralBasis cusp5F).getD 1 []
 #eval (discNum cusp5F : List ℚ)
 
 -- Sanity print: a SINGLE round2Step on the worse cusp (expected `[1, y/x]`, NOT yet maximal).
-#eval (round2Step 12 cusp5F).1.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+#eval (round2Step cusp5F).1.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
 
 -- Sanity print: the FULL integralBasis on the worse cusp (expected `[1, y/x²]`).
 #eval (integralBasis cusp5F).map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
@@ -394,10 +394,10 @@ yet the integral basis — `[1, y/x]` is still non-maximal (`(y/x)/x = y/x²` is
 is `false`). This is exactly why the outer iteration loop is needed: one step is not enough for a worse
 cusp. -/
 theorem cusp5_oneStep_not_maximal :
-    (((round2Step 12 cusp5F).2)
-      && cisZeroG (csubG ((round2Step 12 cusp5F).1.getD 1 [])
+    (((round2Step cusp5F).2)
+      && cisZeroG (csubG ((round2Step cusp5F).1.getD 1 [])
             [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && !isMaximalOrder cusp5F (reduceOrder (round2Step 12 cusp5F).1)) = true := by native_decide
+      && !isMaximalOrder cusp5F (reduceOrder (round2Step cusp5F).1)) = true := by native_decide
 
 /-- **★★ The FULL iteration reaches `[1, y/x²]` for `y² − x⁵`** (`native_decide`): `integralBasis cusp5F`
 iterates Round-2 **twice** (`[1, y] → [1, y/x] → [1, y/x²]`) to the maximal order, returning the generator
@@ -440,7 +440,7 @@ def biCuspIBGen : CPolyG (QFunNZG ℚ) := (integralBasis biCuspF).getD 1 []
 #eval (discNum biCuspF : List ℚ)
 
 -- Sanity print: the bad primes (expected `[x−1, x] = [[-1,1], [0,1]]` in factoring order).
-#eval (badPrimes 16 biCuspF).map (fun p => (cmonicG p : List ℚ))
+#eval (badPrimes biCuspF).map (fun p => (cmonicG p : List ℚ))
 
 -- Sanity print: the FULL integralBasis (expected `[1, y/(x²−x)]`, i.e. second vector denom `[0,-1,1]`).
 #eval (integralBasis biCuspF).map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
@@ -450,7 +450,7 @@ def biCuspIBGen : CPolyG (QFunNZG ℚ) := (integralBasis biCuspF).getD 1 []
 primes where `[1, y]` is non-maximal. The first genuinely multi-prime example (the cusp/node had a single bad
 prime `x`). -/
 theorem biCusp_badPrimes_eq :
-    (badPrimes 16 biCuspF).map cmonicG = [([-1, 1] : CPolyG ℚ), ([0, 1] : CPolyG ℚ)] := by
+    (badPrimes biCuspF).map cmonicG = [([-1, 1] : CPolyG ℚ), ([0, 1] : CPolyG ℚ)] := by
   native_decide
 
 /-- **★★ The multi-prime integral basis is `[1, y/(x(x−1))]`, integral (`(y/(x(x−1)))² = x`) and maximal**

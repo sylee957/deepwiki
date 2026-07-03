@@ -110,14 +110,14 @@ open CPolyG
 The polynomial in `x` whose squarefree part bounds the bad primes. -/
 def discNum (f : CPolyG (QFunNZG ℚ)) : CPolyG ℚ := (discriminant f).1.1
 
-/-- **The bad primes of `f`** `badPrimes fuel f`: the distinct monic irreducible-or-squarefree factors `p`
+/-- **The bad primes of `f`** `badPrimes f`: the distinct monic irreducible-or-squarefree factors `p`
 of the discriminant numerator (`cSqfreeYunFFG` Yun factorization over `ℚ[x]`) that satisfy `p² | d`
 (tested by `cisZeroG (cmodWf d (p·p))`). Over `ℚ[x]` these are the primes where the equation order
 `O = K[x][y]/(f)` may be non-maximal — the primes Round-2 enlarges the order at. (For the cusp `y² − x³`,
 `d = 4x³`, Yun gives `[…, …, x]` with `x` at multiplicity `3`, and `x² | 4x³`, so `badPrimes = [x]`.) -/
-def badPrimes (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) : List (CPolyG ℚ) :=
+def badPrimes (f : CPolyG (QFunNZG ℚ)) : List (CPolyG ℚ) :=
   let d := discNum f
-  let sqf := cSqfreeYunFFG fuel d
+  let sqf := cSqfreeYunFFGWf d
   -- distinct nonconstant squarefree factors, each made monic
   let distinct := (sqf.map cmonicG).filter (fun p => 0 < cdegG p)
   distinct.filter (fun p => cisZeroG (cmodWf d (cmulG p p)))
@@ -140,13 +140,13 @@ def cuspY : CPolyG (QFunNZG ℚ) := afBasisElem 1
 #eval (discNum cuspF : List ℚ)
 
 -- Sanity print: the bad primes of the cusp (expected `[x] = [[0,1]]`).
-#eval (badPrimes 12 cuspF).map (fun p => (p : List ℚ))
+#eval (badPrimes cuspF).map (fun p => (p : List ℚ))
 
 /-- **★ The bad prime of the cusp is `x`** (`native_decide`): `badPrimes cuspF = [x]` (the single monic
 factor `x = [0, 1]` with `x² | 4x³`). The discriminant `4x³` flags exactly `p = x` as the prime where the
 equation order `[1, y]` may be non-maximal. -/
 theorem cusp_badPrimes_eq :
-    (badPrimes 12 cuspF).map cmonicG = [([0, 1] : CPolyG ℚ)] := by native_decide
+    (badPrimes cuspF).map cmonicG = [([0, 1] : CPolyG ℚ)] := by native_decide
 
 /-! ### The p-trace-radical `I_p` at a linear prime (`pTraceRadical`)
 
@@ -397,11 +397,11 @@ equation order `O = [1, y, …, yⁿ⁻¹]` (`powerBasis f`), for the **first** 
 basis and whether it strictly enlarged `O` (`grew = ¬ isPowerBasis`). When there is no bad prime, the order
 is already maximal at every linear prime and the power basis is returned with `grew = false`. (The headline
 linear-prime case; multiple bad primes / higher-degree residue fields iterate this, documented at the end.) -/
-def round2Step (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) :
+def round2Step (f : CPolyG (QFunNZG ℚ)) :
     List (CPolyG (QFunNZG ℚ)) × Bool :=
   let n := cdegG f
   let O := powerBasis f
-  match (badPrimes fuel f) with
+  match (badPrimes f) with
   | [] => (O, false)
   | p :: _ =>
     let pm := cmonicG p
@@ -428,21 +428,21 @@ open CPolyG
   (fun M => M.map (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ)))))
 
 -- Sanity print: the new basis from round2Step (coordinate vectors over ℚ(x); expected `[1,0]`, `[0,1/x]`).
-#eval (round2Step 12 cuspF).1.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
+#eval (round2Step cuspF).1.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
 
 -- Sanity print: did the order grow? (expected `true`).
-#eval (round2Step 12 cuspF).2
+#eval (round2Step cuspF).2
 
 /-- The computed enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x³)` = the second basis vector of `round2Step`
 (`= [0, 1/x]` in the `[1, y]` order basis). The element the engine produces as the Round-2 enlargement. -/
-def cuspNewGen : CPolyG (QFunNZG ℚ) := (round2Step 12 cuspF).1.getD 1 []
+def cuspNewGen : CPolyG (QFunNZG ℚ) := (round2Step cuspF).1.getD 1 []
 
 /-- **★★ `round2Step` ENLARGES the cusp order** (`native_decide`): `(round2Step (y² − x³)).2 = true` — the
 idealizer `(I_x : I_x)` strictly contains the equation order `[1, y]`. The Ford–Zassenhaus Round-2 step
 detects and performs the enlargement. THE ENGINE COMPUTES A ROUND-2 STEP OF THE GENERAL-CURVE INTEGRAL
 BASIS. -/
 theorem cusp_round2_grew :
-    (round2Step 12 cuspF).2 = true := by native_decide
+    (round2Step cuspF).2 = true := by native_decide
 
 /-- **★★ The enlarged generator is `y/x`** (`native_decide`): the second basis vector computed by
 `round2Step` for the cusp is `[0, 1/x]` in the `[1, y]` order basis — i.e. the element `y/x`. The first
@@ -450,7 +450,7 @@ basis vector stays `1` (`[1]`). So `round2Step` produces exactly `[1, y/x]`, the
 the integrality of `y/x`. Checked by `cisZeroG (cuspNewGen − [0, 1/x])` and the first vector being `1`. -/
 theorem cusp_round2_newGen_eq :
     (cisZeroG (csubG cuspNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG ((round2Step 12 cuspF).1.getD 0 []) [CField.one])) = true := by native_decide
+      && cisZeroG (csubG ((round2Step cuspF).1.getD 0 []) [CField.one])) = true := by native_decide
 
 /-- **★★ The enlarged generator `y/x` is INTEGRAL: `(y/x)² = x`** (`native_decide`): `afMul f (y/x) (y/x) =
 x` in `ℚ(x)[y]/(y² − x³)`, i.e. `(y/x)² = y²/x² = x³/x² = x` — a monic integral relation. This is the
@@ -465,7 +465,7 @@ again (`grew = false`). So the Round-2 iteration has reached a fixed point: `[1,
 of the cusp `y² − x³` (genus 0, the well-known result). Verified by running `idealizerBasis` /
 `pTraceRadical` against `[1, y/x]` and checking the order does not enlarge. -/
 theorem cusp_secondStep_stable :
-    let O2 := (round2Step 12 cuspF).1
+    let O2 := (round2Step cuspF).1
     let ip2 := pTraceRadical cuspF [0, 1] 0
     let O3 := idealizerBasis cuspF O2 ip2
     (List.range 2).all (fun i =>
@@ -489,22 +489,22 @@ def nodeF : CPolyG (QFunNZG ℚ) :=
 
 /-- The computed enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x²(x+1))` = the second basis vector of
 `round2Step nodeF` (`= [0, 1/x]` in the `[1, y]` order basis). -/
-def nodeNewGen : CPolyG (QFunNZG ℚ) := (round2Step 12 nodeF).1.getD 1 []
+def nodeNewGen : CPolyG (QFunNZG ℚ) := (round2Step nodeF).1.getD 1 []
 
 -- Sanity print: the node discriminant numerator (expected `4x²(x+1) = 4x² + 4x³ = [0,0,4,4]`).
 #eval (discNum nodeF : List ℚ)
 
 -- Sanity print: the node bad primes (expected `[x] = [[0,1]]`).
-#eval (badPrimes 12 nodeF).map (fun p => (cmonicG p : List ℚ))
+#eval (badPrimes nodeF).map (fun p => (cmonicG p : List ℚ))
 
 /-- **★ The node bad prime is `x`, and `round2Step` enlarges to `[1, y/x]`** (`native_decide`):
 `badPrimes nodeF = [x]`, the order grows (`.2 = true`), and the new generator is `[0, 1/x] = y/x` while the
 first basis vector stays `1`. Same enlargement as the cusp, on a different curve. -/
 theorem node_round2_newGen_eq :
-    ((badPrimes 12 nodeF).map cmonicG = [([0, 1] : CPolyG ℚ)]
-      && (round2Step 12 nodeF).2
+    ((badPrimes nodeF).map cmonicG = [([0, 1] : CPolyG ℚ)]
+      && (round2Step nodeF).2
       && cisZeroG (csubG nodeNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZeroG (csubG ((round2Step 12 nodeF).1.getD 0 []) [CField.one])) = true := by
+      && cisZeroG (csubG ((round2Step nodeF).1.getD 0 []) [CField.one])) = true := by
   native_decide
 
 /-- **★ The node's enlarged generator is INTEGRAL with relation `(y/x)² = x + 1`** (`native_decide`):
@@ -518,7 +518,7 @@ theorem node_newGen_integral :
 (`native_decide`): the idealizer of the p-trace-radical against the enlarged basis `[1, y/x]` is `[1, y/x]`
 again. The Round-2 iteration reaches its fixed point in one step for the node, as for the cusp. -/
 theorem node_secondStep_stable :
-    let O2 := (round2Step 12 nodeF).1
+    let O2 := (round2Step nodeF).1
     let ip2 := pTraceRadical nodeF [0, 1] 0
     let O3 := idealizerBasis nodeF O2 ip2
     (List.range 2).all (fun i =>
