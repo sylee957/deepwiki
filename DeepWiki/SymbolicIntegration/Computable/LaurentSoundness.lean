@@ -112,4 +112,23 @@ theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
   push_cast
   ring
 
+/-! ### M3 (sum assembly): `D_tower` distributes over a list of solved Laurent terms -/
+
+/-- **The non-negative Laurent sum is an antiderivative.** For a list `l` of `(k, aₖ, qₖ)` where each `qₖ`
+solves the shift-`k` RDE, `D_tower(∑ₖ ⟦qₖ·tᵏ⟧) = ∑ₖ ⟦aₖ·tᵏ⟧`. The additive assembly of
+`cIntegrateHyperexpLaurent_pos_term` over the term list (`map_list_sum` + per-term M2). -/
+theorem towerFractionFieldDerivG_laurent_pos_sum [CRischField α] [CRischFieldSpec α]
+    (Dt : CPolyG α) (η : α) (l : List (ℕ × α × α))
+    (hDt : toPolyG Dt = Polynomial.C (CFieldSpec.toK η) * Polynomial.X)
+    (hall : ∀ t ∈ l, cLaurentIntCoeffG η (t.1 : ℤ) t.2.1 = some t.2.2) :
+    towerFractionFieldDerivG Dt
+        ((l.map (fun t => amG α (toPolyG (cshiftG t.1 ([t.2.2] : CPolyG α))))).sum)
+      = (l.map (fun t => amG α (toPolyG (cshiftG t.1 ([t.2.1] : CPolyG α))))).sum := by
+  rw [map_list_sum, List.map_map]
+  congr 1
+  apply List.map_congr_left
+  intro t ht
+  simp only [Function.comp_apply]
+  exact cIntegrateHyperexpLaurent_pos_term Dt η t.1 t.2.1 t.2.2 hDt (hall t ht)
+
 end DeepWiki.SymbolicIntegration
