@@ -72,7 +72,7 @@ both `cbezoutOne` and `radReduce` is `2·(n + len g) + 2`, comfortably above the
 field inverse whenever `yⁿ − f` is irreducible (Trager's algebraic-extension reciprocal). -/
 def radInvN (n : ℕ) (f : α) (g : RadElem α) : RadElem α :=
   let fuel := 2 * (n + (g : List α).length) + 2
-  let (s, _) := CPolyG.cbezoutOne fuel g (radModulus n f)
+  let (s, _) := CPolyG.cbezoutOneWf g (radModulus n f)
   radReduce n f fuel s
 
 end RadElem

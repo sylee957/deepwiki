@@ -19,15 +19,6 @@ variable {α : Type*} [CField α]
 
 `cbezoutOne` extracts the rescaled cofactors from `cgcdExtG`. -/
 
-/-- Bézout cofactors `cbezoutOne fuel a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`: run
-`cgcdExtG` with the given `fuel` to get `(g, s, t)` with `s·a + t·b = g` (a nonzero constant, since
-`a, b` are coprime), then rescale by `g⁻¹` so `u = s/g`, `w = t/g` (the cofactors of the monic
-gcd `1`). -/
-def cbezoutOne (fuel : ℕ) (a b : CPolyG α) : CPolyG α × CPolyG α :=
-  let (g, s, t) := cgcdExtG fuel a b
-  let ginv := CField.inv (cleadG g)
-  (cscaleG ginv s, cscaleG ginv t)
-
 /-- Natural number as a field element: `cnatCastG k = 1 + 1 + … + 1` (`k` times), built only from
 `CField.add`/`CField.one`. Needs only `[CField α]`, so it reduces under `native_decide`; used to
 form the `−a/j` scaling in the Hermite inner loop. (`ComputableFieldGcd.nsmulG` carries a
