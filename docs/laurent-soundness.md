@@ -63,7 +63,12 @@ This is the painful part (foldr + reversed lists + negative-index arithmetic); i
     the negative-shift RDE, closed by `field_simp`/`push_cast`/`ring`.
   - Supporting: `toK_cnatCastG_laurent` (inline), `toK_cLaurentShiftG_{nat,neg}Cast`.
   Both take the `Dt = C(toK η)·X` hypothesis (the hyperexp monomial).
-- [ ] M3 — sum assembly → `hLaurField` discharged. Remaining: `num = negCoeffs.reverse ++ posCoeffs`,
-  `den = tᵐ`; express `⟦num/den⟧ = ∑ⱼ ⟦qⱼ·tʲ⟧`, sum the M2 identities over the `Option`-`foldr`
-  (`negQ`/`posQ`) structure by induction, and relate `∑ⱼ ⟦aⱼtʲ⟧` to the Laurent integrand `⟦fp + b/dₛ⟧`.
-  The genuinely list-heavy induction; both per-term identities it needs are now proven.
+- [~] M3 — sum assembly.
+  - [x] **Kernel DONE** (`towerFractionFieldDerivG_laurent_pos_sum`, commit 8a9c074a): `D_tower` distributes
+    over a solved-term list, `D_tower(∑ₖ ⟦qₖtᵏ⟧) = ∑ₖ ⟦aₖtᵏ⟧` (`map_list_sum` + `List.map_congr_left` +
+    M2). The reusable assembly mechanism.
+  - [ ] **num/den plumbing remaining** (the tedious, math-free part): (1) a `posQ`/`negQ` foldr spec —
+    from `posQ pos = some posCoeffs`, extract `∀ k, cLaurentIntCoeffG η k pos[k] = some posCoeffs[k]` and
+    `length`; (2) a Horner decomposition `amG(toPolyG p) = ∑ₖ amG(toPolyG(cshiftG k [p.getD k 0]))`;
+    (3) assemble `⟦num/den⟧ = ∑ⱼ ⟦qⱼtʲ⟧` (neg via `reverse`/`den = tᵐ`) and apply the kernel + neg-term M2,
+    landing `hLaurField`. All three are list inductions — no new mathematics.
