@@ -103,5 +103,31 @@ pole-cancellation assembly), on the same footing as the RT residue-match and spl
   pole-cancellation is a REAL theorem, **not** an `m≤1` limitation; the objective is attainable. The
   proof is a port of the abstract `hermiteReduce_residual_correct_of_radical` to the tower.
 
+## Pole-cancellation — precise proof roadmap (next session)
+
+The abstract pole-cancellation is `prod_dvd_residNum` (HermiteCorrectness:2850): `∏Vk^{ik−1} ∣ R` where
+`R = C(1−m)·A + Σ residNumIncr` — **conclusion is purely polynomial** (derivation-independent). Its
+structure, and how each hypothesis maps to a tower fact already in hand:
+
+| abstract hypothesis | tower source |
+|---|---|
+| `hstep` (per-factor `gloc′ = A/D − residNum/D`) | **M2** `cHermiteReduceTowerInnerWf_spec_acc` (have it) |
+| `hpw` (kept factors pairwise coprime) | Yun structural — needs multiplicity correspondence |
+| `hpow` (`Vk^ik ∣ D`) | Yun structural — needs multiplicity correspondence |
+| `hnd` (kept factors nodup) | Yun structural — needs multiplicity correspondence |
+| `D = Dstar·W`, `W = ∏Vk^{ik−1}` | **Y4** `toPolyG_yunRadical_split` (radical ∣ d; extend to the exact `W = ∏Vk^{ik−1}` form) |
+
+Two work items:
+1. **Generalize** `prod_dvd_residNum` + `dvd_residNum_factor` + `total_fold_residual_over_D` (~200 L of
+   `IsQRegular` valuation theory over `RatFunc ℚ` with `d/dx`) to an **arbitrary derivation** on
+   `RatFunc K` — the conclusion is polynomial, only the `hstep`/`hdiff` steps touch `′`, so it should
+   generalize; this is the bulk.
+2. **Yun structural facts** over the tower (kept factors pairwise coprime, `Vk^ik ∣ d`, nodup) — needs
+   the `YunInv`/`sqfreeFactPart` **multiplicity correspondence** (extend `YunTowerCorrect.lean`; the
+   abstract `yunFactorizationAbs_pairwise_isRelPrime`/`_prodPow_assoc` provide the targets).
+
+Then feed M2 (item hstep) + Y4-extended (radical) + item-2 (structural) into the generalized
+`prod_dvd_residNum` to get `W·gden²∣resNum`, discharging `hWgd`.
+
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
 matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
