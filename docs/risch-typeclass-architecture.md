@@ -203,17 +203,24 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 | hypothesis | deep lemma | status |
 | --- | --- | --- |
 | primitive `hSpecField` | `cPolyRischDEGWf_nil_field_identity` | **exists — discharged** |
-| `hNrmField` (reduced) | `field_identity_of_cIntegrateReducedGWf_of_residueMatch` | exists, but needs a `residueMatch` + Hermite side condition |
-| `hrecon` (canonical) | — | **missing** (the common blocker for both cases) |
-| hyperexp `hLaurField` (Laurent) | — | **missing** |
+| `hrecon` (canonical) | `canonicalReconstruction` (new) | **discharged, modulo the split frontier** |
+| `hNrmField` (reduced) | `field_identity_of_cIntegrateReducedGWf_of_residueMatch` | exists, needs a `residueMatch` + Hermite side condition |
+| split correctness `d = dₛ·dₙ` + coprimality | `cSplitFactorFastGWf` | **missing** (`native_decide`-only engine frontier) |
+| hyperexp `hLaurField` (Laurent) | — | missing |
 
-So the single highest-leverage next lemma is **canonical reconstruction**
-`⟦fp⟧ + ⟦cn/dn⟧ = ⟦a/d⟧` for `canonicalRepresentationFastGWf` — it unblocks `hrecon` for *both* cases.
-Then reduced-soundness (modulo residueMatch) discharges `hNrmField`, leaving hyperexp gated only on a new
-Laurent-soundness lemma.
+`canonicalReconstruction` assembles `toPolyG_cdivmodWf` + `toPolyG_cbezoutOneWf` +
+`toPolyG_cextendedEuclideanSplitWf` + `canonicalRepFast_field_identity`, so `hrecon` now reduces to exactly
+the `cSplitFactorFastGWf` split-correctness (`d = dₛ·dₙ`, coprimality). `cIntegrateCase_primitive_sound_full`
+(`Dt=1`, `fₚ≠0`, `b=0`) discharges **both** `hSpecField` and `hrecon` — the primitive case is now sound given
+only the reduced identity (`hNrmField`) and the split frontier.
 
-- Open: `LawfulMonomialCase` bundled Prop; the missing canonical-reconstruction + Laurent lemmas above;
-  `CResidueSource` (P0); completeness (P3).
+So the two remaining primitive frontiers are: **(1) reduced-soundness wiring** (discharge `hNrmField` from
+`field_identity_of_cIntegrateReducedGWf_of_residueMatch`, modulo `residueMatch`), and **(2)
+`cSplitFactorFastGWf` split correctness** (`native_decide`-only). Hyperexp additionally needs Laurent
+soundness.
+
+- Open: reduced-soundness wiring + `cSplitFactorFastGWf` split correctness; Laurent soundness (hyperexp);
+  `LawfulMonomialCase` bundled Prop; `CResidueSource` (P0); completeness (P3).
 
 ## Phases
 
