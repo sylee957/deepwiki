@@ -194,4 +194,63 @@ theorem cHermiteReduceTowerGWf_frac_eq_sum (Dt a d : CPolyG α)
     (by rw [hone]; exact one_ne_zero) hden]
   rw [hz, hone, map_zero, map_one, zero_div, zero_add]
 
+/-- The `gloc` fraction of a Hermite-fold factor `x = (v, idx)` (multiplicity `idx+1`). -/
+noncomputable def glocFracG (Dt a d : CPolyG α) (x : CPolyG α × ℕ) : RatFunc (CFieldSpec.K α) :=
+  amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      ([CField.zero], [CField.one])).1.1)
+    / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      ([CField.zero], [CField.one])).1.2)
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
+/-- A fold factor's `gloc` fraction is `Q`-regular for `Q` coprime to its `v`. -/
+theorem glocFracG_isQRegularG (Dt a d : CPolyG α) {Q : (CFieldSpec.K α)[X]} (x : CPolyG α × ℕ)
+    (hv : toPolyG x.1 ≠ 0) (hcop : IsRelPrime Q (toPolyG x.1)) :
+    IsQRegularG Q (glocFracG Dt a d x) :=
+  gloc_isQRegularG Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) hv hcop (x.2 + 1 - 1) a
+
+/-- **`D(⟦g⟧) − D(⟦gloc_k⟧)` is `Vk`-regular** — the pole-cancellation valuation core. `⟦g⟧ = Σ⟦gloc⟧`,
+so its tower derivative splits (`map_list_sum`); permuting `kelem` to the front and cancelling leaves
+`Σ_{j≠k} D(⟦gloc_j⟧)`, each `Vk`-regular (`glocFracG_isQRegularG.deriv`, coprimality `hcop`). Tower analog
+of `deriv_fold_sub_glocIncr_isQRegular`. -/
+theorem deriv_fold_sub_isQRegularG (Dt a d : CPolyG α) (kelem : CPolyG α × ℕ)
+    (hkmem : kelem ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)))
+    (hnd : ((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).Nodup)
+    (hV : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx, toPolyG x.1 ≠ 0)
+    (hcop : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)), x ≠ kelem →
+      IsRelPrime (toPolyG kelem.1) (toPolyG x.1)) :
+    IsQRegularG (toPolyG kelem.1)
+      (towerFractionFieldDerivG Dt
+          (amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.1)
+            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2))
+        - towerFractionFieldDerivG Dt (glocFracG Dt a d kelem)) := by
+  classical
+  set kept := (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)) with hkeptdef
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  have hden : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
+      toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+        ([CField.zero], [CField.one])).1.2 ≠ 0 := by
+    intro x hx _
+    obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt x.1
+      (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])
+    rw [hN, hone, one_mul]; exact pow_ne_zero N (hV x hx)
+  -- `⟦g⟧ = Σ_{kept} glocFracG`, so `D⟦g⟧ = Σ D(glocFracG)`.
+  rw [cHermiteReduceTowerGWf_frac_eq_sum Dt a d hden,
+    map_list_sum (towerFractionFieldDerivG Dt), List.map_map, ← hkeptdef,
+    (List.perm_cons_erase hkmem).map _ |>.sum_eq, List.map_cons, List.sum_cons,
+    show (⇑(towerFractionFieldDerivG Dt) ∘ fun x =>
+        amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1)))
+            (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.1)
+          / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1)))
+            (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2)) kelem
+      = towerFractionFieldDerivG Dt (glocFracG Dt a d kelem) from rfl,
+    add_sub_cancel_left]
+  refine isQRegularG_list_sum _ (fun f hf => ?_)
+  rw [List.mem_map] at hf
+  obtain ⟨x, hx, rfl⟩ := hf
+  rw [hnd.mem_erase_iff] at hx
+  have hxmem : x ∈ (cSqfreeYunFFGWf d).zipIdx := List.mem_of_mem_filter (hkeptdef ▸ hx.2)
+  exact (glocFracG_isQRegularG Dt a d x (hV x hxmem)
+    (hcop x (hkeptdef ▸ hx.2) hx.1)).deriv Dt
+
 end DeepWiki.SymbolicIntegration
