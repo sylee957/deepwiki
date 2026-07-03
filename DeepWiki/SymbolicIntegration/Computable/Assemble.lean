@@ -113,8 +113,9 @@ theorem cIntegrateCase_hyperexp_specNorm :
 
 `cIntegrateCase_sound` proves the field identity for the generic assembler from the two abstract hook
 field-identities (`hSpecField` for `integrateSpecial`, `hNrmField` for `reducedCorrect`) and the canonical
-reconstruction. The concrete cases instantiate it; the hyperexp corollary below shows it subsumes the
-driver's own soundness. -/
+reconstruction. Signatures read through the helpers below: `IsIntegralResultG` (the antiderivative
+predicate), `fieldFrac` (a `CPolyG` fraction as a tower field element), and the `cr*`/`redNorm`
+canonical-split accessors. The concrete cases instantiate it. -/
 
 open QFunNZG Polynomial
 open scoped Differential
@@ -122,40 +123,49 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
 
+/-- The tower fraction-field element `⟦num/den⟧ = amG(toPolyG num) / amG(toPolyG den)`. -/
+noncomputable abbrev fieldFrac (num den : CPolyG α) : RatFunc (CFieldSpec.K α) :=
+  amG α (toPolyG num) / amG α (toPolyG den)
+
+/-- Polynomial part `fₚ` of `canonicalRepresentationFastGWf Dt a d`. -/
+abbrev crPoly (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).1
+/-- Special-part numerator `b` of the canonical split. -/
+abbrev crSpecNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.1.1
+/-- Special-part denominator `dₛ` of the canonical split. -/
+abbrev crSpecDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.1.2
+/-- Normal-part numerator `cₙ` of the canonical split. -/
+abbrev crNormNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.2.1
+/-- Normal-part denominator `dₙ` of the canonical split. -/
+abbrev crNormDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.2.2
+/-- The reduced integral of the normal part `cₙ/dₙ`. -/
+abbrev redNorm (Dt a d : CPolyG α) (cands : List α) : IntegralResultG α :=
+  cIntegrateReducedGWf Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
+
 omit [CRischField α] in
 /-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving
-`(snum, sden)` (whose fraction differentiates to `specialVal`) and the corrected normal part `nrm` (whose
-rational-plus-logs field identity is `hNrmField`), and the two parts reconstruct `a/d` (`hrecon`), then
-`D(res.rational) + logResidueSum res.logs = a/d`. Proven once, from the hook field-identities. -/
+`(snum, sden)` (differentiating to `specialVal`) and the corrected normal part `nrm` (satisfying the
+antiderivative predicate `hNrmField`), and the parts reconstruct `a/d` (`hrecon`), then `res` is an
+antiderivative of `a/d`. Proven once, from the hook field-identities. -/
 theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (snum sden : CPolyG α) (nrm : IntegralResultG α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
-    (hSpec : C.integrateSpecial Dt (canonicalRepresentationFastGWf Dt a d).1
-        (canonicalRepresentationFastGWf Dt a d).2.1.1
-        (canonicalRepresentationFastGWf Dt a d).2.1.2 = some (snum, sden))
-    (hCorr : C.reducedCorrect Dt (cIntegrateReducedGWf Dt
-        (canonicalRepresentationFastGWf Dt a d).2.2.1
-        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) = some nrm)
+    (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
+      = some (snum, sden))
+    (hCorr : C.reducedCorrect Dt (redNorm Dt a d cands) = some nrm)
     (hsome : cIntegrateCase C Dt a d cands = some res)
-    (hSpecField : towerFractionFieldDerivG Dt (amG α (toPolyG snum) / amG α (toPolyG sden)) = specialVal)
-    (hNrmField : towerFractionFieldDerivG Dt
-            (amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2))
-          + logResidueSumG Dt nrm.logs
-        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
-    (hrecon : specialVal + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
+    (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
+    (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
+    (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
+    IsIntegralResultG Dt a d res := by
   have hshape : res = combineSN snum sden nrm := by
     rw [cIntegrateCase] at hsome
+    simp only [crPoly, crSpecNum, crSpecDen, redNorm, crNormNum, crNormDen] at hSpec hCorr
     rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
     rw [hcrep] at hsome hSpec hCorr
     simp only [hSpec, hCorr] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
+  simp only [IsIntegralResultG] at hNrmField ⊢
   rw [hshape]
   show towerFractionFieldDerivG Dt
       (amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
@@ -168,124 +178,72 @@ theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands :
         + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
     rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
     field_simp
-  rw [hcombine, map_add, hSpecField, add_assoc, hNrmField]
-  exact hrecon
+  rw [hcombine, map_add]
+  simp only [fieldFrac] at hSpecField
+  rw [hSpecField, add_assoc, hNrmField]
+  simpa only [fieldFrac] using hrecon
 
 /-- **The hyperexp case, as a corollary of the generic soundness** (not the driver): the special value is
 the polynomial part `⟦fpPart⟧`, `integrateSpecial`/`reducedCorrect` are the Laurent/normal solves. -/
 theorem cIntegrateCase_hyperexp_sound (Dt a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
     (fpPart : CPolyG α) (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
-    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
-        (canonicalRepresentationFastGWf Dt a d).1
-        (cHyperexpSpecialNegG (canonicalRepresentationFastGWf Dt a d).2.1.1
-          (canonicalRepresentationFastGWf Dt a d).2.1.2)
-      = some (lnum, lden))
-    (hNrm : cIntegrateHyperexpNormalGWf Dt
-        (canonicalRepresentationFastGWf Dt a d).2.2.1
-        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands = some nrm)
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt) (crPoly Dt a d)
+        (cHyperexpSpecialNegG (crSpecNum Dt a d) (crSpecDen Dt a d)) = some (lnum, lden))
+    (hNrm : cIntegrateHyperexpNormalGWf Dt (crNormNum Dt a d) (crNormDen Dt a d) cands = some nrm)
     (hsome : cIntegrateCase hyperexpCase Dt a d cands = some res)
-    (hLaurField : towerFractionFieldDerivG Dt (amG α (toPolyG lnum) / amG α (toPolyG lden))
-        = amG α (toPolyG fpPart))
-    (hNrmField : towerFractionFieldDerivG Dt
-            (amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2))
-          + logResidueSumG Dt nrm.logs
-        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
-    (hrecon : amG α (toPolyG fpPart)
-          + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) :=
+    (hLaurField : towerFractionFieldDerivG Dt (fieldFrac lnum lden) = amG α (toPolyG fpPart))
+    (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
+    (hrecon : amG α (toPolyG fpPart) + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
+    IsIntegralResultG Dt a d res :=
   cIntegrateCase_sound hyperexpCase Dt a d cands res lnum lden nrm (amG α (toPolyG fpPart))
     hlden hgden hLaur hNrm hsome hLaurField hNrmField hrecon
 
 /-- **The primitive case, as a corollary of the generic soundness.** The special part is the polynomial
-`qₚ` (as `qₚ/1`) from the `b = 0` RDE; the reduced part needs no correction, so `nrm` is the reduced result
-directly. -/
+`qₚ` (as `qₚ/1`) from the `b = 0` RDE; the reduced part needs no correction, so `nrm` is `redNorm`. -/
 theorem cIntegrateCase_primitive_sound (Dt a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
     (qp : CPolyG α) (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPolyG ([CField.one] : CPolyG α) ≠ 0)
-    (hgden : toPolyG (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
-        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2 ≠ 0)
-    (hb : cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hqp : cPolyRischDEGWf Dt [] (canonicalRepresentationFastGWf Dt a d).1
-        ((cdegG (canonicalRepresentationFastGWf Dt a d).1 : ℤ) + 1) = some qp)
+    (hgden : toPolyG (redNorm Dt a d cands).rational.2 ≠ 0)
+    (hb : cisZeroG (crSpecNum Dt a d) = true)
+    (hqp : cPolyRischDEGWf Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase Dt a d cands = some res)
-    (hSpecField : towerFractionFieldDerivG Dt
-        (amG α (toPolyG qp) / amG α (toPolyG ([CField.one] : CPolyG α))) = specialVal)
-    (hNrmField : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
-                (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.1)
-              / amG α (toPolyG (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
-                (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2))
-          + logResidueSumG Dt (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
-              (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs
-        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
-    (hrecon : specialVal + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
-  have hSpec : primitiveCase.integrateSpecial Dt (canonicalRepresentationFastGWf Dt a d).1
-      (canonicalRepresentationFastGWf Dt a d).2.1.1
-      (canonicalRepresentationFastGWf Dt a d).2.1.2 = some (qp, [CField.one]) := by
+    (hSpecField : towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = specialVal)
+    (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) (redNorm Dt a d cands))
+    (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
+    IsIntegralResultG Dt a d res := by
+  have hSpec : primitiveCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
+      = some (qp, [CField.one]) := by
     simp only [primitiveCase, hb, if_true, hqp]
-  exact cIntegrateCase_sound primitiveCase Dt a d cands res qp [CField.one]
-    (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
-      (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) specialVal hsden hgden hSpec rfl hsome
-    hSpecField hNrmField hrecon
+  exact cIntegrateCase_sound primitiveCase Dt a d cands res qp [CField.one] (redNorm Dt a d cands)
+    specialVal hsden hgden hSpec rfl hsome hSpecField hNrmField hrecon
 
 /-- **Primitive case with the special-part identity discharged** (canonical primitive `Dt = 1`, `fₚ ≠ 0`):
 `hSpecField` is no longer a hypothesis — it follows from `cPolyRischDEGWf_nil_field_identity` (the engine's
-own poly-RDE soundness), leaving only the shared reduced identity (`hNrmField`) and the reconstruction
+own poly-RDE soundness), leaving only the shared reduced identity (`hNrmField`) and reconstruction
 (`hrecon`). One step closer to unconditional. -/
 theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
     (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
-    (hgden : toPolyG (cIntegrateReducedGWf ([CField.one] : CPolyG α)
-        (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
-        (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).rational.2 ≠ 0)
-    (hb : cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.1.1 = true)
-    (hfp : cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1 = false)
-    (hconst : Differential.mapCoeffs
-        (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1) = 0)
-    (hqp : cPolyRischDEGWf ([CField.one] : CPolyG α) [] (canonicalRepresentationFastGWf
-        ([CField.one] : CPolyG α) a d).1
-        ((cdegG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1 : ℤ) + 1) = some qp)
+    (hgden : toPolyG (redNorm ([CField.one] : CPolyG α) a d cands).rational.2 ≠ 0)
+    (hb : cisZeroG (crSpecNum ([CField.one] : CPolyG α) a d) = true)
+    (hfp : cisZeroG (crPoly ([CField.one] : CPolyG α) a d) = false)
+    (hconst : Differential.mapCoeffs (toPolyG (crPoly ([CField.one] : CPolyG α) a d)) = 0)
+    (hqp : cPolyRischDEGWf ([CField.one] : CPolyG α) [] (crPoly ([CField.one] : CPolyG α) a d)
+        ((cdegG (crPoly ([CField.one] : CPolyG α) a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase ([CField.one] : CPolyG α) a d cands = some res)
-    (hNrmField : towerFractionFieldDerivG ([CField.one] : CPolyG α)
-            (amG α (toPolyG (cIntegrateReducedGWf ([CField.one] : CPolyG α)
-                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
-                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).rational.1)
-              / amG α (toPolyG (cIntegrateReducedGWf ([CField.one] : CPolyG α)
-                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
-                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).rational.2))
-          + logResidueSumG ([CField.one] : CPolyG α) (cIntegrateReducedGWf ([CField.one] : CPolyG α)
-              (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
-              (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).logs
-        = amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1)
-          / amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2))
-    (hrecon : amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1)
-            / amG α (toPolyG ([CField.one] : CPolyG α))
-          + amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2)
-        = amG α (toPolyG a) / amG α (toPolyG d)) :
-    towerFractionFieldDerivG ([CField.one] : CPolyG α)
-        (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
-        + logResidueSumG ([CField.one] : CPolyG α) res.logs
-      = amG α (toPolyG a) / amG α (toPolyG d) := by
+    (hNrmField : IsIntegralResultG ([CField.one] : CPolyG α) (crNormNum ([CField.one] : CPolyG α) a d)
+        (crNormDen ([CField.one] : CPolyG α) a d) (redNorm ([CField.one] : CPolyG α) a d cands))
+    (hrecon : fieldFrac (crPoly ([CField.one] : CPolyG α) a d) [CField.one]
+          + fieldFrac (crNormNum ([CField.one] : CPolyG α) a d) (crNormDen ([CField.one] : CPolyG α) a d)
+        = fieldFrac a d) :
+    IsIntegralResultG ([CField.one] : CPolyG α) a d res := by
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
     rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
   exact cIntegrateCase_primitive_sound ([CField.one] : CPolyG α) a d cands res qp
-    (amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1)
-      / amG α (toPolyG ([CField.one] : CPolyG α)))
+    (fieldFrac (crPoly ([CField.one] : CPolyG α) a d) [CField.one])
     (by rw [hone]; exact one_ne_zero) hgden hb hqp hsome
-    (cPolyRischDEGWf_nil_field_identity (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1
-      qp _ hfp (le_refl _) hqp hconst)
+    (cPolyRischDEGWf_nil_field_identity (crPoly ([CField.one] : CPolyG α) a d) qp _ hfp (le_refl _)
+      hqp hconst)
     hNrmField hrecon
 
 end DeepWiki.SymbolicIntegration
