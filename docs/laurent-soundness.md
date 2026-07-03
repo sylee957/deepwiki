@@ -83,11 +83,21 @@ This is the painful part (foldr + reversed lists + negative-index arithmetic); i
 
 **M1 + M2 + M3 all complete.** The full `cIntegrateHyperexpLaurentG` is proven correct.
 
-## Final assembler connection (small, remaining)
+## hLaurField DISCHARGED (3bccef95)
 
-To discharge the assembler's `hLaurField` (`D(lnum/lden) = ⟦fpPart⟧`) end-to-end: instantiate
-`cIntegrateHyperexpLaurentG_sound` with `pos = fp`, `neg = cHyperexpSpecialNegG b ds`, giving
-`D(lnum/lden) = ⟦fp⟧ + ⟦(cHyperexpSpecialNegG b ds).reverse⟧/⟦tᵐ⟧`. The one remaining lemma is
-`cHyperexpSpecialNegG` correctness — `⟦(cHyperexpSpecialNegG b ds).reverse⟧/⟦tᵐ⟧ = ⟦b/dₛ⟧` (the
-negative-coefficient extraction faithfully reads the special part `b/dₛ`) — plus `Dt = η·t` from
-`cExpEtaG`. Then `fpPart = ⟦fp + b/dₛ⟧` and `hLaurField` is discharged.
+The special-part connector is proven, completing the discharge:
+- `cHyperexpSpecialNegG_reverse_smul` — the polynomial identity `C(c)·toPolyG(neg.reverse) = toPolyG b`
+  (`Polynomial.ext` + `toPolyG_coeff`; `neg.reverse.getD j 0 = b_j·cinv` via
+  `getElem?_reverse`/`range`/`map`; `c·cinv = 1` (`c ≠ 0`) and `b` proper close the two coefficient ranges).
+- `cHyperexpSpecialNegG_frac` — `⟦(cHyperexpSpecialNegG b dₛ).reverse⟧/⟦tᵐ⟧ = ⟦b/dₛ⟧` for a monomial
+  `dₛ = c·tᵐ` (cross-multiplies the identity through `amG` via `div_eq_div_iff`).
+- `cIntegrateHyperexpLaurentG_special_sound` — composes the general Laurent soundness with the connector:
+  `cIntegrateHyperexpLaurentG η fp (cHyperexpSpecialNegG b dₛ) = some (lnum,lden) ⟹
+  D_tower(⟦lnum/lden⟧) = ⟦fp⟧ + ⟦b/dₛ⟧`. **This is `hLaurField`.**
+
+The remaining inputs are the special-part *shape* hypotheses (`dₛ = c·tᵐ` a monomial, `b` proper, `c ≠ 0`)
+— canonical-representation properties of the hyperexponential special part, on the same footing as the
+`cSplitFactorFastGWf`/Hermite/RT engine frontiers the primitive case reduces to.
+
+**LAURENT SOUNDNESS COMPLETE** — the hyperexponential Laurent integrator is formally verified, and the
+hyperexp case reaches the same frontier-only footing as the primitive case.
