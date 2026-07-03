@@ -86,4 +86,23 @@ theorem toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow (Dt v u : CPolyG α) :
     refine ⟨j + 1 + M, ?_⟩
     rw [hM, toPolyG_cmulG, toPolyG_cpowG, mul_assoc, ← pow_add]
 
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **A factor's `gloc` fraction is `Q`-regular** whenever `Q` is coprime to `v`: the `gloc` denominator
+(from the `(0,1)` seed) is `(toPolyG v)^N`, coprime to `Q`. This makes the *other* factors'
+contributions `Vk`-regular in the fold. -/
+theorem gloc_isQRegularG (Dt v u : CPolyG α) {Q : (CFieldSpec.K α)[X]} (hv : toPolyG v ≠ 0)
+    (hcop : IsRelPrime Q (toPolyG v)) (j : ℕ) (a : CPolyG α) :
+    IsQRegularG Q
+      (amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j a
+          ([CField.zero], [CField.one])).1.1)
+        / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j a
+          ([CField.zero], [CField.one])).1.2)) := by
+  obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt v u j a
+    ([CField.zero], [CField.one])
+  have hden : toPolyG (cHermiteReduceTowerInnerWf Dt v u j a ([CField.zero], [CField.one])).1.2
+      = toPolyG v ^ N := by
+    rw [hN, show toPolyG ([CField.one] : CPolyG α) = 1 from by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], one_mul]
+  exact ⟨_, _, by rw [hden]; exact pow_ne_zero N hv, by rw [hden]; exact hcop.pow_right, rfl⟩
+
 end DeepWiki.SymbolicIntegration
