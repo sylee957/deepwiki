@@ -186,9 +186,8 @@ theorem cIntegrateHyperexpNormalGWf_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
   simp only [hintRsome] at hsome
   exact (Option.some.injEq _ _ ▸ hsome).symm
 
-/-- The §5.9 driver soundness `D(∫fₙ) = fₙ`, unconditional in `∑c` — the soundness theorem for
-`cIntegrateHyperexpNormalGWf`. The only non-abstract input is the base-oracle residual `hintR`, plus the
-residual-read bridge `hRval`. -/
+/-- Normal-part driver soundness `D(∫fₙ) = fₙ` for `cIntegrateHyperexpNormalGWf`, unconditional in `∑c`,
+given the base-oracle residual `hintR` and the residual-read bridge `hRval`. -/
 theorem cIntegrateHyperexpNormalGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (intR : α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
@@ -246,19 +245,17 @@ theorem cIntegrateHyperexpNormalGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (
       / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) with hR
   rw [show Dg - R + L = (Dg + L) - R by ring, hover, add_sub_cancel_right]
 
-/-! ### The §5.9 driver soundness at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
+/-! ### The driver soundness at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
 
-Instantiating the unconditional §5.9 driver soundness at `α = QFunNZG ℚ` (`CFieldSpec.K (QFunNZG ℚ) =
-RatFunc ℚ`). The concrete `cIntegrateHyperexpNormalG = some res ⟹ D(res) = a/d` for a hyperexponential
-monomial over `ℚ(x)(t)`, unconditional in `∑c`, reduced to the documented base-oracle residual. The local
-instance bridges the carrier abbreviation to `RatFunc ℚ`. -/
+The normal-part driver soundness instantiated at `α = QFunNZG ℚ` (`CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`),
+unconditional in `∑c`. -/
 
-/-- The engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
-`QFunNZG ℚ` deliverable synthesizes the **same** `Algebra ℚ` the bridge `towerFractionFieldDerivG` uses. -/
+/-- Local instance: the engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ` as a `ℚ`-algebra, matching
+the `Algebra ℚ` the bridge `towerFractionFieldDerivG` uses. -/
 noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- The §5.9 driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `QFunNZG ℚ` instance of
+/-- Normal-part driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `QFunNZG ℚ` instance of
 `cIntegrateHyperexpNormalGWf_sound`. -/
 theorem cIntegrateHyperexpNormalGWf_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
@@ -301,24 +298,15 @@ theorem cIntegrateHyperexpNormalGWf_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
   cIntegrateHyperexpNormalGWf_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
-/-! ### The full driver: `cIntegrateHyperexpFullGWf_sound` (§5.4 + §5.10 + §5.9)
+/-! ### The full driver soundness `cIntegrateHyperexpFullGWf_sound`
 
-`cIntegrateHyperexpFullGWf Dt a d cands` combines the §5.10 Laurent special part `fp + b/dₛ` (via
-`cIntegrateHyperexpLaurentG η`) with the §5.9 normal part `cₙ/dₙ` (via `cIntegrateHyperexpNormalGWf`), returning
-the rational part `(lnum/lden) + (gnum/gden)` with the normal logs. Soundness composes:
-* the Laurent field identity `hLaurField : D(lnum/lden) = amG(fpPart)` — the §5.10 special-part correctness
-  (a documented input; the Laurent special-part soundness is a separate piece, not in scope here);
-* the §5.9 normal-part soundness `cIntegrateHyperexpNormalGWf_sound` for `D(gnum/gden) + logResidueSumG = cₙ/dₙ`;
-* the canonical reconstruction `hrecon : amG(fpPart) + cₙ/dₙ = a/d` (the `canonicalRepresentationFastGWf`
-  recombination, documented).
-Then `D(res) + logResidueSumG = D(lnum/lden) + D(gnum/gden) + logResidueSumG = amG(fpPart) + cₙ/dₙ = a/d`.
-The §5.10-special + §5.9-normal hyperexp integral, unconditional in `∑c`, reduced to the Laurent
-special-part identity + the canonical reconstruction + the base-oracle residual. -/
+`cIntegrateHyperexpFullGWf` combines the Laurent special part with the normal part. Soundness composes the
+Laurent field identity `hLaurField`, the normal-part soundness, and the canonical reconstruction `hrecon`,
+giving `D(res) + logResidueSumG = a/d`, unconditional in `∑c`. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- The full §5.10 + §5.9 driver's output shape — when `cIntegrateHyperexpFullGWf Dt a d cands = some
-res`, with the Laurent part succeeding on the canonical split and the normal part succeeding, the result is
-the combined rational part and the normal logs. -/
+/-- Output shape of `cIntegrateHyperexpFullGWf`: when it returns `some res` and both the Laurent and normal
+parts succeed, `res` is the combined rational part with the normal logs. -/
 theorem cIntegrateHyperexpFullGWf_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (lnum lden : CPolyG α)
     (nrm : IntegralResultG α)
@@ -339,8 +327,9 @@ theorem cIntegrateHyperexpFullGWf_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
   simp only [hLaur, hNrm] at hsome
   exact (Option.some.injEq _ _ ▸ hsome).symm
 
-/-- The full §5.10 + §5.9 hyperexp driver soundness `D(∫f) = f`, unconditional in `∑c` — composes the
-Laurent special-part field identity, the normal-part field identity, and the canonical reconstruction. -/
+/-- Full hyperexponential driver soundness `D(∫f) = f` for `cIntegrateHyperexpFullGWf`, unconditional in
+`∑c` — composes the Laurent field identity, the normal-part field identity, and the canonical
+reconstruction. -/
 theorem cIntegrateHyperexpFullGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
     (fpPart : CPolyG α) (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
@@ -383,9 +372,8 @@ theorem cIntegrateHyperexpFullGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a 
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
--- The overshoot identity: the raw §5.6 Rothstein–Trager log part of a hyperexp normal part differentiates
--- to `a/d + R`, not `a/d`, with residual `R = b·∑c` — `extendDeriv_logPart_eq_div_add_residual`, no
--- `∑c = 0`.
+-- The overshoot identity: the Rothstein–Trager log part of a hyperexp normal part differentiates
+-- to `a/d + R`, not `a/d`, with residual `R = b·∑c`, unconditional in `∑c`.
 example {K : Type*} [Field K] [Differential K] [Algebra ℚ K] (s : Finset K) (a : K[X]) (b : K)
     (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, (C b * X).eval α ≠ α′) :
     ∑ α ∈ s, algebraMap K[X] (RatFunc K)
@@ -500,21 +488,5 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
       = amG α (toPolyG a) / amG α (toPolyG d) :=
   cIntegrateHyperexpFullGWf_sound Dt a d cands res lnum lden nrm fpPart hlden hgden
     hLaur hNrm hsome hLaurField hNrmField hrecon
-
-/-! ### Status — the §5.9 hyperexponential driver soundness, unconditional in `∑c`
-
-The overshoot identity (`hyperexp_residue_sum_eq_overshoot_add` / `hyperexp_overshoot_list_engine` /
-`hyperexp_engine_overshoot` / `field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot`) is proven
-axiom-clean (`[propext, Classical.choice, Quot.sound]`, no `native_decide`, no `sorry`), unconditionally in
-`∑c`. The driver soundness theorems (`cIntegrateHyperexpNormalGWf_sound`/`…_qfunNZG`,
-`cIntegrateHyperexpFullGWf_sound`) are proven gated on the abstract engine bridges (`hherm`, `hform`) plus
-the base-RDE-oracle residual `hintR : D(∫R) = R` (`R ∈ α` a base element, e.g. `R = 1 ↦ ∫R = x`) — the
-opposite condition to `∑c = 0` (absorbing `∑c ≠ 0`, not requiring its vanishing). `hintR` is not abstractly
-available because `CRischField.crischDESolve` has no spec layer (`CRischFieldSpec` does not exist;
-`crischDESolve 0 R` over `ℚ(x)` runs the §6 pipeline one tower level down, recursing to `ℚ`), so its
-soundness is only `native_decide`-validated today (`nNormInv_baseIntegral_eq_x`,
-`nVarNorm_baseIntegral_eq_xSq`). Building the abstract `crischDESolve` spec (the bridge
-`instCRischFieldQFunNZG`-unfold → `cRischDEG` field-level soundness → reuse
-`field_identity_of_cPolyRischDEGWf`) would close this residual. -/
 
 end DeepWiki.SymbolicIntegration

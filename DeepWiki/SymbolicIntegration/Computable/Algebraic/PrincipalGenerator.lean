@@ -3,12 +3,11 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalAssembly
 
 /-! # Principal generator of a torsion divisor
 
-For a torsion residue divisor `D` of order `m` on `y² = ρ` (Trager Ch. 6 §1), recover the function
-`g` with `div(g) = m·D` — so the log term of the integral is `(1/m)·log g` — by tracking the `y − v`
-step-functions of Cantor's reduction through the `m·D → O` computation: each reduction step
-`u ← monic((ρ − v²)/u)`, `v ← (−v) mod u` is driven by `y − v(x)`, whose divisor swaps `(u, v)` for
-its reduced form, so the product of the tracked factors is the generator. `native_decide`-validated
-on `y² = x³ + 1` with the order-3 flex `D = (0, 1)`, where `g = y − 1` (the flex tangent line). -/
+For a torsion residue divisor `D` of order `m` on `y² = ρ`, recover the function `g` with
+`div(g) = m·D` (so the log term of the integral is `(1/m)·log g`) by tracking the `y − v`
+step-functions of Cantor's reduction through the `m·D → O` computation: the product of the
+tracked factors is the generator. Validated on `y² = x³ + 1` with the order-3 flex `D = (0, 1)`,
+where `g = y − 1`. -/
 
 open Polynomial
 
@@ -90,20 +89,18 @@ radical extension (`radMul 2 ρ`) starting from `radOne`. -/
 def principalGeneratorOfVs (ρ : QFunNZG ℚ) (vs : List (CPolyG ℚ)) : RadElem (QFunNZG ℚ) :=
   vs.foldl (fun acc v => radMul 2 ρ acc (genFactorOfV v)) radOne
 
-/-- **The principal generator of a torsion divisor** `principalGenerator ρ ρq g m D` — for a torsion
-divisor `D` of order `m` on `y² = ρ` (`m·D = O`), recover the function `g` with `div(g) = m·D` (so the log
-term is `(1/m)·log g`, Trager Ch. 6 §1). Runs `cantorMulTracked ρq g m D` (the order-`m` multiple,
-tracking the `y − v` reduction step-functions) and multiplies the tracked factors into a
-`RadElem (QFunNZG ℚ)` over `y² = ρ` (`principalGeneratorOfVs`). `ρq` is the radicand as a `ℚ[x]`
-polynomial (for Cantor); `ρ` the same radicand as a `ℚ(x)` element (for the radical-extension product). -/
+/-- The principal generator of a torsion divisor `principalGenerator ρ ρq g m D` — for `D` of
+order `m` on `y² = ρ`, the function `g` with `div(g) = m·D`: runs `cantorMulTracked ρq g m D`
+and multiplies the tracked `y − v` factors (`principalGeneratorOfVs`). `ρq` is the radicand as
+a `ℚ[x]` polynomial, `ρ` the same radicand as a `ℚ(x)` element. -/
 def principalGenerator (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g m : ℕ) (D : MumfordDivisor ℚ) :
     RadElem (QFunNZG ℚ) :=
   principalGeneratorOfVs ρ (cantorMulTracked ρq g m D).2
 
-/-! ## ★ The headline: recovering `g = y − 1` for `(0, 1)` on `y² = x³ + 1` (`native_decide`)
+/-! ## Recovering `g = y − 1` for `(0, 1)` on `y² = x³ + 1`
 
-`D = (0, 1)` (Mumford `(x, 1)`), order `m = 3`. `principalGenerator` recovers `gen = y − 1` (`= [−1, 1]`),
-and the `(1/3)·log(y − 1)` differential passes the log-derivative certificate. -/
+`D = (0, 1)` (Mumford `(x, 1)`), order `m = 3`. `principalGenerator` recovers `gen = y − 1`
+(`= [−1, 1]`), and the `(1/3)·log(y − 1)` differential passes the log-derivative certificate. -/
 
 open RadElem
 
@@ -116,70 +113,45 @@ def pgGen01 : RadElem (QFunNZG ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1
 /-- The target generator `y − 1 = [−1, 1]` over `ℚ(x)` (the constant `v = 1` flex tangent line). -/
 def pgYm1 : RadElem (QFunNZG ℚ) := [CField.neg CField.one, CField.one]
 
-/-- **★★ The principal generator of `3·(0, 1)` is `y − 1`** (`native_decide`): tracking the `y − v` Cantor
-reduction step-functions through `3·(0, 1) → O` on `y² = x³ + 1`, the accumulated product is exactly
-`gen = y − 1` (`= [−1, 1]`), recovered by `principalGenerator`. Checked by `radIsZero` of `gen − (y − 1)`
-over `ℚ(x)`. So `div(y − 1) = 3·(0, 1) − 3·∞ = 3·D` — the flex tangent line — and the log term of the
-algebraic integral is `(1/3)·log(y − 1)`. THE ENGINE RECOVERS THE PRINCIPAL GENERATOR (the constructive
-half of Trager's torsion log term). -/
+/-- The principal generator of `3·(0, 1)` on `y² = x³ + 1` is `y − 1` (`= [−1, 1]`): so
+`div(y − 1) = 3·(0, 1) − 3·∞ = 3·D` and the log term is `(1/3)·log(y − 1)`. -/
 theorem principalGenerator_pt01_eq :
     radIsZero (radSub pgGen01 pgYm1) = true := by native_decide
 
-/-- **★ The recovered generator is exactly the raw `RadElem` `[−1, 1]`** (`native_decide`): the tracked
-product reduces literally to `y − 1` (`= [(−1 : ℚ(x)), 1]`), the Mumford reduction-step bookkeeping
-collapsing to the single flex-tangent factor. The literal output of the generator recovery. -/
+/-- The recovered generator is the raw `RadElem` `[−1, 1]` (`= y − 1`). -/
 theorem pgGen01_raw :
     radIsZero (radSub pgGen01 [CField.neg (CField.one : QFunNZG ℚ), CField.one]) = true := by
   native_decide
 
-/-! ### ★ The `(1/3)·log(y − 1)` differential check (`native_decide`)
+/-! ### The `(1/3)·log(y − 1)` differential check
 
-The log term is `(1/3)·log g` with `g = y − 1`, so its differential is `ι = (1/3)·g'/g`. `radLogDeriv ρ g`
-is the honest `RadElem` `g'/g` (division via `radInv2`); `ι = radScale (1/3) (radLogDeriv ρ g)`. The
-cleared log-derivative certificate `radDeriv g = radMul g (radScale 3 ι)` (`radIsLogIntegral`) confirms `g`
-is the `(1/3)`-log argument — `radScale 3 ι = g'/g`, so the certificate is `radDeriv g = radMul g (g'/g)`,
-i.e. `g' = g·(g'/g)`, the defining identity of the recovered generator's logarithmic derivative. -/
+The log term is `(1/3)·log g` with `g = y − 1`, so its differential is `ι = (1/3)·g'/g`
+(`radLogDeriv ρ g` is the `RadElem` `g'/g`). The cleared certificate
+`radDeriv g = radMul g (radScale 3 ι)` confirms `g` is the `(1/3)`-log argument. -/
 
-/-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1` — `radScale (1/3)` of
-the honest log-derivative `radLogDeriv ρ (y − 1)` (division via `radInv2`). The integrand whose
-antiderivative is `(1/3)·log(y − 1)`. -/
+/-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`. -/
 def pgDiff01 : RadElem (QFunNZG ℚ) :=
   radScale (CField.div CField.one (qxOfNum [3])) (radLogDeriv pgRhoX3p1 pgYm1)
 
-/-- **★ The `(1/3)·log(y − 1)` differential passes the log-derivative certificate** (`native_decide`): with
-`g = y − 1` and the integrand `ι = (1/3)·g'/g`, the cleared certificate `radDeriv g = radMul g (3·ι)`
-holds (`radIsLogIntegral 2 ρ g (radScale 3 ι) = true`) — `3·ι = g'/g`, so this is `g' = g·(g'/g)`, the
-recovered generator's logarithmic-derivative identity. CONFIRMS `(1/3)·log(y − 1)` is the torsion log term
-of the `(0, 1)` residue divisor. -/
+/-- The `(1/3)·log(y − 1)` differential passes the log-derivative certificate
+`radDeriv g = radMul g (3·ι)`, confirming `(1/3)·log(y − 1)` is the torsion log term of the
+`(0, 1)` residue divisor. -/
 theorem principalGenerator_pt01_logderiv :
     radIsLogIntegral 2 pgRhoX3p1 pgYm1 (radScale (qxOfNum [3]) pgDiff01) = true := by native_decide
 
-/-- **★ The differential `ι` rationalizes to `x²/(2y(y − 1))`** (`native_decide`): `radLogDeriv ρ (y − 1) =
-(y − 1)'/(y − 1) = ℓ·y/(y − 1)` with `ℓ = 3x²/(2(x³+1))`, and `ℓ·y/(y − 1) = ℓ·y·(y + 1·?)…` rationalizes
-(via `radInv2`'s conjugate) so that `ι = (1/3)·g'/g = x²/(2y(y − 1))`. We verify the cleared form: the
-honest `RadElem` `radLogDeriv ρ (y − 1)` times the constant `1/3` (`= ι`) satisfies the certificate, i.e.
-`radDeriv(y − 1) = radMul (y − 1) (radLogDeriv ρ (y − 1))` directly (`radScale 3 ι = radLogDeriv`). The
-differential Trager's derivation `d/dx[(1/3)log(y − 1)] = (1/3)y'/(y − 1)` predicts, with `y' = 3x²/(2y)`,
-has the right residues at the divisor. -/
+/-- The unscaled certificate `radDeriv(y − 1) = radMul (y − 1) (radLogDeriv ρ (y − 1))` holds
+directly, so `radLogDeriv ρ (y − 1) = (y − 1)'/(y − 1)` (the differential rationalizing to
+`x²/(2y(y − 1))`). -/
 theorem principalGenerator_pt01_logderiv_unscaled :
     radIsZero (radSub (radDeriv 2 pgRhoX3p1 pgYm1)
       (radMul 2 pgRhoX3p1 pgYm1 (radLogDeriv pgRhoX3p1 pgYm1))) = true := by native_decide
 
-/-! ## ★ The principal-generator recovery milestone (`native_decide`) -/
+/-! ## The principal-generator recovery milestone -/
 
-/-- **★★ THE PRINCIPAL GENERATOR OF A TORSION DIVISOR COMPUTES AND VALIDATES** (Trager Ch. 6 §1, the
-constructive half, `native_decide`). `cantorReduceTracked` / `cantorAddTracked` / `cantorMulTracked`
-instrument Cantor's reduction to also emit the `y − v` step-functions; `principalGenerator` multiplies them
-into the generator `g` with `div(g) = m·D`. On `y² = x³ + 1`, for the order-3 flex `D = (0, 1)`:
-* `principalGenerator … (0, 1) 3 = y − 1` — the recovered generator is the flex tangent line `y = 1`, with
-  `div(y − 1) = 3·(0, 1) − 3·∞ = 3·D`;
-* the `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` passes the log-derivative certificate
-  `radDeriv g = radMul g (3·ι)`, confirming `(1/3)·log(y − 1)` is the torsion log term.
-
-The engine now **decides** torsion (`ComputableDivisorOrder`: order `m`, elementary or not) **and
-constructs** the `(1/m)·log g` argument (`principalGenerator`: the function `g` with `div(g) = m·D`) — the
-two halves of Trager's "points of finite order", completing the algebraic-integration decision procedure
-for simple radicals on this example. -/
+/-- The principal generator of a torsion divisor computes and validates. On `y² = x³ + 1`, for
+the order-3 flex `D = (0, 1)`: `principalGenerator … (0, 1) 3 = y − 1` (with
+`div(y − 1) = 3·(0, 1) − 3·∞ = 3·D`), and the `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g`
+passes the log-derivative certificate `radDeriv g = radMul g (3·ι)`. -/
 theorem principal_generator_validates :
     -- the recovered generator is y − 1
     (radIsZero (radSub pgGen01 pgYm1) = true
@@ -191,43 +163,10 @@ theorem principal_generator_validates :
       ∧ radIsZero (radSub (radDeriv 2 pgRhoX3p1 pgYm1)
           (radMul 2 pgRhoX3p1 pgYm1 (radLogDeriv pgRhoX3p1 pgYm1))) = true) := by native_decide
 
-/-! ### Deliverable: `#print axioms`
-
-`[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
-axiom). No `sorry`. -/
+/-! ### Axiom check -/
 
 #print axioms principal_generator_validates
 #print axioms principalGenerator_pt01_eq
 #print axioms principalGenerator_pt01_logderiv
-
-/-! ## What is left of the torsion sub-arc (the constructive finish, documented)
-
-The **decision** half (`ComputableDivisorOrder`: `cantorOrder` / `isTorsionDivisor`) and the
-**construction** half *for the order-3 flex* (`principalGenerator … (0, 1) 3 = y − 1`, the milestone) are
-both delivered. The remaining generalization of the reduction-tracking, recorded — not yet formalized — in
-the `Sources/Doi_10_1007_b138171` catalog:
-
-1. **Higher genus / non-constant step `v`** — for genus `g > 1` (`y² = x⁵ + 1`, …) a Cantor reduction
-   step's `v` is a polynomial of degree `< g`, so the factor `y − v(x)` is a non-constant `RadElem`
-   `[−v, 1]`; `genFactorOfV` already lifts a `ℚ[x]` `v` (the head coefficient path specializes to the
-   genus-1 constant). The product `principalGeneratorOfVs` multiplies these in the extension regardless;
-   the genus-2 examples are the next `native_decide` targets.
-
-2. **Composition-step cancellation factors** — when `cantorCompose` itself drops degree via the gcd (as in
-   `(0, 1) ⊕ (0, −1) → O`, the support `x = 0` cancelling), the cancelled part is a `(y − v)` (here the
-   coordinate function `x`, a base factor); for the order-3 example this contributes only the trivial
-   constant, so `g = y − 1` is exact, but a fully general generator multiplies the composition cofactors in
-   too (Trager Ch. 6 §1, the ideal-quotient bookkeeping). Tracking them is the general reduction-tracking
-   refinement.
-
-3. **Wiring `(1/m, g)` as an `AlgIntegralResult` log term** — `principalGenerator` returns the `RadElem`
-   `g`; packaging `(c/m, g)` into the integrator's `logTerms` (the `cIntegrateAlgebraic` non-principal
-   branch, where `radLogArgSolve` returns `none`) closes the simple-radical log part for points of finite
-   order end-to-end.
-
-The milestone delivered here is the **constructive half**: the `y − v` reduction-step tracking and the
-`g = y − 1` recovery for the order-3 flex, `native_decide`-validated with the `(1/3)·log` differential
-check — Trager's algebraic-integration decision procedure for simple radicals now both *decides* and
-*constructs* the torsion log term. -/
 
 end DeepWiki.SymbolicIntegration

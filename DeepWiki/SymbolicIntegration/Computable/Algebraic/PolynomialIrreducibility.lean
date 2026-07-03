@@ -26,9 +26,7 @@ Coefficients low-to-high: `[a₀, a₁, …]` ↦ `a₀ + a₁ X + …`. `toPoly
 `toPoly (a :: as) = C a + X * toPoly as`. `addL`/`mulL` are computable list arithmetic; the
 bridges `toPoly_addL` / `toPoly_mulL` connect them to Mathlib `Polynomial` `+`/`*`. -/
 
-/-- Horner reading of a coefficient list as a polynomial: `[a₀,…,aₖ] ↦ Σ aᵢ Xⁱ`.
-(Noncomputable, as Mathlib `Polynomial` arithmetic is — used only for the soundness bridge,
-never in the `native_decide` search.) -/
+/-- Horner reading of a coefficient list as a polynomial: `[a₀,…,aₖ] ↦ Σ aᵢ Xⁱ`. -/
 noncomputable def toPoly {R : Type*} [Semiring R] : List R → R[X]
   | [] => 0
   | a :: as => C a + X * toPoly as
@@ -54,9 +52,7 @@ def mulL {R : Type*} [Zero R] [Add R] [Mul R] : List R → List R → List R
 @[simp] theorem toPoly_cons {R : Type*} [Semiring R] (a : R) (as : List R) :
     toPoly (a :: as) = C a + X * toPoly as := rfl
 
-/-- **The engine primitive.** The `i`-th coefficient of `toPoly l` is `l.getD i 0`: the
-Horner reading recovers exactly the list entries (default `0` past the end). Everything else
-follows from this. -/
+/-- `(toPoly l).coeff i = l.getD i 0`: the Horner reading recovers the list entries. -/
 theorem coeff_toPoly {R : Type*} [Semiring R] (l : List R) (i : ℕ) :
     (toPoly l).coeff i = l.getD i 0 := by
   induction l generalizing i with
@@ -90,9 +86,8 @@ theorem toPoly_addL {R : Type*} [CommSemiring R] (as bs : List R) :
       simp only [addL, toPoly_cons, ih, C_add]
       ring
 
-/-- **★ Multiplicativity bridge.** `toPoly (mulL a b) = toPoly a * toPoly b`: the engine's
-list multiplication realizes Mathlib polynomial multiplication. The homomorphism fact behind
-the whole search. -/
+/-- `toPoly (mulL a b) = toPoly a * toPoly b`: list multiplication realizes polynomial
+multiplication. -/
 theorem toPoly_mulL {R : Type*} [CommSemiring R] (as bs : List R) :
     toPoly (mulL as bs) = toPoly as * toPoly bs := by
   induction as with
@@ -101,9 +96,7 @@ theorem toPoly_mulL {R : Type*} [CommSemiring R] (as bs : List R) :
     simp only [mulL, toPoly_addL, toPoly_scaleL, toPoly_cons, ih, map_zero, zero_add]
     ring
 
-/-- **Length-matched injectivity.** Equal `toPoly` and equal length force equal lists (the
-coefficient maps agree at every index `< length`). Lifts list equality from polynomial
-equality, used to reach the search's list-equality contradiction. -/
+/-- Equal `toPoly` and equal length force equal lists. -/
 theorem list_eq_of_toPoly_eq {R : Type*} [Semiring R] [Inhabited R] {l₁ l₂ : List R}
     (hlen : l₁.length = l₂.length) (h : toPoly l₁ = toPoly l₂) : l₁ = l₂ := by
   apply List.ext_getElem! hlen
@@ -118,8 +111,8 @@ theorem list_eq_of_toPoly_eq {R : Type*} [Semiring R] [Inhabited R] {l₁ l₂ :
 
 /-! ## Monic candidate lists and their degrees
 
-A coefficient list `lower ++ [1]` (lower of length `d`) reads as a **monic** polynomial of
-`natDegree` exactly `d`. These are the factor candidates the search enumerates. -/
+A coefficient list `lower ++ [1]` (lower of length `d`) reads as a monic polynomial of
+`natDegree` exactly `d`. -/
 
 /-- `toPoly lower` has `degree < lower.length` (a length-`d` list reads as a poly of degree
 `< d`): all coefficients at index `≥ d` are `0`. -/
@@ -155,10 +148,8 @@ theorem isMonicOfDegree_toPoly_append_one {R : Type*} [CommSemiring R] [Nontrivi
   · rw [add_comm]
     exact monic_X_pow_add hlt
 
-/-- **Reconstruction.** Any monic `q` of `natDegree` exactly `d` is `toPoly (lower ++ [1])`
-for `lower = [q.coeff 0, …, q.coeff (d-1)]`. Proved coefficient-by-coefficient through
-`coeff_toPoly`: below `d` the candidate is `q.coeff i`, at `d` it is the monic `1`, above `d`
-both are `0`. The bridge from an abstract monic divisor to an enumerated candidate list. -/
+/-- Any monic `q` of `natDegree` exactly `d` is `toPoly (lower ++ [1])` for
+`lower = [q.coeff 0, …, q.coeff (d-1)]`. -/
 theorem eq_toPoly_lower_append_one {R : Type*} [CommRing R] {q : R[X]} {d : ℕ}
     (hq : IsMonicOfDegree q d) :
     q = toPoly ((List.ofFn (fun i : Fin d => q.coeff i)) ++ [1]) := by
@@ -180,10 +171,8 @@ theorem eq_toPoly_lower_append_one {R : Type*} [CommRing R] {q : R[X]} {d : ℕ}
 
 /-! ## Fixed-length coefficient comparison
 
-To compare two coefficient lists as *polynomials* by a robust, length-insensitive
-**computable** equality, normalize both to their first `m` coefficients
-(`padCoeffs l m`, padding past the end with `0`). Two lists with equal `toPoly` have equal
-`padCoeffs` (`padCoeffs_eq_of_toPoly_eq`) — the easy direction the soundness proof needs. -/
+`padCoeffs l m` normalizes a list to its first `m` coefficients (padding with `0`), a
+computable normal form for polynomial-equality comparison. -/
 
 /-- The first `m` coefficients of `l` (padded with `0`): `[l.getD 0 0, …, l.getD (m-1) 0]`.
 A computable, fixed-length normal form for polynomial-equality comparison. -/
@@ -205,10 +194,8 @@ theorem padCoeffs_eq_of_toPoly_eq {R : Type*} [Semiring R] {l₁ l₂ : List R} 
   intro i hi
   rw [← coeff_toPoly, ← coeff_toPoly, h]
 
-/-- **Reverse bridge** (degree-bounded). If two lists agree on their first `m` coefficients
-(`padCoeffs … m`) and both read as polynomials of `degree < m`, they read as the *same*
-polynomial — equality below `m` plus vanishing at and above `m`. The completeness direction
-needs this to turn a matching `padCoeffs` into a genuine polynomial factorization. -/
+/-- If two lists agree on their first `m` coefficients and both read as polynomials of
+`degree < m`, they read as the same polynomial. -/
 theorem toPoly_eq_of_padCoeffs_eq {R : Type*} [Semiring R] {l₁ l₂ : List R} {m : ℕ}
     (h1 : (toPoly l₁).degree < m) (h2 : (toPoly l₂).degree < m)
     (h : padCoeffs l₁ m = padCoeffs l₂ m) : toPoly l₁ = toPoly l₂ := by
@@ -224,11 +211,9 @@ theorem toPoly_eq_of_padCoeffs_eq {R : Type*} [Semiring R] {l₁ l₂ : List R} 
 
 /-! ## The finite-field factorization search (on coefficient lists)
 
-`noFactor cf n d` asserts: no two candidate lists — `vq ++ [1]` (lower `vq` of length `d`)
-and `vg ++ [1]` (lower `vg` of length `n − d`) — multiply (via `mulL`) to the same degree-`n`
-polynomial as the target `cf`, checked through the length-`(n+1)` normal form `padCoeffs`.
-Quantified over the `Fintype`s `Fin d → ZMod p` and `Fin (n − d) → ZMod p`, so `Decidable`
-and fully computable (only `+`/`*` on `ZMod p` and list equality). -/
+`noFactor cf n d` asserts no monic degree-`d` factor and monic degree-`(n−d)` cofactor (as
+coefficient lists) multiply to the target `cf`; quantified over the finite `Fin _ → ZMod p`,
+so decidable and computable. -/
 
 /-- The candidate-pair check at a fixed factor degree `d`: no monic degree-`d` factor times
 monic degree-`(n−d)` cofactor (as coefficient lists) matches the target `cf` on its first
@@ -240,9 +225,8 @@ def noFactor {p : ℕ} (cf : List (ZMod p)) (n d : ℕ) : Prop :=
 instance {p : ℕ} [NeZero p] (cf : List (ZMod p)) (n d : ℕ) : Decidable (noFactor cf n d) :=
   inferInstanceAs (Decidable (∀ _, ∀ _, _ ≠ _))
 
-/-- **The 𝔽_p irreducibility check** on a target coefficient list `cf` of degree `n` (so
-`toPoly cf` is monic of `natDegree n`): `n ≥ 1` and no monic factor of any degree
-`1 ≤ d ≤ n/2`. A finite decidable conjunction. -/
+/-- The `𝔽_p` irreducibility check on a monic degree-`n` target `cf`: `n ≥ 1` and no monic
+factor of any degree `1 ≤ d ≤ n/2`. -/
 def irreducibleListModP {p : ℕ} (cf : List (ZMod p)) (n : ℕ) : Prop :=
   1 ≤ n ∧ ∀ d ∈ Finset.Ioc 0 (n / 2), noFactor cf n d
 
@@ -251,11 +235,8 @@ instance {p : ℕ} [NeZero p] (cf : List (ZMod p)) (n : ℕ) : Decidable (irredu
 
 /-! ## Soundness of the 𝔽_p decision -/
 
-/-- **★ 𝔽_p soundness.** If the list search reports `cf` (a monic degree-`n` target, i.e.
-`toPoly cf` monic of `natDegree n`) irreducible, then `toPoly cf` is `Irreducible` over
-`𝔽_p`. Any hypothetical monic factorization `q * g = toPoly cf` is reconstructed
-(`eq_toPoly_lower_append_one`) as candidate lists whose `mulL` product has, by `toPoly_mulL`,
-the same `toPoly` as `cf` — hence the same `padCoeffs`, contradicting the search. -/
+/-- If the list search reports a monic degree-`n` target `cf` irreducible, then `toPoly cf`
+is `Irreducible` over `𝔽_p`. -/
 theorem irreducible_toPoly_of_irreducibleListModP {p : ℕ} [Fact p.Prime] {cf : List (ZMod p)}
     {n : ℕ} (hmon : IsMonicOfDegree (toPoly cf) n) (hirr : irreducibleListModP cf n) :
     Irreducible (toPoly cf) := by
@@ -287,12 +268,8 @@ theorem irreducible_toPoly_of_irreducibleListModP {p : ℕ} [Fact p.Prime] {cf :
   rw [toPoly_mulL]
   rw [← eq_toPoly_lower_append_one hqmon, ← eq_toPoly_lower_append_one hgmon, hfac]
 
-/-- **★ 𝔽_p completeness.** The converse of the soundness direction: a genuinely
-`Irreducible` monic degree-`n` target `toPoly cf` *passes* the list search. So the finite-
-field decision is correct in **both** directions (`irreducibleListModP_iff_irreducible`
-below). Proof: a matching `padCoeffs` would, by the degree-bounded reverse bridge
-`toPoly_eq_of_padCoeffs_eq`, give a real factorization `(candidate) ∣ toPoly cf` with the
-candidate monic of degree `1 ≤ d ≤ n/2`, contradicting `irreducible_iff_lt_natDegree_lt`. -/
+/-- The converse: a genuinely `Irreducible` monic degree-`n` target `toPoly cf` passes the
+list search. -/
 theorem irreducibleListModP_of_irreducible {p : ℕ} [Fact p.Prime] {cf : List (ZMod p)}
     {n : ℕ} (hmon : IsMonicOfDegree (toPoly cf) n) (hirr : Irreducible (toPoly cf)) :
     irreducibleListModP cf n := by
@@ -336,8 +313,7 @@ theorem irreducibleListModP_of_irreducible {p : ℕ} [Fact p.Prime] {cf : List (
   rw [Finset.mem_Ioc, hqm.natDegree_eq, hfp_deg]
   exact ⟨hd1, hd2⟩
 
-/-- **★ 𝔽_p decision correctness, both directions.** The list search decides irreducibility
-of a monic degree-`n` target over `𝔽_p` exactly: sound *and* complete. -/
+/-- The list search decides irreducibility of a monic degree-`n` target over `𝔽_p` exactly. -/
 theorem irreducibleListModP_iff_irreducible {p : ℕ} [Fact p.Prime] {cf : List (ZMod p)}
     {n : ℕ} (hmon : IsMonicOfDegree (toPoly cf) n) :
     irreducibleListModP cf n ↔ Irreducible (toPoly cf) :=
@@ -365,21 +341,14 @@ theorem toPoly_reduceCoeffs (p : ℕ) (cf : List ℤ) :
       Polynomial.map_C, Polynomial.map_X]
     rfl
 
-/-- **The mod-`p` irreducibility test** for an integer coefficient list `cf` of degree `n`:
-reduce mod `p`, then run the finite-field factorization search. `true` is a *sound*
-certificate of irreducibility over `ℚ` (when `toPolyZ cf` is monic); `false` is inconclusive.
-Fully computable, so `native_decide`-able. -/
+/-- The mod-`p` irreducibility test for a degree-`n` integer coefficient list `cf`: reduce
+mod `p`, then run the finite-field search. `true` is a sound irreducibility certificate over
+`ℚ` (when monic); `false` is inconclusive. -/
 def irreducibleByModP (p : ℕ) [NeZero p] (cf : List ℤ) (n : ℕ) : Bool :=
   decide (irreducibleListModP (reduceCoeffs p cf) n)
 
-/-- **★ SOUNDNESS.** If the mod-`p` test succeeds on a monic `f = toPolyZ cf` of degree `n`,
-then `f` is `Irreducible` over `ℤ` (hence over `ℚ` by Gauss's lemma). The proof: the test
-certifies the reduction `f mod p` irreducible over `𝔽_p`
-(`irreducible_toPoly_of_irreducibleListModP`), and a monic polynomial irreducible after
-mapping into an integral domain is irreducible (`Monic.irreducible_of_irreducible_map`).
-
-This theorem carries **no** `native` axiom — the `native_decide` lives only in the
-certificates below. -/
+/-- If the mod-`p` test succeeds on a monic `f = toPolyZ cf` of degree `n`, then `f` is
+`Irreducible` over `ℤ` (hence over `ℚ` by Gauss's lemma). -/
 theorem irreducibleByModP_sound {p : ℕ} [Fact p.Prime] {cf : List ℤ} {n : ℕ}
     (hmon : IsMonicOfDegree (toPolyZ cf) n) (htest : irreducibleByModP p cf n = true) :
     Irreducible (toPolyZ cf) := by
@@ -404,16 +373,12 @@ theorem isMonicOfDegree_toPolyZ_append_one (lower : List ℤ) :
     IsMonicOfDegree (toPolyZ (lower ++ [1])) lower.length :=
   isMonicOfDegree_toPoly_append_one lower
 
-/-! ## ★ `native_decide` irreducibility certificates
+/-! ## Irreducibility certificates
 
-Each positive certificate represents `f` by its `ℤ`-coefficient list `lower ++ [1]` (low-to-
-high, last entry the monic `1`), `native_decide`s `irreducibleByModP p (lower ++ [1]) n =
-true`, then concludes `Irreducible (toPolyZ (lower ++ [1]))` by `irreducibleByModP_sound`.
-Primes are tiny (`p ∈ {2,3,5,7}`) and chosen so `f` is already irreducible mod that `p`,
-keeping the finite search fast. -/
+Each certificate represents `f` by its `ℤ`-coefficient list `lower ++ [1]`, checks
+`irreducibleByModP p (lower ++ [1]) n = true`, and concludes irreducibility over `ℤ`. -/
 
-/-- `Fact (Nat.Prime 3)` for the mod-3 certificates (explicitly named to avoid the aggregator
-auto-name clash with `ComputableDivisorOrder`'s anonymous `Fact (Nat.Prime _)` instances). -/
+/-- `Fact (Nat.Prime 3)` for the mod-3 certificates. -/
 instance factPrime3_polyIrred : Fact (Nat.Prime 3) := ⟨by decide⟩
 /-- `Fact (Nat.Prime 5)` for the mod-5 certificates. -/
 instance factPrime5_polyIrred : Fact (Nat.Prime 5) := ⟨by decide⟩
@@ -451,17 +416,11 @@ theorem irreducible_toPolyZ_cyclotomic_five :
   irreducibleByModP_sound (p := 2) (isMonicOfDegree_toPolyZ_append_one [1, 1, 1, 1])
     (by native_decide)
 
-/-! ## ★ The `x⁴ + 1` limit: SOUND but INCOMPLETE over `ℚ` (a fundamental wall)
+/-! ## The `x⁴ + 1` limit: sound but incomplete over `ℚ`
 
-`x⁴ + 1` is irreducible over `ℚ` (it is `Φ₈`, the 8th cyclotomic) yet **reducible modulo
-every prime** — its Galois group `(ℤ/2)²` has no 4-cycle, so by Frobenius no prime gives an
-inert (irreducible-mod-`p`) reduction. The mod-`p` test therefore returns `false` for *every*
-`p` on a polynomial that *is* irreducible: the test is **sound but not complete** over `ℚ`,
-and this is not a fixable gap in the criterion — it is a theorem of Galois theory. The two
-facts below pin the wall: the mod-`p` evaluations (`native_decide`, `false` at `p = 2,3,5,7`,
-and the same holds for all `p`) and the genuine `ℚ`-irreducibility (axiom-clean, via
-`cyclotomic.irreducible`). A *complete* `ℚ`-irreducibility decider must go beyond mod-`p`
-(see the Zassenhaus scope note below). -/
+`x⁴ + 1 = Φ₈` is irreducible over `ℚ` yet reducible modulo every prime (its Galois group
+`(ℤ/2)²` has no 4-cycle), so the mod-`p` test returns `false` on a polynomial that is
+irreducible. The two facts below pin this limit. -/
 
 /-- `toPolyZ [1,0,0,0,1] = X⁴ + 1` (the lower part `[1,0,0,0]` reads as the constant `1`). -/
 theorem toPolyZ_X_pow_four_add_one : toPolyZ ([1, 0, 0, 0] ++ [1]) = X ^ 4 + 1 := by
@@ -479,17 +438,14 @@ theorem cyclotomic_eight_eq : cyclotomic 8 ℤ = X ^ 4 + 1 := by
     Finset.sum_range_succ, Finset.sum_range_one]
   ring
 
-/-- **★ `x⁴ + 1` IS irreducible over `ℤ`** (hence over `ℚ`) — it is `Φ₈`. Axiom-clean: this
-side of the wall is a genuine theorem, no `native_decide`. -/
+/-- `x⁴ + 1` is irreducible over `ℤ` (hence over `ℚ`) — it is `Φ₈`. -/
 theorem irreducible_toPolyZ_X_pow_four_add_one :
     Irreducible (toPolyZ ([1, 0, 0, 0] ++ [1])) := by
   rw [toPolyZ_X_pow_four_add_one, ← cyclotomic_eight_eq]
   exact cyclotomic.irreducible (by norm_num)
 
-/-- **★ …yet `x⁴ + 1` is REDUCIBLE mod every small prime** — the mod-`p` test returns `false`
-at `p = 2, 3, 5, 7` (`native_decide`). With the previous theorem this exhibits the
-sound-but-incomplete limit: a `ℚ`-irreducible polynomial the mod-`p` certificate can never
-confirm. (The same `false` holds for *all* primes, by the Galois-group argument.) -/
+/-- The mod-`p` test returns `false` for `x⁴ + 1` at `p = 2, 3, 5, 7`: a `ℚ`-irreducible
+polynomial the mod-`p` certificate can never confirm. -/
 theorem irreducibleByModP_X_pow_four_add_one_false :
     irreducibleByModP 2 ([1, 0, 0, 0] ++ [1]) 4 = false ∧
     irreducibleByModP 3 ([1, 0, 0, 0] ++ [1]) 4 = false ∧
@@ -497,10 +453,10 @@ theorem irreducibleByModP_X_pow_four_add_one_false :
     irreducibleByModP 7 ([1, 0, 0, 0] ++ [1]) 4 = false := by
   refine ⟨?_, ?_, ?_, ?_⟩ <;> native_decide
 
-/-! ## Restatements ("it compiled" ≠ "it says the right thing")
+/-! ## Restatements
 
-The coefficient-list certificates do read as the intended polynomials, and soundness has the
-intended type. -/
+The coefficient-list certificates read as the intended polynomials, and soundness has the
+intended one-way type. -/
 
 -- `irreducibleByModP_sound` has exactly the SOUND one-way type: `true ⟹ Irreducible`.
 example : ∀ (p : ℕ) [Fact p.Prime] (cf : List ℤ) (n : ℕ),

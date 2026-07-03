@@ -55,17 +55,10 @@ theorem swellProd_value_preserved :
     toQFunNZG (qReduce swellProd) = toQFunNZG swellProd :=
   toQFunNZG_qReduce swellProd
 
-/-! #### `qReduce` preserves the zero test — the bake-into-ops safety fact
+/-! #### `qReduce` preserves the zero test
 
-Every tower `native_decide` reads the field zero test `CField.isZero = isZeroNZG`, certified
-*value-faithful* by `isZeroNZG_iff`. Since `qReduce` preserves the field value
-(`toQFunNZG_qReduce`), it preserves `isZeroNZG`: a reduced fraction tests zero exactly when the
-original does. This is the load-bearing fact for the bake-into-`qaddNZG`/`qmulNZG` assessment — any
-test of the form `CField.isZero (… add/mul …) = true/false` is unaffected by inserting `qReduce` into
-the ops (the value, hence the zero test, is unchanged); only a test pinning a *literal* fraction
-representation could shift, and the tower suite pins outer `CPolyG`-list lengths (degree in the new
-monomial), not the inner coefficient-fraction lists `qReduce` touches. The reusable theorem now lives next
-to the reducer as `QFunNZG.isZeroNZG_qReduce`; this file keeps the motivating tower demo and axiom audit. -/
+Since `qReduce` preserves the field value, it preserves the zero test `isZeroNZG` (theorem
+`QFunNZG.isZeroNZG_qReduce`): a reduced fraction tests zero exactly when the original does. -/
 
 #print axioms swellProd_value_preserved
 #print axioms isZeroNZG_qReduce
@@ -74,57 +67,35 @@ end QFunNZG
 
 /-! ### STRETCH demo: `qReduce` unblocks a hyperexponential residual that chokes `crischDESolve`
 
-`ComputableHyperexpNormal`'s §5.9 feedback integrates a normal hyperexponential part `fₙ` via the residual
-base solve `crischDESolve 0 R`. That solve can return `none` not because the residual `R` is
-non-elementary, but because it arrives as an unreduced `QFunNZG` fraction whose spurious denominator
-trips the weak-normalizer. We exhibit that representational frontier on a residual that is the value `1`
-stored as `(2x)/(2x)`: `crischDESolve 0 R` chokes (`Rstuck_unreduced_chokes`), but after the fuel-free
-gcd-cancel `qReduce` collapses it to `1/1` the base solve succeeds, recovering `∫1 = x`
-(`Rstuck_reduced_solves`). So the choke is purely representational (the value is the elementary
-δ-constant `1`) and `qReduce` genuinely unblocks it — value-preserving (`toQFunNZG_qReduce`). -/
+A residual that is the value `1` stored as `(2x)/(2x)` makes `crischDESolve 0 R` return `none`
+(`Rstuck_unreduced_chokes`); after `qReduce` collapses it to `1/1` the base solve succeeds, recovering
+`∫1 = x` (`Rstuck_reduced_solves`). The choke is representational and `qReduce` unblocks it. -/
 
 namespace QFunNZG
 
 open CPolyG
 
-/-! #### The decisive choke/unblock: an unreduced residual `crischDESolve` can't solve until `qReduce`
+/-! #### The choke/unblock: an unreduced residual `crischDESolve` can't solve until `qReduce` -/
 
-`Rstuck` is the value `1 ∈ ℚ(x)` stored unreduced as the fraction `(2x)/(2x)` — built by
-`qmulNZG (2x/1) (1/2x)`, exactly the `2x/2x` shape the §5.9 frontier flags. `crischDESolve 0 Rstuck` chokes
-(`none`) on the spurious `2x` denominator; `crischDESolve 0 (qReduce Rstuck)` solves it. This is the
-concrete non-constant-R unblock — value-preserving (`qReduce` keeps `Rstuck = 1`), and it converts a
-`none` into a correct `some` (`y = x`). -/
-
-/-- The residual `1 ∈ ℚ(x)` stored unreduced as `(2x)/(2x)`: `qmulNZG (2x/1) (1/(2x))`, with numerator
-`2x·1` and denominator `1·2x` (both length-2 lists, the swollen `2x/2x` shape) yet the value `1`. The exact
-representational frontier `ComputableHyperexpNormal` describes. -/
+/-- The residual `1 ∈ ℚ(x)` stored unreduced as `(2x)/(2x)` via `qmulNZG (2x/1) (1/(2x))` (num and den
+both length 2). -/
 def Rstuck : QFunNZG ℚ :=
   qmulNZG nLvl1TwoX ⟨([CField.one], [(0 : ℚ), (2 : ℚ)]), by native_decide⟩
 
-/-- `Rstuck` is the value `1` (`native_decide`): the unreduced `(2x)/(2x)` equals `1 ∈ ℚ(x)`
-(`isZero (Rstuck − 1) = true`). So it is a genuine elementary δ-constant residue — the choke below is
-representational, not non-elementarity. -/
+/-- `Rstuck` is the value `1`: `isZero (Rstuck − 1) = true`. -/
 theorem Rstuck_eq_one : CField.isZero (CField.sub Rstuck (CField.one : QFunNZG ℚ)) = true := by
   native_decide
 
-/-- `Rstuck`'s stored denominator is swollen (length 2) (`native_decide`): the unreduced `(2x)/(2x)` has
-a length-2 denominator `2x`, not the reduced `1`. This `2x` is the spurious denominator that chokes
-`crischDESolve`. -/
+/-- `Rstuck`'s stored denominator is swollen: length 2 (`2x`, not the reduced `1`). -/
 theorem Rstuck_den_swollen : (CPolyG.cnormG Rstuck.1.2 : List ℚ).length = 2 := by native_decide
 
-/-- The unreduced residual chokes `crischDESolve` (`native_decide`, the choke): `crischDESolve 0
-Rstuck` over `k = ℚ(x)` returns `none` — even though `Rstuck = 1` (`Rstuck_eq_one`), the weak-
-normalizer/normal-denominator stages trip on the spurious `2x` denominator of the unreduced `(2x)/(2x)`.
-This is the §5.9 hyperexponential frontier the module docstring flags, reproduced concretely. -/
+/-- The unreduced residual chokes `crischDESolve`: `crischDESolve 0 Rstuck` returns `none` even though
+`Rstuck = 1`, tripped by the spurious `2x` denominator. -/
 theorem Rstuck_unreduced_chokes :
     CRischField.crischDESolve (CField.zero : QFunNZG ℚ) Rstuck = none := by native_decide
 
-/-- `qReduce` unblocks the residual: `crischDESolve` then solves, recovering `∫1 = x`
-(`native_decide`, the UNBLOCK). After `qReduce Rstuck` cancels `(2x)/(2x)` to `1/1`,
-`crischDESolve 0 (qReduce Rstuck)` over `ℚ(x)` returns `some y` with `y = x` (the base integral
-`∫1 = x`). So the gcd-cancel layer turns the choke (`Rstuck_unreduced_chokes`, `none`) into a correct
-`some` — the non-constant-R hyperexp residual unblock, value-preserving (`Rstuck = 1`, so `∫1 = x`). This
-is the stretch deliverable: a residual that currently chokes `crischDESolve` computes once reduced. -/
+/-- `qReduce` unblocks the residual: `crischDESolve 0 (qReduce Rstuck)` returns `some y` with `y = x`,
+recovering `∫1 = x`. -/
 theorem Rstuck_reduced_solves :
     (match CRischField.crischDESolve (CField.zero : QFunNZG ℚ) (qReduce Rstuck) with
       | some y => CField.isZero (CField.sub y nLvl1X)

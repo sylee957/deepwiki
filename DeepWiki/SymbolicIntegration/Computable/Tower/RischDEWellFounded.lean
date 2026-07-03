@@ -1,17 +1,14 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 
-/-! # Well-founded generic tower §6 Risch-DE oracle `cRischDEGWf`
+/-! # Well-founded generic tower Risch-DE oracle `cRischDEGWf`
 
-The generic §6 Risch-DE pipeline, by well-founded recursion. Continues `ComputableTowerWellFounded`
-(which supplies `cPolyRischDENoCancelGWf` §6.5 and `cSPDEGWf` §6.4) with the remaining recursive bottoms —
-`cPolyRischDECancelPrimGWf` (§6.6 primitive cancellation, on `(cnormG c).length`),
-`cPolyRischDECancelExpGWf` (§6.6 hyperexponential cancellation, same measure), and `cValuationGWf` (the
-`p`-adic valuation, trial division on `(cnormG x).length`) — plus a flat composition over these leaves for
-the §6.1 weak normalizer, §6.2 normal/special denominators, §6.3 degree bound, and the headline
-`cRischDEGWf`. `[CField α]`-only on the runtime fragment (plus `[CDiffField α]`/`[CFracGcdCoreWf α]`/
-`[CRischField α]` where needed) — never `[CFieldSpec α]`, so it `native_decide`s over the noncomputable
-tower. The §6.6 hypertangent cancellation falls back to non-cancellation, as in the fueled pipeline. -/
+The generic Risch-DE pipeline, by well-founded recursion: the recursive bottoms
+`cPolyRischDECancelPrimGWf` (primitive cancellation), `cPolyRischDECancelExpGWf` (hyperexponential
+cancellation), and `cValuationGWf` (the `p`-adic valuation), plus a flat composition over them for the
+weak normalizer, normal/special denominators, degree bound, and the headline `cRischDEGWf`. `[CField α]`-only
+on the runtime fragment (plus `[CDiffField α]`/`[CFracGcdCoreWf α]`/`[CRischField α]` where needed), so it
+`native_decide`s over the noncomputable tower. -/
 
 open Polynomial
 
@@ -29,15 +26,11 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
-/-- Generic primitive cancellation Poly-Risch-DE (Bronstein §6.6, book p.212)
-`cPolyRischDECancelPrimGWf Dt b c n`: given the primitive monomial derivation `D` (`Dt ∈ α`), `b ∈ α*` (a
-degree-0 `t`-polynomial, scalar `b₀ = lc(b)`) and `c ∈ α[t]`, with degree bound `n : ℤ`, solves
-`Dq + b·q = c` degree-by-degree, recursing at degree `m = deg(c)` into the base RDE
-`CRischField.crischDESolve b₀ (lc c)` (eq. 6.23) over `α`, leading monomial `s·tᵐ`, remainder
-`c' = c − b·(s·tᵐ) − D(s·tᵐ)` (`D = cmonomialDeriv Dt`). Returns `none` ("no solution of degree `≤ n`") or
-`some q`. Well-founded on `(cnormG c).length` under the structural guard
-`(cnormG c').length < (cnormG c).length` (the leading monomial cancels `c`'s top). `[CRischField α]`-generic
-— runs at any tower level. -/
+/-- Generic primitive cancellation Poly-Risch-DE `cPolyRischDECancelPrimGWf Dt b c n`: given the primitive
+monomial derivation `D` (`Dt ∈ α`), scalar `b ∈ α*` (`b₀ = lc(b)`) and `c ∈ α[t]` with degree bound `n : ℤ`,
+solves `Dq + b·q = c` degree-by-degree, recursing at degree `m = deg(c)` into the base RDE
+`CRischField.crischDESolve b₀ (lc c)`, leading monomial `s·tᵐ`, remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)`.
+Returns `none` or `some q`. Well-founded on `(cnormG c).length`. `[CRischField α]`-generic. -/
 def cPolyRischDECancelPrimGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     Option (CPolyG α) :=
   let b0 : α := cleadG b
@@ -58,14 +51,12 @@ def cPolyRischDECancelPrimGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
 termination_by (cnormG c).length
 decreasing_by assumption
 
-/-- Generic hyperexponential cancellation Poly-Risch-DE (Bronstein §6.6, book p.213)
-`cPolyRischDECancelExpGWf Dt b c n`: given the hyperexponential monomial derivation `D`
-(`η = Dt/t ∈ α`, `δ = 1`), `b ∈ α*` (scalar `b₀ = lc(b)`) and `c ∈ α[t]`, with degree bound `n : ℤ`, solves
-`Dq + b·q = c` degree-by-degree, recursing at degree `m = deg(c)` into the eq. 6.24 base RDE
-`crischDESolve (b₀ + m·η) (lc c)` over `α` (the `m·η` shift makes the coefficient genuinely non-constant,
-`η = cExpEtaG Dt`), leading monomial `s·tᵐ`, remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)`. Returns `none` or
-`some q`. Well-founded on `(cnormG c).length` under the structural guard
-`(cnormG c').length < (cnormG c).length`. `[CRischField α]`-generic — runs at any tower level. -/
+/-- Generic hyperexponential cancellation Poly-Risch-DE `cPolyRischDECancelExpGWf Dt b c n`: given the
+hyperexponential monomial derivation `D` (`η = Dt/t ∈ α`, `δ = 1`), scalar `b ∈ α*` (`b₀ = lc(b)`) and
+`c ∈ α[t]` with degree bound `n : ℤ`, solves `Dq + b·q = c` degree-by-degree, recursing at degree
+`m = deg(c)` into the base RDE `crischDESolve (b₀ + m·η) (lc c)` (`η = cExpEtaG Dt`), leading monomial
+`s·tᵐ`, remainder `c' = c − b·(s·tᵐ) − D(s·tᵐ)`. Returns `none` or `some q`. Well-founded on
+`(cnormG c).length`. `[CRischField α]`-generic. -/
 def cPolyRischDECancelExpGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     Option (CPolyG α) :=
   let b0 : α := cleadG b
@@ -98,9 +89,7 @@ variable {α : Type*} [CField α]
 /-- Generic `p`-adic valuation `cValuationGWf p x = ν_p(x)`: the multiplicity of the monic irreducible `p`
 dividing `x` (largest `k` with `pᵏ ∣ x`), by trial division. Stops at the zero polynomial, a constant/unit
 `p` (`cdegG p = 0`), or a non-dividing step, else recurses on `x/p` (`cdivWf`) and adds one. Well-founded on
-`(cnormG x).length` under the structural guard `(cnormG (x/p)).length < (cnormG x).length` (non-constant
-`p ∣ x` drops the `t`-degree on a real run, so the guard never fails). `[CField α]`-generic — runs at any
-tower level. -/
+`(cnormG x).length`. `[CField α]`-generic. -/
 def cValuationGWf (p x : CPolyG α) : ℕ :=
   if cisZeroG x then 0
   else if cdegG p = 0 then 0
@@ -213,13 +202,11 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
-/-- Generic weak normalizer `cWeakNormalizerGWf Dt fnum fden = q ∈ α[t]` (Bronstein §6.1, book p.183):
-split the denominator into its normal part `dₙ` (`cSplitFactorFastGWf`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)`
-with `g = gcd(dₙ, dₙ')`, solve the residue numerator `a` via `cdiophantineGWf`, build the residue resultant
-`r = res_t(a − z·Dd₁, d₁)` (`cResidueResultantTowerGWf`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the
-positive integer roots `nᵢ` of `r` (`cPosIntRootsG`, nodes lifted by `cnatCastG`). For an
-already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic — runs at
-any tower level. -/
+/-- Generic weak normalizer `cWeakNormalizerGWf Dt fnum fden = q ∈ α[t]`: split the denominator into its
+normal part `dₙ` (`cSplitFactorFastGWf`), form `d₁ = (dₙ/g)/gcd(dₙ/g, g)` with `g = gcd(dₙ, dₙ')`, solve the
+residue numerator `a` via `cdiophantineGWf`, build the residue resultant `r = res_t(a − z·Dd₁, d₁)`
+(`cResidueResultantTowerGWf`), and return `∏ᵢ gcd(a − nᵢ·Dd₁, d₁)^{nᵢ}` over the positive integer roots `nᵢ`
+of `r`. For an already-weakly-normalized `f`, `q = 1`. `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
 def cWeakNormalizerGWf (Dt : CPolyG α) (fnum fden : CPolyG α) (boundRoots : ℕ := 16) : CPolyG α :=
   let dn := (cSplitFactorFastGWf Dt fden).1
   let g := CFracGcdCoreWf.cgcdFFCoreWf dn (cderivG dn)
@@ -234,11 +221,11 @@ def cWeakNormalizerGWf (Dt : CPolyG α) (fnum fden : CPolyG α) (boundRoots : �
     let gi := CFracGcdCoreWf.cgcdFFCoreWf (csubG a (cscaleG (cnatCastG n) Dd1)) d1
     cmulG acc (cpowG gi n)) [CField.one]
 
-/-- Generic normal-denominator reduction `cRdeNormalDenominatorGWf Dt fnum fden gnum gden` (Bronstein §6.2,
-book p.185), for weakly normalized `f = fnum/fden`, `g = gnum/gden`. Returns `none` ("no solution") or
-`some (a, b, c, h)` reducing `Dy + fy = g` to `a·Dq + b·q = c` with `q = y·h`. Split the denominators into
-normal parts `dₙ, eₙ` (`cSplitFactorFastGWf`); `p = gcd(dₙ, eₙ)`, `h = gcd(eₙ, eₙ')/gcd(p, p')`; if
-`eₙ ∤ dₙh²` then `none`; else `a = dₙh`, `b = (dₙh·fnum − dₙ·Dh·fden)/fden`, `c = dₙh²·gnum/gden`. -/
+/-- Generic normal-denominator reduction `cRdeNormalDenominatorGWf Dt fnum fden gnum gden` for weakly
+normalized `f = fnum/fden`, `g = gnum/gden`. Returns `none` or `some (a, b, c, h)` reducing `Dy + fy = g` to
+`a·Dq + b·q = c` with `q = y·h`. Split the denominators into normal parts `dₙ, eₙ`; `p = gcd(dₙ, eₙ)`,
+`h = gcd(eₙ, eₙ')/gcd(p, p')`; if `eₙ ∤ dₙh²` then `none`; else `a = dₙh`, `b = (dₙh·fnum − dₙ·Dh·fden)/fden`,
+`c = dₙh²·gnum/gden`. -/
 def cRdeNormalDenominatorGWf (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
     Option (CPolyG α × CPolyG α × CPolyG α × CPolyG α) :=
   let dn := (cSplitFactorFastGWf Dt fden).1
@@ -261,13 +248,11 @@ splitting-factorization `cSplitFactorFastGWf`. -/
 def cSpecialPolyGWf (Dt : CPolyG α) : CPolyG α :=
   cmonicG (cSplitFactorFastGWf Dt Dt).2
 
-/-- Generic special-denominator reduction `cRdeSpecialDenominatorGWf Dt a b c` (Bronstein §6.2, book
-p.190/192). Given `a·Dq + b·q = c` with `a` free of special factors, returns the special-cleared quadruplet
-`(ā, b̄, c̄, h)` (`h = p^{−n}`) so `r = q·h ∈ α[t]` solves `ā·Dr + b̄·r = c̄`. Steps: `p ← cSpecialPolyGWf Dt`
-(constant ⇒ trivial, returns `(a,b,c,1)`); `n_b = ν_p(b)`, `n_c = ν_p(c)` (`cValuationGWf`),
-`n = min(0, n_c − min(0, n_b))`, `N = max(0, −n_b, n − n_c)`; return
-`(a·pᴺ, (b + n·a·Dp/p)·pᴺ, c·p^{N−n}, p^{−n})`, the `Dp/p` division `cdivWf`. The scalar `−negn` is lifted
-by `cnatCastG` (negated). -/
+/-- Generic special-denominator reduction `cRdeSpecialDenominatorGWf Dt a b c`. Given `a·Dq + b·q = c` with
+`a` free of special factors, returns the special-cleared quadruplet `(ā, b̄, c̄, h)` (`h = p^{−n}`) so
+`r = q·h ∈ α[t]` solves `ā·Dr + b̄·r = c̄`. Steps: `p ← cSpecialPolyGWf Dt` (constant ⇒ trivial);
+`n_b = ν_p(b)`, `n_c = ν_p(c)`, `n = min(0, n_c − min(0, n_b))`, `N = max(0, −n_b, n − n_c)`; return
+`(a·pᴺ, (b + n·a·Dp/p)·pᴺ, c·p^{N−n}, p^{−n})`. -/
 def cRdeSpecialDenominatorGWf (Dt : CPolyG α) (a b c : CPolyG α) :
     CPolyG α × CPolyG α × CPolyG α × CPolyG α :=
   let p := cSpecialPolyGWf Dt
@@ -381,13 +366,12 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
-/-- Generic Poly-Risch-DE dispatcher `cPolyRischDEGWf Dt b c n` (Bronstein §6.5 + §6.6): solves
-`Dq + b·q = c` for `q ∈ α[t]`, `deg(q) ≤ n`, routing by monomial type and `deg(b)` (Lemma 6.5.1): `b = 0` ⇒
-pure integration (`cIntegratePolyGWf`, with the `deg(c)+1 ≤ n` check — the primitive base branch);
-`deg(b) > max(0, δ−1)` ⇒ non-cancellation (`cPolyRischDENoCancelGWf`); `δ = 0, deg(b) = 0` ⇒ primitive
-cancellation (`cPolyRischDECancelPrimGWf`); `δ = 1, deg(b) = 0` ⇒ hyperexponential cancellation
-(`cPolyRischDECancelExpGWf`); else (hypertangent `δ ≥ 2`) ⇒ falls back to the non-cancellation loop.
-`[CRischField α]`-generic — runs at any tower level. -/
+/-- Generic Poly-Risch-DE dispatcher `cPolyRischDEGWf Dt b c n`: solves `Dq + b·q = c` for `q ∈ α[t]`,
+`deg(q) ≤ n`, routing by monomial type and `deg(b)`: `b = 0` ⇒ pure integration (`cIntegratePolyGWf`, with
+the `deg(c)+1 ≤ n` check); `deg(b) > max(0, δ−1)` ⇒ non-cancellation (`cPolyRischDENoCancelGWf`);
+`δ = 0, deg(b) = 0` ⇒ primitive cancellation (`cPolyRischDECancelPrimGWf`); `δ = 1, deg(b) = 0` ⇒
+hyperexponential cancellation (`cPolyRischDECancelExpGWf`); else (`δ ≥ 2`) ⇒ non-cancellation.
+`[CRischField α]`-generic. -/
 def cPolyRischDEGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) : Option (CPolyG α) :=
   let δ : ℤ := (cdegG Dt : ℤ)
   let db : ℤ := (cdegG b : ℤ)
@@ -408,25 +392,22 @@ end CPolyG
 
 /-! ## The generic Risch-DE oracle `cRischDEGWf`
 
-`cRischDEGWf` threads the §6 stages. For `f = fnum/fden`, `g = gnum/gden ∈ α(t)` it returns
-`some (ynum, yden)` with `y = ynum/yden` solving `Dy + f·y = g`, or `none`. The base solve inside the
-cancellation cases is the typeclass `crischDESolve`, so a level-`n+1` call recurses into the level-`n`
-`crischDESolve`. -/
+For `f = fnum/fden`, `g = gnum/gden ∈ α(t)`, `cRischDEGWf` returns `some (ynum, yden)` with `y = ynum/yden`
+solving `Dy + f·y = g`, or `none`. The base solve inside the cancellation cases is `crischDESolve`, so a
+level-`n+1` call recurses into the level-`n` `crischDESolve`. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
-/-- The generic Risch differential equation solver `cRischDEGWf Dt fnum fden gnum gden` (Bronstein Ch. 6,
-assembled). For `f = fnum/fden`, `g = gnum/gden ∈ α(t)` and the monomial derivation `D = cmonomialDeriv Dt`,
-returns `some (ynum, yden)` with `y = ynum/yden ∈ α(t)` solving `Dy + f·y = g`, or `none`. Stages: §6.2
-normal denominator (`cRdeNormalDenominatorGWf`) → §6.2 special denominator
-(`cRdeSpecialDenominatorGWf`) → §6.3 degree bound (`cRdeBoundDegreeG`) → §6.4 SPDE (`cSPDEGWf`) → §6.5/§6.6
-PolyRischDE dispatch (`cPolyRischDEGWf`), with the polynomial unknown `Q = α'·v + β` reassembled to
-`y = Q·h₁ / h₀`. The cancellation cases recurse into `CRischField.crischDESolve` over `α` — at level `n+1`
-this is the level-`n` oracle. `native_decide`-able over the noncomputable tower. `[CField α] [CDiffField α]
-[CFracGcdCoreWf α] [CRischField α]`-generic — runs at any tower level. (`f` is assumed weakly normalized —
-the post-Hermite RDE input; `cWeakNormalizerGWf` returns `q = 1` on such `f`.) -/
+/-- The generic Risch differential equation solver `cRischDEGWf Dt fnum fden gnum gden`. For
+`f = fnum/fden`, `g = gnum/gden ∈ α(t)` and the monomial derivation `D = cmonomialDeriv Dt`, returns
+`some (ynum, yden)` with `y = ynum/yden ∈ α(t)` solving `Dy + f·y = g`, or `none`. Stages: normal denominator
+(`cRdeNormalDenominatorGWf`) → special denominator (`cRdeSpecialDenominatorGWf`) → degree bound
+(`cRdeBoundDegreeG`) → SPDE (`cSPDEGWf`) → PolyRischDE dispatch (`cPolyRischDEGWf`), with the polynomial
+unknown `Q = α'·v + β` reassembled to `y = Q·h₁ / h₀`. The cancellation cases recurse into
+`CRischField.crischDESolve` over `α`. `[CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]`-generic;
+`f` is assumed weakly normalized. -/
 def cRischDEGWf (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
     Option (CPolyG α × CPolyG α) :=
   match cRdeNormalDenominatorGWf Dt fnum fden gnum gden with
@@ -495,7 +476,7 @@ def cdenomNormalGateGWf (a : QFunNZG β) : Bool :=
 
 end Gate
 
-/-! The `native_decide` validations of `cRischDEGWf` at `QFunNZG ℚ` were **relocated** to
-`Tower/RischDEInstance.lean` (they need the `CRischField (QFunNZG ℚ)` instance, now above this file). -/
+/-! The validations of `cRischDEGWf` at `QFunNZG ℚ` live in `Tower/RischDEInstance.lean`, which supplies
+the `CRischField (QFunNZG ℚ)` instance. -/
 
 end DeepWiki.SymbolicIntegration

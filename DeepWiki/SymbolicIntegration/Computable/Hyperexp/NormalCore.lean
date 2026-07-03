@@ -18,16 +18,13 @@ namespace CPolyG
 
 /-! ### The hyperexponential residual `R = η · ∑ᵢ cᵢ`
 
-For a hyperexponential `t` (`Dt = η·t`), the Rothstein–Trager logarithmic construction
-`∑ᵢ cᵢ·log(vᵢ)` of a normal part `fₙ` has derivative `fₙ + R` with the residual
-`R = η · ∑ᵢ cᵢ ∈ α` — a constant in `t`, a base-field element. -/
+For a hyperexponential `t` (`Dt = η·t`), the log part `∑ᵢ cᵢ·log(vᵢ)` of a normal part `fₙ` overshoots by
+`R = η · ∑ᵢ cᵢ ∈ α`. -/
 
 variable {α : Type*} [CField α]
 
-/-- Hyperexponential normal-part residual `cHyperexpResidualG η logs = η · ∑ᵢ cᵢ ∈ α`: the residual
-`R` by which the Rothstein–Trager log part `∑ᵢ cᵢ·log(vᵢ)` overshoots the normal integrand on a
-hyperexponential monomial (`η = Dt/t`, `cᵢ` the `logs` coefficients). A constant in `t`, hence a
-base-field element. -/
+/-- Hyperexponential normal-part residual `cHyperexpResidualG η logs = η · ∑ᵢ cᵢ ∈ α`, the amount by which
+the log part overshoots the normal integrand (`cᵢ` the `logs` coefficients). -/
 def cHyperexpResidualG (η : α) (logs : List (α × CPolyG α)) : α :=
   CField.mul η (logs.foldl (fun acc cv => CField.add acc cv.1) CField.zero)
 
@@ -35,14 +32,12 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischFie
 
 /-! ### The normal-part integrator `∫ fₙ = logPart − ∫R`
 
-`cIntegrateHyperexpNormalGWf` integrates a normal part `fₙ = a/d` of a hyperexponential monomial by
-running the reduced capstone, reading the residual `R = η·∑res`, integrating the base residual
-`∫R` over `α` by `CRischField.crischDESolve 0 R`, and subtracting `∫R` from the rational part. -/
+`cIntegrateHyperexpNormalGWf` runs the reduced capstone, reads the residual `R`, integrates `∫R` over the
+base, and subtracts it. -/
 
 /-- Hyperexponential normal-part integral `cIntegrateHyperexpNormalGWf Dt a d cands`: run
-`cIntegrateReducedGWf`, read the residual `R = η·∑ᵢ cᵢ`, integrate `∫R` over the base by
-`crischDESolve 0 R`, and subtract `∫R` from the rational part (same logs); `none` if `∫R` is
-non-elementary. -/
+`cIntegrateReducedGWf`, read `R = η·∑ᵢ cᵢ`, integrate `∫R` by `crischDESolve 0 R`, and subtract it from the
+rational part (same logs); `none` if `∫R` is non-elementary. -/
 def cIntegrateHyperexpNormalGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let red := cIntegrateReducedGWf Dt a d cands
@@ -55,10 +50,9 @@ def cIntegrateHyperexpNormalGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List
     let newNum := csubG gnum (cmulG [intR] gden)
     some ⟨(newNum, gden), red.logs⟩
 
-/-- Full hyperexponential integral with normal feedback `cIntegrateHyperexpFullGWf Dt a d cands`:
-canonical-split `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part `fₚ + b/dₛ` by
-`cIntegrateHyperexpLaurentG`, the normal part by `cIntegrateHyperexpNormalGWf`, and combine the
-rational parts; `none` if either step is non-elementary. -/
+/-- Full hyperexponential integral `cIntegrateHyperexpFullGWf Dt a d cands`: canonical-split
+`f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part by `cIntegrateHyperexpLaurentG` and the normal part
+by `cIntegrateHyperexpNormalGWf`, and combine the rational parts; `none` if either is non-elementary. -/
 def cIntegrateHyperexpFullGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let η : α := cExpEtaG Dt
