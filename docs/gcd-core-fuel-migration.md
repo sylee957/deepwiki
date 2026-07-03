@@ -121,6 +121,24 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   + fuel'd correctness (`FieldGcd`/`ResultantGenericCore` cdivG/cmodG parts/`GenericBezout`/`GcdFFCore`/`GcdFFCorrect`),
   tracing each the dead-leaf way. The deepest layer; do with fresh focus (fatigue-errors surfaced here).
 
+## G7 progress + the base-is-MIXED finding
+- **G7a** deleted dead-leaf SoundnessCapstone. **G7b** deleted vestigial `instCFracGcdCoreRadX3` (last external
+  cgcdExtG tie). **G7c** dropped all leftover abstract `[CFracGcdCore α]` binders (RDE files + Tower/Integrate)
+  after EMPIRICALLY confirming (instance-neutralization test) that ONLY GcdFFCorrect demands the fuel'd instances.
+- ★★ CRUCIAL: the fuel'd base is NOT wholesale-deletable — it's INTERLEAVED with critical LIVE infrastructure:
+  - **FieldGcd** = fuel'd `cgcdExtG` correctness + LIVE `cderivG` (the formal derivative, 25+ consumers!),
+    `associated_toPolyG_cmonicG`, `cleadG_cnormG`/`cdegG_cnormG`/`stepG_length_lt`/`length_cnormG_of_ne`
+    (the Wf engine — FuelFreeGcd/FuelFreeResultant/WellFounded — depends on these).
+  - **GcdFFCorrect** = fuel'd `cgcdFFCore` correctness + LIVE GBPoly/PRS correctness (`CgcdBCorrect`,
+    `CPrimPRSGenAssocReg`, `toGBCoeffPoly*`, `gbnormCore*`) used by the Wf fraction-free gcd via PrimPRSRegular.
+  - **GenericPolyEngine** = LIVE CPolyG/CField base + the fuel'd Euclidean ops.
+  - **ResultantGenericCore** = LIVE interpolation lemmas + fuel'd cdivG/cmodG correctness.
+- G7 FINISH = SURGICAL per-decl deletion within these mixed files: remove ONLY the fuel'd ops
+  (`cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore` + fuel'd instances/class) and their fuel'd
+  correctness THEOREMS, keeping the pervasive live infra. A slip breaks the whole engine (cderivG is
+  load-bearing everywhere) — do with fresh focus + gate after every file. Order: delete the fuel'd correctness
+  theorems first (they consume the ops), then the ops, then the class+instances last.
+
 ## Status after G6b: CLEAN WINS EXHAUSTED (superseded — see G5 above; more clean wins were found + landed)
 The entire fuel'd §5/§6 Tower API is retired (split-factor, canonical-rep, squarefree-split, residue engine,
 hyperexp driver). A full 0-consumer scan finds NO remaining clean fuel'd deletions. The three remaining
