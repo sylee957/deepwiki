@@ -9,7 +9,6 @@ import DeepWiki.SymbolicIntegration.Computable.RischDE.RawSolveField
 import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveExhaustiveness
 import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNorm
 import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNormCanon
-import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSound
 import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSoundWf
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
 import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGcdWitnessWf
