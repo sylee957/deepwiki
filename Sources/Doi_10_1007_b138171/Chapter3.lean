@@ -11,6 +11,7 @@ import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
 import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 3: Differential Fields
@@ -558,33 +559,33 @@ def ex352Pn : CPolyG (QFunNZG ℚ) :=
 /-- Example 3.5.2's expected special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)` (book p.102). -/
 def ex352Ps : CPolyG (QFunNZG ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0, 1], qFrac3 [1] [1]]
 
-/-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFastG` (the canonical
+/-- **Example 3.5.1** (§3.5, p.101): the COMPUTABLE fraction-free `cSplitFactorFastGWf` (the canonical
 generic engine at the generic ℚ(x) = `QFunNZG ℚ`) splits the degree-5 `p` over ℚ(x)[t]
 (`Dt = −t²−(3/2x)t+1/(2x)`) into Bronstein's `pₙ` (degree 3) and `pₛ = t²+(1/x)t−(2x−1)/(4x²)` (degree
 2), monic-normalized, by `native_decide` — where the naive ℚ(x)-Euclidean kernel did not finish
 (coefficient swell). -/
 theorem ex_3_5_1 :
-    (CPolyG.cdegG (CPolyG.cSplitFactorFastG ex351Dt 8 ex351P).1,
-       CPolyG.cdegG (CPolyG.cSplitFactorFastG ex351Dt 8 ex351P).2) = (3, 2)
+    (CPolyG.cdegG (CPolyG.cSplitFactorFastGWf ex351Dt ex351P).1,
+       CPolyG.cdegG (CPolyG.cSplitFactorFastGWf ex351Dt ex351P).2) = (3, 2)
     ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (CPolyG.cSplitFactorFastG ex351Dt 8 ex351P).1) (CPolyG.cmonicG ex351Pn)) = true
+        (CPolyG.cmonicG (CPolyG.cSplitFactorFastGWf ex351Dt ex351P).1) (CPolyG.cmonicG ex351Pn)) = true
     ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (CPolyG.cSplitFactorFastG ex351Dt 8 ex351P).2) (CPolyG.cmonicG ex351Ps)) = true := by
+        (CPolyG.cmonicG (CPolyG.cSplitFactorFastGWf ex351Dt ex351P).2) (CPolyG.cmonicG ex351Ps)) = true := by
   native_decide
 
-/-- **Example 3.5.2** (§3.5, p.102): the COMPUTABLE fraction-free `cSplitSquarefreeFactorFastG` (Yun in
+/-- **Example 3.5.2** (§3.5, p.102): the COMPUTABLE fraction-free `cSplitSquarefreeFactorFastGWf` (Yun in
 `t` + per-factor differential special/normal split, the generic engine at the generic ℚ(x) =
 `QFunNZG ℚ`) on the same degree-5 `p` returns `N`-factor `t`-degrees `[1, 1]` and `S`-factor `t`-degrees
 `[2, 0]`, recombining (by multiplicity) to Bronstein's normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` and
 special part `pₛ = S₁ = t²+(1/x)t−(2x−1)/(4x²)`, all monic-normalized, by `native_decide`. -/
 theorem ex_3_5_2 :
-    (((CPolyG.cSplitSquarefreeFactorFastG ex351Dt 8 ex351P).1).map CPolyG.cdegG,
-       ((CPolyG.cSplitSquarefreeFactorFastG ex351Dt 8 ex351P).2).map CPolyG.cdegG) = ([1, 1], [2, 0])
+    (((CPolyG.cSplitSquarefreeFactorFastGWf ex351Dt ex351P).1).map CPolyG.cdegG,
+       ((CPolyG.cSplitSquarefreeFactorFastGWf ex351Dt ex351P).2).map CPolyG.cdegG) = ([1, 1], [2, 0])
     ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (ex352Recombine (CPolyG.cSplitSquarefreeFactorFastG ex351Dt 8 ex351P).1))
+        (CPolyG.cmonicG (ex352Recombine (CPolyG.cSplitSquarefreeFactorFastGWf ex351Dt ex351P).1))
         (CPolyG.cmonicG ex352Pn)) = true
     ∧ CPolyG.cisZeroG (CPolyG.csubG
-        (CPolyG.cmonicG (ex352Recombine (CPolyG.cSplitSquarefreeFactorFastG ex351Dt 8 ex351P).2))
+        (CPolyG.cmonicG (ex352Recombine (CPolyG.cSplitSquarefreeFactorFastGWf ex351Dt ex351P).2))
         (CPolyG.cmonicG ex352Ps)) = true := by
   native_decide
 

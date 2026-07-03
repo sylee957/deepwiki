@@ -141,22 +141,22 @@ theorem ex_5_4_1 :
 /-! ## §5.6 The Residue Criterion — computable + validated -/
 
 /-- **Algorithm `ResidueReduce`** (§5.6, p.151), the residue resultant: the computable
-`cResidueResultantTowerG Dt fuel a d = R(z) = res_t(d, a − z·Dd) ∈ ℚ(x)[z]` (the canonical generic
+`cResidueResultantTowerGWf Dt a d = R(z) = res_t(d, a − z·Dd) ∈ ℚ(x)[z]` (the canonical generic
 engine, here at the generic ℚ(x) = `QFunNZG ℚ`) over the tower, by the evaluation + Lagrange-
 interpolation template, whose roots are the residues of the logarithmic part of `∫ a/d`. Computable +
 `native_decide`-validated; abstract correctness (Thm 5.6.1) deferred. -/
-noncomputable abbrev alg_5_6_residueResultant := cResidueResultantTowerG (α := QFunNZG ℚ)
+noncomputable abbrev alg_5_6_residueResultant := cResidueResultantTowerGWf (α := QFunNZG ℚ)
 
 /-- **Algorithm `ResidueReduce`** (§5.6, p.151), the log argument: the computable
-`cLogArgTowerG Dt fuel a d c = gcd_t(d, a − c·Dd) ∈ ℚ(x)[t]` (the generic engine at the generic ℚ(x) =
+`cLogArgTowerGWf Dt a d c = gcd_t(d, a − c·Dd) ∈ ℚ(x)[t]` (the generic engine at the generic ℚ(x) =
 `QFunNZG ℚ`) over the tower — the polynomial inside `log` for a residue `c`, so
-`∑_c c·log(cLogArgTowerG … c)` is the logarithmic part of `∫ a/d`. Computable +
+`∑_c c·log(cLogArgTowerGWf … c)` is the logarithmic part of `∫ a/d`. Computable +
 `native_decide`-validated; abstract correctness deferred. -/
-noncomputable abbrev alg_5_6_logArg := cLogArgTowerG (α := QFunNZG ℚ)
+noncomputable abbrev alg_5_6_logArg := cLogArgTowerGWf (α := QFunNZG ℚ)
 
 /-- **Example 5.6.2** (§5.6, p.151–152): for `∫ (2t²−t−x²)/(t³−x²t) dx`, `t = log x`, `Dt = 1/x`, the
-residue resultant `cResidueResultantTowerG` has monic part `z³−xz²−z/4+x/4` (the book's `r` up to a
-ℚ(x) scalar) and the log arguments `cLogArgTowerG … (±1/2) = t ± x` (the residues `±1/2`), all checked
+residue resultant `cResidueResultantTowerGWf` has monic part `z³−xz²−z/4+x/4` (the book's `r` up to a
+ℚ(x) scalar) and the log arguments `cLogArgTowerGWf … (±1/2) = t ± x` (the residues `±1/2`), all checked
 over the generic ℚ(x)[t] (`native_decide`). -/
 theorem ex_5_6_2 :
     (let Dt : CPolyG (QFunNZG ℚ) := [qFrac5 [1] [0, 1]]                       -- `Dt = 1/x`
@@ -167,9 +167,9 @@ theorem ex_5_6_2 :
      let argPlus : CPolyG (QFunNZG ℚ) := [qFrac5 [0, 1] [1], qConst5 1]        -- `t + x`
      let argMinus : CPolyG (QFunNZG ℚ) := [qFrac5 [0, -1] [1], qConst5 1]      -- `t − x`
      CPolyG.cisZeroG (CPolyG.csubG
-         (CPolyG.cmonicG (CPolyG.cResidueResultantTowerG Dt 30 a d)) resMonic)
-     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerG Dt 30 a d (qConst5 (1/2))) argPlus)
-     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerG Dt 30 a d (qConst5 (-1/2))) argMinus))
+         (CPolyG.cmonicG (CPolyG.cResidueResultantTowerGWf Dt a d)) resMonic)
+     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerGWf Dt a d (qConst5 (1/2))) argPlus)
+     ∧ CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cLogArgTowerGWf Dt a d (qConst5 (-1/2))) argMinus))
     := by native_decide
 
 /-! ## §5.8 The Primitive Case — computable + validated (constant-coefficient sub-case) -/
