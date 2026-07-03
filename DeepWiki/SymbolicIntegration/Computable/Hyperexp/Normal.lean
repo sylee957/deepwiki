@@ -4,74 +4,16 @@ import DeepWiki.SymbolicIntegration.Computable.Hyperexp.ExampleData
 
 /-! # The hyperexponential normal part via residual feedback
 
-The residual-feedback normal-part driver `cIntegrateHyperexpNormalG` and full driver
-`cIntegrateHyperexpFullG` (`∫ fₙ = ∑ᵢ cᵢ·log vᵢ − ∫R`, `R = η·∑ᵢ cᵢ` the Rothstein–Trager overshoot),
-with `native_decide`-validated examples such as `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
+`native_decide`-validated examples of the fuel-free residual-feedback hyperexponential integrators
+`cIntegrateHyperexpNormalGWf` / `cIntegrateHyperexpFullGWf` (`ComputableHyperexpNormalCore`,
+`∫ fₙ = ∑ᵢ cᵢ·log vᵢ − ∫R`, `R = η·∑ᵢ cᵢ` the Rothstein–Trager overshoot), such as
+`∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
 open Compute
-
-namespace CPolyG
-
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
-
-/-! ### The normal-part integrator `∫ fₙ = logPart − ∫R`
-
-`cIntegrateHyperexpNormalG` corrects the Rothstein–Trager overshoot on a hyperexponential monomial:
-the log part `∑ᵢ cᵢ·log vᵢ` differentiates to `fₙ + R` with `R = η·∑ᵢ cᵢ` a base-field element, so
-the base integral `∫R` is subtracted from the rational part. -/
-
-/-- Hyperexponential normal-part integral `cIntegrateHyperexpNormalG Dt fuel a d cands`: integrate a
-normal part `fₙ = a/d` of a hyperexponential monomial `t` (`Dt = η·t`). Runs `cIntegrateReducedG`
-(with `fuel` bounding its Hermite descent) for the rational part `g` and the residue logs, reads the
-residual `R = η·∑ᵢ cᵢ` (`cHyperexpResidualG`), integrates `∫R` over the base by
-`crischDESolve 0 R`, and returns `some ⟨(gnum − (∫R)·gden, gden), logs⟩` — so `D(result) = fₙ` —
-or `none` if `∫R` is non-elementary. For `η = 0` (primitive) this collapses to
-`cIntegrateReducedG`. Runs at any tower level. -/
-def cIntegrateHyperexpNormalG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
-    Option (IntegralResultG α) :=
-  let red := cIntegrateReducedG Dt fuel a d cands
-  let η : α := cExpEtaG Dt
-  let R : α := cHyperexpResidualG η red.logs
-  match CRischField.crischDESolve (CField.zero : α) R with
-  | none => none
-  | some intR =>
-    let (gnum, gden) := red.rational
-    let newNum := csubG gnum (cmulG [intR] gden)
-    some ⟨(newNum, gden), red.logs⟩
-
-/-! ### The full hyperexponential integral driver `cIntegrateHyperexpFullG`
-
-Routes the normal part through the residual feedback `cIntegrateHyperexpNormalG` (unlike
-`cIntegrateHyperexpG`, whose normal log part overshoots), so special and normal parts are both
-correct. -/
-
-/-- Full hyperexponential integral with normal feedback `cIntegrateHyperexpFullG Dt fuel a d cands`:
-integrate `f = a/d ∈ k(t)` for a hyperexponential monomial `t` (`Dt = η·t`). Canonical-split
-`f = fₚ + (b/dₛ) + (cₙ/dₙ)` (with `fuel` bounding the split and the Hermite descent), integrate the
-Laurent part `fₚ + b/dₛ` by `cIntegrateHyperexpLaurentG η`, the normal part `cₙ/dₙ` by
-`cIntegrateHyperexpNormalG`, and combine the rational parts. `none` if either the Laurent step or
-the base residual is non-elementary. Runs at any hyperexponential tower level. -/
-def cIntegrateHyperexpFullG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
-    Option (IntegralResultG α) :=
-  let η : α := cExpEtaG Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
-  let neg : List α := cHyperexpSpecialNegG b ds
-  match cIntegrateHyperexpLaurentG η fp neg with
-  | none => none
-  | some (lnum, lden) =>
-    match cIntegrateHyperexpNormalG Dt fuel cn dn cands with
-    | none => none
-    | some nrm =>
-      let (gnum, gden) := nrm.rational
-      let num := caddG (cmulG lnum gden) (cmulG gnum lden)
-      let den := cmulG lden gden
-      some ⟨(num, den), nrm.logs⟩
-
-end CPolyG
 
 /-! ### Validation: `∫ 1/(exp x − 1) dx = log(exp x − 1) − x` (`native_decide`)
 
@@ -129,7 +71,7 @@ theorem nNormInv_reduced_overshoots :
 /-- **★ The §5.9 driver lands `∫ 1/(exp x − 1) = log(exp x − 1) − x`, and `D(∫f) = f`** (`native_decide`,
 the headline). On the hyperexponential **normal** integrand `f = 1/(t−1) = 1/(exp x − 1)` over `ℚ(x)[t]`
 (`Dt = η·t`, `η = 1`) — on which the reduced `cIntegrateReducedG` overshoots by the residual `R = 1`
-(`nNormInv_reduced_overshoots`) — the §5.9 driver `cIntegrateHyperexpNormalG` (reduced capstone + residual
+(`nNormInv_reduced_overshoots`) — the §5.9 driver `cIntegrateHyperexpNormalGWf` (reduced capstone + residual
 `R = η·∑res = 1` + base integral `∫R = x` + subtraction) returns `some res`, and `res` satisfies the
 antiderivative identity `D(res) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` (`checkIdentityG`, cleared of denominators over
 ℚ(x)[t]). The returned object is `log(t−1) − x` (rational part `−x`, one log `(1, t−1)`). **This is the
@@ -142,7 +84,7 @@ theorem nNormInv_landsNormalPart :
       | none => false) = true := by native_decide
 
 /-- **The §5.9 driver's result IS `log(t−1) − x`** (`native_decide`): the returned `IntegralResultG` of
-`cIntegrateHyperexpNormalG` on `f = 1/(exp x − 1)` has rational part exactly `−x` (a single `t⁰`
+`cIntegrateHyperexpNormalGWf` on `f = 1/(exp x − 1)` has rational part exactly `−x` (a single `t⁰`
 coefficient `−x ∈ ℚ(x)`) and a single logarithm with argument `t − 1` — i.e. `log(t−1) − x`, the textbook
 antiderivative. Pins the *shape*, not just the derivative identity. -/
 theorem nNormInv_result_is_logTMinus1_minus_x :
@@ -161,7 +103,7 @@ The combined §5.10 + §5.9 driver on `f = 1/t + 1/(t−1) = (2t−1)/(t²−t)`
 `Dt = η·t`, `η = 1`): the canonical split is `fₛ = 1/t` (special — `t` is the hyperexponential special
 factor) and `fₙ = 1/(t−1)` (normal). The §5.10 special part lands `−1/t`; the §5.9 normal part lands
 `log(t−1) − x` (residual `R = 1`, base integral `x`). So `∫f = −1/t + log(t−1) − x`. The full driver
-`cIntegrateHyperexpFullG` routes the special part through `cIntegrateHyperexpLaurentG` and the normal part
+`cIntegrateHyperexpFullGWf` routes the special part through `cIntegrateHyperexpLaurentG` and the normal part
 through the §5.9 feedback, and the assembled result satisfies `D(∫f) = f` (`checkIdentityG`).
 
 This is the **clean special + normal hyperexponential integral** that was the documented frontier in
@@ -182,7 +124,7 @@ def nSpecNormCands : List NLvl1 := [CField.zero, CField.one, CField.neg CField.o
 the §5.10 driver `cIntegrateHyperexpG` (special part correct, normal part via the bare `cIntegrateReducedG`)
 runs on `f = 1/t + 1/(t−1)` over ℚ(x)[t] and returns `some`, but its normal log part `log(t−1)` overshoots
 `1/(t−1)` by the §5.9 residual `R = 1`, so the full-`f` antiderivative identity `D(res) = f` **fails**
-(`checkIdentityG = false`) — exactly the gap the §5.9 feedback (`cIntegrateHyperexpFullG`) closes. -/
+(`checkIdentityG = false`) — exactly the gap the §5.9 feedback (`cIntegrateHyperexpFullGWf`) closes. -/
 theorem nSpecNorm_specialOnly_overshoots :
     (match CPolyG.cIntegrateHyperexpG nHyperexpDt 24 nSpecNormA nSpecNormD nSpecNormCands with
       | some res => CPolyG.checkIdentityG nHyperexpDt res nSpecNormA nSpecNormD
@@ -191,7 +133,7 @@ theorem nSpecNorm_specialOnly_overshoots :
 /-- **★★ The full §5.10 + §5.9 driver lands `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x`, and
 `D(∫f) = f`** (`native_decide`, the stretch). On `f = 1/t + 1/(t−1)` over `ℚ(x)[t]` (`t = exp`, `Dt = η·t`,
 `η = 1`) — a **special part `1/t` AND a normal part `1/(t−1)`** — the combined driver
-`cIntegrateHyperexpFullG` integrates the special part by §5.10 Laurent (`−1/t`) and the normal part by the
+`cIntegrateHyperexpFullGWf` integrates the special part by §5.10 Laurent (`−1/t`) and the normal part by the
 §5.9 residual feedback (`log(t−1) − x`), recombining to `−1/t + log(t−1) − x`, and `res` satisfies the
 antiderivative identity `D(res) = f` (`checkIdentityG`, cleared of denominators over ℚ(x)[t]). The whole
 special-AND-normal hyperexponential integral computes and differentiates back to `f` — the clean mix that
@@ -217,7 +159,7 @@ subtracts it: `∫fₙ = log(t−1) − x²`.
 This exercises the residual feedback with a **non-constant `R`** (the stretch): `R = 2x` is stored as the
 reduced fraction `2x/1` (the numerator-`η` cancellation keeps the residue constant, so `R = η·1` carries no
 spurious denominator — unlike the unreduced `2x/2x` of a non-δ-constant residue), so `crischDESolve` over
-ℚ(x) genuinely integrates the non-constant `2x` to `x²`, and `cIntegrateHyperexpNormalG` lands
+ℚ(x) genuinely integrates the non-constant `2x` to `x²`, and `cIntegrateHyperexpNormalGWf` lands
 `log(t−1) − x²` with `D(∫f) = f`. -/
 
 /-- The hyperexponential monomial derivative `Dt = η·t = [0, 2x]` over `CPolyG NLvl1 = ℚ(x)[t]`
@@ -259,7 +201,7 @@ theorem nVarNorm_baseIntegral_eq_xSq :
 /-- **★★ The §5.9 driver lands `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`, and `D(∫f) = f`**
 (`native_decide`, the non-constant-residual stretch). On the hyperexponential **normal** integrand
 `f = 2x/(t−1)` over `ℚ(x)[t]` with `t = exp(x²)` (`Dt = η·t`, `η = 2x` **non-constant**), the §5.9 driver
-`cIntegrateHyperexpNormalG` reads the **non-constant** residual `R = 2x` (`nVarNorm_residual_eq_twoX`),
+`cIntegrateHyperexpNormalGWf` reads the **non-constant** residual `R = 2x` (`nVarNorm_residual_eq_twoX`),
 integrates the base residual `∫R = x²` (`nVarNorm_baseIntegral_eq_xSq`), and subtracts it from the log
 part, returning `log(t−1) − x²` (rational part `−x²`, one log `(1, t−1)`) with the antiderivative identity
 `D(res) = f` (`checkIdentityG`, over ℚ(x)[t]). **The residual feedback handles a genuinely non-constant
