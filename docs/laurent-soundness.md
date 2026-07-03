@@ -72,10 +72,22 @@ This is the painful part (foldr + reversed lists + negative-index arithmetic); i
     `cIntegrateHyperexpLaurentG η pos [] = some (num,den) ⟹ D_tower(⟦num/den⟧) = ⟦pos⟧`. Unfolds the
     integrator (`neg=[]` ⟹ `den = t⁰ = 1`), extracts `posQ` via `split`, applies `laurentPosGo_sound`.
     **This discharges `hLaurField` whenever the special part `b = 0`.**
-  - [ ] **Negative side remaining** (for the general `b ≠ 0` discharge): the symmetric `laurentNegGo_sound`
-    — `D_tower(⟦negCoeffs.reverse⟧/⟦tᵐ⟧) = ⟦neg.reverse⟧/⟦tᵐ⟧` via the neg-term M2 (fraction case). Harder
-    than pos because of `reverse` (cons → append) + `den = tᵐ` (length-dependent): induct with the `/X`
-    shift, `(c::cs).reverse = cs.reverse ++ [c]`, `toPolyG_append`, reindexing `X^{i+1}→X^{i+2}`. Then the
-    full `cIntegrateHyperexpLaurentG` soundness = `toPolyG_append` split of `num = negCoeffs.reverse ++
-    posCoeffs` over `den = tᵐ` into the neg-reverse part (`laurentNegGo_sound`) + the pos part
-    (`laurentPosGo_sound`). No new mathematics — the neg-term identity is already proven.
+  - [x] **Negative solve-loop DONE** (`laurentNegGo_sound`, 7298d77b): offset-generalized with the
+    denominator exponent `s + neg.length` held invariant — head reverse-append splits off `⟦q⟧/t^(s+1)`
+    (neg-term M2, `X^as.length` cancels via `mul_div_mul_left`) + tail at offset `s+1` (same den, IH).
+    Supporting: `toPolyG_append_laurent`, `laurentGo_length`.
+  - [x] **GENERAL soundness DONE** (`cIntegrateHyperexpLaurentG_sound`, 9eaf75ea): for any `pos`, `neg`,
+    `D_tower(⟦num/den⟧) = ⟦pos⟧ + ⟦neg.reverse⟧/⟦t^(neg.length)⟧`. Splits `num = negCoeffs.reverse ++
+    posCoeffs` over `den = tᵐ` (`toPolyG_append_laurent`, `negCoeffs.length = neg.length`), then `congr`:
+    neg part = `laurentNegGo_sound`, pos part = `laurentPosGo_sound` after `X^m` cancellation.
+
+**M1 + M2 + M3 all complete.** The full `cIntegrateHyperexpLaurentG` is proven correct.
+
+## Final assembler connection (small, remaining)
+
+To discharge the assembler's `hLaurField` (`D(lnum/lden) = ⟦fpPart⟧`) end-to-end: instantiate
+`cIntegrateHyperexpLaurentG_sound` with `pos = fp`, `neg = cHyperexpSpecialNegG b ds`, giving
+`D(lnum/lden) = ⟦fp⟧ + ⟦(cHyperexpSpecialNegG b ds).reverse⟧/⟦tᵐ⟧`. The one remaining lemma is
+`cHyperexpSpecialNegG` correctness — `⟦(cHyperexpSpecialNegG b ds).reverse⟧/⟦tᵐ⟧ = ⟦b/dₛ⟧` (the
+negative-coefficient extraction faithfully reads the special part `b/dₛ`) — plus `Dt = η·t` from
+`cExpEtaG`. Then `fpPart = ⟦fp + b/dₛ⟧` and `hLaurField` is discharged.
