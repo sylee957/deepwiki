@@ -381,4 +381,23 @@ theorem cSqfreeYunFFGWf_pow_dvd [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
   exact ((pow_dvd_pow_of_dvd haj.dvd (1 + j)).trans
     (sqfreeFactPart_pow_self_dvd_primPart (toPolyG p) hpp (1 + j))).trans (toPolyG p).primPart_dvd
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Each tower Yun factor is squarefree** (from the `sqfreeFactPart` correspondence + squarefreeness
+of `sqfreeFactPart`, transferred across associates). -/
+theorem cSqfreeYunFFGWf_squarefree [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0)
+    (j : ℕ) (hj : j < (cSqfreeYunFFGWf p).length) :
+    Squarefree (toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩)) := by
+  have haj := cSqfreeYunFFGWf_get_assoc hgcd p hp0 hpp j hj
+  exact fun y hy => sqfreeFactPart_squarefree (toPolyG p) (1 + j) y (hy.trans haj.dvd)
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Each tower Yun factor is coprime to its derivative** (squarefree ⟹ coprime to `v'`, char 0). -/
+theorem cSqfreeYunFFGWf_coprime_deriv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0)
+    (j : ℕ) (hj : j < (cSqfreeYunFFGWf p).length) :
+    IsCoprime (toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩))
+      (derivative (toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩))) :=
+  squarefree_iff_isCoprime_derivative.mp (cSqfreeYunFFGWf_squarefree hgcd p hp0 hpp j hj)
+
 end DeepWiki.SymbolicIntegration
