@@ -106,6 +106,16 @@ theorem gloc_isQRegularG (Dt v u : CPolyG α) {Q : (CFieldSpec.K α)[X]} (hv : t
   exact ⟨_, _, by rw [hden]; exact pow_ne_zero N hv, by rw [hden]; exact hcop.pow_right, rfl⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- `Q`-regular is closed under list sums. -/
+theorem isQRegularG_list_sum {Q : (CFieldSpec.K α)[X]} (L : List (RatFunc (CFieldSpec.K α)))
+    (h : ∀ f ∈ L, IsQRegularG Q f) : IsQRegularG Q L.sum := by
+  induction L with
+  | nil => simpa using isQRegularG_zero Q
+  | cons hd tl ih =>
+    rw [List.sum_cons]
+    exact (h hd (List.mem_cons_self ..)).add (ih fun f hf => h f (List.mem_cons_of_mem _ hf))
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Cross-multiplied fraction-pair addition reads as the fraction sum:
 `⟦(a₁·b₂ + b₁·a₂) / (a₂·b₂)⟧ = ⟦a₁/a₂⟧ + ⟦b₁/b₂⟧` (denominators nonzero). -/
 theorem fracPair_add (a1 a2 b1 b2 : CPolyG α) (ha2 : toPolyG a2 ≠ 0) (hb2 : toPolyG b2 ≠ 0) :
