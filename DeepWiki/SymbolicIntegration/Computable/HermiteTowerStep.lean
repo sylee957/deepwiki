@@ -215,4 +215,56 @@ theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPolyG α
   field_simp
   ring
 
+/-! ### Splitting the exact-division frontier into radical + pole-cancellation
+
+The exact-division `resDen ∣ resNum·Dstar` decomposes, by the pure field-algebra
+`dvd_clearedIdentity_of_radical`, into two genuine sub-facts: `d = Dstar·W` (the squarefree radical
+`Dstar` divides `d` with cofactor `W`, a Yun structural fact) and `W·gden² ∣ resNum` (Hermite
+pole-cancellation: the reduced residual's `W`-poles cancel). Tower analog of
+`hermiteReduce_residual_correct_of_radical`. -/
+
+/-- Pure divisibility (any field): from `D = S·W` and `W·gd2 ∣ R`, get `D·gd2 ∣ R·S`. -/
+theorem dvd_clearedIdentity_of_radical {K : Type*} [Field K] {R D gd2 S W : K[X]}
+    (hSD : D = S * W) (hWgd : W * gd2 ∣ R) : D * gd2 ∣ R * S := by
+  obtain ⟨N, hN⟩ := hWgd
+  exact ⟨N, by rw [hSD]; linear_combination S * hN⟩
+
+open QFunNZG in
+/-- **The whole-step Hermite field identity from the radical split.** With `hNum` the exact quotient
+`cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
+reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. Reduces `hherm` to the two
+genuine sub-facts (Yun radical + pole-cancellation) instead of the monolithic exact division. -/
+theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : CPolyG α)
+    (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
+    (hDstar : amG α (toPolyG Dstar) ≠ 0)
+    (hresDen : cnormG (cmulG d (cmulG gden gden)) ≠ [])
+    (hSD : toPolyG d = toPolyG Dstar * toPolyG W)
+    (hWgd : toPolyG W * (toPolyG gden * toPolyG gden)
+        ∣ toPolyG (csubG (cmulG a (cmulG gden gden))
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+              (cmulG gnum (cmonomialDeriv Dt gden)))))) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
+        + amG α (toPolyG (cdivWf (cmulG (csubG (cmulG a (cmulG gden gden))
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+              (cmulG gnum (cmonomialDeriv Dt gden))))) Dstar) (cmulG d (cmulG gden gden))))
+          / amG α (toPolyG Dstar)
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  set resNum := csubG (cmulG a (cmulG gden gden))
+    (cmulG d (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
+      (cmulG gnum (cmonomialDeriv Dt gden)))) with hresNum
+  set resDen := cmulG d (cmulG gden gden) with hresDen'
+  -- the divisibility `resDen ∣ resNum·Dstar` from the radical split.
+  have hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar) := by
+    rw [hresDen', toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
+    exact dvd_clearedIdentity_of_radical hSD hWgd
+  -- the exact-division equation, mapped into the fraction field.
+  have hexactP : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
+      = toPolyG (cmulG resNum Dstar) := toPolyG_cdivWf_exact _ _ hresDen hdvd
+  have hexact : amG α (toPolyG (cdivWf (cmulG resNum Dstar) resDen))
+        * amG α (toPolyG resDen)
+      = amG α (toPolyG resNum) * amG α (toPolyG Dstar) := by
+    rw [← map_mul, hexactP, toPolyG_cmulG, map_mul]
+  exact hermiteTowerStep_field_identity Dt gnum gden a d
+    (cdivWf (cmulG resNum Dstar) resDen) Dstar hd hgden hDstar hexact
+
 end DeepWiki.SymbolicIntegration
