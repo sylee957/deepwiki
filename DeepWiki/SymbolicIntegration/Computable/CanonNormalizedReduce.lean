@@ -123,4 +123,26 @@ end Repin
 #print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized
 #print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff
 
+/-! ### The §6.1 canonical-normality predicate + soundness-gate witness (relocated from the retired
+`RischDE/SolveNormCanon.lean`; consumed by `RischDE/SolveSoundWf.lean`) -/
+
+section CanonNormalized
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
+
+/-- **The §6.1 canonical-normality gate** `IsCanonNormalized f q'`: the lowest-terms canonicalized weakly
+normalized element `qReduce (weakNormalizedF f q')` is weakly normalized (`IsWeaklyNormalizedNorm`). A
+genuine, non-vacuous soundness gate — `native_decide`-validated to hold on the positive-integer-residue
+special-pole class and to fail exactly where the oracle would be unsound. -/
+def IsCanonNormalized (f q' : QFunNZG β) : Prop :=
+  IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))
+
+end CanonNormalized
+
+/-- The witness scalar `−x ∈ ℚ(x) = QFunNZG ℚ` (numerator `[0, -1] = −x`, denominator `[1]`). -/
+def witnessNegX : QFunNZG ℚ := ⟨([(0 : ℚ), -1], [1]), by native_decide⟩
+
+/-- The witness `f = 1/(t₁ − x) ∈ Lvl2 = ℚ(x)(t₁)`: a `D`-constant special pole `t₁ − x` (`D(t₁ − x) = 0`,
+no positive-integer residue) — the soundness-gate witness. -/
+def witnessF : Lvl2 := ⟨([CField.one], [witnessNegX, CField.one]), by native_decide⟩
+
 end DeepWiki.SymbolicIntegration
