@@ -83,7 +83,21 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   (`integralBasisLoop`'s `deg(disc)+1` iteration bound, `radReduceCase*Iterate`'s multiplicity counter — KEEP;
   they're meaningful termination bounds, not the "fuel ran out" ugliness). Not all `(fuel : ℕ)` is gcd-fuel.
 
-## G5 REMAINING — cresultantG + cbezoutOne (deeper: proof-migration, not mechanical)
+## G5 COMPLETE (G5a–i) — the whole Algebraic Trager machinery is fuel-free
+- G5f `cbezoutOne`→`cbezoutOneWf` (radInvN re-point, then deleted).
+- G5g `discResultant`→`cresultantWf` (native_decide, clean).
+- G5h migrated the residue-resultant soundness onto `cresultantWf`: re-pointed cAlgResidueResultant/
+  genResidueResultant/resYAtNode + fixed all native_decide sites + migrated the abstract leaf
+  compute-bridge theorems (toPolyG_cAlgResidueResultant_eq_of_eval / toPolyG_genResidueResultant_eq_of_eval /
+  toK_cresultantG_cAlgResidueNorm) — SIMPLER, since toPolyG_cresultantWf carries no fuel-adequacy hypothesis.
+- G5i deleted the fuel'd `cresultantG` def + its orphaned correctness (cresultantG_cnormG/toPolyG_cresultantG_of_ge/
+  toPolyG_cresultantG), keeping the LIVE interpolation lemmas.
+- ★ These residue "compute-bridge" soundness theorems were LEAVES (only #print axioms) whose PROOFS used the
+  fuel'd correctness — migrating them (swap toPolyG_cresultantG→toPolyG_cresultantWf, drop fuel/hfuel) was
+  the one genuinely-proof-editing part, and it was mechanical once toPolyG_cresultantWf was found to have the
+  IDENTICAL conclusion (= Polynomial.resultant …).
+
+## G5 (OLD, superseded) — cresultantG + cbezoutOne (deeper: proof-migration, not mechanical)
 - `cresultantG` → `cAlgResidueResultant`/`genResidueResultant`/`resYAtNode`/`discResultant` + a real CORRECTNESS
   layer (`toPolyG_cresultantG`, `toPolyG_cAlgResidueResultant_eq_of_eval`, the residue-soundness theorems in
   AlgebraicResidues/GeneralResidues/RadicalLogSoundness/GeneralLogSoundness). Wf correctness EXISTS

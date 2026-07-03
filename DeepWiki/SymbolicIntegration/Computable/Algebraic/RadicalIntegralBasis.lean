@@ -64,12 +64,12 @@ variable {α : Type*} [CField α]
 multiplicity-indexed squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFFG`). This is Trager's general
 `dᵢ = ∏ⱼ Pⱼ^{⌊i·eⱼ/n⌋}` (p. 30) at `n = 2`, `i = 1`: `⌊eⱼ/2⌋` copies of each factor go into `d`. -/
 
-variable [CFracGcdCore α] [CFracGcdCoreWf α]
+variable [CFracGcdCoreWf α]
 
 /-- **Square part** `radSquarePart ρ = d = ∏ᵢ Pᵢ^{⌊i/2⌋}` — the root of the largest square divisor
 of `ρ`, from the multiplicity-indexed squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFFG`): each
 squarefree part `Pᵢ` of multiplicity `i` contributes `Pᵢ^{⌊i/2⌋}` to `d`. So `d² ∣ ρ` and `ρ/d²` is
-squarefree (Trager Ch. 2 §5, p. 30, `d₁` at `n = 2`). Monic. `[CField α] [CFracGcdCore α]`-generic. -/
+squarefree (Trager Ch. 2 §5, p. 30, `d₁` at `n = 2`). Monic. `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def radSquarePart (ρ : CPolyG α) : CPolyG α :=
   (cSqfreeYunFFGWf ρ).zipIdx.foldl
     (fun acc (Pi, i) => cmulG acc (cpowG Pi ((i + 1) / 2))) [CField.one]
@@ -78,7 +78,7 @@ def radSquarePart (ρ : CPolyG α) : CPolyG α :=
 squarefree part of `ρ` collecting one copy of each ODD-multiplicity squarefree factor `Pᵢ` (so
 `ρ = d²·s` with `d = radSquarePart`). Equivalently `s = ρ/d²` (exact division), but built directly from
 the parity of multiplicities so the squarefreeness is structural (Trager Ch. 2 §5, p. 30). Monic.
-`[CField α] [CFracGcdCore α]`-generic. -/
+`[CField α] [CFracGcdCoreWf α]`-generic. -/
 def radSquarefreePart (ρ : CPolyG α) : CPolyG α :=
   (cSqfreeYunFFGWf ρ).zipIdx.foldl
     (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmulG acc Pi else acc) [CField.one]
@@ -94,7 +94,7 @@ integral, and `y/d` is the maximal integral element of the form `y/q`. We return
 `d = radSquarePart ρ` (the square part's root) and `s = radSquarefreePart ρ = ρ/d²` is squarefree with
 `(y/d)² = s`. Returned as the pair `(d, s)` (the basis is `1` and `y/d`; `s` is the minimal-polynomial
 constant `(y/d)² = s`). For squarefree `ρ` (`d = 1`) this is just `[1, y]`. `[CField α]
-[CFracGcdCore α]`-generic. -/
+[CFracGcdCoreWf α]`-generic. -/
 def radIntegralBasis (ρ : CPolyG α) : CPolyG α × CPolyG α :=
   (radSquarePart ρ, radSquarefreePart ρ)
 
@@ -109,7 +109,7 @@ because `s` is squarefree. -/
 /-- **The square-part split is exact** `radSplitExact ρ`: `d²·s = ρ` where `(d, s) = radIntegralBasis
 ρ` — so `s = ρ/d²` is a genuine `ℚ[x]` polynomial (no fractional residue), the precondition that `y/d`
 satisfies the monic `T² − s = 0` over `ℚ[x]`. Checked by `cisZeroG (d²·s − ρ)`, comparing monic-normalized
-(the Yun factors are monic, so `d, s` are; `ρ` is taken monic). `[CField α] [CFracGcdCore α]`-generic. -/
+(the Yun factors are monic, so `d, s` are; `ρ` is taken monic). `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def radSplitExact (ρ : CPolyG α) : Bool :=
   let d := radSquarePart ρ
   let s := radSquarefreePart ρ
@@ -119,7 +119,7 @@ def radSplitExact (ρ : CPolyG α) : Bool :=
 (constant) where `s = radSquarefreePart ρ`. Together with `radSplitExact` this is exactly "`y/d` is
 integral over `ℚ[x]`" — `(y/d)² = s` is a squarefree polynomial, so `y/d` is a root of the monic
 `T² − s ∈ ℚ[x][T]` and the integral closure contains it. Checked by `cdegG (gcd s s') = 0`. `[CField α]
-[CFracGcdCore α]`-generic. -/
+[CFracGcdCoreWf α]`-generic. -/
 def radSquarefreePartIsSquarefree (ρ : CPolyG α) : Bool :=
   let s := radSquarefreePart ρ
   cdegG (cgcdMonicWf s (cderivG s)) = 0
@@ -130,7 +130,7 @@ def radSquarefreePartIsSquarefree (ρ : CPolyG α) : Bool :=
 `s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the MAXIMAL integral element of
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
 (`y/d` itself, which IS integral). Checked by `¬ (P² ∣ s)` via `cdvdGWf`. `[CField α]
-[CFracGcdCore α]`-generic. -/
+[CFracGcdCoreWf α]`-generic. -/
 def radNotIntegralFactor (ρ P : CPolyG α) : Bool :=
   let s := radSquarefreePart ρ
   if cdegG P = 0 then false else !(cdvdGWf (cmulG P P) s)
@@ -145,7 +145,7 @@ For `y² = s` with `s` squarefree, the minimal polynomial of `y/d` is `T² − s
 /-- **Basis discriminant** `radBasisDiscriminant ρ = 4·s` — the discriminant of the minimal
 polynomial `T² − s` of the basis element `y/d` (`s = radSquarefreePart ρ`): `disc(T² − s) = 0² − 4·1·(−s)
 = 4s`. The polynomial discriminant `disc(T² + bT + c) = b² − 4c` at `b = 0, c = −s`. (Up to the unit `1`
-this is `s` itself; the `4` is the classical normalization.) `[CField α] [CFracGcdCore α]`-generic. -/
+this is `s` itself; the `4` is the classical normalization.) `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def radBasisDiscriminant (ρ : CPolyG α) : CPolyG α :=
   cscaleG (cnatCastG 4) (radSquarefreePart ρ)
 
@@ -153,7 +153,7 @@ def radBasisDiscriminant (ρ : CPolyG α) : CPolyG α :=
 (`s = radSquarefreePart ρ` squarefree of degree `m`): `g = ⌈m/2⌉ − 1 = (m + 1)/2 − 1` (`ℕ`-division, so
 `(m + 1)/2` is `⌈m/2⌉`). Trager Ch. 2 §4's `g = d/2 − [K(x,y):K(x)] + 1` specialized to the simple radical
 `y² = s`. `g = 0` (rational) for `deg s ≤ 2`, `g = 1` (elliptic) for `deg s ∈ {3, 4}`, etc. `[CField α]
-[CFracGcdCore α]`-generic. -/
+[CFracGcdCoreWf α]`-generic. -/
 def radGenus (ρ : CPolyG α) : ℕ :=
   let m := cdegG (radSquarefreePart ρ)
   (m + 1) / 2 - 1
