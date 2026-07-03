@@ -97,6 +97,11 @@ pole-cancellation assembly), on the same footing as the RT residue-match and spl
 - [ ] M3 — pole-cancellation `W·gden²∣resNum` (the remaining sub-fact; genuinely needs the full Yun
   multiplicity structure + per-factor pole tracking). The abstract engine (`YunInv`,
   `yunStep_emit_assoc`, `yunLoopAbs_forall₂`, `yunFactorizationAbs_prodPow_assoc`) is all present for it.
+  **★ EMPIRICALLY CONFIRMED TRUE for m≥2** (native `#eval`, 2026-07-04): the cleared Hermite identity
+  holds for `d=t²(t−1)³` (m=2), `d=t³(t−1)²` (m=2), `d=t²(t−1)³(t−2)⁴` (m=3). So the naive-looking
+  global-`a`/sum fold IS correct (the per-factor leftovers conspire to a radical-denominator residual) —
+  pole-cancellation is a REAL theorem, **not** an `m≤1` limitation; the objective is attainable. The
+  proof is a port of the abstract `hermiteReduce_residual_correct_of_radical` to the tower.
 
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
 matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
