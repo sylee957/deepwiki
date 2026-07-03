@@ -202,4 +202,42 @@ theorem cIntegrateCase_hyperexp_sound (Dt a d : CPolyG α)
   cIntegrateCase_sound hyperexpCase Dt a d cands res lnum lden nrm (amG α (toPolyG fpPart))
     hlden hgden hLaur hNrm hsome hLaurField hNrmField hrecon
 
+/-- **The primitive case, as a corollary of the generic soundness.** The special part is the polynomial
+`qₚ` (as `qₚ/1`) from the `b = 0` RDE; the reduced part needs no correction, so `nrm` is the reduced result
+directly. -/
+theorem cIntegrateCase_primitive_sound (Dt a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (qp : CPolyG α) (specialVal : RatFunc (CFieldSpec.K α))
+    (hsden : toPolyG ([CField.one] : CPolyG α) ≠ 0)
+    (hgden : toPolyG (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2 ≠ 0)
+    (hb : cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
+    (hqp : cPolyRischDEGWf Dt [] (canonicalRepresentationFastGWf Dt a d).1
+        ((cdegG (canonicalRepresentationFastGWf Dt a d).1 : ℤ) + 1) = some qp)
+    (hsome : cIntegrateCase primitiveCase Dt a d cands = some res)
+    (hSpecField : towerFractionFieldDerivG Dt
+        (amG α (toPolyG qp) / amG α (toPolyG ([CField.one] : CPolyG α))) = specialVal)
+    (hNrmField : towerFractionFieldDerivG Dt
+            (amG α (toPolyG (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+                (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.1)
+              / amG α (toPolyG (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+                (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2))
+          + logResidueSumG Dt (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+              (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs
+        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
+    (hrecon : specialVal + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  have hSpec : primitiveCase.integrateSpecial Dt (canonicalRepresentationFastGWf Dt a d).1
+      (canonicalRepresentationFastGWf Dt a d).2.1.1
+      (canonicalRepresentationFastGWf Dt a d).2.1.2 = some (qp, [CField.one]) := by
+    simp only [primitiveCase, hb, if_true, hqp]
+  exact cIntegrateCase_sound primitiveCase Dt a d cands res qp [CField.one]
+    (cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+      (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) specialVal hsden hgden hSpec rfl hsome
+    hSpecField hNrmField hrecon
+
 end DeepWiki.SymbolicIntegration
