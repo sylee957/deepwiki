@@ -39,7 +39,7 @@ the **general-`Pic⁰`-torsion core**: the general divisor-class-group arithmeti
 construction of `m·δ` + the good-reduction torsion-ceiling lift, the general analogue of the hyperelliptic
 `principalGenerator` / `isTorsionDivisor` / `mumfordReduceModP`. We isolate it PRECISELY as the named residual
 `GeneralPicTorsionFrontier` and prove the decision modulo it, connecting to the **partial** general torsion we
-already have (`genIsTorsion` / `genDivisorOrder`, which compute the order via the fractional-ideal Pic
+already have (`genDivisorOrder`, which computes the order via the fractional-ideal Pic
 arithmetic but whose termination needs the good-reduction ceiling). NO `sorry`.
 
 Proven (modulo exactly the named frontiers, never re-`sorry`):

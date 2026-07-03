@@ -223,13 +223,6 @@ def genDivisorOrder (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPoly
     (δ : GenDivisor) : Option ℕ :=
   genDivisorOrderAux f basis δ fuel (idealIdentity (cdegG f)) 0
 
-/-- Is `δ` torsion within `fuel` `genIsTorsion fuel f basis δ`: `true` iff `genDivisorOrder` finds a finite
-order `≤ fuel`. A `Bool` view of `genDivisorOrder` for the decision wrappers (the general-curve analogue of
-the hyperelliptic `cantorOrder`-`isSome` torsion test). -/
-def genIsTorsion (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG ℚ)))
-    (δ : GenDivisor) : Bool :=
-  (genDivisorOrder fuel f basis δ).isSome
-
 end CPolyG
 
 /-! ## Validation: principal classes have order 1 (`native_decide`)
