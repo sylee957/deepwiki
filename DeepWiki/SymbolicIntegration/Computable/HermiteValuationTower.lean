@@ -65,4 +65,25 @@ theorem IsQRegularG.deriv {Q : (CFieldSpec.K α)[X]} {f : RatFunc (CFieldSpec.K 
     q ^ 2, pow_ne_zero 2 hq, hQ.pow_right, ?_⟩
   rw [hfeq, towerFractionFieldDerivG_div, map_sub, map_mul, map_mul, map_pow]
 
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The inner-loop `gloc` denominator is a power of `v`** (times the seed denominator): the
+accumulator denominator only ever multiplies by `cpowG v (j+1)`. So a factor's `gloc` denominator is
+coprime to any polynomial coprime to `v` — the key to `Vk`-regularity of the other factors. -/
+theorem toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow (Dt v u : CPolyG α) :
+    ∀ (j : ℕ) (a : CPolyG α) (g : CPolyG α × CPolyG α),
+      ∃ N, toPolyG (cHermiteReduceTowerInnerWf Dt v u j a g).1.2
+        = toPolyG g.2 * toPolyG v ^ N := by
+  intro j
+  induction j with
+  | zero => intro a g; exact ⟨0, by simp [cHermiteReduceTowerInnerWf]⟩
+  | succ j ih =>
+    intro a g
+    rw [cHermiteReduceTowerInnerWf]
+    rcases hBC : cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+      (cscaleG (CField.neg (CField.inv (cnatCastG (j + 1)))) a) with ⟨b, c⟩
+    obtain ⟨M, hM⟩ := ih _ (caddG (cmulG g.1 (cpowG v (j + 1))) (cmulG b g.2),
+      cmulG g.2 (cpowG v (j + 1)))
+    refine ⟨j + 1 + M, ?_⟩
+    rw [hM, toPolyG_cmulG, toPolyG_cpowG, mul_assoc, ← pow_add]
+
 end DeepWiki.SymbolicIntegration
