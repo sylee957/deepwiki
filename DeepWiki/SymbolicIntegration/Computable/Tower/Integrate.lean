@@ -40,35 +40,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute
 
-/-! ### Generic `splitFactor` over the tower (§3.5)
-
-`cSplitFactorFastG` is the `[CField α] [CDiffField α]`-generic mirror of `cSplitFactorFast`: Bronstein's
-splitting-factorization loop with the flat fraction-free monic gcd `CFracGcdCore.cgcdFFCore` (for the two
-gcds `gcd(p, Dp)` and `gcd(p, dp/dt)`) and the fuel-free generic exact division `cdivWf`. `Dp = cmonomialDeriv Dt p` is the differential
-derivation (needs `[CDiffField α]`); `dp/dt = cderivG p` the formal `t`-derivative. -/
-
-namespace CPolyG
-
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
-
-/-- Generic splitting-factorization loop (Bronstein §3.5): `cSplitFactorFastG Dt fuel p =
-(pₙ, pₛ)`, the same recursion as `cSplitFactorFast` but on a generic `[CField α] [CDiffField α]`
-carrier with the flat fraction-free gcd `CFracGcdCore.cgcdFFCore` for the two gcds `gcd(p, Dp)` and
-`gcd(p, dp/dt)`. One step extracts `S = gcd(p, Dp)/gcd(p, dp/dt)` (`Dp = cmonomialDeriv Dt p` the
-differential derivation, `dp/dt = cderivG p` the formal one); constant `S` ⇒ `p` is normal, else recurse
-on `p/S` and accumulate `S` into the special part. Fuel-bounded; runs at any tower level. -/
-def cSplitFactorFastG (Dt : CPolyG α) : ℕ → CPolyG α → CPolyG α × CPolyG α
-  | 0, p => (p, [CField.one])
-  | fuel + 1, p =>
-    let S := cdivWf (CFracGcdCore.cgcdFFCore (fuel + 1) p (cmonomialDeriv Dt p))
-      (CFracGcdCore.cgcdFFCore (fuel + 1) p (cderivG p))
-    if cdegG S = 0 then (p, [CField.one])
-    else
-      let (qn, qs) := cSplitFactorFastG Dt fuel (cdivWf p S)
-      (qn, cmulG S qs)
-
-end CPolyG
-
 /-! ### Generic Yun squarefree factorization in `t` (the formal derivative)
 
 `cSqfreeYunFFG` is the `[CField α]`-generic mirror of `cSqfreeYunFF`: Yun's squarefree factorization in
@@ -105,34 +76,6 @@ def cSqfreeYunFFG (fuel : ℕ) (p : CPolyG α) : List (CPolyG α) :=
   let b1 := cdivWf p g
   let d1 := csubG (cdivWf (cderivG p) g) (cderivG b1)
   cSqfreeYunFFGgo fuel fuel b1 d1
-
-end CPolyG
-
-/-! ### Generic canonical representation over the tower (§3.5)
-
-`canonicalRepresentationFastG` is the `[CField α] [CDiffField α]`-generic mirror of
-`canonicalRepresentationFast`: it splits `f = a/d` (d monic) into `(fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))`.
-The denominator split `d = dₛ·dₙ` uses the generic `cSplitFactorFastG`; the Bézout-split of the
-remainder reuses the already-generic `cbezoutOne`/`cextendedEuclideanSplit` from
-`ComputableCanonicalRep` (those need only `[CField α]`). -/
-
-namespace CPolyG
-
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
-
-/-- Generic `CanonicalRepresentation` (Bronstein §3.5, p.103) over the tower:
-`canonicalRepresentationFastG Dt fuel (a, d) = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d`
-(`d` monic). Steps: divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ`
-(`cSplitFactorFastG`, generic); Bézout-split `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplitWf`
-with `cbezoutOneWf`, the already-generic fuel-free helpers). The reduced part is `b/dₛ`, the simple part `c/dₙ`.
-`[CField α] [CDiffField α] [CFracGcdCore α]`-generic — runs at any tower level. -/
-def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
-    CPolyG α × (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
-  let (q, r) := cdivmodWf a d
-  let (dn, ds) := cSplitFactorFastG Dt fuel d
-  let (u, w) := cbezoutOneWf dn ds
-  let (b, c) := cextendedEuclideanSplitWf dn ds r u w
-  (q, (b, ds), (c, dn))
 
 end CPolyG
 
