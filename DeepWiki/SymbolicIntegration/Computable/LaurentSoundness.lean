@@ -182,4 +182,29 @@ theorem laurentPosGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPolyG α
         rw [hsplit1, map_add, map_add, hsplit2, map_add,
           cIntegrateHyperexpLaurent_pos_term Dt η s a q hDt hq, ih restCoeffs (s + 1) hrest]
 
+/-- **Laurent soundness, polynomial case (`neg = []`).** For `Dt = η·t`, if
+`cIntegrateHyperexpLaurentG η pos [] = some (num, den)`, then `D_tower(⟦num/den⟧) = ⟦pos⟧` — the antiderivative
+identity for a purely non-negative hyperexponential Laurent integrand (`den = 1`). -/
+theorem cIntegrateHyperexpLaurentG_pos_sound [CRischField α] [CRischFieldSpec α]
+    (Dt : CPolyG α) (η : α) (pos num den : CPolyG α)
+    (hDt : toPolyG Dt = Polynomial.C (CFieldSpec.toK η) * Polynomial.X)
+    (hsome : cIntegrateHyperexpLaurentG η pos [] = some (num, den)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG num) / amG α (toPolyG den))
+      = amG α (toPolyG pos) := by
+  rw [cIntegrateHyperexpLaurentG] at hsome
+  simp only [List.length_nil, List.zipIdx_nil, List.foldr_nil] at hsome
+  split at hsome
+  · rename_i negC posCoeffs hnegeq hp
+    simp only [Option.some.injEq] at hnegeq
+    subst hnegeq
+    simp only [List.reverse_nil, List.nil_append, Option.some.injEq, Prod.mk.injEq] at hsome
+    obtain ⟨hnum, hden⟩ := hsome
+    subst hnum; subst hden
+    have hden1 : toPolyG (cshiftG (0 : ℕ) ([CField.one] : CPolyG α)) = 1 := by
+      show toPolyG ([CField.one] : CPolyG α) = 1
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    rw [hden1, map_one, div_one]
+    simpa using laurentPosGo_sound Dt η hDt pos posCoeffs 0 hp
+  · simp at hsome
+
 end DeepWiki.SymbolicIntegration
