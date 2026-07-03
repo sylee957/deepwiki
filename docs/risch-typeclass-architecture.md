@@ -185,12 +185,15 @@ Cost / risk (honest):
   Bridge `cIntegrateHyperexpFullGWf = cIntegrateCase hyperexpCase` holds by **`rfl`** (the hyperexp driver's
   combine is already the uniform fraction form). `native_decide` validates the assembler reproduces
   `checkIdentityG` on the primitive (∫1/t²) and hyperexp (∫1/exp, special+normal mix) cases.
-- **P2 slice done.** `cIntegrateCase_hyperexp_sound` — the full field-identity soundness for the assembler,
-  a one-line transport of `cIntegrateHyperexpFullGWf_sound` through the `rfl` bridge. Concrete proof of
-  "soundness proven once, reused per instance".
-- Open: the primitive-case bridge is not `rfl` (off by `[1]`-multiplications + the `fp=0` shortcut) — it is
-  validated by `native_decide` but not yet a general `=`/soundness transport; `LawfulMonomialCase` +
-  a from-scratch generic `cIntegrateCase_sound`; `CResidueSource` (below).
+- **P2 done.** `cIntegrateCase_sound` proves `D(res.rational) + logResidueSum res.logs = a/d` for the generic
+  assembler **once**, from the two abstract hook field-identities (`hSpecField`, `hNrmField`) + the canonical
+  reconstruction, via the `combineSN` algebra — independent of the monomial case. **Both** transcendental
+  cases are corollaries: `cIntegrateCase_hyperexp_sound` (special value `⟦fpPart⟧`, Laurent/normal solves)
+  and `cIntegrateCase_primitive_sound` (special part `qₚ/1` from the `b=0` RDE, uncorrected reduced) — the
+  latter is what the `rfl` bridge alone could not give.
+- Open: `LawfulMonomialCase` as a bundled Prop (the hook laws are currently supplied as per-theorem
+  hypotheses); discharging `hSpecField`/`hNrmField` from the deep stage lemmas (poly-RDE / reduced
+  soundness); the primitive general `=` bridge; `CResidueSource` (P0, below); completeness (P3).
 
 ## Phases
 
