@@ -80,15 +80,6 @@ remaining fueled comparison checks); `CRischField RadX3` is now supplied by the 
 conservative stub is retired — the scalar-decoupling solver resolves automatically via
 `RadX3 = RadExt (QFunNZG ℚ) 2 (x³+1)`. -/
 
-/-- **`CFracGcdCore RadX3`** — the raw fraction-free gcd over `RadX3[t]`. `RadX3` is a genuine field
-(`y² − (x³+1)` is irreducible over ℚ(x), `irreducible_radX3`), so — exactly as for the constant base
-`instCFracGcdCoreQ` — its content is a unit and the raw gcd is the **raw** Euclidean gcd
-`(cgcdExtG _).1` over `RadX3[t]` (not monic; the public `cgcdFFCore` monic-normalizes at the top). The
-Euclidean work is `[CField RadX3]`-only, so it reduces in the native compiler. This is what
-`canonicalRepresentationFastG`, the Hermite reduction, and the residue log part dispatch through. -/
-instance instCFracGcdCoreRadX3 : CFracGcdCore RadX3 where
-  cgcdFFRawCore fuel p q := (CPolyG.cgcdExtG fuel p q).1
-
 /-- **`CFracGcdCoreWf RadX3`** — the fuel-free raw fraction-free gcd over `RadX3[t]`. Since `RadX3` is a
 field, the raw content-normalized gcd is the fuel-free Euclidean gcd `(cgcdWf p q).1`, mirroring the base
 `CFracGcdCoreWf ℚ` instance. This is the gcd instance consumed by `cIntegrateGFullWf` over the algebraic
