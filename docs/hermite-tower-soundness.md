@@ -62,16 +62,24 @@ So the whole-step identity `D_tower(⟦g⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧` is 
 relation `⟦hNum⟧·⟦d·gden²⟧ = ⟦resNum⟧·⟦Dstar⟧`, closed by `field_simp`/`ring`. Reduces `hherm` to the
 single **exact-division** frontier (carried as the one hypothesis).
 
-### M3 — the exact-division divisibility + Yun — PENDING (deepest)
-The one remaining frontier is the exact-division relation `resDen ∣ resNum·Dstar` for the actual
-`cHermiteReduceTowerGWf` output — Hermite's **pole-cancellation guarantee**: after reduction, the
-residual `a/d - D(g)` has denominator dividing the squarefree radical `Dstar`. This is where M1/M2 (the
-per-factor reduction identities showing each factor's high-multiplicity pole drops) + Yun
-`cSqfreeYunFFGWf` correctness (factors multiply to `d`, pairwise coprime/squarefree → `Dstar` structure)
-feed in. Note the multiplicity subtlety: the outer fold passes the SAME global `a` and `u = d/vⁱ` to each
-factor, so the per-factor sum doesn't naively telescope — the divisibility is genuinely the crux, on the
-same footing as the RT residue-match and split-coprimality frontiers. `HermiteCorrectness.lean` has the
-abstract Yun spine over `ℚ` (`yunFactorizationAbs`, `sqfreeFactPart`).
+### M3-radical — decompose the exact-division into radical + pole-cancellation ✓ DONE (c21504f4)
+`hermiteTowerStep_field_identity_of_radical` + the ported pure lemma `dvd_clearedIdentity_of_radical`
+(`D=S·W ∧ W·gd2∣R → D·gd2∣R·S`, field-generic). The exact-division `resDen ∣ resNum·Dstar` factors into
+two named sub-facts, so the whole-step identity now takes:
+- `hSD : d = Dstar·W` — the squarefree radical `Dstar = ∏ᵢ vᵢ` divides `d` with cofactor `W = ∏ᵢ vᵢ^{i-1}`;
+- `hWgd : W·gden² ∣ resNum` — Hermite pole-cancellation (the `W`-poles of `a/d − D(g)` cancel).
+Tower analog of `hermiteReduce_residual_correct_of_radical`.
+
+### M3 — the two remaining sub-facts — PENDING (deepest; no existing tower theorem)
+1. **Yun radical split `d = Dstar·W`** — needs `cSqfreeYunFFGWf` product correctness `∏ᵢ vᵢ^i = d`.
+   `cSqfreeYunFFGWf` currently has **no** correctness theorem (used only in defs); the abstract ℚ Yun
+   spine (`yunFactorizationAbs`, `sqfreeFactPart` in HermiteCorrectness) is not connected to the tower.
+2. **Pole-cancellation `W·gden² ∣ resNum`** — the genuine Hermite guarantee. Provable per-factor from
+   M1/M2, but with the multiplicity subtlety: the outer fold passes the SAME global `a` and `u = d/vⁱ`
+   to each factor's inner loop, so per-factor identities don't naively telescope.
+
+Both are fresh multi-session algorithm-correctness proofs (port the ℚ Yun spine to the tower + the
+pole-cancellation assembly), on the same footing as the RT residue-match and split-coprimality frontiers.
 
 ## Status
 
@@ -79,8 +87,12 @@ abstract Yun spine over `ℚ` (`yunFactorizationAbs`, `sqfreeFactPart`).
 - [x] **M2 DONE** (2385ec0e) — inner-loop invariant + `fieldFrac_step_add`.
 - [x] **M3-bridge DONE** (f5341c18) — whole-step field identity from exact division
   (`hermiteTowerStep_field_identity`); `hherm` reduced to the exact-division frontier.
-- [ ] M3 — the exact-division divisibility `resDen ∣ resNum·Dstar` (Hermite pole-cancellation) + Yun
-  `cSqfreeYunFFGWf` correctness (deepest; the genuine remaining crux).
+- [x] **hherm discharged downstream** (be5c7215) — `field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_exact`;
+  reduced-part soundness needs only exact-division + RT match.
+- [x] **M3-radical DONE** (c21504f4) — exact-division split into Yun radical `d=Dstar·W` +
+  pole-cancellation `W·gden²∣resNum` (`hermiteTowerStep_field_identity_of_radical`).
+- [ ] M3 — (a) Yun `cSqfreeYunFFGWf` product correctness `∏vᵢ^i=d` (no tower theorem yet);
+  (b) pole-cancellation `W·gden²∣resNum`. Both fresh multi-session; the genuine remaining crux.
 
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
 matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
