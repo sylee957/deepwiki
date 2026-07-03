@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 
 /-! # The tower single-step Hermite identity
 
@@ -88,5 +89,89 @@ theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt :
   rw [hA, pow_succ]
   field_simp
   ring
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+open QFunNZG in
+/-- The inner-loop accumulator update reads as a fraction sum:
+`⟦(g₁·Vpow + b·g₂) / (g₂·Vpow)⟧ = ⟦g₁/g₂⟧ + ⟦b/Vpow⟧`. -/
+theorem fieldFrac_step_add (g1 g2 b Vpow : CPolyG α)
+    (hg2 : toPolyG g2 ≠ 0) (hVpow : toPolyG Vpow ≠ 0) :
+    amG α (toPolyG (caddG (cmulG g1 Vpow) (cmulG b g2))) / amG α (toPolyG (cmulG g2 Vpow))
+      = amG α (toPolyG g1) / amG α (toPolyG g2) + amG α (toPolyG b) / amG α (toPolyG Vpow) := by
+  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul,
+    div_add_div _ _ (amG_toPolyG_ne_zero hg2) (amG_toPolyG_ne_zero hVpow)]
+  ring
+
+open QFunNZG in
+/-- **M2 — the inner Hermite loop invariant** (accumulator-general). For `u, v ≠ 0`, the tower
+derivation `D = implicitDeriv (toPolyG Dt)`, and every step's `cdiophantineGWf` cofactors satisfying
+the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
+`⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. Ports
+`hermiteInner_spec_acc` to the fuel-free Wf tower loop. -/
+theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : CPolyG α)
+    (hu : toPolyG u ≠ 0) (hv : toPolyG v ≠ 0)
+    (hbez : ∀ (j' : ℕ) (A' : CPolyG α),
+      toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+            (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).1
+          * (toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG v))
+        + toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+            (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).2 * toPolyG v
+      = -toPolyG A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
+    ∀ (j : ℕ) (A : CPolyG α) (g : CPolyG α × CPolyG α), toPolyG g.2 ≠ 0 →
+      amG α (toPolyG A) / (amG α (toPolyG u) * amG α (toPolyG v) ^ (j + 1))
+          + towerFractionFieldDerivG Dt (amG α (toPolyG g.1) / amG α (toPolyG g.2))
+        = towerFractionFieldDerivG Dt
+            (amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j A g).1.1)
+              / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j A g).1.2))
+          + amG α (toPolyG (cHermiteReduceTowerInnerWf Dt v u j A g).2)
+            / (amG α (toPolyG u) * amG α (toPolyG v)) := by
+  intro j
+  induction j with
+  | zero =>
+    intro A g hg
+    simp only [cHermiteReduceTowerInnerWf, Nat.zero_add, pow_one]
+    ring
+  | succ j ih =>
+    intro A g hg
+    rw [cHermiteReduceTowerInnerWf]
+    set jval : α := cnatCastG (j + 1) with hjval
+    set Dv := cmonomialDeriv Dt v with hDv
+    set p := cmulG u Dv with hp
+    set rhs := cscaleG (CField.neg (CField.inv jval)) A with hrhs
+    rcases hBC : cdiophantineGWf p v rhs with ⟨B, C⟩
+    simp only []
+    set Vpow := cpowG v (j + 1) with hVpow
+    set A' := csubG (cscaleG (CField.neg jval) C) (cmulG u (cmonomialDeriv Dt B)) with hA'
+    have hVpow0 : toPolyG Vpow ≠ 0 := by
+      rw [hVpow, toPolyG_cpowG]; exact pow_ne_zero _ hv
+    have hgnew : toPolyG (cmulG g.2 Vpow) ≠ 0 := by
+      rw [toPolyG_cmulG]; exact mul_ne_zero hg hVpow0
+    -- the accumulator update reads as `⟦g⟧ + ⟦B/Vpow⟧`.
+    have hstepadd := fieldFrac_step_add g.1 g.2 B Vpow hg hVpow0
+    -- `Vpow = v^(j+1)`, `B/Vpow = am B / (am v)^(j+1)`.
+    have hVpoweq : amG α (toPolyG Vpow) = amG α (toPolyG v) ^ (j + 1) := by
+      rw [hVpow, toPolyG_cpowG, map_pow]
+    -- the Bézout relation at `(j, A)`, matched to M1's `hrel`.
+    have hb := hbez j A
+    rw [← hjval, ← hrhs, hBC] at hb
+    simp only [] at hb
+    -- apply the single-step identity M1.
+    have hstep := towerFractionFieldDerivG_hermite_step (α := α) Dt (toPolyG A) (toPolyG B)
+      (toPolyG C) (toPolyG u) (toPolyG v) hu hv j hb
+    -- the recursion at counter `j` with the updated accumulator and numerator `A'`.
+    have hgnew' : toPolyG (cmulG g.2 Vpow) ≠ 0 := hgnew
+    have ihA := ih A' (caddG (cmulG g.1 Vpow) (cmulG B g.2), cmulG g.2 Vpow) hgnew'
+    simp only [] at ihA
+    -- rewrite `A'` numerator and the accumulator fraction in the recursion hypothesis.
+    have hA'eq : toPolyG A'
+        = -(Polynomial.C ((j : CFieldSpec.K α) + 1)) * toPolyG C
+          - toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG B) := by
+      rw [hA', toPolyG_csubG, toPolyG_cscaleG, toPolyG_cmulG, toPolyG_cmonomialDeriv,
+        CFieldSpec.toK_neg, hjval, toK_cnatCastG_oneShot, Nat.cast_add_one, map_neg]
+    rw [hstepadd, hVpoweq] at ihA
+    rw [map_add] at ihA
+    rw [hA'eq] at ihA
+    -- glue: M1 (power drop) + recursion tail.
+    linear_combination hstep + ihA
 
 end DeepWiki.SymbolicIntegration
