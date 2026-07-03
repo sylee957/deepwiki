@@ -131,4 +131,55 @@ theorem towerFractionFieldDerivG_laurent_pos_sum [CRischField α] [CRischFieldSp
   simp only [Function.comp_apply]
   exact cIntegrateHyperexpLaurent_pos_term Dt η t.1 t.2.1 t.2.2 hDt (hall t ht)
 
+/-- **The non-negative Laurent solve loop is sound (offset-generalized).** If the `posQ` foldr over
+`pos.zipIdx s` (shifts `s, s+1, …`) returns `coeffs`, then `D_tower(⟦tˢ·coeffs⟧) = ⟦tˢ·pos⟧`. Direct
+induction on `pos`, splitting the Horner list off the head and applying the single-term M2 identity plus
+the induction hypothesis at offset `s+1`. -/
+theorem laurentPosGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPolyG α) (η : α)
+    (hDt : toPolyG Dt = Polynomial.C (CFieldSpec.toK η) * Polynomial.X) :
+    ∀ (pos coeffs : CPolyG α) (s : ℕ),
+      ((pos.zipIdx s).foldr (fun ck acc =>
+          match acc with
+          | none => none
+          | some tail =>
+            match cLaurentIntCoeffG η (ck.2 : ℤ) ck.1 with
+            | none => none
+            | some q => some (q :: tail))
+        (some []) = some coeffs) →
+      towerFractionFieldDerivG Dt (amG α (toPolyG (cshiftG s coeffs)))
+        = amG α (toPolyG (cshiftG s pos)) := by
+  intro pos
+  induction pos with
+  | nil =>
+    intro coeffs s h
+    simp only [List.zipIdx_nil, List.foldr_nil, Option.some.injEq] at h
+    subst h; simp [toPolyG_cshiftG]
+  | cons a as ih =>
+    intro coeffs s h
+    rw [List.zipIdx_cons, List.foldr_cons] at h
+    cases hrest : (as.zipIdx (s + 1)).foldr (fun ck acc =>
+        match acc with
+        | none => none
+        | some tail =>
+          match cLaurentIntCoeffG η (ck.2 : ℤ) ck.1 with
+          | none => none
+          | some q => some (q :: tail)) (some []) with
+    | none => rw [hrest] at h; simp at h
+    | some restCoeffs =>
+      rw [hrest] at h
+      cases hq : cLaurentIntCoeffG η (s : ℤ) a with
+      | none => rw [hq] at h; simp at h
+      | some q =>
+        rw [hq] at h
+        rw [Option.some.injEq] at h
+        subst h
+        have hsplit1 : toPolyG (cshiftG s (q :: restCoeffs))
+            = toPolyG (cshiftG s ([q] : CPolyG α)) + toPolyG (cshiftG (s + 1) restCoeffs) := by
+          simp only [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, pow_succ]; ring
+        have hsplit2 : toPolyG (cshiftG s (a :: as))
+            = toPolyG (cshiftG s ([a] : CPolyG α)) + toPolyG (cshiftG (s + 1) as) := by
+          simp only [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, pow_succ]; ring
+        rw [hsplit1, map_add, map_add, hsplit2, map_add,
+          cIntegrateHyperexpLaurent_pos_term Dt η s a q hDt hq, ih restCoeffs (s + 1) hrest]
+
 end DeepWiki.SymbolicIntegration
