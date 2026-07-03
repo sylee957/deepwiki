@@ -191,9 +191,29 @@ Cost / risk (honest):
   cases are corollaries: `cIntegrateCase_hyperexp_sound` (special value `⟦fpPart⟧`, Laurent/normal solves)
   and `cIntegrateCase_primitive_sound` (special part `qₚ/1` from the `b=0` RDE, uncorrected reduced) — the
   latter is what the `rfl` bridge alone could not give.
-- Open: `LawfulMonomialCase` as a bundled Prop (the hook laws are currently supplied as per-theorem
-  hypotheses); discharging `hSpecField`/`hNrmField` from the deep stage lemmas (poly-RDE / reduced
-  soundness); the primitive general `=` bridge; `CResidueSource` (P0, below); completeness (P3).
+- **P2+ started — discharging the hypotheses from deep stage lemmas.** `cIntegrateCase_primitive_sound_polyRDE`
+  (canonical primitive `Dt=1`, `fₚ≠0`) drops `hSpecField`: it follows from `cPolyRischDEGWf_nil_field_identity`
+  (the engine's own poly-RDE soundness). First case law discharged.
+
+### Unconditionality dependency map (what's left for "sound, full stop")
+
+Each corollary still consumes `hNrmField` (shared reduced identity) + `hrecon` (canonical reconstruction),
+and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would discharge them:
+
+| hypothesis | deep lemma | status |
+| --- | --- | --- |
+| primitive `hSpecField` | `cPolyRischDEGWf_nil_field_identity` | **exists — discharged** |
+| `hNrmField` (reduced) | `field_identity_of_cIntegrateReducedGWf_of_residueMatch` | exists, but needs a `residueMatch` + Hermite side condition |
+| `hrecon` (canonical) | — | **missing** (the common blocker for both cases) |
+| hyperexp `hLaurField` (Laurent) | — | **missing** |
+
+So the single highest-leverage next lemma is **canonical reconstruction**
+`⟦fp⟧ + ⟦cn/dn⟧ = ⟦a/d⟧` for `canonicalRepresentationFastGWf` — it unblocks `hrecon` for *both* cases.
+Then reduced-soundness (modulo residueMatch) discharges `hNrmField`, leaving hyperexp gated only on a new
+Laurent-soundness lemma.
+
+- Open: `LawfulMonomialCase` bundled Prop; the missing canonical-reconstruction + Laurent lemmas above;
+  `CResidueSource` (P0); completeness (P3).
 
 ## Phases
 
