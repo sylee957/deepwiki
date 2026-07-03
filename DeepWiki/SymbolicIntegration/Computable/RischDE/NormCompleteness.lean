@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
-import DeepWiki.SymbolicIntegration.Computable.WeakNormalizerCorrect
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
 
 /-! # §6.2 RDE completeness — the fuel-free normal-denominator step preserves solvability (`hnorm`)

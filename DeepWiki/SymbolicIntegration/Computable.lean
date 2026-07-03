@@ -49,7 +49,6 @@ import DeepWiki.SymbolicIntegration.Computable.Structure
 import DeepWiki.SymbolicIntegration.Computable.Tower
 import DeepWiki.SymbolicIntegration.Computable.TranscendentalOverAlgebraic
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
-import DeepWiki.SymbolicIntegration.Computable.WeakNormalizerCorrect
 
 /-! # The generic executable Risch engine (`CField` / `CPolyG` world) — aggregator over the
 core plus the RischDE, Hyperexp, CoupledDE, Tower, and Algebraic sub-areas. -/
