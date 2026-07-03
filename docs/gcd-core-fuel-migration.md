@@ -105,6 +105,22 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   soundness proofs through the Wf lemma — genuine proof-migration, do fresh.
 - `cbezoutOne` → `radInvN` (RadicalGeneralN); `cbezoutOneWf` exists — check if a clean re-point.
 
+## G7 STARTED — base layer
+- **G7a** ✅ deleted the dead-leaf fuel'd `SoundnessCapstone` (9 decls, 16 `cgcdFFCore` uses, zero external
+  code consumers, superseded by the fuel-free RDE soundness) — re-pointed NormalCorrect's waypoint import.
+- After G7a, genuine `CFracGcdCore.cgcdFFCore` CODE uses are confined to the self-contained base cluster:
+  `Tower/GcdFFCore` (the `CFracGcdCore` class + the fuel'd instances `instCFracGcdCoreQ`/`RadX3`/`Q`,
+  `instCTowerGcdWitnessQ_of_terminates`), `Tower/GcdFFCorrect` (correctness). Tower/Integrate's remaining
+  `cgcdFFCore` mentions are DOCSTRINGS.
+- REMAINING `[CFracGcdCore α]` binder sites: SolveNorm(6)/SolveExhaustiveness(5)/Structural(4)/Completeness(1)/
+  MixedTowerIntegrate(1). ★ Structural GENUINELY uses it in some decls (the `omit [CFracGcdCore α] in` pattern
+  shows deliberate per-decl inclusion) — NOT all vestigial. Verify per-decl before dropping.
+- G7 FINISH (fresh, delicate): (1) drop the truly-vestigial binders; (2) verify no LIVE code needs the fuel'd
+  `CFracGcdCore` INSTANCE (instance resolution is invisible to name-scans — delete-and-build is the test);
+  (3) delete the fuel'd instances + Euclidean base (`cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore`)
+  + fuel'd correctness (`FieldGcd`/`ResultantGenericCore` cdivG/cmodG parts/`GenericBezout`/`GcdFFCore`/`GcdFFCorrect`),
+  tracing each the dead-leaf way. The deepest layer; do with fresh focus (fatigue-errors surfaced here).
+
 ## Status after G6b: CLEAN WINS EXHAUSTED (superseded — see G5 above; more clean wins were found + landed)
 The entire fuel'd §5/§6 Tower API is retired (split-factor, canonical-rep, squarefree-split, residue engine,
 hyperexp driver). A full 0-consumer scan finds NO remaining clean fuel'd deletions. The three remaining
