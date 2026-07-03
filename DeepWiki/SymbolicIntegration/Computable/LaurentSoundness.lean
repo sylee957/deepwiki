@@ -309,6 +309,44 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPolyG α
         rw [← hmeq] at hih
         exact hih
 
+/-- **Laurent soundness (general).** For `Dt = η·t`, if `cIntegrateHyperexpLaurentG η pos neg =
+some (num, den)`, then `D_tower(⟦num/den⟧) = ⟦pos⟧ + ⟦neg.reverse⟧/⟦t^(neg.length)⟧` — the antiderivative
+identity for the full hyperexponential Laurent integrand (non-negative part `pos`, negative part
+`neg` read as `∑ᵢ neg[i]·t^{-(i+1)} = ⟦neg.reverse⟧/tᵐ`). -/
+theorem cIntegrateHyperexpLaurentG_sound [CRischField α] [CRischFieldSpec α]
+    (Dt : CPolyG α) (η : α) (pos : CPolyG α) (neg : List α) (num den : CPolyG α)
+    (hDt : toPolyG Dt = Polynomial.C (CFieldSpec.toK η) * Polynomial.X)
+    (hsome : cIntegrateHyperexpLaurentG η pos neg = some (num, den)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG num) / amG α (toPolyG den))
+      = amG α (toPolyG pos)
+        + amG α (toPolyG neg.reverse)
+          / amG α (toPolyG (cshiftG neg.length ([CField.one] : CPolyG α))) := by
+  have hXne : amG α (Polynomial.X : (CFieldSpec.K α)[X]) ≠ 0 :=
+    (map_ne_zero_iff (amG α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
+  have hdenpow : toPolyG (cshiftG neg.length ([CField.one] : CPolyG α))
+      = (Polynomial.X : (CFieldSpec.K α)[X]) ^ neg.length := by
+    rw [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one,
+      mul_one]
+  rw [cIntegrateHyperexpLaurentG] at hsome
+  split at hsome
+  · rename_i negCoeffs posCoeffs hnegeq hposeq
+    simp only [Option.some.injEq, Prod.mk.injEq] at hsome
+    obtain ⟨hnum, hden⟩ := hsome
+    subst hnum; subst hden
+    have hlen : negCoeffs.length = neg.length := laurentGo_length η _ neg negCoeffs 0 hnegeq
+    have hsplit : toPolyG (negCoeffs.reverse ++ posCoeffs)
+        = toPolyG negCoeffs.reverse
+          + Polynomial.X ^ neg.length * toPolyG posCoeffs := by
+      rw [toPolyG_append_laurent, List.length_reverse, hlen]
+    rw [hsplit, map_add, add_div, map_add, add_comm (amG α (toPolyG pos))]
+    congr 1
+    · have hneg := laurentNegGo_sound Dt η hDt neg negCoeffs 0 hnegeq
+      simpa using hneg
+    · have hpos := laurentPosGo_sound Dt η hDt pos posCoeffs 0 hposeq
+      rw [hdenpow, map_mul, map_pow, mul_div_cancel_left₀ _ (pow_ne_zero neg.length hXne)]
+      simpa using hpos
+  all_goals simp at hsome
+
 /-- **Laurent soundness, polynomial case (`neg = []`).** For `Dt = η·t`, if
 `cIntegrateHyperexpLaurentG η pos [] = some (num, den)`, then `D_tower(⟦num/den⟧) = ⟦pos⟧` — the antiderivative
 identity for a purely non-negative hyperexponential Laurent integrand (`den = 1`). -/
