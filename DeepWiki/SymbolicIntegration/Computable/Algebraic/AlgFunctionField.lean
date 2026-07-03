@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtension
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.HermiteNormalForm
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissEngine
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 
 /-! # The general algebraic function field `K(x, y) = K(x)[y]/(f)` — trace and discriminant
 (Trager, *Integration of Algebraic Functions*, Ch. 2 §"Integral Bases", p. 24–26)
@@ -163,7 +164,7 @@ def discriminant (f : CPolyG (QFunNZG ℚ)) : QFunNZG ℚ :=
 /-- **`Resultant(f, f')` for the curve `f`** (the alternative discriminant up to sign): `cresultantG`
 of `f` against its formal `y`-derivative `cderivG f`, eliminating `y`. Equal to `± discriminant f`
 (`disc(f) = (−1)^{n(n−1)/2} Res(f, f')/lc(f)`, `lc = 1` monic). Fuel `2·deg f + 2`. -/
-def discResultant (f : CPolyG α) : α := cresultantG (2 * cdegG f + 2) f (cderivG f)
+def discResultant (f : CPolyG α) : α := cresultantWf f (cderivG f)
 
 end CPolyG
 
