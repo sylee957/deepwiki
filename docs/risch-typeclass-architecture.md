@@ -205,10 +205,18 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 | primitive `hSpecField` | `cPolyRischDEGWf_nil_field_identity` | **exists — discharged** |
 | `hrecon` (canonical) | `canonicalReconstruction` (new) | **discharged, modulo the split frontier** |
 | `hNrmField` (reduced) | `cIntegrateReducedGWf_isIntegralResult` (new) | **wired — reduces to Hermite + RT frontier** |
-| split correctness `d = dₛ·dₙ` + coprimality | `cSplitFactorFastGWf` | frontier (`native_decide`-only) |
+| split factorization `d = dₛ·dₙ` (special·normal) | `cSplitFactorFastGWf_isSplittingFactorizationGen` (new) | **PROVEN abstractly (uncond. at ℚ; general modulo `GcdFFCorrect`)** |
 | Hermite half `hherm` | `cHermiteReduceTowerGWf` | frontier (`native_decide`-only) |
 | RT residue match `hmatch` | Rothstein–Trager residue↔root | frontier (`native_decide`-only) |
-| hyperexp `hLaurField` (Laurent) | — | frontier (missing) |
+| hyperexp `hLaurField` (Laurent) | `cIntegrateHyperexpLaurentG_special_sound` (new) | **PROVEN modulo special-part shape** |
+
+**`cSplitFactorFastGWf` split correctness is now PROVEN** (`SplitFactorWfCorrect.lean`, not `native_decide`):
+M1 per-step bridge `cstepGWf ~ splitFactorStep` → M2 well-founded recursion → `IsSplittingFactorizationGen`
+(`toPolyG d = toPolyG dₛ · toPolyG dₙ`, `dₛ` special, `dₙ` normal-squarefree), reduced to a single gcd
+frontier `GcdFFCorrect` and **discharged unconditionally at the ℚ base** (`gcdFFCorrect_Q`, where the
+fraction-free gcd is the plain monic Euclidean gcd). This feeds `hsplit` in `canonicalReconstruction`
+(the `d = dₛ·dₙ` part; `hgdeg`/`hgne` coprimality is the small remaining piece). One of the three
+engine-compute frontiers is now off the `native_decide`-only list.
 
 `canonicalReconstruction` assembles `toPolyG_cdivmodWf` + `toPolyG_cbezoutOneWf` +
 `toPolyG_cextendedEuclideanSplitWf` + `canonicalRepFast_field_identity`, so `hrecon` reduces to
