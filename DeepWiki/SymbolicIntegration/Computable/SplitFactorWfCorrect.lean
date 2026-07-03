@@ -126,4 +126,20 @@ theorem cSplitFactorFastGWf_isSplittingFactorizationGen [CharZero (CFieldSpec.K 
   intro p hp
   exact hmain (cnormG p : List α).length p le_rfl hp
 
+/-! ### M3 — discharging the gcd frontier at the `ℚ` base -/
+
+/-- **The gcd frontier is unconditional at `ℚ`.** There `cgcdFFCoreWf = cmonicG ∘ (cgcdWf ·).1 =
+cgcdMonicWf` (the plain monic Euclidean gcd), whose correctness is `associated_toPolyG_cgcdMonicWf`. -/
+theorem gcdFFCorrect_Q : GcdFFCorrect (α := ℚ) := fun a b => associated_toPolyG_cgcdMonicWf a b
+
+/-- `CharZero (CFieldSpec.K ℚ) = CharZero ℚ`: local instance for the `ℚ`-base split correctness. -/
+instance : CharZero (CFieldSpec.K ℚ) := inferInstanceAs (CharZero ℚ)
+
+/-- **Unconditional abstract correctness of `cSplitFactorFastGWf` at the `ℚ` base.** For `p ≠ 0`,
+`cSplitFactorFastGWf Dt p` is a genuine general splitting factorization of `p` — no gcd hypothesis. -/
+theorem cSplitFactorFastGWf_isSplittingFactorizationGen_Q (Dt p : CPolyG ℚ) (hp : toPolyG p ≠ 0) :
+    @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv (toPolyG Dt)⟩ (toPolyG p)
+      (toPolyG (cSplitFactorFastGWf Dt p).2) (toPolyG (cSplitFactorFastGWf Dt p).1) :=
+  cSplitFactorFastGWf_isSplittingFactorizationGen gcdFFCorrect_Q Dt p hp
+
 end DeepWiki.SymbolicIntegration
