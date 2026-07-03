@@ -204,23 +204,27 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 | --- | --- | --- |
 | primitive `hSpecField` | `cPolyRischDEGWf_nil_field_identity` | **exists — discharged** |
 | `hrecon` (canonical) | `canonicalReconstruction` (new) | **discharged, modulo the split frontier** |
-| `hNrmField` (reduced) | `field_identity_of_cIntegrateReducedGWf_of_residueMatch` | exists, needs a `residueMatch` + Hermite side condition |
-| split correctness `d = dₛ·dₙ` + coprimality | `cSplitFactorFastGWf` | **missing** (`native_decide`-only engine frontier) |
-| hyperexp `hLaurField` (Laurent) | — | missing |
+| `hNrmField` (reduced) | `cIntegrateReducedGWf_isIntegralResult` (new) | **wired — reduces to Hermite + RT frontier** |
+| split correctness `d = dₛ·dₙ` + coprimality | `cSplitFactorFastGWf` | frontier (`native_decide`-only) |
+| Hermite half `hherm` | `cHermiteReduceTowerGWf` | frontier (`native_decide`-only) |
+| RT residue match `hmatch` | Rothstein–Trager residue↔root | frontier (`native_decide`-only) |
+| hyperexp `hLaurField` (Laurent) | — | frontier (missing) |
 
 `canonicalReconstruction` assembles `toPolyG_cdivmodWf` + `toPolyG_cbezoutOneWf` +
-`toPolyG_cextendedEuclideanSplitWf` + `canonicalRepFast_field_identity`, so `hrecon` now reduces to exactly
-the `cSplitFactorFastGWf` split-correctness (`d = dₛ·dₙ`, coprimality). `cIntegrateCase_primitive_sound_full`
-(`Dt=1`, `fₚ≠0`, `b=0`) discharges **both** `hSpecField` and `hrecon` — the primitive case is now sound given
-only the reduced identity (`hNrmField`) and the split frontier.
+`toPolyG_cextendedEuclideanSplitWf` + `canonicalRepFast_field_identity`, so `hrecon` reduces to
+`cSplitFactorFastGWf` split-correctness. `cIntegrateReducedGWf_isIntegralResult` restates
+`field_identity_of_cIntegrateReducedGWf_of_residueMatch` as `IsIntegralResultG`, so `hNrmField` reduces to
+the Hermite half + the RT residue match. `cIntegrateCase_primitive_sound_full` already discharges
+`hSpecField` (poly-RDE) and `hrecon`.
 
-So the two remaining primitive frontiers are: **(1) reduced-soundness wiring** (discharge `hNrmField` from
-`field_identity_of_cIntegrateReducedGWf_of_residueMatch`, modulo `residueMatch`), and **(2)
-`cSplitFactorFastGWf` split correctness** (`native_decide`-only). Hyperexp additionally needs Laurent
-soundness.
+**Net for the primitive case:** `cIntegrateCase_primitive_sound_full ∘ cIntegrateReducedGWf_isIntegralResult`
+is sound given **exactly three named engine-compute frontiers** — `cSplitFactorFastGWf` split correctness,
+`cHermiteReduceTowerGWf` Hermite half, and the RT residue match — each currently `native_decide`-validated.
+Nothing opaque remains; the abstract soundness is fully assembled down to those three.
 
-- Open: reduced-soundness wiring + `cSplitFactorFastGWf` split correctness; Laurent soundness (hyperexp);
-  `LawfulMonomialCase` bundled Prop; `CResidueSource` (P0); completeness (P3).
+- Open: the three engine-compute frontiers above (each `native_decide`-only — the abstract-correctness
+  frontier the whole engine shares); Laurent soundness (hyperexp); `LawfulMonomialCase` bundled Prop;
+  `CResidueSource` (P0); completeness (P3).
 
 ## Phases
 
