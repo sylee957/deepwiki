@@ -51,6 +51,16 @@ This is the painful part (foldr + reversed lists + negative-index arithmetic); i
 
 ## Status
 
-- [ ] M1 — derivation kernel (in progress)
-- [ ] M2 — single-term identity
-- [ ] M3 — sum assembly → `hLaurField` discharged
+- [x] **M1 — polynomial-image bridge DONE** (`towerFractionFieldDerivG_amG_poly`, commit a5033ae5):
+  `D_tower(⟦p⟧) = ⟦cmonomialDeriv Dt p⟧` in three rewrites (`towerFractionFieldDerivG`,
+  `extendDeriv_algebraMap`, `toPolyG_cmonomialDeriv`).
+- [ ] M2 — single-term identity `cIntegrateHyperexpLaurent_pos_term` (attempted; the proof skeleton works:
+  `towerFractionFieldDerivG_amG_poly` → `congr 1` → poly identity via `Derivation.leibniz` +
+  `implicitDeriv_C` + `Derivation.leibniz_pow` + `implicitDeriv_X` + `CRischFieldSpec.crischDESolve_spec`).
+  **Two concrete blockers to finish:** (1) `toK_cnatCastG` lives inside the `RadElem` namespace
+  (`RadElem.toK_cnatCastG`) — qualify it, or prove `toK (cnatCastG k) = k` inline; the `natAbs` step is
+  `Int.natAbs_natCast` + `if_neg (Int.not_lt.mpr (Int.natCast_nonneg k))`. (2) `Derivation.leibniz_pow`
+  yields `X^(k-1)`, so the final ring step needs `cases k` (`zero`: the `↑k` factor kills the shift term;
+  `succ m`: `Nat.succ_sub_one` + `pow_succ`), then `map_add`/`map_mul` to push `C` through the sum and
+  `push_cast; ring`. State: `Dt = C(toK η)·X` hypothesis, `k : ℕ` (non-negative power only).
+- [ ] M3 — sum assembly → `hLaurField` discharged (the foldr/negative-index bookkeeping)
