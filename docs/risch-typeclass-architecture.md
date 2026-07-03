@@ -173,6 +173,25 @@ Cost / risk (honest):
   existing soundness as corollaries of `cIntegrate_sound` through that bridge, (4) retire the bespoke
   assemblies. Each step gate-green; the driver-equality bridge (step 2) de-risks the proof migration.
 
+## Status (landed)
+
+`Computable/Assemble.lean` (commits 4b19bd7f, a855892d), gate-green:
+
+- **Design refinement.** `CMonomialCase` is realized as a **`MonomialCase α` record**, not an α-resolved
+  typeclass: primitive and hyperexp both live over the *same* `α`, so instances would conflict. The
+  assemblable component is a record (`integrateSpecial` / `reducedCorrect` hooks) passed explicitly. Same
+  "plug in a case" idea; correct Lean encoding.
+- **P1 done.** `cIntegrateCase (C : MonomialCase α) Dt a d cands`, with `primitiveCase` and `hyperexpCase`.
+  Bridge `cIntegrateHyperexpFullGWf = cIntegrateCase hyperexpCase` holds by **`rfl`** (the hyperexp driver's
+  combine is already the uniform fraction form). `native_decide` validates the assembler reproduces
+  `checkIdentityG` on the primitive (∫1/t²) and hyperexp (∫1/exp, special+normal mix) cases.
+- **P2 slice done.** `cIntegrateCase_hyperexp_sound` — the full field-identity soundness for the assembler,
+  a one-line transport of `cIntegrateHyperexpFullGWf_sound` through the `rfl` bridge. Concrete proof of
+  "soundness proven once, reused per instance".
+- Open: the primitive-case bridge is not `rfl` (off by `[1]`-multiplications + the `fp=0` shortcut) — it is
+  validated by `native_decide` but not yet a general `=`/soundness transport; `LawfulMonomialCase` +
+  a from-scratch generic `cIntegrateCase_sound`; `CResidueSource` (below).
+
 ## Phases
 
 - [ ] P0 — `CResidueSource α` + `CResidueSource ℚ` (rational-root enumeration) + `CResidueSource (QFunNZG β)`
