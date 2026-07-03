@@ -175,45 +175,6 @@ def radPartialFractionCoprime : CPolyG α → List (CPolyG α) → List (CPolyG 
     let (Ni, c) := cdiophantineGWf P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
     Ni :: radPartialFractionCoprime c rest
 
-/-- **The multi-case simple-radical rational-part driver** `radIntegrateRational fuel ρ R B` over `y² = ρ`,
-denominator `B` monic, numerator `R` (proper). Squarefree-decomposes `B` with `cSqfreeYunFFG` into
-`[B₁,…,Bₘ]` (`Bᵢ` of multiplicity `i`); drops trivial (constant) factors, pairs each surviving `Bᵢ` with
-its multiplicity `eᵢ = i` and prime-power `Gᵢ = Bᵢ^{eᵢ}`; partial-fractions `R/B = Σ Nᵢ/Gᵢ`
-(`radPartialFractionCoprime`); **classifies** each `Bᵢ` (`radClassifyFactor`) and dispatches `Nᵢ` at
-multiplicity `eᵢ` — a `V`-factor to `radReduceCase1Iterate cderivG Bᵢ (cderivG Bᵢ) ρ (½ρ') eᵢ eᵢ eᵢ Nᵢ []`,
-a `W`-factor to `radReduceCase2Iterate Bᵢ (ρ/Bᵢ) ρ eᵢ eᵢ eᵢ Nᵢ []`. Returns per factor `(isV, Bᵢ, eᵢ, Nᵢ,
-vNumᵢ, Cremᵢ)`: the V/W tag, the factor, its multiplicity, its partial-fraction numerator, the accumulated
-rational-part numerator, and the leftover `k = 1` residual. Needs `[CField α] [CFracGcdCore α]` (the latter
-for the squarefree factorization). -/
-def radIntegrateRational [CFracGcdCore α] (fuel : ℕ) (ρ R B : CPolyG α) :
-    List (Bool × CPolyG α × ℕ × CPolyG α × CPolyG α × CPolyG α) :=
-  let g : CPolyG α := cscaleG (CField.div CField.one (cnatCastG 2)) (cderivG ρ)   -- `½·ρ'` (n = 2)
-  -- squarefree factors `Bᵢ` with their multiplicity `eᵢ = i` (index + 1), trivial factors dropped
-  let factored : List (CPolyG α × ℕ) :=
-    (cSqfreeYunFFG fuel B).zipIdx.filterMap (fun (Bi, i) =>
-      if cdegG Bi = 0 then none else some (Bi, i + 1))
-  -- split each squarefree factor `Bᵢ` into its `W`-part `Wᵢ = gcd(Bᵢ, ρ)` (divides `ρ`, Case 2) and its
-  -- `V`-part `Vᵢ = Bᵢ/Wᵢ` (coprime to `ρ`, Case 1); a single squarefree factor at one multiplicity may
-  -- carry both (Yun groups by multiplicity, the `V`/`W` split is by the relationship to the radicand). Each
-  -- surviving part is `(isV, factor, eᵢ)`.
-  let split : List (Bool × CPolyG α × ℕ) :=
-    factored.flatMap (fun (Bi, e) =>
-      let Wi := cmonicG (cgcdWf Bi ρ).1
-      let Vi := cdivWf Bi Wi
-      (if cdegG Vi = 0 then [] else [(true, Vi, e)]) ++
-      (if cdegG Wi = 0 then [] else [(false, Wi, e)]))
-  let primePowers : List (CPolyG α) := split.map (fun (_, fi, e) => cpowG fi e)
-  let nums : List (CPolyG α) := radPartialFractionCoprime R primePowers
-  (split.zip nums).map (fun ((isV, fi, e), Ni) =>
-    if isV then
-      -- `V`-factor → Case 1
-      let (Crem, vNum) := radReduceCase1Iterate cderivG fi (cderivG fi) ρ g e e e Ni []
-      (true, fi, e, Ni, vNum, Crem)
-    else
-      -- `W`-factor → Case 2
-      let (Crem, vNum) := radReduceCase2Iterate fi (cdivWf ρ fi) ρ e e e Ni []
-      (false, fi, e, Ni, vNum, Crem))
-
 end CPolyG
 
 /-! ### ★ The iterated Case-2 reduction validates: `∫ 1/(x³·√(x³−x))` (`native_decide`)
@@ -343,90 +304,6 @@ def mcR : CPolyG ℚ := [1]
 into the `V`-part `(x−1)` (coprime to `ρ = x`) and the `W`-part `x` (dividing `ρ`). -/
 def mcB : CPolyG ℚ := cmulG (cpowG [-1, 1] 2) (cpowG [0, 1] 2)
 
-/-- **The multi-case dispatch run** `radIntegrateRational 12 ρ R B` on `∫ 1/((x−1)²x²·√x)` — squarefree-
-decomposes `B`, splits the mult-`2` factor `(x−1)x` into `V = (x−1)` / `W = x`, partial-fractions `R` across
-`[(x−1)², x²]`, classifies and dispatches: the `(x−1)²` part to the Case-1 iterate, the `x²` part to the
-Case-2 iterate. Returns the two per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. -/
-def mcRun : List (Bool × CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ) :=
-  radIntegrateRational 12 mcRho mcR mcB
-
-/-- **The dispatch finds exactly two factors, one `V` and one `W`** (`native_decide`): the squarefree
-decomposition + classification yields the `V`-factor `(x−1)` (`isV = true`, Case 1) and the `W`-factor `x`
-(`isV = false`, Case 2), each of multiplicity `2`. Checked on `(mcRun.map (·.1), mcRun.map (·.2.2.1))`
-(the V/W tags and the multiplicities). -/
-theorem mcRun_classification :
-    (mcRun.map (fun r => r.1), mcRun.map (fun r => r.2.2.1)) = ([true, false], [2, 2]) := by
-  native_decide
-
-/-- The radicand `ρ = x` lifted to `ℚ(x)` (`QFunNZG ℚ`), the Picture-B radicand for `radDeriv 2`. -/
+/-- The radicand `ρ = x` as `QFunNZG ℚ` for the multi-case `∫ 1/((x−1)²x²·√x)` capstone (the base of the
+`RadElem` lift used by the Wf validation in `Sources.Hdl_1721_1_15391.AppendixA`). -/
 def mcRhoQx : QFunNZG ℚ := qxOfNum [0, 1]
-
-/-- Pull the `V`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of the dispatch run (the head). -/
-def mcV : CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ := (mcRun.headD (true, [], 0, [], [], [])).2
-
-/-- Pull the `W`-factor reduction `(Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)` out of the dispatch run (the second). -/
-def mcW : CPolyG ℚ × ℕ × CPolyG ℚ × CPolyG ℚ × CPolyG ℚ :=
-  (mcRun.getD 1 (false, [], 0, [], [], [])).2
-
-/-- **The assembled total rational part** `v = v_V + v_W` lifted to `RadElem (QFunNZG ℚ)`. The `V`-piece is
-`v_V = vNum_V/((x−1)^{e−1}·y)` → `[0, vNum_V/((x−1)^{e−1}·ρ)]` (Case 1: common denominator `Bᵢ^{e−1}`); the
-`W`-piece is `v_W = vNum_W/(x^{e}·y)` → `[0, vNum_W/(x^{e}·ρ)]` (Case 2: common denominator `Bᵢ^{e}`). Their
-`radAdd` over `ℚ(x)`. -/
-def mcVlift : RadElem (QFunNZG ℚ) :=
-  radAdd
-    [CField.zero, CField.div (qxOfNum mcV.2.2.2.1)
-      (qxOfNum (cmulG (cpowG mcV.1 (mcV.2.1 - 1)) mcRho))]
-    [CField.zero, CField.div (qxOfNum mcW.2.2.2.1)
-      (qxOfNum (cmulG (cpowG mcW.1 mcW.2.1) mcRho))]
-
-/-- **The integrand's total rational part** `(N_V/(x−1)^{e} + N_W/x^{e})/y − Crem_V/((x−1)y) − Crem_W/(xy)`
-lifted to `RadElem (QFunNZG ℚ)` — the `radAdd` of the two per-factor rational parts `[0, N_V/((x−1)^{e}ρ) −
-Crem_V/((x−1)ρ)]` and `[0, N_W/(x^{e}ρ) − Crem_W/(xρ)]` over `ℚ(x)` (`Bᵢ^{e}` the prime-power). By the
-partial fraction `N_V/(x−1)^{e} + N_W/x^{e} = 1/((x−1)²x²)`, this is the integrand's rational part minus the
-two `k = 1` leftovers. -/
-def mcRatLift : RadElem (QFunNZG ℚ) :=
-  radAdd
-    [CField.zero, CField.sub
-      (CField.div (qxOfNum mcV.2.2.1) (qxOfNum (cmulG (cpowG mcV.1 mcV.2.1) mcRho)))
-      (CField.div (qxOfNum mcV.2.2.2.2) (qxOfNum (cmulG mcV.1 mcRho)))]
-    [CField.zero, CField.sub
-      (CField.div (qxOfNum mcW.2.2.1) (qxOfNum (cmulG (cpowG mcW.1 mcW.2.1) mcRho)))
-      (CField.div (qxOfNum mcW.2.2.2.2) (qxOfNum (cmulG mcW.1 mcRho)))]
-
-/-- **★ The multi-case dispatch integrates `∫ 1/((x−1)²x²·√x)`: `D(v) = rational part of the integrand`**
-(`native_decide`). Over the genuine radical extension `(QFunNZG ℚ)[y]/(y² − x)`, the integrand
-`1/((x−1)²x²·y)` has a `V`-factor `(x−1)` (Case 1) AND a `W`-factor `x` (Case 2); the driver
-partial-fractions, classifies, dispatches the two parts to the Case-1 / Case-2 iterates, and assembles
-`v = v_V + v_W`. The **actual** diagonal radical derivation `radDeriv 2 x` confirms `radDeriv(v)` equals the
-assembled rational part `1/((x−1)²x²·√x) − Crem_V/((x−1)√x) − Crem_W/(x√x)` (the integrand's rational part
-minus the two `k = 1` leftovers). Checked by `radIsZero` of the difference over `ℚ(x)`. **THE ENGINE
-INTEGRATES THE RATIONAL PART OF A GENERAL (MULTI-CASE-DENOMINATOR) SIMPLE-RADICAL INTEGRAND END-TO-END** —
-`D(∫) = rational-part`, the Case-1 and Case-2 reductions dispatched by the partial-fraction front-end and
-validated by the real derivation, leaving only the documented `k = 1` first-order-ODE / logarithmic
-remainders. -/
-theorem mcDriver_integrates :
-    radIsZero (radSub (radDeriv 2 mcRhoQx mcVlift) mcRatLift) = true := by native_decide
-
-/-! ### `#print axioms` — the multi-case dispatch headline
-
-The Case-2 iterate validation, the dispatch classification, and the multi-case end-to-end identity carry
-the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide` compiler axiom — no
-`sorry`, no extra axiom. The partial-fraction front-end + Case-1/Case-2 dispatch assemble a rational part
-`v` whose **actual** radical derivative is the rational part of a general (mixed `V`/`W` denominator)
-simple-radical integrand: `∫ R/(B·y)` is integrated end-to-end up to the documented `k = 1` first-order-ODE
-terms. -/
-
--- The iterated Case-2 reduction, validated through the actual `radDeriv`:
-#print axioms c2itDriver_integrates
-
--- The iterated Case-3 (`C/y`) degree-lowering, validated through the actual `radDeriv`:
-#print axioms c3itDriver_integrates
-
--- The dispatch classifies the mixed denominator into one `V`- and one `W`-factor:
-#print axioms mcRun_classification
-
--- ★ The headline: the multi-case dispatch integrates the rational part end-to-end, by the real
--- radical derivation:
-#print axioms mcDriver_integrates
-
-end DeepWiki.SymbolicIntegration
