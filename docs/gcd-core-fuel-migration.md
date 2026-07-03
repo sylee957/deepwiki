@@ -60,6 +60,11 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   in OneShotAssembly) — deleted the 2 theorems, orphaning + deleting `cLogArgTowerG` + `cResidueResultantTowerG`.
   Kept shared `cAmcDdG`.
 - **G6a** ✅ deleted orphaned `cSplitSquarefreeFactorFastG`.
+- **G6b** ✅ retired the fuel'd §5 split-factor/canonical-rep Tower layer: (G6b-1) slimmed SplitFactorTowerCorrectG
+  to its live `CDiffFieldSpec` bridge (`baseDerivQ` + `instCDiffFieldSpecQFunNZG`), deleting the dead fuel'd
+  correctness decls; (G6b-2) slimmed Tower/Unify to a thin re-export waypoint (2 dead probe theorems removed)
+  and deleted the now-orphaned `cSplitFactorFastG` + `canonicalRepresentationFastG` from Tower/Integrate.
+  Wf twins carry all runtime. Kept the Yun squarefree section (`cSqfreeYunFFG`, still used by G5).
 - **REMAINING — split-factor correctness (G6b):** `SplitFactorTowerCorrectG` (10 decls) + `Tower/Unify`
   (2 decls) are a DECL-DEAD island — NO other file uses any of their decls in code (the one apparent hit was
   a docstring). BUT they are **import waypoints**: deleting them breaks RadicalIntegralSoundness et al., which
