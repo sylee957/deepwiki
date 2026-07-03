@@ -2,6 +2,9 @@ import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.NormalCore
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.FullSoundness
+import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # Assemblable one-level Risch integrator
 
@@ -141,6 +144,46 @@ abbrev crNormDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFas
 abbrev redNorm (Dt a d : CPolyG α) (cands : List α) : IntegralResultG α :=
   cIntegrateReducedGWf Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
 
+omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **Canonical reconstruction, modulo split correctness.** Given the special/normal split is a genuine
+factorization `d = dₛ·dₙ` with `dₛ, dₙ` coprime (their gcd a nonzero constant) and nonzero, the canonical
+pieces recombine: `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`. Assembles `toPolyG_cdivmodWf` (division),
+`toPolyG_cbezoutOneWf` + `toPolyG_cextendedEuclideanSplitWf` (Bézout split), and
+`canonicalRepFast_field_identity`. The only remaining input is the `cSplitFactorFastGWf` correctness
+(`hsplit`, coprimality) — the engine's split frontier. -/
+theorem canonicalReconstruction (Dt a d : CPolyG α)
+    (hd : toPolyG d ≠ 0)
+    (hdn : toPolyG (crNormDen Dt a d) ≠ 0)
+    (hds : toPolyG (crSpecDen Dt a d) ≠ 0)
+    (hsplit : toPolyG d = toPolyG (crSpecDen Dt a d) * toPolyG (crNormDen Dt a d))
+    (hgdeg : (toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0) :
+    fieldFrac (crPoly Dt a d) [CField.one]
+        + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
+        + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
+      = fieldFrac a d := by
+  set qr := cdivmodWf a d with hqr
+  set sn := cSplitFactorFastGWf Dt d with hsn
+  set uw := cbezoutOneWf sn.1 sn.2 with huw
+  set bc := cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 with hbc
+  have hcanon : canonicalRepresentationFastGWf Dt a d = (qr.1, (bc.1, sn.2), (bc.2, sn.1)) := by
+    rw [canonicalRepresentationFastGWf, ← hqr, ← hsn, ← huw, ← hbc]
+  simp only [crPoly, crSpecNum, crSpecDen, crNormNum, crNormDen, fieldFrac, hcanon] at hdn hds hsplit hgdeg hgne ⊢
+  have hcnd : cnormG d ≠ [] := fun h => hd ((cisZeroG_iff d).mp (by simp [cisZeroG, h]))
+  have hcns : cnormG sn.2 ≠ [] := fun h => hds ((cisZeroG_iff sn.2).mp (by simp [cisZeroG, h]))
+  have hbez : toPolyG uw.1 * toPolyG sn.1 + toPolyG uw.2 * toPolyG sn.2 = 1 :=
+    toPolyG_cbezoutOneWf sn.1 sn.2 hgdeg hgne
+  have hadiv : toPolyG a = toPolyG qr.1 * toPolyG d + toPolyG qr.2 := toPolyG_cdivmodWf a d hcnd
+  have hbcr : toPolyG bc.1 * toPolyG sn.1 + toPolyG bc.2 * toPolyG sn.2 = toPolyG qr.2 :=
+    toPolyG_cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 hcns hbez
+  have hone : amG α (toPolyG ([CField.one] : CPolyG α)) = 1 := by
+    rw [show toPolyG ([CField.one] : CPolyG α) = (1 : (CFieldSpec.K α)[X]) from by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]]
+    exact map_one (amG α)
+  rw [hone, div_one]
+  exact canonicalRepFast_field_identity (toPolyG a) (toPolyG d) (toPolyG qr.1) (toPolyG qr.2)
+    (toPolyG sn.1) (toPolyG sn.2) (toPolyG bc.1) (toPolyG bc.2) hd hdn hds hadiv hsplit hbcr
+
 omit [CRischField α] in
 /-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving
 `(snum, sden)` (differentiating to `specialVal`) and the corrected normal part `nrm` (satisfying the
@@ -245,5 +288,44 @@ theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
     (cPolyRischDEGWf_nil_field_identity (crPoly ([CField.one] : CPolyG α) a d) qp _ hfp (le_refl _)
       hqp hconst)
     hNrmField hrecon
+
+/-- **Primitive case with BOTH `hSpecField` and `hrecon` discharged** (canonical primitive `Dt = 1`,
+`fₚ ≠ 0`, special part `b = 0`): the special-part identity comes from the poly-RDE soundness and the
+reconstruction from `canonicalReconstruction` (the `b = 0` special term vanishes). The only remaining
+inputs are the shared reduced identity (`hNrmField`) and the `cSplitFactorFastGWf` split-correctness facts
+(`hsplit`, coprimality) — the engine's split frontier. -/
+theorem cIntegrateCase_primitive_sound_full [CharZero (CFieldSpec.K α)]
+    (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
+    (hgden : toPolyG (redNorm ([CField.one] : CPolyG α) a d cands).rational.2 ≠ 0)
+    (hb : cisZeroG (crSpecNum ([CField.one] : CPolyG α) a d) = true)
+    (hfp : cisZeroG (crPoly ([CField.one] : CPolyG α) a d) = false)
+    (hconst : Differential.mapCoeffs (toPolyG (crPoly ([CField.one] : CPolyG α) a d)) = 0)
+    (hqp : cPolyRischDEGWf ([CField.one] : CPolyG α) [] (crPoly ([CField.one] : CPolyG α) a d)
+        ((cdegG (crPoly ([CField.one] : CPolyG α) a d) : ℤ) + 1) = some qp)
+    (hsome : cIntegrateCase primitiveCase ([CField.one] : CPolyG α) a d cands = some res)
+    (hNrmField : IsIntegralResultG ([CField.one] : CPolyG α) (crNormNum ([CField.one] : CPolyG α) a d)
+        (crNormDen ([CField.one] : CPolyG α) a d) (redNorm ([CField.one] : CPolyG α) a d cands))
+    (hd : toPolyG d ≠ 0)
+    (hdn : toPolyG (crNormDen ([CField.one] : CPolyG α) a d) ≠ 0)
+    (hds : toPolyG (crSpecDen ([CField.one] : CPolyG α) a d) ≠ 0)
+    (hsplit : toPolyG d
+      = toPolyG (crSpecDen ([CField.one] : CPolyG α) a d) * toPolyG (crNormDen ([CField.one] : CPolyG α) a d))
+    (hgdeg : (toPolyG (cgcdWf (crNormDen ([CField.one] : CPolyG α) a d)
+        (crSpecDen ([CField.one] : CPolyG α) a d)).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (crNormDen ([CField.one] : CPolyG α) a d)
+        (crSpecDen ([CField.one] : CPolyG α) a d)).1 ≠ 0) :
+    IsIntegralResultG ([CField.one] : CPolyG α) a d res := by
+  have hspec0 : fieldFrac (crSpecNum ([CField.one] : CPolyG α) a d)
+      (crSpecDen ([CField.one] : CPolyG α) a d) = 0 := by
+    simp only [fieldFrac, (cisZeroG_iff (crSpecNum ([CField.one] : CPolyG α) a d)).mp hb, map_zero,
+      zero_div]
+  have hrecon : fieldFrac (crPoly ([CField.one] : CPolyG α) a d) [CField.one]
+        + fieldFrac (crNormNum ([CField.one] : CPolyG α) a d) (crNormDen ([CField.one] : CPolyG α) a d)
+      = fieldFrac a d := by
+    have h := canonicalReconstruction ([CField.one] : CPolyG α) a d hd hdn hds hsplit hgdeg hgne
+    rw [hspec0, add_zero] at h
+    exact h
+  exact cIntegrateCase_primitive_sound_polyRDE a d cands res qp hgden hb hfp hconst hqp hsome hNrmField
+    hrecon
 
 end DeepWiki.SymbolicIntegration
