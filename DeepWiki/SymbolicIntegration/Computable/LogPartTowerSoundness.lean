@@ -309,72 +309,6 @@ theorem toPolyG_cAmcDdG (Dt a d : CPolyG α) (c : α) :
       = toPolyG a - Polynomial.C (CFieldSpec.toK c)
           * Differential.implicitDeriv (toPolyG Dt) (toPolyG d) := by
   rw [cAmcDdG, toPolyG_csubG, toPolyG_cscaleG, toPolyG_cmonomialDeriv]
-
-omit [Algebra ℚ (CFieldSpec.K α)] in
-/-- **★ The engine log argument is associate to the residue's linear factor** — the engine-vocabulary
-`residue_gcd_eq_linear_factor`. For a residue value `c : α` whose `toK`-image is the residue
-`a(β)/Δd(β)` at a root `β`, **given** the engine gcd-compute reading `hread` (`toPolyG (cLogArgTowerG …)` is
-`Associated` to `gcd (toPolyG d) (toPolyG (cAmcDdG …))`, supplied at `QFunNZG` by
-`associated_toPolyG_cgcdFFCore_reg`), a split squarefree `toPolyG d = ∏_{α∈s}(t−α)` with `Δd(α) ≠ 0` and
-distinct residues, `toPolyG (cLogArgTowerG Dt fuel a d c)` is `Associated` to `X − C β`. Composes `hread`
-with the literal keystone `residue_gcd_eq_linear_factor` through the `cAmcDdG` reading. The grouped-`cLogPartG`
-entry for residue `c` reassembles to the single per-root linear factor `t − β`. -/
-theorem cLogArgTowerG_associated_linear_factor [CFracGcdCore α] [DecidableEq (CFieldSpec.K α)]
-    (Dt a d : CPolyG α) (fuel : ℕ) (c : α) (s : Finset (CFieldSpec.K α)) (β : CFieldSpec.K α)
-    (hread : Associated (toPolyG (cLogArgTowerG Dt fuel a d c))
-      (gcd (toPolyG d) (toPolyG (cAmcDdG Dt a d c))))
-    (hden : toPolyG d = Lagrange.nodal s id)
-    (hDd : ∀ γ ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ ≠ 0)
-    (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
-      (toPolyG a).eval γ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ
-        ≠ (toPolyG a).eval δ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval δ)
-    (hβ : β ∈ s)
-    (hc : CFieldSpec.toK c
-      = (toPolyG a).eval β / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval β) :
-    Associated (toPolyG (cLogArgTowerG Dt fuel a d c)) (Polynomial.X - Polynomial.C β) := by
-  refine hread.trans ?_
-  rw [toPolyG_cAmcDdG, hc]
-  nth_rewrite 1 [hden]
-  exact Associated.of_eq
-    (LogResidueTower.residue_gcd_eq_linear_factor s (toPolyG a)
-      (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) hDd hdist β hβ)
-
-omit [Algebra ℚ (CFieldSpec.K α)] in
-/-- **★ The engine log argument IS the residue's linear factor (literal)** — the literal upgrade of
-`cLogArgTowerG_associated_linear_factor`. Since `cLogArgTowerG = cgcdFFCore = cmonicG (raw)`, its `toPolyG` is
-**monic** (`monic_toPolyG_cmonicG`) whenever nonzero; combined with the `Associated`-to-`X − C β` fact (both
-monic), `eq_of_monic_of_associated` gives the literal `toPolyG (cLogArgTowerG Dt fuel a d c) = X − C β`. This
-is the per-entry shape the per-root `hform` list demands — the grouped-`cLogPartG` entry for residue `c`
-reads *exactly* as the single linear factor `t − β`. Same genuine hypotheses as the `Associated` version. -/
-theorem cLogArgTowerG_eq_linear_factor [CFracGcdCore α] [DecidableEq (CFieldSpec.K α)]
-    (Dt a d : CPolyG α) (fuel : ℕ) (c : α) (s : Finset (CFieldSpec.K α)) (β : CFieldSpec.K α)
-    (hread : Associated (toPolyG (cLogArgTowerG Dt fuel a d c))
-      (gcd (toPolyG d) (toPolyG (cAmcDdG Dt a d c))))
-    (hden : toPolyG d = Lagrange.nodal s id)
-    (hDd : ∀ γ ∈ s, (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ ≠ 0)
-    (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
-      (toPolyG a).eval γ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval γ
-        ≠ (toPolyG a).eval δ / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval δ)
-    (hβ : β ∈ s)
-    (hc : CFieldSpec.toK c
-      = (toPolyG a).eval β / (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)).eval β) :
-    toPolyG (cLogArgTowerG Dt fuel a d c) = Polynomial.X - Polynomial.C β := by
-  have hassoc := cLogArgTowerG_associated_linear_factor Dt a d fuel c s β hread hden hDd hdist hβ hc
-  -- the log argument is nonzero (associate to nonzero `X − C β`)
-  have hne : toPolyG (cLogArgTowerG Dt fuel a d c) ≠ 0 := by
-    intro h; rw [h] at hassoc
-    exact (Polynomial.X_sub_C_ne_zero β) ((associated_zero_iff_eq_zero _).mp hassoc.symm)
-  -- `cLogArgTowerG = cgcdFFCore = cmonicG (raw)` ⟹ `toPolyG` monic
-  have hmonic : (toPolyG (cLogArgTowerG Dt fuel a d c)).Monic := by
-    rw [cLogArgTowerG, CFracGcdCore.cgcdFFCore]
-    rw [cLogArgTowerG, CFracGcdCore.cgcdFFCore] at hne
-    -- the raw gcd's `toPolyG` is nonzero (associate to the nonzero monic-normalized form)
-    have hraw_ne : toPolyG (CFracGcdCore.cgcdFFRawCore fuel d (cAmcDdG Dt a d c)) ≠ 0 := by
-      intro h
-      exact hne (((associated_toPolyG_cmonicG _).trans (Associated.of_eq h)).eq_zero_iff.mpr rfl)
-    exact monic_toPolyG_cmonicG _ hraw_ne
-  exact eq_of_monic_of_associated hmonic (Polynomial.monic_X_sub_C β) hassoc
-
 /-- **Per-term log-derivative reading** — for a log argument `v` with `toPolyG v ≠ 0`, the residue summand
 `amG(Δv)/amG(v)` (`Δv = toPolyG (cmonomialDeriv Dt v)`) equals the monomial log-derivative
 `towerFractionFieldDerivG Dt (amG v) / amG v` over `RatFunc (CFieldSpec.K α)`. The single-term bridge:
@@ -608,8 +542,6 @@ axioms (`propext`, `Classical.choice`, `Quot.sound`); no `native_decide`, no `so
 #print axioms LogResidueTower.residue_gcd_eq_linear_factor
 #print axioms monic_toPolyG_cmonicG
 #print axioms toPolyG_cAmcDdG
-#print axioms cLogArgTowerG_associated_linear_factor
-#print axioms cLogArgTowerG_eq_linear_factor
 #print axioms towerFractionFieldDerivG_logDeriv
 #print axioms logResidueSumG_eq_logDeriv_sum
 #print axioms logResidueSumG_eq_of_residue_match

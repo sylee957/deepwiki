@@ -265,38 +265,16 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α]
 
-/-! ### The generic residue resultant `R(z) = res_t(d, a − z·Dd)` and the log argument
+/-! ### The generic Rothstein–Trager numerator `a − c·Dd`
 
-`cResidueResultantTowerG` mirrors `cResidueResultantTower`: sample `R(zₖ) = res_t(d, a − zₖ·Dd)` at the
-natural nodes `zₖ = cnatCastG k` (`k = 0…deg_t d`, the generic node lift replacing `ofConstNZ (k : ℚ)`)
-and Lagrange-interpolate (`cinterpolateG`). `cLogArgTowerG` is `gcd_t(d, a − c·Dd)` via
-`CFracGcdCore.cgcdFFCore` for a residue `c : α`. Both reuse the already-generic
-`cresultantG`/`cmonomialDeriv`. -/
+`cAmcDdG` is the polynomial in `t` whose `t`-gcd with `d` is the Rothstein–Trager log argument at a
+residue `c` — the shared building block of the fuel-free residue resultant / log-argument engine
+(`cResidueResultantTowerGWf` / `cLogArgTowerGWf`, `Tower/WellFounded`). -/
 
 /-- Generic `a − c·Dd` `cAmcDdG Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/
 def cAmcDdG (Dt a d : CPolyG α) (c : α) : CPolyG α :=
   csubG a (cscaleG c (cmonomialDeriv Dt d))
-
-/-- Generic residue resultant `cResidueResultantTowerG Dt fuel a d = R(z) = res_t(d, a − z·Dd)`,
-returned as a `CPolyG α` whose variable is the residue indeterminate `z` (Bronstein §5.6). Sample
-`R(zₖ) = res_t(d, a − zₖ·Dd)` (`cresultantG`) at the natural nodes `zₖ = cnatCastG k` for
-`k = 0, …, deg_t d` (the generic node lift, replacing `ofConstNZ (k : ℚ)`), then Lagrange-interpolate
-(`cinterpolateG`). `deg_z R ≤ deg_t d`, so `deg_t d + 1` nodes are exact. `[CField α] [CDiffField α]`-
-generic — runs at any tower level. -/
-def cResidueResultantTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) : CPolyG α :=
-  let n := cdegG d
-  let pts : List (α × α) := (List.range (n + 1)).map (fun k =>
-    let zk : α := cnatCastG k
-    (zk, cresultantG fuel d (cAmcDdG Dt a d zk)))
-  cinterpolateG pts
-
-/-- Generic log argument `cLogArgTowerG Dt fuel a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`
-(Bronstein §5.6, the `g_i` inside `log`): the flat fraction-free monic-in-`t` gcd of `d` and
-`a − c·Dd`. Together with the residues `c` (roots of `cResidueResultantTowerG`),
-`∑_c c·log(cLogArgTowerG … c)` is the logarithmic part of `∫ a/d`. -/
-def cLogArgTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (c : α) : CPolyG α :=
-  CFracGcdCore.cgcdFFCore fuel d (cAmcDdG Dt a d c)
 
 end CPolyG
 
