@@ -1,3 +1,19 @@
+# gcd-core fuel migration (full) — ✅✅ COMPLETE (2026-07-03, 34 commits)
+
+★★★ **DONE.** The entire fuel'd gcd-core is retired: no `cgcdExtG`/`cmodG`/`cdivmodG`/`cdivG`/`cdvdG`/
+`cgcdFFCore`/`cgcdFFGen`/`CFracGcdCore`/`CFracGcd` anywhere. G1–G6b (§5/§6 Tower API), G5a–i (Algebraic
+Trager arc incl. the cresultantG residue-soundness proof-migration), G7a–c + G7-FINISH (SoundnessCapstone,
+the Euclidean base ops + classes + instances + fuel'd correctness + swell benchmarks). The whole thing runs
+on the well-founded `…Wf` engine. Final gate PASS.
+★ The "1-theorem proof-migration blocker" was a FALSE ALARM: the apparent Wf-soundness entanglement was
+entirely DOCSTRING mentions (PrimPRSRegular has 0 code uses of the fuel'd lemmas; Structural uses 0
+PrimPRSRegular decls in code). The base was a cleanly-closed cluster; completion was surgical deletion +
+dropping the last leftover `[CFracGcdCore α]` binders + removing dangling `#print axioms` lines.
+★ Remaining `(fuel : ℕ)` in the engine is NOT gcd-core: STRUCTURAL fuel (meaningful bounds —
+`integralBasisLoop` deg-disc, `cantorOrder`/`genDivisorOrder`, the Wf-shared PRS `cprimPRSgcdGenCore`),
+the PARALLEL/Risch–Norman chain (G2b, separate arc), and a few cataloged Algebraic drivers.
+
+---
 # gcd-core fuel migration (full) — phased plan
 
 Goal: delete the fuel'd Euclidean base (`cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG` in
