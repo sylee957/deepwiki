@@ -126,7 +126,7 @@ runs on `f = 1/t + 1/(t−1)` over ℚ(x)[t] and returns `some`, but its normal 
 `1/(t−1)` by the §5.9 residual `R = 1`, so the full-`f` antiderivative identity `D(res) = f` **fails**
 (`checkIdentityG = false`) — exactly the gap the §5.9 feedback (`cIntegrateHyperexpFullGWf`) closes. -/
 theorem nSpecNorm_specialOnly_overshoots :
-    (match CPolyG.cIntegrateHyperexpG nHyperexpDt 24 nSpecNormA nSpecNormD nSpecNormCands with
+    (match CPolyG.cIntegrateHyperexpG nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
       | some res => CPolyG.checkIdentityG nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = false := by native_decide
 

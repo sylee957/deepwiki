@@ -456,6 +456,14 @@ not just defaults):
 - **Commit or push only when asked.** Verify before claiming done: build the affected
   chapter, then `lake build`, and restate theorems as `example`s — don't trust that "it
   compiled" means "it says the right thing".
+- **Large multi-session refactors get a `docs/<name>.md` plan.** For a migration/refactor
+  too big for one pass (e.g. the fuel retirement, `docs/gcd-core-fuel-migration.md`), write a
+  dependency-ordered phased plan under `docs/` — Wf/twin inventory, the pins keeping the old
+  code alive, and the phase order (delete consumers before the ops they use). Keep it current
+  as phases land; each phase is its own gate-green commit. Working autonomously through such a
+  plan (writing the plan, taking sensible risks, committing per gate-green phase) is expected,
+  not something to re-confirm each phase. Durable adjudications/lessons still go to memory; the
+  plan doc holds the mechanical phase list.
 - The repo is on macOS (`darwin`); doc-gen4 needs a clean native `MD4Lean` build
   (cross-platform `.lake` contamination once caused a link failure). Stale `" 2.lean"`
   duplicates from macOS file-sync/lock collisions are never imported — delete them if they

@@ -382,7 +382,7 @@ descends through `instCRischFieldRadExt`, and the returned `IntegralResultG` val
 t + t⁻¹` over `RadX3[t]`, the full hyperexponential driver returns `some res` and `checkIdentityG` confirms
 `D(res) = f`. -/
 theorem mixedHyperexpG_topEntry_validates :
-    (match CPolyG.cIntegrateHyperexpG mixedHyperexpDt 20 [CField.one, CField.zero, CField.one]
+    (match CPolyG.cIntegrateHyperexpG mixedHyperexpDt [CField.one, CField.zero, CField.one]
         [CField.zero, CField.one] [CField.zero, CField.one] with
       | some res =>
           CPolyG.checkIdentityG mixedHyperexpDt res [CField.one, CField.zero, CField.one]

@@ -48,13 +48,13 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCor
 
 /-! ### The full hyperexponential integral driver `cIntegrateHyperexpG` (Bronstein §5.4 + §5.10)
 
-`cIntegrateHyperexpG Dt fuel a d cands` integrates `f = a/d ∈ k(t)` for a **hyperexponential** monomial
+`cIntegrateHyperexpG Dt a d cands` integrates `f = a/d ∈ k(t)` for a **hyperexponential** monomial
 `t` (`Dt = η·t`, `η = cExpEtaG Dt`): canonical-split `f = fₚ + (b/dₛ) + (cₙ/dₙ)`; route the Laurent part
 `fₚ + b/dₛ` through `cIntegrateHyperexpLaurentG` (§5.10), the normal part through `cIntegrateReducedG`
 (Hermite + Rothstein–Trager); combine the rational parts. This is the hyperexponential analogue of
 `cIntegrateGFull` (which handled only `fₚ` and required `b = 0`). -/
 
-/-- **The full hyperexponential integral** `cIntegrateHyperexpG Dt fuel a d cands` (Bronstein §5.4 + §5.10):
+/-- **The full hyperexponential integral** `cIntegrateHyperexpG Dt a d cands` (Bronstein §5.4 + §5.10):
 integrate `f = a/d ∈ k(t)` for a hyperexponential monomial `t` (`Dt = η·t`, `δ = 1`, `η = cExpEtaG Dt`),
 returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`, or `none`. Steps:
 (1) `canonicalRepresentationFastG` splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`;
@@ -64,10 +64,10 @@ integrated by `cIntegrateHyperexpLaurentG η` (§5.10, each coefficient through 
 (4) combine the two rational parts `(qₗₐᵤᵣ/denₗₐᵤᵣ) + (gₙ/gₙd) = (qₗₐᵤᵣ·gₙd + gₙ·denₗₐᵤᵣ)/(denₗₐᵤᵣ·gₙd)`.
 `none` if the §5.10 Laurent integration fails (some `qⱼ` non-elementary). `[CField α] [CDiffField α]
 [CRischField α]`-generic — runs at any hyperexponential tower level. -/
-def cIntegrateHyperexpG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
+def cIntegrateHyperexpG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let η : α := cExpEtaG Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt fuel a d
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
   let neg : List α := cHyperexpSpecialNegG b ds
   match cIntegrateHyperexpLaurentG η fp neg with
   | none => none
@@ -134,7 +134,7 @@ denominators over ℚ(x)[t]). The returned rational part is `−1/t` with no log
 the hyperexponential special part — built on the recursive RDE oracle — computes via §5.10 and
 differentiates back to `f`.** -/
 theorem hyperexpInv_landsSpecialPart :
-    (match CPolyG.cIntegrateHyperexpG hyperexpDt 20 hyperexpInvA hyperexpInvD hyperexpInvCands with
+    (match CPolyG.cIntegrateHyperexpG hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
       | some res => CPolyG.checkIdentityG hyperexpDt res hyperexpInvA hyperexpInvD
       | none => false) = true := by native_decide
 
@@ -161,7 +161,7 @@ term through its own base RDE (`q₁ = 1` for `∫ t`, `q₋₁ = −1` for `∫
 `res` satisfies the antiderivative identity `D(res) = f` (`checkIdentityG`, over ℚ(x)[t]). The
 polynomial-AND-special Laurent integration computes and differentiates back to `f`. -/
 theorem hyperexpPolySpec_lands :
-    (match CPolyG.cIntegrateHyperexpG hyperexpDt 20 hyperexpPolySpecA hyperexpPolySpecD
+    (match CPolyG.cIntegrateHyperexpG hyperexpDt hyperexpPolySpecA hyperexpPolySpecD
         hyperexpInvCands with
       | some res => CPolyG.checkIdentityG hyperexpDt res hyperexpPolySpecA hyperexpPolySpecD
       | none => false) = true := by native_decide
@@ -202,7 +202,7 @@ its normal log part `log(t−1)` overshoots `1/(t−1)` by the §5.9 hyperexpone
 documented frontier — `checkIdentityG` would fail on the full `f`. The §5.10 special part itself is
 exact.) -/
 theorem hyperexpSpecNorm_runs :
-    (CPolyG.cIntegrateHyperexpG hyperexpDt 24 hyperexpSpecNormA hyperexpSpecNormD
+    (CPolyG.cIntegrateHyperexpG hyperexpDt hyperexpSpecNormA hyperexpSpecNormD
       hyperexpSpecNormCands).isSome = true := by native_decide
 
 /-- **The §5.10 special part of the special+normal integrand integrates exactly** (`native_decide`): the
@@ -212,7 +212,7 @@ special part of `f = t⁻¹ + 1/(t−1)` is `1/t`, whose §5.10 Laurent integral
 it is correct — the special-part residue of the larger mix is fully handled; only the *normal* log part
 is the §5.9 frontier. -/
 theorem hyperexpSpecNorm_specialPart_exact :
-    (match CPolyG.cIntegrateHyperexpG hyperexpDt 20 hyperexpInvA hyperexpInvD hyperexpInvCands with
+    (match CPolyG.cIntegrateHyperexpG hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
       | some res => CPolyG.checkIdentityG hyperexpDt res hyperexpInvA hyperexpInvD
       | none => false) = true := by native_decide
 
