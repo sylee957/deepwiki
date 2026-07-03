@@ -72,3 +72,17 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   importers are self-sufficient, delete `SplitFactorTowerCorrectG.lean` + `Tower/Unify.lean` + remove the
   now-safe imports; (3) that orphans `cSplitFactorFastG`+`canonicalRepresentationFastG` (Tower/Integrate) →
   delete. Then G5 (Algebraic `cSqfreeYunFFG`/`cresultantG`/`cbezoutOne`) and G7 (Euclidean base) remain.
+
+  ★★ CORRECTED (second probe): SplitFactorTowerCorrectG is NOT a dead island — it MIXES dead fuel'd
+  correctness (`canonicalRepresentationFastG_reconstructs_qfunNZG`, `_simple_proper_qfunNZG`,
+  `cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG`, `cstepGQ`, `associated_toPolyG_cstepGQ`,
+  `associated_toPolyG_cgcdFFCore_reg`, the `C*RegularQ` classes) with **LIVE infrastructure**: `baseDerivQ`
+  (used by RadicalIntegralSoundness) and the INSTANCE `instCDiffFieldSpecQFunNZG` (load-bearing — instance
+  usage is invisible to a name-scan; its absence is the "failed to synthesize CDiffFieldSpec" error).
+  So G6b = SURGICAL SLIM: delete only the dead fuel'd correctness decls, KEEP `baseDerivQ` /
+  `instCDiffFieldSpecQFunNZG` / `toPolyG_cone_qfunNZG` (and the file itself as import waypoint). Then delete
+  Tower/Unify's 2 dead theorems (keep the file if it's still an import waypoint for Chapter5/6, else delete
+  with direct-import fixes). ★ SCAN-BUG LESSON: the consumer-scan regex MUST allow `noncomputable `/`private `/
+  `@[…] ` prefixes before def/theorem/instance — the naive `^\s*(def|theorem|…)` misses `noncomputable def`
+  and instances, giving false "dead island" verdicts. Always cross-check a wholesale-delete with an actual
+  `lake build` before trusting the scan.
