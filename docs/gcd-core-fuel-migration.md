@@ -65,6 +65,24 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   correctness decls; (G6b-2) slimmed Tower/Unify to a thin re-export waypoint (2 dead probe theorems removed)
   and deleted the now-orphaned `cSplitFactorFastG` + `canonicalRepresentationFastG` from Tower/Integrate.
   Wf twins carry all runtime. Kept the Yun squarefree section (`cSqfreeYunFFG`, still used by G5).
+- **cleanup** ✅ deleted dead legacy `cSplitFactor` (MonomialDeriv, 0 consumers).
+
+## Status after G6b: CLEAN WINS EXHAUSTED
+The entire fuel'd §5/§6 Tower API is retired (split-factor, canonical-rep, squarefree-split, residue engine,
+hyperexp driver). A full 0-consumer scan finds NO remaining clean fuel'd deletions. The three remaining
+phases are LARGE interdependent cataloged-API cascades — deliberate focused sessions, not autonomous nibbles:
+- **G5 (Algebraic)** — the whole `radical*` family (`radSquarePart`/`radSquarefreePart`/`radIntegralBasis`/
+  `radSplitExact`/`radBasisDiscriminant`/`radGenus`/…) threads fuel down to `cSqfreeYunFFG`; `radGenus` is used
+  by CantorComposition/HyperellipticDivisor/GeneralPicard* — dropping fuel there has a huge blast radius and
+  requires re-cataloging the algebraic-function book (`Sources/Hdl_1721_1_15391/Chapter2` `ch2_integralBasis`).
+  Also `cresultantG`→`cAlgResidueResultant`/`discResultant`/`genResidueResultant` and `cbezoutOne`→`radInvN`.
+  Wf twins (`cSqfreeYunFFGWf`/`cresultantWf`/`cbezoutOneWf`) all exist — the work is re-point + drop-fuel +
+  re-catalog across the whole Algebraic arc. ★ SCOPE DECISION NEEDED: re-catalog ch2 to the Wf versions?
+- **G2b (parallel)** — port `cParallelIntegrate`→`SystemQ`→`AnsatzQ`→`SquarefreeFactorsQ` to Wf; re-catalog `alg_10_3`.
+- **G7 (Euclidean base)** — `cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore` are held alive by the
+  fuel'd gcd INSTANCES (`instCFracGcdCoreQ`/`RadX3`/`Q`, `instCTowerGcdWitnessQ`) + the Algebraic arc +
+  `cgcdTerminatesG` (feeds the Wf gcd correctness). Blocked on G5. Once the fuel'd Algebraic consumers +
+  instances are gone, trace FieldGcd/ResultantGenericCore/GenericBezout the dead-leaf way and delete the base.
 - **REMAINING — split-factor correctness (G6b):** `SplitFactorTowerCorrectG` (10 decls) + `Tower/Unify`
   (2 decls) are a DECL-DEAD island — NO other file uses any of their decls in code (the one apparent hit was
   a docstring). BUT they are **import waypoints**: deleting them breaks RadicalIntegralSoundness et al., which
