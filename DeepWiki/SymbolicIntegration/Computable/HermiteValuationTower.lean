@@ -316,4 +316,25 @@ theorem total_fold_residual_tower (Dt a d : CPolyG α)
   field_simp
   ring
 
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
+/-- **Per-factor order bound `vk^e ∣ R`.** From the total-fold residual (`af − Dg = ⟦R/D⟧`), the
+factor-`k` step (`Dgk = af − ⟦residNum_k/D⟧`), `Vk`-regularity of `Dg − Dgk` (`deriv_fold_sub`),
+`vk^(e+1) ∣ D`, and `vk^e ∣ residNum_k`: `vk^(e+1) ∣ (residNum_k − R)` by order extraction, and
+`vk^e ∣ residNum_k` gives `vk^e ∣ R`. Tower analog of `dvd_residNum_factor`. -/
+theorem dvd_R_of_factor {vk R residNum_k : (CFieldSpec.K α)[X]}
+    {af Dg Dgk : RatFunc (CFieldSpec.K α)} (e : ℕ) (D : CPolyG α) (hD : toPolyG D ≠ 0)
+    (hR : af - Dg = amG α R / amG α (toPolyG D))
+    (hstepk : Dgk = af - amG α residNum_k / amG α (toPolyG D))
+    (hderiv : IsQRegularG vk (Dg - Dgk))
+    (hpow : vk ^ (e + 1) ∣ toPolyG D) (hresk : vk ^ e ∣ residNum_k) :
+    vk ^ e ∣ R := by
+  have hDg : Dg = af - amG α R / amG α (toPolyG D) := by linear_combination -hR
+  have heq : Dg - Dgk = amG α (residNum_k - R) / amG α (toPolyG D) := by
+    rw [hDg, hstepk, map_sub, sub_div]; ring
+  rw [heq] at hderiv
+  have hdvd : vk ^ (e + 1) ∣ residNum_k - R := dvd_num_of_isQRegularG hD hpow hderiv
+  have h1 : vk ^ e ∣ residNum_k - R := (pow_dvd_pow vk (Nat.le_succ e)).trans hdvd
+  have h2 : vk ^ e ∣ residNum_k - (residNum_k - R) := dvd_sub hresk h1
+  simpa using h2
+
 end DeepWiki.SymbolicIntegration
