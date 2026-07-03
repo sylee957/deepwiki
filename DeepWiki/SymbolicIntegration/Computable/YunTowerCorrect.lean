@@ -322,4 +322,63 @@ theorem cSqfreeYunFFGWf_forall₂ [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorr
   rw [hmap, yunLoopAbs_irrelevant (0 : (CFieldSpec.K α)[X]) (toPolyG p) L (toPolyG b₁, toPolyG d₁) 1 1]
   exact yunLoopAbs_forall₂ (toPolyG p) hpp L 1 (toPolyG b₁) (toPolyG d₁) (le_refl 1) hinv
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- The `j`-th tower Yun factor is `Associated (sqfreeFactPart (toPolyG p) (1 + j))` (per-index form of
+the correspondence). -/
+theorem cSqfreeYunFFGWf_get_assoc [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0)
+    (j : ℕ) (hj : j < (cSqfreeYunFFGWf p).length) :
+    Associated (toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩))
+      (sqfreeFactPart (toPolyG p) (1 + j)) := by
+  have hf := cSqfreeYunFFGWf_forall₂ hgcd p hp0 hpp
+  have hjm : j < ((cSqfreeYunFFGWf p).map toPolyG).length := by rwa [List.length_map]
+  have hjr : j < ((List.range (cSqfreeYunFFGWf p).length).map
+      (fun j => sqfreeFactPart (toPolyG p) (1 + j))).length := by
+    rw [List.length_map, List.length_range]; exact hj
+  have hg := hf.get hjm hjr
+  simp only [List.get_eq_getElem, List.getElem_map, List.getElem_range] at hg ⊢
+  exact hg
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Distinct tower Yun factors are relatively prime.** From the `sqfreeFactPart` correspondence and
+`sqfreeFactPart_isRelPrime` (distinct multiplicities are coprime). -/
+theorem cSqfreeYunFFGWf_isRelPrime [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0)
+    {j k : ℕ} (hj : j < (cSqfreeYunFFGWf p).length) (hk : k < (cSqfreeYunFFGWf p).length)
+    (hjk : j ≠ k) :
+    IsRelPrime (toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩))
+      (toPolyG ((cSqfreeYunFFGWf p).get ⟨k, hk⟩)) := by
+  have haj := cSqfreeYunFFGWf_get_assoc hgcd p hp0 hpp j hj
+  have hak := cSqfreeYunFFGWf_get_assoc hgcd p hp0 hpp k hk
+  have hne : (1 + j) ≠ (1 + k) := by omega
+  exact fun d hda hdb =>
+    (sqfreeFactPart_isRelPrime (toPolyG p) hne) (hda.trans haj.dvd) (hdb.trans hak.dvd)
+
+open Classical UniqueFactorizationMonoid in
+/-- `sqfreeFactPart A i ^ i ∣ A.primPart`: each squarefree part to its own multiplicity divides the
+primitive part (from the `∏ Aₘ^m ~ pp(A)` decomposition; the `i`-absent case gives `Aᵢ = 1`). -/
+theorem sqfreeFactPart_pow_self_dvd_primPart {K : Type*} [Field K] (A : K[X])
+    (hA : A.primPart ≠ 0) (i : ℕ) : sqfreeFactPart A i ^ i ∣ A.primPart := by
+  have hassoc := primPart_associated_prod_sqfreeFactPart A hA
+  by_cases hi : i ∈ (normalizedFactors A.primPart).toFinset.image
+      (fun P => (normalizedFactors A.primPart).count P)
+  · exact (Finset.dvd_prod_of_mem (fun m => sqfreeFactPart A m ^ m) hi).trans hassoc.symm.dvd
+  · have h1 : sqfreeFactPart A i = 1 := by
+      rw [sqfreeFactPart, Finset.prod_eq_one]
+      intro P hP
+      rw [Finset.mem_filter] at hP
+      exact absurd (hP.2 ▸ Finset.mem_image_of_mem _ hP.1) hi
+    rw [h1, one_pow]; exact one_dvd _
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Each tower Yun factor to its multiplicity divides `d`.** For the factor at index `j` (multiplicity
+`1 + j`), `toPolyG (factor) ^ (1 + j) ∣ toPolyG p` — the `hpow` hypothesis of the pole-cancellation. -/
+theorem cSqfreeYunFFGWf_pow_dvd [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0)
+    (j : ℕ) (hj : j < (cSqfreeYunFFGWf p).length) :
+    toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩) ^ (1 + j) ∣ toPolyG p := by
+  have haj := cSqfreeYunFFGWf_get_assoc hgcd p hp0 hpp j hj
+  exact ((pow_dvd_pow_of_dvd haj.dvd (1 + j)).trans
+    (sqfreeFactPart_pow_self_dvd_primPart (toPolyG p) hpp (1 + j))).trans (toPolyG p).primPart_dvd
+
 end DeepWiki.SymbolicIntegration
