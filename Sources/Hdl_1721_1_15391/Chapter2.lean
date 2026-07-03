@@ -32,20 +32,20 @@ namespace DeepWiki.Tiaf
 
 /-! ## The square-part / squarefree-part split for `n = 2` (Ch. 2 §5, p. 30) -/
 
-/-- **Square part** `radSquarePart fuel ρ = d = ∏ᵢ Pᵢ^{⌊i/2⌋}` (Trager, Chapter 2 §5, p. 30): the root of
+/-- **Square part** `radSquarePart ρ = d = ∏ᵢ Pᵢ^{⌊i/2⌋}` (Trager, Chapter 2 §5, p. 30): the root of
 the largest square divisor of `ρ`, read off the multiplicity-indexed squarefree factorization
 `ρ = ∏ᵢ Pᵢ^i`. Trager's general `dᵢ = ∏ⱼ Pⱼ^{⌊i·eⱼ/n⌋}` specialized to `n = 2, i = 1`, so `d² ∣ ρ` and
 `ρ/d²` is squarefree. -/
 abbrev ch2_squarePart := @radSquarePart
 
-/-- **Squarefree part** `radSquarefreePart fuel ρ = s = ∏_{i odd} Pᵢ = ρ/d²` (Trager, Chapter 2 §5,
+/-- **Squarefree part** `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²` (Trager, Chapter 2 §5,
 p. 30): the radical-style squarefree part collecting one copy of each odd-multiplicity factor, so
 `ρ = d²·s` with `s` squarefree and `(y/d)² = s`. -/
 abbrev ch2_squarefreePart := @radSquarefreePart
 
 /-! ## The integral basis `[1, y/d]` (Ch. 2 §5, p. 31) -/
 
-/-- **The simple-radical integral basis** `radIntegralBasis fuel ρ = (d, s)` (Trager, Chapter 2 §5, p. 31):
+/-- **The simple-radical integral basis** `radIntegralBasis ρ = (d, s)` (Trager, Chapter 2 §5, p. 31):
 the integral closure of `ℚ[x]` in `ℚ(x)[y]/(y² − ρ)` has the explicit `ℚ[x]`-basis `[1, y/d]`, with
 `d = radSquarePart ρ` and `s = radSquarefreePart ρ = ρ/d²` squarefree, `(y/d)² = s`. Returned as the pair
 `(d, s)` (the basis is `1` and `y/d`; `s` is the minimal-polynomial constant `(y/d)² = s`). -/
@@ -53,17 +53,17 @@ abbrev ch2_integralBasis := @radIntegralBasis
 
 /-! ## Integral-closure validation predicates (Ch. 2 §5) -/
 
-/-- **The square-part split is exact** `radSplitExact fuel ρ` (Trager, Chapter 2 §5, p. 30–31): `d²·s = ρ`,
+/-- **The square-part split is exact** `radSplitExact ρ` (Trager, Chapter 2 §5, p. 30–31): `d²·s = ρ`,
 so `s = ρ/d²` is a genuine `ℚ[x]` polynomial — the precondition that `y/d` satisfies the monic `T² − s = 0`
 over `ℚ[x]`. -/
 abbrev ch2_splitExact := @radSplitExact
 
-/-- **`y/d` is integral: `s` is squarefree** `radSquarefreePartIsSquarefree fuel ρ` (Trager, Chapter 2 §5,
+/-- **`y/d` is integral: `s` is squarefree** `radSquarefreePartIsSquarefree ρ` (Trager, Chapter 2 §5,
 p. 31): `gcd(s, s') = 1`, so `(y/d)² = s` is squarefree and `y/d` is a root of the monic `T² − s ∈ ℚ[x][T]`
 — the integral closure contains it. -/
 abbrev ch2_squarefreePartIsSquarefree := @radSquarefreePartIsSquarefree
 
-/-- **`y/(d·P)` is NOT integral** `radNotIntegralFactor fuel ρ P` (Trager, Chapter 2 §5, p. 31, maximality):
+/-- **`y/(d·P)` is NOT integral** `radNotIntegralFactor ρ P` (Trager, Chapter 2 §5, p. 31, maximality):
 for nonconstant `P`, `P² ∤ s` (since `s` is squarefree), so `y/(d·P)` would need the non-polynomial minimal
 polynomial `T² − s/P²` — hence `y/d` is the MAXIMAL integral element of the form `y/q`. -/
 abbrev ch2_notIntegralFactor := @radNotIntegralFactor
@@ -79,12 +79,12 @@ abbrev ch2_integralBasis_validates := @radIntegralBasis_validates
 
 /-! ## Discriminant and genus of the simple-radical basis (Ch. 2 §4–§5) -/
 
-/-- **Basis discriminant** `radBasisDiscriminant fuel ρ = 4·s` (Trager, Chapter 2 §5, p. 30): the
+/-- **Basis discriminant** `radBasisDiscriminant ρ = 4·s` (Trager, Chapter 2 §5, p. 30): the
 discriminant `disc(T² − s) = 4s` of the minimal polynomial of the basis element `y/d`
 (`s = radSquarefreePart ρ`). -/
 abbrev ch2_basisDiscriminant := @radBasisDiscriminant
 
-/-- **Genus** `radGenus fuel ρ = ⌈deg s / 2⌉ − 1` (Trager, Chapter 2 §4, p. 29): the genus of the
+/-- **Genus** `radGenus ρ = ⌈deg s / 2⌉ − 1` (Trager, Chapter 2 §4, p. 29): the genus of the
 hyperelliptic curve `y² = s` (`s` squarefree of degree `m`), Trager's `g = d/2 − [K(x,y):K(x)] + 1`
 specialized to the simple radical `y² = s`. -/
 abbrev ch2_genus := @radGenus

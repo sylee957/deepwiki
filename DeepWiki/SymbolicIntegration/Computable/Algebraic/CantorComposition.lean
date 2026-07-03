@@ -162,10 +162,10 @@ open CPolyG
 
 /-! ### The elliptic curve `y² = x³ + 1` and its points (reusing `ComputableHyperellipticDivisor`)
 
-`hypRhoX3p1 = x³ + 1`, points `(0,1)`, `(2,3)`, `(−1,0)`, with `radGenus 8 hypRhoX3p1 = 1`. -/
+`hypRhoX3p1 = x³ + 1`, points `(0,1)`, `(2,3)`, `(−1,0)`, with `radGenus hypRhoX3p1 = 1`. -/
 
 /-- The genus of `y² = x³ + 1`: `radGenus = 1` (elliptic). Pinned for the group-law checks below. -/
-def cantorGenusX3p1 : ℕ := radGenus 8 hypRhoX3p1
+def cantorGenusX3p1 : ℕ := radGenus hypRhoX3p1
 
 /-- **`radGenus (x³+1) = 1`** (`native_decide`): the curve `y² = x³ + 1` is elliptic, genus 1. -/
 theorem cantorGenusX3p1_eq : cantorGenusX3p1 = 1 := by native_decide
@@ -272,7 +272,7 @@ def hypRhoX5p1 : CPolyG ℚ := [1, 0, 0, 0, 0, 1]
 
 /-- **`radGenus (x⁵+1) = 2`** (`native_decide`): `y² = x⁵ + 1` is a genus-2 hyperelliptic curve (`deg ρ =
 5 = 2·2 + 1`), beyond the elliptic case. -/
-theorem cantorGenusX5p1_eq : radGenus 8 hypRhoX5p1 = 2 := by native_decide
+theorem cantorGenusX5p1_eq : radGenus hypRhoX5p1 = 2 := by native_decide
 
 /-- The point `(0, 1)` on `y² = x⁵ + 1` (`1² = 0⁵ + 1`): Mumford `(x, 1)`. -/
 def hypG2Pt01 : MumfordDivisor ℚ := mumfordPoint (0 : ℚ) 1

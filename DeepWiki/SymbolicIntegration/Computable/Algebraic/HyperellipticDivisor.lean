@@ -215,11 +215,11 @@ theorem mumfordOpposite_pt01_eq :
 theorem mumfordValid_pt01opp : mumfordValid hypRhoX3p1 hypPt01opp = true := by native_decide
 
 /-- The point divisors are reduced (`native_decide`): `deg u = 1 ≤ g = 1` for the genus-1 curve, so
-each single-point divisor `(x − x₀, y₀)` is already in reduced form. (`radGenus 8 hypRhoX3p1 = 1`.) -/
+each single-point divisor `(x − x₀, y₀)` is already in reduced form. (`radGenus hypRhoX3p1 = 1`.) -/
 theorem mumfordIsReduced_pts :
-    mumfordIsReduced (radGenus 8 hypRhoX3p1) hypPt01 = true
-    ∧ mumfordIsReduced (radGenus 8 hypRhoX3p1) hypPt23 = true
-    ∧ mumfordIsReduced (radGenus 8 hypRhoX3p1) hypPtM10 = true := by native_decide
+    mumfordIsReduced (radGenus hypRhoX3p1) hypPt01 = true
+    ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPt23 = true
+    ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPtM10 = true := by native_decide
 
 /-- The order-2 candidate `(0,1) + (0,−1)` as the support-2 divisor with both sheets: `u = x²`,
 interpolant `v` through `(0,1)` and `(0,1)` — but the two points share `x = 0`, so this is *not* a valid
@@ -232,7 +232,7 @@ def hypIdentity : MumfordDivisor ℚ := mumfordIdentity
 cancels to the Jacobian identity) — the order-2 relation `(0,1) + (0,−1) = O`. -/
 theorem mumfordIdentity_valid_reduced :
     mumfordValid hypRhoX3p1 hypIdentity = true
-    ∧ mumfordIsReduced (radGenus 8 hypRhoX3p1) hypIdentity = true := by native_decide
+    ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypIdentity = true := by native_decide
 
 /-! ### A two-point reduced divisor on `y² = x³+1` (`native_decide`)
 
@@ -311,8 +311,8 @@ theorem mumford_representation_validates :
     (mumfordValid hypRhoX3p1 hypPt01 = true
       ∧ mumfordValid hypRhoX3p1 hypPt23 = true
       ∧ mumfordValid hypRhoX3p1 hypPtM10 = true)
-    ∧ (mumfordIsReduced (radGenus 8 hypRhoX3p1) hypPt01 = true
-      ∧ mumfordIsReduced (radGenus 8 hypRhoX3p1) hypPt23 = true)
+    ∧ (mumfordIsReduced (radGenus hypRhoX3p1) hypPt01 = true
+      ∧ mumfordIsReduced (radGenus hypRhoX3p1) hypPt23 = true)
     -- opposite and identity
     ∧ (hypPt01opp = mumfordPoint (0 : ℚ) (-1)
       ∧ mumfordValid hypRhoX3p1 hypIdentity = true)
