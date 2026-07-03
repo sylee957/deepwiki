@@ -31,8 +31,16 @@ and the fuel'd Algebraic residue machinery), migrating every consumer to the fue
   + `cresultantGWf` if absent; add `…Wf_eq`/native_decide equivalence at the cataloged inputs.
 - **G3:** re-point runtime consumers of the fuel'd Tower API to the Wf twins (Tower/Integrate internal
   chain, MixedTowerIntegrate, Hyperexp); re-catalog the book examples to the Wf versions.
-- **G4:** migrate the Wf soundness proofs off the fuel'd defs (cLogArgTowerG, cresultantG,
-  cgcdTerminatesG) — re-state against the `…Wf` twins. The hard proof-migration phase.
+- **G4:** migrate the Wf soundness proofs off the fuel'd defs. REFINED (probed 2026-07-03): the
+  Wf soundness lemmas ALREADY EXIST in `OneShotAssembly` (`cLogArgTowerGWf_eq_linear_factor`,
+  `cIntegrateReducedGWf_logs_eq_per_root`). The fuel'd soundness lemmas in `LogPartTowerSoundness`
+  (`cLogArgTowerG_eq_linear_factor`, `cLogArgTowerG_associated_linear_factor`,
+  `roots_residueResultantTowerG_eq_residues[_qfunNZG]`) feed exactly ONE live theorem:
+  `field_identity_of_cIntegrateReducedGWf_of_residueMatch_qfunNZG` (Wf-facing, but its *proof* routes
+  through the fuel'd lemmas). So G4 = re-route that one theorem's proof through the OneShotAssembly Wf
+  lemmas, then the fuel'd `LogPartTowerSoundness` soundness island (cLogArgTowerG/cResidueResultantTowerG
+  fuel'd theorems) is orphaned and deletable. Bounded proof work, not from-scratch. Similarly probe
+  `cgcdTerminatesG` (feeds GcdFFCorrect's `associated_toPolyG_cgcdFFCore` — check for a Wf twin lemma).
 - **G5:** re-point the Algebraic Trager machinery (cresultantG/cbezoutOne consumers) to Wf.
 - **G6:** now-orphaned: delete the fuel'd Tower API + `cresultantG`/`cbezoutOne` + `cgcdFFCore` +
   their fuel'd correctness files (FieldGcd/ResultantGenericCore/GenericBezout fuel'd theorems, GcdFFCorrect).
