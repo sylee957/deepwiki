@@ -162,46 +162,6 @@ def canonicalRepresentationFastG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α)
   let (b, c) := cextendedEuclideanSplitWf dn ds r u w
   (q, (b, ds), (c, dn))
 
-/-! ### Generic transcendental Hermite reduction over the tower (§5.3) — the RATIONAL PART
-
-`cHermiteReduceTowerG` is the `[CField α] [CDiffField α]`-generic mirror of `cHermiteReduceTower`:
-Bronstein's `HermiteReduce(f, D)` (§5.3, quadratic version) rewrites the normal part `fₙ = a/d` of an
-element of a monomial extension as `D(g) + h` with `h`'s denominator squarefree — `g` is the integral's
-rational part. The squarefree factorization uses the generic `cSqfreeYunFFG`; the inner Bézout loop
-reuses the already-generic fuel-free `cHermiteReduceTowerInnerWf`/`cdiophantineGWf`. The monomial derivation `D =
-cmonomialDeriv Dt` needs `[CDiffField α]`. -/
-
-/-- Generic transcendental Hermite reduction `cHermiteReduceTowerG Dt fuel a d = ((gnum, gden),
-(h_num, h_den))` (Bronstein §5.3, p.139) over the tower: input `f = a/d` reduced/normal (`d` monic,
-squarefree-factorable, `deg a < deg d`), output the rational part `g = gnum/gden` (already integrated)
-and the residual `h = h_num/h_den` with `h_den` squarefree, satisfying `D(g) + h = a/d` for the monomial
-derivation `D = cmonomialDeriv Dt`. The generic mirror of `cHermiteReduceTower`: squarefree-factor `d`
-with the generic `cSqfreeYunFFG`; for each factor `(v, i)` of multiplicity `i ≥ 2`, run the already-
-generic fuel-free `cHermiteReduceTowerInnerWf`; recover `h_num` over the squarefree radical `Dstar = ∏ᵢ vᵢ` exactly
-from `a/d = D(g) + h_num/Dstar`. `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
-def cHermiteReduceTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) :
-    (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
-  let factors := cSqfreeYunFFG fuel d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
-  let Dstar := factors.foldl (fun acc vi => cmulG acc vi) [CField.one]   -- squarefree radical ∏ᵢ vᵢ
-  let g : CPolyG α × CPolyG α := factors.zipIdx.foldl
-    (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
-      let i := idx + 1
-      if i ≤ 1 then gAcc
-      else
-        let Vi_pow := cpowG vi i
-        let u := cdivWf d Vi_pow
-        let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])
-        (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))  -- gAcc + gloc
-    ([CField.zero], [CField.one])
-  let (gnum, gden) := g
-  -- residual numerator `h_num` over `Dstar`, from `a/d − D(g) = h_num/Dstar`:
-  let gprimeNum := csubG (cmulG (cmonomialDeriv Dt gnum) gden) (cmulG gnum (cmonomialDeriv Dt gden))
-  let gden2 := cmulG gden gden
-  let resNum := csubG (cmulG a gden2) (cmulG d gprimeNum)
-  let resDen := cmulG d gden2
-  let hNum := cdivWf (cmulG resNum Dstar) resDen
-  ((cnormG gnum, cnormG gden), (cnormG hNum, cnormG Dstar))
-
 end CPolyG
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
@@ -338,28 +298,6 @@ def cResidueResultantTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) : CP
 def cLogArgTowerG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (c : α) : CPolyG α :=
   CFracGcdCore.cgcdFFCore fuel d (cAmcDdG Dt a d c)
 
-/-! ### The generic rational-residue scan and logarithmic part
-
-`cRationalResiduesG`/`cLogPartG` mirror `cRationalResidues`/`cLogPart`, but take the residue candidates
-as `α` elements `cands : List α` (the generic form — a residue is a field constant). Keep those `c`
-with `R(c) = 0` (`cHornerG R c`, `[CField α]`-generic Horner), and pair each with its log argument. -/
-
-/-- Generic rational/field residues `cRationalResiduesG Dt fuel a d cands`: from the candidate list
-`cands : List α`, keep those `c` that are roots of the residue resultant `R(z) =
-cResidueResultantTowerG Dt fuel a d`, i.e. `R(c) = 0` (tested by `CField.isZero (cHornerG R c)`, the
-generic Horner evaluation). The residues of the simple element `a/d` whose logarithmic part is
-`∑ c·log(cLogArgTowerG … c)`. -/
-def cRationalResiduesG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) : List α :=
-  let R := cResidueResultantTowerG Dt fuel a d
-  cands.filter (fun c => CField.isZero (cHornerG R c))
-
-/-- Generic logarithmic part `cLogPartG Dt fuel a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈
-residues]`: pair each residue `c : α` (from `cRationalResiduesG`) with its log argument
-`cLogArgTowerG Dt fuel a d c`, so `∑ (c, v) ∈ cLogPartG, c·log(v)` is the residue logarithmic part of
-`∫ a/d`. `[CField α] [CDiffField α]`-generic — runs at any tower level. -/
-def cLogPartG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) : List (α × CPolyG α) :=
-  (cRationalResiduesG Dt fuel a d cands).map (fun c => (c, cLogArgTowerG Dt fuel a d c))
-
 end CPolyG
 
 /-! ### The generic integral result and the cleared antiderivative identity
@@ -406,25 +344,6 @@ def checkIdentityG (Dt : CPolyG α) (res : IntegralResultG α) (anum aden : CPol
   let lhs := cmulG (caddG (cmulG gprimeNum Lden) (cmulG Lnum gden2)) aden
   let rhs := cmulG anum (cmulG gden2 Lden)
   cisZeroG (csubG lhs rhs)
-
-/-! ### The generic reduced-case integration capstone
-
-`cIntegrateReducedG` integrates a reduced/simple `f = a/d` over the tower: Hermite rational part
-(`cHermiteReduceTowerG`) + Rothstein–Trager residue logs (`cLogPartG`). The assembled top-level driver
-that splits off the polynomial/special part is `cIntegrateGFull` (`ComputableTowerRischDE`), which feeds
-this capstone its simple normal part. Candidates are `α` elements (the generic residue form). -/
-
-/-- The generic reduced-case integration capstone `cIntegrateReducedG Dt fuel a d cands`: for
-`f = a/d` reduced/normal (no polynomial or special part), `∫ f = g + ∑ c·log(v)`. Hermite-reduce
-(`cHermiteReduceTowerG`) to the rational part `g = gnum/gden` and the simple residual `h = h_num/h_den`
-(squarefree denominator), then take the residue log part of `h` (`cLogPartG`, residues drawn from
-`cands : List α`). Returns the `IntegralResultG` `⟨(gnum, gden), [(c, v)]⟩`. `[CField α] [CDiffField α]`-
-generic — runs at any tower level. -/
-def cIntegrateReducedG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands : List α) :
-    IntegralResultG α :=
-  let ((gnum, gden), (hNum, hDen)) := cHermiteReduceTowerG Dt fuel a d
-  let logs := cLogPartG Dt fuel hNum hDen cands
-  ⟨(gnum, gden), logs⟩
 
 end CPolyG
 

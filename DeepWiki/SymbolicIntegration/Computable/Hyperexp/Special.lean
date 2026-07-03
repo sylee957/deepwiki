@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEInstance
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.LaurentCore
 
 /-! # The hyperexponential special-part integral — term-by-term Laurent integration (Bronstein §5.10)
@@ -43,7 +44,7 @@ open Compute
 
 namespace CPolyG
 
-variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CRischField α]
+variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCore α] [CFracGcdCoreWf α] [CRischField α]
 
 /-! ### The full hyperexponential integral driver `cIntegrateHyperexpG` (Bronstein §5.4 + §5.10)
 
@@ -59,7 +60,7 @@ returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log
 (1) `canonicalRepresentationFastG` splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`;
 (2) the **Laurent part** `fₚ + b/dₛ` (positives `fₚ`, negatives from `cHyperexpSpecialNegG b dₛ`) is
 integrated by `cIntegrateHyperexpLaurentG η` (§5.10, each coefficient through the RDE oracle);
-(3) the simple normal part `cₙ/dₙ` by `cIntegrateReducedG` (Hermite + residue logs);
+(3) the simple normal part `cₙ/dₙ` by `cIntegrateReducedGWf` (Hermite + residue logs);
 (4) combine the two rational parts `(qₗₐᵤᵣ/denₗₐᵤᵣ) + (gₙ/gₙd) = (qₗₐᵤᵣ·gₙd + gₙ·denₗₐᵤᵣ)/(denₗₐᵤᵣ·gₙd)`.
 `none` if the §5.10 Laurent integration fails (some `qⱼ` non-elementary). `[CField α] [CDiffField α]
 [CRischField α]`-generic — runs at any hyperexponential tower level. -/
@@ -71,7 +72,7 @@ def cIntegrateHyperexpG (Dt : CPolyG α) (fuel : ℕ) (a d : CPolyG α) (cands :
   match cIntegrateHyperexpLaurentG η fp neg with
   | none => none
   | some (lnum, lden) =>
-    let nrm := cIntegrateReducedG Dt fuel cn dn cands
+    let nrm := cIntegrateReducedGWf Dt cn dn cands
     let (gnum, gden) := nrm.rational
     -- combine `lnum/lden + gnum/gden`.
     let num := caddG (cmulG lnum gden) (cmulG gnum lden)
