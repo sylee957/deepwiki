@@ -53,20 +53,34 @@ Specializing `g = (0,1)` (⟦0⟧=0) gives the per-factor identity `D_tower(⟦g
 ⟦a_final/(u·v)⟧`, which is exactly the `hstep` element `cHermiteReduceTowerG_telescope_seed`
 (NormalPartSoundness:175) consumes.
 
-### M3 — Yun `cSqfreeYunFFGWf` correctness + multi-factor assembly — PENDING (deepest)
-The factor list from `cSqfreeYunFFGWf` must be shown to (a) multiply back to `d`, (b) be pairwise
-coprime and squarefree (supplying M2's coprimality side-conditions), (c) have the right multiplicities.
-`HermiteCorrectness.lean` has the abstract Yun spine over `ℚ` (ambient instances, `yunFactorizationAbs`,
-`sqfreeFactPart`) — a separate, substantial algorithm-correctness proof. This is a genuine
-multi-session piece and the deepest of the three.
+### M3-bridge — the whole-step field identity from exact division ✓ DONE (f5341c18)
+`hermiteTowerStep_field_identity` (`Computable/HermiteTowerStep.lean`). KEY STRUCTURAL INSIGHT: the def
+`cHermiteReduceTowerGWf` computes the residual `hNum/Dstar` **directly** as `a/d - D(g)`
+(`resNum/resDen = (a·gden² - d·gp)/(d·gden²)`, `gp` the quotient numerator, `hNum = resNum·Dstar/resDen`).
+So the whole-step identity `D_tower(⟦g⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧` is a **clean algebraic assembly**
+(mirrors `canonicalReconstruction`): quotient rule (`towerFractionFieldDerivG_div`) + the exact-division
+relation `⟦hNum⟧·⟦d·gden²⟧ = ⟦resNum⟧·⟦Dstar⟧`, closed by `field_simp`/`ring`. Reduces `hherm` to the
+single **exact-division** frontier (carried as the one hypothesis).
+
+### M3 — the exact-division divisibility + Yun — PENDING (deepest)
+The one remaining frontier is the exact-division relation `resDen ∣ resNum·Dstar` for the actual
+`cHermiteReduceTowerGWf` output — Hermite's **pole-cancellation guarantee**: after reduction, the
+residual `a/d - D(g)` has denominator dividing the squarefree radical `Dstar`. This is where M1/M2 (the
+per-factor reduction identities showing each factor's high-multiplicity pole drops) + Yun
+`cSqfreeYunFFGWf` correctness (factors multiply to `d`, pairwise coprime/squarefree → `Dstar` structure)
+feed in. Note the multiplicity subtlety: the outer fold passes the SAME global `a` and `u = d/vⁱ` to each
+factor, so the per-factor sum doesn't naively telescope — the divisibility is genuinely the crux, on the
+same footing as the RT residue-match and split-coprimality frontiers. `HermiteCorrectness.lean` has the
+abstract Yun spine over `ℚ` (`yunFactorizationAbs`, `sqfreeFactPart`).
 
 ## Status
 
 - [x] **M1 DONE** (b885089a) — tower single-step Hermite identity.
 - [x] **M2 DONE** (2385ec0e) — inner-loop invariant + `fieldFrac_step_add`.
-- [ ] M3 — Yun correctness + multi-factor assembly (deepest; separate algorithm). Remaining bridge:
-  specialize M2 at `g = (0,1)`, match the telescope's `(L₀::rest).zip rest` before/after pair encoding,
-  and discharge the Bézout coprimality side-conditions from Yun factor squarefreeness/coprimality.
+- [x] **M3-bridge DONE** (f5341c18) — whole-step field identity from exact division
+  (`hermiteTowerStep_field_identity`); `hherm` reduced to the exact-division frontier.
+- [ ] M3 — the exact-division divisibility `resDen ∣ resNum·Dstar` (Hermite pole-cancellation) + Yun
+  `cSqfreeYunFFGWf` correctness (deepest; the genuine remaining crux).
 
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
 matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
