@@ -91,8 +91,12 @@ pole-cancellation assembly), on the same footing as the RT residue-match and spl
   reduced-part soundness needs only exact-division + RT match.
 - [x] **M3-radical DONE** (c21504f4) — exact-division split into Yun radical `d=Dstar·W` +
   pole-cancellation `W·gden²∣resNum` (`hermiteTowerStep_field_identity_of_radical`).
-- [ ] M3 — (a) Yun `cSqfreeYunFFGWf` product correctness `∏vᵢ^i=d` (no tower theorem yet);
-  (b) pole-cancellation `W·gden²∣resNum`. Both fresh multi-session; the genuine remaining crux.
+- [x] **Yun radical split DONE** (ce9c68e8, `YunTowerCorrect.lean`) — `toPolyG_yunRadical_split`
+  discharges `hSD` (`d = Dstar·W`) via `Dstar ∣ d` (a clean go-loop product-divides invariant, no
+  `YunInv`/`sqfreeFactPart` needed); reduces to only `GcdFFCorrect` (unconditional at ℚ).
+- [ ] M3 — pole-cancellation `W·gden²∣resNum` (the remaining sub-fact; genuinely needs the full Yun
+  multiplicity structure + per-factor pole tracking). The abstract engine (`YunInv`,
+  `yunStep_emit_assoc`, `yunLoopAbs_forall₂`, `yunFactorizationAbs_prodPow_assoc`) is all present for it.
 
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
 matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
