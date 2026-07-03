@@ -227,6 +227,20 @@ def cSqfreeYunFFGWf (p : CPolyG α) : List (CPolyG α) :=
   let d1 := csubG (cdivWf (cderivG p) g) (cderivG b1)
   cSqfreeYunFFGgoWf (cyunBoundG p) b1 d1
 
+/-- Generic `SplitSquarefreeFactor` (Bronstein §3.5, p.102) over the tower, fuel-free:
+`cSplitSquarefreeFactorFastGWf Dt p = ((N₁,…,Nₘ), (S₁,…,Sₘ))`. Yun-factor `p` in `t` (`cSqfreeYunFFGWf`);
+per factor `pᵢ`, `Sᵢ = cgcdFFCoreWf pᵢ (cmonomialDeriv Dt pᵢ)` (the special part, differential derivation
+`D = cmonomialDeriv Dt`) and `Nᵢ = cdivWf pᵢ Sᵢ` (normal part). The fuel-free analogue of
+`cSplitSquarefreeFactorFastG`. -/
+def cSplitSquarefreeFactorFastGWf [CDiffField α] (Dt : CPolyG α) (p : CPolyG α) :
+    List (CPolyG α) × List (CPolyG α) :=
+  let ps := cSqfreeYunFFGWf p
+  let parts := ps.map (fun pf =>
+    let si := CFracGcdCoreWf.cgcdFFCoreWf pf (cmonomialDeriv Dt pf)
+    let ni := cdivWf pf si
+    (ni, si))
+  (parts.map Prod.fst, parts.map Prod.snd)
+
 end CPolyG
 
 /-! ## The flat-composition pipeline
