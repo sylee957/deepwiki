@@ -13,6 +13,7 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
+open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -65,5 +66,50 @@ theorem cIntegrateHyperexpLaurent_pos_term [CRischField α] [CRischFieldSpec α]
   cases k with
   | zero => simp
   | succ m => rw [Nat.succ_sub_one, pow_succ]; push_cast; ring
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- `toK (cLaurentShiftG η (-(i+1))) = -(i+1) · toK η` for a negative shift. -/
+theorem toK_cLaurentShiftG_negCast [CRischField α] (η : α) (i : ℕ) :
+    CFieldSpec.toK (cLaurentShiftG η (-(i + 1 : ℤ)))
+      = -((i : CFieldSpec.K α) + 1) * CFieldSpec.toK η := by
+  have hnat : (-(i + 1 : ℤ)).natAbs = i + 1 := by omega
+  rw [cLaurentShiftG, hnat, if_pos (by omega), CFieldSpec.toK_mul, CFieldSpec.toK_neg,
+    toK_cnatCastG_laurent]
+  push_cast; ring
+
+/-- **M2 (negative power): one Laurent term is an antiderivative.** For `Dt = η·t` and a solved
+coefficient `cLaurentIntCoeffG η (-(i+1)) a = some q`, `D_tower(⟦q·t^{-(i+1)}⟧) = ⟦a·t^{-(i+1)}⟧`. Quotient
+rule + `crischDESolve` soundness on the negative shift. -/
+theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
+    (Dt : CPolyG α) (η : α) (i : ℕ) (a q : α)
+    (hDt : toPolyG Dt = Polynomial.C (CFieldSpec.toK η) * Polynomial.X)
+    (hsolve : cLaurentIntCoeffG η (-(i + 1 : ℤ)) a = some q) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG ([q] : CPolyG α)) / amG α (toPolyG (cshiftG (i + 1) ([CField.one] : CPolyG α))))
+      = amG α (toPolyG ([a] : CPolyG α))
+        / amG α (toPolyG (cshiftG (i + 1) ([CField.one] : CPolyG α))) := by
+  have hspec := CRischFieldSpec.crischDESolve_spec (cLaurentShiftG η (-(i + 1 : ℤ))) a q hsolve
+  rw [toK_cLaurentShiftG_negCast] at hspec
+  simp only [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one,
+    map_one, mul_one]
+  rw [towerFractionFieldDerivG_div, hDt]
+  have hXpow : (Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η) * Polynomial.X)
+      (Polynomial.X ^ (i + 1)) : (CFieldSpec.K α)[X])
+      = ((i + 1 : ℕ) : (CFieldSpec.K α)[X]) * Polynomial.C (CFieldSpec.toK η) * Polynomial.X ^ (i + 1) := by
+    rw [Derivation.leibniz_pow, Differential.implicitDeriv_X, nsmul_eq_mul, Nat.add_sub_cancel]
+    push_cast; ring
+  have hqC : Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η) * Polynomial.X)
+      (Polynomial.C (CFieldSpec.toK q)) = Polynomial.C ((CFieldSpec.toK q)′) :=
+    Differential.implicitDeriv_C _ _
+  rw [hqC, hXpow]
+  have hAXne : amG α (Polynomial.X ^ (i + 1) : (CFieldSpec.K α)[X]) ≠ 0 :=
+    (map_ne_zero_iff (amG α) (RatFunc.algebraMap_injective _)).mpr
+      (pow_ne_zero _ Polynomial.X_ne_zero)
+  rw [show CFieldSpec.toK a = (CFieldSpec.toK q)′ + -((i : CFieldSpec.K α) + 1) * CFieldSpec.toK η
+      * CFieldSpec.toK q from hspec.symm]
+  simp only [map_add, map_mul, map_natCast, map_pow, map_neg, map_one]
+  field_simp
+  push_cast
+  ring
 
 end DeepWiki.SymbolicIntegration
