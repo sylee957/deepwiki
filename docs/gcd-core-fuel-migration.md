@@ -157,6 +157,25 @@ reverted (tree green at HEAD). Two lessons:
 - The base ops are now DEAD (no live runtime/soundness consumer — only their own entangled correctness web),
   so leaving them is harmless; the deletion is the "100%-fuel-free" completion, needing the closure approach.
 
+## ★★ BASE DELETION NARROWED TO ONE THEOREM (2nd attempt, reverted, but precise finding)
+Built the TRUE closure (after re-pointing the Field example's `cgcdExtG`→`cgcdWf`, the only non-base fuel'd-op
+use; the earlier 187-closure was a parser artifact attributing an anonymous `example` to the type `Lvl2`).
+The real closure = ~45 decls, ALL in base-cluster files. Executed the deletion (all fuel'd ops
+`cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore`/`cgcdFFGen` + instances + benchmarks + most fuel'd
+correctness) — **it BUILT CLEAN except ONE theorem**, then reverted (tree green).
+- ★ THE SINGLE BLOCKER: `associated_toGBPolyG_gbprimitivePartCore_of_correct` (GcdFFCorrect) — a Core/shared
+  PRS-correctness theorem whose PROOF uses `cgcdTerminatesG` (a fuel'd termination predicate) + the fuel'd
+  `associated_toPolyG_cgcdExtG` (base-case cgcdExtG correctness). It is consumed by `PrimPRSRegular`
+  (`CPrimPRSGenAssocReg`), which is used by the **Wf RDE soundness** (`RischDE/Structural`) — so it's
+  LIVE-reachable, not a dead leaf.
+- ★ COMPLETION = migrate THIS ONE theorem's proof off the fuel'd base: re-route its `ℚ`-base case from the
+  fuel'd `associated_toPolyG_cgcdExtG` (`toPolyG (cgcdExtG …) ~ gcd`) to the Wf `toPolyG_cgcdWf`
+  (`toPolyG (cgcdWf …) = resultant`/gcd, FuelFreeGcd) and drop the `cgcdTerminatesG` termination hypothesis
+  (cgcdWf is well-founded — no termination side-condition). Once its proof is fuel-free, the ~45-decl closure
+  deletes cleanly (verified: everything else built green). Then delete the now-empty classes `CFracGcdCore`
+  (GcdFFCore) + `CFracGcd` (GcdFF) — the block-remover doesn't match `class`, delete by hand.
+- REMOVER TOOL: `/tmp/deldecls.py <file> <names...>` (robust: strips docstrings, stops at next docstring open).
+
 ## Status after G6b: CLEAN WINS EXHAUSTED (superseded — see G5 above; more clean wins were found + landed)
 The entire fuel'd §5/§6 Tower API is retired (split-factor, canonical-rep, squarefree-split, residue engine,
 hyperexp driver). A full 0-consumer scan finds NO remaining clean fuel'd deletions. The three remaining
