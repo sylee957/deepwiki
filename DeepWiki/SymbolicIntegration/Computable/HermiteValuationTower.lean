@@ -155,4 +155,33 @@ theorem fracPair_foldl_sum {β : Type*} (glocOf : β → CPolyG α × CPolyG α)
         fracPair_add init.1 init.2 (glocOf x).1 (glocOf x).2 hinit hgx]
       ring
 
+variable [CFracGcdCoreWf α]
+
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- The `cHermiteReduceTowerGWf` rational part `⟦g⟧` reads as `Σ_{non-skipped factors} ⟦gloc⟧`, the
+guarded fold over `(cSqfreeYunFFGWf d).zipIdx` instantiating `fracPair_foldl_sum`. -/
+theorem cHermiteReduceTowerGWf_frac_eq_sum (Dt a d : CPolyG α)
+    (hden : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
+      toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+        ([CField.zero], [CField.one])).1.2 ≠ 0) :
+    amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.1)
+        / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2)
+      = (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+          (fun x => amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1
+                (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.1)
+            / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1)))
+                (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2))).sum := by
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  have hz : toPolyG ([CField.zero] : CPolyG α) = 0 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, mul_zero, add_zero, map_zero]
+  rw [cHermiteReduceTowerGWf]
+  simp only [toPolyG_cnormG]
+  rw [fracPair_foldl_sum
+    (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      ([CField.zero], [CField.one])).1)
+    (fun x => x.2 + 1 ≤ 1) (cSqfreeYunFFGWf d).zipIdx ([CField.zero], [CField.one])
+    (by rw [hone]; exact one_ne_zero) hden]
+  rw [hz, hone, map_zero, map_one, zero_div, zero_add]
+
 end DeepWiki.SymbolicIntegration
