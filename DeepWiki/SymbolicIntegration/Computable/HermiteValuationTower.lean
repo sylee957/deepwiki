@@ -253,4 +253,67 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPolyG α) (kelem : CPolyG α × �
   exact (glocFracG_isQRegularG Dt a d x (hV x hxmem)
     (hcop x (hkeptdef ▸ hx.2) hx.1)).deriv Dt
 
+/-- `Σ (g x / c) = (Σ g x) / c` over a list. -/
+theorem list_sum_map_div {β K : Type*} [Field K] (L : List β) (g : β → K) (c : K) :
+    (L.map (fun x => g x / c)).sum = (L.map g).sum / c := by
+  induction L with
+  | nil => simp
+  | cons hd tl ih =>
+    rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, add_div]
+
+/-- `Σ (c − g x) = n • c − Σ g x` over a list. -/
+theorem list_sum_map_const_sub {β M : Type*} [AddCommGroup M] (L : List β) (c : M) (g : β → M) :
+    (L.map (fun x => c - g x)).sum = L.length • c - (L.map g).sum := by
+  induction L with
+  | nil => simp
+  | cons hd tl ih =>
+    rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, List.length_cons,
+      succ_nsmul]
+    abel
+
+/-- **The total fold residual** (per-factor identities `hstep` given): `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` with
+`R = C(1−m)·a + Σ residNumG`, `m` the number of kept factors. Sums `D⟦g⟧ = Σ D⟦gloc⟧` using each
+factor's `hstep : D⟦gloc x⟧ = ⟦a/d⟧ − ⟦residNumG x /d⟧`. Tower analog of `total_fold_residual_over_D`. -/
+theorem total_fold_residual_tower (Dt a d : CPolyG α)
+    (residNumG : CPolyG α × ℕ → (CFieldSpec.K α)[X]) (hd : toPolyG d ≠ 0)
+    (hden : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
+      toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+        ([CField.zero], [CField.one])).1.2 ≠ 0)
+    (hstep : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      towerFractionFieldDerivG Dt (glocFracG Dt a d x)
+        = amG α (toPolyG a) / amG α (toPolyG d) - amG α (residNumG x) / amG α (toPolyG d)) :
+    amG α (toPolyG a) / amG α (toPolyG d)
+        - towerFractionFieldDerivG Dt
+            (amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.1)
+              / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2))
+      = amG α (Polynomial.C (1 - ((((cSqfreeYunFFGWf d).zipIdx.filter
+              (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPolyG a
+            + (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map residNumG).sum)
+        / amG α (toPolyG d) := by
+  set kept := (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)) with hkeptdef
+  have had : amG α (toPolyG d) ≠ 0 := amG_toPolyG_ne_zero hd
+  rw [cHermiteReduceTowerGWf_frac_eq_sum Dt a d hden, map_list_sum (towerFractionFieldDerivG Dt),
+    List.map_map, ← hkeptdef]
+  -- rewrite each `D⟦gloc⟧` via `hstep`, so the summed function is `a/d − residNum/d`.
+  have heq : (kept.map (⇑(towerFractionFieldDerivG Dt) ∘ fun x =>
+        amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1)))
+            (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.1)
+          / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1)))
+            (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2)))
+      = kept.map (fun x => amG α (toPolyG a) / amG α (toPolyG d)
+          - amG α (residNumG x) / amG α (toPolyG d)) := by
+    apply List.map_congr_left; intro x hx; exact hstep x hx
+  rw [heq, list_sum_map_const_sub]
+  -- `Σ (residNum x /d) = amG (Σ residNum) / d`.
+  have hsumdiv : (kept.map (fun x => amG α (residNumG x) / amG α (toPolyG d))).sum
+      = amG α (kept.map residNumG).sum / amG α (toPolyG d) := by
+    rw [list_sum_map_div, map_list_sum (amG α), List.map_map]; rfl
+  have hCcast : amG α (Polynomial.C (1 - (kept.length : CFieldSpec.K α)))
+      = 1 - (kept.length : RatFunc (CFieldSpec.K α)) := by
+    rw [amG, ← Polynomial.algebraMap_eq, ← IsScalarTower.algebraMap_apply, map_sub, map_one,
+      map_natCast]
+  rw [hsumdiv, nsmul_eq_mul, map_add, map_mul, hCcast]
+  field_simp
+  ring
+
 end DeepWiki.SymbolicIntegration
