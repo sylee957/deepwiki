@@ -105,4 +105,54 @@ theorem gloc_isQRegularG (Dt v u : CPolyG α) {Q : (CFieldSpec.K α)[X]} (hv : t
       rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], one_mul]
   exact ⟨_, _, by rw [hden]; exact pow_ne_zero N hv, by rw [hden]; exact hcop.pow_right, rfl⟩
 
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- Cross-multiplied fraction-pair addition reads as the fraction sum:
+`⟦(a₁·b₂ + b₁·a₂) / (a₂·b₂)⟧ = ⟦a₁/a₂⟧ + ⟦b₁/b₂⟧` (denominators nonzero). -/
+theorem fracPair_add (a1 a2 b1 b2 : CPolyG α) (ha2 : toPolyG a2 ≠ 0) (hb2 : toPolyG b2 ≠ 0) :
+    amG α (toPolyG (caddG (cmulG a1 b2) (cmulG b1 a2))) / amG α (toPolyG (cmulG a2 b2))
+      = amG α (toPolyG a1) / amG α (toPolyG a2) + amG α (toPolyG b1) / amG α (toPolyG b2) := by
+  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul,
+    div_add_div _ _ (amG_toPolyG_ne_zero ha2) (amG_toPolyG_ne_zero hb2)]
+  ring
+
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The guarded `gloc`-fold reads as a fraction sum.** The `cHermiteReduceTowerGWf` `g`-fold
+(`foldl` with `if skip then acc else acc + gloc`) denotes `⟦init⟧ + Σ_{non-skipped} ⟦gloc⟧`, given the
+seed and each non-skipped `gloc` have nonzero denominator. -/
+theorem fracPair_foldl_sum {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Prop)
+    [DecidablePred skip] :
+    ∀ (L : List β) (init : CPolyG α × CPolyG α), toPolyG init.2 ≠ 0 →
+      (∀ x ∈ L, ¬ skip x → toPolyG (glocOf x).2 ≠ 0) →
+      amG α (toPolyG (L.foldl (fun acc x => if skip x then acc
+              else (caddG (cmulG acc.1 (glocOf x).2) (cmulG (glocOf x).1 acc.2),
+                cmulG acc.2 (glocOf x).2)) init).1)
+          / amG α (toPolyG (L.foldl (fun acc x => if skip x then acc
+              else (caddG (cmulG acc.1 (glocOf x).2) (cmulG (glocOf x).1 acc.2),
+                cmulG acc.2 (glocOf x).2)) init).2)
+        = amG α (toPolyG init.1) / amG α (toPolyG init.2)
+          + ((L.filter (fun x => ¬ skip x)).map
+              (fun x => amG α (toPolyG (glocOf x).1) / amG α (toPolyG (glocOf x).2))).sum := by
+  intro L
+  induction L with
+  | nil => intro init _ _; simp
+  | cons x L ih =>
+    intro init hinit hden
+    rw [List.foldl_cons]
+    by_cases hs : skip x
+    · rw [if_pos hs, List.filter_cons_of_neg (by simp [hs]),
+        ih init hinit (fun y hy => hden y (List.mem_cons_of_mem _ hy))]
+    · have hgx : toPolyG (glocOf x).2 ≠ 0 := hden x (List.mem_cons_self ..) hs
+      have hnew : toPolyG (cmulG init.2 (glocOf x).2) ≠ 0 := by
+        rw [toPolyG_cmulG]; exact mul_ne_zero hinit hgx
+      rw [if_neg hs,
+        ih _ hnew (fun y hy => hden y (List.mem_cons_of_mem _ hy)),
+        List.filter_cons_of_pos (by simp [hs]), List.map_cons, List.sum_cons]
+      rw [show (caddG (cmulG init.1 (glocOf x).2) (cmulG (glocOf x).1 init.2),
+          cmulG init.2 (glocOf x).2).1 = caddG (cmulG init.1 (glocOf x).2)
+            (cmulG (glocOf x).1 init.2) from rfl,
+        show (caddG (cmulG init.1 (glocOf x).2) (cmulG (glocOf x).1 init.2),
+          cmulG init.2 (glocOf x).2).2 = cmulG init.2 (glocOf x).2 from rfl,
+        fracPair_add init.1 init.2 (glocOf x).1 (glocOf x).2 hinit hgx]
+      ring
+
 end DeepWiki.SymbolicIntegration
