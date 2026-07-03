@@ -337,4 +337,28 @@ theorem dvd_R_of_factor {vk R residNum_k : (CFieldSpec.K α)[X]}
   have h2 : vk ^ e ∣ residNum_k - (residNum_k - R) := dvd_sub hresk h1
   simpa using h2
 
+omit [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
+/-- **Discharge of M2's Bézout hypothesis** from the gcd coprimality of `(u·Dv, v)`: for every step
+`(j', A')`, `cdiophantineGWf`'s cofactors satisfy `b·(u·Dv) + c·v = −A'·C((j'+1)⁻¹)`. Uses
+`toPolyG_cdiophantineGWf`; the coprimality `gcd(u·Dv, v)` degree-0/nonzero is the input (from `v`
+squarefree + coprime to `u`). -/
+theorem cHermiteInner_hbez_of_gcd (Dt v u : CPolyG α)
+    (hqn : cnormG v ≠ [])
+    (hgdeg : (toPolyG (cgcdWf (cmulG u (cmonomialDeriv Dt v)) v).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (cmulG u (cmonomialDeriv Dt v)) v).1 ≠ 0) :
+    ∀ (j' : ℕ) (A' : CPolyG α),
+      toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+            (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).1
+          * (toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG v))
+        + toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+            (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).2 * toPolyG v
+      = -toPolyG A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹) := by
+  intro j' A'
+  have h := toPolyG_cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+    (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A') hqn hgdeg hgne
+  rw [toPolyG_cmulG, toPolyG_cmonomialDeriv] at h
+  rw [h, toPolyG_cscaleG, CFieldSpec.toK_neg, CFieldSpec.toK_inv, toK_cnatCastG_oneShot,
+    Nat.cast_add_one, Polynomial.C_neg]
+  ring
+
 end DeepWiki.SymbolicIntegration
