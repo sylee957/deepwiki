@@ -472,8 +472,8 @@ def benchQ2 (k : ℕ) : CPolyG Lvl2 := cmulG commonFactor2 (prod2B k)
 def benchFFGcd2 (k : ℕ) : CPolyG Lvl2 := CFracGcd.cgcdFFGen 60 (benchP2 k) (benchQ2 k)
 
 /-- The naive generic Euclidean gcd of the level-2 benchmark pair, monic-normalized (the swelling
-kernel). -/
-def benchExtGcd2 (k : ℕ) : CPolyG Lvl2 := CPolyG.cmonicG (CPolyG.cgcdExtG 60 (benchP2 k) (benchQ2 k)).1
+kernel); the fuel-free `cgcdWf` naive Euclidean, which swells identically. -/
+def benchExtGcd2 (k : ℕ) : CPolyG Lvl2 := CPolyG.cmonicG (CPolyG.cgcdWf (benchP2 k) (benchQ2 k)).1
 
 /-! ##### The level-2 swell measure — recursed through both fraction levels -/
 

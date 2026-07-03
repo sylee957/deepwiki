@@ -54,8 +54,9 @@ def benchQ (k : ℕ) : CPolyG (QFunNZG ℚ) := gBenchQ k
 `CFracGcd.cgcdFFGen`). -/
 def benchFFGcd (k : ℕ) : CPolyG (QFunNZG ℚ) := gBenchFFGcd k
 
-/-- The naive generic Euclidean gcd of the benchmark pair, monic-normalized (the swelling kernel). -/
-def benchExtGcd (k : ℕ) : CPolyG (QFunNZG ℚ) := cmonicG (cgcdExtG 60 (benchP k) (benchQ k)).1
+/-- The naive generic Euclidean gcd of the benchmark pair, monic-normalized (the swelling kernel);
+the fuel-free `cgcdWf` naive Euclidean over the fraction field, which swells identically. -/
+def benchExtGcd (k : ℕ) : CPolyG (QFunNZG ℚ) := cmonicG (cgcdWf (benchP k) (benchQ k)).1
 
 /-! ### The `qReduce`-in-the-loop gcd — the swell-control prototype at `α = QFunNZG ℚ`
 
