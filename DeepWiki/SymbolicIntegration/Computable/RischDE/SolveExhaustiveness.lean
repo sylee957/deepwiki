@@ -284,33 +284,8 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
     hbound := hbound
     hsolve := hsolveWf_of_exhaustiveResidualWf Dt fnum fden gnum gden hres }
 
-/-! ## Operational witnesses: the reachable exhaustiveness layers fire concretely (`native_decide`)
-
-The proven reachable layers are non-vacuous: on concrete *solvable* level-2 inputs the SPDE peel and the
-poly-RDE dispatcher genuinely return `some`, and the assembled `cRischDEG` succeeds — certified by
-`native_decide` over `ℚ(x)(t₁)`. These witness that `hsolve` is reached on real solvable RDEs, not
-vacuously. -/
-
-section OperationalWitnesses
-
-/-- **The assembled `cRischDEG` succeeds on the solvable `Dy = 1`** (`cRischDEG_isSome_Dy_eq_one`,
-`native_decide`): the integration RDE `Dy = 1` over `ℚ(x)(t₁)` is solvable (`y = t₁`), and the §6 solve
-`cRischDEG` returns `some` — the §6.4–6.6 exhaustiveness witnessed operationally on the pure-integration
-(`b = 0`) path that `cPolyRischDEG_isSome_of_bZero` covers. -/
-theorem cRischDEG_isSome_Dy_eq_one :
-    (cRischDEG ([CField.one] : CPolyG (QFunNZG ℚ)) towerRischDEFuel
-      (CField.zero : Lvl2).1.1 (CField.zero : Lvl2).1.2
-      (CField.one : Lvl2).1.1 (CField.one : Lvl2).1.2).isSome = true := by native_decide
-
-/-- **The assembled `cRischDEG` succeeds on the solvable `Dy + y = t₁ + 1`** (`cRischDEG_isSome_Dy_plus_y`,
-`native_decide`): the cancellation-path RDE `Dy + y = t₁ + 1` over `ℚ(x)(t₁)` is solvable (`y = t₁`), and the
-§6 solve `cRischDEG` returns `some` — exhaustiveness on the §6.6 primitive-cancellation path (`f = 1 ≠ 0`, so
-the SPDE peel + cancellation recursion run, not just integration). -/
-theorem cRischDEG_isSome_Dy_plus_y :
-    (cRischDEG ([CField.one] : CPolyG (QFunNZG ℚ)) towerRischDEFuel
-      (CField.one : Lvl2).1.1 (CField.one : Lvl2).1.2
-      towerRdeLvl2GPlusOne.1.1 towerRdeLvl2GPlusOne.1.2).isSome = true := by native_decide
-
-end OperationalWitnesses
+/-! The former `native_decide` operational witnesses were stated over the fuel'd `cRischDEG`; that oracle
+was retired by the fuel-free switch (`Tower/RischDEInstance.lean`), and equivalent fuel-free validations live
+in `Tower/RischDEInstance.lean` (`towerRdeGWf_solves_*`). -/
 
 end DeepWiki.SymbolicIntegration
