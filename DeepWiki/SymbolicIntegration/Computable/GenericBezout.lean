@@ -40,29 +40,6 @@ def cfpow (c : α) : ℕ → α
   | 0 => CField.one
   | n + 1 => CField.mul c (cfpow c n)
 
-/-- Generic univariate resultant `cresultantG fuel p q = res(p, q) ∈ α`, fuel-bounded, via the
-Euclidean polynomial-remainder-sequence identity over `[CField α]`. With `r = p mod q`, `dp = deg p`,
-`dq = deg q`, `dr = deg r`: `res(p, q) = (−1)^(dp·dq)·lc(q)^(dp − dr)·res(q, r)`, bottoming out at
-`res(p, c) = c^(deg p)` for a constant `q = c`, `res(p, 0) = 1` if `p` constant else `0`.
-`fuel ≥ deg p + deg q` is safe. -/
-def cresultantG : ℕ → CPolyG α → CPolyG α → α
-  | 0, _, _ => CField.zero
-  | fuel + 1, p, q =>
-    let p := cnormG p
-    let q := cnormG q
-    if cisZeroG q then
-      if (p : List α).length ≤ 1 then CField.one else CField.zero
-    else if (q : List α).length ≤ 1 then
-      cfpow (cleadG q) (cdegG p)
-    else if (p : List α).length < (q : List α).length then
-      let s := cfpow (CField.neg CField.one) (cdegG p * cdegG q)
-      CField.mul s (cresultantG fuel q p)
-    else
-      let r := cnormG (cmodG (fuel + 1) p q)
-      let sign := cfpow (CField.neg CField.one) (cdegG p * cdegG q)
-      let lcpow := cfpow (cleadG q) (cdegG p - cdegG r)
-      CField.mul (CField.mul sign lcpow) (cresultantG fuel q r)
-
 /-! ### Generic Lagrange interpolation over a `CField`
 
 `cinterpolateG pts = R(z) ∈ CPolyG α` with `R(zₖ) = yₖ`, over a field `α`

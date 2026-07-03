@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 
 /-! # Arbitrary-depth differential towers: the generic fraction field `QFunNZG α`
 This file builds an arbitrary-depth **tower** of differential fields ℚ ⊂ ℚ(x) ⊂ ℚ(x)(t₁) ⊂ … as one
@@ -426,7 +427,7 @@ example :
 executes end to end at **tower level 2**. -/
 example :
     CField.isZero
-      (CPolyG.cresultantG 8 [(CField.zero : Lvl2), CField.one] [CField.one, CField.one]) = false := by
+      (CPolyG.cresultantWf [(CField.zero : Lvl2), CField.one] [CField.one, CField.one]) = false := by
   native_decide
 
 /-- **The level-2 sum of two genuine ℚ(x)(t₁) scalars reduces**: building `c₁ + c₂` where `c₁ = 1/1`
