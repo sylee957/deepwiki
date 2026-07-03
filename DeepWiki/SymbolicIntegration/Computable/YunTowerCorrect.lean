@@ -205,4 +205,59 @@ theorem YunInv_smul {K : Type*} [Field K] (A : K[X]) (i : ℕ) {b d : K[X]}
   exact ⟨e * c, mul_ne_zero he hc, by rw [hb, ← mul_assoc, ← Polynomial.C_mul],
     by rw [hd, ← mul_assoc, ← Polynomial.C_mul]⟩
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The tower Yun entry satisfies the abstract invariant.** For `A = toPolyG p ≠ 0` with primitive
+part `≠ 0`, the entry pair `(p/g, p′/g − (p/g)′)` (`g = cgcdFFCoreWf p p′`) satisfies
+`YunInv A 1` — it is `C(k⁻¹)·` the `yunInv_base` pair, where `toPolyG g = C k·gcd(A, A′)`. Launches the
+`yunLoopAbs_forall₂` correspondence. -/
+theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0) :
+    YunInv (toPolyG p) 1
+      (toPolyG (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p))))
+      (toPolyG (csubG (cdivWf (cderivG p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)))
+        (cderivG (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)))))) := by
+  set A := toPolyG p with hAdef
+  set g := CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p) with hgdef
+  have hA'poly : toPolyG (cderivG p) = derivative A := by rw [toPolyG_cderivG, hAdef]
+  set G := gcd A (derivative A) with hGdef
+  have hG0 : G ≠ 0 := fun h => hp0 (zero_dvd_iff.mp (h ▸ gcd_dvd_left A (derivative A)))
+  -- `toPolyG g ~ G`, hence `toPolyG g = C k · G` for a unit `k`.
+  have hassoc : Associated (toPolyG g) G := by
+    have := hgcd p (cderivG p); rwa [hA'poly] at this
+  obtain ⟨u, hu⟩ := hassoc.symm
+  obtain ⟨k, hkunit, hkC⟩ := Polynomial.isUnit_iff.mp u.isUnit
+  have hk0 : k ≠ 0 := isUnit_iff_ne_zero.mp hkunit
+  have hgval : toPolyG g = Polynomial.C k * G := by rw [← hu, ← hkC]; ring
+  -- divisibility of `toPolyG g` into `A` and `A′`.
+  have hgn : cnormG g ≠ [] := by
+    intro h
+    exact hG0 (zero_dvd_iff.mp (((cisZeroG_iff g).mp (by simp [cisZeroG, h])) ▸ hassoc.dvd))
+  have hgA : toPolyG g ∣ A := hassoc.dvd.trans (gcd_dvd_left A (derivative A))
+  have hgA' : toPolyG g ∣ derivative A :=
+    hassoc.dvd.trans (gcd_dvd_right A (derivative A))
+  -- the two scaling equalities: `b₁ = C(k⁻¹)·(A/G)`, first residual term `q′ = C(k⁻¹)·(A′/G)`.
+  have hkinv : Polynomial.C k⁻¹ * Polynomial.C k = 1 := by
+    rw [← Polynomial.C_mul, inv_mul_cancel₀ hk0, Polynomial.C_1]
+  -- from `q · toPolyG g = x`: `x/G = q · C k`.
+  have hb1ex : toPolyG (cdivWf p g) * toPolyG g = A := toPolyG_cdivWf_exact p g hgn hgA
+  have hq'ex : toPolyG (cdivWf (cderivG p) g) * toPolyG g = derivative A := by
+    have h := toPolyG_cdivWf_exact (cderivG p) g hgn (by rw [hA'poly]; exact hgA')
+    rwa [hA'poly] at h
+  have hAG : A / G = toPolyG (cdivWf p g) * Polynomial.C k :=
+    (eq_ediv_of_mul_eq hG0 (by rw [← hb1ex, hgval]; ring)).symm
+  have hA'G : derivative A / G = toPolyG (cdivWf (cderivG p) g) * Polynomial.C k :=
+    (eq_ediv_of_mul_eq hG0 (by rw [← hq'ex, hgval]; ring)).symm
+  have heqb : toPolyG (cdivWf p g) = Polynomial.C k⁻¹ * (A / G) := by
+    rw [hAG, show Polynomial.C k⁻¹ * (toPolyG (cdivWf p g) * Polynomial.C k)
+        = toPolyG (cdivWf p g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring, hkinv, mul_one]
+  -- assemble `d₁`.
+  have heqd : toPolyG (csubG (cdivWf (cderivG p) g) (cderivG (cdivWf p g)))
+      = Polynomial.C k⁻¹ * (derivative A / G - derivative (A / G)) := by
+    rw [toPolyG_csubG, toPolyG_cderivG, heqb, derivative_C_mul, mul_sub, hA'G,
+      show Polynomial.C k⁻¹ * (toPolyG (cdivWf (cderivG p) g) * Polynomial.C k)
+        = toPolyG (cdivWf (cderivG p) g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring,
+      hkinv, mul_one]
+  rw [heqb, heqd]
+  exact YunInv_smul A 1 (yunInv_base A hp0 hpp) (inv_ne_zero hk0)
+
 end DeepWiki.SymbolicIntegration
