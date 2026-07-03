@@ -54,13 +54,16 @@ This is the painful part (foldr + reversed lists + negative-index arithmetic); i
 - [x] **M1 — polynomial-image bridge DONE** (`towerFractionFieldDerivG_amG_poly`, commit a5033ae5):
   `D_tower(⟦p⟧) = ⟦cmonomialDeriv Dt p⟧` in three rewrites (`towerFractionFieldDerivG`,
   `extendDeriv_algebraMap`, `toPolyG_cmonomialDeriv`).
-- [ ] M2 — single-term identity `cIntegrateHyperexpLaurent_pos_term` (attempted; the proof skeleton works:
-  `towerFractionFieldDerivG_amG_poly` → `congr 1` → poly identity via `Derivation.leibniz` +
-  `implicitDeriv_C` + `Derivation.leibniz_pow` + `implicitDeriv_X` + `CRischFieldSpec.crischDESolve_spec`).
-  **Two concrete blockers to finish:** (1) `toK_cnatCastG` lives inside the `RadElem` namespace
-  (`RadElem.toK_cnatCastG`) — qualify it, or prove `toK (cnatCastG k) = k` inline; the `natAbs` step is
-  `Int.natAbs_natCast` + `if_neg (Int.not_lt.mpr (Int.natCast_nonneg k))`. (2) `Derivation.leibniz_pow`
-  yields `X^(k-1)`, so the final ring step needs `cases k` (`zero`: the `↑k` factor kills the shift term;
-  `succ m`: `Nat.succ_sub_one` + `pow_succ`), then `map_add`/`map_mul` to push `C` through the sum and
-  `push_cast; ring`. State: `Dt = C(toK η)·X` hypothesis, `k : ℕ` (non-negative power only).
-- [ ] M3 — sum assembly → `hLaurField` discharged (the foldr/negative-index bookkeeping)
+- [x] **M2 — single-term identity DONE for BOTH signs** (commits f43a297b, d5a61c32):
+  - `cIntegrateHyperexpLaurent_pos_term` (`k : ℕ`): `D_tower(⟦qₖtᵏ⟧) = ⟦aₖtᵏ⟧` — M1 bridge →
+    `Derivation.leibniz`/`leibniz_pow` + `implicitDeriv_C`/`_X` + `crischDESolve_spec`, closed by
+    `cases k` + `pow_succ` + `push_cast`/`ring`.
+  - `cIntegrateHyperexpLaurent_neg_term` (`-(i+1)`): `D_tower(⟦q·t^{-(i+1)}⟧) = ⟦a·t^{-(i+1)}⟧` — the
+    fraction case via `towerFractionFieldDerivG_div` (quotient rule) + `implicitDeriv` on `C`/`X^(i+1)` +
+    the negative-shift RDE, closed by `field_simp`/`push_cast`/`ring`.
+  - Supporting: `toK_cnatCastG_laurent` (inline), `toK_cLaurentShiftG_{nat,neg}Cast`.
+  Both take the `Dt = C(toK η)·X` hypothesis (the hyperexp monomial).
+- [ ] M3 — sum assembly → `hLaurField` discharged. Remaining: `num = negCoeffs.reverse ++ posCoeffs`,
+  `den = tᵐ`; express `⟦num/den⟧ = ∑ⱼ ⟦qⱼ·tʲ⟧`, sum the M2 identities over the `Option`-`foldr`
+  (`negQ`/`posQ`) structure by induction, and relate `∑ⱼ ⟦aⱼtʲ⟧` to the Laurent integrand `⟦fp + b/dₛ⟧`.
+  The genuinely list-heavy induction; both per-term identities it needs are now proven.
