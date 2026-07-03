@@ -33,18 +33,25 @@ Diophantine solver already has its correctness lemma `toPolyG_cdiophantineGWf`
 (`b·p + c·q = rhs`), which supplies M1's `hrel` at each loop step (with `p = u·Dv`, `q = v`,
 `rhs = -a/(j+1)`) modulo the coprimality side-conditions `gcd(u·Dv, v)` degree-0 + nonzero.
 
-### M2 — the inner-loop field identity (the per-factor `hstep`) — PENDING
-Port `hermiteInner_spec_acc` (HermiteCorrectness:238, a ~60-line induction over the downward counter)
-to `cHermiteReduceTowerInnerWf` (FuelFreeDiophantine:220, fuel-free — so induct on `j` directly, no
-fuel). At counter `j+1`: extract `(b,c) = cdiophantineGWf (u·Dv) v (-a/(j+1))`, establish the Bézout
-relation via `toPolyG_cdiophantineGWf` (carrying the coprimality side-conditions as hypotheses — they
-come from Yun, M3), apply M1, and telescope with the accumulator fraction
-`g' = (g.1·V^{j+1} + b·g.2, g.2·V^{j+1})`.
+### M2 — the inner-loop field identity (the per-factor `hstep`) ✓ DONE (2385ec0e)
+`cHermiteReduceTowerInnerWf_spec_acc` (`Computable/HermiteTowerStep.lean`). Accumulator-general inner
+loop invariant, a faithful port of `hermiteInner_spec_acc` to the fuel-free Wf tower loop
+(FuelFreeDiophantine:220 — induct on the counter `j` directly, no fuel):
 
-Deliverable shape: the per-factor identity `D_tower(⟦gloc⟧) = ⟦a/(u·v^i)⟧ - ⟦a_final/u⟧`, which is
-exactly the `hstep` element that `cHermiteReduceTowerG_telescope_seed`
-(NormalPartSoundness:175) consumes. Needs first: a `fieldFrac`-add lemma for the `CPolyG × CPolyG`
-accumulator (the `toQFun_qadd` analog), then the induction.
+    ⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧)  =  D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧.
+
+At counter `j+1`: extract `(B,C) = cdiophantineGWf (u·Dv) v (-A/(j+1))`, feed the Bézout relation to M1
+(`towerFractionFieldDerivG_hermite_step`), telescope via the accumulator fraction-add
+`fieldFrac_step_add` (`⟦(g₁·Vpow+B·g₂)/(g₂·Vpow)⟧ = ⟦g₁/g₂⟧ + ⟦B/Vpow⟧`) and the derivation's
+`map_add`. Close with `linear_combination hstep + ihA`. GOTCHAS: `map_add` must be `rw`'d on `ihA`
+*before* `hA'eq` introduces `Polynomial.C (↑j+1)` (else it splits `C(↑j+1)` into `C↑j + C 1`, which
+`ring` treats as a distinct atom); `toK_cnatCastG_oneShot` gives `↑(j+1)` needing `Nat.cast_add_one`
+to match M1's `↑j+1`; the Bézout hypothesis is stated in already-mapped polynomial form (M3 discharges
+it via `toPolyG_cdiophantineGWf`, carrying the coprimality side-conditions from Yun).
+
+Specializing `g = (0,1)` (⟦0⟧=0) gives the per-factor identity `D_tower(⟦gloc⟧) = ⟦A/(u·v^(j+1))⟧ −
+⟦a_final/(u·v)⟧`, which is exactly the `hstep` element `cHermiteReduceTowerG_telescope_seed`
+(NormalPartSoundness:175) consumes.
 
 ### M3 — Yun `cSqfreeYunFFGWf` correctness + multi-factor assembly — PENDING (deepest)
 The factor list from `cSqfreeYunFFGWf` must be shown to (a) multiply back to `d`, (b) be pairwise
@@ -56,9 +63,10 @@ multi-session piece and the deepest of the three.
 ## Status
 
 - [x] **M1 DONE** (b885089a) — tower single-step Hermite identity.
-- [ ] M2 — inner-loop invariant (faithful port of `hermiteInner_spec_acc`; ~80 lines + accumulator
-  add-lemma).
-- [ ] M3 — Yun correctness + assembly (deepest; separate algorithm).
+- [x] **M2 DONE** (2385ec0e) — inner-loop invariant + `fieldFrac_step_add`.
+- [ ] M3 — Yun correctness + multi-factor assembly (deepest; separate algorithm). Remaining bridge:
+  specialize M2 at `g = (0,1)`, match the telescope's `(L₀::rest).zip rest` before/after pair encoding,
+  and discharge the Bézout coprimality side-conditions from Yun factor squarefreeness/coprimality.
 
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
 matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
