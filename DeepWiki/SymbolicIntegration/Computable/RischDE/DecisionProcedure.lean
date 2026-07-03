@@ -13,17 +13,14 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-/-! ## Inner frontier
-
-Bundles the normal-denominator, degree-bound, and solver-exhaustiveness residuals into the
-inner-completeness frontier. -/
+/-! ## Inner frontier -/
 
 section InnerFrontierWf
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
   [CRischField α]
 
-/-- The §6 inner-completeness frontier: the three residual clauses feeding `RischDEInnerCompletenessWf`. -/
+/-- The inner-completeness frontier: the three residual clauses feeding `RischDEInnerCompletenessWf`. -/
 structure RischDEInnerDecisionFrontierWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
   /-- Normal-denominator divisibility residual. -/
   hnorm : RdeNormalDivisibilityResidualWf Dt fnum fden gnum gden
@@ -54,19 +51,14 @@ example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec
 
 end InnerFrontierWf
 
-/-! ## Wf inner input and decision frontier
-
-The field-level Wf residual uses the weak-normalized, reduced pair passed to `crischDERawSolveWf`. Naming that
-pair lets the decision-procedure frontier talk about the inner `cRischDEGWf` proof obligation directly, without
-restating the §6.1 normalization expression at every field. -/
+/-! ## Inner input and decision frontier -/
 
 section InnerInputWf
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
-/-- **The Wf inner RDE input pair**: after fuel-free weak normalization by `q`, reduce the transformed
-left-hand side and pair it with `q * g`, exactly as `crischDESolveSoundWf` does before calling
-`crischDERawSolveWf`. -/
+/-- The inner RDE input pair: after weak normalization by `q`, the reduced transformed left-hand side
+paired with `q * g`, as `crischDESolveSoundWf` forms it before calling `crischDERawSolveWf`. -/
 def rischDEInnerInputWf (f g : QFunNZG β) : QFunNZG β × QFunNZG β :=
   let q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
   let q' : QFunNZG β := qOfPolyNZG q
@@ -74,48 +66,38 @@ def rischDEInnerInputWf (f g : QFunNZG β) : QFunNZG β × QFunNZG β :=
 
 end InnerInputWf
 
-/-! ## ★ The Wf field-level decision-procedure frontier and the CAPSTONE
-
-The field-level decision procedure now targets `crischDESolveSoundWf`, the fuel-free executable wrapper.
-`crischDESolveSoundWf_decides_of_residualWf` consumes the Wf-native residual
-`RischDECompletenessResidualWf f g`, whose clauses are stated directly against `cWeakNormalizerGWf` and
-`crischDERawSolveWf`. The public frontier below states those clauses through the Wf inner input and a direct
-`RischDEInnerCompletenessWf` proof, then derives the residual consumed by the capstone:
-`some ⟺ solvable` for the fuel-free solver. The completeness direction is Wf-native; the soundness direction
-is supplied by the direct `RischDESoundnessWf` certificate. -/
+/-! ## The field-level decision-procedure frontier and capstone -/
 
 section Capstone
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
-/-- **The Wf decision-procedure frontier** `RischDEDecisionProcedureFrontierWf f g`: a field-level frontier
-whose inner clause is stated through the fuel-free inner API. Besides the two §6.1 completeness clauses
-(`hwn`, `hck`), it supplies a polynomial solution for the Wf inner input, a
-`RischDEInnerCompletenessWf` proof for that input, and the denominator guard needed to lift
-`cRischDEGWf = some _` through `crischDERawSolveWf`. -/
+/-- `RischDEDecisionProcedureFrontierWf f g`: the field-level frontier — nonzero weak normalizer (`hwn`),
+canonical-normality (`hck`), a polynomial solution for the inner input (`hpolysol`), an inner-completeness
+proof (`hinner`), and the denominator guard (`hden`). -/
 structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
-  /-- §6.1/Wf: a solvable RDE has a nonzero fuel-free weak normalizer. -/
+  /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : FieldRDESolvable f g →
     CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
-  /-- §6.1/Wf: a solvable RDE satisfies the fuel-free canonical-normality guarantee. -/
+  /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
     IsCanonNormalizedWf f
       (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))
-  /-- A solvable field RDE has a polynomial solution for the Wf inner input. -/
+  /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     ∃ ynum yden,
       IsCRischDEGPolySol ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
         gtilde.1.1 gtilde.1.2 ynum yden
-  /-- The Wf inner completeness proof for the weak-normalized, reduced input pair. -/
+  /-- The inner-completeness proof for the weak-normalized, reduced input pair. -/
   hinner : FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     RischDEInnerCompletenessWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2
       gtilde.1.1 gtilde.1.2
-  /-- The returned denominator of a successful Wf inner solve is nonzero. -/
+  /-- The returned denominator of a successful inner solve is nonzero. -/
   hden : FieldRDESolvable f g → ∀ ynum yden : CPolyG β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
@@ -123,7 +105,7 @@ structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
         = some (ynum, yden) →
       CPolyG.cisZeroG yden = false
 
-/-- **Assemble the field-level Wf frontier from its Wf inner residual-tip frontier.** -/
+/-- Assemble the field-level frontier from its inner residual-tip frontier. -/
 theorem decisionProcedureFrontierWf_of_innerFrontier (f g : QFunNZG β)
     (hwn : FieldRDESolvable f g →
       CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false)
@@ -158,8 +140,8 @@ theorem decisionProcedureFrontierWf_of_innerFrontier (f g : QFunNZG β)
       (hinnerFront hsol)
   hden := hden
 
-/-- **The Wf frontier produces the Wf completeness residual**: the `hinner` residual clause is
-obtained by feeding the Wf inner-completeness proof through the raw fuel-free solver bridge. -/
+/-- The frontier produces `RischDECompletenessResidualWf`: the `hinner` clause comes from feeding the
+inner-completeness proof through the raw-solver bridge. -/
 theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
     (h : RischDEDecisionProcedureFrontierWf f g) :
     RischDECompletenessResidualWf f g where
@@ -172,14 +154,8 @@ theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
         (h.hinner hsol)
         (h.hpolysol hsol) (h.hden hsol))
 
-/-- **★★ The CAPSTONE — `crischDESolveSoundWf` is a VERIFIED DECISION PROCEDURE**
-(`crischDESolveSoundWf_isDecisionProcedure`): under the Wf-native frontier
-`RischDEDecisionProcedureFrontierWf f g` and the direct Wf soundness certificate
-`RischDESoundnessWf f g`, the fuel-free recursive solver returns `some` **iff** the field-level Risch DE is
-solvable — `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`.
-
-The `←` half is Wf-native (`crischDESolveSoundWf_complete_of_residualWf`). The `→` half is the existing
-fuel-free soundness wrapper `crischDESolveSoundWf_imp_solvable`, which consumes `RischDESoundnessWf`. -/
+/-- Under `RischDEDecisionProcedureFrontierWf f g` and `RischDESoundnessWf f g`, the recursive solver returns
+`some` iff the field-level Risch DE is solvable — `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`. -/
 theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
     (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :
@@ -201,26 +177,7 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 end Capstone
 
-/-! ### Final verdict (stated precisely)
-
-**Is `crischDESolveSoundWf` a verified decision procedure?** **YES — `some ⟺ solvable`, modulo the
-Wf-native §6 frontier and the direct Wf soundness certificate.**
-`crischDESolveSoundWf_isDecisionProcedure` proves
-`crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g` under the Wf consolidated frontier
-`RischDEDecisionProcedureFrontierWf f g` and `RischDESoundnessWf f g`. The `←` (completeness) is Wf-native
-through `crischDESolveSoundWf_complete_of_residualWf`; the `→` (soundness) is the direct
-`crischDESolveSoundWf_field` certificate application.
-
-`rischDEInnerCompletenessWf_of_decisionFrontierWf` assembles the fuel-free inner map through
-`RdeNormalDivisibilityResidualWf`, `RdeBoundCancellationResidualWf`, and
-`RischDESolveExhaustiveResidualWf`. The public Wf capstone consumes
-`RischDEInnerCompletenessWf` directly through the field-level frontier, then uses the §6.1 `hwn`/`hck` plus
-the Wf inner-input clauses through `RischDECompletenessResidualWf`. The lift of Wf inner completeness into
-the raw-solver `hinner` clause is encoded in
-`completenessResidualWf_of_decisionProcedureFrontierWf`. -/
-
-/-! ### Axiom audit (the Wf capstone and inner-frontier assembly are axiom-clean;
-NO `native_decide`, NO `sorry`) -/
+/-! ### Axiom audit -/
 
 #print axioms crischDESolveSoundWf_isDecisionProcedure
 #print axioms decisionProcedureFrontierWf_of_innerFrontier

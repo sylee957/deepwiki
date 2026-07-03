@@ -2,23 +2,10 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import Mathlib.LinearAlgebra.Lagrange
 
-/-! # Correctness of the computable Rothstein–Trager resultant (`rtResultantCompute ↔ rtResultant`)
-The computable `rtResultantCompute` (`RtResultantCompute`) recovers the bivariate Rothstein–Trager
-resultant `R(t) = res_x(D, A − t·D')` by **evaluation + Lagrange interpolation** on `CPoly = List ℚ`.
-This file proves it realizes the noncomputable `rtResultant` (`RationalIntegrationAlgorithms`) through
-the `toPoly` bridge, on all inputs:
-
-* `cinterpolate` correctness: `toPoly (cinterpolate pts)` evaluates to `yₖ` at `xₖ` and has degree
-  `< #pts` (`toPoly_cinterpolate_eval`, `natDegree_toPoly_cinterpolate_lt`), via the Lagrange-basis
-  numerator `clagNum`.
-* point-agreement: `cresultant fuel D (A − aₖ·D')` is the specialization of `rtResultant` at `aₖ`
-  (`cresultant_eq` + `rtResultant_eval`, `cresultant_sample_eq_eval`).
-* `toPoly_rtResultantCompute_eq_rtResultant`: the two polynomials agree (degree `< deg D + 1`, equal at
-  `deg D + 1` nodes, hence equal by `Lagrange.eq_of_degrees_lt_of_eval_index_eq`).
-
-It also provides the reusable base-change lemmas (`rtResultant_map_of_injective`,
-`rootMultiplicity_C_mul_pow_of_separable`, `lrtSubresultant_map_of_injective`,
-`map_eval_lrtSubresultant_map`) used to establish residue regularity. -/
+/-! # Correctness of the computable Rothstein–Trager resultant
+`rtResultantCompute` recovers the bivariate resultant `res_x(D, A − t·D')` by evaluation and Lagrange
+interpolation on `CPoly = List ℚ`; this file proves it realizes `rtResultant` through the `toPoly`
+bridge, plus the base-change lemmas used for residue regularity. -/
 
 open Polynomial
 
@@ -87,17 +74,15 @@ theorem eval_term_poly (xk yk x : ℚ) (others : List ℚ) :
   intro xj _
   simp [Function.comp, eval_sub, eval_X, eval_C]
 
-/-- **Eval of a Lagrange term at its own node**: the `cinterpolate` term for `(xk, yk)`, with
-`others` the abscissas distinct from `xk`, evaluates to `yk` at `xk` (the denominator is the same
-product, and is nonzero since each `xⱼ ≠ xk`). -/
+/-- The `cinterpolate` term for `(xk, yk)` (with `others` the abscissas `≠ xk`) evaluates to `yk` at
+`xk`. -/
 theorem eval_term_at_self (xk yk : ℚ) (others : List ℚ) (hne : ∀ xj ∈ others, xj ≠ xk) :
     (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
         (clagNum others))).eval xk = yk := by
   rw [eval_term_poly, div_mul_cancel₀]
   exact prod_sub_ne_zero hne
 
-/-- **Eval of a Lagrange term at another node `x ∈ others`** is `0`: the numerator product
-`∏_{xⱼ ∈ others}(x − xⱼ)` contains the vanishing factor `(x − x)`. -/
+/-- The `cinterpolate` term evaluates to `0` at another node `x ∈ others`. -/
 theorem eval_term_at_other (xk yk x : ℚ) (others : List ℚ) (hx : x ∈ others) :
     (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
         (clagNum others))).eval x = 0 := by
@@ -153,9 +138,8 @@ theorem sum_ite_eq_of_nodup_fst (pts : List (ℚ × ℚ)) (hnodup : (pts.map Pro
       rw [if_neg hp1, zero_add]
       exact ih hpsnodup hpps
 
-/-- **`cinterpolate` evaluation correctness**: for a points list with **distinct abscissas**, the
-interpolant evaluates to `yk` at each node `xk` — `R(xk) = yk` for `(xk, yk) ∈ pts`. The on-node term
-contributes `yk`, every off-node term vanishes (its numerator contains the factor `(xk − xk)`). -/
+/-- `cinterpolate` correctness: with distinct abscissas, the interpolant evaluates to `yk` at each node
+`(xk, yk) ∈ pts`. -/
 theorem toPoly_cinterpolate_eval (pts : List (ℚ × ℚ)) (hnodup : (pts.map Prod.fst).Nodup)
     {xk yk : ℚ} (hmem : (xk, yk) ∈ pts) :
     (toPoly (cinterpolate pts)).eval xk = yk := by
@@ -186,8 +170,7 @@ theorem toPoly_cinterpolate_eval (pts : List (ℚ × ℚ)) (hnodup : (pts.map Pr
   rw [List.map_congr_left key]
   exact sum_ite_eq_of_nodup_fst pts hnodup hmem
 
-/-- **Per-term degree bound**: each `cinterpolate` term `C(yk/denom)·∏_{xⱼ ∈ others}(X − C xⱼ)` has
-`natDegree ≤ |others|` (the numerator is a product of `|others|` linear factors). -/
+/-- Each `cinterpolate` term has `natDegree ≤ |others|`. -/
 theorem natDegree_cinterpTerm_le (xs : List ℚ) (p : ℚ × ℚ) :
     (toPoly (cinterpTerm xs p)).natDegree ≤ (xs.filter (· != p.1)).length := by
   obtain ⟨a, b⟩ := p
@@ -207,10 +190,7 @@ theorem natDegree_cinterpTerm_le (xs : List ℚ) (p : ℚ × ℚ) :
 theorem length_filter_le' (l : List ℚ) (q : ℚ → Bool) : (l.filter q).length ≤ l.length :=
   List.length_filter_le q l
 
-/-- **`cinterpolate` degree bound**: the interpolant has degree `< |pts|`. Each term has degree
-`≤ |others| = |pts.map fst| − (number of entries equal to xk) ≤ |pts| − 1`, since `xk` appears in the
-abscissa list and is filtered out. The bound that, with the `|pts|` node values, determines the
-interpolant uniquely. -/
+/-- `cinterpolate` degree bound: the interpolant has degree `< |pts|`. -/
 theorem degree_toPoly_cinterpolate_lt (pts : List (ℚ × ℚ)) (hne : pts ≠ []) :
     (toPoly (cinterpolate pts)).degree < (pts.length : WithBot ℕ) := by
   rw [toPoly_cinterpolate]
@@ -234,9 +214,7 @@ theorem degree_toPoly_cinterpolate_lt (pts : List (ℚ × ℚ)) (hne : pts ≠ [
 /-! ### Degree bound for a determinant with column-degree bounds, and for `rtResultant` -/
 
 open Polynomial in
-/-- **`natDegree` of a `ℚ[X]`-matrix determinant** is bounded by the sum of per-column degree
-bounds: if every entry of column `j` has `natDegree ≤ b j`, then `natDegree (det M) ≤ ∑ j, b j`. Each
-`det` term is a product of one entry per column, so its degree is `≤ ∑ b j`. -/
+/-- If every entry of column `j` has `natDegree ≤ b j`, then `natDegree (det M) ≤ ∑ j, b j`. -/
 theorem natDegree_det_le_sum_col {ι : Type*} [DecidableEq ι] [Fintype ι]
     (M : Matrix ι ι ℚ[X]) (b : ι → ℕ) (hb : ∀ i j, (M i j).natDegree ≤ b j) :
     (M.det).natDegree ≤ ∑ j, b j := by
@@ -251,8 +229,7 @@ theorem natDegree_det_le_sum_col {ι : Type*} [DecidableEq ι] [Fintype ι]
   exact Finset.sum_le_sum (fun i _ => hb (σ i) i)
 
 open Polynomial in
-/-- **Coefficient of the `rtResultant` second polynomial has `t`-degree `≤ 1`**: each `t`-coefficient
-of `A.map C − C X · D'.map C` is `C (A.coeff k) − X · C (D'.coeff k)`, degree `≤ 1` in `t`. -/
+/-- Each `t`-coefficient of `A.map C − C X · D'.map C` has `natDegree ≤ 1`. -/
 theorem natDegree_coeff_rtResultant_g_le (A D : ℚ[X]) (k : ℕ) :
     ((A.map (C : ℚ →+* ℚ[X]) - C Polynomial.X * (derivative D).map (C : ℚ →+* ℚ[X])).coeff
       k).natDegree ≤ 1 := by
@@ -264,10 +241,7 @@ theorem natDegree_coeff_rtResultant_g_le (A D : ℚ[X]) (k : ℕ) :
     rw [Polynomial.natDegree_X, Polynomial.natDegree_C]
 
 open Polynomial in
-/-- **`rtResultant` has degree `≤ deg D` in `t`**: the Sylvester matrix of `D.map C` (constant
-`t`-entries) and `A.map C − C X · D'.map C` (degree-`≤ 1` `t`-entries) has only the `deg D` columns from
-the second polynomial carrying a `t`, so its determinant has `t`-degree `≤ deg D`. The degree side of
-the interpolation uniqueness (`deg D + 1` nodes determine `R(t)`). -/
+/-- `rtResultant A D` has `t`-degree `≤ deg D`. -/
 theorem natDegree_rtResultant_le (A D : ℚ[X]) :
     (rtResultant A D).natDegree ≤ D.natDegree := by
   rw [rtResultant, resultant]
@@ -294,19 +268,14 @@ theorem natDegree_rtResultant_le (A D : ℚ[X]) :
 /-! ### Point-agreement: `cresultant` sample = `rtResultant` specialization -/
 
 open Polynomial in
-/-- **`toPoly` of the sample second polynomial**: `toPoly (A − a·D') = toPoly A − C a · derivative (toPoly D)`
-where `D' = cderiv D` (the computable derivative realizes `ℚ[X]` derivative). -/
+/-- `toPoly (csub A (cscale a (cderiv D))) = toPoly A − C a · derivative (toPoly D)`. -/
 theorem toPoly_sample (A D : CPoly) (a : ℚ) :
     toPoly (csub A (cscale a (cderiv D)))
       = toPoly A - Polynomial.C a * derivative (toPoly D) := by
   rw [toPoly_csub, toPoly_cscale, toPoly_cderiv]
 
 open Polynomial in
-/-- **Point-agreement** (monic `D`): the computable resultant sample `cresultant fuel D (A − a·D')`
-equals the specialization of the noncomputable Rothstein–Trager resultant at `a`,
-`(rtResultant (toPoly A) (toPoly D)).eval a`. The two formal degrees `(deg D, deg D − 1)` (used by
-`rtResultant`) and `(cdeg D, cdeg (A − a·D'))` (used by `cresultant`) are reconciled by
-`resultant_add_right_deg`; the augmentation factor `lc(D)^k = 1` since `D` is monic. -/
+/-- Point-agreement (monic `D`): `cresultant fuel D (A − a·D') = (rtResultant (toPoly A) (toPoly D)).eval a`. -/
 theorem cresultant_sample_eq_eval (A D : CPoly) (a : ℚ)
     (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
     (fuel : ℕ)
@@ -337,13 +306,8 @@ theorem cresultant_sample_eq_eval (A D : CPoly) (a : ℚ)
 /-! ### The agreement `toPoly (rtResultantCompute …) = rtResultant …` -/
 
 open Polynomial in
-/-- **`rtResultantCompute` realizes `rtResultant`** (monic `D`, `deg A < deg D`, sufficient fuel): the
-computable Rothstein–Trager resultant equals the noncomputable one through the `toPoly` bridge,
-`toPoly (rtResultantCompute fuel A D) = rtResultant (toPoly A) (toPoly D)`. Both are polynomials of
-degree `≤ deg D` agreeing at the `deg D + 1` integer nodes `0, …, deg D` (point-agreement
-`cresultant_sample_eq_eval`), hence equal by Lagrange uniqueness
-(`Lagrange.eq_of_degrees_lt_of_eval_index_eq`). The fuel hypothesis is the per-sample bound that
-`cresultant_eq` needs at each node. -/
+/-- `rtResultantCompute` realizes `rtResultant` (monic `D`, `deg A < deg D`, sufficient fuel):
+`toPoly (rtResultantCompute fuel A D) = rtResultant (toPoly A) (toPoly D)`. -/
 theorem toPoly_rtResultantCompute_eq_rtResultant (A D : CPoly) (fuel : ℕ)
     (hDmonic : (toPoly D).Monic) (hAD : (toPoly A).natDegree < (toPoly D).natDegree)
     (hfuel : ∀ k ∈ Finset.range (cdeg D + 1),
@@ -417,10 +381,8 @@ open Polynomial
 
 /-! ### `rtResultant` under an injective base change -/
 
-/-- **`rtResultant` commutes with an injective base change** `σ : K →+* L`:
-`rtResultant (A.map σ) (D.map σ) = (rtResultant A D).map σ`. The injectivity preserves the formal
-`x`-degrees `(deg D, deg D − 1)` (`natDegree_map_eq_of_injective`); `resultant_map_map` then pushes `σ`
-through the Sylvester determinant, and `σ` commutes with `derivative`/`C`/`X`. -/
+/-- `rtResultant` commutes with an injective base change `σ : K →+* L`:
+`rtResultant (A.map σ) (D.map σ) = (rtResultant A D).map σ`. -/
 theorem rtResultant_map_of_injective {K L : Type*} [Field K] [Field L] (σ : K →+* L)
     (hσ : Function.Injective σ) (A D : K[X]) :
     rtResultant (A.map σ) (D.map σ) = (rtResultant A D).map σ := by
@@ -482,10 +444,8 @@ theorem rootMultiplicity_C_mul_pow_of_separable {F : Type*} [Field F] {c : F} (h
 
 /-! ### `lrtSubresultant` under an injective base change, and the eval-commute -/
 
-/-- **`lrtSubresultant` commutes with an injective base change** `ι : F →+* G` (lifted to the
-`F[X]`-coefficients by `mapRingHom ι`): `(lrtSubresultant A D j).map (mapRingHom ι) =
-lrtSubresultant (A.map ι) (D.map ι) j`. Injectivity preserves the formal `x`-degrees; `subresultant_map`
-pushes `ι` through the Sylvester submatrix determinants, and `ι` commutes with `derivative`/`C`/`X`. -/
+/-- `lrtSubresultant` commutes with an injective base change `ι : F →+* G`:
+`(lrtSubresultant A D j).map (mapRingHom ι) = lrtSubresultant (A.map ι) (D.map ι) j`. -/
 theorem lrtSubresultant_map_of_injective {F G : Type*} [Field F] [Field G] (ι : F →+* G)
     (hι : Function.Injective ι) (A D : F[X]) (j : ℕ) :
     (lrtSubresultant A D j).map (Polynomial.mapRingHom ι) = lrtSubresultant (A.map ι) (D.map ι) j := by
@@ -509,10 +469,8 @@ theorem lrtSubresultant_map_of_injective {F G : Type*} [Field F] [Field G] (ι :
       rw [Polynomial.map_map, derivative_map, Polynomial.map_map, hcomm]
   rw [hdeg, hop1, hop2, subresultant_map]
 
-/-- **Eval-after-map commutes with an injective base change**: for `ι : F →+* G` injective,
-`((lrtSubresultant A D j).map (evalRingHom a)).map ι = (lrtSubresultant (A.map ι) (D.map ι) j).map
-(evalRingHom (ι a))`. Combines `lrtSubresultant_map_of_injective` with `map_map` of the two evaluation
-homs (`evalRingHom a` then `ι` vs. `mapRingHom ι` then `evalRingHom (ι a)`). -/
+/-- Eval-after-map commutes with an injective base change `ι`:
+`((lrtSubresultant A D j).map (evalRingHom a)).map ι = (lrtSubresultant (A.map ι) (D.map ι) j).map (evalRingHom (ι a))`. -/
 theorem map_eval_lrtSubresultant_map {F G : Type*} [Field F] [Field G] (ι : F →+* G)
     (hι : Function.Injective ι) (A D : F[X]) (j : ℕ) (a : F) :
     ((lrtSubresultant A D j).map (Polynomial.evalRingHom a)).map ι

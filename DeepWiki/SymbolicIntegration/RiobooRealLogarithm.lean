@@ -1,20 +1,10 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import Mathlib.Algebra.Polynomial.SpecificDegree
 
-/-! # Rioboo's algorithm for real rational functions — the two reachable foundations (Bronstein §2.8)
-The algebraic substrate of Rioboo's `LogToReal`/`LogToAtan` recursion, which rewrites a complex
-logarithm `log((u+√−1)/(u−√−1))` as a real arctangent so a real integrand keeps a real
-antiderivative. Two `√−1`-free, character-free facts:
-
-* **Property (2.16)** — if `x²+1` is irreducible over `K` (equivalently `−1` is not a square),
-  then `P² + Q² = 0 ⟹ P = Q = 0` for `P, Q ∈ K[x]`: the field has no `√−1`, so the two squares
-  can only cancel trivially.
-* **Lemma 2.8.1** (eq 2.17), the classical complex-log → real-arctan identity, stated as the
-  purely algebraic logarithmic-derivative identity `i · logDeriv((u+i)/(u−i)) = 2·u'/(1+u²)`
-  in a differential field. The underlying identity is
-  `DeepWiki.SymbolicIntegration.logDeriv_imagQuot_eq_arctanDeriv`; here we supply the missing
-  constant-`i` ingredient `deriv_i_eq_zero` (`i² = −1 ⟹ i′ = 0`) and restate the lemma against
-  its book form. -/
+/-! # Foundations for real rational logarithms
+Two `√−1`-free facts behind rewriting `log((u+i)/(u−i))` as a real arctangent: if `x²+1` is
+irreducible over `K` then `P² + Q² = 0 ⟹ P = Q = 0`, and the log-derivative identity
+`i · logDeriv((u+i)/(u−i)) = 2·u'/(1+u²)` in a differential field. -/
 
 open Polynomial
 open scoped Differential
@@ -37,8 +27,7 @@ theorem isSquare_neg_one_iff_exists_isRoot :
     have hr' : r ^ 2 + 1 = 0 := by simpa [IsRoot, eval_add, eval_pow] using hr
     exact ⟨r, by linear_combination -hr'⟩
 
-/-- **Property (2.16), the field reformulation** (§2.8, p.60): if `X²+1` is irreducible over `K`
-then `−1` is not a square in `K` (it has no square root, else `X²+1` would have a root). -/
+/-- If `X²+1` is irreducible over `K` then `−1` is not a square in `K`. -/
 theorem not_isSquare_neg_one_of_irreducible (h : Irreducible (X ^ 2 + 1 : K[X])) :
     ¬ IsSquare (-1 : K) := by
   intro hsq
@@ -50,10 +39,7 @@ theorem not_isSquare_neg_one_of_irreducible (h : Irreducible (X ^ 2 + 1 : K[X]))
   rw [Multiset.eq_zero_iff_forall_notMem] at h
   exact h r (by rw [mem_roots hne]; exact hr)
 
-/-- **Property (2.16)** (§2.8, p.60): if `X²+1` is irreducible over `K`, then for `P, Q ∈ K[x]`,
-`P² + Q² = 0 ⟹ P = 0 ∧ Q = 0`. Proof: if `Q ≠ 0` then comparing leading coefficients of
-`P² = −Q²` gives `(lc P)² = −(lc Q)²`, so `−1 = (lc P / lc Q)²` is a square in `K` — contradicting
-that `X²+1` is irreducible (whence `−1` is not a square). -/
+/-- If `X²+1` is irreducible over `K`, then `P² + Q² = 0 ⟹ P = 0 ∧ Q = 0` for `P, Q ∈ K[X]`. -/
 theorem sq_add_sq_eq_zero_of_irreducible (h : Irreducible (X ^ 2 + 1 : K[X]))
     {P Q : K[X]} (hPQ : P ^ 2 + Q ^ 2 = 0) : P = 0 ∧ Q = 0 := by
   have hnsq := not_isSquare_neg_one_of_irreducible h
@@ -79,9 +65,7 @@ end Property216
 section Lemma281
 variable {R : Type*} [Field R] [Differential R]
 
-/-- **Constant `√−1`** (§2.8, p.60): in a differential field, an element `i` with `i² = −1` is a
-constant, `i′ = 0`. (Differentiating `i² = −1` gives `2·i·i′ = 0`; as `i ≠ 0` and `2 ≠ 0` in a
-field of characteristic `0`, `i′ = 0`.) -/
+/-- In a char-`0` differential field, `i² = −1` implies `i` is constant, `i′ = 0`. -/
 theorem deriv_i_eq_zero [CharZero R] {i : R} (hi : i ^ 2 = -1) : i′ = 0 := by
   have hi0 : i ≠ 0 := by rintro rfl; simp at hi
   -- Differentiate `i² = −1`: `(i²)′ = (−1)′`, i.e. `2·i·i′ = 0`.
@@ -97,9 +81,7 @@ theorem deriv_i_eq_zero [CharZero R] {i : R} (hi : i ^ 2 = -1) : i′ = 0 := by
   have h2i : (2 : R) * i ≠ 0 := mul_ne_zero (by norm_num) hi0
   exact (mul_eq_zero.mp hd).resolve_left h2i
 
-/-- **Lemma 2.8.1** (§2.8, p.60, eq 2.17): with `√−1 = i` constant derived from `i² = −1`, the
-complex logarithm rewrites as a real arctangent, `i · logDeriv((u+i)/(u−i)) = 2·u'/(1+u²)` — the
-constant-`i` hypothesis of `logDeriv_imagQuot_eq_arctanDeriv` discharged by `deriv_i_eq_zero`. -/
+/-- With `i² = −1` in a char-`0` differential field, `i · logDeriv((u+i)/(u−i)) = 2·(u′/(1+u²))`. -/
 theorem logDeriv_imagQuot_eq_arctanDeriv_of_sq [CharZero R] {i u : R} (hi : i ^ 2 = -1)
     (h1 : u + i ≠ 0) (h2 : u - i ≠ 0) :
     i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) :=
@@ -126,8 +108,7 @@ section Theorem281
 variable {R : Type*} [Field R] [Differential R]
 
 omit [Differential R] in
-/-- **Nonvanishing of `a − i·b`** (§2.8, behind Thm 2.8.1): if `a² + b² ≠ 0` and `i² = −1`, then
-`a − i·b ≠ 0` — because `(a − i·b)·(a + i·b) = a² + b² ≠ 0`. -/
+/-- If `a² + b² ≠ 0` and `i² = −1`, then `a − i·b ≠ 0`. -/
 theorem sub_imag_ne_zero {i a b : R} (hi : i ^ 2 = -1) (hab : a ^ 2 + b ^ 2 ≠ 0) :
     a - i * b ≠ 0 := by
   intro h
@@ -137,8 +118,7 @@ theorem sub_imag_ne_zero {i a b : R} (hi : i ^ 2 = -1) (hab : a ^ 2 + b ^ 2 ≠ 
   exact hmul.symm
 
 omit [Differential R] in
-/-- **Nonvanishing of `a + i·b`** (§2.8, behind Thm 2.8.1): if `a² + b² ≠ 0` and `i² = −1`, then
-`a + i·b ≠ 0` — because `(a + i·b)·(a − i·b) = a² + b² ≠ 0`. -/
+/-- If `a² + b² ≠ 0` and `i² = −1`, then `a + i·b ≠ 0`. -/
 theorem add_imag_ne_zero {i a b : R} (hi : i ^ 2 = -1) (hab : a ^ 2 + b ^ 2 ≠ 0) :
     a + i * b ≠ 0 := by
   intro h
@@ -148,9 +128,8 @@ theorem add_imag_ne_zero {i a b : R} (hi : i ^ 2 = -1) (hab : a ^ 2 + b ^ 2 ≠ 
   exact hmul.symm
 
 omit [Differential R] in
-/-- **Brahmagupta–Fibonacci nonvanishing of `P² + 1`** (§2.8, behind Thm 2.8.1): with
-`G = B·D − A·C`, `P = (A·D + B·C)/G`, `G ≠ 0`, the identity `(P² + 1)·G² = (A²+B²)(C²+D²)` makes
-`P² + 1 ≠ 0` whenever `A²+B² ≠ 0` and `C²+D² ≠ 0`. -/
+/-- With `G = B·D − A·C ≠ 0` and `P = (A·D + B·C)/G`, `P² + 1 ≠ 0` whenever `A²+B² ≠ 0` and
+`C²+D² ≠ 0`. -/
 theorem sq_add_one_ne_zero_of_quot {A B C D G : R} (hG : B * D - A * C = G) (hG0 : G ≠ 0)
     (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0) :
     ((A * D + B * C) / G) ^ 2 + 1 ≠ 0 := by
@@ -166,10 +145,8 @@ theorem sq_add_one_ne_zero_of_quot {A B C D G : R} (hG : B * D - A * C = G) (hG0
   rw [h, zero_mul] at key
   exact key.symm
 
-/-- **Theorem 2.8.1(a)** (§2.8, p.62, Rioboo): for `A, B` with `A²+B² ≠ 0` and `i² = −1`, the two
-logarithms have equal logarithmic derivatives,
-`logDeriv((A+iB)/(A−iB)) = logDeriv((−B+iA)/(−B−iA))` — because `(A+iB)/(A−iB) = −(−B+iA)/(−B−iA)`
-and the constant `−1` has zero logarithmic derivative. -/
+/-- For `A, B` with `A²+B² ≠ 0` and `i² = −1`,
+`logDeriv((A+iB)/(A−iB)) = logDeriv((−B+iA)/(−B−iA))`. -/
 theorem logDeriv_imagQuot_eq_imagQuot_swap [CharZero R] {i A B : R} (hi : i ^ 2 = -1)
     (hAB : A ^ 2 + B ^ 2 ≠ 0) :
     Differential.logDeriv ((A + i * B) / (A - i * B))
@@ -190,13 +167,8 @@ theorem logDeriv_imagQuot_eq_imagQuot_swap [CharZero R] {i A B : R} (hi : i ^ 2 
   rw [hquot, Differential.logDeriv_mul (-1 : R) _ (by norm_num) (div_ne_zero hmBpA hmBmA),
     hlogm1, zero_add]
 
-/-- **Theorem 2.8.1(b)** (§2.8, p.62, Rioboo's recursion-step identity): for `A, B` with `A²+B² ≠ 0`,
-`i² = −1`, and `C, D` with `G := B·D − A·C ≠ 0`, `C²+D² ≠ 0`, setting `P := (A·D + B·C)/G`,
-`i · logDeriv((A+iB)/(A−iB)) = 2·(P'/(1+P²)) + i · logDeriv((D+iC)/(D−iC))` — i.e.
-`i·d/dx log((A+iB)/(A−iB)) = 2·d/dx arctan(P) + i·d/dx log((D+iC)/(D−iC))`. Proof: the factoring
-`(A+iB)/(A−iB) = ((P+i)/(P−i))·((D+iC)/(D−iC))` (from `(D−iC)(A+iB) = G(P+i)`,
-`(D+iC)(A−iB) = G(P−i)`) makes `logDeriv` additive, and Lemma 2.8.1 turns
-`i·logDeriv((P+i)/(P−i))` into `2·P'/(1+P²)`. -/
+/-- Rioboo's recursion step: for `A²+B² ≠ 0`, `i² = −1`, `G := B·D − A·C ≠ 0`, `C²+D² ≠ 0`, and
+`P := (A·D + B·C)/G`, `i · logDeriv((A+iB)/(A−iB)) = 2·(P′/(1+P²)) + i · logDeriv((D+iC)/(D−iC))`. -/
 theorem logDeriv_imagQuot_eq_arctan_add_imagQuot [CharZero R] {i A B C D G : R} (hi : i ^ 2 = -1)
     (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0)
     (hG : B * D - A * C = G) (hG0 : G ≠ 0) :

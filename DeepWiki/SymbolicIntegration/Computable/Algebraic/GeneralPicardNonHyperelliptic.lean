@@ -1,67 +1,19 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralPicardGroupLaw
 
-/-! # The NON-hyperelliptic Picard group law over `𝔽_p` via the `L(D)` `𝔽_p`-linear solve — the
-genuinely-general case (no `y² = ρ(x)` involution, so Cantor/Mumford does NOT apply), reading an
-INDIVIDUAL divisor class's order on an arbitrary plane curve (Trager Ch. 6 / computational AG: a
-**`ZMod p` Gaussian-elimination `L(D)` solve**, NOT the `𝔽_p[x]` HNF)
+/-! # The non-hyperelliptic Picard group law over `𝔽_p` via the `L(D)` linear solve
 
-`ComputableGeneralPicardGroupLaw` reads an individual class's order beyond the genus-1 ceiling — but only
-for a **hyperelliptic** `y² = ρ(x)` model, because its reduction *engine* round-trips through the proven
-Mumford/Cantor compose/reduce (`ptToMum` / `mumToPts`). A genuinely **non-hyperelliptic** plane curve — a
-smooth `f(x, y) = 0` with no `y² = ρ` involution, e.g. the **Fermat cubic** `x³ + y³ = 1` — has no Mumford
-pair, so Cantor is inapplicable. The general reduction is then the **`L((g+1)·∞)` Riemann–Roch space
-`𝔽_p`-linear solve** over a bivariate monomial basis (computational Brill–Noether / Hess).
-
-**This file supplies that non-hyperelliptic reduction, and the crucial point the user makes: the
-`𝔽_p`-LINEAR algebra is `native_decide`-LIGHT** — a small `ZMod p` Gaussian elimination (`kernelVec`),
-NOT the `𝔽_p[x]` Hermite normal form that hit the compilation wall. The keystone framing (the user's): this
-is COMPUTATIONAL ALGEBRAIC GEOMETRY (linear solves over `𝔽_p`), not abstract Riemann–Roch.
-
-## The `L(D)` `𝔽_p`-linear solve (the line system `|H|` = `L(1·∞-divisor)`)
-
-For a plane curve `f(x, y) = 0` and an effective `𝔽_p`-point divisor `D` (degree `≤ g + 1`),
-`L((g+1)·∞ − D)` is the space of polynomials `h(x, y)` of bounded total degree (a monomial basis) that
-**vanish at every point of `D`**. For the genus-1 plane cubic the relevant space is the **line system**:
-linear forms `h = a·X + b·Y + c·Z` (monomial basis `{X, Y, Z}`). A line vanishing at two points of `D` is a
-**nonzero kernel vector** of the `2×3` homogeneous matrix `[Xᵢ Yᵢ Zᵢ]` over `𝔽_p` — found by
-`kernelVec`, a small `ZMod p` Gaussian elimination (LIGHT). That line is the reducing function `h`.
-
-## Reducing a divisor class (chord-and-tangent = the `L(D)` solve + residual)
-
-* **`pgThird P Q`** — the residual zero of `div(h)`: the **third** intersection of the line `h ∈ L(D)`
-  (through `P`, `Q`) with the cubic. Computed from the **binary cubic** of `f` restricted to the line
-  parametrization `s·P + t·Q` (Vieta: the third root `(s : t) = (−C : B)`), pure `ZMod p` arithmetic. The
-  tangent case `P = Q` uses the polar line `(X² : Y² : −Z²)` (contact-2 = vanishing to multiplicity 2, the
-  `L(2·D)` solve) and factors out the double root.
-* **`pgNeg P = pgThird P O`** (`O` = the base point `∞`), **`pgAddPt P Q = pgThird (pgThird P Q) O`** — the
-  chord-and-tangent law: `[P − ∞] + [Q − ∞] = −[R − ∞]` with `R = pgThird P Q`, negated through `O`. The
-  reduced representative of any class is a single affine point (or `[]` = identity); the analogue of
-  `pdivAdd`.
-* **`nhReduce`** folds the point law over an effective point list (the analogue of `pdivReduce`);
-  **`picMulNH` / `picOrderNH`** read an individual class's order (the analogues of `picMul` / `picOrder`).
-
-**Proof-of-concept** (`native_decide`): on the **Fermat cubic** `x³ + y³ = 1` (genus 1 but
-**NON-hyperelliptic** — Cantor inapplicable, exactly why the `L(D)` route is needed) over `𝔽₅` and `𝔽₁₁`
-(both `≡ 2 mod 3`, so the curve has a **single rational point at infinity** `∞`, the clean base), the
-`L(D)`-solve group law computes `picOrderNH` of the flex class `(1,0) − ∞` as **3** — a genuine
-`ℤ/3`-torsion class — and `3 ∣ N_p` (the `ComputableGeneralTorsionLight` point count). One validated
-non-hyperelliptic `picOrder` via the `L(D)` solve = the general group law works.
-
-Everything is **fuel-bounded total recursion** (no `partial def`), so the axiom set stays
-`[propext, Classical.choice, Quot.sound]` + the `native_decide` reduction axiom — no `sorryAx`. -/
+For a non-hyperelliptic plane curve (no `y² = ρ(x)` involution, so Mumford/Cantor does not apply), the
+reduction is the `L((g+1)·∞ − D)` linear solve over a monomial basis: a reducing function `h ∈ L(D)` as a
+nonzero kernel vector of a homogeneous `ZMod p` matrix (`kernelMat`, Gauss–Jordan elimination), its residual
+zero on the cubic via the binary cubic (`pgThird`, chord-and-tangent), folded into the group law `nhAdd` and
+the individual-class order `picOrderNH` on the affine point-list `RedDivNH`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ## Projective `𝔽_p`-points and their normalization
+/-! ## Projective `𝔽_p`-points and their normalization -/
 
-A point on the projective plane curve is a triple `[X : Y : Z] ∈ (ZMod p)³`. The base point `∞` of the
-Fermat cubic over `p ≡ 2 mod 3` is the single rational point at infinity `[1 : τ : 0]` (`τ³ = −1`); affine
-points are `[x : y : 1]`. We carry the triple internally and read off the affine `(x, y)` for the
-`RedDivNH` representation. -/
-
-/-- A projective `𝔽_p`-point `PPt p = ZMod p × ZMod p × ZMod p` — homogeneous coordinates `[X : Y : Z]`
-of a point on the projective plane curve. Affine points are `[x : y : 1]`; the base point `∞` of the Fermat
-cubic (`p ≡ 2 mod 3`) is `[1 : τ : 0]`. The internal point representation of the `L(D)`-solve group law. -/
+/-- A projective `𝔽_p`-point `PPt p = ZMod p × ZMod p × ZMod p` — homogeneous coordinates `[X : Y : Z]`;
+affine points are `[x : y : 1]`. -/
 abbrev PPt (p : ℕ) : Type := ZMod p × ZMod p × ZMod p
 
 /-- Normalize a projective point `ppNorm P` to a canonical representative: scale so the last nonzero
@@ -78,16 +30,11 @@ def ppNorm {p : ℕ} (P : PPt p) : PPt p :=
 The identity test for the group law (analogue of `pdivEq`). -/
 def ppEq {p : ℕ} (P Q : PPt p) : Bool := decide (ppNorm P = ppNorm Q)
 
-/-! ## The `L(D)` `𝔽_p`-linear solve: a general `ZMod p` Gaussian-elimination kernel basis
+/-! ## The `L(D)` `𝔽_p`-linear solve: a `ZMod p` Gaussian-elimination kernel basis
 
-The space `L((g+1)·∞ − D)` of monomials vanishing at `D` is the **kernel** of the homogeneous matrix whose
-rows are the monomial basis evaluated at the points of `D`. We compute that kernel by a genuine general
-`ZMod p` **Gaussian elimination** (`kernelMat`): reduce the matrix to reduced row-echelon form
-(`rrefMat`, pivot/scale/eliminate over the finite field), then read one basis vector off each free column.
-This is the **`native_decide`-LIGHT** linear algebra — a handful of `ZMod p` field operations on a small
-matrix — the computational heart of the general reduction, where the `𝔽_p[x]` HNF hit the wall. The matrix
-is a `List (List (ZMod p))` (rows); `kernelMat` is generic in the number of columns, so the same routine
-serves the line system (`{X, Y, Z}`, `3` columns) and any larger monomial basis. -/
+The space `L((g+1)·∞ − D)` of monomials vanishing at `D` is the kernel of the homogeneous matrix whose rows
+are the monomial basis evaluated at `D`, computed by `ZMod p` Gaussian elimination (`kernelMat`). Generic in
+the number of columns. -/
 
 /-- Row-scale `rowSmul c r = c · r` — multiply a `ZMod p` row by a scalar (the pivot-normalization
 step of Gaussian elimination). -/
@@ -137,13 +84,9 @@ basis-of-the-row-space datum the kernel read-off uses. -/
 def rref {p : ℕ} (ncol : ℕ) (rows : List (List (ZMod p))) : List (ℕ × List (ZMod p)) :=
   rrefAux ncol 0 ncol [] rows
 
-/-- A kernel basis over `𝔽_p` `kernelMat ncol rows` — the `L(D)` linear solve: a basis of the (right)
-**kernel** `{v : v · rowᵀ = 0}` of the matrix `rows` (the homogeneous system the monomial basis must
-satisfy at `D`), via `ZMod p` Gaussian elimination. Run `rref`, then for each **free** column (no pivot)
-emit a basis vector with `1` there and `−(pivotRow[freeCol])` at each pivot column. Returns the list of
-kernel basis vectors (length-`ncol` `ZMod p` lists). A nonzero one is the reducing function `h`; for an
-independent `2×3` line system it is the single vector `u × v`. Pure `ZMod p` field arithmetic — the
-`native_decide`-LIGHT computational-AG core, no `𝔽_p[x]` HNF. -/
+/-- A kernel basis `kernelMat ncol rows` — the `L(D)` solve: a basis of the right kernel `{v : v · rowᵀ =
+0}` of `rows` via `rref`, emitting one basis vector per free column (`1` there, `−(pivotRow[freeCol])` at
+each pivot column). A nonzero one is the reducing function `h`. -/
 def kernelMat {p : ℕ} (ncol : ℕ) (rows : List (List (ZMod p))) : List (List (ZMod p)) :=
   let piv := rref ncol rows
   let pivCols := piv.map Prod.fst
@@ -154,23 +97,19 @@ def kernelMat {p : ℕ} (ncol : ℕ) (rows : List (List (ZMod p))) : List (List 
         | some pr => -(pr.2.getD fc 0)
         | none => 0))
 
-/-! ## The plane curve, and the residual zero via the binary cubic (the chord-and-tangent intersection)
+/-! ## The plane curve, and the residual zero via the binary cubic
 
-A projective plane curve is a homogeneous cubic `f(X, Y, Z)`, here packaged as the `ZMod p`-function
-`PCurve p`. The reducing function `h ∈ L(D)` is a **line** (the `L(D)` kernel solve, `kernelVec`); its
-residual zero on the cubic is the **third** intersection point. We compute it from the **binary cubic**
-`f(s·P + t·Q) = A·s³ + B·s²t + C·st² + D·t³` (a univariate form on the line parametrization): with `P`, `Q`
-on the curve (`A = D = 0`) the third root is `(s : t) = (−C : B)` (Vieta). The four coefficients `A, B, C,
-D` are read off by evaluating `f` at four parameter values — pure `ZMod p` ring arithmetic. -/
+The reducing function `h ∈ L(D)` is a line; its residual zero on the cubic is the third intersection point,
+read from the binary cubic `f(s·P + t·Q) = A·s³ + B·s²t + C·st² + D·t³` (with `P`, `Q` on the curve, the
+third root is `(s : t) = (−C : B)`). -/
 
 /-- A projective plane curve over `𝔽_p` `PCurve p = ZMod p → ZMod p → ZMod p → ZMod p` — a homogeneous
 polynomial `f(X, Y, Z)` as its `ZMod p`-evaluation function. The Fermat cubic is `f X Y Z = X³ + Y³ − Z³`.
 Used to read the binary-cubic intersection coefficients. -/
 abbrev PCurve (p : ℕ) : Type := ZMod p → ZMod p → ZMod p → ZMod p
 
-/-- The Fermat cubic `fermatF X Y Z = X³ + Y³ − Z³` over `𝔽_p` — the homogeneous form of `x³ + y³ = 1`.
-A smooth genus-1 plane cubic, **not** a hyperelliptic `y² = ρ(x)` model (so Cantor/Mumford does not apply);
-its `L(D)`-solve group law is the proof-of-concept. -/
+/-- The Fermat cubic `fermatF X Y Z = X³ + Y³ − Z³` over `𝔽_p` — the homogeneous form of `x³ + y³ = 1`,
+a smooth non-hyperelliptic genus-1 plane cubic. -/
 def fermatF {p : ℕ} : PCurve p := fun X Y Z => X ^ 3 + Y ^ 3 - Z ^ 3
 
 /-- Projective combination `ppComb P Q s t = s·P + t·Q` (componentwise), normalized — the point at
@@ -229,13 +168,9 @@ def lineParam {p : ℕ} (U V P : PPt p) : ZMod p × ZMod p :=
     | some r => r
     | none => (try2 1 2).getD (0, 0)
 
-/-- The residual (third) intersection `pgThird f P Q` of the line `h ∈ L(D)` through `P`, `Q` with the
-cubic `f`. **Chord** (`P ≠ Q`): the binary cubic `f(s·P + t·Q)` has `A = D = 0`, so the third root is
-`(s : t) = (−C : B)` — return `ppComb P Q (−C) B`. **Tangent** (`P = Q`): take the polar line `(X², Y²,
-−Z²)`, parametrize it by `lineTwoPts` (giving `U`, `V`), locate `P`'s parameter `(sp, tp)` (`lineParam`),
-and factor the double root out of the binary cubic to read the third root (`r₃ = −B/A − 2·sp/tp` in the
-`tp ≠ 0` chart, the dual otherwise). The `L(D)`-solve residual that the chord-and-tangent group law builds
-on; pure `ZMod p` arithmetic. -/
+/-- The residual (third) intersection `pgThird f P Q` of the line through `P`, `Q` with the cubic `f`:
+chord case (`P ≠ Q`) returns `ppComb P Q (−C) B` from the binary cubic; tangent case (`P = Q`) uses the
+polar line `(X², Y², −Z²)` and factors out the double root. -/
 def pgThird {p : ℕ} (f : PCurve p) (P Q : PPt p) : PPt p :=
   if P ≠ Q then
     let (_, b, c, _) := binCubic f P Q
@@ -253,15 +188,11 @@ def pgThird {p : ℕ} (f : PCurve p) (P Q : PPt p) : PPt p :=
       if d = 0 then ppComb U V 1 0
       else ppComb U V 1 ((-c) * d⁻¹)
 
-/-! ## The non-hyperelliptic group law on the reduced-divisor representation `RedDivNH`
+/-! ## The group law on the reduced-divisor representation `RedDivNH`
 
-Mirroring `ComputableGeneralPicardGroupLaw`'s `RedDiv` / `pdivAdd` / `picOrder` interface, the reduced
-divisor class is an affine `𝔽_p`-point list `RedDivNH p = List (ZMod p × ZMod p)`, meaning the class
-`[Σ Pᵢ − n·∞]` (base point `∞` = the curve's chosen rational point at infinity, passed as `O`). For a genus-1
-plane cubic the reduced representative is a **single** affine point (or `[]` = the identity class `[∞ − ∞]`).
-The group law is the chord-and-tangent `L(D)` solve in projective coordinates (`nhAddPt`), read back to the
-affine list (`ppToRed`); `nhReduce` folds it over an effective point list; `picMulNH` / `picOrderNH` read an
-individual class's order — the non-hyperelliptic analogues of `picMul` / `picOrder`. -/
+The reduced divisor class is an affine `𝔽_p`-point list (for a genus-1 cubic, a single point or `[]`). The
+group law is the chord-and-tangent `L(D)` solve `nhAddPt`, read back by `ppToRed`; `nhReduce` folds it over
+a point list and `picMulNH` / `picOrderNH` read an individual class's order. -/
 
 /-- Affine point → projective `affToPP P = [P.1 : P.2 : 1]` — lift an affine `𝔽_p`-point to homogeneous
 coordinates for the group law. -/
@@ -324,18 +255,11 @@ def picOrderNH {p : ℕ} (f : PCurve p) (O : PPt p) (fuel : ℕ) (D : RedDiv p) 
 
 end DeepWiki.SymbolicIntegration
 
-/-! ## Proof-of-concept: the NON-HYPERELLIPTIC Fermat cubic `x³ + y³ = 1` over `𝔽_p` (`native_decide`)
+/-! ## The Fermat cubic `x³ + y³ = 1` over `𝔽_p` (`native_decide`)
 
-The Fermat cubic `x³ + y³ = 1` is a smooth genus-1 plane cubic of degree **3 in both `x` and `y`** — it is
-**not** a `y² = ρ(x)` hyperelliptic model, so the Mumford/Cantor engine does **not** apply, and its group
-law is exactly the `L((g+1)·∞)` `𝔽_p`-linear solve this file builds. We take `p ≡ 2 mod 3`, where `x ↦ x³`
-is a bijection on `𝔽_p`, so `t³ = −1` has a **single** root and the curve has a **single rational point at
-infinity** `∞ = [1 : τ : 0]` (`τ³ = −1`) — the clean base point `O`, keeping the reduction purely affine.
-
-The rational `ℤ/3`-torsion of the Fermat cubic (the flex differences) survives mod `p`: the flex `(1, 0)`
-gives a class `[(1,0) − ∞]` of order **3**. The `L(D)`-solve `picOrderNH` reads that order, and it divides
-`N_p = |Pic⁰(C)(𝔽_p)|` from `ComputableGeneralTorsionLight` — one validated non-hyperelliptic individual
-order, the proof that the general group law works. -/
+On the non-hyperelliptic Fermat cubic over `𝔽₅` and `𝔽₁₁` (both `≡ 2 mod 3`, single rational `∞`), the
+`L(D)`-solve `picOrderNH` reads the order of the flex class `(1,0) − ∞` as 3, dividing the point count
+`N_p`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -353,33 +277,24 @@ def fermatInf5 : PPt 5 := (1, 4, 0)
 `Pic⁰(C)(𝔽_p)` is `3`. -/
 def fermatFlex10 (p : ℕ) : RedDiv p := [((1 : ZMod p), (0 : ZMod p))]
 
-/-- `2·((1,0) − ∞)` reduces to `(0,1) − ∞` over `𝔽₁₁` (`native_decide`): the doubling
-`nhReduce [(1,0),(1,0)]` (via the `L(D)` tangent-line solve — the polar `(X², Y², −Z²)`) is the single
-affine point `(0, 1)`, i.e. `2P = (0,1)` in the chord-and-tangent law. The tangent case of the `L(D)`
-reduction producing a genuine reduced divisor. -/
+/-- `2·((1,0) − ∞)` reduces to `(0,1) − ∞` over `𝔽₁₁`:
+`nhReduce fermatF fermatInf11 (fermatFlex10 11 ++ fermatFlex10 11) = [(0, 1)]`. -/
 theorem nhReduce_double_flex10_11 :
     nhReduce fermatF fermatInf11 (fermatFlex10 11 ++ fermatFlex10 11)
       = [((0 : ZMod 11), (1 : ZMod 11))] := by native_decide
 
-/-- `(1,0) + (0,1)` reduces to the identity `[]` over `𝔽₁₁` (`native_decide`): since `(1,0)` has
-order 3 and `2·(1,0) = (0,1)`, we have `(1,0) + (0,1) = 3·(1,0) = ∞`, the identity class — `nhAdd` of the
-two affine points cancels to `[]`. The `L(D)`-solve inverse law: `(0,1)` is the inverse of `(1,0)`. -/
+/-- `(1,0) + (0,1)` reduces to the identity `[]` over `𝔽₁₁` (`(0,1)` is the inverse of `(1,0)`). -/
 theorem nhAdd_flex10_inv_11 :
     pdivEq 11 (nhAdd fermatF fermatInf11 (fermatFlex10 11)
       [((0 : ZMod 11), (1 : ZMod 11))]) [] = true := by native_decide
 
-/-- The order of the flex class `(1,0) − ∞` on the NON-HYPERELLIPTIC Fermat cubic `x³ + y³ = 1` over
-`𝔽₁₁`, via the `L(D)` `𝔽_p`-linear solve, is 3 (`native_decide`): `picOrderNH fermatF ∞ 30 [(1,0)] =
-some 3` — the individual-class order read by the chord-and-tangent group law (the `ZMod p` Gaussian-kernel
-`L(D)` solve + binary-cubic residual + `picOrderNH`), on a curve where the Mumford/Cantor engine does
-**not** apply. The general non-hyperelliptic Picard group law reads an individual class's order. -/
+/-- The order of the flex class `(1,0) − ∞` on `x³ + y³ = 1` over `𝔽₁₁` is 3:
+`picOrderNH fermatF fermatInf11 30 (fermatFlex10 11) = some 3`. -/
 theorem picOrderNH_flex10_11_eq3 :
     picOrderNH fermatF fermatInf11 30 (fermatFlex10 11) = some 3 := by native_decide
 
-/-- The `L(D)`-solve order of `(1,0) − ∞` divides the point count `N₁₁ = 12` (`native_decide`): the
-genus-1 group `Pic⁰(C)(𝔽₁₁)` has order `N₁₁ = npFermatCubic 11 (fermatCubic 11) = 12` (the
-`ComputableGeneralTorsionLight` point count), so the order 3 of `(1,0) − ∞` divides it (`12 % 3 = 0`).
-Cross-validates the non-hyperelliptic `L(D)`-solve group law against the flat `𝔽_p` point count. -/
+/-- The order of `(1,0) − ∞` over `𝔽₁₁` is 3 and divides the point count `N₁₁ = 12`:
+`picOrderNH … = some 3 ∧ npFermatCubic 11 (fermatCubic 11) % 3 = 0`. -/
 theorem picOrderNH_flex10_11_divides_Np :
     picOrderNH fermatF fermatInf11 30 (fermatFlex10 11) = some 3
       ∧ npFermatCubic 11 (fermatCubic 11) % 3 = 0 := by native_decide

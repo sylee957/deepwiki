@@ -1,14 +1,10 @@
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
 
-/-! # Czichowski's logs are the Rothstein–Trager gcds (Bronstein §2.6 / Czichowski Lemma 2.3)
-The integral *connection* behind Czichowski's algorithm: the Gröbner-basis logarithm argument
-`S(x,c) = gcd(D, A − c·D')` (Czichowski's Lemma 2.3) is exactly the Rothstein–Trager polynomial
-`Gₐ = ∏_{res(α)=a}(X−α)`, so Czichowski's integral `∫ A/D = ∑ c·log(gcd(D, A−c·D'))` is the *same*
-logarithmic part as the §2.4/§2.5 Rothstein–Trager / Lazard–Rioboo–Trager result. Stated for split
-squarefree `D = Lagrange.nodal s id = ∏_{α∈s}(X−α)`: the gcd of `D` with `A − a·D'` factors as the
-product of `(X−α)` over the residue-`a` roots `α` of `D`, hence the §2.5 grouped log sum can be rewritten
-with `gcd(D, A−a·D')` inside each `logDeriv`. This is the connection only — no Gröbner-basis structure. -/
+/-! # Gcd log-form for rational integrals
+For split squarefree `D = ∏_{α∈s}(X−α)`, the gcd `gcd(D, A − a·D')` equals the Rothstein-Trager
+factor `∏_{res(α)=a}(X−α)`, so the grouped logarithmic sum can be written with the gcd inside each
+`logDeriv`. -/
 
 open Polynomial
 
@@ -19,13 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 variable {K : Type*} [Field K]
 
 open scoped Classical in
-/-- **Czichowski's Lemma 2.3 = the Rothstein–Trager gcd** (Bronstein §2.6, p.54): for split squarefree
-`D = Lagrange.nodal s id = ∏_{α∈s}(X−α)`, the gcd `gcd(D, A − a·D')` is the product of `(X−α)` over the
-roots `α` of `D` whose residue `A(α)/D'(α)` equals `a` — i.e. it is exactly the Rothstein–Trager
-polynomial `Gₐ = ∏_{α∈s, res(α)=a}(X−α)`. Czichowski's Gröbner-basis logarithm argument `S(x,c)` coincides
-with the §2.4 RT gcd, so his `∫ A/D = ∑ c·log(gcd(D, A−c·D'))` is the same logarithmic part as RT/LRT.
-The roots of the gcd are the residue-`a` roots of `D` (`isRoot_gcd_iff_residue`), and the gcd splits as a
-monic product of those linear factors. -/
+/-- For split squarefree `D = Lagrange.nodal s id`, `gcd(D, A − a·D') = ∏_{α∈s, res(α)=a}(X−α)`. -/
 theorem gcd_nodal_eq_prod_residue (s : Finset K) (A : K[X]) (a : K) :
     gcd (Lagrange.nodal s id) (A - C a * derivative (Lagrange.nodal s id))
       = ∏ α ∈ s.filter
@@ -83,13 +73,7 @@ example (s : Finset K) (A : K[X]) (a : K) :
   gcd_nodal_eq_prod_residue s A a
 
 open scoped Classical in
-/-- **Czichowski's integral in gcd log-form** (Bronstein §2.6, Czichowski part (iii)): for `A` of degree
-`< #s` over split squarefree `D = Lagrange.nodal s id = ∏_{α∈s}(X−α)`,
-`A/D = ∑_a a · logDeriv(gcd(D, A − a·D'))` in `K(x)`, the sum over the distinct residues `a = A(α)/D'(α)` —
-Czichowski's `∫ A/D = ∑ c·log(S(x,c))` with `S(x,c) = gcd(D, A−c·D')`. This is the *same* integral as the
-§2.4/§2.5 Rothstein–Trager / LRT result: rewriting the §2.5 grouped log sum `ratFunc_eq_sum_residue_grouped`
-(whose argument is `∏_{res(α)=a}(X−α)`) by `gcd_nodal_eq_prod_residue` puts `gcd(D, A − a·D')` inside each
-`logDeriv`. -/
+/-- For `deg A < #s` over split squarefree `D`, `A/D = ∑_a a · logDeriv(gcd(D, A − a·D'))` in `K(x)`. -/
 theorem ratFunc_eq_sum_residue_gcd (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
       = ∑ a ∈ s.image (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id))),

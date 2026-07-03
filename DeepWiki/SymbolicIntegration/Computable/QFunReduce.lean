@@ -1,31 +1,12 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
-/-! # `qReduce`: a verified lowest-terms reducer for `QFunNZG α`, with an abstract invariant
+/-! # `qReduce`: a lowest-terms reducer for `QFunNZG α`
 
-`QFunNZG α ≅ Frac(α[t])` is carried as an **unreduced** fraction `num/den`: the engine tests
-`K`-equality through `isZero`, never canonicalizing, so `qmulNZG`/`qinvNZG` accumulate spurious common
-factors (the value-correct `qinvNZG` of a shared-denominator fraction can be wildly higher degree than
-its lowest-terms form). `qReduce a` cancels `g = gcd(num, den)`: it returns `(num/g)/(den/g)` via the
-fuel-free generic monic gcd `cgcdMonicWf` and exact division `cdivWf`.
-
-Two layers, matching the project's `native_decide`-validated-then-abstractly-proved discipline:
-* **`qReduce`** is computable (data through `cgcdMonicWf`/`cdivWf`, the den-nonzero proof `Prop`-erased), so
-  it `native_decide`s — validated value-preserving (`qReduceEq (qReduce a) a`) and degree-dropping on
-  swelling fractions below.
-* **★ the abstract invariant** `toQFunNZG (qReduce a) = toQFunNZG a` is proved as a GENERAL theorem over
-  every `a : QFunNZG α` (via the `[CFieldSpec α]` `toQFunNZG` bridge into `RatFunc (CFieldSpec.K α)`),
-  NOT `native_decide`: reduction preserves the field value. The lever is `cgcdMonicWf`'s gcd dividing
-  both inputs (`toPolyG_cgcdMonicWf_dvd`) and the shared exact-division spec
-  `toPolyG (cdivWf c g) · toPolyG g = toPolyG c` (`CPolyG.toPolyG_cdivWf_exact`).
-
-`qReduce` stays upstream of the integration/Bareiss engines; the invariant `toQFunNZG_qReduce` is
-**unconditional** (no hypotheses), so it composes freely upstream and downstream tower demos can reuse the
-same proof rather than maintaining a second reducer.
-
-Imports only `ComputableTowerField` (the carrier + bridge) and `ComputableFuelFreeGcd` (the fuel-free
-gcd/division layer and semantic exact-division lemmas) — both upstream of the integration/Bareiss engines,
-so `qReduce` is reusable everywhere later. -/
+`qReduce a` cancels `g = gcd(num, den)` in the unreduced fraction `QFunNZG α ≅ Frac(α[t])`, returning
+`(num/g)/(den/g)` via the fuel-free monic gcd `cgcdMonicWf` and exact division `cdivWf`. It is
+computable (the den-nonzero proof `Prop`-erased), and the abstract invariant
+`toQFunNZG (qReduce a) = toQFunNZG a` proves reduction preserves the field value. -/
 
 open Polynomial
 
@@ -35,9 +16,8 @@ open Compute CPolyG
 
 /-! ### The reducer `qReduce`
 
-`qReduce ⟨(num, den), _⟩ = ⟨(num/g, den/g), _⟩` with `g = cgcdMonicWf num den`. The denominator-nonzero
-proof obligation is discharged abstractly: `den/g` is nonzero because
-`(toPolyG (den/g))·(toPolyG g) = toPolyG den ≠ 0`. -/
+`qReduce ⟨(num, den), _⟩ = ⟨(num/g, den/g), _⟩` with `g = cgcdMonicWf num den`; the denominator-nonzero
+obligation is discharged from `(toPolyG (den/g))·(toPolyG g) = toPolyG den ≠ 0`. -/
 
 namespace QFunNZG
 
@@ -48,12 +28,7 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 def reduceGcd (a : QFunNZG α) : CPolyG α :=
   cgcdMonicWf a.1.1 a.1.2
 
-/-! #### The denominator-nonzero discharge (`[CFieldSpec α]` reasoning, `Prop`-erased)
-
-The new denominator `den/g` is nonzero. The witness threads through `toPolyG`: from `den ≠ 0` the gcd
-`g` divides `den`, so `(toPolyG (den/g))·(toPolyG g) = toPolyG den ≠ 0`, hence
-`toPolyG (den/g) ≠ 0`, i.e. `cisZeroG (den/g) = false`. All `[CFieldSpec α]` facts, but they prove a
-`Prop` field — erased at runtime, so `qReduce` stays computable. -/
+/-! #### The denominator-nonzero discharge (`Prop`-erased) -/
 
 /-- **The reduce-gcd divides numerator and denominator** through the bridge: `toPolyG (reduceGcd a)`
 divides both `toPolyG num` and `toPolyG den` in `(CFieldSpec.K α)[X]`. -/
@@ -86,9 +61,8 @@ theorem toPolyG_reduceDen_mul (a : QFunNZG α) :
     toPolyG (reduceDen a) * toPolyG (reduceGcd a) = toPolyG a.1.2 :=
   CPolyG.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).2
 
-/-- **The reduced denominator is `cisZeroG`-nonzero**: `cisZeroG (reduceDen a) = false`. Since
-`(toPolyG (reduceDen a))·(toPolyG (reduceGcd a)) = toPolyG den ≠ 0`, the left factor `toPolyG (reduceDen
-a)` is nonzero. The den-nonzero subtype witness for `qReduce`. -/
+/-- **The reduced denominator is `cisZeroG`-nonzero**: `cisZeroG (reduceDen a) = false`, from
+`(toPolyG (reduceDen a))·(toPolyG (reduceGcd a)) = toPolyG den ≠ 0`. The den-nonzero subtype witness. -/
 theorem cisZeroG_reduceDen (a : QFunNZG α) : cisZeroG (reduceDen a) = false := by
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff]
   intro hz
@@ -99,20 +73,15 @@ theorem cisZeroG_reduceDen (a : QFunNZG α) : cisZeroG (reduceDen a) = false := 
 end QFunNZG
 
 /-- **Reduce a `QFunNZG α` fraction to lowest terms** `qReduce a = (num/g)/(den/g)` with
-`g = gcd(num, den)` computed by the fuel-free generic monic gcd `cgcdMonicWf`. Cancels the spurious
-common factors that `QFunNZG`'s unreduced `qmulNZG`/`qinvNZG` accumulate (e.g. `xⁿ/xⁿ` for `1`). The
-data (`cdivWf`/`cgcdMonicWf`) needs only `[CField α]` and the den-nonzero proof is `Prop`-erased, so
-`qReduce` is computable (`native_decide`); `[CFieldSpec α]` is used only to discharge the proof. The
-field value is preserved — `toQFunNZG (qReduce a) = toQFunNZG a` (`toQFunNZG_qReduce`). -/
+`g = gcd(num, den)` computed by the fuel-free monic gcd `cgcdMonicWf`, cancelling the common factors that
+`QFunNZG`'s unreduced `qmulNZG`/`qinvNZG` accumulate. Computable (den-nonzero proof `Prop`-erased); the
+field value is preserved (`toQFunNZG_qReduce`). -/
 def qReduce {α : Type*} [CField α] [CFieldSpec α] (a : QFunNZG α) : QFunNZG α :=
   ⟨(QFunNZG.reduceNum a, QFunNZG.reduceDen a), QFunNZG.cisZeroG_reduceDen a⟩
 
-/-! ### ★ The abstract invariant: `qReduce` preserves the field value
+/-! ### The invariant: `qReduce` preserves the field value
 
-`toQFunNZG (qReduce a) = toQFunNZG a` over every `a : QFunNZG α`, proved abstractly through the
-`RatFunc (CFieldSpec.K α)` bridge — NOT `native_decide`. With `Nq, Dq, G` the `amG ∘ toPolyG` images of
-the reduced numerator, reduced denominator, and gcd, the exact-division specs give `Nq·G = N` and
-`Dq·G = D` in `RatFunc`; with `G ≠ 0` the fraction `Nq/Dq` equals `(Nq·G)/(Dq·G) = N/D`. -/
+`toQFunNZG (qReduce a) = toQFunNZG a` over every `a`, through the `RatFunc (CFieldSpec.K α)` bridge. -/
 
 namespace QFunNZG
 
@@ -126,11 +95,9 @@ theorem amG_toPolyG_reduceGcd_ne_zero (a : QFunNZG α) :
 
 end QFunNZG
 
-/-- **★ The reducer preserves the field value** (the abstract invariant): for every `a : QFunNZG α`,
+/-- **The reducer preserves the field value**: for every `a : QFunNZG α`,
 `toQFunNZG (qReduce a) = toQFunNZG a`. Cancelling `g = gcd(num, den)` does not change `num/den` in
-`RatFunc (CFieldSpec.K α)`. Proved abstractly (no `native_decide`): apply `amG` to the exact-division
-specs `(toPolyG (num/g))·(toPolyG g) = toPolyG num` and `(toPolyG (den/g))·(toPolyG g) = toPolyG den`,
-then cross-multiply the resulting `(Nq/Dq) = (Nq·G)/(Dq·G) = N/D` using `G ≠ 0` and `D ≠ 0`. -/
+`RatFunc (CFieldSpec.K α)`. -/
 theorem toQFunNZG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : QFunNZG α) :
     QFunNZG.toQFunNZG (qReduce a) = QFunNZG.toQFunNZG a := by
   -- abbreviations in RatFunc (CFieldSpec.K α)
@@ -158,10 +125,8 @@ namespace QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- **`qReduce` preserves the zero test** (`isZeroNZG (qReduce x) = isZeroNZG x`), with no fuel or
-termination hypotheses. This is the reusable Boolean corollary of `toQFunNZG_qReduce`: reducing a fraction
-does not change its field value, so the field-faithful zero test sees the same result before and after
-canonicalization. -/
+/-- **`qReduce` preserves the zero test**: `isZeroNZG (qReduce x) = isZeroNZG x`, the Boolean corollary
+of `toQFunNZG_qReduce`. -/
 theorem isZeroNZG_qReduce (x : QFunNZG α) :
     isZeroNZG (qReduce x) = isZeroNZG x := by
   have hval : toQFunNZG (qReduce x) = toQFunNZG x := toQFunNZG_qReduce x
@@ -175,15 +140,10 @@ theorem isZeroNZG_qReduce (x : QFunNZG α) :
 
 end QFunNZG
 
-/-! ### Validation: `qReduce` reduces and preserves value at level 1 (`QFunNZG ℚ ≅ ℚ(x)`)
-
-The `native_decide` floor: `qReduce` runs in the native compiler at `α = ℚ` (the data is `[CField ℚ]`,
-the proofs `Prop`-erased), it is value-preserving (`qEq (qReduce a) a`, the engine's own field equality),
-and on a swelling fraction the reduced num+den degrees drop. -/
+/-! ### Validation at `QFunNZG ℚ ≅ ℚ(x)` -/
 
 /-- **Field equality on `QFunNZG α`** `qReduceEq a b = isZero (a − b)` — the `Bool` test `a = b` via the
-engine's `CField` zero test (sidestepping `DecidableEq` on the fraction subtype), used to certify
-`qReduce` value-preservation under `native_decide`. -/
+`CField` zero test, sidestepping `DecidableEq` on the fraction subtype. -/
 def qReduceEq {α : Type*} [CField α] [CFieldDomain α] (a b : QFunNZG α) : Bool :=
   CField.isZero (CField.sub a b)
 

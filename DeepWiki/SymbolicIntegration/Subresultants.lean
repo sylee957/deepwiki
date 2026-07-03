@@ -3,12 +3,9 @@ import Mathlib.Algebra.Polynomial.Basic
 import Mathlib.GroupTheory.Perm.Fin
 import Mathlib.Tactic
 
-/-! # Subresultants (Bronstein §1.4, Definition 1.4.2)
-The `j`-th subresultant `Sⱼ(A,B)` of `A` (degree `n`) and `B` (degree `m`) is built from the
-Sylvester matrix by deleting the last `j` rows of each of the `A`- and `B`-blocks and summing the
-determinants of the `(m+n−2j)`-square submatrices `ⱼSᵢ` (one per `0 ≤ i ≤ j`) against `xⁱ`. We use
-Bronstein's row layout (`m` shifted rows of `A`, then `n` shifted rows of `B`) so the deletion
-recipe applies verbatim. The `0`-th subresultant is the resultant (`subresultant_zero`). -/
+/-! # Subresultants
+The `j`-th subresultant `Sⱼ(A,B)` as a sum of `(m+n−2j)`-square Sylvester submatrix
+determinants against `xⁱ`; the `0`-th subresultant is the resultant. -/
 
 open Polynomial
 
@@ -17,10 +14,7 @@ namespace DeepWiki.SymbolicIntegration
 variable {R : Type*} [CommRing R]
 
 open Matrix Finset in
-/-- Closed-form `4×4` determinant (the `Matrix.det_fin_four` Mathlib lacks): Laplace expansion
-along row `0`, each `3×3` minor expanded along its row `0`. Lets a concrete symbolic `4×4`
-determinant be computed by `rw [det_fin_four]` + entry reduction + `ring`, avoiding the recursive
-`det_succ` blow-up. -/
+/-- Closed-form Laplace expansion of a `4×4` determinant. -/
 theorem det_fin_four (M : Matrix (Fin 4) (Fin 4) R) :
     M.det =
       M 0 0 * (M 1 1 * (M 2 2 * M 3 3 - M 2 3 * M 3 2) - M 1 2 * (M 2 1 * M 3 3 - M 2 3 * M 3 1)
@@ -41,9 +35,7 @@ theorem det_fin_four (M : Matrix (Fin 4) (Fin 4) R) :
     show (Fin.succAbove (3 : Fin 4) 2 : Fin 4) = 2 from rfl]
   ring
 
-/-- **Sylvester matrix** (§1.4, Bronstein layout): `m` shifted rows of `A` (degree `n`) followed by
-`n` shifted rows of `B` (degree `m`), size `(m+n)×(m+n)`. Row `i < m` is `A` shifted by `i`; row
-`m ≤ i` is `B` shifted by `i − m`. -/
+/-- Sylvester matrix of `A` (degree `n`) and `B` (degree `m`): `m` shifted `A`-rows then `n` shifted `B`-rows. -/
 def bSylvester (A B : R[X]) (n m : ℕ) : Matrix (Fin (m + n)) (Fin (m + n)) R :=
   .of fun i l =>
     if (i : ℕ) < m then
@@ -61,8 +53,7 @@ def subCol (n m j i : ℕ) : Fin (m + n - 2 * j) → Fin (m + n) :=
   fun s => ⟨if (s : ℕ) < m + n - 2 * j - 1 then (s : ℕ) else m + n - i - j - 1,
     by have := s.isLt; split <;> omega⟩
 
-/-- **Definition 1.4.2**: the `j`-th *subresultant* `Sⱼ(A,B) = ∑_{i=0}^{j} det(ⱼSᵢ)·xⁱ ∈ R[x]`,
-where `ⱼSᵢ` is the `(m+n−2j)`-square submatrix of the Sylvester matrix selected by `subRow`/`subCol`. -/
+/-- The `j`-th subresultant `Sⱼ(A,B) = ∑_{i=0}^{j} det(ⱼSᵢ)·xⁱ` of Sylvester submatrices. -/
 noncomputable def subresultant (A B : R[X]) (n m j : ℕ) : R[X] :=
   ∑ i ∈ Finset.range (j + 1),
     C ((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).det * X ^ i
@@ -79,17 +70,13 @@ theorem subCol_zero (n m : ℕ) : subCol n m 0 0 = id := by
   · rfl
   · omega
 
-/-- **The `0`-th subresultant is the resultant** (§1.4): `S₀(A,B) = det(Sylvester(A,B))` (as a
-constant polynomial), since the `j = 0` submatrix is the full Sylvester matrix. -/
+/-- `S₀(A,B) = C (det (Sylvester A B))`: the `0`-th subresultant is the resultant. -/
 theorem subresultant_zero (A B : R[X]) (n m : ℕ) :
     subresultant A B n m 0 = C (bSylvester A B n m).det := by
   rw [subresultant, Finset.sum_range_one, subRow_zero, subCol_zero, Matrix.submatrix_id_id,
     pow_zero, mul_one]
 
-/-- **Theorem 1.4.3** (§1.4, degree-preserving case): the subresultant commutes with a coefficient
-ring homomorphism `σ`, `Sⱼ(σ̄A, σ̄B) = σ̄(Sⱼ(A,B))`. This is Bronstein's "Note in particular" form —
-valid whenever `σ` preserves the degree parameters `n, m` (e.g. `A` or `B` monic). The general case
-carries a `σ(lc A)^(deg B − deg σ̄B)` factor when `σ` lowers a degree. -/
+/-- `Sⱼ(σA, σB) = σ(Sⱼ(A,B))`: the subresultant commutes with a coefficient ring homomorphism `σ` at fixed formal degrees. -/
 theorem subresultant_map {S : Type*} [CommRing S] (σ : R →+* S) (A B : R[X]) (n m j : ℕ) :
     subresultant (A.map σ) (B.map σ) n m j = (subresultant A B n m j).map σ := by
   have hbS : bSylvester (A.map σ) (B.map σ) n m = (bSylvester A B n m).map σ := by
@@ -102,10 +89,7 @@ theorem subresultant_map {S : Type*} [CommRing S] (σ : R →+* S) (A B : R[X]) 
     Polynomial.map_C, ← RingHom.mapMatrix_apply, ← RingHom.map_det]
 
 open Matrix Finset in
-/-- **Subresultant scaling law** (Geddes–Czapor–Labahn §7.3, used in the proof of the Fundamental
-PRS Theorem): scaling the arguments by constants scales the subresultant,
-`Sⱼ(a·A, b·B) = a^(m−j)·b^(n−j)·Sⱼ(A,B)`. Each `ⱼSᵢ` keeps `m−j` rows of `A` and `n−j` rows of `B`,
-so its determinant scales by `a^(m−j) b^(n−j)` (a uniform factor across `i`). -/
+/-- Scaling law: `Sⱼ(a·A, b·B) = a^(m−j)·b^(n−j)·Sⱼ(A,B)`. -/
 theorem subresultant_C_mul (a b : R) (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j ≤ n) :
     subresultant (C a * A) (C b * B) n m j
       = C (a ^ (m - j) * b ^ (n - j)) * subresultant A B n m j := by
@@ -149,13 +133,7 @@ theorem det_updateCol_sum' {N : Type*} [DecidableEq N] [Fintype N] (M : Matrix N
              exact Matrix.det_eq_zero_of_column_eq_zero c (fun i => by simp)
   | insert a s ha ih => rw [Finset.sum_insert ha, Matrix.det_updateCol_add, ih, Finset.sum_insert ha]
 
-/-- **Subresultant as a single polynomial-column determinant** (Geddes–Czapor–Labahn §7.3, eq 7.12;
-the form in which the Fundamental-PRS-Theorem row reduction is clean). Since all `ⱼSᵢ` share their
-first `m+n−2j−1` columns and differ only in the last (`subCol` index `m+n−i−j−1`),
-`Sⱼ(A,B) = ∑ᵢ C(det ⱼSᵢ)·Xⁱ` equals the determinant of the matrix whose last column is the
-polynomial `∑ᵢ Xⁱ·(that column)` — derived entirely from this library's own `bSylvester`/`subCol`,
-via determinant multilinearity in the last column (`det_updateCol_sum'` + `det_updateCol_smul`) and
-`RingHom.map_det` for the `C`-lift. -/
+/-- `Sⱼ(A,B)` equals the determinant of the `C`-lifted submatrix with its last column replaced by the polynomial `∑ᵢ Xⁱ·(column i)`. -/
 theorem subresultant_eq_det_polyCol (A B : R[X]) (n m j : ℕ) (hlt : 2 * j < m + n) :
     subresultant A B n m j
       = (Matrix.updateCol
@@ -188,9 +166,7 @@ theorem subresultant_eq_det_polyCol (A B : R[X]) (n m j : ℕ) (hlt : 2 * j < m 
       rw [hsub]
   rw [hcol, ← RingHom.mapMatrix_apply, ← RingHom.map_det]; exact mul_comm _ _
 
-/-- Determinant is unchanged when a `Finset`-sum of (scalar multiples of) *other* rows is added to a
-row — the iterated transvection that drives the Fundamental-PRS-Theorem row reduction (subtracting
-`Q`-multiples of the `B`-rows from the `A`-rows). -/
+/-- Determinant is unchanged by adding a `Finset`-sum of scalar multiples of other rows to a row. -/
 theorem det_updateRow_add_sum_smul_self {N : Type*} [DecidableEq N] [Fintype N] (M : Matrix N N R)
     (i : N) {ι : Type*} [DecidableEq ι] (s : Finset ι) (c : ι → R) (f : ι → N)
     (hf : ∀ k ∈ s, f k ≠ i) :
@@ -213,13 +189,7 @@ theorem det_updateRow_add_sum_smul_self {N : Type*} [DecidableEq N] [Fintype N] 
       rw [hM', Matrix.updateRow_idem]]
     rw [h1, hM', ih hsub]
 
-/-- **Subresultant invariance under `A ↦ A + a·Xᵈ·B`** (Geddes §7.3, the single-monomial step of
-Lemma 7.1's row reduction): every subresultant `Sⱼ(A,B)` is unchanged by adding `a·Xᵈ·B` to `A`
-(requires `j < n`, `B.natDegree ≤ m`, `m + d ≤ n`). Proof: per submatrix,
-`ⱼSᵢ(A + a·Xᵈ·B) = (1 + a•P)·ⱼSᵢ(A)`, where `P` sends each A-row to its B-row source shifted by `d`;
-`1 + a•P` is unipotent upper-triangular (`det = 1`), and the product is the coefficient identity
-`(a·Xᵈ·B).coeff(ν) = a·B.coeff(ν−d)` (the windows agree because `B.coeff` vanishes outside its degree
-range). -/
+/-- `Sⱼ(A + a·Xᵈ·B, B) = Sⱼ(A,B)`: subresultant invariance under adding a monomial multiple of `B` to `A`. -/
 theorem subresultant_add_monomial_mul (A B : R[X]) (a : R) (n m j d : ℕ)
     (hjn : j < n) (hB : B.natDegree ≤ m) (hd : m + d ≤ n) :
     subresultant (A + C a * (X ^ d * B)) B n m j = subresultant A B n m j := by
@@ -287,19 +257,13 @@ theorem subresultant_add_monomial_mul (A B : R[X]) (a : R) (n m j d : ℕ)
       simp only [bSylvester, Matrix.of_apply, ← hl, if_neg (show ¬ (t : ℕ) + j < m by omega)]
   rw [hprod, Matrix.det_mul, hTdet, one_mul]
 
-/-- **Subresultant invariance under `A ↦ A + c·B`** (the constant `d = 0` case of
-`subresultant_add_monomial_mul`): adding a constant multiple of `B` to `A` leaves every `Sⱼ(A,B)`
-fixed (`m ≤ n`, `j < n`, `B.natDegree ≤ m`). -/
+/-- `Sⱼ(A + c·B, B) = Sⱼ(A,B)`: invariance under adding a constant multiple of `B` to `A`. -/
 theorem subresultant_add_const_mul (A B : R[X]) (c : R) (n m j : ℕ)
     (hmn : m ≤ n) (hjn : j < n) (hB : B.natDegree ≤ m) :
     subresultant (A + C c * B) B n m j = subresultant A B n m j := by
   simpa using subresultant_add_monomial_mul A B c n m j 0 hjn hB (by omega)
 
-/-- **Subresultant invariance under `A ↦ A + B·p`** (Geddes §7.3, the full row-reduction half of
-Lemma 7.1): for any polynomial `p` with `p.natDegree + m ≤ n`, every subresultant is unchanged by
-adding `B·p` to `A` (`j < n`, `B.natDegree ≤ m`). Proof: write `p = ∑ₑ p_e·Xᵉ` and fold the monomial
-invariance `subresultant_add_monomial_mul` over the terms. With `p = −Q` (where `A = Q·B + R`) this
-yields `Sⱼ(A,B) = Sⱼ(rem(A,B),B)`. -/
+/-- `Sⱼ(A + B·p, B) = Sⱼ(A,B)`: invariance under adding any polynomial multiple of `B` to `A`. -/
 theorem subresultant_add_mul (A B p : R[X]) (n m j : ℕ)
     (hjn : j < n) (hB : B.natDegree ≤ m) (hp : p.natDegree + m ≤ n) :
     subresultant (A + B * p) B n m j = subresultant A B n m j := by
@@ -322,11 +286,7 @@ theorem subresultant_add_mul (A B p : R[X]) (n m j : ℕ)
   rw [hsum]
   exact key (p.natDegree + 1) (fun e he => by have := Finset.mem_range.mp he; omega) A
 
-/-- **Sylvester-matrix swap symmetry** (foundation for the swap half of Geddes §7.3 Lemma 7.1):
-swapping the two polynomials reindexes the Sylvester matrix by the block permutation that exchanges
-the `m` `A`-rows with the `n` `B`-rows — `bSylvester B A m n` is `bSylvester A B n m` with rows sent
-by `φ` (`i ↦ m+i` on the `B`-rows `i < n`, `i ↦ i−n` on the `A`-rows) and columns by the
-value-preserving cast. -/
+/-- `bSylvester B A m n` is `bSylvester A B n m` reindexed by the block permutation swapping the `A`- and `B`-rows. -/
 theorem bSylvester_swap (A B : R[X]) (n m : ℕ) :
     bSylvester B A m n = (bSylvester A B n m).submatrix
       (fun i : Fin (n + m) => (⟨if (i : ℕ) < n then m + (i : ℕ) else (i : ℕ) - n,
@@ -341,10 +301,7 @@ theorem bSylvester_swap (A B : R[X]) (n m : ℕ) :
       show n + ((i : ℕ) - n) - (l : ℕ) = (i : ℕ) - (l : ℕ) from by omega,
       show (i : ℕ) - n + n = (i : ℕ) from by omega]
 
-/-- The `q`-th power of `finRotate (N+1)` is "add `q` modulo `N+1`": `(finRotate (N+1))^q r` has
-underlying value `(r + q) mod (N+1)`. (Mathlib has `finRotate_succ_apply`/`coe_finRotate` but no
-closed form for the power; this supplies it, used to identify a block-swap permutation as a power of
-`finRotate` and read off its sign.) -/
+/-- `((finRotate (N+1))^q r : ℕ) = (r + q) % (N+1)`: the `q`-th power of `finRotate` adds `q` mod `N+1`. -/
 theorem finRotate_pow_val (N q : ℕ) (r : Fin (N + 1)) :
     (((finRotate (N + 1)) ^ q) r : ℕ) = (r.val + q) % (N + 1) := by
   have hstep : ∀ x : Fin (N + 1), (finRotate (N + 1) x : ℕ) = (x.val + 1) % (N + 1) := by
@@ -365,11 +322,7 @@ theorem finRotate_pow_val_pos (K q : ℕ) (hK : 0 < K) (r : Fin K) :
   exact finRotate_pow_val N q r
 
 open Matrix Equiv in
-/-- **Determinant swap for the subresultant submatrices** (the per-`ⱼSᵢ` heart of the swap half of
-Geddes §7.3 Lemma 7.1): `det ⱼSᵢ(B,A) = (-1)^((m-j)(n-j)) · det ⱼSᵢ(A,B)` (`j ≤ m`, `j < n`). The two
-submatrices share rows and columns (`bSylvester_swap`) up to the block permutation `ρ` exchanging the
-`(m-j)` kept `A`-rows with the `(n-j)` kept `B`-rows; `ρ` is `(finRotate (n+m-2j))^(m-j)`, so its sign
-is `(-1)^((m-j)(n-j))` (`det_permute` + `det_submatrix_equiv_self`). -/
+/-- `det ⱼSᵢ(B,A) = (-1)^((m-j)(n-j)) · det ⱼSᵢ(A,B)`: sign of the per-minor row swap. -/
 theorem bSylvester_submatrix_det_swap (A B : R[X]) (n m j i : ℕ) (hjm : j ≤ m) (hjn : j < n) :
     ((bSylvester B A m n).submatrix (subRow m n j) (subCol m n j i)).det
       = (-1 : R) ^ ((m - j) * (n - j)) *
@@ -425,11 +378,7 @@ theorem bSylvester_submatrix_det_swap (A B : R[X]) (n m j i : ℕ) (hjm : j ≤ 
     rw [key, pow_add, heven.neg_one_pow, mul_one, mul_comm p q]
   rw [hsign]
 
-/-- **Subresultant swap-with-sign** (Geddes §7.3, the swap half of Lemma 7.1): swapping the two
-polynomials multiplies every subresultant by `(-1)^((m-j)(n-j))` —
-`Sⱼ(A,B) = (-1)^((m-j)(n-j)) · Sⱼ(B,A)` (`j ≤ m`, `j < n`). Each `ⱼSᵢ` determinant picks up the sign
-(`bSylvester_submatrix_det_swap`); since the sign is a square root of unity the factor cancels through
-the `C`-coefficients and the sum. -/
+/-- `Sⱼ(A,B) = (-1)^((m-j)(n-j)) · Sⱼ(B,A)`: swapping the polynomials multiplies the subresultant by a sign. -/
 theorem subresultant_swap (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j < n) :
     subresultant A B n m j = (-1 : R[X]) ^ ((m - j) * (n - j)) * subresultant B A m n j := by
   rw [subresultant, subresultant, Finset.mul_sum]
@@ -437,20 +386,13 @@ theorem subresultant_swap (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j < 
   rw [bSylvester_submatrix_det_swap A B n m j i hjm hjn, map_mul, map_pow, map_neg, map_one,
     ← mul_assoc, ← mul_assoc, ← pow_add, Even.neg_one_pow ⟨_, rfl⟩, one_mul]
 
-/-- **Euclidean-step subresultant relation** (Geddes §7.3 Lemma 7.1, the engine of the Fundamental
-PRS Theorem): for a division step `A = R + B·Q` (so `R = A − B·Q` is the remainder), every
-subresultant of `(A,B)` equals — up to the swap sign — the corresponding subresultant of `(B,R)`:
-`Sⱼ(A,B) = (-1)^((m-j)(n-j)) · Sⱼ(B,R)` (`j ≤ m`, `j < n`, `B.natDegree ≤ m`, `Q.natDegree + m ≤ n`).
-Combines the row-reduction invariance `subresultant_add_mul` (kill `B·Q`) with `subresultant_swap`. -/
+/-- `Sⱼ(A,B) = (-1)^((m-j)(n-j)) · Sⱼ(B,Rem)` for a division step `A = Rem + B·Q`. -/
 theorem subresultant_rem (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m) (hjn : j < n)
     (hB : B.natDegree ≤ m) (hQ : Q.natDegree + m ≤ n) (hA : A = Rem + B * Q) :
     subresultant A B n m j = (-1 : R[X]) ^ ((m - j) * (n - j)) * subresultant B Rem m n j := by
   rw [hA, subresultant_add_mul Rem B Q n m j hjn hB hQ, subresultant_swap Rem B n m j hjm hjn]
 
-/-- Helper for the degree-padding step: when the second polynomial `Rem` has formal degree `d+1`
-but true degree `≤ d`, the minor obtained by deleting the first row and column of the `ⱼSᵢ`
-submatrix of `bSylvester B Rem m (d+1)` is exactly the corresponding `ⱼSᵢ` submatrix of
-`bSylvester B Rem m d` (the column index shifts by one). -/
+/-- Deleting the first row and column of the `ⱼSᵢ` submatrix at formal degree `d+1` gives the `ⱼSᵢ` submatrix at degree `d`. -/
 private theorem subresultant_pad_entry (B Rem : R[X]) (m d j i : ℕ) (hjd : j < d) (hjm : j ≤ m)
     (hij : i ≤ j) (hRem : Rem.natDegree ≤ d) (s s' : Fin (d + m - 2 * j)) :
     (bSylvester B Rem m (d + 1)) (subRow m (d + 1) j ⟨(s : ℕ) + 1, by have := s.isLt; omega⟩)
@@ -477,8 +419,7 @@ private theorem subresultant_pad_entry (B Rem : R[X]) (m d j i : ℕ) (hjd : j <
     (split_ifs <;>
       first | rfl | rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)] | (congr 1; omega))
 
-/-- Helper for the degree-padding step: column `0` of the `ⱼSᵢ` submatrix of `bSylvester B Rem m
-(d+1)` (with `Rem.natDegree ≤ d`) has the single nonzero entry `B.coeff m` at row `0`. -/
+/-- Column `0` of the `ⱼSᵢ` submatrix at formal degree `d+1` has its only nonzero entry `B.coeff m` at row `0`. -/
 private theorem subresultant_pad_col0 (B Rem : R[X]) (m d j i : ℕ) (hjd : j < d) (hjm : j ≤ m)
     (_hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ d) (s c0 : Fin (d + 1 + m - 2 * j))
     (hc0 : (c0 : ℕ) = 0) :
@@ -495,12 +436,7 @@ private theorem subresultant_pad_col0 (B Rem : R[X]) (m d j i : ℕ) (hjd : j < 
   · rw [if_neg hs0]
     split_ifs <;> first | rfl | rw [Polynomial.coeff_eq_zero_of_natDegree_lt (by omega)]
 
-/-- **Degree-padding, one step** (Geddes §7.3, the leading-coefficient bookkeeping of Lemma 7.1):
-increasing the formal degree of the second polynomial `Rem` from `d` to `d+1` (when its true degree
-is `≤ d`) multiplies every subresultant by the leading coefficient `B.coeff m` of the first —
-`Sⱼ(B, Rem; m, d+1) = (lc B) · Sⱼ(B, Rem; m, d)` (`j < d`, `j ≤ m`, `B.natDegree ≤ m`,
-`Rem.natDegree ≤ d`). Proof: cofactor-expand each `ⱼSᵢ` along its first column, which is `B.coeff m`
-times a unit vector (`subresultant_pad_col0`), and identify the minor (`subresultant_pad_entry`). -/
+/-- `Sⱼ(B,Rem; m,d+1) = C (B.coeff m) · Sⱼ(B,Rem; m,d)`: raising `Rem`'s formal degree by one scales by `lc B`. -/
 theorem subresultant_pad_step (B Rem : R[X]) (m d j : ℕ) (hjd : j < d) (hjm : j ≤ m)
     (hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ d) :
     subresultant B Rem m (d + 1) j = C (B.coeff m) * subresultant B Rem m d j := by
@@ -540,11 +476,7 @@ theorem subresultant_pad_step (B Rem : R[X]) (m d j : ℕ) (hjd : j < d) (hjm : 
     · intro h; exact absurd (Finset.mem_univ _) h
   rw [hdet, map_mul]; ring
 
-/-- **Degree padding** (Geddes §7.3, Lemma 7.1's leading-coefficient correction): a subresultant
-computed with the second polynomial `Rem` at formal degree `n` equals `(lc B)^(n−k)` times the one
-at `Rem`'s true degree `k`, where `lc B = B.coeff m` — `Sⱼ(B,Rem; m,n) = (B.coeff m)^(n−k) ·
-Sⱼ(B,Rem; m,k)` (`j < k`, `j ≤ m`, `B.natDegree ≤ m`, `Rem.natDegree ≤ k ≤ n`). Iterates
-`subresultant_pad_step`. -/
+/-- `Sⱼ(B,Rem; m,n) = C (B.coeff m)^(n−k) · Sⱼ(B,Rem; m,k)`: padding `Rem`'s formal degree from `k` to `n`. -/
 theorem subresultant_padding (B Rem : R[X]) (m k j : ℕ) (hjk : j < k) (hjm : j ≤ m)
     (hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ k) :
     ∀ n, k ≤ n →
@@ -556,12 +488,7 @@ theorem subresultant_padding (B Rem : R[X]) (m k j : ℕ) (hjk : j < k) (hjm : j
     rw [subresultant_pad_step B Rem m n j (by omega) hjm hB (by omega), ih, ← mul_assoc,
       ← pow_succ', show n - k + 1 = n + 1 - k from by omega]
 
-/-- **Euclidean-step subresultant relation with degree correction** (Geddes §7.3 Lemma 7.1, the
-case `0 ≤ j < deg(rem)` of the Fundamental PRS Theorem): for a division step `A = Rem + B·Q`, every
-subresultant of `(A,B)` reduces to a genuine subresultant of `(B,Rem)` at `Rem`'s true degree, with
-the swap sign and the leading-coefficient power — `Sⱼ(A,B) = (-1)^((m-j)(n-j)) · (lc B)^(n−k) ·
-Sⱼ(B,Rem)` where `k = Rem.natDegree` (`j ≤ m`, `j < k ≤ n`, `B.natDegree ≤ m`, `Q.natDegree+m ≤ n`).
-Combines `subresultant_rem` and `subresultant_padding`. -/
+/-- `Sⱼ(A,B) = (-1)^((m-j)(n-j)) · C (B.coeff m)^(n−k) · Sⱼ(B,Rem)` at `k = Rem.natDegree`, for `A = Rem + B·Q` and `j < k`. -/
 theorem subresultant_rem_lt (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m)
     (hjk : j < Rem.natDegree) (hkn : Rem.natDegree ≤ n) (hB : B.natDegree ≤ m)
     (hQ : Q.natDegree + m ≤ n) (hA : A = Rem + B * Q) :
@@ -571,10 +498,7 @@ theorem subresultant_rem_lt (A B Q Rem : R[X]) (n m j : ℕ) (hjm : j ≤ m)
   rw [subresultant_rem A B Q Rem n m j hjm (by omega) hB hQ hA,
     subresultant_padding B Rem m Rem.natDegree j hjk hjm hB le_rfl n hkn]
 
-/-- Per-minor evaluation for the degenerate index `j = γ-1` (Brown–Traub Lemma 1, eq 15):
-the `ⱼSᵢ` submatrix of `bSylvester B Rem γ φ` is upper-triangular — its single `Rem`-row is
-`[0,…,0, Rem.coeff i]` (since `Rem.coeff(φ-c)=0` on the kept columns, as `φ-c ≥ γ > deg Rem`) and the
-`B`-block is upper-triangular with `lc B = B.coeff γ` on the diagonal — so `det = (lc B)^(φ-γ+1)·Rem.coeff i`. -/
+/-- Per-minor value at `j = γ-1`: `det ⱼSᵢ = (B.coeff γ)^(φ-γ+1) · Rem.coeff i`. -/
 private theorem subresultant_deg_sub_one_entry (B Rem : R[X]) (γ φ i : ℕ) (hγ : 1 ≤ γ)
     (hγφ : γ ≤ φ) (hRem : Rem.natDegree < γ) (hi : i < γ) :
     ((bSylvester B Rem γ φ).submatrix (subRow γ φ (γ - 1)) (subCol γ φ (γ - 1) i)).det
@@ -627,9 +551,7 @@ private theorem subresultant_deg_sub_one_entry (B Rem : R[X]) (γ φ i : ℕ) (h
       · rw [if_pos hsB, if_pos ⟨by omega, by omega⟩, coeff_eq_zero_of_natDegree_lt (by omega)]
       · rw [if_neg hsB, if_neg (by omega)]
 
-/-- **Subresultant at index `γ-1`** (Geddes §7.3 / Brown–Traub eq 15): for `deg Rem < γ ≤ φ`,
-`Sⱼ(B,Rem; γ,φ) = (lc B)^(φ-γ+1)·Rem` at `j = γ-1` — summing the per-minor determinants
-(`subresultant_deg_sub_one_entry`) reassembles `Rem` via `as_sum_range'` (`deg Rem < γ`). -/
+/-- `S_{γ-1}(B,Rem; γ,φ) = C ((B.coeff γ)^(φ-γ+1)) · Rem` for `deg Rem < γ ≤ φ`. -/
 theorem subresultant_deg_sub_one (B Rem : R[X]) (γ φ : ℕ) (hγ : 1 ≤ γ) (hγφ : γ ≤ φ)
     (hRem : Rem.natDegree < γ) :
     subresultant B Rem γ φ (γ - 1) = C ((B.coeff γ) ^ (φ - γ + 1)) * Rem := by
@@ -641,10 +563,7 @@ theorem subresultant_deg_sub_one (B Rem : R[X]) (γ φ : ℕ) (hγ : 1 ≤ γ) (
   simp only [C_mul_X_pow_eq_monomial]
   exact (Rem.as_sum_range' γ (by omega)).symm
 
-/-- **Fundamental PRS Theorem, degenerate case `j = deg G − 1`** (Brown–Traub Lemma 1, eq 15): for a
-division step `A = Rem + B·Q` with `deg Rem < deg B = γ ≤ deg A = φ`,
-`S_{γ-1}(A,B) = (-1)^(φ-γ+1)·(lc B)^(φ-γ+1)·Rem` — the `(γ-1)`-th subresultant is the remainder up to
-sign and a power of `lc B`. Composes `subresultant_rem` (swap-with-sign) with `subresultant_deg_sub_one`. -/
+/-- `S_{γ-1}(A,B) = (-1)^(φ-γ+1) · C ((B.coeff γ)^(φ-γ+1)) · Rem` for `A = Rem + B·Q`, `deg Rem < γ ≤ φ`. -/
 theorem subresultant_rem_eq_15 (A B Q Rem : R[X]) (γ φ : ℕ) (hγ : 1 ≤ γ) (hγφ : γ ≤ φ)
     (hB : B.natDegree ≤ γ) (hRem : Rem.natDegree < γ) (hQ : Q.natDegree + γ ≤ φ)
     (hA : A = Rem + B * Q) :
@@ -655,9 +574,7 @@ theorem subresultant_rem_eq_15 (A B Q Rem : R[X]) (γ φ : ℕ) (hγ : 1 ≤ γ)
     show (γ - (γ - 1)) * (φ - (γ - 1)) = φ - γ + 1 from by
       rw [show γ - (γ - 1) = 1 from by omega, one_mul]; omega]
 
-/-- For `j ≥ deg Rem` the `ⱼSᵢ` submatrix of `bSylvester B Rem γ φ` is upper-triangular: the `B`-block
-has `lc B`-diagonal with zeros below, and every `Rem`-row entry strictly below the diagonal is
-`Rem.coeff` of a degree `> j ≥ deg Rem`, hence `0`. Shared core of the degenerate cases (eqs 13–15). -/
+/-- For `j ≥ deg Rem` the `ⱼSᵢ` submatrix of `bSylvester B Rem γ φ` is upper-triangular (entries below the diagonal vanish). -/
 private theorem subresultant_deg_ge_upperTri (B Rem : R[X]) (γ φ j i : ℕ) (hj1 : Rem.natDegree ≤ j)
     (hj2 : j < γ) (hγφ : γ ≤ φ)
     (e : Fin ((φ + γ - 2 * j - 1) + 1) ≃ Fin (φ + γ - 2 * j)) (he : e = finCongr (by omega))
@@ -684,10 +601,7 @@ private theorem subresultant_deg_ge_upperTri (B Rem : R[X]) (γ φ j i : ℕ) (h
     · exact coeff_eq_zero_of_natDegree_lt (by omega)
     · rfl
 
-/-- **Fundamental PRS Theorem, vanishing case `deg Rem < j < deg G − 1`** (Brown–Traub Lemma 1, eq 14):
-`Sⱼ(B,Rem; γ,φ) = 0`. The `ⱼSᵢ` submatrix is upper-triangular (`subresultant_deg_ge_upperTri`) and a
-middle `Rem`-row contributes the diagonal entry `Rem.coeff j = 0` (as `j > deg Rem`), so the determinant
-vanishes. -/
+/-- `Sⱼ(B,Rem; γ,φ) = 0` for `deg Rem < j < γ - 1`. -/
 theorem subresultant_deg_mid (B Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree < j) (hj2 : j < γ - 1)
     (hγφ : γ ≤ φ) :
     subresultant B Rem γ φ j = 0 := by
@@ -713,9 +627,7 @@ theorem subresultant_deg_mid (B Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree
   rw [if_neg (show ¬ (φ < φ) by omega), if_pos ⟨by omega, by omega⟩]
   exact coeff_eq_zero_of_natDegree_lt (by omega)
 
-/-- **Fundamental PRS Theorem, vanishing case** (Brown–Traub Lemma 1, eq 14): for a division step
-`A = Rem + B·Q` with `deg Rem < j < deg B − 1`, `Sⱼ(A,B) = 0`. Composes `subresultant_rem` with
-`subresultant_deg_mid`. -/
+/-- `Sⱼ(A,B) = 0` for `A = Rem + B·Q` with `deg Rem < j < γ - 1`. -/
 theorem subresultant_rem_eq_14 (A B Q Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree < j)
     (hj2 : j < γ - 1) (hγφ : γ ≤ φ) (hB : B.natDegree ≤ γ) (hQ : Q.natDegree + γ ≤ φ)
     (hA : A = Rem + B * Q) :
@@ -723,7 +635,7 @@ theorem subresultant_rem_eq_14 (A B Q Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.nat
   rw [subresultant_rem A B Q Rem φ γ j (by omega) (by omega) hB hQ hA,
     subresultant_deg_mid B Rem γ φ j hj1 hj2 hγφ, mul_zero]
 
-/-- `#{t : Fin M | t.val < k} = k` for `k ≤ M` (the first `k` elements of `Fin M`). -/
+/-- `#{t : Fin M | t.val < k} = k` for `k ≤ M`. -/
 private theorem card_filter_lt (M k : ℕ) (h : k ≤ M) :
     (Finset.univ.filter (fun t : Fin M => (t : ℕ) < k)).card = k := by
   conv_rhs => rw [← Finset.card_range k]
@@ -733,9 +645,7 @@ private theorem card_filter_lt (M k : ℕ) (h : k ≤ M) :
   · intro b hb; rw [Finset.mem_range] at hb
     exact ⟨⟨b, by omega⟩, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hb⟩, rfl⟩
 
-/-- Per-minor evaluation for `deg Rem ≤ j < γ` (the general degenerate index, Brown–Traub eq 19): the
-upper-triangular `ⱼSᵢ` det is the product of its diagonal — `φ-j` copies of `lc B`, `γ-j-1` copies of
-`Rem.coeff j`, and one `Rem.coeff i` — so `det = (lc B)^(φ-j)·(Rem.coeff j)^(γ-j-1)·Rem.coeff i`. -/
+/-- Per-minor value for `deg Rem ≤ j < γ`: `det ⱼSᵢ = (B.coeff γ)^(φ-j) · (Rem.coeff j)^(γ-j-1) · Rem.coeff i`. -/
 private theorem subresultant_deg_ge_entry (B Rem : R[X]) (γ φ j i : ℕ) (hj1 : Rem.natDegree ≤ j)
     (hj2 : j < γ) (hγφ : γ ≤ φ) (hi : i ≤ j) :
     ((bSylvester B Rem γ φ).submatrix (subRow γ φ j) (subCol γ φ j i)).det
@@ -786,10 +696,7 @@ private theorem subresultant_deg_ge_entry (B Rem : R[X]) (γ φ j i : ℕ) (hj1 
     rw [card_filter_lt _ _ (by omega), Finset.card_univ, Fintype.card_fin] at h; omega
   rw [hcn]; ring
 
-/-- **Subresultant for `deg Rem ≤ j < γ`** (Geddes §7.3 / Brown–Traub eq 19, the unified degenerate
-formula): `Sⱼ(B,Rem; γ,φ) = (lc B)^(φ-j)·(Rem.coeff j)^(γ-j-1)·Rem`. Summing the per-minor determinants
-(`subresultant_deg_ge_entry`) reassembles `Rem` (`as_sum_range'`, `deg Rem ≤ j`). Specializes to eq 15
-(`j=γ-1`, exponent `0`), eq 14 (`j>deg Rem` ⇒ `Rem.coeff j = 0`), and eq 13 (`j=deg Rem`). -/
+/-- `Sⱼ(B,Rem; γ,φ) = C ((B.coeff γ)^(φ-j) · (Rem.coeff j)^(γ-j-1)) · Rem` for `deg Rem ≤ j < γ`. -/
 theorem subresultant_deg_ge (B Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree ≤ j) (hj2 : j < γ)
     (hγφ : γ ≤ φ) :
     subresultant B Rem γ φ j = C ((B.coeff γ) ^ (φ - j) * (Rem.coeff j) ^ (γ - j - 1)) * Rem := by
@@ -803,10 +710,7 @@ theorem subresultant_deg_ge (B Rem : R[X]) (γ φ j : ℕ) (hj1 : Rem.natDegree 
   simp only [C_mul_X_pow_eq_monomial]
   exact (Rem.as_sum_range' (j + 1) (by omega)).symm
 
-/-- For `j ≥ deg B` and `m ≤ n` the `ⱼSᵢ` submatrix of `bSylvester A B n m` (the *normal*
-orientation, first poly `A` of the larger formal degree `n`) is upper-triangular: the `A`-block has
-`lc A = A.coeff n`-diagonal with zeros below, and every `B`-row entry strictly below the diagonal is
-`B.coeff` of a degree `> j ≥ deg B`, hence `0`. The mirror of `subresultant_deg_ge_upperTri`. -/
+/-- For `j ≥ deg B`, `m ≤ n` the `ⱼSᵢ` submatrix of `bSylvester A B n m` is upper-triangular (normal orientation). -/
 private theorem subresultant_deg_ge_normal_upperTri (A B : R[X]) (n m j i : ℕ)
     (hj1 : B.natDegree ≤ j) (hj2 : j < n) (hmn : m ≤ n) (hjm : j ≤ m)
     (e : Fin ((m + n - 2 * j - 1) + 1) ≃ Fin (m + n - 2 * j)) (he : e = finCongr (by omega))
@@ -833,10 +737,7 @@ private theorem subresultant_deg_ge_normal_upperTri (A B : R[X]) (n m j i : ℕ)
     · exact coeff_eq_zero_of_natDegree_lt (by omega)
     · rfl
 
-/-- Per-minor evaluation for `deg B ≤ j ≤ m ≤ n`, `j < n` (the *normal*-orientation mirror of
-`subresultant_deg_ge_entry`): the upper-triangular `ⱼSᵢ` det of `bSylvester A B n m` is the product of
-its diagonal — `m-j` copies of `lc A = A.coeff n`, `n-j-1` copies of `B.coeff j`, and one `B.coeff i` —
-so `det = (A.coeff n)^(m-j)·(B.coeff j)^(n-j-1)·B.coeff i`. -/
+/-- Per-minor value (normal orientation) for `deg B ≤ j ≤ m ≤ n`, `j < n`: `det ⱼSᵢ = (A.coeff n)^(m-j) · (B.coeff j)^(n-j-1) · B.coeff i`. -/
 private theorem subresultant_deg_ge_normal_entry (A B : R[X]) (n m j i : ℕ)
     (hj1 : B.natDegree ≤ j) (hj2 : j < n) (hmn : m ≤ n) (hjm : j ≤ m) (hi : i ≤ j) :
     ((bSylvester A B n m).submatrix (subRow n m j) (subCol n m j i)).det
@@ -887,12 +788,7 @@ private theorem subresultant_deg_ge_normal_entry (A B : R[X]) (n m j i : ℕ)
     rw [card_filter_lt _ _ (by omega), Finset.card_univ, Fintype.card_fin] at h; omega
   rw [hcn]; ring
 
-/-- **Subresultant for `deg B ≤ j ≤ m ≤ n`, `j < n`** (the *normal*-orientation mirror of
-`subresultant_deg_ge`, with the first poly `A` of the larger formal degree `n`):
-`Sⱼ(A,B; n,m) = (lc A)^(m-j)·(B.coeff j)^(n-j-1)·B`. Summing the per-minor determinants
-(`subresultant_deg_ge_normal_entry`) reassembles `B` (`as_sum_range'`, `deg B ≤ j`). This is the shape
-needed by the Lazard–Rioboo–Trager top index `j = deg E`, where `E ∣ D` and the p.r.s. terminates in
-one step (`gcd D E ~ E`), so the formal degrees `(n,m) = (deg D, deg D − 1)` are *not* swapped. -/
+/-- `Sⱼ(A,B; n,m) = C ((A.coeff n)^(m-j) · (B.coeff j)^(n-j-1)) · B` (normal orientation) for `deg B ≤ j ≤ m ≤ n`, `j < n`. -/
 theorem subresultant_deg_ge_normal (A B : R[X]) (n m j : ℕ) (hj1 : B.natDegree ≤ j) (hj2 : j < n)
     (hmn : m ≤ n) (hjm : j ≤ m) :
     subresultant A B n m j = C ((A.coeff n) ^ (m - j) * (B.coeff j) ^ (n - j - 1)) * B := by
@@ -912,10 +808,7 @@ example (A B : R[X]) (n m j : ℕ) (hj1 : B.natDegree ≤ j) (hj2 : j < n) (hmn 
     subresultant A B n m j = C ((A.coeff n) ^ (m - j) * (B.coeff j) ^ (n - j - 1)) * B :=
   subresultant_deg_ge_normal A B n m j hj1 hj2 hmn hjm
 
-/-- **Fundamental PRS Theorem, case `j = deg H`** (Brown–Traub Lemma 1, eq 13): for a division step
-`A = Rem + B·Q` with `deg Rem < deg B = γ ≤ deg A = φ`,
-`S_η(A,B) = (-1)^((φ-η)(γ-η))·(lc B)^(φ-η)·(lc Rem)^(γ-η-1)·Rem` at `η = deg Rem`. Composes
-`subresultant_rem` with `subresultant_deg_ge`. -/
+/-- `S_η(A,B) = (-1)^((φ-η)(γ-η)) · C ((B.coeff γ)^(φ-η) · (lc Rem)^(γ-η-1)) · Rem` at `η = deg Rem`, for `A = Rem + B·Q`. -/
 theorem subresultant_rem_eq_13 (A B Q Rem : R[X]) (γ φ : ℕ) (hη : Rem.natDegree < γ) (hγφ : γ ≤ φ)
     (hB : B.natDegree ≤ γ) (hQ : Q.natDegree + γ ≤ φ) (hA : A = Rem + B * Q) :
     subresultant A B φ γ Rem.natDegree
@@ -927,12 +820,7 @@ theorem subresultant_rem_eq_13 (A B Q Rem : R[X]) (γ φ : ℕ) (hη : Rem.natDe
     Nat.mul_comm (γ - Rem.natDegree) (φ - Rem.natDegree)]
   rfl
 
-/-- **Fundamental PRS Theorem, single step** (Brown–Traub Lemma 2, eq 21, over an integral domain):
-relates consecutive subresultants across one PRS division step `α·A = β·C + B·Q` (`α,β` constants,
-`A,B,C` the three consecutive polynomials with `deg C = c < deg B = b ≤ deg A = a`). For `0 ≤ j < c`,
-`α^(b-j)·Sⱼ(A,B) = (-1)^((a-j)(b-j))·(lc B)^(a-c)·β^(b-j)·Sⱼ(B,C)`. Composes the single-division-step
-relation `subresultant_rem_lt` (eq 12) with the scaling law `subresultant_C_mul` (eq 25, applied to
-unscale `α·A` and `β·C`). The engine of the iterated Fundamental Theorem. -/
+/-- PRS step for `α·A = β·C + B·Q`, `0 ≤ j < c`: `α^(b-j)·Sⱼ(A,B) = (-1)^((a-j)(b-j))·(lc B)^(a-c)·β^(b-j)·Sⱼ(B,C)`. -/
 theorem subresultant_prs_step [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c j : ℕ)
     (hβ : β ≠ 0) (hjc : j < c) (hcb : c < b) (hcpoly : C_poly.natDegree = c)
     (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a)
@@ -951,14 +839,13 @@ theorem subresultant_prs_step [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a 
   rw [← hL, subresultant_rem_lt (C α * A) B Q (C β * C_poly) a b j (by omega) (by rw [hRn]; omega)
       (by rw [hRn]; omega) hB hQ hrel, hRn, hR, mul_comm (b - j) (a - j)]
 
-/-- Unscale the first argument: `Sⱼ(α·A, B) = α^(b-j)·Sⱼ(A,B)` (scaling law, `b_scalar = 1`). -/
+/-- `Sⱼ(α·A, B) = C (α^(b-j)) · Sⱼ(A,B)`: unscale the first argument. -/
 private theorem prs_unscale (A B : R[X]) (α : R) (a b j : ℕ) (hjb : j ≤ b) (hja : j ≤ a) :
     subresultant (C α * A) B a b j = C (α ^ (b - j)) * subresultant A B a b j := by
   conv_lhs => rw [show B = C (1 : R) * B from by rw [map_one, one_mul]]
   rw [subresultant_C_mul α 1 A B a b j hjb hja, one_pow, mul_one]
 
-/-- **Fundamental PRS Theorem, single step at `j = deg G − 1`** (Brown–Traub Lemma 2, eq 24): across a
-PRS step `α·A = β·C + B·Q`, `α·S_{b-1}(A,B) = (-1)^(a-b+1)·(lc B)^(a-b+1)·β·C`. From eq 15 + scaling. -/
+/-- PRS step at `j = b - 1`: `α·S_{b-1}(A,B) = (-1)^(a-b+1) · C ((lc B)^(a-b+1)) · β·C`. -/
 theorem subresultant_prs_step_top [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c : ℕ)
     (hβ : β ≠ 0) (hcb : c < b) (hcpoly : C_poly.natDegree = c)
     (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a) (hrel : C α * A = C β * C_poly + B * Q) :
@@ -970,8 +857,7 @@ theorem subresultant_prs_step_top [IsDomain R] (A B C_poly Q : R[X]) (α β : R)
   rw [← hL, subresultant_rem_eq_15 (C α * A) B Q (C β * C_poly) b a (by omega) (by omega) hB
       (by rw [hRn]; omega) hQ hrel]
 
-/-- **Fundamental PRS Theorem, vanishing step** (Brown–Traub Lemma 2, eq 23): across a PRS step,
-`Sⱼ(A,B) = 0` for `deg C < j < deg B − 1`. From eq 14 + scaling (`α ≠ 0` cancels in the domain). -/
+/-- Vanishing PRS step: `Sⱼ(A,B) = 0` for `c < j < b - 1`. -/
 theorem subresultant_prs_step_gap [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c j : ℕ)
     (hα : α ≠ 0) (hβ : β ≠ 0) (hcj : c < j) (hjb : j < b - 1)
     (hcpoly : C_poly.natDegree = c) (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a)
@@ -987,9 +873,7 @@ theorem subresultant_prs_step_gap [IsDomain R] (A B C_poly Q : R[X]) (α β : R)
   · exact absurd h (by rw [C_eq_zero]; exact pow_ne_zero _ hα)
   · exact h
 
-/-- **Fundamental PRS Theorem, single step at `j = deg H`** (Brown–Traub Lemma 2, eq 22): across a PRS
-step, `α^(b-c)·S_c(A,B) = (-1)^((a-c)(b-c))·(lc B)^(a-c)·(lc βC)^(b-c-1)·βC` at `c = deg C`. From eq 13
-+ scaling. -/
+/-- PRS step at `j = c`: `α^(b-c)·S_c(A,B) = (-1)^((a-c)(b-c))·(lc B)^(a-c)·(lc βC)^(b-c-1)·βC`. -/
 theorem subresultant_prs_step_deg [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c : ℕ)
     (hβ : β ≠ 0) (hcb : c < b) (hcpoly : C_poly.natDegree = c)
     (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a) (hrel : C α * A = C β * C_poly + B * Q) :
@@ -1003,12 +887,7 @@ theorem subresultant_prs_step_deg [IsDomain R] (A B C_poly Q : R[X]) (α β : R)
   rw [hRn] at key
   rw [← hL, key]
 
-/-- **Theorem 1.4.3** (§1.4, general scaling case): when a coefficient homomorphism `σ` preserves the
-degree of `A` (`deg σ̄A = deg A`) but may lower that of `B`, the subresultant specializes up to a
-power of `σ(lc A)` — `σ̄(Sⱼ(A,B)) = σ(lc A)^(deg B − deg σ̄B) · Sⱼ(σ̄A, σ̄B)` for `0 ≤ j < deg σ̄B`,
-`j ≤ deg A`. Composes `subresultant_map` (σ commutes at the original formal degrees) with
-`subresultant_padding` (relating `σ̄B`'s formal degree `deg B` to its true degree `deg σ̄B`, the extra
-rows cofactor-expanding to `lc σ̄A = σ(lc A)`). The degree-preserving case is `subresultant_map`. -/
+/-- `σ(Sⱼ(A,B)) = C (σ(lc A))^(deg B − deg σB) · Sⱼ(σA, σB)` when `σ` preserves `deg A` but may lower `deg B`. -/
 theorem subresultant_map_lt {S : Type*} [CommRing S] (σ : R →+* S) (A B : R[X]) (j : ℕ)
     (hA : (A.map σ).natDegree = A.natDegree) (hj1 : j < (B.map σ).natDegree)
     (hj2 : j ≤ A.natDegree) :

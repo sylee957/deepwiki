@@ -1,10 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveNorm
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
 
-/-! # The fuel-free §6.1 normality check is `qReduce`-invariant
-
-This file records the Wf canonical-normality gate used by the fuel-free RDE solver.
-The denominator-direct gate on `qReduce x` is definitionally the wrapper gate on `x`. -/
+/-! # The canonical-normality check is `qReduce`-invariant. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -44,10 +41,7 @@ example (x : QFunNZG β) : cisCanonNormalizedCoreGWf (qReduce x) = cisCanonNorma
 
 end Bridge
 
-/-! ## Fuel-free canonical-normality propositions
-
-The Wf propositions are the fuel-free normality gates: they read the normal part through
-`cSplitFactorFastGWf` and are the predicates consumed by the Wf soundness API. -/
+/-! ## Canonical-normality propositions -/
 
 section NormalityWf
 
@@ -71,22 +65,14 @@ theorem cisCanonNormalizedGWf_iff (f q' : QFunNZG β) :
 
 end NormalityWf
 
-/-! ## The Wf re-pin corollary
-
-The Wf wrapper weak-normalizes `f` to `ftilde = weakNormalizedF f q'`
-(`q' = qOfPolyNZG (cWeakNormalizerGWf [1] f.1.1 f.1.2)`) and passes the Wf gate
-`cisCanonNormalizedGWf ftilde`. The Wf gated core, holding the reduced `qReduce ftilde`, runs the
-denominator-direct gate `cisCanonNormalizedCoreGWf (qReduce ftilde)`. The following equations reconcile those
-two Wf gates definitionally. -/
+/-! ## The re-pin corollary -/
 
 section Repin
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
-/-- **The Wf re-pin gate reconciliation** (`cisCanonNormalizedCoreGWf_qReduce_weakNormalized`): for the
-weak-normalized `ftilde = weakNormalizedF f q'` (`q'` the lift of the fuel-free weak normalizer
-`cWeakNormalizerGWf [1] f.1.1 f.1.2`), the Wf gated core's denominator-direct check on the reduced input
-equals the Wf wrapper's check on the pre-reduce input. -/
+/-- For `ftilde = weakNormalizedF f q'` (`q'` the lift of `cWeakNormalizerGWf [1] f.1.1 f.1.2`), the
+core check on the reduced input equals the wrapper check on the pre-reduce input. -/
 theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized (f : QFunNZG β) :
     cisCanonNormalizedCoreGWf (qReduce (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
@@ -96,8 +82,7 @@ theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized (f : QFunNZG β) :
     (weakNormalizedF f
       (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
 
-/-- **The Wf re-pin gate decides `IsCanonNormalizedWf`**: the Wf gated core's denominator-direct check on the
-reduced weak-normalized input passes iff the fuel-free §6.1 normalization guarantee holds. -/
+/-- The core check on the reduced weak-normalized input passes iff `IsCanonNormalizedWf` holds. -/
 theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
     cisCanonNormalizedCoreGWf (qReduce (weakNormalizedF f
         (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))) = true
@@ -123,16 +108,13 @@ end Repin
 #print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized
 #print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff
 
-/-! ### The §6.1 canonical-normality predicate + soundness-gate witness (relocated from the retired
-`RischDE/SolveNormCanon.lean`; consumed by `RischDE/SolveSoundWf.lean`) -/
+/-! ### The canonical-normality predicate and soundness-gate witness -/
 
 section CanonNormalized
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
-/-- **The §6.1 canonical-normality gate** `IsCanonNormalized f q'`: the lowest-terms canonicalized weakly
-normalized element `qReduce (weakNormalizedF f q')` is weakly normalized (`IsWeaklyNormalizedNorm`). A
-genuine, non-vacuous soundness gate — `native_decide`-validated to hold on the positive-integer-residue
-special-pole class and to fail exactly where the oracle would be unsound. -/
+/-- `IsCanonNormalized f q'`: the canonicalized element `qReduce (weakNormalizedF f q')` is weakly
+normalized (`IsWeaklyNormalizedNorm`). -/
 def IsCanonNormalized (f q' : QFunNZG β) : Prop :=
   IsWeaklyNormalizedNorm (qReduce (weakNormalizedF f q'))
 
@@ -141,8 +123,8 @@ end CanonNormalized
 /-- The witness scalar `−x ∈ ℚ(x) = QFunNZG ℚ` (numerator `[0, -1] = −x`, denominator `[1]`). -/
 def witnessNegX : QFunNZG ℚ := ⟨([(0 : ℚ), -1], [1]), by native_decide⟩
 
-/-- The witness `f = 1/(t₁ − x) ∈ Lvl2 = ℚ(x)(t₁)`: a `D`-constant special pole `t₁ − x` (`D(t₁ − x) = 0`,
-no positive-integer residue) — the soundness-gate witness. -/
+/-- The witness `f = 1/(t₁ − x) ∈ Lvl2 = ℚ(x)(t₁)`: a `D`-constant special pole with no
+positive-integer residue. -/
 def witnessF : Lvl2 := ⟨([CField.one], [witnessNegX, CField.one]), by native_decide⟩
 
 end DeepWiki.SymbolicIntegration

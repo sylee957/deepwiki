@@ -1,32 +1,13 @@
 import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Assembly
 import Mathlib.RingTheory.AdjoinRoot
 
-/-! # §8.4 tangent telescoping reconstruction — unconditional `cCoupledDECancelTan_sound`
+/-! # Tangent telescoping reconstruction for the hypertangent coupled system
 
-The §8.4 tangent box `cCoupledDECancelTan` (Bronstein, *Symbolic Integration I*, p.265) solves the
-hypertangent coupled `t`-polynomial system degree-by-degree, each level peeling a base
-`cCoupledDESystem` solve (over `k = ℚ(x)`) and reducing the right-hand side by synthetic division by
-`t − √−1`. This file proves that telescoping **correct**: the assembled `(q₁, q₂)` genuinely solves the
-§8.4 coupled system at the `ℚ[x][t]` level, discharging the engine's own `cancelTanClearedCheck` and so
-dropping the `_of_check` gate of the tangent soundness (`native_decide`-free).
-
-The reconstruction is verified in the Gaussian extension `S = AdjoinRoot (X²+1)` over `ℚ[x]`
-(`ℚ[x](√−1)`, `iU = √−1`):
-
-* **`evalAtI` projection consistency** (`evalAtI_spec`): `(toPoly2S p).eval iU = pairToS (evalAtI p)` —
-  `evalAtI` computes the residue of a real `t`-polynomial at `t = √−1`.
-* **`divByTminusI` synthetic-division correctness** (`divByTminusI_spec`): `pairListToS p =
-  (X − C iU)·pairListToS (divByTminusI p) + C ((pairListToS p).eval iU)` — the exact division identity
-  for the `k(√−1)[t]` Ruffini step (proved through a `go`-level existential invariant `go_div_master`).
-* **`reduction_real`**: combining the two, projected back to two real `ℚ[x][t]` identities via the
-  `{1, iU}`-basis extraction `cplx_eq_imp` (the numerator vanishes at `t = √−1`, `numerator_eval_zero`).
-* **`reconstruct`** (the telescoping induction, structural on `n`): the assembled `(q₁, q₂)` satisfy
-  `TanSolves` — both rows of the §8.4 coupled system at level `n` over `ℚ[x][t]`. Base case from the
-  unconditional `cCoupledDESystem_sound`; the step is the `q = (t − √−1)·h + s` algebra closed by
-  `linear_combination`.
-* **`cCoupledDECancelTan_sound`** (UNCONDITIONAL, `n = 2`): `cancelTanClearedCheck` discharged via
-  `cancelTanClearedCheck_of_reconstruct`, fed to `cancelTanClearedCheck_sound`. No `_of_check` gate,
-  no `native_decide`, no `sorry` (`#print axioms` = standard logical axioms only). -/
+`cCoupledDECancelTan` solves the hypertangent coupled `t`-polynomial system degree-by-degree,
+each level a base `cCoupledDESystem` solve reduced by synthetic division by `t − √−1`. This file
+verifies the telescoping in the Gaussian extension `S = AdjoinRoot (X²+1)` over `ℚ[x]`
+(`iU = √−1`), proving the assembled `(q₁, q₂)` solve the coupled system over `ℚ[x][t]` and so
+discharge `cancelTanClearedCheck`. -/
 
 namespace DeepWiki.SymbolicIntegration.CPolyG
 open Polynomial CPolyG
@@ -179,7 +160,7 @@ theorem divByTminusI_spec (p : List (CPolyG ℚ × CPolyG ℚ)) :
     ring
   rw [heval]; exact hr
 
-/-! ### toPoly2S as a ring hom: §8.4 operations lifted to S[t] -/
+/-! ### `toPoly2S` as a ring hom: operations lifted to `S[t]` -/
 
 theorem toPoly2S_eq_map (p : List (CPolyG ℚ)) :
     toPoly2S p = (toPoly2 p).map (AdjoinRoot.of (X ^ 2 + 1 : (Polynomial ℚ)[X])) := rfl
@@ -451,7 +432,7 @@ theorem eval_toPoly2S_shift (h : List (CPolyG ℚ)) :
   rw [toPoly2S_eq_map, toPoly2_shift, Polynomial.map_mul, Polynomial.map_X, eval_mul, eval_X]
   rfl
 
-/-- The §8.4 numerator `realNum + i·imagNum` vanishes at `t = i` (since `z = c(i)`). -/
+/-- The numerator `realNum + i·imagNum` vanishes at `t = i` (since `z = c(i)`). -/
 theorem numerator_eval_zero (c1 c2 : List (CPolyG ℚ)) (s1 s2 : CPolyG ℚ) (nN : ℚ) :
     (cplx
         (tadd (tsub c1 [csubG (evalAtI c1).1 (evalAtI c2).2])
@@ -484,8 +465,8 @@ theorem mul_X_sub_iU_cplx (d1 d2 : List (CPolyG ℚ)) :
     rw [← map_pow, iU_sq, map_neg, map_one]
   linear_combination (-(toPoly2S d2)) * hii
 
-/-- The reduction step, real form: if `realNum,imagNum` are the §8.4 numerator parts and
-`quot = divByTminusI (zip realNum imagNum)`, then the two `ℚ[x][t]` identities hold. -/
+/-- The reduction step, real form: for `quot = divByTminusI (zip realNum imagNum)`, the two
+`ℚ[x][t]` identities relating `realNum`/`imagNum` to `quot` hold. -/
 theorem reduction_real (c1 c2 : List (CPolyG ℚ)) (s1 s2 : CPolyG ℚ) (nN : ℚ)
     (realNum imagNum : List (CPolyG ℚ))
     (hr : realNum = tadd (tsub c1 [csubG (evalAtI c1).1 (evalAtI c2).2])
@@ -566,7 +547,7 @@ theorem tdeg_zero_toPoly2 (p : List (CPolyG ℚ)) (h : tdeg p = 0) :
 
 /-! ### The telescoping induction -/
 
-/-- The §8.4 coupled `t`-polynomial system at level `n`, over `ℚ[x][t]` (`a = −1`, `η = 1`):
+/-- The coupled `t`-polynomial system at level `n` over `ℚ[x][t]` (`a = −1`, `η = 1`):
 `D q₁ + (b₀ − n·t)·q₁ − b₂·q₂ = c₁` and `D q₂ + b₂·q₁ + (b₀ − n·t)·q₂ = c₂`. -/
 def TanSolves (b0 b2 : CPolyG ℚ) (n : ℕ) (c1 c2 q1 q2 : List (CPolyG ℚ)) : Prop :=
   toPoly2 (tanDeriv q1)
@@ -581,8 +562,7 @@ theorem toPolyG_scale_one (nN : ℚ) : toPolyG (cscaleG nN [CField.one]) = C nN 
   simp [show CFieldSpec.toK (CField.one : ℚ) = 1 from rfl,
     show CFieldSpec.toK nN = nN from rfl]
 
-/-- The §8.4 base-case identity (`n = 0`, `q = [s]`): from the base solve's `ℚ[X]` identities,
-the singleton solution solves the level-0 coupled `t`-system. -/
+/-- Base case (`n = 0`, `q = [s]`): the singleton solution solves the level-0 coupled `t`-system. -/
 theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPolyG ℚ))
     (s1 s2 : CPolyG ℚ) (hd1 : tdeg c1 = 0) (hd2 : tdeg c2 = 0)
     (hsolve : cCoupledDESystem (-1) b0 b2 (tcoeff c1 0) (tcoeff c2 0) dbound = some (s1, s2)) :
@@ -606,9 +586,8 @@ theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPol
     rw [map_add, map_add, map_mul, map_mul] at h
     linear_combination h
 
-/-- **★ Telescoping reconstruction (real `ℚ[x][t]` form)**: a returned `cCoupledDECancelTan`
-solution solves the §8.4 coupled system at the `ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`). By structural
-induction on `n` (the def is now structural-on-`n`, so it unfolds by `rw`). -/
+/-- Telescoping reconstruction: a returned `cCoupledDECancelTan` solution solves the coupled system
+at the `ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`), by induction on `n`. -/
 theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
     ∀ (n : ℕ) (b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)),
       cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2) →
@@ -721,11 +700,8 @@ theorem tisZero_of_toPoly2_zero (p : List (CPolyG ℚ)) (h : toPoly2 p = 0) : ti
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hk] at hc
   exact hc.symm
 
-/-- **★ The §8.4 tangent cleared check is discharged by `reconstruct` at `n = 2`** (`native_decide`-free):
-if `cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)` then the engine's own
-`cancelTanClearedCheck` passes. The reconstruction (`reconstruct`) gives the genuine `ℚ[x][t]`
-identities at level `n = 2` (where the diagonal shift `C(C 2)·X = toPoly2 [[],[2]]`), whose
-residual `t`-polynomials therefore have `toPoly2 = 0`, hence `tisZero`. -/
+/-- A successful `cCoupledDECancelTan … 2` solve satisfies `cancelTanClearedCheck … = true`,
+since `reconstruct` makes the residual `t`-polynomials `toPoly2 = 0` at level `n = 2`. -/
 theorem cancelTanClearedCheck_of_reconstruct (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     (c1 c2 q1 q2 : List (CPolyG ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :
@@ -754,14 +730,9 @@ end DeepWiki.SymbolicIntegration.CPolyG
 namespace DeepWiki.SymbolicIntegration
 open CPolyG Polynomial
 
-/-- **★★ Tangent RDE cancellation soundness — UNCONDITIONAL** (`cCoupledDECancelTan_sound`,
-`native_decide`-free, no cleared-check hypothesis): if `cCoupledDECancelTan dbound b0 b2 c1 c2 2
-= some (q1, q2)` then `(q₁, q₂)` solves the §8.4 tangent coupled `t`-polynomial system (8.15) at the
-`ℚ[x][t]` level (`D = ∂x + (t²+1)∂t`, the diagonal shift `−2t`). The engine's own
-`cancelTanClearedCheck` is now *discharged* from the unconditional base solve `cCoupledDESystem_sound`
-plus the §8.4 telescoping reconstruction (`reconstruct`: `evalAtI` projection mod `t²+1` +
-`divByTminusI` synthetic division), via `cancelTanClearedCheck_of_reconstruct`, then fed to
-`cancelTanClearedCheck_sound`. Drops the `_of_check` gate. -/
+/-- Tangent RDE cancellation soundness: a successful `cCoupledDECancelTan dbound b0 b2 c1 c2 2` solve
+`(q₁, q₂)` solves the tangent coupled `t`-polynomial system at the `ℚ[x][t]` level
+(`D = ∂x + (t²+1)∂t`, diagonal shift `−2t`). -/
 theorem cCoupledDECancelTan_sound (dbound : ℕ) (b0 b2 : CPolyG ℚ)
     (c1 c2 q1 q2 : List (CPolyG ℚ))
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 2 = some (q1, q2)) :

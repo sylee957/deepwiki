@@ -16,25 +16,21 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- Bézout cofactors `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`: run
-`cgcdWf` to get `(g, s, t)` with `s·a + t·b = g` (a nonzero constant, since `a, b` coprime),
-then rescale by `g⁻¹`. -/
+/-- Bézout cofactors `cbezoutOneWf a b = (u, w)` with `u·a + w·b = 1` for coprime `a, b`. -/
 def cbezoutOneWf (a b : CPolyG α) : CPolyG α × CPolyG α :=
   let (g, s, t) := cgcdWf a b
   let ginv := CField.inv (cleadG g)
   (cscaleG ginv s, cscaleG ginv t)
 
-/-- Bézout split `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)`: with a Bézout pair
-`u·dₙ + w·dₛ = 1`, returns `b = (u·r) mod dₛ` and `c = w·r + (u·r div dₛ)·dₙ` via `cdivmodWf`. -/
+/-- Bézout split `cextendedEuclideanSplitWf dₙ dₛ r u w = (b, c)` with `b = (u·r) mod dₛ`,
+`c = w·r + (u·r div dₛ)·dₙ`, given a Bézout pair `u·dₙ + w·dₛ = 1`. -/
 def cextendedEuclideanSplitWf (dn ds r u w : CPolyG α) : CPolyG α × CPolyG α :=
   let ur := cmulG u r
   let (quo, rem) := cdivmodWf ur ds
   (rem, caddG (cmulG w r) (cmulG quo dn))
 
-/-- Generic Diophantine/Bézout solver `cdiophantineGWf p q rhs = (b, c)` solving `b·p + c·q = rhs`
-with `deg b < deg q`, for coprime `p, q`: from `cgcdWf p q = (g, s, t)` with `s·p + t·q = g`
-(a nonzero constant), rescale `(s, t)` by `rhs/g`, reduce the first cofactor mod `q`
-(`S = quo·q + b` via `cdivmodWf`), and absorb `quo·p` into the second (`c = T + quo·p`). -/
+/-- Generic Diophantine solver `cdiophantineGWf p q rhs = (b, c)` solving `b·p + c·q = rhs` with
+`deg b < deg q`, for coprime `p, q`. -/
 def cdiophantineGWf (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
   let (g, s, t) := cgcdWf p q
   let ginv := CField.inv (cleadG g)
@@ -46,14 +42,10 @@ def cdiophantineGWf (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
 
 variable [CFieldSpec α]
 
-/-! ### Correctness of the Bézout/Diophantine leaves
+/-! ### Correctness of the Bézout/Diophantine leaves -/
 
-The Bézout/Diophantine identities over `K[X]`, from the leaf lemmas `toPolyG_cgcdWf` (Bézout) and
-`toPolyG_cdivmodWf` (Euclidean division). -/
-
-/-- `cbezoutOneWf` solves the Bézout identity `u·a + w·b = 1` over `K[X]`: with
-`(g, s, t) = cgcdWf a b` and `g` a nonzero constant (the coprime case), the rescaled cofactors
-`(u, w) = cbezoutOneWf a b` satisfy `toPolyG u · toPolyG a + toPolyG w · toPolyG b = 1`. -/
+/-- `cbezoutOneWf` solves the Bézout identity `toPolyG u · toPolyG a + toPolyG w · toPolyG b = 1`
+over `K[X]`, when the gcd of `a, b` is a nonzero constant (coprime case). -/
 theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
     (hgdeg : (toPolyG (cgcdWf a b).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf a b).1 ≠ 0) :
@@ -83,10 +75,8 @@ theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
     rw [← hbez]; ring
   rw [hcombine, hgC, ← Polynomial.C_mul, inv_mul_cancel₀ hlead_ne, Polynomial.C_1]
 
-/-- `cextendedEuclideanSplitWf` solves `b·dₙ + c·dₛ = r` over `K[X]`: with a Bézout pair
-`u·dₙ + w·dₛ = 1` (read through `toPolyG`), `cextendedEuclideanSplitWf dn ds r u w = (b, c)` gives
-`toPolyG b · toPolyG dn + toPolyG c · toPolyG ds = toPolyG r`. Requires `dₛ` nonzero
-(`cnormG ds ≠ []`). -/
+/-- `cextendedEuclideanSplitWf` solves `toPolyG b · toPolyG dn + toPolyG c · toPolyG ds = toPolyG r`
+over `K[X]`, given a Bézout pair `u·dₙ + w·dₛ = 1` and nonzero `dₛ`. -/
 theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
     (hds0 : cnormG ds ≠ [])
     (hbez : toPolyG u * toPolyG dn + toPolyG w * toPolyG ds = 1) :
@@ -114,8 +104,7 @@ theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
   rw [show cmulG u r = ur from rfl] at hkey ⊢
   rw [hkey, hbez, one_mul]
 
-/-- `cextendedEuclideanSplitWf`'s first cofactor is proper (`deg b < deg dₛ`): the first cofactor
-`b = (u·r) mod dₛ` is a Euclidean remainder mod `dₛ`. -/
+/-- `cextendedEuclideanSplitWf`'s first cofactor is proper: `deg b < deg dₛ`. -/
 theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : CPolyG α)
     (hds : cnormG ds ≠ []) :
     (toPolyG (cextendedEuclideanSplitWf dn ds r u w).1).degree < (toPolyG ds).degree := by
@@ -126,8 +115,7 @@ theorem cextendedEuclideanSplitWf_fst_degree_lt (dn ds r u w : CPolyG α)
   show (cnormG (cmodWf (cmulG u r) ds) : List α).length < _
   exact cmodWf_length_lt (cmulG u r) ds hds
 
-/-- `cextendedEuclideanSplitWf`'s second cofactor is proper (`deg c < deg dₙ`): from the Bézout
-split, the first-cofactor remainder bound, the denominator split `d = dₛ·dₙ`, and `deg r < deg d`. -/
+/-- `cextendedEuclideanSplitWf`'s second cofactor is proper: `deg c < deg dₙ`. -/
 theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPolyG α)
     (hds : cnormG ds ≠ []) (hdn : cnormG dn ≠ [])
     (hsplit : toPolyG d = toPolyG ds * toPolyG dn)
@@ -156,10 +144,8 @@ theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPolyG α)
   rw [add_comm (toPolyG ds).degree (toPolyG dn).degree] at hcdsdeg
   exact (WithBot.add_lt_add_iff_right hdsdeg).mp hcdsdeg
 
-/-- `cdiophantineGWf` solves `b·p + c·q = rhs` over `K[X]`: for coprime `p, q` (extended-gcd
-`cgcdWf p q = (g, s, t)` with `g` a nonzero constant), the output `(b, c) = cdiophantineGWf p q rhs`
-satisfies `toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG rhs`. From the raw Bézout
-`toPolyG_cgcdWf` rescaled by `rhs/lc(g)` and the Euclidean division `toPolyG_cdivmodWf`. -/
+/-- `cdiophantineGWf` solves `toPolyG b · toPolyG p + toPolyG c · toPolyG q = toPolyG rhs` over
+`K[X]`, for coprime `p, q` (gcd a nonzero constant). -/
 theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
     (hq0 : cnormG q ≠ [])
     (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
@@ -209,9 +195,7 @@ theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
       = (Polynomial.C c⁻¹ * Polynomial.C c) * toPolyG rhs := by ring
     _ = toPolyG rhs := by rw [hCcancel, one_mul]
 
-/-- `cdiophantineGWf`'s first cofactor is proper: `deg (cdiophantineGWf p q rhs).1 < deg q` for
-nonzero `q`. The first cofactor is the normalized `cmodWf` remainder of the rescaled Bézout
-dividend. -/
+/-- `cdiophantineGWf`'s first cofactor is proper: `deg (cdiophantineGWf p q rhs).1 < deg q` for nonzero `q`. -/
 theorem cdiophantineGWf_fst_degree_lt (p q rhs : CPolyG α) (hq : cnormG q ≠ []) :
     (toPolyG (cdiophantineGWf p q rhs).1).degree < (toPolyG q).degree := by
   set g := (cgcdWf p q).1 with hg
@@ -231,10 +215,8 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-/-- Inner Hermite loop over a squarefree factor `v` (multiplicity `i`, `u = d/vⁱ`), driven by the
-downward counter `j`: each step solves `b·(u·Dv) + c·v = −a/j` with `cdiophantineGWf`
-(`Dv = cmonomialDeriv Dt v` the monomial derivation), accumulates the rational summand `b/vʲ`
-into `g`, and updates `a ← −j·c − u·Db`. Structural recursion on `j`. -/
+/-- Inner Hermite loop over a squarefree factor `v` (with `u = d/vⁱ`), driven by the downward counter
+`j`: each step solves `b·(u·Dv) + c·v = −a/j`, accumulates `b/vʲ` into `g`, updates `a ← −j·c − u·Db`. -/
 def cHermiteReduceTowerInnerWf (Dt : CPolyG α) (v u : CPolyG α) :
     ℕ → CPolyG α → CPolyG α × CPolyG α → (CPolyG α × CPolyG α) × CPolyG α
   | 0, a, g => (g, a)

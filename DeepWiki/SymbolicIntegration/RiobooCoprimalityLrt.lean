@@ -1,18 +1,10 @@
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 
-/-! # Theorem 2.8.4 in full — the LRT discharges Rioboo's cofactor hypotheses (Bronstein §2.8, p.67)
-`rioboo_coprime` (`RiobooCoprimality`) proves `gcd(A, B) = 1` *taking* the gcd-cofactor factorizations
-* (2.27) `C − (a+i·b)·D' = (E₁+i·E₂)·(A+i·B)`,
-* (2.28) `D = (F₁+i·F₂)·(A+i·B)`
-as hypotheses. This file **discharges** those hypotheses from the Lazard–Rioboo–Trager correctness
-theorem `lazardRiobooTrager_output_isSimilar_gcd`: the specialized LRT output curve `S(a+i·b, x)` is
-*similar* to `gcd(D, C − (a+i·b)·D')`, so over the field it is **associated** to the gcd and therefore
-**divides** both `D` and `C − (a+i·b)·D'` — giving the cofactors `E, F` directly. Splitting `S(a+i·b)`,
-`E`, `F` into real + `i`·imaginary parts via the conjugation `σ` (`σ = Polynomial.map conj`, `conj i = −i`)
-recovers (2.27)/(2.28), and `rioboo_coprime` closes. The result `rioboo_coprime_lrt` is the **full**
-Theorem 2.8.4: `gcd(A, B) = 1` with hypotheses only on `C, D` (real coefficients, `D` separable),
-`(a+i·b)` a root of the Rothstein–Trager resultant, and `b ≠ 0` — **no abstract cofactor hypotheses**. -/
+/-! # LRT discharges the Rioboo cofactor hypotheses
+The Lazard–Rioboo–Trager correctness theorem supplies the gcd-cofactor factorizations that
+`rioboo_coprime` takes as hypotheses, giving `rioboo_coprime_lrt`: `IsCoprime A B` for the real and
+imaginary parts of the LRT output curve, with hypotheses only on `C, D` real, `D` separable, and `b ≠ 0`. -/
 
 open Polynomial
 
@@ -43,11 +35,8 @@ end SimilarDvd
 section RealImagDecomp
 variable {K : Type*} [Field K] [CharZero K]
 
-/-- **Real/imaginary decomposition over a conjugation** (the splitter behind discharging (2.27)/(2.28)):
-in `K[x]` with an involutive coefficient conjugation `conj` (`conj ∘ conj = id`) sending `i ↦ −i`
-(`conj i = −i`, `i² = −1`, char `0`), every `z ∈ K[x]` decomposes as `z = z₁ + (C i)·z₂` with the
-real parts `z₁ = (z + σz)/2`, `z₂ = −(C i)·(z − σz)/2` both fixed by `σ = map conj`. (`1/i = −i` since
-`i·(−i) = −i² = 1`; `1/2 = C(2⁻¹)` is a `σ`-fixed unit in char `0`.) -/
+/-- With an involutive coefficient conjugation `conj` sending `i ↦ −i` (`i² = −1`, char `0`), every
+`z ∈ K[x]` decomposes as `z = z₁ + (C i)·z₂` with `z₁, z₂` fixed by `σ = map conj`. -/
 theorem exists_realImag_decomp (conj : K →+* K)
     (hconj : ∀ c, conj (conj c) = c) {i : K} (hi : i ^ 2 = -1) (hconji : conj i = -i)
     (z : K[X]) :
@@ -85,19 +74,9 @@ section Thm284
 variable {K : Type*} [Field K] [IsAlgClosed K] [CharZero K]
 
 open scoped Classical in
-/-- **Theorem 2.8.4, the FULL statement** (§2.8, p.67–68, Rioboo): the LRT discharges the cofactor
-hypotheses of `rioboo_coprime`. Over an algebraically closed char-`0` field `K` with an involutive
-conjugation `conj` (`conj i = −i`, `i² = −1`) certifying `C, D` real (`C.map conj = C`, `D.map conj = D`)
-and `a, b` real (`conj a = a`, `conj b = b`), with `D` separable, `deg C < deg D`, `b ≠ 0`, and
-`(a+i·b)` a root of the Rothstein–Trager resultant `R = res_x(D, C − t·D')` (the book's
-`P(a,b)=Q(a,b)=0`, kept for faithfulness but not consumed — the LRT correctness below covers *every*
-residue, the non-root case giving `gcd = 1 ~ S(a+i·b)` and coprimality trivially), the real/imaginary
-parts of the LRT output curve `S(a+i·b, x) = A + i·B` are **coprime**: `IsCoprime A B`. Proof: the LRT
-correctness `lazardRiobooTrager_output_isSimilar_gcd` makes `S(a+i·b, x)` *similar* to
-`gcd(D, C − (a+i·b)·D')`, hence (over the field) *associated*, hence a divisor of both `D` and
-`C − (a+i·b)·D'`; the cofactors `E, F` exist, split into real + `i`·imaginary parts by
-`exists_realImag_decomp`, recovering (2.27)/(2.28), and `rioboo_coprime` closes (the unit `b` lands in
-`span {A, B}` via the squarefreeness Bézout). -/
+/-- Over an algebraically closed char-`0` field with conjugation `conj` (`conj i = −i`, `i² = −1`), `C, D`
+real, `D` separable, `deg C < deg D`, `b ≠ 0`, and `(a+i·b)` a root of `rtResultant C D`, the real and
+imaginary parts of the LRT output curve `S(a+i·b, x) = A + i·B` satisfy `IsCoprime A B`. -/
 theorem rioboo_coprime_lrt (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDegree < D.natDegree)
     (conj : K →+* K) (hconj : ∀ c, conj (conj c) = c) {i : K} (hi : i ^ 2 = -1)
     (hconji : conj i = -i) (hCreal : Cnum.map conj = Cnum) (hDreal : D.map conj = D)
@@ -155,10 +134,8 @@ theorem rioboo_coprime_lrt (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDeg
     (hσfix hAreal) (hσfix hBreal) hbunit hsqfree h27 h28
 
 open scoped Classical in
-/-- Restatement of the **full Theorem 2.8.4** against the book wording (§2.8, p.67–68): with `C, D`
-real (`conj`-fixed), `D` squarefree, `deg C < deg D`, `b ≠ 0`, and `(a+i·b)` a root of the RT/LRT
-resultant, the real/imaginary parts `A, B` of the LRT log argument `S(a+i·b, x) = A + i·B` satisfy
-`gcd(A, B) = 1` — Rioboo's arctan denominator is nonzero. No abstract cofactor hypotheses. -/
+/-- Restatement: with `C, D` real, `D` squarefree, `deg C < deg D`, `b ≠ 0`, and `(a+i·b)` a resultant
+root, the real and imaginary parts `A, B` of `S(a+i·b, x) = A + i·B` satisfy `IsCoprime A B`. -/
 example (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDegree < D.natDegree)
     (conj : K →+* K) (hconj : ∀ c, conj (conj c) = c) {i : K} (hi : i ^ 2 = -1)
     (hconji : conj i = -i) (hCreal : Cnum.map conj = Cnum) (hDreal : D.map conj = D)

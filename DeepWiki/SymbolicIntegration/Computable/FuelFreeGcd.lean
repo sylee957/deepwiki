@@ -28,10 +28,7 @@ def reduceStepWf (p q : CPolyG α) : CPolyG α :=
       [CField.div (cleadG p) (cleadG q)]) (cnormG q)))
 
 /-- Generic Euclidean division on `CPolyG`: `cdivmodWf p q = (quotient, remainder)` with
-`p = quotient · q + remainder` over `K` (`q ≠ 0`). Well-founded on `(cnormG p).length`; the reduce
-step is taken only under the length-drop guard, so the def stays `[CField α]`-only (hence
-`native_decide`-able over noncomputable-`CFieldSpec` carriers like `QFunNZG ℚ`). Over a genuine
-field the guard always holds (`stepG_length_lt`). -/
+`p = quotient · q + remainder` over `K` (`q ≠ 0`). Well-founded on `(cnormG p).length`. -/
 def cdivmodWf (p q : CPolyG α) : CPolyG α × CPolyG α :=
   let pn := cnormG p
   let qn := cnormG q
@@ -59,10 +56,8 @@ def cdivWf (p q : CPolyG α) : CPolyG α := (cdivmodWf p q).1
 
 Termination is by `(cnormG b).length`, strictly dropped by the remainder (`cmodWf_length_lt`). -/
 
-/-- Extended Euclidean algorithm on `CPolyG`: `cgcdWf a b = (g, s, t)` with the Bézout relation
-`s·a + t·b = g` and `g = gcd(a, b)` over `K`. Well-founded on `(cnormG b).length`; the recursion is
-taken only under the length-drop guard, so the def stays `[CField α]`-only. Over a genuine field the
-guard always holds (`cmodWf_length_lt`). -/
+/-- Extended Euclidean algorithm on `CPolyG`: `cgcdWf a b = (g, s, t)` with `s·a + t·b = g` and
+`g = gcd(a, b)` over `K`. Well-founded on `(cnormG b).length`. -/
 def cgcdWf (a b : CPolyG α) : CPolyG α × CPolyG α × CPolyG α :=
   if cisZeroG b then (cnormG a, [CField.one], [])
   else

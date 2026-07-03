@@ -4,35 +4,11 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
-`ComputableTowerField`/`ComputableTowerDeriv` built the generic fraction-field carrier `QFunNZG α`
-(the next tower level ℚ(x)(t₁)(t₂)…) with a *computable* `CField` instance AND a *computable*
-derivation tower (`CDiffField (QFunNZG α)`, `towerDerivQFunNZG`). This file supplies the §3.5/§5.3
-integration pipeline (split/normal factor, canonical representation, transcendental Hermite reduction)
-over that generic carrier. The pipeline runs on the generic engine ops
-(`caddG`/`cmulG`/`cmonomialDeriv`/`cdivWf`/…); the one operation needing care is the fraction-free
-`t`-gcd.
-
-The pipeline defs (suffix `G`) over `[CField α] [CFieldDomain α] [CDiffField α]` take every `t`-gcd from
-the flat generic fraction-free gcd `CFracGcdCore.cgcdFFCore fuel p q` (`ComputableTowerGcdFFCore`) —
-the recursive primitive-PRS gcd that stays polynomial-sized over the tower (it AGREES with the swelling
-fuel-free Euclidean `cgcdMonicWf`, both being the unique monic gcd, but computes it without the fraction-field
-coefficient swell that would make the integration pipeline over a fraction-field carrier blow up). Every
-pipeline def that calls a `t`-gcd therefore carries the
-`` constraint, resolved automatically at every concrete tower level (base `CFracGcdCore ℚ`
-+ recursive `CFracGcdCore (QFunNZG β)`).
-
-* `CFracGcdCore.cgcdFFCore` — the flat fraction-free monic gcd used by the pipeline.
-* `cSplitFactorFastG` (§3.5 special/normal split `p = pₙ·pₛ` via the derivation `D` + gcd).
-* `cSqfreeYunFFG` (Yun squarefree factorization in `t`, the formal `dp/dt`) — what the Hermite
-  reduction factors the denominator with.
-* `canonicalRepresentationFastG` (the `a/d → (fₚ, (b, dₛ), (c, dₙ))` canonical representation),
-  reusing the already-generic fuel-free Bézout helpers `cbezoutOneWf`/`cextendedEuclideanSplitWf`.
-* `cHermiteReduceTowerG` (the transcendental Hermite reduction of the simple normal part →
-  rational `g` + reduced remainder — the RATIONAL PART of the integral), reusing the already-generic
-  fuel-free inner loop `cHermiteReduceTowerInnerWf`/`cdiophantineGWf`.
-
-This file keeps the fueled generic engine and the shared level-2 example data. The corresponding
-fuel-free `native_decide` validations live in `ComputableTowerWellFounded`. -/
+The integration pipeline (special/normal split, canonical representation, transcendental Hermite
+reduction, Rothstein–Trager logarithmic part) over the generic tower carrier `QFunNZG α`. Pipeline defs
+carry the suffix `G`, run on the generic engine ops, and take every `t`-gcd from the flat fraction-free
+`CFracGcdCore.cgcdFFCore` to avoid fraction-field coefficient swell. This file keeps the fueled engine and
+the shared level-2 example data; the fuel-free `native_decide` validations live downstream. -/
 
 open Polynomial
 

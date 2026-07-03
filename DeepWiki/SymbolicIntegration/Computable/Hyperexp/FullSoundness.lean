@@ -1,43 +1,10 @@
 import DeepWiki.SymbolicIntegration.Computable.OneShotAssembly
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.NormalCore
 
-/-! # Unconditional soundness of the §5.9 hyperexponential normal-part driver (Bronstein §5.9)
+/-! # Soundness of the hyperexponential normal-part driver
 
-`ComputableOneShotAssembly` proved the hyperexp one-shot for the raw driver `cIntegrateGFullWf` gated on
-the integrability witness `∑c = 0`. The obstruction: `cIntegrateGFull`'s pure-normal branch emits the raw
-§5.6 Rothstein–Trager logs, which overshoot a hyperexponential normal part by `R = η·∑c` (the
-`extendDeriv_logPart_eq_div_add_residual` leftover); the §5.9 residual-feedback driver
-`cIntegrateHyperexpNormalG` corrects the overshoot — `∫fₙ = logPart − ∫R`, absorbing `R` into a base
-integral `∫R = crischDESolve 0 R`. This file proves that driver sound, unconditionally in `∑c` (no
-`∑c = 0` side condition), modulo the base-RDE-oracle's `∫R`-soundness.
-
-Two ingredients:
-
-* The overshoot identity `hyperexp_residue_sum_eq_overshoot_add`: for a hyperexponential monomial
-  `v = C b·X` (`Dt = η′·t`), squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, every root normal, the §5.6
-  Rothstein–Trager residue sum `∑_α C(c_α)·D(log(t−α))` equals `algebraMap(C(b·∑c)) + a/d` over
-  `RatFunc K` — unconditionally, no `∑c = 0`. Composes the unconditional decomposition
-  `monomial_residue_sum_eq_cancel_add` (residue sum = cancel sum + a/d) with `hyperexp_cancel_sum_eq` (the
-  hyperexp cancel sum is `algebraMap(C(b·∑c))`).
-* The base residual `∫R`-soundness: the §5.9 feedback integrates `R ∈ α` by `crischDESolve 0 R` (the
-  pure-integration `Dy = R`, one tower level down). The base oracle `CRischField.crischDESolve` has no
-  abstract spec layer (`CRischFieldSpec` does not exist — see `ComputableTranscendentalOverAlgebraic`), so
-  its soundness is only `native_decide`-validated today (e.g. `nNormInv_baseIntegral_eq_x`); we carry the
-  conclusion `D(∫R) = R` as the explicit hypothesis `hintR`.
-
-The driver soundness theorems (`cIntegrateHyperexpNormalGWf_sound` / `cIntegrateHyperexpFullGWf_sound`)
-compose these two: the new rational part `g − ∫R` differentiates to `(a/d + R) − R = a/d`, the overshoot
-`R` cancelling.
-
-## Scope
-
-The overshoot identity is fully proven, axiom-clean (`[propext, Classical.choice, Quot.sound]`, no
-`native_decide`). The driver soundness is proven gated on two documented inputs: (a) the same abstract
-engine bridges (`hherm`, `hform`, …) the primitive/hyperexp one-shots in `ComputableOneShotAssembly`
-already take, and (b) the base-RDE-oracle residual `hintR : D(∫R) = R`, which is not abstractly available
-because `crischDESolve` has no spec layer. So the unconditional-in-`∑c` hyperexp soundness reduces to the
-base oracle's `∫R`-soundness — the opposite condition to `∑c = 0` (absorbing `∑c ≠ 0`, not requiring its
-vanishing). -/
+`D(∫fₙ) = fₙ` for the residual-feedback hyperexponential normal-part driver, unconditional in the
+residue sum `∑c`, reduced to the base-RDE oracle's residual soundness `D(∫R) = R`. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -48,29 +15,16 @@ open Compute CPolyG QFunNZG
 
 /-! ### The overshoot identity `D(logPart) = a/d + R` for the hyperexponential monomial
 
-The raw §5.6 Rothstein–Trager log part `∑_α c_α·log(t−α)` of a hyperexponential normal part `fₙ = a/d`
-overshoots: its derivative is `a/d + R`, not `a/d`, with the residual `R = b·∑c` (`b = η′`). This is the
-`extendDeriv_logPart_eq_div_add_residual` claim, made precise and proven from two unconditional pieces in
-`ComputableOneShotAssembly`'s `ResidueMatchTower`:
-
-* `monomial_residue_sum_eq_cancel_add` — residue sum = (polynomial-part cancel sum) + a/d, for ANY monomial.
-* `hyperexp_cancel_sum_eq` — for the hyperexp monomial `v = C b·X`, the cancel sum is `algebraMap(C(b·∑c))`.
-
-So residue sum = `algebraMap(C(b·∑c)) + a/d`. No integrability witness — `∑c` is whatever it is, and the
-overshoot `R = b·∑c` is carried, not killed. (When `∑c = 0` the overshoot vanishes and this collapses to
-the residue match `= a/d`, the `hyperexp_residue_match_iff_sum_zero` regime.) -/
+The Rothstein–Trager log part of a hyperexponential normal part `fₙ = a/d` differentiates to `a/d + R`
+with residual `R = b·∑c`, carried unconditionally in `∑c`. -/
 
 namespace ResidueMatchTower
 
 variable {K : Type*} [Field K] [Differential K] [Algebra ℚ K]
 
-/-- The hyperexponential overshoot identity `residue sum = algebraMap(C(b·∑c)) + a/d` (Bronstein §5.9, the
-raw-log overshoot) — for the hyperexponential monomial `v = C b·X` (`Dt = η′·t`, `b = η′`), a squarefree
-`d = ∏_{α∈s}(t−α)`, `deg a < #s`, every root normal (`(C b·X).eval α ≠ α′`), the §5.6 Rothstein–Trager
-residue sum `∑_{α∈s} C(c_α)·(D(t−α)/(t−α))` (`c_α = a(α)/(Dd)(α)`, `D = extendDeriv
-(implicitDeriv (C b·X))`) equals `algebraMap(C(b·∑_α c_α)) + a/d` over `RatFunc K` — unconditionally, no
-`∑c = 0`. Composes `monomial_residue_sum_eq_cancel_add` (residue sum = cancel sum + a/d) with
-`hyperexp_cancel_sum_eq` (the hyperexp cancel sum is `algebraMap(C(b·∑c))`). -/
+/-- Hyperexponential overshoot identity: the Rothstein–Trager residue sum equals
+`algebraMap(C(b·∑c)) + a/d` over `RatFunc K`, for a monomial `v = C b·X`, squarefree
+`d = ∏_{α∈s}(t−α)`, `deg a < #s`, every root normal — unconditional in `∑c`. -/
 theorem hyperexp_residue_sum_eq_overshoot_add (s : Finset K) (a : K[X]) (b : K)
     (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, (C b * X).eval α ≠ α′) :
     ∑ α ∈ s, algebraMap K[X] (RatFunc K)
@@ -89,22 +43,16 @@ theorem hyperexp_residue_sum_eq_overshoot_add (s : Finset K) (a : K[X]) (b : K)
 
 end ResidueMatchTower
 
-/-! ### Task 1 (engine vocabulary): the overshoot residue match over `K = CFieldSpec.K α`
+/-! ### The overshoot residue match over `K = CFieldSpec.K α` (engine vocabulary)
 
-The hyperexp analog of `hyperexp_residue_match_list_engine`, **without** the `∑c = 0` witness: the
-engine-shaped `List` sum over the per-root list equals `algebraMap(C(b·∑c)) + a/d` — the overshoot, not the
-match. Transports `hyperexp_residue_sum_eq_overshoot_add` through the definitional `amG = algebraMap` and the
-`towerFractionFieldDerivG` unfolding. -/
+The overshoot identity restated on the engine's per-root `List` sum, transported through `amG = algebraMap`
+and the `towerFractionFieldDerivG` unfolding. -/
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- The overshoot list↔Finset bridge in the engine's vocabulary — for a hyperexponential monomial
-`toPolyG Dt = C b·X` (`b = η′`), a squarefree `d = ∏_{β∈s}(t−β)`, `deg a < #s`, every root normal, the
-engine-shaped `List` sum over the per-root list of `(c_β, X − C β)` pairs equals `algebraMap(C(b·∑c)) + a/d`
-over `RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt` — unconditionally, no `∑c = 0`.
-Transports `hyperexp_residue_sum_eq_overshoot_add` through `amG = algebraMap` and the
-`towerFractionFieldDerivG` unfolding. -/
+/-- Engine-vocabulary overshoot: the per-root `List` sum equals `amG(C(b·∑c)) + a/d` over
+`RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt`, unconditional in `∑c`. -/
 theorem hyperexp_overshoot_list_engine (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
     (a : (CFieldSpec.K α)[X]) (b : CFieldSpec.K α) (hDt : toPolyG Dt = C b * X)
     (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′) :
@@ -130,13 +78,9 @@ theorem hyperexp_overshoot_list_engine (Dt : CPolyG α) (s : Finset (CFieldSpec.
   rw [List.map_map, Finset.sum_map_toList]
   exact ResidueMatchTower.hyperexp_residue_sum_eq_overshoot_add s a b hA hnorm
 
-/-- The hyperexp engine overshoot residue sum — for a hyperexponential monomial `toPolyG Dt = C b·X`, a
-squarefree `hDen` factored as `∏_{β∈s}(t−β)`, `deg (toPolyG hNum) < #s`, every root normal, and the engine
-residue logs `logs` whose `(toK cv.1, toPolyG cv.2)`-images are the per-root list `s.toList.map (fun β =>
-(residue β, X − C β))` (`hform`), the engine residue-match sum `∑_{(c,v)∈logs} amG(C(toK c))·(D(log v))`
-equals `amG(C(b·∑c)) + amG(hNum)/amG(hDen)` over `RatFunc (CFieldSpec.K α)` — unconditionally, no
-`∑c = 0`. Rewrites the engine sum through `hform` into the bridge's per-root form, which
-`hyperexp_overshoot_list_engine` sends to `algebraMap(C(b·∑c)) + hNum/hDen`. -/
+/-- Engine residue-match overshoot: the log sum `∑_{(c,v)∈logs} amG(C(toK c))·D(log v)` equals
+`amG(C(b·∑c)) + amG(hNum)/amG(hDen)` over `RatFunc (CFieldSpec.K α)`, given the per-root form `hform`,
+unconditional in `∑c`. -/
 theorem hyperexp_engine_overshoot (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
     (hNum hDen : CPolyG α) (b : CFieldSpec.K α) (logs : List (α × CPolyG α))
     (hDt : toPolyG Dt = C b * X)
@@ -168,17 +112,13 @@ theorem hyperexp_engine_overshoot (Dt : CPolyG α) (s : Finset (CFieldSpec.K α)
   rw [List.map_map] at hbridge
   exact hbridge
 
-/-! ### Assembly: the reduced-case overshoot field identity `D(g) + logResidueSumG = a/d + R`
+/-! ### The reduced-case overshoot field identity `D(g) + logResidueSumG = a/d + R`
 
-Composing the Hermite half `hherm` (`D(g) + h = a/d`) with the overshoot residue sum
-`hyperexp_engine_overshoot` (`residue sum = R + h`, `R = algebraMap(C(b·∑c))`) gives the reduced-case
-identity `D(g) + logResidueSumG = a/d + R`, unconditionally in `∑c`, gated only on the abstract Hermite
-telescoping + per-root reassembly. -/
+Composing the Hermite half with the overshoot residue sum. -/
 
-/-- The reduced-case overshoot field identity for the hyperexp case — for `res = cIntegrateReducedGWf Dt a
-d cands`, a hyperexponential monomial `toPolyG Dt = C b·X`, and the Hermite half/per-root reassembly
-hypotheses, the reduced-case identity `D(g) + logResidueSumG Dt res.logs = amG a/amG d + amG(C(b·∑c))`
-holds over `RatFunc (CFieldSpec.K α)`, unconditionally in `∑c`. -/
+/-- Reduced-case overshoot field identity: for `res = cIntegrateReducedGWf Dt a d cands` and the Hermite
+half/per-root hypotheses, `D(g) + logResidueSumG Dt res.logs = amG a/amG d + amG(C(b·∑c))` over
+`RatFunc (CFieldSpec.K α)`, unconditional in `∑c`. -/
 theorem field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot [CFracGcdCoreWf α]
     (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
@@ -220,28 +160,18 @@ theorem field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot [CFracGcdCoreW
       / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) with hR
   rw [show Dg + (R + h) = (Dg + h) + R by ring, hherm]
 
-/-! ### The §5.9 driver soundness `cIntegrateHyperexpNormalGWf_sound`
+/-! ### The normal-part driver soundness `cIntegrateHyperexpNormalGWf_sound`
 
-`cIntegrateHyperexpNormalGWf Dt a d cands` runs the reduced capstone `red = cIntegrateReducedGWf`, reads
-`R = cHyperexpResidualG η red.logs`, integrates `∫R = crischDESolve 0 R` (the base-RDE oracle), and returns
-`⟨(gnum − ∫R·gden, gden), red.logs⟩` — the rational part `g − ∫R`, same logs. The §5.9 feedback
-`∫fₙ = logPart − ∫R`. Soundness: the new rational part differentiates to `D(g) − D(∫R) = (a/d + R) − R =
-a/d` (the overshoot `R` cancels `D(∫R)` from the base oracle).
-
-The two inputs beyond the abstract engine bridges (Hermite half `hherm`, per-root reassembly `hform`):
-* `hintR` — the base-RDE-oracle residual: `D(∫R) = amG(C(toK R))` over the tower fraction field. The
-  documented residual (the base oracle `crischDESolve` has no abstract spec layer — it is only
-  `native_decide`-validated, e.g. `nNormInv_baseIntegral_eq_x`).
-* `hRval` — the residual-read bridge `toK R = b·∑c` (the engine residual `R = η·∑(log coeffs)` reads to the
-  abstract overshoot `b·∑_β c_β` of Task 1, via `cExpEtaG`'s `η = b` and `hform`'s fold↔Finset sum). Carried
-  here as the field-level `amG(C(toK R)) = amG(C(b·∑c))`; the precise engine-internal bridge. -/
+`cIntegrateHyperexpNormalGWf` runs the reduced capstone, reads `R = cHyperexpResidualG η red.logs`,
+integrates `∫R` by the base-RDE oracle, and subtracts it; the new rational part `g − ∫R` differentiates to
+`(a/d + R) − R = a/d`. The residual `hintR : D(∫R) = R` and the residual-read bridge `hRval : toK R = b·∑c`
+are carried as hypotheses. -/
 
 variable [CRischField α]
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- The §5.9 driver's output shape — when `cIntegrateHyperexpNormalGWf Dt a d cands = some res`, with
-`red = cIntegrateReducedGWf Dt a d cands` and the base oracle succeeding on
-`R = cHyperexpResidualG (cExpEtaG Dt) red.logs`, the result is the same logs and rational part `g − ∫R`. -/
+/-- Output shape of `cIntegrateHyperexpNormalGWf`: when it returns `some res` and the base oracle succeeds
+on `R`, `res` has the same logs and rational part `g − ∫R`. -/
 theorem cIntegrateHyperexpNormalGWf_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (intR : α)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)

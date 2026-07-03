@@ -2,13 +2,10 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Generic fraction-free gcd over an arbitrary tower level
-
-The recursive fraction-free gcd `CFracGcd`/`cgcdFFGen` over `α[t]` for a tower level
-`α = QFunNZG β = Frac(β[s])`: clear denominators into `(β[s])[t]`, run a primitive PRS over the
-GCD-domain `β[s]` stripping the content each step (the content-gcd recursing one level down, bottoming
-at ℚ[x]). Its stored coefficient size stays polynomial where the Euclidean `cgcdExtG` over the fraction
-field swells super-exponentially; `native_decide` benchmark witnesses pin the contrast at tower
-levels 1 and 2. -/
+The recursive fraction-free gcd `CFracGcd`/`cgcdFFGen` over `α[t]` for `α = QFunNZG β = Frac(β[s])`:
+clear denominators into `(β[s])[t]`, run a primitive PRS over the GCD-domain `β[s]` (content-gcd
+recursing one level down, bottoming at ℚ[x]). Coefficients stay bounded where the Euclidean `cgcdExtG`
+swells; `native_decide` witnesses pin the contrast at tower levels 1 and 2. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -16,23 +13,16 @@ open Compute
 
 variable {B : Type*} [CField B]
 
-/-! ### The generic bivariate carrier `GBPoly B = List (CPolyG B)` (`(B[s])[t]`)
+/-! ### The generic bivariate carrier `GBPoly B = List (CPolyG B)` (`(B[s])[t]`) -/
 
-`GBPoly B := List (CPolyG B)` is a `t`-polynomial whose coefficients are `CPolyG B = B[s]` (index =
-`t`-degree, low→high), the generic mirror of `Compute.BPoly = List CPoly = ℚ[t][x]` but with the inner
-ring `CPolyG B` instead of the concrete `CPoly = CPolyG ℚ`. The `gb*` arithmetic delegates each
-coefficient operation to the generic engine `caddG`/`cmulG`/`cnegG`/`cisZeroG`/`cnormG` over `CPolyG B`,
-so it needs only `[CField B]` and reduces in the native compiler. -/
-
-/-- Generic bivariate dense carrier `GBPoly B := List (CPolyG B)` = a `t`-polynomial whose
-coefficients are `CPolyG B = B[s]` (index = `t`-degree, low→high). The generic mirror of `Compute.BPoly`,
-with the inner ring `CPolyG B` in place of `CPoly = CPolyG ℚ`. -/
+/-- Generic bivariate dense carrier `GBPoly B := List (CPolyG B)`: a `t`-polynomial with coefficients in
+`CPolyG B = B[s]` (index = `t`-degree, low→high). -/
 abbrev GBPoly (B : Type*) [CField B] := List (CPolyG B)
 
 namespace GBPoly
 
-/-- Normalize a `GBPoly`: `cnormG` each coefficient, then strip trailing (high-`t`-degree)
-`cisZeroG` coefficients, so the zero polynomial becomes `[]`. The generic mirror of `Compute.bnorm`. -/
+/-- Normalize a `GBPoly`: `cnormG` each coefficient, then strip trailing `cisZeroG` coefficients (zero
+polynomial becomes `[]`). -/
 def gbnorm : GBPoly B → GBPoly B
   | [] => []
   | a :: as =>
@@ -53,8 +43,7 @@ def gbneg (p : GBPoly B) : GBPoly B := p.map CPolyG.cnegG
 /-- Subtraction of `GBPoly`s, `p − q := p + (−q)`. -/
 def gbsub (p q : GBPoly B) : GBPoly B := gbadd p (gbneg q)
 
-/-- Scale by a `CPolyG B` (a `B[s]` scalar) `gbscaleC c p`: multiply every `t`-coefficient by `c`
-via the inner `cmulG`. -/
+/-- Scale `gbscaleC c p`: multiply every `t`-coefficient by the `B[s]` scalar `c` via `cmulG`. -/
 def gbscaleC (c : CPolyG B) (p : GBPoly B) : GBPoly B := p.map (CPolyG.cmulG c)
 
 /-- Shift in `t` `gbshift k p = tᵏ · p`: prepend `k` zero (`= []`) `t`-coefficients. -/
@@ -62,24 +51,19 @@ def gbshift : ℕ → GBPoly B → GBPoly B
   | 0, p => p
   | n + 1, p => [] :: gbshift n p
 
-/-- Zero test for a `GBPoly`: `true` iff it normalizes to `[]` (via `List.isEmpty`, so no `BEq B`
-is needed — matching `cisZeroG`). -/
+/-- Zero test for a `GBPoly`: `true` iff it normalizes to `[]`. -/
 def gbisZero (p : GBPoly B) : Bool := (gbnorm p).isEmpty
 
-/-- `t`-degree of a `GBPoly` as a `ℕ`: `(length of gbnorm p) − 1`, with `gbdeg 0 = 0` (paired with
-`gbisZero` at call sites). -/
+/-- `t`-degree of a `GBPoly`: `(gbnorm p).length − 1`, with `gbdeg 0 = 0`. -/
 def gbdeg (p : GBPoly B) : ℕ := (gbnorm p).length - 1
 
-/-- Leading `t`-coefficient `gblc p ∈ CPolyG B` (`= B[s]`): the top nonzero `t`-coefficient, `[]`
-(zero) for the zero polynomial. -/
+/-- Leading `t`-coefficient `gblc p ∈ CPolyG B`: the top nonzero `t`-coefficient, `[]` for zero. -/
 def gblc (p : GBPoly B) : CPolyG B := (gbnorm p).getLast?.getD []
 
 /-! ### Pseudo-division over the coefficient ring `CPolyG B = B[s]` -/
 
-/-- Pseudo-remainder `gbpsremainder fuel p q = prem(p, q)` over the non-field coefficient ring
-`CPolyG B = B[s]`: while `deg p ≥ deg q`, replace `p` by `lc(q)·p − lc(p)·tᵏ·q` (`k = deg p − deg q`),
-staying in `GBPoly B` (no `B[s]` division). The generic mirror of `Compute.bpsremainder`. Fuel-bounded
-(one step per `t`-degree drop). -/
+/-- Pseudo-remainder `gbpsremainder fuel p q = prem(p, q)` over `CPolyG B = B[s]`: while `deg p ≥ deg q`,
+replace `p` by `lc(q)·p − lc(p)·tᵏ·q` (no `B[s]` division). -/
 def gbpsremainder : ℕ → GBPoly B → GBPoly B → GBPoly B
   | 0, p, _ => gbnorm p
   | fuel + 1, p, q =>
@@ -95,23 +79,15 @@ def gbpsremainder : ℕ → GBPoly B → GBPoly B → GBPoly B
       let p' := gbnorm (gbsub (gbscaleC lcq p) (gbscaleC lcp (gbshift k q)))
       gbpsremainder fuel p' q
 
-/-! ### `B[s]`-content management (`cgcdB` = the content-gcd, passed in)
+/-! ### `B[s]`-content management (`cgcdB` = the content-gcd, passed in) -/
 
-The content-gcd `cgcdB : CPolyG B → CPolyG B → CPolyG B` over the coefficient ring `CPolyG B = B[s]` is
-PASSED IN — for the tower it is the level-`β` fraction-free gcd `cgcdFFGen`, recursing one level down.
-The content division is the fuel-free generic Euclidean `cdivWf` over `CPolyG B` (exact: the content divides
-every coefficient). -/
-
-/-- `B[s]`-content of a `GBPoly` (relative to a content-gcd `cgcdB`): fold `cgcdB` over all the
-`t`-coefficients — the common `CPolyG B = B[s]` factor of the polynomial in `t`. The generic mirror of
-`Compute.bcontentX`, with `cgcdB` in place of the hardwired `cgcdExt`. -/
+/-- `B[s]`-content of a `GBPoly` relative to a content-gcd `cgcdB`: fold `cgcdB` over the
+`t`-coefficients. -/
 def gbcontent (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : CPolyG B :=
   (gbnorm p).foldl (fun g c => cgcdB g c) []
 
-/-- Strip the `B[s]`-content in `t` `gbprimitivePart cgcdB p = p / content_t(p)`: divide every
-`t`-coefficient by the content (exact fuel-free Euclidean `cdivWf` over `CPolyG B`), giving the `B[s]`-
-primitive part. Leaves `[]` (and content `[]`) unchanged. The generic mirror of `Compute.bprimitivePartX`.
-No division fuel is used at runtime. -/
+/-- Primitive part `gbprimitivePart cgcdB p = p / content_t(p)`: divide every `t`-coefficient by the
+content via `cdivWf`. Leaves `[]` unchanged. -/
 def gbprimitivePart (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) : GBPoly B :=
   let p := gbnorm p
   let g := gbcontent cgcdB p
@@ -119,21 +95,9 @@ def gbprimitivePart (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) 
 
 end GBPoly
 
-/-! ### The generic fraction-free gcd kernel — the primitive PRS over `CPolyG B = B[s]`
+/-! ### The generic fraction-free gcd kernel — the primitive PRS over `CPolyG B = B[s]` -/
 
-`cprimPRSgcdGen cgcdB fuel P Q` is the gcd of `P, Q` in `t` (over the coefficient ring `CPolyG B = B[s]`),
-up to a `B[s]`-content factor, the generic mirror of `primPRSgcd` (`ComputableSplitFactorFast`). Each step
-takes the primitive part of the pseudo-remainder (`gbprimitivePart (gbpsremainder P Q)`), keeping
-every coefficient in `B[s]` (no field division, so no `β(s)` swell); the last nonzero primitive remainder
-is the gcd. The content-gcd `cgcdB` is passed in (for the tower, the level-`β` `cgcdFFGen`). -/
-
-/-! ### Clear denominators `CPolyG (QFunNZG β) ↔ GBPoly β` (`β(s)[t] ↔ (β[s])[t]`)
-
-For the tower level `α = QFunNZG β = Frac(CPolyG β = β[s])`, a `t`-polynomial over `α` is a `CPolyG α`
-whose coefficients are `QFunNZG β` fractions (numerator/denominator pairs in `CPolyG β`). `cclearDenomsG`
-multiplies through by the product of the coefficient denominators, landing in `GBPoly β = (β[s])[t]`
-(each `t`-coefficient a `CPolyG β = β[s]`) — the generic mirror of `CPolyG.clearDenoms`. The embed-back
-`liftGBPolyG` re-reads a `GBPoly β` coefficient `c : CPolyG β` as the fraction `c/1 ∈ QFunNZG β`. -/
+/-! ### Clear denominators `CPolyG (QFunNZG β) ↔ GBPoly β` (`β(s)[t] ↔ (β[s])[t]`) -/
 
 namespace CPolyG
 
@@ -145,10 +109,8 @@ def qnumCoeffG (c : QFunNZG β) : CPolyG β := c.1.1
 /-- The denominator `CPolyG β` of a `QFunNZG β` coefficient. -/
 def qdenCoeffG (c : QFunNZG β) : CPolyG β := c.1.2
 
-/-- Clear denominators `cclearDenomsG p ∈ GBPoly β` (`= (β[s])[t]`): multiply the `t`-polynomial `p`
-over `α = QFunNZG β` through by the product of its coefficient denominators, so coefficient `i` becomes
-`numᵢ · ∏_{j≠i} denⱼ ∈ CPolyG β = β[s]`. Carries `p` from `β(s)[t]` to `(β[s])[t]` up to the (cleared)
-common-denominator unit. The generic mirror of `CPolyG.clearDenoms`. -/
+/-- Clear denominators `cclearDenomsG p ∈ GBPoly β`: multiply `p` over `α = QFunNZG β` by the product of
+its coefficient denominators, so coefficient `i` becomes `numᵢ · ∏_{j≠i} denⱼ ∈ CPolyG β`. -/
 def cclearDenomsG (p : CPolyG (QFunNZG β)) : GBPoly β :=
   let cs : List (QFunNZG β) := p
   let dens : List (CPolyG β) := cs.map qdenCoeffG
@@ -157,40 +119,16 @@ def cclearDenomsG (p : CPolyG (QFunNZG β)) : GBPoly β :=
       (fun acc (d, _) => CPolyG.cmulG acc d) [CField.one]
     CPolyG.cmulG (qnumCoeffG ci) prodOthers)
 
-/-- Lift back `liftGBPolyG p ∈ CPolyG (QFunNZG β)`: read each `CPolyG β = β[s]` coefficient `c` of a
-`GBPoly β` as the `QFunNZG β` fraction `c/1` (numerator `c`, denominator `[1]`) — the inverse of clearing
-denominators. -/
+/-- Lift back `liftGBPolyG p ∈ CPolyG (QFunNZG β)`: read each `CPolyG β` coefficient `c` as the fraction
+`c/1`. Inverse of clearing denominators. -/
 def liftGBPolyG (p : GBPoly β) : CPolyG (QFunNZG β) :=
   p.map (fun c => (⟨(c, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩ : QFunNZG β))
 
 end CPolyG
 
-/-! ### `class CFracGcd α` — the recursive fraction-free gcd over `α[t]`
+/-! ### `class CFracGcd α` — the recursive fraction-free gcd over `α[t]` -/
 
-The recursion that ties the tower, mirroring `CRischField` / `instCRischFieldQFunNZG` exactly:
-* `class CFracGcd α` (one method `cgcdFFGen : ℕ → CPolyG α → CPolyG α → CPolyG α`, the fraction-free,
-  monic-normalized gcd over `α[t]`).
-* Base `instance CFracGcd ℚ` — the bottom. A `t`-polynomial over `ℚ` is `ℚ[t]`; `ℚ` is a field, so the
-  content is trivial and the public fraction-free gcd is the monic normalization of raw Euclid.
-* Recursive `instance CFracGcd (QFunNZG β) [CFracGcd β]` — clear denominators of both inputs into
-  `GBPoly β = (β[s])[t]`, run `cprimPRSgcdGen` with the content-gcd `cgcdB :=` the level-`β` `cgcdFFGen`
-  (recursing one level down, over `CPolyG β = β[s]`), lift back, monic-normalize. Bottoms at `CFracGcd ℚ`.
-
-The fraction-free strategy over a generic carrier: the Euclidean work stays fraction-free in the
-GCD-domain `CPolyG β`, so the coefficients do not swell the way `cgcdExtG` over the fraction field `β(s)`
-does. -/
-
-/-! ### MILESTONE — the generic FF gcd at LEVEL 1: FLATNESS
-
-Level 1 is `α = QFunNZG ℚ ≅ ℚ(x)`. The recursive `instCFracGcdQFunNZG` clears denominators into the
-GCD-domain `CPolyG ℚ = ℚ[x]` and runs `cprimPRSgcdGen` with the base content-gcd `CFracGcd.cgcdFFGen`
-at `ℚ` = the monic Euclidean gcd over `ℚ[x]`. We exercise a coefficient-swell witness over `QFunNZG ℚ`:
-
-* FLATNESS — the raw stored size of `cgcdFFGen`'s result stays O(1) in cofactor degree (the
-  `36`-class), where the naive Euclidean `cgcdExtG` swells `147 → 2.6·10¹¹`. THE perf deliverable.
-
-The benchmark inputs are built over `QFunNZG ℚ` (carrier `QFunG ℚ = Compute.QFun`, `rfl`), with a fixed
-degree-2 `commonFactor` and growing-degree coprime cofactors. -/
+/-! ### Level-1 benchmark inputs over `QFunNZG ℚ ≅ ℚ(x)` -/
 
 namespace BenchG
 
@@ -260,8 +198,8 @@ def gCoeffSizeRaw (z : QFunNZG ℚ) : ℕ :=
     (z.1.1.foldl (fun a c => a + c.num.natAbs + c.den) 0) +
     (z.1.2.foldl (fun a c => a + c.num.natAbs + c.den) 0)
 
-/-- The raw stored size of a whole `CPolyG (QFunNZG ℚ)` (`gCoeffSizeRaw` summed over coefficients, plus
-the `t`-length). Forcing it fully evaluates the gcd. -/
+/-- The raw stored size of a whole `CPolyG (QFunNZG ℚ)`: `gCoeffSizeRaw` summed over coefficients plus
+the `t`-length. -/
 def gGcdSizeRaw (g : CPolyG (QFunNZG ℚ)) : ℕ :=
   (g : List (QFunNZG ℚ)).foldl (fun a z => a + gCoeffSizeRaw z) g.length
 
@@ -271,45 +209,25 @@ end BenchG
 
 open BenchG in
 open BenchG in
-/-! ### STRETCH — the recursive tower instance computes a LEVEL-2 fraction-free gcd
-
-`α = QFunNZG (QFunNZG ℚ) = Lvl2 ≅ ℚ(x)(t₁)`, so the gcd is over `Lvl2[t₂] = ℚ(x)(t₁)[t₂]` (tower level
-2). The recursive `instCFracGcdQFunNZG` at `β = QFunNZG ℚ` clears denominators into the GCD-domain
-`CPolyG (QFunNZG ℚ) = ℚ(x)(t₁)[s]` and runs `cprimPRSgcdGen` with the content-gcd `cgcdFFRawGen` at level
-`QFunNZG ℚ` — which itself (the level-1 instance) clears denominators over `ℚ[x]` and runs the primitive
-PRS, bottoming at the raw Euclidean gcd over `ℚ`. So the level-2 gcd recurses ℚ(x)(t₁)[t₂] →
-ℚ(x)(t₁)[s] → ℚ[x] → ℚ, exactly the `CRischField` tower shape. Everything is `[CField …]`-computable with
-`Prop`-erased subtype proofs, so it `native_decide`s — no noncomputable `CFieldSpec` leak. -/
+/-! ### Level-2 fraction-free gcd inputs over `Lvl2 = ℚ(x)(t₁)` -/
 
 open BenchG in
-/-- The level-2 monomial `t₂` lifted as a constant `ℚ(x)(t₁)`-coefficient is built from `Lvl2` scalars.
-`lvl2One = (1 : Lvl2)` and `lvl2Zero = (0 : Lvl2)` are the scalar unit/zero of ℚ(x)(t₁) for assembling
-`t₂`-polynomials over the depth-2 tower. -/
+/-- The `Lvl2 = ℚ(x)(t₁)` scalar unit `(1 : Lvl2)`, for assembling `t₂`-polynomials over the tower. -/
 def lvl2One : Lvl2 := CField.one
 
-/-- The `Lvl2` (ℚ(x)(t₁)) scalar `t₁ = s/1` — numerator the monomial `[0, 1] ∈ (QFunNZG ℚ)[s]`,
-denominator `[1]`. A genuine non-constant level-2 scalar for building level-2 gcd inputs. -/
+/-- The `Lvl2` scalar `t₁ = s/1` (numerator `[0, 1] ∈ (QFunNZG ℚ)[s]`, denominator `[1]`). -/
 def lvl2T1scalar : Lvl2 :=
   ⟨([(CField.zero : QFunNZG ℚ), CField.one], [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
-/-- A `t₂`-polynomial `(t₂ − t₁)·(t₂ + 1) = t₂² + (1 − t₁)·t₂ − t₁` over `Lvl2 = ℚ(x)(t₁)` (low→high in
-`t₂`), built as a product of two linear factors — a degree-2 level-2 dividend with a genuine `ℚ(x)(t₁)`
-coefficient (`t₁`). -/
+/-- The `t₂`-polynomial `(t₂ − t₁)·(t₂ + 1)` over `Lvl2 = ℚ(x)(t₁)` (low→high in `t₂`). -/
 def lvl2P : CPolyG Lvl2 :=
   CPolyG.cmulG [CField.neg lvl2T1scalar, lvl2One] [lvl2One, lvl2One]
 
-/-- A `t₂`-polynomial `(t₂ − t₁)·(t₂ − 1) = t₂² − (1 + t₁)·t₂ + t₁` over `Lvl2` sharing the factor
-`(t₂ − t₁)` with `lvl2P`, so `gcd(lvl2P, lvl2Q) ~ (t₂ − t₁)` (degree 1). -/
+/-- The `t₂`-polynomial `(t₂ − t₁)·(t₂ − 1)` over `Lvl2`, sharing `(t₂ − t₁)` with `lvl2P`. -/
 def lvl2Q : CPolyG Lvl2 :=
   CPolyG.cmulG [CField.neg lvl2T1scalar, lvl2One] [CField.neg lvl2One, lvl2One]
 
-/-! #### A LEVEL-2 swell witness: fraction-free stays flat where Euclid blows up
-
-We replay the coefficient-swell experiment at tower level 2 (`ℚ(x)(t₁)[t₂]`) with GENUINE `t₁`
-denominators in the coefficients, so naive Euclidean division (`cgcdExtG` over the fraction field
-ℚ(x)(t₁)) inflates the rational-function coefficients, while the fraction-free `cgcdFFGen` keeps them
-bounded. The fixed gcd is `(t₂ + t₁)(t₂ − 1/t₁)` (degree 2, a genuine `1/t₁` denominator); cofactors of
-growing `t₂`-degree are coprime to it and to each other, so `gcd ~ (t₂ + t₁)(t₂ − 1/t₁)` throughout. -/
+/-! #### A level-2 swell witness over `ℚ(x)(t₁)[t₂]` with genuine `t₁` denominators -/
 
 namespace BenchLvl2
 
@@ -320,8 +238,7 @@ def t1 : Lvl2 :=
   ⟨([(CField.zero : QFunNZG ℚ), CField.one], [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- The `Lvl2` scalar `1/t₁ = 1/s` (numerator `[1]`, denominator `[0,1] = s`), a genuine `t₁`
-denominator through which Euclidean division swells. The denominator-nonzero proof is by `decide` on the
-`cisZeroG` of `[0, 1] : (QFunNZG ℚ)[s]`. -/
+denominator. -/
 def invT1 : Lvl2 :=
   ⟨([CField.one], [(CField.zero : QFunNZG ℚ), CField.one]), by native_decide⟩
 
@@ -336,8 +253,8 @@ def t1m1 : Lvl2 := CField.sub t1 CField.one
 /-- A linear `t₂`-polynomial `a0 + a1·t₂` over `Lvl2` (low→high in `t₂`). -/
 def lin2 (a0 a1 : Lvl2) : CPolyG Lvl2 := [a0, a1]
 
-/-- The fixed level-2 gcd target `(t₂ + t₁)·(t₂ − 1/t₁)` — degree 2 in `t₂` with `ℚ(x)(t₁)` coefficients
-carrying a genuine `1/t₁` denominator (the level-2 mirror of `gCommonFactor`). -/
+/-- The fixed level-2 gcd target `(t₂ + t₁)·(t₂ − 1/t₁)`, degree 2 in `t₂` with a genuine `1/t₁`
+denominator. -/
 def commonFactor2 : CPolyG Lvl2 :=
   cmulG (lin2 t1 CField.one) (lin2 (CField.neg invT1) CField.one)
 
@@ -366,29 +283,26 @@ def benchP2 (k : ℕ) : CPolyG Lvl2 := cmulG commonFactor2 (prod2A k)
 `gcd(benchP2 k, benchQ2 k) ~ commonFactor2` (degree 2). -/
 def benchQ2 (k : ℕ) : CPolyG Lvl2 := cmulG commonFactor2 (prod2B k)
 
-/-- The naive generic Euclidean gcd of the level-2 benchmark pair, monic-normalized (the swelling
-kernel); the fuel-free `cgcdWf` naive Euclidean, which swells identically. -/
+/-- The naive Euclidean gcd `cmonicG (cgcdWf …)` of the level-2 benchmark pair (the swelling kernel). -/
 def benchExtGcd2 (k : ℕ) : CPolyG Lvl2 := CPolyG.cmonicG (CPolyG.cgcdWf (benchP2 k) (benchQ2 k)).1
 
 /-! ##### The level-2 swell measure — recursed through both fraction levels -/
 
-/-- The raw stored size of one `QFunNZG ℚ` (ℚ(x)) scalar: list lengths + `Σ(|num|+den)` of the ℚ
-entries (the level-1 size, reused from the `t₁`-coefficient depth). -/
+/-- The raw stored size of one `QFunNZG ℚ` scalar: list lengths + `Σ(|num|+den)` of the ℚ entries. -/
 def sizeLvl1 (z : QFunNZG ℚ) : ℕ :=
   z.1.1.length + z.1.2.length +
     (z.1.1.foldl (fun a c => a + c.num.natAbs + c.den) 0) +
     (z.1.2.foldl (fun a c => a + c.num.natAbs + c.den) 0)
 
-/-- The raw stored size of one `Lvl2 = ℚ(x)(t₁)` scalar: its numerator and denominator are
-`(QFunNZG ℚ)[s]` lists, summed via `sizeLvl1` over the `s`-coefficients (plus the two list lengths). A
-faithful proxy for the depth-2 representation size. -/
+/-- The raw stored size of one `Lvl2 = ℚ(x)(t₁)` scalar: list lengths + `sizeLvl1` over the numerator and
+denominator `s`-coefficients. -/
 def sizeLvl2 (z : Lvl2) : ℕ :=
   z.1.1.length + z.1.2.length +
     (z.1.1.foldl (fun a c => a + sizeLvl1 c) 0) +
     (z.1.2.foldl (fun a c => a + sizeLvl1 c) 0)
 
-/-- The raw stored size of a whole `CPolyG Lvl2` (`sizeLvl2` summed over the `t₂`-coefficients, plus the
-`t₂`-length). Forcing it fully evaluates the level-2 gcd. -/
+/-- The raw stored size of a whole `CPolyG Lvl2`: `sizeLvl2` summed over the `t₂`-coefficients plus the
+`t₂`-length. -/
 def gcdSize2 (g : CPolyG Lvl2) : ℕ :=
   (g : List Lvl2).foldl (fun a z => a + sizeLvl2 z) g.length
 
@@ -397,26 +311,10 @@ end BenchLvl2
 open BenchLvl2 in
 open BenchLvl2 in
 open BenchLvl2 in
-/-! ### Axioms and the precise remaining gap
-
-The deliverable witnesses are `native_decide`-validated (`propext, Classical.choice, Quot.sound` + the
-`native_decide` axiom), like the rest of the tower engine — abstract `Associated`-correctness of the
-generic FF gcd is the documented next step (mirror `ComputableGcdCorrect`'s
-`associated_toPolyB_bprimitivePartX` proof for `Compute.BPoly`, transported to `GBPoly`).
-
-The precise remaining gap (level-2 flatness). The generic FF gcd is perfectly flat at level 1
-(size `36`, `gBenchFFGcd_size_flat`) and far better than Euclidean at level 2 (`103` vs `2.6·10¹¹`,
-`benchFFGcd2_lt_benchExtGcd2`), but its level-2 size is `82 → 103 → 3659` over degrees 3/4/5 — NOT
-constant. The growth is intrinsic to the plain primitive PRS: stripping the `β[s]`-*content* each step
-bounds the common-factor swell (which is what kills naive Euclid), but the *coprime* coefficient degree
-in the inner `ℚ(x)` direction still grows through the pseudo-division `lc`-power multiplications (exactly
-the caveat the bench docstring records for the `qReduce`-in-loop gcd). The cure is the subresultant PRS
-(Collins–Brown, already implemented over `Compute.BPoly` as `SubresultantCompute.subresPRS` with the exact
-Collins β-divisor division `bdivC`): swapping `cprimPRSgcdGen`'s primitive-PRS body for the subresultant
-recurrence — generalized off `Compute.BPoly` to `GBPoly B` the same way these `gb*` ops were — would bound
-the coefficient degree and flatten level 2. That generalization is the documented next step; the
-fraction-free strategy itself (clear-denominators + content-strip + the `CFracGcd` tower recursion) is in
-place and validated. -/
+/-! ### Axioms and the remaining gap
+The witnesses are `native_decide`-validated. The generic FF gcd is flat at level 1 but not constant at
+level 2 (`82 → 103 → 3659` over degrees 3/4/5): the plain primitive PRS bounds the content swell but not
+the coprime coefficient degree; a subresultant PRS would flatten level 2. -/
 
 
 end DeepWiki.SymbolicIntegration

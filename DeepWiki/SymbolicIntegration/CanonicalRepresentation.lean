@@ -4,14 +4,11 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Radical.Basic
 
 /-! # The canonical representation
-For a monomial extension `(k(t), D)` with `Dt = v ∈ k[t]`, every `f ∈ k(t)` splits *uniquely* as
-`f = fₚ + fₛ + fₙ` — a polynomial part `fₚ`, a *reduced* (special-denominator) part `fₛ ∈ k⟨t⟩`,
-and a *simple* (normal-denominator) part `fₙ`. We give the classifying predicates (`IsSimple`,
-`IsReduced`), the splitting-factorization routine `splitFactor` that separates the special and
-normal parts of a polynomial denominator, the squarefree variant `splitSquarefreeFactor` built on
-Yun's factorization, the `canonicalRepresentation` of a rational function, and the root
-characterization (a splitting factor `pₛ`/`pₙ` collects the constant/nonconstant roots). The
-derivation on `k[X]` is the monomial derivation `implicitDeriv v` (`Dt = v`). -/
+For a monomial extension `(k(t), D)` with `Dt = v`, the unique split `f = fₚ + fₛ + fₙ` of
+`f ∈ k(t)` into polynomial, reduced (special-denominator), and simple (normal-denominator) parts.
+Provides the classifying predicates `IsSimple`/`IsReduced`, the `splitFactor` denominator
+splitting, its squarefree variant `splitSquarefreeFactor`, `canonicalRepresentation`, and the
+root characterization of the split. -/
 
 open scoped Differential
 open Polynomial
@@ -118,10 +115,8 @@ noncomputable def splitFactorStep (v p : K[X]) : K[X] :=
   gcd p (Differential.implicitDeriv v p) / gcd p (derivative p)
 
 open Classical in
-/-- The splitting-factorization recursion, as a `fuel`-bounded computation. Each step extracts the
-squarefree special factor `S = gcd(p,Dp)/gcd(p,dp/dt)`; if `deg S = 0` the polynomial is normal and
-`(p, 1)` is returned, otherwise recurse on `p/S` and multiply `S` back into the special part. The
-result is `(pₙ, pₛ)`: the normal part and the special part. -/
+/-- The `fuel`-bounded splitting recursion: each step extracts the squarefree special factor
+`S = gcd(p,Dp)/gcd(p,dp/dt)`, recursing on `p/S`, and returns `(pₙ, pₛ)`. -/
 noncomputable def splitFactorAux (v : K[X]) : K[X] → ℕ → K[X] × K[X]
   | p, 0 => (p, 1)
   | p, (n + 1) =>
@@ -139,10 +134,8 @@ noncomputable def splitFactor (v p : K[X]) : K[X] × K[X] :=
   splitFactorAux v p p.natDegree
 
 open Classical in
-/-- One-step property of the `splitFactor` step `S = gcd(q,Dq)/gcd(q,dq/dt)`: if `S` is constant
-then `q` is normal; if `S` is non-constant then `S` is a special factor of `q` with strictly
-smaller-degree quotient. `splitFactorAux` is correct on any `p` for which this holds at every
-polynomial (`IsSplitFactorStep` everywhere — discharged for fully-split `p` below). -/
+/-- One-step property of the `splitFactor` step `S`: if `S` is constant then `q` is normal;
+if non-constant then `S` is a special factor of `q` with strictly smaller-degree quotient. -/
 def IsSplitFactorStep (v q : K[X]) : Prop :=
   ((splitFactorStep v q).natDegree = 0 → @IsNormal _ _ ⟨Differential.implicitDeriv v⟩ q) ∧
   (0 < (splitFactorStep v q).natDegree →
@@ -151,9 +144,8 @@ def IsSplitFactorStep (v q : K[X]) : Prop :=
      @IsSpecial _ _ ⟨Differential.implicitDeriv v⟩ (splitFactorStep v q)))
 
 open Classical in
-/-- Correctness of the `splitFactor` recursion under the one-step property holding everywhere: for
-fuel `≥ deg p`, `splitFactorAux v p fuel` returns a splitting factorization `(pₙ, pₛ)` of `p`
-(`p = pₛ·pₙ`, `pₛ` special, `pₙ` normal) — w.r.t. the monomial derivation `D` (`Dt = v`). -/
+/-- Under the one-step property holding everywhere, for fuel `≥ deg p`, `splitFactorAux v p fuel`
+returns a splitting factorization `(pₙ, pₛ)` of `p` (`p = pₛ·pₙ`, `pₛ` special, `pₙ` normal). -/
 theorem splitFactorAux_isSplittingFactorization (v : K[X])
     (hstep : ∀ q : K[X], IsSplitFactorStep v q) :
     ∀ (fuel : ℕ) (p : K[X]), p.natDegree ≤ fuel →
@@ -216,10 +208,8 @@ section SplitFactorSplit
 variable {K : Type*} [Field K] [CharZero K] [Differential K]
 
 open Classical in
-/-- For a fully-split `q = ∏_{a∈s}(X − a)^{eₐ}` (each `eₐ ≥ 1`, char `0`), the `splitFactor` step
-`S = gcd(q,Dq)/gcd(q,dq/dt)` is the squarefree special part — `S ~ ∏_{a : v(a)=a′}(X − a)`. By the
-gcd formula `gcd(q,Dq) ~ gcd(q,dq/dt)·∏_{special}(X − a)` the division is exact and yields the
-special factor. -/
+/-- For a fully-split `q = ∏_{a∈s}(X − a)^{eₐ}` (char `0`), the step `S` is the squarefree special
+part `S ~ ∏_{a : v(a)=a′}(X − a)`. -/
 theorem splitFactorStep_prod_X_sub_C_pow_associated (v : K[X]) (s : Finset K) (e : K → ℕ)
     (he : ∀ a ∈ s, 1 ≤ e a) :
     Associated (splitFactorStep v (∏ a ∈ s, (X - C a) ^ e a))
@@ -250,11 +240,8 @@ theorem splitFactorStep_prod_X_sub_C_associated (v : K[X]) (s : Finset K) :
   simpa using h
 
 open Classical in
-/-- The `splitFactor` one-step property `IsSplitFactorStep` holds for every squarefree fully-split
-`q = ∏_{a∈s}(X − a)`: the step `S` is the special factor `∏_{special}(X − a)`, which (when
-non-constant) is a special divisor of `q` with strictly smaller-degree quotient, and (when constant)
-`q` is normal (no special roots). This discharges the hypothesis of `splitFactor` correctness on
-squarefree split inputs. -/
+/-- The one-step property `IsSplitFactorStep` holds for every squarefree fully-split
+`q = ∏_{a∈s}(X − a)`. -/
 theorem isSplitFactorStep_prod_X_sub_C (v : K[X]) (s : Finset K) :
     IsSplitFactorStep v (∏ a ∈ s, (X - C a)) := by
   letI : Differential K[X] := ⟨Differential.implicitDeriv v⟩
@@ -304,10 +291,8 @@ open UniqueFactorizationMonoid
 
 open Classical in
 omit [Differential K] in
-/-- Prime-power decomposition of a nonzero polynomial: `p ~ ∏_{π ∈ primeFactors p} π^{m_π}`, where
-`m_π = count π (normalizedFactors p)` is the multiplicity. The factors are the *distinct* irreducible
-divisors (over `K`, not over `K̄`), so this is the general-irreducible analogue of the linear-factor
-product `∏(X − a)^{eₐ}`. -/
+/-- Prime-power decomposition of a nonzero polynomial: `p ~ ∏_{π ∈ primeFactors p} π^{m_π}` with
+`m_π = count π (normalizedFactors p)`. -/
 theorem associated_prod_primeFactors_pow {p : K[X]} (hp : p ≠ 0) :
     Associated p (∏ π ∈ primeFactors p, π ^ (normalizedFactors p).count π) := by
   have h1 : Associated (normalizedFactors p).prod p := prod_normalizedFactors hp
@@ -322,9 +307,7 @@ end GeneralSplitFactor
 section GcdDerivAssoc
 variable {R : Type*} [CommRing R] [NormalizedGCDMonoid R] [Differential R]
 
-/-- The gcd-with-derivative is an associate invariant: `Associated p q → gcd(p, Dp) ~ gcd(q, Dq)`.
-(`q = u·p` for a unit `u`; `gcd(u·p, D(u·p)) ~ gcd(u, Du)·gcd(p, Dp)` by the two-factor formula, and
-`gcd(u, Du)` is a unit. This is the bridge from `p` to its prime-power decomposition.) -/
+/-- gcd-with-derivative is an associate invariant: `Associated p q → gcd(p, Dp) ~ gcd(q, Dq)`. -/
 theorem associated_gcd_deriv_of_associated {p q : R} (h : Associated p q) :
     Associated (gcd p p′) (gcd q q′) := by
   obtain ⟨u, rfl⟩ := h
@@ -343,12 +326,8 @@ variable {K : Type*} [Field K] [Differential K[X]]
 open UniqueFactorizationMonoid
 
 open Classical in
-/-- Gcd-with-derivative factorization over *arbitrary irreducibles* (not just linear factors): for
-`p ≠ 0` with every prime-factor multiplicity `m_π` a unit (characteristic `0`), the gcd with the
-derivative factors as `gcd(p, Dp) ~ (∏_π π^{m_π−1})·∏_π gcd(π, Dπ)` — the multiplicity defect times
-the per-prime gcds. Proof: bridge `p` to its prime-power decomposition (`associated_gcd_deriv_of_…`),
-split over the pairwise-coprime prime powers (`associated_gcd_deriv_prod`), and compute each power
-(`associated_gcd_deriv_pow`). -/
+/-- gcd-with-derivative over arbitrary irreducibles: for `p ≠ 0` with every multiplicity a unit
+(char `0`), `gcd(p, Dp) ~ (∏_π π^{m_π−1})·∏_π gcd(π, Dπ)`. -/
 theorem associated_gcd_deriv_prod_primeFactors {p : K[X]} (hp : p ≠ 0)
     (hunit : ∀ π ∈ primeFactors p, IsUnit (((normalizedFactors p).count π : ℕ) : K[X])) :
     Associated (gcd p p′)
@@ -379,9 +358,7 @@ theorem associated_gcd_deriv_prod_primeFactors {p : K[X]} (hp : p ≠ 0)
   rw [Finset.prod_mul_distrib]
 
 open Classical in
-/-- Per-prime gcd collapse: `∏_π gcd(π, Dπ) ~ ∏_{π special} π` over the prime factors of `p`. Each
-prime `π` is irreducible, so `gcd(π, Dπ)` is either a unit (when `π ∤ Dπ`, i.e. `π` normal) or
-`~ π` (when `π ∣ Dπ`, i.e. `π` special); the unit factors drop out. -/
+/-- Per-prime gcd collapse: `∏_π gcd(π, Dπ) ~ ∏_{π special} π` over the prime factors of `p`. -/
 theorem associated_prod_gcd_deriv_primeFactors {p : K[X]} :
     Associated (∏ π ∈ primeFactors p, gcd π π′)
       (∏ π ∈ (primeFactors p).filter (fun π => @IsSpecial _ _ ⟨(Differential.deriv : _)⟩ π), π) := by
@@ -395,11 +372,8 @@ theorem associated_prod_gcd_deriv_primeFactors {p : K[X]} :
     exact associated_one_iff_isUnit.mpr (hirr.isUnit_gcd_iff.mpr (h : ¬ π ∣ π′))
 
 open Classical in
-/-- General gcd formula over arbitrary irreducibles: for `p ≠ 0` with
-every multiplicity a unit (char `0`), `gcd(p, Dp) ~ (∏_π π^{m_π−1})·∏_{π special} π` — the
-multiplicity defect times the squarefree product of the *special* prime factors. Combines the
-prime-power gcd split (`associated_gcd_deriv_prod_primeFactors`) with the per-prime collapse
-(`associated_prod_gcd_deriv_primeFactors`). -/
+/-- General gcd formula over arbitrary irreducibles: for `p ≠ 0` with every multiplicity a unit
+(char `0`), `gcd(p, Dp) ~ (∏_π π^{m_π−1})·∏_{π special} π`. -/
 theorem associated_gcd_deriv_special_part {p : K[X]} (hp : p ≠ 0)
     (hunit : ∀ π ∈ primeFactors p, IsUnit (((normalizedFactors p).count π : ℕ) : K[X])) :
     Associated (gcd p p′)
@@ -416,9 +390,7 @@ variable {K : Type*} [Field K] [CharZero K]
 open UniqueFactorizationMonoid
 
 open Classical in
-/-- In characteristic `0`, a positive prime-factor multiplicity is a unit in `K[X]`:
-`(m_π : K[X]) = C (m_π : K)` is a nonzero constant. (Supplies the `hunit` hypothesis of the general
-gcd formula.) -/
+/-- In characteristic `0`, a positive prime-factor multiplicity is a unit in `K[X]`. -/
 theorem isUnit_natCast_count_primeFactors {p : K[X]} {π : K[X]}
     (hπ : π ∈ primeFactors p) :
     IsUnit (((normalizedFactors p).count π : ℕ) : K[X]) := by
@@ -426,8 +398,7 @@ theorem isUnit_natCast_count_primeFactors {p : K[X]} {π : K[X]}
   rw [← map_natCast (C : K →+* K[X])]
   exact isUnit_C.mpr (isUnit_iff_ne_zero.mpr (Nat.cast_ne_zero.mpr (by omega)))
 
-/-- In characteristic `0`, no irreducible polynomial is special under `d/dt`: an irreducible `π` is
-separable, so `gcd(π, dπ/dt) = 1` and `π ∤ dπ/dt`. (The `d/dt`-special filter is empty.) -/
+/-- In characteristic `0`, no irreducible polynomial is special under `d/dt`: `π ∤ dπ/dt`. -/
 theorem not_isSpecial_derivative_of_irreducible {π : K[X]} (hπ : Irreducible π) :
     ¬ π ∣ derivative π := by
   intro hdvd
@@ -441,12 +412,8 @@ variable {K : Type*} [Field K] [CharZero K] [Differential K]
 open UniqueFactorizationMonoid
 
 open Classical in
-/-- The `splitFactor` step for *general* `p` (char `0`):
-`S = gcd(p, Dp)/gcd(p, dp/dt)` (`Dt = v`) is associated to the squarefree product of the *special*
-prime factors of `p` — `S ~ ∏_{π : π ∣ Dπ} π`. The numerator carries `(∏π^{m−1})·∏_{special}π` and
-the denominator the bare multiplicity defect `∏π^{m−1}` (no `d/dt`-special factor in char `0`), so
-the quotient is exactly the special part. This is the general-irreducible analogue of
-`splitFactorStep_prod_X_sub_C_pow_associated` and makes the step correct for *every* polynomial. -/
+/-- For general `p` (char `0`), the step `S = gcd(p, Dp)/gcd(p, dp/dt)` is associated to the
+squarefree product of the special prime factors of `p`: `S ~ ∏_{π : π ∣ Dπ} π`. -/
 theorem splitFactorStep_associated_prod_special (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
     Associated (splitFactorStep v p)
       (∏ π ∈ (primeFactors p).filter
@@ -487,9 +454,7 @@ theorem splitFactorStep_associated_prod_special (v : K[X]) {p : K[X]} (hp : p �
 
 open Classical in
 omit [CharZero K] in
-/-- If every prime factor of `p` is normal (w.r.t. `D`), then `p` is `IsNormalSqfree`: every
-squarefree factor of `p` is normal. A squarefree `q ∣ p` is associated to the product of its distinct (hence
-pairwise-coprime) prime factors, each of which divides `p` and so is normal (`IsNormal.prod`). -/
+/-- If every prime factor of `p` is normal (w.r.t. `D`), then `p` is `IsNormalSqfree`. -/
 theorem isNormalSqfree_of_forall_prime_normal (v : K[X]) {p : K[X]}
     (h : ∀ π : K[X], Prime π → π ∣ p → @IsNormal _ _ ⟨Differential.implicitDeriv v⟩ π) :
     @IsNormalSqfree _ _ ⟨Differential.implicitDeriv v⟩ p := by
@@ -510,9 +475,7 @@ theorem isNormalSqfree_of_forall_prime_normal (v : K[X]) {p : K[X]}
   · exact (((pairwise_primeFactors_isRelPrime (a := q)) hπ hρ hπρ)).isCoprime
 
 open Classical in
-/-- If the `splitFactor` step `S` is constant
-(`deg S = 0`), then `p` is `IsNormalSqfree` — every squarefree factor of `p` is normal. (`S ~ ∏_{special}π`
-is a unit, so `p` has no special prime factor; every prime factor is normal.) -/
+/-- If the `splitFactor` step `S` is constant (`deg S = 0`), then `p` is `IsNormalSqfree`. -/
 theorem isNormalSqfree_of_splitFactorStep_natDegree_zero (v : K[X]) {p : K[X]} (hp : p ≠ 0)
     (hdeg : (splitFactorStep v p).natDegree = 0) :
     @IsNormalSqfree _ _ ⟨Differential.implicitDeriv v⟩ p := by
@@ -576,11 +539,8 @@ theorem splitFactorStep_dvd (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
     exact dvd_of_mem_normalizedFactors (mem_primeFactors.mp (Finset.mem_of_mem_filter π hπ))
 
 open Classical in
-/-- Hypothesis-free `splitFactorAux` correctness: for fuel `≥ deg p`
-and `p ≠ 0`, `splitFactorAux v p fuel` returns a general splitting factorization `(pₙ, pₛ)`
-of `p` — `p = pₛ·pₙ`, `pₛ` special, and every squarefree factor of `pₙ` normal (`IsNormalSqfree`).
-No `IsSplitFactorStep` hypothesis: the step facts (`isSpecial_splitFactorStep`, `splitFactorStep_dvd`,
-`isNormalSqfree_of_splitFactorStep_natDegree_zero`) hold for general `p`. -/
+/-- Hypothesis-free `splitFactorAux` correctness: for fuel `≥ deg p` and `p ≠ 0`, it returns a
+general splitting factorization `(pₙ, pₛ)` — `p = pₛ·pₙ`, `pₛ` special, `pₙ` `IsNormalSqfree`. -/
 theorem splitFactorAux_isSplittingFactorizationGen (v : K[X]) :
     ∀ (fuel : ℕ) (p : K[X]), p ≠ 0 → p.natDegree ≤ fuel →
       @IsSplittingFactorizationGen _ _ ⟨Differential.implicitDeriv v⟩ p
@@ -724,9 +684,8 @@ end SplitSquarefreeFactorSplit
 section CanonicalRep
 variable {K : Type*} [Field K] [Differential K]
 
-/-- The Bézout split underlying `ExtendedEuclidean(dₙ, dₛ, r)`: for coprime `dₙ, dₛ` and any `r`,
-returns `(b, c)` with `b·dₙ + c·dₙ`… given a Bézout identity `u·dₙ + w·dₛ = 1`, reduce `u·r` mod
-`dₛ` to keep `deg b < deg dₛ`. (`b = (u·r) %ₘ dₛ`, `c = w·r + (u·r /ₘ dₛ)·dₙ`.) -/
+/-- The Bézout split of `r` over coprime `dₙ, dₛ` given `u·dₙ + w·dₛ = 1`: returns `(b, c)` solving
+`b·dₙ + c·dₛ = r` with `deg b < deg dₛ` (`b = (u·r) %ₘ dₛ`, `c = w·r + (u·r /ₘ dₛ)·dₙ`). -/
 noncomputable def extendedEuclideanSplit (dn ds r u w : K[X]) : K[X] × K[X] :=
   ((u * r) %ₘ ds, w * r + (u * r /ₘ ds) * dn)
 
@@ -753,8 +712,7 @@ theorem extendedEuclideanSplit_degree_lt (dn ds r u w : K[X]) (hds : ds.Monic) :
   exact degree_modByMonic_lt (u * r) hds
 
 open Classical in
-/-- A Bézout pair `(u, w)` with `u·a + w·b = 1` for coprime `a, b` (the `ExtendedEuclidean` output),
-chosen via the existential `IsCoprime`; `(0, 0)` otherwise. -/
+/-- A Bézout pair `(u, w)` with `u·a + w·b = 1` for coprime `a, b`; `(0, 0)` otherwise. -/
 noncomputable def bezoutOne (a b : K[X]) : K[X] × K[X] :=
   if h : IsCoprime a b then (h.choose, h.choose_spec.choose) else (0, 0)
 
@@ -766,10 +724,9 @@ theorem bezoutOne_spec {a b : K[X]} (h : IsCoprime a b) :
   exact h.choose_spec.choose_spec
 
 open Classical in
-/-- The canonical representation of `f ∈ k(t)`: with `d = denom f` (monic) and
-`a = num f`, polynomial-divide `a = q·d + r` (`q = a /ₘ d`, `r = a %ₘ d`), split the denominator
-`(dₙ, dₛ) = splitFactor v d`, run extended Euclid on `(dₙ, dₛ, r)` (Bézout `u·dₙ + w·dₛ = 1`) to get
-`(b, c)`, and return `(q, b/dₛ, c/dₙ)` — polynomial part, reduced part, simple part. -/
+/-- The canonical representation of `f ∈ k(t)` as `(q, b/dₛ, c/dₙ)` — polynomial, reduced, and
+simple parts — from the polynomial division `num f = q·d + r`, the denominator split
+`(dₙ, dₛ) = splitFactor v d`, and the Bézout split `(b, c)` of `r`. -/
 noncomputable def canonicalRepresentation (v : K[X]) (f : RatFunc K) :
     K[X] × RatFunc K × RatFunc K :=
   let a := f.num
@@ -785,10 +742,8 @@ noncomputable def canonicalRepresentation (v : K[X]) (f : RatFunc K) :
 
 omit [Differential K] in
 open Classical in
-/-- `canonicalRepresentation` correctness, additive split. Given the denominator
-splitting `d = dₛ·dₙ` of `f` (`d = denom f`) and a Bézout pair `u·dₙ + w·dₛ = 1` from extended
-Euclid, the canonical pieces sum back to `f`: `f = q + b/dₛ + c/dₙ` with `q = (num f) /ₘ d` the
-polynomial part and `(b, c)` the Bézout split of `r = (num f) %ₘ d`. -/
+/-- `canonicalRepresentation` correctness (additive form): given `denom f = dₛ·dₙ` and a Bézout
+pair `u·dₙ + w·dₛ = 1`, the canonical pieces sum back to `f = q + b/dₛ + c/dₙ`. -/
 theorem canonicalRepresentation_add_eq (f : RatFunc K)
     {dn ds u w : K[X]} (hsplit : f.denom = ds * dn)
     (hdn : dn ≠ 0) (hds : ds ≠ 0) (hbez : u * dn + w * ds = 1) :
@@ -829,10 +784,8 @@ theorem canonicalRepresentation_add_eq (f : RatFunc K)
   ring
 
 open Classical in
-/-- `canonicalRepresentation` correctness: the three pieces of
-`canonicalRepresentation v f = (q, fₛ, fₙ)` sum to `f` — `(q : k(t)) + fₛ + fₙ = f`. Hypotheses: the
-`splitFactor`-output `(dₙ, dₛ)` genuinely splits the denominator (`denom f = dₛ·dₙ`) and is coprime
-(`IsCoprime dₙ dₛ`), as guaranteed by `splitFactor` correctness. -/
+/-- `canonicalRepresentation` correctness: the three pieces `(q, fₛ, fₙ)` sum to `f`, given that
+the `splitFactor` output splits the denominator (`denom f = dₛ·dₙ`) and is coprime. -/
 theorem canonicalRepresentation_sum_eq (v : K[X]) (f : RatFunc K)
     (hsplit : f.denom = (splitFactor v f.denom).2 * (splitFactor v f.denom).1)
     (hcop : IsCoprime (splitFactor v f.denom).1 (splitFactor v f.denom).2)
@@ -851,10 +804,8 @@ section RootCharacterization
 variable {K : Type*} [Field K] [CharZero K] [Differential K]
 
 open Classical in
-/-- A root `α` of a special polynomial `pₛ` (w.r.t. the coefficient-lifting derivation `κ_D`, i.e.
-the monomial derivation with `Dt = 0`) is a *constant*: `Dα = 0`. The linear factor `X − α` divides
-`pₛ`, so is special (a prime factor of a special polynomial is special), which forces
-`0 = Hₜ(α) = Dα`. -/
+/-- A root `α` of a special polynomial `pₛ` (w.r.t. the coefficient-lifting derivation, `Dt = 0`)
+is a constant: `Dα = 0`. -/
 theorem deriv_eq_zero_of_isSpecial_of_isRoot {ps : K[X]} (hps0 : ps ≠ 0)
     (hps : @IsSpecial _ _ ⟨Differential.implicitDeriv 0⟩ ps) {α : K} (hα : ps.IsRoot α) :
     α′ = 0 := by
@@ -871,8 +822,8 @@ theorem deriv_eq_zero_of_isSpecial_of_isRoot {ps : K[X]} (hps0 : ps ≠ 0)
 
 omit [CharZero K] in
 open Classical in
-/-- A root `α` of a normal polynomial `pₙ` (w.r.t. `κ_D`, `Dt = 0`) is *nonconstant*: `Dα ≠ 0`. The
-linear factor `X − α` divides `pₙ`, so is normal, giving `0 ≠ Hₜ(α) = Dα`. -/
+/-- A root `α` of a normal polynomial `pₙ` (w.r.t. the coefficient-lifting derivation, `Dt = 0`)
+is nonconstant: `Dα ≠ 0`. -/
 theorem deriv_ne_zero_of_isNormal_of_isRoot {pn : K[X]}
     (hpn : @IsNormal _ _ ⟨Differential.implicitDeriv 0⟩ pn) {α : K} (hα : pn.IsRoot α) :
     α′ ≠ 0 := by
@@ -884,11 +835,9 @@ theorem deriv_ne_zero_of_isNormal_of_isRoot {pn : K[X]}
   exact fun h => this h.symm
 
 open Classical in
-/-- Root characterization of the splitting: for a splitting factorization `p = pₛ·pₙ` w.r.t. the
-coefficient-lifting derivation `κ_D` (`Dt = 0`) of a char-`0` differential field, a root `α` of `p`
-is constant iff it is a root of the special part: `Dα = 0 ↔ pₛ(α) = 0`. Forward via
-`deriv_eq_zero_of_isSpecial_of_isRoot` after locating `α` as a root of `pₛ` or `pₙ`; backward the
-same, ruling out `pₙ(α) = 0` (those roots are nonconstant). -/
+/-- Root characterization: for a splitting factorization `p = pₛ·pₙ` (coefficient-lifting
+derivation, char `0`), a root `α` of `p` is constant iff a root of the special part:
+`Dα = 0 ↔ pₛ(α) = 0`. -/
 theorem deriv_eq_zero_iff_isRoot_special {p ps pn : K[X]} (hps0 : ps ≠ 0)
     (hfact : @IsSplittingFactorization _ _ ⟨Differential.implicitDeriv 0⟩ p ps pn)
     {α : K} (hα : p.IsRoot α) :

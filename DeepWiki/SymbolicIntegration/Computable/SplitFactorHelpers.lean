@@ -1,12 +1,9 @@
 import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 
-/-! # Generic associate/derivative helpers for the splitting-factorization correctness
-Abstract correctness of the fraction-free `splitFactor` over a tower level is the generic tower-recursive
-`cSplitFactorFastG_isSplittingFactorizationGen_qfunNZG` (`ComputableSplitFactorTowerCorrectG`) at
-`QFunNZG ℚ`. This file holds two reusable field- and derivation-generic helpers consumed by that generic
-engine: `gcd_derivative_dvd_gcd_implicitDeriv` (the denominator gcd divides the numerator gcd, char `0`)
-and `natDegree_eq_of_associated` (degree is associate-invariant). -/
+/-! # Generic associate/derivative helpers for splitting-factorization correctness
+Two field- and derivation-generic helpers: `gcd_derivative_dvd_gcd_implicitDeriv` (the denominator gcd
+divides the numerator gcd, char `0`) and `natDegree_eq_of_associated` (degree is associate-invariant). -/
 
 open Polynomial Classical
 open scoped Differential
@@ -16,11 +13,7 @@ namespace DeepWiki.SymbolicIntegration
 open Compute CPolyG
 
 open UniqueFactorizationMonoid Classical in
-/-- **The denominator gcd divides the numerator gcd** (char `0`): `gcd(p, dp/dt) ∣ gcd(p, Dp)` for the
-monomial derivation `D = implicitDeriv v`. Both gcds carry the multiplicity defect `∏ π^{m−1}`; the
-numerator additionally carries the special product `∏_{special} π`, while the `d/dt`-special filter is
-empty in char `0`, so the denominator is exactly the defect — which divides the numerator. The
-divisibility that makes the `SplitFactor` step quotient exact. -/
+/-- `gcd(p, dp/dt) ∣ gcd(p, Dp)` in char `0` for the monomial derivation `D = implicitDeriv v`. -/
 theorem gcd_derivative_dvd_gcd_implicitDeriv {K : Type*} [Field K] [CharZero K] [Differential K]
     (v : K[X]) {p : K[X]} (hp : p ≠ 0) :
     gcd p (derivative p) ∣ gcd p (Differential.implicitDeriv v p) := by
@@ -44,7 +37,7 @@ theorem gcd_derivative_dvd_gcd_implicitDeriv {K : Type*} [Field K] [CharZero K] 
   refine hden.dvd.trans ?_
   exact (dvd_mul_right _ _).trans hnum.symm.dvd
 
-/-- **`natDegree` is associate-invariant**: `Associated a b → a.natDegree = b.natDegree` in `K[X]`. -/
+/-- `Associated a b → a.natDegree = b.natDegree` in `K[X]`: degree is associate-invariant. -/
 theorem natDegree_eq_of_associated {K : Type*} [Field K] {a b : K[X]} (h : Associated a b) :
     a.natDegree = b.natDegree :=
   Polynomial.natDegree_eq_of_degree_eq (Polynomial.degree_eq_degree_of_associated h)

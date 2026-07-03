@@ -3,9 +3,9 @@ import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 /-! # Abstract soundness spec `CRischFieldSpec` for the field-level RDE oracle
 
 `CRischFieldSpec α` asserts that a successful `CRischField.crischDESolve b g = some y` yields the
-field-level Risch-DE identity `(toK y)′ + (toK b)·(toK y) = toK g` over `K = CFieldSpec.K α`. Provides
-the constant base instance over `ℚ`, the discharged pure-integration residual `D(∫R) = R`
-(`crischDESolve_zero_intDeriv`), and the cleared-to-field layer bridge `rischDE_field_of_cleared`. -/
+field-level Risch-DE identity `(toK y)′ + (toK b)·(toK y) = toK g` over `K = CFieldSpec.K α`, with the
+constant base instance over `ℚ`, the pure-integration residual `D(∫R) = R`, and the cleared-to-field
+layer bridge `rischDE_field_of_cleared`. -/
 
 open Polynomial
 
@@ -141,53 +141,10 @@ end ClearedToField
 #print axioms towerFractionFieldDerivG_amG_C
 #print axioms rischDE_field_of_cleared
 
-/-! ### ★ The recursive `CRischFieldSpec (QFunNZG β)` — the precise layer-bridge obstruction
+/-! ### The recursive `CRischFieldSpec (QFunNZG β)` layer-bridge
 
-The recursive instance — `crischDESolve b g = some y → (toK y)′ + (toK b)·(toK y) = toK g` over
-`QFunNZG β`, where `crischDESolve` here runs the generic §6 pipeline `cRischDEG ([1] : CPolyG β) fuel
-b.1.1 b.1.2 g.1.1 g.1.2` over `CPolyG β` — is **not** closeable from the available §6 correctness, for two
-distinct reasons. The first is fundamental; the second is supplied above.
-
-1. **★ The conditional-hypotheses gap (the fundamental obstruction).** The §6 correctness
-   `cRischDEG_rdeCleared_gen` / `cRischDEG_rdeCleared_qfunNZG` (`ComputableRischDETowerCorrectG`) is **not**
-   the clean implication "`cRischDEG … = some (ynum, yden)` ⟹ cleared identity". It is *conditional on the
-   entire pipeline being threaded*: it takes as **hypotheses** the primitive-regime witness `hprim`, the §6.2
-   normal-denominator success `hnorm : cRdeNormalDenominatorG … = some (a0, b0, c0, h0)`, the §6.4 SPDE success
-   `hspde : cSPDEG … = some (bbar, cbar, m, α', β)`, the §6.5 non-cancellation success `hpoly :
-   cPolyRischDENoCancelG … = some v`, the transparent-input chain `hin : CSPDEGClearedInputsGen …` (which
-   itself bundles, *per recursion level*, `Associated`-gcd correctness, fuel bounds, and nonzero-denominator
-   facts), plus the §6.2 divisibility side-conditions (`hdn`, `hfden0`, `hgden0`, `hdvdB`, `hdvdC`).
-   **None of these is derivable from the bare `cRischDEG … = some (ynum, yden)`.** To build the
-   instance one must run the pipeline's stages *forward* and prove, from the bare `some`-result, that (a) each
-   intermediate stage also returned `some` with the matching reassembly, and (b) the whole
-   `CSPDEGClearedInputsGen` transparent-input predicate holds on a real run — i.e. re-derive the §6 pipeline's
-   *structural decomposition theorem* (every successful `cRischDEG` run factors through successful, regular
-   stages). That theorem does not exist; it is the documented continuation. It is the §6 analogue of the
-   missing "`cIntegrateGFull … = some res` ⟹ `checkIdentityG … = true`" forward-threading — which is exactly why
-   the `checkIdentityG` ⟹ field-identity bridge (`field_identity_of_checkIdentityG`,
-   `ComputableIntegrateTowerCorrectG`) instead gates on the engine's **own** boolean `checkIdentityG` re-check
-   rather than on a structural decomposition. An
-   analogous *checked* RDE oracle — re-validating `cRischDEG`'s output by an engine boolean RDE check and
-   bridging *that* — is the tractable route to a `CRischFieldSpec`-style guarantee; it is a separate engine
-   addition, out of scope here (it touches `ComputableTowerRischDE`, owned elsewhere).
-
-2. **The cleared → field bridge (supplied: `rischDE_field_of_cleared`).** Even *given* the cleared polynomial
-   identity that stage (1) would yield (the conclusion of `cRischDEG_rdeCleared_gen`, over
-   `(CFieldSpec.K β)[X]`), translating it to the field-level spec `(toK y)′ + (toK b)·(toK y) = toK g` over
-   `RatFunc (CFieldSpec.K β)` is the `amG`/quotient-rule layer-bridge. **This half is done above**
-   (`rischDE_field_of_cleared`), generically over the coefficient carrier: it reads the quotient rule off
-   `towerFractionFieldDerivG_div` and divides the cleared identity through the nonzero
-   `amG gden·amG fden·amG yden²`. (Composing it into the field spec additionally needs a **generic**
-   `CDiffFieldSpec (QFunNZG β)` instance — only the `QFunNZG ℚ`-pinned `instCDiffFieldSpecQFunNZG` exists,
-   though `toQFunNZG_towerDerivQFunNZG` is already generic, so the generic instance is a mechanical lift — and
-   the identification of the spec's `(toK y)′` with `towerFractionFieldDerivG [1] (toQFunNZG y)`, which is
-   exactly `CDiffFieldSpec.toK_cderiv` at the recursive instance.)
-
-So the committed deliverable is: the `CRischFieldSpec` **class**, the **base `ℚ` instance** (axiom-clean), the
-**discharged hyperexp residual** `crischDESolve_zero_intDeriv` (`D(∫R) = R` from the spec, removing the
-`hintR` native-residual from the hyperexp soundness chain — the headline ask), and the **cleared → field half
-of the recursive layer-bridge** `rischDE_field_of_cleared`. The recursive *instance* is blocked on the §6
-pipeline's structural-decomposition theorem (reason 1), recorded here so the gap and its tractable route (a
-checked RDE oracle) are explicit. -/
+The recursive instance over `QFunNZG β` is not committed here: the cleared → field half is supplied
+(`rischDE_field_of_cleared`), but assembling the field-level spec additionally requires a structural
+decomposition theorem for the generic RDE pipeline that is not yet available. -/
 
 end DeepWiki.SymbolicIntegration

@@ -3,19 +3,10 @@ import Mathlib.Algebra.Polynomial.Div
 import Mathlib.FieldTheory.RatFunc.Basic
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 
-/-! # The complete partial fraction decomposition (Bronstein §2.7, Theorem 2.7.1, structural core)
-For `A, D ∈ K[x]` with `D` monic nonzero, `gcd(A,D)=1`, and a squarefree factorization
-`D = ∏ᵢ Dᵢ^{eᵢ}` (the `Dᵢ` monic, pairwise coprime), the **complete** partial fraction decomposition is
-`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` with `deg Hᵢⱼ < deg Dᵢ` and `P = A /ₘ D`.
-
-This file formalizes the `K[x]`-level structural conclusion of Theorem 2.7.1. The substantive new
-ingredient is the **base-`Dᵢ` (`Dᵢ`-adic) digit expansion** of the per-prime-power numerator `Bᵢ`:
-writing `Bᵢ = ∑_{j<eᵢ} Cⱼ·Dᵢ^j` with `deg Cⱼ < deg Dᵢ` via repeated division by the monic `Dᵢ`, so
-`Bᵢ/Dᵢ^{eᵢ} = ∑_{k=1}^{eᵢ} C_{eᵢ−k}/Dᵢ^k`. Composed with the multi-factor coprime split
-`ratFunc_partialFraction_prod` this gives the full decomposition.
-
-The over-the-closure form `Hᵢⱼ(α)/(x−α)ʲ` and the rational `Hᵢⱼ` *algorithm* (the differential-variable
-Laurent-coefficient construction, eqs 2.10–2.12) are out of scope. -/
+/-! # The complete partial fraction decomposition
+The `K[x]`-level structural decomposition `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` (with
+`deg Hᵢⱼ < deg Dᵢ`) for a squarefree factorization `D = ∏ᵢ Dᵢ^{eᵢ}`, built from the base-`g`
+(`g`-adic) digit expansion of each prime-power numerator. -/
 
 open Polynomial
 
@@ -23,11 +14,9 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {K : Type*} [Field K]
 
-/-! ## §2.7 The base-`g` (`g`-adic) digit expansion -/
+/-! ## The base-`g` (`g`-adic) digit expansion -/
 
-/-- **Iterated division by a monic power** (§2.7): dividing by `g^(j+1)` is dividing by `g` then by `g^j`,
-`B /ₘ g^(j+1) = (B /ₘ g) /ₘ g^j`, for monic `g`. Proved by the uniqueness of the monic division pair:
-`B = r + g^(j+1)·q` with `q = (B /ₘ g) /ₘ g^j` and `r = B %ₘ g + g·((B /ₘ g) %ₘ g^j)`, `deg r < deg g^(j+1)`. -/
+/-- Iterated division by a monic power: `B /ₘ g^(j+1) = (B /ₘ g) /ₘ g^j` for monic `g`. -/
 theorem divByMonic_pow_succ (B g : K[X]) (hg : g.Monic) (j : ℕ) :
     B /ₘ g ^ (j + 1) = (B /ₘ g) /ₘ g ^ j := by
   refine (div_modByMonic_unique (q := (B /ₘ g) /ₘ g ^ j)
@@ -58,13 +47,11 @@ theorem divByMonic_pow_succ (B g : K[X]) (hg : g.Monic) (j : ℕ) :
         have : (j + 1) * g.natDegree = g.natDegree + j * g.natDegree := by ring
         omega
 
-/-- **`g`-adic digit** (§2.7): the `j`-th digit of `B` in base `g` is `(B /ₘ g^j) %ₘ g` — repeatedly
-strip the lowest digit `B %ₘ g` after dividing out `g^j`. For monic `g` of positive degree these are the
-coefficients of the base-`g` expansion `B = ∑ⱼ (digit j)·g^j`. -/
+/-- The `j`-th base-`g` digit of `B`: `(B /ₘ g^j) %ₘ g`, the coefficient of `g^j` in the
+base-`g` expansion `B = ∑ⱼ (digit j)·g^j`. -/
 noncomputable def baseDigit (B g : K[X]) (j : ℕ) : K[X] := (B /ₘ g ^ j) %ₘ g
 
-/-- **Digits are proper** (§2.7): each base-`g` digit has `degree < degree g` for monic `g` of positive
-degree — it is a remainder modulo `g`. -/
+/-- Each base-`g` digit is proper: `degree (baseDigit B g j) < degree g` for monic `g`. -/
 theorem degree_baseDigit_lt (B g : K[X]) (hg : g.Monic) (j : ℕ) :
     (baseDigit B g j).degree < g.degree :=
   degree_modByMonic_lt _ hg
@@ -78,10 +65,8 @@ theorem baseDigit_succ (B g : K[X]) (hg : g.Monic) (j : ℕ) :
     baseDigit B g (j + 1) = baseDigit (B /ₘ g) g j := by
   rw [baseDigit, baseDigit, divByMonic_pow_succ B g hg]
 
-/-- **Base-`g` reconstruction** (§2.7, the digit expansion): for monic `g` of positive degree, any `B`
-with `degree B < e·degree g` reconstructs from its first `e` base-`g` digits,
-`B = ∑_{j<e} (baseDigit B g j)·g^j` — the polynomial analogue of base-`g` positional notation, by
-repeated division (`B = B %ₘ g + g·(B /ₘ g)`). The degree hypothesis guarantees `e` digits suffice. -/
+/-- Base-`g` reconstruction: for monic `g` of positive degree and `degree B < e·degree g`,
+`B = ∑_{j<e} (baseDigit B g j)·g^j`. -/
 theorem baseDigit_reconstruction (g : K[X]) (hg : g.Monic) :
     ∀ (e : ℕ) (B : K[X]), B.degree < ((e * g.natDegree : ℕ) : WithBot ℕ) →
       B = ∑ j ∈ Finset.range e, baseDigit B g j * g ^ j := by
@@ -121,13 +106,10 @@ theorem baseDigit_reconstruction (g : K[X]) (hg : g.Monic) :
       rw [baseDigit_succ B g hg, pow_succ]
       ring
 
-/-! ## §2.7 The `Dᵢ`-adic expansion of a single prime-power fraction `B/g^e` -/
+/-! ## The `g`-adic expansion of a single prime-power fraction `B/g^e` -/
 
-/-- **`Dᵢ`-adic Laurent expansion of `B/g^e`** (§2.7, Theorem 2.7.1, the single-prime-power core): for
-monic `g` of positive degree and `B` with `deg B < e·deg g`, the fraction `B/g^e` decomposes as
-`B/g^e = ∑_{k=1}^{e} Hₖ/g^k` with `deg Hₖ < deg g`, where `Hₖ = baseDigit B g (e−k)` is the `(e−k)`-th
-base-`g` digit of `B` — i.e. the digit expansion `B = ∑_{j<e} Cⱼ·g^j` rewritten with descending powers
-`Cⱼ/g^{e−j}` (reindexed `k = e−j`). This is the partial fraction of one prime-power summand `Dᵢ^{eᵢ}`. -/
+/-- `g`-adic Laurent expansion of `B/g^e`: for monic `g` of positive degree and `deg B < e·deg g`,
+`B/g^e = ∑_{k=1}^{e} Hₖ/g^k` with `Hₖ = baseDigit B g (e−k)` and `deg Hₖ < deg g`. -/
 theorem ratFunc_DadicExpansion (g : K[X]) (hg : g.Monic) (e : ℕ) (B : K[X])
     (hB : B.degree < ((e * g.natDegree : ℕ) : WithBot ℕ)) :
     (algebraMap K[X] (RatFunc K) B) / (algebraMap K[X] (RatFunc K) g) ^ e
@@ -152,18 +134,12 @@ theorem ratFunc_DadicExpansion (g : K[X]) (hg : g.Monic) (e : ℕ) (B : K[X])
     rw [hkj, map_mul, map_pow]
     rw [div_eq_div_iff (pow_ne_zero _ hg0) (pow_ne_zero _ hg0), mul_assoc, hpow]
 
-/-! ## §2.7 Theorem 2.7.1 — the complete partial fraction decomposition (`K[x]`-level structure) -/
+/-! ## The complete partial fraction decomposition (`K[x]`-level structure) -/
 
 open Classical in
-/-- **Theorem 2.7.1, the complete partial fraction decomposition** (§2.7, structural `K[x]`-level core):
-for `A, D ∈ K[x]` with a squarefree factorization `D = ∏ᵢ Dᵢ^{eᵢ}` (the `Dᵢ` monic of positive degree,
-pairwise coprime, `eᵢ ≥ 1`), there is a polynomial part `P` and proper numerators `Hᵢⱼ` (`deg Hᵢⱼ < deg Dᵢ`)
-with
-`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j`.
-Composes Mathlib's degree-bounded coprime split `div_prod_eq_quo_add_sum_rem_div` (giving `A/∏ᵢ Dᵢ^{eᵢ}
-= P + ∑ᵢ rᵢ/Dᵢ^{eᵢ}`, `deg rᵢ < eᵢ·deg Dᵢ`) with the `Dᵢ`-adic expansion `ratFunc_DadicExpansion` of each
-prime-power summand `rᵢ/Dᵢ^{eᵢ}`. The over-the-closure form `Hᵢⱼ(α)/(x−α)ʲ` and the rational `Hᵢⱼ`
-*algorithm* (eqs 2.10–2.12) are out of scope. -/
+/-- The complete partial fraction decomposition: for a squarefree factorization `D = ∏ᵢ Dᵢ^{eᵢ}`
+(the `Dᵢ` monic of positive degree, pairwise coprime, `eᵢ ≥ 1`), there is a polynomial part `P`
+and proper numerators `Hᵢⱼ` (`deg Hᵢⱼ < deg Dᵢ`) with `A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j`. -/
 theorem ratFunc_completePartialFraction {ι : Type*} (s : Finset ι) (D : ι → K[X]) (e : ι → ℕ)
     (hD : ∀ i ∈ s, (D i).Monic) (_hd : ∀ i ∈ s, 0 < (D i).natDegree) (_he : ∀ i ∈ s, 1 ≤ e i)
     (hcop : Set.Pairwise ↑s fun i j => IsCoprime (D i) (D j)) (A : K[X]) :
@@ -193,20 +169,19 @@ theorem ratFunc_completePartialFraction {ι : Type*} (s : Finset ι) (D : ι →
       rwa [degree_pow, degree_eq_natDegree (hD i hi).ne_zero, nsmul_eq_mul, ← Nat.cast_mul] at hlt
     exact ratFunc_DadicExpansion (D i) (hD i hi) (e i) (r i) hri
 
-/-! ## §2.7 Restatements against the book's wording -/
+/-! ## Restatements -/
 
-/-- Restatement of the base-`g` digit expansion: `B = ∑_{j<e} Cⱼ·g^j` with proper digits `deg Cⱼ < deg g`,
-the positional base-`g` notation underlying the `Dᵢ`-adic Laurent series. -/
+/-- Restatement of the base-`g` digit expansion: `B = ∑_{j<e} Cⱼ·g^j` with proper digits
+`deg Cⱼ < deg g`. -/
 example (g : K[X]) (hg : g.Monic) (_hd : 0 < g.natDegree) (e : ℕ) (B : K[X])
     (hB : B.degree < ((e * g.natDegree : ℕ) : WithBot ℕ)) :
     ∃ C : ℕ → K[X], (∀ j, (C j).degree < g.degree) ∧
       B = ∑ j ∈ Finset.range e, C j * g ^ j :=
   ⟨baseDigit B g, fun j => degree_baseDigit_lt _ _ hg j, baseDigit_reconstruction g hg e B hB⟩
 
-/-- Restatement of Theorem 2.7.1 (the `K[x]`-level structural conclusion): for a squarefree
-factorization `D = ∏ᵢ Dᵢ^{eᵢ}` (monic, pairwise-coprime, positive-degree `Dᵢ`, `eᵢ ≥ 1`),
-`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` with `deg Hᵢⱼ < deg Dᵢ` and `P` the polynomial part — the
-`Hᵢⱼ(α)/(x−α)ʲ` over-the-closure form being the further evaluation of `Hᵢⱼ` at the roots `α` of `Dᵢ`. -/
+/-- Restatement of the complete partial fraction decomposition: for a squarefree factorization
+`D = ∏ᵢ Dᵢ^{eᵢ}` (monic, pairwise-coprime, positive-degree `Dᵢ`, `eᵢ ≥ 1`),
+`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` with `deg Hᵢⱼ < deg Dᵢ` and `P` the polynomial part. -/
 example {ι : Type*} (s : Finset ι) (D : ι → K[X]) (e : ι → ℕ)
     (hD : ∀ i ∈ s, (D i).Monic) (hd : ∀ i ∈ s, 0 < (D i).natDegree) (he : ∀ i ∈ s, 1 ≤ e i)
     (hcop : Set.Pairwise ↑s fun i j => IsCoprime (D i) (D j)) (A : K[X]) :

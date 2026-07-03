@@ -2,21 +2,11 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGlue
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 
-/-! # §6 RDE cleared-identity building blocks (carrier-generic)
+/-! # Carrier-generic RDE cleared-identity building blocks
 
-This file collects the carrier-generic, gcd-agnostic §6 RDE building blocks consumed by the fuel-free RDE
-cleared-identity development (`RischDE/Structural.lean`) and the `RatFunc ℚ` valuation lift
-(`RischDE/RatFuncValuation.lean`):
-
-* **Generic helper lemmas** — the `cgcdWf`-unit / exact-division / SPDE-peel helpers, stated
-  `{α} [CField α] [CFieldSpec α]`-generic (their bodies are gcd-agnostic, taking the gcd `g`
-  abstractly): `cgcdWf_isUnit_of_divided_gen`, `cdivWf_a_exact_of_gcd`, `cdivWf_b_exact_of_gcd`,
-  `cdivWf_c_exact_of_cdvdGWf`, `cSPDE_peel_cleared_gen`, `toPolyG_cdivWf_exact_mul_gen`.
-* **★ The derivation-generic pole order-drop** — the polynomial kernel of Bronstein Lemma 6.1.1 /
-  Theorem 4.4.2: a derivation lowers the order of a pole at a **normal** irreducible by exactly one
-  (`pow_sub_one_dvd_deriv_of_pow_dvd`, `not_pow_dvd_deriv_of_normal`,
-  `emultiplicity_deriv_eq_sub_one_of_normal`), and its Wronskian-numerator valuation lift
-  `emultiplicity_wronskian_numerator_eq_of_normal`. -/
+Carrier-generic, gcd-agnostic RDE helper lemmas plus the derivation-generic pole order-drop
+kernel (a derivation lowers a pole's order at a normal irreducible by exactly one) and its
+Wronskian-numerator valuation lift. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -25,16 +15,12 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-/-! ### Generic helper lemmas (the §6.4 helpers at any tower level)
+/-! ### Generic helper lemmas
 
-The §6.4 SPDE certificate discharge needs five engine facts whose proofs only ever touch the gcd `g`
-**abstractly** (through an `Associated (toPolyG g) (gcd …)` hypothesis and the generic
-`cgcdWf`/`cdivWf`/`cdvdG`/`cdvdGWf` API). We state them generically over `{α} [CField α] [CFieldSpec α]`, so they
-apply at `QFunNZG ℚ` (and any level). Each reuses the already generic `toPolyG_cgcdWf_dvd` /
-`toPolyG_cdivWf_exact` / divisibility read-offs / `spde_const_base` / `spde_step_glue`. -/
+Carrier-generic SPDE certificate helpers, stated over `{α} [CField α] [CFieldSpec α]` with the
+gcd `g` taken abstractly. -/
 
-/-- **The divided coefficients' fuel-free gcd is a unit** (generic): after dividing `a,b` by a nonzero gcd
-`g`, the Wf gcd of `bd, ad` is a unit. -/
+/-- After dividing `a, b` by a nonzero gcd `g`, the gcd of `bd, ad` is a unit. -/
 theorem cgcdWf_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α]
     (a b ad bd g : CPolyG α) (hgne : toPolyG g ≠ 0)
     (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b)))
@@ -52,9 +38,7 @@ theorem cgcdWf_isUnit_of_divided_gen {α : Type*} [CField α] [CFieldSpec α]
   have hG1 : G ∣ 1 := ⟨k, mul_left_cancel₀ hgne hcancel⟩
   exact isUnit_of_dvd_one hG1
 
-/-- **The `a`-exact-division witness** (generic) `toPolyG (cdivWf a g) · toPolyG g = toPolyG a` from
-`g ~ gcd(a, b)` (`g ∣ a`) and `g ≠ 0`. Generic mirror of `cdivFF_a_exact_of_gcd`
-(`cdivFF := cdivWf`). -/
+/-- `toPolyG (cdivWf a g) * toPolyG g = toPolyG a` from `g ~ gcd(a, b)` (`g ∣ a`) and `g ≠ 0`. -/
 theorem cdivWf_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : CPolyG α)
     (hg0 : cnormG g ≠ [])
     (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))) :
@@ -62,8 +46,7 @@ theorem cdivWf_a_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : 
   have hgdvd : toPolyG g ∣ toPolyG a := hgassoc.dvd.trans (gcd_dvd_left _ _)
   exact toPolyG_cdivWf_exact a g hg0 hgdvd
 
-/-- **The `b`-exact-division witness** (generic) `toPolyG (cdivWf b g) · toPolyG g = toPolyG b` from
-`g ~ gcd(a, b)` (`g ∣ b`). Generic mirror of `cdivFF_b_exact_of_gcd`. -/
+/-- `toPolyG (cdivWf b g) * toPolyG g = toPolyG b` from `g ~ gcd(a, b)` (`g ∣ b`). -/
 theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : CPolyG α)
     (hg0 : cnormG g ≠ [])
     (hgassoc : Associated (toPolyG g) (gcd (toPolyG a) (toPolyG b))) :
@@ -71,8 +54,7 @@ theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : 
   have hgdvd : toPolyG g ∣ toPolyG b := hgassoc.dvd.trans (gcd_dvd_right _ _)
   exact toPolyG_cdivWf_exact b g hg0 hgdvd
 
-/-- **The Wf `c`-exact-division witness** (generic) `toPolyG (cdivWf c g) · toPolyG g = toPolyG c`
-from the fuel-free `cdvdGWf g c = true` branch (`g ∣ c`). -/
+/-- `toPolyG (cdivWf c g) * toPolyG g = toPolyG c` from `cdvdGWf g c = true` (`g ∣ c`). -/
 theorem cdivWf_c_exact_of_cdvdGWf {α : Type*} [CField α] [CFieldSpec α] (c g : CPolyG α)
     (hg0 : cnormG g ≠ [])
     (hdvd : cdvdGWf g c = true) :
@@ -80,11 +62,8 @@ theorem cdivWf_c_exact_of_cdvdGWf {α : Type*} [CField α] [CFieldSpec α] (c g 
   have hgdvd : toPolyG g ∣ toPolyG c := dvd_of_cdvdGWf g c hg0 hdvd
   exact toPolyG_cdivWf_exact c g hg0 hgdvd
 
-/-- **One `cSPDEG` peel's cleared lifting** (generic) at `D = cmonomialDeriv Dt = implicitDeriv (toPolyG
-Dt)`. Given the divided coefficients `ad, bd, cd`, the Bézout cofactors `r, z` with the certificate
-`toPolyG bd · toPolyG r + toPolyG ad · toPolyG z = toPolyG cd`, and any `h` solving the reduced equation,
-the reconstruction `q = ad·h + r` solves `ad·D(q) + bd·q = cd` over `(CFieldSpec.K α)[X]`. Generic mirror of
-`cSPDE_peel_cleared` (carrier-agnostic, via `spde_step_glue`). -/
+/-- One `cSPDEG` peel's cleared lifting: with `D = implicitDeriv (toPolyG Dt)`, Bézout certificate
+`bd·r + ad·z = cd`, and `h` solving the reduced equation, `q = ad·h + r` solves `ad·D(q) + bd·q = cd`. -/
 theorem cSPDE_peel_cleared_gen {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     (Dt ad bd cd r z h : CPolyG α)
     (hbez : toPolyG bd * toPolyG r + toPolyG ad * toPolyG z = toPolyG cd)
@@ -103,43 +82,23 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-! ### §6.2 — the generic normal-denominator cleared lifting and special-denominator primitive case -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **Generic exact-division reorientation** `toPolyG (cdivWf p q) · toPolyG q = toPolyG p` from `toPolyG
-q ∣ toPolyG p` (nonzero divisor). Carrier-generic mirror of `toPolyG_cdivG_exact_mul`
-(reorienting the already-generic `toPolyG_cdivWf_exact`). -/
+/-- `toPolyG (cdivWf p q) * toPolyG q = toPolyG p` from `toPolyG q ∣ toPolyG p` (nonzero divisor). -/
 theorem toPolyG_cdivWf_exact_mul_gen (p q : CPolyG α)
     (hq0 : cnormG q ≠ [])
     (hQdvd : toPolyG q ∣ toPolyG p) :
     toPolyG (cdivWf p q) * toPolyG q = toPolyG p :=
   toPolyG_cdivWf_exact p q hq0 hQdvd
 
-/-! #### ★ The derivation-generic pole order-drop — the polynomial kernel of Bronstein Lemma 6.1.1 / Thm 4.4.2
+/-! #### Derivation-generic pole order-drop
 
-The §6.1 normal-denominator necessity (Theorem 6.1.2(i) / Corollary 6.1.1) rests on the valuation fact that
-*a derivation lowers the order of a pole at a **normal** irreducible by exactly one* — `νₚ(D y) = νₚ(y) − 1`
-when `νₚ(y) < 0` and `p ∤ D p` (Bronstein Lemma 6.1.1, via Theorem 4.4.2). Its polynomial kernel — stated for
-an arbitrary `Derivation` `D`, not just `Polynomial.derivative` — is recorded here in two halves:
-
-* `pow_sub_one_dvd_deriv_of_pow_dvd` — the universally-true LOWER bound `q^n ∣ p ⟹ q^{n−1} ∣ D p` (no
-  primality/normality/characteristic needed): the order drops by **at most** one. The `Derivation`-generic
-  analogue of Mathlib's `pow_sub_one_dvd_derivative_of_pow_dvd`.
-* `not_pow_dvd_deriv_of_normal` — the EXACT half at a normal prime: if `pⁿ ∥ f` (`n ≥ 1`, `p ∤ r` for
-  `f = pⁿ·r`), `p` prime, `p ∤ D p` (normal), over a characteristic-zero field, then `pⁿ ∤ D f` — so the
-  order is *exactly* `n − 1`. The Leibniz expansion `D f = p^{n−1}·(n·(Dp)·r + p·Dr)` has `p ∤ n·(Dp)·r`.
-
-Assembled, `emultiplicity_deriv_eq_sub_one_of_normal` gives `emultiplicity p (D f) = emultiplicity p f − 1`
-for a normal prime `p ∣ f`. These are the reusable §6.1 order-drop kernel; the genuine *fractional*-solution
-necessity additionally needs the `K(t)`-valuation lift, weak normalization, and the `k⟨t⟩` differential
-subring (see `hnormalize`'s remaining-obligation note in `ComputableRischDESolveExhaustiveness`). -/
+For an arbitrary `Derivation` `D`, a derivation lowers a pole's order at a normal irreducible by
+exactly one, recorded as a lower bound, the exact half at a normal prime, and their assembly. -/
 
 section DerivationPoleOrderDrop
 
 variable {R : Type*} [CommRing R]
 
-/-- **Derivation-generic order-drop, lower bound** (`pow_sub_one_dvd_deriv_of_pow_dvd`): for any
-`Derivation ℤ R R` and `q^n ∣ p`, `q^(n-1) ∣ D p`. The Leibniz expansion of `p = qⁿ·r` is
-`D p = qⁿ·D r + (n • q^{n−1} • D q)·r`, both summands divisible by `q^{n−1}`. The `Derivation`-generic
-analogue of Mathlib's `pow_sub_one_dvd_derivative_of_pow_dvd` (which is pinned to `Polynomial.derivative`) —
-"a derivation drops a pole's order by at most one", needing no primality, normality, or characteristic. -/
+/-- Order-drop lower bound: for any `Derivation ℤ R R` and `q^n ∣ p`, `q^(n-1) ∣ D p`. -/
 theorem pow_sub_one_dvd_deriv_of_pow_dvd (D : Derivation ℤ R R) {p q : R} {n : ℕ}
     (hdvd : q ^ n ∣ p) : q ^ (n - 1) ∣ D p := by
   obtain ⟨r, rfl⟩ := hdvd
@@ -154,12 +113,8 @@ section DerivationNormalOrderDrop
 
 variable {K : Type*} [Field K] [CharZero K]
 
-/-- **Derivation-generic order-drop, exact half at a normal prime** (`not_pow_dvd_deriv_of_normal`): over a
-characteristic-zero field, for a prime `p` that is normal for the derivation (`¬ p ∣ D p`), if `f = pⁿ·r` with
-`n ≥ 1` and `p ∤ r` (i.e. `pⁿ ∥ f` exactly), then `pⁿ ∤ D f`. Leibniz gives `D f = p^{n−1}·(n·(Dp)·r + p·Dr)`;
-dividing a hypothetical `pⁿ ∣ D f` by `p^{n−1}` forces `p ∣ n·(Dp)·r`, but `p` is prime, `p ∤ Dp` (normal),
-`p ∤ r`, and `(n : K) ≠ 0` (char zero) is a unit — contradiction. With the lower bound, this pins the order
-at exactly `n − 1`: the heart of Bronstein Lemma 6.1.1 / Theorem 4.4.2. -/
+/-- Order-drop exact half at a normal prime: over a char-zero field, for a prime `p` normal for `D`
+(`¬ p ∣ D p`), if `f = pⁿ·r` with `n ≥ 1` and `p ∤ r`, then `pⁿ ∤ D f`. -/
 theorem not_pow_dvd_deriv_of_normal (D : Derivation ℤ K[X] K[X]) {p r : K[X]} {n : ℕ}
     (hp : Prime p) (hnormal : ¬ p ∣ D p) (hn : 1 ≤ n) (hr : ¬ p ∣ r) :
     ¬ p ^ n ∣ D (p ^ n * r) := by
@@ -189,13 +144,8 @@ theorem not_pow_dvd_deriv_of_normal (D : Derivation ℤ K[X] K[X]) {p r : K[X]} 
   · exact hnormal h
   · exact hr h
 
-/-- **Derivation-generic exact pole order-drop** (`emultiplicity_deriv_eq_sub_one_of_normal`): over a
-characteristic-zero field, for a prime `p` normal for the derivation (`¬ p ∣ D p`), if `f = pⁿ·r` with `n ≥ 1`
-and `p ∤ r` (so `emultiplicity p f = n`), then `emultiplicity p (D f) = n − 1`. Both bounds combine: the
-universal lower bound `p^{n−1} ∣ D f` (`pow_sub_one_dvd_deriv_of_pow_dvd`) and the normal exact bound
-`pⁿ ∤ D f` (`not_pow_dvd_deriv_of_normal`). This is the polynomial-ring statement of Bronstein Lemma 6.1.1 /
-Theorem 4.4.2 — "a derivation drops the order at a normal pole by exactly one" — the kernel the §6.1
-fractional-solution denominator necessity (`hnormalize`) rests on, once lifted to `K(t)` valuations. -/
+/-- Exact pole order-drop: over a char-zero field, for a prime `p` normal for `D` (`¬ p ∣ D p`), if
+`f = pⁿ·r` with `n ≥ 1` and `p ∤ r`, then `emultiplicity p (D f) = n − 1`. -/
 theorem emultiplicity_deriv_eq_sub_one_of_normal (D : Derivation ℤ K[X] K[X]) {p r : K[X]} {n : ℕ}
     (hp : Prime p) (hnormal : ¬ p ∣ D p) (hn : 1 ≤ n) (hr : ¬ p ∣ r) :
     emultiplicity p (D (p ^ n * r)) = (n - 1 : ℕ) := by
@@ -203,16 +153,13 @@ theorem emultiplicity_deriv_eq_sub_one_of_normal (D : Derivation ℤ K[X] K[X]) 
   · exact pow_sub_one_dvd_deriv_of_pow_dvd D (Dvd.intro r rfl)
   · rw [Nat.sub_add_cancel hn]; exact not_pow_dvd_deriv_of_normal D hp hnormal hn hr
 
-/-! #### ★ The Wronskian-numerator order-drop — the `K(t)`-valuation lift of Bronstein Lemma 6.1.1
+/-! #### The Wronskian-numerator order-drop
 
-For `y = a/b ∈ K(t)` the derivative is `Dy = (D a·b − a·D b)/b²`, so the `p`-adic valuation
-`νₚ(Dy) = νₚ(D a·b − a·D b) − 2·νₚ(b)`. The fractional Lemma 6.1.1 (`νₚ(Dy) = νₚ(y) − 1` at a normal
-pole `νₚ(y) < 0`) therefore reduces to the **polynomial** identity `νₚ(D a·b − a·D b) = νₚ(a) + νₚ(b) − 1`
-when `p` is normal and `νₚ(a) < νₚ(b)` (a genuine pole). Writing `a = pᵐ·a'`, `b = pᵏ·b'` (`p ∤ a',b'`,
-`m < k`), the Leibniz expansion is `D a·b − a·D b = p^{m+k−1}·((m−k)·(Dp)·a'·b' + p·(Da'·b' − a'·Db'))`,
-whose cofactor is `p`-coprime: mod `p` it is `(m−k)·(Dp)·a'·b'`, a product of `p`-non-divisors
-(`(m−k : K) ≠ 0` char zero, `p ∤ Dp` normal, `p ∤ a'`, `p ∤ b'`). This is the `K(t)`-valuation lift's
-numerator core — Bronstein Lemma 6.1.1 lifted off `K[X]` to the fraction field `K(t) = RatFunc K`. -/
+The polynomial-valuation core of the fraction-field pole order-drop: the Wronskian numerator of
+`y = a/b` has multiplicity `νₚ(a) + νₚ(b) − 1` at a normal prime with `νₚ(a) < νₚ(b)`. -/
+
+/-- Wronskian-numerator multiplicity: for a normal prime `p` (`¬ p ∣ D p`) over a char-zero field,
+`a = pᵐ·a'`, `b = pᵏ·b'` with `p ∤ a', b'` and `m < k`, `emultiplicity p (D a·b − a·D b) = m + k − 1`. -/
 theorem emultiplicity_wronskian_numerator_eq_of_normal (D : Derivation ℤ K[X] K[X]) {p a' b' : K[X]}
     {m k : ℕ} (hp : Prime p) (hnormal : ¬ p ∣ D p) (hlt : m < k) (ha' : ¬ p ∣ a') (hb' : ¬ p ∣ b') :
     emultiplicity p (D (p ^ m * a') * (p ^ k * b') - (p ^ m * a') * D (p ^ k * b'))
@@ -284,7 +231,7 @@ example {K : Type*} [Field K] [CharZero K] (D : Derivation ℤ K[X] K[X]) {p r :
     emultiplicity p (D (p ^ n * r)) = (n - 1 : ℕ) :=
   emultiplicity_deriv_eq_sub_one_of_normal D hp hnormal hn hr
 
-/-! ### Axiom audit (the `QFunNZG ℚ` §6 RDE correctness rests only on the standard kernel axioms) -/
+/-! ### Axiom audit -/
 
 #print axioms pow_sub_one_dvd_deriv_of_pow_dvd
 #print axioms not_pow_dvd_deriv_of_normal

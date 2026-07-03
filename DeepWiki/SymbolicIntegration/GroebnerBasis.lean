@@ -11,12 +11,9 @@ import Mathlib.Data.Finsupp.MonomialOrder
 
 /-! # Gröbner bases over a monomial order
 
-A Gröbner-basis predicate built on Mathlib's monomial-order division algorithm
-(`MonomialOrder.div_set`) and monomial-ideal membership: `IsGroebnerBasis m I B`
-says the leading monomials of `B ⊆ I` generate the *initial ideal* of `I`. The
-characteristic property `f ∈ I ↔` the division remainder of `f` by `B` is `0`
-follows. This is the reusable foundation for the Czichowski Gröbner-basis
-construction (Bronstein §2.6). -/
+A Gröbner-basis predicate over Mathlib's monomial-order division algorithm:
+`IsGroebnerBasis m I B` says the leading monomials of `B ⊆ I` generate the initial
+ideal of `I`, with the characteristic property `f ∈ I ↔` remainder `= 0`. -/
 
 open MvPolynomial MonomialOrder
 
@@ -51,8 +48,7 @@ theorem linearCombination_mem_of_subset {B : Set (MvPolynomial σ R)}
 
 variable {I : Ideal (MvPolynomial σ R)} {B : Set (MvPolynomial σ R)}
 
-/-- **Characteristic property of a Gröbner basis.** For a Gröbner basis `B` of `I`
-and the quotient `g`/remainder `r` from dividing `f` by `B`, one has `f ∈ I ↔ r = 0`. -/
+/-- For a Gröbner basis `B` of `I` and remainder `r` of dividing `f` by `B`, `f ∈ I ↔ r = 0`. -/
 theorem IsGroebnerBasis.mem_iff_div_remainder_eq_zero (hB : IsGroebnerBasis m I B)
     (f : MvPolynomial σ R) {g : B →₀ MvPolynomial σ R} {r : MvPolynomial σ R}
     (hgr : f = Finsupp.linearCombination _ (fun b : B => (b : MvPolynomial σ R)) g + r)
@@ -123,10 +119,7 @@ theorem IsGroebnerBasis.span_eq (hB : IsGroebnerBasis m I B) : Ideal.span B = I 
     simp only [smul_eq_mul]
     exact Ideal.mul_mem_left _ _ (Ideal.subset_span b.2)
 
-/-- **Existence of a Gröbner basis** (Dickson's lemma). Over a field, with finitely many
-variables, every ideal `I` has a finite Gröbner basis `B`. The leading monomials of `I`
-form a monomial ideal whose minimal generators are finite (Dickson: `σ →₀ ℕ` is a
-well-quasi-order); a representative polynomial for each minimal degree is a Gröbner basis. -/
+/-- Over a field with finitely many variables, every ideal `I` has a finite Gröbner basis. -/
 theorem exists_isGroebnerBasis {σ K : Type*} [Finite σ] [Field K] (m : MonomialOrder σ)
     (I : Ideal (MvPolynomial σ K)) :
     ∃ B : Finset (MvPolynomial σ K), IsGroebnerBasis m I (↑B : Set (MvPolynomial σ K)) := by
@@ -191,19 +184,15 @@ theorem exists_isGroebnerBasis {σ K : Type*} [Finite σ] [Field K] (m : Monomia
       simp only [Finset.coe_image, Set.mem_image, Set.Finite.coe_toFinset]
       exact ⟨s, hsM, rfl⟩
 
-/-- The **S-polynomial** `S(f,g)` over a field: with `γ = m.degree f ⊔ m.degree g` the lcm of the
-leading monomials, `monomial (γ - m.degree f) (m.leadingCoeff f)⁻¹ * f - monomial (γ - m.degree g)
-(m.leadingCoeff g)⁻¹ * g`; the two scaled terms share leading monomial `γ`, so `S(f,g)` cancels
-the leading terms of `f` and `g`. -/
+/-- The S-polynomial `S(f,g)` over a field: the leading-coefficient-normalized combination whose
+scaled terms share leading monomial `γ = m.degree f ⊔ m.degree g`, cancelling the leading terms. -/
 noncomputable def sPolynomial {K : Type*} [Field K] (m : MonomialOrder σ)
     (f g : MvPolynomial σ K) : MvPolynomial σ K :=
   monomial ((m.degree f ⊔ m.degree g) - m.degree f) (m.leadingCoeff f)⁻¹ * f -
     monomial ((m.degree f ⊔ m.degree g) - m.degree g) (m.leadingCoeff g)⁻¹ * g
 
-/-- **Bridge to Mathlib's S-polynomial** (for nonzero `f, g`). Mathlib's `m.sPolynomial` avoids
-inverting leading coefficients (`monomial _ (lc g) * f - monomial _ (lc f) * g`); ours normalizes
-by `(lc f)⁻¹`, `(lc g)⁻¹`. They differ by the scalar `(lc f * lc g)⁻¹`:
-`S(f,g) = (lc f * lc g)⁻¹ • m.sPolynomial f g`. -/
+/-- Bridge to Mathlib's S-polynomial (nonzero `f, g`):
+`sPolynomial m f g = (lc f * lc g)⁻¹ • m.sPolynomial f g`. -/
 theorem sPolynomial_eq_inv_smul_mathlib {K : Type*} [Field K] (m : MonomialOrder σ)
     {f g : MvPolynomial σ K} (hf : f ≠ 0) (hg : g ≠ 0) :
     sPolynomial m f g = (m.leadingCoeff f * m.leadingCoeff g)⁻¹ • m.sPolynomial f g := by
@@ -218,16 +207,13 @@ theorem sPolynomial_eq_inv_smul_mathlib {K : Type*} [Field K] (m : MonomialOrder
   rw [← smul_mul_assoc, smul_monomial, smul_eq_mul, e1,
     ← smul_mul_assoc, smul_monomial, smul_eq_mul, e2]
 
-/-- The S-polynomial of two ideal members lies in the ideal: `S(f,g) = monomial _ _ * f -
-monomial _ _ * g` is a difference of left multiples of `f, g ∈ I`. -/
+/-- The S-polynomial of two ideal members lies in the ideal. -/
 theorem sPolynomial_mem {K : Type*} [Field K] {I : Ideal (MvPolynomial σ K)}
     {f g : MvPolynomial σ K} (hf : f ∈ I) (hg : g ∈ I) : sPolynomial m f g ∈ I :=
   I.sub_mem (Ideal.mul_mem_left _ _ hf) (Ideal.mul_mem_left _ _ hg)
 
-/-- **Buchberger's criterion, the forward (easy) half.** A Gröbner basis `B` of `I` reduces every
-S-polynomial `S(b,b')` (`b, b' ∈ B`) to zero: any division remainder of `S(b,b')` by `B` is `0`.
-The converse — S-polynomials reducing to `0` forcing `B` to be a Gröbner basis (Buchberger's
-theorem, via the syzygy argument) — is the deferred research-grade direction. -/
+/-- Buchberger's criterion, forward half: a Gröbner basis `B` of `I` reduces every S-polynomial
+`S(b,b')` (`b, b' ∈ B`) to zero. -/
 theorem IsGroebnerBasis.sPolynomial_div_remainder_eq_zero {K : Type*} [Field K]
     {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)} (hB : IsGroebnerBasis m I B)
     {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B) {g : B →₀ MvPolynomial σ K}
@@ -248,18 +234,16 @@ theorem leadingCoeff_C_mul {K : Type*} [Field K] (m : MonomialOrder σ) {c : K} 
   unfold MonomialOrder.leadingCoeff
   rw [degree_C_mul m hc, ← smul_eq_C_mul, coeff_smul, smul_eq_mul]
 
-/-- **S-polynomial collapse for equal leading monomials** (CLO §2.6): when `m.degree f =
-m.degree g`, the lcm `f ⊔ g = m.degree f`, so the monomial shifts are `monomial 0 = C`, and
-`S(f,g) = C (m.leadingCoeff f)⁻¹ * f - C (m.leadingCoeff g)⁻¹ * g` is a scalar combination. -/
+/-- For equal leading monomials `m.degree f = m.degree g`, `S(f,g)` collapses to the scalar
+combination `C (m.leadingCoeff f)⁻¹ * f - C (m.leadingCoeff g)⁻¹ * g`. -/
 theorem sPolynomial_eq_of_degree_eq {K : Type*} [Field K] (m : MonomialOrder σ)
     {f g : MvPolynomial σ K} (h : m.degree f = m.degree g) :
     sPolynomial m f g = C (m.leadingCoeff f)⁻¹ * f - C (m.leadingCoeff g)⁻¹ * g := by
   unfold sPolynomial
   rw [h, sup_idem, tsub_self, monomial_zero']
 
-/-- **S-polynomial of equal-leading-monomial polynomials has strictly smaller degree** (CLO
-§2.6): both `C (lc f)⁻¹ * f` and `C (lc g)⁻¹ * g` are monic of degree `m.degree f`, so the
-leading terms cancel and `m.degree (S(f,g)) ≺[m] m.degree f` (`m.degree f ≠ 0`). -/
+/-- For equal leading monomials, `m.degree (S(f,g)) ≺[m] m.degree f`: the S-polynomial has strictly
+smaller degree (leading terms cancel). -/
 theorem sPolynomial_degree_lt_of_degree_eq {K : Type*} [Field K] (m : MonomialOrder σ)
     {f g : MvPolynomial σ K} (h : m.degree f = m.degree g) (hf : f ≠ 0) (hg : g ≠ 0)
     (hδ : m.degree f ≠ 0) :
@@ -292,7 +276,7 @@ theorem sPolynomial_degree_lt_of_degree_eq {K : Type*} [Field K] (m : MonomialOr
   · refine (m.leadingCoeff_ne_zero_iff.mpr h0) ?_
     rw [MonomialOrder.leadingCoeff, heq, hcoeff]
 
-/-- **Scaled S-polynomial rewrite** (CLO §2.6 telescoping step): for equal leading monomials,
+/-- For equal leading monomials,
 `(m.leadingCoeff f) • S(f,g) = f - (m.leadingCoeff f / m.leadingCoeff g) • g`. -/
 theorem leadingCoeff_smul_sPolynomial_of_degree_eq {K : Type*} [Field K] (m : MonomialOrder σ)
     {f g : MvPolynomial σ K} (h : m.degree f = m.degree g) (hf : f ≠ 0) :
@@ -302,11 +286,9 @@ theorem leadingCoeff_smul_sPolynomial_of_degree_eq {K : Type*} [Field K] (m : Mo
     smul_smul, smul_smul, mul_inv_cancel₀ (m.leadingCoeff_ne_zero_iff.mpr hf), one_smul,
     div_eq_mul_inv]
 
-/-- **The cancellation lemma** (Cox–Little–O'Shea §2.6, Lemma 5): if `p₀,…,pₙ` are nonzero with
-the same leading monomial `δ` and their leading terms cancel (`m.degree (∑ᵢ pᵢ) ≺[m] δ`), then
-the sum telescopes into a combination of S-polynomials pivoting on the last element,
-`∑ᵢ pᵢ = ∑_{i≠last} (m.leadingCoeff (pᵢ)) • S(pᵢ, p_last)`, and each `S(pᵢ, p_last)` has degree
-`≺[m] δ` — the leading-term-free combination at the heart of the converse Buchberger criterion. -/
+/-- Cancellation lemma: if `p₀,…,pₙ` are nonzero with the same leading monomial `δ` and their
+leading terms cancel, then `∑ᵢ pᵢ = ∑_{i≠last} (m.leadingCoeff (pᵢ)) • S(pᵢ, p_last)` with each
+`S(pᵢ, p_last)` of degree `≺[m] δ`. -/
 theorem cancellation_lemma {K : Type*} [Field K] (m : MonomialOrder σ) {n : ℕ}
     {p : Fin (n + 1) → MvPolynomial σ K} {δ : σ →₀ ℕ}
     (hδ : ∀ i, m.degree (p i) = δ) (hp : ∀ i, p i ≠ 0)
@@ -354,11 +336,8 @@ theorem cancellation_lemma {K : Type*} [Field K] (m : MonomialOrder σ) {n : ℕ
     mul_inv_cancel₀ hdlast, neg_smul, one_smul, sub_neg_eq_add,
     Finset.sum_erase_add Finset.univ p (Finset.mem_univ last)]
 
-/-- **Leading-monomial divisibility ⟹ Gröbner basis** (the bookkeeping wrapper of CLO §2.6
-Theorem 6). If `B ⊆ I` has unit leading coefficients, generates `I`, and every nonzero `f ∈ I`
-has its leading monomial divisible by `m.degree b` for some `b ∈ B`, then `B` is a Gröbner basis
-of `I`. The hard content of the converse Buchberger criterion is establishing the divisibility
-hypothesis. -/
+/-- If `B ⊆ I` has unit leading coefficients, generates `I`, and every nonzero `f ∈ I` has its
+leading monomial divisible by `m.degree b` for some `b ∈ B`, then `B` is a Gröbner basis of `I`. -/
 theorem isGroebnerBasis_of_exists_leadingMonomial_le {K : Type*} [Field K]
     {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
     (hBI : ∀ b ∈ B, b ∈ I) (hlc : ∀ b ∈ B, IsUnit (m.leadingCoeff b))
@@ -409,14 +388,9 @@ theorem degree_le_degree_mul {K : Type*} [Field K] {h g : MvPolynomial σ K}
   rw [degree_mul hh hg]
   exact le_add_self
 
-/-- **The leading-monomial divisibility core of the converse Buchberger criterion**
-(Cox–Little–O'Shea §2.6, Theorem 6, the minimal-representation argument). If `B` generates `I` and
-every S-polynomial `S(b,b')` of `B` has a *standard representation* `∑ q c · c` whose summand
-degrees are all `≼[m] m.degree (S(b,b'))`, then every nonzero `f ∈ I` has its leading monomial
-divisible by `m.degree b` for some `b ∈ B`. The proof minimizes the representation `f = ∑ h b · b`
-over the well-founded degree of its largest summand; if the leading monomial of `f` lies strictly
-below that degree, the top-degree part cancels into S-polynomials (`sPolynomial_decomposition`),
-each reducible via `hS` to a strictly-smaller representation — contradicting minimality. -/
+/-- If `B` generates `I` and every S-polynomial `S(b,b')` has a standard representation `∑ q c · c`
+with summand degrees `≼[m] m.degree (S(b,b'))`, then every nonzero `f ∈ I` has its leading monomial
+divisible by `m.degree b` for some `b ∈ B`. -/
 theorem exists_leadingMonomial_le {K : Type*} [Field K] [Finite σ]
     (I : Ideal (MvPolynomial σ K)) (B : Finset (MvPolynomial σ K))
     (hspan : Ideal.span (↑B : Set (MvPolynomial σ K)) = I)
@@ -707,10 +681,9 @@ theorem exists_leadingMonomial_le {K : Type*} [Field K] [Finite σ]
       rw [hdeltaOf]; exact (Finset.sup_lt_iff hδpos).mpr (fun b _ => hd' b)
     exact hwf.not_lt_min D (show deltaOf h' ∈ D from ⟨h', hfh', rfl⟩) hδ'
 
-/-- **Buchberger's criterion, the converse (hard) half** (Cox–Little–O'Shea §2.6, Theorem 6). A
-generating set `B` of `I` with unit leading coefficients, *every* of whose S-polynomials `S(b,b')`
-has a standard representation `∑ q c · c` over `B` with summand degrees `≼[m] m.degree (S(b,b'))`
-(equivalently: every S-polynomial reduces to `0` modulo `B`), is a Gröbner basis of `I`. -/
+/-- Buchberger's criterion, converse half: a generating set `B` of `I` with unit leading
+coefficients whose every S-polynomial has a standard representation `∑ q c · c` with summand degrees
+`≼[m] m.degree (S(b,b'))` (i.e. reduces to `0` modulo `B`) is a Gröbner basis of `I`. -/
 theorem isGroebnerBasis_of_sPolynomial_reducesToZero {K : Type*} [Field K] [Finite σ]
     (I : Ideal (MvPolynomial σ K)) (B : Finset (MvPolynomial σ K))
     (hBI : ∀ b ∈ B, b ∈ I) (hlc : ∀ b ∈ B, IsUnit (m.leadingCoeff b))
@@ -722,15 +695,10 @@ theorem isGroebnerBasis_of_sPolynomial_reducesToZero {K : Type*} [Field K] [Fini
   isGroebnerBasis_of_exists_leadingMonomial_le hBI hlc
     (exists_leadingMonomial_le I B hspan hS)
 
-/-! ## Buchberger's algorithm: the S-polynomial completion step, termination, and correctness
+/-! ## Buchberger's algorithm: completion step, termination, and correctness
 
-The remaining ingredients of Buchberger's algorithm. Over a field with finitely many
-variables, the ring `MvPolynomial σ K` is Noetherian, so the leading-term ideals form a
-well-founded ascending chain. One *step* adjoins the nonzero division remainders of all
-S-polynomials; either every S-polynomial already reduces to `0` (so `B` is a Gröbner basis
-by `isGroebnerBasis_of_sPolynomial_reducesToZero`) or a new leading monomial strictly grows
-the leading-term ideal. The `WellFoundedGT` ascending-chain condition turns this dichotomy
-into termination + correctness. -/
+The S-polynomial completion step (adjoining nonzero remainders), with termination from the
+Noetherian ascending-chain condition on leading-term ideals and the resulting correctness. -/
 
 /-- The chosen division data (quotient family, remainder) of `f` by the finite set `B`
 (with unit leading coefficients), extracted from `MonomialOrder.div_set` by choice. -/
@@ -1014,10 +982,8 @@ theorem buchberger_terminates_correct {K : Type*} [Field K] [Finite σ] (m : Mon
 
 /-! ## Existence of a reduced Gröbner basis (one-pass inter-reduction)
 
-From `exists_isGroebnerBasis` a finite Gröbner basis exists; making it monic, deleting
-redundant elements (whose leading monomial is divided by another's), and auto-reducing each
-surviving element against the others produces a *reduced* Gröbner basis. Each step preserves
-`Ideal.span` (hence `I`) and the leading-monomial set, so the Gröbner property persists. -/
+Monicizing, minimizing (deleting redundant elements), and auto-reducing a finite Gröbner basis
+produces a reduced one; each step preserves `Ideal.span` and the leading-monomial set. -/
 
 /-- `initialIdeal m I` equals the leading-term ideal of any Gröbner basis `B` of `I`
 (`leadTermIdeal m B`). -/
@@ -1027,8 +993,8 @@ theorem IsGroebnerBasis.initialIdeal_eq_leadTermIdeal {K : Type*} [Field K]
     initialIdeal m I = leadTermIdeal m B :=
   hB.2.2.symm
 
-/-- **Leading-term-ideal criterion for a Gröbner basis.** A finite `B ⊆ I` with unit leading
-coefficients is a Gröbner basis of `I` iff its leading-term ideal equals the initial ideal of `I`. -/
+/-- A finite `B ⊆ I` with unit leading coefficients is a Gröbner basis of `I` iff its leading-term
+ideal equals the initial ideal of `I`. -/
 theorem isGroebnerBasis_iff_leadTermIdeal_eq {K : Type*} [Field K]
     {I : Ideal (MvPolynomial σ K)} {B : Finset (MvPolynomial σ K)}
     (hBI : ∀ b ∈ (↑B : Set (MvPolynomial σ K)), b ∈ I)
@@ -1036,9 +1002,8 @@ theorem isGroebnerBasis_iff_leadTermIdeal_eq {K : Type*} [Field K]
     IsGroebnerBasis m I (↑B : Set (MvPolynomial σ K)) ↔ leadTermIdeal m B = initialIdeal m I :=
   ⟨fun hB => hB.2.2, fun h => ⟨hBI, hlc, h⟩⟩
 
-/-- **Leading-term-preservation under division by a non-dividing set.** If `g ≠ 0` and no
-`m.degree b` (`b ∈ B'`) divides `m.degree g`, then dividing `g` by `B'` leaves the leading term
-untouched: `(remainder m hB' g).coeff (m.degree g) = m.leadingCoeff g`. -/
+/-- If `g ≠ 0` and no `m.degree b` (`b ∈ B'`) divides `m.degree g`, then
+`(remainder m hB' g).coeff (m.degree g) = m.leadingCoeff g`: division leaves the leading term intact. -/
 theorem coeff_remainder_degree_eq {K : Type*} [Field K] (m : MonomialOrder σ)
     {B' : Finset (MvPolynomial σ K)} (hB' : ∀ b ∈ B', IsUnit (m.leadingCoeff b))
     {g : MvPolynomial σ K}
@@ -1078,9 +1043,8 @@ theorem coeff_remainder_degree_eq {K : Type*} [Field K] (m : MonomialOrder σ)
     exact this.symm
   rw [hgc, ← MonomialOrder.leadingCoeff]
 
-/-- **Degree-preservation under division by a non-dividing set.** Under the hypotheses of
-`coeff_remainder_degree_eq`, the remainder is nonzero, has the same leading monomial as `g`, and
-the same leading coefficient. -/
+/-- Under the hypotheses of `coeff_remainder_degree_eq`, the remainder is nonzero and has the same
+leading monomial and leading coefficient as `g`. -/
 theorem degree_remainder_eq {K : Type*} [Field K] (m : MonomialOrder σ)
     {B' : Finset (MvPolynomial σ K)} (hB' : ∀ b ∈ B', IsUnit (m.leadingCoeff b))
     {g : MvPolynomial σ K} (hg : g ≠ 0)
@@ -1115,13 +1079,13 @@ theorem degree_remainder_eq {K : Type*} [Field K] (m : MonomialOrder σ)
   rw [MonomialOrder.leadingCoeff, hdeg, hcoeff, MonomialOrder.leadingCoeff]
 
 open Classical in
-/-- **Monic rescaling of a basis** (Step 1 of reduced-GB construction): replace each `g ∈ B` by
-`C (m.leadingCoeff g)⁻¹ * g`, normalizing the leading coefficient to `1` over a field. -/
+/-- Monic rescaling of a basis: replace each `g ∈ B` by `C (m.leadingCoeff g)⁻¹ * g`, normalizing
+the leading coefficient to `1`. -/
 noncomputable def monicize {K : Type*} [Field K] (m : MonomialOrder σ)
     (B : Finset (MvPolynomial σ K)) : Finset (MvPolynomial σ K) :=
   B.image (fun g => C (m.leadingCoeff g)⁻¹ * g)
 
-/-- The monic rescaling `C (lc g)⁻¹ * g` of a nonzero `g` is monic, nonzero, and degree-preserving. -/
+/-- The rescaling `C (lc g)⁻¹ * g` of nonzero `g` is monic, degree-preserving, and nonzero. -/
 theorem leadingCoeff_C_inv_mul {K : Type*} [Field K] (m : MonomialOrder σ)
     {g : MvPolynomial σ K} (hg : g ≠ 0) :
     m.leadingCoeff (C (m.leadingCoeff g)⁻¹ * g) = 1 ∧
@@ -1140,16 +1104,15 @@ theorem mem_monicize {K : Type*} [Field K] (m : MonomialOrder σ)
     x ∈ monicize m B ↔ ∃ g ∈ B, C (m.leadingCoeff g)⁻¹ * g = x := by
   unfold monicize; rw [Finset.mem_image]
 
-/-- **Monicize is monic**: every element of `monicize m B` has leading coefficient `1`, provided
-`B`'s elements have unit (hence nonzero) leading coefficients. -/
+/-- Every element of `monicize m B` has leading coefficient `1` (given `B` has unit leading
+coefficients). -/
 theorem leadingCoeff_eq_one_of_mem_monicize {K : Type*} [Field K] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} (hB : ∀ g ∈ B, IsUnit (m.leadingCoeff g))
     {x : MvPolynomial σ K} (hx : x ∈ monicize m B) : m.leadingCoeff x = 1 := by
   obtain ⟨g, hg, rfl⟩ := (mem_monicize m).mp hx
   exact (leadingCoeff_C_inv_mul m (m.leadingCoeff_ne_zero_iff.mp (hB g hg).ne_zero)).1
 
-/-- **Monicize preserves the span**: `Ideal.span ↑(monicize m B) = Ideal.span ↑B` — each element is
-a unit scalar multiple of an element of `B` and vice versa. -/
+/-- Monicize preserves the span: `Ideal.span ↑(monicize m B) = Ideal.span ↑B`. -/
 theorem span_monicize {K : Type*} [Field K] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} (hB : ∀ g ∈ B, IsUnit (m.leadingCoeff g)) :
     Ideal.span (↑(monicize m B) : Set (MvPolynomial σ K)) = Ideal.span (↑B : Set (MvPolynomial σ K)) := by
@@ -1189,7 +1152,7 @@ theorem degree_image_monicize {K : Type*} [Field K] (m : MonomialOrder σ)
     exact (leadingCoeff_C_inv_mul m
       (m.leadingCoeff_ne_zero_iff.mp (hB g (Finset.mem_coe.mp hg)).ne_zero)).2.1
 
-/-- **Monicize preserves the leading-term ideal** (same leading-monomial degrees). -/
+/-- Monicize preserves the leading-term ideal. -/
 theorem leadTermIdeal_monicize {K : Type*} [Field K] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} (hB : ∀ g ∈ B, IsUnit (m.leadingCoeff g)) :
     leadTermIdeal m (monicize m B) = leadTermIdeal m B := by
@@ -1202,8 +1165,7 @@ theorem leadTermIdeal_monicize {K : Type*} [Field K] (m : MonomialOrder σ)
     rw [Set.image_image],
     degree_image_monicize m hB]
 
-/-- **Step 1: monicizing a Gröbner basis gives a monic Gröbner basis** of the same ideal: every
-element of `monicize m B` has leading coefficient `1`. -/
+/-- Monicizing a Gröbner basis gives a monic Gröbner basis of the same ideal. -/
 theorem isGroebnerBasis_monicize {K : Type*} [Field K]
     {I : Ideal (MvPolynomial σ K)} {B : Finset (MvPolynomial σ K)}
     (hB : IsGroebnerBasis m I (↑B : Set (MvPolynomial σ K))) :
@@ -1240,15 +1202,14 @@ theorem degreeRepr_spec {K : Type*} [Field K] (m : MonomialOrder σ)
   exact ⟨hs.choose_spec.1, hs.choose_spec.2⟩
 
 open Classical in
-/-- **Minimal degrees of a basis**: the leading-monomial degrees of `B` that are minimal under `≤`
-(no other realized degree properly divides them). -/
+/-- The leading-monomial degrees of `B` that are minimal under `≤`. -/
 noncomputable def minimalDegrees {K : Type*} [Field K] (m : MonomialOrder σ)
     (B : Finset (MvPolynomial σ K)) : Finset (σ →₀ ℕ) :=
   (B.image m.degree).filter (fun s => ∀ t ∈ B.image m.degree, t ≤ s → t = s)
 
 open Classical in
-/-- **Minimal reduction of a basis** (Step 2 of reduced-GB construction): for each minimal
-leading-monomial degree of `B`, keep a single representative element. -/
+/-- Minimal reduction of a basis: keep one representative element per minimal leading-monomial
+degree of `B`. -/
 noncomputable def minimize {K : Type*} [Field K] (m : MonomialOrder σ)
     (B : Finset (MvPolynomial σ K)) : Finset (MvPolynomial σ K) :=
   (minimalDegrees m B).image (degreeRepr m B)
@@ -1264,8 +1225,7 @@ theorem mem_minimalDegrees {K : Type*} [Field K] (m : MonomialOrder σ)
   rw [Finset.mem_filter, Finset.mem_image]
 
 open Classical in
-/-- Every realized degree of `B` dominates a minimal one (`σ →₀ ℕ` is well-founded under `≤` when
-`σ` is finite — Dickson). -/
+/-- Every realized degree of `B` dominates a minimal one. -/
 theorem exists_minimalDegree_le {K : Type*} [Field K] [Finite σ] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} {s : σ →₀ ℕ} (hs : s ∈ B.image m.degree) :
     ∃ t ∈ minimalDegrees m B, t ≤ s := by
@@ -1315,9 +1275,7 @@ theorem degree_image_minimize {K : Type*} [Field K] (m : MonomialOrder σ)
       ⟨s, Finset.mem_coe.mp hs, rfl⟩), ?_⟩
     exact (degreeRepr_spec m B (mem_minimalDegrees m |>.mp (Finset.mem_coe.mp hs)).1).2
 
-/-- **Minimize preserves the leading-term ideal**: `leadTermIdeal m (minimize m B) = leadTermIdeal m B`.
-Every realized degree dominates a minimal one (`exists_minimalDegree_le`), so the minimal leading
-monomials already generate. -/
+/-- Minimize preserves the leading-term ideal: `leadTermIdeal m (minimize m B) = leadTermIdeal m B`. -/
 theorem leadTermIdeal_minimize {K : Type*} [Field K] [Finite σ] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} :
     leadTermIdeal m (minimize m B) = leadTermIdeal m B := by
@@ -1350,8 +1308,8 @@ theorem leadTermIdeal_minimize {K : Type*} [Field K] [Finite σ] (m : MonomialOr
     obtain ⟨t, ht, htle⟩ := exists_minimalDegree_le m (Finset.mem_image.mpr ⟨g, hg, rfl⟩)
     exact ⟨t, Finset.mem_coe.mpr ht, hxi' ▸ htle⟩
 
-/-- **Step 2: minimizing a monic Gröbner basis gives a minimal monic Gröbner basis** of the same
-ideal — still monic, still a Gröbner basis, and now with pairwise non-dividing leading monomials. -/
+/-- Minimizing a monic Gröbner basis gives a monic Gröbner basis of the same ideal with pairwise
+non-dividing leading monomials. -/
 theorem isGroebnerBasis_minimize {K : Type*} [Field K] [Finite σ]
     {I : Ideal (MvPolynomial σ K)} {B : Finset (MvPolynomial σ K)}
     (hB : IsGroebnerBasis m I (↑B : Set (MvPolynomial σ K)))
@@ -1395,16 +1353,16 @@ theorem isUnit_leadingCoeff_erase {K : Type*} [Field K] (m : MonomialOrder σ)
   intro b hb; exact hBu b (Finset.mem_of_mem_erase hb)
 
 open Classical in
-/-- **Auto-reduction of one element** (Step 3 kernel): the remainder of `g` on division by the
-*other* basis elements `B.erase g`. -/
+/-- Auto-reduction of one element: the remainder of `g` on division by the other elements
+`B.erase g`. -/
 noncomputable def autoReduceElt {K : Type*} [Field K] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} (hBu : ∀ b ∈ B, IsUnit (m.leadingCoeff b))
     (g : MvPolynomial σ K) : MvPolynomial σ K :=
   remainder m (isUnit_leadingCoeff_erase m hBu g) g
 
 open Classical in
-/-- **Auto-reduce preserves the leading term** when `g`'s leading monomial is not divided by any
-other element's: `autoReduceElt` is nonzero, degree-preserving, and (over a monic basis) monic. -/
+/-- When `g`'s leading monomial is divided by no other element's, `autoReduceElt` is nonzero,
+degree-preserving, and preserves the leading coefficient. -/
 theorem autoReduceElt_spec {K : Type*} [Field K] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} (hBu : ∀ b ∈ B, IsUnit (m.leadingCoeff b))
     {g : MvPolynomial σ K} (hg : g ≠ 0)
@@ -1416,8 +1374,8 @@ theorem autoReduceElt_spec {K : Type*} [Field K] (m : MonomialOrder σ)
   intro b hb; exact hnd b (Finset.mem_coe.mp hb)
 
 open Classical in
-/-- The reduced-support property of `autoReduceElt`: no support monomial of `autoReduceElt m hBu g`
-is divisible by the leading monomial of an *other* element `h ∈ B.erase g`. -/
+/-- No support monomial of `autoReduceElt m hBu g` is divisible by the leading monomial of another
+element `h ∈ B.erase g`. -/
 theorem autoReduceElt_reduced {K : Type*} [Field K] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} (hBu : ∀ b ∈ B, IsUnit (m.leadingCoeff b))
     (g : MvPolynomial σ K) {c : σ →₀ ℕ} (hc : c ∈ (autoReduceElt m hBu g).support)
@@ -1437,9 +1395,8 @@ theorem sub_autoReduceElt_mem_span {K : Type*} [Field K] (m : MonomialOrder σ)
   exact hle hmem
 
 open Classical in
-/-- **Auto-reduction of a minimal basis** (Step 3): replace each `g ∈ B` by its remainder on
-division by the other elements. Over a minimal monic Gröbner basis this yields a *reduced*
-Gröbner basis. -/
+/-- Auto-reduction of a basis: replace each `g ∈ B` by its remainder on division by the other
+elements. -/
 noncomputable def autoReduce {K : Type*} [Field K] (m : MonomialOrder σ)
     {B : Finset (MvPolynomial σ K)} (hBu : ∀ b ∈ B, IsUnit (m.leadingCoeff b)) :
     Finset (MvPolynomial σ K) :=
@@ -1458,9 +1415,8 @@ theorem mem_autoReduce {K : Type*} [Field K] (m : MonomialOrder σ)
   · rintro ⟨g, _, rfl⟩; exact ⟨g.1, g.2, rfl⟩
   · rintro ⟨g, hg, rfl⟩; exact ⟨⟨g, hg⟩, Finset.mem_attach _ _, rfl⟩
 
-/-- **Step 3: auto-reducing a minimal monic Gröbner basis gives a reduced Gröbner basis.** With `B`
-a monic Gröbner basis of `I` whose leading monomials pairwise do not divide each other,
-`autoReduce m hBu` is a *reduced* Gröbner basis of `I`. -/
+/-- Auto-reducing a monic Gröbner basis of `I` with pairwise non-dividing leading monomials gives a
+reduced Gröbner basis of `I`. -/
 theorem isReducedGroebnerBasis_autoReduce {K : Type*} [Field K] [Finite σ]
     {I : Ideal (MvPolynomial σ K)} {B : Finset (MvPolynomial σ K)}
     (hBu : ∀ b ∈ B, IsUnit (m.leadingCoeff b))
@@ -1533,9 +1489,7 @@ theorem isReducedGroebnerBasis_autoReduce {K : Type*} [Field K] [Finite σ]
   rw [(hspec g' hg').2.1]
   exact autoReduceElt_reduced m hBu g hc hg'erase
 
-/-- **Existence of a reduced Gröbner basis.** Over a field with finitely many variables, every ideal
-`I` has a finite *reduced* Gröbner basis: take any Gröbner basis (`exists_isGroebnerBasis`), make it
-monic (`monicize`), minimal (`minimize`), then auto-reduce (`autoReduce`). -/
+/-- Over a field with finitely many variables, every ideal `I` has a finite reduced Gröbner basis. -/
 theorem exists_isReducedGroebnerBasis {σ K : Type*} [Finite σ] [Field K] (m : MonomialOrder σ)
     (I : Ideal (MvPolynomial σ K)) :
     ∃ B : Finset (MvPolynomial σ K), IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial σ K)) := by
@@ -1551,17 +1505,12 @@ theorem exists_isReducedGroebnerBasis {σ K : Type*} [Finite σ] [Field K] (m : 
     fun b hb => by rw [hmonic₂ b (Finset.mem_coe.mpr hb)]; exact isUnit_one
   exact ⟨autoReduce m hBu₂, isReducedGroebnerBasis_autoReduce hBu₂ hB₂ hmonic₂ hpair₂⟩
 
-/-! ## Lazard's Lemma 1: distinct leading y-degrees in a minimal bivariate Gröbner basis
+/-! ## Distinct leading y-degrees in a minimal bivariate Gröbner basis
 
-Lazard (1985), J. Symb. Comp. 1, 261–270, Lemma 1 — the foundational step of his bivariate
-Gröbner-basis structure theorem, and the stepping stone toward Czichowski's structural lemmas
-(Bronstein §2.6). Over `MvPolynomial (Fin 2) K` (index `0 = x`, `1 = y`) the leading y-degree of
-`b` is `(m.degree b) 1`; the lemma says distinct elements of a minimal/reduced Gröbner basis have
-distinct leading y-degrees. -/
+Over `MvPolynomial (Fin 2) K` the leading y-degree of `b` is `(m.degree b) 1`; distinct elements of
+a reduced Gröbner basis have distinct leading y-degrees. -/
 
-/-- In `Fin 2 →₀ ℕ`, two exponent vectors agreeing at index `1` (the y-coordinate) are comparable:
-since the remaining ℕ-values at index `0` are totally ordered, the finsupps are comparable
-pointwise. -/
+/-- In `Fin 2 →₀ ℕ`, two exponent vectors agreeing at index `1` are comparable. -/
 theorem finsupp_fin_two_le_or_le_of_apply_eq {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) :
     d ≤ d' ∨ d' ≤ d := by
   rcases le_total (d 0) (d' 0) with h0 | h0
@@ -1584,19 +1533,16 @@ theorem IsReducedGroebnerBasis.ne_zero {K : Type*} [Field K] {I : Ideal (MvPolyn
     (hb : b ∈ B) : b ≠ 0 :=
   m.leadingCoeff_ne_zero_iff.mp (by rw [hB.2.1 b hb]; exact one_ne_zero)
 
-/-- **Minimality extraction.** In a reduced Gröbner basis, the leading monomial of `b'` does not
-divide that of a distinct `b`: instantiating the reduced condition at the leading monomial
-`m.degree b ∈ b.support` (`b ≠ 0`). -/
+/-- In a reduced Gröbner basis, the leading monomial of `b'` does not divide that of a distinct
+`b`. -/
 theorem IsReducedGroebnerBasis.leadingMonomial_not_le {K : Type*} [Field K]
     {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
     (hB : IsReducedGroebnerBasis m I B) {b b' : MvPolynomial σ K} (hb : b ∈ B) (hb' : b' ∈ B)
     (hne : b ≠ b') : ¬ (m.degree b' ≤ m.degree b) :=
   hB.2.2 b hb b' hb' hne (m.degree b) (degree_mem_support (hB.ne_zero hb))
 
-/-- **Lazard (1985), Lemma 1.** In a reduced (minimal) Gröbner basis `B` of a two-variable ideal,
-distinct elements have distinct leading y-degrees `(m.degree ·) 1`. If two shared a y-degree they
-would be comparable (`finsupp_fin_two_le_or_le_of_apply_eq`), so one leading monomial would divide
-the other — contradicting minimality (`IsReducedGroebnerBasis.leadingMonomial_not_le`). -/
+/-- In a reduced Gröbner basis `B` of a two-variable ideal, distinct elements have distinct leading
+y-degrees `(m.degree ·) 1`. -/
 theorem lazard_lemma1 {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
@@ -1607,8 +1553,8 @@ theorem lazard_lemma1 {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
       (Ne.symm hne) hle
   · exact hB.leadingMonomial_not_le (Finset.mem_coe.mpr hb) (Finset.mem_coe.mpr hb') hne hle
 
-/-- **Lazard's Lemma 1, injectivity form.** The leading-y-degree map `b ↦ (m.degree b) 1` is
-injective on a reduced Gröbner basis of a two-variable ideal. -/
+/-- The leading-y-degree map `b ↦ (m.degree b) 1` is injective on a reduced Gröbner basis of a
+two-variable ideal. -/
 theorem lazard_lemma1_injOn {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
@@ -1619,23 +1565,12 @@ theorem lazard_lemma1_injOn {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
 
 /-! ## The `MvPolynomial (Fin 2) K ↔ K[x][y]` representation bridge
 
-Lazard's bivariate Gröbner-basis structure theory (Lazard 1985, for Bronstein §2.6 /
-Czichowski) views a bivariate polynomial `f : MvPolynomial (Fin 2) K` as a univariate
-polynomial in `y` with coefficients in `K[x]`. Mathlib's `MvPolynomial.finSuccEquiv` pulls out
-**variable `0`** as the `Polynomial` variable, so we adopt the convention `y = variable 0`,
-`x = variable 1` — `finSuccEquiv K 1 f : Polynomial (MvPolynomial (Fin 1) K)` is the `K[x][y]`
-view, its `natDegree` is the `y`-degree `degreeOf 0 f`, and its `leadingCoeff` (in the GCD domain
-`MvPolynomial (Fin 1) K ≃ K[x]`) is the leading-`y`-coefficient `Rₖ` of Lazard's lemmas.
+Views a bivariate `f : MvPolynomial (Fin 2) K` as a univariate polynomial in `y` with coefficients
+in `K[x]` via `finSuccEquiv K 1`, under the convention `y = variable 0`, `x = variable 1`. The
+`y`-degree is the dominant coordinate of the monomial order, packaged as a hypothesis `hdom` and
+proved for `MonomialOrder.lex`. -/
 
-For Lazard's structure theory the `y`-degree must be the **dominant** coordinate of the monomial
-order. The lex order `MonomialOrder.lex` on `Fin 2` makes the *smaller* index dominant (`X 1 <
-X 0 ^ 2`), i.e. index `0 = y` dominant — the right convention. We package this dominance as a
-hypothesis `hdom : ∀ f ≠ 0, (m.degree f) 0 = degreeOf 0 f` and prove `MonomialOrder.lex`
-satisfies it (`lex_degree_apply_zero`), so the bridge is stated for any dominant order and
-instantiated concretely by lex. -/
-
-/-- For lex on `Fin 2`, comparable exponent vectors are comparable at the dominant index `0`:
-`toLex s ≤ toLex t → s 0 ≤ t 0` (index `0` is the most significant lex coordinate). -/
+/-- For lex on `Fin 2`, `toLex s ≤ toLex t → s 0 ≤ t 0` (index `0` is most significant). -/
 theorem apply_zero_le_of_toLex_le {s t : Fin 2 →₀ ℕ} (h : toLex s ≤ toLex t) : s 0 ≤ t 0 := by
   rcases h.lt_or_eq with hlt | heq
   · obtain ⟨i, hbelow, hi⟩ := Finsupp.Lex.lt_iff.mp hlt
@@ -1644,9 +1579,8 @@ theorem apply_zero_le_of_toLex_le {s t : Fin 2 →₀ ℕ} (h : toLex s ≤ toLe
     · exact (hbelow 0 (by decide)).le
   · exact (congrArg (fun u => (ofLex u) 0) heq).le
 
-/-- For lex on `Fin 2`, comparable exponent vectors *equal at the dominant index `0`* are comparable
-at index `1`: `toLex s ≤ toLex t → s 0 = t 0 → s 1 ≤ t 1` (a tie at the most significant lex
-coordinate is broken by the next one). -/
+/-- For lex on `Fin 2`, `toLex s ≤ toLex t → s 0 = t 0 → s 1 ≤ t 1` (tie at index `0` broken at
+index `1`). -/
 theorem apply_one_le_of_toLex_le_of_apply_zero_eq {s t : Fin 2 →₀ ℕ}
     (h : toLex s ≤ toLex t) (h0 : s 0 = t 0) : s 1 ≤ t 1 := by
   rcases h.lt_or_eq with hlt | heq
@@ -1656,8 +1590,8 @@ theorem apply_one_le_of_toLex_le_of_apply_zero_eq {s t : Fin 2 →₀ ℕ}
     · exact hi.le
   · exact (congrArg (fun u => (ofLex u) 1) heq).le
 
-/-- **Lex makes the `y`-degree (index `0`) dominant**: for `MonomialOrder.lex` on `Fin 2` and
-`f ≠ 0`, the index-`0` exponent of the leading monomial equals the `y`-degree `degreeOf 0 f`. -/
+/-- Under `MonomialOrder.lex` on `Fin 2` with `f ≠ 0`, the index-`0` exponent of the leading
+monomial equals the `y`-degree `degreeOf 0 f`. -/
 theorem lex_degree_apply_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
     (MonomialOrder.lex.degree f) 0 = degreeOf 0 f := by
   apply le_antisymm
@@ -1669,15 +1603,13 @@ theorem lex_degree_apply_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
     rw [MonomialOrder.lex_le_iff] at hle
     exact apply_zero_le_of_toLex_le hle
 
-/-- **The `K[x][y]` view of a bivariate polynomial** (`y = variable 0`): `finSuccEquiv K 1 f`
-re-reads `f : MvPolynomial (Fin 2) K` as a univariate polynomial in `y` with coefficients in
-`MvPolynomial (Fin 1) K ≃ K[x]`. -/
+/-- The `K[x][y]` view of a bivariate polynomial (`y = variable 0`): `finSuccEquiv K 1 f`. -/
 noncomputable def lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     Polynomial (MvPolynomial (Fin 1) K) :=
   finSuccEquiv K 1 f
 
-/-- **Lazard's leading-`y`-coefficient `Rₖ`**: the `K[x]`-coefficient of the top `y`-power of `f`,
-`(finSuccEquiv K 1 f).leadingCoeff ∈ MvPolynomial (Fin 1) K`. -/
+/-- The leading-`y`-coefficient of `f`: the `K[x]`-coefficient of its top `y`-power,
+`(lazardView f).leadingCoeff`. -/
 noncomputable def leadingYCoeff {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     MvPolynomial (Fin 1) K :=
   (lazardView f).leadingCoeff
@@ -1692,35 +1624,30 @@ theorem lazardView_injective {K : Type*} [Field K] :
     lazardView f = 0 ↔ f = 0 := by
   rw [lazardView, map_eq_zero_iff _ (finSuccEquiv K 1).injective]
 
-/-- **The `y`-degree bridge**: the `natDegree` of the `K[x][y]` view is the `y`-degree
-`degreeOf 0 f` (Mathlib's `natDegree_finSuccEquiv`). -/
+/-- The `natDegree` of the `K[x][y]` view is the `y`-degree `degreeOf 0 f`. -/
 theorem natDegree_lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     (lazardView f).natDegree = degreeOf 0 f :=
   natDegree_finSuccEquiv f
 
-/-- **The degree bridge** (under a dominant order): for a `MonomialOrder (Fin 2) m` whose leading
-monomial maximizes the variable-`0` exponent (`hdom`), the index-`0` component of `m.degree f` is
-the `K[x][y]` `natDegree`. Combines `hdom` with `natDegree_finSuccEquiv`. -/
+/-- Under a dominant order (`hdom`), the index-`0` component of `m.degree f` is the `K[x][y]`
+`natDegree` of `f`. -/
 theorem degree_apply_zero_eq_natDegree_lazardView {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
     (hdom : ∀ f : MvPolynomial (Fin 2) K, f ≠ 0 → (m.degree f) 0 = degreeOf 0 f)
     {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
     (m.degree f) 0 = (lazardView f).natDegree := by
   rw [hdom f hf, natDegree_lazardView]
 
-/-- **`leadingYCoeff f ≠ 0 ↔ f ≠ 0`**: the leading-`y`-coefficient vanishes exactly when `f` does
-(`Polynomial.leadingCoeff_ne_zero` through the `finSuccEquiv` injection). -/
+/-- `leadingYCoeff f ≠ 0 ↔ f ≠ 0`. -/
 @[simp] theorem leadingYCoeff_ne_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
     leadingYCoeff f ≠ 0 ↔ f ≠ 0 := by
   rw [ne_eq, ne_eq, leadingYCoeff, Polynomial.leadingCoeff_eq_zero, lazardView_eq_zero_iff]
 
-/-- **`leadingYCoeff f = 0 ↔ f = 0`**. -/
+/-- `leadingYCoeff f = 0 ↔ f = 0`. -/
 @[simp] theorem leadingYCoeff_eq_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
     leadingYCoeff f = 0 ↔ f = 0 := by
   rw [leadingYCoeff, Polynomial.leadingCoeff_eq_zero, lazardView_eq_zero_iff]
 
-/-- **Multiplicativity of the leading-`y`-coefficient**: `leadingYCoeff (f * g) = leadingYCoeff f *
-leadingYCoeff g` — `lazardView` is a ring hom into the domain `Polynomial (MvPolynomial (Fin 1) K)`
-(no zero divisors), so `Polynomial.leadingCoeff_mul` applies. -/
+/-- `leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g`. -/
 theorem leadingYCoeff_mul {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
     leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g := by
   rw [leadingYCoeff, leadingYCoeff, leadingYCoeff, lazardView, lazardView, lazardView, map_mul,
@@ -1746,22 +1673,11 @@ example {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
     leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g :=
   leadingYCoeff_mul f g
 
-/-! ## Toward Lazard's Lemma 2: the `y`-shift toolbox
+/-! ## The `y`-shift toolbox
 
-Lazard (1985), Lemma 2 — the leading-`y`-coefficient `R_{i+1} = leadingYCoeff f_{i+1}` divides
-`Rᵢ = leadingYCoeff fᵢ` along a minimal bivariate Gröbner basis sorted by increasing `y`-degree
-(Lemma 1, `lazard_lemma1`). The proof's algebraic core: since `d(i) < d(i+1)` the ideal members
-`y^{d(i+1)−d(i)}·fᵢ` and `f_{i+1}` share `y`-degree `d(i+1)`; dividing their leading terms produces an
-ideal element of `y`-degree `d(i+1)` whose leading-`y`-coefficient is `gcd(Rᵢ, R_{i+1})`; its leading
-monomial must be divisible by some basis element's leading monomial, and minimality forces
-`R_{i+1} = gcd(Rᵢ, R_{i+1})`, i.e. `R_{i+1} ∣ Rᵢ`.
-
-The `y`-shift `f ↦ y^k·f` is the move that aligns the two `y`-degrees. Under the `K[x][y]` view
-(`y = X 0`), it multiplies `lazardView` by `Polynomial.X ^ k`, so it adds `k` to the `y`-degree and
-leaves the leading-`y`-coefficient unchanged. These facts (`degreeOf_X_pow_mul`,
-`leadingYCoeff_X_pow_mul`) and the resulting same-`y`-degree alignment (`leadingYCoeff_yShift_eq`)
-are formalized; the full divisibility conclusion rests on Lazard's Theorem 1 structure (content /
-primpart / `Pₖ = Rₖ·Sₖ`), which is unformalized — see the §2.6 residual. -/
+The `y`-shift `f ↦ y^k·f` aligns `y`-degrees: under the `K[x][y]` view it multiplies `lazardView`
+by `Polynomial.X ^ k`, adding `k` to the `y`-degree and leaving the leading-`y`-coefficient
+unchanged. -/
 
 /-- The `K[x][y]` view of a `y`-shift: `lazardView (X 0 ^ k * f) = Polynomial.X ^ k * lazardView f`
 (`finSuccEquiv (X 0) = Polynomial.X`). -/
@@ -1769,24 +1685,21 @@ theorem lazardView_X_pow_mul {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (
     lazardView (X 0 ^ k * f) = Polynomial.X ^ k * lazardView f := by
   rw [lazardView, lazardView, map_mul, map_pow, finSuccEquiv_X_zero]
 
-/-- **`y`-shift adds `k` to the `y`-degree**: `degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k` for
-`f ≠ 0` (the `K[x][y]` `natDegree` of `X^k * lazardView f`). -/
+/-- `degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k` for `f ≠ 0`: the `y`-shift adds `k` to the
+`y`-degree. -/
 theorem degreeOf_X_pow_mul {K : Type*} [Field K] (k : ℕ) {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
     degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k := by
   have hne : lazardView f ≠ 0 := lazardView_eq_zero_iff.not.mpr hf
   rw [← natDegree_lazardView, ← natDegree_lazardView, lazardView_X_pow_mul,
     Polynomial.natDegree_X_pow_mul k hne]
 
-/-- **`y`-shift fixes the leading-`y`-coefficient**: `leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f`
-(`Polynomial.leadingCoeff_mul_X_pow`). -/
+/-- `leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f`: the `y`-shift fixes the leading-`y`-coefficient. -/
 theorem leadingYCoeff_X_pow_mul {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (Fin 2) K) :
     leadingYCoeff (X 0 ^ k * f) = leadingYCoeff f := by
   rw [leadingYCoeff, leadingYCoeff, lazardView_X_pow_mul, mul_comm, Polynomial.leadingCoeff_mul_X_pow]
 
-/-- **The same-`y`-degree alignment of Lazard's Lemma 2** (the `R_{i+1} ∣ Rᵢ` setup): if `fᵢ` has
-`y`-degree `dᵢ` and `f_{i+1}` has `y`-degree `d_{i+1}` with `dᵢ ≤ d_{i+1}`, then the `y`-shifted
-`y^{d_{i+1}−dᵢ}·fᵢ` matches the `y`-degree `d_{i+1}` of `f_{i+1}` while keeping the leading-`y`-coefficient
-`Rᵢ` — so their leading terms (degree `d_{i+1}`) can be divided, the step producing `gcd(Rᵢ, R_{i+1})`. -/
+/-- If `fi ≠ 0` and `degreeOf 0 fi ≤ degreeOf 0 fi1`, the `y`-shifted `y^{d₁−d₀}·fi` matches the
+`y`-degree of `fi1` while keeping the leading-`y`-coefficient of `fi`. -/
 theorem leadingYCoeff_yShift_eq {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fin 2) K}
     (hfi : fi ≠ 0) (hd : degreeOf 0 fi ≤ degreeOf 0 fi1) :
     degreeOf 0 (X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi) = degreeOf 0 fi1 ∧
@@ -1815,12 +1728,8 @@ example {K : Type*} [Field K] (k : ℕ) (f : MvPolynomial (Fin 2) K) :
 
 /-! ## GCD / Bézout structure on the leading-`y`-coefficient ring `MvPolynomial (Fin 1) K`
 
-The leading-`y`-coefficients `Rₖ = leadingYCoeff fₖ` live in `MvPolynomial (Fin 1) K ≃ K[x]`, a
-**principal ideal domain**. Lazard's Lemma 2 needs (i) a chosen `gcd` (`MvPolynomial (Fin 1) K`
-is a UFD, hence a `GCDMonoid` via `UniqueFactorizationMonoid.toGCDMonoid`), and (ii) **Bézout's
-identity** — `gcd g g'` as a `K[x]`-combination `a·g + b·g'` (transferring `K[x]`'s `IsBezout`
-through the ring equivalence `MvPolynomial (Fin 1) K ≃+* K[x]`). These are provided as local
-`letI` instances inside the lemmas; no global instance is registered (to avoid diamonds). -/
+A chosen `GCDMonoid` and Bézout identity on `MvPolynomial (Fin 1) K ≃ K[x]` (a PID), transferred
+from `K[x]`. Provided as local `letI` instances, not global (to avoid diamonds). -/
 
 open scoped Classical in
 /-- The ring equivalence `MvPolynomial (Fin 1) K ≃+* K[x]`: pull out the single variable
@@ -1844,8 +1753,7 @@ open scoped Classical in
     (mvPolynomialFinOneEquivPolynomial K).symm.surjective
 
 open scoped Classical in
-/-- **Bézout's identity for the leading-`y`-coefficient ring** (for the chosen `GCDMonoid`):
-there are `a, b ∈ MvPolynomial (Fin 1) K` with `a·g + b·g' = gcd g g'`. -/
+/-- Bézout's identity: there are `a, b` with `a·g + b·g' = gcd g g'` in `MvPolynomial (Fin 1) K`. -/
 theorem exists_mul_add_mul_eq_gcd {K : Type*} [Field K] (g g' : MvPolynomial (Fin 1) K) :
     ∃ a b : MvPolynomial (Fin 1) K,
       a * g + b * g' = @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' := by
@@ -1868,9 +1776,7 @@ theorem gcd_dvd_right_mvPolynomialFinOne {K : Type*} [Field K] (g g' : MvPolynom
   letI := gcdMonoidMvPolynomialFinOne K
   gcd_dvd_right g g'
 
-/-- The `x`-degree bridge to `K[x]`: `natDegree (e r) = degreeOf 0 r` for the ring equivalence
-`e = mvPolynomialFinOneEquivPolynomial K` (it composes `finSuccEquiv K 0`, whose `natDegree` is
-`degreeOf 0`, with a coefficient-relabelling that preserves `natDegree`). -/
+/-- `natDegree (e r) = degreeOf 0 r` for `e = mvPolynomialFinOneEquivPolynomial K`. -/
 theorem natDegree_mvPolynomialFinOneEquivPolynomial {K : Type*} [Field K]
     (r : MvPolynomial (Fin 1) K) :
     (mvPolynomialFinOneEquivPolynomial K r).natDegree = degreeOf 0 r := by
@@ -1880,8 +1786,7 @@ theorem natDegree_mvPolynomialFinOneEquivPolynomial {K : Type*} [Field K]
   apply Polynomial.natDegree_map_eq_of_injective
   exact EquivLike.injective (isEmptyAlgEquiv K (Fin 0))
 
-/-- **`degreeOf 0` is monotone under divisibility** on `MvPolynomial (Fin 1) K`: `p ∣ q`, `q ≠ 0`
-`⟹ degreeOf 0 p ≤ degreeOf 0 q` (transfer to `K[x]`'s `natDegree_le_of_dvd`). -/
+/-- On `MvPolynomial (Fin 1) K`, `p ∣ q` and `q ≠ 0` imply `degreeOf 0 p ≤ degreeOf 0 q`. -/
 theorem degreeOf_le_of_dvd {K : Type*} [Field K] {p q : MvPolynomial (Fin 1) K}
     (hpq : p ∣ q) (hq : q ≠ 0) : degreeOf 0 p ≤ degreeOf 0 q := by
   set e := mvPolynomialFinOneEquivPolynomial K with he
@@ -1889,9 +1794,8 @@ theorem degreeOf_le_of_dvd {K : Type*} [Field K] {p q : MvPolynomial (Fin 1) K}
   refine Polynomial.natDegree_le_of_dvd (map_dvd e hpq) ?_
   rwa [Ne, map_eq_zero_iff _ e.injective]
 
-/-- **Equal-degree divisor is a reverse divisor** on `MvPolynomial (Fin 1) K`: if `p ∣ q`, `q ≠ 0`
-and `degreeOf 0 q ≤ degreeOf 0 p`, then `q ∣ p` (`p, q` are associated; transfer to `K[x]`'s
-`associated_of_dvd_of_natDegree_le`). -/
+/-- On `MvPolynomial (Fin 1) K`, if `p ∣ q`, `q ≠ 0` and `degreeOf 0 q ≤ degreeOf 0 p`, then
+`q ∣ p`. -/
 theorem dvd_of_dvd_of_degreeOf_le {K : Type*} [Field K] {p q : MvPolynomial (Fin 1) K}
     (hpq : p ∣ q) (hq : q ≠ 0) (hdeg : degreeOf 0 q ≤ degreeOf 0 p) : q ∣ p := by
   set e := mvPolynomialFinOneEquivPolynomial K with he
@@ -1914,24 +1818,15 @@ example {K : Type*} [Field K] (g g' : MvPolynomial (Fin 1) K) :
       a * g + b * g' = @gcd _ _ (gcdMonoidMvPolynomialFinOne K) g g' :=
   exists_mul_add_mul_eq_gcd g g'
 
-/-! ## Lazard's Lemma 2: the leading-`y`-coefficient gcd construction
+/-! ## The leading-`y`-coefficient gcd construction
 
-Lazard (1985), Lemma 2 (J. Symb. Comp. 1, p.263): along a minimal bivariate Gröbner basis sorted
-by increasing `y`-degree, `R_{i+1} = leadingYCoeff f_{i+1}` divides `Rᵢ = leadingYCoeff fᵢ`. The
-algebraic core, formalized here as `lazard_gcd_construction`: with `dᵢ ≤ d_{i+1}` the ideal members
-`y^{d_{i+1}−dᵢ}·fᵢ` and `f_{i+1}` share `y`-degree `d_{i+1}` with leading-`y`-coefficients `Rᵢ`,
-`R_{i+1}`; a **Bézout combination** `ã·(y^{d_{i+1}−dᵢ}·fᵢ) + b̃·f_{i+1} ∈ I` (lifting the `K[x]`-Bézout
-identity `a·Rᵢ + b·R_{i+1} = gcd(Rᵢ,R_{i+1})` to `y`-constants) produces `P ∈ I` of `y`-degree
-`d_{i+1}` with `leadingYCoeff P = gcd(Rᵢ, R_{i+1})`.
+Along a minimal bivariate Gröbner basis sorted by increasing `y`-degree, the higher
+`R_{i+1} = leadingYCoeff f_{i+1}` divides the lower `Rᵢ = leadingYCoeff fᵢ`. The algebraic core is a
+Bézout combination producing `P ∈ I` of `y`-degree `d_{i+1}` with `leadingYCoeff P = gcd(Rᵢ,
+R_{i+1})`, plus the `x`-degree bridge under lex. -/
 
-The remaining minimality contradiction — `LM(P) ≥ LM(b)` for some basis `b` forces `gcd = R_{i+1}`,
-i.e. `R_{i+1} ∣ Rᵢ` — needs the `x`-degree bridge `(m.degree P) 1 = natDegree_x (leadingYCoeff P)`
-under lex (the second lex coordinate of the leading monomial equals the `x`-degree of the
-leading-`y`-coefficient), which is unformalized — see the §2.6 residual. -/
-
-/-- **Leading coefficient of a sum at a known degree.** If `p, q : S[Y]` have `natDegree ≤ d` and
-their `d`-coefficients sum to a nonzero value, then `p + q` has `natDegree` exactly `d` and
-`leadingCoeff (p + q) = p.coeff d + q.coeff d`. -/
+/-- If `p, q : S[Y]` have `natDegree ≤ d` and `p.coeff d + q.coeff d ≠ 0`, then `p + q` has
+`natDegree = d` and `leadingCoeff (p + q) = p.coeff d + q.coeff d`. -/
 theorem natDegree_leadingCoeff_add {S : Type*} [CommRing S] {p q : Polynomial S} {d : ℕ}
     (hp : p.natDegree ≤ d) (hq : q.natDegree ≤ d) (hne : p.coeff d + q.coeff d ≠ 0) :
     (p + q).natDegree = d ∧ (p + q).leadingCoeff = p.coeff d + q.coeff d := by
@@ -1944,9 +1839,8 @@ theorem natDegree_leadingCoeff_add {S : Type*} [CommRing S] {p q : Polynomial S}
     exact hne (by rw [← hcoeff]; exact Polynomial.coeff_eq_zero_of_natDegree_lt hlt)
   exact ⟨hdeg, by rw [Polynomial.leadingCoeff, hdeg, hcoeff]⟩
 
-/-- **Gröbner-basis leading-monomial domination.** Every nonzero `f ∈ I` has its leading monomial
-dominated by that of some nonzero basis element: `∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree f`
-(`monomial (m.degree f) 1 ∈ initialIdeal m I = span (leading monomials of B)`). -/
+/-- Every nonzero `f ∈ I` has its leading monomial dominated by that of some nonzero basis element:
+`∃ b ∈ B, b ≠ 0 ∧ m.degree b ≤ m.degree f`. -/
 theorem IsGroebnerBasis.exists_degree_le {K : Type*} [Field K]
     {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)} (hB : IsGroebnerBasis m I B)
     {f : MvPolynomial σ K} (hfI : f ∈ I) (hf0 : f ≠ 0) :
@@ -1967,10 +1861,9 @@ theorem IsGroebnerBasis.exists_degree_le {K : Type*} [Field K]
   exact (hlc b hbB).ne_zero (by rw [hb0, MonomialOrder.leadingCoeff, degree_zero, coeff_zero])
 
 open scoped Classical in
-/-- **Lazard's Lemma 2, the gcd construction** (the algebraic core, Lazard 1985, p.263). For ideal
-members `fᵢ, f_{i+1}` with `degreeOf 0 fᵢ ≤ degreeOf 0 f_{i+1}` (the `y`-degrees), there is `P ∈ I`
-of `y`-degree `degreeOf 0 f_{i+1}` whose leading-`y`-coefficient is `gcd(leadingYCoeff fᵢ,
-leadingYCoeff f_{i+1})`. Built from the Bézout combination `ã·(y^{d_{i+1}−dᵢ}·fᵢ) + b̃·f_{i+1}`. -/
+/-- The gcd construction: for ideal members `fi, fi1` with `degreeOf 0 fi ≤ degreeOf 0 fi1`, there
+is `P ∈ I` of `y`-degree `degreeOf 0 fi1` with `leadingYCoeff P = gcd(leadingYCoeff fi,
+leadingYCoeff fi1)`. -/
 theorem lazard_gcd_construction {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {fi fi1 : MvPolynomial (Fin 2) K} (hfiI : fi ∈ I) (hfi1I : fi1 ∈ I)
     (hfi : fi ≠ 0) (hd : degreeOf 0 fi ≤ degreeOf 0 fi1) :
@@ -2024,10 +1917,8 @@ theorem lazard_gcd_construction {K : Type*} [Field K] {I : Ideal (MvPolynomial (
   exact ⟨P, hPI, by rw [← natDegree_lazardView, hPdeg],
     by rw [leadingYCoeff, hPlc, hpcoeff, hqcoeff, hab]⟩
 
-/-- **The `x`-degree of the leading monomial under lex** (Lazard's structure theory): for
-`MonomialOrder.lex` on `Fin 2` and `f ≠ 0`, the index-`1` exponent of the leading monomial is the
-`x`-degree `degreeOf 0 (leadingYCoeff f)` of the leading-`y`-coefficient — among the top-`y`-power
-terms (the support of `leadingYCoeff f`), lex picks the maximal `x`-power. -/
+/-- Under `MonomialOrder.lex` on `Fin 2` with `f ≠ 0`, the index-`1` exponent of the leading
+monomial is the `x`-degree `degreeOf 0 (leadingYCoeff f)` of the leading-`y`-coefficient. -/
 theorem lex_degree_apply_one {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
     (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) := by
   classical
@@ -2058,13 +1949,8 @@ theorem lex_degree_apply_one {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} 
     have hcons1 : (Finsupp.cons (δ 0) mon) 1 = mon 0 := by rw [hsucc, Finsupp.cons_succ]
     rwa [hcons1] at hmain
 
-/-- **Lazard (1985), Lemma 2** (J. Symb. Comp. 1, p.263): along a reduced (minimal) bivariate
-Gröbner basis over `lex`, the leading-`y`-coefficient `R_{i+1} = leadingYCoeff f_{i+1}` of the
-higher-`y`-degree element divides `Rᵢ = leadingYCoeff fᵢ`. From `lazard_gcd_construction` there is
-`P ∈ I` of `y`-degree `d_{i+1}` with `leadingYCoeff P = gcd(Rᵢ, R_{i+1})`; its leading monomial
-`(d_{i+1}, deg_x gcd)` dominates some basis element `b`, which minimality forces to be `f_{i+1}`
-(else `LM(b) ≤ LM(f_{i+1})`, impossible) — giving `deg_x R_{i+1} ≤ deg_x gcd`, hence
-`R_{i+1} ∼ gcd`, so `R_{i+1} ∣ gcd ∣ Rᵢ`. -/
+/-- Along a reduced bivariate Gröbner basis over `lex`, the higher-`y`-degree
+`leadingYCoeff fi1` divides the lower `leadingYCoeff fi` (`degreeOf 0 fi < degreeOf 0 fi1`). -/
 theorem lazard_lemma2 {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
@@ -2136,15 +2022,10 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
 
 /-! ## Sorting a minimal bivariate Gröbner basis by `y`-degree
 
-Lazard's Lemma 3 (and the descent `gᵢ ∣ fᵢ`) operates on the basis `B` *sorted by increasing
-`y`-degree* `degreeOf 0`. The sort exists because the `y`-degrees are **distinct** on `B`: under
-`lex` (index `0 = y` dominant) `degreeOf 0 b = (lex.degree b) 0`, and two distinct basis elements
-sharing it would be comparable (`finsupp_fin_two_le_or_le_of_apply_zero_eq`), contradicting
-minimality (`IsReducedGroebnerBasis.leadingMonomial_not_le`). The strictly-increasing enumeration
-`sortedByYDegree` is built from `Finset.orderEmbOfFin` on the (injective) `y`-degree image. -/
+The `y`-degrees `degreeOf 0` are distinct on a reduced basis, so `sortedByYDegree` enumerates `B`
+by strictly increasing `y`-degree (via `Finset.orderEmbOfFin` on the injective `y`-degree image). -/
 
-/-- In `Fin 2 →₀ ℕ`, two exponent vectors agreeing at index `0` (the `y`-coordinate under the lex
-convention) are comparable: the remaining ℕ-values at index `1` are totally ordered. -/
+/-- In `Fin 2 →₀ ℕ`, two exponent vectors agreeing at index `0` are comparable. -/
 theorem finsupp_fin_two_le_or_le_of_apply_zero_eq {d d' : Fin 2 →₀ ℕ} (h : d 0 = d' 0) :
     d ≤ d' ∨ d' ≤ d := by
   rcases le_total (d 1) (d' 1) with h1 | h1
@@ -2157,10 +2038,8 @@ theorem finsupp_fin_two_le_or_le_of_apply_zero_eq {d d' : Fin 2 →₀ ℕ} (h :
     · exact h.ge
     · exact h1
 
-/-- **The `y`-degrees are distinct on a minimal Gröbner basis** (the index-`0` companion of
-`lazard_lemma1`). Under `lex`, distinct elements of a reduced bivariate Gröbner basis have
-distinct `y`-degrees `degreeOf 0`: a tie makes the leading monomials comparable, so one divides
-the other, contradicting minimality. -/
+/-- Under `lex`, distinct elements of a reduced bivariate Gröbner basis have distinct `y`-degrees
+`degreeOf 0`. -/
 theorem lazard_degreeOf_ne {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
@@ -2175,7 +2054,7 @@ theorem lazard_degreeOf_ne {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2
       (Ne.symm hne) hle
   · exact hB.leadingMonomial_not_le (Finset.mem_coe.mpr hb) (Finset.mem_coe.mpr hb') hne hle
 
-/-- **The `y`-degree key is injective on a minimal Gröbner basis.** -/
+/-- The `y`-degree key is injective on a reduced Gröbner basis. -/
 theorem lazard_degreeOf_injOn {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
@@ -2184,21 +2063,19 @@ theorem lazard_degreeOf_injOn {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fi
   by_contra hne
   exact lazard_degreeOf_ne hB b hb b' hb' hne hdeg
 
-/-- The image finset of `y`-degrees of a minimal Gröbner basis; its cardinality is `B.card`
-(the key is injective, `lazard_degreeOf_injOn`). -/
+/-- The image finset of `y`-degrees of the basis `B`. -/
 noncomputable def yDegreeImage {K : Type*} [Field K] (B : Finset (MvPolynomial (Fin 2) K)) :
     Finset ℕ :=
   B.image (fun b => degreeOf 0 b)
 
-/-- `(yDegreeImage B).card = B.card` for a minimal Gröbner basis (`y`-degree key injective). -/
+/-- `(yDegreeImage B).card = B.card` for a reduced Gröbner basis. -/
 theorem card_yDegreeImage {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
     (yDegreeImage B).card = B.card :=
   Finset.card_image_of_injOn (lazard_degreeOf_injOn hB)
 
-/-- The `∃!` witness for `sortedByYDegree`: a *unique* basis element of any prescribed `y`-degree
-that occurs in `B` (existence from `Finset.mem_image`, uniqueness from `lazard_degreeOf_injOn`). -/
+/-- A unique basis element of any prescribed `y`-degree occurring in `B`. -/
 theorem existsUnique_mem_degreeOf_eq {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
@@ -2212,10 +2089,8 @@ theorem existsUnique_mem_degreeOf_eq {K : Type*} [Field K] {I : Ideal (MvPolynom
     (show degreeOf 0 b' = degreeOf 0 b by rw [hb'eq, hbeq])
 
 open scoped Classical in
-/-- **The minimal Gröbner basis sorted by `y`-degree** (Part A of Lazard's Lemma 3 framework). An
-enumeration `Fin B.card → MvPolynomial (Fin 2) K` of `B` whose `y`-degrees `degreeOf 0` are
-strictly increasing: pull the increasing enumeration of the (injective) `y`-degree image back
-through the bijection `b ↦ degreeOf 0 b`. -/
+/-- The enumeration `Fin B.card → MvPolynomial (Fin 2) K` of `B` with strictly increasing `y`-degree
+`degreeOf 0`. -/
 noncomputable def sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
@@ -2232,8 +2107,8 @@ theorem sortedByYDegree_mem {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 
   exact Finset.choose_mem
     (fun b => degreeOf 0 b = (yDegreeImage B).orderEmbOfFin (card_yDegreeImage hB) i) B _
 
-/-- **The sorted enumeration realizes the chosen `y`-degree**: `degreeOf 0 (sortedByYDegree hB i)`
-is the `i`-th value of the increasing `y`-degree enumeration. -/
+/-- `degreeOf 0 (sortedByYDegree hB i)` is the `i`-th value of the increasing `y`-degree
+enumeration. -/
 theorem degreeOf_sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
@@ -2244,8 +2119,7 @@ theorem degreeOf_sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial 
   exact Finset.choose_property
     (fun b => degreeOf 0 b = (yDegreeImage B).orderEmbOfFin (card_yDegreeImage hB) i) B _
 
-/-- **The sorted enumeration is strictly increasing in `y`-degree**: `i < j ⟹ degreeOf 0
-(sortedByYDegree hB i) < degreeOf 0 (sortedByYDegree hB j)` (Part A's key monotonicity). -/
+/-- `i < j ⟹ degreeOf 0 (sortedByYDegree hB i) < degreeOf 0 (sortedByYDegree hB j)`. -/
 theorem degreeOf_sortedByYDegree_strictMono {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
@@ -2254,7 +2128,7 @@ theorem degreeOf_sortedByYDegree_strictMono {K : Type*} [Field K]
   simp only [degreeOf_sortedByYDegree]
   exact (Finset.orderEmbOfFin (yDegreeImage B) (card_yDegreeImage hB)).strictMono hij
 
-/-- **The sorted enumeration is injective** (strictly monotone `y`-degree key). -/
+/-- The sorted enumeration is injective. -/
 theorem sortedByYDegree_injective {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
@@ -2267,8 +2141,7 @@ theorem sortedByYDegree_injective {K : Type*} [Field K] {I : Ideal (MvPolynomial
   · exact absurd (congrArg (fun b => degreeOf 0 b) hij.symm)
       (ne_of_lt (degreeOf_sortedByYDegree_strictMono hB h))
 
-/-- **The sorted enumeration is a bijection onto `B`**: its range is exactly `↑B`. With injectivity
-(`sortedByYDegree_injective`) and `|Fin B.card| = |B|`, the image is all of `B`. -/
+/-- The range of the sorted enumeration is exactly `↑B`. -/
 theorem range_sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) :
@@ -2304,39 +2177,27 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     Set.range (sortedByYDegree hB) = (↑B : Set (MvPolynomial (Fin 2) K)) :=
   range_sortedByYDegree hB
 
-/-! ## Lazard's Lemma 3: the leading-`y`-coefficient reduction step and the `Pₖ = Rₖ·Sₖ` split
+/-! ## The reduction step and the `Pₖ = Rₖ·Sₖ` split
 
-Lazard (1985), Lemma 3 (J. Symb. Comp. 1, p.263): for a minimal bivariate Gröbner basis sorted by
-increasing `y`-degree, `gᵢ = leadingYCoeff fᵢ` divides `fᵢ` (and `f₀ ∈ K[x]`, `fₖ` monic in `y`).
-The mechanism is the **reduction step**: since `g_{i+1} ∣ gᵢ` (Lemma 2, `lazard_lemma2`), with
-`q = gᵢ/g_{i+1}` the ideal element `C̃(q)·f_{i+1} − y^{d_{i+1}−dᵢ}·fᵢ` has matching `y`-degree-`d_{i+1}`
-leading term `gᵢ·y^{d_{i+1}}`, so the difference has `y`-degree `< d_{i+1}` — formalized here as
-`lazard_lemma3_reductionStep`. Reducing it to zero modulo the basis and inducting over the sorted
-enumeration gives `gᵢ ∣ fᵢ` (the full descent over `f₀,…,fₖ` is the unformalized remainder — see the
-§2.6 residual).
+The reduction step: with `q = gᵢ/g_{i+1}`, the ideal element `yConst q·f_{i+1} − y^{shift}·fᵢ` has
+`y`-degree `< d_{i+1}` (leading terms cancel). The `Pₖ = Rₖ·Sₖ` split: given `gᵢ ∣ fᵢ`, the content
+of `lazardView fᵢ` is associated to `Rᵢ = leadingYCoeff fᵢ` and the primitive part `Sᵢ` is
+monic-in-`y`. -/
 
-The concrete Czichowski payload `Pₖ = Rₖ·Sₖ` is the content/primpart split with the content equal to
-`Rᵢ = leadingYCoeff fᵢ`: given `gᵢ ∣ fᵢ` (i.e. `C(Rᵢ) ∣ lazardView fᵢ`), the content of `lazardView fᵢ`
-is associated to `Rᵢ` and the primitive part `Sᵢ` is monic-in-`y` (unit leading coefficient) —
-`content_associated_leadingYCoeff_of_C_dvd`, `leadingCoeff_primPart_isUnit_of_C_dvd`,
-`lazard_Pk_eq_Rk_Sk`. -/
-
-/-- The `y`-constant lift `K[x] → K[x][y] → MvPolynomial (Fin 2) K` of a leading-`y`-coefficient,
-`r ↦ (finSuccEquiv K 1).symm (C r)`; its `K[x][y]` view is the constant polynomial `C r`. -/
+/-- The `y`-constant lift `r ↦ (finSuccEquiv K 1).symm (C r)` of `r : K[x]` into
+`MvPolynomial (Fin 2) K`. -/
 noncomputable def yConst {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
     MvPolynomial (Fin 2) K :=
   (finSuccEquiv K 1).symm (Polynomial.C r)
 
-/-- `lazardView (yConst r) = C r`: the `K[x][y]` view of a `y`-constant is the constant polynomial. -/
+/-- `lazardView (yConst r) = C r`. -/
 @[simp] theorem lazardView_yConst {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
     lazardView (yConst r) = Polynomial.C r := by
   rw [lazardView, yConst, AlgEquiv.apply_symm_apply]
 
-/-- **Lazard's Lemma 3, the reduction step** (Lazard 1985, p.263). With `q = gᵢ/g_{i+1}` witnessed by
-`leadingYCoeff fi1 * q = leadingYCoeff fi` (the divisibility from Lemma 2) and `y`-degrees
-`dᵢ < d_{i+1}`, the ideal element `R := yConst q · f_{i+1} − y^{d_{i+1}−dᵢ}·fᵢ` has `y`-degree
-`< d_{i+1}`: both subtracted terms have `y`-degree `d_{i+1}` and the *same* leading-`y`-coefficient
-`gᵢ`, so the top terms cancel. (Membership `R ∈ I` for `fᵢ, f_{i+1} ∈ I` is immediate.) -/
+/-- The reduction step: with `leadingYCoeff fi1 * q = leadingYCoeff fi` and `degreeOf 0 fi <
+degreeOf 0 fi1`, the element `yConst q · fi1 − y^{shift}·fi` has `y`-degree `< degreeOf 0 fi1` (the
+matching top terms cancel). -/
 theorem lazard_lemma3_reductionStep {K : Type*} [Field K] {fi fi1 : MvPolynomial (Fin 2) K}
     (hfi : fi ≠ 0) (hd : degreeOf 0 fi < degreeOf 0 fi1)
     {q : MvPolynomial (Fin 1) K} (hq : leadingYCoeff fi1 * q = leadingYCoeff fi) :
@@ -2375,18 +2236,15 @@ theorem lazard_lemma3_reductionStep {K : Type*} [Field K] {fi fi1 : MvPolynomial
   rw [hdiff0, Polynomial.natDegree_zero] at heq
   exact hdpos.ne' heq.symm
 
-/-- The ideal element of the Lemma 3 reduction step lies in `I` (difference of left multiples of the
-ideal members `fᵢ, f_{i+1}`). -/
+/-- The reduction-step element `yConst q · fi1 − y^{shift}·fi` lies in `I` when `fi, fi1 ∈ I`. -/
 theorem lazard_lemma3_reductionStep_mem {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {fi fi1 : MvPolynomial (Fin 2) K} (hfiI : fi ∈ I) (hfi1I : fi1 ∈ I)
     {q : MvPolynomial (Fin 1) K} :
     yConst q * fi1 - X 0 ^ (degreeOf 0 fi1 - degreeOf 0 fi) * fi ∈ I :=
   I.sub_mem (Ideal.mul_mem_left _ _ hfi1I) (Ideal.mul_mem_left _ _ hfiI)
 
-/-- **The `K[x][y]` view of the reduction step.** Writing `R := yConst q · f_{i+1} − y^{shift}·fᵢ`,
-its `K[x][y]` view is `lazardView R = C q · lazardView f_{i+1} − X^{shift} · lazardView fᵢ`; this is
-the equation the descent telescopes (the `y`-shift `X^{shift}` and `y`-constant `C q` are `lazardView`
-of `X 0 ^ shift` and `yConst q`). -/
+/-- The `K[x][y]` view of the reduction step:
+`lazardView (yConst q · fi1 − X 0 ^ sh · fi) = C q · lazardView fi1 − X^sh · lazardView fi`. -/
 theorem lazardView_reductionStep {K : Type*} [Field K] (fi fi1 : MvPolynomial (Fin 2) K)
     (q : MvPolynomial (Fin 1) K) (sh : ℕ) :
     lazardView (yConst q * fi1 - X 0 ^ sh * fi)
@@ -2394,18 +2252,15 @@ theorem lazardView_reductionStep {K : Type*} [Field K] (fi fi1 : MvPolynomial (F
   rw [lazardView, map_sub, map_mul, map_mul, map_pow, finSuccEquiv_X_zero, ← lazardView,
     ← lazardView, ← lazardView, lazardView_yConst]
 
-/-- **The descent equation, solved for `y^{shift}·fᵢ`.** From the reduction step `R = yConst q ·
-f_{i+1} − y^{shift}·fᵢ`, the `y`-shifted `fᵢ` is `X^{shift}·lazardView fᵢ = C q · lazardView f_{i+1}
-− lazardView R` in `K[x][y]` — the form whose `K[x]`-content/divisibility the descent reads off. -/
+/-- The reduction equation solved for `y^{shift}·fi`:
+`X^sh·lazardView fi = C q · lazardView fi1 − lazardView (yConst q · fi1 − X 0 ^ sh · fi)`. -/
 theorem lazardView_yShift_eq_reductionStep {K : Type*} [Field K]
     (fi fi1 : MvPolynomial (Fin 2) K) (q : MvPolynomial (Fin 1) K) (sh : ℕ) :
     Polynomial.X ^ sh * lazardView fi
       = Polynomial.C q * lazardView fi1 - lazardView (yConst q * fi1 - X 0 ^ sh * fi) := by
   rw [lazardView_reductionStep]; ring
 
-/-- **`C d ∣ X^sh · p ⟹ C d ∣ p`** over any commutative ring: a `y`-constant divisor survives the
-`y`-shift `X^sh` (the coefficients of `X^sh · p` are `p`'s coefficients shifted, so `d` divides each
-coefficient of `p` iff it divides each coefficient of `X^sh · p`). -/
+/-- Over any commutative ring, `Polynomial.C d ∣ X^sh · p ⟹ Polynomial.C d ∣ p`. -/
 theorem C_dvd_of_C_dvd_X_pow_mul {S : Type*} [CommRing S] {d : S} {p : Polynomial S} {sh : ℕ}
     (h : Polynomial.C d ∣ Polynomial.X ^ sh * p) : Polynomial.C d ∣ p := by
   rw [Polynomial.C_dvd_iff_dvd_coeff] at h ⊢
@@ -2413,12 +2268,8 @@ theorem C_dvd_of_C_dvd_X_pow_mul {S : Type*} [CommRing S] {d : S} {p : Polynomia
   have := h (i + sh)
   rwa [Polynomial.coeff_X_pow_mul] at this
 
-/-- **The descent transfer step** (Part B core, divisibility half, general form). With `R := yConst
-q · f_{i+1} − y^{shift}·fᵢ`, if `C d ∣ C q · lazardView f_{i+1}` and `C d ∣ lazardView R`, then
-`C d ∣ lazardView fᵢ`: substituting into `X^{shift}·lazardView fᵢ = C q · lazardView f_{i+1} −
-lazardView R` shows `C d ∣ X^{shift}·lazardView fᵢ`, and `C d` survives the `y`-shift
-(`C_dvd_of_C_dvd_X_pow_mul`). The `C q ·` form is what the descent needs: with `gᵢ = g_{i+1}·q`,
-`C(gᵢ) ∣ C q · lazardView f_{i+1}` follows from the higher-index `C(g_{i+1}) ∣ lazardView f_{i+1}`. -/
+/-- If `C d ∣ C q · lazardView fi1` and `C d ∣ lazardView (yConst q · fi1 − X 0 ^ sh · fi)`, then
+`C d ∣ lazardView fi`. -/
 theorem C_dvd_lazardView_of_reductionStep_mul {K : Type*} [Field K]
     {fi fi1 : MvPolynomial (Fin 2) K} {q : MvPolynomial (Fin 1) K} {d : MvPolynomial (Fin 1) K}
     {sh : ℕ} (hfi1 : Polynomial.C d ∣ Polynomial.C q * lazardView fi1)
@@ -2428,10 +2279,8 @@ theorem C_dvd_lazardView_of_reductionStep_mul {K : Type*} [Field K]
   rw [lazardView_yShift_eq_reductionStep]
   exact dvd_sub hfi1 hR
 
-/-- **The descent transfer step** (Part B core, divisibility half). With `R := yConst q · f_{i+1} −
-y^{shift}·fᵢ`, if the divisibilities `C d ∣ lazardView f_{i+1}` and `C d ∣ lazardView R` hold, then
-`C d ∣ lazardView fᵢ` (the `C q ·` form `C_dvd_lazardView_of_reductionStep_mul` with `C d ∣ lazardView
-f_{i+1} ⟹ C d ∣ C q · lazardView f_{i+1}`). -/
+/-- If `C d ∣ lazardView fi1` and `C d ∣ lazardView (yConst q · fi1 − X 0 ^ sh · fi)`, then
+`C d ∣ lazardView fi`. -/
 theorem C_dvd_lazardView_of_reductionStep {K : Type*} [Field K]
     {fi fi1 : MvPolynomial (Fin 2) K} {q : MvPolynomial (Fin 1) K} {d : MvPolynomial (Fin 1) K}
     {sh : ℕ} (hfi1 : Polynomial.C d ∣ lazardView fi1)

@@ -1,36 +1,10 @@
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFF
 
-/-! # Coefficient-swell benchmark: fraction-free vs naive Euclidean vs `qReduce`-in-the-loop
-The tower integrator can run its `t`-polynomial gcd over `α = QFunNZG ℚ ≅ ℚ(x)` several ways: the
-generic **fraction-free** `cgcdFFGen` (clear denominators into `ℚ[x][t]`, primitive PRS —
-`ComputableTowerGcdFF`) or the generic **Euclidean** `cgcdExtG` over the fraction field ℚ(x)
-(`GenericPolyEngine`). Euclidean division divides by the leading ℚ(x)-coefficient each step, so the
-rational-function coefficients **swell** super-exponentially; the fraction-free kernel keeps them
-bounded.
-
-This file pins that swell with a concrete witness over `QFunNZG ℚ`. With the gcd held **fixed at
-degree 2** (the `BenchG.gCommonFactor` `(t+x)(t−1/x)`) and only the *cofactor* `t`-degree scaling, the
-raw stored coefficient-size of the gcd RESULT is:
-
-| total `t`-degree of `p` | `cgcdFFGen` | `cgcdExtG` | `qReduce`-in-loop (Euclid + per-step reduce) |
-| --- | --- | --- | --- |
-| 3 | 36 | 147 | 28 |
-| 4 | 36 | 258 261 011 921 | 405 |
-
-So `cgcdExtG`'s stored coefficient size jumps from 147 to ~2.6·10¹¹ for a single extra degree (it reaches
-a 147-digit value by degree 5), while `cgcdFFGen` stays flat (`36`) and the `qReduce`-reducing variant
-stays far below the swell (`28 → 405`). (`native_decide` build-time confirms the runtime cost: at total
-degree 5, `cgcdFFGen` ≈ baseline but `cgcdExtG` is ~90 s.)
-
-* **`benchNormGcd`** — a Euclidean gcd that applies `qReduce` (gcd-cancel to lowest terms) to
-  every remainder coefficient each step. It produces the *same* monic gcd as `cgcdFFGen`
-  (`benchNormGcd_agrees_cgcdFFGen`) and **tames the swell in the result** (`benchNormGcd_size_tamed`,
-  `28 → 405` vs Euclid's `147 → 2.6·10¹¹`). It does NOT, however, stay perfectly flat like `cgcdFFGen`:
-  `qReduce` cancels only *common* factors and makes the gcd **monic** (scaling by `1/lead`), while
-  Euclidean division still grows the coprime coefficient *degree* each step — so its per-step `qReduce`
-  (an inner ℚ[x] gcd) cost compounds and it overtakes `cgcdFFGen` at higher degree. The genuine fix is the
-  fraction-free PRS in `cgcdFFGen`; this file documents *why*. -/
+/-! # Coefficient-swell benchmark for `t`-polynomial gcd over `QFunNZG ℚ`
+Compares the fraction-free `cgcdFFGen`, the naive Euclidean `cgcdExtG`, and a `qReduce`-in-the-loop
+variant. Naive Euclidean coefficients swell super-exponentially; the fraction-free kernel stays flat and
+`qReduce`-per-step tames but does not fully bound the swell. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -42,24 +16,18 @@ open BenchG
 
 /-! ### Benchmark inputs — reusing `BenchG`'s `QFunNZG ℚ` data (gcd fixed at degree 2) -/
 
-/-- The benchmark dividend `p = gCommonFactor · glinProdA k` over `QFunNZG ℚ`, total `t`-degree `k + 2`
-(reusing `BenchG.gBenchP`). -/
+/-- The benchmark dividend `p = gCommonFactor · glinProdA k` over `QFunNZG ℚ`, total `t`-degree `k + 2`. -/
 def benchP (k : ℕ) : CPolyG (QFunNZG ℚ) := gBenchP k
 
 /-- The benchmark divisor `q = gCommonFactor · glinProdB k` over `QFunNZG ℚ`, total `t`-degree `k + 2`;
-`gcd(benchP k, benchQ k) = gCommonFactor` (degree 2), reusing `BenchG.gBenchQ`. -/
+`gcd(benchP k, benchQ k) = gCommonFactor` (degree 2). -/
 def benchQ (k : ℕ) : CPolyG (QFunNZG ℚ) := gBenchQ k
 
-/-- The naive generic Euclidean gcd of the benchmark pair, monic-normalized (the swelling kernel);
-the fuel-free `cgcdWf` naive Euclidean over the fraction field, which swells identically. -/
+/-- The naive Euclidean gcd `cmonicG (cgcdWf …)` of the benchmark pair, monic-normalized (the swelling
+kernel over the fraction field). -/
 def benchExtGcd (k : ℕ) : CPolyG (QFunNZG ℚ) := cmonicG (cgcdWf (benchP k) (benchQ k)).1
 
-/-! ### The `qReduce`-in-the-loop gcd — the swell-control prototype at `α = QFunNZG ℚ`
-
-A Euclidean gcd that reduces every remainder coefficient to lowest terms (`qReduce`, the
-gcd-cancel) after each division step. It removes the *common-factor* swell, so the result size stays
-flat; it does not bound the coprime coefficient-*degree* growth, so it is slower than `cgcdFFGen` deeper
-in the tower (see the module docstring). -/
+/-! ### The `qReduce`-in-the-loop gcd — the swell-control prototype at `α = QFunNZG ℚ` -/
 
 /-- Reduce every coefficient of a `CPolyG (QFunNZG ℚ)` to lowest terms (`qReduce`
 coefficientwise). -/
@@ -67,8 +35,7 @@ def normCoeffs (p : CPolyG (QFunNZG ℚ)) : CPolyG (QFunNZG ℚ) :=
   (p : List (QFunNZG ℚ)).map qReduce
 
 /-- Euclidean division-with-remainder that `qReduce`-reduces each remainder's coefficients every step
-(otherwise mirroring `cdivmodG`): `benchDivmodNorm fuel p q = (quotient, remainder)`. The per-step
-reduction keeps the *integer* size of remainder coefficients bounded. -/
+(otherwise mirroring `cdivmodG`): `benchDivmodNorm fuel p q = (quotient, remainder)`. -/
 def benchDivmodNorm : ℕ → CPolyG (QFunNZG ℚ) → CPolyG (QFunNZG ℚ) →
     CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)
   | 0, p, _ => ([], cnormG p)
@@ -89,8 +56,8 @@ def benchDivmodNorm : ℕ → CPolyG (QFunNZG ℚ) → CPolyG (QFunNZG ℚ) →
 def benchModNorm (fuel : ℕ) (p q : CPolyG (QFunNZG ℚ)) : CPolyG (QFunNZG ℚ) :=
   (benchDivmodNorm fuel p q).2
 
-/-- Plain (non-extended) Euclidean gcd loop with per-step coefficient `qReduce` (`benchModNorm` for the
-remainder, `normCoeffs` after each step): the swell-control gcd at `α = QFunNZG ℚ`. -/
+/-- Plain Euclidean gcd loop with per-step coefficient `qReduce` (`benchModNorm` remainder, `normCoeffs`
+each step): the swell-control gcd at `α = QFunNZG ℚ`. -/
 def benchNormGcdGo : ℕ → CPolyG (QFunNZG ℚ) → CPolyG (QFunNZG ℚ) → CPolyG (QFunNZG ℚ)
   | 0, a, _ => cnormG a
   | fuel + 1, a, b =>
@@ -103,23 +70,16 @@ def benchNormGcd (k : ℕ) : CPolyG (QFunNZG ℚ) :=
 
 /-! ### The swell measure and the pinned witnesses (`native_decide`) -/
 
-/-- The raw stored size of a whole `CPolyG (QFunNZG ℚ)` (`BenchG.gGcdSizeRaw`). Forcing it fully
-evaluates the gcd, so a timing harness cannot hide cost behind laziness. -/
+/-- The raw stored size of a whole `CPolyG (QFunNZG ℚ)` (`BenchG.gGcdSizeRaw`). -/
 def gcdSizeRaw (g : CPolyG (QFunNZG ℚ)) : ℕ := gGcdSizeRaw g
 
-/-- **The naive Euclidean result swells super-exponentially** (`native_decide`): the raw stored
-coefficient size of `benchExtGcd` is `147` at total degree 3 but `258 261 011 921` (~2.6·10¹¹) at total
-degree 4 — a single extra degree multiplies the stored size by over a billion. This is the
-coefficient-swell signature the fraction-free kernel exists to avoid. -/
+/-- The naive Euclidean result swells: `gcdSizeRaw (benchExtGcd 1) = 147` but `benchExtGcd 2` has raw
+stored size `258261011921`. -/
 theorem benchExtGcd_size_swells :
     gcdSizeRaw (benchExtGcd 1) = 147 ∧ gcdSizeRaw (benchExtGcd 2) = 258261011921 := by native_decide
 
-/-- **The `qReduce`-in-the-loop fix tames the result size** (`native_decide`): the raw stored
-coefficient size of `benchNormGcd` is `28` at total degree 3 and `405` at total degree 4 — reducing each
-remainder to lowest terms removes the *common-factor* swell, staying far below the naive Euclidean kernel
-(`28`/`405` vs `147`/`2.6·10¹¹`). It is not perfectly flat like `cgcdFFGen` (`36`/`36`): `qReduce`'s
-**monic** gcd-cancel scales by `1/lead`, growing the *coprime* coefficient degree the fraction-free PRS
-keeps bounded — the remaining gap to `cgcdFFGen` (see the module docstring). -/
+/-- The `qReduce`-in-the-loop gcd tames the result size: `gcdSizeRaw (benchNormGcd 1) = 28` and
+`benchNormGcd 2` has raw stored size `405`, far below the naive Euclidean kernel. -/
 theorem benchNormGcd_size_tamed :
     gcdSizeRaw (benchNormGcd 1) = 28 ∧ gcdSizeRaw (benchNormGcd 2) = 405 := by native_decide
 

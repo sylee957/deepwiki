@@ -1,35 +1,10 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 
-/-! # Rioboo's `LogToReal`: the σ-orbit root partition and full correctness (Bronstein §2.8, p.66–69)
-`LogToReal(R, S)` rewrites the complex-log sum `g = ∑_{α | R(α)=0} α·log(S(α, x))` as a real function
-by partitioning the roots of `R` over `K̄` into **real roots** (`α = a ∈ K`, i.e. `b = 0`) and
-**conjugate pairs** `a ± i·b` with `b > 0`, each pair contributing both `a+i·b` and `a−i·b` (book
-(2.25), p.66). The per-pair contribution is the real function `a·log(A²+B²) + b·LogToAtan(A, B)`
-(`logToReal_conjugate_pair`), so the output (p.69) is
-`∑_{pairs} [a·log(A²+B²) + b·LogToAtan(A,B)] + ∑_{real roots} a·log(S(a, x))`.
-
-**Stage A — assembly given the partition.** Taking the root partition
-`R.roots = reals + map a₊ pairs + map a₋ pairs` (each conjugate pair `p` supplying both
-`a₊ p = a p + i·b p` and `a₋ p = a p − i·b p`) as a **certified `Multiset` hypothesis**, the original
-root-sum `∑_{α ∈ R.roots} α·logDeriv(S α)` splits as `∑_{reals} + ∑_{pairs} [pair contribution]`
-(`logToReal_rootSum_split`), and by `logToReal_conjugate_pair` the pair part equals the real form
-`∑_{pairs} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]` — so **`LogToReal`'s output derivative
-equals the original complex log-sum's derivative, given the partition** (`logToReal_correct_of_partition`).
-
-**Stage B — the partition CONSTRUCTION (now complete).** Over a field-with-involution `(L, σ)`
-(`σ ∘ σ = id`, `σ i = −i`, `i² = −1`) with the ordered fixed field `K ↪ L` (`[Field K] [LinearOrder K]
-[IsStrictOrderedRing K]`), the real/imaginary parts `realPart σ α = (α+σα)/2`,
-`imagPart σ i α = (α−σα)/(2i)` are `σ`-fixed (`realPart_fixed`/`imagPart_fixed`), reconstruct
-`α = a + i·b`, `σα = a − i·b` (`eq_realPart_add_imagPart`/`conj_eq_realPart_sub_imagPart`), and
-`σ` flips `b` (`imagPart_conj`/`realImagPartK_conj`: `b(σα) = −b(α)`), with `b = 0 ⟺ σα = α`
-(`realImagPartK_eq_zero_iff`). Selecting `reals = R.roots.filter (b·=0)`,
-`pairs = R.roots.filter (0<b·)` (the `b>0` rep via `K`'s order), the σ-stable root multiset partitions
-`R.roots = reals + pairs.map(a+ib) + pairs.map(a−ib)` (`roots_partition`): the `b<0` block is the
-`σ`-image of the `b>0` block, count-preservingly (`count_roots_conj_eq` + `b(σα)=−b(α)`, a
-`Multiset.count`/`Multiset.ext` σ-bijection — no Mathlib orbit lemma needed), and the trichotomy
-`b≠0 = (0<b) ⊎ (b<0)` splits the moved part. Feeding this into `logToReal_correct_of_partition` gives
-**the full `LogToReal` correctness over `R`'s roots, with NO partition hypothesis**
-(`logToReal_correct`) — closing the §2.8 `LogToReal` root-partition/recursion. -/
+/-! # Rioboo's `LogToReal`: the σ-orbit root partition and full correctness
+Partitioning the roots of `R` over `K̄` into real roots (`b = 0`) and conjugate pairs `a ± i·b`
+(`b > 0`) via a conjugation `σ` (`σ ∘ σ = id`, `σ i = −i`, `i² = −1`) with ordered fixed field `K`,
+`roots_partition` constructs the certified partition that `logToReal_correct_of_partition` consumes,
+giving `logToReal_correct`: the complex-log sum's derivative equals `LogToReal`'s real output's. -/
 
 open Polynomial
 open scoped Differential
@@ -40,23 +15,15 @@ section Recursion
 variable {R : Type*} [Field R] [Differential R]
 
 omit [Field R] [Differential R] in
-/-- **Conjugate-pair root partition of a `Multiset`** (§2.8, p.66, book (2.25), the `bind`-of-`{a₊, a₋}`
-form): for `pairs : Multiset σ` of conjugate-pair data and conjugate-root maps `a₊, a₋ : σ → R`, the
-roots contributed by the pairs are `pairs.bind (fun p => {a₊ p, a₋ p})`, and this equals
-`map a₊ pairs + map a₋ pairs` — each pair `p` supplies exactly its two conjugate roots. The flat
-`map a₊ pairs + map a₋ pairs` is the form used by the root-sum split. -/
+/-- `pairs.bind (fun p => {aPlus p, aMinus p}) = pairs.map aPlus + pairs.map aMinus`. -/
 theorem bind_pair_eq_map_add_map {σ : Type*} (pairs : Multiset σ) (aPlus aMinus : σ → R) :
     (pairs.bind fun p => ({aPlus p, aMinus p} : Multiset R)) = pairs.map aPlus + pairs.map aMinus := by
   rw [show (fun p => ({aPlus p, aMinus p} : Multiset R)) = (fun p => aPlus p ::ₘ {aMinus p}) from rfl,
     Multiset.bind_cons, Multiset.bind_singleton]
 
 omit [Differential R] in
-/-- **`LogToReal` root-sum split over the partition** (§2.8, p.66, book (2.22)→(2.25)): given the root
-partition `roots = reals + map a₊ pairs + map a₋ pairs` (`reals : Multiset R` the real roots, `pairs`
-the conjugate-pair data, `a₊ p`/`a₋ p` the two conjugate roots of pair `p`) and a per-root weight-times-
-log-derivative term `g`, the original complex log-sum `∑_{α ∈ roots} g α = (roots.map g).sum` splits as
-the real-root part `∑_{reals} g a` plus the conjugate-pair part `∑_{pairs} [g (a₊ p) + g (a₋ p)]`. Pure
-`Multiset.sum`/`map` bookkeeping (`Multiset.sum_map_add`). -/
+/-- Given `roots = reals + map aPlus pairs + map aMinus pairs`, the root-sum splits as
+`(roots.map g).sum = (reals.map g).sum + (pairs.map (fun p => g (aPlus p) + g (aMinus p))).sum`. -/
 theorem logToReal_rootSum_split {σ : Type*} (roots reals : Multiset R) (pairs : Multiset σ)
     (aPlus aMinus : σ → R) (g : R → R)
     (hpart : roots = reals + pairs.map aPlus + pairs.map aMinus) :
@@ -66,17 +33,9 @@ theorem logToReal_rootSum_split {σ : Type*} (roots reals : Multiset R) (pairs :
     add_assoc, Multiset.map_map, Multiset.map_map, ← Multiset.sum_map_add]
   rfl
 
-/-- **`LogToReal` correctness given the partition** (§2.8, p.66–69, the assembly heart of the full
-algorithm): suppose the roots of `S`'s associated `R` partition as `roots = reals +
-map (a·+i·b·) pairs + map (a·−i·b·) pairs` (`a p, b p ∈ K` the real/imaginary parts of a conjugate
-pair, `i² = −1`), and each pair has the real/imaginary split `S(a p + i·b p, x) = A p + i·B p`,
-`S(a p − i·b p, x) = A p − i·B p` (from `exists_realImag_split`) with `(A p)² + (B p)² ≠ 0`. Then the
-original complex log-sum's derivative `∑_{α ∈ roots} α·logDeriv(S α)` equals
-`∑_{reals} a·logDeriv(S a) + ∑_{pairs} [a·logDeriv((A p)²+(B p)²) + b·(i·logDeriv((A+iB)/(A−iB)))]` —
-i.e. the derivative of `LogToReal`'s real output `∑_{pairs} [a·log(A²+B²) + b·LogToAtan(A,B)] +
-∑_{reals} a·log(S(a, x))`. The conjugate-pair part is folded from `logToReal_conjugate_pair_of_split`
-by `Multiset.map_congr`; the split into real/pair parts is `logToReal_rootSum_split`. The partition is
-taken as a certified hypothesis (the σ-orbit construction is the §2.8 residual). -/
+/-- Given the certified partition `roots = reals + map (a·+i·b·) pairs + map (a·−i·b·) pairs` and each
+pair's split `S(a p ± i·b p) = A p ± i·B p` (`(A p)²+(B p)² ≠ 0`), the complex-log sum
+`∑ α·logDeriv(S α)` equals `∑_{reals} α·logDeriv(S α) + ∑_{pairs} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]`. -/
 theorem logToReal_correct_of_partition {σ : Type*}
     (S : R → R) (reals : Multiset R) (pairs : Multiset σ)
     (a b A B : σ → R) {i : R} (hi : i ^ 2 = -1)
@@ -97,11 +56,8 @@ theorem logToReal_correct_of_partition {σ : Type*}
   refine congrArg _ (congrArg _ (Multiset.map_congr rfl fun p hp => ?_))
   exact logToReal_conjugate_pair_of_split hi (hAB p hp) (hSplus p hp) (hSminus p hp)
 
-/-- Restatement of **`LogToReal`'s correctness given the partition** against the book wording
-(§2.8, p.66–69): the original complex log-sum `g = ∑_{α | R(α)=0} α·log(S(α, x))` has derivative equal
-to the derivative of `LogToReal`'s real output — the conjugate-pair sum `∑_{a,b∈K, b>0, P(a,b)=Q(a,b)=0}
-[a·log(A²+B²) + b·LogToAtan(A,B)]` plus the real-root sum `∑_{a∈K, R(a)=0} a·log(S(a,x))` — given that
-`R`'s roots partition as real roots ⊎ conjugate pairs `a±i·b`. -/
+/-- Restatement: given the partition, `∑ α·logDeriv(S α)` equals the real form
+`∑_{reals} α·logDeriv(S α) + ∑_{pairs} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]`. -/
 example {σ : Type*} (S : R → R) (reals : Multiset R) (pairs : Multiset σ)
     (a b A B : σ → R) {i : R} (hi : i ^ 2 = -1) (roots : Multiset R)
     (hpart : roots = reals + pairs.map (fun p => a p + i * b p)
@@ -120,14 +76,8 @@ end Recursion
 section Conjugation
 variable {L : Type*} [Field L]
 
-/-- **σ-conjugation permutes `R`'s roots** (§2.8, p.66, the start of the partition construction): let
-`σ : L ≃+* L` be a field automorphism (the conjugation, `σ i = −i`) fixing `R`'s coefficients
-(`R.map σ = R`, so `R ∈ K[t]` over the fixed field `K`), with `R` split over `L`
-(`card R.roots = R.natDegree`). Then `σ` maps the root multiset to itself, `R.roots.map σ = R.roots`
-— so `σ` acts as a permutation of `R`'s roots. This is the bijection-of-roots fact
-(`roots_map_of_injective_of_card_eq_natDegree`, `σ` injective) composed with `R.map σ = R`. It is the
-input to the orbit partition: σ-fixed roots are the real roots (`α = a`), 2-element orbits `{α, σα}` the
-conjugate pairs `a ± i·b`. -/
+/-- If a field automorphism `σ` fixes `R`'s coefficients (`R.map σ = R`) and `R` is split, then
+`σ` permutes the roots: `R.roots.map σ = R.roots`. -/
 theorem roots_map_self_of_map_eq {σ : L ≃+* L} {R : L[X]}
     (hmap : R.map (σ : L →+* L) = R) (hsplit : Multiset.card R.roots = R.natDegree) :
     R.roots.map (σ : L →+* L) = R.roots := by
@@ -136,11 +86,8 @@ theorem roots_map_self_of_map_eq {σ : L ≃+* L} {R : L[X]}
   rw [hmap] at this
   exact this
 
-/-- **σ-conjugation preserves root multiplicities** (§2.8, p.66, the orbit-stability behind the
-partition): with the same hypotheses (`R.map σ = R`, `R` split), each root and its conjugate occur with
-the same multiplicity, `(R.roots).count α = (R.roots).count (σ α)` for `σ` injective — so conjugate
-roots pair up evenly and the 2-element σ-orbits `{α, σα}` carry equal counts. Immediate from
-`roots_map_self_of_map_eq` and `Multiset.count_map_eq_count'`. -/
+/-- With `R.map σ = R` and `R` split, each root and its conjugate share multiplicity:
+`R.roots.count α = R.roots.count (σ α)`. -/
 theorem count_roots_conj_eq [DecidableEq L] {σ : L ≃+* L} {R : L[X]}
     (hmap : R.map (σ : L →+* L) = R) (hsplit : Multiset.card R.roots = R.natDegree) (α : L) :
     R.roots.count α = R.roots.count (σ α) := by
@@ -154,20 +101,15 @@ end Conjugation
 section RealImagPart
 variable {L : Type*} [Field L] [CharZero L]
 
-/-- **Real part of a root** (§2.8, p.66, `a = (α + σ α)/2`): for the conjugation `σ` (`σ i = −i`,
-fixed field the reals) and a root `α = a + i·b`, the real part is `realPart σ α = (α + σ α)/2`. With
-`σ α = a − i·b` this recovers `a`, the common real part of the conjugate pair `α, σ α`. -/
+/-- Real part of a root under conjugation `σ`: `realPart σ α := (α + σ α)/2`. -/
 def realPart (σ : L ≃+* L) (α : L) : L := (α + σ α) / 2
 
-/-- **Imaginary part of a root** (§2.8, p.66, `b = (α − σ α)/(2 i)`): for the conjugation `σ`
-(`σ i = −i`) and `i` with `i² = −1`, the imaginary part is `imagPart σ i α = (α − σ α)/(2 i)`. With
-`σ α = a − i·b` this recovers `b`; `b = 0 ⟺ σ α = α` (real root), and `b(σ α) = −b(α)`. -/
+/-- Imaginary part of a root under conjugation `σ` with `i² = −1`: `imagPart σ i α := (α − σ α)/(2·i)`. -/
 def imagPart (σ : L ≃+* L) (i : L) (α : L) : L := (α - σ α) / (2 * i)
 
 variable {σ : L ≃+* L} {i : L}
 
-/-- `α = realPart σ α + i·imagPart σ i α` (§2.8, p.66): a root reconstructs from its real and
-imaginary parts, with `i² = −1`. -/
+/-- `α = realPart σ α + i·imagPart σ i α`, with `i² = −1`. -/
 theorem eq_realPart_add_imagPart (hi : i ^ 2 = -1) (α : L) :
     α = realPart σ α + i * imagPart σ i α := by
   have hi0 : (i : L) ≠ 0 := by rintro rfl; norm_num at hi
@@ -175,8 +117,7 @@ theorem eq_realPart_add_imagPart (hi : i ^ 2 = -1) (α : L) :
   field_simp
   ring
 
-/-- `σ α = realPart σ α − i·imagPart σ i α` (§2.8, p.66): the conjugate root is the real part minus
-`i` times the imaginary part. -/
+/-- `σ α = realPart σ α − i·imagPart σ i α`, with `i² = −1`. -/
 theorem conj_eq_realPart_sub_imagPart (hi : i ^ 2 = -1) (α : L) :
     σ α = realPart σ α - i * imagPart σ i α := by
   have hi0 : (i : L) ≠ 0 := by rintro rfl; norm_num at hi
@@ -184,30 +125,24 @@ theorem conj_eq_realPart_sub_imagPart (hi : i ^ 2 = -1) (α : L) :
   field_simp
   ring
 
-/-- **`imagPart` is `σ`-fixed** (§2.8, p.66): with `σ` an involution (`σ (σ α) = α`) and `σ i = −i`,
-the imaginary part lies in the fixed field, `σ (imagPart σ i α) = imagPart σ i α`. Computation:
-`σ b = (σ α − α)/(2·σ i) = (σ α − α)/(−2 i) = (α − σ α)/(2 i) = b`. -/
+/-- For `σ` an involution with `σ i = −i`, `σ (imagPart σ i α) = imagPart σ i α`. -/
 theorem imagPart_fixed (hinv : ∀ x, σ (σ x) = x) (hσi : σ i = -i) (α : L) :
     σ (imagPart σ i α) = imagPart σ i α := by
   simp only [imagPart, map_div₀, map_sub, map_mul, hinv, hσi, map_ofNat, mul_neg, div_neg]
   rw [← neg_div, neg_sub]
 
-/-- **`realPart` is `σ`-fixed** (§2.8, p.66): with `σ` an involution, the real part lies in the fixed
-field, `σ (realPart σ α) = realPart σ α`. -/
+/-- For `σ` an involution, `σ (realPart σ α) = realPart σ α`. -/
 theorem realPart_fixed (hinv : ∀ x, σ (σ x) = x) (α : L) :
     σ (realPart σ α) = realPart σ α := by
   rw [realPart, map_div₀, map_add, hinv, map_ofNat, add_comm]
 
 omit [CharZero L] in
-/-- **`σ` flips the imaginary part** (§2.8, p.66, `b(σ α) = −b(α)`): with `σ` an involution,
-`imagPart σ i (σ α) = −imagPart σ i α` — conjugation negates the imaginary part, so it bijects the
-`b > 0` roots with the `b < 0` roots. -/
+/-- For `σ` an involution, `imagPart σ i (σ α) = −imagPart σ i α`. -/
 theorem imagPart_conj (hinv : ∀ x, σ (σ x) = x) (α : L) :
     imagPart σ i (σ α) = -imagPart σ i α := by
   rw [imagPart, imagPart, hinv, ← neg_div, neg_sub]
 
-/-- **Real root ⟺ `imagPart = 0`** (§2.8, p.66): with `i ≠ 0`, a root is `σ`-fixed (real,
-`σ α = α`) iff its imaginary part vanishes, `imagPart σ i α = 0 ↔ σ α = α`. -/
+/-- With `i² = −1`, `imagPart σ i α = 0 ↔ σ α = α`. -/
 theorem imagPart_eq_zero_iff (hi : i ^ 2 = -1) (α : L) :
     imagPart σ i α = 0 ↔ σ α = α := by
   have hi0 : (i : L) ≠ 0 := by rintro rfl; norm_num at hi
@@ -221,9 +156,7 @@ variable {L : Type*} [Field L] [CharZero L] [DecidableEq L]
 variable {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K] [Algebra K L]
 
 omit [DecidableEq L] in
-/-- **`K`-valued imaginary part flips under `σ`** (§2.8, p.66): if the ordered fixed field `K` reads
-the imaginary part (`algebraMap K L (b α) = imagPart σ i α`), then `b (σ α) = −b α` — the sign-flip
-transported to the ordered field `K` (via `imagPart_conj` and injectivity of `algebraMap K L`). -/
+/-- If `algebraMap K L (b α) = imagPart σ i α`, then `b (σ α) = −b α`. -/
 theorem realImagPartK_conj {σ : L ≃+* L} {i : L} {b : L → K}
     (hinv : ∀ x, σ (σ x) = x)
     (hb : ∀ α, algebraMap K L (b α) = imagPart σ i α) (α : L) :
@@ -233,27 +166,15 @@ theorem realImagPartK_conj {σ : L ≃+* L} {i : L} {b : L → K}
   rw [hb, map_neg, hb, imagPart_conj hinv]
 
 omit [DecidableEq L] [LinearOrder K] [IsStrictOrderedRing K] in
-/-- **`K`-valued imaginary part is `0` ⟺ real root** (§2.8, p.66): if `algebraMap K L (b α) =
-imagPart σ i α` and `i² = −1`, then `b α = 0 ↔ σ α = α` — the ordered-field criterion picking out the
-real roots. -/
+/-- If `algebraMap K L (b α) = imagPart σ i α` and `i² = −1`, then `b α = 0 ↔ σ α = α`. -/
 theorem realImagPartK_eq_zero_iff {σ : L ≃+* L} {i : L} {b : L → K} (hi : i ^ 2 = -1)
     (hb : ∀ α, algebraMap K L (b α) = imagPart σ i α) (α : L) :
     b α = 0 ↔ σ α = α := by
   rw [← imagPart_eq_zero_iff hi α, ← hb α, map_eq_zero]
 
-/-- **Conjugate-pair root partition from the conjugation** (§2.8, p.66, book (2.25), the σ-orbit
-construction): let `σ : L ≃+* L` be the conjugation (an involution `σ ∘ σ = id`, `σ i = −i`) fixing
-`R`'s coefficients (`R.map σ = R`, so `R ∈ K[t]`), `R` split (`card R.roots = deg R`), `i² = −1`, and
-let the ordered fixed field `K` read each imaginary part `b α = imagPart σ i α` (`algebraMap K L (b α)
-= imagPart σ i α`). Selecting `reals := R.roots.filter (b · = 0)` (the real roots, `b = 0`) and
-`pairs := R.roots.filter (0 < b ·)` (one representative per conjugate pair, the `b > 0` selection via
-`K`'s order), the root multiset partitions as
-`R.roots = reals + pairs.map (a·+i·b·) + pairs.map (a·−i·b·)` with `a = realPart`. The moved part
-`filter (b·≠0)` splits by trichotomy (`K` linear) into `filter (0<b·) + filter (b·<0)`, and the `b<0`
-block is the `σ`-image of the `b>0` block (`σ` bijects them count-preservingly, via `count_roots_conj_eq`
-and `realImagPartK_conj`'s `b(σα)=−b(α)`); the `a+ib`/`a−ib` maps are `id`/`σ` on the roots
-(`eq_realPart_add_imagPart`, `conj_eq_realPart_sub_imagPart`). This constructs the certified partition
-hypothesis of `logToReal_correct_of_partition`. -/
+/-- With `σ` an involution (`σ i = −i`) fixing `R`'s coefficients (`R.map σ = R`), `R` split, `i² = −1`,
+and `algebraMap K L (b α) = imagPart σ i α`, the roots partition as
+`R.roots = filter (b·=0) + (filter (0<b·)).map (a·+i·b·) + (filter (0<b·)).map (a·−i·b·)`. -/
 theorem roots_partition {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K}
     (hi : i ^ 2 = -1) (hinv : ∀ x, σ (σ x) = x)
     (hb : ∀ α, algebraMap K L (b α) = imagPart σ i α)
@@ -309,18 +230,10 @@ section Correct
 variable {L : Type*} [Field L] [Differential L] [CharZero L] [DecidableEq L]
   {K : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K] [Algebra K L]
 
-/-- **`LogToReal` correctness over `R`'s roots** (§2.8, p.66–69, book (2.22)→(2.26), CLOSING the
-algorithm): in a differential field `L` carrying `√−1` (`i² = −1`) and a conjugation `σ`
-(an involution `σ ∘ σ = id`, `σ i = −i`) with `R ∈ K[t]` lifted `σ`-fixed (`R.map σ = R`) and split
-over `L` (`card R.roots = deg R`), reading each imaginary part into the ordered fixed field `K`
-(`algebraMap K L (b α) = imagPart σ i α`), the σ-orbit partition `roots_partition` discharges the
-partition hypothesis of `logToReal_correct_of_partition` **without assuming it**: given each root's
-real/imaginary split `S(a+i·b, x) = A + i·B`, `S(a−i·b, x) = A − i·B` (`A²+B² ≠ 0`, from
-`exists_realImag_split_bivariate`), the original complex log-sum's derivative
-`∑_{α|R(α)=0} α·logDeriv(S(α,x))` equals `LogToReal`'s real output's derivative
-`∑_{reals} a·logDeriv(S a) + ∑_{pairs} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]` —
-`a·log(A²+B²) + b·LogToAtan(A,B)` per conjugate pair. `reals = R.roots.filter (b·=0)` the real roots,
-`pairs = R.roots.filter (0 < b·)` the `b>0` representatives. This is the full §2.8 `LogToReal`. -/
+/-- Full `LogToReal` correctness: in a differential field `L` with `i² = −1`, conjugation `σ`
+(involution, `σ i = −i`), `R.map σ = R` split, and `algebraMap K L (b α) = imagPart σ i α`, given each
+pair's split `S(a±i·b) = A ± i·B` (`A²+B² ≠ 0`), the complex-log sum `∑ α·logDeriv(S α)` equals
+`∑_{b·=0} α·logDeriv(S α) + ∑_{0<b·} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]`. -/
 theorem logToReal_correct {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K}
     (S A B : L → L)
     (hi : i ^ 2 = -1) (hinv : ∀ x, σ (σ x) = x)
@@ -342,11 +255,8 @@ theorem logToReal_correct {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K}
     (realPart σ) (imagPart σ i) A B hi R.roots
     (roots_partition hi hinv hb hmap hsplit) hSplus hSminus hAB
 
-/-- Restatement of **`LogToReal`'s full correctness** against the book wording (§2.8, p.66–69):
-the complex-log sum `g = ∑_{α|R(α)=0} α·log(S(α,x))` has derivative equal to `LogToReal`'s real
-output's derivative — `∑_{a,b∈K, b>0, P(a,b)=Q(a,b)=0} [a·log(A²+B²) + b·LogToAtan(A,B)] +
-∑_{a∈K, R(a)=0} a·log(S(a,x))` — with the conjugate-pair partition CONSTRUCTED from the conjugation
-(no partition hypothesis). -/
+/-- Restatement: with the partition constructed from the conjugation, `∑ α·logDeriv(S α)` equals
+`∑_{b·=0} α·logDeriv(S α) + ∑_{0<b·} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]`. -/
 example {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K} (S A B : L → L)
     (hi : i ^ 2 = -1) (hinv : ∀ x, σ (σ x) = x)
     (hb : ∀ α, algebraMap K L (b α) = imagPart σ i α)

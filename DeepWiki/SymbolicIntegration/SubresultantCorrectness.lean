@@ -3,34 +3,19 @@ import DeepWiki.SymbolicIntegration.SubresultantPRS
 import Mathlib.RingTheory.AdjoinRoot
 import Mathlib.Algebra.Polynomial.SpecificDegree
 
-/-! # Bridging the computable subresultant PRS to the abstract subresultant (Bronstein §1.5/§2.5)
-The computable bivariate engine (`SubresultantCompute`: `BPoly := List CPoly = ℚ[t][x]`, with
-`bpsremainder` the pseudo-remainder and `subresPRS` the Collins–Brown subresultant chain) is validated
-*pointwise* by `native_decide` on concrete instances. This file connects it to the **abstract** subresultant
-theory (`Subresultants`/`SubresultantPRS`, the Sylvester-submatrix `subresultant A B n m j`) through the
-already-proven `toBPoly : BPoly → (ℚ[X])[X]` homomorphism bridge of `ComputeCorrectness`.
-
-The spine is `toBPoly_bpsremainder` — the honest `ℚ[t][x]` pseudo-division identity
-`C(toPoly c) · toBPoly p = toBPoly s · toBPoly q + toBPoly (bpsremainder fuel p q)`. Combined with the
-abstract subresultant reduction law `subresultant_rem` (`subresultant A B = ±·subresultant B Rem` when
-`A = Rem + B·Q`) and the scaling law `subresultant_C_mul`, this realizes **one subresultant-PRS step**
-of the computable pseudo-remainder against the abstract subresultant — the structural core of the
-`lrtGcdCompute ↔ lrtSubresultant` agreement. (The full chain agreement — the β-divisor accumulation of
-`subresPRS` against the subresultant normalization, the `bsubresultantGcd` degree filter, and the
-`bprimitivePartX`/`bmonicXmodR` content steps — is the deep Collins–Brown formalization left open; see
-the closing note.) -/
+/-! # Bridging the computable subresultant PRS to the abstract subresultant
+Connects the computable bivariate PRS engine (`BPoly = ℚ[t][x]`, `bpsremainder`, `subresPRS`) to the
+abstract Sylvester-submatrix `subresultant` through the `toBPoly : BPoly → (ℚ[X])[X]` homomorphism, up to
+the full `lrtGcdCompute ↔ lrtSubresultant` agreement over a residue ring. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
 /-! ### `toBPoly` degree / leading-`x`-coefficient bridge
-The `BPoly` list structure maps to `(ℚ[X])[X]` `x`-coefficients exactly: `(toBPoly p).coeff i = toPoly
-(p.getD i [])`. From this, `bdeg`/`blc` are the honest `natDegree`/`leadingCoeff` (for a normalized,
-nonzero list), mirroring the `CPoly`-layer lemmas `cdeg_eq_natDegree`/`clead_eq_leadingCoeff`. -/
+`bdeg`/`blc` are the honest `x`-`natDegree`/`leadingCoeff` of `toBPoly p`. -/
 
-/-- **`x`-coefficient read**: the `i`-th `x`-coefficient of `toBPoly p` is `toPoly` of the `i`-th list
-entry (`[]` past the end). The Horner bridge `toBPoly` realizes the dense `x`-coefficient list exactly. -/
+/-- The `i`-th `x`-coefficient of `toBPoly p` is `toPoly` of the `i`-th list entry (`[]` past the end). -/
 theorem toBPoly_coeff (p : BPoly) (i : ℕ) : (toBPoly p).coeff i = toPoly (p.getD i []) := by
   induction p generalizing i with
   | nil => simp
@@ -40,8 +25,7 @@ theorem toBPoly_coeff (p : BPoly) (i : ℕ) : (toBPoly p).coeff i = toPoly (p.ge
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
-/-- **`x`-degree bound**: `natDegree (toBPoly p) ≤ (bnorm p).length − 1` (`x`-coefficients past the
-normalized length vanish). -/
+/-- `natDegree (toBPoly p) ≤ (bnorm p).length − 1`. -/
 theorem natDegree_toBPoly_le (p : BPoly) : (toBPoly p).natDegree ≤ (bnorm p).length - 1 := by
   rw [← toBPoly_bnorm]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
@@ -49,8 +33,7 @@ theorem natDegree_toBPoly_le (p : BPoly) : (toBPoly p).natDegree ≤ (bnorm p).l
   rw [toBPoly_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]
   rfl
 
-/-- `bnorm` has **no trailing zero `x`-coefficient**: `(bnorm p).getLast?` is never `some` of a
-`CPoly` that `toPoly`-vanishes (its `cnorm` is `[]`). -/
+/-- `bnorm` has no trailing zero `x`-coefficient: its `getLast?` never `toPoly`-vanishes. -/
 theorem bnorm_getLast?_toPoly_ne_zero (p : BPoly) {v : CPoly}
     (h : (bnorm p).getLast? = some v) : toPoly v ≠ 0 := by
   induction p with
@@ -73,13 +56,12 @@ theorem bnorm_getLast?_toPoly_ne_zero (p : BPoly) {v : CPoly}
       rw [List.getLast?_cons_cons] at h
       exact ih (by rw [hr]; exact h)
 
-/-- `blc` is the **`x`-coefficient at the top index**: `toPoly (blc p) = (toBPoly p).coeff (bdeg p)`. -/
+/-- `toPoly (blc p) = (toBPoly p).coeff (bdeg p)`: `blc` is the top-index `x`-coefficient. -/
 theorem toPoly_blc_eq_coeff (p : BPoly) : toPoly (blc p) = (toBPoly p).coeff (bdeg p) := by
   rw [blc, bdeg, ← toBPoly_bnorm, toBPoly_coeff, List.getD_eq_getElem?_getD,
     ← List.getLast?_eq_getElem?]
 
-/-- `bisZero p` is `true` iff `toBPoly p = 0` (the list normalizes to empty exactly for the zero
-polynomial in `x`). -/
+/-- `bisZero p = true ↔ toBPoly p = 0`. -/
 theorem bisZero_iff_toBPoly_eq_zero (p : BPoly) : bisZero p = true ↔ toBPoly p = 0 := by
   rw [bisZero, beq_iff_eq]
   constructor
@@ -99,8 +81,7 @@ theorem bisZero_iff_toBPoly_eq_zero (p : BPoly) : bisZero p = true ↔ toBPoly p
         simp only [Option.getD_some] at this
         exact hv this
 
-/-- The leading `x`-coefficient of a normalized nonzero `BPoly` is nonzero (under `toPoly`):
-`toPoly (blc p) ≠ 0` when `¬ bisZero p`. -/
+/-- `toPoly (blc p) ≠ 0` when `¬ bisZero p`. -/
 theorem toPoly_blc_ne_zero (p : BPoly) (h : ¬ bisZero p = true) : toPoly (blc p) ≠ 0 := by
   have hbne : bnorm p ≠ [] := by
     intro hb
@@ -111,7 +92,7 @@ theorem toPoly_blc_ne_zero (p : BPoly) (h : ¬ bisZero p = true) : toPoly (blc p
   · simp only [Option.getD_some]
     exact bnorm_getLast?_toPoly_ne_zero p hg
 
-/-- **`bdeg` is the honest `x`-`natDegree`**: `bdeg p = (toBPoly p).natDegree`. -/
+/-- `bdeg p = (toBPoly p).natDegree`. -/
 theorem bdeg_eq_natDegree (p : BPoly) : bdeg p = (toBPoly p).natDegree := by
   by_cases h : bisZero p = true
   · have hz : toBPoly p = 0 := (bisZero_iff_toBPoly_eq_zero p).mp h
@@ -130,7 +111,7 @@ theorem bdeg_eq_natDegree (p : BPoly) : bdeg p = (toBPoly p).natDegree := by
       have hle := natDegree_toBPoly_le p
       rw [bdeg]; omega
 
-/-- For a normalized nonzero `BPoly`, the normalized list length is `natDegree (toBPoly p) + 1`. -/
+/-- For nonzero `p`, `(bnorm p).length = (toBPoly p).natDegree + 1`. -/
 theorem length_bnorm_of_ne (p : BPoly) (h : ¬ bisZero p = true) :
     (bnorm p).length = (toBPoly p).natDegree + 1 := by
   have hbne : bnorm p ≠ [] := by
@@ -141,18 +122,13 @@ theorem length_bnorm_of_ne (p : BPoly) (h : ¬ bisZero p = true) :
   have hpos : 1 ≤ (bnorm p).length := List.length_pos_iff.mpr hbne
   omega
 
-/-- **`blc` is the honest `x`-`leadingCoeff`**: `toPoly (blc p) = (toBPoly p).leadingCoeff`. -/
+/-- `toPoly (blc p) = (toBPoly p).leadingCoeff`. -/
 theorem toPoly_blc_eq_leadingCoeff (p : BPoly) : toPoly (blc p) = (toBPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← bdeg_eq_natDegree, ← toPoly_blc_eq_coeff]
 
-/-! ### The abstract subresultant under a one-sided constant scaling
-A specialization of `subresultant_C_mul` (`Subresultants`) that scales only the **first** argument: it
-absorbs the `C(toPoly c)` content factor that the computable pseudo-division identity
-(`toBPoly_bpsremainder`) puts on `toBPoly p`, so the subresultant reduction `subresultant_rem` applies
-to `C(toPoly c) · toBPoly p` rather than `toBPoly p` directly. -/
+/-! ### The abstract subresultant under a one-sided constant scaling -/
 
-/-- **Subresultant scaled in the first argument only**: `Sⱼ(C c · A, B) = c^(m−j) · Sⱼ(A, B)`
-(`j ≤ m`, `j ≤ n`). The `b = 1` case of `subresultant_C_mul` (`C 1 * B = B`, `1^(n−j) = 1`). -/
+/-- `Sⱼ(C c · A, B) = c^(m−j) · Sⱼ(A, B)` (`j ≤ m`, `j ≤ n`): subresultant scaled in the first argument. -/
 theorem subresultant_C_mul_left {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n m j : ℕ)
     (hjm : j ≤ m) (hjn : j ≤ n) :
     subresultant (C c * A) B n m j = C (c ^ (m - j)) * subresultant A B n m j := by
@@ -160,9 +136,7 @@ theorem subresultant_C_mul_left {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n
   rw [map_one, one_mul, one_pow, mul_one] at h
   rw [h]
 
-/-- **Subresultant scaled in the second argument only**: `Sⱼ(A, C c · B) = c^(n−j) · Sⱼ(A, B)`
-(`j ≤ m`, `j ≤ n`). The `a = 1` case of `subresultant_C_mul` — the mirror of `subresultant_C_mul_left`,
-absorbing the `C(toPoly β)` content the β-divisor `bdivC` carries on the *next* PRS element. -/
+/-- `Sⱼ(A, C c · B) = c^(n−j) · Sⱼ(A, B)` (`j ≤ m`, `j ≤ n`): subresultant scaled in the second argument. -/
 theorem subresultant_C_mul_right {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n m j : ℕ)
     (hjm : j ≤ m) (hjn : j ≤ n) :
     subresultant A (C c * B) n m j = C (c ^ (n - j)) * subresultant A B n m j := by
@@ -170,25 +144,10 @@ theorem subresultant_C_mul_right {R : Type*} [CommRing R] (c : R) (A B : R[X]) (
   rw [map_one, one_mul, one_pow, one_mul] at h
   rw [h]
 
-/-! ### One subresultant-PRS step of the computable pseudo-remainder
-The structural core: through `toBPoly`, one pseudo-division step of the computable engine
-(`bpsremainder`) realizes the abstract subresultant reduction `subresultant_rem`. With `A = toBPoly p`,
-`B = toBPoly q`, the pseudo-division identity `C(toPoly c) · A = toBPoly s · B + toBPoly prem`
-(`toBPoly_bpsremainder`) plus the one-sided scaling law absorbs the content factor `c^(m−j)` and yields
-`Sⱼ(A, B) · c^(m−j) = ±·Sⱼ(B, prem)` — the equation that, iterated along the chain, is the subresultant
-PRS. The degree side-conditions of `subresultant_rem` (`deg B ≤ m`, `deg(quotient) + m ≤ n`) are taken
-as hypotheses: they hold in the regular subresultant-PRS use (where `deg B = m`, `deg A = n`), and stating
-them keeps this a clean abstract bridge over the already-proven `toBPoly` homomorphism. -/
+/-! ### One subresultant-PRS step of the computable pseudo-remainder -/
 
-/-- **One subresultant-PRS step through `toBPoly`** (Bronstein §1.5, Geddes §7.3 Lemma 7.1, realized on
-the computable engine): let `A = toBPoly p`, `B = toBPoly q`, `Rem = toBPoly (bpsremainder fuel p q)`,
-and `(s, c)` the quotient/content witnesses of `toBPoly_bpsremainder` (so `C(toPoly c)·A = toBPoly s·B +
-Rem`). For formal degrees `n, m` with `j ≤ m`, `j < n`, `deg B ≤ m`, and `deg(toBPoly s) + m ≤ n`, the
-abstract subresultant satisfies
-`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · Sⱼ(B, Rem; m,n)`.
-Pure consequence of `subresultant_C_mul_left` (absorb the content factor) and `subresultant_rem` (the
-division-step reduction). This is the one-step engine of the subresultant chain; iterating it along
-`subresPRS` (with the β-divisor bookkeeping) is the full `lrtGcdCompute ↔ lrtSubresultant` agreement. -/
+/-- One subresultant-PRS step through `toBPoly`: from the pseudo-division identity for `(s, c)`,
+`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · Sⱼ(B, Rem; m,n)` under the degree bounds. -/
 theorem subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n m j : ℕ)
     (s : BPoly) (c : CPoly)
     (hsc : Polynomial.C (toPoly c) * toBPoly p
@@ -203,12 +162,8 @@ theorem subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n 
   exact subresultant_rem (Polynomial.C (toPoly c) * toBPoly p) (toBPoly q) (toBPoly s)
     (toBPoly (bpsremainder fuel p q)) n m j hjm hjn hB hQ (by rw [hsc]; ring)
 
-/-- **One subresultant-PRS step, packaged from `toBPoly_bpsremainder`**: extracting the
-quotient/content witnesses `(s, c)` from `toBPoly_bpsremainder`, there exist a content `c : CPoly` and
-quotient `s : BPoly` realizing the pseudo-division identity, *and* — once the quotient-degree bound
-`deg(toBPoly s) + m ≤ n` is known — the subresultant reduction
-`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · Sⱼ(B, Rem; m,n)`. So the only remaining
-side-condition is the quotient-degree bound (automatic in the regular subresultant-PRS use). -/
+/-- Existence form: some quotient/content `(s, c)` realize the pseudo-division identity and, given the
+quotient-degree bound, the subresultant reduction. -/
 theorem exists_subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPoly) (n m j : ℕ)
     (hjm : j ≤ m) (hjn : j < n) (hB : (toBPoly q).natDegree ≤ m) :
     ∃ (s : BPoly) (c : CPoly),
@@ -222,21 +177,14 @@ theorem exists_subresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (p q : BPo
   exact ⟨s, c, hsc, fun hQs =>
     subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c hsc hjm hjn hB hQs⟩
 
-/-! ### Identifying the LRT operands: the computable lifts realize `D.map C`, `A − t·D'`
-The abstract LRT subresultant `lrtSubresultant A D j` (`RationalIntegrationAlgorithms`) takes the
-subresultant of `D.map C` and `A.map C − C X · (D').map C` over `(ℚ[X])[X]`. The computable engine
-forms the same operands as `BPoly`s (`liftCtoBPoly D`, `bArgAmtD' A D`). These lemmas show the `toBPoly`
-images of the computable operands are *exactly* the abstract LRT operands — closing the gap between the
-two operand constructions so the subresultant chain above is literally about `lrtSubresultant`. -/
+/-! ### Identifying the LRT operands: the computable lifts realize `D.map C`, `A − t·D'` -/
 
 /-- `toPoly (cC c) = C c`: the constant-`CPoly` lift realizes the `ℚ[X]` constant. -/
 @[simp] theorem toPoly_cC (c : ℚ) : toPoly (cC c) = Polynomial.C c := by
   rw [cC, toPoly_cnorm]
   simp [toPoly_cons]
 
-/-- **`liftCtoBPoly` realizes `·.map C`**: `toBPoly (liftCtoBPoly p) = (toPoly p).map C` — lifting a
-`CPoly` (`= ℚ[x]`) into `BPoly` with constant `t`-coefficients realizes the abstract coefficient
-embedding `C : ℚ →+* ℚ[t]` applied to `toPoly p`. -/
+/-- `toBPoly (liftCtoBPoly p) = (toPoly p).map C`: `liftCtoBPoly` realizes the coefficient embedding. -/
 theorem toBPoly_liftCtoBPoly (p : CPoly) :
     toBPoly (liftCtoBPoly p) = (toPoly p).map (Polynomial.C : ℚ →+* ℚ[X]) := by
   induction p with
@@ -246,14 +194,12 @@ theorem toBPoly_liftCtoBPoly (p : CPoly) :
     rw [toBPoly_cons, toPoly_cons, ih, toPoly_cC, Polynomial.map_add, Polynomial.map_mul,
       Polynomial.map_X, Polynomial.map_C]
 
-/-- `toPoly ctVar = X`: the computable `t`-variable lifts to `X ∈ ℚ[t]` (the `t`-indeterminate
-realized in `ComputeCorrectness`'s `ℚ[X]` reading of `CPoly = ℚ[t]`). -/
+/-- `toPoly ctVar = X`: the computable `t`-variable lifts to the indeterminate `X ∈ ℚ[t]`. -/
 @[simp] theorem toPoly_ctVar : toPoly ctVar = (Polynomial.X : ℚ[X]) := by
   rw [ctVar]; simp [toPoly_cons]
 
-/-- **`bArgAmtD'` realizes the LRT second operand**: `toBPoly (bArgAmtD' A D) = (toPoly A).map C −
-C X · (derivative (toPoly D)).map C` — the computable `A − t·D'` lift is exactly the
-`A.map C − C t · (D').map C` operand of `lrtSubresultant`. -/
+/-- `toBPoly (bArgAmtD' A D) = (toPoly A).map C − C X · (derivative (toPoly D)).map C`: the LRT second
+operand `A − t·D'`. -/
 theorem toBPoly_bArgAmtD' (A D : CPoly) :
     toBPoly (bArgAmtD' A D)
       = (toPoly A).map (Polynomial.C : ℚ →+* ℚ[X])
@@ -261,32 +207,19 @@ theorem toBPoly_bArgAmtD' (A D : CPoly) :
   rw [bArgAmtD', toBPoly_bsub, toBPoly_liftCtoBPoly, toBPoly_bscaleC, toBPoly_liftCtoBPoly,
     toPoly_ctVar, toPoly_cderiv]
 
-/-- **The computable LRT operands are the abstract LRT operands**: `toBPoly (liftCtoBPoly D)` and
-`toBPoly (bArgAmtD' A D)` are exactly the two arguments of `lrtSubresultant A D j` (with the book's
-formal degrees `deg D`, `deg D − 1`). So the subresultant chain `subresultant_C_mul_eq_rem_of_bpsremainder`
-run on these lifts is literally about `lrtSubresultant`. -/
+/-- `lrtSubresultant A D j` is the abstract subresultant of the `toBPoly` images of the computable
+operands at formal degrees `deg D`, `deg D − 1`. -/
 theorem lrtSubresultant_eq_subresultant_toBPoly (A D : CPoly) (j : ℕ) :
     lrtSubresultant (toPoly A) (toPoly D) j
       = subresultant (toBPoly (liftCtoBPoly D)) (toBPoly (bArgAmtD' A D))
           (toPoly D).natDegree ((toPoly D).natDegree - 1) j := by
   rw [lrtSubresultant, toBPoly_liftCtoBPoly, toBPoly_bArgAmtD']
 
-/-! ### The LRT subresultant reduced to the first computable pseudo-remainder
-Combining the operand identification with the one-step subresultant-PRS reduction: the abstract
-`lrtSubresultant A D j` equals — up to the content factor `c^(m−j)` and the swap sign — the abstract
-subresultant of `D` (lifted) against the *first computable pseudo-remainder* `bpsremainder fuel (D lifted)
-(A − t·D')`. This is the entry point of the subresultant chain: the LRT subresultant, one
-pseudo-division step in, is the subresultant of the next PRS pair. -/
+/-! ### The LRT subresultant reduced to the first computable pseudo-remainder -/
 
-/-- **LRT subresultant after one computable pseudo-division step**: with the book's formal degrees
-`n = deg D`, `m = deg D − 1`, `P = liftCtoBPoly D`, `Q = bArgAmtD' A D`, and `(s, c)` the
-`toBPoly_bpsremainder` witnesses for the LRT PRS step `prem(D, A−t·D') = bpsremainder fuel P Q` (so
-`C(toPoly c)·P = s·Q + prem`), the abstract `lrtSubresultant A D j` satisfies
-`C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · Sⱼ(Q, prem(P,Q); m, n)`
-once `j ≤ deg D − 1`, `j < deg D`, `deg(toBPoly Q) ≤ deg D − 1`, and the quotient-degree bound
-`deg(toBPoly s) + (deg D − 1) ≤ deg D` hold. This is `subresultant_C_mul_eq_rem_of_bpsremainder`
-(with `p = P`, `q = Q`, `n = deg D`, `m = deg D − 1`) transported across
-`lrtSubresultant_eq_subresultant_toBPoly` — the LRT subresultant as one step of the computable PRS. -/
+/-- LRT subresultant after one computable pseudo-division step:
+`C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · Sⱼ(Q, prem(P,Q); m, n)` with
+`n = deg D`, `m = deg D − 1`, `P = liftCtoBPoly D`, `Q = bArgAmtD' A D`. -/
 theorem lrtSubresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (A D : CPoly) (j : ℕ)
     (s : BPoly) (c : CPoly)
     (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
@@ -305,19 +238,9 @@ theorem lrtSubresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (A D : CPoly) 
   exact subresultant_C_mul_eq_rem_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)
     (toPoly D).natDegree ((toPoly D).natDegree - 1) j s c hsc hjm hjn hB hQ
 
-/-! ### `bdivC` realizes exact `ℚ[t]`-division (the β-divisor exact-division core)
-`bdivC fuel p c` divides every `x`-coefficient of `p` by the `ℚ[t]` scalar `c` (via the per-`CPoly`
-Euclidean quotient `cdiv`). In the subresultant PRS the β-divisor `c = βᵢ` always *divides* the
-pseudo-remainder (Collins's theorem), so this scalar division is **exact**: `C(toPoly c) · toBPoly
-(bdivC fuel p c) = toBPoly p`. The honest content is per-`x`-coefficient — the `CPoly` exact-division
-bridge (the `toPoly_cdivmod'` Euclidean identity with a zero remainder), folded over the
-`x`-coefficient list through `toBPoly`. We state it from the directly-checkable `cmod`-zero certificate
-and give the `ℚ[t]` divisibility wrapper. -/
+/-! ### `bdivC` realizes exact `ℚ[t]`-division -/
 
-/-- **`CPoly` exact-division bridge**: if the remainder `cmod fuel a c` reads to `0` in `ℚ[X]`, then
-`cdiv` realizes honest division `toPoly a = toPoly (cdiv fuel a c) · toPoly c`. From the
-Euclidean-division identity `toPoly_cdivmod'` with a zero remainder (needs `cnorm c ≠ []`). (Local copy
-of the `HermiteCorrectness` bridge, kept here to avoid the Hermite import.) -/
+/-- If `cmod fuel a c` reads to `0` in `ℚ[X]`, then `toPoly a = toPoly (cdiv fuel a c) · toPoly c`. -/
 theorem toPoly_cdiv_of_cmod_zero_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c ≠ [])
     (hrem : toPoly (cmod fuel a c) = 0) :
     toPoly a = toPoly (cdiv fuel a c) * toPoly c := by
@@ -326,9 +249,7 @@ theorem toPoly_cdiv_of_cmod_zero_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c �
       show (cdivmod fuel a c).2 = cmod fuel a c from rfl, hrem, add_zero] at h
   exact h
 
-/-- **Divisibility ⟹ exact remainder** (`CPoly`): if `toPoly c ∣ toPoly a` in `ℚ[X]` (with `c ≠ 0` and
-enough fuel), the computable remainder reads to `0`. The remainder has degree `< deg c` (`cmod_length_lt`)
-yet is divisible by `c`, hence vanishes. (Local copy of the `HermiteCorrectness` bridge.) -/
+/-- If `toPoly c ∣ toPoly a` (with `c ≠ 0`, enough fuel), then `toPoly (cmod fuel a c) = 0`. -/
 theorem cmod_eq_zero_of_dvd_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c ≠ [])
     (hfuel : (cnorm a).length ≤ fuel) (hdvd : toPoly c ∣ toPoly a) :
     toPoly (cmod fuel a c) = 0 := by
@@ -352,11 +273,8 @@ theorem cmod_eq_zero_of_dvd_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c ≠ [])
   rw [Polynomial.degree_eq_natDegree hrne, Polynomial.degree_eq_natDegree hc0, Nat.cast_le] at hdeg
   omega
 
-/-- **`toBPoly` of a coefficient-wise exact division**: if dividing every `x`-coefficient `a` of `p`
-by the `ℚ[t]` scalar `c` is exact (`toPoly (cmod fuel a c) = 0`, i.e. `toPoly c ∣ toPoly a`), then
-`C(toPoly c) · toBPoly (p.map (cdiv fuel · c)) = toBPoly p` — the scalar `C(toPoly c)` factors back out
-of the divided `x`-coefficient list. Per-coefficient `toPoly_cdiv_of_cmod_zero_loc`, folded over the
-list through the `toBPoly` Horner shape. -/
+/-- If every `x`-coefficient of `p` divides exactly by `c`, then
+`C(toPoly c) · toBPoly (p.map (cdiv fuel · c)) = toBPoly p`. -/
 theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
     Polynomial.C (toPoly c) * toBPoly (p.map (fun a => cdiv fuel a c)) = toBPoly p := by
@@ -370,34 +288,24 @@ theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm 
     rw [ha, map_mul]
     linear_combination Polynomial.X * has
 
-/-- **`bdivC` realizes exact `ℚ[t]`-division** (Collins's β-divisor division, the chain-content core):
-when dividing every `x`-coefficient of `p` by `c` is exact (`toPoly (cmod fuel a c) = 0` for each
-`x`-coefficient `a` — the β-divisor always divides the pseudo-remainder over `ℚ[t]`),
-`C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. So `bdivC` is honest exact scalar division in `x`,
-the step that strips the pseudo-remainder `lc`-power inflation in `subresPRS`. -/
+/-- `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p` when every `x`-coefficient of `p` divides
+exactly by `c`: `bdivC` is exact scalar `ℚ[t]`-division. -/
 theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p := by
   rw [bdivC, toBPoly_bnorm]
   exact toBPoly_map_cdiv_exact fuel p c hc hrem
 
-/-- **`bdivC` exact-division from `ℚ[t]` divisibility** (the form the subresultant chain feeds): if the
-`ℚ[t]` scalar `c` divides every `x`-coefficient of `p` in `ℚ[t]` (`toPoly c ∣ toPoly a`, with enough
-fuel), then `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. Converts the per-coefficient
-divisibility certificate (Collins: βᵢ ∣ each coefficient of the pseudo-remainder) into the exact
-scalar division via `cmod_eq_zero_of_dvd_loc`. -/
+/-- `bdivC` exact division from divisibility: if `toPoly c ∣ toPoly a` for every `x`-coefficient `a`,
+then `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. -/
 theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
     (hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
   toBPoly_bdivC_exact fuel p c hc
     (fun a ha => cmod_eq_zero_of_dvd_loc fuel a c hc (hfuel a ha) (hdvd a ha))
 
-/-- **`bprimitivePartX` realizes exact `ℚ[t]`-content division** (the `lrtSubresultantCompute` content
-step): when the `ℚ[t]`-content `g = bcontentX fuel p` is nonzero (`hg`) and divides every `x`-coefficient
-of `bnorm p` exactly (`toPoly (cmod fuel a g) = 0` — true since the content is the `ℚ[t]`-gcd of the
-coefficients), `C(toPoly g) · toBPoly (bprimitivePartX fuel p) = toBPoly p`. So `bprimitivePartX` strips a
-`ℚ[t]` content factor in `x` — a similarity-preserving step (the content `C(toPoly g)` is the absorbed
-unit). Reuses `toBPoly_map_cdiv_exact` over the normalized coefficient list, through `toBPoly_bnorm`. -/
+/-- `C(toPoly g) · toBPoly (bprimitivePartX fuel p) = toBPoly p` with `g = bcontentX fuel p` nonzero
+and dividing each `x`-coefficient exactly: `bprimitivePartX` strips a `ℚ[t]` content factor. -/
 theorem toBPoly_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
     (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
     (hrem : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0) :
@@ -409,21 +317,10 @@ theorem toBPoly_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
   rw [toBPoly_bnorm, toBPoly_map_cdiv_exact fuel (bnorm p) (bcontentX fuel p) hgcn hrem,
     toBPoly_bnorm]
 
-/-! ### One *subresultant-PRS* step on the β-divided remainder (the actual `subresPRS` recurrence)
-The raw step `subresultant_C_mul_eq_rem_of_bpsremainder` relates `Sⱼ(p,q)` to `Sⱼ(q, prem(p,q))` against
-the *raw* pseudo-remainder. The actual `subresPRS` recurrence forms the next element as
-`r = bdivC fuel (prem p q) β` — the β-divided pseudo-remainder (exact `ℚ[t]`-division stripping the
-`lc`-power inflation). Folding in the β-divisor exact-division `toBPoly_bdivC_exact`, the relation reads
-directly on the divided element `r`, the form the chain induction telescopes. -/
+/-! ### One subresultant-PRS step on the β-divided remainder -/
 
-/-- **One subresultant-PRS step on the β-divided remainder** (the literal `subresPRS` recurrence step):
-with `A = toBPoly p`, `B = toBPoly q`, and `r = bdivC fuel (bpsremainder fuel p q) β` the next PRS
-element (so `toPoly β` divides every `x`-coefficient of `bpsremainder fuel p q` exactly), the
-pseudo-division content factor `(s, c)` and the β-content combine to
-`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, toBPoly r; m,n)`.
-Composes `subresultant_C_mul_eq_rem_of_bpsremainder` (the raw step) with the β-divisor exact-division
-`toBPoly_bdivC_exact` (restoring `toBPoly (bpsremainder…) = C(toPoly β)·toBPoly r`) and the
-second-argument scaling `subresultant_C_mul_right`. This is the literal one-step law of `subresPRS`. -/
+/-- One subresultant-PRS step on the β-divided remainder `r = bdivC fuel (bpsremainder fuel p q) β`:
+`C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, toBPoly r; m,n)`. -/
 theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
     (s : BPoly) (c : CPoly)
     (hsc : Polynomial.C (toPoly c) * toBPoly p
@@ -445,15 +342,8 @@ theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (
     subresultant_C_mul_right (toPoly β) (toBPoly q)
       (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j (le_of_lt hjn) hjm]
 
-/-- **LRT subresultant after one β-divided PRS step** (the literal first chain step of
-`lrtSubresultantCompute`/`subresPRS` on the LRT operands): with the book's formal degrees `n = deg D`,
-`m = deg D − 1`, `P = liftCtoBPoly D`, `Q = bArgAmtD' A D`, `(s, c)` the `toBPoly_bpsremainder` witnesses
-and `R₃ = bdivC fuel (bpsremainder fuel P Q) β` the next `subresPRS` element (β dividing every
-`x`-coefficient of the pseudo-remainder), the abstract `lrtSubresultant A D j` satisfies
-`C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(Q, R₃; m,n)`.
-This is `subresultant_C_mul_eq_bdivC_of_bpsremainder` (with `p = P`, `q = Q`) transported across
-`lrtSubresultant_eq_subresultant_toBPoly` — the LRT subresultant as one *divided* step of `subresPRS`,
-the chain-recurrence entry point whose iterate is the full `lrtGcdCompute ↔ lrtSubresultant` agreement. -/
+/-- LRT subresultant after one β-divided PRS step (next element `R₃ = bdivC fuel (bpsremainder fuel P Q) β`):
+`C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(Q, R₃; m,n)`. -/
 theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
     (s : BPoly) (c : CPoly)
     (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
@@ -475,20 +365,10 @@ theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly
   exact subresultant_C_mul_eq_bdivC_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D) β
     (toPoly D).natDegree ((toPoly D).natDegree - 1) j s c hsc hβ hdiv hjm hjn hB hQ
 
-/-! ### The one-step PRS reduction as a `ℚ[t]`-similarity (the "up to content/unit" form)
-The `C(...)` content factors of the one-divided-step law are all `C`-of-constants in `ℚ[t] = ℚ[X]`, so —
-when those factors are nonzero — the law reads as a `ℚ[t]`-**similarity** `IsSimilar` (Bronstein §1.5's
-"similar" relation, `PseudoDivision`): the LRT subresultant is similar over `ℚ[t]` to the abstract
-subresultant of the next divided PRS pair. This is the exact sense in which the chain agreement holds
-"up to a `ℚ[t]` content/unit", at the one-step level. -/
+/-! ### The one-step PRS reduction as a `ℚ[t]`-similarity -/
 
-/-- **One divided PRS step as a `ℚ[t]`-similarity**: under the β-divided step hypotheses, with the
-content factors nonzero (`toPoly c ≠ 0`, `toPoly β ≠ 0`), the LRT subresultant is *similar over `ℚ[t]`*
-to the abstract subresultant of the next divided PRS pair `(Q, R₃)`:
-`IsSimilar (lrtSubresultant A D j) (Sⱼ(Q, bdivC … prem; m, n))`. Packages
-`lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder` as the similarity witnesses
-`(toPoly c)^(m−j)` and `(-1)^((m−j)(n−j))·(toPoly β)^(m−j)` (the `(-1)^…` absorbed into the `C`-constant).
-This is the "up to `ℚ[t]` content/unit" chain agreement at one divided step. -/
+/-- One divided PRS step as a `ℚ[t]`-similarity: with content factors nonzero,
+`IsSimilar (lrtSubresultant A D j) (Sⱼ(Q, bdivC … prem; m, n))`. -/
 theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
     (s : BPoly) (c : CPoly)
     (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
@@ -513,28 +393,10 @@ theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) 
   simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
   ring
 
-/-! ### Telescoping the divided one-step similarity along the whole `subresPRS`
-The divided one-step law `subresultant_C_mul_eq_bdivC_of_bpsremainder` relates `Sⱼ(p,q)` to `Sⱼ(q,r)`
-for the *literal* `subresPRS` recurrence `r = bdivC fuel (prem p q) β`. The **multi-step** agreement is its
-telescoping along an entire chain of `BPoly` elements `G : ℕ → BPoly` (where `G i` is the `i`-th element of
-the computable PRS), each consecutive pair `(G i, G (i+1))` satisfying the divided one-step hypotheses with
-its own pseudo-division witnesses `(s i, c i)` and β-divisor `β i`. Packaging the one step as a generic
-`IsSimilar` (over arbitrary `BPoly`s, with a per-index formal-degree function `d : ℕ → ℕ`) and chaining
-through `IsSimilar.trans` lands `IsSimilar (Sⱼ(G 0, G 1)) (Sⱼ(G n, G (n+1)))` for every `n` — the full
-chain agreement, *without* matching the computable `cpowP`/`cdiv` β/ψ accumulators against the abstract
-`subresPRS_beta`/`subresPRS_gamma`: every per-step constant is absorbed by `IsSimilar`. The accumulator
-algebra only governs *which* `BPoly` is `G i` and *which* scalar `β i` divides the pseudo-remainder; those
-enter purely as the per-step hypotheses, discharged once for the real `subresPRS` at the application site. -/
+/-! ### Telescoping the divided one-step similarity along the whole `subresPRS` -/
 
-/-- **Generic divided one-step similarity** (the chain link, over arbitrary `BPoly`s): if
-`r = bdivC fuel (bpsremainder fuel p q) β` is the next divided PRS element (β dividing every
-`x`-coefficient of the pseudo-remainder exactly), the pseudo-division witnesses `(s, c)` are nonzero under
-`toPoly`, and the degree side-conditions hold, then the subresultant of `(p, q)` at formal degrees `(n, m)`
-is `ℚ[t]`-similar to that of `(q, r)` at `(m, n')`:
-`IsSimilar (Sⱼ(toBPoly p, toBPoly q; n, m)) (Sⱼ(toBPoly q, toBPoly r; m, n'))` (`n' = n` here; the `n'`
-slot is kept explicit so a degree chain can supply `deg (G (i+2))`'s formal padding). The repackaging of
-`subresultant_C_mul_eq_bdivC_of_bpsremainder` into `IsSimilar` — the `(-1)^…`-and-content factors are the
-similarity witnesses. -/
+/-- Generic divided one-step similarity over arbitrary `BPoly`s: with `r = bdivC fuel (bpsremainder fuel
+p q) β`, `IsSimilar (Sⱼ(toBPoly p, toBPoly q; n, m)) (Sⱼ(toBPoly q, toBPoly r; m, n))`. -/
 theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
     (s : BPoly) (c : CPoly)
     (hsc : Polynomial.C (toPoly c) * toBPoly p
@@ -555,13 +417,8 @@ theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly
   simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
   ring
 
-/-- **The combined per-step PRS relation through `toBPoly`** (the bridge into the abstract telescope):
-combining the pseudo-division identity `C(toPoly c)·toBPoly p = toBPoly s·toBPoly q + toBPoly (prem p q)`
-with the β-divisor exact division `toBPoly (prem p q) = C(toPoly β)·toBPoly r`
-(`r = bdivC fuel (prem p q) β`), the computable PRS step reads as the **abstract** Brown–Traub PRS
-relation with constant scalars: `C(toPoly c)·toBPoly p = C(toPoly β)·toBPoly r + toBPoly s·toBPoly q`.
-This is the exact `hrel` shape `subresultant_prs_telescope` (`SubresultantPRS`) consumes — so the computable
-chain feeds the abstract telescope verbatim, with `α = toPoly c`, `β = toPoly β`, `Q = toBPoly s`. -/
+/-- The combined per-step PRS relation through `toBPoly`:
+`C(toPoly c)·toBPoly p = C(toPoly β)·toBPoly r + toBPoly q·toBPoly s` with `r = bdivC fuel (prem p q) β`. -/
 theorem toBPoly_prs_rel (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (c : CPoly)
     (hsc : Polynomial.C (toPoly c) * toBPoly p
         = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
@@ -572,27 +429,11 @@ theorem toBPoly_prs_rel (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (c :
         + toBPoly q * toBPoly s := by
   rw [hsc, toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hβ hdiv]; ring
 
-/-! ### The abstract-PRS telescope over the computable chain (the full multi-step agreement)
-With the combined relation `toBPoly_prs_rel` in hand, the computable `subresPRS` chain — realized as an
-abstract sequence `F i := toBPoly (G i)` of `(ℚ[X])[X]` polynomials — satisfies the Brown–Traub PRS
-relation verbatim (constant scalars `α i = toPoly (c i)`, `β i = toPoly (β i)`, quotient
-`Q i = toBPoly (s i)`). So the abstract Fundamental PRS Theorem `subresultant_prs_telescope`
-(`SubresultantPRS`) telescopes the *whole* chain in one shot: `Sⱼ(F 0, F 1) ~ Sⱼ(F m, F (m+1))` at the
-elements' own degrees, for every `m`. This is the multi-step agreement the one-step engine was the link
-for — the `IsSimilar.trans` chaining is performed inside `subresultant_prs_telescope`, so no manual
-accumulator matching is needed: every per-step `α/β` constant is a `toPoly` content factor absorbed by the
-similarity. -/
+/-! ### The abstract-PRS telescope over the computable chain -/
 
-/-- **Full chain telescope through `toBPoly`** (the multi-step `subresPRS ↔ subresultant` agreement): for a
-computable PRS chain `G : ℕ → BPoly` whose consecutive elements satisfy the divided one-step hypotheses —
-the pseudo-division witnesses `(s l, c l)`, the β-divisors `bt l` dividing every `x`-coefficient of the
-pseudo-remainder (`hsc`, `hβcn`, `hdiv`), the next element `G (l+2) = bdivC fuel (prem (G l) (G (l+1)))
-(bt l)` (`hG2`), and the degree side-conditions on the elements' own `natDegree`s (nonzero leading
-coefficients `hlc`, strict decrease `hcb`, the index bound `hj`, quotient bound `hQ`) — the subresultant of
-`(G 0, G 1)` is `ℚ[t]`-similar to that of `(G m, G (m+1))`:
-`IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (Sⱼ(toBPoly (G m), toBPoly (G (m+1))))`. The computable chain
-is fed to the abstract `subresultant_prs_telescope` via the combined relation `toBPoly_prs_rel`; the whole
-`IsSimilar.trans` telescoping happens inside it. -/
+/-- Full chain telescope: for a computable PRS chain `G` satisfying the divided one-step hypotheses,
+`IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (Sⱼ(toBPoly (G m), toBPoly (G (m+1))))` at the elements'
+own degrees. -/
 theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
     (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (j m : ℕ)
     (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
@@ -619,21 +460,10 @@ theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
         (hsc l hl) (hβcn l hl) (hdiv l hl)
       rw [hG2 l hl]; exact hrel)
 
-/-! ### The chain endpoint: `Sⱼ` is similar to the degree-`j` `subresPRS` element
-`isSimilar_subresPRS_telescope` lands the chain *endpoint* `Sⱼ(G m, G (m+1))`. At the **regular index**
-`j = deg (toBPoly (G (m+2)))` — the degree of the next PRS element — the abstract Fundamental PRS Theorem
-`subresultant_prs_similar_elt` collapses the endpoint subresultant all the way to that element
-`toBPoly (G (m+2))` itself (the telescope's `IsSimilar.trans` plus the regular-index remainder step). So
-`Sⱼ(toBPoly (G 0), toBPoly (G 1)) ~ toBPoly (G (m+2))` — the subresultant of the first pair is similar to
-the degree-`j` chain element, which is exactly what the computable `bsubresultantGcd` filters out. -/
+/-! ### The chain endpoint: `Sⱼ` is similar to the degree-`j` `subresPRS` element -/
 
-/-- **`Sⱼ` similar to the degree-`j` `subresPRS` element** (the endpoint of the chain agreement, regular
-index): with the per-step divided-PRS hypotheses on the chain `G` (as in `isSimilar_subresPRS_telescope`,
-now over `l ≤ m`), the index `j = deg (toBPoly (G (m+2)))` strictly below every earlier element
-(`hjlt`), and `toBPoly (G (m+2)) ≠ 0` (`hCne`), the subresultant of `(G 0, G 1)` at that index is
-`ℚ[t]`-similar to the element `toBPoly (G (m+2))`:
-`IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (toBPoly (G (m+2)))`. The `toBPoly` instance of
-`subresultant_prs_similar_elt`, fed the combined relation `toBPoly_prs_rel` at each step. -/
+/-- At the regular index `j = deg (toBPoly (G (m+2)))`,
+`IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (toBPoly (G (m+2)))`. -/
 theorem isSimilar_subresPRS_elt (fuel : ℕ) (G : ℕ → BPoly)
     (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
     (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
@@ -661,22 +491,10 @@ theorem isSimilar_subresPRS_elt (fuel : ℕ) (G : ℕ → BPoly)
       rw [hG2 l hl]; exact hrel)
     hCne
 
-/-! ### LRT endpoint: `lrtSubresultant` similar to the degree-`j` `subresPRS` element
-Specializing `isSimilar_subresPRS_elt` to the LRT chain — `G 0 = liftCtoBPoly D`, `G 1 = bArgAmtD' A D`
-(the operands of `lrtSubresultant`, via `lrtSubresultant_eq_subresultant_toBPoly`) — and using that
-`toBPoly (liftCtoBPoly D)` has `x`-degree `deg D` and `toBPoly (bArgAmtD' A D)` has `x`-degree `deg D − 1`
-(the regular LRT case, taken as hypotheses), the **abstract** `lrtSubresultant A D j` at the index
-`j = deg (toBPoly (G (m+2)))` is `ℚ[t]`-similar to the degree-`j` computable PRS element. This is the
-endpoint of the LRT chain agreement: the noncomputable LRT subresultant matches the computable engine's
-degree-`j` subresultant-PRS element up to a `ℚ[t]` content/unit. -/
+/-! ### LRT endpoint: `lrtSubresultant` similar to the degree-`j` `subresPRS` element -/
 
-/-- **`lrtSubresultant` similar to the degree-`j` LRT `subresPRS` element** (the LRT chain endpoint): for
-the LRT chain `G` with `G 0 = liftCtoBPoly D`, `G 1 = bArgAmtD' A D`, formal-degree agreement
-`hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree`,
-`hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree − 1` (the regular case), and the per-step divided
-hypotheses, the abstract `lrtSubresultant A D (deg (toBPoly (G (m+2))))` is similar to `toBPoly (G (m+2))`:
-`IsSimilar (lrtSubresultant A D (deg (G (m+2)))) (toBPoly (G (m+2)))`. Transports `isSimilar_subresPRS_elt`
-across `lrtSubresultant_eq_subresultant_toBPoly` (with the two formal-degree rewrites). -/
+/-- For the LRT chain (`G 0 = liftCtoBPoly D`, `G 1 = bArgAmtD' A D`) with the regular formal degrees,
+`IsSimilar (lrtSubresultant A D (deg (G (m+2)))) (toBPoly (G (m+2)))`. -/
 theorem isSimilar_lrtSubresultant_subresPRS_elt (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
     (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
@@ -701,61 +519,33 @@ theorem isSimilar_lrtSubresultant_subresPRS_elt (fuel : ℕ) (A D : CPoly) (G : 
   rw [lrtSubresultant_eq_subresultant_toBPoly, ← hG0, ← hG1]
   exact hend
 
-/-! ### `bsubresultantGcd ∼ lrtSubresultant` (the chain agreement, modulo the degree-`j` filter identity)
-The endpoint `isSimilar_lrtSubresultant_subresPRS_elt` lands `lrtSubresultant A D j ~ toBPoly (G (m+2))`,
-the abstract LRT subresultant similar to the **degree-`j` computable PRS element** `G (m+2)`. The computable
-`bsubresultantGcd fuel j P Q` extracts that same element by a degree-`j` filter over the `subresPRS` list;
-since the chain's degrees strictly decrease, the degree-`j` element is unique, so the filter returns exactly
-`G (m+2)`. Taking that **filter identity** `toBPoly (bsubresultantGcd fuel j P Q) = toBPoly (G (m+2))` as a
-hypothesis (the one remaining list-structure fact — see the ceiling note), the agreement
-`IsSimilar (lrtSubresultant A D j) (toBPoly (bsubresultantGcd fuel j P Q))` follows by `Eq ▸` on the
-endpoint similarity. This isolates the residual gap to a *single* purely-structural list identity. -/
+/-! ### `bsubresultantGcd ∼ lrtSubresultant` (modulo the degree-`j` filter identity) -/
 
-/-! #### The degree-`j` filter identity, structurally (discharging `hfilt` for the real `subresPRS`)
-`bsubresultantGcd fuel j P Q` filters the chain `subresPRS fuel P Q` to its degree-`j` nonzero elements
-and takes the **last**. Since the `subresPRS` `x`-degrees strictly decrease, the degree-`j` element is
-**unique**, so the filtered list is a singleton and the last element *is* that one element — the chain's
-degree-`j` element `G (m+2)`. These lemmas turn that uniqueness into the literal filter identity `hfilt`,
-abstracted over the list (so it applies to the real `subresPRS` once the chain element is exhibited at the
-filtered position). -/
+/-! #### The degree-`j` filter identity, structurally -/
 
-/-- **Filter-last is the unique filtered element**: if filtering a list `L` by a predicate yields a
-*singleton* `[w]`, the `getLast?.getD d` read of the filter returns exactly `w`. The list-structure core of
-the degree-`j` filter identity: a singleton filter has its single element as its last. -/
+/-- If `L.filter pred = [w]`, then `(L.filter pred).getLast?.getD d = w`. -/
 theorem getLast?_getD_filter_eq_of_singleton {α : Type*} (L : List α) (pred : α → Bool) (w d : α)
     (hfil : L.filter pred = [w]) :
     (L.filter pred).getLast?.getD d = w := by
   rw [hfil, List.getLast?_singleton, Option.getD_some]
 
-/-- **`bsubresultantGcd` reads as the singleton-filtered element**: if the degree-`j` nonzero filter of
-`subresPRS fuel P Q` is a singleton `[w]`, then `bsubresultantGcd fuel j P Q = w`. Unfolds
-`bsubresultantGcd` and applies `getLast?_getD_filter_eq_of_singleton`. -/
+/-- If the degree-`j` nonzero filter of `subresPRS fuel P Q` is `[w]`, then `bsubresultantGcd fuel j P Q = w`. -/
 theorem bsubresultantGcd_eq_of_filter_singleton (fuel j : ℕ) (P Q : BPoly) (w : BPoly)
     (hfil : (subresPRS fuel P Q).filter (fun R => decide (bdeg R = j ∧ ¬ bisZero R)) = [w]) :
     bsubresultantGcd fuel j P Q = w := by
   rw [bsubresultantGcd]
   exact getLast?_getD_filter_eq_of_singleton _ _ w [] hfil
 
-/-- **The degree-`j` filter identity** (the `hfilt` hypothesis, structurally): if the degree-`j` nonzero
-filter of `subresPRS fuel P Q` is the singleton `[G (m+2)]` (the chain element of `x`-degree `j` —
-the unique such element, by strict degree decrease), then `bsubresultantGcd fuel j P Q = G (m+2)`, hence
-`toBPoly (bsubresultantGcd fuel j P Q) = toBPoly (G (m+2))` — the literal `hfilt` of
-`isSimilar_lrtSubresultant_bsubresultantGcd`. So exhibiting the chain's degree-`j` element as the sole
-filtered element discharges `hfilt`. -/
+/-- If the degree-`j` nonzero filter of `subresPRS fuel P Q` is `[G (m+2)]`, then
+`toBPoly (bsubresultantGcd fuel j P Q) = toBPoly (G (m+2))`. -/
 theorem toBPoly_bsubresultantGcd_eq_of_filter_singleton (fuel : ℕ) (P Q : BPoly) (G : ℕ → BPoly) (m : ℕ)
     (hfil : (subresPRS fuel P Q).filter
         (fun R => decide (bdeg R = (toBPoly (G (m + 2))).natDegree ∧ ¬ bisZero R)) = [G (m + 2)]) :
     toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree P Q) = toBPoly (G (m + 2)) := by
   rw [bsubresultantGcd_eq_of_filter_singleton fuel (toBPoly (G (m + 2))).natDegree P Q (G (m + 2)) hfil]
 
-/-- **`bsubresultantGcd ∼ lrtSubresultant`, modulo the filter identity** (the chain agreement, endpoint
-form): under the LRT-chain endpoint hypotheses (as in `isSimilar_lrtSubresultant_subresPRS_elt`) and the
-**filter identity** `hfilt : toBPoly (bsubresultantGcd fuel (deg (G (m+2))) (G 0) (G 1)) = toBPoly (G (m+2))`
-— that the computable degree-`j` filter returns the chain's degree-`j` element (true since strict degree
-decrease makes that element unique) — the computable `bsubresultantGcd` is `ℚ[t]`-similar to the abstract
-`lrtSubresultant`: `IsSimilar (lrtSubresultant A D j) (toBPoly (bsubresultantGcd fuel j (G 0) (G 1)))` at
-`j = deg (toBPoly (G (m+2)))`. The endpoint similarity `isSimilar_lrtSubresultant_subresPRS_elt` rewritten
-through `hfilt`. The hypothesis `hfilt` isolates the sole remaining list-structure fact. -/
+/-- Given the filter identity `hfilt`, `IsSimilar (lrtSubresultant A D j) (toBPoly (bsubresultantGcd
+fuel j (G 0) (G 1)))` at `j = deg (toBPoly (G (m+2)))`. -/
 theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
     (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
@@ -781,12 +571,8 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPoly) (G
   exact isSimilar_lrtSubresultant_subresPRS_elt fuel A D G bt s c m hG0 hG1 hd0 hd1
     hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
 
-/-- **`bsubresultantGcd ∼ lrtSubresultant`, from the singleton filter** (the `hfilt`-free chain agreement):
-the same as `isSimilar_lrtSubresultant_bsubresultantGcd`, but instead of taking the filter identity `hfilt`
-as a hypothesis, it derives it from the **structural** singleton-filter fact `hfil` — that the degree-`j`
-nonzero filter of `subresPRS fuel (G 0) (G 1)` is the singleton `[G (m+2)]` (the chain's degree-`j` element,
-unique by strict degree decrease). So the only list-structure input is `hfil` (the filter is a singleton),
-which `toBPoly_bsubresultantGcd_eq_of_filter_singleton` turns into the `hfilt` the agreement consumes. -/
+/-- As `isSimilar_lrtSubresultant_bsubresultantGcd`, but with the filter identity derived from the
+singleton-filter hypothesis `hfil` instead of taken directly. -/
 theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
     (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
@@ -812,17 +598,9 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : CPol
     hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
     (toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel (G 0) (G 1) G m hfil)
 
-/-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute`
-`toBPoly_bprimitivePartX_exact` says `bprimitivePartX` strips a `ℚ[t]` content factor — a similarity-
-preserving operation. Packaged as `IsSimilar`, it gives `toBPoly p ~ toBPoly (bprimitivePartX fuel p)`.
-Since `lrtSubresultantCompute fuel j A D = bprimitivePartX fuel (bsubresultantGcd fuel j (liftCtoBPoly D)
-(bArgAmtD' A D))`, chaining this through `isSimilar_lrtSubresultant_bsubresultantGcd` (via `IsSimilar.trans`)
-lands `lrtSubresultant A D j ~ toBPoly (lrtSubresultantCompute fuel j A D)` — the abstract LRT subresultant
-similar to the computable *primitive* LRT subresultant, modulo the same single filter identity. -/
+/-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
 
-/-- **`bprimitivePartX` preserves `ℚ[t]`-similarity**: `toBPoly p` is similar to `toBPoly (bprimitivePartX
-fuel p)` (the stripped content `C(toPoly g)` is the absorbed unit), under the exact-content hypotheses of
-`toBPoly_bprimitivePartX_exact`. -/
+/-- `IsSimilar (toBPoly p) (toBPoly (bprimitivePartX fuel p))` under the content-exactness hypotheses. -/
 theorem isSimilar_toBPoly_bprimitivePartX (fuel : ℕ) (p : BPoly)
     (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
     (hg0 : toPoly (bcontentX fuel p) ≠ 0)
@@ -831,13 +609,8 @@ theorem isSimilar_toBPoly_bprimitivePartX (fuel : ℕ) (p : BPoly)
   ⟨1, toPoly (bcontentX fuel p), one_ne_zero, hg0, by
     rw [map_one, one_mul, toBPoly_bprimitivePartX_exact fuel p hg hgcn hrem]⟩
 
-/-- **`lrtSubresultant ∼ lrtSubresultantCompute`, modulo the filter identity** (the chain agreement after
-the content step): under the LRT-chain endpoint hypotheses, the filter identity `hfilt`, and the content-
-exactness of `bprimitivePartX` on the degree-`j` element (`hg`/`hgcn`/`hg0`/`hrem`), the abstract
-`lrtSubresultant A D j` is `ℚ[t]`-similar to the computable **primitive** LRT subresultant
-`lrtSubresultantCompute fuel j (liftCtoBPoly⁻ …)`. Chains `isSimilar_lrtSubresultant_bsubresultantGcd`
-(abstract ∼ raw subresultant) with `isSimilar_toBPoly_bprimitivePartX` (raw ∼ primitive) via
-`IsSimilar.trans`. -/
+/-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `bprimitivePartX`,
+`IsSimilar (lrtSubresultant A D j) (toBPoly (lrtSubresultantCompute fuel j A D))`. -/
 theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
     (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
@@ -876,19 +649,10 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPo
   exact hraw.trans hprim
 
 /-! ### The `bmonicXmodR` mod-`R` unit bridge (`lrtSubresultantCompute → lrtGcdCompute`)
-`lrtGcdCompute = bmonicXmodR R (lrtSubresultantCompute …)`: reduce mod `R`, then multiply every
-`x`-coefficient by the mod-`R` inverse of the leading `x`-coefficient (Exercise 2.7's monic-in-`x`
-normalization). This is a **unit** operation in the residue ring `ℚ[t]/(R)`, so it preserves similarity
-*over `ℚ[t]/(R)`*. We model the residue ring by an **arbitrary** ring hom `φ : ℚ[X] →+* S` killing
-`toPoly R` (`hφR : φ (toPoly R) = 0`); the bridge then lands an exact `Φ`-image unit-multiple identity in
-`S[x]` (where `Φ = Polynomial.mapRingHom φ`), which is the residue-ring `IsSimilar` content. Working over a
-generic `φ` (rather than constructing `ℚ[t]/(R)`) keeps the bridge reusable and quotient-construction-free:
-`ℚ[t]/(R)`'s quotient map is one such `φ`. -/
+Modeling the residue ring `ℚ[t]/(R)` by an arbitrary ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, the
+monic-in-`x` normalization `bmonicXmodR` is multiplication by a residue-ring unit. -/
 
-/-- **`credR` agrees mod `R`**: for any ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, the mod-`R` reduction
-`credR fuel R c = cmod fuel c R` has the same `φ`-image as `c`: `φ (toPoly (credR fuel R c)) = φ (toPoly c)`.
-From the Euclidean identity `toPoly c = q·toPoly R + toPoly (cmod fuel c R)` (`toPoly_cdivmod'`), the
-`toPoly R` term maps to `0`. -/
+/-- For `φ` killing `toPoly R`, `φ (toPoly (credR fuel R c)) = φ (toPoly c)`. -/
 theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : CPoly)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     φ (toPoly (credR fuel R c)) = φ (toPoly c) := by
@@ -897,10 +661,8 @@ theorem map_toPoly_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : 
       show (cdivmod fuel c R).2 = cmod fuel c R from rfl] at hdiv
   rw [credR, hdiv, map_add, map_mul, hφR, mul_zero, zero_add]
 
-/-- **`Φ ∘ toBPoly` ignores a coefficient-wise mod-`R` reduction**: with `Φ = Polynomial.mapRingHom φ` and
-`φ` killing `toPoly R`, mapping every `x`-coefficient of `p` through `credR fuel R` leaves the `Φ`-image of
-`toBPoly` unchanged: `Φ (toBPoly (p.map (credR fuel R))) = Φ (toBPoly p)`. Coefficient-wise
-`map_toPoly_credR`, folded over the `x`-coefficient list through the Horner shape (`Φ` a ring hom). -/
+/-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
+`Φ (toBPoly (p.map (credR fuel R))) = Φ (toBPoly p)`. -/
 theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly)
     (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ) (toBPoly (p.map (credR fuel R)))
@@ -912,22 +674,14 @@ theorem mapRingHom_toBPoly_map_credR {S : Type*} [CommRing S] (φ : ℚ[X] →+*
     congr 1
     rw [Polynomial.coe_mapRingHom, Polynomial.map_C, Polynomial.map_C, map_toPoly_credR φ fuel R a hR hφR]
 
-/-- **`bredR` is `Φ`-transparent**: with `Φ = Polynomial.mapRingHom φ` and `φ` killing `toPoly R`, the
-mod-`R` reduction `bredR fuel R p` has the same `Φ`-image of `toBPoly` as `p`:
-`Φ (toBPoly (bredR fuel R p)) = Φ (toBPoly p)`. Unfolds `bredR` (`bnorm (p.map (credR fuel R))`) through
-`toBPoly_bnorm` and `mapRingHom_toBPoly_map_credR`. -/
+/-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, `Φ (toBPoly (bredR fuel R p)) = Φ (toBPoly p)`. -/
 theorem mapRingHom_toBPoly_bredR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly)
     (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ) (toBPoly (bredR fuel R p)) = (Polynomial.mapRingHom φ) (toBPoly p) := by
   rw [bredR, toBPoly_bnorm, mapRingHom_toBPoly_map_credR φ fuel R p hR hφR]
 
-/-- **`cinvMod` is the mod-`R` inverse**: for any ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, when the
-extended-Euclidean gcd `g = (cgcdExt fuel c R).1` reduces to a **nonzero constant** `C u` (`hg`, `u ≠ 0` —
-Exercise 2.7's regularity that the leading `x`-coefficient is a unit mod `R`), the computable inverse
-`cinvMod fuel R c` satisfies `φ (toPoly (cinvMod fuel R c)) · φ (toPoly c) = 1` in `S`. From the Bézout
-identity `toPoly s · toPoly c + toPoly t · toPoly R = toPoly g = C u` (`toPoly_cgcdExt`): applying `φ`
-kills the `toPoly R` term, giving `φ(toPoly s)·φ(toPoly c) = φ(C u)`; scaling by `u⁻¹` (the `cscale (clead
-g)⁻¹` in `cinvMod`, with `clead g = u`) makes the product `1`. -/
+/-- `cinvMod` is the mod-`R` inverse: for `φ` killing `toPoly R`, when the extended-Euclidean gcd of `c, R`
+reduces to a nonzero constant `C u`, `φ (toPoly (cinvMod fuel R c)) · φ (toPoly c) = 1`. -/
 theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R c : CPoly)
     (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
     (hg : toPoly (cgcdExt fuel c R).1 = Polynomial.C u) :
@@ -949,12 +703,8 @@ theorem map_toPoly_cinvMod_mul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (f
     exact this
   rw [mul_assoc, himg, ← map_mul, ← Polynomial.C_mul, inv_mul_cancel₀ hu, Polynomial.C_1, map_one]
 
-/-- **Coefficient-wise `credR ∘ (· * inv)` is `Φ`-scaling by `φ(toPoly inv)`**: with `Φ =
-Polynomial.mapRingHom φ` and `φ` killing `toPoly R`, mapping every `x`-coefficient `c ↦ credR fuel R (cmul
-c inv)` realizes, under `Φ`, multiplication of `toBPoly q` by the constant `C (φ (toPoly inv))`:
-`Φ (toBPoly (q.map (fun c => credR fuel R (cmul c inv)))) = C (φ (toPoly inv)) · Φ (toBPoly q)`. Per
-coefficient `credR` drops (`map_toPoly_credR`) and `cmul` is `toPoly`-multiplicative; folding over the
-Horner list factors the constant `φ (toPoly inv)` out. -/
+/-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`,
+`Φ (toBPoly (q.map (fun c => credR fuel R (cmul c inv)))) = C (φ (toPoly inv)) · Φ (toBPoly q)`. -/
 theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ)
     (R inv : CPoly) (q : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) :
     (Polynomial.mapRingHom φ) (toBPoly (q.map (fun c => credR fuel R (cmul c inv))))
@@ -968,15 +718,9 @@ theorem mapRingHom_toBPoly_map_credR_cmul {S : Type*} [CommRing S] (φ : ℚ[X] 
         map_toPoly_credR φ fuel R _ hR hφR, toPoly_cmul, map_mul, Polynomial.C_mul, mul_comm]
     · rw [Polynomial.coe_mapRingHom (f := φ), Polynomial.map_X]; ring
 
-/-- **`bmonicXmodR` is a `Φ`-image unit-multiple** (the mod-`R` monic-normalization unit bridge): for any
-ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, with `Φ = Polynomial.mapRingHom φ`, when the leading-
-`x`-coefficient's mod-`R` gcd reduces to a nonzero constant `C u` (`hg`/`hu` — Exercise 2.7 regularity), the
-`Φ`-image of `bmonicXmodR fuel R p` is the **unit** `φ (toPoly (cinvMod fuel R (blc (bredR fuel R p))))`
-times the `Φ`-image of `toBPoly p`:
-`Φ (toBPoly (bmonicXmodR fuel R p)) = C (φ (toPoly inv)) · Φ (toBPoly p)`, and `φ (toPoly inv)` is a unit in
-`S` (its inverse is `φ (toPoly (blc (bredR fuel R p)))`, by `map_toPoly_cinvMod_mul`). So `bmonicXmodR`
-preserves similarity over the residue ring `S = ℚ[t]/(R)`: the monic-in-`x` normalization is multiplication
-by a residue-ring unit. -/
+/-- With `Φ = mapRingHom φ` and `φ` killing `toPoly R`, when the leading coefficient's mod-`R` gcd reduces
+to a nonzero constant `C u`, `Φ (toBPoly (bmonicXmodR fuel R p)) = C (φ (toPoly inv)) · Φ (toBPoly p)` with
+`φ (toPoly inv)` a unit in `S`. -/
 theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly)
     (p : BPoly) (hR : cnorm R ≠ []) (hφR : φ (toPoly R) = 0) {u : ℚ} (hu : u ≠ 0)
     (hg : toPoly (cgcdExt fuel (blc (bredR fuel R p)) R).1 = Polynomial.C u)
@@ -994,18 +738,10 @@ theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →
       (bredR fuel R p) hR hφR,
     mapRingHom_toBPoly_bredR φ fuel R p hR hφR]
 
-/-! ### The full `lrtGcdCompute ↔ lrtSubresultant` agreement over the residue ring `ℚ[t]/(R)`
-Chaining the `ℚ[t]`-similarity `lrtSubresultant ∼ lrtSubresultantCompute`
-(`isSimilar_lrtSubresultant_lrtSubresultantCompute`) — pushed through the residue map `φ : ℚ[X] →+* S` —
-with the `bmonicXmodR` unit bridge (`mapRingHom_toBPoly_bmonicXmodR`: `lrtGcdCompute`'s `Φ`-image is a
-residue-ring unit times `lrtSubresultantCompute`'s) lands the headline: over the residue ring `S = ℚ[t]/(R)`,
-the abstract `lrtSubresultant` is `IsSimilar` to the computable `lrtGcdCompute`. The push-through needs the
-content witnesses to stay nonzero mod `R` (Ex 2.7 regularity), taken as `φ`-nonzero hypotheses. -/
+/-! ### The full `lrtGcdCompute ↔ lrtSubresultant` agreement over the residue ring `ℚ[t]/(R)` -/
 
-/-- **`IsSimilar` pushes through a ring hom keeping the witnesses nonzero**: a `ℚ[t]`-similarity
-`IsSimilar A B` whose witnesses `a, b` map to *nonzero* `φ a, φ b` in `S` gives a residue-ring similarity of
-the `Φ`-images, `IsSimilar (Φ A) (Φ B)` (`Φ = Polynomial.mapRingHom φ`). The witnesses are `φ a, φ b`; the
-defining equation maps over since `Φ ∘ C = C ∘ φ`. -/
+/-- A `ℚ[t]`-similarity `IsSimilar A B` whose witnesses stay `φ`-nonzero gives
+`IsSimilar (Φ A) (Φ B)` (`Φ = mapRingHom φ`). -/
 theorem isSimilar_mapRingHom {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) {A B : (ℚ[X])[X]}
     (h : IsSimilar A B) (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 → Polynomial.C a * A = Polynomial.C b * B
       → φ a ≠ 0 ∧ φ b ≠ 0) :
@@ -1017,9 +753,7 @@ theorem isSimilar_mapRingHom {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) {A B
   rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
   simpa only [Polynomial.coe_mapRingHom] using hcong
 
-/-- **A residue-ring unit multiple is `IsSimilar`**: if `Φ B = C η · Φ A` with `η` a unit in `S`
-(`η · η' = 1`), then `IsSimilar (Φ A) (Φ B)` over `S` (witnesses `η` and `1`; `η ≠ 0` since it is a unit in
-a — necessarily nontrivial — ring). The `bmonicXmodR` unit-multiple identity packaged as a similarity. -/
+/-- If `B = C η · A` with `η` a unit (`η · η' = 1`), then `IsSimilar A B`. -/
 theorem isSimilar_of_unit_mul {S : Type*} [CommRing S] [Nontrivial S] {A B : S[X]} {η η' : S}
     (hη : η * η' = 1) (hAB : B = Polynomial.C η * A) :
     IsSimilar A B := by
@@ -1029,17 +763,9 @@ theorem isSimilar_of_unit_mul {S : Type*} [CommRing S] [Nontrivial S] {A B : S[X
     exact one_ne_zero hη.symm
   exact ⟨η, 1, hηne, one_ne_zero, by rw [hAB, map_one, one_mul]⟩
 
-/-- **The full `lrtGcdCompute ↔ lrtSubresultant` agreement, over the residue ring `ℚ[t]/(R)`** (the
-headline): for a residue map `φ : ℚ[X] →+* S` killing `toPoly R`, under the whole-chain LRT hypotheses
-(as in `isSimilar_lrtSubresultant_lrtSubresultantCompute`), the `bmonicXmodR` regularity (the leading
-`x`-coefficient's mod-`R` gcd reduces to a nonzero constant `C u`; the reduced primitive part is nonzero),
-and the content witnesses staying `φ`-nonzero (Ex 2.7 regularity `hne`), the `Φ`-image of the abstract
-`lrtSubresultant` is `IsSimilar` to the `Φ`-image of the computable `lrtGcdCompute` over `S = ℚ[t]/(R)`:
-`IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`. Chains
-`isSimilar_lrtSubresultant_lrtSubresultantCompute` (mapped through `φ` by `isSimilar_mapRingHom`) with the
-`bmonicXmodR` unit bridge `mapRingHom_toBPoly_bmonicXmodR` (packaged by `isSimilar_of_unit_mul`) via
-`IsSimilar.trans`. This is the computable LRT log argument validated against the noncomputable subresultant,
-up to a residue-ring unit — the closing step of the agreement. -/
+/-- The full `lrtGcdCompute ↔ lrtSubresultant` agreement over `S = ℚ[t]/(R)`: for a residue map
+`φ : ℚ[X] →+* S` killing `toPoly R`, under the whole-chain and regularity hypotheses,
+`IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`. -/
 theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDomain S] (φ : ℚ[X] →+* S)
     (fuel : ℕ) (R A D : CPoly) (G : ℕ → BPoly) (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
     (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
@@ -1098,52 +824,11 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDoma
     hunit (by rw [lrtGcdCompute]; exact hbridge)
   exact hmap.trans hsimUnit
 
-/-! ### The honest ceiling: from the chain agreement to `lrtGcdCompute`
-The pieces above now realize the **full multi-step subresultant-PRS chain agreement** of the computable
-engine against the abstract subresultant — no longer just one step:
-- β-divisor exact-division `toBPoly_bdivC_exact`, the divided one-step law
-  `subresultant_C_mul_eq_bdivC_of_bpsremainder` and its `IsSimilar` packaging
-  `isSimilar_subresultant_bdivC_step`;
-- the combined per-step relation `toBPoly_prs_rel` (computable pseudo-division + β-division = the abstract
-  Brown–Traub PRS relation), feeding the **whole-chain telescope** `isSimilar_subresPRS_telescope`
-  (`Sⱼ(G 0,G 1) ~ Sⱼ(G m,G (m+1))` for every `m`, via the abstract `subresultant_prs_telescope` — the
-  `IsSimilar.trans` chaining is internal, so **no manual `cpowP`/`cdiv` vs `subresPRS_beta`/`_gamma`
-  accumulator matching** is needed: every per-step `α/β` is a `toPoly` content factor absorbed by `IsSimilar`);
-- the endpoint collapse `isSimilar_subresPRS_elt` (`Sⱼ(G 0,G 1) ~ toBPoly (G (m+2))`, the degree-`j`
-  element, via `subresultant_prs_similar_elt`) and its LRT specialization
-  `isSimilar_lrtSubresultant_subresPRS_elt` (`lrtSubresultant A D j ~ toBPoly (G (m+2))`);
-- `isSimilar_lrtSubresultant_bsubresultantGcd` — `lrtSubresultant A D j ∼ bsubresultantGcd` — modulo the
-  **filter identity** `toBPoly (bsubresultantGcd …) = toBPoly (G (m+2))`, now **discharged structurally**
-  by `toBPoly_bsubresultantGcd_eq_of_filter_singleton` (the singleton-filter list fact:
-  `bsubresultantGcd`'s degree-`j` filter is `[G (m+2)]`, so its last element is `G (m+2)`), giving the
-  `hfilt`-free `isSimilar_lrtSubresultant_bsubresultantGcd_real`;
-- the content step `toBPoly_bprimitivePartX_exact` / its similarity packaging
-  `isSimilar_toBPoly_bprimitivePartX`, chained into
-  `isSimilar_lrtSubresultant_lrtSubresultantCompute` — `lrtSubresultant A D j ∼ lrtSubresultantCompute`;
-- **the `bmonicXmodR` mod-`R` unit bridge** (`map_toPoly_credR`, `mapRingHom_toBPoly_bredR`,
-  `map_toPoly_cinvMod_mul`, `mapRingHom_toBPoly_bmonicXmodR`): over any residue map `φ : ℚ[X] →+* S` killing
-  `toPoly R`, the monic-in-`x` normalization `bmonicXmodR` is multiplication by a residue-ring **unit**
-  (`cinvMod` is the mod-`R` inverse, by the `cgcdExt` Bézout identity); composed through
-  `isSimilar_mapRingHom` + `IsSimilar.trans` this lands the **headline**
-  `lrtGcdCompute_isSimilar_lrtSubresultant` — `Φ (lrtSubresultant A D j) ∼ Φ (toBPoly (lrtGcdCompute …))`
-  over the residue ring `S = ℚ[t]/(R)`.
-
-So the two isolated structural facts that closed the agreement are both landed: (1) the **degree-`j` filter
-identity** (singleton filter ⟹ `bsubresultantGcd` is the chain element), and (2) the **`bmonicXmodR` mod-`R`
-unit bridge** (monic normalization = residue-ring unit multiple). The remaining **data-instantiation** for
-the **real** `subresPRS` is **also now done** (see the `goState` section below): the internal
-`let rec subresPRS.go` is mirrored by the top-level state machine `goState`, whose chain element
-`chainG`, β-divisor `chainBt`, and `Classical.choose` pseudo-division witnesses `chainS`/`chainC`
-discharge the abstract `G`/`bt`/`s`/`c`; `hsc` is `chain_hsc` (the `toBPoly_bpsremainder` spec), `hG2` is
-`chain_hG2` (definitional via `goState_fst_add_two`), `hG0`/`hG1` are `chainG_zero`/`chainG_one`, and the
-singleton-filter `hfilt` is `chain_hfilt` (`subresPRS_eq_range` + `filter_range_unique` +
-`unique_of_strictAnti` — the strict-`bdeg`-decrease uniqueness, no `let rec` induction needed thanks to
-`go.eq_2`). The fully-instantiated `lrtGcdCompute_isSimilar_lrtSubresultant_concrete` quantifies over **no**
-abstract chain: only the genuine *mathematics-grade* regularity remains as hypotheses — Collins
-β-divisibility (`hdiv`), the chain nonzero/degree side-conditions, the `bprimitivePartX` content-exactness
-(`bcontentX` divides each coefficient), and the Exercise 2.7 residue-ring regularity (`φ` killing
-`toPoly R`, the leading coeff a unit mod `R`, witnesses `φ`-nonzero). No recurrence-matching or
-list/`let rec` plumbing is left. -/
+/-! ### From the chain agreement to `lrtGcdCompute`
+The pieces above assemble the full multi-step subresultant-PRS chain agreement into the headline
+`lrtGcdCompute_isSimilar_lrtSubresultant`, with the degree-`j` filter identity and the `bmonicXmodR` unit
+bridge both discharged structurally, and the concrete `subresPRS` data supplied by the `goState` section
+below. -/
 
 -- Restatement: `bdivC` is exact ℚ[t]-division — `C(toPoly c)·toBPoly(bdivC fuel p c) = toBPoly p`
 -- when every x-coefficient divides exactly.
@@ -1210,30 +895,20 @@ example {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) (fuel : ℕ) (R : CPoly) 
           * φ (toPoly (blc (bredR fuel R p))) = 1 :=
   mapRingHom_toBPoly_bmonicXmodR φ fuel R p hR hφR hu hg hpz
 
-/-! ### Instantiating the abstract chain from the concrete `subresPRS.go` (data plumbing)
-The headline `lrtGcdCompute_isSimilar_lrtSubresultant` quantifies over an abstract chain `G : ℕ → BPoly`
-with per-step witnesses `bt`/`s`/`c` and side-conditions. To instantiate it from the **real**
-`subresPRS fuel P Q`, we mirror the internal `let rec subresPRS.go` as a top-level **state machine**
-`goState`: its state `(Ri₋₁, Ri, ψ, δ)` carries everything one `go`-step needs, and one application of
-`goStep` reproduces the `go` recurrence (`Riₙ₊₁ = bdivC fuel (prem Ri₋₁ Ri) βᵢ`, `βᵢ = goBeta …`). The
-chain element `G i := (goState … i).1` and the β-divisor `bt i := goBeta …` are then *computable*
-projections of the state, and the divided-step recurrence `hG2` holds **definitionally** — no list
-reasoning. The `go`-list bridge (`go_state_getD`) connects this state machine back to the literal
-`subresPRS` list for the singleton-filter fact `hfil`. -/
+/-! ### Instantiating the abstract chain from the concrete `subresPRS.go`
+Mirrors the internal `subresPRS.go` recurrence as a top-level state machine `goState`, so the abstract
+chain data `G`/`bt`/`s`/`c` and its side-conditions can be supplied from the real `subresPRS fuel P Q`. -/
 
-/-- **ψ-accumulator update of one `subresPRS.go` step**: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when
-`δ = 0`), the exact-over-`ℚ[t]` subresultant ψ recurrence carried by `go`. -/
+/-- ψ-accumulator update of one `subresPRS.go` step: `ψ' = (−lc Ri₋₁)^δ / ψ^(δ−1)` (`ψ' = ψ` when `δ = 0`). -/
 def goPsi' (fuel : ℕ) (Ri_1 : BPoly) (psi : CPoly) (dp : ℕ) : CPoly :=
   if dp = 0 then psi else cdiv fuel (cpowP (cneg (blc Ri_1)) dp) (cpowP psi (dp - 1))
 
-/-- **β-divisor of one `subresPRS.go` step**: `β = −lc(Ri₋₁) · ψ'^δ` (`ψ'` from `goPsi'`), the exact
-`ℚ[t]`-divisor stripping the pseudo-remainder `lc`-power inflation in the subresultant PRS. -/
+/-- β-divisor of one `subresPRS.go` step: `β = −lc(Ri₋₁) · ψ'^δ` with `ψ'` from `goPsi'`. -/
 def goBeta (fuel : ℕ) (Ri_1 : BPoly) (psi : CPoly) (dp : ℕ) : CPoly :=
   cmul (cneg (blc Ri_1)) (cpowP (goPsi' fuel Ri_1 psi dp) dp)
 
-/-- **One `subresPRS.go` step on the state** `(Ri₋₁, Ri, ψ, δ) ↦ (Ri, Ri₊₁, ψ', δ')` with
-`Ri₊₁ = bdivC fuel (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = bdeg Ri − bdeg Ri₊₁` —
-the top-level mirror of the internal `let rec subresPRS.go` recurrence. -/
+/-- One `subresPRS.go` step on the state `(Ri₋₁, Ri, ψ, δ) ↦ (Ri, Ri₊₁, ψ', δ')` with
+`Ri₊₁ = bdivC fuel (prem Ri₋₁ Ri) β`, `ψ' = goPsi'`, `β = goBeta`, `δ' = bdeg Ri − bdeg Ri₊₁`. -/
 def goStep (fuel : ℕ) : BPoly × BPoly × CPoly × ℕ → BPoly × BPoly × CPoly × ℕ
   | (Ri_1, Ri, psi, dp) =>
     let psi' := goPsi' fuel Ri_1 psi dp
@@ -1241,33 +916,26 @@ def goStep (fuel : ℕ) : BPoly × BPoly × CPoly × ℕ → BPoly × BPoly × C
     let Ri1 := bdivC fuel (bpsremainder fuel Ri_1 Ri) beta
     (Ri, Ri1, psi', bdeg Ri - bdeg Ri1)
 
-/-- **The `subresPRS.go` state at index `i`** `goState fuel s₀ i = goStepⁱ s₀`: the `go`-recurrence state
-after `i` steps from the initial state `s₀ = (P, Q, [-1], bdeg P − bdeg Q)`. The chain element is the
-first component, the next chain element the second. -/
+/-- The `subresPRS.go` state at index `i`: `goState fuel s₀ i = goStepⁱ s₀`. -/
 def goState (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) : ℕ → BPoly × BPoly × CPoly × ℕ
   | 0 => s0
   | i + 1 => goStep fuel (goState fuel s0 i)
 
-/-- **`goState` commutes with one step**: `goState fuel (goStep fuel s₀) k = goState fuel s₀ (k+1)`. -/
+/-- `goState fuel (goStep fuel s₀) k = goState fuel s₀ (k+1)`. -/
 theorem goState_goStep (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (k : ℕ) :
     goState fuel (goStep fuel s0) k = goState fuel s0 (k + 1) := by
   induction k generalizing s0 with
   | zero => rfl
   | succ n ih => rw [goState, goState, ih]
 
-/-- **The next chain element is the second state component**: `(goState fuel s₀ (l+1)).1 =
-(goState fuel s₀ l).2.1` — `go` shifts the pair `(Ri₋₁, Ri)` to `(Ri, Ri₊₁)`, so element `l+1` is the
-second slot of state `l`. -/
+/-- `(goState fuel s₀ (l+1)).1 = (goState fuel s₀ l).2.1`. -/
 theorem goState_succ_fst (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (l : ℕ) :
     (goState fuel s0 (l + 1)).1 = (goState fuel s0 l).2.1 := by
   show (goStep fuel (goState fuel s0 l)).1 = _
   rw [goStep]
 
-/-- **The divided-PRS recurrence `hG2` holds definitionally for `goState`**: with `G i := (goState fuel s₀
-i).1` and the β-divisor `bt l := goBeta fuel (G l) ψₗ δₗ` (the ψ/δ of state `l`), the chain element
-`G (l+2)` is exactly `bdivC fuel (bpsremainder fuel (G l) (G (l+1))) (bt l)` — the literal `subresPRS`
-divided-step recurrence, by definition of `goStep`. This discharges `hG2` for the concrete chain with no
-list reasoning. -/
+/-- The divided-PRS recurrence for `goState`: `(goState fuel s₀ (l+2)).1 = bdivC fuel (prem …)
+(goBeta …)`, holding definitionally. -/
 theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (l : ℕ) :
     (goState fuel s0 (l + 2)).1
       = bdivC fuel (bpsremainder fuel (goState fuel s0 l).1 (goState fuel s0 (l + 1)).1)
@@ -1277,14 +945,9 @@ theorem goState_fst_add_two (fuel : ℕ) (s0 : BPoly × BPoly × CPoly × ℕ) (
   rw [goStep]
   rw [goState_succ_fst fuel s0 l]
 
-/-! #### The `go`-list ↔ `goState` bridge (reading `subresPRS` off the state machine)
-The `goState` machine carries the chain data; to identify `subresPRS`'s *list* elements with the state
-machine (for the singleton-filter `hfil`), these lemmas read the `go` list — and then `subresPRS` —
-through `goState`, valid while the chain stays nonzero and fuel suffices. -/
+/-! #### The `go`-list ↔ `goState` bridge -/
 
-/-- **One `subresPRS.go` step against `goState`**: while `Ri` (the current element `s.2.1`) is nonzero,
-`go fuel (fo+1) …` emits `Ri` then recurses on the `goStep`-advanced state — the literal `go` recurrence
-re-expressed through the top-level `goStep`. -/
+/-- While `s.2.1` is nonzero, `go fuel (fo+1) …` emits it and recurses on the `goStep`-advanced state. -/
 theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (hz : ¬ bisZero s.2.1 = true) :
     subresPRS.go fuel (fo + 1) s.1 s.2.1 s.2.2.1 s.2.2.2
       = s.2.1 :: subresPRS.go fuel fo (goStep fuel s).1 (goStep fuel s).2.1
@@ -1295,10 +958,8 @@ theorem go_step_state (fuel fo : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (hz :
   simp only [hz, Bool.false_eq_true, if_false]
   rfl
 
-/-- **`go`-list index reads the state machine**: as long as the chain elements stay nonzero through index
-`k` and the fuel `fo` exceeds `k`, the `k`-th element of `go fuel fo …` is the second state component
-`(goState fuel s k).2.1`. Induction on `k`, peeling one `go_step_state` and shifting `goState` by
-`goState_goStep`. -/
+/-- While the chain stays nonzero through index `k` and `k < fo`, the `k`-th element of `go fuel fo …` is
+`(goState fuel s k).2.1`. -/
 theorem go_getD (fuel : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (k fo : ℕ) (hfo : k < fo)
     (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true) :
     (subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2).getD k [] = (goState fuel s k).2.1 := by
@@ -1314,11 +975,8 @@ theorem go_getD (fuel : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (k fo : ℕ) (
         (fun i hi => by rw [goState_goStep]; exact hnz (i + 1) (by omega)),
       goState_goStep]
 
-/-- **`subresPRS` index reads the chain element `G i := (goState fuel s₀ i).1`**: with the initial state
-`s₀ = (P, Q, [-1], bdeg P − bdeg Q)`, the `i`-th element of `subresPRS fuel P Q` is `(goState fuel s₀ i).1`
-— provided the chain stays nonzero through index `i−1` and `i ≤ fuel`. So `subresPRS`'s list is literally
-the `goState` chain, the identification that lets the singleton-filter fact be stated on the state machine.
--/
+/-- The `i`-th element of `subresPRS fuel P Q` is `(goState fuel (P,Q,[-1],…) i).1`, while the chain stays
+nonzero through `i−1` and `i ≤ fuel`. -/
 theorem subresPRS_getD (fuel : ℕ) (P Q : BPoly) (i : ℕ) (hfo : i ≤ fuel)
     (hnz : ∀ k < i, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) k).2.1 = true) :
     (subresPRS fuel P Q).getD i [] = (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 := by
@@ -1332,8 +990,7 @@ theorem subresPRS_getD (fuel : ℕ) (P Q : BPoly) (i : ℕ) (hfo : i ≤ fuel)
     simp only at h
     rw [h, goState_succ_fst]
 
-/-- **`go` stops at a zero element**: if the current element `s.2.1` is zero, `go fuel fo …` is `[]` (the
-nonzero-prefix recursion terminates). -/
+/-- If `s.2.1` is zero, `go fuel fo … = []`. -/
 theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (hz : bisZero s.2.1 = true) :
     subresPRS.go fuel fo s.1 s.2.1 s.2.2.1 s.2.2.2 = [] := by
   cases fo with
@@ -1344,10 +1001,8 @@ theorem go_zero (fuel fo : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (hz : bisZe
     simp only at hz
     simp only [hz, if_true]
 
-/-- **Full `go` list as a `range`-map**: when the chain elements stay nonzero through index `k` and the
-next is zero (and fuel suffices), `go fuel fo …` is *exactly* `[s.2.1, …, (goState fuel s k).2.1]` =
-`(List.range (k+1)).map (fun i => (goState fuel s i).2.1)`. Induction peeling one `go_step_state`,
-`go_zero` at the terminal step. -/
+/-- When the chain is nonzero through `k`, zero at `k+1`, and fuel suffices,
+`go fuel fo … = (List.range (k+1)).map (fun i => (goState fuel s i).2.1)`. -/
 theorem go_eq_range (fuel : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (k fo : ℕ) (hfo : k + 1 < fo)
     (hnz : ∀ i ≤ k, ¬ bisZero (goState fuel s i).2.1 = true)
     (hz : bisZero (goState fuel s (k + 1)).2.1 = true) :
@@ -1372,9 +1027,7 @@ theorem go_eq_range (fuel : ℕ) (s : BPoly × BPoly × CPoly × ℕ) (k fo : �
     simp only [Function.comp_apply]
     rw [goState_goStep]
 
-/-- **Filter of `List.range n` with a unique satisfier is a singleton**: if `q N = true`, `N < n`, and
-`N` is the *only* index below `n` with `q i = true`, then `(List.range n).filter q = [N]`. (`range` is
-nodup, so the filtered list is nodup with every element `= N`, hence `[N]`.) -/
+/-- If `N` is the unique index below `n` with `q N = true`, then `(List.range n).filter q = [N]`. -/
 theorem filter_range_unique {n N : ℕ} (q : ℕ → Bool) (hN : N < n) (hqN : q N = true)
     (huniq : ∀ i, i < n → q i = true → i = N) :
     (List.range n).filter q = [N] := by
@@ -1401,11 +1054,8 @@ theorem filter_range_unique {n N : ℕ} (q : ℕ → Bool) (hN : N < n) (hqN : q
         simp at hfnodup
     rw [ha, has]
 
-/-- **Full `subresPRS` list as a `range`-map of the chain `G i := (goState fuel s₀ i).1`**: with
-`s₀ = (P, Q, [-1], bdeg P − bdeg Q)`, when the chain elements `G 0, …, G N` are all nonzero, `G (N+1)`
-is zero, and `N+1 < fuel`, the list `subresPRS fuel P Q` is exactly `[G 0, …, G N] =
-(List.range (N+1)).map G`. Prepends `G 0 = P` to `go_eq_range` (the `go` list is the chain from `G 1`),
-shifting `(goState …).2.1` to `(goState … (·+1)).1` via `goState_succ_fst`. -/
+/-- When the chain `G i := (goState fuel (P,Q,[-1],…) i).1` is nonzero through `N`, zero at `N+1`, and
+`N+1 < fuel`, `subresPRS fuel P Q = (List.range (N+1)).map G`. -/
 theorem subresPRS_eq_range (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < fuel)
     (hnz : ∀ i ≤ N, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 = true)
     (hzN : bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (N + 1)).1 = true) :
@@ -1429,9 +1079,7 @@ theorem subresPRS_eq_range (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < f
     intro i _
     simp only [Function.comp_apply, goState_succ_fst]
 
-/-- **Strict degree decrease ⟹ unique degree-`N` index**: if `f (i+1) < f i` for all `i < N`, then `N`
-is the *only* index `i ≤ N` with `f i = f N`. The arithmetic core of the singleton-filter uniqueness:
-strict decrease of the `bdeg` chain makes the degree-`N` element unique. -/
+/-- If `f (i+1) < f i` for all `i < N`, then `N` is the only index `i ≤ N` with `f i = f N`. -/
 theorem unique_of_strictAnti (f : ℕ → ℕ) (N : ℕ) (hstrict : ∀ i < N, f (i + 1) < f i) :
     ∀ i ≤ N, f i = f N → i = N := by
   have mono : ∀ j ≤ N, ∀ i < j, f j < f i := by
@@ -1451,12 +1099,8 @@ theorem unique_of_strictAnti (f : ℕ → ℕ) (N : ℕ) (hstrict : ∀ i < N, f
   have := mono N (le_refl N) i hiN
   omega
 
-/-- **The degree-`N` filter of `subresPRS` is the singleton `[G N]`** (the structural `hfil`, discharged):
-with `s₀ = (P, Q, [-1], bdeg P − bdeg Q)` and the chain `G i := (goState fuel s₀ i).1`, when the elements
-`G 0, …, G N` are nonzero (`hnz`), `G (N+1)` is zero (`hzN`), the `bdeg` chain strictly decreases
-(`hstrict`), and `N+1 < fuel`, the degree-`bdeg (G N)` nonzero filter of `subresPRS fuel P Q` is exactly
-`[G N]`. The full-list `subresPRS_eq_range` pushed through `List.filter_map` and `filter_range_unique`
-(uniqueness via `unique_of_strictAnti`). -/
+/-- The degree-`bdeg (G N)` nonzero filter of `subresPRS fuel P Q` is `[G N]`, under nonzero-through-`N`,
+zero-at-`N+1`, strict `bdeg` decrease, and `N+1 < fuel`. -/
 theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N + 1 < fuel)
     (hnz : ∀ i ≤ N, ¬ bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1 = true)
     (hzN : bisZero (goState fuel (P, Q, [-1], bdeg P - bdeg Q) (N + 1)).1 = true)
@@ -1480,51 +1124,41 @@ theorem subresPRS_filter_singleton (fuel : ℕ) (P Q : BPoly) (N : ℕ) (hfo : N
       exact unique_of_strictAnti (fun i => bdeg (G i)) N hstrict i (by omega) hqi.1
   rw [hfilt, List.map_singleton]
 
-/-! #### Concrete chain data from `subresPRS` (discharging `G`/`bt`/`s`/`c`, `hsc`, `hG2`, `hfilt`)
-The chain element `chainG`, β-divisor `chainBt`, and pseudo-division witnesses `chainS`/`chainC` are now
-*defined* (computable projections of `goState`, and `Classical.choose` of `toBPoly_bpsremainder` for the
-existential quotient/content). The per-step pseudo-division identity `hsc` and divided recurrence `hG2`
-hold for them automatically; combined with `subresPRS_filter_singleton` this discharges `hfilt`. -/
+/-! #### Concrete chain data from `subresPRS` -/
 
-/-- **The concrete `subresPRS` chain element** `chainG fuel P Q i := (goState fuel (P,Q,[-1],…) i).1` —
-the `i`-th element of `subresPRS fuel P Q`, as a function `ℕ → BPoly`. -/
+/-- The concrete `subresPRS` chain element `chainG fuel P Q i := (goState fuel (P,Q,[-1],…) i).1`. -/
 noncomputable def chainG (fuel : ℕ) (P Q : BPoly) (i : ℕ) : BPoly :=
   (goState fuel (P, Q, [-1], bdeg P - bdeg Q) i).1
 
-/-- **The concrete `subresPRS` β-divisor** `chainBt fuel P Q l := goBeta …` at the `l`-th state — the
-exact `ℚ[t]`-divisor `βₗ` of the `subresPRS` divided step `Rₗ₊₂ = prem(Rₗ,Rₗ₊₁)/βₗ`. -/
+/-- The concrete `subresPRS` β-divisor `chainBt fuel P Q l := goBeta …` at the `l`-th state. -/
 noncomputable def chainBt (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPoly :=
   goBeta fuel (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).1
     (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.1
     (goState fuel (P, Q, [-1], bdeg P - bdeg Q) l).2.2.2
 
-/-- **The concrete pseudo-division quotient** `chainS fuel P Q l`: the `Classical.choose` quotient of the
-pseudo-division identity `toBPoly_bpsremainder` for the chain pair `(chainG l, chainG (l+1))`. -/
+/-- The concrete pseudo-division quotient `chainS fuel P Q l` for the chain pair `(chainG l, chainG (l+1))`. -/
 noncomputable def chainS (fuel : ℕ) (P Q : BPoly) (l : ℕ) : BPoly :=
   (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose
 
-/-- **The concrete pseudo-division content** `chainC fuel P Q l`: the `Classical.choose` content `c ∈ ℚ[t]`
-of the pseudo-division identity for the chain pair `(chainG l, chainG (l+1))`. -/
+/-- The concrete pseudo-division content `chainC fuel P Q l` for the chain pair `(chainG l, chainG (l+1))`. -/
 noncomputable def chainC (fuel : ℕ) (P Q : BPoly) (l : ℕ) : CPoly :=
   (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose_spec.choose
 
-/-- **`chainG 0 = P`**: the chain's first element is the first `subresPRS` argument. -/
+/-- `chainG fuel P Q 0 = P`. -/
 @[simp] theorem chainG_zero (fuel : ℕ) (P Q : BPoly) : chainG fuel P Q 0 = P := rfl
 
-/-- **`chainG 1 = Q`**: the chain's second element is the second `subresPRS` argument. -/
+/-- `chainG fuel P Q 1 = Q`. -/
 @[simp] theorem chainG_one (fuel : ℕ) (P Q : BPoly) : chainG fuel P Q 1 = Q := by
   rw [chainG, goState_succ_fst]; rfl
 
-/-- **`hsc` for the concrete chain**: the pseudo-division identity holds for `chainS`/`chainC` by the very
-`Classical.choose` spec of `toBPoly_bpsremainder`. -/
+/-- The pseudo-division identity holds for the concrete `chainS`/`chainC`. -/
 theorem chain_hsc (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
     Polynomial.C (toPoly (chainC fuel P Q l)) * toBPoly (chainG fuel P Q l)
       = toBPoly (chainS fuel P Q l) * toBPoly (chainG fuel P Q (l + 1))
         + toBPoly (bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))) :=
   (toBPoly_bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1))).choose_spec.choose_spec
 
-/-- **`hG2` for the concrete chain**: the divided-PRS recurrence `chainG (l+2) =
-bdivC fuel (prem (chainG l) (chainG (l+1))) (chainBt l)` holds definitionally via `goState_fst_add_two`. -/
+/-- The divided-PRS recurrence `chainG (l+2) = bdivC fuel (prem (chainG l) (chainG (l+1))) (chainBt l)`. -/
 theorem chain_hG2 (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
     chainG fuel P Q (l + 2)
       = bdivC fuel (bpsremainder fuel (chainG fuel P Q l) (chainG fuel P Q (l + 1)))
@@ -1532,10 +1166,8 @@ theorem chain_hG2 (fuel : ℕ) (P Q : BPoly) (l : ℕ) :
   rw [chainG, goState_fst_add_two, chainBt]
   rfl
 
-/-- **`hfilt` for the concrete chain**: the degree-`(toBPoly (chainG (m+2))).natDegree` filter of
-`subresPRS fuel P Q` returns the chain element `chainG (m+2)` (under `toBPoly`). Combines the singleton
-filter `subresPRS_filter_singleton` (rewriting `bdeg = natDegree` via `bdeg_eq_natDegree`) with
-`toBPoly_bsubresultantGcd_eq_of_filter_singleton`. -/
+/-- The filter identity for the concrete chain:
+`toBPoly (bsubresultantGcd fuel (deg (chainG (m+2))) P Q) = toBPoly (chainG (m+2))`. -/
 theorem chain_hfilt (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel)
     (hnz : ∀ i ≤ m + 2, ¬ bisZero (chainG fuel P Q i) = true)
     (hzN : bisZero (chainG fuel P Q (m + 2 + 1)) = true)
@@ -1546,27 +1178,12 @@ theorem chain_hfilt (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel
   rw [bdeg_eq_natDegree] at hfil
   exact toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel P Q (chainG fuel P Q) m hfil
 
-/-! ### The clean concrete agreement: `lrtGcdCompute ↔ lrtSubresultant` for the real `subresPRS`
-Instantiating the headline `lrtGcdCompute_isSimilar_lrtSubresultant` with the **concrete** chain data
-(`chainG`/`chainBt`/`chainS`/`chainC` from `subresPRS`) discharges the abstract chain `G`/`bt`/`s`/`c`,
-the per-step identity `hsc` (`chain_hsc`), the divided recurrence `hG2` (`chain_hG2`), the endpoints
-`hG0`/`hG1` (`chainG_zero`/`chainG_one`), and the singleton-filter `hfilt` (`chain_hfilt`). What remains
-are exactly the genuine regularity inputs the task isolates: Collins β-divisibility (`hdiv`), the chain
-nonzero/degree side-conditions (`hβcn`/`hc0`/`hβ0`/`hlc`/`hcb`/`hjlt`/`hQ` and the filter's
-`hnzF`/`hzNF`/`hstrictF`), the `bprimitivePartX` content-exactness, and the residue-ring regularity of
-Exercise 2.7 (`φ` killing `toPoly R`, leading coeff a unit mod `R`, witnesses `φ`-nonzero). No abstract
-chain is quantified over: `P = liftCtoBPoly D`, `Q = bArgAmtD' A D` and the chain is `subresPRS`'s own. -/
+/-! ### The clean concrete agreement: `lrtGcdCompute ↔ lrtSubresultant` for the real `subresPRS` -/
 
-/-- **The clean concrete `lrtGcdCompute ↔ lrtSubresultant` agreement** (the LAST step, fully
-data-instantiated): for the **real** `subresPRS fuel (liftCtoBPoly D) (bArgAmtD' A D)` chain
-`chainG`/`chainBt`/`chainS`/`chainC`, with `j := (toBPoly (chainG (m+2))).natDegree` the regular index,
-and a residue map `φ : ℚ[X] →+* S` killing `toPoly R` — under the genuine regularity inputs (Collins
-β-divisibility `hdiv`; the chain nonzero/degree side-conditions; the `bprimitivePartX` content exactness;
-and the Exercise 2.7 residue-ring regularity) — the `Φ`-image of the abstract `lrtSubresultant` is
-`IsSimilar` to the `Φ`-image of the computable `lrtGcdCompute` over `S = ℚ[t]/(R)`. This is the headline
-`lrtGcdCompute_isSimilar_lrtSubresultant` with the abstract chain `G`/`bt`/`s`/`c` and the structural
-hypotheses `hG0`/`hG1`/`hsc`/`hG2`/`hfilt` *discharged from `subresPRS`* — only the mathematics-grade
-regularity (no list/recurrence plumbing) is left as hypotheses. -/
+/-- The clean concrete `lrtGcdCompute ↔ lrtSubresultant` agreement for the real
+`subresPRS fuel (liftCtoBPoly D) (bArgAmtD' A D)` chain: for a residue map `φ` killing `toPoly R`, under
+the regularity inputs, `IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`
+over `S = ℚ[t]/(R)` at `j = (toBPoly (chainG (m+2))).natDegree`. -/
 theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S] [IsDomain S]
     (φ : ℚ[X] →+* S) (fuel : ℕ) (R A D : CPoly) (m : ℕ)
     (hRcn : cnorm R ≠ []) (hφR : φ (toPoly R) = 0)
@@ -1670,24 +1287,11 @@ example (fuel : ℕ) (P Q : BPoly) (m : ℕ) (hfo : m + 2 + 1 < fuel)
   chain_hfilt fuel P Q m hfo hnz hzN hstrict
 
 
-/-! ### The `AdjoinRoot.mk ↔ eval-at-root` bridge for `lrtSubresultant`
-The residue map `φ = AdjoinRoot.mk f : K[t] →+* S` (`S = AdjoinRoot f = K[t]/(f)`) is, on a `t`-polynomial
-`p`, the *evaluation* `p(α)` at the root `α = AdjoinRoot.root f` (over the base `algebraMap K S = of f`):
-`mk f p = aeval (root f) p` (`AdjoinRoot.aeval_eq`). Applied **coefficient-wise** through `Polynomial.map`
-to a polynomial-in-`x` over `K[t]`, the lifted map `Φ = mapRingHom φ` therefore sends the LRT subresultant
-`lrtSubresultant A D j` (over `K[t]`, in `x`) to the *base-changed* LRT subresultant over `S`, specialized
-at `α`: `Φ (lrtSubresultant A D j) = (lrtSubresultant (A.map σ) (D.map σ) j).map (evalRingHom α)`, where
-`σ = of f = algebraMap K S` is the constant-coefficient base change and `α = root f = φ X`. This identifies
-the *abstract* residue map with the abstract `lrtSubresultant_eval` machinery — the bridge that transfers
-the proven LRT regularity (`leadingCoeff_lrtSubresultant_eval_ne_zero`) to a `Φ`-nonvanishing fact. -/
+/-! ### The `AdjoinRoot.mk ↔ eval-at-root` bridge for `lrtSubresultant` -/
 
-/-- **`mapRingHom (mk f)` on `lrtSubresultant` = base-changed `lrtSubresultant` evaluated at the root**:
-for a field `K`, `f : K[X]` (`X = t`), `S = AdjoinRoot f`, `σ = AdjoinRoot.of f = algebraMap K S` the
-base change and `α = AdjoinRoot.root f` the root, the lifted residue map `Φ = Polynomial.mapRingHom (mk f)`
-sends `lrtSubresultant A D j` (over `K[t]`) to `(lrtSubresultant (A.map σ) (D.map σ) j).map (evalRingHom α)`
-over `S`. Pure base-change/specialization identity: `subresultant_map (mk f)` pushes `mk f` through the
-Sylvester determinant, `mk f ∘ C = of f`, `mk f X = root f` (`AdjoinRoot.mk_X`), and `derivative_map`
-commutes derivative with the base change — exactly the shape of `lrtSubresultant_eval` over `S` at `α`. -/
+/-- For a field `K`, `f : K[X]`, `S = AdjoinRoot f`, `σ = of f`, `α = root f`, the lifted residue map
+`Φ = mapRingHom (mk f)` sends `lrtSubresultant A D j` to
+`(lrtSubresultant (A.map σ) (D.map σ) j).map (evalRingHom α)`. -/
 theorem mapRingHom_mk_lrtSubresultant {K : Type*} [Field K] (f : K[X]) [Fact (Irreducible f)]
     (A D : K[X]) (j : ℕ) :
     (Polynomial.mapRingHom (AdjoinRoot.mk f)) (lrtSubresultant A D j)

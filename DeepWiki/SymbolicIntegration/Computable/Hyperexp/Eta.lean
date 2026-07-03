@@ -13,9 +13,7 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-- Hyperexponential coefficient `cExpEtaG Dt = η ∈ α`: for a hyperexponential monomial
-`Dt = η·t` (`δ = 1`), divide `Dt` by `t` (`cshiftG 1 [1]`, exact quotient via `cdivWf`) and read
-the resulting degree-0 `t`-polynomial's coefficient. -/
+/-- Hyperexponential coefficient `cExpEtaG Dt = Dt/t = η ∈ α` for a monomial `Dt = η·t`. -/
 def cExpEtaG (Dt : CPolyG α) : α :=
   cleadG (cdivWf Dt (cshiftG 1 [CField.one]))
 

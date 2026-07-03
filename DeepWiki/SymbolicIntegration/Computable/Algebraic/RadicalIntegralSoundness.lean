@@ -2,66 +2,20 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalDerivationInvari
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalRationalDriver
 
-/-! # The first abstractly-verified algebraic (radical) integral — `D(v) = g` via `radDeriv`
-`ComputableRadicalExtension` / `ComputableRadicalRationalDriver` *compute* simple-radical antiderivatives
-(`∫ R/(B√ρ)`) and validate `D(v) = g` for concrete integrands by `native_decide`;
-`ComputableRadicalDerivationInvariant` proves the keystone **`toPolyG_radDeriv`** — through the Horner
-bridge `toPolyG : RadElem α → K[X]` (with `X` the radical generator `y`, `K = CFieldSpec.K α`), the
-diagonal derivation `radDeriv n f` *is* Mathlib's `Differential.implicitDeriv (C (toK ℓ) · X)` for the
-rule `y' = ℓ·y`, `ℓ = logDerRadicand n f = f'/(nf)`.
+/-! # Abstract soundness of the radical rational-part integrator: `radDeriv v = g` in `K[X]`
 
-This file takes the first step from "`radDeriv` is a derivation" to "**the integrator is sound**": it
-proves a concrete algebraic integral *correct as a general theorem* — `radDeriv n f v = g` in the genuine
-field `K[X]`, via the keystone + `implicitDeriv_X` + `ring`, with **no `native_decide`** (axiom-clean
-`[propext, Classical.choice, Quot.sound]`). The seed of the soundness capstone `D(∫f) = f`.
+Through the Horner bridge `toPolyG : RadElem α → K[X]` (with `X` the generator `y`, `K = CFieldSpec.K α`),
+the diagonal derivation `radDeriv n f` is `Differential.implicitDeriv (C (toK ℓ) · X)` for the rule
+`y' = ℓ·y`, `ℓ = logDerRadicand n f = f'/(nf)`. Using this keystone, the rational-part integrator's
+`radDeriv v = g` is proven as a genuine-field `K[X]` identity, with no `native_decide`.
 
-* **`IsRadicalRationalIntegral n f g v`** — the soundness predicate (rational part, no log term):
-  `radDeriv n f v = g` read in `K[X]` (`toPolyG (radDeriv n f v) = toPolyG g`). The named target the
-  capstone grows into.
-
-* **`isRadicalRationalIntegral_radGen`** — the abstractly-verified integral
-  **`∫ (f'/(nf))·√f dx = √f`**, i.e. `D(√f) = (f'/(nf))·√f` (`radDeriv n f radGen = [zero, logDerRadicand
-  n f]`). The antiderivative `v = radGen = y = √f` is the polynomial-in-`y` element `[0,1]` (no
-  denominator), so the proof stays in the ring `RadElem α` and routes entirely through `toPolyG_radDeriv`
-  + `implicitDeriv_X` (`toPolyG radGen = X`, `implicitDeriv v X = v`). General in `n`, the radicand `f`,
-  and the base `α` — needs **no** `n·toK f ≠ 0` hypothesis (the generator identity `y' = ℓ·y` holds
-  unconditionally). Over `α = ℚ(x)`, `n = 2`, `f = x³+1` this is the `native_decide` fact
-  `radDeriv_radGen_eq`, here proven abstractly.
-
-* **`isRadicalRationalIntegral_linear`** — the same for a *general* degree-`< n` antiderivative
-  `v = a₀ + a₁·y` (`[a₀, a₁]`): `D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁ℓ)·y`, the diagonal derivation made an
-  honest `K[X]` identity. Shows the soundness holds for any two-term radical antiderivative, not only the
-  bare generator.
-
-The **general** rational-part soundness is then assembled (abstract `K[X]`, general in `n`/`f`/`α`):
-
-* **`radReduceRationalTelescope`** — the fuel-recursion **telescoping invariant** (the genuinely-new
-  accumulation lemma): `radDeriv` distributes over the integrator's accumulator `foldl radAdd`
-  (`toPolyG_radDeriv_foldlRadAdd`) and the per-step contributions telescope to the endpoints
-  (`sum_radDeriv_telescope`), giving `radDeriv(accumulated v) + final-leftover = original integrand`.
-
-* **`radDeriv_foldlRadAdd_zero_cons_telescope`** — the **general rational-part soundness**: for the
-  pure-`y` lifts (`R/y ↦ (R/ρ)·y`, the form every `radReduceCaseᵢIterate` piece takes), *given* each
-  step's base-field equation `D(cBᵢ) + cBᵢ·ℓ = cCᵢ − cCᵢ₊₁` (the cleared single-step Case identity read in
-  `K`, via the per-step lift `toPolyG_radDeriv_zero_cons_sub_iff`), the assembled antiderivative
-  `v = foldl radAdd radZero [0,cBᵢ]` satisfies `radDeriv(v) = integrand − final-leftover` in `K[X]`.
-
-So the soundness capstone is a theorem under the precondition "each cleared step's `K`-equation holds".
-That precondition is **now discharged for the LITERAL `qxOfNum`-coefficient lifts** the
-`radIntegrateRational` driver produces, via three axiom-clean `QFunNZG ℚ`-specific bridges (none
-`radDeriv`-arithmetic):
-
-* **`toQFunNZG_cderiv_qxOfNum`** (bridge i, the substantive one) — `cderiv (qxOfNum P) = qxOfNum (cderivG
-  P)` read in `RatFunc ℚ`: the polynomial embedding `qxOfNum : CPolyG ℚ → QFunNZG ℚ` commutes with the
-  derivation (`cderiv = towerDerivQFunNZG [1]` realizes `extendDeriv (implicitDeriv (toPolyG [1]))`, which on
-  the algebra-map image is `algebraMap (baseDerivQ ·)`, and `baseDerivQ` is the plain `derivative` over `ℚ`).
-* **`toK_logDerRadicand_mul_radicand`** (bridge ii) — `ℓ·f = (1/n)·f'` in `K` (the integrand `g = (1/n)f'`
-  IS `ℓ·f` with `ℓ = f'/(nf)`).
-* **`radCase3Residual_eq`** (bridge iii) — the per-step polynomial cleared identity `B'f + Bg − C` is `rfl`.
-
-Composed by **`toK_step_qxOfNum_iff`** (each step's cleared polynomial identity ⟺ the telescope's per-step
-`K`-equation) and **`radDeriv_foldlRadAdd_qxOfNum_telescope`** (the **LITERAL** `qxOfNum`-coefficient
-rational-part soundness over `ℚ(x)`), recorded in the closing module docstring. -/
+The predicate is `IsRadicalRationalIntegral n f g v` (`toPolyG (radDeriv n f v) = toPolyG g`); concrete
+instances are `isRadicalRationalIntegral_radGen` (`∫ (f'/(nf))·√f = √f`) and
+`isRadicalRationalIntegral_linear` (two-term antiderivatives). The general soundness is the telescoping
+invariant `radReduceRationalTelescope` and `radDeriv_foldlRadAdd_zero_cons_telescope`, whose per-step
+`K`-equation precondition is discharged for the literal `qxOfNum`-coefficient lifts via three
+`QFunNZG ℚ`-specific bridges (`toQFunNZG_cderiv_qxOfNum`, `toK_logDerRadicand_mul_radicand`,
+`radCase3Residual_eq`), composed by `toK_step_qxOfNum_iff` and `radDeriv_foldlRadAdd_qxOfNum_telescope`. -/
 
 open Polynomial
 
@@ -73,82 +27,53 @@ namespace RadElem
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
-/-! ### The Horner readings `toPolyG radGen = X` and `toPolyG [0, c] = C(toK c)·X`
-
-The radical antiderivatives in play are pure-`y` (and, more generally, degree-`< n`) elements; their
-`toPolyG` images are the corresponding low-degree polynomials in `X`. These two readings are all the
-`toPolyG`-side computation the concrete soundness proofs need (`radGen = [0,1]`, the integrand `[0, ℓ]`). -/
+/-! ### The Horner readings `toPolyG radGen = X` and `toPolyG [0, c] = C(toK c)·X` -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`toPolyG radGen = X`** — the radical generator `y = √f` (`radGen = [0, 1]`) reads as the formal
-variable `X` under the Horner bridge (`toK 0 = 0`, `toK 1 = 1`). The single fact that turns
-`implicitDeriv … X = …` into a statement about `radDeriv radGen`. -/
+/-- `toPolyG radGen = X`: the generator `y = √f` (`radGen = [0, 1]`) reads as `X` under the Horner
+bridge. -/
 @[denote] theorem toPolyG_radGen : CPolyG.toPolyG (radGen : RadElem α) = X := by
   show CPolyG.toPolyG [CField.zero, CField.one] = X
   rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
     CFieldSpec.toK_zero, CFieldSpec.toK_one, map_zero, map_one, zero_add, mul_one]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`toPolyG [zero, c] = C (toK c) · X`** — the pure-`y` element `c·y` (`[0, c]`) reads as `C(toK c)·X`
-(its only nonzero coefficient is at degree `1`). The reading of an `R/y`-form radical antiderivative
-(`c·y`) and of a diagonal-derivation `y`-component. -/
+/-- `toPolyG [zero, c] = C (toK c) · X`: the pure-`y` element `c·y` reads as `C(toK c)·X`. -/
 theorem toPolyG_zero_cons (c : α) :
     CPolyG.toPolyG ([CField.zero, c] : RadElem α) = Polynomial.C (CFieldSpec.toK c) * X := by
   rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
     CFieldSpec.toK_zero, map_zero, zero_add]
   ring
 
-/-! ### The soundness predicate and the first abstractly-verified algebraic integral
+/-! ### The soundness predicate and the concrete algebraic integrals -/
 
-`IsRadicalRationalIntegral n f g v` says the radical element `v` is an antiderivative of the integrand `g`
-in `F(y) = α[y]/(yⁿ − f)`, *rational part only* (no `Σ cᵢ log uᵢ` term): the genuine-field reading of
-`radDeriv n f v = g`. The concrete witness is `v = √f` against `g = (f'/(nf))·√f`. -/
-
-/-- **The radical rational-integral soundness predicate** `IsRadicalRationalIntegral n f g v` — the radical
-element `v` integrates `g` over `α[y]/(yⁿ − f)`, *rational part* (no logarithmic term): the genuine-field
-identity `toPolyG (radDeriv n f v) = toPolyG g` in `K[X]` (`K = CFieldSpec.K α`, `X` the generator `y`).
-The named soundness target the capstone `D(∫g) = g` grows into; an instance is a concrete algebraic
-integral proven correct **abstractly** (not by `native_decide`). -/
+/-- The radical rational-integral soundness predicate `IsRadicalRationalIntegral n f g v`: the radical
+element `v` integrates `g` over `α[y]/(yⁿ − f)` (rational part), i.e. the genuine-field identity
+`toPolyG (radDeriv n f v) = toPolyG g` in `K[X]`. -/
 def IsRadicalRationalIntegral (n : ℕ) (f g v : RadElem α) : Prop :=
   CPolyG.toPolyG (radDeriv n (f.headD CField.zero) v) = CPolyG.toPolyG g
 
-/-- **★ The abstractly-verified algebraic integral `∫ (f'/(nf))·√f dx = √f`** — `D(√f) = (f'/(nf))·√f`
-in the genuine field `K[X]`: `toPolyG (radDeriv n f radGen) = toPolyG [zero, logDerRadicand n f]`. The
-antiderivative `v = radGen = y = √f` is `[0,1]` (a polynomial in `y`, no denominator), so the whole proof
-is the keystone `toPolyG_radDeriv` + `toPolyG_radGen` (`toPolyG radGen = X`) + Mathlib's `implicitDeriv_X`
-(`implicitDeriv v X = v`): `toPolyG (radDeriv n f radGen) = implicitDeriv (C(toK ℓ)·X) X = C(toK ℓ)·X =
-toPolyG [0, ℓ]`. General in `n`, the radicand `f`, and `α`; needs **no** `n·toK f ≠ 0` (the generator
-identity `y' = ℓ·y` is unconditional). This is the `native_decide` fact `radDeriv_radGen_eq` proven as a
-general theorem — the first abstractly-verified simple-radical integral. -/
+/-- The algebraic integral `∫ (f'/(nf))·√f dx = √f`: `toPolyG (radDeriv n f radGen) =
+toPolyG [zero, logDerRadicand n f]` in `K[X]`, via the keystone + `toPolyG_radGen` + `implicitDeriv_X`.
+General in `n`, `f`, `α`; no `n·toK f ≠ 0` needed. -/
 theorem toPolyG_radDeriv_radGen (n : ℕ) (f : α) :
     CPolyG.toPolyG (radDeriv n f (radGen : RadElem α))
       = CPolyG.toPolyG ([CField.zero, logDerRadicand n f] : RadElem α) := by
   rw [toPolyG_radDeriv, toPolyG_radGen, Differential.implicitDeriv_X,
     toPolyG_zero_cons (logDerRadicand n f)]
 
-/-- **★ The radical integral `∫ (f'/(nf))·√f = √f` as a soundness instance** —
-`IsRadicalRationalIntegral n [f] g radGen` with the integrand `g = [zero, logDerRadicand n f] =
-(f'/(nf))·y`. The first concrete algebraic integral packaged as the named soundness predicate, proven
-abstractly via `toPolyG_radDeriv_radGen` (`[f].headD = f` exposes the radicand to `radDeriv`). -/
+/-- The radical integral `∫ (f'/(nf))·√f = √f` as a soundness instance:
+`IsRadicalRationalIntegral n [f] [zero, logDerRadicand n f] radGen`, via `toPolyG_radDeriv_radGen`. -/
 theorem isRadicalRationalIntegral_radGen (n : ℕ) (f : α) :
     IsRadicalRationalIntegral n [f] ([CField.zero, logDerRadicand n f]) (radGen : RadElem α) := by
   show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) radGen) = _
   rw [List.headD_cons, toPolyG_radDeriv_radGen]
 
-/-! ### A general degree-`< n` antiderivative: `D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁ℓ)·y`
+/-! ### A general degree-`< n` antiderivative: `D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁ℓ)·y` -/
 
-Beyond the bare generator, the soundness holds for any two-term radical element `v = a₀ + a₁y` — the
-diagonal derivation `radDeriv` reads, through `toPolyG`, as the honest `K[X]` derivation
-`implicitDeriv (C(toK ℓ)·X)`, so `D(a₀ + a₁y)` is `D(a₀) + (D(a₁) + a₁·ℓ)·y` exactly (no `y`-power
-mixing, no quotient reduction — `v` has degree `< n` for `n ≥ 2`). The integrand it integrates is read
-off the diagonal formula. -/
-
-/-- **★ The diagonal-derivation identity for a two-term radical antiderivative** —
-`toPolyG (radDeriv n f [a₀, a₁]) = toPolyG [D(a₀), D(a₁) + a₁·ℓ]` with `ℓ = logDerRadicand n f`: the
-genuine-field reading of `D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁·ℓ)·y`, the diagonal derivation made an honest
-`K[X]` identity (keystone + `implicitDeriv` on `C(toK a₀) + C(toK a₁)·X`, `ring`). Shows the radical
-integrator's `D(v) = g` is sound for *any* degree-`< n` antiderivative `v = a₀ + a₁y`, not only the
-generator. -/
+/-- The diagonal-derivation identity for a two-term antiderivative:
+`toPolyG (radDeriv n f [a₀, a₁]) = toPolyG [D(a₀), D(a₁) + a₁·ℓ]` with `ℓ = logDerRadicand n f`, i.e.
+`D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁·ℓ)·y` in `K[X]`. -/
 theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
     CPolyG.toPolyG (radDeriv n f ([a₀, a₁] : RadElem α))
       = CPolyG.toPolyG ([CDiffField.cderiv a₀,
@@ -168,10 +93,8 @@ theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
     map_add, map_mul]
   ring
 
-/-- **★ The two-term radical integral as a soundness instance** —
-`IsRadicalRationalIntegral n [f] g [a₀, a₁]` with the integrand `g = [D(a₀), D(a₁) + a₁·ℓ]`
-(`ℓ = logDerRadicand n f`): the antiderivative `v = a₀ + a₁y` integrates `D(a₀) + (D(a₁) + a₁ℓ)·y`,
-packaged as the named predicate and proven abstractly via `toPolyG_radDeriv_linear`. -/
+/-- The two-term radical integral as a soundness instance:
+`IsRadicalRationalIntegral n [f] [D(a₀), D(a₁) + a₁·ℓ] [a₀, a₁]`, via `toPolyG_radDeriv_linear`. -/
 theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
     IsRadicalRationalIntegral n [f]
       ([CDiffField.cderiv a₀,
@@ -180,38 +103,17 @@ theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
   show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) [a₀, a₁]) = _
   rw [List.headD_cons, toPolyG_radDeriv_linear]
 
-/-! ### The fuel-recursion TELESCOPING invariant (the genuinely new lemma)
+/-! ### The fuel-recursion telescoping invariant
 
-The multi-case driver's `radReduceCaseᵢIterate` is a fuel recursion with an **accumulator** `vNum`: each
-step appends one contribution (`radAdd vNum contrib`) and replaces the leftover integrand by the negated
-residual. Soundness of the assembled `v` rests on the loop invariant
-`radDeriv(vNum) + leftover = original integrand` being preserved across the descent.
-
-Stripped to its mathematical core — which is what makes it provable *generally and abstractly* — the
-invariant is a **telescoping of `radDeriv` over a list of contributions**. Two ingredients:
-
-* **`toPolyG_radDeriv_foldlRadAdd`** — `radDeriv` distributes over the accumulator `foldl radAdd`:
-  `toPolyG (radDeriv n f (cs.foldl radAdd acc)) = toPolyG (radDeriv n f acc) + Σ_{c∈cs} toPolyG (radDeriv
-  n f c)`. The accumulator structure of every `radReduceCaseᵢIterate` is exactly this fold; additivity
-  (`toPolyG_radDeriv_radAdd`) pushed through it.
-
-* **`sum_radDeriv_telescope`** — if each contribution's derivative is the *difference of consecutive
-  leftovers* (`toPolyG (radDeriv n f (cs.get i)) = toPolyG (Ls.get i) − toPolyG (Ls.get (i+1))`, the
-  per-step cleared identity (1) read through `radDeriv`), the sum telescopes to
-  `toPolyG (Ls.head) − toPolyG (Ls.getLast)`.
-
-Composing, the accumulated `v = foldl radAdd radZero cs` satisfies the master soundness
-`toPolyG (radDeriv n f v) + toPolyG (final leftover) = toPolyG (initial integrand)`
-(`radReduceRationalTelescope`): the **general rational-part soundness, as an abstract `K[X]` identity**,
-reduced to the per-step `radDeriv` identity (1) over the engine's already-cleared single steps. -/
+The driver's accumulator `radDeriv(vNum) + leftover = original integrand` is a telescoping of `radDeriv`
+over the contribution list: `radDeriv` distributes over `foldl radAdd` (`toPolyG_radDeriv_foldlRadAdd`)
+and the per-step contributions telescope to the endpoints (`sum_radDeriv_telescope`), giving
+`radReduceRationalTelescope`. -/
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
-/-- **`radDeriv` distributes over the accumulator fold** — `toPolyG (radDeriv n f (cs.foldl radAdd acc))
-= toPolyG (radDeriv n f acc) + (cs.map (fun c => toPolyG (radDeriv n f c))).sum`. The exact accumulator
-structure of every `radReduceCaseᵢIterate` (`vNum ↦ radAdd vNum contrib`), so its accumulated `radDeriv`
-is the sum of the per-step `radDeriv` contributions plus the seed. Proven by list induction on `cs`,
-generalizing the accumulator, with the single step `toPolyG_radDeriv_radAdd`. -/
+/-- `radDeriv` distributes over the accumulator fold: `toPolyG (radDeriv n f (cs.foldl radAdd acc)) =
+toPolyG (radDeriv n f acc) + (cs.map (fun c => toPolyG (radDeriv n f c))).sum`. -/
 theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs : List (RadElem α)) :
     CPolyG.toPolyG (radDeriv n f (cs.foldl radAdd acc))
       = CPolyG.toPolyG (radDeriv n f acc)
@@ -223,15 +125,10 @@ theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs :
     ring
 
 omit [CDiffFieldSpec α] in
-/-- **The per-step contributions telescope (head/last form)** — for a head leftover `L₀`, a tail list of
-leftovers `rest`, and contributions `cs` of the same length as `rest`, if each contribution's
-`radDeriv`-image is the difference of consecutive leftovers — phrased as: `cs` zipped against the
-consecutive pairs of `L₀ :: rest` (i.e. `(L₀ :: rest).zip rest`) satisfies, head-to-head,
-`toPolyG (radDeriv n f c) = toPolyG p.1 − toPolyG p.2` (the per-step cleared identity (1)) — then the sum
-of the contributions' `radDeriv`-images is `toPolyG L₀ − toPolyG (rest.getLastD L₀)`. The clean
-telescoping over the fuel descent: each step "moves one piece" from the leftover into the accumulator, the
-sum collapsing to the endpoints. Stated via a parallel `List.Forall₂` recursion to keep the endpoints free
-of index/non-emptiness proof obligations. -/
+/-- The per-step contributions telescope (head/last form): if each contribution's `radDeriv`-image is
+the difference of consecutive leftovers (zipped as `(L₀ :: rest).zip rest`), the sum is
+`toPolyG L₀ − toPolyG (rest.getLastD L₀)`. Stated via `List.Forall₂` to keep the endpoints free of
+index obligations. -/
 theorem sum_radDeriv_telescope (n : ℕ) (f : α) :
     ∀ (L₀ : RadElem α) (rest : List (RadElem α)) (cs : List (RadElem α)),
       List.Forall₂ (fun c p => CPolyG.toPolyG (radDeriv n f c)
@@ -260,19 +157,11 @@ theorem sum_radDeriv_telescope (n : ℕ) (f : α) :
     rw [List.getLastD_cons]
     ring
 
-/-- **★ The master rational-part telescoping soundness (abstract, general)** — let `cs` be the list of
-per-step contributions a `radReduceCaseᵢIterate` accumulates (each `radAdd`-ed into the running `vNum`,
-from the seed `radZero`), and let `L₀ :: rest` be the chain of leftover integrands it passes through (`L₀`
-the *original* integrand, `rest.getLastD L₀` the *final* leftover). If each contribution's `radDeriv`-image
-is the difference of the consecutive leftovers it sits between (the per-step cleared identity (1), read
-through `radDeriv` and zipped as `(L₀ :: rest).zip rest`), then the accumulated antiderivative
-`v = cs.foldl radAdd radZero` satisfies the master soundness in `K[X]`:
-`toPolyG (radDeriv n f v) + toPolyG (final leftover) = toPolyG (original integrand)`.
-The general rational-part soundness as an abstract `K[X]` identity, reduced exactly to the per-step
-`radDeriv` identity — `radDeriv` distributes over the accumulator fold (`toPolyG_radDeriv_foldlRadAdd`,
-seed `radDeriv radZero = 0`) and the contributions telescope (`sum_radDeriv_telescope`). This is the
-genuinely-new accumulation-invariant lemma; instantiating the hypothesis with the per-case lift gives the
-soundness of `radIntegrateRational`'s assembled `v`. -/
+/-- The master rational-part telescoping soundness: for contributions `cs` (accumulated from `radZero`)
+and leftovers `L₀ :: rest`, if each contribution's `radDeriv`-image is the difference of consecutive
+leftovers, then `v = cs.foldl radAdd radZero` satisfies
+`toPolyG (radDeriv n f v) + toPolyG (final leftover) = toPolyG (original integrand)` in `K[X]`. Composes
+`toPolyG_radDeriv_foldlRadAdd` and `sum_radDeriv_telescope`. -/
 theorem radReduceRationalTelescope (n : ℕ) (f : α) (L₀ : RadElem α) (rest cs : List (RadElem α))
     (hstep : List.Forall₂ (fun c p => CPolyG.toPolyG (radDeriv n f c)
           = CPolyG.toPolyG p.1 - CPolyG.toPolyG p.2)
@@ -284,24 +173,15 @@ theorem radReduceRationalTelescope (n : ℕ) (f : α) (L₀ : RadElem α) (rest 
     sum_radDeriv_telescope n f L₀ rest cs hstep]
   ring
 
-/-! ### Toward the general rational-part soundness: the `C/y`-form single step (capstone reduction)
+/-! ### The `C/y`-form single step: reduction to one base-field equation
 
-The multi-case driver `radIntegrateRational` (`ComputableRadicalRationalDriver`) assembles the rational
-part of `∫ R/(B√ρ)` as a sum of `R/y`-form pieces, each lifted to the pure-`y` radical element `[0, c]`
-(`c·y`, with `c = vNum/(denom·ρ)` a base-field element — the `native_decide` `*_integrates` theorems use
-exactly this `[0, R/ρ]` lift, since `R/y = (R/ρ)·y` in `α[y]/(y² − ρ)`). The driver's soundness
-`radDeriv(v) = integrand` therefore rests, piece by piece, on the **`C/y`-form single-step identity**: for
-`v = c·y` and integrand `g = γ·y`, `radDeriv n f v = g` is the *single base-field equation*
-`D(c) + c·ℓ = γ` (`ℓ = logDerRadicand n f`). The next two lemmas make that reduction abstract: the
-`C/y`-form soundness is **equivalent** to that one equation in `K`, and the equation is what each cleared
-Case identity (`case3_cleared_identity` & co., currently `native_decide`) certifies after dividing by the
-common denominator. -/
+Every `R/y`-form piece of the rational-part driver lifts to a pure-`y` element `[0, c]` (`c·y`); for such
+`v = c·y` and integrand `g = γ·y`, `radDeriv n f v = g` collapses to the single base-field equation
+`D(c) + c·ℓ = γ` (`ℓ = logDerRadicand n f`). -/
 
-/-- **The `y`-component reading of a `C/y`-form antiderivative's derivative** —
-`toPolyG (radDeriv n f [zero, c]) = C (toK (D(c) + c·ℓ)) · X` with `ℓ = logDerRadicand n f`: the diagonal
-derivation of `c·y` (`[0, c]`) is `(D(c) + c·ℓ)·y`, a pure `y`-component (`D(c·y) = D(c)·y + c·D(y) =
-D(c)·y + c·ℓ·y`). Specializes `toPolyG_radDeriv_linear` at `a₀ = 0` (the constant component vanishes:
-`D(0) = 0`). The building block of the `C/y`-form soundness. -/
+/-- The `y`-component reading of a `C/y`-form antiderivative's derivative:
+`toPolyG (radDeriv n f [zero, c]) = C (toK (D(c) + c·ℓ)) · X` with `ℓ = logDerRadicand n f`. Specializes
+`toPolyG_radDeriv_linear` at `a₀ = 0`. -/
 theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
     CPolyG.toPolyG (radDeriv n f ([CField.zero, c] : RadElem α))
       = Polynomial.C (CFieldSpec.toK

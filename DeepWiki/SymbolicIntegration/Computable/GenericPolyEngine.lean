@@ -6,20 +6,10 @@ import DeepWiki.SymbolicIntegration.Computable.Denote
 
 /-! # A generic computable field, and a polynomial engine over it
 
-A `CField` is a type `α` of computable field elements: computable
-`zero`/`one`/`add`/`mul`/`neg`/`inv` and a decidable zero test, with no abstract field
-structure attached — so its operations *reduce* (`#eval`/`native_decide`). The meaning of
-those operations is supplied separately by a companion `CFieldSpec`: a homomorphism
-`toK : α → K` into a genuine Mathlib `Field K` that intertwines the computable operations
-with the field ones.
-
-On top of any `CField`, this file builds a dense polynomial engine `CPolyG α := List α`
-(coefficient lists, index = degree, low to high) with computable arithmetic
-`caddG`/`cmulG`/`cdivmodG`/`cgcdExtG`/…, together with a Horner bridge
-`toPolyG : CPolyG α → (CFieldSpec.K α)[X]` proved to realize genuine polynomial arithmetic
-over `K`. The split — bridge-free `CField` on the compute side, the noncomputable `toK`
-bridge on the proof side — is exactly what lets one engine both evaluate and be verified.
-It imports Mathlib plus the topic's `Denote` simp-attribute registration. -/
+`CField α`: computable field operations (`zero`/`one`/`add`/`mul`/`neg`/`inv`, zero test) that
+reduce, with meaning supplied by a companion `CFieldSpec` homomorphism `toK : α → K` into a Mathlib
+`Field K`. Over any `CField`, a dense polynomial engine `CPolyG α := List α` with computable
+arithmetic and a Horner bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]`. -/
 
 open Polynomial
 
@@ -27,16 +17,11 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The `CField` typeclass (computable operations only)
 
-`CField α` packages just the computable field operations on `α`: `zero`/`one`/`add`/`mul`/`neg`/
-`inv` and the computable zero test `isZero`, plus derived `sub`/`div`. It is deliberately bridge-free,
-so an instance whose operations are honest list computations stays *computable* even though its
-companion `CFieldSpec` (the field-homomorphism bridge) is noncomputable. The polynomial engine
-(`caddG`/`cmulG`/`cdivmodG`/`cgcdExtG`) needs only `[CField α]`, so it reduces (`#eval`/`native_decide`);
-the correctness proofs add `[CFieldSpec α]`. -/
+`CField α`: the computable field operations plus zero test, bridge-free so instances stay
+computable; correctness proofs add `[CFieldSpec α]`. -/
 
-/-- Computable field operations: a type `α` with computable `zero`/`one`/`add`/`mul`/`neg`/`inv`
-and a computable zero test `isZero`. Bridge-free, so instances built from honest computations stay
-computable; the field-homomorphism bridge lives in the companion `CFieldSpec`. -/
+/-- Computable field operations: `zero`/`one`/`add`/`mul`/`neg`/`inv` and a zero test `isZero`;
+bridge-free, so instances stay computable. -/
 class CField (α : Type*) where
   /-- Computable zero. -/
   zero : α
@@ -65,17 +50,11 @@ end CField
 
 /-! ### The `CFieldSpec` typeclass (the field-homomorphism bridge)
 
-`CFieldSpec α` (over `[CField α]`) carries the noncomputable bridge `toK : α → K` into a genuine
-Mathlib `Field K` that intertwines the `CField` operations, plus the certification `isZero_iff` of the
-computable zero test against `toK a = 0`. `toK` need NOT be injective — the engine operates on
-representations and tests `K`-equality through `isZero`, so multiple representations of one field
-element are fine (e.g. unreduced rational functions). Keeping this separate from `CField` is what lets
-the engine compute while only the *correctness layer* depends on the bridge. -/
+`CFieldSpec α`: the noncomputable bridge `toK : α → K` into a Mathlib `Field K` intertwining the
+`CField` operations, with `isZero_iff` certifying the zero test; `toK` need not be injective. -/
 
-/-- Computable-field specification: the field-homomorphism bridge for `[CField α]`. Carries
-`toK : α → K` into a Mathlib `Field K` intertwining `zero`/`one`/`add`/`mul`/`neg`/`inv`, plus the
-certification `isZero_iff` of `CField.isZero` against `toK a = 0`. Noncomputable in general; required
-only by the correctness proofs, not by the engine. -/
+/-- Computable-field specification: the bridge `toK : α → K` into a Mathlib `Field K` intertwining
+`zero`/`one`/`add`/`mul`/`neg`/`inv`, plus `isZero_iff` certifying `CField.isZero`. -/
 class CFieldSpec (α : Type*) [CField α] where
   /-- The genuine Mathlib field the bridge lands in. -/
   K : Type*
@@ -122,9 +101,8 @@ end CFieldSpec
 
 /-! ### Instances: `CField ℚ` and `CFieldSpec ℚ`
 
-`ℚ` is trivially a computable field over itself: the operations are `ℚ`'s own, `isZero` by decidable
-equality, and the bridge is `K = ℚ`, `toK = id` with every law `rfl`. The simplest instance — and the
-one that validates the whole abstraction. -/
+`ℚ` as a computable field over itself: `ℚ`'s own operations, `isZero` by decidable equality, bridge
+`K = ℚ`, `toK = id`. -/
 
 /-- `CField ℚ`: rationals as a computable field with `ℚ`'s own operations and
 `isZero a := decide (a = 0)`. -/
@@ -152,10 +130,8 @@ instance : CFieldSpec ℚ where
 
 /-! ### The polynomial engine `CPolyG α := List α`
 
-Over any `[CField α]`, the dense-coefficient list `CPolyG α` (index = degree, low to high) carries
-polynomial arithmetic, with every operation built from `CField.add`/`mul`/`neg`/`isZero`. The Horner
-bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]` embeds it into genuine polynomials via `toK` (so it
-additionally needs `[CFieldSpec α]`). -/
+Dense-coefficient lists (index = degree, low to high) over `[CField α]`, with arithmetic built from
+the `CField` operations and a Horner bridge `toPolyG` into `(CFieldSpec.K α)[X]`. -/
 
 /-- Generic dense coefficient list over a computable field `α` (index = degree, low to high).
 A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
@@ -217,19 +193,10 @@ def cmonicG {α : Type*} [CField α] (p : CPolyG α) : CPolyG α :=
   let p := cnormG p
   if cisZeroG p then [] else cscaleG (CField.inv (cleadG p)) p
 
-/-! ### Euclidean division and the extended Euclidean algorithm (engine, `[CField α]`-only)
-
-`cdivmodG`/`cdivG`/`cmodG`/`cdvdG`/`cgcdExtG` implement polynomial division, remainder, divisibility,
-and gcd over any `[CField α]`, using only the computable operations (so they reduce,
-`#eval`/`native_decide`); they are fuel-bounded for termination. Their correctness — the Euclidean
-identity, Bézout, gcd divisibility — is proved separately, where the `[CFieldSpec α]` bridge is in
-scope. -/
-
 /-! ### The generic Horner bridge `toPolyG` and its homomorphism lemmas
 
-From here on the bridge `[CFieldSpec α]` is in scope: `toPolyG` and every correctness lemma reference
-`CFieldSpec.toK`/`CFieldSpec.K` and so carry the extra binder, while the engine ops above need only
-`[CField α]`. -/
+From here on the bridge `[CFieldSpec α]` is in scope: `toPolyG` and every correctness lemma carry the
+extra binder, while the engine ops above need only `[CField α]`. -/
 
 /-- Generic bridge to `(CFieldSpec.K α)[X]`: `toPolyG p` reads a `CPolyG` coefficient list (index =
 degree, low to high) as a `Polynomial (CFieldSpec.K α)` in Horner form `p₀ + x·(p₁ + x·(p₂ + …))`,
@@ -440,10 +407,8 @@ theorem cnormG_eq_nil_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG �
     rw [toK_cleadG_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
     exact hcl rfl
 
-/-- Degree bound from normalized-length bound: a strictly shorter normalized coefficient list (with
-nonzero divisor `q`) is strictly lower degree under `toPolyG` — `length (cnormG p) < length (cnormG q)`
-gives `deg (toPolyG p) < deg (toPolyG q)`. The bridge from the engine's `length`-form remainder bounds
-(`cmodG_length_lt`) to honest `Polynomial.degree`s (via `cdegG_eq_natDegree`); `p = 0` lands `⊥ < deg q`. -/
+/-- `length (cnormG p) < length (cnormG q)` (with `cnormG q ≠ []`) gives
+`deg (toPolyG p) < deg (toPolyG q)`. -/
 theorem toPolyG_degree_lt_of_length_lt {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α)
     (hq : cnormG q ≠ []) (hlen : (cnormG p : List α).length < (cnormG q : List α).length) :
     (toPolyG p).degree < (toPolyG q).degree := by

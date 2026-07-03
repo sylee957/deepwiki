@@ -2,24 +2,17 @@ import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
-/-! # Generic RDE glue lemmas (`cgcdFF`-free), shared by the `…CorrectG` tower correctness
+/-! # Generic RDE glue lemmas
 
-The handful of carrier-agnostic algebraic glue lemmas the generic `QFunNZG ℚ` RDE correctness
-(`ComputableRischDETowerCorrectG`) consumes. Each is **fully generic** — pure-Mathlib `Derivation`
-algebra (`spde_step_glue`/`spde_const_base`/`rdeNormalDenominator_glue`) or generic-engine `toPolyG`
-facts (`dvd_of_cdvdG`/`toPolyG_cdiophantineG`) plus their fuel-free companions
-(`dvd_of_cdvdGWf`/`toPolyG_cdiophantineGWf`) — so they live here over the generic engine, kept
-self-contained for the `…CorrectG` files. -/
+Carrier-agnostic algebraic glue lemmas consumed by the tower RDE correctness: pure `Derivation`
+algebra and generic-engine `toPolyG` divisibility/Diophantine facts. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-- **The Rothstein `SPDE`-step gluing identity** (commutative-ring `Derivation` algebra): with `D` a
-derivation, divided coefficients `a, b, c`, a Bézout witness `b·r + a·z = c`, and a solution `h` of the
-*reduced* equation `a·D(h) + (b + D(a))·h = z − D(r)`, the reconstruction `q = a·h + r` solves the
-original divided equation `a·D(q) + b·q = c`. Pure `Derivation.leibniz` + `ring`; the algebraic core of
-one `cSPDE` peel (Bronstein Theorem 6.4.1). -/
+/-- SPDE-step gluing: with Bézout witness `b·r + a·z = c` and `h` solving the reduced equation
+`a·D(h) + (b + D(a))·h = z − D(r)`, the reconstruction `q = a·h + r` solves `a·D(q) + b·q = c`. -/
 theorem spde_step_glue {R : Type*} [CommRing R] (D : Derivation ℤ R R)
     (a b c r z h : R)
     (hbez : b * r + a * z = c)
@@ -33,9 +26,8 @@ theorem spde_step_glue {R : Type*} [CommRing R] (D : Derivation ℤ R R)
   rw [this, hred]
   linear_combination hbez
 
-/-- **The constant-`a` base-case scaling identity** (commutative-ring): if `a₀ ≠ 0` is a nonzero scalar
-and `h` solves the reduced `D(h) + (a₀⁻¹·b)·h = a₀⁻¹·c`, then `h` solves `a₀·D(h) + b·h = c` (multiply
-through by `a₀`). The `deg(a) = 0` base case of `cSPDE`, where `α = 1`, `β = 0` (`q = h`). -/
+/-- Constant-`a` base-case scaling: if `a₀ ≠ 0` and `h` solves `D(h) + (a₀⁻¹·b)·h = a₀⁻¹·c`, then `h`
+solves `a₀·D(h) + b·h = c`. -/
 theorem spde_const_base {K : Type*} [Field K] (D : Derivation ℤ K[X] K[X])
     (a0 : K) (b c h : K[X]) (ha0 : a0 ≠ 0)
     (hred : D h + (Polynomial.C a0⁻¹ * b) * h = Polynomial.C a0⁻¹ * c) :
@@ -51,12 +43,10 @@ theorem spde_const_base {K : Type*} [Field K] (D : Derivation ℤ K[X] K[X])
     _ = (Polynomial.C a0 * Polynomial.C a0⁻¹) * c := by ring
     _ = c := by rw [hinv, one_mul]
 
-/-- **The §6.2 normal-denominator cleared lifting** (commutative-ring `Derivation` core): with `D` a
-derivation, the normal part `DN ≠ 0`, the factorization `A = DN·H` and the two exact-division
-certificates `B·FDEN = A·FNUM − DN·(D H)·FDEN`, `C·GDEN = DN·H²·GNUM`, a solution `Q` of the reduced
-equation `A·D(Q) + B·Q = C` makes `y = Q/H` solve `D(y) + f·y = g` in the cleared form
-`GDEN·FDEN·(D(Q)·H − Q·(D H)) + GDEN·FNUM·Q·H = GNUM·FDEN·H²`. Pure algebra: multiply the reduced
-equation by `FDEN·GDEN`, the whole identity is `DN` times the goal, cancel the nonzero `DN`. -/
+/-- Normal-denominator cleared lifting: with `DN ≠ 0`, `A = DN·H`, exact-division certificates
+`B·FDEN = A·FNUM − DN·(D H)·FDEN` and `C·GDEN = DN·H²·GNUM`, and `Q` solving `A·D(Q) + B·Q = C`,
+`y = Q/H` solves the cleared form
+`GDEN·FDEN·(D(Q)·H − Q·(D H)) + GDEN·FNUM·Q·H = GNUM·FDEN·H²`. -/
 theorem rdeNormalDenominator_glue {R : Type*} [CommRing R] [NoZeroDivisors R]
     (D : Derivation ℤ R R) (DN H FNUM FDEN GNUM GDEN A B C Q : R)
     (hDN : DN ≠ 0)
@@ -75,12 +65,8 @@ theorem rdeNormalDenominator_glue {R : Type*} [CommRing R] [NoZeroDivisors R]
     linear_combination hmul
   exact mul_left_cancel₀ hDN hkey
 
-/-- **The §6.2 special-denominator substitution expansion** (commutative-ring `Derivation` core): for a
-special irreducible `p` with `D p = E·p` (the hyperexponential case `p = t`, `E = η ∈ k`), the
-reconstruction `r = q·pᵏ` of the special-denominator stage expands by Leibniz as
-`a·D(r) + b·r = (a·D(q) + b·q + k·a·E·q)·pᵏ`. Pure `Derivation.leibniz` + `Derivation.leibniz_pow`; the
-algebraic heart of Bronstein's §6.2 special-denominator substitution (`r = q·h`, `h = p^{−n} = pᵏ`,
-`k = −n ≥ 0`). -/
+/-- Special-denominator substitution expansion: for `p` with `D p = E·p`, the reconstruction `r = q·pᵏ`
+expands as `a·D(r) + b·r = (a·D(q) + b·q + k·a·E·q)·pᵏ`. -/
 theorem specialDenominatorSubst_expand {R : Type*} [CommRing R] (D : Derivation ℤ R R)
     (a b p E q : R) (k : ℕ) (hDp : D p = E * p) :
     a * D (q * p ^ k) + b * (q * p ^ k)
@@ -90,13 +76,8 @@ theorem specialDenominatorSubst_expand {R : Type*} [CommRing R] (D : Derivation 
   | zero => simp
   | succ k => simp only [Nat.add_sub_cancel, smul_eq_mul, Nat.cast_succ, pow_succ]; ring
 
-/-- **The §6.2 special-denominator cleared identity from the reduced obligation** (commutative-ring
-`Derivation` core): with `D p = E·p`, if the substitution's *reduced* identity
-`a·D(q) + b·q + k·a·E·q = c` holds — the fact Bronstein's §6.2 valuation bookkeeping (Lemma 6.2.1/6.2.2,
-the `ν_p`-exponent relations) supplies — then `r = q·pᵏ` solves `a·D(r) + b·r = c·pᵏ`. Isolates the single
-missing §6.2 obligation (`hreduced`) from the otherwise-mechanical `Derivation` algebra; the hyperexp
-analogue of how `rdeNormalDenominator_glue` discharges the normal-denominator stage from its reduced
-`a·D(Q) + b·Q = c`. -/
+/-- Special-denominator cleared identity: with `D p = E·p`, if the reduced identity
+`a·D(q) + b·q + k·a·E·q = c` holds, then `r = q·pᵏ` solves `a·D(r) + b·r = c·pᵏ`. -/
 theorem specialDenominatorSubst_cleared {R : Type*} [CommRing R] (D : Derivation ℤ R R)
     (a b c p E q : R) (k : ℕ) (hDp : D p = E * p)
     (hreduced : a * D q + b * q + (k : R) * (a * E) * q = c) :

@@ -1,46 +1,11 @@
 import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGcdWitnessWf
 import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalCorrect
 
-/-! # The CORRECT (weak-normalized) recursive Risch-DE solver — closing the divisibility wall
+/-! # The weak-normalized recursive Risch-DE solver
 
-`ComputableRischDENormalCorrect` sharpened the recursive RDE-oracle wall to its exact mathematical
-content: a successful `crischDESolve f g = some y` over `QFunNZG β` gives the field-level Risch-DE identity
-**modulo** the reduced crux `RischDESuccessResidualCrux`, whose genuine obstruction is the §6.1
-weak-normalization product-divisibilities `hdvdB_dn_h` (`fden ∣ dₙh`) and `hdvdC_dn_h2` (`gden ∣ dₙh²`).
-The diagnosis there: the recursive `crischDESolve` **skips** Bronstein §6.1 weak normalization
-(`cWeakNormalizerG`), so it feeds raw (possibly non-normal) input into `cRischDEG`, on which the
-divisibility can fail — but `dvd_dn_h_of_normal` shows the divisibility **vanishes on normal input**.
-
-This file builds the **correct** algorithm — the one the engine should run — and confirms the diagnosis:
-
-* **`crischDESolveNorm f g`** (Task 1) = weak-normalize `f` via `cWeakNormalizerG` to `f̃ = f − Dq/q`,
-  solve the normalized RDE `Dỹ + f̃·ỹ = q·g` with the existing recursive `crischDESolve`, and transform
-  the solution back by `y = ỹ/q` (the §6.1 round-trip).
-* **The normalization-correctness sub-lemma** (Task 2): the precise, isolated property that makes the
-  divisibility crux vanish — `IsWeaklyNormalizedNorm f̃` says `f̃`'s denominator equals its own normal
-  part (`toPolyG (cSplitFactorFastG [1] _ f̃.1.2).1 = toPolyG f̃.1.2`). This is exactly the algebraic
-  *guarantee* of `cWeakNormalizerG` (Bronstein §6.1): for the post-normalization `f̃`, the special part of
-  the denominator is a unit. It is `native_decide`-validated on concrete runs (the engine computes it) but
-  not abstractly self-certified, so it is carried as the **one** isolated normalization-correctness fact.
-* **The §6.1 round-trip correctness** (Task 3): `roundtrip_field` — the pure field-algebra substitution
-  showing `Y = Ỹ/Q` solves the original `D(Y) + F·Y = G` whenever `Ỹ` solves the normalized
-  `D(Ỹ) + (F − DQ/Q)·Ỹ = Q·G` (`Q ≠ 0`). This is a **theorem** (Mathlib `Derivation` quotient rule), no
-  residual.
-* **★ The capstone** (Task 4): `crischDESolveNorm_field` — the field-level Risch-DE identity for the
-  ORIGINAL `f, g` from a successful `crischDESolveNorm`, with `[CTowerGcdWitness β]`, the normalization
-  guarantee (Task 2), and `RischDESuccessResidualNorm` — the crux **with the `B`-divisibility clause
-  `hdvdB_dn_h` REMOVED** (discharged by `dvd_dn_h_of_normal`). NO `native_decide`. **So the `B`-divisibility
-  crux — the §6.2 self-divisibility `dvd_dn_h_of_normal` targets, the wall the diagnosis pinned — IS closed
-  for the correct (normalized) algorithm, modulo the single normalization-correctness sub-lemma.**
-
-★ **Verdict (stated precisely at the end): the wall is illusory FOR THE `B`-DIVISIBILITY** — the §6.2
-self-divisibility `fden ∣ dₙh` that `dvd_dn_h_of_normal` targets was the engine's missing weak-normalization
-step; with `cWeakNormalizerG` added it is a **theorem** given the one §6.1 normalization-correctness fact
-(`IsWeaklyNormalizedNorm`). Precisely beyond that single sub-lemma: (i) the `C`-divisibility `hdvdC_dn_h2`
-(`gden ∣ dₙh0²`) is a **`g`-side cross-divisibility** that `dvd_dn_h_of_normal` provably does NOT reach
-	(it is the engine's own `cdvdG` check up to `gden`-vs-`eₙ`, not a self-divisibility), and (ii) the per-run
-	termination data (`hdn`/`hin`/`hdb`) that every computable solver carries. Both are NOT the
-	`B`-divisibility wall; they are a distinct `g`-side condition + generic termination side data. -/
+`crischDESolveNorm` weak-normalizes `f` to `f̃ = f − Dq/q`, solves the normalized RDE with the
+recursive `crischDESolve`, and transforms the solution back by `y = ỹ/q`. The field-level
+round-trip and the normalization-correctness sub-lemma `IsWeaklyNormalizedNorm` live here. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -49,23 +14,17 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG GBPolyCore
 
-/-! ## The §6.1 round-trip field-algebra identity (Task 3, abstract — no engine, no residual)
+/-! ## The round-trip field-algebra identity
 
-The pure substitution lemma underlying the round-trip: in any field with a `Derivation`, if `Ỹ` solves the
-**weakly-normalized** equation `D(Ỹ) + (F − DQ/Q)·Ỹ = Q·G` and `Q ≠ 0`, then `Y = Ỹ/Q` solves the
-**original** `D(Y) + F·Y = G`. This is exactly Bronstein §6.1's reduction of the RDE to its
-weakly-normalized form, read at the field level. A theorem — the round-trip preserves the RDE. -/
+If `Ỹ` solves the weakly-normalized `D(Ỹ) + (F − DQ/Q)·Ỹ = Q·G` with `Q ≠ 0`, then `Y = Ỹ/Q`
+solves the original `D(Y) + F·Y = G`. -/
 
 section RoundTrip
 
 variable {K : Type*} [Field K] (D : Derivation ℤ (RatFunc K) (RatFunc K))
 
-/-- **★ The §6.1 round-trip preserves the Risch DE** (`roundtrip_field`, abstract): for a `Derivation` `D`
-on `RatFunc K`, field elements `F G Q Ỹ` with `Q ≠ 0`, if `Ỹ` solves the weakly-normalized equation
-`D(Ỹ) + (F − D(Q)/Q)·Ỹ = Q·G`, then `Y = Ỹ/Q` solves the original `D(Y) + F·Y = G`. The substitution
-`y = ỹ/q` of Bronstein §6.1, read purely at the field level (`Derivation` quotient rule
-`D(Ỹ/Q) = (D(Ỹ)·Q − Ỹ·D(Q))/Q²`); the algebraic essence of the weak-normalization round-trip, with NO
-residual. -/
+/-- `roundtrip_field`: if `Ỹ` solves `D(Ỹ) + (F − D(Q)/Q)·Ỹ = Q·G` with `Q ≠ 0`, then `Y = Ỹ/Q`
+solves `D(Y) + F·Y = G`. -/
 theorem roundtrip_field (F G Q Ytilde : RatFunc K) (hQ : Q ≠ 0)
     (hnorm : D Ytilde + (F - D Q / Q) * Ytilde = Q * G) :
     D (Ytilde / Q) + F * (Ytilde / Q) = G := by
@@ -83,28 +42,16 @@ theorem roundtrip_field (F G Q Ytilde : RatFunc K) (hQ : Q ≠ 0)
 
 end RoundTrip
 
-/-! ## The normalized recursive solver `crischDESolveNorm` (Task 1)
+/-! ## The normalized recursive solver `crischDESolveNorm`
 
-`crischDESolveNorm f g` runs the §6.1 round-trip around the existing recursive `crischDESolve`:
-
-1. compute the weak normalizer `q = cWeakNormalizerG [1] fuel f.1.1 f.1.2` (Bronstein §6.1) — the
-   polynomial with `f − Dq/q` weakly normalized;
-2. lift `q` to `QFunNZG β` as `q' = q/1` (guarding `q ≠ 0`);
-3. form `f̃ = f − Dq'/q'` (the weakly-normalized field element) and `qg = q'·g`;
-4. solve the normalized RDE `crischDESolve f̃ qg`; on `some ỹ`, return `y = ỹ/q'`.
-
-Computable over `QFunNZG β` (everything routes through the engine; subtype proofs `Prop`-erased). The base
-solve, normal-denominator reduction, etc., are exactly the production `crischDESolve` — this wrapper only
-adds the missing §6.1 pre-step. -/
+Weak-normalize `f`, solve the normalized RDE with `crischDESolve`, and transform the solution back.
+Computable over `QFunNZG β`. -/
 
 section Lift
 
 variable {β : Type*} [CField β] [CFieldDomain β]
 
-/-- **Lift a polynomial `q : CPolyG β` to `QFunNZG β` as `q/1`** `qOfPolyNZG q`: numerator `q`, denominator
-`[1]` (always nonzero). When `q` itself is zero the lift is still well-formed (`0/1`); the solver guards
-`q ≠ 0` separately where the field round-trip needs `Q ≠ 0`. The bridge turning the §6.1 weak-normalizer
-output (a `CPolyG β`) into a `QFunNZG β` field element. -/
+/-- `qOfPolyNZG q`: lift a polynomial `q : CPolyG β` to `QFunNZG β` as `q/1`. -/
 def qOfPolyNZG (q : CPolyG β) : QFunNZG β :=
   ⟨(q, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
@@ -114,10 +61,7 @@ section Helpers
 
 variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
 
-/-- **The weakly-normalized field element** `weakNormalizedF f q' = f − Dq'/q'` over `QFunNZG β`
-(`D = towerDerivQFunNZG [1]`, the level derivation): subtract the logarithmic derivative `Dq'/q'` of the
-weak normalizer from `f`. By Bronstein §6.1 this is weakly normalized for `q' = cWeakNormalizerG`'s output.
-The first argument of the inner `crischDESolve`. -/
+/-- `weakNormalizedF f q' = f − Dq'/q'` over `QFunNZG β`: the weakly-normalized field element. -/
 def weakNormalizedF (f q' : QFunNZG β) : QFunNZG β :=
   qsubNZG f (qmulNZG (towerDerivQFunNZG ([CField.one] : CPolyG β) q') (qinvNZG q'))
 
@@ -126,7 +70,7 @@ end Helpers
 
 /-! ## The computable lowest-terms reduction `reduceSoundOpt`
 
-`reduceSoundOpt` is the shared `[CField β]`-data reducer used by both the fueled and Wf sound wrappers. -/
+`reduceSoundOpt` is the shared `[CField β]`-data lowest-terms reducer used by the sound wrappers. -/
 
 section Reduce
 
@@ -144,39 +88,28 @@ theorem reduceSoundOpt_eq (a : QFunNZG β) : reduceSoundOpt a = some (qReduce a)
 
 end Reduce
 
-/-! ## The normalization-correctness sub-lemma (Task 2)
+/-! ## The normalization-correctness sub-lemma
 
-`IsWeaklyNormalizedNorm h` is the precise property of a `QFunNZG β` that makes the §6.2 divisibility crux
-vanish (via `dvd_dn_h_of_normal`): `h`'s denominator equals its own normal part. This is exactly Bronstein
-§6.1's *guarantee* for the post-normalization `f̃ = f − Dq/q`: the residue resultant's positive integer
-roots are exhausted, so the special part of `f̃`'s denominator is a unit and the denominator IS its own
-normal part. The engine computes `cWeakNormalizerG` and the property holds on every concrete run
-(`native_decide`-checkable), but `cWeakNormalizerG` carries no abstract correctness theorem — so this is
-the single isolated normalization-correctness fact, supplied as a hypothesis at the capstone. -/
+`IsWeaklyNormalizedNorm h` says `h`'s denominator equals its own normal part — the property that
+holds for a weakly-normalized field element. -/
 
 section Normality
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
-/-- **The weak-normalization guarantee** `IsWeaklyNormalizedNorm h`: the `QFunNZG β` `h` has a
-**weakly-normalized denominator** — its denominator equals its own §3.5 normal part
-`toPolyG (cSplitFactorFastG [1] _ h.1.2).1 = toPolyG h.1.2` (equivalently, the denominator's special part
-is a unit). The output `f̃ = f − Dq/q` of Bronstein §6.1 weak normalization satisfies this by construction;
-it is the precise condition under which `dvd_dn_h_of_normal` discharges the §6.2 divisibility crux. The
-single isolated normalization-correctness fact (the engine validates it per run; no abstract theorem). -/
+/-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its own normal part
+`toPolyG (cSplitFactorFastGWf [1] _ h.1.2).1 = toPolyG h.1.2`. -/
 def IsWeaklyNormalizedNorm (h : QFunNZG β) : Prop :=
   toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) h.1.2).1
     = toPolyG h.1.2
 
 end Normality
 
-/-! ## The construction bridges to the field (Task 3 — the round-trip read through `toQFunNZG`)
+/-! ## The construction bridges to the field
 
-The solver's `QFunNZG`-level constructions read at the field level (`toQFunNZG`) exactly as the §6.1
-round-trip wants: `weakNormalizedF f q'` reads as `F − D(Q)/Q`, the scaled RHS `q'·g` reads as `Q·G`, and
-the returned `ytilde·q'⁻¹` reads as `Ỹ/Q`. All three are ring-hom computations (`toQFunNZG_q*` +
-`toQFunNZG_towerDerivQFunNZG`); the derivation `D = towerFractionFieldDerivG [1]` agrees with
-`towerDerivQFunNZG [1]` through `toQFunNZG`. -/
+The solver's `QFunNZG`-level constructions read at the field level through `toQFunNZG`:
+`weakNormalizedF f q'` as `F − D(Q)/Q`, the scaled RHS `q'·g` as `Q·G`, and the returned value
+as `Ỹ/Q`. -/
 
 section Bridges
 
@@ -184,10 +117,8 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
 omit [CRischField β] in
-/-- **The derivation bridge** `towerFractionFieldDerivG [1] (toQFunNZG x) = toQFunNZG (towerDerivQFunNZG [1]
-x)`: the abstract fraction-field derivation `towerFractionFieldDerivG [1]` agrees with the computable tower
-derivation `towerDerivQFunNZG [1]` through `toQFunNZG`. Just `toQFunNZG_towerDerivQFunNZG` read through
-`towerFractionFieldDerivG = extendDeriv (implicitDeriv (toPolyG ·))`. -/
+/-- `towerFractionFieldDerivG_toQFunNZG`: `towerFractionFieldDerivG [1]` agrees with
+`towerDerivQFunNZG [1]` through `toQFunNZG`. -/
 theorem towerFractionFieldDerivG_toQFunNZG (x : QFunNZG β) :
     towerFractionFieldDerivG ([CField.one] : CPolyG β) (toQFunNZG x)
       = toQFunNZG (towerDerivQFunNZG ([CField.one] : CPolyG β) x) := by
@@ -195,9 +126,7 @@ theorem towerFractionFieldDerivG_toQFunNZG (x : QFunNZG β) :
 
 omit [CDiffField β] [CDiffFieldSpec β] [CRischField β]
   [Algebra ℚ (CFieldSpec.K β)] in
-/-- **`toQFunNZG q' ≠ 0` from `q ≠ 0`** (`toQFunNZG_qOfPolyNZG_ne_zero`): the lift `q' = q/1` has nonzero
-field image exactly when `q` is nonzero (`toQFunNZG q' = amG(toPolyG q)/amG 1 = amG(toPolyG q)`). The
-`Q ≠ 0` hypothesis the round-trip needs, from the solver's `cisZeroG q = false` guard. -/
+/-- `toQFunNZG_qOfPolyNZG_ne_zero`: the lift `q' = q/1` has nonzero field image when `q` is nonzero. -/
 theorem toQFunNZG_qOfPolyNZG_ne_zero (q : CPolyG β) (hq : CPolyG.cisZeroG q = false) :
     toQFunNZG (qOfPolyNZG q) ≠ 0 := by
   rw [toQFunNZG]
@@ -206,11 +135,8 @@ theorem toQFunNZG_qOfPolyNZG_ne_zero (q : CPolyG β) (hq : CPolyG.cisZeroG q = f
   exact amG_toPolyG_ne_zero (toPolyG_ne_zero_of_cisZeroG_false hq)
 
 omit [CRischField β] in
-/-- **`weakNormalizedF` reads as `F − D(Q)/Q`** (`toQFunNZG_weakNormalizedF`, the §6.1 round-trip field
-identity through the construction): `toQFunNZG (weakNormalizedF f q') = toQFunNZG f −
-towerFractionFieldDerivG [1] (toQFunNZG q') / toQFunNZG q'`. The weakly-normalized field element `f̃ = f −
-Dq/q` read at the field level — a ring-hom computation (`toQFunNZG_qsubNZG`/`_qmulNZG`/`_qinvNZG` +
-the derivation bridge). The round-trip correctness for the LHS coefficient, a **theorem**. -/
+/-- `toQFunNZG_weakNormalizedF`: `toQFunNZG (weakNormalizedF f q') = toQFunNZG f −
+towerFractionFieldDerivG [1] (toQFunNZG q') / toQFunNZG q'`. -/
 theorem toQFunNZG_weakNormalizedF (f q' : QFunNZG β) :
     toQFunNZG (weakNormalizedF f q')
       = toQFunNZG f
@@ -219,17 +145,14 @@ theorem toQFunNZG_weakNormalizedF (f q' : QFunNZG β) :
     towerFractionFieldDerivG_toQFunNZG, div_eq_mul_inv]
 
 omit [CDiffField β] [CDiffFieldSpec β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
-/-- **The returned solution reads as `Ỹ/Q`** (`toQFunNZG_solution`): `toQFunNZG (qmulNZG ytilde (qinvNZG
-q')) = toQFunNZG ytilde / toQFunNZG q'`. The §6.1 back-transform `y = ỹ/q` read at the field level
-(`toQFunNZG_qmulNZG`/`_qinvNZG`), a ring-hom computation. -/
+/-- `toQFunNZG_solution`: `toQFunNZG (qmulNZG ytilde (qinvNZG q')) = toQFunNZG ytilde / toQFunNZG q'`. -/
 theorem toQFunNZG_solution (ytilde q' : QFunNZG β) :
     toQFunNZG (qmulNZG ytilde (qinvNZG q'))
       = toQFunNZG ytilde / toQFunNZG q' := by
   rw [toQFunNZG_qmulNZG, toQFunNZG_qinvNZG, div_eq_mul_inv]
 
 omit [CDiffField β] [CDiffFieldSpec β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] in
-/-- **The scaled RHS reads as `Q·G`** (`toQFunNZG_scaledRHS`): `toQFunNZG (qmulNZG q' g) = toQFunNZG q' *
-toQFunNZG g`. The §6.1 RHS scaling `g ↦ q·g` read at the field level (`toQFunNZG_qmulNZG`). -/
+/-- `toQFunNZG_scaledRHS`: `toQFunNZG (qmulNZG q' g) = toQFunNZG q' * toQFunNZG g`. -/
 theorem toQFunNZG_scaledRHS (q' g : QFunNZG β) :
     toQFunNZG (qmulNZG q' g) = toQFunNZG q' * toQFunNZG g :=
   toQFunNZG_qmulNZG q' g

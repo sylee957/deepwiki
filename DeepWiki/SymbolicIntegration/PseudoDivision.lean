@@ -2,12 +2,9 @@ import Mathlib.Algebra.Polynomial.Div
 import Mathlib.Tactic
 
 /-! # Pseudo-division of polynomials over an integral domain
-Bronstein §1.2: over an integral domain `D` the Euclidean division of `A` by `B ≠ 0` need not be
-exact (`lc(B)` may not divide `lc(A)`), but after scaling `A` by a power of `b = lc(B)` it is.
-The *pseudo-division* produces a pseudo-quotient `Q` and pseudo-remainder `R` with
-`bⁿ · A = B·Q + R` and `deg R < deg B`. Mathlib has Euclidean division by a *monic* divisor
-(`divByMonic`/`modByMonic`) but not pseudo-division over a domain, so we prove its existence here
-(the spec the algorithm `PolyPseudoDivide` realizes). -/
+Over a domain, scaling `A` by a power of `lc(B)` makes division by `B ≠ 0` exact: pseudo-division
+gives `lc(B)ⁿ · A = B·Q + R` with `deg R < deg B`. Also the similarity relation and polynomial
+remainder sequences, with the gcd-invariance of the PRS. -/
 
 open Polynomial
 
@@ -15,10 +12,8 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R] [IsDomain R]
 
-/-- Pseudo-division existence (§1.2): for `B ≠ 0` there are a power `n`, a pseudo-quotient `Q`
-and pseudo-remainder `Rem` with `lc(B)ⁿ · A = B·Q + Rem` and `deg Rem < deg B`. The minimal such
-`n` is `max(0, deg A − deg B + 1)`; this `∃ n` form is the mathematical content of the
-`PolyPseudoDivide` algorithm. -/
+/-- Pseudo-division existence: for `B ≠ 0` there are `n`, `Q`, `Rem` with
+`lc(B)ⁿ · A = B·Q + Rem` and `deg Rem < deg B`. -/
 theorem pseudoDivision_exists (A B : R[X]) (hB : B ≠ 0) :
     ∃ (n : ℕ) (Q Rem : R[X]),
       C B.leadingCoeff ^ n * A = B * Q + Rem ∧ Rem.degree < B.degree := by
@@ -83,8 +78,7 @@ theorem pseudoDivision_exists (A B : R[X]) (hB : B ≠ 0) :
           _ = (B * Q₁ + R₁) + C b ^ n₁ * q := by rw [hEq]
           _ = B * (Q₁ + C b ^ n₁ * C a * X ^ δ) + R₁ := by rw [hq]; ring
 
-/-- Similarity (§1.5): `A` is *similar* to `B` over `D[x]` when `a · A = b · B` for some
-nonzero scalars `a, b ∈ D` (the relation whose classes the PRS gcd-tower preserves). -/
+/-- `A` is *similar* to `B` when `C a * A = C b * B` for some nonzero scalars `a, b`. -/
 def IsSimilar (A B : R[X]) : Prop := ∃ a b : R, a ≠ 0 ∧ b ≠ 0 ∧ C a * A = C b * B
 
 /-- `IsSimilar` is reflexive (witnesses `a = b = 1`). -/
@@ -96,8 +90,7 @@ omit [IsDomain R] in
 theorem IsSimilar.symm {A B : R[X]} (h : IsSimilar A B) : IsSimilar B A :=
   let ⟨a, b, ha, hb, hab⟩ := h; ⟨b, a, hb, ha, hab.symm⟩
 
-/-- `IsSimilar` is transitive — here `IsDomain R` is essential, so the product witnesses
-`c·a` and `b·d` stay nonzero. -/
+/-- `IsSimilar` is transitive (over a domain the product witnesses stay nonzero). -/
 theorem IsSimilar.trans {A B C₀ : R[X]} (h₁ : IsSimilar A B) (h₂ : IsSimilar B C₀) :
     IsSimilar A C₀ := by
   obtain ⟨a, b, ha, hb, hab⟩ := h₁
@@ -109,12 +102,11 @@ theorem IsSimilar.trans {A B C₀ : R[X]} (h₁ : IsSimilar A B) (h₂ : IsSimil
     _ = C b * (C d * C₀) := by rw [hcd]
     _ = C (b * d) * C₀ := by rw [C_mul]; ring
 
-/-- Similarity is an equivalence relation (§1.5, Exercise 1.11). -/
+/-- Similarity is an equivalence relation. -/
 theorem isSimilar_equivalence : Equivalence (IsSimilar (R := R)) :=
   ⟨IsSimilar.refl, fun h => h.symm, fun h₁ h₂ => h₁.trans h₂⟩
 
-/-- Similar polynomials have equal `natDegree` (over a domain `C a` with `a ≠ 0` does not change
-the degree, so `deg A = deg (C a * A) = deg (C b * B) = deg B`). -/
+/-- Similar polynomials have equal `natDegree`. -/
 theorem IsSimilar.natDegree_eq {A B : R[X]} (h : IsSimilar A B) : A.natDegree = B.natDegree := by
   obtain ⟨a, b, ha, hb, hab⟩ := h
   rw [← natDegree_C_mul ha, hab, natDegree_C_mul hb]
@@ -122,7 +114,7 @@ theorem IsSimilar.natDegree_eq {A B : R[X]} (h : IsSimilar A B) : A.natDegree = 
 example {A B : R[X]} (h : IsSimilar A B) : A.natDegree = B.natDegree := h.natDegree_eq
 
 /-- `Rem` is a *pseudo-remainder* of `A` by `B`: `lc(B)ᵏ · A = B·Q + Rem` with `deg Rem < deg B`
-for some power `k` and pseudo-quotient `Q` (the output of `PolyPseudoDivide`, §1.2). -/
+for some `k`, `Q`. -/
 def IsPseudoRemainder (A B Rem : R[X]) : Prop :=
   ∃ (k : ℕ) (Q : R[X]), C B.leadingCoeff ^ k * A = B * Q + Rem ∧ Rem.degree < B.degree
 
@@ -132,26 +124,23 @@ theorem isPseudoRemainder_exists (A B : R[X]) (hB : B ≠ 0) :
   obtain ⟨n, Q, Rem, hEq, hdeg⟩ := pseudoDivision_exists A B hB
   exact ⟨Rem, n, Q, hEq, hdeg⟩
 
-/-- Polynomial Remainder Sequence (§1.5, Definition 1.5.1): a sequence `Rs` with `Rs 0 = A`,
-`Rs 1 = B`, where each nonzero `Rs (i+1)` makes `C (β (i+1)) · Rs (i+2)` a pseudo-remainder of
-`Rs i` by `Rs (i+1)` (with the scalar `β (i+1) ≠ 0`), and a zero divisor forces the next term to
-vanish. The choice of the nonzero `β`-sequence selects the PRS variant (Euclidean, primitive, …). -/
+/-- Polynomial remainder sequence: `Rs 0 = A`, `Rs 1 = B`, each nonzero `Rs (i+1)` makes
+`C (β (i+1)) · Rs (i+2)` a pseudo-remainder of `Rs i` by `Rs (i+1)` (`β (i+1) ≠ 0`), and a zero
+term forces the next to vanish. -/
 def IsPRS (A B : R[X]) (Rs : ℕ → R[X]) (β : ℕ → R) : Prop :=
   Rs 0 = A ∧ Rs 1 = B ∧
     ∀ i, (Rs (i + 1) ≠ 0 →
             β (i + 1) ≠ 0 ∧ IsPseudoRemainder (Rs i) (Rs (i + 1)) (C (β (i + 1)) * Rs (i + 2)))
       ∧ (Rs (i + 1) = 0 → C (β (i + 1)) * Rs (i + 2) = 0)
 
-/-- Associated polynomials are similar (the unit is a constant in `R[X]` over a domain). -/
+/-- Associated polynomials are similar. -/
 theorem IsSimilar.of_associated {x y : R[X]} (h : Associated x y) : IsSimilar x y := by
   obtain ⟨u, rfl⟩ := h
   obtain ⟨r, hr, hru⟩ := Polynomial.isUnit_iff.mp u.isUnit
   exact ⟨r, 1, hr.ne_zero, one_ne_zero, by rw [← hru, map_one]; ring⟩
 
-/-- PRS gcd-invariance step (§1.5, the core of Theorem 1.5.1): consecutive gcds of a PRS are
-similar, `gcd(Rᵢ, Rᵢ₊₁) ~ gcd(Rᵢ₊₁, Rᵢ₊₂)`. From `lc(Rᵢ₊₁)ᵏ·Rᵢ = Rᵢ₊₁·Q + β·Rᵢ₊₂` one gets
-`H ∣ lc·G` and `G ∣ β·H`; cancelling shows the two cofactors multiply to a nonzero constant, so
-each is a nonzero constant, giving the scalar similarity. -/
+/-- PRS gcd-invariance step: consecutive gcds are similar,
+`gcd(Rᵢ, Rᵢ₊₁) ~ gcd(Rᵢ₊₁, Rᵢ₊₂)`. -/
 theorem isSimilar_gcd_step [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β : ℕ → R}
     (hprs : IsPRS A B Rs β) {i : ℕ} (hi : Rs (i + 1) ≠ 0) :
     IsSimilar (gcd (Rs i) (Rs (i + 1))) (gcd (Rs (i + 1)) (Rs (i + 2))) := by
@@ -195,9 +184,7 @@ theorem isSimilar_gcd_step [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β
   · intro h; exact hQ₁0 (by rw [hQ₁C, h, map_zero])
   · rw [hQ₁]; nth_rewrite 1 [hQ₁C]; ring
 
-/-- Theorem 1.5.1 (§1.5): the last nonzero element `Rₖ` of a PRS of `A, B` is similar to
-`gcd(A, B)`. The consecutive gcds form a similarity chain from `gcd(A,B) = gcd(R₀,R₁)` to
-`gcd(Rₖ, Rₖ₊₁) = gcd(Rₖ, 0) ~ Rₖ`, using `isSimilar_gcd_step` at each link. -/
+/-- The last nonzero element `Rₖ` of a PRS of `A, B` is similar to `gcd(A, B)`. -/
 theorem IsPRS.isSimilar_gcd [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β : ℕ → R}
     (hprs : IsPRS A B Rs β) {k : ℕ} (hk1 : Rs (k + 1) = 0)
     (hpos : ∀ j, 1 ≤ j → j ≤ k → Rs j ≠ 0) :

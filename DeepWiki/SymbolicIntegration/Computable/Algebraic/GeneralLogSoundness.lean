@@ -155,35 +155,11 @@ theorem genLogDeriv_residue_eq_multiplicity (a : K) (m : ℕ) (v : K[X])
       = (m : K) :=
   logDeriv_residue_eq_multiplicity a m v hv
 
-/-! ### ★ Obligation 1 — `genResidueResultant` roots = residues (the GENERAL norm factoring, the milestone)
+/-! ### The residue-norm factoring: `genResidueResultant` roots = residues -/
 
-`genResidueResultant f g Dder D = res_X(res_Y(Z·D' − g, F), D)` is the full double resultant
-(`ComputableGeneralResidues`). The outer `res_X(·, D)` is, by `resultant_eq_prod_eval`, `C(lc D)^N · ∏_{α₀ :
-D(α₀)=0} genNorm(α₀, Z)`, where `genNorm(α₀, Z) = res_Y(Z·D'(α₀) − g(α₀, Y), F(α₀, Y))` is the inner norm
-evaluated at the root `α₀` of `D`.
-
-For the **radical** case `F = Y² − ρ` and `g = g₀ + g₁·Y`, the radical template's `residueNorm_factor` showed
-`genNorm` is the two-sheet quadratic `(Z·D'(α₀) − g₀(α₀))² − g₁(α₀)²·ρ(α₀)`, factoring into the two residues
-`(g₀ ± g₁√ρ)/D'` over the two sheets `Y = ±√ρ(α₀)`. For an **arbitrary** monic `F` of degree `n` in `Y`, the
-norm `genNorm(α₀, Z) = ∏_{β : F(α₀,β)=0}(Z·D'(α₀) − g(α₀, β))` over the `n` places `β` of the fiber (the
-resultant of `Z·D' − g` against `F` is the product of `Z·D' − g(α₀,β)` over the roots `β` of `F(α₀, ·)`, up
-to the leading coefficient), each linear factor `Z·D'(α₀) − g(α₀, β) = D'(α₀)·(Z − g(α₀,β)/D'(α₀))` giving the
-residue `g(α₀, β)/D'(α₀)` at the place `(α₀, β)` — exactly Trager's per-place residue `g/D'` (with `F_y` the
-branch order absorbed when `D' ≠ 0`). We prove the general per-root factoring `genNormFactor` (the `K[Z]`
-identity, the general analogue of `residueNorm_factor` — `n` factors not `2`) and the product-form root
-theorem `roots_genResidueResultant_eq_residues` (the general analogue of `roots_residueResultant_eq_residues`),
-abstractly. -/
-
-/-- **★ The general residue-norm factors into the per-place residues** (obligation 1's general ingredient, the
-`n`-factor analogue of `residueNorm_factor`) — for `c ≠ 0` (`c = D'(α₀)`) and a finite multiset `fiber` of
-fiber values `β` (the roots of `F(α₀, ·)`, the places over `x = α₀`) with per-place numerators `gval β` (`=
-g(α₀, β)`), the general residue-norm `∏_{β ∈ fiber}(Z·c − gval β)` factors as `C(c)^{|fiber|}·∏_{β ∈ fiber}(Z
-− gval β / c)` — the per-place residues `gval β / c = g(α₀, β)/D'(α₀)`, **exactly Trager's per-place residue
-`g/D'`** over each place `(α₀, β)` of the fiber. The exact `K[Z]`-identity that, composed with
-`resultant_eq_prod_eval` over `K[Z]`, reduces the general double-resultant root↔residue correspondence to the
-existing transcendental RT infra (`roots_rtResultant`). The general analogue of the radical's two-sheet
-`residueNorm_factor` (which is this with `|fiber| = 2`, `fiber = {√ρ, −√ρ}` reading `gval = g₀ + g₁·Y`). Proven
-by pulling `C c` out of each linear factor (`Z·c − gval β = c·(Z − gval β/c)`) and `Multiset.prod_map_mul`. -/
+/-- The residue-norm factors into the per-place residues: for `c ≠ 0` and a fiber multiset `fiber` with
+per-place numerators `gval β`, `∏_{β ∈ fiber}(Z·c − gval β) = C(c)^{|fiber|}·∏_{β ∈ fiber}(Z − gval β /
+c)`, exhibiting the residues `gval β / c`. -/
 theorem genNormFactor (c : K) (fiber : Multiset K) (gval : K → K) (hc : c ≠ 0) :
     (fiber.map (fun β => Polynomial.X * Polynomial.C c - Polynomial.C (gval β))).prod
       = Polynomial.C c ^ Multiset.card fiber
@@ -199,14 +175,8 @@ theorem genNormFactor (c : K) (fiber : Multiset K) (gval : K → K) (hc : c ≠ 
   -- `∏_β (C c · (Z − r β)) = (∏_β C c)·(∏_β (Z − r β))` (`prod_map_mul`), and `∏_β C c = C c^card`
   rw [Multiset.prod_map_mul, Multiset.map_const', Multiset.prod_replicate]
 
-/-- **★ The general residue-norm has the per-place residues as its root multiset** (the `n`-factor analogue
-of `roots_residueNorm`) — for `c ≠ 0` (`c = D'(α₀)`) and a fiber multiset `fiber` of fiber values `β` (the
-roots of `F(α₀, ·)`), the roots (with multiplicity) of the general residue-norm `∏_{β ∈ fiber}(Z·c − gval β)`
-are exactly the per-place residues `{gval β / c : β ∈ fiber}` = `{g(α₀, β)/D'(α₀)}` over the places of the
-fiber. From `genNormFactor` (the factorization into `C c^card·∏_β(Z − gval β/c)`) by `roots_C_mul` (drop the
-nonzero leading `c^card`) then `roots_multiset_prod_X_sub_C` (split the product of monic linear factors). The
-per-root half of the general double-resultant root↔residue correspondence; the general analogue of
-`roots_residueNorm`. -/
+/-- The residue-norm's root multiset is the per-place residues: for `c ≠ 0`, the roots of
+`∏_{β ∈ fiber}(Z·c − gval β)` are `fiber.map (fun β => gval β / c)`. -/
 theorem roots_genNorm (c : K) (fiber : Multiset K) (gval : K → K) (hc : c ≠ 0) :
     ((fiber.map (fun β => Polynomial.X * Polynomial.C c - Polynomial.C (gval β))).prod).roots
       = fiber.map (fun β => gval β / c) := by
@@ -221,21 +191,9 @@ theorem roots_genNorm (c : K) (fiber : Multiset K) (gval : K → K) (hc : c ≠ 
       rw [Multiset.map_map]; rfl,
     Polynomial.roots_multiset_prod_X_sub_C]
 
-/-- **★ The general residue resultant's roots ARE Trager's per-place residues (the
-`roots_residueResultant_eq_residues` analogue, general curve)** — *given* the `resultant_eq_prod_eval` product
-form `R = C(lc)^N · ∏_{α₀ ∈ Droots} genNorm(α₀, Z)` (the SAME factoring the radical case and
-`rtResultant_eq_prod_roots` use, here with the **general** per-root norm `genNorm(α₀, Z) = ∏_{β ∈ fiber α₀}
-(Z·D'(α₀) − g(α₀, β))` — the inner `res_Y(Z·D' − g, F)` evaluated at `α₀`, a product over the fiber `fiber α₀`
-of places `β` over `x = α₀`), with `D'(α₀) ≠ 0` at every root `α₀` of `D`, the roots (with multiplicity) of
-the general residue resultant `R` are exactly the **per-place residues** `g(α₀, β)/D'(α₀)` over every place
-`(α₀, β)` — `R.roots = Droots.bind (fun α₀ => (fiber α₀).map (fun β => g α₀ β / Dprime α₀))`. This is
-obligation 1's closure at the abstract `F̄[Z]` level for an **arbitrary** curve: composing `roots_C_mul` (drop
-the nonzero leading `C(lc)^N`), `roots_multiset_prod` (the product's roots are the bind of the factors'), and
-`roots_genNorm` (each factor's roots are the per-place residues). The general analogue of
-`roots_residueResultant_eq_residues` — the radical's two-sheet `{(g₀±g₁√ρ)/D'}` is this with `fiber α₀ =
-{√ρ(α₀), −√ρ(α₀)}` and `g α₀ β = g₀(α₀) + g₁(α₀)·β`. The only remaining (mechanical, engine-side) step is the
-`resultant_eq_prod_eval` instantiation supplying this product-form hypothesis for `genResidueResultant` — the
-compute-bridge, exactly the single-resultant pattern. -/
+/-- The residue resultant's roots are the per-place residues: given the product form
+`R = C(lc)^N · ∏_{α₀ ∈ Droots} genNorm(α₀, Z)` with `Dprime α₀ ≠ 0` on `Droots`, `R.roots =
+Droots.bind (fun α₀ => (fiber α₀).map (fun β => g α₀ β / Dprime α₀))`. -/
 theorem roots_genResidueResultant_eq_residues (lc : K) (N : ℕ) (Droots : Multiset K)
     (Dprime : K → K) (fiber : K → Multiset K) (g : K → K → K)
     (hlc : lc ≠ 0)
@@ -272,26 +230,12 @@ theorem roots_genResidueResultant_eq_residues (lc : K) (N : ℕ) (Droots : Multi
   refine Multiset.bind_congr (fun α₀ hα => ?_)
   exact roots_genNorm (Dprime α₀) (fiber α₀) (g α₀) (hDp α₀ hα)
 
-/-! #### Obligation 3 (the partial fraction) — reused from the radical template, base-field/`ℚ(x)`-algebraic
-
-Obligation 3 — *`logpart = Σᵢ cᵢ·afDerivWf(uᵢ)/uᵢ` in the function field* — has, as its genuinely-analytic
-content, the per-term residue match, which is the algebraic **Bernoulli/Lagrange partial fraction**
-(`LogResidue.ratLogPart_eq_residue_logDeriv_sum`, already proven), NOT a curve-residue theorem: after
-rationalizing the general log part to `ℚ(x)`, the residue-sum `Σ cᵢ/(x − poleᵢ)` IS its partial fraction, the
-`cᵢ` the partial-fraction coefficients (the same residues `roots_genResidueResultant_eq_residues` exhibits).
-We restate the verdict for the general curve — identical to the radical one, since after the norm to `ℚ(x)`
-the log part is a rational function and the split-denominator partial fraction is all that is needed. -/
+/-! #### The log-part per-term match is the algebraic partial fraction -/
 
 open scoped Differential in
-/-- **★ Obligation 3 (general framing) — the general log-part per-term match is the algebraic partial
-fraction** — for a squarefree split denominator `D = ∏_{α∈s}(X − α)` and `deg A < #s`, the rational log part
-`A/D` equals `Σ_{α∈s} residue(α)·logDeriv(X − α)` in `K(x)` (`residue(α) = A(α)/D'(α)`). This IS
-**`LogResidue.ratLogPart_eq_residue_logDeriv_sum`** = `PartialFraction.ratFunc_eq_sum_residue_logDeriv` — a
-pure Bernoulli/Lagrange partial fraction (no analytic residue theorem) — restated as the discharge of the
-general-curve obligation 3's per-term residue match for the rational (split-denominator) case: the residue-sum
-`Σ cᵢ·logDeriv(uᵢ)` IS the partial fraction of the log part, the `cᵢ` exactly the residues
-`roots_genResidueResultant_eq_residues` exhibits. The general curve reduces to this after the norm to `ℚ(x)`.
-The verdict (general): the per-term match is ALGEBRAIC, not analytic — identical to the radical case. -/
+/-- The log-part per-term match is the algebraic partial fraction: for a squarefree split denominator
+`D = ∏_{α∈s}(X − α)` and `deg A < #s`, `A/D = Σ_{α∈s} residue(α)·logDeriv(X − α)` in `K(x)` with
+`residue(α) = A(α)/D'(α)`. -/
 theorem genRatLogPart_eq_residue_logDeriv_sum (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
       = ∑ α ∈ s, algebraMap K[X] (RatFunc K)
@@ -301,35 +245,13 @@ theorem genRatLogPart_eq_residue_logDeriv_sum (s : Finset K) (A : K[X]) (hA : A.
 
 end LogResidue
 
-/-! ### ★ The compute-bridge — `genResidueResultant`'s interpolation-uniqueness characterization (engine link)
-
-`roots_genResidueResultant_eq_residues` works on the *abstract* product form `R = C(lc)^N·∏_{α₀} genNorm(α₀, Z)`.
-To discharge its hypothesis `hR` for the ENGINE's `genResidueResultant f g Dder D` (which
-interpolates over the `Z`-nodes `k = 0, …, n·deg_X D`, `n = deg_y f`), the bridge is the **interpolation-
-uniqueness** characterization — the EXACT analogue of the radical's `toPolyG_cAlgResidueResultant_eq_of_eval`:
-the engine's `genResidueResultant` is THE unique polynomial of degree `< n·deg_X D + 2` agreeing at each node
-`Z = (k : ℚ)` with the abstract product form. The outer carrier is `ℚ` (`CFieldSpec.K ℚ = ℚ`, `toK = id`), so
-node distinctness is `Nat.cast` injectivity into `ℚ` (char 0) and the assembly is `eval_toPolyG_cinterpolateG`
-+ `degree_toPolyG_cinterpolateG_lt` + `Polynomial.eq_of_degrees_lt_of_eval_index_eq`, with the general
-`n·deg_X D + 1` node count (vs the radical's doubled `2·deg D + 1`). Composed with
-`roots_genResidueResultant_eq_residues`, this connects the abstract roots↔residues theorem to the engine's
-`genResidueResultant` — the compute-bridge CLOSED, axiom-clean. -/
+/-! ### The compute-bridge: `genResidueResultant`'s interpolation-uniqueness characterization -/
 
 namespace CPolyG
 
-/-- **★ The compute-bridge — the interpolation-uniqueness characterization of `genResidueResultant`** — let
-`R : ℚ[X]` have `degree < cdegG f * cdegG D + 2` (the general `n·deg_X D + 1` node count, `n = deg_y f`), and
-suppose at each node `k ∈ {0, …, cdegG f · cdegG D + 1}` its value is the engine's per-node outer resultant
-`R.eval (k : ℚ) = cresultantWf (resYAtNode f g Dder (k : ℚ)) D` (the inner `res_Y` against
-`F` then outer `res_X` against `D`, the values `genResidueResultant` interpolates). Then `toPolyG
-(genResidueResultant f g Dder D) = R`. The compute-bridge CLOSED: the engine's general
-residue resultant is the unique degree-`< n·deg_X D + 2` polynomial with those node values — the EXACT
-`toPolyG_cAlgResidueResultant_eq_of_eval` Lagrange-uniqueness, ported to the general double resultant
-(`genResidueResultant`) over the concrete `ℚ` outer carrier. The node abscissae `(k : ℚ)` are distinct by
-`Nat.cast` injectivity into `ℚ` (char 0), so no separate `InjOn` hypothesis is needed (unlike the radical's
-generic-`α` `cnatCastG` version). Composed with `roots_genResidueResultant_eq_residues` (whose hypothesis `hR`
-is the `resultant_eq_prod_eval` product form), this discharges `hR` for the engine's `genResidueResultant` —
-connecting the abstract roots↔residues milestone to the actual engine. -/
+/-- The interpolation-uniqueness characterization of `genResidueResultant`: if `R : ℚ[X]` has
+`degree < cdegG f * cdegG D + 2` and `R.eval (k : ℚ) = cresultantWf (resYAtNode f g Dder (k : ℚ)) D`
+at each node `k`, then `toPolyG (genResidueResultant f g Dder D) = R`. -/
 theorem toPolyG_genResidueResultant_eq_of_eval
     (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (D : CPolyG ℚ)
     (R : ℚ[X])
@@ -414,25 +336,11 @@ theorem toPolyG_genResidueResultant_eq_of_eval
 
 end CPolyG
 
-/-! ### ★ Priority 3 — composing rational + log into the full GENERAL algebraic integral soundness `D(∫f) = f`
+/-! ### Composing rational + log into the full algebraic integral soundness `D(∫f) = f`
 
-The unified general integrator `afIntegrateAlgebraicWf` returns `(v, u)` (and in general `(v, args)`) — a
-rational part `v` plus log terms — so `∫f = v + Σ cᵢ log uᵢ` and the full soundness is
-`D(∫f) = afDerivWf(v) + Σ cᵢ·afDerivWf(uᵢ)/uᵢ = f`. This **splits exactly into the two halves**, each now a
-fuel-free theorem (modulo their isolated per-step inputs):
-
-* the **rational part** `afDerivWf(v) = ratPart(f)` — `ComputableGeneralIntegralSoundness`'s
-  `generalReduceRationalTelescopeWf` (the rational-part telescoping over the eq.-11 reduction);
-* the **log part** `Σ cᵢ·afDerivWf(uᵢ)/uᵢ = logPart(f)` — this file's `IsGeneralLogIntegralWf`
-  (`isGeneralLogIntegralWf_of_residue_match`), with its per-term match the algebraic partial fraction
-  (`genRatLogPart_eq_residue_logDeriv_sum`) and its residues the `genResidueResultant` roots
-  (`roots_genResidueResultant_eq_residues`).
-
-Cross-multiplied by the log part's common denominator `commonDenom = ∏ uⱼ`, the full identity in the carrier
-quotient `K[X] ⧸ afIdeal f` is `afDerivWf(v)·commonDenom + afLogSumNumWf(args) = f·commonDenom`, the sum of the
-two halves. We state the composed predicate `IsGeneralAlgebraicIntegralWf` and prove it follows from the
-rational soundness (`afDerivWf(v) = ratPart`) + the log soundness (`IsGeneralLogIntegralWf`) + the split
-`f = ratPart + logPart`. The general-curve analogue of the radical's `isAlgebraicIntegral_of_parts`. -/
+The full soundness `D(v + Σ cᵢ log uᵢ) = f` splits into the rational part `afDerivWf(v) = ratPart` and the
+log part `IsGeneralLogIntegralWf`. Cross-multiplied by `commonDenom = ∏ uⱼ`, the composed predicate
+`IsGeneralAlgebraicIntegralWf` follows from the two halves plus the split `f = ratPart + logPart`. -/
 
 namespace CPolyG
 
@@ -461,31 +369,11 @@ theorem isGeneralAlgebraicIntegralWf_of_parts (f g v ratPart logPart commonDenom
 
 end CPolyG
 
-/-! ### `#print axioms` — the general-curve log-part setting + foundational floor + obligation 1 milestone
+/-! ### Axiom audit (`#print axioms`)
 
-Each log-part predicate, the certificate bridge, the additivity floor, obligation 2 (the log-derivative
-residue), obligation 1's general norm factoring and the **root↔residue theorem for the general double
-resultant** (`roots_genResidueResultant_eq_residues`), obligation 3 (the partial fraction), and the full
-composition carry **only** the standard `[propext, Classical.choice, Quot.sound]` — no `native_decide`
-compiler axiom, no `sorry`. The faithful general-curve log-soundness setting (`D(log u) = afDerivWf(u)/u` in the
-carrier quotient `K[X] ⧸ afIdeal f`), the fact that every engine-validated log certificate **is** the abstract
-single-log soundness (`isGeneralLogTermWf_of_logCert`), the multi-term residue-sum distribution
-(`mk_toPolyG_afLogSumNumWf_eq_sum`), the general norm factoring into per-place residues (`genNormFactor` /
-`roots_genNorm`), the **milestone** root↔residue theorem (`roots_genResidueResultant_eq_residues`, the
-`roots_residueResultant_eq_residues` analogue for the GENERAL double resultant), and the full composition
-(`isGeneralAlgebraicIntegralWf_of_parts`) are general theorems — the LOG half of the general algebraic capstone
-`D(∫f) = f`, with the residue-correctness core mirrored from the radical template as closely as the general
-norm allows. **The compute-bridge is now CLOSED** — `toPolyG_genResidueResultant_eq_of_eval` (the
-interpolation-uniqueness characterization, the EXACT `toPolyG_cAlgResidueResultant_eq_of_eval` port to the
-general double resultant `genResidueResultant`) discharges the `hR` product-form hypothesis of
-`roots_genResidueResultant_eq_residues` for the ENGINE's `genResidueResultant`, so the abstract roots↔residues
-milestone connects to the actual engine. With both halves' abstract cores + this engine bridge proven, the
-complete algebraic `D(afIntegrateAlgebraicWf f) = f` is **self-contained at its mathematical core**, modulo the
-documented `native_decide` engine boundary (the `afLogArgSolveWf`/`afRationalSolveWf` round-trip certificate, the
-`hsplit`/`hnode`/`hrat`/`hlog` preconditions the composition theorems take as hypotheses — exactly as the
-radical capstone's `isAlgebraicIntegral_of_parts` does), and the `resultant_eq_prod_eval` *application* feeding
-the per-node values into `toPolyG_genResidueResultant_eq_of_eval`'s `hnode` (the same factoring
-`rtResultant_eq_prod_roots` already provides for the single resultant). -/
+The log-part predicates, the certificate bridge, the residue-norm factoring and root↔residue theorem, the
+partial fraction, the compute-bridge, and the full composition carry only `[propext, Classical.choice,
+Quot.sound]` — no `sorry`. -/
 
 -- ★ Obligation 2 (general framing): the logarithmic-derivative residue equals the vanishing order:
 #print axioms LogResidue.genLogDeriv_residue_eq_multiplicity

@@ -4,22 +4,16 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.DifferentialFields
 
-/-! # The Bernoulli partial-fraction / residue decomposition (Bronstein §2.1, simple-root case)
-For a polynomial `A` of degree `< n` and `n` distinct points `s`, with `D = ∏_{α∈s}(X−α)` (squarefree,
-so simple roots), the residue (Lagrange) decomposition is
-`A = ∑_{α∈s} (A(α)/D'(α)) · (D/(X−α))`, i.e. dividing by `D`, the partial fraction
-`A/D = ∑_{α∈s} (A(α)/D'(α)) / (X−α)` — the `∑_{α|D(α)=0}` sum underlying Bernoulli's algorithm (and the
-Rothstein–Trager logarithmic part). Built from Mathlib's Lagrange interpolation (`nodal`, `nodalWeight`,
-`basis`). -/
+/-! # Partial-fraction / residue decomposition (simple-root case)
+For `A` of degree `< #s` and distinct points `s`, with `D = ∏_{α∈s}(X−α)`, the residue decomposition
+`A/D = ∑_{α∈s} (A(α)/D'(α)) / (X−α)`, and its consequences for the logarithmic part of `∫ A/D`. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-- Bernoulli residue decomposition (§2.1): for `A` of degree `< #s` and distinct points `s`,
-with `D = ∏_{α∈s}(X−α) = Lagrange.nodal s id`, `A = ∑_{α∈s} (A(α)/D'(α))·(D/(X−α))`. Dividing by `D`
-gives the simple-root partial fraction `A/D = ∑_{α∈s} (A(α)/D'(α))/(X−α)`; the coefficient
-`A(α)/D'(α)` is the residue of `A/D` at `α`. -/
+/-- Residue decomposition: for `deg A < #s` and `D = ∏_{α∈s}(X−α)`,
+`A = ∑_{α∈s} (A(α)/D'(α))·(D/(X−α))`. -/
 theorem eq_sum_residue_mul_nodal_div {K : Type*} [Field K] (s : Finset K) (A : K[X])
     (hA : A.degree < s.card) :
     A = ∑ α ∈ s, C (A.eval α / eval α (derivative (Lagrange.nodal s id)))
@@ -36,10 +30,8 @@ theorem eq_sum_residue_mul_nodal_div {K : Type*} [Field K] (s : Finset K) (A : K
   simp only [id_eq]
   rw [hd, hdiv]
 
-/-- Bernoulli partial fraction in `K(x)` (§2.1, eq 2.3 simple-root case): for `A` of degree `< #s`
-and distinct `s`, with `D = ∏_{α∈s}(X−α)`, the rational function decomposes as
-`A/D = ∑_{α∈s} (A(α)/D'(α))/(X−α)` — the sum over the roots of `D`, residue `A(α)/D'(α)` at each.
-Since each `1/(X−α)` is a logarithmic derivative, `∫ A/D = ∑_{α∈s} (A(α)/D'(α))·log(X−α)`. -/
+/-- Partial fraction in `K(x)`: for `deg A < #s` and `D = ∏_{α∈s}(X−α)`,
+`A/D = ∑_{α∈s} (A(α)/D'(α))/(X−α)`. -/
 theorem ratFunc_eq_sum_residue_div {K : Type*} [Field K] (s : Finset K) (A : K[X])
     (hA : A.degree < s.card) :
     (algebraMap K[X] (RatFunc K) A) / (algebraMap K[X] (RatFunc K) (Lagrange.nodal s id))
@@ -65,10 +57,8 @@ theorem ratFunc_eq_sum_residue_div {K : Type*} [Field K] (s : Finset K) (A : K[X
   field_simp
 
 open scoped Differential in
-/-- Bernoulli integral (§2.1): `∫ A/D = ∑_{α∈s} (A(α)/D'(α))·log(X−α)` for squarefree
-`D = ∏_{α∈s}(X−α)` and `deg A < #s`. Modeling `log(X−α)` by `L α` with `(L α)′ = 1/(X−α)`, the
-derivative of `∑_{α∈s} (A(α)/D'(α))·L α` is the integrand `A/D` — by the partial fraction
-`ratFunc_eq_sum_residue_div`, since each residue `A(α)/D'(α)` is a constant. -/
+/-- Integral: modeling `log(X−α)` by `L α` with `(L α)′ = 1/(X−α)`,
+`(∑_{α∈s} (A(α)/D'(α))·L α)′ = A/D`. -/
 theorem deriv_sum_residue_log {K : Type*} [Field K] (s : Finset K) (A : K[X])
     (hA : A.degree < s.card) (L : K → RatFunc K)
     (hL : ∀ α ∈ s, (L α)′ = (algebraMap K[X] (RatFunc K) (X - C α))⁻¹) :
@@ -84,10 +74,8 @@ theorem deriv_sum_residue_log {K : Type*} [Field K] (s : Finset K) (A : K[X])
   rw [deriv_const_mul _ hc, hL α hα, ← div_eq_mul_inv]
 
 open scoped Differential in
-/-- Logarithmic part as a `logDeriv` sum (§2.1/§2.4): for `D = ∏_{α∈s}(X−α)` squarefree and
-`deg A < #s`, `A/D = ∑_{α∈s} (A(α)/D'(α)) · logDeriv(X−α)` in `K(x)` — the integrand exhibited as a sum
-of logarithmic derivatives, so `∫ A/D = ∑_{α∈s} (A(α)/D'(α))·log(X−α)`. The explicit (Rothstein–Trager
-simple-root) logarithmic part: each `1/(X−α)` *is* `logDeriv(X−α)` since `(X−α)′ = 1`. -/
+/-- Logarithmic part as a `logDeriv` sum: for `D = ∏_{α∈s}(X−α)` and `deg A < #s`,
+`A/D = ∑_{α∈s} (A(α)/D'(α)) · logDeriv(X−α)`. -/
 theorem ratFunc_eq_sum_residue_logDeriv {K : Type*} [Field K] (s : Finset K) (A : K[X])
     (hA : A.degree < s.card) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
@@ -103,10 +91,8 @@ theorem ratFunc_eq_sum_residue_logDeriv {K : Type*} [Field K] (s : Finset K) (A 
 
 open Classical in
 open scoped Differential in
-/-- Rothstein–Trager residue-grouped log sum (§2.4): grouping the simple-root sum
-`ratFunc_eq_sum_residue_logDeriv` by residue value, `A/D = ∑_{a} a · logDeriv(∏_{α : res(α)=a}(X−α))`
-over the distinct residues `a = A(α)/D'(α)` — the factors with a common residue `a` collected into the
-Rothstein–Trager polynomial `Gₐ = ∏_{res(α)=a}(X−α)`, so `∫ A/D = ∑_a a·log(Gₐ)`. -/
+/-- Residue-grouped log sum: `A/D = ∑_{a} a · logDeriv(∏_{α : res(α)=a}(X−α))` over the distinct
+residues `a = A(α)/D'(α)`. -/
 theorem ratFunc_eq_sum_residue_grouped {K : Type*} [Field K] (s : Finset K) (A : K[X])
     (hA : A.degree < s.card) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)

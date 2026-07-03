@@ -1,11 +1,8 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 
 /-! # Coprimality of the real and imaginary parts of the LRT gcd
-
-Rioboo's specialization guarantee: from the LRT gcd-cofactor factorizations
-`C − (a+i·b)·D' = (E₁+i·E₂)·(A+i·B)` and `D = (F₁+i·F₂)·(A+i·B)`, with `D` squarefree and `b ≠ 0`,
-the real and imaginary parts `A, B` of the LRT gcd are coprime (`rioboo_coprime`) — so the arctan
-numerator `(A·D + B·C)/(B·D − A·C)` has a nonzero denominator. -/
+From the gcd-cofactor factorizations `C − (a+i·b)·D' = (E₁+i·E₂)·(A+i·B)` and `D = (F₁+i·F₂)·(A+i·B)`
+with `D` squarefree and `b` a unit, the real and imaginary parts `A, B` are coprime (`rioboo_coprime`). -/
 
 open Polynomial
 
@@ -14,11 +11,8 @@ namespace DeepWiki.SymbolicIntegration
 section Coprimality
 variable {S : Type*} [CommRing S] [IsDomain S] [CharZero S]
 
-/-- **`i`-free component extraction** (§2.8, the real/imag matching behind (2.27)⟹(2.29),
-(2.28)⟹(2.30)): in a char-`0` integral domain with `i² = −1` and a conjugation `σ` (`σ i = −i`)
-certifying `a₁, a₂, b₁, b₂` are `i`-free (`σ` fixes each), `a₁ + i·a₂ = b₁ + i·b₂ ⟹ a₁ = b₁ ∧ a₂ = b₂`.
-Subtract to reduce to `(a₁−b₁) + i·(a₂−b₂) = 0` and its conjugate, then cancel `2` (char `0`) and
-`i` (nonzero since `i² = −1`). The domain `(K(a,b))(i)[x]` of the §2.8 application qualifies. -/
+/-- With `i² = −1`, a conjugation `σ` (`σ i = −i`) fixing `i`-free `a₁, a₂, b₁, b₂`, in a char-`0`
+domain, `a₁ + i·a₂ = b₁ + i·b₂ ⟹ a₁ = b₁ ∧ a₂ = b₂`. -/
 theorem eq_and_eq_of_add_imag_eq {i a₁ a₂ b₁ b₂ : S} (hi : i ^ 2 = -1)
     (σ : S →+* S) (hσi : σ i = -i)
     (hσa₁ : σ a₁ = a₁) (hσa₂ : σ a₂ = a₂) (hσb₁ : σ b₁ = b₁) (hσb₂ : σ b₂ = b₂)
@@ -37,11 +31,7 @@ theorem eq_and_eq_of_add_imag_eq {i a₁ a₂ b₁ b₂ : S} (hi : i ^ 2 = -1)
   have := (mul_eq_zero.mp hiQ).resolve_left two_ne_zero
   exact (mul_eq_zero.mp this).resolve_left hi0
 
-/-- **Imaginary part of (2.27) ⟹ (2.29)** (§2.8, p.68): from
-`C − (a+i·b)·D' = (E₁ + i·E₂)·(A + i·B)` (`i² = −1`, all of `C, D', E₁, E₂, A, B, a, b` `i`-free,
-certified by a conjugation `σ` and `2`-cancellation), taking the imaginary part gives
-`−b·D' = E₁·B + E₂·A`. (The `i`-free part is `(2.30)`-style `C − a·D' = E₁·A − E₂·B`; we only need the
-imaginary half here.) -/
+/-- Imaginary part of `C − (a+i·b)·D' = (E₁ + i·E₂)·(A + i·B)` (all operands `i`-free): `−b·D' = E₁·B + E₂·A`. -/
 theorem imagPart_eq_of_mul_split {i a b C D' E₁ E₂ A B : S} (hi : i ^ 2 = -1)
     (σ : S →+* S) (hσi : σ i = -i)
     (hσa : σ a = a) (hσb : σ b = b) (hσC : σ C = C) (hσD' : σ D' = D')
@@ -62,9 +52,7 @@ theorem imagPart_eq_of_mul_split {i a b C D' E₁ E₂ A B : S} (hi : i ^ 2 = -1
     rw [map_add, map_mul, hσE₁, hσB, map_mul, hσE₂, hσA]
   exact (eq_and_eq_of_add_imag_eq hi σ hσi hσreL hσimL hσreR hσimR hform).2
 
-/-- **Real part of (2.28) ⟹ (2.30)** (§2.8, p.68): from `D = (F₁ + i·F₂)·(A + i·B)` (`i² = −1`, all of
-`D, F₁, F₂, A, B` `i`-free, certified by a conjugation `σ` and `2`-cancellation), taking the real part
-gives `D = F₁·A − F₂·B`. -/
+/-- Real part of `D = (F₁ + i·F₂)·(A + i·B)` (all operands `i`-free): `D = F₁·A − F₂·B`. -/
 theorem realPart_eq_of_mul_split {i D F₁ F₂ A B : S} (hi : i ^ 2 = -1)
     (σ : S →+* S) (hσi : σ i = -i)
     (hσD : σ D = D) (hσF₁ : σ F₁ = F₁) (hσF₂ : σ F₂ = F₂) (hσA : σ A = A) (hσB : σ B = B)
@@ -81,16 +69,8 @@ theorem realPart_eq_of_mul_split {i D F₁ F₂ A B : S} (hi : i ^ 2 = -1)
     rw [map_add, map_mul, hσF₁, hσB, map_mul, hσF₂, hσA]
   exact (eq_and_eq_of_add_imag_eq hi σ hσi hσreL hσimL hσreR hσimR hform).1
 
-/-- **Theorem 2.8.4, the Bézout coprimality core** (§2.8, p.67–68, Rioboo): given the LRT gcd-cofactor
-factorizations
-* (2.27) `C − (a+i·b)·D' = (E₁ + i·E₂)·(A + i·B)`,
-* (2.28) `D = (F₁ + i·F₂)·(A + i·B)`,
-with `i² = −1`, `D` squarefree (`IsCoprime D D'`, `D' = D'`), `b` a unit (`b ≠ 0` in a field), and a
-conjugation `σ` (`σ i = −i`) certifying all of `a, b, C, D, D', E₁, E₂, F₁, F₂, A, B` are `i`-free,
-then **`IsCoprime A B`** — i.e. `gcd(A, B) = 1`. Proof: imaginary part of (2.27) gives
-`(2.29) −b·D' = E₁B + E₂A`, real part of (2.28) gives `(2.30) D = F₁A − F₂B`; with `G₁D + G₂D' = 1`
-from squarefreeness, `b = b(G₁D + G₂D') = (bG₁F₁ − G₂E₂)·A − (bG₁F₂ + G₂E₁)·B`, so the unit `b` lies
-in `span {A, B}`, giving `IsCoprime A B`. -/
+/-- Given `C − (a+i·b)·D' = (E₁ + i·E₂)·(A + i·B)`, `D = (F₁ + i·F₂)·(A + i·B)` (all operands `i`-free,
+`i² = −1`), `IsCoprime D D'`, and `b` a unit, the real and imaginary parts satisfy `IsCoprime A B`. -/
 theorem rioboo_coprime {i a b C D D' E₁ E₂ F₁ F₂ A B : S} (hi : i ^ 2 = -1)
     (σ : S →+* S) (hσi : σ i = -i)
     (hσa : σ a = a) (hσb : σ b = b) (hσC : σ C = C) (hσD : σ D = D) (hσD' : σ D' = D')
@@ -126,10 +106,7 @@ end Coprimality
 section Restatement
 variable {S : Type*} [CommRing S] [IsDomain S] [CharZero S]
 
-/-- Restatement of **Theorem 2.8.4** against the book wording (§2.8, p.67–68): with `R = P + i·Q` a
-squarefree RT-resultant factor and `S = A + i·B` the LRT gcd, given the gcd-cofactor relations
-`C − (a+i·b)·D' = (E₁+i·E₂)(A+i·B)` (2.27), `D = (F₁+i·F₂)(A+i·B)` (2.28), `D` squarefree, and `b ≠ 0`
-(a unit), then `gcd(A(a,b,x), B(a,b,x)) = 1` in `K(a,b)[x]` — here as `IsCoprime A B`. -/
+/-- Restatement: from the gcd-cofactor relations with `D` squarefree and `b` a unit, `IsCoprime A B`. -/
 example {i a b C D D' E₁ E₂ F₁ F₂ A B : S} (hi : i ^ 2 = -1)
     (σ : S →+* S) (hσi : σ i = -i)
     (hσa : σ a = a) (hσb : σ b = b) (hσC : σ C = C) (hσD : σ D = D) (hσD' : σ D' = D')

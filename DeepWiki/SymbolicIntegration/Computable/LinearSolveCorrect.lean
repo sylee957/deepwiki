@@ -1,33 +1,10 @@
 import DeepWiki.SymbolicIntegration.Computable.Parametric
 
-/-! # Abstract correctness of the ℚ-Gaussian-elimination linear solver (`crref` / `cConstSolveUniqueQ`)
+/-! # Abstract correctness of the ℚ-Gaussian-elimination linear solver
 
-The §7.1/§7.3 constant linear solver of `ComputableParametric` (`crref`, the list-based Gauss–Jordan
-reduction to reduced row echelon form, and `cConstSolveUniqueQ`, the unique back-substituted solution)
-is here proven **abstractly correct** over `ℚ` — no `decide`/`native_decide`. The two structural halves
-of Gaussian elimination, each by induction on the `crref.go` fuel-recursion:
-
-* **`crref_go_solves` / `crref_solves`** — the *solution-preserving* (reverse-spanning) invariant: any
-  vector solving the RREF rows solves every input row. Each elementary row operation
-  (`elim r = r − (rₖ)·prn`, `prn = pr/piv`) is invertible, so it preserves the common-zero set; rows
-  dropped at the `col ≥ ncols` exit are zero on every processed column (tracked by the "cleared below
-  `col`" invariant) and hence killed by any solution vector.
-* **`crref_go_rref` / `crref_rref`** — the *forward* reduced-echelon structure: the output pivot
-  submatrix is the identity (`isIdentitySubmatrix`), pivot columns are `Nodup` and bounded
-  (`crref_go_pivots`), and output rows stay at least `ncols` wide (`crref_go_rowlen`).
-
-Combined (`back_read_solves_rref` for the full-rank back-read, then `crref_solves` to push the solution
-to the augmented rows), these give the headline
-
-* **`cConstSolveUniqueQ_sound`** — if `cConstSolveUniqueQ Arows urhs ncols = some x` then `x` solves the
-  ℚ-linear system `A·x = b` rowwise (`dotQ (Arows.getD i []) x = urhs.getD i 0`). `#print axioms`:
-  only `propext`/`Classical.choice`/`Quot.sound` (no native compiler axiom).
-
-This is the solution-set correctness the `ComputableCoupledDE` notes flagged as missing
-("no `crref` solution-set lemma in the library"); it de-self-certifies the §8 coupled-system
-*completeness* atom. The remaining glue to drop the §8 cleared-check gate entirely is the
-matrix-assembly faithfulness bridge (`cCoupledDESystem`'s `mulMatrixQ`/`derivMatrixQ` blocks encode the
-polynomial residual coefficients), documented there. -/
+Abstract correctness over `ℚ` of `crref` (list-based Gauss–Jordan reduction to RREF) and
+`cConstSolveUniqueQ` (back-substituted solution): the solution-preserving invariant, the forward
+reduced-echelon structure, and the headline `cConstSolveUniqueQ_sound`. -/
 
 namespace DeepWiki.SymbolicIntegration.CPolyG
 
@@ -157,12 +134,8 @@ theorem solvesRow_map_div (piv : ℚ) (hpiv : piv ≠ 0) (pr x : List ℚ) :
     · exact h'
   · intro h; exact Or.inr h
 
-/-- **★ Soundness of `crref.go`: every solution of the output rows is a solution of the input rows.**
-For a fixed `v` with `v.length ≤ ncols`, if every row currently in `rest ∪ pivRows` is at least as long
-as `v` (Hlen) and every `rest` row is already cleared on columns `< col` (Hcl), then any `v` solving the
-output RREF rows `(crref.go ncols fuel col rest pivRows pivCols).1` also solves every `rest` and `pivRows`
-row. (The reverse spanning direction of Gaussian elimination — each row op is invertible, and rows dropped
-at the `col ≥ ncols` exit are zero on every processed column, hence killed by `v`.) -/
+/-- Soundness of `crref.go`: any `v` solving the output RREF rows also solves every `rest` and
+`pivRows` row (under the length and cleared-below-`col` invariants). -/
 theorem crref_go_solves (ncols : ℕ) (v : List ℚ) (hv : v.length ≤ ncols) :
     ∀ (fuel col : ℕ) (rest pivRows : List (List ℚ)) (pivCols : List ℕ),
       ncols ≤ fuel + col →
@@ -329,10 +302,8 @@ theorem crref_go_solves (ncols : ℕ) (v : List ℚ) (hv : v.length ≤ ncols) :
               rw [hpivElimdef]; exact List.mem_map_of_mem hr
             exact recover r (hlen r (List.mem_append_right _ hr)) (hpivElim_solve (elim r) helimmem)
 
-/-- **★ Soundness of `crref`: solutions of the RREF rows are solutions of the input.** If `v.length ≤
-ncols`, every input row is at least as long as `v`, and `v` solves every row of `(crref rows ncols).1`
-(the RREF), then `v` solves every input row. (`crref_go_solves` specialized to the initial call
-`go (ncols + rows.length + 1) 0 rows [] []`.) -/
+/-- Soundness of `crref`: if `v` solves every row of the RREF `(crref rows ncols).1`, then `v` solves
+every input row. -/
 theorem crref_solves (rows : List (List ℚ)) (ncols : ℕ) (v : List ℚ)
     (hv : v.length ≤ ncols) (hrows : ∀ r ∈ rows, v.length ≤ r.length)
     (hsol : solvesAll (crref rows ncols).1 v) :
@@ -341,9 +312,7 @@ theorem crref_solves (rows : List (List ℚ)) (ncols : ℕ) (v : List ℚ)
     (by omega) (by simpa using hrows) (by simp) hsol
   exact h.1
 
-/-- **The pivot columns of `crref.go` are distinct and bounded by `ncols`.** Carrying that the
-accumulated pivot columns are all `< col` and `Nodup` (and `col ≤ ncols`), the output pivot-column list
-is `Nodup` with every entry `< ncols`. -/
+/-- The output pivot-column list of `crref.go` is `Nodup` with every entry `< ncols`. -/
 theorem crref_go_pivots (ncols : ℕ) :
     ∀ (fuel col : ℕ) (rest pivRows : List (List ℚ)) (pivCols : List ℕ),
       col ≤ ncols →
@@ -442,10 +411,7 @@ theorem isIdentitySubmatrix_reverse (rows : List (List ℚ)) (cols : List ℕ)
   have : (rows.length - 1 - i = cols.length - 1 - j) ↔ (i = j) := by rw [hlen]; omega
   simp only [this]
 
-/-- **★ Forward RREF structure of `crref.go`: the output pivot submatrix is the identity.** Carrying
-the accumulator invariants — identity pivot submatrix (Hid), all accumulated pivot columns `< col`
-(Hpc), every `rest` row cleared on columns `< col` (Hcl), and all rows at least `ncols` wide (Hrl) —
-the output `(R, PC) = go ncols fuel col rest pivRows pivCols` satisfies `isIdentitySubmatrix R PC`. -/
+/-- Forward RREF structure of `crref.go`: the output `(R, PC)` satisfies `isIdentitySubmatrix R PC`. -/
 theorem crref_go_rref (ncols : ℕ) :
     ∀ (fuel col : ℕ) (rest pivRows : List (List ℚ)) (pivCols : List ℕ),
       (∀ r ∈ rest ++ pivRows, ncols ≤ r.length) →
@@ -626,9 +592,8 @@ theorem idxOf?_of_mem {α : Type*} [BEq α] [LawfulBEq α] (l : List α) (c : α
   | none => rw [h] at hlt; simp at hlt
   | some i => rfl
 
-/-- **★ Top-level `crref` correctness.** For `rows` all at least `ncols` wide, the RREF
-`(R, PC) = crref rows ncols` has an identity pivot submatrix, `PC` is `Nodup`, and every pivot column
-is `< ncols`. -/
+/-- Top-level `crref` correctness: the RREF `(R, PC)` has an identity pivot submatrix, `PC` is `Nodup`,
+and every pivot column is `< ncols`. -/
 theorem crref_rref (rows : List (List ℚ)) (ncols : ℕ)
     (hrows : ∀ r ∈ rows, ncols ≤ r.length) :
     isIdentitySubmatrix (crref rows ncols).1 (crref rows ncols).2 ∧
@@ -640,11 +605,8 @@ theorem crref_rref (rows : List (List ℚ)) (ncols : ℕ)
   · exact (crref_go_pivots ncols (ncols + rows.length + 1) 0 rows [] []
       (by omega) (by simp) (by simp)).1
 
-/-- **★ P1: the back-read of a full-rank RREF solves the RREF rows.** Given `(R, PC)` a reduced
-echelon form with identity pivot submatrix, `PC` `Nodup`, every pivot column `< ncols` (so the rhs
-column `ncols` is not a pivot), full column rank `ncols ≤ PC.length`, `R.length = PC.length`, and every
-`R`-row of length `≥ ncols + 1`, the back-substituted vector `x` (with last coordinate `-1`) solves
-every row of `R`. -/
+/-- The back-read of a full-rank RREF solves the RREF rows: the back-substituted vector `x` (with last
+coordinate `-1`) solves every row of `R`. -/
 theorem back_read_solves_rref (R : List (List ℚ)) (PC : List ℕ) (ncols : ℕ)
     (hid : isIdentitySubmatrix R PC) (hnd : PC.Nodup) (hpcb : ∀ c ∈ PC, c < ncols)
     (hrank : ncols ≤ PC.length) (hrlen : ∀ r ∈ R, ncols + 1 ≤ r.length) :
@@ -727,8 +689,7 @@ theorem back_read_solves_rref (R : List (List ℚ)) (PC : List ℕ) (ncols : ℕ
       exfalso; apply hi'; rw [Finset.mem_range]; rw [hRPClen] at hi; omega
   rw [hmain]; ring
 
-/-- **Output rows of `crref.go` are at least `ncols` wide.** (Elimination is `zipWith` with the
-≥`ncols`-wide normalized pivot, so widths never drop below `ncols`; reversal preserves widths.) -/
+/-- Output rows of `crref.go` are at least `ncols` wide. -/
 theorem crref_go_rowlen (ncols : ℕ) :
     ∀ (fuel col : ℕ) (rest pivRows : List (List ℚ)) (pivCols : List ℕ),
       (∀ r ∈ rest ++ pivRows, ncols ≤ r.length) →
@@ -790,13 +751,8 @@ theorem crref_rowlen (rows : List (List ℚ)) (ncols : ℕ)
     ∀ r ∈ (crref rows ncols).1, ncols ≤ r.length :=
   crref_go_rowlen ncols (ncols + rows.length + 1) 0 rows [] [] (by simpa using hrows)
 
-/-- **★★ Soundness of `cConstSolveUniqueQ`: the returned solution solves the linear system.** If
-`cConstSolveUniqueQ Arows urhs ncols = some x` (with the matrix `Arows` having every row of width
-exactly `ncols`, and `Arows.length = urhs.length`), then `x` solves `A·x = b` rowwise: for each
-`i < Arows.length`, `dotQ (Arows.getD i []) x = urhs.getD i 0`. Proof: the augmented matrix's RREF is
-sound (`crref_solves`) and the back-read vector `x ++ [-1]` solves the RREF rows
-(`back_read_solves_rref`, using the identity-pivot-submatrix structure + full rank), so `x ++ [-1]`
-solves every augmented row `Aᵢ ++ [bᵢ]`, i.e. `dotQ Aᵢ x − bᵢ = 0`. -/
+/-- Soundness of `cConstSolveUniqueQ`: if it returns `some x`, then `x` solves `A·x = b` rowwise,
+`dotQ (Arows.getD i []) x = urhs.getD i 0` for each `i < Arows.length`. -/
 theorem cConstSolveUniqueQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
     (hwidth : ∀ r ∈ Arows, r.length = ncols) (hlen : Arows.length = urhs.length)
     (hsome : cConstSolveUniqueQ Arows urhs ncols = some x) :

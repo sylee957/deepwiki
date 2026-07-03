@@ -1,24 +1,11 @@
 import DeepWiki.SymbolicIntegration.LiouvilleExpExtension
 import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
 
-/-! # The exponential pole-matching, ported from the logarithmic case (exp keystone, UNCONDITIONAL)
+/-! # The exponential pole-matching, ported from the logarithmic case
 
-Discharges `ExpPoleMatching u` (the residual the exp keystone `isLiouville_of_expPoleMatching` waits
-on) from `NondegenerateExp u` alone, by **porting** the logarithmic Rosenlicht pole-matching
-(`LiouvilleLog.multiLogPoleObligation_of_nondegenerateLog`) to the exp monomial `t = exp u`.
-
-The combinatorial pole-machinery (`wConst`, `poleMult`, `factorsFinset`, squarefree products) is
-**derivation-independent** and reused verbatim from `LiouvilleLog`; only the derivation-touching
-lemmas are re-derived over `expDerivPoly`/`expDifferential`.  The one structural difference from log:
-the special factor `π = X = t` is a *unit* (`X ∣ DX`), so `logDeriv X = u'` is an `F`-element, **not**
-a `t`-pole (`logDeriv_X_eq`).  It is therefore split off into the `F`-part, and the genuine
-pole-matching/independence runs over `π ≠ X` (where `not_dvd_expDerivPoly_of_ne_X` applies).
-
-- `expPoleMatching_of_nondegenerateExp` — the ported pole-matching (`ExpPoleMatching u` from
-  `NondegenerateExp u`).
-- `isLiouville_expExtension_uncond` — the UNCONDITIONAL exp keystone, completing the log+exp Liouville
-  pair (mirroring `LiouvilleLog.isLiouville_logExtension_uncond`).
--/
+Discharges `ExpPoleMatching u` from `NondegenerateExp u` (`expPoleMatching_of_nondegenerateExp`), giving
+the unconditional exp keystone `isLiouville_expExtension_uncond`. The special factor `X = exp u` is a
+unit and is split into the `F`-part; pole-matching runs over `π ≠ X`. -/
 
 open scoped Differential
 open Polynomial Differential
@@ -39,9 +26,7 @@ open RatFunc
 /-! ## The exp `logDeriv` factorization fold (derivation-touching, re-derived for `expDerivPoly`) -/
 
 omit [CharZero F] in
-/-- **`logDeriv` of a `RatFunc` splits as numerator minus denominator `logDeriv`** (exp port of
-`LiouvilleLog.logDeriv_eq_num_sub_denom`): for `w ≠ 0`, `logDeriv w = logDeriv(algebraMap (num w)) −
-logDeriv(algebraMap (denom w))`. -/
+/-- For `w ≠ 0`, `logDeriv w = logDeriv(algebraMap (num w)) − logDeriv(algebraMap (denom w))`. -/
 theorem logDeriv_eq_num_sub_denom (u : F) {w : RatFunc F} (hw : w ≠ 0) :
     letI := expDifferential u
     logDeriv w = logDeriv (algebraMap F[X] (RatFunc F) (RatFunc.num w))
@@ -55,10 +40,8 @@ theorem logDeriv_eq_num_sub_denom (u : F) {w : RatFunc F} (hw : w ≠ 0) :
   exact logDeriv_div _ _ hnum hden
 
 omit [CharZero F] in
-/-- **`logDeriv` of a polynomial image folds along its UFD factorization** (exp port of
-`LiouvilleLog.logDeriv_algebraMap_eq_unit_add_sum`): for `p ≠ 0`, `logDeriv (algebraMap p) =
-logDeriv (algebraMap (C lc)) + ∑_{π ∈ factors} (count π) · logDeriv (algebraMap π)`.  Derivation-generic
-(`logDeriv_mul`/`logDeriv_multisetProd`), unchanged from the log proof. -/
+/-- `logDeriv` of a polynomial image folds along its UFD factorization: for `p ≠ 0`,
+`logDeriv (algebraMap p) = logDeriv (algebraMap (C lc)) + ∑_{π ∈ factors} (count π) · logDeriv (algebraMap π)`. -/
 theorem logDeriv_algebraMap_eq_unit_add_sum [DecidableEq F] (u : F) {p : F[X]} (hp : p ≠ 0) :
     letI := expDifferential u
     logDeriv (algebraMap F[X] (RatFunc F) p)
@@ -92,11 +75,8 @@ theorem logDeriv_algebraMap_eq_unit_add_sum [DecidableEq F] (u : F) {p : F[X]} (
   rw [nsmul_eq_mul]
 
 omit [CharZero F] in
-/-- **The exp `RatFunc` `logDeriv` pole decomposition** (exp port of
-`LiouvilleLog.logDeriv_eq_wConst_add_sum`): for `w ≠ 0`, `logDeriv w = logDeriv (algebraMap (wConst w))
-+ ∑_{π ∈ factorsFinset w} algebraMap (C (poleMult w π)) · logDeriv (algebraMap π)`.  The combinatorial
-`wConst`/`poleMult`/`factorsFinset` are reused from `LiouvilleLog` (derivation-independent); the proof
-is unchanged except routing through the exp factorization fold. -/
+/-- Pole decomposition: for `w ≠ 0`, `logDeriv w = logDeriv (algebraMap (wConst w))
++ ∑_{π ∈ factorsFinset w} algebraMap (C (poleMult w π)) · logDeriv (algebraMap π)`. -/
 theorem logDeriv_eq_wConst_add_sum [DecidableEq F] (u : F) {w : RatFunc F} (hw : w ≠ 0) :
     letI := expDifferential u
     logDeriv w = logDeriv (algebraMap F (RatFunc F) (wConst w))
@@ -168,10 +148,8 @@ theorem logDeriv_eq_wConst_add_sum [DecidableEq F] (u : F) {w : RatFunc F} (hw :
 /-! ## Splitting off the special factor `X` (the exp-specific step) -/
 
 omit [CharZero F] in
-/-- **The special-factor pole term is `F`-valued** (the exp-specific fact): `algebraMap (C r) ·
-logDeriv (algebraMap X) = algebraMap (r · u')` in `RatFunc F` — a constant `u`-logarithm, *not* a
-`t`-pole, since `logDeriv (exp u) = u'` (`logDeriv_X_eq`).  This is what lets the `X = t` part of every
-`wᵢ` fold into the `F`-data, leaving the genuine pole-matching over `π ≠ X`. -/
+/-- The special-factor term is `F`-valued: `algebraMap (C r) · logDeriv (algebraMap X) =
+algebraMap (r · u')` in `RatFunc F`, since `logDeriv (exp u) = u'`. -/
 theorem X_term_eq_algebraMap (u : F) (r : F) :
     letI := expDifferential u
     algebraMap F[X] (RatFunc F) (Polynomial.C r) * logDeriv (algebraMap F[X] (RatFunc F) Polynomial.X)
@@ -180,10 +158,8 @@ theorem X_term_eq_algebraMap (u : F) (r : F) :
   rw [logDeriv_X_eq, ← algebraMap_eq_algebraMap_C (b := r), ← map_mul]
 
 omit [CharZero F] in
-/-- **A `C`-residue pole sum over a `Finset` of monic irreducibles ≠ X is `F`-pole-free except at X**:
-splitting `∑_{π ∈ S}` into the (`F`-valued) `X` term plus the `∑_{π ∈ S.erase X}` genuine-pole part.
-This is the exp port's reshuffle of the collected pole sum: the `X` summand becomes a constant
-`u`-logarithm (`X_term_eq_algebraMap`) and moves into the `F`-data. -/
+/-- Splits a `C`-residue pole sum `∑_{π ∈ S}` into the `F`-valued `X` term plus the genuine-pole part
+over `S.erase X`. -/
 theorem sum_pole_split_X [DecidableEq F] (u : F) (S : Finset F[X]) (r : F[X] → F) :
     letI := expDifferential u
     (∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
@@ -199,9 +175,8 @@ theorem sum_pole_split_X [DecidableEq F] (u : F) (S : Finset F[X]) (r : F[X] →
 /-! ## The multi-term collection (exp port) -/
 
 omit [CharZero F] in
-/-- **An `F`-coefficient combination of `logDeriv`s of `F`-elements is a polynomial** (exp port of
-`LiouvilleLog.sum_const_logDeriv_algebraMap_mem_range`): each `logDeriv (algebraMap xᵢ) = algebraMap
-(logDeriv xᵢ)` is `F`-valued. -/
+/-- An `F`-coefficient combination of `logDeriv`s of `F`-elements is a polynomial (in
+`(algebraMap F[X]).range`). -/
 theorem sum_const_logDeriv_algebraMap_mem_range (u : F) {ι : Type*} [Fintype ι]
     (c : ι → F) (x : ι → F) :
     letI := expDifferential u
@@ -216,10 +191,8 @@ theorem sum_const_logDeriv_algebraMap_mem_range (u : F) {ι : Type*} [Fintype ι
   rw [logDeriv_algebraMap, ← algebraMap_eq_algebraMap_C, ← map_mul]
 
 omit [CharZero F] in
-/-- **The multi-term `logDeriv`-sum pole-collection** (exp port of
-`LiouvilleLog.sum_const_logDeriv_eq_wConst_add_pole`): `∑ᵢ ↑(cᵢ)·logDeriv wᵢ = ∑ᵢ ↑(cᵢ)·logDeriv
-(↑(wConst wᵢ)) + ∑_{π ∈ S} ↑(C (∑ᵢ cᵢ · poleMult wᵢ π)) · logDeriv (↑π)` with `S = ⋃ᵢ factorsFinset wᵢ`.
-Derivation-generic, unchanged from the log proof. -/
+/-- Multi-term pole-collection: `∑ᵢ ↑(cᵢ)·logDeriv wᵢ = ∑ᵢ ↑(cᵢ)·logDeriv (↑(wConst wᵢ))
++ ∑_{π ∈ S} ↑(C (∑ᵢ cᵢ · poleMult wᵢ π)) · logDeriv (↑π)`, `S = ⋃ᵢ factorsFinset wᵢ`. -/
 theorem sum_const_logDeriv_eq_wConst_add_pole [DecidableEq F] (u : F) {ι : Type*} [Fintype ι]
     (c : ι → F) (w : ι → RatFunc F) (hw : ∀ i, w i ≠ 0) :
     letI := expDifferential u
@@ -256,11 +229,8 @@ theorem sum_const_logDeriv_eq_wConst_add_pole [DecidableEq F] (u : F) {ι : Type
 
 open scoped algebraMap in
 omit [CharZero F] in
-/-- **Pole-independence for the exp monomial, modulo `π ∤ Dπ`** (exp port of
-`LiouvilleLog.poleIndependence_of_logDerivPoly_ne_zero`): for distinct monic irreducible `πⱼ` with `dⱼ`
-of `t`-degree `< deg πⱼ`, if `∑ⱼ dⱼ · logDeriv πⱼ` is a *polynomial* and each `πⱼ ∤ D πⱼ`, then every
-`dⱼ = 0`.  The Rosenlicht partial-fraction-uniqueness argument is derivation-generic; the exp content
-is that `πⱼ ∤ D πⱼ` is supplied for `πⱼ ≠ X` by `not_dvd_expDerivPoly_of_ne_X` (the wrapper below). -/
+/-- Pole-independence modulo `π ∤ Dπ`: for distinct monic irreducible `πⱼ` with `deg dⱼ < deg πⱼ`, if
+`∑ⱼ dⱼ · logDeriv πⱼ` is a polynomial and each `πⱼ ∤ D πⱼ`, then every `dⱼ = 0`. -/
 theorem poleIndependence_of_not_dvd (u : F) {ιπ : Type*} [Fintype ιπ]
     (π : ιπ → F[X]) (d : ιπ → F[X]) (hmon : ∀ j, (π j).Monic) (hirr : ∀ j, Irreducible (π j))
     (hinj : Function.Injective π) (hdeg : ∀ j, (d j).natDegree < (π j).natDegree)
@@ -319,11 +289,8 @@ theorem poleIndependence_of_not_dvd (u : F) {ιπ : Type*} [Fintype ιπ]
   exact absurd (Polynomial.natDegree_le_of_dvd hdvdd hd0) (by have := hdeg j; omega)
 
 open scoped algebraMap in
-/-- **Pole-independence over a `Finset` of monic irreducibles ≠ X, with constant residues** (exp port
-of `LiouvilleLog.poleIndependence_finset_const`): GIVEN `NondegenerateExp`, a finite set `S` of monic
-irreducible `t`-polynomials **none equal to `X`** and constant residues `r : F[X] → F`, if `∑_{π ∈ S}
-↑(C (r π)) · logDeriv (↑π)` is a polynomial then every `r π = 0` (`π ∈ S`).  Packages
-`poleIndependence_of_not_dvd` over `↥S`, with `πⱼ ∤ D πⱼ` from `not_dvd_expDerivPoly_of_ne_X`. -/
+/-- Pole-independence over monic irreducibles `≠ X` with constant residues: given `NondegenerateExp`,
+if `∑_{π ∈ S} ↑(C (r π)) · logDeriv (↑π)` is a polynomial then every `r π = 0`. -/
 theorem poleIndependence_finset_const_ne_X (u : F) (hnd : NondegenerateExp u) (S : Finset F[X])
     (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π) (hXS : Polynomial.X ∉ S)
     (r : F[X] → F)
@@ -352,9 +319,7 @@ theorem poleIndependence_finset_const_ne_X (u : F) (hnd : NondegenerateExp u) (S
 /-! ## The simple-pole separation (exp port; `denom v` keeps only the special factor `X`) -/
 
 omit [CharZero F] in
-/-- **A simple-pole sum (over monic irreducibles), times the common denominator, is a polynomial**
-(exp port of `LiouvilleLog.simplePole_mul_prod_mem_range`): each term `↑(C rπ)·(Dπ/π)·↑(∏ρ) = ↑(C rπ ·
-Dπ · ∏_{ρ≠π} ρ)`. Derivation-generic via the exp `logDeriv_algebraMap_eq`. -/
+/-- A simple-pole sum times the common denominator `∏_{ρ∈S} ρ` is a polynomial. -/
 theorem simplePole_mul_prod_mem_range (u : F) (S : Finset F[X]) (r : F[X] → F)
     (hmon : ∀ π ∈ S, π.Monic) :
     letI := expDifferential u
@@ -373,12 +338,8 @@ theorem simplePole_mul_prod_mem_range (u : F) (S : Finset F[X]) (r : F[X] → F)
   rw [logDeriv_algebraMap_eq u π, hprod, map_mul, map_mul, map_mul]
   field_simp
 
-/-- **The pole of `v′` cannot be cancelled at `π ≠ X`** (exp port of
-`LiouvilleLog.not_dvd_sq_mul_of_pole`): for a monic irreducible `π ∣ D`, `π ≠ X` (so `π ∤ Dπ` by
-`not_dvd_expDerivPoly_of_ne_X`), `N` coprime to `D`, and `G = ∏_{ρ∈S} ρ` a product of distinct monic
-irreducibles, `D² ∤ (D·DN − N·DD)·G` where `DN = expDerivPoly u N`, `DD = expDerivPoly u D`.  Taking
-`v_π`: `2k` vs `(k−1) + v_π(G) ≤ k`, impossible.  The exp content is `π ≠ X`; otherwise identical to
-the log. -/
+/-- The pole of `v′` cannot be cancelled at `π ≠ X`: for monic irreducible `π ∣ D`, `π ≠ X`, `N`
+coprime to `D`, `G = ∏_{ρ∈S} ρ`, `D² ∤ (D·DN − N·DD)·G` (`DN = expDerivPoly u N`, `DD = expDerivPoly u D`). -/
 theorem not_dvd_sq_mul_of_pole (u : F) (hnd : NondegenerateExp u) {N D π : F[X]}
     (hπmon : π.Monic) (hπirr : Irreducible π) (hπX : π ≠ Polynomial.X) (hDne0 : D ≠ 0)
     (hcop : IsCoprime N D) (hπdvdD : π ∣ D) {S : Finset F[X]}
@@ -429,11 +390,8 @@ theorem not_dvd_sq_mul_of_pole (u : F) (hnd : NondegenerateExp u) {N D π : F[X]
   rw [← Nat.cast_mul, Nat.cast_le] at hfinal
   omega
 
-/-- **`denom v` keeps only the special factor `X`** (the exp analogue of the log's `D = 1`): if `v′ +
-(≠X simple-pole sum)` is a polynomial, then `denom v = X^(deg)` — every `π ≠ X` pole of `v` is forbidden
-(`not_dvd_sq_mul_of_pole`).  Unlike the log (where `v` is forced to be a *polynomial*, `D = 1`), for the
-exp monomial `v` may still carry an `X = exp u` pole (a *unit*), so the conclusion is "`denom v` is a
-pure power of `X`", not "`denom v = 1`". -/
+/-- `denom v` keeps only the special factor `X`: if `v′ + (≠X simple-pole sum)` is a polynomial, then
+`denom v = X^(natDegree)`. -/
 theorem denom_eq_X_pow_of_deriv_add_simplePole (u : F) (hnd : NondegenerateExp u)
     (v : RatFunc F) (S : Finset F[X]) (r : F[X] → F)
     (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π)
@@ -508,11 +466,8 @@ theorem denom_eq_X_pow_of_deriv_add_simplePole (u : F) (hnd : NondegenerateExp u
   rw [hdeg, ← heq]
 
 omit [CharZero F] in
-/-- **`v′` times an `X`-power denominator is a polynomial** (the `X`-pole bookkeeping for the exp
-separation): if `denom v = X^k`, then `v′ · ↑(X^k) = ↑(D N − C(k·u')·N) ∈ F[t]` (`N = num v`).  The
-special factor `X = t` is a unit, so `D(X^k) = C(k·u')·X^k` and the `X^k` denominator clears against the
-exp derivative's diagonal coefficient formula — exactly the `hclear` step of
-`expDeriv_mem_range_imp_mem_range`. -/
+/-- `v′` times an `X`-power denominator is a polynomial: if `denom v = X^k`, then
+`v′ · ↑(X^k) ∈ (algebraMap F[X]).range`. -/
 theorem deriv_mul_X_pow_mem_range (u : F) {v : RatFunc F} {k : ℕ}
     (hdXk : RatFunc.denom v = Polynomial.X ^ k) :
     letI := expDifferential u
@@ -550,13 +505,8 @@ theorem deriv_mul_X_pow_mem_range (u : F) {v : RatFunc F} {k : ℕ}
     ring
   exact ⟨M, hclear.symm⟩
 
-/-- **The simple-pole separation (exp port)**: if `v′ + (≠X simple-pole sum `Q`) ∈ F[t]`, then `Q`
-*itself* is in `F[t]`.  Proof: `denom v = X^k` (`denom_eq_X_pow_of_deriv_add_simplePole`), so `v′·↑(X^k)
-∈ F[t]` (`deriv_mul_X_pow_mem_range`); hence `Q·↑(X^k) = (v′+Q)·↑(X^k) − v′·↑(X^k) ∈ F[t]` and `Q·↑G ∈
-F[t]` (`simplePole_mul_prod_mem_range`, `G = ∏_{ρ∈S} ρ`); since `X ∉ S`, `X^k` and `G` are *coprime*, so
-`Q = Q·(p·X^k + q·G)/1 = p·(Q·X^k) + q·(Q·G) ∈ F[t]`.  The exp counterpart of
-`LiouvilleLog.mem_range_of_deriv_add_simplePole_mem_range`, but separating the pole sum (not forcing `v`
-to be a polynomial — `v` may keep its `X = exp u` unit-pole). -/
+/-- Simple-pole separation: if `v′ + (≠X simple-pole sum Q)` is a polynomial, then `Q` itself is a
+polynomial. -/
 theorem simplePole_mem_range_of_deriv_add (u : F) (hnd : NondegenerateExp u)
     (v : RatFunc F) (S : Finset F[X]) (r : F[X] → F)
     (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π) (hXS : Polynomial.X ∉ S)
@@ -614,16 +564,12 @@ theorem simplePole_mem_range_of_deriv_add (u : F) (hnd : NondegenerateExp u)
 /-! ## The exp pole-matching assembly (the ported keystone residual) -/
 
 omit [CharZero F] in
-/-- **The signed `X`-multiplicity is a constant** (`(poleMult w X)′ = 0`): `poleMult w X` is a
-difference of `ℕ`-counts cast to `F`, hence annihilated by the derivation (`Derivation.map_natCast`). -/
+/-- The signed pole multiplicity is a constant: `(poleMult w π)′ = 0`. -/
 theorem deriv_poleMult_eq_zero [DecidableEq F] (w : RatFunc F) (π : F[X]) : (poleMult w π)′ = 0 := by
   rw [poleMult, Derivation.map_sub, Derivation.map_natCast, Derivation.map_natCast, sub_zero]
 
 omit [CharZero F] in
-/-- **The special-factor constant `u`-logarithm is an antiderivative of `K·u'`** (the `X`-term fold):
-for a constant `K` (`K′ = 0`), `(algebraMap (K · u))′ = algebraMap (K · u')` in `RatFunc F` — so the
-`F`-valued `X = exp u` part `K·u'` of the collected sum is the derivative of `K·u ∈ F`, absorbable into
-the corrected `v₀`.  (`logDeriv (exp u) = u'`, so the `exp(k u)` factors fold into `(K u)′`.) -/
+/-- For a constant `K` (`K′ = 0`), `(algebraMap (K · u))′ = algebraMap (K · u')` in `RatFunc F`. -/
 theorem deriv_algebraMap_const_mul_self (u : F) {K : F} (hK : K′ = 0) :
     letI := expDifferential u
     letI := expDifferentialAlgebra u
@@ -634,16 +580,8 @@ theorem deriv_algebraMap_const_mul_self (u : F) {K : F} (hK : K′ = 0) :
   congr 1
   rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, hK, mul_zero, add_zero]
 
-/-- **`ExpPoleMatching u` from `NondegenerateExp u` — the ported pole-matching (the residual the exp
-keystone waits on).**  Ports `LiouvilleLog.multiLogPoleObligation_of_nondegenerateLog` to the exp
-monomial.  Given `algebraMap a = ∑ᵢ ↑cᵢ logDeriv wᵢ + v′`: replace any zero `wᵢ` by `1`, factor and
-collect (`sum_const_logDeriv_eq_wConst_add_pole`) into the `F`-part `∑ᵢ ↑cᵢ logDeriv (↑(wConst w'ᵢ))`
-plus the simple-pole sum over `S = ⋃ᵢ factorsFinset w'ᵢ`.  **Split off the special factor `X`**
-(`sum_pole_split_X`): its term `↑K·u'` (`K = ∑ᵢ cᵢ poleMult w'ᵢ X` a constant) is `F`-valued; the rest is
-the genuine pole sum `Q` over `S.erase X`.  Then `v′ + Q ∈ F[t]` (the `F`-part, `X`-term and `↑a` are
-polynomials), so `Q ∈ F[t]` (`simplePole_mem_range_of_deriv_add`); pole-independence over `π ≠ X`
-(`poleIndependence_finset_const_ne_X`, from `NondegenerateExp`) forces every residue `0`, so `Q = 0`.
-Take `w₀ᵢ = wConst w'ᵢ` and `v₀ = v + ↑(K·u)`, whose derivative `v′ + ↑(K·u') = ↑(a − xF) ∈ F`. -/
+/-- `ExpPoleMatching u` from `NondegenerateExp u`: the pole-matching residual the exp keystone waits
+on. -/
 theorem expPoleMatching_of_nondegenerateExp (u : F) (hnd : NondegenerateExp u) :
     ExpPoleMatching u := by
   letI := expDifferential u
@@ -765,13 +703,8 @@ theorem expPoleMatching_of_nondegenerateExp (u : F) (hnd : NondegenerateExp u) :
 
 /-! ## The unconditional exp keystone (composition with the proven `isLiouville_of_expPoleMatching`) -/
 
-/-- **The transcendental-exp Liouville keystone — UNCONDITIONAL (modulo `NondegenerateExp` only).**
-`F(exp u) = RatFunc F` is a Liouville extension of `F` for *every* genuine new exp monomial
-(`NondegenerateExp u`, i.e. `exp(k u) ∉ F` for all `k ≠ 0` — the Risch new-monomial condition).
-Composes the proven exp keystone `isLiouville_of_expPoleMatching` (which already discharges the `v∈F`
-descent — the clean exp win) with the ported pole-matching `expPoleMatching_of_nondegenerateExp`,
-closing the last residual.  This completes the log+exp transcendental Liouville pair, mirroring
-`LiouvilleLog.isLiouville_logExtension_uncond`. -/
+/-- The transcendental-exp Liouville keystone: `F(exp u) = RatFunc F` is a Liouville extension of `F`
+for every genuine new exp monomial (`NondegenerateExp u`). -/
 theorem isLiouville_expExtension_uncond (u : F) (hnd : NondegenerateExp u) :
     letI := expDifferential u
     letI := expDifferentialAlgebra u

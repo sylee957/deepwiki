@@ -4,15 +4,11 @@ import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 
-/-! # Squarefree factorization — the derivative criterion (Bronstein §1.6–§1.7)
-The squarefree part and deflations of `A ∈ D[x]` are computed by gcd's with `dA/dx`, resting on
-the fact that a prime factor `P` divides `dA/dx` exactly once less than it divides `A`. Here we
-prove the easy half (Theorem 1.6.1(i), over any commutative ring): if `Pⁿ⁺¹ ∣ A` then `Pⁿ`
-divides both `A` and `dA/dx`, hence `Pⁿ ∣ gcd(A, dA/dx)`; the characteristic-`0` converse
-(Theorem 1.6.1(ii)); and the §1.7 squarefree criterion: over a characteristic-`0` field, `A` is
-squarefree iff `gcd(A, dA/dx) = 1`. The deflation theory (relations 1.11–1.13) and the
-squarefree-factorization parts (Lemma 1.7.1's equation 1.15) follow; the full Yun/Musser
-squarefree-factorization routine is tracked as remaining library work. -/
+/-! # Squarefree factorization via the derivative criterion
+The squarefree part and deflations of `A ∈ D[x]` are computed by gcds with `dA/dx`, since a prime
+factor `P` divides `dA/dx` exactly once less than it divides `A`. Includes the deflation theory,
+the squarefree-factorization parts, and the executable factorization algorithm with its
+correctness. -/
 
 open Polynomial
 
@@ -20,8 +16,7 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R]
 
-/-- **Theorem 1.6.1(i)** (§1.6, core): if `Pⁿ⁺¹ ∣ A` then `Pⁿ` divides both `A` and its
-derivative `dA/dx`. -/
+/-- If `Pⁿ⁺¹ ∣ A` then `Pⁿ` divides both `A` and its derivative `dA/dx`. -/
 theorem pow_dvd_and_pow_dvd_derivative {A P : R[X]} {n : ℕ} (h : P ^ (n + 1) ∣ A) :
     P ^ n ∣ A ∧ P ^ n ∣ derivative A := by
   refine ⟨(pow_dvd_pow P (Nat.le_succ n)).trans h, ?_⟩
@@ -31,8 +26,7 @@ theorem pow_dvd_and_pow_dvd_derivative {A P : R[X]} {n : ℕ} (h : P ^ (n + 1) �
   · exact ((dvd_mul_left (P ^ n) _).mul_right _).mul_right _
   · exact (pow_dvd_pow P (Nat.le_succ n)).mul_right _
 
-/-- **Theorem 1.6.1(i)** (§1.6): if `Pⁿ⁺¹ ∣ A` then `Pⁿ ∣ gcd(A, dA/dx)` (for any gcd `G` of `A`
-and its derivative). -/
+/-- If `Pⁿ⁺¹ ∣ A` then `Pⁿ ∣ G` for any gcd `G` of `A` and its derivative `dA/dx`. -/
 theorem pow_dvd_gcd_of_pow_succ_dvd {A P G : R[X]} {n : ℕ} (h : P ^ (n + 1) ∣ A)
     (hG : IsGCD A (derivative A) G) : P ^ n ∣ G :=
   hG.dvd (pow_dvd_and_pow_dvd_derivative h).1 (pow_dvd_and_pow_dvd_derivative h).2
@@ -40,8 +34,8 @@ theorem pow_dvd_gcd_of_pow_succ_dvd {A P G : R[X]} {n : ℕ} (h : P ^ (n + 1) �
 section CharZero
 variable {R : Type*} [CommRing R] [IsDomain R] [CharZero R]
 
-/-- **Theorem 1.6.1(ii)** (§1.6): the characteristic-`0` converse. If `P` is prime of positive
-degree, `0 < n`, and `Pⁿ` divides both `A` and `dA/dx`, then `Pⁿ⁺¹ ∣ A`. -/
+/-- In characteristic `0`: if `P` is prime of positive degree, `0 < n`, and `Pⁿ` divides both `A`
+and `dA/dx`, then `Pⁿ⁺¹ ∣ A`. -/
 theorem pow_succ_dvd_of_pow_dvd_derivative {A P : R[X]} {n : ℕ} (hn : 0 < n) (hP : Prime P)
     (hPdeg : 0 < P.natDegree) (hA : P ^ n ∣ A) (hA' : P ^ n ∣ derivative A) :
     P ^ (n + 1) ∣ A := by
@@ -68,8 +62,8 @@ theorem pow_succ_dvd_of_pow_dvd_derivative {A P : R[X]} {n : ℕ} (hn : 0 < n) (
         (eq_zero_of_dvd_of_degree_lt hPP (degree_derivative_lt hPne))
   · exact hPB hR
 
-/-- **Theorem 1.6.1** (§1.6), combined: in characteristic `0`, for a prime `P` of positive
-degree and `0 < n`, `Pⁿ⁺¹ ∣ A ⟺ Pⁿ` divides both `A` and `dA/dx`. -/
+/-- In characteristic `0`, for prime `P` of positive degree and `0 < n`, `Pⁿ⁺¹ ∣ A` iff `Pⁿ`
+divides both `A` and `dA/dx`. -/
 theorem pow_succ_dvd_iff {A P : R[X]} {n : ℕ} (hn : 0 < n) (hP : Prime P)
     (hPdeg : 0 < P.natDegree) :
     P ^ (n + 1) ∣ A ↔ P ^ n ∣ A ∧ P ^ n ∣ derivative A :=
@@ -78,9 +72,7 @@ theorem pow_succ_dvd_iff {A P : R[X]} {n : ℕ} (hn : 0 < n) (hP : Prime P)
 
 end CharZero
 
-/-- The squarefree criterion: over a characteristic-`0` field, `A` is squarefree iff it is coprime
-to its derivative — `gcd(A, dA/dx) = 1`. (`Squarefree ↔ Separable` on a perfect field, and
-`Separable A ↔ IsCoprime A (dA/dx)`.) -/
+/-- Over a characteristic-`0` field, `A` is squarefree iff `IsCoprime A (dA/dx)`. -/
 theorem squarefree_iff_isCoprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
     Squarefree A ↔ IsCoprime A (derivative A) :=
   PerfectField.separable_iff_squarefree.symm.trans (separable_def A)
@@ -90,20 +82,20 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- **Squarefree part** (§1.6, Definition 1.6.2): `A* = ∏ Pᵢ`, the product of the distinct
-(normalized) prime factors of the primitive part `pp(A) = ∏ Pᵢ^eᵢ`. -/
+/-- Squarefree part `A* = ∏ Pᵢ`: the product of the distinct normalized prime factors of the
+primitive part `pp(A)`. -/
 noncomputable def squarefreePart (A : D[X]) : D[X] :=
   ∏ P ∈ (normalizedFactors A.primPart).toFinset, P
 
 open Classical in
-/-- **`k`-deflation** (§1.6, Definition 1.6.2): `A⁻ᵏ = ∏ Pᵢ^max(0, eᵢ−k)` (truncated exponents),
-from `pp(A) = ∏ Pᵢ^eᵢ`. The `1`-deflation `A⁻ = A⁻¹` is the *deflation* of `A`. -/
+/-- `k`-deflation `A⁻ᵏ = ∏ Pᵢ^max(0, eᵢ−k)`: the primitive part with each factor exponent
+truncated by `k`. -/
 noncomputable def deflation (A : D[X]) (k : ℕ) : D[X] :=
   ∏ P ∈ (normalizedFactors A.primPart).toFinset, P ^ ((normalizedFactors A.primPart).count P - k)
 
 open Classical in
-/-- **Relation (1.11)** (§1.6): `A* · A⁻ = pp(A)` (up to associates) — the squarefree part times
-the deflation recovers the primitive part, since `∏ Pᵢ · ∏ Pᵢ^(eᵢ−1) = ∏ Pᵢ^eᵢ`. -/
+/-- `A* · A⁻¹` is associated to `pp(A)`: the squarefree part times the deflation recovers the
+primitive part. -/
 theorem squarefreePart_mul_deflation (A : D[X]) (hA : A.primPart ≠ 0) :
     Associated (squarefreePart A * deflation A 1) A.primPart := by
   rw [squarefreePart, deflation, ← Finset.prod_mul_distrib]
@@ -120,8 +112,7 @@ theorem squarefreePart_mul_deflation (A : D[X]) (hA : A.primPart ≠ 0) :
   exact prod_normalizedFactors hA
 
 open Classical in
-/-- **`A⁻⁰ = pp(A)`** (§1.6, the note preceding relation 1.11): the `0`-deflation recovers the
-primitive part (up to associates), since `∏ Pᵢ^(eᵢ−0) = ∏ Pᵢ^eᵢ`. -/
+/-- The `0`-deflation `A⁻⁰` is associated to the primitive part `pp(A)`. -/
 theorem deflation_zero (A : D[X]) (hA : A.primPart ≠ 0) : Associated (deflation A 0) A.primPart := by
   rw [deflation]; simp only [Nat.sub_zero]
   rw [← Finset.prod_multiset_count]; exact prod_normalizedFactors hA
@@ -136,16 +127,14 @@ theorem deflation_dvd_primPart (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
   exact hdvd.trans (deflation_zero A hA).dvd
 
 open Classical in
-/-- Every deflation is primitive: `A⁻ᵏ` is a divisor of the primitive `pp(A)`. (Used to identify
-`pp(A⁻ᵏ)` with `A⁻ᵏ` when iterating the deflation, e.g. for relation 1.13.) -/
+/-- Every deflation `A⁻ᵏ` is primitive (a divisor of the primitive `pp(A)`). -/
 theorem deflation_isPrimitive (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     (deflation A k).IsPrimitive :=
   isPrimitive_of_dvd (isPrimitive_primPart A) (deflation_dvd_primPart A k hA)
 
 open Classical in
-/-- The factor multiplicities of a deflation are the truncated original ones:
-`count Q (normalizedFactors A⁻ᵏ) = count Q (normalizedFactors pp(A)) − k`. (Canonical because
-`normalizedFactors` is normalized — this is why the deflation uses `normalizedFactors`.) -/
+/-- The factor multiplicities of a deflation are the truncated originals:
+`count Q (normalizedFactors A⁻ᵏ) = count Q (normalizedFactors pp(A)) − k`. -/
 theorem count_normalizedFactors_deflation (A : D[X]) (k : ℕ) (Q : D[X]) :
     (normalizedFactors (deflation A k)).count Q = (normalizedFactors A.primPart).count Q - k := by
   set M := normalizedFactors A.primPart with hM
@@ -181,8 +170,7 @@ theorem deflation_ne_zero (A : D[X]) (k : ℕ) : deflation A k ≠ 0 := by
     pow_ne_zero _ (irreducible_of_normalized_factor P (Multiset.mem_toFinset.mp hP)).ne_zero
 
 open Classical in
-/-- **Relation (1.12)** (§1.6): `A⁻⁽ᵏ⁺¹⁾ = (A⁻ᵏ)⁻` — the `(k+1)`-deflation is the deflation of the
-`k`-deflation. -/
+/-- `A⁻⁽ᵏ⁺¹⁾ = (A⁻ᵏ)⁻¹`: the `(k+1)`-deflation is the deflation of the `k`-deflation. -/
 theorem deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     deflation A (k + 1) = deflation (deflation A k) 1 := by
   conv_rhs => rw [deflation, (deflation_isPrimitive A k hA).primPart_eq]
@@ -196,8 +184,8 @@ theorem deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     rw [show (normalizedFactors A.primPart).count P - (k + 1) = 0 by omega, pow_zero]
 
 open Classical in
-/-- **Relation (1.13)** (§1.6): `A⁻⁽ᵏ⁺¹⁾ = A⁻ᵏ / (A⁻ᵏ)*` — multiplicatively,
-`(A⁻ᵏ)* · A⁻⁽ᵏ⁺¹⁾ = A⁻ᵏ` up to associates (relation 1.11 applied to `A⁻ᵏ`, via relation 1.12). -/
+/-- `(A⁻ᵏ)* · A⁻⁽ᵏ⁺¹⁾` is associated to `A⁻ᵏ`: the squarefree part of a deflation times the next
+deflation recovers it. -/
 theorem squarefreePart_mul_deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     Associated (squarefreePart (deflation A k) * deflation A (k + 1)) (deflation A k) := by
   have hne : (deflation A k).primPart ≠ 0 := by
@@ -220,17 +208,15 @@ theorem squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
   omega
 
 open Classical in
-/-- **Squarefree-factorization part** (§1.7, Lemma 1.7.1): `Aᵢ = ∏_{eₚ = i} P`, the product of the
-prime factors of `pp(A)` of multiplicity exactly `i` (the `i`-th factor of the squarefree
-factorization `pp(A) = ∏ᵢ Aᵢⁱ`). -/
+/-- Squarefree-factorization part `Aᵢ = ∏_{eₚ = i} P`: the product of the prime factors of `pp(A)`
+of multiplicity exactly `i`. -/
 noncomputable def sqfreeFactPart (A : D[X]) (i : ℕ) : D[X] :=
   ∏ P ∈ (normalizedFactors A.primPart).toFinset.filter
     (fun P => (normalizedFactors A.primPart).count P = i), P
 
 open Classical in
-/-- **Lemma 1.7.1 (ii)** (§1.7, equation 1.15): `Aᵢ = (A⁻⁽ⁱ⁻¹⁾)* / (A⁻ⁱ)*`, in multiplicative
-form `(A⁻ⁱ)* · Aᵢ = (A⁻⁽ⁱ⁻¹⁾)*` (`1 ≤ i`). The squarefree parts of consecutive deflations differ
-exactly by the factor `Aᵢ` of multiplicity `i`, since `{eₚ > i} ⊔ {eₚ = i} = {eₚ ≥ i}`. -/
+/-- `(A⁻ⁱ)* · Aᵢ = (A⁻⁽ⁱ⁻¹⁾)*` (`1 ≤ i`): consecutive deflation squarefree parts differ exactly by
+the multiplicity-`i` factor `Aᵢ`. -/
 theorem squarefreePart_deflation_mul_sqfreeFactPart (A : D[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) :
     squarefreePart (deflation A i) * sqfreeFactPart A i = squarefreePart (deflation A (i - 1)) := by
@@ -248,9 +234,8 @@ theorem squarefreePart_deflation_mul_sqfreeFactPart (A : D[X]) (i : ℕ) (hi : 1
   omega
 
 open Classical in
-/-- **Lemma 1.7.1 (i)** (§1.7): `A⁻ᵏ = ∏ᵢ Aᵢ^(i−k)`, the deflation regrouped by multiplicity (the
-product ranges over the multiplicities `i` occurring in `pp(A)`; terms with `i ≤ k` contribute `1`).
-Proof: `Finset.prod_fiberwise_of_maps_to` partitions the prime factors of `pp(A)` by multiplicity. -/
+/-- `A⁻ᵏ = ∏ᵢ Aᵢ^(i−k)`: the deflation regrouped by multiplicity `i` (terms with `i ≤ k`
+contribute `1`). -/
 theorem deflation_eq_prod_sqfreeFactPart (A : D[X]) (k : ℕ) :
     deflation A k = ∏ i ∈ (normalizedFactors A.primPart).toFinset.image
         (fun P => (normalizedFactors A.primPart).count P),
@@ -267,9 +252,7 @@ theorem deflation_eq_prod_sqfreeFactPart (A : D[X]) (k : ℕ) :
   rw [hP.2]
 
 open Classical in
-/-- **Lemma 1.7.1 (iii)** (§1.7): `pp(A) = ∏ᵢ Aᵢⁱ` (up to associates) — the squarefree
-factorization of the primitive part. (The `k = 0` case of `deflation_eq_prod_sqfreeFactPart`
-combined with `deflation_zero`.) -/
+/-- `pp(A)` is associated to `∏ᵢ Aᵢⁱ`: the squarefree factorization of the primitive part. -/
 theorem primPart_associated_prod_sqfreeFactPart (A : D[X]) (hA : A.primPart ≠ 0) :
     Associated A.primPart (∏ i ∈ (normalizedFactors A.primPart).toFinset.image
       (fun P => (normalizedFactors A.primPart).count P), (sqfreeFactPart A i) ^ i) := by
@@ -286,8 +269,7 @@ theorem sqfreeFactPart_ne_zero (A : D[X]) (i : ℕ) : sqfreeFactPart A i ≠ 0 :
     (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).ne_zero
 
 open Classical in
-/-- **Lemma 1.7.1 (iii)** (§1.7), squarefree part: each `Aᵢ = ∏_{eₚ = i} P` is squarefree (a product
-of distinct primes). -/
+/-- Each squarefree-factorization part `Aᵢ` is squarefree (a product of distinct primes). -/
 theorem sqfreeFactPart_squarefree (A : D[X]) (i : ℕ) : Squarefree (sqfreeFactPart A i) := by
   rw [sqfreeFactPart]
   apply Finset.squarefree_prod_of_pairwise_isCoprime
@@ -308,9 +290,8 @@ theorem sqfreeFactPart_squarefree (A : D[X]) (i : ℕ) : Squarefree (sqfreeFactP
       (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).squarefree
 
 open Classical in
-/-- **Lemma 1.7.1 (iii)** (§1.7), pairwise coprimality: the `Aᵢ` are pairwise coprime in the gcd
-sense — `gcd(Aᵢ, Aⱼ) ∈ D` for `i ≠ j` (stated as `IsRelPrime`, the non-Bézout notion, since `D[X]`
-need not be a Bézout domain). Their prime supports `{eₚ = i}` and `{eₚ = j}` are disjoint. -/
+/-- The squarefree-factorization parts are pairwise relatively prime: `IsRelPrime (Aᵢ) (Aⱼ)`
+for `i ≠ j`. -/
 theorem sqfreeFactPart_isRelPrime (A : D[X]) {i j : ℕ} (hij : i ≠ j) :
     IsRelPrime (sqfreeFactPart A i) (sqfreeFactPart A j) := by
   apply WfDvdMonoid.isRelPrime_of_no_irreducible_factors (fun h => sqfreeFactPart_ne_zero A i h.1)
@@ -332,8 +313,7 @@ theorem sqfreeFactPart_isRelPrime (A : D[X]) {i j : ℕ} (hij : i ≠ j) :
   exact hij (hi.symm.trans hj)
 
 open Classical in
-/-- The squarefree part of a deflation as a product of the higher squarefree-factorization parts:
-`(A⁻ᵏ)* = ∏_{j > k} Aⱼ`. (The `(A⁻⁽ᵏ⁻¹⁾)* = ∏_{j ≥ k} Aⱼ` identity underlying Yun's eq 1.16.) -/
+/-- The squarefree part of a deflation as a product of higher parts: `(A⁻ᵏ)* = ∏_{j > k} Aⱼ`. -/
 theorem squarefreePart_deflation_eq_prod (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     squarefreePart (deflation A k)
       = ∏ j ∈ ((normalizedFactors A.primPart).toFinset.image
@@ -357,9 +337,8 @@ theorem squarefreePart_deflation_eq_prod (A : D[X]) (k : ℕ) (hA : A.primPart �
     exact ⟨Finset.mem_image_of_mem _ hP.1, hP.2⟩
 
 open Classical in
-/-- The derivative of a deflation in factored form (the analytic core of Yun's relation 1.17):
-`d(A⁻ᵏ)/dx = ∑ₐ (∏_{b ≠ a} Aᵦ^(b−k)) · (a−k)·Aₐ^(a−k−1)·dAₐ/dx`, by the product and power rules on
-`A⁻ᵏ = ∏ Aⱼ^(j−k)`. -/
+/-- The derivative of a deflation in factored form:
+`d(A⁻ᵏ)/dx = ∑ₐ (∏_{b ≠ a} Aᵦ^(b−k)) · (a−k)·Aₐ^(a−k−1)·dAₐ/dx`. -/
 theorem derivative_deflation (A : D[X]) (k : ℕ) :
     derivative (deflation A k)
       = ∑ a ∈ (normalizedFactors A.primPart).toFinset.image
@@ -373,8 +352,7 @@ theorem derivative_deflation (A : D[X]) (k : ℕ) :
   rw [derivative_pow]
 
 omit [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D] in
-/-- Exponent-shifting helper for the Yun recurrence: `(∏ₗ gₗ^(l−j))·(∏_{l≠b} gₗ) =
-gᵦ^(b−j)·∏_{l≠b} gₗ^(l−j+1)`. -/
+/-- Exponent-shifting helper: `(∏ₗ gₗ^(l−j))·(∏_{l≠b} gₗ) = gᵦ^(b−j)·∏_{l≠b} gₗ^(l−j+1)`. -/
 private theorem prod_pow_sub_mul_prod_erase (g : ℕ → D[X]) (s : Finset ℕ) (j b : ℕ) (hb : b ∈ s) :
     (∏ l ∈ s, g l ^ (l - j)) * (∏ l ∈ s.erase b, g l)
       = g b ^ (b - j) * ∏ l ∈ s.erase b, g l ^ (l - j + 1) := by
@@ -382,8 +360,8 @@ private theorem prod_pow_sub_mul_prod_erase (g : ℕ → D[X]) (s : Finset ℕ) 
   exact congrArg _ (Finset.prod_congr rfl fun l _ => (pow_succ (g l) (l - j)).symm)
 
 open Classical in
-/-- **Yun's polynomial `Yₖ`** (§1.7, equation 1.16): `Yₖ = ∑_{i≥k} (i−k+1)·(dAᵢ/dx)·∏_{l≥k, l≠i} Aₗ`,
-the polynomial driving Yun's squarefree-factorization recurrence. -/
+/-- The polynomial `Yₖ = ∑_{i≥k} (i−k+1)·(dAᵢ/dx)·∏_{l≥k, l≠i} Aₗ` driving the
+squarefree-factorization recurrence. -/
 noncomputable def Yun (A : D[X]) (i : ℕ) : D[X] :=
   ∑ a ∈ ((normalizedFactors A.primPart).toFinset.image
       (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => i ≤ a),
@@ -393,9 +371,7 @@ noncomputable def Yun (A : D[X]) (i : ℕ) : D[X] :=
         sqfreeFactPart A l
 
 open Classical in
-/-- **Lemma 1.7.2** (§1.7, equation 1.17): Yun's derivative recurrence
-`d(A⁻⁽ⁱ⁻¹⁾)/dx = A⁻ⁱ · Yᵢ` (`1 ≤ i`). The product/power rule on `A⁻⁽ⁱ⁻¹⁾ = ∏ Aⱼ^(j−i+1)`
-(`derivative_deflation`) regroups, term-by-term, into `A⁻ⁱ = ∏ Aⱼ^(j−i)` times Yun's `Yᵢ`. -/
+/-- Derivative recurrence `d(A⁻⁽ⁱ⁻¹⁾)/dx = A⁻ⁱ · Yᵢ` (`1 ≤ i`). -/
 theorem derivative_deflation_pred (A : D[X]) (i : ℕ) (hi : 1 ≤ i) :
     derivative (deflation A (i - 1)) = deflation A i * Yun A i := by
   set I := (normalizedFactors A.primPart).toFinset.image
@@ -429,8 +405,8 @@ theorem derivative_deflation_pred (A : D[X]) (i : ℕ) (hi : 1 ≤ i) :
     simp
 
 open Classical in
-/-- The derivative of a squarefree part in factored form (toward Yun's relation 1.18):
-`d(A⁻ᵏ)*/dx = ∑_{a > k} (∏_{b > k, b ≠ a} Aᵦ) · dAₐ/dx`, by the product rule on `(A⁻ᵏ)* = ∏_{j > k} Aⱼ`. -/
+/-- The derivative of a squarefree part in factored form:
+`d(A⁻ᵏ)*/dx = ∑_{a > k} (∏_{b > k, b ≠ a} Aᵦ) · dAₐ/dx`. -/
 theorem derivative_squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     derivative (squarefreePart (deflation A k))
       = ∑ a ∈ ((normalizedFactors A.primPart).toFinset.image
@@ -441,10 +417,7 @@ theorem derivative_squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPar
   rw [squarefreePart_deflation_eq_prod A k hA, derivative_prod_finset]
 
 open Classical in
-/-- Yun's relation 1.18: `Yᵢ − d(A⁻⁽ⁱ⁻¹⁾)*/dx = Aᵢ·Y_{i+1}`. Both `Yᵢ` and `d(A⁻⁽ⁱ⁻¹⁾)*` sum over the
-multiplicities `≥ i` with the same `∏_{l≠a} Aₗ` factor, so their difference is termwise
-`(C(a−i+1)−1) = C(a−i)`; the `a=i` term vanishes and the rest regroups to `Aᵢ·Y_{i+1}` by pulling out
-the multiplicity-`i` factor `Aᵢ`. -/
+/-- `Yᵢ − d(A⁻⁽ⁱ⁻¹⁾)*/dx = Aᵢ·Y_{i+1}` (`1 ≤ i`). -/
 theorem Yun_sub_derivative_squarefreePart (A : D[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
     Yun A i - derivative (squarefreePart (deflation A (i - 1)))
       = sqfreeFactPart A i * Yun A (i + 1) := by
@@ -522,12 +495,8 @@ variable {K : Type*} [Field K] [CharZero K]
 
 open Classical
 
-/-- Yun's relation 1.17 (gcd clause), over a characteristic-`0` field: `gcd((A⁻⁽ⁱ⁻¹⁾)*, Yᵢ) ∈ K`, i.e.
-`(A⁻⁽ⁱ⁻¹⁾)*` and `Yᵢ` are relatively prime. A prime factor `P` of `(A⁻⁽ⁱ⁻¹⁾)* = ∏_{l≥i} Aₗ` divides
-some `Aₐ`; it then divides every `Yᵢ`-term except the `a`-th (each other term carries the factor `Aₐ`),
-while it misses the `a`-th term because `Aₐ` is squarefree so `P ∤ dAₐ/dx` (separability in char `0`),
-`P ∤ ∏_{l≠a} Aₗ` (the `Aₗ` are pairwise coprime), and `P ∤` the nonzero constant coefficient. Hence
-`P ∤ Yᵢ`. -/
+/-- Over a characteristic-`0` field, `(A⁻⁽ⁱ⁻¹⁾)*` and `Yᵢ` are relatively prime:
+`IsRelPrime ((A⁻⁽ⁱ⁻¹⁾)*) (Yᵢ)` (`1 ≤ i`). -/
 theorem isRelPrime_squarefreePart_Yun (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
     IsRelPrime (squarefreePart (deflation A (i - 1))) (Yun A i) := by
   set I := (normalizedFactors A.primPart).toFinset.image
@@ -579,9 +548,8 @@ theorem isRelPrime_squarefreePart_Yun (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : 
   rw [Yun, ← hI, ← hf, ← Finset.add_sum_erase _ g haI'] at hPY
   exact hga ((dvd_add_left hPS).mp hPY)
 
-/-- Char-`0` multiplicity drop in the derivative: if `Pʲ ∥ p` exactly (`Pʲ ∣ p`, `P^{j+1} ∤ p`) for an
-irreducible `P` and `j ≥ 1`, then `Pʲ ∤ dp/dx`. Writing `p = Pʲ·g` (`P ∤ g`), `dp/dx = P^{j-1}·(j·P'·g
-+ P·g')`, and `P` divides neither `j` (nonzero in char `0`), `P'` (separability), nor `g`. -/
+/-- Over a characteristic-`0` field: if `Pʲ ∣ p` exactly (`P^{j+1} ∤ p`) for irreducible `P` and
+`j ≥ 1`, then `Pʲ ∤ dp/dx`. -/
 private theorem pow_not_dvd_derivative_aux (p P : K[X]) (j : ℕ) (hj : 1 ≤ j) (hP : Irreducible P)
     (hdvd : P ^ j ∣ p) (hndvd : ¬ P ^ (j + 1) ∣ p) : ¬ P ^ j ∣ derivative p := by
   obtain ⟨g, hg⟩ := hdvd
@@ -603,11 +571,8 @@ private theorem pow_not_dvd_derivative_aux (p P : K[X]) (j : ℕ) (hj : 1 ≤ j)
     · exact hP.prime.not_unit ((hP.separable).isUnit_of_dvd' (dvd_refl P) hdP)
   · exact hPg hg'
 
-/-- Musser's algorithm initialization `S⁻ ← gcd(S, dS/dx)` (§1.7, eq 1.14), over a characteristic-`0`
-field: `gcd(pp(A), d pp(A)/dx) = A⁻¹` (up to associates). The forward divisibility `A⁻¹ ∣ gcd` holds in
-any characteristic (`pow_sub_one_dvd_derivative_of_pow_dvd` on each `Aᵢ^i ∣ pp`); the reverse uses the
-char-`0` multiplicity drop (`pow_not_dvd_derivative_aux`): a prime `P ∣ Aⱼ` has `Pʲ ∤ pp'`, so the
-cofactor `pp'/A⁻¹` is coprime to `gcd`, forcing `gcd ∣ A⁻¹`. -/
+/-- Over a characteristic-`0` field, `gcd(pp(A), d pp(A)/dx)` is associated to the deflation
+`A⁻¹`. -/
 theorem deflation_one_eq_gcd (A : K[X]) (hA : A.primPart ≠ 0) :
     Associated (gcd A.primPart (derivative A.primPart)) (deflation A 1) := by
   set I := (normalizedFactors A.primPart).toFinset.image
@@ -674,10 +639,8 @@ variable {K : Type*} [Field K]
 
 open Classical
 
-/-- Musser's squarefree-factorization algorithm, the loop step `Y ← gcd(S*, S⁻)`: over a field,
-`gcd((A⁻⁽ᵏ⁻¹⁾)*, A⁻ᵏ) = (A⁻ᵏ)*` (up to associates). Since `(A⁻⁽ᵏ⁻¹⁾)* = Aₖ·(A⁻ᵏ)*` (1.15) with `Aₖ`
-coprime to `A⁻ᵏ`, and `(A⁻ᵏ)* ∣ A⁻ᵏ` (1.13), the gcd strips exactly the `Aₖ` factor. With `Aₖ = S*/Y`
-(1.15) and `S⁻/Y = A⁻⁽ᵏ⁺¹⁾` (1.13), this justifies one iteration of the loop. -/
+/-- Over a field, `gcd((A⁻⁽ᵏ⁻¹⁾)*, A⁻ᵏ)` is associated to the deflation squarefree part
+`(A⁻ᵏ)*` (`1 ≤ k`). -/
 theorem gcd_squarefreePart_deflation (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.primPart ≠ 0) :
     Associated (gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
       (squarefreePart (deflation A k)) := by
@@ -698,9 +661,8 @@ theorem gcd_squarefreePart_deflation (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A
       (sqfreeFactPart A k) := hcop.symm.of_isCoprime_of_dvd_left (gcd_dvd_right _ _)
   exact hgc.dvd_of_dvd_mul_left (gcd_dvd_left _ _)
 
-/-- Musser's squarefree-factorization loop (§1.7, p.29), as an executable recursion on `fuel`. From
-`S* = (A⁻⁽ᵏ⁻¹⁾)*` and `S⁻ = A⁻ᵏ`, while `S⁻` is non-constant it sets `Y = gcd(S*, S⁻)`, emits
-`Aₖ = S*/Y`, and recurses on `(Y, S⁻/Y)`; the constant `S⁻` case emits the final `S*`. -/
+/-- Executable squarefree-factorization loop on `fuel`: while `Sminus` is non-constant, emit
+`Sstar / gcd(Sstar, Sminus)` and recurse on `(gcd, Sminus/gcd)`; otherwise emit `Sstar`. -/
 noncomputable def squarefreeLoop (Sstar Sminus : K[X]) : ℕ → List K[X]
   | 0 => [Sstar]
   | (n + 1) =>
@@ -708,8 +670,8 @@ noncomputable def squarefreeLoop (Sstar Sminus : K[X]) : ℕ → List K[X]
     else (Sstar / gcd Sstar Sminus)
       :: squarefreeLoop (gcd Sstar Sminus) (Sminus / gcd Sstar Sminus) n
 
-/-- Musser's `Squarefree(A)` algorithm: the squarefree-factorization parts of `A`, computed from
-`S⁻ ← gcd(pp A, d pp A/dx)` (`= A⁻¹`) and `S* ← pp A / S⁻` (`= A*`) by `squarefreeLoop`. -/
+/-- The squarefree-factorization parts of `A`, computed by `squarefreeLoop` from
+`gcd(pp A, d pp A/dx)` and `pp A / gcd`. -/
 noncomputable def squarefreeFactorization (A : K[X]) : List K[X] :=
   squarefreeLoop (A.primPart / gcd A.primPart (derivative A.primPart))
     (gcd A.primPart (derivative A.primPart)) A.primPart.natDegree
@@ -722,8 +684,7 @@ theorem associated_div_iff {X Y c : K[X]} (hY : Y ≠ 0) (hdvd : Y ∣ X) :
   · intro h; exact hmul ▸ h.mul_left Y
   · intro h; exact (hmul.symm ▸ h).of_mul_left (Associated.refl Y) hY
 
-/-- Loop body, emitted part: `Aₖ = S*/Y` is the `k`-th squarefree-factorization part — at
-`S* = (A⁻⁽ᵏ⁻¹⁾)*`, `Y = gcd(S*, A⁻ᵏ) = (A⁻ᵏ)*`, so `S*/Y = (A⁻⁽ᵏ⁻¹⁾)*/(A⁻ᵏ)* = Aₖ` (1.15, eq 1.15). -/
+/-- The emitted loop part `(A⁻⁽ᵏ⁻¹⁾)* / gcd((A⁻⁽ᵏ⁻¹⁾)*, A⁻ᵏ)` is associated to `Aₖ` (`1 ≤ k`). -/
 theorem squarefreeLoop_head_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.primPart ≠ 0) :
     Associated (squarefreePart (deflation A (k - 1))
         / gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
@@ -735,7 +696,7 @@ theorem squarefreeLoop_head_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.pr
   rw [associated_div_iff hY (hYass.dvd.trans ⟨sqfreeFactPart A k, hsplit.symm⟩)]
   exact hsplit ▸ hYass.symm.mul_right (sqfreeFactPart A k)
 
-/-- Loop body, updated deflation: `S⁻/Y = A⁻ᵏ/(A⁻ᵏ)* = A⁻⁽ᵏ⁺¹⁾` (1.13), the next iteration's `S⁻`. -/
+/-- The updated loop deflation `A⁻ᵏ / gcd((A⁻⁽ᵏ⁻¹⁾)*, A⁻ᵏ)` is associated to `A⁻⁽ᵏ⁺¹⁾` (`1 ≤ k`). -/
 theorem squarefreeLoop_tail_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.primPart ≠ 0) :
     Associated (deflation A k
         / gcd (squarefreePart (deflation A (k - 1))) (deflation A k))
@@ -748,8 +709,8 @@ theorem squarefreeLoop_tail_assoc (A : K[X]) (k : ℕ) (hk : 1 ≤ k) (hA : A.pr
   exact h13.symm.trans (hYass.symm.mul_right (deflation A (k + 1)))
 
 /-! ### Total correctness of the executable algorithm
-The output of `squarefreeFactorization A` equals the squarefree-factorization parts `[A₁, …, Aₘ]`
-up to associates (`squarefreeFactorization_forall₂`), via the loop invariant `loop_correct`. -/
+`squarefreeFactorization A` equals the squarefree-factorization parts `[A₁, …, Aₘ]` up to
+associates. -/
 
 private theorem deflation_natDegree_eq_zero_iff (A : K[X]) (k : ℕ) :
     (deflation A k).natDegree = 0 ↔ ∀ P ∈ (normalizedFactors A.primPart).toFinset,

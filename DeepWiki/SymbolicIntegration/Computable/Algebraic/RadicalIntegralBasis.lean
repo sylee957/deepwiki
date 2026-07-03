@@ -3,52 +3,14 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResidues
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 
-/-! # Algebraic-function integration: the simple-radical INTEGRAL BASIS (Trager Ch. 2 §5)
+/-! # Algebraic-function integration: the simple-radical integral basis
 
-The simple-radical **rational** part (`ComputableRadicalExtension` / `ComputableRadicalCase2`) and the
-log-part **residues** (`ComputableAlgebraicResidues`) are done. Their second half — the **divisors** and
-the **principal-divisor test** of the logarithmic part, and the integration of general (non-radical)
-algebraic functions — both rest on one missing piece: an explicit **integral basis** for the ring of
-functions with no finite poles. This file builds it for simple radical extensions.
-
-For a simple radical extension `K(x)[y]/(yⁿ − ρ)` (`ρ ∈ ℚ[x]`) the integral closure of `ℚ[x]` has an
-EXPLICIT integral basis — no general Ch. 2 idealizer / Round-2 needed. Trager Ch. 2 §5 (thesis p. 30):
-the natural basis `1, y, …, y^{n−1}` is already *normal* (Prop., p. 30, from the `Tᵢ`-decoupling of
-`ComputableRadicalExtension`); writing `yⁿ = ∏ⱼ Pⱼ^{eⱼ}` with the `Pⱼ` squarefree (no repeated factors),
-the maximal `dᵢ(x)` clearing the `i`-th radical is
-
-  **`dᵢ = ∏ⱼ Pⱼ^{⌊i·eⱼ/n⌋}`**   (p. 30),
-
-and `[1, y/d₁, y²/d₂, …, y^{n−1}/d_{n−1}]` is an integral basis (p. 31). This file focuses on `n = 2`,
-`y² = ρ`, the hyperelliptic / unnested-square-root case (an integral table such as Gradshteyn–Ryzhik has
-< 1% of problems outside it).
-
-For `n = 2`: collect the squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFFG`, indexed by
-multiplicity). The **square part** is `d = ∏ᵢ Pᵢ^{⌊i/2⌋}` (Trager's `d₁` at `n = 2, i = 1`) — the root of
-the largest square divisor — and the **squarefree part** is `s = ρ/d² = ∏_{i odd} Pᵢ` (the radical of `ρ`,
-collecting one copy of each odd-multiplicity factor). Then `ρ = d²·s` with `s` squarefree, `(y/d)² = s`,
-and the integral basis is `[1, y/d]` (so we represent it by the pair `(d, s)`).
-
-* **`radSquarePart` / `radSquarefreePart`** — `d` and `s = ρ/d²` from the Yun factorization (group by
-  parity of multiplicity). `native_decide`: `ρ = x³+1 → d = 1, s = x³+1`; `ρ = x³+x² → d = x, s = x+1`;
-  `ρ = x⁵−x⁴ → d = x², s = x−1`.
-* **`radIntegralBasis`** — the basis `[1, y/d]`, returned as the pair `(d, s)` (`y/d` has `(y/d)² = s`).
-* **Integral-closure VALIDATION** (`native_decide`): (a) `y/d` is integral — `d²·s = ρ` EXACTLY (so
-  `s = ρ/d² ∈ ℚ[x]` is a genuine polynomial, the minimal polynomial `T² − s` of `y/d` is over `ℚ[x]`),
-  and `s` is squarefree (`gcd(s, s') = 1`); (b) the basis is MAXIMAL — `y/(d·P)` is NOT integral for any
-  nonconstant `P`, because its would-be minimal polynomial `T² − s/P²` is not over `ℚ[x]` (`P² ∤ s` since
-  `s` is squarefree).
-* **Discriminant & genus** (STRETCH, `native_decide`): the basis discriminant `disc(T² − s) = 4s`, and
-  the hyperelliptic genus `g = ⌈deg s / 2⌉ − 1` for squarefree `s` (`y² = x³+1 → g = 1` elliptic;
-  `y² = x → g = 0` rational; `y² = x⁵+1 → g = 2`).
-
-**The engine now computes AND validates the simple-radical integral basis** (the `[1, y/d]` integral
-closure of `ℚ[x]`), together with its discriminant and the hyperelliptic genus. This is the prerequisite
-for the **principal-divisor test** (Trager Ch. 6): on top of the integral basis the still-deferred,
-research-grade next step is the **divisor construction** (Ch. 5 §3) — representing a divisor as a
-fractional ideal in this basis — and the **torsion / points-of-finite-order bound** (Ch. 6, good
-reduction) deciding whether a divisor's multiple is ever principal, which is what produces the actual log
-arguments `vᵢ` from the residues. -/
+For a simple radical extension `ℚ(x)[y]/(y² − ρ)` (`ρ ∈ ℚ[x]`) the integral closure of `ℚ[x]` has the
+explicit basis `[1, y/d]`, where `ρ = d²·s` splits into the square part `d = ∏ᵢ Pᵢ^{⌊i/2⌋}` and the
+squarefree part `s = ρ/d² = ∏_{i odd} Pᵢ` (from the multiplicity-indexed squarefree factorization). The
+basis is represented by the pair `(d, s)` with `(y/d)² = s`. Validation checks: `d²·s = ρ` exact, `s`
+squarefree (`y/d` integral), and `y/(d·P)` not integral for nonconstant `P` (maximality); plus the basis
+discriminant `4s` and the hyperelliptic genus `⌈deg s/2⌉ − 1`. -/
 
 open Polynomial
 
@@ -58,43 +20,34 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-! ### The square-part / squarefree-part split for `n = 2` (Trager Ch. 2 §5)
+/-! ### The square-part / squarefree-part split for `n = 2`
 
-`ρ = d²·s`: `d = ∏ᵢ Pᵢ^{⌊i/2⌋}` (the square part's root) and `s = ∏_{i odd} Pᵢ` (squarefree), from the
-multiplicity-indexed squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFFG`). This is Trager's general
-`dᵢ = ∏ⱼ Pⱼ^{⌊i·eⱼ/n⌋}` (p. 30) at `n = 2`, `i = 1`: `⌊eⱼ/2⌋` copies of each factor go into `d`. -/
+`ρ = d²·s`: `d = ∏ᵢ Pᵢ^{⌊i/2⌋}` and `s = ∏_{i odd} Pᵢ` (squarefree), from the multiplicity-indexed
+squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFFG`). -/
 
 variable [CFracGcdCoreWf α]
 
-/-- **Square part** `radSquarePart ρ = d = ∏ᵢ Pᵢ^{⌊i/2⌋}` — the root of the largest square divisor
-of `ρ`, from the multiplicity-indexed squarefree factorization `ρ = ∏ᵢ Pᵢ^i` (`cSqfreeYunFFG`): each
-squarefree part `Pᵢ` of multiplicity `i` contributes `Pᵢ^{⌊i/2⌋}` to `d`. So `d² ∣ ρ` and `ρ/d²` is
-squarefree (Trager Ch. 2 §5, p. 30, `d₁` at `n = 2`). Monic. `[CField α] [CFracGcdCoreWf α]`-generic. -/
+/-- Square part `radSquarePart ρ = d = ∏ᵢ Pᵢ^{⌊i/2⌋}`: the root of the largest square divisor of `ρ`
+(each squarefree part `Pᵢ` of multiplicity `i` contributes `Pᵢ^{⌊i/2⌋}`), so `d² ∣ ρ` and `ρ/d²` is
+squarefree. Monic. -/
 def radSquarePart (ρ : CPolyG α) : CPolyG α :=
   (cSqfreeYunFFGWf ρ).zipIdx.foldl
     (fun acc (Pi, i) => cmulG acc (cpowG Pi ((i + 1) / 2))) [CField.one]
 
-/-- **Squarefree part** `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²` — the radical-style
-squarefree part of `ρ` collecting one copy of each ODD-multiplicity squarefree factor `Pᵢ` (so
-`ρ = d²·s` with `d = radSquarePart`). Equivalently `s = ρ/d²` (exact division), but built directly from
-the parity of multiplicities so the squarefreeness is structural (Trager Ch. 2 §5, p. 30). Monic.
-`[CField α] [CFracGcdCoreWf α]`-generic. -/
+/-- Squarefree part `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²`: one copy of each odd-multiplicity
+factor `Pᵢ`, so `ρ = d²·s` with `d = radSquarePart` and `s` squarefree by construction. Monic. -/
 def radSquarefreePart (ρ : CPolyG α) : CPolyG α :=
   (cSqfreeYunFFGWf ρ).zipIdx.foldl
     (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmulG acc Pi else acc) [CField.one]
 
-/-! ### The integral basis `[1, y/d]` (Trager Ch. 2 §5, p. 31)
+/-! ### The integral basis `[1, y/d]`
 
-`d = radSquarePart ρ`, `s = radSquarefreePart ρ`; `ρ = d²·s`, `(y/d)² = ρ/d² = s` is squarefree hence
-integral, and `y/d` is the maximal integral element of the form `y/q`. We return the basis by the pair
-`(d, s)`: the second basis element is `y/d`, whose square is the squarefree polynomial `s`. -/
+`d = radSquarePart ρ`, `s = radSquarefreePart ρ`; `(y/d)² = s` is squarefree hence integral, and `y/d` is
+the maximal integral element of the form `y/q`. Returned as the pair `(d, s)`. -/
 
-/-- **The simple-radical integral basis** `radIntegralBasis ρ = (d, s)` for `ℚ[x][y]/(y² − ρ)`
-(Trager Ch. 2 §5, p. 31): the integral closure of `ℚ[x]` has the explicit `ℚ[x]`-basis `[1, y/d]`, where
-`d = radSquarePart ρ` (the square part's root) and `s = radSquarefreePart ρ = ρ/d²` is squarefree with
-`(y/d)² = s`. Returned as the pair `(d, s)` (the basis is `1` and `y/d`; `s` is the minimal-polynomial
-constant `(y/d)² = s`). For squarefree `ρ` (`d = 1`) this is just `[1, y]`. `[CField α]
-[CFracGcdCoreWf α]`-generic. -/
+/-- The simple-radical integral basis `radIntegralBasis ρ = (d, s)` for `ℚ[x][y]/(y² − ρ)`: the integral
+closure of `ℚ[x]` has basis `[1, y/d]` with `d = radSquarePart ρ`, `s = radSquarefreePart ρ = ρ/d²`
+squarefree, `(y/d)² = s` (`[1, y]` for squarefree `ρ`). -/
 def radIntegralBasis (ρ : CPolyG α) : CPolyG α × CPolyG α :=
   (radSquarePart ρ, radSquarefreePart ρ)
 

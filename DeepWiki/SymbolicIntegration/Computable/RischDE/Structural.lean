@@ -1,46 +1,12 @@
 import DeepWiki.SymbolicIntegration.Computable.RischFieldSpec
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 
-/-! # §6 RDE structural decomposition — `cRischDEG = some _` ⟹ the stage `some`-results
+/-! # RDE structural decomposition
 
-`ComputableRischFieldSpec` records the **recursive** `CRischFieldSpec (QFunNZG β)` instance as the
-documented layer-bridge obstruction: the §6 correctness `cRischDEG_rdeCleared_gen`
-(`ComputableRischDETowerCorrectG`) is **conditional** on ≈13 hypotheses, none of which were yet derived
-from the bare success `cRischDEG … = some (ynum, yden)`. This file **attempts** that derivation — the §6
-*structural-decomposition theorem* — and partitions the ≈13 hypotheses into the **derivable** class
-(forced by `cRischDEG`'s own `match` structure) and the **irreducible residual** (global regularity the
-algorithm does not self-certify), stating each precisely.
-
-The §6 RDE oracle `cRischDEG Dt fuel fnum fden gnum gden` is a chain of `match … with | none => none | …`
-forms:
-
-  `match cRdeNormalDenominatorG … with | some (a0,b0,c0,h0) =>`
-  `  let (a,b,c,h1) := cRdeSpecialDenominatorG Dt fuel a0 b0 c0`
-  `  match cSPDEG Dt fuel a b c (cRdeBoundDegreeG Dt a b c) with | some (bbar,cbar,m,α',β) =>`
-  `    match cPolyRischDEG Dt fuel bbar cbar m with | some v => some (cmulG (caddG (cmulG α' v) β) h1, h0)`
-
-so a successful run **structurally forces** each intermediate stage to have returned `some` with the very
-reassembly the capstone consumes. This is exactly the **derivable** bulk of the capstone's hypotheses.
-
-* **`cRischDEG_some_imp_stages`** — ★ the structural-decomposition core: `cRischDEG … = some (ynum, yden)`
-  yields the §6.2 `hnorm` (`cRdeNormalDenominatorG = some (a0,b0,c0,h0)`), the §6.4 `hspde` (`cSPDEG … =
-  some (bbar,cbar,m,α',β)` at the bound degree on the special-cleared coefficients), the §6.5/§6.6
-  dispatcher result `cPolyRischDEG … = some v`, and the output identification `ynum = (α'·v+β)·h1`,
-  `yden = h0`. The three stage-`some`-results derived from bare success.
-* **`cRischDEGWf_some_imp_stages_structural`** — the same structural reading for `cRischDEGWf`, exported
-  from this structural module so Wf proofs can use one structural API instead of reaching into the runtime
-  well-founded module for control-flow facts.
-* **`cPolyRischDEG_some_imp_noCancel_of_primitive`** — the dispatcher → non-cancellation bridge in the
-  primitive regime: when `Dt` is primitive (`cdegG Dt = 0`) and `bbar ≠ 0` (`db > max 0 (δ−1) = 0`),
-  `cPolyRischDEG Dt fuel bbar cbar m = cPolyRischDENoCancelG Dt fuel bbar cbar m`, so the capstone's
-  `hpoly` (which is the §6.5 non-cancellation solve, NOT the dispatcher) is the dispatcher result.
-
-The genuinely **irreducible residual** — `hprim` (primitive-regime restriction; `cRischDEG` runs all
-regimes), the §6.2 divisibility side-conditions (`hdn`, `hdvdB`, `hdvdC`), and the
-transparent-input chain `hin : CSPDEGClearedInputsGen` (whose per-level `Associated`-gcd clauses are the
-`CPrimPRSGenAssocReg` regularity that `associated_toPolyG_cgcdFFCore` itself takes as a hypothesis, and
-which the engine never self-certifies) — is isolated and named in `RischDEStructuralResidual` below, with
-the precise reason each is not forced by bare success. -/
+A successful `cRischDEG … = some (ynum, yden)` structurally forces each intermediate stage to have
+returned `some`. This file derives those stage results (`cRischDEGWf_some_imp_stages_structural`, the
+dispatcher → non-cancellation bridge) and isolates the residual regularity conditions the algorithm
+does not self-certify (`RischDEStructuralResidualWf`). -/
 
 open Polynomial Classical
 open scoped Differential
@@ -51,12 +17,11 @@ open Compute CPolyG QFunNZG
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-/-! ### Fuel-free structural decomposition
+/-! ### Structural decomposition
 
-The well-founded runtime module defines the same control-flow reading for `cRischDEGWf`. This wrapper exposes
-it from the structural layer, matching the legacy fueled API location. -/
+This wrapper exposes the `cRischDEGWf` control-flow reading from the structural layer. -/
 
-/-- **Wf structural decomposition**: `cRischDEGWf = some _` forces the Wf stage `some`-results. -/
+/-- `cRischDEGWf = some _` forces the stage `some`-results. -/
 theorem cRischDEGWf_some_imp_stages_structural [CFracGcdCoreWf α] [CRischField α] (Dt : CPolyG α)
     (fnum fden gnum gden ynum yden : CPolyG α)
     (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden)) :
@@ -74,22 +39,13 @@ theorem cRischDEGWf_some_imp_stages_structural [CFracGcdCoreWf α] [CRischField 
       ∧ yden = h0 :=
   cRischDEGWf_some_imp_stages Dt fnum fden gnum gden ynum yden hsucc
 
-/-! ### The dispatcher → non-cancellation bridge (primitive regime, positive `deg(bbar)`)
+/-! ### The dispatcher → non-cancellation bridge
 
-The capstone `cRischDEG_rdeCleared_gen` takes `hpoly : cPolyRischDENoCancelG Dt fuel bbar cbar m = some v`
-— the §6.5 **non-cancellation** solve — whereas `cRischDEG`'s body (and hence `cRischDEG_some_imp_stages`)
-yields the §6.5/§6.6 **dispatcher** `cPolyRischDEG Dt fuel bbar cbar m = some v`. The dispatcher routes by
-`δ = cdegG Dt` and `db = cdegG bbar` (Lemma 6.5.1): in the **primitive** regime (`δ = 0`) with
-`db > max 0 (δ−1) = 0` (i.e. `bbar` of positive degree) it routes to `cPolyRischDENoCancelG` verbatim. So
-under `cdegG Dt = 0` and `0 < cdegG bbar`, the dispatcher result IS the capstone's non-cancellation result.
-(`bbar = 0` would route to pure integration `cIntegratePolyG`; `db = 0` to the primitive cancellation
-recursion `cPolyRischDECancelPrimG` — neither is `cPolyRischDENoCancelG`, so the bridge needs
-`0 < cdegG bbar`, which the capstone's downstream consumption implicitly assumes.) -/
+In the primitive regime (`cdegG Dt = 0`) with positive `deg(bbar)`, the dispatcher `cPolyRischDEGWf`
+routes to the non-cancellation solve `cPolyRischDENoCancelGWf`. -/
 
-/-- **Fuel-free mirror of `cPolyRischDEG_eq_noCancel_of_primitive`**: in the primitive regime
-(`cdegG Dt = 0`) with positive `deg(bbar)`, the fuel-free dispatcher `cPolyRischDEGWf` reduces to the
-non-cancellation solve `cPolyRischDENoCancelGWf`. Same Lemma-6.5.1 routing; a structural mirror of the
-retired fuel'd dispatcher. -/
+/-- In the primitive regime (`cdegG Dt = 0`) with positive `deg(bbar)`, `cPolyRischDEGWf` reduces to
+`cPolyRischDENoCancelGWf`. -/
 theorem cPolyRischDEGWf_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG α)
     (bbar cbar : CPolyG α) (m : ℤ) (hδ : cdegG Dt = 0) (hdb : 0 < cdegG bbar) :
     cPolyRischDEGWf Dt bbar cbar m = cPolyRischDENoCancelGWf Dt bbar cbar m := by
@@ -104,10 +60,8 @@ theorem cPolyRischDEGWf_eq_noCancel_of_primitive [CRischField α] (Dt : CPolyG �
   rw [show (max (0 : ℤ) (-1)) = 0 by norm_num]
   exact_mod_cast hdb
 
-/-- **Fuel-free mirror of `cRischDEG_some_imp_noCancel_of_primitive`**: from a bare `cRischDEGWf`
-success in the primitive regime with positive `deg(bbar)`, the §6.2 `hnorm`, §6.4 `hspde`, and the
-capstone's §6.5 non-cancellation `hpoly` (`cPolyRischDENoCancelGWf … = some v`) all hold. Composes
-`cRischDEGWf_some_imp_stages` with `cPolyRischDEGWf_eq_noCancel_of_primitive`. -/
+/-- From a bare `cRischDEGWf` success in the primitive regime, the normal-denominator, SPDE, and
+non-cancellation stage results all hold. -/
 theorem cRischDEGWf_some_imp_noCancel_of_primitive [CFracGcdCoreWf α] [CRischField α] (Dt : CPolyG α)
     (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
     (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden)) :
@@ -130,20 +84,18 @@ theorem cRischDEGWf_some_imp_noCancel_of_primitive [CFracGcdCoreWf α] [CRischFi
   exact hdisp
 
 
-/-! ### Axiom audit (the structural decomposition rests only on the standard kernel axioms) -/
+/-! ### Axiom audit -/
 
 #print axioms cRischDEGWf_some_imp_stages_structural
 
-/-! ## Fuel-free cleared-identity ports (Phase P1 of the RischDE Wf migration) -/
+/-! ## Cleared-identity ports -/
 
 section WfCleared
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-/-- **Fuel-free mirror of `cPolyRischDENoCancelG_cleared_identity_gen`**: a `cPolyRischDENoCancelGWf`
-success `= some q` yields the §6.5 non-cancellation identity `D(q) + b·q = c` over `(CFieldSpec.K α)[X]`.
-`fun_induction` on the well-founded `cPolyRischDENoCancelGWf` recursion, mirroring the fuel'd fuel-induction
-proof (base `c = 0`; recursive `q = p + qrec`, closed by `linear_combination` on the IH). -/
+/-- A `cPolyRischDENoCancelGWf` success `= some q` yields the identity `D(q) + b·q = c` over
+`(CFieldSpec.K α)[X]`. -/
 theorem cPolyRischDENoCancelGWf_cleared_identity (Dt b c : CPolyG α) (n : ℤ) (q : CPolyG α)
     (hsolve : cPolyRischDENoCancelGWf Dt b c n = some q) :
     Differential.implicitDeriv (toPolyG Dt) (toPolyG q) + toPolyG b * toPolyG q = toPolyG c := by
@@ -168,10 +120,8 @@ section WfSPDECleared
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
-/-- **Fuel-free mirror of `cSPDEGClearedGen`**: the per-level certificate for `cSPDEGWf`, with
-`g = cgcdFFCoreWf a b` and divided coefficients via `cdivWf`. Fuel-free (no fuel-bound clauses),
-well-founded on `(n+1).toNat` mirroring `cSPDEGWf`'s own recursion structure exactly (same explicit
-`(n − deg ad + 1).toNat < (n+1).toNat` guard, so `decreasing_by assumption` applies verbatim). -/
+/-- `cSPDEGClearedGenWf`: the per-level certificate for `cSPDEGWf`, with `g = cgcdFFCoreWf a b` and
+divided coefficients via `cdivWf`. -/
 def cSPDEGClearedGenWf (Dt a b c : CPolyG α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
@@ -195,11 +145,8 @@ def cSPDEGClearedGenWf (Dt a b c : CPolyG α) (n : ℤ) : Prop :=
 termination_by (n + 1).toNat
 decreasing_by assumption
 
-/-- **Fuel-free mirror of `cSPDEG_cleared_lifting_gen`**: under `cSPDEGClearedGenWf`, if `cSPDEGWf Dt a b c n
-= some (b̄, c̄, m, α, β)` then for every `h` solving the reduced `D(h) + b̄·h = c̄`, the reconstruction `q =
-α·h + β` solves the original `a·D(q) + b·q = c` over `(CFieldSpec.K α)[X]`. `fun_induction` on the
-well-founded `cSPDEGWf` recursion, mirroring the fuel'd fuel-induction proof case-by-case (constant-`a'` base
-via `spde_const_base`, recursive peel via `cSPDE_peel_cleared_gen`). -/
+/-- Under `cSPDEGClearedGenWf`, if `cSPDEGWf … = some (b̄, c̄, m, α, β)` then for every `h` solving
+`D(h) + b̄·h = c̄`, the reconstruction `q = α·h + β` solves `a·D(q) + b·q = c`. -/
 theorem cSPDEGWf_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar : CPolyG α) (m : ℤ)
     (α' β : CPolyG α)
     (hspde : cSPDEGWf Dt a b c n = some (bbar, cbar, m, α', β))
@@ -290,9 +237,8 @@ theorem cSPDEGWf_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar
   | case6 => exact absurd hspde (by simp)
   | case7 a b c n hn g hdvd => exact absurd hspde (by simp)
 
-/-- **Fuel-free mirror of `CSPDEGClearedInputsGen`**: the transparent per-level input predicate for
-`cSPDEGWf`'s cleared-certificate discharge. Fuel-free (no fuel-bound length clauses), well-founded on
-`(n+1).toNat` with the same explicit recursion guard as `cSPDEGClearedGenWf`. -/
+/-- `CSPDEGClearedInputsGenWf`: the transparent per-level input predicate for `cSPDEGWf`'s
+cleared-certificate discharge. -/
 def CSPDEGClearedInputsGenWf (Dt a b c : CPolyG α) (n : ℤ) : Prop :=
   if n < 0 then True
   else
@@ -314,11 +260,7 @@ termination_by (n + 1).toNat
 decreasing_by assumption
 
 omit [CDiffFieldSpec α] in
-/-- **Fuel-free mirror of `cSPDEGCleared_of_inputs_gen`**: `CSPDEGClearedInputsGenWf Dt a b c n` implies the
-per-level certificate `cSPDEGClearedGenWf Dt a b c n`. `fun_induction` on the well-founded
-`CSPDEGClearedInputsGenWf` recursion, mirroring the fuel'd fuel-induction proof (exact-division witnesses via
-`cdivWf_a/b_exact_of_gcd` + `cdivWf_c_exact_of_cdvdGWf`, the Bézout clause via `toPolyG_cdiophantineGWf` with
-the divided-coefficient Wf gcd shown unit by `cgcdWf_isUnit_of_divided_gen`). -/
+/-- `CSPDEGClearedInputsGenWf Dt a b c n` implies the per-level certificate `cSPDEGClearedGenWf Dt a b c n`. -/
 theorem cSPDEGClearedGenWf_of_inputs (Dt a b c : CPolyG α) (n : ℤ) (hin : CSPDEGClearedInputsGenWf Dt a b c n) :
     cSPDEGClearedGenWf Dt a b c n := by
   fun_induction CSPDEGClearedInputsGenWf Dt a b c n with
@@ -368,12 +310,9 @@ section WfNormalDenominator
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
-/-- **Fuel-free mirror of `cRdeNormalDenominatorG_cleared_lift_gen`**: writing `dₙ = (cSplitFactorFastGWf Dt
-fden).1`, if `cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a, b, c, h)`, the normal part is
-nonzero, the two `cdivWf`-clearings are exact, and a polynomial `Q` solves the reduced `a·D(Q) + b·Q = c`,
-then `y = Q/h` solves the cleared `gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h = gnum·fden·h²` over
-`(CFieldSpec.K α)[X]`. Fuel-free mirror, reusing the fuel-agnostic `rdeNormalDenominator_glue` /
-`toPolyG_cdivWf_exact_mul_gen` verbatim. -/
+/-- Writing `dₙ = (cSplitFactorFastGWf Dt fden).1`, if `cRdeNormalDenominatorGWf … = some (a, b, c, h)`,
+the clearings are exact, and `Q` solves `a·D(Q) + b·Q = c`, then `Q` solves the cleared
+`gden·fden·(D(Q)·h − Q·D(h)) + gden·fnum·Q·h = gnum·fden·h²`. -/
 theorem cRdeNormalDenominatorGWf_cleared_lift (Dt : CPolyG α) (fnum fden gnum gden a b c h Q : CPolyG α)
     (hres : cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a, b, c, h))
     (hdn : toPolyG (cSplitFactorFastGWf Dt fden).1 ≠ 0)
@@ -424,8 +363,8 @@ section WfCapstone
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
-/-- **Fuel-free mirror of `cSPDEG_cleared_lifting_of_inputs_gen`**: composes `cSPDEGWf_cleared_lifting_gen`
-with `cSPDEGClearedGenWf_of_inputs` to lift under the transparent input predicate directly. -/
+/-- Lift under the transparent input predicate directly, composing `cSPDEGWf_cleared_lifting_gen` with
+`cSPDEGClearedGenWf_of_inputs`. -/
 theorem cSPDEGWf_cleared_lifting_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ)
     (bbar cbar : CPolyG α) (m : ℤ) (α' β : CPolyG α)
     (hspde : cSPDEGWf Dt a b c n = some (bbar, cbar, m, α', β))
@@ -438,8 +377,7 @@ theorem cSPDEGWf_cleared_lifting_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) 
   cSPDEGWf_cleared_lifting_gen Dt a b c n bbar cbar m α' β hspde
     (cSPDEGClearedGenWf_of_inputs Dt a b c n hin) h hh
 
-/-- **Fuel-free mirror of `cSPDEG_polyRischDENoCancel_cleared_of_inputs_gen`**: feeds the §6.5
-non-cancellation success through `cPolyRischDENoCancelGWf_cleared_identity` into the SPDE lifting. -/
+/-- Feed the non-cancellation success through `cPolyRischDENoCancelGWf_cleared_identity` into the SPDE lifting. -/
 theorem cSPDEGWf_polyRischDENoCancel_cleared_of_inputs (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ)
     (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
     (hspde : cSPDEGWf Dt a b c n = some (bbar, cbar, m, α', β))
@@ -451,8 +389,7 @@ theorem cSPDEGWf_polyRischDENoCancel_cleared_of_inputs (Dt : CPolyG α) (a b c :
   cSPDEGWf_cleared_lifting_of_inputs Dt a b c n bbar cbar m α' β hspde hin v
     (cPolyRischDENoCancelGWf_cleared_identity Dt bbar cbar m v hpoly)
 
-/-- **Fuel-free mirror of `cSPDEG_polyRischDENoCancel_cleared_at_boundDegree_gen`**: the spine instantiated
-at the §6.3 degree bound `n = cRdeBoundDegreeG Dt a b c`. -/
+/-- The spine instantiated at the degree bound `n = cRdeBoundDegreeG Dt a b c`. -/
 theorem cSPDEGWf_polyRischDENoCancel_cleared_at_boundDegree (Dt : CPolyG α) (a b c : CPolyG α)
     (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
     (hspde : cSPDEGWf Dt a b c (cRdeBoundDegreeG Dt a b c : ℤ) = some (bbar, cbar, m, α', β))
@@ -464,12 +401,9 @@ theorem cSPDEGWf_polyRischDENoCancel_cleared_at_boundDegree (Dt : CPolyG α) (a 
   cSPDEGWf_polyRischDENoCancel_cleared_of_inputs Dt a b c
     (cRdeBoundDegreeG Dt a b c : ℤ) bbar cbar m α' β v hspde hin hpoly
 
-/-- **Fuel-free mirror of `rdeClearedIdentity_of_polyRDEIdentity`** (primitive regime): the fuel-free §6
-cleared identity from the residual and the bare poly-RDE identity `D(v) + bbar·v = cbar`, taken directly
-rather than through the non-cancellation solver-success form. Given the primitive special regime, the §6.2
-normal-denominator output, its divisibility certificates, the §6.4 SPDE output under
-`CSPDEGClearedInputsGenWf`, and `hidentity`, the reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0`
-satisfies the cleared Risch-DE identity over `(CFieldSpec.K α)[X]`. -/
+/-- In the primitive regime, from the normal-denominator output, its divisibility certificates, the
+SPDE output under `CSPDEGClearedInputsGenWf`, and the poly-RDE identity `D(v) + bbar·v = cbar`, the
+reconstruction `ynum = (α'·v + β)·[1]`, `yden = h0` satisfies the cleared Risch-DE identity. -/
 theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPolyG α)
     (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α)
     (bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
@@ -524,38 +458,34 @@ section WfResidual
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
   [CRischField α]
 
-/-- **Fuel-free mirror of `RischDEStructuralResidual`**: the irreducible residual of the fuel-free §6 RDE
-structural decomposition — the hypotheses of `rdeClearedIdentityWf_of_polyRDEIdentity` that a bare
-`cRischDEGWf` success does NOT self-certify (the primitive-regime restriction, the §6.2 divisibility
-side-conditions, and the per-level transparent-input chain `CSPDEGClearedInputsGenWf`). -/
+/-- `RischDEStructuralResidualWf`: the residual hypotheses of `rdeClearedIdentityWf_of_polyRDEIdentity`
+that a bare `cRischDEGWf` success does not self-certify. -/
 structure RischDEStructuralResidualWf (Dt : CPolyG α) (fnum fden gnum gden a0 b0 c0 h0 : CPolyG α) :
     Prop where
-  /-- Primitive special regime: `cdegG (cSpecialPolyGWf Dt) = 0` (the capstone is primitive-only). -/
+  /-- Primitive special regime: `cdegG (cSpecialPolyGWf Dt) = 0`. -/
   hprim : cdegG (cSpecialPolyGWf Dt) = 0
-  /-- §6.2: the normal part `dₙ = (cSplitFactorFastGWf Dt fden).1` is nonzero. -/
+  /-- The normal part `dₙ = (cSplitFactorFastGWf Dt fden).1` is nonzero. -/
   hdn : toPolyG (cSplitFactorFastGWf Dt fden).1 ≠ 0
-  /-- §6.2: the input denominator `fden` is nonzero. -/
+  /-- The input denominator `fden` is nonzero. -/
   hfden0 : cnormG fden ≠ []
-  /-- §6.2: the input denominator `gden` is nonzero. -/
+  /-- The input denominator `gden` is nonzero. -/
   hgden0 : cnormG gden ≠ []
-  /-- §6.2: `fden` divides the `B`-numerator (the `cdivWf` clearing is exact). -/
+  /-- `fden` divides the `B`-numerator (the `cdivWf` clearing is exact). -/
   hdvdB : toPolyG fden ∣ toPolyG (csubG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h0) fnum)
       (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 (cmonomialDeriv Dt h0)) fden))
-  /-- §6.2: `gden` divides the `C`-numerator (the `cdivWf` clearing is exact). -/
+  /-- `gden` divides the `C`-numerator (the `cdivWf` clearing is exact). -/
   hdvdC : toPolyG gden ∣ toPolyG (cmulG (cmulG (cmulG (cSplitFactorFastGWf Dt fden).1 h0) h0) gnum)
-  /-- §6.4: the per-level transparent-input chain `CSPDEGClearedInputsGenWf` on the special-cleared
-  coefficients at the §6.3 bound degree. -/
+  /-- The transparent-input chain `CSPDEGClearedInputsGenWf` on the special-cleared coefficients at
+  the bound degree. -/
   hin : CSPDEGClearedInputsGenWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
       (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1 (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
       (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
         (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
         (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
 
-/-- **Fuel-free mirror of `rdeCleared_of_success_and_residual`**: given `cRischDEGWf Dt fnum fden gnum gden
-= some (ynum, yden)`, `cdegG Dt = 0`, the SPDE output `bbar` of positive degree, and the irreducible
-residual `RischDEStructuralResidualWf` on the matching §6.2 normal-denominator output, the returned `y =
-ynum/yden` satisfies the cleared identity `gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden =
-gnum·fden·yden²` over `(CFieldSpec.K α)[X]` — with NO fuel dependency anywhere in the statement or proof. -/
+/-- Given a `cRischDEGWf` success, `cdegG Dt = 0`, positive `deg(bbar)`, and the residual
+`RischDEStructuralResidualWf`, the returned `y = ynum/yden` satisfies the cleared identity
+`gden·fden·(D(ynum)·yden − ynum·D(yden)) + gden·fnum·ynum·yden = gnum·fden·yden²`. -/
 theorem rdeClearedWf_of_success_and_residual (Dt : CPolyG α)
     (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
     (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden))
@@ -599,11 +529,8 @@ section WfFieldHeadline
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
   [CRischField α] [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **★ The fuel-free §6 RDE oracle's field-level soundness, from bare success + the isolated residual**
-(primitive regime): composes `rdeClearedWf_of_success_and_residual` (bare `cRischDEGWf` success + the
-residual ⟹ the cleared polynomial identity) with the cleared → field bridge `rischDE_field_of_cleared`.
-The Wf-track analogue of `crischDESolve_field_of_witness_residual`'s field-level conclusion, but for the
-*fuel-free* oracle directly — no tower-gcd witness, no fuel, no `native_decide`. -/
+/-- The RDE oracle's field-level soundness in the primitive regime, from bare `cRischDEGWf` success
+and the residual: composes `rdeClearedWf_of_success_and_residual` with `rischDE_field_of_cleared`. -/
 theorem crischDEWf_field_of_success_and_residual (Dt : CPolyG α)
     (fnum fden gnum gden ynum yden : CPolyG α) (hδ : cdegG Dt = 0)
     (hsucc : cRischDEGWf Dt fnum fden gnum gden = some (ynum, yden))

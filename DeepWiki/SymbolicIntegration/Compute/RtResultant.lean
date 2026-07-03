@@ -2,20 +2,9 @@ import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 
 /-! # Computable Rothstein–Trager resultant over `ℚ`
-The noncomputable `rtResultant A D = res_x(D, A − t·D') ∈ ℚ[t]` (in
-`DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms`) is the heart of the Rothstein–Trager /
-LRT logarithmic part — its roots are the residues. Mathlib's `ℚ[X]` resultant is **noncomputable**
-(`Polynomial.resultant` over the noncomputable `ℚ[X]` arithmetic), so it cannot `#eval`. Here we give a
-genuinely **computable**, `#eval`-able rendering on the dense coefficient carrier `CPoly := List ℚ`
-(from `LogToAtanCompute`): a univariate `cresultant` via the **Euclidean polynomial-remainder-sequence**
-identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q, r)` with `r = p mod q`, bottoming
-out at `res(p, c) = c^(deg p)` for constant `c`. The bivariate Rothstein–Trager resultant `R(t) =
-res_x(D, A − t·D')` is recovered, staying in univariate `CPoly`, by **evaluation + Lagrange
-interpolation**: sample `R(aₖ) = cresultant D (A − aₖ·D')` at `aₖ = k` for `k = 0,…,deg D` and
-interpolate (`cinterpolate`). The result is genuinely `#eval`-able and `native_decide`-checkable on
-concrete numerators/denominators.
-`cderiv` is the computable coefficient-shift derivative; everything reuses `LogToAtanCompute`'s `CPoly`
-algebra and the `toPoly : CPoly → ℚ[X]` bridge. -/
+A `#eval`-able rendering of the resultant `R(t) = res_x(D, A − t·D')` on the carrier
+`CPoly := List ℚ`: a univariate `cresultant` via the Euclidean polynomial-remainder-sequence, then
+`R(t)` recovered by evaluation and Lagrange interpolation (`cinterpolate`). -/
 
 open Polynomial
 
@@ -25,19 +14,17 @@ namespace Compute
 
 /-! ### Computable derivative on `CPoly` -/
 
-/-- **Coefficient-shift derivative** `cderiv [a₀,a₁,a₂,…] = [a₁, 2a₂, 3a₃, …]`: differentiates a
-`CPoly` by multiplying each coefficient by its degree and dropping the constant term. -/
+/-- Coefficient-shift derivative `cderiv [a₀,a₁,a₂,…] = [a₁, 2a₂, 3a₃, …]`. -/
 def cderiv : CPoly → CPoly
   | [] => []
   | _ :: as => go 1 as
 where
-  /-- Auxiliary: from degree `k`, emit `k·a` for each coefficient `a` (the derivative tail). -/
+  /-- From degree `k`, emit `k·a` for each coefficient `a` (the derivative tail). -/
   go : ℕ → CPoly → CPoly
   | _, [] => []
   | k, a :: as => ((k : ℚ) * a) :: go (k + 1) as
 
-/-- `toPoly (cderiv p) = derivative (toPoly p)`: `cderiv` realizes the `ℚ[X]` derivative under the
-Horner bridge. -/
+/-- `toPoly (cderiv p) = derivative (toPoly p)`: `cderiv` realizes the `ℚ[X]` derivative. -/
 theorem toPoly_cderiv (p : CPoly) : toPoly (cderiv p) = derivative (toPoly p) := by
   -- Generalize the starting degree: `toPoly (cderiv.go k as) = derivative (X * toPoly_at_degree)`…
   -- A direct two-list induction with the index threaded through is cleanest.
@@ -61,20 +48,17 @@ theorem toPoly_cderiv (p : CPoly) : toPoly (cderiv p) = derivative (toPoly p) :=
 
 /-! ### Computable univariate resultant on `CPoly` (Euclidean-PRS route) -/
 
-/-- **Degree** of a `CPoly` as a `ℕ`: `cdeg p = (length of normalized p) − 1`, with `cdeg 0 = 0`
-(treated together with `cisZero` at the call sites). -/
+/-- Degree of a `CPoly` as a `ℕ`: `cdeg p = (length of normalized p) − 1`, with `cdeg 0 = 0`. -/
 def cdeg (p : CPoly) : ℕ := (cnorm p).length - 1
 
-/-- **Power** of a rational `c^n` (computable, by `ℕ`-recursion). -/
+/-- Power of a rational `c^n`, by `ℕ`-recursion. -/
 def cpow (c : ℚ) : ℕ → ℚ
   | 0 => 1
   | n + 1 => c * cpow c n
 
-/-- **Computable univariate resultant** `cresultant fuel p q = res_x(p, q) ∈ ℚ`, fuel-bounded, via the
-Euclidean polynomial-remainder-sequence identity. With `r = p mod q`, `dp = deg p`, `dq = deg q`,
-`dr = deg r`: `res(p,q) = (−1)^(dp·dq) · lc(q)^(dp − dr) · res(q, r)`, bottoming out at `res(p, c) =
-c^(deg p)` for a *constant* `q = c` and `res(p, 0) = 0` when `deg p > 0` (`= 1` when `p` is also
-constant). One step suffices per degree drop, so `fuel ≥ deg p + deg q` is safe. -/
+/-- Computable univariate resultant `cresultant fuel p q = res_x(p, q) ∈ ℚ`, fuel-bounded, via the
+Euclidean polynomial-remainder-sequence identity
+`res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q, r)` with `r = p mod q`. -/
 def cresultant : ℕ → CPoly → CPoly → ℚ
   | 0, _, _ => 0
   | fuel + 1, p, q =>
@@ -98,18 +82,16 @@ def cresultant : ℕ → CPoly → CPoly → ℚ
 
 /-! ### Computable Lagrange interpolation on `CPoly` -/
 
-/-- **Constant `CPoly`** `cC c = [c]` (degree-0 polynomial), normalized to `[]` when `c = 0`. -/
+/-- Constant `CPoly` `cC c = [c]`, normalized to `[]` when `c = 0`. -/
 def cC (c : ℚ) : CPoly := cnorm [c]
 
-/-- **Lagrange basis numerator** `∏_{j≠i} (x − xⱼ)` over the sample abscissas `xs`, skipping index `i`'s
-abscissa value `xi` once (so it must be called with the `i`-th abscissa removed, or guarded by `xi`). -/
+/-- Lagrange basis numerator `∏_{j} (x − xⱼ)` over the sample abscissas `xs`. -/
 def clagNum : List ℚ → CPoly
   | [] => [1]
   | x :: xs => cmul [(-x), 1] (clagNum xs)
 
-/-- **Lagrange interpolation** `cinterpolate pts = R(t)` with `R(xₖ) = yₖ` for each `(xₖ, yₖ) ∈ pts`
-(distinct abscissas, over the field `ℚ`): `∑ₖ yₖ · ∏_{j≠k}(t − xⱼ)/(xₖ − xⱼ)`, built in `CPoly` via
-`cmul`/`cadd`/`cscale` (the scalar `1/∏(xₖ − xⱼ)` is a `ℚ` inverse — `ℚ` is a field). -/
+/-- Lagrange interpolation `cinterpolate pts = R(t)` with `R(xₖ) = yₖ` for each `(xₖ, yₖ) ∈ pts`
+(distinct abscissas over `ℚ`): `∑ₖ yₖ · ∏_{j≠k}(t − xⱼ)/(xₖ − xⱼ)`. -/
 def cinterpolate (pts : List (ℚ × ℚ)) : CPoly :=
   let xs := pts.map Prod.fst
   let term : ℚ × ℚ → CPoly := fun (xk, yk) =>
@@ -121,11 +103,8 @@ def cinterpolate (pts : List (ℚ × ℚ)) : CPoly :=
 
 /-! ### The Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')` -/
 
-/-- **Computable Rothstein–Trager resultant** `rtResultantCompute fuel A D = R(t) = res_x(D, A − t·D')
-∈ ℚ[t]`, returned as a `CPoly` in `t`. Since `deg_t R ≤ deg D`, it is computed by **evaluation +
-Lagrange interpolation**: for `aₖ = k`, `k = 0,…,deg D`, sample `R(aₖ) = cresultant fuel D (A − aₖ·D')`
-(with `D' = cderiv D`, `A − aₖ·D'` a `CPoly` via `csub`/`cscale`), then interpolate the points
-`(aₖ, R(aₖ))`. This stays entirely in univariate `CPoly`. -/
+/-- Computable Rothstein–Trager resultant `rtResultantCompute fuel A D = R(t) = res_x(D, A − t·D')`,
+returned as a `CPoly` in `t`, computed by sampling and Lagrange interpolation. -/
 def rtResultantCompute (fuel : ℕ) (A D : CPoly) : CPoly :=
   let D' := cderiv D
   let n := cdeg D  -- `deg_t R ≤ deg_x D = n`, so `n + 1` sample points determine `R`.
@@ -135,37 +114,28 @@ def rtResultantCompute (fuel : ℕ) (A D : CPoly) : CPoly :=
     (a, cresultant fuel D Aa))
   cinterpolate pts
 
-/-! ### Squarefree (primitive) part — recovers the book's `R = 4t²+1` -/
+/-! ### Squarefree (primitive) part -/
 
-/-- **Make a `CPoly` monic** (lead coefficient `1`) by dividing through by its leading coefficient;
-the zero polynomial stays `[]`. -/
+/-- Make a `CPoly` monic (lead coefficient `1`) by dividing through by its leading coefficient; the
+zero polynomial stays `[]`. -/
 def cmonic (p : CPoly) : CPoly :=
   let p := cnorm p
   if cisZero p then [] else cscale (clead p)⁻¹ p
 
-/-- **Squarefree part** of a `CPoly` over `ℚ`, made monic: `csqfreePart fuel p = monic(p / gcd(p, p'))`,
-the radical of `p` (each irreducible factor with multiplicity 1); e.g. it sends `45796·(4t²+1)³`
-to the monic `t² + 1/4`. -/
+/-- Squarefree part of a `CPoly` over `ℚ`, made monic: `csqfreePart fuel p = monic(p / gcd(p, p'))`,
+the radical of `p`. -/
 def csqfreePart (fuel : ℕ) (p : CPoly) : CPoly :=
   let p := cnorm p
   let (g, _, _) := cgcdExt fuel p (cderiv p)
   cmonic (cdiv fuel p g)
 
-/-! ### Bridge back to `ℚ[X]` and agreement — PROVEN in `ComputeCorrectness`/`RtResultantCorrectness`
-`toPoly (cresultant …)` agrees with Mathlib's `Polynomial.resultant` on all inputs
-(`ComputeCorrectness.cresultant_eq`, via the Euclidean-PRS toolkit `resultant_comm`/
-`resultant_add_mul_right`/`resultant_add_right_deg` with the §2.4 formal-vs-actual degree
-reconciliation), and `toPoly (rtResultantCompute …)` equals the noncomputable bivariate resultant
-`rtResultant` (`RtResultantCorrectness.toPoly_rtResultantCompute_eq_rtResultant`, for monic `D` and
-`deg A < deg D`): both have degree `< deg D + 1` and agree at the `deg D + 1` integer nodes
-(`cinterpolate` correctness `toPoly_cinterpolate_eval` + the column-degree bound
-`natDegree_rtResultant_le`), hence are equal by `Lagrange.eq_of_degrees_lt_of_eval_index_eq`. -/
+/-! ### Bridge back to `ℚ[X]` and agreement
+`toPoly (cresultant …)` agrees with Mathlib's `Polynomial.resultant` and
+`toPoly (rtResultantCompute …)` with the noncomputable `rtResultant`, proven in `Correctness` and
+`RtResultantCorrectness`. -/
 
-/-- **Agreement with the noncomputable `rtResultant` — PROVEN.** Under the `toPoly` bridge, the
-computable `rtResultantCompute` equals the noncomputable `DeepWiki.SymbolicIntegration.rtResultant`
-(exactly, for monic `D` and `deg A < deg D`): see
-`RtResultantCorrectness.toPoly_rtResultantCompute_eq_rtResultant`. This `Prop` records the general
-up-to-scalar form; the exact equality under the natural hypotheses is the stronger proven statement. -/
+/-- Agreement `Prop`: up to a nonzero scalar, `toPoly (rtResultantCompute fuel A D)` equals
+`rtResultant (toPoly A) (toPoly D)`. -/
 def rtResultantCompute_agrees_statement : Prop :=
   ∀ (A D : CPoly) (fuel : ℕ), ∃ c : ℚ, c ≠ 0 ∧
     toPoly (rtResultantCompute fuel A D)

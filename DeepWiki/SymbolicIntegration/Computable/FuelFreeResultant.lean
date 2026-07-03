@@ -3,10 +3,8 @@ import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
 
 /-! # Well-founded generic resultant `cresultantWf`
 
-The Euclidean-PRS resultant on `CPolyG`, by well-founded recursion on the composite measure
-`cresultantMeasure`. The def is `[CField α]`-only (so it reduces under `native_decide` over
-noncomputable-`CFieldSpec` carriers); the Sylvester-resultant identity `toPolyG_cresultantWf` is
-proved by well-founded induction on its own recursion. -/
+The Euclidean-PRS resultant on `CPolyG`, by well-founded recursion on `cresultantMeasure`;
+`[CField α]`-only, with the Sylvester-resultant identity `toPolyG_cresultantWf`. -/
 
 open Polynomial
 
@@ -16,23 +14,14 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-! ### The generic resultant `cresultantWf`
-
-The recursion has two shapes — a swap `(p, q) → (q, p)` and a reduce `(p, q) → (q, cmodWf p q)` —
-so termination is by the composite measure `cresultantMeasure`, strictly dropped by both
-(`cresultantMeasure_swap_lt`/`cresultantMeasure_reduce_lt`). -/
-
-/-- Well-founded measure for `cresultantWf`: `cresultantMeasure p q = 2·(len p + len q) + len q`,
-`len` the normalized-list length. Both the swap `(p,q)→(q,p)` and the reduce `(p,q)→(q, cmodWf p q)`
-strictly decrease it; the swap alone leaves `len p + len q` fixed, hence the `+ len q` tie-breaker. -/
+/-- Well-founded measure for `cresultantWf`: `2·(len p + len q) + len q`, `len` the normalized-list
+length; strictly dropped by both the swap and reduce branches. -/
 def cresultantMeasure (p q : CPolyG α) : ℕ :=
   2 * ((cnormG p : List α).length + (cnormG q : List α).length) + (cnormG q : List α).length
 
-/-- Generic univariate resultant `cresultantWf p q = res(p, q) ∈ α` by the Euclidean PRS. Base cases
-are `q = 0` (`1` if `p` is constant, otherwise `0`) and nonzero constant `q = c` (`c^(deg p)`); the
-swap and reduce branches recurse only under the `cresultantMeasure` drop guard, so the def stays
-`[CField α]`-only (hence `native_decide`-able over noncomputable-`CFieldSpec` carriers like
-`QFunNZG ℚ`). Over a genuine field the guards always hold. -/
+/-- Generic univariate resultant `cresultantWf p q = res(p, q) ∈ α` by the Euclidean PRS,
+`[CField α]`-only; base cases `q = 0` (`1` if `p` constant, else `0`) and constant `q = c`
+(`c^(deg p)`). -/
 def cresultantWf (p q : CPolyG α) : α :=
   let pn := cnormG p
   let qn := cnormG q
@@ -59,17 +48,16 @@ decreasing_by · assumption
 variable [CFieldSpec α]
 
 omit [CFieldSpec α] in
-/-- The swap strictly drops the measure: when `len p < len q`,
-`cresultantMeasure q p < cresultantMeasure p q`. Discharges the swap branch's structural guard. -/
+/-- The swap strictly drops the measure: `len p < len q` gives
+`cresultantMeasure q p < cresultantMeasure p q`. -/
 theorem cresultantMeasure_swap_lt (p q : CPolyG α)
     (hpq : (cnormG p : List α).length < (cnormG q : List α).length) :
     cresultantMeasure q p < cresultantMeasure p q := by
   simp only [cresultantMeasure]
   omega
 
-/-- The reduce strictly drops the measure (over `[CFieldSpec α]`): for a nonzero divisor `q` with
-`len q ≤ len p`, `cresultantMeasure q (cnormG (cmodWf p q)) < cresultantMeasure p q`. Discharges the
-reduce branch's structural guard. -/
+/-- The reduce strictly drops the measure: for a nonzero divisor `q` with `len q ≤ len p`,
+`cresultantMeasure q (cnormG (cmodWf p q)) < cresultantMeasure p q`. -/
 theorem cresultantMeasure_reduce_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
     (hpq : ¬ (cnormG p : List α).length < (cnormG q : List α).length) :
     cresultantMeasure q (cnormG (cmodWf p q)) < cresultantMeasure p q := by
@@ -79,8 +67,7 @@ theorem cresultantMeasure_reduce_lt (p q : CPolyG α) (hq : cnormG q ≠ [])
   omega
 
 /-- Quotient degree: for a non-constant divisor with `deg q ≤ deg p`,
-`natDegree (cdivWf p q) + natDegree q = natDegree p` (the Euclidean quotient has degree
-`deg p − deg q`). Supplies `resultant_add_mul_right`'s degree side-condition in the reduce case. -/
+`natDegree (cdivWf p q) + natDegree q = natDegree p`. -/
 theorem cdivWf_natDegree_add (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
     (hq2 : 2 ≤ (cnormG q : List α).length) (hpq : (cnormG q : List α).length ≤ (cnormG p : List α).length) :
     (toPolyG (cdivWf p q)).natDegree + (toPolyG q).natDegree = (toPolyG p).natDegree := by

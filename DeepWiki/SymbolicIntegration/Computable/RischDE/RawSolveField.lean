@@ -1,18 +1,10 @@
 import DeepWiki.SymbolicIntegration.Computable.RischDE.SolveSoundWf
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
 
-/-! # Field-level soundness of the fuel-free raw RDE solve `crischDERawSolveWf`
+/-! # Field-level soundness of the raw RDE solve `crischDERawSolveWf`
 
-The fuel-free analogue of `crischDESolve_field_of_witness_residual` (`SoundnessCapstone`), but for the
-**fuel-free** raw solver `crischDERawSolveWf` (which runs `cRischDEGWf [1]` in place of the fuel'd
-`cRischDEG [1] towerRischDEFuel`). Composes the Phase-P1 headline
-`crischDEWf_field_of_success_and_residual` (`RischDE.Structural`) with the raw-solve unfold: a successful
-`crischDERawSolveWf` returns exactly a `cRischDEGWf [1]`-success pair, so the field identity follows from the
-residual with **no fuel, no tower-gcd witness, no `native_decide`**.
-
-This is the standalone soundness the fuel-free instance switch (`docs/rischde-wf-migration.md` Phase P2)
-needs: it exhibits, on the exact runtime shape the rebased `CRischField (QFunNZG β)` instance will use, that
-a successful gated solve satisfies the field-level Risch-DE identity. -/
+A successful `crischDERawSolveWf` returns a `cRischDEGWf [1]`-success pair, so the field-level
+Risch-DE identity follows from the isolated residual `RawSolveResidualWf`. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -28,9 +20,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 
 omit [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFracGcdCoreWf β] [CRischField β]
   [Algebra ℚ (CFieldSpec.K β)] in
-/-- **`cdegG [1] = 0`** over a `CFieldDomain` (fuel-free re-derivation, kept independent of the fuel'd
-`SoundnessCapstone`): the monomial derivative `Ds = [CField.one]` the recursive fuel-free RDE solve uses is a
-constant, so it is in the **primitive** regime — the `hδ` side-condition the Phase-P1 headline needs. -/
+/-- `cdegG [CField.one] = 0` over a `CFieldDomain`: the constant `[1]` has degree `0` (primitive regime). -/
 theorem cdegG_one_eq_zero_wf : cdegG ([CField.one] : CPolyG β) = 0 := by
   have hnz : CPolyG.cisZeroG ([CField.one] : CPolyG β) = false := CFieldDomain.nz_one
   rw [CPolyG.cisZeroG, List.isEmpty_eq_false_iff_exists_mem] at hnz
@@ -46,21 +36,16 @@ theorem cdegG_one_eq_zero_wf : cdegG ([CField.one] : CPolyG β) = 0 := by
     · rw [if_neg (by simpa using h1)]
   rw [cdegG, hcn]; rfl
 
-/-- **The residual for the fuel-free raw RDE solve** `RawSolveResidualWf ftilde gtilde`: the hypotheses of
-the Phase-P1 headline `crischDEWf_field_of_success_and_residual`, specialized to the recursive base solve
-`cRischDEGWf ([1] : CPolyG β)` on `(ftilde, gtilde)`. Bundles the primitive-regime structural residual
-`RischDEStructuralResidualWf` on the normal-denominator output, the positive-`deg(bbar)` dispatcher
-side-condition, and the two input-denominator nonzero facts — exactly what a bare `crischDERawSolveWf`
-success does NOT self-certify. Fuel-free analogue of `RischDESuccessResidual`. -/
+/-- Residual hypotheses for `crischDERawSolveWf` field soundness: the structural residual, the
+positive-`deg(bbar)` dispatcher side-condition, and the two input-denominator nonzero facts. -/
 structure RawSolveResidualWf (ftilde gtilde : QFunNZG β) : Prop where
-  /-- The primitive-regime §6 structural residual on the level-`β` base solve, for the matching
-  normal-denominator output. -/
+  /-- The structural residual on the base solve, for the matching normal-denominator output. -/
   hres : ∀ a0 b0 c0 h0 : CPolyG β,
     cRdeNormalDenominatorGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
         = some (a0, b0, c0, h0) →
       RischDEStructuralResidualWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
         a0 b0 c0 h0
-  /-- The positive-`deg(bbar)` dispatcher side-condition (Lemma 6.5.1 non-cancellation routing). -/
+  /-- The positive-`deg(bbar)` dispatcher side-condition (non-cancellation routing). -/
   hdb : ∀ a0 b0 c0 bbar cbar : CPolyG β, ∀ m : ℤ, ∀ α' β' : CPolyG β,
     cSPDEGWf ([CField.one] : CPolyG β)
         (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
@@ -76,13 +61,8 @@ structure RawSolveResidualWf (ftilde gtilde : QFunNZG β) : Prop where
   /-- The input `gtilde`'s denominator is nonzero. -/
   hgden : toPolyG gtilde.1.2 ≠ 0
 
-/-- **★ The fuel-free raw RDE solve is field-level sound, from bare success + the isolated residual**: if
-`crischDERawSolveWf ftilde gtilde = some y` then, under the residual `RawSolveResidualWf ftilde gtilde`, the
-returned `y = ynum/yden` solves the field-level Risch DE `D(Y) + F·Y = G` for `(ftilde, gtilde)` over
-`RatFunc (CFieldSpec.K β)`. Unfolds `crischDERawSolveWf` to the bare `cRischDEGWf [1]` success and applies the
-Phase-P1 headline `crischDEWf_field_of_success_and_residual` (primitive regime via `cdegG_one_eq_zero_wf`).
-Fuel-free analogue of `crischDESolve_field_of_witness_residual`; NO fuel, NO tower-gcd witness, NO
-`native_decide`. -/
+/-- If `crischDERawSolveWf ftilde gtilde = some y` and `RawSolveResidualWf ftilde gtilde` holds, then
+`y = ynum/yden` solves the field-level Risch DE `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. -/
 theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : QFunNZG β)
     (hsolve : crischDERawSolveWf ftilde gtilde = some y)
     (hres : RawSolveResidualWf ftilde gtilde) :
@@ -115,7 +95,7 @@ theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : QFunNZG β)
 
 end RawSolveField
 
-/-! ### Axiom audit (fuel-free field soundness of the raw solve, NO `native_decide`) -/
+/-! ### Axiom audit -/
 
 #print axioms crischDERawSolveWf_field_of_residual
 

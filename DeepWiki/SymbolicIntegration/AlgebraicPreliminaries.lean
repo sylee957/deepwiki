@@ -2,10 +2,10 @@ import Mathlib.Algebra.GCDMonoid.Basic
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.Tactic
 
-/-! # Algebraic preliminaries — the gcd predicate and the resultant–root corollary
-The greatest-common-divisor *predicate* `IsGCD` (as opposed to Mathlib's chosen-operation
-`GCDMonoid`) with its satellite API and uniqueness up to units, the resultant–root corollary
-(`res = 0 ⟺` a common root), and gcd-multiplicativity/coprime-cancellation lemmas. -/
+/-! # Algebraic preliminaries
+The gcd *predicate* `IsGCD` with its API and uniqueness up to units, the resultant–root
+corollary (`res = 0` iff a common root), and gcd-multiplicativity and coprime-cancellation
+lemmas. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -35,9 +35,7 @@ theorem IsGCD.associated [IsCancelMulZero R] {x y z t : R} (hz : IsGCD x y z) (h
   associated_of_dvd_dvd (ht.dvd hz.dvd_left hz.dvd_right) (hz.dvd ht.dvd_left ht.dvd_right)
 
 open Polynomial in
-/-- For a nonzero `f` that splits, `res(f, g) = 0` iff `f` and `g` share a root — some root `α`
-of `f` has `g(α) = 0`. Falls out of `res = lc(f)ⁿ·∏_α g(α)` (`resultant_eq_prod_eval`) since
-`lc(f)ⁿ ≠ 0` in a domain and a product vanishes iff a factor does. -/
+/-- For a nonzero `f` that splits, `res(f, g) = 0` iff some root `α` of `f` has `g(α) = 0`. -/
 theorem resultant_eq_zero_iff_exists_root {S : Type*} [CommRing S] [IsDomain S] {f g : S[X]}
     (n : ℕ) (hg : g.natDegree ≤ n) (hf : f.Splits) (hf0 : f ≠ 0) :
     Polynomial.resultant f g f.natDegree n = 0 ↔ ∃ α ∈ f.roots, g.eval α = 0 := by
@@ -48,10 +46,8 @@ theorem resultant_eq_zero_iff_exists_root {S : Type*} [CommRing S] [IsDomain S] 
 section GCDMonoid
 variable {R : Type*} [CommMonoidWithZero R] [NormalizedGCDMonoid R]
 
-/-- The gcd is multiplicative in its first argument across coprime factors: if `gcd a b` is a
-unit then `gcd (a·b) c` is associated to `gcd a c · gcd b c`. (The two-factor base case of
-`gcd(p, Dp) = ∏ gcd(pᵢ^eᵢ, D pᵢ^eᵢ)`; Mathlib has only the one-direction
-`gcd_mul_dvd_mul_gcd`.) -/
+/-- gcd multiplicativity across coprime factors: if `gcd a b` is a unit then
+`gcd (a·b) c` is associated to `gcd a c · gcd b c`. -/
 theorem associated_gcd_mul_of_isUnit_gcd {a b : R} (hab : IsUnit (gcd a b)) (c : R) :
     Associated (gcd (a * b) c) (gcd a c * gcd b c) := by
   refine associated_of_dvd_dvd ?_ ?_
@@ -68,8 +64,7 @@ theorem associated_gcd_mul_of_isUnit_gcd {a b : R} (hab : IsUnit (gcd a b)) (c :
       (hcop.mul_left_dvd).mpr dvd_rfl
     exact ((gcd_mul_lcm (gcd a c) (gcd b c)).symm.dvd.trans step1).trans hlcm
 
-/-- Coprime cancellation (divisibility form): if `gcd x b` is a unit and `x ∣ b·c` then `x ∣ c`.
-(`x ∣ gcd (x·c) (b·c) ~ gcd x b · c ~ c`.) -/
+/-- Coprime cancellation (divisibility form): if `gcd x b` is a unit and `x ∣ b·c` then `x ∣ c`. -/
 theorem dvd_of_dvd_mul_of_isUnit_gcd {x b c : R} (hxb : IsUnit (gcd x b)) (h : x ∣ b * c) :
     x ∣ c := by
   have hx : x ∣ gcd (x * c) (b * c) := dvd_gcd (dvd_mul_right x c) h

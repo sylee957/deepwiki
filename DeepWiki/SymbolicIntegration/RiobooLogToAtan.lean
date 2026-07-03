@@ -1,18 +1,9 @@
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 
-/-! # Rioboo's `LogToAtan`: complex-log → real-arctan conversion (Bronstein §2.8, p.63)
-Rioboo's `LogToAtan(A, B)` (`A, B ∈ K[x]`, `B ≠ 0`) returns a list of arctangent arguments whose
-arctan-derivative sum `∑ 2·P'/(1+P²)` equals `i · d/dx log((A+iB)/(A−iB))`. The recursion:
-`if B ∣ A return [A/B]`; `if deg A < deg B return LogToAtan(−B, A)`; else with the extended
-Euclidean cofactors `B·D − A·C = G = gcd(A,B)`, `return (A·D+B·C)/G :: LogToAtan(D, C)`.
-
-Each branch is exactly **Theorem 2.8.1** (already proved): base = the `q = A/B` form of Lemma 2.8.1,
-swap = `logDeriv_imagQuot_eq_imagQuot_swap`, step = `logDeriv_imagQuot_eq_arctan_add_imagQuot`. Here we
-add the recursion's list helper `atanDerivSum`, a **fuel-bounded** total `logToAtanAux`, the three
-single-step unfolding identities, and the assembled correctness `logToAtanAux_correct` (under a
-"fuel reaches the base case" predicate). Everything is stated abstractly in a characteristic-`0`
-differential field `R` with `i² = −1`; the algorithm's branch decisions live on the `K[x]` operands,
-embedded into `R` by a derivation-commuting ring hom `φ`. -/
+/-! # Rioboo's `LogToAtan`: complex-log to real-arctan conversion
+`LogToAtan(A, B)` returns a list of arctangent arguments whose arctan-derivative sum `∑ 2·P'/(1+P²)`
+equals `i · d/dx log((A+iB)/(A−iB))`, in a char-`0` differential field with `i² = −1`, with branch
+decisions on `K[x]` operands embedded via a derivation-commuting ring hom `φ`. -/
 
 open Polynomial
 open scoped Differential
@@ -47,10 +38,8 @@ section LogToAtan
 variable {K : Type*} [Field K]
 variable {R : Type*} [Field R] [Differential R] [CharZero R]
 
-/-- **`LogToAtan` recursion, fuel-bounded** (§2.8, p.63): `logToAtanAux φ fuel A B` runs Rioboo's
-recursion `fuel` steps, returning the list of arctan arguments (as elements of `R` via `φ`). Branches:
-`B ∣ A → [φ(A)/φ(B)]`; `deg A < deg B → LogToAtan(−B, A)`; else with `B·D − A·C = G = gcd(A,B)`,
-`(φ(A)φ(D)+φ(B)φ(C))/φ(G) :: LogToAtan(D, C)`. Returns `[]` at `fuel = 0`. -/
+/-- Fuel-bounded `LogToAtan` recursion: `logToAtanAux φ fuel A B` returns the list of arctan arguments
+in `R` via `φ`, with branches `B ∣ A`, `deg A < deg B`, and the extended-Euclidean cofactor step. -/
 noncomputable def logToAtanAux (φ : K[X] →+* R) : ℕ → K[X] → K[X] → List R
   | 0, _, _ => []
   | fuel + 1, A, B =>
@@ -66,14 +55,11 @@ noncomputable def logToAtanAux (φ : K[X] →+* R) : ℕ → K[X] → K[X] → L
 
 variable {φ : K[X] →+* R} {i : R}
 
-/-- The two complex logarithms `log((A+iB)/(A−iB))` written via the embedding `φ`, abbreviated for the
-`LogToAtan` correctness statements: `imagLog φ i A B := logDeriv((φA + i·φB)/(φA − i·φB))`. -/
+/-- `imagLog φ i A B := logDeriv((φA + i·φB)/(φA − i·φB))`, the complex-log term via `φ`. -/
 noncomputable def imagLog (φ : K[X] →+* R) (i : R) (A B : K[X]) : R :=
   Differential.logDeriv ((φ A + i * φ B) / (φ A - i * φ B))
 
-/-- **`LogToAtan` base case** (`B ∣ A`, §2.8 p.63): with `u = φA/φB` and `(φA)²+(φB)² ≠ 0`,
-`atanDerivSum [φA/φB] = i · logDeriv((φA+iφB)/(φA−iφB))` — i.e. `2·u'/(1+u²) = i·logDeriv((u+i)/(u−i))`
-by Lemma 2.8.1, after clearing `φB` from the quotient. -/
+/-- Base case (`B ∣ A`): with `(φA)²+(φB)² ≠ 0`, `atanDerivSum [φA/φB] = i · imagLog φ i A B`. -/
 theorem atanDerivSum_base (hi : i ^ 2 = -1)
     {A B : K[X]} (hB : φ B ≠ 0) (hAB : (φ A) ^ 2 + (φ B) ^ 2 ≠ 0) :
     atanDerivSum [φ A / φ B] = i * imagLog φ i A B := by
@@ -98,17 +84,14 @@ theorem atanDerivSum_base (hi : i ^ 2 = -1)
   rw [imagLog, hquot, atanDerivSum_singleton,
     ← logDeriv_imagQuot_eq_arctanDeriv_of_sq hi hupi humi]
 
-/-- **`LogToAtan` swap step** (`deg A < deg B`, §2.8 p.63): `i·logDeriv((φ(−B)+iφA)/(φ(−B)−iφA))
-= i·logDeriv((φA+iφB)/(φA−iφB))` — Theorem 2.8.1(a) applied to `φA, φB`, using `φ(−B) = −φB`. -/
+/-- Swap step (`deg A < deg B`): `i · imagLog φ i (-B) A = i · imagLog φ i A B`. -/
 theorem imagLog_swap (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
     {A B : K[X]} (hAB : (φ A) ^ 2 + (φ B) ^ 2 ≠ 0) :
     i * imagLog φ i (-B) A = i * imagLog φ i A B := by
   rw [imagLog, imagLog, hφneg, logDeriv_imagQuot_eq_imagQuot_swap hi hAB]
 
-/-- **`LogToAtan` recursion step** (`deg A ≥ deg B`, §2.8 p.63): with the extended-Euclidean cofactors
-`C = gcdB(B,−A)`, `D = gcdA(B,−A)`, `G = gcd(B,−A)` (so `φB·φD − φA·φC = φG`), `G ≠ 0`,
-`(φC)²+(φD)² ≠ 0`, and `P = (φA·φD + φB·φC)/φG`, one step of Rioboo's recursion satisfies
-`i·imagLog φ i A B = atanDerivSum [P] + i·imagLog φ i D C` — exactly Theorem 2.8.1(b). -/
+/-- Recursion step: with `φB·φD − φA·φC = φG`, `φG ≠ 0`, `(φA)²+(φB)² ≠ 0`, `(φC)²+(φD)² ≠ 0`,
+`i·imagLog φ i A B = atanDerivSum [(φA·φD + φB·φC)/φG] + i·imagLog φ i D C`. -/
 theorem imagLog_step (hi : i ^ 2 = -1)
     {A B C D G : K[X]} (hAB : (φ A) ^ 2 + (φ B) ^ 2 ≠ 0) (hCD : (φ C) ^ 2 + (φ D) ^ 2 ≠ 0)
     (hG : φ B * φ D - φ A * φ C = φ G) (hG0 : φ G ≠ 0) :
@@ -117,12 +100,8 @@ theorem imagLog_step (hi : i ^ 2 = -1)
   rw [imagLog, imagLog, atanDerivSum_singleton,
     logDeriv_imagQuot_eq_arctan_add_imagQuot hi hAB hCD hG hG0]
 
-/-- **A complete `LogToAtan` run** (§2.8 p.63): the inductive spec of a finite Rioboo recursion tree
-on `(A, B)` producing the arctan-argument list `L : List R`. Constructors mirror the three branches:
-`base` (`B ∣ A`, output `[φA/φB]`), `swap` (`deg A < deg B`, recurse on `(−B, A)`), and `step`
-(`deg A ≥ deg B`, prepend `(φA·φD + φB·φC)/φG` and recurse on the cofactors `(D, C)`), each carrying the
-nonvanishing data (`(φA)²+(φB)² ≠ 0`, `φB ≠ 0`, and for `step` the Bézout relation, `φG ≠ 0`,
-`(φC)²+(φD)² ≠ 0`). Captures termination structurally without a degree measure. -/
+/-- Inductive spec of a complete Rioboo `LogToAtan` recursion on `(A, B)` producing the arctan-argument
+list `L`, with constructors `base`, `swap`, `step` mirroring the three branches. -/
 inductive IsLogToAtanRun (φ : K[X] →+* R) (i : R) : K[X] → K[X] → List R → Prop
   | base {A B : K[X]} (hB : φ B ≠ 0) (hAB : (φ A) ^ 2 + (φ B) ^ 2 ≠ 0) (hdvd : B ∣ A) :
       IsLogToAtanRun φ i A B [φ A / φ B]
@@ -134,11 +113,7 @@ inductive IsLogToAtanRun (φ : K[X] →+* R) (i : R) : K[X] → K[X] → List R 
       (hrun : IsLogToAtanRun φ i D C L) :
       IsLogToAtanRun φ i A B ((φ A * φ D + φ B * φ C) / φ G :: L)
 
-/-- **`LogToAtan` correctness** (§2.8 p.63, the assembly of Theorem 2.8.1): for any complete Rioboo
-run `IsLogToAtanRun φ i A B L`, the arctan-derivative sum of the output equals the complex logarithm,
-`atanDerivSum L = i · imagLog φ i A B = i · d/dx log((φA+iφB)/(φA−iφB))`. Proof: induction on the run —
-`base` is `atanDerivSum_base` (Lemma 2.8.1), `swap` is `imagLog_swap` (Thm 2.8.1(a)) after the IH, and
-`step` is `imagLog_step` (Thm 2.8.1(b)) after the IH. -/
+/-- For any complete run `IsLogToAtanRun φ i A B L`, `atanDerivSum L = i · imagLog φ i A B`. -/
 theorem isLogToAtanRun_correct (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
     {A B : K[X]} {L : List R} (hrun : IsLogToAtanRun φ i A B L) :
     atanDerivSum L = i * imagLog φ i A B := by
@@ -149,23 +124,20 @@ theorem isLogToAtanRun_correct (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p)
       rw [atanDerivSum_cons, ← atanDerivSum_singleton, ih, ← imagLog_step hi hAB hCD hG hG0]
 
 omit [Differential R] [CharZero R] in
-/-- **Fuel def, base branch** (§2.8 p.63): when `B ∣ A`, one fuel step computes `[φA/φB]`, so the
-executable `logToAtanAux` agrees with the `base` run. -/
+/-- Fuel base branch: when `B ∣ A`, `logToAtanAux φ (n+1) A B = [φA/φB]`. -/
 @[simp] theorem logToAtanAux_base {n : ℕ} {A B : K[X]} (hdvd : B ∣ A) :
     logToAtanAux φ (n + 1) A B = [φ A / φ B] := by
   rw [logToAtanAux]; simp [hdvd]
 
 omit [Differential R] [CharZero R] in
-/-- **Fuel def, swap branch** (§2.8 p.63): when `¬ B ∣ A` and `deg A < deg B`, the fuel def recurses on
-`(−B, A)` with one fewer unit of fuel, matching the `swap` run. -/
+/-- Fuel swap branch: when `¬ B ∣ A` and `deg A < deg B`, `logToAtanAux φ (n+1) A B = logToAtanAux φ n (-B) A`. -/
 theorem logToAtanAux_swap {n : ℕ} {A B : K[X]} (hdvd : ¬ B ∣ A) (hlt : A.degree < B.degree) :
     logToAtanAux φ (n + 1) A B = logToAtanAux φ n (-B) A := by
   rw [logToAtanAux]; simp [hdvd, hlt]
 
 omit [Differential R] [CharZero R] in
-/-- **Fuel def, step branch** (§2.8 p.63): when `¬ B ∣ A` and `deg A ≥ deg B`, the fuel def prepends
-`(φA·φD + φB·φC)/φG` (with `C = gcdB(B,−A)`, `D = gcdA(B,−A)`, `G = gcd(B,−A)`) and recurses on the
-cofactors `(D, C)`, matching the `step` run. -/
+/-- Fuel step branch: when `¬ B ∣ A` and `deg A ≥ deg B`, the fuel def prepends `(φA·φD + φB·φC)/φG`
+(cofactors `C = gcdB(B,−A)`, `D = gcdA(B,−A)`, `G = gcd(B,−A)`) and recurses on `(D, C)`. -/
 theorem logToAtanAux_step {n : ℕ} {A B : K[X]} (hdvd : ¬ B ∣ A) (hle : ¬ A.degree < B.degree) :
     logToAtanAux φ (n + 1) A B
       = (φ A * φ (EuclideanDomain.gcdA B (-A)) + φ B * φ (EuclideanDomain.gcdB B (-A)))
@@ -173,18 +145,13 @@ theorem logToAtanAux_step {n : ℕ} {A B : K[X]} (hdvd : ¬ B ∣ A) (hle : ¬ A
         :: logToAtanAux φ n (EuclideanDomain.gcdA B (-A)) (EuclideanDomain.gcdB B (-A)) := by
   rw [logToAtanAux]; simp [hdvd, hle]
 
-/-- **Fuel def realizes a run** (§2.8 p.63): if `logToAtanAux φ fuel A B` is a complete Rioboo run
-`IsLogToAtanRun φ i A B (logToAtanAux φ fuel A B)`, its arctan-derivative sum is the complex log,
-`atanDerivSum (logToAtanAux φ fuel A B) = i · imagLog φ i A B`. The bridge from the executable
-fuel-bounded def to the correctness assembly (whenever fuel suffices to reach a base case). -/
+/-- If `logToAtanAux φ fuel A B` is a complete run, `atanDerivSum (logToAtanAux φ fuel A B) = i · imagLog φ i A B`. -/
 theorem logToAtanAux_correct (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
     {A B : K[X]} {fuel : ℕ} (hrun : IsLogToAtanRun φ i A B (logToAtanAux φ fuel A B)) :
     atanDerivSum (logToAtanAux φ fuel A B) = i * imagLog φ i A B :=
   isLogToAtanRun_correct hi hφneg hrun
 
-/-- Restatement of **`LogToAtan` correctness** against the book wording (§2.8, p.63): if `f = ∑_{P∈L}
-2·arctan(P)` is the output of Rioboo's `LogToAtan(A, B)`, then `df/dx = d/dx · i·log((A+iB)/(A−iB))` —
-i.e. as derivatives, `∑_{P∈L} 2·P'/(1+P²) = i · logDeriv((φA+iφB)/(φA−iφB))`. -/
+/-- Restatement: for a complete run, `∑_{P∈L} 2·P'/(1+P²) = i · logDeriv((φA+iφB)/(φA−iφB))`. -/
 example (hi : i ^ 2 = -1) (hφneg : ∀ p : K[X], φ (-p) = -φ p)
     {A B : K[X]} {L : List R} (hrun : IsLogToAtanRun φ i A B L) :
     (L.map fun P => 2 * (P′ / (1 + P ^ 2))).sum

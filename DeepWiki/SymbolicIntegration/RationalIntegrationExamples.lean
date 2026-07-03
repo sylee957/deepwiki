@@ -1,17 +1,15 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
 
-/-! # Worked examples of the rational-function integration algorithms (Bronstein §2.1–§2.8)
-Concrete instances demonstrating the Bernoulli, Hermite, Rothstein–Trager, Lazard–Rioboo–Trager,
-Czichowski and full-partial-fraction procedures. Stated over a general field (book-number-free);
-the per-book §/page citations live in the `Sources/` catalog. -/
+/-! # Worked examples of the rational-function integration algorithms
+Concrete instances of the Bernoulli, Hermite, Rothstein-Trager, Lazard-Rioboo-Trager,
+and full-partial-fraction procedures over a general field. -/
 
 open Polynomial
 open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-/-- **Bernoulli partial fraction of `1/(x³+x)` over `ℚ(√−1)`**: factoring `x³+x = x(x+i)(x−i)`
-(`i² = −1`) gives `1/(x³+x) = 1/x − (1/2)/(x+i) − (1/2)/(x−i)` (numerator collapses to `−i² = 1`). -/
+/-- `1/(t³+t) = 1/t − (1/2)/(t+i) − (1/2)/(t−i)` when `i² = −1`. -/
 theorem inv_cubic_partialFraction {F : Type*} [Field F] [CharZero F] (t i : F) (hi : i ^ 2 = -1)
     (ht : t ≠ 0) (h1 : t + i ≠ 0) (h2 : t - i ≠ 0) :
     1 / (t ^ 3 + t) = 1 / t - (1 / 2) / (t + i) - (1 / 2) / (t - i) := by
@@ -20,9 +18,7 @@ theorem inv_cubic_partialFraction {F : Type*} [Field F] [CharZero F] (t i : F) (
     rw [hfac]; field_simp; ring
   rw [key, hi]; norm_num
 
-/-- **Rothstein–Trager residue gcd for `(x⁴−3x²+6)/(x⁶−5x⁴+5x²+4)`**: for `4a²+1 = 0` the residue gcd
-`Gₐ = x³+2ax²−3x−4a` divides both `D = x⁶−5x⁴+5x²+4` and `A−aD' = (x⁴−3x²+6) − a(6x⁵−20x³+10x)`,
-via the cofactorizations `D = Gₐ·(x³−2ax²−3x+4a)` and `A−aD' = Gₐ·(−6ax²−2x+6a)`. -/
+/-- Rothstein-Trager residue-gcd cofactorizations of `D` and `A−aD'` for `4a²+1 = 0`. -/
 theorem rothsteinTrager_gcd_example {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2 + 1 = 0) :
     ((X : F[X]) ^ 6 - 5 * X ^ 4 + 5 * X ^ 2 + 4
         = (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a) * (X ^ 3 - 2 * C a * X ^ 2 - 3 * X + 4 * C a))
@@ -35,9 +31,7 @@ theorem rothsteinTrager_gcd_example {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 
   · linear_combination ((X : F[X]) ^ 2 - 2) ^ 2 * hb
   · linear_combination (3 * ((X : F[X]) ^ 2 - 1) * (X ^ 2 - 2)) * hb
 
-/-- **Hermite reduction of `(t⁷−24t⁴−4t²+8t−8)/(t⁸+6t⁶+12t⁴+8t²)`**: the rational part is
-`(3t³+8t²+6t+4)/(t⁵+4t³+4t)` and the remaining integrand reduces to `1/t`, i.e.
-`((3t³+8t²+6t+4)/(t⁵+4t³+4t))′ + t⁻¹ = the integrand` (denominators `t·(t²+2)²`, `t²·(t²+2)³`). -/
+/-- Hermite reduction of `(t⁷−24t⁴−4t²+8t−8)/(t⁸+6t⁶+12t⁴+8t²)`: rational part plus `1/t`. -/
 theorem hermiteReduce_octic_example {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1)
     (ht0 : t ≠ 0) (ht2 : t ^ 2 + 2 ≠ 0) :
     ((3 * t ^ 3 + 8 * t ^ 2 + 6 * t + 4) / (t ^ 5 + 4 * t ^ 3 + 4 * t))′ + t⁻¹
@@ -60,10 +54,7 @@ theorem hermiteReduce_octic_example {F : Type*} [Field F] [Differential F] {t : 
     div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hQ) ht0) hD]
   ring
 
-/-- **Exercise 2.1** (§2.2/§2.4, Hermite reduction of `(t⁵−t⁴+4t³+t²−t+5)/(t⁴−2t³+5t²−4t+4)`): the
-denominator is `(t²−t+2)²`, so Hermite reduction gives rational part `(7t⁴+7t³+20t+18)/(14(t²−t+2))` and
-remaining integrand `(7t+3)/(7(t²−t+2))` (squarefree denominator, the logarithmic part), i.e.
-`((7t⁴+7t³+20t+18)/(14(t²−t+2)))′ + (7t+3)/(7(t²−t+2))` is the integrand. -/
+/-- Hermite reduction of `(t⁵−t⁴+4t³+t²−t+5)/(t²−t+2)²`: rational part plus `(7t+3)/(7(t²−t+2))`. -/
 theorem hermiteReduce_quartic_example {F : Type*} [Field F] [CharZero F] [Differential F] {t : F}
     (ht : t′ = 1)
     (hV : t ^ 2 - t + 2 ≠ 0) :
@@ -84,14 +75,7 @@ theorem hermiteReduce_quartic_example {F : Type*} [Field F] [CharZero F] [Differ
   rw [div_add_div _ _ (pow_ne_zero 2 hV14) hV7, div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hV14) hV7) hV2]
   ring
 
-/-- **Example 2.2.1** (§2.2, the original Hermite reduction trace) for
-`∫(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` (denominator `x²·(x²+2)³`). After the partial fraction
-`f = (x−1)/x² + (x⁴−6x³−18x²−12x+8)/(x²+2)³`, `HermiteReduce` (original version) runs the steps
-`(i,j) = (2,1),(3,2),(3,1)` with `V = x` then `V = x²+2`: each verifies the extended-Euclidean relation
-`V'·B + V·C = −Aᵢ/j` (no `U` factor — partial fractions already separated the prime powers) and the update
-`Aᵢ ← −jC − B'`. The `x`-part reduces to `1` (giving `∫dx/x`); the `(x²+2)`-part reduces
-`x⁴−6x³−18x²−12x+8 → x²−6x−2 → 0`. Rational part `g = 1/x + 6x/(x²+2)² + (3−x)/(x²+2)`. Derivative values
-`V'=1, 2x; B'=0,6,−1` inlined; step 2's `C = −x²/2+3x−2` as `Ĉ = 2C = −x²+6x−4`. -/
+/-- Basic Hermite-reduction step trace for `(x⁷−24x⁴−4x²+8x−8)/(x²·(x²+2)³)`. -/
 theorem hermiteBasic_trace_octic {F : Type*} [CommRing F] :
     -- x-part, step (2,1) j=1: V=x, A=x−1, B=1, C=−1
     ((1 : F[X]) * 1 + X * (-1) = -(X - 1))
@@ -105,13 +89,7 @@ theorem hermiteBasic_trace_octic {F : Type*} [CommRing F] :
       ∧ ((0 : F[X]) = -(1 : F[X]) - (-1)) := by
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> ring
 
-/-- **Example 2.2.2** (§2.2, the quadratic Hermite reduction trace) for
-`∫(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` (denominator `x²·(x²+2)³`). The three reduction steps
-`(i,j) = (2,1),(3,2),(3,1)` of `HermiteReduce` (quadratic version), with `V₂ = x`, `U₂ = (x²+2)³`,
-`V₃ = x²+2`, `U₃ = x`: each verifies the extended-Euclidean relation `U·V'·B + V·C = −A/j` and the update
-`A ← −jC − U·B'`, reducing the numerator `A₀ → A₁ → A₂ → A₃ = x²+2` (so the remainder is `1/x`). The
-derivative values `V₂'=1, V₃'=2x, B'=0,6,−1` are inlined, and step 2's `C₂ = −x⁴/2−x³/2+x²−2x−2` appears
-as `Ĉ₂ = 2·C₂ = −x⁴−x³+2x²−4x−4` (the Bézout relation and update both scaled by `j = 2`). -/
+/-- Quadratic Hermite-reduction step trace for `(x⁷−24x⁴−4x²+8x−8)/(x²·(x²+2)³)`. -/
 theorem hermiteQuadratic_trace_octic {F : Type*} [CommRing F] :
     -- step (2,1), j=1:  U₂·V₂'·B + V₂·C₁ = −A₀,   A₁ = −1·C₁ − U₂·B'
     ((X ^ 2 + 2) ^ 3 * (1 : F[X]) + X * (-X ^ 6 - X ^ 5 + 18 * X ^ 3 - 8 * X - 8)
@@ -129,12 +107,7 @@ theorem hermiteQuadratic_trace_octic {F : Type*} [CommRing F] :
       ∧ ((X ^ 2 + 2 : F[X]) = -(-X ^ 2 + X - 2) - X * (-1)) := by
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_⟩ <;> ring
 
-/-- **Example 2.2.3** (§2.2, Mack's linear Hermite reduction trace) for
-`∫(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)`, with `D⁻ = gcd(D, D') = x⁵+4x³+4x` and `D* = D/D⁻ = x³+2x`.
-Two reduction steps (one per while-iteration), each verifying the extended-Euclidean relation
-`(−D*·D⁻'/D⁻)·B + D⁻*·C = A` and update `A ← C − B'·D*/D⁻*`: step 1 with first argument `−5x²−2`
-(`= −D*·D⁻'/D⁻`) gives `(B,C) = (8x²+4, x⁴−2x²+16x+4)`, reducing `A₀ → A₁ = x⁴−2x²+4`; step 2 with
-first argument `−2x²` gives `(B,C) = (3, x²+2)`, reducing `A₁ → A₂ = x²+2`, and `A₂/D* = 1/x`. -/
+/-- Mack's linear Hermite-reduction step trace for `(x⁷−24x⁴−4x²+8x−8)/(x²·(x²+2)³)`. -/
 theorem hermiteMack_trace_octic {F : Type*} [CommRing F] :
     -- denominator split D = D*·D⁻, and the polynomial cofactor for −D*·D⁻'/D⁻ = −(5x²+2)
     ((X ^ 8 + 6 * X ^ 6 + 12 * X ^ 4 + 8 * X ^ 2 : F[X]) = (X ^ 3 + 2 * X) * (X ^ 5 + 4 * X ^ 3 + 4 * X))
@@ -151,9 +124,7 @@ theorem hermiteMack_trace_octic {F : Type*} [CommRing F] :
     ∧ ((X ^ 2 + 2) * X = (X ^ 3 + 2 * X : F[X])) := by
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> ring
 
-/-- **Lazard–Rioboo–Trager subresultant for `(x⁴−3x²+6)/(x⁶−5x⁴+5x²+4)`**: the degree-3 subresultant
-value at a root `a` of `4a²+1` is `S₃(a,x) = −214ax³+107x²+642ax−214 = −214a·(x³+2ax²−3x−4a)`, i.e.
-`−214a` times the Rothstein–Trager gcd `Gₐ`. -/
+/-- The degree-3 Lazard-Rioboo-Trager subresultant is `−214a` times the residue gcd `Gₐ`, for `4a²+1 = 0`. -/
 theorem lazardRiobooTrager_example {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2 + 1 = 0) :
     (-214 * C a * (X : F[X]) ^ 3 + 107 * X ^ 2 + 642 * C a * X - 214
       = -214 * C a * (X ^ 3 + 2 * C a * X ^ 2 - 3 * X - 4 * C a)) := by
@@ -162,9 +133,7 @@ theorem lazardRiobooTrager_example {F : Type*} [Field F] (a : F) (ha : 4 * a ^ 2
     simpa [map_ofNat] using h
   linear_combination (107 * ((X : F[X]) ^ 2 - 2)) * hb
 
-/-- **Hermite reduction of `36/(x⁵−2x⁴−2x³+4x²+x−2)`** (denominator `(x²−1)²(x−2)`): rational part
-`(12x+6)/(x²−1)`, remaining integrand `12/(x²−x−2)`, i.e.
-`((12x+6)/(x²−1))′ + 12/(x²−x−2) = 36/(x⁵−2x⁴−2x³+4x²+x−2)` (numerator collapses to `36(x+1)`). -/
+/-- Hermite reduction of `36/(x²−1)²(x−2)`: rational part `(12t+6)/(t²−1)` plus `12/(t²−t−2)`. -/
 theorem hermiteReduce_quintic_example {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1)
     (h1 : t ^ 2 - 1 ≠ 0) (h2 : t ^ 2 - t - 2 ≠ 0) :
     ((12 * t + 6) / (t ^ 2 - 1))′ + 12 / (t ^ 2 - t - 2)
@@ -184,8 +153,7 @@ theorem hermiteReduce_quintic_example {F : Type*} [Field F] [Differential F] {t 
   rw [div_add_div _ _ (pow_ne_zero 2 h1) h2, div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 h1) h2) hD]
   ring
 
-/-- **Full partial fraction of `36/(x⁵−2x⁴−2x³+4x²+x−2)`** (denominator `(x−1)²(x+1)²(x−2)`):
-`36/D = −9/(x−1)² − 3/(x+1)² − 4/(x+1) + 4/(x−2)`. -/
+/-- Full partial fraction `36/(t−1)²(t+1)²(t−2) = −9/(t−1)² − 3/(t+1)² − 4/(t+1) + 4/(t−2)`. -/
 theorem fullPartialFraction_example {F : Type*} [Field F] (t : F) (h1 : t - 1 ≠ 0) (h2 : t + 1 ≠ 0)
     (h3 : t - 2 ≠ 0) :
     36 / (t ^ 5 - 2 * t ^ 4 - 2 * t ^ 3 + 4 * t ^ 2 + t - 2)
@@ -194,9 +162,7 @@ theorem fullPartialFraction_example {F : Type*} [Field F] (t : F) (h1 : t - 1 �
     ring
   rw [hD]; field_simp; ring
 
-/-- **Integral of `36/(x⁵−2x⁴−2x³+4x²+x−2)` from its full partial fraction**:
-`∫ f = 4·log(x−2) − 4·log(x+1) + 9/(x−1) + 3/(x+1)`, i.e.
-`(9/(x−1) + 3/(x+1))′ + (4/(x−2) − 4/(x+1)) = f` (the bracket is the log part's integrand). -/
+/-- Integral of `36/(t−1)²(t+1)²(t−2)`: rational part `9/(t−1)+3/(t+1)` plus log integrand. -/
 theorem integrateRational_example {F : Type*} [Field F] [Differential F] {t : F} (ht : t′ = 1)
     (h1 : t - 1 ≠ 0) (h2 : t + 1 ≠ 0) (h3 : t - 2 ≠ 0) :
     (9 / (t - 1) + 3 / (t + 1))′ + (4 / (t - 2) - 4 / (t + 1))

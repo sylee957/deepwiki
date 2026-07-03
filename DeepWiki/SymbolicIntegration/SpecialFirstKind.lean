@@ -1,12 +1,9 @@
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 
-/-! # Special polynomials of the first kind (Bronstein §3.4)
-The *first-kind* special polynomials refine `IsSpecial` by a residue test on the roots: a special
-`p ∈ k[t]` is *of the first kind* when, at every root `α` of `p` (in the algebraic closure), the
-residue `Dt − Dα` evaluated at `α` is not the logarithmic derivative of a radical in `k(α)`. This
-file develops the supporting notion of a *logarithmic derivative of a radical*
-(`IsLogDerivRadical`, Def 3.4.3), its descent through algebraic extensions (Lemma 3.4.8), and the
-definition and semigroup structure of the first-kind class (Def 3.4.4, Thm 3.4.4). -/
+/-! # Special polynomials of the first kind
+A special `p ∈ k[t]` is *of the first kind* when at every root `α` the residue `v'(α)` is not a
+logarithmic derivative of a radical. Develops `IsLogDerivRadical`, its descent through algebraic
+extensions, and the definition and closure properties of the first-kind class. -/
 
 open scoped Differential
 open Polynomial
@@ -15,9 +12,8 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {k : Type*} [Field k] [Differential k]
 
-/-- **Definition 3.4.3** (§3.4, p.98): `u ∈ F` is a *logarithmic derivative of an `F`-radical* if
-`n·u = Dv/v` for some `v ∈ F*` and some nonzero integer `n` — i.e. `u` is, up to an integer scale,
-the logarithmic derivative `logDeriv v = v′/v` of a nonzero element. -/
+/-- `u` is a *logarithmic derivative of a radical* if `n·u = Dv/v` for some `v ≠ 0` and nonzero
+integer `n`. -/
 def IsLogDerivRadical {F : Type*} [Field F] [Differential F] (u : F) : Prop :=
   ∃ (v : F) (n : ℤ), v ≠ 0 ∧ n ≠ 0 ∧ (n : F) * u = Differential.logDeriv v
 
@@ -35,9 +31,7 @@ theorem isLogDerivRadical_logDeriv {v : k} (hv : v ≠ 0) :
     IsLogDerivRadical (Differential.logDeriv v) :=
   ⟨v, 1, hv, one_ne_zero, by rw [Int.cast_one, one_mul]⟩
 
-/-- **Definition 3.4.3** normalization (§3.4, p.98): the integer `n` may be taken *positive*. If
-`n·u = Dv/v` with `n < 0`, then `(−n)·u = D(v⁻¹)/v⁻¹` using `logDeriv (v⁻¹) = −logDeriv v`, so a
-witness with positive multiplier exists. -/
+/-- A log-derivative of a radical has a witness with positive multiplier `n`. -/
 theorem isLogDerivRadical_pos {u : k} (h : IsLogDerivRadical u) :
     ∃ (v : k) (n : ℤ), v ≠ 0 ∧ 0 < n ∧ (n : k) * u = Differential.logDeriv v := by
   obtain ⟨v, n, hv, hn, heq⟩ := h
@@ -49,13 +43,8 @@ theorem isLogDerivRadical_pos {u : k} (h : IsLogDerivRadical u) :
     rw [hlog, Int.cast_neg, neg_mul, ← heq]
   · exact ⟨v, n, hv, hpos, heq⟩
 
-/-- **Lemma 3.4.8** (§3.4, p.98): logarithmic-derivative-of-a-radical descends through algebraic
-extensions. If `E` is algebraic over `k` and `a ∈ k` is *not* a log-derivative of a `k`-radical,
-then `a` is not a log-derivative of an `E`-radical either. Proof: from `n·a = Dα/α` for some
-`α ∈ E*`, the minimal polynomial `p = X^m + ΣaᵢXⁱ` of `α` over `k` satisfies `p ∣ q` for
-`q = mna·X^m + Σ(Daᵢ + i·n·a·aᵢ)Xⁱ ∈ k[X]` (since `q(α) = D(p(α)) = 0`); degrees force `q = mna·p`,
-so comparing constant terms gives `Da₀ = m·n·a·a₀`, i.e. `(m·n)·a = logDeriv a₀` with `a₀ ≠ 0`
-(as `α ≠ 0`) and `m·n ≠ 0` — a `k`-radical witness, contradiction. (Characteristic `0`, as in §3.4.) -/
+/-- Descent through algebraic extensions: if `E` is algebraic over a char-`0` field `k` and `a ∈ k` is
+not a log-derivative of a `k`-radical, then it is not a log-derivative of an `E`-radical. -/
 theorem isLogDerivRadical_descent [CharZero k]
     {E : Type*} [Field E] [Differential E] [Algebra k E] [DifferentialAlgebra k E]
     [Algebra.IsAlgebraic k E] {a : k} (ha : ¬ IsLogDerivRadical a) :
@@ -137,17 +126,13 @@ section FirstKind
 -- closure in the book; here it is left as a differential extension parameter.
 variable {Ω : Type*} [Field Ω] [Differential Ω] [Algebra k Ω]
 
-/-- The *residue* `pα(α)` of the monomial derivation `Dt = v` at a root `α ∈ Ω`. The book's
-`pα = (Dt − Dα)/(t − α) ∈ k(α)[t]` evaluates at its argument to `v'(α)` (it is the derivative of
-`Dt − Dα` at its root `α`), so we take this closed form; `residue_eq_eval_divByMonic` proves the
-agreement with `pα(α)`. -/
+/-- The residue `v'(α)` of the monomial derivation `Dt = v` at a root `α ∈ Ω`, as the closed form
+`aeval α (derivative v)`. -/
 noncomputable def residue (v : k[X]) (α : Ω) : Ω := aeval α (derivative v)
 
-/-- **Definition 3.4.4** (§3.4, p.98): `q ∈ k[t]` is *special of the first kind* (w.r.t. the
-monomial derivation `Dt = v`), tested over the differential extension `Ω`, if `q` is special
-(`q ∣ Dq`) and at every root `α ∈ Ω` of `q` the residue `pα(α) = v'(α)` is not a logarithmic
-derivative of an `Ω`-radical. (By Lemma 3.4.8 testing over `Ω = k̄` is equivalent to testing over
-each `k(α)`.) -/
+/-- `q ∈ k[t]` is *special of the first kind* (w.r.t. `Dt = v`, tested over `Ω`) if `q` is special
+(`q ∣ Dq`) and at every root `α ∈ Ω` of `q` the residue `v'(α)` is not a log-derivative of an
+`Ω`-radical. -/
 def IsSpecialFirstKind (v : k[X]) (q : k[X]) : Prop :=
   q ∣ Differential.implicitDeriv v q ∧
     ∀ α : Ω, aeval α q = 0 → ¬ IsLogDerivRadical (residue (Ω := Ω) v α)
@@ -158,10 +143,7 @@ theorem IsSpecialFirstKind.isSpecial {v q : k[X]} (h : IsSpecialFirstKind (Ω :=
     q ∣ Differential.implicitDeriv v q := h.1
 
 variable (Ω) in
-/-- **Theorem 3.4.4(i)** (§3.4, p.99): `S₁` is closed under finite products — a finite product of
-special-first-kind polynomials is special of the first kind. Each root of `∏ fᵢ` is a root of some
-`fᵢ` (the value is `∏ fᵢ(α)`, zero in a domain iff a factor vanishes), and specialness multiplies
-(`IsSpecial.prod`). -/
+/-- A finite product of special-first-kind polynomials is special of the first kind. -/
 theorem isSpecialFirstKind_prod {ι : Type*} (s : Finset ι) (v : k[X]) (f : ι → k[X])
     (hf : ∀ i ∈ s, IsSpecialFirstKind (Ω := Ω) v (f i)) :
     IsSpecialFirstKind (Ω := Ω) v (∏ i ∈ s, f i) := by
@@ -174,9 +156,7 @@ theorem isSpecialFirstKind_prod {ι : Type*} (s : Finset ι) (v : k[X]) (f : ι 
 
 variable (Ω) in
 open Classical in
-/-- **Theorem 3.4.4(ii)** (§3.4, p.99): a divisor of a special-first-kind polynomial is special of
-the first kind. Each root of `q ∣ p` is a root of `p`, and a divisor of a special polynomial is
-special (`isSpecial_of_dvd`; char `0` makes every prime-power multiplicity a unit). -/
+/-- A divisor of a special-first-kind polynomial is special of the first kind (char `0`). -/
 theorem isSpecialFirstKind_of_dvd [CharZero k] {v p q : k[X]} (hp0 : p ≠ 0)
     (hp : IsSpecialFirstKind (Ω := Ω) v p) (hdvd : q ∣ p) :
     IsSpecialFirstKind (Ω := Ω) v q := by
@@ -192,9 +172,7 @@ theorem isSpecialFirstKind_of_dvd [CharZero k] {v p q : k[X]} (hp0 : p ≠ 0)
     obtain ⟨r, rfl⟩ := hdvd; rw [map_mul, hα, zero_mul]
   exact hp.2 α hroot hlog
 
-/-- For a polynomial `f` with root `a`, `(f /ₘ (X − a))(a) = f'(a)`: the value of the exact
-quotient at a simple level equals the formal derivative there (`f = (X − a)·g`, so
-`f' = g + (X − a)·g'`, and `(X − a)` vanishes at `a`). -/
+/-- For `f` with root `a`, `(f /ₘ (X − a)).eval a = (derivative f).eval a`. -/
 theorem eval_divByMonic_X_sub_C_eq_eval_derivative {A : Type*} [Field A] (f : A[X]) (a : A)
     (h : f.IsRoot a) : (f /ₘ (X - C a)).eval a = (derivative f).eval a := by
   set g := f /ₘ (X - C a) with hg
@@ -203,9 +181,8 @@ theorem eval_divByMonic_X_sub_C_eq_eval_derivative {A : Type*} [Field A] (f : A[
     rw [hfac, derivative_mul, derivative_sub, derivative_X, derivative_C, sub_zero, one_mul]
   rw [hderiv, eval_add, eval_mul, eval_sub, eval_X, eval_C, sub_self, zero_mul, add_zero]
 
-/-- **Definition 3.4.4** faithfulness (§3.4, p.98): at a *special* root `α` (where `v(α) = α′`, so
-`t − α ∣ Dt − Dα` and the book's `pα` is a genuine polynomial), the closed-form `residue v α`
-equals the book's `pα(α) = ((Dt − Dα)/(t − α))(α)`. -/
+/-- At a special root `α` (`v(α) = α′`), the closed-form `residue v α` equals
+`((Dt − Dα)/(t − α)).eval α`. -/
 theorem residue_eq_eval_divByMonic [DifferentialAlgebra k Ω] (v : k[X]) (α : Ω)
     (hsp : aeval α v = α′) :
     residue (Ω := Ω) v α
@@ -223,8 +200,7 @@ section AlgebraicExtension
 -- `E` an algebraic differential extension of `k`, both inside the common closure `Ω`.
 variable {E : Type*} [Field E] [Differential E] [Algebra k E] [DifferentialAlgebra k E]
 
-/-- `mapCoeffs` commutes with base change along a differential-algebra hom: applying `D` to the
-coefficients and then mapping equals mapping then applying `D` (`deriv_algebraMap` coefficientwise). -/
+/-- `mapCoeffs` commutes with base change along a differential-algebra hom. -/
 theorem mapCoeffs_map (p : k[X]) :
     (Differential.mapCoeffs p).map (algebraMap k E)
       = Differential.mapCoeffs (p.map (algebraMap k E)) := by
@@ -245,9 +221,7 @@ theorem implicitDeriv_map (v p : k[X]) :
     simp [Differential.implicitDeriv, derivative']
   rw [h1, h2, Polynomial.map_add, Polynomial.map_mul, mapCoeffs_map, derivative_map]
 
-/-- **Corollary 3.4.1** (§3.4, p.95), special half: a special polynomial stays special after an
-algebraic base change — `p ∣ Dp` in `k[t]` gives `p.map ∣ D(p.map)` in `E[t]` (`map` is a ring hom
-preserving divisibility, and `D` commutes with `map`). -/
+/-- A special polynomial stays special after a base change: `p ∣ Dp` gives `p.map ∣ D(p.map)`. -/
 theorem isSpecial_map_of_isSpecial {v p : k[X]} (hp : p ∣ Differential.implicitDeriv v p) :
     (p.map (algebraMap k E)) ∣
       Differential.implicitDeriv (v.map (algebraMap k E)) (p.map (algebraMap k E)) := by
@@ -258,18 +232,14 @@ section ThreeKind
 variable {Ω : Type*} [Field Ω] [Differential Ω] [Algebra k Ω] [Algebra E Ω] [IsScalarTower k E Ω]
 
 omit [Differential k] [Differential E] [DifferentialAlgebra k E] [Differential Ω] in
-/-- The residue is invariant under the intermediate base change `k → E`: `pα(α)` computed for the
-mapped monomial `v.map` equals the one for `v` (the scalar tower collapses the evaluation). -/
+/-- The residue is invariant under the base change `k → E`: `residue (v.map …) α = residue v α`. -/
 theorem residue_map (v : k[X]) (α : Ω) :
     residue (Ω := Ω) (v.map (algebraMap k E)) α = residue (Ω := Ω) v α := by
   rw [residue, residue, derivative_map,
     ← aeval_eq_aeval_map (IsScalarTower.algebraMap_eq k E Ω).symm (derivative v) α]
 
-/-- **Theorem 3.4.4(iii)** (§3.4, p.99): `S₁` grows with the field — if `E` is an algebraic
-extension of `k`, a polynomial that is special of the first kind over `k[t]` stays special of the
-first kind over `E[t]` (`S₁,k[t]:k ⊆ S₁,E[t]:E`). The polynomial stays special (Cor 3.4.1), and the
-residue/root test is unchanged because we test log-derivatives over the common closure `Ω` — the
-Lemma 3.4.8 step of the book is absorbed into testing over `Ω`. -/
+/-- A polynomial special of the first kind over `k[t]` stays special of the first kind over `E[t]`
+for an algebraic extension `E`. -/
 theorem isSpecialFirstKind_map [Algebra.IsAlgebraic k Ω] {v p : k[X]}
     (hp : IsSpecialFirstKind (Ω := Ω) v p) :
     IsSpecialFirstKind (Ω := Ω) (v.map (algebraMap k E)) (p.map (algebraMap k E)) := by

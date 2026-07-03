@@ -2,13 +2,10 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 
-/-! # The Horowitz–Ostrogradsky linear solve (Bronstein §2.3)
-The Horowitz method finds the numerators `B, C` of `∫ A/D = B/D⁻ + ∫ C/D*` by a *linear system* over
-`K` — without factoring `D`. With `D⁻ = gcd(D, D')`, `D* = D/D⁻`, and the Horowitz polynomial `E` (with
-`E·D⁻ = D⁻′·D*`), the defining identity `A = B′·D* − B·E + C·D⁻` is `K`-linear in the coefficients of
-`B` (degree `< deg D⁻`) and `C` (degree `< deg D*`). This file packages that as a `K`-linear map
-`horowitzLinear` and shows it maps the degree-bounded coordinate spaces into `degreeLT (deg D⁻ + deg D*)`;
-"the solve exists and is unique" then reduces to its injectivity (a root-multiplicity argument, separate). -/
+/-! # The Horowitz–Ostrogradsky linear solve
+Finds the numerators `B, C` of `∫ A/D = B/D⁻ + ∫ C/D*` by a `K`-linear system, without factoring `D`.
+Packages the defining identity `A = B′·D* − B·E + C·D⁻` as a linear map `horowitzLinear` on the
+degree-bounded coordinate spaces, and proves its injectivity, giving existence and uniqueness. -/
 
 open Polynomial
 
@@ -66,10 +63,8 @@ theorem horowitzLinear_mem_degreeLT {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0)
   · exact degree_mul_lt_of_lt_of_le hB (le_of_lt hE)
   · rw [Nat.add_comm m n]; exact degree_mul_lt_of_lt_of_le hC (le_of_eq hDmdeg)
 
-/-- The Horowitz operator as a `K`-linear map between the **degree-bounded coordinate spaces**
-`degreeLT (deg D⁻) × degreeLT (deg D*) → degreeLT (deg D⁻ + deg D*)`. Both have `K`-dimension
-`deg D⁻ + deg D*`, so this map is injective iff surjective — the basis of "the solve exists and is
-unique iff the operator is injective". -/
+/-- The Horowitz operator as a `K`-linear map `degreeLT (deg D⁻) × degreeLT (deg D*) →
+degreeLT (deg D⁻ + deg D*)` between the degree-bounded coordinate spaces. -/
 def horowitzMap {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
     (hE : E.degree < Dstar.natDegree) :
     (degreeLT K Dminus.natDegree × degreeLT K Dstar.natDegree) →ₗ[K]
@@ -91,11 +86,8 @@ theorem finrank_degreeLT_prod (m n : ℕ) :
   rw [Module.finrank_prod, (degreeLTEquiv K m).finrank_eq, (degreeLTEquiv K n).finrank_eq,
     Module.finrank_pi, Module.finrank_pi, Fintype.card_fin, Fintype.card_fin]
 
-/-- **The Horowitz solve, reduced to injectivity** (§2.3): if the Horowitz operator is injective, then
-for every numerator `A` with `deg A < deg D⁻ + deg D*` there exist **unique** degree-bounded `B, C` with
-`A = B′·D* − B·E + C·D⁻` — so `∫ A/D = B/D⁻ + ∫ C/D*` with `B, C` found by the linear system. (By
-`injective_iff_surjective` on the equal-dimension coordinate spaces; injectivity is the remaining
-root-multiplicity lemma.) -/
+/-- If the Horowitz operator is injective, then for every `A` with `deg A < deg D⁻ + deg D*` there
+exist unique degree-bounded `B, C` with `A = B′·D* − B·E + C·D⁻`. -/
 theorem exists_unique_horowitz_of_injective {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
     (hE : E.degree < Dstar.natDegree) (hinj : Function.Injective (horowitzMap hDm hDs hE))
     {A : K[X]} (hA : A ∈ degreeLT K (Dminus.natDegree + Dstar.natDegree)) :
@@ -114,15 +106,12 @@ theorem exists_unique_horowitz_of_injective {Dminus Dstar E : K[X]} (hDm : Dminu
   apply Subtype.ext
   rw [horowitzMap_coe_apply, horowitzMap_coe_apply, hBC', hval]
 
-/-! ## Injectivity of the Horowitz operator (the root-multiplicity argument)
-For each prime `p` dividing `D⁻` with `p^k ‖ D⁻` (so `p ‖ D*`, char 0), one shows `p^k ∣ B`; collecting
-over all primes gives `D⁻ ∣ B`, and `deg B < deg D⁻` forces `B = 0`. The engine is the *Wronskian
-divisibility* below: from the Horowitz relation, `W = B′·D⁻ − B·D⁻′` is divisible by `p^{2k−1}`. -/
+/-! ## Injectivity of the Horowitz operator
+A root-multiplicity argument: per-prime `p^k ∣ B` collected over all primes gives `D⁻ ∣ B`, and
+`deg B < deg D⁻` forces `B = 0`. -/
 
-/-- **Wronskian divisibility** (the first half of the injectivity multiplicity argument): writing
-`D⁻ = p^k·w` and `D* = p·u` with `p ∤ u`, the Horowitz relation
-`(p·u)·(B′·D⁻ − B·D⁻′) = −C·(D⁻)²` forces `p^{2k−1} ∣ B′·D⁻ − B·D⁻′` — cancel one `p` (`p ∤ u`, prime)
-to read off `2k−1` factors of `p`. -/
+/-- Wronskian divisibility: with `D⁻ = p^k·w`, `D* = p·u`, `p ∤ u`, the Horowitz relation forces
+`p^{2k−1} ∣ B′·D⁻ − B·D⁻′`. -/
 theorem horowitz_wronskian_prime_pow_dvd {p w u B C : K[X]} (hp : Prime p) {k : ℕ} (hk : 1 ≤ k)
     (hpu : ¬ p ∣ u)
     (hrel : (p * u) * (derivative B * (p ^ k * w) - B * derivative (p ^ k * w))
@@ -138,10 +127,8 @@ theorem horowitz_wronskian_prime_pow_dvd {p w u B C : K[X]} (hp : Prime p) {k : 
   exact (Irreducible.coprime_pow_of_not_dvd (2 * k - 1) hp.irreducible hpu).symm.dvd_of_dvd_mul_left
     hdvd
 
-/-- **Per-prime divisibility** (the multiplicity argument): for a prime `p` with `D⁻ = p^k·w` (`p ∤ w`),
-`D* = p·u` (`p ∤ u`), `p ∤ p′` (char-0 separability), the Horowitz relation forces `p^k ∣ B`. By induction
-on `a ≤ k`: from `p^a ∣ B` (so `B = p^a·B₁`) and `p^{2k−1} ∣ W`, the `p`-order of `W = p^{a+k−1}·M` with
-`M ≡ (a−k)·p′·B₁·w (mod p)` forces `p ∣ B₁` (since `p ∤ (a−k)·p′·w`), giving `p^{a+1} ∣ B`. -/
+/-- Per-prime divisibility: for a prime `p` with `D⁻ = p^k·w`, `D* = p·u`, `p ∤ p′`, the Horowitz
+relation forces `p^k ∣ B`. -/
 theorem horowitz_prime_pow_dvd [CharZero K] {p w u B C : K[X]} (hp : Prime p) {k : ℕ} (hk : 1 ≤ k)
     (hpw : ¬ p ∣ w) (hpu : ¬ p ∣ u) (hpp : ¬ p ∣ derivative p)
     (hrel : (p * u) * (derivative B * (p ^ k * w) - B * derivative (p ^ k * w))
@@ -198,10 +185,8 @@ theorem horowitz_prime_pow_dvd [CharZero K] {p w u B C : K[X]} (hp : Prime p) {k
     obtain ⟨B₂, hB₂⟩ := hpB1
     exact ⟨B₂, by rw [hB₁, hB₂, pow_succ]; ring⟩
 
-/-- **`D⁻ ∣ B`** (assembling the per-prime divisibility): under the Horowitz structure — `D*` squarefree,
-every prime of `D⁻` dividing `D*` (radical `D⁻ ∣ D*`), `E·D⁻ = D⁻′·D*`, char 0 — the homogeneous relation
-`B′·D* − B·E + C·D⁻ = 0` forces `D⁻ ∣ B`. For each prime `p`, extract `D⁻ = p^k·w`, `D* = p·u` and apply
-`horowitz_prime_pow_dvd`; collect via `dvd_iff_emultiplicity_le`. -/
+/-- Under the Horowitz structure (`D*` squarefree, radical `D⁻ ∣ D*`, `E·D⁻ = D⁻′·D*`, char 0), the
+homogeneous relation `B′·D* − B·E + C·D⁻ = 0` forces `D⁻ ∣ B`. -/
 theorem horowitz_dvd_of_rel [CharZero K] {Dminus Dstar E B C : K[X]} (hDm : Dminus ≠ 0)
     (hsqf : Squarefree Dstar) (hrad : ∀ q : K[X], Prime q → q ∣ Dminus → q ∣ Dstar)
     (hE : E * Dminus = derivative Dminus * Dstar)
@@ -235,9 +220,7 @@ theorem horowitz_dvd_of_rel [CharZero K] {Dminus Dstar E B C : K[X]} (hDm : Dmin
     exact hpkB
   · rw [emultiplicity_eq_zero.mpr hpDm]; exact zero_le
 
-/-- **Injectivity of the Horowitz operator** (§2.3): under the Horowitz structure, `horowitzMap` is
-injective. By `horowitz_dvd_of_rel`, `B′·D* − B·E + C·D⁻ = 0` forces `D⁻ ∣ B`, and `deg B < deg D⁻`
-forces `B = 0`, then `C·D⁻ = 0` forces `C = 0`. -/
+/-- Under the Horowitz structure, `horowitzMap` is injective. -/
 theorem horowitzMap_injective [CharZero K] {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
     (hEdeg : E.degree < Dstar.natDegree) (hsqf : Squarefree Dstar)
     (hrad : ∀ q : K[X], Prime q → q ∣ Dminus → q ∣ Dstar)
@@ -259,10 +242,8 @@ theorem horowitzMap_injective [CharZero K] {Dminus Dstar E : K[X]} (hDm : Dminus
     exact (mul_eq_zero.mp hCD).resolve_right hDm
   exact Prod.ext (Subtype.ext hB0) (Subtype.ext hC0)
 
-/-- **The Horowitz solve** (§2.3, the unconditional form): under the Horowitz structure, for every
-numerator `A` with `deg A < deg D⁻ + deg D*` there exist **unique** degree-bounded `B, C` with
-`A = B′·D* − B·E + C·D⁻` — so `∫ A/D = B/D⁻ + ∫ C/D*` with `B, C` from the (now provably nonsingular)
-linear system. Combines `exists_unique_horowitz_of_injective` with `horowitzMap_injective`. -/
+/-- Under the Horowitz structure, for every `A` with `deg A < deg D⁻ + deg D*` there exist unique
+degree-bounded `B, C` with `A = B′·D* − B·E + C·D⁻`. -/
 theorem exists_unique_horowitz [CharZero K] {Dminus Dstar E : K[X]} (hDm : Dminus ≠ 0) (hDs : Dstar ≠ 0)
     (hEdeg : E.degree < Dstar.natDegree) (hsqf : Squarefree Dstar)
     (hrad : ∀ q : K[X], Prime q → q ∣ Dminus → q ∣ Dstar)

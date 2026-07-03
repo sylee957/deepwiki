@@ -3,12 +3,9 @@ import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.RingTheory.Derivation.DifferentialRing
 
-/-! # The derivative `d/dx` on rational functions `K(x)` (Bronstein §2, the differential field `K(x)`)
-Mathlib has no derivation on a field of fractions, so we build `d/dx` on `RatFunc K` directly by the
-quotient rule `(p/q)' = (p'q − pq')/q²`. Well-definedness on `RatFunc.liftOn'` is clean: replacing
-`(p, q)` by `(a·p, a·q)` multiplies numerator and denominator both by `a²` (the `a'` cross-terms
-cancel), so the value is unchanged. This is the substrate for stating the integral correctness
-(`∫f = g + ∫h`) of the rational-integration algorithms (Hermite, Rothstein–Trager, …). -/
+/-! # The derivative `d/dx` on rational functions `K(x)`
+Builds `d/dx` on `RatFunc K` via the quotient rule `(p/q)' = (p'q − pq')/q²`, proves its derivation
+laws, and makes `RatFunc K` a `Differential` field. -/
 
 open Polynomial
 
@@ -119,9 +116,7 @@ noncomputable def ratFuncKDeriv : Derivation K (RatFunc K) (RatFunc K) :=
       map_smul' := fun c x => by simpa using ratFuncDeriv_smul c x }
     fun a b => by simp only [LinearMap.coe_mk, AddHom.coe_mk, smul_eq_mul]; rw [ratFuncDeriv_mul]; ring
 
-/-- **`K(x)` is a differential field** with derivation `d/dx`: restricting the `K`-derivation
-`ratFuncKDeriv` to `ℤ` makes `RatFunc K` a `Differential` ring (the repo pattern for `K[X]`), so the
-abstract differential-field calculus (e.g. `hermite_reduction_step`) applies to rational functions. -/
+/-- `K(x)` is a differential field with derivation `d/dx`. -/
 noncomputable instance : Differential (RatFunc K) :=
   letI : Algebra ℤ (RatFunc K) := Ring.toIntAlgebra _
   ⟨ratFuncKDeriv.restrictScalars ℤ⟩

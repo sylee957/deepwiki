@@ -1,27 +1,12 @@
 import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
 import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerCorrectG
 
-/-! # The `K(t)`-valuation lift of Bronstein Lemma 6.1.1 (the §6.1 normal-denominator pole calculus)
+/-! # The `K(t)`-valuation calculus for normal poles
 
-`ComputableRischDETowerCorrectG` proved, derivation-generic over `K[X]`, the **polynomial** kernel of
-Bronstein Lemma 6.1.1 / Theorem 4.4.2 — "a derivation drops a normal pole's order by exactly one"
-(`emultiplicity_deriv_eq_sub_one_of_normal`) and its Wronskian-numerator form
-(`emultiplicity_wronskian_numerator_eq_of_normal`). The §6.1 *fractional*-solution denominator
-necessity (`hnormalize`, Bronstein Thm 6.1.2(i)) needs that fact lifted to the **fraction field**
-`K(t) = RatFunc K`: a `p`-adic *integer* valuation `νₚ(y)` for `y ∈ K(t)` with `νₚ(D y) = νₚ(y) − 1`
-at a normal pole `νₚ(y) < 0`.
-
-This file builds exactly that, wiring the proven `K[X]` kernel to the engine's fraction-field
-derivation `extendDeriv` (`ComputableFractionFieldDeriv`):
-
-* **`ratFuncOrd p x : ℤ`** — the `p`-adic valuation of `x ∈ RatFunc K`,
-  `multiplicity p (num x) − multiplicity p (denom x)` (Bronstein §6.1 `νₚ`).
-* **`ratFuncOrd_mk`** — `νₚ(p̃/q̃) = νₚ(p̃) − νₚ(q̃)` for any (non-canonical) representation, via the
-  cross-multiplication `num·q̃ = p̃·denom` and `multiplicity`-additivity.
-* **★ `ratFuncOrd_extendDeriv_eq_sub_one_of_normal`** — the lift: for `D = extendDeriv d` the fraction-
-  field extension of a base derivation `d`, a prime `p` normal for `d` (`¬ p ∣ d p`), over a
-  characteristic-zero field, `νₚ(D y) = νₚ(y) − 1` whenever `νₚ(y) < 0`. The genuine `K(t)`-valuation
-  lift of Lemma 6.1.1, the per-prime order-bound the §6.1 normalizer rests on. -/
+A `p`-adic integer valuation `ratFuncOrd p x = νₚ(x)` on `RatFunc K`, with its representation,
+multiplicative, and ultrametric laws, and the key lift: for the fraction-field derivation
+`D = extendDeriv d`, a prime `p` normal for `d`, over a characteristic-zero field,
+`νₚ(D y) = νₚ(y) − 1` at a normal pole `νₚ(y) < 0`. Used for the RDE normal-denominator bounds. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -31,9 +16,8 @@ namespace DeepWiki.SymbolicIntegration
 variable {K : Type*} [Field K]
 
 /-- **The `p`-adic integer valuation on `K(t)`** `ratFuncOrd p x = νₚ(x)`: the `multiplicity` of the
-prime `p` in the numerator minus its multiplicity in the denominator of `x ∈ RatFunc K` (Bronstein §6.1
-`νₚ`). A pole at `p` is `νₚ(x) < 0`. For `x = 0` both multiplicities default, giving `0` (the value at
-poles/zeros is the only meaningful regime). -/
+prime `p` in the numerator minus its multiplicity in the denominator of `x ∈ RatFunc K`. A pole at `p`
+is `νₚ(x) < 0`; `νₚ(0) = 0`. -/
 noncomputable def ratFuncOrd (p : K[X]) (x : RatFunc K) : ℤ :=
   (multiplicity p x.num : ℤ) - (multiplicity p x.denom : ℤ)
 
@@ -48,11 +32,8 @@ theorem ratFuncOrd_algebraMap (p g : K[X]) (hp : Prime p) :
   rw [ratFuncOrd, RatFunc.num_algebraMap, RatFunc.denom_algebraMap, multiplicity_one_of_prime hp]
   simp
 
-/-- **`νₚ` reads through any representation** (`ratFuncOrd_mk`): for `x = a/b` with `a, b ≠ 0` (`b`
-nonzero in `K[X]`), `νₚ(x) = multiplicity p a − multiplicity p b`, even when `(a, b)` is **not** the
-canonical coprime/monic `num`/`denom`. Proof: cross-multiply `num·b = a·denom` (`num_mul_eq_mul_denom_iff`)
-and add `multiplicity` (prime `p`), so `νₚ(num) + νₚ(b) = νₚ(a) + νₚ(denom)`. The well-definedness of
-`νₚ` against the `RatFunc.mk` quotient. -/
+/-- **`νₚ` reads through any representation**: for `x = a/b` with `a, b ≠ 0`,
+`νₚ(x) = multiplicity p a − multiplicity p b`, even when `(a, b)` is not the canonical `num`/`denom`. -/
 theorem ratFuncOrd_mk (p : K[X]) (hp : Prime p) {a b : K[X]} (ha : a ≠ 0) (hb : b ≠ 0) :
     ratFuncOrd p (algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) b)
       = (multiplicity p a : ℤ) - (multiplicity p b : ℤ) := by
@@ -75,9 +56,7 @@ theorem ratFuncOrd_mk (p : K[X]) (hp : Prime p) {a b : K[X]} (ha : a ≠ 0) (hb 
   rw [ratFuncOrd]
   omega
 
-/-- **`νₚ` is multiplicative** (`ratFuncOrd_mul`): `νₚ(x·y) = νₚ(x) + νₚ(y)` for a prime `p` and
-nonzero `x, y ∈ K(t)`. Via `x·y = (num x·num y)/(denom x·denom y)` (`ratFuncOrd_mk`) and
-`multiplicity`-additivity. The valuation product law. -/
+/-- **`νₚ` is multiplicative**: `νₚ(x·y) = νₚ(x) + νₚ(y)` for a prime `p` and nonzero `x, y ∈ K(t)`. -/
 theorem ratFuncOrd_mul (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x ≠ 0) (hy : y ≠ 0) :
     ratFuncOrd p (x * y) = ratFuncOrd p x + ratFuncOrd p y := by
   have hxrep : x = algebraMap K[X] (RatFunc K) x.num / algebraMap K[X] (RatFunc K) x.denom :=
@@ -99,11 +78,8 @@ theorem ratFuncOrd_mul (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x ≠ 0
     ratFuncOrd]
   push_cast; ring
 
-/-- **`νₚ` is ultrametric with the strict-min law** (`ratFuncOrd_add_of_lt`): if `νₚ(x) < νₚ(y)` for a
-prime `p` and nonzero `x, y`, then `νₚ(x + y) = νₚ(x)` (and `x + y ≠ 0`). Via `x + y =
-(num x·denom y + denom x·num y)/(denom x·denom y)`, `multiplicity_add_of_gt` on the numerator (the
-lower-valuation term `num x·denom y` strictly dominates, so no cancellation). The RDE pole-survival
-law: the dominant pole is not cancelled. -/
+/-- **`νₚ` is ultrametric with the strict-min law**: if `νₚ(x) < νₚ(y)` for a prime `p` and nonzero
+`x, y`, then `νₚ(x + y) = νₚ(x)`; the dominant pole is not cancelled. -/
 theorem ratFuncOrd_add_of_lt (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x ≠ 0) (hy : y ≠ 0)
     (hlt : ratFuncOrd p x < ratFuncOrd p y) :
     ratFuncOrd p (x + y) = ratFuncOrd p x := by
@@ -145,15 +121,10 @@ section Lift
 
 variable [CharZero K] (d : Derivation ℤ K[X] K[X])
 
-/-- **★ The `K(t)`-valuation lift of Bronstein Lemma 6.1.1**
-(`ratFuncOrd_extendDeriv_eq_sub_one_of_normal`): for the fraction-field derivation `D = extendDeriv d`
-extending a base derivation `d` on `K[X]`, a prime `p` **normal** for `d` (`¬ p ∣ d p`) over a
-characteristic-zero field, `νₚ(D y) = νₚ(y) − 1` at a **normal pole** `νₚ(y) < 0`. The genuine lift of
-the polynomial kernel `emultiplicity_wronskian_numerator_eq_of_normal` to the fraction field: writing
-`y = a/b` in lowest terms (`a = num y`, `b = denom y`, `multiplicity p a < multiplicity p b` because
-`νₚ(y) < 0`), `D y = (d a·b − a·d b)/b²` (`extendDeriv_mk`), so
-`νₚ(D y) = νₚ(d a·b − a·d b) − 2·νₚ(b) = (νₚ(a)+νₚ(b)−1) − 2·νₚ(b) = νₚ(a) − νₚ(b) − 1 = νₚ(y) − 1`. The
-per-prime pole order-drop the §6.1 normal-denominator necessity (`hnormalize`) consumes. -/
+/-- **The `K(t)`-valuation lift of the normal-pole order drop**: for `D = extendDeriv d` extending a
+base derivation `d` on `K[X]`, a prime `p` **normal** for `d` (`¬ p ∣ d p`) over a characteristic-zero
+field, `νₚ(D y) = νₚ(y) − 1` at a **normal pole** `νₚ(y) < 0`. Lifts the polynomial Wronskian-numerator
+kernel to the fraction field via `D y = (d a·b − a·d b)/b²`. -/
 theorem ratFuncOrd_extendDeriv_eq_sub_one_of_normal {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
     {y : RatFunc K} (hpole : ratFuncOrd p y < 0) :
     ratFuncOrd p (extendDeriv d y) = ratFuncOrd p y - 1 := by
@@ -205,14 +176,10 @@ theorem ratFuncOrd_extendDeriv_eq_sub_one_of_normal {p : K[X]} (hp : Prime p) (h
   have hk1 : 1 ≤ k := Nat.one_le_of_lt hlt
   omega
 
-/-- **★ The per-prime RDE no-pole bound** (`ratFuncOrd_nonneg_of_rde_at_normal`): the genuine §6.1
-pole-cancellation heart. For a solution `y` of `D y + f·y = g` (`D = extendDeriv d`), a prime `p`
-**normal** for `d` (`¬ p ∣ d p`), if `p` is **not a pole of `f`** (`νₚ(f) ≥ 0`, the weak-normalization
-hypothesis at `p`) and **not a pole of `g`** (`νₚ(g) ≥ 0`), then `y` has **no pole at `p`**:
-`νₚ(y) ≥ 0`. Proof (contradiction): a pole `νₚ(y) < 0` gives `νₚ(D y) = νₚ(y) − 1` (the lift) strictly
-below `νₚ(f·y) = νₚ(f) + νₚ(y) ≥ νₚ(y) > νₚ(y) − 1`, so by the strict-min law `νₚ(D y + f·y) = νₚ(y) −
-1 < 0`, contradicting `D y + f·y = g` with `νₚ(g) ≥ 0`. The per-prime input to Bronstein Thm 6.1.2(i):
-`denom(y)` has no factor of a normal prime outside `denom(f)`. -/
+/-- **The per-prime RDE no-pole bound**: for a solution `y` of `D y + f·y = g` (`D = extendDeriv d`), a
+prime `p` **normal** for `d`, if `p` is not a pole of `f` (`νₚ(f) ≥ 0`) nor of `g` (`νₚ(g) ≥ 0`), then
+`y` has no pole at `p` (`νₚ(y) ≥ 0`). By contradiction through the order-drop lift and the strict-min
+law. -/
 theorem ratFuncOrd_nonneg_of_rde_at_normal {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
     {f g y : RatFunc K} (hrde : extendDeriv d y + f * y = g)
     (hf : 0 ≤ ratFuncOrd p f) (hg : 0 ≤ ratFuncOrd p g) :
@@ -242,16 +209,13 @@ theorem ratFuncOrd_nonneg_of_rde_at_normal {p : K[X]} (hp : Prime p) (hnormal : 
 
 end Lift
 
-/-! ### The UFM recombination: per-prime no-pole bounds ⟹ `denom(x) ∣ q` (Bronstein Thm 6.1.2(i)
-global step). The §6.1 normalizer's `Q = y·h0 ∈ K[X]` conclusion is a `denom(y) ∣ h0` divisibility; this
-section turns the per-prime valuation bounds `νₚ(y) ≥ −νₚ(h0)` (no pole of order exceeding that of `h0`)
-into that divisibility via `UniqueFactorizationMonoid.dvd_iff_emultiplicity_le`. -/
+/-! ### The UFM recombination: per-prime no-pole bounds ⟹ `denom(x) ∣ q`
 
-/-- **`denom(x) ∣ q` from per-prime multiplicity bounds** (`ratFunc_denom_dvd_of_multiplicity_le`): for
-`x ∈ K(t)`, `q ∈ K[X]` nonzero, if `multiplicity p x.denom ≤ multiplicity p q` for every prime `p`, then
-`x.denom ∣ q`. The `UniqueFactorizationMonoid` prime-factor recombination (`dvd_iff_emultiplicity_le`),
-lifting the per-prime bound to the global divisibility via the finite-multiplicity `emultiplicity =
-multiplicity` bridge at each prime (both `x.denom, q ≠ 0`). -/
+Per-prime valuation bounds `νₚ(y) ≥ −νₚ(q)` combine into the divisibility `denom(y) ∣ q` via
+`UniqueFactorizationMonoid.dvd_iff_emultiplicity_le`. -/
+
+/-- **`denom(x) ∣ q` from per-prime multiplicity bounds**: for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if
+`multiplicity p x.denom ≤ multiplicity p q` for every prime `p`, then `x.denom ∣ q`. -/
 theorem ratFunc_denom_dvd_of_multiplicity_le {x : RatFunc K} {q : K[X]} (hq : q ≠ 0)
     (h : ∀ p : K[X], Prime p → multiplicity p x.denom ≤ multiplicity p q) :
     x.denom ∣ q := by
@@ -261,12 +225,9 @@ theorem ratFunc_denom_dvd_of_multiplicity_le {x : RatFunc K} {q : K[X]} (hq : q 
     (FiniteMultiplicity.of_prime_left hp hq).emultiplicity_eq_multiplicity]
   exact_mod_cast h p hp
 
-/-- **The valuation bound `−νₚ(x) ≤ νₚ(q)` reads as `multiplicity p x.denom ≤ multiplicity p q`**
-(`multiplicity_denom_le_of_ratFuncOrd`): at a prime `p`, `−ratFuncOrd p x ≤ multiplicity p q` forces
-`multiplicity p x.denom ≤ multiplicity p q`. The coprimality of `num`/`denom`
-(`RatFunc.isCoprime_num_denom`) kills the numerator's contribution: when `p ∣ denom`, `p ∤ num` (else `p`
-would be a unit), so `multiplicity p num = 0` and `−νₚ(x) = multiplicity p denom`; when `p ∤ denom`,
-`multiplicity p denom = 0 ≤ multiplicity p q` for free. -/
+/-- **The valuation bound `−νₚ(x) ≤ νₚ(q)` reads as `multiplicity p x.denom ≤ multiplicity p q`**: at a
+prime `p`, `−ratFuncOrd p x ≤ multiplicity p q` forces `multiplicity p x.denom ≤ multiplicity p q`, using
+coprimality of `num`/`denom`. -/
 theorem multiplicity_denom_le_of_ratFuncOrd {x : RatFunc K} {q : K[X]} (p : K[X]) (hp : Prime p)
     (h : -ratFuncOrd p x ≤ (multiplicity p q : ℤ)) :
     multiplicity p x.denom ≤ multiplicity p q := by
@@ -281,19 +242,16 @@ theorem multiplicity_denom_le_of_ratFuncOrd {x : RatFunc K} {q : K[X]} (p : K[X]
   · -- `p ∤ denom` ⟹ `multiplicity p denom = 0 ≤ multiplicity p q`.
     rw [multiplicity_eq_zero.mpr hpd]; exact Nat.zero_le _
 
-/-- **★ The global no-pole-bound ⟹ denominator divisibility** (`ratFunc_denom_dvd_of_ratFuncOrd_bound`):
-for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if every prime `p` satisfies `νₚ(x) ≥ −νₚ(q)` (no pole of `x` exceeds
-the order of `q`), then `x.denom ∣ q`. The Bronstein Thm 6.1.2(i) recombination in valuation form: combines
-the per-prime read `multiplicity_denom_le_of_ratFuncOrd` with the UFM divisibility
-`ratFunc_denom_dvd_of_multiplicity_le`. The `∃ Q, x = amG(Q)/amG(q)` polynomiality of `Q = x·q` then
-follows from `RatFunc.denom_dvd`. -/
+/-- **The global no-pole-bound ⟹ denominator divisibility**: for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if
+every prime `p` satisfies `νₚ(x) ≥ −νₚ(q)`, then `x.denom ∣ q`. Combines
+`multiplicity_denom_le_of_ratFuncOrd` with `ratFunc_denom_dvd_of_multiplicity_le`. -/
 theorem ratFunc_denom_dvd_of_ratFuncOrd_bound {x : RatFunc K} {q : K[X]} (hq : q ≠ 0)
     (h : ∀ p : K[X], Prime p → -(multiplicity p q : ℤ) ≤ ratFuncOrd p x) :
     x.denom ∣ q :=
   ratFunc_denom_dvd_of_multiplicity_le hq fun p hp =>
     multiplicity_denom_le_of_ratFuncOrd p hp (by have := h p hp; omega)
 
-/-! ### Restatements (the landed `K(t)`-valuation lift) -/
+/-! ### Restatements -/
 
 /-- Restatement: `νₚ` reads through any nonzero representation. -/
 example (p : K[X]) (hp : Prime p) {a b : K[X]} (ha : a ≠ 0) (hb : b ≠ 0) :
@@ -301,7 +259,7 @@ example (p : K[X]) (hp : Prime p) {a b : K[X]} (ha : a ≠ 0) (hb : b ≠ 0) :
       = (multiplicity p a : ℤ) - (multiplicity p b : ℤ) :=
   ratFuncOrd_mk p hp ha hb
 
-/-- ★ Restatement of the lift: `νₚ(D y) = νₚ(y) − 1` at a normal pole, `D = extendDeriv d`. -/
+/-- Restatement of the lift: `νₚ(D y) = νₚ(y) − 1` at a normal pole, `D = extendDeriv d`. -/
 example [CharZero K] (d : Derivation ℤ K[X] K[X]) {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
     {y : RatFunc K} (hpole : ratFuncOrd p y < 0) :
     ratFuncOrd p (extendDeriv d y) = ratFuncOrd p y - 1 :=

@@ -1,18 +1,9 @@
 import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 
-/-! # Computable `LogToAtan` over `ℚ` (Bronstein §2.8, Example 2.8.1, p.63–64)
-Mathlib's `ℚ[X]` arithmetic is **noncomputable** (`Polynomial` wraps `Finsupp`/`AddMonoidAlgebra`,
-whose `+`/`*`/`-` have no kernel reduction), so the abstract `logToAtanAux` cannot `#eval`. Here we
-give a genuinely **computable**, `#eval`-able rendering of Rioboo's `LogToAtan` on a dense coefficient
-representation `CPoly := List ℚ` (index = degree, low to high): `cadd`/`cneg`/`cmul`/`cdivmod`/`cgcdExt`
-are ordinary computable list functions, and `logToAtanCompute` mirrors the three branches of
-`logToAtanAux` (base `B ∣ A`, swap `deg A < deg B`, step with the extended-Euclidean cofactors
-`B·D − A·C = G`) with a `ℕ` fuel parameter. We `#eval` it on **Example 2.8.1** `(x³−3x, x²−2)` and pin
-the result with `native_decide` (kernel `decide` stalls on GMP-backed `ℚ` arithmetic), recovering the
-book's arctan arguments `(x⁵−3x³+x)/2, x³, x`. A `toPoly : CPoly → ℚ[X]` bridge connects this back to
-the `ℚ[X]`-level theory; the cofactor Bézout invariant is **proven** (`logToAtan_cofactor_bezout`,
-`ComputeCorrectness`), the full entry-by-entry correspondence to `logToAtanAux` still open. -/
+/-! # Computable `LogToAtan` over `ℚ`
+A `#eval`-able rendering of the `LogToAtan` algorithm on the dense coefficient carrier
+`CPoly := List ℚ`, with a `toPoly : CPoly → ℚ[X]` bridge back to the `ℚ[X]`-level theory. -/
 
 open Polynomial
 
@@ -20,49 +11,40 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-- **Dense coefficient list** over `ℚ` (index = degree, low to high): `CPoly := CPolyG ℚ` is the
-computable polynomial carrier the `LogToAtan` recursion runs on — the generic `CPolyG` engine
-(`GenericPolyEngine`) specialized at the computable field `ℚ` (defeq to `List ℚ`). -/
+/-- Dense coefficient list over `ℚ` (index = degree, low to high): `CPoly := CPolyG ℚ`, the
+computable polynomial carrier (defeq to `List ℚ`). -/
 abbrev CPoly := CPolyG ℚ
 
-/-- **Normalize** a `CPoly` by stripping trailing (high-degree) zero coefficients, so `cnorm` is a
-canonical form (the zero polynomial becomes `[]`) — the generic `cnormG` specialized at `ℚ`
-(`CField.isZero a = decide (a = 0)`, defeq). -/
+/-- Normalize a `CPoly` by stripping trailing (high-degree) zero coefficients (zero polynomial
+becomes `[]`). -/
 def cnorm : CPoly → CPoly := CPolyG.cnormG
 
-/-- **Coefficientwise addition** of two `CPoly`s (the shorter is zero-extended implicitly) — the
-generic `caddG` specialized at `ℚ` (`CField.add = (· + ·)`, defeq). -/
+/-- Coefficientwise addition of two `CPoly`s (the shorter is zero-extended implicitly). -/
 def cadd : CPoly → CPoly → CPoly := CPolyG.caddG
 
-/-- **Negation** of a `CPoly`, coefficientwise — the generic `cnegG` specialized at `ℚ`
-(`CField.neg = (- ·)`, defeq). -/
+/-- Negation of a `CPoly`, coefficientwise. -/
 def cneg (p : CPoly) : CPoly := CPolyG.cnegG p
 
-/-- **Subtraction** of `CPoly`s, `p − q := p + (−q)`. -/
+/-- Subtraction of `CPoly`s, `p − q := p + (−q)`. -/
 def csub (p q : CPoly) : CPoly := cadd p (cneg q)
 
-/-- **Scalar multiplication** of a `CPoly` by `c : ℚ`, coefficientwise — the generic `cscaleG`
-specialized at `ℚ` (`CField.mul = (· * ·)`, defeq). -/
+/-- Scalar multiplication of a `CPoly` by `c : ℚ`, coefficientwise. -/
 def cscale (c : ℚ) (p : CPoly) : CPoly := CPolyG.cscaleG c p
 
-/-- **Degree shift** `cshift k p = x^k · p`: prepend `k` zero coefficients — the generic `cshiftG`
-specialized at `ℚ` (`CField.zero = 0`, defeq). -/
+/-- Degree shift `cshift k p = x^k · p`: prepend `k` zero coefficients. -/
 def cshift : ℕ → CPoly → CPoly := CPolyG.cshiftG
 
-/-- **Polynomial multiplication** of `CPoly`s (schoolbook convolution via `cshift`/`cscale`) — the
-generic `cmulG` specialized at `ℚ`. -/
+/-- Polynomial multiplication of `CPoly`s (schoolbook convolution via `cshift`/`cscale`). -/
 def cmul : CPoly → CPoly → CPoly := CPolyG.cmulG
 
-/-- **Leading coefficient** of a `CPoly` (the top nonzero coefficient; `0` for the zero polynomial) —
-the generic `cleadG` specialized at `ℚ` (`CField.zero = 0`, defeq). -/
+/-- Leading coefficient of a `CPoly` (top nonzero coefficient; `0` for the zero polynomial). -/
 def clead (p : CPoly) : ℚ := CPolyG.cleadG p
 
-/-- **Zero test** for a `CPoly`: `true` iff it normalizes to `[]`. -/
+/-- Zero test for a `CPoly`: `true` iff it normalizes to `[]`. -/
 def cisZero (p : CPoly) : Bool := cnorm p == []
 
-/-- **Euclidean division** of `CPoly`s, fuel-bounded: `cdivmod fuel p q = (quotient, remainder)` with
-`p = quotient · q + remainder` and `deg remainder < deg q` (long division over the field `ℚ`; `q ≠ 0`).
-The `ℕ` fuel makes it structurally recursive hence computable; one step suffices per degree drop. -/
+/-- Euclidean division of `CPoly`s, fuel-bounded: `cdivmod fuel p q = (quotient, remainder)` with
+`p = quotient · q + remainder`, `deg remainder < deg q`. -/
 def cdivmod : ℕ → CPoly → CPoly → CPoly × CPoly
   | 0, p, _ => ([], cnorm p)
   | fuel + 1, p, q =>
@@ -78,17 +60,17 @@ def cdivmod : ℕ → CPoly → CPoly → CPoly × CPoly
       let (quo, rem) := cdivmod fuel p' q
       (cadd term quo, rem)
 
-/-- **Quotient** of `CPoly` Euclidean division (`cdivmod`'s first component). -/
+/-- Quotient of `CPoly` Euclidean division (`cdivmod`'s first component). -/
 def cdiv (fuel : ℕ) (p q : CPoly) : CPoly := (cdivmod fuel p q).1
 
-/-- **Remainder** of `CPoly` Euclidean division (`cdivmod`'s second component). -/
+/-- Remainder of `CPoly` Euclidean division (`cdivmod`'s second component). -/
 def cmod (fuel : ℕ) (p q : CPoly) : CPoly := (cdivmod fuel p q).2
 
-/-- **Divisibility test** `cdvd fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is zero). -/
+/-- Divisibility test `cdvd fuel q p`: `true` iff `q ∣ p` (remainder of `p` by `q` is zero). -/
 def cdvd (fuel : ℕ) (q p : CPoly) : Bool := cisZero (cmod fuel p q)
 
-/-- **Extended Euclidean algorithm** on `CPoly`s, fuel-bounded: `cgcdExt fuel a b = (g, s, t)` with the
-Bézout relation `s · a + t · b = g` and `g = gcd(a, b)`. Mirrors `EuclideanDomain.gcd`/`gcdA`/`gcdB`. -/
+/-- Extended Euclidean algorithm on `CPoly`s, fuel-bounded: `cgcdExt fuel a b = (g, s, t)` with
+`s · a + t · b = g` and `g = gcd(a, b)`. -/
 def cgcdExt : ℕ → CPoly → CPoly → CPoly × CPoly × CPoly
   | 0, a, _ => (cnorm a, [1], [])
   | fuel + 1, a, b =>
@@ -99,11 +81,8 @@ def cgcdExt : ℕ → CPoly → CPoly → CPoly × CPoly × CPoly
       -- `s·b + t·r = g`, `r = a − q·b` ⇒ `t·a + (s − t·q)·b = g`
       (g, t, csub s (cmul t q))
 
-/-- **Computable `LogToAtan`** (Rioboo, §2.8 p.63) over `CPoly`, fuel-bounded: `logToAtanCompute fuel
-A B` returns the list of arctangent arguments as `(numerator, denominator)` pairs. Branches mirror
-`logToAtanAux`: `B ∣ A → [(A/B, 1)]`; `deg A < deg B → LogToAtan(−B, A)`; else with the extended-
-Euclidean cofactors `(g, D, C) = cgcdExt B (−A)` (so `B·D − A·C = G`), prepend `((A·D + B·C), G)` and
-recurse on `(D, C)`. Genuinely **computable** (no `noncomputable`, no `Classical`) — it `#eval`s. -/
+/-- Computable `LogToAtan` over `CPoly`, fuel-bounded: `logToAtanCompute fuel A B` returns the
+arctangent arguments as `(numerator, denominator)` pairs. -/
 def logToAtanCompute : ℕ → CPoly → CPoly → List (CPoly × CPoly)
   | 0, _, _ => []
   | fuel + 1, A, B =>
@@ -121,10 +100,10 @@ def logToAtanCompute : ℕ → CPoly → CPoly → List (CPoly × CPoly)
       let G := g
       (cadd (cmul A D) (cmul B C), G) :: logToAtanCompute fuel D C
 
-/-- **`x³ − 3x`** as a `CPoly` (Example 2.8.1's `A`): coefficients `[0, −3, 0, 1]`. -/
+/-- `x³ − 3x` as a `CPoly`: coefficients `[0, −3, 0, 1]`. -/
 def cX3m3X : CPoly := [0, -3, 0, 1]
 
-/-- **`x² − 2`** as a `CPoly` (Example 2.8.1's `B`): coefficients `[-2, 0, 1]`. -/
+/-- `x² − 2` as a `CPoly`: coefficients `[-2, 0, 1]`. -/
 def cX2m2 : CPoly := [-2, 0, 1]
 
 -- **Example 2.8.1, the computed `LogToAtan` run** (printed at build): with `A = x³−3x`, `B = x²−2`,
@@ -133,25 +112,19 @@ def cX2m2 : CPoly := [-2, 0, 1]
 -- `(x⁵−3x³+x)/2, x³, x`.
 #eval logToAtanCompute 20 cX3m3X cX2m2
 
-/-- **Example 2.8.1, the proved computation** (§2.8, p.63–64): `logToAtanCompute` on `(x³−3x, x²−2)`
-evaluates to the three `(numerator, denominator)` arctan arguments
-`[((−x+3x³−x⁵), −2), ((−x³), −1), ((x), 1)]` — equal as fractions to the book table's
-`(x⁵−3x³+x)/2, x³, x` (eq 2.20). Proved by `native_decide` (kernel `decide` stalls on the GMP-backed
-`ℚ` arithmetic); this pins the printed `#eval` as a *theorem*, demonstrating the algorithm actually
-runs and returns the book's answer. -/
+/-- `logToAtanCompute` on `(x³−3x, x²−2)` evaluates to the three `(numerator, denominator)` arctan
+arguments `[((−x+3x³−x⁵), −2), ((−x³), −1), ((x), 1)]`. -/
 theorem logToAtanCompute_ex281 :
     logToAtanCompute 20 cX3m3X cX2m2
       = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] := by
   native_decide
 
 /-! ### Bridge back to `ℚ[X]`
-`toPoly` reads a `CPoly` coefficient list as an honest (noncomputable) `Polynomial ℚ`; the homomorphism
-lemmas (`cadd`/`cneg`/`csub`/`cscale`/`cshift`/`cmul` realize the `ℚ[X]` operations) let the computable
-algorithm's outputs be compared with the `ℚ[X]`-level `logToAtanAux`/`IsLogToAtanRun` theory. -/
+`toPoly` reads a `CPoly` as a `Polynomial ℚ`; the homomorphism lemmas show the `CPoly` operations
+realize the `ℚ[X]` operations. -/
 
-/-- **Bridge to `ℚ[X]`**: `toPoly p` reads a `CPoly` coefficient list (index = degree, low to high)
-back as an honest (noncomputable) `Polynomial ℚ` in **Horner form** `p₀ + x·(p₁ + x·(p₂ + …))`. The
-Horner shape makes `toPoly_nil`/`toPoly_cons` definitional. -/
+/-- Bridge `toPoly p` reading a `CPoly` coefficient list (index = degree, low to high) as a
+`Polynomial ℚ` in Horner form `p₀ + x·(p₁ + x·(p₂ + …))`. -/
 noncomputable def toPoly : CPoly → ℚ[X]
   | [] => 0
   | a :: p => Polynomial.C a + X * toPoly p
@@ -159,12 +132,11 @@ noncomputable def toPoly : CPoly → ℚ[X]
 /-- `toPoly [] = 0`: the empty coefficient list is the zero polynomial. -/
 @[simp] theorem toPoly_nil : toPoly ([] : CPoly) = 0 := rfl
 
-/-- `toPoly`'s leading recursion (Horner): `toPoly (a :: p) = C a + X · toPoly p`. -/
+/-- `toPoly (a :: p) = C a + X · toPoly p` (Horner recursion). -/
 @[simp] theorem toPoly_cons (a : ℚ) (p : CPoly) :
     toPoly (a :: p) = Polynomial.C a + X * toPoly p := rfl
 
-/-- `toPoly` is **additive**: `toPoly (cadd p q) = toPoly p + toPoly q` — the list addition `cadd`
-realizes `ℚ[X]` addition under the Horner bridge. -/
+/-- `toPoly` is additive: `toPoly (cadd p q) = toPoly p + toPoly q`. -/
 theorem toPoly_cadd (p q : CPoly) : toPoly (cadd p q) = toPoly p + toPoly q := by
   induction p generalizing q with
   | nil => simp [cadd, CPolyG.caddG]
@@ -177,7 +149,7 @@ theorem toPoly_cadd (p q : CPoly) : toPoly (cadd p q) = toPoly p + toPoly q := b
       show C (a + b) + _ = _
       rw [map_add]; ring
 
-/-- `toPoly` commutes with **negation**: `toPoly (cneg p) = − toPoly p`. -/
+/-- `toPoly` commutes with negation: `toPoly (cneg p) = − toPoly p`. -/
 theorem toPoly_cneg (p : CPoly) : toPoly (cneg p) = - toPoly p := by
   induction p with
   | nil => simp [cneg, CPolyG.cnegG]
@@ -185,11 +157,11 @@ theorem toPoly_cneg (p : CPoly) : toPoly (cneg p) = - toPoly p := by
     show toPoly (-a :: cneg as) = -toPoly (a :: as)
     rw [toPoly_cons, toPoly_cons, ih, map_neg]; ring
 
-/-- `toPoly` realizes **subtraction**: `toPoly (csub p q) = toPoly p − toPoly q`. -/
+/-- `toPoly` realizes subtraction: `toPoly (csub p q) = toPoly p − toPoly q`. -/
 theorem toPoly_csub (p q : CPoly) : toPoly (csub p q) = toPoly p - toPoly q := by
   rw [csub, toPoly_cadd, toPoly_cneg, sub_eq_add_neg]
 
-/-- `toPoly` realizes **scalar multiplication**: `toPoly (cscale c p) = C c · toPoly p`. -/
+/-- `toPoly` realizes scalar multiplication: `toPoly (cscale c p) = C c · toPoly p`. -/
 theorem toPoly_cscale (c : ℚ) (p : CPoly) : toPoly (cscale c p) = Polynomial.C c * toPoly p := by
   induction p with
   | nil => simp [cscale, CPolyG.cscaleG]
@@ -197,7 +169,7 @@ theorem toPoly_cscale (c : ℚ) (p : CPoly) : toPoly (cscale c p) = Polynomial.C
     show toPoly (c * a :: cscale c as) = Polynomial.C c * toPoly (a :: as)
     rw [toPoly_cons, toPoly_cons, ih, map_mul]; ring
 
-/-- `toPoly` realizes the **degree shift**: `toPoly (cshift k p) = X^k · toPoly p`. -/
+/-- `toPoly` realizes the degree shift: `toPoly (cshift k p) = X^k · toPoly p`. -/
 theorem toPoly_cshift (k : ℕ) (p : CPoly) : toPoly (cshift k p) = X ^ k * toPoly p := by
   induction k with
   | zero => simp [cshift, CPolyG.cshiftG]
@@ -205,8 +177,7 @@ theorem toPoly_cshift (k : ℕ) (p : CPoly) : toPoly (cshift k p) = X ^ k * toPo
     show toPoly (0 :: cshift n p) = X ^ (n + 1) * toPoly p
     rw [toPoly_cons, ih, map_zero]; ring
 
-/-- `toPoly` is **multiplicative**: `toPoly (cmul p q) = toPoly p · toPoly q` — `cmul` realizes `ℚ[X]`
-multiplication under the Horner bridge. -/
+/-- `toPoly` is multiplicative: `toPoly (cmul p q) = toPoly p · toPoly q`. -/
 theorem toPoly_cmul (p q : CPoly) : toPoly (cmul p q) = toPoly p * toPoly q := by
   induction p with
   | nil => simp [cmul, CPolyG.cmulG]
@@ -214,17 +185,9 @@ theorem toPoly_cmul (p q : CPoly) : toPoly (cmul p q) = toPoly p * toPoly q := b
     show toPoly (cadd (cscale a q) (0 :: cmul as q)) = toPoly (a :: as) * toPoly q
     rw [toPoly_cadd, toPoly_cscale, toPoly_cons, toPoly_cons, ih, map_zero]; ring
 
-/-! ### Agreement with the `ℚ[X]`-level `logToAtanAux` — PARTIAL (cofactor Bézout invariant proven)
-The single new mathematical fact behind the entry-by-entry correspondence is **proven**:
-`logToAtan_cofactor_bezout` (`ComputeCorrectness`) certifies the `cgcdExt` Bézout identity
-`B·D − A·C = G` under `toPoly`, so the arctan *argument fractions* `(A·D + B·C)/G` are well-defined and
-the `cgcdExt` cofactors `(D, C, G)` agree with `EuclideanDomain.gcdA/gcdB/gcd (toPoly B) (toPoly (cneg A))`
-up to the `gcd`-normalizing unit (which cancels between numerator and denominator). What remains for the
-*full* list-level `logToAtanCompute fuel A B ↦ logToAtanAux φ fuel' (toPoly A) (toPoly B)` is the
-non-mathematical plumbing: matching the branch tests (`cdvd` vs `∣`, `length` vs `degree`) and
-reconciling the two fuel budgets. The correctness of the fractions (`atanDerivSum … = i · logDeriv …`)
-transfers through `isLogToAtanRun_correct`; the `native_decide` computation on Example 2.8.1
-(`logToAtanCompute_ex281`) is the concrete witness. -/
+/-! ### Agreement with the `ℚ[X]`-level `logToAtanAux`
+The cofactor Bézout identity `B·D − A·C = G` under `toPoly` is proven in `logToAtan_cofactor_bezout`
+(`Correctness`), so the arctan argument fractions `(A·D + B·C)/G` are well-defined. -/
 
 end Compute
 

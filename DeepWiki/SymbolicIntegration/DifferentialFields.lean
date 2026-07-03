@@ -4,14 +4,10 @@ import Mathlib.FieldTheory.Differential.Basic
 import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.Tactic
 
-/-! # Differential rings and fields — derivations and their basic calculus
-A *derivation* on a ring `R` is a map `D : R → R` (written `a′`) with `(a + b)′ = a′ + b′` and the
-Leibniz rule `(ab)′ = a·b′ + b·a′` — defined purely algebraically, with no notion of `function`,
-`limit`, or `tangent line`. This is the setting in which integration becomes an *algebraic*
-problem. Building on Mathlib's `Differential` typeclass (`x′` for `D x`, a `Derivation ℤ R R`),
-this file develops the basic calculus: the constant subring `constants R = ker D`, the
+/-! # Differential rings and fields
+Basic differential calculus over Mathlib's `Differential` typeclass: the constant subring, the
 constant-linearity / quotient / power / chain rules, the logarithmic-derivative identity, the
-`R`-module of all derivations, and the notion of a differential ideal. -/
+module of derivations, and differential ideals. -/
 
 open scoped Differential
 open Polynomial
@@ -74,16 +70,14 @@ theorem deriv_eval_of_const_coeffs {R : Type*} [CommRing R] [Differential R]
 def IsDifferentialIdeal {R : Type*} [CommRing R] [Differential R] (I : Ideal R) : Prop :=
   ∀ a ∈ I, a′ ∈ I
 
-/-- The constants form a *differential subring* of `(R, D)`: the zero ideal `⊥` is a differential
-ideal, and `constants R` is closed under `D` (trivially, since `a′ = 0` there). -/
+/-- `⊥` is a differential ideal and `constants R` is closed under `D`. -/
 theorem isDifferentialIdeal_bot_and_deriv_mem_constants {R : Type*} [CommRing R] [Differential R] :
     IsDifferentialIdeal (⊥ : Ideal R) ∧ ∀ a ∈ constants R, a′ ∈ constants R := by
   refine ⟨fun a ha => ?_, fun a ha => ?_⟩
   · simp only [Ideal.mem_bot] at ha ⊢; simp [ha]
   · simp only [mem_constants] at ha ⊢; simp [ha]
 
-/-- A **linear combination of derivations is a derivation**: `(c·D₁ + D₂)` acts pointwise as
-`a ↦ c·(D₁ a) + D₂ a`. The module `Derivation ℤ R R` of all derivations is `derivationModule` below. -/
+/-- `(c • D₁ + D₂) a = c * D₁ a + D₂ a`: a linear combination of derivations acts pointwise. -/
 theorem smul_add_derivation_apply {R : Type*} [CommRing R]
     (c : R) (D₁ D₂ : Derivation ℤ R R) (a : R) :
     (c • D₁ + D₂) a = c * D₁ a + D₂ a := by
@@ -140,9 +134,7 @@ theorem logDeriv_eq_zero {F : Type*} [Field F] [Differential F] (a : F) :
     Differential.logDeriv a = 0 ↔ a′ = 0 :=
   Differential.logDeriv_eq_zero a
 
-/-- The **logarithmic-derivative identity** for a product of powers:
-`logDeriv (∏ uᵢ^{eᵢ}) = ∑ eᵢ · logDeriv uᵢ`, i.e.
-`(u₁^{e₁} ⋯ uₙ^{eₙ})′ / (u₁^{e₁} ⋯ uₙ^{eₙ}) = e₁·u₁′/u₁ + ⋯ + eₙ·uₙ′/uₙ`. -/
+/-- `logDeriv (∏ uᵢ^{eᵢ}) = ∑ eᵢ · logDeriv uᵢ`: the logarithmic derivative of a product of powers. -/
 theorem logDeriv_prod_zpow {F : Type*} [Field F] [Differential F] {ι : Type*}
     (s : Finset ι) (u : ι → F) (e : ι → ℤ) (h : ∀ i ∈ s, u i ≠ 0) :
     Differential.logDeriv (∏ i ∈ s, u i ^ e i)
@@ -152,9 +144,8 @@ theorem logDeriv_prod_zpow {F : Type*} [Field F] [Differential F] {ι : Type*}
 
 end Field
 
-/-- **Uniqueness on a fraction field**: a derivation on a fraction field `K` of an integral
-domain `R` is determined by its restriction to `R` — if `Δ₁, Δ₂` agree on `algebraMap R K` then
-`Δ₁ = Δ₂`. (Forced by the quotient rule: for `x = a/b`, `Δx = (Δa − x·Δb)/b`.) -/
+/-- A derivation on a fraction field is determined by its restriction to `R`: if `Δ₁, Δ₂` agree on
+`algebraMap R K` then `Δ₁ = Δ₂`. -/
 theorem derivation_ext_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
     [Algebra R K] [IsFractionRing R K] {Δ₁ Δ₂ : Derivation ℤ K K}
     (h : ∀ a : R, Δ₁ (algebraMap R K a) = Δ₂ (algebraMap R K a)) : Δ₁ = Δ₂ := by
@@ -172,9 +163,7 @@ theorem derivation_ext_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Fie
   rw [smul_eq_mul, smul_eq_mul] at key
   exact mul_left_cancel₀ hbne key
 
-/-- **Uniqueness on a polynomial ring**: a derivation on `R[X]` is determined by its values on
-the constants `C c` and on `X`. So an extension of a derivation to a monomial `t` with `Dt`
-prescribed is unique. -/
+/-- A derivation on `R[X]` is determined by its values on the constants `C c` and on `X`. -/
 theorem derivation_polynomial_ext {R : Type*} [CommRing R] {Δ₁ Δ₂ : Derivation ℤ R[X] R[X]}
     (hC : ∀ c : R, Δ₁ (Polynomial.C c) = Δ₂ (Polynomial.C c)) (hX : Δ₁ Polynomial.X = Δ₂ Polynomial.X) :
     Δ₁ = Δ₂ := by
@@ -184,10 +173,8 @@ theorem derivation_polynomial_ext {R : Type*} [CommRing R] {Δ₁ Δ₂ : Deriva
   | add p q hp hq => rw [map_add, map_add, hp, hq]
   | monomial n a ih => rw [pow_succ, ← mul_assoc, Δ₁.leibniz, Δ₂.leibniz, ih, hX]
 
-/-- **Existence and uniqueness on a polynomial ring**: for `(R, D)` differential and any
-target `w : R[X]`, there is a *unique* derivation `Δ` on `R[X]` extending `D` on the constants
-(`Δ (C c) = C (Dc)`) and sending `X` to `w` (`Δ X = w`). Existence is `Differential.implicitDeriv w`;
-uniqueness is `derivation_polynomial_ext`. -/
+/-- There is a unique derivation on `R[X]` extending `D` on constants (`Δ (C c) = C (c′)`) and
+sending `X` to a prescribed `w`. -/
 theorem existsUnique_derivation_polynomial {R : Type*} [CommRing R] [Differential R] (w : R[X]) :
     ∃! Δ : Derivation ℤ R[X] R[X],
       (∀ c : R, Δ (Polynomial.C c) = Polynomial.C (c′)) ∧ Δ Polynomial.X = w := by

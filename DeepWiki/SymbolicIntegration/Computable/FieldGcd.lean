@@ -1,32 +1,22 @@
 import DeepWiki.SymbolicIntegration.Computable.Field
 
 /-! # Generic division / gcd / derivative over a `CField`
-Stage B of the generic polynomial engine: **generic `cdivmodG`/`cgcdExtG`/`cderivG`** — the `Compute.*`
-Euclidean division, extended Euclidean algorithm, and formal derivative, mirrored over an arbitrary
-`[CField α]` (ℚ-operations replaced by `CField.add`/`mul`/`neg`/`inv`/`isZero`, `toPoly` by `toPolyG`).
-Their correctness (`toPolyG_cdivmodG` Euclidean identity, `toPolyG_cgcdExtG` Bézout, `cgcdTerminatesG` +
-`toPolyG_cgcdExtG_dvd`, `toPolyG_cderivG`) is proven on all inputs over any `CField`. Coherence lemmas
-(`cdivmodG (α := ℚ) = cdivmod`, …) specialize back to the concrete engine. The level-1 ℚ(x) field
-instance is the generic `QFunNZG ℚ` (`ComputableTowerField`), the bottom of the recursive tower. -/
+Generic Euclidean division, extended Euclidean algorithm, and formal derivative over an arbitrary
+`[CField α]`, with correctness (Euclidean identity, Bézout, derivative) proved through `toPolyG` over
+`K[X]`, plus coherence lemmas specializing back to the concrete engine at `α = ℚ`. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ### Generic formal derivative `cderivG` over a `CField`
-
-`cderivG [a₀, a₁, a₂, …] = [1·a₁, 2·a₂, 3·a₃, …]`: drop the constant coefficient and scale the `k`-th
-remaining coefficient by `k`. The natural-number scaling `k · a` is built from `CField.add` by the
-helper `nsmulG`, whose `toK` is the field `k • _ = (k : K) * _`. The correctness `toPolyG_cderivG`
-realizes `Polynomial.derivative` exactly, mirroring the concrete `toPoly_cderiv`. -/
+/-! ### Generic formal derivative `cderivG` over a `CField` -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α]
 variable [CFieldSpec α]
 
-/-- **Generic `ℕ`-scaling** `nsmulG k a` = `a + a + … + a` (`k` times), built from `CField.add`. The
-coefficient-degree multiplier for the formal derivative; `toK` reads it as `k • _ = (k : K) * _`. -/
+/-- Generic `ℕ`-scaling `nsmulG k a = a + a + … + a` (`k` times), built from `CField.add`. -/
 def nsmulG : ℕ → α → α
   | 0, _ => CField.zero
   | k + 1, a => CField.add a (nsmulG k a)
@@ -37,8 +27,7 @@ def nsmulG : ℕ → α → α
   | zero => rw [nsmulG, CFieldSpec.toK_zero, zero_smul]
   | succ n ih => rw [nsmulG, CFieldSpec.toK_add, ih, succ_nsmul']
 
-/-- **Generic formal derivative** `cderivG [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`: drop the constant
-coefficient, scale the `k`-th remaining coefficient by `k`. -/
+/-- Generic formal derivative `cderivG [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`. -/
 def cderivG : CPolyG α → CPolyG α
   | [] => []
   | _ :: as => go 1 as
@@ -48,8 +37,7 @@ where
   | _, [] => []
   | k, a :: as => nsmulG k a :: go (k + 1) as
 
-/-- **`cderivG` realizes the `K[X]` derivative**: `toPolyG (cderivG p) = Polynomial.derivative
-(toPolyG p)`. -/
+/-- `cderivG` realizes the `K[X]` derivative: `toPolyG (cderivG p) = Polynomial.derivative (toPolyG p)`. -/
 @[denote] theorem toPolyG_cderivG (p : CPolyG α) :
     toPolyG (cderivG p) = Polynomial.derivative (toPolyG p) := by
   suffices h : ∀ (as : CPolyG α) (k : ℕ),
@@ -73,18 +61,10 @@ where
       rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
     rw [hk]; push_cast; ring
 
-/-! ### Correctness of the generic Euclidean division `cdivmodG`
+/-! ### Correctness and termination for the generic Euclidean division
 
-`cdivmodG`/`cdivG`/`cmodG`/`cdvdG`/`cgcdExtG` are defined upstream (engine, `[CField α]`-only,
-`GenericPolyEngine`); here we prove their correctness with the bridge `[CFieldSpec α]` in scope:
-`toPolyG p = toPolyG q · toPolyG (cdivG…) + toPolyG (cmodG…)` and a strict normalized-length / degree
-drop. The leading-term match `c = clead p / clead q` is `CField.div`. -/
-
-/-! #### Degree-drop / termination for `cdivmodG`
-
-The remainder loop strictly shortens the normalized list (`stepG_length_lt`), so `cmodG fuel p q`
-is properly reduced (`cmodG_length_lt`). The single-step degree drop is a field fact about
-`(CFieldSpec.K α)[X]` (`degreeG_reduce_step_lt`), proven exactly as the concrete `degree_reduce_step_lt`. -/
+Correctness (Euclidean identity through `toPolyG`) and the strict normalized-length / degree drop
+of the remainder loop. -/
 
 /-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
 theorem length_cnormG_of_ne (p : CPolyG α) (h : cnormG p ≠ []) :
@@ -94,8 +74,8 @@ theorem length_cnormG_of_ne (p : CPolyG α) (h : cnormG p ≠ []) :
   have hlen : 1 ≤ (cnormG p : List α).length := List.length_pos_iff.mpr h
   omega
 
-/-- **One Euclidean-division step strictly drops the degree** in `(CFieldSpec.K α)[X]`: subtracting the
-leading-term-matching multiple `C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient. -/
+/-- One Euclidean-division step strictly drops the degree in `(CFieldSpec.K α)[X]`: subtracting
+`C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient. -/
 theorem degreeG_reduce_step_lt {P Q : (CFieldSpec.K α)[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
     (hpq : Q.natDegree ≤ P.natDegree) :
     (P - C (P.leadingCoeff / Q.leadingCoeff)
@@ -134,9 +114,8 @@ omit [CFieldSpec α] in
 theorem cdegG_cnormG (p : CPolyG α) : cdegG (cnormG p) = cdegG p := by
   simp only [cdegG, cnormG_idem]
 
-/-- **One `cdivmodG` step strictly shortens the normalized list** (the termination measure): the
-remainder-loop replacement `cnormG (p − (lcP/lcQ)·xᵏ·q)` has strictly smaller normalized length than
-`p`. -/
+/-- One reduce step strictly shortens the normalized list: `cnormG (p − (lcP/lcQ)·xᵏ·q)` has
+strictly smaller normalized length than `p`. -/
 theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])
     (hpq : (cnormG q : List α).length ≤ (cnormG p : List α).length) :
     (cnormG (csubG (cnormG p)
@@ -192,13 +171,7 @@ theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
 theorem div_eq_div_rat (a b : ℚ) : CField.div a b = a / b := by
   rw [CField.div]; show a * b⁻¹ = a / b; rw [div_eq_mul_inv]
 
-/-! ### Correctness of the generic extended Euclidean algorithm `cgcdExtG`
-
-`cgcdExtG fuel a b = (g, s, t)` with the Bézout relation `s·a + t·b = g` over `K`, mirroring
-`Compute.cgcdExt` (defined upstream in `GenericPolyEngine`, engine `[CField α]`-only). The two
-correctness halves: `toPolyG_cgcdExtG` (Bézout, fuel-independent) and `toPolyG_cgcdExtG_dvd` (the gcd
-divides both inputs, under the termination predicate `cgcdTerminatesG`). An inverse modulo `R`
-(`c⁻¹ mod R`, `c` a unit mod `R`) reads off the Bézout cofactor `s/g`. -/
+/-! ### Correctness of the generic extended Euclidean algorithm -/
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by
@@ -223,8 +196,7 @@ theorem cderivG_eq_cderiv : (cderivG : CPolyG ℚ → CPolyG ℚ) = Compute.cder
 end CPolyG
 
 open CPolyG in
-/-- **Monic-normalization is a unit-scaling**: over a field, `cmonicG p` differs from `p` (read by
-`toPolyG`) by the unit `C ((cleadG)⁻¹)`, so they are associates in `K[X]`. -/
+/-- Monic-normalization is a unit-scaling: `toPolyG (cmonicG p)` is associated to `toPolyG p` in `K[X]`. -/
 theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     Associated (toPolyG (CPolyG.cmonicG p)) (toPolyG p) := by
   rw [CPolyG.cmonicG]
@@ -240,10 +212,8 @@ theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p :
       (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr
         (by rw [CFieldSpec.toK_inv]; exact inv_ne_zero (toK_cleadG_ne_zero hne))))
 
-/-- **Field clearing of the Hermite cleared identity** (generic field): from the polynomial cleared
-identity `(P·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` with `gden, Dstar, d ≠ 0` (read into the fraction
-field via the injective `algebraMap`), the field fraction identity `P/gden² + hNum/Dstar = a/d` holds.
-Pure field-arithmetic clearing (`field_simp` + `linear_combination` of the polynomial witness). -/
+/-- Field clearing: from the cleared identity `(P·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` with
+`gden, Dstar, d ≠ 0`, the fraction-field identity `P/gden² + hNum/Dstar = a/d` holds in `RatFunc K`. -/
 theorem hermite_field_div_of_cleared {K : Type*} [Field K] (P Dstar gden hNum d a : K[X])
     (hden : gden ≠ 0) (hDstar : Dstar ≠ 0) (hd : d ≠ 0)
     (hcleared : (P * Dstar + hNum * (gden * gden)) * d = a * ((gden * gden) * Dstar)) :

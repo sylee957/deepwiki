@@ -15,10 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 variable {K : Type*} [Field K] [IsAlgClosed K]
 
 open Classical in
-/-- The Lagrange nodal product over the distinct roots of `Xⁿ+1` reconstructs it:
-`∏_{ζ ∈ (Xⁿ+1).roots}(X − ζ) = Xⁿ+1` (`(n:K) ≠ 0`). `Xⁿ+1` is monic, splits over `K`
-algebraically closed, and is separable, so its roots are simple and the per-root product is the
-whole polynomial. -/
+/-- `Lagrange.nodal (Xⁿ+1).roots.toFinset id = Xⁿ+1` when `(n:K) ≠ 0`. -/
 theorem nodal_roots_X_pow_add_one_eq {n : ℕ} (hn : (n : K) ≠ 0) :
     Lagrange.nodal (X ^ n + 1 : K[X]).roots.toFinset id = X ^ n + 1 := by
   classical
@@ -39,8 +36,7 @@ theorem nodal_roots_X_pow_add_one_eq {n : ℕ} (hn : (n : K) ≠ 0) :
   rw [hlhs, hprod]
 
 omit [IsAlgClosed K] in
-/-- The residue of `1/(Xⁿ+1)` at a root `ζ` is `−ζ/n`: `1/(Xⁿ+1)′(ζ) = 1/(n·ζⁿ⁻¹) = −ζ/n`,
-using `(Xⁿ+1)′ = n·Xⁿ⁻¹` and `ζⁿ = −1` (so `n·ζⁿ⁻¹ = n·ζⁿ/ζ = −n/ζ`); `ζ ≠ 0` since `0ⁿ+1 = 1`. -/
+/-- The residue `1/(Xⁿ+1)′(ζ) = −ζ/n` at a root `ζ` of `Xⁿ+1`. -/
 theorem residue_root_X_pow_add_one {n : ℕ} (hn : (n : K) ≠ 0) (ζ : K)
     (hζ : ζ ∈ (X ^ n + 1 : K[X]).roots) :
     (1 : K) / eval ζ (derivative (X ^ n + 1 : K[X])) = -ζ / (n : K) := by
@@ -60,8 +56,7 @@ theorem residue_root_X_pow_add_one {n : ℕ} (hn : (n : K) ≠ 0) (ζ : K)
   rw [hpow, hζn]; field_simp
 
 open Classical in
-/-- `(Xⁿ+1)` has exactly `n` distinct roots over an algebraically closed field with `(n:K) ≠ 0`:
-`#(Xⁿ+1).roots.toFinset = n` (separable + `deg = n`). -/
+/-- `Xⁿ+1` has exactly `n` distinct roots: `#(Xⁿ+1).roots.toFinset = n` when `(n:K) ≠ 0`. -/
 theorem card_roots_X_pow_add_one {n : ℕ} (hn : (n : K) ≠ 0) :
     (X ^ n + 1 : K[X]).roots.toFinset.card = n := by
   classical
@@ -77,10 +72,7 @@ theorem card_roots_X_pow_add_one {n : ℕ} (hn : (n : K) ≠ 0) :
   rw [if_neg hn1]; simp
 
 open Classical in
-/-- Closed form for `∫ dx/(1+xⁿ)`: over `K` algebraically closed with `(n:K) ≠ 0` and `1 ≤ n`,
-`1/(Xⁿ+1) = ∑_{ζ ∈ (Xⁿ+1).roots} (−ζ/n)·logDeriv(X−ζ)` in `K(x)` — each root contributes a
-logarithm with residue `−ζ/n`. Specializes `ratFunc_eq_sum_residue_logDeriv` at `A = 1`,
-`D = Xⁿ+1`. -/
+/-- Closed form `1/(Xⁿ+1) = ∑_{ζ ∈ (Xⁿ+1).roots} (−ζ/n)·logDeriv(X−ζ)` in `K(x)`. -/
 theorem inv_one_add_X_pow_eq_sum_residue_logDeriv {n : ℕ} (hn : (n : K) ≠ 0) (hn1 : 1 ≤ n) :
     (1 : RatFunc K) / algebraMap K[X] (RatFunc K) (X ^ n + 1)
       = ∑ ζ ∈ (X ^ n + 1 : K[X]).roots.toFinset,
@@ -101,9 +93,7 @@ theorem inv_one_add_X_pow_eq_sum_residue_logDeriv {n : ℕ} (hn : (n : K) ≠ 0)
   rw [eval_one, residue_root_X_pow_add_one hn ζ hmem]
 
 open Classical in
-/-- The `n = 4` case `∫ dx/(1+x⁴)`: over `K` algebraically closed with `(4:K) ≠ 0`,
-`1/(X⁴+1) = ∑_{ζ ∈ (X⁴+1).roots} (−ζ/4)·logDeriv(X−ζ)` — the `n = 4` instance of
-`inv_one_add_X_pow_eq_sum_residue_logDeriv`. -/
+/-- The `n = 4` case: `1/(X⁴+1) = ∑_{ζ ∈ (X⁴+1).roots} (−ζ/4)·logDeriv(X−ζ)`. -/
 theorem inv_one_add_X_pow_four_eq_sum_residue_logDeriv (h4 : (4 : K) ≠ 0) :
     (1 : RatFunc K) / algebraMap K[X] (RatFunc K) (X ^ 4 + 1)
       = ∑ ζ ∈ (X ^ 4 + 1 : K[X]).roots.toFinset,

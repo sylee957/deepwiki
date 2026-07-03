@@ -5,11 +5,8 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 
 /-! # Bridge: the structure decision and the Liouville log keystone
 
-`NondegenerateLog u ↔` no `F`-antiderivative of `u'/u` (`nondegenerateLog_iff_no_antideriv`), the
-keystone composition `isLiouville_of_no_antideriv`, and the rational-base decision
-`NondegenerateLog u ↔ logDeriv u ≠ 0` discharging the Liouville keystone by a single equality test.
-Also pins the empty-base semantics of `cLogIsNewMonomial`: with `logDerivs = []` it decides only
-`w ≠ 0`, which is necessary but not sufficient for `NondegenerateLog`. -/
+`NondegenerateLog u ↔` no `F`-antiderivative of `u'/u`, the keystone `isLiouville_of_no_antideriv`,
+and the rational-base decision `NondegenerateLog u ↔ logDeriv u ≠ 0`. -/
 
 open scoped Differential
 open Polynomial Differential
@@ -17,15 +14,13 @@ open DeepWiki.SymbolicIntegration.LiouvilleLog
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ## The abstract characterization: `NondegenerateLog u ↔ no `F`-antiderivative of `u'/u` -/
+/-! ## The abstract characterization -/
 
 section Abstract
 
 variable {F : Type*} [Field F] [Differential F]
 
-/-- `¬ NondegenerateLog u` exhibits an `F`-antiderivative of `logDeriv u`: a monic irreducible `π`
-annihilated by the log-monomial derivation yields `s := −π.coeff (deg π − 1)/(deg π)` with
-`s′ = logDeriv u`, via the coefficient-`(deg π − 1)` relation. -/
+/-- `¬ NondegenerateLog u` yields an `F`-antiderivative `s` of `logDeriv u` (`s′ = logDeriv u`). -/
 theorem antideriv_of_not_nondegenerateLog [CharZero F] (u : F) (hnd : ¬ NondegenerateLog u) :
     ∃ s : F, s′ = logDeriv u := by
   -- Unfold `¬ NondegenerateLog`: a monic irreducible `π` with `D π = 0`.
@@ -52,9 +47,8 @@ theorem antideriv_of_not_nondegenerateLog [CharZero F] (u : F) (hnd : ¬ Nondege
   rw [show (π.coeff (m - 1))′ = -((m : F) * logDeriv u) from by linear_combination -hcoeff]
   rw [neg_neg, ← mul_assoc, inv_mul_cancel₀ hmF, one_mul]
 
-/-- `NondegenerateLog u ↔ ¬ ∃ s : F, s′ = logDeriv u`: over a char-`0` differential field,
-non-degeneracy is exactly "`u'/u` has no antiderivative in `F`" (the Risch new-monomial condition
-`log u ∉ F`). -/
+/-- `NondegenerateLog u ↔ ¬ ∃ s : F, s′ = logDeriv u`: non-degeneracy is "`u'/u` has no
+antiderivative in `F`". -/
 theorem nondegenerateLog_iff_no_antideriv [CharZero F] (u : F) :
     NondegenerateLog u ↔ ¬ ∃ s : F, s′ = logDeriv u := by
   constructor
@@ -72,9 +66,8 @@ section Keystone
 
 variable {F : Type*} [Field F] [Differential F] [CharZero F]
 
-/-- If `logDeriv u = u'/u` has no antiderivative in `F`, then `F(log u) = RatFunc F` is a Liouville
-extension of `F`: chains `nondegenerateLog_iff_no_antideriv` into
-`isLiouville_logExtension_uncond`. -/
+/-- If `u'/u` has no antiderivative in `F`, then `F(log u) = RatFunc F` is a Liouville extension
+of `F`. -/
 theorem isLiouville_of_no_antideriv (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
     letI := logDifferential u
     letI := logDifferentialAlgebra u
@@ -83,19 +76,13 @@ theorem isLiouville_of_no_antideriv (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv
 
 end Keystone
 
-/-! ## The rational base: `NondegenerateLog u ↔ logDeriv u ≠ 0`
-
-At `F = K(x)` (`K` algebraically closed, char `0`), `logDeriv u` is a pure simple-pole sum whose
-residue at `α` is the multiplicity difference `ord_α (num u) − ord_α (denom u)`; vanishing residues
-force `u` constant, so `logDeriv u` has a rational antiderivative iff `logDeriv u = 0`. -/
+/-! ## The rational base: `NondegenerateLog u ↔ logDeriv u ≠ 0` -/
 
 section RationalBase
 
 variable {K : Type*} [Field K]
 
-/-- A rational function with equal num/denom root multiplicities everywhere is constant, so
-`logDeriv u = 0`: over an algebraically closed field both split over the same root product, which
-cancels. -/
+/-- Equal num/denom root multiplicities everywhere force `u` constant, so `logDeriv u = 0`. -/
 theorem logDeriv_eq_zero_of_rootMultiplicity_eq [IsAlgClosed K] (u : RatFunc K)
     (hmult : ∀ α, (RatFunc.num u).rootMultiplicity α = (RatFunc.denom u).rootMultiplicity α) :
     Differential.logDeriv u = 0 := by
@@ -124,8 +111,7 @@ theorem logDeriv_eq_zero_of_rootMultiplicity_eq [IsAlgClosed K] (u : RatFunc K)
   show ratFuncDeriv (RatFunc.C (N.leadingCoeff / M.leadingCoeff)) = 0
   exact ratFuncDeriv_C_eq_zero _
 
-/-- `residueAt α (logDeriv u) = ord_α (num u) − ord_α (denom u)`: the residue of `u'/u` at `α` is
-the integer num/denom multiplicity difference. -/
+/-- `residueAt α (logDeriv u) = ord_α (num u) − ord_α (denom u)`: the residue of `u'/u` at `α`. -/
 theorem residueAt_logDeriv_eq_mult_diff [CharZero K] (u : RatFunc K) (hu : u ≠ 0) (α : K) :
     residueAt α (Differential.logDeriv u)
       = (((RatFunc.num u).rootMultiplicity α : ℤ)
@@ -134,8 +120,7 @@ theorem residueAt_logDeriv_eq_mult_diff [CharZero K] (u : RatFunc K) (hu : u ≠
   exact residueAt_logDeriv_div_eq_int (RatFunc.num u) (RatFunc.denom u)
     (RatFunc.num_ne_zero hu) (RatFunc.denom_ne_zero u) α
 
-/-- Vanishing residues of `logDeriv u` force equal num/denom multiplicities: the integer
-multiplicity difference is `0` in `K`, and `ℤ → K` is injective in characteristic `0`. -/
+/-- Vanishing residues of `logDeriv u` force equal num/denom root multiplicities. -/
 theorem rootMultiplicity_eq_of_residue_zero [CharZero K] (u : RatFunc K) (hu : u ≠ 0)
     (hres : ∀ α, residueAt α (Differential.logDeriv u) = 0) (α : K) :
     (RatFunc.num u).rootMultiplicity α = (RatFunc.denom u).rootMultiplicity α := by
@@ -148,8 +133,7 @@ theorem rootMultiplicity_eq_of_residue_zero [CharZero K] (u : RatFunc K) (hu : u
   omega
 
 /-- `logDeriv u` has a rational antiderivative iff `logDeriv u = 0` (`K` algebraically closed,
-char `0`): an antiderivative makes all residues vanish, forcing equal num/denom multiplicities and
-hence `u` constant. -/
+char `0`). -/
 theorem logDeriv_hasAntideriv_iff_eq_zero [CharZero K] [IsAlgClosed K] (u : RatFunc K) :
     (∃ s : RatFunc K, s′ = Differential.logDeriv u) ↔ Differential.logDeriv u = 0 := by
   constructor
@@ -163,24 +147,19 @@ theorem logDeriv_hasAntideriv_iff_eq_zero [CharZero K] [IsAlgClosed K] (u : RatF
   · intro h0
     exact ⟨0, by rw [h0, map_zero]⟩
 
-/-- `NondegenerateLog u ↔ logDeriv u ≠ 0` at the rational base: composes
-`nondegenerateLog_iff_no_antideriv` with `logDeriv_hasAntideriv_iff_eq_zero`, reducing
-non-degeneracy to a single equality test. -/
+/-- `NondegenerateLog u ↔ logDeriv u ≠ 0` at the rational base. -/
 theorem nondegenerateLog_ratFunc_iff_logDeriv_ne_zero [CharZero K] [IsAlgClosed K]
     (u : RatFunc K) :
     NondegenerateLog u ↔ Differential.logDeriv u ≠ 0 := by
   rw [nondegenerateLog_iff_no_antideriv u, ne_eq,
     ← logDeriv_hasAntideriv_iff_eq_zero u]
 
-/-- `NondegenerateLog u` is decidable from a `Decidable (logDeriv u = 0)` instance, via
-`nondegenerateLog_ratFunc_iff_logDeriv_ne_zero`. -/
+/-- `NondegenerateLog u` is decidable from a `Decidable (logDeriv u = 0)` instance. -/
 instance instDecidableNondegenerateLogRatFunc [CharZero K] [IsAlgClosed K]
     (u : RatFunc K) [Decidable (Differential.logDeriv u = 0)] : Decidable (NondegenerateLog u) :=
   decidable_of_iff _ (nondegenerateLog_ratFunc_iff_logDeriv_ne_zero u).symm
 
-/-- If `logDeriv u ≠ 0` then `K(x)(log u) = RatFunc (K(x))` is a Liouville extension of `K(x)`:
-chains `logDeriv_hasAntideriv_iff_eq_zero` into `isLiouville_of_no_antideriv`, so a single equality
-check on `u'/u` certifies the extension. -/
+/-- If `logDeriv u ≠ 0` then `K(x)(log u) = RatFunc (K(x))` is a Liouville extension of `K(x)`. -/
 theorem isLiouville_of_logDeriv_ne_zero [CharZero K] [IsAlgClosed K] (u : RatFunc K)
     (hne : Differential.logDeriv u ≠ 0) :
     letI := logDifferential u
@@ -193,17 +172,15 @@ end RationalBase
 
 /-! ## The empty-base semantics of `cLogIsNewMonomial`
 
-`cLogIsNewMonomial logDerivs w` tests `w ∉ span_ℚ{logDerivs}`; with `logDerivs = []` the span is
-`{0}`, so the test collapses to `w ≠ 0` — necessary but not sufficient for `NondegenerateLog`
-(e.g. `w = 1` and `w = x` are nonzero yet have antiderivatives in `ℚ(x)`). Proven by tracing the
-single-column `crref`/nullspace computation. -/
+With `logDerivs = []`, `cLogIsNewMonomial` decides only `w ≠ 0` — necessary but not sufficient for
+`NondegenerateLog`. -/
 
 section ComputableEmptyBase
 
 open CPolyG
 
-/-- `crref.go` halts immediately once the working column `col` reaches `ncols = 1`, returning the
-accumulated pivot rows/columns reversed.  (The single-column tail of the RREF recursion.) -/
+/-- `crref.go` halts once the working column reaches `ncols = 1`, returning the accumulated pivot
+rows/columns reversed. -/
 private lemma crref_go_stop (f : ℕ) (rows pr : List (List ℚ)) (pc : List ℕ) :
     crref.go 1 f 1 rows pr pc = (pr.reverse, pc.reverse) := by
   cases f with
@@ -212,8 +189,8 @@ private lemma crref_go_stop (f : ℕ) (rows pr : List (List ℚ)) (pc : List ℕ
     | nil => rfl
     | cons hd tl => rw [crref.go] <;> simp
 
-/-- `crref.go` at the first column (`col = 0`, empty accumulators, `ncols = 1`): the pivot-column
-list is `[0]` if some row has a nonzero entry in column `0`, else `[]` (a free column). -/
+/-- `crref.go` at the first column (`ncols = 1`): pivot columns `[0]` if some row has a nonzero
+entry in column `0`, else `[]`. -/
 private lemma crref_go_col0 (f : ℕ) (M : List (List ℚ)) :
     (crref.go 1 (f + 1) 0 M [] []).2 =
       (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [0] else []) := by
@@ -230,14 +207,13 @@ private lemma crref_go_col0 (f : ℕ) (M : List (List ℚ)) :
           crref_go_stop, List.reverse_cons, List.reverse_nil, List.nil_append]
     · nofun
 
-/-- The pivot columns of a single-column (`ncols = 1`) RREF: `[0]` iff the matrix has a row with a
-nonzero entry in column `0`, else `[]`. -/
+/-- Pivot columns of a single-column RREF: `[0]` iff some row has a nonzero entry in column `0`,
+else `[]`. -/
 private lemma crref_single_col_pivots (M : List (List ℚ)) :
     (crref M 1).2 = (if (M.find? (fun r => (r.getD 0 0) ≠ 0)).isSome then [0] else []) :=
   crref_go_col0 (1 + M.length) M
 
-/-- The nullspace basis of a single-column matrix: empty if column `0` is a pivot (full rank,
-kernel `{0}`), else the single vector `[1]` (the free column). -/
+/-- Nullspace basis of a single-column matrix: empty if column `0` is a pivot, else `[[1]]`. -/
 private lemma nullspace_single_col (M : List (List ℚ)) :
     cNullspaceBasisQ M 1 = (if (crref M 1).2.contains 0 then [] else [[1]]) := by
   unfold cNullspaceBasisQ
@@ -248,9 +224,8 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
   · rw [h0]; simp
   · simp only [Bool.not_eq_true] at h0; rw [h0]; simp
 
-/-- `cLogIsNewMonomial [] w = true` iff the single cleared coefficient column
-`(cLinearDepData [] w).1` has a row with a nonzero entry — i.e. iff `w`'s cleared numerator is
-nonzero. The empty-base test decides `w ∉ span_ℚ ∅ = {0}`, not "`w` has no antiderivative". -/
+/-- `cLogIsNewMonomial [] w = true` iff the cleared coefficient column `(cLinearDepData [] w).1`
+has a nonzero entry — the empty-base test decides `w ≠ 0`. -/
 theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZG ℚ) :
     CPolyG.cLogIsNewMonomial [] w =
       ((CPolyG.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
@@ -267,8 +242,7 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZG ℚ) :
   | some pr => simp
 
 /-- `cExpIsNewMonomial ws b = cLogIsNewMonomial ws b`: the exponential structure test is
-definitionally the logarithmic one (both are the same ℚ-linear-dependence engine), so the empty-base
-semantics transfers verbatim. -/
+definitionally the logarithmic one. -/
 theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (ws : List (QFunNZG ℚ)) (b : QFunNZG ℚ) :
     CPolyG.cExpIsNewMonomial ws b = CPolyG.cLogIsNewMonomial ws b := rfl
 

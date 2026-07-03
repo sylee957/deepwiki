@@ -4,18 +4,10 @@ import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Correctness of the computable Hermite reduction (`cdiophantine`/`hermiteInner`)
-The computable Hermite engine of `HermiteCompute` (`cdiophantine`, `hermiteInner`, `hermiteReduce`) is
-validated *pointwise* by `native_decide` on Example 2.2.1. This file upgrades the **Bézout/Diophantine
-solver** step to *proven on all inputs*: through the `toPoly : CPoly → ℚ[X]` bridge the computable
-`cdiophantine` realizes the noncomputable `diophantineSolveReduced` of `RationalIntegrationAlgorithms`.
-
-The spine is a **uniqueness** lemma: the reduced Bézout solution `(B, C)` of `B·p + C·q = rhs` with
-`deg B < deg q` is unique for coprime `p, q` (the standard `(B₁−B₂)·p = (C₂−C₁)·q` + coprimality +
-degree argument). Both `cdiophantine` (via `toPoly_cdiophantine` and the remainder-degree bound
-`cmod_length_lt`) and `diophantineSolveReduced` (via `diophantineSolveReduced_spec` and
-`diophantineSolveReduced_fst_degree_lt`) produce such a solution, so their `toPoly`-images agree. From
-the cofactor `B` the partner `C` is then pinned by the Bézout equation, giving the full agreement. This
-transfers `hermiteReducePower_spec`'s per-power Hermite correctness onto the computable side. -/
+Proves the computable Hermite engine correct in `RatFunc ℚ` through the `toPoly : CPoly → ℚ[X]`
+bridge: the Bézout solver `cdiophantine` realizes the abstract `diophantineSolveReduced`, the
+`hermiteInner` loop and `hermiteReduce` wrapper reduce `A/D` to a residual over the squarefree
+radical, and the multi-factor interference divisibility is discharged. -/
 
 open Polynomial
 
@@ -23,10 +15,8 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-! ### Uniqueness of the reduced Bézout cofactor -/
 
-/-- **Reduced-Bézout cofactor uniqueness**: for coprime `p, q` with `q ≠ 0`, if two cofactors `B₁, B₂`
-both have a partner `C₁, C₂` solving `Bᵢ·p + Cᵢ·q = rhs` and both are proper (`deg Bᵢ < deg q`), then
-`B₁ = B₂`. The standard argument: `(B₁−B₂)·p = (C₂−C₁)·q`, so `q ∣ (B₁−B₂)·p`; coprimality gives
-`q ∣ B₁−B₂`, and `deg(B₁−B₂) < deg q` forces `B₁−B₂ = 0`. -/
+/-- Reduced-Bézout cofactor uniqueness: for coprime `p, q` (`q ≠ 0`), proper cofactors `B₁, B₂`
+(`deg Bᵢ < deg q`) with partners solving `Bᵢ·p + Cᵢ·q = rhs` satisfy `B₁ = B₂`. -/
 theorem reduced_bezout_fst_unique {p q B₁ C₁ B₂ C₂ rhs : ℚ[X]} (hpq : IsCoprime p q)
     (h₁ : B₁ * p + C₁ * q = rhs) (h₂ : B₂ * p + C₂ * q = rhs)
     (hd₁ : B₁.degree < q.degree) (hd₂ : B₂.degree < q.degree) :
@@ -42,19 +32,14 @@ theorem reduced_bezout_fst_unique {p q B₁ C₁ B₂ C₂ rhs : ℚ[X]} (hpq : 
     exact absurd (lt_of_le_of_lt hle hlt) (lt_irrefl _)
   exact sub_eq_zero.mp hsub
 
-/-- **Reduced-Bézout partner uniqueness**: once the first cofactor `B` agrees, the partner `C` is
-pinned by the Bézout equation `B·p + C·q = rhs` (cancel the nonzero `q` in the integral domain). -/
+/-- Reduced-Bézout partner uniqueness: with `B` fixed and `q ≠ 0`, `B·p + Cᵢ·q = rhs` pins `C₁ = C₂`. -/
 theorem reduced_bezout_snd_unique {p q B C₁ C₂ rhs : ℚ[X]} (hq : q ≠ 0)
     (h₁ : B * p + C₁ * q = rhs) (h₂ : B * p + C₂ * q = rhs) :
     C₁ = C₂ := by
   have : C₁ * q = C₂ * q := by linear_combination h₁ - h₂
   exact mul_right_cancel₀ hq this
 
-/-! ### `cdiophantine` realizes `diophantineSolveReduced` (degree bound for `B`)
-
-The computable cofactor `B = (cdiophantine fuel p q rhs).1` is the remainder `cnorm (cmod fuel S q)`
-with `S = cscale (clead g)⁻¹ (cmul rhs s)`, so it is degree-reduced just like `diophantineSolveReduced`'s
-`% b`. -/
+/-! ### `cdiophantine` realizes `diophantineSolveReduced` (degree bound for `B`) -/
 
 /-- The first computable cofactor `(cdiophantine fuel p q rhs).1` is the normalized remainder
 `cnorm (cmod fuel (cscale (clead (cgcdExt fuel p q).1)⁻¹ (cmul rhs (cgcdExt fuel p q).2.1)) q)`. -/
@@ -65,9 +50,8 @@ theorem cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPoly) :
   rcases hgst : cgcdExt fuel p q with ⟨g, s, t⟩
   simp only [cdiophantine, hgst, cmod]
 
-/-- **Degree bound for the computable cofactor `B`**: with enough fuel and a nonzero divisor `q`,
-`(toPoly (cdiophantine fuel p q rhs).1).natDegree < (toPoly q).natDegree`. From `cmod_length_lt`
-(the remainder is properly reduced) transported to `natDegree` via `cdeg_eq_natDegree`. -/
+/-- Degree bound for the computable cofactor `B`: with enough fuel and `q ≠ 0`,
+`(toPoly (cdiophantine fuel p q rhs).1).degree < (toPoly q).degree`. -/
 theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : CPoly) (hq : cnorm q ≠ [])
     (hfuel : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
         (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
@@ -90,20 +74,12 @@ theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : CPoly) (hq : cnorm q 
     rw [Polynomial.degree_eq_natDegree hne1, Polynomial.degree_eq_natDegree hqne0, Nat.cast_lt]
     exact hndlt
 
-/-! ### The agreement `cdiophantine ↔ diophantineSolveReduced`
-
-Both solvers return a degree-reduced Bézout solution of `B·p + C·q = rhs` for coprime `p, q`. The
-computable one is correct (`toPoly_cdiophantine`) and degree-reduced (`cdiophantine_fst_degree_lt`);
-the abstract one is correct (`diophantineSolveReduced_spec`) and degree-reduced
-(`diophantineSolveReduced_fst_degree_lt`). By the uniqueness lemmas they agree under `toPoly`. -/
+/-! ### The agreement `cdiophantine ↔ diophantineSolveReduced` -/
 
 open Classical in
-/-- **First-cofactor agreement** `toPoly (cdiophantine fuel p q rhs).1 = (diophantineSolveReduced
-(toPoly p) (toPoly q) (toPoly rhs)).1`: the computable Bézout solver's degree-reduced `B` equals the
-abstract `diophantineSolveReduced`'s. Hypotheses: `p, q` coprime in `ℚ[X]`, `q ≠ 0` (`cnorm q ≠ []`),
-the computable gcd `(cgcdExt fuel p q).1` is a nonzero constant (the coprimality the Hermite call sites
-guarantee, as in `toPoly_cdiophantine`), and enough fuel for the remainder to be properly reduced.
-Proved by `reduced_bezout_fst_unique` from the two correctness + degree facts. -/
+/-- First-cofactor agreement: `toPoly (cdiophantine fuel p q rhs).1 = (diophantineSolveReduced
+(toPoly p) (toPoly q) (toPoly rhs)).1`, for coprime `p, q`, `q ≠ 0`, computable gcd a nonzero
+constant, and enough fuel. -/
 theorem toPoly_cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPoly)
     (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
     (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
@@ -127,9 +103,8 @@ theorem toPoly_cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPoly)
   · linear_combination ha_eq
 
 open Classical in
-/-- **Second-cofactor agreement** `toPoly (cdiophantine fuel p q rhs).2 = (diophantineSolveReduced
-(toPoly p) (toPoly q) (toPoly rhs)).2`: once the first cofactor `B` agrees, the partner `C` is pinned
-by the Bézout equation `B·p + C·q = rhs` (`reduced_bezout_snd_unique`, cancelling the nonzero `q`). -/
+/-- Second-cofactor agreement: `toPoly (cdiophantine fuel p q rhs).2 = (diophantineSolveReduced
+(toPoly p) (toPoly q) (toPoly rhs)).2`, pinned once the first cofactor agrees. -/
 theorem toPoly_cdiophantine_snd_eq (fuel : ℕ) (p q rhs : CPoly)
     (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
     (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
@@ -150,11 +125,8 @@ theorem toPoly_cdiophantine_snd_eq (fuel : ℕ) (p q rhs : CPoly)
   · linear_combination ha_eq
 
 open Classical in
-/-- **Full `cdiophantine ↔ diophantineSolveReduced` agreement** (both cofactors): under `toPoly`, the
-computable Bézout solver realizes the abstract `diophantineSolveReduced` pair. This is the bridge that
-transfers `hermiteReducePower_spec`'s per-power Hermite correctness onto the computable Hermite engine —
-the computable inner loop's Bézout step computes (under `toPoly`) exactly the polynomial the abstract
-correctness proof uses. -/
+/-- Full `cdiophantine ↔ diophantineSolveReduced` agreement (both cofactors): under `toPoly`, the
+computable Bézout solver realizes the abstract `diophantineSolveReduced` pair. -/
 theorem toPoly_cdiophantine_eq (fuel : ℕ) (p q rhs : CPoly)
     (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
     (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
@@ -177,19 +149,12 @@ example (fuel : ℕ) (p q rhs : CPoly)
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 :=
   toPoly_cdiophantine_fst_eq fuel p q rhs hq hcop hg hgc hfuel
 
-/-! ### The `hermiteInner` step identity and inner-loop invariant (in `RatFunc ℚ`)
-
-`hermiteInner` peels rational pieces `B/Vʲ` from a *global* fraction `A/(U·Vᵏ)` (`U = D/Vⁱ`), one
-power at a time, so its per-step identity carries the extra `U` factor that `hermite_reduction_step`
-does not. The identity below is a pure `RatFunc ℚ` calculation from the Bézout relation
-`B·(U·V') + C·V = −A/(j+1)` the computable `cdiophantine` produces. -/
+/-! ### The `hermiteInner` step identity and inner-loop invariant (in `RatFunc ℚ`) -/
 
 open scoped Differential in
-/-- **The `hermiteInner` step identity** in `RatFunc ℚ`: with `am = algebraMap ℚ[X] (RatFunc ℚ)`, if
-`B·(U·V') + C·V = −A·(1/(j+1))` (the Bézout relation `cdiophantine` solves at counter `j+1`), then
-writing the next numerator `A' = −(j+1)·C − U·B'`, `am A/(am U·am V^(j+2)) = (am B/am V^(j+1))′ +
-am A'/(am U·am V^(j+1))` — the global fraction's `V`-power drops by one, emitting the rational summand
-`B/V^(j+1)`. The `U`-factor analog of `hermite_reduction_step`; a pure `RatFunc ℚ` calculation. -/
+/-- The `hermiteInner` step identity in `RatFunc ℚ`: from `B·(U·V') + C·V = −A·(1/(j+1))`, with next
+numerator `A' = −(j+1)·C − U·B'`, `am A/(am U·am V^(j+2)) = (am B/am V^(j+1))′ + am A'/(am U·am V^(j+1))`,
+dropping the `V`-power by one and emitting `B/V^(j+1)`. -/
 theorem hermiteInner_step_ratFunc (A B C U V : ℚ[X]) (hU : U ≠ 0) (hV : V ≠ 0) (j : ℕ)
     (hrel : B * (U * derivative V) + C * V = -A * Polynomial.C (((j : ℚ) + 1)⁻¹)) :
     algebraMap ℚ[X] (RatFunc ℚ) A
@@ -239,8 +204,7 @@ theorem hermiteInner_step_ratFunc (A B C U V : ℚ[X]) (hU : U ≠ 0) (hV : V �
 
 /-! ### The `hermiteInner` loop power `Vpow = V^(j+1)` -/
 
-/-- The repeated-multiplication fold `foldl (·* V) init` over `range n` realizes `init · V^n` under
-`toPoly`. -/
+/-- `foldl (·* V) init` over `range n` realizes `init · V^n` under `toPoly`. -/
 theorem toPoly_foldl_cmul (V : CPoly) (n : ℕ) (init : CPoly) :
     toPoly ((List.range n).foldl (fun acc _ => cmul acc V) init)
       = toPoly init * toPoly V ^ n := by
@@ -256,16 +220,10 @@ theorem toPoly_hermiteInner_Vpow (V : CPoly) (j : ℕ) :
       = toPoly V ^ (j + 1) := by
   rw [toPoly_foldl_cmul]; simp [toPoly_cons]
 
-/-! ### The `hermiteInner` loop correctness (in `RatFunc ℚ`)
+/-! ### The `hermiteInner` loop correctness (in `RatFunc ℚ`) -/
 
-The inner loop `hermiteInner fuel V U j A qzero` peels `B/Vⱼ` pieces, lowering the global fraction
-`A/(U·V^(j+1))` to `A_final/(U·V)`. The correctness identity is the `j`-fold gluing of
-`hermiteInner_step_ratFunc`. The per-step Bézout relation is supplied as a hypothesis `hbez` (the
-computable `cdiophantine` discharges it via `toPoly_cdiophantine`; see `hermiteInner_bezout_of`). -/
-
-/-- The `hermiteInner` per-step quantities, named for the invariant proof: at counter `j+1` with
-numerator `A`, `cdiophantine` returns `(B, C)`, the next numerator is `A' = −(j+1)·C − U·B'`, the
-emitted piece is `B/V^(j+1)`, and the recursion continues at counter `j`. -/
+/-- The per-step Bézout relation of `hermiteInner` at counter `j'` with numerator `A'`: the
+`cdiophantine` cofactors `(B, C)` satisfy `B·(U·V') + C·V = −A'·(1/(j'+1))` under `toPoly`. -/
 private def hbezPred (fuel : ℕ) (V U : CPoly) (j' : ℕ) (A' : CPoly) : Prop :=
   toPoly (cdiophantine fuel (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).1
       * (toPoly U * derivative (toPoly V))
@@ -274,13 +232,9 @@ private def hbezPred (fuel : ℕ) (V U : CPoly) (j' : ℕ) (A' : CPoly) : Prop :
     = -toPoly A' * Polynomial.C (((j' : ℚ) + 1)⁻¹)
 
 open scoped Differential in
-/-- **`hermiteInner` loop invariant** (accumulator-general form) in `RatFunc ℚ`: with `am =
-algebraMap ℚ[X] (RatFunc ℚ)`, for `U, V ≠ 0`, if every reachable Bézout step satisfies its defining
-relation (`hbez`), then for any accumulator `g` with nonzero denominator,
-`am A/(am U·am V^(j+1)) + (toQFun g)′ = (toQFun (hermiteInner fuel V U j A g).1)′ +
-am A_final/(am U·am V)`. So the *new* rational pieces the loop adds to `g` integrate exactly the
-power-drop from `V^(j+1)` to `V`. Induction on the counter `j`, each step the
-`hermiteInner_step_ratFunc` identity glued to the tail (with `toQFun_qadd` realizing `qadd`). -/
+/-- `hermiteInner` loop invariant (accumulator-general form) in `RatFunc ℚ`: for `U, V ≠ 0` and every
+Bézout step satisfying `hbez`, and any accumulator `g` with nonzero denominator,
+`am A/(am U·am V^(j+1)) + (toQFun g)′ = (toQFun (hermiteInner fuel V U j A g).1)′ + am A_final/(am U·am V)`. -/
 theorem hermiteInner_spec_acc (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : CPoly), hbezPred fuel V U j' A') :
     ∀ (j : ℕ) (A : CPoly) (g : QFun), toPoly g.2 ≠ 0 →
@@ -350,11 +304,8 @@ theorem toPoly_qadd_den_ne_zero {x y : QFun} (hx : toPoly x.2 ≠ 0) (hy : toPol
   show toPoly (cmul b d) ≠ 0
   rw [toPoly_cmul]; exact mul_ne_zero hx hy
 
-/-- **The `qadd`-fold realizes the rational-function sum**: for a list of `QFun` increments each with
-nonzero denominator and an initial accumulator with nonzero denominator,
-`toQFun (gs.foldl qadd init) = toQFun init + (gs.map toQFun).sum`. So the Hermite `g`-fold, whatever its
-increments, reads in `RatFunc ℚ` as the plain sum of the increments (plus the seed) — the structural
-fact underlying the multi-factor `hermiteReduce` `g`-accumulation. -/
+/-- The `qadd`-fold realizes the rational-function sum: for increments and a seed all with nonzero
+denominator, `toQFun (gs.foldl qadd init) = toQFun init + (gs.map toQFun).sum`. -/
 theorem toQFun_foldl_qadd (gs : List QFun) (init : QFun) (hinit : toPoly init.2 ≠ 0)
     (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
     toQFun (gs.foldl qadd init) = toQFun init + (gs.map toQFun).sum := by
@@ -369,10 +320,8 @@ theorem toQFun_foldl_qadd (gs : List QFun) (init : QFun) (hinit : toPoly init.2 
     ring
 
 open scoped Differential in
-/-- **The `qadd`-fold derivative is the sum of the increment derivatives**: starting from `qzero`,
-`(toQFun (gs.foldl qadd qzero))′ = ∑ⱼ (toQFun gⱼ)′` in `RatFunc ℚ`. The derivative of the Hermite
-`g`-accumulation distributes over the per-factor increments (the derivation is additive on the
-`toQFun_foldl_qadd` sum). The structural bridge from the fold to a sum of per-factor reductions. -/
+/-- The `qadd`-fold derivative is the sum of the increment derivatives: from `qzero`,
+`(toQFun (gs.foldl qadd qzero))′ = ∑ⱼ (toQFun gⱼ)′` in `RatFunc ℚ`. -/
 theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
     (toQFun (gs.foldl qadd qzero))′ = (gs.map (fun g => (toQFun g)′)).sum := by
   rw [toQFun_foldl_qadd gs qzero (by simp [qzero, toPoly_cons]) hgs, toQFun_qzero, zero_add]
@@ -380,8 +329,7 @@ theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2
     map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
   rfl
 
-/-- **Sum of constant-minus-term** in any additive comm group: `∑ⱼ (T − residⱼ) = n·T − ∑ⱼ residⱼ`,
-where `n = gs.length` (the `ℕ`-scalar multiple). -/
+/-- Sum of constant-minus-term in an additive comm group: `∑ⱼ (T − residⱼ) = gs.length • T − ∑ⱼ residⱼ`. -/
 theorem sum_map_const_sub {α G : Type*} [AddCommGroup G] (gs : List α) (T : G) (resid : α → G) :
     (gs.map (fun g => T - resid g)).sum = gs.length • T - (gs.map resid).sum := by
   induction gs with
@@ -391,13 +339,8 @@ theorem sum_map_const_sub {α G : Type*} [AddCommGroup G] (gs : List α) (T : G)
     abel
 
 open scoped Differential in
-/-- **The global-`A` fold residual as an explicit `(1−n)·T + ∑ residᵢ` sum** in `RatFunc ℚ`: if the
-fold increments `gs` each reduce the *same* global target `T` with `(toQFun gⱼ)′ = T − residⱼ` (the
-shape `hermiteInner_spec` gives, `T = A/D`, `residⱼ = Afinalⱼ/(Uⱼ·Vⱼ)`), then the fold residual is
-`T − (toQFun (gs.foldl qadd qzero))′ = (1 − gs.length)·T + ∑ⱼ residⱼ`. This is the *exact* algebraic
-content of the global-`A` `g`-fold: each increment reduces the whole `T`, so `n` of them overcount `T`
-by `(n−1)` copies — which the `∑ residⱼ` interference must clear back to a single squarefree-denominator
-residual. The honest skeleton over which the multi-factor interference-clearing is stated. -/
+/-- The global-`A` fold residual as `(1−n)·T + ∑ residᵢ` in `RatFunc ℚ`: if each increment satisfies
+`(toQFun gⱼ)′ = T − residⱼ`, then `T − (toQFun (gs.foldl qadd qzero))′ = T − gs.length • T + ∑ⱼ residⱼ`. -/
 theorem foldl_residual_eq (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0)
     (T : RatFunc ℚ) (resid : QFun → RatFunc ℚ)
     (hstep : ∀ g ∈ gs, (toQFun g)′ = T - resid g) :
@@ -407,13 +350,9 @@ theorem foldl_residual_eq (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0
   abel
 
 open scoped Differential in
-/-- **`hermiteInner` loop correctness** (the public `qzero`-start form) in `RatFunc ℚ`: with `am =
-algebraMap ℚ[X] (RatFunc ℚ)`, for `U, V ≠ 0`, if every reachable computable Bézout step satisfies its
-defining relation (`hbez`, discharged by `toPoly_cdiophantine`), then `hermiteInner fuel V U j A qzero
-= (gloc, A_final)` realizes `am A/(am U·am V^(j+1)) = (toQFun gloc)′ + am A_final/(am U·am V)`: the
-emitted rational part `gloc` integrates the global fraction's power-drop from `V^(j+1)` to the
-squarefree `V`. The computable analog of `hermiteReducePower_spec`. Specializes
-`hermiteInner_spec_acc` at the empty accumulator (`toQFun_qzero`). -/
+/-- `hermiteInner` loop correctness (public `qzero`-start form) in `RatFunc ℚ`: for `U, V ≠ 0` and
+every Bézout step satisfying `hbez`, `am A/(am U·am V^(j+1)) = (toQFun gloc)′ + am A_final/(am U·am V)`
+where `(gloc, A_final) = hermiteInner fuel V U j A qzero`. -/
 theorem hermiteInner_spec (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : CPoly), hbezPred fuel V U j' A') (j : ℕ) (A : CPoly) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
@@ -427,12 +366,8 @@ theorem hermiteInner_spec (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV :
   -- `(0)′ = 0`.
   simpa using h
 
-/-- **The per-step Bézout relation `hbezPred` holds**, discharged from `toPoly_cdiophantine`: at every
-counter `j'` and numerator `A'`, the computable `cdiophantine` step satisfies its defining relation,
-provided `V ≠ 0` (`cnorm V ≠ []`), the gcd of `cmul U (cderiv V)` and `V` is a nonzero constant (the
-coprimality the Hermite call sites guarantee), and there is enough fuel for the proper remainder. This
-is the bridge that lets `hermiteInner_spec`'s abstract `hbez` premise be satisfied by the actual
-computable engine. -/
+/-- The per-step Bézout relation `hbezPred` holds for every `j', A'`, given `V ≠ 0` and the gcd of
+`cmul U (cderiv V)` and `V` a nonzero constant. Discharges `hermiteInner_spec`'s `hbez` premise. -/
 theorem hermiteInner_bezout_of (fuel : ℕ) (V U : CPoly) (j' : ℕ) (A' : CPoly)
     (hq : cnorm V ≠ [])
     (hg : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
@@ -448,12 +383,9 @@ theorem hermiteInner_bezout_of (fuel : ℕ) (V U : CPoly) (j' : ℕ) (A' : CPoly
   ring
 
 open scoped Differential in
-/-- **`hermiteInner` correctness from the computable engine** (the fully-discharged form): for `U, V`
-with nonzero `toPoly`, `cnorm V ≠ []`, and the gcd of `cmul U (cderiv V)` and `V` a nonzero constant (the
-coprimality `V ⊥ U·V'` that holds when `V` is squarefree and coprime to `U`), the computable inner loop
-satisfies `am A/(am U·am V^(j+1)) = (toQFun gloc)′ + am A_final/(am U·am V)`. Combines `hermiteInner_spec`
-with `hermiteInner_bezout_of` — this is the computable counterpart of `hermiteReducePower_spec`, with the
-extra global `U`-denominator the `#eval`-able `hermiteInner` carries. -/
+/-- `hermiteInner` correctness from the computable engine (fully-discharged form): for `U, V` with
+nonzero `toPoly`, `cnorm V ≠ []`, and the gcd of `cmul U (cderiv V)` and `V` a nonzero constant, the
+inner loop satisfies `am A/(am U·am V^(j+1)) = (toQFun gloc)′ + am A_final/(am U·am V)`. -/
 theorem hermiteInner_spec_of (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
     (hq : cnorm V ≠ [])
     (hg : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
@@ -483,17 +415,10 @@ example (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec_of fuel V U hU hV hq hg hgc j A
 
-/-! ### Exact division through `toPoly`
+/-! ### Exact division through `toPoly` -/
 
-When the computable Euclidean division `cdiv fuel p q` is *exact* (the remainder `cmod fuel p q`
-reads to `0`), it realizes honest division in `ℚ[X]`: `toPoly p = toPoly (cdiv fuel p q) · toPoly q`.
-This is the certificate the `hermiteReduce` residual recovery needs — `Bres = cdiv … (resNum·Dstar)
-resDen` divides exactly because the difference `A/D − g′` is a genuine polynomial fraction over
-`Dstar`. -/
-
-/-- **Exact-division bridge**: if the remainder `cmod fuel p q` reads to `0` in `ℚ[X]`, then `cdiv`
-realizes honest division: `toPoly p = toPoly (cdiv fuel p q) · toPoly q`. (From the Euclidean-division
-identity `toPoly_cdivmod'` with a zero remainder; needs `cnorm q ≠ []`.) -/
+/-- Exact-division bridge: if `toPoly (cmod fuel p q) = 0` (and `q ≠ 0`), then
+`toPoly p = toPoly (cdiv fuel p q) · toPoly q`. -/
 theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
     (hrem : toPoly (cmod fuel p q) = 0) :
     toPoly p = toPoly (cdiv fuel p q) * toPoly q := by
@@ -502,12 +427,8 @@ theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ []
       show (cdivmod fuel p q).2 = cmod fuel p q from rfl, hrem, add_zero] at h
   exact h
 
-/-- **Divisibility ⟹ exact remainder**: if `toPoly q ∣ toPoly p` in `ℚ[X]` (and `q ≠ 0`, enough
-fuel), then the computable remainder reads to `0`: `toPoly (cmod fuel p q) = 0`. The remainder
-`r = cmod fuel p q` satisfies `toPoly p = toPoly (cdiv …)·toPoly q + toPoly r` with `deg (toPoly r) <
-deg (toPoly q)` (`cmod_length_lt` + the degree bridge); since `toPoly q ∣ toPoly p` it also divides
-`toPoly r`, and a polynomial of degree `< deg q` divisible by `q` is `0`. Converts the exact-division
-certificate from a `cmod`-computation into an honest `ℚ[X]` divisibility hypothesis. -/
+/-- Divisibility ⟹ exact remainder: if `toPoly q ∣ toPoly p` (and `q ≠ 0`, enough fuel), then
+`toPoly (cmod fuel p q) = 0`. -/
 theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
     (hfuel : (cnorm p).length ≤ fuel) (hdvd : toPoly q ∣ toPoly p) :
     toPoly (cmod fuel p q) = 0 := by
@@ -537,9 +458,8 @@ theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
   omega
 
 open Classical in
-/-- **Exact-division cross-multiplication in `RatFunc ℚ`**: when `cdiv fuel p q` is exact
-(`toPoly (cmod fuel p q) = 0`) and `q ≠ 0`, the fraction `am p / am q` equals `am (cdiv fuel p q)`
-as a `RatFunc ℚ` element. -/
+/-- Exact-division cross-multiplication in `RatFunc ℚ`: when `toPoly (cmod fuel p q) = 0` and `q ≠ 0`,
+`am p / am q = am (cdiv fuel p q)`. -/
 theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
     (hrem : toPoly (cmod fuel p q) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
@@ -550,19 +470,12 @@ theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
   rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, map_mul, mul_div_assoc,
     div_self hqm, mul_one]
 
-/-! ### The residual-recovery identity (in `RatFunc ℚ`)
-
-`hermiteReduce` computes the residual log-part numerator `Bres` by clearing denominators in
-`A/D − g′ = Bres/Dstar`: with `g = gnum/gden`, the quotient rule gives `A/D − g′ = resNum/resDen`
-where `resNum = A·gden² − D·(gnum'·gden − gnum·gden')` and `resDen = D·gden²`. The lemma below is the
-pure `RatFunc ℚ` calculation of that subtraction; `am_cdiv_of_cmod_zero` then folds the exact division
-`Bres = (resNum·Dstar)/resDen` into the squarefree-denominator form `Bres/Dstar`. -/
+/-! ### The residual-recovery identity (in `RatFunc ℚ`) -/
 
 open scoped Differential in
-/-- **The residual-recovery numerator identity** in `RatFunc ℚ`: with `am = algebraMap ℚ[X]
-(RatFunc ℚ)`, for `D, gden ≠ 0`, the difference of `A/D` and the derivative of the rational part
-`gnum/gden` is `resNum/(D·gden²)` where `resNum = A·gden² − D·(gnum'·gden − gnum·gden')`. The
-quotient-rule numerator of `(gnum/gden)′` cleared over the common denominator `D·gden²`. -/
+/-- The residual-recovery numerator identity in `RatFunc ℚ`: for `D, gden ≠ 0`,
+`am A/am D − (am gnum/am gden)′ = am resNum/(am D·(am gden·am gden))` with
+`resNum = A·gden² − D·(gnum'·gden − gnum·gden')`. -/
 theorem residual_numerator_ratFunc (A D gnum gden : ℚ[X]) (hD : D ≠ 0) (hgden : gden ≠ 0) :
     algebraMap ℚ[X] (RatFunc ℚ) A / algebraMap ℚ[X] (RatFunc ℚ) D
         - (algebraMap ℚ[X] (RatFunc ℚ) gnum / algebraMap ℚ[X] (RatFunc ℚ) gden)′
@@ -586,28 +499,13 @@ theorem residual_numerator_ratFunc (A D gnum gden : ℚ[X]) (hD : D ≠ 0) (hgde
   rw [pow_two]
   field_simp
 
-/-! ### The full `hermiteReduce` wrapper correctness (in `RatFunc ℚ`)
-
-The previous pieces combine into the public correctness theorem for the computable wrapper
-`hermiteReduce`. Its residual numerator `Bres = cdiv … (resNum·Dstar) resDen` is computed by exact
-division, so as a `RatFunc ℚ` element it equals `resNum·Dstar / resDen`. Folding that through
-`residual_numerator_ratFunc` (the quotient-rule identity `A/D − g′ = resNum/resDen`) and cancelling
-`Dstar` against `resDen = D·gden²` (using `Dstar ∣ D`, witnessed by the exact-division certificate)
-gives `am A/am D = (toQFun g)′ + am Bres/am Dstar`. The single hypothesis is the exact-division
-certificate — exactly the polynomial **cleared identity** `resNum·Dstar = Bres·resDen` (the
-worked-example instance is `native_decide`-validated in the source catalog). -/
+/-! ### The full `hermiteReduce` wrapper correctness (in `RatFunc ℚ`) -/
 
 open scoped Differential in
-/-- **Full `hermiteReduce` wrapper correctness** in `RatFunc ℚ`: writing
-`hermiteReduce fuel A D = ((gnum, gden), (Bres, Dstar))` with `am = algebraMap ℚ[X] (RatFunc ℚ)`,
-under the *exact-division certificate* — the residual numerator `Bres = cdiv fuel (resNum·Dstar)
-resDen` divides exactly (`toPoly (cmod fuel (resNum·Dstar) resDen) = 0`), where
-`resNum = A·gden² − D·(gnum'·gden − gnum·gden')` and `resDen = D·gden²` — and with `D, gden ≠ 0`,
-`Dstar ≠ 0`, the computed reduction satisfies `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`.
-I.e. `∫ A/D = gnum/gden + ∫ Bres/Dstar`: the rational part is `gnum/gden` and the residual integrand
-is `Bres/Dstar`. The certificate is precisely the polynomial cleared identity
-`resNum·Dstar = Bres·resDen`. Combines `residual_numerator_ratFunc` (the quotient-rule numerator) with
-`am_cdiv_of_cmod_zero` (the exact division), cancelling `Dstar` in `am Bres/am Dstar`. -/
+/-- Full `hermiteReduce` wrapper correctness in `RatFunc ℚ`: under the exact-division certificate
+`hexact` and `D, gden ≠ 0`, `Dstar ≠ 0`, the reduction satisfies
+`am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` with `Bres = cdiv fuel (resNum·Dstar) (D·gden²)`
+and `resNum = A·gden² − D·(gnum'·gden − gnum·gden')`. -/
 theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : CPoly)
     (gnum gden Dstar : CPoly)
     (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0)
@@ -671,12 +569,9 @@ theorem toQFun_cnorm (gnum gden : CPoly) :
   simp only [toQFun, toPoly_cnorm]
 
 open scoped Differential in
-/-- **`hermiteReduce` wrapper correctness, residual form** in `RatFunc ℚ`, stated with the residual
-`Bres` taken as the `cnorm`-wrapped exact division (the algorithm's output shape): under the
-exact-division certificate `hexact` and `D, gden ≠ 0`, `Dstar ≠ 0`, the rational part `gnum/gden`
-together with `Bres/Dstar` gives `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. A direct
-`cnorm`-fold of `hermiteReduce_residual_correct` — the form matching how `hermiteReduce` returns its
-residual numerator `Bres = cnorm (cdiv … (resNum·Dstar) (D·gden²))`. -/
+/-- `hermiteReduce` wrapper correctness, residual form with `Bres` the `cnorm`-wrapped exact division:
+under `hexact` and `D, gden ≠ 0`, `Dstar ≠ 0`,
+`am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. -/
 theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly)
     (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
     (hexact : toPoly (cmod fuel
@@ -695,13 +590,9 @@ theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly)
   exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hD hgden hDstar hexact
 
 open scoped Differential in
-/-- **`hermiteReduce` wrapper correctness from an algebraic divisibility certificate** in `RatFunc ℚ`:
-the exact-division premise as an honest `ℚ[X]` *divisibility* `toPoly (D·gden²) ∣ toPoly (resNum·Dstar)`
-(plus a fuel bound), rather than a `cmod`-computation. Under `D, gden ≠ 0`, `Dstar ≠ 0`, and the
-divisibility certificate, `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. The divisibility is
-the genuine mathematical content: it holds because `A/D − g′` is a polynomial fraction over `Dstar`
-(equivalently `Dstar ∣ D` and the numerator clears). Discharges the `cmod` certificate via
-`cmod_eq_zero_of_dvd`. -/
+/-- `hermiteReduce` wrapper correctness from an algebraic divisibility certificate in `RatFunc ℚ`: with
+the premise `toPoly (D·gden²) ∣ toPoly (resNum·Dstar)` (plus a fuel bound), and `D, gden ≠ 0`,
+`Dstar ≠ 0`, `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. -/
 theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar : CPoly)
     (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
@@ -725,17 +616,9 @@ theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar 
   exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hD hgden hDstar
     (cmod_eq_zero_of_dvd fuel _ _ hresDen hfuel hdvd)
 
-/-! ### The Yun radical `Dstar` divides `D` through `toPoly`
+/-! ### The Yun radical `Dstar` divides `D` through `toPoly` -/
 
-`hermiteReduce`'s squarefree radical `Dstar = ∏ⱼ Vⱼ` is the product of the Yun factors `csqfreeFactor
-fuel D = [(V₁,i₁),…]`. The honest content of the Yun decomposition is that this radical divides `D` in
-`ℚ[X]`: `toPoly Dstar ∣ toPoly D`. Each Yun factor `Vⱼ = monic(gcd(bⱼ, dⱼ))` divides its working
-numerator `bⱼ` (gcd divides), and the working numerators chain by *exact* division `bⱼ₊₁ = bⱼ/Vⱼ`
-(`b₁ = D/gcd(D,D')`), so `∏ⱼ Vⱼ ∣ b₁ ∣ D`. The exact-division steps are the engine-honesty content,
-bundled as `SqfreeExact`; `step_exact` reduces each to gcd-termination plus a fuel bound. -/
-
-/-- `cmonic q` divides `q` through `toPoly`: `toPoly (cmonic q) ∣ toPoly q`. (`cmonic q = (clead q)⁻¹·q`
-is an associate of `q`, hence divides it; the zero case is `0 ∣ 0`.) -/
+/-- `cmonic q` divides `q` through `toPoly`: `toPoly (cmonic q) ∣ toPoly q`. -/
 theorem toPoly_cmonic_dvd (q : CPoly) : toPoly (cmonic q) ∣ toPoly q := by
   unfold cmonic
   by_cases h : cisZero (cnorm q)
@@ -751,15 +634,11 @@ theorem toPoly_cmonic_dvd (q : CPoly) : toPoly (cmonic q) ∣ toPoly q := by
     rw [mul_comm (Polynomial.C (clead (cnorm q))⁻¹) (toPoly q), mul_assoc, ← map_mul,
       inv_mul_cancel₀ hc, map_one, mul_one]
 
-/-- The product, through `toPoly`, of the first components of a Yun factor list `[(V₁,i₁),…]`:
-`goProd l = ∏ⱼ toPoly Vⱼ`. The radical `Dstar` of `hermiteReduce` reads to this (`toPoly_Dstar_eq`). -/
+/-- The `toPoly`-product of the first components of a factor list: `goProd l = ∏ⱼ toPoly Vⱼ`. -/
 noncomputable def goProd (l : List (CPoly × ℕ)) : ℚ[X] := (l.map (fun vi => toPoly vi.1)).prod
 
-/-- **Per-step exactness predicate** for the Yun loop `csqfreeFactor.go`, mirroring its recursion on
-the fuel counter `fo`: at each non-terminal step (numerator `b` non-constant) the factor `q =
-monic(gcd b d)` divides `b` *exactly* — `toPoly b = toPoly q · toPoly (b/q)` — and the predicate
-recurses on the deflated `(b', d')`. This is the engine-honesty content that makes the Yun radical an
-honest divisor; `step_exact` discharges one step from gcd-termination plus a fuel bound. -/
+/-- Per-step exactness predicate for `csqfreeFactor.go`: at each non-terminal step the factor
+`q = monic(gcd b d)` divides `b` exactly (`toPoly b = toPoly q · toPoly (b/q)`), recursing on `(b', d')`. -/
 def GoExact (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
   | 0, _, _ => True
   | fo + 1, b, d =>
@@ -770,10 +649,8 @@ def GoExact (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
       let d' := csub (cdiv fuel d q) (cderiv b')
       toPoly b = toPoly q * toPoly b' ∧ GoExact fuel fo b' d'
 
-/-- **The Yun loop's factor product divides its numerator**: under `GoExact`, the product of the
-factors emitted by `csqfreeFactor.go fuel fo b d i` divides `toPoly b`. Induction on `fo`: a dropped
-(constant) factor leaves `goProd rest ∣ b' ∣ b`; a kept factor `q` gives `toPoly q · goProd rest ∣
-toPoly q · toPoly b' = toPoly b` by the step exactness. -/
+/-- Under `GoExact`, the product of the factors emitted by `csqfreeFactor.go fuel fo b d i` divides
+`toPoly b`. -/
 theorem goProd_dvd (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly) (i : ℕ),
     GoExact fuel fo b d → goProd (csqfreeFactor.go fuel fo b d i) ∣ toPoly b := by
   intro fo
@@ -814,18 +691,14 @@ theorem toPoly_foldl_cmul_fst (l : List (CPoly × ℕ)) (init : CPoly) :
     simp only [goProd, List.map_cons, List.prod_cons]
     ring
 
-/-- The radical `Dstar = ∏ⱼ Vⱼ` (the `hermiteReduce` fold of the Yun factor list) reads to `goProd`:
-`toPoly (factors.foldl (cmul · vi.1) [1]) = goProd factors`. -/
+/-- The radical fold reads to `goProd`: `toPoly (l.foldl (cmul · vi.1) [1]) = goProd l`. -/
 theorem toPoly_Dstar_eq (l : List (CPoly × ℕ)) :
     toPoly (l.foldl (fun acc (vi : CPoly × ℕ) => cmul acc vi.1) [1]) = goProd l := by
   rw [toPoly_foldl_cmul_fst]
   simp [toPoly_cons, toPoly_nil]
 
-/-- **One Yun step is exact** when the extended-gcd terminates with enough fuel: with `q =
-monic(gcd b d)` and `b ≠ 0`, `toPoly b = toPoly q · toPoly (b/q)`. The gcd divides `b`
-(`toPoly_cgcdExt_dvd`), `cmonic` preserves this (`toPoly_cmonic_dvd`), and `q ∣ b` makes the Euclidean
-division exact (`cmod_eq_zero_of_dvd` + `toPoly_cdiv_of_cmod_zero`). Discharges one conjunct of
-`GoExact`/`SqfreeExact`. -/
+/-- One Yun step is exact when the extended-gcd terminates with enough fuel: with `q = monic(gcd b d)`
+and `b ≠ 0`, `toPoly b = toPoly q · toPoly (b/q)`. -/
 theorem step_exact (fuel : ℕ) (b d : CPoly) (hbne : cnorm b ≠ [])
     (hterm : cgcdTerminates fuel b d) (hfuel : (cnorm b).length ≤ fuel) :
     toPoly b = toPoly (cmonic (cgcdExt fuel b d).1)
@@ -840,10 +713,8 @@ theorem step_exact (fuel : ℕ) (b d : CPoly) (hbne : cnorm b ≠ [])
   have hrem : toPoly (cmod fuel b q) = 0 := cmod_eq_zero_of_dvd fuel b q hqne hfuel hqb
   rw [toPoly_cdiv_of_cmod_zero fuel b q hqne hrem]; ring
 
-/-- **Engine-honesty bundle** for `csqfreeFactor fuel D`: the initial deflation `b₁ = D/gcd(D,D')` is an
-exact division (`toPoly D = toPoly(gcd) · toPoly b₁`) and every Yun loop step is exact (`GoExact`). On a
-concrete `D` each conjunct is the (decidable) vanishing of a `cmod` remainder; `step_exact` reduces a
-step to gcd-termination plus a fuel bound. -/
+/-- Engine-honesty bundle for `csqfreeFactor fuel D`: the initial deflation `b₁ = D/gcd(D,D')` is an
+exact division and every Yun loop step is exact (`GoExact`). -/
 def SqfreeExact (fuel : ℕ) (D : CPoly) : Prop :=
   let p := cnorm D
   let g := (cgcdExt fuel p (cderiv p)).1
@@ -851,17 +722,8 @@ def SqfreeExact (fuel : ℕ) (D : CPoly) : Prop :=
   let d1 := csub (cdiv fuel (cderiv p) g) (cderiv b1)
   toPoly p = toPoly g * toPoly b1 ∧ GoExact fuel fuel b1 d1
 
-/-- **The Yun radical divides `D`** (`csqfreeFactor` correctness, radical clause): under the
-engine-honesty bundle `SqfreeExact fuel D`, the squarefree radical `Dstar = ∏ⱼ Vⱼ` of
-`csqfreeFactor fuel D` divides `D` in `ℚ[X]`: `toPoly Dstar ∣ toPoly D`. The product of the Yun factors
-divides the initial deflation `b₁` (`goProd_dvd`), and `b₁ = D/gcd(D,D')` divides `D` by the initial
-exact division. This is the honest mathematical content of the Yun squarefree factorization recorded by
-`hermiteReduce`. The squarefree and pairwise-coprime clauses for full `csqfreeFactor` correctness — each
-`Vⱼ` squarefree and the `Vⱼ` pairwise coprime — are proved at the abstract `K[X]` level below
-(`yunFactorizationAbs_squarefree`/`_pairwise_isRelPrime`, unconditional from `A ≠ 0`) and transferred to
-the concrete `csqfreeFactor` (`csqfreeFactor_squarefree`/`csqfreeFactor_pairwise_isRelPrime`) through the
-now-crossed `ℚ`-instance diamond (see the `GoYun`/`go_factor_assoc` sections), under the honesty bundle
-`SqfreeYun`. -/
+/-- The Yun radical divides `D`: under `SqfreeExact fuel D`, the radical `Dstar = ∏ⱼ Vⱼ` of
+`csqfreeFactor fuel D` satisfies `toPoly Dstar ∣ toPoly D`. -/
 theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPoly) (hex : SqfreeExact fuel D) :
     toPoly ((csqfreeFactor fuel D).foldl (fun acc (vi : CPoly × ℕ) => cmul acc vi.1) [1])
       ∣ toPoly D := by
@@ -877,30 +739,13 @@ theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPoly) (hex : SqfreeExact fuel D) :
     rw [← toPoly_cnorm D, hb1]; exact Dvd.intro_left _ rfl
   exact hdvd.trans hb1D
 
-/-! ### What radical-divides buys (and what it does *not*) for the wrapper
-
-`toPoly_Dstar_dvd_D` settles the **radical clause** `toPoly Dstar ∣ toPoly D`. This is the `Dstar ∣ D`
-half mentioned in `hermiteReduce_residual_correct_of_dvd`'s docstring — but **not** the full divisibility
-that theorem requires. Its hypothesis is `toPoly (D·gden²) ∣ toPoly (resNum·Dstar)` with
-`resNum = A·gden² − D·(gnum'·gden − gnum·gden')`; cancelling `Dstar` against `D = Dstar·W`, this is
-`W·gden² ∣ A·gden² − D·gprimeNum`, which forces `W ∣ A` and so does **not** follow from `Dstar ∣ D`
-alone (it is the *cleared Hermite identity* `resNum·Dstar = Bres·(D·gden²)`, validated per-example in
-the source catalog). The missing half — "the numerator clears" — is exactly the
-correctness of the computed rational part `g = gnum/gden` (that `A/D − g′` genuinely has denominator
-`Dstar`), i.e. the full `hermiteInner`/`hermiteReduce` loop correctness, a strictly larger result than
-`csqfreeFactor`'s honesty. So `toPoly_Dstar_dvd_D` is a genuine ingredient toward an unconditional
-wrapper, but does not by itself discharge `hermiteReduce_residual_correct_of_dvd`. -/
-
 /-! ### A computable witness for `SqfreeExact` (`native_decide`-checkable)
 
-`SqfreeExact` is phrased with `toPoly` equalities (noncomputable). Its computable mirror `SqfreeExactComp`
-asserts the *vanishing of the `cmod` remainders* of each division — a decidable condition that
-`native_decide` checks on a concrete `D`. `SqfreeExactComp_to_SqfreeExact` discharges the `toPoly` bundle
-from the `cmod`-zero witnesses (via `toPoly_cdiv_of_cmod_zero`), so the Yun radical-divides theorem
-`toPoly_Dstar_dvd_D` is concretely instantiable. -/
+The computable mirror `SqfreeExactComp` asserts the vanishing of the `cmod` remainders of each
+division — decidable — and `SqfreeExactComp_to_SqfreeExact` discharges the `toPoly` bundle from it. -/
 
-/-- **Computable per-step exactness** for the Yun loop: at each non-terminal step the `cmod`-remainder of
-`b` by `q = monic(gcd b d)` vanishes and `q ≠ 0`. Decidable (so `native_decide`-checkable). -/
+/-- Computable per-step exactness for the Yun loop: at each non-terminal step the `cmod`-remainder of
+`b` by `q = monic(gcd b d)` vanishes and `q ≠ 0`. Decidable. -/
 def GoExactComp (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
   | 0, _, _ => True
   | fo + 1, b, d =>
@@ -925,8 +770,7 @@ instance decGoExactComp (fuel fo : ℕ) (b d : CPoly) : Decidable (GoExactComp f
           (cderiv (cdiv fuel b (cmonic (cgcdExt fuel b d).1))))
       infer_instance
 
-/-- The computable `GoExactComp` implies the `toPoly` predicate `GoExact`: each vanishing `cmod`
-remainder makes the corresponding `cdiv` an honest division (`toPoly_cdiv_of_cmod_zero`). -/
+/-- `GoExactComp` implies `GoExact`: each vanishing `cmod` remainder makes the `cdiv` an honest division. -/
 theorem GoExactComp_to_GoExact (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly),
     GoExactComp fuel fo b d → GoExact fuel fo b d := by
   intro fo
@@ -946,9 +790,8 @@ theorem GoExactComp_to_GoExact (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly),
       exact (toPoly_cdiv_of_cmod_zero fuel b (cmonic (cgcdExt fuel b d).1) hqne hrem0).trans
         (mul_comm _ _)
 
-/-- **Computable engine-honesty bundle** for `csqfreeFactor fuel D`: the `cmod`-remainders of the
-initial deflation and of every Yun loop step vanish (and the divisors are nonzero). Decidable
-(`native_decide`-checkable); implies the `toPoly` bundle `SqfreeExact`. -/
+/-- Computable engine-honesty bundle for `csqfreeFactor fuel D`: the `cmod`-remainders of the initial
+deflation and every Yun loop step vanish (nonzero divisors). Decidable; implies `SqfreeExact`. -/
 def SqfreeExactComp (fuel : ℕ) (D : CPoly) : Prop :=
   let p := cnorm D
   let g := (cgcdExt fuel p (cderiv p)).1
@@ -960,9 +803,8 @@ def SqfreeExactComp (fuel : ℕ) (D : CPoly) : Prop :=
 instance decSqfreeExactComp (fuel : ℕ) (D : CPoly) : Decidable (SqfreeExactComp fuel D) := by
   unfold SqfreeExactComp; infer_instance
 
-/-- The computable `SqfreeExactComp` implies the `toPoly` bundle `SqfreeExact`: the vanishing
-`cmod`-remainders make the initial deflation and each Yun step honest divisions
-(`toPoly_cdiv_of_cmod_zero`, `GoExactComp_to_GoExact`). -/
+/-- `SqfreeExactComp` implies `SqfreeExact`: the vanishing `cmod`-remainders make the initial
+deflation and each Yun step honest divisions. -/
 theorem SqfreeExactComp_to_SqfreeExact (fuel : ℕ) (D : CPoly) :
     SqfreeExactComp fuel D → SqfreeExact fuel D := by
   intro h
@@ -975,22 +817,12 @@ theorem SqfreeExactComp_to_SqfreeExact (fuel : ℕ) (D : CPoly) :
   exact (toPoly_cdiv_of_cmod_zero fuel (cnorm D) (cgcdExt fuel (cnorm D) (cderiv (cnorm D))).1
     hgne hrem0).trans (mul_comm _ _)
 
-/-! ### Full `csqfreeFactor` Yun correctness — the abstract invariant
-
-Toward the *equality* clause `toPoly D = u·∏ⱼ (toPoly Vⱼ)^iⱼ` (with each `Vⱼ` squarefree and the `Vⱼ`
-pairwise coprime), this section ties `csqfreeFactor`'s `(b, d)` recurrence to the abstract Yun theory of
-`SquarefreeFactorization` (the `deflation`/`squarefreePart`/`sqfreeFactPart`/`Yun` machinery). The
-invariant carried through the loop: at step `i`, the working numerator `bᵢ` is the radical of the
-remaining part `∏_{j≥i} Vⱼ = squarefreePart (deflation A (i−1))`, and the working derivative-poly
-`dᵢ = Yᵢ − bᵢ′ = Vᵢ·Y_{i+1}`; the emitted factor `gcd(bᵢ, dᵢ) ~ Vᵢ = sqfreeFactPart A i`. -/
+/-! ### Full `csqfreeFactor` Yun correctness — the abstract invariant -/
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- **The abstract Yun gcd step**: `gcd(∏_{j≥i} Vⱼ, Yᵢ − (∏_{j≥i} Vⱼ)′) ~ Vᵢ`, the i-th squarefree
-factor. The radical `S = squarefreePart (deflation A (i−1)) = Vᵢ · S'` (`S' = squarefreePart
-(deflation A i)`) and the working derivative-poly `d = Yᵢ − S′ = Vᵢ · Y_{i+1}` share the common factor
-`Vᵢ`; pulling it out (`gcd_mul_left'`), `gcd(S', Y_{i+1})` is a unit by `S' ⊥ Y_{i+1}`
-(`isRelPrime_squarefreePart_Yun`). The core gcd identity pinning each Yun factor to `Vᵢ`. -/
+/-- The abstract Yun gcd step: `gcd (squarefreePart (deflation A (i−1))) (Yᵢ − (…)′)` is
+`Associated (sqfreeFactPart A i)`, the i-th squarefree factor. -/
 theorem gcd_radical_yunStep_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) :
     Associated
@@ -1014,18 +846,11 @@ theorem gcd_radical_yunStep_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) 
     (associated_one_iff_isUnit.mpr hunit).mul_left V
   rwa [mul_one] at this
 
-/-! ### Squarefreeness and pairwise coprimality of the Yun factors (from the abstract association)
-
-A Yun factor that is `Associated` to some `sqfreeFactPart A j` inherits squarefreeness
-(`sqfreeFactPart_squarefree` is `Associated`-invariant) and, between two factors at *distinct*
-multiplicities, relative primality (`sqfreeFactPart_isRelPrime`). These reduce the squarefree/coprime
-clauses of full `csqfreeFactor` correctness to the loop-association invariant
-`toPoly Vⱼ ~ sqfreeFactPart A jⱼ` (the remaining open piece). -/
+/-! ### Squarefreeness and pairwise coprimality of the Yun factors (from the abstract association) -/
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- **A Yun factor is squarefree**: any `V` associated to `sqfreeFactPart A j` is squarefree
-(`sqfreeFactPart_squarefree` carried across `Associated.squarefree_iff`). -/
+/-- A Yun factor is squarefree: any `V` associated to `sqfreeFactPart A j` is squarefree. -/
 theorem squarefree_of_associated_sqfreeFactPart {K : Type*} [Field K]
     {V : K[X]} (A : K[X]) (j : ℕ) (h : Associated V (sqfreeFactPart A j)) :
     Squarefree V :=
@@ -1033,50 +858,36 @@ theorem squarefree_of_associated_sqfreeFactPart {K : Type*} [Field K]
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- **Two Yun factors at distinct multiplicities are relatively prime**: if `V ~ sqfreeFactPart A i`,
-`W ~ sqfreeFactPart A j` and `i ≠ j`, then `IsRelPrime V W` (`sqfreeFactPart_isRelPrime` transported
-across the associations via `IsRelPrime.of_dvd_left`/`of_dvd_right`). -/
+/-- Two Yun factors at distinct multiplicities are relatively prime: if `V ~ sqfreeFactPart A i`,
+`W ~ sqfreeFactPart A j` and `i ≠ j`, then `IsRelPrime V W`. -/
 theorem isRelPrime_of_associated_sqfreeFactPart {K : Type*} [Field K]
     {V W : K[X]} (A : K[X]) {i j : ℕ} (hij : i ≠ j)
     (hV : Associated V (sqfreeFactPart A i)) (hW : Associated W (sqfreeFactPart A j)) :
     IsRelPrime V W :=
   ((sqfreeFactPart_isRelPrime A hij).of_dvd_left hV.dvd).of_dvd_right hW.dvd
 
-/-! ### The abstract Yun loop state and its step recurrence (exact, scalar-tracked)
-
-`csqfreeFactor`'s loop carries a numerator `b` (the radical of the remaining part) and a
-derivative-poly `d`, updating `(b, d) ↦ (b/gcd, d/gcd − (b/gcd)′)`. Because the `d`-update contains a
-**subtraction**, the invariant cannot be tracked up to `Associated` alone (subtraction does not respect
-associates); it must track a single *shared scalar* `c ∈ K` relating `(b, d)` to the abstract pair
-`(Babs A i, Dabs A i)`. The two abstract objects satisfy EXACT product identities
-`Babs A i = Vᵢ · Babs A (i+1)` and `Dabs A i = Vᵢ · Yun A (i+1)` (from
-`squarefreePart_deflation_mul_sqfreeFactPart` and `Yun_sub_derivative_squarefreePart`), and `gcd Babs
-Dabs = normalize Vᵢ` (the relatively-prime quotient is a unit), so dividing both by the monic gcd
-multiplies each by the *same* scalar `(leadingCoeff Vᵢ)` — the shared-scalar invariant is preserved. -/
+/-! ### The abstract Yun loop state and its step recurrence (exact, scalar-tracked) -/
 
 open Classical in
-/-- **Abstract Yun numerator** `Babs A i = ∏_{j≥i} Vⱼ`, the radical of the remaining part at step `i`
-(`= squarefreePart (deflation A (i−1))`). -/
+/-- Abstract Yun numerator `Babs A i = squarefreePart (deflation A (i−1))`, the remaining radical at step `i`. -/
 noncomputable def Babs {K : Type*} [Field K] (A : K[X]) (i : ℕ) : K[X] :=
   squarefreePart (deflation A (i - 1))
 
 open Classical in
-/-- **Abstract Yun derivative-poly** `Dabs A i = Yᵢ − Babs A i′ = Vᵢ · Y_{i+1}`, the working `d` at
-step `i`. -/
+/-- Abstract Yun derivative-poly `Dabs A i = Yun A i − (squarefreePart (deflation A (i−1)))′`, the
+working `d` at step `i`. -/
 noncomputable def Dabs {K : Type*} [Field K] (A : K[X]) (i : ℕ) : K[X] :=
   Yun A i - derivative (squarefreePart (deflation A (i - 1)))
 
 open Classical in
-/-- `Babs A i = Vᵢ · Babs A (i+1)` (exact): the remaining radical factors off `Vᵢ` and the radical of
-the next remaining part. Restates `squarefreePart_deflation_mul_sqfreeFactPart`. -/
+/-- `Babs A i = sqfreeFactPart A i · Babs A (i+1)` (exact): the remaining radical factors off `Vᵢ`. -/
 theorem Babs_eq_mul {K : Type*} [Field K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
     Babs A i = sqfreeFactPart A i * Babs A (i + 1) := by
   rw [Babs, Babs, Nat.add_sub_cancel, ← squarefreePart_deflation_mul_sqfreeFactPart A i hi hA,
     mul_comm]
 
 open Classical in
-/-- `Dabs A i = Vᵢ · Yun A (i+1)` (exact): the working derivative-poly factors off `Vᵢ`. Restates
-`Yun_sub_derivative_squarefreePart`. -/
+/-- `Dabs A i = sqfreeFactPart A i · Yun A (i+1)` (exact): the working derivative-poly factors off `Vᵢ`. -/
 theorem Dabs_eq_mul {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) :
     Dabs A i = sqfreeFactPart A i * Yun A (i + 1) := by
@@ -1084,10 +895,7 @@ theorem Dabs_eq_mul {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi 
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- **The monic Yun gcd is `normalize Vᵢ`**: `gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart
-A i)`. Both `Babs A i = Vᵢ·Babs A (i+1)` and `Dabs A i = Vᵢ·Y_{i+1}` carry the common factor `Vᵢ`;
-factoring it out (`gcd_mul_left`), `gcd (Babs A (i+1)) (Y_{i+1})` is a unit (relatively prime,
-`isRelPrime_squarefreePart_Yun`, normalized to `1`), leaving `normalize Vᵢ`. -/
+/-- The monic Yun gcd is `normalize Vᵢ`: `gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i)`. -/
 theorem gcd_Babs_Dabs {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) :
     gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i) := by
@@ -1102,8 +910,7 @@ theorem gcd_Babs_Dabs {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (h
     gcd (Babs A (i + 1)) (Yun A (i + 1)) = 1), mul_one]
 
 open Classical in
-/-- `Vᵢ = C(leadingCoeff Vᵢ) · normalize Vᵢ` over a field: the monic normalization scaled back by the
-leading coefficient recovers the polynomial. (`normalize p = p · C(leadingCoeff p)⁻¹`.) -/
+/-- `p = C(leadingCoeff p) · normalize p` over a field. -/
 theorem self_eq_C_leadingCoeff_mul_normalize {K : Type*} [Field K] (p : K[X]) (hp : p ≠ 0) :
     p = Polynomial.C p.leadingCoeff * normalize p := by
   have hlc : p.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hp
@@ -1117,20 +924,15 @@ theorem self_eq_C_leadingCoeff_mul_normalize {K : Type*} [Field K] (p : K[X]) (h
 /-! ### The shared-scalar Yun loop invariant and its one-step preservation -/
 
 open Classical in
-/-- **The Yun loop invariant** (shared-scalar form): the concrete working pair `(b, d)` is a *common
-constant multiple* `C c · (Babs A i, Dabs A i)` of the abstract radical/derivative-poly at step `i`
-(with `c ≠ 0`). The single shared scalar `c` is what lets the subtraction in the `d`-update commute
-with the abstract identities. -/
+/-- The Yun loop invariant (shared-scalar form): the working pair `(b, d)` is a common constant
+multiple `C c · (Babs A i, Dabs A i)` with `c ≠ 0`. -/
 def YunInv {K : Type*} [Field K] (A : K[X]) (i : ℕ) (b d : K[X]) : Prop :=
   ∃ c : K, c ≠ 0 ∧ b = Polynomial.C c * Babs A i ∧ d = Polynomial.C c * Dabs A i
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- **One Yun loop step preserves the invariant.** From `YunInv A i b d` (with `1 ≤ i`,
-`A.primPart ≠ 0`), the monic gcd `q = gcd b d = normalize Vᵢ`, the deflated numerator `b' = b/q` and
-updated derivative-poly `d' = d/q − b′′` satisfy `YunInv A (i+1) b' d'` — with the scalar advancing by
-`leadingCoeff Vᵢ`. The shared scalar `c·leadingCoeff Vᵢ` multiplies *both* `Babs A (i+1)` and
-`Dabs A (i+1)`, so the subtraction `d/q − (b/q)′` realizes exactly `C(c·w)·(Y_{i+1} − Babs A (i+1)′)`. -/
+/-- One Yun loop step preserves the invariant: from `YunInv A i b d` (`1 ≤ i`, `A.primPart ≠ 0`),
+`gcd b d = normalize Vᵢ` and the deflated `(b/gcd, d/gcd − (b/gcd)′)` satisfy `YunInv A (i+1)`. -/
 theorem yunStep_preserves {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
     gcd b d = normalize (sqfreeFactPart A i) ∧
@@ -1165,38 +967,26 @@ theorem yunStep_preserves {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- **The emitted Yun factor is associated to `Vᵢ`**: under `YunInv A i b d`, the monic gcd `gcd b d`
-(the i-th emitted squarefree factor) is `Associated (sqfreeFactPart A i)`. Hence it is squarefree
-(`squarefree_of_associated_sqfreeFactPart`); factors at distinct multiplicities are relatively prime
-(`isRelPrime_of_associated_sqfreeFactPart`). -/
+/-- The emitted Yun factor is associated to `Vᵢ`: under `YunInv A i b d`, `gcd b d` is
+`Associated (sqfreeFactPart A i)`. -/
 theorem yunStep_emit_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
     Associated (gcd b d) (sqfreeFactPart A i) := by
   rw [(yunStep_preserves A i hi hA hinv).1]
   exact normalize_associated (sqfreeFactPart A i)
 
-/-! ### The abstract Yun loop and its factorwise correctness
-
-The abstract loop `yunLoopAbs A (b, d) i n` runs `n` Yun steps from the working pair `(b, d)` at
-multiplicity `i`, emitting `gcd bⱼ dⱼ` (the j-th squarefree factor) at each step. Iterating
-`yunStep_preserves` keeps `YunInv A (i+j)` along the run, so the j-th emitted factor is `Associated
-(sqfreeFactPart A (i+j))` — squarefree, and at distinct multiplicities pairwise relatively prime. -/
+/-! ### The abstract Yun loop and its factorwise correctness -/
 
 open Classical in
-/-- **Abstract Yun loop**: `n` steps from `(b, d)` at multiplicity `i`, emitting `gcd bⱼ dⱼ` each step
-(the abstract counterpart of `csqfreeFactor.go`, with the `K[X]` monic `gcd` for `cmonic ∘ cgcdExt`
-and honest `/` for `cdiv`). -/
+/-- Abstract Yun loop: `n` steps from `(b, d)` at multiplicity `i`, emitting `gcd bⱼ dⱼ` each step. -/
 noncomputable def yunLoopAbs {K : Type*} [Field K] (A : K[X]) : K[X] × K[X] → ℕ → ℕ → List K[X]
   | _, _, 0 => []
   | (b, d), i, (n + 1) =>
       gcd b d :: yunLoopAbs A (b / gcd b d, d / gcd b d - derivative (b / gcd b d)) (i + 1) n
 
 open Classical in
-/-- **Abstract Yun loop correctness**: from `YunInv A i b d` (with `1 ≤ i`), the `n`-step run emits
-factors `[gcd b₁ d₁, …]` that are `Forall₂ Associated` to `[Vᵢ, Vᵢ₊₁, …, V_{i+n−1}]`
-(`sqfreeFactPart A (i+j)`). The decomposition spine: each Yun factor is, up to a constant, the
-matching squarefree-factorization part. Induction on `n` using `yunStep_emit_assoc` (head) and
-`yunStep_preserves` (tail invariant). -/
+/-- Abstract Yun loop correctness: from `YunInv A i b d` (`1 ≤ i`), the `n`-step run is
+`Forall₂ Associated` to `(List.range n).map (fun j => sqfreeFactPart A (i+j))`. -/
 theorem yunLoopAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0) :
     ∀ (n i : ℕ) (b d : K[X]), 1 ≤ i → YunInv A i b d →
       List.Forall₂ Associated (yunLoopAbs A (b, d) i n)
@@ -1219,9 +1009,8 @@ theorem yunLoopAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA :
     exact htail
 
 open Classical in
-/-- **Every Yun factor is squarefree** (abstract loop): under `YunInv A i b d` (`1 ≤ i`), every member
-of `yunLoopAbs A (b, d) i n` is squarefree. Direct induction: the head `gcd b d ~ Vᵢ` is squarefree
-(`yunStep_emit_assoc` + `squarefree_of_associated_sqfreeFactPart`); the tail keeps `YunInv` (step). -/
+/-- Every Yun factor is squarefree (abstract loop): under `YunInv A i b d` (`1 ≤ i`), every member of
+`yunLoopAbs A (b, d) i n` is squarefree. -/
 theorem yunLoopAbs_squarefree {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0) :
     ∀ (n i : ℕ) (b d : K[X]), 1 ≤ i → YunInv A i b d →
       ∀ V ∈ yunLoopAbs A (b, d) i n, Squarefree V := by
@@ -1236,10 +1025,8 @@ theorem yunLoopAbs_squarefree {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA 
     · exact ih (i + 1) _ _ (by omega) (yunStep_preserves A i hi hA hinv).2 V hV
 
 open Classical in
-/-- **The Yun factors are pairwise relatively prime** (abstract loop): under `YunInv A i b d`
-(`1 ≤ i`), members of `yunLoopAbs A (b, d) i n` at distinct list positions `p ≠ q` are `IsRelPrime`.
-Their multiplicities `i+p ≠ i+q` differ, so `isRelPrime_of_associated_sqfreeFactPart` applies to the
-two factors (each `Associated` to its `sqfreeFactPart` by `yunLoopAbs_forall₂`). -/
+/-- The Yun factors are pairwise relatively prime (abstract loop): under `YunInv A i b d` (`1 ≤ i`),
+members of `yunLoopAbs A (b, d) i n` at distinct positions `p ≠ q` are `IsRelPrime`. -/
 theorem yunLoopAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K[X])
     (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d)
     {p q : ℕ} (hpq : p ≠ q) (hp : p < (yunLoopAbs A (b, d) i n).length)
@@ -1261,10 +1048,8 @@ theorem yunLoopAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K
 /-! ### The Yun decomposition: product of the factors -/
 
 open Classical in
-/-- **The product of the Yun factors is the remaining radical** (abstract loop): under `YunInv A i b d`
-(`1 ≤ i`), the product of the `n` emitted factors is `Associated (∏_{j<n} Vᵢ₊ⱼ)` (`= ∏_{j<n}
-sqfreeFactPart A (i+j)`). Via `List.rel_prod` (`Associated` is multiplicative) on
-`yunLoopAbs_forall₂`. -/
+/-- The product of the Yun factors is the remaining radical (abstract loop): under `YunInv A i b d`
+(`1 ≤ i`), `(yunLoopAbs A (b, d) i n).prod` is `Associated (∏_{j<n} sqfreeFactPart A (i+j))`. -/
 theorem yunLoopAbs_prod_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0)
     (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
     Associated (yunLoopAbs A (b, d) i n).prod
@@ -1273,15 +1058,13 @@ theorem yunLoopAbs_prod_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA 
     (fun _ _ hx _ _ hy => hx.mul_mul hy) (yunLoopAbs_forall₂ A hA n i b d hi hinv)
 
 open Classical in
-/-- **Powered product** of a Yun-factor list `[e₀, e₁, …]`: `∏ₖ eₖ^{i+k}`, raising the k-th factor to
-its multiplicity `i+k` (the radical-to-full-power lift used in the Yun decomposition `∏ⱼ Vⱼ^iⱼ`). -/
+/-- Powered product of a factor list `[e₀, e₁, …]`: `∏ₖ eₖ^{i+k}`, raising the k-th factor to `i+k`. -/
 noncomputable def prodPow {K : Type*} [Field K] (i : ℕ) : List K[X] → K[X]
   | [] => 1
   | e :: es => e ^ i * prodPow (i + 1) es
 
 open Classical in
-/-- `prodPow` respects `Forall₂ Associated` pointwise: associated factor-lists give associated
-powered products (each `eₖ ~ Vₖ` lifts to `eₖ^{i+k} ~ Vₖ^{i+k}` by `Associated.pow`, multiplied). -/
+/-- `prodPow` respects `Forall₂ Associated`: associated factor-lists give associated powered products. -/
 theorem prodPow_associated {K : Type*} [Field K] {l₁ l₂ : List K[X]}
     (h : List.Forall₂ Associated l₁ l₂) (i : ℕ) :
     Associated (prodPow i l₁) (prodPow i l₂) := by
@@ -1290,24 +1073,15 @@ theorem prodPow_associated {K : Type*} [Field K] {l₁ l₂ : List K[X]}
   | cons hhd _ ih => exact hhd.pow_pow.mul_mul (ih (i + 1))
 
 open Classical in
-/-- **The exponentiated Yun decomposition** (abstract loop): under `YunInv A i b d` (`1 ≤ i`), the
-powered product `∏ₖ eₖ^{i+k}` of the emitted factors is `Associated (∏_{j<n} Vᵢ₊ⱼ^{i+j})`. From
-`yunLoopAbs_forall₂` via `prodPow_associated`. With `n` covering all multiplicities and `b₁/d₁` the
-initial radical/derivative-poly, the right side is `A.primPart` up to associates
-(`primPart_associated_prod_sqfreeFactPart`), giving the Yun product decomposition `D ~ u·∏ⱼ Vⱼ^iⱼ`. -/
+/-- The exponentiated Yun decomposition (abstract loop): under `YunInv A i b d` (`1 ≤ i`),
+`prodPow i (yunLoopAbs A (b, d) i n)` is `Associated (prodPow i (∏_{j<n} sqfreeFactPart A (i+j)))`. -/
 theorem yunLoopAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0)
     (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
     Associated (prodPow i (yunLoopAbs A (b, d) i n))
       (prodPow i ((List.range n).map (fun j => sqfreeFactPart A (i + j)))) :=
   prodPow_associated (yunLoopAbs_forall₂ A hA n i b d hi hinv) i
 
-/-! ### The Yun loop base case: `csqfreeFactor`'s `(b₁, d₁)` satisfy `YunInv A 1`
-
-The initialization `b₁ = A/gcd(A,A′)`, `d₁ = A′/gcd(A,A′) − b₁′` of `csqfreeFactor` satisfies the
-shared-scalar invariant `YunInv A 1 b₁ d₁` with scalar `c = leadingCoeff A`. The two monic equalities
-`deflation A 0 = normalize A` (the monic radical-free part) and `gcd A A′ = deflation A 1` reduce the
-init to `derivative_deflation_pred` (`(deflation A 0)′ = deflation A 1 · Yun A 1`) with the scalar
-`leadingCoeff A` consistently shared between `b₁` and `d₁`. -/
+/-! ### The Yun loop base case: `csqfreeFactor`'s `(b₁, d₁)` satisfy `YunInv A 1` -/
 
 open UniqueFactorizationMonoid in
 open Classical in
@@ -1347,8 +1121,7 @@ theorem associated_primPart_self {K : Type*} [Field K] (A : K[X]) (hA0 : A ≠ 0
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- `deflation A 0 = normalize A`: the monic radical-free part is the monic associate of `A`
-(`deflation A 0 ~ A.primPart ~ A ~ normalize A`, all reduced to equality by monic-ness). -/
+/-- `deflation A 0 = normalize A`: the monic radical-free part is the monic associate of `A`. -/
 theorem deflation_zero_eq_normalize {K : Type*} [Field K] (A : K[X]) (hA0 : A ≠ 0)
     (hA : A.primPart ≠ 0) : deflation A 0 = normalize A := by
   refine eq_of_monic_of_associated (deflation_monic A 0)
@@ -1358,7 +1131,7 @@ theorem deflation_zero_eq_normalize {K : Type*} [Field K] (A : K[X]) (hA0 : A �
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- `A′ = C(content A) · A.primPart′`: the derivative pulls the constant content through. -/
+/-- `derivative A = C(content A) · derivative A.primPart`. -/
 theorem derivative_eq_C_content_mul_derivative_primPart {K : Type*} [Field K] (A : K[X]) :
     derivative A = Polynomial.C A.content * derivative A.primPart := by
   conv_lhs => rw [A.eq_C_content_mul_primPart]
@@ -1366,9 +1139,7 @@ theorem derivative_eq_C_content_mul_derivative_primPart {K : Type*} [Field K] (A
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- `gcd A A′ = deflation A 1` over a field: the gcd of `A` and its derivative is Musser's first
-deflation. `gcd A A′ ~ gcd A.primPart A.primPart′ ~ deflation A 1` (`deflation_one_eq_gcd`), both monic
-hence equal. -/
+/-- `gcd A (derivative A) = deflation A 1` over a field. -/
 theorem gcd_self_derivative_eq_deflation_one {K : Type*} [Field K] [CharZero K] (A : K[X])
     (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) :
     gcd A (derivative A) = deflation A 1 := by
@@ -1389,9 +1160,8 @@ theorem gcd_self_derivative_eq_deflation_one {K : Type*} [Field K] [CharZero K] 
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- `squarefreePart (deflation A 0) · deflation A 1 = deflation A 0` (exact, monic version of relation
-1.11): the radical times the first deflation recovers the radical-free part, with associated monics
-forced to equality. -/
+/-- `squarefreePart (deflation A 0) · deflation A 1 = deflation A 0` (exact, monic): the radical times
+the first deflation recovers the radical-free part. -/
 theorem squarefreePart_mul_deflation_one {K : Type*} [Field K] (A : K[X]) (hA : A.primPart ≠ 0) :
     squarefreePart (deflation A 0) * deflation A 1 = deflation A 0 := by
   refine eq_of_monic_of_associated
@@ -1400,11 +1170,8 @@ theorem squarefreePart_mul_deflation_one {K : Type*} [Field K] (A : K[X]) (hA : 
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- **The Yun loop base case**: `csqfreeFactor`'s initialization `(b₁, d₁) = (A/gcd(A,A′), A′/gcd(A,A′)
-− b₁′)` satisfies `YunInv A 1 b₁ d₁` with shared scalar `c = leadingCoeff A`. From the equalities
-`deflation A 0 = normalize A`, `gcd A A′ = deflation A 1`, the exact relation `Babs A 1 · deflation A 1
-= deflation A 0`, and `derivative_deflation_pred` (`(deflation A 0)′ = deflation A 1 · Yun A 1`): both
-`b₁` and `d₁` factor as `C(leadingCoeff A)` times the abstract `Babs A 1`, `Dabs A 1`. -/
+/-- The Yun loop base case: `csqfreeFactor`'s initialization `(A/gcd(A,A′), A′/gcd(A,A′) − b₁′)`
+satisfies `YunInv A 1` with shared scalar `c = leadingCoeff A`. -/
 theorem yunInv_base {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
     (hA : A.primPart ≠ 0) :
     YunInv A 1 (A / gcd A (derivative A))
@@ -1439,23 +1206,18 @@ theorem yunInv_base {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0
   refine ⟨A.leadingCoeff, hlc, hb1, ?_⟩
   rw [hd1div, hb1, derivative_C_mul, Dabs, Nat.sub_self, ← hbabs, mul_sub]
 
-/-! ### Unconditional abstract Yun factorization
-
-Starting the loop from the `csqfreeFactor` initialization (`yunInv_base`), the abstract Yun loop
-`yunFactorizationAbs A n = yunLoopAbs A (A/gcd(A,A′), A′/gcd(A,A′) − …) 1 n` factorizes `A` with no
-`YunInv` hypothesis — only `A ≠ 0`. All four clauses (factorwise association to `Vᵢ`, squarefree,
-pairwise relatively prime, product decomposition) hold unconditionally. -/
+/-! ### Unconditional abstract Yun factorization -/
 
 open Classical in
-/-- **Unconditional abstract Yun factorization** of `A : K[X]`: the `n`-step Yun loop from the
+/-- Unconditional abstract Yun factorization of `A : K[X]`: the `n`-step Yun loop from the
 initialization `(A/gcd(A,A′), A′/gcd(A,A′) − (A/gcd(A,A′))′)`. -/
 noncomputable def yunFactorizationAbs {K : Type*} [Field K] (A : K[X]) (n : ℕ) : List K[X] :=
   yunLoopAbs A (A / gcd A (derivative A),
     derivative A / gcd A (derivative A) - derivative (A / gcd A (derivative A))) 1 n
 
 open Classical in
-/-- **Factorwise correctness** (unconditional): `yunFactorizationAbs A n` is `Forall₂ Associated` to
-`[V₁, …, Vₙ]` (`sqfreeFactPart A (1+j)`). From `yunLoopAbs_forall₂` + `yunInv_base`. -/
+/-- Factorwise correctness (unconditional): `yunFactorizationAbs A n` is `Forall₂ Associated` to
+`(List.range n).map (fun j => sqfreeFactPart A (1+j))`. -/
 theorem yunFactorizationAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
     (hA : A.primPart ≠ 0) (n : ℕ) :
     List.Forall₂ Associated (yunFactorizationAbs A n)
@@ -1463,13 +1225,13 @@ theorem yunFactorizationAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[
   yunLoopAbs_forall₂ A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
 
 open Classical in
-/-- **Every Yun factor is squarefree** (unconditional). -/
+/-- Every Yun factor is squarefree (unconditional). -/
 theorem yunFactorizationAbs_squarefree {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
     (hA : A.primPart ≠ 0) (n : ℕ) : ∀ V ∈ yunFactorizationAbs A n, Squarefree V :=
   yunLoopAbs_squarefree A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
 
 open Classical in
-/-- **The Yun factors are pairwise relatively prime** (unconditional). -/
+/-- The Yun factors are pairwise relatively prime (unconditional). -/
 theorem yunFactorizationAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K[X])
     (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ) {p q : ℕ} (hpq : p ≠ q)
     (hp : p < (yunFactorizationAbs A n).length) (hq : q < (yunFactorizationAbs A n).length) :
@@ -1477,26 +1239,17 @@ theorem yunFactorizationAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero 
   yunLoopAbs_pairwise_isRelPrime A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA) hpq hp hq
 
 open Classical in
-/-- **The product decomposition** (unconditional): the powered product `∏ₖ eₖ^{1+k}` of the Yun
-factors is `Associated (∏_{j<n} V_{1+j}^{1+j})`. With `n` covering all multiplicities this is
-`A.primPart` up to associates (`primPart_associated_prod_sqfreeFactPart`), i.e. the Yun decomposition
-`A ~ u·∏ⱼ Vⱼ^iⱼ`. -/
+/-- The product decomposition (unconditional): the powered product `∏ₖ eₖ^{1+k}` of the Yun factors is
+`Associated (∏_{j<n} sqfreeFactPart A (1+j)^{1+j})`. -/
 theorem yunFactorizationAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
     (hA : A.primPart ≠ 0) (n : ℕ) :
     Associated (prodPow 1 (yunFactorizationAbs A n))
       (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
   yunLoopAbs_prodPow_assoc A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
 
-/-! ### Bridging the concrete `csqfreeFactor` monic gcd to the abstract `gcd`
+/-! ### Bridging the concrete `csqfreeFactor` monic gcd to the abstract `gcd` -/
 
-The atomic concrete↔abstract correspondence for one Yun step: the computable monic gcd `cmonic
-(cgcdExt fuel b d).1` realizes the abstract monic `gcd (toPoly b) (toPoly d)` under `toPoly`. This is
-the load-bearing translation that aligns `csqfreeFactor.go`'s emitted factor `cmonic (cgcdExt b d)`
-with `yunLoopAbs`'s emitted factor `gcd (toPoly b) (toPoly d)`. -/
-
-/-- **`cmonic` realizes `normalize`** through `toPoly`: `toPoly (cmonic q) = normalize (toPoly q)`. The
-nonzero case is `C (clead q)⁻¹ · toPoly q`, with `clead q = leadingCoeff (toPoly q)`, which is exactly
-`normalize` over a field; the zero case is `0`. -/
+/-- `cmonic` realizes `normalize` through `toPoly`: `toPoly (cmonic q) = normalize (toPoly q)`. -/
 theorem toPoly_cmonic_eq_normalize (q : CPoly) :
     toPoly (cmonic q) = normalize (toPoly q) := by
   unfold cmonic
@@ -1515,10 +1268,8 @@ theorem toPoly_cmonic_eq_normalize (q : CPoly) :
     rw [show ((normUnit (toPoly q).leadingCoeff : ℚ) : ℚ) = (toPoly q).leadingCoeff⁻¹ from by
           simp [hlc], toPoly_cnorm, mul_comm]
 
-/-- **The concrete monic gcd realizes the abstract `gcd`** (under gcd-termination): `toPoly (cmonic
-(cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d)`. The computable gcd is `~ gcd (toPoly b) (toPoly d)`
-(divides both by `toPoly_cgcdExt_dvd`, greatest by `toPoly_dvd_cgcdExt`); `cmonic` normalizes it, and
-`gcd` is already normalized, so the monic associates are equal. -/
+/-- The concrete monic gcd realizes the abstract `gcd` (under gcd-termination):
+`toPoly (cmonic (cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d)`. -/
 theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : CPoly) (hterm : cgcdTerminates fuel b d) :
     toPoly (cmonic (cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d) := by
   rw [toPoly_cmonic_eq_normalize]
@@ -1530,20 +1281,11 @@ theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : CPoly) (hterm : cgcdTerminates
   rw [← normalize_gcd (toPoly b) (toPoly d)]
   exact normalize_eq_normalize_iff.mpr (hassoc.dvd_dvd)
 
-/-! ### The concrete `csqfreeFactor.go` carries the abstract `YunInv` — squarefree emitted factors
+/-! ### The concrete `csqfreeFactor.go` carries the abstract `YunInv` — squarefree emitted factors -/
 
-Under a per-step **honesty bundle** `GoYun` (gcd-termination, and both `b/q` and `d/q` exact divisions
-realized under `toPoly`), the concrete loop `csqfreeFactor.go` maps under `toPoly` onto the abstract
-`yunLoopAbs` step: the working pair `(toPoly b, toPoly d)` satisfies `YunInv (toPoly A) i`, the monic
-gcd `cmonic (cgcdExt b d).1` realizes `gcd (toPoly b) (toPoly d)`, and `(b', d')` advance the
-invariant (`yunStep_preserves`). Hence every (kept) emitted factor is `~ sqfreeFactPart`, so squarefree
-(`yunStep_emit_assoc` + `squarefree_of_associated_sqfreeFactPart`). -/
-
-/-- **Per-step honesty bundle** for `csqfreeFactor.go` to realize the abstract Yun step: at each
-non-terminal step (`b` non-constant) the gcd terminates, the monic divisor `q = cmonic (cgcdExt b d).1`
-divides both `b` and `d` exactly (`toPoly b = toPoly q · toPoly b′`, `toPoly d = toPoly q · toPoly
-(d/q)`), and the predicate recurses on `(b′, d′)`. The honest content making the concrete loop a faithful
-realization of `yunLoopAbs`. -/
+/-- Per-step honesty bundle for `csqfreeFactor.go` to realize the abstract Yun step: at each
+non-terminal step the gcd terminates and `q = cmonic (cgcdExt b d).1` divides both `b` and `d` exactly,
+recursing on `(b′, d′)`. -/
 def GoYun (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
   | 0, _, _ => True
   | fo + 1, b, d =>
@@ -1557,45 +1299,19 @@ def GoYun (fuel : ℕ) : ℕ → CPoly → CPoly → Prop
         toPoly d = toPoly q * toPoly (cdiv fuel d q) ∧
         GoYun fuel fo b' d'
 
-/-! ### The `ℚ`-instance diamond in the concrete bridge — RESOLVED
-
-The concrete↔abstract step correspondence (`csqfreeFactor.go`'s `(b′, d′)` maps to `yunLoopAbs`'s
-`(b/gcd, d/gcd − (b/gcd)′)`) is provable per step from `toPoly_cmonic_cgcdExt`, `GoYun`'s exact
-divisions, and `toPoly_cderiv`. Carrying the abstract invariant `YunInv (A : ℚ[X]) i …` through the
-loop and applying `yunStep_preserves`/`yunStep_emit_assoc` at `ℚ[X]` once appeared blocked by a
-**`CommRing ℚ` instance diamond**: the abstract theory (stated over `{K} [Field K]`) derives
-`CommRing ℚ` as `Field.toCommRing`, while `csqfreeFactor`/`Babs`/`normalizedFactors` use `ℚ`'s ambient
-`Rat.commRing` (with `instDecidableEqRat` rather than `Classical.dec` for the `NormalizedGCDMonoid`).
-The two `primPart`/`gcd`/`squarefreePart` instances are *defeq* but not syntactically equal. The
-resolution (next sections): the diamond reduces — through `convert`/the `rw`-trick — to two residual
-instance equalities, the `CommRing ℚ` halves being `rfl`-defeq and the `NormalizedGCDMonoid ℚ` halves
-differing only in a `Subsingleton (DecidableEq ℚ)` argument. This crosses the gap: the ambient-`ℚ` step
-bridges (`yunInv_base_rat`/`yunStep_emit_assoc_rat`/`yunStep_preserves_rat`) carry the abstract spine
-through the concrete loop (`go_factor_assoc`), yielding the concrete `csqfreeFactor` **squarefree** and
-**pairwise-coprime** clauses (`csqfreeFactor_squarefree`/`csqfreeFactor_pairwise_isRelPrime`) under the
-engine-honesty bundle `SqfreeYun`. -/
-
 /-! ### Crossing the `ℚ`-instance diamond by `convert`
 
-The wall above is **not** a wall: `convert hX using 2` reduces an abstract-theory hypothesis/conclusion
-about `A : ℚ[X]` stated with the field-derived `CommRing`/`NormalizedGCDMonoid` to two residual instance
-equalities — the `CommRing ℚ` halves are *defeq* (`rfl`), and the two `NormalizedGCDMonoid ℚ` instances
-differ only in their `DecidableEq ℚ` argument (`instDecidableEqRat` vs `Classical.propDecidable`), a
-`Subsingleton`. So the abstract Yun spine *does* transfer to the concrete `ℚ`-ambient instances. The
-`ratInst%`-tactic below packages the discharge; the `_rat` specializations apply it. -/
+The abstract Yun theory is stated over `{K} [Field K]` (deriving `CommRing`/`NormalizedGCDMonoid` from
+`Field`), while the concrete loop uses `ℚ`'s ambient instances. `convert … using 2` reduces the gap to
+`rfl` on the `CommRing ℚ` halves and a `Subsingleton (DecidableEq ℚ)` on the `NormalizedGCDMonoid` ones;
+the `_rat` specializations below package this discharge. -/
 
 open Classical in
-/-- Bridge the `ℚ`-instance diamond on a `primPart ≠ 0` hypothesis: the ambient `Rat.commRing`-flavored
-`A.primPart ≠ 0` coerces to the `Classical`/`Field.toCommRing`-flavored one the abstract theory expects.
-`primPart`, `gcd`, `squarefreePart` over `ℚ` are *defeq* between the two instance paths (the `CommRing`
-halves are `rfl`, the `NormalizedGCDMonoid` halves differ only in a `Subsingleton (DecidableEq ℚ)`),
-so `convert` closes the gap. -/
+/-- `A.primPart ≠ 0` for `A : ℚ[X]`. -/
 theorem primPart_ne_zero_rat (A : ℚ[X]) : A.primPart ≠ 0 := A.primPart_ne_zero
 
-/-- **Every Yun factor is squarefree** over `ℚ` (ambient instances): for `A : ℚ[X]`, `A ≠ 0`, every
-member of `yunFactorizationAbs A n` is squarefree. The ambient-instance specialization of
-`yunFactorizationAbs_squarefree`, with the `ℚ`-instance diamond discharged by `convert` (the residual
-`CommRing ℚ` equality is `rfl`, the `NormalizedGCDMonoid ℚ` one a `Subsingleton (DecidableEq ℚ)`). -/
+/-- Every Yun factor is squarefree over `ℚ` (ambient instances): for `A : ℚ[X]`, `A ≠ 0`, every member
+of `yunFactorizationAbs A n` is squarefree. -/
 theorem yunFactorizationAbs_squarefree_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) :
     ∀ V ∈ yunFactorizationAbs A n, Squarefree V := by
   convert yunFactorizationAbs_squarefree A hA0 ?_ n using 2
@@ -1604,11 +1320,8 @@ theorem yunFactorizationAbs_squarefree_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ
   · congr 1
     exact Subsingleton.elim _ _
 
-/-- The ambient `NormalizedGCDMonoid ℚ[X]` instance equals the `Classical`-derived one used by the
-abstract Yun theory: both are `Polynomial`'s UFD-derived monoid built over `NormalizedGCDMonoid ℚ`, and
-the two `NormalizedGCDMonoid ℚ` instances differ only in a `Subsingleton (DecidableEq ℚ)` argument. The
-propositional-`Eq` form lets `sqfreeFactPart`/`yunFactorizationAbs` over `ℚ[X]` agree across the diamond
-by substitution rather than fragile deep `convert`. -/
+/-- `sqfreeFactPart A i` over `ℚ[X]` agrees across the ambient/`Classical` instance paths (they differ
+only in a `Subsingleton (DecidableEq ℚ)` argument), stated as a propositional `Eq`. -/
 theorem sqfreeFactPart_rat_eq (A : ℚ[X]) (i : ℕ) :
     @sqfreeFactPart ℚ Rat.commRing Rat.isDomain _ _ A i
       = @sqfreeFactPart ℚ Rat.instField.toCommRing _ _
@@ -1624,9 +1337,8 @@ theorem sqfreeFactPart_rat_eq (A : ℚ[X]) (i : ℕ) :
             (@CommGroupWithZero.instNormalizedGCDMonoid ℚ Rat.commGroupWithZero instDecidableEqRat)
             A i from rfl, hinst]
 
-/-- **Factorwise correctness** over `ℚ` (ambient instances): `yunFactorizationAbs A n` is `Forall₂
-Associated` to the squarefree-factorization parts `[V₁, …, Vₙ]`. Ambient specialization of
-`yunFactorizationAbs_forall₂` through the `convert` instance bridge. -/
+/-- Factorwise correctness over `ℚ` (ambient instances): `yunFactorizationAbs A n` is `Forall₂
+Associated` to `(List.range n).map (fun j => sqfreeFactPart A (1+j))`. -/
 theorem yunFactorizationAbs_forall₂_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) :
     List.Forall₂ Associated (yunFactorizationAbs A n)
       ((List.range n).map (fun j => sqfreeFactPart A (1 + j))) := by
@@ -1637,9 +1349,8 @@ theorem yunFactorizationAbs_forall₂_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ)
   · congr 1
     exact Subsingleton.elim _ _
 
-/-- **Pairwise relative primality** over `ℚ` (ambient instances): distinct-position factors of
-`yunFactorizationAbs A n` are `IsRelPrime`. Ambient specialization of
-`yunFactorizationAbs_pairwise_isRelPrime` through the `convert` instance bridge. -/
+/-- Pairwise relative primality over `ℚ` (ambient instances): distinct-position factors of
+`yunFactorizationAbs A n` are `IsRelPrime`. -/
 theorem yunFactorizationAbs_pairwise_isRelPrime_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) {p q : ℕ}
     (hpq : p ≠ q) (hp : p < (yunFactorizationAbs A n).length)
     (hq : q < (yunFactorizationAbs A n).length) :
@@ -1650,9 +1361,8 @@ theorem yunFactorizationAbs_pairwise_isRelPrime_rat (A : ℚ[X]) (hA0 : A ≠ 0)
   · congr 1
     exact Subsingleton.elim _ _
 
-/-- **The product decomposition** over `ℚ` (ambient instances): the powered product `∏ₖ eₖ^{1+k}` of
-the Yun factors is `Associated (∏_{j<n} V_{1+j}^{1+j})`. Ambient specialization of
-`yunFactorizationAbs_prodPow_assoc` through the `convert` instance bridge. -/
+/-- The product decomposition over `ℚ` (ambient instances): the powered product `∏ₖ eₖ^{1+k}` of the
+Yun factors is `Associated (∏_{j<n} sqfreeFactPart A (1+j)^{1+j})`. -/
 theorem yunFactorizationAbs_prodPow_assoc_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : ℕ) :
     Associated (prodPow 1 (yunFactorizationAbs A n))
       (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) := by
@@ -1663,18 +1373,10 @@ theorem yunFactorizationAbs_prodPow_assoc_rat (A : ℚ[X]) (hA0 : A ≠ 0) (n : 
   · congr 1
     exact Subsingleton.elim _ _
 
-/-! ### Concrete-loop step bridges: the abstract Yun step over ambient `ℚ` instances
+/-! ### Concrete-loop step bridges: the abstract Yun step over ambient `ℚ` instances -/
 
-To carry the abstract `YunInv`/`yunStep_*` apparatus through the concrete `csqfreeFactor.go` loop —
-whose `toPoly`-image lives in `ℚ[X]` with *ambient* instances — the abstract step lemmas are
-specialized to ambient `ℚ`. The recipe (instance-bridge through the `DecidableEq ℚ` subsingleton):
-`primPart` discharged by `convert A.primPart_ne_zero using 2`; the `gcd`/`sqfreeFactPart` value-level
-diamond rewritten away by `gcd_rat_eq`/`sqfreeFactPart_rat_eq`; the abstract conclusion then closed by
-`exact` (whnf-bridging the residual `Babs`/`Dabs` reading inside `YunInv`). -/
-
-/-- The ambient `gcd` over `ℚ[X]` equals the `Classical`-derived one used by the abstract Yun theory:
-both are `Polynomial.normalizedGcdMonoid` over `NormalizedGCDMonoid ℚ`, which differ only in a
-`Subsingleton (DecidableEq ℚ)` argument. The value-level companion of `sqfreeFactPart_rat_eq`. -/
+/-- The ambient `gcd` over `ℚ[X]` equals the `Classical`-derived one (differing only in a
+`Subsingleton (DecidableEq ℚ)` argument). Value-level companion of `sqfreeFactPart_rat_eq`. -/
 theorem gcd_rat_eq (a b : ℚ[X]) :
     @gcd ℚ[X] _ (@Polynomial.normalizedGcdMonoid ℚ Rat.commRing _).toGCDMonoid a b
       = @gcd ℚ[X] _ (@Polynomial.normalizedGcdMonoid ℚ Rat.instField.toCommRing
@@ -1689,8 +1391,7 @@ theorem gcd_rat_eq (a b : ℚ[X]) :
             (@CommGroupWithZero.instNormalizedGCDMonoid ℚ Rat.commGroupWithZero instDecidableEqRat)).toGCDMonoid
           a b from rfl, hinst]
 
-/-- **Yun loop base case** over ambient `ℚ` (`yunInv_base` specialized): `csqfreeFactor`'s
-initialization `(A/gcd(A,A′), A′/gcd(A,A′) − …)` satisfies `YunInv A 1 …` with ambient instances. -/
+/-- Yun loop base case over ambient `ℚ`: `csqfreeFactor`'s initialization satisfies `YunInv A 1`. -/
 theorem yunInv_base_rat (A : ℚ[X]) (hA0 : A ≠ 0) :
     YunInv A 1 (A / gcd A (derivative A))
       (derivative A / gcd A (derivative A) - derivative (A / gcd A (derivative A))) := by
@@ -1699,13 +1400,9 @@ theorem yunInv_base_rat (A : ℚ[X]) (hA0 : A ≠ 0) :
   rw [gcd_rat_eq A (derivative A)]
   exact key
 
-/-- **Scaled Yun loop base case** over ambient `ℚ`: if the initial pair is a common constant multiple
-`(C u·(A/gcd(A,A′)), C u·(A′/gcd) − (C u·(A/gcd))′)` of the monic-gcd initialization (with `u ≠ 0`),
-then it satisfies `YunInv A 1` with scalar `u·(leadingCoeff A)`. This absorbs the unit discrepancy when
-the concrete `csqfreeFactor` init divides by the *raw* (non-monic) extended-gcd output `g ~ gcd(A,A′)`
-rather than the monic gcd: `A/g = C(leadingCoeff g)⁻¹·(A/gcd)`, so `u = (leadingCoeff g)⁻¹`. The shared
-scalar `u·(leadingCoeff A)` multiplies both `Babs A 1` and `Dabs A 1`, keeping the subtraction in the
-`d`-update consistent. -/
+/-- Scaled Yun loop base case over ambient `ℚ`: if the initial pair is a common constant multiple
+`C u·` of the monic-gcd initialization (`u ≠ 0`), it satisfies `YunInv A 1` with scalar
+`u·(leadingCoeff A)`. Absorbs the unit from dividing by the raw (non-monic) extended-gcd output. -/
 theorem yunInv_base_scaled_rat (A : ℚ[X]) (hA0 : A ≠ 0) (u : ℚ) (hu : u ≠ 0) (b1 d1 : ℚ[X])
     (hb1 : b1 = Polynomial.C u * (A / gcd A (derivative A)))
     (hd1 : d1 = Polynomial.C u * (derivative A / gcd A (derivative A))
@@ -1722,8 +1419,8 @@ theorem yunInv_base_scaled_rat (A : ℚ[X]) (hA0 : A ≠ 0) (u : ℚ) (hu : u �
   · rw [hb1, map_mul]; ring
   · rw [hd1, map_mul]; ring
 
-/-- **The emitted Yun factor is associated to `Vᵢ`** over ambient `ℚ` (`yunStep_emit_assoc`
-specialized): under `YunInv A i b d` (`1 ≤ i`), `gcd b d` is `Associated (sqfreeFactPart A i)`. -/
+/-- The emitted Yun factor is associated to `Vᵢ` over ambient `ℚ`: under `YunInv A i b d` (`1 ≤ i`),
+`gcd b d` is `Associated (sqfreeFactPart A i)`. -/
 theorem yunStep_emit_assoc_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[X]) (hinv : YunInv A i b d) :
     Associated (gcd b d) (sqfreeFactPart A i) := by
   have key := yunStep_emit_assoc A i hi
@@ -1731,9 +1428,8 @@ theorem yunStep_emit_assoc_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[
   rw [sqfreeFactPart_rat_eq A i, gcd_rat_eq b d]
   exact key
 
-/-- **One Yun loop step advances the invariant** over ambient `ℚ` (`yunStep_preserves` specialized,
-second conjunct): from `YunInv A i b d` (`1 ≤ i`), the deflated pair `(b/gcd, d/gcd − (b/gcd)′)`
-satisfies `YunInv A (i+1)`. The invariant carried through the concrete loop. -/
+/-- One Yun loop step advances the invariant over ambient `ℚ`: from `YunInv A i b d` (`1 ≤ i`), the
+deflated `(b/gcd, d/gcd − (b/gcd)′)` satisfies `YunInv A (i+1)`. -/
 theorem yunStep_preserves_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[X]) (hinv : YunInv A i b d) :
     YunInv A (i + 1) (b / gcd b d) (d / gcd b d - derivative (b / gcd b d)) := by
   have key := (yunStep_preserves A i hi
@@ -1742,26 +1438,16 @@ theorem yunStep_preserves_rat (A : ℚ[X]) (i : ℕ) (hi : 1 ≤ i) (b d : ℚ[X
   rw [gcd_rat_eq b d]
   exact key
 
-/-! ### The concrete `csqfreeFactor.go` loop carries the abstract `YunInv` (factorwise association)
+/-! ### The concrete `csqfreeFactor.go` loop carries the abstract `YunInv` (factorwise association) -/
 
-Under the per-step honesty bundle `GoYun` and the loop invariant `YunInv (toPoly A) i`, the concrete
-loop `csqfreeFactor.go` maps onto the abstract `yunStep`: each non-terminal step's monic gcd
-`q = cmonic (cgcdExt b d).1` realizes `gcd (toPoly b) (toPoly d)` (`toPoly_cmonic_cgcdExt`), the exact
-divisions of `GoYun` make the deflated `(b′, d′)` realize `(b/gcd, d/gcd − (b/gcd)′)`, and
-`yunStep_preserves_rat` advances `YunInv`. So every *kept* emitted factor `(V, m)` has
-`toPoly V ~ sqfreeFactPart (toPoly A) m` (`yunStep_emit_assoc_rat`), with the recorded multiplicity `m`
-its abstract index (`i ≤ m`, strictly increasing per recursion). This is the concrete realization that
-transfers the abstract squarefree/coprime clauses onto `csqfreeFactor`. -/
-
-/-- `Babs A i ≠ 0` over `ℚ` (`squarefreePart (deflation A (i−1))` is monic, hence nonzero). -/
+/-- `Babs A i ≠ 0` over `ℚ`. -/
 theorem Babs_ne_zero_rat (A : ℚ[X]) (i : ℕ) : Babs A i ≠ 0 := by
   rw [Babs]
   exact (squarefreePart_deflation_monic A (i - 1)
     (by convert A.primPart_ne_zero using 2 <;>
       first | rfl | (congr 1; exact Subsingleton.elim _ _))).ne_zero
 
-/-- The working numerator of a `YunInv` state is nonzero: `b = C c · Babs A i` with `c ≠ 0` and
-`Babs A i ≠ 0`. -/
+/-- The working numerator `b` of a `YunInv A i b d` state is nonzero. -/
 theorem ne_zero_of_yunInv_rat (A : ℚ[X]) (i : ℕ) (b d : ℚ[X]) (hinv : YunInv A i b d) : b ≠ 0 := by
   obtain ⟨c, hc, hb, _⟩ := hinv
   rw [hb]
@@ -1771,13 +1457,9 @@ theorem ne_zero_of_yunInv_rat (A : ℚ[X]) (i : ℕ) (b d : ℚ[X]) (hinv : YunI
 private theorem eq_div_of_eq_mul {a b c : ℚ[X]} (hc : c ≠ 0) (h : a = c * b) : b = a / c := by
   rw [h, mul_div_cancel_left₀ _ hc]
 
-/-- **The concrete Yun loop's kept factors are factorwise associated to the squarefree parts**: under
-`GoYun fuel fo b d` and `YunInv (toPoly A) i (toPoly b) (toPoly d)` (`1 ≤ i`), every emitted factor
-`(V, m) ∈ csqfreeFactor.go fuel fo b d i` satisfies `toPoly V ~ sqfreeFactPart (toPoly A) m` and
-`i ≤ m`. Induction on the fuel counter: each step's monic gcd realizes `gcd (toPoly b) (toPoly d)`
-(`toPoly_cmonic_cgcdExt`), `GoYun`'s exact divisions give the deflated pair as `(b/gcd, d/gcd − (b/gcd)′)`,
-`yunStep_preserves_rat` advances the invariant, and the head factor is `~ sqfreeFactPart (toPoly A) i`
-(`yunStep_emit_assoc_rat`); dropped (unit) factors leave the tail unchanged. -/
+/-- The concrete Yun loop's kept factors are factorwise associated to the squarefree parts: under
+`GoYun fuel fo b d` and `YunInv (toPoly A) i (toPoly b) (toPoly d)` (`1 ≤ i`), every
+`(V, m) ∈ csqfreeFactor.go fuel fo b d i` has `toPoly V ~ sqfreeFactPart (toPoly A) m` and `i ≤ m`. -/
 theorem go_factor_assoc (fuel : ℕ) (A : CPoly) :
     ∀ (fo : ℕ) (b d : CPoly) (i : ℕ), 1 ≤ i → GoYun fuel fo b d →
       YunInv (toPoly A) i (toPoly b) (toPoly d) →

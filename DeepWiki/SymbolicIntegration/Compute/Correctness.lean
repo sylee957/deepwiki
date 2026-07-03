@@ -3,10 +3,9 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Correctness of the computable engine (`toPoly` agreement bridge)
-Through the `toPoly : CPoly → ℚ[X]` bridge, the `*Compute` operations (`cdivmod`/`cgcdExt`/
-`cresultant`/…) are shown to realize the honest `ℚ[X]` operations on all inputs. The spine is the
-Euclidean-division identity `toPoly p = toPoly (cdiv … p q) · toPoly q + toPoly (cmod … p q)` and the
-Bézout identity for `cgcdExt`, which feed the resultant and Hermite agreements. -/
+Through the `toPoly : CPoly → ℚ[X]` bridge, the computable operations (`cdivmod`/`cgcdExt`/
+`cresultant`/…) realize the `ℚ[X]` operations on all inputs, culminating in the resultant agreement
+`cresultant = Polynomial.resultant`. -/
 
 open Polynomial
 
@@ -15,8 +14,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-- `cnorm [] = []`. -/
 @[simp] theorem cnorm_nil : cnorm ([] : CPoly) = [] := rfl
 
-/-- `cnorm` on a cons cell, unfolded to its defining `match` (`cnorm := cnormG` at `ℚ`, with the
-generic `CField.isZero a = decide (a = 0)` rewritten to `a = 0`). -/
+/-- `cnorm` on a cons cell, unfolded to its defining `match`. -/
 theorem cnorm_cons_eq (a : ℚ) (as : CPoly) :
     cnorm (a :: as)
       = (match cnorm as with | [] => if a = 0 then [] else [a] | r => a :: r) := by
@@ -55,9 +53,8 @@ theorem cnorm_cons_eq (a : ℚ) (as : CPoly) :
       rw [h] at ih
       simp only [toPoly_cons, ih]
 
-/-- Euclidean-division identity through `toPoly` (with `q` already normalized and nonzero, any
-fuel): `toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. The `cdivmod` long division
-realizes honest `ℚ[X]` division up to the polynomial value. -/
+/-- Euclidean-division identity through `toPoly` (for `q` normalized and nonzero):
+`toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. -/
 theorem toPoly_cdivmod (fuel : ℕ) (p q : CPoly) (hqn : cnorm q = q) (hq0 : q ≠ []) :
     toPoly p
       = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
@@ -81,24 +78,23 @@ theorem toPoly_cdivmod (fuel : ℕ) (p q : CPoly) (hqn : cnorm q = q) (hq0 : q �
       simp only [toPoly_cadd, toPoly_cnorm, toPoly_csub, toPoly_cmul] at hih ⊢
       linear_combination hih
 
-/-- `cdivmod fuel p q = cdivmod fuel p (cnorm q)`: `cdivmod` normalizes its divisor, so the
-division identity can drop the "`q` normalized" hypothesis. -/
+/-- `cdivmod fuel p q = cdivmod fuel p (cnorm q)`: `cdivmod` normalizes its divisor. -/
 theorem cdivmod_cnorm_right (fuel : ℕ) (p q : CPoly) :
     cdivmod fuel p q = cdivmod fuel p (cnorm q) := by
   cases fuel with
   | zero => rfl
   | succ fuel => simp only [cdivmod, cnorm_idem]
 
-/-- Euclidean-division identity through `toPoly` for an arbitrary nonzero divisor (`cnorm q ≠ []`,
-any fuel): `toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. -/
+/-- Euclidean-division identity through `toPoly` for an arbitrary nonzero divisor (`cnorm q ≠ []`):
+`toPoly p = toPoly (quotient) · toPoly q + toPoly (remainder)`. -/
 theorem toPoly_cdivmod' (fuel : ℕ) (p q : CPoly) (hq0 : cnorm q ≠ []) :
     toPoly p
       = toPoly (cdivmod fuel p q).1 * toPoly q + toPoly (cdivmod fuel p q).2 := by
   rw [cdivmod_cnorm_right]
   simpa [toPoly_cnorm] using toPoly_cdivmod fuel p (cnorm q) (cnorm_idem q) hq0
 
-/-- Bézout identity through `toPoly` for the extended Euclidean algorithm (any fuel): with
-`(g, s, t) = cgcdExt fuel a b`, `toPoly s · toPoly a + toPoly t · toPoly b = toPoly g`. -/
+/-- Bézout identity through `toPoly` for `cgcdExt`: with `(g, s, t) = cgcdExt fuel a b`,
+`toPoly s · toPoly a + toPoly t · toPoly b = toPoly g`. -/
 theorem toPoly_cgcdExt (fuel : ℕ) (a b : CPoly) :
     toPoly (cgcdExt fuel a b).2.1 * toPoly a + toPoly (cgcdExt fuel a b).2.2 * toPoly b
       = toPoly (cgcdExt fuel a b).1 := by
@@ -120,10 +116,8 @@ theorem toPoly_cgcdExt (fuel : ℕ) (a b : CPoly) :
       simp only [toPoly_csub, toPoly_cmul]
       linear_combination hih + toPoly t * hdiv
 
-/-- The `LogToAtan` step invariant `B·D − A·C = G` holds in `ℚ[X]`: the extended-Euclidean
-cofactors `(G, D, C) = cgcdExt fuel B (−A)` that each `logToAtanCompute` step uses (so that
-`(A·D + B·C)/G` is the next arctan argument) satisfy `toPoly B · toPoly D − toPoly A · toPoly C =
-toPoly G`. -/
+/-- The `LogToAtan` cofactor invariant `B·D − A·C = G` in `ℚ[X]`: for
+`(G, D, C) = cgcdExt fuel B (−A)`, `toPoly B · toPoly D − toPoly A · toPoly C = toPoly G`. -/
 theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : CPoly) :
     toPoly B * toPoly (cgcdExt fuel B (cneg A)).2.1
         - toPoly A * toPoly (cgcdExt fuel B (cneg A)).2.2
@@ -133,13 +127,11 @@ theorem logToAtan_cofactor_bezout (fuel : ℕ) (A B : CPoly) :
   linear_combination h
 
 /-! ### The bivariate bridge `toBPoly : BPoly → ℚ[t][x]` and its homomorphism lemmas
-One level up from `toPoly`: a `BPoly = List CPoly` is read as a polynomial in `x` (`Polynomial`)
-whose coefficients are the `ℚ[t]` polynomials `toPoly`. The homomorphism lemmas reduce the `BPoly`
-algebra to honest `(ℚ[X])[X]` operations, mirroring the `CPoly` layer. -/
+Reads a `BPoly = List CPoly` as a `Polynomial (Polynomial ℚ)` in `x`, each `x`-coefficient via
+`toPoly`; the homomorphism lemmas reduce the `BPoly` algebra to `(ℚ[X])[X]` operations. -/
 
-/-- Bivariate bridge `toBPoly : BPoly → (ℚ[X])[X]`: read a `BPoly` (list of `CPoly = ℚ[t]`
-`x`-coefficients, low→high) as an honest `Polynomial (Polynomial ℚ)` in Horner form in `x`, each
-`x`-coefficient embedded via `toPoly`. -/
+/-- Bivariate bridge `toBPoly : BPoly → (ℚ[X])[X]`: read a `BPoly` as a `Polynomial (Polynomial ℚ)`
+in Horner form in `x`, each `x`-coefficient embedded via `toPoly`. -/
 noncomputable def toBPoly : BPoly → Polynomial (Polynomial ℚ)
   | [] => 0
   | a :: p => Polynomial.C (toPoly a) + Polynomial.X * toBPoly p
@@ -205,7 +197,7 @@ theorem toBPoly_bmul (p q : BPoly) : toBPoly (bmul p q) = toBPoly p * toBPoly q 
 /-- `bnorm [] = []`. -/
 @[simp] theorem bnorm_nil : bnorm ([] : BPoly) = [] := rfl
 
-/-- `bnorm` on a cons cell, unfolded to its defining `match` (definitional). -/
+/-- `bnorm` on a cons cell, unfolded to its defining `match`. -/
 theorem bnorm_cons_eq (a : CPoly) (as : BPoly) :
     bnorm (a :: as)
       = (match bnorm as with
@@ -257,10 +249,8 @@ theorem bpsremainder_bnorm_right (fuel : ℕ) (p q : BPoly) :
 @[simp] theorem toBPoly_one : toBPoly ([[1]] : BPoly) = 1 := by
   simp [toBPoly_cons, toPoly_cons]
 
-/-- Pseudo-division identity through `toBPoly` (any fuel): there is a multiplier `c ∈ ℚ[t]` (a
-product of leading `x`-coefficients of `q`) and a quotient `s` with `C (toPoly c) · toBPoly p =
-toBPoly s · toBPoly q + toBPoly (bpsremainder fuel p q)` — the `ℚ[t][x]` pseudo-division relation
-`lc(q)ᵏ·p = s·q + prem`, existential because `ℚ[t]` is not a field. -/
+/-- Pseudo-division identity through `toBPoly`: there exist a multiplier `c ∈ ℚ[t]` and quotient `s`
+with `C (toPoly c) · toBPoly p = toBPoly s · toBPoly q + toBPoly (bpsremainder fuel p q)`. -/
 theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
     ∃ (s : BPoly) (c : CPoly),
       Polynomial.C (toPoly c) * toBPoly p
@@ -290,9 +280,8 @@ theorem toBPoly_bpsremainder (fuel : ℕ) (p q : BPoly) :
         toPoly_cmul, map_mul]
       linear_combination hsc
 
-/-- Diophantine/Bézout solver correctness through `toPoly`: when `gcd(p, q)` is a nonzero
-constant (the coprimality the Hermite call sites guarantee), `cdiophantine fuel p q rhs = (B, C)`
-solves `B·p + C·q = rhs` in `ℚ[X]`: `toPoly B · toPoly p + toPoly C · toPoly q = toPoly rhs`. -/
+/-- Diophantine/Bézout solver correctness through `toPoly`: when `gcd(p, q)` is a nonzero constant,
+`cdiophantine fuel p q rhs = (B, C)` satisfies `toPoly B · toPoly p + toPoly C · toPoly q = toPoly rhs`. -/
 theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : CPoly) (hq : cnorm q ≠ [])
     (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
     (hgc : clead (cgcdExt fuel p q).1 ≠ 0) :
@@ -315,23 +304,20 @@ theorem toPoly_cdiophantine (fuel : ℕ) (p q rhs : CPoly) (hq : cnorm q ≠ [])
     + (Polynomial.C (clead g)⁻¹ * toPoly rhs) * hbez + toPoly rhs * hinv
 
 /-- `cgcdExt`'s gcd is greatest among common divisors: any `d` dividing both `toPoly a` and
-`toPoly b` divides `toPoly (cgcdExt fuel a b).1` (`g` lies in the ideal `(a, b)` by the Bézout
-identity); this half holds for any fuel. -/
+`toPoly b` divides `toPoly (cgcdExt fuel a b).1`. -/
 theorem toPoly_dvd_cgcdExt {d : ℚ[X]} (fuel : ℕ) (a b : CPoly)
     (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) :
     d ∣ toPoly (cgcdExt fuel a b).1 := by
   rw [← toPoly_cgcdExt fuel a b]
   exact dvd_add (ha.mul_left _) (hb.mul_left _)
 
-/-- Termination predicate for `cgcdExt`: the remainder sequence reaches `0` within `fuel` (the
-algorithm finishes rather than bottoming out on the fuel counter). -/
+/-- Termination predicate for `cgcdExt`: the remainder sequence reaches `0` within `fuel`. -/
 def cgcdTerminates : ℕ → CPoly → CPoly → Prop
   | 0, _, b => cisZero b = true
   | fuel + 1, a, b => cisZero b = true ∨ cgcdTerminates fuel b (cmod (fuel + 1) a b)
 
 /-- `cgcdExt`'s gcd divides both inputs when the algorithm terminates: under `cgcdTerminates`,
-`toPoly (cgcdExt fuel a b).1` divides `toPoly a` and `toPoly b`. With `toPoly_dvd_cgcdExt` this
-characterizes `g` as an honest gcd of `a, b` in `ℚ[X]`. -/
+`toPoly (cgcdExt fuel a b).1` divides `toPoly a` and `toPoly b`. -/
 theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : CPoly), cgcdTerminates fuel a b →
     toPoly (cgcdExt fuel a b).1 ∣ toPoly a ∧ toPoly (cgcdExt fuel a b).1 ∣ toPoly b := by
   intro fuel
@@ -376,8 +362,8 @@ theorem toPoly_cgcdExt_dvd : ∀ (fuel : ℕ) (a b : CPoly), cgcdTerminates fuel
 noncomputable def toQFun (x : QFun) : RatFunc ℚ :=
   algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.1) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly x.2)
 
-/-- `qadd` realizes rational-function addition (for nonzero denominators): `toQFun (qadd x y) =
-toQFun x + toQFun y` in `RatFunc ℚ`. -/
+/-- `qadd` realizes rational-function addition (for nonzero denominators):
+`toQFun (qadd x y) = toQFun x + toQFun y`. -/
 theorem toQFun_qadd (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
     toQFun (qadd x y) = toQFun x + toQFun y := by
   obtain ⟨a, b⟩ := x
@@ -391,12 +377,10 @@ theorem toQFun_qadd (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0)
   rw [div_add_div _ _ hb' hd']
   ring
 
-/-! ### Degree / leading coefficient bridge (toward the resultant agreement)
-The `CPoly` list structure maps to `ℚ[X]` coefficients exactly: `(toPoly p).coeff i = p.getD i 0`.
-From this, `cdeg`/`clead` are the honest `natDegree`/`leadingCoeff` (for a normalized, nonzero list). -/
+/-! ### Degree / leading coefficient bridge
+`(toPoly p).coeff i = p.getD i 0`, from which `cdeg`/`clead` are the `natDegree`/`leadingCoeff`. -/
 
-/-- Coefficient read: the `i`-th coefficient of `toPoly p` is the `i`-th list entry (`0` past the
-end). -/
+/-- Coefficient read: `(toPoly p).coeff i = p.getD i 0`. -/
 theorem toPoly_coeff (p : CPoly) (i : ℕ) : (toPoly p).coeff i = p.getD i 0 := by
   induction p generalizing i with
   | nil => simp
@@ -406,8 +390,7 @@ theorem toPoly_coeff (p : CPoly) (i : ℕ) : (toPoly p).coeff i = p.getD i 0 := 
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
-/-- Degree bound: `natDegree (toPoly p) ≤ (cnorm p).length − 1` (coefficients past the normalized
-length vanish). -/
+/-- Degree bound: `natDegree (toPoly p) ≤ (cnorm p).length − 1`. -/
 theorem natDegree_toPoly_le (p : CPoly) : (toPoly p).natDegree ≤ (cnorm p).length - 1 := by
   rw [← toPoly_cnorm]
   apply Polynomial.natDegree_le_iff_coeff_eq_zero.mpr
@@ -459,9 +442,8 @@ theorem cdeg_eq_natDegree (p : CPoly) : cdeg p = (toPoly p).natDegree := by
 theorem clead_eq_leadingCoeff (p : CPoly) : clead p = (toPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← cdeg_eq_natDegree, ← clead_eq_coeff]
 
-/-- One Euclidean-division step strictly drops the degree (`ℚ[X]` level): subtracting the
-leading-term-matching multiple `C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient, so the
-degree falls. -/
+/-- One Euclidean-division step strictly drops the degree in `ℚ[X]`:
+`(P - C (lcP/lcQ)·X^(degP−degQ)·Q).degree < P.degree`. -/
 theorem degree_reduce_step_lt {P Q : ℚ[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)
     (hpq : Q.natDegree ≤ P.natDegree) :
     (P - C (P.leadingCoeff / Q.leadingCoeff)
@@ -503,9 +485,8 @@ theorem length_cnorm_of_ne (p : CPoly) (h : cnorm p ≠ []) :
   have hlen : 1 ≤ (cnorm p).length := List.length_pos_iff.mpr h
   omega
 
-/-- One `cdivmod` step strictly shortens the normalized list (the termination measure): the
-remainder-loop replacement `cnorm (p − (lcP/lcQ)·xᵏ·q)` has strictly smaller normalized length
-than `p`. -/
+/-- One `cdivmod` step strictly shortens the normalized list: the remainder-loop replacement has
+strictly smaller normalized length than `p`. -/
 theorem step_length_lt (p q : CPoly) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
     (hpq : (cnorm q).length ≤ (cnorm p).length) :
     (cnorm (csub (cnorm p)
@@ -551,7 +532,7 @@ theorem cisZero_cnorm (q : CPoly) : cisZero (cnorm q) = cisZero q := by
   simp only [cisZero, cnorm_idem]
 
 /-- Remainder degree bound: with enough fuel and a nonzero divisor, `cmod fuel p q` has strictly
-smaller normalized length than `q` — the Euclidean remainder is properly reduced. -/
+smaller normalized length than `q`. -/
 theorem cmod_length_lt (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
     (hfuel : (cnorm p).length ≤ fuel) :
     (cnorm (cmod fuel p q)).length < (cnorm q).length := by
@@ -584,10 +565,8 @@ theorem cmod_length_lt (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
       rw [cnorm_idem]
       omega
 
-/-- Euclidean-gcd descent terminates for sufficient fuel (the `cgcdTerminates` discharge): when
-`fuel` bounds the first argument's normalized length and strictly bounds the second's, the
-`cgcdExt` remainder descent reaches a zero remainder within `fuel`. The asymmetric strict-on-`b`
-invariant is what makes the descent close. -/
+/-- Euclidean-gcd descent terminates for sufficient fuel: when `fuel` bounds the first argument's
+normalized length and strictly bounds the second's, `cgcdTerminates fuel a b` holds. -/
 theorem cgcdTerminates_of_fuel :
     ∀ (fuel : ℕ) (a b : CPoly), (cnorm a).length ≤ fuel → (cnorm b).length < fuel →
       cgcdTerminates fuel a b := by
@@ -614,9 +593,8 @@ theorem cgcdTerminates_of_fuel_lt (fuel : ℕ) (a b : CPoly)
     cgcdTerminates fuel a b :=
   cgcdTerminates_of_fuel fuel a b (le_of_lt ha) hb
 
-/-- The Euclidean remainder never exceeds the dividend's length (any fuel):
-`(cnorm (cmod fuel a b)).length ≤ (cnorm a).length`. Unlike `cmod_length_lt`'s strict sub-`b`
-bound, this holds without a fuel hypothesis. -/
+/-- The Euclidean remainder never exceeds the dividend's length:
+`(cnorm (cmod fuel a b)).length ≤ (cnorm a).length`. -/
 theorem cmod_length_le_left :
     ∀ (fuel : ℕ) (a b : CPoly), (cnorm (cmod fuel a b)).length ≤ (cnorm a).length := by
   intro fuel
@@ -652,9 +630,8 @@ theorem cmod_length_le_left :
         refine (ih _ b).trans ?_
         rw [cnorm_idem]; omega
 
-/-- `cgcdExt`'s gcd is no longer than its larger input (any fuel):
-`(cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length` — the output is
-always one of the (length-bounded) iterates, so no fuel hypothesis is needed. -/
+/-- `cgcdExt`'s gcd is no longer than its larger input:
+`(cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length`. -/
 theorem cgcdExt_fst_length_le :
     ∀ (fuel : ℕ) (a b : CPoly),
       (cnorm (cgcdExt fuel a b).1).length ≤ max (cnorm a).length (cnorm b).length := by
@@ -686,8 +663,7 @@ theorem cgcdExt_fst_length_le :
           exact ⟨le_max_right _ _, le_trans hra (le_max_left _ _)⟩
 
 /-- Quotient degree: for a non-constant divisor with `deg q ≤ deg p` and enough fuel,
-`natDegree (cdiv …) + natDegree q = natDegree p` (the Euclidean quotient has degree `deg p − deg q`).
-Supplies `resultant_add_mul_right`'s degree side-condition. -/
+`natDegree (cdiv …) + natDegree q = natDegree p`. -/
 theorem cdiv_natDegree_add (fuel : ℕ) (p q : CPoly) (hp : cnorm p ≠ []) (hq : cnorm q ≠ [])
     (hq2 : 2 ≤ (cnorm q).length) (hpq : (cnorm q).length ≤ (cnorm p).length)
     (hfuel : (cnorm p).length ≤ fuel) :
@@ -742,8 +718,7 @@ theorem cresultant_cnorm (fuel : ℕ) (p q : CPoly) :
   | zero => rfl
   | succ fuel => simp only [cresultant, cnorm_idem]
 
-/-- `cresultant ↔ Polynomial.resultant`, the case `deg q ≤ deg p` (no swap): with enough fuel the
-computable Euclidean-PRS resultant equals Mathlib's Sylvester resultant. -/
+/-- `cresultant = Polynomial.resultant` for the case `deg q ≤ deg p` (with enough fuel). -/
 theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : CPoly),
     (cnorm q).length ≤ (cnorm p).length →
     (cnorm p).length + (cnorm q).length + 1 ≤ fuel →
@@ -822,8 +797,7 @@ theorem cresultant_eq_of_ge : ∀ (fuel : ℕ) (p q : CPoly),
         rw [← hdr, clead_eq_coeff, Nat.add_sub_cancel_left]
         ring
 
-/-- `cresultant = Polynomial.resultant`, the general case: for sufficient fuel the computable
-Euclidean-PRS resultant equals Mathlib's Sylvester resultant for any `p, q`. -/
+/-- `cresultant = Polynomial.resultant`, the general case (for any `p, q`, with sufficient fuel). -/
 theorem cresultant_eq (fuel : ℕ) (p q : CPoly)
     (hfuel : (cnorm p).length + (cnorm q).length + 2 ≤ fuel) :
     cresultant fuel p q = Polynomial.resultant (toPoly p) (toPoly q) (cdeg p) (cdeg q) := by

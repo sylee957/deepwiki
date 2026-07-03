@@ -1,14 +1,9 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.Residues
 
-/-! # Residue multiplicity (Bronstein Theorem 2.5.1, the multiplicity bridge)
-The Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')` has, as a polynomial in `t`, each residue
-`a` of `A/D` as a root; its *multiplicity* there equals the number of roots `α` of `D` whose residue
-`A(α)/D'(α)` is `a`, which in turn equals `deg gcd(D, A − a·D')` (the degree of the Rothstein–Trager
-`Gₐ`). This file proves that bridge over an algebraically closed field for separable `D`:
-`deg gcd(D, A − a·D') = #{α : D(α) = 0, A(α)/D'(α) = a} = rootMultiplicity a R`. It identifies the
-LRT subresultant index `i = deg_x R_m` with `rootMultiplicity a R`, discharging the degree hypotheses
-of `isSimilar_lrtSubresultant_eval_gcd`. -/
+/-! # Residue multiplicity
+The multiplicity of a residue `a` as a root of the Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')`
+equals `deg gcd(D, A − a·D')`, over an algebraically closed field for separable `D`. -/
 
 open Polynomial
 
@@ -17,10 +12,7 @@ namespace DeepWiki.SymbolicIntegration
 variable {F : Type*} [Field F]
 
 open scoped Classical in
-/-- **Residue count, gcd-degree form** (Bronstein Thm 2.5.1, the degree side): over an algebraically
-closed field with separable `D`, the roots of `Gₐ = gcd(D, A − a·D')` are exactly the roots `α` of `D`
-with residue `A(α)/D'(α) = a`. Both multisets are nodup (separable), so they coincide; taking cardinality
-gives `deg gcd(D, A − a·D') = #{α ∈ D.roots : A(α)/D'(α) = a}` as a `Multiset.count` of the residue map. -/
+/-- `deg gcd(D, A − a·D')` equals the count of roots `α` of `D` with residue `A(α)/D'(α) = a`. -/
 theorem natDegree_gcd_eq_count_residue [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (a : F) :
     (gcd D (A - C a * derivative D)).natDegree
       = (D.roots.map (fun α => A.eval α / (derivative D).eval α)).count a := by
@@ -62,12 +54,8 @@ example [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (a : F) :
       = (D.roots.map (fun α => A.eval α / (derivative D).eval α)).count a :=
   natDegree_gcd_eq_count_residue A D hD a
 
-/-- **Rothstein–Trager resultant as a product over `K[t]`** (Bronstein §2.4/§2.5; the un-evaluated form
-of `rtResultant_eval_eq_prod_roots`): over an algebraically closed field, for `deg A < deg D`,
-`R(t) = lc(D)^{deg D − 1} · ∏_{α : D(α)=0} (A(α) − t·D'(α))` *as a polynomial in `t`*, the `α`-factor being
-the linear-in-`t` polynomial `C(A(α)) − X·C(D'(α))`. Applies Mathlib's `resultant_eq_prod_eval` over the
-domain `K[t]` to `D.map C` (which splits over `K[t]` since `D` splits over `K`, `Splits.map`) and reads
-the `α`-evaluation `g(C α) = C(A(α)) − X·C(D'(α))` via `eval₂_hom`. -/
+/-- Root-product form over `K[t]`: `R(t) = lc(D)^{deg D − 1} · ∏_{α : D(α)=0} (C(A α) − X·C(D' α))`,
+for `deg A < deg D` over an algebraically closed field. -/
 theorem rtResultant_eq_prod_roots [IsAlgClosed F] (A D : F[X]) (hA : A.natDegree < D.natDegree) :
     rtResultant A D
       = C (D.leadingCoeff) ^ (D.natDegree - 1) *
@@ -109,9 +97,7 @@ example [IsAlgClosed F] (A D : F[X]) (hA : A.natDegree < D.natDegree) :
           C (A.eval α) - Polynomial.X * C ((derivative D).eval α))).prod :=
   rtResultant_eq_prod_roots A D hA
 
-/-- **Linear factor of the resultant** (the per-root step of Bronstein Thm 2.5.1): at a root `α` of `D`
-with `D'(α) ≠ 0`, the `α`-factor `C(A(α)) − t·C(D'(α))` of `R(t)` is `−C(D'(α))·(t − C(residue α))` with
-`residue α = A(α)/D'(α)` — a constant multiple of the monic linear factor whose root is the residue. -/
+/-- At a root `α` with `D'(α) ≠ 0`, `C(A α) − X·C(D' α) = −C(D' α)·(X − C(A α/D' α))`. -/
 theorem linearFactor_eq_residue (A D : F[X]) (α : F) (hα : (derivative D).eval α ≠ 0) :
     C (A.eval α) - Polynomial.X * C ((derivative D).eval α)
       = -C ((derivative D).eval α) * (Polynomial.X - C (A.eval α / (derivative D).eval α)) := by
@@ -120,12 +106,8 @@ theorem linearFactor_eq_residue (A D : F[X]) (α : F) (hα : (derivative D).eval
   linear_combination -hC
 
 open scoped Classical in
-/-- **Roots of the Rothstein–Trager resultant are the residues** (Bronstein Thm 2.5.1, the root-set side):
-over an algebraically closed field, for separable `D` and `deg A < deg D`, the roots of `R(t)` (with
-multiplicity) are exactly the residues `A(α)/D'(α)` over the roots `α` of `D` —
-`(rtResultant A D).roots = D.roots.map (fun α => A(α)/D'(α))`. From the `K[t]`-product form
-`rtResultant_eq_prod_roots`, factoring each term by `linearFactor_eq_residue` into a nonzero constant
-times `t − C(residue)`, then reading roots via `roots_C_mul` and `roots_multiset_prod_X_sub_C`. -/
+/-- The roots of `rtResultant A D` (with multiplicity) are the residues `A(α)/D'(α)` over the roots `α`
+of `D`, for separable `D` and `deg A < deg D` over an algebraically closed field. -/
 theorem roots_rtResultant [IsAlgClosed F] (A D : F[X]) (hD : D.Separable)
     (hA : A.natDegree < D.natDegree) :
     (rtResultant A D).roots = D.roots.map (fun α => A.eval α / (derivative D).eval α) := by
@@ -163,13 +145,8 @@ example [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (hA : A.natDegree < D.na
   roots_rtResultant A D hD hA
 
 open scoped Classical in
-/-- **The multiplicity bridge** (Bronstein Theorem 2.5.1, the multiplicity identification `deg_x R_m = i`):
-over an algebraically closed field, for separable `D` and `deg A < deg D`, the multiplicity of a residue
-`a` as a root of the Rothstein–Trager resultant `R(t)` equals the degree of the Rothstein–Trager gcd `Gₐ`:
-`rootMultiplicity a (rtResultant A D) = deg gcd(D, A − a·D')`. Combines `roots_rtResultant` (the roots of
-`R` are the residues) with `natDegree_gcd_eq_count_residue` (the residue count is `deg Gₐ`); since the
-LRT algorithm takes the index `i` to be this multiplicity, this is the fact that discharges the degree/index
-hypotheses of `isSimilar_lrtSubresultant_eval_gcd`. -/
+/-- `rootMultiplicity a (rtResultant A D) = deg gcd(D, A − a·D')`, for separable `D` and `deg A < deg D`
+over an algebraically closed field. -/
 theorem rootMultiplicity_rtResultant_eq_natDegree_gcd [IsAlgClosed F] (A D : F[X]) (hD : D.Separable)
     (hA : A.natDegree < D.natDegree) (a : F) :
     (rtResultant A D).rootMultiplicity a = (gcd D (A - C a * derivative D)).natDegree := by
@@ -182,12 +159,8 @@ example [IsAlgClosed F] (A D : F[X]) (hD : D.Separable) (hA : A.natDegree < D.na
   rootMultiplicity_rtResultant_eq_natDegree_gcd A D hD hA a
 
 open scoped Classical in
-/-- **Distinct roots of the Rothstein–Trager resultant = the distinct residues** (Czichowski Lemma
-2.2(iii), resultant side): over an algebraically closed field with `D` separable and `deg A < deg D`, the
-*distinct* roots of `R = res_x(A − t·D', D)` are exactly the distinct residues `{A(α)/D'(α) : D(α) = 0}` —
-the `.toFinset` reading of `roots_rtResultant`. Hence the squarefree part (radical) of the resultant is
-`∏_{a}(t − a)` over the distinct residues, which is Czichowski's `R₁`. Identifying `R₁` with the first
-reduced-Gröbner-basis element's `x`-content is the remaining GB-syntactic step (needs the `x > z` basis). -/
+/-- The distinct roots of `rtResultant A D` are the distinct residues `{A(α)/D'(α) : D(α) = 0}`, for
+separable `D` and `deg A < deg D` over an algebraically closed field. -/
 theorem rtResultant_roots_toFinset [IsAlgClosed F] (A D : F[X]) (hD : D.Separable)
     (hA : A.natDegree < D.natDegree) :
     (rtResultant A D).roots.toFinset
@@ -195,10 +168,7 @@ theorem rtResultant_roots_toFinset [IsAlgClosed F] (A D : F[X]) (hD : D.Separabl
   rw [roots_rtResultant A D hD hA, Multiset.toFinset_map]
 
 open scoped Classical in
-/-- **Czichowski's `R₁` divides the resultant** (Lemma 2.2(iii), the radical-divides direction): the monic
-squarefree `R₁ := ∏_{a}(t − a)` over the distinct roots of `R = res_x(A − t·D', D)` divides `R` — `R₁` is the
-squarefree part (radical). With `rtResultant_roots_toFinset` (those distinct roots are the residues), this is
-`R₁ = ∏ over distinct residues`, Czichowski's `R₁ = radical(resultant)`. -/
+/-- The monic squarefree product `∏(X − a)` over the distinct roots `a` of `rtResultant A D` divides it. -/
 theorem czichowskiR1_dvd_rtResultant [IsAlgClosed F] (A D : F[X]) :
     ((rtResultant A D).roots.toFinset.prod (fun a => Polynomial.X - C a)) ∣ rtResultant A D :=
   (Multiset.prod_dvd_prod_of_le (Multiset.map_le_map (Multiset.dedup_le _))).trans

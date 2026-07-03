@@ -1,11 +1,9 @@
 import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.PseudoDivision
 
-/-! # The subresultant Fundamental PRS Theorem (Bronstein §1.5, Brown–Traub §5)
-The subresultants of consecutive elements of a polynomial remainder sequence are *similar*
-(`IsSimilar`, from `PseudoDivision`), so `Sⱼ(F₁,F₂)` is similar to `Sⱼ(Fₘ,F_{m+1})` for every step.
-This is the subresultant counterpart of the gcd-based Theorem 1.5.1 (`IsPRS.isSimilar_gcd`), built by
-telescoping the single-step relation `subresultant_prs_step` (Brown–Traub Lemma 2, eq 21). -/
+/-! # The subresultant Fundamental PRS Theorem
+Subresultants of consecutive PRS elements are similar (`IsSimilar`), so `Sⱼ(F₀,F₁)` is similar to
+`Sⱼ(Fₘ,F_{m+1})` at every step, by telescoping the single-step relation `subresultant_prs_step`. -/
 
 open Polynomial
 
@@ -13,10 +11,8 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R]
 
-/-- **Degree-padding similarity**: raising the second polynomial's formal degree from its true degree `k`
-to `n` scales the subresultant by `C(lc B)^(n−k)` (a nonzero constant when `lc B ≠ 0`), so the two are
-*similar*. `subresultant_padding` packaged through `IsSimilar` — the bridge that lets a formal-degree
-subresultant (e.g. the LRT `deg D − 1`) match an actual-degree p.r.s. computation up to similarity. -/
+/-- Raising the second polynomial's formal degree from `k` to `n` scales the subresultant by a nonzero
+constant, so `subresultant B Rem m n j` is `IsSimilar` to `subresultant B Rem m k j`. -/
 theorem isSimilar_subresultant_padding [IsDomain R] (B Rem : R[X]) (m k j : ℕ)
     (hjk : j < k) (hjm : j ≤ m) (hB : B.natDegree ≤ m) (hRem : Rem.natDegree ≤ k)
     (hlc : B.coeff m ≠ 0) {n : ℕ} (hn : k ≤ n) :
@@ -25,9 +21,8 @@ theorem isSimilar_subresultant_padding [IsDomain R] (B Rem : R[X]) (m k j : ℕ)
   exact ⟨1, (B.coeff m) ^ (n - k), one_ne_zero, pow_ne_zero _ hlc,
     by rw [map_one, one_mul, map_pow]⟩
 
-/-- **Fundamental PRS Theorem, per-step similarity** (Brown–Traub §5): across one PRS division step
-`α·A = β·C + B·Q` (with `lc B ≠ 0`, `α, β ≠ 0`), the subresultants `Sⱼ(A,B)` and `Sⱼ(B,C)` are
-similar (`0 ≤ j < deg C`). The similarity constants are read off `subresultant_prs_step` (eq 21). -/
+/-- Per-step similarity: across one PRS division step `α·A = β·C + B·Q`, the subresultants `Sⱼ(A,B)`
+and `Sⱼ(B,C)` are `IsSimilar` for `j < deg C`. -/
 theorem subresultant_prs_similar [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c j : ℕ)
     (hα : α ≠ 0) (hβ : β ≠ 0) (hlcB : B.coeff b ≠ 0) (hjc : j < c) (hcb : c < b)
     (hcpoly : C_poly.natDegree = c) (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a)
@@ -41,11 +36,8 @@ theorem subresultant_prs_similar [IsDomain R] (A B C_poly Q : R[X]) (α β : R) 
     map_mul, map_mul, map_pow, map_pow, map_pow, map_neg, map_one]
   ring
 
-/-- **Fundamental PRS Theorem** (Brown–Traub §5, eqs 30–31; Bronstein Thm 1.5.2 core): for a PRS `F`
-with division steps `α l·F l = β l·F (l+2) + F (l+1)·Q l` (`0 ≤ j < deg F(l+2)`, degrees strictly
-decreasing, leading/scaling coefficients nonzero), the first subresultant `Sⱼ(F₀,F₁)` is similar to
-`Sⱼ(Fₘ,F_{m+1})` for every `m`. Telescopes the per-step similarity `subresultant_prs_similar` by
-induction on `m` via `IsSimilar.trans`. -/
+/-- Telescoped similarity: for a PRS `F` with steps `α l·F l = β l·F (l+2) + F (l+1)·Q l`, the
+subresultant `Sⱼ(F₀,F₁)` is `IsSimilar` to `Sⱼ(Fₘ,F_{m+1})` for every `m`. -/
 theorem subresultant_prs_telescope [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X])
     (j : ℕ) (m : ℕ)
     (hα : ∀ l < m, α l ≠ 0) (hβ : ∀ l < m, β l ≠ 0)
@@ -67,10 +59,8 @@ theorem subresultant_prs_telescope [IsDomain R] (F : ℕ → R[X]) (α β : ℕ 
       (hα n (by omega)) (hβ n (by omega)) (hlc n (by omega)) (hj n (by omega)) (hcb n (by omega))
       rfl le_rfl (hQ n (by omega)) (hrel n (by omega))
 
-/-- **Fundamental PRS Theorem, explicit product form** (Brown–Traub §5, eq 30): the exact-constant
-telescoping of `subresultant_prs_step` (eq 21) down a PRS. `Sⱼ(F₀,F₁)·∏_{l<m} αₗ^(n_{l+1}-j)` equals
-`Sⱼ(Fₘ,F_{m+1})·∏_{l<m}[(-1)^((nₗ-j)(n_{l+1}-j))·(lc F_{l+1})^(nₗ-n_{l+2})·βₗ^(n_{l+1}-j)]`. The
-explicit `ηᵢ/τᵢ` similarity coefficients (eq 1.9) are read off these products at the regular indices. -/
+/-- Explicit product form of the telescope: `Sⱼ(F₀,F₁)·∏ αₗ^(n_{l+1}-j)` equals `Sⱼ(Fₘ,F_{m+1})`
+times the explicit sign/leading-coefficient/`β` product over `l < m`. -/
 theorem subresultant_prs_telescope_explicit [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X])
     (j : ℕ) (m : ℕ)
     (hβ : ∀ l < m, β l ≠ 0)
@@ -98,10 +88,7 @@ theorem subresultant_prs_telescope_explicit [IsDomain R] (F : ℕ → R[X]) (α 
         * C ((F (l + 1)).coeff (F (l + 1)).natDegree) ^ ((F l).natDegree - (F (l + 2)).natDegree)
         * C (β l ^ ((F (l + 1)).natDegree - j)))) * h21
 
-/-- **Fundamental PRS Theorem, vanishing branch** (Bronstein Thm 1.5.2, the `Sⱼ(A,B) = 0` case): if the
-subresultant at the telescope endpoint vanishes (`Sⱼ(Fₘ,F_{m+1}) = 0` — e.g. a gap index, by
-`subresultant_prs_step_gap`), then `Sⱼ(F₀,F₁) = 0`. The explicit telescope (eq 30) gives
-`Sⱼ(F₀,F₁)·∏ C(αₗ^…) = 0`, and the `α`-product is nonzero in the domain, so `Sⱼ(F₀,F₁) = 0`. -/
+/-- Vanishing branch: if the endpoint subresultant `Sⱼ(Fₘ,F_{m+1}) = 0`, then `Sⱼ(F₀,F₁) = 0`. -/
 theorem subresultant_prs_vanish [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X])
     (j : ℕ) (m : ℕ)
     (hα : ∀ l < m, α l ≠ 0) (hβ : ∀ l < m, β l ≠ 0)
@@ -120,9 +107,7 @@ theorem subresultant_prs_vanish [IsDomain R] (F : ℕ → R[X]) (α β : ℕ →
     exact pow_ne_zero _ (hα l (Finset.mem_range.mp hl))
   exact (mul_eq_zero.mp h30).resolve_right hprod
 
-/-- **Fundamental PRS Theorem, regular index `j = deg C`** (Brown–Traub eq 22): across a PRS step
-`α·A = β·C + B·Q` (with `C ≠ 0`, `lc B ≠ 0`, `α,β ≠ 0`), `S_{deg C}(A,B)` is similar to the remainder
-`C` itself. From `subresultant_prs_step_deg`. -/
+/-- At the regular index `j = deg C`, `S_{deg C}(A,B)` is `IsSimilar` to the remainder `C` itself. -/
 theorem subresultant_prs_similar_remainder [IsDomain R] (A B C_poly Q : R[X]) (α β : R) (a b c : ℕ)
     (hα : α ≠ 0) (hβ : β ≠ 0) (hlcB : B.coeff b ≠ 0) (hC : C_poly ≠ 0) (hcb : c < b)
     (hcpoly : C_poly.natDegree = c) (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a)
@@ -140,8 +125,7 @@ theorem subresultant_prs_similar_remainder [IsDomain R] (A B C_poly Q : R[X]) (�
   simp only [map_mul, map_pow, map_neg, map_one]
   ring
 
-/-- **Fundamental PRS Theorem, regular index `j = deg B − 1`** (Brown–Traub eq 24): across a PRS step,
-`S_{deg B-1}(A,B)` is similar to the remainder `C`. From `subresultant_prs_step_top`. -/
+/-- At the regular index `j = deg B − 1`, `S_{deg B-1}(A,B)` is `IsSimilar` to the remainder `C`. -/
 theorem subresultant_prs_similar_remainder_top [IsDomain R] (A B C_poly Q : R[X]) (α β : R)
     (a b c : ℕ) (hα : α ≠ 0) (hβ : β ≠ 0) (hlcB : B.coeff b ≠ 0) (hcb : c < b)
     (hcpoly : C_poly.natDegree = c) (hB : B.natDegree ≤ b) (hQ : Q.natDegree + b ≤ a)
@@ -153,11 +137,8 @@ theorem subresultant_prs_similar_remainder_top [IsDomain R] (A B C_poly Q : R[X]
   simp only [map_mul, map_pow, map_neg, map_one]
   ring
 
-/-- **Fundamental PRS Theorem, nonzero case** (Bronstein Thm 1.5.2): at the regular index
-`j = deg F_{m+2}`, the subresultant `Sⱼ(F₀,F₁)` is *similar to the PRS element* `F_{m+2}` — telescoping
-the similarity down to `Sⱼ(Fₘ,F_{m+1})` and then to the remainder `F_{m+2}` (`subresultant_prs_similar_remainder`)
-via `IsSimilar.trans`. This is the structural content of Thm 1.5.2: every nonzero subresultant of `A,B`
-is similar to a PRS element. -/
+/-- At the regular index `j = deg F_{m+2}`, the subresultant `Sⱼ(F₀,F₁)` is `IsSimilar` to the PRS
+element `F_{m+2}`. -/
 theorem subresultant_prs_similar_elt [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X]) (m : ℕ)
     (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
     (hlc : ∀ l ≤ m, (F (l + 1)).coeff (F (l + 1)).natDegree ≠ 0)
@@ -176,11 +157,8 @@ theorem subresultant_prs_similar_elt [IsDomain R] (F : ℕ → R[X]) (α β : �
       (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hα m le_rfl) (hβ m le_rfl)
       (hlc m le_rfl) hC (hcb m le_rfl) rfl le_rfl (hQ m le_rfl) (hrel m le_rfl))
 
-/-- **Subresultant ↔ gcd connection** (Loos's Subresultant Theorem applied to gcd computation; the link
-Bronstein's Thm 2.5.1 needs): if the abstract p.r.s. `F` terminates with `F_{m+2} ~ gcd(F₀, F₁)`, then the
-subresultant of `F₀, F₁` of degree `deg F_{m+2}` (`= deg gcd`) is similar to `gcd(F₀, F₁)`. Combines
-`subresultant_prs_similar_elt` (the subresultant of that degree is similar to the p.r.s. element) with the
-gcd-similarity of the last element (Theorem 1.5.1, `IsPRS.isSimilar_gcd`). -/
+/-- Subresultant–gcd link: if a terminating PRS has `F_{m+2}` similar to `gcd(F₀,F₁)`, then the
+subresultant of `F₀,F₁` at degree `deg F_{m+2}` is `IsSimilar` to `gcd(F₀,F₁)`. -/
 theorem subresultant_isSimilar_gcd [IsDomain R] [GCDMonoid R[X]] (F : ℕ → R[X]) (α β : ℕ → R)
     (Q : ℕ → R[X]) (m : ℕ) (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
     (hlc : ∀ l ≤ m, (F (l + 1)).coeff (F (l + 1)).natDegree ≠ 0)
@@ -193,9 +171,7 @@ theorem subresultant_isSimilar_gcd [IsDomain R] [GCDMonoid R[X]] (F : ℕ → R[
       (gcd (F 0) (F 1)) :=
   (subresultant_prs_similar_elt F α β Q m hα hβ hlc hcb hj hQ hrel hC).trans hgcd
 
-/-- `IsSimilar p q` over a domain lifts to an exact rational scalar over the field of fractions:
-`p = C η · q` in `Frac(D)[x]` for some nonzero `η ∈ Frac(D)` (namely `η = b/a` from the witnesses
-`C a · p = C b · q`). -/
+/-- `IsSimilar p q` over a domain lifts to `p = C η · q` in `Frac(D)[x]` for some nonzero `η ∈ Frac(D)`. -/
 theorem IsSimilar.exists_fractionRing {D : Type*} [CommRing D] [IsDomain D] {p q : D[X]}
     (h : IsSimilar p q) :
     ∃ η : FractionRing D, η ≠ 0 ∧
@@ -217,11 +193,8 @@ theorem IsSimilar.exists_fractionRing {D : Type*} [CommRing D] [IsDomain D] {p q
           * q.map (algebraMap D (FractionRing D))) := by rw [key]
     _ = C (algebraMap D (FractionRing D) b / algebraMap D (FractionRing D) a)
           * q.map (algebraMap D (FractionRing D)) := by rw [div_eq_mul_inv, map_mul]; ring
-/-- **Theorem 1.5.2** (Bronstein §1.5, p.23) — exact rational coefficient form over `Frac(D)`: at a
-regular index `j = deg F_{m+2}`, the subresultant equals an explicit nonzero rational multiple `ηᵢ` of
-the PRS element, `Sⱼ(F₀,F₁) = ηᵢ · F_{m+2}` in `Frac(D)[x]`. (The structural `D[x]` similarity is
-`subresultant_prs_similar_elt`; here it is lifted to the exact scalar `ηᵢ ∈ Frac(D)` via
-`IsSimilar.exists_fractionRing`.) -/
+/-- Exact rational form over `Frac(D)`: at `j = deg F_{m+2}`, `Sⱼ(F₀,F₁) = η · F_{m+2}` in `Frac(D)[x]`
+for some nonzero `η`. -/
 theorem subresultant_prs_eq_fractionRing {D : Type*} [CommRing D] [IsDomain D]
     (F : ℕ → D[X]) (α β : ℕ → D) (Q : ℕ → D[X]) (m : ℕ)
     (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
@@ -237,10 +210,8 @@ theorem subresultant_prs_eq_fractionRing {D : Type*} [CommRing D] [IsDomain D]
         = C η * (F (m + 2)).map (algebraMap D (FractionRing D)) :=
   (subresultant_prs_similar_elt F α β Q m hα hβ hlc hcb hj hQ hrel hC).exists_fractionRing
 
-/-- **Fundamental PRS Theorem, nonzero case at the other regular index `j = deg F_{m+1} − 1`** (Bronstein
-Thm 1.5.2): `Sⱼ(F₀,F₁)` is similar to the PRS element `F_{m+2}` — telescoping the similarity to the
-endpoint and then to the remainder via `subresultant_prs_similar_remainder_top` (eq 24). Together with
-`subresultant_prs_similar_elt` (the `j = deg F_{m+2}` index), this covers both regular indices. -/
+/-- At the other regular index `j = deg F_{m+1} − 1`, `Sⱼ(F₀,F₁)` is `IsSimilar` to the PRS element
+`F_{m+2}`. -/
 theorem subresultant_prs_similar_elt_top [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X])
     (m : ℕ) (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
     (hlc : ∀ l ≤ m, (F (l + 1)).coeff (F (l + 1)).natDegree ≠ 0)
@@ -258,10 +229,8 @@ theorem subresultant_prs_similar_elt_top [IsDomain R] (F : ℕ → R[X]) (α β 
       (F m).natDegree (F (m + 1)).natDegree (F (m + 2)).natDegree (hα m le_rfl) (hβ m le_rfl)
       (hlc m le_rfl) (hcb m le_rfl) rfl le_rfl (hQ m le_rfl) (hrel m le_rfl))
 
-/-- **Theorem 1.5.3, base step** (the subresultant-PRS `η=1` at the first division step): for a
-pseudo-division `lc(B)^(δ+1)·A = B·Q + (-1)^(δ+1)·Rem` (the subresultant choice `β = (-1)^(δ+1)`,
-`δ = deg A − deg B`), the subresultant equals the remainder exactly, `S_{deg B-1}(A,B) = Rem`. The two
-`(-1)^(δ+1)` factors square to `1`, so the leading-coefficient powers cancel (`η = 1`). -/
+/-- Base step (`η = 1`): for the pseudo-division `lc(B)^(δ+1)·A = B·Q + (-1)^(δ+1)·Rem`, the subresultant
+equals the remainder exactly, `S_{deg B-1}(A,B) = Rem`. -/
 theorem subresultant_eq_pseudoRem [IsDomain R] (A B Rem Q : R[X]) (a b c : ℕ)
     (hlcB : B.coeff b ≠ 0) (hcb : c < b) (hcpoly : Rem.natDegree = c) (hB : B.natDegree ≤ b)
     (hQ : Q.natDegree + b ≤ a)
@@ -283,10 +252,8 @@ theorem subresultant_eq_pseudoRem [IsDomain R] (A B Rem Q : R[X]) (a b c : ℕ)
       from by ring, hsq, one_mul]
   exact mul_left_cancel₀ (pow_ne_zero _ (by rw [Ne, C_eq_zero]; exact hlcB)) key
 
-/-- **Explicit closed form at the η-index** (the equation Bronstein's Thm 1.5.3 / Collins's Theorem 1(b)
-specializes): combining the telescope (eq 30) at `j = deg F_{m+1} − 1` with the endpoint step (eq 24),
-`Sⱼ(F₀,F₁)·(αₘ-product) = (sign·lc^·βₘ·F_{m+2})·(telescope rhs-product)`. The `ηᵢ` of Thm 1.5.2 is the
-ratio of the two products; `ηᵢ = 1` is the assertion that they are equal for the subresultant p.r.s. -/
+/-- Explicit closed form at the η-index `j = deg F_{m+1} − 1`:
+`Sⱼ(F₀,F₁)·(αₘ-product) = (sign·lc·βₘ·F_{m+2})·(telescope product)`. -/
 theorem subresultant_prs_closed_top [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X]) (m : ℕ)
     (hβ : ∀ l ≤ m, β l ≠ 0)
     (hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
@@ -324,12 +291,8 @@ section NormalCollapse
 variable {M : Type*} [CommRing M]
 
 open Finset in
-/-- **Leading-coefficient product collapse** — the keystone of Collins's Theorem 1 in the normal case
-(`δ=1`), which forces `ηᵢ = 1`. In `subresultant_prs_closed_top`, the normal reduced/subresultant p.r.s.
-coefficients are `αₗ = (lc F_{l+1})²` and `βₗ = (lc Fₗ)²` (`β₀ = 1`); after the signs cancel
-(`(-1)^(k(k+1)) = 1`), the `αₘ`-product on the left equals the `(lc² · βₗ)`-product on the right —
-peeling the last `α`-factor (`prod_range_succ`) against the first `β`-factor (`prod_range_succ'`, where
-`β₀ = 1` drops out) reindexes the two product tails to the same value. -/
+/-- Leading-coefficient product collapse (normal case, `δ=1`): the `∏ c(l+1)^(2(n+1-l+1))` product equals
+`c(n+1)²·∏ c(l+1)²` times the reindexed `β`-product, forcing `η = 1`. -/
 theorem lc_prod_collapse_normal (c : ℕ → M) (n : ℕ) :
     ∏ l ∈ range (n + 1), (c (l + 1)) ^ (2 * (n + 1 - l + 1))
       = (c (n + 1)) ^ 2 * (∏ l ∈ range (n + 1), (c (l + 1)) ^ 2)
@@ -353,13 +316,8 @@ theorem lc_prod_collapse_normal (c : ℕ → M) (n : ℕ) :
 end NormalCollapse
 
 open Finset in
-/-- **Theorem 1.5.3 / Collins Theorem 1, normal case** (`ηᵢ = 1`): for a *normal* subresultant/reduced
-p.r.s. — strictly degree-decreasing by one (`hdeg : (F l).natDegree = d - l`), with the coefficient
-choice `αₗ = (lc F_{l+1})²` and `βₗ = (lc Fₗ)²` (`β₀ = 1`) encoded in `hrel` — the subresultant equals
-the PRS element exactly: `S_{deg F_{m+1} − 1}(F₀, F₁) = F_{m+2}`. Assembles
-`subresultant_prs_closed_top` (the η-index closed form), the sign cancellation (`Nat.even_mul_succ_self`),
-and the leading-coefficient product collapse `lc_prod_collapse_normal`, then cancels the (nonzero) leading
-product. -/
+/-- Normal case (`η = 1`): for a strictly-degree-decreasing-by-one PRS with `αₗ = (lc F_{l+1})²`,
+`βₗ = (lc Fₗ)²`, the subresultant equals the PRS element, `S_{deg F_{m+1}-1}(F₀,F₁) = F_{m+2}`. -/
 theorem subresultant_prs_normal_eq [IsDomain R] (F : ℕ → R[X]) (Q : ℕ → R[X]) (m d : ℕ)
     (hm : 1 ≤ m) (hd : m + 2 ≤ d)
     (hdeg : ∀ l ≤ m + 2, (F l).natDegree = d - l)
@@ -462,17 +420,15 @@ open Finset
 
 variable {M : Type*} [CommMonoid M]
 
-/-- Index shift: a product over `range m` of `c (l+1) ^ (f l)` reindexes to `Ico 1 (m+1)` over
-`c k ^ (f (k-1))`. -/
+/-- Index shift: `∏_{range m} c(l+1)^(f l)` reindexes to `∏_{Ico 1 (m+1)} c k^(f (k-1))`. -/
 theorem shift_prod (c : ℕ → M) (f : ℕ → ℕ) (m : ℕ) :
     ∏ l ∈ range m, (c (l + 1)) ^ (f l) = ∏ k ∈ Ico 1 (m + 1), (c k) ^ (f (k - 1)) := by
   rw [Finset.prod_Ico_eq_prod_range, Nat.add_sub_cancel]
   refine prod_congr rfl (fun l _ => ?_)
   rw [show (1 : ℕ) + l - 1 = l from by omega, Nat.add_comm 1 l]
 
-/-- The `β`-endpoint fold (Collins defective case): with `E m = 1` at the η-index, the separate endpoint
-`c m ^ (δ_{m-1}+1)` (`= βₘ`) absorbs into the `β`-product, giving `∏_{k ∈ Ico 1 (m+1)} c k ^ ((δ_{k-1}+1)·E k)`
-(the `l=0` term `β₀=1` drops). -/
+/-- `β`-endpoint fold: with `E m = 1`, the endpoint `c m^(δ_{m-1}+1)` absorbs into the `β`-product,
+giving `∏_{Ico 1 (m+1)} c k^((δ_{k-1}+1)·E k)`. -/
 theorem beta_fold (c : ℕ → M) (δ E : ℕ → ℕ) (m : ℕ) (hm : 1 ≤ m) (hEm : E m = 1) :
     (c m) ^ (δ (m - 1) + 1)
         * ∏ l ∈ range m, (if l = 0 then (1 : M) else (c l) ^ (δ (l - 1) + 1)) ^ (E l)
@@ -486,12 +442,8 @@ theorem beta_fold (c : ℕ → M) (δ E : ℕ → ℕ) (m : ℕ) (hm : 1 ≤ m) 
   rw [Finset.mem_Ico] at hl
   rw [if_neg (by omega), ← pow_mul]
 
-/-- **General-δ leading-coefficient collapse** — the combinatorial heart of Collins's Theorem 1(b) in the
-*defective* case. With `E` decreasing by the gaps (`E k = E (k+1) + δ (k+1)`), gaps positive (`1 ≤ δ k`), and
-`E m = 1` (the η-index), the `αₘ`-product on the left equals the `(βₘ · lc · β)`-product on the right times
-exactly Collins's coefficient `∏ c (l+1) ^ (δ l · (δ_{l+1} − 1))` — i.e. `∏ cᵢ^(δᵢ₋₁(δᵢ−1))`. Every product
-reindexes (`shift_prod`, `beta_fold`) to a common `∏_{k ∈ Ico 1 (m+1)}`, and one `prod_congr` discharges it
-via the per-`k` identity `(δ_{k-1}+1)·E_{k-1} = (δ_{k-1}+1)·E_k + (δ_{k-1}+δ_k) + δ_{k-1}(δ_k−1)`. -/
+/-- General-`δ` leading-coefficient collapse (defective case): with `E k = E(k+1)+δ(k+1)`, `1 ≤ δ k`, and
+`E m = 1`, the `α`-product equals the `(βₘ·lc·β)`-product times the coefficient `∏ c(l+1)^(δ l·(δ(l+1)-1))`. -/
 theorem lc_collapse_defective (c : ℕ → M) (δ E : ℕ → ℕ) (m : ℕ) (hm : 1 ≤ m)
     (hE : ∀ k, k < m → E k = E (k + 1) + δ (k + 1)) (hδ : ∀ k, 0 < k → k ≤ m → 1 ≤ δ k)
     (hEm : E m = 1) :
@@ -532,24 +484,20 @@ section SubresPRSCoeff
 
 variable {K : Type*} [Field K]
 
-/-- The subresultant-PRS coefficient `γᵢ` (Bronstein §1.5, p.23): `γ₁ = -1` and
-`γᵢ₊₁ = (-rᵢ)^δᵢ · γᵢ^(1-δᵢ)`, where `rᵢ = lc Rᵢ` and `δᵢ = deg Rᵢ₋₁ - deg Rᵢ`. The exponent `1-δᵢ`
-is a (possibly negative) integer, so `γ` lives in the field of fractions. -/
+/-- The subresultant-PRS coefficient `γ`: `γ₀ = 1`, `γ₁ = -1`, `γᵢ₊₁ = (-rᵢ)^δᵢ · γᵢ^(1-δᵢ)`. -/
 noncomputable def subresPRS_gamma (r : ℕ → K) (δ : ℕ → ℕ) : ℕ → K
   | 0 => 1
   | 1 => -1
   | (i + 2) => (-(r (i + 1))) ^ (δ (i + 1))
       * (subresPRS_gamma r δ (i + 1)) ^ ((1 : ℤ) - (δ (i + 1) : ℤ))
 
-/-- The subresultant-PRS coefficient `βᵢ` (Bronstein §1.5, p.23): `β₁ = (-1)^(δ₁+1)` and
-`βᵢ₊₁ = -rᵢ · γᵢ₊₁^(δᵢ+1)`. -/
+/-- The subresultant-PRS coefficient `β`: `β₁ = (-1)^(δ₁+1)`, `βᵢ₊₁ = -rᵢ · γᵢ₊₁^(δᵢ+1)`. -/
 noncomputable def subresPRS_beta (r : ℕ → K) (δ : ℕ → ℕ) : ℕ → K
   | 0 => 1
   | 1 => (-1) ^ (δ 1 + 1)
   | (i + 2) => -(r (i + 1)) * (subresPRS_gamma r δ (i + 2)) ^ (δ (i + 1) + 1)
 
-/-- The subresultant-PRS coefficients `γᵢ` are nonzero (so the `γᵢ^(1-δᵢ)` division is well-defined),
-provided every `rᵢ = lc Rᵢ` is nonzero. -/
+/-- The coefficients `γᵢ` are nonzero for `i ≥ 1`, provided every `rᵢ` is nonzero. -/
 theorem subresPRS_gamma_ne_zero (r : ℕ → K) (δ : ℕ → ℕ) (hr : ∀ i, r i ≠ 0) :
     ∀ i, 1 ≤ i → subresPRS_gamma r δ i ≠ 0 := by
   intro i
@@ -566,10 +514,8 @@ theorem subresPRS_gamma_ne_zero (r : ℕ → K) (δ : ℕ → ℕ) (hr : ∀ i, 
 
 end SubresPRSCoeff
 
-/-- **Theorem 1.5.3 / Collins Theorem 1(c), defective (gap) vanishing**: for a PRS, the subresultant
-`Sⱼ(F₀,F₁)` vanishes at every *defective* index strictly inside the last degree gap,
-`deg F_{m+2} < j < deg F_{m+1} − 1`. Telescopes to step `m` (`subresultant_prs_vanish`) where the
-single-step gap subresultant vanishes (`subresultant_prs_step_gap`, Brown–Traub eq 23). -/
+/-- Defective (gap) vanishing: `Sⱼ(F₀,F₁) = 0` at every index strictly inside the last degree gap,
+`deg F_{m+2} < j < deg F_{m+1} − 1`. -/
 theorem subresultant_prs_gap_zero [IsDomain R] (F : ℕ → R[X]) (α β : ℕ → R) (Q : ℕ → R[X]) (m j : ℕ)
     (hα : ∀ l ≤ m, α l ≠ 0) (hβ : ∀ l ≤ m, β l ≠ 0)
     (hcb : ∀ l ≤ m, (F (l + 2)).natDegree < (F (l + 1)).natDegree)
@@ -586,14 +532,9 @@ theorem subresultant_prs_gap_zero [IsDomain R] (F : ℕ → R[X]) (α β : ℕ �
     hlo hhi rfl le_rfl (hQ m le_rfl) (hrel m le_rfl)
 
 open Finset in
-/-- **Theorem 1.5.3 / Collins Theorem 1, defective (general-gap) case** — the full closed form. For a
-strictly degree-decreasing reduced subresultant PRS with the coefficient choice
-`αₗ = (lc F_{l+1})^(δₗ+1)`, `βₗ = (lc Fₗ)^(δ_{l-1}+1)` (`β₀ = 1`) in `hrel`, the subresultant equals the
-PRS element times Collins's coefficient `∏ cᵢ^(δᵢ₋₁(δᵢ-1))`, in cross-multiplied (denominator-cleared)
-form: `(∏ (lc F_{l+1})^(δₗ(δ_{l+1}-1)))·S_{deg F_{m+1}-1}(F₀,F₁) = SIGN·F_{m+2}`, where `SIGN` is the
-explicit `(-1)`-product `(-1)^(δₘ+1)·∏(-1)^((nₗ-j)(n_{l+1}-j))`. Assembles `subresultant_prs_closed_top`,
-the leading-coefficient collapse `lc_collapse_defective`, the sign factoring, and a leading-product
-cancellation. This is the general-`δ` companion of the normal case `subresultant_prs_normal_eq`. -/
+/-- Defective (general-gap) closed form: for a degree-decreasing reduced PRS with
+`αₗ = (lc F_{l+1})^(δₗ+1)`, `βₗ = (lc Fₗ)^(δ_{l-1}+1)`, the denominator-cleared identity
+`(∏ (lc F_{l+1})^(δₗ(δ_{l+1}-1)))·S_{deg F_{m+1}-1}(F₀,F₁) = SIGN·F_{m+2}` holds. -/
 theorem subresultant_prs_defective_eq [IsDomain R] (F : ℕ → R[X]) (Q : ℕ → R[X]) (m : ℕ)
     (hm : 1 ≤ m) (hdec : ∀ l ≤ m + 1, (F (l + 1)).natDegree < (F l).natDegree)
     (hm1 : 1 ≤ (F (m + 1)).natDegree)

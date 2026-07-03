@@ -7,79 +7,14 @@ import Mathlib.Data.List.OfFn
 import Mathlib.Data.List.GetD
 import Mathlib.RingTheory.Polynomial.Cyclotomic.Roots
 
-/-! # A computable, SOUND irreducibility test for `ℤ[X]` via mod-`p` reduction
+/-! # A computable, sound irreducibility test for `ℤ[X]` via mod-`p` reduction
 
-The tractable, provably-sound core of Zassenhaus factorization: its first step is to
-factor `f` modulo a prime `p`, and a monic integer polynomial that stays **irreducible**
-after reduction mod `p` is already irreducible over `ℚ`. This gives a `native_decide`-able
-**irreducibility certificate** generator: present `f` by its `ℤ`-coefficient list, reduce
-mod a prime `p` into `ZMod p` (the SAME finite-field arithmetic the torsion files
-`ComputableGeneralTorsionLight` / `ComputableDivisorOrder` use), decide irreducibility over
-the **finite** field `𝔽_p`, and lift to `ℚ` by Gauss's lemma
-(`Polynomial.Monic.irreducible_of_irreducible_map`).
-
-**Why a coefficient-list engine.** Mathlib's `Polynomial` `+`/`*`/`map` are `noncomputable`
-(they pick a `Classical.decEq`), so neither `decide` nor `native_decide` reduces them. Like
-the torsion files, the *computation* therefore runs on a **coefficient `List (ZMod p)`**
-(low-to-high, Horner form), with a tiny self-contained `toPoly : List R → R[X]` bridge. The
-single primitive `coeff_toPoly` (`(toPoly l).coeff i = l.getD i 0`) gives both the
-multiplicativity bridge `toPoly_mulL` and the reconstruction of a monic divisor as a
-candidate list. The abstract irreducibility statement lives on Mathlib `Polynomial`.
-
-**The 𝔽_p decision (fully computable).** A monic `fp : (ZMod p)[X]` of degree `n` is
-irreducible iff it has **no** monic proper factor `q` of degree `1 ≤ d ≤ n/2`
-(`Polynomial.Monic.irreducible_iff_lt_natDegree_lt`). Since `fp` is monic, such a factor
-comes with a monic cofactor of degree `n − d`. Both monic factors are coefficient lists
-ending in `1`; the search enumerates the lower coefficients (the `Fintype (ZMod p)` to the
-power of the degree) and checks `mulL q g ≠ fcoeffs` by **list equality** — only `+`/`*` on
-`ZMod p`, so it `native_decide`-compiles.
-
-**★ Soundness** (`irreducibleByModP_sound`): `(toPolyZ cf).Monic → irreducibleByModP p cf =
-true → Irreducible (toPolyZ cf)`, axiom-clean `[propext, Classical.choice, Quot.sound]` (no
-`native`, no `sorry`). The `native_decide` lives only in the example certificates.
-
-**★ 𝔽_p-level completeness** (`irreducibleListModP_iff_irreducible`): over the *finite field*
-the decision is correct in **both** directions — `irreducibleListModP cf n ↔ Irreducible
-(toPoly cf)` for a monic degree-`n` target. So the search neither over- nor under-reports
-irreducibility *of the reduction*; the one-wayness is purely the `𝔽_p ⟹ ℚ` lift, never the
-finite-field decision. (Reverse direction via the degree-bounded `toPoly_eq_of_padCoeffs_eq`:
-a matching `padCoeffs` forces a genuine factorization, contradicting irreducibility.)
-
-**Honest scope — sound, ONE-WAY over `ℚ`.** This is irreducibility **testing**: it can only
-*confirm* `ℚ`-irreducibility. `ℚ`-completeness of the mod-`p` test is **fundamentally
-impossible**, not a missing lemma: `x⁴ + 1` (= `Φ₈`) is `ℚ`-irreducible yet reducible mod
-*every* prime (its Galois group `(ℤ/2)²` has no 4-cycle, so by Frobenius no prime is inert).
-The witnesses `irreducible_toPolyZ_X_pow_four_add_one` (axiom-clean, via `cyclotomic.irreducible`)
-and `irreducibleByModP_X_pow_four_add_one_false` (`native_decide`, `false` at `p = 2,3,5,7`)
-pin this wall. So `irreducibleByModP = false` is **inconclusive** — never read it as "reducible".
-
-**Full Zassenhaus / a COMPLETE `ℚ`-decider — scope.** Going from *testing* to *factoring*
-(hence a complete `ℚ`-irreducibility decision: irreducible ⟺ only the trivial factorization)
-needs the rest of Zassenhaus on top of this mod-`p` factorization:
-1. **Hensel lifting** the mod-`p` factorization to mod `p^k` for `k` large enough that the
-   integer factors are recovered (`p^k > 2·(coeff bound)`). *Mathlib status:* Hensel's lemma
-   exists only in the **root-finding p-adic** form (`Mathlib/NumberTheory/Padics/Hensel.lean`,
-   `hensels_lemma`; also `Mathlib/RingTheory/Henselian.lean`) — **not** the polynomial
-   *factor*-lifting / quadratic-lift-of-a-coprime-factorization form Zassenhaus uses; that
-   layer must be **built**.
-2. **Combinatorial recombination** — search subsets of the lifted mod-`p^k` factors whose
-   product has small enough coefficients to be a true `ℤ`-factor (the exponential step LLL
-   later tames). *Mathlib status:* **not present**; must be built.
-3. **A factorization-correctness predicate** then yields the complete decider. *Mathlib
-   status:* the abstract `UniqueFactorizationMonoid` theory of `ℤ[X]`/`ℚ[X]` is present, but no
-   *computable* `ℚ`-factorization algorithm.
-So the complete-decider campaign is mapped — Hensel-factor-lift + recombination are the two
-build items — and is a strictly larger follow-up. The irreducibility *test* here is the
-high-value, sound, tractable piece: it removes per-radicand manual irreducibility discharge
-by making `Irreducible` `native_decide`-able.
-
-**De-pin connection.** Our radicands are `X² − f(x)` over the function field
-`ℚ(x) = RatFunc ℚ`, not over `ℚ`. Two routes wire this test in later (documented, not forced
-here): (a) **specialize** `x ↦ a` to drop `ℚ(x)[X] → ℚ[X]`; an irreducible specialization
-forces the generic polynomial irreducible (specialization can only *add* factors); (b) the
-cheaper `n = 2` route — if `f(a)` is a non-square in `ℚ` for some `a`, then `f` is a
-non-square in `ℚ(x)`, so `X² − f` is irreducible. Route (b) is cleanest for the
-square-radical de-pin; this file proves the `ℚ`-side engine both routes feed. -/
+A monic integer polynomial that stays irreducible after reduction mod a prime `p` is
+irreducible over `ℚ` (Gauss's lemma). The test runs on coefficient `List (ZMod p)` (Horner
+form, low-to-high) so it is `native_decide`-able, decides irreducibility over `𝔽_p` (both
+directions), and lifts one-way to `ℚ`. The `𝔽_p ⟹ ℚ` lift cannot be a decision procedure —
+`x⁴ + 1` is `ℚ`-irreducible yet reducible mod every prime — so `irreducibleByModP = false`
+is inconclusive. -/
 
 open Polynomial
 

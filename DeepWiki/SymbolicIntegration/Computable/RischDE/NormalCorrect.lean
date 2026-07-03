@@ -1,13 +1,9 @@
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
 import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGcdWitnessWf
 
-/-! # Reducing the recursive RDE residual to its weak-normalization crux
+/-! # `toPolyG` reading helpers for the recursive RDE residual
 
-Discharges the provable clauses of `RischDESuccessResidual` for the recursive instance
-(`Dt = [CField.one]`) — denominator-nonzero from the `QFunNZG β` subtype, `hyden` from the solve
-guard, `hprim` from the gcd witness — and reduces `hdvdB`/`hdvdC` to two product-divisibilities
-(`fden ∣ dₙh`, `gden ∣ dₙh²`), the weak-normalization precondition on the RDE input. The remainder
-is bundled as `RischDESuccessResidualCrux`, with the field identity `crischDESolve_field_of_crux`. -/
+Two generic `toPolyG` reading lemmas consumed by the RDE normalization development. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -15,11 +11,6 @@ open scoped Differential
 namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG GBPolyCore
-
-/-! The fuel'd RDE-residual crux + Hprim + divisibility development that once lived here was retired with
-the fuel-free switch (`Tower/RischDEInstance.lean`); its fuel-free replacements live in
-`RischDE/TowerGcdWitnessWf.lean` and `RischDE/Structural.lean`. Only these two generic `toPolyG` reading
-helpers remain, consumed by `RischDE/SolveNorm.lean`. -/
 
 section Helpers
 

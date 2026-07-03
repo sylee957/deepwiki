@@ -2,11 +2,10 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.CantorComposition
 
 /-! # Divisor order and the good-reduction torsion decision
 
-`cantorOrder` searches the smallest `m ≥ 1` with `m·D = O` on a hyperelliptic Jacobian, and
-`isTorsionDivisor` / `elementarityViaTorsion` decide torsion by using the order of `D mod p` in the
-finite `Jac(𝔽_p)` (a good prime, computed via `CField (ZMod p)`) as the terminating ceiling for the
-ℚ-order search: `some m` means the integral is elementary with a `(1/m)·log` term, `none` means the
-residue divisor has infinite order and the integral is not elementary. -/
+`cantorOrder` searches the least `m ≥ 1` with `m·D = O`; `isTorsionDivisor`/`elementarityViaTorsion`
+decide torsion by using the order of `D mod p` in the finite `Jac(𝔽_p)` as a terminating ceiling for
+the ℚ-order search. `some m` gives an elementary integral with a `(1/m)·log` term; `none` is
+non-torsion (not elementary). -/
 
 open Polynomial
 

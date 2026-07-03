@@ -7,27 +7,11 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
 
-/-! # The Bronstein–Salvy differential-variable Laurent-coefficient engine (Bronstein §2.7, Theorem 2.7.1, eqs 2.10–2.12)
+/-! # Rational Laurent coefficients of a partial-fraction decomposition
 
-For `A, D ∈ K[x]` with `D` monic nonzero, `gcd(A,D)=1`, and a squarefree factorization `D = ∏ᵢ Dᵢ^i`,
-Theorem 2.7.1 computes the partial-fraction Laurent coefficients `Hᵢⱼ ∈ K[x]` **rationally** — using only
-rational operations over `K`, without factoring `Dᵢ` — such that
-`A/D = P + ∑ᵢ ∑_{α|Dᵢ(α)=0} (Hᵢᵢ(α)/(x−α)ⁱ + ⋯ + Hᵢ₁(α)/(x−α))`.
-
-This file builds the engine. The clean model: the **differential polynomial ring** `K(x)⟨u⟩` numerators
-live in `R := MvPolynomial (Option ℕ) K` — variable `none` is `x`, variable `some n` is `u^(n)` (the
-`n`-th derivative of the differential indeterminate `u`). The `d/dx` derivation `ddx` is `K`-linear, fixed
-by `ddx x = 1`, `ddx u^(n) = u^(n+1)`; it is `MvPolynomial.mkDerivation`.
-
-* (2.10) `bezoutE`/`bezoutDeriv` (`= Bᵢ`/`Cᵢ`): extended-Euclidean cofactors with `Bᵢ·Eᵢ ≡ 1`,
-  `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`, where `Eᵢ = D /ₘ Dᵢ^i`.
-* (2.11) `laurentNum` (`= Pᵢⱼ ∈ R`): the numerator of `hᵢ^(i−j)/(i−j)!`, by the quotient-rule recursion.
-* (2.12) `laurentQ` (`= Qᵢⱼ ∈ K[x]`, the `aeval` substitution `u^(k) ↦ Dᵢ^(k+1)/(k+1)`) and the engine
-  `laurentH` (`= Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) %ₘ Dᵢ`).
-
-The `i=1` residue case `H₁₁(α) = A(α)/D'(α)` connects to `Residues.lean`. The full general correctness
-(`Hᵢⱼ(α)` = the `1/(x−α)^j` Laurent coefficient, via the Taylor expansion of `hᵢ,α = (A/D)(x−α)^i`,
-book p.56) is a documented follow-up. -/
+For `A, D ∈ K[x]` with a squarefree factorization `D = ∏ᵢ Dᵢ^i`, computes the partial-fraction Laurent
+coefficients `Hᵢⱼ ∈ K[x]` by rational operations over `K` (no factoring of `Dᵢ`), via a differential
+polynomial ring `K(x)⟨u⟩` and its `d/dx` derivation, and proves `A/D = P + ∑ᵢ ∑_α ∑ⱼ Hᵢⱼ(α)/(x−α)ʲ`. -/
 
 open Polynomial MvPolynomial
 
@@ -35,23 +19,19 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {K : Type*} [Field K]
 
-/-! ## Stage A — the differential polynomial ring `K⟨u⟩` and its `d/dx` derivation -/
+/-! ## The differential polynomial ring `K⟨u⟩` and its `d/dx` derivation -/
 
-/-- **The differential-variable numerator ring** (§2.7): `DiffPoly K = MvPolynomial (Option ℕ) K`, where
-`X none` is the base variable `x` and `X (some n)` is `u^(n)`, the `n`-th derivative of the differential
-indeterminate `u`. The Laurent-coefficient numerators `Pᵢⱼ` (eq 2.11) live here, as they have
-`K`-coefficients. -/
+/-- The differential-variable numerator ring `DiffPoly K = MvPolynomial (Option ℕ) K`: `X none` is `x`,
+`X (some n)` is `u^(n)`, the `n`-th derivative of the differential indeterminate `u`. -/
 abbrev DiffPoly (K : Type*) [Field K] : Type _ := MvPolynomial (Option ℕ) K
 
-/-- **The base variable `x`** (`= X none`) in `DiffPoly K`. -/
+/-- The base variable `x` (`= X none`) in `DiffPoly K`. -/
 noncomputable abbrev dpX : DiffPoly K := X none
 
-/-- **The `n`-th derivative `u^(n)`** of the differential indeterminate (`= X (some n)`) in `DiffPoly K`;
-`dpU 0 = u`, `dpU 1 = u'`, etc. -/
+/-- The `n`-th derivative `u^(n)` (`= X (some n)`) of the differential indeterminate in `DiffPoly K`. -/
 noncomputable abbrev dpU (n : ℕ) : DiffPoly K := X (some n)
 
-/-- **The `K[x] → DiffPoly K` embedding** sending the polynomial variable `X` to `x = X none`; used to
-inject `Eᵢ`, `Eᵢ'` and the input `A` into the differential numerator ring as coefficients of `u`. -/
+/-- The `K[x] → DiffPoly K` embedding sending the polynomial variable `X` to `x = X none`. -/
 noncomputable def dpEmbed : K[X] →+* DiffPoly K :=
   Polynomial.eval₂RingHom (MvPolynomial.C : K →+* DiffPoly K) (X none)
 
@@ -61,9 +41,8 @@ noncomputable def dpEmbed : K[X] →+* DiffPoly K :=
 @[simp] theorem dpEmbed_C (c : K) : dpEmbed (Polynomial.C c) = (MvPolynomial.C c : DiffPoly K) := by
   simp [dpEmbed]
 
-/-- **The `d/dx` derivation on `DiffPoly K`** (§2.7): the `K`-linear derivation with `ddx x = 1` and
-`ddx u^(n) = u^(n+1)`, built by `MvPolynomial.mkDerivation`. This is the engine's `d/dx`: it kills `K`,
-fixes the base variable, and shifts each `u^(n)` to its successor `u^(n+1)`. -/
+/-- The `d/dx` derivation on `DiffPoly K`: the `K`-linear derivation with `ddx x = 1`,
+`ddx u^(n) = u^(n+1)`. -/
 noncomputable def ddx : Derivation K (DiffPoly K) (DiffPoly K) :=
   MvPolynomial.mkDerivation K fun v => match v with
     | none => 1
@@ -78,10 +57,8 @@ noncomputable def ddx : Derivation K (DiffPoly K) (DiffPoly K) :=
 @[simp] theorem ddx_C (c : K) : ddx (MvPolynomial.C c : DiffPoly K) = 0 := by
   rw [← MvPolynomial.algebraMap_eq]; exact (ddx (K := K)).map_algebraMap c
 
-/-- **`ddx` commutes with `dpEmbed` and `Polynomial.derivative`** (§2.7): the `d/dx` of an embedded
-`K[x]`-polynomial is the embedding of its formal derivative, `ddx (dpEmbed p) = dpEmbed (derivative p)`.
-Both sides are `K`-derivations `K[X] → DiffPoly K` (the right composes `derivative` with `dpEmbed`) that
-agree on `X`, hence on all of `K[X]` by `Polynomial.derivation_ext`. -/
+/-- `ddx (dpEmbed p) = dpEmbed (derivative p)`: `ddx` of an embedded polynomial is the embedding of its
+formal derivative. -/
 theorem ddx_dpEmbed (p : K[X]) : ddx (dpEmbed p) = dpEmbed (derivative p) := by
   induction p using Polynomial.induction_on with
   | C c => simp [dpEmbed]
@@ -101,24 +78,20 @@ theorem ddx_dpEmbed (p : K[X]) : ddx (dpEmbed p) = dpEmbed (derivative p) := by
       push_cast
       ring
 
-/-! ## Stage B — (2.10) the extended-Euclidean Bézout cofactors `Bᵢ`, `Cᵢ` -/
+/-! ## The extended-Euclidean Bézout cofactors `Bᵢ`, `Cᵢ` -/
 
-/-- **The cofactor `Eᵢ = D /ₘ Dᵢ^i`** (§2.7): the part of `D` complementary to the prime power `Dᵢ^i`. -/
+/-- The cofactor `Eᵢ = D /ₘ Dᵢ^i`: the part of `D` complementary to the prime power `Dᵢ^i`. -/
 noncomputable def laurentE (D Di : K[X]) (i : ℕ) : K[X] := D /ₘ Di ^ i
 
-/-- **The Bézout cofactor `Bᵢ`** (§2.7, eq 2.10): `Bᵢ = (diophantineSolve Eᵢ Dᵢ 1).1`, the cofactor of
-`Eᵢ` in `Eᵢ·Bᵢ + Dᵢ·(…) = 1`, so `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. Needs `gcd(Eᵢ,Dᵢ)=1` (from squarefreeness). -/
+/-- The Bézout cofactor `Bᵢ` of `Eᵢ` in `Eᵢ·Bᵢ + Dᵢ·(…) = 1`, so `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
 noncomputable def bezoutE (D Di : K[X]) (i : ℕ) : K[X] :=
   (diophantineSolve (laurentE D Di i) Di 1).1
 
-/-- **The Bézout cofactor `Cᵢ`** (§2.7, eq 2.10): `Cᵢ = (diophantineSolve Dᵢ' Dᵢ 1).1`, the cofactor of
-`Dᵢ'` in `Dᵢ'·Cᵢ + Dᵢ·(…) = 1`, so `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`. Needs `gcd(Dᵢ',Dᵢ)=1` (squarefree). -/
+/-- The Bézout cofactor `Cᵢ` of `Dᵢ'` in `Dᵢ'·Cᵢ + Dᵢ·(…) = 1`, so `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`. -/
 noncomputable def bezoutDeriv (Di : K[X]) : K[X] :=
   (diophantineSolve (derivative Di) Di 1).1
 
-/-- **(2.10), the `Bᵢ` congruence**: for `IsCoprime Eᵢ Dᵢ`, `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`, i.e.
-`(bezoutE D Di i * laurentE D Di i) %ₘ Di = 1 %ₘ Di`. From `Eᵢ·Bᵢ + Dᵢ·(…) = 1` reduced mod the monic
-`Di`. -/
+/-- The `Bᵢ` congruence: for `IsCoprime Eᵢ Dᵢ`, `(bezoutE D Di i * laurentE D Di i) %ₘ Di = 1 %ₘ Di`. -/
 theorem bezoutE_mul_laurentE_modByMonic (D Di : K[X]) (i : ℕ) (hDi : Di.Monic)
     (hcop : IsCoprime (laurentE D Di i) Di) :
     (bezoutE D Di i * laurentE D Di i) %ₘ Di = (1 : K[X]) %ₘ Di := by
@@ -129,8 +102,7 @@ theorem bezoutE_mul_laurentE_modByMonic (D Di : K[X]) (i : ℕ) (hDi : Di.Monic)
     rw [bezoutE]; linear_combination hspec
   rw [hkey, sub_modByMonic, self_mul_modByMonic hDi, sub_zero]
 
-/-- **(2.10), the `Cᵢ` congruence**: for `IsCoprime Dᵢ' Dᵢ`, `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`, i.e.
-`(bezoutDeriv Di * derivative Di) %ₘ Di = 1 %ₘ Di`. From `Dᵢ'·Cᵢ + Dᵢ·(…) = 1` reduced mod monic `Di`. -/
+/-- The `Cᵢ` congruence: for `IsCoprime Dᵢ' Dᵢ`, `(bezoutDeriv Di * derivative Di) %ₘ Di = 1 %ₘ Di`. -/
 theorem bezoutDeriv_mul_derivative_modByMonic (Di : K[X]) (hDi : Di.Monic)
     (hcop : IsCoprime (derivative Di) Di) :
     (bezoutDeriv Di * derivative Di) %ₘ Di = (1 : K[X]) %ₘ Di := by
@@ -140,31 +112,23 @@ theorem bezoutDeriv_mul_derivative_modByMonic (Di : K[X]) (hDi : Di.Monic)
     rw [bezoutDeriv]; linear_combination hspec
   rw [hkey, sub_modByMonic, self_mul_modByMonic hDi, sub_zero]
 
-/-- **`gcd(Dᵢ', Dᵢ) = 1` from squarefreeness** (§2.7): a squarefree `Dᵢ` over a `CharZero` field is
-coprime to its derivative, `IsCoprime Dᵢ' Dᵢ` — the (2.10) hypothesis for `Cᵢ`. -/
+/-- A squarefree `Dᵢ` over a `CharZero` field is coprime to its derivative, `IsCoprime Dᵢ' Dᵢ`. -/
 theorem isCoprime_derivative_of_squarefree [CharZero K] {Di : K[X]} (hsf : Squarefree Di) :
     IsCoprime (derivative Di) Di :=
   (squarefree_iff_isCoprime_derivative.mp hsf).symm
 
-/-! ## Stage C — (2.11) the `Pᵢⱼ` numerator recursion -/
+/-! ## The `Pᵢⱼ` numerator recursion -/
 
-/-- **The numerator-recursion step** (§2.7, differentiating eq 2.11): from the numerator `P` of
-`hᵢ^d/d! = P/(u^a·Eᵢ^b)` (with `a = i+d`, `b = d+1`), one `d/dx` and the factorial factor `1/(d+1) = 1/b`
-give the numerator of `hᵢ^(d+1)/(d+1)!`, namely
-`(1/b)·(ddx P · u · Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))` over `u^(a+1)·Eᵢ^(b+1)`. Here `Eᵢ = dpEmbed Ei`,
-`Eᵢ' = dpEmbed (derivative Ei)`, `u = X (some 0)`, `u' = X (some 1)`. The divisor is the factorial
-increment `b = d+1` (since `hᵢ^(d+1)/(d+1)! = (1/(d+1))·d/dx(hᵢ^(d)/d!)`), NOT `a+1`. -/
+/-- The numerator-recursion step: from the numerator `P` of `hᵢ^d/d! = P/(u^a·Eᵢ^b)` (`a = i+d`, `b = d+1`),
+`(1/b)·(ddx P·u·Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))` is the numerator of `hᵢ^(d+1)/(d+1)!`. -/
 noncomputable def laurentNumStep (Ei : K[X]) (a b : ℕ) (P : DiffPoly K) : DiffPoly K :=
   MvPolynomial.C ((b : K)⁻¹) *
     (ddx P * X (some 0) * dpEmbed Ei
       - P * ((a : DiffPoly K) * X (some 1) * dpEmbed Ei
               + (b : DiffPoly K) * X (some 0) * dpEmbed (derivative Ei)))
 
-/-- **The Laurent numerator `Pᵢⱼ`** (§2.7, eq 2.11), indexed by the derivative count `d = i − j` running
-`0,1,…`: `laurentNum A Ei i 0 = dpEmbed A` (the numerator of `hᵢ = A/(uⁱ·Eᵢ)`), and each successive `d`
-applies `laurentNumStep` with denominator exponents `a = i+d`, `b = d+1` (so the factorial divisor is
-`b = d+1`). So `laurentNum A Ei i d` is EXACTLY the book's `Pᵢⱼ` with `j = i − d`, the numerator of
-`hᵢ^d/d! = Pᵢⱼ/(u^(i+d)·Eᵢ^(d+1))` — no scale discrepancy. -/
+/-- The Laurent numerator `Pᵢⱼ` (`j = i − d`), the numerator of `hᵢ^d/d! = Pᵢⱼ/(u^(i+d)·Eᵢ^(d+1))`:
+`laurentNum A Ei i 0 = dpEmbed A` (numerator of `hᵢ = A/(uⁱ·Eᵢ)`), stepped by `laurentNumStep`. -/
 noncomputable def laurentNum (A Ei : K[X]) (i : ℕ) : ℕ → DiffPoly K
   | 0 => dpEmbed A
   | d + 1 => laurentNumStep Ei (i + d) (d + 1) (laurentNum A Ei i d)
@@ -176,12 +140,8 @@ theorem laurentNum_succ (A Ei : K[X]) (i d : ℕ) :
     laurentNum A Ei i (d + 1)
       = laurentNumStep Ei (i + d) (d + 1) (laurentNum A Ei i d) := rfl
 
-/-- **The cleared quotient-rule step** (§2.7, eq 2.11 differentiated, denominator-free form): over a
-characteristic-`0` field the factorial divisor `1/(d+1)` in `laurentNumStep` clears, giving the polynomial
-identity `(d+1)·Pᵢ,d₊₁ = ddx Pᵢ,d · u · Eᵢ − Pᵢ,d·((i+d)·u'·Eᵢ + (d+1)·u·Eᵢ')` in `DiffPoly K`. This is the
-factorial-scaled numerator of the quotient rule `d/dx (P/(uᵃ·Eᵢᵇ)) =
-(ddx P·u·Eᵢ − P·(a·u'·Eᵢ + b·u·Eᵢ'))/(uᵃ⁺¹·Eᵢᵇ⁺¹)` with `a = i+d`, `b = d+1` (so dividing by `b = d+1`
-yields `Pᵢ,d₊₁`), validating the `Pᵢⱼ` recursion against the genuine `d/dx` of `hᵢ^d/d!`. -/
+/-- The denominator-free (characteristic-`0`) recursion identity
+`(d+1)·Pᵢ,d₊₁ = ddx Pᵢ,d·u·Eᵢ − Pᵢ,d·((i+d)·u'·Eᵢ + (d+1)·u·Eᵢ')` in `DiffPoly K`. -/
 theorem laurentNum_cleared_step [CharZero K] (A Ei : K[X]) (i d : ℕ) :
     MvPolynomial.C ((d : K) + 1) * laurentNum A Ei i (d + 1)
       = ddx (laurentNum A Ei i d) * X (some 0) * dpEmbed Ei
@@ -194,26 +154,21 @@ theorem laurentNum_cleared_step [CharZero K] (A Ei : K[X]) (i d : ℕ) :
       mul_inv_cancel₀ (by exact_mod_cast hne), MvPolynomial.C_1, one_mul]
   push_cast; ring
 
-/-! ## Stage D — (2.12) the engine: `Qᵢⱼ` substitution and `Hᵢⱼ` -/
+/-! ## The engine: `Qᵢⱼ` substitution and `Hᵢⱼ` -/
 
-/-- **The `Qᵢⱼ` substitution map** (§2.7): the `K`-algebra map `DiffPoly K → K[x]` realizing
-`Pᵢⱼ(x, Dᵢ', Dᵢ''/2, Dᵢ^(3)/3, …)`, i.e. `x ↦ X`, `u^(k) = X (some k) ↦ Dᵢ^(k+1)/(k+1)`
-(the `(k+1)`-th derivative of `Dᵢ` scaled by `1/(k+1)`). -/
+/-- The `Qᵢⱼ` substitution `Option ℕ → K[x]`: `x ↦ X`, `u^(k) ↦ Dᵢ^(k+1)/(k+1)`. -/
 noncomputable def laurentSubst (Di : K[X]) : Option ℕ → K[X] := fun v =>
   match v with
   | none => Polynomial.X
   | some k => Polynomial.C ((k + 1 : K)⁻¹) * (derivative^[k + 1] Di)
 
-/-- **The polynomial `Qᵢⱼ ∈ K[x]`** (§2.7): `Qᵢⱼ = aeval (laurentSubst Dᵢ) Pᵢⱼ`, substituting the scaled
-derivatives of `Dᵢ` for the differential variables in the numerator `Pᵢⱼ = laurentNum A Eᵢ i (i−j)`. Here
-`Eᵢ = laurentE D Dᵢ i = D /ₘ Dᵢ^i` is the book's cofactor (the part of `D` complementary to `Dᵢ^i`), so the
-numerator recursion differentiates the genuine `hᵢ = A/(Dᵢ^i·Eᵢ)`. -/
+/-- The polynomial `Qᵢⱼ = aeval (laurentSubst Dᵢ) Pᵢⱼ ∈ K[x]`, substituting the scaled derivatives of `Dᵢ`
+into the numerator `Pᵢⱼ = laurentNum A Eᵢ i (i−j)` (`Eᵢ = laurentE D Dᵢ i`). -/
 noncomputable def laurentQ (A D Di : K[X]) (i j : ℕ) : K[X] :=
   aeval (laurentSubst Di) (laurentNum A (laurentE D Di i) i (i - j))
 
-/-- **The Bronstein–Salvy Laurent coefficient `Hᵢⱼ ∈ K[x]`** (§2.7, eq 2.12, **the engine**):
-`Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) (mod Dᵢ)`, computed by purely rational operations over `K` without
-factoring `Dᵢ`. The Laurent coefficient of `1/(x−α)^j` at a root `α` of `Dᵢ` is `Hᵢⱼ(α)`. -/
+/-- The Laurent coefficient `Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) (mod Dᵢ) ∈ K[x]`: `Hᵢⱼ(α)` is the
+`1/(x−α)^j` coefficient at a root `α` of `Dᵢ`. -/
 noncomputable def laurentH (A D Di : K[X]) (i j : ℕ) : K[X] :=
   (laurentQ A D Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di
 
@@ -222,10 +177,10 @@ theorem laurentH_def (A D Di : K[X]) (i j : ℕ) :
       = (laurentQ A D Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di :=
   rfl
 
-/-! ## Stage E — the `i=1` residue: `H₁₁(α) = A(α)/D'(α)` -/
+/-! ## The `i=1` residue: `H₁₁(α) = A(α)/D'(α)` -/
 
-/-- **`aeval (laurentSubst Di) ∘ dpEmbed = id`** on `K[x]`: the `Qᵢⱼ` substitution undoes the embedding
-of a pure-`x` polynomial (no differential variables), since both fix `X` and `C`. -/
+/-- `aeval (laurentSubst Di) (dpEmbed p) = p`: the `Qᵢⱼ` substitution undoes `dpEmbed` on a pure-`x`
+polynomial. -/
 theorem aeval_laurentSubst_dpEmbed (Di p : K[X]) :
     aeval (laurentSubst Di) (dpEmbed p) = p := by
   have h : ((aeval (laurentSubst Di) : DiffPoly K →ₐ[K] K[X]).toRingHom.comp dpEmbed)
@@ -235,35 +190,28 @@ theorem aeval_laurentSubst_dpEmbed (Di p : K[X]) :
     · simp [dpEmbed, laurentSubst]
   exact congrArg (fun f : K[X] →+* K[X] => f p) h
 
-/-- **`Q₁₁ = A`** (§2.7, the `i=j=1` base case): for `i=j=1` the derivative count is `i−j=0`, so
-`P₁₁ = dpEmbed A` and `Q₁₁ = aeval (laurentSubst D₁) (dpEmbed A) = A` — the substitution fixes the base
-variable `x ↦ X` and `A` has no differential variables. -/
+/-- `Q₁₁ = A`: at `i=j=1` the derivative count is `0`, so `laurentQ A D Di 1 1 = A`. -/
 theorem laurentQ_one_one (A D Di : K[X]) : laurentQ A D Di 1 1 = A := by
   rw [laurentQ, Nat.sub_self, laurentNum_zero, aeval_laurentSubst_dpEmbed]
 
-/-- **`E₁ = D /ₘ D₁`** for `i=1`: the cofactor at multiplicity one. -/
+/-- `laurentE D Di 1 = D /ₘ Di`: the cofactor `E₁` at multiplicity one. -/
 theorem laurentE_one (D Di : K[X]) : laurentE D Di 1 = D /ₘ Di := by
   rw [laurentE, pow_one]
 
 open scoped Classical in
-/-- **`H₁₁` is the residue numerator `A·B₁·C₁ %ₘ D₁`** (§2.7, the `i=1` engine output): for `i=j=1`,
-`laurentH A D D₁ 1 1 = (A · bezoutE D D₁ 1 · bezoutDeriv D₁) %ₘ D₁`, since `Q₁₁ = A`, the `Bᵢ`-exponent
-`i−j+1 = 1` and the `Cᵢ`-exponent `2i−j = 1`. -/
+/-- `laurentH A D Di 1 1 = (A · bezoutE D Di 1 · bezoutDeriv Di) %ₘ Di`: the `i=1` engine output. -/
 theorem laurentH_one_one (A D Di : K[X]) :
     laurentH A D Di 1 1 = (A * bezoutE D Di 1 * bezoutDeriv Di) %ₘ Di := by
   rw [laurentH, laurentQ_one_one]
   norm_num
 
-/-- **`%ₘ Dᵢ` is invisible at a root** of `Dᵢ`: for monic `Dᵢ` with `Dᵢ(α)=0`,
-`(P %ₘ Dᵢ).eval α = P.eval α` — the quotient term `Dᵢ·(P /ₘ Dᵢ)` vanishes at `α`. Used to read engine
-outputs (which are `%ₘ Dᵢ`-reduced) at the roots of `Dᵢ`. -/
+/-- `(P %ₘ Dᵢ).eval α = P.eval α` at a root `α` of a monic `Dᵢ`: the `%ₘ` reduction is invisible there. -/
 theorem eval_modByMonic_of_root {P Di : K[X]} {α : K} (_hDi : Di.Monic) (hα : Di.eval α = 0) :
     (P %ₘ Di).eval α = P.eval α := by
   conv_rhs => rw [← modByMonic_add_div P Di]
   rw [Polynomial.eval_add, Polynomial.eval_mul, hα, zero_mul, add_zero]
 
-/-- **`Bᵢ(α) = 1/Eᵢ(α)`** at a root `α` of `Dᵢ` (§2.7, the (2.10) evaluation): from `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`,
-evaluating at a root of the monic `Dᵢ` gives `Bᵢ(α)·Eᵢ(α) = 1`. -/
+/-- `Bᵢ(α)·Eᵢ(α) = 1` at a root `α` of the monic `Dᵢ` (so `Bᵢ(α) = 1/Eᵢ(α)`). -/
 theorem bezoutE_mul_laurentE_eval {D Di : K[X]} {α : K} (i : ℕ) (hDi : Di.Monic)
     (hα : Di.eval α = 0) (hcop : IsCoprime (laurentE D Di i) Di) :
     (bezoutE D Di i).eval α * (laurentE D Di i).eval α = 1 := by
@@ -271,8 +219,7 @@ theorem bezoutE_mul_laurentE_eval {D Di : K[X]} {α : K} (i : ℕ) (hDi : Di.Mon
   have := congrArg (fun p => p.eval α) h
   simpa [eval_modByMonic_of_root hDi hα, Polynomial.eval_mul] using this
 
-/-- **`Cᵢ(α) = 1/Dᵢ'(α)`** at a root `α` of `Dᵢ` (§2.7, the (2.10) evaluation): from `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`,
-evaluating at a root of the monic `Dᵢ` gives `Cᵢ(α)·Dᵢ'(α) = 1`. -/
+/-- `Cᵢ(α)·Dᵢ'(α) = 1` at a root `α` of the monic `Dᵢ` (so `Cᵢ(α) = 1/Dᵢ'(α)`). -/
 theorem bezoutDeriv_mul_derivative_eval {Di : K[X]} {α : K} (hDi : Di.Monic)
     (hα : Di.eval α = 0) (hcop : IsCoprime (derivative Di) Di) :
     (bezoutDeriv Di).eval α * (derivative Di).eval α = 1 := by
@@ -280,12 +227,8 @@ theorem bezoutDeriv_mul_derivative_eval {Di : K[X]} {α : K} (hDi : Di.Monic)
   have := congrArg (fun p => p.eval α) h
   simpa [eval_modByMonic_of_root hDi hα, Polynomial.eval_mul] using this
 
-/-- **`H₁₁(α) = A(α)/D'(α)`**, the Rothstein–Trager residue (§2.7, the `i=1` correctness, book p.56):
-for a simple factor `D = D₁·E₁` (`E₁ = D /ₘ D₁`) and a root `α` of the monic squarefree `D₁`
-(with `E₁(α) ≠ 0`, `D₁'(α) ≠ 0`), the engine output evaluates to `H₁₁(α) = A(α)/(E₁(α)·D₁'(α))`. Since
-`D'(α) = D₁'(α)·E₁(α)` at a root of `D₁` (the `D₁·E₁'` term vanishes), this is exactly the residue
-`A(α)/D'(α)` of `A/D` at the simple root `α` — the value collected in the Rothstein–Trager logarithmic
-sum (`Residues.residue_eq_eval_div_eval_derivative`). -/
+/-- `(laurentH A D Di 1 1).eval α = A(α)/(E₁(α)·D₁'(α))` at a root `α` of the monic `Di`
+(with `E₁(α), D₁'(α) ≠ 0`). -/
 theorem eval_laurentH_one_one {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hcopE : IsCoprime (laurentE D Di 1) Di) (hcopD : IsCoprime (derivative Di) Di)
     (hE : (laurentE D Di 1).eval α ≠ 0) (hD' : (derivative Di).eval α ≠ 0) :
@@ -298,10 +241,8 @@ theorem eval_laurentH_one_one {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : D
     eq_one_div_of_mul_eq_one_left (bezoutDeriv_mul_derivative_eval hDi hα hcopD)
   rw [hB, hC]
   field_simp
-/-- **`H₁₁(α) = A(α)/D'(α)`, in terms of the genuine `D'`** (§2.7, the residue, book p.56): when
-`D = D₁·E₁` with `E₁ = D /ₘ D₁` and `α` a root of the monic squarefree `D₁`, the residue denominator
-`E₁(α)·D₁'(α)` equals `D'(α)` (since `D' = D₁'·E₁ + D₁·E₁'` and `D₁(α)=0`), so the engine output is the
-Rothstein–Trager residue `H₁₁(α) = A(α)/D'(α)`. -/
+/-- `(laurentH A D Di 1 1).eval α = A(α)/D'(α)` for `D = Di·E₁` and `α` a root of the monic `Di`: the
+residue of `A/D` at the simple root `α`. -/
 theorem eval_laurentH_one_one_eq_residue {A D Di : K[X]} {α : K} (hDi : Di.Monic)
     (hα : Di.eval α = 0) (hfac : D = Di * laurentE D Di 1) (hcopE : IsCoprime (laurentE D Di 1) Di)
     (hcopD : IsCoprime (derivative Di) Di) (hE : (laurentE D Di 1).eval α ≠ 0)
@@ -314,19 +255,9 @@ theorem eval_laurentH_one_one_eq_residue {A D Di : K[X]} {α : K} (hDi : Di.Moni
     Polynomial.eval_mul, hα, zero_mul, add_zero]
   rw [mul_comm]
 
-/-! ## Stage F — the `d/dx` derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)`, validating the `Pᵢⱼ`
-recursion (eq 2.11 as a fraction-field invariant)
+/-! ## The `d/dx` derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)` validating the `Pᵢⱼ` recursion -/
 
-Mathlib has no derivation on a field of fractions, so — exactly as `RationalFunctionDerivative.lean`
-does for `K(x)` — we build `d/dx` on `Frac (DiffPoly K) = Localization (nonZeroDivisors (DiffPoly K))`
-directly by the quotient rule `(p/q)' = (ddx p·q − p·ddx q)/q²`, lifting the engine's `ddx`. The
-well-definedness on `Localization.liftOn` follows from differentiating the localization relation. With
-the resulting derivation `fracKDeriv`, eq 2.11's claim `hᵢ^(d)/d! = Pᵢⱼ/(u^(2i−j)·Eᵢ^(i−j+1))` (`d=i−j`)
-becomes a clean fraction-field identity `(fracKDeriv^[d] hᵢ) = d!·(Pᵢ,d/(u^(i+d)·Eᵢ^(d+1)))`, proved by
-induction via `laurentNum_cleared_step` and Mathlib's `Derivation.leibniz_div`. -/
-
-/-- The quotient-rule numerator/denominator pair `(ddx p·q − p·ddx q, q²)` as an element of
-`Frac (DiffPoly K)`. -/
+/-- The quotient-rule fraction `(ddx p·q − p·ddx q)/q²` in `Frac (DiffPoly K)`. -/
 private noncomputable def fracDerivAux (p : DiffPoly K) (q : nonZeroDivisors (DiffPoly K)) :
     FractionRing (DiffPoly K) :=
   Localization.mk (ddx p * (q : DiffPoly K) - p * ddx (q : DiffPoly K))
@@ -351,25 +282,24 @@ private theorem fracDerivAux_wd {p p' : DiffPoly K} {q q' : nonZeroDivisors (Dif
   linear_combination ((q : DiffPoly K) * (q' : DiffPoly K)) * keyd
     - ((q : DiffPoly K) * ddx (q' : DiffPoly K) + (q' : DiffPoly K) * ddx (q : DiffPoly K)) * key
 
-/-- **`d/dx` on `Frac (DiffPoly K)`** (§2.7): the quotient-rule derivative `(p/q)' = (ddx p·q − p·ddx q)/q²`
-extending the engine's `ddx`, defined via `Localization.liftOn` (well-defined by `fracDerivAux_wd`). -/
+/-- `d/dx` on `Frac (DiffPoly K)`: the quotient-rule derivative `(p/q)' = (ddx p·q − p·ddx q)/q²`
+extending `ddx`. -/
 noncomputable def fracDeriv (x : FractionRing (DiffPoly K)) : FractionRing (DiffPoly K) :=
   Localization.liftOn x fracDerivAux (fun h => fracDerivAux_wd h)
 
-/-- **Quotient rule** for `fracDeriv`: `(mk p q)' = (ddx p·q − p·ddx q)/q²`. -/
+/-- Quotient rule: `fracDeriv (mk p q) = (ddx p·q − p·ddx q)/q²`. -/
 theorem fracDeriv_mk (p : DiffPoly K) (q : nonZeroDivisors (DiffPoly K)) :
     fracDeriv (Localization.mk p q) = fracDerivAux p q :=
   Localization.liftOn_mk _ _ _ _
 
-/-- **`mk a b = mk c d` from the cross-multiplication** `d·a = b·c` in `DiffPoly K`. -/
+/-- `mk a b = mk c d` from the cross-multiplication `d·a = b·c`. -/
 private theorem mk_eq_of {a c : DiffPoly K} {b d : nonZeroDivisors (DiffPoly K)}
     (h : (d : DiffPoly K) * a = (b : DiffPoly K) * c) :
     (Localization.mk a b : FractionRing (DiffPoly K)) = Localization.mk c d := by
   rw [Localization.mk_eq_mk_iff, Localization.r_iff_exists]
   exact ⟨1, by simp only [OneMemClass.coe_one, one_mul]; exact h⟩
 
-/-- **`fracDeriv` extends `ddx`**: on an embedded numerator (as a fraction over `1`), `d/dx` on `Frac`
-is the engine's `ddx`, `fracDeriv (algebraMap p) = algebraMap (ddx p)`. -/
+/-- `fracDeriv (algebraMap p) = algebraMap (ddx p)`: `fracDeriv` extends `ddx`. -/
 theorem fracDeriv_algebraMap (p : DiffPoly K) :
     fracDeriv (algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) p)
       = algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (ddx p) := by
@@ -379,7 +309,7 @@ theorem fracDeriv_algebraMap (p : DiffPoly K) :
   apply mk_eq_of
   simp
 
-/-- **Additivity of `fracDeriv`** on `Frac (DiffPoly K)`: `(x + y)' = x' + y'`. -/
+/-- Additivity: `fracDeriv (x + y) = fracDeriv x + fracDeriv y`. -/
 theorem fracDeriv_add (x y : FractionRing (DiffPoly K)) :
     fracDeriv (x + y) = fracDeriv x + fracDeriv y := by
   induction x using Localization.induction_on with | _ px =>
@@ -393,7 +323,7 @@ theorem fracDeriv_add (x y : FractionRing (DiffPoly K)) :
   simp only [map_add, Derivation.leibniz, smul_eq_mul]
   ring
 
-/-- **Leibniz rule for `fracDeriv`** on `Frac (DiffPoly K)`: `(x·y)' = x'·y + x·y'`. -/
+/-- Leibniz rule: `fracDeriv (x·y) = fracDeriv x · y + x · fracDeriv y`. -/
 theorem fracDeriv_mul (x y : FractionRing (DiffPoly K)) :
     fracDeriv (x * y) = fracDeriv x * y + x * fracDeriv y := by
   induction x using Localization.induction_on with | _ px =>
@@ -407,7 +337,7 @@ theorem fracDeriv_mul (x y : FractionRing (DiffPoly K)) :
   simp only [Derivation.leibniz, smul_eq_mul]
   ring
 
-/-- **`K`-linearity of `fracDeriv`** on `Frac (DiffPoly K)`: `(c • x)' = c • x'` for `c : K`. -/
+/-- `K`-linearity: `fracDeriv (c • x) = c • fracDeriv x`. -/
 theorem fracDeriv_smul (c : K) (x : FractionRing (DiffPoly K)) :
     fracDeriv (c • x) = c • fracDeriv x := by
   induction x using Localization.induction_on with | _ px =>
@@ -420,8 +350,7 @@ theorem fracDeriv_smul (c : K) (x : FractionRing (DiffPoly K)) :
   rw [hc, MvPolynomial.smul_eq_C_mul, MvPolynomial.smul_eq_C_mul, MvPolynomial.smul_eq_C_mul]
   ring
 
-/-- **The `d/dx` `K`-derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)`** (§2.7): `fracDeriv` bundled as a
-`Derivation K (Frac) (Frac)`, so Mathlib's `Derivation.leibniz_div`/`leibniz_pow` apply. -/
+/-- The `d/dx` `K`-derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)`: `fracDeriv` bundled as a `Derivation`. -/
 noncomputable def fracKDeriv :
     Derivation K (FractionRing (DiffPoly K)) (FractionRing (DiffPoly K)) :=
   Derivation.mk'
@@ -432,67 +361,61 @@ noncomputable def fracKDeriv :
 
 @[simp] theorem fracKDeriv_apply (x : FractionRing (DiffPoly K)) : fracKDeriv x = fracDeriv x := rfl
 
-/-- **`fracKDeriv` extends `ddx`** (the bundled form of `fracDeriv_algebraMap`). -/
+/-- `fracKDeriv (algebraMap p) = algebraMap (ddx p)`: `fracKDeriv` extends `ddx`. -/
 theorem fracKDeriv_algebraMap (p : DiffPoly K) :
     fracKDeriv (algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) p)
       = algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (ddx p) :=
   fracDeriv_algebraMap p
 
-/-- **`dpEmbed Ei ≠ 0`** for `Ei ≠ 0`: the embedding `K[x] → DiffPoly K` is injective (with left inverse
-`aeval (laurentSubst _)`), so it does not kill a nonzero polynomial. -/
+/-- `dpEmbed Ei ≠ 0` for `Ei ≠ 0`: the embedding is injective. -/
 theorem dpEmbed_ne_zero {Ei : K[X]} (hEi : Ei ≠ 0) : dpEmbed Ei ≠ (0 : DiffPoly K) := by
   intro h
   apply hEi
   have := congrArg (MvPolynomial.aeval (laurentSubst (0 : K[X]))) h
   rwa [aeval_laurentSubst_dpEmbed, map_zero] at this
 
-/-- **The `hᵢ^(d)` denominator** `u^(i+d)·Eᵢ^(d+1) ∈ DiffPoly K` (eq 2.11, `d = i−j`, denominator
-`u^(2i−j)·Eᵢ^(i−j+1)`). -/
+/-- The `hᵢ^(d)` denominator `u^(i+d)·Eᵢ^(d+1) ∈ DiffPoly K`. -/
 noncomputable def lDenom (Ei : K[X]) (i d : ℕ) : DiffPoly K :=
   (X (some 0)) ^ (i + d) * (dpEmbed Ei) ^ (d + 1)
 
-/-- **`u^(i+d)·Eᵢ^(d+1) ≠ 0`** for `Ei ≠ 0`. -/
+/-- `lDenom Ei i d ≠ 0` for `Ei ≠ 0`. -/
 theorem lDenom_ne_zero {Ei : K[X]} (i d : ℕ) (hEi : Ei ≠ 0) : lDenom Ei i d ≠ 0 := by
   refine mul_ne_zero (pow_ne_zero _ ?_) (pow_ne_zero _ (dpEmbed_ne_zero hEi))
   simp [MvPolynomial.X_ne_zero]
 
-/-- **Denominator recursion**: `denom_{d+1} = denom_d · u · Eᵢ` (the new `u`/`Eᵢ` factor each step). -/
+/-- Denominator recursion: `lDenom Ei i (d+1) = lDenom Ei i d · u · Eᵢ`. -/
 theorem lDenom_succ (Ei : K[X]) (i d : ℕ) :
     lDenom Ei i (d + 1) = lDenom Ei i d * X (some 0) * dpEmbed Ei := by
   unfold lDenom
   rw [show i + (d + 1) = (i + d) + 1 from by ring]
   ring
 
-/-- **`hᵢ = A/(uⁱ·Eᵢ)`** as an element of `K(x)⟨u⟩` (eq 2.11 base): the differential-variable fraction
-the engine differentiates. -/
+/-- `hᵢ = A/(uⁱ·Eᵢ)` as an element of `K(x)⟨u⟩`: the fraction the engine differentiates. -/
 noncomputable def hFrac (A Ei : K[X]) (i : ℕ) : FractionRing (DiffPoly K) :=
   algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (dpEmbed A) /
     algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (lDenom Ei i 0)
 
-/-- **The candidate `hᵢ^(d)/d!` fraction** `Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))` (eq 2.11, RHS). -/
+/-- The candidate `hᵢ^(d)/d!` fraction `Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))`. -/
 noncomputable def lFrac (A Ei : K[X]) (i d : ℕ) : FractionRing (DiffPoly K) :=
   algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (laurentNum A Ei i d) /
     algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (lDenom Ei i d)
 
-/-- **`lFrac` base case** `d=0`: `Pᵢ,0/denom₀ = A/(uⁱ·Eᵢ) = hᵢ` (`Pᵢ,0 = A`). -/
+/-- `lFrac` base case: `lFrac A Ei i 0 = hFrac A Ei i`. -/
 theorem lFrac_zero (A Ei : K[X]) (i : ℕ) : lFrac A Ei i 0 = hFrac A Ei i := by
   unfold lFrac hFrac; rw [laurentNum_zero]
 
-/-- **Membership in `nonZeroDivisors`** for a nonzero `DiffPoly K` element (a domain, so nonzero ⇒
-not a zero divisor). -/
+/-- A nonzero `DiffPoly K` element is in `nonZeroDivisors`. -/
 private theorem mem_nzd {p : DiffPoly K} (hp : p ≠ 0) : p ∈ nonZeroDivisors (DiffPoly K) :=
   mem_nonZeroDivisors_iff_ne_zero.mpr hp
 
-/-- **`lFrac` as a `Localization.mk`**: `Pᵢ,d/(u^(i+d)·Eᵢ^(d+1)) = mk Pᵢ,d ⟨denom_d⟩`. -/
+/-- `lFrac` as a `Localization.mk`: `lFrac A Ei i d = mk (laurentNum …) ⟨lDenom …⟩`. -/
 theorem lFrac_mk (A Ei : K[X]) (i d : ℕ) (hEi : Ei ≠ 0) :
     lFrac A Ei i d
       = Localization.mk (laurentNum A Ei i d) ⟨lDenom Ei i d, mem_nzd (lDenom_ne_zero i d hEi)⟩ := by
   unfold lFrac; rw [Localization.mk_eq_mk', IsFractionRing.mk'_eq_div]
 
-/-- **The reduced quotient-rule numerator** (`i+d ≥ 1`): differentiating `Pᵢ,d/denom_d` and reducing,
-`ddx Pᵢ,d·denom_d − Pᵢ,d·ddx denom_d = u^(i+d−1)·Eᵢ^d·((d+1)·Pᵢ,d₊₁)` — the common factor `u^(i+d−1)·Eᵢ^d`
-(`= denom_d² / denom_{d+1}`) extracted, leaving the factorial-scaled `(d+1)·Pᵢ,d₊₁` by
-`laurentNum_cleared_step`. Stated with `m = i+d−1` to keep the exponent honest. -/
+/-- The reduced quotient-rule numerator (`i+d = m+1`):
+`ddx Pᵢ,d·denom_d − Pᵢ,d·ddx denom_d = u^m·Eᵢ^d·((d+1)·Pᵢ,d₊₁)`. -/
 theorem reduced_num [CharZero K] (A Ei : K[X]) (i d m : ℕ) (hm : i + d = m + 1) :
     ddx (laurentNum A Ei i d) * lDenom Ei i d - laurentNum A Ei i d * ddx (lDenom Ei i d)
       = X (some 0) ^ m * dpEmbed Ei ^ d *
@@ -510,11 +433,8 @@ theorem reduced_num [CharZero K] (A Ei : K[X]) (i d m : ℕ) (hm : i + d = m + 1
   rw [key, pow_succ (X (some 0) : DiffPoly K) m, pow_succ (dpEmbed Ei : DiffPoly K) d, hmK]
   ring
 
-/-- **The `hᵢ^(d)`-recursion step in `K(x)⟨u⟩`** (§2.7, eq 2.11): `d/dx (Pᵢ,d/denom_d) = (d+1)·(Pᵢ,d₊₁/denom_{d+1})`
-— differentiating the `d`-th fraction gives the `(d+1)`-th scaled by the factorial increment `d+1` (the
-divisor `laurentNumStep` clears). This is exactly `d/dx (hᵢ^d/d!) = (d+1)·(hᵢ^(d+1)/(d+1)!)`. Proved via
-`reduced_num` + `lDenom_succ`. Requires `0 < i` (so `u^(i+d)` has a positive power to differentiate) and
-`Ei ≠ 0`. -/
+/-- The recursion step in `K(x)⟨u⟩`: `fracKDeriv (lFrac A Ei i d) = (d+1)·lFrac A Ei i (d+1)`.
+Requires `0 < i`, `Ei ≠ 0`. -/
 theorem fracKDeriv_lFrac [CharZero K] (A Ei : K[X]) (i d : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) :
     fracKDeriv (lFrac A Ei i d) = ((d : K) + 1) • lFrac A Ei i (d + 1) := by
   obtain ⟨m, hm⟩ : ∃ m, i + d = m + 1 := ⟨i + d - 1, by omega⟩
@@ -527,26 +447,19 @@ theorem fracKDeriv_lFrac [CharZero K] (A Ei : K[X]) (i d : ℕ) (hi : 0 < i) (hE
   unfold lDenom
   rw [hm]; ring
 
-/-- **The factorial divisor `d!`** accumulated by the `laurentNumStep` recursion (which divides by the
-factorial increment `d+1` at step `d`), realized in `K`. With the corrected normalization the scale is the
-pure factorial `d! = ∏_{k=0}^{d−1}(k+1)`, matching the book's `hᵢ^(d)/d!`. -/
+/-- The factorial divisor `d! = ∏_{k=0}^{d−1}(k+1)` accumulated by the `laurentNumStep` recursion. -/
 noncomputable def laurentScale (K : Type*) [Field K] (i : ℕ) : ℕ → K
   | 0 => 1
   | d + 1 => laurentScale K i d * ((d : K) + 1)
 
-/-- **`laurentScale = d!`** (the corrected scale collapses to the pure factorial): with `laurentNumStep`
-dividing by the factorial increment `d+1`, the accumulated product `laurentScale K i d` is exactly the
-factorial `(d! : K)`, independent of `i`. -/
+/-- `laurentScale K i d = (d.factorial : K)`, independent of `i`. -/
 theorem laurentScale_eq_factorial (i d : ℕ) : laurentScale K i d = (d.factorial : K) := by
   induction d with
   | zero => simp [laurentScale]
   | succ n ih => rw [laurentScale, ih, Nat.factorial_succ]; push_cast; ring
 
-/-- **The eq 2.11 invariant in `K(x)⟨u⟩ = Frac (DiffPoly K)`** (§2.7, the validation of the `Pᵢⱼ` recursion):
-`(d/dx)^[d] hᵢ = d! · (Pᵢ,d / (u^(i+d)·Eᵢ^(d+1)))` for `hᵢ = A/(uⁱ·Eᵢ)` — i.e. exactly the book's
-`hᵢ^(d)/d! = Pᵢⱼ/denom_d` (`= Pᵢⱼ/(u^(i+d)·Eᵢ^(d+1))`). Since `laurentNumStep` divides by the factorial
-increment `d+1`, the `d`-th derivative carries the factorial `laurentScale K i d = d!` (`laurentScale_eq_factorial`);
-the engine's `laurentNum` is EXACTLY the book's `Pᵢⱼ`. Proved by induction via `fracKDeriv_lFrac`. -/
+/-- The recursion invariant in `K(x)⟨u⟩`: `(d/dx)^[d] hᵢ = (laurentScale K i d) • lFrac A Ei i d` for
+`hᵢ = A/(uⁱ·Eᵢ)`. -/
 theorem iterate_fracKDeriv_hFrac [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0)
     (d : ℕ) :
     (fracKDeriv^[d]) (hFrac A Ei i) = (laurentScale K i d) • lFrac A Ei i d := by
@@ -556,15 +469,9 @@ theorem iterate_fracKDeriv_hFrac [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < 
     rw [Function.iterate_succ_apply', ih, laurentScale, Derivation.map_smul,
       fracKDeriv_lFrac A Ei i n hi hEi, smul_smul]
 
-/-! ## Stage G — the root-evaluation `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢα(α), …)` (book p.56)
+/-! ## The root-evaluation `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)` -/
 
-At a root `α` of `Dᵢ` over the algebraic closure, write `Dᵢ = (x−α)·Dᵢ,α`. The substitution `Qᵢⱼ`
-(`u^(k) ↦ Dᵢ^(k+1)/(k+1)`) evaluated at `α` recovers the derivatives of `Dᵢ,α`: the engine of this is the
-Leibniz identity `Dᵢ^(k+1)(α) = (k+1)·Dᵢ,α^(k)(α)` (book p.56, since `(x−α)^(j)=0` for `j>1`), giving
-`Dᵢ^(k+1)(α)/(k+1) = Dᵢ,α^(k)(α)`. Hence `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …, Dᵢ,α^(i−j)(α))`. -/
-
-/-- **Leibniz for `(x−α)·p`** (book p.56): `(((x−α)·p)^(k+1) = (x−α)·p^(k+1) + (k+1)·p^(k)`, since the
-second and higher derivatives of `x−α` vanish. -/
+/-- Leibniz for `(x−α)·p`: `derivative^[k+1] ((x−α)·p) = (x−α)·derivative^[k+1] p + (k+1)·derivative^[k] p`. -/
 theorem iterate_derivative_X_sub_C_mul (α : K) (p : K[X]) (k : ℕ) :
     derivative^[k + 1] ((Polynomial.X - Polynomial.C α) * p)
       = (Polynomial.X - Polynomial.C α) * derivative^[k + 1] p + ((k + 1 : ℕ)) • derivative^[k] p := by
@@ -585,8 +492,7 @@ theorem iterate_derivative_X_sub_C_mul (α : K) (p : K[X]) (k : ℕ) :
       sub_zero, one_mul, derivative_smul, e2, e3, succ_nsmul]
     ring_nf
 
-/-- **`Dᵢ^(k+1)(α) = (k+1)·Dᵢ,α^(k)(α)`** at a root (book p.56): evaluating `iterate_derivative_X_sub_C_mul`
-at `α` kills the `(x−α)` factor. -/
+/-- At a root: `(derivative^[k+1] ((x−α)·p)).eval α = (k+1)·(derivative^[k] p).eval α`. -/
 theorem eval_iterate_derivative_X_sub_C_mul (α : K) (p : K[X]) (k : ℕ) :
     (derivative^[k + 1] ((Polynomial.X - Polynomial.C α) * p)).eval α
       = ((k : K) + 1) * (derivative^[k] p).eval α := by
@@ -595,8 +501,8 @@ theorem eval_iterate_derivative_X_sub_C_mul (α : K) (p : K[X]) (k : ℕ) :
     nsmul_eq_mul]
   push_cast; ring
 
-/-- **`(laurentSubst Dᵢ (u^(k)))(α) = Dᵢ,α^(k)(α)`** (book p.56, the substitution's root value): the scaled
-derivative `Dᵢ^(k+1)/(k+1)` evaluated at a root `α` of `Dᵢ = (x−α)·Dᵢ,α` is the `k`-th derivative of `Dᵢ,α`. -/
+/-- `(laurentSubst ((x−α)·Diα) (some k)).eval α = (derivative^[k] Diα).eval α`: the substitution's root
+value. -/
 theorem eval_laurentSubst_some [CharZero K] (Diα : K[X]) (α : K) (k : ℕ) :
     (laurentSubst ((Polynomial.X - Polynomial.C α) * Diα) (some k)).eval α
       = (derivative^[k] Diα).eval α := by
@@ -604,8 +510,7 @@ theorem eval_laurentSubst_some [CharZero K] (Diα : K[X]) (α : K) (k : ℕ) :
   rw [Polynomial.eval_mul, Polynomial.eval_C, eval_iterate_derivative_X_sub_C_mul, ← mul_assoc,
     inv_mul_cancel₀ (Nat.cast_add_one_ne_zero (R := K) k), one_mul]
 
-/-- **`eval ∘ aeval` collapses to a single evaluated substitution**: `(aeval f P)(α) = aeval (v ↦ f(v)(α)) P`
-for `P ∈ DiffPoly K`, `f : Option ℕ → K[x]` — push the outer `eval α` through the `aeval`. -/
+/-- `(aeval f P).eval α = aeval (fun v => (f v).eval α) P`: push `eval α` through the `aeval`. -/
 theorem eval_aeval_diffPoly (f : Option ℕ → K[X]) (α : K) (P : DiffPoly K) :
     Polynomial.eval α (MvPolynomial.aeval f P) = MvPolynomial.aeval (fun v => (f v).eval α) P := by
   induction P using MvPolynomial.induction_on with
@@ -613,19 +518,14 @@ theorem eval_aeval_diffPoly (f : Option ℕ → K[X]) (α : K) (P : DiffPoly K) 
   | add p q hp hq => simp [hp, hq]
   | mul_X p n hp => simp [hp]
 
-/-- **The root-substitution point** `v ↦` (its value at `α`): `x ↦ α`, `u^(k) ↦ Dᵢ,α^(k)(α)` — the
-arguments of `Pᵢⱼ` in the book's `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …)`. -/
+/-- The root-substitution point: `x ↦ α`, `u^(k) ↦ (derivative^[k] Diα).eval α`. -/
 noncomputable def substEvalAt (Diα : K[X]) (α : K) : Option ℕ → K := fun v =>
   match v with
   | none => α
   | some k => (derivative^[k] Diα).eval α
 
-/-- **`Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …, Dᵢ,α^(i−j)(α))`** (book p.56): at a root `α` of
-`Dᵢ = (x−α)·Dᵢ,α`, the `Qᵢⱼ` substitution evaluates to `Pᵢⱼ` at the derivatives of `Dᵢ,α` — by
-`eval_aeval_diffPoly` (collapse the outer `eval α`) and `eval_laurentSubst_some` (each `u^(k)` value).
-This is the substantive root-evaluation step; identifying the resulting `Pᵢⱼ(α,…)` with the `(i−j)`-th
-Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ` at `α` (hence the `1/(x−α)ʲ` Laurent coefficient of `A/D`)
-is the remaining Taylor-series argument over the closure. -/
+/-- `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)`: at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`, the `Qᵢⱼ` substitution evaluates
+to `aeval (substEvalAt Diα α) (laurentNum …)`. -/
 theorem laurentQ_eval_at_root [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
     (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
       = MvPolynomial.aeval (substEvalAt Diα α)
@@ -639,17 +539,9 @@ theorem laurentQ_eval_at_root [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ
     | some k => rw [eval_laurentSubst_some]; rfl
   rw [hfg]
 
-/-! ## Stage H — the differential substitution hom `σα` and the specialized invariant (book p.56)
+/-! ## The differential substitution hom `σα` and the specialized invariant -/
 
-The bridge from the differential-variable engine to the **actual** function `hᵢ,α = (A/D)(x−α)ⁱ`:
-substitute the genuine derivatives of `Dᵢ,α = Dᵢ /ₘ (x−α)` for the differential variables. The map
-`diffSubst Diα : DiffPoly K →ₐ[K] K[x]` sends `x ↦ X`, `u^(k) ↦ derivative^[k] Diα`; it is a
-**differential** algebra hom — `diffSubst Diα (ddx p) = derivative (diffSubst Diα p)` — so it carries the
-engine's `ddx` to the genuine `Polynomial.derivative`, and hence commutes with the iterated `(d/dx)^[d]`. -/
-
-/-- **The differential substitution hom** `σα : DiffPoly K →ₐ[K] K[x]` (book p.56): the `K`-algebra map
-`x ↦ X`, `u^(k) ↦ Dᵢ,α^(k) = derivative^[k] Diα`, substituting the genuine derivatives of `Diα` (`= Dᵢ,α`,
-the `(x−α)`-cofactor of `Dᵢ` at the root `α`) for the differential indeterminate's derivatives. -/
+/-- The differential substitution hom `σα : DiffPoly K →ₐ[K] K[x]`: `x ↦ X`, `u^(k) ↦ derivative^[k] Diα`. -/
 noncomputable def diffSubst (Diα : K[X]) : DiffPoly K →ₐ[K] K[X] :=
   MvPolynomial.aeval fun v => match v with
     | none => Polynomial.X
@@ -674,11 +566,7 @@ noncomputable def diffSubst (Diα : K[X]) : DiffPoly K →ₐ[K] K[X] :=
     · simp [dpEmbed]
   exact congrArg (fun f : K[X] →+* K[X] => f p) h
 
-/-- **`σα` is a differential hom** (book p.56, the key bridge): `σα (ddx p) = derivative (σα p)` — the
-substitution carries the engine's `d/dx` (`ddx`) to the genuine `Polynomial.derivative`. By
-`MvPolynomial.induction_on`: on `C a` both vanish, on a product `p·X v` Leibniz on both sides reduces to the
-base cases `σα(ddx (X none)) = σα 1 = 1 = derivative X` and
-`σα(ddx (X (some k))) = derivative^[k+1] Diα = derivative (derivative^[k] Diα) = derivative (σα (X (some k)))`. -/
+/-- `σα` is a differential hom: `diffSubst Diα (ddx p) = derivative (diffSubst Diα p)`. -/
 theorem diffSubst_ddx (Diα : K[X]) (p : DiffPoly K) :
     diffSubst Diα (ddx p) = derivative (diffSubst Diα p) := by
   induction p using MvPolynomial.induction_on with
@@ -696,52 +584,38 @@ theorem diffSubst_ddx (Diα : K[X]) (p : DiffPoly K) :
         map_mul, derivative_mul]
       ring
 
-/-! ## Stage I — the specialized eq 2.11 invariant in `K(x) = RatFunc K` (Step 2)
+/-! ## The specialized recursion invariant in `K(x) = RatFunc K` -/
 
-Pushing the `K(x)⟨u⟩` invariant `iterate_fracKDeriv_hFrac` through `σα` lands in `K(x) = RatFunc K`: the
-genuine function `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)` (`= σα hᵢ`), under the genuine `d/dx = ratFuncKDeriv`, satisfies
-`(d/dx)^[d] hᵢ,α = d!·(σα(Pᵢ,d)/(Dᵢ,α^{i+d}·Eᵢ^{d+1}))`. Because `σα` is surjective but not injective, this
-is proved by re-running the induction at the `RatFunc K` level — the polynomial step `reduced_num` carries
-through `σα` (a *differential* hom, `diffSubst_ddx`) to a `K[x]` identity, then `leibniz_div` gives the
-quotient-rule recursion. This makes the engine's `Pᵢⱼ` genuinely the numerators of the derivatives of the
-actual rational function `hᵢ,α`. -/
-
-/-- **The genuine `hᵢ,α`-denominator** `Dᵢ,α^{i+d}·Eᵢ^{d+1} ∈ K[x]` (`= σα (lDenom Ei i d)`): the
-specialization of `lDenom` along `u ↦ Dᵢ,α = Diα`, `Eᵢ ↦ Ei`. -/
+/-- The genuine `hᵢ,α`-denominator `Dᵢ,α^{i+d}·Eᵢ^{d+1} ∈ K[x]` (`= σα (lDenom Ei i d)`). -/
 noncomputable def lDenomα (Ei Diα : K[X]) (i d : ℕ) : K[X] := Diα ^ (i + d) * Ei ^ (d + 1)
 
-/-- **`σα (lDenom Ei i d) = lDenomα Ei Diα i d`** (`= Dᵢ,α^{i+d}·Eᵢ^{d+1}`): the substitution maps the
-differential denominator `u^{i+d}·Eᵢ^{d+1}` to the genuine `Dᵢ,α^{i+d}·Eᵢ^{d+1}` (`u = X (some 0) ↦ Diα`,
-`dpEmbed Ei ↦ Ei`). -/
+/-- `diffSubst Diα (lDenom Ei i d) = lDenomα Ei Diα i d`. -/
 theorem diffSubst_lDenom (Ei Diα : K[X]) (i d : ℕ) :
     diffSubst Diα (lDenom Ei i d) = lDenomα Ei Diα i d := by
   unfold lDenom lDenomα
   rw [map_mul, map_pow, map_pow, diffSubst_X_some Diα 0, diffSubst_dpEmbed,
     Function.iterate_zero_apply]
 
-/-- **`lDenomα ≠ 0`** for `Ei, Diα ≠ 0`. -/
+/-- `lDenomα Ei Diα i d ≠ 0` for `Ei, Diα ≠ 0`. -/
 theorem lDenomα_ne_zero {Ei Diα : K[X]} (i d : ℕ) (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) :
     lDenomα Ei Diα i d ≠ 0 :=
   mul_ne_zero (pow_ne_zero _ hDiα) (pow_ne_zero _ hEi)
 
-/-- **The genuine `hᵢ,α^{(d)}/d!` fraction** `σα(Pᵢ,d)/(Dᵢ,α^{i+d}·Eᵢ^{d+1}) ∈ K(x)` (`= σα` of `lFrac`). -/
+/-- The genuine `hᵢ,α^{(d)}/d!` fraction `σα(Pᵢ,d)/(Dᵢ,α^{i+d}·Eᵢ^{d+1}) ∈ K(x)`. -/
 noncomputable def lFracα (A Ei Diα : K[X]) (i d : ℕ) : RatFunc K :=
   algebraMap K[X] (RatFunc K) (diffSubst Diα (laurentNum A Ei i d)) /
     algebraMap K[X] (RatFunc K) (lDenomα Ei Diα i d)
 
-/-- **`hᵢ,α = A/(Dᵢ,α^i·Eᵢ) = (A/D)·(x−α)ⁱ`** in `K(x)` (`= σα hᵢ`): the genuine rational function whose
-`d`-th derivative the engine's `Pᵢ,d` computes. -/
+/-- `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)` in `K(x)`: the genuine rational function the engine differentiates. -/
 noncomputable def hFracα (A Ei Diα : K[X]) (i : ℕ) : RatFunc K :=
   algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (lDenomα Ei Diα i 0)
 
-/-- **`lFracα` base case** `d=0`: `σα(A)/denomα₀ = A/(Dᵢ,α^i·Eᵢ) = hᵢ,α`. -/
+/-- `lFracα` base case: `lFracα A Ei Diα i 0 = hFracα A Ei Diα i`. -/
 theorem lFracα_zero (A Ei Diα : K[X]) (i : ℕ) : lFracα A Ei Diα i 0 = hFracα A Ei Diα i := by
   unfold lFracα hFracα; rw [laurentNum_zero, diffSubst_dpEmbed]
 
-/-- **The reduced quotient-rule numerator, pushed through `σα`** (`= σα` of `reduced_num`): the genuine
-`K[x]` identity `Pᵢ,d^α'·denomα_d − Pᵢ,d^α·denomα_d' = Dᵢ,α^{i+d−1}·Eᵢ^d·((d+1)·Pᵢ,d₊₁^α)`, where
-`Pᵢ,d^α = σα(laurentNum …)` and `'` is the genuine `Polynomial.derivative`. Applies `diffSubst_ddx` (so
-`σα(ddx P) = derivative(σα P)`) to the differential identity `reduced_num`. -/
+/-- The reduced quotient-rule numerator in `K[x]` (`= σα` of `reduced_num`):
+`(σα Pᵢ,d)'·denomα_d − (σα Pᵢ,d)·denomα_d' = Dᵢ,α^m·Eᵢ^d·((d+1)·σα Pᵢ,d₊₁)`. -/
 theorem reduced_numα [CharZero K] (A Ei Diα : K[X]) (i d m : ℕ) (hm : i + d = m + 1) :
     derivative (diffSubst Diα (laurentNum A Ei i d)) * lDenomα Ei Diα i d
         - diffSubst Diα (laurentNum A Ei i d) * derivative (lDenomα Ei Diα i d)
@@ -755,10 +629,8 @@ theorem reduced_numα [CharZero K] (A Ei Diα : K[X]) (i d m : ℕ) (hm : i + d 
   -- `diffSubst (C ((d:K)+1)) = C ((d:K)+1)` as a constant in `K[x]`
   rw [h, diffSubst_C, Polynomial.C_add, Polynomial.C_eq_natCast, Polynomial.C_1]
 
-/-- **The recursion step in `K(x)`** (`= σα` of `fracKDeriv_lFrac`): differentiating the genuine
-`hᵢ,α^{(d)}/d!` fraction gives the `(d+1)`-th scaled by `d+1`,
-`ratFuncKDeriv (lFracα …d) = (d+1)·lFracα …(d+1)`. The genuine quotient rule via `leibniz_div` +
-`reduced_numα`. Requires `0 < i`, `Ei ≠ 0`, `Diα ≠ 0`. -/
+/-- The recursion step in `K(x)`: `ratFuncKDeriv (lFracα A Ei Diα i d) = (d+1)·lFracα A Ei Diα i (d+1)`.
+Requires `0 < i`, `Ei ≠ 0`, `Diα ≠ 0`. -/
 theorem ratFuncKDeriv_lFracα [CharZero K] (A Ei Diα : K[X]) (i d : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0)
     (hDiα : Diα ≠ 0) :
     ratFuncKDeriv (lFracα A Ei Diα i d) = ((d : K) + 1) • lFracα A Ei Diα i (d + 1) := by
@@ -806,14 +678,9 @@ theorem ratFuncKDeriv_lFracα [CharZero K] (A Ei Diα : K[X]) (i d : ℕ) (hi : 
   rw [hsucc, hdfac, Polynomial.C_add, Polynomial.C_eq_natCast, Polynomial.C_1]
   ring
 
-/-- **The specialized eq 2.11 invariant in `K(x)`** (§2.7, p.56, the genuine-function form, Step 2): the
-`d`-th genuine derivative of the actual rational function `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)` is `d!` times the engine's
-`σα(Pᵢ,d)/(Dᵢ,α^{i+d}·Eᵢ^{d+1})`,
-`(d/dx)^[d] hᵢ,α = d! · (σα(laurentNum A Eᵢ i d) / (Dᵢ,α^{i+d}·Eᵢ^{d+1}))` in `RatFunc K`. This is the image
-of `iterate_fracKDeriv_hFrac` under the differential hom `σα` — proved by induction at the `K(x)` level via
-`ratFuncKDeriv_lFracα`, since `σα` is surjective but not injective. It makes the engine's `Pᵢⱼ` genuinely
-the numerators of the derivatives of the actual function `hᵢ,α = (A/D)(x−α)ⁱ`. Requires `0 < i`,
-`Ei ≠ 0`, `Diα ≠ 0`. -/
+/-- The specialized recursion invariant in `K(x)`:
+`(d/dx)^[d] hᵢ,α = d! · (σα(laurentNum A Eᵢ i d) / (Dᵢ,α^{i+d}·Eᵢ^{d+1}))` for `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)`.
+Requires `0 < i`, `Ei ≠ 0`, `Diα ≠ 0`. -/
 theorem iterate_ratFuncKDeriv_hFracα [CharZero K] (A Ei Diα : K[X]) (i : ℕ) (hi : 0 < i)
     (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) (d : ℕ) :
     (ratFuncKDeriv^[d]) (hFracα A Ei Diα i) = (d.factorial : K) • lFracα A Ei Diα i d := by
@@ -825,16 +692,9 @@ theorem iterate_ratFuncKDeriv_hFracα [CharZero K] (A Ei Diα : K[X]) (i : ℕ) 
     congr 1
     push_cast; ring
 
-/-! ## Stage J — the root-value bridge `σα(Pᵢ,d)(α) = Qᵢⱼ(α)` (Step 3) and the residual Laurent fact
+/-! ## The root-value bridge `σα(Pᵢ,d)(α) = Qᵢⱼ(α)` -/
 
-`σα(Pᵢ,d)(α)` (the numerator of the genuine `hᵢ,α^{(d)}/d!` evaluated at `α`, from Step 2) coincides with the
-book's `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)` (Stage G): both are `aeval (substEvalAt Diα α) (laurentNum …)`. So the
-engine's `Qᵢⱼ(α)` IS the numerator of the `(i−j)`-th derivative of the actual rational function `hᵢ,α` at
-`α` — i.e. `(i−j)!·[Taylor coeff of hᵢ,α at α, order i−j]·(Dᵢ,α(α)^{2i−j}·Eᵢ(α)^{i−j+1})`. -/
-
-/-- **`(σα P)(α) = Pᵢⱼ(α, Dᵢ,α(α), …)`** (the evaluated differential hom): evaluating `σα P` at `α`
-collapses to the `aeval` of `P` at the root-substitution point `substEvalAt Diα α` (`x ↦ α`,
-`u^(k) ↦ Dᵢ,α^{(k)}(α)`), by pushing `eval α` through the `aeval`. -/
+/-- `(diffSubst Diα P).eval α = aeval (substEvalAt Diα α) P`: the evaluated differential hom. -/
 theorem eval_diffSubst (Diα : K[X]) (α : K) (P : DiffPoly K) :
     Polynomial.eval α (diffSubst Diα P) = MvPolynomial.aeval (substEvalAt Diα α) P := by
   rw [diffSubst, eval_aeval_diffPoly]
@@ -847,43 +707,17 @@ theorem eval_diffSubst (Diα : K[X]) (α : K) (P : DiffPoly K) :
     | some k => simp [substEvalAt]
   rw [hfun]
 
-/-- **Step 3, the bridge `σα(Pᵢ,d)(α) = Qᵢⱼ(α)`** (book p.56): the value at `α` of the genuine
-`hᵢ,α^{(i−j)}/(i−j)!` numerator (`= σα(laurentNum …)`, Step 2) equals the engine's `Qᵢⱼ(α)` (Stage G,
-`laurentQ_eval_at_root`), since both are `aeval (substEvalAt Diα α) (laurentNum …)`. This identifies the
-engine's rational `Qᵢⱼ(α)` with the (Taylor-coefficient-bearing) numerator of the **actual** rational
-function `hᵢ,α = (A/D)(x−α)ⁱ`. -/
+/-- The bridge `(σα(laurentNum …)).eval α = (laurentQ …).eval α`: both are
+`aeval (substEvalAt Diα α) (laurentNum …)`. -/
 theorem eval_diffSubst_laurentNum_eq_laurentQ_eval [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
     Polynomial.eval α
         (diffSubst Diα (laurentNum A (laurentE D ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
       = (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α := by
   rw [eval_diffSubst, laurentQ_eval_at_root]
 
-/-! ### Step 4 — the remaining extraction lemma (the pole-order-`j` Laurent coefficient)
-
-What remains for the full general Thm 2.7.1 correctness (`Hᵢⱼ(α) =` the `1/(x−α)ʲ` partial-fraction
-coefficient `c_j` of `A/D`) is the **Taylor/Laurent extraction over the algebraic closure**, NOT reachable
-with the present simple-pole `residueAt` (`RecognizingLogDeriv.residueAt`, the coefficient of `1/(x−α)¹`
-only). Precisely, the residual fact is:
-
-> **Laurent extraction (Step 4).** Over `K̄`, with `hᵢ,α = (A/D)(x−α)ⁱ` regular at `α` and `A/D` having a
-> pole of order `≤ i` at `α` with principal part `∑_{k=1}^{i} c_k/(x−α)^k`, the order-`(i−j)` Taylor
-> coefficient of `hᵢ,α` at `α` is exactly `c_j` (the `1/(x−α)ʲ` partial-fraction coefficient of `A/D`):
-> `(d/dx)^[i−j] hᵢ,α (α) / (i−j)! = c_j`.
-
-Combined with Step 2 (`iterate_ratFuncKDeriv_hFracα`, giving `(d/dx)^[i−j] hᵢ,α (α) = (i−j)!·Qᵢⱼ(α) /
-(Dᵢ,α(α)^{2i−j}·Eᵢ(α)^{i−j+1})` via Step 3) and Step 5 (`Hᵢⱼ(α) = Qᵢⱼ(α)·Bᵢ(α)^{i−j+1}·Cᵢ(α)^{2i−j}`,
-`eval_laurentH` below, with `Bᵢ(α) = 1/Eᵢ(α)`, `Cᵢ(α) = 1/Dᵢ'(α)`), this yields `Hᵢⱼ(α) = c_j`. The blocker
-is the **higher-order** principal-part extraction (a `residueAt`-of-order-`j` generalization: multiply by
-`(x−α)ʲ`, take `(i−j)` derivatives, evaluate; the library's `residueAt` does only the `j=1`, `(i−j)=0` case).
-The `i=j=1` instance is closed (`eval_laurentH_one_one_eq_residue`). -/
-
-/-- **Step 5, the general engine-output evaluation** `Hᵢⱼ(α) = Qᵢⱼ(α)·Bᵢ(α)^{i−j+1}·Cᵢ(α)^{2i−j}` (§2.7,
-eq 2.12 evaluated, generalizing `eval_laurentH_one_one` from `i=j=1` to all `i,j`): at a root `α` of the
-monic `Dᵢ`, the `%ₘ Dᵢ` reduction is invisible (`eval_modByMonic_of_root`), so the engine output evaluates
-to `Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` — the substitution value times the Bézout-cofactor powers
-`Bᵢ(α) = 1/Eᵢ(α)`, `Cᵢ(α) = 1/Dᵢ'(α)` (from the (2.10) congruences
-`bezoutE_mul_laurentE_eval`/`bezoutDeriv_mul_derivative_eval`). This is the `K`-level value the Laurent fact
-(Step 4) then identifies with the `1/(x−α)ʲ` partial-fraction coefficient `c_j`. -/
+/-- The general engine-output evaluation
+`(laurentH A D Di i j).eval α = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` at a root `α` of the monic
+`Dᵢ`, using `Bᵢ(α) = 1/Eᵢ(α)`, `Cᵢ(α) = 1/Dᵢ'(α)`. -/
 theorem eval_laurentH {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
     (laurentH A D Di i j).eval α
@@ -897,13 +731,8 @@ theorem eval_laurentH {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα
     eq_one_div_of_mul_eq_one_left (bezoutDeriv_mul_derivative_eval hDi hα hcopD)
   rw [hB, hC]
 
-/-- **Steps 2+3+5 combined: `Hᵢⱼ(α)` from the genuine `hᵢ,α`-numerator** (§2.7, p.56): at a root `α` of the
-monic `Dᵢ = (x−α)·Dᵢ,α`, the engine output is `Hᵢⱼ(α) = σα(Pᵢ,i−j)(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}`,
-where `σα(Pᵢ,i−j)(α) = Polynomial.eval α (diffSubst Dᵢ,α (laurentNum …))` is the value at `α` of the
-**genuine** `hᵢ,α^{(i−j)}/(i−j)!` numerator (`= σα(laurentNum …)`, Step 2; `= Qᵢⱼ(α)`, Step 3,
-`eval_diffSubst_laurentNum_eq_laurentQ_eval`). This routes the engine's `Qᵢⱼ(α)` through the *actual*
-rational function `hᵢ,α = (A/D)(x−α)ⁱ`. The only remaining gap to `Hᵢⱼ(α) = c_j` is identifying
-`σα(Pᵢ,i−j)(α)`-via-`(Dᵢ,α,Eᵢ)`-powers with the order-`(i−j)` Taylor coefficient of `hᵢ,α` (Step 4). -/
+/-- The engine output from the genuine `hᵢ,α`-numerator: for `Dᵢ = (x−α)·Dᵢ,α`,
+`(laurentH A D Di i j).eval α = (diffSubst Diα (laurentNum …)).eval α · (1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}`. -/
 theorem eval_laurentH_eq_diffSubst_laurentNum [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ)
     (hDi : Di.Monic) (hα : Di.eval α = 0) (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
@@ -922,20 +751,9 @@ theorem eval_laurentH_eq_diffSubst_laurentNum [CharZero K] {A D Di Diα : K[X]} 
     | some k => subst hfac; rw [eval_laurentSubst_some]; simp [substEvalAt]
   rw [hf]
 
-/-! ## Stage K — (a) `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α` (Step 4, the reachable core)
+/-! ## `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α` -/
 
-Evaluating the specialized eq 2.11 invariant `iterate_ratFuncKDeriv_hFracα` (Stage I) at the root `α` via
-`RatFunc.eval (RingHom.id K) α` — a ring hom away from the (here nonzero) denominator `Dᵢ,α(α)·Eᵢ(α) ≠ 0`
-— gives `(d/dx)^[i−j] hᵢ,α (α) = (i−j)!·σα(Pᵢ,i−j)(α)/(Dᵢ,α(α)^{2i−j}·Eᵢ(α)^{i−j+1})`. Combined with the
-cofactor identity `Dᵢ'(α) = Dᵢ,α(α)` (from `Dᵢ = (x−α)·Dᵢ,α`) and `eval_laurentH_eq_diffSubst_laurentNum`
-(Steps 2+3+5), the `(Dᵢ,α, Eᵢ)`-power denominators cancel the `(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` factors,
-identifying the engine output `Hᵢⱼ(α)` with the **order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ`
-at `α`**, i.e. `(d/dx)^[i−j] hᵢ,α (α)/(i−j)!`. Those Taylor coefficients ARE the `1/(x−α)ʲ` partial-fraction
-(Laurent) coefficients of `A/D` by the very definition of `hᵢ,α`, so this completes Thm 2.7.1 up to the
-literal `= c_j` naming. -/
-
-/-- **The cofactor at a simple root: `Dᵢ'(α) = Dᵢ,α(α)`** (book p.56): when `Dᵢ = (x−α)·Dᵢ,α`, the
-derivative `Dᵢ' = Dᵢ,α + (x−α)·Dᵢ,α'`, so at the root `α` the `(x−α)`-term drops and `Dᵢ'(α) = Dᵢ,α(α)`. -/
+/-- The cofactor at a simple root: `(derivative Di).eval α = Diα.eval α` when `Di = (x−α)·Diα`. -/
 theorem eval_derivative_of_X_sub_C_mul {Di Diα : K[X]} {α : K}
     (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα) :
     (derivative Di).eval α = Diα.eval α := by
@@ -944,26 +762,23 @@ theorem eval_derivative_of_X_sub_C_mul {Di Diα : K[X]} {α : K}
     Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_sub, Polynomial.eval_X,
     Polynomial.eval_C, sub_self, zero_mul, add_zero]
 
-/-- **`Eᵢ(α) ≠ 0` ∧ `Dᵢ,α(α) ≠ 0` ⟹ the `hᵢ,α`-denominator is nonzero at `α`**:
-`(lDenomα Eᵢ Dᵢ,α i d)(α) = Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1} ≠ 0`. -/
+/-- `(lDenomα Ei Diα i d).eval α ≠ 0` when `Ei(α), Diα(α) ≠ 0`. -/
 theorem eval_lDenomα_ne_zero {Ei Diα : K[X]} {α : K} (i d : ℕ) (hEi : Ei.eval α ≠ 0)
     (hDiα : Diα.eval α ≠ 0) : (lDenomα Ei Diα i d).eval α ≠ 0 := by
   unfold lDenomα
   rw [Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_pow]
   exact mul_ne_zero (pow_ne_zero _ hDiα) (pow_ne_zero _ hEi)
 
-/-- **Eval of the genuine `hᵢ,α^{(d)}/d!`-fraction at `α`**: when `Eᵢ(α), Dᵢ,α(α) ≠ 0`,
-`RatFunc.eval id α (lFracα A Eᵢ Dᵢ,α i d) = σα(Pᵢ,d)(α) / (Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})`, via
-`eval_algebraMap_div` (the denominator is pole-free at `α`). -/
+/-- Eval of `lFracα` at `α`:
+`RatFunc.eval id α (lFracα A Ei Diα i d) = (diffSubst Diα (laurentNum …)).eval α / (lDenomα …).eval α`. -/
 theorem eval_lFracα {A Ei Diα : K[X]} {α : K} (i d : ℕ) (hEi : Ei.eval α ≠ 0)
     (hDiα : Diα.eval α ≠ 0) :
     RatFunc.eval (RingHom.id K) α (lFracα A Ei Diα i d)
       = (diffSubst Diα (laurentNum A Ei i d)).eval α / (lDenomα Ei Diα i d).eval α := by
   rw [lFracα, eval_algebraMap_div α _ _ (eval_lDenomα_ne_zero i d hEi hDiα)]
 
-/-- **Eval of a `K`-scaled `hᵢ,α`-fraction at `α`**: `RatFunc.eval id α (c • lFracα A Eᵢ Dᵢ,α i d)
-= c · σα(Pᵢ,d)(α)/(Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})` — the scalar `c • _ = C c · _` folds into the numerator
-(`algebraMap (C c · num)/algebraMap denom`) and `eval_algebraMap_div` reads it off. -/
+/-- Eval of a `K`-scaled `lFracα` at `α`:
+`RatFunc.eval id α (c • lFracα A Ei Diα i d) = c · ((diffSubst Diα (laurentNum …)).eval α / (lDenomα …).eval α)`. -/
 theorem eval_smul_lFracα {A Ei Diα : K[X]} {α : K} (c : K) (i d : ℕ) (hEi : Ei.eval α ≠ 0)
     (hDiα : Diα.eval α ≠ 0) :
     RatFunc.eval (RingHom.id K) α (c • lFracα A Ei Diα i d)
@@ -975,11 +790,9 @@ theorem eval_smul_lFracα {A Ei Diα : K[X]} {α : K} (c : K) (i d : ℕ) (hEi :
   rw [hsmul, eval_algebraMap_div α _ _ (eval_lDenomα_ne_zero i d hEi hDiα),
     Polynomial.eval_mul, Polynomial.eval_C, mul_div_assoc]
 
-/-- **(a), Stage I evaluated at the root `α`** (book p.56): for `0 < i`, `Eᵢ(α), Dᵢ,α(α) ≠ 0`, evaluating
-the specialized eq 2.11 invariant `iterate_ratFuncKDeriv_hFracα` at `α` gives
-`(d/dx)^[d] hᵢ,α (α) = d!·σα(Pᵢ,d)(α)/(Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})`, the value of the order-`d` Taylor data of
-the genuine rational function `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)`. `RatFunc.eval id α` is a ring hom away from the (here
-nonzero) denominator. -/
+/-- The specialized invariant evaluated at the root `α`:
+`RatFunc.eval id α ((ratFuncKDeriv^[d]) (hFracα A Ei Diα i)) = d!·(diffSubst Diα (laurentNum …)).eval α / (lDenomα …).eval α`,
+for `0 < i`, `Ei(α), Diα(α) ≠ 0`. -/
 theorem eval_ratFuncKDeriv_iterate_hFracα_at_root [CharZero K] {A Ei Diα : K[X]} {α : K} (i : ℕ)
     (hi : 0 < i) (hEi0 : Ei ≠ 0) (hDiα0 : Diα ≠ 0) (hEi : Ei.eval α ≠ 0) (hDiα : Diα.eval α ≠ 0)
     (d : ℕ) :
@@ -989,15 +802,9 @@ theorem eval_ratFuncKDeriv_iterate_hFracα_at_root [CharZero K] {A Ei Diα : K[X
   rw [iterate_ratFuncKDeriv_hFracα A Ei Diα i hi hEi0 hDiα0 d,
     eval_smul_lFracα _ i d hEi hDiα, mul_div_assoc]
 
-/-- **(a) — `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ`** (§2.7, p.56, the
-substantive reachable core of Thm 2.7.1): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α` (with `j ≤ i`,
-`Eᵢ(α), Dᵢ,α(α) ≠ 0`, where `Eᵢ = laurentE D Dᵢ i`), the engine output equals
-`Hᵢⱼ(α) = (1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` — the order-`(i−j)` Taylor coefficient of the genuine rational
-function `hᵢ,α`. Combines `eval_laurentH_eq_diffSubst_laurentNum` (Steps 2+3+5) with Stage I evaluated at
-`α` (`eval_ratFuncKDeriv_iterate_hFracα_at_root`) and the cofactor identity `Dᵢ'(α) = Dᵢ,α(α)`
-(`eval_derivative_of_X_sub_C_mul`): the `(Dᵢ,α, Eᵢ)`-power denominators cancel the
-`(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` factors. Since `hᵢ,α = (A/D)(x−α)ⁱ`, its order-`(i−j)` Taylor
-coefficient at `α` is precisely the `1/(x−α)ʲ` partial-fraction (Laurent) coefficient `c_j` of `A/D`. -/
+/-- `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ`:
+`(laurentH A D Di i j).eval α = ((i−j)!)⁻¹ · RatFunc.eval id α ((ratFuncKDeriv^[i−j]) (hFracα A Eᵢ Diα i))`,
+for `Dᵢ = (x−α)·Dᵢ,α` monic, `j ≤ i`, `Eᵢ(α), Dᵢ,α(α) ≠ 0`. -/
 theorem eval_laurentH_eq_taylor_coeff [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ)
     (hi : 0 < i) (hji : j ≤ i) (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
@@ -1034,23 +841,23 @@ theorem eval_laurentH_eq_taylor_coeff [CharZero K] {A D Di Diα : K[X]} {α : K}
 
 /-! ## Restatements against the book's wording -/
 
-/-- Restatement of (2.10), the `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
+/-- The `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
 example (D Di : K[X]) (i : ℕ) (hDi : Di.Monic) (hcop : IsCoprime (laurentE D Di i) Di) :
     (bezoutE D Di i * laurentE D Di i) %ₘ Di = (1 : K[X]) %ₘ Di :=
   bezoutE_mul_laurentE_modByMonic D Di i hDi hcop
 
-/-- Restatement of (2.10), the `Cᵢ` congruence `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`. -/
+/-- The `Cᵢ` congruence `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`. -/
 example (Di : K[X]) (hDi : Di.Monic) (hcop : IsCoprime (derivative Di) Di) :
     (bezoutDeriv Di * derivative Di) %ₘ Di = (1 : K[X]) %ₘ Di :=
   bezoutDeriv_mul_derivative_modByMonic Di hDi hcop
 
-/-- Restatement of (2.12): the engine `Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) (mod Dᵢ)`. -/
+/-- The engine `Hᵢⱼ = Qᵢⱼ·Bᵢ^(i−j+1)·Cᵢ^(2i−j) (mod Dᵢ)`. -/
 example (A D Di : K[X]) (i j : ℕ) :
     laurentH A D Di i j
       = (laurentQ A D Di i j * bezoutE D Di i ^ (i - j + 1) * bezoutDeriv Di ^ (2 * i - j)) %ₘ Di :=
   laurentH_def A D Di i j
 
-/-- Restatement of the `i=1` residue (book p.56): `H₁₁(α) = A(α)/D'(α)` at a simple root `α` of `D`. -/
+/-- The `i=1` residue `H₁₁(α) = A(α)/D'(α)` at a simple root `α` of `D`. -/
 example {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hfac : D = Di * laurentE D Di 1) (hcopE : IsCoprime (laurentE D Di 1) Di)
     (hcopD : IsCoprime (derivative Di) Di)
@@ -1058,17 +865,13 @@ example {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
     (laurentH A D Di 1 1).eval α = A.eval α / (derivative D).eval α :=
   eval_laurentH_one_one_eq_residue hDi hα hfac hcopE hcopD hE hD'
 
-/-- Restatement of (2.11) as a fraction-field invariant (book p.55): the `d`-th `d/dx` of
-`hᵢ = A/(uⁱ·Eᵢ)` in `K(x)⟨u⟩` is `d! · Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))` — exactly the book's
-`hᵢ^(d)/d! = Pᵢ,d/denom_d` (the scale is the pure factorial `d!`, no `i`-dependent discrepancy). -/
+/-- The recursion as a fraction-field invariant: `(d/dx)^[d] hᵢ = d! · Pᵢ,d/(u^(i+d)·Eᵢ^(d+1))` in
+`K(x)⟨u⟩`. -/
 example [CharZero K] (A Ei : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) (d : ℕ) :
     (fracKDeriv^[d]) (hFrac A Ei i) = (d.factorial : K) • lFrac A Ei i d := by
   rw [iterate_fracKDeriv_hFrac A Ei i hi hEi d, laurentScale_eq_factorial]
 
-/-- Regression for the `laurentNumStep` factorial fix (`i=2, d=1`): `laurentNum A E₂ 2 1` is EXACTLY the
-book's `P₂,₁ = A'·u·E₂ − A·(2·u'·E₂ + u·E₂')` (numerator of `h₂' = (A/(u²E₂))'`, `1! = 1`, **no** `1/3`
-factor). Before the fix `laurentNumStep` divided by `a+1 = i+d+1 = 4`-style scalars and this was off by a
-binomial factor; with the factorial divisor `b = d+1 = 1` here, the step contributes no division. -/
+/-- `laurentNum A E₂ 2 1 = A'·u·E₂ − A·(2·u'·E₂ + u·E₂')`: the `i=2, d=1` numerator. -/
 example (A E2 : K[X]) :
     laurentNum A E2 2 1
       = ddx (dpEmbed A) * X (some 0) * dpEmbed E2
@@ -1077,32 +880,26 @@ example (A E2 : K[X]) :
   rw [laurentNum_succ, laurentNum_zero, laurentNumStep]
   norm_num
 
-/-- Restatement of the root-evaluation step (book p.56): at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`,
-`Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), Dᵢ,α'(α), …)`. -/
+/-- The root-evaluation step: at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`, `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)`. -/
 example [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
     (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α
       = MvPolynomial.aeval (substEvalAt Diα α)
           (laurentNum A (laurentE D ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)) :=
   laurentQ_eval_at_root A D Diα α i j
 
-/-- Restatement that `σα` is the differential substitution hom (book p.56, Step 1): it carries the
-engine's `ddx` to the genuine `Polynomial.derivative`, `σα (ddx p) = derivative (σα p)`. -/
+/-- `σα` is a differential hom: `σα (ddx p) = derivative (σα p)`. -/
 example (Diα : K[X]) (p : DiffPoly K) :
     diffSubst Diα (ddx p) = derivative (diffSubst Diα p) :=
   diffSubst_ddx Diα p
 
-/-- Restatement of the specialized eq 2.11 invariant in `K(x)` (book p.56, Step 2): the `d`-th genuine
-derivative of `hᵢ,α = A/(Dᵢ,α^i·Eᵢ)` is `d!·σα(Pᵢ,d)/(Dᵢ,α^{i+d}·Eᵢ^{d+1})`. -/
+/-- The specialized recursion invariant in `K(x)`: `(d/dx)^[d] hᵢ,α = d!·σα(Pᵢ,d)/(Dᵢ,α^{i+d}·Eᵢ^{d+1})`. -/
 example [CharZero K] (A Ei Diα : K[X]) (i : ℕ) (hi : 0 < i) (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) (d : ℕ) :
     (ratFuncKDeriv^[d]) (hFracα A Ei Diα i)
       = (d.factorial : K) • (algebraMap K[X] (RatFunc K) (diffSubst Diα (laurentNum A Ei i d)) /
           algebraMap K[X] (RatFunc K) (lDenomα Ei Diα i d)) :=
   iterate_ratFuncKDeriv_hFracα A Ei Diα i hi hEi hDiα d
 
-/-- `hᵢ,α = (A/D)·(x−α)ⁱ` (the genuine function the engine differentiates): with `D = Dᵢ^i·Eᵢ` and
-`Dᵢ = (x−α)·Dᵢ,α`, the candidate `hFracα = A/(Dᵢ,α^i·Eᵢ)` satisfies `hFracα·algebraMap D = algebraMap(A·(x−α)ⁱ)`,
-i.e. `hFracα = (A/D)·(x−α)ⁱ`. (`D = (x−α)ⁱ·Dᵢ,α^i·Eᵢ`, so `(A/D)·(x−α)ⁱ = A/(Dᵢ,α^i·Eᵢ)`.) Shown at `α = 0`
-(`x−α = x`): `hFracα·((x·Dᵢ,α)ⁱ·Eᵢ) = A·xⁱ`. -/
+/-- `hᵢ,α = (A/D)·(x−α)ⁱ` shown at `α = 0`: `hFracα·((x·Dᵢ,α)ⁱ·Eᵢ) = A·xⁱ`. -/
 example (A Ei Diα : K[X]) (i : ℕ) (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) :
     hFracα A Ei Diα i * algebraMap K[X] (RatFunc K) (((Polynomial.X - Polynomial.C (0 : K)) * Diα) ^ i * Ei)
       = algebraMap K[X] (RatFunc K) (A * (Polynomial.X - Polynomial.C (0 : K)) ^ i) := by
@@ -1112,15 +909,14 @@ example (A Ei Diα : K[X]) (i : ℕ) (hEi : Ei ≠ 0) (hDiα : Diα ≠ 0) :
   congr 1
   rw [mul_pow]; ring
 
-/-- Restatement of Step 3, the root-value bridge `σα(Pᵢ,i−j)(α) = Qᵢⱼ(α)` (book p.56). -/
+/-- The root-value bridge `σα(Pᵢ,i−j)(α) = Qᵢⱼ(α)`. -/
 example [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
     Polynomial.eval α
         (diffSubst Diα (laurentNum A (laurentE D ((Polynomial.X - Polynomial.C α) * Diα) i) i (i - j)))
       = (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α :=
   eval_diffSubst_laurentNum_eq_laurentQ_eval A D Diα α i j
 
-/-- Restatement of Step 5, the general engine-output evaluation
-`Hᵢⱼ(α) = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` (book p.56, eq 2.12 evaluated). -/
+/-- The engine-output evaluation `Hᵢⱼ(α) = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}`. -/
 example {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di) :
     (laurentH A D Di i j).eval α
@@ -1128,13 +924,13 @@ example {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα : Di.eval α 
           * (1 / (derivative Di).eval α) ^ (2 * i - j) :=
   eval_laurentH i j hDi hα hcopE hcopD
 
-/-- Restatement of (a), the cofactor identity at a simple root: `Dᵢ'(α) = Dᵢ,α(α)`. -/
+/-- The cofactor identity at a simple root: `Dᵢ'(α) = Dᵢ,α(α)`. -/
 example {Di Diα : K[X]} {α : K} (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα) :
     (derivative Di).eval α = Diα.eval α :=
   eval_derivative_of_X_sub_C_mul hfac
 
-/-- Restatement of (a), Stage I evaluated at the root: `(d/dx)^[d] hᵢ,α (α) =
-d!·σα(Pᵢ,d)(α)/(Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})`. -/
+/-- The specialized invariant evaluated at the root:
+`(d/dx)^[d] hᵢ,α (α) = d!·σα(Pᵢ,d)(α)/(Dᵢ,α(α)^{i+d}·Eᵢ(α)^{d+1})`. -/
 example [CharZero K] {A Ei Diα : K[X]} {α : K} (i : ℕ) (hi : 0 < i) (hEi0 : Ei ≠ 0)
     (hDiα0 : Diα ≠ 0) (hEi : Ei.eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) (d : ℕ) :
     RatFunc.eval (RingHom.id K) α ((ratFuncKDeriv^[d]) (hFracα A Ei Diα i))
@@ -1142,8 +938,8 @@ example [CharZero K] {A Ei Diα : K[X]} {α : K} (i : ℕ) (hi : 0 < i) (hEi0 : 
           / (lDenomα Ei Diα i d).eval α :=
   eval_ratFuncKDeriv_iterate_hFracα_at_root i hi hEi0 hDiα0 hEi hDiα d
 
-/-- **(a) restated** (book p.56): `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient
-`(1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` of the genuine rational function `hᵢ,α = (A/D)(x−α)ⁱ` at `α`. -/
+/-- `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient `(1/(i−j)!)·(d/dx)^[i−j] hᵢ,α (α)` of
+`hᵢ,α = (A/D)(x−α)ⁱ`. -/
 example [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ) (hi : 0 < i) (hji : j ≤ i)
     (hDi : Di.Monic) (hα : Di.eval α = 0) (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
@@ -1154,10 +950,7 @@ example [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ) (hi : 0 < i) (hji
               ((ratFuncKDeriv^[i - j]) (hFracα A (laurentE D Di i) Diα i)) :=
   eval_laurentH_eq_taylor_coeff i j hi hji hDi hα hfac hcopE hcopD hEi hDiα
 
-/-- **The `i=j=1` instance of (a)** (book p.56): at a simple root, the order-`0` Taylor coefficient is the
-function value `hᵢ,α(α)`, so `eval_laurentH_eq_taylor_coeff` specializes to `H₁₁(α) = h₁,α(α)` — the
-`(d/dx)^[0]`-Taylor data, consistent with the residue `eval_laurentH_one_one_eq_residue`. Here `i−j = 0`,
-`(0)! = 1`, and `(ratFuncKDeriv^[0]) (hFracα …) = hFracα …`. -/
+/-- The `i=j=1` instance: `H₁₁(α) = h₁,α(α)`, the order-`0` Taylor coefficient (function value at `α`). -/
 example [CharZero K] {A D Di Diα : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
     (hcopE : IsCoprime (laurentE D Di 1) Di) (hcopD : IsCoprime (derivative Di) Di)
@@ -1168,51 +961,32 @@ example [CharZero K] {A D Di Diα : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.ev
     one_pos le_rfl hDi hα hfac hcopE hcopD hEi hDiα
   simpa using h
 
-/-! ## Stage L — the closure-level book conclusion: principal parts and "proper, pole-free ⟹ regular"
-(Bronstein §2.7, Theorem 2.7.1, the partial-fraction assembly over `K̄`)
+/-! ## Principal parts: the local Taylor approximant and "subtracting it removes the pole" -/
 
-The final book conclusion `A/D = P + ∑ᵢ ∑_{α|Dᵢ(α)=0} ∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ` is the statement that,
-at each pole `α` of `A/D` (a root of `Dᵢ`, of order `i`), the engine sum `∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ` is
-exactly the **principal part** of `A/D` at `α`: subtracting it removes the pole.
-
-The structural core proved here is **regularity**: writing `D = (X−α)^i·M` with `M = Dᵢ,α^i·Eᵢ` pole-free at
-`α` (`M(α) ≠ 0`), the **local Taylor approximant** `W := (A·N) %ₘ (X−α)^i` — `N` the Bézout inverse of `M`
-modulo `(X−α)^i` (`localInverse`) — satisfies `M·W ≡ A (mod (X−α)^i)` (`localApprox_spec`), so its `(X−α)`-adic
-digits `c_d = (taylor α W).coeff d` give a principal part `∑_{j=1}^{i} C(c_{i−j})/(X−α)^j` whose subtraction
-from `A/D` leaves a quotient `R/M` regular at `α` (`subtract_localPrincipalPart_eq`,
-`localPrincipalPart_regular`). The digits `c_{i−j}` ARE the `1/(x−α)ʲ` Laurent coefficients; identifying them
-with the engine output `Hᵢⱼ(α)` is `eval_laurentH_eq_taylor_coeff` up to the Hasse-derivative/`ratFuncKDeriv`
-bridge (`taylorCoeff_localApprox_eq_ratFuncTaylor`, the residual naming step). -/
-
-/-- **The local inverse `N` of `M` modulo `(X−α)^i`** (§2.7, the principal-part assembly): the Bézout
-cofactor with `M·N ≡ 1 (mod (X−α)^i)`, existing since `M(α) ≠ 0` makes `M` coprime to `(X−α)^i`. -/
+/-- The local inverse `N` of `M` modulo `(X−α)^i`: the Bézout cofactor with `M·N ≡ 1 (mod (X−α)^i)`. -/
 noncomputable def localInverse (M : K[X]) (α : K) (i : ℕ) : K[X] :=
   (diophantineSolve M ((Polynomial.X - Polynomial.C α) ^ i) 1).1
 
-/-- **`(X−α)^i` is coprime to `M`** when `M(α) ≠ 0`: `X − α` is prime and does not divide `M` (it would
-force `M(α) = 0`), so its power is coprime to `M`. -/
+/-- `IsCoprime M ((X−α)^i)` when `M(α) ≠ 0`. -/
 theorem isCoprime_M_X_sub_C_pow {M : K[X]} {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     IsCoprime M ((Polynomial.X - Polynomial.C α) ^ i) := by
   have hnd : ¬ (Polynomial.X - Polynomial.C α) ∣ M := by
     rw [dvd_iff_isRoot]; exact fun h => hM h
   exact (((prime_X_sub_C α).coprime_iff_not_dvd.mpr hnd).symm).pow_right
 
-/-- **`M·N ≡ 1 (mod (X−α)^i)`** (the local-inverse congruence): for `M(α) ≠ 0`, the Bézout cofactor
-`localInverse M α i` inverts `M` modulo `(X−α)^i`, `(X−α)^i ∣ M·N − 1`. -/
+/-- The local-inverse congruence: `(X−α)^i ∣ M·(localInverse M α i) − 1` for `M(α) ≠ 0`. -/
 theorem localInverse_spec {M : K[X]} {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     (Polynomial.X - Polynomial.C α) ^ i ∣ M * localInverse M α i - 1 := by
   have hspec := diophantineSolve_spec (isCoprime_M_X_sub_C_pow i hM) (1 : K[X])
   refine ⟨-(diophantineSolve M ((Polynomial.X - Polynomial.C α) ^ i) 1).2, ?_⟩
   rw [localInverse]; linear_combination hspec
 
-/-- **The local Taylor approximant `W := (A·N) %ₘ (X−α)^i`** (§2.7): the degree-`< i` polynomial whose
-`(X−α)`-adic digits are the principal-part Laurent coefficients of `A/D` at the pole `α`. With `N` the
-local inverse of `M = D /ₘ (X−α)^i`, it satisfies `M·W ≡ A (mod (X−α)^i)`. -/
+/-- The local Taylor approximant `W := (A·N) %ₘ (X−α)^i` (degree `< i`), with `M·W ≡ A (mod (X−α)^i)`;
+its `(X−α)`-adic digits are the Laurent coefficients of `A/D` at the pole `α`. -/
 noncomputable def localApprox (A M : K[X]) (α : K) (i : ℕ) : K[X] :=
   (A * localInverse M α i) %ₘ (Polynomial.X - Polynomial.C α) ^ i
 
-/-- **`M·W ≡ A (mod (X−α)^i)`** (§2.7, the defining congruence of the local approximant): `(X−α)^i` divides
-`A − M·W`. From `M·N ≡ 1` and `W = A·N %ₘ (X−α)^i` (so `A·N ≡ W`), `M·W ≡ M·A·N ≡ A`. -/
+/-- The defining congruence `M·W ≡ A (mod (X−α)^i)`: `(X−α)^i ∣ A − M·(localApprox A M α i)`. -/
 theorem localApprox_spec (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     (Polynomial.X - Polynomial.C α) ^ i ∣ A - M * localApprox A M α i := by
   set g := (Polynomial.X - Polynomial.C α) ^ i with hg
@@ -1232,15 +1006,12 @@ theorem localApprox_spec (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) 
   rw [hcomb]
   exact dvd_add (Dvd.dvd.mul_left ((dvd_neg).mpr hMN) A) (Dvd.dvd.mul_left hAN M)
 
-/-- **The Laurent coefficient `c_d`** (§2.7): the order-`d` `(X−α)`-adic digit of the local approximant `W`,
-`c_d = (taylor α W).coeff d` — the `1/(x−α)^{i−d}` partial-fraction coefficient of `A/D` at the pole `α`. -/
+/-- The Laurent coefficient `c_d = (taylor α W).coeff d`, the order-`d` `(X−α)`-adic digit of the local
+approximant `W`. -/
 noncomputable def localCoeff (A M : K[X]) (α : K) (i d : ℕ) : K :=
   (taylor α (localApprox A M α i)).coeff d
 
-/-- **The `(X−α)`-adic reconstruction of `W`** (§2.7): for `deg W < i` (`W = localApprox …`, a remainder
-mod `(X−α)^i`), the local approximant reconstructs from its first `i` Taylor digits,
-`W = ∑_{d<i} c_d·(X−α)^d` (`c_d = localCoeff …`) — the Taylor expansion of `W` about `α`, truncated by its
-degree. -/
+/-- The `(X−α)`-adic reconstruction `localApprox A M α i = ∑_{d<i} c_d·(X−α)^d` (`c_d = localCoeff …`). -/
 theorem localApprox_eq_sum (A M : K[X]) (α : K) (i : ℕ) :
     localApprox A M α i
       = ∑ d ∈ Finset.range i, Polynomial.C (localCoeff A M α i d)
@@ -1269,18 +1040,15 @@ theorem localApprox_eq_sum (A M : K[X]) (α : K) (i : ℕ) :
   rw [htay, Polynomial.sum_over_range' _ (fun d => by simp) i hdeg]
   rfl
 
-/-- **The principal part of `A/D` at the pole `α`** (§2.7, Theorem 2.7.1, the closure form): the sum
-`∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` of the `1/(x−α)ʲ` Laurent terms, with `c_d = localCoeff …` the `(X−α)`-adic
-digits of the local approximant `W`. Subtracting it from `A/D` removes the order-`i` pole at `α`
-(`subtract_localPrincipalPart_eq`). With `D = (X−α)^i·M`, `M(α) ≠ 0`. -/
+/-- The principal part of `A/D` at the pole `α`: the Laurent sum `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ`
+(`c_d = localCoeff …`). -/
 noncomputable def localPrincipalPart (A M : K[X]) (α : K) (i : ℕ) : RatFunc K :=
   ∑ j ∈ Finset.Icc 1 i,
     algebraMap K[X] (RatFunc K) (Polynomial.C (localCoeff A M α i (i - j)))
       / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j
 
-/-- **The principal part consolidated over the common denominator `(X−α)^i`** (§2.7): the Laurent sum
-`∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` equals `W/(x−α)^i` for the local approximant `W = ∑_{d<i} c_d·(x−α)^d`
-(`localApprox`), by clearing each term to the common power `i` and reindexing `d = i−j`. -/
+/-- The principal part consolidated over `(X−α)^i`:
+`localPrincipalPart A M α i = algebraMap (localApprox A M α i) / (algebraMap (X−α))^i`. -/
 theorem localPrincipalPart_eq_div (A M : K[X]) (α : K) (i : ℕ) :
     localPrincipalPart A M α i
       = algebraMap K[X] (RatFunc K) (localApprox A M α i)
@@ -1303,14 +1071,11 @@ theorem localPrincipalPart_eq_div (A M : K[X]) (α : K) (i : ℕ) :
       rw [← pow_add]; congr 1; omega
     rw [map_mul, map_pow, div_eq_div_iff (pow_ne_zero _ hX0) (pow_ne_zero _ hX0), mul_assoc, hpow]
 
-/-- **The regular remainder `R = (A − M·W) /ₘ (X−α)^i`** (§2.7): the polynomial left after subtracting the
-principal part, `A/D − PP = R/M`. By `localApprox_spec`, `(X−α)^i ∣ A − M·W`, so `R` is a genuine
-polynomial; `R/M` is regular at `α` since `M(α) ≠ 0`. -/
+/-- The regular remainder `R = (A − M·W) /ₘ (X−α)^i`: `A/D − PP = R/M`, regular at `α`. -/
 noncomputable def localRemainder (A M : K[X]) (α : K) (i : ℕ) : K[X] :=
   (A - M * localApprox A M α i) /ₘ (Polynomial.X - Polynomial.C α) ^ i
 
-/-- **`A − M·W = (X−α)^i·R`** (§2.7): the exact factorization of the principal-part numerator, from the
-divisibility `localApprox_spec` and the monic division reconstruction. -/
+/-- `A − M·(localApprox A M α i) = (X−α)^i·(localRemainder A M α i)`. -/
 theorem localRemainder_spec (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     A - M * localApprox A M α i
       = (Polynomial.X - Polynomial.C α) ^ i * localRemainder A M α i := by
@@ -1319,13 +1084,8 @@ theorem localRemainder_spec (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 
     ((Polynomial.X - Polynomial.C α) ^ i)]
   rw [(modByMonic_eq_zero_iff_dvd hmonic).2 (localApprox_spec A M i hM), zero_add, localRemainder]
 
-/-- **Theorem 2.7.1, subtracting the principal part removes the pole** (§2.7, p.56, the closure-level
-assembly): for `D = (X−α)^i·M` with `M(α) ≠ 0` (so `α` is a pole of `A/D` of order `≤ i`), subtracting the
-engine's Laurent sum `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` (`localPrincipalPart`) leaves `R/M`, regular at `α`:
-`A/D − ∑_{j=1}^{i} c_{i−j}/(x−α)ʲ = R/M`, `R = localRemainder …`, `M(α) ≠ 0`. This is the partial-fraction
-core — the principal part `∑_j c_{i−j}/(x−α)ʲ` is exactly the singular part of `A/D` at `α`. The Laurent
-coefficients `c_{i−j} = localCoeff A M α i (i−j)` are the engine outputs `Hᵢⱼ(α)` (the order-`(i−j)` Taylor
-coefficients of `hᵢ,α`, `eval_laurentH_eq_taylor_coeff`, up to the Hasse-derivative bridge). -/
+/-- Subtracting the principal part removes the pole: for `D = (X−α)^i·M`, `M(α) ≠ 0`,
+`A/D − localPrincipalPart A M α i = (localRemainder A M α i)/M`, regular at `α`. -/
 theorem subtract_localPrincipalPart_eq (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     algebraMap K[X] (RatFunc K) A
         / (algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ i * M))
@@ -1352,13 +1112,8 @@ theorem subtract_localPrincipalPart_eq (A M : K[X]) {α : K} (i : ℕ) (hM : M.e
   -- the goal is a polynomial identity; `linear_combination` with `hspec` (times the leftover factor)
   linear_combination (X' ^ i * algebraMap K[X] (RatFunc K) M) * hspec
 
-/-- **Theorem 2.7.1, the principal part is exactly the singular part** (§2.7, p.56, the closure-level
-conclusion, existence form): for `D = (X−α)^i·M` with `M(α) ≠ 0`, there is a polynomial `R` and a
-denominator `M` pole-free at `α` (`M(α) ≠ 0`) with
-`A/D − ∑_{j=1}^{i} c_{i−j}/(x−α)ʲ = R/M`, i.e. subtracting the engine's Laurent sum at `α` leaves a
-rational function **regular at `α`** (no pole). This is the assertion that the book's per-root sum
-`∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ` is the principal part of `A/D` at the pole `α`; summing over all poles `α` of
-`D` and adding the polynomial part `P = A /ₘ D` recovers `A/D` (the full partial-fraction theorem). -/
+/-- Existence form: for `D = (X−α)^i·M`, `M(α) ≠ 0`, there is `R` and a denominator `N` with `N(α) ≠ 0`
+such that `A/D − localPrincipalPart A M α i = R/N` is regular at `α`. -/
 theorem exists_regular_sub_localPrincipalPart (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     ∃ (R N : K[X]), N.eval α ≠ 0 ∧
       algebraMap K[X] (RatFunc K) A
@@ -1367,15 +1122,13 @@ theorem exists_regular_sub_localPrincipalPart (A M : K[X]) {α : K} (i : ℕ) (h
         = algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) N :=
   ⟨localRemainder A M α i, M, hM, subtract_localPrincipalPart_eq A M i hM⟩
 
-/-- Restatement of `M·W ≡ A (mod (X−α)^i)` (the local approximant agrees with `A/D·(X−α)^i` to order `i`):
-`(X−α)^i ∣ A − M·W`. -/
+/-- `M·W ≡ A (mod (X−α)^i)`: `(X−α)^i ∣ A − M·(localApprox A M α i)`. -/
 example (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     (Polynomial.X - Polynomial.C α) ^ i ∣ A - M * localApprox A M α i :=
   localApprox_spec A M i hM
 
-/-- Restatement of the closure-level partial-fraction core (book p.56): with `D = (X−α)^i·M`, `M(α) ≠ 0`,
-subtracting the engine's per-root Laurent sum `∑_{j=1}^{i} c_{i−j}/(x−α)ʲ` (`localPrincipalPart`) from
-`A/D` leaves `R/M`, regular at `α` — i.e. that sum is exactly the principal part of `A/D` at the pole `α`. -/
+/-- Subtracting the principal part removes the pole: `A/D − localPrincipalPart A M α i = (localRemainder A M α i)/M`,
+regular at `α`. -/
 example (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
     algebraMap K[X] (RatFunc K) A
         / (algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ i * M))
@@ -1384,29 +1137,9 @@ example (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
           / algebraMap K[X] (RatFunc K) M :=
   subtract_localPrincipalPart_eq A M i hM
 
-/-! ## Stage M — the coefficient bridge `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)` (P2, the
-Hasse-derivative ↔ differential-engine identification, Bronstein §2.7)
+/-! ## The coefficient bridge `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)` -/
 
-The Stage L Laurent coefficient `localCoeff A M α i d = (taylor α W).coeff d` (a `(X−α)`-adic digit of the
-local approximant `W = (A·N) %ₘ (X−α)^i`) is identified here with the differential-engine Taylor
-coefficient `(1/d!)·(d/dx)^[d] hᵢ,α (α)`, where `hᵢ,α = A/M = (A/D)(x−α)ⁱ` (since `D = (x−α)ⁱ·M`). Two
-ingredients:
-
-* **the Hasse-derivative bridge** (`eval_iterate_ratFuncKDeriv_algebraMap_eq_localCoeff`): the genuine
-  `(d/dx)^[d]` of the embedded polynomial `W`, evaluated at `α`, is `d!·localCoeff` — via
-  `ratFuncKDeriv (algebraMap p) = algebraMap (derivative p)` iterated, then
-  `derivative^[d] W = d!·hasseDeriv d W` (`Polynomial.factorial_smul_hasseDeriv`) and
-  `(taylor α W).coeff d = (hasseDeriv d W).eval α` (`Polynomial.taylor_coeff`);
-* **high-order vanishing** (`eval_iterate_ratFuncKDeriv_X_sub_C_pow_dvd`): `A/M − W = (x−α)ⁱ·(R/M)`
-  (`localRemainder_spec`), and `(d/dx)^[d]` of a function whose numerator is divisible by `(x−α)ⁱ` still
-  has a positive `(x−α)`-power in the numerator when `d < i`, so it vanishes at `α`.
-
-Combining, `(d/dx)^[d](A/M)(α) = (d/dx)^[d](W)(α) + 0 = d!·localCoeff`, i.e.
-`localCoeff = (1/d!)·(d/dx)^[d](A/M)(α) = Hᵢ,(i−d)(α)` (the engine Taylor coefficient,
-`eval_laurentH_eq_taylor_coeff`). -/
-
-/-- **`(d/dx)^[d]` carries an embedded polynomial to its iterated derivative**: `(ratFuncKDeriv^[d])`
-applied to `algebraMap p` is `algebraMap (derivative^[d] p)`, by iterating `ratFuncDeriv_algebraMap`. -/
+/-- `(ratFuncKDeriv^[d]) (algebraMap p) = algebraMap (derivative^[d] p)`. -/
 theorem iterate_ratFuncKDeriv_algebraMap (p : K[X]) (d : ℕ) :
     (ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) p)
       = algebraMap K[X] (RatFunc K) (derivative^[d] p) := by
@@ -1417,9 +1150,7 @@ theorem iterate_ratFuncKDeriv_algebraMap (p : K[X]) (d : ℕ) :
       show ratFuncKDeriv (algebraMap K[X] (RatFunc K) p) = algebraMap K[X] (RatFunc K) (derivative p)
         from ratFuncDeriv_algebraMap p, ih]
 
-/-- **Eval of `(d/dx)^[d] W` at `α` is `(derivative^[d] W)(α)`** for an embedded polynomial `W`: the
-`(d/dx)^[d]` of `algebraMap W` is the embedded `derivative^[d] W`, whose `RatFunc.eval id α` reads off the
-polynomial value (denominator `1`, `eval_algebraMap_div`). -/
+/-- `RatFunc.eval id α ((ratFuncKDeriv^[d]) (algebraMap W)) = (derivative^[d] W).eval α`. -/
 theorem eval_iterate_ratFuncKDeriv_algebraMap (W : K[X]) (α : K) (d : ℕ) :
     RatFunc.eval (RingHom.id K) α ((ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) W))
       = (derivative^[d] W).eval α := by
@@ -1427,10 +1158,7 @@ theorem eval_iterate_ratFuncKDeriv_algebraMap (W : K[X]) (α : K) (d : ℕ) :
   have h := eval_algebraMap_div α (derivative^[d] W) 1 (by simp)
   rwa [map_one, div_one, Polynomial.eval_one, div_one] at h
 
-/-- **`(derivative^[d] W)(α) = d!·(taylor α W).coeff d`** (the Hasse-derivative identity): the genuine
-`d`-th derivative value at `α` is `d!` times the order-`d` `(X−α)`-adic digit, from
-`Polynomial.factorial_smul_hasseDeriv` (`d! • hasseDeriv d = derivative^[d]`) and `Polynomial.taylor_coeff`
-(`(taylor α W).coeff d = (hasseDeriv d W).eval α`). -/
+/-- The Hasse-derivative identity `(derivative^[d] W).eval α = d!·(taylor α W).coeff d`. -/
 theorem eval_iterate_derivative_eq_factorial_taylor_coeff (W : K[X]) (α : K) (d : ℕ) :
     (derivative^[d] W).eval α = (d.factorial : K) * (taylor α W).coeff d := by
   have hhasse : derivative^[d] W = d.factorial • hasseDeriv d W := by
@@ -1438,9 +1166,8 @@ theorem eval_iterate_derivative_eq_factorial_taylor_coeff (W : K[X]) (α : K) (d
     simpa using h.symm
   rw [hhasse, Polynomial.taylor_coeff, Polynomial.eval_smul, nsmul_eq_mul]
 
-/-- **The Hasse-derivative bridge**: the genuine `(d/dx)^[d]` of the embedded local approximant `W`,
-evaluated at `α`, is `d!·localCoeff A M α i d` — identifying the engine's iterated-derivative Taylor data
-with the Stage L `(X−α)`-adic digit `c_d = (taylor α W).coeff d`. -/
+/-- The Hasse-derivative bridge:
+`RatFunc.eval id α ((ratFuncKDeriv^[d]) (algebraMap (localApprox A M α i))) = d!·localCoeff A M α i d`. -/
 theorem eval_iterate_ratFuncKDeriv_algebraMap_eq_localCoeff (A M : K[X]) (α : K) (i d : ℕ) :
     RatFunc.eval (RingHom.id K) α
         ((ratFuncKDeriv^[d]) (algebraMap K[X] (RatFunc K) (localApprox A M α i)))
@@ -1448,11 +1175,8 @@ theorem eval_iterate_ratFuncKDeriv_algebraMap_eq_localCoeff (A M : K[X]) (α : K
   rw [eval_iterate_ratFuncKDeriv_algebraMap, eval_iterate_derivative_eq_factorial_taylor_coeff,
     localCoeff]
 
-/-- **High-order vanishing of `(d/dx)^[d]` of a numerator divisible by `(X−α)^i`** (the clean induction): for
-`d ≤ i`, `M(α) ≠ 0`, and `(X−α)^i ∣ p`, the `(d/dx)^[d]` of `p/M` (in `K(x)`) has the shape
-`P_d / Q_d` with `Q_d(α) ≠ 0` and `(X−α)^(i−d) ∣ P_d` — the iterated quotient rule preserves a `(X−α)^(i−d)`
-numerator factor (each derivative drops the power by `1`, `pow_sub_one_dvd_derivative_of_pow_dvd`) and keeps
-the denominator pole-free at `α`. -/
+/-- For `(X−α)^i ∣ p`, `M(α) ≠ 0`, `d ≤ i`, the `(d/dx)^[d]` of `p/M` has shape `Pd/Qd` with `Qd(α) ≠ 0`
+and `(X−α)^(i−d) ∣ Pd`. -/
 theorem exists_iterate_ratFuncKDeriv_div (p M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0)
     (hdvd : (Polynomial.X - Polynomial.C α) ^ i ∣ p) :
     ∀ d, d ≤ i → ∃ (Pd Qd : K[X]), Qd.eval α ≠ 0 ∧ (Polynomial.X - Polynomial.C α) ^ (i - d) ∣ Pd ∧
@@ -1490,9 +1214,7 @@ theorem exists_iterate_ratFuncKDeriv_div (p M : K[X]) {α : K} (i : ℕ) (hM : M
       rw [inv_pow, ← div_eq_inv_mul, div_eq_div_iff (pow_ne_zero 2 hQn0) (pow_ne_zero 2 hQn0)]
       ring
 
-/-- **The order-`d` derivative of a `(X−α)^i`-divisible quotient vanishes at `α`** (`d < i`): evaluating the
-shape `P_d/Q_d` of `exists_iterate_ratFuncKDeriv_div` at `α`, the surviving `(X−α)^(i−d)` numerator factor
-(positive power since `d < i`) is zero at `α`, so `(d/dx)^[d](p/M)(α) = 0`. -/
+/-- For `(X−α)^i ∣ p`, `M(α) ≠ 0`, `d < i`: `RatFunc.eval id α ((ratFuncKDeriv^[d]) (algebraMap p / algebraMap M)) = 0`. -/
 theorem eval_iterate_ratFuncKDeriv_div_eq_zero (p M : K[X]) {α : K} (i d : ℕ) (hM : M.eval α ≠ 0)
     (hdvd : (Polynomial.X - Polynomial.C α) ^ i ∣ p) (hd : d < i) :
     RatFunc.eval (RingHom.id K) α
@@ -1507,9 +1229,7 @@ theorem eval_iterate_ratFuncKDeriv_div_eq_zero (p M : K[X]) {α : K} (i d : ℕ)
       Polynomial.eval_C, sub_self, zero_pow (by omega), zero_mul]
   rw [hPd0, zero_div]
 
-/-- **`A/M − W = (A − M·W)/M`** in `K(x)`: the local approximant `W` (embedded) subtracted from `A/M` clears
-to the single quotient `(A − M·W)/M`, whose numerator `A − M·W` is divisible by `(X−α)^i`
-(`localApprox_spec`). -/
+/-- `A/M − W = (A − M·W)/M` in `K(x)` for `W = localApprox A M α i`. -/
 theorem hFrac_sub_localApprox (A M : K[X]) (α : K) (i : ℕ) (hM : M.eval α ≠ 0) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) M
         - algebraMap K[X] (RatFunc K) (localApprox A M α i)
@@ -1521,17 +1241,9 @@ theorem hFrac_sub_localApprox (A M : K[X]) (α : K) (i : ℕ) (hM : M.eval α �
   rw [map_sub, map_mul]
   field_simp
 
-/-! ## Stage M (cont.) — P2: `localCoeff A M α i d = (1/d!)·(d/dx)^[d](A/M)(α) = Hᵢ,(i−d)(α)`
+/-! ## The coefficient bridge chained to the engine: `localCoeff = Hᵢ,(i−d)(α)` -/
 
-`hᵢ,α = A/M` (since `A/D·(x−α)ⁱ = A·(x−α)ⁱ/((x−α)ⁱ·M) = A/M`). Splitting
-`(d/dx)^[d](A/M) = (d/dx)^[d] W + (d/dx)^[d](A/M − W)` and evaluating at `α`: the first term is
-`d!·localCoeff` (Hasse bridge `eval_iterate_ratFuncKDeriv_algebraMap_eq_localCoeff`), the second vanishes for
-`d < i` (`eval_iterate_ratFuncKDeriv_div_eq_zero`, since `A/M − W = (A − M·W)/M` with `(x−α)ⁱ ∣ A − M·W`).
-So `(d/dx)^[d](A/M)(α) = d!·localCoeff`, i.e. `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`. -/
-
-/-- **`(d/dx)^[d]` is additive** (the iterated derivation respects sums): `(ratFuncKDeriv^[d])(x + y)
-= (ratFuncKDeriv^[d]) x + (ratFuncKDeriv^[d]) y`, by `Derivation.map_add` iterated. Used to split
-`A/M = W + (A/M − W)`. -/
+/-- `(ratFuncKDeriv^[d])` is additive: `(ratFuncKDeriv^[d])(x + y) = (ratFuncKDeriv^[d]) x + (ratFuncKDeriv^[d]) y`. -/
 theorem iterate_ratFuncKDeriv_add (x y : RatFunc K) (d : ℕ) :
     (ratFuncKDeriv^[d]) (x + y) = (ratFuncKDeriv^[d]) x + (ratFuncKDeriv^[d]) y := by
   induction d generalizing x y with
@@ -1540,18 +1252,9 @@ theorem iterate_ratFuncKDeriv_add (x y : RatFunc K) (d : ℕ) :
     rw [Function.iterate_succ_apply, Function.iterate_succ_apply, Function.iterate_succ_apply,
       map_add, ih]
 
-/-- **P2 — the coefficient bridge `localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`** (Bronstein §2.7, the
-Hasse-derivative ↔ differential-engine identification): for `D = (x−α)ⁱ·M` with `M(α) ≠ 0` and `d < i`, the
-Stage L `(X−α)`-adic Laurent digit `localCoeff A M α i d = (taylor α W).coeff d` equals the order-`d` Taylor
-coefficient of the genuine function `hᵢ,α = A/M` (`= (A/D)(x−α)ⁱ`),
-`localCoeff = (1/d!)·(d/dx)^[d](A/M)(α)`. Proof: split `A/M = W + (A/M − W)`, push `(d/dx)^[d]` through the
-sum (`iterate_ratFuncKDeriv_add`) — the embedded-`W` term is `algebraMap (derivative^[d] W)`
-(`iterate_ratFuncKDeriv_algebraMap`), the remainder term `(A/M − W) = (A − M·W)/M` (numerator divisible by
-`(x−α)ⁱ`) is `algebraMap Pd / algebraMap Qd` with `Pd(α) = 0`, `Qd(α) ≠ 0` (`exists_iterate_ratFuncKDeriv_div`,
-`d < i` keeps a positive `(x−α)`-power). Combining over the common denominator `Qd` and evaluating,
-`(d/dx)^[d](A/M)(α) = (derivative^[d] W)(α) = d!·localCoeff` (Hasse identity
-`eval_iterate_derivative_eq_factorial_taylor_coeff`). This identifies the Stage L principal-part digit with
-the engine Taylor coefficient `Hᵢ,(i−d)(α)` (the order-`d = (i − j)` data of `eval_laurentH_eq_taylor_coeff`). -/
+/-- The coefficient bridge: for `M(α) ≠ 0`, `d < i`,
+`localCoeff A M α i d = (d!)⁻¹ · RatFunc.eval id α ((ratFuncKDeriv^[d]) (algebraMap A / algebraMap M))` —
+the order-`d` Taylor coefficient of `hᵢ,α = A/M`. -/
 theorem localCoeff_eq_taylor_coeff [CharZero K] (A M : K[X]) {α : K} (i d : ℕ) (hM : M.eval α ≠ 0)
     (hd : d < i) :
     localCoeff A M α i d
@@ -1591,21 +1294,13 @@ theorem localCoeff_eq_taylor_coeff [CharZero K] (A M : K[X]) {α : K} (i d : ℕ
     exact_mod_cast (Nat.cast_ne_zero (R := K)).mpr (Nat.factorial_ne_zero d)
   field_simp
 
-/-- **`hᵢ,α = A/M` for `M = Dᵢ,α^i·Eᵢ`** (`= lDenomα Eᵢ Dᵢ,α i 0`): the genuine function the engine
-differentiates is `A/M`, the same `A/M` whose order-`d` Taylor digits are `localCoeff` (Stage M).
-`hFracα A Eᵢ Dᵢ,α i = algebraMap A / algebraMap (lDenomα Eᵢ Dᵢ,α i 0)` and `lDenomα Eᵢ Dᵢ,α i 0 = Dᵢ,α^i·Eᵢ`. -/
+/-- `hFracα A Ei Diα i = algebraMap A / algebraMap (lDenomα Ei Diα i 0)`. -/
 theorem hFracα_eq_div_lDenomα (A Ei Diα : K[X]) (i : ℕ) :
     hFracα A Ei Diα i
       = algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (lDenomα Ei Diα i 0) := rfl
 
-/-- **P2, chained to the engine: `localCoeff = Hᵢ,(i−d)(α)`** (Bronstein §2.7, the full coefficient
-identification): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α`, with `M = Dᵢ,α^i·Eᵢ` (`Eᵢ = laurentE D Dᵢ i`,
-so `D = (x−α)ⁱ·M`) pole-free at `α` and `d < i`, the Stage L `(X−α)`-adic Laurent digit
-`localCoeff A M α i d` equals the engine output `Hᵢ,(i−d)(α) = (laurentH A D Dᵢ i (i−d))(α)`. Both equal the
-order-`d` Taylor coefficient `(1/d!)·(d/dx)^[d](A/M)(α)` of `hᵢ,α = A/M = (A/D)(x−α)ⁱ`: `localCoeff` by the
-Hasse-derivative bridge `localCoeff_eq_taylor_coeff`, the engine output by the differential-engine invariant
-`eval_laurentH_eq_taylor_coeff` (with `i − (i − d) = d`). This is the final unification of the Stage L
-principal-part structure with the Stage K differential engine. -/
+/-- The coefficient bridge chained to the engine: at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`, with `M = Dᵢ,α^i·Eᵢ`
+and `d < i`, `localCoeff A M α i d = (laurentH A D Di i (i−d)).eval α`. -/
 theorem localCoeff_eq_laurentH [CharZero K] (A D Di Diα : K[X]) {α : K} (i d : ℕ)
     (hi : 0 < i) (hd : d < i) (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)

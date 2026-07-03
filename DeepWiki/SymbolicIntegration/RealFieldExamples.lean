@@ -11,8 +11,7 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {K L : Type*}
 
-/-- An injective ring hom maps a sum of squares of nonzero elements to one: `IsSumNonzeroSq x`
-gives `IsSumNonzeroSq (f x)`, since `f` preserves `+`, `*` and (being injective) nonzeroness. -/
+/-- An injective ring hom preserves sums of nonzero squares: `IsSumNonzeroSq x → IsSumNonzeroSq (f x)`. -/
 theorem isSumNonzeroSq_map [NonAssocSemiring K] [NonAssocSemiring L]
     (f : K →+* L) (hf : Function.Injective f) {x : K}
     (hx : IsSumNonzeroSq x) : IsSumNonzeroSq (f x) := by
@@ -24,9 +23,7 @@ theorem isSumNonzeroSq_map [NonAssocSemiring K] [NonAssocSemiring L]
     rw [map_add, map_mul]
     exact IsSumNonzeroSq.sq_add (fun hc => ha (hf (by rw [hc, map_zero]))) ih
 
-/-- Formal reality pulls back along an injective ring hom: if `L` is real and `f : K →+* L`
-is injective, then `K` is real (a nontrivial sum of squares vanishing in `K` would map to one
-in `L`). Hence a subfield of a real field is real. -/
+/-- Formal reality pulls back along an injective ring hom `f : K →+* L`. -/
 theorem isFormallyReal_of_injective [CommRing K] [CommRing L]
     [IsFormallyReal L] (f : K →+* L) (hf : Function.Injective f) :
     IsFormallyReal K where
@@ -41,23 +38,18 @@ example : IsFormallyReal ℝ := inferInstance
 -- `ℚ` is a real field: a linearly ordered field is formally real.
 example : IsFormallyReal ℚ := inferInstance
 
-/-- The real `n`-th root of a natural number exists: for `n ≠ 0` and any `p : ℕ`,
-`r := (p : ℝ) ^ (n⁻¹ : ℝ)` satisfies `r ^ n = p`. -/
+/-- For `n ≠ 0` and `p : ℕ`, some `r : ℝ` satisfies `r ^ n = p`. -/
 theorem exists_real_nthRoot {n : ℕ} (hn : n ≠ 0) (p : ℕ) :
     ∃ r : ℝ, r ^ n = (p : ℝ) :=
   ⟨(p : ℝ) ^ ((n : ℝ)⁻¹), Real.rpow_inv_natCast_pow (by positivity) hn⟩
 
-/-- `ℚ(r)` for any real `r` is a real field: the intermediate field `ℚ⟮r⟯ ⊆ ℝ` embeds in `ℝ`
-(its `algebraMap` is injective, being a ring hom out of a field), so formal reality pulls back.
-With `r = ⁿ√p` (`exists_real_nthRoot`) this covers `ℚ(ⁿ√p)`. -/
+/-- `ℚ(r) ⊆ ℝ` for any real `r` is formally real. -/
 theorem isFormallyReal_qadjoin_real (r : ℝ) :
     IsFormallyReal (IntermediateField.adjoin ℚ ({r} : Set ℝ)) := by
   refine isFormallyReal_of_injective (algebraMap _ ℝ) ?_
   exact RingHom.injective _
 
-/-- A characteristic-`0` ring containing `j` with `j² = −2` (e.g. `ℚ(√−2)`) is not formally
-real: `1² + (1² + j·j) = 1 + 1 + (−2) = 0` is a vanishing sum of squares of nonzero elements —
-`−1 = 1² + (√−2)²`. -/
+/-- A characteristic-`0` ring with `j² = −2` is not formally real. -/
 theorem not_isFormallyReal_of_sq_eq_neg_two [CommRing K] [CharZero K]
     {j : K} (hj : j ^ 2 = -2) : ¬ IsFormallyReal K := by
   intro h
@@ -74,8 +66,7 @@ theorem not_isFormallyReal_of_sq_eq_neg_two [CommRing K] [CharZero K]
     exact IsSumNonzeroSq.sq hj0
   exact IsFormallyReal.not_isSumNonzeroSq_zero h0
 
-/-- A positive natCast is a sum of nonzero squares: in a nontrivial semiring, `(n : K)` for
-`n ≥ 1` is `1² + ⋯ + 1²` (`n` summands), hence `IsSumNonzeroSq (n : K)`. -/
+/-- In a nontrivial semiring, `IsSumNonzeroSq (n : K)` for `n ≥ 1`. -/
 theorem isSumNonzeroSq_natCast [NonAssocSemiring K] [Nontrivial K]
     {n : ℕ} (hn : 0 < n) : IsSumNonzeroSq ((n : K)) := by
   induction n with
@@ -89,9 +80,7 @@ theorem isSumNonzeroSq_natCast [NonAssocSemiring K] [Nontrivial K]
       rw [hcast]
       exact IsSumNonzeroSq.sq_add one_ne_zero (ih hm)
 
-/-- A positive-characteristic ring is never formally real: if `(p : K) = 0` with `p ≥ 2`, then
-`0 = ∑_{i=1}^{p} 1²` is a vanishing sum of nonzero squares. Hence every real field has
-characteristic `0`. -/
+/-- A positive-characteristic ring (`CharP K p`, `p > 1`) is never formally real. -/
 theorem not_isFormallyReal_of_charP [NonAssocSemiring K] [Nontrivial K]
     (p : ℕ) (hp : 1 < p) [CharP K p] : ¬ IsFormallyReal K := by
   intro h

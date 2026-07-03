@@ -2,10 +2,9 @@ import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 
 /-! # Worked differential-algebra facts
-The logarithmic-derivative identity for finite products, the coefficient-lifting derivation
-`κ_D` on a polynomial ring, and Rao's denominator-cleared formulation of normal/special
-polynomials in a simple transcendental extension — `b·Δp = b·κ_D(p) + a·(dp/dt)` for
-`Δt = a/b`, with the root characterizations of normality and specialness. -/
+The logarithmic-derivative identity for finite products, the coefficient-lifting derivation `κ_D`,
+and the denominator-cleared derivation `b·Δp = b·κ_D(p) + a·(dp/dt)` with root characterizations of
+normal and special polynomials in a simple transcendental extension. -/
 
 open scoped Differential
 open Polynomial

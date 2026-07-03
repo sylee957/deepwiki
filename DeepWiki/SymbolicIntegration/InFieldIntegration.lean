@@ -2,14 +2,10 @@ import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
-/-! # Recognizing derivatives — the in-field-integration criterion (Bronstein §2.9)
-After the Hermite/Horowitz–Ostrogradsky reduction `f = dg/dx + A/D` of `f ∈ K(x)` with `D`
-squarefree, `gcd(A, D) = 1` and `deg A < deg D`, Bronstein's criterion is: `f` is the derivative of a
-rational function iff `D | A`, i.e. (since `deg A < deg D`) iff `A = 0`. The substance is the negative
-half: if `D` is squarefree, `gcd(A, D) = 1` and `A ≠ 0`, then the *logarithmic part* `A/D` is **not** the
-derivative of any rational function — `∀ v : K(x), v′ ≠ A/D`. The proof is the residue-free divisibility
-descent: writing `v = B/E` (`gcd(B, E) = 1`), the polynomial identity `A·E² = (B'E − BE')·D` forces
-`Dⁿ | E` for *every* `n`, impossible for a nonzero `E` of bounded degree. -/
+/-! # Recognizing derivatives — the in-field-integration criterion
+After the Hermite reduction `f = g′ + A/D` (`D` squarefree, `gcd(A, D) = 1`, `deg A < deg D`), `f` is
+the derivative of a rational function iff `A = 0`. The substance is the negative half: a nonzero
+log-part `A/D` is not the derivative of any rational function. -/
 
 open Polynomial
 open scoped Differential
@@ -18,8 +14,7 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {K : Type*} [Field K]
 
-/-- **Cross-multiplied derivative identity**: if `(B/E)′ = A/D` in `K(x)` (with `D, E ≠ 0`), then
-clearing denominators gives the polynomial identity `A·E² = (B'·E − B·E')·D`. -/
+/-- If `(B/E)′ = A/D` in `K(x)` (`D, E ≠ 0`), then `A·E² = (B'·E − B·E')·D`. -/
 theorem ratFunc_mul_sq_eq_of_deriv_mk_eq {A D B E : K[X]} (hD : D ≠ 0) (hE : E ≠ 0)
     (h : (RatFunc.mk B E)′ = RatFunc.mk A D) :
     A * E ^ 2 = (derivative B * E - B * derivative E) * D := by
@@ -33,11 +28,8 @@ private theorem isCoprime_C_of_ne_zero (D : K[X]) {c : K} (hc : c ≠ 0) :
   obtain ⟨v, hv⟩ := isUnit_C.mpr hc.isUnit
   exact ⟨0, ↑v.inv, by simp [← hv]⟩
 
-/-- **Descent step** (the heart of the divisibility argument): assume `D` is squarefree with
-`gcd(A, D) = 1` and `gcd(B, D) = 1`, char-0, and `A·E² = (B'·E − B·E')·D`. If `D^{n+1} | E`, then
-`D^{n+2} | E`. Substituting `E = D^{n+1}·G`, the numerator `B'E − BE'` carries a factor `Dⁿ`, and after
-cancelling `D^{n+1}` one finds `D | (n+1)·B·D'·G`; coprimality of `D` with `B`, `D'` and the nonzero
-constant `n+1` forces `D | G`, i.e. `D^{n+2} | E`. -/
+/-- Descent step: with `D` squarefree, `gcd(A, D) = gcd(B, D) = 1`, char 0, and
+`A·E² = (B'·E − B·E')·D`, if `D^{n+1} ∣ E` then `D^{n+2} ∣ E`. -/
 private theorem dvd_succ_of_dvd [CharZero K] {A D B E : K[X]} (hD : Squarefree D) (hD0 : D ≠ 0)
     (hBD : IsCoprime B D)
     (hid : A * E ^ 2 = (derivative B * E - B * derivative E) * D)
@@ -82,12 +74,8 @@ private theorem dvd_succ_of_dvd [CharZero K] {A D B E : K[X]} (hD : Squarefree D
   obtain ⟨H, rfl⟩ := hDG
   exact ⟨H, by rw [pow_succ]; ring⟩
 
-/-- **Logarithmic part is not a rational derivative** (Bronstein §2.9, the substance of "Recognizing
-Derivatives"): over a characteristic-`0` field, if `D` is squarefree, `gcd(A, D) = 1` and `A ≠ 0` with
-`deg A < deg D`, then `A/D` is **not** the derivative of any rational function — `∀ v : K(x), v′ ≠ A/D`.
-Proof: from `v = B/E` (`gcd(B, E) = 1`), `A·E² = (B'E − BE')·D` and the descent `dvd_succ_of_dvd` give
-`Dⁿ | E` for all `n`; since `deg A < deg D` makes `D` a non-unit, finite multiplicity of `D` in the
-nonzero `E` is contradicted. -/
+/-- Over a char-`0` field, if `D` is squarefree, `gcd(A, D) = 1`, `A ≠ 0` and `deg A < deg D`, then
+`A/D` is not the derivative of any rational function: `∀ v : K(x), v′ ≠ A/D`. -/
 theorem logPart_not_rational_derivative [CharZero K] {A D : K[X]} (hD : Squarefree D)
     (hAD : IsCoprime A D) (hA0 : A ≠ 0) (hdeg : A.degree < D.degree) (v : RatFunc K) :
     v′ ≠ algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D := by
@@ -129,10 +117,8 @@ theorem logPart_not_rational_derivative [CharZero K] {A D : K[X]} (hD : Squarefr
   obtain ⟨m, hm⟩ := (FiniteMultiplicity.def).mp (FiniteMultiplicity.of_not_isUnit hDnu hEne)
   exact hm (hall m)
 
-/-- **Recognizing derivatives** (Bronstein §2.9, the criterion): after Hermite reduction
-`f = (algebraMap g)′ + A/D` of `f ∈ K(x)` with `D` squarefree, `gcd(A, D) = 1` and `deg A < deg D`,
-`f` is the derivative of a rational function **iff** `A = 0`. The forward (hard) direction is
-`logPart_not_rational_derivative`; the reverse is immediate (`A = 0` makes `f = g′`). -/
+/-- After Hermite reduction `f = (algebraMap g)′ + A/D` (`D` squarefree, `gcd(A, D) = 1`,
+`deg A < deg D`), `f` is the derivative of a rational function iff `A = 0`. -/
 theorem isRationalDerivative_iff [CharZero K] {f : RatFunc K} {g : K[X]} {A D : K[X]}
     (hD : Squarefree D) (hAD : IsCoprime A D) (hdeg : A.degree < D.degree)
     (hf : f = (algebraMap K[X] (RatFunc K) g)′
@@ -152,8 +138,7 @@ theorem isRationalDerivative_iff [CharZero K] {f : RatFunc K} {g : K[X]} {A D : 
     refine ⟨algebraMap K[X] (RatFunc K) g, ?_⟩
     rw [hf, map_zero, zero_div, add_zero]
 
-/-- The criterion restated against the book's wording (`f` is a rational derivative iff the
-Hermite log-part numerator `A` is `0`). -/
+/-- The criterion restated: `f` is a rational derivative iff the Hermite log-part numerator `A = 0`. -/
 example [CharZero K] {f : RatFunc K} {g A D : K[X]} (hD : Squarefree D) (hAD : IsCoprime A D)
     (hdeg : A.degree < D.degree)
     (hf : f = (algebraMap K[X] (RatFunc K) g)′

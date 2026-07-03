@@ -1,11 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorHelpers
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 
-/-! # The canonical field identity `q + b/dₛ + c/dₙ = a/d`
-
-The abstract field-arithmetic recombination lemma over `RatFunc K` used by the generic
-canonical-representation proof: from the division, denominator split, and Bézout split, the three
-pieces recombine to `a/d`. Pure Layer-0 math, independent of the computable engine. -/
+/-! # The canonical field identity `q + b/dₛ + c/dₙ = a/d` over `RatFunc K`. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -14,9 +10,8 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
 
-/-- **The abstract canonical field identity** over ℚ(x)(t): from the division `a = q·d + r`, the
-denominator split `d = dₛ·dₙ`, and the Bézout split `b·dₙ + c·dₛ = r`, the three pieces recombine to
-`a/d` — `q + b/dₛ + c/dₙ = a/d`. The field-arithmetic core, independent of the computable engine. -/
+/-- From `a = q·d + r`, `d = dₛ·dₙ`, and `b·dₙ + c·dₛ = r`, the pieces recombine:
+`q + b/dₛ + c/dₙ = a/d`. -/
 theorem canonicalRepFast_field_identity {K : Type*} [Field K] (a d q r dn ds b c : K[X])
     (hd : d ≠ 0) (hdn : dn ≠ 0) (hds : ds ≠ 0)
     (hadiv : a = q * d + r) (hsplit : d = ds * dn) (hbcr : b * dn + c * ds = r) :

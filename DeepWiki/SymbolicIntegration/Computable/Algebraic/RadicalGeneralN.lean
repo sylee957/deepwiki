@@ -3,44 +3,14 @@ import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import Mathlib.FieldTheory.KummerPolynomial
 import Mathlib.FieldTheory.RatFunc.Degree
 
-/-! # General-`n` radical extensions: the `∛`/`nth`-root inverse and a cube-root `CField`
+/-! # General-`n` radical extensions: the `nth`-root inverse and a cube-root `CField`
 
-The simple-radical carrier `RadExt α n f = α[y]/(yⁿ − f)`
-(`ComputableTranscendentalOverAlgebraic`) is `n`-generic for its ring/derivation
-(`radAdd`/`radMul`/`radDeriv` all take `n`/`f` explicitly), but its **inverse** was the `n = 2`
-conjugate-norm `radInv2` only (`u⁻¹ = ū/(a² − b²f)`), so `instCFieldRadExt` is an honest *field*
-solely at `n = 2`. This file lifts the inverse to **arbitrary `n`** via the **extended Euclidean
-algorithm** in `α[y]`, and exhibits the engine differentiating/integrating over a **cube root**.
-
-* **`radInvN n f g`** — the general-`n` inverse of `g ∈ α[y]/(yⁿ − f)`. When `yⁿ − f` is irreducible,
-  `g` is a unit, so `cbezoutOne` finds `s·g + t·(yⁿ − f) = 1` in `α[y]`; reducing `s` mod `yⁿ = f`
-  gives `g⁻¹` (because `(yⁿ − f) ≡ 0`, so `s·g ≡ 1`). Reuses the engine's `cbezoutOne` (built on
-  `cgcdExtG`). Generic over every `[CField α]` and every `n`. At `n = 2` it agrees with `radInv2`
-  (the conjugate-norm reciprocal, `radInvN_eq_radInv2_at_two` over ℚ(x)).
-* **`RadExtN α n f`** — a *fresh* carrier (mirroring `RadExt`) whose `CField` inverse is `radInvN`
-  rather than `radInv2`, so it is an honest field for **every** `n` where `yⁿ − f` is irreducible
-  (not just `n = 2`). `add`/`mul`/`neg`/`isZero` are the same radical-carrier ops, `cderiv` the same
-  diagonal `radDeriv`. A fresh type (not a second instance on `RadExt`) avoids overlapping with the
-  existing `radInv2`-based `instCFieldRadExt`.
-* **`CFieldN3` / the cube root `∛(x²+1)` over ℚ(x)** — the concrete carrier
-  `RadExtN (QFunNZG ℚ) 3 (x²+1)`, an honest computable field: `y³ − (x²+1)` is **irreducible** over
-  ℚ(x) (`x²+1` is not a perfect cube — `intDegree 2` is not divisible by `3`), proven via
-  `X_pow_sub_C_irreducible_of_prime` (prime `3`).
-* **★ the milestone (`native_decide`)** — over the cube-root carrier, the diagonal derivation
-  `D(y) = (f'/(3f))·y` for `y = ∛(x²+1)` fires through `CDiffField.cderiv`, the cube `y·y·y = f`
-  folds (`radMul 3 f`), and `u · u⁻¹ = 1` holds with `u⁻¹ = radInvN 3 f u` — the engine
-  differentiating/multiplying/inverting over a **cube** root, not just a square root.
-
-**Soundness note.** `radDeriv`-is-a-derivation is already proven `n`-generic in
-`ComputableRadicalDerivationInvariant` (`toPolyG_radDeriv_radAdd`, `mk_toPolyG_radDeriv_radMul` —
-additivity and Leibniz over `α[y]/(yⁿ − f)` for every `n`), so the abstract derivation laws of the
-cube-root carrier `RadExtN α 3 f` are *inherited* from that `n`-generic result: nothing in the
-derivation soundness is `n = 2`-specific. What this file adds beyond `n = 2` is the **inverse**
-(`radInvN`) and a fresh field carrier around it; the genuine-field justification is the `n`-generic
-irreducibility criterion (`X_pow_sub_C_irreducible_of_prime`). The `radInvN` correctness itself —
-`toK (radInvN g) = (toK g)⁻¹` from the `cbezoutOne` Bézout identity read through `toPolyG` modulo the
-`radIdeal` — is the natural next abstract step (the Bézout helper's `toPolyG`-image identity already
-lives in `ComputableCanonicalRepCorrect`); here it is `native_decide`-validated. -/
+The carrier `RadExt α n f = α[y]/(yⁿ − f)` is `n`-generic for its ring/derivation, but its inverse
+`radInv2` is honest only at `n = 2`. This file lifts the inverse to arbitrary `n` via the extended
+Euclidean algorithm in `α[y]` (`radInvN`), wraps it in a fresh field carrier `RadExtN α n f`, and
+exhibits the engine differentiating/multiplying/inverting over the cube root `∛(x²+1)` over `ℚ(x)`
+(`y³ − (x²+1)` is irreducible since `x²+1` is not a perfect cube). The derivation laws are inherited from
+the `n`-generic additivity/Leibniz results. -/
 
 open Polynomial
 
@@ -54,22 +24,15 @@ variable {α : Type*} [CField α]
 
 /-! ### The defining modulus `yⁿ − f` and the general-`n` inverse `radInvN`
 
-The modulus `yⁿ − f ∈ α[y]` as a dense coefficient list, then the inverse of `g` in `α[y]/(yⁿ − f)`
-by extended Euclid: solve `s·g + t·(yⁿ − f) = 1` and reduce `s` mod `yⁿ = f`. -/
+By extended Euclid: solve `s·g + t·(yⁿ − f) = 1` and reduce `s` mod `yⁿ = f`. -/
 
-/-- **The defining modulus `yⁿ − f`** `radModulus n f = [−f, 0, …, 0, 1]` (constant `−f`, then `n − 1`
-zeros, then `1` at index `n`) as a `CPolyG α`: `cshiftG n [1] − [f] = yⁿ − f`. The polynomial whose
-quotient is `α[y]/(yⁿ − f) = RadExt α n f`. -/
+/-- The defining modulus `radModulus n f = [−f, 0, …, 0, 1] = yⁿ − f` as a `CPolyG α`. -/
 def radModulus (n : ℕ) (f : α) : CPolyG α :=
   CPolyG.csubG (CPolyG.cshiftG n [CField.one]) [f]
 
-/-- **The general-`n` inverse** `radInvN n f g` of `g ∈ α[y]/(yⁿ − f)` via the **extended Euclidean
-algorithm** in `α[y]`: from `cbezoutOne fuel g (yⁿ − f) = (s, t)` with `s·g + t·(yⁿ − f) = 1` (valid
-when `yⁿ − f` is irreducible, so `g` is a unit), the inverse is `s mod (yⁿ = f)` — because the
-modulus `≡ 0`, `s·g ≡ 1`. The Bézout cofactor `s` is reduced to degree `< n` by `radReduce`. Fuel for
-both `cbezoutOne` and `radReduce` is `2·(n + len g) + 2`, comfortably above the degrees involved
-(`deg s < n`, the Euclid recursion length `≤ n + 1`). Generic over `[CField α]` and `n`; the honest
-field inverse whenever `yⁿ − f` is irreducible (Trager's algebraic-extension reciprocal). -/
+/-- The general-`n` inverse `radInvN n f g` of `g ∈ α[y]/(yⁿ − f)` via extended Euclid: from
+`cbezoutOneWf g (yⁿ − f) = (s, _)` with `s·g + t·(yⁿ − f) = 1`, the inverse is `s` reduced mod `yⁿ = f`.
+The honest field inverse whenever `yⁿ − f` is irreducible. -/
 def radInvN (n : ℕ) (f : α) (g : RadElem α) : RadElem α :=
   let fuel := 2 * (n + (g : List α).length) + 2
   let (s, _) := CPolyG.cbezoutOneWf g (radModulus n f)
@@ -77,43 +40,32 @@ def radInvN (n : ℕ) (f : α) (g : RadElem α) : RadElem α :=
 
 end RadElem
 
-/-! ### Sanity: `radInvN` inverts, and agrees with `radInv2` at `n = 2` (`native_decide`)
+/-! ### Sanity: `radInvN` inverts, and agrees with `radInv2` at `n = 2`
 
-Over `ℚ(x)`, `n = 2`, `f = x²+1` (the `arcsinh` radical): `radInvN` produces a genuine inverse, and
-it matches `radInv2` up to the canonical (reduced) representative. -/
+Over `ℚ(x)`, `n = 2`, `f = x²+1`: `radInvN` produces a genuine inverse matching `radInv2`. -/
 
 open RadElem
 
-/-- **★ `radInvN` inverts at `n = 2`** (`native_decide`): over `(QFunNZG ℚ)[y]/(y² − (x²+1))`, for
-`u = x + y`, the extended-Euclid inverse `radInvN 2 (x²+1) u` satisfies `radMul 2 (x²+1) u (radInvN …)
-= 1` (checked by `radIsZero` of the product minus `[1]`). THE GENERAL-`n` INVERSE COMPUTES AND
-INVERTS — at `n = 2` it reproduces the conjugate-norm reciprocal through extended Euclid. -/
+/-- `radInvN` inverts at `n = 2`: over `(QFunNZG ℚ)[y]/(y² − (x²+1))`, `radMul 2 (x²+1) u (radInvN 2 …) = 1`
+for `u = x + y`. -/
 theorem radInvN_mul_self_eq_one_at_two :
     radIsZero (radSub (radMul 2 fullRhoArcsinh fullUxPlusY
         (radInvN 2 fullRhoArcsinh fullUxPlusY)) radOne) = true := by native_decide
 
-/-- **`radInvN` agrees with `radInv2` at `n = 2`** (`native_decide`): the extended-Euclid inverse and
-the conjugate-norm inverse are the **same** element of `(QFunNZG ℚ)[y]/(y² − (x²+1))` (both reduced),
-for `u = x + y`. Checked by `radIsZero` of the difference `radInvN 2 ρ u − radInv2 ρ u`. The two
-constructions coincide where both apply — `radInvN` is the honest generalization of `radInv2`. -/
+/-- `radInvN` agrees with `radInv2` at `n = 2`: `radInvN 2 ρ u = radInv2 ρ u` in
+`(QFunNZG ℚ)[y]/(y² − (x²+1))` for `u = x + y`. -/
 theorem radInvN_eq_radInv2_at_two :
     radIsZero (radSub (radInvN 2 fullRhoArcsinh fullUxPlusY)
         (radInv2 fullRhoArcsinh fullUxPlusY)) = true := by native_decide
 
-/-! ### The fresh carrier `RadExtN α n f` — a field for *every* `n` via `radInvN`
+/-! ### The fresh carrier `RadExtN α n f` — a field for every `n` via `radInvN`
 
-`RadExt α n f`'s `CField` instance (`instCFieldRadExt`) uses the conjugate-norm `radInv2`, an honest
-inverse only at `n = 2`. To get a field for arbitrary `n` we wrap the same `RadElem α` in a **fresh**
-one-field structure `RadExtN α n f` whose `inv` is `radInvN` — avoiding an overlapping `CField`
-instance on `RadExt`. Everything else (`add`/`mul`/`neg`/`isZero`, `cderiv`) is the identical
-radical-carrier computation; only the inverse differs. The structure inherits nothing, so the
-algebra is attached explicitly. -/
+A fresh one-field structure wrapping `RadElem α` whose `inv` is `radInvN` (so it is a field for every `n`
+with `yⁿ − f` irreducible), avoiding an overlapping `CField` instance on `RadExt`; all other ops match. -/
 
-/-- **The general-`n` simple-radical carrier as a type** `RadExtN α n f = α[y]/(yⁿ − f)`, a one-field
-structure wrapping `RadElem α`, with `n`/`f` on the type so typeclass resolution dispatches the
-radical `CField`/`CDiffField`. Distinct from `RadExt` so its `CField` inverse can be the general-`n`
-`radInvN` (honest for every irreducible `yⁿ − f`) without overlapping `RadExt`'s `radInv2`-based
-instance. `ofRadN ::`/`toRadN` are the constructor/projection. -/
+/-- The general-`n` simple-radical carrier `RadExtN α n f = α[y]/(yⁿ − f)`: a one-field structure wrapping
+`RadElem α`, with `n`/`f` on the type, whose `CField` inverse is `radInvN`. `ofRadN ::`/`toRadN` are the
+constructor/projection. -/
 structure RadExtN (α : Type*) [CField α] (n : ℕ) (f : α) where
   /-- The underlying coefficient list `[a₀,…,a_{n−1}]` for `Σ aᵢyⁱ ∈ α[y]/(yⁿ − f)`. -/
   ofRadN ::
@@ -143,9 +95,8 @@ def neg (p : RadExtN α n f) : RadExtN α n f := ⟨RadExt.radCanon n f (radNeg 
 canonicalized. -/
 def mul (p q : RadExtN α n f) : RadExtN α n f := ⟨RadExt.radCanon n f (radMul n f p.toRadN q.toRadN)⟩
 
-/-- **Inverse** in `RadExtN α n f` (the general-`n` field case) — the **canonicalized**
-extended-Euclidean inverse `radInvN`: reduce the input to a degree-`< n` rep before `radInvN` and
-canonicalize the output. The honest field inverse whenever `yⁿ − f` is irreducible. -/
+/-- Inverse in `RadExtN α n f`: the canonicalized extended-Euclidean `radInvN` (reduce input, then output,
+to degree `< n`). -/
 def inv (p : RadExtN α n f) : RadExtN α n f :=
   ⟨RadExt.radCanon n f (radInvN n f (RadExt.radCanon n f p.toRadN))⟩
 
@@ -154,11 +105,8 @@ def isZero (p : RadExtN α n f) : Bool := radIsZero (RadExt.radCanon n f p.toRad
 
 end RadExtN
 
-/-- **`CField (RadExtN α n f)`**: the simple-radical extension `α[y]/(yⁿ − f)` as a *computable* field
-for **arbitrary `n`** (over `[CField α]`). Identical to `RadExt`'s ring ops, but `inv := RadExtN.inv`
-is the general-`n` extended-Euclidean `radInvN` (honest whenever `yⁿ − f` is irreducible), not the
-`n = 2` conjugate-norm. Computable — all list/field arithmetic plus the engine's `cbezoutOne`. The
-instance that makes a **cube** root (and any `nth` root) an honest computable field. -/
+/-- `CField (RadExtN α n f)`: the extension `α[y]/(yⁿ − f)` as a computable field for arbitrary `n`, with
+`inv := RadExtN.inv` the extended-Euclidean `radInvN`. -/
 instance instCFieldRadExtN {α : Type*} [CField α] {n : ℕ} {f : α} : CField (RadExtN α n f) where
   zero := RadExtN.zero
   one := RadExtN.one
@@ -168,26 +116,18 @@ instance instCFieldRadExtN {α : Type*} [CField α] {n : ℕ} {f : α} : CField 
   inv := RadExtN.inv
   isZero := RadExtN.isZero
 
-/-- **`CDiffField (RadExtN α n f)`**: the general-`n` radical extension as a *computable differential*
-field (over `[CField α] [CDiffField α]`). `cderiv := radDeriv n f` is the same **diagonal** derivation
-extending `α`'s `cderiv` by `y' = (f'/(nf))·y`; its additivity/Leibniz laws are the `n`-generic
-`RadElem.toPolyG_radDeriv_radAdd` / `RadElem.mk_toPolyG_radDeriv_radMul`
-(`ComputableRadicalDerivationInvariant`), so the cube-root carrier is a genuine differential field
-with **no** `n = 2` specialization. Computable, so the tower derivation reduces. -/
+/-- `CDiffField (RadExtN α n f)`: the radical extension as a computable differential field, with
+`cderiv := radDeriv n f` the diagonal derivation `y' = (f'/(nf))·y`. -/
 instance instCDiffFieldRadExtN {α : Type*} [CField α] [CDiffField α] {n : ℕ} {f : α} :
     CDiffField (RadExtN α n f) where
   cderiv p := ⟨radDeriv n f p.toRadN⟩
 
-/-! ### ★ The concrete cube root `∛(x²+1)` over `ℚ(x)` and its irreducibility
+/-! ### The concrete cube root `∛(x²+1)` over `ℚ(x)` and its irreducibility
 
-`α = QFunNZG ℚ ≅ ℚ(x)`, `n = 3`, `f = x²+1`. `RadX3root := RadExtN (QFunNZG ℚ) 3 cubeRadicand` is the
-cube-root field `ℚ(x)[∛(x²+1)]`. It is an honest field because `y³ − (x²+1)` is **irreducible** over
-ℚ(x): `x²+1` is not a perfect cube in ℚ(x) — a cube `b³` has `intDegree = 3·intDegree(b)` (divisible
-by `3`), but `x²+1` has `intDegree = 2`, not divisible by `3`. Hence
-`X_pow_sub_C_irreducible_of_prime` (prime `3`) applies. -/
+`α = ℚ(x)`, `n = 3`, `f = x²+1`: `y³ − (x²+1)` is irreducible over `ℚ(x)` since `x²+1` (intDegree `2`) is
+not a perfect cube, so `RadX3root = RadExtN (QFunNZG ℚ) 3 (x²+1)` is an honest field. -/
 
-/-- The cube radicand `f = x² + 1 ∈ ℚ(x)` (numerator `[1, 0, 1]` = `1 + x²`), `y = ∛(x²+1)`. The
-`natDegree 2` (not divisible by `3`) is what makes `x²+1` a non-cube, hence `y³ − (x²+1)` irreducible. -/
+/-- The cube radicand `f = x² + 1 ∈ ℚ(x)` (numerator `[1, 0, 1]`), `y = ∛(x²+1)`. -/
 def cubeRadicand : QFunNZG ℚ := qxOfNum [1, 0, 1]
 
 /-- The cube-root field `ℚ(x)[∛(x²+1)] = RadExtN (QFunNZG ℚ) 3 (x²+1)`. -/
@@ -211,9 +151,8 @@ theorem natDeg_X2p1 : (1 + X ^ 2 : ℚ[X]).natDegree = 2 := by
   rw [add_comm, Polynomial.natDegree_add_eq_left_of_natDegree_lt (by simp), natDegree_X_pow]
 
 open CPolyG in
-/-- **`toK cubeRadicand = algebraMap (1 + x²)`** in `RatFunc ℚ`: the ℚ(x)-radicand of `RadX3root`
-reads, through the tower bridge `toQFunNZG`, as `algebraMap ℚ[X] (RatFunc ℚ) (1 + x²)` (numerator
-`[1,0,1] ↦ 1 + x²`, denominator `[1] ↦ 1`). Feeds the not-a-cube / irreducibility argument. -/
+/-- `toK cubeRadicand = algebraMap ℚ[X] (RatFunc ℚ) (1 + x²)`: the radicand reads through the tower bridge
+as the algebra-map image of `1 + x²`. -/
 theorem toK_cubeRadicand :
     CFieldSpec.toK (cubeRadicand : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
   show QFunNZG.toQFunNZG cubeRadicand = _
@@ -230,10 +169,8 @@ theorem toK_cubeRadicand :
   show QFunNZG.amG ℚ (1 + X ^ 2) / QFunNZG.amG ℚ 1 = _
   rw [map_one, div_one]; rfl
 
-/-- **★ `x²+1` is not a cube in `ℚ(x)`**: `∀ b : RatFunc ℚ, b³ ≠ algebraMap (1 + x²)`. A cube `b³` has
-`intDegree = 3·intDegree(b)` (divisible by `3`), but `algebraMap (1 + x²)` has
-`intDegree = natDegree(1 + x²) = 2`, not divisible by `3`. The degree obstruction that makes the
-cube-root extension a field. -/
+/-- `x²+1` is not a cube in `ℚ(x)`: `∀ b, b³ ≠ algebraMap (1 + x²)`, since a cube has `intDegree` divisible
+by `3` but `1 + x²` has `intDegree 2`. -/
 theorem not_cube_X2p1 :
     ∀ b : RatFunc ℚ, b ^ 3 ≠ algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
   intro b hb
@@ -244,131 +181,94 @@ theorem not_cube_X2p1 :
     RatFunc.intDegree_mul hb_ne hb_ne, RatFunc.intDegree_polynomial, natDeg_X2p1] at hdeg
   omega
 
-/-- **★ `y³ − (x²+1)` is irreducible over `ℚ(x)`** — `Irreducible (X³ − C(toK cubeRadicand))` in
-`(RatFunc ℚ)[X]`. By `X_pow_sub_C_irreducible_of_prime` (prime `3`) and `x²+1` not-a-cube
-(`not_cube_X2p1`). So `AdjoinRoot (X³ − C(toK cubeRadicand)) = ℚ(x)[∛(x²+1)]` is a genuine **field** —
-the algebraic fact underwriting the honest cube-root carrier `RadX3root`. -/
+/-- `y³ − (x²+1)` is irreducible over `ℚ(x)`: `Irreducible (X³ − C(toK cubeRadicand))`, from
+`X_pow_sub_C_irreducible_of_prime` (prime `3`) and `not_cube_X2p1`. -/
 theorem irreducible_cubeRad :
     Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZG ℚ))) := by
   rw [toK_cubeRadicand]
   exact X_pow_sub_C_irreducible_of_prime (by norm_num) not_cube_X2p1
 
-/-- **The cube-root irreducibility as a `Fact`** — registers `Irreducible (X³ − C(toK cubeRadicand))`
-so Mathlib's `AdjoinRoot.instField` resolves `Field (AdjoinRoot (X³ − C(toK cubeRadicand)))`, the
-field `ℚ(x)[∛(x²+1)]`. -/
+/-- The cube-root irreducibility as a `Fact`, so `AdjoinRoot.instField` resolves the field
+`ℚ(x)[∛(x²+1)]`. -/
 instance fact_irreducible_cubeRad :
     Fact (Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZG ℚ)))) :=
   ⟨irreducible_cubeRad⟩
 
-/-- **`ℚ(x)[∛(x²+1)]` is a field** — `Field (AdjoinRoot (X³ − C(toK cubeRadicand)))`, resolved from the
-irreducibility `Fact`. The genuine cube-root field the carrier `RadX3root` represents. -/
+/-- `ℚ(x)[∛(x²+1)]` is a field: `Field (AdjoinRoot (X³ − C(toK cubeRadicand)))`, from the irreducibility
+`Fact`. -/
 noncomputable example : Field (AdjoinRoot (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZG ℚ)))) :=
   inferInstance
 
-/-! ### ★★ The milestone: the engine differentiates/multiplies/inverts a CUBE root (`native_decide`)
+/-! ### The engine differentiates/multiplies/inverts a cube root
 
-Over the cube-root carrier `RadX3root = ℚ(x)[∛(x²+1)]`, exercised **through the typeclass
-projections** (`CField.mul`, `CField.inv`, `CDiffField.cderiv` — confirming `instCFieldRadExtN` /
-`instCDiffFieldRadExtN` dispatch):
+Over `RadX3root = ℚ(x)[∛(x²+1)]`, through the typeclass projections: `y·y·y = f` (`radMul 3 f`),
+`D(y) = (f'/(3f))·y` (`radDeriv 3 f`), and `u · u⁻¹ = 1` (`radInvN 3 f`). -/
 
-* `y·y·y = f` — the cube of `y = ∛(x²+1)` folds `y³ → f = x²+1` (`radMul 3 f`);
-* `D(y) = (f'/(3f))·y` — the diagonal derivation fires for a **cube** root (`radDeriv 3 f`,
-  `ℓ = 2x/(3(x²+1))`);
-* `u · u⁻¹ = 1` — the general-`n` extended-Euclid inverse `radInvN 3 f` is a genuine field inverse.
-
-This is the engine handling a cube root, not just a square root — Trager's algebraic extension at
-`n = 3`. -/
-
-/-- **★★ `y·y·y = f` in `RadX3root` through `CField.mul`** (`native_decide`): the cube of the generator
-`y = ∛(x²+1)` via the **typeclass** product `CField.mul` (dispatching to `radMul 3 (x²+1)`) folds
-`y³ → f = x²+1`. Checked by `CField.isZero` of `y·y·y − f` (`f` lifted to `RadX3root` as
-`⟨[x²+1]⟩`). THE CUBE FOLDS — the `CField (RadExtN …)` instance computes over a cube root. -/
+/-- `y·y·y = f` in `RadX3root` through `CField.mul`: the cube of `y = ∛(x²+1)` folds `y³ → f = x²+1`. -/
 theorem cube_gen_cubed_eq_radicand :
     CField.isZero (CField.sub (CField.mul (CField.mul cubeGen cubeGen) cubeGen)
       (⟨[cubeRadicand]⟩ : RadX3root)) = true := by native_decide
 
-/-- **★★ `D(y) = (f'/(3f))·y` in `RadX3root` through `CDiffField.cderiv`** (`native_decide`): the
-**typeclass** derivation `CDiffField.cderiv` (dispatching to the diagonal `radDeriv 3 (x²+1)`) sends
-`y = ∛(x²+1)` to `ℓ·y`, `ℓ = f'/(3f) = 2x/(3(x²+1))`. Checked by `CField.isZero` of `D(y) − [0, ℓ]`.
-THE CUBE-ROOT CARRIER IS A DIFFERENTIAL FIELD — the diagonal derivation fires for `n = 3`. -/
+/-- `D(y) = (f'/(3f))·y` in `RadX3root` through `CDiffField.cderiv`: sends `y = ∛(x²+1)` to `ℓ·y`,
+`ℓ = 2x/(3(x²+1))`. -/
 theorem cube_cderiv_gen_eq :
     CField.isZero (CField.sub (CDiffField.cderiv cubeGen)
       (⟨[CField.zero, cubeLogDer]⟩ : RadX3root)) = true := by native_decide
 
-/-- **★★ `u · u⁻¹ = 1` in `RadX3root` through `CField.mul`/`CField.inv`** (`native_decide`, the
-milestone). For `u = x + y` (`= ⟨[x, 1]⟩`, `y = ∛(x²+1)`), the **typeclass** inverse `CField.inv`
-(the general-`n` extended-Euclid `radInvN 3 (x²+1)`) satisfies `u · u⁻¹ = 1`. THE CUBE-ROOT
-EXTENSION IS A COMPUTABLE FIELD — `radInvN` inverts at `n = 3`, not just `n = 2`. Checked by
-`CField.isZero` of `u · u⁻¹ − 1`. -/
+/-- `u · u⁻¹ = 1` in `RadX3root` through `CField.mul`/`CField.inv`: for `u = x + y`, the inverse
+`radInvN 3 (x²+1)` satisfies `u · u⁻¹ = 1`. -/
 theorem cube_mul_inv_eq_one :
     CField.isZero (CField.sub (CField.mul (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root)
       (CField.inv (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root))) CField.one) = true := by
   native_decide
 
-/-- **A cube-root inverse with a genuine `y²`-component** (`native_decide`): for `u = 1 + y + y²`
-(`= ⟨[1, 1, 1]⟩`, degree `2` over the cube root), `radInvN 3 (x²+1)` still inverts —
-`CField.mul u u⁻¹ = 1`. The extended-Euclid inverse handles a **full-degree** element of the cube-root
-field, not only a binomial `a + by`; the conjugate-norm `radInv2` could not (it reads only `y⁰`/`y¹`). -/
+/-- A cube-root inverse with a genuine `y²`-component: for `u = 1 + y + y²`, `radInvN 3 (x²+1)` inverts,
+`CField.mul u u⁻¹ = 1` — a full-degree element the conjugate-norm `radInv2` could not handle. -/
 theorem cube_mul_inv_eq_one_deg2 :
     CField.isZero (CField.sub (CField.mul (⟨[CField.one, CField.one, CField.one]⟩ : RadX3root)
       (CField.inv (⟨[CField.one, CField.one, CField.one]⟩ : RadX3root))) CField.one) = true := by
   native_decide
 
-/-- **`D(1) = 0` and `D(0) = 0` in `RadX3root`** (`native_decide`): the cube-root derivation
-annihilates the unit and zero (the diagonal `radDeriv`'s `i = 0` component, base `D(1) = 0`). -/
+/-- `D(1) = 0` and `D(0) = 0` in `RadX3root`: the cube-root derivation annihilates the unit and zero. -/
 theorem cube_cderiv_one_zero :
     CField.isZero (CDiffField.cderiv (CField.one : RadX3root)) = true ∧
     CField.isZero (CDiffField.cderiv (CField.zero : RadX3root)) = true := by
   constructor <;> native_decide
 
-/-! ### ★ The general-`n` log-derivative `u'/u` and a cube-root integration check
+/-! ### The general-`n` log-derivative `u'/u` and a cube-root integration check
 
-`∫ u'/u = log u` over the cube-root field. The log-derivative `radLogDerivN n f u = (D u)·u⁻¹` uses
-the general-`n` inverse `radInvN` (the `n = 2` `radLogDeriv` uses `radInv2`), so it is the honest
-`RadElem` `u'/u = D(log u)` for **every** `n`. Differentiating a log antiderivative back to its
-integrand is the integration soundness check: `∫ (radLogDerivN u) = log u`. -/
+`radLogDerivN n f u = (D u)·u⁻¹` uses the general-`n` inverse `radInvN`, so it is the honest `u'/u =
+D(log u)` for every `n`; the integration soundness check is `∫ (radLogDerivN u) = log u`. -/
 
 namespace RadElem
 variable {α : Type*} [CField α] [CDiffField α]
 
-/-- **The general-`n` logarithmic derivative** `radLogDerivN n f u = (radDeriv u)·u⁻¹` over
-`α[y]/(yⁿ − f)` — the honest `RadElem` `u'/u = D(log u)`, with the inverse the **extended-Euclid**
-`radInvN n f` (so it is correct for every `n` where `yⁿ − f` is irreducible, not just `n = 2`). The
-`n`-generic companion of `radLogDeriv` (which is `radInv2`-only); the building block of a cube-root
-`v + Σ cᵢ log uᵢ` antiderivative's derivative. -/
+/-- The general-`n` logarithmic derivative `radLogDerivN n f u = (radDeriv u)·u⁻¹` over `α[y]/(yⁿ − f)`,
+the honest `u'/u = D(log u)` with inverse the extended-Euclid `radInvN n f`. -/
 def radLogDerivN (n : ℕ) (f : α) (u : RadElem α) : RadElem α :=
   radMul n f (radDeriv n f u) (radInvN n f u)
 
 end RadElem
 
-/-- **★ A cube-root log integrand `u'/u` for `u = x + ∛(x²+1)`** (`native_decide`): the general-`n`
-log-derivative `radLogDerivN 3 (x²+1) u` is a genuine **nonzero** element of `ℚ(x)[∛(x²+1)]` — the
-integrand whose antiderivative is `log u`. Confirms `radLogDerivN` produces a real cube-root
-log-derivative (the `∫ u'/u = log u` soundness shape, with `u'/u` an honest cube-root element). -/
+/-- A cube-root log integrand `u'/u` for `u = x + ∛(x²+1)`: `radLogDerivN 3 (x²+1) u` is a nonzero element
+of `ℚ(x)[∛(x²+1)]`, the integrand whose antiderivative is `log u`. -/
 theorem cube_radLogDerivN_nonzero :
     radIsZero (radLogDerivN 3 cubeRadicand (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root).toRadN)
       = false := by native_decide
 
-/-- **★ `D(log u) · u = D(u)` over the cube root** (`native_decide`, the integration soundness check):
-for `u = x + ∛(x²+1)`, the log-derivative integrand `(radLogDerivN 3 f u)` times `u` equals `D(u)` —
-i.e. `(u'/u)·u = u'`, certifying that `radLogDerivN` is the honest `u'/u` whose integral is `log u`.
-Checked by `radIsZero` of `radMul (radLogDerivN u) u − radDeriv u`. THE CUBE-ROOT LOG INTEGRAND IS
-CORRECT — `∫ (u'/u) = log u` over `∛(x²+1)`, the general-`n` inverse making the division honest. -/
+/-- `D(log u) · u = D(u)` over the cube root: for `u = x + ∛(x²+1)`, `(radLogDerivN 3 f u)·u = D(u)`, i.e.
+`(u'/u)·u = u'`, certifying `radLogDerivN` is the honest `u'/u`. -/
 theorem cube_radLogDerivN_mul_eq_deriv :
     radIsZero (radSub
         (radMul 3 cubeRadicand (radLogDerivN 3 cubeRadicand
           (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root).toRadN) [qxOfNum [0, 1], CField.one])
         (radDeriv 3 cubeRadicand [qxOfNum [0, 1], CField.one])) = true := by native_decide
 
-/-! ### ★ The keystone composes at `n = 3`: a transcendental monomial over the CUBE-ROOT base
+/-! ### A transcendental monomial over the cube-root base
 
-The payoff of `CField`/`CDiffField (RadExtN α n f)`: `cmonomialDeriv` needs only those two instances,
-so the whole monomial-derivation engine runs over `RadX3root[t]` — a transcendental monomial `t` over
-the **cube-root** base `ℚ(x)[∛(x²+1)]`, the first mixed elementary tower at `n = 3`
-(transcendental-over-algebraic, Bronstein 1990). We exhibit the mixed tower derivation
-`D(y·t) = D(y)·t + y·Dt`: with `y = ∛(x²+1)` (`D(y) = ℓ·y`, `ℓ = 2x/(3(x²+1))`) and `t = eˣ`
-(`Dt = t`), `D(y·t) = ℓ·y·t + y·t = (ℓ+1)·y·t` — both the cube-root coefficient derivation *and* the
-`d/dt` part fire. -/
+`cmonomialDeriv` runs over `RadX3root[t]`, a transcendental monomial `t` over the cube-root base
+`ℚ(x)[∛(x²+1)]`. With `y = ∛(x²+1)` (`D(y) = ℓ·y`, `ℓ = 2x/(3(x²+1))`) and `t = eˣ` (`Dt = t`),
+`D(y·t) = (ℓ+1)·y·t`. -/
 
 /-- The transcendental monomial `t = eˣ` over the cube-root base: `Dt = t`, as the
 `RadX3root[t]`-polynomial `[0, 1] = t`. -/
@@ -382,20 +282,14 @@ def cubeGenT : CPolyG RadX3root := [CField.zero, cubeGen]
 def cubeGenTDeriv : CPolyG RadX3root :=
   [CField.zero, CField.mul (⟨[CField.zero, CField.add cubeLogDer CField.one]⟩ : RadX3root) CField.one]
 
-/-- **★ `D(y·t) = (ℓ+1)·y·t` over `RadX3root[t] = ℚ(x)[∛(x²+1)][eˣ]`** (`native_decide`): the genuine
-mixed tower derivation at `n = 3`. With `y = ∛(x²+1)` (`D(y) = ℓ·y`, `ℓ = 2x/(3(x²+1))`) and `t = eˣ`
-(`Dt = t`), `cmonomialDeriv` runs **both** the cube-root coefficient derivation (the diagonal
-`radDeriv 3`, contributing `ℓ·y`) and the `d/dt` part (contributing `y`): `D(y·t) = (ℓ+1)·y·t`.
-Checked by `cisZeroG` of the difference. A TRANSCENDENTAL MONOMIAL SITS ON THE CUBE-ROOT BASE — the
-keystone composes at `n = 3`, the first transcendental-on-cube-root computation. -/
+/-- `D(y·t) = (ℓ+1)·y·t` over `RadX3root[t] = ℚ(x)[∛(x²+1)][eˣ]`: `cmonomialDeriv` runs both the cube-root
+coefficient derivation (`ℓ·y`) and the `d/dt` part (`y`). -/
 theorem cube_monomialDeriv_genT_eq :
     CPolyG.cisZeroG (CPolyG.csubG
       (CPolyG.cmonomialDeriv cubeDtExp cubeGenT) cubeGenTDeriv) = true := by native_decide
 
-/-- **The mixed cube-root derivation genuinely runs the coefficient derivation** (`native_decide`):
-`D(y·t)` over `RadX3root[t]` is **not** `cisZeroG`-zero and **not** equal to the pure-`d/dt` result
-`y·t` — confirming the cube-root-base `cderiv` contributed the `ℓ·y·t` term (had `cmonomialDeriv` only
-done `d/dt`, the result would be `y·t = cubeGenT`). The coefficient-derivation half is real. -/
+/-- The mixed cube-root derivation runs the coefficient derivation: `D(y·t)` is neither zero nor equal to
+the pure-`d/dt` result `y·t`, confirming the cube-root-base `cderiv` contributed the `ℓ·y·t` term. -/
 theorem cube_monomialDeriv_genT_runs_coeff :
     (CPolyG.cisZeroG (CPolyG.cmonomialDeriv cubeDtExp cubeGenT) = false) ∧
     (CPolyG.cisZeroG (CPolyG.csubG

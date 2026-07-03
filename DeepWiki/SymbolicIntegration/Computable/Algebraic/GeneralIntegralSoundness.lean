@@ -19,8 +19,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-! ### The generator reading `toPolyG (afBasisElem 1) = X`
 
-The carrier generator `y` is `afBasisElem 1 = [0, 1]`, whose `toPolyG` image is the formal variable `X` —
-the fact that turns `implicitDeriv … X` into a statement about `afDerivWf (afBasisElem 1)`. -/
+The carrier generator `y = afBasisElem 1 = [0, 1]` has `toPolyG` image the formal variable `X`. -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPolyG (afBasisElem 1) = X`: the carrier generator `y` reads as the formal variable `X` under the
@@ -137,8 +136,7 @@ end CPolyG
 
 /-! ### The named general driver run on `y³ = x²`
 
-The round-trip theorem turns an engine certificate into rational-part soundness for the cuspidal-cubic
-run. -/
+The round-trip theorem turns an engine certificate into rational-part soundness. -/
 
 open CPolyG
 

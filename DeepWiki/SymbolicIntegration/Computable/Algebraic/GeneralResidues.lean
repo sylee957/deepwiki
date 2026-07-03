@@ -5,10 +5,10 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 
 /-! # Algebraic-function residues for arbitrary curves: the full double resultant
 
-Trager's residue resultant `R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)), D(X))` for an
-arbitrary monic plane curve `F(x, y) = 0` (`genResidueResultant`, by evaluate-`Z`-nodes +
-Lagrange interpolation over `K(x) = QFunNZG ℚ`), generalizing the hyperelliptic norm shortcut of
-`cAlgResidueResultant`; the roots of `R` are the residues of `(g/D) dx` at its simple finite poles. -/
+The residue resultant `R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)), D(X))` for an arbitrary monic
+plane curve `F(x, y) = 0` (`genResidueResultant`, by evaluate-`Z`-nodes + Lagrange interpolation over
+`K(x) = QFunNZG ℚ`), generalizing the hyperelliptic norm shortcut of `cAlgResidueResultant`; the roots of
+`R` are the residues of `(g/D) dx` at its simple finite poles. -/
 
 open Polynomial
 
@@ -61,17 +61,12 @@ coefficients). The outer `res_X(·, D)` is `∏` over the `deg_X D` roots of `D`
 `res_Y` factor of `Z`-degree `≤ n`, so `deg_Z R ≤ n · deg_X D`. Hence `n · deg_X D + 1` nodes are exact
 (the hyperelliptic `n = 2` gives `2·deg D`, matching `cAlgResidueResultant`). -/
 
-/-- **The general-curve algebraic-residue resultant** `genResidueResultant fuelY fuelX f g Dder D
-= R(Z) ∈ ℚ[Z]` (Trager Ch. 5 §2 eq. 7, **arbitrary** monic curve `F = f`): the full double resultant
-`R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)), D(X))`, returned as a `CPolyG ℚ` in the residue
-indeterminate `Z`. Computed by **evaluation + interpolation**: for nodes `z = 0, 1, …, n·deg_X D`, the
-inner `res_Y` (`resYAtNode`, the full bivariate resultant in `y` over `K(x) = QFunNZG ℚ`) gives the
-`ℚ[X]`-polynomial `res_Y(z·D' − g, F)`, then `res_X(·, D)` (`cresultantG fuelX` over ℚ, eliminating `X`)
-gives `R(z) ∈ ℚ`, and `cinterpolateG` recovers `R(Z)`. `deg_Z R ≤ n·deg_X D` (`n = deg_y f`), so
-`n·deg_X D + 1` nodes are exact. The general-`F` generalization of `cAlgResidueResultant`: where the
-hyperelliptic case collapsed the inner `res_Y` to the norm `(z·D' − g₀)² − g₁²·ρ`, here it is the full
-`res_Y`. `Dder = D'(x) ∈ K(x)` (the `x`-derivative of `D`, supplied by the caller — `D` itself is a
-`ℚ[X]`-polynomial). -/
+/-- The general-curve algebraic-residue resultant `genResidueResultant f g Dder D = R(Z) ∈ ℚ[Z]` for an
+arbitrary monic curve `F = f`: the full double resultant `R(Z) = res_X(res_Y(Z·D'(X) − g(X, Y), F(X, Y)),
+D(X))`, in the residue indeterminate `Z`. Computed by evaluation + interpolation: for nodes
+`z = 0, …, n·deg_X D`, the inner `res_Y` (`resYAtNode`) gives `res_Y(z·D' − g, F)`, then `res_X(·, D)`
+gives `R(z) ∈ ℚ`, and `cinterpolateG` recovers `R(Z)`; `deg_Z R ≤ n·deg_X D` (`n = deg_y f`). Generalizes
+`cAlgResidueResultant`'s hyperelliptic norm shortcut. `Dder = D'(x) ∈ K(x)` supplied by the caller. -/
 def genResidueResultant (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
     (D : CPolyG ℚ) : CPolyG ℚ :=
   let nNodes := cdegG f * cdegG D + 1                        -- `deg_Z R ≤ n · deg_X D`
@@ -82,34 +77,22 @@ def genResidueResultant (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
 
 end CPolyG
 
-/-! ### ★ Validation 1: the trigonal curve `F = y³ + x·y + x` (`n = 3`, `native_decide`)
+/-! ### Validation 1: the trigonal curve `F = y³ + x·y + x` (`n = 3`)
 
-A genuinely **non-hyperelliptic** cubic curve `α = K(x) = QFunNZG ℚ`, `n = 3`, `F = y³ + x·y + x`
-(`a₂ = 0`, `a₁ = x`, `a₀ = x`, monic; the same curve as `ComputableAlgFunctionField`'s `afTrigF`). The
-inner elimination is the **full bivariate `resultant_Y`** in `y` — *not* the `n = 2` norm shortcut.
-
-**Case `g = y` (genuinely bivariate `g`), `D = x − 1`** (one simple pole at `x = 1`). The residue of
-`(y/D) dx` at a place `(x₀, y₀)` is `g/D' = y₀/D'(x₀) = y₀` (`D' = 1`, `x₀ = 1`); the three places above
-`x = 1` carry the three roots `y₀` of `F(1, y) = y³ + y + 1 = 0`. So the residues are exactly the roots
-of `F(1, Z)`, and
-
-  `R(Z) = res_X(res_Y(Z·1 − y, F), x − 1) = F(1, Z) = Z³ + Z + 1`.
-
-Mechanically: `res_Y(Z − y, F) = F(X, Z) = Z³ + X·Z + X` (the resultant of the monic linear `y − Z`
-against `F` is `F` with `y ↦ Z`); `res_X(Z³ + X·Z + X, X − 1)` evaluates at `X = 1` (the `X − 1` root),
-giving `Z³ + Z + 1`. The engine returns exactly `[1, 1, 0, 1]` — `R(Z) = F(1, Z)`, the curve fiber over
-the pole. **This is the full double resultant on a cubic, with a residue that genuinely depends on the
-sheet `y₀`** (impossible to get from the hyperelliptic norm). -/
+A non-hyperelliptic cubic curve over `K(x) = QFunNZG ℚ`. With `g = y` and `D = x − 1` (one simple pole at
+`x = 1`), the residue of `(y/D) dx` at a place `(x₀, y₀)` is `y₀`, so the residues are the roots of
+`F(1, y) = y³ + y + 1` and `R(Z) = F(1, Z) = Z³ + Z + 1`. The inner elimination is the full bivariate
+`res_Y`, giving a residue that depends on the sheet `y₀`. -/
 
 open CPolyG
 
-/-- The trigonal curve `F = y³ + x·y + x ∈ K(x)[y]` (`a₀ = x`, `a₁ = x`, `a₂ = 0`, monic), as a
-`CPolyG (QFunNZG ℚ)` `[x, x, 0, 1]` — the `n = 3` non-hyperelliptic curve. -/
+/-- The trigonal curve `F = y³ + x·y + x ∈ K(x)[y]` as `CPolyG (QFunNZG ℚ)` `[x, x, 0, 1]` — the `n = 3`
+non-hyperelliptic curve. -/
 def genResTrigF : CPolyG (QFunNZG ℚ) :=
   [qxOfNum [0, 1], qxOfNum [0, 1], CField.zero, CField.one]
 
-/-- The genuinely bivariate numerator `g = y` on the trigonal curve (`CPolyG (QFunNZG ℚ)` `[0, 1]`) —
-its residue `y₀/D'` depends on the sheet, so the `res_Y` cannot collapse to a norm. -/
+/-- The bivariate numerator `g = y` on the trigonal curve (`CPolyG (QFunNZG ℚ)` `[0, 1]`); its residue
+`y₀/D'` depends on the sheet, so `res_Y` cannot collapse to a norm. -/
 def genResTrigG : CPolyG (QFunNZG ℚ) := [CField.zero, CField.one]
 
 /-- The denominator `D = x − 1` (`CPolyG ℚ` `[−1, 1]`): one simple pole at `x = 1`. -/
@@ -129,35 +112,24 @@ def genResTrigExpected : CPolyG ℚ := [1, 1, 0, 1]
 -- Sanity print: `R(Z) = Z³ + Z + 1`.
 #eval (cnormG genResTrigR : List ℚ)
 
-/-- **★ The FULL double resultant computes on the trigonal cubic** (`native_decide`, Trager Ch. 5 §2
-eq. 7, general `F`). For `∫ (y/(x − 1)) dx` on the genuinely non-hyperelliptic curve `y³ + xy + x = 0`
-(`n = 3`), the engine's `genResidueResultant` — inner **full bivariate** `res_Y(Z·D' − g, F)` over
-`K(x)`, outer `res_X(·, D)` over ℚ by evaluation+interpolation — produces `R(Z) = Z³ + Z + 1 = F(1, Z)`,
-the curve fiber over the pole `x = 1`. Checked by `cisZeroG` of `R − (Z³ + Z + 1)`. THE ALGEBRAIC-INTEGRAL
-RESIDUE RESULTANT NOW COMPUTES FOR ARBITRARY CURVES — the inner elimination is the genuine `resultant_Y`,
-not the hyperelliptic norm, and the residues `y₀` depend on the sheet of the cubic. -/
+/-- The full double resultant on the trigonal cubic: for `∫ (y/(x − 1)) dx` on the non-hyperelliptic
+`y³ + xy + x = 0` (`n = 3`), `genResidueResultant` produces `R(Z) = Z³ + Z + 1 = F(1, Z)`, the curve
+fiber over the pole `x = 1`, via `cisZeroG` of `R − (Z³ + Z + 1)`. -/
 theorem genResTrig_resultant_eq :
     cisZeroG (csubG genResTrigR genResTrigExpected) = true := by native_decide
 
-/-- **★ The residues are the roots of `F(1, Z)`** (`native_decide`): each root `y₀` of the curve fiber
-`F(1, y) = y³ + y + 1` is a residue, i.e. `R(Z) = F(1, Z)` exactly — so the residues of `∫ (y/(x−1)) dx`
-are precisely the three `y`-values over the pole `x = 1`, Trager's Theorem-2 value `g/D' = y₀/1 = y₀` per
-sheet. Confirmed via the membership test: `Z = 0` is **not** a residue (`F(1,0) = 1 ≠ 0`), but `R`
-vanishes nowhere rational here (the fiber is irreducible over ℚ) — checked by `cIsResidue R 0 = false`
-and the exact match `R = F(1, ·)` above. -/
+/-- The residues are the roots of `F(1, Z)`: `Z = 0` is not a residue (`cIsResidue R 0 = false`), matching
+`R = F(1, Z) = Z³ + Z + 1` whose roots are the three `y`-values over the pole `x = 1`. -/
 theorem genResTrig_zero_not_residue :
     cIsResidue genResTrigR (0 : ℚ) = false := by native_decide
 
-/-! ### ★ Validation 2: trigonal `g = 1` (constant in `y`) — residue `1` on all three sheets
+/-! ### Validation 2: trigonal `g = 1` (constant in `y`) — residue `1` on all three sheets
 
-For the **same** trigonal curve with `g = 1` (constant in `y`) and `D = x − 1`: `f = 1/(x − 1)` is a
-rational function of `x` alone, so its residue at each of the three places above the simple pole `x = 1`
-is the *same* `g/D' = 1/1 = 1`. Hence `R(Z) = (Z − 1)³` (degree `n·deg_X D = 3·1 = 3`, a triple root at
-the common residue `1`). Mechanically `res_Y(Z − 1, F) = (Z − 1)³` (resultant of the constant `Z − 1`
-against the degree-3 monic `F`), and `res_X((Z − 1)³, X − 1) = (Z − 1)³`. -/
+For the same trigonal curve with `g = 1` and `D = x − 1`, the residue at each of the three places above
+`x = 1` is the same `g/D' = 1`, so `R(Z) = (Z − 1)³` (a triple root at the common residue `1`). -/
 
 /-- The constant-in-`y` numerator `g = 1` on the trigonal curve (`CPolyG (QFunNZG ℚ)` `[1]`): `f = 1/D`
-is a pullback of a rational differential, same residue on every sheet. -/
+has the same residue on every sheet. -/
 def genResTrigG1 : CPolyG (QFunNZG ℚ) := [CField.one]
 
 /-- The computed `R(Z)` for `∫ dx/(x − 1)` on the trigonal curve `y³ + xy + x = 0`. -/
@@ -168,32 +140,24 @@ def genResTrigR1 : CPolyG ℚ :=
 `1` on all three sheets, with multiplicity `n = 3`. -/
 def genResTrigExpected1 : CPolyG ℚ := [-1, 3, -3, 1]
 
-/-- **★ The double resultant gives `(Z − 1)³` for the sheet-independent residue** (`native_decide`): for
-`∫ dx/(x − 1)` on `y³ + xy + x = 0` (`g = 1` constant in `y`), the engine's `genResidueResultant`
-produces `R(Z) = (Z − 1)³` — the residue `g/D' = 1` repeated once per sheet (`n = 3` places over the
-simple pole `x = 1`). Checked by `cisZeroG` of `R − (Z − 1)³`. The `res_Y` of a constant against the
-cubic `F` is the cube; the three residues coincide because `f` does not depend on `y`. -/
+/-- The double resultant gives `(Z − 1)³` for the sheet-independent residue: for `∫ dx/(x − 1)` on
+`y³ + xy + x = 0` (`g = 1`), `genResidueResultant` produces `R(Z) = (Z − 1)³`, the residue `1` repeated
+once per sheet, via `cisZeroG` of `R − (Z − 1)³`. -/
 theorem genResTrig1_resultant_eq :
     cisZeroG (csubG genResTrigR1 genResTrigExpected1) = true := by native_decide
 
-/-- **The common residue `1` is a root of `R`** (`native_decide`): `cIsResidue R 1 = true` for
-`R(Z) = (Z − 1)³` — confirming the residue `1` of `∫ dx/((x − 1)·…)` on the trigonal curve. -/
+/-- The common residue `1` is a root of `R`: `cIsResidue R 1 = true` for `R(Z) = (Z − 1)³`. -/
 theorem genResTrig1_residue_one :
     cIsResidue genResTrigR1 (1 : ℚ) = true := by native_decide
 
-/-! ### ★ Conservativity: hyperelliptic `F = y² − x` reproduces `cAlgResidueResultant` (`native_decide`)
+/-! ### Conservativity: hyperelliptic `F = y² − x` reproduces `cAlgResidueResultant`
 
-The general engine must agree with the dedicated hyperelliptic `cAlgResidueResultant` on the simple
-radical case. For `∫ dx/((x − 1)·y)` on `y² = x` — `F = y² − x` (`ρ = x`), `g = y` (`g₀ = 0`, `g₁ = 1`),
-`D = x² − x`, `D' = 2x − 1` — the **general** `genResidueResultant` (full `res_Y` against `y² − x`,
-outer `res_X`) and the **hyperelliptic** `cAlgResidueResultant` (norm `(Z·D' − g₀)² − g₁²·ρ`, outer
-`res_X`) must produce the **same** `R(Z) = Z⁴ − Z²`. They do — the general double resultant *contains*
-the hyperelliptic norm as the `n = 2` special case (`res_Y(Z·D' − g₀ − g₁y, y² − ρ) = (Z·D' − g₀)² −
-g₁²·ρ`). -/
+On the simple radical case `y² = x` with `g = y`, `D = x² − x`, the general `genResidueResultant` (full
+`res_Y`) and the dedicated hyperelliptic `cAlgResidueResultant` (norm `(Z·D' − g₀)² − g₁²·ρ`) both give
+`R(Z) = Z⁴ − Z²`: the general double resultant contains the hyperelliptic norm as the `n = 2` case. -/
 
 /-- The hyperelliptic curve `F = y² − x ∈ K(x)[y]` as a general-carrier polynomial (`CPolyG (QFunNZG ℚ)`
-`[−x, 0, 1]`, `ρ = x`) — the `cAlgResidueResultant` worked example `y = √x`, now as a `genResidueResultant`
-curve. -/
+`[−x, 0, 1]`, `ρ = x`) — the `cAlgResidueResultant` example `y = √x`, as a `genResidueResultant` curve. -/
 def genResHypF : CPolyG (QFunNZG ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
 
 /-- The numerator `g = y` on `y² = x` (`CPolyG (QFunNZG ℚ)` `[0, 1]`; `g₀ = 0`, `g₁ = 1`). -/
@@ -206,64 +170,29 @@ def genResHypD : CPolyG ℚ := [0, -1, 1]
 /-- `D'(x) = 2x − 1 ∈ K(x)` for the hyperelliptic conservativity check. -/
 def genResHypDder : QFunNZG ℚ := qxOfNum [-1, 2]
 
-/-- **★ Conservativity: the general double resultant reproduces the hyperelliptic norm resultant**
-(`native_decide`). On `y² = x` with `g = y`, `D = x² − x`, the general `genResidueResultant` (full
-`res_Y` against `y² − x`, no norm shortcut) equals the dedicated `cAlgResidueResultant` (the `n = 2` norm
-`(Z·D' − g₀)² − g₁²·ρ`): both give `R(Z) = Z⁴ − Z²`. Checked by `cisZeroG` of their difference. THE
-GENERAL ENGINE CONTAINS THE HYPERELLIPTIC CASE — the full `resultant_Y` collapses to the norm exactly
-when `F = y² − ρ` and `g` is linear in `y`, so the two `R(Z)` agree. -/
+/-- Conservativity: the general double resultant reproduces the hyperelliptic norm resultant. On `y² = x`
+with `g = y`, `D = x² − x`, the general `genResidueResultant` equals the dedicated `cAlgResidueResultant`
+(both `R(Z) = Z⁴ − Z²`), via `cisZeroG` of their difference. -/
 theorem genResHyp_conservativity :
     cisZeroG (csubG
       (genResidueResultant genResHypF genResHypG genResHypDder genResHypD)
       (cAlgResidueResultant algResExX_D algResExX_rho algResExX_g0 algResExX_g1)) = true := by
   native_decide
 
-/-- Restatement (the deliverable): the general-curve residue resultant `genResidueResultant` of
-`∫ (y/(x − 1)) dx` on the **non-hyperelliptic** trigonal curve `y³ + xy + x = 0` is `Z³ + Z + 1 =
-F(1, Z)`, whose roots are the residues (the three sheets over the pole `x = 1`) — Trager eq. 7's full
-double resultant `res_X(res_Y(Z·D' − g, F), D)` over the constant field ℚ, beyond the hyperelliptic
-norm. -/
 example : cisZeroG (csubG
     (genResidueResultant genResTrigF genResTrigG genResTrigDder genResTrigD)
     [1, 1, 0, 1]) = true := by native_decide
 
-/-! ### The NEXT pieces: residues → divisors → the algebraic rational part → the integrator
+/-! ### Related pieces
 
-With `genResidueResultant` the engine computes Trager's eq. 7 residue resultant `R(Z)` for **arbitrary**
-curves (the full double resultant), so the **residues** of a `(g/D) dx`-type differential with simple
-finite poles are in hand for any plane curve — the heart and tractable part of the log-part computation.
-The remaining pieces (documented, beyond this file):
+The residue resultant `R(Z)` computed here feeds the divisor construction over the integral basis, the
+principal-divisor / torsion test, and the algebraic rational part; wiring these into the top-level
+integrator is the continuation. -/
 
-1. **General divisors over the integral basis.** The actual log arguments `vᵢ` need the **divisor
-   construction** (Trager Ch. 5 §3): with the Round-2 **integral basis** (`ComputableIntegralBasisFull`)
-   one represents the divisor of a function and the residue divisor of the differential. The hyperelliptic
-   `residueDivisorMumford` (Mumford `(u, v)` representation) generalizes to the general-curve **ideal /
-   integral-basis** representation of divisors, computed against the integral basis here.
-
-2. **The principal-divisor / torsion test (Ch. 5 §3, Ch. 6).** Whether a candidate divisor's multiple is
-   *ever* principal is the points-of-finite-order bound (good reduction, Ch. 6) — the real obstruction to
-   writing the `vᵢ` symbolically; the residues `R(Z)`/this file are the input it consumes.
-
-3. **The algebraic rational part (Ch. 4)** — the genus-`g` Hermite reduction (the algebraic analogue of
-   `cHermiteReduce`) over the integral basis, removing the multiple-pole part before the residues handle
-   the simple-pole log part; then wiring residues + rational part into the top-level integrator
-   for algebraic integrands.
-
-Every input these consume — the residue resultant `R(Z)` (this file), the integral basis
-(`ComputableIntegralBasisFull`), the trace/discriminant (`ComputableAlgFunctionField`) — is now in place;
-what remains is the divisor/torsion orchestration. -/
-
-/-! ### `#print axioms` — does the engine compute algebraic-integral residues for ARBITRARY curves?
+/-! ### Axiom check
 
 Each validation carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
-compiler axiom — **no `sorry`, no extra axiom**. **The engine now computes Trager's eq. 7 residue
-resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)` for arbitrary monic plane curves `F` (the full double
-resultant), beyond the hyperelliptic norm.** The inner elimination is the genuine bivariate
-`resultant_Y` in `y` over `K(x) = QFunNZG ℚ` (`cresultantG` over the field), the outer is `res_X` over ℚ
-by evaluation+interpolation. Validated on the non-hyperelliptic trigonal `y³ + xy + x` (`n = 3`): with
-`g = y` the residues are the curve fiber `R(Z) = F(1, Z) = Z³ + Z + 1` (sheet-dependent residues `y₀`),
-with `g = 1` the common residue `(Z − 1)³`; and conservatively on the hyperelliptic `y² − x` the general
-engine reproduces `cAlgResidueResultant`'s `Z⁴ − Z²`. -/
+compiler axiom, no `sorry`. -/
 
 -- The non-hyperelliptic trigonal curve `y³ + xy + x` (`n = 3`): the full double resultant.
 #print axioms genResTrig_resultant_eq

@@ -307,7 +307,7 @@ combined integral `∫ (y + afDerivWf(y)/y) dx`. -/
 def gcCombineSolvedWf : Option (CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) :=
   afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrandWf gcCombineLogIntegrandWf
 
-/-- The general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y` (`native_decide`):
+/-- The general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`:
 derives the rational part `v = (3/5)x·y` (`afDerivWf f v = y`) and the log argument `u` a nonzero multiple
 of `y` (`afDerivWf f u = afMul f u logIntegrand`, `∫ afDeriv(y)/y = log y`) on the cuspidal cubic `y³ = x²`,
 both by `K`-linear solves through `afDerivWf`. Checked by `afDerivWf f v − y` vanishing, `v = (3/5)xy`, the

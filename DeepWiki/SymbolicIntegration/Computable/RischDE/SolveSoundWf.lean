@@ -3,9 +3,8 @@ import DeepWiki.SymbolicIntegration.Computable.CanonNormalizedReduce
 
 /-! # The sound recursive Risch-DE solver `crischDESolveSoundWf`
 
-The public well-founded RDE wrapper: weak-normalize, gate on `cisCanonNormalizedGWf`, and solve the
-inner RDE through `cRischDEGWf`. `crischDESolveSoundWf_field` derives the field-level identity
-`D(Y) + F·Y = G` for a successful solve from the `RischDESoundnessWf` certificate. -/
+Weak-normalize, gate on `cisCanonNormalizedGWf`, and solve the inner RDE through `cRischDEGWf`.
+`crischDESolveSoundWf_field` derives `D(Y) + F·Y = G` from the `RischDESoundnessWf` certificate. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -16,19 +15,16 @@ open Compute CPolyG QFunNZG
 
 /-! ## The solver `crischDESolveSoundWf`
 
-Pipeline: weak-normalize `f̃ = f − Dq'/q'` (`q = cWeakNormalizerGWf`), run the §6.1 solvability check
-`cisCanonNormalizedGWf f̃`, reduce to lowest terms, solve the inner RDE on `(f̃ᵣ, q'·g)` via
-`cRischDEGWf`, and transform back by `y = ỹ/q'`. -/
+Pipeline: weak-normalize, run the solvability check `cisCanonNormalizedGWf`, reduce to lowest
+terms, solve the inner RDE via `cRischDEGWf`, and transform back by `y = ỹ/q'`. -/
 
 section Solver
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
   [CFracGcdCoreWf β] [CRischField β]
 
-/-- Inner RDE solve `crischDERawSolveWf ftilde gtilde` over `QFunNZG β`: run
-`cRischDEGWf ([1] : CPolyG β)` over `CPolyG β = β[s]` (monomial `s`, `Ds = [1]`) on the num/den
-components, re-lifting the returned `(ynum, yden)` to `QFunNZG β` under a `cisZeroG` denominator
-guard. -/
+/-- `crischDERawSolveWf ftilde gtilde`: run `cRischDEGWf [1]` on the num/den components, re-lifting
+the returned `(ynum, yden)` to `QFunNZG β` under a `cisZeroG` denominator guard. -/
 def crischDERawSolveWf (ftilde gtilde : QFunNZG β) : Option (QFunNZG β) :=
   match CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
   | none => none
@@ -54,11 +50,8 @@ theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZG β) :
       · simp [crischDERawSolveWf, h, hden]
       · simp [crischDERawSolveWf, h, hden]
 
-/-- Sound recursive Risch-DE solver `crischDESolveSoundWf f g` over `QFunNZG β`: weak-normalize `f`
-to `f̃ = f − Dq/q` (`q = cWeakNormalizerGWf`; give up if `q = 0`), run the §6.1 solvability check
-`cisCanonNormalizedGWf f̃` (return `none` when the lowest-terms denominator is not normal), reduce
-`f̃` to lowest terms and solve `(f̃ᵣ, q'·g)` via `crischDERawSolveWf`, transforming back by
-`y = ỹ/q'`. The built-in check removes any external `IsCanonNormalized` hypothesis from soundness. -/
+/-- `crischDESolveSoundWf f g`: weak-normalize `f`, gate on `cisCanonNormalizedGWf`, reduce to lowest
+terms, solve via `crischDERawSolveWf`, and transform back by `y = ỹ/q'`. -/
 def crischDESolveSoundWf (f g : QFunNZG β) : Option (QFunNZG β) :=
   let q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
   if CPolyG.cisZeroG q then none
@@ -112,7 +105,7 @@ theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : QFunNZG β)
       simpa [hq] using hqz
 
 omit [CFieldSpec β] in
-/-- A successful Wf sound solve passed the §6.1 canonical-normality check. -/
+/-- A successful Wf sound solve passed the canonical-normality check. -/
 theorem crischDESolveSoundWf_check (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     cisCanonNormalizedGWf (weakNormalizedF f
@@ -155,8 +148,7 @@ section Capstone
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
 
-/-- Soundness certificate `RischDESoundnessWf f g`: every successful `crischDESolveSoundWf` run
-satisfies the original field-level Risch-DE identity. The public soundness boundary. -/
+/-- `RischDESoundnessWf f g`: every successful `crischDESolveSoundWf` run satisfies the field-level Risch-DE identity. -/
 structure RischDESoundnessWf (f g : QFunNZG β) : Prop where
   /-- Every successful Wf solve returns a genuine field-level Risch-DE solution. -/
   sound : ∀ y : QFunNZG β, crischDESolveSoundWf f g = some y →
@@ -166,10 +158,8 @@ structure RischDESoundnessWf (f g : QFunNZG β) : Prop where
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2)
 
-/-- If `crischDESolveSoundWf f g = some y` then, under `RischDESoundnessWf f g`, the returned `y`
-solves the field-level Risch DE `D(Y) + F·Y = G` for the original `f, g` over
-`RatFunc (CFieldSpec.K β)`. No `IsCanonNormalized` hypothesis — the solver's own §6.1 check
-supplies it. -/
+/-- `crischDESolveSoundWf_field`: under `RischDESoundnessWf f g`, a successful `y` solves
+`D(Y) + F·Y = G` for the original `f, g`. -/
 theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y)
     (hsound : RischDESoundnessWf f g) :
@@ -198,31 +188,20 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 end Capstone
 
-/-! ## ★ Task 4 — `native_decide` validations for the fuel-free solver
+/-! ## `native_decide` validations
 
-The fuel-free sound solver's behaviour over the level-2 field `ℚ(x)(t₁)`, certified by `native_decide` (the
-inner §6 pipeline runs fuel-free through `cRischDEGWf`):
-
-* **The witness returns `none`.** `crischDESolveSoundWf witnessF 1 = none` — on `f = 1/(t₁ − x)`, `g = 1`, the
-  unsolvable RDE, the fuel-free solver's §6.1 check detects unsolvability and returns `none`.
-* **Solvable cases still solve.** `Dy = 1 → y = t₁` and `Dy + y = t₁ + 1 → y = t₁` both return the correct
-  `some y` with `D(y) + f·y = g`, checked at the field level.
-
-These are the fuel-free solver's own smoke tests, independent of the older fueled validation API. -/
+The solver's behaviour over the level-2 field `ℚ(x)(t₁)`, checked by `native_decide`: the
+unsolvable witness returns `none`, and the solvable cases `Dy = 1` and `Dy + y = t₁ + 1` solve. -/
 
 section Validation
 
-/-- **★ The fuel-free sound solver returns `none` on the unsoundness witness**
-(`crischDESolveSoundWf_witness_none`, `native_decide`): for `f = 1/(t₁ − x)`, `g = 1` over `ℚ(x)(t₁)` — the RDE
-with NO solution — `crischDESolveSoundWf witnessF 1 = none`, fuel-free. The §6.1 solvability check detects the
-surviving `D`-constant special pole `t₁ − x` and reports unsolvability. -/
+/-- `crischDESolveSoundWf_witness_none`: `crischDESolveSoundWf witnessF 1 = none` on the unsolvable
+`f = 1/(t₁ − x)`, `g = 1`. -/
 theorem crischDESolveSoundWf_witness_none :
     crischDESolveSoundWf witnessF (CField.one : Lvl2) = none := by native_decide
 
-/-- **The fuel-free sound solver still solves `Dy = 1` at level 2** (`crischDESolveSoundWf_solves_Dy_eq_one`,
-`native_decide`): `crischDESolveSoundWf (0 : Lvl2) (1 : Lvl2)` returns `some y` with `D(y) + 0·y = 1`
-(`y = t₁`), checked at the field level by `CField.isZero` of `cderiv y + 0·y − 1`. The fuel-free integration
-path returns the correct solution. -/
+/-- `crischDESolveSoundWf_solves_Dy_eq_one`: `crischDESolveSoundWf 0 1` at level 2 returns `some y`
+with `D(y) + 0·y = 1`. -/
 theorem crischDESolveSoundWf_solves_Dy_eq_one :
     (match crischDESolveSoundWf (CField.zero : Lvl2) (CField.one : Lvl2) with
       | some y =>
@@ -230,11 +209,8 @@ theorem crischDESolveSoundWf_solves_Dy_eq_one :
             (CField.sub (CField.add (CDiffField.cderiv y) (CField.mul CField.zero y)) CField.one)
       | none => false) = true := by native_decide
 
-/-- **The fuel-free sound solver still solves `Dy + y = t₁ + 1` at level 2** (the cancellation path)
-(`crischDESolveSoundWf_solves_Dy_plus_y`, `native_decide`): `crischDESolveSoundWf (1 : Lvl2) (t₁ + 1)` returns
-`some y` with `D(y) + 1·y = t₁ + 1` (`y = t₁`), checked at the field level. Here `f = 1 ≠ 0`, so the §6.6
-primitive-cancellation degree-recursion runs fuel-free (through `cPolyRischDECancelPrimGWf` / the recursive
-`crischDESolve`). -/
+/-- `crischDESolveSoundWf_solves_Dy_plus_y`: `crischDESolveSoundWf 1 (t₁ + 1)` at level 2 returns
+`some y` with `D(y) + 1·y = t₁ + 1`. -/
 theorem crischDESolveSoundWf_solves_Dy_plus_y :
     (match crischDESolveSoundWf (CField.one : Lvl2) towerRdeLvl2GPlusOne with
       | some y =>
@@ -245,28 +221,9 @@ theorem crischDESolveSoundWf_solves_Dy_plus_y :
 
 end Validation
 
-/-! ### Axiom audit (the capstone is axiom-clean, NO `native_decide`; the validations are `native_decide`) -/
+/-! ### Axiom audit -/
 
 #print axioms crischDESolveSoundWf_field
 #print axioms crischDERawSolveWf_some_iff
-
-/-! ### Final verdict (Task 5)
-
-**Is the fuel-free sound solver built and proven sound?** **Yes.**
-
-* **Built fuel-free.** `crischDESolveSoundWf` runs the §6.1-gated sound pipeline (weak-normalize →
-  `cisCanonNormalizedGWf` check → reduce → solve → transform back) with the inner RDE solve routed through the
-  **fuel-free** `cRischDEGWf` (`crischDERawSolveWf`) in place of the fuel `CRischField.crischDESolve` — no
-  `ℕ`-fuel parameter.
-* **Proven sound through the direct Wf soundness certificate, axiom-clean.** `crischDESolveSoundWf_field`: a
-  successful solve gives the ORIGINAL field-level Risch-DE identity `D(Y) + F·Y = G`, with NO
-  `IsCanonNormalized` hypothesis (the solver checks it), under the direct `RischDESoundnessWf` certificate.
-  Axiom-clean `[propext, Classical.choice, Quot.sound]`, NO `native_decide`.
-* **Fuel-free validations.** The witness `f = 1/(t₁ − x)`, `g = 1` returns `none`
-  (`crischDESolveSoundWf_witness_none`), and the solvable cases `Dy = 1` / `Dy + y = t₁ + 1` return the
-  correct `some y` solving the RDE (`crischDESolveSoundWf_solves_*`) — all `native_decide`, fuel-free.
-
-★ **This is the public fuel-free sound entry point** for the Wf RDE decision-procedure and tower-completeness
-frontiers. -/
 
 end DeepWiki.SymbolicIntegration

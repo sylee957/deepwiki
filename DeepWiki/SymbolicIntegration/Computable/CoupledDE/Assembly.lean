@@ -1,31 +1,11 @@
 import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Basic
 import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
 
-/-! # The §8 coupled-system matrix assembly is faithful — unconditional base soundness
+/-! # Coupled-system matrix assembly faithfulness and base soundness
 
-`ComputableCoupledDE`'s base solve `cCoupledDESystem` reduces the coupled differential system to a
-ℚ-linear system via an undetermined-coefficient ansatz: the `mulMatrixQ`/`derivMatrixQ` blocks assemble
-the residual-polynomial coefficients of `D y + b·y` as rows of a matrix `M`, solved by
-`cConstSolveUniqueQ`. This file proves that assembly **faithful**, then composes it with the now-proven
-`cConstSolveUniqueQ_sound` (`ComputableLinearSolveCorrect`) to DROP the cleared-check gate of the §8
-base soundness — all `native_decide`-free.
-
-* **Matrix faithfulness** (`dotQ_mulMatrixQ_row`, `dotQ_derivMatrixQ_row`, `dotQ_hcatRow`/`dotQ_hcatRow2`):
-  the dot of an assembled matrix row with a coefficient vector equals the matching coefficient of the
-  polynomial residual (Cauchy product for `mulMatrixQ`, `D` for `derivMatrixQ`).
-* **Residual degree bound** (`coeff_residual_zero_of_ge`): above `nrows` every residual coefficient
-  vanishes (the ansatz width is chosen larger than every term's degree).
-* **Row identities** (`coupledRow1_coeff_eq`/`coupledRow2_coeff_eq`): from `cConstSolveUniqueQ_sound`,
-  each `r < nrows` row gives `coeff_r(residual) = coeff_r(z)`.
-* **`coupledClearedCheck_of_cCoupledDESystem`**: hence both cleared residual polynomials vanish
-  identically, so the engine's own check passes — discharged, not assumed.
-* **`cCoupledDESystem_sound`** (UNCONDITIONAL): the §8 base coupled-system soundness, with the
-  `_of_check` gate removed (`#print axioms`: standard logical axioms only).
-
-The §8.4 *tangent* box `cCoupledDECancelTan` is likewise now **unconditional**: its degree-by-degree
-telescoping (per-level base solve + `evalAtI` projection mod `t²+1` + `divByTminusI` synthetic division)
-is proven correct in `ComputableCoupledDETangentReconstruct` (`reconstruct`), discharging its own
-`cancelTanClearedCheck` — base-solve soundness (this file) is the discharged per-level ingredient. -/
+`cCoupledDESystem` reduces a coupled differential system to a ℚ-linear system via undetermined
+coefficients; this file proves the matrix assembly faithful and derives unconditional base
+soundness by discharging the cleared-check via `cConstSolveUniqueQ_sound`. -/
 
 
 namespace DeepWiki.SymbolicIntegration.CPolyG
@@ -201,9 +181,7 @@ theorem derivMatrixQ_len (d nrows : ℕ) : (derivMatrixQ d nrows).length = nrows
 theorem matAddQ_len (A B : List (List ℚ)) : (matAddQ A B).length = min A.length B.length := by
   rw [matAddQ, List.length_zipWith]
 
-/-- The `hcatQ`/`matAddQ` row-`r` dot for a coupled-system real row:
-`dotQ (hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows)) (mulMatrixQ ab2 d nrows) |>.getD r [])
-(uvec ++ vvec)` equals `coeff_r (D y1 + b1 y1 + ab2 y2)` (with uvec/vvec the degree-≤d coeff vectors). -/
+/-- The coupled-system first-row dot equals `coeff_r (D y1 + b1 y1 + ab2 y2)`. -/
 theorem dotQ_hcatRow (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hy1 : y1.length ≤ d + 1) (hy2 : y2.length ≤ d + 1) :
     dotQ ((hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))
@@ -232,8 +210,7 @@ theorem dotQ_hcatRow (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nro
     (by rw [derivMatrixQ_row_len d nrows r hr, hu_len])]
   rw [dotQ_derivMatrixQ_row y1 d nrows r hr hy1, dotQ_mulMatrixQ_row b1 y1 d nrows r hr hy1]
 
-/-- The R2 (second) coupled-system row dot: `hcatQ (mulMatrixQ b2) (matAddQ (derivMatrixQ) (mulMatrixQ b1))`
-row `r` dotted with `y1vec ++ y2vec` equals `coeff_r (b2 y1 + D y2 + b1 y2)`. -/
+/-- The coupled-system second-row dot equals `coeff_r (b2 y1 + D y2 + b1 y2)`. -/
 theorem dotQ_hcatRow2 (b1 b2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hy1 : y1.length ≤ d + 1) (hy2 : y2.length ≤ d + 1) :
     dotQ ((hcatQ (mulMatrixQ b2 d nrows)
@@ -276,9 +253,7 @@ theorem cdegG_le_length (p : CPolyG ℚ) : cdegG p ≤ p.length := by
         rw [h] at ih; simp only [List.length_cons] at ih ⊢; omega
   omega
 
-/-- A coupled-system real-residual coefficient vanishes above `nrows`: if `nrows` exceeds each term's
-`natDegree`, and the polynomials `y1, y2` have `natDegree ≤ d`, then `coeff r (D y1 + b1 y1 + ab2 y2)`
-is `0` for `r ≥ nrows`. -/
+/-- `coeff r (D y1 + b1 y1 + ab2 y2) = 0` for `r ≥ nrows` when `nrows` exceeds every term's degree. -/
 theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ)
     (hy1 : (toPolyG y1).natDegree ≤ d) (hy2 : (toPolyG y2).natDegree ≤ d)
     (hb1 : (toPolyG b1).natDegree + d + 2 ≤ nrows)
@@ -343,11 +318,7 @@ theorem cConstSolveUniqueQ_length (Arows : List (List ℚ)) (urhs : List ℚ) (n
     · simp only [hc2, if_false, Option.some.injEq] at hsome
       rw [← hsome, List.length_map, List.length_range]
 
-/-- The row-`r` (`r < nrows`) coefficient identity for the §8 coupled-system real (first) row: from a
-returned solve (whose abstract correctness `hsolve` is `cConstSolveUniqueQ_sound`), the assembled matrix
-row dotted with the solution equals the residual coefficient, i.e. for `r < nrows`,
-`coeff_r(D u1 + b1 u1 + a•(b2 u2)) = coeff_r(z1)`, with `(u1,u2)` the (pre-cnorm) coefficient blocks.
-The R1 half of `coupledClearedCheck_of_cCoupledDESystem`. -/
+/-- First-row identity `coeff_r(D u1 + b1 u1 + a•(b2 u2)) = coeff_r(z1)` (`r < nrows`) from a solve. -/
 theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol : List ℚ)
     (nrows : ℕ) (hsollen : sol.length = 2 * (d + 1))
     (hsolve : ∀ k, k < (hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))
@@ -390,8 +361,7 @@ theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol
     padCoeffsQ_getD z1 nrows r hr] at heq
   exact heq
 
-/-- The R2 (second) coupled-system row coefficient identity (`r < nrows`):
-`coeff_r(b2 u1 + D u2 + b1 u2) = coeff_r(z2)`. -/
+/-- Second-row identity `coeff_r(b2 u1 + D u2 + b1 u2) = coeff_r(z2)` (`r < nrows`). -/
 theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol : List ℚ)
     (nrows : ℕ) (hsollen : sol.length = 2 * (d + 1))
     (hsolve : ∀ k, k < (hcatQ (matAddQ (derivMatrixQ d nrows) (mulMatrixQ b1 d nrows))
@@ -437,13 +407,8 @@ theorem coupledRow2_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol
     show nrows + r - nrows = r from by omega, padCoeffsQ_getD z2 nrows r hr] at heq
   exact heq
 
-/-- **★★ The §8 base coupled-system solve self-certifies its cleared check** (`native_decide`-free):
-if `cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)` then `coupledClearedCheck a b1 b2 z1 z2
-y1 y2 = true`. Composed with `coupledClearedCheck_sound`, this makes the §8 base coupled-system
-soundness UNCONDITIONAL (drops the cleared-check gate of `cCoupledDESystem_sound_of_check`). Bridges
-`cConstSolveUniqueQ_sound` (abstract ℚ-Gaussian-elimination correctness) through the assembly
-faithfulness lemmas `coupledRow1_coeff_eq`/`coupledRow2_coeff_eq` (`r < nrows`) and the residual
-degree bound `coeff_residual_zero_of_ge` (`r ≥ nrows`), so the residual polynomials vanish identically. -/
+/-- A successful `cCoupledDESystem` solve satisfies `coupledClearedCheck … = true`, discharged from
+`cConstSolveUniqueQ_sound` via the row identities and the residual degree bound. -/
 theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ)
     (d : ℕ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     coupledClearedCheck a b1 b2 z1 z2 y1 y2 = true := by
@@ -602,13 +567,8 @@ end DeepWiki.SymbolicIntegration.CPolyG
 namespace DeepWiki.SymbolicIntegration
 
 open CPolyG in
-/-- **★★ Base coupled-system soundness — UNCONDITIONAL** (`cCoupledDESystem_sound`, `native_decide`-free,
-no cleared-check hypothesis): if `cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)` then `(y₁, y₂)`
-solves the base coupled system at the `ℚ[X]` level — `D(y₁) + b₁·y₁ + C a·(b₂·y₂) = z₁` and
-`D(y₂) + b₂·y₁ + b₁·y₂ = z₂`. Drops the `_of_check` gate of `cCoupledDESystem_sound_of_check`: the
-engine's own cleared check is now *discharged* from `cConstSolveUniqueQ_sound` (abstract
-ℚ-Gaussian-elimination correctness) via `coupledClearedCheck_of_cCoupledDESystem`, then fed to
-`coupledClearedCheck_sound`. -/
+/-- Base coupled-system soundness: a successful `cCoupledDESystem` solve `(y₁, y₂)` satisfies the two
+`ℚ[X]` identities `D(y₁) + b₁·y₁ + C a·(b₂·y₂) = z₁` and `D(y₂) + b₂·y₁ + b₁·y₂ = z₂`. -/
 theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
     (y1 y2 : CPolyG ℚ) (hsome : cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (toPolyG y1) + toPolyG b1 * toPolyG y1
@@ -618,7 +578,7 @@ theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
   coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2
     (CPolyG.coupledClearedCheck_of_cCoupledDESystem a b1 b2 z1 z2 y1 y2 d hsome)
 
-/-! ### Restatements against the intended wording (`native_decide`-free) -/
+/-! ### Restatements against the intended wording -/
 
 -- ★ The §8 base coupled-system solve UNCONDITIONALLY solves the two `ℚ[X]` row identities — no cleared
 -- check hypothesis (the engine's own check is discharged from `cConstSolveUniqueQ_sound`).

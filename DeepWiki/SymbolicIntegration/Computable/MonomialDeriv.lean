@@ -3,11 +3,11 @@ import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 
-/-! # Computable monomial derivation and `splitFactor`
+/-! # Computable monomial derivation
 
-`CDiffField`/`CDiffFieldSpec` (the computable coefficient derivation and its bridge), the monomial
+`CDiffField`/`CDiffFieldSpec` (the computable coefficient derivation and its bridge) and the monomial
 derivation `cmonomialDeriv Dt p = (coefficientwise cderiv of p) + (dp/dt)·Dt` realizing Mathlib's
-`Differential.implicitDeriv`, and the normal/special splitting factorization `cSplitFactor`. -/
+`Differential.implicitDeriv`. -/
 
 open Polynomial
 
@@ -15,23 +15,15 @@ namespace DeepWiki.SymbolicIntegration
 
 open scoped Differential
 
-/-! ### Computable derivation on the coefficient field
+/-! ### Computable derivation on the coefficient field -/
 
-`CDiffField α` adds the single computable operation `cderiv` to a `[CField α]`; the bridge
-`CDiffFieldSpec α` supplies a Mathlib `Differential (CFieldSpec.K α)` and certifies `toK (cderiv a) =
-(toK a)′`. As with `CField`/`CFieldSpec`, the engine (`cmonomialDeriv`) needs only `CDiffField`, so it
-reduces; the correctness layer adds `CDiffFieldSpec`. -/
-
-/-- Computable coefficient derivation: a `[CField α]` with one computable operation
-`cderiv : α → α`. Bridge-free, so instances stay computable; the certification against a Mathlib
-`Differential` lives in the companion `CDiffFieldSpec`. -/
+/-- Computable coefficient derivation: a `[CField α]` with one computable operation `cderiv : α → α`. -/
 class CDiffField (α : Type*) [CField α] where
   /-- Computable derivation on coefficients. -/
   cderiv : α → α
 
-/-- Computable-derivation specification: the bridge for `[CDiffField α]`. Supplies a Mathlib
-`Differential (CFieldSpec.K α)` and certifies `toK (cderiv a) = (toK a)′`. Noncomputable in general;
-required only by the correctness proofs, not by the engine. -/
+/-- Bridge for `[CDiffField α]`: a Mathlib `Differential (CFieldSpec.K α)` certifying
+`toK (cderiv a) = (toK a)′`. -/
 class CDiffFieldSpec (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] where
   /-- The genuine Mathlib differential structure on `K = CFieldSpec.K α`. -/
   diffK : Differential (CFieldSpec.K α)
@@ -44,11 +36,7 @@ instance instDifferentialK (α : Type*) [CField α] [CFieldSpec α] [CDiffField 
     Differential (CFieldSpec.K α) :=
   CDiffFieldSpec.diffK
 
-/-! ### The constant base instance `ℚ`
-
-`ℚ` is a field of *constants* under `d/dx`, so `cderiv := 0` and its `Differential` is the zero
-derivation. `cderiv` is an honest computation, so `CDiffField` stays computable. The genuine `d/dx` of
-ℚ(x) lives one tower level up on the generic `QFunNZG ℚ` (`ComputableTowerDeriv`). -/
+/-! ### The constant base instance `ℚ` -/
 
 /-- The zero derivation on `ℚ` — `ℚ` is a field of constants under `d/dx`. -/
 noncomputable instance instDifferentialQ : Differential ℚ := ⟨0⟩
@@ -66,11 +54,7 @@ noncomputable instance instCDiffFieldSpecQ : CDiffFieldSpec ℚ where
     show (0 : ℚ) = (0 : Derivation ℤ ℚ ℚ) a
     rw [Derivation.coe_zero]; rfl
 
-/-! ### The monomial derivation on `CPolyG α` (`Dt` a polynomial in `t`)
-
-For a monomial `t` over the coefficient field with `Dt ∈ k[t]`, the derivation on `k[t]` sends
-`p` to (coefficientwise `cderiv` of `p`) + `(dp/dt)·Dt`; `toPolyG_cmonomialDeriv` proves it equals
-Mathlib's `Differential.implicitDeriv (toPolyG Dt)`. -/
+/-! ### The monomial derivation on `CPolyG α` -/
 
 namespace CPolyG
 

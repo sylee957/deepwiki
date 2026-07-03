@@ -2,103 +2,19 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.PolynomialIrreducibilit
 
 /-! # Computable `𝔽_p` polynomial factorization: distinct- and equal-degree (Cantor–Zassenhaus)
 
-The foundation layer of full Zassenhaus factorization — and hence of a **complete** `ℚ`-
-irreducibility decider. `ComputablePolynomialIrreducibility` gives a *sound but one-way* mod-`p`
-irreducibility **test**; the wall is `x⁴ + 1`, irreducible over `ℚ` yet reducible mod every
-prime. Going from *testing* to *deciding* needs the full factorization of `f mod p`, then a
-Hensel lift to mod `p^k`, then recombination to `ℤ`-factors. This file builds the **distinct-degree
-factorization (DDF)** and the **equal-degree factorization (EDF)** layers, each with its
-**multiply-back soundness** — together the full mod-`p` factorization into irreducible factors — on
-top of the monic **long-division primitives** (`divmodByMonic` + the division identity
-`divmodByMonic_spec`). Now **built and gate-clean**: the long division, the `lengthTrim`↔degree
-bridges, the Euclidean `gcd`, the Frobenius power, the DDF, the Cantor–Zassenhaus equal-degree
-split and sweep, and both axiom-clean multiply-back invariants (`ddf_prod`, `edf_prod`). The
-deterministic-sweep *completeness* (a good shift always exists), per-factor *irreducibility*, the
-Hensel factor-lift, and recombination remain the documented roadmap (bottom).
-
-**Reused engine.** Polynomials are coefficient `List (ZMod p)`, low-to-high (Horner), with
-`toPoly`/`addL`/`mulL`/`scaleL`/`coeff_toPoly` from `ComputablePolynomialIrreducibility`
-(Mathlib's `Polynomial` `+`/`*` are `noncomputable`, so neither `decide` nor `native_decide`
-reduce them). The computable primitives over the field `𝔽_p`:
-
-* **`divmodByMonic`** — long division of a list-poly by a **monic** divisor (`ZMod p` is a
-  field, so a monic divisor suffices for everything DDF needs), carrying the **division identity**
-  `toPoly f = toPoly g * toPoly q + toPoly r`. The per-step trim decrease (`lengthTrim_subL_mulL_lt`,
-  top-coefficient cancellation) gives the remainder degree bound and division termination.
-* **`gcdByMonic`** — the Euclidean gcd, monic-normalized each step via `monicizeL`. Soundness
-  `gcdByMonicFuel_dvd`: the result divides **both** inputs (left-divisibility is the DDF
-  multiply-back invariant). When a monic divisor divides the dividend the division is exact
-  (`toPoly_eq_mul_quotient_of_dvd`, remainder vanishes by degree).
-* **`xPowModF`** — the Frobenius power `X^(p^d) mod f` by repeated squaring of the list `[0,1]`
-  (`powModL`/`mulModL`), each product reduced `modByMonicL`-style. Computable,
-  `native_decide`-able for small `p, d`.
-
-**Distinct-degree factorization (`ddf`).** For `d = 1, 2, …`: `gcd(f, X^(p^d) − X)` is the
-product of all degree-`d` irreducible factors of (squarefree) `f`; peel it off (monicize, divide
-out), recurse on the cofactor. `ddf` returns `List (ℕ × List (ZMod p))`, each entry `(d, gₐ)` a
-block. (The *value* `ddf` computes — the block list whose product is `f` — is sound; the degree
-*tag* `d` is correct only once Frobenius-power correctness is added, see scope.)
-
-**★ Soundness — multiply-back (`ddfAux_prod` / `ddf_prod`).** The DDF blocks multiply (via
-`mulL`, mod `p`) **back to** `f`: `toPoly (ddfProduct (ddf p f)) = toPoly f`. This is the key
-structural invariant, the engine being that each peel is an **exact** division (`gcd ∣ f`, monic
-divisor ⇒ zero remainder). It is **axiom-clean** `[propext, Classical.choice, Quot.sound]` (no
-`native`, no `sorry`); the `native_decide` lives only in the concrete examples (`x²−1` mod 3,
-`x⁴−1` mod 5, the irreducible `x²+1` mod 3). The per-block **degree** soundness (each block is a
-product of degree-`d` irreducibles, and the per-*factor* irreducibility) is the deeper claim that
-needs Frobenius-power correctness plus equal-degree splitting — scoped below.
-
-**★ Equal-degree factorization (EDF), built here.** A DDF degree-`d` block is a product of `k`
-**distinct** degree-`d` irreducibles; EDF splits it into the `k` factors. The Cantor–Zassenhaus
-split: for `p` odd, `gcd(f, (X + a)^((p^d − 1)/2) − 1)` (`edfSplitOne`) is a (possibly trivial)
-factor for a shift `a`. Lean has **no randomness**, so `a` is iterated **deterministically**
-(`edfBlock` sweeps `a = 0, 1, 2, …`, recursing on both halves of each proper split). The
-**multiply-back soundness** `edf_prod` (`toPoly (edfProduct (edf p f)) = toPoly f`, axiom-clean) is
-built — each split is an exact-division peel, exactly like `ddf_prod`. The two **remaining EDF
-obligations**:
-* **Sweep completeness.** For `k ≥ 2` a "good" shift `a` (one on which the Euler-criterion value
-  `(X + a)^((p^d − 1)/2)` is `+1` on some but not all factors) is *guaranteed to exist* within
-  `ZMod p`, so the deterministic sweep terminates with **all** factors separated. The current
-  `edfBlock` returns a sound (multiplies-back) factorization regardless, but that the swept output
-  is the *fully split* one — every returned list degree exactly `d` — is the open completeness claim
-  (a counting/Chinese-remainder argument over the residue fields). The `p = 2` case instead uses the
-  **trace-map** split `gcd(f, X + X² + X⁴ + ⋯ + X^(2^(d−1)))` (the Cantor–Zassenhaus `p = 2`
-  variant), not yet implemented.
-* **Per-factor irreducibility.** That each fully-split factor is *irreducible* follows from sweep
-  completeness **plus** Frobenius-power correctness (next).
-
-**★ The rest of Zassenhaus (scope, for the complete `ℚ`-decider).** After DDF + EDF:
-0. **Frobenius-power correctness** (`toPoly (xPowModF p d f df) ≡ X^(p^d) (mod toPoly f)`) makes
-   the DDF degree *tags* correct and, with EDF sweep completeness, yields per-factor irreducibility
-   — the abstract `ddf_prod`/`edf_prod` multiply-backs do **not** need it (gcd-divides-first-arg is
-   unconditional), but per-block degree structure does. Provable from `divmodByMonic_spec` (each
-   reduction step is `≡ mod f`) by induction over the squaring.
-1. **Hensel FACTOR-lift mod `p^k`.** Lift the coprime mod-`p` factorization `f ≡ g·h` to mod
-   `p^k`. *Mathlib status:* `hensels_lemma` (`Mathlib/NumberTheory/Padics/Hensel.lean`) and
-   `Mathlib/RingTheory/Henselian.lean` are **root-finding** only — the polynomial *factor*-lift
-   (quadratic lift of a coprime factorization, the Zassenhaus form) must be **built**: given
-   `f ≡ g·h (mod p^m)` with `s·g + t·h ≡ 1 (mod p)`, produce `g', h'` mod `p^{2m}` with the
-   same product. The Bézout cofactors lift alongside.
-2. **Recombination.** Search subsets of the lifted mod-`p^k` factors whose product has small
-   enough coefficients (bounded by `p^k / 2`, Mignotte bound) to be a true `ℤ`-factor.
-   *Mathlib status:* **not present**; an exponential subset search (LLL later tames it), with a
-   factorization-correctness predicate yielding the complete decider.
-So the complete-`ℚ`-decider campaign is: **DDF + EDF (here)** → Hensel-factor-lift → recombination.
-DDF and EDF with their multiply-back invariants are the tractable, high-value first bricks. -/
+Over `𝔽_p` with polynomials as coefficient `List (ZMod p)`: the monic long-division primitives
+(`divmodByMonic` + the division identity), the Euclidean `gcdByMonic`, the Frobenius power
+`xPowModF`, distinct-degree factorization `ddf`, and equal-degree factorization `edf`, each with its
+multiply-back soundness (`ddf_prod`, `edf_prod`). -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ## Degree of a list-poly and the leading entry
+/-! ## Degree of a list-poly and the leading entry -/
 
-For the division and gcd recursions we read a list's polynomial degree off its **last nonzero
-entry**. `lengthTrim` is the index past the last nonzero entry (`= 0` for the zero poly); for a
-nonzero list it is `natDegree + 1`. Working with `lengthTrim` keeps everything `Nat`-valued and
-`Decidable`. -/
-
-/-- Index one past the last nonzero coefficient (`0` if all coefficients vanish): the
-"effective length" of a list-poly. `toPoly`'s `natDegree` is `lengthTrim l - 1` when nonzero. -/
+/-- Index one past the last nonzero coefficient (`0` for the zero poly): the effective length of a
+list-poly, so `toPoly`'s `natDegree` is `lengthTrim l - 1` when nonzero. -/
 def lengthTrim {R : Type*} [Zero R] [DecidableEq R] : List R → ℕ
   | [] => 0
   | a :: as =>
@@ -129,10 +45,7 @@ theorem toPoly_eq_zero_of_lengthTrim_eq_zero {R : Type*} [Semiring R] [Decidable
       · exact absurd h one_ne_zero
     · exact absurd h (by omega)
 
-/-! ## Subtraction of list-polys (over a ring carrier)
-
-`ZMod p` is a `CommRing`, so the engine gains negation. `negL`/`subL` are computable; their
-`toPoly` bridges follow from `toPoly_addL`/`toPoly_scaleL`. -/
+/-! ## Subtraction of list-polys (over a ring carrier) -/
 
 /-- Negate every coefficient. -/
 def negL {R : Type*} [Neg R] : List R → List R
@@ -154,11 +67,7 @@ theorem toPoly_subL {R : Type*} [CommRing R] (as bs : List R) :
     toPoly (subL as bs) = toPoly as - toPoly bs := by
   rw [subL, toPoly_addL, toPoly_negL]; ring
 
-/-! ## The monomial-times-poly building block of long division
-
-A long-division step subtracts `c · X^k · g` from `f`. `shiftL k l` prepends `k` zeros
-(multiply by `X^k`); `scaleL c` multiplies by `C c`. Their `toPoly` bridges are the two
-identities the division identity is assembled from. -/
+/-! ## The monomial-times-poly building block of long division -/
 
 /-- Prepend `k` zeros: multiply a list-poly by `X^k`. -/
 def shiftL {R : Type*} [Zero R] (k : ℕ) (l : List R) : List R :=
@@ -174,20 +83,7 @@ theorem toPoly_shiftL {R : Type*} [CommSemiring R] (k : ℕ) (l : List R) :
       pow_succ]
     rw [show List.replicate k 0 ++ l = shiftL k l from rfl, ih]; ring
 
-/-! ## Long division by a monic divisor
-
-`divmodByMonic f g dg` divides the list-poly `f` by a **monic** divisor `g` whose `toPoly` is
-monic of `natDegree = dg` (so `g`'s entry at index `dg` is `1`). It returns `(q, r)` with the
-**division identity** `toPoly f = toPoly g * toPoly q + toPoly r`. The recursion is on the fuel
-`Fin (f.length + 1)`-style decreasing measure given by `lengthTrim f`; we use an explicit fuel
-parameter for a clean structural recursion, taking `fuel = f.length + 1` at the entry point.
-
-Each step: if `lengthTrim f ≤ dg`, the quotient term is `0` and `r := f`. Otherwise set
-`k := lengthTrim f - 1 - dg` and `c := f.getD (lengthTrim f - 1) 0` (the leading coeff; the
-divisor's leading coeff is `1`), append `c·X^k` to the quotient and recurse on
-`f − c·X^k·g`. The division identity holds **per step** as the tautology
-`toPoly f = toPoly g * (c·X^k) + (toPoly f − toPoly g * (c·X^k))`, so soundness needs no
-degree-decrease reasoning — only that the recursion terminates (the fuel). -/
+/-! ## Long division by a monic divisor -/
 
 /-- One quotient monomial term `c · X^k` as a list-poly (lower `k` zeros, then `c`). -/
 def monomialL {R : Type*} [Zero R] (c : R) (k : ℕ) : List R := shiftL k [c]
@@ -197,9 +93,8 @@ theorem toPoly_monomialL {R : Type*} [CommSemiring R] (c : R) (k : ℕ) :
     toPoly (monomialL c k) = C c * X ^ k := by
   rw [monomialL, toPoly_shiftL]; simp [toPoly]
 
-/-- Long division of `f` by a monic `g` (`toPoly g` monic of degree `dg`), fueled. Returns the
-quotient/remainder pair `(q, r)`. Soundness is the carried division identity, not the size of
-`r`. -/
+/-- Long division of `f` by a monic `g` (`toPoly g` monic of degree `dg`), fueled; returns the
+quotient/remainder pair `(q, r)`. -/
 def divmodByMonicFuel {R : Type*} [CommRing R] [DecidableEq R]
     (g : List R) (dg : ℕ) : ℕ → List R → List R × List R
   | 0, f => ([], f)
@@ -257,8 +152,8 @@ def divmodByMonic {R : Type*} [CommRing R] [DecidableEq R]
     (f g : List R) (dg : ℕ) : List R × List R :=
   divmodByMonicFuel g dg (f.length + 1) f
 
-/-- **★ Division identity.** `toPoly f = toPoly g * toPoly q + toPoly r` for
-`(q, r) = divmodByMonic f g dg`. The structural multiply-back fact behind DDF soundness. -/
+/-- Division identity `toPoly f = toPoly g * toPoly q + toPoly r` for
+`(q, r) = divmodByMonic f g dg`. -/
 theorem divmodByMonic_spec {R : Type*} [CommRing R] [DecidableEq R]
     (f g : List R) (dg : ℕ) :
     toPoly f =
@@ -269,8 +164,7 @@ theorem divmodByMonic_spec {R : Type*} [CommRing R] [DecidableEq R]
 def modByMonicL {R : Type*} [CommRing R] [DecidableEq R] (f g : List R) (dg : ℕ) : List R :=
   (divmodByMonic f g dg).2
 
-/-- `toPoly (modByMonicL f g dg) = toPoly f − toPoly g * toPoly (quotient)`: the remainder
-differs from `f` by a multiple of `g`. -/
+/-- `toPoly (modByMonicL f g dg) = toPoly f − toPoly g * toPoly (quotient)`. -/
 theorem toPoly_modByMonicL {R : Type*} [CommRing R] [DecidableEq R] (f g : List R) (dg : ℕ) :
     toPoly (modByMonicL f g dg) =
       toPoly f - toPoly g * toPoly (divmodByMonic f g dg).1 := by
@@ -278,20 +172,14 @@ theorem toPoly_modByMonicL {R : Type*} [CommRing R] [DecidableEq R] (f g : List 
   have := divmodByMonic_spec f g dg
   linear_combination -this
 
-/-! ## Making a list-poly monic
-
-`leadL f` reads the leading coefficient (`f.getD (lengthTrim f - 1) 0`); `monicizeL f` scales
-`f` by its inverse, so over a field a nonzero `f` becomes monic. The `toPoly` bridge is the
-scale bridge applied to the inverse leading coefficient. The gcd recursion below uses
-`monicizeL` to normalize each divisor so `modByMonicL` (which assumes a monic divisor) applies. -/
+/-! ## Making a list-poly monic -/
 
 /-- The leading coefficient of a list-poly: the entry at `lengthTrim f - 1` (`0` for the zero
-poly). For nonzero `f`, this is `(toPoly f).leadingCoeff`. -/
+poly). -/
 def leadL {R : Type*} [Zero R] [DecidableEq R] (f : List R) : R :=
   f.getD (lengthTrim f - 1) 0
 
-/-- Scale `f` by the inverse of its leading coefficient: over a field, a nonzero `f` becomes
-monic. -/
+/-- Scale `f` by the inverse of its leading coefficient: over a field a nonzero `f` becomes monic. -/
 def monicizeL {R : Type*} [Zero R] [DecidableEq R] [Inv R] [Mul R] (f : List R) : List R :=
   scaleL (leadL f)⁻¹ f
 
@@ -307,13 +195,7 @@ theorem dvd_toPoly_monicizeL {R : Type*} [Field R] [DecidableEq R] (f : List R) 
     toPoly f ∣ toPoly (monicizeL f) := by
   rw [toPoly_monicizeL]; exact Dvd.intro_left _ rfl
 
-/-! ## `lengthTrim` ↔ degree bridges
-
-To prove the Euclidean gcd terminates and is sound we need `lengthTrim` to track the polynomial
-degree: `degree (toPoly l) < lengthTrim l` (sharper than the `length` bound), the leading
-coefficient `(toPoly l).coeff (lengthTrim l - 1) = leadL l`, and that this leading coefficient is
-nonzero exactly when `toPoly l ≠ 0`. These convert the list-level recursion into a clean
-polynomial-degree decrease. -/
+/-! ## `lengthTrim` ↔ degree bridges -/
 
 /-- Entries past the trim length are the default `0`: `lengthTrim l ≤ i → l.getD i 0 = 0`. The
 pure-`Nat` core of the degree bound. -/
@@ -406,17 +288,11 @@ theorem lengthTrim_le_of_degree_lt {R : Type*} [Semiring R] [DecidableEq R] {l :
   refine lt_of_lt_of_le h ?_
   exact_mod_cast Nat.le_sub_one_of_lt hlt
 
-/-! ## The long-division step strictly drops the trim length
+/-! ## The long-division step strictly drops the trim length -/
 
-The single fact that makes division terminate and gives the remainder its degree bound: when
-`toPoly g` is monic of degree `dg` and `lengthTrim f = n > dg`, subtracting the matching leading
-term `c·X^(n-1-dg)·g` (with `c = f`'s leading entry) **cancels the top coefficient**, so
-`lengthTrim (subL f (mulL term g)) < n`. Proven by showing every coefficient of the difference at
-index `≥ n-1` vanishes (`f` and `term·g` agree there: both `0` above `n-1`, both `c` at `n-1`). -/
-
-/-- **★ Per-step trim decrease.** With `toPoly g` monic of `natDegree dg`, `n := lengthTrim f`,
-`n > dg`, `c := f.getD (n-1) 0`, `term := monomialL c (n-1-dg)`: the long-division residue
-`subL f (mulL term g)` has strictly smaller trim length than `f`. -/
+/-- Per-step trim decrease: with `toPoly g` monic of `natDegree dg`, `n := lengthTrim f`, `n > dg`,
+`c := f.getD (n-1) 0`, `term := monomialL c (n-1-dg)`, the residue `subL f (mulL term g)` has
+strictly smaller trim length than `f`. -/
 theorem lengthTrim_subL_mulL_lt {R : Type*} [CommRing R] [DecidableEq R]
     {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg)
     {f : List R} (hn : dg < lengthTrim f) :
@@ -462,9 +338,8 @@ theorem lengthTrim_subL_mulL_lt {R : Type*} [CommRing R] [DecidableEq R]
     rw [hpoly]; exact hdeglt
   omega
 
-/-- **Remainder degree bound.** With `toPoly g` monic of degree `dg` and `fuel ≥ lengthTrim f`,
-the fueled long-division remainder has `lengthTrim ≤ dg` (the loop reaches its `≤ dg` stop before
-running out of fuel, by the per-step decrease). -/
+/-- Remainder degree bound: with `toPoly g` monic of degree `dg` and `fuel ≥ lengthTrim f`, the
+fueled long-division remainder has `lengthTrim ≤ dg`. -/
 theorem lengthTrim_divmodByMonicFuel_snd_le {R : Type*} [CommRing R] [DecidableEq R]
     {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg) :
     ∀ (fuel : ℕ) (f : List R), lengthTrim f ≤ fuel →
@@ -524,14 +399,7 @@ theorem isMonicOfDegree_monicizeL {R : Type*} [Field R] [DecidableEq R] {g : Lis
   · -- monic: (leadL g)⁻¹ * leadingCoeff = 1
     exact monic_C_mul_of_mul_leadingCoeff_eq_one (by rw [hlc]; exact inv_mul_cancel₀ hlead)
 
-/-! ## Euclidean gcd over `𝔽_p`
-
-`gcdByMonic f g` is the polynomial gcd over the field, normalizing the divisor with `monicizeL`
-at each step so `modByMonicL` (monic divisor) applies. We recurse with explicit fuel; with
-`fuel = g.length + 1` the loop always reaches the `g = 0` base (each remainder strictly drops in
-`lengthTrim`). The carried invariant is **divisibility of both arguments** when fuel suffices:
-`toPoly d ∣ toPoly f` and `toPoly d ∣ toPoly g`. The first is exactly what makes a DDF peel exact
-(remainder `0`), the source of multiply-back soundness. -/
+/-! ## Euclidean gcd over `𝔽_p` -/
 
 /-- For a nonzero `g`, the monicization divides `g` (the scaling factor `C (leadL g)⁻¹` is a unit),
 so `g` and `monicizeL g` are associated. -/
@@ -554,11 +422,8 @@ def gcdByMonicFuel {R : Type*} [Field R] [DecidableEq R] : ℕ → List R → Li
       let r := modByMonicL f gm (lengthTrim g - 1)
       gcdByMonicFuel fuel gm r
 
-/-- **★ Two-sided gcd divisibility.** With sufficient fuel (`lengthTrim g ≤ fuel`), the fueled
-Euclidean gcd divides **both** inputs: `toPoly d ∣ toPoly f ∧ toPoly d ∣ toPoly g`, where
-`d = gcdByMonicFuel fuel f g`. By induction on `fuel`; the step uses the remainder degree bound
-(to keep enough fuel for the recursive call), the remainder identity `f = gm * q + r`, and that
-`gm = monicizeL g` is associated to `g`. The left half is the DDF multiply-back invariant. -/
+/-- Two-sided gcd divisibility: with `lengthTrim g ≤ fuel`, the fueled Euclidean gcd
+`d = gcdByMonicFuel fuel f g` divides both inputs, `toPoly d ∣ toPoly f ∧ toPoly d ∣ toPoly g`. -/
 theorem gcdByMonicFuel_dvd {R : Type*} [Field R] [DecidableEq R] :
     ∀ (fuel : ℕ) (f g : List R), lengthTrim g ≤ fuel →
       toPoly (gcdByMonicFuel fuel f g) ∣ toPoly f ∧
@@ -610,8 +475,7 @@ theorem gcdByMonicFuel_dvd {R : Type*} [Field R] [DecidableEq R] :
 def gcdByMonic {R : Type*} [Field R] [DecidableEq R] (f g : List R) : List R :=
   gcdByMonicFuel (g.length + 1) f g
 
-/-- **★ gcd divides its first argument** — the DDF multiply-back invariant.
-`toPoly (gcdByMonic f g) ∣ toPoly f`. -/
+/-- gcd divides its first argument: `toPoly (gcdByMonic f g) ∣ toPoly f`. -/
 theorem gcdByMonic_dvd_left {R : Type*} [Field R] [DecidableEq R] (f g : List R) :
     toPoly (gcdByMonic f g) ∣ toPoly f :=
   (gcdByMonicFuel_dvd (g.length + 1) f g (by have := lengthTrim_le_length g; omega)).1
@@ -621,16 +485,10 @@ theorem gcdByMonic_dvd_right {R : Type*} [Field R] [DecidableEq R] (f g : List R
     toPoly (gcdByMonic f g) ∣ toPoly g :=
   (gcdByMonicFuel_dvd (g.length + 1) f g (by have := lengthTrim_le_length g; omega)).2
 
-/-! ## Exact division when the divisor divides the dividend
+/-! ## Exact division when the divisor divides the dividend -/
 
-If a **monic** `g` (degree `dg`) divides `f`, the long division is exact: the remainder is the
-zero polynomial and `toPoly f = toPoly g * toPoly q`. Proof: the carried remainder `r = f mod g`
-satisfies `g ∣ r` (since `g ∣ f` and `g ∣ g*q`) but `degree r < dg = degree g`, so `r = 0` over
-the field (a domain). This is what makes each DDF peel exact, the engine of multiply-back. -/
-
-/-- **★ Exact division.** With `toPoly g` monic of degree `dg` (so `g ≠ 0`) dividing `toPoly f`,
-the division is exact: `toPoly f = toPoly g * toPoly (divmodByMonic f g dg).1` (the remainder
-vanishes). -/
+/-- Exact division: with `toPoly g` monic of degree `dg` dividing `toPoly f`, the remainder
+vanishes and `toPoly f = toPoly g * toPoly (divmodByMonic f g dg).1`. -/
 theorem toPoly_eq_mul_quotient_of_dvd {R : Type*} [Field R] [DecidableEq R]
     {g : List R} {dg : ℕ} (hg : IsMonicOfDegree (toPoly g) dg)
     {f : List R} (hdvd : toPoly g ∣ toPoly f) :
@@ -658,16 +516,7 @@ theorem toPoly_eq_mul_quotient_of_dvd {R : Type*} [Field R] [DecidableEq R]
   -- conclude
   rw [hid, hr0, add_zero]
 
-/-! ## The Frobenius power `X^(p^d) mod f`
-
-Modular multiplication `mulModL f df a b := (a * b) mod f` and binary exponentiation `powModL`
-let us compute `X^(p^d) mod f` (`xPowModF`) by repeated squaring of `[0, 1]` (the list of `X`),
-each product reduced mod the **monic** `f`. The reduction `mod f` keeps the intermediate degrees
-bounded, so the values stay small — `native_decide`-able for small `p, d` (keep `p ≤ 7`, `d ≤ 4`:
-`p^d` is the exponent and the squaring count is `log₂(p^d)`). The `mod toPoly f` reading
-(`toPoly (mulModL f df a b) ≡ toPoly a * toPoly b`) follows from the division identity; the full
-`X^(p^d)`-correctness is **not** needed for DDF multiply-back (gcd-divides-first-arg is
-unconditional), only for the per-block degree structure. -/
+/-! ## The Frobenius power `X^(p^d) mod f` -/
 
 /-- Modular product over a field: `(a * b) mod f`, with `f` monic of degree `df`. -/
 def mulModL {R : Type*} [Field R] [DecidableEq R] (f : List R) (df : ℕ) (a b : List R) : List R :=
@@ -684,21 +533,12 @@ def powModL {R : Type*} [Field R] [DecidableEq R]
       let half := powModL f df fuel (mulModL f df base base) (e / 2)
       if e % 2 = 1 then mulModL f df base half else half
 
-/-- The Frobenius power `X^(p^d) mod f` over `𝔽_p`: repeated squaring of `[0, 1]` (the polynomial
-`X`) to the exponent `p ^ d`, reduced mod the monic `f` of degree `df`. Computable; the basis of
-the distinct-degree split `gcd(f, X^(p^d) − X)`. -/
+/-- The Frobenius power `X^(p^d) mod f` over `𝔽_p`: repeated squaring of `[0, 1]` to the exponent
+`p ^ d`, reduced mod the monic `f` of degree `df`. -/
 def xPowModF (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (df : ℕ) : List (ZMod p) :=
   powModL f df (p ^ d + 1) [0, 1] (p ^ d)
 
-/-! ## Distinct-degree factorization (DDF)
-
-For `d = 1, 2, …` the degree-`d` block of (squarefree) `f` is `gcd(f, X^(p^d) − X)` — the product
-of all degree-`d` irreducible factors. `ddfAux` peels this block off, monicizes it (`gdm`), divides
-`f` by it (`divmodByMonic`), and recurses on the cofactor with `d + 1`, accumulating `(d, gdm)`. To
-keep the **multiply-back** invariant exact it only peels when the block has positive degree (so the
-monic block has degree `≥ 1` and the division by it is exact, `gdm ∣ f`); otherwise the remaining
-`f` is emitted as a single trailing block. The returned `List (ℕ × List (ZMod p))` is the list of
-blocks (degree tag + coefficient list). -/
+/-! ## Distinct-degree factorization (DDF) -/
 
 /-- The product of DDF blocks (`mulL`-fold of the coefficient lists, from `[1]`). -/
 def ddfProduct {R : Type*} [Zero R] [One R] [Add R] [Mul R]
@@ -714,9 +554,9 @@ theorem toPoly_ddfProduct {R : Type*} [CommSemiring R] (bs : List (ℕ × List R
     rw [ddfProduct, List.foldr_cons, toPoly_mulL, List.map_cons, List.prod_cons,
       ← ddfProduct, ih]
 
-/-- The DDF recursion over `𝔽_p`: at degree `d` with current poly `f`, peel the positive-degree
-block `gcd(f, X^(p^d) − X)`, monicize, divide it out, recurse with `d + 1`; emit the residual as a
-trailing block when no positive-degree block remains. Fueled by recursion depth. -/
+/-- The DDF recursion over `𝔽_p`: at degree `d`, peel the positive-degree block
+`gcd(f, X^(p^d) − X)`, monicize, divide it out, recurse with `d + 1`; emit the residual as a
+trailing block otherwise. -/
 def ddfAux (p : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List (ℕ × List (ZMod p))
   | 0, _, f => [(0, f)]
   | fuel + 1, d, f =>
@@ -735,11 +575,8 @@ def ddfAux (p : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List (�
 def ddf (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) : List (ℕ × List (ZMod p)) :=
   ddfAux p (f.length + 1) 1 f
 
-/-- **★ DDF multiply-back (recursion).** The blocks of `ddfAux p fuel d f` multiply back to `f`:
-`toPoly (ddfProduct (ddfAux p fuel d f)) = toPoly f`. By induction on `fuel`; the peel step uses
-that the monicized block `gdm` is monic of degree `≥ 1` dividing `f` (so the division is exact,
-`f = gdm * cof`) and the IH `product(rest) = cof`. The key structural soundness of DDF; the trailing
-emit and the no-peel branch are the trivial `product = f` cases. -/
+/-- DDF multiply-back (recursion): the blocks of `ddfAux p fuel d f` multiply back to `f`,
+`toPoly (ddfProduct (ddfAux p fuel d f)) = toPoly f`. -/
 theorem ddfAux_prod (p : ℕ) [Fact p.Prime] :
     ∀ (fuel d : ℕ) (f : List (ZMod p)),
       toPoly (ddfProduct (ddfAux p fuel d f)) = toPoly f := by
@@ -780,19 +617,13 @@ theorem ddfAux_prod (p : ℕ) [Fact p.Prime] :
         toPoly_nil]
       simp
 
-/-- **★ DDF multiply-back.** `toPoly (ddfProduct (ddf p f)) = toPoly f` (mod `p`): the
-distinct-degree blocks multiply back to the input. The key structural invariant of DDF, the
-foundation of factorization correctness. -/
+/-- DDF multiply-back: `toPoly (ddfProduct (ddf p f)) = toPoly f` — the distinct-degree blocks
+multiply back to the input. -/
 theorem ddf_prod (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) :
     toPoly (ddfProduct (ddf p f)) = toPoly f :=
   ddfAux_prod p (f.length + 1) 1 f
 
-/-! ## `native_decide` validation of the multiply-back
-
-The concrete computational content behind `ddf_prod`: the **list-level** product of the DDF blocks
-equals the input list (`toPoly` is `noncomputable`, so we validate the engine's `mulL`-fold output
-directly, which `toPoly` then sends to the polynomial identity). Keep `p ≤ 7`, `d` small — `X^(p^d)`
-grows fast. The `Fact (Nat.Prime _)` instances come from `ComputablePolynomialIrreducibility`. -/
+/-! ## `native_decide` validation of the multiply-back -/
 
 /-- DDF blocks of `x² − 1` over `𝔽₃` multiply back to `x² − 1` (list-level, `native_decide`). -/
 example : ddfProduct (ddf 3 ([2, 0, 1] : List (ZMod 3))) = ([2, 0, 1] : List (ZMod 3)) := by
@@ -812,18 +643,7 @@ example : ddfProduct (ddf 3 ([1, 0, 1] : List (ZMod 3))) = ([1, 0, 1] : List (ZM
 example : xPowModF 3 1 ([2, 0, 1] : List (ZMod 3)) 2 = ([0, 1, 0, 0] : List (ZMod 3)) := by
   native_decide
 
-/-! ## Equal-degree factorization (EDF): the Cantor–Zassenhaus split polynomial
-
-A DDF block at degree `d` is a product of `k` **distinct** degree-`d` irreducibles; EDF splits it
-into the `k` factors. For `p` odd the Cantor–Zassenhaus split uses the polynomial
-`(X + a)^((p^d − 1)/2) − 1 mod f` for a shift `a ∈ 𝔽_p`. Over the residue field at each irreducible
-factor, `(X + a)^((p^d − 1)/2)` is `±1` (Euler's criterion: it is a square root of `1`), so the gcd
-of `f` with this polynomial selects exactly the factors on which the value is `+1` — a proper
-factor for a "good" shift `a`. Lean has no randomness, so `a` is swept `0, 1, 2, …` deterministically.
-
-`edfSplitPoly f d a` computes `(X + a)^((p^d − 1)/2) − 1 mod f` via the existing modular
-exponentiation `powModL` (base `[a, 1]` = `X + a`, exponent `(p^d − 1)/2`, reduced mod the monic
-`f`). Keep `p, d` small — the exponent `(p^d − 1)/2` drives the squaring count. -/
+/-! ## Equal-degree factorization (EDF): the Cantor–Zassenhaus split polynomial -/
 
 /-- The Cantor–Zassenhaus split polynomial `(X + a)^((p^d − 1)/2) − 1 mod f` over `𝔽_p` (`p` odd),
 for a shift `a : ZMod p`, with `f` monic of degree `df`. Computed by modular exponentiation of the
@@ -832,27 +652,16 @@ def edfSplitPoly (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (df : ℕ) (a : 
     List (ZMod p) :=
   subL (powModL f df ((p ^ d - 1) / 2 + 1) [a, 1] ((p ^ d - 1) / 2)) [1]
 
-/-- One Cantor–Zassenhaus split attempt: `gcd(f, (X + a)^((p^d − 1)/2) − 1)`, a (possibly trivial)
-factor of `f` for the shift `a`. Always divides `f` (`gcdByMonic_dvd_left`), so peeling it is an
-exact division — the source of EDF multiply-back soundness; whether it is a *proper* factor depends
-on `a` being a "good" shift (the sweep below tries successive `a`). -/
+/-- One Cantor–Zassenhaus split attempt `gcd(f, (X + a)^((p^d − 1)/2) − 1)`, a possibly-trivial
+factor of `f` for the shift `a` (always divides `f`). -/
 def edfSplitOne (p d : ℕ) [Fact p.Prime] (f : List (ZMod p)) (a : ZMod p) : List (ZMod p) :=
   gcdByMonic f (edfSplitPoly p d f (lengthTrim f - 1) a)
 
-/-! ## The deterministic shift sweep
+/-! ## The deterministic shift sweep -/
 
-`edfBlock f d fuel a` splits a DDF degree-`d` block `f` into its degree-`d` irreducible factors by
-sweeping the shift `a = 0, 1, 2, …` deterministically (Lean has no randomness). At each step it
-computes `g = edfSplitOne f d a`; if `g` is a **proper** factor (`1 < lengthTrim g < lengthTrim f`)
-it monicizes `g`, divides it out exactly (`cof = f / gm`), and recurses on **both** `gm` and `cof`
-with the next shift; otherwise it advances `a` and retries. The recursion stops once `f` has degree
-`≤ d` (a single degree-`d` factor, `lengthTrim f ≤ d + 1`) or fuel runs out. Returns the list of
-factor coefficient-lists. Fuel decreases by one on every recursive call (so this is a structural
-recursion); the multiply-back invariant holds at each node regardless of fuel (Task 5). -/
-
-/-- The deterministic Cantor–Zassenhaus shift sweep for a DDF degree-`d` block. Splits `f` until
+/-- The deterministic Cantor–Zassenhaus shift sweep for a DDF degree-`d` block: split `f` until
 every factor has degree `≤ d`, sweeping the shift `a` and recursing on both halves of each proper
-split. Fueled by the recursion budget (decreases by one per call). -/
+split. -/
 def edfBlock (p d : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List (List (ZMod p))
   | 0, _, f => [f]
   | fuel + 1, a, f =>
@@ -866,13 +675,7 @@ def edfBlock (p d : ℕ) [Fact p.Prime] : ℕ → ℕ → List (ZMod p) → List
       else
         edfBlock p d fuel (a + 1) f
 
-/-! ## Full equal-degree factorization
-
-`edf p f` runs the deterministic shift sweep `edfBlock` on **every** DDF block (each `(d, gd)` a
-product of degree-`d` irreducibles) and flattens to the full list of factor coefficient-lists. The
-per-block sweep starts at shift `a = 0` with a fuel budget of the block length (more than enough:
-each proper split strictly drops the degree). `edfProduct` folds the factor lists back with `mulL`
-(the multiply-back target). -/
+/-! ## Full equal-degree factorization -/
 
 /-- The product of EDF factors (`mulL`-fold of the coefficient lists, from `[1]`): the multiply-back
 target for `edf` soundness. -/
@@ -893,12 +696,7 @@ list of factor coefficient-lists. -/
 def edf (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) : List (List (ZMod p)) :=
   (ddf p f).flatMap (fun b => edfBlock p b.1 (b.2.length + 1) 0 b.2)
 
-/-! ## ★ EDF multiply-back soundness
-
-The whole point: the EDF factors multiply back to the input. The engine is the same as DDF — each
-shift split peels an **exact** divisor (`gcdByMonic_dvd_left` ⇒ monic divisor ⇒ zero remainder,
-`toPoly_eq_mul_quotient_of_dvd`), so at every node of `edfBlock` the factor product equals the input,
-and `edf` then telescopes over the DDF blocks (whose own product is `f` by `ddf_prod`). Axiom-clean. -/
+/-! ## EDF multiply-back soundness -/
 
 /-- `toPoly (edfProduct (xs ++ ys)) = toPoly (edfProduct xs) * toPoly (edfProduct ys)`: the factor
 product is multiplicative over list concatenation (the two halves of a proper split). -/
@@ -907,11 +705,8 @@ theorem toPoly_edfProduct_append {R : Type*} [CommSemiring R] (xs ys : List (Lis
       toPoly (edfProduct xs) * toPoly (edfProduct ys) := by
   rw [toPoly_edfProduct, toPoly_edfProduct, toPoly_edfProduct, List.map_append, List.prod_append]
 
-/-- **★ EDF per-block multiply-back.** The factors `edfBlock p d fuel a f` produces multiply back to
-`f`: `toPoly (edfProduct (edfBlock p d fuel a f)) = toPoly f`. By induction on `fuel`; the proper-
-split step uses that `gm = monicizeL (edfSplitOne …)` is monic dividing `f` (exact division,
-`f = gm * cof`) plus the two IHs on `gm` and `cof`; the stop and no-split branches are the trivial
-`product = f` cases. Independent of whether the shift sweep actually separates all factors. -/
+/-- EDF per-block multiply-back: the factors `edfBlock p d fuel a f` produces multiply back to `f`,
+`toPoly (edfProduct (edfBlock p d fuel a f)) = toPoly f`. -/
 theorem edfBlock_prod (p d : ℕ) [Fact p.Prime] :
     ∀ (fuel a : ℕ) (f : List (ZMod p)),
       toPoly (edfProduct (edfBlock p d fuel a f)) = toPoly f := by
@@ -960,11 +755,8 @@ theorem toPoly_edfProduct_flatMap {R : Type*} [CommSemiring R] {α : Type*}
   | cons b l ih =>
     rw [List.flatMap_cons, toPoly_edfProduct_append, ih, List.map_cons, List.prod_cons]
 
-/-- **★ EDF multiply-back.** `toPoly (edfProduct (edf p f)) = toPoly f` (mod `p`): the full
-equal-degree factorization multiplies back to the input. The key structural invariant of EDF — each
-shift split is an exact-division peel (`edfBlock_prod`), and `edf` telescopes over the DDF blocks
-whose product is already `f` (`ddf_prod`). Axiom-clean (`[propext, Classical.choice, Quot.sound]`):
-no `native`, no `sorry`. -/
+/-- EDF multiply-back: `toPoly (edfProduct (edf p f)) = toPoly f` — the full equal-degree
+factorization multiplies back to the input. -/
 theorem edf_prod (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) :
     toPoly (edfProduct (edf p f)) = toPoly f := by
   rw [edf, toPoly_edfProduct_flatMap]
@@ -977,14 +769,7 @@ theorem edf_prod (p : ℕ) [Fact p.Prime] (f : List (ZMod p)) :
   -- ∏ toPoly b.2 over DDF blocks = toPoly (ddfProduct (ddf p f)) = toPoly f
   rw [← toPoly_ddfProduct, ddf_prod]
 
-/-! ## `native_decide` validation of the equal-degree split
-
-The concrete computational content behind `edf_prod`: a degree-`d` DDF **block** with `k ≥ 2`
-same-degree factors is split into exactly those `k` factors, and the EDF factor product (`edfProduct`,
-the `mulL`-fold) re-multiplies to the input. The reconstructed product list carries a few **trailing
-zeros** (intrinsic to `monicizeL`/`divmodByMonic`, which return un-trimmed lists); these are benign —
-`toPoly` ignores trailing zeros, which is exactly what `edf_prod` proves at the polynomial level.
-Keep `p, d` small: the half-exponent `(p^d − 1)/2` drives the squaring count. -/
+/-! ## `native_decide` validation of the equal-degree split -/
 
 /-- The `d = 1` DDF block `(x − 1)(x − 2) = x² + 2x + 2` over `𝔽₅` splits into its two linear
 factors `x − 1 = x + 4` (`[4, 1]`) and `x − 2 = x + 3` (`[3, 1]`) — a `k = 2` same-degree split

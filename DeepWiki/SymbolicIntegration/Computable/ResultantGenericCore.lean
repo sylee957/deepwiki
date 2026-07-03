@@ -2,32 +2,10 @@ import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
-/-! # Generic resultant/interpolation correctness over `CFieldSpec` (engine-only core)
+/-! # Generic resultant/interpolation correctness over `CFieldSpec`
 
-The §2 ℚ-concrete templates `Compute.cresultant_eq` (`ComputeCorrectness`) and
-`Compute.toPoly_cinterpolate_eval` (`RtResultantCorrectness`) certify the *computable* Euclidean-PRS
-resultant `cresultant` and Lagrange interpolation `cinterpolate` against Mathlib's `Polynomial.resultant`
-/ the two characterizing properties — but only over the **concrete** carrier `CPoly = List ℚ`. The
-generic tower engine `cresultantG`/`cinterpolateG` (`ComputableGenericBezout`, over `[CField α]`) needs
-the **same** correctness over any `[CFieldSpec α]`.
-
-This file is the **engine-only core** of that correctness — everything that depends only on the generic
-polynomial engine (`ComputableGenericBezout`/`ComputableFieldGcd`), so it can be imported by the
-fuel-free `cresultantWf` (`ComputableFuelFreeResultant`) without pulling the §5.6 residue / `cgcdFF` layer.
-The residue-resultant realizations and the `cIntegrateGFull` capstones live downstream in
-`ComputableResultantGeneric`, which imports this core.
-
-* **`toPolyG_cresultantG`** (the reusable foundation): `toPolyG (cresultantG fuel p q) =
-  Polynomial.resultant (toPolyG p) (toPolyG q) (cdegG p) (cdegG q)` over `(CFieldSpec.K α)[X]`.
-* **`eval_toPolyG_cinterpolateG`** / **`degree_toPolyG_cinterpolateG_lt`** (generic interpolation
-  correctness): node evaluation `(toPolyG (cinterpolateG pts)).eval (toK zk) = toK yk` and the degree
-  bound `degree (toPolyG (cinterpolateG pts)) < |pts|`.
-* **`rtResultantSeed`** (the seed-generic abstract Rothstein–Trager resultant `R(z) = res_t(D, A − z·Dd)`)
-  with its specialization `rtResultantSeed_eval` and degree bound `natDegree_rtResultantSeed_le`.
-
-The deliverable is purely propositional (axioms `[propext, Classical.choice, Quot.sound]`, no
-`native_decide`), reusable wherever the generic engine runs (§5.6 residues, §10 parallel Risch,
-the fuel-free resultant `cresultantWf`). -/
+Correctness of the generic Lagrange interpolation `cinterpolateG` (node evaluation and degree bound)
+and the seed-generic Rothstein–Trager resultant `rtResultantSeed`, read through `CFieldSpec.toK`. -/
 
 open Polynomial
 
@@ -39,16 +17,15 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-! ### Generic quotient-degree and constant-power helpers -/
 
-/-- **Generic constant power realizes `K`-power**: `toK (cfpow c n) = (toK c) ^ n`. -/
+/-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/
 @[denote] theorem toK_cfpow (c : α) (n : ℕ) : CFieldSpec.toK (cfpow c n) = (CFieldSpec.toK c) ^ n := by
   induction n with
   | zero => simp [cfpow, CFieldSpec.toK_one]
   | succ n ih => rw [cfpow, CFieldSpec.toK_mul, ih, pow_succ']
 
-/-! ### `cresultantG` invariances (mirroring `cresultant_cnorm`/`cdeg_cnorm`/`cmod_cnorm_both`) -/
+/-! ### `cresultantG` invariances -/
 
-/-- **`clagNumG` realizes `∏ (X − C (toK zⱼ))`**: the Horner bridge sends the generic basis numerator to
-the abstract product of linear factors. -/
+/-- `toPolyG (clagNumG zs) = ∏ (X − C (toK zⱼ))`: the basis numerator as a product of linear factors. -/
 theorem toPolyG_clagNumG (zs : List α) :
     toPolyG (clagNumG zs) = (zs.map (fun z => Polynomial.X - Polynomial.C (CFieldSpec.toK z))).prod := by
   induction zs with
@@ -61,8 +38,7 @@ theorem toPolyG_clagNumG (zs : List α) :
         map_one]; ring
     rw [hfac]
 
-/-- **`toPolyG` of the `cinterpolateG` accumulator fold** is the running sum (generic analogue of
-`toPoly_foldl_cadd`). -/
+/-- `toPolyG` of the `cinterpolateG` accumulator fold is the running sum of term images. -/
 theorem toPolyG_foldl_caddG (f : α × α → CPolyG α) (pts : List (α × α)) (init : CPolyG α) :
     toPolyG (pts.foldl (fun acc p => caddG acc (f p)) init)
       = toPolyG init + (pts.map (fun p => toPolyG (f p))).sum := by
@@ -93,8 +69,7 @@ theorem prodG_sub_ne_zero {zk : α} {others : List α}
   obtain ⟨zj, hzj, hzeq⟩ := hy
   exact hne zj hzj (sub_eq_zero.mp hzeq).symm
 
-/-- **The generic Lagrange term as a polynomial**: `toPolyG` of a single interpolation term
-`cscaleG (yk/denom) (clagNumG others)`. -/
+/-- `toPolyG` of a single Lagrange interpolation term `cscaleG (yk/denom) (clagNumG others)`. -/
 theorem toPolyG_termG (zk yk : α) (others : List α) :
     toPolyG (cscaleG (CField.div yk
         (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one))
@@ -105,7 +80,7 @@ theorem toPolyG_termG (zk yk : α) (others : List α) :
   rw [toPolyG_cscaleG, toPolyG_clagNumG, CFieldSpec.toK_div, toK_foldl_csub_mul, CFieldSpec.toK_one,
     one_mul]
 
-/-- **Eval of a generic Lagrange term at a value** `x`. -/
+/-- Evaluation of a generic Lagrange term at a value `x`. -/
 theorem eval_toPolyG_termG (zk yk : α) (others : List α) (x : CFieldSpec.K α) :
     (toPolyG (cscaleG (CField.div yk
         (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one))
@@ -120,8 +95,7 @@ theorem eval_toPolyG_termG (zk yk : α) (others : List α) (x : CFieldSpec.K α)
   intro zj _
   simp [Function.comp, eval_sub, eval_X, eval_C]
 
-/-- **Eval of a generic Lagrange term at its own node** `toK zk`: evaluates to `toK yk` (the denominator
-matches the numerator product, nonzero since each `toK zⱼ ≠ toK zk`). -/
+/-- A generic Lagrange term evaluated at its own node `toK zk` gives `toK yk`. -/
 theorem eval_toPolyG_termG_at_self (zk yk : α) (others : List α)
     (hne : ∀ zj ∈ others, CFieldSpec.toK zj ≠ CFieldSpec.toK zk) :
     (toPolyG (cscaleG (CField.div yk
@@ -130,8 +104,7 @@ theorem eval_toPolyG_termG_at_self (zk yk : α) (others : List α)
   rw [eval_toPolyG_termG, div_mul_cancel₀]
   exact prodG_sub_ne_zero hne
 
-/-- **Eval of a generic Lagrange term at another node** `toK x` with `x ∈ others` is `0`: the numerator
-product contains the vanishing factor `(toK x − toK x)`. -/
+/-- A generic Lagrange term evaluated at another node `toK x` with `x ∈ others` is `0`. -/
 theorem eval_toPolyG_termG_at_other (zk yk x : α) (others : List α) (hx : x ∈ others) :
     (toPolyG (cscaleG (CField.div yk
         (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one))
@@ -148,7 +121,7 @@ private def cinterpTermG (zs : List α) (p : α × α) : CPolyG α :=
       (fun acc zj => CField.mul acc (CField.sub p.1 zj)) CField.one))
     (clagNumG (zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)))
 
-/-- **`cinterpolateG` as a normalized sum of terms** (under `toPolyG`). -/
+/-- `toPolyG (cinterpolateG pts)` is the normalized sum of interpolation term images. -/
 theorem toPolyG_cinterpolateG (pts : List (α × α)) :
     toPolyG (cinterpolateG pts)
       = (pts.map (fun p => toPolyG (cinterpTermG (pts.map Prod.fst) p))).sum := by
@@ -189,10 +162,8 @@ theorem sum_ite_eq_of_nodup_toK_fst (pts : List (α × α))
       exact ih hpsnodup hpps
 
 open scoped Classical in
-/-- **`cinterpolateG` evaluation correctness**: when the abscissa images `pts.map (toK ∘ fst)` are
-**distinct in `K`**, the interpolant evaluates to `toK yk` at each node `toK zk` —
-`R(toK zk) = toK yk` for `(zk, yk) ∈ pts`. The generic analogue of `toPoly_cinterpolate_eval`: the
-on-node term contributes `toK yk`, every off-node term vanishes. -/
+/-- `cinterpolateG` evaluation correctness: with abscissa images `pts.map (toK ∘ fst)` distinct in `K`,
+the interpolant evaluates to `toK yk` at each node `toK zk` for `(zk, yk) ∈ pts`. -/
 theorem eval_toPolyG_cinterpolateG (pts : List (α × α))
     (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup)
     {zk yk : α} (hmem : (zk, yk) ∈ pts) :
@@ -230,8 +201,7 @@ theorem eval_toPolyG_cinterpolateG (pts : List (α × α))
   rw [List.map_congr_left key]
   exact sum_ite_eq_of_nodup_toK_fst pts hnodup hmem
 
-/-- **Per-term degree bound** (generic): each `cinterpolateG` term has `natDegree ≤ |others|` (the
-numerator is a product of `|others|` linear factors). -/
+/-- Each `cinterpolateG` term has `natDegree ≤ |others|` (a product of `|others|` linear factors). -/
 theorem natDegree_toPolyG_cinterpTermG_le (zs : List α) (p : α × α) :
     (toPolyG (cinterpTermG zs p)).natDegree
       ≤ (zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)).length := by
@@ -248,9 +218,7 @@ theorem natDegree_toPolyG_cinterpTermG_le (zs : List α) (p : α × α) :
     exact natDegree_X_sub_C_le _
   · simp
 
-/-- **`cinterpolateG` degree bound**: the interpolant has degree `< |pts|`. Each term has degree
-`≤ |others| ≤ |pts| − 1` (the abscissa `zk`'s image is filtered out). The generic analogue of
-`degree_toPoly_cinterpolate_lt`; the degree side of interpolation uniqueness. -/
+/-- `cinterpolateG` degree bound: the interpolant has degree `< |pts|`. -/
 theorem degree_toPolyG_cinterpolateG_lt (pts : List (α × α)) (hne : pts ≠ []) :
     (toPolyG (cinterpolateG pts)).degree < (pts.length : WithBot ℕ) := by
   rw [toPolyG_cinterpolateG]
@@ -284,31 +252,18 @@ example (pts : List (α × α)) (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)
 
 end CPolyG
 
-/-! ### The seed-generic abstract Rothstein–Trager resultant `R(z) = res_t(d, a − z·Dd)`
-
-The §5.6 residue construction uses the **monomial seed** `Dd = Δd` rather than `derivative d`, so the
-abstract bivariate resultant `R(z) = res_t(d, a − z·Dd) ∈ K[z]` needs to be seed-generic (the
-`RationalIntegrationAlgorithms.rtResultant` fixes `Dd = derivative d`). `rtResultantSeed A D Dd` lifts
-`D, A, Dd` to `(K[z])[t]` (constant `z = C z`) and eliminates `t`; `rtResultantSeed_eval` recovers the
-parameter resultant `res_t(d, a − c·Dd)` at `z = c` (same formal `t`-degrees). The polynomial structure
-the §5.6 residue resultant `cResidueResultantTower` realizes. -/
+/-! ### The seed-generic abstract Rothstein–Trager resultant `R(z) = res_t(d, a − z·Dd)` -/
 
 variable {K : Type*} [Field K]
 
-/-- **Seed-generic abstract Rothstein–Trager resultant** `R(z) = res_t(D, A − z·Dd) ∈ K[z]`: `D, A, Dd`
-lifted to `(K[z])[t]` (coefficients embedded by `C : K → K[z]`, the parameter `z` becoming the constant
-`C X`), the resultant eliminating `t`. Formal `t`-degrees `(deg D, deg D)` — the §5.6 monomial seed `Δd`
-has the *same* `t`-degree as `D` (`mapCoeffs d` preserves degree), unlike the d/dx seed `derivative D`
-(degree `deg D − 1`), so the second formal degree is `deg D` here. The seed-generic analogue of
-`rtResultant`. -/
+/-- Seed-generic Rothstein–Trager resultant `R(z) = res_t(D, A − z·Dd) ∈ K[z]`: `D, A, Dd` lifted to
+`(K[z])[t]` and eliminating `t`, with formal `t`-degrees `(deg D, deg D)`. -/
 noncomputable def rtResultantSeed (A D Dd : K[X]) : K[X] :=
   Polynomial.resultant (D.map (C : K →+* K[X]))
     (A.map (C : K →+* K[X]) - C Polynomial.X * Dd.map (C : K →+* K[X]))
     D.natDegree D.natDegree
 
-/-- **Specialization of `rtResultantSeed`**: evaluating `R(z)` at `z = c` recovers the parameter
-resultant `res_t(D, A − c·Dd)` (same formal `t`-degrees `(deg D, deg D)`). The seed-generic analogue
-of `rtResultant_eval`. -/
+/-- `(rtResultantSeed A D Dd).eval c = res_t(D, A − c·Dd)`: specialization at `z = c`. -/
 theorem rtResultantSeed_eval (A D Dd : K[X]) (c : K) :
     (rtResultantSeed A D Dd).eval c
       = Polynomial.resultant D (A - C c * Dd) D.natDegree D.natDegree := by
@@ -330,9 +285,8 @@ example (A D Dd : K[X]) (c : K) :
   rtResultantSeed_eval A D Dd c
 
 open Polynomial in
-/-- **`natDegree` of a `K[X]`-matrix determinant** is bounded by the sum of per-column degree bounds:
-if every entry of column `j` has `natDegree ≤ b j`, then `natDegree (det M) ≤ ∑ j, b j`. The `K`-generic
-analogue of `natDegree_det_le_sum_col`. -/
+/-- If every entry of column `j` of `M : Matrix ι ι K[X]` has `natDegree ≤ b j`, then
+`natDegree (det M) ≤ ∑ j, b j`. -/
 theorem natDegree_det_le_sum_col {ι : Type*} [DecidableEq ι] [Fintype ι]
     (M : Matrix ι ι K[X]) (b : ι → ℕ) (hb : ∀ i j, (M i j).natDegree ≤ b j) :
     (M.det).natDegree ≤ ∑ j, b j := by
@@ -347,8 +301,7 @@ theorem natDegree_det_le_sum_col {ι : Type*} [DecidableEq ι] [Fintype ι]
   exact Finset.sum_le_sum (fun i _ => hb (σ i) i)
 
 open Polynomial in
-/-- **The `t`-coefficients of `rtResultantSeed`'s second polynomial have `z`-degree `≤ 1`**: each
-`t`-coefficient of `A.map C − C z · Dd.map C` is `C (A.coeff k) − z · C (Dd.coeff k)`, degree `≤ 1`. -/
+/-- Each `t`-coefficient of `A.map C − C z · Dd.map C` has `z`-degree `≤ 1`. -/
 theorem natDegree_coeff_rtResultantSeed_g_le (A Dd : K[X]) (k : ℕ) :
     ((A.map (C : K →+* K[X]) - C Polynomial.X * Dd.map (C : K →+* K[X])).coeff k).natDegree ≤ 1 := by
   rw [Polynomial.coeff_sub, Polynomial.coeff_map, Polynomial.coeff_C_mul, Polynomial.coeff_map]
@@ -359,11 +312,7 @@ theorem natDegree_coeff_rtResultantSeed_g_le (A Dd : K[X]) (k : ℕ) :
     rw [Polynomial.natDegree_X, Polynomial.natDegree_C]
 
 open Polynomial in
-/-- **`rtResultantSeed` has degree `≤ deg D` in `z`**: the Sylvester matrix of `D.map C` (constant
-`z`-entries) and `A.map C − C z · Dd.map C` (degree-`≤ 1` `z`-entries) has only the `deg D` columns from
-the second polynomial carrying a `z`, so its determinant has `z`-degree `≤ deg D`. The degree side of the
-interpolation uniqueness (`deg D + 1` nodes determine `R(z)`). The seed-generic analogue of
-`natDegree_rtResultant_le`. -/
+/-- `(rtResultantSeed A D Dd).natDegree ≤ D.natDegree`: degree in `z` bounded by `deg D`. -/
 theorem natDegree_rtResultantSeed_le (A D Dd : K[X]) :
     (rtResultantSeed A D Dd).natDegree ≤ D.natDegree := by
   rw [rtResultantSeed, resultant]

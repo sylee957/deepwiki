@@ -2,11 +2,10 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtension
 
 /-! # The radical derivation invariant: `radDeriv` is a genuine derivation
 
-The diagonal radical derivation `radDeriv` is additive and Leibniz, as general theorems in the
-genuine field `K = CFieldSpec.K α` through the Horner bridge `toPolyG : RadElem α → K[X]`: the
-keystone `toPolyG_radDeriv` identifies it with Mathlib's `Differential.implicitDeriv` for `y' = ℓ·y`
-(`ℓ = f'/(nf)`), additivity is exact in `K[X]`, and the product rule holds modulo the defining ideal
-`radIdeal n f = (Xⁿ − C(toK f))` whenever `n·toK f ≠ 0`. -/
+`radDeriv` is additive and Leibniz over `K = CFieldSpec.K α` through the Horner bridge
+`toPolyG : RadElem α → K[X]`: `toPolyG_radDeriv` identifies it with `Differential.implicitDeriv` for
+`y' = ℓ·y` (`ℓ = f'/(nf)`); additivity is exact, and Leibniz holds modulo `radIdeal n f = (Xⁿ − C(toK f))`
+when `n·toK f ≠ 0`. -/
 
 open Polynomial
 
@@ -18,10 +17,7 @@ namespace RadElem
 
 variable {α : Type*} [CField α]
 
-/-! ### `toK (cnatCastG k) = (k : K)` — the natural-cast bridge
-
-`cnatCastG k = 1 + 1 + … + 1` (`k` times) over `[CField α]` reads through `toK` as the genuine
-`(k : K)`, identifying `radDeriv`'s `cnatCastG i` index-multiplier with `(i : K)`. -/
+/-! ### The natural-cast bridge `toK (cnatCastG k) = (k : K)` -/
 
 variable [CFieldSpec α]
 
@@ -37,12 +33,8 @@ end RadElem
 
 /-! ### The keystone: `radDeriv` realizes `implicitDeriv (C (toK ℓ) · X)`
 
-`radDeriv n f p = (zipIdx p).map (fun (a,i) ↦ D(aᵢ) + aᵢ·(i·ℓ))` with `ℓ = logDerRadicand n f`. Read
-through `toPolyG`, this is the closed `K[X]` form `mapCoeffs(toPolyG p) + C(toK ℓ)·(X·derivative(toPolyG
-p))`, which is exactly `Differential.implicitDeriv (C(toK ℓ)·X) (toPolyG p)` — the derivation extending
-the base coefficient derivation by `X' = (toK ℓ)·X` (i.e. `y' = ℓ·y`). The proof is an induction over the
-coefficient list with the `zipIdx` start-index `k` generalized (the closed form carries an extra `(k:K[X])
-· toPolyG p` term, which vanishes at the `k = 0` entry point). -/
+Read through `toPolyG`, `radDeriv n f p` is `Differential.implicitDeriv (C(toK ℓ)·X) (toPolyG p)`, the
+derivation extending the base coefficient derivation by `y' = ℓ·y`. -/
 
 namespace RadElem
 
@@ -95,10 +87,8 @@ theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
     simp only [map_add, map_mul, Polynomial.C_eq_natCast, Nat.cast_succ]
     ring
 
-/-- `toPolyG (radDeriv n f p) = Differential.implicitDeriv (C (toK ℓ) · X) (toPolyG p)` with
-`ℓ = logDerRadicand n f = f'/(nf)`: through the Horner bridge `toPolyG` (with `X` the radical
-generator `y`), the computable diagonal derivation realizes Mathlib's `implicitDeriv` for the rule
-`y' = ℓ·y`. The source of additivity and Leibniz. -/
+/-- `toPolyG (radDeriv n f p) = Differential.implicitDeriv (C (toK ℓ) · X) (toPolyG p)`
+(`ℓ = f'/(nf)`): the diagonal derivation realizes `implicitDeriv` for `y' = ℓ·y`. -/
 theorem toPolyG_radDeriv (n : ℕ) (f : α) (p : RadElem α) :
     CPolyG.toPolyG (radDeriv n f p)
       = Differential.implicitDeriv
@@ -111,36 +101,20 @@ theorem toPolyG_radDeriv (n : ℕ) (f : α) (p : RadElem α) :
     Nat.cast_zero, zero_mul, add_zero, smul_eq_mul, derivative'_apply]
   ring
 
-/-! ### Additivity: `radDeriv` commutes with `radAdd` (the clean floor)
+/-! ### Additivity: `radDeriv` commutes with `radAdd` -/
 
-`radAdd = caddG` and `radDeriv` both leave the `yⁿ = f` reduction untouched, so additivity is an exact
-`K[X]` identity: `toPolyG` turns it into the ℤ-linearity of Mathlib's `implicitDeriv` derivation. No
-quotient subtlety enters. -/
-
-/-- **★ `radDeriv` is additive** — `toPolyG (radDeriv n f (radAdd a b)) = toPolyG (radDeriv n f a) +
-toPolyG (radDeriv n f b)` in `K[X]`. Exact (neither `radAdd` nor `radDeriv` touches the `yⁿ = f`
-reduction); from the keystone `toPolyG_radDeriv` and the additivity of `implicitDeriv` (`toPolyG (radAdd a
-b) = toPolyG a + toPolyG b` via `toPolyG_caddG`). The first derivation axiom. -/
+/-- `radDeriv` is additive: `toPolyG (radDeriv n f (radAdd a b)) = toPolyG (radDeriv n f a) +
+toPolyG (radDeriv n f b)` in `K[X]`. -/
 @[denote] theorem toPolyG_radDeriv_radAdd (n : ℕ) (f : α) (a b : RadElem α) :
     CPolyG.toPolyG (radDeriv n f (radAdd a b))
       = CPolyG.toPolyG (radDeriv n f a) + CPolyG.toPolyG (radDeriv n f b) := by
   rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, radAdd, CPolyG.toPolyG_caddG, map_add]
 
-/-! ### Leibniz: `radDeriv (radMul a b) = radDeriv a · b + a · radDeriv b`, modulo `Xⁿ − C(toK f)`
+/-! ### Leibniz for `radMul`, modulo `Xⁿ − C(toK f)`
 
-`radMul = radReduce ∘ cmulG` *does* use the `yⁿ = f` reduction, so the honest product rule holds in the
-**carrier**, i.e. **modulo the defining ideal** `I = (Xⁿ − C(toK f))` of `K[X]`. The proof has three
-self-contained pieces:
-
-1. `toPolyG_radReduce_mem` — one `radReduce` fold changes `toPolyG p` only by a multiple of `Xⁿ −
-   C(toK f)` (it replaces `aₘ·X^{n+k}` by `aₘ·f·Xᵏ`, i.e. subtracts `aₘ·Xᵏ·(Xⁿ − f)`); so
-   `toPolyG (radMul n f a b) ≡ toPolyG a · toPolyG b (mod I)`.
-2. `implicitDeriv_radicand_mem` — the crux `D(Xⁿ − C(toK f)) ∈ I`, where `D = implicitDeriv (C(toK ℓ)·X)`
-   is the `radDeriv` derivation: `D(Xⁿ) = n·C(toK ℓ)·Xⁿ` and `D(C(toK f)) = C(toK f')`, and
-   `n·ℓ·f = f'` in `K` (the defining property of `ℓ = f'/(nf)`, valid once `toK(nf) ≠ 0`) makes the
-   difference reduce to `0` modulo `Xⁿ − C(toK f)`.
-3. `implicitDeriv` is a derivation, so `D(I) ⊆ I` (from the crux), hence `D` descends to `K[X] ⧸ I`, and
-   the free-polynomial Leibniz of `D` pushes to the quotient. -/
+`radMul = radReduce ∘ cmulG` uses the `yⁿ = f` reduction, so the product rule holds in the carrier, i.e.
+modulo the defining ideal `I = (Xⁿ − C(toK f))`: `radReduce` preserves the quotient, the crux
+`D(Xⁿ − C(toK f)) ∈ I` lets `D` descend to `K[X] ⧸ I`, and free-polynomial Leibniz pushes through. -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **The top-coefficient split through `toPolyG`**: `toPolyG (p ++ q) = toPolyG p + X^(p.length) ·
@@ -261,11 +235,8 @@ theorem mk_toPolyG_radMul (n : ℕ) (f : α) (a b : RadElem α) :
 
 /-! ### The crux `D(Xⁿ − C(toK f)) ∈ I` and the descent of `D` to the quotient
 
-`D := implicitDeriv (C(toK ℓ)·X)` (the derivation realized by `radDeriv`, `toPolyG_radDeriv`) is a
-Mathlib `Derivation`; the radical extension is a genuine differential extension exactly when `D` maps the
-defining ideal into itself. This rests on the scalar identity `n·ℓ·f = f'` in `K` (the defining property
-of `ℓ = f'/(nf)`, valid once `n·toK f ≠ 0`): then `D(Xⁿ − C(toK f)) = n·C(toK ℓ)·Xⁿ − C(toK f') ≡
-C(n·toK ℓ·toK f − toK f') = 0 (mod Xⁿ − C(toK f))`. -/
+`D := implicitDeriv (C(toK ℓ)·X)` maps the defining ideal into itself, via the scalar identity
+`n·ℓ·f = f'` (valid when `n·toK f ≠ 0`), so it descends to the quotient carrier. -/
 
 omit [CDiffFieldSpec α] in
 /-- **The defining scalar identity** `n · toK ℓ · toK f = toK f'` in `K` (with `ℓ = logDerRadicand n f =
@@ -278,12 +249,9 @@ theorem toK_logDerRadicand_mul (n : ℕ) (f : α)
   rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, toK_cnatCastG]
   rw [mul_comm ((n : CFieldSpec.K α)) _, mul_assoc, div_mul_cancel₀ _ hnf]
 
-/-- **★ The crux — the `radDeriv` derivation kills the radicand generator modulo its ideal**:
-`D(Xⁿ − C(toK f)) ∈ radIdeal n f` where `D = implicitDeriv (C(toK ℓ)·X)` is the derivation `radDeriv`
-realizes. Computing `D(Xⁿ) = n·C(toK ℓ)·Xⁿ` (power rule, `D X = C(toK ℓ)·X`) and `D(C(toK f)) =
-C(toK f')`, then collapsing `Xⁿ ≡ C(toK f)` and using `n·ℓ·f = f'` (`toK_logDerRadicand_mul`, needs
-`n·toK f ≠ 0`) makes the image `≡ 0`. This is `D(yⁿ − f) = n·y^{n−1}·y' − f' = 0`, the relation that
-makes `y' = ℓ·y` a *consistent* derivation on the radical extension. -/
+/-- The crux: `D(Xⁿ − C(toK f)) ∈ radIdeal n f` for `D = implicitDeriv (C(toK ℓ)·X)`. Computes
+`D(Xⁿ) = n·C(toK ℓ)·Xⁿ`, `D(C(toK f)) = C(toK f')`, collapses `Xⁿ ≡ C(toK f)`, and uses `n·ℓ·f = f'`
+(needs `n·toK f ≠ 0`) — the relation making `y' = ℓ·y` a consistent derivation. -/
 theorem implicitDeriv_radicand_mem (n : ℕ) (f : α)
     (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) :
     Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK (logDerRadicand n f)) * X)
@@ -347,19 +315,11 @@ theorem mk_implicitDeriv_congr (n : ℕ) (f : α)
   apply implicitDeriv_mem_radIdeal n f hnf
   rw [← Ideal.Quotient.eq_zero_iff_mem, map_sub, hpq, sub_self]
 
-/-! ### ★ The Leibniz law for `radDeriv`, modulo the radicand ideal
+/-! ### The Leibniz law for `radDeriv`, modulo the radicand ideal -/
 
-All three pieces assemble: `radDeriv` realizes the derivation `D = implicitDeriv (C(toK ℓ)·X)`
-(`toPolyG_radDeriv`); `radMul ≡ ·` modulo `I` (`mk_toPolyG_radMul`); `D` is a Mathlib derivation (so
-free-polynomial Leibniz) that descends to `K[X] ⧸ I` (`mk_implicitDeriv_congr`). The product rule for
-`radMul` therefore holds in the carrier `K[X] ⧸ (Xⁿ − C(toK f))`. -/
-
-/-- **★ `radDeriv` is Leibniz (modulo the radicand ideal)** — the product rule in the carrier `K[X] ⧸
-(Xⁿ − C(toK f))`: `mk (toPolyG (radDeriv n f (radMul n f a b))) = mk (toPolyG (radMul n f (radDeriv n f
-a) b)) + mk (toPolyG (radMul n f a (radDeriv n f b)))`, valid when `n·toK f ≠ 0` (a genuine radical
-extension: `n ≥ 1`, `f ≠ 0`). Assembled from the keystone `toPolyG_radDeriv`, `radMul`-as-product
-`mk_toPolyG_radMul`, the descent `mk_implicitDeriv_congr`, and the free-polynomial Leibniz of the Mathlib
-derivation `implicitDeriv`. The product-rule derivation axiom. -/
+/-- `radDeriv` is Leibniz modulo the radicand ideal — the product rule in `K[X] ⧸ (Xⁿ − C(toK f))`:
+`mk (toPolyG (radDeriv n f (radMul n f a b))) = mk (toPolyG (radMul n f (radDeriv n f a) b)) +
+mk (toPolyG (radMul n f a (radDeriv n f b)))`, valid when `n·toK f ≠ 0`. -/
 theorem mk_toPolyG_radDeriv_radMul (n : ℕ) (f : α)
     (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) (a b : RadElem α) :
     Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG (radDeriv n f (radMul n f a b)))
@@ -378,11 +338,7 @@ theorem mk_toPolyG_radDeriv_radMul (n : ℕ) (f : α)
   rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, map_add, map_mul, map_mul]
   ring
 
-/-! ### The remaining derivation axioms: `radDeriv` kills `radZero`, `radOne`, and constants
-
-`radDeriv` annihilates `0` and `1` (and, by additivity + `radDeriv_one`, every `ℤ`-multiple of `1`),
-exactly as a derivation must. Both are immediate from the keystone `toPolyG_radDeriv` and the
-ℤ-linearity / `map_one_eq_zero` of the Mathlib derivation `implicitDeriv`. -/
+/-! ### `radDeriv` kills `radZero` and `radOne` -/
 
 /-- **`radDeriv` kills `radZero`** — `toPolyG (radDeriv n f radZero) = 0` in `K[X]` (`radZero = []`,
 `toPolyG [] = 0`, and `implicitDeriv v 0 = 0`). -/
@@ -402,16 +358,9 @@ exactly as a derivation must. Both are immediate from the keystone `toPolyG_radD
 
 end RadElem
 
-/-! ### `#print axioms` — the derivation invariant is axiom-clean
+/-! ### `#print axioms` -/
 
-The keystone, additivity, the crux, and Leibniz carry **only** the standard `[propext,
-Classical.choice, Quot.sound]` — no `native_decide` compiler axiom, no `sorry`. `radDeriv` is a genuine
-derivation (additive + Leibniz) as a general theorem, not a `native_decide`-validated example. -/
-
--- The keystone (radDeriv realizes Mathlib's implicitDeriv) and additivity:
 #print axioms RadElem.toPolyG_radDeriv
 #print axioms RadElem.toPolyG_radDeriv_radAdd
-
--- The crux (radDeriv kills the radicand generator mod its ideal) and Leibniz in the carrier:
 #print axioms RadElem.implicitDeriv_radicand_mem
 #print axioms RadElem.mk_toPolyG_radDeriv_radMul

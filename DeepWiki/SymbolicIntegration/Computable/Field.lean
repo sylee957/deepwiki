@@ -5,10 +5,8 @@ import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 
 /-! # Coherence of the generic polynomial engine with the concrete `CPoly := List ℚ` engine
 
-Coherence lemmas (`caddG (α := ℚ) = cadd`, …, `toPolyG (α := ℚ) = toPoly`) showing the generic
-engine of `GenericPolyEngine` specializes at `ℚ` back to the concrete `Compute.*` engine
-(`LogToAtanCompute`, `ComputeCorrectness`) — the equalities that let `CPoly := CPolyG ℚ` be
-substituted without breaking consumers. -/
+Coherence lemmas showing the generic engine specializes at `α = ℚ` back to the concrete
+`Compute.*` engine (`caddG (α := ℚ) = cadd`, …, `toPolyG (α := ℚ) = toPoly`). -/
 
 open Polynomial
 
@@ -18,13 +16,7 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-! ### Coherence with the concrete `CPoly` engine at `α = ℚ`
-
-The generic engine specialized at `ℚ` (via `CField ℚ`) agrees with the concrete `Compute.*` engine
-of `LogToAtanCompute`/`ComputeCorrectness`. These equalities are what lets a later stage migrate
-`CPoly := CPolyG ℚ` without breaking the existing consumers. `caddG`/`cnegG`/`cscaleG`/`cshiftG`/
-`cmulG` agree **definitionally** (the `CField ℚ` operations unfold to the `ℚ` operations `cadd`/… use);
-`cnormG`/`cisZeroG`/`toPolyG` agree up to a short proof (the `isZero`/`toK = id` indirection). -/
+/-! ### Coherence with the concrete `CPoly` engine at `α = ℚ` -/
 
 /-- `caddG` at `ℚ` is the concrete `cadd` (both add coefficientwise with `ℚ`'s `+`). -/
 theorem caddG_eq_cadd : (caddG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.cadd := by

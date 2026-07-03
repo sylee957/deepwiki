@@ -3,25 +3,10 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.ExampleData
 
-/-! # Tower-level demos for the `QFunNZG` gcd-cancel reducer
-The generic tower fraction field `QFunNZG α` (`ComputableTowerField`) keeps fractions unreduced:
-`qaddNZG`/`qmulNZG` cross-multiply num/den with no gcd-cancel. This is correct but causes (a) coefficient
-swell up the tower (each `qmul` squares the denominator size, limiting practical depth) and (b)
-`crischDESolve`'s weak-normalizer to choke on spurious denominators when a residual arrives as an
-unreduced fraction (the `ComputableHyperexpNormal` §5.9 frontier — e.g. a residue assembled as `2x/2x`).
-
-The reusable reducer now lives upstream as `qReduce` (`ComputableQFunReduce`): it divides numerator and
-denominator by their fuel-free monic gcd `cgcdMonicWf`, uses `cdivWf`, and proves the value-preservation
-theorem `toQFunNZG_qReduce`. This file keeps the tower-facing demos that originally motivated baking the
-reducer into tower arithmetic:
-
-* SWELL demo (`native_decide`) — a fraction with a common factor whose `qReduce` representative is
-  strictly smaller, with the field value unchanged.
-* STRETCH — applying `qReduce` to a hyperexponential residual `R` before `crischDESolve 0 R`.
-
-The pervasive bake-into-`qaddNZG`/`qmulNZG` is a documented follow-up (it would re-pin the existing
-representation-sensitive tower `native_decide`s); this file records the standalone tower evidence while
-leaving the existing engine untouched. -/
+/-! # Tower-level demos for the `QFunNZG` gcd-cancel reducer `qReduce`
+`qReduce` divides a fraction's numerator and denominator by their monic gcd, preserving the field value
+(`toQFunNZG_qReduce`). These demos show it shrinks a swollen product and unblocks a hyperexponential
+residual that otherwise chokes `crischDESolve`. -/
 
 open Polynomial
 
@@ -29,61 +14,43 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute
 
-/-! ### SWELL demo: `qReduce` shrinks an unreduced product, value unchanged (`native_decide`)
+/-! ### SWELL demo: `qReduce` shrinks an unreduced product, value unchanged
 
-We build a fraction over `CPolyG ℚ = ℚ[x]` (level 0, the base field — `ℚ` is a `CField`/`CFieldSpec`/
-`CFieldDomain`) with a deliberate common factor, demonstrate `qReduce` strictly shrinks its
-numerator/denominator length, and certify (via `toQFunNZG_qReduce`) that the field value is unchanged.
-The unreduced fraction is `qmulNZG (t/(t-1)) ((t-1)/t) = (t·(t-1))/((t-1)·t)`, whose num and den both have
-length 3 (degree 2) but which is the constant `1`; `qReduce` cancels to the reduced `1/1` (length 1).
-This is the swell that iterated `qmulNZG` accumulates and that `qReduce` removes. -/
+`qmulNZG (t/(t−1)) ((t−1)/t)` stores the constant `1` as `(t·(t−1))/((t−1)·t)` (num/den length 3);
+`qReduce` cancels to `1/1` (length 1) with the field value unchanged. -/
 
 namespace QFunNZG
 
-/-- The base-field fraction `t/(t−1) ∈ QFunNZG ℚ = ℚ(x)` (numerator `[0,1]`, denominator `[−1,1]`), a
-nonzero-denominator fraction over `CPolyG ℚ = ℚ[x]`. -/
+/-- The fraction `t/(t−1) ∈ QFunNZG ℚ` (numerator `[0,1]`, denominator `[−1,1]`). -/
 def swellA : QFunNZG ℚ := ⟨([(0 : ℚ), 1], [(-1 : ℚ), 1]), by native_decide⟩
 
-/-- The base-field fraction `(t−1)/t ∈ QFunNZG ℚ` (numerator `[−1,1]`, denominator `[0,1]`); the
-reciprocal of `swellA`, so their `qmulNZG` is the constant `1` but stored unreduced as
-`(t·(t−1))/((t−1)·t)`. -/
+/-- The fraction `(t−1)/t ∈ QFunNZG ℚ` (numerator `[−1,1]`, denominator `[0,1]`), the reciprocal of
+`swellA`. -/
 def swellB : QFunNZG ℚ := ⟨([(-1 : ℚ), 1], [(0 : ℚ), 1]), by native_decide⟩
 
-/-- The unreduced product `swellA · swellB = (t·(t−1))/((t−1)·t)` (via `qmulNZG`, no gcd-cancel):
-both numerator `t·(t−1) = t²−t` and denominator `(t−1)·t = t²−t` have length 3 (degree 2), even though
-the fraction is the constant `1` — the swell. -/
+/-- The unreduced product `swellA · swellB = (t·(t−1))/((t−1)·t)` via `qmulNZG`: both num and den are
+`t²−t` (length 3) though the value is `1`. -/
 def swellProd : QFunNZG ℚ := qmulNZG swellA swellB
 
-/-- The unreduced product has numerator length 3 (`native_decide`): `qmulNZG` cross-multiplied to
-`t²−t` (degree 2, length-3 list) — the swollen representation. -/
+/-- The unreduced product `swellProd` has numerator length 3. -/
 theorem swellProd_num_length : (CPolyG.cnormG swellProd.1.1 : List ℚ).length = 3 := by native_decide
 
-/-- The unreduced product has denominator length 3 (`native_decide`): the cross-multiplied
-denominator `(t−1)·t = t²−t` is likewise length 3 — both sides carry the spurious common factor. -/
+/-- The unreduced product `swellProd` has denominator length 3. -/
 theorem swellProd_den_length : (CPolyG.cnormG swellProd.1.2 : List ℚ).length = 3 := by native_decide
 
-/-- `qReduce` shrinks the swollen product's numerator to length 1 (`native_decide`): cancelling the
-common factor `t²−t` collapses `(t²−t)/(t²−t)` to `1/1`, so the reduced numerator has length 1 — the swell
-is removed (3 → 1). -/
+/-- `qReduce` shrinks the swollen product's numerator to length 1. -/
 theorem swellProd_reduced_num_length :
     (CPolyG.cnormG (qReduce swellProd).1.1 : List ℚ).length = 1 := by native_decide
 
-/-- `qReduce` shrinks the swollen product's denominator to length 1 (`native_decide`): the reduced
-denominator is likewise length 1 (`1`), confirming `qReduce` strictly controls the fraction-field swell
-(3 → 1 on both sides). -/
+/-- `qReduce` shrinks the swollen product's denominator to length 1. -/
 theorem swellProd_reduced_den_length :
     (CPolyG.cnormG (qReduce swellProd).1.2 : List ℚ).length = 1 := by native_decide
 
-/-- The reduced product is `cisZeroG`-nonzero in numerator (`native_decide`): `qReduce swellProd`
-landed `1/1`, whose numerator `1` is nonzero — the reduction produced a genuine nonzero fraction (the
-constant `1`), not a degenerate one. -/
+/-- The reduced product `qReduce swellProd` has nonzero numerator (`cisZeroG` is `false`). -/
 theorem swellProd_reduced_num_nonzero :
     CPolyG.cisZeroG (qReduce swellProd).1.1 = false := by native_decide
 
-/-- The swell reduction preserves the field value (via `toQFunNZG_qReduce`): `qReduce swellProd`
-equals `swellProd` as an element of `RatFunc ℚ` — the representation shrank (length 3 → 1, the previous
-`native_decide`s) but the value is unchanged. This is the milestone: a value-preserving swell
-reduction with no fuel chosen at the call site. -/
+/-- `qReduce` preserves the field value: `toQFunNZG (qReduce swellProd) = toQFunNZG swellProd`. -/
 theorem swellProd_value_preserved :
     toQFunNZG (qReduce swellProd) = toQFunNZG swellProd :=
   toQFunNZG_qReduce swellProd

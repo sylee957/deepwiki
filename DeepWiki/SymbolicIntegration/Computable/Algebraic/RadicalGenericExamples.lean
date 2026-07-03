@@ -121,10 +121,8 @@ def radX3m2TwoT2sq : CPolyG RadX3m2 := [CField.zero, CField.zero, CField.add CFi
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX3m2` (`t = eˣ`). -/
 def radX3m2DtExp : CPolyG RadX3m2 := [CField.zero, CField.one]
 
-/-- **★ `D(t²) = 2t²` over `ℚ(x)[√(x³−2)][eˣ]`** (`native_decide`): the SAME mixed-tower `d/dt`
-computation that holds over `x³+1`, now over the radical base `√(x³−2)`. `cmonomialDeriv` (with `t = eˣ`,
-`Dt = t`, coefficient derivation `radDeriv 2 (x³−2)`) gives `D(t²) = 2t·t = 2t²`. THE ENGINE INTEGRATES
-OVER `√(x³−2)`. -/
+/-- `D(t²) = 2t²` over `ℚ(x)[√(x³−2)][eˣ]`: `cmonomialDeriv` (`t = eˣ`, `Dt = t`, coefficient derivation
+`radDeriv 2 (x³−2)`) gives `2t·t = 2t²`. -/
 theorem radX3m2_monomialDeriv_t2sq :
     cisZeroG (csubG (cmonomialDeriv radX3m2DtExp radX3m2T2sq) radX3m2TwoT2sq) = true := by
   native_decide
@@ -137,9 +135,8 @@ def radX3m2GenT : CPolyG RadX3m2 := [CField.zero, radX3m2Gen]
 def radX3m2GenTDeriv : CPolyG RadX3m2 :=
   [CField.zero, CField.mul (⟨[CField.zero, CField.add radX3m2LogDer CField.one]⟩ : RadX3m2) CField.one]
 
-/-- **★ `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³−2)][eˣ]`** (`native_decide`): the genuine MIXED derivation
-over `√(x³−2)` — both `D(y) = ℓ·y` (radical, `ℓ = 3x²/(2(x³−2))`) and `D(t) = t` (monomial) fire, giving
-`D(y·t) = (ℓ+1)·y·t`. BOTH HALVES OF THE MIXED TOWER DERIVATION FIRE OVER `√(x³−2)`. -/
+/-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³−2)][eˣ]`: both `D(y) = ℓ·y` (`ℓ = 3x²/(2(x³−2))`) and `D(t) = t`
+fire. -/
 theorem radX3m2_monomialDeriv_genT :
     cisZeroG (csubG (cmonomialDeriv radX3m2DtExp radX3m2GenT) radX3m2GenTDeriv) = true := by
   native_decide
@@ -204,8 +201,8 @@ def radX5TwoT2sq : CPolyG RadX5 := [CField.zero, CField.zero, CField.add CField.
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX5` (`t = eˣ`). -/
 def radX5DtExp : CPolyG RadX5 := [CField.zero, CField.one]
 
-/-- **★ `D(t²) = 2t²` over `ℚ(x)[√(x⁵−x−1)][eˣ]`** (`native_decide`): the mixed-tower `d/dt` computation
-over the degree-5 radical base. THE ENGINE INTEGRATES OVER `√(x⁵−x−1)`. -/
+/-- `D(t²) = 2t²` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed-tower `d/dt` computation over the degree-5 radical
+base. -/
 theorem radX5_monomialDeriv_t2sq :
     cisZeroG (csubG (cmonomialDeriv radX5DtExp radX5T2sq) radX5TwoT2sq) = true := by native_decide
 
@@ -216,8 +213,8 @@ def radX5GenT : CPolyG RadX5 := [CField.zero, radX5Gen]
 def radX5GenTDeriv : CPolyG RadX5 :=
   [CField.zero, CField.mul (⟨[CField.zero, CField.add radX5LogDer CField.one]⟩ : RadX5) CField.one]
 
-/-- **★ `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x⁵−x−1)][eˣ]`** (`native_decide`): the genuine MIXED derivation
-over the degree-5 radical base (`ℓ = (5x⁴−1)/(2(x⁵−x−1))`). BOTH HALVES FIRE OVER `√(x⁵−x−1)`. -/
+/-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed derivation over the degree-5 radical base
+(`ℓ = (5x⁴−1)/(2(x⁵−x−1))`). -/
 theorem radX5_monomialDeriv_genT :
     cisZeroG (csubG (cmonomialDeriv radX5DtExp radX5GenT) radX5GenTDeriv) = true := by native_decide
 
@@ -279,8 +276,7 @@ def radX3pXTwoT2sq : CPolyG RadX3pX := [CField.zero, CField.zero, CField.add CFi
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX3pX` (`t = eˣ`). -/
 def radX3pXDtExp : CPolyG RadX3pX := [CField.zero, CField.one]
 
-/-- **★ `D(t²) = 2t²` over `ℚ(x)[√(x³+x)][eˣ]`** (`native_decide`): the mixed-tower `d/dt` computation
-over the radical base `√(x³+x)`. THE ENGINE INTEGRATES OVER `√(x³+x)`. -/
+/-- `D(t²) = 2t²` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed-tower `d/dt` computation over `√(x³+x)`. -/
 theorem radX3pX_monomialDeriv_t2sq :
     cisZeroG (csubG (cmonomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
 
@@ -291,54 +287,27 @@ def radX3pXGenT : CPolyG RadX3pX := [CField.zero, radX3pXGen]
 def radX3pXGenTDeriv : CPolyG RadX3pX :=
   [CField.zero, CField.mul (⟨[CField.zero, CField.add radX3pXLogDer CField.one]⟩ : RadX3pX) CField.one]
 
-/-- **★ `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³+x)][eˣ]`** (`native_decide`): the genuine MIXED derivation
-over `√(x³+x)` (`ℓ = (3x²+1)/(2(x³+x))`). BOTH HALVES FIRE OVER `√(x³+x)`. -/
+/-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed derivation over `√(x³+x)`
+(`ℓ = (3x²+1)/(2(x³+x))`). -/
 theorem radX3pX_monomialDeriv_genT :
     cisZeroG (csubG (cmonomialDeriv radX3pXDtExp radX3pXGenT) radX3pXGenTDeriv) = true := by
   native_decide
 
-/-! ### STRETCH — the general-`n` scope (scoping note, no claim forced)
+/-! ### Scope note
 
-What a general-`n` `CFieldSpec (RadExt α n f)` would need, and what is reachable now:
+Prime-`n` irreducibility (hence the genuine field `AdjoinRoot (Xⁿ − C(toK f))` and abstract
+`CFieldDomain`) is reachable from `X_pow_sub_C_irreducible_iff_of_prime` and a not-a-perfect-`p`-th-power
+argument. The computable `CField (RadExt α n f)` carrier is `n = 2` only until the general-`n` inverse
+(extended Euclid) lands; the four radicands here are members of that `n = 2` slice. -/
 
-* **Irreducibility for prime `n = p`.** Mathlib's `X_pow_sub_C_irreducible_iff_of_prime`
-  (`KummerPolynomial.lean`) gives `Irreducible (Xᵖ − C a) ↔ ∀ b, bᵖ ≠ a` for **prime** `p` — exactly the
-  "`f` not a perfect `p`-th power" condition. `irreducible_radDeg2_of_not_isSquare` is its `p = 2`
-  instance; the same one-liner with `Nat.prime_three` (and a "not a perfect cube" radicand proof) would
-  give the **cube-root** `Irreducible (X³ − C(toK f))`. The not-a-perfect-`p`-th-power proof for an
-  odd/coprime-degree polynomial generalizes the parity argument: `intDegree (bᵖ) = p·intDegree b`, so a
-  polynomial whose `natDegree` is **not divisible by `p`** cannot be a `p`-th power. So general-prime-`n`
-  *irreducibility* (hence `Field (AdjoinRoot (Xⁿ − C(toK f)))` and the abstract `CFieldDomain`) is
-  reachable now with no new Mathlib.
+/-! ### `#print axioms` -/
 
-* **What blocks the general-`n` COMPUTABLE carrier.** The computable `CField (RadExt α n f)` is generic in
-  `n` for `zero`/`one`/`add`/`mul`/`neg`/`isZero` (all `radCanon`-folded list arithmetic), but its `inv`
-  is `radInv2` — the `n = 2` **conjugate-norm** reciprocal `u⁻¹ = ū/(a²−b²f)`, which reads only
-  `y⁰`/`y¹`. A general-`n` field inverse needs the full extended-Euclid-in-`α[y]/(yⁿ−f)` (or the
-  resultant/norm form), not yet built. So:
-  - **Irreducibility / the genuine field `AdjoinRoot (Xⁿ − C(toK f))`:** general prime `n` now.
-  - **The computable `CField` + `CFieldSpec` carrier (with a working `inv`):** `n = 2` (this file's
-    three radicands), until the general-`n` inverse lands.
-
-  A degree-3 radical (cube root) is therefore *irreducibility*-reachable today but not yet a computable
-  field carrier; the `n = 2` simple-radical family — of which `√(x³+1)`, `√(x³−2)`, `√(x⁵−x−1)`, `√(x³+x)`
-  are members — is the fully-realized computable mixed-tower slice. -/
-
-/-! ### `#print axioms` — the family computes, generic helper is sorry/native-free
-
-Each per-radicand mixed-tower integral carries only `[propext, Classical.choice, Quot.sound]` plus the
-`native_decide` compiler axiom; the generic irreducibility helpers carry **no** `native`, **no** `sorry`.
-So `√(x³+1)` is one member of a family of radical extensions the engine integrates over, all from ONE
-generic non-square ⟹ irreducible ⟹ `Fact` ⟹ carrier pipeline. -/
-
--- The generic helpers (no `native`, no `sorry`):
 #print axioms not_isSquare_algebraMap_of_odd_natDegree
 #print axioms irreducible_radDeg2_of_not_isSquare
 #print axioms irreducible_radX3m2
 #print axioms irreducible_radX5mXm1
 #print axioms irreducible_radX3pX
 
--- ★ The per-radicand mixed-tower integrals (each `[…, native]`):
 #print axioms radX3m2_monomialDeriv_t2sq
 #print axioms radX3m2_monomialDeriv_genT
 #print axioms radX5_monomialDeriv_t2sq

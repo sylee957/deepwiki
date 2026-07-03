@@ -4,23 +4,12 @@ import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 
-/-! # The Rothstein–Trager residue-MATCH correctness (Bronstein Thm 5.6.1, abstract)
+/-! # The Rothstein–Trager residue-match identity over a monomial tower
 
-`ComputableLogPartTowerSoundness` reduced the checker-free normal-part one-shot to a single hypothesis
-`hmatch` — the **residue match**: that the integrator's logarithmic part `∑ᵢ cᵢ·D(log vᵢ)` (over the tower
-with the monomial derivation `D = cmonomialDeriv Dt`, so `D(t−α) = Dt − α′`, NOT `1`) sums to the simple
-integrand `a/d` over `RatFunc (CFieldSpec.K α)`. The residues `cᵢ` are the roots of the Rothstein–Trager
-resultant `R(z) = res_t(d, a − z·Dd)` (PROVEN: `roots_residueResultantTowerG_eq_residues`) and each
-`vᵢ = gcd_t(d, a − cᵢ·Dd)`.
-
-The base-field analogue is `ratFunc_eq_sum_residue_grouped` (`PartialFraction`): for `D = ∏(X−α)`
-squarefree and the *standard* polynomial derivative (`(X−α)′ = 1`),
-`A/D = ∑_a a·logDeriv(∏_{res(α)=a}(X−α))`. The ★ subtlety the prompt flags (the same gap as the algebraic
-`isRadicalLogIntegral_of_residue_match`): over a monomial `D(t−α) = Dt − α′ ≠ 1`, so the Lagrange
-identity does NOT transport verbatim — the residue `c` at `α` must **absorb** the `Dt − α′` factor
-(Bronstein Thm 5.6.1, the *differentiated* RT criterion).
-
-This file builds the residue-match identity incrementally — small, individually-committed lemmas — toward
+Builds the residue-match identity `∑ᵢ cᵢ·D(log vᵢ) = a/d` over `RatFunc (CFieldSpec.K α)` for the
+monomial derivation `D = cmonomialDeriv Dt` (where `D(t−α) = Dt − α′ ≠ 1`, so the residue must absorb
+the `Dt − α′` factor). Proves the absorption identity at a simple root, the unconditional primitive-case
+match, and the general-monomial match modulo a polynomial-part cancellation hypothesis — toward
 discharging the `hmatch` hypothesis of `logResidueSumG_eq_of_residue_match`. -/
 
 open Polynomial Classical
@@ -32,45 +21,29 @@ open Compute CPolyG QFunNZG
 
 namespace ResidueMatchTower
 
-/-! ### Step 1 (reused): the monomial derivative of a linear factor `t − C α`
-
-Over the tower derivation `D = extendDeriv (implicitDeriv v)` with `v = toPolyG Dt`, the implicit
-derivative of a linear factor is `implicitDeriv v (X − C α) = v − C α′` — `MonomialExtensions`'
-`implicitDeriv_X_sub_C` (the §3.4 root-characterization crux). This is the structural source of the ★
-absorption: the log-derivative of `t − α` is `(v − C α′)/(t − α)`, NOT `1/(t − α)`. -/
-
 variable {K : Type*} [Field K] [Differential K]
 
-/-! ### Step 2: the monomial log-derivative of a linear factor in `K(t)`
+/-! ### The monomial log-derivative of a linear factor in `K(t)`
 
-Under the extended monomial derivation `extendDeriv (implicitDeriv v)`, the log-derivative of the linear
-factor `t − α` reads `(v − C α′)/(t − α)` over `RatFunc K` — the ★ absorption made explicit: it is
-`(Dt − α′)/(t − α)`, NOT `1/(t − α)`. Combines `extendDeriv_logDeriv` with `implicitDeriv_X_sub_C`. -/
+Under `extendDeriv (implicitDeriv v)`, the log-derivative of `t − α` reads `(v − C α′)/(t − α)`, not
+`1/(t − α)`. -/
 
 /-- **The monomial log-derivative of a linear factor** — over `extendDeriv (implicitDeriv v)`,
-`D(t−α)/(t−α) = algebraMap(v − C α′) / algebraMap(t − α)` in `RatFunc K`. The Rothstein–Trager monomial
-absorption made explicit at the per-factor level: the log-derivative is `(Dt − α′)/(t − α)`, not `1/(t − α)`.
-By `extendDeriv_logDeriv` (the generic logarithmic-derivative reading) and `implicitDeriv_X_sub_C`. -/
+`D(t−α)/(t−α) = algebraMap(v − C α′) / algebraMap(t − α)` in `RatFunc K`. -/
 theorem extendDeriv_implicitDeriv_logDeriv_X_sub_C [Algebra ℚ K] (v : K[X]) (α : K) :
     extendDeriv (Differential.implicitDeriv v) (algebraMap K[X] (RatFunc K) (X - C α))
         / algebraMap K[X] (RatFunc K) (X - C α)
       = algebraMap K[X] (RatFunc K) (v - C (α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
   rw [extendDeriv_logDeriv, implicitDeriv_X_sub_C]
 
-/-! ### Step 3a: the ★ absorption identity at a simple root of `d`
+/-! ### The absorption identity at a simple root of `d`
 
-The crux of Bronstein Thm 5.6.1. At a root `α` of the (squarefree) denominator `d`, the monomial
-derivative `Dd = implicitDeriv v d` evaluates to `(Dd)(α) = d′(α)·(v(α) − α′)` — the `v(α) − α′` factor
-that the residue `cᵢ = a(α)/(Dd)(α)` divides out is exactly what makes `cᵢ·D(t−α)/(t−α)` carry residue
-`a(α)/d′(α)` at the place `t−α`, so the monomial RT sum telescopes to `a/d` despite `D(t−α) ≠ 1`.
-
-Proof: `implicitDeriv v d = mapCoeffs d + v·(derivative d)`, so `(Dd)(α) = (mapCoeffs d)(α) +
-v(α)·d′(α)`. Mathlib's `deriv_aeval_eq` gives `(d(α))′ = (mapCoeffs d)(α) + d′(α)·α′`; since `d(α) = 0`
-its LHS is `0′ = 0`, so `(mapCoeffs d)(α) = −d′(α)·α′`, and the two combine to `d′(α)·(v(α) − α′)`. -/
+At a root `α` of the squarefree denominator `d`, the monomial derivative evaluates to
+`(Dd)(α) = d′(α)·(v(α) − α′)`; the `v(α) − α′` factor that the residue divides out is what makes the
+monomial RT sum reassemble `a/d` despite `D(t−α) ≠ 1`. -/
 
 /-- **`eval` of `mapCoeffs d` at a root of `d`** — for `d(α) = 0`, `(mapCoeffs d)(α) = −d′(α)·α′` over a
-differential field `K`. From Mathlib's `deriv_aeval_eq` `(d(α))′ = (mapCoeffs d)(α) + d′(α)·α′` with the
-LHS `(0)′ = 0`. The half of the absorption coming from the coefficient derivation `κ_D`. -/
+differential field `K`, from `deriv_aeval_eq` with LHS `(0)′ = 0`. -/
 theorem eval_mapCoeffs_of_isRoot (d : K[X]) (α : K) (hα : d.eval α = 0) :
     (Differential.mapCoeffs d).eval α = -((derivative d).eval α * α′) := by
   have h := Differential.deriv_aeval_eq (A := K) (R := K) α d
@@ -81,10 +54,8 @@ theorem eval_mapCoeffs_of_isRoot (d : K[X]) (α : K) (hα : d.eval α = 0) :
   -- `0 = (mapCoeffs d)(α) + d′(α)·α′`, so `(mapCoeffs d)(α) = −d′(α)·α′`
   linear_combination -h
 
-/-- **★ The absorption identity at a simple root** (Bronstein Thm 5.6.1) — for `d(α) = 0`, the monomial
-derivative `Dd = implicitDeriv v d` evaluates to `(Dd)(α) = d′(α)·(v(α) − α′)`. The residue
-`cᵢ = a(α)/(Dd)(α)` divides out this `v(α) − α′`, so `cᵢ·(v − C α′)/(t−α)` carries residue `a(α)/d′(α)`
-at `t−α` — the place-wise content making the monomial RT sum reassemble `a/d`. From
+/-- **The absorption identity at a simple root** — for `d(α) = 0`, the monomial derivative
+`Dd = implicitDeriv v d` evaluates to `(Dd)(α) = d′(α)·(v(α) − α′)`. From
 `implicitDeriv = mapCoeffs + v·derivative` and `eval_mapCoeffs_of_isRoot`. -/
 theorem eval_implicitDeriv_of_isRoot (v d : K[X]) (α : K) (hα : d.eval α = 0) :
     (Differential.implicitDeriv v d).eval α = (derivative d).eval α * (v.eval α - α′) := by
@@ -94,18 +65,11 @@ theorem eval_implicitDeriv_of_isRoot (v d : K[X]) (α : K) (hα : d.eval α = 0)
   rw [eval_mapCoeffs_of_isRoot d α hα]
   ring
 
-/-! ### Step 3b: the per-place residue value matches the standard residue
+/-! ### The per-place residue matches the standard residue -/
 
-The RT residue at the place `t−α` is `c_α = a(α)/(Dd)(α)`. By the absorption identity, multiplying back
-the monomial-log-derivative residue `v(α) − α′` recovers the *standard* residue `a(α)/d′(α)` of `a/d` at
-that place: `c_α·(v(α) − α′) = a(α)/d′(α)`. This is the per-place equality that makes the monomial RT sum
-have the same poles-and-residues as `a/d`. -/
-
-/-- **The RT residue recovers the standard residue at a simple root** — for `d(α) = 0` with
-`v(α) ≠ α′` (the factor is *normal*, so `(Dd)(α) ≠ 0`), the RT residue `c_α = a(α)/(Dd)(α)` satisfies
-`c_α·(v(α) − α′) = a(α)/d′(α)` — the standard residue of `a/d` at `t−α`. The place-wise content of
-Bronstein Thm 5.6.1: the monomial log-derivative `(v − Cα′)/(t−α)` weighted by `c_α` contributes exactly
-the standard residue `a(α)/d′(α)`. From `eval_implicitDeriv_of_isRoot`. -/
+/-- **The RT residue recovers the standard residue at a simple root** — for `d(α) = 0` with `v(α) ≠ α′`
+(normal, so `(Dd)(α) ≠ 0`), the RT residue `c_α = a(α)/(Dd)(α)` satisfies
+`c_α·(v(α) − α′) = a(α)/d′(α)`. From `eval_implicitDeriv_of_isRoot`. -/
 theorem residue_mul_eval_sub_eq (a v d : K[X]) (α : K) (hα : d.eval α = 0)
     (hvα : v.eval α ≠ α′) :
     (a.eval α / (Differential.implicitDeriv v d).eval α) * (v.eval α - α′)
@@ -114,37 +78,27 @@ theorem residue_mul_eval_sub_eq (a v d : K[X]) (α : K) (hα : d.eval α = 0)
   rw [div_mul_eq_mul_div, mul_comm ((derivative d).eval α), ← div_div,
     mul_div_assoc, div_self (sub_ne_zero.mpr hvα), mul_one]
 
-/-! ### Step 4: the monomial RT partial fraction over a PRIMITIVE monomial (`Dt = C w` ∈ base field)
+/-! ### The primitive-monomial RT partial fraction (`Dt = C w` in the base field)
 
-For a **primitive** monomial — `Dt = v = C w` with `w ∈ K` (e.g. `t = log η`, `Dt = η′/η ∈ k`) — the
-monomial derivative of a linear factor is the *constant* `D(t−α) = C(w − α′)`, so the log-derivative
-`D(t−α)/(t−α) = C(w − α′)/(t−α)` has NO polynomial part and the ★ absorption collapses to a constant
-factor. The RT sum then matches `a/d` **term by term** (no high-degree cancellation): each
-`c_α·C(w−α′)/(t−α)` is `C(a(α)/d′(α))/(t−α)`, and `ratFunc_eq_sum_residue_div` reassembles `a/d`.
-
-This is the unconditional primitive-case `hmatch`. (The hyperexponential / hypertangent cases have
-`deg_t v ≥ 1`, where the per-term polynomial parts `c_α·(v /ₘ (t−α))` must cancel in aggregate — the
-genuinely-harder regime, isolated below.) -/
+For a **primitive** monomial `Dt = C w` (e.g. `t = log η`), the log-derivative `D(t−α)/(t−α)` is the
+constant `C(w − α′)/(t−α)` with no polynomial part, so the RT sum matches `a/d` term by term. The
+non-primitive cases (`deg_t v ≥ 1`) need a polynomial-part cancellation, isolated below. -/
 
 variable [Algebra ℚ K]
 
 /-- **The monomial log-derivative of `t−α` over a primitive monomial** `Dt = C w` reads as the constant
-`C(w − α′)` over `t−α`: `D(t−α)/(t−α) = algebraMap(C(w − α′))/algebraMap(t−α)` in `RatFunc K`. The
-primitive specialization of `extendDeriv_implicitDeriv_logDeriv_X_sub_C` (`v − Cα′ = C w − Cα′ =
-C(w − α′)`). -/
+`C(w − α′)` over `t−α`: `D(t−α)/(t−α) = algebraMap(C(w − α′))/algebraMap(t−α)` in `RatFunc K`. -/
 theorem extendDeriv_implicitDeriv_C_logDeriv_X_sub_C (w α : K) :
     extendDeriv (Differential.implicitDeriv (C w)) (algebraMap K[X] (RatFunc K) (X - C α))
         / algebraMap K[X] (RatFunc K) (X - C α)
       = algebraMap K[X] (RatFunc K) (C (w - α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
   rw [extendDeriv_implicitDeriv_logDeriv_X_sub_C, ← C_sub]
 
-/-- **★ The primitive-case monomial Rothstein–Trager partial fraction** (Bronstein Thm 5.6.1, primitive
-monomial) — for a squarefree denominator `d = ∏_{α∈s}(t−α)`, `deg a < #s`, a primitive monomial `Dt = C w`,
-and every root `α∈s` *normal* (`w ≠ α′`), the monomial RT residue sum over the roots equals `a/d`:
-`∑_{α∈s} C(c_α)·(D(t−α)/(t−α)) = a/d` with `c_α = a(α)/(Dd)(α)` the RT residue and `D = extendDeriv
-(implicitDeriv (C w))`. Term by term: `D(t−α)/(t−α) = C(w−α′)/(t−α)` (primitive ⇒ constant numerator),
-`c_α·(w−α′) = a(α)/d′(α)` (`residue_mul_eval_sub_eq`), and `ratFunc_eq_sum_residue_div` reassembles `a/d`.
-The unconditional residue match for primitive (logarithmic) tower extensions. -/
+/-- **The primitive-case monomial Rothstein–Trager partial fraction** — for a squarefree
+`d = ∏_{α∈s}(t−α)`, `deg a < #s`, a primitive monomial `Dt = C w`, and every root normal (`w ≠ α′`), the
+monomial RT residue sum equals `a/d`: `∑_{α∈s} C(c_α)·(D(t−α)/(t−α)) = a/d` with `c_α = a(α)/(Dd)(α)`,
+`D = extendDeriv (implicitDeriv (C w))`. The unconditional residue match for primitive (logarithmic)
+tower extensions. -/
 theorem primitive_monomial_residue_match (s : Finset K) (a : K[X]) (w : K)
     (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, w ≠ α′) :
     ∑ α ∈ s, algebraMap K[X] (RatFunc K)
@@ -169,26 +123,16 @@ theorem primitive_monomial_residue_match (s : Finset K) (a : K[X]) (w : K)
   -- both sides are `algebraMap (C ·) / algebraMap (t − α)`; the constants agree by `h`
   rw [h]
 
-/-! ### Step 5: the general monomial RT partial fraction (modulo the polynomial-part cancellation)
+/-! ### The general monomial RT partial fraction, modulo polynomial-part cancellation
 
-For a NON-primitive monomial (`deg_t v ≥ 1`, e.g. hyperexponential `Dt = η′·t` or hypertangent), the
-monomial log-derivative `D(t−α)/(t−α) = (v − Cα′)/(t−α)` has a *polynomial part* `q_α = v /ₘ (t−α)`
-(degree `deg v − 1 ≥ 0`). Splitting `(v − Cα′)/(t−α) = q_α + (v(α)−α′)/(t−α)` (polynomial division),
-the RT sum becomes `(∑_α c_α·q_α) + a/d` — the second summand by the per-place residue match
-(`residue_mul_eval_sub_eq`) and `ratFunc_eq_sum_residue_div`. So the full identity `∑ c_α D(t−α)/(t−α) =
-a/d` holds **iff the polynomial parts cancel**, `∑_α c_α·q_α = 0`.
-
-This `∑ c_α q_α = 0` is the genuinely-harder content (and is FALSE without an integrability/structure
-condition — e.g. for `Dt = η′·t` it reduces to `∑_α c_α·η′ = 0`, i.e. `∑ c_α = 0`, which is the
-exponential-case correction that holds exactly when `a/d` is integrable in the log part alone). We isolate
-it as an explicit hypothesis `hcancel` and prove the reduction. -/
+For a non-primitive monomial (`deg_t v ≥ 1`), `D(t−α)/(t−α)` carries a polynomial part
+`q_α = (v − Cα′) /ₘ (t−α)`, and the RT sum equals `a/d` iff `∑_α c_α·q_α = 0` (an integrability
+condition, automatic in the primitive case). This is isolated as the hypothesis `hcancel`. -/
 
 omit [Differential K] [Algebra ℚ K] in
 /-- **Polynomial over a linear factor splits off its quotient and a simple pole** — in `RatFunc K`,
 `algebraMap p / algebraMap (X − C α) = algebraMap(p /ₘ (X − C α)) + algebraMap(C(p.eval α))/algebraMap(X
-− C α)`. From `modByMonic_add_div` (`p = C(p.eval α) + (X−Cα)·(p /ₘ (X−Cα))`, using
-`modByMonic_X_sub_C_eq_C_eval`). The euclidean split of a proper-or-improper `p/(t−α)` into its polynomial
-part and its residue-over-pole. -/
+− C α)`. From `modByMonic_add_div` and `modByMonic_X_sub_C_eq_C_eval`. -/
 theorem algebraMap_div_X_sub_C_split (p : K[X]) (α : K) :
     algebraMap K[X] (RatFunc K) p / algebraMap K[X] (RatFunc K) (X - C α)
       = algebraMap K[X] (RatFunc K) (p /ₘ (X - C α))
@@ -206,16 +150,11 @@ theorem algebraMap_div_X_sub_C_split (p : K[X]) (α : K) :
   rw [hmap]
   field_simp
 
-/-- **★★ The general monomial Rothstein–Trager partial fraction, modulo polynomial-part cancellation**
-(Bronstein Thm 5.6.1, general monomial) — for a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, an arbitrary
-monomial `Dt = v`, every root normal (`v(α) ≠ α′`), **and** the polynomial parts cancelling
-(`hcancel : ∑_{α∈s} C(c_α)·((v − Cα′) /ₘ (t−α)) = 0`), the monomial RT residue sum equals `a/d`:
-`∑_{α∈s} C(c_α)·(D(t−α)/(t−α)) = a/d`, `c_α = a(α)/(Dd)(α)`, `D = extendDeriv (implicitDeriv v)`. Per term,
-`algebraMap_div_X_sub_C_split` separates the polynomial part `C(c_α)·((v−Cα′)/ₘ(t−α))` from the residue
-`C(c_α·(v(α)−α′))/(t−α) = C(a(α)/d′(α))/(t−α)` (`residue_mul_eval_sub_eq`); the residues reassemble `a/d`
-(`ratFunc_eq_sum_residue_div`) and the polynomial parts vanish by `hcancel`. The `hcancel` hypothesis is
-the genuine extra content for non-primitive (hyperexp/hypertangent) monomials — it is the
-integrability-encoding cancellation, automatic only in the primitive case (where each quotient is `0`). -/
+/-- **The general monomial Rothstein–Trager partial fraction, modulo polynomial-part cancellation** —
+for a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, an arbitrary monomial `Dt = v`, every root normal
+(`v(α) ≠ α′`), and the polynomial parts cancelling (`hcancel : ∑_{α∈s} C(c_α)·((v − Cα′) /ₘ (t−α)) = 0`),
+the monomial RT residue sum equals `a/d`: `∑_{α∈s} C(c_α)·(D(t−α)/(t−α)) = a/d`, `c_α = a(α)/(Dd)(α)`,
+`D = extendDeriv (implicitDeriv v)`. The `hcancel` hypothesis is automatic in the primitive case. -/
 theorem monomial_residue_match_of_cancel (s : Finset K) (a v : K[X])
     (hA : a.degree < s.card) (hnorm : ∀ α ∈ s, v.eval α ≠ α′)
     (hcancel : ∑ α ∈ s, algebraMap K[X] (RatFunc K)
@@ -251,18 +190,14 @@ theorem monomial_residue_match_of_cancel (s : Finset K) (a v : K[X])
   rw [Finset.sum_congr rfl hterm, Finset.sum_add_distrib, ← map_sum, hc] at *
   rw [hcancel, zero_add, ← ratFunc_eq_sum_residue_div s a hA]
 
-/-! ### Step 6: the primitive case as a corollary — the cancellation is automatic
+/-! ### The primitive case: the cancellation is automatic
 
-For a primitive monomial `Dt = C w`, the polynomial part of each term vanishes: `(C w − Cα′) /ₘ (X−Cα) =
-C(w−α′) /ₘ (X−Cα) = 0` (degree `0 < 1`). So `hcancel` holds termwise and `monomial_residue_match_of_cancel`
-applies unconditionally — recovering `primitive_monomial_residue_match`. This exhibits the primitive case
-as the regime where the genuinely-extra `hcancel` content is free. -/
+For a primitive monomial `Dt = C w`, each polynomial part `(C w − Cα′) /ₘ (X−Cα)` is `0`, so `hcancel`
+holds termwise. -/
 
 omit [Algebra ℚ K] in
 /-- **Primitive monomials cancel automatically** — for `Dt = C w`, each polynomial part `(C w − Cα′) /ₘ
-(X−Cα)` is `0` (a degree-`0` polynomial over the degree-`1` `X − Cα`), so the cancellation hypothesis
-`hcancel` of `monomial_residue_match_of_cancel` is satisfied termwise. The primitive case is the regime
-where the non-primitive `hcancel` content is automatic. -/
+(X−Cα)` is `0`, so the `hcancel` hypothesis of `monomial_residue_match_of_cancel` holds termwise. -/
 theorem primitive_cancel (s : Finset K) (a : K[X]) (w : K) :
     ∑ α ∈ s, algebraMap K[X] (RatFunc K)
         (C (a.eval α / (Differential.implicitDeriv (C w) (Lagrange.nodal s id)).eval α)
@@ -278,28 +213,21 @@ theorem primitive_cancel (s : Finset K) (a : K[X]) (w : K) :
 
 end ResidueMatchTower
 
-/-! ### Step 7: the primitive RT residue match in the ENGINE's vocabulary
+/-! ### The primitive RT residue match in the engine's vocabulary
 
-The engine phrases the residue sum over `amG α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))`
-and `towerFractionFieldDerivG Dt = extendDeriv (implicitDeriv (toPolyG Dt))`. Since `amG` is *definitionally*
-that `algebraMap` and `towerFractionFieldDerivG` unfolds to the extended derivation, the `K[X]`-level
-primitive theorem restates directly over the tower carrier `K = CFieldSpec.K α` with `v = toPolyG Dt`. This
-is the Rothstein–Trager residue match in exactly the form the engine's `logResidueSumG_eq_of_residue_match`
-consumes — for a *primitive* monomial (`toPolyG Dt = C w`) and the squarefree denominator factored as
-`∏(t−α)` over its roots. -/
+Restated over `amG α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))` and
+`towerFractionFieldDerivG Dt`, in the form `logResidueSumG_eq_of_residue_match` consumes. -/
 
 open Compute CPolyG QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **★ The primitive RT residue match in the engine's `amG`/`towerFractionFieldDerivG` vocabulary** — for
-a primitive monomial with `toPolyG Dt = C w` (`w ∈ CFieldSpec.K α`), a squarefree `d = ∏_{α∈s}(t−α)`,
-`deg a < #s`, and every root normal, the engine-shaped residue sum `∑_{α∈s} amG(C(c_α))·(D(t−α)/(t−α)) =
-a/d` over `RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt`. The `K[X]`-level
-`primitive_monomial_residue_match` transported verbatim through the definitional `amG = algebraMap` and the
-`towerFractionFieldDerivG` unfolding — the unconditional `hmatch` for primitive (logarithmic) tower
-extensions, phrased exactly as the engine consumes it. -/
+/-- **The primitive RT residue match in the engine's `amG`/`towerFractionFieldDerivG` vocabulary** — for
+a primitive monomial with `toPolyG Dt = C w`, a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, and every
+root normal, the engine-shaped residue sum `∑_{α∈s} amG(C(c_α))·(D(t−α)/(t−α)) = a/d` over
+`RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt`. The unconditional `hmatch` for
+primitive tower extensions. -/
 theorem primitive_monomial_residue_match_engine (Dt : CPolyG α) (s : Finset (CFieldSpec.K α))
     (a : (CFieldSpec.K α)[X]) (w : CFieldSpec.K α) (hDt : toPolyG Dt = C w)
     (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, w ≠ β′) :
@@ -316,33 +244,16 @@ theorem primitive_monomial_residue_match_engine (Dt : CPolyG α) (s : Finset (CF
   rw [hDt]
   exact ResidueMatchTower.primitive_monomial_residue_match s a w hA hnorm
 
-/-! ### ★ Status — what is proven, and the precise remaining obstruction
+/-! ### Status
 
-PROVEN (axiom-clean `[propext, Classical.choice, Quot.sound]`, no `native_decide`):
-* The ★ Rothstein–Trager **absorption identity** `(Dd)(α) = d′(α)·(v(α) − α′)` at a simple root
-  (`ResidueMatchTower.eval_implicitDeriv_of_isRoot`) — the monomial-derivation crux (Bronstein Thm 5.6.1),
-  the same gap as the algebraic `isRadicalLogIntegral_of_residue_match`.
-* The **primitive-case `hmatch`** unconditionally: `∑ c_α·D(t−α)/(t−α) = a/d` for `Dt = C w`
-  (`ResidueMatchTower.primitive_monomial_residue_match`, and in engine vocabulary
-  `primitive_monomial_residue_match_engine`). This discharges `hmatch` for primitive (logarithmic) tower
-  extensions.
-* The **general-case `hmatch` modulo cancellation** (`ResidueMatchTower.monomial_residue_match_of_cancel`):
-  for ANY monomial, `∑ c_α·D(t−α)/(t−α) = a/d` GIVEN the polynomial-part cancellation
-  `hcancel : ∑ c_α·((v−Cα′) /ₘ (t−α)) = 0`, with `hcancel` automatic in the primitive case
-  (`ResidueMatchTower.primitive_cancel`).
+Proven: the absorption identity at a simple root (`eval_implicitDeriv_of_isRoot`), the unconditional
+primitive-case match (`primitive_monomial_residue_match`, and `primitive_monomial_residue_match_engine`),
+and the general-case match modulo cancellation (`monomial_residue_match_of_cancel`, with `hcancel`
+automatic in the primitive case via `primitive_cancel`).
 
-PRECISE REMAINING OBSTRUCTION (for the FULL unconditional `hmatch`, all monomials):
-1. **The non-primitive polynomial cancellation `∑ c_α·((v−Cα′) /ₘ (t−α)) = 0`** is genuinely extra content,
-   NOT a free identity: for `Dt = η′·t` (hyperexponential) it reduces to `∑_α c_α = 0`, the
-   exponential-case correction that holds *exactly when* `a/d` is integrable in the log part alone. The
-   isolated lemma `monomial_residue_match_of_cancel` pins it; proving it needs the integrability witness the
-   engine carries (the resultant having all roots rational AND the leftover proper), routed through a
-   degree/`t`-power argument — the analogue of Bronstein's reduction of the hyperexp case.
-2. **Engine list↔Finset + grouped-GCD bridge:** the engine's `logResidueSumG_eq_of_residue_match` `hmatch` is
-   a `List` sum over grouped args `vᵢ = gcd(d, a−cᵢDd)` (products of equal-residue factors), vs. the
-   Finset-over-roots form here. Mathlib's `Finset.sum_fiberwise` regrouping (as in
-   `PartialFraction.ratFunc_eq_sum_residue_grouped`) bridges the grouping; the list↔Finset and
-   `d = nodal (roots d)` (splitting-field factorization) are mechanical but unwritten. -/
+Remaining for the full unconditional match (all monomials): the non-primitive polynomial cancellation
+`∑ c_α·((v−Cα′) /ₘ (t−α)) = 0` (an integrability condition, e.g. `∑ c_α = 0` for `Dt = η′·t`), and the
+`List`↔`Finset` + grouped-GCD bridge to `logResidueSumG_eq_of_residue_match`. -/
 
 #print axioms ResidueMatchTower.eval_implicitDeriv_of_isRoot
 #print axioms ResidueMatchTower.primitive_monomial_residue_match
