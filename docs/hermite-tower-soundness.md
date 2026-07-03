@@ -131,3 +131,18 @@ Then feed M2 (item hstep) + Y4-extended (radical) + item-2 (structural) into the
 
 Once M2+M3 land, `hNrmField` for the reduced part is discharged down to the RT residue-match frontier,
 matching the primitive/hyperexp footing (see `risch-typeclass-architecture.md`).
+
+## Yun side COMPLETE (2026-07-04) — pole-cancellation isolated to one valuation lemma
+
+`YunTowerCorrect.lean` now proves the full multiplicity correspondence and every structural input to
+`prod_dvd_residNum`:
+- `cSqfreeYunFFGWf_forall₂` — tower factors `~Forall₂ [sqfreeFactPart A 1, A 2, …]` (via entry `YunInv`
+  + `map_toPolyG_cSqfreeYunFFGgoWf_eq` denoting `yunLoopAbs` + the phantom-`A,i` irrelevance).
+- `cSqfreeYunFFGWf_isRelPrime` (`hpw`), `cSqfreeYunFFGWf_pow_dvd` (`hpow`), radical split (`hSD`), M2
+  (`hstep`), zipIdx-nodup (`hnd`) — **all inputs proven**.
+
+The pole-cancellation `W∣R` is now isolated to a **single** deeply derivation-dependent lemma:
+`deriv_fold_sub_glocIncr_isQRegular` (the `IsQRegular` valuation of `D(fold − gloc_k)` at `Vk`). The rest
+of `dvd_residNum_factor`/`prod_dvd_residNum` (`dvd_num_of_isQRegular`, `list_prod_dvd_of_pairwise`, the
+pow-divides addition) is pure polynomial and portable. Remaining: port that one valuation lemma +
+`total_fold_residual` (fold-sum of the M2 identities) to the tower derivation, then assemble.
