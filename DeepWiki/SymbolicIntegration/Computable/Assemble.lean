@@ -240,4 +240,52 @@ theorem cIntegrateCase_primitive_sound (Dt a d : CPolyG α) (cands : List α) (r
       (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) specialVal hsden hgden hSpec rfl hsome
     hSpecField hNrmField hrecon
 
+/-- **Primitive case with the special-part identity discharged** (canonical primitive `Dt = 1`, `fₚ ≠ 0`):
+`hSpecField` is no longer a hypothesis — it follows from `cPolyRischDEGWf_nil_field_identity` (the engine's
+own poly-RDE soundness), leaving only the shared reduced identity (`hNrmField`) and the reconstruction
+(`hrecon`). One step closer to unconditional. -/
+theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
+    (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
+    (hgden : toPolyG (cIntegrateReducedGWf ([CField.one] : CPolyG α)
+        (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
+        (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).rational.2 ≠ 0)
+    (hb : cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.1.1 = true)
+    (hfp : cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1 = false)
+    (hconst : Differential.mapCoeffs
+        (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1) = 0)
+    (hqp : cPolyRischDEGWf ([CField.one] : CPolyG α) [] (canonicalRepresentationFastGWf
+        ([CField.one] : CPolyG α) a d).1
+        ((cdegG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1 : ℤ) + 1) = some qp)
+    (hsome : cIntegrateCase primitiveCase ([CField.one] : CPolyG α) a d cands = some res)
+    (hNrmField : towerFractionFieldDerivG ([CField.one] : CPolyG α)
+            (amG α (toPolyG (cIntegrateReducedGWf ([CField.one] : CPolyG α)
+                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
+                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).rational.1)
+              / amG α (toPolyG (cIntegrateReducedGWf ([CField.one] : CPolyG α)
+                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
+                (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).rational.2))
+          + logResidueSumG ([CField.one] : CPolyG α) (cIntegrateReducedGWf ([CField.one] : CPolyG α)
+              (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1
+              (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2 cands).logs
+        = amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2))
+    (hrecon : amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1)
+            / amG α (toPolyG ([CField.one] : CPolyG α))
+          + amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d)) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG α)
+        (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG ([CField.one] : CPolyG α) res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  exact cIntegrateCase_primitive_sound ([CField.one] : CPolyG α) a d cands res qp
+    (amG α (toPolyG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1)
+      / amG α (toPolyG ([CField.one] : CPolyG α)))
+    (by rw [hone]; exact one_ne_zero) hgden hb hqp hsome
+    (cPolyRischDEGWf_nil_field_identity (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1
+      qp _ hfp (le_refl _) hqp hconst)
+    hNrmField hrecon
+
 end DeepWiki.SymbolicIntegration
