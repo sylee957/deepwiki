@@ -50,6 +50,7 @@ import DeepWiki.SymbolicIntegration.Computable.Tower
 import DeepWiki.SymbolicIntegration.Computable.TranscendentalOverAlgebraic
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Computable.LaurentSoundness
+import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.Assemble
 
 /-! # The generic executable Risch engine (`CField` / `CPolyG` world) — aggregator over the
