@@ -101,9 +101,9 @@ def radTransformAtInfinity (rho g0 g1 D : CPolyG α) :
 of `D̃`; the **residue at infinity** is the `t = 0` factor. For the clean even-degree arcsinh/arccosh
 differentials the other roots (`t = ±i`, the curve's branch points) have residue `0`, so the **nonzero**
 roots of `R̃` are exactly the residues at ∞. Reuses the resultant — no new elimination. -/
-def cAlgResidueAtInfinity (fuel : ℕ) (rho g0 g1 D : CPolyG α) : CPolyG α :=
+def cAlgResidueAtInfinity (rho g0 g1 D : CPolyG α) : CPolyG α :=
   let (rhoT, g0T, g1T, DT) := radTransformAtInfinity rho g0 g1 D
-  cAlgResidueResultant fuel DT rhoT g0T g1T
+  cAlgResidueResultant DT rhoT g0T g1T
 
 /-- **Isolated residue at the place `t = 0`** (= the residue at infinity) `cResidueAtInfinityPlace fuel
 ρ g₀ g₁ D = (Z·D̃'(0) − g̃₀(0))² − g̃₁(0)²·ρ̃(0) ∈ K[Z]`, the `t = 0` factor of the eq. 7 norm with the
@@ -173,7 +173,7 @@ theorem arcsinhInf_residue_eq :
 `t = 0` place (residue at ∞, `±1`); the `Z⁴` is the two branch places `t = ±i` (`x = ∓i`, the curve's
 branch points) where the residue vanishes. So the nonzero roots of `R̃` are the residues at ∞. -/
 theorem arcsinhInf_full_resultant_eq :
-    cisZeroG (csubG (cAlgResidueAtInfinity 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
+    cisZeroG (csubG (cAlgResidueAtInfinity arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D)
       [0, 0, 0, 0, -16, 0, 16]) = true := by native_decide
 
 /-- **★ `±1` are residues at ∞; `2` is not** (`native_decide`): `cIsResidue` on the isolated place
@@ -206,7 +206,7 @@ at infinity is `±1`. The two ∞-residues `+1, −1` sum to `0`, and `0 + 0 = 0
 `cAlgResidueResultant D ρ g₀ g₁ = 16·Z⁴` — a pure `Z`-power, so every finite residue is `0`. (The roots
 of `D = x² + 1` are `x = ±i`, the branch points, with vanishing residue.) -/
 theorem arcsinhInf_finite_residues_zero :
-    cisZeroG (csubG (cAlgResidueResultant 30 arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1)
+    cisZeroG (csubG (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1)
       [0, 0, 0, 0, 16]) = true := by native_decide
 
 /-- **★ The residue theorem for `∫ dx/√(x² + 1)`** (`native_decide`): finite residues are all `0`
@@ -216,8 +216,8 @@ resultant `Z² − 1 = (Z − 1)(Z + 1)`, residues `+1, −1`) — and the finit
 residue theorem (finite + ∞ = 0) is satisfied: the arcsinh log term comes entirely from infinity. -/
 theorem arcsinhInf_residue_theorem :
     cResiduesMatch (cResidueAtInfinityPlace 30 arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1 arcsinhInf_D) [1, -1] = true
-    ∧ cisZeroG (cAlgResidueResultant 30 arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) = false
-    ∧ cResiduesMatch (cAlgResidueResultant 30 arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) [0, 0, 0, 0] = true := by
+    ∧ cisZeroG (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) = false
+    ∧ cResiduesMatch (cAlgResidueResultant arcsinhInf_D arcsinhInf_rho arcsinhInf_g0 arcsinhInf_g1) [0, 0, 0, 0] = true := by
   native_decide
 
 /-! ### ★ STRETCH 1: a differential with BOTH finite and ∞ residues nonzero (`native_decide`)
@@ -240,7 +240,7 @@ def bothInf_g1 : CPolyG ℚ := [1]
 def bothInf_D : CPolyG ℚ := [0, -1, 1]
 
 -- Sanity: finite `(Z²−1)(Z²−2) = Z⁴−3Z²+2`, then the ∞ place `Z²−1`.
-#eval (cnormG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ)
+#eval (cnormG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ)
 #eval (cnormG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ)
 
 /-- **★ Finite residue resultant of `∫ √(x²+1)/(x²−x) dx` is `(Z²−1)(Z²−2)`** (`native_decide`): the
@@ -248,7 +248,7 @@ finite eq. 7 resultant `cAlgResidueResultant D ρ g₀ g₁ = Z⁴ − 3Z² + 2`
 roots `±1` (pole `x = 0`) and `±√2` (pole `x = 1`) — both nonzero, the `±√2` an irrational residue
 requiring the splitting field `ℚ(√2)`. -/
 theorem bothInf_finite_resultant_eq :
-    cisZeroG (csubG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1)
+    cisZeroG (csubG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1)
       [2, 0, -3, 0, 1]) = true := by native_decide
 
 /-- **★ Residue at infinity of `∫ √(x²+1)/(x²−x) dx` is `±1`** (`native_decide`): the isolated `t = 0`
@@ -266,9 +266,9 @@ Z⁴ + 0·Z³ − 3Z² + 0·Z + 2` has root-sum `0`; the ∞ `Z² − 1 = Z² + 
 ends — the engine computes the complete residue picture. (Checked: the `Z³` coefficient of the finite
 resultant and the `Z¹` coefficient of the ∞ resultant are both `0`.) -/
 theorem bothInf_residue_theorem :
-    ((cnormG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ).getD 3 0 = 0)
+    ((cnormG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) : List ℚ).getD 3 0 = 0)
     ∧ ((cnormG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) : List ℚ).getD 1 0 = 0)
-    ∧ cisZeroG (cAlgResidueResultant 40 bothInf_D bothInf_rho bothInf_g0 bothInf_g1) = false
+    ∧ cisZeroG (cAlgResidueResultant bothInf_D bothInf_rho bothInf_g0 bothInf_g1) = false
     ∧ cisZeroG (cResidueAtInfinityPlace 40 bothInf_rho bothInf_g0 bothInf_g1 bothInf_D) = false := by
   native_decide
 

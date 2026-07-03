@@ -197,7 +197,7 @@ def radLogResG0 : CPolyG ℚ := []
 def radLogResG1 : CPolyG ℚ := [1]
 
 /-- The computed residue resultant `R(Z)` for `∫ dx/(x√(x²+1))` (Trager eq. 7, `n = 2`). -/
-def radLogResR : CPolyG ℚ := cAlgResidueResultant 30 radLogResD radLogResRho radLogResG0 radLogResG1
+def radLogResR : CPolyG ℚ := cAlgResidueResultant radLogResD radLogResRho radLogResG0 radLogResG1
 
 -- Sanity print: `R(Z) = 16·Z⁴(Z² − 1) = −16·Z⁴ + 16·Z⁶` (low→high in `Z`).
 #eval (cnormG radLogResR : List ℚ)

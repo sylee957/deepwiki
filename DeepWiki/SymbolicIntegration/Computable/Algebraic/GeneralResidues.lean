@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResidues
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgFunctionField
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 
 /-! # Algebraic-function residues for arbitrary curves: the full double resultant
 
@@ -40,12 +41,12 @@ constant-in-`y` term `z·D'(x)` (`qxOfNum [z] · Dder`, a singleton `CPolyG`) mi
 def zDderMinusG (g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPolyG (QFunNZG ℚ) :=
   csubG [CField.mul (qxOfNum [z]) Dder] g
 
-/-- `resYAtNode fuelY f g Dder z = res_Y(z·D'(X) − g(X, Y), F(X, Y))` at the rational node `Z = z`,
+/-- `resYAtNode f g Dder z = res_Y(z·D'(X) − g(X, Y), F(X, Y))` at the rational node `Z = z`,
 read as a `ℚ[X]`-polynomial: the resultant in `y` (`cresultantG fuelY` over the field
 `α = QFunNZG ℚ`) of `zDderMinusG g Dder z` against the monic curve `f`, recovered as `CPolyG ℚ` by
 `qToPolyQ`. The general-curve replacement for the `n = 2` norm `(z·D' − g₀)² − g₁²·ρ`. -/
-def resYAtNode (fuelY : ℕ) (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPolyG ℚ :=
-  qToPolyQ (cresultantG fuelY (zDderMinusG g Dder z) f)
+def resYAtNode (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPolyG ℚ :=
+  qToPolyQ (cresultantWf (zDderMinusG g Dder z) f)
 
 /-! ### The full general-`F` residue resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`
 
@@ -71,12 +72,12 @@ gives `R(z) ∈ ℚ`, and `cinterpolateG` recovers `R(Z)`. `deg_Z R ≤ n·deg_X
 hyperelliptic case collapsed the inner `res_Y` to the norm `(z·D' − g₀)² − g₁²·ρ`, here it is the full
 `res_Y`. `Dder = D'(x) ∈ K(x)` (the `x`-derivative of `D`, supplied by the caller — `D` itself is a
 `ℚ[X]`-polynomial). -/
-def genResidueResultant (fuelY fuelX : ℕ) (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
+def genResidueResultant (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
     (D : CPolyG ℚ) : CPolyG ℚ :=
   let nNodes := cdegG f * cdegG D + 1                        -- `deg_Z R ≤ n · deg_X D`
   let pts : List (ℚ × ℚ) := (List.range (nNodes + 1)).map (fun k =>
     let z : ℚ := (k : ℚ)
-    (z, cresultantG fuelX (resYAtNode fuelY f g Dder z) D))
+    (z, cresultantWf (resYAtNode f g Dder z) D))
   cinterpolateG pts
 
 end CPolyG
@@ -119,7 +120,7 @@ def genResTrigDder : QFunNZG ℚ := qxOfNum [1]
 
 /-- The computed general residue resultant `R(Z)` for `∫ (y/(x−1)) dx` on `y³ + xy + x = 0`. -/
 def genResTrigR : CPolyG ℚ :=
-  genResidueResultant 20 20 genResTrigF genResTrigG genResTrigDder genResTrigD
+  genResidueResultant genResTrigF genResTrigG genResTrigDder genResTrigD
 
 /-- The expected `R(Z) = F(1, Z) = Z³ + Z + 1` (low→high in `Z`, `[1, 1, 0, 1]`): the residues are the
 three roots `y₀` of the curve fiber `F(1, y) = y³ + y + 1`. -/
@@ -161,7 +162,7 @@ def genResTrigG1 : CPolyG (QFunNZG ℚ) := [CField.one]
 
 /-- The computed `R(Z)` for `∫ dx/(x − 1)` on the trigonal curve `y³ + xy + x = 0`. -/
 def genResTrigR1 : CPolyG ℚ :=
-  genResidueResultant 20 20 genResTrigF genResTrigG1 genResTrigDder genResTrigD
+  genResidueResultant genResTrigF genResTrigG1 genResTrigDder genResTrigD
 
 /-- The expected `R(Z) = (Z − 1)³ = Z³ − 3Z² + 3Z − 1` (low→high, `[−1, 3, −3, 1]`): the common residue
 `1` on all three sheets, with multiplicity `n = 3`. -/
@@ -213,8 +214,8 @@ GENERAL ENGINE CONTAINS THE HYPERELLIPTIC CASE — the full `resultant_Y` collap
 when `F = y² − ρ` and `g` is linear in `y`, so the two `R(Z)` agree. -/
 theorem genResHyp_conservativity :
     cisZeroG (csubG
-      (genResidueResultant 20 20 genResHypF genResHypG genResHypDder genResHypD)
-      (cAlgResidueResultant 20 algResExX_D algResExX_rho algResExX_g0 algResExX_g1)) = true := by
+      (genResidueResultant genResHypF genResHypG genResHypDder genResHypD)
+      (cAlgResidueResultant algResExX_D algResExX_rho algResExX_g0 algResExX_g1)) = true := by
   native_decide
 
 /-- Restatement (the deliverable): the general-curve residue resultant `genResidueResultant` of
@@ -223,7 +224,7 @@ F(1, Z)`, whose roots are the residues (the three sheets over the pole `x = 1`) 
 double resultant `res_X(res_Y(Z·D' − g, F), D)` over the constant field ℚ, beyond the hyperelliptic
 norm. -/
 example : cisZeroG (csubG
-    (genResidueResultant 20 20 genResTrigF genResTrigG genResTrigDder genResTrigD)
+    (genResidueResultant genResTrigF genResTrigG genResTrigDder genResTrigD)
     [1, 1, 0, 1]) = true := by native_decide
 
 /-! ### The NEXT pieces: residues → divisors → the algebraic rational part → the integrator

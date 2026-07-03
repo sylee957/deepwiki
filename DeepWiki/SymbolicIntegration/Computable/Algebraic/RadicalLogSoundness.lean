@@ -578,14 +578,12 @@ norm operand. Composed with `toPolyG_cAlgResidueNorm` (reading the norm abstract
 uniqueness over the `Z`-nodes (the mechanical Lagrange step), this connects the abstract
 `roots_residueResultant_eq_residues` to the engine's `cAlgResidueResultant`. Mirrors the single-resultant
 per-node link `Compute.cresultant_sample_eq_eval` in `RtResultantCorrectness`. -/
-theorem toK_cresultantG_cAlgResidueNorm (fuel : ℕ) (Dprime rho g0 g1 D : CPolyG α) (c : α)
-    (hfuel : (CPolyG.cnormG (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c) : List α).length
-        + (CPolyG.cnormG D : List α).length + 2 ≤ fuel) :
-    CFieldSpec.toK (CPolyG.cresultantG fuel (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c) D)
+theorem toK_cresultantG_cAlgResidueNorm (Dprime rho g0 g1 D : CPolyG α) (c : α) :
+    CFieldSpec.toK (CPolyG.cresultantWf (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c) D)
       = Polynomial.resultant (CPolyG.toPolyG (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c))
           (CPolyG.toPolyG D) (CPolyG.cdegG (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c))
           (CPolyG.cdegG D) :=
-  CPolyG.toPolyG_cresultantG fuel (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c) D hfuel
+  CPolyG.toPolyG_cresultantWf (CPolyG.cAlgResidueNorm Dprime rho g0 g1 c) D
 
 /-! #### ★ Input (a) CLOSED — the interpolation-uniqueness characterization of `cAlgResidueResultant`
 
@@ -613,25 +611,25 @@ resultant is the unique degree-`< 2·deg D + 2` polynomial with those node value
 (squared-norm) `Z`-degree bound. The node images `toK(cnatCastG k) = (k : K)` are distinct
 (`toK_cnatCastG` + `Nat.cast` injectivity in char 0 is NOT assumed — distinctness is over the
 node-index set, handled by `Set.InjOn` on `Nat.cast` restricted to the range). -/
-theorem toPolyG_cAlgResidueResultant_eq_of_eval (fuel : ℕ) (D rho g0 g1 : CPolyG α)
+theorem toPolyG_cAlgResidueResultant_eq_of_eval (D rho g0 g1 : CPolyG α)
     (R : (CFieldSpec.K α)[X])
     (hRdeg : R.degree < (2 * (CPolyG.toPolyG D).natDegree + 2 : ℕ))
     (hinj : Set.InjOn (fun k : ℕ => CFieldSpec.toK (CPolyG.cnatCastG (α := α) k))
       (Finset.range (2 * CPolyG.cdegG D + 1 + 1)))
     (hnode : ∀ k ∈ Finset.range (2 * CPolyG.cdegG D + 1 + 1),
       R.eval (CFieldSpec.toK (CPolyG.cnatCastG (α := α) k))
-        = CFieldSpec.toK (CPolyG.cresultantG fuel
+        = CFieldSpec.toK (CPolyG.cresultantWf
             (CPolyG.cAlgResidueNorm (CPolyG.cderivG D) rho g0 g1 (CPolyG.cnatCastG k)) D)) :
-    CPolyG.toPolyG (CPolyG.cAlgResidueResultant fuel D rho g0 g1) = R := by
+    CPolyG.toPolyG (CPolyG.cAlgResidueResultant D rho g0 g1) = R := by
   classical
   -- the engine builds `cAlgResidueResultant = cinterpolateG pts` over the `Z`-nodes
   set Dprime := CPolyG.cderivG D with hDp
   set pts : List (α × α) :=
     (List.range (2 * CPolyG.cdegG D + 1 + 1)).map (fun k =>
       (CPolyG.cnatCastG (α := α) k,
-        CPolyG.cresultantG fuel (CPolyG.cAlgResidueNorm Dprime rho g0 g1 (CPolyG.cnatCastG k)) D))
+        CPolyG.cresultantWf (CPolyG.cAlgResidueNorm Dprime rho g0 g1 (CPolyG.cnatCastG k)) D))
     with hpts
-  have hcompute : CPolyG.cAlgResidueResultant fuel D rho g0 g1 = CPolyG.cinterpolateG pts := rfl
+  have hcompute : CPolyG.cAlgResidueResultant D rho g0 g1 = CPolyG.cinterpolateG pts := rfl
   -- node-image list and its distinctness
   have hfst : pts.map (fun p => CFieldSpec.toK p.1)
       = (List.range (2 * CPolyG.cdegG D + 1 + 1)).map
@@ -666,7 +664,7 @@ theorem toPolyG_cAlgResidueResultant_eq_of_eval (fuel : ℕ) (D rho g0 g1 : CPol
   · -- agree at the nodes: `toPolyG(cinterpolateG pts)(k) = node value = R(k)`
     intro k hk
     have hmem : (CPolyG.cnatCastG (α := α) k,
-        CPolyG.cresultantG fuel (CPolyG.cAlgResidueNorm Dprime rho g0 g1 (CPolyG.cnatCastG k)) D)
+        CPolyG.cresultantWf (CPolyG.cAlgResidueNorm Dprime rho g0 g1 (CPolyG.cnatCastG k)) D)
         ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, by simpa using hk, rfl⟩
     rw [CPolyG.eval_toPolyG_cinterpolateG pts hnodup hmem]

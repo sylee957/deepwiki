@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalCase2
 import DeepWiki.SymbolicIntegration.Computable.Integrate
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 
 /-! # Log-part residues of algebraic-function integrals
 
@@ -33,12 +34,12 @@ nodes `c = 0, 1, …, 2·deg D`, take `cresultantG` of the inner norm against `D
 (`cinterpolateG`). `deg_Z R ≤ 2·deg_X D`, so `2·deg D + 1` nodes are exact. `fuel` is threaded to the
 inner `cresultantG`. Restricted to `n = 2` — the linear-in-`y` reduction is what collapses the inner
 `resultant_Y` to a single norm. `[CField α]`. -/
-def cAlgResidueResultant (fuel : ℕ) (D rho g0 g1 : CPolyG α) : CPolyG α :=
+def cAlgResidueResultant (D rho g0 g1 : CPolyG α) : CPolyG α :=
   let Dprime := cderivG D
   let nNodes := 2 * cdegG D + 1                          -- `deg_Z R ≤ 2·deg_X D`
   let pts : List (α × α) := (List.range (nNodes + 1)).map (fun k =>
     let c : α := cnatCastG k
-    (c, cresultantG fuel (cAlgResidueNorm Dprime rho g0 g1 c) D))
+    (c, cresultantWf (cAlgResidueNorm Dprime rho g0 g1 c) D))
   cinterpolateG pts
 
 /-! ### Residue membership and the integer-residue failure-test certificate -/
@@ -80,7 +81,7 @@ def algResExX_g0 : CPolyG ℚ := []
 def algResExX_g1 : CPolyG ℚ := [1]
 
 /-- The computed residue resultant `R(Z)` for `∫ dx/((x−1)√x)`. -/
-def algResExX_R : CPolyG ℚ := cAlgResidueResultant 20 algResExX_D algResExX_rho algResExX_g0 algResExX_g1
+def algResExX_R : CPolyG ℚ := cAlgResidueResultant algResExX_D algResExX_rho algResExX_g0 algResExX_g1
 
 /-- The expected monic residue resultant `R(Z) = Z⁴ − Z² = Z²(Z − 1)(Z + 1)` (low→high in `Z`,
 `[0, 0, -1, 0, 1]`): residues `Z = ±1` (the simple pole at `x = 1`, sheets `y = ±1`) and `Z = 0` of
@@ -120,7 +121,7 @@ theorem algResExX_all_residues_integer :
 `∫ dx/((x − 1)·y)` on `y² = x` is `Z⁴ − Z²`, whose nonzero roots `±1` are the residues — computed by
 Trager eq. 7 over the constant field ℚ alone. -/
 example : cisZeroG (csubG
-    (cAlgResidueResultant 20 algResExX_D algResExX_rho algResExX_g0 algResExX_g1)
+    (cAlgResidueResultant algResExX_D algResExX_rho algResExX_g0 algResExX_g1)
     [0, 0, -1, 0, 1]) = true := by native_decide
 
 #print axioms algResExX_resultant_eq
