@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.NormalCore
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
+import DeepWiki.SymbolicIntegration.Computable.Hyperexp.FullSoundness
 
 /-! # Assemblable one-level Risch integrator
 
@@ -107,5 +108,48 @@ theorem cIntegrateCase_hyperexp_specNorm :
         hyperexpSpecNormCands with
       | some res => checkIdentityG hyperexpDt res hyperexpSpecNormA hyperexpSpecNormD
       | none => false) = true := by native_decide
+
+/-! ### Soundness transported through the `rfl` bridge (P2 slice)
+
+Because `cIntegrateCase hyperexpCase` is definitionally `cIntegrateHyperexpFullGWf`, the driver's full
+field-identity soundness applies to the assembler verbatim — no re-proof. -/
+
+open QFunNZG Polynomial
+open scoped Differential
+
+/-- **The assembler's hyperexp case is sound.** Same field-identity conclusion as
+`cIntegrateHyperexpFullGWf_sound`, transported through the `rfl` bridge: if `cIntegrateCase hyperexpCase`
+returns `res` with the Laurent/normal sub-solves and their field identities, then
+`D(res.rational) + logResidueSum res.logs = a/d`. -/
+theorem cIntegrateCase_hyperexp_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
+    (Dt a d : CPolyG α)
+    (cands : List α) (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
+    (fpPart : CPolyG α) (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
+    (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
+        (canonicalRepresentationFastGWf Dt a d).1
+        (cHyperexpSpecialNegG (canonicalRepresentationFastGWf Dt a d).2.1.1
+          (canonicalRepresentationFastGWf Dt a d).2.1.2)
+      = some (lnum, lden))
+    (hNrm : cIntegrateHyperexpNormalGWf Dt
+        (canonicalRepresentationFastGWf Dt a d).2.2.1
+        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands = some nrm)
+    (hsome : cIntegrateCase hyperexpCase Dt a d cands = some res)
+    (hLaurField : towerFractionFieldDerivG Dt (amG α (toPolyG lnum) / amG α (toPolyG lden))
+        = amG α (toPolyG fpPart))
+    (hNrmField : towerFractionFieldDerivG Dt
+            (amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2))
+          + logResidueSumG Dt nrm.logs
+        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
+    (hrecon : amG α (toPolyG fpPart)
+          + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+        = amG α (toPolyG a) / amG α (toPolyG d)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  cIntegrateHyperexpFullGWf_sound Dt a d cands res lnum lden nrm fpPart hlden hgden hLaur hNrm hsome
+    hLaurField hNrmField hrecon
 
 end DeepWiki.SymbolicIntegration
