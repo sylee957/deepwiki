@@ -381,31 +381,9 @@ def cPolyRischDEG (Dt : CPolyG α) (fuel : ℕ) (b c : CPolyG α) (n : ℤ) :
 `Dy + f·y = g`, or `none`. The base solve inside the cancellation cases is the typeclass `crischDESolve`,
 so a *level-`n+1`* call of `cRischDEG` recurses into the *level-`n`* `crischDESolve`. -/
 
-/-- **The generic Risch differential equation solver** `cRischDEG Dt fuel fnum fden gnum gden` (Bronstein
-Ch. 6, assembled), the `[CField α] [CDiffField α] [CRischField α]`-generic mirror of `cRischDE`. For
-`f = fnum/fden`, `g = gnum/gden ∈ α(t)` and the monomial derivation `D = cmonomialDeriv Dt`, returns
-`some (ynum, yden)` with `y = ynum/yden ∈ α(t)` solving `Dy + f·y = g`, or `none`. Stages: §6.2 normal
-denominator (`cRdeNormalDenominatorG`) → §6.2 special denominator (`cRdeSpecialDenominatorG`) → §6.3
-degree bound (`cRdeBoundDegreeG`) → §6.4 SPDE (`cSPDEG`) → §6.5/§6.6 PolyRischDE dispatch
-(`cPolyRischDEG`), with the polynomial unknown `Q = α'·v + β` reassembled to `y = Q·h₁ / h₀`. The
-cancellation cases recurse into `CRischField.crischDESolve` over `α` — at level `n+1` this is the level-`n`
-oracle. (`f` is assumed weakly normalized — the post-Hermite RDE input; `cWeakNormalizerG` returns `q = 1`
-on such `f`.) -/
-def cRischDEG (Dt : CPolyG α) (fuel : ℕ) (fnum fden gnum gden : CPolyG α) :
-    Option (CPolyG α × CPolyG α) :=
-  match cRdeNormalDenominatorG Dt fuel fnum fden gnum gden with
-  | none => none
-  | some (a0, b0, c0, h0) =>
-    let (a, b, c, h1) := cRdeSpecialDenominatorG Dt fuel a0 b0 c0
-    let N := cRdeBoundDegreeG Dt a b c
-    match cSPDEG Dt fuel a b c (N : ℤ) with
-    | none => none
-    | some (bbar, cbar, m, α', β) =>
-      match cPolyRischDEG Dt fuel bbar cbar m with
-      | none => none
-      | some v =>
-        let Q := caddG (cmulG α' v) β
-        some (cmulG Q h1, h0)
+/-! The fuel'd `cRischDEG` assembled oracle was retired by the fuel-free switch (its instance now
+runs `cRischDEGWf`); it had no remaining code consumers. Its fuel'd stages (`cRdeNormalDenominatorG` etc.)
+survive here — still used by the fuel'd degree-bound/cancellation dev + the `crischDESolveNorm` round-trip. -/
 
 end CPolyG
 
