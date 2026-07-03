@@ -124,4 +124,67 @@ theorem prod_map_cSqfreeYunFFGgoWf_dvd (hgcd : GcdFFCorrect (α := α)) :
         _ = toPolyG b :=
               EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_left (toPolyG b) (toPolyG d))
 
+omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
+/-- The Yun-radical `foldl`-product denotes the list product through `toPolyG`:
+`toPolyG (L.foldl cmulG init) = toPolyG init · ∏ (map toPolyG L)`. -/
+theorem toPolyG_foldl_cmulG_plainList (init : CPolyG α) (L : List (CPolyG α)) :
+    toPolyG (L.foldl (fun acc vi => cmulG acc vi) init)
+      = toPolyG init * (L.map toPolyG).prod := by
+  induction L generalizing init with
+  | nil => simp
+  | cons a L ih => rw [List.foldl_cons, List.map_cons, List.prod_cons, ih, toPolyG_cmulG]; ring
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The Yun radical divides the input.** The product of `cSqfreeYunFFGWf p`'s factors divides
+`toPolyG p`: the entry `b₁ = p / gcd(p, p′)` divides `p`, and the go-loop product divides `b₁`. -/
+theorem prod_map_cSqfreeYunFFGWf_dvd (hgcd : GcdFFCorrect (α := α)) (p : CPolyG α)
+    (hp : toPolyG p ≠ 0) :
+    ((cSqfreeYunFFGWf p).map toPolyG).prod ∣ toPolyG p := by
+  rw [cSqfreeYunFFGWf]
+  set g := CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p) with hgdef
+  -- `toPolyG g ∣ toPolyG p` (associated to `gcd(p, p′)`).
+  have hgp : toPolyG g ∣ toPolyG p :=
+    (hgcd p (cderivG p)).dvd.trans (gcd_dvd_left (toPolyG p) (toPolyG (cderivG p)))
+  have hgn : cnormG g ≠ [] := by
+    intro h
+    have hg0 : toPolyG g = 0 := (cisZeroG_iff g).mp (by simp [cisZeroG, h])
+    exact hp (zero_dvd_iff.mp (hg0 ▸ hgp))
+  -- `b₁ = cdivWf p g` divides `p` (exact division).
+  have hb1 : toPolyG (cdivWf p g) * toPolyG g = toPolyG p := toPolyG_cdivWf_exact p g hgn hgp
+  have hb1dvd : toPolyG (cdivWf p g) ∣ toPolyG p := ⟨toPolyG g, hb1.symm⟩
+  exact (prod_map_cSqfreeYunFFGgoWf_dvd hgcd _ _ _).trans hb1dvd
+
+omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
+/-- `toPolyG [CField.one] = 1`. -/
+theorem toPolyG_one_singleton : toPolyG ([CField.one] : CPolyG α) = 1 := by
+  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+
+omit [CDiffFieldSpec α] in
+/-- **The Yun radical `Dstar` divides `d`** (the `cHermiteReduceTowerGWf` squarefree radical): the
+`foldl`-product of the Yun factors of `d` divides `d`, under the gcd frontier. -/
+theorem toPolyG_cHermiteReduceTowerGWf_Dstar_dvd (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd : toPolyG d ≠ 0) :
+    toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ∣ toPolyG d := by
+  rw [cHermiteReduceTowerGWf]
+  simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
+  exact prod_map_cSqfreeYunFFGWf_dvd hgcd d hd
+
+omit [CDiffFieldSpec α] in
+/-- **The radical split `d = Dstar · W`** with `W = d / Dstar`: discharges the `hSD` hypothesis of
+`hermiteTowerStep_field_identity_of_radical` for the `cHermiteReduceTowerGWf` output, under the gcd
+frontier. -/
+theorem toPolyG_yunRadical_split (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd : toPolyG d ≠ 0) :
+    toPolyG d = toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
+      * toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2) := by
+  set Dstar := (cHermiteReduceTowerGWf Dt a d).2.2 with hDstar
+  have hdvd : toPolyG Dstar ∣ toPolyG d :=
+    toPolyG_cHermiteReduceTowerGWf_Dstar_dvd hgcd Dt a d hd
+  have hDstar0 : toPolyG Dstar ≠ 0 := fun h => hd (zero_dvd_iff.mp (h ▸ hdvd))
+  have hDn : cnormG Dstar ≠ [] :=
+    fun h => hDstar0 ((cisZeroG_iff Dstar).mp (by simp [cisZeroG, h]))
+  have hex : toPolyG (cdivWf d Dstar) * toPolyG Dstar = toPolyG d :=
+    toPolyG_cdivWf_exact d Dstar hDn hdvd
+  rw [← hex, mul_comm]
+
 end DeepWiki.SymbolicIntegration
