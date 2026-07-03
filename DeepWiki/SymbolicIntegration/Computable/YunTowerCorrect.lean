@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
+import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
 /-! # Abstract correctness of the fuel-free Yun factorization `cSqfreeYunFFGWf`
 
@@ -186,5 +187,22 @@ theorem toPolyG_yunRadical_split (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPol
   have hex : toPolyG (cdivWf d Dstar) * toPolyG Dstar = toPolyG d :=
     toPolyG_cdivWf_exact d Dstar hDn hdvd
   rw [← hex, mul_comm]
+
+/-! ### Toward the Yun multiplicity correspondence: `YunInv` under constant scaling
+
+The tower entry `(toPolyG b₁, toPolyG d₁)` equals `C(u⁻¹) ·` the abstract `yunInv_base` pair (both
+components scaled by the *same* unit `u`, where `toPolyG (cgcdFFCoreWf p p′) = C u · gcd(p, p′)` from
+`GcdFFCorrect`). Since `YunInv`'s witness has a free scalar, common-constant scaling preserves it —
+so the tower entry satisfies `YunInv`, launching the `yunLoopAbs_forall₂` correspondence. -/
+
+open Classical in
+/-- `YunInv` is preserved under a common nonzero-constant scaling of the working pair `(b, d)`:
+`YunInv A i b d → e ≠ 0 → YunInv A i (C e · b) (C e · d)` (the witness scalar absorbs `e`). -/
+theorem YunInv_smul {K : Type*} [Field K] (A : K[X]) (i : ℕ) {b d : K[X]}
+    (h : YunInv A i b d) {e : K} (he : e ≠ 0) :
+    YunInv A i (Polynomial.C e * b) (Polynomial.C e * d) := by
+  obtain ⟨c, hc, hb, hd⟩ := h
+  exact ⟨e * c, mul_ne_zero he hc, by rw [hb, ← mul_assoc, ← Polynomial.C_mul],
+    by rw [hd, ← mul_assoc, ← Polynomial.C_mul]⟩
 
 end DeepWiki.SymbolicIntegration
