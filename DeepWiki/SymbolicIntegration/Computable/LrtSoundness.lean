@@ -136,6 +136,21 @@ generic (any differential extension `E`) analogue of `towerFractionFieldDerivG`.
 noncomputable def towerDerivExt (Dt : CPolyG α) : Derivation ℤ (RatFunc E) (RatFunc E) :=
   extendDeriv (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)))
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Quotient rule for `towerDerivExt`** (the `E`-analogue of `towerFractionFieldDerivG_div`): for `E`-polys
+`P, Q`, `Δ(P/Q) = (Δ'P·Q − P·Δ'Q)/Q²` in `RatFunc E`, where `Δ' = implicitDeriv (Dt base-changed to E)`. -/
+theorem towerDerivExt_div (Dt : CPolyG α) (P Q : E[X]) :
+    towerDerivExt Dt (algebraMap E[X] (RatFunc E) P / algebraMap E[X] (RatFunc E) Q)
+      = (algebraMap E[X] (RatFunc E)
+            (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) P)
+          * algebraMap E[X] (RatFunc E) Q
+          - algebraMap E[X] (RatFunc E) P
+            * algebraMap E[X] (RatFunc E)
+                (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) Q))
+        / (algebraMap E[X] (RatFunc E) Q) ^ 2 := by
+  rw [towerDerivExt, ← RatFunc.mk_eq_div, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul,
+    map_mul, map_pow]
+
 /-- The **algebraic residue sum** over `E`: `Σᵢ Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)` — the honest
 denotation of the symbolic LRT log part, summing over the residues (roots of each `Rᵢ`) in `E`. -/
 noncomputable def logResidueSumLrtG (Dt : CPolyG α)
