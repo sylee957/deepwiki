@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt
 
 /-! # General-derivation Rothstein–Trager / Lazard–Rioboo–Trager
 
@@ -417,5 +418,37 @@ theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
     · rw [lrtSubresultantGen, subresultant, Polynomial.finsetSum_coeff]
       simp only [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow, mul_ite, mul_one, mul_zero,
         Finset.sum_ite_eq, Finset.mem_range, hk, if_false]
+
+/-! ## Monic normalization (the log argument is the monic gcd, up to association) -/
+
+/-- **Monic normalization kills a scalar factor.** If `p = C k · q` with `k ≠ 0` and `q` monic, then
+`p · C(p.leadingCoeff)⁻¹ = q`. -/
+theorem monicNormalize_of_eq_C_mul_monic {p q : K[X]} (k : K) (hk : k ≠ 0)
+    (hq : q.Monic) (h : p = C k * q) :
+    p * C p.leadingCoeff⁻¹ = q := by
+  have hlc : (C k * q).leadingCoeff = k := by
+    rw [Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C, hq.leadingCoeff, mul_one]
+  rw [h, hlc, mul_right_comm, ← C_mul, mul_inv_cancel₀ hk, C_1, one_mul]
+
+/-- **Monic normalization is an association-class invariant** (over a field). For `p ~ q` (associated) with
+`q` monic, `p · C(p.leadingCoeff)⁻¹ = q`. So a subresultant `~ gcd` monic-normalizes to the monic gcd. -/
+theorem monicNormalize_of_associated_monic {p q : K[X]} (hq : q.Monic) (h : Associated p q) :
+    p * C p.leadingCoeff⁻¹ = q := by
+  obtain ⟨u, hu⟩ := h
+  obtain ⟨k, hk, hkC⟩ : ∃ k : K, k ≠ 0 ∧ (u : K[X]) = C k := by
+    obtain ⟨k, hk⟩ := Polynomial.isUnit_iff.mp u.isUnit
+    exact ⟨k, fun h => by simp [h] at hk, hk.2.symm⟩
+  refine monicNormalize_of_eq_C_mul_monic k⁻¹ (inv_ne_zero hk) hq ?_
+  rw [← hu, hkC, mul_comm (C k⁻¹) (p * C k), mul_assoc, ← C_mul, mul_inv_cancel₀ hk, C_1, mul_one]
+
+/-- **The monic log argument is the residue-pole product.** If the (specialized) subresultant `S` is
+similar to `∏_{β}(t−β)`, its monic normalization equals `∏_{β}(t−β)` exactly. This is the P3 endpoint: with
+`S = lrtSubresultantGen … .map (evalRingHom c)` (`~ gcd` by G3) and `gcd = ∏_{res β = c}(t−β)` (by G2), the
+monic log argument is the residue-`c` linear-factor product. -/
+theorem monicNormalize_eq_of_isSimilar_prod {S : K[X]} (poles : Multiset K)
+    (hsim : IsSimilar S (poles.map (fun β => X - C β)).prod) :
+    S * C S.leadingCoeff⁻¹ = (poles.map (fun β => X - C β)).prod :=
+  monicNormalize_of_associated_monic
+    (monic_multiset_prod_of_monic _ _ (fun β _ => monic_X_sub_C β)) (IsSimilar.associated hsim)
 
 end DeepWiki.SymbolicIntegration
