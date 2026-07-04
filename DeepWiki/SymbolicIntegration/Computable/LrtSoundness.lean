@@ -832,6 +832,20 @@ theorem associated_rootMultiplicity_eq {E : Type*} [Field E] {p q : E[X]} (h : A
       exact fun h => hc0.ne_zero h
     rw [Polynomial.rootMultiplicity_mul (mul_ne_zero hp u.ne_zero), hu0, Nat.add_zero]
 
+/-- A root of a squarefree polynomial has multiplicity exactly `1` (`≥ 1` from being a root, `≤ 1` since a
+double factor `(X−c)²` would contradict squarefreeness). -/
+theorem squarefree_rootMultiplicity_eq_one {E : Type*} [Field E] {p : E[X]} (hsf : Squarefree p)
+    (c : E) (hc : p.IsRoot c) : rootMultiplicity c p = 1 := by
+  have hp0 : p ≠ 0 := hsf.ne_zero
+  have h1 : 0 < rootMultiplicity c p := (Polynomial.rootMultiplicity_pos hp0).mpr hc
+  have h2 : rootMultiplicity c p ≤ 1 := by
+    by_contra h
+    rw [not_le] at h
+    have hdvd : (X - C c) ^ 2 ∣ p :=
+      (pow_dvd_pow _ h).trans (Polynomial.pow_rootMultiplicity_dvd p c)
+    exact Polynomial.not_isUnit_X_sub_C c (hsf (X - C c) (pow_two (X - C c) ▸ hdvd))
+  omega
+
 /-- A root of the powered product `prodPow i L = ∏ⱼ L[j]^(i+j)` (`i ≠ 0`, nonzero) is a root of some factor
 `v ∈ L`. The root-of-product step for `hcover` (a residue is a root of the Yun reconstruction `R ~ ∏Rᵢ^i`). -/
 theorem mem_roots_prodPow {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : List E[X]) (a : E)
