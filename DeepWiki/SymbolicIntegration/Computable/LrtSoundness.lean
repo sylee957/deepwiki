@@ -853,6 +853,35 @@ theorem disjoint_yun_factors [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   simp only [Polynomial.coe_mapRingHom] at hcopE
   exact disjoint_roots_of_isCoprime _ _ hcopE
 
+open Classical in
+omit [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- **`hdisj`.** The entries of `cLrtLogArgG` have pairwise-disjoint `Rᵢ`-root sets: each entry comes from a
+distinct Yun-factor position, and distinct Yun factors are coprime hence disjoint (`disjoint_yun_factors`).
+Via `List.pairwise_filterMap` over the `zipIdx`. -/
+theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
+    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0) :
+    (cLrtLogArgG Dt hNum Dstar).Pairwise (fun p q =>
+      Disjoint ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
+        ((toPolyG q.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset) := by
+  rw [cLrtLogArgG, List.pairwise_filterMap, List.pairwise_iff_getElem]
+  intro i j hi hj hij b hb b' hb'
+  have hi' : i < (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).length := by
+    rwa [List.length_zipIdx] at hi
+  have hj' : j < (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).length := by
+    rwa [List.length_zipIdx] at hj
+  rw [List.getElem_zipIdx] at hb hb'
+  simp only [Nat.zero_add] at hb hb'
+  split at hb
+  · simp at hb
+  · rw [Option.some_inj] at hb; subst hb
+    split at hb'
+    · simp at hb'
+    · rw [Option.some_inj] at hb'; subst hb'
+      exact disjoint_yun_factors hgcd _ hR0 hRpp hi' hj' (Nat.ne_of_lt hij)
+
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **A Yun factor with a root is non-constant** (`¬ (cnormG Rᵢ).length ≤ 1`): a root forces
 `natDegree(Rᵢ) ≥ 1`, but `(cnormG Rᵢ).length ≤ 1` forces `natDegree ≤ 0`. This certifies the `filterMap`
