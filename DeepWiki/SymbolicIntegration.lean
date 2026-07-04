@@ -19,6 +19,7 @@ import DeepWiki.SymbolicIntegration.LaurentCoefficients
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.LiouvilleExpExtension
 import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.MonomialExtensions
