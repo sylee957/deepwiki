@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.SubresultantTowerSpec
 import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
+import DeepWiki.SymbolicIntegration.SpecialFirstKind
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator (G5, pass P1)
 
@@ -16,7 +17,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open Compute CPolyG QFunNZG
 
 /-- The coefficient-list polynomial `Σ_{(a,k) ∈ l.zipIdx s} C a · Xᵏ = Σ_{i<len} C(l[i])·X^{s+i}`. -/
 theorem zipIdx_C_mul_X_pow_sum_eq {R : Type*} [Semiring R] (l : List R) (s : ℕ) :
@@ -136,6 +137,40 @@ generic (any differential extension `E`) analogue of `towerFractionFieldDerivG`.
 noncomputable def towerDerivExt (Dt : CPolyG α) : Derivation ℤ (RatFunc E) (RatFunc E) :=
   extendDeriv (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)))
 
+omit [CDiffField α] [CDiffFieldSpec α] [Differential E] [Algebra ℚ E] in
+/-- The base-change of a nonzero `K`-polynomial to `E` stays nonzero (`algebraMap K E` is an injective field
+hom), so `Polynomial.mapRingHom` preserves nonzerodivisors — the hypothesis of `RatFunc.mapRingHom`. -/
+theorem ratFuncBaseChange_nonZeroDivisors :
+    nonZeroDivisors ((CFieldSpec.K α)[X]) ≤ Submonoid.comap
+      (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E)) (nonZeroDivisors (E[X])) := by
+  intro p hp
+  rw [Submonoid.mem_comap, mem_nonZeroDivisors_iff_ne_zero] at *
+  simpa [Polynomial.mapRingHom, Polynomial.map_ne_zero_iff
+    (algebraMap (CFieldSpec.K α) E).injective] using hp
+
+variable (E) in
+/-- **The base-change ring hom** `RatFunc K →+* RatFunc E` induced by `algebraMap K E` (`K = CFieldSpec.K α`).
+Sends `amG p ↦ amGExt p`; used to transfer the `K`-level Hermite field identity to `E`. -/
+noncomputable def ratFuncBaseChange : RatFunc (CFieldSpec.K α) →+* RatFunc E :=
+  RatFunc.mapRingHom (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
+    ratFuncBaseChange_nonZeroDivisors
+
+omit [CDiffField α] [CDiffFieldSpec α] [Differential E] [Algebra ℚ E] in
+/-- The base-change hom sends `amG p / amG q ↦ amGExt p / amGExt q`. -/
+theorem ratFuncBaseChange_amG_div (p q : (CFieldSpec.K α)[X]) :
+    ratFuncBaseChange E (amG α p / amG α q) = amGExt (E := E) p / amGExt (E := E) q := by
+  erw [RatFunc.map_apply_div]
+  rfl
+  exact ratFuncBaseChange_nonZeroDivisors
+
+omit [CDiffField α] [CDiffFieldSpec α] [Differential E] [Algebra ℚ E] in
+/-- The base-change hom sends `amG p ↦ amGExt p`. -/
+theorem ratFuncBaseChange_amG (p : (CFieldSpec.K α)[X]) :
+    ratFuncBaseChange E (amG α p) = amGExt (E := E) p := by
+  have h1 : amG α p = amG α p / amG α 1 := by simp [amG]
+  rw [h1, ratFuncBaseChange_amG_div]
+  simp [amGExt]
+
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Quotient rule for `towerDerivExt`** (the `E`-analogue of `towerFractionFieldDerivG_div`): for `E`-polys
 `P, Q`, `Δ(P/Q) = (Δ'P·Q − P·Δ'Q)/Q²` in `RatFunc E`, where `Δ' = implicitDeriv (Dt base-changed to E)`. -/
@@ -150,6 +185,19 @@ theorem towerDerivExt_div (Dt : CPolyG α) (P Q : E[X]) :
         / (algebraMap E[X] (RatFunc E) Q) ^ 2 := by
   rw [towerDerivExt, ← RatFunc.mk_eq_div, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul,
     map_mul, map_pow]
+
+/-- **The base-change intertwines the tower derivation** (the crux of the `K→E` transfer): applying
+`ratFuncBaseChange` to a `K`-tower derivative of an `amG`-fraction gives the `E`-tower derivative of the
+corresponding `amGExt`-fraction. Via both quotient rules (`towerFractionFieldDerivG_div`, `towerDerivExt_div`)
+and `implicitDeriv_map` (the monomial derivation commutes with base change). -/
+theorem ratFuncBaseChange_towerFractionFieldDerivG [Algebra ℚ (CFieldSpec.K α)]
+    [DifferentialAlgebra (CFieldSpec.K α) E] (Dt : CPolyG α)
+    (gnum gden : (CFieldSpec.K α)[X]) :
+    ratFuncBaseChange E (towerFractionFieldDerivG Dt (amG α gnum / amG α gden))
+      = towerDerivExt Dt (amGExt (E := E) gnum / amGExt (E := E) gden) := by
+  rw [towerFractionFieldDerivG_div, map_div₀, map_sub, map_mul, map_mul, map_pow]
+  simp only [ratFuncBaseChange_amG, amGExt]
+  rw [towerDerivExt_div, implicitDeriv_map, implicitDeriv_map]
 
 /-- The **algebraic residue sum** over `E`: `Σᵢ Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)` — the honest
 denotation of the symbolic LRT log part, summing over the residues (roots of each `Rᵢ`) in `E`. -/
