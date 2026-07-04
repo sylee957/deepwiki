@@ -63,6 +63,28 @@ noncomputable def evalLrtArg (Si : List (CPolyG α)) (c : E) : E[X] :=
     C ((toPolyG p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c) * X ^ p.2)).sum
   raw * C raw.leadingCoeff⁻¹
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **`evalLrtArg`'s raw sum is the base-changed abstract polynomial.** Given the G4c coefficient identity
+`toPolyG (Sᵢ.getD n []) = P.coeff n` (P the abstract `lrtSubresultantGen`), the computable raw sum equals
+`P.map (eval₂RingHom (algebraMap K E) c)` (`= S`, the base-changed subresultant at `z = c`). -/
+theorem raw_eq_map (Si : List (CPolyG α)) (c : E) (P : ((CFieldSpec.K α)[X])[X])
+    (hg4c : ∀ n, toPolyG (Si.getD n []) = P.coeff n) :
+    (Si.zipIdx.map (fun p => Polynomial.C ((toPolyG p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c)
+        * Polynomial.X ^ p.2)).sum
+      = P.map (Polynomial.eval₂RingHom (algebraMap (CFieldSpec.K α) E) c) := by
+  have hcommute : (Si.zipIdx.map (fun p => Polynomial.C ((toPolyG p.1).eval₂
+        (algebraMap (CFieldSpec.K α) E) c) * Polynomial.X ^ p.2))
+      = (Si.map (fun sk => (toPolyG sk).eval₂ (algebraMap (CFieldSpec.K α) E) c)).zipIdx.map
+        (fun p : E × ℕ => Polynomial.C p.1 * Polynomial.X ^ p.2) := by
+    rw [List.zipIdx_map, List.map_map]; rfl
+  rw [hcommute]
+  ext n
+  rw [zipIdx_C_mul_X_pow_sum_coeff, Polynomial.coeff_map, Polynomial.coe_eval₂RingHom, ← hg4c n,
+    List.getD_eq_getElem?_getD, List.getElem?_map, List.getD_eq_getElem?_getD]
+  cases Si[n]? with
+  | none => simp [toPolyG_nil]
+  | some sk => simp
+
 variable [Differential E] [Algebra ℚ E]
 
 /-- The `E`-tower derivation on `RatFunc E`: `extendDeriv` of `implicitDeriv (Dt base-changed to E)`. The
