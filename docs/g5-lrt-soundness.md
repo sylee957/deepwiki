@@ -291,12 +291,27 @@ over every alg-closed `E`) as a hypothesis, plus the genuine Hermite side condit
 **sole remaining internal frontier is `hlog`**, and `hlog` is itself assembled (`logResidueSumLrtG_eq_normalPart_of_yun`)
 modulo the 5 Yun facts.
 
-Yun-fact discharge started: `mem_cLrtLogArgG` (entry membership: each entry = a `(Rᵢ, idx)` Yun factor +
-`cSubresultantParam …(idx+1)`) + `nodup_roots_cLrtLogArgG_entry` (**`hnodup` done** — `Rᵢ` squarefree ⟹ separable
-base-change ⟹ Nodup). Remaining 4 Yun facts (`hressub`/`hdisj`/`hcover`/`hentry`): `Rᵢ | R` + `residueResultant_map_roots`
-for `hressub`; `cSqfreeYunFFGWf_isRelPrime` for `hdisj`; reconstruction for `hcover`; the multiplicity index=rootMult
-for `hentry` (the hard one) — each needs the RT-setup + `Dstar_E = nodal` alignment threaded. Then `E→K` descent
-(`AlgebraicClosure K`) + swap primitive base ⟹ `PrimitiveFrontier.hreduced`.
+### ★★★★★ ALL 5 YUN FACTS DONE (2026-07-05) — `hlog`'s hypotheses fully dischargeable
+
+Every Yun fact for the concrete `cLrtLogArgG` is now proven and gate-green (`LrtSoundness.lean`):
+- `mem_cLrtLogArgG` / `mem_cLrtLogArgG_of_yun_factor` — entry membership, both directions (`filterMap ∘ zipIdx`).
+- **`hnodup`** `nodup_roots_cLrtLogArgG_entry` — `Rᵢ` squarefree ⟹ separable base-change ⟹ Nodup.
+- **`hressub`** `residue_of_root_cLrtLogArgG_entry` — `Rᵢ | R` ⟹ roots ⊆ residues (`residueResultant_map_roots`).
+- **`hcover`** `cover_cLrtLogArgG` — reconstruction `R ~ ∏Rᵢ^i` (`prodPow_map` + `mem_roots_prodPow`) ⟹ every
+  residue is a root of some non-constant (`not_len_le_one_of_root`) Yun factor, hosting an entry.
+- **`hdisj`** `disjoint_cLrtLogArgG` — `List.pairwise_filterMap` + `disjoint_yun_factors` (`_isRelPrime` ⟹
+  `isCoprime` ⟹ base change ⟹ `disjoint_roots_of_isCoprime`).
+- **`hentry`** `entry_log_eq_fiber_prod` — the multiplicity fact: `idx+1 = rootMultiplicity c R` via the crux
+  `rootMult_R_map_eq_idx_succ` (reconstruction + `rootMult_prodPow_of_unique`: `c` a simple root of only `R_idx`
+  — `yun_factor_map_squarefree` ⟹ mult 1, `disjoint_yun_factors` ⟹ mult 0), fed into `evalLrtArg_eq_fiber_prod`.
+
+Multiplicity infrastructure built: `rootMultiplicity_pow_eq`, `associated_rootMultiplicity_eq`,
+`squarefree_rootMultiplicity_eq_one`, `rootMult_prodPow_eq_zero`, `rootMult_prodPow_of_unique`.
+
+**Remaining:** the final `hlog` wiring — plug the 5 Yun facts + RT-setup into `logResidueSumLrtG_eq_normalPart_of_yun`
+(`hsplit` via `monic_separable_eq_nodal`; `hB`/`hnorm`/`hcancel` are genuine Bronstein RT side conditions taken as
+hypotheses, matching the capstone's `hcopgcd`). That yields the capstone's `hlog`. Then `E→K` descent
+(`AlgebraicClosure K` + injectivity) + swap the primitive base ⟹ `PrimitiveFrontier.hreduced`.
 
 ### ★ `hlog` is ASSEMBLY, not a wall (2026-07-04) — every abstract endpoint already exists
 
