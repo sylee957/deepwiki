@@ -73,12 +73,19 @@ route's tower analytic identity).
   **`lazardRiobooTrager_output_isSimilar_gcd_gen`**. The PRS engine is already `derivative`-agnostic; `B`
   enters only via the opaque `E := A − a·B` + the degree bound. **The abstract LRT residue theory now
   holds for ANY derivation image `B`.**
-- **G4 (next)** — connect the computable tower engine (`implicitDeriv`) to G1–G3:
-  `B := implicitDeriv (toPolyG Dt) (toPolyG Dstar) = toPolyG (cmonomialDeriv Dt Dstar)` (bridge exists,
-  `@[denote]`); `deg B ≤ deg D` via `natDegree_implicitDeriv_le`; normality `hB` from
-  `isCoprime_X_sub_C_implicitDeriv_iff` (`v.eval β ≠ β′`, the genuine `hcopgcd`); `cResidueResultantTowerGWf`
-  = `rtResultantGen` via interpolation (template: `toPoly_rtResultantCompute_eq_rtResultant`);
-  `cSubresultantParam` = `lrtSubresultantGen` via L4b + interpolation-in-`z`.
+- **G4a ✅ DONE** — `natDegree_rtResultantGen_le` (the `z`-degree bound `≤ deg D`, over any field `K`) +
+  `natDegree_det_le_sum_col_gen`; and `natDegree_implicitDeriv_le_of_monic` (the tight `deg B ≤ deg D − 1`
+  for monic `D` + constant `Dt` — the primitive case).
+- **G4b ✅ DONE** (`Computable/ResidueResultantTowerSpec.lean`) — **`toPolyG_cResidueResultantTowerGWf`**:
+  the computable tower residue resultant equals `rtResultantGen (toPolyG a) (toPolyG d) (implicitDeriv
+  (toPolyG Dt) (toPolyG d))` for monic `d` + constant `Dt` + proper `a`. Via the sample-agreement lemma
+  `toK_cresultantWf_cAmcDdG_eq_eval` (`Polynomial.resultant_add_right_deg` reconciles the engine's
+  actual-degree resultant with `rtResultantGen`'s formal degree) + interpolation uniqueness
+  (`eq_of_degrees_lt_of_eval_index_eq`, `toK_cnatCastG`). **The computable residue resultant IS the object
+  G3 reasons about.**
+- **G4c (next)** — `cSubresultantParam` = `lrtSubresultantGen` via the L4b subresultant certification
+  (`toPolyG_cSubresultantG`) + interpolation-in-`z` (analogous to G4b, per `t`-coefficient); plus the
+  normality `hB` from `isCoprime_X_sub_C_implicitDeriv_iff` (`v.eval β ≠ β′`, the genuine `hcopgcd`).
 - **G5** — assemble with the candidate route's tower per-root analytic identity
   (`residue_gcd_eq_linear_factor` / `cIntegrateReducedGWf_logs_eq_per_root`) into a symbolic-log soundness
   `IsIntegralResultLrtG` for `cIntegrateReducedLrtG`; swap the primitive base (closes `hreduced` **without**
