@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt
+import Mathlib.LinearAlgebra.Lagrange
 
 /-! # General-derivation Rothstein–Trager / Lazard–Rioboo–Trager
 
@@ -454,6 +455,44 @@ theorem lrtSubresultantGen_map_eval₂ {L : Type*} [Field L] (φ : K →+* L) (A
   have hdeg : (D.map φ).natDegree = D.natDegree := natDegree_map_eq_of_injective hφ D
   rw [heq, ← Polynomial.map_map, lrtSubresultantGen_map φ A D B j hφ,
     lrtSubresultantGen_eval (A.map φ) (D.map φ) (B.map φ) c j, hdeg]
+
+open scoped Classical in
+/-- **`gcd(nodal s, A − a·B) = ∏_{res β=a}(X−β)`** for a general `B` (the general-derivation form of
+`gcd_nodal_eq_prod_residue`), under normality `hB : B(β) ≠ 0` on `s`. The residue gcd is the product of the
+residue-`a` linear factors. -/
+theorem gcd_nodal_eq_prod_residue_gen (s : Finset K) (A B : K[X]) (a : K)
+    (hB : ∀ α ∈ s, B.eval α ≠ 0) :
+    gcd (Lagrange.nodal s id) (A - C a * B)
+      = ∏ α ∈ s.filter (fun α => A.eval α / B.eval α = a), (X - C α) := by
+  set D := Lagrange.nodal s id with hD
+  set res : K → K := fun α => A.eval α / B.eval α with hres
+  set E := A - C a * B with hE
+  have hDprod : D = ∏ α ∈ s, (X - C α) := by simp [hD, Lagrange.nodal_eq, id]
+  have hDsep : D.Separable := by
+    rw [hDprod]; exact separable_prod_X_sub_C_iff'.mpr fun _ _ _ _ h => h
+  have hDmonic : D.Monic := hD ▸ Lagrange.nodal_monic
+  have hD0 : D ≠ 0 := hD ▸ Lagrange.nodal_ne_zero
+  have hDroots : D.roots = s.val := by rw [hDprod, roots_prod_X_sub_C]
+  have hBroot : ∀ {α : K}, D.IsRoot α → B.eval α ≠ 0 := fun {α} hα =>
+    hB α (by have : α ∈ s.val := hDroots ▸ (mem_roots hD0).mpr hα; exact this)
+  have hgsep : (gcd D E).Separable := hDsep.of_dvd (gcd_dvd_left _ _)
+  have hg0 : gcd D E ≠ 0 := fun h => hD0 (zero_dvd_iff.mp (h ▸ gcd_dvd_left D E))
+  have hgmonic : (gcd D E).Monic := normalize_gcd D E ▸ monic_normalize hg0
+  have hDsplits : D.Splits := by rw [hDprod]; exact Splits.prod fun α _ => Splits.X_sub_C _
+  have hgsplits : (gcd D E).Splits := hDsplits.of_dvd hD0 (gcd_dvd_left D E)
+  have hroots : (gcd D E).roots = (s.filter (fun α => res α = a)).val := by
+    refine (Multiset.Nodup.ext (nodup_roots hgsep) (s.filter (fun α => res α = a)).nodup).mpr
+      fun α => ?_
+    rw [mem_roots hg0, Finset.mem_val, Finset.mem_filter]
+    constructor
+    · intro hα
+      have hDα : D.IsRoot α := dvd_iff_isRoot.mp ((dvd_iff_isRoot.mpr hα).trans (gcd_dvd_left D E))
+      obtain ⟨_, hres'⟩ := (isRoot_gcd_iff_residue_gen A D B a α (hBroot hDα)).mp hα
+      exact ⟨(by have : α ∈ s.val := hDroots ▸ (mem_roots hD0).mpr hDα; exact this), hres'⟩
+    · rintro ⟨hαs, hres'⟩
+      have hDα : D.IsRoot α := (mem_roots hD0).mp (hDroots ▸ hαs)
+      exact (isRoot_gcd_iff_residue_gen A D B a α (hBroot hDα)).mpr ⟨hDα, hres'⟩
+  rw [hgsplits.eq_prod_roots_of_monic hgmonic, hroots, Finset.prod_eq_multiset_prod]
 
 /-! ## Monic normalization (the log argument is the monic gcd, up to association) -/
 
