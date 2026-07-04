@@ -228,3 +228,15 @@ precondition) and `gden`/`Dstar ≠ 0`.
 Remaining: (1) `hcopgcd` — discharge from `v` squarefree + coprime `u`/`v'`, or carry; (2) `gden`/`Dstar
 ≠ 0`; (3) wire into `field_identity_of_cIntegrateReducedGWf_of_residueMatch` (the `toPolyG hNum'=.2.1`
 exact-division bridge).
+
+## FINAL: capstone rests on ONLY hcopgcd (2026-07-04)
+
+`cHermiteReduceTowerGWf_field_identity` now takes only `hd0`/`hpp` + `hcopgcd`. Discharged internally:
+`gden≠0` (`toPolyG_cHermiteReduceTowerGWf_den_ne_zero` via `foldl_den_ne_zero` + `hden_of`), `Dstar≠0`
+(radical split), `hWdvd` (`cSqfreeYunFFGWf_reconstruction`). `hcopgcd` is the genuine differential-
+NORMALITY side condition (`v` coprime `D(v)`; false for `v=t` under hyperexponential `D`) — a correct
+hypothesis matching Bronstein's `hnorm`, not a gap. **The tower-Hermite pole-cancellation soundness is
+complete modulo exactly one genuine Bronstein side condition** (+ the unconditional-at-ℚ gcd frontier).
+
+Only bookkeeping remains: wire into `field_identity_of_cIntegrateReducedGWf_of_residueMatch` (the
+`toPolyG hNum' = toPolyG .2.1` exact-division bridge).
