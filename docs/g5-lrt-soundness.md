@@ -247,5 +247,22 @@ genuine differential-normality `hcopgcd` (Bronstein `hnorm`) + `hd0`/`hpp`.
 `hpart` (via `sum_over_list_partition` + the disjoint fiber-size decomposition of `Dstar`'s roots), and `Dstar`
 splits as `nodal allpoles`. This is the one intricate combinatorial/structural lemma left.
 
+### `hlog` progress (2026-07-04) — design settled + geometric foundation done
+
+- **`[IsAlgClosed E]`** — `IsIntegralResultLrtG` now quantifies over algebraically-closed `E`, and the per-`Rᵢ`
+  splitting hypothesis is **dropped** (automatic). Rationale: the pole-match sums over `Dstar`'s **poles**,
+  which must lie in `E`; `Dstar`-splits ⟹ residues ∈ `E` ⟹ `Rᵢ` splits, and the descent uses the algebraic
+  closure anyway. `isIntegralResultLrtG_of_hherm_of_logMatch` updated in lockstep (`hherm_lrt_E` still fits).
+- **`Dstar` is monic** (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`) **and squarefree** — so the
+  leading-coefficient subtlety vanishes: `Dstar_E = nodal allpoles` **exactly**.
+- **`monic_separable_eq_nodal`** (`LrtSoundness.lean`) — the geometric foundation: over alg-closed `E`, a monic
+  separable poly `= Lagrange.nodal p.roots.toFinset id` (splits + monic ⟹ `∏(X−β)`; separable ⟹ `Nodup` ⟹
+  multiset product collapses to the `Finset` nodal).
+
+Remaining `hlog` pieces (each a real engine→abstract connection over `E`): residue-resultant roots = residues
+(base-change G4b + `roots_residueResultantTowerG_eq_residues`); Yun structure over `E` (`Rᵢ` coprime,
+`R = ∏Rᵢ^i`); `polesOf` + `hpart` (partition via Yun coprimality + `sum_over_list_partition`); `hroots`; `hfac`
+(via `isSimilar_subresultant_prod`, index = fiber size); the RT setup (`hA`/`hnorm`/`hcancel`).
+
 Then `E→K` descent + swap the primitive base ⟹ `PrimitiveFrontier.hreduced` closed, without the
 rational-residue restriction.
