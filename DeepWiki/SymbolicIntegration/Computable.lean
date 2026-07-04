@@ -42,6 +42,7 @@ import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
 import DeepWiki.SymbolicIntegration.Computable.RischDE
 import DeepWiki.SymbolicIntegration.Computable.RischFieldCore
 import DeepWiki.SymbolicIntegration.Computable.RischFieldSpec
+import DeepWiki.SymbolicIntegration.Computable.SquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorHelpers
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect

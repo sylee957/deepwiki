@@ -106,7 +106,7 @@ They move to per-solver realization files as the interfaces land.
 ## Phase plan (dependency-ordered; each phase = one gate-green commit sequence)
 
 - [ ] **P0 — this note.** Fixes the discipline, encoding, interface signatures, naming.
-- [ ] **P1 — `SquarefreeDecomposition`.** Define the interface + `LawfulSquarefreeDecomposition`; prove
+- [x] **P1 — `SquarefreeDecomposition`.** DONE (`SquarefreeDecomposition.lean` interface + `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition` realization in `YunTowerCorrect`). Define the interface + `LawfulSquarefreeDecomposition`; prove
   `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition` bundling the four existing facts. Leaf, no consumers yet.
 - [ ] **P2 — `HermiteReduction`.** Define the interface + `LawfulHermiteReduction` consuming a
   `SquarefreeDecomposition` abstractly (dr-squarefree comes from the interface, not the Yun loop). Prove

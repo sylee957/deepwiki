@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
+import DeepWiki.SymbolicIntegration.Computable.SquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
 /-! # Abstract correctness of the fuel-free Yun factorization `cSqfreeYunFFGWf`
@@ -707,5 +708,23 @@ theorem toPolyG_cHermiteReduceTowerGWf_Dstar_eq_nodal [CharZero (CFieldSpec.K α
       = Lagrange.nodal (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id :=
   split_squarefree_eq_nodal _ (toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0) hsplit
     (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Realization (Stage 2): `cSqfreeYunFFGWf` is a lawful squarefree decomposition.** The single
+`LawfulSquarefreeDecomposition` realization theorem — bundles reconstruction, monic, squarefree, and
+pairwise-coprimality. The abstract Hermite/assembler stages consume this, never the Yun loop itself. -/
+theorem cSqfreeYunFFGWf_lawfulSquarefreeDecomposition [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hpp : (toPolyG d).primPart ≠ 0) :
+    LawfulSquarefreeDecomposition d (cSqfreeYunFFGWf d) :=
+  { reconstruct := cSqfreeYunFFGWf_reconstruction hgcd d hd0 hpp
+    monic := cSqfreeYunFFGWf_monic hgcd d hd0
+    squarefree := fun p hp => by
+      obtain ⟨k, hk, hpk⟩ := List.mem_iff_getElem.mp hp
+      rw [← hpk]; exact cSqfreeYunFFGWf_squarefree hgcd d hd0 hpp k hk
+    coprime := by
+      rw [List.pairwise_iff_getElem]
+      intro i j hi hj hij
+      exact cSqfreeYunFFGWf_isRelPrime hgcd d hd0 hpp hi hj (Nat.ne_of_lt hij) }
 
 end DeepWiki.SymbolicIntegration
