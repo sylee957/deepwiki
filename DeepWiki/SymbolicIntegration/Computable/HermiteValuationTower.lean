@@ -361,4 +361,53 @@ theorem cHermiteInner_hbez_of_gcd (Dt v u : CPolyG α)
     Nat.cast_add_one, Polynomial.C_neg]
   ring
 
+omit [CFracGcdCoreWf α] in
+/-- **The per-factor `hstep` identity** (`D⟦gloc x⟧ = ⟦a/d⟧ − ⟦residNum/d⟧`), from M2 and the isolated
+inputs: `d ≠ 0`, the gcd coprimality of `(u·Dv, v)` (`hgdeg`/`hgne`), and `u·v^i = d` (`hud`, from
+`v^i ∣ d`). Here `residNum = afin · v^(i−1)` (`afin` the inner-loop residual). -/
+theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPolyG α) (x : CPolyG α × ℕ)
+    (hd : toPolyG d ≠ 0) (hv : toPolyG x.1 ≠ 0)
+    (hgdeg : (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+        (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0)
+    (hgne : toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+        (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hud : toPolyG (cdivWf d (cpowG x.1 (x.2 + 1))) * toPolyG x.1 ^ (x.2 + 1) = toPolyG d) :
+    towerFractionFieldDerivG Dt (glocFracG Dt a d x)
+      = amG α (toPolyG a) / amG α (toPolyG d)
+        - amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1)))
+              (x.2 + 1 - 1) a ([CField.zero], [CField.one])).2 * toPolyG x.1 ^ x.2)
+          / amG α (toPolyG d) := by
+  set u := cdivWf d (cpowG x.1 (x.2 + 1)) with hudef
+  have hu : toPolyG u ≠ 0 := fun h0 => hd (by rw [← hud, h0, zero_mul])
+  have hqn : cnormG x.1 ≠ [] := fun h => hv ((cisZeroG_iff x.1).mp (by simp [cisZeroG, h]))
+  have hone : toPolyG ([CField.one] : CPolyG α) ≠ 0 := by
+    rw [show toPolyG ([CField.one] : CPolyG α) = 1 from by
+      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]]
+    exact one_ne_zero
+  have hbez := cHermiteInner_hbez_of_gcd Dt x.1 u hqn hgdeg hgne
+  have hM2 := cHermiteReduceTowerInnerWf_spec_acc Dt x.1 u hu hv hbez x.2 a
+    ([CField.zero], [CField.one]) hone
+  -- the seed fraction ⟦0/1⟧ = 0.
+  have hz : amG α (toPolyG ([CField.zero] : CPolyG α)) = 0 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, mul_zero, add_zero, map_zero, map_zero]
+  have ho : amG α (toPolyG ([CField.one] : CPolyG α)) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one, map_one]
+  rw [hz, ho, zero_div, map_zero, add_zero] at hM2
+  -- `amG u · amG v^(i) = amG d`.
+  have hamud : amG α (toPolyG u) * amG α (toPolyG x.1) ^ (x.2 + 1) = amG α (toPolyG d) := by
+    rw [← map_pow, ← map_mul, hud]
+  have had : amG α (toPolyG d) ≠ 0 := amG_toPolyG_ne_zero hd
+  have hav : amG α (toPolyG x.1) ≠ 0 := amG_toPolyG_ne_zero hv
+  have hau : amG α (toPolyG u) ≠ 0 := amG_toPolyG_ne_zero hu
+  -- rearrange M2 to `D⟦gloc⟧ = amG a/(amG u·amG v^i) − amG afin/(amG u·amG v)`.
+  rw [show towerFractionFieldDerivG Dt (glocFracG Dt a d x)
+      = amG α (toPolyG a) / (amG α (toPolyG u) * amG α (toPolyG x.1) ^ (x.2 + 1))
+        - amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 u x.2 a
+            ([CField.zero], [CField.one])).2) / (amG α (toPolyG u) * amG α (toPolyG x.1)) from by
+      rw [glocFracG]; simp only [Nat.add_sub_cancel]; linear_combination -hM2]
+  rw [Nat.add_sub_cancel, map_mul, map_pow, ← hamud]
+  have hvp : amG α (toPolyG x.1) ^ (x.2 + 1) ≠ 0 := pow_ne_zero _ hav
+  field_simp
+  ring
+
 end DeepWiki.SymbolicIntegration
