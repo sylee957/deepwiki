@@ -441,4 +441,44 @@ theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) 
   have hud := toPolyG_cdivWf_pow_mul d x.1 (x.2 + 1) hv hpow
   exact glocFracG_step_identity Dt a d x hd0 hv (hcopgcd x hx).1 (hcopgcd x hx).2 hud
 
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- The gloc denominators are nonzero (`= v^N`, `v` a nonzero Yun factor) — the `hden` input of both
+`cHermiteReduceTowerGWf_frac_eq_sum` and `total_fold_residual_tower`. -/
+theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0) :
+    ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
+      toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+        ([CField.zero], [CField.one])).1.2 ≠ 0 := by
+  intro x hx _
+  obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
+    (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hx))
+  have hv : toPolyG x.1 ≠ 0 := by
+    rw [← hget]; exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp x.2 hidx
+  obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt x.1
+    (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])
+  rw [hN, show toPolyG ([CField.one] : CPolyG α) = 1 from by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], one_mul]
+  exact pow_ne_zero N hv
+
+/-- **The `R` residual identity** `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` (`R = C(1−m)·a + Σ residNumG`), from
+`total_fold_residual_tower` fed by `all_hstep` and `hden_of`. Modulo the per-factor gcd coprimality. -/
+theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+    amG α (toPolyG a) / amG α (toPolyG d)
+        - towerFractionFieldDerivG Dt
+            (amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.1)
+              / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2))
+      = amG α (Polynomial.C (1 - ((((cSqfreeYunFFGWf d).zipIdx.filter
+              (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPolyG a
+            + (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+                (residNumG Dt a d)).sum)
+        / amG α (toPolyG d) :=
+  total_fold_residual_tower Dt a d (residNumG Dt a d) hd0 (hden_of hgcd Dt a d hd0 hpp)
+    (all_hstep hgcd Dt a d hd0 hpp hcopgcd)
+
 end DeepWiki.SymbolicIntegration
