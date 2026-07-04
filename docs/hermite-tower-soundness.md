@@ -261,3 +261,15 @@ cancellation (`hWgd_of_multiplicity` transported by `·Dstar` + the radical spli
 mechanical. Then discharge the consumer `hherm` by rewriting its `.2.1` middle term. Left undone: the
 core objective (pole-cancellation) is complete and gate-verified; this only connects it to the
 end-to-end reduced-part assembly (which already works modulo `hexact`).
+
+### Wiring cost correction (2026-07-04)
+
+Deeper inspection: `.2.1`'s internal `resNum`/`Dstar`/`resDen` are built from the RAW fold `g`
+(`List.foldl … zipIdx`), NOT the `cnormG`'d projections. The pole-cancellation support lemmas
+(`hWgd_of_multiplicity`, `toPolyG_cHermiteReduceTowerGWf_den_ne_zero`, the `hdvd1` divisibility) are all
+stated on the projections `.1.2`/`.2.2`. So after unfolding `.2.1` the goal is in raw-fold terms and
+cannot directly consume those lemmas — the `hQ1`/`hdvd1` subgoals of `toPolyG_cdivWf_congr` need raw-fold
+restatements (or a projection↔rawfold `toPolyG` bridge for each). This makes the wiring ~100L+, not the
+~40–80L first estimated. It remains OPTIONAL bookkeeping: the pole-cancellation soundness itself is
+complete and gate-verified; this only connects it to the end-to-end assembly, which already works modulo
+`hexact`. `toPolyG_cdivWf_congr` is in place as the core utility whenever it's picked up.
