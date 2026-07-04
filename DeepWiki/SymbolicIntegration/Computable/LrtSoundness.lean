@@ -312,6 +312,71 @@ theorem logResidueTermLrtG_eq_finset_pole_sum {α : Type*} [CField α] [CFieldSp
     (fun c => (polesᵢ.filter (fun β => res β = c)).val) hfac, hroots]
   exact residue_pole_regroup polesᵢ res (poleTerm Dt)
 
+open scoped Classical in
+/-- **Log-part sum in pole form (partition assembly).** Summing the per-`Rᵢ` pole sums over a per-entry
+pole set `polesOf` that tiles the full pole set: `logResidueSumLrtG = Σ_{β ∈ allpoles} res(β)·poleTerm β`.
+Chains `logResidueSumLrtG_eq_termwise` (sum over entries) with `logResidueTermLrtG_eq_finset_pole_sum`
+(each entry ↦ its pole sum). `hpart` is the structural fact that the entries' pole sets partition
+`allpoles` (the LRT/Yun fiber-size decomposition). -/
+theorem logResidueSumLrtG_eq_poleSum {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
+    [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    (Dt : CPolyG α) (logs : List (CPolyG α × List (CPolyG α))) (allpoles : Finset E) (res : E → E)
+    (polesOf : CPolyG α × List (CPolyG α) → Finset E)
+    (hroots : ∀ p ∈ logs, ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots
+      = ((polesOf p).image res).val)
+    (hfac : ∀ p ∈ logs, ∀ c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
+      evalLrtArg p.2 c = (((polesOf p).filter (fun β => res β = c)).val.map (fun β => X - C β)).prod)
+    (hpart : (logs.map (fun p => ∑ β ∈ polesOf p,
+        algebraMap E (RatFunc E) (res β) * poleTerm Dt β)).sum
+      = ∑ β ∈ allpoles, algebraMap E (RatFunc E) (res β) * poleTerm Dt β) :
+    logResidueSumLrtG Dt logs = ∑ β ∈ allpoles, algebraMap E (RatFunc E) (res β) * poleTerm Dt β := by
+  rw [logResidueSumLrtG_eq_termwise Dt logs
+      (fun p => ∑ β ∈ polesOf p, algebraMap E (RatFunc E) (res β) * poleTerm Dt β)
+      (fun p hp => logResidueTermLrtG_eq_finset_pole_sum Dt p (polesOf p) res (hroots p hp) (hfac p hp))]
+  exact hpart
+
+open scoped Differential Classical in
+/-- **LRT log-part soundness (the named theorem).** The tower derivative of the LRT symbolic log part
+denotes the normal integrand: `logResidueSumLrtG Dt logs = hNum/Dstar` over `E`, where `Dstar` splits as
+`∏_{β ∈ allpoles}(t−β)`. Composes `logResidueSumLrtG_eq_poleSum` (log sum ↦ residue-weighted pole sum,
+over a pole partition `polesOf`) with `pole_sum_eq_normalPart` (the Rothstein–Trager residue match
+`Σ_β res(β)·poleTerm β = hNum/Dstar`). The residue is fixed to the RT form
+`res β = hNum(β)/D(∏)(β)`. -/
+theorem logResidueSumLrtG_eq_normalPart {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
+    [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    (Dt hNum : CPolyG α) (logs : List (CPolyG α × List (CPolyG α))) (allpoles : Finset E)
+    (polesOf : CPolyG α × List (CPolyG α) → Finset E)
+    (hroots : ∀ p ∈ logs, ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots
+      = ((polesOf p).image (fun β => ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+          / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              (Lagrange.nodal allpoles id)).eval β)).val)
+    (hfac : ∀ p ∈ logs, ∀ c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
+      evalLrtArg p.2 c = (((polesOf p).filter (fun β =>
+          ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+            / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+                (Lagrange.nodal allpoles id)).eval β = c)).val.map (fun β => X - C β)).prod)
+    (hpart : (logs.map (fun p => ∑ β ∈ polesOf p,
+        algebraMap E (RatFunc E) (((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+            / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+                (Lagrange.nodal allpoles id)).eval β) * poleTerm Dt β)).sum
+      = ∑ β ∈ allpoles, algebraMap E (RatFunc E)
+          (((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+            / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+                (Lagrange.nodal allpoles id)).eval β) * poleTerm Dt β)
+    (hA : ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).degree < allpoles.card)
+    (hnorm : ∀ β ∈ allpoles, ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
+    (hcancel : ∑ β ∈ allpoles, algebraMap E[X] (RatFunc E)
+        (C (((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+              / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+                  (Lagrange.nodal allpoles id)).eval β)
+          * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) :
+    logResidueSumLrtG Dt logs
+      = algebraMap E[X] (RatFunc E) ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
+        / algebraMap E[X] (RatFunc E) (Lagrange.nodal allpoles id) := by
+  rw [logResidueSumLrtG_eq_poleSum Dt logs allpoles _ polesOf hroots hfac hpart]
+  exact pole_sum_eq_normalPart Dt ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)) allpoles
+    hA hnorm hcancel
+
 /-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
 CFieldSpec.K α` in which every residue polynomial `Rᵢ` splits, the `E`-tower derivative of the rational part
 plus the algebraic residue sum equals `anum/aden` (base-changed to `E`). The `E`-quantification + splitting
