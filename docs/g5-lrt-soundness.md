@@ -47,9 +47,37 @@ that intertwines the tower derivation* and is **injective**. Plan:
 
 ## Pass breakdown (each its own gate-green commit)
 
-- **P1 — the `K̄` denotation + `IsIntegralResultLrtG` definition.** `logResidueSumLrtG` (the `K̄` root-sum),
-  `IsIntegralResultLrtG Dt anum aden (res : LrtResultG α)` (`towerFractionFieldDerivG` on `res.rational` +
-  the `K̄` log sum `= anum/aden`, stated so it descends). Gate-green definitions.
+- **P1 — the denotation + `IsIntegralResultLrtG` definition.** Design determined (2026-07-04): **don't build
+  a `Differential (AlgebraicClosure K)` instance** (only `existsUnique_differentialAlgebra_intermediateField`
+  exists). Instead **parameterize over a differential extension `E`** — `extendDerivFun`/`extendDeriv`
+  (`FractionFieldDeriv.lean`) are already generic over any field with a base `Derivation ℤ E[X] E[X]`, and
+  `Differential.implicitDeriv ((toPolyG Dt).map (algebraMap K E))` is the `E`-tower derivation on `E[X]` (needs
+  only `[Differential E]`). Exact turn-key definitions:
+  ```
+  -- `Sᵢ` (z-poly per t-power) evaluated at a residue `c ∈ E`: the E[t] poly `Σₖ (Sᵢ[k] at z=c)·tᵏ`
+  noncomputable def evalLrtArg {E} [Field E] [Algebra (CFieldSpec.K α) E]
+      (Si : List (CPolyG α)) (c : E) : E[X] :=
+    (Si.zipIdx.map (fun p => C ((toPolyG p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c) * X ^ p.2)).sum
+  -- E-tower derivation on RatFunc E
+  noncomputable def towerDerivExt {E} [Field E] [Algebra (CFieldSpec.K α) E] [Differential E]
+      (Dt : CPolyG α) : Derivation ℤ (RatFunc E) (RatFunc E) :=
+    extendDeriv (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)))
+  -- algebraic residue sum over E: Σᵢ Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)
+  noncomputable def logResidueSumLrtG {E} [Field E] [Algebra (CFieldSpec.K α) E] [Differential E]
+      (Dt : CPolyG α) (logs : List (CPolyG α × List (CPolyG α))) : RatFunc E :=
+    (logs.map (fun p => (((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
+      algebraMap E (RatFunc E) c *
+        (towerDerivExt Dt (algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c))
+          / algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c)))).sum)).sum
+  -- soundness: over ANY diff. extension E where each Rᵢ splits, the identity holds (base-changed)
+  def IsIntegralResultLrtG (Dt anum aden : CPolyG α) (res : LrtResultG α) : Prop :=
+    ∀ (E) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E],
+      (∀ p ∈ res.logs, ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).Splits (RingHom.id E)) →
+      towerDerivExt Dt (⟦res.rational over E⟧) + logResidueSumLrtG Dt res.logs = ⟦anum/aden over E⟧
+  ```
+  ⚠️ **design-critical** — verify the shape (non-vacuous; the `E`-quantification + splitting hypothesis is the
+  right descent vehicle; `evalLrtArg`/`towerDerivExt` typecheck against `extendDeriv`'s exact signature)
+  before building on it. Gate-green once it typechecks.
 - **P2 — the residue↔root grouping.** `Rᵢ`'s roots in `K̄` are the residues of multiplicity `i`
   (`cSqfreeYunFFGWf` mult ↔ `rootMultiplicity` of `rtResultantGen`, via G4b + G2). Reuse
   `cResidueResultantTowerGWf` = `rtResultantGen`.
