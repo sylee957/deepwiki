@@ -264,5 +264,23 @@ Remaining `hlog` pieces (each a real engine→abstract connection over `E`): res
 `R = ∏Rᵢ^i`); `polesOf` + `hpart` (partition via Yun coprimality + `sum_over_list_partition`); `hroots`; `hfac`
 (via `isSimilar_subresultant_prod`, index = fiber size); the RT setup (`hA`/`hnorm`/`hcancel`).
 
+### ★ `hlog` is ASSEMBLY, not a wall (2026-07-04) — every abstract endpoint already exists
+
+Scoping confirmed no research gap remains; `hlog` is a (large) mechanical assembly of proven pieces:
+- **residue roots = residues** — `roots_rtResultantGen` (`LrtGeneralDerivation.lean:131`, `[IsAlgClosed K]`)
+  already proves `(rtResultantGen A D B).roots = residues`, via `Polynomial.resultant_eq_prod_eval` (the
+  Poisson product formula, present in the repo). G4b (`toPolyG_cResidueResultantTowerGWf`) connects the
+  concrete `R` to `rtResultantGen` (needs base-change to `E`).
+- **gcd = linear factor** — `residue_gcd_associated_linear_factor` (`LogPartTowerSoundness.lean:75`, generic).
+- **`Sᵢ` = ∏ residue poles** — `isSimilar_subresultant_prod` + `evalLrtArg_cSubresultantParam_eq_prod` (done).
+- **pole sum = normal part** — `pole_sum_eq_normalPart` (the tower residue match; done).
+- **Yun structure** — `YunTowerCorrect` (`cSqfreeYunFFGWf_squarefree/_isRelPrime/_monic/_reconstruction`, all
+  proven) gives the coprime squarefree factors for the fiber-size partition.
+- **`Dstar` splits** — `monic_separable_eq_nodal` (done) + `Dstar` monic/squarefree.
+
+So the remaining labor is threading these into `hroots`/`hfac`/`hpart` for the concrete `cLrtLogArgG`, not new
+mathematics. The `ratFunc_eq_sum_residue_gcd` abstract theorem is the *formal-derivative* case; the *tower*
+case is exactly `pole_sum_eq_normalPart`, already in hand.
+
 Then `E→K` descent + swap the primitive base ⟹ `PrimitiveFrontier.hreduced` closed, without the
 rational-residue restriction.
