@@ -215,16 +215,23 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 | RT residue match — `hres` | — | **engine-external** (caller enumerates residue candidates); correctly a hypothesis. |
 | RT residue match — `hgcdread` | `cLogArgTowerGWf` (= `cgcdFFCoreWf d (cAmcDdG …)`) | **DISCHARGED (2026-07-04)** — it IS the `GcdFFCorrect` frontier (unconditional at ℚ), `fun β _ => hgcd …`. |
 | RT residue match — `hcand` | caller `residueCand` | **residue-data condition** (the candidate value = the RT residue `hNum(β)/D′(β)`); caller-supplied like `hres`, a genuine hypothesis. |
-| leftover properness `hA` | degree induction over the Hermite fold | the "Large residual"; needs the abstract Hermite identity (now DONE) **plus** a tower `hermiteReducePower_remainder_degree` induction. Still open. |
+| leftover properness `hA` | `cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one` | **ALREADY DISCHARGED for deg Dt ≤ 1** (primitive/exp/log) — the earlier §5.3 chain (`toPolyG_residualFraction_proper_of_degree_le_one` + `cHermiteReduceTowerG_g_proper` + exact-division cancellation). The "Large residual, never proven abstractly" comment was STALE; NOT a gap for the transcendental base regime. |
 
-**Composed (2026-07-04):** `field_identity_of_cIntegrateReducedGWf_primitive_maximal` (Assemble) assembles the
-whole primitive reduced case discharging FIVE side conditions internally — `hherm`, `hden`, `hnorm`, `hDd`,
-`hgcdread`. Its remaining inputs are exactly: `hA` (the Large residual — the ONE real remaining gap, a
-degree induction; the abstract Hermite identity it needs is now DONE), and the residue-data conditions
-`hres`/`hdist`/`hcand` (caller-supplied residue enumeration + genuine distinctness — correct hypotheses,
-not gaps). So the primitive reduced-case soundness is complete modulo `{hcopgcd (normality), hsplit
-(rational-residue), constant-roots + w≠0, hA (Large residual), residue-data}` — every engine-compute
-frontier of the reduced case is discharged.
+**Composed (2026-07-04):**
+- `field_identity_of_cIntegrateReducedGWf_primitive_maximal` (Assemble) — the primitive REDUCED case,
+  discharging FIVE side conditions (`hherm`, `hden`, `hnorm`, `hDd`, `hgcdread`); remaining inputs `hA`,
+  `hres`/`hdist`/`hcand` (residue-data).
+- **`cIntegrateGFullWf_primitive_oneShot_hcopgcd_qfunNZG` (Assemble)** — the FULL primitive driver at
+  ℚ(x)(t) with BOTH `hA` (from the existing `_inputProper` capstone) AND `hherm` (pole-cancellation
+  capstone) discharged. So the Hermite frontier is GONE from the full primitive one-shot; its soundness
+  rests on: `hcopgcd` (normality), the residue-data (`hform`/`hnorm`/`hden`), input properness `haProper`,
+  the engine-regularity connectors (`hv`/`hbk`/`hdvd`/`hresDen`), and the tower gcd frontier `hgcd`.
+
+**Net:** every RT side condition of the primitive case is either **discharged** (`hherm`, `hden`, `hnorm`,
+`hDd`, `hgcdread`, `hA`) or a **genuine hypothesis** (`hcopgcd` normality, `hsplit` rational-residue,
+constant-roots + `w≠0`, `hdist`/`hres`/`hcand` residue-data, `haProper` input-properness, `hv`/`hbk`/`hdvd`/
+`hresDen` engine-regularity, `hgcd` tower gcd). No engine-compute gap remains in the transcendental primitive
+case.
 | RT residue match `hmatch` | Rothstein–Trager residue↔root | frontier (`native_decide`-only) |
 | hyperexp `hLaurField` (Laurent) | `cIntegrateHyperexpLaurentG_special_sound` (new) | **PROVEN modulo special-part shape** |
 
