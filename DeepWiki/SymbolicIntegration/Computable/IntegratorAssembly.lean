@@ -503,6 +503,9 @@ structure RischSolver (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [
     [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks. -/
   case : MonomialCase α
+  /-- **Automatically computed residue candidates.** The constant-root list the reduced stage needs,
+  computed from the input `Dt a d` — so the assembled integrator takes no `cands` argument. -/
+  candidates : CPolyG α → CPolyG α → CPolyG α → List α
   /-- The value the special part `snum/sden` differentiates to (a function of the input). -/
   specialVal : CPolyG α → CPolyG α → CPolyG α → RatFunc (CFieldSpec.K α)
   /-- **Special-hook soundness law.** A successful `integrateSpecial` gives a nonzero denominator and a
@@ -573,6 +576,24 @@ theorem isElementaryIntegrable_of_run (S : RischSolver α) (Dt a d : CPolyG α) 
 theorem not_isElementaryIntegrable (S : RischSolver α) (Dt a d : CPolyG α)
     (hobstruct : ¬ S.SpecElem Dt a d ∨ ¬ S.NrmElem Dt a d) : ¬ IsElementaryIntegrableG Dt a d :=
   not_isElementaryIntegrableG_of_obstruction Dt a d (S.descend Dt a d) hobstruct
+
+/-- **The fully automatic integrator (no `cands` argument).** Runs the assembled integrator on the
+solver's own computed candidate list `S.candidates Dt a d`. This is the end-user entry point: a function of
+`(Dt, a, d)` alone. -/
+def run (S : RischSolver α) (Dt a d : CPolyG α) : Option (IntegralResultG α) :=
+  S.integrate Dt a d (S.candidates Dt a d)
+
+/-- **Soundness of the automatic integrator.** A successful `run` is an antiderivative of `a/d` — the
+candidate list being computed internally changes nothing, since `sound` holds for every `cands`. -/
+theorem run_sound (S : RischSolver α) (Dt a d : CPolyG α) (res : IntegralResultG α)
+    (h : S.run Dt a d = some res) : IsIntegralResultG Dt a d res :=
+  S.sound Dt a d (S.candidates Dt a d) res h
+
+/-- **Constructive completeness of the automatic integrator.** A successful `run` certifies `a/d` is
+elementary integrable. -/
+theorem isElementaryIntegrable_of_run' (S : RischSolver α) (Dt a d : CPolyG α)
+    (res : IntegralResultG α) (h : S.run Dt a d = some res) : IsElementaryIntegrableG Dt a d :=
+  IsElementaryIntegrableG.of_isIntegralResult (S.run_sound Dt a d res h)
 
 end RischSolver
 
