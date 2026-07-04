@@ -240,3 +240,24 @@ complete modulo exactly one genuine Bronstein side condition** (+ the unconditio
 
 Only bookkeeping remains: wire into `field_identity_of_cIntegrateReducedGWf_of_residueMatch` (the
 `toPolyG hNum' = toPolyG .2.1` exact-division bridge).
+
+## Optional wiring — actionable recipe (2026-07-04)
+
+The capstone `cHermiteReduceTowerGWf_field_identity` produces the whole-step identity with middle
+numerator `hNum'` (radical form: `cdivWf (cmulG resNum' Dstar) resDen`, `resNum'`/`Dstar`/`resDen` in
+the *projections* `.1.1/.1.2/.2.2`). The consumer `field_identity_of_cIntegrateReducedGWf_of_residueMatch`
+(LogPartTowerSoundness) needs the middle numerator as `.2.1`. These are `toPolyG`-equal (both exact-div
+of `toPolyG`-equal args). The reusable bridge utility `toPolyG_cdivWf_congr` (HermiteValuationTower) is
+in place.
+
+Recipe to finish (verified via MCP goal inspection — `.2.1` unfolds to `cnormG(cdivWf (cmulG resNum_int
+Dstar_int) resDen_int)` over the internal fold `g = List.foldl (guarded-body) ([0],[1]) zipIdx`, which
+is the SAME fold the projections `.1.1=cnormG g.1` etc. denote): prove
+`toPolyG (cHermiteReduceTowerGWf Dt a d).2.1 = toPolyG hNum'` by `conv_rhs/lhs => rw
+[cHermiteReduceTowerGWf]`, `set g := List.foldl … zipIdx` and `set Dstar := List.foldl (·cmulG·) [1] …`
+to collapse the many fold occurrences, `simp only [toPolyG_cnormG]`, then `toPolyG_cdivWf_congr` with
+`hP`/`hQ` closed by `toPolyG_cmulG/csubG/cmonomialDeriv` normalization and `hdvd1` from the pole-
+cancellation (`hWgd_of_multiplicity` transported by `·Dstar` + the radical split `d=Dstar·W`). ~40–80L,
+mechanical. Then discharge the consumer `hherm` by rewriting its `.2.1` middle term. Left undone: the
+core objective (pole-cancellation) is complete and gate-verified; this only connects it to the
+end-to-end reduced-part assembly (which already works modulo `hexact`).
