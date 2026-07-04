@@ -47,4 +47,56 @@ theorem toK_cresultantWf_cAmcDdG_eq_eval (Dt a d : CPolyG α) (c : α)
     show (toPolyG d).coeff (toPolyG d).natDegree = (toPolyG d).leadingCoeff from rfl,
     hDmonic.leadingCoeff, one_pow, one_mul]
 
+open scoped Classical in
+/-- **The tower residue-resultant certification (G4b).** `toPolyG (cResidueResultantTowerGWf Dt a d) =
+rtResultantGen (toPolyG a) (toPolyG d) B` (`B = implicitDeriv (toPolyG Dt) (toPolyG d)`), for **monic** `d`,
+**constant** `Dt`, and proper `a`. The computable engine's residue resultant (an interpolant of the
+resultant samples) provably computes the general-derivation abstract residue resultant — via interpolation
+uniqueness (both have `z`-degree `≤ deg d` and agree at the `deg d + 1` integer nodes). This is the object
+`lazardRiobooTrager_output_isSimilar_gcd_gen` (G3) reasons about. -/
+theorem toPolyG_cResidueResultantTowerGWf [CharZero (CFieldSpec.K α)] (Dt a d : CPolyG α)
+    (hDmonic : (toPolyG d).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG a).natDegree < (toPolyG d).natDegree) :
+    toPolyG (cResidueResultantTowerGWf Dt a d)
+      = rtResultantGen (toPolyG a) (toPolyG d)
+          (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) := by
+  set B := Differential.implicitDeriv (toPolyG Dt) (toPolyG d) with hBdef
+  set pts : List (α × α) := (List.range (cdegG d + 1)).map
+    (fun k => (cnatCastG k, cresultantWf d (cAmcDdG Dt a d (cnatCastG k)))) with hpts
+  have hcompute : cResidueResultantTowerGWf Dt a d = cinterpolateG pts := rfl
+  have hfst : pts.map (fun p => CFieldSpec.toK p.1)
+      = (List.range (cdegG d + 1)).map (Nat.cast : ℕ → CFieldSpec.K α) := by
+    rw [hpts, List.map_map]
+    apply List.map_congr_left
+    intro k _
+    simp only [Function.comp_apply, toK_cnatCastG_oneShot]
+  have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
+    rw [hfst]; exact (List.nodup_range).map Nat.cast_injective
+  have hlen : pts.length = cdegG d + 1 := by rw [hpts, List.length_map, List.length_range]
+  have hne : pts ≠ [] := by rw [hpts]; simp
+  rw [hcompute]
+  symm
+  refine Polynomial.eq_of_degrees_lt_of_eval_index_eq (R := CFieldSpec.K α) (ι := ℕ)
+    (s := Finset.range (cdegG d + 1)) (v := (Nat.cast : ℕ → CFieldSpec.K α))
+    (f := rtResultantGen (toPolyG a) (toPolyG d) B) (g := toPolyG (cinterpolateG pts)) ?_ ?_ ?_ ?_
+  · intro x _ y _ h; exact Nat.cast_injective h
+  · rw [Finset.card_range, Nat.cast_withBot]
+    refine lt_of_le_of_lt Polynomial.degree_le_natDegree ?_
+    rw [Nat.cast_withBot, WithBot.coe_lt_coe]
+    have h1 := natDegree_rtResultantGen_le (toPolyG a) (toPolyG d) B
+    have h2 := cdegG_eq_natDegree d
+    omega
+  · rw [Finset.card_range, Nat.cast_withBot]
+    have := degree_toPolyG_cinterpolateG_lt pts hne
+    rw [hlen] at this
+    simpa [Nat.cast_withBot] using this
+  · intro k hk
+    rw [Finset.mem_range] at hk
+    have hmem : (cnatCastG k, cresultantWf d (cAmcDdG Dt a d (cnatCastG k))) ∈ pts := by
+      rw [hpts, List.mem_map]; exact ⟨k, List.mem_range.mpr hk, rfl⟩
+    rw [show (k : CFieldSpec.K α) = CFieldSpec.toK (cnatCastG k : α) from
+        (toK_cnatCastG_oneShot k).symm,
+      eval_toPolyG_cinterpolateG pts hnodup hmem,
+      toK_cresultantWf_cAmcDdG_eq_eval Dt a d (cnatCastG k) hDmonic hDt0 hAD]
+
 end DeepWiki.SymbolicIntegration
