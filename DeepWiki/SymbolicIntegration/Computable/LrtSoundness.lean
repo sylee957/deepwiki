@@ -784,6 +784,28 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : CPolyG α) (p : CPolyG α × List (CPol
     exact ⟨idx, hmem, hlen, rfl⟩
 
 open Classical in
+omit [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- **`hnodup` per entry.** Each entry's `Rᵢ` is a Yun factor of `R`, hence squarefree
+(`cSqfreeYunFFGWf_squarefree`), so over char-zero `K` it is separable, and its base change to `E` stays
+separable ⟹ `Nodup` roots. -/
+theorem nodup_roots_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
+    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0)
+    (p : CPolyG α × List (CPolyG α)) (hp : p ∈ cLrtLogArgG Dt hNum Dstar) :
+    ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.Nodup := by
+  obtain ⟨idx, hmem, _, _⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
+  have hget : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar))[idx]? = some p.1 :=
+    List.mk_mem_zipIdx_iff_getElem?.mp hmem
+  obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp hget
+  have hp1 : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
+    rw [List.get_eq_getElem]; exact hp1'
+  have hsqf : Squarefree (toPolyG p.1) := hp1 ▸ cSqfreeYunFFGWf_squarefree hgcd _ hR0 hRpp idx hj
+  exact Polynomial.nodup_roots
+    ((PerfectField.separable_iff_squarefree.mpr hsqf).map)
+
+open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
 `IsIntegralResultLrtG` for `cIntegrateReducedLrtG Dt a d`: the Hermite half is discharged outright by
 `hherm_lrt_E` (base-change of `cHermiteReduceTowerGWf_field_identity`), leaving only the log-part match `hlog`
