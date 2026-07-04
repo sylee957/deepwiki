@@ -494,6 +494,35 @@ theorem gcd_nodal_eq_prod_residue_gen (s : Finset K) (A B : K[X]) (a : K)
       exact (isRoot_gcd_iff_residue_gen A D B a α (hBroot hDα)).mpr ⟨hDα, hres'⟩
   rw [hgsplits.eq_prod_roots_of_monic hgmonic, hroots, Finset.prod_eq_multiset_prod]
 
+open scoped Classical in
+/-- **The residue subresultant is similar to the residue-pole product** (over an alg-closed `E`). Combining
+G3 (`lazardRiobooTrager_output_isSimilar_gcd_gen`, `~ gcd`), `lrtSubresultantGen_eval` (the specialized
+subresultant), and G2 (`gcd_nodal_eq_prod_residue_gen`, `gcd = ∏`): for `D = nodal s`, the subresultant of
+`(D, A − c·B)` at index `i = rootMultiplicity c` (`< deg D`) is similar to `∏_{res β = c}(X−β)`. This is the
+`hsim` input to `evalLrtArg_cSubresultantParam_eq_prod`. -/
+theorem isSimilar_subresultant_prod {E : Type*} [Field E] [IsAlgClosed E] (A B : E[X]) (s : Finset E)
+    (c : E) (hB : ∀ β ∈ s, B.eval β ≠ 0)
+    (hA : A.natDegree < (Lagrange.nodal s id).natDegree)
+    (hB_deg : B.natDegree ≤ (Lagrange.nodal s id).natDegree - 1)
+    (hi : (rtResultantGen A (Lagrange.nodal s id) B).rootMultiplicity c
+        < (Lagrange.nodal s id).natDegree) :
+    IsSimilar (subresultant (Lagrange.nodal s id) (A - C c * B) (Lagrange.nodal s id).natDegree
+        ((Lagrange.nodal s id).natDegree - 1)
+        ((rtResultantGen A (Lagrange.nodal s id) B).rootMultiplicity c))
+      (∏ α ∈ s.filter (fun α => A.eval α / B.eval α = c), (X - C α)) := by
+  set D := Lagrange.nodal s id with hD
+  have hDprod : D = ∏ α ∈ s, (X - C α) := by simp [hD, Lagrange.nodal_eq, id]
+  have hDsep : D.Separable := by
+    rw [hDprod]; exact separable_prod_X_sub_C_iff'.mpr fun _ _ _ _ h => h
+  have hBroots : ∀ α ∈ D.roots, B.eval α ≠ 0 := by
+    intro α hα
+    have hr : D.roots = s.val := by rw [hDprod, roots_prod_X_sub_C]
+    exact hB α (Finset.mem_val.mp (hr ▸ hα))
+  have hg3 := lazardRiobooTrager_output_isSimilar_gcd_gen A D B hDsep hBroots hA hB_deg c
+  rw [if_neg (ne_of_lt hi), lrtSubresultantGen_eval] at hg3
+  rw [← gcd_nodal_eq_prod_residue_gen s A B c hB]
+  exact hg3
+
 /-! ## Monic normalization (the log argument is the monic gcd, up to association) -/
 
 /-- **Monic normalization kills a scalar factor.** If `p = C k · q` with `k ≠ 0` and `q` monic, then
