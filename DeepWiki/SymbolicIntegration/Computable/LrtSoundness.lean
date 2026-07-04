@@ -862,6 +862,58 @@ theorem mem_roots_prodPow {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : Li
       obtain ⟨v, hv, hav⟩ := ih (i + 1) (Nat.succ_ne_zero i) hrest ha
       exact ⟨v, List.mem_cons_of_mem e hv, hav⟩
 
+/-- If `c` is a root of no factor of `L`, then `rootMultiplicity c (prodPow i L) = 0` (a root of the product
+would be a root of some factor, by `mem_roots_prodPow`). -/
+theorem rootMult_prodPow_eq_zero {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : List E[X]) (c : E)
+    (hne : prodPow i L ≠ 0) (hnot : ∀ v ∈ L, rootMultiplicity c v = 0) :
+    rootMultiplicity c (prodPow i L) = 0 := by
+  by_contra h
+  have hroot : c ∈ (prodPow i L).roots :=
+    Polynomial.mem_roots'.mpr ⟨hne, (Polynomial.rootMultiplicity_pos hne).mp (Nat.pos_of_ne_zero h)⟩
+  obtain ⟨v, hv, hcv⟩ := mem_roots_prodPow i hi L c hne hroot
+  obtain ⟨hv0, hvroot⟩ := Polynomial.mem_roots'.mp hcv
+  have hpos := (Polynomial.rootMultiplicity_pos hv0).mpr hvroot
+  rw [hnot v hv] at hpos
+  exact Nat.lt_irrefl 0 hpos
+
+/-- **The multiplicity in `prodPow` from a unique simple root.** If `c` is a simple root of exactly one factor
+`L[idx]` (`rootMultiplicity = 1`) and of no other factor, then `rootMultiplicity c (prodPow i L) = i + idx`
+(the exponent of `L[idx]` in `prodPow i L = ∏ⱼ L[j]^(i+j)`). The multiplicity heart of `hentry`. -/
+theorem rootMult_prodPow_of_unique {E : Type*} [Field E] (c : E) :
+    ∀ (L : List E[X]) (i idx : ℕ) (_ : i ≠ 0) (hidx : idx < L.length), prodPow i L ≠ 0 →
+      rootMultiplicity c (L[idx]'hidx) = 1 →
+      (∀ (j : ℕ) (hj : j < L.length), j ≠ idx → rootMultiplicity c (L[j]'hj) = 0) →
+      rootMultiplicity c (prodPow i L) = i + idx := by
+  intro L
+  induction L with
+  | nil => intro i idx _ hidx; simp at hidx
+  | cons e es ih =>
+    intro i idx hi hidx hne hc hother
+    rw [prodPow] at hne ⊢
+    have he0 : e ≠ 0 := fun h => (left_ne_zero_of_mul hne) (by rw [h, zero_pow hi])
+    have hrest0 : prodPow (i + 1) es ≠ 0 := right_ne_zero_of_mul hne
+    rw [Polynomial.rootMultiplicity_mul hne, rootMultiplicity_pow_eq e i c he0]
+    cases idx with
+    | zero =>
+      simp only [List.getElem_cons_zero] at hc
+      rw [hc, mul_one, rootMult_prodPow_eq_zero (i + 1) (Nat.succ_ne_zero i) es c hrest0 ?_,
+        Nat.add_zero]
+      intro v hv
+      obtain ⟨k, hk, rfl⟩ := List.getElem_of_mem hv
+      exact hother (k + 1) (by simpa using hk) (Nat.succ_ne_zero k)
+    | succ idx' =>
+      have hidx' : idx' < es.length := by simpa using hidx
+      simp only [List.getElem_cons_succ] at hc
+      have he_z : rootMultiplicity c e = 0 := by
+        have h0 := hother 0 (Nat.zero_lt_succ _) (Nat.succ_ne_zero idx').symm
+        simpa using h0
+      rw [he_z, mul_zero, zero_add,
+        ih (i + 1) idx' (Nat.succ_ne_zero i) hidx' hrest0 hc ?_]
+      · omega
+      · intro j hj hjne
+        have := hother (j + 1) (by simpa using hj) (by omega)
+        simpa using this
+
 /-- **Coprime polynomials have disjoint roots.** A common root `a` would give `1 = (u·p+v·q)(a) = 0`. -/
 theorem disjoint_roots_of_isCoprime {E : Type*} [Field E] [DecidableEq E] (p q : E[X])
     (h : IsCoprime p q) : Disjoint p.roots.toFinset q.roots.toFinset := by
