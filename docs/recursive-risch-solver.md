@@ -3,6 +3,17 @@
 Goal: solvers assembled **closed-form** (materialize fields → algorithm + soundness + completeness), and a
 **recursive** solver buildable level-by-level up the differential tower `k(t₁)…(tₙ)`.
 
+## Assembly by typeclass resolution (no threaded hypotheses)
+
+The obligations are **not** threaded through `def`s. They are the fields of a **class** `LawfulRischLevel α`
+(`RischTower.lean`) — the `X`/`LawfulX` idiom. Materialize **one** instance and the whole solver assembles
+by resolution, parameter-free: `LawfulRischLevel.integrate` / `.sound` / `.isElementaryIntegrable_of_run` /
+`.not_isElementaryIntegrable`, wherever `[LawfulRischLevel α]` is in scope. The engine frontier facts are
+localized to a companion class per case (e.g. `PrimitiveFrontier α`, `RischSolverPrimitive.lean`); the
+`instance [PrimitiveFrontier α] : LawfulRischLevel α` is written **once**, and everything downstream — and,
+once the tower step is an instance, everything *up the tower* — resolves automatically. This is the answer
+to "write the structure once, without threaded parameters, and it is assembled."
+
 ## The layering
 
 1. **`RischSolver α`** (`RischSolver.lean`) — the closed-form *per-level* bundle. Computable data

@@ -5,9 +5,9 @@ import DeepWiki.SymbolicIntegration.Computable.RischSolver
 The recursion interface and step for building solvers up the differential tower. `SubSolver α case` is the
 special-part (polynomial + RDE) capability that level `n` consumes from level `n-1`; `RischSolver.ofSub`
 assembles a full closed-form `RischSolver` from a `SubSolver` plus this level's reduced-part soundness and
-completeness contract. The base case is `SubSolver.primitive` (`RischSolverPrimitive.lean`); the engine
-bridge from a lower `RischSolver` (the poly-RDE coefficient recursion) is the deferred frontier. See
-`docs/recursive-risch-solver.md`. -/
+completeness contract. The base case is the primitive `LawfulRischLevel` instance (`RischSolverPrimitive.lean`,
+via `PrimitiveFrontier`); the engine bridge from a lower `RischSolver` (the poly-RDE coefficient recursion) is
+the deferred frontier. See `docs/recursive-risch-solver.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -58,7 +58,7 @@ the special subproblem `⟦specSubNum/specSubDen⟧` returns a log-free result w
 `snum/sden` and reconstructs `⟦a/d⟧` with the normal part (`hrun` — the engine bridge relating the case hook
 to a sub-run). The special-part field identity is then **derived from `sub.sound`**, not assumed. This is
 how recursive integration is encoded in `RischSolver`: `RischSolver.ofSub (SubSolver.ofLower sub …) …`
-delegates the special part downward, bottoming out at `SubSolver.primitive`. Only `hrun` (the case-hook ↔
+delegates the special part downward, bottoming out at the primitive `LawfulRischLevel`. Only `hrun` (the case-hook ↔
 sub-run bridge) remains — the algorithm-level fact the tower keystone will supply. -/
 def SubSolver.ofLower {case : MonomialCase α} (sub : RischSolver α)
     (specSubNum specSubDen : CPolyG α → CPolyG α → CPolyG α → CPolyG α)
