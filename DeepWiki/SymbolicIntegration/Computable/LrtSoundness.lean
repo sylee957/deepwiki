@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtIntegrate
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.Computable.SubresultantTowerSpec
 import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator (G5, pass P1)
@@ -108,6 +109,24 @@ theorem evalLrtArg_eq_prod (Si : List (CPolyG α)) (c : E) (A D B : (CFieldSpec.
   simp only [evalLrtArg]
   rw [hraw]
   exact monicNormalize_eq_of_isSimilar_prod poles hsim
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **P3 for the engine's parametric subresultant.** `hg4c` discharged by G4c
+(`toPolyG_cSubresultantParam_getD`): `evalLrtArg (cSubresultantParam Dstar hNum Dd (cdegG Dstar)(cdegG Dd) j) c
+= ∏_{β}(t−β)`, given `deg Dd = deg Dstar − 1` and `IsSimilar S (∏)`. -/
+theorem evalLrtArg_cSubresultantParam_eq_prod [CharZero (CFieldSpec.K α)]
+    (Dstar hNum Dd : CPolyG α) (c : E) (j : ℕ) (poles : Multiset E)
+    (hm : cdegG Dd = cdegG Dstar - 1)
+    (hφ : Function.Injective (algebraMap (CFieldSpec.K α) E))
+    (hsim : IsSimilar (subresultant ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))
+        ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)
+          - Polynomial.C c * (toPolyG Dd).map (algebraMap (CFieldSpec.K α) E))
+        (toPolyG Dstar).natDegree ((toPolyG Dstar).natDegree - 1) j)
+      (poles.map (fun β => Polynomial.X - Polynomial.C β)).prod) :
+    evalLrtArg (cSubresultantParam Dstar hNum Dd (cdegG Dstar) (cdegG Dd) j) c
+      = (poles.map (fun β => Polynomial.X - Polynomial.C β)).prod :=
+  evalLrtArg_eq_prod _ c (toPolyG hNum) (toPolyG Dstar) (toPolyG Dd) j poles hφ
+    (fun n => toPolyG_cSubresultantParam_getD Dstar hNum Dd j n hm) hsim
 
 variable [Differential E] [Algebra ℚ E]
 
