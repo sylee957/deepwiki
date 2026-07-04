@@ -1007,6 +1007,57 @@ theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Fie
       (Multiset.mem_toFinset.mpr hc)) (Multiset.mem_toFinset.mpr hcj)
 
 open Classical in
+variable [CFracGcdCoreWf α] in
+/-- **`hentry` per entry.** Each entry's log argument evaluates to its residue-`c` pole product. Obtains the
+entry structure (`mem_cLrtLogArgG`: `p.2 = cSubresultantParam … (idx+1)`), establishes the index match
+`idx+1 = rootMultiplicity c R` (`rootMult_R_map_eq_idx_succ` + `R_E = rtResultantGen`), then applies
+`evalLrtArg_eq_fiber_prod`; the fiber `Dd_E = implicitDeriv Dt_E Dstar_E` alignment closes it. -/
+theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
+    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α) (allpoles : Finset E)
+    (hDmonic : (toPolyG Dstar).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
+    (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
+    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0)
+    (hm : cdegG (cmonomialDeriv Dt Dstar) = cdegG Dstar - 1)
+    (hB : ∀ β ∈ allpoles, ((toPolyG (cmonomialDeriv Dt Dstar)).map
+        (algebraMap (CFieldSpec.K α) E)).eval β ≠ 0)
+    (hA : ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).natDegree
+        < (Lagrange.nodal allpoles id).natDegree)
+    (hB_deg : ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)).natDegree
+        ≤ (Lagrange.nodal allpoles id).natDegree - 1)
+    (p : CPolyG α × List (CPolyG α)) (hp : p ∈ cLrtLogArgG Dt hNum Dstar)
+    (c : E) (hc : c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots)
+    (hi : (rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)) (Lagrange.nodal allpoles id)
+        ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c
+        < (Lagrange.nodal allpoles id).natDegree) :
+    evalLrtArg p.2 c = ((allpoles.filter (fun β =>
+        ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+          / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              (Lagrange.nodal allpoles id)).eval β = c)).val.map (fun β => X - C β)).prod := by
+  obtain ⟨idx, hmem, _, hp2⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
+  obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp (List.mk_mem_zipIdx_iff_getElem?.mp hmem)
+  have hp1 : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
+    rw [List.get_eq_getElem]; exact hp1'
+  -- `Dd_E = implicitDeriv Dt_E (nodal)` (fiber alignment)
+  have hDd : (toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)
+      = Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          (Lagrange.nodal allpoles id) := by
+    rw [toPolyG_cmonomialDeriv, implicitDeriv_map, hsplit]
+  -- `rtResultantGen hNum_E (nodal) Dd_E = R_E`, hence `rootMult = idx+1`
+  have hRR : rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
+        (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))
+      = (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map (algebraMap (CFieldSpec.K α) E) := by
+    rw [hDd, ← hsplit, ← toPolyG_cResidueResultantTowerGWf_map Dt hNum Dstar hDmonic hDt0 hAD]
+  have hindex : idx + 1 = (rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
+      (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map
+        (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c := by
+    rw [hRR, rootMult_R_map_eq_idx_succ hgcd _ hR0 hRpp idx hj c (hp1 ▸ hc)]
+  rw [hp2, evalLrtArg_eq_fiber_prod Dstar hNum (cmonomialDeriv Dt Dstar) allpoles c (idx + 1) hm hsplit
+    hB hA hB_deg hindex (hindex ▸ hi), hDd]
+
+open Classical in
 omit [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **`hdisj`.** The entries of `cLrtLogArgG` have pairwise-disjoint `Rᵢ`-root sets: each entry comes from a
