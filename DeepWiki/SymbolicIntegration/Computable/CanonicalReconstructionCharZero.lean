@@ -1,0 +1,67 @@
+import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
+import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
+import DeepWiki.SymbolicIntegration.SpecialNormalCoprime
+
+/-! # Canonical reconstruction with the split conditions discharged (`CharZero`)
+
+`canonicalReconstruction_of_charZero`: the canonical pieces recombine `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`
+needing only `[CharZero]` + `GcdFFCorrect` + `d ≠ 0` — the split identity, factor-nonvanishing, and
+coprimality (`hsplit`/`hdn`/`hds`/`hgdeg`/`hgne` of `canonicalReconstruction`) are *derived* from
+`cSplitFactorFastGWf_isSplittingFactorizationGen` (the abstract split correctness) and
+`isCoprime_of_isSpecial_isNormalSqfree` (special ⊥ normal). No split hypothesis remains. -/
+
+namespace DeepWiki.SymbolicIntegration
+
+open Compute CPolyG QFunNZG Polynomial Classical
+open scoped Differential
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
+  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **Canonical reconstruction, split conditions discharged.** From `[CharZero]`, the fraction-free gcd
+correctness `GcdFFCorrect`, and `d ≠ 0`, the split is a genuine coprime factorization (via
+`cSplitFactorFastGWf_isSplittingFactorizationGen` + `isCoprime_of_isSpecial_isNormalSqfree`), so the
+canonical pieces recombine to `⟦a/d⟧`. -/
+theorem canonicalReconstruction_of_charZero (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd : toPolyG d ≠ 0) :
+    fieldFrac (crPoly Dt a d) [CField.one]
+        + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
+        + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
+      = fieldFrac a d := by
+  -- the canonical special/normal denominators are the split output
+  have hspd : crSpecDen Dt a d = (cSplitFactorFastGWf Dt d).2 := by
+    simp only [crSpecDen, canonicalRepresentationFastGWf]
+  have hnd : crNormDen Dt a d = (cSplitFactorFastGWf Dt d).1 := by
+    simp only [crNormDen, canonicalRepresentationFastGWf]
+  -- abstract split correctness (special/normal factorization)
+  letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+  obtain ⟨hfac, hspec, hnorm⟩ := cSplitFactorFastGWf_isSplittingFactorizationGen hgcd Dt d hd
+  -- factor nonvanishing
+  have hds : toPolyG (crSpecDen Dt a d) ≠ 0 := by
+    rw [hspd]; intro h; exact hd (by rw [hfac, h, zero_mul])
+  have hdn : toPolyG (crNormDen Dt a d) ≠ 0 := by
+    rw [hnd]; intro h; exact hd (by rw [hfac, h, mul_zero])
+  have hsplit : toPolyG d = toPolyG (crSpecDen Dt a d) * toPolyG (crNormDen Dt a d) := by
+    rw [hspd, hnd]; exact hfac
+  -- special ⊥ normal coprimality
+  have hcop : IsCoprime (toPolyG (crSpecDen Dt a d)) (toPolyG (crNormDen Dt a d)) := by
+    rw [hspd, hnd]
+    exact isCoprime_of_isSpecial_isNormalSqfree (by rw [← hspd]; exact hds) hspec hnorm
+  -- gcd of the split parts is a unit ⇒ the computable gcd is a nonzero constant
+  have hgu : IsUnit (gcd (toPolyG (crNormDen Dt a d)) (toPolyG (crSpecDen Dt a d))) :=
+    gcd_isUnit_iff_isRelPrime.mpr (hcop.symm.isRelPrime)
+  have hassoc : Associated (toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1)
+      (gcd (toPolyG (crNormDen Dt a d)) (toPolyG (crSpecDen Dt a d))) := by
+    have h1 : Associated (toPolyG (cgcdMonicWf (crNormDen Dt a d) (crSpecDen Dt a d)))
+        (toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1) := by
+      rw [cgcdMonicWf]; exact associated_toPolyG_cmonicG _
+    exact h1.symm.trans (associated_toPolyG_cgcdMonicWf _ _)
+  have hgu' : IsUnit (toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1) :=
+    (Associated.isUnit_iff hassoc).mpr hgu
+  have hgdeg : (toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0 :=
+    natDegree_eq_zero_of_isUnit hgu'
+  have hgne : toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0 := hgu'.ne_zero
+  exact canonicalReconstruction Dt a d hd hdn hds hsplit hgdeg hgne
+
+end DeepWiki.SymbolicIntegration
