@@ -264,6 +264,24 @@ Remaining `hlog` pieces (each a real engine→abstract connection over `E`): res
 `R = ∏Rᵢ^i`); `polesOf` + `hpart` (partition via Yun coprimality + `sum_over_list_partition`); `hroots`; `hfac`
 (via `isSimilar_subresultant_prod`, index = fiber size); the RT setup (`hA`/`hnorm`/`hcancel`).
 
+### ★★★ `hlog` ASSEMBLED (2026-07-04) — `logResidueSumLrtG_eq_normalPart_of_yun`
+
+The full `hlog` now reduces to clean Yun-structure hypotheses. Built (`LrtSoundness.lean`, all gate-green):
+- Residue structure: `rtResultantGen_map` (residue resultant base-changes) + `toPolyG_cResidueResultantTowerGWf_map`
+  (concrete `R_E = rtResultantGen`) + `residueResultant_map_roots` (`R_E.roots = residues`, via `roots_rtResultantGen`).
+- Geometric: `monic_separable_eq_nodal` (`Dstar_E = nodal allpoles`, monic+squarefree).
+- **Three discharge cores**: `sum_filter_rootSet_partition` (`hpart`, via Yun coprimality + `mem_foldr_union_iff`),
+  `roots_eq_image_res_filter` (`hroots`), `evalLrtArg_eq_fiber_prod` (`hfac`, via `isSimilar_subresultant_prod`;
+  fixed a whnf timeout with `convert`+`omega` on the subresultant dimension).
+- **Assembly** `logResidueSumLrtG_eq_normalPart_of_yun`: plugs the three cores into
+  `logResidueSumLrtG_eq_normalPart` (`polesOf p := allpoles.filter(res ∈ Rᵢ.roots)`), concluding
+  `logResidueSumLrtG = hNum/∏(t−β)` modulo the Yun facts `hnodup`/`hressub`/`hdisj`/`hcover`/`hentry` + RT setup.
+
+**Remaining:** discharge those Yun facts for the concrete `cLrtLogArgG Dt hNum Dstar` over `E` — base-change
+`cSqfreeYunFFGWf`'s correctness (`YunTowerCorrect`: squarefree/coprime/reconstruction) to `E`, and the per-entry
+index = `rootMultiplicity` match (`hentry` via `evalLrtArg_eq_fiber_prod`). Then the final assembly +
+`E→K` descent + swap the primitive base.
+
 ### ★ `hlog` is ASSEMBLY, not a wall (2026-07-04) — every abstract endpoint already exists
 
 Scoping confirmed no research gap remains; `hlog` is a (large) mechanical assembly of proven pieces:
