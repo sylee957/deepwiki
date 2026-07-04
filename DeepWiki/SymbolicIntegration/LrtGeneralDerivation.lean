@@ -376,4 +376,46 @@ theorem natDegree_implicitDeriv_le_of_monic {F : Type*} [Field F] [Differential 
   rw [happly]
   exact (natDegree_add_le _ _).trans (max_le hmc hvd)
 
+open scoped Classical in
+/-- **`z`-degree bound on the bivariate subresultant coefficient.** Each `t`-coefficient of
+`lrtSubresultantGen A D B j` (a polynomial in the residue variable `z`) has degree `≤ deg D + (deg D − 1)`,
+hence `< N = deg D + (deg D − 1) + 1` — the node count of `cSubresultantParam`. This is what makes the
+engine's interpolation-in-`z` recover the true subresultant coefficient exactly (G4c). Proved by
+`natDegree_det_le_sum_col_gen`: every Sylvester entry is a coefficient of `D.map C` (`z`-constant) or of
+`A.map C − z·B.map C` (`z`-linear), so each is `z`-degree `≤ 1`, and the submatrix has `≤ deg D + (deg D − 1)`
+columns. -/
+theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
+    ((lrtSubresultantGen A D B j).coeff k).natDegree ≤ D.natDegree + (D.natDegree - 1) := by
+  have hentry : ∀ (i l : Fin ((D.natDegree - 1) + D.natDegree)),
+      (bSylvester (D.map (C : K →+* K[X]))
+        (A.map (C : K →+* K[X]) - C Polynomial.X * B.map (C : K →+* K[X]))
+        D.natDegree (D.natDegree - 1) i l).natDegree ≤ 1 := by
+    intro i l
+    rw [bSylvester, Matrix.of_apply]
+    split_ifs
+    · rw [Polynomial.coeff_map, Polynomial.natDegree_C]; omega
+    · simp
+    · exact natDegree_coeff_rtResultantGen_g_le A B _
+    · simp
+  by_cases hk : k < j + 1
+  · have hcoeff : (lrtSubresultantGen A D B j).coeff k
+        = ((bSylvester (D.map (C : K →+* K[X]))
+            (A.map (C : K →+* K[X]) - C Polynomial.X * B.map (C : K →+* K[X]))
+            D.natDegree (D.natDegree - 1)).submatrix
+            (subRow D.natDegree (D.natDegree - 1) j)
+            (subCol D.natDegree (D.natDegree - 1) j k)).det := by
+      rw [lrtSubresultantGen, subresultant, Polynomial.finsetSum_coeff]
+      simp only [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow, mul_ite, mul_one, mul_zero,
+        Finset.sum_ite_eq, Finset.mem_range, hk, if_true]
+    rw [hcoeff]
+    refine (natDegree_det_le_sum_col_gen _ (fun _ => 1) (fun i l => ?_)).trans ?_
+    · rw [Matrix.submatrix_apply]; exact hentry _ _
+    · simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin, smul_eq_mul, mul_one]
+      omega
+  · rw [show (lrtSubresultantGen A D B j).coeff k = 0 from ?_, Polynomial.natDegree_zero]
+    · omega
+    · rw [lrtSubresultantGen, subresultant, Polynomial.finsetSum_coeff]
+      simp only [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow, mul_ite, mul_one, mul_zero,
+        Finset.sum_ite_eq, Finset.mem_range, hk, if_false]
+
 end DeepWiki.SymbolicIntegration
