@@ -54,6 +54,11 @@ noncomputable def logResidueSumLrtG (Dt : CPolyG α)
         * (towerDerivExt Dt (algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c))
             / algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c)))).sum)).sum
 
+/-- The per-pole logarithmic term `(Δ (t−β))/(t−β)` for a pole `β ∈ E`. -/
+noncomputable def poleTerm (Dt : CPolyG α) (β : E) : RatFunc E :=
+  towerDerivExt Dt (algebraMap E[X] (RatFunc E) (X - C β))
+    / algebraMap E[X] (RatFunc E) (X - C β)
+
 /-- The single-`(Rᵢ, Sᵢ)` residue term: `Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)`. -/
 noncomputable def logResidueTermLrtG (Dt : CPolyG α) (p : CPolyG α × List (CPolyG α)) : RatFunc E :=
   (((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
@@ -120,6 +125,27 @@ theorem towerDerivExt_div_algebraMap_prod (Dt : CPolyG α) (l : Multiset E[X]) (
     obtain ⟨p, hp, rfl⟩ := hx
     exact fun h => hl p hp (IsFractionRing.injective E[X] (RatFunc E) (by rw [h, map_zero])) ),
     Multiset.map_map]
+  rfl
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Term-level assembly: the residue term is the residue-weighted per-pole sum.** Given that each
+monic log argument `evalLrtArg Sᵢ c` factors as `∏_{β ∈ fac c}(t−β)` (the gcd as linear factors, P3), the
+per-`Rᵢ` residue term becomes `Σ_{c ∈ roots Rᵢ} c·(Σ_{β ∈ fac c} poleTerm β)` — via the log-derivative
+product split. Combined with `residue_pole_regroup` this collapses to the pole sum. -/
+theorem logResidueTermLrtG_eq_pole_sum (Dt : CPolyG α) (p : CPolyG α × List (CPolyG α))
+    (fac : E → Multiset E)
+    (hfac : ∀ c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
+      evalLrtArg p.2 c = ((fac c).map (fun β => X - C β)).prod) :
+    logResidueTermLrtG Dt p
+      = (((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
+          algebraMap E (RatFunc E) c * ((fac c).map (poleTerm Dt)).sum)).sum := by
+  rw [logResidueTermLrtG]
+  refine congrArg Multiset.sum (Multiset.map_congr rfl (fun c hc => ?_))
+  rw [hfac c hc, towerDerivExt_div_algebraMap_prod Dt ((fac c).map (fun β => X - C β)) (by
+    intro q hq
+    rw [Multiset.mem_map] at hq
+    obtain ⟨β, _, rfl⟩ := hq
+    exact X_sub_C_ne_zero β), Multiset.map_map]
   rfl
 
 end Ext
