@@ -810,6 +810,28 @@ theorem nodal_roots {E : Type*} [Field E] (s : Finset E) :
     (Lagrange.nodal s id).roots = s.val := by
   rw [Lagrange.nodal]; simp only [id_eq]; exact Polynomial.roots_prod_X_sub_C s
 
+/-- `rootMultiplicity c (p^n) = n · rootMultiplicity c p` (nonzero `p`). -/
+theorem rootMultiplicity_pow_eq {E : Type*} [Field E] (p : E[X]) (n : ℕ) (c : E) (hp : p ≠ 0) :
+    rootMultiplicity c (p ^ n) = n * rootMultiplicity c p := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+    rw [pow_succ, Polynomial.rootMultiplicity_mul (mul_ne_zero (pow_ne_zero k hp) hp), ih,
+      Nat.succ_mul]
+
+/-- `rootMultiplicity` is invariant under `Associated` (the unit factor has no roots). -/
+theorem associated_rootMultiplicity_eq {E : Type*} [Field E] {p q : E[X]} (h : Associated p q) (c : E) :
+    rootMultiplicity c p = rootMultiplicity c q := by
+  obtain ⟨u, rfl⟩ := h
+  by_cases hp : p = 0
+  · simp [hp]
+  · have hu0 : rootMultiplicity c (↑u : E[X]) = 0 := by
+      apply Polynomial.rootMultiplicity_eq_zero
+      obtain ⟨c0, hc0, hc0eq⟩ := Polynomial.isUnit_iff.mp u.isUnit
+      rw [← hc0eq, Polynomial.IsRoot, Polynomial.eval_C]
+      exact fun h => hc0.ne_zero h
+    rw [Polynomial.rootMultiplicity_mul (mul_ne_zero hp u.ne_zero), hu0, Nat.add_zero]
+
 /-- A root of the powered product `prodPow i L = ∏ⱼ L[j]^(i+j)` (`i ≠ 0`, nonzero) is a root of some factor
 `v ∈ L`. The root-of-product step for `hcover` (a residue is a root of the Yun reconstruction `R ~ ∏Rᵢ^i`). -/
 theorem mem_roots_prodPow {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : List E[X]) (a : E)
