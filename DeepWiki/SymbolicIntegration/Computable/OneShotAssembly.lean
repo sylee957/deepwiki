@@ -648,6 +648,45 @@ theorem cIntegrateReducedGWf_lawfulResidueLogPart [CFracGcdCoreWf α] [Decidable
     hnorm (cIntegrateReducedGWf_logs_eq_per_root Dt a d cands s residueCand hden hres hDd hdist hcand
       hgcdread)
 
+/-- **Realization (Stage 2, hyperexp): `cIntegrateReducedGWf.logs` is a lawful residue-log part.** The
+`LawfulResidueLogPart` realization for the hyperexponential monomial (`t′ = b·t`, `b ≠ 0`) — identical to
+the primitive realization but through `hyperexp_engine_hmatch`, which additionally consumes the
+integrability witness `hsum : ∑ c = 0` (the RT polynomial-part cancellation is not automatic here). -/
+theorem cIntegrateReducedGWf_lawfulResidueLogPart_hyperexp [CFracGcdCoreWf α]
+    [DecidableEq (CFieldSpec.K α)]
+    (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α))
+    (b : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
+    (hb : b ≠ 0) (hDt : toPolyG Dt = C b * X)
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
+    (hsum : ∑ β ∈ s, (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+        / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β = 0)
+    (hres : CPolyG.cRationalResiduesGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2 cands = s.toList.map residueCand)
+    (hDd : ∀ β ∈ s,
+      (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β ≠ 0)
+    (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
+      (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval γ
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval γ
+        ≠ (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval δ
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval δ)
+    (hcand : ∀ β ∈ s, CFieldSpec.toK (residueCand β)
+      = (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+        / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)
+    (hgcdread : ∀ β ∈ s, Associated
+      (toPolyG (cLogArgTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+          (cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))
+      (gcd (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+          (toPolyG (cAmcDdG Dt (cHermiteReduceTowerGWf Dt a d).2.1
+            (cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β))))) :
+    LawfulResidueLogPart Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2
+      (CPolyG.cIntegrateReducedGWf Dt a d cands).logs where
+  residue_match := hyperexp_engine_hmatch Dt s (cHermiteReduceTowerGWf Dt a d).2.1
+    (cHermiteReduceTowerGWf Dt a d).2.2 b hb (CPolyG.cIntegrateReducedGWf Dt a d cands).logs hDt hden
+    hA hnorm hsum (cIntegrateReducedGWf_logs_eq_per_root Dt a d cands s residueCand hden hres hDd hdist
+      hcand hgcdread)
+
 /-! ### ★ The `hA` discharge — the Hermite leftover is a PROPER fraction (numer degree < denom degree)
 
 The fuel-free reduced-case one-shots (`field_identity_of_cIntegrateReducedGWf_primitive` below and its
