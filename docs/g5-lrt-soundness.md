@@ -148,9 +148,17 @@ gate-green in `LrtSoundness.lean`:
 
 **⟹ `logResidueSumLrtG` reduces to `Σ_β res(β)·poleTerm β` (the pole sum) given the per-`Rᵢ` factorizations.**
 
-**Remaining (the dense core + structure):**
-- **P3** `evalLrtArg Sᵢ c = ∏_{res β=c}(t−β)` — the base-change of G4c (`Sᵢ = lrtSubresultantGen` coeff) → G3
-  (`~ gcd`) → G2 (`gcd = ∏`) from `K` to `E`, plus `monic(∼gcd) = monic gcd`. The dense plumbing.
+**P3 ENDPOINT DONE (`LrtGeneralDerivation.lean`):** `monicNormalize_of_eq_C_mul_monic` /
+`monicNormalize_of_associated_monic` / **`monicNormalize_eq_of_isSimilar_prod`** —
+`IsSimilar S (∏(t−β)) → S·C(S.leadingCoeff)⁻¹ = ∏(t−β)`. So with `S = lrtSubresultantGen.map(evalRingHom c)`
+(`~ gcd` by G3) and `gcd = ∏_{res β=c}(t−β)` (by G2), the **monic log argument is the residue-`c` linear-factor
+product** — exactly `evalLrtArg`'s value once `raw = S`.
+
+**Remaining P3 (the dense base-change):** `raw = S`, i.e. `evalLrtArg`'s raw sum
+`Σ_k C((toPolyG Sᵢ[k]).eval₂(alg) c)·tᵏ = (lrtSubresultantGen …).map (eval₂RingHom (algebraMap K E) c)`
+[G4c coeff-by-coeff] `= subresultant (Dstar_E)(hNum_E − c·Dd_E) …` [`subresultant_map` + `lrtSubresultantGen_eval`
+over `E`] `= S`; then `S ~ gcd` [G3 over `E`], `gcd = ∏` [G2 over `E`]. The bivariate base-change is the dense
+plumbing that entangles `cLrtLogArgG`'s specific args + the `hm` degree hypothesis.
 - **partition** — the `polesᵢ` (per-`Rᵢ`) partition `Dstar`'s roots (LRT multiplicity structure).
 - **P4** `Σ_β res(β)·poleTerm β = hNum/Dstar` — instantiate `monomial_residue_match_of_cancel` over `E`.
 - **hherm** over `E` + **descent** (base-change injectivity) + assembly, then the `cLrtLogArgG` monic engine fix.
