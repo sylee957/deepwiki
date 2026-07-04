@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
+import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
 
 /-! # `Q`-regularity over the tower fraction field
 
@@ -409,5 +410,35 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPolyG α
   have hvp : amG α (toPolyG x.1) ^ (x.2 + 1) ≠ 0 := pow_ne_zero _ hav
   field_simp
   ring
+
+/-- The per-factor residual numerator `residNumG x = afin · v^(i−1)` (`afin` the inner-loop residual). -/
+noncomputable def residNumG (Dt a d : CPolyG α) (x : CPolyG α × ℕ) : (CFieldSpec.K α)[X] :=
+  toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+    ([CField.zero], [CField.one])).2 * toPolyG x.1 ^ x.2
+
+/-- **All per-factor `hstep` identities** hold, given the per-factor gcd coprimality (`hcopgcd`, the
+standard Hermite precondition — the single remaining frontier). Discharges `hv`/`hpow`/`hud` from the
+Yun structural facts (`get_ne_zero`, `pow_dvd`, `cdivWf_pow_mul`) via the zipIdx→get bridge. -/
+theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+    ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      towerFractionFieldDerivG Dt (glocFracG Dt a d x)
+        = amG α (toPolyG a) / amG α (toPolyG d)
+          - amG α (residNumG Dt a d x) / amG α (toPolyG d) := by
+  intro x hx
+  have hxzip : x ∈ (cSqfreeYunFFGWf d).zipIdx := List.mem_of_mem_filter hx
+  obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
+    (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hxzip))
+  have hv : toPolyG x.1 ≠ 0 := by
+    rw [← hget]; exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp x.2 hidx
+  have hpow : toPolyG x.1 ^ (x.2 + 1) ∣ toPolyG d := by
+    rw [← hget, add_comm]; exact cSqfreeYunFFGWf_pow_dvd hgcd d hd0 hpp x.2 hidx
+  have hud := toPolyG_cdivWf_pow_mul d x.1 (x.2 + 1) hv hpow
+  exact glocFracG_step_identity Dt a d x hd0 hv (hcopgcd x hx).1 (hcopgcd x hx).2 hud
 
 end DeepWiki.SymbolicIntegration
