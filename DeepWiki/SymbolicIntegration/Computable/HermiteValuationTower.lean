@@ -659,12 +659,12 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
 
 /-- **The whole-step Hermite field identity for `cHermiteReduceTowerGWf`** (`D_tower(⟦g⟧) +
 ⟦hNum/Dstar⟧ = ⟦a/d⟧`), discharging pole-cancellation via `hWgd_of_multiplicity` (with the Yun
-reconstruction now internal) and the radical split `toPolyG_yunRadical_split`. Modulo two clean
-frontiers: per-factor gcd coprimality (`hcopgcd`) and `gden`/`Dstar ≠ 0`. -/
+reconstruction now internal) and the radical split `toPolyG_yunRadical_split` (which also discharges
+`Dstar ≠ 0`). Modulo the genuine differential-normality side condition `hcopgcd` (per-factor gcd
+coprimality — `v` coprime `D(v)`, e.g. false for `v=t` under hyperexponential `D`) and `gden ≠ 0`. -/
 theorem cHermiteReduceTowerGWf_field_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
     (hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0)
-    (hDstar0 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
@@ -684,6 +684,8 @@ theorem cHermiteReduceTowerGWf_field_identity [CharZero (CFieldSpec.K α)] (hgcd
             (cHermiteReduceTowerGWf Dt a d).1.2))))
         / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
       = amG α (toPolyG a) / amG α (toPolyG d) := by
+  have hDstar0 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ≠ 0 := fun h =>
+    hd0 (by rw [toPolyG_yunRadical_split hgcd Dt a d hd0, h, zero_mul])
   have hresDen : cnormG (cmulG d (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
       (cHermiteReduceTowerGWf Dt a d).1.2)) ≠ [] := by
     intro h
