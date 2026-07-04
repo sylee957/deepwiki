@@ -190,3 +190,21 @@ factorization reconstructs its input up to associates". The whole pole-cancellat
    `cSqfreeYunFFGgoWf` length = `m` bridge.
 2. **`hcopgcd`** — per-factor gcd coprimality (standard Hermite precondition).
 3. **`hgd0`/`hDstar0`** — fold-denominator nonzero.
+
+## hrecon piece (1) done; piece (2) = loop-length (2026-07-04)
+
+`prodPow_one_sqfreeFactPart_range_associated` (`HermiteCorrectness.lean`) proves the ABSTRACT half:
+`prodPow 1 ((range n).map (sqfreeFactPart A ∘ (1+·))) ~ pp(A)` for `n ≥ maxmult` (extra factors are
+`sqfreeFactPart = 1`, dropped via `Finset.prod_subset`). Plus reusable `prodPow_append_singleton`,
+`prodPow_range_map_eq_finset`.
+
+So `hrecon` now reduces to piece (2): `(cSqfreeYunFFGWf d).length ≥ maxmult`. Then chain
+`prodPow_associated (cSqfreeYunFFGWf_forall₂)` ~ `prodPow_one_sqfreeFactPart_range_associated` ~
+`associated_primPart_self` gives `hrecon`.
+
+KEY OBSERVATION for the finish: the **divides** direction `prodPow 1 (map toPolyG factors) ∣ d` is
+FREE — each `vk^(1+k) ∣ d` (`cSqfreeYunFFGWf_pow_dvd`), pairwise coprime (`cSqfreeYunFFGWf_isRelPrime`),
+so `list_prod_dvd_of_pairwise` applies (mirror `prod_vkidx_dvd_R`). Then `hrecon` (Associated) needs only
+`deg(prodPow 1 factors) = deg d`, i.e. `LEN ≥ maxmult` so no multiplicity is dropped — provable either by
+the loop-terminates-at-degree-0 analysis (`deflation_natDegree_eq_zero_iff`) or the
+divides-plus-degree route.
