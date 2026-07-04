@@ -17,8 +17,8 @@ import DeepWiki.SymbolicIntegration.Computable.Assemble
 /-! # The generic one-level Risch assembler
 
 The **generic** integrator `cIntegrateCase` (parameterized by a `MonomialCase` record), the canonical-split
-accessors (`crPoly`/…/`redNorm`), the canonical reconstruction, and the generic soundness `cIntegrateCase_sound`. The abstract solver bundle `RischSolver` (whose
-`.integrate`/`.sound`/… are derived from these) lives in `RischSolver.lean`. The concrete *case instances*
+accessors (`crPoly`/…/`redNorm`), the canonical reconstruction, and the generic soundness `cIntegrateCase_sound`. The Risch-solver abstraction `LawfulRischLevel` (whose
+`.integrate`/`.sound`/… are derived from these) lives in `RischTower.lean`. The concrete *case instances*
 (`primitiveCase`, `hyperexpCase`), the `native_decide` validations, and the per-case reduced-stage
 realizations live in `IntegratorCases.lean`, which imports this file. The abstract soundness/completeness
 cores (`combineSN_isIntegralResult`, `IsElementaryIntegrableG`, `MonomialCase`, `combineSN`, `fieldFrac`)

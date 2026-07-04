@@ -6,8 +6,8 @@ The concrete `MonomialCase` instances — `primitiveCase` (`Dt ∈ α`) and `hyp
 `native_decide` validations that one assembler reproduces the antiderivative identity on both, and the
 per-case reduced-stage soundness realizations assembled from the Stage-2 interface realizations
 (`LawfulHermiteReduction` + `LawfulResidueLogPart`). Everything here names a concrete algorithm; the generic
-assembler (`cIntegrateCase`, `cIntegrateCase_sound`) and the abstract bundle (`RischSolver`) live in
-`IntegratorAssembly.lean`. See `docs/risch-two-stage-discipline.md`.
+assembler (`cIntegrateCase`, `cIntegrateCase_sound`) and the Risch-solver abstraction (`LawfulRischLevel`,
+`RischTower.lean`) live in `IntegratorAssembly.lean`. See `docs/risch-two-stage-discipline.md`.
 -/
 
 namespace DeepWiki.SymbolicIntegration
