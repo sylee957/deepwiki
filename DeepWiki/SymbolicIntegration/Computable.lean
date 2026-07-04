@@ -24,6 +24,7 @@ import DeepWiki.SymbolicIntegration.Computable.IntegrationSpec
 import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 import DeepWiki.SymbolicIntegration.Computable.IntegratorCases
 import DeepWiki.SymbolicIntegration.Computable.RischSolver
+import DeepWiki.SymbolicIntegration.Computable.RischSolverRec
 import DeepWiki.SymbolicIntegration.Computable.RischSolverPrimitive
 import DeepWiki.SymbolicIntegration.Computable.IntegratorCompleteness
 import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
