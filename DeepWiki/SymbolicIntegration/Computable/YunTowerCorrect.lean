@@ -20,6 +20,30 @@ open Compute CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
 
+/-- **`prodPow` splits as the plain product times the zipIdx-power product**:
+`prodPow s M = (∏ mₖ^s) · ∏ₖ mₖ^k` — separating the uniform `s`-th powers from the extra `k`-fold
+factors. Bridges the reconstruction `prodPow 1 (Yun factors) ~ d` to the `∏ vk^idx` divisor form. -/
+theorem prodPow_eq_prod_mul_zipIdxPow {K : Type*} [Field K] (s : ℕ) (M : List K[X]) :
+    prodPow s M = (M.map (· ^ s)).prod * (M.zipIdx.map (fun x => x.1 ^ x.2)).prod := by
+  induction M generalizing s with
+  | nil => simp [prodPow]
+  | cons a es ih =>
+    rw [prodPow, ih (s + 1), List.map_cons, List.prod_cons, List.zipIdx_cons', List.map_cons,
+      List.prod_cons, pow_zero, one_mul]
+    have hQ : (es.zipIdx.map (fun x => x.1 ^ x.2)).prod * es.prod
+        = ((es.zipIdx.map (Prod.map id (· + 1))).map (fun x => x.1 ^ x.2)).prod := by
+      rw [List.map_map]
+      have hcomp : (fun x : K[X] × ℕ => x.1 ^ x.2) ∘ (Prod.map id (· + 1))
+          = fun x : K[X] × ℕ => x.1 ^ x.2 * x.1 := by
+        funext x; simp [Prod.map, pow_succ]
+      have hfst : es.zipIdx.map (fun x : K[X] × ℕ => x.1) = es := List.zipIdx_map_fst 0 es
+      rw [hcomp, List.prod_map_mul, hfst]
+    have hP : (es.map (· ^ (s + 1))).prod = (es.map (· ^ s)).prod * es.prod := by
+      have : (fun e : K[X] => e ^ (s + 1)) = fun e : K[X] => e ^ s * e := by
+        funext e; rw [pow_succ]
+      rw [this, List.prod_map_mul, List.map_id']
+    rw [hP, ← hQ]; ring
+
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
 /-- `cmonicG` realizes `normalize` through `toPolyG`: `toPolyG (cmonicG q) = normalize (toPolyG q)`.
 The monic associate of `toPolyG q` is its normalization. -/
