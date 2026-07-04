@@ -146,3 +146,29 @@ The pole-cancellation `W∣R` is now isolated to a **single** deeply derivation-
 of `dvd_residNum_factor`/`prod_dvd_residNum` (`dvd_num_of_isQRegular`, `list_prod_dvd_of_pairwise`, the
 pow-divides addition) is pure polynomial and portable. Remaining: port that one valuation lemma +
 `total_fold_residual` (fold-sum of the M2 identities) to the tower derivation, then assemble.
+
+## Valuation core + CAPSTONE COMPLETE (2026-07-04) — pole-cancellation done, 3 frontiers isolated
+
+`HermiteValuationTower.lean` now closes the entire valuation development and the whole-step identity:
+- `deriv_fold_sub_isQRegularG` — the deep `IsQRegularG Vk (D⟦g⟧−D⟦gloc_k⟧)` (ported to the tower
+  derivation `towerFractionFieldDerivG`).
+- `prod_vkidx_dvd_R` — `∏vk^idx ∣ R` (tower `prod_dvd_residNum`), from per-factor `dvd_R_of_factor` +
+  `powers_pairwise_coprime`.
+- `resNum_eq_R_mul_gden_sq` — `resNum = R·gden²` (field-algebra bridge via `R_residual_identity` +
+  the quotient rule + `amG` injectivity).
+- `hWgd_of_multiplicity` — the pole-cancellation `W·gden² ∣ resNum`, reduced to `W ∣ ∏vk^idx`.
+- **`cHermiteReduceTowerGWf_field_identity`** (CAPSTONE) — the whole-step
+  `D_tower(⟦g⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`, via `hermiteTowerStep_field_identity_of_radical` +
+  `toPolyG_yunRadical_split` (hSD) + `hWgd_of_multiplicity` (hWgd).
+
+**The reduced-part (Hermite) soundness of the tower reduction is proven, modulo three clean frontiers**
+carried as hypotheses:
+1. **`hWdvd`** — `W ∣ ∏kept vk^idx` (the Yun multiplicity-product `W = ∏vk^idx`; the only remaining
+   structural fact — assemble from `cSqfreeYunFFGWf_forall₂` + `primPart_associated_prod_sqfreeFactPart`
+   bridging the fold product to the Finset product, with `toPolyG_cHermiteReduceTowerGWf_Dstar_dvd`).
+2. **`hcopgcd`** — per-factor gcd `gcd(u·Dv, v)` deg-0/nonzero (standard Hermite precondition; discharges
+   to `v` squarefree + coprime `u`/`v'`).
+3. **`hgd0`/`hDstar0`** — fold-denominator nonzero.
+
+Next: discharge `hWdvd` (multiplicity-product), then `hgd0`/`hDstar0`, then wire the capstone into the
+LogPart/reduced-part soundness assembly (`field_identity_of_cIntegrateReducedGWf_of_residueMatch`).
