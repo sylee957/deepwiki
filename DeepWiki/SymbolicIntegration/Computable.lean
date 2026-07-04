@@ -14,6 +14,7 @@ import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
 import DeepWiki.SymbolicIntegration.Computable.Denote
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
+import DeepWiki.SymbolicIntegration.Computable.HermiteReduction
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp
 import DeepWiki.SymbolicIntegration.Computable.Integrate
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG

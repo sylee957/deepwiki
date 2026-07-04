@@ -600,18 +600,6 @@ theorem split_squarefree_eq_nodal {K : Type*} [Field K] [CharZero K] (p : K[X]) 
     exact Multiset.map_congr rfl (fun _ _ => by simp)
   rw [Lagrange.nodal, key, ← hsp.eq_prod_roots_of_monic hm]
 
-/-- **The product of pairwise-coprime squarefree polynomials is squarefree** (list form). -/
-theorem squarefree_list_prod {K : Type*} [Field K] (L : List K[X])
-    (hpw : L.Pairwise IsRelPrime) (hsf : ∀ a ∈ L, Squarefree a) : Squarefree L.prod := by
-  induction L with
-  | nil => simp
-  | cons a t ih =>
-    rw [List.pairwise_cons] at hpw
-    rw [List.prod_cons, squarefree_mul_iff]
-    exact ⟨isRelPrime_list_prod_right a t (fun b hb => hpw.1 b hb),
-      hsf a (List.mem_cons_self ..),
-      ih hpw.2 (fun x hx => hsf x (List.mem_cons_of_mem a hx))⟩
-
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Every Yun go-loop factor is monic** — each emitted factor is `cmonicG (cgcdFFCoreWf b d)`, whose
 `toPolyG` is monic (`monic_toPolyG_cmonicG`); the working `b` stays nonzero through the deflation. -/
@@ -660,15 +648,6 @@ theorem toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree [CharZero (CFieldSpec.K 
     obtain ⟨k, hk, hfk⟩ := List.mem_iff_getElem.mp hf
     rw [← hfk]
     exact cSqfreeYunFFGWf_squarefree hgcd d hd0 hpp k hk
-
-/-- The product of monic polynomials is monic (list form). -/
-theorem monic_list_prod {K : Type*} [Field K] (L : List K[X]) (h : ∀ p ∈ L, p.Monic) :
-    L.prod.Monic := by
-  induction L with
-  | nil => simp
-  | cons a t ih =>
-    rw [List.prod_cons]
-    exact (h a (List.mem_cons_self ..)).mul (ih (fun p hp => h p (List.mem_cons_of_mem a hp)))
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Every Yun factor is monic** (entry): the go-loop runs from `b₁ = d / gcd(d, d′) ≠ 0`. -/
