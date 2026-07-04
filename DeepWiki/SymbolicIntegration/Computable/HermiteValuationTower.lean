@@ -611,4 +611,30 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
   simp only [map_sub] at hRid
   linear_combination hRid
 
+/-- **The pole-cancellation `hWgd` (`W·gden² ∣ resNum`)** — reduced to `W ∣ ∏vk^idx` (the Yun
+multiplicity-product, carried as the frontier `hWdvd`): `resNum = R·gden²` and `∏vk^idx ∣ R`, so
+`W ∣ ∏vk^idx ∣ R` gives `W·gden² ∣ R·gden² = resNum`. This is the hypothesis of
+`hermiteTowerStep_field_identity_of_radical`. -/
+theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hWdvd : toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
+      ∣ (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+          (fun x => toPolyG x.1 ^ x.2)).prod) :
+    toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
+        * (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 * toPolyG (cHermiteReduceTowerGWf Dt a d).1.2)
+      ∣ toPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
+            (cHermiteReduceTowerGWf Dt a d).1.2))
+          (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.1)
+              (cHermiteReduceTowerGWf Dt a d).1.2)
+            (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
+              (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2))))) := by
+  rw [resNum_eq_R_mul_gden_sq hgcd Dt a d hd0 hpp hgd0 hcopgcd, ← pow_two]
+  exact mul_dvd_mul_right (hWdvd.trans (prod_vkidx_dvd_R hgcd Dt a d hd0 hpp hcopgcd)) _
+
 end DeepWiki.SymbolicIntegration
