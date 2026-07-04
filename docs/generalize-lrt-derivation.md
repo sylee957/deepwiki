@@ -83,9 +83,15 @@ route's tower analytic identity).
   actual-degree resultant with `rtResultantGen`'s formal degree) + interpolation uniqueness
   (`eq_of_degrees_lt_of_eval_index_eq`, `toK_cnatCastG`). **The computable residue resultant IS the object
   G3 reasons about.**
-- **G4c (next)** — `cSubresultantParam` = `lrtSubresultantGen` via the L4b subresultant certification
-  (`toPolyG_cSubresultantG`) + interpolation-in-`z` (analogous to G4b, per `t`-coefficient); plus the
-  normality `hB` from `isCoprime_X_sub_C_implicitDeriv_iff` (`v.eval β ≠ β′`, the genuine `hcopgcd`).
+- **G4c ✅ CORE DONE** (`Computable/SubresultantTowerSpec.lean`) — `toK_cSubresultantG_getD_eq_coeff`
+  (+ `_monomial`): the **per-value** subresultant agreement — the `k`-th `t`-coefficient of the computable
+  `cSubresultantG Dstar (A − c·Dd) n m j` equals the `k`-th `t`-coefficient of the abstract
+  `subresultant (toPolyG Dstar) (toPolyG A − C c·B) n m j` for any value `c`. Immediate from L4b
+  (`toPolyG_cSubresultantG`) + the `csubG`/`cscaleG`/`cmonomialDeriv` bridges — clean, no interpolation.
+  **Remaining G4c**: extend to non-node residues (`cSubresultantParam`'s interpolation is exact) — needs
+  the bivariate subresultant `z`-degree bound (coeff `k` of `subresultant(Dstar)(A − z·B)` has `z`-degree
+  `≤ m < N = n+m+1`) + interpolation uniqueness; plus the normality `hB` from
+  `isCoprime_X_sub_C_implicitDeriv_iff`.
 - **G5** — assemble with the candidate route's tower per-root analytic identity
   (`residue_gcd_eq_linear_factor` / `cIntegrateReducedGWf_logs_eq_per_root`) into a symbolic-log soundness
   `IsIntegralResultLrtG` for `cIntegrateReducedLrtG`; swap the primitive base (closes `hreduced` **without**
