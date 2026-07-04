@@ -8,6 +8,7 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Computable.OneShotAssembly
 
 /-! # Assemblable one-level Risch integrator
 
@@ -458,5 +459,75 @@ theorem cIntegrateReducedGWf_isIntegralResult_of_hcopgcd [CharZero (CFieldSpec.K
   simp only [IsIntegralResultG]
   exact field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd
     hgcd Dt a d cands hd0 hpp hcopgcd hmatch
+
+open Classical in
+/-- **The maximally-discharged primitive reduced-case field identity.** Assembles the whole primitive
+reduced case (`D⟦reduced.rational⟧ + logResidueSum reduced.logs = ⟦a/d⟧`) with `s :=` the roots of the
+reduced denominator, discharging FOUR side conditions from this session's arcs:
+- `hherm` (whole-step Hermite) ← the pole-cancellation capstone + `toPolyG_hNum'_eq_2_1`, needs `hcopgcd`;
+- `hden` (`.2.2 = nodal s`) ← `toPolyG_cHermiteReduceTowerGWf_Dstar_eq_nodal`, needs `hsplit`;
+- `hnorm` (normality) and `hDd` (resolvent derivative ≠ 0) ← constant roots (`hconst`) + `hw : w ≠ 0`.
+The genuinely-remaining inputs are: `hA` (leftover properness, the "Large residual"), `hdist` (residue
+distinctness, genuine), `hres`/`hcand`/`hgcdread` (residue-enumeration + engine gcd-compute). -/
+theorem field_identity_of_cIntegrateReducedGWf_primitive_maximal [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (cands : List α)
+    (w : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hDt : toPolyG Dt = Polynomial.C w) (hw : w ≠ 0)
+    (hsplit : (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).Splits)
+    (hconst : ∀ β ∈ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset, β′ = 0)
+    (hcopgcd : ∀ x ∈ (CPolyG.cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hA : (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).degree
+      < (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset.card)
+    (hres : CPolyG.cRationalResiduesGWf Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+        (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 cands
+      = (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset.toList.map residueCand)
+    (hdist : ∀ γ ∈ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset,
+      ∀ δ ∈ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset, γ ≠ δ →
+      (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).eval γ
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal
+              (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id)).eval γ
+        ≠ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).eval δ
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal
+              (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id)).eval δ)
+    (hcand : ∀ β ∈ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset,
+      CFieldSpec.toK (residueCand β)
+      = (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).eval β
+        / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal
+            (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id)).eval β)
+    (hgcdread : ∀ β ∈ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset,
+      Associated
+      (toPolyG (CPolyG.cLogArgTowerGWf Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+          (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))
+      (gcd (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2)
+          (toPolyG (CPolyG.cAmcDdG Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+            (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β))))) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  set s := (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset with hs
+  have hden : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id :=
+    toPolyG_cHermiteReduceTowerGWf_Dstar_eq_nodal hgcd Dt a d hd0 hpp hsplit
+  have hherm : towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+      + amG α (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1)
+        / amG α (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2)
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+    have hcap := cHermiteReduceTowerGWf_field_identity hgcd Dt a d hd0 hpp hcopgcd
+    rwa [toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd] at hcap
+  have hnorm : ∀ β ∈ s, w ≠ β′ := primitive_monomial_norm_of_const_roots s w hw hconst
+  have hDd : ∀ β ∈ s, (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β ≠ 0 := by
+    intro β hβ
+    rw [hDt]
+    exact implicitDeriv_C_nodal_eval_ne_zero w hw s hconst β hβ
+  exact field_identity_of_cIntegrateReducedGWf_primitive_of_residueData Dt a d cands s w residueCand
+    hDt hherm hden hA hnorm hres hDd hdist hcand hgcdread
 
 end DeepWiki.SymbolicIntegration
