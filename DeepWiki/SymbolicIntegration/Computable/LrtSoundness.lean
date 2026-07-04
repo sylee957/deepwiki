@@ -15,6 +15,32 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
 
+/-- The coefficient-list polynomial `Σ_{(a,k) ∈ l.zipIdx s} C a · Xᵏ = Σ_{i<len} C(l[i])·X^{s+i}`. -/
+theorem zipIdx_C_mul_X_pow_sum_eq {R : Type*} [Semiring R] (l : List R) (s : ℕ) :
+    ((l.zipIdx s).map (fun p : R × ℕ => Polynomial.C p.1 * Polynomial.X ^ p.2)).sum
+      = ∑ i ∈ Finset.range l.length, Polynomial.C (l.getD i 0) * Polynomial.X ^ (s + i) := by
+  induction l generalizing s with
+  | nil => simp
+  | cons a t ih =>
+    rw [List.zipIdx_cons, List.map_cons, List.sum_cons, ih (s + 1), List.length_cons,
+      Finset.sum_range_succ']
+    simp only [List.getD_cons_zero, List.getD_cons_succ, Nat.add_zero]
+    rw [add_comm (Polynomial.C a * Polynomial.X ^ s)]
+    congr 1
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    rw [show s + 1 + i = s + (i + 1) from by omega]
+
+/-- The `n`-th coefficient of the coefficient-list polynomial is `l.getD n 0`. -/
+theorem zipIdx_C_mul_X_pow_sum_coeff {R : Type*} [Semiring R] (l : List R) (n : ℕ) :
+    (((l.zipIdx).map (fun p : R × ℕ => Polynomial.C p.1 * Polynomial.X ^ p.2)).sum).coeff n
+      = l.getD n 0 := by
+  rw [zipIdx_C_mul_X_pow_sum_eq l 0]
+  simp only [Nat.zero_add, Polynomial.finsetSum_coeff, Polynomial.coeff_C_mul,
+    Polynomial.coeff_X_pow, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq, Finset.mem_range]
+  by_cases hn : n < l.length
+  · rw [if_pos hn]
+  · rw [if_neg hn, List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]; rfl
+
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
 section Ext
