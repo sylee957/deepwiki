@@ -422,6 +422,30 @@ theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
 
 /-! ## Base change of `lrtSubresultantGen` (for the computable→abstract connection over `E`) -/
 
+/-- `rtResultantGen` commutes with an injective base change `φ : K →+* L`:
+`(rtResultantGen A D B).map φ = rtResultantGen (A.map φ) (D.map φ) (B.map φ)`. Base-changes the residue
+resultant to a splitting field `L`, so `roots_rtResultantGen` (roots = residues) applies there. -/
+theorem rtResultantGen_map {L : Type*} [Field L] (φ : K →+* L) (A D B : K[X])
+    (hφ : Function.Injective φ) :
+    (rtResultantGen A D B).map φ = rtResultantGen (A.map φ) (D.map φ) (B.map φ) := by
+  have hcomm : (Polynomial.mapRingHom φ).comp (C : K →+* K[X]) = (C : L →+* L[X]).comp φ := by
+    ext a; simp
+  have hmapC : ∀ p : K[X], (p.map (C : K →+* K[X])).map (Polynomial.mapRingHom φ)
+      = (p.map φ).map (C : L →+* L[X]) := fun p => by
+    rw [Polynomial.map_map, hcomm, ← Polynomial.map_map]
+  have hdeg : (D.map φ).natDegree = D.natDegree := natDegree_map_eq_of_injective hφ D
+  rw [rtResultantGen, rtResultantGen]
+  rw [show ((Polynomial.resultant (D.map (C : K →+* K[X]))
+        (A.map (C : K →+* K[X]) - C Polynomial.X * B.map (C : K →+* K[X]))
+        D.natDegree (D.natDegree - 1)).map φ)
+      = Polynomial.mapRingHom φ (Polynomial.resultant (D.map (C : K →+* K[X]))
+        (A.map (C : K →+* K[X]) - C Polynomial.X * B.map (C : K →+* K[X]))
+        D.natDegree (D.natDegree - 1)) from rfl,
+    ← Polynomial.resultant_map_map, hdeg, hmapC D]
+  congr 2
+  rw [Polynomial.map_sub, Polynomial.map_mul, hmapC A, hmapC B]
+  simp
+
 /-- `lrtSubresultantGen` commutes with an injective base change `φ : K →+* L`:
 `(lrtSubresultantGen A D B j).map (mapRingHom φ) = lrtSubresultantGen (A.map φ) (D.map φ) (B.map φ) j`. -/
 theorem lrtSubresultantGen_map {L : Type*} [Field L] (φ : K →+* L) (A D B : K[X]) (j : ℕ)
