@@ -282,6 +282,22 @@ The full `hlog` now reduces to clean Yun-structure hypotheses. Built (`LrtSoundn
 index = `rootMultiplicity` match (`hentry` via `evalLrtArg_eq_fiber_prod`). Then the final assembly +
 `E→K` descent + swap the primitive base.
 
+### ★★★★ CAPSTONE (2026-07-04) — `isIntegralResultLrtG_cIntegrateReducedLrtG`, whole soundness modulo `hlog`
+
+The complete `IsIntegralResultLrtG` for the concrete `cIntegrateReducedLrtG Dt a d` is now assembled (all
+gate-green, `sorryAx`-free): via the skeleton `isIntegralResultLrtG_of_hherm_of_logMatch`, the Hermite half is
+discharged **outright** by `hherm_lrt_E`, leaving only `hlog` (`logResidueSumLrtG (cLrtLogArgG …) = hNum/Dstar`
+over every alg-closed `E`) as a hypothesis, plus the genuine Hermite side conditions `hd0`/`hpp`/`hcopgcd`. So the
+**sole remaining internal frontier is `hlog`**, and `hlog` is itself assembled (`logResidueSumLrtG_eq_normalPart_of_yun`)
+modulo the 5 Yun facts.
+
+Yun-fact discharge started: `mem_cLrtLogArgG` (entry membership: each entry = a `(Rᵢ, idx)` Yun factor +
+`cSubresultantParam …(idx+1)`) + `nodup_roots_cLrtLogArgG_entry` (**`hnodup` done** — `Rᵢ` squarefree ⟹ separable
+base-change ⟹ Nodup). Remaining 4 Yun facts (`hressub`/`hdisj`/`hcover`/`hentry`): `Rᵢ | R` + `residueResultant_map_roots`
+for `hressub`; `cSqfreeYunFFGWf_isRelPrime` for `hdisj`; reconstruction for `hcover`; the multiplicity index=rootMult
+for `hentry` (the hard one) — each needs the RT-setup + `Dstar_E = nodal` alignment threaded. Then `E→K` descent
+(`AlgebraicClosure K`) + swap primitive base ⟹ `PrimitiveFrontier.hreduced`.
+
 ### ★ `hlog` is ASSEMBLY, not a wall (2026-07-04) — every abstract endpoint already exists
 
 Scoping confirmed no research gap remains; `hlog` is a (large) mechanical assembly of proven pieces:
