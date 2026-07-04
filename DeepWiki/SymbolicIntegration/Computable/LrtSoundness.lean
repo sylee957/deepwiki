@@ -762,6 +762,27 @@ theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPolyG α)
   exact field_identity_lrt_of_hherm_of_logMatch Dt res.rational.1 res.rational.2 hNum hDen anum aden
     res.logs (hlog E) (hherm E)
 
+omit [CFieldSpec α] [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- **Membership in `cLrtLogArgG`.** Each entry `p` comes from a `(Rᵢ, idx)` in the Yun factorization
+`cSqfreeYunFFGWf R` (`R = cResidueResultantTowerGWf …`) with `Rᵢ` non-constant, and `p = (Rᵢ, cSubresultantParam
+… (idx+1))`. Unfolds the `filterMap ∘ zipIdx`; the foundation for the per-entry Yun facts. -/
+theorem mem_cLrtLogArgG (Dt hNum Dstar : CPolyG α) (p : CPolyG α × List (CPolyG α))
+    (hp : p ∈ cLrtLogArgG Dt hNum Dstar) :
+    ∃ idx, (p.1, idx) ∈ (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).zipIdx
+      ∧ ¬ ((cnormG p.1 : List α).length ≤ 1)
+      ∧ p.2 = cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
+          (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1) := by
+  rw [cLrtLogArgG, List.mem_filterMap] at hp
+  obtain ⟨⟨Ri, idx⟩, hmem, hfn⟩ := hp
+  simp only at hfn
+  split at hfn
+  · simp at hfn
+  · rename_i hlen
+    rw [Option.some_inj] at hfn
+    subst hfn
+    exact ⟨idx, hmem, hlen, rfl⟩
+
 open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
 `IsIntegralResultLrtG` for `cIntegrateReducedLrtG Dt a d`: the Hermite half is discharged outright by
