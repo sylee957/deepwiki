@@ -723,7 +723,7 @@ private theorem deflation_natDegree_eq_zero_iff (A : K[X]) (k : ℕ) :
   have := (irreducible_of_normalized_factor P (Multiset.mem_toFinset.mp hP)).natDegree_pos
   omega
 
-private theorem squarefreePart_deflation_natDegree_eq_zero_iff (A : K[X]) (k : ℕ)
+theorem squarefreePart_deflation_natDegree_eq_zero_iff (A : K[X]) (k : ℕ)
     (hA : A.primPart ≠ 0) :
     (squarefreePart (deflation A k)).natDegree = 0 ↔ ∀ P ∈ (normalizedFactors A.primPart).toFinset,
       (normalizedFactors A.primPart).count P ≤ k := by
@@ -739,6 +739,15 @@ private theorem squarefreePart_deflation_natDegree_eq_zero_iff (A : K[X]) (k : �
     have h1 := h P (Finset.mem_filter.mp hP).1
     have h2 := (Finset.mem_filter.mp hP).2
     omega
+
+/-- The remaining Yun radical `squarefreePart (deflation A k)` is constant iff `k` has reached the
+maximum multiplicity: `natDegree = 0 ↔ maxmult ≤ k`. Governs when Yun's loop terminates. -/
+theorem squarefreePart_deflation_natDegree_eq_zero_iff_maxmult (A : K[X]) (k : ℕ)
+    (hA : A.primPart ≠ 0) :
+    (squarefreePart (deflation A k)).natDegree = 0 ↔
+      (normalizedFactors A.primPart).toFinset.sup
+        (fun P => (normalizedFactors A.primPart).count P) ≤ k :=
+  (squarefreePart_deflation_natDegree_eq_zero_iff A k hA).trans Finset.sup_le_iff.symm
 
 private theorem natDegree_eq_of_associated {p q : K[X]} (h : Associated p q) (hq : q ≠ 0) :
     p.natDegree = q.natDegree :=
