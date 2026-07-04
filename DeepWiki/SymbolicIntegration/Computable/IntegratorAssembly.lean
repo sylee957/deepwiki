@@ -482,4 +482,98 @@ theorem field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_exact (Dt a d 
       (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 hd hgden hDstar hexact)
     hmatch
 
+variable [CRischField α]
+
+/-! ## The materializable solver bundle (`RischSolver`)
+
+The whole two-stage discipline, packaged as one structure. A `RischSolver` bundles the case hooks
+(`case`), the special-value function, and the three soundness laws (`specialSound`, `reducedSound`,
+`recon`) plus the completeness descent law (`descend` over the frontier predicates `SpecElem`/`NrmElem`).
+Materializing all fields — each discharged by a Stage-2 realization (`cSqfreeYunFFGWf_lawful…`,
+`cHermiteReduceTowerGWf_lawful…`, `cIntegrateReducedGWf_lawfulResidueLogPart`, the case's `hSpecField`,
+`canonicalReconstruction`) — yields the assembled integrator `.integrate` together with its soundness
+(`.sound`), constructive completeness (`.isElementaryIntegrable_of_run`), and the completeness frontier
+(`.not_isElementaryIntegrable`) *for free*, all derived from the abstract cores in `Assemble.lean`. -/
+
+/-- **A materializable one-level Risch solver.** The case hooks + special value + the soundness laws
+(`specialSound`/`reducedSound`/`recon`) + the completeness descent law (`descend`). Every field is
+discharged by an independent Stage-2 realization; instantiating the bundle assembles the algorithm and
+both proofs. -/
+structure RischSolver (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
+  /-- The per-monomial-case computable hooks. -/
+  case : MonomialCase α
+  /-- The value the special part `snum/sden` differentiates to (a function of the input). -/
+  specialVal : CPolyG α → CPolyG α → CPolyG α → RatFunc (CFieldSpec.K α)
+  /-- **Special-hook soundness law.** A successful `integrateSpecial` gives a nonzero denominator and a
+  fraction differentiating to `specialVal`. Discharged by the case's own `hSpecField` realization. -/
+  specialSound : ∀ (Dt a d snum sden : CPolyG α),
+    case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden) →
+    toPolyG sden ≠ 0 ∧ towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal Dt a d
+  /-- **Reduced-hook soundness law.** A successful `reducedCorrect` on `redNorm` gives a nonzero
+  denominator and an antiderivative of the normal part. Discharged via `LawfulHermiteReduction` +
+  `LawfulResidueLogPart` through `cIntegrateReducedGWf_isIntegralResult_of_lawful`. -/
+  reducedSound : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α),
+    case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm →
+    toPolyG nrm.rational.2 ≠ 0 ∧ IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
+  /-- **Canonical reconstruction law.** The special value and normal fraction recombine to `⟦a/d⟧`.
+  Discharged by `canonicalReconstruction` (modulo the split frontier). -/
+  recon : ∀ (Dt a d : CPolyG α),
+    specialVal Dt a d + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d
+  /-- Special-part elementarity obstruction predicate (the completeness frontier). -/
+  SpecElem : CPolyG α → CPolyG α → CPolyG α → Prop
+  /-- Normal-part elementarity obstruction predicate (the completeness frontier). -/
+  NrmElem : CPolyG α → CPolyG α → CPolyG α → Prop
+  /-- **Completeness descent law.** Elementary integrability of `a/d` descends to elementarity of both
+  the special and normal obligations. The Liouville / residue-criterion content — the frontier contract. -/
+  descend : ∀ (Dt a d : CPolyG α),
+    IsElementaryIntegrableG Dt a d → SpecElem Dt a d ∧ NrmElem Dt a d
+
+namespace RischSolver
+
+/-- **The assembled integrator.** Materializing the bundle gives the algorithm: `cIntegrateCase` on the
+bundle's case hooks. -/
+def integrate (S : RischSolver α) (Dt a d : CPolyG α) (cands : List α) : Option (IntegralResultG α) :=
+  cIntegrateCase S.case Dt a d cands
+
+/-- **Derived soundness.** Any successful run of the assembled integrator is an antiderivative of `a/d`,
+proven once by composing the bundle's laws through the abstract core `cIntegrateCase_sound`. -/
+theorem sound (S : RischSolver α) (Dt a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
+    (h : S.integrate Dt a d cands = some res) : IsIntegralResultG Dt a d res := by
+  have h0 : cIntegrateCase S.case Dt a d cands = some res := h
+  rw [integrate, cIntegrateCase] at h
+  rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+  rw [hcrep] at h
+  dsimp only at h
+  rcases hspec : S.case.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
+  · rw [hspec] at h; simp at h
+  · rw [hspec] at h
+    rcases hcorr : S.case.reducedCorrect Dt (cIntegrateReducedGWf Dt cn dn cands) with _ | nrm
+    · rw [hcorr] at h; simp at h
+    · rw [hcorr] at h
+      have hSpec : S.case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
+          = some (snum, sden) := by
+        simp only [crPoly, crSpecNum, crSpecDen, hcrep]; exact hspec
+      have hCorr : S.case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm := by
+        simp only [redNorm, crNormNum, crNormDen, hcrep]; exact hcorr
+      obtain ⟨hsden, hSpecField⟩ := S.specialSound Dt a d snum sden hSpec
+      obtain ⟨hgden, hNrmField⟩ := S.reducedSound Dt a d cands nrm hCorr
+      exact cIntegrateCase_sound S.case Dt a d cands res snum sden nrm (S.specialVal Dt a d)
+        hsden hgden hSpec hCorr h0 hSpecField hNrmField (S.recon Dt a d)
+
+/-- **Derived constructive completeness.** A successful run certifies `a/d` is elementary integrable
+(the soundness witness fed through the Stage-1 bridge). -/
+theorem isElementaryIntegrable_of_run (S : RischSolver α) (Dt a d : CPolyG α) (cands : List α)
+    (res : IntegralResultG α) (h : S.integrate Dt a d cands = some res) :
+    IsElementaryIntegrableG Dt a d :=
+  IsElementaryIntegrableG.of_isIntegralResult (S.sound Dt a d cands res h)
+
+/-- **Derived completeness frontier.** A certified obstruction in either the special or normal part makes
+`a/d` non-elementary, via the bundle's descent law through the abstract core. -/
+theorem not_isElementaryIntegrable (S : RischSolver α) (Dt a d : CPolyG α)
+    (hobstruct : ¬ S.SpecElem Dt a d ∨ ¬ S.NrmElem Dt a d) : ¬ IsElementaryIntegrableG Dt a d :=
+  not_isElementaryIntegrableG_of_obstruction Dt a d (S.descend Dt a d) hobstruct
+
+end RischSolver
+
 end DeepWiki.SymbolicIntegration

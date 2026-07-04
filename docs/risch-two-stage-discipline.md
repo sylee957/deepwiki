@@ -198,3 +198,25 @@ laws, with the genuine frontier (the *descent* law — Liouville non-elementarit
 completeness) isolated as the contract. Realizing that law concretely is the research campaign (the
 `Completeness.HasLiouvilleForm` / `IsLiouville` machinery in `IntegratorCompleteness`; the transcendental
 log/exp `IsLiouville` instance is the missing Mathlib keystone).
+
+## The materializable solver bundle (`RischSolver`) — DONE
+
+`RischSolver α` (in `IntegratorAssembly.lean`) packages the whole discipline as one structure. Its fields
+are exactly the obligations a new solver must discharge:
+
+- `case : MonomialCase α` — the computable hooks (the algorithm).
+- `specialVal` + `specialSound` — the special-part field-identity law (discharged by the case's `hSpecField`).
+- `reducedSound` — the reduced-part antiderivative law (discharged via `LawfulHermiteReduction` +
+  `LawfulResidueLogPart` through `cIntegrateReducedGWf_isIntegralResult_of_lawful`).
+- `recon` — canonical reconstruction (discharged by `canonicalReconstruction`).
+- `SpecElem`/`NrmElem` + `descend` — the completeness frontier contract.
+
+Materializing all fields yields, *derived from the abstract cores*, with no further proof:
+- `RischSolver.integrate` — the assembled algorithm (`cIntegrateCase S.case`).
+- `RischSolver.sound` — soundness (composes the laws through `cIntegrateCase_sound`).
+- `RischSolver.isElementaryIntegrable_of_run` — constructive completeness.
+- `RischSolver.not_isElementaryIntegrable` — the completeness frontier direction.
+
+This is the answer to "which classes/structures to materialize": instantiate one `RischSolver` (its case
+hooks + the four/three law fields, each closed by an independent Stage-2 realization) and the algorithm and
+both proofs come out automatically.
