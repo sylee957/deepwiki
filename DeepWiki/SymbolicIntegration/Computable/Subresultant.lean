@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
+import DeepWiki.SymbolicIntegration.Computable.ListDet
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
 
@@ -86,6 +87,75 @@ def cSubresultantParam (Dstar A Dd : CPolyG α) (n m j : ℕ) : List (CPolyG α)
       let c := cnatCastG jj
       (c, ((cSubresultantG Dstar (csubG A (cscaleG c Dd)) n m j : CPolyG α) : List α).getD k
         CField.zero))))
+
+/-! ### `toK`-determinant homomorphism (L4b): certifying `cDetG` against `Matrix.det` -/
+
+section Spec
+
+variable [CFieldSpec α]
+
+open CFieldSpec
+
+/-- `toK` intertwines the `CField`-fold `foldl add z` with numeric `foldl (+) (toK z)`. -/
+theorem toK_foldl_add (z : α) (L : List α) :
+    toK (L.foldl CField.add z) = (L.map toK).foldl (· + ·) (toK z) := by
+  induction L generalizing z with
+  | nil => simp
+  | cons a t ih => simp only [List.foldl_cons, List.map_cons, ih, CFieldSpec.toK_add]
+
+/-- `toK` reads a `CField.zero`-defaulted `getD` through `map toK`. -/
+theorem getD_map_toK (l : List α) (j : ℕ) :
+    (l.map toK).getD j 0 = toK (l.getD j CField.zero) := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getD_eq_getElem?_getD]
+  cases l[j]? with
+  | none => simp [CFieldSpec.toK_zero]
+  | some a => simp
+
+/-- **`toK` is a determinant homomorphism.** `toK (cDetGn n M) = listDetn n (M.map (map toK))` — the
+computable cofactor determinant maps to the generic-`CommRing` determinant over `K`. -/
+theorem toK_cDetGn : ∀ (n : ℕ) (M : List (List α)),
+    toK (cDetGn n M) = listDetn n (M.map (fun r => r.map toK)) := by
+  intro n
+  induction n with
+  | zero => intro M; simp [cDetGn, listDetn, CFieldSpec.toK_one]
+  | succ n ih =>
+    intro M
+    cases M with
+    | nil => simp [cDetGn, listDetn, CFieldSpec.toK_one]
+    | cons row rest =>
+      rw [cDetGn, List.map_cons, listDetn, toK_foldl_add, CFieldSpec.toK_zero, List.map_map]
+      congr 1
+      apply List.map_congr_left
+      intro j _
+      simp only [Function.comp]
+      have hminor : (rest.map (fun r => r.take j ++ r.drop (j + 1))).map (fun r => r.map toK)
+          = (rest.map (fun r => r.map toK)).map (fun r => r.take j ++ r.drop (j + 1)) := by
+        rw [List.map_map, List.map_map]
+        apply List.map_congr_left
+        intro r _
+        simp only [Function.comp, List.map_append, List.map_take, List.map_drop]
+      by_cases hpar : j % 2 = 0
+      · simp only [if_pos hpar, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
+      · simp only [if_neg hpar, CFieldSpec.toK_neg, CFieldSpec.toK_mul, ih, hminor, ← getD_map_toK]
+
+/-- `toK (cDetG M) = listDetn M.length (M.map (map toK))`. -/
+theorem toK_cDetG (M : List (List α)) :
+    toK (cDetG M) = listDetn M.length (M.map (fun r => r.map toK)) := by
+  rw [cDetG, toK_cDetGn]
+
+/-- **`cDetG` computes `Matrix.det`.** For a well-formed `n × n` row-list `M`, the computable determinant
+`toK (cDetG M)` equals `(matrixOfList (M.map (map toK)) n).det` — the full bridge from the computable
+cofactor determinant to Mathlib's abstract determinant over `K`. -/
+theorem toK_cDetG_eq_det (M : List (List α)) (n : ℕ) (hlen : M.length = n)
+    (hrows : ∀ r ∈ M, r.length = n) :
+    toK (cDetG M) = (matrixOfList (M.map (fun r => r.map toK)) n).det := by
+  have hlen' : (M.map (fun r => r.map toK)).length = n := by rw [List.length_map]; exact hlen
+  have hrows' : ∀ r ∈ (M.map (fun r => r.map toK)), r.length = n := by
+    intro r hr; rw [List.mem_map] at hr; obtain ⟨s, hs, rfl⟩ := hr
+    rw [List.length_map]; exact hrows s hs
+  rw [toK_cDetG, hlen, listDetn_eq_det n (M.map (fun r => r.map toK)) hlen' hrows']
+
+end Spec
 
 end CPolyG
 
