@@ -2,6 +2,7 @@ import DeepWiki.SymbolicIntegration.Computable.LrtIntegrate
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.SubresultantTowerSpec
 import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
+import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator (G5, pass P1)
 
@@ -247,6 +248,31 @@ theorem logResidueTermLrtG_eq_pole_sum (Dt : CPolyG α) (p : CPolyG α × List (
     obtain ⟨β, _, rfl⟩ := hq
     exact X_sub_C_ne_zero β), Multiset.map_map]
   rfl
+
+open scoped Differential Classical in
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The residue-weighted pole sum is the normal part** (P5 endpoint, over `E`). Instantiating the
+tower residue-match identity `monomial_residue_match_of_cancel` at `K := E` with derivation data
+`v = (toPolyG Dt).map φ` (so `poleTerm Dt β` is literally its `extendDeriv(implicitDeriv v)(t−β)/(t−β)`
+summand): the residue-weighted pole sum `Σ_β res(β)·poleTerm β` equals `a/∏_{β∈s}(t−β)`, where the RT
+residue `res β = a(β)/D(∏)(β)` and `hcancel` is the (automatically-true for a primitive `Dt`)
+polynomial-part cancellation. -/
+theorem pole_sum_eq_normalPart (Dt : CPolyG α) (a : E[X]) (s : Finset E)
+    (hA : a.degree < s.card)
+    (hnorm : ∀ β ∈ s, ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
+    (hcancel : ∑ β ∈ s, algebraMap E[X] (RatFunc E)
+        (C (a.eval β / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              (Lagrange.nodal s id)).eval β)
+          * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) :
+    ∑ β ∈ s, algebraMap E (RatFunc E)
+          (a.eval β / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              (Lagrange.nodal s id)).eval β)
+        * poleTerm Dt β
+      = algebraMap E[X] (RatFunc E) a / algebraMap E[X] (RatFunc E) (Lagrange.nodal s id) := by
+  rw [← ResidueMatchTower.monomial_residue_match_of_cancel s a
+        ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) hA hnorm hcancel]
+  refine Finset.sum_congr rfl (fun β _ => ?_)
+  congr 1
 
 end Ext
 
