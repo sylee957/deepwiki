@@ -154,7 +154,21 @@ gate-green in `LrtSoundness.lean`:
 (`~ gcd` by G3) and `gcd = ∏_{res β=c}(t−β)` (by G2), the **monic log argument is the residue-`c` linear-factor
 product** — exactly `evalLrtArg`'s value once `raw = S`.
 
-**Remaining P3 (the dense base-change):** `raw = S`, i.e. `evalLrtArg`'s raw sum
+**★★ P3 COMPLETE (2026-07-04) — the dense base-change is DONE and gate-green.** The "one dense spot" is
+assembled: `lrtSubresultantGen_map` / `lrtSubresultantGen_map_eval₂` (abstract base-change of the subresultant
+to `E` at `z=c`), `zipIdx_C_mul_X_pow_sum_coeff` (the coefficient-list polynomial's coeffs), **`raw_eq_map`**
+(`evalLrtArg`'s raw sum `= S` via G4c coeff-by-coeff), and **`evalLrtArg_eq_prod`** (`evalLrtArg Sᵢ c =
+∏_{β}(t−β)`, given the G4c identity `hg4c` + `IsSimilar S (∏(t−β))` `hsim`). Composes `raw_eq_map` +
+`lrtSubresultantGen_map_eval₂` + `monicNormalize_eq_of_isSimilar_prod`. **The computable engine's log argument
+provably equals the residue-pole product over `E`.**
+
+**Remaining (mechanical wiring over proven lemmas):** discharge `hg4c` from G4c (`toPolyG_cSubresultantParam_getD`
+with `cLrtLogArgG`'s args + the `hm` degree fact) and `hsim` from G3 (`lazardRiobooTrager_output_isSimilar_gcd_gen`
+over `E`) + G2 (`gcd_nodal_eq_prod_residue_gen`, `gcd = ∏`); the pole partition; `monomial_residue_match_of_cancel`
+over `E`; the Hermite half; descent. No new math, no dense base-change — just applying proven theorems with
+concrete arguments.
+
+_(historical remaining note, now resolved:)_ `raw = S`, i.e. `evalLrtArg`'s raw sum
 `Σ_k C((toPolyG Sᵢ[k]).eval₂(alg) c)·tᵏ = (lrtSubresultantGen …).map (eval₂RingHom (algebraMap K E) c)`
 [G4c coeff-by-coeff] `= subresultant (Dstar_E)(hNum_E − c·Dd_E) …` [`subresultant_map` + `lrtSubresultantGen_eval`
 over `E`] `= S`; then `S ~ gcd` [G3 over `E`], `gcd = ∏` [G2 over `E`]. The bivariate base-change is the dense
