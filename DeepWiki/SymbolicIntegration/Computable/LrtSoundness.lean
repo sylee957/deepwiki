@@ -541,6 +541,25 @@ theorem sum_filter_rootSet_partition {α : Type*} [CField α] [CFieldSpec α] {E
     exact ⟨allpoles.filter (fun β => res β ∈ rootSet p),
       List.mem_map_of_mem hp, Finset.mem_filter.mpr ⟨hβ, hres⟩⟩
 
+open Classical in
+/-- **`hroots` for the filter partition.** When `Rᵢ`'s roots are `Nodup` (squarefree) and every root is a
+residue `res β` of some pole `β ∈ allpoles`, the image of `polesOf p := allpoles.filter (res · ∈ Rᵢ.roots)`
+under `res` recovers `Rᵢ.roots` exactly: `Rᵢ.roots = ((polesOf p).image res).val`. -/
+theorem roots_eq_image_res_filter {E : Type*} [Field E] (allpoles : Finset E) (res : E → E) (Ri : E[X])
+    (hnodup : Ri.roots.Nodup) (hsub : ∀ c ∈ Ri.roots, ∃ β ∈ allpoles, res β = c) :
+    Ri.roots = ((allpoles.filter (fun β => res β ∈ Ri.roots.toFinset)).image res).val := by
+  have hFinset : Ri.roots.toFinset
+      = (allpoles.filter (fun β => res β ∈ Ri.roots.toFinset)).image res := by
+    refine Finset.ext (fun c => ?_)
+    rw [Finset.mem_image]
+    constructor
+    · intro hc
+      obtain ⟨β, hβ, hres⟩ := hsub c (Multiset.mem_toFinset.mp hc)
+      exact ⟨β, Finset.mem_filter.mpr ⟨hβ, hres ▸ hc⟩, hres⟩
+    · rintro ⟨β, hβ, rfl⟩
+      exact (Finset.mem_filter.mp hβ).2
+  rw [← hFinset, Multiset.toFinset_val, Multiset.dedup_eq_self.mpr hnodup]
+
 open scoped Classical in
 /-- **Log-part sum in pole form (partition assembly).** Summing the per-`Rᵢ` pole sums over a per-entry
 pole set `polesOf` that tiles the full pole set: `logResidueSumLrtG = Σ_{β ∈ allpoles} res(β)·poleTerm β`.
