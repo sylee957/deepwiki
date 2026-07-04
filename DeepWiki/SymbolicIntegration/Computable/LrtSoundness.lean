@@ -848,6 +848,19 @@ theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type
   obtain ⟨β, hβ, hres⟩ := Multiset.mem_map.mp hcR
   exact ⟨β, Finset.mem_val.mp (nodal_roots allpoles ▸ hβ), hres⟩
 
+omit [CFieldSpec α] [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- **Reverse membership in `cLrtLogArgG`.** A non-constant Yun factor `Rᵢ = (cSqfreeYunFFGWf R)[idx]` yields
+the entry `(Rᵢ, cSubresultantParam … (idx+1)) ∈ cLrtLogArgG`. The constructive direction of `mem_cLrtLogArgG`,
+used by `hcover` (a residue that is a root of some `Rᵢ` has a hosting entry). -/
+theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : CPolyG α) (idx : ℕ) (Ri : CPolyG α)
+    (hget : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar))[idx]? = some Ri)
+    (hlen : ¬ ((cnormG Ri : List α).length ≤ 1)) :
+    (Ri, cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
+        (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1)) ∈ cLrtLogArgG Dt hNum Dstar := by
+  rw [cLrtLogArgG, List.mem_filterMap]
+  exact ⟨(Ri, idx), List.mk_mem_zipIdx_iff_getElem?.mpr hget, by simp only [if_neg hlen]⟩
+
 open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
 `IsIntegralResultLrtG` for `cIntegrateReducedLrtG Dt a d`: the Hermite half is discharged outright by
