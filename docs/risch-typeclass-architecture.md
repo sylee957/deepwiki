@@ -206,7 +206,7 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 | `hrecon` (canonical) | `canonicalReconstruction` (new) | **discharged, modulo the split frontier** |
 | `hNrmField` (reduced) | `cIntegrateReducedGWf_isIntegralResult` (new) | **wired — reduces to Hermite + RT frontier** |
 | split factorization `d = dₛ·dₙ` (special·normal) | `cSplitFactorFastGWf_isSplittingFactorizationGen` (new) | **PROVEN abstractly (uncond. at ℚ; general modulo `GcdFFCorrect`)** |
-| Hermite half `hherm` | `cHermiteReduceTowerGWf` | frontier (`native_decide`-only) |
+| Hermite half `hherm` | `cHermiteReduceTowerGWf` | **DISCHARGED (2026-07-04)** — `cHermiteReduceTowerGWf_field_identity` proves it abstractly modulo only `hcopgcd` (differential normality); wired via `field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd` and `cIntegrateReducedGWf_isIntegralResult_of_hcopgcd`. No longer `native_decide`-only. |
 | RT residue match `hmatch` | Rothstein–Trager residue↔root | frontier (`native_decide`-only) |
 | hyperexp `hLaurField` (Laurent) | `cIntegrateHyperexpLaurentG_special_sound` (new) | **PROVEN modulo special-part shape** |
 
@@ -225,10 +225,14 @@ engine-compute frontiers is now off the `native_decide`-only list.
 the Hermite half + the RT residue match. `cIntegrateCase_primitive_sound_full` already discharges
 `hSpecField` (poly-RDE) and `hrecon`.
 
-**Net for the primitive case:** `cIntegrateCase_primitive_sound_full ∘ cIntegrateReducedGWf_isIntegralResult`
-is sound given **exactly three named engine-compute frontiers** — `cSplitFactorFastGWf` split correctness,
-`cHermiteReduceTowerGWf` Hermite half, and the RT residue match — each currently `native_decide`-validated.
-Nothing opaque remains; the abstract soundness is fully assembled down to those three.
+**Net for the primitive case:** `cIntegrateCase_primitive_sound_full ∘ cIntegrateReducedGWf_isIntegralResult_of_hcopgcd`
+is sound given **two named engine-compute frontiers plus one genuine side condition** — `cSplitFactorFastGWf`
+split correctness (PROVEN, gcd-only), the RT residue match (still `native_decide`-only), and `hcopgcd`
+(the differential-normality side condition, a *genuine* Bronstein hypothesis, not a gap). **The
+`cHermiteReduceTowerGWf` Hermite half is now abstract** (2026-07-04 pole-cancellation arc): the reduced
+identity `hNrmField` is produced by `cIntegrateReducedGWf_isIntegralResult_of_hcopgcd` from `hcopgcd` +
+`hmatch`, replacing the old `native_decide`-only Hermite frontier. So of the original three engine-compute
+frontiers, two are discharged (split, Hermite) and only the **RT residue match** remains `native_decide`-only.
 
 - Open: the three engine-compute frontiers above (each `native_decide`-only — the abstract-correctness
   frontier the whole engine shares); Laurent soundness (hyperexp); `LawfulMonomialCase` bundled Prop;

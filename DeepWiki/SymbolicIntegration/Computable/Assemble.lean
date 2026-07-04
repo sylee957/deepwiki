@@ -434,4 +434,29 @@ theorem field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd
       rwa [toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd] at hcap)
     hmatch
 
+open Classical in
+/-- **Reduced part is an integral result, Hermite frontier discharged.** Same as
+`cIntegrateReducedGWf_isIntegralResult` but with the whole-step Hermite identity `hherm` supplied by the
+pole-cancellation capstone (`field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd`), so the
+only Hermite-side obligation is the genuine differential-normality side condition `hcopgcd` — not a
+`native_decide`-only frontier. This is the `hNrmField` input of the primitive/hyperexp assemblers with the
+Hermite half now abstract. -/
+theorem cIntegrateReducedGWf_isIntegralResult_of_hcopgcd [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (cands : List α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (CPolyG.cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hmatch : ((cIntegrateReducedGWf Dt a d cands).logs.map (fun cv =>
+          amG α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
+        = amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+          / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)) :
+    IsIntegralResultG Dt a d (cIntegrateReducedGWf Dt a d cands) := by
+  simp only [IsIntegralResultG]
+  exact field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd
+    hgcd Dt a d cands hd0 hpp hcopgcd hmatch
+
 end DeepWiki.SymbolicIntegration
