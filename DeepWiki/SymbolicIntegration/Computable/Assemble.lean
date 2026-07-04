@@ -532,4 +532,100 @@ theorem field_identity_of_cIntegrateReducedGWf_primitive_maximal [CharZero (CFie
   exact field_identity_of_cIntegrateReducedGWf_primitive_of_residueData Dt a d cands s w residueCand
     hDt hherm hden hA hnorm hres hDd hdist hcand hgcdread
 
+/-- `Algebra ℚ (CFieldSpec.K (QFunNZG ℚ))` via `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
+  inferInstanceAs (Algebra ℚ (RatFunc ℚ))
+
+/-- `CharZero (CFieldSpec.K (QFunNZG ℚ))` via `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`. -/
+local instance : CharZero (CFieldSpec.K (QFunNZG ℚ)) :=
+  inferInstanceAs (CharZero (RatFunc ℚ))
+
+open Classical in
+/-- **The fuel-free primitive one-shot at `ℚ(x)(t)` with the Hermite `hherm` ALSO discharged.** Extends
+`cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG` (which already discharges `hA`) by discharging the
+whole-step Hermite identity `hherm` from the pole-cancellation capstone (`cHermiteReduceTowerGWf_field_identity`
++ `toPolyG_hNum'_eq_2_1`, on the normal part `cn/dn`), so the Hermite frontier is gone: the remaining inputs
+are the genuine differential-normality `hcopgcd`, the residue data (`hform`/`hnorm`/`hden`), input properness
+`haProper`, and the engine-regularity connectors (`hv`/`hbk`/`hdvd`/`hresDen`) + the tower gcd frontier `hgcd`. -/
+theorem cIntegrateGFullWf_primitive_oneShot_hcopgcd_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
+    (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
+    (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (w : CFieldSpec.K (QFunNZG ℚ))
+    (hgcd : GcdFFCorrect (α := QFunNZG ℚ))
+    (hDt : toPolyG Dt = Polynomial.C w)
+    (hb' : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
+    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
+    (hrecon : amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
+          / amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+        = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d))
+    (hdn0 : toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2 ≠ 0)
+    (hpp : (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (CPolyG.cSqfreeYunFFGWf (canonicalRepresentationFastGWf Dt a d).2.2.2).zipIdx.filter
+        (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (CPolyG.cgcdWf (CPolyG.cmulG
+          (CPolyG.cdivWf (canonicalRepresentationFastGWf Dt a d).2.2.2 (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (CPolyG.cgcdWf (CPolyG.cmulG
+          (CPolyG.cdivWf (canonicalRepresentationFastGWf Dt a d).2.2.2 (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hden : toPolyG (cHermiteReduceTowerGWf Dt
+          (canonicalRepresentationFastGWf Dt a d).2.2.1
+          (canonicalRepresentationFastGWf Dt a d).2.2.2).2.2 = Lagrange.nodal s id)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hform : (CPolyG.cIntegrateReducedGWf Dt
+            (canonicalRepresentationFastGWf Dt a d).2.2.1
+            (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs.map
+          (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
+        = s.toList.map (fun β =>
+            ((toPolyG (cHermiteReduceTowerGWf Dt
+                  (canonicalRepresentationFastGWf Dt a d).2.2.1
+                  (canonicalRepresentationFastGWf Dt a d).2.2.2).2.1).eval β
+                / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
+              X - C β)))
+    (haProper : (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1).degree
+      < (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2).degree)
+    (hv : ∀ p ∈ (CPolyG.cSqfreeYunFFGWf (canonicalRepresentationFastGWf Dt a d).2.2.2).zipIdx,
+        ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hbk : ∀ p ∈ (CPolyG.cSqfreeYunFFGWf (canonicalRepresentationFastGWf Dt a d).2.2.2).zipIdx,
+        ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG (QFunNZG ℚ)),
+        (toPolyG (cdiophantineGWf
+            (CPolyG.cmulG (CPolyG.cdivWf (canonicalRepresentationFastGWf Dt a d).2.2.2
+              (CPolyG.cpowG p.1 (p.2 + 1))) (CPolyG.cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+          < (toPolyG p.1).degree)
+    (g : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ))
+    (hgeq : g = (CPolyG.cSqfreeYunFFGWf (canonicalRepresentationFastGWf Dt a d).2.2.2).zipIdx.foldl
+      (fun (gAcc : CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) (vi, idx) =>
+        let i := idx + 1
+        if i ≤ 1 then gAcc
+        else
+          let Vi_pow := CPolyG.cpowG vi i
+          let u := CPolyG.cdivWf (canonicalRepresentationFastGWf Dt a d).2.2.2 Vi_pow
+          let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1)
+            (canonicalRepresentationFastGWf Dt a d).2.2.1 ([CField.zero], [CField.one])).1
+          (CPolyG.caddG (CPolyG.cmulG gAcc.1 gloc.2) (CPolyG.cmulG gloc.1 gAcc.2),
+            CPolyG.cmulG gAcc.2 gloc.2))
+      ([CField.zero], [CField.one]))
+    (hdvd : toPolyG (CPolyG.cmulG (canonicalRepresentationFastGWf Dt a d).2.2.2
+        (CPolyG.cmulG g.2 g.2))
+      ∣ toPolyG (CPolyG.cmulG (CPolyG.csubG
+          (CPolyG.cmulG (canonicalRepresentationFastGWf Dt a d).2.2.1 (CPolyG.cmulG g.2 g.2))
+          (CPolyG.cmulG (canonicalRepresentationFastGWf Dt a d).2.2.2
+            (CPolyG.csubG (CPolyG.cmulG (CPolyG.cmonomialDeriv Dt g.1) g.2)
+              (CPolyG.cmulG g.1 (CPolyG.cmonomialDeriv Dt g.2)))))
+        ((CPolyG.cSqfreeYunFFGWf (canonicalRepresentationFastGWf Dt a d).2.2.2).foldl
+          (fun acc vi => CPolyG.cmulG acc vi) [CField.one])))
+    (hresDen : cnormG (CPolyG.cmulG (canonicalRepresentationFastGWf Dt a d).2.2.2
+        (CPolyG.cmulG g.2 g.2)) ≠ ([] : CPolyG (QFunNZG ℚ))) :
+    towerFractionFieldDerivG Dt
+        (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
+        + logResidueSumG Dt res.logs
+      = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) := by
+  have hherm := cHermiteReduceTowerGWf_field_identity hgcd Dt
+    (canonicalRepresentationFastGWf Dt a d).2.2.1 (canonicalRepresentationFastGWf Dt a d).2.2.2
+    hdn0 hpp hcopgcd
+  rw [toPolyG_hNum'_eq_2_1 hgcd Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
+    (canonicalRepresentationFastGWf Dt a d).2.2.2 hdn0 hpp hcopgcd] at hherm
+  exact cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG Dt a d cands res s w hDt hb' hfp
+    hsome hrecon hherm hden hnorm hform haProper hv hbk g hgeq hdvd hresDen
+
 end DeepWiki.SymbolicIntegration
