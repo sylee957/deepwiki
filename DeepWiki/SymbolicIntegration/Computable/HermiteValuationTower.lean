@@ -167,6 +167,28 @@ theorem fracPair_foldl_sum {β : Type*} (glocOf : β → CPolyG α × CPolyG α)
         fracPair_add init.1 init.2 (glocOf x).1 (glocOf x).2 hinit hgx]
       ring
 
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- The guarded Hermite fold keeps a nonzero denominator: from `init.2 ≠ 0` and each non-skipped
+`gloc.2 ≠ 0`, the folded `.2` is nonzero (the denominators only ever multiply). -/
+theorem foldl_den_ne_zero {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Prop)
+    [DecidablePred skip] :
+    ∀ (L : List β) (init : CPolyG α × CPolyG α), toPolyG init.2 ≠ 0 →
+      (∀ x ∈ L, ¬ skip x → toPolyG (glocOf x).2 ≠ 0) →
+      toPolyG (L.foldl (fun acc x => if skip x then acc
+              else (caddG (cmulG acc.1 (glocOf x).2) (cmulG (glocOf x).1 acc.2),
+                cmulG acc.2 (glocOf x).2)) init).2 ≠ 0 := by
+  intro L
+  induction L with
+  | nil => intro init hinit _; exact hinit
+  | cons x L ih =>
+    intro init hinit hden
+    rw [List.foldl_cons]
+    by_cases hs : skip x
+    · rw [if_pos hs]; exact ih init hinit (fun y hy => hden y (List.mem_cons_of_mem _ hy))
+    · rw [if_neg hs]
+      refine ih _ ?_ (fun y hy => hden y (List.mem_cons_of_mem _ hy))
+      rw [toPolyG_cmulG]; exact mul_ne_zero hinit (hden x (List.mem_cons_self ..) hs)
+
 variable [CFracGcdCoreWf α]
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -461,6 +483,24 @@ theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (D
     rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], one_mul]
   exact pow_ne_zero N hv
 
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The Hermite fold denominator `gden` is nonzero** (`toPolyG (cHermiteReduceTowerGWf …).1.2 ≠ 0`):
+the guarded fold starts at `1` and only multiplies nonzero `gloc` denominators (`hden_of`), so
+`foldl_den_ne_zero` gives the result. Discharges `hgd0`. -/
+theorem toPolyG_cHermiteReduceTowerGWf_den_ne_zero [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hpp : (toPolyG d).primPart ≠ 0) :
+    toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0 := by
+  have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  rw [cHermiteReduceTowerGWf]
+  simp only [toPolyG_cnormG]
+  exact foldl_den_ne_zero
+    (fun x => (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+      ([CField.zero], [CField.one])).1)
+    (fun x => x.2 + 1 ≤ 1) (cSqfreeYunFFGWf d).zipIdx ([CField.zero], [CField.one])
+    (by rw [hone]; exact one_ne_zero) (hden_of hgcd Dt a d hd0 hpp)
+
 /-- **The `R` residual identity** `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` (`R = C(1−m)·a + Σ residNumG`), from
 `total_fold_residual_tower` fed by `all_hstep` and `hden_of`. Modulo the per-factor gcd coprimality. -/
 theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
@@ -659,12 +699,13 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
 
 /-- **The whole-step Hermite field identity for `cHermiteReduceTowerGWf`** (`D_tower(⟦g⟧) +
 ⟦hNum/Dstar⟧ = ⟦a/d⟧`), discharging pole-cancellation via `hWgd_of_multiplicity` (with the Yun
-reconstruction now internal) and the radical split `toPolyG_yunRadical_split` (which also discharges
-`Dstar ≠ 0`). Modulo the genuine differential-normality side condition `hcopgcd` (per-factor gcd
-coprimality — `v` coprime `D(v)`, e.g. false for `v=t` under hyperexponential `D`) and `gden ≠ 0`. -/
+reconstruction now internal) and the radical split `toPolyG_yunRadical_split`. `Dstar ≠ 0` and
+`gden ≠ 0` are both discharged internally (from `hd0` via the split and via
+`toPolyG_cHermiteReduceTowerGWf_den_ne_zero`). Modulo **only** the genuine differential-normality side
+condition `hcopgcd` (per-factor gcd coprimality — `v` coprime `D(v)`, e.g. false for `v=t` under
+hyperexponential `D`), which is correctly a hypothesis (matching Bronstein's `hnorm`). -/
 theorem cHermiteReduceTowerGWf_field_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
-    (hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0)
     (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
@@ -684,6 +725,8 @@ theorem cHermiteReduceTowerGWf_field_identity [CharZero (CFieldSpec.K α)] (hgcd
             (cHermiteReduceTowerGWf Dt a d).1.2))))
         / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
       = amG α (toPolyG a) / amG α (toPolyG d) := by
+  have hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0 :=
+    toPolyG_cHermiteReduceTowerGWf_den_ne_zero hgcd Dt a d hd0 hpp
   have hDstar0 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ≠ 0 := fun h =>
     hd0 (by rw [toPolyG_yunRadical_split hgcd Dt a d hd0, h, zero_mul])
   have hresDen : cnormG (cmulG d (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
