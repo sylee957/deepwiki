@@ -72,7 +72,15 @@ soundness.** Recursion reorganizes the tower; it does not remove the leaves.
   **tower** `cLimitedIntegrate`/`cRischDEGWf` recursing into the coefficient field (Bronstein
   `IntegratePrimitivePolynomial`), then prove its soundness — which *is* the tower-step instance. See the
   memory note `leanproofs-primitive-poly-constant-coeff-only`.
-- **P3** — discharge the shared per-level compute-correctness abstractly (Hermite / RT residue / split),
-  collapsing `reducedSound` from a `PrimitiveFrontier` field to a theorem at every level at once.
+- **P3** — discharge the shared per-level compute-correctness abstractly (Hermite / RT residue / split).
+  **Split DONE (2026-07-04):** `canonicalReconstruction_of_charZero` (`CanonicalReconstructionCharZero.lean`)
+  discharges the whole canonical reconstruction from `[CharZero]` + `GcdFFCorrect` + `d ≠ 0`, via the abstract
+  split correctness `cSplitFactorFastGWf_isSplittingFactorizationGen` and the new special ⊥ normal coprimality
+  `isCoprime_of_isSpecial_isNormalSqfree` (`SpecialNormalCoprime.lean`). `PrimitiveFrontier` dropped its
+  `hrecon` field; the reconstruction is now proven. `GcdFFCorrect` is itself a theorem at the `ℚ` base
+  (`gcdFFCorrect_Q`). **Reduced part** (`hreduced`) is *grounded* in
+  `cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces` (a real theorem, not `native_decide`) but
+  stays a field — its Rothstein–Trager residue-data conditions (nodal denominator, *distinct* residues) are
+  genuinely per-input and can fail, so it is not unconditionally closeable.
 - **P4** — the base `LawfulRischLevel` over `ℚ(x)` fully closed; assemble a genuine 2-level tower instance.
 - **P5** — completeness: realize `descend` against Mathlib `IsLiouville` (the transcendental instance).
