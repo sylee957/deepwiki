@@ -134,6 +134,27 @@ committed) is unaffected and correct; it applies to the monic arguments. The rem
 route through the **monic normalization** (`LrtMonicLogs` gives the abstract facts: `monicLrtLog` monic,
 `sᵢ`-unit coprime to `Qᵢ`, `lrtSubresultant_eval_eq_psc_mul_monicLrtLog`).
 
+## Assembly progress (2026-07-04) — the reindexing side is COMPLETE
+
+After the monic fix, `evalLrtArg` = the monic gcd (no unit), and the whole residue↔pole reindexing is built
+gate-green in `LrtSoundness.lean`:
+- `towerDerivExt_div_mul` / `_div_prod` / `_div_algebraMap_prod` — `D(∏ pᵢ)/∏ pᵢ = Σ D(pᵢ)/pᵢ` (log-deriv of
+  a product = sum), via `Derivation.leibniz`. Splits `gcd = ∏(t−β)` into per-pole terms.
+- `poleTerm β := D(t−β)/(t−β)`; `residue_pole_regroup` — `Σ_c c·(Σ_{res β=c} term β) = Σ_β res(β)·term β`
+  (`Finset.sum_fiberwise_of_maps_to`).
+- `logResidueTermLrtG_eq_pole_sum` → `logResidueTermLrtG_eq_finset_pole_sum` — per-`Rᵢ` term = the finset
+  pole sum `Σ_{β∈polesᵢ} res(β)·poleTerm β` (given the gcd factorization `evalLrtArg Sᵢ c = ∏_{res β=c}(t−β)`).
+- `logResidueSumLrtG_eq_termwise` — reduces the whole residue sum termwise.
+
+**⟹ `logResidueSumLrtG` reduces to `Σ_β res(β)·poleTerm β` (the pole sum) given the per-`Rᵢ` factorizations.**
+
+**Remaining (the dense core + structure):**
+- **P3** `evalLrtArg Sᵢ c = ∏_{res β=c}(t−β)` — the base-change of G4c (`Sᵢ = lrtSubresultantGen` coeff) → G3
+  (`~ gcd`) → G2 (`gcd = ∏`) from `K` to `E`, plus `monic(∼gcd) = monic gcd`. The dense plumbing.
+- **partition** — the `polesᵢ` (per-`Rᵢ`) partition `Dstar`'s roots (LRT multiplicity structure).
+- **P4** `Σ_β res(β)·poleTerm β = hNum/Dstar` — instantiate `monomial_residue_match_of_cancel` over `E`.
+- **hherm** over `E` + **descent** (base-change injectivity) + assembly, then the `cLrtLogArgG` monic engine fix.
+
 ## Honest scope
 
 P1–P3, P5-assembly are engineering over DONE pieces. **P4 is the genuine new mathematics** (the tower
