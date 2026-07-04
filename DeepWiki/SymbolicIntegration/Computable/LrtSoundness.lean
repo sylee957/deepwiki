@@ -826,6 +826,17 @@ theorem mem_roots_prodPow {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : Li
       obtain ⟨v, hv, hav⟩ := ih (i + 1) (Nat.succ_ne_zero i) hrest ha
       exact ⟨v, List.mem_cons_of_mem e hv, hav⟩
 
+/-- **Coprime polynomials have disjoint roots.** A common root `a` would give `1 = (u·p+v·q)(a) = 0`. -/
+theorem disjoint_roots_of_isCoprime {E : Type*} [Field E] [DecidableEq E] (p q : E[X])
+    (h : IsCoprime p q) : Disjoint p.roots.toFinset q.roots.toFinset := by
+  rw [Finset.disjoint_left]
+  intro a hap haq
+  rw [Multiset.mem_toFinset, Polynomial.mem_roots'] at hap haq
+  obtain ⟨u, v, huv⟩ := h
+  have h1 : (u * p + v * q).eval a = 1 := by rw [huv]; simp
+  rw [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_mul, hap.2, haq.2] at h1
+  simp at h1
+
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **A Yun factor with a root is non-constant** (`¬ (cnormG Rᵢ).length ≤ 1`): a root forces
 `natDegree(Rᵢ) ≥ 1`, but `(cnormG Rᵢ).length ≤ 1` forces `natDegree ≤ 0`. This certifies the `filterMap`
