@@ -72,6 +72,15 @@ theorem logResidueSumLrtG_eq_sum (Dt : CPolyG α) (logs : List (CPolyG α × Lis
     logResidueSumLrtG (E := E) Dt logs = (logs.map (logResidueTermLrtG (E := E) Dt)).sum := rfl
 
 omit [CDiffField α] [CDiffFieldSpec α] in
+/-- Rewrite the residue sum termwise: if each `(Rᵢ, Sᵢ)` term equals `f p`, then `logResidueSumLrtG = Σ f`. -/
+theorem logResidueSumLrtG_eq_termwise (Dt : CPolyG α) (logs : List (CPolyG α × List (CPolyG α)))
+    (f : CPolyG α × List (CPolyG α) → RatFunc E)
+    (hterm : ∀ p ∈ logs, logResidueTermLrtG Dt p = f p) :
+    logResidueSumLrtG (E := E) Dt logs = (logs.map f).sum := by
+  rw [logResidueSumLrtG_eq_sum]
+  exact congrArg List.sum (List.map_congr_left hterm)
+
+omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `logResidueSumLrtG` of the empty log list is `0`. -/
 @[simp] theorem logResidueSumLrtG_nil (Dt : CPolyG α) :
     logResidueSumLrtG (E := E) Dt ([] : List (CPolyG α × List (CPolyG α))) = 0 := rfl
