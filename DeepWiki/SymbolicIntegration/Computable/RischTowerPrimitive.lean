@@ -10,11 +10,15 @@ frontier facts are the fields of one class, `PrimitiveFrontier α` (materialized
 proven inside the instance (unfolding `primitiveCase.integrateSpecial`); the frontier facts stay isolated in
 `PrimitiveFrontier`:
 
-* `hspecialField` — the poly-RDE identity (canonical `Dt = 1` regime, `cPolyRischDEGWf_nil_field_identity`);
-* `hrecon` — reconstruction (`canonicalReconstruction`, modulo the split frontier);
-* `hreduced` — reduced-part soundness (the `native_decide` Hermite/residue frontier);
-* `SpecElem`/`NrmElem`/`hdescend` — the Liouville completeness contract.
+* `hspecialField` — the poly-RDE identity (canonical `Dt = 1` regime, `cPolyRischDEGWf_nil_field_identity`;
+  the general non-constant-coefficient case is the P2 algorithm gap);
+* `hrecon` — reconstruction (`canonicalReconstruction`, modulo the split coprimality — provable but currently
+  a hypothesis codebase-wide);
+* `hreduced` — reduced-part soundness (grounded in `cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces`
+  under the Rothstein–Trager residue-data conditions — *not* a `native_decide` wall).
 
+This is a **soundness-only** solver: the completeness contract (`SpecElem`/`NrmElem`/`descend`) is trivial in
+the instance, so `not_isElementaryIntegrable` is vacuous. Completeness is the Liouville frontier, deferred.
 See `docs/recursive-risch-solver.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -45,13 +49,6 @@ class PrimitiveFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
   hreduced : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α),
     primitiveCase.reducedCorrect Dt (redNorm Dt a d cands) = some nrm →
     toPolyG nrm.rational.2 ≠ 0 ∧ IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
-  /-- Special-part elementarity obstruction (completeness frontier). -/
-  SpecElem : CPolyG α → CPolyG α → CPolyG α → Prop
-  /-- Normal-part elementarity obstruction (completeness frontier). -/
-  NrmElem : CPolyG α → CPolyG α → CPolyG α → Prop
-  /-- Completeness descent (the Liouville frontier). -/
-  hdescend : ∀ (Dt a d : CPolyG α),
-    IsElementaryIntegrableG Dt a d → SpecElem Dt a d ∧ NrmElem Dt a d
 
 /-- **The primitive `LawfulRischLevel` instance — assembled from `PrimitiveFrontier` by resolution.**
 Materialize one `PrimitiveFrontier α` and the whole solver (`LawfulRischLevel.integrate` / `.sound` /
@@ -77,8 +74,10 @@ instance instLawfulRischLevelPrimitive [PrimitiveFrontier α] : LawfulRischLevel
         exact one_ne_zero
     · rw [if_neg hb] at hhook; simp at hhook
   reducedSound := PrimitiveFrontier.hreduced
-  SpecElem := PrimitiveFrontier.SpecElem
-  NrmElem := PrimitiveFrontier.NrmElem
-  descend := PrimitiveFrontier.hdescend
+  -- Soundness-only: the completeness contract is trivial (`not_isElementaryIntegrable` is vacuous here).
+  -- Completeness (a nontrivial `descend`) is the Liouville frontier, deferred.
+  SpecElem := fun _ _ _ => True
+  NrmElem := fun _ _ _ => True
+  descend := fun _ _ _ _ => ⟨trivial, trivial⟩
 
 end DeepWiki.SymbolicIntegration
