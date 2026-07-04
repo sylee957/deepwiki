@@ -26,6 +26,11 @@ computable subresultant / LRT integrator**. The pattern to reuse: `cResidueResul
 residue resultant `R(z)` by **interpolation in `z`** (evaluate `cresultantWf` at `z=0,1,…,deg` and
 `cinterpolateG`) — avoiding bivariate polynomials. The LRT log-arguments admit the same treatment.
 
+**Status (2026-07-04): L1–L3 DONE and `native_decide`-validated** — the computable root-free LRT integrator
+is built. `∫1/(t²−1)` over `ℚ(t)` yields the symbolic log part `[(z²−1/4, S₁)]` with `S₁(z,t)=1−2z·t`
+(residues `±1/2` stay implicit as roots of `z²−1/4`; `S₁` at each residue is the actual log argument). L4 (the
+abstract correctness bridge) and L5 (swap the primitive base) remain.
+
 Phases (each its own gate-green commit):
 
 - **L1 — computable subresultant `cSubresultantG p q j`** over `CPolyG α`: the `j`-th subresultant
