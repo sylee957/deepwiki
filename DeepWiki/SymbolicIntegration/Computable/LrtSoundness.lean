@@ -435,6 +435,34 @@ theorem toPolyG_cResidueResultantTowerGWf_map {α : Type*} [CField α] [CFieldSp
     rtResultantGen_map (algebraMap (CFieldSpec.K α) E) _ _ _
       (algebraMap (CFieldSpec.K α) E).injective, implicitDeriv_map]
 
+open Classical in
+/-- **The residue resultant's roots over `E` are the residues.** Composes
+`toPolyG_cResidueResultantTowerGWf_map` (concrete `R_E = rtResultantGen`) with `roots_rtResultantGen` (roots =
+residues) over an alg-closed `E`: `(R_E).roots = Dstar_E.roots.map (β ↦ hNum(β)/D(Dstar)(β))`. `hB` is the
+Rothstein–Trager normality (`D(Dstar)(β) ≠ 0` at poles). This is the `hroots` residue structure for `hlog`. -/
+theorem residueResultant_map_roots {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
+    [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
+    (Dt hNum Dstar : CPolyG α) (hDmonic : (toPolyG Dstar).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
+    (hB : ∀ β ∈ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
+        (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
+    (hB_deg : (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).natDegree
+        ≤ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1) :
+    ((toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map (algebraMap (CFieldSpec.K α) E)).roots
+      = ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun β =>
+          ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+            / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+                ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).eval β) := by
+  rw [toPolyG_cResidueResultantTowerGWf_map Dt hNum Dstar hDmonic hDt0 hAD]
+  refine roots_rtResultantGen _ _ _ ?_ hB ?_ hB_deg
+  · exact (hDmonic.map (algebraMap (CFieldSpec.K α) E)).ne_zero
+  · rw [natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective,
+      natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective]
+    exact hAD
+
 /-- **A list-indexed disjoint partition splits a `Finset` sum.** For pairwise-disjoint per-index pole sets
 `polesOf`, the list-sum of per-index `Finset` sums equals the `Finset` sum over their union — the pure
 combinatorial fact behind `hpart`. -/
