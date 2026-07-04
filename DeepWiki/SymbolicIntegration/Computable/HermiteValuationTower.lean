@@ -643,10 +643,7 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
       (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
-    (hWdvd : toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
-      ∣ (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
-          (fun x => toPolyG x.1 ^ x.2)).prod) :
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
         * (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 * toPolyG (cHermiteReduceTowerGWf Dt a d).1.2)
       ∣ toPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
@@ -655,13 +652,15 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
               (cHermiteReduceTowerGWf Dt a d).1.2)
             (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
               (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2))))) := by
+  have hWdvd := hWdvd_of_reconstruction hgcd Dt a d hd0
+    (cSqfreeYunFFGWf_reconstruction hgcd d hd0 hpp)
   rw [resNum_eq_R_mul_gden_sq hgcd Dt a d hd0 hpp hgd0 hcopgcd, ← pow_two]
   exact mul_dvd_mul_right (hWdvd.trans (prod_vkidx_dvd_R hgcd Dt a d hd0 hpp hcopgcd)) _
 
 /-- **The whole-step Hermite field identity for `cHermiteReduceTowerGWf`** (`D_tower(⟦g⟧) +
-⟦hNum/Dstar⟧ = ⟦a/d⟧`), discharging pole-cancellation via `hWgd_of_multiplicity` and the radical split
-`toPolyG_yunRadical_split`. Modulo the three clean frontiers: per-factor gcd coprimality (`hcopgcd`),
-the Yun multiplicity-product (`hWdvd`), and `gden`/`Dstar ≠ 0`. -/
+⟦hNum/Dstar⟧ = ⟦a/d⟧`), discharging pole-cancellation via `hWgd_of_multiplicity` (with the Yun
+reconstruction now internal) and the radical split `toPolyG_yunRadical_split`. Modulo two clean
+frontiers: per-factor gcd coprimality (`hcopgcd`) and `gden`/`Dstar ≠ 0`. -/
 theorem cHermiteReduceTowerGWf_field_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
     (hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0)
@@ -670,10 +669,7 @@ theorem cHermiteReduceTowerGWf_field_identity [CharZero (CFieldSpec.K α)] (hgcd
       (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
-    (hWdvd : toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
-      ∣ (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
-          (fun x => toPolyG x.1 ^ x.2)).prod) :
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     towerFractionFieldDerivG Dt
         (amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.1)
           / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2))
@@ -700,6 +696,6 @@ theorem cHermiteReduceTowerGWf_field_identity [CharZero (CFieldSpec.K α)] (hgcd
     (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2) (amG_toPolyG_ne_zero hd0)
     (amG_toPolyG_ne_zero hgd0) (amG_toPolyG_ne_zero hDstar0) hresDen
     (toPolyG_yunRadical_split hgcd Dt a d hd0)
-    (hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd hWdvd)
+    (hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd)
 
 end DeepWiki.SymbolicIntegration

@@ -749,6 +749,28 @@ theorem squarefreePart_deflation_natDegree_eq_zero_iff_maxmult (A : K[X]) (k : �
         (fun P => (normalizedFactors A.primPart).count P) ≤ k :=
   (squarefreePart_deflation_natDegree_eq_zero_iff A k hA).trans Finset.sup_le_iff.symm
 
+open UniqueFactorizationMonoid in
+/-- The maximum multiplicity is bounded by the degree of the primitive part:
+`maxmult ≤ natDegree pp(A)`. A prime `P` of multiplicity `m` contributes `P^m ∣ pp(A)`, and
+`m ≤ m·deg P ≤ deg pp(A)`. -/
+theorem sup_count_le_natDegree_primPart (A : K[X]) (hA : A.primPart ≠ 0) :
+    (normalizedFactors A.primPart).toFinset.sup
+        (fun P => (normalizedFactors A.primPart).count P) ≤ A.primPart.natDegree := by
+  apply Finset.sup_le
+  intro P hP
+  have hmem := Multiset.mem_toFinset.mp hP
+  have hle : Multiset.replicate ((normalizedFactors A.primPart).count P) P
+      ≤ normalizedFactors A.primPart := Multiset.le_count_iff_replicate_le.mp le_rfl
+  have hdvd1 : P ^ (normalizedFactors A.primPart).count P
+      ∣ (normalizedFactors A.primPart).prod := by
+    rw [← Multiset.prod_replicate]; exact Multiset.prod_dvd_prod_of_le hle
+  have hdvd : P ^ (normalizedFactors A.primPart).count P ∣ A.primPart :=
+    hdvd1.trans (prod_normalizedFactors hA).dvd
+  have hnd := natDegree_le_of_dvd hdvd hA
+  rw [natDegree_pow] at hnd
+  have hpos : 1 ≤ P.natDegree := (irreducible_of_normalized_factor P hmem).natDegree_pos
+  nlinarith [hnd, hpos]
+
 private theorem natDegree_eq_of_associated {p q : K[X]} (h : Associated p q) (hq : q ≠ 0) :
     p.natDegree = q.natDegree :=
   le_antisymm (natDegree_le_of_dvd h.dvd hq)

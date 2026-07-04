@@ -538,4 +538,50 @@ theorem length_cSqfreeYunFFGgoWf_ge [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCo
       rw [List.length_cons]
       omega
 
+open UniqueFactorizationMonoid in
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The Yun factorization has length `≥ maxmult`.** The entry runs the go-loop from `i = 1` with
+fuel `cyunBoundG p ≥ maxmult` (`sup_count_le_natDegree_primPart` + `primPart_dvd` +
+`length_cnormG_of_ne`), so `length_cSqfreeYunFFGgoWf_ge` at `i = 1` gives `maxmult ≤ length`. -/
+theorem length_cSqfreeYunFFGWf_ge [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0) :
+    (normalizedFactors (toPolyG p).primPart).toFinset.sup
+        (fun P => (normalizedFactors (toPolyG p).primPart).count P) ≤ (cSqfreeYunFFGWf p).length := by
+  rw [cSqfreeYunFFGWf]
+  have hinv : YunInv (toPolyG p) 1
+      (toPolyG (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p))))
+      (toPolyG (csubG (cdivWf (cderivG p) (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)))
+        (cderivG (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)))))) :=
+    toPolyG_yunEntry_YunInv hgcd p hp0 hpp
+  have hfuel : (normalizedFactors (toPolyG p).primPart).toFinset.sup
+      (fun P => (normalizedFactors (toPolyG p).primPart).count P) ≤ cyunBoundG p := by
+    have hcn : cnormG p ≠ [] := fun h => hp0 ((cisZeroG_iff p).mp (by simp [cisZeroG, h]))
+    rw [cyunBoundG, length_cnormG_of_ne p hcn]
+    have h1 := sup_count_le_natDegree_primPart (toPolyG p) hpp
+    have h2 : (toPolyG p).primPart.natDegree ≤ (toPolyG p).natDegree :=
+      natDegree_le_of_dvd (toPolyG p).primPart_dvd hp0
+    omega
+  have h := length_cSqfreeYunFFGgoWf_ge hgcd p hpp (cyunBoundG p) 1 _ _ le_rfl hinv (by simpa using hfuel)
+  simpa using h
+
+open UniqueFactorizationMonoid in
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The Yun factorization reconstructs its input up to associates** — `hrecon`:
+`toPolyG d ~ prodPow 1 (Yun factors)`. Chains the factorwise correspondence
+(`cSqfreeYunFFGWf_forall₂` through `prodPow_associated`), the range reconstruction
+(`prodPow_one_sqfreeFactPart_range_associated`, discharged by `length_cSqfreeYunFFGWf_ge`), and
+`pp(d) ~ d`. Discharges the last frontier of the tower-Hermite pole-cancellation. -/
+theorem cSqfreeYunFFGWf_reconstruction [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0) :
+    Associated (toPolyG d) (prodPow 1 ((cSqfreeYunFFGWf d).map toPolyG)) := by
+  have h1 : Associated (prodPow 1 ((cSqfreeYunFFGWf d).map toPolyG))
+      (prodPow 1 ((List.range (cSqfreeYunFFGWf d).length).map
+        (fun j => sqfreeFactPart (toPolyG d) (1 + j)))) :=
+    prodPow_associated (cSqfreeYunFFGWf_forall₂ hgcd d hd0 hpp) 1
+  have h2 : Associated (prodPow 1 ((List.range (cSqfreeYunFFGWf d).length).map
+        (fun j => sqfreeFactPart (toPolyG d) (1 + j)))) (toPolyG d).primPart :=
+    prodPow_one_sqfreeFactPart_range_associated (toPolyG d) hpp _
+      (length_cSqfreeYunFFGWf_ge hgcd d hd0 hpp)
+  exact ((h1.trans h2).trans (associated_primPart_self (toPolyG d) hd0)).symm
+
 end DeepWiki.SymbolicIntegration
