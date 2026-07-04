@@ -21,6 +21,7 @@ import DeepWiki.SymbolicIntegration.Computable.Integrate
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.IntegrationFunctionsCatalog
 import DeepWiki.SymbolicIntegration.Computable.IntegrationSpec
+import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 import DeepWiki.SymbolicIntegration.Computable.IntegratorCompleteness
 import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleExpBridge

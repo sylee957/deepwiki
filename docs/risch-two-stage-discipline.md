@@ -155,7 +155,7 @@ Remaining (larger, separate): **P6 completeness** — a research frontier (Liouv
 transcendental log/exp `IsLiouville` instance is not yet in Mathlib), NOT a mechanical discipline
 application like soundness was. **P7 naming sweep** — a large gradual legacy-rename effort.
 
-## Making Assemble.lean concrete-algorithm-free (in progress)
+## Making Assemble.lean concrete-algorithm-free — DONE
 
 Goal (user directive): NO concrete algorithm name (`cIntegrateCase`, `canonicalRepresentationFastGWf`,
 `cIntegrateReducedGWf`, `cHermiteReduceTowerGWf`, …) in `Assemble.lean` — only abstract structure + laws.
