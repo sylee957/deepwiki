@@ -108,7 +108,7 @@ They move to per-solver realization files as the interfaces land.
 - [ ] **P0 — this note.** Fixes the discipline, encoding, interface signatures, naming.
 - [x] **P1 — `SquarefreeDecomposition`.** DONE (`SquarefreeDecomposition.lean` interface + `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition` realization in `YunTowerCorrect`). Define the interface + `LawfulSquarefreeDecomposition`; prove
   `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition` bundling the four existing facts. Leaf, no consumers yet.
-- [ ] **P2 — `HermiteReduction`.** Define the interface + `LawfulHermiteReduction` consuming a
+- [x] **P2 — `HermiteReduction`.** DONE (interface `HermiteReduction.lean` + realization `cHermiteReduceTowerGWf_lawfulHermiteReduction` in `HermiteReductionRealization.lean`; `squarefree` consumed via `LawfulSquarefreeDecomposition.prod_squarefree`). Assemble-file eviction of the residue/one-shot lemmas is P3–P5. Define the interface + `LawfulHermiteReduction` consuming a
   `SquarefreeDecomposition` abstractly (dr-squarefree comes from the interface, not the Yun loop). Prove
   `cHermiteReduceTowerGWf_lawfulHermiteReduction` (this session's `_field_identity` + squarefree + properness).
   Evict the concrete Hermite lemmas from `Assemble.lean` into the realization file.
