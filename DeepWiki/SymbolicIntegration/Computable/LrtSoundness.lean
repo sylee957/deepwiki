@@ -514,17 +514,15 @@ theorem field_identity_lrt_of_hherm_of_logMatch {α : Type*} [CField α] [CField
       = amGExt (toPolyG anum) / amGExt (toPolyG aden) := by
   rw [hlog]; exact hherm
 
-/-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
-CFieldSpec.K α` in which every residue polynomial `Rᵢ` splits, the `E`-tower derivative of the rational part
-plus the algebraic residue sum equals `anum/aden` (base-changed to `E`). The `E`-quantification + splitting
-hypothesis is the descent vehicle (instantiate `E` at a splitting field to prove; injectivity of the base
-change gives the `K`-level statement). This is the root-free analogue of `IsIntegralResultG` handling
-algebraic residues. -/
+/-- **Symbolic-log soundness for the LRT reduced result.** Over **any** algebraically-closed differential
+extension `E` of `K = CFieldSpec.K α` (so both `Dstar`'s poles and every residue polynomial `Rᵢ`'s roots lie
+in `E`), the `E`-tower derivative of the rational part plus the algebraic residue sum equals `anum/aden`
+(base-changed to `E`). The `E`-quantification is the descent vehicle (instantiate `E` at the algebraic closure
+to prove; injectivity of the base change gives the `K`-level statement). This is the root-free analogue of
+`IsIntegralResultG` handling algebraic residues. -/
 def IsIntegralResultLrtG (Dt anum aden : CPolyG α) (res : LrtResultG α) : Prop :=
   ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-    [DifferentialAlgebra (CFieldSpec.K α) E],
-    (∀ p ∈ res.logs,
-      Polynomial.Splits ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E))) →
+    [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
     (towerDerivExt Dt (amGExt (toPolyG res.rational.1) / amGExt (toPolyG res.rational.2))
           + logResidueSumLrtG Dt res.logs : RatFunc E)
       = amGExt (toPolyG anum) / amGExt (toPolyG aden)
@@ -538,17 +536,16 @@ the Hermite tower soundness) for `res = cIntegrateReducedLrtG`. -/
 theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPolyG α) (res : LrtResultG α)
     (hNum hDen : CPolyG α)
     (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-        [DifferentialAlgebra (CFieldSpec.K α) E],
-        (∀ p ∈ res.logs, Polynomial.Splits ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E))) →
+        [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
         (logResidueSumLrtG Dt res.logs : RatFunc E) = amGExt (toPolyG hNum) / amGExt (toPolyG hDen))
     (hherm : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-        [DifferentialAlgebra (CFieldSpec.K α) E],
+        [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
         (towerDerivExt Dt (amGExt (toPolyG res.rational.1) / amGExt (toPolyG res.rational.2))
             + amGExt (toPolyG hNum) / amGExt (toPolyG hDen) : RatFunc E)
           = amGExt (toPolyG anum) / amGExt (toPolyG aden)) :
     IsIntegralResultLrtG.{_, u} Dt anum aden res := by
-  intro E _ _ _ _ _ hsplits
+  intro E _ _ _ _ _ _
   exact field_identity_lrt_of_hherm_of_logMatch Dt res.rational.1 res.rational.2 hNum hDen anum aden
-    res.logs (hlog E hsplits) (hherm E)
+    res.logs (hlog E) (hherm E)
 
 end DeepWiki.SymbolicIntegration
