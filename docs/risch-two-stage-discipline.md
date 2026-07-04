@@ -95,7 +95,14 @@ four interface `Lawful` classes, `cIntegrate_sound` against them, `cIntegrate_co
 - No concrete-op name in any Stage-1 theorem; no `Lawful<Notion>`-proof body in the assembler.
 - Legacy names migrate gradually (git-mv/rename-only commits), per CLAUDE.md's gradual-improvement rule.
 
-## Currently misplaced (to evict from `Assemble.lean` during migration)
+## Evicted (2026-07-04) ✓
+
+The four superseded concrete lemmas + two `local instance`s were REMOVED from `Assemble.lean` — the
+interface path (`cIntegrateReducedGWf_isIntegralResult_of_lawful` + the two realizations) supersedes them.
+What remains in Assemble: the abstract assembler (`cIntegrateCase`/`cIntegrateCase_sound`), the interface
+composition `_of_lawful`, and the end-to-end `_via_interfaces` corollary — all interface-consuming.
+
+## (historical) Was misplaced
 
 `field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd`,
 `cIntegrateReducedGWf_isIntegralResult_of_hcopgcd`,
