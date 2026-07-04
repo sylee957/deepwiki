@@ -5,6 +5,7 @@ import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Computable.ResidueResultantTowerSpec
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator (G5, pass P1)
 
@@ -415,6 +416,24 @@ theorem monic_separable_eq_nodal {E : Type*} [Field E] [IsAlgClosed E] (p : E[X]
   rw [Lagrange.nodal, Finset.prod_eq_multiset_prod, Multiset.toFinset_val,
     Multiset.dedup_eq_self.mpr hnodup]
   simpa using hprod
+
+/-- **The concrete residue resultant base-changed to `E` is the abstract `rtResultantGen`.** Combines G4b
+(`toPolyG_cResidueResultantTowerGWf`, `R = rtResultantGen` over `K`), `rtResultantGen_map` (base change), and
+`implicitDeriv_map` (the derivation image commutes). Over an alg-closed `E`, `roots_rtResultantGen` then reads
+off the residues from this. -/
+theorem toPolyG_cResidueResultantTowerGWf_map {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
+    [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E]
+    (Dt a d : CPolyG α) (hDmonic : (toPolyG d).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG a).natDegree < (toPolyG d).natDegree) :
+    (toPolyG (cResidueResultantTowerGWf Dt a d)).map (algebraMap (CFieldSpec.K α) E)
+      = rtResultantGen ((toPolyG a).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG d).map (algebraMap (CFieldSpec.K α) E))
+          (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+            ((toPolyG d).map (algebraMap (CFieldSpec.K α) E))) := by
+  rw [toPolyG_cResidueResultantTowerGWf Dt a d hDmonic hDt0 hAD,
+    rtResultantGen_map (algebraMap (CFieldSpec.K α) E) _ _ _
+      (algebraMap (CFieldSpec.K α) E).injective, implicitDeriv_map]
 
 /-- **A list-indexed disjoint partition splits a `Finset` sum.** For pairwise-disjoint per-index pole sets
 `polesOf`, the list-sum of per-index `Finset` sums equals the `Finset` sum over their union — the pure
