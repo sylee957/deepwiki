@@ -41,6 +41,7 @@ import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Computable.Parallel
 import DeepWiki.SymbolicIntegration.Computable.Parametric
 import DeepWiki.SymbolicIntegration.Computable.PolyPartTower
+import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuarded
 import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
