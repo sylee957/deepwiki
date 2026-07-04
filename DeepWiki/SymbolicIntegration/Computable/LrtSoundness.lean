@@ -100,6 +100,22 @@ theorem towerDerivExt_div_prod (Dt : CPolyG α) (l : Multiset (RatFunc E)) (hl :
     rw [Multiset.prod_cons, Multiset.map_cons, Multiset.sum_cons,
       towerDerivExt_div_mul Dt a s.prod ha hsp, ih hs]
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- Log-derivative of a product of **polynomial** factors through `algebraMap`:
+`D(⟦∏ pᵢ⟧)/⟦∏ pᵢ⟧ = Σ D(⟦pᵢ⟧)/⟦pᵢ⟧` (`⟦·⟧ = algebraMap E[X] (RatFunc E)`, nonzero factors). This is the
+form applied to a `gcd = ∏(t−β)` — it produces the per-pole terms directly. -/
+theorem towerDerivExt_div_algebraMap_prod (Dt : CPolyG α) (l : Multiset E[X]) (hl : ∀ p ∈ l, p ≠ 0) :
+    towerDerivExt Dt (algebraMap E[X] (RatFunc E) l.prod) / algebraMap E[X] (RatFunc E) l.prod
+      = (l.map (fun p => towerDerivExt Dt (algebraMap E[X] (RatFunc E) p)
+          / algebraMap E[X] (RatFunc E) p)).sum := by
+  rw [map_multiset_prod, towerDerivExt_div_prod Dt (l.map (algebraMap E[X] (RatFunc E))) (by
+    intro x hx
+    rw [Multiset.mem_map] at hx
+    obtain ⟨p, hp, rfl⟩ := hx
+    exact fun h => hl p hp (IsFractionRing.injective E[X] (RatFunc E) (by rw [h, map_zero])) ),
+    Multiset.map_map]
+  rfl
+
 end Ext
 
 /-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
