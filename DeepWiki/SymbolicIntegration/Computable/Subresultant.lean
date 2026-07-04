@@ -42,6 +42,38 @@ def cSylvesterRows (p q : CPolyG α) (n m : ℕ) : List (List α) :=
     (List.replicate k CField.zero ++ coeffs ++ List.replicate width CField.zero).take width
   (List.range m).map (fun i => shiftRow pc i) ++ (List.range n).map (fun i => shiftRow qc i)
 
+/-- The **exact `bSylvester` matrix** (matching `DeepWiki.SymbolicIntegration.bSylvester`): `m` `A`-rows then
+`n` `B`-rows, entry `(i,l) = A.coeff(n+i−l)` (`i≤l≤i+n`) resp. `B.coeff(i−l)` (`i−m≤l≤i`), coefficients
+high-to-low. -/
+def cBSylvesterRows (p q : CPolyG α) (n m : ℕ) : List (List α) :=
+  let pc : List α := cnormG p
+  let qc : List α := cnormG q
+  let width := m + n
+  let arow (i : ℕ) : List α := (List.range width).map (fun l =>
+    if i ≤ l ∧ l ≤ i + n then pc.getD (n + i - l) CField.zero else CField.zero)
+  let brow (i : ℕ) : List α := (List.range width).map (fun l =>
+    if i - m ≤ l ∧ l ≤ i then qc.getD (i - l) CField.zero else CField.zero)
+  (List.range m).map (fun i => arow i) ++ (List.range n).map (fun jj => brow (m + jj))
+
+/-- Row-index selector `subRow n m j` (delete the last `j` rows of each Sylvester block). -/
+def cSubRowIdx (n m j : ℕ) : List ℕ :=
+  (List.range (m + n - 2 * j)).map (fun t => if t < m - j then t else t + j)
+
+/-- Column-index selector `subCol n m j i` (first `m+n−2j−1` columns plus column `m+n−i−j−1`). -/
+def cSubColIdx (n m j i : ℕ) : List ℕ :=
+  (List.range (m + n - 2 * j)).map (fun s => if s < m + n - 2 * j - 1 then s else m + n - i - j - 1)
+
+/-- Extract the submatrix of `M` on the given row/column index lists. -/
+def cSubmatrix (M : List (List α)) (rows cols : List ℕ) : List (List α) :=
+  rows.map (fun r => cols.map (fun c => (M.getD r []).getD c CField.zero))
+
+/-- **The `j`-th subresultant polynomial** `Sⱼ(p,q) = Σ_{i=0}^{j} det(ⱼSᵢ)·tⁱ` (coefficients low-to-high),
+mirroring `DeepWiki.SymbolicIntegration.subresultant p q n m j`. The symbolic (root-free) LRT log arguments
+are these. -/
+def cSubresultantG (p q : CPolyG α) (n m j : ℕ) : CPolyG α :=
+  (List.range (j + 1)).map (fun i =>
+    cDetG (cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)))
+
 end CPolyG
 
 /-! ### Validation (`native_decide`) -/
@@ -61,5 +93,15 @@ against the proven `cresultantWf`. -/
 theorem cDetG_cSylvesterRows_eq_resultant :
     cDetG (cSylvesterRows ([-1, 0, 1] : CPolyG ℚ) ([2, 1] : CPolyG ℚ) 2 1)
       = cresultantWf ([-1, 0, 1] : CPolyG ℚ) ([2, 1] : CPolyG ℚ) := by native_decide
+
+/-- The **0-th subresultant is the resultant** (constant polynomial): `S₀(t²−1, t+2) = [3]` — the full
+`bSylvester` determinant, matching `cresultantWf`. -/
+theorem cSubresultantG_zero :
+    cSubresultantG ([-1, 0, 1] : CPolyG ℚ) ([2, 1] : CPolyG ℚ) 2 1 0
+      = [cresultantWf ([-1, 0, 1] : CPolyG ℚ) ([2, 1] : CPolyG ℚ)] := by native_decide
+
+/-- The **degree-1 subresultant of `(t²−1, t+2)` is `t+2`** (`= q`, since `deg q = 1`): `S₁ = [2,1]`. -/
+theorem cSubresultantG_one :
+    cSubresultantG ([-1, 0, 1] : CPolyG ℚ) ([2, 1] : CPolyG ℚ) 2 1 1 = [2, 1] := by native_decide
 
 end DeepWiki.SymbolicIntegration
