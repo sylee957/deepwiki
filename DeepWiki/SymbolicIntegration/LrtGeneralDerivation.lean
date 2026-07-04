@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.MonomialExtensions
 
 /-! # General-derivation Rothstein–Trager / Lazard–Rioboo–Trager
 
@@ -351,5 +352,28 @@ theorem natDegree_rtResultantGen_le (A D B : K[X]) :
       · rw [Polynomial.coeff_map, Polynomial.natDegree_C]
       · simp
   · rw [Fin.sum_univ_add]; simp
+
+/-- For a **monic** `p` and a constant `v` (`deg v = 0`), the general derivation image has the tight
+degree bound `deg(implicitDeriv v p) ≤ deg p − 1` — the plain-derivative bound. The leading term of
+`mapCoeffs p` vanishes (`D(leadingCoeff) = D(1) = 0`) and `v·p'` has degree `≤ deg p − 1`. This is the
+tower-side degree fact certifying the formal degree `deg D − 1` of `rtResultantGen` for the **primitive**
+reduced case (`Dt` constant, `Dstar` monic). -/
+theorem natDegree_implicitDeriv_le_of_monic {F : Type*} [Field F] [Differential F] (v p : F[X])
+    (hp : p.Monic) (hv : v.natDegree = 0) :
+    (Differential.implicitDeriv v p).natDegree ≤ p.natDegree - 1 := by
+  have happly : Differential.implicitDeriv v p = Differential.mapCoeffs p + v * derivative p := by
+    simp [Differential.implicitDeriv, derivative']
+  have hmc : (Differential.mapCoeffs p).natDegree ≤ p.natDegree - 1 := by
+    apply natDegree_le_iff_coeff_eq_zero.mpr
+    intro N hN
+    rw [Differential.coeff_mapCoeffs]
+    rcases eq_or_lt_of_le (show p.natDegree ≤ N by omega) with heq | hlt
+    · rw [← heq, ← Polynomial.leadingCoeff, hp.leadingCoeff]; simp
+    · rw [Polynomial.coeff_eq_zero_of_natDegree_lt hlt]; simp
+  have hvd : (v * derivative p).natDegree ≤ p.natDegree - 1 := by
+    refine natDegree_mul_le.trans ?_
+    rw [hv, zero_add]; exact natDegree_derivative_le p
+  rw [happly]
+  exact (natDegree_add_le _ _).trans (max_le hmc hvd)
 
 end DeepWiki.SymbolicIntegration
