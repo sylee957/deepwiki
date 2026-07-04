@@ -172,3 +172,21 @@ carried as hypotheses:
 
 Next: discharge `hWdvd` (multiplicity-product), then `hgd0`/`hDstar0`, then wire the capstone into the
 LogPart/reduced-part soundness assembly (`field_identity_of_cIntegrateReducedGWf_of_residueMatch`).
+
+## hWdvd reduced to Yun reconstruction (2026-07-04)
+
+`hWdvd` (`W ∣ ∏vk^idx`) is now discharged from a single clean frontier via `hWdvd_of_reconstruction`
+(`HermiteValuationTower.lean`):
+- `prodPow_eq_prod_mul_zipIdxPow` (`YunTowerCorrect.lean`) — `prodPow s M = (∏mₖ^s)·∏ₖmₖ^k`.
+- `prodPow_one_cSqfreeYunFFGWf` — `prodPow 1 L = L.prod · FiltProd` (drop-k0 via `prod_map_filter_eq_of_one`).
+- radical split `d = Dstar·W`, and `L.prod = toPolyG Dstar`; `Associated.of_mul_left` cancels `Dstar`.
+
+So `hWdvd ← hrecon : Associated (toPolyG d) (prodPow 1 ((cSqfreeYunFFGWf d).map toPolyG))` — "Yun
+factorization reconstructs its input up to associates". The whole pole-cancellation now rests on:
+1. **`hrecon`** — Yun reconstruction. Remaining gap: `(cSqfreeYunFFGWf d).length = maxmult` (loop stops at
+   degree 0), then `prodPow 1 (range len).map sqfreeFactPart ~ primPart d ~ d` via
+   `deflation_natDegree_eq_zero_iff` + `primPart_associated_prod_sqfreeFactPart` (Finset↔range coverage).
+   Abstract analogue: `squarefreeFactorization_forall₂` (length exactly `m`); need the computable
+   `cSqfreeYunFFGgoWf` length = `m` bridge.
+2. **`hcopgcd`** — per-factor gcd coprimality (standard Hermite precondition).
+3. **`hgd0`/`hDstar0`** — fold-denominator nonzero.
