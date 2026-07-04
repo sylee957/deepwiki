@@ -58,6 +58,7 @@ import DeepWiki.SymbolicIntegration.Computable.SplitFactorHelpers
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.Structure
+import DeepWiki.SymbolicIntegration.Computable.Subresultant
 import DeepWiki.SymbolicIntegration.Computable.Tower
 import DeepWiki.SymbolicIntegration.Computable.TranscendentalOverAlgebraic
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
