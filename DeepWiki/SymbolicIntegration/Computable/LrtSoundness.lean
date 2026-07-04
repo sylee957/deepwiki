@@ -169,6 +169,23 @@ theorem residue_pole_regroup {E : Type*} [Field E] (poles : Finset E) (res : E �
   rw [Finset.mem_filter] at hβ
   rw [hβ.2]
 
+open scoped Classical in
+/-- **Per-`Rᵢ` residue term = finset pole sum.** When `Rᵢ`'s roots (in `E`) are exactly the residue values
+of a pole set `polesᵢ` and each monic log argument factors over the residue-`c` poles
+(`fac c = polesᵢ.filter (res · = c)`), the residue term collapses to the pole sum
+`Σ_{β ∈ polesᵢ} res(β)·poleTerm β`. Chains `logResidueTermLrtG_eq_pole_sum` (product split) with
+`residue_pole_regroup` (residue↔pole). -/
+theorem logResidueTermLrtG_eq_finset_pole_sum {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
+    [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    (Dt : CPolyG α) (p : CPolyG α × List (CPolyG α)) (polesᵢ : Finset E) (res : E → E)
+    (hroots : ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots = (polesᵢ.image res).val)
+    (hfac : ∀ c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
+      evalLrtArg p.2 c = ((polesᵢ.filter (fun β => res β = c)).val.map (fun β => X - C β)).prod) :
+    logResidueTermLrtG Dt p = ∑ β ∈ polesᵢ, algebraMap E (RatFunc E) (res β) * poleTerm Dt β := by
+  rw [logResidueTermLrtG_eq_pole_sum Dt p
+    (fun c => (polesᵢ.filter (fun β => res β = c)).val) hfac, hroots]
+  exact residue_pole_regroup polesᵢ res (poleTerm Dt)
+
 /-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
 CFieldSpec.K α` in which every residue polynomial `Rᵢ` splits, the `E`-tower derivative of the rational part
 plus the algebraic residue sum equals `anum/aden` (base-changed to `E`). The `E`-quantification + splitting
