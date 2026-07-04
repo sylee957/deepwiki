@@ -3,9 +3,11 @@ import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 /-! # The materializable Risch solver bundle (`RischSolver`)
 
 The whole two-stage discipline packaged as one structure over the generic assembler in
-`IntegratorAssembly.lean`. Materializing a `RischSolver`'s fields (the case hooks + candidate generator +
-the soundness laws `specialSound`/`reducedSound`/`recon` + the completeness contract
-`SpecElem`/`NrmElem`/`descend`) yields the assembled integrator `.integrate` plus its soundness `.sound`,
+`IntegratorAssembly.lean`. The structure's *data* is purely computable — just `case` + `candidates`; the
+denotation witness is existentially bound inside `specialSound` (no stored `RatFunc`). Materializing a
+`RischSolver`'s fields (the case hooks + candidate generator + the soundness laws
+`specialSound`/`reducedSound` + the completeness contract `SpecElem`/`NrmElem`/`descend`) yields the
+assembled integrator `.integrate` plus its soundness `.sound`,
 constructive completeness `.isElementaryIntegrable_of_run`, and completeness frontier
 `.not_isElementaryIntegrable` — all derived from the abstract cores in `Assemble.lean`. See
 `docs/risch-two-stage-discipline.md`.
@@ -21,19 +23,20 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-! ## The materializable solver bundle (`RischSolver`)
 
-The whole two-stage discipline, packaged as one structure. A `RischSolver` bundles the case hooks
-(`case`), the special-value function, and the three soundness laws (`specialSound`, `reducedSound`,
-`recon`) plus the completeness descent law (`descend` over the frontier predicates `SpecElem`/`NrmElem`).
-Materializing all fields — each discharged by a Stage-2 realization (`cSqfreeYunFFGWf_lawful…`,
-`cHermiteReduceTowerGWf_lawful…`, `cIntegrateReducedGWf_lawfulResidueLogPart`, the case's `hSpecField`,
-`canonicalReconstruction`) — yields the assembled integrator `.integrate` together with its soundness
+The whole two-stage discipline, packaged as one computable structure. A `RischSolver` bundles the case hooks
+(`case`) and candidate generator (`candidates`) as data, plus the soundness laws (`specialSound` — which
+existentially carries the special value and its reconstruction — and `reducedSound`) and the completeness
+descent law (`descend` over the frontier predicates `SpecElem`/`NrmElem`). Materializing all fields — each
+discharged by a Stage-2 realization (`cSqfreeYunFFGWf_lawful…`, `cHermiteReduceTowerGWf_lawful…`,
+`cIntegrateReducedGWf_lawfulResidueLogPart`, the case's `hSpecField`, `canonicalReconstruction`) — yields the
+assembled integrator `.integrate` together with its soundness
 (`.sound`), constructive completeness (`.isElementaryIntegrable_of_run`), and the completeness frontier
 (`.not_isElementaryIntegrable`) *for free*, all derived from the abstract cores in `Assemble.lean`. -/
 
-/-- **A materializable one-level Risch solver.** The case hooks + special value + the soundness laws
-(`specialSound`/`reducedSound`/`recon`) + the completeness descent law (`descend`). Every field is
-discharged by an independent Stage-2 realization; instantiating the bundle assembles the algorithm and
-both proofs. -/
+/-- **A materializable one-level Risch solver.** Computable data (`case` + `candidates`) + the soundness
+laws (`specialSound`, which existentially carries the special value and reconstruction, and `reducedSound`)
++ the completeness descent law (`descend`). Every field is discharged by an independent Stage-2 realization;
+instantiating the bundle assembles the algorithm and both proofs. -/
 structure RischSolver (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks. -/
@@ -41,23 +44,22 @@ structure RischSolver (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [
   /-- **Automatically computed residue candidates.** The constant-root list the reduced stage needs,
   computed from the input `Dt a d` — so the assembled integrator takes no `cands` argument. -/
   candidates : CPolyG α → CPolyG α → CPolyG α → List α
-  /-- The value the special part `snum/sden` differentiates to (a function of the input). -/
-  specialVal : CPolyG α → CPolyG α → CPolyG α → RatFunc (CFieldSpec.K α)
-  /-- **Special-hook soundness law.** A successful `integrateSpecial` gives a nonzero denominator and a
-  fraction differentiating to `specialVal`. Discharged by the case's own `hSpecField` realization. -/
+  /-- **Special-hook soundness + reconstruction law.** A successful `integrateSpecial` gives a nonzero
+  denominator and *some* special value `v` (existentially quantified — no stored noncomputable `RatFunc`
+  data) that the fraction differentiates to and that recombines with the normal part to `⟦a/d⟧`. Folds the
+  old `specialVal`/`recon` fields into one, keeping the structure's data purely computable (`case` +
+  `candidates`). Discharged by the case's `hSpecField` realization together with `canonicalReconstruction`. -/
   specialSound : ∀ (Dt a d snum sden : CPolyG α),
     case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden) →
-    toPolyG sden ≠ 0 ∧ towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal Dt a d
+    toPolyG sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
+      towerFractionFieldDerivG Dt (fieldFrac snum sden) = v ∧
+      v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d
   /-- **Reduced-hook soundness law.** A successful `reducedCorrect` on `redNorm` gives a nonzero
   denominator and an antiderivative of the normal part. Discharged via `LawfulHermiteReduction` +
   `LawfulResidueLogPart` through `cIntegrateReducedGWf_isIntegralResult_of_lawful`. -/
   reducedSound : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α),
     case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm →
     toPolyG nrm.rational.2 ≠ 0 ∧ IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
-  /-- **Canonical reconstruction law.** The special value and normal fraction recombine to `⟦a/d⟧`.
-  Discharged by `canonicalReconstruction` (modulo the split frontier). -/
-  recon : ∀ (Dt a d : CPolyG α),
-    specialVal Dt a d + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d
   /-- Special-part elementarity obstruction predicate (the completeness frontier). -/
   SpecElem : CPolyG α → CPolyG α → CPolyG α → Prop
   /-- Normal-part elementarity obstruction predicate (the completeness frontier). -/
@@ -96,10 +98,10 @@ theorem sound (S : RischSolver α) (Dt a d : CPolyG α) (res : IntegralResultG �
         simp only [crPoly, crSpecNum, crSpecDen, hcrep]; exact hspec
       have hCorr : S.case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm := by
         simp only [redNorm, crNormNum, crNormDen, hcrep]; exact hcorr
-      obtain ⟨hsden, hSpecField⟩ := S.specialSound Dt a d snum sden hSpec
+      obtain ⟨hsden, v, hSpecField, hrecon⟩ := S.specialSound Dt a d snum sden hSpec
       obtain ⟨hgden, hNrmField⟩ := S.reducedSound Dt a d cands nrm hCorr
-      exact cIntegrateCase_sound S.case Dt a d cands res snum sden nrm (S.specialVal Dt a d)
-        hsden hgden hSpec hCorr h0 hSpecField hNrmField (S.recon Dt a d)
+      exact cIntegrateCase_sound S.case Dt a d cands res snum sden nrm v
+        hsden hgden hSpec hCorr h0 hSpecField hNrmField hrecon
 
 /-- **Derived constructive completeness.** A successful run certifies `a/d` is elementary integrable
 (the soundness witness fed through the Stage-1 bridge). -/
