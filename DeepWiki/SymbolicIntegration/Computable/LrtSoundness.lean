@@ -4,6 +4,7 @@ import DeepWiki.SymbolicIntegration.Computable.SubresultantTowerSpec
 import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
+import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator (G5, pass P1)
 
@@ -198,6 +199,31 @@ theorem ratFuncBaseChange_towerFractionFieldDerivG [Algebra ℚ (CFieldSpec.K α
   rw [towerFractionFieldDerivG_div, map_div₀, map_sub, map_mul, map_mul, map_pow]
   simp only [ratFuncBaseChange_amG, amGExt]
   rw [towerDerivExt_div, implicitDeriv_map, implicitDeriv_map]
+
+open Classical in
+/-- **The Hermite half over `E`** (`hherm`): base-changing the `K`-level `cHermiteReduceTowerGWf_field_identity`
+to `E` via `ratFuncBaseChange`. `D_E(g) + hNum/Dstar = a/d` over `RatFunc E`, with `hNum = H.2.1` (the residual
+identified via `toPolyG_hNum'_eq_2_1`), `Dstar = H.2.2`. `hcopgcd` is the genuine differential-normality side
+condition (Bronstein's `hnorm`). This is the `hherm` input to `isIntegralResultLrtG_of_hherm_of_logMatch`. -/
+theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
+    [DifferentialAlgebra (CFieldSpec.K α) E] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+    (towerDerivExt Dt (amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).1.1)
+          / amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2))
+        + amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+          / amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2) : RatFunc E)
+      = amGExt (toPolyG a) / amGExt (toPolyG d) := by
+  have hK := congrArg (ratFuncBaseChange E)
+    (cHermiteReduceTowerGWf_field_identity hgcd Dt a d hd0 hpp hcopgcd)
+  rw [map_add, ratFuncBaseChange_towerFractionFieldDerivG, ratFuncBaseChange_amG_div,
+    ratFuncBaseChange_amG_div] at hK
+  rw [← toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd]
+  exact hK
 
 /-- The **algebraic residue sum** over `E`: `Σᵢ Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)` — the honest
 denotation of the symbolic LRT log part, summing over the residues (roots of each `Rᵢ`) in `E`. -/
