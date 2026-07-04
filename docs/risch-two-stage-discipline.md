@@ -131,3 +131,26 @@ They move to per-solver realization files as the interfaces land.
 
 Rule for every phase: the abstract half and the algorithm half are **separate theorems**, named 1-1; the
 assembler never sees a concrete op. Keep this file current as phases land.
+
+## State after P0–P5 (2026-07-04) — the soundness discipline is established
+
+Done, all gate-green:
+- **Three shared-stage interfaces** with realizations: `LawfulSquarefreeDecomposition`
+  (`cSqfreeYunFFGWf_lawfulSquarefreeDecomposition`), `LawfulHermiteReduction`
+  (`cHermiteReduceTowerGWf_lawfulHermiteReduction`, consuming the squarefree interface via
+  `prod_squarefree`), `LawfulResidueLogPart` (`cIntegrateReducedGWf_lawfulResidueLogPart` **for both**
+  primitive and hyperexp).
+- **The assembler consumes interfaces**: `cIntegrateReducedGWf_isIntegralResult_of_lawful`
+  (`LawfulHermiteReduction`+`LawfulResidueLogPart` → `IsIntegralResultG`); and
+  `cIntegrateCase_sound` was ALREADY Stage-1 abstract (takes `hSpecField`/`hNrmField`/`hrecon`, no concrete
+  op in its proof) — the interface work makes `hNrmField` flow through the interfaces.
+- **End-to-end** for both solvers: `cIntegrateReducedGWf_{primitive,hyperexp}_isIntegralResult_via_interfaces`
+  compose the realizations through the abstract law, zero concrete re-derivation.
+- **Assemble cleaned**: the four tangled concrete lemmas + two `local instance`s evicted.
+
+The `MonomialCase` hook already has its abstract law surface (`hSpecField`) consumed by
+`cIntegrateCase_sound`; a bundled `LawfulMonomialCase` is optional repackaging.
+
+Remaining (larger, separate): **P6 completeness** — a research frontier (Liouville-descent; the
+transcendental log/exp `IsLiouville` instance is not yet in Mathlib), NOT a mechanical discipline
+application like soundness was. **P7 naming sweep** — a large gradual legacy-rename effort.
