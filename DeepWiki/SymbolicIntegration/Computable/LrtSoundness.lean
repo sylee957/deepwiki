@@ -48,6 +48,31 @@ noncomputable def logResidueSumLrtG (Dt : CPolyG α)
         * (towerDerivExt Dt (algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c))
             / algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c)))).sum)).sum
 
+/-- The single-`(Rᵢ, Sᵢ)` residue term: `Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)`. -/
+noncomputable def logResidueTermLrtG (Dt : CPolyG α) (p : CPolyG α × List (CPolyG α)) : RatFunc E :=
+  (((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
+    algebraMap E (RatFunc E) c
+      * (towerDerivExt Dt (algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c))
+          / algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c)))).sum
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- `logResidueSumLrtG` is the sum of the per-`(Rᵢ, Sᵢ)` terms. -/
+theorem logResidueSumLrtG_eq_sum (Dt : CPolyG α) (logs : List (CPolyG α × List (CPolyG α))) :
+    logResidueSumLrtG (E := E) Dt logs = (logs.map (logResidueTermLrtG (E := E) Dt)).sum := rfl
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- `logResidueSumLrtG` of the empty log list is `0`. -/
+@[simp] theorem logResidueSumLrtG_nil (Dt : CPolyG α) :
+    logResidueSumLrtG (E := E) Dt ([] : List (CPolyG α × List (CPolyG α))) = 0 := rfl
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- `logResidueSumLrtG` peels the head. -/
+theorem logResidueSumLrtG_cons (Dt : CPolyG α) (p : CPolyG α × List (CPolyG α))
+    (rest : List (CPolyG α × List (CPolyG α))) :
+    logResidueSumLrtG (E := E) Dt (p :: rest)
+      = logResidueTermLrtG (E := E) Dt p + logResidueSumLrtG (E := E) Dt rest := by
+  rw [logResidueSumLrtG_eq_sum, logResidueSumLrtG_eq_sum, List.map_cons, List.sum_cons]
+
 end Ext
 
 /-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
