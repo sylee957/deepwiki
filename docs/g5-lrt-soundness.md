@@ -75,9 +75,12 @@ that intertwines the tower derivation* and is **injective**. Plan:
       (∀ p ∈ res.logs, ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).Splits (RingHom.id E)) →
       towerDerivExt Dt (⟦res.rational over E⟧) + logResidueSumLrtG Dt res.logs = ⟦anum/aden over E⟧
   ```
-  ⚠️ **design-critical** — verify the shape (non-vacuous; the `E`-quantification + splitting hypothesis is the
-  right descent vehicle; `evalLrtArg`/`towerDerivExt` typecheck against `extendDeriv`'s exact signature)
-  before building on it. Gate-green once it typechecks.
+  ✅ **DONE** (`Computable/LrtSoundness.lean`, gate-clean) — `amGExt`, `evalLrtArg`, `towerDerivExt`,
+  `logResidueSumLrtG`, `IsIntegralResultLrtG` all typecheck. Shape verified: the equation is
+  `D(rational) + Σᵢ Σ_{c∈roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t) = anum/aden` over every splitting differential
+  extension `E` — i.e. `D(antiderivative) = integrand`, the honest algebraic-residue soundness (true iff the
+  residues are constants, the elementary case). `extendDeriv`/`implicitDeriv` needed `[Algebra ℚ E]`;
+  `E : Type*` makes the def universe-polymorphic.
 - **P2 — the residue↔root grouping.** `Rᵢ`'s roots in `K̄` are the residues of multiplicity `i`
   (`cSqfreeYunFFGWf` mult ↔ `rootMultiplicity` of `rtResultantGen`, via G4b + G2). Reuse
   `cResidueResultantTowerGWf` = `rtResultantGen`.
