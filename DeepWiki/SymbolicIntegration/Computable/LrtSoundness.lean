@@ -73,6 +73,33 @@ theorem logResidueSumLrtG_cons (Dt : CPolyG α) (p : CPolyG α × List (CPolyG �
       = logResidueTermLrtG (E := E) Dt p + logResidueSumLrtG (E := E) Dt rest := by
   rw [logResidueSumLrtG_eq_sum, logResidueSumLrtG_eq_sum, List.map_cons, List.sum_cons]
 
+/-! ### Log-derivative additivity (the residue↔pole reindexing core) -/
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Log-derivative additivity for the `E`-tower derivation.** `D(a·b)/(a·b) = D(a)/a + D(b)/b`. -/
+theorem towerDerivExt_div_mul (Dt : CPolyG α) (a b : RatFunc E) (ha : a ≠ 0) (hb : b ≠ 0) :
+    towerDerivExt Dt (a * b) / (a * b)
+      = towerDerivExt Dt a / a + towerDerivExt Dt b / b := by
+  rw [Derivation.leibniz]
+  simp only [smul_eq_mul]
+  field_simp
+  ring
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Log-derivative of a product is the sum of log-derivatives**: `D(∏ xᵢ)/∏ xᵢ = Σ D(xᵢ)/xᵢ` (for nonzero
+factors). This is the algebraic core of the residue↔pole reindexing — it splits the log-derivative of a
+`gcd = ∏(t−β)` into the per-pole terms `monomial_residue_match_of_cancel` sums over. -/
+theorem towerDerivExt_div_prod (Dt : CPolyG α) (l : Multiset (RatFunc E)) (hl : ∀ x ∈ l, x ≠ 0) :
+    towerDerivExt Dt l.prod / l.prod = (l.map (fun x => towerDerivExt Dt x / x)).sum := by
+  induction l using Multiset.induction with
+  | empty => simp
+  | cons a s ih =>
+    have ha : a ≠ 0 := hl a (Multiset.mem_cons_self a s)
+    have hs : ∀ x ∈ s, x ≠ 0 := fun x hx => hl x (Multiset.mem_cons_of_mem hx)
+    have hsp : s.prod ≠ 0 := Multiset.prod_ne_zero (fun h => (hs 0 h) rfl)
+    rw [Multiset.prod_cons, Multiset.map_cons, Multiset.sum_cons,
+      towerDerivExt_div_mul Dt a s.prod ha hsp, ih hs]
+
 end Ext
 
 /-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
