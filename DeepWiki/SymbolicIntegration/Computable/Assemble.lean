@@ -319,11 +319,42 @@ theorem cIntegrateReducedGWf_hyperexp_isIntegralResult_via_interfaces [CharZero 
     (cIntegrateReducedGWf_lawfulResidueLogPart_hyperexp Dt a d cands s b residueCand hb hDt hden hA
       hnorm hsum hres hDd hdist hcand hgcdread)
 
+omit [CRischField α] [CFracGcdCoreWf α] in
+/-- **The abstract assembler soundness core (no concrete algorithm).** Purely from the abstract stage
+results — a special-part fraction `snum/sden` differentiating to `specialVal`, a normal-part result `nrm`
+that is an antiderivative of `cn/dn` (`hNrmField`), and the canonical reconstruction `specialVal + ⟦cn/dn⟧ =
+⟦a/d⟧` (`hrecon`) — the combined result `combineSN snum sden nrm` is an antiderivative of `a/d`. This is the
+soundness proven *against the interface data*; the concrete assembler is a wrapper (in a realization file)
+that supplies these from `canonicalRepresentationFastGWf` / the reduced stage. -/
+theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : CPolyG α) (nrm : IntegralResultG α)
+    (specialVal : RatFunc (CFieldSpec.K α))
+    (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
+    (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
+    (hNrmField : IsIntegralResultG Dt cn dn nrm)
+    (hrecon : specialVal + fieldFrac cn dn = fieldFrac a d) :
+    IsIntegralResultG Dt a d (combineSN snum sden nrm) := by
+  simp only [IsIntegralResultG] at hNrmField ⊢
+  show towerFractionFieldDerivG Dt
+      (amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
+        / amG α (toPolyG (cmulG sden nrm.rational.2))) + logResidueSumG Dt nrm.logs = _
+  have hAsden : amG α (toPolyG sden) ≠ 0 := amG_toPolyG_ne_zero hsden
+  have hAgden : amG α (toPolyG nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hcombine : amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
+        / amG α (toPolyG (cmulG sden nrm.rational.2))
+      = amG α (toPolyG snum) / amG α (toPolyG sden)
+        + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
+    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
+    field_simp
+  rw [hcombine, map_add]
+  simp only [fieldFrac] at hSpecField
+  rw [hSpecField, add_assoc, hNrmField]
+  simpa only [fieldFrac] using hrecon
+
 omit [CRischField α] in
 /-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving
 `(snum, sden)` (differentiating to `specialVal`) and the corrected normal part `nrm` (satisfying the
 antiderivative predicate `hNrmField`), and the parts reconstruct `a/d` (`hrecon`), then `res` is an
-antiderivative of `a/d`. Proven once, from the hook field-identities. -/
+antiderivative of `a/d`. Proven once, from the abstract core `combineSN_isIntegralResult`. -/
 theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (snum sden : CPolyG α) (nrm : IntegralResultG α)
     (specialVal : RatFunc (CFieldSpec.K α))
@@ -343,23 +374,9 @@ theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands :
     rw [hcrep] at hsome hSpec hCorr
     simp only [hSpec, hCorr] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
-  simp only [IsIntegralResultG] at hNrmField ⊢
   rw [hshape]
-  show towerFractionFieldDerivG Dt
-      (amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
-        / amG α (toPolyG (cmulG sden nrm.rational.2))) + logResidueSumG Dt nrm.logs = _
-  have hAsden : amG α (toPolyG sden) ≠ 0 := amG_toPolyG_ne_zero hsden
-  have hAgden : amG α (toPolyG nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
-  have hcombine : amG α (toPolyG (caddG (cmulG snum nrm.rational.2) (cmulG nrm.rational.1 sden)))
-        / amG α (toPolyG (cmulG sden nrm.rational.2))
-      = amG α (toPolyG snum) / amG α (toPolyG sden)
-        + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
-    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
-    field_simp
-  rw [hcombine, map_add]
-  simp only [fieldFrac] at hSpecField
-  rw [hSpecField, add_assoc, hNrmField]
-  simpa only [fieldFrac] using hrecon
+  exact combineSN_isIntegralResult Dt a d (crNormNum Dt a d) (crNormDen Dt a d) snum sden nrm
+    specialVal hsden hgden hSpecField hNrmField hrecon
 
 /-- **The hyperexp case, as a corollary of the generic soundness** (not the driver): the special value is
 the polynomial part `⟦fpPart⟧`, `integrateSpecial`/`reducedCorrect` are the Laurent/normal solves. -/
