@@ -209,6 +209,16 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 | Hermite half `hherm` | `cHermiteReduceTowerGWf` | **DISCHARGED (2026-07-04)** — `cHermiteReduceTowerGWf_field_identity` proves it abstractly modulo only `hcopgcd` (differential normality); wired via `field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd` and `cIntegrateReducedGWf_isIntegralResult_of_hcopgcd`. No longer `native_decide`-only. |
 | RT residue match — `hform` core | `cIntegrateReducedGWf_logs_eq_per_root` | **already abstract** (via `residue_gcd_eq_linear_factor` + `cLogArgTowerGWf_eq_linear_factor`); takes `hden`/`hres`/`hDd`/`hdist`/`hcand`/`hgcdread` as side conditions. |
 | RT residue match — `hden` | `toPolyG_cHermiteReduceTowerGWf_Dstar_eq_nodal` | **DISCHARGED (2026-07-04)** — `Dstar = nodal(roots)` modulo only `hsplit` (rational-residue split); monic + squarefree proven from the Yun structure (`YunTowerCorrect`). No longer `native_decide`-only. |
+| RT residue match — `hDd` | `implicitDeriv_C_nodal_eval_ne_zero` | **DISCHARGED (2026-07-04)** — resolvent derivative ≠ 0 at roots, modulo constant roots + `w ≠ 0` (`mapCoeffs(nodal)=0` for constant roots + `Lagrange.nodalWeight`). |
+| RT residue match — `hnorm` | `primitive_monomial_norm_of_const_roots` | discharged modulo constant roots + `w ≠ 0` (pre-existing). |
+| RT residue match — `hdist` | — | **GENUINE side condition** (residue distinctness); correctly a hypothesis, not a gap. |
+| RT residue match — `hres` | — | **engine-external** (caller enumerates residue candidates); correctly a hypothesis. |
+| RT residue match — `hcand`, `hgcdread` | `cRationalResiduesGWf`, `cLogArgTowerGWf` | engine-compute frontier (residue values + log-arg gcd); real arcs, still `native_decide`-only. |
+| leftover properness `hA` | degree induction over the Hermite fold | the "Large residual"; needs the abstract Hermite identity (now DONE) **plus** a tower `hermiteReducePower_remainder_degree` induction. Still open. |
+
+**Composed (2026-07-04):** `field_identity_of_cIntegrateReducedGWf_primitive_maximal` (Assemble) assembles the
+whole primitive reduced case discharging `hherm`/`hden`/`hnorm`/`hDd` internally; its remaining inputs are
+exactly `hA` (Large residual), `hdist`/`hres` (genuine/external), `hcand`/`hgcdread` (engine-compute).
 | RT residue match `hmatch` | Rothstein–Trager residue↔root | frontier (`native_decide`-only) |
 | hyperexp `hLaurField` (Laurent) | `cIntegrateHyperexpLaurentG_special_sound` (new) | **PROVEN modulo special-part shape** |
 
