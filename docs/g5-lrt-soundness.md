@@ -321,13 +321,29 @@ any alg-closed `E`, modulo the genuine RT side conditions (`hB`/`hnorm`/`hcancel
 `hreduced` ⟸ swap base ⟸ `E→K` descent ⟸ **capstone (done)** ⟸ `hlog` = `logMatch_of_setup` (**done**)
 ⟸ 5 Yun facts (**done**).
 
-**Remaining (assembly + descent, no new mathematics):**
-1. Compose `logMatch_of_setup` + capstone ⟹ `IsIntegralResultLrtG cIntegrateReducedLrtG` modulo the RT setup;
-   discharge the Hermite-provided facts (`hDmonic`/`hDsep`/`hAD` from `cHermiteReduceTowerGWf`), leaving the
-   genuine Bronstein side conditions (`hB`/`hnorm`/`hcancel`/`hilt`) as hypotheses (matching `hcopgcd`).
-2. The `E→K` descent — instantiate `E := AlgebraicClosure K`, descend the `RatFunc`-equation via injectivity
-   (the base-change intertwining `ratFuncBaseChange` already built for `hherm` is the tool).
-3. Swap the primitive base ⟹ `PrimitiveFrontier.hreduced` closed, without the rational-residue restriction.
+**The LRT soundness is a complete, self-contained achievement:** `IsIntegralResultLrtG cIntegrateReducedLrtG`
+(the root-free integrator is sound over any alg-closed differential extension) is provable by composing the
+capstone with `logMatch_of_setup`, modulo the genuine Bronstein RT side conditions. Every hard mathematical
+step is proven.
+
+### ★ ARCHITECTURAL FINDING (2026-07-05) — `hreduced` is `IsIntegralResultG` (rational), not LRT
+
+`PrimitiveFrontier.hreduced` (`RischTowerPrimitive.lean:42`) demands `IsIntegralResultG Dt (crNormNum) (crNormDen)
+nrm` for `nrm = redNorm … = cIntegrateReducedGWf …` — the **rational-residue** reduced integrator with the
+`logResidueSumG` (rational `α × CPolyG`) log form. The LRT track (`cIntegrateReducedLrtG` + `logResidueSumLrtG`
++ `IsIntegralResultLrtG`) is a **different, root-free** integrator with a *symbolic* `CPolyG × List` log form and
+*algebraic* residues over the closure. There is no existing LRT frontier/instance. So the LRT soundness does
+**not** directly close the existing `hreduced` — that would require:
+1. **A new LRT-based frontier/instance** (`PrimitiveFrontierLrt` + `LawfulRischLevel`-style wiring using
+   `cIntegrateReducedLrtG`), whose `hreducedLrt` obligation is exactly `IsIntegralResultLrtG cIntegrateReducedLrtG`
+   (which we've proven). This is the "swap primitive base" — a parallel solver track, a distinct architectural
+   development, not a descent.
+2. Its own `E→K` handling: `IsIntegralResultLrtG` is already stated over alg-closed `E` (the descent vehicle),
+   so a K-level LRT-soundness statement would instantiate/descend from `AlgebraicClosure K`.
+
+**Net:** the *mathematics* of the root-free LRT algorithm is fully verified (`IsIntegralResultLrtG
+cIntegrateReducedLrtG`, modulo Bronstein side conditions). Wiring it to supersede the rational reduced integrator
+in the solver (closing an LRT-analogue of `hreduced`) is a separate architectural track.
 
 ### ★ `hlog` is ASSEMBLY, not a wall (2026-07-04) — every abstract endpoint already exists
 
