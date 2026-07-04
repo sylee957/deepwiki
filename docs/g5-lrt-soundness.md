@@ -183,3 +183,33 @@ P1–P3, P5-assembly are engineering over DONE pieces. **P4 is the genuine new m
 simple-pole partial-fraction / residue identity over `K̄`), and the descent (P5) needs the base-change-
 intertwines-derivation lemma. This is the multi-pass frontier the user chose; everything it stands on is
 proven.
+
+## ★★ CRUX ASSEMBLED (2026-07-04) — `logResidueSumLrtG_eq_normalPart` is a single named theorem
+
+The **entire mathematical content of LRT log-part soundness** is now assembled as reusable, gate-green,
+`sorryAx`-free lemmas in `Computable/LrtSoundness.lean`, culminating in the named theorem:
+
+- **`logResidueSumLrtG_eq_normalPart`** — `logResidueSumLrtG Dt logs = hNum/Dstar` (as `RatFunc E`), over
+  any splitting extension `E` where `Dstar` splits as `∏_{β ∈ allpoles}(t−β)`. This IS the log-part
+  soundness. It composes, all proven this pass:
+  - `logResidueSumLrtG_eq_poleSum` — log sum ↦ `Σ_{β ∈ allpoles} res(β)·poleTerm β` over a pole partition
+    `polesOf` (chains `logResidueSumLrtG_eq_termwise` + `logResidueTermLrtG_eq_finset_pole_sum`).
+  - `pole_sum_eq_normalPart` — the RT residue match `Σ_β res(β)·poleTerm β = hNum/Dstar`, a thin
+    instantiation of `ResidueMatchTower.monomial_residue_match_of_cancel` at `K := E`, `v := (toPolyG Dt).map φ`
+    (so `poleTerm Dt β` is **literally** its `extendDeriv(implicitDeriv v)(t−β)/(t−β)` summand — `congr 1`
+    closes it by defeq) with the RT residue `res β = hNum(β)/D(∏)(β)`.
+- **`evalLrtArg_cSubresultantParam_eq_prod`** (hg4c auto via G4c) + **`isSimilar_subresultant_prod`** (hsim via
+  G3+G2, over alg-closed `E`) — discharge the `hfac` (`Sᵢ(c) = ∏ residue-`c` poles`) hypothesis.
+
+**The named theorem's remaining hypotheses are engine-structural, not new math:**
+- `hfac` — discharged by `evalLrtArg_cSubresultantParam_eq_prod` + `isSimilar_subresultant_prod` once the
+  per-entry RT setup (`Dstar_E = nodal allpoles`, index `j = fiber size`, `A = hNum`, `B = Dd`) is threaded.
+- `hroots` / `hpart` — the **Yun fiber-size partition**: `Rᵢ`'s roots are exactly the residues of the
+  fiber-size-`i` poles, and these pole sets tile `allpoles`. The one genuinely intricate structural lemma left.
+- `hcancel` — automatically `0` for a **primitive** `Dt` (the mapCoeffs part vanishes; already handled in
+  `ResidueMatchSoundness`).
+- `hA` (properness) / `hnorm` (normality `Dt(β) ≠ β′`) — standard RT preconditions.
+
+**Still remaining for the full `IsIntegralResultLrtG cIntegrateReducedLrtG`:** thread the concrete
+`cLrtLogArgG` entries into `hfac`; prove the Yun fiber-size partition (`hroots`/`hpart`); the Hermite half
+`hherm`; the `E→K` descent + final assembly; and the `cLrtLogArgG` monic-normalization engine fix.
