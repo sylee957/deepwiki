@@ -74,4 +74,51 @@ theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : CPolyG α) (nrm : I
   rw [hSpecField, add_assoc, hNrmField]
   simpa only [fieldFrac] using hrecon
 
+/-! ## Abstract completeness (Stage-1)
+
+The completeness *target*, parallel to soundness. At one Risch level, "`a/d` has an elementary integral over
+the tower" is exactly "there is an `IntegralResultG`" — a rational part plus `Σ cᵢ·log vᵢ` with constant
+`cᵢ`, which is the Liouville form. So `IsElementaryIntegrableG` is defined by that existential, and the
+constructive direction is a corollary of the soundness core. The frontier direction (the algorithm's
+failure certifies non-elementarity) is stated abstractly via a *descent* law — the Liouville / residue-
+criterion / RDE-completeness content — taken as the interface contract, exactly as `hSpecField`/`hNrmField`
+were for soundness. No concrete algorithm. -/
+
+/-- **`a/d` is elementary integrable over the tower**: there is an antiderivative in the Liouville form
+`⟦rational⟧ + Σ cᵢ·log vᵢ` (an `IntegralResultG`). The completeness target. -/
+def IsElementaryIntegrableG (Dt a d : CPolyG α) : Prop :=
+  ∃ res : IntegralResultG α, IsIntegralResultG Dt a d res
+
+/-- **The soundness→completeness bridge.** Any `IsIntegralResultG` witness makes `a/d` elementary
+integrable. So every concrete solver's soundness realization is, verbatim, a constructive-completeness
+witness for `IsElementaryIntegrableG`. -/
+theorem IsElementaryIntegrableG.of_isIntegralResult {Dt a d : CPolyG α} {res : IntegralResultG α}
+    (h : IsIntegralResultG Dt a d res) : IsElementaryIntegrableG Dt a d :=
+  ⟨res, h⟩
+
+/-- **Constructive completeness (soundness core, restated).** If the stages certify a special fraction
+and a normal-part result reconstructing `a/d`, then `a/d` is elementary integrable. The easy direction —
+a corollary of `combineSN_isIntegralResult`. -/
+theorem isElementaryIntegrableG_of_stages (Dt a d cn dn snum sden : CPolyG α)
+    (nrm : IntegralResultG α) (specialVal : RatFunc (CFieldSpec.K α))
+    (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
+    (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
+    (hNrmField : IsIntegralResultG Dt cn dn nrm)
+    (hrecon : specialVal + fieldFrac cn dn = fieldFrac a d) :
+    IsElementaryIntegrableG Dt a d :=
+  ⟨combineSN snum sden nrm,
+    combineSN_isIntegralResult Dt a d cn dn snum sden nrm specialVal hsden hgden hSpecField hNrmField
+      hrecon⟩
+
+/-- **Abstract assembler completeness (the frontier direction).** If elementary-integrability of `a/d`
+descends to both a special-part and a normal-part obligation (`hDescend` — the Liouville / canonical-split
+content), then a certified non-elementary obstruction in either part (`hobstruct`) makes `a/d` non-elementary.
+The dual of `isElementaryIntegrableG_of_stages`: the deep `hDescend` law is the completeness frontier
+(residue criterion, RDE completeness, Liouville descent), the interface contract. -/
+theorem not_isElementaryIntegrableG_of_obstruction (Dt a d : CPolyG α) {SpecElem NrmElem : Prop}
+    (hDescend : IsElementaryIntegrableG Dt a d → SpecElem ∧ NrmElem)
+    (hobstruct : ¬ SpecElem ∨ ¬ NrmElem) :
+    ¬ IsElementaryIntegrableG Dt a d :=
+  fun h => hobstruct.elim (fun hns => hns (hDescend h).1) (fun hnn => hnn (hDescend h).2)
+
 end DeepWiki.SymbolicIntegration

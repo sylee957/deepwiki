@@ -177,3 +177,24 @@ algorithm. `cIntegrateCase_sound` is now a thin wrapper over it.
 Care points: the split crosses two scopes (`namespace CPolyG` for `MonomialCase`/`combineSN`/`cIntegrateCase`
 vs the outer namespace for the rest) and several `variable [CFracGcdCoreWf]/[CRischField]` sections — the
 moved file must reproduce those. Best done as one focused, gate-checked pass.
+
+## Abstract completeness (Stage-1) — DONE
+
+Parallel to the abstract soundness core, in `Assemble.lean` (no concrete algorithm):
+- **`IsElementaryIntegrableG Dt a d := ∃ res, IsIntegralResultG Dt a d res`** — the completeness target. At
+  one Risch level, an elementary integral over the tower is exactly an `IntegralResultG` (Liouville form:
+  rational + Σ constant·log), so this existential is the right predicate.
+- **`IsElementaryIntegrableG.of_isIntegralResult`** — the soundness→completeness bridge: every solver's
+  soundness realization (an `IsIntegralResultG` witness) is verbatim a constructive-completeness witness.
+- **`isElementaryIntegrableG_of_stages`** — constructive completeness from the stage certificates (corollary
+  of `combineSN_isIntegralResult`).
+- **`not_isElementaryIntegrableG_of_obstruction`** — the abstract completeness *frontier direction*: given a
+  descent law (`IsElementaryIntegrableG → SpecElem ∧ NrmElem` — the Liouville / residue-criterion /
+  RDE-completeness content) and a certified obstruction in a stage, `a/d` is non-elementary. The deep
+  `hDescend` law is taken as the interface contract, exactly as `hSpecField`/`hNrmField` were for soundness.
+
+So completeness now has the same two-stage shape: an abstract assembler statement proven over interface
+laws, with the genuine frontier (the *descent* law — Liouville non-elementarity, the residue criterion, RDE
+completeness) isolated as the contract. Realizing that law concretely is the research campaign (the
+`Completeness.HasLiouvilleForm` / `IsLiouville` machinery in `IntegratorCompleteness`; the transcendental
+log/exp `IsLiouville` instance is the missing Mathlib keystone).
