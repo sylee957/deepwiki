@@ -391,6 +391,15 @@ theorem cSqfreeYunFFGWf_squarefree [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCor
   have haj := cSqfreeYunFFGWf_get_assoc hgcd p hp0 hpp j hj
   exact fun y hy => sqfreeFactPart_squarefree (toPolyG p) (1 + j) y (hy.trans haj.dvd)
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Each tower Yun factor is nonzero** (from the correspondence + `sqfreeFactPart_ne_zero`). -/
+theorem cSqfreeYunFFGWf_get_ne_zero [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hp0 : toPolyG p ≠ 0) (hpp : (toPolyG p).primPart ≠ 0)
+    (j : ℕ) (hj : j < (cSqfreeYunFFGWf p).length) :
+    toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩) ≠ 0 := fun h0 =>
+  sqfreeFactPart_ne_zero (toPolyG p) (1 + j)
+    ((cSqfreeYunFFGWf_get_assoc hgcd p hp0 hpp j hj).eq_zero_iff.mp h0)
+
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
 /-- `u·v^i = d` where `u = cdivWf d (v^i)`, given `v^i ∣ d` and `v ≠ 0` (the `hud` input of the
 per-factor Hermite step). -/
