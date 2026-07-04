@@ -713,6 +713,45 @@ theorem hWgd_of_multiplicity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
   rw [resNum_eq_R_mul_gden_sq hgcd Dt a d hd0 hpp hgd0 hcopgcd, ← pow_two]
   exact mul_dvd_mul_right (hWdvd.trans (prod_vkidx_dvd_R hgcd Dt a d hd0 hpp hcopgcd)) _
 
+/-- **Bridge: the capstone's radical numerator `hNum'` denotes the def field `.2.1`.** Both are exact
+division of `toPolyG`-equal args, so `toPolyG_cdivWf_congr` (with the projection form as `P1/Q1` so the
+nonzero/divisibility side-goals stay projection-based and reuse `den_ne_zero`/`hWgd`) closes it. -/
+theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+    toPolyG (cdivWf (cmulG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
+            (cHermiteReduceTowerGWf Dt a d).1.2))
+          (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.1)
+              (cHermiteReduceTowerGWf Dt a d).1.2)
+            (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
+              (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2)))))
+          (cHermiteReduceTowerGWf Dt a d).2.2)
+        (cmulG d (cmulG (cHermiteReduceTowerGWf Dt a d).1.2 (cHermiteReduceTowerGWf Dt a d).1.2)))
+      = toPolyG (cHermiteReduceTowerGWf Dt a d).2.1 := by
+  have hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0 :=
+    toPolyG_cHermiteReduceTowerGWf_den_ne_zero hgcd Dt a d hd0 hpp
+  conv_rhs => rw [cHermiteReduceTowerGWf]
+  simp only [toPolyG_cnormG]
+  apply toPolyG_cdivWf_congr
+  · simp only [cHermiteReduceTowerGWf, toPolyG_cmulG, toPolyG_csubG, toPolyG_cmonomialDeriv,
+      toPolyG_cnormG]
+  · simp only [cHermiteReduceTowerGWf, toPolyG_cmulG, toPolyG_cnormG]
+  · rw [toPolyG_cmulG, toPolyG_cmulG]
+    exact mul_ne_zero hd0 (mul_ne_zero hgd0 hgd0)
+  · simp only [toPolyG_cmulG]
+    rw [toPolyG_yunRadical_split hgcd Dt a d hd0]
+    have h := hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd
+    calc toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 * toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
+            * (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 * toPolyG (cHermiteReduceTowerGWf Dt a d).1.2)
+          = toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
+              * (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 * toPolyG (cHermiteReduceTowerGWf Dt a d).1.2)
+            * toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 := by ring
+      _ ∣ _ := mul_dvd_mul_right h _
+
 /-- **The whole-step Hermite field identity for `cHermiteReduceTowerGWf`** (`D_tower(⟦g⟧) +
 ⟦hNum/Dstar⟧ = ⟦a/d⟧`), discharging pole-cancellation via `hWgd_of_multiplicity` (with the Yun
 reconstruction now internal) and the radical split `toPolyG_yunRadical_split`. `Dstar ≠ 0` and
