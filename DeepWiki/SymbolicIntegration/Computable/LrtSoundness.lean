@@ -837,6 +837,22 @@ theorem disjoint_roots_of_isCoprime {E : Type*} [Field E] [DecidableEq E] (p q :
   rw [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_mul, hap.2, haq.2] at h1
   simp at h1
 
+open Classical in
+omit [CDiffField α] [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- **Distinct Yun factors have disjoint roots over `E`.** `cSqfreeYunFFGWf_isRelPrime` (`IsRelPrime`) ⟹
+`IsCoprime` (PID) ⟹ `IsCoprime` over `E` (base change) ⟹ disjoint roots. -/
+theorem disjoint_yun_factors [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α) (hR0 : toPolyG R ≠ 0)
+    (hRpp : (toPolyG R).primPart ≠ 0) {j k : ℕ} (hj : j < (cSqfreeYunFFGWf R).length)
+    (hk : k < (cSqfreeYunFFGWf R).length) (hjk : j ≠ k) :
+    Disjoint ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
+      ((toPolyG ((cSqfreeYunFFGWf R).get ⟨k, hk⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset := by
+  have hcopE := ((cSqfreeYunFFGWf_isRelPrime hgcd R hR0 hRpp hj hk hjk).isCoprime).map
+    (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
+  simp only [Polynomial.coe_mapRingHom] at hcopE
+  exact disjoint_roots_of_isCoprime _ _ hcopE
+
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **A Yun factor with a root is non-constant** (`¬ (cnormG Rᵢ).length ≤ 1`): a root forces
 `natDegree(Rᵢ) ≥ 1`, but `(cnormG Rᵢ).length ≤ 1` forces `natDegree ≤ 0`. This certifies the `filterMap`
