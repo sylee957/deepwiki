@@ -1073,6 +1073,66 @@ theorem prodPow_associated {K : Type*} [Field K] {l₁ l₂ : List K[X]}
   | cons hhd _ ih => exact hhd.pow_pow.mul_mul (ih (i + 1))
 
 open Classical in
+/-- `prodPow` over an appended singleton: the trailing factor sits at position `L.length`, so it is
+raised to `i + L.length`. -/
+theorem prodPow_append_singleton {K : Type*} [Field K] (i : ℕ) (L : List K[X]) (x : K[X]) :
+    prodPow i (L ++ [x]) = prodPow i L * x ^ (i + L.length) := by
+  induction L generalizing i with
+  | nil => simp [prodPow]
+  | cons a L ih =>
+    rw [List.cons_append, prodPow, prodPow, ih (i + 1), List.length_cons,
+      show i + 1 + L.length = i + (L.length + 1) from by omega]
+    ring
+
+open Classical in
+/-- `prodPow i` of a `range`-map is the `Finset.range` product raising the `k`-th value to `i + k`. -/
+theorem prodPow_range_map_eq_finset {K : Type*} [Field K] (i n : ℕ) (f : ℕ → K[X]) :
+    prodPow i ((List.range n).map f) = ∏ k ∈ Finset.range n, f k ^ (i + k) := by
+  induction n with
+  | zero => simp [prodPow]
+  | succ n ih =>
+    rw [List.range_succ, List.map_append, List.map_cons, List.map_nil, prodPow_append_singleton,
+      ih, Finset.prod_range_succ, List.length_map, List.length_range]
+
+open Classical UniqueFactorizationMonoid in
+/-- **The `range`-`prodPow` of squarefree parts reconstructs `pp(A)`** once `n` covers the maximum
+multiplicity: `prodPow 1 ((range n).map (sqfreeFactPart A ∘ (1 + ·))) ~ pp(A)` — the extra factors past
+the largest multiplicity are `sqfreeFactPart = 1`, so they drop out. -/
+theorem prodPow_one_sqfreeFactPart_range_associated {K : Type*} [Field K] [CharZero K] (A : K[X])
+    (hA : A.primPart ≠ 0) (n : ℕ)
+    (hn : (normalizedFactors A.primPart).toFinset.sup
+      (fun P => (normalizedFactors A.primPart).count P) ≤ n) :
+    Associated (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) A.primPart := by
+  rw [prodPow_range_map_eq_finset]
+  -- reindex `range n` (`1 + k`) to `Ico 1 (n+1)`
+  have hIco : ∏ k ∈ Finset.range n, sqfreeFactPart A (1 + k) ^ (1 + k)
+      = ∏ m ∈ Finset.Ico 1 (n + 1), sqfreeFactPart A m ^ m := by
+    rw [Finset.prod_Ico_eq_prod_range]
+    exact (Finset.prod_congr (by rw [Nat.add_sub_cancel]) (fun k _ => rfl)).symm
+  set image := (normalizedFactors A.primPart).toFinset.image
+    (fun P => (normalizedFactors A.primPart).count P) with himage
+  have hsub : image ⊆ Finset.Ico 1 (n + 1) := by
+    intro i hi
+    rw [himage, Finset.mem_image] at hi
+    obtain ⟨P, hP, rfl⟩ := hi
+    rw [Finset.mem_Ico]
+    refine ⟨Multiset.one_le_count_iff_mem.mpr (Multiset.mem_toFinset.mp hP), ?_⟩
+    have : (normalizedFactors A.primPart).count P ≤ (normalizedFactors A.primPart).toFinset.sup
+        (fun P => (normalizedFactors A.primPart).count P) :=
+      Finset.le_sup (f := fun P => (normalizedFactors A.primPart).count P) hP
+    omega
+  have hoff : ∀ m ∈ Finset.Ico 1 (n + 1), m ∉ image → sqfreeFactPart A m ^ m = 1 := by
+    intro m _ hm
+    have h1 : sqfreeFactPart A m = 1 := by
+      rw [sqfreeFactPart, Finset.prod_eq_one]
+      intro P hP
+      rw [Finset.mem_filter] at hP
+      exact absurd (hP.2 ▸ Finset.mem_image_of_mem _ hP.1) hm
+    rw [h1, one_pow]
+  rw [hIco, ← Finset.prod_subset hsub hoff]
+  exact (primPart_associated_prod_sqfreeFactPart A hA).symm
+
+open Classical in
 /-- The exponentiated Yun decomposition (abstract loop): under `YunInv A i b d` (`1 ≤ i`),
 `prodPow i (yunLoopAbs A (b, d) i n)` is `Associated (prodPow i (∏_{j<n} sqfreeFactPart A (i+j)))`. -/
 theorem yunLoopAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0)
