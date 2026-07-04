@@ -64,4 +64,15 @@ theorem canonicalReconstruction_of_charZero (hgcd : GcdFFCorrect (α := α))
   have hgne : toPolyG (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0 := hgu'.ne_zero
   exact canonicalReconstruction Dt a d hd hdn hds hsplit hgdeg hgne
 
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The canonical normal denominator is nonzero when `d ≠ 0`** (`[CharZero]` + `GcdFFCorrect`): `dₙ` is a
+factor of the split `d = dₛ·dₙ`, so `d ≠ 0 ⇒ dₙ ≠ 0`. -/
+theorem crNormDen_ne_zero_of_charZero (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd : toPolyG d ≠ 0) : toPolyG (crNormDen Dt a d) ≠ 0 := by
+  have hnd : crNormDen Dt a d = (cSplitFactorFastGWf Dt d).1 := by
+    simp only [crNormDen, canonicalRepresentationFastGWf]
+  letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+  obtain ⟨hfac, _, _⟩ := cSplitFactorFastGWf_isSplittingFactorizationGen hgcd Dt d hd
+  rw [hnd]; intro h; exact hd (by rw [hfac, h, mul_zero])
+
 end DeepWiki.SymbolicIntegration

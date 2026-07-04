@@ -29,7 +29,7 @@ See `docs/recursive-risch-solver.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG Polynomial
+open Compute CPolyG QFunNZG Polynomial Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -43,10 +43,12 @@ class PrimitiveFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
     [Fact (GcdFFCorrect (α := α))] where
   /-- The level's residue-candidate generator. -/
   candidates : CPolyG α → CPolyG α → CPolyG α → List α
-  /-- Reduced-part soundness (the shared Hermite/residue frontier — the P3 gap). -/
-  hreduced : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α),
+  /-- Reduced-part soundness (the shared Hermite/residue frontier — the P3 gap). Only the
+  `IsIntegralResultG` obligation remains: the denominator-nonzero conjunct is now *proven* in the instance
+  (Hermite denominator ≠ 0 from `d ≠ 0`). -/
+  hreduced : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α), toPolyG d ≠ 0 →
     primitiveGuardedCase.reducedCorrect Dt (redNorm Dt a d cands) = some nrm →
-    toPolyG nrm.rational.2 ≠ 0 ∧ IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
+    IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
 
 /-- **The primitive `LawfulRischLevel` instance — assembled from `PrimitiveFrontier` by resolution.**
 Materialize one `PrimitiveFrontier α` and the whole solver resolves automatically, parameter-free. The
@@ -85,7 +87,17 @@ instance instLawfulRischLevelPrimitive [Fact (GcdFFCorrect (α := α))] [Primiti
           rw [hvan, add_zero] at hrec
           exact hrec
     · rw [if_neg hguard] at hhook; simp at hhook
-  reducedSound := PrimitiveFrontier.hreduced
+  reducedSound := by
+    intro Dt a d cands nrm hd0 hcorr
+    have hcn : toPolyG (crNormDen Dt a d) ≠ 0 :=
+      crNormDen_ne_zero_of_charZero (Fact.out (p := GcdFFCorrect (α := α))) Dt a d hd0
+    have hpp : (toPolyG (crNormDen Dt a d)).primPart ≠ 0 := Polynomial.primPart_ne_zero _
+    refine ⟨?_, PrimitiveFrontier.hreduced Dt a d cands nrm hd0 hcorr⟩
+    -- the reduced denominator is the Hermite fold denominator, nonzero since `dₙ ≠ 0`
+    simp only [primitiveGuardedCase] at hcorr
+    obtain rfl : nrm = redNorm Dt a d cands := (Option.some.injEq _ _).mp hcorr.symm
+    exact toPolyG_cHermiteReduceTowerGWf_den_ne_zero (Fact.out (p := GcdFFCorrect (α := α)))
+      Dt (crNormNum Dt a d) (crNormDen Dt a d) hcn hpp
   -- Soundness-only: the completeness contract is trivial (`not_isElementaryIntegrable` is vacuous here).
   -- Completeness (a nontrivial `descend`) is the Liouville frontier, deferred.
   SpecElem := fun _ _ _ => True

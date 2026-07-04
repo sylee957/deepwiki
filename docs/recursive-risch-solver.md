@@ -60,7 +60,15 @@ soundness.** Recursion reorganizes the tower; it does not remove the leaves.
   LawfulRischLevel α`. Gate-green; the engine frontiers stay as `PrimitiveFrontier` fields. (The interim
   `RischSolver` structure and `SubSolver`/`ofSub`/`ofLower` combinators were folded into the class and
   removed.)
-- **P2** — the tower-step `instance [LawfulRischLevel α] : LawfulRischLevel (QFunNZG α)`, deriving
+- **P2 special-part — DONE (2026-07-04):** rather than the recursion, `hspecialField` was eliminated by a
+  **guarded** primitive case. `primitiveGuardedCase` (`PrimitiveGuarded.lean`) runs the `b=0` poly-RDE only
+  when two *computable* guards hold — `cisZeroG (csubG Dt [1])` (`toPolyG Dt = 1`) and `cisZeroG (cmapDeriv fp)`
+  (constant coefficients, `toPolyG_cmapDeriv = mapCoeffs`) — so success a-priori satisfies the identity
+  (`primitive_special_identity`). Declining off-domain is honest (sound + complete on the constant-coeff
+  canonical-primitive domain; validated `native_decide`). `PrimitiveFrontier` dropped `hspecialField`; it is
+  now `{candidates, hreduced}`. The general non-constant-coefficient case still needs the coefficient recursion
+  below.
+- **P2 recursion (tower step)** — the `instance [LawfulRischLevel α] : LawfulRischLevel (QFunNZG α)`, deriving
   `specialSound` from the lower instance's `sound`. **Found
   2026-07-04 (an ALGORITHM task, not just a proof):** the engine's primitive-polynomial integration is
   **constant-coefficient-only**. `cPolyRischDEGWf …[]… = cIntegratePolyG` is term-by-term

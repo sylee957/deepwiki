@@ -38,8 +38,9 @@ class LawfulRischLevel (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] 
     toPolyG sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
       towerFractionFieldDerivG Dt (fieldFrac snum sden) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d
-  /-- Reduced-part soundness: a corrected normal part is an antiderivative of `cₙ/dₙ`. -/
-  reducedSound : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α),
+  /-- Reduced-part soundness: a corrected normal part is an antiderivative of `cₙ/dₙ`. The `d ≠ 0`
+  precondition is supplied by the integrator's guard. -/
+  reducedSound : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α), toPolyG d ≠ 0 →
     case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm →
     toPolyG nrm.rational.2 ≠ 0 ∧ IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
   /-- Special-part elementarity obstruction (completeness frontier). -/
@@ -86,7 +87,7 @@ theorem sound [LawfulRischLevel α] (Dt a d : CPolyG α) (res : IntegralResultG 
         have hCorr : case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm := by
           simp only [redNorm, crNormNum, crNormDen, hcrep]; exact hcorr
         obtain ⟨hsden, v, hSpecField, hrecon⟩ := specialSound Dt a d snum sden hd0 hSpec
-        obtain ⟨hgden, hNrmField⟩ := reducedSound Dt a d cands nrm hCorr
+        obtain ⟨hgden, hNrmField⟩ := reducedSound Dt a d cands nrm hd0 hCorr
         exact cIntegrateCase_sound case Dt a d cands res snum sden nrm v
           hsden hgden hSpec hCorr h0 hSpecField hNrmField hrecon
 
