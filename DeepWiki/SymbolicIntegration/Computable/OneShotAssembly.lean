@@ -624,17 +624,15 @@ RT residue factoring). Since `Lagrange.degree_nodal : (nodal s id).degree = #s` 
 turns that equivalence into a one-step bridge: it discharges `hA` from `hden` plus the intrinsic
 proper-fraction property `hproper` (which no longer mentions `s`).
 
-**The residual (verified Large).** The *unconditional* proper-fraction property — Hermite preserves
-properness, a proper input `a/d` (`deg a < deg d`) yielding a proper leftover — is not dischargeable with a
-focused effort: `cHermiteReduceTowerG` recovers `h_num` by an *exact division* over the squarefree radical
-`Dstar = ∏ᵢ vᵢ` after a *multi-factor fold* of `cHermiteReduceTowerInnerWf` (each step a `cdiophantineGWf`
-Bézout solve, cross-multiplied into the running rational part `g`). Bounding `deg h_num < deg Dstar` requires
-the full abstract correctness of `cHermiteReduceTowerG` (the cleared Hermite identity `D(g) + h = a/d`,
-currently `native_decide`-validated only, never proven abstractly) *plus* a tower analogue of the per-power
-`hermiteReducePower_remainder_degree` induction threaded through that fold and the exact division. It is not
-derivable from the cleared identity alone: the rational-part numerator can have arbitrary degree, so the
-identity does not pin `deg h_num`. So properness is taken as the named hypothesis `hproper`, and the bridge
-is the genuinely-provable half connecting it to the `s.card` form the one-shots consume. -/
+**Status: DISCHARGED for `deg Dt ≤ 1`** (primitive / exp / log — the whole transcendental base regime), by
+`cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one` below: the `deg Dt ≤ 1` derivative-degree step
+(`toPolyG_residualFraction_proper_of_degree_le_one`) + `g`-properness (`cHermiteReduceTowerG_g_proper`) +
+the exact-division degree cancellation (`cHermiteReduceTowerGWf_leftover_proper_of_residual`). So the
+inputs are `haProper` (input properness `deg a < deg d`), the per-factor keystone `hb`/`hv`, and the
+exact-division connectors `hdvd`/`hresDen` — engine-regularity facts, not free side conditions. The
+`deg Dt ≥ 2` (hypertangent) case genuinely fails generic Hermite (the `b/v¹` summand breaks the margin —
+that is a characterized different-algorithm boundary, not a gap). The `hproper` bridge below connects the
+residual-properness to the `s.card` form the one-shots consume. -/
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- The fuel-free reduced one-shot degree side condition follows from leftover properness. -/
