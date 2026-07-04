@@ -225,15 +225,27 @@ The **entire mathematical content of LRT log-part soundness** is now assembled a
   - `hherm` — `D(g) + hNum/Dstar = a/d` (⇐ base-change of `cHermiteReduceTowerGWf_field_identity`).
 - **`sum_over_list_partition`** — reduces `hpart` to plain pairwise-disjointness + union.
 
-**The only two remaining gaps are `hlog` and `hherm`**, both engine-structural (not new math):
-- `hherm` — `cHermiteReduceTowerGWf_field_identity` (`HermiteValuationTower.lean:762`) is the K-level Hermite
-  soundness (DONE); its residual numerator is a `cdivWf(...)` that must be identified with `H.2.1`, then the
-  whole identity base-changed K→E (the injective, derivation-intertwining direction). `towerFractionFieldDerivG`
-  (K) → `towerDerivExt` (E), `amG` → `amGExt`.
-- `hlog` — `logResidueSumLrtG_eq_normalPart` needs the Yun fiber-size partition discharged: `hroots` (`Rᵢ`'s
-  roots = residues of the fiber-size-`i` poles), `hfac` (via `evalLrtArg_cSubresultantParam_eq_prod` +
-  `isSimilar_subresultant_prod`, threading the per-entry RT setup), `hpart` (via `sum_over_list_partition` +
-  the disjoint fiber-size decomposition of `Dstar`'s roots), and `Dstar` splits as `nodal allpoles`.
+### ★★★ `hherm` DISCHARGED (2026-07-04) — only `hlog` (Yun partition) remains
+
+`hherm_lrt_E` (`LrtSoundness.lean`) proves the Hermite half over `E` outright, by base-changing the DONE
+K-level `cHermiteReduceTowerGWf_field_identity` (`HermiteValuationTower.lean:762`). The K→E transfer
+machinery, all gate-green:
+- `ratFuncBaseChange : RatFunc K →+* RatFunc E` = `RatFunc.mapRingHom (Polynomial.mapRingHom (algebraMap K E))`
+  (+ `_nonZeroDivisors`, `_amG`, `_amG_div` : `amG p ↦ amGExt p`).
+- `towerDerivExt_div` — the `E`-analogue tower quotient rule (mirror of `towerFractionFieldDerivG_div`).
+- `ratFuncBaseChange_towerFractionFieldDerivG` — the **crux intertwining**: `ratFuncBaseChange` of a K-tower
+  derivative = the E-tower derivative, via both quotient rules + `implicitDeriv_map` (SpecialFirstKind, uses
+  `DifferentialAlgebra K E`).
+- The residual `cdivWf(...) = H.2.1` is `toPolyG_hNum'_eq_2_1` (already proven).
+
+So `hherm_lrt_E` closes one of the two `isIntegralResultLrtG_of_hherm_of_logMatch` inputs. Modulo only the
+genuine differential-normality `hcopgcd` (Bronstein `hnorm`) + `hd0`/`hpp`.
+
+**The single remaining gap is `hlog`** — `logResidueSumLrtG_eq_normalPart` needs the Yun fiber-size partition:
+`hroots` (`Rᵢ`'s roots = residues of the fiber-size-`i` poles), `hfac` (via
+`evalLrtArg_cSubresultantParam_eq_prod` + `isSimilar_subresultant_prod`, threading the per-entry RT setup),
+`hpart` (via `sum_over_list_partition` + the disjoint fiber-size decomposition of `Dstar`'s roots), and `Dstar`
+splits as `nodal allpoles`. This is the one intricate combinatorial/structural lemma left.
 
 Then `E→K` descent + swap the primitive base ⟹ `PrimitiveFrontier.hreduced` closed, without the
 rational-residue restriction.
