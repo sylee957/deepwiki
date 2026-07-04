@@ -80,7 +80,15 @@ soundness.** Recursion reorganizes the tower; it does not remove the leaves.
   **tower** `cLimitedIntegrate`/`cRischDEGWf` recursing into the coefficient field (Bronstein
   `IntegratePrimitivePolynomial`), then prove its soundness — which *is* the tower-step instance. See the
   memory note `leanproofs-primitive-poly-constant-coeff-only`.
-- **P3** — discharge the shared per-level compute-correctness abstractly (Hermite / RT residue / split).
+- **P3 status (2026-07-04).** Split **DONE** (below). Denominator **DONE**: `reducedSound`'s
+  `toPolyG nrm.rational.2 ≠ 0` conjunct is proven (`toPolyG_cHermiteReduceTowerGWf_den_ne_zero` +
+  `crNormDen_ne_zero_of_charZero`), so `PrimitiveFrontier.hreduced` is now the *single* `IsIntegralResultG`
+  (Rothstein–Trager) obligation. **Remaining P3 = abstract RT correctness** (the residue-data conditions of
+  `cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces`: nodal `Dstar`, distinct residues, computed
+  residues/log-args correct). This is the deep frontier the whole soundness arc reduced to `native_decide`; a
+  guard here needs the RT algorithm's correctness (that `cRationalResiduesGWf`/`cLogPartGWf` compute the
+  mathematically-correct residues), not merely a domain check — genuine multi-session research.
+- **P3 (original)** — discharge the shared per-level compute-correctness abstractly (Hermite / RT residue / split).
   **Split DONE (2026-07-04):** `canonicalReconstruction_of_charZero` (`CanonicalReconstructionCharZero.lean`)
   discharges the whole canonical reconstruction from `[CharZero]` + `GcdFFCorrect` + `d ≠ 0`, via the abstract
   split correctness `cSplitFactorFastGWf_isSplittingFactorizationGen` and the new special ⊥ normal coprimality
