@@ -419,6 +419,42 @@ theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
       simp only [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow, mul_ite, mul_one, mul_zero,
         Finset.sum_ite_eq, Finset.mem_range, hk, if_false]
 
+/-! ## Base change of `lrtSubresultantGen` (for the computable→abstract connection over `E`) -/
+
+/-- `lrtSubresultantGen` commutes with an injective base change `φ : K →+* L`:
+`(lrtSubresultantGen A D B j).map (mapRingHom φ) = lrtSubresultantGen (A.map φ) (D.map φ) (B.map φ) j`. -/
+theorem lrtSubresultantGen_map {L : Type*} [Field L] (φ : K →+* L) (A D B : K[X]) (j : ℕ)
+    (hφ : Function.Injective φ) :
+    (lrtSubresultantGen A D B j).map (Polynomial.mapRingHom φ)
+      = lrtSubresultantGen (A.map φ) (D.map φ) (B.map φ) j := by
+  have hcomm : (Polynomial.mapRingHom φ).comp (C : K →+* K[X]) = (C : L →+* L[X]).comp φ := by
+    ext a; simp
+  have hmapC : ∀ p : K[X], (p.map (C : K →+* K[X])).map (Polynomial.mapRingHom φ)
+      = (p.map φ).map (C : L →+* L[X]) := by
+    intro p; rw [Polynomial.map_map, hcomm, ← Polynomial.map_map]
+  have hdeg : (D.map φ).natDegree = D.natDegree := natDegree_map_eq_of_injective hφ D
+  rw [lrtSubresultantGen, lrtSubresultantGen, ← subresultant_map, hdeg, hmapC D]
+  congr 2
+  rw [Polynomial.map_sub, Polynomial.map_mul, hmapC A, hmapC B]
+  simp
+
+/-- **`lrtSubresultantGen` base-changed and specialized at `z = c` is the residue subresultant over `L`.**
+`(lrtSubresultantGen A D B j).map (eval₂RingHom φ c) = subresultant (D.map φ) (A.map φ − C c·B.map φ) …`.
+This is exactly `evalLrtArg`'s raw value once the computable `Sᵢ` coefficients are read as `lrtSubresultantGen`
+coefficients (G4c). -/
+theorem lrtSubresultantGen_map_eval₂ {L : Type*} [Field L] (φ : K →+* L) (A D B : K[X]) (c : L) (j : ℕ)
+    (hφ : Function.Injective φ) :
+    (lrtSubresultantGen A D B j).map (Polynomial.eval₂RingHom φ c)
+      = subresultant (D.map φ) (A.map φ - Polynomial.C c * B.map φ) D.natDegree (D.natDegree - 1) j := by
+  have heq : (Polynomial.eval₂RingHom φ c : K[X] →+* L)
+      = (Polynomial.evalRingHom c).comp (Polynomial.mapRingHom φ) := by
+    ext p
+    · simp
+    · simp
+  have hdeg : (D.map φ).natDegree = D.natDegree := natDegree_map_eq_of_injective hφ D
+  rw [heq, ← Polynomial.map_map, lrtSubresultantGen_map φ A D B j hφ,
+    lrtSubresultantGen_eval (A.map φ) (D.map φ) (B.map φ) c j, hdeg]
+
 /-! ## Monic normalization (the log argument is the monic gcd, up to association) -/
 
 /-- **Monic normalization kills a scalar factor.** If `p = C k · q` with `k ≠ 0` and `q` monic, then
