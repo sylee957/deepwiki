@@ -124,6 +124,25 @@ theorem towerDerivExt_div_algebraMap_prod (Dt : CPolyG α) (l : Multiset E[X]) (
 
 end Ext
 
+open scoped Classical in
+/-- **Residue↔pole regrouping.** Grouping poles `β` by residue value `res β = c`, the *residue*-indexed sum
+`Σ_c c·(Σ_{res β = c} term β)` equals the *pole*-indexed sum `Σ_β res(β)·term β`. This is the combinatorial
+core connecting `logResidueSumLrtG` (residue-indexed, via the `Rᵢ` roots) to the pole sum that
+`monomial_residue_match_of_cancel` proves equals `hNum/Dstar`. -/
+theorem residue_pole_regroup {E : Type*} [Field E] (poles : Finset E) (res : E → E)
+    (term : E → RatFunc E) :
+    (∑ c ∈ poles.image res, algebraMap E (RatFunc E) c
+        * (∑ β ∈ poles.filter (fun β => res β = c), term β))
+      = ∑ β ∈ poles, algebraMap E (RatFunc E) (res β) * term β := by
+  rw [← Finset.sum_fiberwise_of_maps_to (s := poles) (t := poles.image res)
+    (g := res) (fun β hβ => Finset.mem_image_of_mem res hβ)
+    (fun β => algebraMap E (RatFunc E) (res β) * term β)]
+  refine Finset.sum_congr rfl (fun c _ => ?_)
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun β hβ => ?_)
+  rw [Finset.mem_filter] at hβ
+  rw [hβ.2]
+
 /-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
 CFieldSpec.K α` in which every residue polynomial `Rᵢ` splits, the `E`-tower derivative of the rational part
 plus the algebraic residue sum equals `anum/aden` (base-changed to `E`). The `E`-quantification + splitting
