@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
+import Mathlib.Data.List.Sigma
 
 /-! # `Q`-regularity over the tower fraction field
 
@@ -480,5 +481,49 @@ theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (�
         / amG α (toPolyG d) :=
   total_fold_residual_tower Dt a d (residNumG Dt a d) hd0 (hden_of hgcd Dt a d hd0 hpp)
     (all_hstep hgcd Dt a d hd0 hpp hcopgcd)
+
+/-- **Each `vk^idx` divides `R`** (the per-factor order bounds), by `dvd_R_of_factor` fed by the `R`
+residual identity, `all_hstep`, `deriv_fold_sub`, `hpow`, and `hresk = dvd_mul_left`. The `hV`/`hnd`/`hcop`
+inputs to `deriv_fold_sub` are the Yun structural facts. Modulo the per-factor gcd coprimality. -/
+theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+    ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      toPolyG x.1 ^ x.2 ∣ (Polynomial.C (1 - ((((cSqfreeYunFFGWf d).zipIdx.filter
+              (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPolyG a
+            + (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+                (residNumG Dt a d)).sum) := by
+  have hV : ∀ y ∈ (cSqfreeYunFFGWf d).zipIdx, toPolyG y.1 ≠ 0 := by
+    intro y hy
+    obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
+      (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hy))
+    rw [← hget]; exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp y.2 hidx
+  have hnd : ((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).Nodup :=
+    (List.Nodup.of_map Prod.snd (List.nodup_zipIdx_map_snd _)).filter _
+  have hRid := R_residual_identity hgcd Dt a d hd0 hpp hcopgcd
+  intro x hx
+  obtain ⟨hxidx, hxget⟩ := List.getElem?_eq_some_iff.mp
+    (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using (List.mem_of_mem_filter hx)))
+  have hcop : ∀ y ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)), y ≠ x →
+      IsRelPrime (toPolyG x.1) (toPolyG y.1) := by
+    intro y hy hyx
+    obtain ⟨hyidx, hyget⟩ := List.getElem?_eq_some_iff.mp
+      (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using (List.mem_of_mem_filter hy)))
+    have hne2 : x.2 ≠ y.2 := by
+      intro h; apply hyx
+      refine Prod.ext ?_ h.symm
+      rw [← hyget, ← hxget]; exact getElem_congr rfl h.symm hyidx
+    rw [← hxget, ← hyget]
+    exact cSqfreeYunFFGWf_isRelPrime hgcd d hd0 hpp hxidx hyidx hne2
+  have hderiv := deriv_fold_sub_isQRegularG Dt a d x hx hnd hV hcop
+  have hstepk := all_hstep hgcd Dt a d hd0 hpp hcopgcd x hx
+  have hpow : toPolyG x.1 ^ (x.2 + 1) ∣ toPolyG d := by
+    rw [← hxget, add_comm]; exact cSqfreeYunFFGWf_pow_dvd hgcd d hd0 hpp x.2 hxidx
+  have hresk : toPolyG x.1 ^ x.2 ∣ residNumG Dt a d x := by rw [residNumG]; exact dvd_mul_left _ _
+  exact dvd_R_of_factor x.2 d hd0 hRid hstepk hderiv hpow hresk
 
 end DeepWiki.SymbolicIntegration
