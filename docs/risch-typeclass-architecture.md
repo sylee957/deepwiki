@@ -213,12 +213,18 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 | RT residue match — `hnorm` | `primitive_monomial_norm_of_const_roots` | discharged modulo constant roots + `w ≠ 0` (pre-existing). |
 | RT residue match — `hdist` | — | **GENUINE side condition** (residue distinctness); correctly a hypothesis, not a gap. |
 | RT residue match — `hres` | — | **engine-external** (caller enumerates residue candidates); correctly a hypothesis. |
-| RT residue match — `hcand`, `hgcdread` | `cRationalResiduesGWf`, `cLogArgTowerGWf` | engine-compute frontier (residue values + log-arg gcd); real arcs, still `native_decide`-only. |
+| RT residue match — `hgcdread` | `cLogArgTowerGWf` (= `cgcdFFCoreWf d (cAmcDdG …)`) | **DISCHARGED (2026-07-04)** — it IS the `GcdFFCorrect` frontier (unconditional at ℚ), `fun β _ => hgcd …`. |
+| RT residue match — `hcand` | caller `residueCand` | **residue-data condition** (the candidate value = the RT residue `hNum(β)/D′(β)`); caller-supplied like `hres`, a genuine hypothesis. |
 | leftover properness `hA` | degree induction over the Hermite fold | the "Large residual"; needs the abstract Hermite identity (now DONE) **plus** a tower `hermiteReducePower_remainder_degree` induction. Still open. |
 
 **Composed (2026-07-04):** `field_identity_of_cIntegrateReducedGWf_primitive_maximal` (Assemble) assembles the
-whole primitive reduced case discharging `hherm`/`hden`/`hnorm`/`hDd` internally; its remaining inputs are
-exactly `hA` (Large residual), `hdist`/`hres` (genuine/external), `hcand`/`hgcdread` (engine-compute).
+whole primitive reduced case discharging FIVE side conditions internally — `hherm`, `hden`, `hnorm`, `hDd`,
+`hgcdread`. Its remaining inputs are exactly: `hA` (the Large residual — the ONE real remaining gap, a
+degree induction; the abstract Hermite identity it needs is now DONE), and the residue-data conditions
+`hres`/`hdist`/`hcand` (caller-supplied residue enumeration + genuine distinctness — correct hypotheses,
+not gaps). So the primitive reduced-case soundness is complete modulo `{hcopgcd (normality), hsplit
+(rational-residue), constant-roots + w≠0, hA (Large residual), residue-data}` — every engine-compute
+frontier of the reduced case is discharged.
 | RT residue match `hmatch` | Rothstein–Trager residue↔root | frontier (`native_decide`-only) |
 | hyperexp `hLaurField` (Laurent) | `cIntegrateHyperexpLaurentG_special_sound` (new) | **PROVEN modulo special-part shape** |
 
