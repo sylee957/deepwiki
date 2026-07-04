@@ -60,6 +60,7 @@ import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.Structure
 import DeepWiki.SymbolicIntegration.Computable.Subresultant
+import DeepWiki.SymbolicIntegration.Computable.SubresultantSpec
 import DeepWiki.SymbolicIntegration.Computable.LrtLogArg
 import DeepWiki.SymbolicIntegration.Computable.LrtIntegrate
 import DeepWiki.SymbolicIntegration.Computable.Tower
