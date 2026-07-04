@@ -810,6 +810,31 @@ theorem nodal_roots {E : Type*} [Field E] (s : Finset E) :
     (Lagrange.nodal s id).roots = s.val := by
   rw [Lagrange.nodal]; simp only [id_eq]; exact Polynomial.roots_prod_X_sub_C s
 
+/-- A root of the powered product `prodPow i L = ∏ⱼ L[j]^(i+j)` (`i ≠ 0`, nonzero) is a root of some factor
+`v ∈ L`. The root-of-product step for `hcover` (a residue is a root of the Yun reconstruction `R ~ ∏Rᵢ^i`). -/
+theorem mem_roots_prodPow {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : List E[X]) (a : E)
+    (hne : prodPow i L ≠ 0) (ha : a ∈ (prodPow i L).roots) : ∃ v ∈ L, a ∈ v.roots := by
+  induction L generalizing i with
+  | nil => rw [prodPow, Polynomial.roots_one] at ha; simp at ha
+  | cons e es ih =>
+    rw [prodPow] at hne ha
+    rw [Polynomial.roots_mul hne, Multiset.mem_add] at ha
+    rcases ha with ha | ha
+    · rw [Polynomial.roots_pow, Multiset.mem_nsmul] at ha
+      exact ⟨e, List.mem_cons_self, ha.2⟩
+    · have hrest : prodPow (i + 1) es ≠ 0 := fun h => hne (by rw [h, mul_zero])
+      obtain ⟨v, hv, hav⟩ := ih (i + 1) (Nat.succ_ne_zero i) hrest ha
+      exact ⟨v, List.mem_cons_of_mem e hv, hav⟩
+
+/-- `prodPow` commutes with a polynomial base change `φ`: `(prodPow i L).map φ = prodPow i (L.map (·.map φ))`. -/
+theorem prodPow_map {K E : Type*} [Field K] [Field E] (φ : K →+* E) (i : ℕ) (L : List K[X]) :
+    (prodPow i L).map φ = prodPow i (L.map (Polynomial.map φ)) := by
+  induction L generalizing i with
+  | nil => simp [prodPow]
+  | cons e es ih =>
+    simp only [prodPow, List.map_cons, Polynomial.map_mul, Polynomial.map_pow]
+    rw [ih]
+
 variable [CFracGcdCoreWf α] in
 /-- **`hressub` per entry.** Every root `c` of an entry's `Rᵢ` (over `E`) is a residue `res β` of some pole `β`:
 `Rᵢ ∣ R` (Yun factor divides the resultant), so `Rᵢ_E.roots ≤ R_E.roots = residues` (`residueResultant_map_roots`).
