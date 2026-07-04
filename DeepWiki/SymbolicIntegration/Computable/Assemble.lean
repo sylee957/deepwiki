@@ -9,6 +9,8 @@ import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
 import DeepWiki.SymbolicIntegration.Computable.OneShotAssembly
+import DeepWiki.SymbolicIntegration.Computable.HermiteReduction
+import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
 
 /-! # Assemblable one-level Risch integrator
 
@@ -209,6 +211,20 @@ theorem cIntegrateReducedGWf_isIntegralResult (Dt a d : CPolyG α) (cands : List
     IsIntegralResultG Dt a d (cIntegrateReducedGWf Dt a d cands) := by
   simp only [IsIntegralResultG]
   exact field_identity_of_cIntegrateReducedGWf_of_residueMatch Dt a d cands hherm hmatch
+
+omit [CRischField α] in
+/-- **Reduced-part soundness, consuming the interfaces (Stage-1).** From `LawfulHermiteReduction` (the
+cleared Hermite identity) and `LawfulResidueLogPart` (the RT residue match) — the two *abstract* stage
+laws — the reduced normal part integrates correctly. This is the assembler consuming its interfaces: the
+composition `Hermite ∘ ResidueLogPart = reduced-part soundness`, with no concrete algorithm re-derived. -/
+theorem cIntegrateReducedGWf_isIntegralResult_of_lawful (Dt a d : CPolyG α) (cands : List α)
+    (hherm : LawfulHermiteReduction Dt a d (CPolyG.cHermiteReduceTowerGWf Dt a d).1.1
+      (CPolyG.cHermiteReduceTowerGWf Dt a d).1.2 (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+      (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2)
+    (hres : LawfulResidueLogPart Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+      (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (CPolyG.cIntegrateReducedGWf Dt a d cands).logs) :
+    IsIntegralResultG Dt a d (CPolyG.cIntegrateReducedGWf Dt a d cands) :=
+  cIntegrateReducedGWf_isIntegralResult Dt a d cands hherm.field_identity hres.residue_match
 
 omit [CRischField α] in
 /-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving

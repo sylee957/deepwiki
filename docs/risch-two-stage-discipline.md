@@ -114,7 +114,7 @@ They move to per-solver realization files as the interfaces land.
   Evict the concrete Hermite lemmas from `Assemble.lean` into the realization file.
 - [x] **P3 — `ResidueLogPart`.** DONE (interface `ResidueLogPart.lean` + primitive realization `cIntegrateReducedGWf_lawfulResidueLogPart` in `OneShotAssembly`). Eviction of the Assemble one-shots is P5. Define interface + `LawfulResidueLogPart`; prove the `cIntegrateReducedGWf`
   realization. Evict the residue lemmas.
-- [ ] **P4 — abstract assembler.** Restate `cIntegrateCase_sound` to consume `Lawful{Hermite,ResidueLogPart,
+- [x] **P4 (part 1) — abstract composition.** DONE (`cIntegrateReducedGWf_isIntegralResult_of_lawful` in Assemble: `LawfulHermiteReduction` + `LawfulResidueLogPart` → `IsIntegralResultG`, interface-only). Full eviction of the concrete one-shots is P5. Original P4: Restate `cIntegrateCase_sound` to consume `Lawful{Hermite,ResidueLogPart,
   MonomialCase}` + `LawfulSquarefreeDecomposition`. `Assemble.lean` becomes abstract-only.
 - [ ] **P5 — per-solver corollaries.** Primitive/hyperexp/poly one-shots become thin corollaries in their
   solver files (the evicted `_qfunNZG` theorems, now one-liners).
