@@ -805,6 +805,49 @@ theorem nodup_roots_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [
   exact Polynomial.nodup_roots
     ((PerfectField.separable_iff_squarefree.mpr hsqf).map)
 
+/-- The roots of the nodal polynomial `∏_{β ∈ s}(X − β)` are exactly `s` (as a multiset). -/
+theorem nodal_roots {E : Type*} [Field E] (s : Finset E) :
+    (Lagrange.nodal s id).roots = s.val := by
+  rw [Lagrange.nodal]; simp only [id_eq]; exact Polynomial.roots_prod_X_sub_C s
+
+variable [CFracGcdCoreWf α] in
+/-- **`hressub` per entry.** Every root `c` of an entry's `Rᵢ` (over `E`) is a residue `res β` of some pole `β`:
+`Rᵢ ∣ R` (Yun factor divides the resultant), so `Rᵢ_E.roots ≤ R_E.roots = residues` (`residueResultant_map_roots`).
+-/
+theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
+    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α) (allpoles : Finset E)
+    (hDmonic : (toPolyG Dstar).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
+    (hB : ∀ β ∈ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
+        (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
+    (hB_deg : (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).natDegree
+        ≤ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1)
+    (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
+    (p : CPolyG α × List (CPolyG α)) (hp : p ∈ cLrtLogArgG Dt hNum Dstar)
+    (c : E) (hc : c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots) :
+    ∃ β ∈ allpoles, ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+        / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+            (Lagrange.nodal allpoles id)).eval β = c := by
+  obtain ⟨idx, hmem, _, _⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
+  have hp1mem : p.1 ∈ cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar) := by
+    obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp (List.mk_mem_zipIdx_iff_getElem?.mp hmem)
+    exact hp1' ▸ List.getElem_mem hj
+  have hdvd : toPolyG p.1 ∣ toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) :=
+    (List.dvd_prod (List.mem_map_of_mem (f := toPolyG) hp1mem)).trans
+      (prod_map_cSqfreeYunFFGWf_dvd hgcd _ hR0)
+  have hR0E : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map
+      (algebraMap (CFieldSpec.K α) E) ≠ 0 :=
+    (Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hR0
+  have hcR := Multiset.mem_of_le
+    (Polynomial.roots.le_of_dvd hR0E (Polynomial.map_dvd (algebraMap (CFieldSpec.K α) E) hdvd)) hc
+  rw [residueResultant_map_roots Dt hNum Dstar hDmonic hDt0 hAD hB hB_deg, hsplit] at hcR
+  obtain ⟨β, hβ, hres⟩ := Multiset.mem_map.mp hcR
+  exact ⟨β, Finset.mem_val.mp (nodal_roots allpoles ▸ hβ), hres⟩
+
 open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
 `IsIntegralResultLrtG` for `cIntegrateReducedLrtG Dt a d`: the Hermite half is discharged outright by
