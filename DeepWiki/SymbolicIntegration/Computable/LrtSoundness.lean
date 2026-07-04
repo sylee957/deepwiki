@@ -132,6 +132,42 @@ theorem evalLrtArg_cSubresultantParam_eq_prod [CharZero (CFieldSpec.K α)]
   evalLrtArg_eq_prod _ c (toPolyG hNum) (toPolyG Dstar) (toPolyG Dd) j poles hφ
     (fun n => toPolyG_cSubresultantParam_getD Dstar hNum Dd j n hm) hsim
 
+open Classical in
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **`hfac` core: the entry log argument is the residue-`c` pole product.** For `Dstar_E = nodal allpoles`
+(split) and the entry index `i = rootMultiplicity c` in the residue resultant (the Yun index ↔ fiber-size
+match), `evalLrtArg (cSubresultantParam … i) c = ∏_{β ∈ allpoles, res β = c}(t − β)`. Chains
+`evalLrtArg_cSubresultantParam_eq_prod` with `isSimilar_subresultant_prod`. -/
+theorem evalLrtArg_eq_fiber_prod [CharZero (CFieldSpec.K α)] [IsAlgClosed E]
+    (Dstar hNum Dd : CPolyG α) (allpoles : Finset E) (c : E) (i : ℕ)
+    (hm : cdegG Dd = cdegG Dstar - 1)
+    (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
+    (hB : ∀ β ∈ allpoles, ((toPolyG Dd).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ 0)
+    (hA : ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).natDegree
+        < (Lagrange.nodal allpoles id).natDegree)
+    (hB_deg : ((toPolyG Dd).map (algebraMap (CFieldSpec.K α) E)).natDegree
+        ≤ (Lagrange.nodal allpoles id).natDegree - 1)
+    (hindex : i = (rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
+        (Lagrange.nodal allpoles id) ((toPolyG Dd).map (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c)
+    (hi : i < (Lagrange.nodal allpoles id).natDegree) :
+    evalLrtArg (cSubresultantParam Dstar hNum Dd (cdegG Dstar) (cdegG Dd) i) c
+      = ((allpoles.filter (fun β => ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+            / ((toPolyG Dd).map (algebraMap (CFieldSpec.K α) E)).eval β = c)).val.map
+          (fun β => X - C β)).prod := by
+  refine evalLrtArg_cSubresultantParam_eq_prod Dstar hNum Dd c i
+    ((allpoles.filter (fun β => ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+        / ((toPolyG Dd).map (algebraMap (CFieldSpec.K α) E)).eval β = c)).val) hm
+    (algebraMap (CFieldSpec.K α) E).injective ?_
+  rw [hsplit, hindex]
+  have hdeg : (toPolyG Dstar).natDegree = (Lagrange.nodal allpoles id).natDegree := by
+    rw [← natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective (toPolyG Dstar),
+      hsplit]
+  have hsim := isSimilar_subresultant_prod ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
+    ((toPolyG Dd).map (algebraMap (CFieldSpec.K α) E)) allpoles c hB hA hB_deg (hindex ▸ hi)
+  rw [Finset.prod_eq_multiset_prod] at hsim
+  convert hsim using 2
+  all_goals omega
+
 variable [Differential E] [Algebra ℚ E]
 
 /-- The `E`-tower derivation on `RatFunc E`: `extendDeriv` of `implicitDeriv (Dt base-changed to E)`. The
