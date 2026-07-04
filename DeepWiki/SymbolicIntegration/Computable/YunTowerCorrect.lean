@@ -391,6 +391,20 @@ theorem cSqfreeYunFFGWf_squarefree [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCor
   have haj := cSqfreeYunFFGWf_get_assoc hgcd p hp0 hpp j hj
   exact fun y hy => sqfreeFactPart_squarefree (toPolyG p) (1 + j) y (hy.trans haj.dvd)
 
+omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
+/-- `u·v^i = d` where `u = cdivWf d (v^i)`, given `v^i ∣ d` and `v ≠ 0` (the `hud` input of the
+per-factor Hermite step). -/
+theorem toPolyG_cdivWf_pow_mul (d v : CPolyG α) (i : ℕ) (hv : toPolyG v ≠ 0)
+    (hdvd : toPolyG v ^ i ∣ toPolyG d) :
+    toPolyG (cdivWf d (cpowG v i)) * toPolyG v ^ i = toPolyG d := by
+  have hcn : cnormG (cpowG v i) ≠ [] := by
+    intro h
+    have hz : toPolyG (cpowG v i) = 0 := (cisZeroG_iff _).mp (by simp [cisZeroG, h])
+    rw [toPolyG_cpowG] at hz; exact pow_ne_zero i hv hz
+  have hd2 : toPolyG (cpowG v i) ∣ toPolyG d := by rw [toPolyG_cpowG]; exact hdvd
+  have h := toPolyG_cdivWf_exact d (cpowG v i) hcn hd2
+  rwa [toPolyG_cpowG] at h
+
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Each tower Yun factor is coprime to its derivative** (squarefree ⟹ coprime to `v'`, char 0). -/
 theorem cSqfreeYunFFGWf_coprime_deriv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
