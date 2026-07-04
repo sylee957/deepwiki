@@ -495,6 +495,52 @@ theorem sum_over_list_partition {ι : Type*} {γ : Type*} [DecidableEq γ] {M : 
     rw [List.map_cons, List.sum_cons, List.map_cons, List.foldr_cons,
       Finset.sum_union hpt, ih hdisj.2]
 
+/-- Membership in a `foldr (· ∪ ·) ∅` of `Finset`s: `β` is in the union iff it is in some list member. -/
+theorem mem_foldr_union_iff {γ : Type*} [DecidableEq γ] (L : List (Finset γ)) (β : γ) :
+    β ∈ L.foldr (· ∪ ·) ∅ ↔ ∃ s ∈ L, β ∈ s := by
+  induction L with
+  | nil => simp
+  | cons hd u ih =>
+    rw [List.foldr_cons, Finset.mem_union, ih]
+    simp only [List.mem_cons, exists_eq_or_imp]
+
+open Classical in
+/-- **Filter-partition pole sum** (the concrete `hpart`). With `polesOf p := allpoles.filter (res · ∈ rootSet p)`
+for pairwise-disjoint `rootSet`s (the `Rᵢ.roots`, disjoint via Yun coprimality) that cover every pole's residue,
+the list-sum of per-entry pole sums equals the full sum over `allpoles`. Discharges the `hpart` hypothesis of
+`logResidueSumLrtG_eq_poleSum`/`_eq_normalPart`. -/
+theorem sum_filter_rootSet_partition {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
+    [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    (Dt : CPolyG α) (allpoles : Finset E) (res : E → E)
+    (logs : List (CPolyG α × List (CPolyG α))) (rootSet : CPolyG α × List (CPolyG α) → Finset E)
+    (hdisj : logs.Pairwise (fun p q => Disjoint (rootSet p) (rootSet q)))
+    (hcover : ∀ β ∈ allpoles, ∃ p ∈ logs, res β ∈ rootSet p) :
+    (logs.map (fun p => ∑ β ∈ allpoles.filter (fun β => res β ∈ rootSet p),
+        algebraMap E (RatFunc E) (res β) * poleTerm Dt β)).sum
+      = ∑ β ∈ allpoles, algebraMap E (RatFunc E) (res β) * poleTerm Dt β := by
+  have hfilterdisj : logs.Pairwise (fun p q =>
+      Disjoint (allpoles.filter (fun β => res β ∈ rootSet p))
+        (allpoles.filter (fun β => res β ∈ rootSet q))) := by
+    refine hdisj.imp fun {p q} hpq => ?_
+    rw [Finset.disjoint_left]
+    intro β hβp hβq
+    rw [Finset.mem_filter] at hβp hβq
+    exact (Finset.disjoint_left.mp hpq hβp.2) hβq.2
+  rw [sum_over_list_partition logs (fun p => allpoles.filter (fun β => res β ∈ rootSet p))
+    (fun β => algebraMap E (RatFunc E) (res β) * poleTerm Dt β) hfilterdisj]
+  congr 1
+  refine Finset.ext (fun β => ?_)
+  rw [mem_foldr_union_iff]
+  constructor
+  · rintro ⟨s, hs, hβs⟩
+    rw [List.mem_map] at hs
+    obtain ⟨p, _, rfl⟩ := hs
+    exact (Finset.mem_filter.mp hβs).1
+  · intro hβ
+    obtain ⟨p, hp, hres⟩ := hcover β hβ
+    exact ⟨allpoles.filter (fun β => res β ∈ rootSet p),
+      List.mem_map_of_mem hp, Finset.mem_filter.mpr ⟨hβ, hres⟩⟩
+
 open scoped Classical in
 /-- **Log-part sum in pole form (partition assembly).** Summing the per-`Rᵢ` pole sums over a per-entry
 pole set `polesOf` that tiles the full pole set: `logResidueSumLrtG = Σ_{β ∈ allpoles} res(β)·poleTerm β`.
