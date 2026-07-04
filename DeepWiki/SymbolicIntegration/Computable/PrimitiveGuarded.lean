@@ -20,6 +20,21 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
+/-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
+`p < 0`, divided by `q`. -/
+def CPolyG.cRatG (p : ℤ) (q : ℕ) : α :=
+  CField.div (if p < 0 then CField.neg (CPolyG.cnatCastG p.natAbs) else CPolyG.cnatCastG p.natAbs)
+    (CPolyG.cnatCastG q)
+
+/-- **Automatic residue candidates**: the bounded rational sweep `{p/q : |p| ≤ bound, 1 ≤ q ≤ bound}`.
+`cRationalResiduesGWf` filters these to the actual residues (roots of the residue resultant), so the reduced
+integrator needs *no externally supplied* candidate list for small-rational residues — `candidates` becomes
+a fixed computable function. Completeness is bounded (large / non-rational residues need a bigger sweep or
+root-finding); soundness is unaffected (any candidate list is filtered to genuine roots). -/
+def CPolyG.defaultResidueCandidates (bound : ℕ) : List α :=
+  (List.range (2 * bound + 1)).flatMap (fun i =>
+    (List.range bound).map (fun j => CPolyG.cRatG ((i : ℤ) - (bound : ℤ)) (j + 1)))
+
 omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
 /-- **Computable constant-coefficient guard soundness.** `cisZeroG (cmapDeriv fp) = true` (the coefficientwise
 derivative vanishes) implies `mapCoeffs (toPolyG fp) = 0` (coefficients are differential constants). -/

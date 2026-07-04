@@ -34,4 +34,16 @@ theorem primitiveGuardedCase_declines_nonPrimitive :
     cIntegrateCase primitiveGuardedCase ([CField.zero, CField.one] : CPolyG Lvl1)
         [CField.zero, CField.one] [CField.one] [] = none := by native_decide
 
+/-- **Automatic candidates find fractional residues.** `∫ 1/(t²−1) = ½log(t−1) − ½log(t+1)` has residues
+`±1/2`. With `candidates := defaultResidueCandidates 3` (the bounded rational sweep, *not* a hand-picked
+list), `primitiveGuardedCase` lands a `checkIdentityG`-passing result — `candidates` is computed
+automatically. -/
+theorem primitiveGuardedCase_autoCands_log :
+    (match cIntegrateCase primitiveGuardedCase ([CField.one] : CPolyG Lvl1)
+        [CField.one] [CField.neg CField.one, CField.zero, CField.one]
+        (defaultResidueCandidates 3) with
+      | some res => checkIdentityG ([CField.one] : CPolyG Lvl1) res [CField.one]
+          [CField.neg CField.one, CField.zero, CField.one]
+      | none => false) = true := by native_decide
+
 end DeepWiki.SymbolicIntegration

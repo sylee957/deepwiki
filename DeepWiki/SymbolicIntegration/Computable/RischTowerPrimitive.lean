@@ -5,20 +5,15 @@ import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuarded
 
 /-! # The primitive base as a resolved instance (`PrimitiveFrontier` ⇒ `LawfulRischLevel`)
 
-The primitive-case (`Dθ ∈ k`) base of the tower, packaged so **no hypotheses are threaded**. The engine
-frontier facts are the fields of one class, `PrimitiveFrontier α` (materialized *once*); from it, the
-`LawfulRischLevel α` instance — and hence the assembled `integrate` / `sound` / completeness — resolve
-**automatically**, parameter-free, wherever `[PrimitiveFrontier α]` is in scope. The special-part law and the
-**reconstruction** are proven inside the instance; the residual frontier facts stay isolated in
-`PrimitiveFrontier`:
-
-The incidental conditions are handled *by the algorithm*: the gcd correctness is a resolved
-**`[Fact (GcdFFCorrect α)]`** instance (a *proven theorem* `gcdFFCorrect_Q` at the `ℚ` base — no field),
-`d ≠ 0` is **supplied by the integrator's guard**, and the **special-part identity is now guaranteed by the
-`primitiveGuardedCase` guard** (P2): the hook runs the poly-RDE only when `toPolyG Dt = 1` and the
-coefficients are constant, so a successful special integration *a-priori* satisfies the identity
-(`primitive_special_identity`) — `hspecialField` is no longer a field. The reconstruction is proven via
-`canonicalReconstruction_of_charZero`. The single residual field:
+The primitive-case (`Dθ ∈ k`) base of the tower. `[PrimitiveFrontier α]` resolves the whole
+`LawfulRischLevel α` instance — hence the assembled `integrate` / `sound` / completeness — parameter-free.
+The incidental conditions are all handled *by the algorithm/instance*, so `PrimitiveFrontier` has shrunk to a
+**single field**: the gcd correctness is a resolved **`[Fact (GcdFFCorrect α)]`** instance (proven at ℚ),
+`d ≠ 0` is **supplied by the integrator's guard**, the **special-part identity is guaranteed by the
+`primitiveGuardedCase` guard** (P2 — `hspecialField` gone), the reconstruction is proven via
+`canonicalReconstruction_of_charZero`, the reduced denominator is proven, and the **candidate list is
+computed automatically** (`defaultResidueCandidates`, a bounded rational sweep — no `candidates` field). The
+single residual field:
 
 * `hreduced` — reduced-part soundness (grounded in `cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces`
   under the Rothstein–Trager residue-data conditions — the P3 frontier, *not* a `native_decide` wall).
@@ -41,8 +36,6 @@ threaded parameters. -/
 class PrimitiveFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
     [Fact (GcdFFCorrect (α := α))] where
-  /-- The level's residue-candidate generator. -/
-  candidates : CPolyG α → CPolyG α → CPolyG α → List α
   /-- Reduced-part soundness (the shared Hermite/residue frontier — the P3 gap). Only the
   `IsIntegralResultG` obligation remains: the denominator-nonzero conjunct is now *proven* in the instance
   (Hermite denominator ≠ 0 from `d ≠ 0`). -/
@@ -59,7 +52,9 @@ from the successful hook), and the **reconstruction from `canonicalReconstructio
 instance instLawfulRischLevelPrimitive [Fact (GcdFFCorrect (α := α))] [PrimitiveFrontier α] :
     LawfulRischLevel α where
   case := primitiveGuardedCase
-  candidates := PrimitiveFrontier.candidates
+  -- **Automatic candidates** (P2): the bounded rational sweep, no field. `cRationalResiduesGWf` filters it
+  -- to genuine residues; the bound grows with the denominator degree.
+  candidates := fun _ _ d => defaultResidueCandidates (cdegG d + 3)
   specialSound := by
     intro Dt a d snum sden hd0 hhook
     simp only [primitiveGuardedCase] at hhook
