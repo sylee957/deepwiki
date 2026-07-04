@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 
 /-! # General-derivation Rothstein–Trager / Lazard–Rioboo–Trager
 
@@ -184,5 +185,122 @@ theorem rootMultiplicity_rtResultantGen_eq_natDegree_gcd [IsAlgClosed K] (A D B 
     (rtResultantGen A D B).rootMultiplicity a = (gcd D (A - C a * B)).natDegree := by
   rw [← count_roots, roots_rtResultantGen A D B hD.ne_zero hB hA hB_deg,
     ← natDegree_gcd_eq_count_residue_gen A D B hD hB a]
+
+/-! ## The LRT subresultant-similarity theorem for a general derivation `B`
+
+Bronstein Thm 2.5.1(ii) generalized: the LRT subresultant at the residue multiplicity index, specialized
+`z ↦ a`, is similar to `gcd(D, A − a·B)`. The subresultant/PRS engine is already `derivative`-agnostic;
+`derivative D` enters only via `E := A − a·B` (opaque) and the degree bound `deg B ≤ deg D − 1`. -/
+
+/-- Multi-step (`k ≥ 2`) LRT subresultant similarity for a general `B`. -/
+theorem isSimilar_lrtSubresultant_eval_gcd_gen {K : Type*} [Field K] [GCDMonoid K[X]]
+    (A D B : K[X]) (a : K) (hD : D ≠ 0) (hA : A.natDegree < D.natDegree)
+    (hB_deg : B.natDegree ≤ D.natDegree - 1)
+    {k : ℕ} (hk2 : 2 ≤ k) (hk0 : euclideanPRS D (A - C a * B) (k + 1) = 0)
+    (hknz : ∀ j, 1 ≤ j → j ≤ k → euclideanPRS D (A - C a * B) j ≠ 0) :
+    IsSimilar
+      ((lrtSubresultantGen A D B (euclideanPRS D (A - C a * B) k).natDegree).map
+        (Polynomial.evalRingHom a))
+      (gcd D (A - C a * B)) := by
+  rw [lrtSubresultantGen_eval]
+  set E := A - C a * B with hE
+  have hElt : E.natDegree ≤ D.natDegree - 1 :=
+    (natDegree_sub_le _ _).trans (max_le (by omega) ((natDegree_C_mul_le _ _).trans hB_deg))
+  have hjE : (euclideanPRS D E k).natDegree < E.natDegree := by
+    have h := euclideanPRS_natDegree_strictAnti D E hknz 1 k (le_refl 1) (by omega) (le_refl k)
+    rwa [euclideanPRS_one] at h
+  have hengine := subresultant_euclideanPRS_isSimilar_gcd D E hD
+    (le_trans hElt (Nat.sub_le _ _)) hk2 hk0 hknz
+  exact (isSimilar_subresultant_padding D E D.natDegree E.natDegree
+    (euclideanPRS D E k).natDegree hjE
+    (le_trans (le_of_lt hjE) (le_trans hElt (Nat.sub_le _ _))) le_rfl le_rfl
+    (leadingCoeff_ne_zero.mpr hD) hElt).trans hengine
+
+/-- Top-index (`k = 1`, `E ∣ D`) LRT subresultant similarity for a general `B`. -/
+theorem isSimilar_lrtSubresultant_eval_gcd_top_gen {K : Type*} [Field K] [GCDMonoid K[X]]
+    (A D B : K[X]) (a : K) (hD : D ≠ 0) (hA : A.natDegree < D.natDegree)
+    (hB_deg : B.natDegree ≤ D.natDegree - 1) (hE : A - C a * B ≠ 0)
+    (h0 : euclideanPRS D (A - C a * B) 2 = 0) :
+    IsSimilar
+      ((lrtSubresultantGen A D B (A - C a * B).natDegree).map (Polynomial.evalRingHom a))
+      (gcd D (A - C a * B)) := by
+  rw [lrtSubresultantGen_eval]
+  set E := A - C a * B with hEdef
+  have hElt : E.natDegree ≤ D.natDegree - 1 :=
+    (natDegree_sub_le _ _).trans (max_le (by omega) ((natDegree_C_mul_le _ _).trans hB_deg))
+  have hsim : IsSimilar (subresultant D E D.natDegree (D.natDegree - 1) E.natDegree) E := by
+    rw [subresultant_deg_ge_normal D E D.natDegree (D.natDegree - 1) E.natDegree le_rfl
+      (by omega) (Nat.sub_le _ _) hElt]
+    exact ⟨1, (D.coeff D.natDegree) ^ (D.natDegree - 1 - E.natDegree)
+        * E.coeff E.natDegree ^ (D.natDegree - E.natDegree - 1), one_ne_zero,
+      mul_ne_zero (pow_ne_zero _ (by rw [← leadingCoeff]; exact leadingCoeff_ne_zero.mpr hD))
+        (pow_ne_zero _ (by rw [← leadingCoeff]; exact leadingCoeff_ne_zero.mpr hE)),
+      by rw [map_one, one_mul]⟩
+  exact hsim.trans (isSimilar_gcd_right_of_euclideanPRS_two_eq_zero D E hE h0).symm
+
+open scoped Classical in
+/-- LRT subresultant similarity at the residue multiplicity index (part-(ii) regime `i < deg D`) for a
+general `B` under normality `hB`. -/
+theorem lazardRiobooTrager_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlgClosed K]
+    (A D B : K[X]) (hD : D.Separable) (hB : ∀ α ∈ D.roots, B.eval α ≠ 0)
+    (hA : A.natDegree < D.natDegree) (hB_deg : B.natDegree ≤ D.natDegree - 1) (a : K)
+    (hi : (rtResultantGen A D B).rootMultiplicity a < D.natDegree) :
+    IsSimilar
+      ((lrtSubresultantGen A D B ((rtResultantGen A D B).rootMultiplicity a)).map
+        (Polynomial.evalRingHom a))
+      (gcd D (A - C a * B)) := by
+  set E := A - C a * B with hE
+  have hDne : D ≠ 0 := fun h => by simp [h] at hA
+  have hmul : (rtResultantGen A D B).rootMultiplicity a = (gcd D E).natDegree :=
+    rootMultiplicity_rtResultantGen_eq_natDegree_gcd A D B hD hB hA hB_deg a
+  have hEne : E ≠ 0 := by
+    intro h
+    rw [h, (IsSimilar.of_associated
+      (gcd_zero_right D ▸ normalize_associated D)).natDegree_eq] at hmul
+    rw [hmul] at hi; exact absurd hi (lt_irrefl _)
+  obtain ⟨k, hk1, hk0, hknz⟩ := exists_last_euclideanPRS_nonzero D E hEne
+  have hsim : IsSimilar (euclideanPRS D E k) (gcd D E) :=
+    (isPRS_euclideanPRS D E).isSimilar_gcd hk0 (fun j hj1 hjk => hknz j hj1 hjk)
+  have hdeg : (euclideanPRS D E k).natDegree = (gcd D E).natDegree := hsim.natDegree_eq
+  rcases Nat.lt_or_ge k 2 with hk | hk2
+  · have hk1' : k = 1 := by omega
+    subst hk1'
+    rw [euclideanPRS_one] at hdeg
+    have h0 : euclideanPRS D E 2 = 0 := hk0
+    rw [hmul, ← hdeg]
+    exact isSimilar_lrtSubresultant_eval_gcd_top_gen A D B a hDne hA hB_deg hEne h0
+  · rw [hmul, ← hdeg]
+    exact isSimilar_lrtSubresultant_eval_gcd_gen A D B a hDne hA hB_deg hk2 hk0 hknz
+
+open scoped Classical in
+/-- **The general-derivation LRT algorithm-output correctness (unified, no excluded case).** For any `a`,
+the LRT output curve `Sᵢ` at multiplicity `i = rootMultiplicity a (rtResultantGen A D B)` — namely `D` if
+`i = deg D`, else `lrtSubresultantGen A D B i` — specialized `z ↦ a`, is similar to `gcd(D, A − a·B)`.
+Generalizes `lazardRiobooTrager_output_isSimilar_gcd` from `derivative D` to an arbitrary `B` under
+normality `hB` (`B(α) ≠ 0` at roots of `D`). -/
+theorem lazardRiobooTrager_output_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlgClosed K]
+    (A D B : K[X]) (hD : D.Separable) (hB : ∀ α ∈ D.roots, B.eval α ≠ 0)
+    (hA : A.natDegree < D.natDegree) (hB_deg : B.natDegree ≤ D.natDegree - 1) (a : K) :
+    IsSimilar
+      ((if (rtResultantGen A D B).rootMultiplicity a = D.natDegree then D.map (C : K →+* K[X])
+        else lrtSubresultantGen A D B ((rtResultantGen A D B).rootMultiplicity a)).map
+        (Polynomial.evalRingHom a))
+      (gcd D (A - C a * B)) := by
+  have hDne : D ≠ 0 := fun h => by simp [h] at hA
+  set E := A - C a * B with hE
+  have hmul : (rtResultantGen A D B).rootMultiplicity a = (gcd D E).natDegree :=
+    rootMultiplicity_rtResultantGen_eq_natDegree_gcd A D B hD hB hA hB_deg a
+  have hile : (rtResultantGen A D B).rootMultiplicity a ≤ D.natDegree :=
+    hmul.le.trans (natDegree_le_of_dvd (gcd_dvd_left D E) hDne)
+  by_cases hcase : (rtResultantGen A D B).rootMultiplicity a = D.natDegree
+  · rw [if_pos hcase]
+    have hmapid : (D.map (C : K →+* K[X])).map (Polynomial.evalRingHom a) = D := by
+      rw [Polynomial.map_map,
+        show (Polynomial.evalRingHom a).comp (C : K →+* K[X]) = RingHom.id K from by ext k; simp,
+        Polynomial.map_id]
+    rw [hmapid]
+    exact (isSimilar_gcd_left_of_natDegree_eq hDne (hmul.symm.trans hcase)).symm
+  · rw [if_neg hcase]
+    exact lazardRiobooTrager_isSimilar_gcd_gen A D B hD hB hA hB_deg a (lt_of_le_of_ne hile hcase)
 
 end DeepWiki.SymbolicIntegration
