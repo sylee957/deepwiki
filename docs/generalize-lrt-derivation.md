@@ -59,21 +59,33 @@ route's tower analytic identity).
 
 ## Phase plan (each its own gate-green commit)
 
-- **G1** — `rtResultantGen A D B := resultant(D.map C, A.map C − C X · B.map C) deg D (deg D − 1)`;
-  `rtResultantGen_eval`, `natDegree_rtResultantGen_le`, and the bridge `rtResultant A D =
-  rtResultantGen A D (derivative D)`. (Mechanical; a new abstract file `LrtGeneralDerivation.lean`.)
-- **G2** — `roots_rtResultantGen` / `rootMultiplicity_rtResultantGen_eq_natDegree_gcd` /
-  `gcd_nodal_eq_prod_residue_gen` under `hB` normality. (Mechanical + `hB`.)
-- **G3** — `lrtSubresultantGen` + `lazardRiobooTrager_output_isSimilar_gcd_gen` (subresultant
-  similarity with `B`).
-- **G4** — connect `cResidueResultantTowerGWf` / `cSubresultantParam` / `cLrtLogArgG` (`implicitDeriv`)
-  to G1–G3 via `toPolyG_cmonomialDeriv` + `toPolyG_cSubresultantG` (L4b) + `toPoly_rtResultantCompute`
-  interpolation (already done for `derivative`; re-do for `B`).
-- **G5** — assemble with the candidate route's tower per-root analytic identity into a symbolic-log
-  soundness `IsIntegralResultLrtG` for `cIntegrateReducedLrtG`; swap the primitive base (closes
-  `hreduced` without the rational-residue restriction).
+- **G1 ✅ DONE** (`LrtGeneralDerivation.lean`) — `rtResultantGen A D B`, `lrtSubresultantGen A D B j`,
+  their `_eval` lemmas, and the `derivative`-case bridges (`rtResultantGen A D (derivative D) =
+  rtResultant A D`, `rfl`). The resultant/subresultant defs treat `B` opaquely, so verbatim.
+- **G2 ✅ DONE** — the residue↔root theory under normality `hB : ∀ α ∈ D.roots, B.eval α ≠ 0`:
+  `residue_eq_iff_isRoot_sub_gen`, `isRoot_gcd_iff_residue_gen`, `rtResultantGen_eq_prod_roots`,
+  `linearFactor_eq_residue_gen`, `roots_rtResultantGen`, `natDegree_gcd_eq_count_residue_gen`, and the
+  headline **`rootMultiplicity_rtResultantGen_eq_natDegree_gcd`** (RT residue-multiplicity for arbitrary
+  `B`). `D` stays `Separable` for nodup-roots; `hB` (`deg B ≤ deg D − 1` too) replaces separability's
+  `D'(α) ≠ 0`.
+- **G3 ✅ DONE** — the LRT subresultant-similarity chain: `isSimilar_lrtSubresultant_eval_gcd_gen` /
+  `_top_gen`, `lazardRiobooTrager_isSimilar_gcd_gen`, and the unified capstone
+  **`lazardRiobooTrager_output_isSimilar_gcd_gen`**. The PRS engine is already `derivative`-agnostic; `B`
+  enters only via the opaque `E := A − a·B` + the degree bound. **The abstract LRT residue theory now
+  holds for ANY derivation image `B`.**
+- **G4 (next)** — connect the computable tower engine (`implicitDeriv`) to G1–G3:
+  `B := implicitDeriv (toPolyG Dt) (toPolyG Dstar) = toPolyG (cmonomialDeriv Dt Dstar)` (bridge exists,
+  `@[denote]`); `deg B ≤ deg D` via `natDegree_implicitDeriv_le`; normality `hB` from
+  `isCoprime_X_sub_C_implicitDeriv_iff` (`v.eval β ≠ β′`, the genuine `hcopgcd`); `cResidueResultantTowerGWf`
+  = `rtResultantGen` via interpolation (template: `toPoly_rtResultantCompute_eq_rtResultant`);
+  `cSubresultantParam` = `lrtSubresultantGen` via L4b + interpolation-in-`z`.
+- **G5** — assemble with the candidate route's tower per-root analytic identity
+  (`residue_gcd_eq_linear_factor` / `cIntegrateReducedGWf_logs_eq_per_root`) into a symbolic-log soundness
+  `IsIntegralResultLrtG` for `cIntegrateReducedLrtG`; swap the primitive base (closes `hreduced` **without**
+  the rational-residue restriction).
 
-**Bottom line:** the generalization is a *parametrization* (`derivative D → B`) plus one honest
-hypothesis (`hB` normality, already characterized by `isCoprime_X_sub_C_implicitDeriv_iff`), reusing the
-repo's `implicitDeriv` gcd theory and the candidate route's tower analytic identity. Not new deep math —
-a substantial but bounded refactor-and-connect.
+**Bottom line:** ✅ **the mathematical core is DONE** (G1–G3, gate-clean) — the abstract LRT residue theory
+is generalized from `derivative D` to an arbitrary derivation image `B`, exactly a parametrization plus one
+honest normality hypothesis (already characterized by `isCoprime_X_sub_C_implicitDeriv_iff`). What remains
+(G4/G5) is *connecting* the computable tower engine to it — engineering of the same flavor as the L4b
+subresultant certification, not new mathematics.
