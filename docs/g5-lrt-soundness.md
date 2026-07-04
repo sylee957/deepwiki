@@ -105,6 +105,35 @@ that intertwines the tower derivation* and is **injective**. Plan:
   `field_identity_of_reducedG_of_residueMatch`; descend to `IsIntegralResultLrtG` over `K`. Then swap the
   primitive base to `cIntegrateReducedLrtG` ⟹ `hreduced` closed WITHOUT the rational-residue restriction.
 
+## ⚠️ CRITICAL CORRECTNESS FINDING (2026-07-04) — raw `Sᵢ` is unsound over the tower
+
+Digging into the residue↔pole reindexing surfaced a genuine subtlety that would have made a "one-shot"
+proof **wrong**. The LRT log argument is a *subresultant* `Sᵢ(c,t)`, which equals `sᵢ(c)·(monic gcd)` where
+`sᵢ(c) = (lrtSubresultant …).coeff i` is a leading-coefficient **unit** (`LrtMonicLogs.lrtPsc`,
+`lrtSubresultant_eval_eq_psc_mul_monicLrtLog`). Its log-derivative contributes
+`D(sᵢ(c))/sᵢ(c)` to each term.
+
+- **Rational case (`K(x)`, formal `d/dx`):** the unit VANISHES — `logDeriv_algebraMap_C_mul_eq`
+  (`LrtMonicLogs.lean:152`): `sᵢ(c)` is a `t`-constant so `derivative(C sᵢ(c)) = 0`. Raw `Sᵢ` is sound.
+- **Tower case (`D_tower = mapCoeffs + Dt·d/dt`):** the unit does **NOT** vanish —
+  `D_tower(C·sᵢ(c)) = C(D_base(sᵢ(c)))`, nonzero whenever `sᵢ(c)` is not a *base*-constant (it generally
+  isn't — its a rational function of `x`). So `Σ_c c·D_base(sᵢ(c))/sᵢ(c)` is a **spurious extra term**, and
+  the raw-`Sᵢ` reduced identity is **FALSE** over the tower.
+
+**Consequence.** `cLrtLogArgG` currently emits the raw `cSubresultantParam`; for tower soundness the log
+arguments must be **monic-normalized** (Bronstein §2 Ex 2.7 — divide each `Sᵢ(c,t)` by its leading
+`t`-coefficient `sᵢ(c)`; abstract: `LrtMonicLogs.monicLrtLog`). So:
+1. **P1's `IsIntegralResultLrtG` / `logResidueSumLrtG` and `cLrtLogArgG` must use the MONIC-normalized
+   `Sᵢ`** (or `evalLrtArg` must divide out the leading coefficient), else the predicate is false for the
+   raw engine output. This is a **design fix, not just a proof step**.
+2. The computable engine needs a monic-normalization step (`cSubresultantParam` → divide by its top
+   `t`-coefficient `z`-polynomial), and the `evalLrtArg`/soundness updated to match.
+
+This is why raw-`Sᵢ` "in one shot" would have been wrong. The reindexing machinery (`towerDerivExt_div_*`,
+committed) is unaffected and correct; it applies to the monic arguments. The remaining G5 work must first
+route through the **monic normalization** (`LrtMonicLogs` gives the abstract facts: `monicLrtLog` monic,
+`sᵢ`-unit coprime to `Qᵢ`, `lrtSubresultant_eval_eq_psc_mul_monicLrtLog`).
+
 ## Honest scope
 
 P1–P3, P5-assembly are engineering over DONE pieces. **P4 is the genuine new mathematics** (the tower

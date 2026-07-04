@@ -26,10 +26,16 @@ noncomputable def amGExt (p : (CFieldSpec.K α)[X]) : RatFunc E :=
   algebraMap E[X] (RatFunc E) (p.map (algebraMap (CFieldSpec.K α) E))
 
 /-- The symbolic log argument `Sᵢ` (a list of `z`-polynomials, one per `t`-power) evaluated at a residue
-`c ∈ E`: the `E[t]` polynomial `Σₖ (Sᵢ[k] at z=c)·tᵏ`. -/
+`c ∈ E` and **monic-normalized in `t`**: the raw `E[t]` polynomial `Σₖ (Sᵢ[k] at z=c)·tᵏ` divided by its
+leading `t`-coefficient. The monic normalization (Bronstein §2 Ex 2.7, `LrtMonicLogs.monicLrtLog`) is
+**required for tower soundness** — the raw subresultant `Sᵢ(c) = sᵢ(c)·(monic gcd)` carries a
+leading-coefficient unit `sᵢ(c)` whose *tower* log-derivative `D_base(sᵢ(c))/sᵢ(c)` does **not** vanish
+(unlike the formal `d/dx` case), so the raw argument gives a spurious extra term. Dividing by the leading
+coefficient turns `Sᵢ(c)` into the **monic gcd**, whose log-derivative is exactly the RT residue term. -/
 noncomputable def evalLrtArg (Si : List (CPolyG α)) (c : E) : E[X] :=
-  (Si.zipIdx.map (fun p =>
+  let raw : E[X] := (Si.zipIdx.map (fun p =>
     C ((toPolyG p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c) * X ^ p.2)).sum
+  raw * C raw.leadingCoeff⁻¹
 
 variable [Differential E] [Algebra ℚ E]
 
