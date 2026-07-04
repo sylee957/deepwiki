@@ -862,6 +862,15 @@ theorem mem_roots_prodPow {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : Li
       obtain ⟨v, hv, hav⟩ := ih (i + 1) (Nat.succ_ne_zero i) hrest ha
       exact ⟨v, List.mem_cons_of_mem e hv, hav⟩
 
+/-- `prodPow` commutes with a polynomial base change `φ`: `(prodPow i L).map φ = prodPow i (L.map (·.map φ))`. -/
+theorem prodPow_map {K E : Type*} [Field K] [Field E] (φ : K →+* E) (i : ℕ) (L : List K[X]) :
+    (prodPow i L).map φ = prodPow i (L.map (Polynomial.map φ)) := by
+  induction L generalizing i with
+  | nil => simp [prodPow]
+  | cons e es ih =>
+    simp only [prodPow, List.map_cons, Polynomial.map_mul, Polynomial.map_pow]
+    rw [ih]
+
 /-- If `c` is a root of no factor of `L`, then `rootMultiplicity c (prodPow i L) = 0` (a root of the product
 would be a root of some factor, by `mem_roots_prodPow`). -/
 theorem rootMult_prodPow_eq_zero {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : List E[X]) (c : E)
@@ -942,6 +951,62 @@ theorem disjoint_yun_factors [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   exact disjoint_roots_of_isCoprime _ _ hcopE
 
 open Classical in
+omit [CDiffField α] [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- **A Yun factor stays squarefree over `E`.** Squarefree over char-zero `K` ⟹ separable ⟹ separable over
+`E` (base change) ⟹ squarefree over `E`. -/
+theorem yun_factor_map_squarefree [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α) (hR0 : toPolyG R ≠ 0)
+    (hRpp : (toPolyG R).primPart ≠ 0) {j : ℕ} (hj : j < (cSqfreeYunFFGWf R).length) :
+    Squarefree ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)) :=
+  ((PerfectField.separable_iff_squarefree.mpr
+    (cSqfreeYunFFGWf_squarefree hgcd R hR0 hRpp j hj)).map).squarefree
+
+open Classical in
+omit [CDiffField α] [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- **The residue multiplicity is the Yun-factor index + 1** (the `hindex` crux). For `c` a root of the
+`idx`-th Yun factor of `R` (base-changed to `E`), `rootMultiplicity c (R_E) = idx + 1`: `R ~ ∏Rⱼ^(j+1)`
+(reconstruction), and `c` is a simple root of only `R_idx` (squarefree ⟹ mult 1; coprimality ⟹ mult 0
+elsewhere), so `rootMult_prodPow_of_unique` gives `1 + idx`. -/
+theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α) (hR0 : toPolyG R ≠ 0)
+    (hRpp : (toPolyG R).primPart ≠ 0) (idx : ℕ) (hidx : idx < (cSqfreeYunFFGWf R).length) (c : E)
+    (hc : c ∈ ((toPolyG ((cSqfreeYunFFGWf R).get ⟨idx, hidx⟩)).map (algebraMap (CFieldSpec.K α) E)).roots) :
+    rootMultiplicity c ((toPolyG R).map (algebraMap (CFieldSpec.K α) E)) = idx + 1 := by
+  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd R hR0 hRpp).map
+    (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
+  simp only [Polynomial.coe_mapRingHom, prodPow_map] at hrec
+  rw [associated_rootMultiplicity_eq hrec c]
+  have hprodne : prodPow 1 (((cSqfreeYunFFGWf R).map toPolyG).map
+      (Polynomial.map (algebraMap (CFieldSpec.K α) E))) ≠ 0 :=
+    fun h => ((Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hR0)
+      (hrec.eq_zero_iff.mpr h)
+  have hlen : idx < (((cSqfreeYunFFGWf R).map toPolyG).map
+      (Polynomial.map (algebraMap (CFieldSpec.K α) E))).length := by
+    rw [List.length_map, List.length_map]; exact hidx
+  have hget : ∀ (j : ℕ) (hj : j < (cSqfreeYunFFGWf R).length),
+      (((cSqfreeYunFFGWf R).map toPolyG).map (Polynomial.map (algebraMap (CFieldSpec.K α) E)))[j]'
+          (by rw [List.length_map, List.length_map]; exact hj)
+        = (toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E) := by
+    intro j hj; rw [List.getElem_map, List.getElem_map]; rfl
+  rw [rootMult_prodPow_of_unique c _ 1 idx one_ne_zero hlen hprodne ?_ ?_]
+  · omega
+  · rw [hget idx hidx]
+    exact squarefree_rootMultiplicity_eq_one (yun_factor_map_squarefree hgcd R hR0 hRpp hidx) c
+      (Polynomial.isRoot_of_mem_roots hc)
+  · intro j hj hjne
+    have hj' : j < (cSqfreeYunFFGWf R).length := by rw [List.length_map, List.length_map] at hj; exact hj
+    rw [hget j hj']
+    apply Polynomial.rootMultiplicity_eq_zero
+    intro hroot
+    have hcj : c ∈ ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj'⟩)).map
+        (algebraMap (CFieldSpec.K α) E)).roots :=
+      Polynomial.mem_roots'.mpr ⟨(yun_factor_map_squarefree hgcd R hR0 hRpp hj').ne_zero, hroot⟩
+    exact (Finset.disjoint_left.mp (disjoint_yun_factors hgcd R hR0 hRpp hidx hj' (Ne.symm hjne))
+      (Multiset.mem_toFinset.mpr hc)) (Multiset.mem_toFinset.mpr hcj)
+
+open Classical in
 omit [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **`hdisj`.** The entries of `cLrtLogArgG` have pairwise-disjoint `Rᵢ`-root sets: each entry comes from a
@@ -988,14 +1053,6 @@ theorem not_len_le_one_of_root {E : Type*} [Field E] [Algebra (CFieldSpec.K α) 
     Polynomial.natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective] at hle
   omega
 
-/-- `prodPow` commutes with a polynomial base change `φ`: `(prodPow i L).map φ = prodPow i (L.map (·.map φ))`. -/
-theorem prodPow_map {K E : Type*} [Field K] [Field E] (φ : K →+* E) (i : ℕ) (L : List K[X]) :
-    (prodPow i L).map φ = prodPow i (L.map (Polynomial.map φ)) := by
-  induction L generalizing i with
-  | nil => simp [prodPow]
-  | cons e es ih =>
-    simp only [prodPow, List.map_cons, Polynomial.map_mul, Polynomial.map_pow]
-    rw [ih]
 
 variable [CFracGcdCoreWf α] in
 /-- **`hressub` per entry.** Every root `c` of an entry's `Rᵢ` (over `E`) is a residue `res β` of some pole `β`:
