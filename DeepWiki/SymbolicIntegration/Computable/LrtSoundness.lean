@@ -661,6 +661,57 @@ theorem logResidueSumLrtG_eq_normalPart {α : Type*} [CField α] [CFieldSpec α]
   exact pole_sum_eq_normalPart Dt ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)) allpoles
     hA hnorm hcancel
 
+open scoped Differential Classical in
+/-- **`hlog` from the Yun structure** (the assembly of the three discharge cores). With `polesOf p :=
+allpoles.filter (res · ∈ Rᵢ.roots)`, `logResidueSumLrtG_eq_normalPart`'s hypotheses discharge from: `hnodup`
+(each `Rᵢ` squarefree) + `hressub` (each root is a residue) ⟹ `hroots` (`roots_eq_image_res_filter`); `hdisj`
+(Yun coprimality) + `hcover` (reconstruction) ⟹ `hpart` (`sum_filter_rootSet_partition`); `hentry` (each entry
+log arg = its fiber product, from `evalLrtArg_eq_fiber_prod`) ⟹ `hfac`. Conclusion: `logResidueSumLrtG =
+hNum/∏(t−β)`. -/
+theorem logResidueSumLrtG_eq_normalPart_of_yun {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
+    [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    (Dt hNum : CPolyG α) (logs : List (CPolyG α × List (CPolyG α))) (allpoles : Finset E) (res : E → E)
+    (hres : res = fun β => ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+        / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+            (Lagrange.nodal allpoles id)).eval β)
+    (hnodup : ∀ p ∈ logs, ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.Nodup)
+    (hressub : ∀ p ∈ logs, ∀ c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
+        ∃ β ∈ allpoles, res β = c)
+    (hdisj : logs.Pairwise (fun p q =>
+        Disjoint ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
+          ((toPolyG q.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset))
+    (hcover : ∀ β ∈ allpoles, ∃ p ∈ logs,
+        res β ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset)
+    (hentry : ∀ p ∈ logs, ∀ c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
+        evalLrtArg p.2 c
+          = ((allpoles.filter (fun β => res β = c)).val.map (fun β => X - C β)).prod)
+    (hA : ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).degree < allpoles.card)
+    (hnorm : ∀ β ∈ allpoles, ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
+    (hcancel : ∑ β ∈ allpoles, algebraMap E[X] (RatFunc E)
+        (C (res β) * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) :
+    logResidueSumLrtG Dt logs
+      = algebraMap E[X] (RatFunc E) ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
+        / algebraMap E[X] (RatFunc E) (Lagrange.nodal allpoles id) := by
+  subst hres
+  refine logResidueSumLrtG_eq_normalPart Dt hNum logs allpoles
+    (fun p => allpoles.filter (fun β =>
+      ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+        / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+            (Lagrange.nodal allpoles id)).eval β
+      ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset)) ?_ ?_ ?_ hA hnorm hcancel
+  · intro p hp
+    exact roots_eq_image_res_filter allpoles _ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E))
+      (hnodup p hp) (hressub p hp)
+  · intro p hp c hc
+    rw [hentry p hp c hc]
+    congr 2
+    congr 1
+    ext β
+    simp only [Finset.mem_filter, Multiset.mem_toFinset]
+    exact ⟨fun h => ⟨⟨h.1, by rw [h.2]; exact hc⟩, h.2⟩, fun h => ⟨h.1.1, h.2⟩⟩
+  · exact sum_filter_rootSet_partition Dt allpoles _ logs
+      (fun p => ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset) hdisj hcover
+
 /-- **LRT field-identity assembler** (the analogue of `field_identity_of_reducedG_of_residueMatch`, over
 `E`). Given the log-part match `hlog` (`logResidueSumLrtG = hNum/Dstar`, from
 `logResidueSumLrtG_eq_normalPart`) and the Hermite half `hherm` (`D(g) + hNum/Dstar = a/d`), the full
