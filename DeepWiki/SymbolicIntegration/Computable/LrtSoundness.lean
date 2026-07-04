@@ -401,6 +401,21 @@ theorem logResidueTermLrtG_eq_finset_pole_sum {α : Type*} [CField α] [CFieldSp
     (fun c => (polesᵢ.filter (fun β => res β = c)).val) hfac, hroots]
   exact residue_pole_regroup polesᵢ res (poleTerm Dt)
 
+open Classical in
+/-- **A monic separable polynomial over an algebraically-closed field is `nodal` of its roots.** Splitting
+(alg-closed) + monic gives `p = ∏ (X − β)` over the root multiset, and separable makes the roots `Nodup`, so
+the multiset product collapses to the `Finset` product `Lagrange.nodal p.roots.toFinset id`. -/
+theorem monic_separable_eq_nodal {E : Type*} [Field E] [IsAlgClosed E] (p : E[X])
+    (hm : p.Monic) (hsep : p.Separable) :
+    p = Lagrange.nodal p.roots.toFinset id := by
+  classical
+  have hnodup : p.roots.Nodup := Polynomial.nodup_roots hsep
+  have hprod : p = (p.roots.map (fun β => X - C β)).prod :=
+    (IsAlgClosed.splits p).eq_prod_roots_of_monic hm
+  rw [Lagrange.nodal, Finset.prod_eq_multiset_prod, Multiset.toFinset_val,
+    Multiset.dedup_eq_self.mpr hnodup]
+  simpa using hprod
+
 /-- **A list-indexed disjoint partition splits a `Finset` sum.** For pairwise-disjoint per-index pole sets
 `polesOf`, the list-sum of per-index `Finset` sums equals the `Finset` sum over their union — the pure
 combinatorial fact behind `hpart`. -/
