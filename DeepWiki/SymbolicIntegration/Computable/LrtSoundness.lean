@@ -312,6 +312,38 @@ theorem logResidueTermLrtG_eq_finset_pole_sum {α : Type*} [CField α] [CFieldSp
     (fun c => (polesᵢ.filter (fun β => res β = c)).val) hfac, hroots]
   exact residue_pole_regroup polesᵢ res (poleTerm Dt)
 
+/-- **A list-indexed disjoint partition splits a `Finset` sum.** For pairwise-disjoint per-index pole sets
+`polesOf`, the list-sum of per-index `Finset` sums equals the `Finset` sum over their union — the pure
+combinatorial fact behind `hpart`. -/
+theorem sum_over_list_partition {ι : Type*} {γ : Type*} [DecidableEq γ] {M : Type*} [AddCommMonoid M]
+    (l : List ι) (polesOf : ι → Finset γ) (g : γ → M)
+    (hdisj : l.Pairwise (fun p q => Disjoint (polesOf p) (polesOf q))) :
+    (l.map (fun p => ∑ β ∈ polesOf p, g β)).sum
+      = ∑ β ∈ (l.map polesOf).foldr (· ∪ ·) ∅, g β := by
+  have hmemfold : ∀ (L : List (Finset γ)) (β : γ), β ∈ L.foldr (· ∪ ·) ∅ → ∃ s ∈ L, β ∈ s := by
+    intro L β hβ
+    induction L with
+    | nil => simp at hβ
+    | cons hd u ih =>
+      rw [List.foldr_cons, Finset.mem_union] at hβ
+      rcases hβ with h | h
+      · exact ⟨hd, List.mem_cons_self, h⟩
+      · obtain ⟨s', hs', hβ'⟩ := ih h
+        exact ⟨s', List.mem_cons_of_mem hd hs', hβ'⟩
+  induction l with
+  | nil => simp
+  | cons p t ih =>
+    rw [List.pairwise_cons] at hdisj
+    have hpt : Disjoint (polesOf p) ((t.map polesOf).foldr (· ∪ ·) ∅) := by
+      rw [Finset.disjoint_right]
+      intro β hβ hβp
+      obtain ⟨s, hs, hβs⟩ := hmemfold (t.map polesOf) β hβ
+      rw [List.mem_map] at hs
+      obtain ⟨q, hqt, rfl⟩ := hs
+      exact (Finset.disjoint_left.mp (hdisj.1 q hqt) hβp) hβs
+    rw [List.map_cons, List.sum_cons, List.map_cons, List.foldr_cons,
+      Finset.sum_union hpt, ih hdisj.2]
+
 open scoped Classical in
 /-- **Log-part sum in pole form (partition assembly).** Summing the per-`Rᵢ` pole sums over a per-entry
 pole set `polesOf` that tiles the full pole set: `logResidueSumLrtG = Σ_{β ∈ allpoles} res(β)·poleTerm β`.
