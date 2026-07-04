@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtIntegrate
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
+import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator (G5, pass P1)
 
@@ -84,6 +85,29 @@ theorem raw_eq_map (Si : List (CPolyG α)) (c : E) (P : ((CFieldSpec.K α)[X])[X
   cases Si[n]? with
   | none => simp [toPolyG_nil]
   | some sk => simp
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **P3: the monic log argument is the residue-pole product.** Given the G4c coefficient identity and that
+the base-changed subresultant `S` is similar to `∏_{β}(t−β)` (G3 `~gcd` + G2 `gcd=∏`), `evalLrtArg Sᵢ c =
+∏_{β}(t−β)`. Composes `raw_eq_map` (`raw = S`) with `monicNormalize_eq_of_isSimilar_prod` (`monic(S) = ∏`). -/
+theorem evalLrtArg_eq_prod (Si : List (CPolyG α)) (c : E) (A D B : (CFieldSpec.K α)[X]) (j : ℕ)
+    (poles : Multiset E) (hφ : Function.Injective (algebraMap (CFieldSpec.K α) E))
+    (hg4c : ∀ n, toPolyG (Si.getD n []) = (lrtSubresultantGen A D B j).coeff n)
+    (hsim : IsSimilar (subresultant (D.map (algebraMap (CFieldSpec.K α) E))
+        (A.map (algebraMap (CFieldSpec.K α) E)
+          - Polynomial.C c * B.map (algebraMap (CFieldSpec.K α) E)) D.natDegree (D.natDegree - 1) j)
+      (poles.map (fun β => Polynomial.X - Polynomial.C β)).prod) :
+    evalLrtArg Si c = (poles.map (fun β => Polynomial.X - Polynomial.C β)).prod := by
+  have hraw : (Si.zipIdx.map (fun p => Polynomial.C
+        ((toPolyG p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c) * Polynomial.X ^ p.2)).sum
+      = subresultant (D.map (algebraMap (CFieldSpec.K α) E))
+        (A.map (algebraMap (CFieldSpec.K α) E)
+          - Polynomial.C c * B.map (algebraMap (CFieldSpec.K α) E)) D.natDegree (D.natDegree - 1) j := by
+    rw [raw_eq_map Si c (lrtSubresultantGen A D B j) hg4c,
+      lrtSubresultantGen_map_eval₂ _ A D B c j hφ]
+  simp only [evalLrtArg]
+  rw [hraw]
+  exact monicNormalize_eq_of_isSimilar_prod poles hsim
 
 variable [Differential E] [Algebra ℚ E]
 
