@@ -11,15 +11,16 @@ frontier facts are the fields of one class, `PrimitiveFrontier α` (materialized
 **reconstruction** are proven inside the instance; the residual frontier facts stay isolated in
 `PrimitiveFrontier`:
 
-* `hgcd` — the fraction-free gcd correctness `GcdFFCorrect` (a *proven theorem* `gcdFFCorrect_Q` at the `ℚ`
-  base); with `[CharZero]` it discharges the whole canonical reconstruction via
-  `canonicalReconstruction_of_charZero` (split factorization + special ⊥ normal coprimality) — the split
-  frontier is **gone**, no longer a hypothesis;
-* `hden` — the mild scope condition that a successful special integration has `d ≠ 0` (a genuine fraction);
+Only the two genuine frontiers remain as fields; the incidental conditions are handled *by the algorithm*:
+the gcd correctness is a resolved **`[Fact (GcdFFCorrect α)]`** instance (a *proven theorem* `gcdFFCorrect_Q`
+at the `ℚ` base — no field), and `d ≠ 0` is **supplied by the integrator's guard** (`integrate` declines the
+degenerate `a/0`). The reconstruction is then proven via `canonicalReconstruction_of_charZero`. The residual
+fields:
+
 * `hspecialField` — the poly-RDE identity (canonical `Dt = 1` regime, `cPolyRischDEGWf_nil_field_identity`;
   the general non-constant-coefficient case is the P2 algorithm gap);
 * `hreduced` — reduced-part soundness (grounded in `cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces`
-  under the Rothstein–Trager residue-data conditions — *not* a `native_decide` wall).
+  under the Rothstein–Trager residue-data conditions — the P3 frontier, *not* a `native_decide` wall).
 
 This is a **soundness-only** solver: the completeness contract (`SpecElem`/`NrmElem`/`descend`) is trivial in
 the instance, so `not_isElementaryIntegrable` is vacuous. Completeness is the Liouville frontier, deferred.
@@ -37,16 +38,10 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 `LawfulRischLevel` instance (hence the whole solver) then resolves from `[PrimitiveFrontier α]` with no
 threaded parameters. -/
 class PrimitiveFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] where
+    [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
+    [Fact (GcdFFCorrect (α := α))] where
   /-- The level's residue-candidate generator. -/
   candidates : CPolyG α → CPolyG α → CPolyG α → List α
-  /-- The fraction-free gcd correctness (a *proven theorem* `gcdFFCorrect_Q` at the `ℚ` base). With
-  `[CharZero]` this discharges the entire canonical reconstruction — the split frontier is gone. -/
-  hgcd : GcdFFCorrect (α := α)
-  /-- Scope condition: a successful special integration is of a genuine fraction (`d ≠ 0`). -/
-  hden : ∀ (Dt a d snum sden : CPolyG α),
-    primitiveCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
-      = some (snum, sden) → toPolyG d ≠ 0
   /-- Poly-RDE identity: the `b = 0` RDE output `qₚ` differentiates back to `⟦fₚ⟧`. -/
   hspecialField : ∀ (Dt a d qp : CPolyG α),
     cisZeroG (crSpecNum Dt a d) = true →
@@ -61,13 +56,14 @@ class PrimitiveFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
 Materialize one `PrimitiveFrontier α` and the whole solver (`LawfulRischLevel.integrate` / `.sound` /
 completeness) resolves automatically, parameter-free. `specialSound` is proven here: the special-part
 identity from `hspecialField`, and the **reconstruction from `canonicalReconstruction_of_charZero`** (the
-split frontier discharged) with the `b = 0` special term vanishing. -/
-instance instLawfulRischLevelPrimitive [PrimitiveFrontier α] : LawfulRischLevel α where
+split frontier discharged, gcd correctness from the `[Fact (GcdFFCorrect α)]` instance) with the `b = 0`
+special term vanishing; `d ≠ 0` is supplied by the integrator's guard. -/
+instance instLawfulRischLevelPrimitive [Fact (GcdFFCorrect (α := α))] [PrimitiveFrontier α] :
+    LawfulRischLevel α where
   case := primitiveCase
   candidates := PrimitiveFrontier.candidates
   specialSound := by
-    intro Dt a d snum sden hhook
-    have hd0 : toPolyG d ≠ 0 := PrimitiveFrontier.hden Dt a d snum sden hhook
+    intro Dt a d snum sden hd0 hhook
     simp only [primitiveCase] at hhook
     by_cases hb : cisZeroG (crSpecNum Dt a d) = true
     · rw [if_pos hb] at hhook
@@ -84,7 +80,7 @@ instance instLawfulRischLevelPrimitive [PrimitiveFrontier α] : LawfulRischLevel
         · -- reconstruction `⟦fₚ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`, split frontier discharged
           have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
             simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
-          have hrec := canonicalReconstruction_of_charZero PrimitiveFrontier.hgcd Dt a d hd0
+          have hrec := canonicalReconstruction_of_charZero (Fact.out (p := GcdFFCorrect (α := α))) Dt a d hd0
           rw [hvan, add_zero] at hrec
           exact hrec
     · rw [if_neg hb] at hhook; simp at hhook

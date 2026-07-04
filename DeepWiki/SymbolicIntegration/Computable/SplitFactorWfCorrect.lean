@@ -132,6 +132,10 @@ theorem cSplitFactorFastGWf_isSplittingFactorizationGen [CharZero (CFieldSpec.K 
 cgcdMonicWf` (the plain monic Euclidean gcd), whose correctness is `associated_toPolyG_cgcdMonicWf`. -/
 theorem gcdFFCorrect_Q : GcdFFCorrect (α := ℚ) := fun a b => associated_toPolyG_cgcdMonicWf a b
 
+/-- **The gcd frontier as a resolvable `Fact` at the `ℚ` base.** Lets `[Fact (GcdFFCorrect (α := ℚ))]`
+resolve automatically (the tower case above `ℚ` is the PRS-regularity frontier — no such instance there). -/
+instance instFactGcdFFCorrectQ : Fact (GcdFFCorrect (α := ℚ)) := ⟨gcdFFCorrect_Q⟩
+
 /-- `CharZero (CFieldSpec.K ℚ) = CharZero ℚ`: local instance for the `ℚ`-base split correctness. -/
 instance : CharZero (CFieldSpec.K ℚ) := inferInstanceAs (CharZero ℚ)
 

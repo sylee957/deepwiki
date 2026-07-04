@@ -31,8 +31,9 @@ class LawfulRischLevel (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] 
   case : MonomialCase α
   /-- The level's residue-candidate generator (so the integrator takes no `cands` argument). -/
   candidates : CPolyG α → CPolyG α → CPolyG α → List α
-  /-- Special-part soundness + reconstruction (existential special value — no stored `RatFunc` data). -/
-  specialSound : ∀ (Dt a d snum sden : CPolyG α),
+  /-- Special-part soundness + reconstruction (existential special value — no stored `RatFunc` data). The
+  `d ≠ 0` precondition is *supplied by the integrator's guard*, so it is not a materialization burden. -/
+  specialSound : ∀ (Dt a d snum sden : CPolyG α), toPolyG d ≠ 0 →
     case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden) →
     toPolyG sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
       towerFractionFieldDerivG Dt (fieldFrac snum sden) = v ∧
@@ -52,36 +53,42 @@ class LawfulRischLevel (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] 
 namespace LawfulRischLevel
 
 /-- **The assembled integrator** — a function of `(Dt, a, d)` alone (the candidate list is the instance's
-`candidates`). Parameter-free: the case hooks come from the `[LawfulRischLevel α]` instance. -/
+`candidates`). Parameter-free: the case hooks come from the `[LawfulRischLevel α]` instance. **Guards on
+`d ≠ 0`** (declines the degenerate `a/0` — not a genuine integrand), so a successful run supplies `d ≠ 0` to
+the soundness laws for free. -/
 def integrate [LawfulRischLevel α] (Dt a d : CPolyG α) : Option (IntegralResultG α) :=
-  cIntegrateCase case Dt a d (candidates Dt a d)
+  if cisZeroG d then none else cIntegrateCase case Dt a d (candidates Dt a d)
 
 /-- **Derived soundness.** Any successful run is an antiderivative of `a/d`, composed from the instance's
 laws through the abstract core `cIntegrateCase_sound`. No threaded hypotheses. -/
 theorem sound [LawfulRischLevel α] (Dt a d : CPolyG α) (res : IntegralResultG α)
     (h : integrate Dt a d = some res) : IsIntegralResultG Dt a d res := by
   rw [integrate] at h
-  set cands := candidates Dt a d with hcands
-  have h0 : cIntegrateCase case Dt a d cands = some res := h
-  rw [cIntegrateCase] at h
-  rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-  rw [hcrep] at h
-  dsimp only at h
-  rcases hspec : case.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
-  · rw [hspec] at h; simp at h
-  · rw [hspec] at h
-    rcases hcorr : case.reducedCorrect Dt (cIntegrateReducedGWf Dt cn dn cands) with _ | nrm
-    · rw [hcorr] at h; simp at h
-    · rw [hcorr] at h
-      have hSpec : case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
-          = some (snum, sden) := by
-        simp only [crPoly, crSpecNum, crSpecDen, hcrep]; exact hspec
-      have hCorr : case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm := by
-        simp only [redNorm, crNormNum, crNormDen, hcrep]; exact hcorr
-      obtain ⟨hsden, v, hSpecField, hrecon⟩ := specialSound Dt a d snum sden hSpec
-      obtain ⟨hgden, hNrmField⟩ := reducedSound Dt a d cands nrm hCorr
-      exact cIntegrateCase_sound case Dt a d cands res snum sden nrm v
-        hsden hgden hSpec hCorr h0 hSpecField hNrmField hrecon
+  by_cases hdz : cisZeroG d = true
+  · rw [if_pos hdz] at h; simp at h
+  · rw [if_neg hdz] at h
+    have hd0 : toPolyG d ≠ 0 := fun hh => hdz ((cisZeroG_iff d).mpr hh)
+    set cands := candidates Dt a d with hcands
+    have h0 : cIntegrateCase case Dt a d cands = some res := h
+    rw [cIntegrateCase] at h
+    rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rw [hcrep] at h
+    dsimp only at h
+    rcases hspec : case.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
+    · rw [hspec] at h; simp at h
+    · rw [hspec] at h
+      rcases hcorr : case.reducedCorrect Dt (cIntegrateReducedGWf Dt cn dn cands) with _ | nrm
+      · rw [hcorr] at h; simp at h
+      · rw [hcorr] at h
+        have hSpec : case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
+            = some (snum, sden) := by
+          simp only [crPoly, crSpecNum, crSpecDen, hcrep]; exact hspec
+        have hCorr : case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm := by
+          simp only [redNorm, crNormNum, crNormDen, hcrep]; exact hcorr
+        obtain ⟨hsden, v, hSpecField, hrecon⟩ := specialSound Dt a d snum sden hd0 hSpec
+        obtain ⟨hgden, hNrmField⟩ := reducedSound Dt a d cands nrm hCorr
+        exact cIntegrateCase_sound case Dt a d cands res snum sden nrm v
+          hsden hgden hSpec hCorr h0 hSpecField hNrmField hrecon
 
 /-- **Derived constructive completeness.** A successful run certifies `a/d` is elementary integrable. -/
 theorem isElementaryIntegrable_of_run [LawfulRischLevel α] (Dt a d : CPolyG α)
