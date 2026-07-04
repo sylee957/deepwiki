@@ -308,10 +308,26 @@ Every Yun fact for the concrete `cLrtLogArgG` is now proven and gate-green (`Lrt
 Multiplicity infrastructure built: `rootMultiplicity_pow_eq`, `associated_rootMultiplicity_eq`,
 `squarefree_rootMultiplicity_eq_one`, `rootMult_prodPow_eq_zero`, `rootMult_prodPow_of_unique`.
 
-**Remaining:** the final `hlog` wiring — plug the 5 Yun facts + RT-setup into `logResidueSumLrtG_eq_normalPart_of_yun`
-(`hsplit` via `monic_separable_eq_nodal`; `hB`/`hnorm`/`hcancel` are genuine Bronstein RT side conditions taken as
-hypotheses, matching the capstone's `hcopgcd`). That yields the capstone's `hlog`. Then `E→K` descent
-(`AlgebraicClosure K` + injectivity) + swap the primitive base ⟹ `PrimitiveFrontier.hreduced`.
+### ★★★★★★ FINAL `hlog` WIRING DONE (2026-07-05) — all hard internal math proven
+
+`logMatch_of_setup` (`LrtSoundness.lean`, gate-green) produces the capstone's `hlog` outright: it plugs the 5 Yun
+facts into `logResidueSumLrtG_eq_normalPart_of_yun` (`hsplit` via `monic_separable_eq_nodal`; the `Dd_E =
+implicitDeriv Dt_E Dstar_E` alignment `hDd2` via `toPolyG_cmonomialDeriv`+`implicitDeriv_map` bridges the
+`residueResultant`/`entry` forms), concluding `logResidueSumLrtG (cLrtLogArgG Dt hNum Dstar) = hNum/Dstar` over
+any alg-closed `E`, modulo the genuine RT side conditions (`hB`/`hnorm`/`hcancel`/`hilt` normality+cancellation,
+`hAD`/`hAnd`/`hAdeg` properness, `hDmonic`/`hDsep`/`hR0`/`hRpp`/`hm` Hermite-provided).
+
+**So every hard mathematical step of the LRT soundness is now proven.** The whole chain composes:
+`hreduced` ⟸ swap base ⟸ `E→K` descent ⟸ **capstone (done)** ⟸ `hlog` = `logMatch_of_setup` (**done**)
+⟸ 5 Yun facts (**done**).
+
+**Remaining (assembly + descent, no new mathematics):**
+1. Compose `logMatch_of_setup` + capstone ⟹ `IsIntegralResultLrtG cIntegrateReducedLrtG` modulo the RT setup;
+   discharge the Hermite-provided facts (`hDmonic`/`hDsep`/`hAD` from `cHermiteReduceTowerGWf`), leaving the
+   genuine Bronstein side conditions (`hB`/`hnorm`/`hcancel`/`hilt`) as hypotheses (matching `hcopgcd`).
+2. The `E→K` descent — instantiate `E := AlgebraicClosure K`, descend the `RatFunc`-equation via injectivity
+   (the base-change intertwining `ratFuncBaseChange` already built for `hherm` is the tool).
+3. Swap the primitive base ⟹ `PrimitiveFrontier.hreduced` closed, without the rational-residue restriction.
 
 ### ★ `hlog` is ASSEMBLY, not a wall (2026-07-04) — every abstract endpoint already exists
 
