@@ -303,4 +303,53 @@ theorem lazardRiobooTrager_output_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlg
   · rw [if_neg hcase]
     exact lazardRiobooTrager_isSimilar_gcd_gen A D B hD hB hA hB_deg a (lt_of_le_of_ne hile hcase)
 
+/-! ## `z`-degree bound (over a general field, needed for the interpolation certification)
+
+`rtResultantGen A D B` has `z`-degree `≤ deg D`, generalizing `natDegree_rtResultant_le` (stated over `ℚ`)
+to any field `K` and arbitrary `B`. Needed to certify `cResidueResultantTowerGWf` (an interpolant of the
+resultant samples) via interpolation uniqueness. -/
+
+/-- Column-degree bound for a matrix determinant (general field). -/
+theorem natDegree_det_le_sum_col_gen {ι : Type*} [DecidableEq ι] [Fintype ι]
+    (M : Matrix ι ι K[X]) (b : ι → ℕ) (hb : ∀ i j, (M i j).natDegree ≤ b j) :
+    (M.det).natDegree ≤ ∑ j, b j := by
+  rw [Matrix.det_apply]
+  refine (Polynomial.natDegree_sum_le _ _).trans ?_
+  rw [Finset.fold_max_le]
+  refine ⟨Nat.zero_le _, ?_⟩
+  intro σ _
+  rw [Function.comp_apply]
+  refine (natDegree_smul_le _ _).trans ?_
+  refine (Polynomial.natDegree_prod_le _ _).trans ?_
+  exact Finset.sum_le_sum (fun i _ => hb (σ i) i)
+
+/-- Each `z`-coefficient of `A.map C − C z · B.map C` has `natDegree ≤ 1` (linear in `z`). -/
+theorem natDegree_coeff_rtResultantGen_g_le (A B : K[X]) (k : ℕ) :
+    ((A.map (C : K →+* K[X]) - C Polynomial.X * B.map (C : K →+* K[X])).coeff k).natDegree ≤ 1 := by
+  rw [Polynomial.coeff_sub, Polynomial.coeff_map, Polynomial.coeff_C_mul, Polynomial.coeff_map]
+  refine (natDegree_sub_le _ _).trans (max_le ?_ ?_)
+  · rw [Polynomial.natDegree_C]; exact Nat.zero_le 1
+  · refine (Polynomial.natDegree_mul_le (p := (Polynomial.X : K[X]))
+      (q := Polynomial.C (B.coeff k))).trans ?_
+    rw [Polynomial.natDegree_X, Polynomial.natDegree_C]
+
+/-- `rtResultantGen A D B` has `z`-degree `≤ deg D`. -/
+theorem natDegree_rtResultantGen_le (A D B : K[X]) :
+    (rtResultantGen A D B).natDegree ≤ D.natDegree := by
+  rw [rtResultantGen, resultant]
+  refine le_trans (natDegree_det_le_sum_col_gen _
+    (fun j => j.addCases (fun _ => 1) (fun _ => 0)) ?_) ?_
+  · intro i j
+    rw [Polynomial.sylvester, Matrix.of_apply]
+    refine j.addCases (fun j₁ => ?_) (fun j₁ => ?_)
+    · simp only [Fin.addCases_left]
+      split_ifs with h
+      · exact natDegree_coeff_rtResultantGen_g_le A B _
+      · simp
+    · simp only [Fin.addCases_right]
+      split_ifs with h
+      · rw [Polynomial.coeff_map, Polynomial.natDegree_C]
+      · simp
+  · rw [Fin.sum_univ_add]; simp
+
 end DeepWiki.SymbolicIntegration
