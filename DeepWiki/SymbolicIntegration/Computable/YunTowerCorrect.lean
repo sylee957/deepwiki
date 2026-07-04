@@ -611,6 +611,35 @@ theorem squarefree_list_prod {K : Type*} [Field K] (L : List K[X])
       hsf a (List.mem_cons_self ..),
       ih hpw.2 (fun x hx => hsf x (List.mem_cons_of_mem a hx))⟩
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Every Yun go-loop factor is monic** — each emitted factor is `cmonicG (cgcdFFCoreWf b d)`, whose
+`toPolyG` is monic (`monic_toPolyG_cmonicG`); the working `b` stays nonzero through the deflation. -/
+theorem cSqfreeYunFFGgoWf_monic (hgcd : GcdFFCorrect (α := α)) :
+    ∀ (fo : ℕ) (b d : CPolyG α), toPolyG b ≠ 0 →
+      ∀ p ∈ cSqfreeYunFFGgoWf fo b d, (toPolyG p).Monic := by
+  intro fo
+  induction fo with
+  | zero => intro b d _ p hp; simp [cSqfreeYunFFGgoWf] at hp
+  | succ fo ih =>
+    intro b d hb p hp
+    rw [cSqfreeYunFFGgoWf] at hp
+    by_cases hdeg : cdegG b = 0
+    · rw [if_pos hdeg] at hp; simp at hp
+    · rw [if_neg hdeg, List.mem_cons] at hp
+      have hgne : gcd (toPolyG b) (toPolyG d) ≠ 0 :=
+        fun h => hb (zero_dvd_iff.mp (h ▸ gcd_dvd_left (toPolyG b) (toPolyG d)))
+      have hcg : toPolyG (CFracGcdCoreWf.cgcdFFCoreWf b d) ≠ 0 :=
+        fun h => hgne ((hgcd b d).eq_zero_iff.mp h)
+      rcases hp with rfl | hp
+      · exact monic_toPolyG_cmonicG _ hcg
+      · have hb' : toPolyG (cdivWf b (cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d))) ≠ 0 := by
+          rw [toPolyG_yunDeflate_fst hgcd b d hb]
+          intro h
+          apply hb
+          rw [← EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_left (toPolyG b) (toPolyG d)), h,
+            mul_zero]
+        exact ih _ _ hb' p hp
+
 omit [CDiffFieldSpec α] in
 /-- **The Yun radical `Dstar` is squarefree** — a product of the pairwise-coprime, squarefree Yun
 factors (`squarefree_list_prod`). -/
@@ -631,18 +660,52 @@ theorem toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree [CharZero (CFieldSpec.K 
     rw [← hfk]
     exact cSqfreeYunFFGWf_squarefree hgcd d hd0 hpp k hk
 
+/-- The product of monic polynomials is monic (list form). -/
+theorem monic_list_prod {K : Type*} [Field K] (L : List K[X]) (h : ∀ p ∈ L, p.Monic) :
+    L.prod.Monic := by
+  induction L with
+  | nil => simp
+  | cons a t ih =>
+    rw [List.prod_cons]
+    exact (h a (List.mem_cons_self ..)).mul (ih (fun p hp => h p (List.mem_cons_of_mem a hp)))
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Every Yun factor is monic** (entry): the go-loop runs from `b₁ = d / gcd(d, d′) ≠ 0`. -/
+theorem cSqfreeYunFFGWf_monic (hgcd : GcdFFCorrect (α := α)) (d : CPolyG α) (hd0 : toPolyG d ≠ 0) :
+    ∀ p ∈ cSqfreeYunFFGWf d, (toPolyG p).Monic := by
+  rw [cSqfreeYunFFGWf]
+  apply cSqfreeYunFFGgoWf_monic hgcd
+  set g := CFracGcdCoreWf.cgcdFFCoreWf d (cderivG d) with hgdef
+  have hgp : toPolyG g ∣ toPolyG d :=
+    (hgcd d (cderivG d)).dvd.trans (gcd_dvd_left (toPolyG d) (toPolyG (cderivG d)))
+  have hgn : cnormG g ≠ [] := fun h =>
+    hd0 (zero_dvd_iff.mp (((cisZeroG_iff g).mp (by simp [cisZeroG, h])) ▸ hgp))
+  have hex := toPolyG_cdivWf_exact d g hgn hgp
+  intro h; apply hd0; rw [← hex, h, zero_mul]
+
 omit [CDiffFieldSpec α] in
-/-- **The RT `hden` bridge.** If the Yun radical `Dstar` is monic and splits over `K` (the rational-residue
-slice), then `Dstar = nodal (its root set)` — the `hden` hypothesis of the RT residue-match assemblers,
-with squarefreeness supplied by the Yun structure. `hsplit` is the genuine rational-residue restriction. -/
+/-- **The Yun radical `Dstar` is monic** — a product of the monic Yun factors (`monic_list_prod`). -/
+theorem toPolyG_cHermiteReduceTowerGWf_Dstar_monic (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic := by
+  rw [cHermiteReduceTowerGWf]
+  simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
+  apply monic_list_prod
+  intro p hp
+  rw [List.mem_map] at hp
+  obtain ⟨f, hf, rfl⟩ := hp
+  exact cSqfreeYunFFGWf_monic hgcd d hd0 f hf
+
+omit [CDiffFieldSpec α] in
+/-- **The RT `hden` bridge.** If the Yun radical `Dstar` splits over `K` (the rational-residue slice),
+then `Dstar = nodal (its root set)` — the `hden` hypothesis of the RT residue-match assemblers. Monic
+and squarefree are supplied by the Yun structure; `hsplit` is the genuine rational-residue restriction. -/
 theorem toPolyG_cHermiteReduceTowerGWf_Dstar_eq_nodal [CharZero (CFieldSpec.K α)]
     (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
     (hpp : (toPolyG d).primPart ≠ 0)
-    (hmonic : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic)
     (hsplit : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Splits) :
     toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
       = Lagrange.nodal (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id :=
-  split_squarefree_eq_nodal _ hmonic hsplit
+  split_squarefree_eq_nodal _ (toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0) hsplit
     (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
 
 end DeepWiki.SymbolicIntegration
