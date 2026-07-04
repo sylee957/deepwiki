@@ -905,6 +905,55 @@ theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : CPolyG α) (idx : ℕ) (R
   exact ⟨(Ri, idx), List.mk_mem_zipIdx_iff_getElem?.mpr hget, by simp only [if_neg hlen]⟩
 
 open Classical in
+variable [CFracGcdCoreWf α] in
+/-- **`hcover` per pole.** Every pole `β`'s residue is a root of some entry's `Rᵢ`: the residue is a root of
+`R_E` (`residueResultant_map_roots`), which factors as `∏Rᵢ^i` (reconstruction, base-changed), so the residue
+is a root of some Yun factor `Rᵢ_E`; that `Rᵢ` is non-constant (`not_len_le_one_of_root`), hence hosts an
+entry (`mem_cLrtLogArgG_of_yun_factor`). -/
+theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
+    [Algebra (CFieldSpec.K α) E] [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E]
+    (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α) (allpoles : Finset E)
+    (hDmonic : (toPolyG Dstar).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
+    (hB : ∀ β ∈ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
+        (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
+    (hB_deg : (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).natDegree
+        ≤ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1)
+    (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
+    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0)
+    (β : E) (hβ : β ∈ allpoles) :
+    ∃ p ∈ cLrtLogArgG Dt hNum Dstar,
+      ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+          / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              (Lagrange.nodal allpoles id)).eval β
+        ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset := by
+  set φ := algebraMap (CFieldSpec.K α) E
+  set res := ((toPolyG hNum).map φ).eval β
+      / (Differential.implicitDeriv ((toPolyG Dt).map φ) (Lagrange.nodal allpoles id)).eval β
+  have hresR : res ∈ ((toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map φ).roots := by
+    rw [residueResultant_map_roots Dt hNum Dstar hDmonic hDt0 hAD hB hB_deg, hsplit]
+    exact Multiset.mem_map.mpr ⟨β, nodal_roots allpoles ▸ Finset.mem_val.mpr hβ, rfl⟩
+  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd _ hR0 hRpp).map (Polynomial.mapRingHom φ)
+  simp only [Polynomial.coe_mapRingHom, prodPow_map] at hrec
+  have hprodne : prodPow 1 ((cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).map toPolyG
+      |>.map (Polynomial.map φ)) ≠ 0 :=
+    fun h => ((Polynomial.map_ne_zero_iff φ.injective).mpr hR0) (hrec.eq_zero_iff.mpr h)
+  have hresP := Multiset.mem_of_le (Polynomial.roots.le_of_dvd hprodne hrec.dvd) hresR
+  obtain ⟨v, hv, hresv⟩ := mem_roots_prodPow 1 one_ne_zero _ res hprodne hresP
+  rw [List.map_map, List.mem_map] at hv
+  obtain ⟨Ri, hRimem, hRiv⟩ := hv
+  obtain ⟨idx, hidx⟩ := List.getElem?_of_mem hRimem
+  have hRi0 : toPolyG Ri ≠ 0 := (cSqfreeYunFFGWf_monic hgcd _ hR0 Ri hRimem).ne_zero
+  have hresRi : res ∈ ((toPolyG Ri).map φ).roots := by
+    rw [Function.comp_apply] at hRiv; rwa [← hRiv] at hresv
+  refine ⟨_, mem_cLrtLogArgG_of_yun_factor Dt hNum Dstar idx Ri hidx
+    (not_len_le_one_of_root Ri hRi0 res hresRi), ?_⟩
+  exact Multiset.mem_toFinset.mpr hresRi
+
+open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
 `IsIntegralResultLrtG` for `cIntegrateReducedLrtG Dt a d`: the Hermite half is discharged outright by
 `hherm_lrt_E` (base-change of `cHermiteReduceTowerGWf_field_identity`), leaving only the log-part match `hlog`
