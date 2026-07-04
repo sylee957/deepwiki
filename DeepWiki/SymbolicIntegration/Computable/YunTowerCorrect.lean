@@ -44,6 +44,45 @@ theorem prodPow_eq_prod_mul_zipIdxPow {K : Type*} [Field K] (s : ℕ) (M : List 
       rw [this, List.prod_map_mul, List.map_id']
     rw [hP, ← hQ]; ring
 
+/-- Filtering out list entries whose image under `g` is `1` leaves the mapped product unchanged. -/
+theorem prod_map_filter_eq_of_one {M : Type*} [CommMonoid M] {β : Type*} (l : List β) (p : β → Bool)
+    (g : β → M) (h : ∀ x ∈ l, ¬ p x → g x = 1) :
+    ((l.filter p).map g).prod = (l.map g).prod := by
+  induction l with
+  | nil => simp
+  | cons a t ih =>
+    simp only [List.filter_cons, List.map_cons, List.prod_cons]
+    by_cases hp : p a
+    · simp only [hp, if_true, List.map_cons, List.prod_cons,
+        ih (fun x hx => h x (List.mem_cons_of_mem a hx))]
+    · simp only [hp, Bool.false_eq_true, if_false, ih (fun x hx => h x (List.mem_cons_of_mem a hx)),
+        h a (List.mem_cons_self ..) (by simp [hp]), one_mul]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **`prodPow 1` of the tower Yun factors = the radical product times the `∏vk^idx` divisor**:
+`prodPow 1 L = L.prod · FiltProd` where `L = map toPolyG (cSqfreeYunFFGWf d)` and `FiltProd` drops the
+multiplicity-1 factors (which contribute `vk^0 = 1`). Plumbs the reconstruction `d ~ prodPow 1 L`
+into the `hWdvd` divisor form. -/
+theorem prodPow_one_cSqfreeYunFFGWf (d : CPolyG α) :
+    prodPow 1 ((cSqfreeYunFFGWf d).map toPolyG)
+      = ((cSqfreeYunFFGWf d).map toPolyG).prod
+        * (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+            (fun x => toPolyG x.1 ^ x.2)).prod := by
+  rw [prodPow_eq_prod_mul_zipIdxPow]
+  have hsnd : (((cSqfreeYunFFGWf d).map toPolyG).zipIdx.map (fun x => x.1 ^ x.2)).prod
+      = ((cSqfreeYunFFGWf d).zipIdx.map (fun x => toPolyG x.1 ^ x.2)).prod := by
+    rw [List.zipIdx_map, List.map_map]; rfl
+  congr 1
+  · simp only [pow_one, List.map_id']
+  · rw [hsnd, ← prod_map_filter_eq_of_one ((cSqfreeYunFFGWf d).zipIdx)
+      (fun x => ¬ (x.2 + 1 ≤ 1)) (fun x => toPolyG x.1 ^ x.2) (fun x _ hx => ?_)]
+    have hx0 : x.2 = 0 := by
+      by_contra hne
+      apply hx
+      have hle : ¬ (x.2 + 1 ≤ 1) := by omega
+      simpa using hle
+    rw [hx0, pow_zero]
+
 omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
 /-- `cmonicG` realizes `normalize` through `toPolyG`: `toPolyG (cmonicG q) = normalize (toPolyG q)`.
 The monic associate of `toPolyG q` is its normalization. -/

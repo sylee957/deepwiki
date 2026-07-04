@@ -611,6 +611,27 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
   simp only [map_sub] at hRid
   linear_combination hRid
 
+omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **Discharge of the multiplicity-product `hWdvd`** from the Yun reconstruction
+`d ~ prodPow 1 (Yun factors)`: since `prodPow 1 L = Dstar · FiltProd` and `d = Dstar · W`, cancelling
+`Dstar` gives `W ~ FiltProd`, hence `W ∣ FiltProd`. Reduces `hWdvd` to the single clean fact that Yun
+factorization reconstructs its input up to associates. -/
+theorem hWdvd_of_reconstruction (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0)
+    (hrecon : Associated (toPolyG d) (prodPow 1 ((cSqfreeYunFFGWf d).map toPolyG))) :
+    toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
+      ∣ (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+          (fun x => toPolyG x.1 ^ x.2)).prod := by
+  have hLprod : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
+      = ((cSqfreeYunFFGWf d).map toPolyG).prod := by
+    rw [cHermiteReduceTowerGWf]
+    simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
+  have hsplit := toPolyG_yunRadical_split hgcd Dt a d hd0
+  have hDstar0 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ≠ 0 := by
+    intro h; exact hd0 (by rw [hsplit, h, zero_mul])
+  rw [prodPow_one_cSqfreeYunFFGWf, ← hLprod, hsplit] at hrecon
+  exact (Associated.of_mul_left hrecon (Associated.refl _) hDstar0).dvd
+
 /-- **The pole-cancellation `hWgd` (`W·gden² ∣ resNum`)** — reduced to `W ∣ ∏vk^idx` (the Yun
 multiplicity-product, carried as the frontier `hWdvd`): `resNum = R·gden²` and `∏vk^idx ∣ R`, so
 `W ∣ ∏vk^idx ∣ R` gives `W·gden² ∣ R·gden² = resNum`. This is the hypothesis of
