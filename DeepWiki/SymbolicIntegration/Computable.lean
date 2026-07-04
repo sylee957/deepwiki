@@ -39,6 +39,7 @@ import DeepWiki.SymbolicIntegration.Computable.PolyPartTower
 import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
+import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
 import DeepWiki.SymbolicIntegration.Computable.RischDE

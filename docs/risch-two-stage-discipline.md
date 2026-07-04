@@ -112,7 +112,7 @@ They move to per-solver realization files as the interfaces land.
   `SquarefreeDecomposition` abstractly (dr-squarefree comes from the interface, not the Yun loop). Prove
   `cHermiteReduceTowerGWf_lawfulHermiteReduction` (this session's `_field_identity` + squarefree + properness).
   Evict the concrete Hermite lemmas from `Assemble.lean` into the realization file.
-- [ ] **P3 — `ResidueLogPart`.** Define interface + `LawfulResidueLogPart`; prove the `cIntegrateReducedGWf`
+- [x] **P3 — `ResidueLogPart`.** DONE (interface `ResidueLogPart.lean` + primitive realization `cIntegrateReducedGWf_lawfulResidueLogPart` in `OneShotAssembly`). Eviction of the Assemble one-shots is P5. Define interface + `LawfulResidueLogPart`; prove the `cIntegrateReducedGWf`
   realization. Evict the residue lemmas.
 - [ ] **P4 — abstract assembler.** Restate `cIntegrateCase_sound` to consume `Lawful{Hermite,ResidueLogPart,
   MonomialCase}` + `LawfulSquarefreeDecomposition`. `Assemble.lean` becomes abstract-only.
