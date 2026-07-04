@@ -486,4 +486,56 @@ theorem cSqfreeYunFFGWf_coprime_deriv [CharZero (CFieldSpec.K α)] (hgcd : GcdFF
       (derivative (toPolyG ((cSqfreeYunFFGWf p).get ⟨j, hj⟩))) :=
   squarefree_iff_isCoprime_derivative.mp (cSqfreeYunFFGWf_squarefree hgcd p hp0 hpp j hj)
 
+open UniqueFactorizationMonoid in
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The Yun go-loop runs at least `maxmult − (i−1)` steps.** With `YunInv (toPolyG p) i` the working
+`b` is `C c · squarefreePart (deflation (toPolyG p) (i−1))`, so `cdegG b = 0 ⟺ maxmult ≤ i−1`
+(`squarefreePart_deflation_natDegree_eq_zero_iff_maxmult`); each non-terminal step deflates to `i+1`
+(`yunStep_preserves` + the deflate bridges), so the emitted list has length `≥ maxmult − (i−1)`. -/
+theorem length_cSqfreeYunFFGgoWf_ge [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (p : CPolyG α) (hpp : (toPolyG p).primPart ≠ 0) :
+    ∀ (fo i : ℕ) (b d : CPolyG α), 1 ≤ i →
+      YunInv (toPolyG p) i (toPolyG b) (toPolyG d) →
+      (normalizedFactors (toPolyG p).primPart).toFinset.sup
+          (fun P => (normalizedFactors (toPolyG p).primPart).count P) - (i - 1) ≤ fo →
+      (normalizedFactors (toPolyG p).primPart).toFinset.sup
+          (fun P => (normalizedFactors (toPolyG p).primPart).count P) - (i - 1)
+        ≤ (cSqfreeYunFFGgoWf fo b d).length := by
+  set M := (normalizedFactors (toPolyG p).primPart).toFinset.sup
+    (fun P => (normalizedFactors (toPolyG p).primPart).count P) with hM
+  intro fo
+  induction fo with
+  | zero => intro i b d _ _ hfo; simp only [Nat.le_zero] at hfo; rw [hfo]; exact Nat.zero_le _
+  | succ fo ih =>
+    intro i b d hi hinv hfo
+    rw [cSqfreeYunFFGgoWf]
+    by_cases hdeg : cdegG b = 0
+    · rw [if_pos hdeg]
+      obtain ⟨c, hc, hb, _⟩ := hinv
+      have hMle : M ≤ i - 1 := by
+        rw [cdegG_eq_natDegree, hb, natDegree_C_mul hc] at hdeg
+        rw [hM, ← squarefreePart_deflation_natDegree_eq_zero_iff_maxmult (toPolyG p) (i - 1) hpp]
+        exact hdeg
+      simp only [List.length_nil]; omega
+    · rw [if_neg hdeg]
+      have hbne : toPolyG b ≠ 0 := by
+        intro h0; apply hdeg; rw [cdegG_eq_natDegree, h0, natDegree_zero]
+      have hMgt : i ≤ M := by
+        by_contra hlt
+        obtain ⟨c, hc, hb, _⟩ := hinv
+        apply hdeg
+        rw [cdegG_eq_natDegree, hb, natDegree_C_mul hc,
+          show Babs (toPolyG p) i = squarefreePart (deflation (toPolyG p) (i - 1)) from rfl,
+          squarefreePart_deflation_natDegree_eq_zero_iff_maxmult (toPolyG p) (i - 1) hpp, ← hM]
+        omega
+      have hinv' : YunInv (toPolyG p) (i + 1)
+          (toPolyG (cdivWf b (cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d))))
+          (toPolyG (csubG (cdivWf d (cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d)))
+            (cderivG (cdivWf b (cmonicG (CFracGcdCoreWf.cgcdFFCoreWf b d)))))) := by
+        rw [toPolyG_yunDeflate_fst hgcd b d hbne, toPolyG_yunDeflate_snd hgcd b d hbne]
+        exact (yunStep_preserves (toPolyG p) i hi hpp hinv).2
+      have hih := ih (i + 1) _ _ (by omega) hinv' (by omega)
+      rw [List.length_cons]
+      omega
+
 end DeepWiki.SymbolicIntegration
