@@ -526,4 +526,47 @@ theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α :=
   have hresk : toPolyG x.1 ^ x.2 ∣ residNumG Dt a d x := by rw [residNumG]; exact dvd_mul_left _ _
   exact dvd_R_of_factor x.2 d hd0 hRid hstepk hderiv hpow hresk
 
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- The kept factor powers `vk^idx` are pairwise relatively prime (distinct Yun factors coprime,
+`IsRelPrime.pow`). -/
+theorem powers_pairwise_coprime [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0) :
+    List.Pairwise IsRelPrime
+      (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+        (fun x => toPolyG x.1 ^ x.2)) := by
+  rw [List.pairwise_map]
+  apply List.Pairwise.sublist List.filter_sublist
+  rw [List.pairwise_iff_getElem]
+  intro i j hi hj hij
+  rw [List.length_zipIdx] at hi hj
+  have hi' : i < (cSqfreeYunFFGWf d).length := hi
+  have hj' : j < (cSqfreeYunFFGWf d).length := hj
+  have h1 : ((cSqfreeYunFFGWf d).zipIdx[i]).1 = (cSqfreeYunFFGWf d)[i] := by simp [List.getElem_zipIdx]
+  have h2 : ((cSqfreeYunFFGWf d).zipIdx[i]).2 = i := by simp [List.getElem_zipIdx]
+  have h3 : ((cSqfreeYunFFGWf d).zipIdx[j]).1 = (cSqfreeYunFFGWf d)[j] := by simp [List.getElem_zipIdx]
+  have h4 : ((cSqfreeYunFFGWf d).zipIdx[j]).2 = j := by simp [List.getElem_zipIdx]
+  rw [h1, h2, h3, h4]
+  exact ((cSqfreeYunFFGWf_isRelPrime hgcd d hd0 hpp hi' hj' (Nat.ne_of_lt hij)).pow_left).pow_right
+
+/-- **The product `∏ vk^idx ∣ R`** — the kept factor powers, each dividing `R` (`all_vkidx_dvd_R`) and
+pairwise coprime (`powers_pairwise_coprime`), so their product divides `R` (`list_prod_dvd_of_pairwise`).
+Modulo the per-factor gcd coprimality. -/
+theorem prod_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+    (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+        (fun x => toPolyG x.1 ^ x.2)).prod
+      ∣ (Polynomial.C (1 - ((((cSqfreeYunFFGWf d).zipIdx.filter
+            (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPolyG a
+          + (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+              (residNumG Dt a d)).sum) := by
+  refine list_prod_dvd_of_pairwise _ _ (powers_pairwise_coprime hgcd d hd0 hpp) (fun p hp => ?_)
+  rw [List.mem_map] at hp
+  obtain ⟨x, hx, rfl⟩ := hp
+  exact all_vkidx_dvd_R hgcd Dt a d hd0 hpp hcopgcd x hx
+
 end DeepWiki.SymbolicIntegration
