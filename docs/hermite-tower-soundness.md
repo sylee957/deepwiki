@@ -273,3 +273,21 @@ restatements (or a projection↔rawfold `toPolyG` bridge for each). This makes t
 ~40–80L first estimated. It remains OPTIONAL bookkeeping: the pole-cancellation soundness itself is
 complete and gate-verified; this only connects it to the end-to-end assembly, which already works modulo
 `hexact`. `toPolyG_cdivWf_congr` is in place as the core utility whenever it's picked up.
+
+## WIRING COMPLETE (2026-07-04)
+
+Done — the estimate was wrong, the wiring landed cleanly (~one build cycle) thanks to the right
+`toPolyG_cdivWf_congr` orientation:
+- `toPolyG_hNum'_eq_2_1` (HermiteValuationTower) — the capstone's radical numerator `hNum'` denotes the
+  def field `.2.1`. Applied `toPolyG_cdivWf_congr` with **P1/Q1 = the projection form** (unfolding `.2.1`
+  on the RHS to the raw fold), so the nonzero (`hQ1`) and divisibility (`hdvd1`) side-goals stayed
+  projection-based and reused `den_ne_zero` + `hWgd_of_multiplicity` (transported by the radical split);
+  the symmetric `hP`/`hQ` raw=projection equalities closed by `simp [cHermiteReduceTowerGWf, toPolyG_*]`.
+  The projection-vs-rawfold "complication" dissolved because only `hP`/`hQ` touch raw terms, and those
+  need no support lemmas.
+- `field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd` (Assemble) — discharges the
+  consumer's `hherm` via the capstone + bridge. **The reduced normal part integrates correctly modulo
+  ONLY `hcopgcd` (normality), `hmatch` (caller RT residue match), and `hgcd` (ℚ-unconditional).** The
+  `.rational.1 = H.1.1` defeq is accepted as in the sibling `_of_exact`.
+
+The tower-Hermite reduced-part soundness is now fully assembled end-to-end from the pole-cancellation.
