@@ -584,4 +584,65 @@ theorem cSqfreeYunFFGWf_reconstruction [CharZero (CFieldSpec.K α)] (hgcd : GcdF
       (length_cSqfreeYunFFGWf_ge hgcd d hd0 hpp)
   exact ((h1.trans h2).trans (associated_primPart_self (toPolyG d) hd0)).symm
 
+/-- **A monic, split, squarefree polynomial is the `nodal` polynomial of its root set.**
+`p = ∏_{β ∈ roots} (X − β)`. The mathematical core of the RT `hden` bridge (the reduced denominator
+factors into distinct linear factors over `K`). -/
+theorem split_squarefree_eq_nodal {K : Type*} [Field K] [CharZero K] (p : K[X]) (hm : p.Monic)
+    (hsp : p.Splits) (hsf : Squarefree p) :
+    p = Lagrange.nodal p.roots.toFinset id := by
+  have hnodup : p.roots.Nodup := Polynomial.nodup_roots (PerfectField.separable_iff_squarefree.mpr hsf)
+  have key : (∏ β ∈ p.roots.toFinset, (Polynomial.X - Polynomial.C (id β)))
+      = (p.roots.map (fun β => Polynomial.X - Polynomial.C β)).prod := by
+    rw [Finset.prod_eq_multiset_prod]
+    congr 1
+    rw [Multiset.toFinset_val, Multiset.dedup_eq_self.mpr hnodup]
+    exact Multiset.map_congr rfl (fun _ _ => by simp)
+  rw [Lagrange.nodal, key, ← hsp.eq_prod_roots_of_monic hm]
+
+/-- **The product of pairwise-coprime squarefree polynomials is squarefree** (list form). -/
+theorem squarefree_list_prod {K : Type*} [Field K] (L : List K[X])
+    (hpw : L.Pairwise IsRelPrime) (hsf : ∀ a ∈ L, Squarefree a) : Squarefree L.prod := by
+  induction L with
+  | nil => simp
+  | cons a t ih =>
+    rw [List.pairwise_cons] at hpw
+    rw [List.prod_cons, squarefree_mul_iff]
+    exact ⟨isRelPrime_list_prod_right a t (fun b hb => hpw.1 b hb),
+      hsf a (List.mem_cons_self ..),
+      ih hpw.2 (fun x hx => hsf x (List.mem_cons_of_mem a hx))⟩
+
+omit [CDiffFieldSpec α] in
+/-- **The Yun radical `Dstar` is squarefree** — a product of the pairwise-coprime, squarefree Yun
+factors (`squarefree_list_prod`). -/
+theorem toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hpp : (toPolyG d).primPart ≠ 0) :
+    Squarefree (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2) := by
+  rw [cHermiteReduceTowerGWf]
+  simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
+  apply squarefree_list_prod
+  · rw [List.pairwise_map, List.pairwise_iff_getElem]
+    intro i j hi hj hij
+    exact cSqfreeYunFFGWf_isRelPrime hgcd d hd0 hpp hi hj (Nat.ne_of_lt hij)
+  · intro b hb
+    rw [List.mem_map] at hb
+    obtain ⟨f, hf, rfl⟩ := hb
+    obtain ⟨k, hk, hfk⟩ := List.mem_iff_getElem.mp hf
+    rw [← hfk]
+    exact cSqfreeYunFFGWf_squarefree hgcd d hd0 hpp k hk
+
+omit [CDiffFieldSpec α] in
+/-- **The RT `hden` bridge.** If the Yun radical `Dstar` is monic and splits over `K` (the rational-residue
+slice), then `Dstar = nodal (its root set)` — the `hden` hypothesis of the RT residue-match assemblers,
+with squarefreeness supplied by the Yun structure. `hsplit` is the genuine rational-residue restriction. -/
+theorem toPolyG_cHermiteReduceTowerGWf_Dstar_eq_nodal [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hpp : (toPolyG d).primPart ≠ 0)
+    (hmonic : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic)
+    (hsplit : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Splits) :
+    toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
+      = Lagrange.nodal (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id :=
+  split_squarefree_eq_nodal _ hmonic hsplit
+    (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
+
 end DeepWiki.SymbolicIntegration
