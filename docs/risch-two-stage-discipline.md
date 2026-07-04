@@ -211,8 +211,12 @@ are exactly the obligations a new solver must discharge:
 - `recon` — canonical reconstruction (discharged by `canonicalReconstruction`).
 - `SpecElem`/`NrmElem` + `descend` — the completeness frontier contract.
 
+- `candidates` — the residue-candidate list, computed from `(Dt, a, d)`, so the assembled integrator takes
+  **no `cands` argument** (fully automatic).
+
 Materializing all fields yields, *derived from the abstract cores*, with no further proof:
-- `RischSolver.integrate` — the assembled algorithm (`cIntegrateCase S.case`).
+- `RischSolver.integrate Dt a d` — the assembled algorithm (`cIntegrateCase S.case … (S.candidates Dt a d)`),
+  a function of `(Dt, a, d)` alone.
 - `RischSolver.sound` — soundness (composes the laws through `cIntegrateCase_sound`).
 - `RischSolver.isElementaryIntegrable_of_run` — constructive completeness.
 - `RischSolver.not_isElementaryIntegrable` — the completeness frontier direction.

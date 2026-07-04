@@ -534,17 +534,19 @@ structure RischSolver (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [
 
 namespace RischSolver
 
-/-- **The assembled integrator.** Materializing the bundle gives the algorithm: `cIntegrateCase` on the
-bundle's case hooks. -/
-def integrate (S : RischSolver α) (Dt a d : CPolyG α) (cands : List α) : Option (IntegralResultG α) :=
-  cIntegrateCase S.case Dt a d cands
+/-- **The assembled integrator (fully automatic).** Materializing the bundle gives the algorithm: run
+`cIntegrateCase` on the bundle's case hooks with the solver's own computed candidate list
+`S.candidates Dt a d`. A function of `(Dt, a, d)` alone — no `cands` argument. -/
+def integrate (S : RischSolver α) (Dt a d : CPolyG α) : Option (IntegralResultG α) :=
+  cIntegrateCase S.case Dt a d (S.candidates Dt a d)
 
 /-- **Derived soundness.** Any successful run of the assembled integrator is an antiderivative of `a/d`,
 proven once by composing the bundle's laws through the abstract core `cIntegrateCase_sound`. -/
-theorem sound (S : RischSolver α) (Dt a d : CPolyG α) (cands : List α) (res : IntegralResultG α)
-    (h : S.integrate Dt a d cands = some res) : IsIntegralResultG Dt a d res := by
+theorem sound (S : RischSolver α) (Dt a d : CPolyG α) (res : IntegralResultG α)
+    (h : S.integrate Dt a d = some res) : IsIntegralResultG Dt a d res := by
+  set cands := S.candidates Dt a d with hcands
   have h0 : cIntegrateCase S.case Dt a d cands = some res := h
-  rw [integrate, cIntegrateCase] at h
+  rw [integrate, cIntegrateCase, ← hcands] at h
   rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
   rw [hcrep] at h
   dsimp only at h
@@ -566,34 +568,16 @@ theorem sound (S : RischSolver α) (Dt a d : CPolyG α) (cands : List α) (res :
 
 /-- **Derived constructive completeness.** A successful run certifies `a/d` is elementary integrable
 (the soundness witness fed through the Stage-1 bridge). -/
-theorem isElementaryIntegrable_of_run (S : RischSolver α) (Dt a d : CPolyG α) (cands : List α)
-    (res : IntegralResultG α) (h : S.integrate Dt a d cands = some res) :
+theorem isElementaryIntegrable_of_run (S : RischSolver α) (Dt a d : CPolyG α)
+    (res : IntegralResultG α) (h : S.integrate Dt a d = some res) :
     IsElementaryIntegrableG Dt a d :=
-  IsElementaryIntegrableG.of_isIntegralResult (S.sound Dt a d cands res h)
+  IsElementaryIntegrableG.of_isIntegralResult (S.sound Dt a d res h)
 
 /-- **Derived completeness frontier.** A certified obstruction in either the special or normal part makes
 `a/d` non-elementary, via the bundle's descent law through the abstract core. -/
 theorem not_isElementaryIntegrable (S : RischSolver α) (Dt a d : CPolyG α)
     (hobstruct : ¬ S.SpecElem Dt a d ∨ ¬ S.NrmElem Dt a d) : ¬ IsElementaryIntegrableG Dt a d :=
   not_isElementaryIntegrableG_of_obstruction Dt a d (S.descend Dt a d) hobstruct
-
-/-- **The fully automatic integrator (no `cands` argument).** Runs the assembled integrator on the
-solver's own computed candidate list `S.candidates Dt a d`. This is the end-user entry point: a function of
-`(Dt, a, d)` alone. -/
-def run (S : RischSolver α) (Dt a d : CPolyG α) : Option (IntegralResultG α) :=
-  S.integrate Dt a d (S.candidates Dt a d)
-
-/-- **Soundness of the automatic integrator.** A successful `run` is an antiderivative of `a/d` — the
-candidate list being computed internally changes nothing, since `sound` holds for every `cands`. -/
-theorem run_sound (S : RischSolver α) (Dt a d : CPolyG α) (res : IntegralResultG α)
-    (h : S.run Dt a d = some res) : IsIntegralResultG Dt a d res :=
-  S.sound Dt a d (S.candidates Dt a d) res h
-
-/-- **Constructive completeness of the automatic integrator.** A successful `run` certifies `a/d` is
-elementary integrable. -/
-theorem isElementaryIntegrable_of_run' (S : RischSolver α) (Dt a d : CPolyG α)
-    (res : IntegralResultG α) (h : S.run Dt a d = some res) : IsElementaryIntegrableG Dt a d :=
-  IsElementaryIntegrableG.of_isIntegralResult (S.run_sound Dt a d res h)
 
 end RischSolver
 
