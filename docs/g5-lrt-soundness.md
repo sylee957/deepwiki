@@ -213,3 +213,27 @@ The **entire mathematical content of LRT log-part soundness** is now assembled a
 **Still remaining for the full `IsIntegralResultLrtG cIntegrateReducedLrtG`:** thread the concrete
 `cLrtLogArgG` entries into `hfac`; prove the Yun fiber-size partition (`hroots`/`hpart`); the Hermite half
 `hherm`; the `E→K` descent + final assembly; and the `cLrtLogArgG` monic-normalization engine fix.
+
+## ★★ ASSEMBLY SKELETON DONE (2026-07-04) — the whole soundness composes end-to-end
+
+`Computable/LrtSoundness.lean` now closes the architecture, mirroring the rational-residue template
+`field_identity_of_reducedG_of_residueMatch`:
+- **`field_identity_lrt_of_hherm_of_logMatch`** (fixed `E`) — `rw [hlog]; exact hherm`.
+- **`isIntegralResultLrtG_of_hherm_of_logMatch`** — packages it under the `∀E` quantifier (shared universe
+  `u`), producing the full `IsIntegralResultLrtG Dt anum aden res` from **two clean per-`E` inputs**:
+  - `hlog` — `logResidueSumLrtG res.logs = hNum/Dstar` (⇐ `logResidueSumLrtG_eq_normalPart` + Yun partition).
+  - `hherm` — `D(g) + hNum/Dstar = a/d` (⇐ base-change of `cHermiteReduceTowerGWf_field_identity`).
+- **`sum_over_list_partition`** — reduces `hpart` to plain pairwise-disjointness + union.
+
+**The only two remaining gaps are `hlog` and `hherm`**, both engine-structural (not new math):
+- `hherm` — `cHermiteReduceTowerGWf_field_identity` (`HermiteValuationTower.lean:762`) is the K-level Hermite
+  soundness (DONE); its residual numerator is a `cdivWf(...)` that must be identified with `H.2.1`, then the
+  whole identity base-changed K→E (the injective, derivation-intertwining direction). `towerFractionFieldDerivG`
+  (K) → `towerDerivExt` (E), `amG` → `amGExt`.
+- `hlog` — `logResidueSumLrtG_eq_normalPart` needs the Yun fiber-size partition discharged: `hroots` (`Rᵢ`'s
+  roots = residues of the fiber-size-`i` poles), `hfac` (via `evalLrtArg_cSubresultantParam_eq_prod` +
+  `isSimilar_subresultant_prod`, threading the per-entry RT setup), `hpart` (via `sum_over_list_partition` +
+  the disjoint fiber-size decomposition of `Dstar`'s roots), and `Dstar` splits as `nodal allpoles`.
+
+Then `E→K` descent + swap the primitive base ⟹ `PrimitiveFrontier.hreduced` closed, without the
+rational-residue restriction.
