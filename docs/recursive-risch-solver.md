@@ -18,7 +18,14 @@ Goal: solvers assembled **closed-form** (materialize fields → algorithm + soun
    this level's reduced-part soundness + completeness contract assemble a full `RischSolver`. Soundness and
    completeness fall out of the derived API.
 
-4. **`SubSolver.primitive`** (`RischSolverPrimitive.lean`) — the **base case**. The special part is the
+4. **`SubSolver.ofLower`** (`RischSolverRec.lean`) — the **recursion step**. Builds a `SubSolver` from a
+   sub-`RischSolver`: the special part is *computed by another solver* `sub`, and the special-part field
+   identity is **derived from `sub.sound`** (not assumed). Only `hrun` — the engine bridge relating this
+   level's `integrateSpecial` hook to a `sub.integrate` run on the special subproblem — remains. This is how
+   recursive integration is encoded in `RischSolver`, displacing the ad-hoc `cIntegrate…`: the special part
+   delegates *downward to another `RischSolver`*, bottoming out at `SubSolver.primitive`.
+
+5. **`SubSolver.primitive`** (`RischSolverPrimitive.lean`) — the **base case**. The special part is the
    poly-RDE output `qₚ` (as `qₚ/1`); discharged from the poly-RDE identity (canonical `Dt=1` regime, via
    `cPolyRischDEGWf_nil_field_identity`) and `canonicalReconstruction`. Bottom of the recursion.
 

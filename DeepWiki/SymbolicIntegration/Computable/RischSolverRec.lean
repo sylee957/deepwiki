@@ -52,4 +52,32 @@ def RischSolver.ofSub {case : MonomialCase α} (sub : SubSolver α case)
   NrmElem := NrmElem
   descend := descend
 
+/-- **The recursion step: a `SubSolver` built from a sub-`RischSolver`.** The special part is *computed by
+another solver* `sub` (the level below): whenever this level's `integrateSpecial` succeeds, running `sub` on
+the special subproblem `⟦specSubNum/specSubDen⟧` returns a log-free result whose rational part equals
+`snum/sden` and reconstructs `⟦a/d⟧` with the normal part (`hrun` — the engine bridge relating the case hook
+to a sub-run). The special-part field identity is then **derived from `sub.sound`**, not assumed. This is
+how recursive integration is encoded in `RischSolver`: `RischSolver.ofSub (SubSolver.ofLower sub …) …`
+delegates the special part downward, bottoming out at `SubSolver.primitive`. Only `hrun` (the case-hook ↔
+sub-run bridge) remains — the algorithm-level fact the tower keystone will supply. -/
+def SubSolver.ofLower {case : MonomialCase α} (sub : RischSolver α)
+    (specSubNum specSubDen : CPolyG α → CPolyG α → CPolyG α → CPolyG α)
+    (hrun : ∀ (Dt a d snum sden : CPolyG α),
+      case.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden) →
+      toPolyG sden ≠ 0 ∧ ∃ res : IntegralResultG α,
+        sub.integrate Dt (specSubNum Dt a d) (specSubDen Dt a d) = some res ∧
+        res.logs = [] ∧
+        fieldFrac res.rational.1 res.rational.2 = fieldFrac snum sden ∧
+        fieldFrac (specSubNum Dt a d) (specSubDen Dt a d)
+            + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
+    SubSolver α case where
+  special := by
+    intro Dt a d snum sden hhook
+    obtain ⟨hsden, res, hres, hlogs, heq, hrecon⟩ := hrun Dt a d snum sden hhook
+    refine ⟨hsden, fieldFrac (specSubNum Dt a d) (specSubDen Dt a d), ?_, hrecon⟩
+    have hs := sub.sound Dt (specSubNum Dt a d) (specSubDen Dt a d) res hres
+    rw [IsIntegralResultG, hlogs, logResidueSumG_nil, add_zero] at hs
+    rw [← heq]
+    exact hs
+
 end DeepWiki.SymbolicIntegration
