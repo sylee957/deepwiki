@@ -498,14 +498,7 @@ theorem field_identity_of_cIntegrateReducedGWf_primitive_maximal [CharZero (CFie
       CFieldSpec.toK (residueCand β)
       = (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).eval β
         / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal
-            (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id)).eval β)
-    (hgcdread : ∀ β ∈ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset,
-      Associated
-      (toPolyG (CPolyG.cLogArgTowerGWf Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
-          (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))
-      (gcd (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2)
-          (toPolyG (CPolyG.cAmcDdG Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
-            (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β))))) :
+            (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).roots.toFinset id)).eval β) :
     towerFractionFieldDerivG Dt
         (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
           / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
@@ -527,6 +520,15 @@ theorem field_identity_of_cIntegrateReducedGWf_primitive_maximal [CharZero (CFie
     intro β hβ
     rw [hDt]
     exact implicitDeriv_C_nodal_eval_ne_zero w hw s hconst β hβ
+  have hgcdread : ∀ β ∈ s, Associated
+      (toPolyG (CPolyG.cLogArgTowerGWf Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+          (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))
+      (gcd (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2)
+          (toPolyG (CPolyG.cAmcDdG Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+            (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))) := fun β _ =>
+    hgcd (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2
+      (CPolyG.cAmcDdG Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+        (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β))
   exact field_identity_of_cIntegrateReducedGWf_primitive_of_residueData Dt a d cands s w residueCand
     hDt hherm hden hA hnorm hres hDd hdist hcand hgcdread
 
