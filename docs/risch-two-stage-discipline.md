@@ -116,7 +116,7 @@ They move to per-solver realization files as the interfaces land.
   realization. Evict the residue lemmas.
 - [x] **P4 (part 1) — abstract composition.** DONE (`cIntegrateReducedGWf_isIntegralResult_of_lawful` in Assemble: `LawfulHermiteReduction` + `LawfulResidueLogPart` → `IsIntegralResultG`, interface-only). Full eviction of the concrete one-shots is P5. Original P4: Restate `cIntegrateCase_sound` to consume `Lawful{Hermite,ResidueLogPart,
   MonomialCase}` + `LawfulSquarefreeDecomposition`. `Assemble.lean` becomes abstract-only.
-- [ ] **P5 — per-solver corollaries.** Primitive/hyperexp/poly one-shots become thin corollaries in their
+- [x] **P5 (core) — end-to-end via interfaces.** DONE (`cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces`: the primitive reduced-part soundness assembled from the two realizations through `_of_lawful`, zero concrete re-derivation). Removing the now-superseded concrete `_of_hcopgcd`/`_maximal`/`_qfunNZG` lemmas from Assemble is the remaining cleanup. Original P5: Primitive/hyperexp/poly one-shots become thin corollaries in their
   solver files (the evicted `_qfunNZG` theorems, now one-liners).
 - [ ] **P6 — completeness.** Same discipline: `LawfulDecidesElementary` interface + per-case realizations +
   one abstract `cIntegrate_complete`.

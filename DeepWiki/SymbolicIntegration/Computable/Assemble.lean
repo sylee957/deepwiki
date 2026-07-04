@@ -10,6 +10,7 @@ import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
 import DeepWiki.SymbolicIntegration.Computable.OneShotAssembly
 import DeepWiki.SymbolicIntegration.Computable.HermiteReduction
+import DeepWiki.SymbolicIntegration.Computable.HermiteReductionRealization
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
 
 /-! # Assemblable one-level Risch integrator
@@ -225,6 +226,52 @@ theorem cIntegrateReducedGWf_isIntegralResult_of_lawful (Dt a d : CPolyG α) (ca
       (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (CPolyG.cIntegrateReducedGWf Dt a d cands).logs) :
     IsIntegralResultG Dt a d (CPolyG.cIntegrateReducedGWf Dt a d cands) :=
   cIntegrateReducedGWf_isIntegralResult Dt a d cands hherm.field_identity hres.residue_match
+
+open Classical in
+omit [CRischField α] in
+/-- **Primitive reduced-part soundness, assembled from the two realizations through the interfaces.** The
+end-to-end payoff of the two-stage discipline: `cHermiteReduceTowerGWf_lawfulHermiteReduction` (Stage 2) and
+`cIntegrateReducedGWf_lawfulResidueLogPart` (Stage 2) fed through `cIntegrateReducedGWf_isIntegralResult_of_lawful`
+(Stage 1) — the reduced normal part integrates correctly with NO concrete algorithm re-derived in the
+composition, only the two realization theorems and the abstract law. -/
+theorem cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α))
+    (w : CFieldSpec.K α) (residueCand : CFieldSpec.K α → α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (CPolyG.cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hproper : (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).degree
+      < (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).degree)
+    (hDt : toPolyG Dt = Polynomial.C w)
+    (hden : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hnorm : ∀ β ∈ s, w ≠ β′)
+    (hres : CPolyG.cRationalResiduesGWf Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+        (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 cands = s.toList.map residueCand)
+    (hDd : ∀ β ∈ s,
+      (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β ≠ 0)
+    (hdist : ∀ γ ∈ s, ∀ δ ∈ s, γ ≠ δ →
+      (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).eval γ
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval γ
+        ≠ (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).eval δ
+          / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval δ)
+    (hcand : ∀ β ∈ s, CFieldSpec.toK (residueCand β)
+      = (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).eval β
+        / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)
+    (hgcdread : ∀ β ∈ s, Associated
+      (toPolyG (CPolyG.cLogArgTowerGWf Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+          (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β)))
+      (gcd (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2)
+          (toPolyG (CPolyG.cAmcDdG Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+            (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 (residueCand β))))) :
+    IsIntegralResultG Dt a d (CPolyG.cIntegrateReducedGWf Dt a d cands) :=
+  cIntegrateReducedGWf_isIntegralResult_of_lawful Dt a d cands
+    (cHermiteReduceTowerGWf_lawfulHermiteReduction hgcd Dt a d hd0 hpp hcopgcd hproper)
+    (cIntegrateReducedGWf_lawfulResidueLogPart Dt a d cands s w residueCand hDt hden hA hnorm hres
+      hDd hdist hcand hgcdread)
 
 omit [CRischField α] in
 /-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving
