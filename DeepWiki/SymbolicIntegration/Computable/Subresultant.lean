@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
+import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
 
 /-! # Computable determinant + subresultant (L1 of the computable-LRT build)
 
@@ -74,6 +75,18 @@ def cSubresultantG (p q : CPolyG α) (n m j : ℕ) : CPolyG α :=
   (List.range (j + 1)).map (fun i =>
     cDetG (cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)))
 
+/-- **The parametric subresultant `Sⱼ(z,t)`** of `Dstar` and `A − z·Dd` — the symbolic RT log argument, a
+polynomial in `t` whose coefficients are polynomials in the residue `z`, **computed without roots** by
+interpolation in `z` (`cSubresultantG` at `z = 0,1,…,n+m` per `t`-coefficient, then `cinterpolateG`). Output:
+`List (CPolyG α)`, the `z`-polynomial coefficient of each `tᵏ` (`k = 0..j`). -/
+def cSubresultantParam (Dstar A Dd : CPolyG α) (n m j : ℕ) : List (CPolyG α) :=
+  let N := n + m + 1
+  (List.range (j + 1)).map (fun k =>
+    cinterpolateG ((List.range N).map (fun jj =>
+      let c := cnatCastG jj
+      (c, ((cSubresultantG Dstar (csubG A (cscaleG c Dd)) n m j : CPolyG α) : List α).getD k
+        CField.zero))))
+
 end CPolyG
 
 /-! ### Validation (`native_decide`) -/
@@ -103,5 +116,15 @@ theorem cSubresultantG_zero :
 /-- The **degree-1 subresultant of `(t²−1, t+2)` is `t+2`** (`= q`, since `deg q = 1`): `S₁ = [2,1]`. -/
 theorem cSubresultantG_one :
     cSubresultantG ([-1, 0, 1] : CPolyG ℚ) ([2, 1] : CPolyG ℚ) 2 1 1 = [2, 1] := by native_decide
+
+/-- **L2a — parametric = scalar at a point.** `S₁(z,t)` of `(t²−1, t − z·2t)` is `(1−2z)·t`; evaluated at
+`z = 2` (a sample point) it equals the *scalar* subresultant `S₁(t²−1, −3t)` (`= −3t`). The interpolation is
+exact at the sample nodes — validating the root-free parametric log-argument. -/
+theorem cSubresultantParam_eval :
+    (cSubresultantParam ([-1, 0, 1] : CPolyG ℚ) ([0, 1] : CPolyG ℚ) ([0, 2] : CPolyG ℚ) 2 1 1).map
+        (fun zp => cHornerG zp (2 : ℚ))
+      = (cnormG (cSubresultantG ([-1, 0, 1] : CPolyG ℚ)
+          (csubG ([0, 1] : CPolyG ℚ) (cscaleG (2 : ℚ) ([0, 2] : CPolyG ℚ))) 2 1 1) : List ℚ) := by
+  native_decide
 
 end DeepWiki.SymbolicIntegration
