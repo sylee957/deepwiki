@@ -87,9 +87,17 @@ that intertwines the tower derivation* and is **injective**. Plan:
 - **P3 — `Sᵢ` at a residue = the RT gcd.** `toPolyG_cSubresultantParam_getD` (G4c) + `lazardRiobooTrager_
   output_isSimilar_gcd_gen` (G3), specialised at each root `c` of `Rᵢ`; the normality `hB` from
   `isCoprime_X_sub_C_implicitDeriv_iff` (the genuine `hcopgcd`).
-- **P4 — the `K̄` analytic identity** `Σ_c c·logDeriv(gcd) = hNum/Dstar`: the general-derivation `K̄` analog
-  of `ratFunc_eq_sum_residue_gcd`, reusing the tower `logResidueSumG_eq_of_residue_match`. The genuinely-new
-  analytic content (Bronstein 5.6.1's simple-pole partial fraction over the tower).
+- **P4 — the analytic identity over `E`** `Σ_c c·logDeriv(gcd) = hNum/Dstar`. **★ Tractability insight
+  (2026-07-04):** this is *not* fully new — `ratFunc_eq_sum_residue_gcd` (proven, over ANY field with `D =
+  nodal s` splitting) gives the **formal-`d/dt`** identity `A/D = Σ_a a·logDeriv_{d/dt}(gcd(D, A − a·D'))`;
+  it applies verbatim over `E` (where `Dstar` splits). For the **primitive** case (`Dt = C w`, `w` constant)
+  with **constant residues** (the elementary case, where `Dstar` has constant coeffs so `mapCoeffs Dstar =
+  0`), the tower derivation `D_tower = mapCoeffs + w·d/dt` **reduces to `w·d/dt`** on the reduced part, and
+  `B = implicitDeriv (C w) Dstar = w·D'` (the monic-degree fact). So `D_tower(gcd)/gcd = w·logDeriv_{d/dt}(gcd)`
+  and the residues scale by `1/w`: the tower identity = `ratFunc_eq_sum_residue_gcd` (over `E`) composed with
+  the `z ↦ w·z` rescaling. **So P4 = `ratFunc_eq_sum_residue_gcd`-over-`E` + the `w`-scaling bridge, not a
+  from-scratch tower partial-fraction.** The genuinely-new work shrinks to the scaling + the constant-
+  coefficient (normality) bookkeeping.
 - **P5 — descent + assembly.** Base-change injectivity `RatFunc K ↪ RatFunc K̄` intertwining the derivation;
   assemble P2–P4 into the `K̄`-`hmatch`; combine with the transferred `hherm` via
   `field_identity_of_reducedG_of_residueMatch`; descend to `IsIntegralResultLrtG` over `K`. Then swap the
