@@ -762,4 +762,31 @@ theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPolyG α)
   exact field_identity_lrt_of_hherm_of_logMatch Dt res.rational.1 res.rational.2 hNum hDen anum aden
     res.logs (hlog E) (hherm E)
 
+open Classical in
+/-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
+`IsIntegralResultLrtG` for `cIntegrateReducedLrtG Dt a d`: the Hermite half is discharged outright by
+`hherm_lrt_E` (base-change of `cHermiteReduceTowerGWf_field_identity`), leaving only the log-part match `hlog`
+(`logResidueSumLrtG (cLrtLogArgG …) = hNum/Dstar` over every alg-closed `E`, provable via
+`logResidueSumLrtG_eq_normalPart_of_yun` + the Yun facts). `hd0`/`hpp`/`hcopgcd` are the genuine Hermite-side
+conditions (Bronstein's `hnorm`). -/
+theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K α)]
+    [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+        [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
+        (logResidueSumLrtG Dt (cLrtLogArgG Dt (cHermiteReduceTowerGWf Dt a d).2.1
+              (cHermiteReduceTowerGWf Dt a d).2.2) : RatFunc E)
+          = amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
+            / amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)) :
+    IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) := by
+  refine isIntegralResultLrtG_of_hherm_of_logMatch Dt a d (cIntegrateReducedLrtG Dt a d)
+    (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hlog ?_
+  intro E _ _ _ _ _ _
+  exact hherm_lrt_E hgcd Dt a d hd0 hpp hcopgcd
+
 end DeepWiki.SymbolicIntegration
