@@ -826,6 +826,24 @@ theorem mem_roots_prodPow {E : Type*} [Field E] (i : ℕ) (hi : i ≠ 0) (L : Li
       obtain ⟨v, hv, hav⟩ := ih (i + 1) (Nat.succ_ne_zero i) hrest ha
       exact ⟨v, List.mem_cons_of_mem e hv, hav⟩
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **A Yun factor with a root is non-constant** (`¬ (cnormG Rᵢ).length ≤ 1`): a root forces
+`natDegree(Rᵢ) ≥ 1`, but `(cnormG Rᵢ).length ≤ 1` forces `natDegree ≤ 0`. This certifies the `filterMap`
+guard for the residue-hosting entry in `hcover`. -/
+theorem not_len_le_one_of_root {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E] (Ri : CPolyG α)
+    (hR0 : toPolyG Ri ≠ 0) (c : E)
+    (hc : c ∈ ((toPolyG Ri).map (algebraMap (CFieldSpec.K α) E)).roots) :
+    ¬ ((cnormG Ri : List α).length ≤ 1) := by
+  intro hlen
+  have hnd := natDegree_toPolyG_le Ri
+  have hdvd : (X - C c) ∣ (toPolyG Ri).map (algebraMap (CFieldSpec.K α) E) :=
+    dvd_iff_isRoot.mpr (isRoot_of_mem_roots hc)
+  have hle := Polynomial.natDegree_le_of_dvd hdvd
+    ((Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hR0)
+  rw [Polynomial.natDegree_X_sub_C,
+    Polynomial.natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective] at hle
+  omega
+
 /-- `prodPow` commutes with a polynomial base change `φ`: `(prodPow i L).map φ = prodPow i (L.map (·.map φ))`. -/
 theorem prodPow_map {K E : Type*} [Field K] [Field E] (φ : K →+* E) (i : ℕ) (L : List K[X]) :
     (prodPow i L).map φ = prodPow i (L.map (Polynomial.map φ)) := by
