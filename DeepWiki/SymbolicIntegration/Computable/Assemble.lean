@@ -7,6 +7,7 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
+import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
 
 /-! # Assemblable one-level Risch integrator
 
@@ -399,6 +400,38 @@ theorem field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_exact (Dt a d 
     (hermiteTowerStep_field_identity Dt (CPolyG.cHermiteReduceTowerGWf Dt a d).1.1
       (CPolyG.cHermiteReduceTowerGWf Dt a d).1.2 a d (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
       (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 hd hgden hDstar hexact)
+    hmatch
+
+open Classical in
+/-- **Reduced-part soundness, Hermite half discharged from pole-cancellation.** Given the RT residue
+match (`hmatch`) and the differential-normality side condition `hcopgcd`, the reduced normal part
+integrates correctly. Here the whole-step Hermite identity `hherm` is discharged by the pole-cancellation
+capstone `cHermiteReduceTowerGWf_field_identity` (its radical numerator matched to the def field `.2.1`
+via `toPolyG_hNum'_eq_2_1`), so `hexact`/`hgden`/`hDstar` are no longer separate frontiers — only the
+genuine Bronstein normality condition `hcopgcd` remains (besides `hmatch` and the ℚ-unconditional gcd
+frontier `hgcd`). -/
+theorem field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd
+    [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (cands : List α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (CPolyG.cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (CPolyG.cgcdWf (CPolyG.cmulG (CPolyG.cdivWf d (CPolyG.cpowG x.1 (x.2 + 1)))
+          (CPolyG.cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hmatch : ((CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map (fun cv =>
+          amG α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
+        = amG α (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1)
+          / amG α (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2)) :
+    towerFractionFieldDerivG Dt
+        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+      = amG α (toPolyG a) / amG α (toPolyG d) :=
+  field_identity_of_cIntegrateReducedGWf_of_residueMatch Dt a d cands
+    (by
+      have hcap := cHermiteReduceTowerGWf_field_identity hgcd Dt a d hd0 hpp hcopgcd
+      rwa [toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd] at hcap)
     hmatch
 
 end DeepWiki.SymbolicIntegration
