@@ -83,15 +83,18 @@ route's tower analytic identity).
   actual-degree resultant with `rtResultantGen`'s formal degree) + interpolation uniqueness
   (`eq_of_degrees_lt_of_eval_index_eq`, `toK_cnatCastG`). **The computable residue resultant IS the object
   G3 reasons about.**
-- **G4c ✅ CORE DONE** (`Computable/SubresultantTowerSpec.lean`) — `toK_cSubresultantG_getD_eq_coeff`
-  (+ `_monomial`): the **per-value** subresultant agreement — the `k`-th `t`-coefficient of the computable
-  `cSubresultantG Dstar (A − c·Dd) n m j` equals the `k`-th `t`-coefficient of the abstract
-  `subresultant (toPolyG Dstar) (toPolyG A − C c·B) n m j` for any value `c`. Immediate from L4b
-  (`toPolyG_cSubresultantG`) + the `csubG`/`cscaleG`/`cmonomialDeriv` bridges — clean, no interpolation.
-  **Remaining G4c**: extend to non-node residues (`cSubresultantParam`'s interpolation is exact) — needs
-  the bivariate subresultant `z`-degree bound (coeff `k` of `subresultant(Dstar)(A − z·B)` has `z`-degree
-  `≤ m < N = n+m+1`) + interpolation uniqueness; plus the normality `hB` from
-  `isCoprime_X_sub_C_implicitDeriv_iff`.
+- **G4c ✅ DONE** (`Computable/SubresultantTowerSpec.lean`):
+  - `toK_cSubresultantG_getD_eq_coeff` (+ `_monomial`) — the **per-value** subresultant agreement (clean
+    from L4b + `csubG`/`cscaleG`/`cmonomialDeriv` bridges).
+  - `natDegree_coeff_lrtSubresultantGen_le` (`LrtGeneralDerivation.lean`) — the **bivariate `z`-degree
+    bound** (each `t`-coefficient of `lrtSubresultantGen` has `z`-degree `≤ deg D + (deg D−1) < N`), via
+    `natDegree_det_le_sum_col_gen` (every Sylvester entry is `z`-degree `≤ 1`).
+  - **`toPolyG_cSubresultantParam_getD`** — the capstone: the `k`-th entry of the engine's parametric log
+    argument `cSubresultantParam` equals the `k`-th `t`-coefficient of `lrtSubresultantGen (toPolyG A)
+    (toPolyG Dstar) (toPolyG Dd) j` (for `deg Dd = deg Dstar − 1`), via interpolation uniqueness (degree
+    bound + node agreement + coeff/eval commutation + `lrtSubresultantGen_eval`).
+  **⟹ the entire computable→abstract LRT connection is certified: residue resultant (G4b) + parametric
+  subresultant (G4c).**
 - **G5** — assemble with the candidate route's tower per-root analytic identity
   (`residue_gcd_eq_linear_factor` / `cIntegrateReducedGWf_logs_eq_per_root`) into a symbolic-log soundness
   `IsIntegralResultLrtG` for `cIntegrateReducedLrtG`; swap the primitive base (closes `hreduced` **without**
