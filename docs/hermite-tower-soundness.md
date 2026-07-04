@@ -208,3 +208,23 @@ so `list_prod_dvd_of_pairwise` applies (mirror `prod_vkidx_dvd_R`). Then `hrecon
 `deg(prodPow 1 factors) = deg d`, i.e. `LEN ≥ maxmult` so no multiplicity is dropped — provable either by
 the loop-terminates-at-degree-0 analysis (`deflation_natDegree_eq_zero_iff`) or the
 divides-plus-degree route.
+
+## hrecon PROVEN — hWdvd frontier ELIMINATED (2026-07-04)
+
+The Yun reconstruction `cSqfreeYunFFGWf_reconstruction : toPolyG d ~ prodPow 1 (Yun factors)` is now
+fully proven (`YunTowerCorrect.lean`):
+- `length_cSqfreeYunFFGgoWf_ge` — the go-loop runs `≥ maxmult−(i−1)` steps (fuel induction; working `b`
+  is `C c·squarefreePart(deflation (i−1))` so `cdegG b=0 ⟺ maxmult≤i−1`).
+- `length_cSqfreeYunFFGWf_ge` — entry: `maxmult ≤ length` (fuel bound `maxmult ≤ cyunBoundG` via
+  `sup_count_le_natDegree_primPart` + `primPart_dvd` + `length_cnormG_of_ne`).
+- assembly: `forall₂` through `prodPow_associated` ~ `prodPow_one_sqfreeFactPart_range_associated` ~
+  `associated_primPart_self`.
+
+So `hWdvd_of_reconstruction` discharges `hWdvd` unconditionally; `hWgd_of_multiplicity` and
+`cHermiteReduceTowerGWf_field_identity` no longer take it. **The whole-step tower-Hermite field identity
+now rests on only TWO frontiers**: `hcopgcd` (per-factor gcd coprimality — a standard Hermite
+precondition) and `gden`/`Dstar ≠ 0`.
+
+Remaining: (1) `hcopgcd` — discharge from `v` squarefree + coprime `u`/`v'`, or carry; (2) `gden`/`Dstar
+≠ 0`; (3) wire into `field_identity_of_cIntegrateReducedGWf_of_residueMatch` (the `toPolyG hNum'=.2.1`
+exact-division bridge).
