@@ -47,9 +47,17 @@ soundness.** Recursion reorganizes the tower; it does not remove the leaves.
 - **P1 (this commit)** — the skeleton: `SubSolver`, `RischSolver.ofSub`, `SubSolver.primitive`, and
   `RischSolverPrimitive` rebuilt as `ofSub (SubSolver.primitive …)`. Gate-green; the engine bridge and the
   per-level frontiers stay as named hypotheses.
-- **P2** — the engine bridge `SubSolver.ofLower : RischSolver <coeff field> → SubSolver α case`, deriving
-  the special identity from the lower solver's soundness through the poly-RDE. Requires exposing
-  `cPolyRischDEGWf`'s coefficient recursion abstractly (the tower keystone, `QFunNZG`).
+- **P2** — the engine bridge `SubSolver.ofLower : RischSolver <coeff field> → SubSolver α case`. **Found
+  2026-07-04 (an ALGORITHM task, not just a proof):** the engine's primitive-polynomial integration is
+  **constant-coefficient-only**. `cPolyRischDEGWf …[]… = cIntegratePolyG` is term-by-term
+  `∫cᵢtⁱ = cᵢtⁱ⁺¹/(i+1)` (correct only when `D cᵢ = 0`); `cPrimitivePolyIntegrate`'s own docstring says
+  "constant-coefficient sub-case"; `cLimitedIntegrate` exists only over the base `k = ℚ`. For non-constant
+  coefficients the algorithm returns a genuinely *wrong* `some`, so `specialSound` is *false* off-regime —
+  a hypothesis-free primitive `RischSolver α` is impossible with today's engine. P2 must first **implement**
+  the general primitive-polynomial integrator: the top-down recursion `qⱼ′ = cⱼ − (j+1)·qⱼ₊₁` solved by a
+  **tower** `cLimitedIntegrate`/`cRischDEGWf` recursing into the coefficient field (Bronstein
+  `IntegratePrimitivePolynomial`), then prove its soundness — which *is* `SubSolver.ofLower`. See the memory
+  note `leanproofs-primitive-poly-constant-coeff-only`.
 - **P3** — discharge the shared per-level compute-correctness abstractly (Hermite / RT residue / split),
   collapsing `reducedSound` and `recon` from hypotheses to theorems at every level at once.
 - **P4** — the base `RischSolver` over `ℚ(x)` fully closed; assemble a genuine 2-level tower instance.
