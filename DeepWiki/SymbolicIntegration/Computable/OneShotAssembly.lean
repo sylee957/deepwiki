@@ -389,6 +389,49 @@ example (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (hw : w ≠ 0) (hconst : ∀ β ∈ s, β′ = 0) : ∀ β ∈ s, w ≠ β′ :=
   primitive_monomial_norm_of_const_roots s w hw hconst
 
+/-! ### The PRIMITIVE `hDd` — the resolvent derivative is nonzero at each (simple, constant) root
+
+`primitive_engine_hmatch`'s per-root assembly (`cIntegrateReducedGWf_logs_eq_per_root`) takes
+`hDd : ∀ β ∈ s, (implicitDeriv Dt (nodal s id)).eval β ≠ 0`. For a primitive monomial `t′ = w` with
+`w ≠ 0` and **constant** resolvent roots (`β′ = 0`), this discharges: `implicitDeriv (C w) p =
+mapCoeffs p + C w · p′`, the horizontal `mapCoeffs (nodal) = 0` for constant roots, so it is `C w · nodal′`,
+and `nodal′` is nonzero at each node (distinct roots, `Lagrange.nodalWeight`). -/
+
+/-- The `nodal` derivative is nonzero at each of its (distinct) nodes: `nodal′(β) ≠ 0` for `β ∈ s`. -/
+theorem eval_derivative_nodal_ne_zero {K : Type*} [Field K] [DecidableEq K] (s : Finset K) (β : K)
+    (hβ : β ∈ s) : (derivative (Lagrange.nodal s id)).eval β ≠ 0 := by
+  have hne := Lagrange.nodalWeight_ne_zero (v := (id : K → K)) (Set.injOn_id _) hβ
+  rw [Lagrange.nodalWeight_eq_eval_derivative_nodal (v := (id : K → K)) hβ] at hne
+  simp only [id_eq] at hne
+  exact fun h0 => hne (by rw [h0]; simp)
+
+/-- The horizontal derivation vanishes on a `nodal` with constant roots: `mapCoeffs (nodal s id) = 0`
+when every `β ∈ s` is a constant (`β′ = 0`). -/
+theorem mapCoeffs_nodal_eq_zero {K : Type*} [Field K] [Differential K] [DecidableEq K] (s : Finset K)
+    (hconst : ∀ β ∈ s, (Differential.deriv : Derivation ℤ K K) β = 0) :
+    Differential.mapCoeffs (Lagrange.nodal s id) = 0 := by
+  rw [Lagrange.nodal]
+  induction s using Finset.induction with
+  | empty => simp
+  | @insert a t ha ih =>
+    rw [Finset.prod_insert ha, Derivation.leibniz]
+    have hfa : Differential.mapCoeffs (X - C (id a)) = 0 := by
+      rw [map_sub, Differential.mapCoeffs_X, Differential.mapCoeffs_C, id_eq,
+        hconst a (Finset.mem_insert_self a t), map_zero, sub_zero]
+    rw [hfa, ih (fun β hβ => hconst β (Finset.mem_insert_of_mem hβ))]; simp
+
+/-- **The primitive `hDd` discharge**: for `t′ = C w` (`w ≠ 0`) with constant resolvent roots, the
+resolvent derivative `implicitDeriv (C w) (nodal s id)` is nonzero at every node. -/
+theorem implicitDeriv_C_nodal_eval_ne_zero {K : Type*} [Field K] [Differential K] [DecidableEq K]
+    (w : K) (hw : w ≠ 0) (s : Finset K)
+    (hconst : ∀ β ∈ s, (Differential.deriv : Derivation ℤ K K) β = 0) (β : K) (hβ : β ∈ s) :
+    (Differential.implicitDeriv (C w) (Lagrange.nodal s id)).eval β ≠ 0 := by
+  have hform : Differential.implicitDeriv (C w) (Lagrange.nodal s id)
+      = Differential.mapCoeffs (Lagrange.nodal s id) + C w * derivative (Lagrange.nodal s id) := by
+    simp [Differential.implicitDeriv, derivative']
+  rw [hform, mapCoeffs_nodal_eq_zero s hconst, zero_add, eval_mul, eval_C]
+  exact mul_ne_zero hw (eval_derivative_nodal_ne_zero s β hβ)
+
 /-! ### Task 2 (hyperexp): the list↔Finset bridge + the engine `hmatch`, GATED on `∑c = 0`
 
 The hyperexponential analog of `primitive_residue_match_list_engine` / `primitive_engine_hmatch`. The ONLY
