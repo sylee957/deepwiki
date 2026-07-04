@@ -20,6 +20,22 @@ open Compute CPolyG QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
+omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **Exact division respects `toPolyG`**: `cdivWf P Q` denotes `toPolyG P / toPolyG Q` whenever the
+division is exact, so `toPolyG`-equal (and exactly-divisible) numerator/denominator pairs give the same
+`cdivWf` denotation — the bridge for matching a radical-form numerator to the `cnormG`'d def field. -/
+theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : CPolyG α)
+    (hP : toPolyG P1 = toPolyG P2) (hQ : toPolyG Q1 = toPolyG Q2)
+    (hQ1 : toPolyG Q1 ≠ 0) (hdvd1 : toPolyG Q1 ∣ toPolyG P1) :
+    toPolyG (cdivWf P1 Q1) = toPolyG (cdivWf P2 Q2) := by
+  have hn1 : cnormG Q1 ≠ [] := fun hnil => hQ1 ((cisZeroG_iff Q1).mp (by simp [cisZeroG, hnil]))
+  have hn2 : cnormG Q2 ≠ [] := fun hnil => (hQ ▸ hQ1) ((cisZeroG_iff Q2).mp (by simp [cisZeroG, hnil]))
+  have h1 := toPolyG_cdivWf_exact P1 Q1 hn1 hdvd1
+  have hdvd2 : toPolyG Q2 ∣ toPolyG P2 := by rw [← hQ, ← hP]; exact hdvd1
+  have h2 := toPolyG_cdivWf_exact P2 Q2 hn2 hdvd2
+  apply mul_right_cancel₀ hQ1
+  rw [h1, hP, ← h2, hQ]
+
 /-- `f` is `Q`-regular over the tower fraction field: it has a representation `amG p / amG q` with
 `q ≠ 0` coprime to `Q` (no `Q`-pole). -/
 def IsQRegularG (Q : (CFieldSpec.K α)[X]) (f : RatFunc (CFieldSpec.K α)) : Prop :=
