@@ -409,6 +409,22 @@ theorem logResidueSumLrtG_eq_normalPart {α : Type*} [CField α] [CFieldSpec α]
   exact pole_sum_eq_normalPart Dt ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)) allpoles
     hA hnorm hcancel
 
+/-- **LRT field-identity assembler** (the analogue of `field_identity_of_reducedG_of_residueMatch`, over
+`E`). Given the log-part match `hlog` (`logResidueSumLrtG = hNum/Dstar`, from
+`logResidueSumLrtG_eq_normalPart`) and the Hermite half `hherm` (`D(g) + hNum/Dstar = a/d`), the full
+reduced field identity `D(g) + logResidueSumLrtG = a/d` holds. -/
+theorem field_identity_lrt_of_hherm_of_logMatch {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
+    [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    (Dt gnum gden hNum hDen anum aden : CPolyG α) (logs : List (CPolyG α × List (CPolyG α)))
+    (hlog : (logResidueSumLrtG Dt logs : RatFunc E) = amGExt (toPolyG hNum) / amGExt (toPolyG hDen))
+    (hherm : (towerDerivExt Dt (amGExt (toPolyG gnum) / amGExt (toPolyG gden))
+          + amGExt (toPolyG hNum) / amGExt (toPolyG hDen) : RatFunc E)
+        = amGExt (toPolyG anum) / amGExt (toPolyG aden)) :
+    (towerDerivExt Dt (amGExt (toPolyG gnum) / amGExt (toPolyG gden)) + logResidueSumLrtG Dt logs
+        : RatFunc E)
+      = amGExt (toPolyG anum) / amGExt (toPolyG aden) := by
+  rw [hlog]; exact hherm
+
 /-- **Symbolic-log soundness for the LRT reduced result.** Over **any** differential extension `E` of `K =
 CFieldSpec.K α` in which every residue polynomial `Rᵢ` splits, the `E`-tower derivative of the rational part
 plus the algebraic residue sum equals `anum/aden` (base-changed to `E`). The `E`-quantification + splitting
@@ -423,5 +439,27 @@ def IsIntegralResultLrtG (Dt anum aden : CPolyG α) (res : LrtResultG α) : Prop
     (towerDerivExt Dt (amGExt (toPolyG res.rational.1) / amGExt (toPolyG res.rational.2))
           + logResidueSumLrtG Dt res.logs : RatFunc E)
       = amGExt (toPolyG anum) / amGExt (toPolyG aden)
+
+/-- **`IsIntegralResultLrtG` from the log match + Hermite half.** Packages `field_identity_lrt_of_hherm_of_
+logMatch` under the `E`-quantifier: given, over every splitting extension `E`, the log-part match `hlog`
+(`logResidueSumLrtG res.logs = hNum/Dstar`) and the Hermite half `hherm` (`D(g) + hNum/Dstar = a/d`), the
+soundness predicate `IsIntegralResultLrtG` holds. This is the final-assembly skeleton: what remains is
+discharging `hlog` (via `logResidueSumLrtG_eq_normalPart` + the Yun partition) and `hherm` (base-change of
+the Hermite tower soundness) for `res = cIntegrateReducedLrtG`. -/
+theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPolyG α) (res : LrtResultG α)
+    (hNum hDen : CPolyG α)
+    (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+        [DifferentialAlgebra (CFieldSpec.K α) E],
+        (∀ p ∈ res.logs, Polynomial.Splits ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E))) →
+        (logResidueSumLrtG Dt res.logs : RatFunc E) = amGExt (toPolyG hNum) / amGExt (toPolyG hDen))
+    (hherm : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+        [DifferentialAlgebra (CFieldSpec.K α) E],
+        (towerDerivExt Dt (amGExt (toPolyG res.rational.1) / amGExt (toPolyG res.rational.2))
+            + amGExt (toPolyG hNum) / amGExt (toPolyG hDen) : RatFunc E)
+          = amGExt (toPolyG anum) / amGExt (toPolyG aden)) :
+    IsIntegralResultLrtG.{_, u} Dt anum aden res := by
+  intro E _ _ _ _ _ hsplits
+  exact field_identity_lrt_of_hherm_of_logMatch Dt res.rational.1 res.rational.2 hNum hDen anum aden
+    res.logs (hlog E hsplits) (hherm E)
 
 end DeepWiki.SymbolicIntegration
