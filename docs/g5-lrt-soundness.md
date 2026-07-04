@@ -87,17 +87,19 @@ that intertwines the tower derivation* and is **injective**. Plan:
 - **P3 — `Sᵢ` at a residue = the RT gcd.** `toPolyG_cSubresultantParam_getD` (G4c) + `lazardRiobooTrager_
   output_isSimilar_gcd_gen` (G3), specialised at each root `c` of `Rᵢ`; the normality `hB` from
   `isCoprime_X_sub_C_implicitDeriv_iff` (the genuine `hcopgcd`).
-- **P4 — the analytic identity over `E`** `Σ_c c·logDeriv(gcd) = hNum/Dstar`. **★ Tractability insight
-  (2026-07-04):** this is *not* fully new — `ratFunc_eq_sum_residue_gcd` (proven, over ANY field with `D =
-  nodal s` splitting) gives the **formal-`d/dt`** identity `A/D = Σ_a a·logDeriv_{d/dt}(gcd(D, A − a·D'))`;
-  it applies verbatim over `E` (where `Dstar` splits). For the **primitive** case (`Dt = C w`, `w` constant)
-  with **constant residues** (the elementary case, where `Dstar` has constant coeffs so `mapCoeffs Dstar =
-  0`), the tower derivation `D_tower = mapCoeffs + w·d/dt` **reduces to `w·d/dt`** on the reduced part, and
-  `B = implicitDeriv (C w) Dstar = w·D'` (the monic-degree fact). So `D_tower(gcd)/gcd = w·logDeriv_{d/dt}(gcd)`
-  and the residues scale by `1/w`: the tower identity = `ratFunc_eq_sum_residue_gcd` (over `E`) composed with
-  the `z ↦ w·z` rescaling. **So P4 = `ratFunc_eq_sum_residue_gcd`-over-`E` + the `w`-scaling bridge, not a
-  from-scratch tower partial-fraction.** The genuinely-new work shrinks to the scaling + the constant-
-  coefficient (normality) bookkeeping.
+- **P4 — the analytic identity over `E`.** **★★ NOT NEW MATH (2026-07-04):** the candidate route's
+  **`monomial_residue_match_of_cancel`** (`ResidueMatchSoundness.lean:158`) *already* proves the **tower**
+  identity over **any** field `K` `[Field K] [Differential K] [Algebra ℚ K]`: for `d = nodal s` (splits),
+  `deg a < #s`, normal roots (`v(α) ≠ α′`), and `hcancel` (poly parts cancel — **automatic for primitive
+  `Dt = C w`**, `monomial_residue_match_primitive`), it gives the **pole-indexed** sum
+  `Σ_{α∈s} C(cₐ)·(D(t−α)/(t−α)) = a/d`, `D = extendDeriv (implicitDeriv v)`, `cₐ = a(α)/(implicitDeriv v d)(α)`
+  — the mapCoeffs part IS handled (via `hcancel`). **It applies verbatim over `E`.** So P4 = instantiate this
+  over `E` (`s = roots(Dstar in E)`, `a = hNum`, `v = Dt`). The genuinely-new work is *not* the analytic
+  identity but the **residue↔pole REINDEXING**: my `logResidueSumLrtG` is *residue*-indexed
+  (`Σ_c c·D(gcd_c)/gcd_c`), the theorem is *pole*-indexed (`Σ_β res(β)·D(t−β)/(t−β)`); they agree because
+  `gcd_c = Sᵢ(c,t) = ∏_{res(β)=c}(t−β)` and `D(∏)/∏ = Σ D(t−β)/(t−β)` regroups the residue sum into the pole
+  sum. So the remaining substance is **P3** (`Sᵢ(c) = gcd_c = ∏ linear factors`, via G4c+G3) + this regrouping;
+  **P4's analytic core is a direct reuse.**
 - **P5 — descent + assembly.** Base-change injectivity `RatFunc K ↪ RatFunc K̄` intertwining the derivation;
   assemble P2–P4 into the `K̄`-`hmatch`; combine with the transferred `hherm` via
   `field_identity_of_reducedG_of_residueMatch`; descend to `IsIntegralResultLrtG` over `K`. Then swap the
