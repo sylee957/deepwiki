@@ -569,4 +569,46 @@ theorem prod_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α :
   obtain ⟨x, hx, rfl⟩ := hp
   exact all_vkidx_dvd_R hgcd Dt a d hd0 hpp hcopgcd x hx
 
+/-- **`resNum = R·gden²`** (as polynomials): the def's residual numerator equals `R` times `gden²`,
+from the `R` residual identity + the quotient rule for `D⟦g⟧` + `amG` injectivity. Bridges the
+valuation `R` (`prod_vkidx_dvd_R`) to the field-identity `resNum`. `hgden`: `gden ≠ 0` (a standard
+precondition). -/
+theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
+    toPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
+          (cHermiteReduceTowerGWf Dt a d).1.2))
+        (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.1)
+            (cHermiteReduceTowerGWf Dt a d).1.2)
+          (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
+            (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2)))))
+      = (Polynomial.C (1 - ((((cSqfreeYunFFGWf d).zipIdx.filter
+              (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPolyG a
+            + (((cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
+                (residNumG Dt a d)).sum)
+        * toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ^ 2 := by
+  set gnum := (cHermiteReduceTowerGWf Dt a d).1.1 with hgnum
+  set gden := (cHermiteReduceTowerGWf Dt a d).1.2 with hgden
+  set D := Differential.implicitDeriv (toPolyG Dt) with hDdef
+  have hRid := R_residual_identity hgcd Dt a d hd0 hpp hcopgcd
+  rw [← hgnum, ← hgden] at hRid
+  have hinj := RatFunc.algebraMap_injective (CFieldSpec.K α)
+  have had : amG α (toPolyG d) ≠ 0 := amG_toPolyG_ne_zero hd0
+  have hgd : amG α (toPolyG gden) ≠ 0 := amG_toPolyG_ne_zero hgd0
+  have hDg : towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
+      = (amG α (D (toPolyG gnum)) * amG α (toPolyG gden)
+          - amG α (toPolyG gnum) * amG α (D (toPolyG gden))) / amG α (toPolyG gden) ^ 2 := by
+    rw [towerFractionFieldDerivG_div, ← map_pow]
+  rw [hDg] at hRid
+  apply hinj
+  simp only [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmonomialDeriv, map_sub, map_mul, map_pow, ← hDdef]
+  field_simp at hRid
+  simp only [map_sub] at hRid
+  linear_combination hRid
+
 end DeepWiki.SymbolicIntegration
