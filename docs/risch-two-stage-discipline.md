@@ -154,3 +154,26 @@ The `MonomialCase` hook already has its abstract law surface (`hSpecField`) cons
 Remaining (larger, separate): **P6 completeness** — a research frontier (Liouville-descent; the
 transcendental log/exp `IsLiouville` instance is not yet in Mathlib), NOT a mechanical discipline
 application like soundness was. **P7 naming sweep** — a large gradual legacy-rename effort.
+
+## Making Assemble.lean concrete-algorithm-free (in progress)
+
+Goal (user directive): NO concrete algorithm name (`cIntegrateCase`, `canonicalRepresentationFastGWf`,
+`cIntegrateReducedGWf`, `cHermiteReduceTowerGWf`, …) in `Assemble.lean` — only abstract structure + laws.
+
+**Done:** `combineSN_isIntegralResult` — the assembler soundness proven purely over abstract stage data
+(special fraction, normal result + its `IsIntegralResultG`, canonical reconstruction), NO concrete
+algorithm. `cIntegrateCase_sound` is now a thin wrapper over it.
+
+**Remaining (safe — all concrete refs are Assemble-internal, 0 external):** split the file.
+- **STAYS (abstract)** in `Assemble.lean`: `MonomialCase` (record), `combineSN`, `fieldFrac`,
+  `combineSN_isIntegralResult`. Minimal imports: `IntegrationSpec` (`IsIntegralResultG`),
+  `IntegrateTowerCorrectG` (`towerFractionFieldDerivG`/`amG`/`logResidueSumG`), the poly engine
+  (`toPolyG`/`caddG`/`cmulG`).
+- **MOVES** to a new `IntegratorAssembly.lean` (imports `Assemble`): `cIntegrateCase` (def),
+  `primitiveCase`/`hyperexpCase`, the `native_decide` validations, the `cr*` wrappers + `redNorm` +
+  `canonicalReconstruction`, `cIntegrateReducedGWf_isIntegralResult(_of_lawful)`, the two
+  `_via_interfaces` corollaries, `cIntegrateCase_sound` + the case corollaries, and
+  `field_identity_…_of_exact`.
+Care points: the split crosses two scopes (`namespace CPolyG` for `MonomialCase`/`combineSN`/`cIntegrateCase`
+vs the outer namespace for the rest) and several `variable [CFracGcdCoreWf]/[CRischField]` sections — the
+moved file must reproduce those. Best done as one focused, gate-checked pass.
