@@ -102,9 +102,11 @@ instance instLawfulRischLevelPrimitive [Fact (GcdFFCorrect (α := α))] [Primiti
     refine ⟨?_, PrimitiveFrontier.hreduced Dt a d cands nrm hd0 hcorr⟩
     -- the reduced denominator is the Hermite fold denominator, nonzero since `dₙ ≠ 0`
     simp only [primitiveGuardedCase] at hcorr
-    obtain rfl : nrm = redNorm Dt a d cands := (Option.some.injEq _ _).mp hcorr.symm
-    exact toPolyG_cHermiteReduceTowerGWf_den_ne_zero (Fact.out (p := GcdFFCorrect (α := α)))
-      Dt (crNormNum Dt a d) (crNormDen Dt a d) hcn hpp
+    split at hcorr
+    · obtain rfl : nrm = redNorm Dt a d cands := (Option.some.injEq _ _).mp hcorr.symm
+      exact toPolyG_cHermiteReduceTowerGWf_den_ne_zero (Fact.out (p := GcdFFCorrect (α := α)))
+        Dt (crNormNum Dt a d) (crNormDen Dt a d) hcn hpp
+    · exact absurd hcorr (by simp)
   -- Soundness-only: the completeness contract is trivial (`not_isElementaryIntegrable` is vacuous here).
   -- Completeness (a nontrivial `descend`) is the Liouville frontier, deferred.
   SpecElem := fun _ _ _ => True

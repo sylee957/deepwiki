@@ -82,7 +82,11 @@ theorem primitive_special_identity (Dt fp qp : CPolyG α)
 
 /-- **The guarded primitive monomial case.** `integrateSpecial` runs the `b = 0` poly-RDE only when the
 computable guards hold: `b = 0`, `toPolyG Dt = 1` (`cisZeroG (csubG Dt [1])`), and constant coefficients
-(`cisZeroG (cmapDeriv fp)`). Otherwise it declines. The reduced part needs no correction. -/
+(`cisZeroG (cmapDeriv fp)`). Otherwise it declines. `reducedCorrect` applies the **integrability guard**
+(Bronstein §5.6): the reduced log part is a valid antiderivative only when each residue `c` is a constant
+(`D c = 0`) — otherwise `D(c·log v)` carries a spurious `Dc·log v` — so it accepts iff every residue is
+constant (`cisZeroG [D c]`), declining non-elementary reduced parts. The root-free analogue of the hyperexp
+`∑cᵢ = 0` guard. -/
 def primitiveGuardedCase : MonomialCase α where
   integrateSpecial Dt fp b _ds :=
     if cisZeroG b && cisZeroG (csubG Dt [CField.one]) && cisZeroG (cmapDeriv fp) then
@@ -90,6 +94,7 @@ def primitiveGuardedCase : MonomialCase α where
       | none => none
       | some qp => some (qp, [CField.one])
     else none
-  reducedCorrect _Dt nrm := some nrm
+  reducedCorrect _Dt nrm :=
+    if nrm.logs.all (fun cv => cisZeroG [CDiffField.cderiv cv.1]) then some nrm else none
 
 end DeepWiki.SymbolicIntegration
