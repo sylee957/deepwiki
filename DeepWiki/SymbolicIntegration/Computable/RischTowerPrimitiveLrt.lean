@@ -89,6 +89,14 @@ theorem hreducedLrt_of_genuineAll.{u} [CharZero (CFieldSpec.K α)] (hgcd : GcdFF
     (fun Dt a' d' hd0' => isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine hgcd Dt a' d' hd0'
       (hgen Dt a' d' hd0')) Dt a d hd0
 
+-- The closure genuinely constructs the frontier: given the genuine data for every reduced input, a
+-- `PrimitiveFrontierLrt` instance follows (hence the whole assembled root-free LRT solver).
+universe u in
+example [CharZero (CFieldSpec.K α)] [Fact (GcdFFCorrect (α := α))]
+    (hgen : ∀ (Dt a d : CPolyG α), toPolyG d ≠ 0 → LrtReducedGenuineData.{u, _, u} Dt a d) :
+    PrimitiveFrontierLrt α :=
+  ⟨hreducedLrt_of_genuineAll (Fact.out (p := GcdFFCorrect (α := α))) hgen⟩
+
 /-- **The frontier certifies broad elementary integrability of the reduced normal part.** From a
 `PrimitiveFrontierLrt` instance, the canonical normal part `cₙ/dₙ` is elementary-integrable in the
 algebraic-residue sense — the LRT analogue of the reduced-part payoff of `PrimitiveFrontier`. -/
