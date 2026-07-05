@@ -26,6 +26,7 @@ import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 import DeepWiki.SymbolicIntegration.Computable.IntegratorCases
 import DeepWiki.SymbolicIntegration.Computable.RischTower
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitive
+import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitiveLrt
 import DeepWiki.SymbolicIntegration.Computable.IntegratorCompleteness
 import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
 import DeepWiki.SymbolicIntegration.Computable.ListDet
