@@ -106,3 +106,45 @@ theorem mapCoeffs_eq_zero_of_mem_coprime_prod {P : K[X]} {L : List (K[X] × ℕ)
   exact mapCoeffs_eq_zero_of_coprime_pow_factor (hpos q hq) (hmonic q hq) hPeq hcop' hP
 
 end DeepWiki.SymbolicIntegration.ResidueBridge
+
+/-! ## Stage 1 — pairwise coprimality of the Yun factors -/
+
+namespace DeepWiki.SymbolicIntegration
+
+open Compute CPolyG Polynomial Classical
+
+variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+  [CFracGcdCoreWf α] [CharZero (CFieldSpec.K α)]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- Each Yun factor is `Associated` to a distinct `sqfreeFactPart` of the residue resultant (index `1 + k`),
+by `cSqfreeYunFFGWf_forall₂`. -/
+theorem associated_toPolyG_cSqfreeYunFFGWf_get (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
+    (hR0 : toPolyG R ≠ 0) (hpp : (toPolyG R).primPart ≠ 0)
+    (k : ℕ) (hk : k < (cSqfreeYunFFGWf R).length) :
+    Associated (toPolyG (cSqfreeYunFFGWf R)[k]) (sqfreeFactPart (toPolyG R) (1 + k)) := by
+  have hf₂ := cSqfreeYunFFGWf_forall₂ hgcd R hR0 hpp
+  obtain ⟨hlen, hget⟩ := List.forall₂_iff_get.mp hf₂
+  have hk₁ : k < ((cSqfreeYunFFGWf R).map toPolyG).length := by simpa using hk
+  have hk₂ : k < ((List.range (cSqfreeYunFFGWf R).length).map
+      fun j => sqfreeFactPart (toPolyG R) (1 + j)).length := by simpa using hk
+  have h := hget k hk₁ hk₂
+  simpa using h
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Stage 1.** The Yun factors of `R` (as polynomial images) are pairwise coprime: each is `Associated` to a
+distinct `sqfreeFactPart` of `toPolyG R`, and those are pairwise relatively prime
+(`sqfreeFactPart_isRelPrime`). -/
+theorem pairwise_isCoprime_toPolyG_cSqfreeYunFFGWf (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
+    (hR0 : toPolyG R ≠ 0) (hpp : (toPolyG R).primPart ≠ 0) :
+    (cSqfreeYunFFGWf R).Pairwise (fun a b => IsCoprime (toPolyG a) (toPolyG b)) := by
+  rw [List.pairwise_iff_get]
+  intro i j hij
+  have ai := associated_toPolyG_cSqfreeYunFFGWf_get hgcd R hR0 hpp i i.isLt
+  have aj := associated_toPolyG_cSqfreeYunFFGWf_get hgcd R hR0 hpp j j.isLt
+  have hne : (1 + (i : ℕ)) ≠ (1 + (j : ℕ)) := by omega
+  have hc : IsCoprime (sqfreeFactPart (toPolyG R) (1 + (i : ℕ)))
+      (sqfreeFactPart (toPolyG R) (1 + (j : ℕ))) := (sqfreeFactPart_isRelPrime _ hne).isCoprime
+  exact ((hc.of_isCoprime_of_dvd_left ai.dvd).symm.of_isCoprime_of_dvd_left aj.dvd).symm
+
+end DeepWiki.SymbolicIntegration
