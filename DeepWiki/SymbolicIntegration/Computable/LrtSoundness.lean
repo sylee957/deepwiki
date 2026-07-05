@@ -115,6 +115,35 @@ theorem evalLrtArg_eq_prod (Si : List (CPolyG α)) (c : E) (A D B : (CFieldSpec.
   exact monicNormalize_eq_of_isSimilar_prod poles hsim
 
 omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The pure-single-log branch (`i = deg Dstar`) evaluates to `Dstar` itself.** For the const-embedded `Dstar`
+(`Dstar.map (·::[])` — a `t`-polynomial with *constant* `z`-coefficients, no residue dependence), `evalLrtArg`'s
+raw sum is `Dstar_E`, and when `Dstar_E` is monic the monic normalization is trivial. This is the log argument
+of a single pure log `c·D(Dstar)/Dstar` (all poles share one residue) — the `i = n` branch of `cLrtLogArgG`. -/
+theorem evalLrtArg_const_embed_eq (Dstar : CPolyG α) (c : E)
+    (hmonic : ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).Monic) :
+    evalLrtArg (Dstar.map (fun x => ([x] : CPolyG α))) c
+      = (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) := by
+  have hg4c : ∀ n, toPolyG ((Dstar.map (fun x => ([x] : CPolyG α))).getD n [])
+      = ((toPolyG Dstar).map C).coeff n := by
+    intro n
+    rw [Polynomial.coeff_map, toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_map,
+      List.getD_eq_getElem?_getD]
+    cases h : Dstar[n]? with
+    | none => simp [toPolyG_nil, CFieldSpec.toK_zero]
+    | some a => simp [toPolyG_cons, toPolyG_nil]
+  have hraw : ((Dstar.map (fun x => ([x] : CPolyG α))).zipIdx.map (fun p =>
+        C ((toPolyG p.1).eval₂ (algebraMap (CFieldSpec.K α) E) c) * X ^ p.2)).sum
+      = (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) := by
+    rw [raw_eq_map (Dstar.map (fun x => ([x] : CPolyG α))) c ((toPolyG Dstar).map C) hg4c,
+      Polynomial.map_map]
+    have hcomp : (Polynomial.eval₂RingHom (algebraMap (CFieldSpec.K α) E) c).comp
+        (C : (CFieldSpec.K α) →+* (CFieldSpec.K α)[X]) = algebraMap (CFieldSpec.K α) E := by
+      ext k; simp
+    rw [hcomp]
+  simp only [evalLrtArg]
+  rw [hraw, hmonic.leadingCoeff, inv_one, map_one, mul_one]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **P3 for the engine's parametric subresultant.** `hg4c` discharged by G4c
 (`toPolyG_cSubresultantParam_getD`): `evalLrtArg (cSubresultantParam Dstar hNum Dd (cdegG Dstar)(cdegG Dd) j) c
 = ∏_{β}(t−β)`, given `deg Dd = deg Dstar − 1` and `IsSimilar S (∏)`. -/
@@ -772,7 +801,8 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : CPolyG α) (p : CPolyG α × List (CPol
     ∃ idx, (p.1, idx) ∈ (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).zipIdx
       ∧ ¬ ((cnormG p.1 : List α).length ≤ 1)
       ∧ (idx + 1 ≠ cdegG Dstar → p.2 = cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
-          (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1)) := by
+          (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1))
+      ∧ (idx + 1 = cdegG Dstar → p.2 = Dstar.map (fun x => ([x] : CPolyG α))) := by
   rw [cLrtLogArgG, List.mem_filterMap] at hp
   obtain ⟨⟨Ri, idx⟩, hmem, hfn⟩ := hp
   simp only at hfn
@@ -783,11 +813,11 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : CPolyG α) (p : CPolyG α × List (CPol
     · -- `i = n` (pure single log): `p.2 = Dstar`; the subresultant claim is vacuous.
       rename_i hin
       rw [Option.some_inj] at hfn; subst hfn
-      exact ⟨idx, hmem, hlen, fun hne => absurd hin hne⟩
+      exact ⟨idx, hmem, hlen, fun hne => absurd hin hne, fun _ => rfl⟩
     · -- else: `p.2 = subresultant`.
       rename_i hin
       rw [Option.some_inj] at hfn; subst hfn
-      exact ⟨idx, hmem, hlen, fun _ => rfl⟩
+      exact ⟨idx, hmem, hlen, fun _ => rfl, fun heq => absurd heq hin⟩
 
 open Classical in
 omit [CDiffFieldSpec α] in
@@ -1034,15 +1064,12 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
     (hB_deg : ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)).natDegree
         ≤ (Lagrange.nodal allpoles id).natDegree - 1)
     (p : CPolyG α × List (CPolyG α)) (hp : p ∈ cLrtLogArgG Dt hNum Dstar)
-    (c : E) (hc : c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots)
-    (hi : (rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)) (Lagrange.nodal allpoles id)
-        ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c
-        < (Lagrange.nodal allpoles id).natDegree) :
+    (c : E) (hc : c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots) :
     evalLrtArg p.2 c = ((allpoles.filter (fun β =>
         ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
           / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
               (Lagrange.nodal allpoles id)).eval β = c)).val.map (fun β => X - C β)).prod := by
-  obtain ⟨idx, hmem, _, hp2imp⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
+  obtain ⟨idx, hmem, _, hp2imp, hp2n⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
   obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp (List.mk_mem_zipIdx_iff_getElem?.mp hmem)
   have hp1 : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
     rw [List.get_eq_getElem]; exact hp1'
@@ -1060,14 +1087,56 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
       (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c := by
     rw [hRR, rootMult_R_map_eq_idx_succ hgcd _ hR0 hRpp idx hj c (hp1 ▸ hc)]
-  -- `idx+1 = rootMult c < nodal.natDegree = deg Dstar`, so the non-degenerate (subresultant) branch applies.
-  have hne : idx + 1 ≠ cdegG Dstar := by
-    have h1 : idx + 1 < (Lagrange.nodal allpoles id).natDegree := hindex ▸ hi
+  have hdeg : (Lagrange.nodal allpoles id).natDegree = cdegG Dstar := by
     rw [← hsplit, natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective,
-      ← cdegG_eq_natDegree] at h1
-    omega
-  rw [hp2imp hne, evalLrtArg_eq_fiber_prod Dstar hNum (cmonomialDeriv Dt Dstar) allpoles c (idx + 1) hm hsplit
-    hB hA hB_deg hindex (hindex ▸ hi), hDd]
+      ← cdegG_eq_natDegree]
+  set φ := algebraMap (CFieldSpec.K α) E with hφ
+  by_cases heqn : idx + 1 = cdegG Dstar
+  · -- **`i = n`: single pure log** — `p.2 = Dstar`, `evalLrtArg = Dstar_E`, and the fiber is *all* poles.
+    have hDsep : (Lagrange.nodal allpoles id).Separable := by
+      rw [Lagrange.nodal, ← Finset.prod_attach]
+      exact separable_prod_X_sub_C_iff'.mpr fun a _ b _ h => Subtype.ext (by simpa using h)
+    have hBroots : ∀ β ∈ (Lagrange.nodal allpoles id).roots,
+        ((toPolyG (cmonomialDeriv Dt Dstar)).map φ).eval β ≠ 0 := fun β hβ =>
+      hB β (Finset.mem_val.mp (nodal_roots allpoles ▸ hβ))
+    -- `#fiber = deg gcd = rootMult c R_E = idx+1 = cdegG Dstar = #allpoles`, so `fiber = allpoles`.
+    have hfiber : (allpoles.filter (fun β => ((toPolyG hNum).map φ).eval β
+        / (Differential.implicitDeriv ((toPolyG Dt).map φ) (Lagrange.nodal allpoles id)).eval β = c))
+        = allpoles := by
+      apply Finset.eq_of_subset_of_card_le (Finset.filter_subset _ _)
+      have hcnt := natDegree_gcd_eq_count_residue_gen ((toPolyG hNum).map φ) (Lagrange.nodal allpoles id)
+        ((toPolyG (cmonomialDeriv Dt Dstar)).map φ) hDsep hBroots c
+      have hrm := rootMultiplicity_rtResultantGen_eq_natDegree_gcd ((toPolyG hNum).map φ)
+        (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map φ) hDsep hBroots hA hB_deg c
+      have hcard : (allpoles.filter (fun β => ((toPolyG hNum).map φ).eval β
+          / (Differential.implicitDeriv ((toPolyG Dt).map φ) (Lagrange.nodal allpoles id)).eval β = c)).card
+          = idx + 1 := by
+        rw [← hDd, hindex, hrm, hcnt, nodal_roots, Multiset.count_map, Finset.card_def,
+          Finset.filter_val]
+        exact congrArg Multiset.card (Multiset.filter_congr fun a _ => eq_comm)
+      have hcardall : allpoles.card = idx + 1 := by
+        rw [heqn, ← hdeg, Lagrange.natDegree_nodal]
+      omega
+    rw [hp2n heqn, evalLrtArg_const_embed_eq Dstar c (hDmonic.map φ), hfiber, hsplit, Lagrange.nodal,
+      Finset.prod_eq_multiset_prod]
+    simp only [id_eq]
+  · -- **`i < n`: subresultant** — the original path, `hi` now derived from `idx+1 ≤ cdegG` (`hindex` + degree).
+    have hR_E0 : (rtResultantGen ((toPolyG hNum).map φ) (Lagrange.nodal allpoles id)
+        ((toPolyG (cmonomialDeriv Dt Dstar)).map φ)) ≠ 0 := by
+      rw [hRR, Polynomial.map_ne_zero_iff φ.injective]; exact hR0
+    have hle : idx + 1 ≤ cdegG Dstar := by
+      have h1 : idx + 1 ≤ (rtResultantGen ((toPolyG hNum).map φ) (Lagrange.nodal allpoles id)
+          ((toPolyG (cmonomialDeriv Dt Dstar)).map φ)).natDegree := by
+        rw [hindex]
+        refine le_trans (le_of_eq ?_) (Polynomial.natDegree_le_of_dvd
+          (Polynomial.pow_rootMultiplicity_dvd _ c) hR_E0)
+        rw [Polynomial.natDegree_pow, Polynomial.natDegree_X_sub_C, mul_one]
+      exact le_trans h1 (by rw [← hdeg]; exact natDegree_rtResultantGen_le _ _ _)
+    have hi' : (rtResultantGen ((toPolyG hNum).map φ) (Lagrange.nodal allpoles id)
+        ((toPolyG (cmonomialDeriv Dt Dstar)).map φ)).rootMultiplicity c
+        < (Lagrange.nodal allpoles id).natDegree := by rw [← hindex, hdeg]; omega
+    rw [hp2imp heqn, evalLrtArg_eq_fiber_prod Dstar hNum (cmonomialDeriv Dt Dstar) allpoles c (idx + 1) hm
+      hsplit hB hA hB_deg hindex (hindex ▸ hi'), hDd]
 
 
 open Classical in
@@ -1256,7 +1325,7 @@ open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **The final `hlog` wiring.** Plugs the five Yun facts into `logResidueSumLrtG_eq_normalPart_of_yun`,
 discharging `hsplit` via `monic_separable_eq_nodal` (`Dstar` monic + separable). The remaining RT side
-conditions (`hB` normality, `hAdeg`/`hAnd` properness, `hB_deg`, `hnorm`, `hcancel`, `hilt`) are Bronstein's
+conditions (`hB` normality, `hAdeg`/`hAnd` properness, `hB_deg`, `hnorm`, `hcancel`) are Bronstein's
 genuine hypotheses. Conclusion: `logResidueSumLrtG (cLrtLogArgG …) = hNum/Dstar` — the capstone's `hlog`. -/
 theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E] [DifferentialAlgebra (CFieldSpec.K α) E]
@@ -1284,11 +1353,7 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
               / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
                   (Lagrange.nodal ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
                     id)).eval β)
-          * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0)
-    (hilt : ∀ c : E, (rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
-        (Lagrange.nodal ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset id)
-        ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c
-        < (Lagrange.nodal ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset id).natDegree) :
+          * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) :
     (logResidueSumLrtG Dt (cLrtLogArgG Dt hNum Dstar) : RatFunc E)
       = amGExt (toPolyG hNum) / amGExt (toPolyG Dstar) := by
   set φ := algebraMap (CFieldSpec.K α) E with hφdef
@@ -1310,7 +1375,7 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
       hRpp β hβ)
     (fun p hp c hc => entry_log_eq_fiber_prod hgcd Dt hNum Dstar allpoles hDmonic hDt0 hAD hsplit hR0
       hRpp hm (fun β hβ => by rw [hDd2]; exact hB β (Multiset.mem_toFinset.mp hβ))
-      (by rw [hnd]; exact hAnd) (by rw [hnd, hDd2]; exact hB_deg) p hp c hc (hilt c))
+      (by rw [hnd]; exact hAnd) (by rw [hnd, hDd2]; exact hB_deg) p hp c hc)
     hAdeg hnorm hcancel]
   rw [← hsplit]
   simp only [amGExt, hφdef]
@@ -1351,9 +1416,11 @@ Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into t
 outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerGWf Dt a d).2.2`
 monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`/`_squarefree`);
 `hDt0`…`hm` are the remaining `K`-level residue-data facts (degree bounds, the residue resultant nonzero); `hE`
-bundles the **three genuine** per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles
-(`hB`), normality `hnorm` (`η ≠ Dβ`), and the subresultant-multiplicity bound `hilt` (the residual is not a
-single pure-log `c·D′/D`). Everything else is **discharged internally**: the RT cancellation `hcancel` is
+bundles the **two genuine** per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles
+(`hB`) and normality `hnorm` (`η ≠ Dβ`). (The former subresultant-multiplicity bound `hilt` — "the residual is
+not a single pure log `c·D′/D`" — is **no longer needed**: `cLrtLogArgG` now handles that case directly via its
+`i = deg Dstar` branch, so `entry_log_eq_fiber_prod` proves it too.) Everything else is **discharged
+internally**: the RT cancellation `hcancel` is
 automatic in the primitive case (`hDt0`: `Dt` constant, via `hcancel_of_primitive`), and the three
 degree/properness conditions `hAnd`/`hAdeg`/`hB_deg` follow from the `K`-level `hAD`/`hm` by base change
 (`φ = algebraMap` preserves `natDegree` over a field; `Dstar` monic + separable ⟹ its root count is its degree).
@@ -1383,25 +1450,17 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
                 (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
         ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
-            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
-        ∧ (∀ c : E, (rtResultantGen ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map
-              (algebraMap (CFieldSpec.K α) E))
-            (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id)
-            ((toPolyG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)).map
-              (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c
-            < (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id).natDegree)) :
+            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)) :
     IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) := by
   have hDmonic := toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0
   have hDsep : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Separable :=
     PerfectField.separable_iff_squarefree.mpr
       (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
   refine isIntegralResultLrtG_cIntegrateReducedLrtG hgcd Dt a d hd0 hpp hcopgcd (fun E _ _ _ _ _ _ => ?_)
-  obtain ⟨hB, hnorm, hilt⟩ := hE E
+  obtain ⟨hB, hnorm⟩ := hE E
   -- The three degree-side conditions are *discharged internally* from the `K`-level facts by base change
   -- (`φ = algebraMap (CFieldSpec.K α) E` preserves `natDegree` over a field), leaving only the genuine
-  -- `hB`/`hnorm`/`hilt`.
+  -- `hB`/`hnorm` (`hilt` was the pure-single-log exclusion — now the algorithm handles that case).
   have hAnd : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).natDegree
       < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
     rw [Polynomial.natDegree_map, Polynomial.natDegree_map]; exact hAD
@@ -1426,7 +1485,6 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
   exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerGWf Dt a d).2.1
     (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR0 hRpp hm hB hB_deg.le hAnd hAdeg hnorm
     (hcancel_of_primitive Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hDt0)
-    hilt
 
 universe u
 
@@ -1437,9 +1495,10 @@ variable [CFracGcdCoreWf α] in
 automatic facts (`hpp`/`hRpp`, both `primPart_ne_zero`), `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`
 needs exactly: the Yun-factor coprimality `hcopgcd`, the **primitive-case** `hDt0` (`Dt` constant), the
 residual degree bound `hAD`, the residue resultant nonzero `hR0`, the monomial-derivative degree `hm`, and the
-three per-extension conditions `hB`/`hnorm`/`hilt`. These are the Rothstein–Trager residue-data plus
+two per-extension conditions `hB`/`hnorm`. These are the Rothstein–Trager residue-data plus
 tower-nondegeneracy hypotheses — the honest residual frontier of the root-free primitive reduced integrator
-once the `hcancel` and degree/properness conditions are discharged. -/
+once the `hcancel` and degree/properness conditions are discharged. (The former `hilt` pure-single-log
+exclusion is gone: `cLrtLogArgG`'s `i = deg Dstar` branch handles it.) -/
 structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
   /-- Yun-factor coprimality: each higher-multiplicity factor's `gcd` with its derivative cofactor is a unit. -/
   hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
@@ -1469,14 +1528,6 @@ structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
         ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
             ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
-        ∧ (∀ c : E, (rtResultantGen ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map
-              (algebraMap (CFieldSpec.K α) E))
-            (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id)
-            ((toPolyG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)).map
-              (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c
-            < (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id).natDegree)
 
 set_option maxHeartbeats 800000 in
 open Classical in
