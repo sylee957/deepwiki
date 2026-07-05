@@ -117,6 +117,66 @@ theorem ratFuncOrd_add_of_lt (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x
     multiplicity_mul hp (hfin (mul_ne_zero hdx hdy)), ratFuncOrd]
   push_cast; ring
 
+/-- **The ultrametric lower bound** (common lower bound preserved): if `n ≤ 0` and `n ≤ νₚ x`, `n ≤ νₚ y`,
+then `n ≤ νₚ(x + y)`. The `n ≤ 0` guard covers the `x + y = 0` case (`νₚ 0 = 0`). Via
+`min_le_emultiplicity_add` on the common-denominator numerator. -/
+theorem le_ratFuncOrd_add (p : K[X]) (hp : Prime p) {x y : RatFunc K} {n : ℤ} (hn : n ≤ 0)
+    (hx : n ≤ ratFuncOrd p x) (hy : n ≤ ratFuncOrd p y) : n ≤ ratFuncOrd p (x + y) := by
+  rcases eq_or_ne x 0 with rfl | hx0
+  · simpa using hy
+  rcases eq_or_ne y 0 with rfl | hy0
+  · simpa using hx
+  rcases eq_or_ne (x + y) 0 with hxy0 | hxy0
+  · rw [hxy0, ratFuncOrd, RatFunc.num_zero, RatFunc.denom_zero, multiplicity_zero,
+      multiplicity_one_of_prime hp]
+    omega
+  have hnx := RatFunc.num_ne_zero hx0
+  have hny := RatFunc.num_ne_zero hy0
+  have hdx := RatFunc.denom_ne_zero x
+  have hdy := RatFunc.denom_ne_zero y
+  have hxrep : x = algebraMap K[X] (RatFunc K) x.num / algebraMap K[X] (RatFunc K) x.denom :=
+    (RatFunc.num_div_denom x).symm
+  have hyrep : y = algebraMap K[X] (RatFunc K) y.num / algebraMap K[X] (RatFunc K) y.denom :=
+    (RatFunc.num_div_denom y).symm
+  set N : K[X] := x.num * y.denom + x.denom * y.num with hN
+  have hsum : x + y = algebraMap K[X] (RatFunc K) N
+      / algebraMap K[X] (RatFunc K) (x.denom * y.denom) := by
+    rw [hN, map_add, map_mul, map_mul, map_mul]; conv_lhs => rw [hxrep, hyrep]
+    rw [div_add_div _ _ (RatFunc.algebraMap_ne_zero hdx) (RatFunc.algebraMap_ne_zero hdy)]
+  have hNne : N ≠ 0 := by
+    intro h; rw [hsum, h, map_zero, zero_div] at hxy0; exact hxy0 rfl
+  have hfin := fun {z : K[X]} (hz : z ≠ 0) => FiniteMultiplicity.of_prime_left hp hz
+  have hAne : x.num * y.denom ≠ 0 := mul_ne_zero hnx hdy
+  have hBne : x.denom * y.num ≠ 0 := mul_ne_zero hdx hny
+  have hh := @min_le_emultiplicity_add K[X] _ p (x.num * y.denom) (x.denom * y.num)
+  rw [← hN, (hfin hAne).emultiplicity_eq_multiplicity, (hfin hBne).emultiplicity_eq_multiplicity,
+    (hfin hNne).emultiplicity_eq_multiplicity, multiplicity_mul hp (hfin hAne),
+    multiplicity_mul hp (hfin hBne)] at hh
+  rw [hsum, ratFuncOrd_mk p hp hNne (mul_ne_zero hdx hdy),
+    multiplicity_mul hp (hfin (mul_ne_zero hdx hdy))]
+  rw [ratFuncOrd] at hx hy
+  rcases le_total (multiplicity p x.num + multiplicity p y.denom)
+    (multiplicity p x.denom + multiplicity p y.num) with h | h
+  · rw [min_eq_left (by exact_mod_cast h)] at hh
+    have hle : multiplicity p x.num + multiplicity p y.denom ≤ multiplicity p N := by exact_mod_cast hh
+    omega
+  · rw [min_eq_right (by exact_mod_cast h)] at hh
+    have hle : multiplicity p x.denom + multiplicity p y.num ≤ multiplicity p N := by exact_mod_cast hh
+    omega
+
+/-- `νₚ(−x) = νₚ(x)` (negation is a unit multiple). -/
+theorem ratFuncOrd_neg (p : K[X]) (hp : Prime p) (x : RatFunc K) :
+    ratFuncOrd p (-x) = ratFuncOrd p x := by
+  rcases eq_or_ne x 0 with rfl | hx0
+  · rw [neg_zero]
+  · have hneg1 : ratFuncOrd p (-1 : RatFunc K) = 0 := by
+      rw [show (-1 : RatFunc K) = algebraMap K[X] (RatFunc K) (-1) by rw [map_neg, map_one],
+        ratFuncOrd_algebraMap p (-1) hp,
+        multiplicity_eq_zero.mpr (fun hd => hp.not_unit (isUnit_of_dvd_unit hd isUnit_one.neg))]
+      rfl
+    rw [show -x = (-1 : RatFunc K) * x by ring,
+      ratFuncOrd_mul p hp (neg_ne_zero.mpr one_ne_zero) hx0, hneg1, zero_add]
+
 section Lift
 
 variable [CharZero K] (d : Derivation ℤ K[X] K[X])
@@ -219,6 +279,20 @@ theorem ratFuncOrd_nonneg_of_extendDeriv_ge_neg_one {p : K[X]} (hp : Prime p) (h
   rw [not_le] at hlt
   rw [ratFuncOrd_extendDeriv_eq_sub_one_of_normal d hp hnormal hlt] at h
   omega
+
+/-- **The residue criterion's rational-part regularity** (`descendGenuine` core). In a Liouville form
+`f = D g + h` (`D = extendDeriv d`) with `f` **reduced** at `p` (`νₚ f ≥ −1`, a simple pole) and the log part
+`h` simple-poled (`νₚ h ≥ −1`), the rational part `g` is **regular** at every prime `p` normal for `d`
+(`νₚ g ≥ 0`): `D g = f − h` has at most a simple pole (ultrametric), and an at-most-simple-pole derivative
+comes from a regular function. Hence `D g` carries **no** residue at `p`, so every residue of `f` is a
+constant log coefficient — the pole-order half of the transcendental residue criterion. -/
+theorem ratFuncOrd_nonneg_of_liouville_reduced {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
+    {f g h : RatFunc K} (hLiou : f = extendDeriv d g + h)
+    (hf : -1 ≤ ratFuncOrd p f) (hh : -1 ≤ ratFuncOrd p h) : 0 ≤ ratFuncOrd p g := by
+  refine ratFuncOrd_nonneg_of_extendDeriv_ge_neg_one d hp hnormal ?_
+  have hDg : extendDeriv d g = f + -h := by rw [hLiou]; ring
+  rw [hDg]
+  exact le_ratFuncOrd_add p hp (by norm_num) hf (by rw [ratFuncOrd_neg p hp]; exact hh)
 
 end Lift
 
