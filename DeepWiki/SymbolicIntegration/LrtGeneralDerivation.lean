@@ -151,6 +151,22 @@ theorem roots_rtResultantGen [IsAlgClosed K] (A D B : K[X]) (hD0 : D ≠ 0)
   rw [hRC, roots_C_mul _ hs0, hmap, roots_multiset_prod_X_sub_C]
 
 open scoped Classical in
+/-- **`rtResultantGen A D B ≠ 0`** under normality (`hB`). From the root-product form: the leading scalar
+`lc(D)^{deg D−1}` is nonzero and each factor `C(A α) − X·C(B α) = −C(B α)·(X − C residue)` is nonzero. -/
+theorem rtResultantGen_ne_zero [IsAlgClosed K] (A D B : K[X]) (hD0 : D ≠ 0)
+    (hB : ∀ α ∈ D.roots, B.eval α ≠ 0) (hA : A.natDegree < D.natDegree)
+    (hB_deg : B.natDegree ≤ D.natDegree - 1) :
+    rtResultantGen A D B ≠ 0 := by
+  rw [rtResultantGen_eq_prod_roots A D B hA hB_deg]
+  refine mul_ne_zero (pow_ne_zero _ ?_) (Multiset.prod_ne_zero ?_)
+  · rw [Ne, C_eq_zero]; exact leadingCoeff_ne_zero.mpr hD0
+  · rw [Multiset.mem_map]
+    rintro ⟨α, hα, hfα⟩
+    rw [linearFactor_eq_residue_gen A B α (hB α hα)] at hfα
+    exact mul_ne_zero (neg_ne_zero.mpr (C_ne_zero.mpr (hB α hα)))
+      (Polynomial.X_sub_C_ne_zero _) hfα
+
+open scoped Classical in
 /-- `deg gcd(D, A − a·B) = #{roots α of D with residue A(α)/B(α) = a}`, under `Squarefree`/`Separable D`
 and normality `hB`. -/
 theorem natDegree_gcd_eq_count_residue_gen [IsAlgClosed K] (A D B : K[X]) (hD : D.Separable)

@@ -1444,23 +1444,20 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
         = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1)
     (hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-        (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).roots,
-            (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
-              ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
-        ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+        ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
-            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)) :
+            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′) :
     IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) := by
   have hDmonic := toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0
   have hDsep : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Separable :=
     PerfectField.separable_iff_squarefree.mpr
       (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
   refine isIntegralResultLrtG_cIntegrateReducedLrtG hgcd Dt a d hd0 hpp hcopgcd (fun E _ _ _ _ _ _ => ?_)
-  obtain ⟨hB, hnorm⟩ := hE E
-  -- The three degree-side conditions are *discharged internally* from the `K`-level facts by base change
+  have hnorm := hE E
+  -- The degree-side conditions are *discharged internally* from the `K`-level facts by base change
   -- (`φ = algebraMap (CFieldSpec.K α) E` preserves `natDegree` over a field), leaving only the genuine
-  -- `hB`/`hnorm` (`hilt` was the pure-single-log exclusion — now the algorithm handles that case).
+  -- normality `hnorm`. (`hB` — `implicitDeriv` nonvanishing at the poles — is now *derived* from `hnorm`:
+  -- `hnorm` ⟺ `IsCoprime Dstar_E (implicitDeriv Dt_E Dstar_E)`, and coprimality means no shared root.)
   have hAnd : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).natDegree
       < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
     rw [Polynomial.natDegree_map, Polynomial.natDegree_map]; exact hAD
@@ -1468,6 +1465,19 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
       (algebraMap (CFieldSpec.K α) E)).Monic := hDmonic.map _
   have hDsepE : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
       (algebraMap (CFieldSpec.K α) E)).Separable := hDsep.map
+  have hB : ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+          (algebraMap (CFieldSpec.K α) E)).roots,
+      (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+        ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+          (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0 := by
+    intro β hβ
+    have hcop : IsCoprime ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))
+        (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+          ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))) := by
+      rw [monic_separable_eq_nodal _ hDmonicE hDsepE, Lagrange.nodal]
+      exact (isCoprime_prod_X_sub_C_implicitDeriv_iff _ _).mpr (by simpa using hnorm)
+    exact isCoprime_X_sub_C_iff.mp (hcop.of_isCoprime_of_dvd_left
+      (dvd_iff_isRoot.mpr (Polynomial.isRoot_of_mem_roots hβ)))
   have hcard : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
         (algebraMap (CFieldSpec.K α) E)).roots.toFinset.card
       = ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
@@ -1517,17 +1527,13 @@ structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
   /-- The monomial derivative drops the degree by exactly one. -/
   hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
         = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1
-  /-- The three genuine per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles,
-  normality `η ≠ Dβ`, and the subresultant-multiplicity bound (the residual is not a single pure-log). -/
+  /-- The **one** genuine per-splitting-extension condition: normality `η ≠ Dβ` at the poles. (`implicitDeriv`
+  nonvanishing at the poles is *derived* from this — normality ⟺ `IsCoprime Dstar (implicitDeriv Dt Dstar)`.) -/
   hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-        (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).roots,
-            (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
-              ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
-        ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+        ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
-            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
+            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′
 
 set_option maxHeartbeats 800000 in
 open Classical in
