@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtIntegrate
+import DeepWiki.SymbolicIntegration.Computable.LrtSoundness
 
 /-! # The primitive-case integrability guard for the root-free LRT integrator
 
@@ -41,7 +42,34 @@ theorem cIntegrateReducedLrtGuardedG_eq_some_iff (Dt a d : CPolyG α) :
   unfold cIntegrateReducedLrtGuardedG
   cases h : cResidueConstantGuardG Dt a d <;> simp_all
 
+/-- **Extraction from a successful guarded run.** If the guarded integrator returns `res`, then the guard
+passed *and* `res` is exactly the unguarded LRT result — the bridge from the `Option`-valued integrator to the
+underlying soundness. -/
+theorem cIntegrateReducedLrtGuardedG_some (Dt a d : CPolyG α) (res : LrtResultG α)
+    (h : cIntegrateReducedLrtGuardedG Dt a d = some res) :
+    cResidueConstantGuardG Dt a d = true ∧ res = cIntegrateReducedLrtG Dt a d := by
+  unfold cIntegrateReducedLrtGuardedG at h
+  split at h
+  · rename_i hg
+    injection h with h'
+    exact ⟨hg, h'.symm⟩
+  · exact absurd h (by simp)
+
 end CPolyG
+
+open CPolyG in
+/-- **Guarded LRT reduced soundness.** A successful *guarded* run is sound: it returns the unguarded LRT
+result (`cIntegrateReducedLrtGuardedG_some`), whose soundness `hsound` — supplied by
+`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` under the genuine Bronstein setup conditions — transfers
+verbatim. The guard makes the integrator *correctly partial* (declining non-elementary inputs, where the
+unconditional claim is false); this is the shape a real Risch soundness theorem takes — `= some res ⇒ correct`
+— now with a **real** guard instead of the no-op `some nrm`. -/
+theorem cIntegrateReducedLrtGuardedG_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] [CFracGcdCoreWf α] (Dt a d : CPolyG α) (res : LrtResultG α)
+    (hguarded : cIntegrateReducedLrtGuardedG Dt a d = some res)
+    (hsound : IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)) :
+    IsIntegralResultLrtG Dt a d res :=
+  (cIntegrateReducedLrtGuardedG_some Dt a d res hguarded).2 ▸ hsound
 
 /-! ### Validation (`native_decide`) -/
 
