@@ -328,6 +328,18 @@ theorem ratFuncOrd_nonneg_of_liouville_reduced {p : K[X]} (hp : Prime p) (hnorma
   rw [hDg]
   exact le_ratFuncOrd_add p hp (by norm_num) hf (by rw [ratFuncOrd_neg p hp]; exact hh)
 
+/-- **The residue criterion's rational-part has no residue** (`descendGenuine` valuation heart, combined). In
+a Liouville form `f = D g + h` with `f` reduced (`νₚ f ≥ −1`) and `h` simple-poled (`νₚ h ≥ −1`), the
+rational-part derivative `D g` is **regular** at every prime `p` normal for `d` (`νₚ(D g) ≥ 0`) — so it has no
+simple pole and contributes **no residue**. Hence every residue of `f` at `p` is the residue of the log part
+`h`, a constant log coefficient. Composes `ratFuncOrd_nonneg_of_liouville_reduced` (`g` regular) with
+`ratFuncOrd_extendDeriv_nonneg_of_nonneg` (`D` of regular is regular). -/
+theorem ratFuncOrd_extendDeriv_nonneg_of_liouville_reduced {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
+    {f g h : RatFunc K} (hLiou : f = extendDeriv d g + h)
+    (hf : -1 ≤ ratFuncOrd p f) (hh : -1 ≤ ratFuncOrd p h) : 0 ≤ ratFuncOrd p (extendDeriv d g) :=
+  ratFuncOrd_extendDeriv_nonneg_of_nonneg d hp
+    (ratFuncOrd_nonneg_of_liouville_reduced d hp hnormal hLiou hf hh)
+
 end Lift
 
 /-! ### The UFM recombination: per-prime no-pole bounds ⟹ `denom(x) ∣ q`
