@@ -13,17 +13,20 @@
 >    (algebraically **closed** differential extension). Mathlib's differential-field library
 >    (`FieldTheory/Differential/`) stops at **finite** extensions (`differentialFiniteDimensional`,
 >    `IntermediateField`), so instantiating it as-stated needs `Differential (AlgebraicClosure K)`, which
->    Mathlib lacks. **This is a real gap but a *developable* one**, two ways:
->    - **(A)** Build `Differential (AlgebraicClosure K)` — the closure is the directed union of finite
->      subextensions, each with a derivation via `differentialFiniteDimensional`, glued by
->      `uniqueDifferentialAlgebraFiniteDimensional` (standard: a derivation extends uniquely to algebraic
->      extensions). Un-blocks `IsIntegralResultLrtG` as-stated; reusable, Mathlib-worthy.
->    - **(B)** Weaken `[IsAlgClosed E]` in `IsIntegralResultLrtG` to "the residue polynomials **split** in E".
->      The residues are finitely many, so a **finite** `Polynomial.SplittingField` suffices — covered by
->      `differentialFiniteDimensional` directly, no infinite extension. Refactors the LRT statement + proofs.
+>    Mathlib lacks. This was a real gap but a *developable* one — and **Direction (A) is now DONE**:
+>    - **(A) — BUILT** (`DifferentialAlgebraicClosure.lean`, commit `bada3a2c`): `Differential
+>      (AlgebraicClosure K)` + `DifferentialAlgebra K (AlgebraicClosure K)`, axiom-clean. Not the colimit
+>      slog it looked like — the key is Mathlib's `Derivation.algHom_deriv` (an injective differential-algebra
+>      hom commutes with `′` on separable elements): `derivAt x`, computed in the finite `K⟮x⟯`, agrees with
+>      the derivation of *any* finite intermediate field ∋ x (`derivAt_eq_val_deriv`), so the laws reduce any
+>      finite element set to the common finite `K⟮x,y⟯`. Char 0 gives separability. **Payoff**
+>      (`LrtAlgebraicClosure.lean`, `6c814a17`): `isIntegralResultLrtG_algebraicClosure` instantiates the LRT
+>      `∀E` identity at `E = AlgebraicClosure (CFieldSpec.K α)` — a single concrete identity, not just "∀ E".
+>    - **(B)** — alternative, not pursued: weaken `[IsAlgClosed E]` to "residues split in E" and instantiate at
+>      the finite `Polynomial.SplittingField`. Would refactor the LRT statement; (A) un-blocks as-stated.
 >
-> The LRT reduced-part soundness (`descendGenuine`) is untouched and valuable; pursuing (A) or (B) is the
-> "new mathematical direction" that makes it usable end-to-end. See the correction below.
+> The LRT reduced-part soundness (`descendGenuine`) is untouched and valuable; **(A) makes it usable
+> end-to-end**. Lesson: re-grep Mathlib before calling something a wall — `algHom_deriv` was the key.
 
 ## Motivation (two questions)
 
