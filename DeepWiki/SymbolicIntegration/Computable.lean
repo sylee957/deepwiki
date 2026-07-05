@@ -44,6 +44,7 @@ import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.ResidueResultantTowerSpec
 import DeepWiki.SymbolicIntegration.Computable.SubresultantTowerSpec
 import DeepWiki.SymbolicIntegration.Computable.LrtSoundness
+import DeepWiki.SymbolicIntegration.Computable.LrtAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Computable.MixedTowerIntegrate
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Computable.NormalPartSoundness
