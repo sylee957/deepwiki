@@ -73,6 +73,27 @@ theorem cIntegrateReducedLrtGuardedG_sound {α : Type*} [CField α] [CFieldSpec 
     IsIntegralResultLrtG Dt a d res :=
   (cIntegrateReducedLrtGuardedG_some Dt a d res hguarded).2 ▸ hsound
 
+open CPolyG in
+/-- **All LRT residues are constant** (result-level, `Bool`). Every residue minimal polynomial `Rᵢ` in
+`res.logs` has constant coefficients after monic normalization (`D(monic Rᵢ) = 0`, coefficient-wise
+`cmapDeriv`) — i.e. its roots, the algebraic residues, are constants. Monic normalization strips the
+resultant-scaling artifact (as in `cResidueConstantGuardG`). The `Bool` guard the genuine integrator checks. -/
+def allResiduesConstantLrtG {α : Type*} [CField α] [CDiffField α] (res : LrtResultG α) : Bool :=
+  res.logs.all (fun RS => cisZeroG (cmapDeriv (cmonicG RS.1)))
+
+/-- **All LRT residues are constant** (`Prop`). The LRT analogue of `AllResiduesConstantG`; the residues here
+are **roots of `Rᵢ`** (not explicit `α`), so constancy is `D(monic Rᵢ) = 0` rather than `D(cᵢ) = 0`. -/
+def AllResiduesConstantLrtG {α : Type*} [CField α] [CDiffField α] (res : LrtResultG α) : Prop :=
+  allResiduesConstantLrtG res = true
+
+/-- **Genuine LRT integral result**: the formal LRT identity `IsIntegralResultLrtG` **and** all residues
+constant (`AllResiduesConstantLrtG`). The conjunction certifies a *true* antiderivative
+`⟦g⟧ + Σᵢ Σ_{Rᵢ(c)=0} c·log Sᵢ(c,t)` with constant algebraic residues — the LRT analogue of
+`IsGenuineIntegralResultG`; `IsIntegralResultLrtG` alone is the formal (constant-treated) identity. -/
+def IsGenuineIntegralResultLrtG {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    (Dt anum aden : CPolyG α) (res : LrtResultG α) : Prop :=
+  IsIntegralResultLrtG Dt anum aden res ∧ AllResiduesConstantLrtG res
+
 /-! ### Validation (`native_decide`) -/
 
 namespace CPolyG
