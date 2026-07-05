@@ -1,134 +1,34 @@
-import DeepWiki.SymbolicIntegration.Computable.LrtAssembly
-import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 import DeepWiki.SymbolicIntegration.Computable.RischTower
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitive
-import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitiveLrt
 import DeepWiki.SymbolicIntegration.Computable.Tower.CarrierRec
 
-/-! # `RischSolver` — the recursive Risch tower solver (base + step)
+/-! # The recursive Risch tower step (`[LawfulRischLevel β] → LawfulRischLevel (QFunNZG β)`)
 
-The genuine, root-free Risch integrator, structured **recursively** over the monomial tower — **the one
-solver**. Integrating `a/d ∈ α(t)` decomposes into the polynomial part, the reduced part (root-free LRT),
-and the special part, and the **polynomial part's coefficient integration recurses into `RischSolver` for
-the coefficient field**. That coefficient recursion is the heart of the transcendental algorithm (Bronstein
-§5.3–5.9) — and is exactly what a one-level solver misses: its special-part hook fires only when the
-polynomial part has constant coefficients (`D(fp) = 0`).
+The **tower STEP** of the recursive Risch solver: given a solver for the coefficient field
+`[LawfulRischLevel β]`, build one for `(QFunNZG β)(t)`. Integrating `a/d ∈ (QFunNZG β)(t)` decomposes into the
+polynomial part, the reduced part, and the special part; the **polynomial part's coefficient integration
+recurses into `LawfulRischLevel β`** — the heart of the transcendental algorithm (Bronstein §5.3–5.9), and
+exactly what a one-level solver misses (its special-part hook fires only when the polynomial part has constant
+coefficients, `D(fp) = 0`).
 
-- **`integrate`** — integrate `a/d ∈ α(t)` (monomial derivative `Dt`) to a root-free `LrtResultG`, or `none`.
-- **`sound`** — a successful run is a **genuine** antiderivative (`IsGenuineIntegralResultLrtG`: the LRT
-  identity + all residues constant).
+The chain, built here:
+- **`cLimitedIntegratePolyRatG`** — the generic top-down coefficient recursion `D(bᵢ) = aᵢ − (i+1)·η·bᵢ₊₁`,
+  with soundness `cLimitedIntegratePolyRatG_poly_sound` (`D_tower(q) = p`, denotational form) for any sound
+  coefficient integrator `intR`.
+- **`towerCoeffIntegrate`** — that `intR` for the tower step: recurse into `LawfulRischLevel β`'s **rational**
+  (base-level `K`, descent-free) integrator; sound by `towerCoeffIntegrate_sound`.
+- **`towerPolyIntegrate`** / **`towerPolyIntegrate_sound`** — the polynomial-part integrator + `D_tower(q) = p`.
+- **`tower_special_identity`** / **`towerPrimitiveCase`** / **`instLawfulRischLevelTower`** — the primitive
+  monomial case (general coefficients via the recursion) and the resolved `LawfulRischLevel (QFunNZG β)`
+  instance. With the base (`instLawfulRischLevelPrimitive`) a solver resolves at every tower depth.
 
-The **base** instance (`instRischSolverPrimitive`, from `[PrimitiveFrontierLrt α]`) is the genuine one-level
-LRT integrator inlined here — canonical split → special hook → root-free `cIntegrateReducedLrtG` →
-`combineSNLrt`, then the residue-constancy guard — correct for the constant-coefficient regime (`ℚ(x)` and any
-level whose polynomial part is constant). It supersedes the retired `LawfulRischLevelLrt`. The **step** adds
-the coefficient recursion `[RischSolver β] → RischSolver (QFunNZG β)` via the generic-tower limited
-integration. See `docs/recursive-risch-tower.md`. -/
+The single abstraction is `LawfulRischLevel` (`RischTower.lean`); the earlier `RischSolver` /
+`LawfulRischLevelLrt` duplicate wrappers are retired. See `docs/recursive-risch-tower.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG Polynomial
 open scoped Differential
-
-variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-  [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
-
-/-- **The recursive Risch tower solver, as a class.** `integrate Dt a d` integrates `a/d ∈ α(t)` (with
-monomial derivative `Dt`) to a root-free `LrtResultG α`, or declines; `sound` certifies a successful run is a
-*genuine* antiderivative (`IsGenuineIntegralResultLrtG`). One instance at each tower level (base + step)
-assembles a solver at every depth by resolution. -/
-class RischSolver (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
-    [Fact (GcdFFCorrect (α := α))] where
-  /-- Integrate `a/d ∈ α(t)` (monomial derivative `Dt`) to a root-free LRT result, or `none`. -/
-  integrate : CPolyG α → CPolyG α → CPolyG α → Option (LrtResultG α)
-  /-- **Genuine soundness**: a successful run is a true antiderivative of `a/d` with constant residues. -/
-  sound : ∀ (Dt a d : CPolyG α) (r : LrtResultG α), toPolyG d ≠ 0 →
-    integrate Dt a d = some r → IsGenuineIntegralResultLrtG Dt a d r
-
-/-- **The base integrator** — the genuine one-level LRT primitive integrator: `d ≠ 0` guard, the primitive
-case integrator `cIntegrateCaseLrt primitiveGuardedCase` (canonical split → special hook → root-free
-`cIntegrateReducedLrtG` → `combineSNLrt`), then the residue-constancy guard `allResiduesConstantLrtG`. -/
-def rischIntegratePrimitive [CRischField α] [Fact (GcdFFCorrect (α := α))] [PrimitiveFrontierLrt α]
-    (Dt a d : CPolyG α) : Option (LrtResultG α) :=
-  if cisZeroG d then none else
-    (cIntegrateCaseLrt primitiveGuardedCase Dt a d).bind fun res =>
-      if allResiduesConstantLrtG res then some res else none
-
-/-- **Base soundness** — a successful `rischIntegratePrimitive` run is a genuine antiderivative: the LRT
-identity (via `cIntegrateCaseLrt_sound` from `primitiveGuardedCase_specialSound` + `PrimitiveFrontierLrt.hreducedLrt`)
-plus residue-constancy (the guard). -/
-theorem rischSoundPrimitive [CRischField α] [Fact (GcdFFCorrect (α := α))] [PrimitiveFrontierLrt α]
-    (Dt a d : CPolyG α) (r : LrtResultG α) (h : rischIntegratePrimitive Dt a d = some r) :
-    IsGenuineIntegralResultLrtG Dt a d r := by
-  rw [rischIntegratePrimitive] at h
-  by_cases hdz : cisZeroG d = true
-  · rw [if_pos hdz] at h; simp at h
-  · rw [if_neg hdz, Option.bind_eq_some_iff] at h
-    obtain ⟨res', hcase, hguard⟩ := h
-    have hd0 : toPolyG d ≠ 0 := fun hh => hdz ((cisZeroG_iff d).mpr hh)
-    split at hguard
-    · rename_i hg
-      obtain rfl : res' = r := (Option.some.injEq _ _).mp hguard
-      refine ⟨?_, hg⟩
-      have h0 : cIntegrateCaseLrt primitiveGuardedCase Dt a d = some res' := hcase
-      rw [cIntegrateCaseLrt] at hcase
-      rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-      rw [hcrep] at hcase
-      dsimp only at hcase
-      rcases hspec : primitiveGuardedCase.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
-      · rw [hspec] at hcase; simp at hcase
-      · rw [hspec] at hcase
-        have hSpec : primitiveGuardedCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
-            (crSpecDen Dt a d) = some (snum, sden) := by
-          simp only [crPoly, crSpecNum, crSpecDen, hcrep]; exact hspec
-        obtain ⟨hsden, v, hSpecField, hrecon⟩ := primitiveGuardedCase_specialSound Dt a d snum sden hd0 hSpec
-        exact cIntegrateCaseLrt_sound (Fact.out (p := GcdFFCorrect (α := α))) primitiveGuardedCase Dt a d res'
-          snum sden v hd0 hSpec h0 hsden hSpecField (PrimitiveFrontierLrt.hreducedLrt Dt a d hd0) hrecon
-    · simp at hguard
-
-/-- **The base Risch solver** (`ℚ(x)` and any constant-coefficient level) — `rischIntegratePrimitive` +
-`rischSoundPrimitive`, resolved from `[PrimitiveFrontierLrt α]`. Supersedes the retired `LawfulRischLevelLrt`.
-Low priority so the recursive step wins at `QFunNZG` levels. -/
-instance (priority := 100) instRischSolverPrimitive [CRischField α] [Fact (GcdFFCorrect (α := α))]
-    [PrimitiveFrontierLrt α] : RischSolver α where
-  integrate := rischIntegratePrimitive
-  sound Dt a d r _ h := rischSoundPrimitive Dt a d r h
-
-/-! ## Limited integration — the primitive the coefficient recursion calls
-
-The polynomial-part recursion needs, at each degree, a **rational** antiderivative of a coefficient
-(an element of the coefficient field itself — introducing a logarithm there would leave the field).
-`integrateRational` is `integrate` restricted to log-free results. -/
-
-/-- **Limited integration**: integrate `a/d ∈ α(t)` demanding a **rational** antiderivative (no new
-logarithms) — `some (num, den)` with `D(num/den) = a/d`, or `none`. This is the primitive the
-polynomial-part coefficient recursion calls: each polynomial coefficient must integrate to an element of
-the coefficient field, not introduce a log. -/
-def RischSolver.integrateRational [Fact (GcdFFCorrect (α := α))] [RischSolver α]
-    (Dt a d : CPolyG α) : Option (CPolyG α × CPolyG α) :=
-  (RischSolver.integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
-
-/-- **Limited-integration soundness.** A successful `integrateRational` is a genuine *rational*
-antiderivative: the log-free `LrtResultG ⟨(num, den), []⟩` satisfies the LRT identity, i.e. over every
-splitting extension the tower derivative of `⟦num/den⟧` equals `a/d`. -/
-theorem RischSolver.integrateRational_sound [Fact (GcdFFCorrect (α := α))] [RischSolver α]
-    (Dt a d num den : CPolyG α) (hd0 : toPolyG d ≠ 0)
-    (h : RischSolver.integrateRational Dt a d = some (num, den)) :
-    IsIntegralResultLrtG Dt a d ⟨(num, den), []⟩ := by
-  unfold RischSolver.integrateRational at h
-  rw [Option.bind_eq_some_iff] at h
-  obtain ⟨r, hint, hguard⟩ := h
-  split at hguard
-  · rename_i hemp
-    have hrat : r.rational = (num, den) := (Option.some.injEq _ _).mp hguard
-    have hlogs : r.logs = [] := List.isEmpty_iff.mp hemp
-    have hgen := (RischSolver.sound Dt a d r hd0 hint).1
-    obtain ⟨rr, rl⟩ := r
-    simp only at hrat hlogs
-    subst hrat; subst hlogs
-    exact hgen
-  · exact absurd hguard (by simp)
 
 /-! ## The coefficient recursion — generic-tower polynomial-part limited integration
 
@@ -152,7 +52,7 @@ def limIntTopFirst {α : Type*} [CField α] (η : α) (intR : α → Option α) 
 coefficient system `D(bᵢ) = aᵢ − (i+1)·η·bᵢ₊₁` top-down (from the leading coefficient down), each step a
 limited integration `intR` of an `α`-coefficient — the recursion into the coefficient field. Returns the
 antiderivative's coefficient list `[b₀, …, bₙ]`, or `none` if any coefficient fails to integrate rationally.
-Parameterized by `intR : α → Option α` so the tower step plugs in `RischSolver β.integrateRational`. -/
+Parameterized by `intR : α → Option α` so the tower step plugs in `LawfulRischLevel β.integrateRational`. -/
 def cLimitedIntegratePolyRatG {α : Type*} [CField α] (η : α) (intR : α → Option α)
     (p : List α) : Option (List α) :=
   limIntTopFirst η intR p.zipIdx.reverse []
@@ -295,7 +195,7 @@ theorem cLimitedIntegratePolyRatG_poly_sound {α : Type*} [CField α] [CFieldSpe
 /-! ## The tower step's recursion connector
 
 Integrating `a/d ∈ (QFunNZG β)(t)`, the polynomial part's coefficients live in `QFunNZG β = β(s)`. Each is
-integrated by recursing into `RischSolver β` — this is `intR` for `cLimitedIntegratePolyRatG`. The derivation
+integrated by recursing into `LawfulRischLevel β` — this is `intR` for `cLimitedIntegratePolyRatG`. The derivation
 used is the **carrier** one (`Ds = [1]`, `s` an independent variable), which is exactly the `cderiv` that
 `cLimitedIntegratePolyRatG_poly_sound` is stated against — so the recursion is consistent and sound. -/
 
