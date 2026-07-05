@@ -365,3 +365,34 @@ case is exactly `pole_sum_eq_normalPart`, already in hand.
 
 Then `E→K` descent + swap the primitive base ⟹ `PrimitiveFrontier.hreduced` closed, without the
 rational-residue restriction.
+
+### ★★ FULL ROOT-FREE SOLVER ASSEMBLED (2026-07-05) — the swap is DONE
+
+The "separate architectural track" above is now built. Five gate-green pieces make the root-free primitive
+solver an exact parallel of the rational one:
+
+| rational (residues ∈ K) | root-free (algebraic residues) | file |
+|---|---|---|
+| `IsIntegralResultG` | `IsIntegralResultLrtG` | IntegrationSpec / LrtSoundness |
+| `IsElementaryIntegrableG` | `IsElementaryIntegrableLrtG` | Assemble / RischTowerPrimitiveLrt |
+| `combineSN` / `combineSN_isIntegralResult` | `combineSNLrt` / `combineSNLrt_isIntegralResultLrt` | Assemble / LrtAssembly |
+| `cIntegrateCase` / `cIntegrateCase_sound` | `cIntegrateCaseLrt` / `cIntegrateCaseLrt_sound` | IntegratorAssembly / LrtAssembly |
+| `LawfulRischLevel` / `integrate` / `sound` | `LawfulRischLevelLrt` / `integrateLrt` / `soundLrt` | RischTower / RischTowerLrt |
+| `PrimitiveFrontier.hreduced` ← `..._via_interfaces` | `PrimitiveFrontierLrt.hreducedLrt` ← `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` | RischTowerPrimitive(Lrt) |
+| `instLawfulRischLevelPrimitive` | `instLawfulRischLevelLrtPrimitive` | RischTowerPrimitive(Lrt) |
+
+- The special part is **shared** (rational, frontier-independent): `primitiveGuardedCase_specialSound`,
+  extracted from `instLawfulRischLevelPrimitive` and reused by both.
+- `soundLrt` holds over **every** algebraically-closed differential extension `E` (the descent vehicle
+  built into `IsIntegralResultLrtG`), so it handles **algebraic residues** — the whole point.
+- Materialize **one** `PrimitiveFrontierLrt α` ⇒ `integrateLrt`/`soundLrt` resolve parameter-free.
+
+**The essential difference:** the LRT frontier's obligation `hreducedLrt` is **general** — dischargeable
+(`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`) modulo only the genuine Bronstein criterion
+(normality `hnorm`, RT cancellation `hcancel`, and structural per-`E` conditions), with **no**
+rational-residue restriction. The rational `hreduced` cannot be closed in general (it demands rational
+residues), which is exactly why the swap was needed. Assembling `hreduced` = building this LRT track.
+
+**Remaining (optional):** materialize a concrete `PrimitiveFrontierLrt` instance for a worked
+algebraic-residue example (the genuine `hnorm`/`hcancel` are the actual integrability criterion, supplied per
+input); discharge more structural `hE` conditions (`hB`/`hAnd`/`hAdeg` from `Dstar` squarefree over `E`).
