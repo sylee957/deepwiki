@@ -46,6 +46,18 @@ def cLimitedIntegrateSingleBase (a η : QFunNZG ℚ) : Option (QFunNZG ℚ × �
     let bpoly := cAntiderivBaseQ integrand
     some (⟨(bpoly, [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩, -c1)
 
+/-- **`cLimitedIntegrateSingleBase` in the num/den signature** of `LawfulRischLevelLrt.limitedIntegrateSingle`
+(`anum aden ηnum ηden ↦ ((bnum, bden), c)`) — the base ℚ instance's field for Phase 3-wire-2. Guards the
+denominators nonzero (`QFunNZG` needs `cisZeroG den = false`), then wraps `cLimitedIntegrateSingleBase`. -/
+def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : CPolyG ℚ) :
+    Option ((CPolyG ℚ × CPolyG ℚ) × ℚ) :=
+  if hA : CPolyG.cisZeroG aden = false then
+    if hη : CPolyG.cisZeroG ηden = false then
+      (cLimitedIntegrateSingleBase ⟨(anum, aden), hA⟩ ⟨(ηnum, ηden), hη⟩).map
+        fun bc => ((bc.1.1.1, bc.1.1.2), bc.2)
+    else none
+  else none
+
 /-- `c · tⁿ` as a `CPolyG α` (`n` zeros then `c`). -/
 def cMonomialG {α : Type*} [CField α] (c : α) (n : ℕ) : CPolyG α :=
   (List.replicate n (CField.zero) ++ [c] : List α)
@@ -134,6 +146,18 @@ theorem cLimitedIntegrateSingleBase_example :
               (CField.mul (CPolyG.qConstParamG c) limIntSingleExampleEta)))
             && decide (c ≠ 0)
       | none => false) = true := by native_decide
+
+-- **Sanity print.** The num/den adapter on `(1+1/x, 1/x)`: `b = x = [0,1]/[1]`, `c = 1`.
+#eval (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
+  (fun r => (CPolyG.qnormPairG r.1.1 r.1.2, r.2))
+
+/-- **The num/den adapter matches `cLimitedIntegrateSingleBase`.** On `a = 1+1/x = (x+1)/x`, `η = 1/x`,
+`limitedIntegrateSingleBaseNumDen` returns `((bnum, bden), c)` with `bnum/bden = x` (`= [0,1]/[1]` in lowest
+terms) and `c = 1` — the degree-raising constant, in the shape a base `LawfulRischLevelLrt` instance's
+`limitedIntegrateSingle` field consumes (Phase 3-wire-2). -/
+theorem limitedIntegrateSingleBaseNumDen_example :
+    (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
+      (fun r => (CPolyG.qnormPairG r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by native_decide
 
 /-! ### 2-level end-to-end — the degree-raising primitive polynomial integral
 
