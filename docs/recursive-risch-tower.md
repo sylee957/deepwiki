@@ -27,21 +27,22 @@ to a genuine root-free `LrtResultG α`; `sound` certifies `IsGenuineIntegralResu
   limited integration `intR` of an `α`-coefficient. Parameterized by `intR : α → Option α` so the tower step
   plugs in `RischSolver β.integrateRational`. **Built** (gate-green algorithm).
 
-## Remaining — soundness (four bridges)
+## Soundness — DONE (`cLimitedIntegratePolyRatG_poly_sound`)
 
-`cLimitedIntegratePolyRatG_sound` : with `intR` sound (`∀ c b, intR c = some b → D(b) = c`) and
-`cLimitedIntegratePolyRatG η intR p = some q`, then `implicitDeriv (C η) (toPolyG q) = toPolyG p` (the
-tower derivative of `q` is `p`). Path:
-1. **Fold induction** — the fold produces `q` with the coefficient equations `cderiv (q.getD i) = aᵢ −
-   (i+1)·η·(q.getD (i+1))` for `i < p.length` (each accepted step is an `intR` success; `hintR` gives the
-   equation). Cleanest via a structural-recursion redefinition (`limIntTopFirst` on `p.zipIdx.reverse`).
-2. **`toK` transport** — push the raw `CField`-op equations through `toK` to `K = CFieldSpec.K α`.
-3. **Coefficient ↔ polynomial** — `coeff i (implicitDeriv (C η) Q) = D(coeff i Q) + η·(i+1)·coeff (i+1) Q`
-   (`mapCoeffs` + `C η · derivative`, `coeff_derivative`), matched to `toK (p.getD i) = coeff i (toPolyG p)`.
-4. **`Polynomial.ext`** — assemble 2–3 into the polynomial identity.
+With `intR` sound (`∀ c b, intR c = some b → cderiv b = c`) and `cLimitedIntegratePolyRatG η intR p = some q`,
+`implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p` (the tower derivative of `q` is `p`) — **proven, no sorry**.
+The four bridges:
+1. **Fold induction** — `limIntTopFirst_drop` (`q.drop |L| = acc`) + `limIntTopFirst_eq` (coefficient
+   equations at each processing position) + `cLimitedIntegratePolyRatG_eq` (indexed form
+   `cderiv (q[i]) = aᵢ − (i+1)·η·q[i+1]`, `i < deg p`). **Done.**
+2. **`toK` transport** — `CFieldSpec.toK_sub`/`toK_mul` + inline `toK (cnatCastG k) = (k : K)`. **Done.**
+3. **Coefficient ↔ polynomial** — `coeff m (implicitDeriv (C η) Q) = D(coeff m Q) + η·(m+1)·coeff (m+1) Q`
+   (`coeff_mapCoeffs` + `coeff_C_mul` + `coeff_derivative`) + `CDiffFieldSpec.toK_cderiv`. **Done.**
+4. **`Polynomial.ext`** — coefficient-wise, off-degree both sides vanish (`getElem?_eq_none`). **Done.**
 
-Then the primitive special-part soundness is no longer restricted to `D(fp)=0` — it holds for any polynomial
-part whose coefficients integrate (rationally) in the coefficient field.
+So the primitive special-part soundness is no longer restricted to `D(fp)=0` — it holds for any polynomial
+part whose coefficients integrate (rationally) in the coefficient field. The recursion the rebuild was for is
+a proven-correct algorithm.
 
 ## Remaining — the tower step
 
@@ -59,7 +60,13 @@ the base couldn't recurse; with the recursion built, the step closes modulo thes
 
 ## Status
 
-Phases A + B built & gate-green (commits `4aab225d`, `2de63ea4`): the recursive `RischSolver` class, the
-base instance, the limited-integration interface + soundness, and the coefficient-recursion algorithm. The
-four-bridge soundness of the recursion and the tower-step wiring are the multi-session continuation. The
-reduced part (genuine LRT) and Hermite are already generic and reused verbatim.
+Built & gate-green (commits `4aab225d`, `2de63ea4`, `01545f24`, `cd144146`): the recursive `RischSolver`
+class + base instance, the limited-integration interface + soundness, the coefficient-recursion algorithm,
+**and its full soundness `D_tower(q) = p`** (`cLimitedIntegratePolyRatG_poly_sound`, no sorry). The reduced
+part (genuine LRT) and Hermite are already generic and reused verbatim.
+
+**Only the tower-step wiring remains** — the QFunNZG plumbing that supplies `intR := RischSolver β.integrateRational
+Ds (num c) (den c)` (split each coefficient `c ∈ QFunNZG β = β(s)` into `num/den ∈ CPolyG β`, thread `Ds` =
+`β`'s monomial derivative), combines the polynomial-part result with the LRT reduced part (`combineSNLrt`), and
+threads the two soundness lemmas into the step instance `[RischSolver β] → RischSolver (QFunNZG β)`. The hard
+mathematics — the coefficient recursion and its soundness — is done.
