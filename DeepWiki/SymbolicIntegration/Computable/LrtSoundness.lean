@@ -1333,9 +1333,12 @@ Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into t
 outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerGWf Dt a d).2.2`
 monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`/`_squarefree`);
 `hDt0`…`hm` are the remaining `K`-level residue-data facts (degree bounds, the residue resultant nonzero); `hE`
-bundles the per-splitting-extension side conditions (normality `hnorm`, properness `hAnd`/`hAdeg`/`hB_deg`,
-`implicitDeriv` nonvanishing `hB`, the subresultant-multiplicity bound `hilt`). The RT cancellation `hcancel` is
-**discharged internally** — automatic in the primitive case (`hDt0`: `Dt` constant), via `hcancel_of_primitive`.
+bundles the **three genuine** per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles
+(`hB`), normality `hnorm` (`η ≠ Dβ`), and the subresultant-multiplicity bound `hilt` (the residual is not a
+single pure-log `c·D′/D`). Everything else is **discharged internally**: the RT cancellation `hcancel` is
+automatic in the primitive case (`hDt0`: `Dt` constant, via `hcancel_of_primitive`), and the three
+degree/properness conditions `hAnd`/`hAdeg`/`hB_deg` follow from the `K`-level `hAD`/`hm` by base change
+(`φ = algebraMap` preserves `natDegree` over a field; `Dstar` monic + separable ⟹ its root count is its degree).
 Unlike the rational `hreduced`, this is general: residues may be algebraic. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
@@ -1360,17 +1363,6 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
             (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
               ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
-        ∧ (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
-              ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E))).natDegree
-            ≤ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E)).natDegree - 1
-        ∧ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).natDegree
-            < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E)).natDegree
-        ∧ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).degree
-            < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E)).roots.toFinset.card
         ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
             ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
@@ -1388,9 +1380,33 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
     PerfectField.separable_iff_squarefree.mpr
       (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
   refine isIntegralResultLrtG_cIntegrateReducedLrtG hgcd Dt a d hd0 hpp hcopgcd (fun E _ _ _ _ _ _ => ?_)
-  obtain ⟨hB, hB_deg, hAnd, hAdeg, hnorm, hilt⟩ := hE E
+  obtain ⟨hB, hnorm, hilt⟩ := hE E
+  -- The three degree-side conditions are *discharged internally* from the `K`-level facts by base change
+  -- (`φ = algebraMap (CFieldSpec.K α) E` preserves `natDegree` over a field), leaving only the genuine
+  -- `hB`/`hnorm`/`hilt`.
+  have hAnd : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).natDegree
+      < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
+    rw [Polynomial.natDegree_map, Polynomial.natDegree_map]; exact hAD
+  have hDmonicE : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+      (algebraMap (CFieldSpec.K α) E)).Monic := hDmonic.map _
+  have hDsepE : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+      (algebraMap (CFieldSpec.K α) E)).Separable := hDsep.map
+  have hcard : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+        (algebraMap (CFieldSpec.K α) E)).roots.toFinset.card
+      = ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
+    conv_rhs => rw [monic_separable_eq_nodal _ hDmonicE hDsepE]
+    rw [Lagrange.natDegree_nodal]
+  have hAdeg : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).degree
+      < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+          (algebraMap (CFieldSpec.K α) E)).roots.toFinset.card := by
+    rw [hcard]; exact lt_of_le_of_lt Polynomial.degree_le_natDegree (by exact_mod_cast hAnd)
+  have hB_deg : (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+        ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))).natDegree
+      = ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1 := by
+    rw [← implicitDeriv_map, ← toPolyG_cmonomialDeriv, Polynomial.natDegree_map, Polynomial.natDegree_map,
+      ← cdegG_eq_natDegree, ← cdegG_eq_natDegree, hm]
   exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerGWf Dt a d).2.1
-    (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR0 hRpp hm hB hB_deg hAnd hAdeg hnorm
+    (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR0 hRpp hm hB hB_deg.le hAnd hAdeg hnorm
     (hcancel_of_primitive Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hDt0)
     hilt
 
