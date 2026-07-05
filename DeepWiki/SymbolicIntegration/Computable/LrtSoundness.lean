@@ -1299,6 +1299,33 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
 
 open scoped Differential in
 open Classical in
+/-- **`hcancel` is automatic in the primitive case.** When `Dt` is a constant (`(toPolyG Dt).natDegree = 0` —
+the primitive monomial `Dθ ∈ k`), the factor `((toPolyG Dt).map φ − C β′) /ₘ (X − β)` is a constant divided by
+a linear, hence `0`, so the whole RT-cancellation sum vanishes with **no** side hypothesis. -/
+theorem hcancel_of_primitive {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E] [Differential E]
+    (Dt hNum Dstar : CPolyG α) (hDt0 : (toPolyG Dt).natDegree = 0) :
+    (∑ β ∈ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
+        algebraMap E[X] (RatFunc E)
+        (C (((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
+              / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+                  (Lagrange.nodal ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
+                    id)).eval β)
+          * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) := by
+  apply Finset.sum_eq_zero
+  intro β _
+  have hdiv : (((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β) = 0 := by
+    rw [Polynomial.divByMonic_eq_zero_iff (Polynomial.monic_X_sub_C β), Polynomial.degree_X_sub_C]
+    calc (((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)).degree
+        ≤ max (((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).degree) ((C (β′) : E[X]).degree) :=
+          Polynomial.degree_sub_le _ _
+      _ ≤ 0 := max_le (le_trans Polynomial.degree_map_le
+          (le_trans (Polynomial.degree_le_natDegree) (by rw [hDt0]; rfl))) Polynomial.degree_C_le
+      _ < 1 := by decide
+  rw [hdiv, mul_zero, map_zero]
+
+open scoped Differential in
+open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **★★ The assembled LRT reduced-case soundness** — the root-free analogue of `hreduced`, fully composed.
 Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into the capstone
@@ -1306,10 +1333,10 @@ Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into t
 outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerGWf Dt a d).2.2`
 monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`/`_squarefree`);
 `hDt0`…`hm` are the remaining `K`-level residue-data facts (degree bounds, the residue resultant nonzero); `hE`
-bundles the genuine per-splitting-extension Bronstein side conditions (normality `hnorm`,
-properness `hAnd`/`hAdeg`/`hB_deg`, `implicitDeriv` nonvanishing `hB`, the RT cancellation `hcancel`, and the
-subresultant-multiplicity bound `hilt`). Unlike the rational `hreduced`, this is general: residues may be
-algebraic. -/
+bundles the per-splitting-extension side conditions (normality `hnorm`, properness `hAnd`/`hAdeg`/`hB_deg`,
+`implicitDeriv` nonvanishing `hB`, the subresultant-multiplicity bound `hilt`). The RT cancellation `hcancel` is
+**discharged internally** — automatic in the primitive case (`hDt0`: `Dt` constant), via `hcancel_of_primitive`.
+Unlike the rational `hreduced`, this is general: residues may be algebraic. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
     (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
@@ -1347,15 +1374,6 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
         ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
             ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
-        ∧ (∑ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
-            algebraMap E[X] (RatFunc E)
-            (C (((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map
-                  (algebraMap (CFieldSpec.K α) E)).eval β
-                  / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
-                      (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                        (algebraMap (CFieldSpec.K α) E)).roots.toFinset id)).eval β)
-              * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0)
         ∧ (∀ c : E, (rtResultantGen ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map
               (algebraMap (CFieldSpec.K α) E))
             (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
@@ -1370,9 +1388,10 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
     PerfectField.separable_iff_squarefree.mpr
       (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
   refine isIntegralResultLrtG_cIntegrateReducedLrtG hgcd Dt a d hd0 hpp hcopgcd (fun E _ _ _ _ _ _ => ?_)
-  obtain ⟨hB, hB_deg, hAnd, hAdeg, hnorm, hcancel, hilt⟩ := hE E
+  obtain ⟨hB, hB_deg, hAnd, hAdeg, hnorm, hilt⟩ := hE E
   exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerGWf Dt a d).2.1
     (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR0 hRpp hm hB hB_deg hAnd hAdeg hnorm
-    hcancel hilt
+    (hcancel_of_primitive Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hDt0)
+    hilt
 
 end DeepWiki.SymbolicIntegration
