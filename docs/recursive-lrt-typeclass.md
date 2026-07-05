@@ -86,11 +86,15 @@ impossible" — that was too strong. The remaining frontiers are **unproven soun
 believed-correct algorithms, plus genuine scope conditions** — eliminable *in principle* via large proofs:
 
 - `PrimitiveFrontierLrt` closes to `LrtReducedGenuineData`, a **mix**: `hDt0` is the primitive-case *scope*
-  (definitional — hyperexp is a different instance); `hR0` (resultant ≠ 0), `hE` (non-degeneracy: the residual
-  is not a single pure log) are conditions the *current proof* needs, that hold **generically** and can fail on
-  degenerate inputs. Full eliminability turns on an open question: **is `cIntegrateReducedLrtG` complete at those
-  degeneracies** (repeated residues, pure single log)? If yes, universally true and dischargeable by extending
-  the proof; if the algorithm assumes non-degeneracy, genuinely conditional. **Not yet determined.**
+  (definitional — hyperexp is a different instance); `hR0` (resultant ≠ 0) is a **proof-artifact** (derivable
+  from `hE`'s normality `hB` via `roots_rtResultantGen`'s `s ≠ 0`); `hE.3`/`hilt` ("residual not a single pure
+  log") **was a genuine algorithm gap** — `cIntegrateReducedLrtG` returned *wrong* answers on pure logs (`∫1/t →
+  log(t+1)`) because `cLrtLogArgG` omitted the `i = deg Dstar` branch. **RESOLVED (`a1a61216`):** the branch is
+  now added (emits `Dstar`), so the algorithm is correct on pure logs. **Consequence:** `hilt` is now
+  dischargeable-in-principle — the follow-on is to extend the soundness (`evalLrtArg_eq_fiber_prod` →
+  `entry_log_eq_fiber_prod` → `logMatch_of_setup`) to the `i = n` case via the existing
+  `isSimilar_gcd_left_of_natDegree_eq` (`LrtGeneralDerivation.lean:298`), then drop `hilt`+`hR0` from
+  `LrtReducedGenuineData`. So this frontier is a genuine (bounded) proof development, not a wall.
 - `GcdFFCorrect` at tower levels — fraction-free-gcd = genuine-gcd PRS-regularity; classical subresultant
   theory, portable (pieces in `YunTowerCorrect`/`SplitFactorHelpers`). Medium.
 - `LrtLiouvilleFrontier` (completeness descent) — abstract Liouville keystone proven in-project
