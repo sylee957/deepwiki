@@ -1,14 +1,29 @@
 # Refactoring the recursive Risch solver onto the genuine, root-free LRT path
 
-> **STATUS (2026-07-05): SUPERSEDED — the recursion landed on the RATIONAL path instead.** Putting the
-> *coefficient recursion* on the LRT path (`LrtResultG`, `∀E [IsAlgClosed E]` soundness) is blocked: the
-> tower step needs base-level (`K`) coefficient soundness, and descending the LRT `∀E` identity to `K` needs
-> a `Differential (AlgebraicClosure K)` instance Mathlib lacks (and the dev structurally avoids). The
-> shipped solution (`recursive-risch-tower.md`, commits `40d41280`→`bb3d183c`) uses the **rational**
-> `LawfulRischLevel.integrateRational`, whose `IsIntegralResultG` is already `K`-level (descent-free) — so
-> the coefficient recursion is sound with no algebraic-closure machinery. The LRT reduced-part *soundness*
-> (`LrtSoundness.lean`, `descendGenuine`) is untouched and valuable; only its use as the *coefficient
-> integrator* was abandoned. Kept as a record of why the rational path was chosen.
+> **STATUS (2026-07-05): the coefficient recursion is rational; the LRT `IsAlgClosed` gap is a developable
+> direction, not a wall.** Two separate facts, which an earlier draft of this note wrongly conflated:
+>
+> 1. **Why the *coefficient recursion* uses the rational path** — not because LRT is "blocked", but because a
+>    coefficient integral is **limited integration**: the antiderivative must lie in the coefficient field
+>    (log-free). Any algebraic-residue logarithm the LRT could produce would leave that field and be rejected
+>    anyway. So `LawfulRischLevel.integrateRational` (rational, `K`-level `IsIntegralResultG`, descent-free) is
+>    the *correct* tool there on its own merits (shipped: `recursive-risch-tower.md`, `40d41280`→`bb3d183c`).
+>
+> 2. **The LRT log part** (`IsIntegralResultLrtG`, `LrtSoundness.lean`) *is* stated `∀ E [IsAlgClosed E]`
+>    (algebraically **closed** differential extension). Mathlib's differential-field library
+>    (`FieldTheory/Differential/`) stops at **finite** extensions (`differentialFiniteDimensional`,
+>    `IntermediateField`), so instantiating it as-stated needs `Differential (AlgebraicClosure K)`, which
+>    Mathlib lacks. **This is a real gap but a *developable* one**, two ways:
+>    - **(A)** Build `Differential (AlgebraicClosure K)` — the closure is the directed union of finite
+>      subextensions, each with a derivation via `differentialFiniteDimensional`, glued by
+>      `uniqueDifferentialAlgebraFiniteDimensional` (standard: a derivation extends uniquely to algebraic
+>      extensions). Un-blocks `IsIntegralResultLrtG` as-stated; reusable, Mathlib-worthy.
+>    - **(B)** Weaken `[IsAlgClosed E]` in `IsIntegralResultLrtG` to "the residue polynomials **split** in E".
+>      The residues are finitely many, so a **finite** `Polynomial.SplittingField` suffices — covered by
+>      `differentialFiniteDimensional` directly, no infinite extension. Refactors the LRT statement + proofs.
+>
+> The LRT reduced-part soundness (`descendGenuine`) is untouched and valuable; pursuing (A) or (B) is the
+> "new mathematical direction" that makes it usable end-to-end. See the correction below.
 
 ## Motivation (two questions)
 

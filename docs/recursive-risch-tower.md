@@ -10,9 +10,11 @@
 > directly on the single `LawfulRischLevel` abstraction. **Key finding:** the coefficient integrator's
 > soundness is *denotational* `toK (cderiv b) = toK c` (not the carrier `cderiv b = c` — `toK` is
 > deliberately non-injective), and it uses the **rational** `integrateRational` (base-level `K`,
-> descent-free), *not* the LRT path of `lrt-recursive-solver-refactor.md` (whose `∀E` soundness can't
-> descend without `Differential (AlgebraicClosure K)`). The historical design below is kept as a record;
-> read it against that pivot.
+> descent-free) — the correct tool for a coefficient integral, which is *limited* integration (log-free) by
+> nature, independent of the LRT path. (The LRT `∀E [IsAlgClosed E]` soundness of the *log* part needs an
+> algebraically-closed differential extension to instantiate — a **developable** direction, not a wall; see
+> `lrt-recursive-solver-refactor.md`.) The historical design below is kept as a record; read it against that
+> pivot.
 
 ## What was missing
 
