@@ -16,12 +16,12 @@ soundness *and* completeness, no assumed hypotheses left.
   reduced to is now **proven** (`allResiduesConstantLrtG_of_guard`, `ResidueConstantBridge.lean`).
 - **Differential (AlgebraicClosure K): built** — un-blocks instantiating the LRT `∀E` soundness concretely.
 
-## What dangles — the four frontier classes (none materialized)
+## What dangles — the frontier classes (none materialized)
 
 | Frontier | File | Field | Discharge status |
 |---|---|---|---|
 | `PrimitiveFrontier` | `RischTowerPrimitive` | `hreduced : IsIntegralResultG` (rational reduced) | normal-part soundness PROVEN for δ≤1 (`cHermiteReduceTowerGWf_numer_degree_lt…`); needs materialization at the concrete carrier |
-| `LiouvilleFrontier` | `LiouvilleCompleteness` | `descendGenuine` (rational completeness) | keystone (`isLiouville_logExtension_uncond`) done; remaining = computable→abstract bridge |
+| ~~`LiouvilleFrontier`~~ | ~~`LiouvilleCompleteness`~~ | ~~`descendGenuine` (rational completeness)~~ | **RETIRED (701dbf95)** — redundant with `LrtLiouvilleFrontier`; sole consumer migrated to the LRT certificate |
 | `PrimitiveFrontierLrt` | `RischTowerPrimitiveLrt` | `hreducedLrt : IsIntegralResultLrtG` (algebraic reduced) | **closed to `LrtReducedGenuineData`** (`hreducedLrt_of_genuineAll`); remaining = the genuine Bronstein conditions per input |
 | `LrtLiouvilleFrontier` | `LrtCompleteness` | `descendGenuineLrt` (algebraic completeness) | keystone done; remaining = computable→abstract residue bridge |
 
