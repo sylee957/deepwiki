@@ -85,22 +85,22 @@ Phases (each its own gate-green commit):
 impossible" — that was too strong. The remaining frontiers are **unproven soundness/criterion theorems for
 believed-correct algorithms, plus genuine scope conditions** — eliminable *in principle* via large proofs:
 
-- `PrimitiveFrontierLrt` closes to `LrtReducedGenuineData`, a **mix**: `hDt0` is the primitive-case *scope*
-  (definitional — hyperexp is a different instance); `hR0` (resultant ≠ 0) is a **proof-artifact** (derivable
-  from `hE`'s normality `hB` via `roots_rtResultantGen`'s `s ≠ 0`); `hE.3`/`hilt` ("residual not a single pure
-  log") **was a genuine algorithm gap** — `cIntegrateReducedLrtG` returned *wrong* answers on pure logs (`∫1/t →
-  log(t+1)`) because `cLrtLogArgG` omitted the `i = deg Dstar` branch. **RESOLVED (`a1a61216`):** the branch is
-  now added (emits `Dstar`), so the algorithm is correct on pure logs. **Consequence:** `hilt` is now
-  dischargeable-in-principle. **DONE (`b4f98d37`): `hilt` is dropped from `LrtReducedGenuineData`.** The
-  algorithm's `i = deg Dstar` branch is now proven sound (`evalLrtArg_const_embed_eq` + `entry_log_eq_fiber_prod`
-  restructured to case-split on `idx+1 = cdegG Dstar`, the `i=n` fiber being *all* poles), so the pure-single-log
-  exclusion is no longer needed — the frontier bundle `hE` shrank from three genuine per-extension conditions to
-  **two** (`hB` normality + `hnorm`). `hR0` (resultant ≠ 0) remains as a **redundant hypothesis** — it is a pure
-  proof-artifact (always derivable from `hB` via `roots_rtResultantGen`'s `s ≠ 0`), so it is not a real frontier,
-  just an un-removed condition; dropping it needs a `rtResultantGen_ne_zero` helper + a ~25-line alg-closure
-  derivation in `_of_setup`, deferred as cosmetic. **So the genuine reduced-frontier conditions are now
-  `{hcopgcd, hDt0 (scope), hAD, hm, hB, hnorm}` — one fewer than before, and the removed one was the only one the
-  algorithm actually mishandled.**
+- `PrimitiveFrontierLrt` closes to `LrtReducedGenuineData`, now the **5 genuine Bronstein conditions
+  `{hcopgcd, hDt0 (scope), hAD, hm, hE}`** (down from 8 across three sessions). Removed as *derived, not assumed*:
+  - **`hilt`** (`hE.3`, "residual not a single pure log") **was a genuine algorithm gap** — `cIntegrateReducedLrtG`
+    returned *wrong* answers on pure logs (`∫1/t → log(t+1)`) because `cLrtLogArgG` omitted the `i = deg Dstar`
+    branch. **RESOLVED (`a1a61216`)** + **DROPPED (`b4f98d37`):** the branch emits `Dstar`, proven sound
+    (`evalLrtArg_const_embed_eq` + `entry_log_eq_fiber_prod` case-split on `idx+1 = cdegG Dstar`, the `i=n` fiber
+    being *all* poles).
+  - **`hB`** (`implicitDeriv` nonvanishing at the poles) — derived from `hE` normality via
+    `isCoprime_prod_X_sub_C_implicitDeriv_iff`; the `hE` bundle shrank three→one (just `hnorm`).
+  - **`hR0`** (residue resultant ≠ 0) **DROPPED (`884f0b44`, 2026-07-05)** — Bronstein Thm 5.6.1/§4.4 derives it
+    from `hE` normality: over `E = AlgebraicClosure K`, `rtResultantGen_ne_zero` + the `_map` bridge +
+    `algebraMap` injectivity give `R ≠ 0`. See the ★ universe note in the recipe below.
+  The 5 survivors are genuine (Bronstein's own hypotheses): `hcopgcd`/`hE` = normality, `hDt0` = primitive-case
+  scope, `hm` = the exact degree-drop (only an *upper* bound is provable generically), `hAD` = Hermite
+  properness (dischargeable-in-principle but only via a concrete-carrier `QFunNZG ℚ` lemma with several
+  engine-regularity side conditions, so it stays for now).
 
   **★ Drop recipe (all deps confirmed to exist, 2026-07-05):** a ~150-line multi-lemma dev in `LrtSoundness.lean`:
   1. **`evalLrtArg_const_embed_eq`** (BUILT + gate-tested, then reverted with the rest): `evalLrtArg (Dstar.map
@@ -117,9 +117,18 @@ believed-correct algorithms, plus genuine scope conditions** — eliminable *in 
      subresultant path (`hi` derived via `lt_of_le_of_ne`).
   4. **Thread up:** `logMatch_of_setup` stops passing `hilt c` to `entry_log`; `_of_setup`/`LrtReducedGenuineData`/
      `_of_genuine` drop the `hilt` field from the `hE` bundle.
-  5. **Drop `hR0`:** derive internally in `_of_setup` — instantiate `hE` at `E = AlgebraicClosure (CFieldSpec.K α)`,
-     take `hB`, `roots_rtResultantGen` gives `R_E = C s·∏` with `s ≠ 0` ⟹ `R_E ≠ 0` ⟹ `R ≠ 0` (base-change
-     injective, `amGExt_ne_zero`-style). Remove the `hR0` field + `hRpp` (always-true `primPart_ne_zero`).
+  5. **Drop `hR0` — DONE (`884f0b44`).** `residueResultant_ne_zero_of_hnormAlgClosure` (new
+     `LrtResidueResultantDischarge.lean`): instantiate at `E = AlgebraicClosure (CFieldSpec.K α)`, derive `hB`
+     from `hnorm`, then `toPolyG_cResidueResultantTowerGWf_map` + `rtResultantGen_ne_zero` + `map` injectivity
+     ⟹ `R ≠ 0`. `_of_genuine` moved here (it now derives `hR0`) and supplies `hRpp` via `primPart_ne_zero`.
+     **★ Universe trap (this was the exact snag that stalled the prior attempt):** instantiating the *inline
+     structure field* `hE : ∀ (E : Type u) …` at `AlgebraicClosure K` fails with "failed to synthesize
+     `CFieldSpec α`", because `CFieldSpec.K : Type*` is an **existential universe independent of `α`**, and a
+     rigid structure-field universe `u` won't unify with it (nor will an explicit `.{u}` param). Fix: make the
+     `∀E` normality a **universe-polymorphic `def LrtPoleNormalityData`** (mirroring `IsIntegralResultLrtG`),
+     store *that* in the field, and instantiate the def — its E-universe auto-generalizes and unifies. Changing
+     `hE` to the def alters the structure's universe arity, so downstream `.{u, _}` / `.{u, _, u}` annotations on
+     `LrtReducedGenuineData` are dropped (inference suffices).
 - `GcdFFCorrect` at tower levels — fraction-free-gcd = genuine-gcd PRS-regularity; classical subresultant
   theory, portable (pieces in `YunTowerCorrect`/`SplitFactorHelpers`). Medium.
 - `LrtLiouvilleFrontier` (completeness descent) — abstract Liouville keystone proven in-project
