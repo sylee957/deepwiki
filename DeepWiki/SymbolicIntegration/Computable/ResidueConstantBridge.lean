@@ -147,4 +147,42 @@ theorem pairwise_isCoprime_toPolyG_cSqfreeYunFFGWf (hgcd : GcdFFCorrect (α := �
       (sqfreeFactPart (toPolyG R) (1 + (j : ℕ))) := (sqfreeFactPart_isRelPrime _ hne).isCoprime
   exact ((hc.of_isCoprime_of_dvd_left ai.dvd).symm.of_isCoprime_of_dvd_left aj.dvd).symm
 
+/-! ## Stage 2 — the monic product decomposition -/
+
+/-- `prodPow 1 M = ∏ Mₖ^(1+k)` as a `zipIdx` product. -/
+theorem prodPow_one_eq_zipIdx {K : Type*} [Field K] (M : List K[X]) :
+    prodPow 1 M = (M.zipIdx.map fun x => x.1 ^ (1 + x.2)).prod := by
+  rw [prodPow_eq_prod_mul_zipIdxPow]
+  have h2 : (M.zipIdx.map fun x => x.1 ^ (1 + x.2)).prod
+      = (M.zipIdx.map fun x => x.1).prod * (M.zipIdx.map fun x => x.1 ^ x.2).prod := by
+    rw [← List.prod_map_mul]; congr 1
+    exact List.map_congr_left fun x _ => by rw [pow_add, pow_one]
+  rw [h2]; congr 1; simp
+
+/-- `prodPow i` of a list of monic polynomials is monic. -/
+theorem monic_prodPow {K : Type*} [Field K] (i : ℕ) {M : List K[X]}
+    (hM : ∀ p ∈ M, p.Monic) : (prodPow i M).Monic := by
+  induction M generalizing i with
+  | nil => exact monic_one
+  | cons a es ih =>
+    exact ((hM a (by simp)).pow i).mul (ih (i + 1) (fun p hp => hM p (by simp [hp])))
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **Stage 2.** The monic normalization of `R` equals the product of its (monic) Yun factors raised to their
+multiplicities: `⟦cmonicG R⟧ = ∏ ⟦Rₖ⟧^(1+k)`. Via `cSqfreeYunFFGWf_reconstruction` (`toPolyG R` is `Associated`
+to that product), lifted through `normalize`: both `⟦cmonicG R⟧ = normalize ⟦R⟧` and the (monic) product equal
+`normalize` of associated polynomials, hence are equal. The Yun factors are already monic
+(`cSqfreeYunFFGWf_monic`), so no per-factor normalization is needed. -/
+theorem toPolyG_cmonicG_eq_prod_yun (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
+    (hR0 : toPolyG R ≠ 0) (hpp : (toPolyG R).primPart ≠ 0) :
+    toPolyG (cmonicG R) = ((cSqfreeYunFFGWf R).zipIdx.map fun x => toPolyG x.1 ^ (1 + x.2)).prod := by
+  have hrhs : prodPow 1 ((cSqfreeYunFFGWf R).map toPolyG)
+      = ((cSqfreeYunFFGWf R).zipIdx.map fun x => toPolyG x.1 ^ (1 + x.2)).prod := by
+    rw [prodPow_one_eq_zipIdx, List.zipIdx_map, List.map_map]; rfl
+  have hM_monic : (prodPow 1 ((cSqfreeYunFFGWf R).map toPolyG)).Monic :=
+    monic_prodPow 1 (fun p hp => by
+      obtain ⟨r, hr, rfl⟩ := List.mem_map.mp hp; exact cSqfreeYunFFGWf_monic hgcd R hR0 r hr)
+  rw [← hrhs, toPolyG_cmonicG_eq_normalize, ← hM_monic.normalize_eq_self]
+  exact normalize_eq_normalize_iff_associated.mpr (cSqfreeYunFFGWf_reconstruction hgcd R hR0 hpp)
+
 end DeepWiki.SymbolicIntegration
