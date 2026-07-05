@@ -94,6 +94,21 @@ def IsGenuineIntegralResultLrtG {α : Type*} [CField α] [CFieldSpec α] [CDiffF
     (Dt anum aden : CPolyG α) (res : LrtResultG α) : Prop :=
   IsIntegralResultLrtG Dt anum aden res ∧ AllResiduesConstantLrtG res
 
+/-- **Genuine (broad) elementary integrability** — the well-posed LRT completeness target: there is an
+`LrtResultG` that is a *genuine* integral result (LRT identity **and** constant residues). Unlike the formal
+`IsElementaryIntegrableLrtG` (which holds whenever the poles lie over `K`, regardless of residue-constancy),
+its negation is a meaningful non-integrability statement. The algebraic-residue analogue of
+`IsElementaryIntegrableGenuineG`. -/
+def IsElementaryIntegrableGenuineLrtG {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    (Dt a d : CPolyG α) : Prop :=
+  ∃ res : LrtResultG α, IsGenuineIntegralResultLrtG Dt a d res
+
+/-- Any genuine LRT witness makes `a/d` genuinely (broadly) elementary integrable. -/
+theorem IsElementaryIntegrableGenuineLrtG.of_genuine {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] {Dt a d : CPolyG α} {res : LrtResultG α}
+    (h : IsGenuineIntegralResultLrtG Dt a d res) : IsElementaryIntegrableGenuineLrtG Dt a d :=
+  ⟨res, h⟩
+
 /-! ### Validation (`native_decide`) -/
 
 namespace CPolyG
