@@ -207,6 +207,19 @@ theorem ratFuncOrd_nonneg_of_rde_at_normal {p : K[X]} (hp : Prime p) (hnormal : 
       ratFuncOrd_add_of_lt p hp hDyne (mul_ne_zero hf0 hyne) hlt_sum
     rw [hrde, hDy_ord] at hsum_ord; omega
 
+/-- **An at-most-simple-pole derivative comes from a regular function.** At a prime `p` **normal** for `d`,
+if `D y = extendDeriv d y` has at most a simple pole (`νₚ(D y) ≥ −1`), then `y` is regular (`νₚ(y) ≥ 0`): a
+pole `νₚ(y) < 0` would drop to `νₚ(D y) = νₚ(y) − 1 ≤ −2`. This is the pole-order heart of the residue
+criterion (`descendGenuine`): in a Liouville form `a/d = D g + Σ cᵢ·logDeriv vᵢ` with `a/d` **reduced**
+(simple poles) and the log part simple-poled, the rational part `g` carries no simple pole at those primes,
+so `D g` contributes **no** residue there — every residue is a constant log coefficient. -/
+theorem ratFuncOrd_nonneg_of_extendDeriv_ge_neg_one {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
+    {y : RatFunc K} (h : -1 ≤ ratFuncOrd p (extendDeriv d y)) : 0 ≤ ratFuncOrd p y := by
+  by_contra hlt
+  rw [not_le] at hlt
+  rw [ratFuncOrd_extendDeriv_eq_sub_one_of_normal d hp hnormal hlt] at h
+  omega
+
 end Lift
 
 /-! ### The UFM recombination: per-prime no-pole bounds ⟹ `denom(x) ∣ q`
