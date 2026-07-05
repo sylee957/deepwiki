@@ -18,7 +18,7 @@ Phase 1b. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open Compute CPolyG Polynomial
 
 namespace CPolyG
 
@@ -62,15 +62,46 @@ def cIntegratePrimPolyDegRaiseG {α : Type*} [CField α] [CDiffField α]
   | fuel + 1, p =>
     if cisZeroG p then some []
     else
-      let m := cdegG p
-      let a := cleadG p
-      match limInt a with
-      | none => none
-      | some (b, c) =>
-        let q0 := caddG (cMonomialG (CField.div c (cnatCastG (m + 1))) (m + 1)) (cMonomialG b m)
-        match cIntegratePrimPolyDegRaiseG η limInt fuel (csubG p (cmonomialDeriv [η] q0)) with
-        | none => none
-        | some q => some (caddG q q0)
+      (limInt (cleadG p)).bind fun bc =>
+        let q0 := caddG (cMonomialG (CField.div bc.2 (cnatCastG (cdegG p + 1))) (cdegG p + 1))
+          (cMonomialG bc.1 (cdegG p))
+        (cIntegratePrimPolyDegRaiseG η limInt fuel (csubG p (cmonomialDeriv [η] q0))).map fun qr =>
+          caddG qr q0
+
+/-- **Soundness of the degree-raising primitive-polynomial integrator** — `D_tower(q) = p`. Denotationally,
+`implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p`. The identity **telescopes**: each step forms `q₀`, recurses on
+`p − D_tower(q₀)`, and adds `q₀` back, so `D_tower(q) = D_tower(q_rec) + D_tower(q₀) = (p − D_tower(q₀)) +
+D_tower(q₀) = p` — holding for **any** `limInt` (no correctness hypothesis on it), the same exact-subtraction
+insight as the cancellation-case poly-RDE soundness. -/
+theorem cIntegratePrimPolyDegRaiseG_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] (η : α) (limInt : α → Option (α × α)) :
+    ∀ (fuel : ℕ) (p q : CPolyG α), cIntegratePrimPolyDegRaiseG η limInt fuel p = some q →
+      Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPolyG q) = toPolyG p := by
+  have hη : toPolyG ([η] : CPolyG α) = Polynomial.C (CFieldSpec.toK η) := by
+    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro p q h
+    simp only [cIntegratePrimPolyDegRaiseG] at h
+    split at h
+    · rename_i hc
+      simp only [Option.some.injEq] at h; subst h
+      rw [toPolyG_nil, map_zero, (cisZeroG_iff p).mp hc]
+    · simp at h
+  | succ fuel ih =>
+    intro p q h
+    simp only [cIntegratePrimPolyDegRaiseG] at h
+    split at h
+    · rename_i hc
+      simp only [Option.some.injEq] at h; subst h
+      rw [toPolyG_nil, map_zero, (cisZeroG_iff p).mp hc]
+    · rw [Option.bind_eq_some_iff] at h
+      obtain ⟨⟨b, c⟩, _hlim, hmap⟩ := h
+      rw [Option.map_eq_some_iff] at hmap
+      obtain ⟨qr, hrec, rfl⟩ := hmap
+      rw [toPolyG_caddG, map_add, ih _ _ hrec, toPolyG_csubG, toPolyG_cmonomialDeriv, hη]
+      ring
 
 end CPolyG
 
