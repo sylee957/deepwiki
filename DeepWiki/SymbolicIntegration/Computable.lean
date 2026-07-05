@@ -7,6 +7,7 @@ import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
 import DeepWiki.SymbolicIntegration.Computable.Field
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
+import DeepWiki.SymbolicIntegration.Computable.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
