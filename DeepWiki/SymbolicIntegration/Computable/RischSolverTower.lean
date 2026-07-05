@@ -211,4 +211,46 @@ theorem cLimitedIntegratePolyRatG_eq {α : Type*} [CField α] (D : α → α) (�
   rw [hget] at heq
   exact heq
 
+/-- **★ Polynomial-part soundness** (bridges 2–4). With a sound `intR` (`intR c = some b ⟹ cderiv b = c`),
+the antiderivative `q` of the polynomial part `p` (primitive case, `Dθ = η`) satisfies the tower-derivative
+identity `implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p` — i.e. `D_tower(q) = p`. Assembled coefficient-wise
+(`Polynomial.ext`): `coeff m (implicitDeriv (C η) Q) = D(coeff m Q) + η·(m+1)·coeff (m+1) Q`
+(`coeff_mapCoeffs` + `coeff_C_mul` + `coeff_derivative`), matched to the indexed coefficient equations
+(`cLimitedIntegratePolyRatG_eq`) transported through `toK` (`toK_cderiv`, `toK_sub`, `toK_mul`,
+`toK_cnatCastG`); off-degree both sides vanish. This is the primitive polynomial integration the one-level
+solver skipped — now sound for **any** polynomial part whose coefficients integrate in the coefficient field. -/
+theorem cLimitedIntegratePolyRatG_poly_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] (η : α) (intR : α → Option α)
+    (hintR : ∀ c b, intR c = some b → CDiffField.cderiv b = c)
+    (p q : List α) (h : cLimitedIntegratePolyRatG η intR p = some q) :
+    Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPolyG q) = toPolyG p := by
+  have hlen : q.length = p.length := by
+    have hd := (limIntTopFirst_drop η intR p.zipIdx.reverse [] q h).2
+    simpa [List.length_reverse, List.length_zipIdx] using hd
+  have heq := cLimitedIntegratePolyRatG_eq CDiffField.cderiv η intR hintR p q h
+  have htoKnat : ∀ k : ℕ, CFieldSpec.toK (cnatCastG k : α) = (k : CFieldSpec.K α) := by
+    intro k
+    induction k with
+    | zero => rw [cnatCastG, CFieldSpec.toK_zero]; simp
+    | succ n ih => rw [cnatCastG, CFieldSpec.toK_add, CFieldSpec.toK_one, ih]; push_cast; ring
+  have himpl : Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPolyG q)
+      = Differential.mapCoeffs (toPolyG q) + Polynomial.C (CFieldSpec.toK η) * derivative (toPolyG q) := by
+    simp [Differential.implicitDeriv, derivative']
+  apply Polynomial.ext
+  intro m
+  rw [himpl, coeff_add, Differential.coeff_mapCoeffs, coeff_C_mul, Polynomial.coeff_derivative,
+    toPolyG_coeff, toPolyG_coeff, toPolyG_coeff]
+  rcases Nat.lt_or_ge m p.length with hm | hm
+  · rw [← CDiffFieldSpec.toK_cderiv, heq m hm, CFieldSpec.toK_sub, CFieldSpec.toK_mul,
+      CFieldSpec.toK_mul, htoKnat]
+    push_cast; ring
+  · have hpm : p.getD m CField.zero = CField.zero := by
+      rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]; rfl
+    have hqm : q.getD m CField.zero = CField.zero := by
+      rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]; rfl
+    have hqm1 : q.getD (m + 1) CField.zero = CField.zero := by
+      rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by omega)]; rfl
+    rw [hpm, hqm, hqm1]
+    simp [CFieldSpec.toK_zero]
+
 end DeepWiki.SymbolicIntegration
