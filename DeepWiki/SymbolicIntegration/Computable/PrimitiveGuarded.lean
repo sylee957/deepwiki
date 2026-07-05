@@ -100,9 +100,8 @@ def primitiveGuardedCase : MonomialCase α where
 omit [CFieldSpec α] [CDiffFieldSpec α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
   [CharZero (CFieldSpec.K α)] in
 /-- **The guarded primitive case guards residues.** Its `reducedCorrect` accepts iff every residue is constant
-(`nrm.logs.all (cisZeroG [D cᵢ])`), which is exactly `AllResiduesConstantG`. Discharges the
-`caseGuardsResidues` obligation of `LawfulRischLevel` for the primitive solver, upgrading its soundness to
-genuine. -/
+(`nrm.logs.all (cisZeroG [D cᵢ])`), which is exactly `AllResiduesConstantG`. This is the residue-guard property
+(`CaseGuardsResidues`) for the primitive solver — the hook that upgrades formal soundness to genuine. -/
 theorem primitiveGuardedCase_guardsResidues :
     CaseGuardsResidues (primitiveGuardedCase : MonomialCase α) := by
   intro Dt nrm nrm' hcorr
