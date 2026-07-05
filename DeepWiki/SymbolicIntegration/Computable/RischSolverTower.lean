@@ -57,4 +57,60 @@ theorem RischSolver.integrate_base_eq [Fact (GcdFFCorrect (α := α))] [LawfulRi
     (Dt a d : CPolyG α) :
     (instRischSolverOfLawfulLrt).integrate Dt a d = LawfulRischLevelLrt.integrateLrt Dt a d := rfl
 
+/-! ## Limited integration — the primitive the coefficient recursion calls
+
+The polynomial-part recursion needs, at each degree, a **rational** antiderivative of a coefficient
+(an element of the coefficient field itself — introducing a logarithm there would leave the field).
+`integrateRational` is `integrate` restricted to log-free results. -/
+
+/-- **Limited integration**: integrate `a/d ∈ α(t)` demanding a **rational** antiderivative (no new
+logarithms) — `some (num, den)` with `D(num/den) = a/d`, or `none`. This is the primitive the
+polynomial-part coefficient recursion calls: each polynomial coefficient must integrate to an element of
+the coefficient field, not introduce a log. -/
+def RischSolver.integrateRational [Fact (GcdFFCorrect (α := α))] [RischSolver α]
+    (Dt a d : CPolyG α) : Option (CPolyG α × CPolyG α) :=
+  (RischSolver.integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
+
+/-- **Limited-integration soundness.** A successful `integrateRational` is a genuine *rational*
+antiderivative: the log-free `LrtResultG ⟨(num, den), []⟩` satisfies the LRT identity, i.e. over every
+splitting extension the tower derivative of `⟦num/den⟧` equals `a/d`. -/
+theorem RischSolver.integrateRational_sound [Fact (GcdFFCorrect (α := α))] [RischSolver α]
+    (Dt a d num den : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (h : RischSolver.integrateRational Dt a d = some (num, den)) :
+    IsIntegralResultLrtG Dt a d ⟨(num, den), []⟩ := by
+  unfold RischSolver.integrateRational at h
+  rw [Option.bind_eq_some_iff] at h
+  obtain ⟨r, hint, hguard⟩ := h
+  split at hguard
+  · rename_i hemp
+    have hrat : r.rational = (num, den) := (Option.some.injEq _ _).mp hguard
+    have hlogs : r.logs = [] := List.isEmpty_iff.mp hemp
+    have hgen := (RischSolver.sound Dt a d r hd0 hint).1
+    obtain ⟨rr, rl⟩ := r
+    simp only at hrat hlogs
+    subst hrat; subst hlogs
+    exact hgen
+  · exact absurd hguard (by simp)
+
+/-! ## The coefficient recursion — generic-tower polynomial-part limited integration
+
+The polynomial part `p = Σ aᵢ tⁱ ∈ α(t)` (primitive case `Dθ = η ∈ α`) integrates to `q = Σ bᵢ tⁱ` with
+`D_tower(q) = p`, where `D_tower(q) = Σᵢ (D(bᵢ) + (i+1)·η·bᵢ₊₁) tⁱ`. Matching coefficients gives the
+**top-down** system `D(bᵢ) = aᵢ − (i+1)·η·bᵢ₊₁`, each a limited integration of an `α`-coefficient — the
+recursion into the coefficient field's solver. This is what the one-level solver skipped (it fires only for
+`D(fp) = 0`). -/
+
+/-- **Generic-tower polynomial-part limited integration** (primitive case, `Dθ = η ∈ α`). Solves the
+coefficient system `D(bᵢ) = aᵢ − (i+1)·η·bᵢ₊₁` top-down (from the leading coefficient down), each step a
+limited integration `intR` of an `α`-coefficient — the recursion into the coefficient field. Returns the
+antiderivative's coefficient list `[b₀, …, bₙ]`, or `none` if any coefficient fails to integrate rationally.
+Parameterized by `intR : α → Option α` so the tower step plugs in `RischSolver β.integrateRational`. -/
+def cLimitedIntegratePolyRatG {α : Type*} [CField α] (η : α) (intR : α → Option α)
+    (p : List α) : Option (List α) :=
+  p.zipIdx.reverse.foldl (fun acc x =>
+    acc.bind fun bs =>
+      let rhs := CField.sub x.1 (CField.mul (CField.mul (cnatCastG (x.2 + 1)) η) (bs.headD CField.zero))
+      (intR rhs).map (fun bi => bi :: bs))
+    (some [])
+
 end DeepWiki.SymbolicIntegration
