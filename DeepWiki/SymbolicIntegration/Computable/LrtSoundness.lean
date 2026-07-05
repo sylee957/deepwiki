@@ -1410,4 +1410,70 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
     (hcancel_of_primitive Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hDt0)
     hilt
 
+universe u
+
+open scoped Differential in
+open Classical in
+variable [CFracGcdCoreWf α] in
+/-- **The genuine per-input side conditions of the assembled LRT reduced soundness**, bundled. Beyond the
+automatic facts (`hpp`/`hRpp`, both `primPart_ne_zero`), `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`
+needs exactly: the Yun-factor coprimality `hcopgcd`, the **primitive-case** `hDt0` (`Dt` constant), the
+residual degree bound `hAD`, the residue resultant nonzero `hR0`, the monomial-derivative degree `hm`, and the
+three per-extension conditions `hB`/`hnorm`/`hilt`. These are the Rothstein–Trager residue-data plus
+tower-nondegeneracy hypotheses — the honest residual frontier of the root-free primitive reduced integrator
+once the `hcancel` and degree/properness conditions are discharged. -/
+structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
+  /-- Yun-factor coprimality: each higher-multiplicity factor's `gcd` with its derivative cofactor is a unit. -/
+  hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0
+  /-- The **primitive case**: `Dθ = Dt` is a constant (a degree-0 tower polynomial). -/
+  hDt0 : (toPolyG Dt).natDegree = 0
+  /-- The reduced residual is proper: `deg hNum < deg Dstar`. -/
+  hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
+        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
+  /-- The residue resultant is nonzero (the residues are well-defined). -/
+  hR0 : toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0
+  /-- The monomial derivative drops the degree by exactly one. -/
+  hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
+        = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1
+  /-- The three genuine per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles,
+  normality `η ≠ Dβ`, and the subresultant-multiplicity bound (the residual is not a single pure-log). -/
+  hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+        [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
+        (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).roots,
+            (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
+        ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
+            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
+        ∧ (∀ c : E, (rtResultantGen ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map
+              (algebraMap (CFieldSpec.K α) E))
+            (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id)
+            ((toPolyG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)).map
+              (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c
+            < (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id).natDegree)
+
+set_option maxHeartbeats 800000 in
+open Classical in
+variable [CFracGcdCoreWf α] in
+/-- **The assembled LRT reduced soundness from the bundled genuine data.**
+`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` with the two automatic facts (`hpp`/`hRpp`, both
+`primPart_ne_zero`) discharged: given only `d ≠ 0` and the genuine `LrtReducedGenuineData`, the root-free
+primitive reduced integrator `cIntegrateReducedLrtG` is sound. This is the clean entry point that closes
+`hreducedLrt` down to the necessary residue-data + nondegeneracy conditions. -/
+theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldSpec.K α)]
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hgen : LrtReducedGenuineData.{u, _} Dt a d) :
+    IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) :=
+  isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{_, u} hgcd Dt a d hd0
+    (Polynomial.primPart_ne_zero _) hgen.hcopgcd hgen.hDt0 hgen.hAD hgen.hR0
+    (Polynomial.primPart_ne_zero _) hgen.hm hgen.hE
+
 end DeepWiki.SymbolicIntegration

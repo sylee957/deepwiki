@@ -13,7 +13,15 @@ algebraic-residue log sum equals `a/d`.
 
 This file packages that as the parallel frontier `PrimitiveFrontierLrt` (single field `hreducedLrt`) with the
 broad (algebraic-residue) elementary-integrability target `IsElementaryIntegrableLrtG`, and the reductions
-tying them to the assembled soundness `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`. -/
+tying them to the assembled soundness `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`.
+
+**Closing `hreducedLrt`.** `hreducedLrt_of_genuineAll` closes the frontier down to the bundled genuine data
+`LrtReducedGenuineData` (Rothstein–Trager residue-data + the primitive-case `Dt` constant + the three
+per-extension nondegeneracy conditions `hB`/`hnorm`/`hilt`): given that data for every reduced input, the LRT
+primitive reduced soundness is a *theorem*, so `PrimitiveFrontierLrt` is `⟨hreducedLrt_of_genuineAll hgcd data⟩`.
+Those conditions are Bronstein's necessary hypotheses (a properly-built tower satisfies them, but they are not
+provable from the computable data alone), so this is the honest closure — the residual is exactly the genuine
+integrability conditions, not an opaque soundness obligation. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -65,6 +73,21 @@ theorem hreducedLrt_of_reducedSoundLrt [CharZero (CFieldSpec.K α)] (hgcd : GcdF
     IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
   hRed Dt (crNormNum Dt a d) (crNormDen Dt a d) (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0)
+
+/-- **★ `hreducedLrt` closed from the genuine data.** Threading the assembled `of_genuine` soundness through
+`hreducedLrt_of_reducedSoundLrt`: if the genuine Rothstein–Trager residue-data + tower-nondegeneracy conditions
+(`LrtReducedGenuineData`) hold for *every* reduced input, then the LRT primitive reduced frontier `hreducedLrt`
+holds. This closes the frontier down to those **necessary** conditions — no rational-residue restriction, no
+opaque soundness field. Instantiate `PrimitiveFrontierLrt` in one line: `⟨hreducedLrt_of_genuineAll hgcd
+genuineData⟩`. -/
+theorem hreducedLrt_of_genuineAll.{u} [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (hgen : ∀ (Dt a' d' : CPolyG α), toPolyG d' ≠ 0 → LrtReducedGenuineData.{u, _} Dt a' d')
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) :
+    IsIntegralResultLrtG.{_, u} Dt (crNormNum Dt a d) (crNormDen Dt a d)
+      (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
+  hreducedLrt_of_reducedSoundLrt hgcd
+    (fun Dt a' d' hd0' => isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine hgcd Dt a' d' hd0'
+      (hgen Dt a' d' hd0')) Dt a d hd0
 
 /-- **The frontier certifies broad elementary integrability of the reduced normal part.** From a
 `PrimitiveFrontierLrt` instance, the canonical normal part `cₙ/dₙ` is elementary-integrable in the
