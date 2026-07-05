@@ -289,4 +289,38 @@ theorem cLimitedIntegratePolyRatG_poly_sound {α : Type*} [CField α] [CFieldSpe
     rw [hpm, hqm, hqm1]
     simp [CFieldSpec.toK_zero]
 
+/-! ## The tower step's recursion connector
+
+Integrating `a/d ∈ (QFunNZG β)(t)`, the polynomial part's coefficients live in `QFunNZG β = β(s)`. Each is
+integrated by recursing into `RischSolver β` — this is `intR` for `cLimitedIntegratePolyRatG`. The derivation
+used is the **carrier** one (`Ds = [1]`, `s` an independent variable), which is exactly the `cderiv` that
+`cLimitedIntegratePolyRatG_poly_sound` is stated against — so the recursion is consistent and sound. -/
+
+/-- Embed a polynomial as a fraction `num/1 ∈ QFunNZG β`. -/
+def qEmbedNumG {β : Type*} [CField β] [CFieldDomain β] (num : CPolyG β) : QFunNZG β :=
+  ⟨(num, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
+
+/-- **The coefficient-recursion bridge** — integrate a coefficient `c ∈ QFunNZG β = β(s)`: decompose to
+`num/den ∈ CPolyG β`, recurse into `RischSolver β.integrateRational` with the carrier derivation `Ds = [1]`,
+and reassemble the rational antiderivative via `QFunNZG β`'s field division (`CField.div`, total). This is the
+`intR` the tower step feeds to `cLimitedIntegratePolyRatG` — the recursion into the coefficient field, written
+once. -/
+def towerCoeffIntegrate {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [CharZero (CFieldSpec.K β)]
+    [Fact (GcdFFCorrect (α := β))] [RischSolver β] (c : QFunNZG β) : Option (QFunNZG β) :=
+  (RischSolver.integrateRational [CField.one] (qnumCoeffG c) (qdenCoeffG c)).map fun bd =>
+    CField.div (qEmbedNumG bd.1) (qEmbedNumG bd.2)
+
+/-- **The tower step's polynomial-part integrator** — the proven coefficient recursion
+`cLimitedIntegratePolyRatG` with the coefficient bridge `towerCoeffIntegrate` plugged in as `intR`: the
+polynomial part `Σ aᵢ tⁱ` of a `(QFunNZG β)(t)` element integrates by recursing into `RischSolver β` for each
+coefficient. This is the recursion the whole rebuild was for, written once — its soundness `D_tower(q) = p`
+is `cLimitedIntegratePolyRatG_poly_sound` once `towerCoeffIntegrate` is shown sound (`intR c = some b ⟹
+cderiv b = c`). -/
+def towerPolyIntegrate {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [CharZero (CFieldSpec.K β)]
+    [Fact (GcdFFCorrect (α := β))] [RischSolver β] (η : QFunNZG β) (p : CPolyG (QFunNZG β)) :
+    Option (CPolyG (QFunNZG β)) :=
+  cLimitedIntegratePolyRatG η towerCoeffIntegrate p
+
 end DeepWiki.SymbolicIntegration
