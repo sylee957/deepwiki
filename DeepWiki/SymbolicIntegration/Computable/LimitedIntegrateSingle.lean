@@ -46,6 +46,32 @@ def cLimitedIntegrateSingleBase (a η : QFunNZG ℚ) : Option (QFunNZG ℚ × �
     let bpoly := cAntiderivBaseQ integrand
     some (⟨(bpoly, [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩, -c1)
 
+/-- `c · tⁿ` as a `CPolyG α` (`n` zeros then `c`). -/
+def cMonomialG {α : Type*} [CField α] (c : α) (n : ℕ) : CPolyG α :=
+  (List.replicate n (CField.zero) ++ [c] : List α)
+
+/-- **Degree-raising primitive-polynomial integration** `cIntegratePrimPolyDegRaiseG η limInt fuel p`
+(Bronstein `IntegratePrimitivePolynomial`, Thm 5.8.1): given the primitive derivation `Dt = η ∈ α`, a
+single-`w` limited integrator `limInt : a ↦ (b, c)` with `a = D(b) + c·η` (`c` the constant embedded in `α`),
+and `p ∈ α[t]`, returns `q` with `D_tower(q) = p` and `deg q ≤ deg p + 1`. Peels the leading term
+`a·tᵐ`: `LimitedIntegrate(a, η) = (b, c)` gives `q₀ = c/(m+1)·t^(m+1) + b·tᵐ` (the **degree-raising** term),
+whose derivative matches `a·tᵐ`, then recurses on `p − D_tower(q₀)` (degree `< m`). -/
+def cIntegratePrimPolyDegRaiseG {α : Type*} [CField α] [CDiffField α]
+    (η : α) (limInt : α → Option (α × α)) : ℕ → CPolyG α → Option (CPolyG α)
+  | 0, p => if cisZeroG p then some [] else none
+  | fuel + 1, p =>
+    if cisZeroG p then some []
+    else
+      let m := cdegG p
+      let a := cleadG p
+      match limInt a with
+      | none => none
+      | some (b, c) =>
+        let q0 := caddG (cMonomialG (CField.div c (cnatCastG (m + 1))) (m + 1)) (cMonomialG b m)
+        match cIntegratePrimPolyDegRaiseG η limInt fuel (csubG p (cmonomialDeriv [η] q0)) with
+        | none => none
+        | some q => some (caddG q q0)
+
 end CPolyG
 
 /-! ### Validation — the degree-raising example
@@ -76,6 +102,37 @@ theorem cLimitedIntegrateSingleBase_example :
             (CField.add (CDiffField.cderiv b)
               (CField.mul (CPolyG.qConstParamG c) limIntSingleExampleEta)))
             && decide (c ≠ 0)
+      | none => false) = true := by native_decide
+
+/-! ### 2-level end-to-end — the degree-raising primitive polynomial integral
+
+`k = ℚ(x)(t)`, `Dt = 1/x` (`t = log x`). Integrate `p = (1 + 1/x)·t + 1 ∈ ℚ(x)[t]`. The leading coefficient
+`1 + 1/x` has `LimitedIntegrate(1+1/x, 1/x) = (x, 1)` with `c = 1 ≠ 0`, so the antiderivative gains a degree:
+`∫p = t²/2 + x·t = (log x)²/2 + x·log x`. This is exactly the case the current log-free coefficient discharge
+declines. -/
+
+/-- The base single-`w` limited integrator wrapped to `α × α` (embedding the constant `c ∈ ℚ` as `qConstParamG c`),
+the `intR` the degree-raising recursion consumes at the base level. -/
+def limIntBaseWrap (η a : QFunNZG ℚ) : Option (QFunNZG ℚ × QFunNZG ℚ) :=
+  (cLimitedIntegrateSingleBase a η).map (fun bc => (bc.1, CPolyG.qConstParamG bc.2))
+
+/-- `p = 1 + (1 + 1/x)·t ∈ ℚ(x)[t]`. -/
+def prim2ExampleP : CPolyG (QFunNZG ℚ) := [qConstParamG 1, limIntSingleExampleA]
+
+-- **Sanity print.** `∫p` should be `[0, x, 1/2]` = `x·t + (1/2)·t²` = `x·log x + (log x)²/2`.
+#eval (cIntegratePrimPolyDegRaiseG limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
+    prim2ExampleP).map (fun q => q.map (fun c => CPolyG.qnormPairG c.1.1 c.1.2))
+
+/-- **The degree-raising primitive-polynomial integrator is correct on the 2-level example.** With the Phase-1
+base `LimitedIntegrate` as `intR`, `cIntegratePrimPolyDegRaiseG` computes `q` with `D_tower(q) = p` for
+`p = (1+1/x)·t + 1` over `ℚ(x)(t)` (`Dt = 1/x`), and the antiderivative has **degree 2 = deg p + 1** — the
+degree-raising the log-free discharge cannot produce. -/
+theorem cIntegratePrimPolyDegRaiseG_example :
+    (match cIntegratePrimPolyDegRaiseG limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
+        prim2ExampleP with
+      | some q =>
+          cisZeroG (csubG (cmonomialDeriv [limIntSingleExampleEta] q) prim2ExampleP)
+            && decide (cdegG q = 2)
       | none => false) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

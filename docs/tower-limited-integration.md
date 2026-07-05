@@ -51,25 +51,35 @@ logarithmic derivative `Dw/w` — so the vehicle is `cParamRischDE [a, η]` dire
 
 Each phase is its own gate-green commit.
 
-- **Phase 1 — base single-`w` limited integration (this file's first deliverable).**
+- **Phase 1 — base single-`w` limited integration. ✅ DONE (`LimitedIntegrateSingle.lean`).**
   `cLimitedIntegrateSingleBase (a η : QFunNZG ℚ) : Option (QFunNZG ℚ × ℚ)` returning `(b, c)` with
   `a = D(b) + c·η`, built from `cLinearConstraintsQ [a,η]` + `cNullspaceBasisQ` (find the `c₀ ≠ 0` kernel vector,
-  normalize `c₀ = 1`, `c = −c₁`) + base polynomial integration of the cleared (polynomial) residual for `b`.
-  Native-`decide` validated on a degree-raising example (`a = 1 + 1/x`, `η = 1/x` ⟹ `(b,c) = (x, 1)`). Scope:
-  the **polynomial-`b`** regime (matches `cParamRischDE`); rational-`b` (Hermite pre-pass) is Phase 1b.
+  normalize `c₀ = 1`, `c = −c₁`) + base polynomial integration of the cleared residual for `b`. Native-`decide`
+  validated: `LimitedIntegrate(1+1/x, 1/x) = (x, 1)`. Scope: the **polynomial-`b`** regime; rational-`b` is 1b.
+- **Phase 3-core — degree-raising recursion. ✅ DONE (`LimitedIntegrateSingle.lean`).**
+  `cIntegratePrimPolyDegRaiseG η limInt fuel p` = Bronstein's `IntegratePrimitivePolynomial` (Thm 5.8.1):
+  peel `a·tᵐ`, `limInt(a) = (b,c)`, `q₀ = c/(m+1)·t^(m+1) + b·tᵐ`, recurse on `p − D_tower(q₀)`. Native-`decide`
+  validated end-to-end at **2 levels** (`k = ℚ(x)(log x)`, `Dt = 1/x`): `∫((1+1/x)·t + 1) = t²/2 + x·t`, with
+  `D_tower(q) = p` and `deg q = deg p + 1` (the degree-raising the log-free discharge declines). A 2-level tower
+  needs only Phase 1 + this (coefficients live at the base `ℚ(x)`); higher towers need Phase 2.
 - **Phase 1b — base rational `b`.** Hermite-reduce the rational part before the kernel solve, so `b ∈ ℚ(x)`
   (not just `ℚ[x]`). Extends `cLimitedIntegrate` past its polynomial-only limitation.
-- **Phase 2 — tower recursion.** `cLimitedIntegrateSingleG` over `QFunNZG β` (base case = Phase 1/1b; recursive
-  case = Hermite + residue at level `β` + recurse), the single-`w` analogue of `cIntegrateReducedLrtG`.
-- **Phase 3 — wire into the coefficient recursion.** Replace `towerCoeffIntegrateLrt`'s log-free discharge with
-  the single-`w` version; thread the returned `c` into a degree-`(deg p + 1)` `q` in `towerPolyIntegrateLrt`.
-- **Phase 4 — soundness.** Extend `cLimitedIntegratePolyRatG_poly_sound` to the degree-raising form; per-level
-  base-change soundness for the tower recursion.
+- **Phase 2 — tower recursion (3+ levels).** `cLimitedIntegrateSingleG` over `QFunNZG β` (base case = Phase 1/1b;
+  recursive case = Hermite + residue at level `β` + recurse), the single-`w` analogue of `cIntegrateReducedLrtG`.
+- **Phase 3-wire — wire into the LRT solver.** Replace `towerCoeffIntegrateLrt`'s log-free discharge +
+  `cLimitedIntegratePolyRatG` (fixed-degree) with the `(b,c)` single-`w` version + `cIntegratePrimPolyDegRaiseG`.
+- **Phase 4 — soundness.** Prove `D_tower(q) = p` for `cIntegratePrimPolyDegRaiseG` (abstract, the degree-raising
+  analogue of `cLimitedIntegratePolyRatG_poly_sound`); per-level base-change soundness for the tower recursion.
 
 ## Retirements (subsumable/dead)
 
-- `cLimitedIntegrate` (log variant) is **not** on the fix path (needs raw `η`, and it is polynomial-only);
-  keep only if a catalog item cites §7.2, else fold into the generic parametric solver.
-- `cParamLogDerivCandidate`, `cBaseIsProper` — internal helpers, 0 external uses; retire if the generic
-  parametric path subsumes them.
-- Audit for ℚ-specific utilities that a `CPolyG α` base+abbrev would subsume (`qnormPairG`, `cLcmQ`, `cCoeffQ`).
+- **`cLimitedIntegratePolyRatG` (fixed-degree coefficient recursion) → subsumed by `cIntegratePrimPolyDegRaiseG`.**
+  The new recursion generalizes it (`limInt` returning `(b, 0)` recovers the fixed-degree case). Retire once
+  Phase 3-wire replaces the solver's use of it and Phase 4 ports its soundness. Not retireable yet — it is
+  load-bearing in `towerPolyIntegrateLrt` with a proven `_poly_sound`.
+- **Already retired (prior LRT rebase):** the rational tower solver `towerPolyIntegrate`/`towerPrimitiveCase`
+  (`RischTower.lean` deleted) — 0 uses.
+- `cLimitedIntegrate` (log variant) is **not** on the fix path (needs raw `η`, polynomial-only), but it is a
+  **cataloged §7.2 book item** (`Sources/Doi_10_1007_b138171/Chapter7.lean`) — keep for coverage.
+- `cParamLogDerivCandidate`, `cBaseIsProper` — 0 external uses but live internal deps of the cataloged
+  `cParamLogDeriv`/`cParametricLogDeriv`; not dead. Not redundant.
