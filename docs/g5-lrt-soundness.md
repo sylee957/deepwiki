@@ -432,3 +432,15 @@ is now proven, gate-green**:
 a project-internal base-change/threading assembly on the scale of the *forward* LRT soundness capstone (it reuses
 essentially all of it), not a research problem. The `exp`-case Liouville instance (`ExpCaseLiouvilleFrontier`)
 remains the one genuine frontier.
+
+**Refinement (why step (1) is witness-threaded, not scalar lemmas).** The residue algebra over `RatFunc E` cannot
+be built from clean unconditional laws: `RatFunc.eval` is only *conditionally* multiplicative
+(`RatFunc.eval_mul` requires `denom(α) ≠ 0`), and residues live exactly at poles (`denom(α) = 0`). So the basic
+residue identities — scalar pull-out `residueAt β (C c · x) = c · residueAt β x` and additivity
+`residueAt β (x+y) = residueAt β x + residueAt β y` — hold only under the **simple-pole** structure, i.e. they
+are the *witness* lemmas `residueAt_sub_of_witnesses` / `residueAt_sum_of_witnesses` (which carry `(X−β)·tᵢ =
+aᵢ/bᵢ`, `bᵢ(β) ≠ 0`). Consequently the log-sum residue `residueAt β (Σ cᵢ·logDeriv_Δ vᵢ) = Σ cᵢ·mult_β(vᵢ)`
+must be assembled by constructing the per-term simple-pole witnesses for the **tower** derivation `Δ` (the base
+`residueAt_logDeriv_eq_rootMultiplicity` is for the formal `d/dX`). This is the crux of the remaining size: the
+residue-value matching is a witness-threaded residue-algebra development over `E`, mirroring the forward
+soundness LRT residue machinery, not a handful of one-line corollaries.
