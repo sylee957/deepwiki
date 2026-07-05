@@ -377,31 +377,114 @@ theorem towerPolyIntegrate_sound {β : Type*} [CField β] [CFieldSpec β] [CDiff
   cLimitedIntegratePolyRatG_poly_sound η towerCoeffIntegrate
     (fun c b hcb => towerCoeffIntegrate_sound c b hcb) p q h
 
-/-- **★ The tower step's special-part field identity** (`Dt = [1]`, the `D(t)=1` log-tower case). From
+/-- **★ The tower step's special-part field identity** (`Dθ = 1`, the `D(t)=1` log-tower case). From
 `towerPolyIntegrate_sound`, the polynomial antiderivative `qp` of the poly part `fp` gives the field-level
-`D_tower(⟦qp/1⟧) = ⟦fp/1⟧`: `towerFractionFieldDerivG [1] (fieldFrac qp [1]) = fieldFrac fp [1]`. This is the
-`integrateSpecial`-soundness the tower primitive `MonomialCase` needs — mirroring `primitive_special_identity`
-but for GENERAL coefficients (the recursion), not constant ones. The bridge: `towerFractionFieldDerivG` on a
-poly image `amG P` is `amG (Δ P)` (quotient rule with denominator `1`, `Δ 1 = 0`); then `Δ = implicitDeriv 1`
-matches `towerPolyIntegrate_sound`. -/
+`D_tower(⟦qp/1⟧) = ⟦fp/1⟧`: `towerFractionFieldDerivG Dt (fieldFrac qp [1]) = fieldFrac fp [1]` under
+`toPolyG Dt = 1`. This is the `integrateSpecial`-soundness the tower primitive `MonomialCase` needs —
+mirroring `primitive_special_identity` (same `Dt` + `toPolyG Dt = 1` shape) but for GENERAL coefficients (the
+recursion), not constant ones. The bridge: `towerFractionFieldDerivG` on a poly image `amG P` is `amG (Δ P)`
+(quotient rule with denominator `1`, `Δ 1 = 0`); then `Δ = implicitDeriv 1` matches `towerPolyIntegrate_sound`. -/
 theorem tower_special_identity {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
     [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β]
-    (fp qp : CPolyG (QFunNZG β)) (h : towerPolyIntegrate CField.one fp = some qp) :
-    towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG β)) (fieldFrac qp [CField.one])
-      = fieldFrac fp [CField.one] := by
+    (Dt fp qp : CPolyG (QFunNZG β)) (hDt : toPolyG Dt = 1)
+    (h : towerPolyIntegrate CField.one fp = some qp) :
+    towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = fieldFrac fp [CField.one] := by
   have hpoly := towerPolyIntegrate_sound CField.one fp qp h
   rw [CFieldSpec.toK_one, Polynomial.C_1] at hpoly
   have hone : toPolyG ([CField.one] : CPolyG (QFunNZG β)) = 1 := toPolyG_one_singleton
-  -- `towerFractionFieldDerivG [1] (amG (toPolyG qp)) = amG (implicitDeriv (toPolyG [1]) (toPolyG qp))`.
-  have hbridge : towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG β))
-        (QFunNZG.amG (QFunNZG β) (toPolyG qp))
-      = QFunNZG.amG (QFunNZG β)
-          (Differential.implicitDeriv (toPolyG ([CField.one] : CPolyG (QFunNZG β))) (toPolyG qp)) := by
-    have hd := towerFractionFieldDerivG_div ([CField.one] : CPolyG (QFunNZG β)) (toPolyG qp) 1
+  -- `towerFractionFieldDerivG Dt (amG (toPolyG qp)) = amG (implicitDeriv (toPolyG Dt) (toPolyG qp))`.
+  have hbridge : towerFractionFieldDerivG Dt (QFunNZG.amG (QFunNZG β) (toPolyG qp))
+      = QFunNZG.amG (QFunNZG β) (Differential.implicitDeriv (toPolyG Dt) (toPolyG qp)) := by
+    have hd := towerFractionFieldDerivG_div Dt (toPolyG qp) 1
     simp only [map_one, div_one, one_pow, Derivation.map_one_eq_zero, map_zero, mul_zero, sub_zero,
       mul_one] at hd
     exact hd
   simp only [fieldFrac, hone, map_one, div_one]
-  rw [hbridge, hone, hpoly]
+  rw [hbridge, hDt, hpoly]
+
+/-- **The tower primitive monomial case** — the `Dθ = 1` log-tower case with the polynomial part integrated
+by the coefficient RECURSION `towerPolyIntegrate` (not the constant-coefficient `cPolyRischDEGWf` of the
+one-level `primitiveGuardedCase`). Guard: `b = 0` (no special denominator) and `Dt = [1]`; the constant-`fp`
+requirement is DROPPED — the recursion handles general coefficients. The reduced-part hook is the shared
+residue guard (`primitiveGuardedCase.reducedCorrect`). This is the extension point: hyperexp/hypertangent
+cases supply a different `integrateSpecial`. -/
+def towerPrimitiveCase {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β] :
+    MonomialCase (QFunNZG β) where
+  integrateSpecial Dt fp b _ds :=
+    if cisZeroG b && cisZeroG (csubG Dt [CField.one]) then
+      match towerPolyIntegrate CField.one fp with
+      | none => none
+      | some qp => some (qp, [CField.one])
+    else none
+  reducedCorrect := (primitiveGuardedCase (α := QFunNZG β)).reducedCorrect
+
+/-- **Tower primitive special-part soundness** — the tower analogue of `primitiveGuardedCase_specialSound`.
+Under the guard (`b = 0`, `Dθ = 1`) the polynomial RECURSION `towerPolyIntegrate` yields `qp` with
+`D_tower(⟦qp⟧) = ⟦fp⟧` (`tower_special_identity`, GENERAL coefficients), and the reconstruction
+(`canonicalReconstruction_of_charZero`, special term vanishing since `b = 0`) closes; off the guard the hook
+returns `none`. -/
+theorem towerPrimitiveCase_specialSound {β : Type*} [CField β] [CFieldSpec β] [CDiffField β]
+    [CDiffFieldSpec β] [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
+    [CharZero (CFieldSpec.K β)] [LawfulRischLevel β] [Fact (GcdFFCorrect (α := QFunNZG β))]
+    (Dt a d snum sden : CPolyG (QFunNZG β)) (hd0 : toPolyG d ≠ 0)
+    (hhook : (towerPrimitiveCase (β := β)).integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
+      (crSpecDen Dt a d) = some (snum, sden)) :
+    toPolyG sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K (QFunNZG β)),
+      towerFractionFieldDerivG Dt (fieldFrac snum sden) = v ∧
+      v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
+  simp only [towerPrimitiveCase] at hhook
+  by_cases hguard : (cisZeroG (crSpecNum Dt a d) && cisZeroG (csubG Dt [CField.one])) = true
+  · rw [if_pos hguard] at hhook
+    rw [Bool.and_eq_true] at hguard
+    obtain ⟨hb, hDt1g⟩ := hguard
+    rcases hqp : towerPolyIntegrate CField.one (crPoly Dt a d) with _ | qp
+    · rw [hqp] at hhook; simp at hhook
+    · rw [hqp] at hhook
+      simp only [Option.some.injEq, Prod.mk.injEq] at hhook
+      obtain ⟨rfl, rfl⟩ := hhook
+      have hDt1 : toPolyG Dt = 1 := by
+        have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
+        rw [toPolyG_csubG, toPolyG_one_singleton, sub_eq_zero] at hh; exact hh
+      refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
+      · rw [toPolyG_one_singleton]; exact one_ne_zero
+      · exact tower_special_identity Dt (crPoly Dt a d) qp hDt1 hqp
+      · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
+          simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
+        have hrec := canonicalReconstruction_of_charZero
+          (Fact.out (p := GcdFFCorrect (α := QFunNZG β))) Dt a d hd0
+        rw [hvan, add_zero] at hrec
+        exact hrec
+  · rw [if_neg hguard] at hhook; simp at hhook
+
+open Classical in
+/-- **★★ The tower STEP instance** — `LawfulRischLevel (QFunNZG β)` from a below-level solver
+`[LawfulRischLevel β]` and this level's reduced frontier `[PrimitiveFrontier (QFunNZG β)]`. Together with the
+base (`instLawfulRischLevelPrimitive : PrimitiveFrontier ℚ ⇒ LawfulRischLevel ℚ`) this makes the Risch solver
+resolve at EVERY tower depth by recursion — the whole point of the rebuild. `specialSound` is the coefficient
+RECURSION (`towerPrimitiveCase_specialSound`, general polynomial parts, not just constant ones);
+`reducedSound`/`caseGuardsResidues` reuse the shared guarded reduced hook (`primitiveGuardedCase.reducedCorrect`,
+so the reduced frontier is exactly the base one lifted a level). -/
+instance instLawfulRischLevelTower {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
+    [CharZero (CFieldSpec.K β)] [LawfulRischLevel β] [Fact (GcdFFCorrect (α := QFunNZG β))]
+    [PrimitiveFrontier (QFunNZG β)] : LawfulRischLevel (QFunNZG β) where
+  case := towerPrimitiveCase
+  candidates := fun _ _ d => defaultResidueCandidates (cdegG d + 3)
+  specialSound := fun Dt a d snum sden hd0 hhook =>
+    towerPrimitiveCase_specialSound Dt a d snum sden hd0 hhook
+  reducedSound := by
+    intro Dt a d cands nrm hd0 hcorr
+    have hcn : toPolyG (crNormDen Dt a d) ≠ 0 :=
+      crNormDen_ne_zero_of_charZero (Fact.out (p := GcdFFCorrect (α := QFunNZG β))) Dt a d hd0
+    have hpp : (toPolyG (crNormDen Dt a d)).primPart ≠ 0 := Polynomial.primPart_ne_zero _
+    refine ⟨?_, PrimitiveFrontier.hreduced Dt a d cands nrm hd0 hcorr⟩
+    simp only [towerPrimitiveCase, primitiveGuardedCase] at hcorr
+    split at hcorr
+    · obtain rfl : nrm = redNorm Dt a d cands := (Option.some.injEq _ _).mp hcorr.symm
+      exact toPolyG_cHermiteReduceTowerGWf_den_ne_zero (Fact.out (p := GcdFFCorrect (α := QFunNZG β)))
+        Dt (crNormNum Dt a d) (crNormDen Dt a d) hcn hpp
+    · exact absurd hcorr (by simp)
+  caseGuardsResidues := primitiveGuardedCase_guardsResidues
 
 end DeepWiki.SymbolicIntegration
