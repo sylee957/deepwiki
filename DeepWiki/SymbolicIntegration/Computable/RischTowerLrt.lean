@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitive
 import DeepWiki.SymbolicIntegration.Computable.LrtAssembly
+import DeepWiki.SymbolicIntegration.Computable.LrtAlgebraicClosure
 
 /-! # `LawfulRischLevelLrt` — the recursive LRT (algebraic-residue) Risch-solver abstraction
 
@@ -90,6 +91,41 @@ the broad (algebraic-residue) sense — `IsElementaryIntegrableLrtG`, via `sound
 theorem isElementaryIntegrableLrt_of_run [LawfulRischLevelLrt α] (Dt a d : CPolyG α)
     (res : LrtResultG α) (h : integrate Dt a d = some res) : IsElementaryIntegrableLrtG Dt a d :=
   ⟨res, soundFormalLrt Dt a d res h⟩
+
+/-- **Limited (log-free) LRT integration** — `integrate` restricted to results with **no** algebraic-residue
+logs. A log-free antiderivative is purely rational, so it needs no algebraic closure to state — making this the
+right coefficient integrator for the tower recursion (the LRT analogue of the rational `integrateRational`). -/
+def integrateRationalLrt [LawfulRischLevelLrt α] (Dt a d : CPolyG α) : Option (CPolyG α × CPolyG α) :=
+  (integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
+
+/-- **★ K-level soundness of the log-free LRT integrator** — the ∀E ⇒ K descent for log-free results. A
+successful `integrateRationalLrt` run gives the **base-level** identity `D_tower(num/den) = a/d` in
+`RatFunc (CFieldSpec.K α)`, with no algebraic-closure extension. The `∀E` LRT soundness instantiates at the
+algebraic closure (`isIntegralResultLrtG_algebraicClosure`); the empty log part drops (`logResidueSumLrtG_nil`);
+the two sides are base-changes of the `K`-level fractions (`ratFuncBaseChange_towerFractionFieldDerivG`,
+`ratFuncBaseChange_amG_div`), so the `K`-identity follows by **injectivity of the field hom `ratFuncBaseChange`**.
+This is the `intR`-soundness the tower coefficient recursion consumes — descent-free `K`-level, exactly like
+`integrateRational_sound` on the rational side. -/
+theorem integrateRationalLrt_sound [LawfulRischLevelLrt α] (Dt a d num den : CPolyG α)
+    (h : integrateRationalLrt Dt a d = some (num, den)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG num) / amG α (toPolyG den))
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  unfold integrateRationalLrt at h
+  rw [Option.bind_eq_some_iff] at h
+  obtain ⟨r, hint, hguard⟩ := h
+  split at hguard
+  · rename_i hemp
+    have hrat : r.rational = (num, den) := (Option.some.injEq _ _).mp hguard
+    have hnum : r.rational.1 = num := by rw [hrat]
+    have hden : r.rational.2 = den := by rw [hrat]
+    have hlogs : r.logs = [] := List.isEmpty_iff.mp hemp
+    -- the `∀E` identity, instantiated at the canonical algebraic closure
+    have hE := isIntegralResultLrtG_algebraicClosure Dt a d r (soundFormalLrt Dt a d r hint)
+    rw [hlogs, logResidueSumLrtG_nil, add_zero, hnum, hden] at hE
+    -- both sides are `ratFuncBaseChange` of the `K`-level fractions; invert and use injectivity
+    rw [← ratFuncBaseChange_towerFractionFieldDerivG, ← ratFuncBaseChange_amG_div] at hE
+    exact (ratFuncBaseChange (AlgebraicClosure (CFieldSpec.K α))).injective hE
+  · exact absurd hguard (by simp)
 
 end LawfulRischLevelLrt
 
