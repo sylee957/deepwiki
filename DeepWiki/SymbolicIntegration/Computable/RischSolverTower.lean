@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtAssembly
 import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
+import DeepWiki.SymbolicIntegration.Computable.RischTower
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitive
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitiveLrt
 
@@ -301,26 +302,25 @@ def qEmbedNumG {β : Type*} [CField β] [CFieldDomain β] (num : CPolyG β) : QF
   ⟨(num, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- **The coefficient-recursion bridge** — integrate a coefficient `c ∈ QFunNZG β = β(s)`: decompose to
-`num/den ∈ CPolyG β`, recurse into `RischSolver β.integrateRational` with the carrier derivation `Ds = [1]`,
-and reassemble the rational antiderivative via `QFunNZG β`'s field division (`CField.div`, total). This is the
-`intR` the tower step feeds to `cLimitedIntegratePolyRatG` — the recursion into the coefficient field, written
-once. -/
+`num/den ∈ CPolyG β`, recurse into `LawfulRischLevel β.integrateRational` (the **rational, base-level**
+integrator — its soundness is descent-free `K`-level, exactly what the coefficient recursion needs) with the
+carrier derivation `Ds = [1]`, and reassemble via `QFunNZG β`'s field division (`CField.div`, total). The
+`intR` the tower step feeds to `cLimitedIntegratePolyRatG` — the recursion into the coefficient field, once. -/
 def towerCoeffIntegrate {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [CharZero (CFieldSpec.K β)]
-    [Fact (GcdFFCorrect (α := β))] [RischSolver β] (c : QFunNZG β) : Option (QFunNZG β) :=
-  (RischSolver.integrateRational [CField.one] (qnumCoeffG c) (qdenCoeffG c)).map fun bd =>
+    [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β]
+    (c : QFunNZG β) : Option (QFunNZG β) :=
+  (LawfulRischLevel.integrateRational [CField.one] (qnumCoeffG c) (qdenCoeffG c)).map fun bd =>
     CField.div (qEmbedNumG bd.1) (qEmbedNumG bd.2)
 
 /-- **The tower step's polynomial-part integrator** — the proven coefficient recursion
 `cLimitedIntegratePolyRatG` with the coefficient bridge `towerCoeffIntegrate` plugged in as `intR`: the
-polynomial part `Σ aᵢ tⁱ` of a `(QFunNZG β)(t)` element integrates by recursing into `RischSolver β` for each
-coefficient. This is the recursion the whole rebuild was for, written once — its soundness `D_tower(q) = p`
-is `cLimitedIntegratePolyRatG_poly_sound` once `towerCoeffIntegrate` is shown sound (`intR c = some b ⟹
-cderiv b = c`). -/
+polynomial part `Σ aᵢ tⁱ` of a `(QFunNZG β)(t)` element integrates by recursing into `LawfulRischLevel β` for
+each coefficient. This is the recursion the whole rebuild was for, written once — its soundness
+`D_tower(q) = p` is `cLimitedIntegratePolyRatG_poly_sound` once `towerCoeffIntegrate` is shown sound
+(`intR c = some b ⟹ cderiv b = c`, now on descent-free `K`-level ground). -/
 def towerPolyIntegrate {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
-    [CFieldDomain β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [CharZero (CFieldSpec.K β)]
-    [Fact (GcdFFCorrect (α := β))] [RischSolver β] (η : QFunNZG β) (p : CPolyG (QFunNZG β)) :
-    Option (CPolyG (QFunNZG β)) :=
+    [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β]
+    (η : QFunNZG β) (p : CPolyG (QFunNZG β)) : Option (CPolyG (QFunNZG β)) :=
   cLimitedIntegratePolyRatG η towerCoeffIntegrate p
 
 end DeepWiki.SymbolicIntegration
