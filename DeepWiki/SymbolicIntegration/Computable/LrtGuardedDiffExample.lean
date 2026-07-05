@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleCompleteness
+import DeepWiki.SymbolicIntegration.Computable.LrtCompleteness
 import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFF
 
 /-! # The integrability guard, validated non-trivially over a differential tower
@@ -30,15 +30,16 @@ theorem cResidueConstantGuardG_accepts_invXinvLog :
       [BenchG.gcInvX] [CField.zero, CField.one] = true := by native_decide
 
 /-- **End-to-end completeness on a concrete integrand (modulo the Liouville frontier): `∫1/log x` is not
-genuinely elementary integrable.** Feeds the guard demo `cResidueConstantGuardG_declines_invLog` into the
-completeness certificate `not_isElementaryIntegrableGenuine`: over `ℚ(x)(log x)`, since the root-free guard
-declines `1/t` (residue `x` non-constant), any `LiouvilleFrontier` instance certifies it non-integrable. The
-whole pipeline — decision procedure ⟹ non-integrability — realized on the non-elementary `Li(x)`. -/
-theorem not_genuinelyIntegrable_invLog [Algebra ℚ (CFieldSpec.K (QFunNZG ℚ))]
-    [LiouvilleFrontier (QFunNZG ℚ)] :
-    ¬ IsElementaryIntegrableGenuineG ([BenchG.gcInvX] : CPolyG (QFunNZG ℚ))
+genuinely (broad-sense) elementary integrable.** Feeds the guard demo `cResidueConstantGuardG_declines_invLog`
+into the algebraic-residue completeness certificate `not_isElementaryIntegrableGenuineLrt`: over `ℚ(x)(log x)`,
+since the root-free guard declines `1/t` (residue `x` non-constant), any `LrtLiouvilleFrontier` instance
+certifies it non-integrable — the broad (no rational-residue restriction) form. The whole pipeline — decision
+procedure ⟹ non-integrability — realized on the non-elementary `Li(x)`. -/
+theorem not_genuinelyIntegrableLrt_invLog [Algebra ℚ (CFieldSpec.K (QFunNZG ℚ))]
+    [LrtLiouvilleFrontier (QFunNZG ℚ)] :
+    ¬ IsElementaryIntegrableGenuineLrtG ([BenchG.gcInvX] : CPolyG (QFunNZG ℚ))
       [CField.one] [CField.zero, CField.one] :=
-  not_isElementaryIntegrableGenuine _ _ _
+  not_isElementaryIntegrableGenuineLrt _ _ _
     (fun h => absurd ((cisZeroG_iff _).mpr h) (by native_decide))
     cResidueConstantGuardG_declines_invLog
 

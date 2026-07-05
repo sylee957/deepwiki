@@ -89,7 +89,7 @@ formal log-derivative identity `IsIntegralResultG`; it is too weak to be a compl
 whenever the poles are rational over `K`, regardless of residue-constancy). `IsElementaryIntegrableGenuineG`
 is the **well-posed** target — the same but with all residues constant (`IsGenuineIntegralResultG`), so its
 negation is a meaningful non-integrability statement. The assembled solver's `sound` produces the genuine one;
-the decidable completeness certificate lives in `LiouvilleFrontier` (`LiouvilleCompleteness.lean`). -/
+the decidable completeness certificate lives in `LrtLiouvilleFrontier` (`LrtCompleteness.lean`). -/
 
 /-- **`a/d` is formally elementary integrable over the tower**: there is an `IntegralResultG` satisfying the
 formal identity `IsIntegralResultG`. Too weak to complete against (residues need not be constant); the genuine

@@ -10,7 +10,7 @@ towerFractionFieldDerivG Dt`. This is the abstract Liouville form `Σ cᵢ · lo
 x′/x`), spelled with the tower derivation directly — the generic `Differential (RatFunc K)` instance is only
 available on the concrete tower, so the tower-derivation spelling keeps this lemma generic over `α`.
 
-This is bridge piece (2) toward the completeness descent `descendGenuine` (see `LiouvilleCompleteness.lean`):
+This is bridge piece (2) toward the completeness descent `descendGenuineLrt` (see `LrtCompleteness.lean`):
 it exhibits the computable log part in the abstract Liouville form, so the in-project Liouville/residue
 criterion (`isLiouville_logExtension_uncond`, `ratFunc_logarithmFree_iff_residues_zero`) can be applied. -/
 

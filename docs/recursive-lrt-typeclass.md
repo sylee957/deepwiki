@@ -30,7 +30,7 @@ soundness *and* completeness, no assumed hypotheses left.
 
 ## Plan (dependency-ordered)
 
-1. **Consolidate the completeness frontiers.** Prove `IsElementaryIntegrableGenuineG → IsElementaryIntegrableGenuineLrtG`
+1. **Consolidate the completeness frontiers.** DONE (partial): the rational `LiouvilleFrontier` is RETIRED — its one consumer (the ∫1/log x demo) migrated to the stronger `LrtLiouvilleFrontier` certificate; `LiouvilleCompleteness.lean` deleted. The general connection (below) that would DERIVE it is still open. Prove `IsElementaryIntegrableGenuineG → IsElementaryIntegrableGenuineLrtG`
    (a rational genuine result is an algebraic one — each rational log `(c,v)` is the root of `X−c`). Then
    `LrtLiouvilleFrontier ⇒ LiouvilleFrontier` (both descend to the same `cResidueConstantGuardG`), retiring
    the separately-assumed rational completeness frontier. **Smallest, cleanest first win.**

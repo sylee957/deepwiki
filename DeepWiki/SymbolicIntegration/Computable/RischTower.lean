@@ -13,7 +13,7 @@ The derived `sound` certifies a **genuine** integral result (`IsGenuineIntegralR
 log-derivative identity *plus* all residues constant — so a successful run is a true antiderivative, not merely
 a formal identity. The residue-constancy comes from `caseGuardsResidues` (the case's `reducedCorrect` is a real
 integrability guard, e.g. `primitiveGuardedCase`). **Completeness** — a decidable non-integrability certificate
-— is decoupled into `LiouvilleFrontier` (`LiouvilleCompleteness.lean`), so soundness resolution never depends
+— is decoupled into `LrtLiouvilleFrontier` (`LrtCompleteness.lean`), so soundness resolution never depends
 on the completeness frontier.
 
 Because the tower carriers iterate generically (`CField`/`CDiffField`/`CRischField`/`CFracGcdCoreWf` of
@@ -33,7 +33,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 (`specialSound` carrying the special value existentially, `reducedSound`), and the residue guard
 (`caseGuardsResidues` — the case's `reducedCorrect` only accepts constant-residue results). One `instance`
 assembles the solver and everything derived from it by resolution — no threaded parameters. The derived
-`sound` is **genuine** (`IsGenuineIntegralResultG`); completeness lives in `LiouvilleFrontier`. -/
+`sound` is **genuine** (`IsGenuineIntegralResultG`); completeness lives in `LrtLiouvilleFrontier`. -/
 class LawfulRischLevel (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks for this level. -/

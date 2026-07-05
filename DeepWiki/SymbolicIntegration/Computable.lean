@@ -86,7 +86,6 @@ import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
 import DeepWiki.SymbolicIntegration.Computable.Assemble
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleCompleteness
 
 /-! # The generic executable Risch engine (`CField` / `CPolyG` world) — aggregator over the
 core plus the RischDE, Hyperexp, CoupledDE, Tower, and Algebraic sub-areas. -/

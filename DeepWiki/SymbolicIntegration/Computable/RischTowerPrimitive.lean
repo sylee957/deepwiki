@@ -109,7 +109,7 @@ instance instLawfulRischLevelPrimitive [Fact (GcdFFCorrect (α := α))] [Primiti
     · exact absurd hcorr (by simp)
   -- The residue guard: `primitiveGuardedCase.reducedCorrect` accepts only constant-residue results, so the
   -- derived `sound` is genuine. Completeness (the decidable non-integrability certificate) is decoupled into
-  -- `LiouvilleFrontier` (`LiouvilleCompleteness.lean`).
+  -- `LrtLiouvilleFrontier` (`LrtCompleteness.lean`).
   caseGuardsResidues := primitiveGuardedCase_guardsResidues
 
 end DeepWiki.SymbolicIntegration
