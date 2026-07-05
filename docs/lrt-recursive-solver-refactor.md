@@ -1,5 +1,15 @@
 # Refactoring the recursive Risch solver onto the genuine, root-free LRT path
 
+> **STATUS (2026-07-05): SUPERSEDED — the recursion landed on the RATIONAL path instead.** Putting the
+> *coefficient recursion* on the LRT path (`LrtResultG`, `∀E [IsAlgClosed E]` soundness) is blocked: the
+> tower step needs base-level (`K`) coefficient soundness, and descending the LRT `∀E` identity to `K` needs
+> a `Differential (AlgebraicClosure K)` instance Mathlib lacks (and the dev structurally avoids). The
+> shipped solution (`recursive-risch-tower.md`, commits `40d41280`→`bb3d183c`) uses the **rational**
+> `LawfulRischLevel.integrateRational`, whose `IsIntegralResultG` is already `K`-level (descent-free) — so
+> the coefficient recursion is sound with no algebraic-closure machinery. The LRT reduced-part *soundness*
+> (`LrtSoundness.lean`, `descendGenuine`) is untouched and valuable; only its use as the *coefficient
+> integrator* was abandoned. Kept as a record of why the rational path was chosen.
+
 ## Motivation (two questions)
 
 1. **Why can't the primitive integrator just "use LRT"?** The main solver `LawfulRischLevel`

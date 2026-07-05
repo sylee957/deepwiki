@@ -1,4 +1,18 @@
-# The recursive Risch tower (`RischSolver`) — clean rebuild
+# The recursive Risch tower — clean rebuild
+
+> **STATUS (2026-07-05): DONE — landed on `LawfulRischLevel`, not `RischSolver`.** The tower STEP is
+> assembled and gate-green (commits `40d41280`→`bb3d183c`): the coefficient recursion
+> (`cLimitedIntegratePolyRatG` + `towerCoeffIntegrate` + `towerPolyIntegrate`), its soundness
+> (`towerCoeffIntegrate_sound`, `towerPolyIntegrate_sound`, `tower_special_identity`), and the resolved
+> instance `instLawfulRischLevelTower : [LawfulRischLevel β] → LawfulRischLevel (QFunNZG β)`. A
+> `noncomputable example` validates depth-2 resolution. **Design pivot:** the separate `RischSolver` class
+> below was a duplicate of `LawfulRischLevel` and is **retired** (commit `2ec560b7`); the step is built
+> directly on the single `LawfulRischLevel` abstraction. **Key finding:** the coefficient integrator's
+> soundness is *denotational* `toK (cderiv b) = toK c` (not the carrier `cderiv b = c` — `toK` is
+> deliberately non-injective), and it uses the **rational** `integrateRational` (base-level `K`,
+> descent-free), *not* the LRT path of `lrt-recursive-solver-refactor.md` (whose `∀E` soundness can't
+> descend without `Differential (AlgebraicClosure K)`). The historical design below is kept as a record;
+> read it against that pivot.
 
 ## What was missing
 
