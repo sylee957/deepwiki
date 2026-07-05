@@ -133,6 +133,34 @@ theorem isElementaryIntegrable_of_run [LawfulRischLevel α] (Dt a d : CPolyG α)
     (res : IntegralResultG α) (h : integrate Dt a d = some res) : IsElementaryIntegrableGenuineG Dt a d :=
   IsElementaryIntegrableGenuineG.of_isGenuineIntegralResult (sound Dt a d res h)
 
+/-- **Limited integration (rational, base-level)** — `integrate` restricted to log-free results. Because the
+rational solver's `IsIntegralResultG` is a **base-level (`K`)** identity (not `∀E` like the LRT one), its
+log-free specialization needs **no algebraic-closure descent** — making it the right coefficient integrator for
+the tower recursion. -/
+def integrateRational [LawfulRischLevel α] (Dt a d : CPolyG α) : Option (CPolyG α × CPolyG α) :=
+  (integrate Dt a d).bind fun r => if r.logs.isEmpty then some r.rational else none
+
+/-- **K-level rational-antiderivative soundness** — a log-free `integrateRational` run gives
+`D_tower(num/den) = a/d` directly in `RatFunc (CFieldSpec.K α)`, no `∀E` descent (`IsIntegralResultG` is
+already base-level; the empty log part drops via `logResidueSumG_nil`). This is the `intR` the tower
+coefficient recursion needs on solid ground. -/
+theorem integrateRational_sound [LawfulRischLevel α] (Dt a d num den : CPolyG α)
+    (h : integrateRational Dt a d = some (num, den)) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG num) / amG α (toPolyG den))
+      = amG α (toPolyG a) / amG α (toPolyG d) := by
+  unfold integrateRational at h
+  rw [Option.bind_eq_some_iff] at h
+  obtain ⟨r, hint, hguard⟩ := h
+  split at hguard
+  · rename_i hemp
+    have hrat : r.rational = (num, den) := (Option.some.injEq _ _).mp hguard
+    have hlogs : r.logs = [] := List.isEmpty_iff.mp hemp
+    have hgen := (sound Dt a d r hint).1
+    unfold IsIntegralResultG at hgen
+    rw [hlogs, logResidueSumG_nil, add_zero, hrat] at hgen
+    exact hgen
+  · exact absurd hguard (by simp)
+
 end LawfulRischLevel
 
 end DeepWiki.SymbolicIntegration
