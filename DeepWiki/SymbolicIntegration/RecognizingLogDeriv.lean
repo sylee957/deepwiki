@@ -185,6 +185,19 @@ theorem residueAt_of_mul_X_sub_C (α : K) (f : RatFunc K) (g h : K[X]) (hh : h.e
   rw [residueAt, heq, eval_algebraMap_div α g h hh]
 
 open scoped Classical in
+/-- **The residue vanishes on a function regular at `α`.** If `f = A/B` with `B(α) ≠ 0` (no pole at `α`), then
+`residueAt α f = 0` — `(X−α)·f = (X−α)A/B` has a zero at `α`. This is the `Res(D g) = 0`-from-regularity step
+of the residue criterion in field-residue form (`D g` regular at `α` ⟹ no residue there). -/
+theorem residueAt_eq_zero_of_regular (α : K) (A B : K[X]) (hB : B.eval α ≠ 0) :
+    residueAt α (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) B) = 0 := by
+  have heq : algebraMap K[X] (RatFunc K) (X - C α)
+        * (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) B)
+      = algebraMap K[X] (RatFunc K) ((X - C α) * A) / algebraMap K[X] (RatFunc K) B := by
+    rw [map_mul, mul_div_assoc]
+  rw [residueAt_of_mul_X_sub_C α _ ((X - C α) * A) B hB heq, eval_mul, eval_sub, eval_X, eval_C,
+    sub_self, zero_mul, zero_div]
+
+open scoped Classical in
 /-- For `D = (X − α)·E` with `E(α) ≠ 0`, `residueAt α (A/D) = A(α)/D'(α)`. -/
 theorem residueAt_div_eq_residue (A E : K[X]) (α : K) (hE : E.eval α ≠ 0) :
     residueAt α (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) ((X - C α) * E))
