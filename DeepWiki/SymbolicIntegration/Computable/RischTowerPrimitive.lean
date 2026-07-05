@@ -107,10 +107,9 @@ instance instLawfulRischLevelPrimitive [Fact (GcdFFCorrect (α := α))] [Primiti
       exact toPolyG_cHermiteReduceTowerGWf_den_ne_zero (Fact.out (p := GcdFFCorrect (α := α)))
         Dt (crNormNum Dt a d) (crNormDen Dt a d) hcn hpp
     · exact absurd hcorr (by simp)
-  -- Soundness-only: the completeness contract is trivial (`not_isElementaryIntegrable` is vacuous here).
-  -- Completeness (a nontrivial `descend`) is the Liouville frontier, deferred.
-  SpecElem := fun _ _ _ => True
-  NrmElem := fun _ _ _ => True
-  descend := fun _ _ _ _ => ⟨trivial, trivial⟩
+  -- The residue guard: `primitiveGuardedCase.reducedCorrect` accepts only constant-residue results, so the
+  -- derived `sound` is genuine. Completeness (the decidable non-integrability certificate) is decoupled into
+  -- `LiouvilleFrontier` (`LiouvilleCompleteness.lean`).
+  caseGuardsResidues := primitiveGuardedCase_guardsResidues
 
 end DeepWiki.SymbolicIntegration

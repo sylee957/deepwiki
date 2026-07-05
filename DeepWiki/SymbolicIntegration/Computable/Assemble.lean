@@ -32,6 +32,14 @@ def combineSN (snum sden : CPolyG α) (nrm : IntegralResultG α) : IntegralResul
   let gden := nrm.rational.2
   ⟨(caddG (cmulG snum gden) (cmulG gnum sden), cmulG sden gden), nrm.logs⟩
 
+/-- **A monomial case guards residues**: whenever its `reducedCorrect` accepts a reduced result, that result
+has all residues constant (`AllResiduesConstantG`). The guarded primitive and hyperexp cases satisfy this; a
+no-op `reducedCorrect _ nrm := some nrm` would not. This is the property that upgrades a solver's soundness
+from the formal identity to a *genuine* antiderivative certificate. -/
+def CaseGuardsResidues (C : MonomialCase α) : Prop :=
+  ∀ (Dt : CPolyG α) (nrm nrm' : IntegralResultG α),
+    C.reducedCorrect Dt nrm = some nrm' → AllResiduesConstantG nrm'
+
 end CPolyG
 
 open CPolyG QFunNZG Polynomial

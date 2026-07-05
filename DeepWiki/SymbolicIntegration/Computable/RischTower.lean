@@ -3,10 +3,18 @@ import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 /-! # `LawfulRischLevel` — the one Risch-solver abstraction (write one instance, assembled)
 
 The single abstraction for the assembled Risch integrator: the `X` / `LawfulX` idiom. The per-level
-obligations — computable data (`case` + `candidates`) and the soundness/completeness laws — are the fields
-of a **class** `LawfulRischLevel α`. Materialize **one** instance and the whole solver assembles by
-resolution, parameter-free: `LawfulRischLevel.integrate` / `.sound` / `.isElementaryIntegrable_of_run` /
-`.not_isElementaryIntegrable`, wherever `[LawfulRischLevel α]` is in scope.
+obligations — computable data (`case` + `candidates`), the soundness laws (`specialSound`, `reducedSound`),
+and the **residue guard** `caseGuardsResidues` — are the fields of a **class** `LawfulRischLevel α`.
+Materialize **one** instance and the whole solver assembles by resolution, parameter-free:
+`LawfulRischLevel.integrate` / `.sound` / `.isElementaryIntegrable_of_run`, wherever `[LawfulRischLevel α]` is
+in scope.
+
+The derived `sound` certifies a **genuine** integral result (`IsGenuineIntegralResultG`) — the formal
+log-derivative identity *plus* all residues constant — so a successful run is a true antiderivative, not merely
+a formal identity. The residue-constancy comes from `caseGuardsResidues` (the case's `reducedCorrect` is a real
+integrability guard, e.g. `primitiveGuardedCase`). **Completeness** — a decidable non-integrability certificate
+— is decoupled into `LiouvilleFrontier` (`LiouvilleCompleteness.lean`), so soundness resolution never depends
+on the completeness frontier.
 
 Because the tower carriers iterate generically (`CField`/`CDiffField`/`CRischField`/`CFracGcdCoreWf` of
 `QFunNZG β` are recursive instances), a recursive instance
@@ -21,10 +29,11 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **The Risch solver as a class.** The computable data (`case` + `candidates`) and the
-soundness/completeness laws (`specialSound` carrying the special value existentially, `reducedSound`, and
-the completeness contract `SpecElem`/`NrmElem`/`descend`). One `instance` assembles the solver and
-everything derived from it by resolution — no threaded parameters. -/
+/-- **The Risch solver as a class.** The computable data (`case` + `candidates`), the soundness laws
+(`specialSound` carrying the special value existentially, `reducedSound`), and the residue guard
+(`caseGuardsResidues` — the case's `reducedCorrect` only accepts constant-residue results). One `instance`
+assembles the solver and everything derived from it by resolution — no threaded parameters. The derived
+`sound` is **genuine** (`IsGenuineIntegralResultG`); completeness lives in `LiouvilleFrontier`. -/
 class LawfulRischLevel (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
   /-- The per-monomial-case computable hooks for this level. -/
@@ -43,26 +52,21 @@ class LawfulRischLevel (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] 
   reducedSound : ∀ (Dt a d : CPolyG α) (cands : List α) (nrm : IntegralResultG α), toPolyG d ≠ 0 →
     case.reducedCorrect Dt (redNorm Dt a d cands) = some nrm →
     toPolyG nrm.rational.2 ≠ 0 ∧ IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
-  /-- Special-part elementarity obstruction (completeness frontier). -/
-  SpecElem : CPolyG α → CPolyG α → CPolyG α → Prop
-  /-- Normal-part elementarity obstruction (completeness frontier). -/
-  NrmElem : CPolyG α → CPolyG α → CPolyG α → Prop
-  /-- Completeness descent law: elementary integrability descends to the two part obligations. -/
-  descend : ∀ (Dt a d : CPolyG α),
-    IsElementaryIntegrableG Dt a d → SpecElem Dt a d ∧ NrmElem Dt a d
+  /-- The case's `reducedCorrect` is a real **integrability guard**: it only accepts constant-residue reduced
+  results. This upgrades the derived soundness from the formal identity to a *genuine* antiderivative. -/
+  caseGuardsResidues : CaseGuardsResidues case
 
 namespace LawfulRischLevel
 
 /-- **The assembled integrator** — a function of `(Dt, a, d)` alone (the candidate list is the instance's
 `candidates`). Parameter-free: the case hooks come from the `[LawfulRischLevel α]` instance. **Guards on
-`d ≠ 0`** (declines the degenerate `a/0` — not a genuine integrand), so a successful run supplies `d ≠ 0` to
-the soundness laws for free. -/
+`d ≠ 0`** (declines the degenerate `a/0`), so a successful run supplies `d ≠ 0` to the soundness laws. -/
 def integrate [LawfulRischLevel α] (Dt a d : CPolyG α) : Option (IntegralResultG α) :=
   if cisZeroG d then none else cIntegrateCase case Dt a d (candidates Dt a d)
 
-/-- **Derived soundness.** Any successful run is an antiderivative of `a/d`, composed from the instance's
-laws through the abstract core `cIntegrateCase_sound`. No threaded hypotheses. -/
-theorem sound [LawfulRischLevel α] (Dt a d : CPolyG α) (res : IntegralResultG α)
+/-- **Formal soundness.** Any successful run satisfies the formal (log-derivative) integral identity,
+composed from the instance's laws through the abstract core `cIntegrateCase_sound`. -/
+theorem soundFormal [LawfulRischLevel α] (Dt a d : CPolyG α) (res : IntegralResultG α)
     (h : integrate Dt a d = some res) : IsIntegralResultG Dt a d res := by
   rw [integrate] at h
   by_cases hdz : cisZeroG d = true
@@ -91,15 +95,43 @@ theorem sound [LawfulRischLevel α] (Dt a d : CPolyG α) (res : IntegralResultG 
         exact cIntegrateCase_sound case Dt a d cands res snum sden nrm v
           hsden hgden hSpec hCorr h0 hSpecField hNrmField hrecon
 
-/-- **Derived constructive completeness.** A successful run certifies `a/d` is elementary integrable. -/
-theorem isElementaryIntegrable_of_run [LawfulRischLevel α] (Dt a d : CPolyG α)
-    (res : IntegralResultG α) (h : integrate Dt a d = some res) : IsElementaryIntegrableG Dt a d :=
-  IsElementaryIntegrableG.of_isIntegralResult (sound Dt a d res h)
+/-- **All residues of a successful run are constant** — the corrected normal part came through the case's
+residue guard (`caseGuardsResidues`), and the combined result keeps that log part (`combineSN`). -/
+theorem allResiduesConstant_of_run [LawfulRischLevel α] (Dt a d : CPolyG α) (res : IntegralResultG α)
+    (h : integrate Dt a d = some res) : AllResiduesConstantG res := by
+  rw [integrate] at h
+  by_cases hdz : cisZeroG d = true
+  · rw [if_pos hdz] at h; simp at h
+  · rw [if_neg hdz] at h
+    set cands := candidates Dt a d with hcands
+    rw [cIntegrateCase] at h
+    rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rw [hcrep] at h
+    dsimp only at h
+    rcases hspec : case.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
+    · rw [hspec] at h; simp at h
+    · rw [hspec] at h
+      rcases hcorr : case.reducedCorrect Dt (cIntegrateReducedGWf Dt cn dn cands) with _ | nrm
+      · rw [hcorr] at h; simp at h
+      · rw [hcorr] at h
+        simp only [Option.some.injEq] at h
+        have hlogs : res.logs = nrm.logs := by rw [← h]; rfl
+        have hnrm := caseGuardsResidues Dt (cIntegrateReducedGWf Dt cn dn cands) nrm hcorr
+        unfold AllResiduesConstantG at hnrm ⊢
+        rw [hlogs]; exact hnrm
 
-/-- **Derived completeness frontier.** A certified obstruction in either part makes `a/d` non-elementary. -/
-theorem not_isElementaryIntegrable [LawfulRischLevel α] (Dt a d : CPolyG α)
-    (hobstruct : ¬ SpecElem Dt a d ∨ ¬ NrmElem Dt a d) : ¬ IsElementaryIntegrableG Dt a d :=
-  not_isElementaryIntegrableG_of_obstruction Dt a d (descend Dt a d) hobstruct
+/-- **Genuine soundness.** Any successful run is a *genuine* integral result — the formal identity
+(`soundFormal`) plus all residues constant (`allResiduesConstant_of_run`) — so `⟦g⟧ + Σ cᵢ·log vᵢ` is a true
+antiderivative of `a/d`, not merely a formal log-derivative identity. -/
+theorem sound [LawfulRischLevel α] (Dt a d : CPolyG α) (res : IntegralResultG α)
+    (h : integrate Dt a d = some res) : IsGenuineIntegralResultG Dt a d res :=
+  ⟨soundFormal Dt a d res h, allResiduesConstant_of_run Dt a d res h⟩
+
+/-- **Derived constructive completeness.** A successful run certifies `a/d` is *genuinely* elementary
+integrable (an antiderivative in the Liouville form with constant residues). -/
+theorem isElementaryIntegrable_of_run [LawfulRischLevel α] (Dt a d : CPolyG α)
+    (res : IntegralResultG α) (h : integrate Dt a d = some res) : IsElementaryIntegrableGenuineG Dt a d :=
+  IsElementaryIntegrableGenuineG.of_isGenuineIntegralResult (sound Dt a d res h)
 
 end LawfulRischLevel
 

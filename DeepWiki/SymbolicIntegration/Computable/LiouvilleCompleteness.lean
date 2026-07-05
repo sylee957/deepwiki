@@ -1,11 +1,12 @@
-import DeepWiki.SymbolicIntegration.Computable.GenuineSoundness
+import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitive
 import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 
 /-! # Structured completeness for the primitive case — the Liouville frontier
 
-The `LawfulRischLevel` completeness contract is trivial in the primitive instance (`SpecElem = NrmElem = True`),
-so `not_isElementaryIntegrable` is vacuous. This file makes it **meaningful**, against the well-posed target
-`IsElementaryIntegrableGenuineG` (genuine, residue-constant integrability): the necessary condition is the
+`LawfulRischLevel` is soundness-only (its `sound` is genuine; completeness is decoupled here so soundness
+resolution never depends on the completeness frontier). This file provides the completeness, against the
+well-posed target `IsElementaryIntegrableGenuineG` (genuine, residue-constant integrability): the necessary
+condition is the
 decidable root-free integrability guard `cResidueConstantGuardG` (residues constant ⟺ monic `D(R) = 0`), and the
 descent — genuine integrability ⟹ residues constant — is the primitive-case Liouville/residue criterion
 (Bronstein Thm 5.6.1), held as a frontier class field (the completeness analogue of `PrimitiveFrontier.hreduced`).
