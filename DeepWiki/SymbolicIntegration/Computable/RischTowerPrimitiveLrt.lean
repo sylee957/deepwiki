@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtSoundness
+import DeepWiki.SymbolicIntegration.Computable.LrtResidueResultantDischarge
 import DeepWiki.SymbolicIntegration.Computable.CanonicalReconstructionCharZero
 
 /-! # The LRT (root-free) primitive reduced frontier — the algebraic-residue analogue of `PrimitiveFrontier`
@@ -80,10 +81,10 @@ theorem hreducedLrt_of_reducedSoundLrt [CharZero (CFieldSpec.K α)] (hgcd : GcdF
 holds. This closes the frontier down to those **necessary** conditions — no rational-residue restriction, no
 opaque soundness field. Instantiate `PrimitiveFrontierLrt` in one line: `⟨hreducedLrt_of_genuineAll hgcd
 genuineData⟩`. -/
-theorem hreducedLrt_of_genuineAll.{u} [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
-    (hgen : ∀ (Dt a' d' : CPolyG α), toPolyG d' ≠ 0 → LrtReducedGenuineData.{u, _} Dt a' d')
+theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (hgen : ∀ (Dt a' d' : CPolyG α), toPolyG d' ≠ 0 → LrtReducedGenuineData Dt a' d')
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) :
-    IsIntegralResultLrtG.{_, u} Dt (crNormNum Dt a d) (crNormDen Dt a d)
+    IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
   hreducedLrt_of_reducedSoundLrt hgcd
     (fun Dt a' d' hd0' => isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine hgcd Dt a' d' hd0'
@@ -91,9 +92,8 @@ theorem hreducedLrt_of_genuineAll.{u} [CharZero (CFieldSpec.K α)] (hgcd : GcdFF
 
 -- The closure genuinely constructs the frontier: given the genuine data for every reduced input, a
 -- `PrimitiveFrontierLrt` instance follows (hence the whole assembled root-free LRT solver).
-universe u in
 example [CharZero (CFieldSpec.K α)] [Fact (GcdFFCorrect (α := α))]
-    (hgen : ∀ (Dt a d : CPolyG α), toPolyG d ≠ 0 → LrtReducedGenuineData.{u, _, u} Dt a d) :
+    (hgen : ∀ (Dt a d : CPolyG α), toPolyG d ≠ 0 → LrtReducedGenuineData Dt a d) :
     PrimitiveFrontierLrt α :=
   ⟨hreducedLrt_of_genuineAll (Fact.out (p := GcdFFCorrect (α := α))) hgen⟩
 

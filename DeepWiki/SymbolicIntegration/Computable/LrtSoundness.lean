@@ -1501,6 +1501,22 @@ universe u
 open scoped Differential in
 open Classical in
 variable [CFracGcdCoreWf α] in
+/-- **The `∀E` Rothstein–Trager pole-normality condition, as a universe-polymorphic `def`** (mirroring
+`IsIntegralResultLrtG`): at every algebraically-closed differential extension `E` of `K = CFieldSpec.K α`, the
+monomial derivation `Dt` avoids the pole derivatives (`η ≠ β′`). Being a `def` — not an inline `∀ (E : Type u)`
+field — its `E`-universe auto-generalizes, so it can be instantiated at `E = AlgebraicClosure K` (whose universe
+is the *existential* one of `CFieldSpec.K`), which a rigid structure-field universe cannot. This is what lets
+`hR0` be *derived* rather than assumed (see `hR0_of_normalityData`). -/
+def LrtPoleNormalityData (Dt a d : CPolyG α) : Prop :=
+  ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
+    ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+            (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
+        ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′
+
+open scoped Differential in
+open Classical in
+variable [CFracGcdCoreWf α] in
 /-- **The genuine per-input side conditions of the assembled LRT reduced soundness**, bundled. Beyond the
 automatic facts (`hpp`/`hRpp`, both `primPart_ne_zero`), `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`
 needs exactly: the Yun-factor coprimality `hcopgcd`, the **primitive-case** `hDt0` (`Dt` constant), the
@@ -1521,34 +1537,15 @@ structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
   /-- The reduced residual is proper: `deg hNum < deg Dstar`. -/
   hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
-  /-- The residue resultant is nonzero (the residues are well-defined). -/
-  hR0 : toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
-        (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0
   /-- The monomial derivative drops the degree by exactly one. -/
   hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
         = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1
-  /-- The **one** genuine per-splitting-extension condition: normality `η ≠ Dβ` at the poles. (`implicitDeriv`
-  nonvanishing at the poles is *derived* from this — normality ⟺ `IsCoprime Dstar (implicitDeriv Dt Dstar)`.) -/
-  hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
-        [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-        ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
-                (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
-            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′
+  /-- The **one** genuine per-splitting-extension condition: normality `η ≠ Dβ` at the poles. (Both the
+  `implicitDeriv` nonvanishing *and* the residue-resultant nonvanishing `hR0` are *derived* from this —
+  normality ⟺ `IsCoprime Dstar (implicitDeriv Dt Dstar)`; see `hR0_of_normalityData`.) -/
+  hE : LrtPoleNormalityData Dt a d
 
-set_option maxHeartbeats 800000 in
-open Classical in
-variable [CFracGcdCoreWf α] in
-/-- **The assembled LRT reduced soundness from the bundled genuine data.**
-`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup` with the two automatic facts (`hpp`/`hRpp`, both
-`primPart_ne_zero`) discharged: given only `d ≠ 0` and the genuine `LrtReducedGenuineData`, the root-free
-primitive reduced integrator `cIntegrateReducedLrtG` is sound. This is the clean entry point that closes
-`hreducedLrt` down to the necessary residue-data + nondegeneracy conditions. -/
-theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldSpec.K α)]
-    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
-    (hd0 : toPolyG d ≠ 0) (hgen : LrtReducedGenuineData.{u, _} Dt a d) :
-    IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) :=
-  isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{_, u} hgcd Dt a d hd0
-    (Polynomial.primPart_ne_zero _) hgen.hcopgcd hgen.hDt0 hgen.hAD hgen.hR0
-    (Polynomial.primPart_ne_zero _) hgen.hm hgen.hE
+-- `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` lives in `LrtResidueResultantDischarge` (it derives
+-- `hR0` from `hE` via the algebraic closure, which is downstream of this file).
 
 end DeepWiki.SymbolicIntegration
