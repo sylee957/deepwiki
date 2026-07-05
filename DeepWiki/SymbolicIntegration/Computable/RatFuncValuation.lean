@@ -236,6 +236,40 @@ theorem ratFuncOrd_extendDeriv_eq_sub_one_of_normal {p : K[X]} (hp : Prime p) (h
   have hk1 : 1 ≤ k := Nat.one_le_of_lt hlt
   omega
 
+/-- **Derivative of a regular function is regular** (`Res_p(D y) = 0` in valuation form). If `y` is regular at
+`p` (`νₚ y ≥ 0`), then `D y = extendDeriv d y` is regular (`νₚ(D y) ≥ 0`) — so `D y` has no simple pole at `p`,
+i.e. **no residue**. No normality needed: `y = a/b` reduced with `νₚ y ≥ 0` forces `b` a `p`-unit
+(coprimality), and `D y = (d a·b − a·d b)/b²` then has a `p`-unit denominator over a polynomial numerator. The
+`g`-regular ⟹ `Res(D g) = 0` step of the residue criterion (`descendGenuine`). -/
+theorem ratFuncOrd_extendDeriv_nonneg_of_nonneg {p : K[X]} (hp : Prime p) {y : RatFunc K}
+    (hy : 0 ≤ ratFuncOrd p y) : 0 ≤ ratFuncOrd p (extendDeriv d y) := by
+  rcases eq_or_ne y 0 with rfl | hy0
+  · rw [map_zero, ratFuncOrd, RatFunc.num_zero, RatFunc.denom_zero, multiplicity_zero,
+      multiplicity_one_of_prime hp]; norm_num
+  have ha0 : y.num ≠ 0 := RatFunc.num_ne_zero hy0
+  have hb0 : y.denom ≠ 0 := RatFunc.denom_ne_zero y
+  have hbunit : multiplicity p y.denom = 0 := by
+    by_contra hbne
+    have hpb : p ∣ y.denom := by
+      by_contra hnd; exact hbne (multiplicity_eq_zero.mpr hnd)
+    have hpna : ¬ p ∣ y.num := fun h =>
+      hp.not_unit ((RatFunc.isCoprime_num_denom y).isUnit_of_dvd' h hpb)
+    rw [ratFuncOrd, multiplicity_eq_zero.mpr hpna] at hy
+    omega
+  have hyrep : y = algebraMap K[X] (RatFunc K) y.num / algebraMap K[X] (RatFunc K) y.denom :=
+    (RatFunc.num_div_denom y).symm
+  have hDy : extendDeriv d y = algebraMap K[X] (RatFunc K) (d y.num * y.denom - y.num * d y.denom)
+      / algebraMap K[X] (RatFunc K) (y.denom ^ 2) := by
+    conv_lhs => rw [hyrep, ← RatFunc.mk_eq_div, extendDeriv_mk, RatFunc.mk_eq_div]
+  rcases eq_or_ne (d y.num * y.denom - y.num * d y.denom) 0 with hnum0 | hnum0
+  · rw [hDy, hnum0, map_zero, zero_div, ratFuncOrd, RatFunc.num_zero, RatFunc.denom_zero,
+      multiplicity_zero, multiplicity_one_of_prime hp]; norm_num
+  rw [hDy, ratFuncOrd_mk p hp hnum0 (pow_ne_zero 2 hb0)]
+  have hb2 : multiplicity p (y.denom ^ 2) = 0 := by
+    rw [show y.denom ^ 2 = y.denom * y.denom by ring,
+      multiplicity_mul hp (FiniteMultiplicity.of_prime_left hp (mul_ne_zero hb0 hb0)), hbunit]
+  rw [hb2]; simp
+
 /-- **The per-prime RDE no-pole bound**: for a solution `y` of `D y + f·y = g` (`D = extendDeriv d`), a
 prime `p` **normal** for `d`, if `p` is not a pole of `f` (`νₚ(f) ≥ 0`) nor of `g` (`νₚ(g) ≥ 0`), then
 `y` has no pole at `p` (`νₚ(y) ≥ 0`). By contradiction through the order-drop lift and the strict-min
