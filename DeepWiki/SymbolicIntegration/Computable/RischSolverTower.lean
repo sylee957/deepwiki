@@ -100,6 +100,16 @@ The polynomial part `p = Σ aᵢ tⁱ ∈ α(t)` (primitive case `Dθ = η ∈ �
 recursion into the coefficient field's solver. This is what the one-level solver skipped (it fires only for
 `D(fp) = 0`). -/
 
+/-- Top-first coefficient recursion: process `[(aₖ,k), …, (a₀,0)]` (reversed `zipIdx`), threading the
+already-computed higher coefficients `acc = [bₖ₊₁, …, bₙ]`. Each step computes `bᵢ = intR(aᵢ − (i+1)·η·bᵢ₊₁)`
+(`bᵢ₊₁ = acc.headD`) and prepends it. Structural recursion — induction-friendly. -/
+def limIntTopFirst {α : Type*} [CField α] (η : α) (intR : α → Option α) :
+    List (α × ℕ) → List α → Option (List α)
+  | [], acc => some acc
+  | (a, i) :: rest, acc =>
+    (intR (CField.sub a (CField.mul (CField.mul (cnatCastG (i + 1)) η) (acc.headD CField.zero)))).bind
+      fun bi => limIntTopFirst η intR rest (bi :: acc)
+
 /-- **Generic-tower polynomial-part limited integration** (primitive case, `Dθ = η ∈ α`). Solves the
 coefficient system `D(bᵢ) = aᵢ − (i+1)·η·bᵢ₊₁` top-down (from the leading coefficient down), each step a
 limited integration `intR` of an `α`-coefficient — the recursion into the coefficient field. Returns the
@@ -107,10 +117,98 @@ antiderivative's coefficient list `[b₀, …, bₙ]`, or `none` if any coeffici
 Parameterized by `intR : α → Option α` so the tower step plugs in `RischSolver β.integrateRational`. -/
 def cLimitedIntegratePolyRatG {α : Type*} [CField α] (η : α) (intR : α → Option α)
     (p : List α) : Option (List α) :=
-  p.zipIdx.reverse.foldl (fun acc x =>
-    acc.bind fun bs =>
-      let rhs := CField.sub x.1 (CField.mul (CField.mul (cnatCastG (x.2 + 1)) η) (bs.headD CField.zero))
-      (intR rhs).map (fun bi => bi :: bs))
-    (some [])
+  limIntTopFirst η intR p.zipIdx.reverse []
+
+/-- **The result's top part is the accumulator, and its length is `|L| + |acc|`.** Each successful step
+prepends exactly one coefficient, so `q = [new…] ++ acc` — `q.drop |L| = acc`. The structural invariant the
+coefficient equations rest on. -/
+theorem limIntTopFirst_drop {α : Type*} [CField α] (η : α) (intR : α → Option α) :
+    ∀ (L : List (α × ℕ)) (acc q : List α),
+      limIntTopFirst η intR L acc = some q → q.drop L.length = acc ∧ q.length = L.length + acc.length := by
+  intro L
+  induction L with
+  | nil => intro acc q h; simp only [limIntTopFirst, Option.some.injEq] at h; subst h; simp
+  | cons hd tl ih =>
+    intro acc q h
+    obtain ⟨a, i⟩ := hd
+    simp only [limIntTopFirst] at h
+    rw [Option.bind_eq_some_iff] at h
+    obtain ⟨bi, _, hrec⟩ := h
+    obtain ⟨hdrop, hlen⟩ := ih (bi :: acc) q hrec
+    refine ⟨?_, ?_⟩
+    · rw [List.length_cons, ← List.drop_drop, hdrop, List.drop_succ_cons, List.drop_zero]
+    · rw [hlen, List.length_cons, List.length_cons]; omega
+
+/-- `l.getD (n + j) = r.getD j` when `l.drop n = r`. -/
+private theorem getD_of_drop {α : Type*} (l : List α) (n j : ℕ) (x : α) (r : List α)
+    (h : l.drop n = r) : l.getD (n + j) x = r.getD j x := by
+  rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, ← List.getElem?_drop, h]
+
+/-- **The coefficient equations** (bridge 1). With a sound `intR` (`intR c = some b ⟹ D(b) = c`), every
+accepted coefficient of `limIntTopFirst` satisfies the top-down system: at each position `m < |L|`,
+`D(q[m]) = aₘ − (m+1)·η·q[m+1]`, where `(aₘ, jₘ) = L.reverse[m]` (the coefficient/index processed there).
+The algorithmic heart of the polynomial-part soundness. -/
+theorem limIntTopFirst_eq {α : Type*} [CField α] (D : α → α) (η : α) (intR : α → Option α)
+    (hintR : ∀ c b, intR c = some b → D b = c) :
+    ∀ (L : List (α × ℕ)) (acc q : List α), limIntTopFirst η intR L acc = some q →
+      ∀ m, m < L.length →
+        D (q.getD m CField.zero)
+        = CField.sub (L.reverse.getD m (CField.zero, 0)).1
+            (CField.mul (CField.mul (cnatCastG ((L.reverse.getD m (CField.zero, 0)).2 + 1)) η)
+              (q.getD (m + 1) CField.zero)) := by
+  intro L
+  induction L with
+  | nil => intro acc q _ m hm; simp at hm
+  | cons hd tl ih =>
+    intro acc q h m hm
+    obtain ⟨a, i⟩ := hd
+    simp only [limIntTopFirst] at h
+    rw [Option.bind_eq_some_iff] at h
+    obtain ⟨bi, hbi, hrec⟩ := h
+    obtain ⟨hdrop, _⟩ := limIntTopFirst_drop η intR tl (bi :: acc) q hrec
+    rw [List.length_cons] at hm
+    rcases Nat.lt_or_ge m tl.length with hm2 | hm2
+    · have hrev : ((a, i) :: tl).reverse.getD m (CField.zero, 0) = tl.reverse.getD m (CField.zero, 0) := by
+        rw [List.reverse_cons, List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD,
+          List.getElem?_append_left (by rw [List.length_reverse]; exact hm2)]
+      rw [hrev]; exact ih (bi :: acc) q hrec m hm2
+    · have hmeq : m = tl.length := by omega
+      subst hmeq
+      have hq0 : q.getD tl.length CField.zero = bi := by
+        have h0 := getD_of_drop q tl.length 0 CField.zero (bi :: acc) hdrop; simpa using h0
+      have hq1 : q.getD (tl.length + 1) CField.zero = acc.headD CField.zero := by
+        have h1 := getD_of_drop q tl.length 1 CField.zero (bi :: acc) hdrop
+        rw [List.getD_cons_succ] at h1
+        rw [h1]; cases acc <;> rfl
+      have hrev : ((a, i) :: tl).reverse.getD tl.length (CField.zero, 0) = (a, i) := by
+        rw [List.reverse_cons, List.getD_eq_getElem?_getD,
+          List.getElem?_append_right (by rw [List.length_reverse]), List.length_reverse, Nat.sub_self]
+        rfl
+      rw [hq0, hq1, hrev]
+      exact hintR _ _ hbi
+
+/-- **The coefficient equations, indexed by degree** — the usable form. With `intR` sound, the antiderivative
+`q` of the polynomial part `p` satisfies `D(q[m]) = p[m] − (m+1)·η·q[m+1]` for every `m < deg p`. Specializes
+`limIntTopFirst_eq` to `p.zipIdx.reverse` (where the processing position equals the polynomial index). This is
+the coefficient-level statement of `D_tower(q) = p`; the remaining bridges (`toK` transport +
+`coeff (implicitDeriv (C η) Q) = D(coeff) + η·(i+1)·coeff(i+1)` + `Polynomial.ext`) assemble the polynomial
+identity. -/
+theorem cLimitedIntegratePolyRatG_eq {α : Type*} [CField α] (D : α → α) (η : α) (intR : α → Option α)
+    (hintR : ∀ c b, intR c = some b → D b = c)
+    (p q : List α) (h : cLimitedIntegratePolyRatG η intR p = some q) :
+    ∀ m, m < p.length →
+      D (q.getD m CField.zero)
+      = CField.sub (p.getD m CField.zero)
+          (CField.mul (CField.mul (cnatCastG (m + 1)) η) (q.getD (m + 1) CField.zero)) := by
+  intro m hm
+  have hlen : p.zipIdx.reverse.length = p.length := by rw [List.length_reverse, List.length_zipIdx]
+  have heq := limIntTopFirst_eq D η intR hintR p.zipIdx.reverse [] q h m (by rw [hlen]; exact hm)
+  rw [List.reverse_reverse] at heq
+  have hpm : p[m]? = some p[m] := List.getElem?_eq_getElem hm
+  have hget : p.zipIdx.getD m (CField.zero, 0) = (p.getD m CField.zero, m) := by
+    rw [List.getD_eq_getElem?_getD, List.getElem?_zipIdx, hpm]
+    simp [List.getD_eq_getElem?_getD, hpm]
+  rw [hget] at heq
+  exact heq
 
 end DeepWiki.SymbolicIntegration
