@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtCompleteness
+import DeepWiki.SymbolicIntegration.Computable.ResidueConstantBridge
 
 /-! # The primitive LRT integrator as a decision procedure (soundness + completeness)
 
@@ -47,5 +48,34 @@ theorem isElementaryIntegrableGenuineLrt_of_guard (Dt a d : CPolyG α)
     (hguard : cResidueConstantGuardG Dt a d = true) :
     IsElementaryIntegrableGenuineLrtG Dt a d :=
   ⟨cIntegrateReducedLrtG Dt a d, hsound, hbridge hguard⟩
+
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The sufficiency (`←`), with the residue bridge DISCHARGED.** A passing guard yields a genuine
+antiderivative given only the raw reduced soundness `hsound` and the nonzero residue resultant `hR0` (the same
+one soundness needs) — the residue-constancy is now *proven* (`allResiduesConstantLrtG_of_guard`, the assembled
+Yun-factor bridge), no longer an input. -/
+theorem isElementaryIntegrableGenuineLrt_of_guard_of_setup [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+      (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0)
+    (hsound : IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d))
+    (hguard : cResidueConstantGuardG Dt a d = true) :
+    IsElementaryIntegrableGenuineLrtG Dt a d :=
+  isElementaryIntegrableGenuineLrt_of_guard Dt a d hsound
+    (allResiduesConstantLrtG_of_guard hgcd Dt a d hR0) hguard
+
+/-- **★ The primitive LRT integrator decides genuine elementary integrability — fully assembled.** The residue
+bridge is discharged, so the decision `IsElementaryIntegrableGenuineLrtG a d ↔ cResidueConstantGuardG a d = true`
+needs only the two genuine setup ingredients on the `←` side — the raw reduced soundness `hsound` and the
+nonzero residue resultant `hR0` (both required by the reduced soundness anyway) — plus `LrtLiouvilleFrontier`
+on the `→`. No unproven residue bridge remains. -/
+theorem primitiveLrtDecides_of_setup [CharZero (CFieldSpec.K α)] [LrtLiouvilleFrontier α]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+      (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0)
+    (hsound : IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)) :
+    IsElementaryIntegrableGenuineLrtG Dt a d ↔ cResidueConstantGuardG Dt a d = true :=
+  primitiveLrtDecides Dt a d hd0
+    (isElementaryIntegrableGenuineLrt_of_guard_of_setup hgcd Dt a d hR0 hsound)
 
 end DeepWiki.SymbolicIntegration
