@@ -68,8 +68,14 @@ Each phase is its own gate-green commit.
   recursive case = Hermite + residue at level `β` + recurse), the single-`w` analogue of `cIntegrateReducedLrtG`.
 - **Phase 3-wire — wire into the LRT solver.** Replace `towerCoeffIntegrateLrt`'s log-free discharge +
   `cLimitedIntegratePolyRatG` (fixed-degree) with the `(b,c)` single-`w` version + `cIntegratePrimPolyDegRaiseG`.
-- **Phase 4 — soundness.** Prove `D_tower(q) = p` for `cIntegratePrimPolyDegRaiseG` (abstract, the degree-raising
-  analogue of `cLimitedIntegratePolyRatG_poly_sound`); per-level base-change soundness for the tower recursion.
+- **Phase 4-core — abstract soundness of the recursion. ✅ DONE (`LimitedIntegrateSingle.lean`).**
+  `cIntegratePrimPolyDegRaiseG_sound`: `implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p`, axiom-clean
+  (`[propext, choice, Quot.sound]`, no `native_decide`). Telescopes — holds for **any** `limInt` (no correctness
+  hypothesis), via `Option.bind`/`map` destructuring + `map_add` (`implicitDeriv v` is a Mathlib `Derivation`).
+- **Phase 4-rest — soundness of the wiring.** When Phase 3-wire lands: `limInt`-soundness ⟹ the emitted `q₀`
+  matches the leading term (already implied by the telescoping identity being the *whole* correctness — the
+  `limInt` soundness is only needed to know the recursion doesn't spuriously decline); per-level base-change
+  soundness for the Phase 2 tower recursion.
 
 ## Retirements (subsumable/dead)
 
