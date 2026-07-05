@@ -91,10 +91,27 @@ believed-correct algorithms, plus genuine scope conditions** — eliminable *in 
   log") **was a genuine algorithm gap** — `cIntegrateReducedLrtG` returned *wrong* answers on pure logs (`∫1/t →
   log(t+1)`) because `cLrtLogArgG` omitted the `i = deg Dstar` branch. **RESOLVED (`a1a61216`):** the branch is
   now added (emits `Dstar`), so the algorithm is correct on pure logs. **Consequence:** `hilt` is now
-  dischargeable-in-principle — the follow-on is to extend the soundness (`evalLrtArg_eq_fiber_prod` →
-  `entry_log_eq_fiber_prod` → `logMatch_of_setup`) to the `i = n` case via the existing
-  `isSimilar_gcd_left_of_natDegree_eq` (`LrtGeneralDerivation.lean:298`), then drop `hilt`+`hR0` from
-  `LrtReducedGenuineData`. So this frontier is a genuine (bounded) proof development, not a wall.
+  dischargeable-in-principle — the follow-on is to extend the soundness to the `i = n` case, then drop
+  `hilt`+`hR0`. **So this frontier is a genuine (bounded) proof development, not a wall.**
+
+  **★ Drop recipe (all deps confirmed to exist, 2026-07-05):** a ~150-line multi-lemma dev in `LrtSoundness.lean`:
+  1. **`evalLrtArg_const_embed_eq`** (BUILT + gate-tested, then reverted with the rest): `evalLrtArg (Dstar.map
+     (·::[])) c = Dstar_E` when `Dstar_E` monic (via `raw_eq_map` with `P = (toPolyG Dstar).map C`; `raw = Dstar_E`;
+     monic ⟹ normalization trivial). This is the `i = n` log-argument.
+  2. **Extend `mem_cLrtLogArgG`** with a 4th conjunct `idx+1 = cdegG Dstar → p.2 = Dstar.map (·::[])` (the `i=n`
+     branch value; the existing 3rd conjunct is the `≠` subresultant case). Fix the 3 consumers' `obtain` arity
+     (`nodup_roots`, `cover`, `entry_log` — add one `_`).
+  3. **Restructure `entry_log_eq_fiber_prod` to DROP `hi`**: establish `idx+1 ≤ cdegG Dstar` (`hindex` +
+     `Polynomial.rootMultiplicity_le_natDegree` + `natDegree_rtResultantGen_le` + `cdegG_eq_natDegree`), then
+     `by_cases idx+1 = cdegG Dstar`: `= n` uses `hp2n` + `evalLrtArg_const_embed_eq` + **fiber = allpoles** (from
+     `natDegree_gcd_eq_count_residue_gen` + `rootMultiplicity_rtResultantGen_eq_natDegree_gcd` ⟹ `#fiber = idx+1 =
+     n = #allpoles` ⟹ `Finset.eq_of_subset_of_card_le`; fiber-product = nodal = `Dstar_E`); `< n` is the existing
+     subresultant path (`hi` derived via `lt_of_le_of_ne`).
+  4. **Thread up:** `logMatch_of_setup` stops passing `hilt c` to `entry_log`; `_of_setup`/`LrtReducedGenuineData`/
+     `_of_genuine` drop the `hilt` field from the `hE` bundle.
+  5. **Drop `hR0`:** derive internally in `_of_setup` — instantiate `hE` at `E = AlgebraicClosure (CFieldSpec.K α)`,
+     take `hB`, `roots_rtResultantGen` gives `R_E = C s·∏` with `s ≠ 0` ⟹ `R_E ≠ 0` ⟹ `R ≠ 0` (base-change
+     injective, `amGExt_ne_zero`-style). Remove the `hR0` field + `hRpp` (always-true `primPart_ne_zero`).
 - `GcdFFCorrect` at tower levels — fraction-free-gcd = genuine-gcd PRS-regularity; classical subresultant
   theory, portable (pieces in `YunTowerCorrect`/`SplitFactorHelpers`). Medium.
 - `LrtLiouvilleFrontier` (completeness descent) — abstract Liouville keystone proven in-project
