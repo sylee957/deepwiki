@@ -63,14 +63,24 @@ theorem towerCoeffIntegrateLrt_sound (c b : QFunNZG β) (h : towerCoeffIntegrate
   rw [hcd, CFieldSpec.toK_div, htoK_embed bn, htoK_embed bd, htoK_c]
   exact hsound
 
+/-- **The single-`w` LRT coefficient integrator** `(b, c)` — tries the optional
+`LawfulRischLevelLrt.limitedIntegrateSingle` (reconstructing `b = bnum/bden` and the constant `c` as
+`QFunNZG β` elements), falling back to the log-free `towerCoeffIntegrateLrt` (`c = 0`) when the class supplies no
+single-`w` integrator (the default). This is the `limInt` that flips on the degree-raising `c·tᵐ⁺¹/(m+1)` term
+once a base `(b,c)` integrator (`cLimitedIntegrateSingleBase`) is present. -/
+def towerCoeffIntegrateSingleLrt (η c : QFunNZG β) : Option (QFunNZG β × QFunNZG β) :=
+  match LawfulRischLevelLrt.limitedIntegrateSingle (qnumCoeffG c) (qdenCoeffG c)
+      (qnumCoeffG η) (qdenCoeffG η) with
+  | some ((bn, bd), cc) => some (CField.div (qEmbedNumG bn) (qEmbedNumG bd), qEmbedNumG [cc])
+  | none => (towerCoeffIntegrateLrt c).map fun b => (b, CField.zero)
+
 /-- **The LRT tower step's polynomial-part integrator** — the degree-raising Bronstein recursion
-`cIntegratePrimPolyDegRaiseG` (`IntegratePrimitivePolynomial`, Thm 5.8.1) with the LRT coefficient bridge
-`towerCoeffIntegrateLrt` as the single-`w` `limInt` (wrapped `b ↦ (b, 0)`; the degree-raising `c` is `0` until a
-`(b,c)` limited integrator is supplied — `docs/tower-limited-integration.md` Phase 2). Soundness `D_tower(q) = p`
-is the telescoping `cIntegratePrimPolyDegRaiseG_sound` (needs *no* `limInt` correctness hypothesis). -/
+`cIntegratePrimPolyDegRaiseG` (`IntegratePrimitivePolynomial`, Thm 5.8.1) with `towerCoeffIntegrateSingleLrt` as
+the single-`w` `limInt` (real `(b,c)` when the class provides `limitedIntegrateSingle`, else log-free `c = 0`).
+Soundness `D_tower(q) = p` is the telescoping `cIntegratePrimPolyDegRaiseG_sound` — no `limInt` correctness
+hypothesis, so it holds for the degree-raising `(b,c)` integrator too. -/
 def towerPolyIntegrateLrt (η : QFunNZG β) (p : CPolyG (QFunNZG β)) : Option (CPolyG (QFunNZG β)) :=
-  cIntegratePrimPolyDegRaiseG η (fun c => (towerCoeffIntegrateLrt c).map fun b => (b, CField.zero))
-    (cdegG p + 2) p
+  cIntegratePrimPolyDegRaiseG η (towerCoeffIntegrateSingleLrt η) (cdegG p + 2) p
 
 omit [CRischField β] in
 /-- **★ The LRT tower step's polynomial-part soundness** — `D_tower(q) = p`, the telescoping

@@ -51,6 +51,14 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
   reducedSoundLrt : ∀ (Dt a d : CPolyG α), toPolyG d ≠ 0 →
     IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d))
+  /-- **Optional single-`w` limited integrator** (Bronstein §5.8/§5.12) — `(anum, aden, ηnum, ηden) ↦
+  ((bnum, bden), c)` with `anum/aden = D(bnum/bden) + c·(ηnum/ηden)` over `α(s)`. Feeds the degree-raising
+  coefficient recursion `cIntegratePrimPolyDegRaiseG` its `c` (the `c·tᵐ⁺¹/(m+1)` term). Defaults to `none` ⟹
+  the tower recursion falls back to the log-free coefficient integrator (`c = 0`), so existing instances are
+  unaffected; a `(b,c)` instance (base = `cLimitedIntegrateSingleBase`) flips on degree-raising. Soundness is
+  telescoping (`cIntegratePrimPolyDegRaiseG_sound` needs no correctness law on this). -/
+  limitedIntegrateSingle : CPolyG α → CPolyG α → CPolyG α → CPolyG α → Option ((CPolyG α × CPolyG α) × α) :=
+    fun _ _ _ _ => none
 
 namespace LawfulRischLevelLrt
 

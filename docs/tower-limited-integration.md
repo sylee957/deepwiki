@@ -73,9 +73,19 @@ Each phase is its own gate-green commit.
   *emitting* the degree-raising term needs the real `(b,c)` `limInt` (base = `cLimitedIntegrateSingleBase`,
   Phase 3-wire-2; higher levels = Phase 2). **Retired** the fixed-degree `cLimitedIntegratePolyRatG` +
   `limIntTopFirst` + 3 soundness lemmas (~157 lines) — subsumed.
-- **Phase 3-wire-2 — supply the real `(b,c)` `limInt`.** Expose a single-`w` limited integrator on
-  `LawfulRischLevelLrt` (base instance = `cLimitedIntegrateSingleBase`; recursive = Phase 2); replace the
-  `b ↦ (b,0)` wrap. This flips on actual degree-raising in the solver.
+- **Phase 3-wire-2 — supply the real `(b,c)` `limInt` (automatic, class-based).** The recursion + base single-`w`
+  are built, proven, and validated end-to-end (`cIntegratePrimPolyDegRaiseG_example`). Making the *class-resolved*
+  `integrate` use it, in two steps:
+  - **Class interface + wiring. ✅ DONE (2026-07-06).** Added the *optional* field (num/den style, no
+    `[CFieldDomain α]` signature change — `CRischField` does **not** imply `CFieldDomain`):
+    `limitedIntegrateSingle : CPolyG α → CPolyG α → CPolyG α → CPolyG α → Option ((CPolyG α × CPolyG α) × α) := fun _ _ _ _ => none`
+    (`RischTowerLrt.lean`). `towerCoeffIntegrateSingleLrt` (`RischSolverTowerLrt.lean`) calls it and reconstructs
+    `(b, c)`, `.orElse` the log-free `(b,0)`; `towerPolyIntegrateLrt` feeds it to `cIntegratePrimPolyDegRaiseG`.
+    Default `none` ⟹ every existing instance compiles unchanged and behaves identically (log-free); soundness is
+    the telescoping `cIntegratePrimPolyDegRaiseG_sound` (holds for the `(b,c)` `limInt` too). Gate PASS.
+  - **Flip on for the base (remaining).** A `LawfulRischLevelLrt` instance for the concrete base carrier
+    providing `limitedIntegrateSingle := cLimitedIntegrateSingleBase` (num/den-adapted, guarding `aden ≠ 0`).
+    Validate a 2-level `integrate` run producing a degree-raising antiderivative through the solver.
 - **Phase 4-core — abstract soundness of the recursion. ✅ DONE (`LimitedIntegrateSingle.lean`).**
   `cIntegratePrimPolyDegRaiseG_sound`: `implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p`, axiom-clean
   (`[propext, choice, Quot.sound]`, no `native_decide`). Telescopes — holds for **any** `limInt` (no correctness
