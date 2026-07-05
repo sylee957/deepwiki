@@ -50,6 +50,31 @@ Revised plan: (1) general connection `IsElementaryIntegrableGenuineG → …Lrt`
 (2′) re-base the recursion on `LrtResultG`; (3) discharge `PrimitiveFrontierLrt` from the genuine data over the
 closure; (4) discharge `descendGenuineLrt`; (5) ground instance. The re-base (2′) is the load-bearing refactor.
 
+## ★★ The re-base, phased (2026-07-05) — user directive "rebase it and retire redundant one"
+
+**Head start (mapped):** the *one-level* LRT assembly is already complete — `cIntegrateCaseLrt` +
+`cIntegrateCaseLrt_sound` (full special+reduced → `LrtResultG`, `LrtAssembly.lean`), `combineSNLrt`, and
+`PrimitiveFrontierLrt` (dischargeable to `LrtReducedGenuineData`). The special-part hook `MonomialCase` and the
+generic coefficient recursion `cLimitedIntegratePolyRatG` are *shared* (result-type-agnostic). What is missing
+is only the **recursive LRT tower class** + its LRT coefficient integrator. So the re-base reuses most of the
+stack.
+
+Phases (each its own gate-green commit):
+
+- **Phase 1 — `LawfulRischLevelLrt` class + base instance.** `RischTowerLrt.lean`: the recursive LRT class
+  (`case` + `specialSound` [K-level, shared] + `reducedSoundLrt` [LRT]), `integrate` via `cIntegrateCaseLrt`,
+  `soundFormalLrt` via `cIntegrateCaseLrt_sound`, and `instLawfulRischLevelLrtPrimitive` from
+  `[PrimitiveFrontierLrt α]` (reusing `primitiveGuardedCase_specialSound`). No coefficient recursion at the base.
+  **← current.**
+- **Phase 2 — the LRT tower step.** `towerCoeffIntegrateLrt` (log-free coefficient integrator recursing into
+  `LawfulRischLevelLrt β`) + its K-level soundness (∀E ⇒ K by injectivity of `ratFuncBaseChange` on log-free
+  results), fed to the shared `cLimitedIntegratePolyRatG`; then `instLawfulRischLevelLrtTower`. Validate depth-2.
+- **Phase 3 — retire the redundant rational recursion.** Once the LRT tower resolves at every depth, delete the
+  rational `LawfulRischLevel` reduced-log path + `PrimitiveFrontier` (the undischargeable frontier). Keep the
+  generic coefficient recursion (`cLimitedIntegratePolyRatG`) — it is result-type-agnostic and reused.
+- **Phase 4 — ground instance + completeness.** Discharge `PrimitiveFrontierLrt` from the genuine data
+  (`hreducedLrt_of_genuineAll`); the completeness frontier `LrtLiouvilleFrontier` stays the honest boundary.
+
 ## Plan (dependency-ordered)
 
 1. **Consolidate the completeness frontiers.** DONE (partial): the rational `LiouvilleFrontier` is RETIRED — its one consumer (the ∫1/log x demo) migrated to the stronger `LrtLiouvilleFrontier` certificate; `LiouvilleCompleteness.lean` deleted. The general connection (below) that would DERIVE it is still open. Prove `IsElementaryIntegrableGenuineG → IsElementaryIntegrableGenuineLrtG`
