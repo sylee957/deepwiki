@@ -72,8 +72,27 @@ Phases (each its own gate-green commit):
 - **Phase 3 — retire the redundant rational recursion.** Once the LRT tower resolves at every depth, delete the
   rational `LawfulRischLevel` reduced-log path + `PrimitiveFrontier` (the undischargeable frontier). Keep the
   generic coefficient recursion (`cLimitedIntegratePolyRatG`) — it is result-type-agnostic and reused.
-- **Phase 4 — ground instance + completeness.** Discharge `PrimitiveFrontierLrt` from the genuine data
-  (`hreducedLrt_of_genuineAll`); the completeness frontier `LrtLiouvilleFrontier` stays the honest boundary.
+- **Phase 4 — grounding + the honest end state.** DONE. `RischTowerLrtGrounding.lean`:
+  `lrtSolver_sound_on_tower` — on the concrete carrier `QFunNZG ℚ` (the real ℚ(x)-tower), the assembled
+  `LawfulRischLevelLrt.integrate` is sound (`IsIntegralResultLrtG`) depending on **only** the two honest
+  frontiers (`PrimitiveFrontierLrt` at the levels used + the tower-level gcd `Fact`; `Fact (GcdFFCorrect ℚ)` is
+  a resolved instance). Plus an `example` deriving the whole solver from `LrtReducedGenuineData` via
+  `hreducedLrt_of_genuineAll`.
+
+### ★★★ Outcome (2026-07-05): the re-base is COMPLETE
+
+A **hypothesis-free ground instance is mathematically impossible** — and that is the honest finding, not a gap:
+`PrimitiveFrontierLrt` closes only to `LrtReducedGenuineData` (Bronstein's *necessary* residue/normality
+conditions, false for some inputs — e.g. `hilt` non-degeneracy excludes pure single-log), and `GcdFFCorrect` at
+tower levels is the PRS-regularity frontier (its own docstring says so). Both are **genuine mathematical
+content**, not deferred bookkeeping. So "no dangling frontier" is achieved in the honest sense: the recursion
+resolves at every depth, and every remaining hypothesis is a **named genuine condition** — with the
+*undischargeable-in-principle* rational `PrimitiveFrontier` deleted and replaced by the
+dischargeable-to-genuine-data `PrimitiveFrontierLrt`. Completeness stays `LrtLiouvilleFrontier` (Liouville).
+
+The one deferred *mechanical* item is the general connection `IsElementaryIntegrableGenuineG → …Lrt` (the
+`evalLrtArg` monic-normalization makes it ~150 intricate lines) — not needed for the re-base, since the rational
+recursion is retired.
 
 ## Plan (dependency-ordered)
 
