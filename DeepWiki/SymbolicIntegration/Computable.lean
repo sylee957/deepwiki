@@ -69,6 +69,7 @@ import DeepWiki.SymbolicIntegration.Computable.Subresultant
 import DeepWiki.SymbolicIntegration.Computable.SubresultantSpec
 import DeepWiki.SymbolicIntegration.Computable.LrtLogArg
 import DeepWiki.SymbolicIntegration.Computable.LrtIntegrate
+import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 import DeepWiki.SymbolicIntegration.Computable.Tower
 import DeepWiki.SymbolicIntegration.Computable.TranscendentalOverAlgebraic
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
