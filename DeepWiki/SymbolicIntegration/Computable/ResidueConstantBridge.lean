@@ -69,4 +69,40 @@ theorem mapCoeffs_eq_zero_of_coprime_pow_factor {P Q M : K[X]} {i : ℕ} (hi : 1
     have := Polynomial.natDegree_le_of_dvd hdvd hne
     omega
 
+omit [Differential K] [CharZero K] in
+/-- List product of coprime terms: `q` coprime to each entry ⟹ coprime to the product. -/
+private theorem isCoprime_list_prod_right {q : K[X]} {L : List K[X]}
+    (h : ∀ x ∈ L, IsCoprime q x) : IsCoprime q L.prod := by
+  induction L with
+  | nil => simpa using isCoprime_one_right
+  | cons a t ih =>
+    rw [List.prod_cons]
+    exact (h a (by simp)).mul_right (ih fun x hx => h x (by simp [hx]))
+
+/-- **The core, extended to a full pairwise-coprime monic factorization.** If `P = ∏ Qₖ^eₖ` with the `Qₖ`
+pairwise coprime, each monic with `eₖ ≥ 1`, and `mapCoeffs P = 0`, then `mapCoeffs Qₖ = 0` for every
+factor `Qₖ`. This is the core `mapCoeffs_eq_zero_of_coprime_pow_factor` applied uniformly across the
+squarefree Yun decomposition. -/
+theorem mapCoeffs_eq_zero_of_mem_coprime_prod {P : K[X]} {L : List (K[X] × ℕ)}
+    (hmonic : ∀ q ∈ L, (Prod.fst q).Monic) (hpos : ∀ q ∈ L, 1 ≤ q.2)
+    (hcop : L.Pairwise (fun a b => IsCoprime a.1 b.1))
+    (hfact : P = (L.map fun q => q.1 ^ q.2).prod) (hP : mapCoeffs P = 0)
+    {q : K[X] × ℕ} (hq : q ∈ L) : mapCoeffs q.1 = 0 := by
+  -- Move `q` to the front: `L = s ++ q :: t ~ q :: (s ++ t)`.
+  obtain ⟨s, t, rfl⟩ := List.append_of_mem hq
+  have hperm : (s ++ q :: t).Perm (q :: (s ++ t)) := List.perm_middle
+  -- `P = q.1 ^ q.2 · (product of the rest)`.
+  have hPeq : P = q.1 ^ q.2 * ((s ++ t).map fun r => r.1 ^ r.2).prod := by
+    rw [hfact, (hperm.map fun r => r.1 ^ r.2).prod_eq, List.map_cons, List.prod_cons]
+  -- `q.1` coprime to every remaining factor (pairwise coprimality across the permuted list).
+  have hcopP : (q :: (s ++ t)).Pairwise (fun a b => IsCoprime a.1 b.1) :=
+    (hperm.pairwise_iff (fun h => h.symm)).mp hcop
+  have hqcop : ∀ r ∈ s ++ t, IsCoprime q.1 r.1 := (List.pairwise_cons.mp hcopP).1
+  have hcop' : IsCoprime q.1 ((s ++ t).map fun r => r.1 ^ r.2).prod := by
+    apply isCoprime_list_prod_right
+    intro x hx
+    obtain ⟨r, hr, rfl⟩ := List.mem_map.mp hx
+    exact (hqcop r hr).pow_right
+  exact mapCoeffs_eq_zero_of_coprime_pow_factor (hpos q hq) (hmonic q hq) hPeq hcop' hP
+
 end DeepWiki.SymbolicIntegration.ResidueBridge
