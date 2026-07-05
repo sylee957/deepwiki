@@ -70,3 +70,37 @@ Ds (num c) (den c)` (split each coefficient `c ∈ QFunNZG β = β(s)` into `num
 `β`'s monomial derivative), combines the polynomial-part result with the LRT reduced part (`combineSNLrt`), and
 threads the two soundness lemmas into the step instance `[RischSolver β] → RischSolver (QFunNZG β)`. The hard
 mathematics — the coefficient recursion and its soundness — is done.
+
+## Completeness (the LRT tower's other half)
+
+The primitive LRT tower is **complete** as well as sound (mirroring the rational `LiouvilleCompleteness`, but
+root-free — no rational-residue restriction):
+- `IsElementaryIntegrableGenuineLrtG` (`LrtGuarded`) — the well-posed genuine ∃ target.
+- `LrtLiouvilleFrontier.descendGenuineLrt` (`LrtCompleteness`) — genuine-integrable ⟹ the residue-constancy
+  guard `cResidueConstantGuardG = true`, held as the Liouville-criterion frontier (Bronstein 5.6.1; the
+  abstract keystone `isLiouville_logExtension_uncond` is done in-project).
+- `not_isElementaryIntegrableGenuineLrt` — the derived decidable non-integrability certificate.
+
+So `RischSolver` (soundness) + `LrtLiouvilleFrontier` (completeness) = a structurally complete primitive LRT
+tower.
+
+## Extending to hyperexponential / hypertangent
+
+The reduced part (root-free LRT) and Hermite are **kind-generic** — reused verbatim. The extension point is the
+**monomial kind** (`MonomialCase`, consumed by `cIntegrateCaseLrt`). Each new kind supplies:
+1. a `MonomialCase` whose `integrateSpecial` handles that kind's special/polynomial part (primitive: the
+   coefficient recursion `cLimitedIntegratePolyRatG`; hyperexponential: §5.9; hypertangent: §5.10) — plus its
+   special-part soundness;
+2. a reduced-soundness frontier (the `PrimitiveFrontierLrt` analogue) and an integrability-criterion frontier
+   (the `LrtLiouvilleFrontier` analogue) for that kind.
+`primitiveGuardedCase` is the first instance; `RischSolver`'s base would generalize to dispatch on the kind of
+`Dt` (primitive ⟺ `Dt` constant; hyperexp ⟺ `Dt = η·t`; hypertangent ⟺ `Dt = η·(t²+1)`).
+
+## Retiring the rational path (assessment)
+
+`LawfulRischLevelLrt` is retired. The **rational** `LawfulRischLevel` / `PrimitiveFrontier` /
+`LiouvilleFrontier` are superseded by the LRT path but **deeply entangled** — 11 consumer files, and the
+rational `LiouvilleFrontier` is load-bearing for the **algebraic-function completeness**
+(`Algebraic/AlgebraicCompleteness`, `AlgebraicHermiteCompleteness`), plus `RischTowerPrimitive` holds the shared
+`primitiveGuardedCase_specialSound`. Full retirement = porting the completeness arc (rational + algebraic) onto
+the LRT genuine notions, then deleting the rational classes — a large multi-session port, not a deletion.
