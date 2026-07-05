@@ -238,21 +238,24 @@ theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)
   rw [cLrtLogArgG, List.mem_filterMap] at hRS
   obtain ⟨⟨Ri, idx⟩, hmem, hg⟩ := hRS
   simp only at hg
-  split at hg
-  · exact absurd hg (by simp)
-  · rw [Option.some.injEq] at hg
-    subst hg
-    have hRi : Ri ∈ cSqfreeYunFFGWf R := by
-      have h := List.mem_map_of_mem (f := Prod.fst) hmem
-      rwa [List.zipIdx_map_fst] at h
-    have hRi0 : mapCoeffs (toPolyG Ri) = 0 :=
-      mapCoeffs_toPolyG_yunFactor_eq_zero hgcd R hR0 hpp hguard' hRi
-    have hcm : toPolyG (cmonicG Ri) = toPolyG Ri := by
-      rw [toPolyG_cmonicG_eq_normalize]
-      exact (cSqfreeYunFFGWf_monic hgcd R hR0 Ri hRi).normalize_eq_self
-    show cisZeroG (cmapDeriv (cmonicG Ri)) = true
-    rw [cisZeroG_iff, toPolyG_cmapDeriv, hcm]
-    exact hRi0
+  -- `RS.1 = Ri` in both some-branches (`i = n` emits `Dstar` as `RS.2`, else the subresultant), so the
+  -- residue-poly `RS.1` — the only thing that matters here — is the Yun factor regardless.
+  have hRS1 : RS.1 = Ri := by
+    split_ifs at hg <;>
+      first
+        | simp only [reduceCtorEq] at hg
+        | (rw [Option.some.injEq] at hg; exact (congrArg Prod.fst hg).symm)
+  rw [hRS1]
+  have hRi : Ri ∈ cSqfreeYunFFGWf R := by
+    have h := List.mem_map_of_mem (f := Prod.fst) hmem
+    rwa [List.zipIdx_map_fst] at h
+  have hRi0 : mapCoeffs (toPolyG Ri) = 0 :=
+    mapCoeffs_toPolyG_yunFactor_eq_zero hgcd R hR0 hpp hguard' hRi
+  have hcm : toPolyG (cmonicG Ri) = toPolyG Ri := by
+    rw [toPolyG_cmonicG_eq_normalize]
+    exact (cSqfreeYunFFGWf_monic hgcd R hR0 Ri hRi).normalize_eq_self
+  rw [cisZeroG_iff, toPolyG_cmapDeriv, hcm]
+  exact hRi0
 
 /-- **Stage 3b (the residue bridge).** A passing residue guard forces the reduced LRT result's residues to be
 constant: `cResidueConstantGuardG a d = true → allResiduesConstantLrtG (cIntegrateReducedLrtG a d) = true`.

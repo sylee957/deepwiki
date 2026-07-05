@@ -18,9 +18,12 @@ namespace CPolyG
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- **The symbolic LRT log part.** `cLrtLogArgG Dt hNum Dstar = [(Rᵢ, Sᵢ)]`: for each non-constant squarefree
-factor `Rᵢ` (multiplicity `i`) of the residue resultant `R(z) = Res_t(Dstar, hNum − z·D Dstar)`, the
-parametric degree-`i` subresultant `Sᵢ(z,t)` (`cSubresultantParam`). Root-free — the residues stay implicit
-as the roots of `Rᵢ`. -/
+factor `Rᵢ` (multiplicity `i`) of the residue resultant `R(z) = Res_t(Dstar, hNum − z·D Dstar)`, the log
+argument `Sᵢ(z,t)`. When `i = deg Dstar` (the residue's fiber is *all* poles — a single pure log `c·D(Dstar)/Dstar`)
+the argument is `Dstar` itself (Bronstein Thm 2.5.1(i)); otherwise the parametric degree-`i` subresultant
+`Sᵢ(z,t)` (`cSubresultantParam`). Root-free — the residues stay implicit as the roots of `Rᵢ`. The `i = n`
+branch mirrors the rational `lazardRiobooTrager` and the abstract `…_isSimilar_gcd_gen`; the top-index
+subresultant does *not* coincide with `Dstar`, so omitting it gives a wrong argument on pure logs. -/
 def cLrtLogArgG (Dt hNum Dstar : CPolyG α) : List (CPolyG α × List (CPolyG α)) :=
   let Dd := cmonomialDeriv Dt Dstar
   let R := cResidueResultantTowerGWf Dt hNum Dstar
@@ -29,6 +32,7 @@ def cLrtLogArgG (Dt hNum Dstar : CPolyG α) : List (CPolyG α × List (CPolyG α
   (cSqfreeYunFFGWf R).zipIdx.filterMap (fun (Ri, idx) =>
     let i := idx + 1
     if (cnormG Ri : List α).length ≤ 1 then none
+    else if i = n then some (Ri, Dstar.map (fun c => ([c] : CPolyG α)))
     else some (Ri, cSubresultantParam Dstar hNum Dd n m i))
 
 end CPolyG
@@ -51,5 +55,16 @@ theorem cResidueResultant_invT2m1 :
 `1∓t = ∓(t∓1)`. No roots were computed. -/
 theorem cLrtLogArg_invT2m1 :
     cLrtLogArgG ([1] : CPolyG ℚ) [1] [-1, 0, 1] = [([-1/4, 0, 1], [[1], [0, -2]])] := by native_decide
+
+/-- **Single-pure-log fix — `∫ 1/t = log t`.** Residue 1 with multiplicity 1 = `deg Dstar`, so the log
+argument is `Dstar = t` (`[[0],[1]]`) itself — the `i = n` branch. Before the branch the algorithm returned the
+degenerate top-index subresultant `t+1` (`[[1],[1]]`), which is **wrong** (`D(log(t+1)) = 1/(t+1) ≠ 1/t`). -/
+theorem cLrtLogArg_invT_pureLog :
+    (cLrtLogArgG ([1] : CPolyG ℚ) [1] [0, 1]).map (·.2) = [[[0], [1]]] := by native_decide
+
+/-- **Single-pure-log fix — `∫ 2t/(t²+1) = log(t²+1)`.** Residue 1 with multiplicity 2 = `deg Dstar`, argument
+`Dstar = t²+1` (`[[1],[0],[1]]`). Before the fix the algorithm returned `t²+t+1` (`[[1],[1],[1]]`), wrong. -/
+theorem cLrtLogArg_invT2p1_pureLog :
+    (cLrtLogArgG ([1] : CPolyG ℚ) [0, 2] [1, 0, 1]).map (·.2) = [[[1], [0], [1]]] := by native_decide
 
 end DeepWiki.SymbolicIntegration

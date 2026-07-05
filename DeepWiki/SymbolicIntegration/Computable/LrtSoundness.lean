@@ -771,17 +771,23 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : CPolyG α) (p : CPolyG α × List (CPol
     (hp : p ∈ cLrtLogArgG Dt hNum Dstar) :
     ∃ idx, (p.1, idx) ∈ (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).zipIdx
       ∧ ¬ ((cnormG p.1 : List α).length ≤ 1)
-      ∧ p.2 = cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
-          (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1) := by
+      ∧ (idx + 1 ≠ cdegG Dstar → p.2 = cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
+          (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1)) := by
   rw [cLrtLogArgG, List.mem_filterMap] at hp
   obtain ⟨⟨Ri, idx⟩, hmem, hfn⟩ := hp
   simp only at hfn
   split at hfn
   · simp at hfn
   · rename_i hlen
-    rw [Option.some_inj] at hfn
-    subst hfn
-    exact ⟨idx, hmem, hlen, rfl⟩
+    split at hfn
+    · -- `i = n` (pure single log): `p.2 = Dstar`; the subresultant claim is vacuous.
+      rename_i hin
+      rw [Option.some_inj] at hfn; subst hfn
+      exact ⟨idx, hmem, hlen, fun hne => absurd hin hne⟩
+    · -- else: `p.2 = subresultant`.
+      rename_i hin
+      rw [Option.some_inj] at hfn; subst hfn
+      exact ⟨idx, hmem, hlen, fun _ => rfl⟩
 
 open Classical in
 omit [CDiffFieldSpec α] in
@@ -1036,7 +1042,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
         ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
           / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
               (Lagrange.nodal allpoles id)).eval β = c)).val.map (fun β => X - C β)).prod := by
-  obtain ⟨idx, hmem, _, hp2⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
+  obtain ⟨idx, hmem, _, hp2imp⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
   obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp (List.mk_mem_zipIdx_iff_getElem?.mp hmem)
   have hp1 : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
     rw [List.get_eq_getElem]; exact hp1'
@@ -1054,7 +1060,13 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
       (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c := by
     rw [hRR, rootMult_R_map_eq_idx_succ hgcd _ hR0 hRpp idx hj c (hp1 ▸ hc)]
-  rw [hp2, evalLrtArg_eq_fiber_prod Dstar hNum (cmonomialDeriv Dt Dstar) allpoles c (idx + 1) hm hsplit
+  -- `idx+1 = rootMult c < nodal.natDegree = deg Dstar`, so the non-degenerate (subresultant) branch applies.
+  have hne : idx + 1 ≠ cdegG Dstar := by
+    have h1 : idx + 1 < (Lagrange.nodal allpoles id).natDegree := hindex ▸ hi
+    rw [← hsplit, natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective,
+      ← cdegG_eq_natDegree] at h1
+    omega
+  rw [hp2imp hne, evalLrtArg_eq_fiber_prod Dstar hNum (cmonomialDeriv Dt Dstar) allpoles c (idx + 1) hm hsplit
     hB hA hB_deg hindex (hindex ▸ hi), hDd]
 
 
@@ -1079,13 +1091,14 @@ theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     rwa [List.length_zipIdx] at hj
   rw [List.getElem_zipIdx] at hb hb'
   simp only [Nat.zero_add] at hb hb'
-  split at hb
-  · simp at hb
-  · rw [Option.some_inj] at hb; subst hb
-    split at hb'
-    · simp at hb'
-    · rw [Option.some_inj] at hb'; subst hb'
-      exact disjoint_yun_factors hgcd _ hR0 hRpp hi' hj' (Nat.ne_of_lt hij)
+  -- `b.1`/`b'.1` are the Yun factors at `i`/`j` in BOTH some-branches (`i = n` emits `Dstar`, else the
+  -- subresultant), so the disjointness closes identically regardless of the `i = n` branch.
+  split_ifs at hb hb' <;>
+    first
+      | simp only [reduceCtorEq] at hb
+      | simp only [reduceCtorEq] at hb'
+      | (obtain rfl := Option.some.inj hb; obtain rfl := Option.some.inj hb';
+         exact disjoint_yun_factors hgcd _ hR0 hRpp hi' hj' (Nat.ne_of_lt hij))
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **A Yun factor with a root is non-constant** (`¬ (cnormG Rᵢ).length ≤ 1`): a root forces
@@ -1146,16 +1159,21 @@ theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
-/-- **Reverse membership in `cLrtLogArgG`.** A non-constant Yun factor `Rᵢ = (cSqfreeYunFFGWf R)[idx]` yields
-the entry `(Rᵢ, cSubresultantParam … (idx+1)) ∈ cLrtLogArgG`. The constructive direction of `mem_cLrtLogArgG`,
-used by `hcover` (a residue that is a root of some `Rᵢ` has a hosting entry). -/
+/-- **Reverse membership in `cLrtLogArgG`.** A non-constant Yun factor `Rᵢ = (cSqfreeYunFFGWf R)[idx]` hosts an
+entry `(Rᵢ, Sᵢ) ∈ cLrtLogArgG` — `Sᵢ` is `Dstar` (`idx+1 = deg Dstar`, the single-pure-log branch) or the
+subresultant otherwise. The constructive direction of `mem_cLrtLogArgG`, used by `hcover` (which only needs the
+hosting entry's `Rᵢ`, not its `Sᵢ`). -/
 theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : CPolyG α) (idx : ℕ) (Ri : CPolyG α)
     (hget : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar))[idx]? = some Ri)
     (hlen : ¬ ((cnormG Ri : List α).length ≤ 1)) :
-    (Ri, cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
-        (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1)) ∈ cLrtLogArgG Dt hNum Dstar := by
-  rw [cLrtLogArgG, List.mem_filterMap]
-  exact ⟨(Ri, idx), List.mk_mem_zipIdx_iff_getElem?.mpr hget, by simp only [if_neg hlen]⟩
+    ∃ Si, (Ri, Si) ∈ cLrtLogArgG Dt hNum Dstar := by
+  refine ⟨if idx + 1 = cdegG Dstar then Dstar.map (fun c => ([c] : CPolyG α))
+      else cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
+        (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1), ?_⟩
+  rw [cLrtLogArgG]
+  refine List.mem_filterMap.mpr ⟨(Ri, idx), List.mk_mem_zipIdx_iff_getElem?.mpr hget, ?_⟩
+  simp only [if_neg hlen]
+  split <;> rfl
 
 open Classical in
 variable [CFracGcdCoreWf α] in
@@ -1202,9 +1220,9 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   have hRi0 : toPolyG Ri ≠ 0 := (cSqfreeYunFFGWf_monic hgcd _ hR0 Ri hRimem).ne_zero
   have hresRi : res ∈ ((toPolyG Ri).map φ).roots := by
     rw [Function.comp_apply] at hRiv; rwa [← hRiv] at hresv
-  refine ⟨_, mem_cLrtLogArgG_of_yun_factor Dt hNum Dstar idx Ri hidx
-    (not_len_le_one_of_root Ri hRi0 res hresRi), ?_⟩
-  exact Multiset.mem_toFinset.mpr hresRi
+  obtain ⟨Si, hSi⟩ := mem_cLrtLogArgG_of_yun_factor Dt hNum Dstar idx Ri hidx
+    (not_len_le_one_of_root Ri hRi0 res hresRi)
+  exact ⟨(Ri, Si), hSi, Multiset.mem_toFinset.mpr hresRi⟩
 
 open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
