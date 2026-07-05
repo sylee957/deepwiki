@@ -1297,5 +1297,79 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   rw [← hsplit]
   simp only [amGExt, hφdef]
 
+open scoped Differential in
+open Classical in
+variable [CFracGcdCoreWf α] in
+/-- **★★ The assembled LRT reduced-case soundness** — the root-free analogue of `hreduced`, fully composed.
+Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into the capstone
+`isIntegralResultLrtG_cIntegrateReducedLrtG`, yielding `IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)`
+outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `hDmonic`…`hm` are the `K`-level residue-data
+facts (`Dstar = (cHermiteReduceTowerGWf Dt a d).2.2` monic + separable, degree bounds, the residue resultant
+nonzero); `hE` bundles the genuine per-splitting-extension Bronstein side conditions (normality `hnorm`,
+properness `hAnd`/`hAdeg`/`hB_deg`, `implicitDeriv` nonvanishing `hB`, the RT cancellation `hcancel`, and the
+subresultant-multiplicity bound `hilt`). Unlike the rational `hreduced`, this is general: residues may be
+algebraic. -/
+theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFieldSpec.K α)]
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
+      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
+          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
+    (hDmonic : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic)
+    (hDsep : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Separable)
+    (hDt0 : (toPolyG Dt).natDegree = 0)
+    (hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
+        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0)
+    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+        (cHermiteReduceTowerGWf Dt a d).2.2)).primPart ≠ 0)
+    (hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
+        = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1)
+    (hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+        [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
+        (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).roots,
+            (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0)
+        ∧ (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+              ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E))).natDegree
+            ≤ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E)).natDegree - 1
+        ∧ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).natDegree
+            < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E)).natDegree
+        ∧ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).degree
+            < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E)).roots.toFinset.card
+        ∧ (∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
+            ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
+        ∧ (∑ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
+            algebraMap E[X] (RatFunc E)
+            (C (((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map
+                  (algebraMap (CFieldSpec.K α) E)).eval β
+                  / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
+                      (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+                        (algebraMap (CFieldSpec.K α) E)).roots.toFinset id)).eval β)
+              * ((((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0)
+        ∧ (∀ c : E, (rtResultantGen ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map
+              (algebraMap (CFieldSpec.K α) E))
+            (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id)
+            ((toPolyG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)).map
+              (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c
+            < (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+              (algebraMap (CFieldSpec.K α) E)).roots.toFinset id).natDegree)) :
+    IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) := by
+  refine isIntegralResultLrtG_cIntegrateReducedLrtG hgcd Dt a d hd0 hpp hcopgcd (fun E _ _ _ _ _ _ => ?_)
+  obtain ⟨hB, hB_deg, hAnd, hAdeg, hnorm, hcancel, hilt⟩ := hE E
+  exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerGWf Dt a d).2.1
+    (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR0 hRpp hm hB hB_deg hAnd hAdeg hnorm
+    hcancel hilt
 
 end DeepWiki.SymbolicIntegration
