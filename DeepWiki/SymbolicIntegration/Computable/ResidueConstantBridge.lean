@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
+import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 
 /-! # The residue bridge — a passing guard forces the result residues constant
 
@@ -218,5 +219,51 @@ theorem mapCoeffs_toPolyG_yunFactor_eq_zero (hgcd : GcdFFCorrect (α := α)) (R 
   have hqL : (toPolyG z.1, 1 + z.2) ∈ L := List.mem_map_of_mem hz
   have := mapCoeffs_eq_zero_of_mem_coprime_prod hmonic hpos hcop hfact hguard hqL
   rwa [hz1] at this
+
+open Differential in
+/-- **Stage 3b (core).** Every log argument produced by `cLrtLogArgG` has `D`-constant residues, given the
+residue resultant `R` is `D`-constant (the guard) and nonzero. Each log's `Rᵢ` is a Yun factor of `R`, so has
+`D`-constant coefficients (Stage 3a); since `Rᵢ` is monic, `⟦cmonicG Rᵢ⟧ = ⟦Rᵢ⟧`, and `cisZeroG (cmapDeriv ·)`
+is the computable reading of `mapCoeffs ⟦·⟧ = 0` (`cisZeroG_iff`, `toPolyG_cmapDeriv`). -/
+theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
+    (hguard : cisZeroG (cmapDeriv (cmonicG (cResidueResultantTowerGWf Dt hNum Dstar))) = true) :
+    (cLrtLogArgG Dt hNum Dstar).all (fun RS => cisZeroG (cmapDeriv (cmonicG RS.1))) = true := by
+  set R := cResidueResultantTowerGWf Dt hNum Dstar with hRdef
+  have hpp : (toPolyG R).primPart ≠ 0 := Polynomial.primPart_ne_zero _
+  have hguard' : mapCoeffs (toPolyG (cmonicG R)) = 0 := by
+    rw [← toPolyG_cmapDeriv]; exact (cisZeroG_iff _).mp hguard
+  rw [List.all_eq_true]
+  intro RS hRS
+  rw [cLrtLogArgG, List.mem_filterMap] at hRS
+  obtain ⟨⟨Ri, idx⟩, hmem, hg⟩ := hRS
+  simp only at hg
+  split at hg
+  · exact absurd hg (by simp)
+  · rw [Option.some.injEq] at hg
+    subst hg
+    have hRi : Ri ∈ cSqfreeYunFFGWf R := by
+      have h := List.mem_map_of_mem (f := Prod.fst) hmem
+      rwa [List.zipIdx_map_fst] at h
+    have hRi0 : mapCoeffs (toPolyG Ri) = 0 :=
+      mapCoeffs_toPolyG_yunFactor_eq_zero hgcd R hR0 hpp hguard' hRi
+    have hcm : toPolyG (cmonicG Ri) = toPolyG Ri := by
+      rw [toPolyG_cmonicG_eq_normalize]
+      exact (cSqfreeYunFFGWf_monic hgcd R hR0 Ri hRi).normalize_eq_self
+    show cisZeroG (cmapDeriv (cmonicG Ri)) = true
+    rw [cisZeroG_iff, toPolyG_cmapDeriv, hcm]
+    exact hRi0
+
+/-- **Stage 3b (the residue bridge).** A passing residue guard forces the reduced LRT result's residues to be
+constant: `cResidueConstantGuardG a d = true → allResiduesConstantLrtG (cIntegrateReducedLrtG a d) = true`.
+Both sides run on the same Hermite reduce, so this is `all_cLrtLogArgG_residueConstant_of_guard` at
+`(hNum, Dstar) = (H.2.1, H.2.2)`. The `hR0` precondition (nonzero residue resultant) is the same one the raw
+reduced soundness (`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`) requires, supplied by the setup. -/
+theorem allResiduesConstantLrtG_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+      (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0)
+    (hguard : cResidueConstantGuardG Dt a d = true) :
+    allResiduesConstantLrtG (cIntegrateReducedLrtG Dt a d) = true :=
+  all_cLrtLogArgG_residueConstant_of_guard hgcd Dt _ _ hR0 hguard
 
 end DeepWiki.SymbolicIntegration
