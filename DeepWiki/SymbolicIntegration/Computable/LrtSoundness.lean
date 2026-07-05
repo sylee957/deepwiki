@@ -1303,9 +1303,10 @@ variable [CFracGcdCoreWf α] in
 /-- **★★ The assembled LRT reduced-case soundness** — the root-free analogue of `hreduced`, fully composed.
 Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into the capstone
 `isIntegralResultLrtG_cIntegrateReducedLrtG`, yielding `IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)`
-outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `hDmonic`…`hm` are the `K`-level residue-data
-facts (`Dstar = (cHermiteReduceTowerGWf Dt a d).2.2` monic + separable, degree bounds, the residue resultant
-nonzero); `hE` bundles the genuine per-splitting-extension Bronstein side conditions (normality `hnorm`,
+outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerGWf Dt a d).2.2`
+monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`/`_squarefree`);
+`hDt0`…`hm` are the remaining `K`-level residue-data facts (degree bounds, the residue resultant nonzero); `hE`
+bundles the genuine per-splitting-extension Bronstein side conditions (normality `hnorm`,
 properness `hAnd`/`hAdeg`/`hB_deg`, `implicitDeriv` nonvanishing `hB`, the RT cancellation `hcancel`, and the
 subresultant-multiplicity bound `hilt`). Unlike the rational `hreduced`, this is general: residues may be
 algebraic. -/
@@ -1317,8 +1318,6 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
-    (hDmonic : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic)
-    (hDsep : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Separable)
     (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree)
@@ -1366,6 +1365,10 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
             < (Lagrange.nodal ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
               (algebraMap (CFieldSpec.K α) E)).roots.toFinset id).natDegree)) :
     IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) := by
+  have hDmonic := toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0
+  have hDsep : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Separable :=
+    PerfectField.separable_iff_squarefree.mpr
+      (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
   refine isIntegralResultLrtG_cIntegrateReducedLrtG hgcd Dt a d hd0 hpp hcopgcd (fun E _ _ _ _ _ _ => ?_)
   obtain ⟨hB, hB_deg, hAnd, hAdeg, hnorm, hcancel, hilt⟩ := hE E
   exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerGWf Dt a d).2.1
