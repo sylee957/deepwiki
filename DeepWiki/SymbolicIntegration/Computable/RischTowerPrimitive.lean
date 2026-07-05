@@ -43,6 +43,43 @@ class PrimitiveFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α]
     primitiveGuardedCase.reducedCorrect Dt (redNorm Dt a d cands) = some nrm →
     IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm
 
+/-- **Primitive special-part soundness** (shared by the rational and LRT primitive solvers). The special
+part is `primitiveGuardedCase.integrateSpecial`: under the guard (`b = 0`, `Dθ = 1`, constant `fₚ`) it solves
+the polynomial RDE and the reconstruction (`canonicalReconstruction_of_charZero`) closes with the special term
+vanishing; off the guard the hook returns `none`. Independent of any reduced frontier, so both solvers reuse
+it. -/
+theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
+    (Dt a d snum sden : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hhook : primitiveGuardedCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
+      (crSpecDen Dt a d) = some (snum, sden)) :
+    toPolyG sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
+      towerFractionFieldDerivG Dt (fieldFrac snum sden) = v ∧
+      v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
+  simp only [primitiveGuardedCase] at hhook
+  by_cases hguard : (cisZeroG (crSpecNum Dt a d) && cisZeroG (csubG Dt [CField.one])
+      && cisZeroG (cmapDeriv (crPoly Dt a d))) = true
+  · rw [if_pos hguard] at hhook
+    rw [Bool.and_eq_true, Bool.and_eq_true] at hguard
+    obtain ⟨⟨hb, hDt1g⟩, hconstg⟩ := hguard
+    rcases hqp : cPolyRischDEGWf Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) with _ | qp
+    · rw [hqp] at hhook; simp at hhook
+    · rw [hqp] at hhook
+      simp only [Option.some.injEq, Prod.mk.injEq] at hhook
+      obtain ⟨rfl, rfl⟩ := hhook
+      have hDt1 : toPolyG Dt = 1 := by
+        have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
+        rw [toPolyG_csubG, toPolyG_one_singleton, sub_eq_zero] at hh; exact hh
+      have hconst := mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (crPoly Dt a d) hconstg
+      refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
+      · rw [toPolyG_one_singleton]; exact one_ne_zero
+      · exact primitive_special_identity Dt (crPoly Dt a d) qp hDt1 hconst hqp
+      · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
+          simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
+        have hrec := canonicalReconstruction_of_charZero (Fact.out (p := GcdFFCorrect (α := α))) Dt a d hd0
+        rw [hvan, add_zero] at hrec
+        exact hrec
+  · rw [if_neg hguard] at hhook; simp at hhook
+
 /-- **The primitive `LawfulRischLevel` instance — assembled from `PrimitiveFrontier` by resolution.**
 Materialize one `PrimitiveFrontier α` and the whole solver resolves automatically, parameter-free. The
 `case` is `primitiveGuardedCase`, so `specialSound` is **fully proven** here: the special-part identity is
@@ -55,33 +92,8 @@ instance instLawfulRischLevelPrimitive [Fact (GcdFFCorrect (α := α))] [Primiti
   -- **Automatic candidates** (P2): the bounded rational sweep, no field. `cRationalResiduesGWf` filters it
   -- to genuine residues; the bound grows with the denominator degree.
   candidates := fun _ _ d => defaultResidueCandidates (cdegG d + 3)
-  specialSound := by
-    intro Dt a d snum sden hd0 hhook
-    simp only [primitiveGuardedCase] at hhook
-    by_cases hguard : (cisZeroG (crSpecNum Dt a d) && cisZeroG (csubG Dt [CField.one])
-        && cisZeroG (cmapDeriv (crPoly Dt a d))) = true
-    · rw [if_pos hguard] at hhook
-      rw [Bool.and_eq_true, Bool.and_eq_true] at hguard
-      obtain ⟨⟨hb, hDt1g⟩, hconstg⟩ := hguard
-      rcases hqp : cPolyRischDEGWf Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) with _ | qp
-      · rw [hqp] at hhook; simp at hhook
-      · rw [hqp] at hhook
-        simp only [Option.some.injEq, Prod.mk.injEq] at hhook
-        obtain ⟨rfl, rfl⟩ := hhook
-        have hDt1 : toPolyG Dt = 1 := by
-          have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
-          rw [toPolyG_csubG, toPolyG_one_singleton, sub_eq_zero] at hh; exact hh
-        have hconst := mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (crPoly Dt a d) hconstg
-        refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
-        · rw [toPolyG_one_singleton]; exact one_ne_zero
-        · exact primitive_special_identity Dt (crPoly Dt a d) qp hDt1 hconst hqp
-        · -- reconstruction `⟦fₚ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`, split frontier discharged
-          have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
-            simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
-          have hrec := canonicalReconstruction_of_charZero (Fact.out (p := GcdFFCorrect (α := α))) Dt a d hd0
-          rw [hvan, add_zero] at hrec
-          exact hrec
-    · rw [if_neg hguard] at hhook; simp at hhook
+  specialSound := fun Dt a d snum sden hd0 hhook =>
+    primitiveGuardedCase_specialSound Dt a d snum sden hd0 hhook
   reducedSound := by
     intro Dt a d cands nrm hd0 hcorr
     have hcn : toPolyG (crNormDen Dt a d) ≠ 0 :=
