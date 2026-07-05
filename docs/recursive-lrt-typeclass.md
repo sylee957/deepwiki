@@ -91,8 +91,16 @@ believed-correct algorithms, plus genuine scope conditions** — eliminable *in 
   log") **was a genuine algorithm gap** — `cIntegrateReducedLrtG` returned *wrong* answers on pure logs (`∫1/t →
   log(t+1)`) because `cLrtLogArgG` omitted the `i = deg Dstar` branch. **RESOLVED (`a1a61216`):** the branch is
   now added (emits `Dstar`), so the algorithm is correct on pure logs. **Consequence:** `hilt` is now
-  dischargeable-in-principle — the follow-on is to extend the soundness to the `i = n` case, then drop
-  `hilt`+`hR0`. **So this frontier is a genuine (bounded) proof development, not a wall.**
+  dischargeable-in-principle. **DONE (`b4f98d37`): `hilt` is dropped from `LrtReducedGenuineData`.** The
+  algorithm's `i = deg Dstar` branch is now proven sound (`evalLrtArg_const_embed_eq` + `entry_log_eq_fiber_prod`
+  restructured to case-split on `idx+1 = cdegG Dstar`, the `i=n` fiber being *all* poles), so the pure-single-log
+  exclusion is no longer needed — the frontier bundle `hE` shrank from three genuine per-extension conditions to
+  **two** (`hB` normality + `hnorm`). `hR0` (resultant ≠ 0) remains as a **redundant hypothesis** — it is a pure
+  proof-artifact (always derivable from `hB` via `roots_rtResultantGen`'s `s ≠ 0`), so it is not a real frontier,
+  just an un-removed condition; dropping it needs a `rtResultantGen_ne_zero` helper + a ~25-line alg-closure
+  derivation in `_of_setup`, deferred as cosmetic. **So the genuine reduced-frontier conditions are now
+  `{hcopgcd, hDt0 (scope), hAD, hm, hB, hnorm}` — one fewer than before, and the removed one was the only one the
+  algorithm actually mishandled.**
 
   **★ Drop recipe (all deps confirmed to exist, 2026-07-05):** a ~150-line multi-lemma dev in `LrtSoundness.lean`:
   1. **`evalLrtArg_const_embed_eq`** (BUILT + gate-tested, then reverted with the rest): `evalLrtArg (Dstar.map
