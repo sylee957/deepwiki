@@ -185,4 +185,38 @@ theorem toPolyG_cmonicG_eq_prod_yun (hgcd : GcdFFCorrect (α := α)) (R : CPolyG
   rw [← hrhs, toPolyG_cmonicG_eq_normalize, ← hM_monic.normalize_eq_self]
   exact normalize_eq_normalize_iff_associated.mpr (cSqfreeYunFFGWf_reconstruction hgcd R hR0 hpp)
 
+/-! ## Stage 3 — assembly -/
+
+open Differential ResidueBridge in
+/-- **Stage 3a.** Each Yun factor of `R` has `D`-constant coefficients, given the monic normalization of `R`
+does (the guard). Apply the list-level core `mapCoeffs_eq_zero_of_mem_coprime_prod` to the pairwise-coprime
+monic decomposition of `⟦cmonicG R⟧` (Stages 1 + 2). -/
+theorem mapCoeffs_toPolyG_yunFactor_eq_zero (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
+    (hR0 : toPolyG R ≠ 0) (hpp : (toPolyG R).primPart ≠ 0)
+    (hguard : mapCoeffs (toPolyG (cmonicG R)) = 0)
+    {Ri : CPolyG α} (hRi : Ri ∈ cSqfreeYunFFGWf R) :
+    mapCoeffs (toPolyG Ri) = 0 := by
+  have hfst : (cSqfreeYunFFGWf R).zipIdx.map Prod.fst = cSqfreeYunFFGWf R :=
+    List.zipIdx_map_fst 0 _
+  set L := (cSqfreeYunFFGWf R).zipIdx.map fun x => (toPolyG x.1, 1 + x.2) with hL
+  have hmem_fst : ∀ x ∈ (cSqfreeYunFFGWf R).zipIdx, x.1 ∈ cSqfreeYunFFGWf R := fun x hx =>
+    hfst ▸ List.mem_map_of_mem hx
+  have hmonic : ∀ q ∈ L, (Prod.fst q).Monic := by
+    intro q hq; obtain ⟨x, hx, rfl⟩ := List.mem_map.mp hq
+    exact cSqfreeYunFFGWf_monic hgcd R hR0 _ (hmem_fst x hx)
+  have hpos : ∀ q ∈ L, 1 ≤ q.2 := by
+    intro q hq; obtain ⟨x, _, rfl⟩ := List.mem_map.mp hq; omega
+  have hcop : L.Pairwise fun a b => IsCoprime a.1 b.1 := by
+    rw [hL, List.pairwise_map]
+    have hp := pairwise_isCoprime_toPolyG_cSqfreeYunFFGWf hgcd R hR0 hpp
+    rw [← hfst, List.pairwise_map] at hp
+    exact hp
+  have hfact : toPolyG (cmonicG R) = (L.map fun q => q.1 ^ q.2).prod := by
+    rw [hL, List.map_map]; exact toPolyG_cmonicG_eq_prod_yun hgcd R hR0 hpp
+  -- `(toPolyG Ri, 1 + k) ∈ L` for `Ri`'s index `k`.
+  obtain ⟨z, hz, hz1⟩ := List.mem_map.mp (hfst ▸ hRi)
+  have hqL : (toPolyG z.1, 1 + z.2) ∈ L := List.mem_map_of_mem hz
+  have := mapCoeffs_eq_zero_of_mem_coprime_prod hmonic hpos hcop hfact hguard hqL
+  rwa [hz1] at this
+
 end DeepWiki.SymbolicIntegration
