@@ -14,6 +14,7 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Computable.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
 import DeepWiki.SymbolicIntegration.Computable.Denote
+import DeepWiki.SymbolicIntegration.Computable.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.Computable.HermiteReduction
