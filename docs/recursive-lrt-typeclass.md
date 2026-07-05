@@ -28,6 +28,28 @@ soundness *and* completeness, no assumed hypotheses left.
 `LawfulRischLevel` produces `IntegralResultG` (rational residues); the LRT track uses `LrtResultG`
 (algebraic). So they are **not the same solver** — merging is a re-basing, not a deletion.
 
+## ★ Key finding (2026-07-05): the rational reduced frontier is NOT universally dischargeable
+
+`PrimitiveFrontier.hreduced` concludes `IsIntegralResultG` (rational, K-level residues). But
+`cIntegrateReducedGWf_primitive_of_splitData` (`PrimitiveReducedGrounded.lean`) shows that soundness needs
+the **rational-residue split data**: `hden : ⟦Dstar⟧ = Lagrange.nodal s id` (the reduced denominator splits
+into *distinct linear* factors over `K`), plus the residue formula/distinctness. For an input whose residues
+are algebraic (don't split over `K`), `IsIntegralResultG` is **false** — the rational reduced integrator gives
+wrong/incomplete logs. So `PrimitiveFrontier` can never be materialized as a ground instance; it is a genuine
+frontier, not an unproven-but-true statement.
+
+**Consequence for the north star.** "No dangling frontiers" is impossible on the rational `IntegralResultG`
+recursion. The path is therefore **step 2′ = re-base `LawfulRischLevel` (and the tower step) on `LrtResultG`**,
+where the reduced frontier `PrimitiveFrontierLrt` *is* dischargeable — it is already closed to
+`LrtReducedGenuineData` (`hreducedLrt_of_genuineAll`), and those residue-data conditions ARE providable over
+the splitting field / algebraic closure (now that `Differential (AlgebraicClosure K)` is built). The genuine
+Bronstein side conditions (`hilt` non-degeneracy etc.) are the honest irreducible frontier — the real
+boundary of the algorithm's correctness, not bookkeeping.
+
+Revised plan: (1) general connection `IsElementaryIntegrableGenuineG → …Lrt` [universally true, buildable];
+(2′) re-base the recursion on `LrtResultG`; (3) discharge `PrimitiveFrontierLrt` from the genuine data over the
+closure; (4) discharge `descendGenuineLrt`; (5) ground instance. The re-base (2′) is the load-bearing refactor.
+
 ## Plan (dependency-ordered)
 
 1. **Consolidate the completeness frontiers.** DONE (partial): the rational `LiouvilleFrontier` is RETIRED — its one consumer (the ∫1/log x demo) migrated to the stronger `LrtLiouvilleFrontier` certificate; `LiouvilleCompleteness.lean` deleted. The general connection (below) that would DERIVE it is still open. Prove `IsElementaryIntegrableGenuineG → IsElementaryIntegrableGenuineLrtG`
