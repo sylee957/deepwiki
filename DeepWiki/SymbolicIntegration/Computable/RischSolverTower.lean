@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 import DeepWiki.SymbolicIntegration.Computable.RischTower
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitive
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitiveLrt
+import DeepWiki.SymbolicIntegration.Computable.Tower.CarrierRec
 
 /-! # `RischSolver` — the recursive Risch tower solver (base + step)
 
@@ -185,14 +186,14 @@ private theorem getD_of_drop {α : Type*} (l : List α) (n j : ℕ) (x : α) (r 
 accepted coefficient of `limIntTopFirst` satisfies the top-down system: at each position `m < |L|`,
 `D(q[m]) = aₘ − (m+1)·η·q[m+1]`, where `(aₘ, jₘ) = L.reverse[m]` (the coefficient/index processed there).
 The algorithmic heart of the polynomial-part soundness. -/
-theorem limIntTopFirst_eq {α : Type*} [CField α] (D : α → α) (η : α) (intR : α → Option α)
-    (hintR : ∀ c b, intR c = some b → D b = c) :
+theorem limIntTopFirst_eq {α : Type*} [CField α] [CFieldSpec α] (D : α → α) (η : α) (intR : α → Option α)
+    (hintR : ∀ c b, intR c = some b → CFieldSpec.toK (D b) = CFieldSpec.toK c) :
     ∀ (L : List (α × ℕ)) (acc q : List α), limIntTopFirst η intR L acc = some q →
       ∀ m, m < L.length →
-        D (q.getD m CField.zero)
-        = CField.sub (L.reverse.getD m (CField.zero, 0)).1
+        CFieldSpec.toK (D (q.getD m CField.zero))
+        = CFieldSpec.toK (CField.sub (L.reverse.getD m (CField.zero, 0)).1
             (CField.mul (CField.mul (cnatCastG ((L.reverse.getD m (CField.zero, 0)).2 + 1)) η)
-              (q.getD (m + 1) CField.zero)) := by
+              (q.getD (m + 1) CField.zero))) := by
   intro L
   induction L with
   | nil => intro acc q _ m hm; simp at hm
@@ -230,13 +231,14 @@ theorem limIntTopFirst_eq {α : Type*} [CField α] (D : α → α) (η : α) (in
 the coefficient-level statement of `D_tower(q) = p`; the remaining bridges (`toK` transport +
 `coeff (implicitDeriv (C η) Q) = D(coeff) + η·(i+1)·coeff(i+1)` + `Polynomial.ext`) assemble the polynomial
 identity. -/
-theorem cLimitedIntegratePolyRatG_eq {α : Type*} [CField α] (D : α → α) (η : α) (intR : α → Option α)
-    (hintR : ∀ c b, intR c = some b → D b = c)
+theorem cLimitedIntegratePolyRatG_eq {α : Type*} [CField α] [CFieldSpec α] (D : α → α) (η : α)
+    (intR : α → Option α)
+    (hintR : ∀ c b, intR c = some b → CFieldSpec.toK (D b) = CFieldSpec.toK c)
     (p q : List α) (h : cLimitedIntegratePolyRatG η intR p = some q) :
     ∀ m, m < p.length →
-      D (q.getD m CField.zero)
-      = CField.sub (p.getD m CField.zero)
-          (CField.mul (CField.mul (cnatCastG (m + 1)) η) (q.getD (m + 1) CField.zero)) := by
+      CFieldSpec.toK (D (q.getD m CField.zero))
+      = CFieldSpec.toK (CField.sub (p.getD m CField.zero)
+          (CField.mul (CField.mul (cnatCastG (m + 1)) η) (q.getD (m + 1) CField.zero))) := by
   intro m hm
   have hlen : p.zipIdx.reverse.length = p.length := by rw [List.length_reverse, List.length_zipIdx]
   have heq := limIntTopFirst_eq D η intR hintR p.zipIdx.reverse [] q h m (by rw [hlen]; exact hm)
@@ -258,7 +260,7 @@ identity `implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p` — i.e. `D_tower(
 solver skipped — now sound for **any** polynomial part whose coefficients integrate in the coefficient field. -/
 theorem cLimitedIntegratePolyRatG_poly_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
     [CDiffFieldSpec α] (η : α) (intR : α → Option α)
-    (hintR : ∀ c b, intR c = some b → CDiffField.cderiv b = c)
+    (hintR : ∀ c b, intR c = some b → CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c)
     (p q : List α) (h : cLimitedIntegratePolyRatG η intR p = some q) :
     Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPolyG q) = toPolyG p := by
   have hlen : q.length = p.length := by
@@ -322,5 +324,57 @@ def towerPolyIntegrate {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] 
     [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β]
     (η : QFunNZG β) (p : CPolyG (QFunNZG β)) : Option (CPolyG (QFunNZG β)) :=
   cLimitedIntegratePolyRatG η towerCoeffIntegrate p
+
+/-- **★ Coefficient-recursion soundness.** A successful `towerCoeffIntegrate c = some b` gives the
+**denotational** derivative identity `toK (cderiv b) = toK c` in `RatFunc (CFieldSpec.K β)`. This is the
+correct form (a *carrier* equality `cderiv b = c` is unavailable — `toK` is deliberately non-injective on
+unreduced fractions) and exactly the `intR`-soundness `cLimitedIntegratePolyRatG_poly_sound` consumes.
+Proof: `integrateRational` returns `(bn, bd)` with the base-level `K`-identity
+`D_tower(amG bn / amG bd) = amG (qnum c) / amG (qden c)` (`integrateRational_sound`, no algebraic-closure
+descent); `toK (cderiv b)` rewrites to `towerFractionFieldDerivG [1] (toK b)` (carrier
+`cderiv = towerDerivQFunNZG [1]`, intertwined by `toK_cderiv`), `toK b` to `amG bn / amG bd`
+(`toK_div`, `qEmbedNumG` embeds `num/1`), and `toK c` to `amG (qnum c) / amG (qden c)` (`toQFunNZG`). -/
+theorem towerCoeffIntegrate_sound {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β]
+    (c b : QFunNZG β) (h : towerCoeffIntegrate c = some b) :
+    CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c := by
+  unfold towerCoeffIntegrate at h
+  rw [Option.map_eq_some_iff] at h
+  obtain ⟨⟨bn, bd⟩, hint, rfl⟩ := h
+  -- Base-level rational-antiderivative identity from `integrateRational_sound` (descent-free `K`-level).
+  have hsound := LawfulRischLevel.integrateRational_sound [CField.one]
+    (qnumCoeffG c) (qdenCoeffG c) bn bd hint
+  -- `toK (cderiv X) = towerFractionFieldDerivG [1] (toK X)`: `toK_cderiv` + the carrier derivation is
+  -- `towerDerivQFunNZG [1]`, whose abstract realization `deriv diffK` *is* `towerFractionFieldDerivG [1]`.
+  have hcd : CFieldSpec.toK (CDiffField.cderiv (CField.div (qEmbedNumG bn) (qEmbedNumG bd)))
+      = towerFractionFieldDerivG [CField.one]
+          (CFieldSpec.toK (CField.div (qEmbedNumG bn) (qEmbedNumG bd))) := by
+    rw [CDiffFieldSpec.toK_cderiv]
+    rfl
+  -- `toK (qEmbedNumG num) = amG (toPolyG num)` (the `num/1` embed).
+  have htoK_embed : ∀ num : CPolyG β, CFieldSpec.toK (qEmbedNumG num) = QFunNZG.amG β (toPolyG num) := by
+    intro num
+    show QFunNZG.amG β (toPolyG num) / QFunNZG.amG β (toPolyG ([CField.one] : CPolyG β))
+      = QFunNZG.amG β (toPolyG num)
+    rw [toPolyG_one_singleton, map_one, div_one]
+  -- `toK c = amG (qnum c) / amG (qden c)` (`toQFunNZG`, `qnumCoeffG`/`qdenCoeffG` are `c.1.1`/`c.1.2`).
+  have htoK_c : CFieldSpec.toK c
+      = QFunNZG.amG β (toPolyG (qnumCoeffG c)) / QFunNZG.amG β (toPolyG (qdenCoeffG c)) := rfl
+  rw [hcd, CFieldSpec.toK_div, htoK_embed bn, htoK_embed bd, htoK_c]
+  exact hsound
+
+/-- **★ The tower step's polynomial-part soundness** — `D_tower(q) = p` for the recursion assembled from
+`towerCoeffIntegrate`. The proven generic `cLimitedIntegratePolyRatG_poly_sound` fed the coefficient bridge
+`towerCoeffIntegrate` (sound by `towerCoeffIntegrate_sound`): a successful `towerPolyIntegrate η p = some q`
+gives the tower-derivative identity `implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p` over
+`(RatFunc (CFieldSpec.K β))[X]` — the polynomial part `Σ aᵢ tⁱ` integrates by recursing into
+`LawfulRischLevel β` for each coefficient. This is the recursion a one-level solver skips, now sound at the
+next tower level, base-level-descent-free. -/
+theorem towerPolyIntegrate_sound {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β]
+    (η : QFunNZG β) (p q : CPolyG (QFunNZG β)) (h : towerPolyIntegrate η p = some q) :
+    Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPolyG q) = toPolyG p :=
+  cLimitedIntegratePolyRatG_poly_sound η towerCoeffIntegrate
+    (fun c b hcb => towerCoeffIntegrate_sound c b hcb) p q h
 
 end DeepWiki.SymbolicIntegration
