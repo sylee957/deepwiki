@@ -1,4 +1,5 @@
-import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.Tower.Deriv
+import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
 
 /-! # Global-recursive tower-carrier instances
 
@@ -24,5 +25,21 @@ noncomputable instance instCharZeroKQFunNZG {α : Type*} [CField α] [CFieldSpec
 noncomputable instance instAlgebraQKQFunNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α]
     [Algebra ℚ (CFieldSpec.K α)] : Algebra ℚ (CFieldSpec.K (QFunNZG α)) :=
   inferInstanceAs (Algebra ℚ (RatFunc (CFieldSpec.K α)))
+
+/-- **`CDiffFieldSpec` iterates up the tower.** The carrier's `cderiv` is `towerDerivQFunNZG [1]` (the new
+monomial as an independent variable); its abstract realization on `RatFunc (CFieldSpec.K α)` is
+`fractionFieldDifferential (implicitDeriv (toPolyG [1]))` — the base derivation of `CDiffFieldSpec α` lifted to
+the fraction field — and the intertwining `toK_cderiv` is the generic `toQFunNZG_towerDerivQFunNZG [1]`. One
+recursive instance for the whole tower, generalizing the ℚ-specific base `instCDiffFieldSpecQFunNZG`. -/
+noncomputable instance instCDiffFieldSpecQFunNZGRec {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] [CFieldDomain α] [Algebra ℚ (CFieldSpec.K α)] : CDiffFieldSpec (QFunNZG α) where
+  diffK := fractionFieldDifferential
+    (Differential.implicitDeriv (CPolyG.toPolyG ([CField.one] : CPolyG α)))
+  toK_cderiv a := by
+    show QFunNZG.toQFunNZG (QFunNZG.towerDerivQFunNZG [CField.one] a)
+      = @Differential.deriv _ _ (fractionFieldDifferential
+          (Differential.implicitDeriv (CPolyG.toPolyG ([CField.one] : CPolyG α)))) (QFunNZG.toQFunNZG a)
+    rw [QFunNZG.toQFunNZG_towerDerivQFunNZG [CField.one] a]
+    rfl
 
 end DeepWiki.SymbolicIntegration
