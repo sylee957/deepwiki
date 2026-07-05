@@ -377,4 +377,31 @@ theorem towerPolyIntegrate_sound {β : Type*} [CField β] [CFieldSpec β] [CDiff
   cLimitedIntegratePolyRatG_poly_sound η towerCoeffIntegrate
     (fun c b hcb => towerCoeffIntegrate_sound c b hcb) p q h
 
+/-- **★ The tower step's special-part field identity** (`Dt = [1]`, the `D(t)=1` log-tower case). From
+`towerPolyIntegrate_sound`, the polynomial antiderivative `qp` of the poly part `fp` gives the field-level
+`D_tower(⟦qp/1⟧) = ⟦fp/1⟧`: `towerFractionFieldDerivG [1] (fieldFrac qp [1]) = fieldFrac fp [1]`. This is the
+`integrateSpecial`-soundness the tower primitive `MonomialCase` needs — mirroring `primitive_special_identity`
+but for GENERAL coefficients (the recursion), not constant ones. The bridge: `towerFractionFieldDerivG` on a
+poly image `amG P` is `amG (Δ P)` (quotient rule with denominator `1`, `Δ 1 = 0`); then `Δ = implicitDeriv 1`
+matches `towerPolyIntegrate_sound`. -/
+theorem tower_special_identity {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [LawfulRischLevel β]
+    (fp qp : CPolyG (QFunNZG β)) (h : towerPolyIntegrate CField.one fp = some qp) :
+    towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG β)) (fieldFrac qp [CField.one])
+      = fieldFrac fp [CField.one] := by
+  have hpoly := towerPolyIntegrate_sound CField.one fp qp h
+  rw [CFieldSpec.toK_one, Polynomial.C_1] at hpoly
+  have hone : toPolyG ([CField.one] : CPolyG (QFunNZG β)) = 1 := toPolyG_one_singleton
+  -- `towerFractionFieldDerivG [1] (amG (toPolyG qp)) = amG (implicitDeriv (toPolyG [1]) (toPolyG qp))`.
+  have hbridge : towerFractionFieldDerivG ([CField.one] : CPolyG (QFunNZG β))
+        (QFunNZG.amG (QFunNZG β) (toPolyG qp))
+      = QFunNZG.amG (QFunNZG β)
+          (Differential.implicitDeriv (toPolyG ([CField.one] : CPolyG (QFunNZG β))) (toPolyG qp)) := by
+    have hd := towerFractionFieldDerivG_div ([CField.one] : CPolyG (QFunNZG β)) (toPolyG qp) 1
+    simp only [map_one, div_one, one_pow, Derivation.map_one_eq_zero, map_zero, mul_zero, sub_zero,
+      mul_one] at hd
+    exact hd
+  simp only [fieldFrac, hone, map_one, div_one]
+  rw [hbridge, hone, hpoly]
+
 end DeepWiki.SymbolicIntegration
