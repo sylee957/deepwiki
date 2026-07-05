@@ -96,6 +96,25 @@ theorem IsElementaryIntegrableG.of_isIntegralResult {Dt a d : CPolyG α} {res : 
     (h : IsIntegralResultG Dt a d res) : IsElementaryIntegrableG Dt a d :=
   ⟨res, h⟩
 
+/-- **Genuine elementary integrability**: an antiderivative in the Liouville form with **constant** residue
+coefficients (`IsGenuineIntegralResultG`). The well-posed completeness target: unlike `IsElementaryIntegrableG`
+(the formal ∃, which holds whenever the poles are rational over `K` regardless of residue-constancy), this
+requires the residues to be genuine constants, so `¬IsElementaryIntegrableGenuineG` is a meaningful
+non-integrability statement. -/
+def IsElementaryIntegrableGenuineG (Dt a d : CPolyG α) : Prop :=
+  ∃ res : IntegralResultG α, IsGenuineIntegralResultG Dt a d res
+
+/-- Any genuine witness makes `a/d` genuinely elementary integrable. -/
+theorem IsElementaryIntegrableGenuineG.of_isGenuineIntegralResult {Dt a d : CPolyG α}
+    {res : IntegralResultG α} (h : IsGenuineIntegralResultG Dt a d res) :
+    IsElementaryIntegrableGenuineG Dt a d :=
+  ⟨res, h⟩
+
+/-- Genuine integrability implies the formal `IsElementaryIntegrableG` (drop the residue-constancy). -/
+theorem IsElementaryIntegrableGenuineG.toIsElementaryIntegrableG {Dt a d : CPolyG α}
+    (h : IsElementaryIntegrableGenuineG Dt a d) : IsElementaryIntegrableG Dt a d :=
+  let ⟨res, hres⟩ := h; ⟨res, hres.1⟩
+
 /-- **Constructive completeness (soundness core, restated).** If the stages certify a special fraction
 and a normal-part result reconstructing `a/d`, then `a/d` is elementary integrable. The easy direction —
 a corollary of `combineSN_isIntegralResult`. -/
