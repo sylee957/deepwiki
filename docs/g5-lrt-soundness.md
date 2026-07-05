@@ -396,3 +396,39 @@ residues), which is exactly why the swap was needed. Assembling `hreduced` = bui
 **Remaining (optional):** materialize a concrete `PrimitiveFrontierLrt` instance for a worked
 algebraic-residue example (the genuine `hnorm`/`hcancel` are the actual integrability criterion, supplied per
 input); discharge more structural `hE` conditions (`hB`/`hAnd`/`hAdeg` from `Dstar` squarefree over `E`).
+
+### ★★ `descendGenuine` reduction map (2026-07-05) — the mathematical heart is DONE
+
+`descendGenuine` (`LiouvilleCompleteness.lean`, the completeness frontier): genuine elementary integrability
+of the reduced part ⟹ `cResidueConstantGuardG` (the residues are constants). Research (grounded in
+`isLiouville_logExtension_uncond` + `ratFunc_logarithmFree_iff_residues_zero`, both done in-project) re-scoped
+it from "research-grade / missing from Mathlib" to a **computable→abstract bridge** — the *converse* of the
+forward LRT soundness development. Across the loop it decomposed, and **every self-contained mathematical piece
+is now proven, gate-green**:
+
+**Proven (the residue-criterion heart):**
+- *Liouville-form bridge* — `logResidueSumG_eq_logDerivForm`, `isIntegralResultG_iff_liouvilleForm`
+  (`LiouvilleFormBridge.lean`): `IsIntegralResultG` **is** the abstract Liouville form `Δg + Σ cᵢ·logDeriv uᵢ`.
+- *roots ↔ residues* — `roots_rtResultantGen` (`LrtGeneralDerivation.lean`, forward, already built).
+- *ultrametric* — `le_ratFuncOrd_add` (`νₚ(x+y) ≥ min`), `ratFuncOrd_neg` (`RatFuncValuation.lean`).
+- *pole-order heart* — `ratFuncOrd_nonneg_of_extendDeriv_ge_neg_one` (at-most-simple-pole derivative ⟹ regular).
+- *(a) g regular* — `ratFuncOrd_nonneg_of_liouville_reduced` (reduced Liouville form ⟹ `νₚ g ≥ 0`).
+- *(b) Dg no residue* — `ratFuncOrd_extendDeriv_nonneg_of_nonneg` (`D` of regular is regular) + capstone
+  `ratFuncOrd_extendDeriv_nonneg_of_liouville_reduced` (reduced Liouville ⟹ `νₚ(Dg) ≥ 0`).
+- *(c2) residue vanishes on regular* — `residueAt_eq_zero_of_regular` (`RecognizingLogDeriv.lean`).
+
+**Remaining = the E-level assembly (large integration, not small lemmas):**
+1. **Tower-derivation residue analysis.** The base `residueAt` machinery (`residueAt_logDeriv_eq_rootMultiplicity`,
+   `residueAt_derivative_eq_zero`) is w.r.t. the *formal* `d/dX`; `descendGenuine`'s derivation is the *tower*
+   `Δ = towerFractionFieldDerivG`. So "`residueAt β (Σ cᵢ·logDeriv_Δ vᵢ) = Σ cᵢ·mult_β(vᵢ)`" is **not** a direct
+   port — the log-sum residue must be redone for `Δ` (via `residueAt_sum_of_witnesses` + witness threading).
+2. **Base-change to the splitting field `E`.** Poles/residues live in `E` (roots of `R`), so the valuation heart
+   and residue algebra base-change to `RatFunc E` — reuse the forward soundness `ratFuncBaseChange` /
+   `towerDerivExt` / `roots_rtResultantGen` machinery (`LrtSoundness.lean`).
+3. **RT-root ↔ residue-value ↔ guard.** `residueAt β f = Σ cᵢ·mult` (constant, from (c2) + the log-sum residue) =
+   the RT residue at `β`; then `D(cmonicG R) = 0 ⟺ all roots constant ⟺ cResidueConstantGuardG`.
+
+**Verdict:** the hard mathematical content (pole-order reasoning + residue-vanishing) is **done**; what remains is
+a project-internal base-change/threading assembly on the scale of the *forward* LRT soundness capstone (it reuses
+essentially all of it), not a research problem. The `exp`-case Liouville instance (`ExpCaseLiouvilleFrontier`)
+remains the one genuine frontier.
