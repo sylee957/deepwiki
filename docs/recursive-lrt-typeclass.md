@@ -81,14 +81,29 @@ Phases (each its own gate-green commit):
 
 ### ★★★ Outcome (2026-07-05): the re-base is COMPLETE
 
-A **hypothesis-free ground instance is mathematically impossible** — and that is the honest finding, not a gap:
-`PrimitiveFrontierLrt` closes only to `LrtReducedGenuineData` (Bronstein's *necessary* residue/normality
-conditions, false for some inputs — e.g. `hilt` non-degeneracy excludes pure single-log), and `GcdFFCorrect` at
-tower levels is the PRS-regularity frontier (its own docstring says so). Both are **genuine mathematical
-content**, not deferred bookkeeping. So "no dangling frontier" is achieved in the honest sense: the recursion
-resolves at every depth, and every remaining hypothesis is a **named genuine condition** — with the
-*undischargeable-in-principle* rational `PrimitiveFrontier` deleted and replaced by the
-dischargeable-to-genuine-data `PrimitiveFrontierLrt`. Completeness stays `LrtLiouvilleFrontier` (Liouville).
+**Correction to an earlier overstatement:** a hypothesis-free ground instance is *not* "mathematically
+impossible" — that was too strong. The remaining frontiers are **unproven soundness/criterion theorems for
+believed-correct algorithms, plus genuine scope conditions** — eliminable *in principle* via large proofs:
+
+- `PrimitiveFrontierLrt` closes to `LrtReducedGenuineData`, a **mix**: `hDt0` is the primitive-case *scope*
+  (definitional — hyperexp is a different instance); `hR0` (resultant ≠ 0), `hE` (non-degeneracy: the residual
+  is not a single pure log) are conditions the *current proof* needs, that hold **generically** and can fail on
+  degenerate inputs. Full eliminability turns on an open question: **is `cIntegrateReducedLrtG` complete at those
+  degeneracies** (repeated residues, pure single log)? If yes, universally true and dischargeable by extending
+  the proof; if the algorithm assumes non-degeneracy, genuinely conditional. **Not yet determined.**
+- `GcdFFCorrect` at tower levels — fraction-free-gcd = genuine-gcd PRS-regularity; classical subresultant
+  theory, portable (pieces in `YunTowerCorrect`/`SplitFactorHelpers`). Medium.
+- `LrtLiouvilleFrontier` (completeness descent) — abstract Liouville keystone proven in-project
+  (`isLiouville_logExtension_uncond`); the remaining computable→abstract residue bridge is a large
+  witness-threaded residue-algebra development (the converse of the forward soundness dev). Large.
+
+So "no dangling frontier" is achieved *structurally* (the recursion resolves at every depth; every hypothesis is
+a **named** condition; the undischargeable-in-principle rational `PrimitiveFrontier` is deleted), but the three
+frontiers are **genuine remaining mathematics**, each a multi-session discharge — not proven-impossible.
+
+**Completeness now derivable at the class** (`b3fe0b3e`): `LawfulRischLevelLrt.reducedDecides` — the instance
+that gives `soundFormalLrt` also *decides* genuine integrability of the reduced part (`←` from the instance's
+`reducedSoundLrt`, `→` from `[LrtLiouvilleFrontier α]`), the frontier kept an instance arg (decoupling intact).
 
 The one deferred *mechanical* item is the general connection `IsElementaryIntegrableGenuineG → …Lrt` (the
 `evalLrtArg` monic-normalization makes it ~150 intricate lines) — not needed for the re-base, since the rational
