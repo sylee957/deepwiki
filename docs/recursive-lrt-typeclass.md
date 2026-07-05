@@ -30,10 +30,10 @@ soundness *and* completeness, no assumed hypotheses left.
 
 ## ★ Key finding (2026-07-05): the rational reduced frontier is NOT universally dischargeable
 
-`PrimitiveFrontier.hreduced` concludes `IsIntegralResultG` (rational, K-level residues). But
-`cIntegrateReducedGWf_primitive_of_splitData` (`PrimitiveReducedGrounded.lean`) shows that soundness needs
-the **rational-residue split data**: `hden : ⟦Dstar⟧ = Lagrange.nodal s id` (the reduced denominator splits
-into *distinct linear* factors over `K`), plus the residue formula/distinctness. For an input whose residues
+`PrimitiveFrontier.hreduced` concludes `IsIntegralResultG` (rational, K-level residues). But the rational
+reduced soundness needs the **rational-residue split data** — `hden : ⟦Dstar⟧ = Lagrange.nodal s id` (the
+reduced denominator splits into *distinct linear* factors over `K`), plus the residue formula/distinctness (the
+now-retired `cIntegrateReducedGWf_primitive_of_splitData` made this explicit). For an input whose residues
 are algebraic (don't split over `K`), `IsIntegralResultG` is **false** — the rational reduced integrator gives
 wrong/incomplete logs. So `PrimitiveFrontier` can never be materialized as a ground instance; it is a genuine
 frontier, not an unproven-but-true statement.

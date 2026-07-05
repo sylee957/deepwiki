@@ -1,5 +1,12 @@
 # Recursive Risch solver architecture
 
+> **SUPERSEDED (2026-07-05).** This describes the *rational* `LawfulRischLevel` recursion (over `IntegralResultG`),
+> now **retired** — its reduced frontier `PrimitiveFrontier` (`IsIntegralResultG`) is not universally
+> dischargeable (forces the reduced denominator to split over `K`). Re-based onto `LawfulRischLevelLrt` (over
+> `LrtResultG`), whose reduced frontier `PrimitiveFrontierLrt` is dischargeable; `RischTower.lean` is deleted.
+> Current architecture: **`docs/recursive-lrt-typeclass.md`**. Kept as a historical record of the
+> typeclass-assembly design the LRT version reuses.
+
 Goal: solvers assembled **closed-form** (materialize fields → algorithm + soundness + completeness), and a
 **recursive** solver buildable level-by-level up the differential tower `k(t₁)…(tₙ)`.
 

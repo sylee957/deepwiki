@@ -1,5 +1,11 @@
 # The recursive Risch tower — clean rebuild
 
+> **SUPERSEDED (2026-07-05).** The `LawfulRischLevel` tower described below has been **retired** and re-based
+> onto `LawfulRischLevelLrt` (over `LrtResultG`) — see `docs/recursive-lrt-typeclass.md`. The generic
+> coefficient recursion (`cLimitedIntegratePolyRatG`) survived the re-base and is reused; the rational
+> `towerCoeffIntegrate`/`towerPolyIntegrate`/`instLawfulRischLevelTower` and `RischTower.lean` are deleted.
+> Kept as the record of the coefficient-recursion rebuild.
+
 > **STATUS (2026-07-05): DONE — landed on `LawfulRischLevel`, not `RischSolver`.** The tower STEP is
 > assembled and gate-green (commits `40d41280`→`bb3d183c`): the coefficient recursion
 > (`cLimitedIntegratePolyRatG` + `towerCoeffIntegrate` + `towerPolyIntegrate`), its soundness
