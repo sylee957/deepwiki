@@ -66,8 +66,16 @@ Each phase is its own gate-green commit.
   (not just `ℚ[x]`). Extends `cLimitedIntegrate` past its polynomial-only limitation.
 - **Phase 2 — tower recursion (3+ levels).** `cLimitedIntegrateSingleG` over `QFunNZG β` (base case = Phase 1/1b;
   recursive case = Hermite + residue at level `β` + recurse), the single-`w` analogue of `cIntegrateReducedLrtG`.
-- **Phase 3-wire — wire into the LRT solver.** Replace `towerCoeffIntegrateLrt`'s log-free discharge +
-  `cLimitedIntegratePolyRatG` (fixed-degree) with the `(b,c)` single-`w` version + `cIntegratePrimPolyDegRaiseG`.
+- **Phase 3-wire — wire into the LRT solver. ✅ DONE (`RischSolverTowerLrt.lean`).** `towerPolyIntegrateLrt`
+  now = `cIntegratePrimPolyDegRaiseG η (towerCoeffIntegrateLrt wrapped b ↦ (b,0)) (deg p + 2)`, with
+  `towerPolyIntegrateLrt_sound` via the telescoping `cIntegratePrimPolyDegRaiseG_sound` (no coefficient-soundness
+  hypothesis). Behavior-identical for now (`c = 0` ⟹ same `q` as the old fixed-degree recursion); actually
+  *emitting* the degree-raising term needs the real `(b,c)` `limInt` (base = `cLimitedIntegrateSingleBase`,
+  Phase 3-wire-2; higher levels = Phase 2). **Retired** the fixed-degree `cLimitedIntegratePolyRatG` +
+  `limIntTopFirst` + 3 soundness lemmas (~157 lines) — subsumed.
+- **Phase 3-wire-2 — supply the real `(b,c)` `limInt`.** Expose a single-`w` limited integrator on
+  `LawfulRischLevelLrt` (base instance = `cLimitedIntegrateSingleBase`; recursive = Phase 2); replace the
+  `b ↦ (b,0)` wrap. This flips on actual degree-raising in the solver.
 - **Phase 4-core — abstract soundness of the recursion. ✅ DONE (`LimitedIntegrateSingle.lean`).**
   `cIntegratePrimPolyDegRaiseG_sound`: `implicitDeriv (C ⟦η⟧) (toPolyG q) = toPolyG p`, axiom-clean
   (`[propext, choice, Quot.sound]`, no `native_decide`). Telescopes — holds for **any** `limInt` (no correctness
@@ -79,10 +87,10 @@ Each phase is its own gate-green commit.
 
 ## Retirements (subsumable/dead)
 
-- **`cLimitedIntegratePolyRatG` (fixed-degree coefficient recursion) → subsumed by `cIntegratePrimPolyDegRaiseG`.**
-  The new recursion generalizes it (`limInt` returning `(b, 0)` recovers the fixed-degree case). Retire once
-  Phase 3-wire replaces the solver's use of it and Phase 4 ports its soundness. Not retireable yet — it is
-  load-bearing in `towerPolyIntegrateLrt` with a proven `_poly_sound`.
+- **`cLimitedIntegratePolyRatG` (fixed-degree coefficient recursion) → ✅ RETIRED (Phase 3-wire).** Subsumed by
+  `cIntegratePrimPolyDegRaiseG` (the `limInt` `(b,0)` slice recovers it). Deleted `limIntTopFirst`,
+  `cLimitedIntegratePolyRatG`, `limIntTopFirst_drop`/`_eq`, `cLimitedIntegratePolyRatG_eq`/`_poly_sound` from
+  `RischSolverTower.lean` (~157 lines); only `qEmbedNumG` remains there.
 - **Already retired (prior LRT rebase):** the rational tower solver `towerPolyIntegrate`/`towerPrimitiveCase`
   (`RischTower.lean` deleted) — 0 uses.
 - `cLimitedIntegrate` (log variant) is **not** on the fix path (needs raw `η`, polynomial-only), but it is a
