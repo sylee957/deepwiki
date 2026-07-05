@@ -487,4 +487,16 @@ instance instLawfulRischLevelTower {β : Type*} [CField β] [CFieldSpec β] [CDi
     · exact absurd hcorr (by simp)
   caseGuardsResidues := primitiveGuardedCase_guardsResidues
 
+/-- **Validation: the tower solver resolves at DEPTH 2 by recursion.** Given a base solver
+`[LawfulRischLevel β]` and the per-level reduced frontiers, `LawfulRischLevel` resolves for
+`QFunNZG (QFunNZG β)` — the step instance chains on ITSELF (the level-1 `LawfulRischLevel (QFunNZG β)` it
+needs is produced by the same step at level β), so every tower depth gets a solver. This is the recursion the
+whole rebuild targeted. -/
+noncomputable example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
+    [CFieldDomain β]
+    [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)] [CharZero (CFieldSpec.K β)]
+    [LawfulRischLevel β] [Fact (GcdFFCorrect (α := QFunNZG β))] [PrimitiveFrontier (QFunNZG β)]
+    [Fact (GcdFFCorrect (α := QFunNZG (QFunNZG β)))] [PrimitiveFrontier (QFunNZG (QFunNZG β))] :
+    LawfulRischLevel (QFunNZG (QFunNZG β)) := inferInstance
+
 end DeepWiki.SymbolicIntegration
