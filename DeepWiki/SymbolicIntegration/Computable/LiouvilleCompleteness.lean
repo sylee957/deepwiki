@@ -6,11 +6,19 @@ import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 The `LawfulRischLevel` completeness contract is trivial in the primitive instance (`SpecElem = NrmElem = True`),
 so `not_isElementaryIntegrable` is vacuous. This file makes it **meaningful**, against the well-posed target
 `IsElementaryIntegrableGenuineG` (genuine, residue-constant integrability): the necessary condition is the
-decidable root-free integrability guard `cResidueConstantGuardG` (residues constant ⟺ `D(R) = 0`), and the
-descent — genuine integrability ⟹ residues constant — is the transcendental **Liouville theorem** for the
-primitive case, held as a frontier class field (the completeness analogue of `PrimitiveFrontier.hreduced`).
-Mathlib has only the algebraic Liouville case, so the descent is a genuine frontier; everything else is
-derived. -/
+decidable root-free integrability guard `cResidueConstantGuardG` (residues constant ⟺ monic `D(R) = 0`), and the
+descent — genuine integrability ⟹ residues constant — is the primitive-case Liouville/residue criterion
+(Bronstein Thm 5.6.1), held as a frontier class field (the completeness analogue of `PrimitiveFrontier.hreduced`).
+
+**Status of the descent** (not a Mathlib gap): the transcendental **log** Liouville keystone is *already proven
+in-project* — `LiouvilleLog.isLiouville_logExtension_uncond` (`IsLiouville F F(log u)` from the necessary
+`NondegenerateLog u`), axiom-clean — as is the rational residue criterion
+(`ratFunc_logarithmFree_iff_residues_zero`). So `descendGenuine` is not research-grade: it is the
+computable→abstract **bridge** (relate `cResidueResultantTowerGWf`'s roots to the abstract residues via the
+soundness-side `roots_rtResultantGen`/`toPolyG_cResidueResultantTowerGWf_map`, and `IsElementaryIntegrableGenuineG`
+to the abstract Liouville form via `logResidueSumG = Σ (toK cᵢ)·logDeriv(amG vᵢ)`), plus the residue-matching
+core (for a reduced `a/d`, the rational part cannot carry a simple-pole residue, so all residues are the
+constant log coefficients). That bridge is large but project-internal, not a missing theorem. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -21,9 +29,11 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- **The primitive completeness frontier (Liouville criterion), as a class.** `descendGenuine` states the
 necessary condition for *genuine* elementary integrability of the reduced normal part: the residues are
-constants, i.e. the residue resultant has constant coefficients (`cResidueConstantGuardG`, root-free,
-decidable). This implication — genuine integrability ⟹ residues constant — is exactly the transcendental
-Liouville theorem (Bronstein Thm 5.6.1); Mathlib has only the algebraic case, so it is a genuine frontier. -/
+constants, i.e. the monic residue resultant has constant coefficients (`cResidueConstantGuardG`, root-free,
+decidable). This implication — genuine integrability ⟹ residues constant — is the primitive-case residue
+criterion (Bronstein Thm 5.6.1). Its abstract math is done in-project (`isLiouville_logExtension_uncond`, the
+transcendental log Liouville keystone; `ratFunc_logarithmFree_iff_residues_zero`, the residue criterion); this
+field is the computable→abstract bridge to those results (see the module docstring), not a missing theorem. -/
 class LiouvilleFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
   descendGenuine : ∀ (Dt a d : CPolyG α), toPolyG d ≠ 0 →
