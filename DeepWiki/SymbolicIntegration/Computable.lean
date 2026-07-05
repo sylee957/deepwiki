@@ -33,6 +33,7 @@ import DeepWiki.SymbolicIntegration.Computable.IntegratorCompleteness
 import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
 import DeepWiki.SymbolicIntegration.Computable.ListDet
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleExpBridge
+import DeepWiki.SymbolicIntegration.Computable.LiouvilleFormBridge
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleLogBridge
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleLogTower
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleStructure
