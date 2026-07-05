@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.RischTowerPrimitive
 import DeepWiki.SymbolicIntegration.Computable.LrtAssembly
 import DeepWiki.SymbolicIntegration.Computable.LrtAlgebraicClosure
+import DeepWiki.SymbolicIntegration.Computable.PrimitiveLrtDecision
 
 /-! # `LawfulRischLevelLrt` — the recursive LRT (algebraic-residue) Risch-solver abstraction
 
@@ -126,6 +127,34 @@ theorem integrateRationalLrt_sound [LawfulRischLevelLrt α] (Dt a d num den : CP
     rw [← ratFuncBaseChange_towerFractionFieldDerivG, ← ratFuncBaseChange_amG_div] at hE
     exact (ratFuncBaseChange (AlgebraicClosure (CFieldSpec.K α))).injective hE
   · exact absurd hguard (by simp)
+
+/-- **★ Derived decision procedure — completeness meets soundness at the class.** The *same* instance that
+gives `soundFormalLrt` also **decides** genuine (algebraic-residue) elementary integrability of the reduced
+normal part `cₙ/dₙ`, once the Liouville completeness frontier `[LrtLiouvilleFrontier α]` is available:
+integrability **iff** the root-free residue guard passes. The `←` (sufficiency) draws on the instance's own
+`reducedSoundLrt`; the `→` (necessity/completeness) on the frontier. The completeness frontier is an *instance
+argument*, never a class field — so `soundFormalLrt` stays independent of it (the deliberate decoupling). -/
+theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt
+        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0) :
+    IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
+      ↔ cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = true :=
+  primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
+    (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0)
+
+/-- **Derived completeness certificate at the class.** From `reducedDecides`: if the residue guard *fails*, the
+reduced normal part is not genuinely elementary integrable — a decidable non-integrability certificate that the
+solver's class produces directly (given the Liouville frontier). -/
+theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hR0 : toPolyG (cResidueResultantTowerGWf Dt
+        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0)
+    (hguard : cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = false) :
+    ¬ IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d) := by
+  rw [reducedDecides hgcd Dt a d hd0 hR0, hguard]; simp
 
 end LawfulRischLevelLrt
 
