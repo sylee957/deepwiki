@@ -93,7 +93,7 @@ that is part of the job.
 - [x] `Computable/Assemble.lean` — done (template, `baba3648`)
 - [x] `Computable/HermiteValuationTower.lean` — done (template, `a5a1ee10`)
 - [x] `Computable/OneShotSoundness.lean`
-- [ ] `Computable/CoupledDE/Assembly.lean`
+- [x] `Computable/CoupledDE/Assembly.lean`
 - [ ] `Computable/LaurentSoundness.lean`
 - [ ] `Computable/RischDE/Structural.lean`
 - [ ] `Computable/YunTowerCorrect.lean`

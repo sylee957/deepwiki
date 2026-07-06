@@ -512,14 +512,12 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
     · -- toPolyG R1 = 0.
       rw [cisZeroG_iff]
       apply Polynomial.ext; intro r
-      simp only [toPolyG_csubG, toPolyG_caddG, toPolyG_cscaleG, toPolyG_cmulG, cderivQ,
-        toPolyG_cderivG, Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero,
+      simp only [denote, cderivQ, Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero,
         CFieldSpec.toK, id_eq, htoP_y1, htoP_y2]
       by_cases hr : r < nrows
       · have hrow := coupledRow1_coeff_eq a b1 b2 z1 z2 d sol nrows hsollen hsolve' r hr
         rw [← hu1def, ← hu2def] at hrow
-        simp only [cderivQ, toPolyG_cderivG, toPolyG_cmulG, toPolyG_cscaleG, CFieldSpec.toK,
-          id_eq] at hrow
+        simp only [denote, cderivQ, CFieldSpec.toK, id_eq] at hrow
         rw [show (Polynomial.C a * toPolyG b2 * toPolyG u2)
             = Polynomial.C a * (toPolyG b2 * toPolyG u2) from by ring] at hrow
         linear_combination hrow
@@ -529,16 +527,15 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
         have hres := coeff_residual_zero_of_ge b1 (cscaleG a b2) y1 y2 d nrows r
           (by rw [htoP_y1]; exact hu1deg) (by rw [htoP_y2]; exact hu2deg)
           (by omega) (by omega) (by omega) hr
-        simp only [cderivQ, toPolyG_cderivG, toPolyG_cmulG, toPolyG_cscaleG, CFieldSpec.toK,
-          id_eq, htoP_y1, htoP_y2] at hres
+        simp only [denote, cderivQ, CFieldSpec.toK, id_eq, htoP_y1, htoP_y2] at hres
         rw [show (Polynomial.C a * toPolyG b2 * toPolyG u2)
             = Polynomial.C a * (toPolyG b2 * toPolyG u2) from by ring] at hres
         linear_combination hres - hz1z
     · -- toPolyG R2 = 0.
       rw [cisZeroG_iff]
       apply Polynomial.ext; intro r
-      simp only [toPolyG_csubG, toPolyG_caddG, toPolyG_cmulG, cderivQ, toPolyG_cderivG,
-        Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero, htoP_y1, htoP_y2]
+      simp only [denote, cderivQ, Polynomial.coeff_sub, Polynomial.coeff_add, Polynomial.coeff_zero,
+        htoP_y1, htoP_y2]
       by_cases hr : r < nrows
       · have hrow := coupledRow2_coeff_eq a b1 b2 z1 z2 d sol nrows hsollen hsolve' r hr
         rw [← hu1def, ← hu2def] at hrow
@@ -552,8 +549,7 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
           have := Polynomial.natDegree_mul_le (p := toPolyG b2) (q := toPolyG u1); omega
         have hres := coeff_residual_zero_of_ge b1 (cscaleG a b2) u2 u1 d nrows r hu2deg hu1deg
           (by omega) (by omega) (by omega) hr
-        simp only [cderivQ, toPolyG_cderivG, toPolyG_cmulG, toPolyG_cscaleG, CFieldSpec.toK,
-          id_eq] at hres
+        simp only [denote, cderivQ, CFieldSpec.toK, id_eq] at hres
         have hab2u1 : (Polynomial.C a * toPolyG b2 * toPolyG u1).coeff r = 0 := by
           apply Polynomial.coeff_eq_zero_of_natDegree_lt
           have h := Polynomial.natDegree_mul_le (p := Polynomial.C a * toPolyG b2) (q := toPolyG u1)
