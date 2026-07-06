@@ -281,6 +281,24 @@ open Compute CPolyG QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
+omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+variable [CFracGcdCoreWf α] in
+/-- `canonicalRepresentationFastGWf` is in the pure-normal branch. -/
+structure IsPureNormalBranch (Dt a d : CPolyG α) : Prop where
+  /-- The special part vanishes. -/
+  special_zero : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true
+  /-- The polynomial part vanishes. -/
+  poly_zero : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true
+
+omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
+variable [CFracGcdCoreWf α] in
+/-- `canonicalRepresentationFastGWf` is in the polynomial branch. -/
+structure IsPolynomialBranch (Dt a d : CPolyG α) : Prop where
+  /-- The special part vanishes. -/
+  special_zero : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true
+  /-- The polynomial part is nonzero. -/
+  poly_nonzero : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = false
+
 /-- **★ The list↔Finset bridge in the engine's vocabulary** — for a primitive monomial with
 `toPolyG Dt = C w` (`w ∈ CFieldSpec.K α`), a squarefree `d = ∏_{β∈s}(t−β)`, `deg a < #s`, every root normal,
 the engine-shaped **`List` sum** over the per-root list of `(c_β, X − C β)` pairs equals `a/d` over
@@ -934,15 +952,16 @@ part `b` and polynomial part `fₚ` of the fuel-free canonical split both vanish
 returns exactly `cIntegrateReducedGWf` on the simple part `(cₙ, dₙ)`. -/
 theorem cIntegrateGFullWf_pureNormal_eq [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true) :
+    (hbranch : IsPureNormalBranch Dt a d) :
     CPolyG.cIntegrateGFullWf Dt a d cands
       = some (CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
           (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) := by
   rw [CPolyG.cIntegrateGFullWf]
   rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-  rw [hcrep] at hb hfp
-  simp only [hb, hfp, if_true]
+  have hspecial := hbranch.special_zero
+  have hpoly := hbranch.poly_zero
+  rw [hcrep] at hspecial hpoly
+  simp only [hspecial, hpoly, if_true]
 
 example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
@@ -950,7 +969,7 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     CPolyG.cIntegrateGFullWf Dt a d cands
       = some (CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
           (canonicalRepresentationFastGWf Dt a d).2.2.2 cands) :=
-  cIntegrateGFullWf_pureNormal_eq Dt a d cands hb hfp
+  cIntegrateGFullWf_pureNormal_eq Dt a d cands ⟨hb, hfp⟩
 
 /-- **★★★ The fuel-free PRIMITIVE one-shot for `cIntegrateGFullWf` (pure-normal branch), checker-free** —
 for a primitive monomial, if the fuel-free full driver returns `some res` on the pure-normal branch, then the
@@ -959,8 +978,7 @@ reduced fuel-free primitive identity and the fuel-free canonical reconstruction 
 theorem cIntegrateGFullWf_primitive_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (s : Finset (CFieldSpec.K α)) (w : CFieldSpec.K α)
     (hDt : toPolyG Dt = C w)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
     (hrecon : amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
           / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
@@ -1002,7 +1020,7 @@ theorem cIntegrateGFullWf_primitive_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α)
       = amG α (toPolyG a) / amG α (toPolyG d) := by
   have hres : res = CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
       (canonicalRepresentationFastGWf Dt a d).2.2.2 cands := by
-    rw [cIntegrateGFullWf_pureNormal_eq Dt a d cands hb hfp] at hsome
+    rw [cIntegrateGFullWf_pureNormal_eq Dt a d cands hbranch] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hres
   rw [field_identity_of_cIntegrateReducedGWf_primitive Dt
@@ -1054,7 +1072,8 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hb hfp hsome hrecon hherm hden hA hnorm hform
+  cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt ⟨hb, hfp⟩ hsome hrecon
+    hherm hden hA hnorm hform
 
 /-! ### ★ The fuel-free POLYNOMIAL branch of `cIntegrateGFullWf`: output pin + one-shot
 
@@ -1071,8 +1090,7 @@ omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 `canonicalRepresentationFastGWf`, `cIntegrateReducedGWf`, and `cPolyRischDEGWf`. -/
 theorem cIntegrateGFullWf_poly_eq [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = false)
+    (hbranch : IsPolynomialBranch Dt a d)
     (hqp : CPolyG.cPolyRischDEGWf Dt [] (canonicalRepresentationFastGWf Dt a d).1
         ((CPolyG.cdegG (canonicalRepresentationFastGWf Dt a d).1 : ℤ) + 1) = some qp) :
     CPolyG.cIntegrateGFullWf Dt a d cands
@@ -1087,8 +1105,10 @@ theorem cIntegrateGFullWf_poly_eq [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CP
             (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs⟩ := by
   rw [CPolyG.cIntegrateGFullWf]
   rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
-  rw [hcrep] at hb hfp hqp
-  simp only [hb, hfp, hqp, if_true, if_neg (by decide : ¬ (false = true))]
+  have hspecial := hbranch.special_zero
+  have hpoly := hbranch.poly_nonzero
+  rw [hcrep] at hspecial hpoly hqp
+  simp only [hspecial, hpoly, hqp, if_true, if_neg (by decide : ¬ (false = true))]
 
 example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (qp : CPolyG α)
     (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
@@ -1105,14 +1125,13 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
               (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2),
         (CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
             (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs⟩ :=
-  cIntegrateGFullWf_poly_eq Dt a d cands qp hb hfp hqp
+  cIntegrateGFullWf_poly_eq Dt a d cands qp ⟨hb, hfp⟩ hqp
 
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf`, a-priori soundness** — the `…Wf`
 one-shot using the fuel-free poly-RDE oracle, reduced capstone, and canonical split. -/
 theorem cIntegrateGFullWf_poly_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = false)
+    (hbranch : IsPolynomialBranch Dt a d)
     (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
     (hqp : CPolyG.cPolyRischDEGWf Dt [] (canonicalRepresentationFastGWf Dt a d).1
         ((CPolyG.cdegG (canonicalRepresentationFastGWf Dt a d).1 : ℤ) + 1) = some qp)
@@ -1149,7 +1168,7 @@ theorem cIntegrateGFullWf_poly_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d
             (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).rational.2),
       (CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
           (canonicalRepresentationFastGWf Dt a d).2.2.2 cands).logs⟩ := by
-    rw [cIntegrateGFullWf_poly_eq Dt a d cands qp hb hfp hqp] at hsome
+    rw [cIntegrateGFullWf_poly_eq Dt a d cands qp hbranch hqp] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hres
   set gnum := (CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
@@ -1193,7 +1212,8 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateGFullWf_poly_oneShot Dt a d cands res qp hb hfp hsome hqp hgden hpoly hnormal hrecon
+  cIntegrateGFullWf_poly_oneShot Dt a d cands res qp ⟨hb, hfp⟩ hsome hqp hgden hpoly hnormal
+    hrecon
 
 /-! ### ★★★ The fuel-free POLYNOMIAL one-shot with `hpoly` discharged (primitive base)
 
@@ -1206,10 +1226,7 @@ coefficient field identity discharges `hpoly`. -/
 (primitive base).** -/
 theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).2.1.1
-        = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1
-        = false)
+    (hbranch : IsPolynomialBranch ([CField.one] : CPolyG α) a d)
     (hsome : CPolyG.cIntegrateGFullWf ([CField.one] : CPolyG α) a d cands = some res)
     (hqp : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG α) []
         (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1
@@ -1243,6 +1260,8 @@ theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracG
         + logResidueSumG ([CField.one] : CPolyG α) res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) := by
   set fp := (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1 with hfpE
+  have hfp := hbranch.poly_nonzero
+  rw [← hfpE] at hfp
   have hqp_eq : qp = CPolyG.cIntegratePolyGWf fp := by
     rw [cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) fp ((CPolyG.cdegG fp : ℤ) + 1) hfp
       (le_refl _)] at hqp
@@ -1253,7 +1272,7 @@ theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracG
     rw [show CPolyG.cIntegratePolyGWf fp = CPolyG.cIntegratePolyG fp by rfl]
     exact towerFractionFieldDerivG_amG_cIntegratePolyG_const fp
       (cIntegratePolyG_const_coeff fp hconst)
-  exact cIntegrateGFullWf_poly_oneShot ([CField.one] : CPolyG α) a d cands res qp hb hfp hsome
+  exact cIntegrateGFullWf_poly_oneShot ([CField.one] : CPolyG α) a d cands res qp hbranch hsome
     hqp hgden hpoly hnormal hrecon
 
 /-! ### ★★★ Task 3 milestone: the HYPEREXPONENTIAL one-shot for `cIntegrateGFullWf`, GATED on `∑c = 0`
@@ -1281,8 +1300,7 @@ with the fuel-free canonical reconstruction. -/
 theorem cIntegrateGFullWf_hyperexp_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
     (hb : b ≠ 0) (hDt : toPolyG Dt = C b * X)
-    (hbz : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
     (hrecon : amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
           / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
@@ -1328,7 +1346,7 @@ theorem cIntegrateGFullWf_hyperexp_oneShot [CFracGcdCoreWf α] (Dt : CPolyG α) 
       = amG α (toPolyG a) / amG α (toPolyG d) := by
   have hres : res = CPolyG.cIntegrateReducedGWf Dt (canonicalRepresentationFastGWf Dt a d).2.2.1
       (canonicalRepresentationFastGWf Dt a d).2.2.2 cands := by
-    rw [cIntegrateGFullWf_pureNormal_eq Dt a d cands hbz hfp] at hsome
+    rw [cIntegrateGFullWf_pureNormal_eq Dt a d cands hbranch] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hres
   rw [field_identity_of_cIntegrateReducedGWf_hyperexp Dt
@@ -1384,8 +1402,8 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateGFullWf_hyperexp_oneShot Dt a d cands res s b hb hDt hbz hfp hsome hrecon hherm
-    hden hA hnorm hsum hform
+  cIntegrateGFullWf_hyperexp_oneShot Dt a d cands res s b hb hDt ⟨hbz, hfp⟩ hsome hrecon
+    hherm hden hA hnorm hsum hform
 
 /-! ### ★ The PRIMITIVE one-shot at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
 
@@ -1411,8 +1429,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
     (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (w : CFieldSpec.K (QFunNZG ℚ))
     (hDt : toPolyG Dt = C w)
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
     (hrecon : amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
           / amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
@@ -1453,7 +1470,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
         (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
-  cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hb hfp hsome hrecon hherm hden hA
+  cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hbranch hsome hrecon hherm hden hA
     hnorm hform
 
 /-- **★★★ The fuel-free HYPEREXPONENTIAL one-shot for `cIntegrateGFullWf` over `ℚ(x)(t)`, gated on
@@ -1462,8 +1479,7 @@ theorem cIntegrateGFullWf_hyperexp_oneShot_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
     (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (b : CFieldSpec.K (QFunNZG ℚ))
     (hb : b ≠ 0) (hDt : toPolyG Dt = C b * X)
-    (hbz : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
     (hrecon : amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
           / amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
@@ -1508,7 +1524,7 @@ theorem cIntegrateGFullWf_hyperexp_oneShot_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
         (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
-  cIntegrateGFullWf_hyperexp_oneShot Dt a d cands res s b hb hDt hbz hfp hsome hrecon hherm hden hA
+  cIntegrateGFullWf_hyperexp_oneShot Dt a d cands res s b hb hDt hbranch hsome hrecon hherm hden hA
     hnorm hsum hform
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
@@ -1745,8 +1761,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QF
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
     (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (w : CFieldSpec.K (QFunNZG ℚ))
     (hDt : toPolyG Dt = C w)
-    (hb' : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).2.1.1 = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf Dt a d).1 = true)
+    (hbranch : IsPureNormalBranch Dt a d)
     (hsome : CPolyG.cIntegrateGFullWf Dt a d cands = some res)
     (hrecon : amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
           / amG (QFunNZG ℚ) (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
@@ -1820,7 +1835,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : CPolyG (QF
     (canonicalRepresentationFastGWf Dt a d).2.2.1
     (canonicalRepresentationFastGWf Dt a d).2.2.2 s hDtdeg haProper hv hbk hden g hgeq
     hdvd hresDen
-  exact cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hb' hfp hsome hrecon
+  exact cIntegrateGFullWf_primitive_oneShot Dt a d cands res s w hDt hbranch hsome hrecon
     hherm hden hA hnorm hform
 
 /-! ### ★★★ The fuel-free POLY-BRANCH CAPSTONE at `ℚ(x)(t)`
@@ -1835,10 +1850,7 @@ properness.** -/
 theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
     (qp : CPolyG (QFunNZG ℚ)) (s : Finset (CFieldSpec.K (QFunNZG ℚ)))
-    (hb : CPolyG.cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG (QFunNZG ℚ)) a d).2.1.1
-        = true)
-    (hfp : CPolyG.cisZeroG (canonicalRepresentationFastGWf ([CField.one] : CPolyG (QFunNZG ℚ)) a d).1
-        = false)
+    (hbranch : IsPolynomialBranch ([CField.one] : CPolyG (QFunNZG ℚ)) a d)
     (hsome : CPolyG.cIntegrateGFullWf ([CField.one] : CPolyG (QFunNZG ℚ)) a d cands = some res)
     (hqp : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG (QFunNZG ℚ)) []
         (canonicalRepresentationFastGWf ([CField.one] : CPolyG (QFunNZG ℚ)) a d).1
@@ -1947,7 +1959,8 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
     (canonicalRepresentationFastGWf ([CField.one] : CPolyG (QFunNZG ℚ)) a d).2.2.1
     (canonicalRepresentationFastGWf ([CField.one] : CPolyG (QFunNZG ℚ)) a d).2.2.2 cands s
     (1 : CFieldSpec.K (QFunNZG ℚ)) hDt hherm hden hA hnorm hform
-  exact cIntegrateGFullWf_poly_oneShot_base a d cands res qp hb hfp hsome hqp hgden hconst hnormal hrecon
+  exact cIntegrateGFullWf_poly_oneShot_base a d cands res qp hbranch hsome hqp hgden hconst hnormal
+    hrecon
 
 /-! ### Axiom audit — the `hA`-discharged primitive one-shot rests only on the standard kernel axioms. -/
 

@@ -60,7 +60,8 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
       repeated Yun input pair as `IsYunFactorizationInput`.
 - [x] `Computable/NormalPartSoundness.lean` (121) — bundled the repeated Hermite factor
       nonzero/cofactor-proper pair as `IsHermiteInnerFactor` and `IsHermiteFactorData`.
-- [ ] `Computable/OneShotAssembly.lean` (264)
+- [x] `Computable/OneShotAssembly.lean` (264) — bundled repeated full-driver branch selectors as
+      `IsPureNormalBranch` / `IsPolynomialBranch`; left residue-side variants explicit.
 - [ ] `HermiteCorrectness.lean` (314), `GroebnerBasis.lean` (429), `SubresultantCorrectness.lean` (255),
       `LaurentCoefficients.lean` (162) — large; expect several clusters each.
 - [ ] sweep: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do n=$(grep -coE "\(h[a-zA-Z0-9]+ :" "$f"); [ "$n" -gt 40 ] && echo "$n $f"; done | sort -rn`
