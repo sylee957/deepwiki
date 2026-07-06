@@ -239,20 +239,6 @@ theorem dotQ_hcatRow2 (b1 b2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nro
 theorem natDegree_toPolyG_le_cdegG (p : CPolyG ℚ) : (toPolyG p).natDegree ≤ cdegG p := by
   rw [cdegG]; exact natDegree_toPolyG_le p
 
-/-- `cdegG p < p.length + 1` (so `cdegG p ≤ p.length`). -/
-theorem cdegG_le_length (p : CPolyG ℚ) : cdegG p ≤ p.length := by
-  rw [cdegG]
-  have : (cnormG p : List ℚ).length ≤ p.length := by
-    induction p with
-    | nil => simp [cnormG]
-    | cons a as ih =>
-      rw [cnormG]
-      cases h : cnormG as with
-      | nil => by_cases ha : CField.isZero a <;> simp [ha, List.length_cons]
-      | cons b bs =>
-        rw [h] at ih; simp only [List.length_cons] at ih ⊢; omega
-  omega
-
 /-- `coeff r (D y1 + b1 y1 + ab2 y2) = 0` for `r ≥ nrows` when `nrows` exceeds every term's degree. -/
 theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ)
     (hy1 : (toPolyG y1).natDegree ≤ d) (hy2 : (toPolyG y2).natDegree ≤ d)
