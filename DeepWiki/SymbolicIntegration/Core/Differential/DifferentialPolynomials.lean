@@ -107,6 +107,13 @@ noncomputable def diffSubst (Diα : K[X]) : DiffPoly K →ₐ[K] K[X] :=
     · simp [dpEmbed]
   exact congrArg (fun f : K[X] →+* K[X] => f p) h
 
+/-- `dpEmbed p ≠ 0` for `p ≠ 0`. -/
+theorem dpEmbed_ne_zero {p : K[X]} (hp : p ≠ 0) : dpEmbed p ≠ (0 : DiffPoly K) := by
+  intro h
+  apply hp
+  have := congrArg (diffSubst (0 : K[X])) h
+  rwa [diffSubst_dpEmbed, map_zero] at this
+
 /-- `diffSubst Diα` carries `ddx` to the polynomial derivative. -/
 theorem diffSubst_ddx (Diα : K[X]) (p : DiffPoly K) :
     diffSubst Diα (ddx p) = derivative (diffSubst Diα p) := by

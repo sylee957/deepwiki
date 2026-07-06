@@ -201,13 +201,6 @@ theorem eval_laurentH_one_one_eq_residue {A D Di : K[X]} {α : K} (hDi : Di.Moni
 
 /-! ## Laurent fractions in `K(x)⟨u⟩ = Frac (DiffPoly K)` -/
 
-/-- `dpEmbed Ei ≠ 0` for `Ei ≠ 0`: the embedding is injective. -/
-theorem dpEmbed_ne_zero {Ei : K[X]} (hEi : Ei ≠ 0) : dpEmbed Ei ≠ (0 : DiffPoly K) := by
-  intro h
-  apply hEi
-  have := congrArg (MvPolynomial.aeval (laurentSubst (0 : K[X]))) h
-  rwa [aeval_laurentSubst_dpEmbed, map_zero] at this
-
 /-- The `hᵢ^(d)` denominator `u^(i+d)·Eᵢ^(d+1) ∈ DiffPoly K`. -/
 noncomputable def lDenom (Ei : K[X]) (i d : ℕ) : DiffPoly K :=
   (X (some 0)) ^ (i + d) * (dpEmbed Ei) ^ (d + 1)
