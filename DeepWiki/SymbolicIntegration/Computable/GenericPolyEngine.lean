@@ -357,6 +357,21 @@ theorem toPolyG_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
+/-- `toPolyG` of a coefficient list is its dense polynomial `∑ i, C(toK cᵢ) * X^i`. -/
+theorem toPolyG_eq_sum_range {α : Type*} [CField α] [CFieldSpec α] (l : CPolyG α) :
+    toPolyG l =
+      ∑ i ∈ Finset.range l.length, C (CFieldSpec.toK ((l : List α).getD i CField.zero)) * X ^ i := by
+  induction l with
+  | nil => simp
+  | cons a p ih =>
+    rw [toPolyG_cons, List.length_cons, Finset.sum_range_succ', ih, Finset.mul_sum]
+    simp only [List.getD_cons_succ, List.getD_cons_zero, pow_zero, mul_one, pow_succ]
+    rw [add_comm]
+    congr 1
+    apply Finset.sum_congr rfl
+    intro i _
+    ring
+
 /-- `toK` reads a normalized coefficient as the corresponding coefficient of `toPolyG p`. -/
 theorem toK_cnormG_getD {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (k : ℕ) :
     CFieldSpec.toK ((cnormG p : List α).getD k CField.zero) = (toPolyG p).coeff k := by

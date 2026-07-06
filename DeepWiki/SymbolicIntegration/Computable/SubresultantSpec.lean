@@ -102,20 +102,6 @@ theorem matrixOfList_cSubmatrix (p q : CPolyG α) (n m j i : ℕ) :
     cSubRowIdx_getD n m j r, cSubColIdx_getD n m j i c,
     toK_cBSylvesterRows_getD p q n m (subRow n m j r).isLt (subCol n m j i c).isLt]
 
-/-- `toPolyG` of a coefficient list is its dense polynomial `∑_{i<len} C(toK cᵢ)·Xⁱ`. -/
-theorem toPolyG_eq_sum_range (l : CPolyG α) :
-    toPolyG l = ∑ i ∈ Finset.range l.length, C (toK ((l : List α).getD i CField.zero)) * X ^ i := by
-  induction l with
-  | nil => simp
-  | cons a p ih =>
-    rw [toPolyG_cons, List.length_cons, Finset.sum_range_succ', ih, Finset.mul_sum]
-    simp only [List.getD_cons_succ, List.getD_cons_zero, pow_zero, mul_one, pow_succ]
-    rw [add_comm]
-    congr 1
-    apply Finset.sum_congr rfl
-    intro i _
-    ring
-
 /-- **The subresultant certification.** `toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p)
 (toPolyG q) n m j`: the computable Sylvester-submatrix subresultant computes Mathlib's abstract
 subresultant. -/
