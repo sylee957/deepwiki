@@ -512,7 +512,7 @@ theorem toK_logDerRadicand_qxOfNum (n : ℕ) (ρ : CPolyG ℚ) :
     CFieldSpec.toK (logDerRadicand n (qxOfNum ρ))
       = QFunNZG.amG ℚ (derivative (CPolyG.toPolyG ρ))
         / ((n : RatFunc (CFieldSpec.K ℚ)) * QFunNZG.amG ℚ (CPolyG.toPolyG ρ)) := by
-  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, toK_cnatCastG, toK_cderiv_qxOfNum,
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CPolyG.toK_cnatCastG, toK_cderiv_qxOfNum,
     toK_qxOfNum]
 
 /-- **★ The literal per-step `K`-equation reduces to the cleared polynomial identity** — for `qxOfNum`-of-

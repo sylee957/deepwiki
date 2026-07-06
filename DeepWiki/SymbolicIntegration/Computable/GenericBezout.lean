@@ -19,6 +19,13 @@ def cnatCastG : ℕ → α
   | 0 => CField.zero
   | k + 1 => CField.add CField.one (cnatCastG k)
 
+/-- `toK (cnatCastG k) = (k : K)`: the computable natural cast reads as the genuine one. -/
+@[denote] theorem toK_cnatCastG [CFieldSpec α] (k : ℕ) :
+    CFieldSpec.toK (cnatCastG k : α) = (k : CFieldSpec.K α) := by
+  induction k with
+  | zero => rw [cnatCastG, CFieldSpec.toK_zero, Nat.cast_zero]
+  | succ n ih => rw [cnatCastG, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ, add_comm]
+
 /-- Generic power of a field element: `cfpow c n = cⁿ` over `[CField α]` (by `ℕ`-recursion). -/
 def cfpow (c : α) : ℕ → α
   | 0 => CField.one

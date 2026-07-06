@@ -363,7 +363,7 @@ theorem cHermiteInner_hbez_of_gcd (Dt v u : CPolyG α)
   have h := toPolyG_cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
     (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A') hqn hgdeg hgne
   rw [toPolyG_cmulG, toPolyG_cmonomialDeriv] at h
-  rw [h, toPolyG_cscaleG, CFieldSpec.toK_neg, CFieldSpec.toK_inv, toK_cnatCastG_oneShot,
+  rw [h, toPolyG_cscaleG, CFieldSpec.toK_neg, CFieldSpec.toK_inv, CPolyG.toK_cnatCastG,
     Nat.cast_add_one, Polynomial.C_neg]
   ring
 

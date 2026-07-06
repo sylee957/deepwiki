@@ -49,20 +49,11 @@ theorem towerFractionFieldDerivG_amG_poly (Dt p : CPolyG α) :
   rw [towerFractionFieldDerivG, extendDeriv_algebraMap, toPolyG_cmonomialDeriv]
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- `toK (cnatCastG k) = (k : K)` (inline; the `k`-fold `CField.one` sum reads as the natural cast). -/
-theorem toK_cnatCastG_laurent (k : ℕ) :
-    CFieldSpec.toK (CPolyG.cnatCastG k : α) = (k : CFieldSpec.K α) := by
-  induction k with
-  | zero => rw [CPolyG.cnatCastG, CFieldSpec.toK_zero, Nat.cast_zero]
-  | succ n ih => rw [CPolyG.cnatCastG, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ,
-      add_comm]
-
-omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `toK (cLaurentShiftG η k) = k · toK η` for a non-negative shift `k : ℕ`. -/
 theorem toK_cLaurentShiftG_natCast [CRischField α] (η : α) (k : ℕ) :
     CFieldSpec.toK (cLaurentShiftG η (k : ℤ)) = (k : CFieldSpec.K α) * CFieldSpec.toK η := by
   rw [cLaurentShiftG, Int.natAbs_natCast, if_neg (Int.not_lt.mpr (Int.natCast_nonneg k)),
-    CFieldSpec.toK_mul, toK_cnatCastG_laurent]
+    CFieldSpec.toK_mul, CPolyG.toK_cnatCastG]
 
 /-- **M2 (non-negative power): one Laurent term is an antiderivative.** For a hyperexponential monomial
 `Dt = η·t` and a solved coefficient `cLaurentIntCoeffG η k aₖ = some qₖ` (`k : ℕ`),
@@ -97,7 +88,7 @@ theorem toK_cLaurentShiftG_negCast [CRischField α] (η : α) (i : ℕ) :
       = -((i : CFieldSpec.K α) + 1) * CFieldSpec.toK η := by
   have hnat : (-(i + 1 : ℤ)).natAbs = i + 1 := by omega
   rw [cLaurentShiftG, hnat, if_pos (by omega), CFieldSpec.toK_mul, CFieldSpec.toK_neg,
-    toK_cnatCastG_laurent]
+    CPolyG.toK_cnatCastG]
   push_cast; ring
 
 /-- **M2 (negative power): one Laurent term is an antiderivative.** For `Dt = η·t` and a solved

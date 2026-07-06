@@ -84,7 +84,7 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
       have : pts.map (fun p => CFieldSpec.toK p.1)
           = (List.range N).map (Nat.cast : ℕ → CFieldSpec.K α) := by
         rw [hpts, List.map_map]; apply List.map_congr_left; intro jj _
-        simp only [Function.comp_apply, toK_cnatCastG_oneShot]
+        simp only [Function.comp_apply, CPolyG.toK_cnatCastG]
       rw [this]; exact (List.nodup_range).map Nat.cast_injective
     rw [hget]
     symm
@@ -108,7 +108,7 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
           (cdegG Dstar) (cdegG Dd) j : CPolyG α) : List α).getD k CField.zero) ∈ pts := by
         rw [hpts, List.mem_map]; exact ⟨jj, List.mem_range.mpr hjj, rfl⟩
       rw [show (jj : CFieldSpec.K α) = CFieldSpec.toK (cnatCastG jj : α) from
-          (toK_cnatCastG_oneShot jj).symm]
+          (CPolyG.toK_cnatCastG jj).symm]
       rw [eval_toPolyG_cinterpolateG pts hnodup hmem, toK_cSubresultantG_getD_eq_coeff, hcommute,
         lrtSubresultantGen_eval, hnm, hmm, ← hdd]
   · -- `k > j`: both are `0`

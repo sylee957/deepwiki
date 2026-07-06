@@ -19,16 +19,6 @@ open Compute CPolyG QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `toK (cnatCastG k) = (k : K)`: the engine's `ℕ`-cast reads as the natural cast in
-`K = CFieldSpec.K α`. -/
-theorem toK_cnatCastG_oneShot (k : ℕ) :
-    CFieldSpec.toK (CPolyG.cnatCastG k : α) = (k : CFieldSpec.K α) := by
-  induction k with
-  | zero => rw [CPolyG.cnatCastG, CFieldSpec.toK_zero, Nat.cast_zero]
-  | succ n ih => rw [CPolyG.cnatCastG, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ,
-      add_comm]
-
-omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Shifted antiderivative-tail derivative law: for the index-`k`-started integration tail
 `L_k = (c.zipIdx k).map (fun (a,i) => a/(i+1))`, `D(X^{k+1} · toPolyG L_k) = X^k · toPolyG c`. -/
 theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (c : CPolyG α) :
@@ -51,7 +41,7 @@ theorem derivative_Xpow_mul_toPolyG_integrateTail [CharZero (CFieldSpec.K α)] (
       rw [mul_comm, derivative_C_mul, derivative_X_pow, add_tsub_cancel_right, ← mul_assoc, ← C_mul]
       congr 1
       -- `(toK (a/(k+1))) · (k+1 : K) = toK a`, since `toK (cnatCast (k+1)) = (k+1 : K)`
-      rw [CFieldSpec.toK_div, toK_cnatCastG_oneShot]
+      rw [CFieldSpec.toK_div, CPolyG.toK_cnatCastG]
       have hk1 : ((k : CFieldSpec.K α) + 1) ≠ 0 := by
         have : ((k : CFieldSpec.K α) + 1) = ((k + 1 : ℕ) : CFieldSpec.K α) := by push_cast; ring
         rw [this, Nat.cast_ne_zero]; omega

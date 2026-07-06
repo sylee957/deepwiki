@@ -13,24 +13,6 @@ namespace DeepWiki.SymbolicIntegration
 
 open scoped Differential
 
-namespace RadElem
-
-variable {α : Type*} [CField α]
-
-/-! ### The natural-cast bridge `toK (cnatCastG k) = (k : K)` -/
-
-variable [CFieldSpec α]
-
-/-- `toK (cnatCastG k) = (k : K)`: the `k`-fold `CField.one` sum reads as the genuine natural cast in
-`K`. The bridge that turns `radDeriv`'s `cnatCastG i` index-multiplier into `(i : K)`. -/
-@[denote] theorem toK_cnatCastG (k : ℕ) : CFieldSpec.toK (CPolyG.cnatCastG k : α) = (k : CFieldSpec.K α) := by
-  induction k with
-  | zero => rw [CPolyG.cnatCastG, CFieldSpec.toK_zero, Nat.cast_zero]
-  | succ n ih => rw [CPolyG.cnatCastG, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ,
-      add_comm]
-
-end RadElem
-
 /-! ### The keystone: `radDeriv` realizes `implicitDeriv (C (toK ℓ) · X)`
 
 Read through `toPolyG`, `radDeriv n f p` is `Differential.implicitDeriv (C(toK ℓ)·X) (toPolyG p)`, the
@@ -71,7 +53,7 @@ theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
     show CPolyG.toPolyG (CField.add (CDiffField.cderiv a)
           (CField.mul a (CField.mul (CPolyG.cnatCastG k) ℓ)) :: radDerivFrom ℓ (k + 1) as) = _
     rw [CPolyG.toPolyG_cons, CFieldSpec.toK_add, CFieldSpec.toK_mul, CFieldSpec.toK_mul,
-      CDiffFieldSpec.toK_cderiv, toK_cnatCastG]
+      CDiffFieldSpec.toK_cderiv, CPolyG.toK_cnatCastG]
     rw [ih (k + 1), CPolyG.toPolyG_cons]
     -- expand `mapCoeffs (C(toK a) + X·toPolyG as)` and `derivative (C(toK a) + X·toPolyG as)` by the
     -- derivation/derivative product rules (`mapCoeffs X = 0`, `derivative X = 1`, `derivative C = 0`).
@@ -246,7 +228,7 @@ theorem toK_logDerRadicand_mul (n : ℕ) (f : α)
     (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) :
     (n : CFieldSpec.K α) * CFieldSpec.toK (logDerRadicand n f) * CFieldSpec.toK f
       = CFieldSpec.toK (CDiffField.cderiv f) := by
-  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, toK_cnatCastG]
+  rw [logDerRadicand, CFieldSpec.toK_div, CFieldSpec.toK_mul, CPolyG.toK_cnatCastG]
   rw [mul_comm ((n : CFieldSpec.K α)) _, mul_assoc, div_mul_cancel₀ _ hnf]
 
 /-- The crux: `D(Xⁿ − C(toK f)) ∈ radIdeal n f` for `D = implicitDeriv (C(toK ℓ)·X)`. Computes

@@ -69,7 +69,7 @@ theorem toPolyG_cResidueResultantTowerGWf [CharZero (CFieldSpec.K α)] (Dt a d :
     rw [hpts, List.map_map]
     apply List.map_congr_left
     intro k _
-    simp only [Function.comp_apply, toK_cnatCastG_oneShot]
+    simp only [Function.comp_apply, CPolyG.toK_cnatCastG]
   have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
     rw [hfst]; exact (List.nodup_range).map Nat.cast_injective
   have hlen : pts.length = cdegG d + 1 := by rw [hpts, List.length_map, List.length_range]
@@ -95,7 +95,7 @@ theorem toPolyG_cResidueResultantTowerGWf [CharZero (CFieldSpec.K α)] (Dt a d :
     have hmem : (cnatCastG k, cresultantWf d (cAmcDdG Dt a d (cnatCastG k))) ∈ pts := by
       rw [hpts, List.mem_map]; exact ⟨k, List.mem_range.mpr hk, rfl⟩
     rw [show (k : CFieldSpec.K α) = CFieldSpec.toK (cnatCastG k : α) from
-        (toK_cnatCastG_oneShot k).symm,
+        (CPolyG.toK_cnatCastG k).symm,
       eval_toPolyG_cinterpolateG pts hnodup hmem,
       toK_cresultantWf_cAmcDdG_eq_eval Dt a d (cnatCastG k) hDmonic hDt0 hAD]
 

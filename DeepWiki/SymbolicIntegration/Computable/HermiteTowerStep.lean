@@ -168,7 +168,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
         = -(Polynomial.C ((j : CFieldSpec.K α) + 1)) * toPolyG C
           - toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG B) := by
       rw [hA', toPolyG_csubG, toPolyG_cscaleG, toPolyG_cmulG, toPolyG_cmonomialDeriv,
-        CFieldSpec.toK_neg, hjval, toK_cnatCastG_oneShot, Nat.cast_add_one, map_neg]
+        CFieldSpec.toK_neg, hjval, CPolyG.toK_cnatCastG, Nat.cast_add_one, map_neg]
     rw [hstepadd, hVpoweq] at ihA
     rw [map_add] at ihA
     rw [hA'eq] at ihA
