@@ -6,6 +6,7 @@ import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorIncrements
 import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorResidual
 import DeepWiki.SymbolicIntegration.Compute.HermitePower
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualCorrectness
+import DeepWiki.SymbolicIntegration.Compute.HermiteResidualBridge
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
