@@ -99,21 +99,6 @@ theorem degreeG_reduce_step_lt {P Q : (CFieldSpec.K α)[X]} (hP : P ≠ 0) (hQ :
     (by rw [Polynomial.degree_eq_natDegree hP, Polynomial.degree_eq_natDegree hT0, hTnd]) hP
     hTlc.symm
 
-omit [CFieldSpec α] in
-/-- `cleadG` is invariant under `cnormG`: `cleadG (cnormG p) = cleadG p`. -/
-theorem cleadG_cnormG (p : CPolyG α) : cleadG (cnormG p) = cleadG p := by
-  simp only [cleadG, cnormG_idem]
-
-omit [CFieldSpec α] in
-/-- `cisZeroG` is invariant under `cnormG`. -/
-theorem cisZeroG_cnormG (q : CPolyG α) : cisZeroG (cnormG q) = cisZeroG q := by
-  simp only [cisZeroG, cnormG_idem]
-
-omit [CFieldSpec α] in
-/-- `cdegG` is invariant under `cnormG`. -/
-theorem cdegG_cnormG (p : CPolyG α) : cdegG (cnormG p) = cdegG p := by
-  simp only [cdegG, cnormG_idem]
-
 /-- One reduce step strictly shortens the normalized list: `cnormG (p − (lcP/lcQ)·xᵏ·q)` has
 strictly smaller normalized length than `p`. -/
 theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q ≠ [])

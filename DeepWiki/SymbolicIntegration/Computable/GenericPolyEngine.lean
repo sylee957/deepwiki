@@ -321,6 +321,18 @@ theorem cnormG_cons_eq {α : Type*} [CField α] (a : α) (as : CPolyG α) :
       rw [h] at ih
       simp only [cnormG_cons_eq, ih]
 
+/-- `cleadG` is invariant under `cnormG`: `cleadG (cnormG p) = cleadG p`. -/
+theorem cleadG_cnormG {α : Type*} [CField α] (p : CPolyG α) : cleadG (cnormG p) = cleadG p := by
+  simp only [cleadG, cnormG_idem]
+
+/-- `cisZeroG` is invariant under `cnormG`. -/
+theorem cisZeroG_cnormG {α : Type*} [CField α] (q : CPolyG α) : cisZeroG (cnormG q) = cisZeroG q := by
+  simp only [cisZeroG, cnormG_idem]
+
+/-- `cdegG` is invariant under `cnormG`. -/
+theorem cdegG_cnormG {α : Type*} [CField α] (p : CPolyG α) : cdegG (cnormG p) = cdegG p := by
+  simp only [cdegG, cnormG_idem]
+
 /-- `toPolyG` ignores normalization: `toPolyG (cnormG p) = toPolyG p` — stripping trailing zeros
 does not change the polynomial (the dropped coefficients are zero, via `isZero_iff`). -/
 @[simp, denote] theorem toPolyG_cnormG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
