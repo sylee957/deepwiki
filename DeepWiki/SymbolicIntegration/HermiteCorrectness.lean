@@ -2,6 +2,7 @@ import DeepWiki.Algebra.ListSums
 import DeepWiki.Algebra.ListProducts
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
+import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
@@ -394,19 +395,6 @@ example (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec_of fuel V U hU hV ⟨hq, hg, hgc⟩ j A
-
-open Classical in
-/-- Exact-division cross-multiplication in `RatFunc ℚ`: when `toPoly (cmod fuel p q) = 0` and `q ≠ 0`,
-`am p / am q = am (cdiv fuel p q)`. -/
-theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
-    (hrem : toPoly (cmod fuel p q) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
-      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q)) := by
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
-  have hqm : algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hq0
-  rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, map_mul, mul_div_assoc,
-    div_self hqm, mul_one]
 
 /-! ### The residual-recovery identity (in `RatFunc ℚ`) -/
 

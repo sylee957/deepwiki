@@ -21,6 +21,16 @@ theorem am_toPoly_ne_zero {p : CPoly} (hp : toPoly p ≠ 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hp
 
+/-- Exact computable division becomes division in `RatFunc ℚ`. -/
+theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hrem : toPoly (cmod fuel p q) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q)) := by
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hqm : algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) ≠ 0 := am_toPoly_ne_zero hq0
+  rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, map_mul, mul_div_assoc,
+    div_self hqm, mul_one]
+
 /-- `cisZero p = true ↔ toPoly p = 0`: the `CPoly` zero test agrees with vanishing in `ℚ[X]`. -/
 theorem cisZero_iff_toPoly_eq_zero (p : CPoly) : cisZero p = true ↔ toPoly p = 0 := by
   rw [cisZero, beq_iff_eq, cnorm_eq_nil_iff]
