@@ -344,6 +344,33 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     exact mul_ne_zero hd0 (mul_ne_zero hg2ne hg2ne) h0
 
 set_option maxHeartbeats 800000 in
+/-- **The reduced integrator is sound in the no-poles / trivial-normal-part case** (`deg Dstar = 0`). With a
+constant squarefree denominator there are no residues, so the log part is empty
+(`cLrtLogArgG_eq_nil_of_cdegG_zero`) and the leftover numerator vanishes (`(…).2.1 = 0`, from the `.degree`
+properness `hAD_degree_of_genuineMonomial` — `deg hNum < deg Dstar = 0`), leaving the pure Hermite identity
+`hherm_lrt_E`. This is Bronstein's §5.6 "no poles" branch (empty residue loop) — the `natDegree`-`hAD` gap where
+`0 < 0` fails but the reduced part is trivially sound. -/
+theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles [CharZero (CFieldSpec.K α)]
+    [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0) (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt)
+    (hDstar0 : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree = 0) :
+    IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) := by
+  have hcopgcd := hcopgcd_of_genuineMonomial hgcd Dt d hd0 hpp hgen
+  have hADdeg := hAD_degree_of_genuineMonomial hgcd Dt a d hd0 hpp hDtdeg haProper hgen
+  have hNum0 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.1 = 0 := by
+    by_contra h; have := Polynomial.natDegree_lt_natDegree h hADdeg; omega
+  have hDstarcdeg : cdegG (cHermiteReduceTowerGWf Dt a d).2.2 = 0 := by
+    rw [cdegG_eq_natDegree]; exact hDstar0
+  intro E _ _ _ _ _ _
+  rw [cIntegrateReducedLrtG]
+  simp only [cLrtLogArgG_eq_nil_of_cdegG_zero Dt _ _ hDstarcdeg, logResidueSumLrtG_nil, add_zero]
+  have hh := hherm_lrt_E (E := E) hgcd Dt a d hd0 hpp hcopgcd
+  rw [hNum0, show amGExt (0 : (CFieldSpec.K α)[X]) = (0 : RatFunc E) from by simp [amGExt],
+    zero_div, add_zero] at hh
+  exact hh
+
+set_option maxHeartbeats 800000 in
 /-- **The assembled LRT reduced soundness from the bundled genuine data.** Moved here from `LrtSoundness`
 because it now *derives* `hR0` (via `hR0_of_normalityData`, which needs the algebraic closure) rather than
 reading it off a structure field. Given only `d ≠ 0` and the genuine `LrtReducedGenuineData` (now `hR0`-free),
