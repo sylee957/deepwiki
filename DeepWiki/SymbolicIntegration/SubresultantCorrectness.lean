@@ -596,14 +596,24 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : CPol
 
 /-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
 
+/-- The content stripped by `bprimitivePartX fuel p` is nonzero and divides every coefficient exactly. -/
+structure IsPrimitivePartXInput (fuel : ℕ) (p : BPoly) : Prop where
+  /-- The computed content is not boolean-zero. -/
+  content_not_zero : ¬ cisZero (bcontentX fuel p) = true
+  /-- The normalized content list is nonempty. -/
+  content_cnorm_ne : cnorm (bcontentX fuel p) ≠ []
+  /-- The computed content reads to a nonzero polynomial. -/
+  content_toPoly_ne : toPoly (bcontentX fuel p) ≠ 0
+  /-- The content divides every normalized `x`-coefficient exactly. -/
+  exact_division : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0
+
 /-- `IsSimilar (toBPoly p) (toBPoly (bprimitivePartX fuel p))` under the content-exactness hypotheses. -/
 theorem isSimilar_toBPoly_bprimitivePartX (fuel : ℕ) (p : BPoly)
-    (hg : ¬ cisZero (bcontentX fuel p) = true) (hgcn : cnorm (bcontentX fuel p) ≠ [])
-    (hg0 : toPoly (bcontentX fuel p) ≠ 0)
-    (hrem : ∀ a ∈ bnorm p, toPoly (cmod fuel a (bcontentX fuel p)) = 0) :
+    (hprim : IsPrimitivePartXInput fuel p) :
     IsSimilar (toBPoly p) (toBPoly (bprimitivePartX fuel p)) :=
-  ⟨1, toPoly (bcontentX fuel p), one_ne_zero, hg0, by
-    rw [map_one, one_mul, toBPoly_bprimitivePartX_exact fuel p hg hgcn hrem]⟩
+  ⟨1, toPoly (bcontentX fuel p), one_ne_zero, hprim.content_toPoly_ne, by
+    rw [map_one, one_mul, toBPoly_bprimitivePartX_exact fuel p hprim.content_not_zero
+      hprim.content_cnorm_ne hprim.exact_division]⟩
 
 /-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `bprimitivePartX`,
 `IsSimilar (lrtSubresultant A D j) (toBPoly (lrtSubresultantCompute fuel j A D))`. -/
@@ -626,23 +636,16 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPo
     (hCne : toBPoly (G (m + 2)) ≠ 0)
     (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
       = toBPoly (G (m + 2)))
-    (hg : ¬ cisZero (bcontentX fuel
-        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) = true)
-    (hgcn : cnorm (bcontentX fuel
-        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ [])
-    (hg0 : toPoly (bcontentX fuel
-        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ 0)
-    (hrem : ∀ a ∈ bnorm (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)),
-      toPoly (cmod fuel a
-        (bcontentX fuel (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)))) = 0) :
+    (hprim : IsPrimitivePartXInput fuel
+      (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
       (toBPoly (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)) := by
   have hraw := isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1
     hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne hfilt
-  have hprim := isSimilar_toBPoly_bprimitivePartX fuel
-    (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)) hg hgcn hg0 hrem
+  have hprimSim := isSimilar_toBPoly_bprimitivePartX fuel
+    (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)) hprim
   rw [lrtSubresultantCompute, ← hG0, ← hG1]
-  exact hraw.trans hprim
+  exact hraw.trans hprimSim
 
 /-! ### The `bmonicXmodR` mod-`R` unit bridge (`lrtSubresultantCompute → lrtGcdCompute`)
 Modeling the residue ring `ℚ[t]/(R)` by an arbitrary ring hom `φ : ℚ[X] →+* S` killing `toPoly R`, the
@@ -782,15 +785,8 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDoma
     (hCne : toBPoly (G (m + 2)) ≠ 0)
     (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
       = toBPoly (G (m + 2)))
-    (hg : ¬ cisZero (bcontentX fuel
-        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) = true)
-    (hgcn : cnorm (bcontentX fuel
-        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ [])
-    (hg0 : toPoly (bcontentX fuel
-        (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) ≠ 0)
-    (hrem : ∀ a ∈ bnorm (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)),
-      toPoly (cmod fuel a
-        (bcontentX fuel (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)))) = 0)
+    (hprim : IsPrimitivePartXInput fuel
+      (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)))
     (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 →
         Polynomial.C a * lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree
           = Polynomial.C b * toBPoly (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)
@@ -807,7 +803,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDoma
         (lrtGcdCompute fuel (toBPoly (G (m + 2))).natDegree R A D))) := by
   -- abstract ℚ[t]-similarity, mapped through φ to the residue ring
   have habs := isSimilar_lrtSubresultant_lrtSubresultantCompute fuel A D G bt s c m hG0 hG1 hd0 hd1
-    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne hfilt hg hgcn hg0 hrem
+    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne hfilt hprim
   have hmap := isSimilar_mapRingHom φ habs hne
   -- the bmonicXmodR unit bridge: lrtGcdCompute = bmonicXmodR R lrtSubresultantCompute
   obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ fuel R
@@ -1213,25 +1209,10 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
       ≤ (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) l)).natDegree)
     (hCne : toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2)) ≠ 0)
     -- bprimitivePartX content-exactness on the degree-j element
-    (hg : ¬ cisZero (bcontentX fuel
-        (bsubresultantGcd fuel
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-          (liftCtoBPoly D) (bArgAmtD' A D))) = true)
-    (hgcn : cnorm (bcontentX fuel
-        (bsubresultantGcd fuel
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-          (liftCtoBPoly D) (bArgAmtD' A D))) ≠ [])
-    (hg0 : toPoly (bcontentX fuel
-        (bsubresultantGcd fuel
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-          (liftCtoBPoly D) (bArgAmtD' A D))) ≠ 0)
-    (hrem : ∀ a ∈ bnorm (bsubresultantGcd fuel
+    (hprim : IsPrimitivePartXInput fuel
+      (bsubresultantGcd fuel
         (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-        (liftCtoBPoly D) (bArgAmtD' A D)),
-      toPoly (cmod fuel a (bcontentX fuel
-        (bsubresultantGcd fuel
-          (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
-          (liftCtoBPoly D) (bArgAmtD' A D)))) = 0)
+        (liftCtoBPoly D) (bArgAmtD' A D)))
     (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 →
         Polynomial.C a * lrtSubresultant (toPoly A) (toPoly D)
             (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree
@@ -1263,7 +1244,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
     (fun l _ => chain_hsc fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
     hβcn hdiv
     (fun l _ => chain_hG2 fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
-    hc0 hβ0 hlc hcb hjlt hQ hCne hfilt hg hgcn hg0 hrem hne hu hgu hpz
+    hc0 hβ0 hlc hcb hjlt hQ hCne hfilt hprim hne hu hgu hpz
 
 -- Restatement: the divided-PRS recurrence `hG2` holds DEFINITIONALLY for the concrete `subresPRS`
 -- chain element `chainG` and β-divisor `chainBt` (no list/recurrence plumbing).
