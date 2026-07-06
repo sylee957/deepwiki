@@ -25,7 +25,7 @@ Why each condition follows from `η ∉ range D`:
 `hAD` (properness `deg hNum < deg Dstar`) is *not* a normality condition at all — it is **guaranteed by Hermite
 reduction** and should be a discharged theorem. `hDt0` (`deg Dt = 0`) is the primitive-case **scope tag**.
 
-## Status — `hE` and `hm` subsumed; frontier now `{hcopgcd, hDt0, hAD, hE}`
+## Status — all three normality conditions subsumed; frontier now `{hDt0, hAD, hE}`
 
 - **✅ `hE` (2026-07-06).** `GenuinePrimitiveMonomialLrt Dt` (input-independent, `LrtSoundness.lean`) +
   `lrtPoleNormalityData_of_genuineMonomial` (per-input `hE` in one line). **The structure field
@@ -35,22 +35,25 @@ reduction** and should be a discharged theorem. `hDt0` (`deg Dt = 0`) is the pri
   (`LrtGeneralDerivation`, the exact `D(cₙ₋₁)+nη≠0` argument) + `eta_not_range_der` (`η ∉ range D_K` via the
   property at `K̄` + `deriv_algebraMap` descent) + `hm_of_genuineMonomial` (the `cdegG`/`cmonomialDeriv` bridge,
   deg-0 case separate). `_of_genuine` derives `hm` from `hgen.hE`.
+- **✅ `hcopgcd` (2026-07-06).** **Removed from the structure.** The deepest normality condition (Yun factors'
+  normality: `gcd(d/vᵐ·D(v), v)` is a unit) — assembled from three pieces in `LrtResidueResultantDischarge`:
+  - `isCoprime_implicitDeriv_of_genuineMonomial` — `IsCoprime v (D v)` for monic squarefree `v` (base-change to
+    `K̄` via `isCoprime_map`, `v` splits `monic_separable_eq_nodal`, `isCoprime_prod_X_sub_C_implicitDeriv_iff` +
+    the monomial property). The normality math.
+  - `isCoprime_cofactor_yunFactor` — the cofactor coprimality `IsCoprime (d/vᵐ) v`: over `K̄`, `v` splits; at
+    each root `β` of `v`, `rootMult β d = idx+1` (`rootMult_R_map_eq_idx_succ`, the residue-multiplicity toolkit)
+    equals `rootMult β (vᵐ)` (β simple), forcing `rootMult β (d/vᵐ) = 0` — β not a root of the cofactor. (Went
+    through the *root-multiplicity* toolkit already built for the residue analysis, not a `List.prod`
+    reconstruction-cancellation.)
+  - `natDegree_cgcdWf_eq_zero_of_isCoprime` — the `cgcdWf`-unit bridge (`IsCoprime.isUnit_of_dvd'`).
+  - `hcopgcd_of_genuineMonomial` assembles them (`IsCoprime.mul_left` + the `zipIdx`→`get` bridge
+    `List.mk_mem_zipIdx_iff_getElem?`); `_of_genuine` derives `hcopgcd` from `hgen.hE`.
 
 ## Next
 
-1. **`hcopgcd`** — the deepest remaining subsumption (Yun factors' normality: `gcd(d/vᵐ·D(v), v)` is a unit).
-   **Two reusable pieces DONE (2026-07-06, `LrtResidueResultantDischarge`):**
-   - ✅ `isCoprime_implicitDeriv_of_genuineMonomial` — `IsCoprime v (D v)` for monic squarefree `v` (base-change
-     to `K̄` via `isCoprime_map`, `v` splits `monic_separable_eq_nodal`, `isCoprime_prod_X_sub_C_implicitDeriv_iff`
-     + the monomial property). The normality math.
-   - ✅ `natDegree_cgcdWf_eq_zero_of_isCoprime` — the `cgcdWf`-unit bridge (`IsCoprime.isUnit_of_dvd'` +
-     `toPolyG_cgcdWf_dvd`): abstract `IsCoprime` ⟹ the computable `hcopgcd`-shape (`natDegree = 0 ∧ ≠ 0`).
-   - **Remaining:** cofactor coprimality `IsCoprime (d/vᵐ) v` (Yun: reconstruction `d ~ ∏vⱼ^ᵐʲ` + pairwise
-     `cSqfreeYunFFGWf_isRelPrime` ⟹ `∏_{j≠k}` coprime with `vₖ`); `IsCoprime.mul_left` assembly; the `zipIdx`
-     wiring (Yun-factor monic/squarefree from `cSqfreeYunFFGgoWf_monic`/`_squarefree`); remove the field.
-2. **Discharge `hAD`** from the Hermite properness invariant (`cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one`,
+1. **Discharge `hAD`** from the Hermite properness invariant (`cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one`,
    concrete-carrier — algorithm-derived, belongs nowhere in the frontier).
-3. **Collapse** to `{GenuinePrimitiveMonomialLrt Dt, hDt0 (scope)}`, then **pull the monomial property out of the
+2. **Collapse** to `{GenuinePrimitiveMonomialLrt Dt, hDt0 (scope)}`, then **pull the monomial property out of the
    per-input structure** (provided once per `Dt`).
-4. **`GenuineMonomialTower` class** capturing the invariant for a whole concrete tower, from which
+3. **`GenuineMonomialTower` class** capturing the invariant for a whole concrete tower, from which
    `[PrimitiveFrontierLrt]` is discharged unconditionally on that tower.

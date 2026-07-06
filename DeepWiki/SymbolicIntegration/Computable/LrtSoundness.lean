@@ -1540,28 +1540,24 @@ open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **The genuine per-input side conditions of the assembled LRT reduced soundness**, bundled. Beyond the
 automatic facts (`hpp`/`hRpp`, both `primPart_ne_zero`), `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`
-needs exactly: the Yun-factor coprimality `hcopgcd`, the **primitive-case** `hDt0` (`Dt` constant), the
-residual degree bound `hAD`, the residue resultant nonzero `hR0`, the monomial-derivative degree `hm`, and the
-two per-extension conditions `hB`/`hnorm`. These are the Rothstein–Trager residue-data plus
-tower-nondegeneracy hypotheses — the honest residual frontier of the root-free primitive reduced integrator
-once the `hcancel` and degree/properness conditions are discharged. (The former `hilt` pure-single-log
-exclusion is gone: `cLrtLogArgG`'s `i = deg Dstar` branch handles it.) -/
+needs the Rothstein–Trager residue-data plus tower-nondegeneracy hypotheses. All of the *normality* ones —
+the Yun-factor coprimality `hcopgcd`, the residue resultant nonzero `hR0`, the monomial-derivative degree
+`hm`, and the per-input pole-normality `hnorm` — are now **derived** from the single **input-independent**
+monomial property `hE` (`hcopgcd_of_genuineMonomial`, `hR0_of_normalityData`, `hm_of_genuineMonomial`,
+`lrtPoleNormalityData_of_genuineMonomial`); this structure carries only the irreducible residuum: the
+scope tag `hDt0`, the Hermite properness `hAD`, and `hE`. (The former `hilt` pure-single-log exclusion is
+gone: `cLrtLogArgG`'s `i = deg Dstar` branch handles it.) -/
 structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
-  /-- Yun-factor coprimality: each higher-multiplicity factor's `gcd` with its derivative cofactor is a unit. -/
-  hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
-      ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
-          (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0
   /-- The **primitive case**: `Dθ = Dt` is a constant (a degree-0 tower polynomial). -/
   hDt0 : (toPolyG Dt).natDegree = 0
   /-- The reduced residual is proper: `deg hNum < deg Dstar`. -/
   hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
-  /-- The **one** genuine condition, now the **input-independent** monomial normality `η = Dt` is not a
-  derivative (`GenuinePrimitiveMonomialLrt Dt`). The per-input pole-normality `LrtPoleNormalityData` (hence the
-  `implicitDeriv` nonvanishing *and* `hR0`) is *derived* from it (`lrtPoleNormalityData_of_genuineMonomial`) —
-  so this depends only on the tower level's monomial, not on `a/d`. -/
+  /-- The **one** genuine condition: the **input-independent** monomial normality `η = Dt` is not a
+  derivative (`GenuinePrimitiveMonomialLrt Dt`). *Every* per-input normality condition — the Yun-factor
+  coprimality `hcopgcd`, the residue resultant nonzero `hR0`, the monomial-derivative degree drop `hm`, and
+  the pole-normality `LrtPoleNormalityData` — is *derived* from it, so this depends only on the tower level's
+  monomial, not on `a/d`. -/
   hE : GenuinePrimitiveMonomialLrt Dt
 
 -- `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` lives in `LrtResidueResultantDischarge` (it derives
