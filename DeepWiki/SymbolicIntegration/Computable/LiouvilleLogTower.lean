@@ -6,8 +6,8 @@ import Mathlib.Tactic
 Assembles the single-level log keystone `isLiouville_logExtension_uncond` via `IsLiouville.trans`
 into the multi-level tower `F ⊆ F(log u₁) ⊆ F(log u₁, log u₂) ⊆ …`, Liouville over `F` at every
 height modulo `NondegenerateLog uᵢ`.  Supplies the composite plumbing (`differentialAlgebra_trans`,
-`containConstants_trans`), the per-level glue `containConstants_of_nondegenerateLog`, the inductive
-step `isLiouville_ratFunc_step`, and the bundled `LiouvilleStage` tower. -/
+`containConstants_trans`), the inductive step `isLiouville_ratFunc_step`, and the bundled
+`LiouvilleStage` tower. -/
 
 open Polynomial
 open scoped Differential
@@ -43,50 +43,6 @@ theorem containConstants_trans {A B C : Type*} [Field A] [Field B] [Field C]
       apply FaithfulSMul.algebraMap_injective B C; rw [hbc, map_zero]
     obtain ⟨a, ha⟩ := mem_range_of_deriv_eq_zero A hb0
     exact ⟨a, by rw [IsScalarTower.algebraMap_apply A B C, ha, hb]⟩
-
-/-! ## The per-level glue: a nondegenerate log introduces no new constants -/
-
-section PerLevel
-
-variable {K : Type*} [Field K] [Differential K] [CharZero K]
-
-/-- A nondegenerate new log monomial introduces no new constants: for `NondegenerateLog u`,
-`ContainConstants K (RatFunc K)` holds for the log-monomial derivation `t' = u'/u`. -/
-theorem containConstants_of_nondegenerateLog (u : K) (hnd : NondegenerateLog u) :
-    letI := logDifferential u
-    Differential.ContainConstants K (RatFunc K) := by
-  letI := logDifferential u
-  letI := logDifferentialAlgebra u
-  refine ⟨fun {x} hx => ?_⟩
-  -- `x′ = 0 ∈ range`, so by the corrected `v`-reduction `x = v₀ + b·(log u)`, `b′ = 0`.
-  have hxrange : x′ ∈ (algebraMap K (RatFunc K)).range := by rw [hx]; exact ⟨0, by rw [map_zero]⟩
-  obtain ⟨v₀, b, hb0, hxeq⟩ := deriv_mem_range_imp_linear u hnd hxrange
-  have hfa : ∀ a : K, algebraMap K (RatFunc K) a = algebraMap K[X] (RatFunc K) (C a) := by
-    intro a; rw [algebraMap_eq_algebraMap_C]
-  -- Rewrite `x` as the image of the degree-`≤ 1` polynomial `C v₀ + C b·X`.
-  have hxP : x = algebraMap K[X] (RatFunc K) (C v₀ + C b * X) := by
-    rw [hxeq, hfa v₀, hfa b, map_add, map_mul]
-  -- `D (C v₀ + C b·X) = C v₀′ + C b · C (u'/u)` on `K[X]` (no fraction-field `ℤ`-algebra diamond).
-  have hDp : logDerivPoly u (C v₀ + C b * X) = C v₀′ + C b * C (logCoeff u) := by
-    rw [map_add, Derivation.leibniz, logDerivPoly_C, logDerivPoly_C, logDerivPoly_X, hb0]
-    simp only [map_zero, smul_eq_mul, mul_zero, add_zero]
-  have hxder : x′ = algebraMap K[X] (RatFunc K) (C v₀′ + C b * C (logCoeff u)) := by
-    rw [hxP, derivExtends u (C v₀ + C b * X), hDp]
-  -- `x′ = 0`, so by injectivity the polynomial is `0`, i.e. `v₀′ + b·(u'/u) = 0`.
-  rw [hx] at hxder
-  have hpoly0 : C v₀′ + C b * C (logCoeff u) = 0 :=
-    FaithfulSMul.algebraMap_injective K[X] (RatFunc K) (by rw [← hxder, map_zero])
-  have hF0 : v₀′ + b * logCoeff u = 0 := by
-    have h := hpoly0; rw [← C_mul, ← map_add] at h; exact C_eq_zero.mp h
-  -- If `b ≠ 0`, `-v₀/b` is a `K`-antiderivative of `u'/u` — forbidden.  So `b = 0` and `x = v₀ ∈ K`.
-  have hbeq0 : b = 0 := by
-    by_contra hbne
-    refine not_isAntideriv_of_nondegenerateLog u hnd (s := -v₀ / b) ?_
-    rw [Differential.deriv.leibniz_div_const (-v₀) b hb0, smul_eq_mul, map_neg]
-    field_simp; linear_combination -hF0
-  exact ⟨v₀, by rw [hxP, hbeq0, map_zero, zero_mul, add_zero, ← hfa v₀]⟩
-
-end PerLevel
 
 /-! ## The abstract inductive step and the bundled tower -/
 

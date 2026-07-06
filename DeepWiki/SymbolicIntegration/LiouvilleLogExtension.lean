@@ -602,6 +602,47 @@ theorem deriv_mem_range_imp_linear (u : F) (hnd : NondegenerateLog u) {v : RatFu
     ← algebraMap_eq_algebraMap_C, ← algebraMap_eq_algebraMap_C]
   rw [add_comm]
 
+/-- A nondegenerate log monomial introduces no new constants in `RatFunc F`. -/
+theorem containConstants_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u) :
+    letI := logDifferential u
+    Differential.ContainConstants F (RatFunc F) := by
+  letI := logDifferential u
+  letI := logDifferentialAlgebra u
+  refine ⟨fun {x} hx => ?_⟩
+  -- `x′ = 0 ∈ range`, so the corrected `v`-reduction gives `x = v₀ + b·(log u)`, with `b′ = 0`.
+  have hxrange : x′ ∈ (algebraMap F (RatFunc F)).range := by rw [hx]; exact ⟨0, by rw [map_zero]⟩
+  obtain ⟨v₀, b, hb0, hxeq⟩ := deriv_mem_range_imp_linear u hnd hxrange
+  have hfa : ∀ a : F,
+      algebraMap F (RatFunc F) a = algebraMap F[X] (RatFunc F) (Polynomial.C a) := by
+    intro a; rw [algebraMap_eq_algebraMap_C]
+  -- Rewrite `x` as the image of the degree-`≤ 1` polynomial `C v₀ + C b·X`.
+  have hxP :
+      x = algebraMap F[X] (RatFunc F) (Polynomial.C v₀ + Polynomial.C b * Polynomial.X) := by
+    rw [hxeq, hfa v₀, hfa b, map_add, map_mul]
+  -- `D (C v₀ + C b·X) = C v₀′ + C b · C (u'/u)`.
+  have hDp :
+      logDerivPoly u (Polynomial.C v₀ + Polynomial.C b * Polynomial.X) =
+        Polynomial.C v₀′ + Polynomial.C b * Polynomial.C (logCoeff u) := by
+    rw [map_add, Derivation.leibniz, logDerivPoly_C, logDerivPoly_C, logDerivPoly_X, hb0]
+    simp only [map_zero, smul_eq_mul, mul_zero, add_zero]
+  have hxder :
+      x′ = algebraMap F[X] (RatFunc F)
+        (Polynomial.C v₀′ + Polynomial.C b * Polynomial.C (logCoeff u)) := by
+    rw [hxP, derivExtends u (Polynomial.C v₀ + Polynomial.C b * Polynomial.X), hDp]
+  -- `x′ = 0`, so the polynomial derivative is `0`, i.e. `v₀′ + b·(u'/u) = 0`.
+  rw [hx] at hxder
+  have hpoly0 : Polynomial.C v₀′ + Polynomial.C b * Polynomial.C (logCoeff u) = 0 :=
+    FaithfulSMul.algebraMap_injective F[X] (RatFunc F) (by rw [← hxder, map_zero])
+  have hF0 : v₀′ + b * logCoeff u = 0 := by
+    have h := hpoly0; rw [← C_mul, ← map_add] at h; exact C_eq_zero.mp h
+  -- If `b ≠ 0`, `-v₀/b` is a `F`-antiderivative of `u'/u`; otherwise `x = v₀ ∈ F`.
+  have hbeq0 : b = 0 := by
+    by_contra hbne
+    refine not_isAntideriv_of_nondegenerateLog u hnd (s := -v₀ / b) ?_
+    rw [Differential.deriv.leibniz_div_const (-v₀) b hb0, smul_eq_mul, map_neg]
+    field_simp; linear_combination -hF0
+  exact ⟨v₀, by rw [hxP, hbeq0, map_zero, zero_mul, add_zero, ← hfa v₀]⟩
+
 omit [CharZero F] in
 /-- Given `RationalToPolyObligation`, `PolyVReductionObligation`, and `logDeriv u ≠ 0`,
 `v′ ∈ F ⟹ v ∈ F` on `RatFunc F`. -/
