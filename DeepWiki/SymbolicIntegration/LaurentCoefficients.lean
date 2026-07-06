@@ -7,6 +7,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
@@ -1139,56 +1140,7 @@ theorem principalPart_eq_engineSum_of_regular [CharZero K] {A A' M' N Md D Di Di
   rw [principalPart_unique i hMd hM heq,
     localPrincipalPart_eq_engineSum A D Di Diα i hi hroot]
 
-/-! ## Stage Q — regularity at `α` as a predicate, and the fully-assembled engine-form capstone -/
-
-/-- **Regularity at `α`** (§2.7, the pole-free predicate): a `RatFunc K` is regular at `α` when it is some
-`N/M` with `M(α) ≠ 0` (no pole at `α`). Closed under addition/subtraction and contains every principal part
-at a *different* root `β ≠ α`. -/
-def RegularAt (α : K) (f : RatFunc K) : Prop :=
-  ∃ (N M : K[X]), M.eval α ≠ 0 ∧ f = algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) M
-
-/-- **`0` is regular at `α`** (`N = 0`, `M = 1`). -/
-theorem RegularAt.zero (α : K) : RegularAt α (0 : RatFunc K) :=
-  ⟨0, 1, by simp, by simp⟩
-
-/-- **`RegularAt` is closed under addition**: `N₁/M₁ + N₂/M₂ = (N₁·M₂ + N₂·M₁)/(M₁·M₂)`, denominator
-`(M₁·M₂)(α) = M₁(α)·M₂(α) ≠ 0`. -/
-theorem RegularAt.add {α : K} {f g : RatFunc K} (hf : RegularAt α f) (hg : RegularAt α g) :
-    RegularAt α (f + g) := by
-  obtain ⟨N₁, M₁, hM₁, rfl⟩ := hf
-  obtain ⟨N₂, M₂, hM₂, rfl⟩ := hg
-  have hM₁0 : algebraMap K[X] (RatFunc K) M₁ ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (fun h => hM₁ (by rw [h, Polynomial.eval_zero]))
-  have hM₂0 : algebraMap K[X] (RatFunc K) M₂ ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (fun h => hM₂ (by rw [h, Polynomial.eval_zero]))
-  refine ⟨N₁ * M₂ + M₁ * N₂, M₁ * M₂, by rw [Polynomial.eval_mul]; exact mul_ne_zero hM₁ hM₂, ?_⟩
-  rw [div_add_div _ _ hM₁0 hM₂0, map_add, map_mul, map_mul, map_mul]
-
-/-- **`RegularAt` is closed under finite sums** over a `Finset`. -/
-theorem RegularAt.sum {α : K} {ι : Type*} {s : Finset ι} {f : ι → RatFunc K}
-    (hf : ∀ i ∈ s, RegularAt α (f i)) : RegularAt α (∑ i ∈ s, f i) := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simpa using RegularAt.zero α
-  | @insert a s ha ih =>
-    rw [Finset.sum_insert ha]
-    exact (hf a (Finset.mem_insert_self a s)).add
-      (ih (fun i hi => hf i (Finset.mem_insert_of_mem hi)))
-
-/-- **A principal part at `β` is regular at every `α ≠ β`** (§2.7): `localPrincipalPart A M β i` consolidates
-to `Wᵝ/(x−β)^i` (`localPrincipalPart_eq_div`), whose denominator `(x−β)^i` is `(α−β)^i ≠ 0` at `α ≠ β`. -/
-theorem RegularAt.localPrincipalPart {α β : K} (hαβ : α ≠ β) (A M : K[X]) (i : ℕ) :
-    RegularAt α (localPrincipalPart A M β i) := by
-  refine ⟨localApprox A M β i, (Polynomial.X - Polynomial.C β) ^ i, ?_, ?_⟩
-  · rw [Polynomial.eval_pow, Polynomial.eval_sub, Polynomial.eval_X, Polynomial.eval_C]
-    exact pow_ne_zero _ (sub_ne_zero.mpr hαβ)
-  · rw [localPrincipalPart_eq_div, map_pow]
-
-/-- **A regular function as the `N/Md` certificate**: unpacks `RegularAt α f` to a concrete `N/Md` with
-`Md(α) ≠ 0`, the input form of `principalPart_eq_engineSum_of_regular`. -/
-theorem RegularAt.exists_div {α : K} {f : RatFunc K} (hf : RegularAt α f) :
-    ∃ (N Md : K[X]), Md.eval α ≠ 0
-      ∧ f = algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) Md := hf
+/-! ## Stage Q — regularity at `α` and the fully-assembled engine-form capstone -/
 
 open Classical in
 /-- **P1, the multi-pole telescoping with per-pole regularity certificate** (§2.7, the strengthened
