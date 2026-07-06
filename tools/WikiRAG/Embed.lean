@@ -96,14 +96,22 @@ def indexAll (db : SQLite) : IO Unit := do
     return
   IO.println s!"Embedding {rows.size} declarations via Ollama ({current})…"
   let mut done := 0
+  let mut failed := 0
+  let mut consec := 0     -- consecutive failures; a long streak ⇒ Ollama is actually down
   for (name, short, kind, sig, doc) in rows do
-    match (← embedText (embedDoc short kind sig doc)) with
+    let txt := embedDoc short kind sig doc
+    -- one retry smooths transient failures (e.g. a cold model reload)
+    let ev ← (do match (← embedText txt) with | some v => pure (some v) | none => embedText txt)
+    match ev with
     | none =>
-      IO.eprintln s!"Ollama unreachable or empty embedding after {done} done. \
-        Run `ollama serve` and `ollama pull {current}`, then re-run."
-      return
+      failed := failed + 1; consec := consec + 1
+      if consec > 50 then
+        IO.eprintln s!"Ollama unreachable — {failed} failures, {done} done. Aborting; \
+          run `ollama serve` (+ `ollama pull {current}`) and re-run to resume."
+        return
     | some vec =>
-      if done == 0 then
+      consec := 0
+      if done == 0 && (← getMeta db "embed_model").isNone then
         setMeta db "embed_model" current
         setMeta db "embed_dim" (toString vec.size)
       let upd ← db.prepare "UPDATE decls SET embedding = ? WHERE name = ?"
@@ -111,8 +119,9 @@ def indexAll (db : SQLite) : IO Unit := do
       upd.bindText 2 name
       upd.exec
       done := done + 1
-      if done % 100 == 0 then IO.println s!"  …{done}/{rows.size}"
-  IO.println s!"Indexed {done} embeddings (model `{current}`, dim {(← getMeta db "embed_dim").getD "?"})."
+      if done % 100 == 0 then IO.println s!"  …{done}/{rows.size} ({failed} skipped)"
+  IO.println s!"Indexed {done} embeddings ({failed} skipped — re-run to retry them). \
+    Model `{current}`, dim {(← getMeta db "embed_dim").getD "?"}."
 
 /-- Model *switch*: drop all embeddings and re-embed everything with the configured model. -/
 def reindexAll (db : SQLite) : IO Unit := do
