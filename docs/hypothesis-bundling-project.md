@@ -71,7 +71,10 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
       `IsBdivCExactStep` and the `bprimitivePartX` content-exactness input as
       `IsPrimitivePartXInput`; bundled endpoint PRS-chain regularity as `IsSubresPRSChainInput`.
       `LaurentCoefficients.lean`: bundled regular root data as `IsLaurentRegularRoot`.
-- [ ] sweep: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do n=$(grep -coE "\(h[a-zA-Z0-9]+ :" "$f"); [ "$n" -gt 40 ] && echo "$n $f"; done | sort -rn`
+- [x] sweep: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do n=$(grep -coE "\(h[a-zA-Z0-9]+ :" "$f"); [ "$n" -gt 40 ] && echo "$n $f"; done | sort -rn`
+      was run after the listed bundles. The raw count still flags already-audited files plus future
+      candidates such as `LiouvilleLogExtension.lean`, `SubresultantPRS.lean`, `IntegratorCases.lean`,
+      and `Hyperexp/FullSoundness.lean`; those need a separate cluster audit before any bundling.
 
 ## Guardrails
 
