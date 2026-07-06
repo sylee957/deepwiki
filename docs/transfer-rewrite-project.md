@@ -98,7 +98,7 @@ that is part of the job.
 - [x] `Computable/RischDE/Structural.lean`
 - [x] `Computable/YunTowerCorrect.lean`
 - [x] `Computable/FuelFreeDiophantine.lean`
-- [ ] `Computable/Tower/GcdFFCorrect.lean`
+- [x] `Computable/Tower/GcdFFCorrect.lean`
 - [ ] `Computable/Algebraic/RadicalIntegralSoundness.lean`
 - [ ] `Computable/TranscendentalOverAlgebraic.lean`
 - [ ] sweep the rest: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do grep -qE "rw \[.*toPolyG_c|simp only \[.*toPolyG_c" "$f" && echo "$f"; done`

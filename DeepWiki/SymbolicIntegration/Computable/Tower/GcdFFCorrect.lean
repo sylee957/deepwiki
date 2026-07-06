@@ -328,7 +328,7 @@ theorem toPolyG_foldl_cmulG (init : CPolyG β) (ds : List (CPolyG β × ℕ)) :
   induction ds generalizing init with
   | nil => simp
   | cons hd tl ih =>
-    rw [List.foldl_cons, ih, CPolyG.toPolyG_cmulG, List.map_cons, List.prod_cons]; ring
+    simp only [List.foldl_cons, ih, denote, List.map_cons, List.prod_cons]; ring
 
 omit [CFieldSpec β] in
 /-- The `i`-th cleared coefficient of `cclearDenomsCoreG p` (in range) is `numᵢ · (∏_{j≠i} denⱼ)`. -/
@@ -362,7 +362,7 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPolyG (QFunNZG β)) (i : ℕ) :
   · rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
       GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff,
       List.getD_eq_getElem?_getD, cclearDenomsCoreG_getElem p i hi, Option.getD_some]
-    rw [CPolyG.toPolyG_cmulG, toPolyG_foldl_cmulG,
+    simp only [denote, toPolyG_foldl_cmulG,
       show CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 by
         rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one],
       one_mul]
@@ -468,8 +468,8 @@ theorem toGBCoeffPoly_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
       refine ⟨gbaddCore s' (gbscaleCCore (CPolyG.cmulG c' (gblcCore (gbnormCore p)))
           (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CField.one]])),
           CPolyG.cmulG c' (gblcCore (gbnormCore q)), ?_⟩
-      rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
-        toGBCoeffPoly_one, CPolyG.toPolyG_cmulG, map_mul, CPolyG.toPolyG_cmulG, map_mul]
+      simp only [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
+        toGBCoeffPoly_one, denote, map_mul]
       linear_combination hsc
 
 end GBPolyCore
