@@ -394,6 +394,41 @@ theorem natDegree_implicitDeriv_le_of_monic {F : Type*} [Field F] [Differential 
   rw [happly]
   exact (natDegree_add_le _ _).trans (max_le hmc hvd)
 
+open scoped Differential in
+/-- **Exact degree drop for a genuine primitive monomial.** For monic `p` (`deg p ≥ 1`), constant `v`
+(`deg v = 0`, `η = v.coeff 0`) with `η` **not a derivative** (`∀ γ, γ′ ≠ η`), `implicitDeriv v p` has degree
+*exactly* `deg p − 1`. The sub-leading coefficient is `(cₙ₋₁)′ + n·η`; were it `0`, then `η = D(−cₙ₋₁/n)` would
+be a derivative — contradiction. This is the `hm` frontier condition, derived from the monomial property. -/
+theorem natDegree_implicitDeriv_eq_of_monic_of_not_range {F : Type*} [Field F] [Differential F] [CharZero F]
+    (v p : F[X]) (hp : p.Monic) (hv : v.natDegree = 0) (hn : 1 ≤ p.natDegree)
+    (hrange : ∀ (γ : F), γ′ ≠ v.coeff 0) :
+    (Differential.implicitDeriv v p).natDegree = p.natDegree - 1 := by
+  have hle := natDegree_implicitDeriv_le_of_monic v p hp hv
+  have happly : Differential.implicitDeriv v p = Differential.mapCoeffs p + v * derivative p := by
+    simp [Differential.implicitDeriv, derivative']
+  have hn0 : (p.natDegree : F) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+  have hcoeff : (Differential.implicitDeriv v p).coeff (p.natDegree - 1)
+      = (p.coeff (p.natDegree - 1))′ + v.coeff 0 * (p.natDegree : F) := by
+    rw [happly, Polynomial.coeff_add, Differential.coeff_mapCoeffs]
+    conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hv]
+    rw [Polynomial.coeff_C_mul, Polynomial.coeff_derivative,
+      show p.natDegree - 1 + 1 = p.natDegree from by omega, hp.coeff_natDegree, one_mul,
+      show ((p.natDegree - 1 : ℕ) : F) + 1 = (p.natDegree : F) from by
+        rw [Nat.cast_sub hn, Nat.cast_one]; ring]
+  refine le_antisymm hle (Polynomial.le_natDegree_of_ne_zero ?_)
+  rw [hcoeff]
+  intro h0
+  refine hrange (- (p.coeff (p.natDegree - 1)) / (p.natDegree : F)) ?_
+  have hleib : ((p.natDegree : F) * (- (p.coeff (p.natDegree - 1)) / (p.natDegree : F)))′
+      = (p.natDegree : F) * ((- (p.coeff (p.natDegree - 1)) / (p.natDegree : F))′) := by
+    rw [Derivation.leibniz]
+    simp [Derivation.map_natCast Differential.deriv]
+  have hkey : (p.natDegree : F) * ((- (p.coeff (p.natDegree - 1)) / (p.natDegree : F))′)
+      = (p.natDegree : F) * v.coeff 0 := by
+    rw [← hleib, mul_div_cancel₀ _ hn0, map_neg]
+    linear_combination -h0
+  exact mul_left_cancel₀ hn0 hkey
+
 open scoped Classical in
 /-- **`z`-degree bound on the bivariate subresultant coefficient.** Each `t`-coefficient of
 `lrtSubresultantGen A D B j` (a polynomial in the residue variable `z`) has degree `≤ deg D + (deg D − 1)`,
