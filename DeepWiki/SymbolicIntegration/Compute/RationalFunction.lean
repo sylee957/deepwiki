@@ -31,6 +31,14 @@ theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
   rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, map_mul, mul_div_assoc,
     div_self hqm, mul_one]
 
+/-- Exact computable division gives a multiplicative factorization in `RatFunc ℚ`. -/
+theorem am_eq_cdiv_mul_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hrem : toPoly (cmod fuel p q) = 0) :
+    algebraMap ℚ[X] (RatFunc ℚ) (toPoly p)
+      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q))
+        * algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) := by
+  rw [← map_mul, toPoly_cdiv_of_cmod_zero fuel p q hq hrem]
+
 /-- `cisZero p = true ↔ toPoly p = 0`: the `CPoly` zero test agrees with vanishing in `ℚ[X]`. -/
 theorem cisZero_iff_toPoly_eq_zero (p : CPoly) : cisZero p = true ↔ toPoly p = 0 := by
   rw [cisZero, beq_iff_eq, cnorm_eq_nil_iff]

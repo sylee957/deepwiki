@@ -1698,17 +1698,6 @@ The engine reduces the **global** fraction `A/D` once per repeated factor `(Vᵢ
 `am A/am D − (toQFun glocᵢ)′` has denominator `am U·am Vᵢ = am (D/Vᵢ^{iᵢ−1})`, whose squarefree
 *radical* is dominated by `Dstar`. The composition tracks these per-factor residuals through the fold. -/
 
-/-- **Exact reading of the global denominator** through a factor power: if `cmod fuel D Vpow` reads to
-`0` (i.e. `Vpow ∣ D` exactly) and `Vpow ≠ 0`, then `am D = am (cdiv fuel D Vpow) · am Vpow` in
-`RatFunc ℚ`. This is the certificate making `hermiteInner`'s global denominator `U·Vᵢ^{iᵢ}` equal to
-`D` (so each factor's inner loop reduces the genuine `A/D`). -/
-theorem am_D_eq_cdiv_mul (fuel : ℕ) (D Vpow : CPoly) (hVpow : cnorm Vpow ≠ [])
-    (hrem : toPoly (cmod fuel D Vpow) = 0) :
-    algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
-      = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D Vpow))
-        * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vpow) := by
-  rw [← map_mul, toPoly_cdiv_of_cmod_zero fuel D Vpow hVpow hrem]
-
 /-! ### The single-repeated-factor wrapper: `U·V` is the radical `Dstar`
 
 When `D` has a **single** repeated factor `(V, m)` (every other irreducible factor of `D` is simple),
@@ -2054,7 +2043,7 @@ For a kept factor `(Vi, i)` (`i ≥ 2`, so `i = (i−1)+1`), with `U = D/Vi^i` r
 `(toQFun glocᵢ)′ = am A/am D − am Afinalᵢ/(am U·am Vi)`. So with `T = am A/am D`, each increment reduces
 the *same* global `T`, leaving the per-factor residual `residᵢ = am Afinalᵢ/(am U·am Vi)` — exactly the
 shape `foldl_residual_eq` consumes. The reconciliation `am D = am U·am Vi^i` is the exact-division
-content `Vi^i ∣ D` (`am_D_eq_cdiv_mul`), supplied here as a hypothesis. -/
+content `Vi^i ∣ D` (`am_eq_cdiv_mul_of_cmod_zero`), supplied here as a hypothesis. -/
 
 /-- The `glocIncr` denominator `Uᵢ·Vi` (the per-factor residual denominator): for the kept factor
 `(Vi, i)` with `Uᵢ = D/Vi^i`, the residual fraction `residᵢ` has denominator `am Uᵢ·am Vi`. -/
