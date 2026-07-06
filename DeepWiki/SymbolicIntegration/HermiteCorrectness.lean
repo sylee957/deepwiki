@@ -1,3 +1,4 @@
+import DeepWiki.Algebra.ListSums
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
@@ -347,15 +348,6 @@ theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2
     map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
   rfl
 
-/-- Sum of constant-minus-term in an additive comm group: `∑ⱼ (T − residⱼ) = gs.length • T − ∑ⱼ residⱼ`. -/
-theorem sum_map_const_sub {α G : Type*} [AddCommGroup G] (gs : List α) (T : G) (resid : α → G) :
-    (gs.map (fun g => T - resid g)).sum = gs.length • T - (gs.map resid).sum := by
-  induction gs with
-  | nil => simp
-  | cons hd tl ih =>
-    simp only [List.map_cons, List.sum_cons, List.length_cons, ih, succ_nsmul]
-    abel
-
 open scoped Differential in
 /-- The global-`A` fold residual as `(1−n)·T + ∑ residᵢ` in `RatFunc ℚ`: if each increment satisfies
 `(toQFun gⱼ)′ = T − residⱼ`, then `T − (toQFun (gs.foldl qadd qzero))′ = T − gs.length • T + ∑ⱼ residⱼ`. -/
@@ -364,7 +356,7 @@ theorem foldl_residual_eq (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0
     (hstep : ∀ g ∈ gs, (toQFun g)′ = T - resid g) :
     T - (toQFun (gs.foldl qadd qzero))′
       = T - gs.length • T + (gs.map resid).sum := by
-  rw [deriv_toQFun_foldl_qadd gs hgs, List.map_congr_left hstep, sum_map_const_sub]
+  rw [deriv_toQFun_foldl_qadd gs hgs, List.map_congr_left hstep, list_sum_map_const_sub]
   abel
 
 open scoped Differential in
@@ -2242,7 +2234,7 @@ theorem total_fold_residual (fuel : ℕ) (A D : CPoly) (factors : List (CPoly ×
     have h2 : 2 ≤ Vi.2 := by simpa using (List.mem_filter.mp hVi).2
     simp only [Function.comp_apply]
     exact hstep Vi hViF h2
-  rw [hmapeq, sum_map_const_sub]
+  rw [hmapeq, list_sum_map_const_sub]
   abel
 
 /-! ### The per-factor residual over the *global* denominator `D`
