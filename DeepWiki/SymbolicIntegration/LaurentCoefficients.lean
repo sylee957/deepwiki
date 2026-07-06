@@ -7,6 +7,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalUniqueness
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
@@ -952,116 +953,7 @@ example (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K} (hc : c ≠ 0) :
         = algebraMap K[X] (RatFunc K) P + ∑ α ∈ R, PP α :=
   completePartialFraction_over_closure A mult R hc
 
-/-! ## Stage O — principal-part intrinsicity (uniqueness of the principal part at `α`) and the literal
-Theorem 2.7.1 conclusion (Bronstein §2.7, the final closing step)
-
-The telescoping `exists_sum_localPrincipalPart` produces, at each pole `α`, the principal part
-`PP α = localPrincipalPart A' N α i` of the **running (peeled) numerator** `A'` over the running cofactor
-`N` — a correct singular part of `A/D` at `α`, but with numerators differing from the original-`A` engine
-form. Principal-part **intrinsicity** closes this gap: the principal part of a rational function at `α` is
-**unique** (independent of how the rest is split off), so `PP α` coincides with `localPrincipalPart A Mα α i`
-for the original cofactor `Mα = D /ₘ (X−α)^i`, whose coefficients ARE the engine outputs `Hᵢⱼ(α)`
-(`localCoeff_eq_laurentH`).
-
-The mechanism: a principal part at `α` of order `i` consolidates (over the common denominator `(X−α)^i`) to
-`W/(X−α)^i` with `deg W < i` (`localPrincipalPart_eq_div`, `degree_modByMonic_lt`). If such a `W/(X−α)^i`
-equals a function `N/M` **regular at `α`** (`M(α) ≠ 0`), then cross-multiplying gives `(X−α)^i ∣ W·M`;
-coprimality of `(X−α)^i` to `M` forces `(X−α)^i ∣ W`, and `deg W < i` forces `W = 0`. Hence two principal
-parts at `α` whose difference is regular at `α` are equal (`principalPart_unique`). -/
-
-/-- **A bounded-degree principal part `W/(X−α)^i` equal to a function regular at `α` is `0`** (§2.7, the
-intrinsicity core): if `algebraMap W / (algebraMap (X−α))^i = algebraMap N / algebraMap M` with `M(α) ≠ 0`
-and `deg W < i`, then `W = 0`. Cross-multiplying gives the polynomial identity `W·M = N·(X−α)^i`, so
-`(X−α)^i ∣ W·M`; since `(X−α)^i` is coprime to `M` (`M(α) ≠ 0`), `(X−α)^i ∣ W`, and `deg W < i = deg (X−α)^i`
-forces `W = 0` (`eq_zero_of_dvd_of_degree_lt`). -/
-theorem eq_zero_of_div_pow_eq_regular {W N M : K[X]} {α : K} (i : ℕ) (hM : M.eval α ≠ 0)
-    (hW : W.degree < ((Polynomial.X - Polynomial.C α) ^ i).degree)
-    (heq : algebraMap K[X] (RatFunc K) W
-            / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ i
-          = algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) M) :
-    W = 0 := by
-  have hX0 : (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
-  have hM0 : algebraMap K[X] (RatFunc K) M ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
-      (fun h => hM (by rw [h, Polynomial.eval_zero]))
-  -- cross-multiply the `RatFunc` identity to a polynomial identity `W·M = N·(X−α)^i`
-  rw [div_eq_div_iff (pow_ne_zero i hX0) hM0, ← map_pow, ← map_mul, ← map_mul] at heq
-  have hpoly : W * M = N * (Polynomial.X - Polynomial.C α) ^ i :=
-    RatFunc.algebraMap_injective K heq
-  -- `(X−α)^i ∣ W·M`, coprime to `M`, so `(X−α)^i ∣ W`; then `deg W < i` forces `W = 0`
-  have hdvd : (Polynomial.X - Polynomial.C α) ^ i ∣ W * M := ⟨N, by rw [hpoly]; ring⟩
-  have hcop : IsCoprime ((Polynomial.X - Polynomial.C α) ^ i) M :=
-    (isCoprime_M_X_sub_C_pow i hM).symm
-  exact eq_zero_of_dvd_of_degree_lt (hcop.dvd_of_dvd_mul_right hdvd) hW
-
-/-- **Principal-part intrinsicity / uniqueness at `α`** (§2.7, the closing step): two principal parts at `α`
-of order `i` whose difference is regular at `α` are equal. Concretely, if
-`localPrincipalPart A₁ M₁ α i + r₁ = localPrincipalPart A₂ M₂ α i + r₂` where `r₁, r₂` are functions regular
-at `α` (here both `Nₖ/Mₖ` with `Mₖ(α) ≠ 0`), then `localPrincipalPart A₁ M₁ α i = localPrincipalPart A₂ M₂ α i`.
-Consolidating both principal parts to `Wₖ/(X−α)^i` (`localPrincipalPart_eq_div`, `deg Wₖ < i`), their
-difference `(W₁−W₂)/(X−α)^i` equals the regular `r₂ − r₁` (a single quotient `N/M`, `M(α) ≠ 0`), so
-`W₁ − W₂ = 0` (`eq_zero_of_div_pow_eq_regular`); hence `W₁ = W₂` and the principal parts agree. -/
-theorem principalPart_unique {A₁ M₁ A₂ M₂ N₁ N₂ Md₁ Md₂ : K[X]} {α : K} (i : ℕ)
-    (hMd₁ : Md₁.eval α ≠ 0) (hMd₂ : Md₂.eval α ≠ 0)
-    (heq : localPrincipalPart A₁ M₁ α i
-            + algebraMap K[X] (RatFunc K) N₁ / algebraMap K[X] (RatFunc K) Md₁
-          = localPrincipalPart A₂ M₂ α i
-            + algebraMap K[X] (RatFunc K) N₂ / algebraMap K[X] (RatFunc K) Md₂) :
-    localPrincipalPart A₁ M₁ α i = localPrincipalPart A₂ M₂ α i := by
-  set W₁ := localApprox A₁ M₁ α i with hW₁
-  set W₂ := localApprox A₂ M₂ α i with hW₂
-  have hX0 : (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
-  have hMd₁0 : algebraMap K[X] (RatFunc K) Md₁ ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
-      (fun h => hMd₁ (by rw [h, Polynomial.eval_zero]))
-  have hMd₂0 : algebraMap K[X] (RatFunc K) Md₂ ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr
-      (fun h => hMd₂ (by rw [h, Polynomial.eval_zero]))
-  have hDp0 : (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ i ≠ 0 :=
-    pow_ne_zero i hX0
-  have hMd₁₂0 : algebraMap K[X] (RatFunc K) (Md₁ * Md₂) ≠ 0 := by
-    rw [map_mul]; exact mul_ne_zero hMd₁0 hMd₂0
-  -- consolidate both principal parts to the common `(X−α)^i` denominator
-  rw [localPrincipalPart_eq_div, localPrincipalPart_eq_div, ← hW₁, ← hW₂] at heq
-  -- the polynomial cross-identity `(W₁ − W₂)·(Md₁·Md₂) = (N₂·Md₁ − N₁·Md₂)·(X−α)^i`, from `heq`
-  -- rearrange `heq` so the shared `D^i` denominator combines on one side
-  have heqsub : algebraMap K[X] (RatFunc K) (W₁ - W₂)
-        / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ i
-      = algebraMap K[X] (RatFunc K) N₂ / algebraMap K[X] (RatFunc K) Md₂
-        - algebraMap K[X] (RatFunc K) N₁ / algebraMap K[X] (RatFunc K) Md₁ := by
-    rw [map_sub, sub_div]
-    linear_combination heq
-  have hpolyid : (W₁ - W₂) * (Md₁ * Md₂)
-      = (N₂ * Md₁ - N₁ * Md₂) * (Polynomial.X - Polynomial.C α) ^ i := by
-    apply RatFunc.algebraMap_injective K
-    rw [div_sub_div _ _ hMd₂0 hMd₁0,
-      div_eq_div_iff hDp0 (mul_ne_zero hMd₂0 hMd₁0)] at heqsub
-    simp only [map_mul, map_sub, map_pow] at heqsub ⊢
-    ring_nf
-    ring_nf at heqsub
-    linear_combination heqsub
-  -- `(W₁−W₂)/(X−α)^i = (N₂·Md₁ − N₁·Md₂)/(Md₁·Md₂)`, regular at `α`
-  have hdiff : algebraMap K[X] (RatFunc K) (W₁ - W₂)
-        / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ i
-      = algebraMap K[X] (RatFunc K) (N₂ * Md₁ - N₁ * Md₂)
-        / algebraMap K[X] (RatFunc K) (Md₁ * Md₂) := by
-    rw [div_eq_div_iff hDp0 hMd₁₂0, ← map_pow, ← map_mul, ← map_mul, hpolyid]
-  -- the difference numerator has degree `< i` (each `Wₖ` is a `%ₘ (X−α)^i`)
-  have hdeg : (W₁ - W₂).degree < ((Polynomial.X - Polynomial.C α) ^ i).degree := by
-    have hmonic : ((Polynomial.X - Polynomial.C α) ^ i).Monic := (monic_X_sub_C α).pow i
-    have h1 : W₁.degree < ((Polynomial.X - Polynomial.C α) ^ i).degree := by
-      rw [hW₁, localApprox]; exact degree_modByMonic_lt _ hmonic
-    have h2 : W₂.degree < ((Polynomial.X - Polynomial.C α) ^ i).degree := by
-      rw [hW₂, localApprox]; exact degree_modByMonic_lt _ hmonic
-    exact lt_of_le_of_lt (Polynomial.degree_sub_le _ _) (max_lt h1 h2)
-  -- `W₁ − W₂ = 0` by the intrinsicity core, so the principal parts agree
-  have hMM : (Md₁ * Md₂).eval α ≠ 0 := by
-    rw [Polynomial.eval_mul]; exact mul_ne_zero hMd₁ hMd₂
-  have hWeq : W₁ - W₂ = 0 := eq_zero_of_div_pow_eq_regular i hMM hdeg hdiff
-  rw [localPrincipalPart_eq_div, localPrincipalPart_eq_div, ← hW₁, ← hW₂,
-    sub_eq_zero.mp hWeq]
+/-! ## Stage O — principal-part intrinsicity and the literal Theorem 2.7.1 conclusion -/
 
 /-- **The principal part in engine form `∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ`** (§2.7, Theorem 2.7.1, the literal
 per-pole conclusion): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α`, the principal part of `A/D` at `α`
