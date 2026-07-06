@@ -136,15 +136,6 @@ theorem not_linearDependentOverConst_algebraMap {n : ℕ} [NeZero n] (y : Fin n 
 
 end Extension
 
-/-- A root of a separable polynomial with constant coefficients is a constant. -/
-theorem deriv_eq_zero_of_separable_algebraic_const {E : Type*} [Field E] [Differential E]
-    {c : E} (p : E[X])
-    (hp : ∀ i, (p.coeff i)′ = 0) (hroot : p.eval c = 0) (hsep : p.derivative.eval c ≠ 0) :
-    c′ = 0 := by
-  have hchain : (p.eval c)′ = p.derivative.eval c * c′ := deriv_eval_of_const_coeffs p c hp
-  rw [hroot, map_zero] at hchain
-  exact (mul_eq_zero.mp hchain.symm).resolve_left hsep
-
 section AlgebraicConstant
 variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
   [DifferentialAlgebra F E]
