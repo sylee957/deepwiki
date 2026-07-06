@@ -802,28 +802,44 @@ theorem eval_ratFuncKDeriv_iterate_hFracα_at_root [CharZero K] {A Ei Diα : K[X
   rw [iterate_ratFuncKDeriv_hFracα A Ei Diα i hi hEi0 hDiα0 d,
     eval_smul_lFracα _ i d hEi hDiα, mul_div_assoc]
 
+/-- A regular root setup for the Laurent coefficient engine at multiplicity `i`. -/
+structure IsLaurentRegularRoot (D Di Diα : K[X]) (α : K) (i : ℕ) : Prop where
+  /-- `Di` is monic. -/
+  monic : Di.Monic
+  /-- `α` is a root of `Di`. -/
+  root : Di.eval α = 0
+  /-- `Di` factors as `(X - C α) * Diα`. -/
+  factor : Di = (Polynomial.X - Polynomial.C α) * Diα
+  /-- The complementary factor `Eᵢ` is coprime to `Di`. -/
+  coprime_laurentE : IsCoprime (laurentE D Di i) Di
+  /-- The derivative `Di'` is coprime to `Di`. -/
+  coprime_derivative : IsCoprime (derivative Di) Di
+  /-- The complementary factor `Eᵢ` does not vanish at `α`. -/
+  laurentE_eval_ne : (laurentE D Di i).eval α ≠ 0
+  /-- The linear cofactor `Diα` does not vanish at `α`. -/
+  cofactor_eval_ne : Diα.eval α ≠ 0
+
 /-- `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α = (A/D)(x−α)ⁱ`:
 `(laurentH A D Di i j).eval α = ((i−j)!)⁻¹ · RatFunc.eval id α ((ratFuncKDeriv^[i−j]) (hFracα A Eᵢ Diα i))`,
 for `Dᵢ = (x−α)·Dᵢ,α` monic, `j ≤ i`, `Eᵢ(α), Dᵢ,α(α) ≠ 0`. -/
 theorem eval_laurentH_eq_taylor_coeff [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ)
-    (hi : 0 < i) (hji : j ≤ i) (hDi : Di.Monic) (hα : Di.eval α = 0)
-    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
-    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
-    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    (hi : 0 < i) (hji : j ≤ i) (hroot : IsLaurentRegularRoot D Di Diα α i) :
     (laurentH A D Di i j).eval α
       = (((i - j).factorial : K))⁻¹
           * RatFunc.eval (RingHom.id K) α
               ((ratFuncKDeriv^[i - j]) (hFracα A (laurentE D Di i) Diα i)) := by
   -- abbreviations
   set Ei := laurentE D Di i with hEidef
-  have hEi0 : Ei ≠ 0 := fun h => hEi (by rw [h, Polynomial.eval_zero])
-  have hDiα0 : Diα ≠ 0 := fun h => hDiα (by rw [h, Polynomial.eval_zero])
+  have hEi0 : Ei ≠ 0 := fun h => hroot.laurentE_eval_ne (by rw [← hEidef, h, Polynomial.eval_zero])
+  have hDiα0 : Diα ≠ 0 := fun h => hroot.cofactor_eval_ne (by rw [h, Polynomial.eval_zero])
   -- evaluate Stage I at the root
-  rw [eval_ratFuncKDeriv_iterate_hFracα_at_root i hi hEi0 hDiα0 hEi hDiα (i - j)]
+  rw [eval_ratFuncKDeriv_iterate_hFracα_at_root i hi hEi0 hDiα0
+    hroot.laurentE_eval_ne hroot.cofactor_eval_ne (i - j)]
   -- the engine output, via Steps 2+3+5
-  rw [eval_laurentH_eq_diffSubst_laurentNum i j hDi hα hfac hcopE hcopD, ← hEidef]
+  rw [eval_laurentH_eq_diffSubst_laurentNum i j hroot.monic hroot.root hroot.factor
+    hroot.coprime_laurentE hroot.coprime_derivative, ← hEidef]
   -- the `(derivative Di)(α) = Diα(α)` cofactor identity
-  rw [eval_derivative_of_X_sub_C_mul hfac]
+  rw [eval_derivative_of_X_sub_C_mul hroot.factor]
   -- the denominator `lDenomα Ei Diα i (i-j) (α) = Diα(α)^{i+(i-j)}·Ei(α)^{(i-j)+1}`
   unfold lDenomα
   rw [Polynomial.eval_mul, Polynomial.eval_pow, Polynomial.eval_pow]
@@ -948,7 +964,7 @@ example [CharZero K] {A D Di Diα : K[X]} {α : K} (i j : ℕ) (hi : 0 < i) (hji
       = (((i - j).factorial : K))⁻¹
           * RatFunc.eval (RingHom.id K) α
               ((ratFuncKDeriv^[i - j]) (hFracα A (laurentE D Di i) Diα i)) :=
-  eval_laurentH_eq_taylor_coeff i j hi hji hDi hα hfac hcopE hcopD hEi hDiα
+  eval_laurentH_eq_taylor_coeff i j hi hji ⟨hDi, hα, hfac, hcopE, hcopD, hEi, hDiα⟩
 
 /-- The `i=j=1` instance: `H₁₁(α) = h₁,α(α)`, the order-`0` Taylor coefficient (function value at `α`). -/
 example [CharZero K] {A D Di Diα : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
@@ -958,7 +974,7 @@ example [CharZero K] {A D Di Diα : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.ev
     (laurentH A D Di 1 1).eval α
       = RatFunc.eval (RingHom.id K) α (hFracα A (laurentE D Di 1) Diα 1) := by
   have h := eval_laurentH_eq_taylor_coeff (A := A) (D := D) (Di := Di) (Diα := Diα) (α := α) 1 1
-    one_pos le_rfl hDi hα hfac hcopE hcopD hEi hDiα
+    one_pos le_rfl ⟨hDi, hα, hfac, hcopE, hcopD, hEi, hDiα⟩
   simpa using h
 
 /-! ## Principal parts: the local Taylor approximant and "subtracting it removes the pole" -/
@@ -1302,10 +1318,7 @@ theorem hFracα_eq_div_lDenomα (A Ei Diα : K[X]) (i : ℕ) :
 /-- The coefficient bridge chained to the engine: at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`, with `M = Dᵢ,α^i·Eᵢ`
 and `d < i`, `localCoeff A M α i d = (laurentH A D Di i (i−d)).eval α`. -/
 theorem localCoeff_eq_laurentH [CharZero K] (A D Di Diα : K[X]) {α : K} (i d : ℕ)
-    (hi : 0 < i) (hd : d < i) (hDi : Di.Monic) (hα : Di.eval α = 0)
-    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
-    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
-    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    (hi : 0 < i) (hd : d < i) (hroot : IsLaurentRegularRoot D Di Diα α i) :
     localCoeff A (lDenomα (laurentE D Di i) Diα i 0) α i d
       = (laurentH A D Di i (i - d)).eval α := by
   set Ei := laurentE D Di i with hEidef
@@ -1313,10 +1326,10 @@ theorem localCoeff_eq_laurentH [CharZero K] (A D Di Diα : K[X]) {α : K} (i d :
   -- `M(α) ≠ 0`: `M = Diα^i·Ei`
   have hM : M.eval α ≠ 0 := by
     rw [hMdef, lDenomα, Nat.add_zero, Nat.zero_add, pow_one, Polynomial.eval_mul, Polynomial.eval_pow]
-    exact mul_ne_zero (pow_ne_zero _ hDiα) hEi
+    exact mul_ne_zero (pow_ne_zero _ hroot.cofactor_eval_ne) hroot.laurentE_eval_ne
   -- the engine side: `Hᵢ,(i−d)(α) = (1/(i−(i−d))!)·(d/dx)^[i−(i−d)] hᵢ,α (α)`, with `i−(i−d)=d`
   have hji : i - d ≤ i := by omega
-  rw [eval_laurentH_eq_taylor_coeff (Diα := Diα) i (i - d) hi hji hDi hα hfac hcopE hcopD hEi hDiα]
+  rw [eval_laurentH_eq_taylor_coeff (Diα := Diα) i (i - d) hi hji hroot]
   rw [show i - (i - d) = d from by omega, ← hEidef]
   -- the `localCoeff` side via the Hasse bridge, with `hFracα = A/M`
   rw [localCoeff_eq_taylor_coeff A M i d hM hd, hFracα_eq_div_lDenomα, ← hMdef]
@@ -1340,7 +1353,8 @@ example [CharZero K] (A D Di Diα : K[X]) {α : K} (i d : ℕ) (hi : 0 < i) (hd 
     (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
     localCoeff A (lDenomα (laurentE D Di i) Diα i 0) α i d
       = (laurentH A D Di i (i - d)).eval α :=
-  localCoeff_eq_laurentH A D Di Diα i d hi hd hDi hα hfac hcopE hcopD hEi hDiα
+  localCoeff_eq_laurentH A D Di Diα i d hi hd
+    ⟨hDi, hα, hfac, hcopE, hcopD, hEi, hDiα⟩
 
 /-! ## Stage N — P1: the multi-pole assembly (subtracting ALL principal parts) and the remainder-zero
 fact (Bronstein §2.7, Theorem 2.7.1, the literal over-the-closure conclusion)
@@ -1650,10 +1664,7 @@ Bronstein–Salvy engine sum `∑_{j=1}^{i} (laurentH A D Dᵢ i j)(α)/(x−α)
 `1 ≤ j ≤ i`, so the `i−j < i` hypothesis holds). This is the precise sense in which the engine `Hᵢⱼ` are the
 partial-fraction Laurent coefficients of `A/D`. -/
 theorem localPrincipalPart_eq_engineSum [CharZero K] (A D Di Diα : K[X]) {α : K} (i : ℕ)
-    (hi : 0 < i) (hDi : Di.Monic) (hα : Di.eval α = 0)
-    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
-    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
-    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) :
+    (hi : 0 < i) (hroot : IsLaurentRegularRoot D Di Diα α i) :
     localPrincipalPart A (lDenomα (laurentE D Di i) Diα i 0) α i
       = ∑ j ∈ Finset.Icc 1 i,
           algebraMap K[X] (RatFunc K) (Polynomial.C ((laurentH A D Di i j).eval α))
@@ -1662,7 +1673,7 @@ theorem localPrincipalPart_eq_engineSum [CharZero K] (A D Di Diα : K[X]) {α : 
   refine Finset.sum_congr rfl fun j hj => ?_
   simp only [Finset.mem_Icc] at hj
   -- the `j`-th Laurent coefficient `localCoeff A M α i (i−j) = Hᵢⱼ(α)`
-  rw [localCoeff_eq_laurentH A D Di Diα i (i - j) hi (by omega) hDi hα hfac hcopE hcopD hEi hDiα,
+  rw [localCoeff_eq_laurentH A D Di Diα i (i - j) hi (by omega) hroot,
     show i - (i - j) = j from by omega]
 
 /-! ## Stage P — the literal Theorem 2.7.1 conclusion over the algebraic closure (engine form) -/
@@ -1695,10 +1706,7 @@ data `A', M'`) has the property that `A/D − q` is **regular at `α`** (`= N/Md
 the peeled-vs-original numerator matching: the intrinsic principal part is the original-`A` engine sum
 regardless of how it was computed. -/
 theorem principalPart_eq_engineSum_of_regular [CharZero K] {A A' M' N Md D Di Diα : K[X]} {α : K}
-    (i : ℕ) (hi : 0 < i) (hDi : Di.Monic) (hα : Di.eval α = 0)
-    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
-    (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
-    (hEi : (laurentE D Di i).eval α ≠ 0) (hDiα : Diα.eval α ≠ 0) (hMd : Md.eval α ≠ 0)
+    (i : ℕ) (hi : 0 < i) (hroot : IsLaurentRegularRoot D Di Diα α i) (hMd : Md.eval α ≠ 0)
     (hreg : algebraMap K[X] (RatFunc K) A
               / algebraMap K[X] (RatFunc K)
                   ((Polynomial.X - Polynomial.C α) ^ i * lDenomα (laurentE D Di i) Diα i 0)
@@ -1711,7 +1719,7 @@ theorem principalPart_eq_engineSum_of_regular [CharZero K] {A A' M' N Md D Di Di
   set M := lDenomα (laurentE D Di i) Diα i 0 with hMdef
   have hM : M.eval α ≠ 0 := by
     rw [hMdef, lDenomα, Nat.add_zero, Nat.zero_add, pow_one, Polynomial.eval_mul, Polynomial.eval_pow]
-    exact mul_ne_zero (pow_ne_zero _ hDiα) hEi
+    exact mul_ne_zero (pow_ne_zero _ hroot.cofactor_eval_ne) hroot.laurentE_eval_ne
   -- `q` and `localPrincipalPart A M α i` are both principal parts of `A/D` at `α`, rest regular at `α`
   have hcanon := subtract_localPrincipalPart_eq A M i hM
   -- `q + N/Md = localPrincipalPart A M α i + R/M` (both equal `A/D`)
@@ -1723,7 +1731,7 @@ theorem principalPart_eq_engineSum_of_regular [CharZero K] {A A' M' N Md D Di Di
     linear_combination hcanon - hreg
   -- uniqueness: `q = localPrincipalPart A M α i`, then engine form
   rw [principalPart_unique i hMd hM heq,
-    localPrincipalPart_eq_engineSum A D Di Diα i hi hDi hα hfac hcopE hcopD hEi hDiα]
+    localPrincipalPart_eq_engineSum A D Di Diα i hi hroot]
 
 /-! ## Stage Q — regularity at `α` as a predicate, and the fully-assembled engine-form capstone -/
 
@@ -1921,8 +1929,8 @@ theorem completePartialFraction_engineForm [CharZero K] (A : K[X]) (mult : K →
     obtain ⟨N, Md, hMd, hregdiv⟩ := (hreg α hα).exists_div
     rw [hPPeq]
     -- assemble the `hreg`-certificate into the input shape of `principalPart_eq_engineSum_of_regular`
-    apply principalPart_eq_engineSum_of_regular (D := D) (mult α) hi hDimonic hDiα0root hfac hcopE hcopD
-      hEi hDiαα hMd
+    apply principalPart_eq_engineSum_of_regular (D := D) (mult α) hi
+      ⟨hDimonic, hDiα0root, hfac, hcopE, hcopD, hEi, hDiαα⟩ hMd
     -- the goal denominator `(x−α)^{mult α}·lDenomα… = D` (`hDfac`); rest is `hreg`'s certificate
     rw [← hDfac, ← hPPeq]
     exact hregdiv
@@ -1952,7 +1960,8 @@ example [CharZero K] (A D Di Diα : K[X]) {α : K} (i : ℕ) (hi : 0 < i) (hDi :
       = ∑ j ∈ Finset.Icc 1 i,
           algebraMap K[X] (RatFunc K) (Polynomial.C ((laurentH A D Di i j).eval α))
             / (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) ^ j :=
-  localPrincipalPart_eq_engineSum A D Di Diα i hi hDi hα hfac hcopE hcopD hEi hDiα
+  localPrincipalPart_eq_engineSum A D Di Diα i hi
+    ⟨hDi, hα, hfac, hcopE, hcopD, hEi, hDiα⟩
 
 /-- Restatement of the literal Theorem 2.7.1 over `K̄` (book p.55–56), engine form:
 `A/D = P + ∑ᵢ ∑_{α|Dᵢ(α)=0} (Hᵢᵢ(α)/(x−α)ⁱ + ⋯ + Hᵢ₁(α)/(x−α))`, the engine outputs `Hᵢⱼ(α)` being the

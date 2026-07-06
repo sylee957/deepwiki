@@ -66,10 +66,11 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
       Hermite-inner Bézout input, and residual-wrapper denominator input.
 - [x] `GroebnerBasis.lean` (429) — bundled the repeated Lazard base hypotheses as
       `HasLazardBaseDvd` / `HasLazardBaseDegreeZero`; left structural `hB` basis witnesses explicit.
-- [ ] `SubresultantCorrectness.lean` (255), `LaurentCoefficients.lean` (162) — large; expect several
+- [x] `SubresultantCorrectness.lean` (255), `LaurentCoefficients.lean` (162) — large; expect several
       clusters each. `SubresultantCorrectness.lean`: bundled the exact β-divided PRS step as
       `IsBdivCExactStep` and the `bprimitivePartX` content-exactness input as
       `IsPrimitivePartXInput`; bundled endpoint PRS-chain regularity as `IsSubresPRSChainInput`.
+      `LaurentCoefficients.lean`: bundled regular root data as `IsLaurentRegularRoot`.
 - [ ] sweep: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do n=$(grep -coE "\(h[a-zA-Z0-9]+ :" "$f"); [ "$n" -gt 40 ] && echo "$n $f"; done | sort -rn`
 
 ## Guardrails
