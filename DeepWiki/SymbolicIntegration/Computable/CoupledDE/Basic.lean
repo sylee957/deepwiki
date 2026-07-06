@@ -44,6 +44,44 @@ corresponding row of `A`). -/
 def hcatQ (A B : List (List ℚ)) : List (List ℚ) :=
   List.zipWith (· ++ ·) A B
 
+/-- A `mulMatrixQ` row within range is exactly `d + 1` entries wide. -/
+theorem mulMatrixQ_row_len (b : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows) :
+    ((mulMatrixQ b d nrows).getD r []).length = d + 1 := by
+  rw [mulMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
+    List.getElem_map]
+  simp
+
+/-- A `derivMatrixQ` row within range is exactly `d + 1` entries wide. -/
+theorem derivMatrixQ_row_len (d nrows r : ℕ) (hr : r < nrows) :
+    ((derivMatrixQ d nrows).getD r []).length = d + 1 := by
+  rw [derivMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
+    List.getElem_map]
+  simp
+
+/-- `getD` row of `matAddQ A B` within both inputs is the rowwise `zipWith (+)`. -/
+theorem matAddQ_getD_row (A B : List (List ℚ)) (r : ℕ) (hA : r < A.length) (hB : r < B.length) :
+    (matAddQ A B).getD r [] = List.zipWith (· + ·) (A.getD r []) (B.getD r []) := by
+  rw [matAddQ, getD_lt_gen _ r [] (by rw [List.length_zipWith]; omega), List.getElem_zipWith,
+    getD_lt_gen A r [] hA, getD_lt_gen B r [] hB]
+
+/-- `getD` row of `hcatQ A B` within both inputs is the append of the two rows. -/
+theorem hcatQ_getD_row (A B : List (List ℚ)) (r : ℕ) (hA : r < A.length) (hB : r < B.length) :
+    (hcatQ A B).getD r [] = A.getD r [] ++ B.getD r [] := by
+  rw [hcatQ, getD_lt_gen _ r [] (by rw [List.length_zipWith]; omega), List.getElem_zipWith,
+    getD_lt_gen A r [] hA, getD_lt_gen B r [] hB]
+
+/-- `mulMatrixQ b d nrows` has exactly `nrows` rows. -/
+theorem mulMatrixQ_len (b : CPolyG ℚ) (d nrows : ℕ) : (mulMatrixQ b d nrows).length = nrows := by
+  rw [mulMatrixQ, List.length_map, List.length_range]
+
+/-- `derivMatrixQ d nrows` has exactly `nrows` rows. -/
+theorem derivMatrixQ_len (d nrows : ℕ) : (derivMatrixQ d nrows).length = nrows := by
+  rw [derivMatrixQ, List.length_map, List.length_range]
+
+/-- `matAddQ A B` has one row for each aligned pair of input rows. -/
+theorem matAddQ_len (A B : List (List ℚ)) : (matAddQ A B).length = min A.length B.length := by
+  rw [matAddQ, List.length_zipWith]
+
 /-- `cCoupledDESystem a b1 b2 z1 z2 d` (`D = d/dx`): solve `(Dy₁; Dy₂) + [[b₁, a·b₂], [b₂, b₁]]·(y₁; y₂)
 = (z₁; z₂)` for `y₁, y₂ ∈ ℚ[x]` of degree `≤ d`, via the ansatz residuals as one ℚ-linear solve
 (`cConstSolveUniqueQ`). Returns `some (y₁, y₂)` or `none`. -/

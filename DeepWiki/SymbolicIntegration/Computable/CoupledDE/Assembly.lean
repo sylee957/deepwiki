@@ -147,40 +147,6 @@ theorem dotQ_zipWith_add (a b u : List ℚ) (hab : a.length = b.length) (hu : a.
         rw [ih ys ws (by simpa using hab) (by simpa using hu)]
         ring
 
-/-- A `mulMatrixQ`/`derivMatrixQ`/`matAddQ` row (`r < nrows`) is exactly `d+1` wide. -/
-theorem mulMatrixQ_row_len (b : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows) :
-    ((mulMatrixQ b d nrows).getD r []).length = d + 1 := by
-  rw [mulMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
-    List.getElem_map]
-  simp
-
-theorem derivMatrixQ_row_len (d nrows r : ℕ) (hr : r < nrows) :
-    ((derivMatrixQ d nrows).getD r []).length = d + 1 := by
-  rw [derivMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
-    List.getElem_map]
-  simp
-
-/-- `getD` row of `matAddQ A B` (`r` within both) is the `zipWith (+)` of the two rows. -/
-theorem matAddQ_getD_row (A B : List (List ℚ)) (r : ℕ) (hA : r < A.length) (hB : r < B.length) :
-    (matAddQ A B).getD r [] = List.zipWith (· + ·) (A.getD r []) (B.getD r []) := by
-  rw [matAddQ, getD_lt_gen _ r [] (by rw [List.length_zipWith]; omega), List.getElem_zipWith,
-    getD_lt_gen A r [] hA, getD_lt_gen B r [] hB]
-
-/-- `getD` row of `hcatQ A B` (`r` within both) is the append of the two rows. -/
-theorem hcatQ_getD_row (A B : List (List ℚ)) (r : ℕ) (hA : r < A.length) (hB : r < B.length) :
-    (hcatQ A B).getD r [] = A.getD r [] ++ B.getD r [] := by
-  rw [hcatQ, getD_lt_gen _ r [] (by rw [List.length_zipWith]; omega), List.getElem_zipWith,
-    getD_lt_gen A r [] hA, getD_lt_gen B r [] hB]
-
-theorem mulMatrixQ_len (b : CPolyG ℚ) (d nrows : ℕ) : (mulMatrixQ b d nrows).length = nrows := by
-  rw [mulMatrixQ, List.length_map, List.length_range]
-
-theorem derivMatrixQ_len (d nrows : ℕ) : (derivMatrixQ d nrows).length = nrows := by
-  rw [derivMatrixQ, List.length_map, List.length_range]
-
-theorem matAddQ_len (A B : List (List ℚ)) : (matAddQ A B).length = min A.length B.length := by
-  rw [matAddQ, List.length_zipWith]
-
 /-- The coupled-system first-row dot equals `coeff_r (D y1 + b1 y1 + ab2 y2)`. -/
 theorem dotQ_hcatRow (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows)
     (hy1 : y1.length ≤ d + 1) (hy2 : y2.length ≤ d + 1) :

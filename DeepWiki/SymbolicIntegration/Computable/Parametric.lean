@@ -244,6 +244,11 @@ def cLimitedIntegrate (fnum fden : CPolyG ℚ) (wnums wdens : List (CPolyG ℚ))
   let gdens := fden :: logDerivs.map Prod.snd
   cParamRischDE gnums gdens
 
+/-- `getD` within range reads the element. -/
+theorem getD_lt_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : n < l.length) :
+    l.getD n d = l[n] := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hn]; rfl
+
 end CPolyG
 
 /-! ### Validation — the parametric logarithmic derivative recognizer

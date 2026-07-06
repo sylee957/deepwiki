@@ -8,11 +8,6 @@ reduced-echelon structure, and the headline `cConstSolveUniqueQ_sound`. -/
 
 namespace DeepWiki.SymbolicIntegration.CPolyG
 
-/-- `getD` within range reads the element (generic). -/
-theorem getD_lt_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : n < l.length) :
-    l.getD n d = l[n] := by
-  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hn]; rfl
-
 /-- `getD` past the end is the default (generic). -/
 theorem getD_long_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : l.length ≤ n) :
     l.getD n d = d := by
