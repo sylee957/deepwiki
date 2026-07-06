@@ -91,19 +91,6 @@ theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q 
     rw [length_cnormG_of_ne _ hne, length_cnormG_of_ne p hp]
     omega
 
-/-! ### Coherence of the generic ops with the concrete `Compute.*` engine at `α = ℚ` -/
-
-/-- `csubG` at `ℚ` is the concrete `csub`. -/
-theorem csubG_eq_csub : (csubG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.csub := by
-  funext p q
-  rw [csubG, Compute.csub, cnegG_eq_cneg, congrFun (congrFun caddG_eq_cadd _) _]
-
-/-- `cleadG` at `ℚ` is the concrete `clead`. -/
-theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
-  funext p
-  rw [cleadG, Compute.clead, cnormG_eq_cnorm]
-  rfl
-
 end CPolyG
 
 /-- Field clearing: from the cleared identity `(P·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` with

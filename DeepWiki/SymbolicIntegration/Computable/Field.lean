@@ -30,6 +30,11 @@ theorem caddG_eq_cadd : (caddG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Com
 /-- `cnegG` at `ℚ` is the concrete `cneg`. -/
 theorem cnegG_eq_cneg : (cnegG : CPolyG ℚ → CPolyG ℚ) = Compute.cneg := rfl
 
+/-- `csubG` at `ℚ` is the concrete `csub`. -/
+theorem csubG_eq_csub : (csubG : CPolyG ℚ → CPolyG ℚ → CPolyG ℚ) = Compute.csub := by
+  funext p q
+  rw [csubG, Compute.csub, cnegG_eq_cneg, congrFun (congrFun caddG_eq_cadd _) _]
+
 /-- `cscaleG` at `ℚ` is the concrete `cscale`. -/
 theorem cscaleG_eq_cscale (c : ℚ) : (cscaleG c : CPolyG ℚ → CPolyG ℚ) = Compute.cscale c := rfl
 
@@ -67,6 +72,12 @@ theorem cisZeroG_eq_cisZero : (cisZeroG : CPolyG ℚ → Bool) = Compute.cisZero
   funext p
   rw [cisZeroG, cnormG_eq_cnorm, Compute.cisZero]
   cases h : Compute.cnorm p <;> simp
+
+/-- `cleadG` at `ℚ` is the concrete `clead`. -/
+theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
+  funext p
+  rw [cleadG, Compute.clead, cnormG_eq_cnorm]
+  rfl
 
 /-- `toPolyG` at `ℚ` is the concrete `toPoly` (`toK = id`, `CFieldSpec.K ℚ = ℚ`). -/
 theorem toPolyG_eq_toPoly : (toPolyG : CPolyG ℚ → ℚ[X]) = Compute.toPoly := by
