@@ -56,7 +56,8 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
 - [x] `Computable/LaurentSoundness.lean` — define `IsProperSpecialPart` (the
       `{nz,mpos,clead,proper}` prefix, 3 theorems), `IsSpecialDenominator` (adds `mono`, 2 theorems),
       and `IsHyperexpMonomial` (the `hDt` condition, 8 sites). **Template.**
-- [ ] `Computable/LrtSoundness.lean` (162 binders) — audit for clusters beyond the existing `Lrt*Data`.
+- [x] `Computable/LrtSoundness.lean` (162 binders) — audited beyond the existing `Lrt*Data`; bundled the
+      repeated Yun input pair as `IsYunFactorizationInput`.
 - [ ] `Computable/NormalPartSoundness.lean` (121)
 - [ ] `Computable/OneShotAssembly.lean` (264)
 - [ ] `HermiteCorrectness.lean` (314), `GroebnerBasis.lean` (429), `SubresultantCorrectness.lean` (255),

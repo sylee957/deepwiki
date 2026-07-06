@@ -183,7 +183,7 @@ theorem isCoprime_cofactor_yunFactor [CharZero (CFieldSpec.K α)] (hgcd : GcdFFC
       (AlgebraicClosure (CFieldSpec.K α)))).Monic :=
     (cSqfreeYunFFGWf_monic hgcd d hd0 v (List.getElem_mem hidx)).map _
   have hvsfE : Squarefree ((toPolyG v).map (algebraMap (CFieldSpec.K α)
-      (AlgebraicClosure (CFieldSpec.K α)))) := yun_factor_map_squarefree hgcd d hd0 hpp hidx
+      (AlgebraicClosure (CFieldSpec.K α)))) := yun_factor_map_squarefree hgcd d ⟨hd0, hpp⟩ hidx
   have hvsepE : ((toPolyG v).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))).Separable :=
     PerfectField.separable_iff_squarefree.mpr hvsfE
@@ -205,7 +205,7 @@ theorem isCoprime_cofactor_yunFactor [CharZero (CFieldSpec.K α)] (hgcd : GcdFFC
   intro hroot
   have hmd : rootMultiplicity β ((toPolyG d).map (algebraMap (CFieldSpec.K α)
       (AlgebraicClosure (CFieldSpec.K α)))) = idx + 1 :=
-    rootMult_R_map_eq_idx_succ hgcd d hd0 hpp idx hidx β hβroot
+    rootMult_R_map_eq_idx_succ hgcd d ⟨hd0, hpp⟩ idx hidx β hβroot
   have hmapmul : (toPolyG d).map (algebraMap (CFieldSpec.K α)
         (AlgebraicClosure (CFieldSpec.K α)))
       = ((toPolyG u).map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))))
@@ -403,8 +403,8 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldS
     exact isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup hgcd Dt a d hd0
       (Polynomial.primPart_ne_zero _)
       (hcopgcd_of_genuineMonomial hgcd Dt d hd0 (Polynomial.primPart_ne_zero _) hgen.hE)
-      hDt0 hAD
-      (hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hDt0 hAD hnorm)
-      (Polynomial.primPart_ne_zero _) (hm_of_genuineMonomial hgcd Dt a d hd0 hgen.hE hDt0) hnorm
+      hDt0 hAD ⟨hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hDt0 hAD hnorm,
+        Polynomial.primPart_ne_zero _⟩
+      (hm_of_genuineMonomial hgcd Dt a d hd0 hgen.hE hDt0) hnorm
 
 end DeepWiki.SymbolicIntegration

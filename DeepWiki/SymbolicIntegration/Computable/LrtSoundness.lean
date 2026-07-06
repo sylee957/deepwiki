@@ -832,6 +832,15 @@ theorem mem_cLrtLogArgG (Dt hNum Dstar : CPolyG α) (p : CPolyG α × List (CPol
       rw [Option.some_inj] at hfn; subst hfn
       exact ⟨idx, hmem, hlen, fun _ => rfl, fun heq => absurd heq hin⟩
 
+omit [CDiffField α] [CDiffFieldSpec α] in
+variable [CFracGcdCoreWf α] in
+/-- `R` is a nonzero input for the squarefree Yun factorization. -/
+structure IsYunFactorizationInput (R : CPolyG α) [NormalizedGCDMonoid (CFieldSpec.K α)] : Prop where
+  /-- `R` denotes a nonzero polynomial. -/
+  nonzero : toPolyG R ≠ 0
+  /-- The primitive part of `R` denotes a nonzero polynomial. -/
+  primPart_nonzero : (toPolyG R).primPart ≠ 0
+
 open Classical in
 omit [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
@@ -840,8 +849,7 @@ variable [CFracGcdCoreWf α] in
 separable ⟹ `Nodup` roots. -/
 theorem nodup_roots_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
-    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0)
+    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
     (p : CPolyG α × List (CPolyG α)) (hp : p ∈ cLrtLogArgG Dt hNum Dstar) :
     ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.Nodup := by
   obtain ⟨idx, hmem, _, _⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
@@ -850,7 +858,8 @@ theorem nodup_roots_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [
   obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp hget
   have hp1 : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
     rw [List.get_eq_getElem]; exact hp1'
-  have hsqf : Squarefree (toPolyG p.1) := hp1 ▸ cSqfreeYunFFGWf_squarefree hgcd _ hR0 hRpp idx hj
+  have hsqf : Squarefree (toPolyG p.1) :=
+    hp1 ▸ cSqfreeYunFFGWf_squarefree hgcd _ hR.nonzero hR.primPart_nonzero idx hj
   exact Polynomial.nodup_roots
     ((PerfectField.separable_iff_squarefree.mpr hsqf).map)
 
@@ -989,12 +998,12 @@ variable [CFracGcdCoreWf α] in
 /-- **Distinct Yun factors have disjoint roots over `E`.** `cSqfreeYunFFGWf_isRelPrime` (`IsRelPrime`) ⟹
 `IsCoprime` (PID) ⟹ `IsCoprime` over `E` (base change) ⟹ disjoint roots. -/
 theorem disjoint_yun_factors [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α) (hR0 : toPolyG R ≠ 0)
-    (hRpp : (toPolyG R).primPart ≠ 0) {j k : ℕ} (hj : j < (cSqfreeYunFFGWf R).length)
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
+    (hR : IsYunFactorizationInput R) {j k : ℕ} (hj : j < (cSqfreeYunFFGWf R).length)
     (hk : k < (cSqfreeYunFFGWf R).length) (hjk : j ≠ k) :
     Disjoint ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
       ((toPolyG ((cSqfreeYunFFGWf R).get ⟨k, hk⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset := by
-  have hcopE := ((cSqfreeYunFFGWf_isRelPrime hgcd R hR0 hRpp hj hk hjk).isCoprime).map
+  have hcopE := ((cSqfreeYunFFGWf_isRelPrime hgcd R hR.nonzero hR.primPart_nonzero hj hk hjk).isCoprime).map
     (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
   simp only [Polynomial.coe_mapRingHom] at hcopE
   exact disjoint_roots_of_isCoprime _ _ hcopE
@@ -1005,11 +1014,11 @@ variable [CFracGcdCoreWf α] in
 /-- **A Yun factor stays squarefree over `E`.** Squarefree over char-zero `K` ⟹ separable ⟹ separable over
 `E` (base change) ⟹ squarefree over `E`. -/
 theorem yun_factor_map_squarefree [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α) (hR0 : toPolyG R ≠ 0)
-    (hRpp : (toPolyG R).primPart ≠ 0) {j : ℕ} (hj : j < (cSqfreeYunFFGWf R).length) :
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
+    (hR : IsYunFactorizationInput R) {j : ℕ} (hj : j < (cSqfreeYunFFGWf R).length) :
     Squarefree ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)) :=
   ((PerfectField.separable_iff_squarefree.mpr
-    (cSqfreeYunFFGWf_squarefree hgcd R hR0 hRpp j hj)).map).squarefree
+    (cSqfreeYunFFGWf_squarefree hgcd R hR.nonzero hR.primPart_nonzero j hj)).map).squarefree
 
 open Classical in
 omit [CDiffField α] [CDiffFieldSpec α] in
@@ -1019,17 +1028,17 @@ variable [CFracGcdCoreWf α] in
 (reconstruction), and `c` is a simple root of only `R_idx` (squarefree ⟹ mult 1; coprimality ⟹ mult 0
 elsewhere), so `rootMult_prodPow_of_unique` gives `1 + idx`. -/
 theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
-    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α) (hR0 : toPolyG R ≠ 0)
-    (hRpp : (toPolyG R).primPart ≠ 0) (idx : ℕ) (hidx : idx < (cSqfreeYunFFGWf R).length) (c : E)
+    [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
+    (hR : IsYunFactorizationInput R) (idx : ℕ) (hidx : idx < (cSqfreeYunFFGWf R).length) (c : E)
     (hc : c ∈ ((toPolyG ((cSqfreeYunFFGWf R).get ⟨idx, hidx⟩)).map (algebraMap (CFieldSpec.K α) E)).roots) :
     rootMultiplicity c ((toPolyG R).map (algebraMap (CFieldSpec.K α) E)) = idx + 1 := by
-  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd R hR0 hRpp).map
+  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd R hR.nonzero hR.primPart_nonzero).map
     (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
   simp only [Polynomial.coe_mapRingHom, prodPow_map] at hrec
   rw [associated_rootMultiplicity_eq hrec c]
   have hprodne : prodPow 1 (((cSqfreeYunFFGWf R).map toPolyG).map
       (Polynomial.map (algebraMap (CFieldSpec.K α) E))) ≠ 0 :=
-    fun h => ((Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hR0)
+    fun h => ((Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hR.nonzero)
       (hrec.eq_zero_iff.mpr h)
   have hlen : idx < (((cSqfreeYunFFGWf R).map toPolyG).map
       (Polynomial.map (algebraMap (CFieldSpec.K α) E))).length := by
@@ -1042,7 +1051,7 @@ theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Fie
   rw [rootMult_prodPow_of_unique c _ 1 idx one_ne_zero hlen hprodne ?_ ?_]
   · omega
   · rw [hget idx hidx]
-    exact squarefree_rootMultiplicity_eq_one (yun_factor_map_squarefree hgcd R hR0 hRpp hidx) c
+    exact squarefree_rootMultiplicity_eq_one (yun_factor_map_squarefree hgcd R hR hidx) c
       (Polynomial.isRoot_of_mem_roots hc)
   · intro j hj hjne
     have hj' : j < (cSqfreeYunFFGWf R).length := by rw [List.length_map, List.length_map] at hj; exact hj
@@ -1051,8 +1060,8 @@ theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Fie
     intro hroot
     have hcj : c ∈ ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj'⟩)).map
         (algebraMap (CFieldSpec.K α) E)).roots :=
-      Polynomial.mem_roots'.mpr ⟨(yun_factor_map_squarefree hgcd R hR0 hRpp hj').ne_zero, hroot⟩
-    exact (Finset.disjoint_left.mp (disjoint_yun_factors hgcd R hR0 hRpp hidx hj' (Ne.symm hjne))
+      Polynomial.mem_roots'.mpr ⟨(yun_factor_map_squarefree hgcd R hR hj').ne_zero, hroot⟩
+    exact (Finset.disjoint_left.mp (disjoint_yun_factors hgcd R hR hidx hj' (Ne.symm hjne))
       (Multiset.mem_toFinset.mpr hc)) (Multiset.mem_toFinset.mpr hcj)
 
 open Classical in
@@ -1067,8 +1076,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
     (hDmonic : (toPolyG Dstar).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
     (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
-    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0)
+    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
     (hm : cdegG (cmonomialDeriv Dt Dstar) = cdegG Dstar - 1)
     (hB : ∀ β ∈ allpoles, ((toPolyG (cmonomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E)).eval β ≠ 0)
@@ -1100,7 +1108,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
   have hindex : idx + 1 = (rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
       (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c := by
-    rw [hRR, rootMult_R_map_eq_idx_succ hgcd _ hR0 hRpp idx hj c (hp1 ▸ hc)]
+    rw [hRR, rootMult_R_map_eq_idx_succ hgcd _ hR idx hj c (hp1 ▸ hc)]
   have hdeg : (Lagrange.nodal allpoles id).natDegree = cdegG Dstar := by
     rw [← hsplit, natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective,
       ← cdegG_eq_natDegree]
@@ -1137,7 +1145,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
   · -- **`i < n`: subresultant** — the original path, `hi` now derived from `idx+1 ≤ cdegG` (`hindex` + degree).
     have hR_E0 : (rtResultantGen ((toPolyG hNum).map φ) (Lagrange.nodal allpoles id)
         ((toPolyG (cmonomialDeriv Dt Dstar)).map φ)) ≠ 0 := by
-      rw [hRR, Polynomial.map_ne_zero_iff φ.injective]; exact hR0
+      rw [hRR, Polynomial.map_ne_zero_iff φ.injective]; exact hR.nonzero
     have hle : idx + 1 ≤ cdegG Dstar := by
       have h1 : idx + 1 ≤ (rtResultantGen ((toPolyG hNum).map φ) (Lagrange.nodal allpoles id)
           ((toPolyG (cmonomialDeriv Dt Dstar)).map φ)).natDegree := by
@@ -1161,8 +1169,7 @@ distinct Yun-factor position, and distinct Yun factors are coprime hence disjoin
 Via `List.pairwise_filterMap` over the `zipIdx`. -/
 theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
-    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0) :
+    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar)) :
     (cLrtLogArgG Dt hNum Dstar).Pairwise (fun p q =>
       Disjoint ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
         ((toPolyG q.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset) := by
@@ -1181,7 +1188,7 @@ theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
       | simp only [reduceCtorEq] at hb
       | simp only [reduceCtorEq] at hb'
       | (obtain rfl := Option.some.inj hb; obtain rfl := Option.some.inj hb';
-         exact disjoint_yun_factors hgcd _ hR0 hRpp hi' hj' (Nat.ne_of_lt hij))
+         exact disjoint_yun_factors hgcd _ hR hi' hj' (Nat.ne_of_lt hij))
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **A Yun factor with a root is non-constant** (`¬ (cnormG Rᵢ).length ≤ 1`): a root forces
@@ -1276,8 +1283,7 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
           ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).natDegree
         ≤ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1)
     (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
-    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0)
+    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
     (β : E) (hβ : β ∈ allpoles) :
     ∃ p ∈ cLrtLogArgG Dt hNum Dstar,
       ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
@@ -1290,17 +1296,18 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   have hresR : res ∈ ((toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map φ).roots := by
     rw [residueResultant_map_roots Dt hNum Dstar hDmonic hDt0 hAD hB hB_deg, hsplit]
     exact Multiset.mem_map.mpr ⟨β, nodal_roots allpoles ▸ Finset.mem_val.mpr hβ, rfl⟩
-  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd _ hR0 hRpp).map (Polynomial.mapRingHom φ)
+  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd _ hR.nonzero hR.primPart_nonzero).map
+    (Polynomial.mapRingHom φ)
   simp only [Polynomial.coe_mapRingHom, prodPow_map] at hrec
   have hprodne : prodPow 1 ((cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).map toPolyG
       |>.map (Polynomial.map φ)) ≠ 0 :=
-    fun h => ((Polynomial.map_ne_zero_iff φ.injective).mpr hR0) (hrec.eq_zero_iff.mpr h)
+    fun h => ((Polynomial.map_ne_zero_iff φ.injective).mpr hR.nonzero) (hrec.eq_zero_iff.mpr h)
   have hresP := Multiset.mem_of_le (Polynomial.roots.le_of_dvd hprodne hrec.dvd) hresR
   obtain ⟨v, hv, hresv⟩ := mem_roots_prodPow 1 one_ne_zero _ res hprodne hresP
   rw [List.map_map, List.mem_map] at hv
   obtain ⟨Ri, hRimem, hRiv⟩ := hv
   obtain ⟨idx, hidx⟩ := List.getElem?_of_mem hRimem
-  have hRi0 : toPolyG Ri ≠ 0 := (cSqfreeYunFFGWf_monic hgcd _ hR0 Ri hRimem).ne_zero
+  have hRi0 : toPolyG Ri ≠ 0 := (cSqfreeYunFFGWf_monic hgcd _ hR.nonzero Ri hRimem).ne_zero
   have hresRi : res ∈ ((toPolyG Ri).map φ).roots := by
     rw [Function.comp_apply] at hRiv; rwa [← hRiv] at hresv
   obtain ⟨Si, hSi⟩ := mem_cLrtLogArgG_of_yun_factor Dt hNum Dstar idx Ri hidx
@@ -1346,8 +1353,7 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [IsAlgClosed E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
     (hDmonic : (toPolyG Dstar).Monic) (hDsep : (toPolyG Dstar).Separable)
     (hDt0 : (toPolyG Dt).natDegree = 0) (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
-    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).primPart ≠ 0)
+    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
     (hm : cdegG (cmonomialDeriv Dt Dstar) = cdegG Dstar - 1)
     (hB : ∀ β ∈ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
         (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
@@ -1382,14 +1388,14 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     simp only [denote]
     rw [implicitDeriv_map]
   rw [logResidueSumLrtG_eq_normalPart_of_yun Dt hNum (cLrtLogArgG Dt hNum Dstar) allpoles _ rfl
-    (fun p hp => nodup_roots_cLrtLogArgG_entry hgcd Dt hNum Dstar hR0 hRpp p hp)
+    (fun p hp => nodup_roots_cLrtLogArgG_entry hgcd Dt hNum Dstar hR p hp)
     (fun p hp c hc => residue_of_root_cLrtLogArgG_entry hgcd Dt hNum Dstar allpoles hDmonic hDt0 hAD
-      hB hB_deg hsplit hR0 p hp c hc)
-    (disjoint_cLrtLogArgG hgcd Dt hNum Dstar hR0 hRpp)
-    (fun β hβ => cover_cLrtLogArgG hgcd Dt hNum Dstar allpoles hDmonic hDt0 hAD hB hB_deg hsplit hR0
-      hRpp β hβ)
-    (fun p hp c hc => entry_log_eq_fiber_prod hgcd Dt hNum Dstar allpoles hDmonic hDt0 hAD hsplit hR0
-      hRpp hm (fun β hβ => by rw [hDd2]; exact hB β (Multiset.mem_toFinset.mp hβ))
+      hB hB_deg hsplit hR.nonzero p hp c hc)
+    (disjoint_cLrtLogArgG hgcd Dt hNum Dstar hR)
+    (fun β hβ => cover_cLrtLogArgG hgcd Dt hNum Dstar allpoles hDmonic hDt0 hAD hB hB_deg hsplit hR
+      β hβ)
+    (fun p hp c hc => entry_log_eq_fiber_prod hgcd Dt hNum Dstar allpoles hDmonic hDt0 hAD hsplit hR
+      hm (fun β hβ => by rw [hDd2]; exact hB β (Multiset.mem_toFinset.mp hβ))
       (by rw [hnd]; exact hAnd) (by rw [hnd, hDd2]; exact hB_deg) p hp c hc)
     hAdeg hnorm hcancel]
   rw [← hsplit]
@@ -1430,7 +1436,8 @@ Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into t
 `isIntegralResultLrtG_cIntegrateReducedLrtG`, yielding `IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)`
 outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerGWf Dt a d).2.2`
 monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`/`_squarefree`);
-`hDt0`…`hm` are the remaining `K`-level residue-data facts (degree bounds, the residue resultant nonzero); `hE`
+`hDt0`/`hAD`/`hm` and `hR` are the remaining `K`-level residue-data facts; `hR` bundles the residue
+resultant nonzero and primitive-part nonzero hypotheses. `hE`
 bundles the **two genuine** per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles
 (`hB`) and normality `hnorm` (`η ≠ Dβ`). (The former subresultant-multiplicity bound `hilt` — "the residual is
 not a single pure log `c·D′/D`" — is **no longer needed**: `cLrtLogArgG` now handles that case directly via its
@@ -1451,10 +1458,9 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
     (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
-        (cHermiteReduceTowerGWf Dt a d).2.2) ≠ 0)
-    (hRpp : (toPolyG (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
-        (cHermiteReduceTowerGWf Dt a d).2.2)).primPart ≠ 0)
+    (hR : IsYunFactorizationInput
+        (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
+          (cHermiteReduceTowerGWf Dt a d).2.2))
     (hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
         = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1)
     (hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
@@ -1508,7 +1514,7 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
     rw [← implicitDeriv_map, ← toPolyG_cmonomialDeriv, Polynomial.natDegree_map, Polynomial.natDegree_map,
       ← cdegG_eq_natDegree, ← cdegG_eq_natDegree, hm]
   exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerGWf Dt a d).2.1
-    (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR0 hRpp hm hB hB_deg.le hAnd hAdeg hnorm
+    (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR hm hB hB_deg.le hAnd hAdeg hnorm
     (hcancel_of_primitive Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hDt0)
 
 universe u
