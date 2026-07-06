@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Compute.Diophantine
 import DeepWiki.SymbolicIntegration.Compute.Hermite
 import DeepWiki.SymbolicIntegration.Compute.HermiteInnerCorrectness
 import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorIncrements
+import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorResidual
 import DeepWiki.SymbolicIntegration.Compute.HermitePower
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualCorrectness
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
