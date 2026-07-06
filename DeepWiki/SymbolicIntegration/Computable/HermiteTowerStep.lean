@@ -1,3 +1,4 @@
+import DeepWiki.Algebra.PolynomialDivisibility
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 
@@ -223,12 +224,6 @@ The exact-division `resDen ∣ resNum·Dstar` decomposes, by the pure field-alge
 pole-cancellation: the reduced residual's `W`-poles cancel). Tower analog of
 `hermiteReduce_residual_correct_of_radical`. -/
 
-/-- Pure divisibility (any field): from `D = S·W` and `W·gd2 ∣ R`, get `D·gd2 ∣ R·S`. -/
-theorem dvd_clearedIdentity_of_radical {K : Type*} [Field K] {R D gd2 S W : K[X]}
-    (hSD : D = S * W) (hWgd : W * gd2 ∣ R) : D * gd2 ∣ R * S := by
-  obtain ⟨N, hN⟩ := hWgd
-  exact ⟨N, by rw [hSD]; linear_combination S * hN⟩
-
 open QFunNZG in
 /-- **The whole-step Hermite field identity from the radical split.** With `hNum` the exact quotient
 `cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
@@ -256,7 +251,7 @@ theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : C
   -- the divisibility `resDen ∣ resNum·Dstar` from the radical split.
   have hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar) := by
     rw [hresDen', toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
-    exact dvd_clearedIdentity_of_radical hSD hWgd
+    exact DeepWiki.polynomial_dvd_clearedIdentity_of_radical hSD hWgd
   -- the exact-division equation, mapped into the fraction field.
   have hexactP : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
       = toPolyG (cmulG resNum Dstar) := toPolyG_cdivWf_exact _ _ hresDen hdvd

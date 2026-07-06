@@ -1,5 +1,6 @@
 import DeepWiki.Algebra.ListSums
 import DeepWiki.Algebra.ListProducts
+import DeepWiki.Algebra.PolynomialDivisibility
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
@@ -1545,30 +1546,6 @@ Then `D·gden² ∣ resNum'·Dstar` since `resNum'·Dstar = D·(M·Dstar)` and `
 algebraic skeleton of "`A/D − g′` clears to denominator `Dstar`": the first divisibility says the global
 fraction's numerator reduces, the second that the leftover `gden²` cancels against `M·Dstar`. -/
 
-/-- **The cleared-identity divisibility from two cleaner ones** (`ℚ[X]` level): if `D ∣ R` (so
-`R = D·M`) and `gd2 ∣ M·S`, then `D·gd2 ∣ R·S`. The algebraic reduction of
-`hermiteReduce_residual_correct_of_dvd`'s monolithic premise to the loop's two structural
-divisibilities (`D ∣ resNum'`, `gden² ∣ (resNum'/D)·Dstar`). -/
-theorem dvd_clearedIdentity_of_split {R D gd2 S : ℚ[X]} (hD : D ≠ 0)
-    (hDR : D ∣ R) (hgd : gd2 ∣ (R / D) * S) :
-    D * gd2 ∣ R * S := by
-  obtain ⟨M, hM⟩ := hDR
-  have hMeq : R / D = M := by rw [hM, mul_div_cancel_left₀ _ hD]
-  rw [hMeq] at hgd
-  obtain ⟨N, hN⟩ := hgd
-  exact ⟨N, by rw [hM]; linear_combination D * hN⟩
-
-/-- **The cleared-identity divisibility from `Dstar ∣ D` plus one cleaner divisibility** (`ℚ[X]`
-level): if `S ∣ D` (so `D = S·W`, the radical clause `Dstar ∣ D`) and `W·gd2 ∣ R` (the single residual
-cert), then `D·gd2 ∣ R·S`. Cancelling the common `S`: `D·gd2 = S·(W·gd2)` and `R·S = S·R`, so the
-claim is `W·gd2 ∣ R`. Folds the **proven** radical-divides fact (`toPoly_Dstar_dvd_D`) into the
-divisibility, leaving a *single* `cmod`-cert `(D/Dstar)·gden² ∣ resNum'` to discharge. -/
-theorem dvd_clearedIdentity_of_radical {R D gd2 S W : ℚ[X]}
-    (hSD : D = S * W) (hWgd : W * gd2 ∣ R) :
-    D * gd2 ∣ R * S := by
-  obtain ⟨N, hN⟩ := hWgd
-  exact ⟨N, by rw [hSD]; linear_combination S * hN⟩
-
 open scoped Differential in
 /-- **`hermiteReduce` wrapper correctness from the two split divisibility certificates** in `RatFunc ℚ`:
 the cleared-identity premise factored into the loop's two structural `cmod`-vanishings —
@@ -1618,7 +1595,7 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
   -- assemble the monolithic divisibility via the split lemma.
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
-    exact dvd_clearedIdentity_of_split hD hDR hg2dvd
+    exact DeepWiki.polynomial_dvd_clearedIdentity_of_split hD hDR hg2dvd
   exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hden hfuel hdvd
 
 open scoped Differential in
@@ -1669,7 +1646,8 @@ theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Ds
   -- assemble the monolithic divisibility through the radical reduction.
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
-    exact dvd_clearedIdentity_of_radical (W := toPoly (cdiv fuel D Dstar)) hWeq hWgddvd
+    exact DeepWiki.polynomial_dvd_clearedIdentity_of_radical
+      (W := toPoly (cdiv fuel D Dstar)) hWeq hWgddvd
   exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hden hfuel hdvd
 
 /-! ### The decidable residual-honesty bundle and the unconditional wrapper
