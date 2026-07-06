@@ -39,13 +39,12 @@ def IsRadicalLogTerm (n : ℕ) (ρ : α) (u integrand : RadElem α) : Prop :=
       * Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG integrand)
 
 omit [CDiffFieldSpec α] in
-/-- The engine's log-derivative certificate implies the single-log soundness predicate:
-`radIsLogIntegral n ρ u integrand = true → IsRadicalLogTerm n ρ u integrand`, via
-`cisZeroG_iff` + `toPolyG_csubG` + `mk_toPolyG_radMul`. -/
+/-- The engine's log-derivative certificate implies the single-log soundness predicate. -/
 theorem isRadicalLogTerm_of_radIsLogIntegral (n : ℕ) (ρ : α) (u integrand : RadElem α)
     (h : radIsLogIntegral n ρ u integrand = true) :
     IsRadicalLogTerm n ρ u integrand := by
-  rw [radIsLogIntegral, radIsZero, radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero] at h
+  rw [radIsLogIntegral, radIsZero, radSub, CPolyG.cisZeroG_iff] at h
+  simp only [denote, sub_eq_zero] at h
   -- `toPolyG(radDeriv u) = toPolyG(radMul u integrand)` in `K[X]`; push through `mk` and read
   -- `mk(toPolyG(radMul u integrand)) = mk(toPolyG u)·mk(toPolyG integrand)` (the quotient product).
   rw [IsRadicalLogTerm, h, mk_toPolyG_radMul]
@@ -92,8 +91,7 @@ theorem mk_toPolyG_radLogSum2 (n : ℕ) (ρ : α) (c₁ : α) (u₁ : RadElem α
         + Polynomial.C (CFieldSpec.toK c₂)
           * Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG (radDeriv n ρ u₂))
           * Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG u₁) := by
-  simp only [radLogSum2, radAdd, CPolyG.toPolyG_caddG, map_add, mk_toPolyG_radMul, radScale,
-    CPolyG.toPolyG_cscaleG, map_mul]
+  simp only [radLogSum2, radAdd, denote, map_add, mk_toPolyG_radMul, radScale, map_mul]
 
 end RadElem
 
@@ -480,8 +478,8 @@ theorem mk_toPolyG_radLogSumNum_eq_sum (n : ℕ) (ρ : α) (args : List (α × R
     | nil => intro acc; simp
     | cons t ts ih =>
       intro acc
-      rw [List.foldl_cons, ih (radAdd acc t), radAdd, CPolyG.toPolyG_caddG, map_add,
-        List.map_cons, List.sum_cons]
+      rw [List.foldl_cons, ih (radAdd acc t), radAdd]
+      simp only [denote, map_add, List.map_cons, List.sum_cons]
       ring
   rw [hfold terms radZero]
   show Ideal.Quotient.mk (radIdeal n ρ) (CPolyG.toPolyG (radZero : RadElem α)) + _ = _
@@ -573,7 +571,8 @@ theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZG ℚ) (F : AlgIntegralResu
     (integrand : RadElem (QFunNZG ℚ))
     (hrt : RadElem.radIsZero (RadElem.radSub (algDeriv ρ F) integrand) = true) :
     CPolyG.toPolyG (algDeriv ρ F) = CPolyG.toPolyG integrand := by
-  rw [RadElem.radIsZero, RadElem.radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero] at hrt
+  rw [RadElem.radIsZero, RadElem.radSub, CPolyG.cisZeroG_iff] at hrt
+  simp only [denote, sub_eq_zero] at hrt
   exact hrt
 
 /-! ### Axiom checks
