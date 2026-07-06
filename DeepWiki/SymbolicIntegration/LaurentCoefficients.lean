@@ -2,6 +2,7 @@ import Mathlib.Algebra.MvPolynomial.Derivation
 import Mathlib.Algebra.MvPolynomial.Eval
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Algebra.Polynomial.Taylor
+import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
@@ -20,16 +21,6 @@ namespace DeepWiki.SymbolicIntegration
 variable {K : Type*} [Field K]
 
 /-! ## The differential polynomial ring `K⟨u⟩` and its `d/dx` derivation -/
-
-/-- The differential-variable numerator ring `DiffPoly K = MvPolynomial (Option ℕ) K`: `X none` is `x`,
-`X (some n)` is `u^(n)`, the `n`-th derivative of the differential indeterminate `u`. -/
-abbrev DiffPoly (K : Type*) [Field K] : Type _ := MvPolynomial (Option ℕ) K
-
-/-- The base variable `x` (`= X none`) in `DiffPoly K`. -/
-noncomputable abbrev dpX : DiffPoly K := X none
-
-/-- The `n`-th derivative `u^(n)` (`= X (some n)`) of the differential indeterminate in `DiffPoly K`. -/
-noncomputable abbrev dpU (n : ℕ) : DiffPoly K := X (some n)
 
 /-- The `K[x] → DiffPoly K` embedding sending the polynomial variable `X` to `x = X none`. -/
 noncomputable def dpEmbed : K[X] →+* DiffPoly K :=
