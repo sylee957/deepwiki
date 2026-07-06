@@ -40,6 +40,22 @@ elab "transfer% " t:term : term => do
   | some pf => return pf
   | none => mkEqRefl e
 
+open Lean.Elab.Tactic in
+/-- `transfer` (tactic): whole-goal transfer — rewrite every denotation application in the goal to its
+abstract form (via the `denote` set), then close the goal if it has become reflexive. Deterministic
+because the `denote` lemmas orient toward the abstract side. -/
+elab "transfer" : tactic => withMainContext do
+  let goal ← getMainGoal
+  let ty ← goal.getType
+  let (ty', proof?) ← denoteNormalize ty
+  match proof? with
+  | some pf =>
+    let newGoal ← mkFreshExprMVar ty' (kind := .syntheticOpaque)
+    goal.assign (← mkEqMPR pf newGoal)
+    replaceMainGoal [newGoal.mvarId!]
+  | none => pure ()
+  (do (← getMainGoal).refl) <|> pure ()
+
 section Test
 open DeepWiki.SymbolicIntegration CPolyG Polynomial
 
@@ -57,6 +73,17 @@ example (p q : CPolyG α) : True := by
   -- h : toPolyG (cmulG p q) = toPolyG p * toPolyG q
   guard_hyp h : toPolyG (cmulG p q) = toPolyG p * toPolyG q
   trivial
+
+/-- The `transfer` tactic closes a denotation-equality goal (whole-goal, then reflexive). -/
+example (p q r : CPolyG α) :
+    toPolyG (cmulG (caddG p q) r) = (toPolyG p + toPolyG q) * toPolyG r := by
+  transfer
+
+/-- Whole-goal transfer under an arbitrary head (here `natDegree`): the denotation is pushed through
+regardless of the surrounding relation — the reach `transfer%`/`RefinesPolyG` (equality-only) lack. -/
+example (p q : CPolyG α) :
+    (toPolyG (cmulG p q)).natDegree = (toPolyG p * toPolyG q).natDegree := by
+  transfer
 
 end Test
 
