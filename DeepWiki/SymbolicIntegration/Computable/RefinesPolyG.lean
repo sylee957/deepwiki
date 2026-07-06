@@ -1,12 +1,13 @@
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
+import DeepWiki.SymbolicIntegration.Computable.DenoteHom
 
 /-! # Refinement relation for generic computable polynomials
 
 `RefinesPolyG p q` relates a computable coefficient list to its semantic polynomial reading.
-Operations transfer through the CoqEAL-style parametricity classes `DenoteHom₁`/`DenoteHom₂`:
-registering one instance per computable operation (built directly from its `@[denote]` square) makes
-the generic respect lemmas `hom₁`/`hom₂` — and hence the `transfer` tactic — handle that operation
-for free, with no per-operation respect lemma to hand-write.
+Operations transfer through the CoqEAL-style parametricity classes `DenoteHom₁`/`DenoteHom₂`
+(defined in `Computable.DenoteHom`): most instances are *generated* from the `@[denote]` square by
+`derive_denote_hom`, so the generic respect lemmas `hom₁`/`hom₂` — and hence the `transfer` tactic —
+handle each operation for free, with no per-operation respect lemma to hand-write.
 -/
 
 open Polynomial
@@ -21,21 +22,6 @@ def RefinesPolyG {α : Type*} [CField α] [CFieldSpec α]
     (p : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
   toPolyG p = q
 
-/-- A unary computable operation `cop` denotes the abstract unary `op` through `toPolyG`
-(the CoqEAL parametricity instance: registering one makes `transfer` handle `cop`). -/
-class DenoteHom₁ {α : Type*} [CField α] [CFieldSpec α]
-    (cop : CPolyG α → CPolyG α) (op : outParam ((CFieldSpec.K α)[X] → (CFieldSpec.K α)[X])) : Prop where
-  /-- The denotation square: `cop` commutes with `op` along `toPolyG`. -/
-  square : ∀ p, toPolyG (cop p) = op (toPolyG p)
-
-/-- A binary computable operation `cop` denotes the abstract binary `op` through `toPolyG`
-(the CoqEAL parametricity instance for `transfer`). -/
-class DenoteHom₂ {α : Type*} [CField α] [CFieldSpec α]
-    (cop : CPolyG α → CPolyG α → CPolyG α)
-    (op : outParam ((CFieldSpec.K α)[X] → (CFieldSpec.K α)[X] → (CFieldSpec.K α)[X])) : Prop where
-  /-- The denotation square: `cop` commutes with `op` along `toPolyG`. -/
-  square : ∀ p q, toPolyG (cop p q) = op (toPolyG p) (toPolyG q)
-
 /-- Prove refinement and denotation-equality goals by transfer: `simp [denote]` for goals with an
 explicit abstract side, else aesop over the `Refines` respect-rule set to *synthesize* the abstract
 polynomial (metavariable RHS) by recursion on the computable expression down to atoms. -/
@@ -44,20 +30,20 @@ macro "transfer" : tactic =>
       | (simp_all [RefinesPolyG, denote]; done)
       | (aesop (rule_sets := [Refines]) (config := { enableSimp := false })))
 
+-- No-parameter operations: the `DenoteHom` instances are GENERATED from their denotation squares.
+derive_denote_hom toPolyG_caddG
+derive_denote_hom toPolyG_csubG
+derive_denote_hom toPolyG_cmulG
+derive_denote_hom toPolyG_cnegG
+derive_denote_hom toPolyG_cderivG
+derive_denote_hom toPolyG_cmapDeriv
+derive_denote_hom toPolyG_cmonomialDeriv
+
 section Instances
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- `caddG` denotes `+`. -/
-instance : DenoteHom₂ (caddG (α := α)) (· + ·) := ⟨toPolyG_caddG⟩
-/-- `csubG` denotes `-`. -/
-instance : DenoteHom₂ (csubG (α := α)) (· - ·) := ⟨toPolyG_csubG⟩
-/-- `cmulG` denotes `*`. -/
-instance : DenoteHom₂ (cmulG (α := α)) (· * ·) := ⟨toPolyG_cmulG⟩
-/-- `cnegG` denotes negation. -/
-instance : DenoteHom₁ (cnegG (α := α)) (- ·) := ⟨toPolyG_cnegG⟩
-/-- `cderivG` denotes the formal derivative. -/
-instance : DenoteHom₁ (cderivG (α := α)) Polynomial.derivative := ⟨toPolyG_cderivG⟩
+-- Parameterized operations (extra scalar/exponent argument): kept as explicit instances.
 /-- `cscaleG c` denotes scaling by `C (toK c)`. -/
 instance (c : α) : DenoteHom₁ (cscaleG c) (fun p => Polynomial.C (CFieldSpec.toK c) * p) :=
   ⟨fun p => toPolyG_cscaleG c p⟩
@@ -67,14 +53,6 @@ instance (k : ℕ) : DenoteHom₁ (fun p : CPolyG α => cshiftG k p) (fun p => X
 /-- `cpowG · n` denotes `· ^ n`. -/
 instance (n : ℕ) : DenoteHom₁ (fun p : CPolyG α => cpowG p n) (fun p => p ^ n) :=
   ⟨fun p => toPolyG_cpowG p n⟩
-
-variable [CDiffField α] [CDiffFieldSpec α]
-
-/-- `cmapDeriv` denotes coefficient-wise derivation. -/
-instance : DenoteHom₁ (cmapDeriv (α := α)) Differential.mapCoeffs := ⟨toPolyG_cmapDeriv⟩
-/-- `cmonomialDeriv` denotes the tower monomial derivative `implicitDeriv`. -/
-instance : DenoteHom₂ (cmonomialDeriv (α := α)) (fun a b => Differential.implicitDeriv a b) :=
-  ⟨toPolyG_cmonomialDeriv⟩
 
 end Instances
 
