@@ -219,7 +219,7 @@ def modularityCmd (args : List String) : IO Unit := do
     -- split a conceptually-bonded pair (the `mul_left`/`mul_right` guard) — visible, not hidden.
     let mut modVecs : HashMap String (Array (Array Float)) := {}
     for (_, md, v) in embs do modVecs := modVecs.insert md ((modVecs.getD md #[]).push v)
-    let mut cand : Array (String × String × String × Float × Float × Float × Float) := #[]
+    let mut cand : Array Regroup := #[]
     for (nm, home, v) in embs do
       let nbrs := adj.getD nm #[]
       let deg := nbrs.size
@@ -229,21 +229,24 @@ def modularityCmd (args : List String) : IO Unit := do
       let mut alt := home; let mut cnt := 0
       for (mm, c) in byMod.toArray do if mm != home && c > cnt then alt := mm; cnt := c
       if alt == home then continue
-      let str := (cnt.toFloat / deg.toFloat - (byMod.getD home 0).toFloat / deg.toFloat)
-        * (1.0 - 1.0 / deg.toFloat)
-      let con := cosine v (sums.getD alt #[]) - cosine v (sums.getD home #[])
-      let evo := evoOf home alt    -- evolutionary pull: do home & alt change together?
       let mut dis := 0.0
       for sv in modVecs.getD home #[] do
         let s := cosine v sv
         if s < 0.999 && s > dis then dis := s   -- nearest home sibling (excluding self ≈ 1)
-      cand := cand.push (short.getD nm nm, home, alt, str, con, evo, dis)
+      cand := cand.push
+        { short := short.getD nm nm, home, alt
+          str := (cnt.toFloat / deg.toFloat - (byMod.getD home 0).toFloat / deg.toFloat)
+            * (1.0 - 1.0 / deg.toFloat)
+          con := cosine v (sums.getD alt #[]) - cosine v (sums.getD home #[])
+          evo := evoOf home alt
+          dis }
     -- Pareto front: drop candidates dominated on (str↑, con↑, evo↑, dis↓)
-    let front := cand.filter (fun (_, _, _, si, ci, ei, di) =>
-      !cand.any (fun (_, _, _, sj, cj, ej, dj) =>
-        sj ≥ si && cj ≥ ci && ej ≥ ei && dj ≤ di && (sj > si || cj > ci || ej > ei || dj < di)))
+    let front := cand.filter (fun c =>
+      !cand.any (fun d =>
+        d.str ≥ c.str && d.con ≥ c.con && d.evo ≥ c.evo && d.dis ≤ c.dis &&
+        (d.str > c.str || d.con > c.con || d.evo > c.evo || d.dis < c.dis)))
     IO.println s!"\n== MULTI-OBJECTIVE regroup — Pareto front {front.size}/{cand.size} (str=structural, con=conceptual, evo=co-change, dis=disturbance; high dis = splits a bonded pair) =="
-    for (s, home, alt, st, cn, ev, ds) in (front.qsort (fun a b => a.2.2.2.1 > b.2.2.2.1)).toList.take top do
-      IO.println s!"  str={pctS st} con={pctS cn} evo={pct ev} dis={pct ds}  {s}  [{home.splitOn "." |>.getLastD home}]→[{alt.splitOn "." |>.getLastD alt}]"
+    for c in (front.qsort (fun a b => a.str > b.str)).toList.take top do
+      IO.println s!"  str={pctS c.str} con={pctS c.con} evo={pct c.evo} dis={pct c.dis}  {c.short}  [{c.home.splitOn "." |>.getLastD c.home}]→[{c.alt.splitOn "." |>.getLastD c.alt}]"
 
 end WikiRAG
