@@ -18,7 +18,7 @@ Scores (all derived from the graph, no magic cutoffs):
 * **granularity** per directory: cohesion + mean module size, reported as numbers, not flags. -/
 
 namespace WikiRAG
-open Std
+open Std SQLite SQLite.Blob
 
 /-- The namespace directory of a module = its path minus the last component. -/
 def directory (m : String) : String :=
@@ -75,6 +75,10 @@ def modularityQ (nodes : Array String) (adj : HashMap String (Array String)) : F
     let a := (degc.getD c 0).toFloat / E2
     q := q + e.toFloat / E2 - a * a
   return (q, ec.toArray.size)
+
+/-- Componentwise sum of two equal-length vectors (for embedding centroids). -/
+def vadd (a b : Array Float) : Array Float :=
+  if a.size == b.size then (Array.range a.size).map (fun i => a[i]! + b[i]!) else b
 
 /-- Run the scored modularity report on the graph restricted to modules under `--prefix`. -/
 def modularityCmd (args : List String) : IO Unit := do
@@ -166,5 +170,40 @@ def modularityCmd (args : List String) : IO Unit := do
     (d, c, n, avg, mx))
   for (d, c, n, avg, mx) in (dirs.qsort (fun a b => a.2.1 < b.2.1)).toList.take top do
     IO.println s!"  cohesion={pct c}%  modules={n} mean={avg} max={mx}  {d}"
+  -- ===== CONCEPTUAL (NL) layer: cosine over the Ollama docstring embeddings =====
+  let es ← db.prepare s!"SELECT name, module, embedding FROM decls WHERE embedding IS NOT NULL AND module LIKE '{pfx}%'"
+  let mut embs : Array (String × String × Array Float) := #[]
+  while (← es.step) do
+    match (fromBinary (← es.columnBlob 2) : Except String (Array Float)) with
+    | .ok v => embs := embs.push (← es.columnText 0, ← es.columnText 1, v)
+    | .error _ => pure ()
+  if embs.isEmpty then
+    IO.println "\n(no embeddings — run `scripts/wiki index` for the conceptual/NL layer)"
+  else
+    -- module centroids (unnormalised sums; `cosine` normalises)
+    let mut sums : HashMap String (Array Float) := {}
+    for (_, md, v) in embs do sums := sums.insert md (vadd (sums.getD md #[]) v)
+    let mods := sums.toArray.map (·.1)
+    -- CONCEPTUAL cohesion: mean cosine of a module's decls to its docstring centroid
+    let mut chS : HashMap String Float := {}; let mut chN : HashMap String Nat := {}
+    for (_, md, v) in embs do
+      chS := chS.insert md ((chS.getD md 0.0) + cosine v (sums.getD md #[])); chN := bump chN md
+    IO.println s!"\n== CONCEPTUAL cohesion (mean docstring-cosine of a module's decls; {embs.size} embedded) =="
+    let ccoh := mods.map (fun md => (md, (chS.getD md 0.0) / (chN.getD md 1).toFloat))
+    for (md, sc) in (ccoh.qsort (fun a b => a.2 < b.2)).toList.take top do
+      IO.println s!"  {pct sc}  {md}"
+    -- SEMANTIC misplacement: docstring nearer another module's centroid than its home's
+    let mut smis : Array (String × Float × String × String) := #[]
+    for (nm, home, v) in embs do
+      let homeSim := cosine v (sums.getD home #[])
+      let mut alt := home; let mut best := -2.0
+      for md in mods do
+        if md != home then
+          let s := cosine v (sums.getD md #[])
+          if s > best then alt := md; best := s
+      if alt != home then smis := smis.push (nm.splitOn "." |>.getLastD nm, best - homeSim, home, alt)
+    IO.println "\n== SEMANTIC misplacement (docstring nearer another module's centroid → regroup) =="
+    for (s, sc, home, alt) in (smis.qsort (fun a b => a.2.1 > b.2.1)).toList.take top do
+      IO.println s!"  {pct sc}  {s}  [{home.splitOn "." |>.getLastD home}]→[{alt.splitOn "." |>.getLastD alt}]"
 
 end WikiRAG
