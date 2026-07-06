@@ -13,6 +13,7 @@ import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives

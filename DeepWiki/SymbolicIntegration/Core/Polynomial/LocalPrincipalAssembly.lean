@@ -1,0 +1,129 @@
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
+
+/-! # Assembling local principal parts
+
+Finite products of linear pole factors and the telescoping decomposition obtained
+by subtracting one local principal part at a time.
+-/
+
+open Polynomial
+
+namespace DeepWiki.SymbolicIntegration
+
+variable {K : Type*} [Field K]
+
+/-- A proper rational function with nonzero constant denominator is zero. -/
+theorem properRatFunc_const_denom_eq_zero {N M : K[X]} (hM : M.natDegree = 0) (hM0 : M ≠ 0)
+    (hdeg : N.degree < M.degree) :
+    algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) M = 0 := by
+  have hMdeg : M.degree = 0 := by
+    rw [Polynomial.degree_eq_natDegree hM0, hM]; rfl
+  rw [hMdeg] at hdeg
+  have hN0 : N = 0 := by
+    by_contra hN
+    rw [Polynomial.degree_eq_natDegree hN] at hdeg
+    exact absurd hdeg (by exact_mod_cast Nat.not_lt_zero _)
+  rw [hN0, map_zero, zero_div]
+
+/-- Subtracting the local principal part leaves a quotient regular at the same point. -/
+theorem subtract_localPrincipalPart_regular (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    ∃ R : K[X],
+      algebraMap K[X] (RatFunc K) A
+          / (algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ i * M))
+        - localPrincipalPart A M α i
+        = algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) M :=
+  ⟨localRemainder A M α i, subtract_localPrincipalPart_eq A M i hM⟩
+
+/-- The product `∏ α ∈ R, (X - C α) ^ mult α`. -/
+noncomputable def rootProd (R : Finset K) (mult : K → ℕ) : K[X] :=
+  ∏ α ∈ R, (Polynomial.X - Polynomial.C α) ^ mult α
+
+/-- The empty root product is `1`. -/
+@[simp] theorem rootProd_empty (mult : K → ℕ) : rootProd (∅ : Finset K) mult = 1 := by
+  simp [rootProd]
+
+/-- Insert one factor into a root product. -/
+theorem rootProd_insert [DecidableEq K] {α : K} {R : Finset K} (mult : K → ℕ) (hα : α ∉ R) :
+    rootProd (insert α R) mult = (Polynomial.X - Polynomial.C α) ^ mult α * rootProd R mult := by
+  rw [rootProd, Finset.prod_insert hα, rootProd]
+
+/-- `rootProd R mult` does not vanish at a point outside `R`. -/
+theorem eval_rootProd_ne_zero {β : K} {R : Finset K} (mult : K → ℕ) (hβ : β ∉ R) :
+    (rootProd R mult).eval β ≠ 0 := by
+  rw [rootProd, Polynomial.eval_prod, Finset.prod_ne_zero_iff]
+  intro α hα
+  rw [Polynomial.eval_pow, Polynomial.eval_sub, Polynomial.eval_X, Polynomial.eval_C]
+  exact pow_ne_zero _ (sub_ne_zero.mpr (fun h => hβ (h ▸ hα)))
+
+open Classical in
+/-- Decompose a quotient by a root product by subtracting local principal parts. -/
+theorem exists_sum_localPrincipalPart (M₀ : K[X]) (mult : K → ℕ) :
+    ∀ (R : Finset K), (∀ α ∈ R, M₀.eval α ≠ 0) → ∀ (A : K[X]),
+      ∃ (PP : K → RatFunc K) (Rem : K[X]),
+        algebraMap K[X] (RatFunc K) A
+            / algebraMap K[X] (RatFunc K) (rootProd R mult * M₀)
+          = (∑ α ∈ R, PP α) + algebraMap K[X] (RatFunc K) Rem / algebraMap K[X] (RatFunc K) M₀ := by
+  intro R
+  induction R using Finset.induction_on with
+  | empty =>
+    intro _ A
+    refine ⟨fun _ => 0, A, ?_⟩
+    rw [rootProd_empty, one_mul, Finset.sum_empty, zero_add]
+  | @insert α R hα ih =>
+    intro hpolefree A
+    set N := rootProd R mult * M₀ with hNdef
+    have hNα : N.eval α ≠ 0 := by
+      rw [hNdef, Polynomial.eval_mul]
+      exact mul_ne_zero (eval_rootProd_ne_zero mult hα)
+        (hpolefree α (Finset.mem_insert_self α R))
+    have hpeel := subtract_localPrincipalPart_eq A N (mult α) hNα
+    obtain ⟨PP, Rem, hrec⟩ :=
+      ih (fun β hβ => hpolefree β (Finset.mem_insert_of_mem hβ)) (localRemainder A N α (mult α))
+    refine ⟨fun β => if β = α then localPrincipalPart A N α (mult α) else PP β, Rem, ?_⟩
+    rw [Finset.sum_insert hα, if_pos rfl]
+    have hsumR : (∑ β ∈ R, (if β = α then localPrincipalPart A N α (mult α) else PP β))
+        = ∑ β ∈ R, PP β := by
+      refine Finset.sum_congr rfl fun β hβ => ?_
+      have hβα : β ≠ α := fun h => hα (h ▸ hβ)
+      rw [if_neg hβα]
+    rw [hsumR]
+    have hden : rootProd (insert α R) mult * M₀
+        = (Polynomial.X - Polynomial.C α) ^ mult α * N := by
+      rw [rootProd_insert mult hα, hNdef]; ring
+    rw [hden]
+    have hsplit : algebraMap K[X] (RatFunc K) A
+          / algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ mult α * N)
+        = localPrincipalPart A N α (mult α)
+          + algebraMap K[X] (RatFunc K) (localRemainder A N α (mult α))
+              / algebraMap K[X] (RatFunc K) N := by
+      have := hpeel
+      rw [sub_eq_iff_eq_add] at this
+      rw [this]; ring
+    rw [hsplit, hrec]
+    ring
+
+/-- Dividing by a nonzero constant polynomial is multiplication by the inverse scalar. -/
+theorem div_C_eq_algebraMap {Rem : K[X]} {c : K} (hc : c ≠ 0) :
+    algebraMap K[X] (RatFunc K) Rem / algebraMap K[X] (RatFunc K) (Polynomial.C c)
+      = algebraMap K[X] (RatFunc K) (Polynomial.C c⁻¹ * Rem) := by
+  have hCc : algebraMap K[X] (RatFunc K) (Polynomial.C c) ≠ 0 :=
+    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (by simpa using hc)
+  rw [map_mul, div_eq_iff hCc, ← map_mul, ← map_mul]
+  congr 1
+  rw [mul_right_comm, ← Polynomial.C_mul, inv_mul_cancel₀ hc, Polynomial.C_1, one_mul]
+
+open Classical in
+/-- A root-product denominator with constant base has a complete principal-part decomposition. -/
+theorem completePartialFraction_over_closure (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K}
+    (hc : c ≠ 0) :
+    ∃ (P : K[X]) (PP : K → RatFunc K),
+      algebraMap K[X] (RatFunc K) A
+          / algebraMap K[X] (RatFunc K) (rootProd R mult * Polynomial.C c)
+        = algebraMap K[X] (RatFunc K) P + ∑ α ∈ R, PP α := by
+  have hpolefree : ∀ α ∈ R, (Polynomial.C c).eval α ≠ 0 := fun α _ => by
+    rw [Polynomial.eval_C]; exact hc
+  obtain ⟨PP, Rem, hdecomp⟩ := exists_sum_localPrincipalPart (Polynomial.C c) mult R hpolefree A
+  refine ⟨Polynomial.C c⁻¹ * Rem, PP, ?_⟩
+  rw [hdecomp, div_C_eq_algebraMap hc, add_comm]
+
+end DeepWiki.SymbolicIntegration
