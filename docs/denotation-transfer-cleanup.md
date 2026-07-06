@@ -1,9 +1,52 @@
 # Plan: a relational refinement layer for `SymbolicIntegration/Computable`
 
-**Status:** proposed · **Owner:** autonomous agent (Codex-executable) · **Repo:** `deepwiki` (Lean 4, toolchain `leanprover/lean4:v4.31.0`)
+**Status:** core layer **BUILT & gate-green on `main`** (Phases 1–2 done); remaining frontier is a
+parametricity *translation* (below) · **Owner:** autonomous agent (Codex-executable) · **Repo:**
+`deepwiki` (Lean 4, toolchain `leanprover/lean4:v4.31.0`)
 
 This document is self-contained. It assumes **no** prior conversation context. Read it top to
 bottom before touching code. Each phase is an independent, gate-green commit.
+
+---
+
+## STATUS UPDATE (what is already realized on `main`)
+
+The relational layer exists in [`Computable/RefinesPolyG.lean`](../DeepWiki/SymbolicIntegration/Computable/RefinesPolyG.lean):
+
+- **`RefinesPolyG p q := toPolyG p = q`** (functional refinement, the CoqEAL relation).
+- **CoqEAL parametricity layer (realized):** generic classes `DenoteHom₁`/`DenoteHom₂` (denotation
+  square; abstract `op` an `outParam`) + two generic respect lemmas `RefinesPolyG.hom₁`/`hom₂` that
+  dispatch on the instance. **Every** computable operation is now a **one-line `instance`** built from
+  its `@[denote]` square (`caddG/csubG/cmulG/cnegG/cderivG/cscaleG/cshiftG/cpowG/cmapDeriv/cmonomialDeriv`);
+  a NEW operation transfers for free with no new lemma. The hand-written per-op respect lemmas were
+  retired into this layer.
+- **`transfer` tactic:** `first | (simp_all [RefinesPolyG, denote]; done) | aesop (rule_sets := [Refines])`.
+  Branch 1 is the fast path for explicit-RHS goals; branch 2 **synthesizes** the abstract polynomial
+  (metavariable RHS) by aesop over the `Refines` rule set (the `hom₁/hom₂` + nullary + `refinesPolyG_self`
+  atom-closer). The `Refines` aesop rule set is declared in `Computable/Denote.lean`.
+- **Zero-test reflection:** `eq_of_csub_cisZero` / `ne_of_csub_cisZero_false` bridge a `native_decide`
+  `cisZeroG (csubG p q)` check to semantic (in)equality of the refined polynomials.
+
+**Honest findings that recalibrate the rest of this plan (do not re-discover these):**
+1. **Per-site transport conversion is largely DONE and is a readability, not line-count, win.** The clean
+   `from by simp only [toPolyG_*]` blocks were already converted (commit series `refactor(denote): …`);
+   net deltas were ±a few lines. No large untapped conversion remains.
+2. **Transport is a MINORITY of proof bulk** across the topic (measured: `CoupledDE/Assembly`,
+   `HermiteValuationTower`, `LrtSoundness`). The dominant bulk is real mathematics — degree bounds,
+   coefficient extensionality, `RatFunc`/linear-algebra arithmetic. So the layer will not "greatly"
+   shrink proofs; that expectation was miscalibrated. Do **not** force `denote`/`transfer` into the
+   remaining coefficient-bash proofs where curated `simp only` lists feed `linear_combination` — high
+   risk (over-firing), low value.
+3. **Synthesis has no `= _` term-hole consumer** (Lean elaborates the hole before the tactic). Synthesis
+   only fires on genuine `∃`-goals; the practical transfer is explicit-RHS or whole-goal (matching Trocq's
+   whole-goal-translation ceiling).
+
+**Remaining frontier — the only lever that removes plumbing wholesale (research-grade):** a Lean
+**parametricity translation** that auto-*generates* the `DenoteHom` instances (and eventually the
+transfer proof terms) from the `@[denote]` squares — the Lean analog of Coq's `param` / Trocq's Coq-Elpi
+plugin, and structurally like Mathlib's `@[to_additive]`. This is a self-contained metaprogramming
+project, not a proof conversion. The instance layer it would target is already in place. **No mature Lean
+port of CoqEAL/Trocq exists** — this would be novel. See §6 for references.
 
 ---
 
