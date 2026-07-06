@@ -25,21 +25,28 @@ Why each condition follows from `η ∉ range D`:
 `hAD` (properness `deg hNum < deg Dstar`) is *not* a normality condition at all — it is **guaranteed by Hermite
 reduction** and should be a discharged theorem. `hDt0` (`deg Dt = 0`) is the primitive-case **scope tag**.
 
-## Status
+## Status — `hE` and `hm` subsumed; frontier now `{hcopgcd, hDt0, hAD, hE}`
 
-- **✅ DONE (2026-07-06).** `GenuinePrimitiveMonomialLrt Dt` (input-independent, `LrtSoundness.lean`) +
+- **✅ `hE` (2026-07-06).** `GenuinePrimitiveMonomialLrt Dt` (input-independent, `LrtSoundness.lean`) +
   `lrtPoleNormalityData_of_genuineMonomial` (per-input `hE` in one line). **The structure field
-  `LrtReducedGenuineData.hE` is now `GenuinePrimitiveMonomialLrt Dt`** (was the per-input `LrtPoleNormalityData
-  Dt a d`); `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` derives the per-input normality (hence
-  `hR0`) from it. So the frontier's normality now depends only on the monomial, not the integrand.
+  `LrtReducedGenuineData.hE` is now `GenuinePrimitiveMonomialLrt Dt`** (was per-input `LrtPoleNormalityData`);
+  `_of_genuine` derives the per-input normality (hence `hR0`) from it.
+- **✅ `hm` (2026-07-06).** **Removed from the structure.** `natDegree_implicitDeriv_eq_of_monic_of_not_range`
+  (`LrtGeneralDerivation`, the exact `D(cₙ₋₁)+nη≠0` argument) + `eta_not_range_der` (`η ∉ range D_K` via the
+  property at `K̄` + `deriv_algebraMap` descent) + `hm_of_genuineMonomial` (the `cdegG`/`cmonomialDeriv` bridge,
+  deg-0 case separate). `_of_genuine` derives `hm` from `hgen.hE`.
 
 ## Next
 
-1. **Derive `hm` from `GenuinePrimitiveMonomialLrt`** (the `D(cₙ₋₁)+nη≠0` argument — a K-level bridge:
-   `toPolyG_cmonomialDeriv` + monic-`Dstar` sub-leading-coeff + `η ∉ range D_K` from the property at `K̄`).
-2. **Derive `hcopgcd`** (normality of Yun factors ⟺ `η ≠ β′` via `isCoprime_X_sub_C_implicitDeriv_iff`).
-3. **Discharge `hAD`** from the Hermite properness invariant (algorithm-derived, belongs nowhere in the frontier).
-4. **Collapse the frontier** to `{GenuinePrimitiveMonomialLrt Dt (monomial), hDt0 (scope)}` — everything else
-   derived. Then **pull the monomial property out of the per-input structure** (provided once per `Dt`).
-5. **`GenuineMonomialTower` class** capturing the invariant for a whole concrete tower (each level a genuine
-   monomial), from which `[PrimitiveFrontierLrt]` is discharged unconditionally on that tower.
+1. **`hcopgcd`** — the deepest remaining subsumption. It's the Yun factors' normality
+   `gcd(d/vᵐ·D(v), v)` is a unit. Path: (a) `cgcdWf`-unit `⟺ IsCoprime` via `GcdFFCorrect` (the fraction-free
+   gcd computes the genuine gcd); (b) `IsCoprime v (implicitDeriv Dt v)` from the monomial property over `K̄`
+   (`isCoprime_prod_X_sub_C_implicitDeriv_iff`, `v` splits into `∏(t−βᵢ)`, `η ≠ βᵢ′`); (c) cofactor coprimality
+   `gcd(d/vᵐ, v)=1` from the Yun structure (`cSqfreeYunFFGWf_isRelPrime`/`_pow_dvd`); (d) `IsCoprime` of the
+   product + `K̄→K` descent. ~5 lemmas — a real sub-development.
+2. **Discharge `hAD`** from the Hermite properness invariant (`cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one`,
+   concrete-carrier — algorithm-derived, belongs nowhere in the frontier).
+3. **Collapse** to `{GenuinePrimitiveMonomialLrt Dt, hDt0 (scope)}`, then **pull the monomial property out of the
+   per-input structure** (provided once per `Dt`).
+4. **`GenuineMonomialTower` class** capturing the invariant for a whole concrete tower, from which
+   `[PrimitiveFrontierLrt]` is discharged unconditionally on that tower.
