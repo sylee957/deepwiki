@@ -76,18 +76,29 @@ theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : CPoly) (hq : cnorm q 
 
 /-! ### The agreement `cdiophantine ↔ diophantineSolveReduced` -/
 
+/-- `cdiophantine fuel p q rhs` has the reduced coprime input certificates. -/
+structure IsCDiophantineInput (fuel : ℕ) (p q rhs : CPoly) : Prop where
+  /-- The computable denominator is nonzero. -/
+  q_ne : cnorm q ≠ []
+  /-- The abstract inputs are coprime. -/
+  coprime : IsCoprime (toPoly p) (toPoly q)
+  /-- The computable gcd reads as its leading constant. -/
+  gcd_const : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1)
+  /-- The leading coefficient of the computed gcd is nonzero. -/
+  gcd_lead_ne : clead (cgcdExt fuel p q).1 ≠ 0
+  /-- The modulus fuel bound is large enough for the scaled right-hand side. -/
+  fuel_bound : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
+    (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel
+
 open Classical in
 /-- First-cofactor agreement: `toPoly (cdiophantine fuel p q rhs).1 = (diophantineSolveReduced
 (toPoly p) (toPoly q) (toPoly rhs)).1`, for coprime `p, q`, `q ≠ 0`, computable gcd a nonzero
 constant, and enough fuel. -/
 theorem toPoly_cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPoly)
-    (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
-    (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
-    (hgc : clead (cgcdExt fuel p q).1 ≠ 0)
-    (hfuel : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
-        (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
+    (hinput : IsCDiophantineInput fuel p q rhs) :
     toPoly (cdiophantine fuel p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 := by
+  obtain ⟨hq, hcop, hg, hgc, hfuel⟩ := hinput
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
   -- computable side: correctness + degree bound
   have hc_eq := toPoly_cdiophantine fuel p q rhs hq hg hgc
@@ -106,15 +117,15 @@ open Classical in
 /-- Second-cofactor agreement: `toPoly (cdiophantine fuel p q rhs).2 = (diophantineSolveReduced
 (toPoly p) (toPoly q) (toPoly rhs)).2`, pinned once the first cofactor agrees. -/
 theorem toPoly_cdiophantine_snd_eq (fuel : ℕ) (p q rhs : CPoly)
-    (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
-    (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
-    (hgc : clead (cgcdExt fuel p q).1 ≠ 0)
-    (hfuel : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
-        (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
+    (hinput : IsCDiophantineInput fuel p q rhs) :
     toPoly (cdiophantine fuel p q rhs).2
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).2 := by
+  have hq := hinput.q_ne
+  have hcop := hinput.coprime
+  have hg := hinput.gcd_const
+  have hgc := hinput.gcd_lead_ne
   have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
-  have hfst := toPoly_cdiophantine_fst_eq fuel p q rhs hq hcop hg hgc hfuel
+  have hfst := toPoly_cdiophantine_fst_eq fuel p q rhs hinput
   have hc_eq := toPoly_cdiophantine fuel p q rhs hq hg hgc
   have ha_eq := diophantineSolveReduced_spec hcop (toPoly rhs)
   -- with `B` equal, the two Bézout equations have the same `B·p` term; cancel `q`.
@@ -128,15 +139,11 @@ open Classical in
 /-- Full `cdiophantine ↔ diophantineSolveReduced` agreement (both cofactors): under `toPoly`, the
 computable Bézout solver realizes the abstract `diophantineSolveReduced` pair. -/
 theorem toPoly_cdiophantine_eq (fuel : ℕ) (p q rhs : CPoly)
-    (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
-    (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
-    (hgc : clead (cgcdExt fuel p q).1 ≠ 0)
-    (hfuel : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
-        (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
+    (hinput : IsCDiophantineInput fuel p q rhs) :
     (toPoly (cdiophantine fuel p q rhs).1, toPoly (cdiophantine fuel p q rhs).2)
       = diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs) :=
-  Prod.ext (toPoly_cdiophantine_fst_eq fuel p q rhs hq hcop hg hgc hfuel)
-    (toPoly_cdiophantine_snd_eq fuel p q rhs hq hcop hg hgc hfuel)
+  Prod.ext (toPoly_cdiophantine_fst_eq fuel p q rhs hinput)
+    (toPoly_cdiophantine_snd_eq fuel p q rhs hinput)
 
 -- The reduced-Bézout cofactor of `cdiophantine` equals the abstract `diophantineSolveReduced`'s.
 example (fuel : ℕ) (p q rhs : CPoly)
@@ -147,7 +154,7 @@ example (fuel : ℕ) (p q rhs : CPoly)
         (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
     toPoly (cdiophantine fuel p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 :=
-  toPoly_cdiophantine_fst_eq fuel p q rhs hq hcop hg hgc hfuel
+  toPoly_cdiophantine_fst_eq fuel p q rhs ⟨hq, hcop, hg, hgc, hfuel⟩
 
 /-! ### The `hermiteInner` step identity and inner-loop invariant (in `RatFunc ℚ`) -/
 
@@ -230,6 +237,16 @@ private def hbezPred (fuel : ℕ) (V U : CPoly) (j' : ℕ) (A' : CPoly) : Prop :
     + toPoly (cdiophantine fuel (cmul U (cderiv V)) V (cscale (-((j' : ℚ) + 1)⁻¹) A')).2
       * toPoly V
     = -toPoly A' * Polynomial.C (((j' : ℚ) + 1)⁻¹)
+
+/-- The Hermite-inner Bézout call has a nonzero denominator and constant gcd. -/
+structure IsHermiteInnerBezoutInput (fuel : ℕ) (V U : CPoly) : Prop where
+  /-- The inner denominator is nonzero. -/
+  den_ne : cnorm V ≠ []
+  /-- The computed gcd reads as its leading constant. -/
+  gcd_const : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
+    = Polynomial.C (clead (cgcdExt fuel (cmul U (cderiv V)) V).1)
+  /-- The leading coefficient of the computed gcd is nonzero. -/
+  gcd_lead_ne : clead (cgcdExt fuel (cmul U (cderiv V)) V).1 ≠ 0
 
 open scoped Differential in
 /-- `hermiteInner` loop invariant (accumulator-general form) in `RatFunc ℚ`: for `U, V ≠ 0` and every
@@ -369,11 +386,9 @@ theorem hermiteInner_spec (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV :
 /-- The per-step Bézout relation `hbezPred` holds for every `j', A'`, given `V ≠ 0` and the gcd of
 `cmul U (cderiv V)` and `V` a nonzero constant. Discharges `hermiteInner_spec`'s `hbez` premise. -/
 theorem hermiteInner_bezout_of (fuel : ℕ) (V U : CPoly) (j' : ℕ) (A' : CPoly)
-    (hq : cnorm V ≠ [])
-    (hg : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
-      = Polynomial.C (clead (cgcdExt fuel (cmul U (cderiv V)) V).1))
-    (hgc : clead (cgcdExt fuel (cmul U (cderiv V)) V).1 ≠ 0) :
+    (hbez : IsHermiteInnerBezoutInput fuel V U) :
     hbezPred fuel V U j' A' := by
+  obtain ⟨hq, hg, hgc⟩ := hbez
   rw [hbezPred]
   have h := toPoly_cdiophantine fuel (cmul U (cderiv V)) V
     (cscale (-((j' : ℚ) + 1)⁻¹) A') hq hg hgc
@@ -387,10 +402,7 @@ open scoped Differential in
 nonzero `toPoly`, `cnorm V ≠ []`, and the gcd of `cmul U (cderiv V)` and `V` a nonzero constant, the
 inner loop satisfies `am A/(am U·am V^(j+1)) = (toQFun gloc)′ + am A_final/(am U·am V)`. -/
 theorem hermiteInner_spec_of (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
-    (hq : cnorm V ≠ [])
-    (hg : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
-      = Polynomial.C (clead (cgcdExt fuel (cmul U (cderiv V)) V).1))
-    (hgc : clead (cgcdExt fuel (cmul U (cderiv V)) V).1 ≠ 0) (j : ℕ) (A : CPoly) :
+    (hbez : IsHermiteInnerBezoutInput fuel V U) (j : ℕ) (A : CPoly) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly A)
         / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U)
             * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
@@ -398,7 +410,7 @@ theorem hermiteInner_spec_of (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (h
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec fuel V U hU hV
-    (fun j' A' => hermiteInner_bezout_of fuel V U j' A' hq hg hgc) j A
+    (fun j' A' => hermiteInner_bezout_of fuel V U j' A' hbez) j A
 
 open scoped Differential in
 -- The computable `hermiteInner` loop integrates the rational part of `A/(U·V^(j+1))` exactly,
@@ -413,7 +425,7 @@ example (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (
       = (toQFun (hermiteInner fuel V U j A qzero).1)′
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
-  hermiteInner_spec_of fuel V U hU hV hq hg hgc j A
+  hermiteInner_spec_of fuel V U hU hV ⟨hq, hg, hgc⟩ j A
 
 /-! ### Exact division through `toPoly` -/
 
@@ -472,6 +484,15 @@ theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
 
 /-! ### The residual-recovery identity (in `RatFunc ℚ`) -/
 
+/-- The denominators of a Hermite residual wrapper are nonzero. -/
+structure IsHermiteResidualInput (D gden Dstar : CPoly) : Prop where
+  /-- The original denominator reads nonzero. -/
+  den_ne : toPoly D ≠ 0
+  /-- The rational-part denominator reads nonzero. -/
+  gden_ne : toPoly gden ≠ 0
+  /-- The squarefree residual denominator is nonzero. -/
+  radical_ne : cnorm Dstar ≠ []
+
 open scoped Differential in
 /-- The residual-recovery numerator identity in `RatFunc ℚ`: for `D, gden ≠ 0`,
 `am A/am D − (am gnum/am gden)′ = am resNum/(am D·(am gden·am gden))` with
@@ -508,8 +529,7 @@ open scoped Differential in
 and `resNum = A·gden² − D·(gnum'·gden − gnum·gden')`. -/
 theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : CPoly)
     (gnum gden Dstar : CPoly)
-    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0)
-    (hDstar : cnorm Dstar ≠ [])
+    (hden : IsHermiteResidualInput D gden Dstar)
     (hexact : toPoly (cmod fuel
         (cmul (csub (cmul A (cmul gden gden))
             (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
@@ -522,6 +542,9 @@ theorem hermiteReduce_residual_correct (fuel : ℕ) (A D : CPoly)
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  have hD := hden.den_ne
+  have hgden := hden.gden_ne
+  have hDstar := hden.radical_ne
   have hinj := RatFunc.algebraMap_injective (K := ℚ)
   set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef
   -- abbreviations matching `hermiteReduce`'s `let`-bindings.
@@ -573,7 +596,7 @@ open scoped Differential in
 under `hexact` and `D, gden ≠ 0`, `Dstar ≠ 0`,
 `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. -/
 theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly)
-    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hden : IsHermiteResidualInput D gden Dstar)
     (hexact : toPoly (cmod fuel
         (cmul (csub (cmul A (cmul gden gden))
             (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
@@ -587,14 +610,14 @@ theorem hermiteReduce_spec_cnorm (fuel : ℕ) (A D gnum gden Dstar : CPoly)
               (cmul D (cmul gden gden)))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
   rw [toPoly_cnorm]
-  exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hD hgden hDstar hexact
+  exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hden hexact
 
 open scoped Differential in
 /-- `hermiteReduce` wrapper correctness from an algebraic divisibility certificate in `RatFunc ℚ`: with
 the premise `toPoly (D·gden²) ∣ toPoly (resNum·Dstar)` (plus a fuel bound), and `D, gden ≠ 0`,
 `Dstar ≠ 0`, `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar`. -/
 theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar : CPoly)
-    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
     (hdvd : toPoly (cmul D (cmul gden gden))
@@ -608,12 +631,14 @@ theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar 
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  have hD := hden.den_ne
+  have hgden := hden.gden_ne
   have hresDenP : toPoly (cmul D (cmul gden gden)) ≠ 0 := by
     rw [toPoly_cmul, toPoly_cmul]
     exact mul_ne_zero hD (mul_ne_zero hgden hgden)
   have hresDen : cnorm (cmul D (cmul gden gden)) ≠ [] :=
     fun h => hresDenP ((cnorm_eq_nil_iff _).mp h)
-  exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hD hgden hDstar
+  exact hermiteReduce_residual_correct fuel A D gnum gden Dstar hden
     (cmod_eq_zero_of_dvd fuel _ _ hresDen hfuel hdvd)
 
 /-! ### The Yun radical `Dstar` divides `D` through `toPoly` -/
@@ -1791,10 +1816,7 @@ qzero`. No divisibility certificate — the residual denominator `U·V` is alrea
 `hermiteInner_spec_of` with the two denominator reconciliations. -/
 theorem hermiteReduce_residual_correct_single (fuel : ℕ) (V U A Dstar D : CPoly)
     (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0)
-    (hq : cnorm V ≠ [])
-    (hg : toPoly (cgcdExt fuel (cmul U (cderiv V)) V).1
-      = Polynomial.C (clead (cgcdExt fuel (cmul U (cderiv V)) V).1))
-    (hgc : clead (cgcdExt fuel (cmul U (cderiv V)) V).1 ≠ 0) (j : ℕ)
+    (hbez : IsHermiteInnerBezoutInput fuel V U) (j : ℕ)
     (hD : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V) ^ (j + 1))
     (hDstar : algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar)
@@ -1804,7 +1826,7 @@ theorem hermiteReduce_residual_correct_single (fuel : ℕ) (V U A Dstar D : CPol
         + algebraMap ℚ[X] (RatFunc ℚ) (toPoly (hermiteInner fuel V U j A qzero).2)
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
   rw [hD, hDstar]
-  exact hermiteInner_spec_of fuel V U hU hV hq hg hgc j A
+  exact hermiteInner_spec_of fuel V U hU hV hbez j A
 
 /-! ### Reducing the cleared-identity divisibility to two structural divisibilities
 
@@ -1863,7 +1885,7 @@ loop content (`A/D − g′` clears to denominator `Dstar`), each decidably `cmo
 concrete `D` — strictly cleaner than the monolithic `hermiteReduce_residual_correct_of_dvd`
 premise, which they assemble via `dvd_clearedIdentity_of_split`. -/
 theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dstar : CPoly)
-    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
     (hresD : toPoly (cmod fuel
@@ -1882,6 +1904,8 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  have hD := hden.den_ne
+  have hgden := hden.gden_ne
   set resNum' := csub (cmul A (cmul gden gden))
     (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
   -- nonzero divisors as `cnorm ≠ []`.
@@ -1900,7 +1924,7 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
     exact dvd_clearedIdentity_of_split hD hDR hg2dvd
-  exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hD hgden hDstar hfuel hdvd
+  exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hden hfuel hdvd
 
 open scoped Differential in
 /-- **`hermiteReduce` wrapper correctness from the radical clause plus one cert** in `RatFunc ℚ`: the
@@ -1911,7 +1935,7 @@ Under `D, gden ≠ 0`, `Dstar ≠ 0` and a fuel bound, `am A/am D = (toQFun (gnu
 Dstar`. This is the cleanest divisibility input: the *abstract* radical content folded in, leaving one
 decidable cert. -/
 theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Dstar : CPoly)
-    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
     (hfuelD : (cnorm D).length ≤ fuel)
@@ -1928,6 +1952,9 @@ theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Ds
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
+  have hD := hden.den_ne
+  have hgden := hden.gden_ne
+  have hDstar := hden.radical_ne
   set resNum' := csub (cmul A (cmul gden gden))
     (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden)))) with hresNum'
   have hWeq : toPoly D = toPoly Dstar * toPoly (cdiv fuel D Dstar) := by
@@ -1948,7 +1975,7 @@ theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Ds
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
     exact dvd_clearedIdentity_of_radical (W := toPoly (cdiv fuel D Dstar)) hWeq hWgddvd
-  exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hD hgden hDstar hfuel hdvd
+  exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hden hfuel hdvd
 
 /-! ### The decidable residual-honesty bundle and the unconditional wrapper
 
@@ -1988,7 +2015,7 @@ and a fuel bound, `am A/am D = (toQFun (gnum,gden))′ + am Bres/am Dstar` with
 engine's own decidable `cmod`-computations (`HermiteResComp_to_split`), rather than supplied as an
 algebraic divisibility hypothesis. -/
 theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar : CPoly)
-    (hD : toPoly D ≠ 0) (hgden : toPoly gden ≠ 0) (hDstar : cnorm Dstar ≠ [])
+    (hden : IsHermiteResidualInput D gden Dstar)
     (hfuel : (cnorm (cmul (csub (cmul A (cmul gden gden))
         (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)).length ≤ fuel)
     (hcomp : HermiteResComp fuel A D gnum gden Dstar) :
@@ -2002,7 +2029,7 @@ theorem hermiteReduce_residual_correct_uncond (fuel : ℕ) (A D gnum gden Dstar 
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) := by
   obtain ⟨hresD, hg2⟩ := hcomp
   rw [cnorm_eq_nil_iff] at hresD hg2
-  exact hermiteReduce_residual_correct_of_split fuel A D gnum gden Dstar hD hgden hDstar hfuel
+  exact hermiteReduce_residual_correct_of_split fuel A D gnum gden Dstar hden hfuel
     hresD hg2
 
 open scoped Differential in
@@ -2023,7 +2050,7 @@ example (fuel : ℕ) (A D gnum gden Dstar : CPoly)
                   (cmul D (csub (cmul (cderiv gnum) gden) (cmul gnum (cderiv gden))))) Dstar)
               (cmul D (cmul gden gden))))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly Dstar) :=
-  hermiteReduce_residual_correct_uncond fuel A D gnum gden Dstar hD hgden hDstar hfuel hcomp
+  hermiteReduce_residual_correct_uncond fuel A D gnum gden Dstar ⟨hD, hgden, hDstar⟩ hfuel hcomp
 
 /-! ### The multi-factor `g`-fold interference invariant: toward an unconditional wrapper
 
@@ -2139,13 +2166,9 @@ side conditions of `hermiteInner_spec_of`, the increment derivative reduces the 
 denominator via the reconciliation. -/
 theorem glocIncr_residual (fuel : ℕ) (A D : CPoly) (Vi : CPoly) (j : ℕ)
     (hU : toPoly (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
-    (hV : toPoly Vi ≠ 0) (hq : cnorm Vi ≠ [])
-    (hg : toPoly (cgcdExt fuel (cmul (cdiv fuel D
-        ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1
-      = Polynomial.C (clead (cgcdExt fuel (cmul (cdiv fuel D
-          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1))
-    (hgc : clead (cgcdExt fuel (cmul (cdiv fuel D
-        ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1 ≠ 0)
+    (hV : toPoly Vi ≠ 0)
+    (hbez : IsHermiteInnerBezoutInput fuel Vi
+      (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
     (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D
           ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
@@ -2157,7 +2180,7 @@ theorem glocIncr_residual (fuel : ℕ) (A D : CPoly) (Vi : CPoly) (j : ℕ)
               ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (j + 1) A qzero).2)
           / glocResidDen fuel D (Vi, j + 2) := by
   set U := cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1]) with hUdef
-  have hspec := hermiteInner_spec_of fuel Vi U hU hV hq hg hgc (j + 1) A
+  have hspec := hermiteInner_spec_of fuel Vi U hU hV hbez (j + 1) A
   -- `glocIncr fuel A D (Vi, j+2) = (hermiteInner fuel Vi U (j+1) A qzero).1` (since `(j+2)-1 = j+1`).
   have hgloc : glocIncr fuel A D (Vi, j + 2)
       = (hermiteInner fuel Vi U (j + 1) A qzero).1 := by
@@ -2433,13 +2456,9 @@ reconciliation `hDrec : am D = am Uᵢ·am Vi^{j+2}` (the exactness `Vi^{j+2} �
 + `glocResidDen_eq_over_D`. -/
 theorem glocIncr_hstep (fuel : ℕ) (A D : CPoly) (Vi : CPoly) (j : ℕ) (hD : toPoly D ≠ 0)
     (hU : toPoly (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
-    (hV : toPoly Vi ≠ 0) (hq : cnorm Vi ≠ [])
-    (hg : toPoly (cgcdExt fuel (cmul (cdiv fuel D
-        ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1
-      = Polynomial.C (clead (cgcdExt fuel (cmul (cdiv fuel D
-          ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1))
-    (hgc : clead (cgcdExt fuel (cmul (cdiv fuel D
-        ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) (cderiv Vi)) Vi).1 ≠ 0)
+    (hV : toPoly Vi ≠ 0)
+    (hbez : IsHermiteInnerBezoutInput fuel Vi
+      (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
     (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D
           ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])))
@@ -2448,7 +2467,7 @@ theorem glocIncr_hstep (fuel : ℕ) (A D : CPoly) (Vi : CPoly) (j : ℕ) (hD : t
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly A) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
         - algebraMap ℚ[X] (RatFunc ℚ) (residNumIncr fuel A D (Vi, j + 2))
           / algebraMap ℚ[X] (RatFunc ℚ) (toPoly D) := by
-  rw [glocIncr_residual fuel A D Vi j hU hV hq hg hgc hDrec]
+  rw [glocIncr_residual fuel A D Vi j hU hV hbez hDrec]
   -- recast the `glocResidDen` fraction over the global `D` numerator `residNumIncr`.
   rw [glocResidDen_eq_over_D fuel D Vi j
     (hermiteInner fuel Vi (cdiv fuel D

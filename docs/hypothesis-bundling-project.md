@@ -62,7 +62,9 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
       nonzero/cofactor-proper pair as `IsHermiteInnerFactor` and `IsHermiteFactorData`.
 - [x] `Computable/OneShotAssembly.lean` (264) — bundled repeated full-driver branch selectors as
       `IsPureNormalBranch` / `IsPolynomialBranch`; left residue-side variants explicit.
-- [ ] `HermiteCorrectness.lean` (314), `GroebnerBasis.lean` (429), `SubresultantCorrectness.lean` (255),
+- [x] `HermiteCorrectness.lean` (314) — bundled the repeated Diophantine agreement input,
+      Hermite-inner Bézout input, and residual-wrapper denominator input.
+- [ ] `GroebnerBasis.lean` (429), `SubresultantCorrectness.lean` (255),
       `LaurentCoefficients.lean` (162) — large; expect several clusters each.
 - [ ] sweep: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do n=$(grep -coE "\(h[a-zA-Z0-9]+ :" "$f"); [ "$n" -gt 40 ] && echo "$n $f"; done | sort -rn`
 

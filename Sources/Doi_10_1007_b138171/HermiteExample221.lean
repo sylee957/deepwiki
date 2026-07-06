@@ -129,7 +129,7 @@ example :
       (cmul cD221 (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
     rw [← cnorm_eq_nil_iff, hermite_ex221_exact_division]
   exact hermiteReduce_residual_correct 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hexact
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hexact
 
 /-- **Example 2.2.1: the engine-honesty bundle holds** (`native_decide`): every `cmod`-remainder in the
 Yun factorization of `D = x²(x²+2)³` vanishes, so `SqfreeExactComp 40 cD221` — and hence (via
@@ -189,7 +189,7 @@ example :
         (cmul [8, 12, 20, 12, 8, 3] (cderiv [0, 8, 0, 12, 0, 6, 0, 1]))))) [0, 2, 0, 1])).length ≤ 40 := by
     native_decide
   exact hermiteReduce_residual_correct_uncond 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hfuel hermite_ex221_resComp
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hfuel hermite_ex221_resComp
 
 /-! ### Example 2.2.1 via the radical wrapper: `Dstar ∣ D` from the proven Yun radical clause
 
@@ -243,6 +243,7 @@ example :
       (cmul (cdiv 40 cD221 [0, 2, 0, 1]) (cmul [0, 8, 0, 12, 0, 6, 0, 1] [0, 8, 0, 12, 0, 6, 0, 1]))) = 0 := by
     rw [← cnorm_eq_nil_iff]; native_decide
   exact hermiteReduce_residual_correct_of_radical 40 cA221 cD221 [8, 12, 20, 12, 8, 3]
-    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] hD hgden hDstar hfuel hfuelD hermite_ex221_Dstar_dvd hWgd
+    [0, 8, 0, 12, 0, 6, 0, 1] [0, 2, 0, 1] ⟨hD, hgden, hDstar⟩ hfuel hfuelD
+    hermite_ex221_Dstar_dvd hWgd
 
 end DeepWiki.SymbolicIntegration.Compute
