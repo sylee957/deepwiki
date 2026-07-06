@@ -543,6 +543,22 @@ theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CField α] [CFieldSpec �
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff] at h
   exact h
 
+/-- Monic-normalization is a unit-scaling: `toPolyG (cmonicG p)` is associated to `toPolyG p` in `K[X]`. -/
+theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    Associated (toPolyG (cmonicG p)) (toPolyG p) := by
+  rw [cmonicG]
+  split_ifs with h
+  · rw [toPolyG_nil]
+    have hz : toPolyG p = 0 := (cisZeroG_iff p).mp (by rwa [cisZeroG_cnormG] at h)
+    rw [hz]
+  · rw [toPolyG_cscaleG, toPolyG_cnormG]
+    have hne : cnormG (cnormG p) ≠ [] := by
+      rw [cnormG_idem]; intro he
+      exact h (by rw [cisZeroG_cnormG, cisZeroG_iff, ← toPolyG_cnormG, he, toPolyG_nil])
+    exact associated_unit_mul_left _ _
+      (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr
+        (by rw [CFieldSpec.toK_inv]; exact inv_ne_zero (toK_cleadG_ne_zero hne))))
+
 /-- `toPolyG (cmonicG p)` is monic for `toPolyG p ≠ 0`. -/
 theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α)
     (hp : toPolyG p ≠ 0) :

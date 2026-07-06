@@ -106,23 +106,6 @@ theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
 
 end CPolyG
 
-open CPolyG in
-/-- Monic-normalization is a unit-scaling: `toPolyG (cmonicG p)` is associated to `toPolyG p` in `K[X]`. -/
-theorem associated_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
-    Associated (toPolyG (CPolyG.cmonicG p)) (toPolyG p) := by
-  rw [CPolyG.cmonicG]
-  split_ifs with h
-  · rw [toPolyG_nil]
-    have hz : toPolyG p = 0 := (cisZeroG_iff p).mp (by rwa [cisZeroG_cnormG] at h)
-    rw [hz]
-  · rw [toPolyG_cscaleG, toPolyG_cnormG]
-    have hne : cnormG (cnormG p) ≠ [] := by
-      rw [cnormG_idem]; intro he
-      exact h (by rw [cisZeroG_cnormG, cisZeroG_iff, ← toPolyG_cnormG, he, toPolyG_nil])
-    exact associated_unit_mul_left _ _
-      (Polynomial.isUnit_C.mpr (isUnit_iff_ne_zero.mpr
-        (by rw [CFieldSpec.toK_inv]; exact inv_ne_zero (toK_cleadG_ne_zero hne))))
-
 /-- Field clearing: from the cleared identity `(P·Dstar + hNum·gden²)·d = a·(gden²·Dstar)` with
 `gden, Dstar, d ≠ 0`, the fraction-field identity `P/gden² + hNum/Dstar = a/d` holds in `RatFunc K`. -/
 theorem hermite_field_div_of_cleared {K : Type*} [Field K] (P Dstar gden hNum d a : K[X])
