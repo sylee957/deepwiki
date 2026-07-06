@@ -21,6 +21,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReductionStep
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBoundedReduction
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerCommonFactor
 
 /-! # Gröbner bases over a monomial order
 
@@ -71,36 +72,6 @@ Two layers, with **different** scope:
   recorded directly as `hbase : degreeOf 0 (sorted 0) = 0` — see the §2.6 residual for why
   discharging it needs the genuine `K[x][y]` divide-out construction, not just `gₖ`. -/
 
-/-- **The `K[x]`-content common divisor of the leading `y`-coefficients** (Lazard's `Gₖ₊₁`, closed
-form): the leading `y`-coefficient `gₖ` of the **top** (`y`-degree-maximal) sorted basis element. By
-`leadingYCoeff_sortedByYDegree_dvd_of_le` it divides `leadingYCoeff (sorted i)` for every `i`. (Only
-the `K[x]`-layer; the `y`-primitive part `P` of the gcd is a separate factor — see the section
-docstring.) -/
-noncomputable def gbCommonContent {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (htop : Fin B.card) : MvPolynomial (Fin 1) K :=
-  leadingYCoeff (sortedByYDegree hB htop)
-
-/-- **`gbCommonContent` divides every leading `y`-coefficient**: with `htop` the `y`-degree-maximal
-index (`∀ i, i ≤ htop`), `gₖ = gbCommonContent` divides `leadingYCoeff (sorted i)` for all `i`. -/
-theorem gbCommonContent_dvd {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    {htop : Fin B.card} (hmax : ∀ i : Fin B.card, i ≤ htop) (i : Fin B.card) :
-    gbCommonContent hB htop ∣ leadingYCoeff (sortedByYDegree hB i) :=
-  leadingYCoeff_sortedByYDegree_dvd_of_le hB (hmax i)
-
-/-- **The `K[x]`-content-unit condition** (Lazard's `Gₖ₊₁ = 1`): `IsUnit gₖ` for the top element.
-**Necessary but not sufficient** for the descent base — it ignores the `y`-primitive part `P` of the
-gcd (`I = (y)` satisfies it yet has `f₀ = y ∉ K[x]`). Records only the `K[x]`-layer of Lazard's
-`P·Gₖ₊₁` divide-out. -/
-def gbLeadingCoeffIsUnit {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
-    {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (htop : Fin B.card) : Prop :=
-  IsUnit (gbCommonContent hB htop)
-
 /-! ### Part A: dividing out a common factor preserves the Gröbner-basis structure
 
 Lazard (1985), Theorem 1 proof: `hgᵢ := fᵢ / (P·Gₖ₊₁)` is a minimal Gröbner basis iff the `fᵢ`
@@ -111,54 +82,6 @@ leading monomials are preserved". The arithmetic core is the **leading-monomial 
 set drops by exactly `m.degree h`, an order-isomorphism on degrees that preserves divisibility and
 minimality. This is the reachable framework half; the genuine wall (which `h` to divide by so the
 quotient's minimal element lands in `K[x]`) is Part B. -/
-
-/-- **Degree of a cofactor** (leading-monomial shift): if `b = h * q` with `h, q ≠ 0`, then
-`m.degree q = m.degree b - m.degree h` (`MonomialOrder.degree_mul`, over a domain). -/
-theorem degree_cofactor {K : Type*} [Field K] (m : MonomialOrder σ)
-    {h q : MvPolynomial σ K} (hh : h ≠ 0) (hq : q ≠ 0) :
-    m.degree q = m.degree (h * q) - m.degree h := by
-  rw [degree_mul hh hq, add_comm, add_tsub_cancel_right]
-
-/-- **Leading coefficient of a cofactor**: `m.leadingCoeff (h * q) = m.leadingCoeff h *
-m.leadingCoeff q` (`MonomialOrder.leadingCoeff_mul`, over a domain) — the leading coefficient
-scales multiplicatively under dividing out a common factor. -/
-theorem leadingCoeff_cofactor {K : Type*} [Field K] (m : MonomialOrder σ)
-    (h q : MvPolynomial σ K) :
-    m.leadingCoeff (h * q) = m.leadingCoeff h * m.leadingCoeff q :=
-  MonomialOrder.leadingCoeff_mul
-
-/-- **The leading monomial of a common multiple dominates that of the cofactor**: `m.degree q ≤
-m.degree (h * q)` (the divided-out factor `h` only adds to the degree). -/
-theorem degree_cofactor_le {K : Type*} [Field K] (m : MonomialOrder σ)
-    {h q : MvPolynomial σ K} (hh : h ≠ 0) (hq : q ≠ 0) :
-    m.degree q ≤ m.degree (h * q) := by
-  rw [degree_mul hh hq]; exact le_add_self
-
-/-- **Leading-monomial divisibility is preserved by a common shift** (Part A core). For a fixed
-shift `s` (`= m.degree h`), `s + c ≤ s + d ↔ c ≤ d`: dividing both leading monomials by `LM(h)`
-preserves the divisibility relation between them — the order-isomorphism `c ↦ s + c` on degrees. -/
-theorem degree_add_le_add_iff {s c d : σ →₀ ℕ} : s + c ≤ s + d ↔ c ≤ d :=
-  add_le_add_iff_left s
-
-/-- **Leading-monomial shift, equation form**: with `b = h * q`, `b' = h * q'` (`h, q, q' ≠ 0`),
-`m.degree b ≤ m.degree b' ↔ m.degree q ≤ m.degree q'` — both leading monomials carry the same `LM(h)`
-shift, so the divisibility relation among the divided set matches that among `B`. -/
-theorem degree_mul_le_mul_iff {K : Type*} [Field K] (m : MonomialOrder σ)
-    {h q q' : MvPolynomial σ K} (hh : h ≠ 0) (hq : q ≠ 0) (hq' : q' ≠ 0) :
-    m.degree (h * q) ≤ m.degree (h * q') ↔ m.degree q ≤ m.degree q' := by
-  rw [degree_mul hh hq, degree_mul hh hq', degree_add_le_add_iff]
-
-/-- **Minimality is preserved by dividing out a common factor** (Part A, the minimal-basis half of
-Lazard's Theorem 1 reduction). If `b' = h·q'` does not lead-monomial-divide a distinct `b = h·q` in
-the reduced GB, then `q'` does not lead-monomial-divide `q` after the divide-out: the `LM(h)` shift
-cancels (`degree_mul_le_mul_iff`), so the no-divisibility relation transfers to the quotient set. -/
-theorem leadingMonomial_cofactor_not_le {K : Type*} [Field K]
-    {I : Ideal (MvPolynomial σ K)} {B : Set (MvPolynomial σ K)}
-    (hB : IsReducedGroebnerBasis m I B) {h q q' : MvPolynomial σ K} (hh : h ≠ 0)
-    (hq : q ≠ 0) (hq' : q' ≠ 0) (hb : h * q ∈ B) (hb' : h * q' ∈ B) (hne : h * q ≠ h * q') :
-    ¬ (m.degree q' ≤ m.degree q) := by
-  rw [← degree_mul_le_mul_iff m hh hq' hq]
-  exact hB.leadingMonomial_not_le hb hb' hne
 
 /-! ### The base obstruction is genuine: `f = xy + 1` (refuting a free base case)
 

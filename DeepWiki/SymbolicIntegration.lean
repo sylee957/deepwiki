@@ -26,6 +26,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReductionStep
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBoundedReduction
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerCommonFactor
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
