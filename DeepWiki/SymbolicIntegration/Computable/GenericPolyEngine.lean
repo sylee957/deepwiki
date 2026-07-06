@@ -213,6 +213,11 @@ noncomputable def toPolyG {α : Type*} [CField α] [CFieldSpec α] : CPolyG α �
 @[simp, denote] theorem toPolyG_cons {α : Type*} [CField α] [CFieldSpec α] (a : α) (p : CPolyG α) :
     toPolyG (a :: p) = Polynomial.C (CFieldSpec.toK a) + X * toPolyG p := rfl
 
+/-- `toPolyG [CField.one] = 1`: the singleton coefficient list `[1]` reads as the polynomial `1`. -/
+@[denote] theorem toPolyG_one_singleton {α : Type*} [CField α] [CFieldSpec α] :
+    toPolyG ([CField.one] : CPolyG α) = 1 := by
+  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+
 /-- `toPolyG` is additive: `caddG` realizes `(CFieldSpec.K α)[X]` addition under the Horner bridge. -/
 @[simp, denote] theorem toPolyG_caddG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (caddG p q) = toPolyG p + toPolyG q := by

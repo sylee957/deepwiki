@@ -23,10 +23,6 @@ theorem toPolyG_ne_zero_of_cisZeroG_false {p : CPolyG β} (h : CPolyG.cisZeroG p
   rw [(CPolyG.cisZeroG_iff p).mpr h0] at h
   exact absurd h (by simp)
 
-/-- `toPolyG [CField.one] = 1`: the constant `[1]` reads as the polynomial `1`. -/
-theorem toPolyG_cone_eq_one : toPolyG ([CField.one] : CPolyG β) = 1 := by
-  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
-
 end Helpers
 
 end DeepWiki.SymbolicIntegration

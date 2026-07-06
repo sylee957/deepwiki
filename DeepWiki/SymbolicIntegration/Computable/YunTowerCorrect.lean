@@ -220,11 +220,6 @@ theorem prod_map_cSqfreeYunFFGWf_dvd (hgcd : GcdFFCorrect (α := α)) (p : CPoly
   have hb1dvd : toPolyG (cdivWf p g) ∣ toPolyG p := ⟨toPolyG g, hb1.symm⟩
   exact (prod_map_cSqfreeYunFFGgoWf_dvd hgcd _ _ _).trans hb1dvd
 
-omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
-/-- `toPolyG [CField.one] = 1`. -/
-theorem toPolyG_one_singleton : toPolyG ([CField.one] : CPolyG α) = 1 := by
-  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
-
 omit [CDiffFieldSpec α] in
 /-- **The Yun radical `Dstar` divides `d`** (the `cHermiteReduceTowerGWf` squarefree radical): the
 `foldl`-product of the Yun factors of `d` divides `d`, under the gcd frontier. -/
