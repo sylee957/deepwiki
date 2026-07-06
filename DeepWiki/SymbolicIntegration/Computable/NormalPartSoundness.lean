@@ -28,7 +28,7 @@ theorem amG_toPolyG_fracAddG (gAcc gloc : CPolyG α × CPolyG α)
         / amG α (toPolyG (cmulG gAcc.2 gloc.2))
       = amG α (toPolyG gAcc.1) / amG α (toPolyG gAcc.2)
         + amG α (toPolyG gloc.1) / amG α (toPolyG gloc.2) := by
-  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
+  simp only [denote, map_add, map_mul]
   rw [div_add_div _ _ (amG_toPolyG_ne_zero hAcc) (amG_toPolyG_ne_zero hloc)]
   ring
 
@@ -57,7 +57,7 @@ theorem amG_toPolyG_foldl_fracAddG :
       (caddG (cmulG s.1 gloc.2) (cmulG gloc.1 s.2), cmulG s.2 gloc.2) with hsnew
     have hsnew_ne : toPolyG snew.2 ≠ 0 := by
       rw [hsnew]; show toPolyG (cmulG s.2 gloc.2) ≠ 0
-      rw [toPolyG_cmulG]; exact mul_ne_zero hs hgloc
+      simpa only [denote] using mul_ne_zero hs hgloc
     have hrest : ∀ g ∈ rest, toPolyG g.2 ≠ 0 := fun g hg => hmem g (List.mem_cons_of_mem _ hg)
     obtain ⟨hden, heq⟩ := ih snew hsnew_ne hrest
     refine ⟨by simpa only [List.foldl_cons] using hden, ?_⟩
@@ -242,7 +242,8 @@ theorem cHermiteReduceTowerGWf_leftover_proper_of_residual [CFracGcdCoreWf α]
   -- exact division: `h_num · resDen = resNum·Dstar = resNum · Dstar`
   have hexact : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
       = toPolyG resNum * toPolyG Dstar := by
-    rw [toPolyG_cdivWf_exact (cmulG resNum Dstar) resDen hresDen hdvd, toPolyG_cmulG]
+    rw [toPolyG_cdivWf_exact (cmulG resNum Dstar) resDen hresDen hdvd]
+    simp only [denote]
   exact degree_lt_of_exact_div hexact hresProper hDstar
 
 /-! ### The residual-fraction properness `deg resNum < deg resDen` for `δ(t) ≤ 1`
@@ -400,9 +401,7 @@ theorem toPolyG_gprimeNum_proper_of_margin (Dt gnum gden : CPolyG α) (hM : toPo
     (toPolyG (csubG (cmulG (cmonomialDeriv Dt gnum) gden)
         (cmulG gnum (cmonomialDeriv Dt gden)))).degree
       < (toPolyG (cmulG gden gden)).degree := by
-  rw [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
-    toPolyG_cmonomialDeriv, toPolyG_cmonomialDeriv]
-  exact degree_implicitDeriv_frac_lt_of_margin hM hmargin
+  simpa only [denote] using degree_implicitDeriv_frac_lt_of_margin hM hmargin
 
 omit [Algebra ℚ (CFieldSpec.K α)] in
 /-- `D(g)` proper from `g` proper when `deg Dt ≤ 1`: a proper `g = gnum/gden` has proper derivative
