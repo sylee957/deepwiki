@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
 
 /-! # Assembling local principal parts
 
@@ -125,5 +126,88 @@ theorem completePartialFraction_over_closure (A : K[X]) (mult : K → ℕ) (R : 
   obtain ⟨PP, Rem, hdecomp⟩ := exists_sum_localPrincipalPart (Polynomial.C c) mult R hpolefree A
   refine ⟨Polynomial.C c⁻¹ * Rem, PP, ?_⟩
   rw [hdecomp, div_C_eq_algebraMap hc, add_comm]
+
+open Classical in
+/-- Decompose a quotient by root-product principal parts, with regularity certificates at every root. -/
+theorem exists_sum_localPrincipalPart_regular (M₀ : K[X]) (mult : K → ℕ) :
+    ∀ (R : Finset K), (∀ α ∈ R, M₀.eval α ≠ 0) → ∀ (A : K[X]),
+      ∃ (PP : K → RatFunc K) (Rem : K[X]),
+        algebraMap K[X] (RatFunc K) A
+            / algebraMap K[X] (RatFunc K) (rootProd R mult * M₀)
+          = (∑ α ∈ R, PP α) + algebraMap K[X] (RatFunc K) Rem / algebraMap K[X] (RatFunc K) M₀
+        ∧ (∀ α ∈ R, RegularAt α
+            (algebraMap K[X] (RatFunc K) A
+                / algebraMap K[X] (RatFunc K) (rootProd R mult * M₀) - PP α))
+        ∧ ∀ α ∈ R, ∃ (A' M' : K[X]), PP α = localPrincipalPart A' M' α (mult α) := by
+  intro R
+  induction R using Finset.induction_on with
+  | empty =>
+    intro _ A
+    exact ⟨fun _ => 0, A, by rw [rootProd_empty, one_mul, Finset.sum_empty, zero_add],
+      (fun α hα => by simp at hα), fun α hα => by simp at hα⟩
+  | @insert α₀ R hα₀ ih =>
+    intro hpolefree A
+    set N := rootProd R mult * M₀ with hNdef
+    have hNα₀ : N.eval α₀ ≠ 0 := by
+      rw [hNdef, Polynomial.eval_mul]
+      exact mul_ne_zero (eval_rootProd_ne_zero mult hα₀)
+        (hpolefree α₀ (Finset.mem_insert_self α₀ R))
+    have hpeel := subtract_localPrincipalPart_eq A N (mult α₀) hNα₀
+    obtain ⟨PP, Rem, hrec, hregrec, hstructrec⟩ :=
+      ih (fun β hβ => hpolefree β (Finset.mem_insert_of_mem hβ)) (localRemainder A N α₀ (mult α₀))
+    refine ⟨fun β => if β = α₀ then localPrincipalPart A N α₀ (mult α₀) else PP β, Rem, ?_, ?_, ?_⟩
+    · simp only [Finset.sum_insert hα₀, if_pos]
+      have hsumR : (∑ β ∈ R, (if β = α₀ then localPrincipalPart A N α₀ (mult α₀) else PP β))
+          = ∑ β ∈ R, PP β :=
+        Finset.sum_congr rfl fun β hβ => if_neg (show β ≠ α₀ from fun h => hα₀ (h ▸ hβ))
+      rw [hsumR]
+      have hden : rootProd (insert α₀ R) mult * M₀
+          = (Polynomial.X - Polynomial.C α₀) ^ mult α₀ * N := by
+        rw [rootProd_insert mult hα₀, hNdef]; ring
+      rw [hden]
+      have hsplit : algebraMap K[X] (RatFunc K) A
+            / algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α₀) ^ mult α₀ * N)
+          = localPrincipalPart A N α₀ (mult α₀)
+            + algebraMap K[X] (RatFunc K) (localRemainder A N α₀ (mult α₀))
+                / algebraMap K[X] (RatFunc K) N := by
+        rw [sub_eq_iff_eq_add] at hpeel; rw [hpeel]; ring
+      rw [hsplit, hrec]; ring
+    · intro γ hγ
+      have hden : rootProd (insert α₀ R) mult * M₀
+          = (Polynomial.X - Polynomial.C α₀) ^ mult α₀ * N := by
+        rw [rootProd_insert mult hα₀, hNdef]; ring
+      have hwhole : algebraMap K[X] (RatFunc K) A
+            / algebraMap K[X] (RatFunc K) (rootProd (insert α₀ R) mult * M₀)
+          = localPrincipalPart A N α₀ (mult α₀)
+            + algebraMap K[X] (RatFunc K) (localRemainder A N α₀ (mult α₀))
+                / algebraMap K[X] (RatFunc K) N := by
+        rw [sub_eq_iff_eq_add] at hpeel; rw [hden, hpeel]; ring
+      rw [hwhole]
+      simp only []
+      rcases eq_or_ne γ α₀ with hγα₀ | hγα₀
+      · subst hγα₀
+        rw [if_pos rfl, add_sub_cancel_left]
+        exact ⟨localRemainder A N γ (mult γ), N, hNα₀, rfl⟩
+      · rw [if_neg hγα₀]
+        have hmemR : γ ∈ R := Finset.mem_of_mem_insert_of_ne hγ hγα₀
+        have h1 : RegularAt γ (localPrincipalPart A N α₀ (mult α₀)) :=
+          RegularAt.localPrincipalPart hγα₀ A N (mult α₀)
+        have h2 : RegularAt γ
+            (algebraMap K[X] (RatFunc K) (localRemainder A N α₀ (mult α₀))
+                / algebraMap K[X] (RatFunc K) N - PP γ) := hregrec γ hmemR
+        have hrw : localPrincipalPart A N α₀ (mult α₀)
+              + algebraMap K[X] (RatFunc K) (localRemainder A N α₀ (mult α₀))
+                  / algebraMap K[X] (RatFunc K) N - PP γ
+            = localPrincipalPart A N α₀ (mult α₀)
+              + (algebraMap K[X] (RatFunc K) (localRemainder A N α₀ (mult α₀))
+                  / algebraMap K[X] (RatFunc K) N - PP γ) := by ring
+        rw [hrw]
+        exact h1.add h2
+    · intro γ hγ
+      simp only []
+      rcases eq_or_ne γ α₀ with hγα₀ | hγα₀
+      · subst hγα₀; exact ⟨A, N, by rw [if_pos rfl]⟩
+      · rw [if_neg hγα₀]
+        exact hstructrec γ (Finset.mem_of_mem_insert_of_ne hγ hγα₀)
 
 end DeepWiki.SymbolicIntegration
