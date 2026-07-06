@@ -19,6 +19,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBuchbergerCriterion
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBuchbergerAlgorithm
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBasisExistence
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReducedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
