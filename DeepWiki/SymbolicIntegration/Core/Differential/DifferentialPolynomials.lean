@@ -125,6 +125,33 @@ theorem diffSubst_ddx (Diα : K[X]) (p : DiffPoly K) :
         map_mul, derivative_mul]
       ring
 
+/-- `(aeval f P).eval α = aeval (fun v => (f v).eval α) P`. -/
+theorem eval_aeval_diffPoly (f : Option ℕ → K[X]) (α : K) (P : DiffPoly K) :
+    Polynomial.eval α (MvPolynomial.aeval f P) = MvPolynomial.aeval (fun v => (f v).eval α) P := by
+  induction P using MvPolynomial.induction_on with
+  | C a => simp
+  | add p q hp hq => simp [hp, hq]
+  | mul_X p n hp => simp [hp]
+
+/-- The point substitution `x ↦ α`, `u^(k) ↦ (Diα^(k)).eval α`. -/
+noncomputable def substEvalAt (Diα : K[X]) (α : K) : Option ℕ → K := fun v =>
+  match v with
+  | none => α
+  | some k => (derivative^[k] Diα).eval α
+
+/-- `(diffSubst Diα P).eval α = aeval (substEvalAt Diα α) P`. -/
+theorem eval_diffSubst (Diα : K[X]) (α : K) (P : DiffPoly K) :
+    Polynomial.eval α (diffSubst Diα P) = MvPolynomial.aeval (substEvalAt Diα α) P := by
+  rw [diffSubst, eval_aeval_diffPoly]
+  have hfun : (fun v => Polynomial.eval α
+        (match v with | (none : Option ℕ) => Polynomial.X | some k => derivative^[k] Diα))
+      = substEvalAt Diα α := by
+    funext v
+    cases v with
+    | none => simp [substEvalAt]
+    | some k => simp [substEvalAt]
+  exact congrArg (fun f => MvPolynomial.aeval f P) hfun
+
 /-! ## Fraction-field derivation -/
 
 /-- The quotient-rule fraction `(ddx p * q - p * ddx q) / q^2` in `Frac (DiffPoly K)`. -/

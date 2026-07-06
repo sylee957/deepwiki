@@ -344,20 +344,6 @@ theorem eval_laurentSubst_some [CharZero K] (Diα : K[X]) (α : K) (k : ℕ) :
   rw [Polynomial.eval_mul, Polynomial.eval_C, eval_iterate_derivative_X_sub_C_mul, ← mul_assoc,
     inv_mul_cancel₀ (Nat.cast_add_one_ne_zero (R := K) k), one_mul]
 
-/-- `(aeval f P).eval α = aeval (fun v => (f v).eval α) P`: push `eval α` through the `aeval`. -/
-theorem eval_aeval_diffPoly (f : Option ℕ → K[X]) (α : K) (P : DiffPoly K) :
-    Polynomial.eval α (MvPolynomial.aeval f P) = MvPolynomial.aeval (fun v => (f v).eval α) P := by
-  induction P using MvPolynomial.induction_on with
-  | C a => simp
-  | add p q hp hq => simp [hp, hq]
-  | mul_X p n hp => simp [hp]
-
-/-- The root-substitution point: `x ↦ α`, `u^(k) ↦ (derivative^[k] Diα).eval α`. -/
-noncomputable def substEvalAt (Diα : K[X]) (α : K) : Option ℕ → K := fun v =>
-  match v with
-  | none => α
-  | some k => (derivative^[k] Diα).eval α
-
 /-- `Qᵢⱼ(α) = Pᵢⱼ(α, Dᵢ,α(α), …)`: at a root `α` of `Dᵢ = (x−α)·Dᵢ,α`, the `Qᵢⱼ` substitution evaluates
 to `aeval (substEvalAt Diα α) (laurentNum …)`. -/
 theorem laurentQ_eval_at_root [CharZero K] (A D Diα : K[X]) (α : K) (i j : ℕ) :
@@ -482,19 +468,6 @@ theorem iterate_ratFuncKDeriv_hFracα [CharZero K] (A Ei Diα : K[X]) (i : ℕ) 
     push_cast; ring
 
 /-! ## The root-value bridge `σα(Pᵢ,d)(α) = Qᵢⱼ(α)` -/
-
-/-- `(diffSubst Diα P).eval α = aeval (substEvalAt Diα α) P`: the evaluated differential hom. -/
-theorem eval_diffSubst (Diα : K[X]) (α : K) (P : DiffPoly K) :
-    Polynomial.eval α (diffSubst Diα P) = MvPolynomial.aeval (substEvalAt Diα α) P := by
-  rw [diffSubst, eval_aeval_diffPoly]
-  have hfun : (fun v => Polynomial.eval α
-        (match v with | (none : Option ℕ) => Polynomial.X | some k => derivative^[k] Diα))
-      = substEvalAt Diα α := by
-    funext v
-    cases v with
-    | none => simp [substEvalAt]
-    | some k => simp [substEvalAt]
-  exact congrArg (fun f => MvPolynomial.aeval f P) hfun
 
 /-- The bridge `(σα(laurentNum …)).eval α = (laurentQ …).eval α`: both are
 `aeval (substEvalAt Diα α) (laurentNum …)`. -/
