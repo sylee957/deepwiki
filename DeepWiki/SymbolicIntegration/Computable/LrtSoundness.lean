@@ -1090,7 +1090,8 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
   have hDd : (toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)
       = Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
           (Lagrange.nodal allpoles id) := by
-    rw [toPolyG_cmonomialDeriv, implicitDeriv_map, hsplit]
+    simp only [denote]
+    rw [implicitDeriv_map, hsplit]
   -- `rtResultantGen hNum_E (nodal) Dd_E = R_E`, hence `rootMult = idx+1`
   have hRR : rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
         (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))
@@ -1378,7 +1379,8 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   have hnd : (Lagrange.nodal allpoles id).natDegree = ((toPolyG Dstar).map φ).natDegree := by rw [hsplit]
   have hDd2 : (toPolyG (cmonomialDeriv Dt Dstar)).map φ
       = Differential.implicitDeriv ((toPolyG Dt).map φ) ((toPolyG Dstar).map φ) := by
-    rw [toPolyG_cmonomialDeriv, implicitDeriv_map]
+    simp only [denote]
+    rw [implicitDeriv_map]
   rw [logResidueSumLrtG_eq_normalPart_of_yun Dt hNum (cLrtLogArgG Dt hNum Dstar) allpoles _ rfl
     (fun p hp => nodup_roots_cLrtLogArgG_entry hgcd Dt hNum Dstar hR0 hRpp p hp)
     (fun p hp c hc => residue_of_root_cLrtLogArgG_entry hgcd Dt hNum Dstar allpoles hDmonic hDt0 hAD
