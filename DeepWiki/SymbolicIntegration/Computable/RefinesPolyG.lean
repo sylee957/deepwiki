@@ -58,6 +58,15 @@ instance : DenoteHom₂ (cmulG (α := α)) (· * ·) := ⟨toPolyG_cmulG⟩
 instance : DenoteHom₁ (cnegG (α := α)) (- ·) := ⟨toPolyG_cnegG⟩
 /-- `cderivG` denotes the formal derivative. -/
 instance : DenoteHom₁ (cderivG (α := α)) Polynomial.derivative := ⟨toPolyG_cderivG⟩
+/-- `cscaleG c` denotes scaling by `C (toK c)`. -/
+instance (c : α) : DenoteHom₁ (cscaleG c) (fun p => Polynomial.C (CFieldSpec.toK c) * p) :=
+  ⟨fun p => toPolyG_cscaleG c p⟩
+/-- `cshiftG k` denotes multiplication by `X ^ k`. -/
+instance (k : ℕ) : DenoteHom₁ (fun p : CPolyG α => cshiftG k p) (fun p => X ^ k * p) :=
+  ⟨fun p => toPolyG_cshiftG k p⟩
+/-- `cpowG · n` denotes `· ^ n`. -/
+instance (n : ℕ) : DenoteHom₁ (fun p : CPolyG α => cpowG p n) (fun p => p ^ n) :=
+  ⟨fun p => toPolyG_cpowG p n⟩
 
 variable [CDiffField α] [CDiffFieldSpec α]
 
@@ -123,21 +132,6 @@ theorem ne_of_csub_cisZero_false (hp : RefinesPolyG p p') (hq : RefinesPolyG q q
 /-- `[CField.one]` refines the one polynomial. -/
 @[refines] theorem one : RefinesPolyG ([CField.one] : CPolyG α) 1 := by simp [RefinesPolyG, denote]
 
-/-- `cscaleG c` respects `RefinesPolyG` (extra scalar argument; kept explicit). -/
-@[refines] theorem scale (c : α) (hp : RefinesPolyG p p') :
-    RefinesPolyG (cscaleG c p) (Polynomial.C (CFieldSpec.toK c) * p') := by
-  rw [RefinesPolyG] at hp ⊢; rw [toPolyG_cscaleG, hp]
-
-/-- `cshiftG k` respects `RefinesPolyG` (extra shift argument; kept explicit). -/
-@[refines] theorem shift (k : ℕ) (hp : RefinesPolyG p p') :
-    RefinesPolyG (cshiftG k p) (X ^ k * p') := by
-  rw [RefinesPolyG] at hp ⊢; rw [toPolyG_cshiftG, hp]
-
-/-- `cpowG · n` respects `RefinesPolyG` (extra exponent argument; kept explicit). -/
-@[refines] theorem pow (hp : RefinesPolyG p p') (n : ℕ) :
-    RefinesPolyG (cpowG p n) (p' ^ n) := by
-  rw [RefinesPolyG] at hp ⊢; rw [toPolyG_cpowG, hp]
-
 /-- `cnormG` refines the original denotation. -/
 @[refines] theorem norm : RefinesPolyG (cnormG p) (toPolyG p) := by rw [RefinesPolyG, toPolyG_cnormG]
 
@@ -157,7 +151,7 @@ theorem refinesPolyG_self {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG �
 attribute [aesop safe 1 apply (rule_sets := [Refines])]
   RefinesPolyG.hom₁ RefinesPolyG.hom₂
   RefinesPolyG.nil RefinesPolyG.const RefinesPolyG.zero RefinesPolyG.one
-  RefinesPolyG.scale RefinesPolyG.shift RefinesPolyG.pow RefinesPolyG.norm_of
+  RefinesPolyG.norm_of
 attribute [aesop safe 99 apply (rule_sets := [Refines])] refinesPolyG_self
 
 section Examples
@@ -172,6 +166,11 @@ example (a b c : CPolyG α) :
 which `simp [denote]` cannot drive — aesop applies the `hom₁`/`hom₂` rules, each dispatching on its
 `DenoteHom` instance, down to atoms. -/
 example (a b c : CPolyG α) : ∃ q, RefinesPolyG (cmulG (caddG a b) c) q := by
+  transfer
+
+-- The extra-argument ops (`cscaleG`/`cshiftG`/`cpowG`) also synthesize through their
+-- parameterized `DenoteHom₁` instances — aesop's higher-order unification recovers `cop`.
+example (a : CPolyG α) (c : α) : ∃ q, RefinesPolyG (cscaleG c (cpowG a 3)) q := by
   transfer
 
 example (a b c : CPolyG α) :
