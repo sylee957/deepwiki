@@ -13,7 +13,7 @@ Formal polynomial expressions in a base variable and derivative variables. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open MvPolynomial
+open Polynomial MvPolynomial
 
 variable {K : Type*} [Field K]
 
@@ -74,6 +74,55 @@ theorem ddx_dpEmbed (p : Polynomial K) : ddx (dpEmbed p) = dpEmbed (Polynomial.d
         Derivation.leibniz_pow, ddx_x, Nat.add_sub_cancel]
       simp only [smul_eq_mul, mul_one, nsmul_eq_mul]
       push_cast
+      ring
+
+/-! ## Differential substitutions -/
+
+/-- The differential substitution hom `DiffPoly K →ₐ[K] K[x]` sending `x` to `X` and `u^(k)` to `Diα^(k)`. -/
+noncomputable def diffSubst (Diα : K[X]) : DiffPoly K →ₐ[K] K[X] :=
+  MvPolynomial.aeval fun v => match v with
+    | none => Polynomial.X
+    | some k => derivative^[k] Diα
+
+/-- `diffSubst` sends the base variable to `X`. -/
+@[simp] theorem diffSubst_X_none (Diα : K[X]) :
+    diffSubst Diα (X none : DiffPoly K) = Polynomial.X := by
+  simp [diffSubst]
+
+/-- `diffSubst` sends `u^(k)` to the `k`-th derivative of `Diα`. -/
+@[simp] theorem diffSubst_X_some (Diα : K[X]) (k : ℕ) :
+    diffSubst Diα (X (some k) : DiffPoly K) = derivative^[k] Diα := by
+  simp [diffSubst]
+
+/-- `diffSubst` sends constants to constant polynomials. -/
+@[simp] theorem diffSubst_C (Diα : K[X]) (a : K) :
+    diffSubst Diα (MvPolynomial.C a : DiffPoly K) = Polynomial.C a := by
+  simp [diffSubst]
+
+/-- `diffSubst` undoes `dpEmbed` on pure `x`-polynomials. -/
+@[simp] theorem diffSubst_dpEmbed (Diα p : K[X]) : diffSubst Diα (dpEmbed p) = p := by
+  have h : ((diffSubst Diα : DiffPoly K →ₐ[K] K[X]).toRingHom.comp dpEmbed) = RingHom.id K[X] := by
+    apply Polynomial.ringHom_ext
+    · intro c; simp [dpEmbed]
+    · simp [dpEmbed]
+  exact congrArg (fun f : K[X] →+* K[X] => f p) h
+
+/-- `diffSubst Diα` carries `ddx` to the polynomial derivative. -/
+theorem diffSubst_ddx (Diα : K[X]) (p : DiffPoly K) :
+    diffSubst Diα (ddx p) = derivative (diffSubst Diα p) := by
+  induction p using MvPolynomial.induction_on with
+  | C a => rw [← MvPolynomial.algebraMap_eq, (ddx (K := K)).map_algebraMap, map_zero,
+      AlgHom.commutes, Polynomial.algebraMap_eq, derivative_C]
+  | add p q hp hq => rw [map_add, map_add, map_add, derivative_add, hp, hq]
+  | mul_X p v hp =>
+      have hbase : diffSubst Diα (ddx (X v : DiffPoly K)) = derivative (diffSubst Diα (X v)) := by
+        cases v with
+        | none => rw [ddx_x, map_one, diffSubst_X_none, derivative_X]
+        | some k =>
+            rw [show ddx (X (some k) : DiffPoly K) = X (some (k + 1)) from ddx_u k,
+              diffSubst_X_some, diffSubst_X_some, ← Function.iterate_succ_apply' derivative k Diα]
+      rw [Derivation.leibniz, smul_eq_mul, smul_eq_mul, map_add, map_mul, map_mul, hp, hbase,
+        map_mul, derivative_mul]
       ring
 
 /-! ## Fraction-field derivation -/
