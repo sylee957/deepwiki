@@ -86,9 +86,12 @@ theorem hreducedLrt_of_genuineAll [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorr
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0) :
     IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) :=
-  hreducedLrt_of_reducedSoundLrt hgcd
-    (fun Dt a' d' hd0' hDt0' => isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine hgcd Dt a' d' hd0'
-      hDt0' (hgen Dt a' d' hd0')) Dt a d hd0 hDt0
+  -- apply `_of_genuine` directly at the canonical normal part, whose properness `deg crNormNum < deg crNormDen`
+  -- (`crNormNum_degree_lt_crNormDen`) supplies the `haProper` input
+  isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
+    (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hDt0
+    (crNormNum_degree_lt_crNormDen hgcd Dt a d hd0)
+    (hgen Dt (crNormNum Dt a d) (crNormDen Dt a d) (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0))
 
 -- The closure genuinely constructs the frontier: given the genuine data for every reduced input, a
 -- `PrimitiveFrontierLrt` instance follows (hence the whole assembled root-free LRT solver).

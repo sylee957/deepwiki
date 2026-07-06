@@ -1560,18 +1560,20 @@ monomial property `hE` (`hcopgcd_of_genuineMonomial`, `hR0_of_normalityData`, `h
 `lrtPoleNormalityData_of_genuineMonomial`). The **primitive-case scope tag** `hDt0` (`deg Dt = 0`) is *no
 longer a field* either: it is a **decidable runtime guard** — `cIntegrateCaseLrt`'s `if cdegG Dt = 0` branch
 discharges it, so a successful run supplies it (`isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` takes it
-as an explicit hypothesis, threaded from the branch). This structure carries only the Hermite properness `hAD`
-and the single genuine monomial condition `hE`. (The former `hilt` pure-single-log exclusion is gone:
+as an explicit hypothesis, threaded from the branch). The **Hermite properness `hAD`** is *no longer a field*
+either: `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` takes the input properness `deg a < deg d`
+(supplied by `crNormNum_degree_lt_crNormDen` at the canonical normal part) and case-splits on `deg Dstar` —
+deriving `.natDegree hAD` from the `.degree` discharge (`hAD_degree_of_genuineMonomial`) when there are poles,
+and handling `deg Dstar = 0` as the trivially-sound no-poles branch (`…_of_noPoles`). So this structure now
+carries the **single** genuine monomial condition `hE`. (The former `hilt` pure-single-log exclusion is gone:
 `cLrtLogArgG`'s `i = deg Dstar` branch handles it.) -/
 structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
-  /-- The reduced residual is proper: `deg hNum < deg Dstar`. -/
-  hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
-        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
-  /-- The **one** genuine condition: the **input-independent** monomial normality `η = Dt` is not a
-  derivative (`GenuinePrimitiveMonomialLrt Dt`). *Every* per-input normality condition — the Yun-factor
-  coprimality `hcopgcd`, the residue resultant nonzero `hR0`, the monomial-derivative degree drop `hm`, and
-  the pole-normality `LrtPoleNormalityData` — is *derived* from it, so this depends only on the tower level's
-  monomial, not on `a/d`. -/
+  /-- The **single** genuine condition: the **input-independent** monomial normality `η = Dt` is not a
+  derivative (`GenuinePrimitiveMonomialLrt Dt`). *Every* per-input condition — the Yun-factor coprimality
+  `hcopgcd`, the residue resultant nonzero `hR0`, the monomial-derivative degree drop `hm`, the pole-normality
+  `LrtPoleNormalityData`, and now the Hermite properness `hAD` (via the `.degree` discharge + the no-poles
+  case-split, `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine`) — is *derived* from it, so this depends
+  only on the tower level's monomial, not on `a/d`. (The `a d` parameters are now vestigial.) -/
   hE : GenuinePrimitiveMonomialLrt Dt
 
 -- `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` lives in `LrtResidueResultantDischarge` (it derives

@@ -371,24 +371,37 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles [CharZero (CFieldS
   exact hh
 
 set_option maxHeartbeats 800000 in
-/-- **The assembled LRT reduced soundness from the bundled genuine data.** Moved here from `LrtSoundness`
-because it now *derives* `hR0` (via `hR0_of_normalityData`, which needs the algebraic closure) rather than
-reading it off a structure field. Given only `d ≠ 0` and the genuine `LrtReducedGenuineData` (now `hR0`-free),
-the root-free primitive reduced integrator `cIntegrateReducedLrtG` is sound. -/
+/-- **The assembled LRT reduced soundness from the genuine monomial property alone.** Given `d ≠ 0`, the
+decidable scope guard `hDt0`, the input properness `haProper` (`deg a < deg d`), and the single genuine datum
+`LrtReducedGenuineData` (now just `hE`), the root-free primitive reduced integrator `cIntegrateReducedLrtG` is
+sound. Case-splits on `deg Dstar`: **no poles** (`deg Dstar = 0`) is the trivially-sound no-poles branch
+(`…_of_noPoles`); otherwise the Hermite properness `hAD` is *derived* in `.natDegree` form from the `.degree`
+discharge (`hAD_degree_of_genuineMonomial` + `natDegree_lt_natDegree`, `deg Dstar ≥ 1`) and fed to `…_of_setup`
+alongside the derived `hR0`/`hm`/`hnorm`/`hcopgcd`. Every side condition flows from `hE`. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
-    (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0) (hgen : LrtReducedGenuineData Dt a d) :
-    IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) :=
-  -- the per-input pole-normality *and* the degree-drop `hm` are *derived* from the input-independent monomial
-  -- property `hgen.hE` (`lrtPoleNormalityData_of_genuineMonomial`, `hm_of_genuineMonomial`); the Yun-factor
-  -- coprimality `hcopgcd` likewise (`hcopgcd_of_genuineMonomial`). `hDt0` is the decidable primitive-case guard,
-  -- now supplied by the caller's `if cdegG Dt = 0` branch rather than carried in `LrtReducedGenuineData`.
-  have hnorm : LrtPoleNormalityData Dt a d := lrtPoleNormalityData_of_genuineMonomial hgen.hE
-  isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup hgcd Dt a d hd0
-    (Polynomial.primPart_ne_zero _)
-    (hcopgcd_of_genuineMonomial hgcd Dt d hd0 (Polynomial.primPart_ne_zero _) hgen.hE)
-    hDt0 hgen.hAD
-    (hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hDt0 hgen.hAD hnorm)
-    (Polynomial.primPart_ne_zero _) (hm_of_genuineMonomial hgcd Dt a d hd0 hgen.hE hDt0) hnorm
+    (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : LrtReducedGenuineData Dt a d) :
+    IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) := by
+  have hDtdeg : (toPolyG Dt).natDegree ≤ 1 := hDt0 ▸ Nat.zero_le 1
+  by_cases hDstar0 : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree = 0
+  · -- no poles: `deg Dstar = 0` ⟹ trivially sound (the `.natDegree hAD = 0<0` gap)
+    exact isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles hgcd Dt a d hd0
+      (Polynomial.primPart_ne_zero _) hDtdeg haProper hgen.hE hDstar0
+  · -- `deg Dstar ≥ 1`: derive `.natDegree hAD` from the `.degree` discharge, then the residue path
+    have hADdeg := hAD_degree_of_genuineMonomial hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _)
+      hDtdeg haProper hgen.hE
+    have hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
+        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree := by
+      by_cases hh : toPolyG (cHermiteReduceTowerGWf Dt a d).2.1 = 0
+      · rw [hh, Polynomial.natDegree_zero]; omega
+      · exact Polynomial.natDegree_lt_natDegree hh hADdeg
+    have hnorm : LrtPoleNormalityData Dt a d := lrtPoleNormalityData_of_genuineMonomial hgen.hE
+    exact isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup hgcd Dt a d hd0
+      (Polynomial.primPart_ne_zero _)
+      (hcopgcd_of_genuineMonomial hgcd Dt d hd0 (Polynomial.primPart_ne_zero _) hgen.hE)
+      hDt0 hAD
+      (hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hDt0 hAD hnorm)
+      (Polynomial.primPart_ne_zero _) (hm_of_genuineMonomial hgcd Dt a d hd0 hgen.hE hDt0) hnorm
 
 end DeepWiki.SymbolicIntegration
