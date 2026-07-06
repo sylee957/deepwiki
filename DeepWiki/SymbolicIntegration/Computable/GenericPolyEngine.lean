@@ -97,6 +97,13 @@ namespace CFieldSpec
     toK (CField.div a b) = toK a / toK b := by
   rw [CField.div, toK_mul, toK_inv, div_eq_mul_inv]
 
+/-- `toK` intertwines a `CField.add` fold with the corresponding field addition fold. -/
+theorem toK_foldl_add {α : Type*} [CField α] [CFieldSpec α] (z : α) (L : List α) :
+    toK (L.foldl CField.add z) = (L.map toK).foldl (· + ·) (toK z) := by
+  induction L generalizing z with
+  | nil => simp
+  | cons a t ih => simp only [List.foldl_cons, List.map_cons, ih, CFieldSpec.toK_add]
+
 end CFieldSpec
 
 /-! ### Instances: `CField ℚ` and `CFieldSpec ℚ`

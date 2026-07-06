@@ -96,13 +96,6 @@ variable [CFieldSpec α]
 
 open CFieldSpec
 
-/-- `toK` intertwines the `CField`-fold `foldl add z` with numeric `foldl (+) (toK z)`. -/
-theorem toK_foldl_add (z : α) (L : List α) :
-    toK (L.foldl CField.add z) = (L.map toK).foldl (· + ·) (toK z) := by
-  induction L generalizing z with
-  | nil => simp
-  | cons a t ih => simp only [List.foldl_cons, List.map_cons, ih, CFieldSpec.toK_add]
-
 /-- `toK` reads a `CField.zero`-defaulted `getD` through `map toK`. -/
 theorem getD_map_toK (l : List α) (j : ℕ) :
     (l.map toK).getD j 0 = toK (l.getD j CField.zero) := by
