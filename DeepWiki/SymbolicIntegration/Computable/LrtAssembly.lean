@@ -75,10 +75,15 @@ normal part via the root-free `cIntegrateReducedLrtG` → combined with `combine
 integrator is direct). -/
 def cIntegrateCaseLrt [CFracGcdCoreWf α] (C : MonomialCase α) (Dt a d : CPolyG α) :
     Option (LrtResultG α) :=
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
-  match C.integrateSpecial Dt fp b ds with
-  | none => none
-  | some (snum, sden) => some (combineSNLrt snum sden (cIntegrateReducedLrtG Dt cn dn))
+  -- **Primitive-case runtime guard** (`Dθ ∈ k`, i.e. `deg Dt = 0`): the LRT reduced integrator is
+  -- primitive-specific, so a successful run *decides* `deg Dt = 0` — discharging `hDt0` from the branch
+  -- rather than carrying it as a frontier hypothesis.
+  if cdegG Dt = 0 then
+    let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+    match C.integrateSpecial Dt fp b ds with
+    | none => none
+    | some (snum, sden) => some (combineSNLrt snum sden (cIntegrateReducedLrtG Dt cn dn))
+  else none
 
 open Classical in
 /-- **Generic primitive LRT assembler soundness.** If `cIntegrateCaseLrt C` returns `res`, the special hook
@@ -93,10 +98,14 @@ theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d) = some (snum, sden))
     (hsome : cIntegrateCaseLrt C Dt a d = some res) (hsden : toPolyG sden ≠ 0)
     (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
-    (hNrmField : IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
+    (hNrmField : (toPolyG Dt).natDegree = 0 → IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)))
     (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
     IsIntegralResultLrtG Dt a d res := by
+  -- the primitive-case guard is *decided* by a successful run: `cIntegrateCaseLrt = some res ⟹ deg Dt = 0`
+  have hguard : cdegG Dt = 0 := by
+    by_contra h; rw [cIntegrateCaseLrt, if_neg h] at hsome; simp at hsome
+  have hDt0 : (toPolyG Dt).natDegree = 0 := by rw [← cdegG_eq_natDegree]; exact hguard
   have hgden : toPolyG (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)).rational.2 ≠ 0 :=
     toPolyG_cHermiteReduceTowerGWf_den_ne_zero hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) (Polynomial.primPart_ne_zero _)
@@ -104,7 +113,7 @@ theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
       = combineSNLrt snum sden (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) := by
     have hexp : cIntegrateCaseLrt C Dt a d
         = some (combineSNLrt snum sden (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d))) := by
-      rw [cIntegrateCaseLrt]
+      rw [cIntegrateCaseLrt, if_pos hguard]
       simp only [crPoly, crSpecNum, crSpecDen, crNormNum, crNormDen] at hSpec ⊢
       rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
       rw [hcrep] at hSpec
@@ -114,7 +123,7 @@ theorem cIntegrateCaseLrt_sound [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     exact (Option.some.injEq _ _ ▸ hsome).symm
   rw [hshape]
   refine combineSNLrt_isIntegralResultLrt Dt a d (crNormNum Dt a d) (crNormDen Dt a d) snum sden
-    (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) hsden hgden ?_ hNrmField
+    (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)) hsden hgden ?_ (hNrmField hDt0)
   rw [hSpecField]; exact hrecon
 
 end DeepWiki.SymbolicIntegration

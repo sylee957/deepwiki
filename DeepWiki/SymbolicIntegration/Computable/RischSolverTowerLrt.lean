@@ -169,7 +169,7 @@ instance instLawfulRischLevelLrtTower [Fact (GcdFFCorrect (α := QFunNZG β))]
   case := towerPrimitiveCaseLrt
   specialSound := fun Dt a d snum sden hd0 hhook =>
     towerPrimitiveCaseLrt_specialSound Dt a d snum sden hd0 hhook
-  reducedSoundLrt := fun Dt a d hd0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0
+  reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
 
 /-- **Validation: the LRT tower solver resolves at DEPTH 2 by recursion.** The step instance chains on itself
 (the level-1 `LawfulRischLevelLrt (QFunNZG β)` it needs is produced by the same step at level β), so every tower

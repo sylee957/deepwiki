@@ -48,7 +48,7 @@ class LawfulRischLevelLrt (α : Type*) [CField α] [CFieldSpec α] [CDiffField �
   /-- Reduced-part soundness with algebraic residues: `cₙ/dₙ` integrates to `cIntegrateReducedLrtG …` over every
   alg-closed differential extension `E`. This is exactly `PrimitiveFrontierLrt.hreducedLrt` — the dischargeable
   frontier (no rational-residue restriction). -/
-  reducedSoundLrt : ∀ (Dt a d : CPolyG α), toPolyG d ≠ 0 →
+  reducedSoundLrt : ∀ (Dt a d : CPolyG α), toPolyG d ≠ 0 → (toPolyG Dt).natDegree = 0 →
     IsIntegralResultLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       (cIntegrateReducedLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d))
   /-- **Optional single-`w` limited integrator** (Bronstein §5.8/§5.12) — `(anum, aden, ηnum, ηden) ↦
@@ -143,26 +143,27 @@ integrability **iff** the root-free residue guard passes. The `←` (sufficiency
 `reducedSoundLrt`; the `→` (necessity/completeness) on the frontier. The completeness frontier is an *instance
 argument*, never a class field — so `soundFormalLrt` stays independent of it (the deliberate decoupling). -/
 theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd : GcdFFCorrect (α := α))
-    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hR0 : toPolyG (cResidueResultantTowerGWf Dt
         (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
         (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0) :
     IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       ↔ cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = true :=
   primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
-    (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0)
+    (crNormDen_ne_zero_of_charZero hgcd Dt a d hd0) hR0 (reducedSoundLrt Dt a d hd0 hDt0)
 
 /-- **Derived completeness certificate at the class.** From `reducedDecides`: if the residue guard *fails*, the
 reduced normal part is not genuinely elementary integrable — a decidable non-integrability certificate that the
 solver's class produces directly (given the Liouville frontier). -/
 theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
     (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hDt0 : (toPolyG Dt).natDegree = 0)
     (hR0 : toPolyG (cResidueResultantTowerGWf Dt
         (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
         (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0)
     (hguard : cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = false) :
     ¬ IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d) := by
-  rw [reducedDecides hgcd Dt a d hd0 hR0, hguard]; simp
+  rw [reducedDecides hgcd Dt a d hd0 hDt0 hR0, hguard]; simp
 
 end LawfulRischLevelLrt
 
@@ -177,7 +178,7 @@ instance instLawfulRischLevelLrtPrimitive [CRischField α] [PrimitiveFrontierLrt
   case := primitiveGuardedCase
   specialSound := fun Dt a d snum sden hd0 hhook =>
     primitiveGuardedCase_specialSound Dt a d snum sden hd0 hhook
-  reducedSoundLrt := fun Dt a d hd0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0
+  reducedSoundLrt := fun Dt a d hd0 hDt0 => PrimitiveFrontierLrt.hreducedLrt Dt a d hd0 hDt0
 
 /-- **Validation: the base LRT solver resolves from the reduced frontier.** Given `[PrimitiveFrontierLrt α]`,
 `LawfulRischLevelLrt α` resolves parameter-free — the base of the recursive LRT tower. -/

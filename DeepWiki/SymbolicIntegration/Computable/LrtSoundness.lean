@@ -1544,12 +1544,13 @@ needs the Rothstein–Trager residue-data plus tower-nondegeneracy hypotheses. A
 the Yun-factor coprimality `hcopgcd`, the residue resultant nonzero `hR0`, the monomial-derivative degree
 `hm`, and the per-input pole-normality `hnorm` — are now **derived** from the single **input-independent**
 monomial property `hE` (`hcopgcd_of_genuineMonomial`, `hR0_of_normalityData`, `hm_of_genuineMonomial`,
-`lrtPoleNormalityData_of_genuineMonomial`); this structure carries only the irreducible residuum: the
-scope tag `hDt0`, the Hermite properness `hAD`, and `hE`. (The former `hilt` pure-single-log exclusion is
-gone: `cLrtLogArgG`'s `i = deg Dstar` branch handles it.) -/
+`lrtPoleNormalityData_of_genuineMonomial`). The **primitive-case scope tag** `hDt0` (`deg Dt = 0`) is *no
+longer a field* either: it is a **decidable runtime guard** — `cIntegrateCaseLrt`'s `if cdegG Dt = 0` branch
+discharges it, so a successful run supplies it (`isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` takes it
+as an explicit hypothesis, threaded from the branch). This structure carries only the Hermite properness `hAD`
+and the single genuine monomial condition `hE`. (The former `hilt` pure-single-log exclusion is gone:
+`cLrtLogArgG`'s `i = deg Dstar` branch handles it.) -/
 structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
-  /-- The **primitive case**: `Dθ = Dt` is a constant (a degree-0 tower polynomial). -/
-  hDt0 : (toPolyG Dt).natDegree = 0
   /-- The reduced residual is proper: `deg hNum < deg Dstar`. -/
   hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
