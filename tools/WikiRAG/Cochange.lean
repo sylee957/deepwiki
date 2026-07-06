@@ -45,7 +45,11 @@ def mineCochange (db : SQLite) : IO Unit := do
   let ins ← db.prepare "INSERT OR REPLACE INTO cochange (a,b,weight) VALUES (?,?,?)"
   for (k, w) in pairs.toArray do
     let ps := k.splitOn "||"
-    ins.bindText 1 (ps.getD 0 ""); ins.bindText 2 (ps.getD 1 ""); ins.bindText 3 (toString w); ins.exec
+    ins.bindText 1 (ps.getD 0 "")
+    ins.bindText 2 (ps.getD 1 "")
+    ins.bindText 3 (toString w)
+    ins.exec
+    ins.reset
   IO.println s!"Mined co-change: {commits.size} commits → {pairs.size} co-changing module pairs."
 
 /-- Load the `cochange` table into a `"a||b"` (a<b) → weight map; empty if not mined yet. -/
