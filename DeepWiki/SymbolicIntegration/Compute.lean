@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.SymbolicIntegration.Compute.Diophantine
 import DeepWiki.SymbolicIntegration.Compute.Hermite
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
