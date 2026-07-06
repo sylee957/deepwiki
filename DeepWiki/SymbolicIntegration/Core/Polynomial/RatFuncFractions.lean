@@ -31,4 +31,14 @@ theorem ratFunc_mk_mul_mk (p q r s : K[X]) :
     RatFunc.mk p q * RatFunc.mk r s = RatFunc.mk (p * r) (q * s) := by
   rw [RatFunc.mk_eq_div, RatFunc.mk_eq_div, RatFunc.mk_eq_div, div_mul_div_comm, map_mul, map_mul]
 
+/-- A list sum of polynomial numerators over a common denominator collapses to one fraction. -/
+theorem ratFunc_list_sum_algebraMap_div_const {α : Type*} (L : List α) (f : α → K[X])
+    (d : RatFunc K) :
+    (L.map (fun k => algebraMap K[X] (RatFunc K) (f k) / d)).sum
+      = algebraMap K[X] (RatFunc K) ((L.map f).sum) / d := by
+  induction L with
+  | nil => simp
+  | cons hd tl ih =>
+    rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, map_add, add_div]
+
 end DeepWiki.SymbolicIntegration

@@ -2288,17 +2288,6 @@ sum is a single fraction `am (Σᵢ Afinalᵢ·Vi^{i−1})/am D`, and the `(1−
 `R = C(1−n)·A + Σᵢ Afinalᵢ·Vi^{i−1}` — the exact single-fraction-over-`D` form. The interference clears
 to denominator `Dstar` precisely when `am (D/Dstar) ∣ am R`, the **named open divisibility** below. -/
 
-/-- **List-sum of common-denominator fractions**: `∑ₖ am (f k)/d = am (∑ₖ f k)/d` in `RatFunc ℚ` (the
-numerators add over the shared denominator `d`). The sum collapses the per-factor residuals onto a
-single fraction over `am D`. -/
-theorem list_sum_am_div_const {α : Type*} (l : List α) (f : α → ℚ[X]) (d : RatFunc ℚ) :
-    (l.map (fun k => algebraMap ℚ[X] (RatFunc ℚ) (f k) / d)).sum
-      = algebraMap ℚ[X] (RatFunc ℚ) ((l.map f).sum) / d := by
-  induction l with
-  | nil => simp
-  | cons hd tl ih =>
-    rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, map_add, add_div]
-
 /-- **The per-factor `Afinal`** of `hermiteReduce`'s `g`-fold: the residual numerator
 `(hermiteInner fuel Vi Uᵢ (i−1) A qzero).2` left over the radical-reduced denominator after peeling. -/
 def afinalIncr (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ) : CPoly :=
@@ -2346,7 +2335,7 @@ theorem total_fold_residual_over_D (fuel : ℕ) (A D : CPoly) (factors : List (C
   rw [← hkept, ← hn] at htot
   rw [htot]
   -- the residual sum over the common denominator `am D`.
-  rw [list_sum_am_div_const kept (residNumIncr fuel A D) (am (toPoly D))]
+  rw [ratFunc_list_sum_algebraMap_div_const kept (residNumIncr fuel A D) (am (toPoly D))]
   -- the `(1 − n)·T` overcounting term as a fraction over `am D`.
   rw [map_add]
   -- `am (C(1−n)·A) = (1 − n)·am A` and `n • T = n·am A/am D`.
