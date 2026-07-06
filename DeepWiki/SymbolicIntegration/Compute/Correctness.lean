@@ -377,6 +377,33 @@ theorem toQFun_qadd (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0)
   rw [div_add_div _ _ hb' hd']
   ring
 
+/-- `toQFun qzero = 0`. -/
+theorem toQFun_qzero : toQFun qzero = 0 := by
+  simp [toQFun, qzero, toPoly_nil]
+
+/-- `qadd x y` has nonzero denominator when both `x` and `y` do. -/
+theorem toPoly_qadd_den_ne_zero {x y : QFun} (hx : toPoly x.2 ≠ 0) (hy : toPoly y.2 ≠ 0) :
+    toPoly (qadd x y).2 ≠ 0 := by
+  obtain ⟨a, b⟩ := x
+  obtain ⟨c, d⟩ := y
+  show toPoly (cmul b d) ≠ 0
+  rw [toPoly_cmul]
+  exact mul_ne_zero hx hy
+
+/-- A `qadd` fold denotes the seed plus the sum of the entries. -/
+theorem toQFun_foldl_qadd (gs : List QFun) (init : QFun) (hinit : toPoly init.2 ≠ 0)
+    (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
+    toQFun (gs.foldl qadd init) = toQFun init + (gs.map toQFun).sum := by
+  induction gs generalizing init with
+  | nil => simp
+  | cons hd tl ih =>
+    have hhd : toPoly hd.2 ≠ 0 := hgs hd (List.mem_cons_self ..)
+    have htl : ∀ g ∈ tl, toPoly g.2 ≠ 0 := fun g hg => hgs g (List.mem_cons_of_mem hd hg)
+    have hnew : toPoly (qadd init hd).2 ≠ 0 := toPoly_qadd_den_ne_zero hinit hhd
+    rw [List.foldl_cons, ih (qadd init hd) hnew htl, toQFun_qadd init hd hinit hhd,
+      List.map_cons, List.sum_cons]
+    ring
+
 /-! ### Degree / leading coefficient bridge
 `(toPoly p).coeff i = p.getD i 0`, from which `cdeg`/`clead` are the `natDegree`/`leadingCoeff`. -/
 
