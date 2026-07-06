@@ -4,12 +4,13 @@ import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.SquarefreeDecomposition
+import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
 /-! # Abstract correctness of the fuel-free Yun factorization `cSqfreeYunFFGWf`
 
-The computable Yun loop `cSqfreeYunFFGgoWf` mirrors the abstract `yunLoopAbs`
-(`HermiteCorrectness.yunLoopAbs`) step for step: each emits the monic gcd of the working pair and
+The computable Yun loop `cSqfreeYunFFGgoWf` mirrors the squarefree theory's abstract `yunLoopAbs`
+step for step: each emits the monic gcd of the working pair and
 recurses on the deflated pair `(b/gcd, d/gcd − (b/gcd)′)`. This file establishes the per-step bridges
 through `toPolyG`, reducing to the gcd frontier `GcdFFCorrect` (unconditional at `ℚ`). -/
 
