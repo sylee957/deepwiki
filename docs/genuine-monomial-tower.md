@@ -38,12 +38,16 @@ reduction** and should be a discharged theorem. `hDt0` (`deg Dt = 0`) is the pri
 
 ## Next
 
-1. **`hcopgcd`** — the deepest remaining subsumption. It's the Yun factors' normality
-   `gcd(d/vᵐ·D(v), v)` is a unit. Path: (a) `cgcdWf`-unit `⟺ IsCoprime` via `GcdFFCorrect` (the fraction-free
-   gcd computes the genuine gcd); (b) `IsCoprime v (implicitDeriv Dt v)` from the monomial property over `K̄`
-   (`isCoprime_prod_X_sub_C_implicitDeriv_iff`, `v` splits into `∏(t−βᵢ)`, `η ≠ βᵢ′`); (c) cofactor coprimality
-   `gcd(d/vᵐ, v)=1` from the Yun structure (`cSqfreeYunFFGWf_isRelPrime`/`_pow_dvd`); (d) `IsCoprime` of the
-   product + `K̄→K` descent. ~5 lemmas — a real sub-development.
+1. **`hcopgcd`** — the deepest remaining subsumption (Yun factors' normality: `gcd(d/vᵐ·D(v), v)` is a unit).
+   **Two reusable pieces DONE (2026-07-06, `LrtResidueResultantDischarge`):**
+   - ✅ `isCoprime_implicitDeriv_of_genuineMonomial` — `IsCoprime v (D v)` for monic squarefree `v` (base-change
+     to `K̄` via `isCoprime_map`, `v` splits `monic_separable_eq_nodal`, `isCoprime_prod_X_sub_C_implicitDeriv_iff`
+     + the monomial property). The normality math.
+   - ✅ `natDegree_cgcdWf_eq_zero_of_isCoprime` — the `cgcdWf`-unit bridge (`IsCoprime.isUnit_of_dvd'` +
+     `toPolyG_cgcdWf_dvd`): abstract `IsCoprime` ⟹ the computable `hcopgcd`-shape (`natDegree = 0 ∧ ≠ 0`).
+   - **Remaining:** cofactor coprimality `IsCoprime (d/vᵐ) v` (Yun: reconstruction `d ~ ∏vⱼ^ᵐʲ` + pairwise
+     `cSqfreeYunFFGWf_isRelPrime` ⟹ `∏_{j≠k}` coprime with `vₖ`); `IsCoprime.mul_left` assembly; the `zipIdx`
+     wiring (Yun-factor monic/squarefree from `cSqfreeYunFFGgoWf_monic`/`_squarefree`); remove the field.
 2. **Discharge `hAD`** from the Hermite properness invariant (`cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one`,
    concrete-carrier — algorithm-derived, belongs nowhere in the frontier).
 3. **Collapse** to `{GenuinePrimitiveMonomialLrt Dt, hDt0 (scope)}`, then **pull the monomial property out of the

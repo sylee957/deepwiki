@@ -117,6 +117,39 @@ theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect 
     rw [h0, hC, Differential.implicitDeriv_C]
     simp
 
+omit [CFracGcdCoreWf α] in
+open scoped Differential in
+/-- **Normality of a monic squarefree factor, from the genuine monomial property.** `IsCoprime v (D v)`
+(`D = implicitDeriv Dt`, the tower-derivative normality underlying `hcopgcd`) for monic squarefree `v` over `K`
+— by base change to `K̄` (`isCoprime_map`), where `v` splits (`monic_separable_eq_nodal`) and
+`isCoprime_prod_X_sub_C_implicitDeriv_iff` reduces coprimality to `η ≠ β′` at the roots, supplied by
+`GenuinePrimitiveMonomialLrt`. The reusable core of the `hcopgcd` subsumption (the remaining work is the Yun
+cofactor coprimality + the `cgcdWf`-unit bridge). -/
+theorem isCoprime_implicitDeriv_of_genuineMonomial [CharZero (CFieldSpec.K α)] (Dt v : CPolyG α)
+    (hgen : GenuinePrimitiveMonomialLrt Dt) (hmonic : (toPolyG v).Monic)
+    (hsf : Squarefree (toPolyG v)) :
+    IsCoprime (toPolyG v) (Differential.implicitDeriv (toPolyG Dt) (toPolyG v)) := by
+  rw [← Polynomial.isCoprime_map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α))),
+    implicitDeriv_map]
+  have hmonicE := hmonic.map (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)))
+  have hsepE : ((toPolyG v).map
+      (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)))).Separable :=
+    (Polynomial.separable_map _).mpr (PerfectField.separable_iff_squarefree.mpr hsf)
+  rw [monic_separable_eq_nodal _ hmonicE hsepE, Lagrange.nodal]
+  exact (isCoprime_prod_X_sub_C_implicitDeriv_iff _ _).mpr
+    (fun β _ => hgen (AlgebraicClosure (CFieldSpec.K α)) β)
+
+omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
+/-- **The `cgcdWf`-unit bridge.** `IsCoprime (toPolyG a) (toPolyG b)` makes the fraction-free gcd a unit
+(`IsCoprime.isUnit_of_dvd'` with `toPolyG_cgcdWf_dvd`), hence degree `0` and nonzero — the computable
+`hcopgcd`-shape conclusion from the abstract coprimality. -/
+theorem natDegree_cgcdWf_eq_zero_of_isCoprime (a b : CPolyG α)
+    (h : IsCoprime (toPolyG a) (toPolyG b)) :
+    (toPolyG (cgcdWf a b).1).natDegree = 0 ∧ toPolyG (cgcdWf a b).1 ≠ 0 := by
+  obtain ⟨hda, hdb⟩ := toPolyG_cgcdWf_dvd a b
+  have hunit : IsUnit (toPolyG (cgcdWf a b).1) := h.isUnit_of_dvd' hda hdb
+  exact ⟨Polynomial.natDegree_eq_zero_of_isUnit hunit, hunit.ne_zero⟩
+
 set_option maxHeartbeats 800000 in
 /-- **The assembled LRT reduced soundness from the bundled genuine data.** Moved here from `LrtSoundness`
 because it now *derives* `hR0` (via `hR0_of_normalityData`, which needs the algebraic closure) rather than
