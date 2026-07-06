@@ -12,6 +12,7 @@ import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 import DeepWiki.SymbolicIntegration.HorowitzLinearSolve
