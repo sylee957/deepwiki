@@ -87,18 +87,24 @@ runtime — then the branch *knows* it holds, so it stops being a frontier hypot
    (`isCoprime_of_isSpecial_isNormalSqfree`, `toPolyG_cbezoutOneWf`) + remainder bound (`cmodWf_length_lt`).
 2. **✅ (2a) Generic `.degree` leftover-proper** (`cHermiteReduceTowerGWf_leftover_proper_of_degree_le_one`,
    `NormalPartSoundness`, commit `61198cf6`) — `deg (…).2.1 < deg (…).2.2` from `deg a < deg d` + `deg Dt ≤ 1`
-   + the per-factor `hv`/`hb` + the residual divisibility `hdvd` (+ `hresDen`/`hDstar`). Assembles
-   `cHermiteReduceTowerG_residual_proper_of_degree_le_one` + `cHermiteReduceTowerGWf_leftover_proper_of_residual`.
-   **Remaining (2b):** discharge its hypotheses from `(hgcd, hd0, hpp, hE)` — `hv` = Yun `get_ne_zero` (zipIdx→get),
-   `hb` = `cdiophantineGWf_fst_degree_lt`, `hDstar`/`hresDen` = nonzero, **`hdvd`** = `hWgd_of_multiplicity`
-   (`HermiteValuationTower`, uses `hcopgcd` — derivable from `hE` via `hcopgcd_of_genuineMonomial`) modulo the
-   `cnormG`-congruence (`g` vs `.1.1/.1.2`) + Dstar-cancellation (`(d/Dstar)·Dstar = d`).
-3. **`degree`→`natDegree` conversion + the `cn = 0` degenerate case** (trivial normal part → reduced result is
-   the trivially-sound `0`, `hAD` bypassed).
-4. **Thread the discharged `hAD` into `_of_genuine`; remove the field** ⟹ `LrtReducedGenuineData = {hE}`.
+   + the per-factor `hv`/`hb` + residual divisibility `hdvd` (+ `hresDen`/`hDstar`).
+3. **✅ (2b) FULL `.degree` discharge** (`hAD_degree_of_genuineMonomial`, `LrtResidueResultantDischarge`,
+   commit `dea5c480`, axiom-clean) — `deg (…).2.1 < deg (…).2.2` from **only** `(hgcd, hd0, hpp, deg Dt ≤ 1,
+   deg a < deg d, hgen)`. Every leftover-proper hypothesis discharged: `hv`/`hb` (Yun `get_ne_zero` +
+   `cdiophantineGWf_fst_degree_lt`), `hDstar`/`hresDen` (`Dstar_monic`/`den_ne_zero`), and **`hdvd`** from
+   `hWgd_of_multiplicity` (`hcopgcd` derived from `hgen`) via the `d = W·Dstar` cancellation, bridging the raw
+   fold `g` to the `cnormG`-projections through `toPolyG` (`set g` + `toPolyG_cnormG` leaf rewrites `hg1`/`hg2`).
+   The residual-divisibility assembly — the hard mathematical core — is DONE.
+4. **Remaining: `.degree`→`.natDegree` + the `cn = 0` edge + field removal.** The `hAD` field is `.natDegree`,
+   used pervasively (~8 `LrtSoundness` lemmas). `.degree hAD` + `natDegree Dstar ≥ 1` ⟹ `.natDegree hAD` cleanly
+   (`Polynomial.natDegree_lt_natDegree`). The edge: `natDegree Dstar = 0` ⟺ `Dstar = 1` ⟺ trivial normal part
+   (`crNormNum = 0` by crNorm properness), where `.natDegree hAD` is `0<0` = **false** but the reduced part is
+   trivially sound (`D(0)=0`). So removing the field needs `_of_genuine` to take `haProper` (= crNorm properness,
+   threaded from the frontier) instead of `hAD`, and **case-split on `Dstar = 1`**: non-trivial → convert to
+   `.natDegree hAD`; trivial → the reduced-soundness trivial-case lemma. Then remove the field ⟹ `{hE}`.
+   (~80–120L; the trivial-case reduced soundness is the real remaining work.)
 
-The two hardest foundational pieces (crNorm properness, the Hermite-chain assembly) are DONE; the remainder is
-bounded bookkeeping (`hdvd` cancellation + `cn=0`/natDegree edge + threading, ~80–100L).
+The two hardest pieces (crNorm properness, the full `.degree` discharge incl. `hdvd`) are DONE and committed.
 
 ## Next (optional)
 
