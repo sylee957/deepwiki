@@ -319,14 +319,21 @@ theorem toBPoly_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
 
 /-! ### One subresultant-PRS step on the β-divided remainder -/
 
+/-- A pseudo-division step whose β-division of the remainder is exact. -/
+structure IsBdivCExactStep (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (c : CPoly) : Prop where
+  /-- The pseudo-division relation before β-division. -/
+  relation : Polynomial.C (toPoly c) * toBPoly p
+    = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q)
+  /-- The β divisor is nonzero after normalization. -/
+  beta_cnorm_ne : cnorm β ≠ []
+  /-- β divides every coefficient of the pseudo-remainder exactly. -/
+  exact_division : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0
+
 /-- One subresultant-PRS step on the β-divided remainder `r = bdivC fuel (bpsremainder fuel p q) β`:
 `C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, toBPoly r; m,n)`. -/
 theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
     (s : BPoly) (c : CPoly)
-    (hsc : Polynomial.C (toPoly c) * toBPoly p
-        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
-    (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0)
+    (hstep : IsBdivCExactStep fuel p q β s c)
     (hjm : j ≤ m) (hjn : j < n)
     (hB : (toBPoly q).natDegree ≤ m)
     (hQ : (toBPoly s).natDegree + m ≤ n) :
@@ -334,11 +341,12 @@ theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (
       = (-1 : (ℚ[X])[X]) ^ ((m - j) * (n - j))
         * (Polynomial.C ((toPoly β) ^ (m - j))
           * subresultant (toBPoly q) (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j) := by
-  have hstep := subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c hsc hjm hjn hB hQ
+  have hremStep := subresultant_C_mul_eq_rem_of_bpsremainder fuel p q n m j s c
+    hstep.relation hjm hjn hB hQ
   have hexact : toBPoly (bpsremainder fuel p q)
       = Polynomial.C (toPoly β) * toBPoly (bdivC fuel (bpsremainder fuel p q) β) :=
-    (toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hβ hdiv).symm
-  rw [hstep, hexact,
+    (toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hstep.beta_cnorm_ne hstep.exact_division).symm
+  rw [hremStep, hexact,
     subresultant_C_mul_right (toPoly β) (toBPoly q)
       (toBPoly (bdivC fuel (bpsremainder fuel p q) β)) m n j (le_of_lt hjn) hjm]
 
@@ -346,11 +354,7 @@ theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (
 `C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(Q, R₃; m,n)`. -/
 theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
     (s : BPoly) (c : CPoly)
-    (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
-        = toBPoly s * toBPoly (bArgAmtD' A D)
-          + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
-    (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (cmod fuel a β) = 0)
+    (hstep : IsBdivCExactStep fuel (liftCtoBPoly D) (bArgAmtD' A D) β s c)
     (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
     (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
     (hQ : (toBPoly s).natDegree + ((toPoly D).natDegree - 1) ≤ (toPoly D).natDegree) :
@@ -363,7 +367,7 @@ theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly
               ((toPoly D).natDegree - 1) (toPoly D).natDegree j) := by
   rw [lrtSubresultant_eq_subresultant_toBPoly]
   exact subresultant_C_mul_eq_bdivC_of_bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D) β
-    (toPoly D).natDegree ((toPoly D).natDegree - 1) j s c hsc hβ hdiv hjm hjn hB hQ
+    (toPoly D).natDegree ((toPoly D).natDegree - 1) j s c hstep hjm hjn hB hQ
 
 /-! ### The one-step PRS reduction as a `ℚ[t]`-similarity -/
 
@@ -371,11 +375,7 @@ theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly
 `IsSimilar (lrtSubresultant A D j) (Sⱼ(Q, bdivC … prem; m, n))`. -/
 theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
     (s : BPoly) (c : CPoly)
-    (hsc : Polynomial.C (toPoly c) * toBPoly (liftCtoBPoly D)
-        = toBPoly s * toBPoly (bArgAmtD' A D)
-          + toBPoly (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)))
-    (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D), toPoly (cmod fuel a β) = 0)
+    (hstep : IsBdivCExactStep fuel (liftCtoBPoly D) (bArgAmtD' A D) β s c)
     (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
     (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
     (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
@@ -389,7 +389,7 @@ theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) 
       * (toPoly β) ^ (((toPoly D).natDegree - 1) - j),
     pow_ne_zero _ hc0,
     mul_ne_zero (pow_ne_zero _ (by norm_num)) (pow_ne_zero _ hβ0), ?_⟩
-  rw [lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder fuel A D β j s c hsc hβ hdiv hjm hjn hB hQ]
+  rw [lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder fuel A D β j s c hstep hjm hjn hB hQ]
   simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
   ring
 
@@ -399,10 +399,7 @@ theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) 
 p q) β`, `IsSimilar (Sⱼ(toBPoly p, toBPoly q; n, m)) (Sⱼ(toBPoly q, toBPoly r; m, n))`. -/
 theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
     (s : BPoly) (c : CPoly)
-    (hsc : Polynomial.C (toPoly c) * toBPoly p
-        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
-    (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0)
+    (hstep : IsBdivCExactStep fuel p q β s c)
     (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
     (hjm : j ≤ m) (hjn : j < n)
     (hB : (toBPoly q).natDegree ≤ m)
@@ -413,21 +410,20 @@ theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly
     (-1 : ℚ[X]) ^ ((m - j) * (n - j)) * (toPoly β) ^ (m - j),
     pow_ne_zero _ hc0,
     mul_ne_zero (pow_ne_zero _ (by norm_num)) (pow_ne_zero _ hβ0), ?_⟩
-  rw [subresultant_C_mul_eq_bdivC_of_bpsremainder fuel p q β n m j s c hsc hβ hdiv hjm hjn hB hQ]
+  rw [subresultant_C_mul_eq_bdivC_of_bpsremainder fuel p q β n m j s c hstep hjm hjn hB hQ]
   simp only [Polynomial.C_mul, map_pow, map_neg, map_one]
   ring
 
 /-- The combined per-step PRS relation through `toBPoly`:
 `C(toPoly c)·toBPoly p = C(toPoly β)·toBPoly r + toBPoly q·toBPoly s` with `r = bdivC fuel (prem p q) β`. -/
 theorem toBPoly_prs_rel (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (c : CPoly)
-    (hsc : Polynomial.C (toPoly c) * toBPoly p
-        = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q))
-    (hβ : cnorm β ≠ [])
-    (hdiv : ∀ a ∈ bpsremainder fuel p q, toPoly (cmod fuel a β) = 0) :
+    (hstep : IsBdivCExactStep fuel p q β s c) :
     Polynomial.C (toPoly c) * toBPoly p
       = Polynomial.C (toPoly β) * toBPoly (bdivC fuel (bpsremainder fuel p q) β)
         + toBPoly q * toBPoly s := by
-  rw [hsc, toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hβ hdiv]; ring
+  rw [hstep.relation,
+    toBPoly_bdivC_exact fuel (bpsremainder fuel p q) β hstep.beta_cnorm_ne hstep.exact_division]
+  ring
 
 /-! ### The abstract-PRS telescope over the computable chain -/
 
@@ -457,7 +453,7 @@ theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
     hc0 hβ0 hlc hcb hj hQ
     (fun l hl => by
       have hrel := toBPoly_prs_rel fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
-        (hsc l hl) (hβcn l hl) (hdiv l hl)
+        ⟨hsc l hl, hβcn l hl, hdiv l hl⟩
       rw [hG2 l hl]; exact hrel)
 
 /-! ### The chain endpoint: `Sⱼ` is similar to the degree-`j` `subresPRS` element -/
@@ -487,7 +483,7 @@ theorem isSimilar_subresPRS_elt (fuel : ℕ) (G : ℕ → BPoly)
     hc0 hβ0 hlc hcb hjlt hQ
     (fun l hl => by
       have hrel := toBPoly_prs_rel fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
-        (hsc l hl) (hβcn l hl) (hdiv l hl)
+        ⟨hsc l hl, hβcn l hl, hdiv l hl⟩
       rw [hG2 l hl]; exact hrel)
     hCne
 
@@ -852,7 +848,8 @@ example (fuel : ℕ) (A D β : CPoly) (j : ℕ) (s : BPoly) (c : CPoly)
       (subresultant (toBPoly (bArgAmtD' A D))
         (toBPoly (bdivC fuel (bpsremainder fuel (liftCtoBPoly D) (bArgAmtD' A D)) β))
         ((toPoly D).natDegree - 1) (toPoly D).natDegree j) :=
-  isSimilar_lrtSubresultant_subresultant_bdivC fuel A D β j s c hsc hβ hdiv hc0 hβ0 hjm hjn hB hQ
+  isSimilar_lrtSubresultant_subresultant_bdivC fuel A D β j s c ⟨hsc, hβ, hdiv⟩
+    hc0 hβ0 hjm hjn hB hQ
 
 -- Restatement: the WHOLE computable PRS chain telescopes — `Sⱼ(G 0, G 1) ~ Sⱼ(G m, G (m+1))` for any `m`.
 example (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (j m : ℕ)
