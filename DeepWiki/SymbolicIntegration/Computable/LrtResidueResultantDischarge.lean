@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtSoundness
 import DeepWiki.SymbolicIntegration.Computable.DifferentialAlgebraicClosure
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
 /-! # Discharging the residue-resultant nonvanishing `hR0` from normality `hE`
 
@@ -250,6 +251,97 @@ theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCor
     refine (isCoprime_implicitDeriv_of_genuineMonomial Dt x.1 hgen
       (cSqfreeYunFFGWf_monic hgcd d hd0 x.1 hxmem) ?_).symm
     rw [← hget]; exact cSqfreeYunFFGWf_squarefree hgcd d hd0 hpp x.2 hidx
+
+set_option maxHeartbeats 1600000 in
+open scoped Differential in
+/-- **The Hermite properness `hAD` (`degree` form) discharged from the genuine monomial property.** For
+`deg Dt ≤ 1` and a proper input `deg a < deg d`, `deg (…).2.1 < deg (…).2.2`, resting only on
+`(hgcd, hd0, hpp, hgen)`. Discharges every hypothesis of `cHermiteReduceTowerGWf_leftover_proper_of_degree_le_one`:
+`hv`/`hb` from Yun `get_ne_zero` + `cdiophantineGWf_fst_degree_lt`; `hDstar`/`hresDen` from the radical/denominator
+nonvanishing; and the residual divisibility `hdvd` from `hWgd_of_multiplicity` (the Yun coprimality `hcopgcd`
+*derived* from `hgen` via `hcopgcd_of_genuineMonomial`) via the `d = W·Dstar` cancellation, bridging the raw
+fold `g` to the `cnormG`-projections through `toPolyG`. -/
+theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
+    (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
+    (hpp : (toPolyG d).primPart ≠ 0) (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt) :
+    (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree
+      < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).degree := by
+  have hcopgcd := hcopgcd_of_genuineMonomial hgcd Dt d hd0 hpp hgen
+  have hgd0 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0 :=
+    toPolyG_cHermiteReduceTowerGWf_den_ne_zero hgcd Dt a d hd0 hpp
+  set g := (cSqfreeYunFFGWf d).zipIdx.foldl
+      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivWf d Vi_pow
+            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+      ([CField.zero], [CField.one]) with hg_def
+  -- raw-fold `g` ↔ `cnormG`-projection bridges (equal through `toPolyG`)
+  have hg1 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.1 = toPolyG g.1 := by
+    rw [hg_def]; simp only [cHermiteReduceTowerGWf, toPolyG_cnormG]
+  have hg2 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 = toPolyG g.2 := by
+    rw [hg_def]; simp only [cHermiteReduceTowerGWf, toPolyG_cnormG]
+  have hDsF : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
+      = toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one]) := by
+    simp only [cHermiteReduceTowerGWf, toPolyG_cnormG]
+  have hDstar0 : toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one]) ≠ 0 := by
+    rw [← hDsF]; exact (toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0).ne_zero
+  have hg2ne : toPolyG g.2 ≠ 0 := by rw [← hg2]; exact hgd0
+  refine cHermiteReduceTowerGWf_leftover_proper_of_degree_le_one Dt a d hDtdeg haProper
+    ?_ ?_ g hg_def ?_ ?_ hDstar0
+  · -- hv : each repeated Yun factor is nonzero
+    intro p hp _
+    obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
+      (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))
+    rw [← hget]; exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp p.2 hidx
+  · -- hb : the per-step Diophantine cofactor is proper
+    intro p hp _ rhs
+    refine cdiophantineGWf_fst_degree_lt _ p.1 rhs ?_
+    intro h
+    obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
+      (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))
+    rw [← hget] at h
+    exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp p.2 hidx ((cnormG_eq_nil_iff _).mp h)
+  · -- hdvd : `d·g.2² ∣ resNum·Dstar`, from `hWgd` (`W·g.2² ∣ resNum`) and `d = W·Dstar`
+    have hWgd := hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd
+    have hHermDsNe : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ≠ 0 :=
+      (toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0).ne_zero
+    have hWD : toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2)
+        * toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one]) = toPolyG d := by
+      rw [← hDsF]
+      exact toPolyG_cdivWf_exact d (cHermiteReduceTowerGWf Dt a d).2.2
+        (fun h => hHermDsNe ((cnormG_eq_nil_iff _).mp h))
+        (toPolyG_cHermiteReduceTowerGWf_Dstar_dvd hgcd Dt a d hd0)
+    -- push `hWgd` from the `cnormG`-projections to `g` (through `toPolyG`)
+    rw [show toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 * toPolyG (cHermiteReduceTowerGWf Dt a d).1.2
+          = toPolyG g.2 * toPolyG g.2 from by rw [hg2]] at hWgd
+    rw [show toPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
+              (cHermiteReduceTowerGWf Dt a d).1.2))
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.1)
+                (cHermiteReduceTowerGWf Dt a d).1.2)
+              (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
+                (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2)))))
+          = toPolyG (csubG (cmulG a (cmulG g.2 g.2))
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
+        from by simp only [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmonomialDeriv, hg1, hg2]] at hWgd
+    -- assemble `d·g.2² ∣ resNum·Dstar` from `W·g.2² ∣ resNum` and `d = W·Dstar`
+    rw [toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
+    rw [show toPolyG d * (toPolyG g.2 * toPolyG g.2)
+          = toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one])
+            * (toPolyG (cdivWf d (cHermiteReduceTowerGWf Dt a d).2.2) * (toPolyG g.2 * toPolyG g.2))
+        from by rw [← hWD]; ring,
+      mul_comm (toPolyG (csubG (cmulG a (cmulG g.2 g.2))
+        (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2))))))]
+    exact mul_dvd_mul_left _ hWgd
+  · -- hresDen : `d·g.2² ≠ 0`
+    intro h
+    have h0 := (cnormG_eq_nil_iff _).mp h
+    rw [toPolyG_cmulG, toPolyG_cmulG] at h0
+    exact mul_ne_zero hd0 (mul_ne_zero hg2ne hg2ne) h0
 
 set_option maxHeartbeats 800000 in
 /-- **The assembled LRT reduced soundness from the bundled genuine data.** Moved here from `LrtSoundness`
