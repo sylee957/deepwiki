@@ -49,14 +49,10 @@ elab "derive_denote_hom " sq:ident : command => do
       let tpImplicits := lhsArgs.pop  -- the `@toPolyG α inst inst` prefix
       let tpHead := mkAppN toPolyGFn tpImplicits  -- `toPolyG` awaiting its polynomial argument
       let tpOf (x : Expr) : Expr := mkApp tpHead x
-      -- Polynomial args are those explicit args whose `toPolyG` occurs in the RHS.
+      -- Polynomial args are those args whose `toPolyG` occurs in the RHS; every other binder
+      -- (`α`, instances, and scalar/exponent parameters like `c`/`n`) becomes an instance binder.
       let polyArgs ← args.filterM fun x => do
         pure <| (rhs.find? (· == tpOf x)).isSome
-      -- Any explicit (default-binder) arg that is not a polynomial arg is an unsupported parameter.
-      for x in args do
-        let d ← x.fvarId!.getDecl
-        if d.binderInfo == .default && !polyArgs.contains x then
-          throwError "derive_denote_hom: `{name}` has extra argument `{d.userName}`; keep an explicit instance"
       let n := polyArgs.size
       unless n == 1 || n == 2 do
         throwError "derive_denote_hom: expected 1 or 2 polynomial arguments, got {n}"

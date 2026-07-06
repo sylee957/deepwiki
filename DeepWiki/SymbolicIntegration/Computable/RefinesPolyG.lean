@@ -30,31 +30,20 @@ macro "transfer" : tactic =>
       | (simp_all [RefinesPolyG, denote]; done)
       | (aesop (rule_sets := [Refines]) (config := { enableSimp := false })))
 
--- No-parameter operations: the `DenoteHom` instances are GENERATED from their denotation squares.
+-- Every `DenoteHom` instance is GENERATED from the operation's denotation square, including the
+-- parameterized ops (`cscaleG c`, `cshiftG k`, `cpowG · n`) whose scalar argument becomes an
+-- instance binder. Adding a new computable operation now requires only its `@[denote]` square + one
+-- `derive_denote_hom` line.
 derive_denote_hom toPolyG_caddG
 derive_denote_hom toPolyG_csubG
 derive_denote_hom toPolyG_cmulG
 derive_denote_hom toPolyG_cnegG
 derive_denote_hom toPolyG_cderivG
+derive_denote_hom toPolyG_cscaleG
+derive_denote_hom toPolyG_cshiftG
+derive_denote_hom toPolyG_cpowG
 derive_denote_hom toPolyG_cmapDeriv
 derive_denote_hom toPolyG_cmonomialDeriv
-
-section Instances
-
-variable {α : Type*} [CField α] [CFieldSpec α]
-
--- Parameterized operations (extra scalar/exponent argument): kept as explicit instances.
-/-- `cscaleG c` denotes scaling by `C (toK c)`. -/
-instance (c : α) : DenoteHom₁ (cscaleG c) (fun p => Polynomial.C (CFieldSpec.toK c) * p) :=
-  ⟨fun p => toPolyG_cscaleG c p⟩
-/-- `cshiftG k` denotes multiplication by `X ^ k`. -/
-instance (k : ℕ) : DenoteHom₁ (fun p : CPolyG α => cshiftG k p) (fun p => X ^ k * p) :=
-  ⟨fun p => toPolyG_cshiftG k p⟩
-/-- `cpowG · n` denotes `· ^ n`. -/
-instance (n : ℕ) : DenoteHom₁ (fun p : CPolyG α => cpowG p n) (fun p => p ^ n) :=
-  ⟨fun p => toPolyG_cpowG p n⟩
-
-end Instances
 
 namespace RefinesPolyG
 
