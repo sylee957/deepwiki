@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtSoundness
 import DeepWiki.SymbolicIntegration.Computable.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
+import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
 
 /-! # Discharging the residue-resultant nonvanishing `hR0` from normality `hE`
 
@@ -317,17 +318,28 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
         (fun h => hHermDsNe ((cnormG_eq_nil_iff _).mp h))
         (toPolyG_cHermiteReduceTowerGWf_Dstar_dvd hgcd Dt a d hd0)
     -- push `hWgd` from the `cnormG`-projections to `g` (through `toPolyG`)
-    rw [show toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 * toPolyG (cHermiteReduceTowerGWf Dt a d).1.2
-          = toPolyG g.2 * toPolyG g.2 from by rw [hg2]] at hWgd
-    rw [show toPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
+    rw [hg2] at hWgd
+    have htransport :
+        toPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
               (cHermiteReduceTowerGWf Dt a d).1.2))
             (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.1)
                 (cHermiteReduceTowerGWf Dt a d).1.2)
               (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
                 (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2)))))
           = toPolyG (csubG (cmulG a (cmulG g.2 g.2))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
-        from by simp only [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmonomialDeriv, hg1, hg2]] at hWgd
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
+              (cmulG g.1 (cmonomialDeriv Dt g.2))))) := by
+      change RefinesPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
+              (cHermiteReduceTowerGWf Dt a d).1.2))
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.1)
+                (cHermiteReduceTowerGWf Dt a d).1.2)
+              (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
+                (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2)))))
+          (toPolyG (csubG (cmulG a (cmulG g.2 g.2))
+            (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
+              (cmulG g.1 (cmonomialDeriv Dt g.2))))))
+      transfer
+    rw [htransport] at hWgd
     -- assemble `d·g.2² ∣ resNum·Dstar` from `W·g.2² ∣ resNum` and `d = W·Dstar`
     rw [toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
     rw [show toPolyG d * (toPolyG g.2 * toPolyG g.2)
