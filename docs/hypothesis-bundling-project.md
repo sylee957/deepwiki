@@ -64,8 +64,10 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
       `IsPureNormalBranch` / `IsPolynomialBranch`; left residue-side variants explicit.
 - [x] `HermiteCorrectness.lean` (314) — bundled the repeated Diophantine agreement input,
       Hermite-inner Bézout input, and residual-wrapper denominator input.
-- [ ] `GroebnerBasis.lean` (429), `SubresultantCorrectness.lean` (255),
-      `LaurentCoefficients.lean` (162) — large; expect several clusters each.
+- [x] `GroebnerBasis.lean` (429) — bundled the repeated Lazard base hypotheses as
+      `HasLazardBaseDvd` / `HasLazardBaseDegreeZero`; left structural `hB` basis witnesses explicit.
+- [ ] `SubresultantCorrectness.lean` (255), `LaurentCoefficients.lean` (162) — large; expect several
+      clusters each.
 - [ ] sweep: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do n=$(grep -coE "\(h[a-zA-Z0-9]+ :" "$f"); [ "$n" -gt 40 ] && echo "$n $f"; done | sort -rn`
 
 ## Guardrails
