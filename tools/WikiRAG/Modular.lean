@@ -1,4 +1,5 @@
 import WikiRAG.Query
+import WikiRAG.Cochange
 import Std.Data.HashMap
 
 /-! # Modularity analytics over the `uses` graph
@@ -85,6 +86,17 @@ def modularityQ (nodes : Array String) (adj : HashMap String (Array String)) : F
 def vadd (a b : Array Float) : Array Float :=
   if a.size == b.size then (Array.range a.size).map (fun i => a[i]! + b[i]!) else b
 
+/-- A regroup candidate `home → alt` with its multi-objective vector (maximise `str`/`con`/`evo`,
+minimise `dis`). -/
+structure Regroup where
+  short : String
+  home : String
+  alt : String
+  str : Float    -- structural pull (dependency affinity toward `alt`)
+  con : Float    -- conceptual agreement (docstring cosine: alt − home)
+  evo : Float    -- evolutionary pull (co-change of home & alt)
+  dis : Float    -- disturbance (bond to nearest home sibling) — a cost
+
 /-- Run the scored modularity report on the graph restricted to modules under `--prefix`. -/
 def modularityCmd (args : List String) : IO Unit := do
   let argv := args.toArray
@@ -93,6 +105,10 @@ def modularityCmd (args : List String) : IO Unit := do
   let top := (argv.find? (·.startsWith "--top=")).bind (·.drop 6 |>.toString.toNat?) |>.getD 15
   let path := (← IO.getEnv "WIKI_DB").getD defaultDbPath
   let db ← openDb path
+  let cc ← loadCochange db      -- evolutionary (co-change) coupling, `"a||b"` (a<b) → weight
+  let ccMax := (cc.toArray.foldl (fun m (kw : String × Nat) => Nat.max m kw.2) 1).toFloat
+  let evoOf := fun (x y : String) =>
+    (cc.getD (if x < y then s!"{x}||{y}" else s!"{y}||{x}") 0).toFloat / ccMax
   let decls ← allDecls db
   let mut d2m : HashMap String String := {}
   let mut short : HashMap String String := {}
@@ -203,7 +219,7 @@ def modularityCmd (args : List String) : IO Unit := do
     -- split a conceptually-bonded pair (the `mul_left`/`mul_right` guard) — visible, not hidden.
     let mut modVecs : HashMap String (Array (Array Float)) := {}
     for (_, md, v) in embs do modVecs := modVecs.insert md ((modVecs.getD md #[]).push v)
-    let mut cand : Array (String × String × String × Float × Float × Float) := #[]
+    let mut cand : Array (String × String × String × Float × Float × Float × Float) := #[]
     for (nm, home, v) in embs do
       let nbrs := adj.getD nm #[]
       let deg := nbrs.size
@@ -216,17 +232,18 @@ def modularityCmd (args : List String) : IO Unit := do
       let str := (cnt.toFloat / deg.toFloat - (byMod.getD home 0).toFloat / deg.toFloat)
         * (1.0 - 1.0 / deg.toFloat)
       let con := cosine v (sums.getD alt #[]) - cosine v (sums.getD home #[])
+      let evo := evoOf home alt    -- evolutionary pull: do home & alt change together?
       let mut dis := 0.0
       for sv in modVecs.getD home #[] do
         let s := cosine v sv
         if s < 0.999 && s > dis then dis := s   -- nearest home sibling (excluding self ≈ 1)
-      cand := cand.push (short.getD nm nm, home, alt, str, con, dis)
-    -- Pareto front: drop candidates dominated on (str↑, con↑, dis↓)
-    let front := cand.filter (fun (_, _, _, si, ci, di) =>
-      !cand.any (fun (_, _, _, sj, cj, dj) =>
-        sj ≥ si && cj ≥ ci && dj ≤ di && (sj > si || cj > ci || dj < di)))
-    IO.println s!"\n== MULTI-OBJECTIVE regroup — Pareto front {front.size}/{cand.size} (str=structural pull, con=conceptual agreement, dis=disturbance; high dis = move splits a bonded pair) =="
-    for (s, home, alt, st, cn, ds) in (front.qsort (fun a b => a.2.2.2.1 > b.2.2.2.1)).toList.take top do
-      IO.println s!"  str={pctS st} con={pctS cn} dis={pct ds}  {s}  [{home.splitOn "." |>.getLastD home}]→[{alt.splitOn "." |>.getLastD alt}]"
+      cand := cand.push (short.getD nm nm, home, alt, str, con, evo, dis)
+    -- Pareto front: drop candidates dominated on (str↑, con↑, evo↑, dis↓)
+    let front := cand.filter (fun (_, _, _, si, ci, ei, di) =>
+      !cand.any (fun (_, _, _, sj, cj, ej, dj) =>
+        sj ≥ si && cj ≥ ci && ej ≥ ei && dj ≤ di && (sj > si || cj > ci || ej > ei || dj < di)))
+    IO.println s!"\n== MULTI-OBJECTIVE regroup — Pareto front {front.size}/{cand.size} (str=structural, con=conceptual, evo=co-change, dis=disturbance; high dis = splits a bonded pair) =="
+    for (s, home, alt, st, cn, ev, ds) in (front.qsort (fun a b => a.2.2.2.1 > b.2.2.2.1)).toList.take top do
+      IO.println s!"  str={pctS st} con={pctS cn} evo={pct ev} dis={pct ds}  {s}  [{home.splitOn "." |>.getLastD home}]→[{alt.splitOn "." |>.getLastD alt}]"
 
 end WikiRAG

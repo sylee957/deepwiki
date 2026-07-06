@@ -4,6 +4,7 @@ import WikiRAG.Extract
 import WikiRAG.Embed
 import WikiRAG.Query
 import WikiRAG.Viz
+import WikiRAG.Cochange
 import WikiRAG.Modular
 
 /-! # `wiki` — graph-RAG CLI over the Lean library
@@ -244,6 +245,7 @@ unsafe def main (args : List String) : IO Unit := do
   | "rdeps" :: rest => depsCmd (parseOpts rest {}) true
   | "path" :: a :: b :: _ => pathCmd a b
   | "context" :: rest => contextCmd (parseOpts rest {})
+  | "cochange" :: _ => do mineCochange (← openExisting)
   | "modularity" :: rest => modularityCmd rest
   | "dot" :: rest => dotCmd rest
   | cmd :: _ => do IO.eprintln s!"unknown command: {cmd}\n"; IO.println usage
