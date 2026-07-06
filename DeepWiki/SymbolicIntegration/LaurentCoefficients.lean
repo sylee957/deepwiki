@@ -811,25 +811,6 @@ theorem localPrincipalPart_eq_engineSum [CharZero K] (A D Di Diα : K[X]) {α : 
   rw [localCoeff_eq_laurentH A D Di Diα i (i - j) hi (by omega) hroot,
     show i - (i - j) = j from by omega]
 
-/-! ## Stage P — the literal Theorem 2.7.1 conclusion over the algebraic closure (engine form) -/
-
-open Classical in
-/-- **Theorem 2.7.1, the literal partial fraction `A/D = P + ∑ᵢ ∑_α ∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ`** (Bronstein
-§2.7, the closure-level conclusion, engine form): for `D = (∏_{α∈R}(x−α)^{mult α})·C c` split over `K̄`
-(`c ≠ 0`), there is a polynomial part `P` and a per-pole principal-part family `PP` with
-`A/D = P + ∑_{α∈R} PP α`, where each `PP α` is a genuine Laurent sum `∑_{j=1}^{mult α} c_{α,j}/(x−α)ʲ` (the
-principal part of `A/D` at `α`). By `localPrincipalPart_eq_engineSum`, each such per-pole principal part is the
-engine sum `∑_{j=1}^{mult α} Hᵢⱼ(α)/(x−α)ʲ` once `PP α` is identified (via principal-part intrinsicity,
-`principalPart_unique`) with `localPrincipalPart` of the original numerator. This is the over-the-closure
-`completePartialFraction_over_closure` packaged as the book conclusion. -/
-theorem completePartialFraction_thm_2_7_1 (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K}
-    (hc : c ≠ 0) :
-    ∃ (P : K[X]) (PP : K → RatFunc K),
-      algebraMap K[X] (RatFunc K) A
-          / algebraMap K[X] (RatFunc K) (rootProd R mult * Polynomial.C c)
-        = algebraMap K[X] (RatFunc K) P + ∑ α ∈ R, PP α :=
-  completePartialFraction_over_closure A mult R hc
-
 /-- **Per-pole intrinsic identification of any principal part with the engine sum** (§2.7, the bridge from
 the telescoping's per-pole `PP α` to the literal engine form): at a root `α` of the monic
 `Dᵢ = (x−α)·Dᵢ,α`, with `D = (x−α)ⁱ·M`, `M = Dᵢ,α^i·Eᵢ` (`Eᵢ = laurentE D Dᵢ i`) the original cofactor, IF a
