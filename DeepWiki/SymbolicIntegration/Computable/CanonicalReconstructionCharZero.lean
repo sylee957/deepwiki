@@ -75,4 +75,62 @@ theorem crNormDen_ne_zero_of_charZero (hgcd : GcdFFCorrect (α := α)) (Dt a d :
   obtain ⟨hfac, _, _⟩ := cSplitFactorFastGWf_isSplittingFactorizationGen hgcd Dt d hd
   rw [hnd]; intro h; exact hd (by rw [hfac, h, mul_zero])
 
+omit [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The canonical normal part is proper** (`[CharZero]` + `GcdFFCorrect`, `d ≠ 0`): `deg crNormNum <
+deg crNormDen`. `crNormNum` is the second cofactor of `cextendedEuclideanSplitWf` over the normal denominator
+`crNormDen = dₙ`, so `cextendedEuclideanSplitWf_snd_degree_lt` gives properness — from the split `d = dₛ·dₙ`
+(`cSplitFactorFastGWf_isSplittingFactorizationGen`), the special⊥normal Bézout identity
+(`isCoprime_of_isSpecial_isNormalSqfree`, `toPolyG_cbezoutOneWf`), and the remainder bound `deg (a mod d) <
+deg d` (`cmodWf_length_lt`). The `degree` form holds unconditionally on `d ≠ 0` (incl. the trivial `crNormNum =
+0` case, `⊥ < deg dₙ`); it is the never-done crNorm-properness cleanup target, the foundation of the Hermite
+properness `hAD`. -/
+theorem crNormNum_degree_lt_crNormDen (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
+    (hd : toPolyG d ≠ 0) :
+    (toPolyG (crNormNum Dt a d)).degree < (toPolyG (crNormDen Dt a d)).degree := by
+  letI : Differential ((CFieldSpec.K α)[X]) := ⟨Differential.implicitDeriv (toPolyG Dt)⟩
+  obtain ⟨hfac, hspec, hnorm⟩ := cSplitFactorFastGWf_isSplittingFactorizationGen hgcd Dt d hd
+  -- factor nonvanishing (from `d = dₛ·dₙ`) and the derived `cnormG ≠ []` guards
+  have hds0 : toPolyG (cSplitFactorFastGWf Dt d).2 ≠ 0 := fun h => hd (by rw [hfac, h, zero_mul])
+  have hdn0 : toPolyG (cSplitFactorFastGWf Dt d).1 ≠ 0 := fun h => hd (by rw [hfac, h, mul_zero])
+  have hds : cnormG (cSplitFactorFastGWf Dt d).2 ≠ [] := fun h => hds0 ((cnormG_eq_nil_iff _).mp h)
+  have hdn : cnormG (cSplitFactorFastGWf Dt d).1 ≠ [] := fun h => hdn0 ((cnormG_eq_nil_iff _).mp h)
+  have hcnd : cnormG d ≠ [] := fun h => hd ((cnormG_eq_nil_iff d).mp h)
+  -- special ⊥ normal ⇒ the split parts are coprime ⇒ the computable gcd is a nonzero constant ⇒ Bézout
+  have hcop : IsCoprime (toPolyG (cSplitFactorFastGWf Dt d).2) (toPolyG (cSplitFactorFastGWf Dt d).1) :=
+    isCoprime_of_isSpecial_isNormalSqfree hds0 hspec hnorm
+  have hgu : IsUnit (gcd (toPolyG (cSplitFactorFastGWf Dt d).1) (toPolyG (cSplitFactorFastGWf Dt d).2)) :=
+    gcd_isUnit_iff_isRelPrime.mpr (hcop.symm.isRelPrime)
+  have hassoc : Associated (toPolyG (cgcdWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1)
+      (gcd (toPolyG (cSplitFactorFastGWf Dt d).1) (toPolyG (cSplitFactorFastGWf Dt d).2)) := by
+    have h1 : Associated (toPolyG (cgcdMonicWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2))
+        (toPolyG (cgcdWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1) := by
+      rw [cgcdMonicWf]; exact associated_toPolyG_cmonicG _
+    exact h1.symm.trans (associated_toPolyG_cgcdMonicWf _ _)
+  have hgu' : IsUnit (toPolyG (cgcdWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1) :=
+    (Associated.isUnit_iff hassoc).mpr hgu
+  have hgdeg : (toPolyG (cgcdWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1).natDegree = 0 :=
+    natDegree_eq_zero_of_isUnit hgu'
+  have hgne : toPolyG (cgcdWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1 ≠ 0 := hgu'.ne_zero
+  have hbez : toPolyG (cbezoutOneWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1
+        * toPolyG (cSplitFactorFastGWf Dt d).1
+      + toPolyG (cbezoutOneWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).2
+        * toPolyG (cSplitFactorFastGWf Dt d).2 = 1 :=
+    toPolyG_cbezoutOneWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2 hgdeg hgne
+  -- the remainder `a mod d` is proper over `d`
+  have hr : (toPolyG (cdivmodWf a d).2).degree < (toPolyG d).degree :=
+    toPolyG_degree_lt_of_length_lt (cmodWf a d) d hcnd (cmodWf_length_lt a d hcnd)
+  -- `crNormNum = (cextendedEuclideanSplitWf dₙ dₛ (a mod d) u w).2`, `crNormDen = dₙ`
+  have hnn : crNormNum Dt a d = (cextendedEuclideanSplitWf (cSplitFactorFastGWf Dt d).1
+      (cSplitFactorFastGWf Dt d).2 (cdivmodWf a d).2
+      (cbezoutOneWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1
+      (cbezoutOneWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).2).2 := by
+    simp only [crNormNum, canonicalRepresentationFastGWf]
+  have hnd : crNormDen Dt a d = (cSplitFactorFastGWf Dt d).1 := by
+    simp only [crNormDen, canonicalRepresentationFastGWf]
+  rw [hnn, hnd]
+  exact cextendedEuclideanSplitWf_snd_degree_lt (cSplitFactorFastGWf Dt d).1
+    (cSplitFactorFastGWf Dt d).2 (cdivmodWf a d).2
+    (cbezoutOneWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).1
+    (cbezoutOneWf (cSplitFactorFastGWf Dt d).1 (cSplitFactorFastGWf Dt d).2).2 d hds hdn hfac hbez hr
+
 end DeepWiki.SymbolicIntegration
