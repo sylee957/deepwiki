@@ -434,6 +434,13 @@ theorem cisZeroG_iff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
   rw [cisZeroG, ← cnormG_eq_nil_iff]
   exact (List.isEmpty_iff (l := (cnormG p : List α)))
 
+/-- `cisZeroG p = false` gives `toPolyG p ≠ 0`. -/
+theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CField α] [CFieldSpec α] {p : CPolyG α}
+    (h : cisZeroG p = false) :
+    toPolyG p ≠ 0 := by
+  rw [Bool.eq_false_iff, Ne, cisZeroG_iff] at h
+  exact h
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
