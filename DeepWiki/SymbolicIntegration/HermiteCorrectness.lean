@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
@@ -2698,27 +2699,18 @@ This `IsQRegular Q` predicate is closed under `+` (common denominator stays copr
 
 /-- **`Q`-regular**: a `RatFunc ℚ` representable `am p/am q` with `q ≠ 0` coprime to `Q` — no pole at
 `Q`. The denominator-coprimality witness driving the per-factor order argument for `W ∣ R`. -/
-def IsQRegular (Q : ℚ[X]) (f : RatFunc ℚ) : Prop :=
-  ∃ p q : ℚ[X], q ≠ 0 ∧ IsRelPrime Q q ∧
-    f = algebraMap ℚ[X] (RatFunc ℚ) p / algebraMap ℚ[X] (RatFunc ℚ) q
+abbrev IsQRegular (Q : ℚ[X]) (f : RatFunc ℚ) : Prop :=
+  IsRatFuncRegular Q f
 
 /-- `0` is `Q`-regular (denominator `1`). -/
 theorem isQRegular_zero (Q : ℚ[X]) : IsQRegular Q 0 :=
-  ⟨0, 1, one_ne_zero, isRelPrime_one_right, by simp⟩
+  isRatFuncRegular_zero Q
 
 /-- **`Q`-regular is closed under `+`**: over the common denominator `q₁·q₂` (coprime to `Q` since each
 `qᵢ` is, by `IsRelPrime.mul_right`). The sum of two pole-free-at-`Q` functions is pole-free at `Q`. -/
 theorem IsQRegular.add {Q : ℚ[X]} {f g : RatFunc ℚ} (hf : IsQRegular Q f) (hg : IsQRegular Q g) :
-    IsQRegular Q (f + g) := by
-  obtain ⟨p1, q1, hq1, hQ1, hf⟩ := hf
-  obtain ⟨p2, q2, hq2, hQ2, hg⟩ := hg
-  refine ⟨p1 * q2 + q1 * p2, q1 * q2, mul_ne_zero hq1 hq2, hQ1.mul_right hQ2, ?_⟩
-  have hinj := RatFunc.algebraMap_injective (K := ℚ)
-  set am := algebraMap ℚ[X] (RatFunc ℚ)
-  have ha1 : am q1 ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq1
-  have ha2 : am q2 ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq2
-  rw [hf, hg, map_add, map_mul, map_mul, map_mul]
-  rw [div_add_div _ _ ha1 ha2, mul_comm (am q1) (am p2)]
+    IsQRegular Q (f + g) :=
+  IsRatFuncRegular.add hf hg
 
 /-- **Order extraction from `Q`-regularity**: if the fraction `am r/am D` is `Q`-regular, `D ≠ 0`, and
 `Q^e ∣ D`, then `Q^e ∣ r`. Cross-multiplying `r·q = p·D` (the regular representation), `Q^e ∣ D ∣ p·D =
@@ -2726,18 +2718,8 @@ r·q`; coprimality `IsRelPrime (Q^e) q` then transfers the power onto `r`. The n
 order the `Q`-regular function declines to carry. -/
 theorem dvd_num_of_isQRegular {Q r D : ℚ[X]} {e : ℕ} (hD : D ≠ 0) (hQe : Q ^ e ∣ D)
     (hf : IsQRegular Q (algebraMap ℚ[X] (RatFunc ℚ) r / algebraMap ℚ[X] (RatFunc ℚ) D)) :
-    Q ^ e ∣ r := by
-  obtain ⟨p, q, hq, hQ, heq⟩ := hf
-  have hinj := RatFunc.algebraMap_injective (K := ℚ)
-  set am := algebraMap ℚ[X] (RatFunc ℚ)
-  have had : am D ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
-  have haq : am q ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq
-  have hcross : am (r * q) = am (p * D) := by
-    rw [div_eq_div_iff had haq] at heq
-    rw [map_mul, map_mul]
-    linear_combination heq
-  have hpoly : r * q = p * D := hinj hcross
-  exact (hQ.pow_left).dvd_of_dvd_mul_right (by rw [hpoly]; exact hQe.mul_left p)
+    Q ^ e ∣ r :=
+  dvd_num_of_isRatFuncRegular hD hQe hf
 
 open scoped Differential in
 /-- **`Q`-regular is closed under the `RatFunc` derivative**: if `f = am p/am q` has denominator `q`
@@ -2764,20 +2746,15 @@ theorem glocIncr_toQFun_isQRegular (fuel : ℕ) (A D : CPoly) (Vi : CPoly × ℕ
 
 /-- **`Q`-regular is closed under negation**: `−f = am(−p)/am q`, same `Q`-coprime denominator. -/
 theorem IsQRegular.neg {Q : ℚ[X]} {f : RatFunc ℚ} (hf : IsQRegular Q f) : IsQRegular Q (-f) := by
-  obtain ⟨p, q, hq, hQ, hfeq⟩ := hf
-  exact ⟨-p, q, hq, hQ, by rw [hfeq, map_neg, neg_div]⟩
+  exact IsRatFuncRegular.neg hf
 
 /-- **A `List`-sum of `Q`-regular summands is `Q`-regular**: by induction, folding `IsQRegular.add`
 from `isQRegular_zero`. The interference sum over the *other* factors (each `glocᵢ′`, `i≠k`, pole-free at
 `Vk`) is itself pole-free at `Vk`. -/
 theorem isQRegular_list_sum {α : Type*} {Q : ℚ[X]} (L : List α)
     (f : α → RatFunc ℚ) (hreg : ∀ a ∈ L, IsQRegular Q (f a)) :
-    IsQRegular Q (L.map f).sum := by
-  induction L with
-  | nil => simpa using isQRegular_zero Q
-  | cons hd tl ih =>
-    rw [List.map_cons, List.sum_cons]
-    exact (hreg hd (List.mem_cons_self)).add (ih (fun a ha => hreg a (List.mem_cons_of_mem _ ha)))
+    IsQRegular Q (L.map f).sum :=
+  isRatFuncRegular_list_sum L f hreg
 
 open scoped Differential in
 /-- **The interference derivative `g′ − glocₖ′` is `Vk`-regular**: the fold derivative `g′ = Σ_{i∈kept}

@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import Mathlib.Data.List.Sigma
 
 /-! # `Q`-regularity over the tower fraction field
@@ -39,39 +40,24 @@ theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : CPolyG α)
 /-- `f` is `Q`-regular over the tower fraction field: it has a representation `amG p / amG q` with
 `q ≠ 0` coprime to `Q` (no `Q`-pole). -/
 def IsQRegularG (Q : (CFieldSpec.K α)[X]) (f : RatFunc (CFieldSpec.K α)) : Prop :=
-  ∃ p q : (CFieldSpec.K α)[X], q ≠ 0 ∧ IsRelPrime Q q ∧ f = amG α p / amG α q
+  IsRatFuncRegular Q f
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `0` is `Q`-regular (denominator `1`). -/
 theorem isQRegularG_zero (Q : (CFieldSpec.K α)[X]) : IsQRegularG Q (0 : RatFunc (CFieldSpec.K α)) :=
-  ⟨0, 1, one_ne_zero, isRelPrime_one_right, by simp⟩
+  isRatFuncRegular_zero Q
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `Q`-regular is closed under `+` (common denominator `q₁·q₂`, coprime to `Q`). -/
 theorem IsQRegularG.add {Q : (CFieldSpec.K α)[X]} {f g : RatFunc (CFieldSpec.K α)}
-    (hf : IsQRegularG Q f) (hg : IsQRegularG Q g) : IsQRegularG Q (f + g) := by
-  obtain ⟨p1, q1, hq1, hQ1, hf⟩ := hf
-  obtain ⟨p2, q2, hq2, hQ2, hg⟩ := hg
-  refine ⟨p1 * q2 + q1 * p2, q1 * q2, mul_ne_zero hq1 hq2, hQ1.mul_right hQ2, ?_⟩
-  have hinj := RatFunc.algebraMap_injective (CFieldSpec.K α)
-  have ha1 : amG α q1 ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq1
-  have ha2 : amG α q2 ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq2
-  rw [hf, hg, map_add, map_mul, map_mul, map_mul, div_add_div _ _ ha1 ha2,
-    mul_comm (amG α q1) (amG α p2)]
+    (hf : IsQRegularG Q f) (hg : IsQRegularG Q g) : IsQRegularG Q (f + g) :=
+  IsRatFuncRegular.add hf hg
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- **Order extraction**: if `amG r/amG D` is `Q`-regular, `D ≠ 0`, `Q^e ∣ D`, then `Q^e ∣ r`. -/
 theorem dvd_num_of_isQRegularG {Q r D : (CFieldSpec.K α)[X]} {e : ℕ} (hD : D ≠ 0) (hQe : Q ^ e ∣ D)
-    (hf : IsQRegularG Q (amG α r / amG α D)) : Q ^ e ∣ r := by
-  obtain ⟨p, q, hq, hQ, heq⟩ := hf
-  have hinj := RatFunc.algebraMap_injective (CFieldSpec.K α)
-  have had : amG α D ≠ 0 := (map_ne_zero_iff _ hinj).mpr hD
-  have haq : amG α q ≠ 0 := (map_ne_zero_iff _ hinj).mpr hq
-  have hpoly : r * q = p * D := by
-    apply hinj
-    rw [div_eq_div_iff had haq] at heq
-    rw [map_mul, map_mul]; linear_combination heq
-  exact (hQ.pow_left).dvd_of_dvd_mul_right (by rw [hpoly]; exact hQe.mul_left p)
+    (hf : IsQRegularG Q (amG α r / amG α D)) : Q ^ e ∣ r :=
+  dvd_num_of_isRatFuncRegular hD hQe hf
 
 /-- **`Q`-regular is closed under the tower derivative** `towerFractionFieldDerivG Dt`: if `f = amG p/amG q`
 with `q` coprime to `Q`, then `D_tower f` has denominator `q²`, still coprime to `Q`. Uses the tower
@@ -126,12 +112,8 @@ theorem gloc_isQRegularG (Dt v u : CPolyG α) {Q : (CFieldSpec.K α)[X]} (hv : t
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `Q`-regular is closed under list sums. -/
 theorem isQRegularG_list_sum {Q : (CFieldSpec.K α)[X]} (L : List (RatFunc (CFieldSpec.K α)))
-    (h : ∀ f ∈ L, IsQRegularG Q f) : IsQRegularG Q L.sum := by
-  induction L with
-  | nil => simpa using isQRegularG_zero Q
-  | cons hd tl ih =>
-    rw [List.sum_cons]
-    exact (h hd (List.mem_cons_self ..)).add (ih fun f hf => h f (List.mem_cons_of_mem _ hf))
+    (h : ∀ f ∈ L, IsQRegularG Q f) : IsQRegularG Q L.sum :=
+  isRatFuncRegular_list_sum_self L h
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Cross-multiplied fraction-pair addition reads as the fraction sum:
