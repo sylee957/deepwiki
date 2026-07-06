@@ -109,6 +109,6 @@ the load-bearing piece making `F(log u) = RatFunc F` a genuine differential fiel
 only the Kähler-module-valued localization, not a self-derivation extension) — a standalone
 Mathlib-contributable derivation-extension lemma, recorded here as the enabler of the transcendental-log
 Liouville keystone. -/
-noncomputable abbrev fracField_deriv_extension := @LiouvilleLog.fracDeriv
+noncomputable abbrev fracField_deriv_extension := @PolynomialFractionDeriv.fracDeriv
 
 end DeepWiki.Si
