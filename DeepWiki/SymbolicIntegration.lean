@@ -8,8 +8,7 @@ import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
-import DeepWiki.SymbolicIntegration.DifferentialExtensions
-import DeepWiki.SymbolicIntegration.DifferentialFields
+import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
@@ -20,6 +19,8 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalUniqueness
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
+import DeepWiki.SymbolicIntegration.DifferentialExtensions
+import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 import DeepWiki.SymbolicIntegration.HorowitzLinearSolve
