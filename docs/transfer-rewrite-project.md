@@ -1,6 +1,34 @@
 # Project: rewrite SymbolicIntegration proofs through front-loaded transfer
 
-**Status:** in progress (kickoff) · **Owner:** autonomous agent · **Repo:** `deepwiki` (Lean 4, v4.31.0)
+**Status:** in progress · **Owner:** Codex-executable · **Repo:** `deepwiki` (Lean 4, v4.31.0)
+
+This document is self-contained; it assumes no conversation context. Read top to bottom before editing.
+
+## For the executing agent (Codex): the loop
+
+Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. Work **one file at a time**, in the
+worklist order below. For each file:
+
+1. **Find convertible sites:**
+   `grep -nE "rw \[.*toPolyG_c|simp only \[.*toPolyG_c" <file>`
+2. **Convert only the clean cases** (patterns below). Leave anything that doesn't match cleanly.
+3. **Gate the module:** `scripts/check.sh DeepWiki.SymbolicIntegration.Computable.<Module>` — must print
+   `GATE: PASS` (warnings are failures). If a conversion breaks the proof or `simp only [denote]`
+   over-fires, **revert that one site** and move on (do not fight it).
+4. **Commit per file:** `refactor(transfer): front-load transport in <Module>`, ending the body with
+   `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`.
+5. Mark the file done in the worklist and continue.
+
+Two conversions are already committed as **templates** — copy their shape:
+- `Assemble.lean` (commit `baba3648`) and `HermiteValuationTower.lean` (commit `a5a1ee10`).
+
+## The framework (already built, do not rebuild)
+
+`DeepWiki/Transfer/` (topic-agnostic): the `denote` simp attribute + the `transfer%` term elaborator and
+`transfer` whole-goal tactic. Every `toPolyG_c*` homomorphism square is `@[denote]`, so `simp only
+[denote]` pushes the denotation to the leaves under any surrounding context (Lean's simp congruence =
+Sozeau generalized rewriting). Import `DeepWiki.Transfer` where you use `transfer`/`transfer%` (most
+files already reach `denote` transitively via `GenericPolyEngine`).
 
 ## Goal
 
@@ -28,29 +56,55 @@ Kickoff example ([`Assemble.lean` hcombine](../DeepWiki/SymbolicIntegration/Comp
 field_simp` → `simp only [denote, map_add, map_mul]; field_simp` (8 ordered lemmas → one unordered
 transport step, then the math).
 
-## Target idioms
+## Conversion patterns (the only four; concrete before → after)
 
-- **Interleaved `rw [toPolyG_c…, <hom lemmas>, …]; <math>`** → `simp only [denote, <hom lemmas>]; <math>`
-  (front-load transport; the `<math>` is pure). The dominant, highest-value case (≈242 `rw` chains,
-  most partially convertible this way).
-- **`simp only [toPolyG_a, toPolyG_b, …]`** (≈45) → `simp only [denote]` (drop the explicit list).
-- **`have h : toPolyG (cop …) = <denote-normal form> := by <transport>`** → `have h := transfer% (…)`
-  *only* when the RHS is exactly the denote-normal form (many of the ≈82 `have`s are not — they use a
-  local abbreviation or an atom needing a hypothesis; leave those).
-- **Whole-goal `toPolyG X = q`** closable by transport → `by transfer`.
-- **Keep** the `native_decide` zero-test reflection (`RefinesPolyG.eq_of_csub_cisZero`) — distinct.
+1. **Interleaved chain — front-load** (highest value). A `rw` mixing `toPolyG_c*` + homomorphism
+   lemmas (`map_add`/`map_mul`/`map_sub`/`map_pow`) then math:
+   ```
+   rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul,
+     div_add_div _ _ h1 h2]; ring
+   -- →
+   simp only [denote, map_add, map_mul]      -- front-loaded transport (unordered, robust)
+   rw [div_add_div _ _ h1 h2]; ring          -- pure math
+   ```
+   Rule: move the `toPolyG_c*` and `map_*` lemmas into `simp only [denote, map_*]`; keep the genuinely
+   mathematical rewrites (`div_add_div`, `field_simp`, `ring`, `mul_comm`, a named lemma, a hypothesis)
+   as the following step.
+2. **Simp-list — swap for `denote`.** `simp only [toPolyG_a, toPolyG_b, …, <non-denote lemmas>]` →
+   `simp only [denote, <non-denote lemmas>]` (drop every `toPolyG_c*`; keep the rest, e.g. a def unfold
+   like `cHermiteReduceTowerGWf`, `map_*`, `← hDef`).
+3. **`have` synthesis — `transfer%`** *only when the RHS is exactly the denote-normal form*:
+   `have h : toPolyG (cop …) = <denote-normal> := by rw [toPolyG_c…]` → `have h := transfer% (toPolyG (cop …))`.
+   Most `have`s do NOT qualify (RHS uses a local abbrev, or the LHS is a variable needing a hypothesis
+   first) — leave those.
+4. **Whole-goal `toPolyG X = q`** closable purely by transport → `by transfer`.
 
-## Phase order & discipline
+**Do NOT convert:** curated `simp only [toPolyG_*, coeff_*]` feeding `linear_combination` (coefficient
+bashes — leave as-is); single-lemma `simp only [toPolyG_cnormG]` (no gain); anything where
+`simp only [denote]` over-fires and breaks a downstream step. **Keep** the `native_decide` zero-test
+reflection `RefinesPolyG.eq_of_csub_cisZero` — a distinct capability, not transfer.
 
-By file, densest first (transport-rewrite counts): `HermiteValuationTower` (32), `OneShotSoundness` (24),
-`CoupledDE/Assembly` (21), `LaurentSoundness` (19), `RischDE/Structural` (18), `YunTowerCorrect` (16), …
+When a proof needs a denotation square that is not yet `@[denote]` (e.g. `toPolyG_radDeriv` in
+`Algebraic/RadicalDerivationInvariant`), tag it `@[denote]` in its defining file so front-loading works —
+that is part of the job.
 
-Per file: front-load convertible proofs; **gate each file green** (`scripts/check.sh <module>`); commit
-per file/batch. **Do not force** `simp only [denote]` where it over-fires or where transport is genuinely
-inseparable from the math (curated `simp only` feeding `linear_combination` — leave as-is). **Retire
-duplication** found along the way (`scripts/wiki rdeps` before deleting). When a proof needs a denotation
-square that is not yet `@[denote]` (e.g. `toPolyG_radDeriv`), tag it `@[denote]` in its defining file so
-front-loading works — that is part of the work.
+## Worklist (densest first; update status as you go)
+
+- [x] `Computable/Assemble.lean` — done (template, `baba3648`)
+- [x] `Computable/HermiteValuationTower.lean` — done (template, `a5a1ee10`)
+- [ ] `Computable/OneShotSoundness.lean`
+- [ ] `Computable/CoupledDE/Assembly.lean`
+- [ ] `Computable/LaurentSoundness.lean`
+- [ ] `Computable/RischDE/Structural.lean`
+- [ ] `Computable/YunTowerCorrect.lean`
+- [ ] `Computable/FuelFreeDiophantine.lean`
+- [ ] `Computable/Tower/GcdFFCorrect.lean`
+- [ ] `Computable/Algebraic/RadicalIntegralSoundness.lean`
+- [ ] `Computable/TranscendentalOverAlgebraic.lean`
+- [ ] sweep the rest: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do grep -qE "rw \[.*toPolyG_c|simp only \[.*toPolyG_c" "$f" && echo "$f"; done`
+
+After the worklist, run the full gate once (`scripts/check.sh`, bare) to confirm `GATE: PASS` across all
+default targets.
 
 ## Guardrails
 
