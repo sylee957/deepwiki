@@ -75,6 +75,26 @@ theorem toPolyG_eq_toPoly : (toPolyG : CPolyG ℚ → ℚ[X]) = Compute.toPoly :
   | nil => rfl
   | cons a as ih => show Polynomial.C (CFieldSpec.toK a) + X * toPolyG as = _; rw [ih]; rfl
 
+/-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
+theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by
+  induction k with
+  | zero => show (CField.zero : ℚ) = _; rw [show (CField.zero : ℚ) = 0 from rfl]; simp
+  | succ n ih => rw [nsmulG]; show a + nsmulG n a = _; rw [ih]; push_cast; ring
+
+/-- `cderivG` at `ℚ` is the concrete `cderiv`. -/
+theorem cderivG_eq_cderiv : (cderivG : CPolyG ℚ → CPolyG ℚ) = Compute.cderiv := by
+  have hgo : ∀ (k : ℕ) (as : CPolyG ℚ), cderivG.go k as = Compute.cderiv.go k as := by
+    intro k as
+    induction as generalizing k with
+    | nil => rfl
+    | cons b bs ih =>
+      show nsmulG k b :: cderivG.go (k + 1) bs = ((k : ℚ) * b) :: Compute.cderiv.go (k + 1) bs
+      rw [ih, nsmulG_eq_natCast_mul]
+  funext p
+  cases p with
+  | nil => rfl
+  | cons a as => show cderivG.go 1 as = Compute.cderiv.go 1 as; rw [hgo]
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
