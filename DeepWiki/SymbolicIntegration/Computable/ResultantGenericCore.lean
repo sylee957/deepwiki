@@ -17,19 +17,6 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-! ### `cresultantG` invariances -/
 
-/-- `toPolyG (clagNumG zs) = ∏ (X − C (toK zⱼ))`: the basis numerator as a product of linear factors. -/
-theorem toPolyG_clagNumG (zs : List α) :
-    toPolyG (clagNumG zs) = (zs.map (fun z => Polynomial.X - Polynomial.C (CFieldSpec.toK z))).prod := by
-  induction zs with
-  | nil => simp [clagNumG, toPolyG_cons, CFieldSpec.toK_one]
-  | cons z zs ih =>
-    rw [clagNumG, toPolyG_cmulG, ih, List.map_cons, List.prod_cons]
-    have hfac : toPolyG ([CField.neg z, CField.one] : CPolyG α)
-        = Polynomial.X - Polynomial.C (CFieldSpec.toK z) := by
-      rw [toPolyG_cons, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_neg, CFieldSpec.toK_one, map_neg,
-        map_one]; ring
-    rw [hfac]
-
 /-- `toPolyG` of the `cinterpolateG` accumulator fold is the running sum of term images. -/
 theorem toPolyG_foldl_caddG (f : α × α → CPolyG α) (pts : List (α × α)) (init : CPolyG α) :
     toPolyG (pts.foldl (fun acc p => caddG acc (f p)) init)

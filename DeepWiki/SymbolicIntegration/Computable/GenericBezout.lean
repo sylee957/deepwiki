@@ -44,6 +44,19 @@ def clagNumG : List α → CPolyG α
   | [] => [CField.one]
   | z :: zs => cmulG [CField.neg z, CField.one] (clagNumG zs)
 
+/-- `toPolyG (clagNumG zs) = ∏ (X − C (toK zⱼ))`: the basis numerator as a product of linear factors. -/
+theorem toPolyG_clagNumG [CFieldSpec α] (zs : List α) :
+    toPolyG (clagNumG zs) = (zs.map (fun z => Polynomial.X - Polynomial.C (CFieldSpec.toK z))).prod := by
+  induction zs with
+  | nil => simp [clagNumG, toPolyG_cons, CFieldSpec.toK_one]
+  | cons z zs ih =>
+    rw [clagNumG, toPolyG_cmulG, ih, List.map_cons, List.prod_cons]
+    have hfac : toPolyG ([CField.neg z, CField.one] : CPolyG α)
+        = Polynomial.X - Polynomial.C (CFieldSpec.toK z) := by
+      rw [toPolyG_cons, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_neg, CFieldSpec.toK_one, map_neg,
+        map_one]; ring
+    rw [hfac]
+
 /-- Generic Lagrange interpolation `cinterpolateG pts = R(z)` with `R(zₖ) = yₖ` for each
 `(zₖ, yₖ) ∈ pts` (distinct abscissas, over the field `α`): `∑ₖ yₖ · ∏_{j≠k}(z − zⱼ)/(zₖ − zⱼ)`. The
 scalar `1/∏(zₖ − zⱼ)` is a `CField.inv`; the per-term polynomial uses `cmulG`/`cscaleG`/`caddG`. -/
