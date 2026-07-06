@@ -26,4 +26,8 @@ noncomputable abbrev dpU (n : ℕ) : DiffPoly K := X (some n)
 noncomputable def dpEmbed : Polynomial K →+* DiffPoly K :=
   Polynomial.eval₂RingHom (MvPolynomial.C : K →+* DiffPoly K) (X none)
 
+/-- `dpEmbed` sends the polynomial variable to `dpX`. -/
+@[simp] theorem dpEmbed_X : dpEmbed (Polynomial.X : Polynomial K) = (X none : DiffPoly K) := by
+  simp [dpEmbed]
+
 end DeepWiki.SymbolicIntegration

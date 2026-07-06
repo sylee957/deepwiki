@@ -22,9 +22,6 @@ variable {K : Type*} [Field K]
 
 /-! ## The differential polynomial ring `K⟨u⟩` and its `d/dx` derivation -/
 
-@[simp] theorem dpEmbed_X : dpEmbed (Polynomial.X : K[X]) = (X none : DiffPoly K) := by
-  simp [dpEmbed]
-
 @[simp] theorem dpEmbed_C (c : K) : dpEmbed (Polynomial.C c) = (MvPolynomial.C c : DiffPoly K) := by
   simp [dpEmbed]
 
