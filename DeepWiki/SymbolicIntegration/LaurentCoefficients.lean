@@ -22,10 +22,6 @@ variable {K : Type*} [Field K]
 
 /-! ## The differential polynomial ring `K⟨u⟩` and its `d/dx` derivation -/
 
-/-- The `K[x] → DiffPoly K` embedding sending the polynomial variable `X` to `x = X none`. -/
-noncomputable def dpEmbed : K[X] →+* DiffPoly K :=
-  Polynomial.eval₂RingHom (MvPolynomial.C : K →+* DiffPoly K) (X none)
-
 @[simp] theorem dpEmbed_X : dpEmbed (Polynomial.X : K[X]) = (X none : DiffPoly K) := by
   simp [dpEmbed]
 

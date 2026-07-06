@@ -1,4 +1,7 @@
 import Mathlib.Algebra.MvPolynomial.Basic
+import Mathlib.Algebra.MvPolynomial.Eval
+import Mathlib.Algebra.Polynomial.Basic
+import Mathlib.Algebra.Polynomial.Eval.Defs
 
 /-! # Differential polynomials
 
@@ -18,5 +21,9 @@ noncomputable abbrev dpX : DiffPoly K := X none
 
 /-- The `n`-th derivative variable `u^(n) = X (some n)` in `DiffPoly K`. -/
 noncomputable abbrev dpU (n : ℕ) : DiffPoly K := X (some n)
+
+/-- The embedding `K[x] → DiffPoly K` sending `X` to `dpX`. -/
+noncomputable def dpEmbed : Polynomial K →+* DiffPoly K :=
+  Polynomial.eval₂RingHom (MvPolynomial.C : K →+* DiffPoly K) (X none)
 
 end DeepWiki.SymbolicIntegration
