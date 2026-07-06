@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
 import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 
@@ -52,43 +53,26 @@ theorem extendDerivFun_algebraMap (p : K[X]) :
   rw [← RatFunc.mk_one p, extendDerivFun_mk]
   simp
 
-private theorem algebraMap_ne_zero {q : K[X]} (hq : q ≠ 0) :
-    algebraMap K[X] (RatFunc K) q ≠ 0 :=
-  (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hq
-
-/-- Fraction addition for `RatFunc.mk`: `p/q + r/s = (ps + rq)/(qs)`. -/
-private theorem mk_add_mk (p r : K[X]) {q s : K[X]} (hq : q ≠ 0) (hs : s ≠ 0) :
-    RatFunc.mk p q + RatFunc.mk r s = RatFunc.mk (p * s + r * q) (q * s) := by
-  rw [RatFunc.mk_eq_div, RatFunc.mk_eq_div, RatFunc.mk_eq_div,
-    div_add_div _ _ (algebraMap_ne_zero hq) (algebraMap_ne_zero hs), map_add, map_mul, map_mul,
-    map_mul]
-  ring
-
 /-- Additivity of `extendDerivFun`: `(x + y) ↦ x' + y'`. -/
 theorem extendDerivFun_add (x y : RatFunc K) :
     extendDerivFun d (x + y) = extendDerivFun d x + extendDerivFun d y := by
   induction x using RatFunc.induction_on' with | _ p q hq =>
   induction y using RatFunc.induction_on' with | _ r s hs =>
-  rw [mk_add_mk p r hq hs, extendDerivFun_mk, extendDerivFun_mk, extendDerivFun_mk,
-    mk_add_mk _ _ (pow_ne_zero 2 hq) (pow_ne_zero 2 hs),
+  rw [ratFunc_mk_add_mk p r hq hs, extendDerivFun_mk, extendDerivFun_mk, extendDerivFun_mk,
+    ratFunc_mk_add_mk _ _ (pow_ne_zero 2 hq) (pow_ne_zero 2 hs),
     RatFunc.mk_eq_mk (pow_ne_zero 2 (mul_ne_zero hq hs)) (mul_ne_zero (pow_ne_zero 2 hq)
       (pow_ne_zero 2 hs))]
   simp only [Derivation.leibniz, map_add, smul_eq_mul]; ring
-
-/-- Fraction multiplication for `RatFunc.mk`: `(p/q)·(r/s) = (pr)/(qs)`. -/
-private theorem mk_mul_mk (p q r s : K[X]) :
-    RatFunc.mk p q * RatFunc.mk r s = RatFunc.mk (p * r) (q * s) := by
-  rw [RatFunc.mk_eq_div, RatFunc.mk_eq_div, RatFunc.mk_eq_div, div_mul_div_comm, map_mul, map_mul]
 
 /-- Leibniz rule for `extendDerivFun`: `(x·y) ↦ x'·y + x·y'`. -/
 theorem extendDerivFun_mul (x y : RatFunc K) :
     extendDerivFun d (x * y) = extendDerivFun d x * y + x * extendDerivFun d y := by
   induction x using RatFunc.induction_on' with | _ p q hq =>
   induction y using RatFunc.induction_on' with | _ r s hs =>
-  rw [mk_mul_mk p q r s, extendDerivFun_mk, extendDerivFun_mk, extendDerivFun_mk,
-    mk_mul_mk (d p * q - p * d q) (q ^ 2) r s,
-    mk_mul_mk p q (d r * s - r * d s) (s ^ 2),
-    mk_add_mk _ _ (mul_ne_zero (pow_ne_zero 2 hq) hs) (mul_ne_zero hq (pow_ne_zero 2 hs)),
+  rw [ratFunc_mk_mul_mk p q r s, extendDerivFun_mk, extendDerivFun_mk, extendDerivFun_mk,
+    ratFunc_mk_mul_mk (d p * q - p * d q) (q ^ 2) r s,
+    ratFunc_mk_mul_mk p q (d r * s - r * d s) (s ^ 2),
+    ratFunc_mk_add_mk _ _ (mul_ne_zero (pow_ne_zero 2 hq) hs) (mul_ne_zero hq (pow_ne_zero 2 hs)),
     RatFunc.mk_eq_mk (pow_ne_zero 2 (mul_ne_zero hq hs))
       (mul_ne_zero (mul_ne_zero (pow_ne_zero 2 hq) hs) (mul_ne_zero hq (pow_ne_zero 2 hs)))]
   simp only [Derivation.leibniz, smul_eq_mul]; ring

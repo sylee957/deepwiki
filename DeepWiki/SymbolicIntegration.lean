@@ -19,6 +19,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalUniqueness
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.GroebnerBasis

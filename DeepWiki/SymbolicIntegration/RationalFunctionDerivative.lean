@@ -2,6 +2,7 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.RingTheory.Derivation.DifferentialRing
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 
 /-! # The derivative `d/dx` on rational functions `K(x)`
 Builds `d/dx` on `RatFunc K` via the quotient rule `(p/q)' = (p'q − pq')/q²`, proves its derivation
@@ -48,43 +49,26 @@ theorem ratFuncDeriv_algebraMap (p : K[X]) :
   rw [← RatFunc.mk_one p, ratFuncDeriv_mk]
   simp
 
-private theorem algebraMap_ne_zero {q : K[X]} (hq : q ≠ 0) :
-    algebraMap K[X] (RatFunc K) q ≠ 0 :=
-  (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hq
-
-/-- Fraction addition for `RatFunc.mk`: `p/q + r/s = (ps + rq)/(qs)`. -/
-private theorem mk_add_mk (p r : K[X]) {q s : K[X]} (hq : q ≠ 0) (hs : s ≠ 0) :
-    RatFunc.mk p q + RatFunc.mk r s = RatFunc.mk (p * s + r * q) (q * s) := by
-  rw [RatFunc.mk_eq_div, RatFunc.mk_eq_div, RatFunc.mk_eq_div,
-    div_add_div _ _ (algebraMap_ne_zero hq) (algebraMap_ne_zero hs), map_add, map_mul, map_mul,
-    map_mul]
-  ring
-
 /-- **Additivity of `d/dx`** on `K(x)`: `(x + y)' = x' + y'`. -/
 theorem ratFuncDeriv_add (x y : RatFunc K) :
     ratFuncDeriv (x + y) = ratFuncDeriv x + ratFuncDeriv y := by
   induction x using RatFunc.induction_on' with | _ p q hq =>
   induction y using RatFunc.induction_on' with | _ r s hs =>
-  rw [mk_add_mk p r hq hs, ratFuncDeriv_mk, ratFuncDeriv_mk, ratFuncDeriv_mk,
-    mk_add_mk _ _ (pow_ne_zero 2 hq) (pow_ne_zero 2 hs),
+  rw [ratFunc_mk_add_mk p r hq hs, ratFuncDeriv_mk, ratFuncDeriv_mk, ratFuncDeriv_mk,
+    ratFunc_mk_add_mk _ _ (pow_ne_zero 2 hq) (pow_ne_zero 2 hs),
     RatFunc.mk_eq_mk (pow_ne_zero 2 (mul_ne_zero hq hs)) (mul_ne_zero (pow_ne_zero 2 hq)
       (pow_ne_zero 2 hs))]
   simp only [derivative_add, derivative_mul]; ring
-
-/-- Fraction multiplication for `RatFunc.mk`: `(p/q)·(r/s) = (pr)/(qs)`. -/
-private theorem mk_mul_mk (p q r s : K[X]) :
-    RatFunc.mk p q * RatFunc.mk r s = RatFunc.mk (p * r) (q * s) := by
-  rw [RatFunc.mk_eq_div, RatFunc.mk_eq_div, RatFunc.mk_eq_div, div_mul_div_comm, map_mul, map_mul]
 
 /-- **Leibniz rule for `d/dx`** on `K(x)`: `(x·y)' = x'·y + x·y'`. -/
 theorem ratFuncDeriv_mul (x y : RatFunc K) :
     ratFuncDeriv (x * y) = ratFuncDeriv x * y + x * ratFuncDeriv y := by
   induction x using RatFunc.induction_on' with | _ p q hq =>
   induction y using RatFunc.induction_on' with | _ r s hs =>
-  rw [mk_mul_mk p q r s, ratFuncDeriv_mk, ratFuncDeriv_mk, ratFuncDeriv_mk,
-    mk_mul_mk (derivative p * q - p * derivative q) (q ^ 2) r s,
-    mk_mul_mk p q (derivative r * s - r * derivative s) (s ^ 2),
-    mk_add_mk _ _ (mul_ne_zero (pow_ne_zero 2 hq) hs) (mul_ne_zero hq (pow_ne_zero 2 hs)),
+  rw [ratFunc_mk_mul_mk p q r s, ratFuncDeriv_mk, ratFuncDeriv_mk, ratFuncDeriv_mk,
+    ratFunc_mk_mul_mk (derivative p * q - p * derivative q) (q ^ 2) r s,
+    ratFunc_mk_mul_mk p q (derivative r * s - r * derivative s) (s ^ 2),
+    ratFunc_mk_add_mk _ _ (mul_ne_zero (pow_ne_zero 2 hq) hs) (mul_ne_zero hq (pow_ne_zero 2 hs)),
     RatFunc.mk_eq_mk (pow_ne_zero 2 (mul_ne_zero hq hs))
       (mul_ne_zero (mul_ne_zero (pow_ne_zero 2 hq) hs) (mul_ne_zero hq (pow_ne_zero 2 hs)))]
   simp only [derivative_mul]; ring
