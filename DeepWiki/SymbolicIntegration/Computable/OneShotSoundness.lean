@@ -382,7 +382,7 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelPrimGWf (Dt b c q : CPolyG α) 
   | case1 c _n hc =>
       rw [Option.some.injEq] at hsolve
       subst q
-      rw [(cisZeroG_iff c).mp hc, toPolyG_cmonomialDeriv, toPolyG_nil, map_zero, mul_zero, add_zero]
+      simp only [(cisZeroG_iff c).mp hc, denote, toPolyG_nil, map_zero, mul_zero, add_zero]
   | case2 =>
       exact absurd hsolve (by simp)
   | case3 =>
@@ -407,7 +407,7 @@ theorem toPolyG_cmonomialDeriv_cPolyRischDECancelExpGWf (Dt b c q : CPolyG α) (
   | case1 c _n hc =>
       rw [Option.some.injEq] at hsolve
       subst q
-      rw [(cisZeroG_iff c).mp hc, toPolyG_cmonomialDeriv, toPolyG_nil, map_zero, mul_zero, add_zero]
+      simp only [(cisZeroG_iff c).mp hc, denote, toPolyG_nil, map_zero, mul_zero, add_zero]
   | case2 =>
       exact absurd hsolve (by simp)
   | case3 =>
