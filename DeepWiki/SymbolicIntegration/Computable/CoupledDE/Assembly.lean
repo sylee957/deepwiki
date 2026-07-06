@@ -235,10 +235,6 @@ theorem dotQ_hcatRow2 (b1 b2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nro
     (by rw [derivMatrixQ_row_len d nrows r hr]; simp)]
   rw [dotQ_derivMatrixQ_row y2 d nrows r hr hy2, dotQ_mulMatrixQ_row b1 y2 d nrows r hr hy2]
 
-/-- `natDegree (toPolyG p) ≤ cdegG p`. -/
-theorem natDegree_toPolyG_le_cdegG (p : CPolyG ℚ) : (toPolyG p).natDegree ≤ cdegG p := by
-  rw [cdegG]; exact natDegree_toPolyG_le p
-
 /-- `coeff r (D y1 + b1 y1 + ab2 y2) = 0` for `r ≥ nrows` when `nrows` exceeds every term's degree. -/
 theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ)
     (hy1 : (toPolyG y1).natDegree ≤ d) (hy2 : (toPolyG y2).natDegree ≤ d)
@@ -473,12 +469,12 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
         omega
       omega
     -- degree bounds.
-    have hndb1 := natDegree_toPolyG_le_cdegG b1
-    have hndb2 := natDegree_toPolyG_le_cdegG b2
+    have hndb1 : (toPolyG b1).natDegree ≤ cdegG b1 := by rw [cdegG_eq_natDegree]
+    have hndb2 : (toPolyG b2).natDegree ≤ cdegG b2 := by rw [cdegG_eq_natDegree]
     have hndab2 : (toPolyG (cscaleG a b2)).natDegree ≤ cdegG b2 := by
       rw [toPolyG_cscaleG]; exact le_trans (Polynomial.natDegree_C_mul_le _ _) hndb2
-    have hndz1 := natDegree_toPolyG_le_cdegG z1
-    have hndz2 := natDegree_toPolyG_le_cdegG z2
+    have hndz1 : (toPolyG z1).natDegree ≤ cdegG z1 := by rw [cdegG_eq_natDegree]
+    have hndz2 : (toPolyG z2).natDegree ≤ cdegG z2 := by rw [cdegG_eq_natDegree]
     have hfold : ∀ x ∈ [cdegG b1 + d, cdegG b2 + d, cdegG z1, cdegG z2, d],
         x ≤ [cdegG b1 + d, cdegG b2 + d, cdegG z1, cdegG z2, d].foldl max 0 := by
       intro x hx; simp only [List.foldl_cons, List.foldl_nil]
