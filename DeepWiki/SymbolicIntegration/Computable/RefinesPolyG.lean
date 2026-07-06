@@ -18,7 +18,7 @@ def RefinesPolyG {α : Type*} [CField α] [CFieldSpec α]
     (p : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
   toPolyG p = q
 
-/-- Prove a `RefinesPolyG` goal by pushing `toPolyG` through computable polynomial operations. -/
+/-- Prove refinement and denotation-equality goals by pushing `toPolyG` through computable operations. -/
 macro "transfer" : tactic => `(tactic| simp_all [RefinesPolyG, denote])
 
 namespace RefinesPolyG
@@ -141,6 +141,10 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 example (a b c : CPolyG α) :
     RefinesPolyG (cmulG (caddG a b) c) ((toPolyG a + toPolyG b) * toPolyG c) := by
+  transfer
+
+example (a b c : CPolyG α) :
+    toPolyG (cmulG (caddG a b) c) = (toPolyG a + toPolyG b) * toPolyG c := by
   transfer
 
 end Examples

@@ -329,15 +329,6 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
           = toPolyG (csubG (cmulG a (cmulG g.2 g.2))
             (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
               (cmulG g.1 (cmonomialDeriv Dt g.2))))) := by
-      change RefinesPolyG (csubG (cmulG a (cmulG (cHermiteReduceTowerGWf Dt a d).1.2
-              (cHermiteReduceTowerGWf Dt a d).1.2))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.1)
-                (cHermiteReduceTowerGWf Dt a d).1.2)
-              (cmulG (cHermiteReduceTowerGWf Dt a d).1.1
-                (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).1.2)))))
-          (toPolyG (csubG (cmulG a (cmulG g.2 g.2))
-            (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2)
-              (cmulG g.1 (cmonomialDeriv Dt g.2))))))
       transfer
     rw [htransport] at hWgd
     -- assemble `d·g.2² ∣ resNum·Dstar` from `W·g.2² ∣ resNum` and `d = W·Dstar`
