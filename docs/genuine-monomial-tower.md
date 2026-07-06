@@ -66,21 +66,39 @@ runtime — then the branch *knows* it holds, so it stops being a frontier hypot
 - **`hE`** (`η ∉ range D`) — **UNDECIDABLE** (existential over an infinite field: you cannot `if`-test "is `Dt`
   the derivative of *some* element"). Stays external — Bronstein's standing monomial hypothesis (Thm 5.1.1),
   provable on a concrete tower. The single genuine mathematical frontier.
-- **`hAD`** (`deg hNum < deg Dstar`) — decidable, but **NOT a clean `if` guard.** For a *polynomial* integrand
-  (`∫x²`) the normal part is `0/1`, so `hAD` is `0 < 0` = **false**; an `if hAD` guard would make
-  `cIntegrateCaseLrt` return `none`, *breaking polynomial integration*. So `hAD` is not retirable by a bare
-  guard — it needs the canonical-rep properness **discharge** (prove `hAD` holds when the normal part is
-  non-trivial, handle the `cn = 0` case as the trivial reduced result `0`), via
-  `cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one` (`OneShotAssembly`) +
-  `cHermiteReduceTowerG_residual_proper_of_degree_le_one` + `cdiophantineGWf_fst_degree_lt`(`hb`) + Yun
-  `get_ne_zero`(`hv`) + the fold→`.2.1/.2.2` projection/`hdvd` bookkeeping (~150L). A **domain/properness**
-  condition, not a normality frontier.
+- **`hAD`** (`deg hNum < deg Dstar`) — decidable, but **NOT a clean `if` guard**, and the discharge is a real
+  project. For a *polynomial* integrand (`∫x²`) the normal part is `0/1`, so `hAD` is `0 < 0` = **false**; an
+  `if hAD` guard would make `cIntegrateCaseLrt` return `none`, *breaking polynomial integration*. So `hAD` needs
+  the canonical-rep properness **discharge**. ★ **It IS generically dischargeable** (corrected 2026-07-06 — not
+  carrier-specific: the building blocks `cextendedEuclideanSplitWf_snd_degree_lt` and
+  `cHermiteReduceTowerG_residual_proper_of_degree_le_one` are generic over `α`), but it is a **~150–200L
+  multi-piece assembly**, mapped below.
 
-## Next (optional, lower priority than the completed normality arc)
+## The `hAD` discharge — fully mapped roadmap (~150–200L, generic)
 
-1. **Discharge `hAD`** from canonical-rep properness (the ~150L above, with the `cn = 0` trivial case handled) —
-   then `LrtReducedGenuineData = {hE}`, the single genuine monomial property. Pieces exist as `example`s in
-   `NormalPartSoundness`.
+`crNormNum = (cextendedEuclideanSplitWf dnds.1 dnds.2 qr.2 uw.1 uw.2).2`, `crNormDen = dnds.1`
+(from `canonicalRepresentationFastGWf`, `Tower/WellFounded.lean`), so:
+
+1. **crNorm properness `deg crNormNum < deg crNormDen`** — the foundational piece, an acknowledged
+   *never-done "later cleanup target"* (`OneShotAssembly.lean:1829`; every capstone assumes it as `haProper`).
+   Direct from `cextendedEuclideanSplitWf_snd_degree_lt dnds.1 dnds.2 qr.2 uw.1 uw.2 d` — **but its hypotheses
+   need**: the `cSplitFactorFastGWf` correctness `d = ds·dn` + coprimality (NOT a landed generic lemma — no
+   `toPolyG_cSplitFactorFastGWf`), then `toPolyG_cbezoutOneWf` (needs that coprimality), and the `cdivmodWf`
+   remainder bound `deg (a mod d) < deg d`.
+2. **Hermite preserves properness ⟹ `hAD`**: `cHermiteReduceTowerG_residual_proper_of_degree_le_one` (generic)
+   + `cHermiteReduceTowerGWf_leftover_proper_of_residual` (generic) + `cdiophantineGWf_fst_degree_lt` (`hb`) +
+   Yun `get_ne_zero` (`hv`) + the fold→`.2.1/.2.2` projection bridges (the `hdvd` residual-divisibility is the
+   fiddly one).
+3. **`degree`→`natDegree` conversion + the `cn = 0` degenerate case** (trivial normal part → reduced result is
+   the trivially-sound `0`, `hAD` bypassed).
+4. **Thread the discharged `hAD` into `_of_genuine`; remove the field** ⟹ `LrtReducedGenuineData = {hE}`.
+
+Why this differs from `hDt0`: `hDt0` was decidable, faithful, edge-free (a 2-line guard). `hAD`'s discharge
+rests on the unbuilt crNorm-properness cleanup target. A focused task, not a session-tail one.
+
+## Next (optional)
+
+1. **Discharge `hAD`** per the roadmap above → `LrtReducedGenuineData = {hE}`, the single genuine monomial property.
 2. **Pull `hE` out of the per-input structure** (it depends only on `Dt`, provided once per tower level).
 3. **`GenuineMonomialTower` class** capturing the invariant for a whole concrete tower, from which
    `[PrimitiveFrontierLrt]` is discharged unconditionally on that tower.
