@@ -15,6 +15,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBasisBasic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerSPolynomial
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBuchbergerCriterion
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
