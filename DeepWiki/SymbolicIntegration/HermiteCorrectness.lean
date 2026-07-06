@@ -1,4 +1,5 @@
 import DeepWiki.Algebra.ListSums
+import DeepWiki.Algebra.ListProducts
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
@@ -2867,27 +2868,6 @@ The interference numerator `R` is divisible by each `Vk^{ik−1}` (`dvd_residNum
 factors `Vk` are pairwise coprime (Yun's `csqfreeFactor_pairwise_isRelPrime`), so are the powers
 `Vk^{ik−1}`, hence their product `W = ∏_{kept} Vk^{ik−1} = D/Dstar` divides `R` — the single remaining
 interference divisibility, now proven by the per-factor order argument. -/
-
-/-- **`x` coprime to each list element ⟹ coprime to the product** (list `IsRelPrime.prod_right`). -/
-theorem isRelPrime_list_prod_right {α : Type*} [CommMonoidWithZero α] [GCDMonoid α]
-    (x : α) (L : List α) (h : ∀ a ∈ L, IsRelPrime x a) : IsRelPrime x L.prod := by
-  induction L with
-  | nil => simpa using isRelPrime_one_right
-  | cons hd tl ih =>
-    rw [List.prod_cons]
-    exact (h hd (List.mem_cons_self ..)).mul_right (ih fun a ha => h a (List.mem_cons_of_mem _ ha))
-
-/-- **Pairwise-coprime list factors each dividing `z` ⟹ product divides `z`** (list
-`Finset.prod_dvd_of_isRelPrime`): inducting with `IsRelPrime.mul_dvd`, the head is coprime to the tail
-product (`isRelPrime_list_prod_right`). -/
-theorem list_prod_dvd_of_pairwise {α : Type*} [CommMonoidWithZero α] [GCDMonoid α]
-    (L : List α) (z : α) (hpw : L.Pairwise IsRelPrime) (hd : ∀ a ∈ L, a ∣ z) : L.prod ∣ z := by
-  induction L with
-  | nil => simp
-  | cons hd' tl ih =>
-    rw [List.prod_cons, List.pairwise_cons] at *
-    exact IsRelPrime.mul_dvd (isRelPrime_list_prod_right hd' tl fun i hi => hpw.1 i hi)
-      (hd hd' (List.mem_cons_self ..)) (ih hpw.2 fun a ha => hd a (List.mem_cons_of_mem _ ha))
 
 open scoped Differential in
 /-- **The product interference divisibility `W ∣ R`**: with `W = ∏_{kept} Vk^{ik−1}` and `R =

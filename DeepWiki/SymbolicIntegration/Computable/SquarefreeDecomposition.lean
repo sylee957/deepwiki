@@ -1,3 +1,4 @@
+import DeepWiki.Algebra.ListProducts
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
