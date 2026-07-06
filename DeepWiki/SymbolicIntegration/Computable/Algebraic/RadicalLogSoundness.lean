@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegralSoundness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogIntegral
+import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
 import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalAssembly
@@ -43,11 +44,13 @@ omit [CDiffFieldSpec α] in
 theorem isRadicalLogTerm_of_radIsLogIntegral (n : ℕ) (ρ : α) (u integrand : RadElem α)
     (h : radIsLogIntegral n ρ u integrand = true) :
     IsRadicalLogTerm n ρ u integrand := by
-  rw [radIsLogIntegral, radIsZero, radSub, CPolyG.cisZeroG_iff] at h
-  simp only [denote, sub_eq_zero] at h
+  rw [radIsLogIntegral, radIsZero, radSub] at h
+  have hderiv :
+      CPolyG.toPolyG (radDeriv n ρ u) = CPolyG.toPolyG (radMul n ρ u integrand) :=
+    RefinesPolyG.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) h
   -- `toPolyG(radDeriv u) = toPolyG(radMul u integrand)` in `K[X]`; push through `mk` and read
   -- `mk(toPolyG(radMul u integrand)) = mk(toPolyG u)·mk(toPolyG integrand)` (the quotient product).
-  rw [IsRadicalLogTerm, h, mk_toPolyG_radMul]
+  rw [IsRadicalLogTerm, hderiv, mk_toPolyG_radMul]
 
 /-! ### The log-derivative sum is `radDeriv`-additive
 
@@ -571,9 +574,8 @@ theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZG ℚ) (F : AlgIntegralResu
     (integrand : RadElem (QFunNZG ℚ))
     (hrt : RadElem.radIsZero (RadElem.radSub (algDeriv ρ F) integrand) = true) :
     CPolyG.toPolyG (algDeriv ρ F) = CPolyG.toPolyG integrand := by
-  rw [RadElem.radIsZero, RadElem.radSub, CPolyG.cisZeroG_iff] at hrt
-  simp only [denote, sub_eq_zero] at hrt
-  exact hrt
+  rw [RadElem.radIsZero, RadElem.radSub] at hrt
+  exact RefinesPolyG.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) hrt
 
 /-! ### Axiom checks
 

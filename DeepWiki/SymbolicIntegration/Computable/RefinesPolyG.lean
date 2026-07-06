@@ -32,6 +32,18 @@ theorem intro (h : toPolyG p = p') : RefinesPolyG p p' := h
 /-- Eliminate `RefinesPolyG` to its denotation equality. -/
 theorem denote_eq (h : RefinesPolyG p p') : toPolyG p = p' := h
 
+/-- A true executable zero test reflects to zero of any refined semantic polynomial. -/
+theorem eq_zero_of_cisZero (hp : RefinesPolyG p p') (hz : cisZeroG p = true) : p' = 0 := by
+  rw [← hp]
+  exact (cisZeroG_iff p).mp hz
+
+/-- A false executable zero test reflects to nonzero of any refined semantic polynomial. -/
+theorem ne_zero_of_cisZero_false (hp : RefinesPolyG p p') (hz : cisZeroG p = false) :
+    p' ≠ 0 := by
+  intro hzero
+  have htrue : cisZeroG p = true := (cisZeroG_iff p).mpr (by rw [hp, hzero])
+  simp [hz] at htrue
+
 end RefinesPolyG
 
 /-- Every computable polynomial refines its own denotation. -/
@@ -77,6 +89,17 @@ variable {p q : CPolyG α} {p' q' : (CFieldSpec.K α)[X]}
     RefinesPolyG (csubG p q) (p' - q') := by
   rw [RefinesPolyG] at hp hq ⊢
   rw [toPolyG_csubG, hp, hq]
+
+/-- A true executable zero test on `p - q` reflects semantic equality of refined polynomials. -/
+theorem eq_of_csub_cisZero (hp : RefinesPolyG p p') (hq : RefinesPolyG q q')
+    (hz : cisZeroG (csubG p q) = true) : p' = q' := by
+  exact sub_eq_zero.mp (eq_zero_of_cisZero (sub hp hq) hz)
+
+/-- A false executable zero test on `p - q` reflects semantic inequality of refined polynomials. -/
+theorem ne_of_csub_cisZero_false (hp : RefinesPolyG p p') (hq : RefinesPolyG q q')
+    (hz : cisZeroG (csubG p q) = false) : p' ≠ q' := by
+  intro h
+  exact ne_zero_of_cisZero_false (sub hp hq) hz (sub_eq_zero.mpr h)
 
 /-- `cscaleG` respects `RefinesPolyG`. -/
 @[refines] theorem scale (c : α) (hp : RefinesPolyG p p') :
@@ -146,6 +169,24 @@ example (a b c : CPolyG α) :
 example (a b c : CPolyG α) :
     toPolyG (cmulG (caddG a b) c) = (toPolyG a + toPolyG b) * toPolyG c := by
   transfer
+
+example :
+    toPolyG (caddG ([1] : CPolyG ℚ) [0, 1]) =
+      toPolyG (caddG ([0, 1] : CPolyG ℚ) [1]) := by
+  refine RefinesPolyG.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) ?_
+  native_decide
+
+example :
+    toPolyG (cmulG ([1, 1] : CPolyG ℚ) [1, -1]) =
+      toPolyG (csubG ([1] : CPolyG ℚ) [0, 0, 1]) := by
+  refine RefinesPolyG.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) ?_
+  native_decide
+
+example :
+    toPolyG (cmulG ([1, 1] : CPolyG ℚ) [1, -1]) ≠
+      toPolyG ([1, 0, 1] : CPolyG ℚ) := by
+  refine RefinesPolyG.ne_of_csub_cisZero_false (refinesPolyG_self _) (refinesPolyG_self _) ?_
+  native_decide
 
 end Examples
 
