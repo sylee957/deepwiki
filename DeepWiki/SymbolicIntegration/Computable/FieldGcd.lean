@@ -167,10 +167,6 @@ theorem cleadG_eq_clead : (cleadG : CPolyG ℚ → ℚ) = Compute.clead := by
   rw [cleadG, Compute.clead, cnormG_eq_cnorm]
   rfl
 
-/-- `CField.div` at `ℚ` is ordinary division. -/
-theorem div_eq_div_rat (a b : ℚ) : CField.div a b = a / b := by
-  rw [CField.div]; show a * b⁻¹ = a / b; rw [div_eq_mul_inv]
-
 /-! ### Correctness of the generic extended Euclidean algorithm -/
 
 /-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
