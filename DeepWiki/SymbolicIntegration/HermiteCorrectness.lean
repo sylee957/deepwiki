@@ -3,6 +3,7 @@ import DeepWiki.Algebra.ListProducts
 import DeepWiki.Algebra.PolynomialDivisibility
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.Diophantine
+import DeepWiki.SymbolicIntegration.Compute.HermitePower
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 import DeepWiki.SymbolicIntegration.Compute.SquarefreeExact
@@ -73,24 +74,6 @@ theorem hermiteInner_step_ratFunc (A B C U V : ℚ[X]) (hU : U ≠ 0) (hV : V �
   rw [hA, pow_succ]
   field_simp
   ring
-
-/-! ### The `hermiteInner` loop power `Vpow = V^(j+1)` -/
-
-/-- `foldl (·* V) init` over `range n` realizes `init · V^n` under `toPoly`. -/
-theorem toPoly_foldl_cmul (V : CPoly) (n : ℕ) (init : CPoly) :
-    toPoly ((List.range n).foldl (fun acc _ => cmul acc V) init)
-      = toPoly init * toPoly V ^ n := by
-  induction n generalizing init with
-  | zero => simp
-  | succ n ih =>
-    rw [List.range_succ, List.foldl_concat, toPoly_cmul, ih, pow_succ]
-    ring
-
-/-- The `hermiteInner` per-step power `Vpow = V^(j+1)` (the fold over `range (j+1)` from `[1]`). -/
-theorem toPoly_hermiteInner_Vpow (V : CPoly) (j : ℕ) :
-    toPoly ((List.range (j + 1)).foldl (fun acc _ => cmul acc V) [1])
-      = toPoly V ^ (j + 1) := by
-  rw [toPoly_foldl_cmul]; simp [toPoly_cons]
 
 /-! ### The `hermiteInner` loop correctness (in `RatFunc ℚ`) -/
 
