@@ -52,12 +52,6 @@ theorem mapCoeffs_toPolyG_eq_afFx (f : CPolyG α) :
     Differential.mapCoeffs (toPolyG f) = toPolyG (afFx f) := by
   rw [afFx, ← cmapDeriv, toPolyG_cmapDeriv]
 
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `afFy` reads as the formal derivative through `toPolyG`. -/
-theorem derivative_toPolyG_eq_afFy (f : CPolyG α) :
-    Polynomial.derivative (toPolyG f) = toPolyG (afFy f) := by
-  rw [afFy, toPolyG_cderivG]
-
 end CPolyG
 
 end DeepWiki.SymbolicIntegration

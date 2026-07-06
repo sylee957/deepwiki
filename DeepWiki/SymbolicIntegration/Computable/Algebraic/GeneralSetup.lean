@@ -14,6 +14,17 @@ variable {α : Type*} [CField α]
 /-- The formal `y`-derivative `∂f/∂y` of a general curve polynomial. -/
 def afFy (f : CPolyG α) : CPolyG α := cderivG f
 
+section AfFyDenote
+
+variable [CFieldSpec α]
+
+/-- `afFy` reads as the formal derivative through `toPolyG`. -/
+theorem derivative_toPolyG_eq_afFy (f : CPolyG α) :
+    Polynomial.derivative (toPolyG f) = toPolyG (afFy f) := by
+  rw [afFy, toPolyG_cderivG]
+
+end AfFyDenote
+
 variable [CDiffField α]
 
 /-- The coefficientwise base derivative `∂f/∂x` of a general curve polynomial. -/
