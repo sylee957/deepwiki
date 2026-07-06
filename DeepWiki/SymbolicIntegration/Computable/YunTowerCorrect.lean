@@ -197,7 +197,7 @@ theorem toPolyG_foldl_cmulG_plainList (init : CPolyG α) (L : List (CPolyG α)) 
       = toPolyG init * (L.map toPolyG).prod := by
   induction L generalizing init with
   | nil => simp
-  | cons a L ih => rw [List.foldl_cons, List.map_cons, List.prod_cons, ih, toPolyG_cmulG]; ring
+  | cons a L ih => simp only [List.foldl_cons, List.map_cons, List.prod_cons, ih, denote]; ring
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **The Yun radical divides the input.** The product of `cSqfreeYunFFGWf p`'s factors divides
@@ -231,7 +231,7 @@ theorem toPolyG_cHermiteReduceTowerGWf_Dstar_dvd (hgcd : GcdFFCorrect (α := α)
     (hd : toPolyG d ≠ 0) :
     toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ∣ toPolyG d := by
   rw [cHermiteReduceTowerGWf]
-  simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
+  simp only [denote, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
   exact prod_map_cSqfreeYunFFGWf_dvd hgcd d hd
 
 omit [CDiffFieldSpec α] in
@@ -637,7 +637,7 @@ theorem toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree [CharZero (CFieldSpec.K 
     (hpp : (toPolyG d).primPart ≠ 0) :
     Squarefree (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2) := by
   rw [cHermiteReduceTowerGWf]
-  simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
+  simp only [denote, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
   apply squarefree_list_prod
   · rw [List.pairwise_map, List.pairwise_iff_getElem]
     intro i j hi hj hij
@@ -668,7 +668,7 @@ omit [CDiffFieldSpec α] in
 theorem toPolyG_cHermiteReduceTowerGWf_Dstar_monic (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
     (hd0 : toPolyG d ≠ 0) : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic := by
   rw [cHermiteReduceTowerGWf]
-  simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
+  simp only [denote, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]
   apply monic_list_prod
   intro p hp
   rw [List.mem_map] at hp
