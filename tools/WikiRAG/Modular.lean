@@ -31,6 +31,11 @@ def directory (m : String) : String :=
 /-- Percent (0–100) of a [0,1] score, for display. -/
 @[inline] def pct (x : Float) : Int := (x * 100.0).round.toUInt64.toNat
 
+/-- Signed percent, for objectives that can be negative (e.g. conceptual disagreement). -/
+@[inline] def pctS (x : Float) : Int :=
+  let n : Int := (x.abs * 100.0).round.toUInt64.toNat
+  if x < 0.0 then -n else n
+
 /-- Label propagation on an undirected subgraph, returning each node's community label. -/
 def labelProp (nodes : Array String) (adj : HashMap String (Array String)) :
     HashMap String Nat := Id.run do
@@ -192,18 +197,36 @@ def modularityCmd (args : List String) : IO Unit := do
     let ccoh := mods.map (fun md => (md, (chS.getD md 0.0) / (chN.getD md 1).toFloat))
     for (md, sc) in (ccoh.qsort (fun a b => a.2 < b.2)).toList.take top do
       IO.println s!"  {pct sc}  {md}"
-    -- SEMANTIC misplacement: docstring nearer another module's centroid than its home's
-    let mut smis : Array (String × Float × String × String) := #[]
+    -- MULTI-OBJECTIVE regroup (NSGA-style, no weighting): each move-candidate carries a vector
+    -- (structural pull, conceptual agreement, disturbance = bond to a home sibling). Keep the Pareto
+    -- non-dominated set on (str↑, con↑, dis↓); the LLM judge picks. `dis` high ⇒ the move would
+    -- split a conceptually-bonded pair (the `mul_left`/`mul_right` guard) — visible, not hidden.
+    let mut modVecs : HashMap String (Array (Array Float)) := {}
+    for (_, md, v) in embs do modVecs := modVecs.insert md ((modVecs.getD md #[]).push v)
+    let mut cand : Array (String × String × String × Float × Float × Float) := #[]
     for (nm, home, v) in embs do
-      let homeSim := cosine v (sums.getD home #[])
-      let mut alt := home; let mut best := -2.0
-      for md in mods do
-        if md != home then
-          let s := cosine v (sums.getD md #[])
-          if s > best then alt := md; best := s
-      if alt != home then smis := smis.push (nm.splitOn "." |>.getLastD nm, best - homeSim, home, alt)
-    IO.println "\n== SEMANTIC misplacement (docstring nearer another module's centroid → regroup) =="
-    for (s, sc, home, alt) in (smis.qsort (fun a b => a.2.1 > b.2.1)).toList.take top do
-      IO.println s!"  {pct sc}  {s}  [{home.splitOn "." |>.getLastD home}]→[{alt.splitOn "." |>.getLastD alt}]"
+      let nbrs := adj.getD nm #[]
+      let deg := nbrs.size
+      if deg == 0 then continue
+      let mut byMod : HashMap String Nat := {}
+      for x in nbrs do byMod := bump byMod (d2m.getD x "")
+      let mut alt := home; let mut cnt := 0
+      for (mm, c) in byMod.toArray do if mm != home && c > cnt then alt := mm; cnt := c
+      if alt == home then continue
+      let str := (cnt.toFloat / deg.toFloat - (byMod.getD home 0).toFloat / deg.toFloat)
+        * (1.0 - 1.0 / deg.toFloat)
+      let con := cosine v (sums.getD alt #[]) - cosine v (sums.getD home #[])
+      let mut dis := 0.0
+      for sv in modVecs.getD home #[] do
+        let s := cosine v sv
+        if s < 0.999 && s > dis then dis := s   -- nearest home sibling (excluding self ≈ 1)
+      cand := cand.push (short.getD nm nm, home, alt, str, con, dis)
+    -- Pareto front: drop candidates dominated on (str↑, con↑, dis↓)
+    let front := cand.filter (fun (_, _, _, si, ci, di) =>
+      !cand.any (fun (_, _, _, sj, cj, dj) =>
+        sj ≥ si && cj ≥ ci && dj ≤ di && (sj > si || cj > ci || dj < di)))
+    IO.println s!"\n== MULTI-OBJECTIVE regroup — Pareto front {front.size}/{cand.size} (str=structural pull, con=conceptual agreement, dis=disturbance; high dis = move splits a bonded pair) =="
+    for (s, home, alt, st, cn, ds) in (front.qsort (fun a b => a.2.2.2.1 > b.2.2.2.1)).toList.take top do
+      IO.println s!"  str={pctS st} con={pctS cn} dis={pct ds}  {s}  [{home.splitOn "." |>.getLastD home}]→[{alt.splitOn "." |>.getLastD alt}]"
 
 end WikiRAG
