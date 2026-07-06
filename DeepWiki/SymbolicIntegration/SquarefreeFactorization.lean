@@ -924,6 +924,160 @@ theorem deflation_one_eq_gcd (A : K[X]) (hA : A.primPart ≠ 0) :
   exact associated_of_dvd_dvd (hcop.dvd_of_dvd_mul_right (hs ▸ gcd_dvd_right _ _))
     (dvd_gcd (deflation_dvd_primPart A 1 hA) ⟨s, hs⟩)
 
+/-! ### The abstract Yun loop base case -/
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `squarefreePart (deflation A k)` is monic. -/
+theorem squarefreePart_deflation_monic {K : Type*} [Field K] (A : K[X]) (k : ℕ)
+    (hA : A.primPart ≠ 0) : (squarefreePart (deflation A k)).Monic := by
+  rw [squarefreePart_deflation A k hA]
+  refine monic_prod_of_monic _ _ (fun P hP => ?_)
+  have hmem := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
+  rw [← normalize_normalized_factor P hmem]
+  exact monic_normalize (irreducible_of_normalized_factor P hmem).ne_zero
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `deflation A k` is monic. -/
+theorem deflation_monic {K : Type*} [Field K] (A : K[X]) (k : ℕ) :
+    (deflation A k).Monic := by
+  rw [deflation]
+  refine monic_prod_of_monic _ _ (fun P hP => ?_)
+  have hmem := Multiset.mem_toFinset.mp hP
+  refine (?_ : (P).Monic).pow _
+  rw [← normalize_normalized_factor P hmem]
+  exact monic_normalize (irreducible_of_normalized_factor P hmem).ne_zero
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `A.primPart` is associated to `A` over a field. -/
+theorem associated_primPart_self {K : Type*} [Field K] (A : K[X]) (hA0 : A ≠ 0) :
+    Associated A.primPart A := by
+  have hc : IsUnit (Polynomial.C A.content) := by
+    rw [isUnit_C, isUnit_iff_ne_zero]
+    exact fun h => hA0 (by rw [A.eq_C_content_mul_primPart, h, map_zero, zero_mul])
+  refine ⟨hc.unit, ?_⟩
+  rw [IsUnit.unit_spec]
+  conv_rhs => rw [A.eq_C_content_mul_primPart]
+  ring
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `deflation A 0 = normalize A` over a field. -/
+theorem deflation_zero_eq_normalize {K : Type*} [Field K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) : deflation A 0 = normalize A := by
+  refine eq_of_monic_of_associated (deflation_monic A 0)
+    ((monic_normalize hA0)) ?_
+  exact ((deflation_zero A hA).trans (associated_primPart_self A hA0)).trans
+    (associated_normalize A)
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `derivative A = C (content A) * derivative A.primPart`. -/
+theorem derivative_eq_C_content_mul_derivative_primPart {K : Type*} [Field K] (A : K[X]) :
+    derivative A = Polynomial.C A.content * derivative A.primPart := by
+  conv_lhs => rw [A.eq_C_content_mul_primPart]
+  rw [derivative_mul, derivative_C, zero_mul, zero_add]
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `gcd A (derivative A) = deflation A 1` over a characteristic-zero field. -/
+theorem gcd_self_derivative_eq_deflation_one {K : Type*} [Field K] [CharZero K] (A : K[X])
+    (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) :
+    gcd A (derivative A) = deflation A 1 := by
+  have hgne : gcd A (derivative A) ≠ 0 :=
+    fun h => hA0 (eq_zero_of_zero_dvd (h ▸ gcd_dvd_left _ _))
+  have hgmonic : (gcd A (derivative A)).Monic := by
+    rw [← normalize_eq_self_iff_monic hgne]; exact normalize_gcd A (derivative A)
+  refine eq_of_monic_of_associated hgmonic (deflation_monic A 1) ?_
+  have hAp : Associated A A.primPart := (associated_primPart_self A hA0).symm
+  have hc : IsUnit (Polynomial.C A.content) := by
+    rw [isUnit_C, isUnit_iff_ne_zero]
+    exact fun h => hA0 (by rw [A.eq_C_content_mul_primPart, h, map_zero, zero_mul])
+  have hAp' : Associated (derivative A) (derivative A.primPart) := by
+    rw [derivative_eq_C_content_mul_derivative_primPart A]
+    exact associated_unit_mul_left (derivative A.primPart) (Polynomial.C A.content) hc
+  exact (Associated.gcd hAp hAp').trans (deflation_one_eq_gcd A hA)
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `squarefreePart (deflation A 0) * deflation A 1 = deflation A 0`. -/
+theorem squarefreePart_mul_deflation_one {K : Type*} [Field K] (A : K[X]) (hA : A.primPart ≠ 0) :
+    squarefreePart (deflation A 0) * deflation A 1 = deflation A 0 := by
+  refine eq_of_monic_of_associated
+    ((squarefreePart_deflation_monic A 0 hA).mul (deflation_monic A 1)) (deflation_monic A 0) ?_
+  exact squarefreePart_mul_deflation_succ A 0 hA
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- The Yun loop initialization satisfies `YunInv A 1`. -/
+theorem yunInv_base {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) :
+    YunInv A 1 (A / gcd A (derivative A))
+      (derivative A / gcd A (derivative A) - derivative (A / gcd A (derivative A))) := by
+  have hg : gcd A (derivative A) = deflation A 1 := gcd_self_derivative_eq_deflation_one A hA0 hA
+  have hd1ne : deflation A 1 ≠ 0 := deflation_ne_zero A 1
+  have hlc : A.leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hA0
+  have hAeq : A = Polynomial.C A.leadingCoeff * deflation A 0 := by
+    rw [deflation_zero_eq_normalize A hA0 hA]
+    exact self_eq_C_leadingCoeff_mul_normalize A hA0
+  have hbabs : Babs A 1 = squarefreePart (deflation A 0) := by rw [Babs]
+  have hAfact : A = (Polynomial.C A.leadingCoeff * squarefreePart (deflation A 0)) * deflation A 1 := by
+    rw [mul_assoc, squarefreePart_mul_deflation_one A hA, ← hAeq]
+  have hb1 : A / gcd A (derivative A) = Polynomial.C A.leadingCoeff * Babs A 1 := by
+    rw [hg, hbabs]
+    nth_rewrite 1 [hAfact]
+    rw [mul_div_cancel_right₀ _ hd1ne]
+  have hAderiv : derivative A = Polynomial.C A.leadingCoeff * (deflation A 1 * Yun A 1) := by
+    have hdp := derivative_deflation_pred A 1 (le_refl 1)
+    rw [Nat.sub_self] at hdp
+    conv_lhs => rw [hAeq, derivative_C_mul, hdp]
+  have hd1div : derivative A / gcd A (derivative A) = Polynomial.C A.leadingCoeff * Yun A 1 := by
+    rw [hg]
+    nth_rewrite 1 [hAderiv]
+    rw [mul_comm (deflation A 1) (Yun A 1), ← mul_assoc, mul_div_cancel_right₀ _ hd1ne]
+  refine ⟨A.leadingCoeff, hlc, hb1, ?_⟩
+  rw [hd1div, hb1, derivative_C_mul, Dabs, Nat.sub_self, ← hbabs, mul_sub]
+
+/-! ### Unconditional abstract Yun factorization -/
+
+open Classical in
+/-- Abstract Yun factorization from the standard initialization. -/
+noncomputable def yunFactorizationAbs {K : Type*} [Field K] (A : K[X]) (n : ℕ) : List K[X] :=
+  yunLoopAbs A (A / gcd A (derivative A),
+    derivative A / gcd A (derivative A) - derivative (A / gcd A (derivative A))) 1 n
+
+open Classical in
+/-- `yunFactorizationAbs` is factorwise associated to consecutive squarefree parts. -/
+theorem yunFactorizationAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) (n : ℕ) :
+    List.Forall₂ Associated (yunFactorizationAbs A n)
+      ((List.range n).map (fun j => sqfreeFactPart A (1 + j))) :=
+  yunLoopAbs_forall₂ A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
+
+open Classical in
+/-- Every factor in `yunFactorizationAbs` is squarefree. -/
+theorem yunFactorizationAbs_squarefree {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0)
+    (hA : A.primPart ≠ 0) (n : ℕ) : ∀ V ∈ yunFactorizationAbs A n, Squarefree V :=
+  yunLoopAbs_squarefree A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
+
+open Classical in
+/-- Distinct-position factors in `yunFactorizationAbs` are relatively prime. -/
+theorem yunFactorizationAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K[X])
+    (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ) {p q : ℕ} (hpq : p ≠ q)
+    (hp : p < (yunFactorizationAbs A n).length) (hq : q < (yunFactorizationAbs A n).length) :
+    IsRelPrime ((yunFactorizationAbs A n).get ⟨p, hp⟩) ((yunFactorizationAbs A n).get ⟨q, hq⟩) :=
+  yunLoopAbs_pairwise_isRelPrime A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA) hpq hp hq
+
+open Classical in
+/-- The powered product of `yunFactorizationAbs` matches the powered squarefree parts up to association. -/
+theorem yunFactorizationAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X])
+    (hA0 : A ≠ 0) (hA : A.primPart ≠ 0) (n : ℕ) :
+    Associated (prodPow 1 (yunFactorizationAbs A n))
+      (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
+  yunLoopAbs_prodPow_assoc A hA n 1 _ _ (le_refl 1) (yunInv_base A hA0 hA)
+
 end GcdField
 
 section SquarefreeAlgorithm
