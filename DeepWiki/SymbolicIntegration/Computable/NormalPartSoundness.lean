@@ -1047,6 +1047,54 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
 #print axioms toPolyG_gprimeNum_proper_of_margin
 #print axioms toPolyG_gprimeNum_proper_of_degree_le_one
 #print axioms toPolyG_resNum_proper
+omit [Algebra ℚ (CFieldSpec.K α)] in
+/-- **The `cHermiteReduceTowerGWf` leftover is proper for `deg Dt ≤ 1`** (generic, `degree` form, no
+splitting): `deg (…).2.1 < deg (…).2.2`. Assembles the residual-fraction properness
+(`cHermiteReduceTowerG_residual_proper_of_degree_le_one`, from input properness `deg a < deg d` + `deg Dt ≤ 1`
++ the per-factor nonzero/Bézout hypotheses) with the exact-division degree cancellation
+(`cHermiteReduceTowerGWf_leftover_proper_of_residual`, via the `.2.1`/`.2.2` projections + the residual
+divisibility `hdvd`). The generic core of `hAD` (the `QFunNZG ℚ` `_numer_degree_lt` reads off `s.card` from
+this by splitting; this stops at the split-free `degree` comparison). -/
+theorem cHermiteReduceTowerGWf_leftover_proper_of_degree_le_one [CFracGcdCoreWf α] (Dt a d : CPolyG α)
+    (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
+    (haProper : (toPolyG a).degree < (toPolyG d).degree)
+    (hv : ∀ p ∈ (cSqfreeYunFFGWf d).zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
+    (hb : ∀ p ∈ (cSqfreeYunFFGWf d).zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
+        (toPolyG (cdiophantineGWf
+            (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
+          < (toPolyG p.1).degree)
+    (g : CPolyG α × CPolyG α)
+    (hgeq : g = (cSqfreeYunFFGWf d).zipIdx.foldl
+      (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
+          let i := idx + 1
+          if i ≤ 1 then gAcc
+          else
+            let Vi_pow := cpowG vi i
+            let u := cdivWf d Vi_pow
+            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
+            (caddG (cmulG gAcc.1 gloc.2) (cmulG gloc.1 gAcc.2), cmulG gAcc.2 gloc.2))
+      ([CField.zero], [CField.one]))
+    (hdvd : toPolyG (cmulG d (cmulG g.2 g.2))
+      ∣ toPolyG (cmulG (csubG (cmulG a (cmulG g.2 g.2))
+          (cmulG d (csubG (cmulG (cmonomialDeriv Dt g.1) g.2) (cmulG g.1 (cmonomialDeriv Dt g.2)))))
+        ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one])))
+    (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG α))
+    (hDstar : toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one]) ≠ 0) :
+    (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree
+      < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).degree := by
+  have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
+    (cSqfreeYunFFGWf d) hDtdeg haProper hv hb
+  simp only at hresProper
+  subst hgeq
+  exact cHermiteReduceTowerGWf_leftover_proper_of_residual Dt a d
+    (csubG (cmulG a (cmulG _ _))
+      (cmulG d (csubG (cmulG (cmonomialDeriv Dt _) _) (cmulG _ (cmonomialDeriv Dt _)))))
+    (cmulG d (cmulG _ _))
+    ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one])
+    (by simp only [cHermiteReduceTowerGWf, denote])
+    (by simp only [cHermiteReduceTowerGWf, denote])
+    hdvd hresDen hDstar hresProper
+
 #print axioms toPolyG_residualFraction_proper_of_degree_le_one
 #print axioms degree_lt_pow_succ_of_degree_lt
 #print axioms toPolyG_inner_summand_proper
