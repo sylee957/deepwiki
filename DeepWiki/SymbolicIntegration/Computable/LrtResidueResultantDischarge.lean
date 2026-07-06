@@ -107,7 +107,8 @@ theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect 
       = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1 := by
   have hmonic : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic :=
     toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0
-  rw [cdegG_eq_natDegree, cdegG_eq_natDegree, toPolyG_cmonomialDeriv]
+  rw [cdegG_eq_natDegree, cdegG_eq_natDegree]
+  simp only [denote]
   by_cases hdeg : 1 ≤ (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
   · exact natDegree_implicitDeriv_eq_of_monic_of_not_range _ _ hmonic hDt0 hdeg
       (eta_not_range_der Dt hgen hDt0)
@@ -242,13 +243,12 @@ theorem hcopgcd_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCor
     (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hxzip))
   have hxmem : x.1 ∈ cSqfreeYunFFGWf d := by rw [← hget]; exact List.getElem_mem hidx
   apply natDegree_cgcdWf_eq_zero_of_isCoprime
-  rw [toPolyG_cmulG]
+  simp only [denote]
   refine IsCoprime.mul_left ?_ ?_
   · -- cofactor coprimality `IsCoprime (d/v^(x.2+1)) v`
     rw [← hget]
     exact isCoprime_cofactor_yunFactor hgcd d hd0 hpp x.2 hidx
   · -- tower-derivative normality `IsCoprime (D v) v`
-    rw [toPolyG_cmonomialDeriv]
     refine (isCoprime_implicitDeriv_of_genuineMonomial Dt x.1 hgen
       (cSqfreeYunFFGWf_monic hgcd d hd0 x.1 hxmem) ?_).symm
     rw [← hget]; exact cSqfreeYunFFGWf_squarefree hgcd d hd0 hpp x.2 hidx
@@ -283,12 +283,12 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
       ([CField.zero], [CField.one]) with hg_def
   -- raw-fold `g` ↔ `cnormG`-projection bridges (equal through `toPolyG`)
   have hg1 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.1 = toPolyG g.1 := by
-    rw [hg_def]; simp only [cHermiteReduceTowerGWf, toPolyG_cnormG]
+    rw [hg_def]; simp only [cHermiteReduceTowerGWf, denote]
   have hg2 : toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 = toPolyG g.2 := by
-    rw [hg_def]; simp only [cHermiteReduceTowerGWf, toPolyG_cnormG]
+    rw [hg_def]; simp only [cHermiteReduceTowerGWf, denote]
   have hDsF : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
       = toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one]) := by
-    simp only [cHermiteReduceTowerGWf, toPolyG_cnormG]
+    simp only [cHermiteReduceTowerGWf, denote]
   have hDstar0 : toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one]) ≠ 0 := by
     rw [← hDsF]; exact (toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0).ne_zero
   have hg2ne : toPolyG g.2 ≠ 0 := by rw [← hg2]; exact hgd0
@@ -343,7 +343,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
   · -- hresDen : `d·g.2² ≠ 0`
     intro h
     have h0 := (cnormG_eq_nil_iff _).mp h
-    rw [toPolyG_cmulG, toPolyG_cmulG] at h0
+    simp only [denote] at h0
     exact mul_ne_zero hd0 (mul_ne_zero hg2ne hg2ne) h0
 
 set_option maxHeartbeats 800000 in
