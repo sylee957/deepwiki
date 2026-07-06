@@ -15,11 +15,18 @@ The relational layer exists in [`Computable/RefinesPolyG.lean`](../DeepWiki/Symb
 
 - **`RefinesPolyG p q := toPolyG p = q`** (functional refinement, the CoqEAL relation).
 - **CoqEAL parametricity layer (realized):** generic classes `DenoteHom₁`/`DenoteHom₂` (denotation
-  square; abstract `op` an `outParam`) + two generic respect lemmas `RefinesPolyG.hom₁`/`hom₂` that
-  dispatch on the instance. **Every** computable operation is now a **one-line `instance`** built from
-  its `@[denote]` square (`caddG/csubG/cmulG/cnegG/cderivG/cscaleG/cshiftG/cpowG/cmapDeriv/cmonomialDeriv`);
-  a NEW operation transfers for free with no new lemma. The hand-written per-op respect lemmas were
+  square; abstract `op` an `outParam`, in [`Computable/DenoteHom.lean`](../DeepWiki/SymbolicIntegration/Computable/DenoteHom.lean)) + two generic respect lemmas
+  `RefinesPolyG.hom₁`/`hom₂` that dispatch on the instance. The hand-written per-op respect lemmas were
   retired into this layer.
+- **Parametricity *translation* (realized — the frontier below is now partly built):** the
+  `derive_denote_hom sq` command (also in `Computable/DenoteHom.lean`) reads a denotation square
+  `sq : ∀ …, toPolyG (cop …) = op (toPolyG …) …`, extracts `cop` (computable head) and `op` (abstract
+  operation, by abstracting `toPolyG` of the polynomial args from the RHS), and **generates** the
+  `DenoteHom` instance — including parameterized ops (`cscaleG c`, `cpowG · n`; the scalar becomes an
+  instance binder). All **ten** instances
+  (`caddG/csubG/cmulG/cnegG/cderivG/cscaleG/cshiftG/cpowG/cmapDeriv/cmonomialDeriv`) are generated; a NEW
+  operation needs only its `@[denote]` square + one `derive_denote_hom` line, with `op` DERIVED not
+  hand-written. This is the Lean slice of Coq's `param` translation.
 - **`transfer` tactic:** `first | (simp_all [RefinesPolyG, denote]; done) | aesop (rule_sets := [Refines])`.
   Branch 1 is the fast path for explicit-RHS goals; branch 2 **synthesizes** the abstract polynomial
   (metavariable RHS) by aesop over the `Refines` rule set (the `hom₁/hom₂` + nullary + `refinesPolyG_self`
@@ -41,12 +48,14 @@ The relational layer exists in [`Computable/RefinesPolyG.lean`](../DeepWiki/Symb
    only fires on genuine `∃`-goals; the practical transfer is explicit-RHS or whole-goal (matching Trocq's
    whole-goal-translation ceiling).
 
-**Remaining frontier — the only lever that removes plumbing wholesale (research-grade):** a Lean
-**parametricity translation** that auto-*generates* the `DenoteHom` instances (and eventually the
-transfer proof terms) from the `@[denote]` squares — the Lean analog of Coq's `param` / Trocq's Coq-Elpi
-plugin, and structurally like Mathlib's `@[to_additive]`. This is a self-contained metaprogramming
-project, not a proof conversion. The instance layer it would target is already in place. **No mature Lean
-port of CoqEAL/Trocq exists** — this would be novel. See §6 for references.
+**Remaining frontier (partly built):** `derive_denote_hom` (above) is the *instance-generating* half of a
+Lean **parametricity translation** — the Lean analog of Coq's `param` / Trocq, structurally like Mathlib's
+`@[to_additive]`. Done: generating `DenoteHom` instances (the abstract `op`) from the squares. Not yet:
+(a) generating the *square itself* from the computable definition (would need a syntactic derivation over
+the op's `def`), and (b) a full whole-goal transfer that rewrites arbitrary goals through the relation
+(Trocq's translation). The instance generator is `CPolyG`-specific; a separate denotation family
+(e.g. `RadElem`/`radDeriv` in `Algebraic/`) would need its own classes + command. **No mature Lean port of
+CoqEAL/Trocq exists** — this direction is novel. See §6 for references.
 
 ---
 
