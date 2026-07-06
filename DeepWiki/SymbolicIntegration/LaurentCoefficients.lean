@@ -199,117 +199,7 @@ theorem eval_laurentH_one_one_eq_residue {A D Di : K[X]} {α : K} (hDi : Di.Moni
     Polynomial.eval_mul, hα, zero_mul, add_zero]
   rw [mul_comm]
 
-/-! ## The `d/dx` derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)` validating the `Pᵢⱼ` recursion -/
-
-/-- The quotient-rule fraction `(ddx p·q − p·ddx q)/q²` in `Frac (DiffPoly K)`. -/
-private noncomputable def fracDerivAux (p : DiffPoly K) (q : nonZeroDivisors (DiffPoly K)) :
-    FractionRing (DiffPoly K) :=
-  Localization.mk (ddx p * (q : DiffPoly K) - p * ddx (q : DiffPoly K))
-    ⟨(q : DiffPoly K) ^ 2, pow_mem q.2 2⟩
-
-private theorem fracDerivAux_wd {p p' : DiffPoly K} {q q' : nonZeroDivisors (DiffPoly K)}
-    (h : (Localization.r (nonZeroDivisors (DiffPoly K))) (p, q) (p', q')) :
-    fracDerivAux p q = fracDerivAux p' q' := by
-  rw [Localization.r_iff_exists] at h
-  obtain ⟨c, hc⟩ := h
-  have hc0 : (c : DiffPoly K) ≠ 0 := nonZeroDivisors.coe_ne_zero c
-  have key : (q' : DiffPoly K) * p = (q : DiffPoly K) * p' := mul_left_cancel₀ hc0 (by simpa using hc)
-  have keyd := congrArg ddx key
-  rw [Derivation.leibniz, Derivation.leibniz] at keyd
-  simp only [smul_eq_mul] at keyd
-  unfold fracDerivAux
-  rw [Localization.mk_eq_mk_iff, Localization.r_iff_exists]
-  refine ⟨1, ?_⟩
-  simp only [OneMemClass.coe_one, one_mul]
-  show ((q' : DiffPoly K) ^ 2) * (ddx p * (q : DiffPoly K) - p * ddx (q : DiffPoly K))
-      = ((q : DiffPoly K) ^ 2) * (ddx p' * (q' : DiffPoly K) - p' * ddx (q' : DiffPoly K))
-  linear_combination ((q : DiffPoly K) * (q' : DiffPoly K)) * keyd
-    - ((q : DiffPoly K) * ddx (q' : DiffPoly K) + (q' : DiffPoly K) * ddx (q : DiffPoly K)) * key
-
-/-- `d/dx` on `Frac (DiffPoly K)`: the quotient-rule derivative `(p/q)' = (ddx p·q − p·ddx q)/q²`
-extending `ddx`. -/
-noncomputable def fracDeriv (x : FractionRing (DiffPoly K)) : FractionRing (DiffPoly K) :=
-  Localization.liftOn x fracDerivAux (fun h => fracDerivAux_wd h)
-
-/-- Quotient rule: `fracDeriv (mk p q) = (ddx p·q − p·ddx q)/q²`. -/
-theorem fracDeriv_mk (p : DiffPoly K) (q : nonZeroDivisors (DiffPoly K)) :
-    fracDeriv (Localization.mk p q) = fracDerivAux p q :=
-  Localization.liftOn_mk _ _ _ _
-
-/-- `mk a b = mk c d` from the cross-multiplication `d·a = b·c`. -/
-private theorem mk_eq_of {a c : DiffPoly K} {b d : nonZeroDivisors (DiffPoly K)}
-    (h : (d : DiffPoly K) * a = (b : DiffPoly K) * c) :
-    (Localization.mk a b : FractionRing (DiffPoly K)) = Localization.mk c d := by
-  rw [Localization.mk_eq_mk_iff, Localization.r_iff_exists]
-  exact ⟨1, by simp only [OneMemClass.coe_one, one_mul]; exact h⟩
-
-/-- `fracDeriv (algebraMap p) = algebraMap (ddx p)`: `fracDeriv` extends `ddx`. -/
-theorem fracDeriv_algebraMap (p : DiffPoly K) :
-    fracDeriv (algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) p)
-      = algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (ddx p) := by
-  rw [← Localization.mk_one_eq_algebraMap, fracDeriv_mk]
-  unfold fracDerivAux
-  rw [← Localization.mk_one_eq_algebraMap]
-  apply mk_eq_of
-  simp
-
-/-- Additivity: `fracDeriv (x + y) = fracDeriv x + fracDeriv y`. -/
-theorem fracDeriv_add (x y : FractionRing (DiffPoly K)) :
-    fracDeriv (x + y) = fracDeriv x + fracDeriv y := by
-  induction x using Localization.induction_on with | _ px =>
-  induction y using Localization.induction_on with | _ py =>
-  obtain ⟨p, q⟩ := px; obtain ⟨r, s⟩ := py
-  rw [Localization.add_mk, fracDeriv_mk, fracDeriv_mk, fracDeriv_mk]
-  unfold fracDerivAux
-  rw [Localization.add_mk]
-  apply mk_eq_of
-  push_cast
-  simp only [map_add, Derivation.leibniz, smul_eq_mul]
-  ring
-
-/-- Leibniz rule: `fracDeriv (x·y) = fracDeriv x · y + x · fracDeriv y`. -/
-theorem fracDeriv_mul (x y : FractionRing (DiffPoly K)) :
-    fracDeriv (x * y) = fracDeriv x * y + x * fracDeriv y := by
-  induction x using Localization.induction_on with | _ px =>
-  induction y using Localization.induction_on with | _ py =>
-  obtain ⟨p, q⟩ := px; obtain ⟨r, s⟩ := py
-  rw [Localization.mk_mul, fracDeriv_mk, fracDeriv_mk, fracDeriv_mk]
-  unfold fracDerivAux
-  rw [Localization.mk_mul, Localization.mk_mul, Localization.add_mk]
-  apply mk_eq_of
-  push_cast
-  simp only [Derivation.leibniz, smul_eq_mul]
-  ring
-
-/-- `K`-linearity: `fracDeriv (c • x) = c • fracDeriv x`. -/
-theorem fracDeriv_smul (c : K) (x : FractionRing (DiffPoly K)) :
-    fracDeriv (c • x) = c • fracDeriv x := by
-  induction x using Localization.induction_on with | _ px =>
-  obtain ⟨p, q⟩ := px
-  rw [Localization.smul_mk, fracDeriv_mk, fracDeriv_mk]
-  unfold fracDerivAux
-  rw [Localization.smul_mk]
-  apply mk_eq_of
-  have hc : ddx (c • p) = c • ddx p := map_smul ddx.toLinearMap c p
-  rw [hc, MvPolynomial.smul_eq_C_mul, MvPolynomial.smul_eq_C_mul, MvPolynomial.smul_eq_C_mul]
-  ring
-
-/-- The `d/dx` `K`-derivation on `K(x)⟨u⟩ = Frac (DiffPoly K)`: `fracDeriv` bundled as a `Derivation`. -/
-noncomputable def fracKDeriv :
-    Derivation K (FractionRing (DiffPoly K)) (FractionRing (DiffPoly K)) :=
-  Derivation.mk'
-    { toFun := fracDeriv, map_add' := fracDeriv_add,
-      map_smul' := fun c x => by simpa using fracDeriv_smul c x }
-    fun a b => by
-      simp only [LinearMap.coe_mk, AddHom.coe_mk, smul_eq_mul]; rw [fracDeriv_mul]; ring
-
-@[simp] theorem fracKDeriv_apply (x : FractionRing (DiffPoly K)) : fracKDeriv x = fracDeriv x := rfl
-
-/-- `fracKDeriv (algebraMap p) = algebraMap (ddx p)`: `fracKDeriv` extends `ddx`. -/
-theorem fracKDeriv_algebraMap (p : DiffPoly K) :
-    fracKDeriv (algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) p)
-      = algebraMap (DiffPoly K) (FractionRing (DiffPoly K)) (ddx p) :=
-  fracDeriv_algebraMap p
+/-! ## Laurent fractions in `K(x)⟨u⟩ = Frac (DiffPoly K)` -/
 
 /-- `dpEmbed Ei ≠ 0` for `Ei ≠ 0`: the embedding is injective. -/
 theorem dpEmbed_ne_zero {Ei : K[X]} (hEi : Ei ≠ 0) : dpEmbed Ei ≠ (0 : DiffPoly K) := by
@@ -385,7 +275,7 @@ theorem fracKDeriv_lFrac [CharZero K] (A Ei : K[X]) (i d : ℕ) (hi : 0 < i) (hE
   rw [lFrac_mk A Ei i d hEi, lFrac_mk A Ei i (d + 1) hEi, fracKDeriv_apply, fracDeriv_mk]
   show (Localization.mk _ ⟨(lDenom Ei i d) ^ 2, _⟩ : FractionRing (DiffPoly K)) = _
   rw [Localization.smul_mk]
-  apply mk_eq_of
+  apply diffPoly_fraction_mk_eq_of_cross_mul
   show lDenom Ei i (d + 1) * _ = (lDenom Ei i d) ^ 2 * _
   rw [reduced_num A Ei i d m hm, MvPolynomial.smul_eq_C_mul, lDenom_succ]
   unfold lDenom
