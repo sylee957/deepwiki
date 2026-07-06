@@ -74,27 +74,31 @@ runtime — then the branch *knows* it holds, so it stops being a frontier hypot
   `cHermiteReduceTowerG_residual_proper_of_degree_le_one` are generic over `α`), but it is a **~150–200L
   multi-piece assembly**, mapped below.
 
-## The `hAD` discharge — fully mapped roadmap (~150–200L, generic)
+## The `hAD` discharge — roadmap (~150–200L, generic; steps 1+2a LANDED 2026-07-06)
 
 `crNormNum = (cextendedEuclideanSplitWf dnds.1 dnds.2 qr.2 uw.1 uw.2).2`, `crNormDen = dnds.1`
 (from `canonicalRepresentationFastGWf`, `Tower/WellFounded.lean`), so:
 
-1. **crNorm properness `deg crNormNum < deg crNormDen`** — the foundational piece, an acknowledged
-   *never-done "later cleanup target"* (`OneShotAssembly.lean:1829`; every capstone assumes it as `haProper`).
-   Direct from `cextendedEuclideanSplitWf_snd_degree_lt dnds.1 dnds.2 qr.2 uw.1 uw.2 d` — **but its hypotheses
-   need**: the `cSplitFactorFastGWf` correctness `d = ds·dn` + coprimality (NOT a landed generic lemma — no
-   `toPolyG_cSplitFactorFastGWf`), then `toPolyG_cbezoutOneWf` (needs that coprimality), and the `cdivmodWf`
-   remainder bound `deg (a mod d) < deg d`.
-2. **Hermite preserves properness ⟹ `hAD`**: `cHermiteReduceTowerG_residual_proper_of_degree_le_one` (generic)
-   + `cHermiteReduceTowerGWf_leftover_proper_of_residual` (generic) + `cdiophantineGWf_fst_degree_lt` (`hb`) +
-   Yun `get_ne_zero` (`hv`) + the fold→`.2.1/.2.2` projection bridges (the `hdvd` residual-divisibility is the
-   fiddly one).
+1. **✅ crNorm properness `deg crNormNum < deg crNormDen`** (`crNormNum_degree_lt_crNormDen`,
+   `CanonicalReconstructionCharZero`, commit `e02807e8`) — the never-done "cleanup target", now LANDED
+   generically (`.degree` form, unconditional on `d ≠ 0`, incl. `crNormNum = 0` via `⊥ < deg dₙ`). From
+   `cextendedEuclideanSplitWf_snd_degree_lt` + the split `d = ds·dn`
+   (`cSplitFactorFastGWf_isSplittingFactorizationGen`) + special⊥normal Bézout
+   (`isCoprime_of_isSpecial_isNormalSqfree`, `toPolyG_cbezoutOneWf`) + remainder bound (`cmodWf_length_lt`).
+2. **✅ (2a) Generic `.degree` leftover-proper** (`cHermiteReduceTowerGWf_leftover_proper_of_degree_le_one`,
+   `NormalPartSoundness`, commit `61198cf6`) — `deg (…).2.1 < deg (…).2.2` from `deg a < deg d` + `deg Dt ≤ 1`
+   + the per-factor `hv`/`hb` + the residual divisibility `hdvd` (+ `hresDen`/`hDstar`). Assembles
+   `cHermiteReduceTowerG_residual_proper_of_degree_le_one` + `cHermiteReduceTowerGWf_leftover_proper_of_residual`.
+   **Remaining (2b):** discharge its hypotheses from `(hgcd, hd0, hpp, hE)` — `hv` = Yun `get_ne_zero` (zipIdx→get),
+   `hb` = `cdiophantineGWf_fst_degree_lt`, `hDstar`/`hresDen` = nonzero, **`hdvd`** = `hWgd_of_multiplicity`
+   (`HermiteValuationTower`, uses `hcopgcd` — derivable from `hE` via `hcopgcd_of_genuineMonomial`) modulo the
+   `cnormG`-congruence (`g` vs `.1.1/.1.2`) + Dstar-cancellation (`(d/Dstar)·Dstar = d`).
 3. **`degree`→`natDegree` conversion + the `cn = 0` degenerate case** (trivial normal part → reduced result is
    the trivially-sound `0`, `hAD` bypassed).
 4. **Thread the discharged `hAD` into `_of_genuine`; remove the field** ⟹ `LrtReducedGenuineData = {hE}`.
 
-Why this differs from `hDt0`: `hDt0` was decidable, faithful, edge-free (a 2-line guard). `hAD`'s discharge
-rests on the unbuilt crNorm-properness cleanup target. A focused task, not a session-tail one.
+The two hardest foundational pieces (crNorm properness, the Hermite-chain assembly) are DONE; the remainder is
+bounded bookkeeping (`hdvd` cancellation + `cn=0`/natDegree edge + threading, ~80–100L).
 
 ## Next (optional)
 
