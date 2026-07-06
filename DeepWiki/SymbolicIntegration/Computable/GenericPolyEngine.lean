@@ -104,6 +104,14 @@ theorem toK_foldl_add {α : Type*} [CField α] [CFieldSpec α] (z : α) (L : Lis
   | nil => simp
   | cons a t ih => simp only [List.foldl_cons, List.map_cons, ih, CFieldSpec.toK_add]
 
+/-- `toK` reads a `CField.zero`-defaulted list lookup through `List.map toK`. -/
+theorem getD_map_toK {α : Type*} [CField α] [CFieldSpec α] (l : List α) (j : ℕ) :
+    (l.map toK).getD j 0 = toK (l.getD j CField.zero) := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getD_eq_getElem?_getD]
+  cases l[j]? with
+  | none => simp [CFieldSpec.toK_zero]
+  | some a => simp
+
 end CFieldSpec
 
 /-! ### Instances: `CField ℚ` and `CFieldSpec ℚ`

@@ -96,14 +96,6 @@ variable [CFieldSpec α]
 
 open CFieldSpec
 
-/-- `toK` reads a `CField.zero`-defaulted `getD` through `map toK`. -/
-theorem getD_map_toK (l : List α) (j : ℕ) :
-    (l.map toK).getD j 0 = toK (l.getD j CField.zero) := by
-  rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getD_eq_getElem?_getD]
-  cases l[j]? with
-  | none => simp [CFieldSpec.toK_zero]
-  | some a => simp
-
 /-- **`toK` is a determinant homomorphism.** `toK (cDetGn n M) = listDetn n (M.map (map toK))` — the
 computable cofactor determinant maps to the generic-`CommRing` determinant over `K`. -/
 theorem toK_cDetGn : ∀ (n : ℕ) (M : List (List α)),
