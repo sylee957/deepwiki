@@ -53,8 +53,9 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
 
 ## Worklist (start with LaurentSoundness as the template)
 
-- [ ] `Computable/LaurentSoundness.lean` — define `IsSpecialDenominator` (the `{nz,mpos,clead,proper,mono}`
-      cluster, 3 theorems) + `IsHyperexpMonomial` (the `hDt` condition, 8 sites). **Template.**
+- [x] `Computable/LaurentSoundness.lean` — define `IsProperSpecialPart` (the
+      `{nz,mpos,clead,proper}` prefix, 3 theorems), `IsSpecialDenominator` (adds `mono`, 2 theorems),
+      and `IsHyperexpMonomial` (the `hDt` condition, 8 sites). **Template.**
 - [ ] `Computable/LrtSoundness.lean` (162 binders) — audit for clusters beyond the existing `Lrt*Data`.
 - [ ] `Computable/NormalPartSoundness.lean` (121)
 - [ ] `Computable/OneShotAssembly.lean` (264)
