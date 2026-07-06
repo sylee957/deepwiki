@@ -94,7 +94,7 @@ that is part of the job.
 - [x] `Computable/HermiteValuationTower.lean` — done (template, `a5a1ee10`)
 - [x] `Computable/OneShotSoundness.lean`
 - [x] `Computable/CoupledDE/Assembly.lean`
-- [ ] `Computable/LaurentSoundness.lean`
+- [x] `Computable/LaurentSoundness.lean`
 - [ ] `Computable/RischDE/Structural.lean`
 - [ ] `Computable/YunTowerCorrect.lean`
 - [ ] `Computable/FuelFreeDiophantine.lean`

@@ -56,7 +56,7 @@ theorem cIntegrateHyperexpLaurent_pos_term [CRischField α] [CRischFieldSpec α]
   have hspec := CRischFieldSpec.crischDESolve_spec (cLaurentShiftG η (k : ℤ)) ak qk hsolve
   rw [toK_cLaurentShiftG_natCast] at hspec
   rw [toPolyG_cmonomialDeriv, hDt]
-  simp only [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
+  simp only [denote, toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
   rw [show (Polynomial.X ^ k * Polynomial.C (CFieldSpec.toK qk) : (CFieldSpec.K α)[X])
       = Polynomial.C (CFieldSpec.toK qk) * Polynomial.X ^ k from by ring,
     Derivation.leibniz, Derivation.leibniz_pow, Differential.implicitDeriv_X,
@@ -90,7 +90,7 @@ theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
         / amG α (toPolyG (cshiftG (i + 1) ([CField.one] : CPolyG α))) := by
   have hspec := CRischFieldSpec.crischDESolve_spec (cLaurentShiftG η (-(i + 1 : ℤ))) a q hsolve
   rw [toK_cLaurentShiftG_negCast] at hspec
-  simp only [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one,
+  simp only [denote, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one,
     map_one, mul_one]
   rw [towerFractionFieldDerivG_div, hDt]
   have hXpow : (Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η) * Polynomial.X)
@@ -175,10 +175,10 @@ theorem laurentPosGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPolyG α
         subst h
         have hsplit1 : toPolyG (cshiftG s (q :: restCoeffs))
             = toPolyG (cshiftG s ([q] : CPolyG α)) + toPolyG (cshiftG (s + 1) restCoeffs) := by
-          simp only [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, pow_succ]; ring
+          simp only [denote, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, pow_succ]; ring
         have hsplit2 : toPolyG (cshiftG s (a :: as))
             = toPolyG (cshiftG s ([a] : CPolyG α)) + toPolyG (cshiftG (s + 1) as) := by
-          simp only [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, pow_succ]; ring
+          simp only [denote, toPolyG_cons, toPolyG_nil, mul_zero, add_zero, pow_succ]; ring
         rw [hsplit1, map_add, map_add, hsplit2, map_add,
           cIntegrateHyperexpLaurent_pos_term Dt η s a q hDt hq, ih restCoeffs (s + 1) hrest]
 
@@ -276,7 +276,7 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPolyG α
           (map_ne_zero_iff (amG α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
         have hden : ∀ k, toPolyG (cshiftG k ([CField.one] : CPolyG α)) = (Polynomial.X : (CFieldSpec.K α)[X]) ^ k := by
           intro k
-          rw [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero,
+          simp only [denote, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero,
             map_one, mul_one]
         have hqsingle : toPolyG ([q] : CPolyG α) = Polynomial.C (CFieldSpec.toK q) := by
           rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
@@ -325,7 +325,7 @@ theorem cIntegrateHyperexpLaurentG_sound [CRischField α] [CRischFieldSpec α]
     (map_ne_zero_iff (amG α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
   have hdenpow : toPolyG (cshiftG neg.length ([CField.one] : CPolyG α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ neg.length := by
-    rw [toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one,
+    simp only [denote, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one,
       mul_one]
   rw [cIntegrateHyperexpLaurentG] at hsome
   split at hsome
@@ -429,8 +429,9 @@ theorem cHyperexpSpecialNegG_frac [CRischField α] (b ds : CPolyG α)
   have hpoly := cHyperexpSpecialNegG_reverse_smul b ds hnz hmpos hc hproper
   have hdenpow : toPolyG (cshiftG (cHyperexpSpecialNegG b ds).length ([CField.one] : CPolyG α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ cdegG ds := by
-    rw [hlen, toPolyG_cshiftG, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero,
-      map_one, mul_one]
+    rw [hlen]
+    simp only [denote, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one,
+      mul_one]
   have hXne : amG α ((Polynomial.X : (CFieldSpec.K α)[X]) ^ cdegG ds) ≠ 0 :=
     (map_ne_zero_iff (amG α) (RatFunc.algebraMap_injective _)).mpr (pow_ne_zero _ Polynomial.X_ne_zero)
   have hdsne : amG α (toPolyG ds) ≠ 0 := by
