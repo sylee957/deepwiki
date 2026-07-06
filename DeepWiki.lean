@@ -1,3 +1,4 @@
+import DeepWiki.Algebra
 import DeepWiki.Transfer
 import DeepWiki.NetworkCalculus
 import DeepWiki.ReactiveSystems

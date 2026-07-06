@@ -1,3 +1,4 @@
+import DeepWiki.Algebra.ListSums
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
 import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
@@ -274,24 +275,6 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPolyG α) (kelem : CPolyG α × �
   have hxmem : x ∈ (cSqfreeYunFFGWf d).zipIdx := List.mem_of_mem_filter (hkeptdef ▸ hx.2)
   exact (glocFracG_isQRegularG Dt a d x (hV x hxmem)
     (hcop x (hkeptdef ▸ hx.2) hx.1)).deriv Dt
-
-/-- `Σ (g x / c) = (Σ g x) / c` over a list. -/
-theorem list_sum_map_div {β K : Type*} [Field K] (L : List β) (g : β → K) (c : K) :
-    (L.map (fun x => g x / c)).sum = (L.map g).sum / c := by
-  induction L with
-  | nil => simp
-  | cons hd tl ih =>
-    rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, add_div]
-
-/-- `Σ (c − g x) = n • c − Σ g x` over a list. -/
-theorem list_sum_map_const_sub {β M : Type*} [AddCommGroup M] (L : List β) (c : M) (g : β → M) :
-    (L.map (fun x => c - g x)).sum = L.length • c - (L.map g).sum := by
-  induction L with
-  | nil => simp
-  | cons hd tl ih =>
-    rw [List.map_cons, List.sum_cons, ih, List.map_cons, List.sum_cons, List.length_cons,
-      succ_nsmul]
-    abel
 
 /-- **The total fold residual** (per-factor identities `hstep` given): `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` with
 `R = C(1−m)·a + Σ residNumG`, `m` the number of kept factors. Sums `D⟦g⟧ = Σ D⟦gloc⟧` using each
