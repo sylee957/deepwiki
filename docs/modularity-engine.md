@@ -1,69 +1,64 @@
-# The modularity analytics engine (quantified refactoring suggestions)
+# The modularity analytics engine (scored refactoring signals)
 
-**Status:** Phase 1 built (`scripts/modularity.py`); Phases 2–3 specced · Codex-executable
+**Status:** structural engine built in WikiRAG (`wiki modularity`); semantic layer specced · **Repo:** `deepwiki`
 
 A decision-support engine that turns WikiRAG's exact `uses` dependency graph (`.wiki/graph.db`) into
-**quantified, ranked** refactoring suggestions for an agent — so a novice agent randomly entering the
-codebase is handed a *map with confidence scores*, not left to grep. It **suggests and ranks; the agent
-validates and acts.** Grounded in software-modularization research (Mancoridis–Mitchell Bunch / the MQ
-cohesion-coupling metric; community detection), semantic clone detection (GraphCode2Vec = embeddings +
-dependence graph), and ITP premise selection (deep-graph-embedding retrieval, LeanSearch/LeanDojo).
+**quantified, ranked** refactoring signals — so a novice agent entering the codebase gets a *map with
+scores*, not a grep. It **scores and ranks; the agent validates and acts.** Grounded in the software
+modularization literature (Mancoridis–Mitchell MQ; **Newman modularity `Q`**), semantic clone detection
+(GraphCode2Vec = embeddings + dependence graph), and ITP premise selection (deep-graph-embedding retrieval).
 
-The four concerns it answers:
-1. *quantified modularization suggestions* → analyses 1–2 + directory health;
-2. *every module understandable to a novice* → Phase 3 cluster summaries + self-containedness;
-3. *distant-but-similar → regroup, without over/under-refactoring* → analyses 3–4 + the over/under flags;
-4. *similarity / subsumability / unifiability → retire* → analysis 5 (+ Phase 2 semantic precision).
+**Design principle — every signal is a continuous score, never a hard threshold.** There are no magic
+cutoffs (`size > 40`, `frac ≥ 75`, …); each module/decl/pair is *ranked by a score* and the top ones shown.
+The only knobs are `--top=N` (display count) and `--prefix=NS` (scope).
 
-## Phase 1 — structural engine (BUILT)
+## Usage
 
-`python3 scripts/modularity.py [--prefix <namespace>] [--top N] [--json]` reads `.wiki/graph.db` and emits:
+```bash
+scripts/wiki modularity                       # DeepWiki.SymbolicIntegration, top 15
+scripts/wiki modularity --prefix=DeepWiki.NetworkCalculus --top=20
+```
 
-| Analysis | Signal | Feeds |
+## The scores (structural; from the graph alone, no embeddings)
+
+| Signal | Score | Meaning |
 |---|---|---|
-| **cohesion/coupling** per module & directory | MQ ratio `intra/(intra+inter)` | health, split |
-| **split candidates** | size ≥ 40 ∧ ≥2 internal communities (label propagation on the module's own subgraph) → the *split axis* | `docs/file-splitting-project.md` |
-| **misplaced decls** | ≥75% of a decl's `uses`/used-by neighbours live in another module | regroup |
-| **co-locate** | module pair with ≥15 cross edges in *different* directories | regroup |
-| **duplicate/unifiable** | identical signature-up-to-name, genuine reusable decls (not examples), across modules | `docs/hypothesis-bundling-project.md` + retire |
-| **directory health** | flags `under (split)` (max>120 ∧ cohesion<0.55) and `over (merge)` (≥8 modules ∧ avg<6) | over/under calibration |
+| **split** | internal **Newman modularity `Q`** of the module's own subgraph (label-propagation communities) | high `Q` ⇒ genuine sub-community structure → split; a flat bag scores ~0 (`#communities` = the split axis) |
+| **misplacement** | `(bestOtherAffinity − homeAffinity) · (1 − 1/deg)` | a decl pulled toward another module; degree-discounted so low-degree noise self-attenuates (no degree cutoff) |
+| **coupling** | `cross(m₁,m₂) / √(size₁·size₂)` | size-normalised cross-*directory* coupling → co-locate/regroup |
+| **cohesion / granularity** | `intra / (intra+inter)` per module & directory | reported as numbers, sorted worst-first — over/under-refactoring reads off the distribution, not a boolean flag |
 
-Real Phase-1 findings on the current tree (validated by hand earlier this project): `GroebnerBasis` → 6
-communities; `Computable.Algebraic.RadicalExtension` cohesion **0.14**; `Computable.Tower` cohesion 0.17;
-`getD_map_toK`/`radCase3CofactorTower` misplaced into `GenericPolyEngine`; `cderiv/cmonic/cnorm/cneg` and
-`cmod/cdiv/cinvMod` re-defined across `LogToAtan`/`RtResultant`/`Subresultant` (retire candidates).
+Real output on the current tree (validated by hand earlier): split — `RadicalExtension` `Q=75` (6 comms),
+`GcdFF` `Q=70` (10), `ZassenhausDecider` `Q=63` (72 decls, 8); misplacement — `getD_map_toK`,
+`radCase3CofactorTower` → `GenericPolyEngine`; coupling — `RadicalIntegralSoundness ⇄ GenericPolyEngine`
+(score 599); granularity — `Computable.Tower` cohesion 17%, `RischDE` 18% (low-cohesion dirs).
 
-**How an agent uses it:** run before starting `file-splitting`/`bundling`/retire work; take the ranked
-candidates as the worklist (the split-axis communities become the leaf files; misplaced decls become
-`git mv` targets; duplicate clusters become dedup tasks). Then **validate each** — the engine ranks, it
-does not decide.
+**How an agent uses it:** run before `file-splitting` / regroup / retire work; take the ranked lists as the
+worklist — the split communities become leaf files, high-misplacement decls become `git mv` targets, high
+coupling pairs become co-location candidates. Then **validate each**; the engine ranks, it does not decide.
 
-## Phase 2 — semantic layer (add embedding precision)
+## Semantic layer (specced — the continuous similarity/retire score)
 
-Requires embeddings: `scripts/wiki index` (local Ollama; `.wiki/graph.db` currently has 0). Then extend
-`modularity.py` with a cosine-similarity pass over the `embedding` BLOBs:
-- **precise duplicate/subsumability**: signature-identity (Phase 1) over-flags *same-type, different-meaning*
-  decls (worked examples). Embedding cosine distinguishes *same-meaning* (true dedup) from coincidental
-  type-equality — the GraphCode2Vec insight (combine embedding **and** graph proximity, neither alone).
-- **semantic misplacement / distant-but-similar**: decls whose embedding neighbours cluster in a different
-  directory than their graph neighbours = "similar-but-far" regroup candidates (concern 3).
-- **subsumption ranking**: for a candidate pair, the more-general one (fewer hypotheses / the other's
-  statement is an instance) is the survivor; flag the specific one to retire via the general.
+`.wiki/graph.db` currently has **0 embeddings** (`scripts/wiki index` needs a local Ollama). The
+**duplicate / subsumability / unifiability** signal is deliberately *not* an exact-signature filter (that
+was a deterministic match, and over-flags same-typed worked examples). Its principled form is a **continuous
+similarity score** = embedding cosine × structural neighbour-overlap (the GraphCode2Vec insight: combine
+graph and embedding, neither alone). Once embeddings exist, add to `Modular.lean`:
+- **similarity/retire score** per decl pair: cosine(emb) blended with Jaccard(neighbour sets); rank; the
+  more-general decl (fewer hypotheses / the other's statement is an instance) is the survivor.
+- **semantic misplacement**: decls whose embedding neighbours cluster in a different directory than their
+  graph neighbours = "distant-but-similar" regroup candidates.
 
-## Phase 3 — novice-comprehension layer
+## Comprehension layer (specced — for the novice)
 
-For each detected community, generate an LLM summary ("what this cluster is, its entry points, what it
-depends on") and a **self-containedness score** (fraction of a module's deps that are local + whether it
-has a module docstring). Surface via a new `scripts/wiki summarize <module>` and store back into a
-`summaries` table. This is the "novice randomly enters and isn't lost" layer — the RAG comprehension use.
+Per detected community, an LLM summary ("what this cluster is, entry points, dependencies") + a
+self-containedness score (fraction of local deps + presence of a module docstring), surfaced as
+`wiki summarize <module>`. This is the "novice enters anywhere and isn't lost" layer.
 
-## Calibration & guardrails (avoid over- and under-refactoring)
+## Guardrails
 
-- The `over`/`under` directory-health flags are the calibration dial; tune thresholds against the existing
-  well-formed areas (e.g. `Compute/` cohesion 0.67 is "ok" — don't touch). A suggestion is only actionable
-  if it also *reads* sensibly; **the engine never rewrites** — it emits a worklist an agent vets.
-- Re-run `scripts/wiki build` before analysis so the graph is current; the graph is **exact** (from Lean's
-  environment), so structural signals are trustworthy; embedding signals (Phase 2) are fuzzy and ranked.
-- Do not chase low-confidence suggestions; a duplicate cluster across *intentionally-separate carriers*
-  (different `CField`/tower instances) is not a defect. When Phase 1 and a hand-read disagree, trust the
-  hand-read and note the false positive to tune thresholds.
+- The engine **never rewrites** — it emits scored worklists an agent vets. A high score is a *prior*, not a
+  verdict; a duplicate across intentionally-separate carriers (different `CField`/tower instances) is not a
+  defect. When a score and a hand-read disagree, trust the hand-read.
+- Re-run `scripts/wiki build` before analysis so the graph is current. Structural scores are trustworthy
+  (the `uses` graph is exact); the semantic scores (once added) are fuzzy priors, ranked.

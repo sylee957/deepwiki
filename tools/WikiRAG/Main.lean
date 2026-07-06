@@ -4,11 +4,12 @@ import WikiRAG.Extract
 import WikiRAG.Embed
 import WikiRAG.Query
 import WikiRAG.Viz
+import WikiRAG.Modular
 
 /-! # `wiki` — graph-RAG CLI over the Lean library
 Subcommands: `build` (extract the graph), `index` (Ollama embeddings),
-`search`, `show`, `deps`, `rdeps`, `path`, `context`. All read commands emit
-human-readable text, or JSON with `--json`. -/
+`search`, `show`, `deps`, `rdeps`, `path`, `context`, `modularity`. All read
+commands emit human-readable text, or JSON with `--json`. -/
 
 open Lean WikiRAG SQLite
 
@@ -243,5 +244,6 @@ unsafe def main (args : List String) : IO Unit := do
   | "rdeps" :: rest => depsCmd (parseOpts rest {}) true
   | "path" :: a :: b :: _ => pathCmd a b
   | "context" :: rest => contextCmd (parseOpts rest {})
+  | "modularity" :: rest => modularityCmd rest
   | "dot" :: rest => dotCmd rest
   | cmd :: _ => do IO.eprintln s!"unknown command: {cmd}\n"; IO.println usage
