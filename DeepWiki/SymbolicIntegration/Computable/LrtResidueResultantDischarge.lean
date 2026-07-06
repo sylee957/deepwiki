@@ -79,6 +79,44 @@ theorem hR0_of_normalityData [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
   residueResultant_ne_zero_of_hnormAlgClosure hgcd Dt a d hd0 hpp hDt0 hAD
     (h (AlgebraicClosure (CFieldSpec.K α)))
 
+omit [CFracGcdCoreWf α] in
+open scoped Differential in
+/-- **`η ∉ range(D_K)` from the genuine monomial property.** At `E = AlgebraicClosure K` the property gives
+`η_K̄ ∉ range(D_K̄)`; it descends to `K` via `deriv_algebraMap` (the derivation intertwines base change): if
+`γ′ = η` in `K` then `(φγ)′ = φη` in `K̄`, contradicting the property at `β = φγ`. -/
+theorem eta_not_range_der [CharZero (CFieldSpec.K α)] (Dt : CPolyG α)
+    (hgen : GenuinePrimitiveMonomialLrt Dt) (hDt0 : (toPolyG Dt).natDegree = 0) :
+    ∀ (γ : CFieldSpec.K α), γ′ ≠ (toPolyG Dt).coeff 0 := by
+  intro γ hγ
+  refine hgen (AlgebraicClosure (CFieldSpec.K α))
+    (algebraMap (CFieldSpec.K α) (AlgebraicClosure (CFieldSpec.K α)) γ) ?_
+  rw [Polynomial.eq_C_of_natDegree_eq_zero hDt0, Polynomial.map_C, Polynomial.eval_C, ← hγ,
+    deriv_algebraMap]
+
+open scoped Differential in
+/-- **`hm` from the genuine monomial property.** The monomial-derivative degree drop
+`cdegG (cmonomialDeriv Dt Dstar) = cdegG Dstar − 1` is `natDegree_implicitDeriv_eq_of_monic_of_not_range`
+(monic `Dstar` from Hermite; `η ∉ range D` from `eta_not_range_der`) through the `cdegG`/`cmonomialDeriv`
+bridges. The degenerate `deg Dstar = 0` (`Dstar = 1`) case is handled separately (both sides `0`). -/
+theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
+    (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hgen : GenuinePrimitiveMonomialLrt Dt)
+    (hDt0 : (toPolyG Dt).natDegree = 0) :
+    cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
+      = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1 := by
+  have hmonic : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic :=
+    toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0
+  rw [cdegG_eq_natDegree, cdegG_eq_natDegree, toPolyG_cmonomialDeriv]
+  by_cases hdeg : 1 ≤ (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
+  · exact natDegree_implicitDeriv_eq_of_monic_of_not_range _ _ hmonic hDt0 hdeg
+      (eta_not_range_der Dt hgen hDt0)
+  · have h0 : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree = 0 := by omega
+    have hC : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Polynomial.C 1 := by
+      conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero h0]
+      rw [show (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).coeff 0 = 1 from by
+        rw [← h0]; exact hmonic.coeff_natDegree]
+    rw [h0, hC, Differential.implicitDeriv_C]
+    simp
+
 set_option maxHeartbeats 800000 in
 /-- **The assembled LRT reduced soundness from the bundled genuine data.** Moved here from `LrtSoundness`
 because it now *derives* `hR0` (via `hR0_of_normalityData`, which needs the algebraic closure) rather than
@@ -88,11 +126,12 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldS
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
     (hd0 : toPolyG d ≠ 0) (hgen : LrtReducedGenuineData Dt a d) :
     IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) :=
-  -- the per-input pole-normality is *derived* from the input-independent monomial property `hgen.hE`
+  -- the per-input pole-normality *and* the degree-drop `hm` are *derived* from the input-independent monomial
+  -- property `hgen.hE` (`lrtPoleNormalityData_of_genuineMonomial`, `hm_of_genuineMonomial`)
   have hnorm : LrtPoleNormalityData Dt a d := lrtPoleNormalityData_of_genuineMonomial hgen.hE
   isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup hgcd Dt a d hd0
     (Polynomial.primPart_ne_zero _) hgen.hcopgcd hgen.hDt0 hgen.hAD
     (hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hgen.hDt0 hgen.hAD hnorm)
-    (Polynomial.primPart_ne_zero _) hgen.hm hnorm
+    (Polynomial.primPart_ne_zero _) (hm_of_genuineMonomial hgcd Dt a d hd0 hgen.hE hgen.hDt0) hnorm
 
 end DeepWiki.SymbolicIntegration

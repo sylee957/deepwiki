@@ -1558,9 +1558,6 @@ structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
   /-- The reduced residual is proper: `deg hNum < deg Dstar`. -/
   hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
         < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree
-  /-- The monomial derivative drops the degree by exactly one. -/
-  hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
-        = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1
   /-- The **one** genuine condition, now the **input-independent** monomial normality `η = Dt` is not a
   derivative (`GenuinePrimitiveMonomialLrt Dt`). The per-input pole-normality `LrtPoleNormalityData` (hence the
   `implicitDeriv` nonvanishing *and* `hR0`) is *derived* from it (`lrtPoleNormalityData_of_genuineMonomial`) —
