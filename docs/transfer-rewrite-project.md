@@ -95,7 +95,7 @@ that is part of the job.
 - [x] `Computable/OneShotSoundness.lean`
 - [x] `Computable/CoupledDE/Assembly.lean`
 - [x] `Computable/LaurentSoundness.lean`
-- [ ] `Computable/RischDE/Structural.lean`
+- [x] `Computable/RischDE/Structural.lean`
 - [ ] `Computable/YunTowerCorrect.lean`
 - [ ] `Computable/FuelFreeDiophantine.lean`
 - [ ] `Computable/Tower/GcdFFCorrect.lean`

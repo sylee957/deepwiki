@@ -164,8 +164,7 @@ theorem cSPDEGWf_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar
     obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
     subst hα; subst hβ
     have hcc : toPolyG c = 0 := (cisZeroG_iff c).mp hc
-    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_nil, zero_mul, add_zero, map_zero, mul_zero,
-      mul_zero, add_zero, hcc]
+    simp only [denote, toPolyG_nil, zero_mul, add_zero, map_zero, mul_zero, hcc]
   | case2 => exact absurd hspde (by simp)
   | case3 a b c n hn g hdvd a' b' c' hdeg ainv =>
     intro h hh
@@ -345,7 +344,7 @@ theorem cRdeNormalDenominatorGWf_cleared_lift (Dt : CPolyG α) (fnum fden gnum g
     have hCexact : toPolyG c * toPolyG gden = toPolyG cNum := by
       rw [← hc]; exact toPolyG_cdivWf_exact_mul_gen cNum gden hgden0 hdvdC
     have hCeq : toPolyG cNum = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
-      rw [hcNum, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]; ring
+      simp only [hcNum, denote]; ring
     have hBcert : toPolyG b * toPolyG fden = toPolyG a * toPolyG fnum
         - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
       rw [hBexact]; exact hBeq
@@ -445,7 +444,7 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPolyG α)
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
     rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
   have hynum : toPolyG (cmulG Q [CField.one]) = toPolyG Q := by
-    rw [toPolyG_cmulG, hone, mul_one]
+    simp only [denote, hone, mul_one]
   have hlift := cRdeNormalDenominatorGWf_cleared_lift Dt fnum fden gnum gden a0 b0 c0 h0 Q
     hnorm hdn hfden0 hgden0 hdvdB hdvdC hred
   rw [hynum]
