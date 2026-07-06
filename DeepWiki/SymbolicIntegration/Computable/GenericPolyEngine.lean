@@ -441,6 +441,21 @@ theorem toPolyG_ne_zero_of_cisZeroG_false {α : Type*} [CField α] [CFieldSpec �
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff] at h
   exact h
 
+/-- `toPolyG (cmonicG p)` is monic for `toPolyG p ≠ 0`. -/
+theorem monic_toPolyG_cmonicG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α)
+    (hp : toPolyG p ≠ 0) :
+    (toPolyG (cmonicG p)).Monic := by
+  have hz : cisZeroG (cnormG p) = false := by
+    rw [← Bool.not_eq_true, cisZeroG_iff, toPolyG_cnormG]
+    exact hp
+  have hcform : toPolyG (cmonicG p)
+      = Polynomial.C (CFieldSpec.toK (CField.inv (cleadG (cnormG p)))) * toPolyG p := by
+    rw [cmonicG, if_neg (by rw [hz]; decide), toPolyG_cscaleG, toPolyG_cnormG]
+  rw [hcform]
+  refine monic_C_mul_of_mul_leadingCoeff_eq_one ?_
+  rw [CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, toPolyG_cnormG,
+    inv_mul_cancel₀ (Polynomial.leadingCoeff_ne_zero.mpr hp)]
+
 end CPolyG
 
 end DeepWiki.SymbolicIntegration
