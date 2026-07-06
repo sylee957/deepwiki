@@ -124,6 +124,14 @@ theorem subresultant_C_mul (a b : R) (A B : R[X]) (n m j : ℕ) (hjm : j ≤ m) 
     rw [hcardA, hcardB]
   rw [hprod, map_mul]; ring
 
+/-- `Sⱼ(C c · A, B) = c^(m−j) · Sⱼ(A, B)` (`j ≤ m`, `j ≤ n`): subresultant scaled in the first argument. -/
+theorem subresultant_C_mul_left (c : R) (A B : R[X]) (n m j : ℕ)
+    (hjm : j ≤ m) (hjn : j ≤ n) :
+    subresultant (C c * A) B n m j = C (c ^ (m - j)) * subresultant A B n m j := by
+  have h := subresultant_C_mul c 1 A B n m j hjm hjn
+  rw [map_one, one_mul, one_pow, mul_one] at h
+  rw [h]
+
 /-- Determinant is additive over a `Finset`-sum in a single column. -/
 theorem det_updateCol_sum' {N : Type*} [DecidableEq N] [Fintype N] (M : Matrix N N R) (c : N)
     {ι : Type*} [DecidableEq ι] (s : Finset ι) (g : ι → N → R) :

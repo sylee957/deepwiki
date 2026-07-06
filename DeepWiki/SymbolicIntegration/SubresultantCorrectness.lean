@@ -126,16 +126,6 @@ theorem length_bnorm_of_ne (p : BPoly) (h : ¬ bisZero p = true) :
 theorem toPoly_blc_eq_leadingCoeff (p : BPoly) : toPoly (blc p) = (toBPoly p).leadingCoeff := by
   rw [Polynomial.leadingCoeff, ← bdeg_eq_natDegree, ← toPoly_blc_eq_coeff]
 
-/-! ### The abstract subresultant under a one-sided constant scaling -/
-
-/-- `Sⱼ(C c · A, B) = c^(m−j) · Sⱼ(A, B)` (`j ≤ m`, `j ≤ n`): subresultant scaled in the first argument. -/
-theorem subresultant_C_mul_left {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n m j : ℕ)
-    (hjm : j ≤ m) (hjn : j ≤ n) :
-    subresultant (C c * A) B n m j = C (c ^ (m - j)) * subresultant A B n m j := by
-  have h := subresultant_C_mul c 1 A B n m j hjm hjn
-  rw [map_one, one_mul, one_pow, mul_one] at h
-  rw [h]
-
 /-- `Sⱼ(A, C c · B) = c^(n−j) · Sⱼ(A, B)` (`j ≤ m`, `j ≤ n`): subresultant scaled in the second argument. -/
 theorem subresultant_C_mul_right {R : Type*} [CommRing R] (c : R) (A B : R[X]) (n m j : ℕ)
     (hjm : j ≤ m) (hjn : j ≤ n) :
@@ -687,16 +677,6 @@ theorem isSimilar_mapRingHom {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) {A B
   have hcong := congrArg (Polynomial.map φ) hab
   rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
   simpa only [Polynomial.coe_mapRingHom] using hcong
-
-/-- If `B = C η · A` with `η` a unit (`η · η' = 1`), then `IsSimilar A B`. -/
-theorem isSimilar_of_unit_mul {S : Type*} [CommRing S] [Nontrivial S] {A B : S[X]} {η η' : S}
-    (hη : η * η' = 1) (hAB : B = Polynomial.C η * A) :
-    IsSimilar A B := by
-  have hηne : η ≠ 0 := by
-    rintro rfl
-    rw [zero_mul] at hη
-    exact one_ne_zero hη.symm
-  exact ⟨η, 1, hηne, one_ne_zero, by rw [hAB, map_one, one_mul]⟩
 
 /-- The full `lrtGcdCompute ↔ lrtSubresultant` agreement over `S = ℚ[t]/(R)`: for a residue map
 `φ : ℚ[X] →+* S` killing `toPoly R`, under the whole-chain and regularity hypotheses,

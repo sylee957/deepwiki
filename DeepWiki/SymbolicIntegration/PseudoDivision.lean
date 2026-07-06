@@ -106,6 +106,16 @@ theorem IsSimilar.trans {A B C₀ : R[X]} (h₁ : IsSimilar A B) (h₂ : IsSimil
 theorem isSimilar_equivalence : Equivalence (IsSimilar (R := R)) :=
   ⟨IsSimilar.refl, fun h => h.symm, fun h₁ h₂ => h₁.trans h₂⟩
 
+/-- If `B = C η · A` with `η` a unit (`η · η' = 1`), then `IsSimilar A B`. -/
+theorem isSimilar_of_unit_mul {S : Type*} [CommRing S] [Nontrivial S] {A B : S[X]} {η η' : S}
+    (hη : η * η' = 1) (hAB : B = Polynomial.C η * A) :
+    IsSimilar A B := by
+  have hηne : η ≠ 0 := by
+    rintro rfl
+    rw [zero_mul] at hη
+    exact one_ne_zero hη.symm
+  exact ⟨η, 1, hηne, one_ne_zero, by rw [hAB, map_one, one_mul]⟩
+
 /-- Similar polynomials have equal `natDegree`. -/
 theorem IsSimilar.natDegree_eq {A B : R[X]} (h : IsSimilar A B) : A.natDegree = B.natDegree := by
   obtain ⟨a, b, ha, hb, hab⟩ := h
