@@ -17,19 +17,6 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-/-! ### The generator reading `toPolyG (afBasisElem 1) = X`
-
-The carrier generator `y = afBasisElem 1 = [0, 1]` has `toPolyG` image the formal variable `X`. -/
-
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `toPolyG (afBasisElem 1) = X`: the carrier generator `y` reads as the formal variable `X` under the
-Horner bridge. -/
-theorem toPolyG_afBasisElem_one : toPolyG (afBasisElem 1 : CPolyG α) = X := by
-  rw [afBasisElem, toPolyG_cshiftG, pow_one]
-  have h1 : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
-  rw [h1, mul_one]
-
 /-! ### The rational-integral API
 
 The rational-part predicate, generator identity, telescoping, and round-trip closure over `afDerivWf`. -/

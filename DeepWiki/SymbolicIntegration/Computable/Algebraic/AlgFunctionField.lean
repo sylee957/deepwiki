@@ -29,6 +29,13 @@ def afMul (f a b : CPolyG α) : CPolyG α := afReduce f (cmulG a b)
 /-- The `i`-th power-basis element `yⁱ` of `α[y]/(f)` (`cshiftG i [1]`). -/
 def afBasisElem (i : ℕ) : CPolyG α := cshiftG i [CField.one]
 
+/-- `toPolyG (afBasisElem 1) = X`: the carrier generator `y` reads as the formal variable `X`. -/
+theorem toPolyG_afBasisElem_one [CFieldSpec α] : toPolyG (afBasisElem 1 : CPolyG α) = X := by
+  rw [afBasisElem, toPolyG_cshiftG, pow_one]
+  have h1 : toPolyG ([CField.one] : CPolyG α) = 1 := by
+    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
+  rw [h1, mul_one]
+
 /-- Power in `α[y]/(f)`: `afPow f a k = aᵏ mod f` by `ℕ`-recursion, each step an `afMul`. -/
 def afPow (f a : CPolyG α) : ℕ → CPolyG α
   | 0 => [CField.one]
