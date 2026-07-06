@@ -18,8 +18,13 @@ def RefinesPolyG {α : Type*} [CField α] [CFieldSpec α]
     (p : CPolyG α) (q : (CFieldSpec.K α)[X]) : Prop :=
   toPolyG p = q
 
-/-- Prove refinement and denotation-equality goals by pushing `toPolyG` through computable operations. -/
-macro "transfer" : tactic => `(tactic| simp_all [RefinesPolyG, denote])
+/-- Prove refinement and denotation-equality goals by transfer: `simp [denote]` for goals with an
+explicit abstract side, else aesop over the `Refines` respect-lemma set to *synthesize* the abstract
+polynomial (metavariable RHS) by recursion on the computable expression down to atoms. -/
+macro "transfer" : tactic =>
+  `(tactic| first
+      | (simp_all [RefinesPolyG, denote]; done)
+      | (aesop (rule_sets := [Refines]) (config := { enableSimp := false })))
 
 namespace RefinesPolyG
 
@@ -158,12 +163,27 @@ variable [CDiffField α] [CDiffFieldSpec α]
 
 end RefinesPolyG
 
+-- Structural respect lemmas fire first (low penalty), decomposing the computable expression;
+-- `refinesPolyG_self` is the terminal atom-closer (high penalty), used only when no operation head
+-- matches. This ordering makes `aesop (rule_sets := [Refines])` synthesize the abstract polynomial.
+attribute [aesop safe 1 apply (rule_sets := [Refines])]
+  RefinesPolyG.nil RefinesPolyG.const RefinesPolyG.zero RefinesPolyG.one
+  RefinesPolyG.add RefinesPolyG.neg RefinesPolyG.sub RefinesPolyG.scale
+  RefinesPolyG.shift RefinesPolyG.mul RefinesPolyG.pow RefinesPolyG.norm_of
+  RefinesPolyG.deriv RefinesPolyG.mapDeriv RefinesPolyG.monomialDeriv
+attribute [aesop safe 99 apply (rule_sets := [Refines])] refinesPolyG_self
+
 section Examples
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
 example (a b c : CPolyG α) :
     RefinesPolyG (cmulG (caddG a b) c) ((toPolyG a + toPolyG b) * toPolyG c) := by
+  transfer
+
+/-- `transfer` synthesizes the abstract polynomial from the computable structure (metavariable RHS),
+which `simp [denote]` cannot drive — aesop applies the `Refines` respect lemmas down to atoms. -/
+example (a b c : CPolyG α) : ∃ q, RefinesPolyG (cmulG (caddG a b) c) q := by
   transfer
 
 example (a b c : CPolyG α) :
