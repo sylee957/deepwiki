@@ -4,6 +4,8 @@ import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 import DeepWiki.SymbolicIntegration.Compute.RtResultant
+import DeepWiki.SymbolicIntegration.Compute.Squarefree
+import DeepWiki.SymbolicIntegration.Compute.SquarefreeExact
 import DeepWiki.SymbolicIntegration.Compute.Subresultant
 
 /-! # Concrete `Compute` computations over Mathlib `Polynomial` (base ℚ(x)) — aggregator. -/
