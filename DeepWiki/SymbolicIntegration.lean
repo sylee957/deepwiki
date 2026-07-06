@@ -30,6 +30,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerCommonFactor
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardDescent
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardFactorization
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerNoCommonYFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerDivideOutCommonFactor
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
