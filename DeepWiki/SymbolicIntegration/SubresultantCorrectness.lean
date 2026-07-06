@@ -240,39 +240,6 @@ theorem lrtSubresultant_C_mul_eq_rem_of_bpsremainder (fuel : ℕ) (A D : CPoly) 
 
 /-! ### `bdivC` realizes exact `ℚ[t]`-division -/
 
-/-- If `cmod fuel a c` reads to `0` in `ℚ[X]`, then `toPoly a = toPoly (cdiv fuel a c) · toPoly c`. -/
-theorem toPoly_cdiv_of_cmod_zero_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c ≠ [])
-    (hrem : toPoly (cmod fuel a c) = 0) :
-    toPoly a = toPoly (cdiv fuel a c) * toPoly c := by
-  have h := toPoly_cdivmod' fuel a c hc
-  rw [show (cdivmod fuel a c).1 = cdiv fuel a c from rfl,
-      show (cdivmod fuel a c).2 = cmod fuel a c from rfl, hrem, add_zero] at h
-  exact h
-
-/-- If `toPoly c ∣ toPoly a` (with `c ≠ 0`, enough fuel), then `toPoly (cmod fuel a c) = 0`. -/
-theorem cmod_eq_zero_of_dvd_loc (fuel : ℕ) (a c : CPoly) (hc : cnorm c ≠ [])
-    (hfuel : (cnorm a).length ≤ fuel) (hdvd : toPoly c ∣ toPoly a) :
-    toPoly (cmod fuel a c) = 0 := by
-  have hc0 : toPoly c ≠ 0 := fun h => hc ((cnorm_eq_nil_iff c).mpr h)
-  have hdiv := toPoly_cdivmod' fuel a c hc
-  rw [show (cdivmod fuel a c).1 = cdiv fuel a c from rfl,
-      show (cdivmod fuel a c).2 = cmod fuel a c from rfl] at hdiv
-  have hqr : toPoly c ∣ toPoly (cmod fuel a c) := by
-    have hd2 : toPoly c ∣ toPoly (cdiv fuel a c) * toPoly c := Dvd.intro_left _ rfl
-    have hsub : toPoly (cmod fuel a c) = toPoly a - toPoly (cdiv fuel a c) * toPoly c := by
-      rw [hdiv]; ring
-    rw [hsub]; exact dvd_sub hdvd hd2
-  have hlen : (cnorm (cmod fuel a c)).length < (cnorm c).length := cmod_length_lt fuel a c hc hfuel
-  by_contra hne
-  have hrne : toPoly (cmod fuel a c) ≠ 0 := hne
-  have hdeg : (toPoly c).degree ≤ (toPoly (cmod fuel a c)).degree :=
-    Polynomial.degree_le_of_dvd hqr hrne
-  have e1 : (cnorm (cmod fuel a c)).length = (toPoly (cmod fuel a c)).natDegree + 1 :=
-    length_cnorm_of_ne _ (fun h => hrne ((cnorm_eq_nil_iff _).mp h))
-  have e2 : (cnorm c).length = (toPoly c).natDegree + 1 := length_cnorm_of_ne c hc
-  rw [Polynomial.degree_eq_natDegree hrne, Polynomial.degree_eq_natDegree hc0, Nat.cast_le] at hdeg
-  omega
-
 /-- If every `x`-coefficient of `p` divides exactly by `c`, then
 `C(toPoly c) · toBPoly (p.map (cdiv fuel · c)) = toBPoly p`. -/
 theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
@@ -283,7 +250,7 @@ theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm 
   | cons a as ih =>
     have has := ih (fun b hb => hrem b (by simp [hb]))
     have ha : toPoly a = toPoly (cdiv fuel a c) * toPoly c :=
-      toPoly_cdiv_of_cmod_zero_loc fuel a c hc (hrem a (by simp))
+      toPoly_cdiv_of_cmod_zero fuel a c hc (hrem a (by simp))
     rw [List.map_cons, toBPoly_cons, toBPoly_cons]
     rw [ha, map_mul]
     linear_combination Polynomial.X * has
@@ -302,7 +269,7 @@ theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cn
     (hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
   toBPoly_bdivC_exact fuel p c hc
-    (fun a ha => cmod_eq_zero_of_dvd_loc fuel a c hc (hfuel a ha) (hdvd a ha))
+    (fun a ha => cmod_eq_zero_of_dvd fuel a c hc (hfuel a ha) (hdvd a ha))
 
 /-- `C(toPoly g) · toBPoly (bprimitivePartX fuel p) = toBPoly p` with `g = bcontentX fuel p` nonzero
 and dividing each `x`-coefficient exactly: `bprimitivePartX` strips a `ℚ[t]` content factor. -/

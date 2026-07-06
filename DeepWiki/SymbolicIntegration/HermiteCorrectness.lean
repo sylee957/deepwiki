@@ -395,36 +395,6 @@ example (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec_of fuel V U hU hV ⟨hq, hg, hgc⟩ j A
 
-/-- Divisibility ⟹ exact remainder: if `toPoly q ∣ toPoly p` (and `q ≠ 0`, enough fuel), then
-`toPoly (cmod fuel p q) = 0`. -/
-theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
-    (hfuel : (cnorm p).length ≤ fuel) (hdvd : toPoly q ∣ toPoly p) :
-    toPoly (cmod fuel p q) = 0 := by
-  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
-  -- Euclidean identity: `toPoly p = toPoly (cdiv …)·toPoly q + toPoly (cmod …)`.
-  have hdiv := toPoly_cdivmod' fuel p q hq
-  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
-      show (cdivmod fuel p q).2 = cmod fuel p q from rfl] at hdiv
-  -- `toPoly q ∣ toPoly (cmod …)`: it divides `p` and `(cdiv …)·q`, hence the difference.
-  have hqr : toPoly q ∣ toPoly (cmod fuel p q) := by
-    have hd2 : toPoly q ∣ toPoly (cdiv fuel p q) * toPoly q := Dvd.intro_left _ rfl
-    have : toPoly (cmod fuel p q) = toPoly p - toPoly (cdiv fuel p q) * toPoly q := by
-      rw [hdiv]; ring
-    rw [this]; exact dvd_sub hdvd hd2
-  -- degree of the remainder is below `deg q`.
-  have hlen : (cnorm (cmod fuel p q)).length < (cnorm q).length := cmod_length_lt fuel p q hq hfuel
-  by_contra hne
-  have hrne : toPoly (cmod fuel p q) ≠ 0 := hne
-  have hdeg : (toPoly q).degree ≤ (toPoly (cmod fuel p q)).degree :=
-    Polynomial.degree_le_of_dvd hqr hrne
-  -- but the length bound gives the strict reverse inequality.
-  have e1 : (cnorm (cmod fuel p q)).length = (toPoly (cmod fuel p q)).natDegree + 1 :=
-    length_cnorm_of_ne _ (fun h => hrne ((cnorm_eq_nil_iff _).mp h))
-  have e2 : (cnorm q).length = (toPoly q).natDegree + 1 := length_cnorm_of_ne q hq
-  have hndlt : (toPoly (cmod fuel p q)).natDegree < (toPoly q).natDegree := by omega
-  rw [Polynomial.degree_eq_natDegree hrne, Polynomial.degree_eq_natDegree hq0, Nat.cast_le] at hdeg
-  omega
-
 open Classical in
 /-- Exact-division cross-multiplication in `RatFunc ℚ`: when `toPoly (cmod fuel p q) = 0` and `q ≠ 0`,
 `am p / am q = am (cdiv fuel p q)`. -/

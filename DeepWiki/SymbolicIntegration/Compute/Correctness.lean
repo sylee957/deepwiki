@@ -601,6 +601,32 @@ theorem cmod_length_lt (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
       rw [cnorm_idem]
       omega
 
+/-- Divisibility gives a vanishing computable remainder, assuming enough fuel. -/
+theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hfuel : (cnorm p).length ≤ fuel) (hdvd : toPoly q ∣ toPoly p) :
+    toPoly (cmod fuel p q) = 0 := by
+  have hq0 : toPoly q ≠ 0 := fun h => hq ((cnorm_eq_nil_iff q).mpr h)
+  have hdiv := toPoly_cdivmod' fuel p q hq
+  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
+      show (cdivmod fuel p q).2 = cmod fuel p q from rfl] at hdiv
+  have hqr : toPoly q ∣ toPoly (cmod fuel p q) := by
+    have hd2 : toPoly q ∣ toPoly (cdiv fuel p q) * toPoly q := Dvd.intro_left _ rfl
+    have hsub : toPoly (cmod fuel p q) = toPoly p - toPoly (cdiv fuel p q) * toPoly q := by
+      rw [hdiv]; ring
+    rw [hsub]; exact dvd_sub hdvd hd2
+  have hlen : (cnorm (cmod fuel p q)).length < (cnorm q).length :=
+    cmod_length_lt fuel p q hq hfuel
+  by_contra hne
+  have hrne : toPoly (cmod fuel p q) ≠ 0 := hne
+  have hdeg : (toPoly q).degree ≤ (toPoly (cmod fuel p q)).degree :=
+    Polynomial.degree_le_of_dvd hqr hrne
+  have e1 : (cnorm (cmod fuel p q)).length = (toPoly (cmod fuel p q)).natDegree + 1 :=
+    length_cnorm_of_ne _ (fun h => hrne ((cnorm_eq_nil_iff _).mp h))
+  have e2 : (cnorm q).length = (toPoly q).natDegree + 1 := length_cnorm_of_ne q hq
+  have hndlt : (toPoly (cmod fuel p q)).natDegree < (toPoly q).natDegree := by omega
+  rw [Polynomial.degree_eq_natDegree hrne, Polynomial.degree_eq_natDegree hq0, Nat.cast_le] at hdeg
+  omega
+
 /-- Euclidean-gcd descent terminates for sufficient fuel: when `fuel` bounds the first argument's
 normalized length and strictly bounds the second's, `cgcdTerminates fuel a b` holds. -/
 theorem cgcdTerminates_of_fuel :
