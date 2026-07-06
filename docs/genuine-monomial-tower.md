@@ -49,11 +49,29 @@ reduction** and should be a discharged theorem. `hDt0` (`deg Dt = 0`) is the pri
   - `hcopgcd_of_genuineMonomial` assembles them (`IsCoprime.mul_left` + the `zipIdx`→`get` bridge
     `List.mk_mem_zipIdx_iff_getElem?`); `_of_genuine` derives `hcopgcd` from `hgen.hE`.
 
-## Next
+## The remaining two fields are NOT normality — they are honest structural conditions
 
-1. **Discharge `hAD`** from the Hermite properness invariant (`cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one`,
-   concrete-carrier — algorithm-derived, belongs nowhere in the frontier).
-2. **Collapse** to `{GenuinePrimitiveMonomialLrt Dt, hDt0 (scope)}`, then **pull the monomial property out of the
-   per-input structure** (provided once per `Dt`).
+With all normality subsumed, the frontier `LrtReducedGenuineData = {hDt0, hAD, hE}` splits by *kind*:
+
+- **`hE`** — the **single genuine mathematical frontier**: the input-independent monomial normality
+  `η = Dt ∉ range D` (`GenuinePrimitiveMonomialLrt Dt`). Provable on a concrete genuine tower ⟹ vanishes there.
+- **`hDt0`** (`deg Dt = 0`) — the primitive-case **scope tag**. Selects the algorithm branch; a correct
+  *precondition*, not a frontier to eliminate.
+- **`hAD`** (`deg hNum < deg Dstar`) — Hermite **properness**. Unlike the normality conditions it does **not**
+  vanish: it is *conditional on input properness* `deg a < deg d`. It is dischargeable — but to the honest
+  precondition `deg a < deg d`, not to nothing — via the already-assembled chain
+  `cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one` (`OneShotAssembly`) +
+  `cHermiteReduceTowerG_residual_proper_of_degree_le_one` + `cdiophantineGWf_fst_degree_lt` (`hb`) + Yun
+  `get_ne_zero` (`hv`), with the fold→`.2.1/.2.2` projection/`hdvd` bookkeeping (~150L, the `hdvd` residual
+  divisibility being the fiddly piece) and a `degree`→`natDegree` conversion. A **domain/properness** condition,
+  not a normality frontier.
+
+## Next (optional, lower priority than the completed normality arc)
+
+1. **Replace `hAD` with `deg a < deg d`** — the faithful input-properness precondition — via the assembly above.
+   This makes every field of `LrtReducedGenuineData` an honest structural/domain condition with `hE` the sole
+   mathematical one. (Separate ~150L degree-tracking task; the pieces all exist as `example`s in
+   `NormalPartSoundness`.)
+2. **Pull `hE` out of the per-input structure** (it depends only on `Dt`, provided once per tower level).
 3. **`GenuineMonomialTower` class** capturing the invariant for a whole concrete tower, from which
    `[PrimitiveFrontierLrt]` is discharged unconditionally on that tower.
