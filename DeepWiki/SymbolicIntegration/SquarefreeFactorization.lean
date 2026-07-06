@@ -312,6 +312,23 @@ theorem sqfreeFactPart_isRelPrime (A : D[X]) {i j : ℕ} (hij : i ≠ j) :
   rw [hPeqQ] at hi
   exact hij (hi.symm.trans hj)
 
+open UniqueFactorizationMonoid in
+open Classical in
+/-- Any associate of `sqfreeFactPart A j` is squarefree. -/
+theorem squarefree_of_associated_sqfreeFactPart {K : Type*} [Field K]
+    {V : K[X]} (A : K[X]) (j : ℕ) (h : Associated V (sqfreeFactPart A j)) :
+    Squarefree V :=
+  h.squarefree_iff.mpr (sqfreeFactPart_squarefree A j)
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- Associates of distinct squarefree-factorization parts are relatively prime. -/
+theorem isRelPrime_of_associated_sqfreeFactPart {K : Type*} [Field K]
+    {V W : K[X]} (A : K[X]) {i j : ℕ} (hij : i ≠ j)
+    (hV : Associated V (sqfreeFactPart A i)) (hW : Associated W (sqfreeFactPart A j)) :
+    IsRelPrime V W :=
+  ((sqfreeFactPart_isRelPrime A hij).of_dvd_left hV.dvd).of_dvd_right hW.dvd
+
 open Classical in
 /-- The squarefree part of a deflation as a product of higher parts: `(A⁻ᵏ)* = ∏_{j > k} Aⱼ`. -/
 theorem squarefreePart_deflation_eq_prod (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :

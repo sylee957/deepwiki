@@ -586,26 +586,6 @@ theorem gcd_radical_yunStep_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) 
     (associated_one_iff_isUnit.mpr hunit).mul_left V
   rwa [mul_one] at this
 
-/-! ### Squarefreeness and pairwise coprimality of the Yun factors (from the abstract association) -/
-
-open UniqueFactorizationMonoid in
-open Classical in
-/-- A Yun factor is squarefree: any `V` associated to `sqfreeFactPart A j` is squarefree. -/
-theorem squarefree_of_associated_sqfreeFactPart {K : Type*} [Field K]
-    {V : K[X]} (A : K[X]) (j : ℕ) (h : Associated V (sqfreeFactPart A j)) :
-    Squarefree V :=
-  h.squarefree_iff.mpr (sqfreeFactPart_squarefree A j)
-
-open UniqueFactorizationMonoid in
-open Classical in
-/-- Two Yun factors at distinct multiplicities are relatively prime: if `V ~ sqfreeFactPart A i`,
-`W ~ sqfreeFactPart A j` and `i ≠ j`, then `IsRelPrime V W`. -/
-theorem isRelPrime_of_associated_sqfreeFactPart {K : Type*} [Field K]
-    {V W : K[X]} (A : K[X]) {i j : ℕ} (hij : i ≠ j)
-    (hV : Associated V (sqfreeFactPart A i)) (hW : Associated W (sqfreeFactPart A j)) :
-    IsRelPrime V W :=
-  ((sqfreeFactPart_isRelPrime A hij).of_dvd_left hV.dvd).of_dvd_right hW.dvd
-
 /-! ### The abstract Yun loop state and its step recurrence (exact, scalar-tracked) -/
 
 open Classical in
