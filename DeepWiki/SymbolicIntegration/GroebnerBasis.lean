@@ -23,6 +23,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBoundedReduction
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardStep
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerCommonFactor
 import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardDescent
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardFactorization
 
 /-! # Gröbner bases over a monomial order
 
@@ -83,128 +84,6 @@ leading monomials are preserved". The arithmetic core is the **leading-monomial 
 set drops by exactly `m.degree h`, an order-isomorphism on degrees that preserves divisibility and
 minimality. This is the reachable framework half; the genuine wall (which `h` to divide by so the
 quotient's minimal element lands in `K[x]`) is Part B. -/
-
-open scoped Classical in
-/-- A `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` (UFD `⟹` normalized GCD domain), supplying
-the normalization that `Polynomial.content`/`primPart` need. Used as a local `letI`; not a global
-instance (avoids diamonds with `gcdMonoidMvPolynomialFinOne`). -/
-@[reducible] noncomputable def normalizedGcdMonoidMvPolynomialFinOne (K : Type*) [Field K] :
-    NormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
-  letI := UniqueFactorizationMonoid.normalizationMonoid (α := MvPolynomial (Fin 1) K)
-  UniqueFactorizationMonoid.toNormalizedGCDMonoid _
-
-/-- **Content divides the leading-`y`-coefficient**: for the chosen `NormalizedGCDMonoid`, the
-content of `lazardView f` divides `Rᵢ = leadingYCoeff f` (`content` divides every coefficient,
-including the leading one). -/
-theorem content_lazardView_dvd_leadingYCoeff {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
-    @Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)
-      ∣ leadingYCoeff f := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
-  rw [leadingYCoeff, Polynomial.leadingCoeff]
-  exact Polynomial.content_dvd_coeff _
-
-/-- **Lazard's Lemma 3, content half of `Pₖ = Rₖ·Sₖ`**: if `gᵢ ∣ fᵢ` in the form `C(Rᵢ) ∣ lazardView fᵢ`
-(equivalently `Rᵢ ∣ content`, the converse of the always-true `content ∣ Rᵢ`), then the content of
-`lazardView fᵢ` is **associated** to `Rᵢ = leadingYCoeff fᵢ`. -/
-theorem content_associated_leadingYCoeff_of_C_dvd {K : Type*} [Field K]
-    {f : MvPolynomial (Fin 2) K}
-    (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
-    Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
-      (leadingYCoeff f) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
-  refine associated_of_dvd_dvd (content_lazardView_dvd_leadingYCoeff f) ?_
-  exact Polynomial.dvd_content_iff_C_dvd.mpr hdvd
-
-/-- **The base divisibility is the content criterion** (the "no common factor" characterization). The
-descent base `C(gᵢ) ∣ lazardView fᵢ` holds **iff** the content of `lazardView fᵢ` is *associated* to
-`Rᵢ = leadingYCoeff fᵢ` (i.e. `fᵢ` is `y`-primitive up to its leading coefficient). Forward is
-`content_associated_leadingYCoeff_of_C_dvd`; the converse uses `gᵢ ∣ content` (from the association) and
-`Polynomial.dvd_content_iff_C_dvd`. This is the exact obstruction Lazard's `P·Gₖ₊₁` divide-out removes —
-it makes every `fᵢ` `y`-primitive (`content ∼ Rᵢ`) so the base holds. -/
-theorem C_dvd_lazardView_iff_content_associated {K : Type*} [Field K]
-    {f : MvPolynomial (Fin 2) K} :
-    Polynomial.C (leadingYCoeff f) ∣ lazardView f ↔
-      Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
-        (leadingYCoeff f) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
-  refine ⟨content_associated_leadingYCoeff_of_C_dvd, fun hassoc => ?_⟩
-  exact Polynomial.dvd_content_iff_C_dvd.mp hassoc.symm.dvd
-
-/-- **Lazard's Lemma 3, monic-primpart half of `Pₖ = Rₖ·Sₖ`**: if `C(Rᵢ) ∣ lazardView fᵢ` (`gᵢ ∣ fᵢ`),
-the primitive part `Sᵢ = (lazardView fᵢ).primPart` is **monic in `y`** — its leading coefficient is a
-unit of `K[x]` (a nonzero constant). Since `Rᵢ = content · leadingCoeff(Sᵢ)` and `content ∼ Rᵢ`, the
-factor `leadingCoeff(Sᵢ)` must be a unit. -/
-theorem leadingCoeff_primPart_isUnit_of_C_dvd {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
-    (hf : f ≠ 0) (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
-    IsUnit ((@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
-      (lazardView f)).leadingCoeff) := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
-  set c := Polynomial.content (lazardView f) with hc
-  set s := Polynomial.primPart (lazardView f) with hs
-  have hassoc : Associated c (leadingYCoeff f) := content_associated_leadingYCoeff_of_C_dvd hdvd
-  have hc0 : c ≠ 0 := by
-    rw [hc, Ne, Polynomial.content_eq_zero_iff]; exact lazardView_eq_zero_iff.not.mpr hf
-  -- `Rᵢ = leadingCoeff (C c * s) = c * leadingCoeff s` (domain), and `c ∼ Rᵢ`, so `leadingCoeff s` is a unit.
-  have hReq : leadingYCoeff f = c * s.leadingCoeff := by
-    conv_lhs => rw [leadingYCoeff, Polynomial.eq_C_content_mul_primPart (lazardView f), ← hc, ← hs]
-    rw [Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C]
-  obtain ⟨u, hu⟩ := hassoc
-  -- `c * (s.leadingCoeff) = c * u`, cancel `c` to get `s.leadingCoeff = u`, a unit.
-  have : c * s.leadingCoeff = c * (u : MvPolynomial (Fin 1) K) := by rw [← hReq, hu]
-  rw [mul_right_inj' hc0] at this
-  rw [this]; exact u.isUnit
-
-/-- **Lazard's Lemma 3, the `Pₖ = Rₖ·Sₖ` factorization** (Bronstein/Czichowski §2.6(i)). If `gᵢ ∣ fᵢ`
-(`C(Rᵢ) ∣ lazardView fᵢ`), the `K[x][y]` view splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ`
-associated to `Rᵢ = leadingYCoeff fᵢ` and `Sᵢ` primitive and monic-in-`y` (unit leading coefficient) —
-the Czichowski structure `Pₖ = Rₖ·Sₖ`. -/
-theorem lazard_Pk_eq_Rk_Sk {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0)
-    (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
-    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
-      lazardView f = Polynomial.C (@Polynomial.content _ _
-          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)) * S ∧
-        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
-          (lazardView f)) (leadingYCoeff f) ∧
-        S.IsPrimitive ∧ IsUnit S.leadingCoeff := by
-  letI := normalizedGcdMonoidMvPolynomialFinOne K
-  refine ⟨(lazardView f).primPart, Polynomial.eq_C_content_mul_primPart (lazardView f),
-    content_associated_leadingYCoeff_of_C_dvd hdvd, Polynomial.isPrimitive_primPart _,
-    leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd⟩
-
-/-- **Lazard's `Pₖ = Rₖ·Sₖ` for every sorted basis element** (Part C, no-common-factor case). With
-the base divisibility `C(g₀) ∣ lazardView f₀` (`hbase`, the necessary-and-sufficient "no common factor"),
-the descent `lazard_lemma3_dvd` discharges the divisibility hypothesis of `lazard_Pk_eq_Rk_Sk`, so
-*every* `fᵢ = sorted i` splits as `lazardView fᵢ = C(cᵢ)·Sᵢ` with content `cᵢ ∼ Rᵢ = leadingYCoeff fᵢ`
-and `Sᵢ` primitive and monic in `y` (unit leading coefficient). -/
-theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree {K : Type*} [Field K]
-    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (hbase : HasLazardBaseDvd hB)
-    (i : Fin B.card) :
-    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
-      lazardView (sortedByYDegree hB i) = Polynomial.C (@Polynomial.content _ _
-          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB i))) * S ∧
-        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
-          (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
-        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
-  lazard_Pk_eq_Rk_Sk (hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i)))
-    (lazard_lemma3_dvd hB hbase i)
-
-/-- **Lazard's `Pₖ = Rₖ·Sₖ` for every sorted basis element from `f₀ ∈ K[x]`** (Part C, `degreeOf = 0`
-form): the `degreeOf 0 (sorted 0) = 0` specialization of `lazard_Pk_eq_Rk_Sk_of_sortedByYDegree` (base
-discharged by `baseDvd_of_degreeOf_zero`). -/
-theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree_of_degreeOf_zero {K : Type*} [Field K]
-    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    (hbase : HasLazardBaseDegreeZero hB)
-    (i : Fin B.card) :
-    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
-      lazardView (sortedByYDegree hB i) = Polynomial.C (@Polynomial.content _ _
-          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB i))) * S ∧
-        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
-          (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
-        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
-  lazard_Pk_eq_Rk_Sk_of_sortedByYDegree hB (baseDvd_of_degreeOf_zero hB hbase) i
 
 /-! ## Part B: the no-common-factor base, and the genuine `K[x][y]` divide-out obstruction
 

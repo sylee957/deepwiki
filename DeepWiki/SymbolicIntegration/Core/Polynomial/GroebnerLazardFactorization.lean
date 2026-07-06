@@ -1,0 +1,114 @@
+import Mathlib.RingTheory.MvPolynomial.Groebner
+import Mathlib.RingTheory.Polynomial.UniqueFactorization
+import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
+import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardDescent
+
+/-! # Lazard factorization API
+
+Content and primitive-part factorization for the `K[x][y]` view used in Lazard descent.
+-/
+
+open MvPolynomial MonomialOrder
+
+namespace DeepWiki.SymbolicIntegration
+
+open scoped Classical in
+/-- A local `NormalizedGCDMonoid` on `MvPolynomial (Fin 1) K` for polynomial content. -/
+@[reducible] noncomputable def normalizedGcdMonoidMvPolynomialFinOne (K : Type*) [Field K] :
+    NormalizedGCDMonoid (MvPolynomial (Fin 1) K) :=
+  letI := UniqueFactorizationMonoid.normalizationMonoid (α := MvPolynomial (Fin 1) K)
+  UniqueFactorizationMonoid.toNormalizedGCDMonoid _
+
+/-- The content of `lazardView f` divides the leading `y`-coefficient of `f`. -/
+theorem content_lazardView_dvd_leadingYCoeff {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
+    @Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)
+      ∣ leadingYCoeff f := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  rw [leadingYCoeff, Polynomial.leadingCoeff]
+  exact Polynomial.content_dvd_coeff _
+
+/-- If `C (leadingYCoeff f)` divides `lazardView f`, its content is associated to `leadingYCoeff f`. -/
+theorem content_associated_leadingYCoeff_of_C_dvd {K : Type*} [Field K]
+    {f : MvPolynomial (Fin 2) K}
+    (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
+    Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
+      (leadingYCoeff f) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  refine associated_of_dvd_dvd (content_lazardView_dvd_leadingYCoeff f) ?_
+  exact Polynomial.dvd_content_iff_C_dvd.mpr hdvd
+
+/-- `C (leadingYCoeff f) ∣ lazardView f` iff the content is associated to `leadingYCoeff f`. -/
+theorem C_dvd_lazardView_iff_content_associated {K : Type*} [Field K]
+    {f : MvPolynomial (Fin 2) K} :
+    Polynomial.C (leadingYCoeff f) ∣ lazardView f ↔
+      Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f))
+        (leadingYCoeff f) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  refine ⟨content_associated_leadingYCoeff_of_C_dvd, fun hassoc => ?_⟩
+  exact Polynomial.dvd_content_iff_C_dvd.mp hassoc.symm.dvd
+
+/-- If `C (leadingYCoeff f)` divides `lazardView f`, the primitive part has unit leading coefficient. -/
+theorem leadingCoeff_primPart_isUnit_of_C_dvd {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
+    (hf : f ≠ 0) (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
+    IsUnit ((@Polynomial.primPart _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+      (lazardView f)).leadingCoeff) := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  set c := Polynomial.content (lazardView f) with hc
+  set s := Polynomial.primPart (lazardView f) with hs
+  have hassoc : Associated c (leadingYCoeff f) := content_associated_leadingYCoeff_of_C_dvd hdvd
+  have hc0 : c ≠ 0 := by
+    rw [hc, Ne, Polynomial.content_eq_zero_iff]; exact lazardView_eq_zero_iff.not.mpr hf
+  have hReq : leadingYCoeff f = c * s.leadingCoeff := by
+    conv_lhs => rw [leadingYCoeff, Polynomial.eq_C_content_mul_primPart (lazardView f), ← hc, ← hs]
+    rw [Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C]
+  obtain ⟨u, hu⟩ := hassoc
+  have : c * s.leadingCoeff = c * (u : MvPolynomial (Fin 1) K) := by rw [← hReq, hu]
+  rw [mul_right_inj' hc0] at this
+  rw [this]; exact u.isUnit
+
+/-- Lazard factorization: `lazardView f = C c * S` with `c ∼ leadingYCoeff f` and monic primitive `S`. -/
+theorem lazard_Pk_eq_Rk_Sk {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0)
+    (hdvd : Polynomial.C (leadingYCoeff f) ∣ lazardView f) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView f = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView f)) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView f)) (leadingYCoeff f) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff := by
+  letI := normalizedGcdMonoidMvPolynomialFinOne K
+  refine ⟨(lazardView f).primPart, Polynomial.eq_C_content_mul_primPart (lazardView f),
+    content_associated_leadingYCoeff_of_C_dvd hdvd, Polynomial.isPrimitive_primPart _,
+    leadingCoeff_primPart_isUnit_of_C_dvd hf hdvd⟩
+
+/-- Lazard factorization for every sorted basis element once the base divisibility holds. -/
+theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : HasLazardBaseDvd hB)
+    (i : Fin B.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB i) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB i))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk (hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i)))
+    (lazard_lemma3_dvd hB hbase i)
+
+/-- Lazard factorization for every sorted basis element from the degree-zero base condition. -/
+theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree_of_degreeOf_zero {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    (hbase : HasLazardBaseDegreeZero hB)
+    (i : Fin B.card) :
+    ∃ S : Polynomial (MvPolynomial (Fin 1) K),
+      lazardView (sortedByYDegree hB i) = Polynomial.C (@Polynomial.content _ _
+          (normalizedGcdMonoidMvPolynomialFinOne K) (lazardView (sortedByYDegree hB i))) * S ∧
+        Associated (@Polynomial.content _ _ (normalizedGcdMonoidMvPolynomialFinOne K)
+          (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
+        S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
+  lazard_Pk_eq_Rk_Sk_of_sortedByYDegree hB (baseDvd_of_degreeOf_zero hB hbase) i
+
+end DeepWiki.SymbolicIntegration
