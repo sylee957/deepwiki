@@ -15,7 +15,14 @@ Small notes for semantic consolidation targets discovered during the migration.
 
 ## Differential substitutions
 
-- `LaurentCoefficients.lean` defines `diffSubst`, its generator simp lemmas, and
-  `diffSubst_ddx`.
-- Candidate: move this cluster to the differential-polynomial core once the Laurent-specific
-  root evaluation lemmas are separated from the generic differential-hom statement.
+- Done: `diffSubst`, its generator simp lemmas, `diffSubst_ddx`, and the point-evaluation
+  helpers now live in `Core/Differential/DifferentialPolynomials.lean`.
+
+## Local principal parts
+
+- `LaurentCoefficients.lean` still contains the local inverse/approximant/principal-part API:
+  `localInverse`, `localApprox`, `localCoeff`, `localPrincipalPart`, and regularity/uniqueness
+  lemmas.
+- Candidate: extract the source-neutral local principal-part construction into a polynomial
+  or rational-function core file, leaving only the bridge to the Laurent engine in
+  `LaurentCoefficients.lean`.
