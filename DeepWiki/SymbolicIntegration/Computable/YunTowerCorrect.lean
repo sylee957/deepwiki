@@ -706,4 +706,48 @@ theorem cSqfreeYunFFGWf_lawfulSquarefreeDecomposition [CharZero (CFieldSpec.K α
       intro i j hi hj hij
       exact cSqfreeYunFFGWf_isRelPrime hgcd d hd0 hpp hi hj (Nat.ne_of_lt hij) }
 
+/-! ### The Yun factorization of a constant is empty (the no-poles / trivial-normal-part base case) -/
+
+omit [CDiffField α] [CDiffFieldSpec α] [CFieldSpec α] in
+/-- **The Yun go-loop is empty once its working polynomial is a constant** (`cdegG b = 0` fires the
+terminating `if`). -/
+theorem cSqfreeYunFFGgoWf_eq_nil_of_cdegG_zero (fo : ℕ) (b d : CPolyG α) (hb : cdegG b = 0) :
+    cSqfreeYunFFGgoWf fo b d = [] := by
+  cases fo with
+  | zero => rfl
+  | succ n => rw [cSqfreeYunFFGgoWf]; exact if_pos hb
+
+omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
+/-- **Dividing a constant stays a constant**: `cdegG p = 0 ⟹ cdegG (cdivWf p q) = 0`. The polynomial quotient
+of a degree-`0` dividend has degree `0` (`p = q̂·q + r` with `deg r < deg q`; a positive-degree `q̂` would push
+`deg p` positive). -/
+theorem cdegG_cdivWf_eq_zero_of_cdegG_zero (p q : CPolyG α) (hp : cdegG p = 0)
+    (hq : cnormG q ≠ []) : cdegG (cdivWf p q) = 0 := by
+  rw [cdegG_eq_natDegree] at hp ⊢
+  have hdiv := toPolyG_cmodWf p q hq
+  have hq' : toPolyG q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
+  by_contra hquot
+  have hquot0 : toPolyG (cdivWf p q) ≠ 0 := fun h => hquot (by rw [h, Polynomial.natDegree_zero])
+  have hrem : (toPolyG (cmodWf p q)).degree < (toPolyG q).degree :=
+    toPolyG_degree_lt_of_length_lt (cmodWf p q) q hq (cmodWf_length_lt p q hq)
+  have hmuldeg : (toPolyG q).degree ≤ (toPolyG (cdivWf p q) * toPolyG q).degree := by
+    rw [Polynomial.degree_mul]
+    exact le_add_of_nonneg_left (Polynomial.zero_le_degree_iff.mpr hquot0)
+  have hpdeg : (toPolyG p).degree = (toPolyG (cdivWf p q) * toPolyG q).degree := by
+    rw [hdiv, add_comm]
+    exact Polynomial.degree_add_eq_right_of_degree_lt (lt_of_lt_of_le hrem hmuldeg)
+  have hnat := Polynomial.natDegree_eq_of_degree_eq hpdeg
+  rw [Polynomial.natDegree_mul hquot0 hq'] at hnat
+  omega
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- **The Yun factorization of a constant is empty** (`cdegG p = 0 ⟹ cSqfreeYunFFGWf p = []`) — the base of
+the no-poles / trivial-normal-part case: with no non-constant factor there are no residues. -/
+theorem cSqfreeYunFFGWf_eq_nil_of_cdegG_zero (p : CPolyG α) (hp : cdegG p = 0)
+    (hg : cnormG (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)) ≠ []) :
+    cSqfreeYunFFGWf p = [] := by
+  rw [cSqfreeYunFFGWf]
+  exact cSqfreeYunFFGgoWf_eq_nil_of_cdegG_zero _ _ _
+    (cdegG_cdivWf_eq_zero_of_cdegG_zero p _ hp hg)
+
 end DeepWiki.SymbolicIntegration
