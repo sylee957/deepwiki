@@ -34,6 +34,7 @@ import DeepWiki.SymbolicIntegration.Computable.RischSolverTowerLrt
 import DeepWiki.SymbolicIntegration.Computable.RischTowerLrtGrounding
 import DeepWiki.SymbolicIntegration.Computable.LrtCompleteness
 import DeepWiki.SymbolicIntegration.Computable.IntegratorCompleteness
+import DeepWiki.SymbolicIntegration.Computable.LinearSolve
 import DeepWiki.SymbolicIntegration.Computable.LinearSolveCorrect
 import DeepWiki.SymbolicIntegration.Computable.ListDet
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleExpBridge

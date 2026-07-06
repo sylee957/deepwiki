@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Tower.Field
+import DeepWiki.SymbolicIntegration.Computable.LinearSolve
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
 /-! # Computable parametric problems over the tower ℚ(x)[t]
@@ -6,8 +6,7 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 Computable solvers, over the base monomial field `k = ℚ`, for three parametric integration problems: the
 parametric Risch differential equation `Dy + f·y = Σᵢ cᵢ·gᵢ` (returning a basis of the constant solution
 subspace), the limited integration problem `f = Dv + Σᵢ cᵢ·log(wᵢ)`, and the parametric logarithmic
-derivative problem `n·f = Dv/v + m·Dθ/θ`. The shared ingredient is a dense linear solver over the constant
-field `Const(k) = ℚ` (RREF, nullspace basis, unique/particular solve). -/
+derivative problem `n·f = Dv/v + m·Dθ/θ`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -55,66 +54,6 @@ constant) is ruled out; a proper `b` is conservatively accepted. -/
 def cParametricLogDeriv (b : QFunNZG ℚ) : Bool :=
   -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
   CField.isZero b || cBaseIsProper b
-
-/-! ### A dense linear solver over the constant field `Const(k) = ℚ` -/
-
-/-- Reduced row echelon form over ℚ `crref rows ncols = (R, pivots)`: Gauss–Jordan elimination of the
-dense matrix `rows` to RREF `R`, with the list of pivot column indices (strictly increasing). Each pivot
-is normalized to `1` and is the only nonzero entry in its column; zero rows are dropped. -/
-def crref (rows : List (List ℚ)) (ncols : ℕ) : List (List ℚ) × List ℕ :=
-  -- work column by column, maintaining the not-yet-pivoted rows and the accumulated pivot rows.
-  let rec go : ℕ → ℕ → List (List ℚ) → List (List ℚ) → List ℕ →
-      List (List ℚ) × List ℕ
-    | 0, _, _, pivRows, pivCols => (pivRows.reverse, pivCols.reverse)
-    | _, _, [], pivRows, pivCols => (pivRows.reverse, pivCols.reverse)  -- no rows left
-    | fuel + 1, col, rest, pivRows, pivCols =>
-      if col ≥ ncols then (pivRows.reverse, pivCols.reverse)
-      else
-        -- find a row in `rest` with a nonzero entry in column `col`.
-        match rest.find? (fun r => (r.getD col 0) ≠ 0) with
-        | none => go (fuel) (col + 1) rest pivRows pivCols  -- free column, skip
-        | some pr =>
-          let piv := pr.getD col 0
-          let prn := pr.map (· / piv)                       -- normalize pivot to 1
-          -- eliminate column `col` from every other current row (rest minus pr, and pivRows).
-          let elim : List ℚ → List ℚ := fun r =>
-            let f := r.getD col 0
-            (List.zipWith (fun ri pi => ri - f * pi) r prn)
-          let restElim := (rest.filter (fun r => !(decide (r = pr)))).map elim
-          let pivRowsElim := pivRows.map elim
-          go fuel (col + 1) restElim (prn :: pivRowsElim) (col :: pivCols)
-  go (ncols + rows.length + 1) 0 rows [] []
-
-/-- **Nullspace basis over ℚ** `cNullspaceBasisQ rows ncols = [v⃗₁, …, v⃗ᵣ]`: a basis of the kernel
-`{x⃗ ∈ ℚ^ncols : A·x⃗ = 0}` of the homogeneous system whose rows are `rows`. From the RREF each free
-(non-pivot) column yields one basis vector (`1` at that column, `−R[pivotRow][freeCol]` at each pivot
-column). Returns `[]` when the kernel is trivial. -/
-def cNullspaceBasisQ (rows : List (List ℚ)) (ncols : ℕ) : List (List ℚ) :=
-  let (R, pivCols) := crref rows ncols
-  let freeCols := (List.range ncols).filter (fun j => !pivCols.contains j)
-  freeCols.map (fun fc =>
-    (List.range ncols).map (fun j =>
-      if j = fc then (1 : ℚ)
-      else match pivCols.idxOf? j with
-        | some pr => - ((R.getD pr []).getD fc 0)   -- pivot column `j` is at RREF row `pr`
-        | none => 0))                                -- another free column ⇒ 0
-
-/-- **Unique solution over ℚ (if it exists)** `cConstSolveUniqueQ Arows urhs ncols`: solve the
-inhomogeneous system `A·x⃗ = u⃗` (`A = Arows`, `u⃗ = urhs`) for the **unique** `x⃗ ∈ ℚ^ncols`, returning
-`some x⃗` iff the solution exists and is unique (full column rank), else `none`. Row-reduces the augmented
-matrix `[A | u]`; a pivot in the augmented column ⟹ inconsistent; a free non-augmented column ⟹ not
-unique; else read each variable off its pivot row's augmented entry. -/
-def cConstSolveUniqueQ (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) : Option (List ℚ) :=
-  let aug := List.zipWith (fun r u => r ++ [u]) Arows urhs
-  let (R, pivCols) := crref aug (ncols + 1)
-  if pivCols.contains ncols then none           -- pivot in the rhs column: inconsistent
-  else if pivCols.length < ncols then none       -- a free variable: not unique
-  else
-    -- full rank: variable `j` (pivot column) reads its value off the augmented entry of its pivot row.
-    some ((List.range ncols).map (fun j =>
-      match pivCols.idxOf? j with
-      | some pr => (R.getD pr []).getD ncols 0
-      | none => 0))
 
 /-! ### `cParamLogDeriv` — the parametric logarithmic derivative recognizer over `k = ℚ(x)`
 
@@ -243,11 +182,6 @@ def cLimitedIntegrate (fnum fden : CPolyG ℚ) (wnums wdens : List (CPolyG ℚ))
   let gnums := fnum :: logDerivs.map Prod.fst
   let gdens := fden :: logDerivs.map Prod.snd
   cParamRischDE gnums gdens
-
-/-- `getD` within range reads the element. -/
-theorem getD_lt_gen {α : Type*} (l : List α) (n : ℕ) (d : α) (hn : n < l.length) :
-    l.getD n d = l[n] := by
-  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hn]; rfl
 
 end CPolyG
 
