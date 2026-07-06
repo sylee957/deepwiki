@@ -42,4 +42,13 @@ theorem eval_iterate_derivative_X_sub_C_mul (α : K) (p : K[X]) (k : ℕ) :
     nsmul_eq_mul]
   push_cast; ring
 
+/-- The cofactor at a simple root: if `f = (X - C α) * g`, then `f'.eval α = g.eval α`. -/
+theorem eval_derivative_of_X_sub_C_mul {f g : K[X]} {α : K}
+    (hfac : f = (Polynomial.X - Polynomial.C α) * g) :
+    (derivative f).eval α = g.eval α := by
+  subst hfac
+  rw [derivative_mul, derivative_sub, derivative_X, Polynomial.derivative_C, sub_zero, one_mul,
+    Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_sub, Polynomial.eval_X,
+    Polynomial.eval_C, sub_self, zero_mul, add_zero]
+
 end DeepWiki.SymbolicIntegration

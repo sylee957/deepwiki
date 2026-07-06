@@ -479,15 +479,6 @@ theorem eval_laurentH_eq_diffSubst_laurentNum [CharZero K] {A D Di Diα : K[X]} 
 
 /-! ## `Hᵢⱼ(α)` is the order-`(i−j)` Taylor coefficient of `hᵢ,α` -/
 
-/-- The cofactor at a simple root: `(derivative Di).eval α = Diα.eval α` when `Di = (x−α)·Diα`. -/
-theorem eval_derivative_of_X_sub_C_mul {Di Diα : K[X]} {α : K}
-    (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα) :
-    (derivative Di).eval α = Diα.eval α := by
-  subst hfac
-  rw [derivative_mul, derivative_sub, derivative_X, Polynomial.derivative_C, sub_zero, one_mul,
-    Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_sub, Polynomial.eval_X,
-    Polynomial.eval_C, sub_self, zero_mul, add_zero]
-
 /-- `(lDenomα Ei Diα i d).eval α ≠ 0` when `Ei(α), Diα(α) ≠ 0`. -/
 theorem eval_lDenomα_ne_zero {Ei Diα : K[X]} {α : K} (i d : ℕ) (hEi : Ei.eval α ≠ 0)
     (hDiα : Diα.eval α ≠ 0) : (lDenomα Ei Diα i d).eval α ≠ 0 := by
