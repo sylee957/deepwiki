@@ -791,6 +791,7 @@ theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPolyG α)
   exact field_identity_lrt_of_hherm_of_logMatch Dt res.rational.1 res.rational.2 hNum hDen anum aden
     res.logs (hlog E) (hherm E)
 
+omit [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **The symbolic log part is empty when the squarefree denominator is a constant** (`cdegG Dstar = 0`):
 no poles ⟹ no residues (Bronstein's §5.6 residue criterion is vacuous). The residue resultant of a constant is
