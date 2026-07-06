@@ -15,14 +15,6 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-! ### Generic quotient-degree and constant-power helpers -/
-
-/-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/
-@[denote] theorem toK_cfpow (c : α) (n : ℕ) : CFieldSpec.toK (cfpow c n) = (CFieldSpec.toK c) ^ n := by
-  induction n with
-  | zero => simp [cfpow, CFieldSpec.toK_one]
-  | succ n ih => rw [cfpow, CFieldSpec.toK_mul, ih, pow_succ']
-
 /-! ### `cresultantG` invariances -/
 
 /-- `toPolyG (clagNumG zs) = ∏ (X − C (toK zⱼ))`: the basis numerator as a product of linear factors. -/
