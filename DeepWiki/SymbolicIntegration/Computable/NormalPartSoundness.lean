@@ -179,11 +179,6 @@ theorem towerFractionFieldDerivG_amG_seed (Dt : CPolyG α) :
     rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero, map_zero]
   rw [hzero, zero_div, map_zero]
 
-omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- The seed denominator `[CField.one]` is nonzero under `toPolyG` (`= 1`). -/
-theorem toPolyG_seed_den_ne_zero : toPolyG ([CField.one] : CPolyG α) ≠ 0 := by
-  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]; exact one_ne_zero
-
 /-! ### The Hermite telescoping at the engine seed `0/1` -/
 
 /-- The Hermite telescoping at the seed `([CField.zero], [CField.one])`: `D(g) + h = a/d` for the `g`
@@ -208,7 +203,7 @@ theorem cHermiteReduceTowerG_telescope_seed (Dt : CPolyG α)
         + amG α (toPolyG (rest.getLastD L₀).1) / amG α (toPolyG (rest.getLastD L₀).2)
       = amG α (toPolyG L₀.1) / amG α (toPolyG L₀.2) :=
   cHermiteReduceTowerG_telescope Dt (([CField.zero] : CPolyG α), ([CField.one] : CPolyG α))
-    L₀ rest glocs toPolyG_seed_den_ne_zero hmem (towerFractionFieldDerivG_amG_seed Dt) hstep
+    L₀ rest glocs CPolyG.toPolyG_one_singleton_ne_zero hmem (towerFractionFieldDerivG_amG_seed Dt) hstep
 
 /-! ### The exact-division degree bound -/
 
