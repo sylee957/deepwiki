@@ -1,6 +1,6 @@
 # Plan: a `transfer` elaborator plugin (the Lean Trocq analog)
 
-**Status:** in progress · **Owner:** autonomous agent · **Repo:** `deepwiki` (Lean 4, v4.31.0)
+**Status:** DONE (all phases; gate-green) · **Owner:** autonomous agent · **Repo:** `deepwiki` (Lean 4, v4.31.0)
 
 ## Why (the finding that motivates this)
 
@@ -37,9 +37,17 @@ decomposition for the functional (`toPolyG`) case; the elaborator's unique value
 2. **`transfer` tactic** — whole-goal rewrite via the same normalization; close equality goals.
 3. **Validation** — reproduce the `RefinesPolyG` synthesis examples through `transfer%`; check whole-goal
    transfer on a `natDegree`/`dvd` goal (the relation-general reach).
-4. **Retire / reconcile** — decide `RefinesPolyG`/`DenoteHom`/`derive_denote_hom` disposition once
-   `transfer%`+`transfer` subsume them (the aesop `transfer` becomes the tactic; `DenoteHom` instances
-   may be dropped if the simp-set drive suffices). Each step gate-green.
+4. **Retire / reconcile** — DONE. The elaborator `transfer`/`transfer%` supersede the aesop machinery:
+   - `Computable/DenoteHom.lean` (classes + `derive_denote_hom` generator) **deleted** — 0 external uses.
+   - `RefinesPolyG.lean` **trimmed** to the zero-test reflection core (`RefinesPolyG` def,
+     `refinesPolyG_self`, `sub`, `eq_zero_of_cisZero`/`ne_zero_of_cisZero_false`,
+     `eq_of_csub_cisZero`/`ne_of_csub_cisZero_false`) — the `native_decide` `cisZeroG` bridge, a distinct
+     capability transfer does not cover. The aesop `transfer` macro, `hom₁`/`hom₂`, the `DenoteHom`
+     instances and 10 `derive_denote_hom` calls are gone.
+   - `Denote.lean` **trimmed**: dropped the `Refines` aesop rule set and the `refines` label attr
+     (only the retired machinery used them); `register_simp_attr denote` stays (drives `transfer`).
+   - The single external `by transfer` (LrtResidueResultantDischarge) migrated to `simp only [denote, hg1, hg2]`.
+   - `Transfer` added to the `Computable` aggregator. Full gate green.
 
 ## Guardrails
 

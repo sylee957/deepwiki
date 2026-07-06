@@ -64,6 +64,7 @@ import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
 import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
 import DeepWiki.SymbolicIntegration.Computable.ResidueConstantBridge
+import DeepWiki.SymbolicIntegration.Computable.Transfer
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
