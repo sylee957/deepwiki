@@ -342,6 +342,11 @@ theorem toPolyG_coeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (
     | zero => simp [coeff_C]
     | succ n => simp [coeff_X_mul, ih]
 
+/-- `toK` reads a normalized coefficient as the corresponding coefficient of `toPolyG p`. -/
+theorem toK_cnormG_getD {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) (k : ℕ) :
+    CFieldSpec.toK ((cnormG p : List α).getD k CField.zero) = (toPolyG p).coeff k := by
+  rw [← toPolyG_coeff, toPolyG_cnormG]
+
 /-- `cnormG` has no trailing zero: `(cnormG p).getLast?` is never a zero coefficient. -/
 theorem cnormG_getLast?_ne_some_zero {α : Type*} [CField α] (p : CPolyG α) :
     ∀ v, (cnormG p : List α).getLast? = some v → CField.isZero v = false := by

@@ -32,11 +32,6 @@ theorem getD_map_of_lt {β γ : Type*} (g : β → γ) (l : List β) (r : ℕ) (
 theorem getD_range_of_lt {r N : ℕ} (h : r < N) : (List.range N).getD r 0 = r := by
   rw [List.getD_eq_getElem?_getD, List.getElem?_range h]; rfl
 
-/-- `toK` reads a `cnormG` coefficient as `(toPolyG p).coeff`. -/
-theorem toK_cnormG_getD (p : CPolyG α) (k : ℕ) :
-    toK ((cnormG p : List α).getD k CField.zero) = (toPolyG p).coeff k := by
-  rw [← toPolyG_coeff, toPolyG_cnormG]
-
 /-! ### Index-selector reads -/
 
 theorem cSubRowIdx_length (n m j : ℕ) : (cSubRowIdx n m j).length = m + n - 2 * j := by
