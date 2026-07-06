@@ -2,7 +2,7 @@ import Mathlib.Algebra.Polynomial.Basic
 import Mathlib.Algebra.Polynomial.Degree.Defs
 import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.RingTheory.Polynomial.Basic
-import DeepWiki.SymbolicIntegration.Computable.Denote
+import DeepWiki.Transfer.Denote
 
 /-! # A generic computable field, and a polynomial engine over it
 

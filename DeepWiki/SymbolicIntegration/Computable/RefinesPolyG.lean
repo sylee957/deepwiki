@@ -8,7 +8,7 @@ of the refined polynomials — the bridge that lets a decidable `cisZeroG (csubG
 `toPolyG p = toPolyG q`.
 
 General denotation *transfer* (synthesizing the abstract meaning of a computable expression) lives in
-`Computable.Transfer` (`transfer%` / `transfer`); this file keeps only the zero-test reflection.
+`DeepWiki.Transfer` (`transfer%` / `transfer`); this file keeps only the zero-test reflection.
 -/
 
 open Polynomial

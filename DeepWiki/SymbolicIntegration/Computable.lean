@@ -13,7 +13,6 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Computable.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
-import DeepWiki.SymbolicIntegration.Computable.Denote
 import DeepWiki.SymbolicIntegration.Computable.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
@@ -64,7 +63,7 @@ import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
 import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
 import DeepWiki.SymbolicIntegration.Computable.ResidueConstantBridge
-import DeepWiki.SymbolicIntegration.Computable.Transfer
+import DeepWiki.SymbolicIntegration.Computable.TransferExamples
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
