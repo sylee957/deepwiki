@@ -93,7 +93,7 @@ theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
   have hc : (cextendedEuclideanSplitWf dn ds r u w).2
       = caddG (cmulG w r) (cmulG (cdivWf ur ds) dn) := by
     rw [cextendedEuclideanSplitWf]; simp only [cdivWf, hur]
-  rw [hb, hc, toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG]
+  simp only [hb, hc, denote]
   have hrem : toPolyG (cmodWf ur ds)
       = toPolyG ur - toPolyG (cdivWf ur ds) * toPolyG ds := by
     rw [hdivmod]; ring
@@ -178,7 +178,7 @@ theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
   have hcval : (cdiophantineGWf p q rhs).2
       = cnormG (caddG T (cmulG (cdivmodWf S q).1 p)) := by
     rw [cdiophantineGWf]
-  rw [hbval, hcval, toPolyG_cnormG, toPolyG_cnormG, toPolyG_caddG, toPolyG_cmulG]
+  simp only [hbval, hcval, denote]
   -- `b = S − quo·q`, so `b·p + (T + quo·p)·q = S·p + T·q = C(c⁻¹)·rhs·(s·p + t·q) = C(c⁻¹)·rhs·g = rhs`.
   have hbpoly : toPolyG (cdivmodWf S q).2 = toPolyG S - toPolyG (cdivmodWf S q).1 * toPolyG q := by
     rw [hdivmod]; ring

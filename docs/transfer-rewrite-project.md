@@ -97,7 +97,7 @@ that is part of the job.
 - [x] `Computable/LaurentSoundness.lean`
 - [x] `Computable/RischDE/Structural.lean`
 - [x] `Computable/YunTowerCorrect.lean`
-- [ ] `Computable/FuelFreeDiophantine.lean`
+- [x] `Computable/FuelFreeDiophantine.lean`
 - [ ] `Computable/Tower/GcdFFCorrect.lean`
 - [ ] `Computable/Algebraic/RadicalIntegralSoundness.lean`
 - [ ] `Computable/TranscendentalOverAlgebraic.lean`
