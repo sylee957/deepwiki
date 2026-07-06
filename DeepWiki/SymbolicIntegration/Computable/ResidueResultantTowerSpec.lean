@@ -99,4 +99,24 @@ theorem toPolyG_cResidueResultantTowerGWf [CharZero (CFieldSpec.K α)] (Dt a d :
       eval_toPolyG_cinterpolateG pts hnodup hmem,
       toK_cresultantWf_cAmcDdG_eq_eval Dt a d (cnatCastG k) hDmonic hDt0 hAD]
 
+omit [CDiffFieldSpec α] in
+/-- **The residue resultant of a constant is a constant** (`cdegG d = 0 ⟹ cdegG (cResidueResultantTowerGWf
+Dt a d) = 0`): the interpolation runs over `n + 1 = 1` node, and a single-point Lagrange interpolant is a
+constant (`degree_toPolyG_cinterpolateG_lt`). The no-poles residue-resultant fact behind `cLrtLogArgG = []`. -/
+theorem cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero (Dt a d : CPolyG α) (hd : cdegG d = 0) :
+    cdegG (cResidueResultantTowerGWf Dt a d) = 0 := by
+  rw [cResidueResultantTowerGWf]
+  simp only [hd, Nat.zero_add]
+  set pts : List (α × α) := (List.range 1).map (fun k =>
+    (cnatCastG k, cresultantWf d (cAmcDdG Dt a d (cnatCastG k)))) with hpts
+  have hlen : pts.length = 1 := by rw [hpts, List.length_map, List.length_range]
+  have hne : pts ≠ [] := by rw [← List.length_pos_iff_ne_nil, hlen]; norm_num
+  by_cases hz : toPolyG (cinterpolateG pts) = 0
+  · rw [cdegG_eq_natDegree, hz, Polynomial.natDegree_zero]
+  · have hlt := degree_toPolyG_cinterpolateG_lt pts hne
+    rw [hlen] at hlt
+    rw [cdegG_eq_natDegree]
+    have := (Polynomial.natDegree_lt_iff_degree_lt hz).mpr hlt
+    omega
+
 end DeepWiki.SymbolicIntegration

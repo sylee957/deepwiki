@@ -791,6 +791,18 @@ theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPolyG α)
   exact field_identity_lrt_of_hherm_of_logMatch Dt res.rational.1 res.rational.2 hNum hDen anum aden
     res.logs (hlog E) (hherm E)
 
+variable [CFracGcdCoreWf α] in
+/-- **The symbolic log part is empty when the squarefree denominator is a constant** (`cdegG Dstar = 0`):
+no poles ⟹ no residues (Bronstein's §5.6 residue criterion is vacuous). The residue resultant of a constant is
+a constant (`cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero`), whose Yun factorization is empty
+(`cSqfreeYunFFGWf_eq_nil_of_cdegG_zero`), so the `filterMap` runs over the empty list. The trivial-normal-part
+(no-poles) base of the reduced soundness. -/
+theorem cLrtLogArgG_eq_nil_of_cdegG_zero (Dt hNum Dstar : CPolyG α) (hDstar : cdegG Dstar = 0) :
+    cLrtLogArgG Dt hNum Dstar = [] := by
+  have hR := cSqfreeYunFFGWf_eq_nil_of_cdegG_zero (cResidueResultantTowerGWf Dt hNum Dstar)
+    (cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero Dt hNum Dstar hDstar)
+  simp only [cLrtLogArgG, hR, List.zipIdx_nil, List.filterMap_nil]
+
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **Membership in `cLrtLogArgG`.** Each entry `p` comes from a `(Rᵢ, idx)` in the Yun factorization

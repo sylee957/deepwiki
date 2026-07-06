@@ -721,8 +721,16 @@ omit [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α] in
 /-- **Dividing a constant stays a constant**: `cdegG p = 0 ⟹ cdegG (cdivWf p q) = 0`. The polynomial quotient
 of a degree-`0` dividend has degree `0` (`p = q̂·q + r` with `deg r < deg q`; a positive-degree `q̂` would push
 `deg p` positive). -/
-theorem cdegG_cdivWf_eq_zero_of_cdegG_zero (p q : CPolyG α) (hp : cdegG p = 0)
-    (hq : cnormG q ≠ []) : cdegG (cdivWf p q) = 0 := by
+theorem cdegG_cdivWf_eq_zero_of_cdegG_zero (p q : CPolyG α) (hp : cdegG p = 0) :
+    cdegG (cdivWf p q) = 0 := by
+  by_cases hq : cnormG q = []
+  · -- zero divisor: `cdivWf p q = []` (the `cisZeroG` branch of `cdivmodWf`)
+    have hcz : cisZeroG (cnormG q) = true := by
+      rw [cisZeroG_cnormG]; exact (cisZeroG_iff q).mpr ((cnormG_eq_nil_iff q).mp hq)
+    have hnil : cdivWf p q = ([] : CPolyG α) := by
+      show (cdivmodWf p q).1 = []
+      simp [cdivmodWf.eq_def, hcz]
+    rw [hnil]; rfl
   rw [cdegG_eq_natDegree] at hp ⊢
   have hdiv := toPolyG_cmodWf p q hq
   have hq' : toPolyG q ≠ 0 := fun h => hq ((cnormG_eq_nil_iff q).mpr h)
@@ -743,11 +751,10 @@ theorem cdegG_cdivWf_eq_zero_of_cdegG_zero (p q : CPolyG α) (hp : cdegG p = 0)
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **The Yun factorization of a constant is empty** (`cdegG p = 0 ⟹ cSqfreeYunFFGWf p = []`) — the base of
 the no-poles / trivial-normal-part case: with no non-constant factor there are no residues. -/
-theorem cSqfreeYunFFGWf_eq_nil_of_cdegG_zero (p : CPolyG α) (hp : cdegG p = 0)
-    (hg : cnormG (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)) ≠ []) :
+theorem cSqfreeYunFFGWf_eq_nil_of_cdegG_zero (p : CPolyG α) (hp : cdegG p = 0) :
     cSqfreeYunFFGWf p = [] := by
   rw [cSqfreeYunFFGWf]
   exact cSqfreeYunFFGgoWf_eq_nil_of_cdegG_zero _ _ _
-    (cdegG_cdivWf_eq_zero_of_cdegG_zero p _ hp hg)
+    (cdegG_cdivWf_eq_zero_of_cdegG_zero p _ hp)
 
 end DeepWiki.SymbolicIntegration
