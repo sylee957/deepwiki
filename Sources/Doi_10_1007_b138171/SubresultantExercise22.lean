@@ -294,13 +294,28 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex22 :
     IsSimilar (lrtSubresultant (toPoly cA22) (toPoly cD22)
         (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree)
       (toBPoly (lrtSubresultantCompute 60
-        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)) :=
-  isSimilar_lrtSubresultant_lrtSubresultantCompute 60 cA22 cD22 (chainG 60 hP hQ)
+        (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree cA22 cD22)) := by
+  let hchain : IsSubresPRSChainInput 60 (chainG 60 hP hQ) (chainBt 60 hP hQ)
+      (chainS 60 hP hQ) (chainC 60 hP hQ) 7 := {
+    exact_step := fun l hl => ⟨chain_hsc 60 hP hQ l, hβcn_ex22 l hl, hdiv_ex22 l hl⟩
+    next_eq := fun l _ => chain_hG2 60 hP hQ l
+    scale_toPoly_ne := hc0_ex22
+    beta_toPoly_ne := hβ0_ex22
+    leading_coeff_ne := hlc_ex22
+    degree_drop := hcb_ex22
+    endpoint_degree_lt := hjlt_ex22
+    quotient_degree_le := hQ_ex22
+    endpoint_ne_zero := hCne_ex22 }
+  let hprim : IsPrimitivePartXInput 60
+      (bsubresultantGcd 60 (toBPoly (chainG 60 hP hQ (7 + 2))).natDegree hP hQ) := {
+    content_not_zero := hg_ex22
+    content_cnorm_ne := hgcn_ex22
+    content_toPoly_ne := hg0_ex22
+    exact_division := hrem_ex22 }
+  exact isSimilar_lrtSubresultant_lrtSubresultantCompute 60 cA22 cD22 (chainG 60 hP hQ)
     (chainBt 60 hP hQ) (chainS 60 hP hQ) (chainC 60 hP hQ) 7
-    (chainG_zero 60 hP hQ) (chainG_one 60 hP hQ) hd0_ex22 hd1_ex22
-    (fun l _ => chain_hsc 60 hP hQ l) hβcn_ex22 hdiv_ex22
-    (fun l _ => chain_hG2 60 hP hQ l) hc0_ex22 hβ0_ex22 hlc_ex22 hcb_ex22 hjlt_ex22 hQ_ex22
-    hCne_ex22 hfilt_ex22 hg_ex22 hgcn_ex22 hg0_ex22 hrem_ex22
+    (chainG_zero 60 hP hQ) (chainG_one 60 hP hQ) hd0_ex22 hd1_ex22 hchain
+    hfilt_ex22 hprim
 
 /-! ### The residue ring `ℚ[t]/(R)` for Ex 2.2 and the `bmonicXmodR` unit regularity (`native_decide`)
 The modulus is the monic primitive Rothstein–Trager resultant `R = cmonic cR22` (degree 10, squarefree).

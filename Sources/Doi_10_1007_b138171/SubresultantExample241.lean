@@ -536,13 +536,28 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241 :
     IsSimilar (lrtSubresultant (toPoly cA241) (toPoly cD241)
         (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree)
       (toBPoly (lrtSubresultantCompute 30
-        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)) :=
-  isSimilar_lrtSubresultant_lrtSubresultantCompute 30 cA241 cD241 (chainG 30 gP gQ)
+        (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree cA241 cD241)) := by
+  let hchain : IsSubresPRSChainInput 30 (chainG 30 gP gQ) (chainBt 30 gP gQ)
+      (chainS 30 gP gQ) (chainC 30 gP gQ) 1 := {
+    exact_step := fun l hl => ⟨chain_hsc 30 gP gQ l, hβcn_ex241 l hl, hdiv_ex241 l hl⟩
+    next_eq := fun l _ => chain_hG2 30 gP gQ l
+    scale_toPoly_ne := hc0_ex241
+    beta_toPoly_ne := hβ0_ex241
+    leading_coeff_ne := hlc_ex241
+    degree_drop := hcb_ex241
+    endpoint_degree_lt := hjlt_ex241
+    quotient_degree_le := hQ_ex241
+    endpoint_ne_zero := hCne_ex241 }
+  let hprim : IsPrimitivePartXInput 30
+      (bsubresultantGcd 30 (toBPoly (chainG 30 gP gQ (1 + 2))).natDegree gP gQ) := {
+    content_not_zero := hg_ex241
+    content_cnorm_ne := hgcn_ex241
+    content_toPoly_ne := hg0_ex241
+    exact_division := hrem_ex241 }
+  exact isSimilar_lrtSubresultant_lrtSubresultantCompute 30 cA241 cD241 (chainG 30 gP gQ)
     (chainBt 30 gP gQ) (chainS 30 gP gQ) (chainC 30 gP gQ) 1
-    (chainG_zero 30 gP gQ) (chainG_one 30 gP gQ) hd0_ex241 hd1_ex241
-    (fun l _ => chain_hsc 30 gP gQ l) hβcn_ex241 hdiv_ex241
-    (fun l _ => chain_hG2 30 gP gQ l) hc0_ex241 hβ0_ex241 hlc_ex241 hcb_ex241 hjlt_ex241 hQ_ex241
-    hCne_ex241 hfilt_ex241 hg_ex241 hgcn_ex241 hg0_ex241 hrem_ex241
+    (chainG_zero 30 gP gQ) (chainG_one 30 gP gQ) hd0_ex241 hd1_ex241 hchain
+    hfilt_ex241 hprim
 
 /-! ### The headline closure: `Φ (lrtSubresultant) ∼ Φ (toBPoly lrtGcdCompute)` over `ℚ[t]/(4t²+1)`
 Pushing the `ℚ[t]`-similarity `isSimilar_lrtSubresultant_lrtSubresultantCompute_ex241` through the residue

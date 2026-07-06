@@ -458,34 +458,47 @@ theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
 
 /-! ### The chain endpoint: `Sⱼ` is similar to the degree-`j` `subresPRS` element -/
 
+/-- A divided subresultant PRS chain through index `m` with a regular endpoint. -/
+structure IsSubresPRSChainInput (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → CPoly)
+    (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ) : Prop where
+  /-- Each pseudo-remainder step is exact after β-division. -/
+  exact_step : ∀ l ≤ m, IsBdivCExactStep fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
+  /-- Each next chain element is the β-divided pseudo-remainder. -/
+  next_eq : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l)
+  /-- Each pseudo-division scalar reads to a nonzero polynomial. -/
+  scale_toPoly_ne : ∀ l ≤ m, toPoly (c l) ≠ 0
+  /-- Each β divisor reads to a nonzero polynomial. -/
+  beta_toPoly_ne : ∀ l ≤ m, toPoly (bt l) ≠ 0
+  /-- Each middle chain element has nonzero leading coefficient. -/
+  leading_coeff_ne : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0
+  /-- Degrees strictly drop along the divided PRS chain. -/
+  degree_drop : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree
+  /-- The endpoint degree lies below all earlier second-successor degrees. -/
+  endpoint_degree_lt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree
+  /-- Each pseudo-quotient satisfies the degree bound used by subresultant reduction. -/
+  quotient_degree_le : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
+    ≤ (toBPoly (G l)).natDegree
+  /-- The endpoint chain element is nonzero after `toBPoly`. -/
+  endpoint_ne_zero : toBPoly (G (m + 2)) ≠ 0
+
 /-- At the regular index `j = deg (toBPoly (G (m+2)))`,
 `IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (toBPoly (G (m+2)))`. -/
 theorem isSimilar_subresPRS_elt (fuel : ℕ) (G : ℕ → BPoly)
     (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
-    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
-        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
-    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
-    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
-    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
-      ≤ (toBPoly (G l)).natDegree)
-    (hCne : toBPoly (G (m + 2)) ≠ 0) :
+    (hchain : IsSubresPRSChainInput fuel G bt s c m) :
     IsSimilar
       (subresultant (toBPoly (G 0)) (toBPoly (G 1))
         (toBPoly (G 0)).natDegree (toBPoly (G 1)).natDegree (toBPoly (G (m + 2))).natDegree)
       (toBPoly (G (m + 2))) :=
   subresultant_prs_similar_elt (fun i => toBPoly (G i)) (fun l => toPoly (c l))
     (fun l => toPoly (bt l)) (fun l => toBPoly (s l)) m
-    hc0 hβ0 hlc hcb hjlt hQ
+    hchain.scale_toPoly_ne hchain.beta_toPoly_ne hchain.leading_coeff_ne hchain.degree_drop
+    hchain.endpoint_degree_lt hchain.quotient_degree_le
     (fun l hl => by
       have hrel := toBPoly_prs_rel fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
-        ⟨hsc l hl, hβcn l hl, hdiv l hl⟩
-      rw [hG2 l hl]; exact hrel)
-    hCne
+        (hchain.exact_step l hl)
+      rw [hchain.next_eq l hl]; exact hrel)
+    hchain.endpoint_ne_zero
 
 /-! ### LRT endpoint: `lrtSubresultant` similar to the degree-`j` `subresPRS` element -/
 
@@ -496,21 +509,10 @@ theorem isSimilar_lrtSubresultant_subresPRS_elt (fuel : ℕ) (A D : CPoly) (G : 
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
-    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
-        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
-    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
-    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
-    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
-      ≤ (toBPoly (G l)).natDegree)
-    (hCne : toBPoly (G (m + 2)) ≠ 0) :
+    (hchain : IsSubresPRSChainInput fuel G bt s c m) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
       (toBPoly (G (m + 2))) := by
-  have hend := isSimilar_subresPRS_elt fuel G bt s c m hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
+  have hend := isSimilar_subresPRS_elt fuel G bt s c m hchain
   rw [hd0, hd1] at hend
   rw [lrtSubresultant_eq_subresultant_toBPoly, ← hG0, ← hG1]
   exact hend
@@ -547,25 +549,14 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPoly) (G
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
-    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
-        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
-    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
-    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
-    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
-      ≤ (toBPoly (G l)).natDegree)
-    (hCne : toBPoly (G (m + 2)) ≠ 0)
+    (hchain : IsSubresPRSChainInput fuel G bt s c m)
     (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
       = toBPoly (G (m + 2))) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
       (toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) := by
   rw [hfilt]
   exact isSimilar_lrtSubresultant_subresPRS_elt fuel A D G bt s c m hG0 hG1 hd0 hd1
-    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
+    hchain
 
 /-- As `isSimilar_lrtSubresultant_bsubresultantGcd`, but with the filter identity derived from the
 singleton-filter hypothesis `hfil` instead of taken directly. -/
@@ -574,24 +565,13 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : CPol
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
-    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
-        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
-    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
-    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
-    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
-      ≤ (toBPoly (G l)).natDegree)
-    (hCne : toBPoly (G (m + 2)) ≠ 0)
+    (hchain : IsSubresPRSChainInput fuel G bt s c m)
     (hfil : (subresPRS fuel (G 0) (G 1)).filter
         (fun R => decide (bdeg R = (toBPoly (G (m + 2))).natDegree ∧ ¬ bisZero R)) = [G (m + 2)]) :
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
       (toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))) :=
   isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1
-    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne
+    hchain
     (toBPoly_bsubresultantGcd_eq_of_filter_singleton fuel (G 0) (G 1) G m hfil)
 
 /-! ### `bprimitivePartX` preserves similarity, and `lrtSubresultant ∼ lrtSubresultantCompute` -/
@@ -622,18 +602,7 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPo
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
-    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
-        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
-    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
-    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
-    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
-      ≤ (toBPoly (G l)).natDegree)
-    (hCne : toBPoly (G (m + 2)) ≠ 0)
+    (hchain : IsSubresPRSChainInput fuel G bt s c m)
     (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
       = toBPoly (G (m + 2)))
     (hprim : IsPrimitivePartXInput fuel
@@ -641,7 +610,7 @@ theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPo
     IsSimilar (lrtSubresultant (toPoly A) (toPoly D) (toBPoly (G (m + 2))).natDegree)
       (toBPoly (lrtSubresultantCompute fuel (toBPoly (G (m + 2))).natDegree A D)) := by
   have hraw := isSimilar_lrtSubresultant_bsubresultantGcd fuel A D G bt s c m hG0 hG1 hd0 hd1
-    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne hfilt
+    hchain hfilt
   have hprimSim := isSimilar_toBPoly_bprimitivePartX fuel
     (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1)) hprim
   rw [lrtSubresultantCompute, ← hG0, ← hG1]
@@ -771,18 +740,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDoma
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
-    (hsc : ∀ l ≤ m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
-        = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
-    (hβcn : ∀ l ≤ m, cnorm (bt l) ≠ [])
-    (hdiv : ∀ l ≤ m, ∀ a ∈ bpsremainder fuel (G l) (G (l + 1)), toPoly (cmod fuel a (bt l)) = 0)
-    (hG2 : ∀ l ≤ m, G (l + 2) = bdivC fuel (bpsremainder fuel (G l) (G (l + 1))) (bt l))
-    (hc0 : ∀ l ≤ m, toPoly (c l) ≠ 0) (hβ0 : ∀ l ≤ m, toPoly (bt l) ≠ 0)
-    (hlc : ∀ l ≤ m, (toBPoly (G (l + 1))).coeff (toBPoly (G (l + 1))).natDegree ≠ 0)
-    (hcb : ∀ l ≤ m, (toBPoly (G (l + 2))).natDegree < (toBPoly (G (l + 1))).natDegree)
-    (hjlt : ∀ l < m, (toBPoly (G (m + 2))).natDegree < (toBPoly (G (l + 2))).natDegree)
-    (hQ : ∀ l ≤ m, (toBPoly (s l)).natDegree + (toBPoly (G (l + 1))).natDegree
-      ≤ (toBPoly (G l)).natDegree)
-    (hCne : toBPoly (G (m + 2)) ≠ 0)
+    (hchain : IsSubresPRSChainInput fuel G bt s c m)
     (hfilt : toBPoly (bsubresultantGcd fuel (toBPoly (G (m + 2))).natDegree (G 0) (G 1))
       = toBPoly (G (m + 2)))
     (hprim : IsPrimitivePartXInput fuel
@@ -803,7 +761,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant {S : Type*} [CommRing S] [IsDoma
         (lrtGcdCompute fuel (toBPoly (G (m + 2))).natDegree R A D))) := by
   -- abstract ℚ[t]-similarity, mapped through φ to the residue ring
   have habs := isSimilar_lrtSubresultant_lrtSubresultantCompute fuel A D G bt s c m hG0 hG1 hd0 hd1
-    hsc hβcn hdiv hG2 hc0 hβ0 hlc hcb hjlt hQ hCne hfilt hprim
+    hchain hfilt hprim
   have hmap := isSimilar_mapRingHom φ habs hne
   -- the bmonicXmodR unit bridge: lrtGcdCompute = bmonicXmodR R lrtSubresultantCompute
   obtain ⟨hbridge, hunit⟩ := mapRingHom_toBPoly_bmonicXmodR φ fuel R
@@ -1234,6 +1192,21 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
         (lrtGcdCompute fuel
           (toBPoly (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D) (m + 2))).natDegree R A D))) := by
   have hfilt := chain_hfilt fuel (liftCtoBPoly D) (bArgAmtD' A D) m hfoF hnzF hzNF hstrictF
+  have hchain : IsSubresPRSChainInput fuel
+      (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D))
+      (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D))
+      (chainS fuel (liftCtoBPoly D) (bArgAmtD' A D))
+      (chainC fuel (liftCtoBPoly D) (bArgAmtD' A D)) m := {
+    exact_step := fun l hl => ⟨chain_hsc fuel (liftCtoBPoly D) (bArgAmtD' A D) l,
+      hβcn l hl, hdiv l hl⟩
+    next_eq := fun l _ => chain_hG2 fuel (liftCtoBPoly D) (bArgAmtD' A D) l
+    scale_toPoly_ne := hc0
+    beta_toPoly_ne := hβ0
+    leading_coeff_ne := hlc
+    degree_drop := hcb
+    endpoint_degree_lt := hjlt
+    quotient_degree_le := hQ
+    endpoint_ne_zero := hCne }
   exact lrtGcdCompute_isSimilar_lrtSubresultant φ fuel R A D
     (chainG fuel (liftCtoBPoly D) (bArgAmtD' A D))
     (chainBt fuel (liftCtoBPoly D) (bArgAmtD' A D))
@@ -1241,10 +1214,7 @@ theorem lrtGcdCompute_isSimilar_lrtSubresultant_concrete {S : Type*} [CommRing S
     (chainC fuel (liftCtoBPoly D) (bArgAmtD' A D)) m
     hRcn hφR (chainG_zero fuel (liftCtoBPoly D) (bArgAmtD' A D))
     (chainG_one fuel (liftCtoBPoly D) (bArgAmtD' A D)) hd0 hd1
-    (fun l _ => chain_hsc fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
-    hβcn hdiv
-    (fun l _ => chain_hG2 fuel (liftCtoBPoly D) (bArgAmtD' A D) l)
-    hc0 hβ0 hlc hcb hjlt hQ hCne hfilt hprim hne hu hgu hpz
+    hchain hfilt hprim hne hu hgu hpz
 
 -- Restatement: the divided-PRS recurrence `hG2` holds DEFINITIONALLY for the concrete `subresPRS`
 -- chain element `chainG` and β-divisor `chainBt` (no list/recurrence plumbing).
