@@ -88,9 +88,11 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldS
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
     (hd0 : toPolyG d ≠ 0) (hgen : LrtReducedGenuineData Dt a d) :
     IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d) :=
+  -- the per-input pole-normality is *derived* from the input-independent monomial property `hgen.hE`
+  have hnorm : LrtPoleNormalityData Dt a d := lrtPoleNormalityData_of_genuineMonomial hgen.hE
   isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup hgcd Dt a d hd0
     (Polynomial.primPart_ne_zero _) hgen.hcopgcd hgen.hDt0 hgen.hAD
-    (hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hgen.hDt0 hgen.hAD hgen.hE)
-    (Polynomial.primPart_ne_zero _) hgen.hm hgen.hE
+    (hR0_of_normalityData hgcd Dt a d hd0 (Polynomial.primPart_ne_zero _) hgen.hDt0 hgen.hAD hnorm)
+    (Polynomial.primPart_ne_zero _) hgen.hm hnorm
 
 end DeepWiki.SymbolicIntegration

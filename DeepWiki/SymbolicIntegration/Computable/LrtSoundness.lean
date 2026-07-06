@@ -1515,6 +1515,27 @@ def LrtPoleNormalityData (Dt a d : CPolyG α) : Prop :=
         ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′
 
 open scoped Differential in
+/-- **The genuine primitive-monomial property (input-INDEPENDENT).** At every alg-closed differential extension
+`E`, `(Dt)(β) ≠ β′` for **every** `β ∈ E` (not just the poles of some integrand). In the primitive case
+(`deg Dt = 0`, `(Dt)(β) = η` constant) this is exactly `η ∉ range(D_E)` — `η = Dt` is not a derivative, i.e.
+`t` is a genuine monomial (Bronstein Def 5.1.1 / Lemma 5.1.2, `Const(k(t)) = Const(k)`). A property of the tower
+LEVEL's monomial `Dt` alone — so it discharges the per-input `hE` for **every** `a/d` at once. -/
+def GenuinePrimitiveMonomialLrt (Dt : CPolyG α) : Prop :=
+  ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
+    [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
+    ∀ (β : E), ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′
+
+open scoped Differential in
+variable [CFracGcdCoreWf α] in
+/-- **Per-input pole-normality from the input-independent monomial property.** `LrtPoleNormalityData Dt a d`
+(quantified over a specific integrand's Hermite poles) is an immediate consequence of
+`GenuinePrimitiveMonomialLrt Dt` (which covers *all* `β`); the input `a/d` drops out. This is the faithfulness
+reframing — Bronstein's "genuine normality" is a property of the monomial, not of each integrand. -/
+theorem lrtPoleNormalityData_of_genuineMonomial {Dt a d : CPolyG α}
+    (hgen : GenuinePrimitiveMonomialLrt Dt) : LrtPoleNormalityData Dt a d :=
+  fun E _ _ _ _ _ _ β _ => hgen E β
+
+open scoped Differential in
 open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **The genuine per-input side conditions of the assembled LRT reduced soundness**, bundled. Beyond the
@@ -1540,10 +1561,11 @@ structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
   /-- The monomial derivative drops the degree by exactly one. -/
   hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
         = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1
-  /-- The **one** genuine per-splitting-extension condition: normality `η ≠ Dβ` at the poles. (Both the
-  `implicitDeriv` nonvanishing *and* the residue-resultant nonvanishing `hR0` are *derived* from this —
-  normality ⟺ `IsCoprime Dstar (implicitDeriv Dt Dstar)`; see `hR0_of_normalityData`.) -/
-  hE : LrtPoleNormalityData Dt a d
+  /-- The **one** genuine condition, now the **input-independent** monomial normality `η = Dt` is not a
+  derivative (`GenuinePrimitiveMonomialLrt Dt`). The per-input pole-normality `LrtPoleNormalityData` (hence the
+  `implicitDeriv` nonvanishing *and* `hR0`) is *derived* from it (`lrtPoleNormalityData_of_genuineMonomial`) —
+  so this depends only on the tower level's monomial, not on `a/d`. -/
+  hE : GenuinePrimitiveMonomialLrt Dt
 
 -- `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` lives in `LrtResidueResultantDischarge` (it derives
 -- `hR0` from `hE` via the algebraic closure, which is downstream of this file).
