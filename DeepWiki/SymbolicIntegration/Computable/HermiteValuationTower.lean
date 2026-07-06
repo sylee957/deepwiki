@@ -139,8 +139,8 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 theorem fracPair_add (a1 a2 b1 b2 : CPolyG α) (ha2 : toPolyG a2 ≠ 0) (hb2 : toPolyG b2 ≠ 0) :
     amG α (toPolyG (caddG (cmulG a1 b2) (cmulG b1 a2))) / amG α (toPolyG (cmulG a2 b2))
       = amG α (toPolyG a1) / amG α (toPolyG a2) + amG α (toPolyG b1) / amG α (toPolyG b2) := by
-  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul,
-    div_add_div _ _ (amG_toPolyG_ne_zero ha2) (amG_toPolyG_ne_zero hb2)]
+  simp only [denote, map_add, map_mul]
+  rw [div_add_div _ _ (amG_toPolyG_ne_zero ha2) (amG_toPolyG_ne_zero hb2)]
   ring
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -662,7 +662,7 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
     rw [towerFractionFieldDerivG_div, ← map_pow]
   rw [hDg] at hRid
   apply hinj
-  simp only [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmonomialDeriv, map_sub, map_mul, map_pow, ← hDdef]
+  simp only [denote, map_sub, map_mul, map_pow, ← hDdef]
   field_simp at hRid
   simp only [map_sub] at hRid
   linear_combination hRid
@@ -737,9 +737,8 @@ theorem toPolyG_hNum'_eq_2_1 [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (
   conv_rhs => rw [cHermiteReduceTowerGWf]
   simp only [toPolyG_cnormG]
   apply toPolyG_cdivWf_congr
-  · simp only [cHermiteReduceTowerGWf, toPolyG_cmulG, toPolyG_csubG, toPolyG_cmonomialDeriv,
-      toPolyG_cnormG]
-  · simp only [cHermiteReduceTowerGWf, toPolyG_cmulG, toPolyG_cnormG]
+  · simp only [cHermiteReduceTowerGWf, denote]
+  · simp only [cHermiteReduceTowerGWf, denote]
   · rw [toPolyG_cmulG, toPolyG_cmulG]
     exact mul_ne_zero hd0 (mul_ne_zero hgd0 hgd0)
   · simp only [toPolyG_cmulG]
