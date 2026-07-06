@@ -559,33 +559,6 @@ theorem hermiteReduce_residual_correct_of_dvd (fuel : ℕ) (A D gnum gden Dstar 
 
 /-! ### Full `csqfreeFactor` Yun correctness — the abstract invariant -/
 
-open UniqueFactorizationMonoid in
-open Classical in
-/-- The abstract Yun gcd step: `gcd (squarefreePart (deflation A (i−1))) (Yᵢ − (…)′)` is
-`Associated (sqfreeFactPart A i)`, the i-th squarefree factor. -/
-theorem gcd_radical_yunStep_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
-    (hA : A.primPart ≠ 0) :
-    Associated
-      (gcd (squarefreePart (deflation A (i - 1)))
-        (Yun A i - derivative (squarefreePart (deflation A (i - 1)))))
-      (sqfreeFactPart A i) := by
-  have hsplit := squarefreePart_deflation_mul_sqfreeFactPart A i hi hA
-  have hd := Yun_sub_derivative_squarefreePart A i hi hA
-  set V := sqfreeFactPart A i with hV
-  set S' := squarefreePart (deflation A i) with hS'
-  set Y := Yun A (i + 1) with hY
-  have hS : squarefreePart (deflation A (i - 1)) = V * S' := by
-    rw [hV, hS', mul_comm]; exact hsplit.symm
-  rw [hd, hS]
-  refine (gcd_mul_left' V S' Y).trans ?_
-  have hrp : IsRelPrime S' Y := by
-    have h := isRelPrime_squarefreePart_Yun A (i + 1) (by omega) hA
-    rwa [Nat.add_sub_cancel] at h
-  have hunit : IsUnit (gcd S' Y) := gcd_isUnit_iff_isRelPrime.mpr hrp
-  have : Associated (V * gcd S' Y) (V * 1) :=
-    (associated_one_iff_isUnit.mpr hunit).mul_left V
-  rwa [mul_one] at this
-
 /-! ### The abstract Yun loop state and its step recurrence (exact, scalar-tracked) -/
 
 open Classical in
