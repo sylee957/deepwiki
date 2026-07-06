@@ -67,7 +67,8 @@ theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : CPolyG α) (nrm : I
         / amG α (toPolyG (cmulG sden nrm.rational.2))
       = amG α (toPolyG snum) / amG α (toPolyG sden)
         + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
-    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
+    -- front-load transport (denotation + `amG` homomorphism) to a pure fraction-field goal, then math
+    simp only [denote, map_add, map_mul]
     field_simp
   rw [hcombine, map_add]
   simp only [fieldFrac] at hSpecField
