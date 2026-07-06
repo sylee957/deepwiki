@@ -102,6 +102,12 @@ theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ []
       show (cdivmod fuel p q).2 = cmod fuel p q from rfl, hrem, add_zero] at h
   exact h
 
+/-- A vanishing computable remainder gives divisibility through `toPoly`. -/
+theorem toPoly_dvd_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hrem : toPoly (cmod fuel p q) = 0) :
+    toPoly q ∣ toPoly p :=
+  ⟨toPoly (cdiv fuel p q), by rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, mul_comm]⟩
+
 /-- Bézout identity through `toPoly` for `cgcdExt`: with `(g, s, t) = cgcdExt fuel a b`,
 `toPoly s · toPoly a + toPoly t · toPoly b = toPoly g`. -/
 theorem toPoly_cgcdExt (fuel : ℕ) (a b : CPoly) :

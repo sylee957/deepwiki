@@ -1792,14 +1792,6 @@ theorem dvd_clearedIdentity_of_radical {R D gd2 S W : ℚ[X]}
   obtain ⟨N, hN⟩ := hWgd
   exact ⟨N, by rw [hSD]; linear_combination S * hN⟩
 
-/-- **Divisibility from a vanishing `cmod` remainder**: if `cmod fuel p q` reads to `0` and `q ≠ 0`
-(`cnorm q ≠ []`), then `toPoly q ∣ toPoly p`. The honest-division reading of an exact computable
-remainder (`toPoly_cdiv_of_cmod_zero`). -/
-theorem toPoly_dvd_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
-    (hrem : toPoly (cmod fuel p q) = 0) :
-    toPoly q ∣ toPoly p :=
-  ⟨toPoly (cdiv fuel p q), by rw [toPoly_cdiv_of_cmod_zero fuel p q hq hrem, mul_comm]⟩
-
 open scoped Differential in
 /-- **`hermiteReduce` wrapper correctness from the two split divisibility certificates** in `RatFunc ℚ`:
 the cleared-identity premise factored into the loop's two structural `cmod`-vanishings —
