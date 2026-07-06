@@ -27,17 +27,6 @@ theorem toPolyG_foldl_caddG (f : α × α → CPolyG α) (pts : List (α × α))
     rw [List.foldl_cons, ih, toPolyG_caddG, List.map_cons, List.sum_cons]
     ring
 
-/-- The generic denominator fold `∏ acc·(zk − zⱼ)` equals `toK init · ∏ (toK zk − toK zⱼ)` under `toK`. -/
-theorem toK_foldl_csub_mul (zk : α) (others : List α) (init : α) :
-    CFieldSpec.toK (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) init)
-      = CFieldSpec.toK init
-        * (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod := by
-  induction others generalizing init with
-  | nil => simp
-  | cons z zs ih =>
-    rw [List.foldl_cons, ih, CFieldSpec.toK_mul, CFieldSpec.toK_sub, List.map_cons, List.prod_cons]
-    ring
-
 /-- The product `∏_{zⱼ ∈ others}(toK zk − toK zⱼ)` is nonzero when every `toK zⱼ ≠ toK zk`. -/
 theorem prodG_sub_ne_zero {zk : α} {others : List α}
     (hne : ∀ zj ∈ others, CFieldSpec.toK zj ≠ CFieldSpec.toK zk) :
