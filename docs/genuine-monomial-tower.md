@@ -95,16 +95,28 @@ runtime — then the branch *knows* it holds, so it stops being a frontier hypot
    `hWgd_of_multiplicity` (`hcopgcd` derived from `hgen`) via the `d = W·Dstar` cancellation, bridging the raw
    fold `g` to the `cnormG`-projections through `toPolyG` (`set g` + `toPolyG_cnormG` leaf rewrites `hg1`/`hg2`).
    The residual-divisibility assembly — the hard mathematical core — is DONE.
-4. **Remaining: `.degree`→`.natDegree` + the `cn = 0` edge + field removal.** The `hAD` field is `.natDegree`,
-   used pervasively (~8 `LrtSoundness` lemmas). `.degree hAD` + `natDegree Dstar ≥ 1` ⟹ `.natDegree hAD` cleanly
-   (`Polynomial.natDegree_lt_natDegree`). The edge: `natDegree Dstar = 0` ⟺ `Dstar = 1` ⟺ trivial normal part
-   (`crNormNum = 0` by crNorm properness), where `.natDegree hAD` is `0<0` = **false** but the reduced part is
-   trivially sound (`D(0)=0`). So removing the field needs `_of_genuine` to take `haProper` (= crNorm properness,
-   threaded from the frontier) instead of `hAD`, and **case-split on `Dstar = 1`**: non-trivial → convert to
-   `.natDegree hAD`; trivial → the reduced-soundness trivial-case lemma. Then remove the field ⟹ `{hE}`.
-   (~80–120L; the trivial-case reduced soundness is the real remaining work.)
+4. **✅ (step 3) `.degree`→`.natDegree` + the `cn = 0` edge + FIELD REMOVED** (commits `ad5295e3`→`f0d5ddf6`,
+   axiom-clean). `_of_genuine` now takes `haProper` (`deg a < deg d`, supplied by `crNormNum_degree_lt_crNormDen`
+   at the canonical normal part) and **case-splits on `deg Dstar`**:
+   - `deg Dstar ≥ 1`: `.degree hAD` → `.natDegree hAD` via `Polynomial.natDegree_lt_natDegree` (case `hNum=0` →
+     `0 < deg Dstar`), then the existing residue path (`…_of_setup`).
+   - `deg Dstar = 0` (no poles, the `0<0` edge, ⟺ trivial normal part): the **no-poles soundness**
+     `isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles` — assembled from the *hAD-independent* Hermite
+     identity `hherm_lrt_E` + the empty log part `cLrtLogArgG_eq_nil_of_cdegG_zero` (constant `Dstar` ⟹ constant
+     residue resultant `cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero` ⟹ empty Yun factorization
+     `cSqfreeYunFFGWf_eq_nil_of_cdegG_zero`) + the vanishing leftover numerator (`H.2.1 = 0` from `.degree hAD`).
+   The `hAD` field is dropped ⟹ **`LrtReducedGenuineData = {hE}`**.
 
-The two hardest pieces (crNorm properness, the full `.degree` discharge incl. `hdvd`) are DONE and committed.
+## ✅ DONE — the frontier is a single genuine monomial property
+
+`LrtReducedGenuineData = {hE}` = `GenuinePrimitiveMonomialLrt Dt` (`η = Dt ∉ range D`). Every side condition —
+`hcopgcd`, `hR0`, `hm`, `hnorm`, `hAD`, and the `hDt0` scope guard — flows from this single input-independent
+tower fact, provable on a concrete genuine tower. Matches Bronstein exactly: `hE` = Thm 5.1.1's monomial
+hypothesis; the no-poles case-split = §5.6's empty residue set (`deg(0) = −∞` faithful, p.129). All axiom-clean.
+
+Remaining (optional): pull `hE` out of the per-input `LrtReducedGenuineData` structure (the `a d` params are now
+vestigial — `hE` depends only on `Dt`); a `GenuineMonomialTower` class discharging `[PrimitiveFrontierLrt]`
+unconditionally on a concrete tower.
 
 ## Next (optional)
 
