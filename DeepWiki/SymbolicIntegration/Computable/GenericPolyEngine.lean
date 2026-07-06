@@ -1,5 +1,6 @@
 import Mathlib.Algebra.Polynomial.Basic
 import Mathlib.Algebra.Polynomial.Degree.Defs
+import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.RingTheory.Polynomial.Basic
 import DeepWiki.Transfer.Denote
@@ -298,6 +299,54 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
   induction n with
   | zero => simp [cpowG, denote]
   | succ n ih => rw [cpowG, toPolyG_cmulG, ih, pow_succ, mul_comm]
+
+/-! ### Generic formal derivative `cderivG` over a `CField` -/
+
+/-- Generic `ℕ`-scaling `nsmulG k a = a + a + … + a` (`k` times), built from `CField.add`. -/
+def nsmulG {α : Type*} [CField α] : ℕ → α → α
+  | 0, _ => CField.zero
+  | k + 1, a => CField.add a (nsmulG k a)
+
+/-- `toK (nsmulG k a) = k • toK a` in `K`. -/
+@[denote] theorem toK_nsmulG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (a : α) :
+    CFieldSpec.toK (nsmulG k a) = k • CFieldSpec.toK a := by
+  induction k with
+  | zero => rw [nsmulG, CFieldSpec.toK_zero, zero_smul]
+  | succ n ih => rw [nsmulG, CFieldSpec.toK_add, ih, succ_nsmul']
+
+/-- Generic formal derivative `cderivG [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`. -/
+def cderivG {α : Type*} [CField α] : CPolyG α → CPolyG α
+  | [] => []
+  | _ :: as => go 1 as
+where
+  /-- Auxiliary: from degree `k`, emit `nsmulG k a` for each coefficient `a` (the derivative tail). -/
+  go : ℕ → CPolyG α → CPolyG α
+  | _, [] => []
+  | k, a :: as => nsmulG k a :: go (k + 1) as
+
+/-- `cderivG` realizes the `K[X]` derivative: `toPolyG (cderivG p) = Polynomial.derivative (toPolyG p)`. -/
+@[denote] theorem toPolyG_cderivG {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
+    toPolyG (cderivG p) = Polynomial.derivative (toPolyG p) := by
+  suffices h : ∀ (as : CPolyG α) (k : ℕ),
+      toPolyG (cderivG.go k as)
+        = (k : (CFieldSpec.K α)[X]) * toPolyG as + X * Polynomial.derivative (toPolyG as) by
+    cases p with
+    | nil => simp [cderivG]
+    | cons a as =>
+      show toPolyG (cderivG.go 1 as) = Polynomial.derivative (toPolyG (a :: as))
+      rw [h as 1, toPolyG_cons, derivative_add, derivative_C, derivative_mul, derivative_X]
+      push_cast; ring
+  intro as
+  induction as with
+  | nil => intro k; simp [cderivG.go]
+  | cons b bs ih =>
+    intro k
+    show toPolyG (nsmulG k b :: cderivG.go (k + 1) bs) = _
+    rw [toPolyG_cons, ih (k + 1), toPolyG_cons, derivative_add, derivative_C, derivative_mul,
+      derivative_X]
+    have hk : Polynomial.C (CFieldSpec.toK (nsmulG k b)) = (k : (CFieldSpec.K α)[X]) * Polynomial.C (CFieldSpec.toK b) := by
+      rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
+    rw [hk]; push_cast; ring
 
 /-! ### Normalization, degree, leading coefficient — generic correctness -/
 

@@ -1,65 +1,17 @@
 import DeepWiki.SymbolicIntegration.Computable.Field
 
-/-! # Generic division / gcd / derivative over a `CField`
-Generic Euclidean division, extended Euclidean algorithm, and formal derivative over an arbitrary
-`[CField α]`, with correctness (Euclidean identity, Bézout, derivative) proved through `toPolyG` over
-`K[X]`, plus coherence lemmas specializing back to the concrete engine at `α = ℚ`. -/
+/-! # Generic division and gcd over a `CField`
+Generic Euclidean division and extended Euclidean algorithm over arbitrary `[CField α]`, with
+correctness proved through `toPolyG` over `K[X]`, plus concrete-engine coherence lemmas at `α = ℚ`. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ### Generic formal derivative `cderivG` over a `CField` -/
-
 namespace CPolyG
 
 variable {α : Type*} [CField α]
 variable [CFieldSpec α]
-
-/-- Generic `ℕ`-scaling `nsmulG k a = a + a + … + a` (`k` times), built from `CField.add`. -/
-def nsmulG : ℕ → α → α
-  | 0, _ => CField.zero
-  | k + 1, a => CField.add a (nsmulG k a)
-
-/-- `toK (nsmulG k a) = k • toK a` in `K`. -/
-@[denote] theorem toK_nsmulG (k : ℕ) (a : α) : CFieldSpec.toK (nsmulG k a) = k • CFieldSpec.toK a := by
-  induction k with
-  | zero => rw [nsmulG, CFieldSpec.toK_zero, zero_smul]
-  | succ n ih => rw [nsmulG, CFieldSpec.toK_add, ih, succ_nsmul']
-
-/-- Generic formal derivative `cderivG [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`. -/
-def cderivG : CPolyG α → CPolyG α
-  | [] => []
-  | _ :: as => go 1 as
-where
-  /-- Auxiliary: from degree `k`, emit `nsmulG k a` for each coefficient `a` (the derivative tail). -/
-  go : ℕ → CPolyG α → CPolyG α
-  | _, [] => []
-  | k, a :: as => nsmulG k a :: go (k + 1) as
-
-/-- `cderivG` realizes the `K[X]` derivative: `toPolyG (cderivG p) = Polynomial.derivative (toPolyG p)`. -/
-@[denote] theorem toPolyG_cderivG (p : CPolyG α) :
-    toPolyG (cderivG p) = Polynomial.derivative (toPolyG p) := by
-  suffices h : ∀ (as : CPolyG α) (k : ℕ),
-      toPolyG (cderivG.go k as)
-        = (k : (CFieldSpec.K α)[X]) * toPolyG as + X * Polynomial.derivative (toPolyG as) by
-    cases p with
-    | nil => simp [cderivG]
-    | cons a as =>
-      show toPolyG (cderivG.go 1 as) = Polynomial.derivative (toPolyG (a :: as))
-      rw [h as 1, toPolyG_cons, derivative_add, derivative_C, derivative_mul, derivative_X]
-      push_cast; ring
-  intro as
-  induction as with
-  | nil => intro k; simp [cderivG.go]
-  | cons b bs ih =>
-    intro k
-    show toPolyG (nsmulG k b :: cderivG.go (k + 1) bs) = _
-    rw [toPolyG_cons, ih (k + 1), toPolyG_cons, derivative_add, derivative_C, derivative_mul,
-      derivative_X]
-    have hk : Polynomial.C (CFieldSpec.toK (nsmulG k b)) = (k : (CFieldSpec.K α)[X]) * Polynomial.C (CFieldSpec.toK b) := by
-      rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
-    rw [hk]; push_cast; ring
 
 /-! ### Correctness and termination for the generic Euclidean division
 
