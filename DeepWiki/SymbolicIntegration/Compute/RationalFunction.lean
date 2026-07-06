@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Compute.Hermite
-import DeepWiki.SymbolicIntegration.HermiteCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Correctness
+import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
 /-! # Computable rational functions ℚ(x)
 Completes `QFun = CPoly × CPoly` into a computable field ℚ(x): the field operations, the

@@ -93,6 +93,15 @@ theorem toPoly_cdivmod' (fuel : ℕ) (p q : CPoly) (hq0 : cnorm q ≠ []) :
   rw [cdivmod_cnorm_right]
   simpa [toPoly_cnorm] using toPoly_cdivmod fuel p (cnorm q) (cnorm_idem q) hq0
 
+/-- Exact division through `toPoly`: zero `cmod` gives quotient times divisor. -/
+theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+    (hrem : toPoly (cmod fuel p q) = 0) :
+    toPoly p = toPoly (cdiv fuel p q) * toPoly q := by
+  have h := toPoly_cdivmod' fuel p q hq
+  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
+      show (cdivmod fuel p q).2 = cmod fuel p q from rfl, hrem, add_zero] at h
+  exact h
+
 /-- Bézout identity through `toPoly` for `cgcdExt`: with `(g, s, t) = cgcdExt fuel a b`,
 `toPoly s · toPoly a + toPoly t · toPoly b = toPoly g`. -/
 theorem toPoly_cgcdExt (fuel : ℕ) (a b : CPoly) :

@@ -395,18 +395,6 @@ example (fuel : ℕ) (V U : CPoly) (hU : toPoly U ≠ 0) (hV : toPoly V ≠ 0) (
           / (algebraMap ℚ[X] (RatFunc ℚ) (toPoly U) * algebraMap ℚ[X] (RatFunc ℚ) (toPoly V)) :=
   hermiteInner_spec_of fuel V U hU hV ⟨hq, hg, hgc⟩ j A
 
-/-! ### Exact division through `toPoly` -/
-
-/-- Exact-division bridge: if `toPoly (cmod fuel p q) = 0` (and `q ≠ 0`), then
-`toPoly p = toPoly (cdiv fuel p q) · toPoly q`. -/
-theorem toPoly_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
-    (hrem : toPoly (cmod fuel p q) = 0) :
-    toPoly p = toPoly (cdiv fuel p q) * toPoly q := by
-  have h := toPoly_cdivmod' fuel p q hq
-  rw [show (cdivmod fuel p q).1 = cdiv fuel p q from rfl,
-      show (cdivmod fuel p q).2 = cmod fuel p q from rfl, hrem, add_zero] at h
-  exact h
-
 /-- Divisibility ⟹ exact remainder: if `toPoly q ∣ toPoly p` (and `q ≠ 0`, enough fuel), then
 `toPoly (cmod fuel p q) = 0`. -/
 theorem cmod_eq_zero_of_dvd (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
