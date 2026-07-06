@@ -293,20 +293,20 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     rw [← hDsF]; exact (toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0).ne_zero
   have hg2ne : toPolyG g.2 ≠ 0 := by rw [← hg2]; exact hgd0
   refine cHermiteReduceTowerGWf_leftover_proper_of_degree_le_one Dt a d hDtdeg haProper
-    ?_ ?_ g hg_def ?_ ?_ hDstar0
-  · -- hv : each repeated Yun factor is nonzero
+    ?_ g hg_def ?_ ?_ hDstar0
+  · -- hfac : each repeated Yun factor is nonzero and has proper Diophantine cofactors
     intro p hp _
-    obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
-      (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))
-    rw [← hget]; exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp p.2 hidx
-  · -- hb : the per-step Diophantine cofactor is proper
-    intro p hp _ rhs
-    refine cdiophantineGWf_fst_degree_lt _ p.1 rhs ?_
-    intro h
-    obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
-      (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))
-    rw [← hget] at h
-    exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp p.2 hidx ((cnormG_eq_nil_iff _).mp h)
+    refine ⟨?_, ?_⟩
+    · obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
+        (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))
+      rw [← hget]; exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp p.2 hidx
+    · intro rhs
+      refine cdiophantineGWf_fst_degree_lt _ p.1 rhs ?_
+      intro h
+      obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
+        (List.mk_mem_zipIdx_iff_getElem?.mp (by simpa using hp))
+      rw [← hget] at h
+      exact cSqfreeYunFFGWf_get_ne_zero hgcd d hd0 hpp p.2 hidx ((cnormG_eq_nil_iff _).mp h)
   · -- hdvd : `d·g.2² ∣ resNum·Dstar`, from `hWgd` (`W·g.2² ∣ resNum`) and `d = W·Dstar`
     have hWgd := hWgd_of_multiplicity hgcd Dt a d hd0 hpp hgd0 hcopgcd
     have hHermDsNe : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ≠ 0 :=

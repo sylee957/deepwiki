@@ -1713,7 +1713,8 @@ theorem cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one
     (hresDen : cnormG (cmulG d (cmulG g.2 g.2)) ≠ ([] : CPolyG (QFunNZG ℚ))) :
     (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card := by
   have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
-    (cSqfreeYunFFGWf d) hDtdeg haProper hv hb
+    (cSqfreeYunFFGWf d) hDtdeg haProper
+    (fun p hp hskip => ⟨hv p hp hskip, hb p hp hskip⟩)
   simp only at hresProper
   subst hgeq
   have hDstar : toPolyG ((cSqfreeYunFFGWf d).foldl (fun acc vi => cmulG acc vi) [CField.one])

@@ -58,7 +58,8 @@ Prepend `export PATH="$HOME/.elan/bin:$PATH"` to every shell call. One file at a
       and `IsHyperexpMonomial` (the `hDt` condition, 8 sites). **Template.**
 - [x] `Computable/LrtSoundness.lean` (162 binders) — audited beyond the existing `Lrt*Data`; bundled the
       repeated Yun input pair as `IsYunFactorizationInput`.
-- [ ] `Computable/NormalPartSoundness.lean` (121)
+- [x] `Computable/NormalPartSoundness.lean` (121) — bundled the repeated Hermite factor
+      nonzero/cofactor-proper pair as `IsHermiteInnerFactor` and `IsHermiteFactorData`.
 - [ ] `Computable/OneShotAssembly.lean` (264)
 - [ ] `HermiteCorrectness.lean` (314), `GroebnerBasis.lean` (429), `SubresultantCorrectness.lean` (255),
       `LaurentCoefficients.lean` (162) — large; expect several clusters each.
