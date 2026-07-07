@@ -340,7 +340,8 @@ theorem toPolyG_foldl_caddG {α : Type*} [CField α] [CFieldSpec α]
 /-- `toPolyG` realizes subtraction: `toPolyG (csubG p q) = toPolyG p − toPolyG q`. -/
 @[simp, denote] theorem toPolyG_csubG {α : Type*} [CField α] [CFieldSpec α] (p q : CPolyG α) :
     toPolyG (csubG p q) = toPolyG p - toPolyG q := by
-  rw [csubG, toPolyG_caddG, toPolyG_cnegG, sub_eq_add_neg]
+  rw [csubG]
+  simp only [denote, sub_eq_add_neg]
 
 /-- `toPolyG` realizes scalar multiplication: `toPolyG (cscaleG c p) = C (toK c) · toPolyG p`. -/
 @[simp, denote] theorem toPolyG_cscaleG {α : Type*} [CField α] [CFieldSpec α] (c : α) (p : CPolyG α) :
