@@ -662,7 +662,8 @@ theorem reconstruct (dbound : ℕ) (b0 : CPolyG ℚ) :
         rw [hRexp] at hR1; rw [hIexp] at hR2
         -- base solve identities, mapped C : ℚ[x] → ℚ[x][t].
         have hB2shift : toPolyG b2shift = toPolyG b2 - C nN := by
-          rw [hb2shift, toPolyG_csubG, toPolyG_scale_one]
+          rw [hb2shift]
+          simp only [denote, toPolyG_scale_one]
         rw [hB2shift] at hb1 hb2
         have hCB1 := congrArg (Polynomial.C (R := Polynomial ℚ)) hb1
         have hCB2 := congrArg (Polynomial.C (R := Polynomial ℚ)) hb2
