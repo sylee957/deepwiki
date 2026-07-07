@@ -22,20 +22,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- The squarefree part of a deflation is the product of the prime factors of `pp(A)` whose
-multiplicity exceeds `k`: `(A⁻ᵏ)* = ∏_{eₚ > k} P`. -/
-theorem squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
-    squarefreePart (deflation A k)
-      = ∏ P ∈ (normalizedFactors A.primPart).toFinset.filter
-          (fun P => k < (normalizedFactors A.primPart).count P), P := by
-  rw [squarefreePart, (deflation_isPrimitive A k hA).primPart_eq]
-  apply Finset.prod_congr _ (fun _ _ => rfl)
-  ext P
-  rw [Multiset.mem_toFinset, ← Multiset.count_pos, count_normalizedFactors_deflation,
-    Finset.mem_filter, Multiset.mem_toFinset, ← Multiset.count_pos]
-  omega
-
-open Classical in
 /-- Squarefree-factorization part `Aᵢ = ∏_{eₚ = i} P`: the product of the prime factors of `pp(A)`
 of multiplicity exactly `i`. -/
 noncomputable def sqfreeFactPart (A : D[X]) (i : ℕ) : D[X] :=

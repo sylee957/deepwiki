@@ -126,6 +126,20 @@ theorem squarefreePart_mul_deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart 
   have h := squarefreePart_mul_deflation (deflation A k) hne
   rwa [(deflation_isPrimitive A k hA).primPart_eq, ← deflation_succ A k hA] at h
 
+open Classical in
+/-- The squarefree part of a deflation is the product of the prime factors of `pp(A)` whose
+multiplicity exceeds `k`: `(A⁻ᵏ)* = ∏_{eₚ > k} P`. -/
+theorem squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    squarefreePart (deflation A k)
+      = ∏ P ∈ (normalizedFactors A.primPart).toFinset.filter
+          (fun P => k < (normalizedFactors A.primPart).count P), P := by
+  rw [squarefreePart, (deflation_isPrimitive A k hA).primPart_eq]
+  apply Finset.prod_congr _ (fun _ _ => rfl)
+  ext P
+  rw [Multiset.mem_toFinset, ← Multiset.count_pos, count_normalizedFactors_deflation,
+    Finset.mem_filter, Multiset.mem_toFinset, ← Multiset.count_pos]
+  omega
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
