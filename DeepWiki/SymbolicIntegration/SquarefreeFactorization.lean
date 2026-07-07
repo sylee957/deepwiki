@@ -37,11 +37,6 @@ open Classical
 /-! ### The abstract Yun loop state and its recurrence -/
 
 open Classical in
-/-- Abstract Yun derivative-polynomial `Dabs A i = Yun A i − (Babs A i)′`. -/
-noncomputable def Dabs {K : Type*} [Field K] (A : K[X]) (i : ℕ) : K[X] :=
-  Yun A i - derivative (squarefreePart (deflation A (i - 1)))
-
-open Classical in
 /-- `Babs A i = sqfreeFactPart A i * Babs A (i+1)`. -/
 theorem Babs_eq_mul {K : Type*} [Field K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) :

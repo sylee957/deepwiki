@@ -232,6 +232,11 @@ open Classical in
 noncomputable def Babs (A : K[X]) (i : ℕ) : K[X] :=
   squarefreePart (deflation A (i - 1))
 
+open Classical in
+/-- Abstract Yun derivative-polynomial `Dabs A i = Yun A i − (Babs A i)′`. -/
+noncomputable def Dabs (A : K[X]) (i : ℕ) : K[X] :=
+  Yun A i - derivative (squarefreePart (deflation A (i - 1)))
+
 end SquarefreeYunState
 
 end DeepWiki.SymbolicIntegration
