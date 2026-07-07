@@ -155,7 +155,7 @@ omit [CFieldSpec β] in
       | true =>
         have hpa : CPolyG.toPolyG a = 0 := by
           have hca : CPolyG.cnormG a = [] := by simpa [CPolyG.cisZeroG, cnormG_idem] using ha
-          rw [← toPolyG_cnormG, hca, toPolyG_nil]
+          exact (cnormG_eq_nil_iff _).mp hca
         simp [toGBCoeffPoly_cons, hpa, has]
       | false => simp [toGBCoeffPoly_cons, toPolyG_cnormG, has]
     | cons b bs =>
