@@ -65,7 +65,7 @@ theorem gcd_nodal_eq_prod_residue (s : Finset K) (A : K[X]) (a : K) :
   rw [hgsplits.eq_prod_roots_of_monic hgmonic, hroots, Finset.prod_eq_multiset_prod]
 
 open scoped Classical in
--- Czichowski's Lemma 2.3: `gcd(D, A − a·D') = ∏_{α∈s, res(α)=a}(X−α)`, the Rothstein–Trager `Gₐ`.
+-- The gcd factor is the product of the linear factors whose roots have residue `a`.
 example (s : Finset K) (A : K[X]) (a : K) :
     gcd (Lagrange.nodal s id) (A - C a * derivative (Lagrange.nodal s id))
       = ∏ α ∈ s.filter
@@ -86,7 +86,7 @@ theorem ratFunc_eq_sum_residue_gcd (s : Finset K) (A : K[X]) (hA : A.degree < s.
   rw [gcd_nodal_eq_prod_residue]
 
 open scoped Classical in
--- Czichowski part (iii): `∫ A/D = ∑_a a·log(gcd(D, A−a·D'))`, the RT/LRT log sum with the RT gcd.
+-- The grouped logarithmic derivative form can be written with the residue gcd in each summand.
 example (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
     algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
       = ∑ a ∈ s.image (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id))),
