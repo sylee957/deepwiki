@@ -116,6 +116,16 @@ theorem deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
       not_lt] at hP'
     rw [show (normalizedFactors A.primPart).count P - (k + 1) = 0 by omega, pow_zero]
 
+open Classical in
+/-- `(A⁻ᵏ)* · A⁻⁽ᵏ⁺¹⁾` is associated to `A⁻ᵏ`: the squarefree part of a deflation times the next
+deflation recovers it. -/
+theorem squarefreePart_mul_deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    Associated (squarefreePart (deflation A k) * deflation A (k + 1)) (deflation A k) := by
+  have hne : (deflation A k).primPart ≠ 0 := by
+    rw [(deflation_isPrimitive A k hA).primPart_eq]; exact deflation_ne_zero A k
+  have h := squarefreePart_mul_deflation (deflation A k) hne
+  rwa [(deflation_isPrimitive A k hA).primPart_eq, ← deflation_succ A k hA] at h
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
