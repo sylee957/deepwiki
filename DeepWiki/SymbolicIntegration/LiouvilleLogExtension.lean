@@ -330,8 +330,8 @@ lemma logDeriv_ne_zero_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u) : 
   rw [logDerivPoly_X]
   simp [logCoeff, h0]
 
--- Restatements pinning the log-monomial setup to the book's wording (Rosenlicht §, log case).
--- `t' = u'/u`: the defining equation of the log monomial `t = log u`.
+-- Restatements pinning the log-monomial setup to its API-level equations.
+-- `t' = u'/u`: the defining equation of the logarithmic monomial.
 example (u : F) : logDerivPoly u (X : F[X]) = C (logDeriv u) := logDerivPoly_X u
 -- The derivation on `F(t)` restricted to the linear monomial `b·t` (`b ∈ F`) is
 -- `b'·t + b·(u'/u)`: the constant-field part plus the monomial part.
@@ -1605,9 +1605,7 @@ example (u : F) (hmlp : MultiLogPoleObligation u) (hrtp : RationalToPolyObligati
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   isLiouville_of_multiLogPole u hmlp ⟨hrtp, hpv, hu⟩
--- `PoleIndependenceObligation` is PROVEN from the engine once the transcendence residue
--- `∀ j, D πⱼ ≠ 0` is supplied: feeding that residue into `poleIndependence_of_logDerivPoly_ne_zero`
--- discharges the obligation, so the obligation ⟺ "no positive-degree monic irreducible is killed by `D`".
+-- `PoleIndependenceObligation` follows from nonvanishing of `D πⱼ` on every irreducible factor.
 example (u : F)
     (hDne : letI := logDifferential u; ∀ {ιπ : Type} [Fintype ιπ] (π : ιπ → F[X]),
       (∀ j, Irreducible (π j)) → ∀ j, logDerivPoly u (π j) ≠ 0) :
@@ -1616,26 +1614,22 @@ example (u : F)
   intro ιπ _ π d hmon hirr hinj hdeg hpoly
   exact poleIndependence_of_logDerivPoly_ne_zero u π d hmon hirr hinj hdeg
     (hDne π hirr) hpoly
--- From the genuine non-degeneracy `NondegenerateLog u` (= `log u ∉ F`), BOTH the rational-to-poly
--- pole descent AND the pole-independence obligations are theorems (no longer assumptions).
+-- `NondegenerateLog u` supplies both rational-to-polynomial pole descent and pole independence.
 example (u : F) (hnd : NondegenerateLog u) : RationalToPolyObligation u :=
   rationalToPolyObligation_of_nondegenerateLog u hnd
 example (u : F) (hnd : NondegenerateLog u) : PoleIndependenceObligation u :=
   poleIndependenceObligation_of_nondegenerateLog u hnd
--- The keystone: a genuine new log monomial (`NondegenerateLog u`) plus ONLY the multi-term
--- pole-matching residue (`MultiLogPoleObligation u`) yields the real `IsLiouville F (RatFunc F)` —
--- the false `PolyVReductionObligation` no longer appears (its `b·t` survivor folds into `b·log u`).
+-- `NondegenerateLog u` plus multi-term pole matching yields `IsLiouville F (RatFunc F)`.
 example (u : F) (hnd : NondegenerateLog u) (hmlp : MultiLogPoleObligation u) :
     letI := logDifferential u
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   isLiouville_of_nondegenerateLog u hnd hmlp
--- `MultiLogPoleObligation` is now a THEOREM from `NondegenerateLog u` plus the single sharp residual
--- `DerivSimplePoleSeparation u` (the simple poles of `logDeriv` separate from `v′`'s order-`≥ 2` poles).
+-- `MultiLogPoleObligation` follows from nondegeneracy plus separation of simple logarithmic poles.
 example (u : F) (hnd : NondegenerateLog u) (hsep : DerivSimplePoleSeparation u) :
     MultiLogPoleObligation u :=
   multiLogPoleObligation_of_nondegenerateLog u hnd hsep
--- The keystone, conditional form: `NondegenerateLog u` + the (now-discharged) separation residual.
+-- Conditional form using `NondegenerateLog u` and simple-pole separation.
 example (u : F) (hnd : NondegenerateLog u) (hsep : DerivSimplePoleSeparation u) :
     letI := logDifferential u
     letI := logDifferentialAlgebra u
