@@ -49,7 +49,7 @@ end RadElem
 
 open RadElem
 
-/-! ### Shared validation data for `radInv2` and `radLogDeriv` -/
+/-! ### Shared example data for `radInv2` and `radLogDeriv` -/
 
 /-- The radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`). -/
 def fullRhoArcsinh : QFunNZG ℚ := qxOfNum [1, 0, 1]
@@ -135,10 +135,5 @@ def rtCombU : RadElem (QFunNZG ℚ) := [qxOfNum [0, 1], CField.one]
 
 /-- The log residual `[0, 1/(x²+1)]` absorbed by the combined log solve. -/
 def rtCombLogResidual : RadElem (QFunNZG ℚ) := radInvYLift rtCombRho CField.one
-
-/-! ### `#print axioms` for shared assembly checks -/
-
-#print axioms radInv2_mul_self_eq_one
-#print axioms radLogDeriv_eq_integrand_arcsinh
 
 end DeepWiki.SymbolicIntegration
