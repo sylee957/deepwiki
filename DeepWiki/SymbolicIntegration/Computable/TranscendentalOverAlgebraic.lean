@@ -488,8 +488,8 @@ theorem toPolyG_radInv2 (q : RadElem α) :
         - C (CFieldSpec.toK (CField.div (radCoeff1 q) (radNorm2 f q))) * X := by
   show CPolyG.toPolyG [CField.div (radCoeff0 q) (radNorm2 f q),
       CField.neg (CField.div (radCoeff1 q) (radNorm2 f q))] = _
-  simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]
-  rw [CFieldSpec.toK_neg, map_neg]; ring
+  simp only [denote, mul_zero, add_zero]
+  rw [map_neg]; ring
 
 /-- `toPolyG q = C(toK a) + C(toK b)·X` for a length-`≤ 2` `q` (`a, b` the `radCoeff0/1`). -/
 theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2) :
