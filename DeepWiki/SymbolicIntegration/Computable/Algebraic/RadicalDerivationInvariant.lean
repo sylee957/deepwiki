@@ -214,7 +214,8 @@ theorem mk_toPolyG_radMul (n : ℕ) (f : α) (a b : RadElem α) :
     Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG (radMul n f a b))
       = Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG a)
         * Ideal.Quotient.mk (radIdeal n f) (CPolyG.toPolyG b) := by
-  rw [radMul, mk_toPolyG_radReduce, CPolyG.toPolyG_cmulG, map_mul]
+  rw [radMul, mk_toPolyG_radReduce]
+  simp only [denote, map_mul]
 
 /-! ### The crux `D(Xⁿ − C(toK f)) ∈ I` and the descent of `D` to the quotient
 
