@@ -99,8 +99,8 @@ that is part of the job.
 - [x] `Computable/YunTowerCorrect.lean`
 - [x] `Computable/FuelFreeDiophantine.lean`
 - [x] `Computable/Tower/GcdFFCorrect.lean`
-- [ ] `Computable/Algebraic/RadicalIntegralSoundness.lean`
-- [ ] `Computable/TranscendentalOverAlgebraic.lean`
+- [x] `Computable/Algebraic/RadicalIntegralSoundness.lean`
+- [x] `Computable/TranscendentalOverAlgebraic.lean`
 - [ ] sweep the rest: `for f in $(find DeepWiki/SymbolicIntegration -name '*.lean'); do grep -qE "rw \[.*toPolyG_c|simp only \[.*toPolyG_c" "$f" && echo "$f"; done`
 
 After the worklist, run the full gate once (`scripts/check.sh`, bare) to confirm `GATE: PASS` across all
