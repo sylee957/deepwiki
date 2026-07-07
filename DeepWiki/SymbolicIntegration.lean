@@ -40,6 +40,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalUniqueness
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
+import DeepWiki.SymbolicIntegration.Core.Polynomial.PolynomialNormalization
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
