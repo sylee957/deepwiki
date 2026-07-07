@@ -165,8 +165,8 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
--- ★ The RDE decision procedure in book terms: the fuel-free recursive Risch-DE solver returns `some` iff the
--- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf §6 completeness frontier + the
+-- The RDE decision procedure: the fuel-free recursive Risch-DE solver returns `some` iff the
+-- field-level Risch DE `D(Y) + F·Y = G` is solvable, modulo the named Wf completeness frontier and the
 -- direct Wf soundness certificate.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
