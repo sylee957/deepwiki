@@ -105,16 +105,10 @@ end ConjugatePairFromSplit
 section Restatements
 variable {S : Type*} [CommRing S] {K : Type*} [CommRing K] [Algebra K S]
 
-/-- Restatement of the **real/imaginary split** against the book wording (§2.8, p.69): "write
-`R(u+i·v)` as `P(u,v) + i·Q(u,v)`" — for any `R ∈ K[t]` there are real-form `P, Q` with
-`R(u+i·v) = P + i·Q`, certified real by the conjugate `R(u−i·v) = P − i·Q`. -/
 example (i : S) (hi : i ^ 2 = -1) (u v : S) (R : K[X]) :
     ∃ P Q : S, aeval (u + i * v) R = P + i * Q ∧ aeval (u - i * v) R = P - i * Q :=
   exists_realImag_split i hi u v R
 
-/-- Restatement of the **conjugate-product bridge** against the book wording (§2.8, p.69): with
-`S(a+i·b, x) = A + i·B` (`i² = −1`), `A(a,b,x)² + B(a,b,x)²` is the product of the conjugate values
-`S(a+i·b, x)·S(a−i·b, x)` — the argument of the real logarithm `a·log(A²+B²)`. -/
 example {T : Type*} [CommRing T] (i A B sP sM : T) (hi : i ^ 2 = -1)
     (hP : sP = A + i * B) (hM : sM = A - i * B) : A ^ 2 + B ^ 2 = sP * sM :=
   sq_add_sq_eq_mul_conj i A B sP sM hi hP hM
