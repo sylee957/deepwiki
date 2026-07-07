@@ -40,7 +40,9 @@ theorem denote_eq (h : RefinesPolyG p p') : toPolyG p = p' := h
 /-- `csubG` respects `RefinesPolyG` — the one operation needed by the zero-test reflection below. -/
 theorem sub (hp : RefinesPolyG p p') (hq : RefinesPolyG q q') :
     RefinesPolyG (csubG p q) (p' - q') := by
-  rw [RefinesPolyG] at hp hq ⊢; rw [toPolyG_csubG, hp, hq]
+  rw [RefinesPolyG] at hp hq ⊢
+  simp only [denote]
+  rw [hp, hq]
 
 /-- A true executable zero test reflects to zero of any refined semantic polynomial. -/
 theorem eq_zero_of_cisZero (hp : RefinesPolyG p p') (hz : cisZeroG p = true) : p' = 0 := by
