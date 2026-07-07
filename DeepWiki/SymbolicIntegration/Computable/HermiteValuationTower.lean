@@ -108,7 +108,7 @@ theorem gloc_isQRegularG (Dt v u : CPolyG α) {Q : (CFieldSpec.K α)[X]} (hv : t
   have hden : toPolyG (cHermiteReduceTowerInnerWf Dt v u j a ([CField.zero], [CField.one])).1.2
       = toPolyG v ^ N := by
     rw [hN, show toPolyG ([CField.one] : CPolyG α) = 1 from by
-      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], one_mul]
+      simp only [denote, mul_zero, add_zero, map_one], one_mul]
   exact ⟨_, _, by rw [hden]; exact pow_ne_zero N hv, by rw [hden]; exact hcop.pow_right, rfl⟩
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -206,9 +206,9 @@ theorem cHermiteReduceTowerGWf_frac_eq_sum (Dt a d : CPolyG α)
             / amG α (toPolyG (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpowG x.1 (x.2 + 1)))
                 (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2))).sum := by
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote, mul_zero, add_zero, map_one]
   have hz : toPolyG ([CField.zero] : CPolyG α) = 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, mul_zero, add_zero, map_zero]
+    simp only [denote, mul_zero, add_zero, map_zero]
   rw [cHermiteReduceTowerGWf]
   simp only [toPolyG_cnormG]
   rw [fracPair_foldl_sum
@@ -388,16 +388,16 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPolyG α
   have hqn : cnormG x.1 ≠ [] := fun h => hv ((cisZeroG_iff x.1).mp (by simp [cisZeroG, h]))
   have hone : toPolyG ([CField.one] : CPolyG α) ≠ 0 := by
     rw [show toPolyG ([CField.one] : CPolyG α) = 1 from by
-      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]]
+      simp only [denote, mul_zero, add_zero, map_one]]
     exact one_ne_zero
   have hbez := cHermiteInner_hbez_of_gcd Dt x.1 u hqn hgdeg hgne
   have hM2 := cHermiteReduceTowerInnerWf_spec_acc Dt x.1 u hu hv hbez x.2 a
     ([CField.zero], [CField.one]) hone
   -- the seed fraction ⟦0/1⟧ = 0.
   have hz : amG α (toPolyG ([CField.zero] : CPolyG α)) = 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, mul_zero, add_zero, map_zero, map_zero]
+    simp only [denote, mul_zero, add_zero, map_zero]
   have ho : amG α (toPolyG ([CField.one] : CPolyG α)) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one, map_one]
+    simp only [denote, mul_zero, add_zero, map_one]
   rw [hz, ho, zero_div, map_zero, add_zero] at hM2
   -- `amG u · amG v^(i) = amG d`.
   have hamud : amG α (toPolyG u) * amG α (toPolyG x.1) ^ (x.2 + 1) = amG α (toPolyG d) := by
@@ -462,7 +462,7 @@ theorem hden_of [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (D
   obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt x.1
     (cdivWf d (cpowG x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])
   rw [hN, show toPolyG ([CField.one] : CPolyG α) = 1 from by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], one_mul]
+    simp only [denote, mul_zero, add_zero, map_one], one_mul]
   exact pow_ne_zero N hv
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -474,7 +474,7 @@ theorem toPolyG_cHermiteReduceTowerGWf_den_ne_zero [CharZero (CFieldSpec.K α)]
     (hpp : (toPolyG d).primPart ≠ 0) :
     toPolyG (cHermiteReduceTowerGWf Dt a d).1.2 ≠ 0 := by
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote, mul_zero, add_zero, map_one]
   rw [cHermiteReduceTowerGWf]
   simp only [toPolyG_cnormG]
   exact foldl_den_ne_zero
