@@ -2,27 +2,19 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 
-/-! # Lazard–Rioboo–Trager correctness (Bronstein Theorem 2.5.1, part (ii))
-The LRT log-part algorithm replaces the Rothstein–Trager per-residue gcds `gcd(D, A − a·D')` by the
-specializations `Sᵢ(a, x)` of one subresultant PRS. Theorem 2.5.1(ii) is the correctness statement
-`ppₓ(Sₘ)(a, x) ~ gcd(D, A − a·D')`. This file connects the *concrete* subresultant ↔ gcd engine
-(`subresultant_euclideanPRS_isSimilar_gcd`) to the algorithm's primitive `lrtSubresultant` via the
-specialization `lrtSubresultant_eval` (`t ↦ a`). `lrtSubresultant_eval` lands on the formal-degree-`deg D − 1`
-subresultant; `isSimilar_subresultant_padding` matches that to the *actual* degree of `A − a·D'` driving the
-Euclidean p.r.s. up to a nonzero `lc(D)` power, so the correctness holds for **every** residue — including
-the degenerate `deg(A − a·D') < deg D − 1`. (Over a field `ppₓ(Sₘ) ~ Sₘ`, so the similarity below is the
-part-(ii) conclusion with the primitive part absorbed by `~`.) -/
+/-! # Lazard–Rioboo–Trager correctness
+The LRT log-part algorithm replaces the Rothstein-Trager per-residue gcds
+`gcd(D, A - a * D')` by specializations of one subresultant PRS.
+
+This file connects the subresultant-gcd engine to `lrtSubresultant`, including the
+padding needed when `A - C a * derivative D` has smaller than formal degree. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-- **Residue non-degeneracy** (the characterization of when `A − a·D'` keeps the full degree `deg D − 1`):
-the degree drops below `deg D − 1` exactly at the single residue value `a = A_{n−1}/(n·lc D)` (`n = deg D`),
-where the `xⁿ⁻¹`-coefficient `A_{n−1} − a·n·lc(D)` cancels (the leading coefficient of `D'` is `n·lc(D)`).
-Under the non-cancellation `A_{n−1} ≠ a·n·lc(D)` the full degree is kept. (`deg(A − a·D') ≤ deg D − 1`
-always, since `deg A < deg D`; `isSimilar_lrtSubresultant_eval_gcd` no longer needs this, handling the
-degenerate value uniformly via padding — this records the dividing line.) -/
+/-- If the top coefficient does not cancel, `A - C a * derivative D` has degree
+`D.natDegree - 1`. -/
 theorem natDegree_sub_C_mul_derivative {K : Type*} [Field K] (A D : K[X]) (a : K)
     (hA : A.natDegree < D.natDegree)
     (hne : A.coeff (D.natDegree - 1) ≠ a * ((D.natDegree : K) * D.leadingCoeff)) :
@@ -38,15 +30,8 @@ theorem natDegree_sub_C_mul_derivative {K : Type*} [Field K] (A D : K[X]) (a : K
   intro h
   exact hne (by linear_combination h)
 
-/-- **Theorem 2.5.1, part (ii)** (the LRT subresultant correctness — *all* residues): for `D ≠ 0` and
-`deg A < deg D`, the LRT subresultant `lrtSubresultant A D` at the index `i = deg R_k` (`R_k` the last
-nonzero element of the Euclidean p.r.s. of `D, A − a·D'`), specialized by `t ↦ a`, is *similar* to
-`gcd(D, A − a·D')` — the book's `ppₓ(R_m)(a,x) ~ gcd(D, A−aD')` (over a field `ppₓ(R_m) ~ R_m`). Holds for
-every residue, including the *degenerate* one where `deg(A − a·D') < deg D − 1`: `lrtSubresultant_eval`
-lands on the formal-degree-`(deg D − 1)` subresultant, which `isSimilar_subresultant_padding` matches to the
-actual-degree p.r.s. computation `subresultant_euclideanPRS_isSimilar_gcd` up to a nonzero `lc(D)` power
-(absorbed by `~`). The index bound `i = deg R_k < deg(A − a·D')` follows from `k ≥ 2` via the strict degree
-decrease `euclideanPRS_natDegree_strictAnti`. -/
+/-- The specialized LRT subresultant at the last nonzero Euclidean PRS degree is
+similar to `gcd D (A - C a * derivative D)`. -/
 theorem isSimilar_lrtSubresultant_eval_gcd {K : Type*} [Field K] [GCDMonoid K[X]]
     (A D : K[X]) (a : K) (hD : D ≠ 0) (hA : A.natDegree < D.natDegree)
     {k : ℕ} (hk2 : 2 ≤ k) (hk0 : euclideanPRS D (A - C a * derivative D) (k + 1) = 0)
@@ -70,13 +55,8 @@ theorem isSimilar_lrtSubresultant_eval_gcd {K : Type*} [Field K] [GCDMonoid K[X]
     (le_trans (le_of_lt hjE) (le_trans hElt (Nat.sub_le _ _))) le_rfl le_rfl
     (leadingCoeff_ne_zero.mpr hD) hElt).trans hengine
 
-/-- **Theorem 2.5.1, part (ii) — the top-index `k = 1` case** (`E := A − a·D'` *divides* `D`): the
-Euclidean p.r.s. of `D, E` terminates in one step (`R₂ = prem(D, E) = 0`), so the last nonzero element
-is `R₁ = E` and `i = deg R₁ = deg E` is the *top* p.r.s. index. The LRT subresultant at index `deg E`,
-specialized `t ↦ a`, is `subresultant D E (deg D) (deg D − 1) (deg E)`, which the *normal*-orientation
-degenerate formula `subresultant_deg_ge_normal` (first poly `D`, the larger formal degree, `deg E < deg D`)
-collapses to `C(...)·E`, i.e. `~ E`; chaining `gcd D E ~ E` gives `~ gcd(D, A − a·D')`. This is the
-`k = 1` boundary that padding cannot reach (`j = deg E` may equal `deg D − 1`). -/
+/-- In the one-step PRS case, the specialized top LRT subresultant is similar to
+`gcd D (A - C a * derivative D)`. -/
 theorem isSimilar_lrtSubresultant_eval_gcd_top {K : Type*} [Field K] [GCDMonoid K[X]]
     (A D : K[X]) (a : K) (hD : D ≠ 0) (hA : A.natDegree < D.natDegree)
     (hE : A - C a * derivative D ≠ 0)
@@ -100,19 +80,8 @@ theorem isSimilar_lrtSubresultant_eval_gcd_top {K : Type*} [Field K] [GCDMonoid 
   exact hsim.trans (isSimilar_gcd_right_of_euclideanPRS_two_eq_zero D E hE h0).symm
 
 open scoped Classical in
-/-- **Theorem 2.5.1 — algorithm-level capstone (full part-(ii) regime)**: state part-(ii) correctness
-directly at the LRT algorithm's own index `i = rootMultiplicity a R` (`R = rtResultant A D`), with the
-p.r.s.-termination hypotheses discharged internally. Over an algebraically closed field with `D`
-separable and `deg A < deg D`, for a residue `a` whose multiplicity `i` in `R` is *strictly* below
-`deg D` (i.e. `gcd(D, A − a·D')` is a *proper* factor of `D` — the genuine part-(ii) regime, excluding
-only the part-(i) `i = deg D` case where `A − a·D' = 0` and `gcd ~ D`), the LRT subresultant at index
-`i`, specialized `t ↦ a`, is similar to the Rothstein–Trager gcd `gcd(D, A − a·D')`. The index is
-rewritten from `i` to the last-p.r.s. degree via `rootMultiplicity_rtResultant_eq_natDegree_gcd`
-(`i = deg gcd`) and `IsSimilar.natDegree_eq` on `(isPRS_euclideanPRS …).isSimilar_gcd`
-(`deg gcd = deg R_k`); the termination data `hk0`/`hknz` come from `exists_last_euclideanPRS_nonzero`.
-Both `k ≥ 2` (multi-step, via `isSimilar_lrtSubresultant_eval_gcd` + padding) and `k = 1` (one-step,
-`E ∣ D`, the top p.r.s. index `i = deg E`, via `isSimilar_lrtSubresultant_eval_gcd_top`) are covered;
-only `A − a·D' = 0` (the part-(i) `i = deg D` regime) is excluded by `hi`. -/
+/-- At any residue whose multiplicity is below `D.natDegree`, the specialized LRT
+subresultant is similar to the Rothstein-Trager gcd. -/
 theorem lazardRiobooTrager_isSimilar_gcd {K : Type*} [Field K] [IsAlgClosed K]
     (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
     (hi : (rtResultant A D).rootMultiplicity a < D.natDegree) :
@@ -161,13 +130,8 @@ example {K : Type*} [Field K] [IsAlgClosed K]
   lazardRiobooTrager_isSimilar_gcd A D hD hA a hi
 
 open scoped Classical in
-/-- **Theorem 2.5.1, unified algorithm output** (no excluded case): for any `a`, the LRT algorithm's
-output curve `Sᵢ` at multiplicity `i = rootMultiplicity a R` — namely `D` if `i = deg D` (part (i), the
-`A − a·D' = 0` regime, where `gcd ~ D`) else `lrtSubresultant A D i` (part (ii)) — specialized `t ↦ a`,
-is similar to `gcd(D, A − a·D')`. The `if i = deg D` branch is exactly `lazardRiobooTrager`'s own, so this
-stitches parts (i) and (ii) into one statement covering EVERY residue with no boundary: `i ≤ deg D` always
-(`gcd ∣ D`), and the `i = deg D` case routes to `isSimilar_gcd_left_of_natDegree_eq`, `i < deg D` to the
-capstone `lazardRiobooTrager_isSimilar_gcd`. -/
+/-- The branch returned by the LRT algorithm at any residue is similar to
+`gcd D (A - C a * derivative D)`. -/
 theorem lazardRiobooTrager_output_isSimilar_gcd {K : Type*} [Field K] [IsAlgClosed K]
     (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K) :
     IsSimilar
