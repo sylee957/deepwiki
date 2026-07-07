@@ -8,25 +8,25 @@ import Mathlib.RingTheory.Bezout
 import Mathlib.Data.Finsupp.PWO
 import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Finsupp.MonomialOrder
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBasisBasic
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerSPolynomial
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBuchbergerCriterion
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBuchbergerAlgorithm
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBasisExistence
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReducedBasis
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerOneVariableGcd
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLeadingYCoeffGcd
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReductionStep
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBoundedReduction
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardStep
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerCommonFactor
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardDescent
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardFactorization
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerNoCommonYFactor
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerDivideOutCommonFactor
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerDividedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerCriterion
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerAlgorithm
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisExistence
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.OneVariableGcd
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LeadingYCoeffGcd
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateSorting
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReductionStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BoundedReduction
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.CommonFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardDescent
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardFactorization
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.NoCommonYFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.DivideOutCommonFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.DividedBasis
 
 /-! # Gröbner bases over a monomial order
 

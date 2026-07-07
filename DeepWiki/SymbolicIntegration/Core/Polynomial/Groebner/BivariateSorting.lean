@@ -1,7 +1,7 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.Data.Finsupp.MonomialOrder
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReducedBasis
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
 
 /-! # Sorting bivariate Gröbner bases by y-degree
 

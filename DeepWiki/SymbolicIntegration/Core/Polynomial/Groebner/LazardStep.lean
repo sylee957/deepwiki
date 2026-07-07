@@ -1,10 +1,10 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.RingTheory.MvPolynomial.Ideal
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReducedBasis
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReductionStep
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBoundedReduction
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateSorting
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReductionStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BoundedReduction
 
 /-! # The one-step Lazard descent
 

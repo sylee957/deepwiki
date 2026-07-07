@@ -8,7 +8,7 @@ import Mathlib.RingTheory.Bezout
 import Mathlib.Data.Finsupp.PWO
 import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Finsupp.MonomialOrder
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBasisBasic
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
 
 /-! # Gröbner basis existence
 

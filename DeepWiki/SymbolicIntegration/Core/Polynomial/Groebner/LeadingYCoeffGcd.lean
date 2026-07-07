@@ -1,8 +1,8 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.Data.Finsupp.MonomialOrder
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReducedBasis
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerOneVariableGcd
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.OneVariableGcd
 
 /-! # Leading y-coefficient gcds
 

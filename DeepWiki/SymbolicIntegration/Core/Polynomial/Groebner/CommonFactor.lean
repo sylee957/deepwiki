@@ -1,8 +1,8 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.Data.Finsupp.MonomialOrder
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerReducedBasis
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBoundedReduction
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateSorting
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BoundedReduction
 
 /-! # Common factors in bivariate Gröbner bases
 

@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerDivideOutCommonFactor
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerCommonFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.DivideOutCommonFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.CommonFactor
 
 /-! # Divided Groebner basis
 

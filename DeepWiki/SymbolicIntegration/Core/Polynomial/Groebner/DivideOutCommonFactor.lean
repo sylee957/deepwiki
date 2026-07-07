@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerNoCommonYFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.NoCommonYFactor
 
 /-! # Divide out the common `K[x][y]` factor
 

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBasisBasic
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
 
 /-! # S-polynomials for Gröbner bases
 

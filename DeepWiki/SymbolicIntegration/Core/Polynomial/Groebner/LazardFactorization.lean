@@ -1,9 +1,9 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.RingTheory.Polynomial.UniqueFactorization
 import Mathlib.RingTheory.UniqueFactorizationDomain.GCDMonoid
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardDescent
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateSorting
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardDescent
 
 /-! # Lazard factorization API
 

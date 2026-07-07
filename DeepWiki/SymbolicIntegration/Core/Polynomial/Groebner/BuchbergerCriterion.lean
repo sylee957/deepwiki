@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBasisBasic
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerSPolynomial
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
 
 /-! # Buchberger criterion
 

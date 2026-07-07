@@ -1,7 +1,7 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.RingTheory.Polynomial.Basic
 import Mathlib.Algebra.MvPolynomial.Equiv
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
 
 /-! # Bivariate Gröbner reduction steps
 

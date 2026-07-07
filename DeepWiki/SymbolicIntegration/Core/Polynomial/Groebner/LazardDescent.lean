@@ -1,8 +1,8 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateView
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBivariateSorting
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerBoundedReduction
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateSorting
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BoundedReduction
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardStep
 
 /-! # Lazard descent from the base condition
 

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardFactorization
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardFactorization
 
 /-! # No common `y`-factor for Lazard descent
 
