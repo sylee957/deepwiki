@@ -126,6 +126,16 @@ theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
     map_add, map_mul]
   ring
 
+/-- The pure-`y` radical derivative has coefficient `D(c) + c * logDerRadicand n f`. -/
+theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
+    CPolyG.toPolyG (radDeriv n f ([CField.zero, c] : RadElem α))
+      = Polynomial.C (CFieldSpec.toK
+          (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f)))) * X := by
+  rw [toPolyG_radDeriv_linear, CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil,
+    mul_zero, add_zero, CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero]
+  rw [map_zero, map_zero, zero_add]
+  ring
+
 /-! ### Additivity: `radDeriv` commutes with `radAdd` -/
 
 /-- `radDeriv` is additive: `toPolyG (radDeriv n f (radAdd a b)) = toPolyG (radDeriv n f a) +

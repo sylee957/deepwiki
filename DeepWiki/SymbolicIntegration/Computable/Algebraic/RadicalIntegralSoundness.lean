@@ -123,19 +123,6 @@ Every `R/y`-form piece of the rational-part driver lifts to a pure-`y` element `
 `v = c·y` and integrand `g = γ·y`, `radDeriv n f v = g` collapses to the single base-field equation
 `D(c) + c·ℓ = γ` (`ℓ = logDerRadicand n f`). -/
 
-/-- The `y`-component reading of a `C/y`-form antiderivative's derivative:
-`toPolyG (radDeriv n f [zero, c]) = C (toK (D(c) + c·ℓ)) · X` with `ℓ = logDerRadicand n f`. Specializes
-`toPolyG_radDeriv_linear` at `a₀ = 0`. -/
-theorem toPolyG_radDeriv_zero_cons (n : ℕ) (f c : α) :
-    CPolyG.toPolyG (radDeriv n f ([CField.zero, c] : RadElem α))
-      = Polynomial.C (CFieldSpec.toK
-          (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f)))) * X := by
-  rw [toPolyG_radDeriv_linear, CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil,
-    mul_zero, add_zero, CDiffFieldSpec.toK_cderiv, CFieldSpec.toK_zero]
-  -- the constant component is `D(0) = 0`, leaving only the `y`-component `C (toK (D c + c·ℓ))·X`
-  rw [map_zero, map_zero, zero_add]
-  ring
-
 /-- **★ The `C/y`-form soundness reduces to one base-field equation** — for a base-field witness `c` and
 integrand coefficient `γ`, the radical antiderivative `c·y` integrates `γ·y` (i.e.
 `IsRadicalRationalIntegral n [f] [zero, γ] [zero, c]`) **iff** `D(c) + c·ℓ = γ` in `K`
