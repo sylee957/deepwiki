@@ -239,4 +239,16 @@ noncomputable def Dabs (A : K[X]) (i : ℕ) : K[X] :=
 
 end SquarefreeYunState
 
+section SquarefreeYunStateLemmas
+
+variable {K : Type*} [Field K]
+
+open Classical in
+/-- `Dabs A i = sqfreeFactPart A i * Yun A (i+1)`. -/
+theorem Dabs_eq_mul (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
+    Dabs A i = sqfreeFactPart A i * Yun A (i + 1) := by
+  rw [Dabs]; exact Yun_sub_derivative_squarefreePart A i hi hA
+
+end SquarefreeYunStateLemmas
+
 end DeepWiki.SymbolicIntegration

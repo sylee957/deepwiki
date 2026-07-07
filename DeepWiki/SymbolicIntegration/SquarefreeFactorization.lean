@@ -44,13 +44,6 @@ theorem Babs_eq_mul {K : Type*} [Field K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
   rw [Babs, Babs, Nat.add_sub_cancel, ← squarefreePart_deflation_mul_sqfreeFactPart A i hi hA,
     mul_comm]
 
-open Classical in
-/-- `Dabs A i = sqfreeFactPart A i * Yun A (i+1)`. -/
-theorem Dabs_eq_mul {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
-    (hA : A.primPart ≠ 0) :
-    Dabs A i = sqfreeFactPart A i * Yun A (i + 1) := by
-  rw [Dabs]; exact Yun_sub_derivative_squarefreePart A i hi hA
-
 open UniqueFactorizationMonoid in
 open Classical in
 /-- `gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i)`. -/
