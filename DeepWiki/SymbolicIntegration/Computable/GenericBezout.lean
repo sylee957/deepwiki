@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 
 /-! # Generic Bézout cofactors, resultant, and Lagrange interpolation
 
-Natural-number casts (`cnatCastG`), field powers (`cfpow`), and Lagrange interpolation
+Natural-number casts (`cnatCastG`) and Lagrange interpolation
 (`clagNumG`/`cinterpolateG`), all generic over `[CField α]`. -/
 
 open Polynomial
@@ -25,18 +25,6 @@ def cnatCastG : ℕ → α
   induction k with
   | zero => rw [cnatCastG, CFieldSpec.toK_zero, Nat.cast_zero]
   | succ n ih => rw [cnatCastG, CFieldSpec.toK_add, CFieldSpec.toK_one, ih, Nat.cast_succ, add_comm]
-
-/-- Generic power of a field element: `cfpow c n = cⁿ` over `[CField α]` (by `ℕ`-recursion). -/
-def cfpow (c : α) : ℕ → α
-  | 0 => CField.one
-  | n + 1 => CField.mul c (cfpow c n)
-
-/-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/
-@[denote] theorem toK_cfpow [CFieldSpec α] (c : α) (n : ℕ) :
-    CFieldSpec.toK (cfpow c n) = (CFieldSpec.toK c) ^ n := by
-  induction n with
-  | zero => simp [cfpow, CFieldSpec.toK_one]
-  | succ n ih => rw [cfpow, CFieldSpec.toK_mul, ih, pow_succ']
 
 /-- Generic Lagrange basis numerator `clagNumG zs = ∏ⱼ (z − zⱼ)` over abscissas `zs`, built from the
 degree-1 factors `[−zⱼ, 1]` via `cmulG`. -/

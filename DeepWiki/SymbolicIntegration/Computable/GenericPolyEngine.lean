@@ -9,8 +9,9 @@ import DeepWiki.Transfer.Denote
 
 `CField α`: computable field operations (`zero`/`one`/`add`/`mul`/`neg`/`inv`, zero test) that
 reduce, with meaning supplied by a companion `CFieldSpec` homomorphism `toK : α → K` into a Mathlib
-`Field K`. Over any `CField`, a dense polynomial engine `CPolyG α := List α` with computable
-arithmetic and a Horner bridge `toPolyG : CPolyG α → (CFieldSpec.K α)[X]`. -/
+`Field K`. Over any `CField`, generic scalar powers and a dense polynomial engine
+`CPolyG α := List α` provide computable arithmetic with a Horner bridge
+`toPolyG : CPolyG α → (CFieldSpec.K α)[X]`. -/
 
 open Polynomial
 
@@ -169,6 +170,18 @@ def creverseDegG {α : Type*} [CField α] (k : ℕ) (p : CPolyG α) : CPolyG α 
 /-- Monomial `c * X^n` as a `CPolyG`: `n` low-degree zeros followed by coefficient `c`. -/
 def cMonomialG {α : Type*} [CField α] (c : α) (n : ℕ) : CPolyG α :=
   (List.replicate n CField.zero ++ [c] : List α)
+
+/-- Generic power of a field element: `cfpow c n = cⁿ` over `[CField α]` by `ℕ`-recursion. -/
+def cfpow {α : Type*} [CField α] (c : α) : ℕ → α
+  | 0 => CField.one
+  | n + 1 => CField.mul c (cfpow c n)
+
+/-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/
+@[denote] theorem toK_cfpow {α : Type*} [CField α] [CFieldSpec α] (c : α) (n : ℕ) :
+    CFieldSpec.toK (cfpow c n) = (CFieldSpec.toK c) ^ n := by
+  induction n with
+  | zero => simp [cfpow, CFieldSpec.toK_one]
+  | succ n ih => rw [cfpow, CFieldSpec.toK_mul, ih, pow_succ']
 
 /-- The generic denominator fold `∏ acc·(zk − zⱼ)` reads through `toK` as
 `toK init · ∏ (toK zk − toK zⱼ)`. -/
