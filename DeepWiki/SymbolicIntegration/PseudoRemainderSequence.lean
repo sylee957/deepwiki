@@ -23,8 +23,10 @@ noncomputable def euclideanPRS (A B : R[X]) : ℕ → R[X]
       else Classical.choose
         (isPseudoRemainder_exists (euclideanPRS A B n) (euclideanPRS A B (n + 1)) h)
 
+/-- The zeroth Euclidean PRS term is `A`. -/
 @[simp] theorem euclideanPRS_zero (A B : R[X]) : euclideanPRS A B 0 = A := rfl
 
+/-- The first Euclidean PRS term is `B`. -/
 @[simp] theorem euclideanPRS_one (A B : R[X]) : euclideanPRS A B 1 = B := rfl
 
 /-- Unfolding of `R_{n+2}` when `R_{n+1} ≠ 0`. -/
@@ -239,8 +241,7 @@ theorem isSimilar_gcd_left_of_natDegree_eq {K : Type*} [Field K] [GCDMonoid K[X]
     (hC : C ≠ 0) (hdeg : (gcd C E).natDegree = C.natDegree) : IsSimilar (gcd C E) C :=
   isSimilar_of_dvd_of_natDegree_eq (gcd_dvd_left C E) hC hdeg
 
--- Faithfulness (Thm 2.5.1(i) at the LRT use site): when a residue `a` has multiplicity `deg D`,
--- the gcd `gcd(D, A − a·D')` is similar to `D`.
+-- At the full-multiplicity LRT boundary, the gcd `gcd(D, A − a·D')` is similar to `D`.
 example {K : Type*} [Field K] [GCDMonoid K[X]] (A D : K[X]) (a : K) (hD : D ≠ 0)
     (hn : (gcd D (A - C a * derivative D)).natDegree = D.natDegree) :
     IsSimilar (gcd D (A - C a * derivative D)) D :=
