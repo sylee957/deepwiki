@@ -282,7 +282,7 @@ theorem toK_radicandX3p1 :
   show QFunNZG.amG ℚ (toPolyG ([1, 0, 0, 1] : CPolyG ℚ))
       / QFunNZG.amG ℚ (toPolyG ([CField.one] : CPolyG ℚ)) = _
   have h1 : toPolyG ([1, 0, 0, 1] : CPolyG ℚ) = 1 + X ^ 3 := by
-    simp only [toPolyG_cons, toPolyG_nil]
+    simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
   have h2 : toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
