@@ -180,10 +180,7 @@ theorem field_identity_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] [Algeb
 /-! ### Keyed on the algorithm function `cPolyRischDEG` -/
 
 omit [CDiffFieldSpec α] in
-/-- **`cPolyRischDEGWf` `b = 0` branch returns `cIntegratePolyGWf c`** (for nonzero `c` within the degree
-budget). When `cisZeroG c = false` and `deg c + 1 ≤ n`, `cPolyRischDEGWf Dt [] c n = some
-(cIntegratePolyGWf c)`: the pure-integration arm of the fuel-free dispatcher. Pins the algorithm's output
-shape. -/
+/-- `cPolyRischDEGWf` returns `cIntegratePolyGWf c` on the nonzero `b = 0` branch within budget. -/
 theorem cPolyRischDEGWf_nil_eq [CRischField α] (Dt : CPolyG α) (c : CPolyG α) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n) :
     CPolyG.cPolyRischDEGWf Dt ([] : CPolyG α) c n = some (CPolyG.cIntegratePolyGWf c) := by
@@ -218,11 +215,7 @@ theorem field_identity_of_cPolyRischDEGWf [CharZero (CFieldSpec.K α)] [Algebra 
 
 /-! ### Discharging the constant-base hypothesis from integrand to antiderivative -/
 
-/-- **`mapCoeffs` and `derivative` commute on `(CFieldSpec.K α)[X]`**:
-`mapCoeffs (derivative r) = derivative (mapCoeffs r)`. Both are derivations; the coefficientwise check
-(`coeff_mapCoeffs`, `coeff_derivative`) reduces to `(x·(n+1))′ = x′·(n+1)`, true since the nat-cast
-`(n+1 : K)` is a differential constant (`map_natCast`). The conduit for transporting the constant-base
-condition through the antiderivative `cIntegratePolyG`. -/
+/-- `mapCoeffs` commutes with `Polynomial.derivative` on `(CFieldSpec.K α)[X]`. -/
 theorem mapCoeffs_derivative_commute (r : (CFieldSpec.K α)[X]) :
     Differential.mapCoeffs (Polynomial.derivative r) =
       Polynomial.derivative (Differential.mapCoeffs r) := by
@@ -286,8 +279,7 @@ one-shot over the carrier abbreviation. -/
 noncomputable local instance : CharZero (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (CharZero (RatFunc ℚ))
 
-/-- The engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
-deliverable synthesizes the **same** `Algebra ℚ` the bridge `towerFractionFieldDerivG` uses. -/
+/-- Local `ℚ`-algebra structure on `CFieldSpec.K (QFunNZG ℚ)` via `RatFunc ℚ`. -/
 noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
@@ -306,17 +298,14 @@ theorem field_identity_of_cPolyRischDEGWf_qfunNZG (c q : CPolyG (QFunNZG ℚ)) (
           / amG (QFunNZG ℚ) (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))) :=
   field_identity_of_cPolyRischDEGWf c q n hc hdeg hsome hconst
 
-/-! ### Restatements against the intended wording (anonymous `example`s) -/
+/-! ### Restatements of the polynomial-branch identities -/
 
--- ★ THE FORMAL-DERIVATIVE ATOM (UNCONDITIONAL, abstract, checker-free): the engine's term-by-term
--- antiderivative `cIntegratePolyG` differentiates back to its integrand, `D(toPolyG (cIntegratePolyG c))
--- = toPolyG c` over `(CFieldSpec.K α)[X]` — proven, no runtime check.
+-- The term-by-term antiderivative `cIntegratePolyG` differentiates back to its integrand.
 example [CharZero (CFieldSpec.K α)] (c : CPolyG α) :
     Polynomial.derivative (toPolyG (CPolyG.cIntegratePolyG c)) = toPolyG c :=
   derivative_toPolyG_cIntegratePolyG c
 
--- ★ THE CRUX (checker self-discharge): the polynomial-branch output PASSES `checkIdentityG` abstractly
--- (no check executed) — the missing link `algorithm-output ⟹ check-passes` for the reachable branch.
+-- The polynomial-branch output satisfies `checkIdentityG` abstractly, with no runtime check.
 example [CharZero (CFieldSpec.K α)] (c : CPolyG α)
     (hconst : Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0) :
     CPolyG.checkIdentityG ([CField.one] : CPolyG α)
@@ -324,8 +313,7 @@ example [CharZero (CFieldSpec.K α)] (c : CPolyG α)
       = true :=
   checkIdentityG_cIntegratePolyG_const c hconst
 
--- ★ THE DELIVERABLE at `α = QFunNZG ℚ`: `cPolyRischDEGWf = some q ⟹ D(res) = integrand` over `RatFunc ℚ`,
--- checker-free (the `checkIdentityG` guard is never run; no native_decide).
+-- At `α = QFunNZG ℚ`, a successful polynomial RDE solve differentiates back to the integrand.
 example (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
     (hsome : CPolyG.cPolyRischDEGWf ([CField.one] : CPolyG (QFunNZG ℚ)) ([] : CPolyG (QFunNZG ℚ)) c n
@@ -337,16 +325,13 @@ example (c q : CPolyG (QFunNZG ℚ)) (n : ℤ)
           / amG (QFunNZG ℚ) (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))) :=
   field_identity_of_cPolyRischDEGWf_qfunNZG c q n hc hdeg hsome hconst
 
--- ★ CONSTANT-BASE TRANSPORT (conditional): integrand coefficients differential-constant ⟹ antiderivative
--- coefficients differential-constant (`mapCoeffs (toPolyG c) = 0 → mapCoeffs (toPolyG (cIntegratePolyG c))
--- = 0`) — the hypothesis is genuinely needed (the two conditions are equivalent).
+-- Differential-constant integrand coefficients give differential-constant antiderivative coefficients.
 example [CharZero (CFieldSpec.K α)] (c : CPolyG α)
     (hc : Differential.mapCoeffs (toPolyG c) = 0) :
     Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0 :=
   cIntegratePolyG_const_coeff c hc
 
--- ★ POLY-RDE SOUNDNESS keyed on the INTEGRAND (`b = 0` branch, primitive base): `cPolyRischDEGWf = some q`
--- with `mapCoeffs (toPolyG c) = 0` ⟹ `D(amG q/amG 1) = amG c/amG 1`, checker-free.
+-- Polynomial RDE soundness for the `b = 0` branch, keyed on the integrand.
 example [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] [CRischField α]
     (c q : CPolyG α) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n)
@@ -493,10 +478,9 @@ theorem cPolyRischDEGWf_cancelExp_field (Dt b c q : CPolyG α) (m : ℤ)
   towerFractionFieldDerivG_amG_of_polyIdentity Dt b c q
     (cPolyRischDEGWf_cancelExp_sound Dt b c q m hδ hdb hb hsome)
 
-/-! ### Restatements against the intended wording (anonymous `example`s) -/
+/-! ### Restatements of the cancellation identities -/
 
--- ★★ Field-level primitive-cancellation soundness via the fuel-free dispatcher, checker-free,
--- base-oracle-free: `cPolyRischDEGWf = some q` ⟹ `D(amG q) + amG b · amG q = amG c`.
+-- Field-level primitive-cancellation soundness via the fuel-free dispatcher.
 example (Dt b c q : CPolyG α) (m : ℤ)
     (hδ : CPolyG.cdegG Dt = 0) (hdb : CPolyG.cdegG b = 0) (hb : CPolyG.cisZeroG b = false)
     (hsome : CPolyG.cPolyRischDEGWf Dt b c m = some q) :
