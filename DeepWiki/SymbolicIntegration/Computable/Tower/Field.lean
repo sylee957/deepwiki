@@ -212,8 +212,8 @@ theorem toQFunNZG_qaddNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain
       / amG α (CPolyG.toPolyG (CPolyG.cmulG b d))
     = amG α (CPolyG.toPolyG a) / amG α (CPolyG.toPolyG b)
       + amG α (CPolyG.toPolyG c) / amG α (CPolyG.toPolyG d)
-  simp only [CPolyG.toPolyG_caddG, CPolyG.toPolyG_cmulG, map_add, map_mul,
-    div_add_div _ _ hb' hd']
+  simp only [denote, map_add, map_mul]
+  rw [div_add_div _ _ hb' hd']
   ring
 
 /-- `toQFunNZG (qmulNZG x y) = toQFunNZG x * toQFunNZG y`: `qmulNZG` realizes `*`. -/
@@ -224,7 +224,8 @@ theorem toQFunNZG_qmulNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain
   show amG α (CPolyG.toPolyG (CPolyG.cmulG a c)) / amG α (CPolyG.toPolyG (CPolyG.cmulG b d))
     = amG α (CPolyG.toPolyG a) / amG α (CPolyG.toPolyG b)
       * (amG α (CPolyG.toPolyG c) / amG α (CPolyG.toPolyG d))
-  rw [CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, map_mul, map_mul, div_mul_div_comm]
+  simp only [denote, map_mul]
+  rw [div_mul_div_comm]
 
 /-- `toQFunNZG (qnegNZG x) = - toQFunNZG x`: `qnegNZG` realizes negation. -/
 theorem toQFunNZG_qnegNZG {α : Type*} [CField α] [CFieldSpec α] (x : QFunNZG α) :
@@ -232,7 +233,8 @@ theorem toQFunNZG_qnegNZG {α : Type*} [CField α] [CFieldSpec α] (x : QFunNZG 
   obtain ⟨⟨a, b⟩, hb⟩ := x
   show amG α (CPolyG.toPolyG (CPolyG.cnegG a)) / amG α (CPolyG.toPolyG b)
     = - (amG α (CPolyG.toPolyG a) / amG α (CPolyG.toPolyG b))
-  rw [CPolyG.toPolyG_cnegG, map_neg, neg_div]
+  simp only [denote, map_neg]
+  rw [neg_div]
 
 /-- `toQFunNZG (qinvNZG x) = (toQFunNZG x)⁻¹`: `qinvNZG` realizes `⁻¹` (`0⁻¹ = 0`). -/
 theorem toQFunNZG_qinvNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] (x : QFunNZG α) :
