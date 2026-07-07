@@ -1130,24 +1130,31 @@ theorem simplePole_mul_prod_mem_range (u : F) (S : Finset F[X]) (r : F[X] → F)
   field_simp
 
 omit [Differential F] [CharZero F] in
+/-- A finite set of polynomial factors is monic and irreducible pointwise. -/
+structure IsMonicIrreducibleSet (S : Finset F[X]) : Prop where
+  /-- Every member of the set is monic. -/
+  monic : ∀ π ∈ S, π.Monic
+  /-- Every member of the set is irreducible. -/
+  irreducible : ∀ π ∈ S, Irreducible π
+
+omit [Differential F] [CharZero F] in
 /-- A product of distinct monic irreducibles `∏_{π∈S} π` is squarefree. -/
-theorem squarefree_prod_of_monic_irreducible (S : Finset F[X])
-    (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π) :
+theorem squarefree_prod_of_monic_irreducible (S : Finset F[X]) (hS : IsMonicIrreducibleSet S) :
     Squarefree (∏ ρ ∈ S, ρ) := by
-  refine Finset.squarefree_prod_of_pairwise_isCoprime ?_ (fun π hπ => (hirr π hπ).squarefree)
+  refine Finset.squarefree_prod_of_pairwise_isCoprime ?_ (fun π hπ => (hS.irreducible π hπ).squarefree)
   intro i hi j hj hij
   simp only [Function.onFun]
   -- Distinct monic irreducibles are coprime, hence `IsRelPrime`.
-  refine ((hirr i hi).coprime_iff_not_dvd.mpr fun hdvd => hij ?_).isRelPrime
-  exact eq_of_monic_of_associated (hmon i hi) (hmon j hj)
-    ((hirr i hi).associated_of_dvd (hirr j hj) hdvd)
+  refine ((hS.irreducible i hi).coprime_iff_not_dvd.mpr fun hdvd => hij ?_).isRelPrime
+  exact eq_of_monic_of_associated (hS.monic i hi) (hS.monic j hj)
+    ((hS.irreducible i hi).associated_of_dvd (hS.irreducible j hj) hdvd)
 
 /-- Valuation contradiction: for monic irreducible `π ∣ D` (`π ∤ D π`), `N` coprime to `D`, and
 `G = ∏_{ρ∈S} ρ` distinct monic irreducibles, `D² ∤ (D·DN − N·DD)·G`
 (`DN = logDerivPoly u N`, `DD = logDerivPoly u D`). -/
 theorem not_dvd_sq_mul_of_pole (u : F) (hnd : NondegenerateLog u) {N D π : F[X]}
     (hπmon : π.Monic) (hπirr : Irreducible π) (hDne0 : D ≠ 0) (hcop : IsCoprime N D)
-    (hπdvdD : π ∣ D) {S : Finset F[X]} (hSmon : ∀ ρ ∈ S, ρ.Monic) (hSirr : ∀ ρ ∈ S, Irreducible ρ) :
+    (hπdvdD : π ∣ D) {S : Finset F[X]} (hS : IsMonicIrreducibleSet S) :
     ¬ D * D ∣ (D * logDerivPoly u N - N * logDerivPoly u D) * (∏ ρ ∈ S, ρ) := by
   intro hdvd
   set DN := logDerivPoly u N with hDNdef
@@ -1172,7 +1179,7 @@ theorem not_dvd_sq_mul_of_pole (u : F) (hnd : NondegenerateLog u) {N D π : F[X]
     exact hπirr.1 (hcop.isUnit_of_dvd' hπN hπdvdD)
   have hmultG : emultiplicity π G ≤ 1 :=
     ((squarefree_iff_emultiplicity_le_one G).mp
-      (squarefree_prod_of_monic_irreducible S hSmon hSirr) π).resolve_right hπirr.1
+      (squarefree_prod_of_monic_irreducible S hS) π).resolve_right hπirr.1
   -- `v_π(N·DD) = k − 1`; `v_π(D·DN) ≥ k > k − 1`; so `v_π(D·DN − N·DD) = k − 1`.
   have hmult_NDD : emultiplicity π (N * DD) = ((k - 1 : ℕ) : ℕ∞) := by
     rw [emultiplicity_mul hπprime, hmultN, hmultDD, zero_add]
@@ -1204,7 +1211,7 @@ theorem not_dvd_sq_mul_of_pole (u : F) (hnd : NondegenerateLog u) {N D π : F[X]
 /-- Given `NondegenerateLog`, if `v′ + (simple-pole sum over `S`)` is a polynomial then `v` is a polynomial. -/
 theorem mem_range_of_deriv_add_simplePole_mem_range (u : F) (hnd : NondegenerateLog u)
     (v : RatFunc F) (S : Finset F[X]) (r : F[X] → F)
-    (hmon : ∀ π ∈ S, π.Monic) (hirr : ∀ π ∈ S, Irreducible π)
+    (hS : IsMonicIrreducibleSet S)
     (hpoly : letI := logDifferential u
       (v′ + ∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
           * logDeriv (algebraMap F[X] (RatFunc F) π))
@@ -1226,7 +1233,7 @@ theorem mem_range_of_deriv_add_simplePole_mem_range (u : F) (hnd : Nondegenerate
   set DN := logDerivPoly u N with hDNdef
   set DD := logDerivPoly u D with hDDdef
   -- `Q · ↑G = ↑NQ` (helper) and `R = ↑Rp` (hypothesis).
-  obtain ⟨NQ, hNQ⟩ := simplePole_mul_prod_mem_range u S r hmon
+  obtain ⟨NQ, hNQ⟩ := simplePole_mul_prod_mem_range u S r hS.monic
   obtain ⟨Rp, hRp⟩ := hpoly
   set Q : RatFunc F := ∑ π ∈ S, algebraMap F[X] (RatFunc F) (Polynomial.C (r π))
       * logDeriv (algebraMap F[X] (RatFunc F) π) with hQdef
@@ -1243,7 +1250,7 @@ theorem mem_range_of_deriv_add_simplePole_mem_range (u : F) (hnd : Nondegenerate
   have hv'eq : v′ = v * logDeriv v := by rw [logDeriv, mul_div_cancel₀ _ hv0]
   have hGA : algebraMap F[X] (RatFunc F) G ≠ 0 :=
     RatFunc.algebraMap_ne_zero (Polynomial.Monic.ne_zero (by
-      rw [hGdef]; exact monic_prod_of_monic _ _ (fun π hπ => hmon π hπ)))
+      rw [hGdef]; exact monic_prod_of_monic _ _ (fun π hπ => hS.monic π hπ)))
   -- `v′ · ↑D · ↑D = ↑D·↑DN − ↑N·↑DD` (the controlled `field_simp`, only `↑N`/`↑D` denominators).
   have hclear : v′ * algebraMap F[X] (RatFunc F) D * algebraMap F[X] (RatFunc F) D
       = algebraMap F[X] (RatFunc F) D * algebraMap F[X] (RatFunc F) DN
@@ -1274,7 +1281,7 @@ theorem mem_range_of_deriv_add_simplePole_mem_range (u : F) (hnd : Nondegenerate
     have hπirr : Irreducible π := UniqueFactorizationMonoid.irreducible_of_normalized_factor _ hπmem
     have hπdvdD : π ∣ D := UniqueFactorizationMonoid.dvd_of_mem_normalizedFactors hπmem
     exact absurd hdvd
-      (not_dvd_sq_mul_of_pole u hnd hπmon hπirr hDne0 hcop hπdvdD hmon hirr)
+      (not_dvd_sq_mul_of_pole u hnd hπmon hπirr hDne0 hcop hπdvdD hS)
   rw [hveq, hD1, map_one, div_one]
   exact ⟨N, rfl⟩
 
@@ -1297,7 +1304,7 @@ theorem derivSimplePoleSeparation_of_nondegenerateLog (u : F) (hnd : Nondegenera
   letI := logDifferential u
   intro v S r hmon hirr hpoly
   -- `v` is a polynomial (separation engine), hence `v′` is a polynomial.
-  obtain ⟨p, hp⟩ := mem_range_of_deriv_add_simplePole_mem_range u hnd v S r hmon hirr hpoly
+  obtain ⟨p, hp⟩ := mem_range_of_deriv_add_simplePole_mem_range u hnd v S r ⟨hmon, hirr⟩ hpoly
   have hv'poly : v′ ∈ (algebraMap F[X] (RatFunc F)).range := by
     refine ⟨logDerivPoly u p, ?_⟩
     rw [← derivExtends u p, hp]

@@ -364,7 +364,7 @@ theorem not_dvd_sq_mul_of_pole (u : F) (hnd : NondegenerateExp u) {N D π : F[X]
     exact hπirr.1 (hcop.isUnit_of_dvd' hπN hπdvdD)
   have hmultG : emultiplicity π G ≤ 1 :=
     ((squarefree_iff_emultiplicity_le_one G).mp
-      (squarefree_prod_of_monic_irreducible S hSmon hSirr) π).resolve_right hπirr.1
+      (squarefree_prod_of_monic_irreducible S ⟨hSmon, hSirr⟩) π).resolve_right hπirr.1
   have hmult_NDD : emultiplicity π (N * DD) = ((k - 1 : ℕ) : ℕ∞) := by
     rw [emultiplicity_mul hπprime, hmultN, hmultDD, zero_add]
   have hmult_DDN_ge : (k : ℕ∞) ≤ emultiplicity π (D * DN) := by
