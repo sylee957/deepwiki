@@ -176,7 +176,7 @@ theorem towerFractionFieldDerivG_amG_seed (Dt : CPolyG α) :
     towerFractionFieldDerivG Dt
         (amG α (toPolyG ([CField.zero] : CPolyG α)) / amG α (toPolyG ([CField.one] : CPolyG α))) = 0 := by
   have hzero : amG α (toPolyG ([CField.zero] : CPolyG α)) = 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero, map_zero]
+    simp only [denote, map_zero, mul_zero, add_zero]
   rw [hzero, zero_div, map_zero]
 
 /-! ### The Hermite telescoping at the engine seed `0/1` -/
@@ -604,9 +604,9 @@ omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 theorem toPolyG_seedPair_proper :
     (toPolyG ([CField.zero] : CPolyG α)).degree < (toPolyG ([CField.one] : CPolyG α)).degree := by
   have hzero : toPolyG ([CField.zero] : CPolyG α) = 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero]
+    simp only [denote, map_zero, mul_zero, add_zero]
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]
+    simp only [denote, map_one, mul_zero, add_zero]
   rw [hzero, hone, Polynomial.degree_zero, Polynomial.degree_one]
   exact bot_lt_iff_ne_bot.mpr (by simp)
 
