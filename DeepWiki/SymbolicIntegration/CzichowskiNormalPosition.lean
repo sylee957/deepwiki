@@ -44,6 +44,7 @@ theorem mvPolynomialFinOneEquivPolynomial_C (a : K) :
   rw [finSuccEquiv_apply]
   simp
 
+/-- The `K[x]`-equiv sends the only variable `X 0` to `Polynomial.X`. -/
 theorem mvPolynomialFinOneEquivPolynomial_X :
     mvPolynomialFinOneEquivPolynomial K (X 0) = Polynomial.X := by
   rw [mvPolynomialFinOneEquivPolynomial]
@@ -52,12 +53,14 @@ theorem mvPolynomialFinOneEquivPolynomial_X :
   rw [finSuccEquiv_X_zero]
   simp
 
+/-- `liftX` sends constants to constants. -/
 @[simp] theorem liftX_C (a : K) : liftX (Polynomial.C a) = (C a : MvPolynomial (Fin 2) K) := by
   apply lazardView_injective
   rw [lazardView_liftX, ← mvPolynomialFinOneEquivPolynomial_C a, RingEquiv.symm_apply_apply,
     lazardView, finSuccEquiv_apply]
   simp
 
+/-- `liftX` sends the univariate variable to the bivariate `x = X 1`. -/
 @[simp] theorem liftX_X : liftX (Polynomial.X : K[X]) = X (1 : Fin 2) := by
   apply lazardView_injective
   rw [lazardView_liftX, ← mvPolynomialFinOneEquivPolynomial_X, RingEquiv.symm_apply_apply,
@@ -72,6 +75,7 @@ theorem liftX_injective : Function.Injective (liftX (K := K)) := by
   rw [lazardView_liftX, lazardView_liftX] at h
   exact (mvPolynomialFinOneEquivPolynomial K).symm.injective (Polynomial.C_injective h)
 
+/-- `liftX p = 0` iff `p = 0`. -/
 @[simp] theorem liftX_eq_zero_iff {p : K[X]} : liftX p = 0 ↔ p = 0 :=
   map_eq_zero_iff _ liftX_injective
 
@@ -200,12 +204,15 @@ inverse of `liftX` that kills `z − T`. -/
 noncomputable def evalAtResidue : MvPolynomial (Fin 2) K →+* K[X] :=
   (MvPolynomial.aeval (![residuePoly A D, Polynomial.X] : Fin 2 → K[X])).toRingHom
 
+/-- Substituting `z := T` sends `X 0` to `residuePoly A D`. -/
 @[simp] theorem evalAtResidue_X0 : evalAtResidue A D (X 0) = residuePoly A D := by
   simp [evalAtResidue]
 
+/-- Substituting `z := T` sends `X 1` to `Polynomial.X`. -/
 @[simp] theorem evalAtResidue_X1 : evalAtResidue A D (X 1) = Polynomial.X := by
   simp [evalAtResidue]
 
+/-- Substituting `z := T` preserves constants. -/
 @[simp] theorem evalAtResidue_C (a : K) : evalAtResidue A D (C a) = Polynomial.C a := by
   simp [evalAtResidue]
 
@@ -410,6 +417,7 @@ noncomputable def evalAtResidueQuot : MvPolynomial (Fin 2) K →ₐ[K] K[X] ⧸ 
   (Ideal.Quotient.mkₐ K (Ideal.span {D})).comp
     (MvPolynomial.aeval (![residuePoly A D, Polynomial.X] : Fin 2 → K[X]))
 
+/-- `evalAtResidueQuot` is quotient reduction of `evalAtResidue`. -/
 @[simp] theorem evalAtResidueQuot_apply (f : MvPolynomial (Fin 2) K) :
     evalAtResidueQuot A D f = Ideal.Quotient.mk (Ideal.span {D}) (evalAtResidue A D f) := rfl
 
@@ -546,8 +554,10 @@ of `I` along it. -/
 noncomputable def polyZ : K[X] →+* MvPolynomial (Fin 2) K :=
   (Polynomial.aeval (zVar : MvPolynomial (Fin 2) K)).toRingHom
 
+/-- The `z`-embedding sends `Polynomial.X` to `zVar`. -/
 @[simp] theorem polyZ_X : polyZ (Polynomial.X : K[X]) = zVar := by simp [polyZ]
 
+/-- The `z`-embedding preserves constants. -/
 @[simp] theorem polyZ_C (a : K) : polyZ (Polynomial.C a) = (C a : MvPolynomial (Fin 2) K) := by
   simp [polyZ, MvPolynomial.algebraMap_eq]
 
@@ -619,6 +629,7 @@ theorem mem_zeroLocus_czIdeal_iff_isRoot (hD : D.Separable) (x : Fin 2 → K) :
 /-- The `z`-elimination ideal `I ∩ K[z]`, the pullback of `I` along `polyZ`. -/
 noncomputable def elimZ : Ideal K[X] := Ideal.comap polyZ (czIdeal A D)
 
+/-- Membership in `elimZ A D` is membership of `polyZ p` in `czIdeal A D`. -/
 @[simp] theorem mem_elimZ_iff {p : K[X]} : p ∈ elimZ A D ↔ polyZ p ∈ czIdeal A D := Iff.rfl
 
 open scoped Classical in
