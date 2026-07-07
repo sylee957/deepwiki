@@ -294,7 +294,8 @@ theorem toQFunNZG_qxOfNum (p : CPolyG ℚ) :
     QFunNZG.toQFunNZG (qxOfNum p) = QFunNZG.amG ℚ (CPolyG.toPolyG p) := by
   show QFunNZG.amG ℚ (CPolyG.toPolyG p) / QFunNZG.amG ℚ (CPolyG.toPolyG ([CField.one] : CPolyG ℚ)) = _
   have h1 : CPolyG.toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote]
+    simp
   rw [h1, map_one, div_one]
 
 /-- **`baseDerivQ` is the plain polynomial derivative over `ℚ`** — `baseDerivQ q = Polynomial.derivative
@@ -304,7 +305,8 @@ and over `ℚ` the base `Differential ℚ` is the zero derivation (`instDifferen
 theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
     baseDerivQ q = Polynomial.derivative q := by
   have h1 : CPolyG.toPolyG ([CField.one] : CPolyG ℚ) = 1 := by
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote]
+    simp
   rw [baseDerivQ, h1, Differential.implicitDeriv]
   -- `mapCoeffs q = 0` (base deriv on ℚ is `0`), leaving `1 • derivative' q = derivative q`
   have hmc : Differential.mapCoeffs q = 0 := by
