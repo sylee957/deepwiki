@@ -196,6 +196,16 @@ theorem toK_foldl_csub_mul {α : Type*} [CField α] [CFieldSpec α]
     rw [List.foldl_cons, ih, CFieldSpec.toK_mul, CFieldSpec.toK_sub, List.map_cons, List.prod_cons]
     ring
 
+/-- The product `∏_{zⱼ ∈ others}(toK zk − toK zⱼ)` is nonzero when every `toK zⱼ ≠ toK zk`. -/
+theorem prodG_sub_ne_zero {α : Type*} [CField α] [CFieldSpec α] {zk : α} {others : List α}
+    (hne : ∀ zj ∈ others, CFieldSpec.toK zj ≠ CFieldSpec.toK zk) :
+    (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod ≠ 0 := by
+  rw [Ne, List.prod_eq_zero_iff]
+  intro hy
+  rw [List.mem_map] at hy
+  obtain ⟨zj, hzj, hzeq⟩ := hy
+  exact hne zj hzj (sub_eq_zero.mp hzeq).symm
+
 /-- Normalize a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
 def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α

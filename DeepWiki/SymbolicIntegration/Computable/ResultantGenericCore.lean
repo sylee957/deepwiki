@@ -17,16 +17,6 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-! ### `cresultantG` invariances -/
 
-/-- The product `∏_{zⱼ ∈ others}(toK zk − toK zⱼ)` is nonzero when every `toK zⱼ ≠ toK zk`. -/
-theorem prodG_sub_ne_zero {zk : α} {others : List α}
-    (hne : ∀ zj ∈ others, CFieldSpec.toK zj ≠ CFieldSpec.toK zk) :
-    (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod ≠ 0 := by
-  rw [Ne, List.prod_eq_zero_iff]
-  intro hy
-  rw [List.mem_map] at hy
-  obtain ⟨zj, hzj, hzeq⟩ := hy
-  exact hne zj hzj (sub_eq_zero.mp hzeq).symm
-
 /-- `toPolyG` of a single Lagrange interpolation term `cscaleG (yk/denom) (clagNumG others)`. -/
 theorem toPolyG_termG (zk yk : α) (others : List α) :
     toPolyG (cscaleG (CField.div yk
