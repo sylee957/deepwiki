@@ -174,7 +174,7 @@ theorem cValuationGWf_sharp (p x : CPolyG α)
         intro h
         apply hx0
         rw [hid, h, zero_mul]
-      have hxne : cnormG x ≠ [] := fun he => hx0 (by rw [← toPolyG_cnormG, he, toPolyG_nil])
+      have hxne : cnormG x ≠ [] := fun he => hx0 ((cnormG_eq_nil_iff _).mp he)
       have hqne : cnormG (cdivWf x p) ≠ [] := fun he =>
         hq0 (by rw [cnormG_eq_nil_iff] at he; exact he)
       have hdegdrop : (toPolyG (cdivWf x p)).natDegree < (toPolyG x).natDegree := by
