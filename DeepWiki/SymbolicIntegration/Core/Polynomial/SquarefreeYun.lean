@@ -390,6 +390,20 @@ theorem yunLoopAbs_prod_assoc [CharZero K] (A : K[X])
   List.rel_prod (R := Associated) (Associated.refl 1)
     (fun _ _ hx _ _ hy => hx.mul_mul hy) (yunLoopAbs_forall₂ A hA n i b d hi hinv)
 
+open Classical in
+/-- Powered product of `[e₀,e₁,…]`: `∏ₖ eₖ^(i+k)`. -/
+noncomputable def prodPow (i : ℕ) : List K[X] → K[X]
+  | [] => 1
+  | e :: es => e ^ i * prodPow (i + 1) es
+
+open Classical in
+/-- `prodPow` respects factorwise association. -/
+theorem prodPow_associated {l₁ l₂ : List K[X]} (h : List.Forall₂ Associated l₁ l₂) (i : ℕ) :
+    Associated (prodPow i l₁) (prodPow i l₂) := by
+  induction h generalizing i with
+  | nil => exact Associated.refl _
+  | cons hhd _ ih => exact hhd.pow_pow.mul_mul (ih (i + 1))
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration

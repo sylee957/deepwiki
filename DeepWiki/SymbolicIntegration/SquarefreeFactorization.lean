@@ -40,21 +40,6 @@ open Classical
 /-! ### The abstract Yun loop and its factor products -/
 
 open Classical in
-/-- Powered product of `[e₀,e₁,…]`: `∏ₖ eₖ^(i+k)`. -/
-noncomputable def prodPow {K : Type*} [Field K] (i : ℕ) : List K[X] → K[X]
-  | [] => 1
-  | e :: es => e ^ i * prodPow (i + 1) es
-
-open Classical in
-/-- `prodPow` respects factorwise association. -/
-theorem prodPow_associated {K : Type*} [Field K] {l₁ l₂ : List K[X]}
-    (h : List.Forall₂ Associated l₁ l₂) (i : ℕ) :
-    Associated (prodPow i l₁) (prodPow i l₂) := by
-  induction h generalizing i with
-  | nil => exact Associated.refl _
-  | cons hhd _ ih => exact hhd.pow_pow.mul_mul (ih (i + 1))
-
-open Classical in
 /-- `prodPow` over an appended singleton raises the last factor to `i + L.length`. -/
 theorem prodPow_append_singleton {K : Type*} [Field K] (i : ℕ) (L : List K[X]) (x : K[X]) :
     prodPow i (L ++ [x]) = prodPow i L * x ^ (i + L.length) := by
