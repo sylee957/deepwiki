@@ -214,12 +214,12 @@ theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ)
     apply Polynomial.coeff_eq_zero_of_natDegree_lt
     exact lt_of_le_of_lt (Polynomial.natDegree_derivative_le _) (by omega)
   have hb1y1 : (toPolyG (cmulG b1 y1)).coeff r = 0 := by
-    rw [toPolyG_cmulG]
+    simp only [denote]
     apply Polynomial.coeff_eq_zero_of_natDegree_lt
     have := Polynomial.natDegree_mul_le (p := toPolyG b1) (q := toPolyG y1)
     omega
   have hab2y2 : (toPolyG (cmulG ab2 y2)).coeff r = 0 := by
-    rw [toPolyG_cmulG]
+    simp only [denote]
     apply Polynomial.coeff_eq_zero_of_natDegree_lt
     have := Polynomial.natDegree_mul_le (p := toPolyG ab2) (q := toPolyG y2)
     omega
