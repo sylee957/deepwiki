@@ -20,6 +20,12 @@ primitive part `pp(A)`. -/
 noncomputable def squarefreePart (A : D[X]) : D[X] :=
   ∏ P ∈ (normalizedFactors A.primPart).toFinset, P
 
+open Classical in
+/-- `k`-deflation `A⁻ᵏ = ∏ Pᵢ^max(0, eᵢ−k)`: the primitive part with each factor exponent
+truncated by `k`. -/
+noncomputable def deflation (A : D[X]) (k : ℕ) : D[X] :=
+  ∏ P ∈ (normalizedFactors A.primPart).toFinset, P ^ ((normalizedFactors A.primPart).count P - k)
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration

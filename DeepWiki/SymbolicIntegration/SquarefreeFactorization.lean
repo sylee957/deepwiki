@@ -22,12 +22,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- `k`-deflation `A⁻ᵏ = ∏ Pᵢ^max(0, eᵢ−k)`: the primitive part with each factor exponent
-truncated by `k`. -/
-noncomputable def deflation (A : D[X]) (k : ℕ) : D[X] :=
-  ∏ P ∈ (normalizedFactors A.primPart).toFinset, P ^ ((normalizedFactors A.primPart).count P - k)
-
-open Classical in
 /-- `A* · A⁻¹` is associated to `pp(A)`: the squarefree part times the deflation recovers the
 primitive part. -/
 theorem squarefreePart_mul_deflation (A : D[X]) (hA : A.primPart ≠ 0) :
