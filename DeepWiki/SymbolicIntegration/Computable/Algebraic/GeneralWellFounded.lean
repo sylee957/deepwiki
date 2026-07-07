@@ -63,7 +63,8 @@ theorem mk_toPolyG_afDerivWf (f u : CPolyG α) (hf : cnormG f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u))
       = Ideal.Quotient.mk (afIdeal f)
           (Differential.implicitDeriv (toPolyG (afYprimeWf f)) (toPolyG u)) := by
-  rw [afDerivWf_eq_afReduce_cmonomialDeriv, mk_toPolyG_afReduce f _ hf, toPolyG_cmonomialDeriv]
+  rw [afDerivWf_eq_afReduce_cmonomialDeriv, mk_toPolyG_afReduce f _ hf]
+  simp only [denote]
 
 /-- `afDerivWf` is additive modulo the curve ideal. -/
 theorem mk_toPolyG_afDerivWf_add (f a b : CPolyG α) (hf : cnormG f ≠ []) :
