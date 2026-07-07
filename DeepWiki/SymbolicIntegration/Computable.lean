@@ -63,6 +63,7 @@ import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
 import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
+import DeepWiki.SymbolicIntegration.Computable.QFunNZGDiffSpec
 import DeepWiki.SymbolicIntegration.Computable.ResidueConstantBridge
 import DeepWiki.SymbolicIntegration.Computable.TransferExamples
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
@@ -73,7 +74,6 @@ import DeepWiki.SymbolicIntegration.Computable.RischFieldCore
 import DeepWiki.SymbolicIntegration.Computable.RischFieldSpec
 import DeepWiki.SymbolicIntegration.Computable.SquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorHelpers
-import DeepWiki.SymbolicIntegration.Computable.SplitFactorTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.Structure
 import DeepWiki.SymbolicIntegration.Computable.Subresultant
