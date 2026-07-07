@@ -34,7 +34,8 @@ theorem logResidueSumG_eq_logDerivForm (Dt : CPolyG α) (logs : List (α × CPol
   apply congrArg List.sum
   apply List.map_congr_left
   intro cv _
-  rw [toPolyG_cmonomialDeriv, ← towerFractionFieldDerivG_amG]
+  simp only [denote]
+  rw [← towerFractionFieldDerivG_amG]
 
 /-- **`IsIntegralResultG` is the explicit Liouville form.** The formal integral identity is exactly
 `Δ(g) + Σ_{(c,v)} c·(Δ(amG v)/amG v) = a/d` — a rational-part derivative plus a constant-coefficient
