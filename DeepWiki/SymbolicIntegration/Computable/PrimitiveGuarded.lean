@@ -4,9 +4,9 @@ import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 
 /-! # Guarded primitive special integration
 
-The primitive `b = 0` poly-RDE `cPolyRischDEGWf Dt [] fp` is term-by-term integration, correct **only** for
-`Dt = 1` (canonical primitive) with **constant coefficients** (`mapCoeffs (toPolyG fp) = 0`). Rather than
-assume the resulting field identity (`hspecialField`), `primitiveGuardedCase` **guards** the hook on those
+The primitive `b = 0` poly-RDE `cPolyRischDEGWf Dt [] fp` is term-by-term integration, correct only for
+`Dt = 1` (canonical primitive) with constant coefficients (`mapCoeffs (toPolyG fp) = 0`). Rather than
+assume the resulting field identity (`hspecialField`), `primitiveGuardedCase` guards the hook on those
 two conditions — both *computable* (`cisZeroG (csubG Dt [1])` and `cisZeroG (cmapDeriv fp)`) — so a
 successful special integration a-priori *guarantees* the identity. Declining outside the domain is honest:
 the algorithm is sound and complete for the constant-coefficient canonical-primitive case, while the
@@ -26,7 +26,7 @@ def CPolyG.cRatG (p : ℤ) (q : ℕ) : α :=
   CField.div (if p < 0 then CField.neg (CPolyG.cnatCastG p.natAbs) else CPolyG.cnatCastG p.natAbs)
     (CPolyG.cnatCastG q)
 
-/-- **Automatic residue candidates**: the bounded rational sweep `{p/q : |p| ≤ bound, 1 ≤ q ≤ bound}`.
+/-- Automatic residue candidates from the bounded rational sweep `{p/q : |p| ≤ bound, 1 ≤ q ≤ bound}`.
 `cRationalResiduesGWf` filters these to the actual residues (roots of the residue resultant), so the reduced
 integrator needs *no externally supplied* candidate list for small-rational residues — `candidates` becomes
 a fixed computable function. Completeness is bounded (large / non-rational residues need a bigger sweep or
@@ -36,17 +36,14 @@ def CPolyG.defaultResidueCandidates (bound : ℕ) : List α :=
     (List.range bound).map (fun j => CPolyG.cRatG ((i : ℤ) - (bound : ℤ)) (j + 1)))
 
 omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
-/-- **Computable constant-coefficient guard soundness.** `cisZeroG (cmapDeriv fp) = true` (the coefficientwise
-derivative vanishes) implies `mapCoeffs (toPolyG fp) = 0` (coefficients are differential constants). -/
+/-- `cisZeroG (cmapDeriv fp) = true` proves that `fp` has constant coefficients. -/
 theorem mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (fp : CPolyG α)
     (h : cisZeroG (cmapDeriv fp) = true) : Differential.mapCoeffs (toPolyG fp) = 0 := by
   have hzero : toPolyG (cmapDeriv fp) = 0 := (cisZeroG_iff _).mp h
   simpa only [denote] using hzero
 
 omit [CFracGcdCoreWf α] in
-/-- **Generalized poly-RDE field identity for `toPolyG Dt = 1`.** The `Dt = [CField.one]` identity
-`cPolyRischDEGWf_nil_field_identity` lifts to any `Dt` with `toPolyG Dt = 1`, since `towerFractionFieldDerivG`
-depends only on `toPolyG Dt` and the `b = 0` branch is `Dt`-independent. -/
+/-- The poly-RDE field identity holds for any `Dt` with `toPolyG Dt = 1`. -/
 theorem field_identity_Dt1 (Dt c q : CPolyG α) (n : ℤ)
     (hDt1 : toPolyG Dt = 1) (hc : cisZeroG c = false) (hdeg : (cdegG c : ℤ) + 1 ≤ n)
     (hsome : cPolyRischDEGWf Dt ([] : CPolyG α) c n = some q)
@@ -63,9 +60,7 @@ theorem field_identity_Dt1 (Dt c q : CPolyG α) (n : ℤ)
   exact cPolyRischDEGWf_nil_field_identity c q n hc hdeg hsome1 hconst
 
 omit [CFracGcdCoreWf α] in
-/-- **The primitive special-part identity, unconditional on the guarded regime.** If `toPolyG Dt = 1`, the
-coefficients of `fp` are constant, and the poly-RDE returns `qp`, then `qp/1` differentiates to `⟦fp⟧` —
-covering both `fp = 0` (`qp = 0`, trivial) and `fp ≠ 0` (`field_identity_Dt1`). -/
+/-- The primitive special-part identity holds under the guarded regime. -/
 theorem primitive_special_identity (Dt fp qp : CPolyG α)
     (hDt1 : toPolyG Dt = 1) (hconst : Differential.mapCoeffs (toPolyG fp) = 0)
     (hsome : cPolyRischDEGWf Dt ([] : CPolyG α) fp ((cdegG fp : ℤ) + 1) = some qp) :
@@ -82,12 +77,7 @@ theorem primitive_special_identity (Dt fp qp : CPolyG α)
     rw [toPolyG_nil, hfp0, map_zero, zero_div, map_zero]
   · exact field_identity_Dt1 Dt fp qp _ hDt1 (by simpa using hfp) (le_refl _) hsome hconst
 
-/-- **The guarded primitive monomial case.** `integrateSpecial` runs the `b = 0` poly-RDE only when the
-computable guards hold: `b = 0`, `toPolyG Dt = 1` (`cisZeroG (csubG Dt [1])`), and constant coefficients
-(`cisZeroG (cmapDeriv fp)`). Otherwise it declines. `reducedCorrect` applies the **integrability guard**
-for reduced logarithmic parts: each residue `c` must be a constant (`D c = 0`), since otherwise
-`D(c·log v)` carries a spurious `Dc·log v`. It accepts exactly when every residue passes the computable
-constant check `cisZeroG [D c]`. -/
+/-- The guarded primitive monomial case. -/
 def primitiveGuardedCase : MonomialCase α where
   integrateSpecial Dt fp b _ds :=
     if cisZeroG b && cisZeroG (csubG Dt [CField.one]) && cisZeroG (cmapDeriv fp) then
