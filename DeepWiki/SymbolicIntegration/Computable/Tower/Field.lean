@@ -74,8 +74,9 @@ provides only `Prop` fields (erased at runtime). -/
 noncomputable instance instCFieldDomainOfCFieldSpec {α : Type*} [CField α] [CFieldSpec α] :
     CFieldDomain α where
   nz_one := by
-    rw [Bool.eq_false_iff, Ne, CPolyG.cisZeroG_iff, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil,
-      CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    rw [Bool.eq_false_iff, Ne, CPolyG.cisZeroG_iff]
+    simp only [denote, mul_zero, add_zero, map_one]
+    show (1 : (CFieldSpec.K α)[X]) ≠ 0
     exact one_ne_zero
   nz_mul := by
     intro b d hb hd
@@ -196,7 +197,7 @@ theorem toQFunNZG_qoneNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain
   show amG α (CPolyG.toPolyG ([CField.one] : CPolyG α))
       / amG α (CPolyG.toPolyG ([CField.one] : CPolyG α)) = 1
   have h1 : CPolyG.toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote, mul_zero, add_zero, map_one]
   rw [h1, map_one, div_self one_ne_zero]
 
 /-- `toQFunNZG (qaddNZG x y) = toQFunNZG x + toQFunNZG y`: `qaddNZG` realizes `+`. -/
