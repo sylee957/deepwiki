@@ -224,7 +224,7 @@ open Differential in
 /-- **Stage 3b (core).** Every log argument produced by `cLrtLogArgG` has `D`-constant residues, given the
 residue resultant `R` is `D`-constant (the guard) and nonzero. Each log's `Rᵢ` is a Yun factor of `R`, so has
 `D`-constant coefficients (Stage 3a); since `Rᵢ` is monic, `⟦cmonicG Rᵢ⟧ = ⟦Rᵢ⟧`, and `cisZeroG (cmapDeriv ·)`
-is the computable reading of `mapCoeffs ⟦·⟧ = 0` (`cisZeroG_iff`, `toPolyG_cmapDeriv`). -/
+is the computable reading of `mapCoeffs ⟦·⟧ = 0`. -/
 theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
     (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
     (hguard : cisZeroG (cmapDeriv (cmonicG (cResidueResultantTowerGWf Dt hNum Dstar))) = true) :
@@ -232,7 +232,8 @@ theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)
   set R := cResidueResultantTowerGWf Dt hNum Dstar with hRdef
   have hpp : (toPolyG R).primPart ≠ 0 := Polynomial.primPart_ne_zero _
   have hguard' : mapCoeffs (toPolyG (cmonicG R)) = 0 := by
-    rw [← toPolyG_cmapDeriv]; exact (cisZeroG_iff _).mp hguard
+    have hzero := (cisZeroG_iff _).mp hguard
+    simpa only [denote] using hzero
   rw [List.all_eq_true]
   intro RS hRS
   rw [cLrtLogArgG, List.mem_filterMap] at hRS
@@ -254,8 +255,8 @@ theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)
   have hcm : toPolyG (cmonicG Ri) = toPolyG Ri := by
     rw [toPolyG_cmonicG_eq_normalize]
     exact (cSqfreeYunFFGWf_monic hgcd R hR0 Ri hRi).normalize_eq_self
-  rw [cisZeroG_iff, toPolyG_cmapDeriv, hcm]
-  exact hRi0
+  rw [cisZeroG_iff]
+  simpa only [denote, hcm] using hRi0
 
 /-- **Stage 3b (the residue bridge).** A passing residue guard forces the reduced LRT result's residues to be
 constant: `cResidueConstantGuardG a d = true → allResiduesConstantLrtG (cIntegrateReducedLrtG a d) = true`.
