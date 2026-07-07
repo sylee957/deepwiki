@@ -26,7 +26,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreW
 
 omit [CDiffField β] [CFracGcdCoreWf β] [CTowerGcdWitnessWf β] in
 /-- `toPolyG [CField.one] = 1`: the constant `[1]` reads as the polynomial `1`. -/
-theorem toPolyG_cone_eq_one_wf : toPolyG ([CField.one] : CPolyG β) = 1 := by
+@[denote] theorem toPolyG_cone_eq_one_wf : toPolyG ([CField.one] : CPolyG β) = 1 := by
   simp only [denote]
   simp
 
