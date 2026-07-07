@@ -419,8 +419,8 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
           = (padCoeffsQ z1 nrows ++ padCoeffsQ z2 nrows).getD k 0 := by
       rw [← hrow1u, ← hMdef, ← hrhsdef]; exact hsolve
     -- toPolyG agreement (cnorm).
-    have htoP_y1 : toPolyG y1 = toPolyG u1 := by rw [← hy1, toPolyG_cnormG]
-    have htoP_y2 : toPolyG y2 = toPolyG u2 := by rw [← hy2, toPolyG_cnormG]
+    have htoP_y1 : toPolyG y1 = toPolyG u1 := by rw [← hy1]; simp only [denote]
+    have htoP_y2 : toPolyG y2 = toPolyG u2 := by rw [← hy2]; simp only [denote]
     have hu1deg : (toPolyG u1).natDegree ≤ d := by
       have h1 : (toPolyG u1).natDegree ≤ (cnormG u1 : List ℚ).length - 1 := natDegree_toPolyG_le u1
       have h2 : (cnormG u1 : List ℚ).length ≤ d + 1 := by
