@@ -84,14 +84,14 @@ theorem dvd_residNum_factor (fuel : ℕ) (A D : CPoly) (factors : List (CPoly ×
 The interference numerator `R` is divisible by each `Vk^{ik−1}` (`dvd_residNum_factor`). Since the kept
 factors `Vk` are pairwise coprime (Yun's `csqfreeFactor_pairwise_isRelPrime`), so are the powers
 `Vk^{ik−1}`, hence their product `W = ∏_{kept} Vk^{ik−1} = D/Dstar` divides `R` — the single remaining
-interference divisibility, now proven by the per-factor order argument. -/
+interference divisibility follows from the per-factor order argument. -/
 
 open scoped Differential in
 /-- **The product interference divisibility `W ∣ R`**: with `W = ∏_{kept} Vk^{ik−1}` and `R =
 C(1−n)·A + Σ residNumIncr`, given the per-factor residual identities (`hstep`), pairwise coprimality of
 the kept factors `Vk` (`hpw`), each `Vk^{ik} ∣ D`, the product `∏_{kept} Vk^{ik−1}` divides `R`. The
 per-factor order bounds `Vk^{ik−1} ∣ R` (`dvd_residNum_factor`) assemble over the coprime powers
-(`list_prod_dvd_of_pairwise`): the entire multi-factor interference clears, the last remaining piece. -/
+(`list_prod_dvd_of_pairwise`): the multi-factor interference numerator clears. -/
 theorem prod_dvd_residNum (fuel : ℕ) (A D : CPoly) (factors : List (CPoly × ℕ))
     (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
     (hD : toPoly D ≠ 0) (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
