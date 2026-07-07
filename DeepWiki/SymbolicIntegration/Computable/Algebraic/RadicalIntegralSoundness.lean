@@ -53,17 +53,14 @@ element `v` integrates `g` over `α[y]/(yⁿ − f)` (rational part), i.e. the g
 def IsRadicalRationalIntegral (n : ℕ) (f g v : RadElem α) : Prop :=
   CPolyG.toPolyG (radDeriv n (f.headD CField.zero) v) = CPolyG.toPolyG g
 
-/-- The algebraic integral `∫ (f'/(nf))·√f dx = √f`: `toPolyG (radDeriv n f radGen) =
-toPolyG [zero, logDerRadicand n f]` in `K[X]`, via the keystone + `toPolyG_radGen` + `implicitDeriv_X`.
-General in `n`, `f`, `α`; no `n·toK f ≠ 0` needed. -/
+/-- The radical generator differentiates to the logarithmic-derivative coefficient. -/
 theorem toPolyG_radDeriv_radGen (n : ℕ) (f : α) :
     CPolyG.toPolyG (radDeriv n f (radGen : RadElem α))
       = CPolyG.toPolyG ([CField.zero, logDerRadicand n f] : RadElem α) := by
   rw [toPolyG_radDeriv, toPolyG_radGen, Differential.implicitDeriv_X,
     toPolyG_zero_cons (logDerRadicand n f)]
 
-/-- The radical integral `∫ (f'/(nf))·√f = √f` as a soundness instance:
-`IsRadicalRationalIntegral n [f] [zero, logDerRadicand n f] radGen`, via `toPolyG_radDeriv_radGen`. -/
+/-- `radGen` is a radical rational integral for its logarithmic-derivative integrand. -/
 theorem isRadicalRationalIntegral_radGen (n : ℕ) (f : α) :
     IsRadicalRationalIntegral n [f] ([CField.zero, logDerRadicand n f]) (radGen : RadElem α) := by
   show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) radGen) = _
@@ -93,8 +90,7 @@ theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
     map_add, map_mul]
   ring
 
-/-- The two-term radical integral as a soundness instance:
-`IsRadicalRationalIntegral n [f] [D(a₀), D(a₁) + a₁·ℓ] [a₀, a₁]`, via `toPolyG_radDeriv_linear`. -/
+/-- A two-term radical element integrates its computed diagonal derivative. -/
 theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
     IsRadicalRationalIntegral n [f]
       ([CDiffField.cderiv a₀,
@@ -125,10 +121,7 @@ theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs :
     ring
 
 omit [CDiffFieldSpec α] in
-/-- The per-step contributions telescope (head/last form): if each contribution's `radDeriv`-image is
-the difference of consecutive leftovers (zipped as `(L₀ :: rest).zip rest`), the sum is
-`toPolyG L₀ − toPolyG (rest.getLastD L₀)`. Stated via `List.Forall₂` to keep the endpoints free of
-index obligations. -/
+/-- Contributions whose derivatives are consecutive leftover differences telescope. -/
 theorem sum_radDeriv_telescope (n : ℕ) (f : α) :
     ∀ (L₀ : RadElem α) (rest : List (RadElem α)) (cs : List (RadElem α)),
       List.Forall₂ (fun c p => CPolyG.toPolyG (radDeriv n f c)
@@ -342,11 +335,7 @@ theorem radDeriv_radGen_sound_qx :
   rw [toPolyG_radDeriv_radGen]
   rfl
 
-/-- **The `radIsZero` test form of the `√(x³+1)` integral**, abstractly — `radIsZero (radDeriv 2 (x³+1)
-radGen − [0, 3x²/(2(x³+1))]) = true`: the engine's `native_decide` statement `radDeriv_radGen_eq`, but
-derived from the abstract `K[X]` identity `radDeriv_radGen_sound_qx` through `cisZeroG_iff` /
-`toPolyG_csubG` (so it carries **no** `native_decide` axiom). The same proposition the kernel checks
-numerically, here a theorem of the abstract derivation. -/
+/-- The abstract zero-test form of the `√(x³+1)` radical-generator derivative. -/
 theorem radIsZero_radDeriv_radGen_qx :
     radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
         [CField.zero, radicandLogDer]) = true := by
