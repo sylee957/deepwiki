@@ -9,7 +9,7 @@ integrates soundly. Under the `primitiveGuardedCase` guard (`b = 0`, `Dθ = 1`, 
 RDE is solved and `canonicalReconstruction_of_charZero` closes the reconstruction with the special term
 vanishing; off the guard the hook returns `none`. This `K`-level identity is the `specialSound` field of the
 LRT primitive base `instLawfulRischLevelLrtPrimitive` (`RischTowerLrt.lean`) — independent of any reduced
-frontier, so the recursive solver reuses it. See `docs/recursive-lrt-typeclass.md`. -/
+frontier, so the recursive solver reuses it. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -19,7 +19,7 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
-/-- **Primitive special-part soundness** (shared by the rational and LRT primitive solvers). The special
+/-- Primitive special-part soundness shared by the rational and LRT primitive solvers. The special
 part is `primitiveGuardedCase.integrateSpecial`: under the guard (`b = 0`, `Dθ = 1`, constant `fₚ`) it solves
 the polynomial RDE and the reconstruction (`canonicalReconstruction_of_charZero`) closes with the special term
 vanishing; off the guard the hook returns `none`. Independent of any reduced frontier, so both solvers reuse
