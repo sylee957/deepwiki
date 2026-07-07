@@ -134,8 +134,6 @@ theorem rioboo_coprime_lrt (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDeg
     (hσfix hAreal) (hσfix hBreal) hbunit hsqfree h27 h28
 
 open scoped Classical in
-/-- Restatement: with `C, D` real, `D` squarefree, `deg C < deg D`, `b ≠ 0`, and `(a+i·b)` a resultant
-root, the real and imaginary parts `A, B` of `S(a+i·b, x) = A + i·B` satisfy `IsCoprime A B`. -/
 example (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDegree < D.natDegree)
     (conj : K →+* K) (hconj : ∀ c, conj (conj c) = c) {i : K} (hi : i ^ 2 = -1)
     (hconji : conj i = -i) (hCreal : Cnum.map conj = Cnum) (hDreal : D.map conj = D)
