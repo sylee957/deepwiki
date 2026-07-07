@@ -2,15 +2,13 @@ import DeepWiki.Algebra.ListProducts
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
-/-! # Interface: `LawfulSquarefreeDecomposition` (Stage-1 abstract)
+/-! # Interface: `LawfulSquarefreeDecomposition`
 
 The squarefree-decomposition stage of the Risch reduced case, stated purely against the polynomial
 denotation `toPolyG` — no concrete algorithm. A list `decomp = [v₁, …, vₘ]` (the multiplicity-`i` factor at
 index `i-1`) is a *lawful* squarefree decomposition of `d` when its factors denote a monic, squarefree,
-pairwise-coprime family whose powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates.
-
-See `docs/risch-two-stage-discipline.md`. The realization `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition`
-lives with the algorithm (`YunSquarefreeDecomposition`), not here. -/
+pairwise-coprime family whose powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates. Algorithmic
+realizations live with the squarefree decomposition engines. -/
 
 open Polynomial Classical
 
