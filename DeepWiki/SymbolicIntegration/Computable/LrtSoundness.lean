@@ -7,9 +7,9 @@ import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
 import DeepWiki.SymbolicIntegration.Computable.ResidueResultantTowerSpec
 
-/-! # Symbolic-log soundness for the root-free LRT reduced integrator (G5, pass P1)
+/-! # Symbolic-log soundness for the root-free LRT reduced integrator
 
-`IsIntegralResultLrtG` — the soundness contract for `cIntegrateReducedLrtG`'s **symbolic** log part
+`IsIntegralResultLrtG` is the soundness contract for `cIntegrateReducedLrtG`'s **symbolic** log part
 `[(Rᵢ, Sᵢ)]`, denoting `Σᵢ Σ_{Rᵢ(c)=0} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)`. To handle **algebraic** residues without
 building a `Differential (AlgebraicClosure K)` instance, it is stated over an arbitrary differential
 extension `E` of `K = CFieldSpec.K α` in which every `Rᵢ` splits (the descent vehicle): `extendDeriv` /
@@ -59,8 +59,8 @@ noncomputable def amGExt (p : (CFieldSpec.K α)[X]) : RatFunc E :=
 
 /-- The symbolic log argument `Sᵢ` (a list of `z`-polynomials, one per `t`-power) evaluated at a residue
 `c ∈ E` and **monic-normalized in `t`**: the raw `E[t]` polynomial `Σₖ (Sᵢ[k] at z=c)·tᵏ` divided by its
-leading `t`-coefficient. The monic normalization (Bronstein §2 Ex 2.7, `LrtMonicLogs.monicLrtLog`) is
-**required for tower soundness** — the raw subresultant `Sᵢ(c) = sᵢ(c)·(monic gcd)` carries a
+leading `t`-coefficient. The monic normalization is required for tower soundness: the raw subresultant
+`Sᵢ(c) = sᵢ(c)·(monic gcd)` carries a
 leading-coefficient unit `sᵢ(c)` whose *tower* log-derivative `D_base(sᵢ(c))/sᵢ(c)` does **not** vanish
 (unlike the formal `d/dx` case), so the raw argument gives a spurious extra term. Dividing by the leading
 coefficient turns `Sᵢ(c)` into the **monic gcd**, whose log-derivative is exactly the RT residue term. -/
@@ -70,7 +70,7 @@ noncomputable def evalLrtArg (Si : List (CPolyG α)) (c : E) : E[X] :=
   raw * C raw.leadingCoeff⁻¹
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`evalLrtArg`'s raw sum is the base-changed abstract polynomial.** Given the G4c coefficient identity
+/-- **`evalLrtArg`'s raw sum is the base-changed abstract polynomial.** Given the coefficient identity
 `toPolyG (Sᵢ.getD n []) = P.coeff n` (P the abstract `lrtSubresultantGen`), the computable raw sum equals
 `P.map (eval₂RingHom (algebraMap K E) c)` (`= S`, the base-changed subresultant at `z = c`). -/
 theorem raw_eq_map (Si : List (CPolyG α)) (c : E) (P : ((CFieldSpec.K α)[X])[X])
@@ -92,9 +92,9 @@ theorem raw_eq_map (Si : List (CPolyG α)) (c : E) (P : ((CFieldSpec.K α)[X])[X
   | some sk => simp
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **P3: the monic log argument is the residue-pole product.** Given the G4c coefficient identity and that
-the base-changed subresultant `S` is similar to `∏_{β}(t−β)` (G3 `~gcd` + G2 `gcd=∏`), `evalLrtArg Sᵢ c =
-∏_{β}(t−β)`. Composes `raw_eq_map` (`raw = S`) with `monicNormalize_eq_of_isSimilar_prod` (`monic(S) = ∏`). -/
+/-- **The monic log argument is the residue-pole product.** Given the coefficient identity and that
+the base-changed subresultant `S` is similar to `∏_{β}(t−β)`, `evalLrtArg Sᵢ c = ∏_{β}(t−β)`. Composes
+`raw_eq_map` (`raw = S`) with `monicNormalize_eq_of_isSimilar_prod` (`monic(S) = ∏`). -/
 theorem evalLrtArg_eq_prod (Si : List (CPolyG α)) (c : E) (A D B : (CFieldSpec.K α)[X]) (j : ℕ)
     (poles : Multiset E) (hφ : Function.Injective (algebraMap (CFieldSpec.K α) E))
     (hg4c : ∀ n, toPolyG (Si.getD n []) = (lrtSubresultantGen A D B j).coeff n)
@@ -144,8 +144,8 @@ theorem evalLrtArg_const_embed_eq (Dstar : CPolyG α) (c : E)
   rw [hraw, hmonic.leadingCoeff, inv_one, map_one, mul_one]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **P3 for the engine's parametric subresultant.** `hg4c` discharged by G4c
-(`toPolyG_cSubresultantParam_getD`): `evalLrtArg (cSubresultantParam Dstar hNum Dd (cdegG Dstar)(cdegG Dd) j) c
+/-- **The engine's parametric subresultant gives the residue-pole product.** With coefficients certified by
+`toPolyG_cSubresultantParam_getD`, `evalLrtArg (cSubresultantParam Dstar hNum Dd (cdegG Dstar)(cdegG Dd) j) c
 = ∏_{β}(t−β)`, given `deg Dd = deg Dstar − 1` and `IsSimilar S (∏)`. -/
 theorem evalLrtArg_cSubresultantParam_eq_prod [CharZero (CFieldSpec.K α)]
     (Dstar hNum Dd : CPolyG α) (c : E) (j : ℕ) (poles : Multiset E)
@@ -270,7 +270,7 @@ open Classical in
 /-- **The Hermite half over `E`** (`hherm`): base-changing the `K`-level `cHermiteReduceTowerGWf_field_identity`
 to `E` via `ratFuncBaseChange`. `D_E(g) + hNum/Dstar = a/d` over `RatFunc E`, with `hNum = H.2.1` (the residual
 identified via `toPolyG_hNum'_eq_2_1`), `Dstar = H.2.2`. `hcopgcd` is the genuine differential-normality side
-condition (Bronstein's `hnorm`). This is the `hherm` input to `isIntegralResultLrtG_of_hherm_of_logMatch`. -/
+condition. This is the `hherm` input to `isIntegralResultLrtG_of_hherm_of_logMatch`. -/
 theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
     [DifferentialAlgebra (CFieldSpec.K α) E] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
@@ -385,7 +385,7 @@ theorem towerDerivExt_div_algebraMap_prod (Dt : CPolyG α) (l : Multiset E[X]) (
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Term-level assembly: the residue term is the residue-weighted per-pole sum.** Given that each
-monic log argument `evalLrtArg Sᵢ c` factors as `∏_{β ∈ fac c}(t−β)` (the gcd as linear factors, P3), the
+monic log argument `evalLrtArg Sᵢ c` factors as `∏_{β ∈ fac c}(t−β)` (the gcd as linear factors), the
 per-`Rᵢ` residue term becomes `Σ_{c ∈ roots Rᵢ} c·(Σ_{β ∈ fac c} poleTerm β)` — via the log-derivative
 product split. Combined with `residue_pole_regroup` this collapses to the pole sum. -/
 theorem logResidueTermLrtG_eq_pole_sum (Dt : CPolyG α) (p : CPolyG α × List (CPolyG α))
@@ -406,7 +406,7 @@ theorem logResidueTermLrtG_eq_pole_sum (Dt : CPolyG α) (p : CPolyG α × List (
 
 open scoped Differential Classical in
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **The residue-weighted pole sum is the normal part** (P5 endpoint, over `E`). Instantiating the
+/-- **The residue-weighted pole sum is the normal part** (over `E`). Instantiating the
 tower residue-match identity `monomial_residue_match_of_cancel` at `K := E` with derivation data
 `v = (toPolyG Dt).map φ` (so `poleTerm Dt β` is literally its `extendDeriv(implicitDeriv v)(t−β)/(t−β)`
 summand): the residue-weighted pole sum `Σ_β res(β)·poleTerm β` equals `a/∏_{β∈s}(t−β)`, where the RT
@@ -482,7 +482,7 @@ theorem monic_separable_eq_nodal {E : Type*} [Field E] [IsAlgClosed E] (p : E[X]
     Multiset.dedup_eq_self.mpr hnodup]
   simpa using hprod
 
-/-- **The concrete residue resultant base-changed to `E` is the abstract `rtResultantGen`.** Combines G4b
+/-- **The concrete residue resultant base-changed to `E` is the abstract `rtResultantGen`.** Combines
 (`toPolyG_cResidueResultantTowerGWf`, `R = rtResultantGen` over `K`), `rtResultantGen_map` (base change), and
 `implicitDeriv_map` (the derivation image commutes). Over an alg-closed `E`, `roots_rtResultantGen` then reads
 off the residues from this. -/
@@ -794,8 +794,8 @@ theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPolyG α)
 omit [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **The symbolic log part is empty when the squarefree denominator is a constant** (`cdegG Dstar = 0`):
-no poles ⟹ no residues (Bronstein's §5.6 residue criterion is vacuous). The residue resultant of a constant is
-a constant (`cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero`), whose Yun factorization is empty
+there are no poles and hence no residues. The residue resultant of a constant is constant
+(`cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero`), whose Yun factorization is empty
 (`cSqfreeYunFFGWf_eq_nil_of_cdegG_zero`), so the `filterMap` runs over the empty list. The trivial-normal-part
 (no-poles) base of the reduced soundness. -/
 theorem cLrtLogArgG_eq_nil_of_cdegG_zero (Dt hNum Dstar : CPolyG α) (hDstar : cdegG Dstar = 0) :
@@ -1320,7 +1320,7 @@ open Classical in
 `hherm_lrt_E` (base-change of `cHermiteReduceTowerGWf_field_identity`), leaving only the log-part match `hlog`
 (`logResidueSumLrtG (cLrtLogArgG …) = hNum/Dstar` over every alg-closed `E`, provable via
 `logResidueSumLrtG_eq_normalPart_of_yun` + the Yun facts). `hd0`/`hpp`/`hcopgcd` are the genuine Hermite-side
-conditions (Bronstein's `hnorm`). -/
+conditions. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
@@ -1345,9 +1345,9 @@ open scoped Differential in
 open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **The final `hlog` wiring.** Plugs the five Yun facts into `logResidueSumLrtG_eq_normalPart_of_yun`,
-discharging `hsplit` via `monic_separable_eq_nodal` (`Dstar` monic + separable). The remaining RT side
-conditions (`hB` normality, `hAdeg`/`hAnd` properness, `hB_deg`, `hnorm`, `hcancel`) are Bronstein's
-genuine hypotheses. Conclusion: `logResidueSumLrtG (cLrtLogArgG …) = hNum/Dstar` — the capstone's `hlog`. -/
+discharging `hsplit` via `monic_separable_eq_nodal` (`Dstar` monic + separable). The residue side
+conditions are normality, properness, degree control, and polynomial-part cancellation. Conclusion:
+`logResidueSumLrtG (cLrtLogArgG …) = hNum/Dstar`, the capstone's `hlog`. -/
 theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E] [DifferentialAlgebra (CFieldSpec.K α) E]
     [IsAlgClosed E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
@@ -1431,18 +1431,17 @@ theorem hcancel_of_primitive {α : Type*} [CField α] [CFieldSpec α] [CDiffFiel
 open scoped Differential in
 open Classical in
 variable [CFracGcdCoreWf α] in
-/-- **★★ The assembled LRT reduced-case soundness** — the root-free analogue of `hreduced`, fully composed.
+/-- **The assembled LRT reduced-case soundness**: the root-free analogue of `hreduced`, fully composed.
 Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into the capstone
 `isIntegralResultLrtG_cIntegrateReducedLrtG`, yielding `IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)`
 outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerGWf Dt a d).2.2`
 monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`/`_squarefree`);
-`hDt0`/`hAD`/`hm` and `hR` are the remaining `K`-level residue-data facts; `hR` bundles the residue
+`hDt0`/`hAD`/`hm` and `hR` are the `K`-level residue-data facts; `hR` bundles the residue
 resultant nonzero and primitive-part nonzero hypotheses. `hE`
 bundles the **two genuine** per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles
-(`hB`) and normality `hnorm` (`η ≠ Dβ`). (The former subresultant-multiplicity bound `hilt` — "the residual is
-not a single pure log `c·D′/D`" — is **no longer needed**: `cLrtLogArgG` now handles that case directly via its
-`i = deg Dstar` branch, so `entry_log_eq_fiber_prod` proves it too.) Everything else is **discharged
-internally**: the RT cancellation `hcancel` is
+(`hB`) and normality `hnorm` (`η ≠ Dβ`). The pure-log branch is handled directly by `cLrtLogArgG` at
+`i = deg Dstar`, so `entry_log_eq_fiber_prod` covers it as well. Everything else is discharged
+internally: the RT cancellation `hcancel` is
 automatic in the primitive case (`hDt0`: `Dt` constant, via `hcancel_of_primitive`), and the three
 degree/properness conditions `hAnd`/`hAdeg`/`hB_deg` follow from the `K`-level `hAD`/`hm` by base change
 (`φ = algebraMap` preserves `natDegree` over a field; `Dstar` monic + separable ⟹ its root count is its degree).
@@ -1522,7 +1521,7 @@ universe u
 open scoped Differential in
 open Classical in
 variable [CFracGcdCoreWf α] in
-/-- **The `∀E` Rothstein–Trager pole-normality condition, as a universe-polymorphic `def`** (mirroring
+/-- **The `∀E` residue pole-normality condition, as a universe-polymorphic `def`** (mirroring
 `IsIntegralResultLrtG`): at every algebraically-closed differential extension `E` of `K = CFieldSpec.K α`, the
 monomial derivation `Dt` avoids the pole derivatives (`η ≠ β′`). Being a `def` — not an inline `∀ (E : Type u)`
 field — its `E`-universe auto-generalizes, so it can be instantiated at `E = AlgebraicClosure K` (whose universe
@@ -1538,8 +1537,8 @@ def LrtPoleNormalityData (Dt a d : CPolyG α) : Prop :=
 open scoped Differential in
 /-- **The genuine primitive-monomial property (input-INDEPENDENT).** At every alg-closed differential extension
 `E`, `(Dt)(β) ≠ β′` for **every** `β ∈ E` (not just the poles of some integrand). In the primitive case
-(`deg Dt = 0`, `(Dt)(β) = η` constant) this is exactly `η ∉ range(D_E)` — `η = Dt` is not a derivative, i.e.
-`t` is a genuine monomial (Bronstein Def 5.1.1 / Lemma 5.1.2, `Const(k(t)) = Const(k)`). A property of the tower
+(`deg Dt = 0`, `(Dt)(β) = η` constant) this is exactly `η ∉ range(D_E)`: `η = Dt` is not a derivative, so
+`t` is a genuine monomial. A property of the tower
 LEVEL's monomial `Dt` alone — so it discharges the per-input `hE` for **every** `a/d` at once. -/
 def GenuinePrimitiveMonomialLrt (Dt : CPolyG α) : Prop :=
   ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
@@ -1551,7 +1550,7 @@ variable [CFracGcdCoreWf α] in
 /-- **Per-input pole-normality from the input-independent monomial property.** `LrtPoleNormalityData Dt a d`
 (quantified over a specific integrand's Hermite poles) is an immediate consequence of
 `GenuinePrimitiveMonomialLrt Dt` (which covers *all* `β`); the input `a/d` drops out. This is the faithfulness
-reframing — Bronstein's "genuine normality" is a property of the monomial, not of each integrand. -/
+reframing: genuine normality is a property of the monomial, not of each integrand. -/
 theorem lrtPoleNormalityData_of_genuineMonomial {Dt a d : CPolyG α}
     (hgen : GenuinePrimitiveMonomialLrt Dt) : LrtPoleNormalityData Dt a d :=
   fun E _ _ _ _ _ _ β _ => hgen E β
@@ -1561,20 +1560,20 @@ open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **The genuine per-input side conditions of the assembled LRT reduced soundness**, bundled. Beyond the
 automatic facts (`hpp`/`hRpp`, both `primPart_ne_zero`), `isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`
-needs the Rothstein–Trager residue-data plus tower-nondegeneracy hypotheses. All of the *normality* ones —
+needs the residue-data plus tower-nondegeneracy hypotheses. All of the *normality* ones —
 the Yun-factor coprimality `hcopgcd`, the residue resultant nonzero `hR0`, the monomial-derivative degree
-`hm`, and the per-input pole-normality `hnorm` — are now **derived** from the single **input-independent**
+`hm`, and the per-input pole-normality `hnorm` — are derived from the single **input-independent**
 monomial property `hE` (`hcopgcd_of_genuineMonomial`, `hR0_of_normalityData`, `hm_of_genuineMonomial`,
-`lrtPoleNormalityData_of_genuineMonomial`). The **primitive-case scope tag** `hDt0` (`deg Dt = 0`) is *no
-longer a field* either: it is a **decidable runtime guard** — `cIntegrateCaseLrt`'s `if cdegG Dt = 0` branch
+`lrtPoleNormalityData_of_genuineMonomial`). The **primitive-case scope tag** `hDt0` (`deg Dt = 0`) is a
+decidable runtime guard: `cIntegrateCaseLrt`'s `if cdegG Dt = 0` branch
 discharges it, so a successful run supplies it (`isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` takes it
-as an explicit hypothesis, threaded from the branch). The **Hermite properness `hAD`** is *no longer a field*
-either: `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` takes the input properness `deg a < deg d`
+as an explicit hypothesis, threaded from the branch). The **Hermite properness `hAD`** is supplied from input
+properness: `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` takes `deg a < deg d`
 (supplied by `crNormNum_degree_lt_crNormDen` at the canonical normal part) and case-splits on `deg Dstar` —
 deriving `.natDegree hAD` from the `.degree` discharge (`hAD_degree_of_genuineMonomial`) when there are poles,
 and handling `deg Dstar = 0` as the trivially-sound no-poles branch (`…_of_noPoles`). So this structure now
-carries the **single** genuine monomial condition `hE`. (The former `hilt` pure-single-log exclusion is gone:
-`cLrtLogArgG`'s `i = deg Dstar` branch handles it.) -/
+carries the **single** genuine monomial condition `hE`; `cLrtLogArgG`'s `i = deg Dstar` branch handles the
+pure-single-log case. -/
 structure LrtReducedGenuineData (Dt a d : CPolyG α) : Prop where
   /-- The **single** genuine condition: the **input-independent** monomial normality `η = Dt` is not a
   derivative (`GenuinePrimitiveMonomialLrt Dt`). *Every* per-input condition — the Yun-factor coprimality
