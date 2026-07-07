@@ -27,7 +27,8 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreW
 omit [CDiffField β] [CFracGcdCoreWf β] [CTowerGcdWitnessWf β] in
 /-- `toPolyG [CField.one] = 1`: the constant `[1]` reads as the polynomial `1`. -/
 theorem toPolyG_cone_eq_one_wf : toPolyG ([CField.one] : CPolyG β) = 1 := by
-  rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+  simp only [denote]
+  simp
 
 omit [CDiffField β] in
 /-- `toPolyG (cgcdFFCoreWf [1] z)` is a unit for any `z` (the gcd is `Associated` to `1`). -/
