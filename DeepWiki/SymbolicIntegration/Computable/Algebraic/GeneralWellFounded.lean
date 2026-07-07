@@ -105,7 +105,8 @@ theorem implicitDerivWf_curve_mem (f : CPolyG α) (hf : cnormG f ≠ [])
   rw [mapCoeffs_toPolyG_eq_afFx, derivative_toPolyG_eq_afFy]
   have hyp : Ideal.Quotient.mk (afIdeal f) (toPolyG (afYprimeWf f))
       = Ideal.Quotient.mk (afIdeal f) (- toPolyG (afFx f) * toPolyG (afFyInvWf f)) := by
-    rw [afYprimeWf, mk_toPolyG_afReduce f _ hf, toPolyG_cmulG, toPolyG_cnegG]
+    rw [afYprimeWf, mk_toPolyG_afReduce f _ hf]
+    simp only [denote, map_mul, map_neg]
   rw [map_add, map_mul, hyp, ← map_mul]
   have hfyinv := mk_toPolyG_afFyInvWf_mul_afFy f hf hgdeg hgne
   rw [show - toPolyG (afFx f) * toPolyG (afFyInvWf f) * toPolyG (afFy f)
