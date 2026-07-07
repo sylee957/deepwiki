@@ -67,6 +67,13 @@ theorem primPart_associated_prod_sqfreeFactPart (A : D[X]) (hA : A.primPart ≠ 
   rw [← h]
   exact (deflation_zero A hA).symm
 
+open Classical in
+/-- A squarefree-factorization part is never zero (a product of nonzero primes). -/
+theorem sqfreeFactPart_ne_zero (A : D[X]) (i : ℕ) : sqfreeFactPart A i ≠ 0 := by
+  rw [sqfreeFactPart, Finset.prod_ne_zero_iff]
+  exact fun P hP => (irreducible_of_normalized_factor P
+    (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).ne_zero
+
 end SquarefreeParts
 
 end DeepWiki.SymbolicIntegration

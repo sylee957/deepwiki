@@ -23,13 +23,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- A squarefree-factorization part is never zero (a product of nonzero primes). -/
-theorem sqfreeFactPart_ne_zero (A : D[X]) (i : ℕ) : sqfreeFactPart A i ≠ 0 := by
-  rw [sqfreeFactPart, Finset.prod_ne_zero_iff]
-  exact fun P hP => (irreducible_of_normalized_factor P
-    (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).ne_zero
-
-open Classical in
 /-- Each squarefree-factorization part `Aᵢ` is squarefree (a product of distinct primes). -/
 theorem sqfreeFactPart_squarefree (A : D[X]) (i : ℕ) : Squarefree (sqfreeFactPart A i) := by
   rw [sqfreeFactPart]
