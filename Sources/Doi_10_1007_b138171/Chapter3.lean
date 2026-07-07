@@ -509,11 +509,11 @@ abbrev ex_3_1_3 := @implicitDeriv_X_monomial
 
 /-- **Example 3.2.1** (§3.2, p.82): the only derivation on `ℚ(x)` that vanishes on `ℚ` and sends
 `x ↦ 1` is `d/dx` — a corollary of fraction-field uniqueness. -/
-abbrev ex_3_2_1 := @derivation_fractionRing_unique_of_restrict
+abbrev ex_3_2_1 := @derivation_ext_fractionRing
 
 /-- **Example 3.2.2** (§3.2, p.82): the only derivation extending `D` with `t` constant is `κ_D` — the
 same fraction-field uniqueness. -/
-abbrev ex_3_2_2 := @derivation_fractionRing_unique_of_restrict
+abbrev ex_3_2_2 := @derivation_ext_fractionRing
 
 /-- **Example 3.2.3** (§3.2, p.83): an element algebraic over the constants (char `0`) is itself a
 constant. -/

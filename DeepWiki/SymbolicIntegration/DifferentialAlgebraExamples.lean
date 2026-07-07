@@ -96,19 +96,6 @@ theorem differentialIdeal_bot_and_top :
 
 end DifferentialIdealsPolynomial
 
-section TranscendentalExtension
-variable {R K : Type*} [CommRing R] [IsDomain R] [Field K] [Algebra R K] [IsFractionRing R K]
-
-/-- On the fraction field `K` of `R`, a derivation is determined by its restriction to `R` — so a
-derivation on `F(x)`/`F(t)` with a prescribed restriction is unique (e.g. `d/dx` as the extension
-of `0_F` with `Dx = 1`, and `κ_D` as the extension of `D` with `Δt = 0`); restates
-`derivation_ext_fractionRing`. -/
-theorem derivation_fractionRing_unique_of_restrict {Δ₁ Δ₂ : Derivation ℤ K K}
-    (h : ∀ a : R, Δ₁ (algebraMap R K a) = Δ₂ (algebraMap R K a)) : Δ₁ = Δ₂ :=
-  derivation_ext_fractionRing h
-
-end TranscendentalExtension
-
 section AlgebraicOverConstants
 variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
   [DifferentialAlgebra F E]
