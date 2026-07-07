@@ -102,6 +102,13 @@ theorem toPolyG_radDeriv (n : ℕ) (f : α) (p : RadElem α) :
     Nat.cast_zero, zero_mul, add_zero, smul_eq_mul, derivative'_apply]
   ring
 
+/-- The radical generator differentiates to the logarithmic-derivative coefficient. -/
+theorem toPolyG_radDeriv_radGen (n : ℕ) (f : α) :
+    CPolyG.toPolyG (radDeriv n f (radGen : RadElem α))
+      = CPolyG.toPolyG ([CField.zero, logDerRadicand n f] : RadElem α) := by
+  rw [toPolyG_radDeriv, toPolyG_radGen, Differential.implicitDeriv_X,
+    toPolyG_zero_cons (logDerRadicand n f)]
+
 /-! ### Additivity: `radDeriv` commutes with `radAdd` -/
 
 /-- `radDeriv` is additive: `toPolyG (radDeriv n f (radAdd a b)) = toPolyG (radDeriv n f a) +

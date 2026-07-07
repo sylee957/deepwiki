@@ -35,13 +35,6 @@ element `v` integrates `g` over `α[y]/(yⁿ − f)` (rational part), i.e. the g
 def IsRadicalRationalIntegral (n : ℕ) (f g v : RadElem α) : Prop :=
   CPolyG.toPolyG (radDeriv n (f.headD CField.zero) v) = CPolyG.toPolyG g
 
-/-- The radical generator differentiates to the logarithmic-derivative coefficient. -/
-theorem toPolyG_radDeriv_radGen (n : ℕ) (f : α) :
-    CPolyG.toPolyG (radDeriv n f (radGen : RadElem α))
-      = CPolyG.toPolyG ([CField.zero, logDerRadicand n f] : RadElem α) := by
-  rw [toPolyG_radDeriv, toPolyG_radGen, Differential.implicitDeriv_X,
-    toPolyG_zero_cons (logDerRadicand n f)]
-
 /-- `radGen` is a radical rational integral for its logarithmic-derivative integrand. -/
 theorem isRadicalRationalIntegral_radGen (n : ℕ) (f : α) :
     IsRadicalRationalIntegral n [f] ([CField.zero, logDerRadicand n f]) (radGen : RadElem α) := by
