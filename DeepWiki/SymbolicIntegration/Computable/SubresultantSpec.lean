@@ -8,7 +8,7 @@ The computable Sylvester-submatrix subresultant `cSubresultantG` computes Mathli
 `DeepWiki.SymbolicIntegration.subresultant` under the `toPolyG` bridge. Built from the `toK`-determinant
 homomorphism `toK_cDetG_eq_det` (Subresultant.lean) plus the index correspondence
 `cBSylvesterRows`/`cSubRowIdx`/`cSubColIdx` ↔ `bSylvester`/`subRow`/`subCol`. This is the last purely
-computational bridge of the root-free LRT log part — see `docs/computable-lrt.md`. -/
+computational bridge of the root-free LRT log part. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -54,7 +54,7 @@ theorem cSubColIdx_getD (n m j i : ℕ) (s : Fin (m + n - 2 * j)) :
 
 /-! ### The Sylvester-matrix entry correspondence -/
 
-/-- **`cBSylvesterRows` reads as the abstract `bSylvester`.** Entry `(RR, CC)` of the computable Sylvester
+/-- `cBSylvesterRows` reads as the abstract `bSylvester`. Entry `(RR, CC)` of the computable Sylvester
 matrix, read through `toK`, equals the abstract `bSylvester (toPolyG p) (toPolyG q) n m` entry. -/
 theorem toK_cBSylvesterRows_getD (p q : CPolyG α) (n m : ℕ) {RR CC : ℕ}
     (hR : RR < m + n) (hC : CC < m + n) :
@@ -84,7 +84,7 @@ theorem toK_cBSylvesterRows_getD (p q : CPolyG α) (n m : ℕ) {RR CC : ℕ}
 
 /-! ### The submatrix correspondence and the subresultant identity -/
 
-/-- **The computable Sylvester submatrix maps to the abstract one.** After `toK`, `matrixOfList` of the
+/-- The computable Sylvester submatrix maps to the abstract one. After `toK`, `matrixOfList` of the
 computable submatrix equals `(bSylvester …).submatrix (subRow …) (subCol …)`. -/
 theorem matrixOfList_cSubmatrix (p q : CPolyG α) (n m j i : ℕ) :
     matrixOfList ((cSubmatrix (cBSylvesterRows p q n m) (cSubRowIdx n m j) (cSubColIdx n m j i)).map
@@ -102,7 +102,7 @@ theorem matrixOfList_cSubmatrix (p q : CPolyG α) (n m j i : ℕ) :
     cSubRowIdx_getD n m j r, cSubColIdx_getD n m j i c,
     toK_cBSylvesterRows_getD p q n m (subRow n m j r).isLt (subCol n m j i c).isLt]
 
-/-- **The subresultant certification.** `toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p)
+/-- The subresultant certification. `toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p)
 (toPolyG q) n m j`: the computable Sylvester-submatrix subresultant computes Mathlib's abstract
 subresultant. -/
 @[denote]
