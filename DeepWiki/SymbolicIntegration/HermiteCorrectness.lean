@@ -30,10 +30,10 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.Compute
 
-/-! ### Summary: the multi-factor interference invariant, fully closed
+/-! ### Summary: the multi-factor interference invariant
 
-The multi-factor `hermiteReduce` `g`-fold correctness is now **fully proven** (no remaining
-divisibility hypothesis). The chain:
+The multi-factor `hermiteReduce` `g`-fold correctness discharges the interference
+divisibility internally. The chain:
 
 * `foldl_cond_eq_foldl_glocList` — the conditional `g`-fold is a plain `qadd`-fold over the kept-factor
   increment list `glocList`.
@@ -63,13 +63,12 @@ divisibility hypothesis). The chain:
 * `residNum_eq_resNumPrime` + `dvd_R_iff_dvd_resNumPrime` — `R·gden² = resNum'`, so `W ∣ R ⟺
   W·gden² ∣ resNum'` (the algorithm's own cleared-identity cert), confirming consistency.
 
-The earlier worry that this cancellation is "not implied by the per-factor specifications alone" is
-resolved: the order argument needs no per-factor `Afinalᵢ` divisibility — it confines each `Vk`-pole to
-factor `k`'s own residual identity (`glocₖ′`) via the `IsQRegular` localization of the *other* factors'
-derivatives. The single-repeated-factor case (`n = 1`, `W = 1`) is `hermiteReduce_residual_correct_single`. -/
+The order argument needs no per-factor `Afinalᵢ` divisibility: it confines each `Vk`-pole to factor `k`'s
+own residual identity (`glocₖ′`) via the `IsQRegular` localization of the *other* factors' derivatives.
+The single-repeated-factor case (`n = 1`, `W = 1`) is `hermiteReduce_residual_correct_single`. -/
 
 open scoped Differential in
--- Hermite reduction, multi-factor wrapper (Bronstein §2.2/§2.5): the computable `hermiteReduce`
+-- Hermite reduction, multi-factor wrapper: the computable `hermiteReduce`
 -- `g`-fold integrates the rational part `g`, leaving a residual over the squarefree radical `Dstar` —
 -- conditional ONLY on the single interference divisibility `W ∣ R` (`W = D/Dstar`,
 -- `R = C(1−n)·A + Σ Afinalᵢ·Vi^{i−1}`), everything else (the over-`D` residual skeleton, the radical
@@ -102,7 +101,7 @@ With `W ∣ R` now *proven* (`prod_dvd_residNum`), the multi-factor wrapper
 (`hermiteReduce_residual_correct_multifactor`) becomes fully unconditional. Taking the radical
 decomposition `D = Dstar·W` with `W = ∏_{kept} Vk^{ik−1}` (the cofactor `D/Dstar`) and the per-factor
 hypotheses (residual identities, pairwise coprimality, `Vk^{ik} ∣ D`), the `g`-fold residual identity
-`am A/am D = (toQFun g)′ + am (R/W)/am Dstar` holds **with no remaining divisibility assumption** — the
+`am A/am D = (toQFun g)′ + am (R/W)/am Dstar` holds without a separate divisibility assumption: the
 integrand lives over the squarefree radical `Dstar`. This closes the multi-factor interference. -/
 
 open scoped Differential in
@@ -112,7 +111,7 @@ identities (`hstep`), pairwise-coprime kept factors (`hpw`), distinct kept facto
 `Vk^{ik} ∣ D` for each kept factor (`hpow`), the `g`-fold residual is correct:
 `am A/am D = (toQFun g)′ + am (R/W)/am Dstar` — **no `W ∣ R` hypothesis**, the interference divisibility
 is discharged internally by `prod_dvd_residNum`. The residual integrand lives over the squarefree radical
-`Dstar`. The unconditional multi-factor Hermite reduction (Bronstein §2.2/§2.5). -/
+`Dstar`. -/
 theorem hermiteReduce_residual_correct_uncond' (fuel : ℕ) (A D Dstar : CPoly)
     (factors : List (CPoly × ℕ))
     (W : ℚ[X]) (hWeq : W = ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map
@@ -152,7 +151,7 @@ theorem hermiteReduce_residual_correct_uncond' (fuel : ℕ) (A D Dstar : CPoly)
   linear_combination hres + hclear
 
 open scoped Differential in
--- Hermite reduction, multi-factor, UNCONDITIONAL (Bronstein §2.2/§2.5): the computable `hermiteReduce`
+-- Hermite reduction, multi-factor, unconditional: the computable `hermiteReduce`
 -- `g`-fold integrates the rational part `g`, leaving a residual `(R/W)/Dstar` over the **squarefree
 -- radical** `Dstar` — with NO interference-divisibility hypothesis (`W ∣ R` discharged internally). The
 -- per-factor data alone (residual identities, pairwise-coprime kept factors, `Vk^{ik} ∣ D`, the radical
