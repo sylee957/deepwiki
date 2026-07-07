@@ -338,15 +338,18 @@ theorem toPolyG_cRdeSpecialDenominatorGWf_coeffs_of_noClear [CFieldSpec α] (Dt 
     rw [CFieldSpec.toK_neg, CFieldSpec.toK_zero, neg_zero]
   refine ⟨?_, ?_, ?_⟩
   · rw [cRdeSpecialDenominatorGWf]
-    simp only [if_neg hp, hn, toPolyG_cmulG, zero_sub]
-    rfl
+    simp only [if_neg hp, hn, denote, zero_sub]
+    dsimp only [pN]
+    simp only [denote]
   · rw [cRdeSpecialDenominatorGWf]
-    simp only [if_neg hp, hn, neg_zero, Int.toNat_zero, cnatCastG, toPolyG_cmulG, toPolyG_caddG,
-      toPolyG_cscaleG, hbterm0, map_zero, zero_mul, add_zero, zero_sub]
-    rfl
+    simp only [if_neg hp, hn, neg_zero, Int.toNat_zero, cnatCastG, denote, hbterm0, map_zero, zero_mul,
+      add_zero, zero_sub]
+    dsimp only [pN]
+    simp only [denote]
   · rw [cRdeSpecialDenominatorGWf]
-    simp only [if_neg hp, hn, sub_zero, toPolyG_cmulG, zero_sub]
-    rfl
+    simp only [if_neg hp, hn, sub_zero, denote, zero_sub]
+    dsimp only [pN]
+    simp only [denote]
 
 end CPolyG
 
