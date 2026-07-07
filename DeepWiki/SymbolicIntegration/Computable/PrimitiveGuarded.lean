@@ -2,15 +2,15 @@ import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 
-/-! # The guarded primitive special hook (P2: `hspecialField` becomes an algorithm guarantee)
+/-! # Guarded primitive special integration
 
 The primitive `b = 0` poly-RDE `cPolyRischDEGWf Dt [] fp` is term-by-term integration, correct **only** for
 `Dt = 1` (canonical primitive) with **constant coefficients** (`mapCoeffs (toPolyG fp) = 0`). Rather than
 assume the resulting field identity (`hspecialField`), `primitiveGuardedCase` **guards** the hook on those
 two conditions — both *computable* (`cisZeroG (csubG Dt [1])` and `cisZeroG (cmapDeriv fp)`) — so a
 successful special integration a-priori *guarantees* the identity. Declining outside the domain is honest:
-the algorithm is sound + complete for the constant-coefficient canonical-primitive case; the general
-non-constant case needs the P2 recursion. -/
+the algorithm is sound and complete for the constant-coefficient canonical-primitive case, while the
+non-constant case belongs to the general primitive recursion. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -85,10 +85,9 @@ theorem primitive_special_identity (Dt fp qp : CPolyG α)
 /-- **The guarded primitive monomial case.** `integrateSpecial` runs the `b = 0` poly-RDE only when the
 computable guards hold: `b = 0`, `toPolyG Dt = 1` (`cisZeroG (csubG Dt [1])`), and constant coefficients
 (`cisZeroG (cmapDeriv fp)`). Otherwise it declines. `reducedCorrect` applies the **integrability guard**
-(Bronstein §5.6): the reduced log part is a valid antiderivative only when each residue `c` is a constant
-(`D c = 0`) — otherwise `D(c·log v)` carries a spurious `Dc·log v` — so it accepts iff every residue is
-constant (`cisZeroG [D c]`), declining non-elementary reduced parts. The root-free analogue of the hyperexp
-`∑cᵢ = 0` guard. -/
+for reduced logarithmic parts: each residue `c` must be a constant (`D c = 0`), since otherwise
+`D(c·log v)` carries a spurious `Dc·log v`. It accepts exactly when every residue passes the computable
+constant check `cisZeroG [D c]`. -/
 def primitiveGuardedCase : MonomialCase α where
   integrateSpecial Dt fp b _ds :=
     if cisZeroG b && cisZeroG (csubG Dt [CField.one]) && cisZeroG (cmapDeriv fp) then
