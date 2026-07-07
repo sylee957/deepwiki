@@ -26,15 +26,6 @@ theorem properRatFunc_const_denom_eq_zero {N M : K[X]} (hM : M.natDegree = 0) (h
     exact absurd hdeg (by exact_mod_cast Nat.not_lt_zero _)
   rw [hN0, map_zero, zero_div]
 
-/-- Subtracting the local principal part leaves a quotient regular at the same point. -/
-theorem subtract_localPrincipalPart_regular (A M : K[X]) {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
-    ∃ R : K[X],
-      algebraMap K[X] (RatFunc K) A
-          / (algebraMap K[X] (RatFunc K) ((Polynomial.X - Polynomial.C α) ^ i * M))
-        - localPrincipalPart A M α i
-        = algebraMap K[X] (RatFunc K) R / algebraMap K[X] (RatFunc K) M :=
-  ⟨localRemainder A M α i, subtract_localPrincipalPart_eq A M i hM⟩
-
 /-- The product `∏ α ∈ R, (X - C α) ^ mult α`. -/
 noncomputable def rootProd (R : Finset K) (mult : K → ℕ) : K[X] :=
   ∏ α ∈ R, (Polynomial.X - Polynomial.C α) ^ mult α
