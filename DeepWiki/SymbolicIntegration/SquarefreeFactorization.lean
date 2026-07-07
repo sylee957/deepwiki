@@ -40,13 +40,6 @@ open Classical
 /-! ### The abstract Yun loop and its factor products -/
 
 open Classical in
-/-- Abstract Yun loop emitting `gcd b d` and recursing on the deflated pair. -/
-noncomputable def yunLoopAbs {K : Type*} [Field K] (A : K[X]) : K[X] × K[X] → ℕ → ℕ → List K[X]
-  | _, _, 0 => []
-  | (b, d), i, (n + 1) =>
-      gcd b d :: yunLoopAbs A (b / gcd b d, d / gcd b d - derivative (b / gcd b d)) (i + 1) n
-
-open Classical in
 /-- The abstract Yun loop is factorwise associated to consecutive squarefree parts. -/
 theorem yunLoopAbs_forall₂ {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0) :
     ∀ (n i : ℕ) (b d : K[X]), 1 ≤ i → YunInv A i b d →

@@ -315,6 +315,13 @@ theorem yunStep_emit_assoc [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
   rw [(yunStep_preserves A i hi hA hinv).1]
   exact normalize_associated (sqfreeFactPart A i)
 
+open Classical in
+/-- Abstract Yun loop emitting `gcd b d` and recursing on the deflated pair. -/
+noncomputable def yunLoopAbs (A : K[X]) : K[X] × K[X] → ℕ → ℕ → List K[X]
+  | _, _, 0 => []
+  | (b, d), i, (n + 1) =>
+      gcd b d :: yunLoopAbs A (b / gcd b d, d / gcd b d - derivative (b / gcd b d)) (i + 1) n
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration
