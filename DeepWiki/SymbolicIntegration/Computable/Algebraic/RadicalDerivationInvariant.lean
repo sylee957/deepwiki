@@ -162,7 +162,7 @@ modulo the defining ideal `I = (Xⁿ − C(toK f))`: `radReduce` preserves the q
 `D(Xⁿ − C(toK f)) ∈ I` lets `D` descend to `K[X] ⧸ I`, and free-polynomial Leibniz pushes through. -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **The top-coefficient split through `toPolyG`**: `toPolyG (p ++ q) = toPolyG p + X^(p.length) ·
+/-- The top-coefficient split through `toPolyG`: `toPolyG (p ++ q) = toPolyG p + X^(p.length) ·
 toPolyG q`. The `append` homomorphism for the Horner bridge, the tool for peeling the top coefficient in
 `radReduce`. -/
 theorem toPolyG_append (p q : RadElem α) :
@@ -176,27 +176,27 @@ theorem toPolyG_append (p q : RadElem α) :
     simp only [List.length_cons, pow_succ]
     ring
 
-/-- **The radicand-defining ideal** `radIdeal n f = (Xⁿ − C(toK f)) ⊆ K[X]`: the principal ideal whose
+/-- The radicand-defining ideal `radIdeal n f = (Xⁿ − C(toK f)) ⊆ K[X]`: the principal ideal whose
 quotient is the carrier `K[X]/(Xⁿ − C(toK f)) ≅ K(y)` with `yⁿ = toK f`. Leibniz for `radMul` holds
 modulo this ideal. -/
 noncomputable def radIdeal (n : ℕ) (f : α) : Ideal (CFieldSpec.K α)[X] :=
   Ideal.span {X ^ n - Polynomial.C (CFieldSpec.toK f)}
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **The radicand generator lies in its ideal** — `Xⁿ − C(toK f) ∈ radIdeal n f`. -/
+/-- The radicand generator lies in its ideal — `Xⁿ − C(toK f) ∈ radIdeal n f`. -/
 theorem radicand_mem (n : ℕ) (f : α) :
     X ^ n - Polynomial.C (CFieldSpec.toK f) ∈ radIdeal n f :=
   Ideal.subset_span (Set.mem_singleton _)
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`c · (Xⁿ − C(toK f)) ∈ radIdeal n f`** for any cofactor — the multiples of the radicand generator
+/-- `c · (Xⁿ − C(toK f)) ∈ radIdeal n f` for any cofactor — the multiples of the radicand generator
 used by the `radReduce` fold step. -/
 theorem mul_radicand_mem (n : ℕ) (f : α) (c : (CFieldSpec.K α)[X]) :
     c * (X ^ n - Polynomial.C (CFieldSpec.toK f)) ∈ radIdeal n f :=
   Ideal.mul_mem_left _ _ (radicand_mem n f)
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`Ideal.Quotient.mk` collapses `Xⁿ` to `C(toK f)`** — `mk (radIdeal n f) (Xⁿ) = mk (radIdeal n f)
+/-- `Ideal.Quotient.mk` collapses `Xⁿ` to `C(toK f)` — `mk (radIdeal n f) (Xⁿ) = mk (radIdeal n f)
 (C(toK f))`: the defining relation `yⁿ = f` in the quotient `K[X] ⧸ (Xⁿ − C(toK f))`. -/
 theorem mk_X_pow (n : ℕ) (f : α) :
     Ideal.Quotient.mk (radIdeal n f) (X ^ n)
@@ -204,8 +204,8 @@ theorem mk_X_pow (n : ℕ) (f : α) :
   rw [← sub_eq_zero, ← map_sub, Ideal.Quotient.eq_zero_iff_mem]; exact radicand_mem n f
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **One `radReduce` fold preserves the quotient**, in the form needed for the fuel induction: for a
-**normalized** nonempty `q` of length `> n`, `mk (toPolyG (caddG (dropLast q) (cshiftG (len−1−n)
+/-- One `radReduce` fold preserves the quotient, in the form needed for the fuel induction: for a
+normalized nonempty `q` of length `> n`, `mk (toPolyG (caddG (dropLast q) (cshiftG (len−1−n)
 [am·f]))) = mk (toPolyG q)` with `am = getLast q`. The fold replaces the top coefficient `aₘ·X^{n+k}`
 (index `m = len−1 ≥ n`) by `aₘ·f·Xᵏ`, subtracting `aₘ·Xᵏ·(Xⁿ − C(toK f)) ∈ radIdeal n f`. -/
 theorem mk_toPolyG_radReduce_step (n : ℕ) (f : α) (q : RadElem α)
@@ -243,7 +243,7 @@ theorem mk_toPolyG_radReduce_step (n : ℕ) (f : α) (q : RadElem α)
   ring
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`radReduce` preserves the quotient `K[X] ⧸ (Xⁿ − C(toK f))`**: `mk (toPolyG (radReduce n f fuel
+/-- `radReduce` preserves the quotient `K[X] ⧸ (Xⁿ − C(toK f))`: `mk (toPolyG (radReduce n f fuel
 p)) = mk (toPolyG p)` for any fuel. Each fold step preserves it (`mk_toPolyG_radReduce_step`); a fuel
 induction over the loop. This is what makes `radMul ≡ ·` modulo the radicand ideal. -/
 theorem mk_toPolyG_radReduce (n : ℕ) (f : α) (fuel : ℕ) (p : RadElem α) :
@@ -268,7 +268,7 @@ theorem mk_toPolyG_radReduce (n : ℕ) (f : α) (fuel : ℕ) (p : RadElem α) :
       rw [hgl, mk_toPolyG_radReduce_step n f (CPolyG.cnormG p) hqne hlt, CPolyG.toPolyG_cnormG]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- **`radMul` realizes the product modulo the ideal**: `mk (radIdeal n f) (toPolyG (radMul n f a b)) =
+/-- `radMul` realizes the product modulo the ideal: `mk (radIdeal n f) (toPolyG (radMul n f a b)) =
 mk (radIdeal n f) (toPolyG a) · mk (radIdeal n f) (toPolyG b)`. `radMul = radReduce ∘ cmulG`, and
 `radReduce` preserves the quotient (`mk_toPolyG_radReduce`) while `cmulG` realizes `K[X]`-multiplication
 exactly (`toPolyG_cmulG`). The ring structure of the carrier `K[X] ⧸ (Xⁿ − C(toK f))`. -/
@@ -285,7 +285,7 @@ theorem mk_toPolyG_radMul (n : ℕ) (f : α) (a b : RadElem α) :
 `n·ℓ·f = f'` (valid when `n·toK f ≠ 0`), so it descends to the quotient carrier. -/
 
 omit [CDiffFieldSpec α] in
-/-- **The defining scalar identity** `n · toK ℓ · toK f = toK f'` in `K` (with `ℓ = logDerRadicand n f =
+/-- The defining scalar identity `n · toK ℓ · toK f = toK f'` in `K` (with `ℓ = logDerRadicand n f =
 f'/(nf)`), valid when `n·toK f ≠ 0` — the `nⁿ·y^{n−1}·y' = f'` relation read on `ℓ`. The algebraic heart
 of the crux. -/
 theorem toK_logDerRadicand_mul (n : ℕ) (f : α)
@@ -328,7 +328,7 @@ theorem implicitDeriv_radicand_mem (n : ℕ) (f : α)
         rw [← toK_logDerRadicand_mul n f hnf]; ring, map_zero]
     exact Ideal.zero_mem _
 
-/-- **The `radDeriv` derivation maps `radIdeal n f` into itself** (`n·toK f ≠ 0`): for any `x ∈ radIdeal
+/-- The `radDeriv` derivation maps `radIdeal n f` into itself (`n·toK f ≠ 0`): for any `x ∈ radIdeal
 n f`, `D x ∈ radIdeal n f` with `D = implicitDeriv (C(toK ℓ)·X)`. Since `radIdeal` is principal
 (`x = c·(Xⁿ − C f)`) and `D` is a derivation, `D x = Dc·(Xⁿ − C f) + c·D(Xⁿ − C f) ∈ radIdeal n f` (both
 summands, the second by the crux `implicitDeriv_radicand_mem`). This is the descent of `D` to the
@@ -346,7 +346,7 @@ theorem implicitDeriv_mem_radIdeal (n : ℕ) (f : α)
   · exact implicitDeriv_radicand_mem n f hnf
   · exact radicand_mem n f
 
-/-- **`D` descends to the quotient**: if `mk (radIdeal n f) p = mk (radIdeal n f) q`, then `mk (D p) =
+/-- `D` descends to the quotient: if `mk (radIdeal n f) p = mk (radIdeal n f) q`, then `mk (D p) =
 mk (D q)` (with `D = implicitDeriv (C(toK ℓ)·X)`). The two arguments differ by an element of `radIdeal n
 f`, which `D` keeps in `radIdeal n f` (`implicitDeriv_mem_radIdeal`); the derivation is ℤ-linear so the
 difference of images is `D(p − q) ∈ radIdeal n f`. -/
@@ -386,13 +386,13 @@ theorem mk_toPolyG_radDeriv_radMul (n : ℕ) (f : α)
 
 /-! ### `radDeriv` kills `radZero` and `radOne` -/
 
-/-- **`radDeriv` kills `radZero`** — `toPolyG (radDeriv n f radZero) = 0` in `K[X]` (`radZero = []`,
+/-- `radDeriv` kills `radZero` — `toPolyG (radDeriv n f radZero) = 0` in `K[X]` (`radZero = []`,
 `toPolyG [] = 0`, and `implicitDeriv v 0 = 0`). -/
 @[denote] theorem toPolyG_radDeriv_radZero (n : ℕ) (f : α) :
     CPolyG.toPolyG (radDeriv n f (radZero : RadElem α)) = 0 := by
   rw [toPolyG_radDeriv, show (radZero : RadElem α) = [] from rfl, CPolyG.toPolyG_nil, map_zero]
 
-/-- **`radDeriv` kills `radOne`** — `toPolyG (radDeriv n f radOne) = 0` in `K[X]` (`radOne = [1]`,
+/-- `radDeriv` kills `radOne` — `toPolyG (radDeriv n f radOne) = 0` in `K[X]` (`radOne = [1]`,
 `toPolyG [1] = 1`, and `implicitDeriv v 1 = 0`: a derivation annihilates the unit). -/
 @[denote] theorem toPolyG_radDeriv_radOne (n : ℕ) (f : α) :
     CPolyG.toPolyG (radDeriv n f (radOne : RadElem α)) = 0 := by
