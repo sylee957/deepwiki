@@ -17,7 +17,7 @@ open scoped Differential
 open RadElem CPolyG
 open DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 
-/-! ## Part 1 — the decision integrator `cIntegrateAlgebraicDecide` -/
+/-! ## Decision Integrator -/
 
 /-- The self-determining algebraic integrator `cIntegrateAlgebraicDecide` over `y² = ρ`, returning
 `Option AlgIntegralResult`: computes the rational part `v`, then `some ⟨v, []⟩` if `hasLogPart =
@@ -59,7 +59,7 @@ theorem cIntegrateAlgebraicDecide_principal_eq (p : ℕ) [Fact p.Prime]
   | none => rw [hN] at hlog; simp at hlog
   | some N => rfl
 
-/-! ## Part 2 — soundness: `some F → D(F) = integrand` (checker-free, modulo the frontier) -/
+/-! ## Soundness -/
 
 section Soundness
 
@@ -134,7 +134,7 @@ theorem cIntegrateAlgebraicDecide_sound
 
 end Soundness
 
-/-! ## Part 3 — completeness: `none → ¬ IsAlgebraicElementary integrand` (modulo the frontier) -/
+/-! ## Completeness -/
 
 section Completeness
 
@@ -181,7 +181,7 @@ theorem cIntegrateAlgebraicDecide_complete {isTorsion : Prop} {elem : Prop}
 
 end Completeness
 
-/-! ## Part 4 — the decision-procedure capstone: `(∃ F, … = some F) ⟺ IsAlgebraicElementary` -/
+/-! ## Decision Criterion -/
 
 section Decides
 
@@ -216,9 +216,9 @@ theorem cIntegrateAlgebraicDecide_decides {isTorsion : Prop} {elem : Prop}
 
 end Decides
 
-/-! ## Part 5 — end-to-end witnesses (both verdicts) -/
+/-! ## End-To-End Witnesses -/
 
-/-! ### Witness A — the non-torsion `(3,5)` on `y² = x³ − 2` → `none` -/
+/-! ### Non-torsion witness -/
 
 /-- A non-principal log residual `decideNonPrincipalResidual`: the double-pole integrand
 `[0, 1/(x²·(x²+1))]` for which `radLogArgSolve … [0,0,1] 1 = none`, forcing the torsion decision to
@@ -236,7 +236,7 @@ def decideWitnessNonTorsion : Option AlgIntegralResult :=
 integrand is not elementary. -/
 theorem decideWitnessNonTorsion_none : decideWitnessNonTorsion = none := by native_decide
 
-/-! ### Witness B — the torsion flex `(0,1)` on `y² = x³ + 1` → `some` with a `(1/3)·log` term -/
+/-! ### Torsion witness -/
 
 /-- `cIntegrateAlgebraicDecide` on the order-3 torsion flex `(0,1)` of `y² = x³ + 1`: a log-part
 input whose principal solve fails, expected to return `some ⟨v, [(1/3, y − 1)]⟩`. -/
@@ -252,7 +252,7 @@ theorem decideWitnessTorsion_some :
      (decideWitnessTorsion.bind fun F => F.logTerms.head?.map fun t => qEq t.1 (oneOverMQ 3)))
       = (true, some 1, some true) := by native_decide
 
-/-! ### Witness C — a principal example → `some` -/
+/-! ### Principal witness -/
 
 /-- `cIntegrateAlgebraicDecide` on a principal-log example (`y² = x² + 1`, the `arcsinh` solve): with
 a principal `radLogArgSolve = some N`, expected to return `some` with a `1·log(N/D)` term. -/
@@ -285,7 +285,7 @@ theorem self_determining_algebraic_decision_validates :
 
 section Restatements
 
--- ★ SOUNDNESS (checker-free, modulo the named frontier): `some F → D(F) = integrand`.
+-- Soundness: `some F → D(F) = integrand`.
 example (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ)
     (D : CPolyG ℚ) (degBound : ℕ) (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
@@ -298,7 +298,7 @@ example (p : ℕ) [Fact p.Prime]
   cIntegrateAlgebraicDecide_sound p ρ R B residual c D degBound ρq gen Dm hasLogPart integrand
     hres F hsome
 
--- ★ COMPLETENESS (modulo the named frontier): `none → ¬ elementary`.
+-- Completeness: `none → ¬ elementary`.
 example (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ)
     (D : CPolyG ℚ) (degBound : ℕ) (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
@@ -310,7 +310,7 @@ example (p : ℕ) [Fact p.Prime]
   cIntegrateAlgebraicDecide_complete p ρ R B residual c D degBound ρq gen Dm hasLogPart
     hres hnone
 
--- ★ DECISION PROCEDURE (modulo the named frontier): `(∃ F, … = some F) ⟺ elementary`.
+-- Decision criterion: `(∃ F, … = some F) ⟺ elementary`.
 example (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (R B : CPolyG ℚ) (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ)
     (D : CPolyG ℚ) (degBound : ℕ) (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ)
