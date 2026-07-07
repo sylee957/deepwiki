@@ -55,11 +55,10 @@ theorem combineSNLrt_isIntegralResultLrt (Dt a d cn dn snum sden : CPolyG α)
   have e1 : amGExt (E := F) (toPolyG (caddG (cmulG snum r.rational.2) (cmulG r.rational.1 sden)))
       = amGExt (E := F) (toPolyG snum) * amGExt (E := F) (toPolyG r.rational.2)
         + amGExt (E := F) (toPolyG r.rational.1) * amGExt (E := F) (toPolyG sden) := by
-    simp only [amGExt, toPolyG_caddG, toPolyG_cmulG, Polynomial.map_add, Polynomial.map_mul,
-      map_add, map_mul]
+    simp only [amGExt, denote, Polynomial.map_add, Polynomial.map_mul, map_add, map_mul]
   have e2 : amGExt (E := F) (toPolyG (cmulG sden r.rational.2))
       = amGExt (E := F) (toPolyG sden) * amGExt (E := F) (toPolyG r.rational.2) := by
-    simp only [amGExt, toPolyG_cmulG, Polynomial.map_mul, map_mul]
+    simp only [amGExt, denote, Polynomial.map_mul, map_mul]
   have hcombine : amGExt (E := F) (toPolyG (caddG (cmulG snum r.rational.2) (cmulG r.rational.1 sden)))
         / amGExt (E := F) (toPolyG (cmulG sden r.rational.2))
       = amGExt (E := F) (toPolyG snum) / amGExt (E := F) (toPolyG sden)
