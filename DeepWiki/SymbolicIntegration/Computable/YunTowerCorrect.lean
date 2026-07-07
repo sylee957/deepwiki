@@ -316,7 +316,8 @@ theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
   -- assemble `d₁`.
   have heqd : toPolyG (csubG (cdivWf (cderivG p) g) (cderivG (cdivWf p g)))
       = Polynomial.C k⁻¹ * (derivative A / G - derivative (A / G)) := by
-    rw [toPolyG_csubG, toPolyG_cderivG, heqb, derivative_C_mul, mul_sub, hA'G,
+    simp only [denote]
+    rw [heqb, derivative_C_mul, mul_sub, hA'G,
       show Polynomial.C k⁻¹ * (toPolyG (cdivWf (cderivG p) g) * Polynomial.C k)
         = toPolyG (cdivWf (cderivG p) g) * (Polynomial.C k⁻¹ * Polynomial.C k) from by ring,
       hkinv, mul_one]
