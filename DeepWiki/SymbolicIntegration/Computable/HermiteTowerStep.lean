@@ -250,7 +250,8 @@ theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : C
   set resDen := cmulG d (cmulG gden gden) with hresDen'
   -- the divisibility `resDen ∣ resNum·Dstar` from the radical split.
   have hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar) := by
-    rw [hresDen', toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
+    rw [hresDen']
+    simp only [denote]
     exact DeepWiki.polynomial_dvd_clearedIdentity_of_radical hSD hWgd
   -- the exact-division equation, mapped into the fraction field.
   have hexactP : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
