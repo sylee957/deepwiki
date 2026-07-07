@@ -131,7 +131,7 @@ theorem toQFunNZG_qOfPolyNZG_ne_zero (q : CPolyG β) (hq : CPolyG.cisZeroG q = f
     toQFunNZG (qOfPolyNZG q) ≠ 0 := by
   rw [toQFunNZG]
   show amG β (toPolyG q) / amG β (toPolyG ([CField.one] : CPolyG β)) ≠ 0
-  rw [toPolyG_one_singleton, map_one, div_one]
+  simp only [denote, map_one, mul_zero, add_zero, div_one]
   exact amG_toPolyG_ne_zero (CPolyG.toPolyG_ne_zero_of_cisZeroG_false hq)
 
 omit [CRischField β] in
