@@ -154,7 +154,7 @@ theorem residueAt_of_mul_X_sub_C (α : K) (f : RatFunc K) (g h : K[X]) (hh : h.e
   rw [residueAt, heq, eval_algebraMap_div α g h hh]
 
 open scoped Classical in
-/-- **The residue vanishes on a function regular at `α`.** If `f = A/B` with `B(α) ≠ 0` (no pole at `α`), then
+/-- The residue vanishes on a function regular at `α`. If `f = A/B` with `B(α) ≠ 0` (no pole at `α`), then
 `residueAt α f = 0` — `(X−α)·f = (X−α)A/B` has a zero at `α`. This is the `Res(D g) = 0`-from-regularity step
 of the residue criterion in field-residue form (`D g` regular at `α` ⟹ no residue there). -/
 theorem residueAt_eq_zero_of_regular (α : K) (A B : K[X]) (hB : B.eval α ≠ 0) :
