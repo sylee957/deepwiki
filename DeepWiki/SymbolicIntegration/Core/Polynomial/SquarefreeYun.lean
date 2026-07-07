@@ -237,6 +237,11 @@ open Classical in
 noncomputable def Dabs (A : K[X]) (i : ℕ) : K[X] :=
   Yun A i - derivative (squarefreePart (deflation A (i - 1)))
 
+open Classical in
+/-- The Yun loop invariant: `(b,d)` is a common nonzero constant multiple of `(Babs A i,Dabs A i)`. -/
+def YunInv (A : K[X]) (i : ℕ) (b d : K[X]) : Prop :=
+  ∃ c : K, c ≠ 0 ∧ b = Polynomial.C c * Babs A i ∧ d = Polynomial.C c * Dabs A i
+
 end SquarefreeYunState
 
 section SquarefreeYunStateLemmas

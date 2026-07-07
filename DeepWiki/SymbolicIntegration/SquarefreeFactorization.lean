@@ -71,11 +71,6 @@ theorem self_eq_C_leadingCoeff_mul_normalize {K : Type*} [Field K] (p : K[X]) (h
         = (Polynomial.C p.leadingCoeff * Polynomial.C p.leadingCoeff⁻¹) * p from by ring,
     ← map_mul, mul_inv_cancel₀ hlc, map_one, one_mul]
 
-open Classical in
-/-- The Yun loop invariant: `(b,d)` is a common nonzero constant multiple of `(Babs A i,Dabs A i)`. -/
-def YunInv {K : Type*} [Field K] (A : K[X]) (i : ℕ) (b d : K[X]) : Prop :=
-  ∃ c : K, c ≠ 0 ∧ b = Polynomial.C c * Babs A i ∧ d = Polynomial.C c * Dabs A i
-
 open UniqueFactorizationMonoid in
 open Classical in
 /-- One Yun step preserves `YunInv` and emits `normalize (sqfreeFactPart A i)`. -/
