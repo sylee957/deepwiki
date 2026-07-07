@@ -143,16 +143,4 @@ def cubeRatLift : RadElem (QFunNZG ℚ) :=
 theorem cubeDriver_integrates :
     radIsZero (radSub (radDeriv 2 cubeFqx cubeVlift) cubeRatLift) = true := by native_decide
 
-/-! ### `#print axioms` — the driver's assembled `vNum`/`Crem` and the end-to-end integration checks. -/
-
--- The driver's assembled rational-part numerator and the leftover `k = 1` residual:
-#print axioms sqrtxRun_vNum_eq
-#print axioms sqrtxRun_remainder_eq
-
--- ★ The driver integrates: `D(v) = rational part of the integrand`, by the real radical derivation:
-#print axioms sqrtxDriver_integrates
-
--- ★ The same, on the headline radicand `y² = x³+1` (a genuine elliptic-curve radical `√(x³+1)`):
-#print axioms cubeDriver_integrates
-
 end DeepWiki.SymbolicIntegration
