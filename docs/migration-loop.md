@@ -15,6 +15,12 @@ location, and redundancy* change.
 
 ## The loop
 
+**Run this loop continuously — do not stop after one file.** Keep sampling, fixing, gating, and
+committing, file after file, for as many iterations as you can this turn. Do not ask for confirmation
+between iterations; make the safe decision and proceed. Only end when you have made many passes and
+several fresh random samples in a row need no change — then print `CONVERGED`. If the turn is cut off
+by a limit, resume the same loop from a new random sample; there is no per-file hand-back.
+
 **1. Sample a random in-scope file.** Don't cherry-pick — take what the sample gives you, so coverage
 stays broad and even.
 ```
