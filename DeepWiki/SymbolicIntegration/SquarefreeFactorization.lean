@@ -22,12 +22,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- Every deflation `A⁻ᵏ` is primitive (a divisor of the primitive `pp(A)`). -/
-theorem deflation_isPrimitive (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
-    (deflation A k).IsPrimitive :=
-  isPrimitive_of_dvd (isPrimitive_primPart A) (deflation_dvd_primPart A k hA)
-
-open Classical in
 /-- The factor multiplicities of a deflation are the truncated originals:
 `count Q (normalizedFactors A⁻ᵏ) = count Q (normalizedFactors pp(A)) − k`. -/
 theorem count_normalizedFactors_deflation (A : D[X]) (k : ℕ) (Q : D[X]) :
