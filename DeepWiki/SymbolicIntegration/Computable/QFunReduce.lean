@@ -128,15 +128,13 @@ theorem isZeroNZG_qReduce (x : QFunNZG α) :
 
 end QFunNZG
 
-/-! ### Validation at `QFunNZG ℚ ≅ ℚ(x)` -/
+/-! ### Examples over `QFunNZG ℚ ≅ ℚ(x)` -/
 
 /-- Field equality on `QFunNZG α`, tested as `isZero (a - b)`. -/
 def qReduceEq {α : Type*} [CField α] [CFieldDomain α] (a b : QFunNZG α) : Bool :=
   CField.isZero (CField.sub a b)
 
-/-- The swelling test fraction `(x² − 1)/((x − 1)(x + 3)) = (x² − 1)/(x² + 2x − 3)` over `ℚ(x)`, whose
-lowest-terms form is `(x + 1)/(x + 3)`. Numerator `[-1, 0, 1] = x² − 1`, denominator
-`[-3, 2, 1] = x² + 2x − 3`. -/
+/-- A reducible fraction over `ℚ(x)` whose lowest-terms form is `(x + 1)/(x + 3)`. -/
 def swellFrac : QFunNZG ℚ :=
   ⟨([(-1 : ℚ), 0, 1], [(-3 : ℚ), 2, 1]), by native_decide⟩
 
@@ -154,9 +152,7 @@ example :
     cdegG (qReduce swellFrac).1.1 + cdegG (qReduce swellFrac).1.2
       < cdegG swellFrac.1.1 + cdegG swellFrac.1.2 := by native_decide
 
-/-- A more dramatic swell `(x⁴ − 1)/((x − 1)(x⁵ + x⁴ + x³ + x² + x + 1))`: numerator `x⁴ − 1` (degree 4),
-denominator degree 6, sharing the factor `(x − 1)(x + 1)(x² + 1)`-vs-cyclotomic overlap `x − 1` and more.
-Numerator `[-1,0,0,0,1]`, denominator `(x − 1)·(x⁵+x⁴+x³+x²+x+1) = x⁶ − 1 = [-1,0,0,0,0,0,1]`. -/
+/-- A higher-degree reducible fraction over `ℚ(x)` for `qReduce` examples. -/
 def swellFrac2 : QFunNZG ℚ :=
   ⟨([(-1 : ℚ), 0, 0, 0, 1], [(-1 : ℚ), 0, 0, 0, 0, 0, 1]), by native_decide⟩
 
