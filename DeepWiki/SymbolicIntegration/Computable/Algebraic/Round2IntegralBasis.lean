@@ -76,12 +76,6 @@ def cuspF : CPolyG (QFunNZG ℚ) :=
 /-- The generator `y` of `ℚ(x)[y]/(y² − x³)` (`afBasisElem 1 = [0, 1]`). -/
 def cuspY : CPolyG (QFunNZG ℚ) := afBasisElem 1
 
--- Computed cusp discriminant numerator, expected `4x³ = [0,0,0,4]`.
-#eval (discNum cuspF : List ℚ)
-
--- Computed bad primes of the cusp, expected `[x] = [[0,1]]`.
-#eval (badPrimes cuspF).map (fun p => (p : List ℚ))
-
 /-- The bad prime of the cusp is `x`: `badPrimes cuspF = [x]` (the single monic factor `x = [0, 1]` with
 `x² ∣ 4x³`). -/
 theorem cusp_badPrimes_eq :
@@ -129,15 +123,6 @@ For `f = y² − x³`, `p = x`: the trace matrix `[[2, 0], [0, 2x³]]` at `x = 0
 `{(0, 1)} = y`; Hermite-reduces to the `K[x]`-basis `[x, y]`, strictly containing `x·O`. -/
 
 open CPolyG
-
--- Computed cusp trace matrix evaluated at `x = 0`, expected `[[2,0],[0,0]]`.
-#eval traceMatrixAtRoot cuspF 0
-
--- Computed kernel basis of the reduced trace matrix, expected `[(0,1)]` for the element `y`.
-#eval kernelBasisG (cdegG cuspF) (traceMatrixAtRoot cuspF 0)
-
--- Computed `K[x]`-basis of `I_x`, with rows `[x,0]` and `[0,1]` in power-basis coordinates.
-#eval (pTraceRadical cuspF [0, 1] 0).map (fun row => row.map (fun q => cnormG q))
 
 /-- The cusp trace matrix mod `x` is `[[2, 0], [0, 0]]`: `traceMatrix (y² − x³) = [[2, 0], [0, 2x³]]`
 evaluated at `x = 0`, a rank-`1` matrix with kernel `{(0, 1)} = y`. -/
@@ -313,16 +298,6 @@ For the cusp `f = y² − x³`, bad prime `p = x`, `I_x = ⟨x, y⟩`, and the i
 
 open CPolyG
 
--- Computed inverse of the cusp `I_x`-basis matrix `B = [[x,0],[0,1]]`.
-#eval (matInvG 2 (ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0))).map
-  (fun M => M.map (fun row => row.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ)))))
-
--- Computed new basis from `round2Step`, with coordinate vectors `[1,0]` and `[0,1/x]` over `ℚ(x)`.
-#eval (round2Step cuspF).1.map (fun b => b.map (fun z => ((z.1.1 : List ℚ), (z.1.2 : List ℚ))))
-
--- Computed growth flag for the cusp order, expected `true`.
-#eval (round2Step cuspF).2
-
 /-- The enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x³)`, the second basis vector of `round2Step`
 (`[0, 1/x]` in the `[1, y]` order basis). -/
 def cuspNewGen : CPolyG (QFunNZG ℚ) := (round2Step cuspF).1.getD 1 []
@@ -366,12 +341,6 @@ def nodeF : CPolyG (QFunNZG ℚ) :=
 (`[0, 1/x]`). -/
 def nodeNewGen : CPolyG (QFunNZG ℚ) := (round2Step nodeF).1.getD 1 []
 
--- Computed node discriminant numerator, expected `4x²(x+1) = [0,0,4,4]`.
-#eval (discNum nodeF : List ℚ)
-
--- Computed node bad primes, expected `[x] = [[0,1]]`.
-#eval (badPrimes nodeF).map (fun p => (cmonicG p : List ℚ))
-
 /-- The node bad prime is `x`, and `round2Step` enlarges to `[1, y/x]`: `badPrimes nodeF = [x]`, `.2 = true`,
 new generator `[0, 1/x] = y/x`, first vector `1`. -/
 theorem node_round2_newGen_eq :
@@ -400,22 +369,5 @@ theorem node_secondStep_stable :
 `round2Step` is one enlargement at the first linear bad prime. The full integral-basis algorithm
 iterates it to a fixed point: over all bad primes simultaneously, re-basing the trace matrix after each
 enlargement, and using residue-field linear algebra over `K[x]/(p)` for higher-degree bad primes. -/
-
-/-! ### `#print axioms` — the engine computes a Round-2 step of the integral basis -/
-
--- The bad prime and p-trace-radical of the cusp.
-#print axioms cusp_badPrimes_eq
-#print axioms cusp_pTraceRadical_basis
-
--- The idealizer enlarges `[1, y]` to `[1, y/x]`, integral and stable.
-#print axioms cusp_round2_grew
-#print axioms cusp_round2_newGen_eq
-#print axioms cusp_newGen_integral
-#print axioms cusp_secondStep_stable
-
--- The node `y² − x²(x+1)` has the same enlargement, with `(y/x)² = x+1`.
-#print axioms node_round2_newGen_eq
-#print axioms node_newGen_integral
-#print axioms node_secondStep_stable
 
 end DeepWiki.SymbolicIntegration
