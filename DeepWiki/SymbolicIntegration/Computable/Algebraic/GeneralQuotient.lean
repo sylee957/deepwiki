@@ -43,7 +43,8 @@ theorem mk_toPolyG_afMul (f a b : CPolyG α) (hf : cnormG f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afMul f a b))
       = Ideal.Quotient.mk (afIdeal f) (toPolyG a)
         * Ideal.Quotient.mk (afIdeal f) (toPolyG b) := by
-  rw [afMul, mk_toPolyG_afReduce f _ hf, toPolyG_cmulG, map_mul]
+  rw [afMul, mk_toPolyG_afReduce f _ hf]
+  simp only [denote, map_mul]
 
 variable [CDiffField α] [CDiffFieldSpec α]
 
