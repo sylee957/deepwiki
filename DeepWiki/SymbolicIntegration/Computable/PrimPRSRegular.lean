@@ -83,7 +83,8 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
           (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CField.one]])),
           CPolyG.cmulG c' (gblcCore (gbnormCore q)), ?_, ?_⟩
       · rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
-          toGBCoeffPoly_one, CPolyG.toPolyG_cmulG, map_mul, CPolyG.toPolyG_cmulG, map_mul]
+          toGBCoeffPoly_one]
+        simp only [denote, map_mul]
         linear_combination hsc
       · simpa only [denote] using mul_ne_zero hc' hlcq
 
