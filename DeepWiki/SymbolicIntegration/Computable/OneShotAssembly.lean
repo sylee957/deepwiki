@@ -1946,7 +1946,7 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
         + logResidueSumG ([CField.one] : CPolyG (QFunNZG ℚ)) res.logs
       = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) := by
   have hDt : toPolyG ([CField.one] : CPolyG (QFunNZG ℚ)) = C (1 : CFieldSpec.K (QFunNZG ℚ)) := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]
+    simp only [denote, map_one, mul_zero, add_zero]
   have hDtdeg : (toPolyG ([CField.one] : CPolyG (QFunNZG ℚ))).natDegree ≤ 1 := by
     rw [hDt, Polynomial.natDegree_C]; exact Nat.zero_le 1
   have hA := cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one
