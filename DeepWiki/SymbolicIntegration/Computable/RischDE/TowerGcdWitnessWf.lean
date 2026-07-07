@@ -145,7 +145,9 @@ theorem hdvdC_of_dvd_wf (Dt : CPolyG β) (gnum fden gden h0 : CPolyG β)
 theorem dvd_dn_h_of_normal_wf (Dt : CPolyG β) (fden h0 : CPolyG β)
     (hnormal : toPolyG (CPolyG.cSplitFactorFastGWf Dt fden).1 = toPolyG fden) :
     toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) := by
-  rw [CPolyG.toPolyG_cmulG, hnormal]; exact Dvd.intro _ rfl
+  simp only [denote]
+  rw [hnormal]
+  exact Dvd.intro _ rfl
 
 end Divisibility
 
