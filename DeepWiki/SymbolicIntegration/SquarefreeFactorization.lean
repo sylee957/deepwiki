@@ -40,22 +40,6 @@ open Classical
 /-! ### The abstract Yun loop and its factor products -/
 
 open Classical in
-/-- Every factor emitted by the abstract Yun loop is squarefree. -/
-theorem yunLoopAbs_squarefree {K : Type*} [Field K] [CharZero K] (A : K[X])
-    (hA : A.primPart ≠ 0) :
-    ∀ (n i : ℕ) (b d : K[X]), 1 ≤ i → YunInv A i b d →
-      ∀ V ∈ yunLoopAbs A (b, d) i n, Squarefree V := by
-  intro n
-  induction n with
-  | zero => intro i b d _ _ V hV; simp [yunLoopAbs] at hV
-  | succ n ih =>
-    intro i b d hi hinv V hV
-    rw [yunLoopAbs, List.mem_cons] at hV
-    rcases hV with rfl | hV
-    · exact squarefree_of_associated_sqfreeFactPart A i (yunStep_emit_assoc A i hi hA hinv)
-    · exact ih (i + 1) _ _ (by omega) (yunStep_preserves A i hi hA hinv).2 V hV
-
-open Classical in
 /-- Distinct-position factors emitted by the abstract Yun loop are relatively prime. -/
 theorem yunLoopAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K[X])
     (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d)
