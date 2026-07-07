@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.Frontier
+import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.LiouvilleFrontier
 
 /-! # Algebraic completeness
 
