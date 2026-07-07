@@ -147,7 +147,7 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := QFunNZG β
       obtain ⟨rfl, rfl⟩ := hhook
       have hDt1 : toPolyG Dt = 1 := by
         have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
-        rw [toPolyG_csubG, toPolyG_one_singleton, sub_eq_zero] at hh; exact hh
+        simpa only [denote, toPolyG_one_singleton, sub_eq_zero] using hh
       refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
       · rw [toPolyG_one_singleton]; exact one_ne_zero
       · exact tower_special_identityLrt Dt (crPoly Dt a d) qp hDt1 hqp
