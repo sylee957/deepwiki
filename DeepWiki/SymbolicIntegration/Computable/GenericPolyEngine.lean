@@ -220,6 +220,9 @@ def cmonicG {α : Type*} [CField α] (p : CPolyG α) : CPolyG α :=
   let p := cnormG p
   if cisZeroG p then [] else cscaleG (CField.inv (cleadG p)) p
 
+/-- Monic test for a `CPolyG`: `true` iff `cmonicG p = p` as normalized lists. -/
+def cisMonicG {α : Type*} [CField α] (p : CPolyG α) : Bool := cisZeroG (csubG (cmonicG p) p)
+
 /-! ### The generic Horner bridge `toPolyG` and its homomorphism lemmas
 
 From here on the bridge `[CFieldSpec α]` is in scope: `toPolyG` and every correctness lemma carry the

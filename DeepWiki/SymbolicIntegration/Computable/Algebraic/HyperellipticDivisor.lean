@@ -26,9 +26,6 @@ structure MumfordDivisor (α : Type*) where
   v : CPolyG α
   deriving Repr, DecidableEq
 
-/-- `u` is monic: `cmonicG u = u` (as normalized lists). -/
-def cisMonicG (u : CPolyG α) : Bool := cisZeroG (csubG (cmonicG u) u)
-
 /-- Mumford validity: `(D.u, D.v)` is a valid semi-reduced divisor on `y² = ρ` — `D.u` monic,
 `deg D.v < deg D.u`, and `D.u ∣ (D.v² − ρ)` (the on-curve constraint). -/
 def mumfordValid (ρ : CPolyG α) (D : MumfordDivisor α) : Bool :=
