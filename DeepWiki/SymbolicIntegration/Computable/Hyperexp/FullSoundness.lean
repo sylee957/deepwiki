@@ -231,10 +231,8 @@ theorem cIntegrateHyperexpNormalGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (
   have hAgden : amG α (toPolyG gden) ≠ 0 := amG_toPolyG_ne_zero hgden
   have hnewrat : amG α (toPolyG (csubG gnum (cmulG [intR] gden))) / amG α (toPolyG gden)
       = amG α (toPolyG gnum) / amG α (toPolyG gden) - amG α (Polynomial.C (CFieldSpec.toK intR)) := by
-    rw [toPolyG_csubG, toPolyG_cmulG, map_sub, map_mul]
-    have hsingle : toPolyG ([intR] : CPolyG α) = Polynomial.C (CFieldSpec.toK intR) := by
-      rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
-    rw [hsingle, sub_div, mul_div_assoc, div_self hAgden, mul_one]
+    simp only [denote, map_sub, map_mul, toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
+    rw [sub_div, mul_div_assoc, div_self hAgden, mul_one]
   rw [hnewrat, map_sub, hintR, hRval]
   have hover := field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot Dt a d cands s b
     hDt hherm hden hA hnorm hform
@@ -363,8 +361,7 @@ theorem cIntegrateHyperexpFullGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a 
         / amG α (toPolyG (cmulG lden nrm.rational.2))
       = amG α (toPolyG lnum) / amG α (toPolyG lden)
         + amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2) := by
-    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul,
-      map_mul]
+    simp only [denote, map_add, map_mul]
     field_simp
   rw [hcombine, map_add, hLaurField]
   rw [add_assoc, hNrmField]
