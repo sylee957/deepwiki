@@ -3,44 +3,38 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.TorsionLogTerm
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
 import Mathlib.FieldTheory.Differential.Liouville
 
-/-! # Completeness of the algebraic integrator: the "`none` ⟹ not elementary" direction
+/-! # Completeness of the algebraic integrator
 
-The converse of soundness for the simple-radical algebraic integrator `cIntegrateAlgebraicWf`
-(over `y² = ρ`): no log argument plus a non-torsion residue divisor means no elementary
-antiderivative. Assembles the within-tower descent (from Mathlib's `isLiouville_of_finiteDimensional`)
-and reduces full completeness to two named `def` frontiers — the Liouville structure theorem for the
-curve's function field and the good-reduction divisor-torsion decision correctness. -/
+Liouville-form predicates, descent lemmas, torsion-decision witnesses, and residual interfaces for
+the simple-radical algebraic integration completeness direction. -/
 
 open scoped Differential
 open Polynomial Differential
 
 namespace DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 
-/-! ## The algebraic-elementary predicate (Liouville form over a differential field `K`) -/
+/-! ## Algebraic-elementary predicates -/
 
 section Predicate
 
 variable (F : Type*) (K : Type*) [Field F] [Field K] [Differential F] [Differential K]
 variable [Algebra F K]
 
-/-- The algebraic-elementary predicate `IsAlgebraicElementary F K f`: `f ∈ F` has an elementary
-antiderivative of Liouville form over `K` — `↑f = ∑ᵢ ↑cᵢ · logDeriv uᵢ + v′` with constants
-`cᵢ ∈ F`, arguments `uᵢ ∈ K`, and `v ∈ K`. -/
+/-- `IsAlgebraicElementary F K f` gives a Liouville form for `f` over `K`. -/
 def IsAlgebraicElementary (f : F) : Prop :=
   ∃ (ι : Type) (_ : Fintype ι) (c : ι → F) (_ : ∀ x, (c x)′ = 0) (u : ι → K) (v : K),
     (algebraMap F K f) = ∑ x, (algebraMap F K (c x)) * logDeriv (u x) + v′
 
 end Predicate
 
-/-! ## The within-tower algebraic descent (via Mathlib's `isLiouville_of_finiteDimensional`) -/
+/-! ## Finite-dimensional descent -/
 
 section FiniteDimDescent
 
 variable (F : Type*) (K : Type*) [Field F] [Field K] [CharZero F]
 variable [Differential F] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
 
-/-- Elementary over a finite-dimensional algebraic extension `K / F` (`CharZero F`) descends to
-elementary over the base `F`. Rides `isLiouville_of_finiteDimensional`. -/
+/-- Elementary over a finite-dimensional extension `K / F` descends to `F`. -/
 theorem elementary_base_of_elementary_finiteDim [FiniteDimensional F K] (f : F)
     (h : IsAlgebraicElementary F K f) : IsAlgebraicElementary F F f := by
   haveI : IsLiouville F K := isLiouville_of_finiteDimensional
@@ -49,29 +43,26 @@ theorem elementary_base_of_elementary_finiteDim [FiniteDimensional F K] (f : F)
   exact ⟨ι₀, inferInstance, c₀, hc₀, u₀, v₀, by
     simpa only [Algebra.algebraMap_self_apply] using hrep₀⟩
 
-/-- Non-elementarity over the base `F` propagates up a finite-dimensional algebraic extension `K / F`
-(contrapositive of `elementary_base_of_elementary_finiteDim`). -/
+/-- Base non-elementarity propagates up a finite-dimensional extension `K / F`. -/
 theorem not_elementary_extension_of_not_elementary_base_alg [FiniteDimensional F K] (f : F)
     (h : ¬ IsAlgebraicElementary F F f) : ¬ IsAlgebraicElementary F K f :=
   fun hK => h (elementary_base_of_elementary_finiteDim F K f hK)
 
 end FiniteDimDescent
 
-/-! ## The torsion-decision soundness on concrete witnesses -/
+/-! ## Torsion-decision witnesses -/
 
 section Witnesses
 
 open DeepWiki.SymbolicIntegration
 
-/-- The engine decides the infinite-order witness `(3,5)` on `y² = x³ − 2` non-elementary:
-`isTorsionDivisor = none`, `elementarityViaTorsion = false`, and `torsionLogTerm = none`. -/
+/-- The engine rejects the infinite-order witness `(3,5)` on `y² = x³ - 2`. -/
 theorem engine_none_of_nonTorsion_witness :
     isTorsionDivisor 5 hypRhoX3m2 1 hypPt35 = none
     ∧ elementarityViaTorsion 5 hypRhoX3m2 1 hypPt35 = false
     ∧ (torsionLogTerm 5 tltRhoX3m2 hypRhoX3m2 1 hypPt35).isNone = true := by native_decide
 
-/-- The engine decides the order-3 flex `(0,1)` on `y² = x³ + 1` elementary: `isTorsionDivisor =
-some 3`, `elementarityViaTorsion = true`, and `torsionLogTerm` produces a `(1/3)·log(y − 1)` term. -/
+/-- The engine accepts the order-3 flex `(0,1)` on `y² = x³ + 1`. -/
 theorem engine_some_of_torsion_witness :
     isTorsionDivisor 5 hypRhoX3p1 1 hypPt01 = some 3
     ∧ elementarityViaTorsion 5 hypRhoX3p1 1 hypPt01 = true
@@ -79,22 +70,19 @@ theorem engine_some_of_torsion_witness :
 
 end Witnesses
 
-/-! ## The deep frontier (named `def`s, never `sorry`) -/
+/-! ## Liouville and rational-part residual interfaces -/
 
 section Frontier
 
 variable (F : Type*) [Field F] [Differential F] [CharZero F]
 
-/-- Frontier 1 — Liouville's structure theorem for a curve's function field: for every differential
-algebraic extension `K` with an `IsLiouville F K` instance, base non-elementarity
-(`¬ IsAlgebraicElementary F F f`) stays non-elementary over `K`, i.e. the search over `K` is exhaustive. -/
+/-- `AlgebraicLiouvilleFrontier F` propagates base non-elementarity through Liouville extensions. -/
 def AlgebraicLiouvilleFrontier : Prop :=
   ∀ (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K] [IsLiouville F K]
     (f : F), ¬ IsAlgebraicElementary F F f → ¬ IsAlgebraicElementary F K f
 
 omit [CharZero F] in
-/-- `AlgebraicLiouvilleFrontier F` is a theorem at the single-extension level: for any Liouville
-extension `K / F`, base non-elementarity propagates. -/
+/-- `AlgebraicLiouvilleFrontier F` holds for each supplied Liouville extension. -/
 theorem algebraicLiouville_single_extension : AlgebraicLiouvilleFrontier F := by
   intro K _ _ _ _ _ f h hK
   obtain ⟨ι, _, c, hc, u, v, hrep⟩ := hK
@@ -102,18 +90,15 @@ theorem algebraicLiouville_single_extension : AlgebraicLiouvilleFrontier F := by
   exact h ⟨ι₀, inferInstance, c₀, hc₀, u₀, v₀, by
     simpa only [Algebra.algebraMap_self_apply] using hrep₀⟩
 
-/-! ### The rational-part half of the decomposition (the always-elementary part) -/
+/-! ### Rational parts -/
 
 omit [CharZero F] in
-/-- The rational part `D(v)` is always elementary: any `f = v′` is `IsAlgebraicElementary F F` via
-the empty constant family and antiderivative `v`. -/
+/-- The derivative `v′` is algebraic-elementary via the empty logarithmic family. -/
 theorem ratPart_isAlgebraicElementary (v : F) : IsAlgebraicElementary F F (v′) := by
   refine ⟨Empty, inferInstance, Empty.elim, fun x => x.elim, Empty.elim, v, ?_⟩
   simp only [Algebra.algebraMap_self_apply, Finset.univ_eq_empty, Finset.sum_empty, zero_add]
 
-/-- Frontier 1b — rational-part exhaustiveness: if `f` is elementary, then `f − v′` (after
-subtracting the computed rational antiderivative) is elementary with a purely logarithmic form
-(empty derivative part, all constants × `logDeriv`). -/
+/-- `RationalPartExhaustivenessFrontier F` reduces `f - v′` to a purely logarithmic form. -/
 def RationalPartExhaustivenessFrontier : Prop :=
   ∀ (f v : F), IsAlgebraicElementary F F f →
     IsAlgebraicElementary F F (f - v′) →
@@ -122,23 +107,20 @@ def RationalPartExhaustivenessFrontier : Prop :=
 
 end Frontier
 
-/-! ## Frontier piece 2 — the good-reduction divisor-torsion decision correctness -/
+/-! ## Divisor-torsion residual interface -/
 
 section TorsionFrontier
 
 open DeepWiki.SymbolicIntegration
 
-/-- Frontier 2 — the good-reduction torsion-decision correctness: the Boolean decision
-`elementarityViaTorsion p ρq g D` agrees with an abstract torsion predicate `isTorsion D` for some
-good prime `p`. -/
+/-- `DivisorTorsionDecisionFrontier isTorsion` relates `elementarityViaTorsion` to `isTorsion`. -/
 def DivisorTorsionDecisionFrontier
     (isTorsion : CPolyG.MumfordDivisor ℚ → Prop) : Prop :=
   ∀ (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ),
     ∃ (p : ℕ) (_ : Fact p.Prime),
       (elementarityViaTorsion p ρq g D = true ↔ isTorsion D)
 
-/-- `elementarityViaTorsion p ρq g D = true ↔ ∃ m, isTorsionDivisor p ρq g D = some m`: the Boolean
-decision is exactly whether a torsion order was found. -/
+/-- `elementarityViaTorsion p ρq g D = true` iff `isTorsionDivisor` returns `some m`. -/
 theorem elementarityViaTorsion_iff_some (p : ℕ) [Fact p.Prime]
     (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ) :
     elementarityViaTorsion p ρq g D = true
@@ -146,8 +128,7 @@ theorem elementarityViaTorsion_iff_some (p : ℕ) [Fact p.Prime]
   unfold elementarityViaTorsion
   rw [Option.isSome_iff_exists]
 
-/-- `(torsionLogTerm p ρ ρq g D).isSome ↔ ∃ m, isTorsionDivisor p ρq g D = some m`: the log branch
-fires exactly when the torsion decision returns `some m`. -/
+/-- `(torsionLogTerm p ρ ρq g D).isSome = true` iff `isTorsionDivisor` returns `some m`. -/
 theorem torsionLogTerm_isSome_iff (p : ℕ) [Fact p.Prime]
     (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ) :
     (torsionLogTerm p ρ ρq g D).isSome = true
@@ -159,7 +140,7 @@ theorem torsionLogTerm_isSome_iff (p : ℕ) [Fact p.Prime]
 
 end TorsionFrontier
 
-/-! ## The algebraic-completeness residual, and the decision-procedure equivalence -/
+/-! ## Completeness residuals -/
 
 section Assembly
 
@@ -167,26 +148,21 @@ open DeepWiki.SymbolicIntegration
 
 variable (ρ : QFunNZG ℚ) (ρq : CPolyG ℚ) (g : ℕ) (D : CPolyG.MumfordDivisor ℚ)
 
-/-- The algebraic-completeness residual `AlgebraicCompletenessResidual p ρq g D isTorsion elem`:
-bundles the two frontier-instances on divisor `D` — `htorsion` (frontier 2) and `hcriterion`
-(frontier 1) — that turn the engine's non-principal-branch output into the integrand's elementarity. -/
+/-- `AlgebraicCompletenessResidual` bundles torsion detection and the elementarity criterion. -/
 structure AlgebraicCompletenessResidual (p : ℕ) [Fact p.Prime]
     (isTorsion : Prop) (elem : Prop) : Prop where
-  /-- Frontier 2 on `D`: `(∃ m, isTorsionDivisor = some m) ↔ isTorsion`. -/
+  /-- Torsion detection agrees with the abstract torsion predicate. -/
   htorsion : (∃ m, isTorsionDivisor p ρq g D = some m) ↔ isTorsion
-  /-- Frontier 1 on `D`: `isTorsion ↔ elem` (elementary iff the residue divisor is torsion). -/
+  /-- Abstract torsion agrees with elementarity. -/
   hcriterion : isTorsion ↔ elem
 
-/-- Algebraic completeness modulo the residual: under `AlgebraicCompletenessResidual`, the engine's
-non-principal log branch returns a term iff the integrand is elementary —
-`(torsionLogTerm p ρ ρq g D).isSome = true ↔ elem`. -/
+/-- Under `AlgebraicCompletenessResidual`, `torsionLogTerm` returns a term iff `elem`. -/
 theorem cIntegrateAlgebraicWf_complete_of_residual {isTorsion elem : Prop} (p : ℕ)
     [Fact p.Prime] (hres : AlgebraicCompletenessResidual ρq g D p isTorsion elem) :
     (torsionLogTerm p ρ ρq g D).isSome = true ↔ elem := by
   rw [torsionLogTerm_isSome_iff, hres.htorsion, hres.hcriterion]
 
-/-- Non-elementarity ⟹ the engine emits no log term: under the residual,
-`¬ elem → (torsionLogTerm p ρ ρq g D).isNone = true`. -/
+/-- Under `AlgebraicCompletenessResidual`, `¬ elem` makes `torsionLogTerm` return `none`. -/
 theorem engine_none_of_not_elementary {isTorsion elem : Prop} (p : ℕ) [Fact p.Prime]
     (hres : AlgebraicCompletenessResidual ρq g D p isTorsion elem) (hne : ¬ elem) :
     (torsionLogTerm p ρ ρq g D).isNone = true := by
@@ -197,14 +173,7 @@ theorem engine_none_of_not_elementary {isTorsion elem : Prop} (p : ℕ) [Fact p.
 
 end Assembly
 
-/-! ## The completeness map
-
-`cIntegrateAlgebraicWf_complete_of_residual` proves `some ⟺ elementary` under
-`AlgebraicCompletenessResidual`; `engine_none_of_not_elementary` is the "`none` ⟹ not elementary"
-reading. The within-tower descent, the always-elementary rational part, and the engine-side control
-flow are proven; the two deep frontiers (`AlgebraicLiouvilleFrontier`,
-`DivisorTorsionDecisionFrontier`, plus `RationalPartExhaustivenessFrontier`) are named `def`s, never
-`sorry`. -/
+/-! ## Restatements and axiom audit -/
 
 /-! ### Restatements (anonymous `example`s) -/
 
