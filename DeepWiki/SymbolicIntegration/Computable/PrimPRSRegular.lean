@@ -48,7 +48,8 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
           = toGBCoeffPoly s * toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q)
         ∧ CPolyG.toPolyG c ≠ 0 := by
   have hone : CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote]
+    simp
   -- `lc(gbnormCore q)` reads nonzero (the divisor is nonzero)
   have hlcq : CPolyG.toPolyG (gblcCore (gbnormCore q)) ≠ 0 :=
     toPolyG_gblcCore_ne_zero hq
