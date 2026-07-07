@@ -1,8 +1,9 @@
 import DeepWiki.SymbolicIntegration.Computable.Field
 
-/-! # Generic division and gcd over a `CField`
-Generic Euclidean division and extended Euclidean algorithm over arbitrary `[CField α]`, with
-correctness proved through `toPolyG` over `K[X]`, plus concrete-engine coherence lemmas at `α = ℚ`. -/
+/-! # Generic Euclidean bridge lemmas over a `CField`
+
+Termination support for fuel-free Euclidean division over arbitrary `[CField α]`, proved through
+`toPolyG` over `K[X]`, plus a fraction-field clearing lemma used by Hermite-style identities. -/
 
 open Polynomial
 
@@ -13,10 +14,10 @@ namespace CPolyG
 variable {α : Type*} [CField α]
 variable [CFieldSpec α]
 
-/-! ### Correctness and termination for the generic Euclidean division
+/-! ### Termination for the generic Euclidean division
 
-Correctness (Euclidean identity through `toPolyG`) and the strict normalized-length / degree drop
-of the remainder loop. -/
+The strict degree drop over `K[X]` and the corresponding normalized-list length drop for the remainder
+loop. -/
 
 /-- One Euclidean-division step strictly drops the degree in `(CFieldSpec.K α)[X]`: subtracting
 `C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient. -/
