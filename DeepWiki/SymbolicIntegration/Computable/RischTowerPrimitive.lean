@@ -44,7 +44,7 @@ theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
       obtain ⟨rfl, rfl⟩ := hhook
       have hDt1 : toPolyG Dt = 1 := by
         have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
-        simpa only [denote, toPolyG_one_singleton, sub_eq_zero] using hh
+        simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
       have hconst := mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (crPoly Dt a d) hconstg
       refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
       · simp only [denote, mul_zero, add_zero]
