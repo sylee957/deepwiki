@@ -56,7 +56,7 @@ theorem leadingYCoeff_sortedByYDegree_dvd_of_le {K : Type*} [Field K]
   · exact leadingYCoeff_sortedByYDegree_dvd_of_lt hB h
   · rw [h]
 
-/-- **Lazard's Lemma 3, the base case** (Lazard 1985, p.263, "`f₀ ∈ K[x]`"). A `y`-degree-`0` element
+/-- **Lazard descent, the base case.** A `y`-degree-`0` element
 has `lazardView f = C (leadingYCoeff f)` (a constant in `K[x][y]`), so trivially `gᵢ ∣ fᵢ` in the form
 `C (leadingYCoeff f) ∣ lazardView f`. This is the bottom of the descent. -/
 theorem C_dvd_lazardView_of_degreeOf_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
@@ -157,7 +157,7 @@ theorem C_dvd_C_mul_lazardView_of_dvd {K : Type*} [Field K] {fj : MvPolynomial (
   rw [← hq, Polynomial.C_mul, mul_comm (Polynomial.C gj)]
   exact mul_dvd_mul_left _ hfj
 
-/-- **Lazard's Lemma 3, the assembled single descent step** (Lazard 1985, p.263). For sorted basis
+/-- **Lazard descent, the assembled single step.** For sorted basis
 elements `fi := sortedByYDegree hB i`, `fj := sortedByYDegree hB j` and `q : K[x]`, the reduction
 element `R := yConst q · fj − y^{shift}·fi ∈ I`. Given (1) `C(g_i) ∣ C q · lazardView fj` (which, with
 `q = g_i/g_j`, follows from the higher-index `C(g_j) ∣ lazardView fj` via `C_dvd_C_mul_lazardView_of_dvd`)
@@ -166,9 +166,9 @@ contributors of `R`'s GB-reduction), one obtains `C(g_i) ∣ lazardView fi`. (As
 `C_dvd_lazardView_of_mem_of_dvd_bounded`, `lazard_lemma3_reductionStep_mem`, and
 `C_dvd_lazardView_of_reductionStep_mul`.) Intended use: `q := g_i/g_j`
 (`leadingYCoeff_sortedByYDegree_dvd_of_lt`) with `i < j`, where `R` has `y`-degree `< d(j)`
-(`lazard_lemma3_reductionStep`). The remaining obstruction to closing the full induction is the
-self-reference of (2) at `b = fi` (`y`-degree `d(i) ≤ degreeOf 0 R`), Lazard's no-common-factor
-`÷q` step. -/
+(`lazard_lemma3_reductionStep`). Closing the full induction also requires the no-common-factor
+divide-out step to eliminate the self-reference of (2) at `b = fi`
+(`y`-degree `d(i) ≤ degreeOf 0 R`). -/
 theorem C_dvd_lazardView_descentStep {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
