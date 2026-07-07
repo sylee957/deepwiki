@@ -71,6 +71,7 @@ theorem toPolyG_radDerivFrom (ℓ : α) (k : ℕ) (p : RadElem α) :
 
 /-- `toPolyG (radDeriv n f p) = Differential.implicitDeriv (C (toK ℓ) · X) (toPolyG p)`
 (`ℓ = f'/(nf)`): the diagonal derivation realizes `implicitDeriv` for `y' = ℓ·y`. -/
+@[denote]
 theorem toPolyG_radDeriv (n : ℕ) (f : α) (p : RadElem α) :
     CPolyG.toPolyG (radDeriv n f p)
       = Differential.implicitDeriv

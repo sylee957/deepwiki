@@ -339,8 +339,7 @@ theorem radDeriv_radGen_sound_qx :
 theorem radIsZero_radDeriv_radGen_qx :
     radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
         [CField.zero, radicandLogDer]) = true := by
-  rw [radIsZero, radSub, CPolyG.cisZeroG_iff]
-  simp only [denote]
+  rw [radIsZero, radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG]
   rw [radDeriv_radGen_sound_qx]
   simp only [denote]
   ring
@@ -773,8 +772,8 @@ theorem radIsZero_radDeriv_c3itVlift
   rw [radIsZero, radSub, CPolyG.cisZeroG_iff]
   simp only [denote]
   rw [sub_eq_zero]
-  change IsRadicalRationalIntegral 2 [qxOfNum c3itRho] c3itRatLift c3itVlift
-  exact isRadicalRationalIntegral_c3itRun hcheck
+  simpa only [IsRadicalRationalIntegral, c3itRhoQx, c3itRho, List.headD_cons, denote]
+    using isRadicalRationalIntegral_c3itRun hcheck
 
 /-! ### The GENERAL rational-part soundness: what is now a theorem, and the precise residual
 
