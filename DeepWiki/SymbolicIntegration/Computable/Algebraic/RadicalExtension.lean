@@ -602,34 +602,4 @@ theorem expCase_cleared_identity :
 theorem expCase_residual_eq :
     cisZeroG (csubG expD [qxOfNum [-1/2]]) = true := by native_decide
 
-/-! ### `#print axioms` -/
-
--- Carrier: `y·y = f` and the diagonal `D(y) = (f'/(2f))·y` over ℚ(x):
-#print axioms radGen_sq_eq_radicand
-#print axioms radDeriv_radGen_eq
-
--- `Tᵢ` decoupling: the derivation-commutation and the `∫(g₀+g₁y)` split:
-#print axioms radProj_one_radDeriv_comm
-#print axioms radDeriv_decouples
-
--- Case-1 rational reduction: the cofactor congruence and the cleared Hermite identity:
-#print axioms case1_congruence
-#print axioms case1_cleared_identity
-
--- Case-2 reduction (W ∣ f): the cofactor congruence and the cleared identity:
-#print axioms case2_congruence
-#print axioms case2_cleared_identity
-
--- Case-3 degree-lowering (C/y, θ'=1): the cleared identity and the strict degree drop:
-#print axioms case3_cleared_identity
-#print axioms case3_degree_drop
-
--- `θ = log v` degree-lowering (2-level tower): the cleared identity and the strict degree drop:
-#print axioms logCase_cleared_identity
-#print axioms logCase_degree_drop
-
--- `θ = exp v` `C/(θᵏy)` reduction (exponential tower): the constant-term congruence and cleared identity:
-#print axioms expCase_congruence
-#print axioms expCase_cleared_identity
-
 end DeepWiki.SymbolicIntegration
