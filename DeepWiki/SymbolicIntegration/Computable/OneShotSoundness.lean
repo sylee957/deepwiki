@@ -92,7 +92,8 @@ theorem toPolyG_cmonomialDeriv_cIntegratePolyG_const [CharZero (CFieldSpec.K α)
   rw [toPolyG_cmonomialDeriv]
   -- `toPolyG [CField.one] = 1`, so `implicitDeriv 1 = mapCoeffs + derivative`
   have hDt : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]
+    simp only [denote]
+    simp
   rw [hDt, Differential.implicitDeriv, Derivation.add_apply, hconst, zero_add]
   -- the `v • derivative'` part is `1 • derivative = derivative`
   rw [Derivation.smul_apply, one_smul, Derivation.restrictScalars_apply]
