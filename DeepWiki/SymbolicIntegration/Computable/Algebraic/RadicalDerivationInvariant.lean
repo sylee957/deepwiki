@@ -146,6 +146,17 @@ toPolyG (radDeriv n f b)` in `K[X]`. -/
   rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, radAdd]
   simp only [denote, map_add]
 
+/-- `radDeriv` distributes over a `radAdd` accumulator fold. -/
+theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs : List (RadElem α)) :
+    CPolyG.toPolyG (radDeriv n f (cs.foldl radAdd acc))
+      = CPolyG.toPolyG (radDeriv n f acc)
+        + (cs.map (fun c => CPolyG.toPolyG (radDeriv n f c))).sum := by
+  induction cs generalizing acc with
+  | nil => simp
+  | cons c cs ih =>
+    rw [List.foldl_cons, ih (radAdd acc c), toPolyG_radDeriv_radAdd, List.map_cons, List.sum_cons]
+    ring
+
 /-! ### Leibniz for `radMul`, modulo `Xⁿ − C(toK f)`
 
 `radMul = radReduce ∘ cmulG` uses the `yⁿ = f` reduction, so the product rule holds in the carrier, i.e.

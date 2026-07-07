@@ -59,18 +59,6 @@ and the per-step contributions telescope to the endpoints (`sum_radDeriv_telesco
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
-/-- `radDeriv` distributes over the accumulator fold: `toPolyG (radDeriv n f (cs.foldl radAdd acc)) =
-toPolyG (radDeriv n f acc) + (cs.map (fun c => toPolyG (radDeriv n f c))).sum`. -/
-theorem toPolyG_radDeriv_foldlRadAdd (n : ℕ) (f : α) (acc : RadElem α) (cs : List (RadElem α)) :
-    CPolyG.toPolyG (radDeriv n f (cs.foldl radAdd acc))
-      = CPolyG.toPolyG (radDeriv n f acc)
-        + (cs.map (fun c => CPolyG.toPolyG (radDeriv n f c))).sum := by
-  induction cs generalizing acc with
-  | nil => simp
-  | cons c cs ih =>
-    rw [List.foldl_cons, ih (radAdd acc c), toPolyG_radDeriv_radAdd, List.map_cons, List.sum_cons]
-    ring
-
 omit [CDiffFieldSpec α] in
 /-- Contributions whose derivatives are consecutive leftover differences telescope. -/
 theorem sum_radDeriv_telescope (n : ℕ) (f : α) :
