@@ -22,7 +22,7 @@ variable {α : Type*} [CField α]
 
 The inner `res_Y` lands in `α = K(x) = QFunNZG ℚ`. When `F` is monic in `y` the resultant is a genuine
 *polynomial* in `x`, so the `QFunNZG ℚ` value is `numerator/denominator` with the denominator a nonzero
-**constant** (the engine keeps fractions unreduced, so the constant may be any nonzero scalar `c`, not
+constant (the engine keeps fractions unreduced, so the constant may be any nonzero scalar `c`, not
 literally `1`). `qToPolyQ` recovers the `ℚ[x]`-polynomial by the exact division `numerator / denominator`
 (`cdivWf` over ℚ): when `denominator ∣ numerator` this is the polynomial quotient, here `cscale (c⁻¹)`. -/
 
@@ -50,12 +50,13 @@ def resYAtNode (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (z : ℚ) : CPo
 
 /-! ### The full general-`F` residue resultant `R(Z) = res_X(res_Y(Z·D' − g, F), D)`
 
-Assemble the outer `resultant_X` over `ℚ` by the **evaluate-`Z`-nodes + Lagrange-interpolate** template
+Assemble the outer `resultant_X` over `ℚ` by the evaluate-`Z`-nodes plus Lagrange-interpolate template
 of `cResidueResultantTower` / `cAlgResidueResultant`: for each rational node `z`, the inner resultant
 `resYAtNode` gives the `ℚ[x]`-polynomial `res_Y(z·D' − g, F)(x)`, then `res_X(that, D)` (`cresultantG`
 over ℚ) gives the value `R(z) ∈ ℚ`; interpolating the points `(z, R(z))` recovers `R(Z) ∈ ℚ[Z]`.
 
-**`Z`-degree bound.** `res_Y(Z·D' − g, F)` is degree `≤ n = deg_y F` in `Z` (only the `y⁰` coefficient
+The `Z`-degree bound is `deg_Z R ≤ n · deg_X D`: `res_Y(Z·D' − g, F)` is degree `≤ n = deg_y F`
+in `Z` (only the `y⁰` coefficient
 `Z·D' − g₀` carries `Z`, and the resultant against the degree-`n` `F` is degree `n` in `F`'s argument's
 coefficients). The outer `res_X(·, D)` is `∏` over the `deg_X D` roots of `D`, each contributing a
 `res_Y` factor of `Z`-degree `≤ n`, so `deg_Z R ≤ n · deg_X D`. Hence `n · deg_X D + 1` nodes are exact
@@ -185,9 +186,8 @@ example : cisZeroG (csubG
 
 /-! ### Related pieces
 
-The residue resultant `R(Z)` computed here feeds the divisor construction over the integral basis, the
-principal-divisor / torsion test, and the algebraic rational part; wiring these into the top-level
-integrator is the continuation. -/
+The residue resultant `R(Z)` computed here feeds the divisor construction over the integral basis,
+the principal-divisor/torsion test, and the algebraic rational part. -/
 
 /-! ### Axiom check
 
