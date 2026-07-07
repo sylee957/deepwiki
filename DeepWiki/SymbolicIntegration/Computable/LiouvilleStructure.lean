@@ -1,6 +1,6 @@
 import Mathlib.FieldTheory.Differential.Liouville
 import Mathlib.RingTheory.Derivation.MapCoeffs
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicCompleteness
+import DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 
 /-! # Structural Liouville descent
 

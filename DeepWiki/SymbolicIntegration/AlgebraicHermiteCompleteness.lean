@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicCompleteness
+import DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 import DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound
 import Mathlib.FieldTheory.Separable
 
