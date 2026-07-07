@@ -33,9 +33,9 @@ open Compute CPolyG QFunNZG
 #check @cIntegrateGFullWf_primitive_oneShot_qfunNZG
 #check @cIntegrateGFullWf_hyperexp_oneShot_qfunNZG
 #check @field_identity_of_cIntegrateGFullWf_of_checkIdentityG
--- ★ the primitive normal-part capstone: hA discharged for deg Dt ≤ 1 at ℚ(x)(t).
+-- The primitive normal-part capstone: `hA` discharged for `deg Dt ≤ 1` at `ℚ(x)(t)`.
 #check @cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG
--- ★ the primitive-base polynomial capstone: hpoly and hA discharged at ℚ(x)(t).
+-- The primitive-base polynomial capstone: `hpoly` and `hA` discharged at `ℚ(x)(t)`.
 #check @cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
 
 -- `cIntegratePolyG`: PARTIAL soundness — the constant case only.
@@ -66,17 +66,13 @@ open Compute CPolyG QFunNZG
 #check @decisionProcedureFrontierWf_of_innerFrontier
 #check @crischDESolveSoundWf_isDecisionProcedure
 
--- ★ The Wf-first TOWER-INDUCTION for RDE completeness (`ComputableTowerRischDECompleteness`): the public Wf
+-- The Wf-first tower induction for RDE completeness: the public Wf
 -- predicate `CRischFieldCompleteWf` and step `crischFieldCompleteWf_step` target `crischDESolveSoundWf`
 -- directly, modulo the Wf per-level frontier
 -- `RischDEStepFrontierWf` and direct Wf soundness certificates. The Wf per-level frontier now exposes the
 -- Wf inner residual-tip frontier and uses `decisionProcedureFrontierWf_of_innerFrontier` to assemble the
--- field-level decision frontier. The residual recursion layer that still calls `CRischField.crischDESolve`
--- one level down is represented by the base IH `CRischFieldComplete β`. Remaining
--- non-RDE completeness frontiers are separate: the tower-case
--- `NondegenerateLog` (multi-level ℚ-linear-dependence structure theorem; the rational base is done,
--- `nondegenerateLog_ratFunc_iff_logDeriv_ne_zero`), the exponential Liouville instance (off-limits), and the
--- tangent §5.10 reduction (a separate engine).
+-- field-level decision frontier. The residual recursion layer that calls `CRischField.crischDESolve`
+-- one level down is represented by the base IH `CRischFieldComplete β`.
 #check @crischFieldComplete_Q
 #check @CRischFieldCompleteWf
 #check @RischDEStepFrontierWf
