@@ -19,8 +19,8 @@ variable {K : Type*} [Field K] [IsAlgClosed K]
 open scoped Classical in
 /-- At a residue `a` (a root of the Rothstein–Trager resultant
 `R = rtResultant A D`) of multiplicity `i < deg D`, the specialized `i`-th LRT subresultant has `x`-degree
-*exactly* `i`, so its leading `x`-coefficient — the `i`-th principal subresultant coefficient `sᵢ(a)` — is
-**nonzero**. From `lazardRiobooTrager_isSimilar_gcd` (the specialized subresultant is *similar* to
+exactly `i`, so its leading `x`-coefficient — the `i`-th principal subresultant coefficient `sᵢ(a)` — is
+nonzero. From `lazardRiobooTrager_isSimilar_gcd` (the specialized subresultant is similar to
 `gcd(D, A − a·D')`), `IsSimilar.natDegree_eq` gives `deg = deg gcd`, and
 `rootMultiplicity_rtResultant_eq_natDegree_gcd` rewrites `deg gcd = rootMultiplicity a R = i`; since `a`
 is a root of `R`, `i ≥ 1 > 0`, so the polynomial is nonzero and its top coefficient is its (nonzero)
@@ -75,14 +75,14 @@ example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
         (Polynomial.evalRingHom a)).coeff ((rtResultant A D).rootMultiplicity a) ≠ 0 :=
   leadingCoeff_lrtSubresultant_eval_ne_zero A D hD hA a ha hi
 
-/-- The `i`-th **principal subresultant coefficient** `sᵢ ∈ K[t]`: the leading `x`-coefficient
+/-- The `i`-th principal subresultant coefficient `sᵢ ∈ K[t]`: the leading `x`-coefficient
 `(lrtSubresultant A D i).coeff i` of the `i`-th LRT subresultant, viewed as a polynomial in `t`. Its
 specialization at `a` is the top coefficient of the specialized subresultant
 (`lrtPsc_eval`). -/
 noncomputable def lrtPsc (A D : K[X]) (i : ℕ) : K[X] := (lrtSubresultant A D i).coeff i
 
 omit [IsAlgClosed K] in
-/-- **Specialization of the principal subresultant coefficient**: `sᵢ(a) = (lrtPsc A D i).eval a` equals
+/-- Specialization of the principal subresultant coefficient: `sᵢ(a) = (lrtPsc A D i).eval a` equals
 the `i`-th coefficient of the specialized subresultant `Sᵢ(D, A − a·D')` — `coeff_map` for `t ↦ a`. -/
 theorem lrtPsc_eval (A D : K[X]) (i : ℕ) (a : K) :
     (lrtPsc A D i).eval a
@@ -91,14 +91,14 @@ theorem lrtPsc_eval (A D : K[X]) (i : ℕ) (a : K) :
   simp only [Polynomial.coe_evalRingHom]
 
 open scoped Classical in
-/-- The distinct **residues of multiplicity exactly `i`** in the Rothstein–Trager resultant
+/-- The distinct residues of multiplicity exactly `i` in the Rothstein–Trager resultant
 `R = rtResultant A D`: the roots `a` of `R` with `rootMultiplicity a R = i`. These are the values the LRT
 algorithm groups under one degree-`i` subresultant. -/
 noncomputable def residueSetOfMult (A D : K[X]) (i : ℕ) : Finset K :=
   (rtResultant A D).roots.toFinset.filter (fun a => (rtResultant A D).rootMultiplicity a = i)
 
 open scoped Classical in
-/-- **`Qᵢ`**, the multiplicity-`i` factor of the Rothstein–Trager resultant: the monic squarefree
+/-- `Qᵢ`, the multiplicity-`i` factor of the Rothstein–Trager resultant: the monic squarefree
 `Qᵢ := ∏_{a : rootMult a R = i}(t − a)` over the distinct residues of multiplicity exactly `i`
 (a divisor of `R`'s radical, hence squarefree). -/
 noncomputable def lrtQ (A D : K[X]) (i : ℕ) : K[X] :=
@@ -106,8 +106,8 @@ noncomputable def lrtQ (A D : K[X]) (i : ℕ) : K[X] :=
 
 open scoped Classical in
 /-- The `i`-th principal subresultant coefficient
-`sᵢ = lrtPsc A D i` is **coprime** to the multiplicity-`i` factor `Qᵢ = lrtQ A D i` (for `0 < i < deg D`),
-i.e. `sᵢ` is a **unit in `K[t]/(Qᵢ)`** — exactly what makes monic-normalizing the LRT logarithm arguments
+`sᵢ = lrtPsc A D i` is coprime to the multiplicity-`i` factor `Qᵢ = lrtQ A D i` (for `0 < i < deg D`),
+i.e. `sᵢ` is a unit in `K[t]/(Qᵢ)` — exactly what makes monic-normalizing the LRT logarithm arguments
 legitimate. Each linear factor `t − a` of `Qᵢ` has `a` a residue of multiplicity `i`, so by the regularity
 core `leadingCoeff_lrtSubresultant_eval_ne_zero` (through `lrtPsc_eval`) `sᵢ(a) ≠ 0`, i.e. `t − a ∤ sᵢ`;
 since `t − a` is prime, `sᵢ` is coprime to it (`Prime.coprime_iff_not_dvd` + `dvd_iff_isRoot`), and
@@ -143,7 +143,7 @@ example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (i : �
 
 omit [IsAlgClosed K] in
 open scoped Differential in
-/-- **`logDeriv` kills an `x`-constant factor** in monic LRT normalization: for a
+/-- `logDeriv` kills an `x`-constant factor in monic LRT normalization: for a
 nonzero constant `c ∈ K` (a `C`-constant, hence `x`-derivative `0`) and a nonzero polynomial `f ∈ K[x]`,
 the logarithmic derivatives of `C c · f` and of `f` over `K(x)` coincide,
 `logDeriv (C c · f) = logDeriv f`. The `log(c)` term is `x`-constant, so it drops out:
@@ -164,7 +164,7 @@ theorem logDeriv_algebraMap_C_mul_eq (c : K) (hc : c ≠ 0) (f : K[X]) (hf : f �
   rw [map_mul, Differential.logDeriv_mul _ _ hcne hfne, hlogc, zero_add]
 
 open scoped Classical in
-/-- The **monic-in-`x` normalization** of the specialized LRT log argument `Sᵢ(a,x)`: the `i`-th LRT
+/-- The monic-in-`x` normalization of the specialized LRT log argument `Sᵢ(a,x)`: the `i`-th LRT
 subresultant specialized at the residue `a` (`(lrtSubresultant A D i).map (evalRingHom a)`), divided by
 its leading `x`-coefficient `sᵢ(a)`. As `Sᵢ(a,x) * C (leadingCoeff Sᵢ(a,x))⁻¹` this is exactly the
 polynomial the *modified* LRT puts inside the logarithm so the argument is monic in `x`. -/
@@ -173,7 +173,7 @@ noncomputable def monicLrtLog (A D : K[X]) (i : ℕ) (a : K) : K[X] :=
   S * C (S.leadingCoeff)⁻¹
 
 open scoped Classical in
-/-- **The monic normalization is monic**: at a residue `a` of multiplicity `i < deg D`, the specialized
+/-- The monic normalization is monic: at a residue `a` of multiplicity `i < deg D`, the specialized
 LRT subresultant `Sᵢ(a,x)` is nonzero (its top coefficient `sᵢ(a) ≠ 0` by the regularity core), so
 `monicLrtLog A D i a = Sᵢ(a,x)·C(sᵢ(a))⁻¹` is monic in `x` (`monic_mul_leadingCoeff_inv`). -/
 theorem monic_monicLrtLog (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
@@ -189,7 +189,7 @@ theorem monic_monicLrtLog (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.
 
 omit [IsAlgClosed K] in
 open scoped Classical in
-/-- **`Sᵢ(a,x) = sᵢ(a)·(monic normalization)`** — the specialized LRT log argument factors as its nonzero
+/-- `Sᵢ(a,x) = sᵢ(a)·(monic normalization)`: the specialized LRT log argument factors as its nonzero
 `x`-constant leading coefficient `sᵢ(a)` times its monic-in-`x` normalization `monicLrtLog`. This is the
 factorization that, fed through `logDeriv_algebraMap_C_mul_eq`, makes the monic modification keep the same
 integral. -/
@@ -208,7 +208,7 @@ theorem lrtSubresultant_eval_eq_psc_mul_monicLrtLog (A D : K[X]) (a : K) (i : �
 open scoped Differential in
 open scoped Classical in
 /-- Replacing the LRT log argument `Sᵢ(a,x)` by its
-monic-in-`x` normalization `monicLrtLog A D i a` yields the **same** logarithmic-part derivative,
+monic-in-`x` normalization `monicLrtLog A D i a` yields the same logarithmic-part derivative,
 `logDeriv (Sᵢ(a,x)) = logDeriv (monicLrtLog A D i a)` over `K(x)`. The two differ only by the nonzero
 `x`-constant leading coefficient `sᵢ(a)` (`lrtSubresultant_eval_eq_psc_mul_monicLrtLog`), and `logDeriv`
 kills that constant factor (`logDeriv_algebraMap_C_mul_eq`) — so the *modified* algorithm with monic
