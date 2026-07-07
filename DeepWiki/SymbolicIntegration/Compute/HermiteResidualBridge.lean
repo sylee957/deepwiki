@@ -12,8 +12,8 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-! ### Bridging the two residual numerators: `R·gden² = resNum'`
 
-The whole fold residual `A/D − g′` has two representations: the **per-factor** form `am R/am D`
-(`total_fold_residual_over_D`, `R = C(1−n)·A + Σ residNumIncr`), and the **quotient-rule** form
+The whole fold residual `A/D − g′` has two representations: the per-factor form `am R/am D`
+(`total_fold_residual_over_D`, `R = C(1−n)·A + Σ residNumIncr`), and the quotient-rule form
 `am resNum'/(am D·am gden²)` (`residual_numerator_ratFunc`, `g = gnum/gden`, `resNum' = A·gden² −
 D·gprimeNum`). Equating them (both equal `A/D − g′`) pins `R·gden² = resNum'` as polynomials — the
 consistency bridge linking the interference numerator `R` to the algorithm's computed residual numerator
@@ -21,7 +21,7 @@ consistency bridge linking the interference numerator `R` to the algorithm's com
 divisibility on `resNum'`. -/
 
 open scoped Differential in
-/-- **The per-factor residual numerator agrees with the quotient-rule one**: if the fold `g = (gnum,
+/-- The per-factor residual numerator agrees with the quotient-rule one: if the fold `g = (gnum,
 gden)` satisfies the per-factor identities (`hstep`), then `R·gden² = resNum'` in `ℚ[X]`, where `R =
 C(1−n)·A + Σ residNumIncr` is the interference numerator and `resNum' = A·gden² − D·(gnum'·gden −
 gnum·gden')` the quotient-rule residual numerator. Both equal the residual `A/D − g′` over their
@@ -74,12 +74,8 @@ theorem residNum_eq_resNumPrime (fuel : ℕ) (A D gnum gden : CPoly) (factors : 
   rw [map_mul, map_mul]
   exact hRgd
 
-/-- **`W ∣ R ⟺ W·gden² ∣ resNum'`** (cancel the common `gden²`): with `R·gden² = resNum'`
-(`residNum_eq_resNumPrime`) and `gden ≠ 0`, the interference divisibility `W ∣ R` is *equivalent* to the
-algorithm's cleared-identity divisibility `W·gden² ∣ resNum'`. So the abstract interference wall is
-exactly the divisibility the existing radical wrapper (`hermiteReduce_residual_correct_of_radical`) and
-per-example `native_decide` certs consume — confirming the reduction is consistent and the wall is the
-single remaining piece. -/
+/-- `W ∣ R ↔ W·gden² ∣ resNum'`: with `R·gden² = resNum'` and `gden ≠ 0`, interference divisibility
+is equivalent to the cleared residual-numerator divisibility. -/
 theorem dvd_R_iff_dvd_resNumPrime {R resNum' gden W : ℚ[X]} (hgden : gden ≠ 0)
     (hRel : R * (gden * gden) = resNum') :
     W ∣ R ↔ W * (gden * gden) ∣ resNum' := by
