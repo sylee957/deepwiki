@@ -224,7 +224,7 @@ theorem toPolyG_cgcdWf (a b : CPolyG α) :
     -- IH at the recursive pair `(b, cmodWf a b)`: `s·b + t·r = g`
     rw [show cgcdWf b (cmodWf a b) = (g, s, t) from hgst] at ih
     rw [hval]
-    rw [toPolyG_csubG, toPolyG_cmulG]
+    simp only [denote]
     simp only at ih
     linear_combination ih + toPolyG t * heuclid
   | case3 a b =>
