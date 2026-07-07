@@ -269,7 +269,7 @@ theorem toPolyG_liftGBPolyCoreG (p : GBPolyCore β) :
     show QFunNZG.toQFunNZG _ = QFunNZG.amG β (CPolyG.toPolyG c)
     rw [QFunNZG.toQFunNZG]
     have h1 : CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 := by
-      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+      simp only [denote, mul_zero, add_zero, map_one]
     show QFunNZG.amG β (CPolyG.toPolyG c) / QFunNZG.amG β (CPolyG.toPolyG ([CField.one] : CPolyG β))
       = QFunNZG.amG β (CPolyG.toPolyG c)
     rw [h1, map_one, div_one]
@@ -364,7 +364,7 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPolyG (QFunNZG β)) (i : ℕ) :
       List.getD_eq_getElem?_getD, cclearDenomsCoreG_getElem p i hi, Option.getD_some]
     simp only [denote, toPolyG_foldl_cmulG,
       show CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 by
-        rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one],
+        simp only [denote, mul_zero, add_zero, map_one],
       one_mul]
     set dens := p.map CPolyG.qdenCoeffCoreG with hdens
     have hcd : commonDenG p = (dens.map CPolyG.toPolyG).prod := by rw [commonDenG, hdens]
@@ -433,7 +433,7 @@ theorem gbpsremainderCore_gbnormCore_right (fuel : ℕ) (p q : GBPolyCore β) :
 @[simp] theorem toGBCoeffPoly_one : toGBCoeffPoly ([[CField.one]] : GBPolyCore β) = 1 := by
   rw [toGBCoeffPoly_cons, toGBCoeffPoly_nil, mul_zero, add_zero,
     show CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 by
-      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one], map_one]
+      simp only [denote, mul_zero, add_zero, map_one], map_one]
 
 /-- Pseudo-division identity through `toGBCoeffPoly`: there exist a multiplier `c ∈ β[s]` and quotient
 `s` with `C (toPolyG c) · toGBCoeffPoly p = toGBCoeffPoly s · toGBCoeffPoly q +
@@ -443,7 +443,7 @@ theorem toGBCoeffPoly_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
       Polynomial.C (CPolyG.toPolyG c) * toGBCoeffPoly p
         = toGBCoeffPoly s * toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q) := by
   have hone : CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote, mul_zero, add_zero, map_one]
   induction fuel generalizing p with
   | zero => exact ⟨[], [CField.one], by simp [gbpsremainderCore, toGBCoeffPoly_gbnormCore, hone]⟩
   | succ fuel ih =>
