@@ -72,7 +72,8 @@ theorem mk_toPolyG_afDerivWf_add (f a b : CPolyG α) (hf : cnormG f ≠ []) :
       = Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f a))
         + Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f b)) := by
   rw [mk_toPolyG_afDerivWf f _ hf, mk_toPolyG_afDerivWf f a hf,
-    mk_toPolyG_afDerivWf f b hf, toPolyG_caddG, map_add, map_add]
+    mk_toPolyG_afDerivWf f b hf]
+  simp only [denote, map_add]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- Bézout inverse of `f_y` in the quotient. -/
