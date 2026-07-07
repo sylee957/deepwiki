@@ -8,7 +8,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG
 
-/-! ### Validation helpers -/
+/-! ### Example helpers -/
 
 /-- A ℚ constant `n` as a `QFunNZG ℚ` element. -/
 def qConstG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
@@ -19,7 +19,7 @@ def qFracG (num den : List ℚ) (h : CPolyG.cisZeroG den = false := by native_de
 
 /-! ### Primitive case `t = log x`, `Dt = 1/x` -/
 
-/-- Validation monomial derivative for the primitive case: `Dt = 1/x`. -/
+/-- Example monomial derivative for the primitive case: `Dt = 1/x`. -/
 def primitivePolyIntegrateExampleDt : CPolyG (QFunNZG ℚ) :=
   [qFracG [1] [0, 1]]
 
@@ -39,7 +39,7 @@ theorem primitivePolyIntegrate_example :
 
 /-! ### Nonlinear case `t = tan x`, `Dt = t² + 1` -/
 
-/-- Validation monomial derivative for the nonlinear case: `Dt = t² + 1`. -/
+/-- Example monomial derivative for the nonlinear case: `Dt = t² + 1`. -/
 def polyReduceTowerExampleDt : CPolyG (QFunNZG ℚ) := [qConstG 1, qConstG 0, qConstG 1]
 
 /-- The polynomial part `p = t³` over `ℚ(x)[t]`. -/
@@ -58,7 +58,5 @@ theorem polyReduceTower_example :
 theorem polyReduceTower_example_remainder_degree :
     CPolyG.cdegG (CPolyG.cPolyReduceTower polyReduceTowerExampleDt 8 polyReduceTowerExampleP).2 = 1 := by
   native_decide
-
-#print axioms polyReduceTower_example
 
 end DeepWiki.SymbolicIntegration
