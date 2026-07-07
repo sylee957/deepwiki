@@ -37,29 +37,6 @@ open Classical
 /-! ### The abstract Yun loop state and its recurrence -/
 
 open Classical in
-/-- `Babs A i = sqfreeFactPart A i * Babs A (i+1)`. -/
-theorem Babs_eq_mul {K : Type*} [Field K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
-    (hA : A.primPart ≠ 0) :
-    Babs A i = sqfreeFactPart A i * Babs A (i + 1) := by
-  rw [Babs, Babs, Nat.add_sub_cancel, ← squarefreePart_deflation_mul_sqfreeFactPart A i hi hA,
-    mul_comm]
-
-open UniqueFactorizationMonoid in
-open Classical in
-/-- `gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i)`. -/
-theorem gcd_Babs_Dabs {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
-    (hA : A.primPart ≠ 0) :
-    gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i) := by
-  rw [Babs_eq_mul A i hi hA, Dabs_eq_mul A i hi hA, gcd_mul_left]
-  have hrp : IsRelPrime (Babs A (i + 1)) (Yun A (i + 1)) := by
-    have h := isRelPrime_squarefreePart_Yun A (i + 1) (by omega) hA
-    rw [Babs]; rwa [Nat.add_sub_cancel] at h
-  have hunit : IsUnit (gcd (Babs A (i + 1)) (Yun A (i + 1))) :=
-    gcd_isUnit_iff_isRelPrime.mpr hrp
-  rw [(normalize_eq_one.mpr hunit ▸ (normalize_gcd (Babs A (i + 1)) (Yun A (i + 1))).symm :
-    gcd (Babs A (i + 1)) (Yun A (i + 1)) = 1), mul_one]
-
-open Classical in
 /-- `p = C p.leadingCoeff * normalize p` over a field. -/
 theorem self_eq_C_leadingCoeff_mul_normalize {K : Type*} [Field K] (p : K[X]) (hp : p ≠ 0) :
     p = Polynomial.C p.leadingCoeff * normalize p := by

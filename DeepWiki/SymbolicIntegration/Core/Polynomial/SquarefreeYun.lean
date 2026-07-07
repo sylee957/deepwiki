@@ -1,3 +1,4 @@
+import Mathlib.Algebra.GCDMonoid.Basic
 import Mathlib.FieldTheory.Separable
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 
@@ -253,6 +254,27 @@ open Classical in
 theorem Dabs_eq_mul (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
     Dabs A i = sqfreeFactPart A i * Yun A (i + 1) := by
   rw [Dabs]; exact Yun_sub_derivative_squarefreePart A i hi hA
+
+open Classical in
+/-- `Babs A i = sqfreeFactPart A i * Babs A (i+1)`. -/
+theorem Babs_eq_mul (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
+    Babs A i = sqfreeFactPart A i * Babs A (i + 1) := by
+  rw [Babs, Babs, Nat.add_sub_cancel, ← squarefreePart_deflation_mul_sqfreeFactPart A i hi hA,
+    mul_comm]
+
+open UniqueFactorizationMonoid in
+open Classical in
+/-- `gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i)`. -/
+theorem gcd_Babs_Dabs [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
+    gcd (Babs A i) (Dabs A i) = normalize (sqfreeFactPart A i) := by
+  rw [Babs_eq_mul A i hi hA, Dabs_eq_mul A i hi hA, gcd_mul_left]
+  have hrp : IsRelPrime (Babs A (i + 1)) (Yun A (i + 1)) := by
+    have h := isRelPrime_squarefreePart_Yun A (i + 1) (by omega) hA
+    rw [Babs]; rwa [Nat.add_sub_cancel] at h
+  have hunit : IsUnit (gcd (Babs A (i + 1)) (Yun A (i + 1))) :=
+    gcd_isUnit_iff_isRelPrime.mpr hrp
+  rw [(normalize_eq_one.mpr hunit ▸ (normalize_gcd (Babs A (i + 1)) (Yun A (i + 1))).symm :
+    gcd (Babs A (i + 1)) (Yun A (i + 1)) = 1), mul_one]
 
 end SquarefreeYunStateLemmas
 
