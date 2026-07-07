@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToAtan
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
 
 /-! # Computable `LogToAtan` over `ℚ`
-A `#eval`-able rendering of the `LogToAtan` algorithm on the dense coefficient carrier
+An executable rendering of the `LogToAtan` algorithm on the dense coefficient carrier
 `CPoly := List ℚ`, with a `toPoly : CPoly → ℚ[X]` bridge back to the `ℚ[X]`-level theory. -/
 
 open Polynomial
@@ -105,12 +105,6 @@ def cX3m3X : CPoly := [0, -3, 0, 1]
 
 /-- `x² − 2` as a `CPoly`: coefficients `[-2, 0, 1]`. -/
 def cX2m2 : CPoly := [-2, 0, 1]
-
--- **Example 2.8.1, the computed `LogToAtan` run** (printed at build): with `A = x³−3x`, `B = x²−2`,
--- this prints `[([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])]`, i.e. the
--- `(num, den)` pairs `((−x + 3x³ − x⁵), −2)`, `((−x³), −1)`, `((x), 1)` = the book's
--- `(x⁵−3x³+x)/2, x³, x`.
-#eval logToAtanCompute 20 cX3m3X cX2m2
 
 /-- `logToAtanCompute` on `(x³−3x, x²−2)` evaluates to the three `(numerator, denominator)` arctan
 arguments `[((−x+3x³−x⁵), −2), ((−x³), −1), ((x), 1)]`. -/
