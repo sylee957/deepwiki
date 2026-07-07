@@ -1,6 +1,6 @@
 import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 
-/-! # Generic list-matrix determinant = `Matrix.det` (L4 foundation for the computable LRT)
+/-! # Generic list-matrix determinant = `Matrix.det`
 
 `listDetn` is the cofactor-expansion determinant on a row-list matrix over a `CommRing`; `listDetn_eq_det`
 proves it equals `Matrix.det` of the corresponding `Fin n × Fin n` matrix. The bridge lets the computable
@@ -41,7 +41,7 @@ theorem listDetn_two : listDetn 2 ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := b
 theorem listDetn_three :
     listDetn 3 ([[2, 0, 1], [1, 3, 2], [0, 1, 1]] : List (List ℚ)) = 3 := by native_decide
 
-/-- **Column-deletion index lemma.** For a list `L` of length `n+1`, deleting column `j` (`take j ++
+/-- Column-deletion index lemma. For a list `L` of length `n+1`, deleting column `j` (`take j ++
 drop (j+1)`) reads at index `k < n` as `L` at `if k < j then k else k+1` — the `Fin.succAbove` skip. -/
 theorem getD_take_append_drop (L : List R) (n j k : ℕ) (hL : L.length = n + 1) (hk : k < n) :
     (L.take j ++ L.drop (j + 1)).getD k 0 = L.getD (if k < j then k else k + 1) 0 := by
@@ -54,7 +54,7 @@ theorem getD_take_append_drop (L : List R) (n j k : ℕ) (hL : L.length = n + 1)
     congr 2
     omega
 
-/-- **The minor of a row-list matrix is the `Fin.succ`/`succAbove` submatrix.** Deleting row 0 (via `rest`)
+/-- The minor of a row-list matrix is the `Fin.succ`/`succAbove` submatrix. Deleting row 0 (via `rest`)
 and column `j` (via `take j ++ drop (j+1)`) from `matrixOfList (row :: rest) (n+1)` gives exactly
 `.submatrix Fin.succ j.succAbove`. -/
 theorem matrixOfList_minor (n : ℕ) (row : List R) (rest : List (List R))
@@ -82,9 +82,9 @@ theorem matrixOfList_minor (n : ℕ) (row : List R) (rest : List (List R))
       Fin.succAbove_of_le_castSucc j k (by rw [Fin.le_def, Fin.val_castSucc]; exact hkj),
       Fin.val_succ]
 
-/-- **`listDetn` computes `Matrix.det`.** For a well-formed `n × n` row-list `M`, the cofactor-expansion
+/-- `listDetn` computes `Matrix.det`. For a well-formed `n × n` row-list `M`, the cofactor-expansion
 `listDetn n M` equals `(matrixOfList M n).det`. Proved by induction on `n` via `Matrix.det_succ_row_zero`
-and the minor correspondence `matrixOfList_minor`. This is the L4 bridge certifying the computable
+and the minor correspondence `matrixOfList_minor`. This bridge certifies the computable
 determinant against Mathlib's abstract determinant. -/
 theorem listDetn_eq_det : ∀ (n : ℕ) (M : List (List R)), M.length = n → (∀ r ∈ M, r.length = n) →
     listDetn n M = (matrixOfList M n).det := by
