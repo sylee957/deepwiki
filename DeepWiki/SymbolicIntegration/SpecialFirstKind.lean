@@ -123,7 +123,7 @@ theorem isLogDerivRadical_descent [CharZero k]
 
 section FirstKind
 -- `Ω` is a differential extension of `k` containing every root we test against — the algebraic
--- closure in the book; here it is left as a differential extension parameter.
+-- closure can be supplied as one such extension, but the theory only needs this parameter.
 variable {Ω : Type*} [Field Ω] [Differential Ω] [Algebra k Ω]
 
 /-- The residue `v'(α)` of the monomial derivation `Dt = v` at a root `α ∈ Ω`, as the closed form
