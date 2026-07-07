@@ -35,6 +35,7 @@ def constants (R : Type*) [CommRing R] [Differential R] : Subring R where
     simp only [Set.mem_setOf_eq, map_neg] at *
     rw [ha, neg_zero]
 
+/-- Membership in `constants R` is exactly vanishing derivative. -/
 @[simp] theorem mem_constants {R : Type*} [CommRing R] [Differential R] {a : R} :
     a ∈ constants R ↔ a′ = 0 := Iff.rfl
 
