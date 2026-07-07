@@ -60,7 +60,8 @@ def IsCanonNormalizedWf (f q' : QFunNZG β) : Prop :=
 theorem cisCanonNormalizedGWf_iff (f q' : QFunNZG β) :
     cisCanonNormalizedGWf (weakNormalizedF f q') = true ↔ IsCanonNormalizedWf f q' := by
   unfold cisCanonNormalizedGWf IsCanonNormalizedWf IsWeaklyNormalizedNormWf
-  rw [CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero]
+  rw [CPolyG.cisZeroG_iff]
+  simp only [denote, sub_eq_zero]
   rfl
 
 end NormalityWf
