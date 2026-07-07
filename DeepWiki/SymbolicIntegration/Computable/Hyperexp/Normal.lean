@@ -13,7 +13,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute
 
-/-! ### Validation: `∫ 1/(exp x − 1) dx = log(exp x − 1) − x`
+/-! ### Examples: `∫ 1/(exp x − 1) dx = log(exp x − 1) − x`
 
 Over `ℚ(x)[t]` (`t = exp x`, `Dt = η·t`, `η = 1`), `f = 1/(t−1)` has log part `log(t−1)` overshooting by
 `R = 1`; the feedback subtracts `∫R = x`. -/
@@ -73,8 +73,6 @@ theorem nNormInv_result_is_logTMinus1_minus_x :
           && (res.logs.all (fun cv => CPolyG.cisZeroG (CPolyG.csubG cv.2 nNormInvD)))
       | none => false) = true := by native_decide
 
-#print axioms nNormInv_landsNormalPart
-
 /-! ### The special + normal mix: `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x`
 
 The combined driver on `f = 1/t + 1/(t−1) = (2t−1)/(t²−t)` over `ℚ(x)[t]` (`t = exp`, `η = 1`): the special
@@ -105,8 +103,6 @@ theorem nSpecNorm_full_lands :
     (match CPolyG.cIntegrateHyperexpFullGWf nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
       | some res => CPolyG.checkIdentityG nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = true := by native_decide
-
-#print axioms nSpecNorm_full_lands
 
 /-! ### A non-constant base residual: `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²`
 
@@ -154,7 +150,5 @@ theorem nVarNorm_landsNormalPart :
           && CPolyG.cisZeroG (CPolyG.csubG res.rational.1 [CField.neg nLvl1XSq])
           && res.logs.length == 1
       | none => false) = true := by native_decide
-
-#print axioms nVarNorm_landsNormalPart
 
 end DeepWiki.SymbolicIntegration
