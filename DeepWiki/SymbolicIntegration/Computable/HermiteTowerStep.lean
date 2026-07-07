@@ -2,13 +2,10 @@ import DeepWiki.Algebra.PolynomialDivisibility
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 
-/-! # The tower single-step Hermite identity
+/-! # Tower Hermite step identities
 
-The per-step kernel of the inner Hermite loop `cHermiteReduceTowerInnerWf`, over the tower fraction
-field `RatFunc (CFieldSpec.K α)` with the monomial derivation `D = implicitDeriv (toPolyG Dt)`
-(realized as `towerFractionFieldDerivG Dt`). Ports `hermiteInner_step_ratFunc` — which is specialized
-to `d/dx` only through `ratFuncDeriv_algebraMap` — to the tower derivation, whose polynomial-image
-bridge is `towerFractionFieldDerivG_div` at `den = 1`. -/
+Field identities for one tower Hermite reduction step and the accumulator fold
+used by `cHermiteReduceTowerInnerWf`. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -28,11 +25,10 @@ theorem towerFractionFieldDerivG_amG (Dt : CPolyG α) (p : (CFieldSpec.K α)[X])
   have h := towerFractionFieldDerivG_div Dt p 1
   simpa using h
 
-/-- **The tower Hermite lowering step** (the `cHermiteReduceTowerInnerWf` single step). With
+/-- The tower Hermite lowering step for `cHermiteReduceTowerInnerWf`. With
 `D = implicitDeriv (toPolyG Dt)`, `U, V ≠ 0`, and the Diophantine relation
 `B·(U·DV) + C·V = -A·C((j+1)⁻¹)`, one step drops the `V`-power by one and emits `B/V^(j+1)`:
-`amG A/(amG U · amG V^(j+2)) = D_tower(amG B/amG V^(j+1)) + amG(-(C(j+1))·C - U·DB)/(amG U·amG V^(j+1))`.
-Ports `hermiteInner_step_ratFunc` to the tower derivation. -/
+`amG A/(amG U · amG V^(j+2)) = D_tower(amG B/amG V^(j+1)) + amG(-(C(j+1))·C - U·DB)/(amG U·amG V^(j+1))`. -/
 theorem towerFractionFieldDerivG_hermite_step [CharZero (CFieldSpec.K α)] (Dt : CPolyG α)
     (A B C U V : (CFieldSpec.K α)[X]) (hU : U ≠ 0) (hV : V ≠ 0) (j : ℕ)
     (hrel : B * (U * Differential.implicitDeriv (toPolyG Dt) V) + C * V
@@ -104,11 +100,10 @@ theorem fieldFrac_step_add (g1 g2 b Vpow : CPolyG α)
   ring
 
 open QFunNZG in
-/-- **M2 — the inner Hermite loop invariant** (accumulator-general). For `u, v ≠ 0`, the tower
+/-- The inner Hermite loop invariant with a general accumulator. For `u, v ≠ 0`, the tower
 derivation `D = implicitDeriv (toPolyG Dt)`, and every step's `cdiophantineGWf` cofactors satisfying
 the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
-`⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. Ports
-`hermiteInner_spec_acc` to the fuel-free Wf tower loop. -/
+`⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. -/
 theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : CPolyG α)
     (hu : toPolyG u ≠ 0) (hv : toPolyG v ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : CPolyG α),
@@ -179,19 +174,19 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     -- glue: M1 (power drop) + recursion tail.
     linear_combination hstep + ihA
 
-/-! ### M3-bridge — the whole-step field identity from exact division
+/-! ### Whole-step field identity from exact division
 
 `cHermiteReduceTowerGWf Dt a d = ((gnum,gden),(hNum,Dstar))` computes the residual `hNum/Dstar` so
 that it equals `a/d - D(g)` by construction: `resNum/resDen = (a·gden² - d·gp)/(d·gden²)` with
 `gp = D(gnum)·gden - gnum·D(gden)` the quotient numerator, and `hNum = (resNum·Dstar)/resDen`. So the
 step identity `D(⟦g⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧` is a clean algebraic assembly reducing to the single
-**exact-division** relation `hNum·resDen = resNum·Dstar` (Hermite's pole-cancellation guarantee, which
+exact-division relation `hNum·resDen = resNum·Dstar` (Hermite's pole-cancellation guarantee, which
 M1/M2 + Yun discharge). Mirrors `canonicalReconstruction`. -/
 
-/-- **The whole-step Hermite field identity.** For the tower derivation `D`, given `d, gden, Dstar ≠ 0`
+/-- The whole-step Hermite field identity. For the tower derivation `D`, given `d, gden, Dstar ≠ 0`
 and the exact-division relation `⟦hNum⟧·⟦d·gden²⟧ = ⟦resNum⟧·⟦Dstar⟧` (with `resNum = a·gden² - d·gp`,
 `gp = D(gnum)·gden - gnum·D(gden)`), the reduced part telescopes:
-`D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. Reduces `hherm` to the exact-division frontier. -/
+`D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
 theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPolyG α)
     (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
     (hDstar : amG α (toPolyG Dstar) ≠ 0)
@@ -220,7 +215,7 @@ theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPolyG α
   field_simp
   ring
 
-/-! ### Splitting the exact-division frontier into radical + pole-cancellation
+/-! ### Radical split for exact division
 
 The exact-division `resDen ∣ resNum·Dstar` decomposes, by the pure field-algebra
 `polynomial_dvd_cleared_identity_of_radical`, into two genuine sub-facts: `d = Dstar·W` (the squarefree radical
@@ -229,10 +224,9 @@ pole-cancellation: the reduced residual's `W`-poles cancel). Tower analog of
 `hermiteReduce_residual_correct_of_radical`. -/
 
 open QFunNZG in
-/-- **The whole-step Hermite field identity from the radical split.** With `hNum` the exact quotient
+/-- The whole-step Hermite field identity from the radical split. With `hNum` the exact quotient
 `cdivWf (resNum·Dstar) (d·gden²)`, given `d = Dstar·W` (`hSD`) and `W·gden² ∣ resNum` (`hWgd`), the
-reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. Reduces `hherm` to the two
-genuine sub-facts (Yun radical + pole-cancellation) instead of the monolithic exact division. -/
+reduced part telescopes: `D_tower(⟦gnum/gden⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧`. -/
 theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : CPolyG α)
     (hd : amG α (toPolyG d) ≠ 0) (hgden : amG α (toPolyG gden) ≠ 0)
     (hDstar : amG α (toPolyG Dstar) ≠ 0)
