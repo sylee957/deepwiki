@@ -381,6 +381,15 @@ theorem yunLoopAbs_pairwise_isRelPrime [CharZero K] (A : K[X])
     simpa using h
   exact isRelPrime_of_associated_sqfreeFactPart A (by omega : i + p ≠ i + q) hAp hAq
 
+open Classical in
+/-- The abstract Yun loop product is associated to the product of consecutive squarefree parts. -/
+theorem yunLoopAbs_prod_assoc [CharZero K] (A : K[X])
+    (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
+    Associated (yunLoopAbs A (b, d) i n).prod
+      (((List.range n).map (fun j => sqfreeFactPart A (i + j))).prod) :=
+  List.rel_prod (R := Associated) (Associated.refl 1)
+    (fun _ _ hx _ _ hy => hx.mul_mul hy) (yunLoopAbs_forall₂ A hA n i b d hi hinv)
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration

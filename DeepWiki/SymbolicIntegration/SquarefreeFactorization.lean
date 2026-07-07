@@ -40,15 +40,6 @@ open Classical
 /-! ### The abstract Yun loop and its factor products -/
 
 open Classical in
-/-- The abstract Yun loop product is associated to the product of consecutive squarefree parts. -/
-theorem yunLoopAbs_prod_assoc {K : Type*} [Field K] [CharZero K] (A : K[X])
-    (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
-    Associated (yunLoopAbs A (b, d) i n).prod
-      (((List.range n).map (fun j => sqfreeFactPart A (i + j))).prod) :=
-  List.rel_prod (R := Associated) (Associated.refl 1)
-    (fun _ _ hx _ _ hy => hx.mul_mul hy) (yunLoopAbs_forall₂ A hA n i b d hi hinv)
-
-open Classical in
 /-- Powered product of `[e₀,e₁,…]`: `∏ₖ eₖ^(i+k)`. -/
 noncomputable def prodPow {K : Type*} [Field K] (i : ℕ) : List K[X] → K[X]
   | [] => 1
