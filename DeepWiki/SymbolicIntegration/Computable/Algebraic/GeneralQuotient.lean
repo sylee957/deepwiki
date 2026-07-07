@@ -51,7 +51,8 @@ variable [CDiffField α] [CDiffFieldSpec α]
 /-- `afFx` reads as coefficientwise base derivation through `toPolyG`. -/
 theorem mapCoeffs_toPolyG_eq_afFx (f : CPolyG α) :
     Differential.mapCoeffs (toPolyG f) = toPolyG (afFx f) := by
-  rw [afFx, ← cmapDeriv, toPolyG_cmapDeriv]
+  rw [afFx, ← cmapDeriv]
+  simp only [denote]
 
 end CPolyG
 
