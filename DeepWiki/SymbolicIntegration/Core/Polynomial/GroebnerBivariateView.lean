@@ -193,6 +193,38 @@ theorem degreeOf_le_degreeOf_mul {K : Type*} [Field K] {g b : MvPolynomial (Fin 
       (by rwa [← lazardView, Ne, lazardView_eq_zero_iff])]
   exact Nat.le_add_left _ _
 
+/-- Under lex, the index-`1` exponent of the leading monomial is the `x`-degree of
+`leadingYCoeff f`. -/
+theorem lex_degree_apply_one {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) := by
+  classical
+  set δ := MonomialOrder.lex.degree f with hδ
+  have hδ0 : δ 0 = degreeOf 0 f := lex_degree_apply_zero hf
+  have hlyc : leadingYCoeff f = (lazardView f).coeff (degreeOf 0 f) := by
+    rw [leadingYCoeff, Polynomial.leadingCoeff, natDegree_lazardView]
+  have hsucc : (1 : Fin 2) = (0 : Fin 1).succ := rfl
+  apply le_antisymm
+  · have hδmem : δ ∈ f.support := MonomialOrder.degree_mem_support hf
+    set mon' : Fin 1 →₀ ℕ := Finsupp.tail δ with hmon'
+    have hcons : Finsupp.cons (δ 0) mon' = δ := by rw [hmon', Finsupp.cons_tail]
+    have hmem' : mon' ∈ (leadingYCoeff f).support := by
+      rw [hlyc, lazardView, mem_support_coeff_finSuccEquiv, ← hδ0, hcons]
+      exact hδmem
+    have hval : mon' 0 = δ 1 := by rw [hmon', Finsupp.tail_apply, hsucc]
+    rw [← hval, degreeOf_eq_sup]
+    exact Finset.le_sup (f := fun s : Fin 1 →₀ ℕ => s 0) hmem'
+  · rw [degreeOf_eq_sup]
+    apply Finset.sup_le
+    intro mon hmon
+    rw [hlyc, lazardView, mem_support_coeff_finSuccEquiv, ← hδ0] at hmon
+    have hle : (Finsupp.cons (δ 0) mon) ≼[MonomialOrder.lex] δ :=
+      MonomialOrder.le_degree hmon
+    rw [MonomialOrder.lex_le_iff] at hle
+    have h0eq : (Finsupp.cons (δ 0) mon) 0 = δ 0 := Finsupp.cons_zero _ _
+    have hmain := apply_one_le_of_toLex_le_of_apply_zero_eq hle h0eq
+    have hcons1 : (Finsupp.cons (δ 0) mon) 1 = mon 0 := by rw [hsucc, Finsupp.cons_succ]
+    rwa [hcons1] at hmain
+
 -- Restatements against the intended wording.
 example {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) : d ≤ d' ∨ d' ≤ d :=
   finsupp_fin_two_le_or_le_of_apply_eq h
@@ -226,6 +258,10 @@ example {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
 example {K : Type*} [Field K] {g b : MvPolynomial (Fin 2) K}
     (hne : g * b ≠ 0) : degreeOf 0 b ≤ degreeOf 0 (g * b) :=
   degreeOf_le_degreeOf_mul hne
+
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
+    (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) :=
+  lex_degree_apply_one hf
 
 /-! ## The `y`-shift toolbox
 

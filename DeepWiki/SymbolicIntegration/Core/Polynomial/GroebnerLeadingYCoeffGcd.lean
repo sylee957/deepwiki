@@ -114,38 +114,6 @@ theorem lazard_gcd_construction {K : Type*} [Field K] {I : Ideal (MvPolynomial (
   exact ⟨P, hPI, by rw [← natDegree_lazardView, hPdeg],
     by rw [leadingYCoeff, hPlc, hpcoeff, hqcoeff, hab]⟩
 
-/-- Under `MonomialOrder.lex` on `Fin 2` with `f ≠ 0`, the index-`1` exponent of the leading
-monomial is the `x`-degree `degreeOf 0 (leadingYCoeff f)` of the leading-`y`-coefficient. -/
-theorem lex_degree_apply_one {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
-    (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) := by
-  classical
-  set δ := MonomialOrder.lex.degree f with hδ
-  have hδ0 : δ 0 = degreeOf 0 f := lex_degree_apply_zero hf
-  have hlyc : leadingYCoeff f = (lazardView f).coeff (degreeOf 0 f) := by
-    rw [leadingYCoeff, Polynomial.leadingCoeff, natDegree_lazardView]
-  have hsucc : (1 : Fin 2) = (0 : Fin 1).succ := rfl
-  apply le_antisymm
-  · -- `δ 1 ≤ deg_x`: `δ = (tail δ).cons (δ 0)`, and `tail δ ∈ support (leadingYCoeff f)`.
-    have hδmem : δ ∈ f.support := MonomialOrder.degree_mem_support hf
-    set mon' : Fin 1 →₀ ℕ := Finsupp.tail δ with hmon'
-    have hcons : Finsupp.cons (δ 0) mon' = δ := by rw [hmon', Finsupp.cons_tail]
-    have hmem' : mon' ∈ (leadingYCoeff f).support := by
-      rw [hlyc, lazardView, mem_support_coeff_finSuccEquiv, ← hδ0, hcons]; exact hδmem
-    have hval : mon' 0 = δ 1 := by rw [hmon', Finsupp.tail_apply, hsucc]
-    rw [← hval, degreeOf_eq_sup]
-    exact Finset.le_sup (f := fun s : Fin 1 →₀ ℕ => s 0) hmem'
-  · -- `deg_x ≤ δ 1`: each `mon ∈ support (leadingYCoeff f)` gives `mon.cons (δ 0) ≼[lex] δ`.
-    rw [degreeOf_eq_sup]
-    apply Finset.sup_le
-    intro mon hmon
-    rw [hlyc, lazardView, mem_support_coeff_finSuccEquiv, ← hδ0] at hmon
-    have hle : (Finsupp.cons (δ 0) mon) ≼[MonomialOrder.lex] δ := MonomialOrder.le_degree hmon
-    rw [MonomialOrder.lex_le_iff] at hle
-    have h0eq : (Finsupp.cons (δ 0) mon) 0 = δ 0 := Finsupp.cons_zero _ _
-    have hmain := apply_one_le_of_toLex_le_of_apply_zero_eq hle h0eq
-    have hcons1 : (Finsupp.cons (δ 0) mon) 1 = mon 0 := by rw [hsucc, Finsupp.cons_succ]
-    rwa [hcons1] at hmain
-
 /-- Along a reduced bivariate Gröbner basis over `lex`, the higher-`y`-degree
 `leadingYCoeff fi1` divides the lower `leadingYCoeff fi` (`degreeOf 0 fi < degreeOf 0 fi1`). -/
 theorem lazard_lemma2 {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
@@ -205,10 +173,6 @@ theorem lazard_lemma2 {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
   exact hfin
 
 -- Restatements against the intended wording.
-example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
-    (MonomialOrder.lex.degree f) 1 = degreeOf 0 (leadingYCoeff f) :=
-  lex_degree_apply_one hf
-
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
