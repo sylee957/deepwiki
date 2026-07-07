@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Assembly
+import DeepWiki.SymbolicIntegration.Computable.CoupledDE.Bivariate
 import Mathlib.RingTheory.AdjoinRoot
 
 /-! # Tangent telescoping reconstruction for the hypertangent coupled system
