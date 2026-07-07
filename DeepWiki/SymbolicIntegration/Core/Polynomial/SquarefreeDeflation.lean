@@ -26,6 +26,24 @@ truncated by `k`. -/
 noncomputable def deflation (A : D[X]) (k : ℕ) : D[X] :=
   ∏ P ∈ (normalizedFactors A.primPart).toFinset, P ^ ((normalizedFactors A.primPart).count P - k)
 
+open Classical in
+/-- `A* · A⁻¹` is associated to `pp(A)`: the squarefree part times the deflation recovers the
+primitive part. -/
+theorem squarefreePart_mul_deflation (A : D[X]) (hA : A.primPart ≠ 0) :
+    Associated (squarefreePart A * deflation A 1) A.primPart := by
+  rw [squarefreePart, deflation, ← Finset.prod_mul_distrib]
+  have h : ∀ P ∈ (normalizedFactors A.primPart).toFinset,
+      P * P ^ ((normalizedFactors A.primPart).count P - 1)
+        = P ^ ((normalizedFactors A.primPart).count P) := by
+    intro P hP
+    rw [← pow_succ']
+    congr 1
+    have hpos : 0 < (normalizedFactors A.primPart).count P :=
+      Multiset.count_pos.mpr (Multiset.mem_toFinset.mp hP)
+    omega
+  rw [Finset.prod_congr rfl h, ← Finset.prod_multiset_count]
+  exact prod_normalizedFactors hA
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
