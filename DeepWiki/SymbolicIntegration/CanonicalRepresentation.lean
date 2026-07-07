@@ -553,7 +553,7 @@ theorem splitFactorAux_isSplittingFactorizationGen (v : K[X]) :
     rw [Nat.le_zero, Polynomial.natDegree_eq_zero] at hp
     obtain ⟨c, rfl⟩ := hp
     have hc : c ≠ 0 := fun h => hp0 (by rw [h, map_zero])
-    -- a nonzero constant `C c` is a unit, hence book-normal.
+    -- a nonzero constant `C c` is a unit, hence normal-squarefree.
     have hnorm : IsNormalSqfree (C c) :=
       (isNormal_of_isUnit (isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc))).isNormalSqfree
     simp only [splitFactorAux]
