@@ -119,8 +119,9 @@ theorem cSplitFactorFastGWf_isSplittingFactorizationGen [CharZero (CFieldSpec.K 
         rw [hres] at hih
         obtain ⟨heq, hqspec, hqnorm⟩ := hih
         refine ⟨?_, ?_, hqnorm⟩
-        · rw [toPolyG_cmulG, mul_assoc, ← heq, ← hexact, mul_comm]
-        · rw [toPolyG_cmulG]
+        · simp only [denote]
+          rw [mul_assoc, ← heq, ← hexact, mul_comm]
+        · simp only [denote]
           exact (IsSpecial.of_associated hAstep.symm
             (isSpecial_splitFactorStep (toPolyG Dt) hp)).mul hqspec
   intro p hp
