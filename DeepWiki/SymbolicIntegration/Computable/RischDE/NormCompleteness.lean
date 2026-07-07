@@ -106,7 +106,8 @@ omit [CDiffFieldSpec α] [CRischField α] in
 theorem dvd_dnh2Wf_of_en_dvd_dn (Dt : CPolyG α) (fden gden : CPolyG α)
     (hdvd : toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnWf Dt fden)) :
     toPolyG (rdeNormEnWf Dt gden) ∣ toPolyG (rdeNormDnh2Wf Dt fden gden) := by
-  rw [rdeNormDnh2Wf, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG]
+  rw [rdeNormDnh2Wf]
+  simp only [denote]
   exact (hdvd.mul_right _).mul_right _
 
 omit [CRischField α] in
