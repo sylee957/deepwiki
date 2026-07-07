@@ -78,11 +78,6 @@ The integrand `R/(B·y)` has `B` squarefree-decomposed into prime-powers, each c
 `V`-factor or `W`-factor, `R` partial-fractioned across them, and each piece dispatched to the
 matching iterated reduction. -/
 
-/-- Product of a list of polynomials `radProdList ps = ∏ ps` (folding `cmulG` from `1`). Used to form
-the cofactor `∏_{j≠i} Gⱼ`. -/
-def radProdList (ps : List (CPolyG α)) : CPolyG α :=
-  ps.foldl (fun acc p => cmulG acc p) [CField.one]
-
 /-- Classify a squarefree denominator factor `radClassifyFactor Bi ρ = true` iff `Bi` is a `V`-factor
 (coprime to `ρ`, `gcd(Bi, ρ)` constant), `false` iff a `W`-factor (`Bi ∣ ρ`). Generic over `[CField α]`. -/
 def radClassifyFactor (Bi ρ : CPolyG α) : Bool :=
@@ -94,7 +89,7 @@ pairwise-coprime `Gs` with `B = ∏Gᵢ` and proper `R`, returns `Nᵢ` with `R/
 def radPartialFractionCoprime : CPolyG α → List (CPolyG α) → List (CPolyG α)
   | _, [] => []
   | R, G :: rest =>
-    let P := radProdList rest
+    let P := cprodG rest
     let (Ni, c) := cdiophantineGWf P G R   -- `Ni·P + c·G = R`, `deg Ni < deg G`
     Ni :: radPartialFractionCoprime c rest
 

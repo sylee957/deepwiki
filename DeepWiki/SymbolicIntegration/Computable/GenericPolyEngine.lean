@@ -196,6 +196,10 @@ def cmulG {α : Type*} [CField α] : CPolyG α → CPolyG α → CPolyG α
   | [], _ => []
   | a :: as, q => caddG (cscaleG a q) (CField.zero :: cmulG as q)
 
+/-- Product of a list of `CPolyG`s, folding `cmulG` from `[1]`. -/
+def cprodG {α : Type*} [CField α] (ps : List (CPolyG α)) : CPolyG α :=
+  ps.foldl (fun acc p => cmulG acc p) [CField.one]
+
 /-- Power of a `CPolyG` by `ℕ`-recursion (`[1]` at `0`). -/
 def cpowG {α : Type*} [CField α] (p : CPolyG α) : ℕ → CPolyG α
   | 0 => [CField.one]
