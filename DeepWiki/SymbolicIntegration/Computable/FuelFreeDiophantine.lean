@@ -97,7 +97,8 @@ theorem toPolyG_cextendedEuclideanSplitWf (dn ds r u w : CPolyG α)
   have hrem : toPolyG (cmodWf ur ds)
       = toPolyG ur - toPolyG (cdivWf ur ds) * toPolyG ds := by
     rw [hdivmod]; ring
-  rw [hrem, hur, toPolyG_cmulG]
+  rw [hrem, hur]
+  simp only [denote]
   have hkey : (toPolyG u * toPolyG r - toPolyG (cdivWf (cmulG u r) ds) * toPolyG ds) * toPolyG dn
       + (toPolyG w * toPolyG r + toPolyG (cdivWf (cmulG u r) ds) * toPolyG dn) * toPolyG ds
       = (toPolyG u * toPolyG dn + toPolyG w * toPolyG ds) * toPolyG r := by ring
