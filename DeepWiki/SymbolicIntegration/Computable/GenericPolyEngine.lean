@@ -324,7 +324,8 @@ theorem toPolyG_foldl_caddG {α : Type*} [CField α] [CFieldSpec α]
   induction pts generalizing init with
   | nil => simp
   | cons p ps ih =>
-    rw [List.foldl_cons, ih, toPolyG_caddG, List.map_cons, List.sum_cons]
+    rw [List.foldl_cons, ih]
+    simp only [denote, List.map_cons, List.sum_cons]
     ring
 
 /-- `toPolyG` commutes with negation: `toPolyG (cnegG p) = − toPolyG p`. -/
