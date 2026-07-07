@@ -1,3 +1,4 @@
+import Mathlib.Algebra.Squarefree.Basic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
 
 /-! # Polynomial squarefree-factorization parts
@@ -73,6 +74,27 @@ theorem sqfreeFactPart_ne_zero (A : D[X]) (i : ℕ) : sqfreeFactPart A i ≠ 0 :
   rw [sqfreeFactPart, Finset.prod_ne_zero_iff]
   exact fun P hP => (irreducible_of_normalized_factor P
     (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).ne_zero
+
+open Classical in
+/-- Each squarefree-factorization part `Aᵢ` is squarefree (a product of distinct primes). -/
+theorem sqfreeFactPart_squarefree (A : D[X]) (i : ℕ) : Squarefree (sqfreeFactPart A i) := by
+  rw [sqfreeFactPart]
+  apply Finset.squarefree_prod_of_pairwise_isCoprime
+  · intro P hP Q hQ hPQ
+    have hPm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
+    have hQm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hQ).1
+    apply WfDvdMonoid.isRelPrime_of_no_irreducible_factors
+      (fun h => (irreducible_of_normalized_factor P hPm).ne_zero h.1)
+    intro z hz hzP hzQ
+    have hPQa : Associated P Q :=
+      (hz.associated_of_dvd (irreducible_of_normalized_factor P hPm) hzP).symm.trans
+        (hz.associated_of_dvd (irreducible_of_normalized_factor Q hQm) hzQ)
+    apply hPQ
+    have := normalize_eq_normalize_iff_associated.mpr hPQa
+    rwa [normalize_normalized_factor P hPm, normalize_normalized_factor Q hQm] at this
+  · intro P hP
+    exact (irreducible_of_normalized_factor P
+      (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).squarefree
 
 end SquarefreeParts
 

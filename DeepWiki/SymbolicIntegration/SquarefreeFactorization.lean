@@ -23,27 +23,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- Each squarefree-factorization part `Aᵢ` is squarefree (a product of distinct primes). -/
-theorem sqfreeFactPart_squarefree (A : D[X]) (i : ℕ) : Squarefree (sqfreeFactPart A i) := by
-  rw [sqfreeFactPart]
-  apply Finset.squarefree_prod_of_pairwise_isCoprime
-  · intro P hP Q hQ hPQ
-    have hPm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
-    have hQm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hQ).1
-    apply WfDvdMonoid.isRelPrime_of_no_irreducible_factors
-      (fun h => (irreducible_of_normalized_factor P hPm).ne_zero h.1)
-    intro z hz hzP hzQ
-    have hPQa : Associated P Q :=
-      (hz.associated_of_dvd (irreducible_of_normalized_factor P hPm) hzP).symm.trans
-        (hz.associated_of_dvd (irreducible_of_normalized_factor Q hQm) hzQ)
-    apply hPQ
-    have := normalize_eq_normalize_iff_associated.mpr hPQa
-    rwa [normalize_normalized_factor P hPm, normalize_normalized_factor Q hQm] at this
-  · intro P hP
-    exact (irreducible_of_normalized_factor P
-      (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).squarefree
-
-open Classical in
 /-- The squarefree-factorization parts are pairwise relatively prime: `IsRelPrime (Aᵢ) (Aⱼ)`
 for `i ≠ j`. -/
 theorem sqfreeFactPart_isRelPrime (A : D[X]) {i j : ℕ} (hij : i ≠ j) :
