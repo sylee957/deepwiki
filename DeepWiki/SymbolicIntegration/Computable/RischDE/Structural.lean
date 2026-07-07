@@ -334,7 +334,9 @@ theorem cRdeNormalDenominatorGWf_cleared_lift (Dt : CPolyG α) (fnum fden gnum g
   · rw [Option.some.injEq, Prod.mk.injEq, Prod.mk.injEq, Prod.mk.injEq] at hres
     obtain ⟨ha, hb, hc, hh⟩ := hres
     rw [hh] at ha hb hc
-    have hA : toPolyG a = toPolyG dn * toPolyG h := by rw [← ha, toPolyG_cmulG]
+    have hA : toPolyG a = toPolyG dn * toPolyG h := by
+      rw [← ha, ← hdndef]
+      simp only [denote]
     have hBexact : toPolyG b * toPolyG fden = toPolyG bNum := by
       rw [← hb]; exact toPolyG_cdivWf_exact_mul_gen bNum fden hfden0 hdvdB
     have hBeq : toPolyG bNum = toPolyG a * toPolyG fnum
