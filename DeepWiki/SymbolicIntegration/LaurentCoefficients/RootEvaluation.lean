@@ -46,6 +46,56 @@ theorem eval_diffSubst_laurentNum_eq_laurentQ_eval [CharZero K] (A D Diα : K[X]
       = (laurentQ A D ((Polynomial.X - Polynomial.C α) * Diα) i j).eval α := by
   rw [eval_diffSubst, laurentQ_eval_at_root]
 
+/-! ## The `i=1` residue: `H₁₁(α) = A(α)/D'(α)` -/
+
+/-- `aeval (laurentSubst Di) (dpEmbed p) = p`: the `Qᵢⱼ` substitution undoes `dpEmbed` on a pure-`x`
+polynomial. -/
+theorem aeval_laurentSubst_dpEmbed (Di p : K[X]) :
+    aeval (laurentSubst Di) (dpEmbed p) = p := by
+  have h : ((aeval (laurentSubst Di) : DiffPoly K →ₐ[K] K[X]).toRingHom.comp dpEmbed)
+      = RingHom.id K[X] := by
+    apply Polynomial.ringHom_ext
+    · intro c; simp [dpEmbed]
+    · simp [dpEmbed, laurentSubst]
+  exact congrArg (fun f : K[X] →+* K[X] => f p) h
+
+/-- `Q₁₁ = A`: at `i=j=1` the derivative count is `0`, so `laurentQ A D Di 1 1 = A`. -/
+theorem laurentQ_one_one (A D Di : K[X]) : laurentQ A D Di 1 1 = A := by
+  rw [laurentQ, Nat.sub_self, laurentNum_zero, aeval_laurentSubst_dpEmbed]
+
+/-- `laurentE D Di 1 = D /ₘ Di`: the cofactor `E₁` at multiplicity one. -/
+theorem laurentE_one (D Di : K[X]) : laurentE D Di 1 = D /ₘ Di := by
+  rw [laurentE, pow_one]
+
+open scoped Classical in
+/-- `laurentH A D Di 1 1 = (A · bezoutE D Di 1 · bezoutDeriv Di) %ₘ Di`: the `i=1` engine output. -/
+theorem laurentH_one_one (A D Di : K[X]) :
+    laurentH A D Di 1 1 = (A * bezoutE D Di 1 * bezoutDeriv Di) %ₘ Di := by
+  rw [laurentH, laurentQ_one_one]
+  norm_num
+
+/-- `(P %ₘ Dᵢ).eval α = P.eval α` at a root `α` of a monic `Dᵢ`: the `%ₘ` reduction is invisible there. -/
+theorem eval_modByMonic_of_root {P Di : K[X]} {α : K} (_hDi : Di.Monic) (hα : Di.eval α = 0) :
+    (P %ₘ Di).eval α = P.eval α := by
+  conv_rhs => rw [← modByMonic_add_div P Di]
+  rw [Polynomial.eval_add, Polynomial.eval_mul, hα, zero_mul, add_zero]
+
+/-- `Bᵢ(α)·Eᵢ(α) = 1` at a root `α` of the monic `Dᵢ` (so `Bᵢ(α) = 1/Eᵢ(α)`). -/
+theorem bezoutE_mul_laurentE_eval {D Di : K[X]} {α : K} (i : ℕ) (hDi : Di.Monic)
+    (hα : Di.eval α = 0) (hcop : IsCoprime (laurentE D Di i) Di) :
+    (bezoutE D Di i).eval α * (laurentE D Di i).eval α = 1 := by
+  have h := bezoutE_mul_laurentE_modByMonic D Di i hDi hcop
+  have := congrArg (fun p => p.eval α) h
+  simpa [eval_modByMonic_of_root hDi hα, Polynomial.eval_mul] using this
+
+/-- `Cᵢ(α)·Dᵢ'(α) = 1` at a root `α` of the monic `Dᵢ` (so `Cᵢ(α) = 1/Dᵢ'(α)`). -/
+theorem bezoutDeriv_mul_derivative_eval {Di : K[X]} {α : K} (hDi : Di.Monic)
+    (hα : Di.eval α = 0) (hcop : IsCoprime (derivative Di) Di) :
+    (bezoutDeriv Di).eval α * (derivative Di).eval α = 1 := by
+  have h := bezoutDeriv_mul_derivative_modByMonic Di hDi hcop
+  have := congrArg (fun p => p.eval α) h
+  simpa [eval_modByMonic_of_root hDi hα, Polynomial.eval_mul] using this
+
 /-- The general engine-output evaluation
 `(laurentH A D Di i j).eval α = Qᵢⱼ(α)·(1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}` at a root `α` of the monic
 `Dᵢ`, using `Bᵢ(α) = 1/Eᵢ(α)`, `Cᵢ(α) = 1/Dᵢ'(α)`. -/
@@ -61,6 +111,35 @@ theorem eval_laurentH {A D Di : K[X]} {α : K} (i j : ℕ) (hDi : Di.Monic) (hα
   have hC : (bezoutDeriv Di).eval α = 1 / (derivative Di).eval α :=
     eq_one_div_of_mul_eq_one_left (bezoutDeriv_mul_derivative_eval hDi hα hcopD)
   rw [hB, hC]
+
+/-- `(laurentH A D Di 1 1).eval α = A(α)/(E₁(α)·D₁'(α))` at a root `α` of the monic `Di`
+(with `E₁(α), D₁'(α) ≠ 0`). -/
+theorem eval_laurentH_one_one {A D Di : K[X]} {α : K} (hDi : Di.Monic) (hα : Di.eval α = 0)
+    (hcopE : IsCoprime (laurentE D Di 1) Di) (hcopD : IsCoprime (derivative Di) Di)
+    (hE : (laurentE D Di 1).eval α ≠ 0) (hD' : (derivative Di).eval α ≠ 0) :
+    (laurentH A D Di 1 1).eval α
+      = A.eval α / ((laurentE D Di 1).eval α * (derivative Di).eval α) := by
+  rw [laurentH_one_one, eval_modByMonic_of_root hDi hα, Polynomial.eval_mul, Polynomial.eval_mul]
+  have hB : (bezoutE D Di 1).eval α = 1 / (laurentE D Di 1).eval α :=
+    eq_one_div_of_mul_eq_one_left (bezoutE_mul_laurentE_eval 1 hDi hα hcopE)
+  have hC : (bezoutDeriv Di).eval α = 1 / (derivative Di).eval α :=
+    eq_one_div_of_mul_eq_one_left (bezoutDeriv_mul_derivative_eval hDi hα hcopD)
+  rw [hB, hC]
+  field_simp
+
+/-- `(laurentH A D Di 1 1).eval α = A(α)/D'(α)` for `D = Di·E₁` and `α` a root of the monic `Di`: the
+residue of `A/D` at the simple root `α`. -/
+theorem eval_laurentH_one_one_eq_residue {A D Di : K[X]} {α : K} (hDi : Di.Monic)
+    (hα : Di.eval α = 0) (hfac : D = Di * laurentE D Di 1) (hcopE : IsCoprime (laurentE D Di 1) Di)
+    (hcopD : IsCoprime (derivative Di) Di) (hE : (laurentE D Di 1).eval α ≠ 0)
+    (hD' : (derivative Di).eval α ≠ 0) :
+    (laurentH A D Di 1 1).eval α = A.eval α / (derivative D).eval α := by
+  rw [eval_laurentH_one_one hDi hα hcopE hcopD hE hD']
+  congr 1
+  -- `D'(α) = D₁'(α)·E₁(α)`: differentiate `D = D₁·E₁`, the `D₁·E₁'` term vanishes at the root `α`
+  conv_rhs => rw [hfac, derivative_mul, Polynomial.eval_add, Polynomial.eval_mul,
+    Polynomial.eval_mul, hα, zero_mul, add_zero]
+  rw [mul_comm]
 
 /-- The engine output from the genuine `hᵢ,α`-numerator: for `Dᵢ = (x−α)·Dᵢ,α`,
 `(laurentH A D Di i j).eval α = (diffSubst Diα (laurentNum …)).eval α · (1/Eᵢ(α))^{i−j+1}·(1/Dᵢ'(α))^{2i−j}`. -/
