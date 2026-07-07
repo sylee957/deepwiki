@@ -171,7 +171,7 @@ theorem cCoupledDESystem_sound_of_check (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d 
         + toPolyG b1 * toPolyG y2 = toPolyG z2 :=
   coupledClearedCheck_sound a b1 b2 z1 z2 y1 y2 hcheck
 
--- **Sanity print** (book p.266 step 4): `CoupledDESystem(0, 4x−2, 2−8x², 4−4x) = (−1, 2x+1)`.
+-- **Sanity print.** The worked base solve returns `(−1, 2x+1)`.
 #eval (cCoupledDESystem (-1) ([] : CPolyG ℚ) coupledExB2 coupledExZ1 coupledExZ2 1).map
   (fun p => ((p.1 : List ℚ), (p.2 : List ℚ)))
 
@@ -185,7 +185,7 @@ theorem coupledDESystem_example :
       | none => false) = true := by native_decide
 
 #print axioms coupledDESystem_example
-/-! ### Restatement of the base soundness against the intended wording -/
+/-! ### Restatement of the base soundness signature -/
 
 -- ★ Base coupled-system soundness, `native_decide`-free: a self-certifying `cCoupledDESystem` solve gives
 -- the two `ℚ[X]` row identities `D(y₁) + b₁y₁ + a·b₂y₂ = z₁`, `D(y₂) + b₂y₁ + b₁y₂ = z₂`.
