@@ -15,7 +15,7 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {K : Type*} [Field K]
 
-/-- **The `p`-adic integer valuation on `K(t)`** `ratFuncOrd p x = νₚ(x)`: the `multiplicity` of the
+/-- The `p`-adic integer valuation on `K(t)` `ratFuncOrd p x = νₚ(x)`: the `multiplicity` of the
 prime `p` in the numerator minus its multiplicity in the denominator of `x ∈ RatFunc K`. A pole at `p`
 is `νₚ(x) < 0`; `νₚ(0) = 0`. -/
 noncomputable def ratFuncOrd (p : K[X]) (x : RatFunc K) : ℤ :=
@@ -32,7 +32,7 @@ theorem ratFuncOrd_algebraMap (p g : K[X]) (hp : Prime p) :
   rw [ratFuncOrd, RatFunc.num_algebraMap, RatFunc.denom_algebraMap, multiplicity_one_of_prime hp]
   simp
 
-/-- **`νₚ` reads through any representation**: for `x = a/b` with `a, b ≠ 0`,
+/-- `νₚ` reads through any representation: for `x = a/b` with `a, b ≠ 0`,
 `νₚ(x) = multiplicity p a − multiplicity p b`, even when `(a, b)` is not the canonical `num`/`denom`. -/
 theorem ratFuncOrd_mk (p : K[X]) (hp : Prime p) {a b : K[X]} (ha : a ≠ 0) (hb : b ≠ 0) :
     ratFuncOrd p (algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) b)
@@ -56,7 +56,7 @@ theorem ratFuncOrd_mk (p : K[X]) (hp : Prime p) {a b : K[X]} (ha : a ≠ 0) (hb 
   rw [ratFuncOrd]
   omega
 
-/-- **`νₚ` is multiplicative**: `νₚ(x·y) = νₚ(x) + νₚ(y)` for a prime `p` and nonzero `x, y ∈ K(t)`. -/
+/-- `νₚ` is multiplicative: `νₚ(x·y) = νₚ(x) + νₚ(y)` for a prime `p` and nonzero `x, y ∈ K(t)`. -/
 theorem ratFuncOrd_mul (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x ≠ 0) (hy : y ≠ 0) :
     ratFuncOrd p (x * y) = ratFuncOrd p x + ratFuncOrd p y := by
   have hxrep : x = algebraMap K[X] (RatFunc K) x.num / algebraMap K[X] (RatFunc K) x.denom :=
@@ -78,7 +78,7 @@ theorem ratFuncOrd_mul (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x ≠ 0
     ratFuncOrd]
   push_cast; ring
 
-/-- **`νₚ` is ultrametric with the strict-min law**: if `νₚ(x) < νₚ(y)` for a prime `p` and nonzero
+/-- `νₚ` is ultrametric with the strict-min law: if `νₚ(x) < νₚ(y)` for a prime `p` and nonzero
 `x, y`, then `νₚ(x + y) = νₚ(x)`; the dominant pole is not cancelled. -/
 theorem ratFuncOrd_add_of_lt (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x ≠ 0) (hy : y ≠ 0)
     (hlt : ratFuncOrd p x < ratFuncOrd p y) :
@@ -117,7 +117,7 @@ theorem ratFuncOrd_add_of_lt (p : K[X]) (hp : Prime p) {x y : RatFunc K} (hx : x
     multiplicity_mul hp (hfin (mul_ne_zero hdx hdy)), ratFuncOrd]
   push_cast; ring
 
-/-- **The ultrametric lower bound** (common lower bound preserved): if `n ≤ 0` and `n ≤ νₚ x`, `n ≤ νₚ y`,
+/-- The ultrametric lower bound (common lower bound preserved): if `n ≤ 0` and `n ≤ νₚ x`, `n ≤ νₚ y`,
 then `n ≤ νₚ(x + y)`. The `n ≤ 0` guard covers the `x + y = 0` case (`νₚ 0 = 0`). Via
 `min_le_emultiplicity_add` on the common-denominator numerator. -/
 theorem le_ratFuncOrd_add (p : K[X]) (hp : Prime p) {x y : RatFunc K} {n : ℤ} (hn : n ≤ 0)
@@ -181,9 +181,9 @@ section Lift
 
 variable [CharZero K] (d : Derivation ℤ K[X] K[X])
 
-/-- **The `K(t)`-valuation lift of the normal-pole order drop**: for `D = extendDeriv d` extending a
-base derivation `d` on `K[X]`, a prime `p` **normal** for `d` (`¬ p ∣ d p`) over a characteristic-zero
-field, `νₚ(D y) = νₚ(y) − 1` at a **normal pole** `νₚ(y) < 0`. Lifts the polynomial Wronskian-numerator
+/-- The `K(t)`-valuation lift of the normal-pole order drop: for `D = extendDeriv d` extending a
+base derivation `d` on `K[X]`, a prime `p` normal for `d` (`¬ p ∣ d p`) over a characteristic-zero
+field, `νₚ(D y) = νₚ(y) − 1` at a normal pole `νₚ(y) < 0`. Lifts the polynomial Wronskian-numerator
 kernel to the fraction field via `D y = (d a·b − a·d b)/b²`. -/
 theorem ratFuncOrd_extendDeriv_eq_sub_one_of_normal {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
     {y : RatFunc K} (hpole : ratFuncOrd p y < 0) :
@@ -236,9 +236,9 @@ theorem ratFuncOrd_extendDeriv_eq_sub_one_of_normal {p : K[X]} (hp : Prime p) (h
   have hk1 : 1 ≤ k := Nat.one_le_of_lt hlt
   omega
 
-/-- **Derivative of a regular function is regular** (`Res_p(D y) = 0` in valuation form). If `y` is regular at
+/-- Derivative of a regular function is regular (`Res_p(D y) = 0` in valuation form). If `y` is regular at
 `p` (`νₚ y ≥ 0`), then `D y = extendDeriv d y` is regular (`νₚ(D y) ≥ 0`) — so `D y` has no simple pole at `p`,
-i.e. **no residue**. No normality needed: `y = a/b` reduced with `νₚ y ≥ 0` forces `b` a `p`-unit
+i.e. no residue. No normality needed: `y = a/b` reduced with `νₚ y ≥ 0` forces `b` a `p`-unit
 (coprimality), and `D y = (d a·b − a·d b)/b²` then has a `p`-unit denominator over a polynomial numerator. The
 `g`-regular ⟹ `Res(D g) = 0` step of the residue criterion (`descendGenuine`). -/
 theorem ratFuncOrd_extendDeriv_nonneg_of_nonneg {p : K[X]} (hp : Prime p) {y : RatFunc K}
@@ -270,8 +270,8 @@ theorem ratFuncOrd_extendDeriv_nonneg_of_nonneg {p : K[X]} (hp : Prime p) {y : R
       multiplicity_mul hp (FiniteMultiplicity.of_prime_left hp (mul_ne_zero hb0 hb0)), hbunit]
   rw [hb2]; simp
 
-/-- **The per-prime RDE no-pole bound**: for a solution `y` of `D y + f·y = g` (`D = extendDeriv d`), a
-prime `p` **normal** for `d`, if `p` is not a pole of `f` (`νₚ(f) ≥ 0`) nor of `g` (`νₚ(g) ≥ 0`), then
+/-- The per-prime RDE no-pole bound: for a solution `y` of `D y + f·y = g` (`D = extendDeriv d`), a
+prime `p` normal for `d`, if `p` is not a pole of `f` (`νₚ(f) ≥ 0`) nor of `g` (`νₚ(g) ≥ 0`), then
 `y` has no pole at `p` (`νₚ(y) ≥ 0`). By contradiction through the order-drop lift and the strict-min
 law. -/
 theorem ratFuncOrd_nonneg_of_rde_at_normal {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
@@ -301,12 +301,12 @@ theorem ratFuncOrd_nonneg_of_rde_at_normal {p : K[X]} (hp : Prime p) (hnormal : 
       ratFuncOrd_add_of_lt p hp hDyne (mul_ne_zero hf0 hyne) hlt_sum
     rw [hrde, hDy_ord] at hsum_ord; omega
 
-/-- **An at-most-simple-pole derivative comes from a regular function.** At a prime `p` **normal** for `d`,
+/-- An at-most-simple-pole derivative comes from a regular function. At a prime `p` normal for `d`,
 if `D y = extendDeriv d y` has at most a simple pole (`νₚ(D y) ≥ −1`), then `y` is regular (`νₚ(y) ≥ 0`): a
 pole `νₚ(y) < 0` would drop to `νₚ(D y) = νₚ(y) − 1 ≤ −2`. This is the pole-order heart of the residue
-criterion (`descendGenuine`): in a Liouville form `a/d = D g + Σ cᵢ·logDeriv vᵢ` with `a/d` **reduced**
+criterion (`descendGenuine`): in a Liouville form `a/d = D g + Σ cᵢ·logDeriv vᵢ` with `a/d` reduced
 (simple poles) and the log part simple-poled, the rational part `g` carries no simple pole at those primes,
-so `D g` contributes **no** residue there — every residue is a constant log coefficient. -/
+so `D g` contributes no residue there — every residue is a constant log coefficient. -/
 theorem ratFuncOrd_nonneg_of_extendDeriv_ge_neg_one {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
     {y : RatFunc K} (h : -1 ≤ ratFuncOrd p (extendDeriv d y)) : 0 ≤ ratFuncOrd p y := by
   by_contra hlt
@@ -314,11 +314,11 @@ theorem ratFuncOrd_nonneg_of_extendDeriv_ge_neg_one {p : K[X]} (hp : Prime p) (h
   rw [ratFuncOrd_extendDeriv_eq_sub_one_of_normal d hp hnormal hlt] at h
   omega
 
-/-- **The residue criterion's rational-part regularity** (`descendGenuine` core). In a Liouville form
-`f = D g + h` (`D = extendDeriv d`) with `f` **reduced** at `p` (`νₚ f ≥ −1`, a simple pole) and the log part
-`h` simple-poled (`νₚ h ≥ −1`), the rational part `g` is **regular** at every prime `p` normal for `d`
+/-- The residue criterion's rational-part regularity (`descendGenuine` core). In a Liouville form
+`f = D g + h` (`D = extendDeriv d`) with `f` reduced at `p` (`νₚ f ≥ −1`, a simple pole) and the log part
+`h` simple-poled (`νₚ h ≥ −1`), the rational part `g` is regular at every prime `p` normal for `d`
 (`νₚ g ≥ 0`): `D g = f − h` has at most a simple pole (ultrametric), and an at-most-simple-pole derivative
-comes from a regular function. Hence `D g` carries **no** residue at `p`, so every residue of `f` is a
+comes from a regular function. Hence `D g` carries no residue at `p`, so every residue of `f` is a
 constant log coefficient — the pole-order half of the transcendental residue criterion. -/
 theorem ratFuncOrd_nonneg_of_liouville_reduced {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
     {f g h : RatFunc K} (hLiou : f = extendDeriv d g + h)
@@ -328,10 +328,10 @@ theorem ratFuncOrd_nonneg_of_liouville_reduced {p : K[X]} (hp : Prime p) (hnorma
   rw [hDg]
   exact le_ratFuncOrd_add p hp (by norm_num) hf (by rw [ratFuncOrd_neg p hp]; exact hh)
 
-/-- **The residue criterion's rational-part has no residue** (`descendGenuine` valuation heart, combined). In
+/-- The residue criterion's rational-part has no residue (`descendGenuine` valuation heart, combined). In
 a Liouville form `f = D g + h` with `f` reduced (`νₚ f ≥ −1`) and `h` simple-poled (`νₚ h ≥ −1`), the
-rational-part derivative `D g` is **regular** at every prime `p` normal for `d` (`νₚ(D g) ≥ 0`) — so it has no
-simple pole and contributes **no residue**. Hence every residue of `f` at `p` is the residue of the log part
+rational-part derivative `D g` is regular at every prime `p` normal for `d` (`νₚ(D g) ≥ 0`) — so it has no
+simple pole and contributes no residue. Hence every residue of `f` at `p` is the residue of the log part
 `h`, a constant log coefficient. Composes `ratFuncOrd_nonneg_of_liouville_reduced` (`g` regular) with
 `ratFuncOrd_extendDeriv_nonneg_of_nonneg` (`D` of regular is regular). -/
 theorem ratFuncOrd_extendDeriv_nonneg_of_liouville_reduced {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
@@ -347,7 +347,7 @@ end Lift
 Per-prime valuation bounds `νₚ(y) ≥ −νₚ(q)` combine into the divisibility `denom(y) ∣ q` via
 `UniqueFactorizationMonoid.dvd_iff_emultiplicity_le`. -/
 
-/-- **`denom(x) ∣ q` from per-prime multiplicity bounds**: for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if
+/-- `denom(x) ∣ q` from per-prime multiplicity bounds: for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if
 `multiplicity p x.denom ≤ multiplicity p q` for every prime `p`, then `x.denom ∣ q`. -/
 theorem ratFunc_denom_dvd_of_multiplicity_le {x : RatFunc K} {q : K[X]} (hq : q ≠ 0)
     (h : ∀ p : K[X], Prime p → multiplicity p x.denom ≤ multiplicity p q) :
@@ -358,7 +358,7 @@ theorem ratFunc_denom_dvd_of_multiplicity_le {x : RatFunc K} {q : K[X]} (hq : q 
     (FiniteMultiplicity.of_prime_left hp hq).emultiplicity_eq_multiplicity]
   exact_mod_cast h p hp
 
-/-- **The valuation bound `−νₚ(x) ≤ νₚ(q)` reads as `multiplicity p x.denom ≤ multiplicity p q`**: at a
+/-- The valuation bound `−νₚ(x) ≤ νₚ(q)` reads as `multiplicity p x.denom ≤ multiplicity p q`: at a
 prime `p`, `−ratFuncOrd p x ≤ multiplicity p q` forces `multiplicity p x.denom ≤ multiplicity p q`, using
 coprimality of `num`/`denom`. -/
 theorem multiplicity_denom_le_of_ratFuncOrd {x : RatFunc K} {q : K[X]} (p : K[X]) (hp : Prime p)
@@ -375,7 +375,7 @@ theorem multiplicity_denom_le_of_ratFuncOrd {x : RatFunc K} {q : K[X]} (p : K[X]
   · -- `p ∤ denom` ⟹ `multiplicity p denom = 0 ≤ multiplicity p q`.
     rw [multiplicity_eq_zero.mpr hpd]; exact Nat.zero_le _
 
-/-- **The global no-pole-bound ⟹ denominator divisibility**: for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if
+/-- The global no-pole-bound implies denominator divisibility: for `x ∈ K(t)`, `q ∈ K[X]` nonzero, if
 every prime `p` satisfies `νₚ(x) ≥ −νₚ(q)`, then `x.denom ∣ q`. Combines
 `multiplicity_denom_le_of_ratFuncOrd` with `ratFunc_denom_dvd_of_multiplicity_le`. -/
 theorem ratFunc_denom_dvd_of_ratFuncOrd_bound {x : RatFunc K} {q : K[X]} (hq : q ≠ 0)
