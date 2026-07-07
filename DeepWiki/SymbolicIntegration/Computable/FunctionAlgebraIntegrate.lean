@@ -175,30 +175,33 @@ namespace CPolyG
 
 open scoped Differential
 
-/-- Component 1's curve `T₁ = y² − x ∈ ℚ(x)[y]`, the function field `ℚ(x)[√x]`. -/
-def fa72T1 : CPolyG (QFunNZG ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
+/-- The square-root component curve `T₁ = y² − x ∈ ℚ(x)[y]`. -/
+def sqrtComponentCurve : CPolyG (QFunNZG ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
 
-/-- The component-1 integral `F₁ = (2/3)·x·y ∈ ℚ(x)[y]/(y²−x)`: `∫y dx = 2xy/3` on `y² = x`. -/
-def fa72F1 : CPolyG (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 2/3]]
+/-- The square-root component integral `F₁ = (2/3)·x·y`. -/
+def sqrtComponentIntegral : CPolyG (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 2/3]]
 
-/-- Component 2's curve `T₂ = y³ − x ∈ ℚ(x)[y]`, the function field `ℚ(x)[x^{1/3}]`. -/
-def fa72T2 : CPolyG (QFunNZG ℚ) := [qxOfNum [0, -1], CField.zero, CField.zero, CField.one]
+/-- The cube-root component curve `T₂ = y³ − x ∈ ℚ(x)[y]`. -/
+def cubeRootComponentCurve : CPolyG (QFunNZG ℚ) := [qxOfNum [0, -1], CField.zero, CField.zero, CField.one]
 
-/-- The component-2 integral `F₂ = (3/4)·x·y ∈ ℚ(x)[y]/(y³−x)`: `∫y dx = 3xy/4` on `y³ = x`. -/
-def fa72F2 : CPolyG (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 3/4]]
+/-- The cube-root component integral `F₂ = (3/4)·x·y`. -/
+def cubeRootComponentIntegral : CPolyG (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 3/4]]
 
 /-- The integrand `y = [0, 1]` (`afBasisElem 1`) of `∫y dx`. -/
-def fa72Y : CPolyG (QFunNZG ℚ) := afBasisElem 1
+def componentIntegrandY : CPolyG (QFunNZG ℚ) := afBasisElem 1
 
 /-- Component 1 (`native_decide`): `∫y dx = (2/3)·x·y` on `y² − x = 0`, checked by
 `cisZeroG (afDerivWf (y²−x) F₁ − y)`. -/
-theorem fa72_component1 :
-    cisZeroG (csubG (afDerivWf fa72T1 fa72F1) fa72Y) = true := by native_decide
+theorem sqrtComponentIntegral_deriv :
+    cisZeroG (csubG (afDerivWf sqrtComponentCurve sqrtComponentIntegral) componentIntegrandY) = true := by
+  native_decide
 
 /-- Component 2 (`native_decide`): `∫y dx = (3/4)·x·y` on `y³ − x = 0`, checked by
 `cisZeroG (afDerivWf (y³−x) F₂ − y)`. -/
-theorem fa72_component2 :
-    cisZeroG (csubG (afDerivWf fa72T2 fa72F2) fa72Y) = true := by native_decide
+theorem cubeRootComponentIntegral_deriv :
+    cisZeroG (csubG (afDerivWf cubeRootComponentCurve cubeRootComponentIntegral) componentIntegrandY)
+      = true := by
+  native_decide
 
 end CPolyG
 
