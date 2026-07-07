@@ -429,7 +429,7 @@ theorem toAdj_zero : toAdj (RadExt.zero : RadExt α n f) = 0 := by
 theorem toAdj_one : toAdj (RadExt.one : RadExt α n f) = 1 := by
   show AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (CPolyG.toPolyG ([CField.one] : RadElem α)) = 1
   rw [show CPolyG.toPolyG ([CField.one] : RadElem α) = (1 : (CFieldSpec.K α)[X]) by
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]]
+    simp only [denote]; simp]
   exact map_one _
 
 /-- `toAdj` sends radical-extension addition to quotient-ring addition. -/
