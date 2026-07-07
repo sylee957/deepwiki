@@ -39,14 +39,6 @@ open Classical
 
 /-! ### The abstract Yun loop and its factor products -/
 
-open Classical in
-/-- The powered product of the abstract Yun loop matches the powered squarefree parts up to association. -/
-theorem yunLoopAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X])
-    (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
-    Associated (prodPow i (yunLoopAbs A (b, d) i n))
-      (prodPow i ((List.range n).map (fun j => sqfreeFactPart A (i + j)))) :=
-  prodPow_associated (yunLoopAbs_forall₂ A hA n i b d hi hinv) i
-
 /-- Over a characteristic-`0` field: if `Pʲ ∣ p` exactly (`P^{j+1} ∤ p`) for irreducible `P` and
 `j ≥ 1`, then `Pʲ ∤ dp/dx`. -/
 private theorem pow_not_dvd_derivative_aux (p P : K[X]) (j : ℕ) (hj : 1 ≤ j) (hP : Irreducible P)

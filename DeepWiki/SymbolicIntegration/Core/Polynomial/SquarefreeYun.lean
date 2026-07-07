@@ -460,6 +460,14 @@ theorem prodPow_one_sqfreeFactPart_range_associated [CharZero K] (A : K[X])
   rw [hIco, ← Finset.prod_subset hsub hoff]
   exact (primPart_associated_prod_sqfreeFactPart A hA).symm
 
+open Classical in
+/-- The powered product of the abstract Yun loop matches the powered squarefree parts up to association. -/
+theorem yunLoopAbs_prodPow_assoc [CharZero K] (A : K[X])
+    (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
+    Associated (prodPow i (yunLoopAbs A (b, d) i n))
+      (prodPow i ((List.range n).map (fun j => sqfreeFactPart A (i + j)))) :=
+  prodPow_associated (yunLoopAbs_forall₂ A hA n i b d hi hinv) i
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration
