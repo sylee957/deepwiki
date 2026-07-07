@@ -182,7 +182,8 @@ theorem toPoly2_cscaleListQ (s : ℚ) (p : List (CPolyG ℚ)) :
   · rw [List.getD_eq_getElem?_getD, List.getElem?_map]
     rw [show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     simp only [Option.map_some, Option.getD_some]
-    rw [toPolyG_cscaleG, Polynomial.coeff_C_mul, toPoly2_coeff,
+    simp only [denote]
+    rw [Polynomial.coeff_C_mul, toPoly2_coeff,
       List.getD_eq_getElem?_getD, show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     simp only [Option.getD_some, CFieldSpec.toK, id_eq]
   · rw [List.getD_eq_getElem?_getD, List.getElem?_map,
