@@ -124,17 +124,6 @@ theorem deflation_one_eq_gcd (A : K[X]) (hA : A.primPart ≠ 0) :
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- `squarefreePart (deflation A k)` is monic. -/
-theorem squarefreePart_deflation_monic {K : Type*} [Field K] (A : K[X]) (k : ℕ)
-    (hA : A.primPart ≠ 0) : (squarefreePart (deflation A k)).Monic := by
-  rw [squarefreePart_deflation A k hA]
-  refine monic_prod_of_monic _ _ (fun P hP => ?_)
-  have hmem := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
-  rw [← normalize_normalized_factor P hmem]
-  exact monic_normalize (irreducible_of_normalized_factor P hmem).ne_zero
-
-open UniqueFactorizationMonoid in
-open Classical in
 /-- `deflation A k` is monic. -/
 theorem deflation_monic {K : Type*} [Field K] (A : K[X]) (k : ℕ) :
     (deflation A k).Monic := by
