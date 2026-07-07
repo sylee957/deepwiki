@@ -3,6 +3,7 @@ import Mathlib.FieldTheory.Perfect
 import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 
 /-! # Squarefree factorization via the derivative criterion
 The squarefree part and deflations of `A ∈ D[x]` are computed by gcds with `dA/dx`, since a prime
@@ -15,16 +16,6 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R]
-
-/-- If `Pⁿ⁺¹ ∣ A` then `Pⁿ` divides both `A` and its derivative `dA/dx`. -/
-theorem pow_dvd_and_pow_dvd_derivative {A P : R[X]} {n : ℕ} (h : P ^ (n + 1) ∣ A) :
-    P ^ n ∣ A ∧ P ^ n ∣ derivative A := by
-  refine ⟨(pow_dvd_pow P (Nat.le_succ n)).trans h, ?_⟩
-  obtain ⟨B, rfl⟩ := h
-  rw [derivative_mul, derivative_pow_succ]
-  apply dvd_add
-  · exact ((dvd_mul_left (P ^ n) _).mul_right _).mul_right _
-  · exact (pow_dvd_pow P (Nat.le_succ n)).mul_right _
 
 /-- If `Pⁿ⁺¹ ∣ A` then `Pⁿ ∣ G` for any gcd `G` of `A` and its derivative `dA/dx`. -/
 theorem pow_dvd_gcd_of_pow_succ_dvd {A P G : R[X]} {n : ℕ} (h : P ^ (n + 1) ∣ A)
