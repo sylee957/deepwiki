@@ -46,7 +46,8 @@ structure IsSpecialDenominator (b ds : CPolyG α) : Prop extends IsProperSpecial
 (`extendDeriv_algebraMap` + `toPolyG_cmonomialDeriv`). -/
 theorem towerFractionFieldDerivG_amG_poly (Dt p : CPolyG α) :
     towerFractionFieldDerivG Dt (amG α (toPolyG p)) = amG α (toPolyG (cmonomialDeriv Dt p)) := by
-  rw [towerFractionFieldDerivG, extendDeriv_algebraMap, toPolyG_cmonomialDeriv]
+  rw [towerFractionFieldDerivG, extendDeriv_algebraMap]
+  simp only [denote]
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `toK (cLaurentShiftG η k) = k · toK η` for a non-negative shift `k : ℕ`. -/
