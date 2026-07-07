@@ -70,8 +70,18 @@ Query liberally; it's cheap and it shows you the whole graph a newcomer can't se
 - **bundle / re-docstring** — collapse recurring hypothesis clusters into a `Prop` structure; make module
   and declaration docstrings orient a newcomer.
 
-**5. Be bold — prefer the uniformity-raising change over the timid local patch.** A newcomer should be
-able to *predict* what a thing is called and where it lives, so actively:
+**5. Be bold — moving and renaming are SAFE here, so prefer them over the timid local patch.**
+
+> **Why you can move with confidence.** Lean fully type-checks *every* reference across the whole
+> library. A move or rename that breaks anything — a missed import, a stale reference, a wrong
+> `namespace` — **cannot** compile: `scripts/check.sh` turns red and names the exact broken site. There
+> is no silent breakage, no runtime surprise, no "did I catch every caller?" — the gate answers that
+> for you, exhaustively. So a reorganization is *low-risk and fully reversible* (it's a `git` revert if
+> the gate ever fails), not a leap of faith. **Treat the type checker as your net and move.** The
+> failure mode to avoid is not a broken build (the gate catches that) — it is leaving the library
+> disorganized because a move *felt* risky when it wasn't.
+
+A newcomer should be able to *predict* what a thing is called and where it lives, so actively:
 - **Rename declarations** to a consistent, semantic scheme; unify naming *families* so the same concept is
   named the same way everywhere (Mathlib's `conclusion_of_hypothesis` order; one term per object across a
   group; `Is<Concept>` predicates; no primed names). If half a family is `…_left`/`…_right` and the rest
@@ -82,12 +92,35 @@ able to *predict* what a thing is called and where it lives, so actively:
 - **Standardize the shape** — uniform module-docstring style, section headers, and hypothesis-binder
   conventions, so every file *feels* the same to read.
 
-Bold means larger-scoped, not reckless:
-- **Always `scripts/wiki rdeps <name>` first** — a rename touches every reference; update them all in one
-  deliberate, atomic change (real edits, not `sed`), then gate. Nothing half-renamed.
+**Plan the move in a file first — then execute it mechanically.** For any multi-file reorganization
+(a partition-mode regroup, a directory split, a family-wide rename), don't improvise edit-by-edit —
+that is what makes an agent hesitate. Write a short scratch plan (`docs/reorg-<theme>.md`, delete it
+when the reorg lands) that pins the move down completely *before touching code*, so execution is
+rote:
+```
+# Reorg: <theme>            e.g. the derivation-on-FractionRing cluster
+Target module: DeepWiki.SymbolicIntegration.<Dir>.<NewFile>
+Decls to move (from `wiki show`/`context`):
+  derivation_fractionRing_unique_of_restrict   [Core/Differential/Foo.lean → here]
+  existsUnique_derivation_fractionRing         [Compute/Bar.lean          → here]
+  ...
+Impact (`wiki rdeps` on each): <callers to re-import>
+Unify: <near-duplicate lemmas in the cluster to collapse into one abstraction>
+Steps: 1) create target + aggregator  2) git mv / move decls  3) fix imports  4) gate  5) unify  6) gate
+```
+With the plan written, the moves are deterministic; follow it and let the gate confirm each step.
+
+Bold means larger-scoped, not reckless — the discipline that keeps a bold move clean:
+- **Always `scripts/wiki rdeps <name>` first** — a rename touches every reference; the plan lists them,
+  then update them all in one deliberate, atomic change (real edits, not `sed`) and gate. Nothing
+  half-renamed. (`rdeps` tells you the blast radius up front, so a red gate is a surprise you've already
+  ruled out — not a risk you're taking.)
 - **A file/module rename** touches every import + the aggregator + doc-gen URLs — do it as a
   **`git mv`-only commit** (imports + aggregator only, zero declaration change), separate from content
   edits, so the gate can verify it's moves-only.
+- **When the gate goes red, it's doing its job** — read the error, fix the named site, re-gate. A red
+  gate mid-reorg is normal and expected, not a signal to abandon the move; only an *unfixable* red gate
+  (a genuine semantic clash) is a reason to `git` revert and rethink.
 
 ## Guardrails
 
