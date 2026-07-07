@@ -116,6 +116,52 @@ theorem hdvdWf_free_of_en_dvd_dn (Dt fnum fden gnum gden : CPolyG α)
 
 end DivisibilityResidualWf
 
+/-! ## Clearing divisibility clauses -/
+
+section ClearingDivisibility
+
+variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+
+/-- If `fden ∣ dₙ·h0`, then `fden` divides the `B`-numerator `dₙh·fnum - dₙ·Dh·fden`. -/
+theorem hdvdB_of_dvd_wf (Dt : CPolyG β) (fnum fden h0 : CPolyG β)
+    (hdvd : toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0)) :
+    toPolyG fden ∣ toPolyG (CPolyG.csubG
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) fnum)
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1
+          (CPolyG.cmonomialDeriv Dt h0)) fden)) := by
+  simp only [denote] at hdvd ⊢
+  apply dvd_sub
+  · exact hdvd.mul_right _
+  · exact Dvd.intro_left _ rfl
+
+/-- If `gden ∣ dₙ·h0·h0`, then `gden` divides the `C`-numerator `dₙh²·gnum`. -/
+theorem hdvdC_of_dvd_wf (Dt : CPolyG β) (gnum fden gden h0 : CPolyG β)
+    (hdvd : toPolyG gden ∣ toPolyG (CPolyG.cmulG
+      (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) h0)) :
+    toPolyG gden ∣ toPolyG (CPolyG.cmulG
+        (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) h0) gnum) := by
+  simp only [denote] at hdvd ⊢
+  exact hdvd.mul_right _
+
+/-- `fden ∣ dₙh` when `fden` equals its own normal part. -/
+theorem dvd_dn_h_of_normal_wf (Dt : CPolyG β) (fden h0 : CPolyG β)
+    (hnormal : toPolyG (CPolyG.cSplitFactorFastGWf Dt fden).1 = toPolyG fden) :
+    toPolyG fden ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) := by
+  simp only [denote]
+  rw [hnormal]
+  exact Dvd.intro _ rfl
+
+end ClearingDivisibility
+
+/-- `fden ∣ dₙh` for the shape `fden = [1]`. -/
+theorem dvd_dn_h_one_wf {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
+    [CTowerGcdWitnessWf β] (h0 : CPolyG β) :
+    toPolyG ([CField.one] : CPolyG β)
+      ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) [CField.one]).1 h0) := by
+  rw [cSplitFactorFastGWf_one_eq]
+  simp only [denote, toPolyG_cone_eq_one_wf]
+  exact one_dvd _
+
 
 /-! ## Inner completeness assembly -/
 
