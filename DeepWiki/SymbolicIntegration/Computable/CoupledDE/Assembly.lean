@@ -55,7 +55,8 @@ theorem dotQ_mulMatrixQ_row (b y : CPolyG ℚ) (d nrows r : ℕ) (hr : r < nrows
   rw [mulMatrixQ, getD_lt_gen _ r [] (by rw [List.length_map, List.length_range]; exact hr),
     List.getElem_map, List.getElem_range]
   rw [dotQ_range_maps]
-  rw [toPolyG_cmulG, Polynomial.coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
+  simp only [denote]
+  rw [Polynomial.coeff_mul, Finset.Nat.sum_antidiagonal_eq_sum_range_succ_mk]
   -- RHS: Σ_{j≤r} b[j]·y[r-j]; reindex j ↦ r-j to Σ_{i≤r} b[r-i]·y[i].
   rw [show (∑ k ∈ Finset.range (r + 1),
         (toPolyG b).coeff k * (toPolyG y).coeff (r - k))
