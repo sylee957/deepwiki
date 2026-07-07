@@ -145,7 +145,8 @@ theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : C
   rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero]
   -- push `toPolyG` through everything
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]
+    simp only [denote]
+    simp
   have hzero : toPolyG ([CField.zero] : CPolyG α) = 0 := by
     rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero]
   simp only [toPolyG_cmulG, toPolyG_caddG, toPolyG_csubG, hone, hzero]
