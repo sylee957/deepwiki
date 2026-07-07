@@ -526,8 +526,8 @@ theorem cCoupledDESystem_sound (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ)
 
 /-! ### Restatements against the intended wording -/
 
--- ★ The §8 base coupled-system solve UNCONDITIONALLY solves the two `ℚ[X]` row identities — no cleared
--- check hypothesis (the engine's own check is discharged from `cConstSolveUniqueQ_sound`).
+-- The base coupled-system solve satisfies the two `ℚ[X]` row identities without a separate cleared-check
+-- hypothesis; the check is discharged from `cConstSolveUniqueQ_sound`.
 example (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
     (hsome : CPolyG.cCoupledDESystem a b1 b2 z1 z2 d = some (y1, y2)) :
     Polynomial.derivative (CPolyG.toPolyG y1) + CPolyG.toPolyG b1 * CPolyG.toPolyG y1
@@ -536,7 +536,7 @@ example (a : ℚ) (b1 b2 z1 z2 y1 y2 : CPolyG ℚ) (d : ℕ)
         + CPolyG.toPolyG b1 * CPolyG.toPolyG y2 = CPolyG.toPolyG z2 :=
   cCoupledDESystem_sound a b1 b2 z1 z2 d y1 y2 hsome
 
--- ★ `cConstSolveUniqueQ` soundness restated: the returned solution solves `A·x = b` rowwise.
+-- `cConstSolveUniqueQ` soundness: the returned solution solves `A·x = b` rowwise.
 example (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
     (hwidth : ∀ r ∈ Arows, r.length = ncols) (hlen : Arows.length = urhs.length)
     (hsome : CPolyG.cConstSolveUniqueQ Arows urhs ncols = some x) :
