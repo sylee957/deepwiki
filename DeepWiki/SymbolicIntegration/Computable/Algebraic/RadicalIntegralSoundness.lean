@@ -350,8 +350,11 @@ numerically, here a theorem of the abstract derivation. -/
 theorem radIsZero_radDeriv_radGen_qx :
     radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
         [CField.zero, radicandLogDer]) = true := by
-  rw [radIsZero, radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero,
-    radDeriv_radGen_sound_qx]
+  rw [radIsZero, radSub, CPolyG.cisZeroG_iff]
+  simp only [denote]
+  rw [radDeriv_radGen_sound_qx]
+  simp only [denote]
+  ring
 
 /-! ### Bridge (i): the `qxOfNum : CPolyG ℚ → QFunNZG ℚ` lift commutes with the derivation
 
