@@ -1,54 +1,59 @@
-# Laurent root-substitution bridge reorg
+# Laurent root-substitution split
 
-## Target module
+## Target modules
 
-`DeepWiki.SymbolicIntegration.LaurentCoefficients` should become an aggregator over thematic Laurent-coefficient modules.
-
-Planned modules:
-
-- `DeepWiki.SymbolicIntegration.LaurentCoefficients.Engine`: current engine definitions and base recursion.
-- `DeepWiki.SymbolicIntegration.LaurentCoefficients.RootSubstitution`: root substitution, `diffSubst` bridge, and Taylor-coefficient bridge.
-- Later split candidate: engine-form partial-fraction assembly.
+- `DeepWiki.SymbolicIntegration.LaurentCoefficients.RootInvariant`
+- `DeepWiki.SymbolicIntegration.LaurentCoefficients.RootEvaluation`
+- `DeepWiki.SymbolicIntegration.LaurentCoefficients.TaylorCoefficient`
+- `DeepWiki.SymbolicIntegration.LaurentCoefficients.RootSubstitution` remains an aggregator.
 
 ## Declarations to move
 
-First mechanical step:
+`RootInvariant` owns the specialized recursion invariant in `K(x)`:
 
-- Move the current contents of `DeepWiki/SymbolicIntegration/LaurentCoefficients.lean` to
-  `DeepWiki/SymbolicIntegration/LaurentCoefficients/Engine.lean`.
-- Replace `DeepWiki/SymbolicIntegration/LaurentCoefficients.lean` with an aggregator import.
+- `lDenomα`, `diffSubst_lDenom`, `lDenomα_ne_zero`
+- `lFracα`, `hFracα`, `lFracα_zero`
+- `reduced_numα`, `ratFuncKDeriv_lFracα`
+- `iterate_ratFuncKDeriv_hFracα`
 
-Second thematic step:
+`RootEvaluation` owns the engine-output root evaluation bridge:
 
-- Move root-substitution and Taylor bridge declarations out of `Engine`:
-  `eval_laurentSubst_some`, `laurentQ_eval_at_root`, `lDenomα`, `diffSubst_lDenom`,
-  `lDenomα_ne_zero`, `lFracα`, `hFracα`, `lFracα_zero`, `reduced_numα`,
-  `ratFuncKDeriv_lFracα`, `iterate_ratFuncKDeriv_hFracα`,
-  `eval_diffSubst_laurentNum_eq_laurentQ_eval`, `eval_laurentH`,
-  `eval_laurentH_eq_diffSubst_laurentNum`, `eval_lDenomα_ne_zero`,
-  `eval_lFracα`, `eval_smul_lFracα`, `eval_ratFuncKDeriv_iterate_hFracα_at_root`,
-  `IsLaurentRegularRoot`, `eval_laurentH_eq_taylor_coeff`.
+- `eval_laurentSubst_some`
+- `laurentQ_eval_at_root`
+- `eval_diffSubst_laurentNum_eq_laurentQ_eval`
+- `eval_laurentH`
+- `eval_laurentH_eq_diffSubst_laurentNum`
+
+`TaylorCoefficient` owns the evaluated rational-function bridge and regular-root package:
+
+- `eval_lDenomα_ne_zero`
+- `eval_lFracα`, `eval_smul_lFracα`
+- `eval_ratFuncKDeriv_iterate_hFracα_at_root`
+- `IsLaurentRegularRoot`
+- `eval_laurentH_eq_taylor_coeff`
 
 ## Impact
 
-`wiki rdeps` checks before the split:
+`scripts/wiki rdeps DeepWiki.SymbolicIntegration.eval_laurentH_eq_taylor_coeff --depth 3`
+reports downstream use in `LaurentCoefficients.Assembly` and the source catalog.
 
-- `diffSubst_lDenom`: used by `reduced_numα`, `ratFuncKDeriv_lFracα`.
-- `eval_diffSubst_laurentNum_eq_laurentQ_eval`: catalog alias only.
-- `eval_laurentH_eq_diffSubst_laurentNum`: used by `eval_laurentH_eq_taylor_coeff`, catalog alias.
-- `eval_laurentH_eq_taylor_coeff`: used by `localCoeff_eq_laurentH`, catalog alias.
-- `localCoeff_eq_laurentH`: used by `localPrincipalPart_eq_engineSum`, catalog alias.
+`scripts/wiki rdeps DeepWiki.SymbolicIntegration.iterate_ratFuncKDeriv_hFracα --depth 3`
+reports the catalog invariant restatement and the Taylor coefficient evaluation.
 
-Existing import sites of `DeepWiki.SymbolicIntegration.LaurentCoefficients` remain valid through the aggregator.
+`scripts/wiki rdeps DeepWiki.SymbolicIntegration.eval_laurentH_eq_diffSubst_laurentNum --depth 3`
+reports the catalog root-evaluation restatement, the Taylor bridge, and assembly.
 
 ## Unify list
 
-- Keep declaration names and namespaces unchanged.
-- Keep book/source aliases in `Sources/` pointed at the same declaration names.
-- Keep `diffSubst` core in `Core/Differential/DifferentialPolynomials.lean`; this reorg is only the Laurent-side bridge.
+- Keep the existing `RootSubstitution` import path as an aggregator so downstream files
+  need no semantic retargeting.
+- Place the genuine rational-function recursion near the fraction invariant it
+  specializes.
+- Place Taylor evaluation after both root evaluation and the rational invariant.
 
 ## Steps
 
-1. Pure move: make `LaurentCoefficients.lean` an aggregator and move current contents to `LaurentCoefficients/Engine.lean`; gate and commit.
-2. Extract the root-substitution/Taylor bridge into `LaurentCoefficients/RootSubstitution.lean`; update aggregator order; gate and commit.
-3. Rebuild `scripts/wiki` and resample the `diffSubst` partition signal.
+1. Add the three stage modules.
+2. Replace `RootSubstitution.lean` with an aggregator importing `TaylorCoefficient`.
+3. Gate each new module, then the existing `RootSubstitution` aggregator.
+4. Run the full gate, rebuild the wiki graph, and commit.
