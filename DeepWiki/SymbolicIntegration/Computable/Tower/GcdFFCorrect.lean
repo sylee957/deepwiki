@@ -189,7 +189,7 @@ theorem gbnormCore_getLast?_toPolyG_ne_zero (p : GBPolyCore β) :
         intro v hv
         rw [if_neg (by simp), List.getLast?_singleton, Option.some.injEq] at hv
         subst hv
-        rw [toPolyG_cnormG]
+        simp only [denote]
         intro hz
         have hca : CPolyG.cnormG a = [] := (cnormG_eq_nil_iff a).mpr hz
         rw [CPolyG.cisZeroG, hca] at ha
