@@ -124,7 +124,7 @@ theorem isRadicalLogTerm_radGen (n : ℕ) (f : α) :
   -- the integrand `[ℓ]` reads as `C(toK ℓ)`; `radGen` reads as `X`; `radDeriv radGen` reads as `C(toK ℓ)·X`
   have hint : CPolyG.toPolyG ([logDerRadicand n f] : RadElem α) = Polynomial.C (CFieldSpec.toK
       (logDerRadicand n f)) := by
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]
+    simp only [denote, mul_zero, add_zero]
   rw [toPolyG_radDeriv_radGen_eq, toPolyG_radGen, hint, ← map_mul]
   -- `C(toK ℓ)·X = X·C(toK ℓ)` in `K[X]`, pushed through `mk` (commutativity)
   rw [mul_comm X]
