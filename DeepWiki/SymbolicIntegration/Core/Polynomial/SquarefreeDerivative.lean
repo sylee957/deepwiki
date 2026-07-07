@@ -59,6 +59,14 @@ theorem pow_succ_dvd_of_pow_dvd_derivative {A P : R[X]} {n : ℕ} (hn : 0 < n) (
         (eq_zero_of_dvd_of_degree_lt hPP (degree_derivative_lt hPne))
   · exact hPB hR
 
+/-- In characteristic `0`, for prime `P` of positive degree and `0 < n`, `Pⁿ⁺¹ ∣ A` iff `Pⁿ`
+divides both `A` and `dA/dx`. -/
+theorem pow_succ_dvd_iff {A P : R[X]} {n : ℕ} (hn : 0 < n) (hP : Prime P)
+    (hPdeg : 0 < P.natDegree) :
+    P ^ (n + 1) ∣ A ↔ P ^ n ∣ A ∧ P ^ n ∣ derivative A :=
+  ⟨pow_dvd_and_pow_dvd_derivative,
+    fun h => pow_succ_dvd_of_pow_dvd_derivative hn hP hPdeg h.1 h.2⟩
+
 end CharZero
 
 end DeepWiki.SymbolicIntegration
