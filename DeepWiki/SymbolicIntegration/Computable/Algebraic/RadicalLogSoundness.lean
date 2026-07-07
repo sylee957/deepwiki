@@ -577,13 +577,13 @@ theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZG ℚ) (F : AlgIntegralResu
   rw [RadElem.radIsZero, RadElem.radSub] at hrt
   exact RefinesPolyG.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) hrt
 
-/-! ### Axiom checks
+/-! ### Axiom audit
 
 The log-part predicates, certificate bridge, additivity floor, obligation lemmas, and
 compositions below carry only `[propext, Classical.choice, Quot.sound]` — no `native_decide`,
 no `sorry`. -/
 
--- The certificate↔predicate bridge: every validated `radIsLogIntegral` is the abstract single-log soundness:
+-- The certificate-to-predicate bridge: every `radIsLogIntegral` certificate gives abstract single-log soundness.
 #print axioms RadElem.isRadicalLogTerm_of_radIsLogIntegral
 
 -- The additivity floor: `radDeriv` distributes over the log-numerator fold:
