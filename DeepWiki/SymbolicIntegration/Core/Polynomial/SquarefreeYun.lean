@@ -404,6 +404,17 @@ theorem prodPow_associated {l₁ l₂ : List K[X]} (h : List.Forall₂ Associate
   | nil => exact Associated.refl _
   | cons hhd _ ih => exact hhd.pow_pow.mul_mul (ih (i + 1))
 
+open Classical in
+/-- `prodPow` over an appended singleton raises the last factor to `i + L.length`. -/
+theorem prodPow_append_singleton (i : ℕ) (L : List K[X]) (x : K[X]) :
+    prodPow i (L ++ [x]) = prodPow i L * x ^ (i + L.length) := by
+  induction L generalizing i with
+  | nil => simp [prodPow]
+  | cons a L ih =>
+    rw [List.cons_append, prodPow, prodPow, ih (i + 1), List.length_cons,
+      show i + 1 + L.length = i + (L.length + 1) from by omega]
+    ring
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration
