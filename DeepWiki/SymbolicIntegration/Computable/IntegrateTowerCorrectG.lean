@@ -95,7 +95,9 @@ theorem checkIdentityG_fold_eq (Dt : CPolyG α) :
       with hnewnum
     set newden := cmulG sden cv.2 with hnewden
     have hnewden_ne : toPolyG newden ≠ 0 := by
-      rw [hnewden, toPolyG_cmulG]; exact mul_ne_zero hsden hvne
+      rw [hnewden]
+      simp only [denote]
+      exact mul_ne_zero hsden hvne
     -- the IH applied to the rest with the new seed
     have hrest : ∀ cv' ∈ rest, toPolyG cv'.2 ≠ 0 := fun cv' hcv' => hv cv' (List.mem_cons_of_mem _ hcv')
     obtain ⟨hden, heq⟩ := ih newnum newden hnewden_ne hrest
