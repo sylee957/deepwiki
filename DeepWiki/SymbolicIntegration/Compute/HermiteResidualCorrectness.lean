@@ -191,7 +191,7 @@ theorem hermiteReduce_residual_correct_of_split (fuel : ℕ) (A D gnum gden Dsta
   rw [toPoly_cmul, toPoly_cmul, hMeq] at hg2dvd
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
-    exact DeepWiki.polynomial_dvd_clearedIdentity_of_split hD hDR hg2dvd
+    exact DeepWiki.polynomial_dvd_cleared_identity_of_split hD hDR hg2dvd
   exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hden hfuel hdvd
 
 open scoped Differential in
@@ -234,7 +234,7 @@ theorem hermiteReduce_residual_correct_of_radical (fuel : ℕ) (A D gnum gden Ds
   rw [toPoly_cmul, toPoly_cmul] at hWgddvd
   have hdvd : toPoly (cmul D (cmul gden gden)) ∣ toPoly (cmul resNum' Dstar) := by
     rw [toPoly_cmul, toPoly_cmul, toPoly_cmul]
-    exact DeepWiki.polynomial_dvd_clearedIdentity_of_radical
+    exact DeepWiki.polynomial_dvd_cleared_identity_of_radical
       (W := toPoly (cdiv fuel D Dstar)) hWeq hWgddvd
   exact hermiteReduce_residual_correct_of_dvd fuel A D gnum gden Dstar hden hfuel hdvd
 

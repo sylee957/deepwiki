@@ -223,7 +223,7 @@ theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPolyG α
 /-! ### Splitting the exact-division frontier into radical + pole-cancellation
 
 The exact-division `resDen ∣ resNum·Dstar` decomposes, by the pure field-algebra
-`dvd_clearedIdentity_of_radical`, into two genuine sub-facts: `d = Dstar·W` (the squarefree radical
+`polynomial_dvd_cleared_identity_of_radical`, into two genuine sub-facts: `d = Dstar·W` (the squarefree radical
 `Dstar` divides `d` with cofactor `W`, a Yun structural fact) and `W·gden² ∣ resNum` (Hermite
 pole-cancellation: the reduced residual's `W`-poles cancel). Tower analog of
 `hermiteReduce_residual_correct_of_radical`. -/
@@ -256,7 +256,7 @@ theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : C
   have hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar) := by
     rw [hresDen']
     simp only [denote]
-    exact DeepWiki.polynomial_dvd_clearedIdentity_of_radical hSD hWgd
+    exact DeepWiki.polynomial_dvd_cleared_identity_of_radical hSD hWgd
   -- the exact-division equation, mapped into the fraction field.
   have hexactP : toPolyG (cdivWf (cmulG resNum Dstar) resDen) * toPolyG resDen
       = toPolyG (cmulG resNum Dstar) := toPolyG_cdivWf_exact _ _ hresDen hdvd

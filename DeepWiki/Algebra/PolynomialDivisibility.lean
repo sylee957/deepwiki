@@ -9,7 +9,7 @@ Small divisibility identities for clearing polynomial denominators.
 namespace DeepWiki
 
 /-- If `D ∣ R` and `gd2 ∣ (R / D) * S`, then `D * gd2 ∣ R * S`. -/
-theorem polynomial_dvd_clearedIdentity_of_split {K : Type*} [Field K]
+theorem polynomial_dvd_cleared_identity_of_split {K : Type*} [Field K]
     {R D gd2 S : Polynomial K}
     (hD : D ≠ 0) (hDR : D ∣ R) (hgd : gd2 ∣ (R / D) * S) :
     D * gd2 ∣ R * S := by
@@ -20,7 +20,7 @@ theorem polynomial_dvd_clearedIdentity_of_split {K : Type*} [Field K]
   exact ⟨N, by rw [hM]; linear_combination D * hN⟩
 
 /-- If `D = S * W` and `W * gd2 ∣ R`, then `D * gd2 ∣ R * S`. -/
-theorem polynomial_dvd_clearedIdentity_of_radical {K : Type*} [Field K]
+theorem polynomial_dvd_cleared_identity_of_radical {K : Type*} [Field K]
     {R D gd2 S W : Polynomial K} (hSD : D = S * W) (hWgd : W * gd2 ∣ R) :
     D * gd2 ∣ R * S := by
   obtain ⟨N, hN⟩ := hWgd
