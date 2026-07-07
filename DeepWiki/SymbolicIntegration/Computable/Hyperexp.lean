@@ -6,4 +6,4 @@ import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Normal
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.NormalCore
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
 
-/-! # Computable engine — hyperexponential case aggregator. -/
+/-! # Hyperexponential computable integration modules. -/
