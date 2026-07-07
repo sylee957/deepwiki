@@ -66,8 +66,13 @@ theorem stepG_length_lt (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnormG q 
   have hstep : toPolyG step
       = toPolyG p - C ((toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff)
           * X ^ ((toPolyG p).natDegree - (toPolyG q).natDegree) * toPolyG q := by
-    rw [hstepdef, toPolyG_csubG, toPolyG_cnormG, toPolyG_cmulG, toPolyG_cshiftG, toPolyG_cnormG, hk]
-    simp only [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, hc]
+    rw [hstepdef]
+    simp only [denote, hk]
+    simp only [mul_zero, add_zero]
+    have hcoef : CFieldSpec.toK (cleadG p) / CFieldSpec.toK (cleadG q)
+        = (toPolyG p).leadingCoeff / (toPolyG q).leadingCoeff := by
+      simpa [CFieldSpec.toK_div] using hc
+    rw [hcoef]
     ring
   have hpq' : (toPolyG q).natDegree ≤ (toPolyG p).natDegree := by
     have e1 := length_cnormG_of_ne p hp
