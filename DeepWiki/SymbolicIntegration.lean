@@ -93,7 +93,7 @@ import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.Compute
 import DeepWiki.SymbolicIntegration.Computable
 
-/-! # Symbolic Integration (Bronstein) — topic aggregator
+/-! # Symbolic Integration — topic aggregator
 
 The abstract theory on Mathlib carriers, the concrete `Compute` layer over Mathlib
 `Polynomial`, and the generic executable `Computable` Risch engine (core, base Risch DE,
