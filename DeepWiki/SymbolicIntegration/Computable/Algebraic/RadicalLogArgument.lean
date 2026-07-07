@@ -77,7 +77,7 @@ The residual `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' − rad
 `ℚ`-linear in `N`; evaluating it on the monomial basis and clearing each `ℚ(x)` entry to a polynomial
 numerator gives the `ℚ`-matrix of the system. -/
 
-/-- **A ℚ(x) value `xᵏ`** (`QFunNZG ℚ`) — numerator the `k`-th monomial `[0,…,0,1]`, denominator `1`. -/
+/-- The ℚ(x) value `xᵏ`: numerator the `k`-th monomial `[0,…,0,1]`, denominator `1`. -/
 def qxMonomial (k : ℕ) : QFunNZG ℚ := qxOfNum (cshiftG k [(1 : ℚ)])
 
 /-- The cleared log-derivative residual `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' −
@@ -90,11 +90,10 @@ def radLogResidual (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : C
   radSub (radSub (radScale Dq (radDeriv 2 ρ N)) (radScale Dpq N))
     (radScale Dq (radMul 2 ρ N integrand))
 
-/-- **The numerator coefficient list of a ℚ(x) element** `qxNum z = z.1.1 ∈ ℚ[x]` (a `List ℚ`) — the
-fraction's numerator polynomial. -/
+/-- The numerator coefficient list `qxNum z = z.1.1 ∈ ℚ[x]` of a ℚ(x) element. -/
 def qxNum (z : QFunNZG ℚ) : CPolyG ℚ := z.1.1
 
-/-- **The denominator coefficient list of a ℚ(x) element** `qxDen z = z.1.2 ∈ ℚ[x]` (a `List ℚ`). -/
+/-- The denominator coefficient list `qxDen z = z.1.2 ∈ ℚ[x]` of a ℚ(x) element. -/
 def qxDen (z : QFunNZG ℚ) : CPolyG ℚ := z.1.2
 
 /-- The monomial basis `radLogBasis degBound` for the ansatz `N = a₀ + a₁·y`: the `2·(degBound+1)`
@@ -103,8 +102,7 @@ def radLogBasis (degBound : ℕ) : List (RadElem (QFunNZG ℚ)) :=
   ((List.range (degBound + 1)).map (fun k => ([qxMonomial k, CField.zero] : RadElem (QFunNZG ℚ)))) ++
   ((List.range (degBound + 1)).map (fun k => ([CField.zero, qxMonomial k] : RadElem (QFunNZG ℚ))))
 
-/-- **Pad a ℚ-list to length `len`** with trailing zeros (so coefficient lists of differing degree align
-into matrix rows). -/
+/-- Pad a ℚ-list to length `len` with trailing zeros. -/
 def ratPadTo (len : ℕ) (p : List ℚ) : List ℚ :=
   p ++ List.replicate (len - p.length) 0
 
@@ -139,7 +137,7 @@ def radLogMatrix (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPo
   let nonzero := allRows.filter (fun row => row.any (fun a => a ≠ 0))
   (nonzero, nCols)
 
-/-! ### `radLogArgSolve`: COMPUTE the log argument `N` (so `u = N/D`) -/
+/-! ### `radLogArgSolve`: compute the log argument `N` (so `u = N/D`) -/
 
 /-- Solve for the log argument: `radLogArgSolve ρ integrand D degBound = some N` with `N = a₀ + a₁·y`
 (degree `≤ degBound`) and `∫(integrand) dx = log(N/D)`, by finding a nonzero kernel vector of the
@@ -179,7 +177,7 @@ degree `1` (expected `N = x + y` up to a constant). -/
 def radArgSolvedArcsinh : Option (RadElem (QFunNZG ℚ)) :=
   radLogArgSolve radArgRhoArcsinh radArgIntegrandArcsinh [1] 1
 
--- Sanity print: the computed numerator `N` for arcsinh (should be a constant multiple of `x + y`).
+-- Computed numerator `N` for arcsinh, expected up to scalar as `x + y`.
 #eval (radArgSolvedArcsinh.map (fun N => N.map (fun z => ((qxNum z : List ℚ), (qxDen z : List ℚ)))))
 
 /-- `radLogArgSolve` computes `u = x + y` for `∫ dx/√(x²+1)`: the solved `N` passes the log-derivative
@@ -218,7 +216,7 @@ degree `0` (expected `N = y − 1`, so `u = (y − 1)/x`). -/
 def radArgSolvedFinite : Option (RadElem (QFunNZG ℚ)) :=
   radLogArgSolve radArgRhoArcsinh radArgIntegrandFinite [0, 1] 0
 
--- Sanity print: the computed numerator `N` for the finite-pole case (a constant multiple of `y − 1`).
+-- Computed numerator `N` for the finite-pole case, expected up to scalar as `y − 1`.
 #eval (radArgSolvedFinite.map (fun N => N.map (fun z => ((qxNum z : List ℚ), (qxDen z : List ℚ)))))
 
 /-- `radLogArgSolve` computes `u = (y − 1)/x` for `∫ dx/(x√(x²+1))` with fixed `D = x`: the solved `N`
