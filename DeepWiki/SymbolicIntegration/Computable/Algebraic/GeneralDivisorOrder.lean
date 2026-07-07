@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDivisor
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDivisorExamples
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 
 /-! # The general divisor order (torsion test) over an arbitrary plane curve
