@@ -91,7 +91,8 @@ theorem cSplitFactorFastGWf_isSplittingFactorizationGen [CharZero (CFieldSpec.K 
           rw [← natDegree_eq_of_associated hAstep, ← cdegG_eq_natDegree, hSdeg]
         have hnorm := isNormalSqfree_of_splitFactorStep_natDegree_zero (toPolyG Dt) hp hstepdeg
         have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-          rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+          simp only [denote]
+          simp
         show IsSplittingFactorizationGen (toPolyG p) (toPolyG ([CField.one] : CPolyG α)) (toPolyG p)
         rw [hone]
         exact ⟨(one_mul _).symm, isSpecial_one, hnorm⟩
