@@ -4,8 +4,7 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 
 /-! # Core hyperexponential normal-part drivers
 
-The residual-feedback normal and full hyperexponential integration drivers
-(`cIntegrateHyperexpNormalGWf` / `cIntegrateHyperexpFullGWf`), separated from the concrete examples.
+The residual-feedback normal and full hyperexponential integration drivers.
 -/
 
 open Polynomial
@@ -32,7 +31,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischFie
 
 /-! ### The normal-part integrator `∫ fₙ = logPart − ∫R`
 
-`cIntegrateHyperexpNormalGWf` runs the reduced capstone, reads the residual `R`, integrates `∫R` over the
+`cIntegrateHyperexpNormalGWf` runs the reduced integrator, reads the residual `R`, integrates `∫R` over the
 base, and subtracts it. -/
 
 /-- Hyperexponential normal-part integral `cIntegrateHyperexpNormalGWf Dt a d cands`: run
