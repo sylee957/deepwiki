@@ -67,7 +67,7 @@ def radicandX3m2 : QFunNZG ℚ := qxOfNum [-2, 0, 0, 1]
 /-- **`toPolyG [-2,0,0,1] = −2 + x³` has `natDegree 3`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X3m2 : (toPolyG ([-2, 0, 0, 1] : CPolyG ℚ)).natDegree = 3 := by
   have h : toPolyG ([-2, 0, 0, 1] : CPolyG ℚ) = C (-2) + X ^ 3 := by
-    simp only [toPolyG_cons, toPolyG_nil]
+    simp only [denote]
     show C (-2 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
   rw [h]; compute_degree!
@@ -151,7 +151,7 @@ def radicandX5mXm1 : QFunNZG ℚ := qxOfNum [-1, -1, 0, 0, 0, 1]
 /-- **`toPolyG [-1,-1,0,0,0,1] = −1 − x + x⁵` has `natDegree 5`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X5mXm1 : (toPolyG ([-1, -1, 0, 0, 0, 1] : CPolyG ℚ)).natDegree = 5 := by
   have h : toPolyG ([-1, -1, 0, 0, 0, 1] : CPolyG ℚ) = (C (-1) + C (-1) * X) + X ^ 5 := by
-    simp only [toPolyG_cons, toPolyG_nil]
+    simp only [denote]
     show C (-1 : ℚ) + X * (C (-1) + X * (C 0 + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))))) = _
     simp; ring
   rw [h]; compute_degree!
@@ -228,7 +228,7 @@ def radicandX3pX : QFunNZG ℚ := qxOfNum [0, 1, 0, 1]
 /-- **`toPolyG [0,1,0,1] = x + x³` has `natDegree 3`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X3pX : (toPolyG ([0, 1, 0, 1] : CPolyG ℚ)).natDegree = 3 := by
   have h : toPolyG ([0, 1, 0, 1] : CPolyG ℚ) = C 1 * X + X ^ 3 := by
-    simp only [toPolyG_cons, toPolyG_nil]
+    simp only [denote]
     show C (0 : ℚ) + X * (C 1 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
   rw [h]; compute_degree!
