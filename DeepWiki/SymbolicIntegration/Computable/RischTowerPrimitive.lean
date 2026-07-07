@@ -47,7 +47,8 @@ theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
         simpa only [denote, toPolyG_one_singleton, sub_eq_zero] using hh
       have hconst := mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (crPoly Dt a d) hconstg
       refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
-      · rw [toPolyG_one_singleton]; exact one_ne_zero
+      · simp only [denote, mul_zero, add_zero]
+        exact one_ne_zero
       · exact primitive_special_identity Dt (crPoly Dt a d) qp hDt1 hconst hqp
       · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
           simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
