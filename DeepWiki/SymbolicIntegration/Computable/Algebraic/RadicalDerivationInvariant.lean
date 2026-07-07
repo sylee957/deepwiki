@@ -29,15 +29,13 @@ omit [CDiffField α] [CDiffFieldSpec α] in
 bridge. -/
 @[denote] theorem toPolyG_radGen : CPolyG.toPolyG (radGen : RadElem α) = X := by
   show CPolyG.toPolyG [CField.zero, CField.one] = X
-  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
-    CFieldSpec.toK_zero, CFieldSpec.toK_one, map_zero, map_one, zero_add, mul_one]
+  simp only [denote, mul_zero, add_zero, map_zero, map_one, zero_add, mul_one]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPolyG [zero, c] = C (toK c) · X`: the pure-`y` element `c·y` reads as `C(toK c)·X`. -/
 theorem toPolyG_zero_cons (c : α) :
     CPolyG.toPolyG ([CField.zero, c] : RadElem α) = Polynomial.C (CFieldSpec.toK c) * X := by
-  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
-    CFieldSpec.toK_zero, map_zero, zero_add]
+  simp only [denote, mul_zero, add_zero, map_zero, zero_add]
   ring
 
 /-- The index-generalized diagonal map `radDerivFrom ℓ k p` = `(List.zipIdx p k).map (fun (a,i) ↦
@@ -401,7 +399,7 @@ theorem mk_toPolyG_radDeriv_radMul (n : ℕ) (f : α)
   rw [toPolyG_radDeriv]
   have h1 : CPolyG.toPolyG (radOne : RadElem α) = 1 := by
     show CPolyG.toPolyG [CField.one] = 1
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
+    simp only [denote, mul_zero, add_zero, map_one]
   rw [h1, Derivation.map_one_eq_zero]
 
 end RadElem
