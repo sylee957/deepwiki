@@ -105,6 +105,7 @@ theorem matrixOfList_cSubmatrix (p q : CPolyG α) (n m j i : ℕ) :
 /-- **The subresultant certification.** `toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p)
 (toPolyG q) n m j`: the computable Sylvester-submatrix subresultant computes Mathlib's abstract
 subresultant. -/
+@[denote]
 theorem toPolyG_cSubresultantG (p q : CPolyG α) (n m j : ℕ) :
     toPolyG (cSubresultantG p q n m j) = subresultant (toPolyG p) (toPolyG q) n m j := by
   rw [toPolyG_eq_sum_range, subresultant, cSubresultantG, List.length_map, List.length_range]

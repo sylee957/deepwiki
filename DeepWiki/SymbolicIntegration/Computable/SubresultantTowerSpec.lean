@@ -30,7 +30,8 @@ theorem toK_cSubresultantG_getD_eq_coeff (Dstar A Dd : CPolyG α) (c : α) (n m 
           CField.zero)
       = (subresultant (toPolyG Dstar)
           (toPolyG A - C (CFieldSpec.toK c) * toPolyG Dd) n m j).coeff k := by
-  rw [← toPolyG_coeff, toPolyG_cSubresultantG, toPolyG_csubG, toPolyG_cscaleG]
+  rw [← toPolyG_coeff]
+  simp only [denote]
 
 variable [CDiffField α] [CDiffFieldSpec α]
 
@@ -43,7 +44,8 @@ theorem toK_cSubresultantG_getD_eq_coeff_monomial (Dt Dstar A : CPolyG α) (c : 
       = (subresultant (toPolyG Dstar)
           (toPolyG A - C (CFieldSpec.toK c)
             * Differential.implicitDeriv (toPolyG Dt) (toPolyG Dstar)) n m j).coeff k := by
-  rw [toK_cSubresultantG_getD_eq_coeff, toPolyG_cmonomialDeriv]
+  rw [toK_cSubresultantG_getD_eq_coeff]
+  simp only [denote]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 open scoped Classical in
