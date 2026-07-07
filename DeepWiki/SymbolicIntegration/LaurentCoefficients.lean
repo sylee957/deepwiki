@@ -573,7 +573,7 @@ theorem eval_laurentH_eq_taylor_coeff [CharZero K] {A D Di Diα : K[X]} {α : K}
   rw [one_div, one_div, inv_pow, inv_pow]
   field_simp
 
-/-! ## Restatements against the book's wording -/
+/-! ## Restatement examples -/
 
 /-- The `Bᵢ` congruence `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
 example (D Di : K[X]) (i : ℕ) (hDi : Di.Monic) (hcop : IsCoprime (laurentE D Di i) Di) :
@@ -738,8 +738,6 @@ theorem localCoeff_eq_laurentH [CharZero K] (A D Di Diα : K[X]) {α : K} (i d :
   -- the `localCoeff` side via the Hasse bridge, with `hFracα = A/M`
   rw [localCoeff_eq_taylor_coeff A M i d hM hd, hFracα_eq_div_lDenomα, ← hMdef]
 
-/-- Restatement of P2 (the coefficient bridge): the Stage L Laurent digit `localCoeff` is the order-`d`
-Taylor coefficient `(1/d!)·(d/dx)^[d](A/M)(α)` of `hᵢ,α = A/M`. -/
 example [CharZero K] (A M : K[X]) {α : K} (i d : ℕ) (hM : M.eval α ≠ 0) (hd : d < i) :
     localCoeff A M α i d
       = (((d.factorial : K))⁻¹)
@@ -748,8 +746,6 @@ example [CharZero K] (A M : K[X]) {α : K} (i d : ℕ) (hM : M.eval α ≠ 0) (h
                 (algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) M)) :=
   localCoeff_eq_taylor_coeff A M i d hM hd
 
-/-- Restatement of P2 chained to the engine: the Stage L Laurent digit `localCoeff` equals the
-Bronstein–Salvy engine output `Hᵢ,(i−d)(α)` (book p.56). -/
 example [CharZero K] (A D Di Diα : K[X]) {α : K} (i d : ℕ) (hi : 0 < i) (hd : d < i)
     (hDi : Di.Monic) (hα : Di.eval α = 0)
     (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
@@ -762,21 +758,16 @@ example [CharZero K] (A D Di Diα : K[X]) {α : K} (i d : ℕ) (hi : 0 < i) (hd 
 
 /-! ## Stage N — P1: the multi-pole assembly and the closure-level remainder -/
 
-/-- Restatement of the P1 remainder-zero fact: a proper `N/M` over a nonzero constant `M` is `0`. -/
 example {N M : K[X]} (hM : M.natDegree = 0) (hM0 : M ≠ 0) (hdeg : N.degree < M.degree) :
     algebraMap K[X] (RatFunc K) N / algebraMap K[X] (RatFunc K) M = 0 :=
   properRatFunc_const_denom_eq_zero hM hM0 hdeg
 
-/-- Restatement of P1, the multi-pole telescoping (book p.56): subtracting the per-pole principal parts at
-every root in `R` leaves a remainder `Rem/M₀` regular at every `α ∈ R`. -/
 example (M₀ A : K[X]) (mult : K → ℕ) (R : Finset K) (hpf : ∀ α ∈ R, M₀.eval α ≠ 0) :
     ∃ (PP : K → RatFunc K) (Rem : K[X]),
       algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (rootProd R mult * M₀)
         = (∑ α ∈ R, PP α) + algebraMap K[X] (RatFunc K) Rem / algebraMap K[X] (RatFunc K) M₀ :=
   exists_sum_localPrincipalPart M₀ mult R hpf A
 
-/-- Restatement of the P1 capstone (book p.56, the over-the-closure conclusion with split denominator):
-`A/D = P + ∑_{α∈R} PP α` for `D = (∏_{α∈R}(x−α)^{mult α})·C c`, `c ≠ 0` (all roots of `D` over `K̄`). -/
 example (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K} (hc : c ≠ 0) :
     ∃ (P : K[X]) (PP : K → RatFunc K),
       algebraMap K[X] (RatFunc K) A
@@ -784,15 +775,10 @@ example (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K} (hc : c ≠ 0) :
         = algebraMap K[X] (RatFunc K) P + ∑ α ∈ R, PP α :=
   completePartialFraction_over_closure A mult R hc
 
-/-! ## Stage O — principal-part intrinsicity and the literal Theorem 2.7.1 conclusion -/
+/-! ## Stage O — principal-part intrinsicity and the engine-form conclusion -/
 
-/-- **The principal part in engine form `∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ`** (§2.7, Theorem 2.7.1, the literal
-per-pole conclusion): at a root `α` of the monic `Dᵢ = (x−α)·Dᵢ,α`, the principal part of `A/D` at `α`
-(`localPrincipalPart A M α i`, `M = Dᵢ,α^i·Eᵢ` the original cofactor with `D = (x−α)ⁱ·M`) is **literally** the
-Bronstein–Salvy engine sum `∑_{j=1}^{i} (laurentH A D Dᵢ i j)(α)/(x−α)ʲ`. Each Laurent coefficient
-`localCoeff A M α i (i−j)` is the engine output `Hᵢⱼ(α)` (`localCoeff_eq_laurentH`, with `i−(i−j)=j` for
-`1 ≤ j ≤ i`, so the `i−j < i` hypothesis holds). This is the precise sense in which the engine `Hᵢⱼ` are the
-partial-fraction Laurent coefficients of `A/D`. -/
+/-- The principal part of `A/D` at `α` is the engine sum
+`∑ j, (laurentH A D Dᵢ i j)(α)/(X - α)^j`. -/
 theorem localPrincipalPart_eq_engineSum [CharZero K] (A D Di Diα : K[X]) {α : K} (i : ℕ)
     (hi : 0 < i) (hroot : IsLaurentRegularRoot D Di Diα α i) :
     localPrincipalPart A (lDenomα (laurentE D Di i) Diα i 0) α i
@@ -806,16 +792,8 @@ theorem localPrincipalPart_eq_engineSum [CharZero K] (A D Di Diα : K[X]) {α : 
   rw [localCoeff_eq_laurentH A D Di Diα i (i - j) hi (by omega) hroot,
     show i - (i - j) = j from by omega]
 
-/-- **Per-pole intrinsic identification of any principal part with the engine sum** (§2.7, the bridge from
-the telescoping's per-pole `PP α` to the literal engine form): at a root `α` of the monic
-`Dᵢ = (x−α)·Dᵢ,α`, with `D = (x−α)ⁱ·M`, `M = Dᵢ,α^i·Eᵢ` (`Eᵢ = laurentE D Dᵢ i`) the original cofactor, IF a
-candidate Laurent sum `q` (a principal part at `α`, given as `localPrincipalPart A' M' α i` for some peeled
-data `A', M'`) has the property that `A/D − q` is **regular at `α`** (`= N/Md`, `Md(α) ≠ 0`), then `q` is
-**literally** the engine sum `∑_{j=1}^{i} (laurentH A D Dᵢ i j)(α)/(x−α)ʲ`. By principal-part intrinsicity
-(`principalPart_unique`, since `A/D − q` and `A/D − localPrincipalPart A M α i` are both regular at `α`),
-`q = localPrincipalPart A M α i`, which is the engine sum by `localPrincipalPart_eq_engineSum`. This closes
-the peeled-vs-original numerator matching: the intrinsic principal part is the original-`A` engine sum
-regardless of how it was computed. -/
+/-- Any principal part whose difference from `A/D` is regular at `α` equals the
+engine sum built from `laurentH A D Dᵢ i`. -/
 theorem principalPart_eq_engineSum_of_regular [CharZero K] {A A' M' N Md D Di Diα : K[X]} {α : K}
     (i : ℕ) (hi : 0 < i) (hroot : IsLaurentRegularRoot D Di Diα α i) (hMd : Md.eval α ≠ 0)
     (hreg : algebraMap K[X] (RatFunc K) A
@@ -847,16 +825,8 @@ theorem principalPart_eq_engineSum_of_regular [CharZero K] {A A' M' N Md D Di Di
 /-! ## Stage Q — regularity at `α` and the fully-assembled engine-form capstone -/
 
 open Classical in
-/-- **Theorem 2.7.1, the LITERAL engine-form partial fraction `A/D = P + ∑_α ∑_{j=1}^{mult α} Hᵢⱼ(α)/(x−α)ʲ`**
-(Bronstein §2.7, the full closure-level conclusion): for `D = (∏_{α∈R}(x−α)^{mult α})·C c` split over `K̄`
-(`c ≠ 0`), GIVEN per-pole squarefree-factorization data `pole α` (a monic `Dᵢ = (x−α)·Dᵢ,α` with `α` its root,
-the cofactor coprimalities, the base-value nonvanishing, `0 < mult α`, and the original factorization
-`D = (x−α)^{mult α}·(Dᵢ,α^{mult α}·Eᵢ)`), there is a polynomial part `P` with
-`A/D = P + ∑_{α∈R} ∑_{j=1}^{mult α} (laurentH A D Dᵢ (mult α) j)(α)/(x−α)ʲ` — the engine outputs `Hᵢⱼ(α)` ARE
-the partial-fraction Laurent coefficients. Each per-pole principal part from the telescoping
-(`exists_sum_localPrincipalPart_regular`) is identified with the original-`A` engine sum by principal-part
-intrinsicity (`principalPart_eq_engineSum_of_regular`), the per-pole `RegularAt α (A/D − PP α)` certificate
-supplying the needed regularity. This is the complete, literal Theorem 2.7.1 over the algebraic closure. -/
+/-- Engine-form complete partial fractions over a split denominator, with coefficients
+`laurentH A D Dᵢ (mult α) j` at each pole `α`. -/
 theorem completePartialFraction_engineForm [CharZero K] (A : K[X]) (mult : K → ℕ) (R : Finset K)
     {c : K} (hc : c ≠ 0)
     (Di Diα : K → K[X])
@@ -904,8 +874,6 @@ theorem completePartialFraction_engineForm [CharZero K] (A : K[X]) (mult : K →
   congr 1
   exact Finset.sum_congr rfl hPPeng
 
-/-- Restatement of the principal-part intrinsicity / uniqueness (book §2.7, the closing fact): two principal
-parts at `α` of order `i` whose difference is regular at `α` are equal. -/
 example {A₁ M₁ A₂ M₂ N₁ N₂ Md₁ Md₂ : K[X]} {α : K} (i : ℕ) (hMd₁ : Md₁.eval α ≠ 0)
     (hMd₂ : Md₂.eval α ≠ 0)
     (heq : localPrincipalPart A₁ M₁ α i
@@ -915,8 +883,6 @@ example {A₁ M₁ A₂ M₂ N₁ N₂ Md₁ Md₂ : K[X]} {α : K} (i : ℕ) (h
     localPrincipalPart A₁ M₁ α i = localPrincipalPart A₂ M₂ α i :=
   principalPart_unique i hMd₁ hMd₂ heq
 
-/-- Restatement of the literal per-pole engine form (book p.56): the principal part of `A/D` at a root `α` of
-`Dᵢ` is `∑_{j=1}^{i} Hᵢⱼ(α)/(x−α)ʲ`, the Bronstein–Salvy engine sum. -/
 example [CharZero K] (A D Di Diα : K[X]) {α : K} (i : ℕ) (hi : 0 < i) (hDi : Di.Monic)
     (hα : Di.eval α = 0) (hfac : Di = (Polynomial.X - Polynomial.C α) * Diα)
     (hcopE : IsCoprime (laurentE D Di i) Di) (hcopD : IsCoprime (derivative Di) Di)
@@ -928,9 +894,6 @@ example [CharZero K] (A D Di Diα : K[X]) {α : K} (i : ℕ) (hi : 0 < i) (hDi :
   localPrincipalPart_eq_engineSum A D Di Diα i hi
     ⟨hDi, hα, hfac, hcopE, hcopD, hEi, hDiα⟩
 
-/-- Restatement of the literal Theorem 2.7.1 over `K̄` (book p.55–56), engine form:
-`A/D = P + ∑ᵢ ∑_{α|Dᵢ(α)=0} (Hᵢᵢ(α)/(x−α)ⁱ + ⋯ + Hᵢ₁(α)/(x−α))`, the engine outputs `Hᵢⱼ(α)` being the
-partial-fraction Laurent coefficients of `A/D`. -/
 example [CharZero K] (A : K[X]) (mult : K → ℕ) (R : Finset K) {c : K} (hc : c ≠ 0)
     (Di Diα : K → K[X])
     (pole : ∀ α ∈ R, 0 < mult α ∧ (Di α).Monic ∧ (Di α).eval α = 0
