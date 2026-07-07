@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LaurentCoefficients.Base
+import DeepWiki.SymbolicIntegration.LaurentCoefficients.FractionInvariant
 
 /-! # Laurent root-substitution bridge
 
