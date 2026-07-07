@@ -78,20 +78,20 @@ theorem rioboo_coprime {i a b C D D' E₁ E₂ F₁ F₂ A B : S} (hi : i ^ 2 = 
     (hσA : σ A = A) (hσB : σ B = B)
     (hbunit : IsUnit b)
     (hsqfree : IsCoprime D D')
-    (h27 : C - (a + i * b) * D' = (E₁ + i * E₂) * (A + i * B))
-    (h28 : D = (F₁ + i * F₂) * (A + i * B)) :
+    (hresidueSplit : C - (a + i * b) * D' = (E₁ + i * E₂) * (A + i * B))
+    (hdenSplit : D = (F₁ + i * F₂) * (A + i * B)) :
     IsCoprime A B := by
-  -- (2.29) and (2.30).
-  have h29 : -(b * D') = E₁ * B + E₂ * A :=
-    imagPart_eq_of_mul_split hi σ hσi hσa hσb hσC hσD' hσE₁ hσE₂ hσA hσB h27
-  have h30 : D = F₁ * A - F₂ * B :=
-    realPart_eq_of_mul_split hi σ hσi hσD hσF₁ hσF₂ hσA hσB h28
+  -- Extract the imaginary residue equation and the real denominator equation.
+  have himag : -(b * D') = E₁ * B + E₂ * A :=
+    imagPart_eq_of_mul_split hi σ hσi hσa hσb hσC hσD' hσE₁ hσE₂ hσA hσB hresidueSplit
+  have hreal : D = F₁ * A - F₂ * B :=
+    realPart_eq_of_mul_split hi σ hσi hσD hσF₁ hσF₂ hσA hσB hdenSplit
   -- Bézout for squarefreeness: `G₁·D + G₂·D' = 1`.
   obtain ⟨G₁, G₂, hG⟩ := hsqfree
   -- `b = (b·G₁·F₁ − G₂·E₂)·A − (b·G₁·F₂ + G₂·E₁)·B`.
   have hkey : b = (b * G₁ * F₁ - G₂ * E₂) * A - (b * G₁ * F₂ + G₂ * E₁) * B := by
-    have e1 : b * D = b * (F₁ * A - F₂ * B) := by rw [h30]
-    have e2 : b * D' = -(E₁ * B + E₂ * A) := by linear_combination -h29
+    have e1 : b * D = b * (F₁ * A - F₂ * B) := by rw [hreal]
+    have e2 : b * D' = -(E₁ * B + E₂ * A) := by linear_combination -himag
     calc b = b * (G₁ * D + G₂ * D') := by rw [hG]; ring
       _ = G₁ * (b * D) + G₂ * (b * D') := by ring
       _ = G₁ * (b * (F₁ * A - F₂ * B)) + G₂ * -(E₁ * B + E₂ * A) := by rw [e1, e2]
@@ -112,10 +112,11 @@ example {i a b C D D' E₁ E₂ F₁ F₂ A B : S} (hi : i ^ 2 = -1)
     (hσE₁ : σ E₁ = E₁) (hσE₂ : σ E₂ = E₂) (hσF₁ : σ F₁ = F₁) (hσF₂ : σ F₂ = F₂)
     (hσA : σ A = A) (hσB : σ B = B)
     (hbunit : IsUnit b) (hsqfree : IsCoprime D D')
-    (h27 : C - (a + i * b) * D' = (E₁ + i * E₂) * (A + i * B))
-    (h28 : D = (F₁ + i * F₂) * (A + i * B)) :
+    (hresidueSplit : C - (a + i * b) * D' = (E₁ + i * E₂) * (A + i * B))
+    (hdenSplit : D = (F₁ + i * F₂) * (A + i * B)) :
     IsCoprime A B :=
-  rioboo_coprime hi σ hσi hσa hσb hσC hσD hσD' hσE₁ hσE₂ hσF₁ hσF₂ hσA hσB hbunit hsqfree h27 h28
+  rioboo_coprime hi σ hσi hσa hσb hσC hσD hσD' hσE₁ hσE₂ hσF₁ hσF₂ hσA hσB
+    hbunit hsqfree hresidueSplit hdenSplit
 
 end Restatement
 
