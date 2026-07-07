@@ -30,7 +30,7 @@ noncomputable def pairListToS : List (CPolyG ℚ × CPolyG ℚ) → SGauss[X]
   | a :: as => C (pairToS a) + X * pairListToS as
 
 theorem toS_add (p q : CPolyG ℚ) : toS (caddG p q) = toS p + toS q := by
-  unfold toS; rw [toPolyG_caddG, map_add]
+  simp only [toS, denote, map_add]
 theorem toS_sub (p q : CPolyG ℚ) : toS (csubG p q) = toS p - toS q := by
   unfold toS; rw [toPolyG_csubG, map_sub]
 theorem toS_scale (c : ℚ) (p : CPolyG ℚ) : toS (cscaleG c p) = AdjoinRoot.of _ (C c) * toS p := by
