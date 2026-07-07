@@ -460,7 +460,9 @@ theorem toPolyG_foldl_caddG (g : ℕ → CPolyG ℚ) :
   | succ m ih =>
     intro init
     rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil,
-      toPolyG_caddG, ih, Finset.sum_range_succ]
+      Finset.sum_range_succ]
+    simp only [denote]
+    rw [ih]
     ring
 
 open CPolyG in
