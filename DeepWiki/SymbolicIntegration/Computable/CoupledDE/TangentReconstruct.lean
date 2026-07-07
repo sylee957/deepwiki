@@ -360,7 +360,7 @@ theorem mapDeriv_coeff (p : List (CPolyG ℚ)) (k : ℕ) :
       show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     rw [List.getD_eq_getElem?_getD, show p[k]? = some p[k] from List.getElem?_eq_getElem hk]
     simp only [Option.map_some, Option.getD_some]
-    rw [cderivQ, toPolyG_cderivG]
+    simp only [cderivQ, denote]
   · rw [List.getD_eq_getElem?_getD, List.getElem?_map,
       show p[k]? = none from List.getElem?_eq_none (by omega)]
     rw [List.getD_eq_getElem?_getD, show p[k]? = none from List.getElem?_eq_none (by omega)]
