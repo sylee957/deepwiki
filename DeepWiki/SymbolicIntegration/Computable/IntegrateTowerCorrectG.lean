@@ -112,11 +112,9 @@ theorem checkIdentityG_fold_eq (Dt : CPolyG α) :
         = amG α (toPolyG snum) / amG α (toPolyG sden)
           + amG α (Polynomial.C (CFieldSpec.toK cv.1))
               * (amG α (toPolyG (cmonomialDeriv Dt cv.2)) / amG α (toPolyG cv.2)) := by
-      rw [hnewnum, hnewden, toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cscaleG,
-        toPolyG_cmulG, map_add, map_mul, map_mul, map_mul]
+      rw [hnewnum, hnewden]
+      simp only [denote, map_add, map_mul]
       field_simp
-      simp only [map_mul]
-      ring
     rw [hstep]; ring
 
 /-! ### The `checkIdentityG` ⟹ field-identity bridge -/
