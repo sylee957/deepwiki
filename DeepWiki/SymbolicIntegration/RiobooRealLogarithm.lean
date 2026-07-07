@@ -87,16 +87,10 @@ theorem logDeriv_imagQuot_eq_arctanDeriv_of_sq [CharZero R] {i u : R} (hi : i ^ 
     i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) :=
   logDeriv_imagQuot_eq_arctanDeriv hi (deriv_i_eq_zero hi) h1 h2
 
-/-- Restatement of **Property (2.16)** against the book wording (§2.8, p.60): `x²+1` irreducible
-over `K` ⟹ for `P, Q ∈ K[x]`, `P² + Q² = 0 ⟹ P = 0 ∧ Q = 0`. -/
 example {K : Type*} [Field K] (h : Irreducible (X ^ 2 + 1 : K[X])) (P Q : K[X])
     (hPQ : P ^ 2 + Q ^ 2 = 0) : P = 0 ∧ Q = 0 :=
   sq_add_sq_eq_zero_of_irreducible h hPQ
 
-/-- Restatement of **Lemma 2.8.1 / eq (2.17)** against the book wording: in a differential field
-of characteristic `0`, with `√−1 = i` (`i² = −1`) and `u` with `u² ≠ −1`,
-`√−1 · (d/dx) log((u+√−1)/(u−√−1)) = 2·(d/dx) arctan(u)` — i.e. as logarithmic derivatives,
-`i · logDeriv((u+i)/(u−i)) = 2·(u'/(1+u²))`. -/
 example {R : Type*} [Field R] [Differential R] [CharZero R] (i u : R) (hi : i ^ 2 = -1)
     (h1 : u + i ≠ 0) (h2 : u - i ≠ 0) :
     i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) :=
@@ -207,19 +201,12 @@ theorem logDeriv_imagQuot_eq_arctan_add_imagQuot [CharZero R] {i A B C D G : R} 
   -- Lemma 2.8.1 on `i·logDeriv((P+i)/(P−i))`.
   rw [logDeriv_imagQuot_eq_arctanDeriv_of_sq hi hPpi hPmi]
 
-/-- Restatement of **Theorem 2.8.1(a)** against the book wording (§2.8, p.62): for `A, B ∈ K[x]\{0}`
-with `A²+B² ≠ 0` (`i² = −1`), `d/dx log((A+iB)/(A−iB)) = d/dx log((−B+iA)/(−B−iA))` — as logarithmic
-derivatives `logDeriv((A+iB)/(A−iB)) = logDeriv((−B+iA)/(−B−iA))`. -/
 example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B : R) (hi : i ^ 2 = -1)
     (hAB : A ^ 2 + B ^ 2 ≠ 0) :
     Differential.logDeriv ((A + i * B) / (A - i * B))
       = Differential.logDeriv ((-B + i * A) / (-B - i * A)) :=
   logDeriv_imagQuot_eq_imagQuot_swap hi hAB
 
-/-- Restatement of **Theorem 2.8.1(b)** against the book wording (§2.8, p.62, eq display): with
-`G = gcd(A,B) = B·D − A·C`, `C ≠ 0` (so `C²+D² ≠ 0`), `P = (A·D + B·C)/G`,
-`i · d/dx log((A+iB)/(A−iB)) = 2·d/dx arctan(P) + i · d/dx log((D+iC)/(D−iC))` — rendering
-`d/dx arctan(P) = P'/(1+P²)`. -/
 example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B C D G : R) (hi : i ^ 2 = -1)
     (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0) (hG : B * D - A * C = G) (hG0 : G ≠ 0) :
     i * Differential.logDeriv ((A + i * B) / (A - i * B))
