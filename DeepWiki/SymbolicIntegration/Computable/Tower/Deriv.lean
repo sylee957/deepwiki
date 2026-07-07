@@ -72,11 +72,11 @@ theorem lvl2_deriv_t1_eq_one :
     CField.isZero
       (CField.sub (CDiffField.cderiv lvl2T1) (CField.one : Lvl2)) = true := by native_decide
 
-/-- `D(1) = 0` at level 2: the derivation annihilates the constant `1`. -/
+-- `D(1) = 0` at level 2: the derivation annihilates the constant `1`.
 example :
     CField.isZero (CDiffField.cderiv (CField.one : Lvl2)) = true := by native_decide
 
-/-- `D(0) = 0` at level 2: the derivation annihilates `0`. -/
+-- `D(0) = 0` at level 2: the derivation annihilates `0`.
 example :
     CField.isZero (CDiffField.cderiv (CField.zero : Lvl2)) = true := by native_decide
 
@@ -98,20 +98,20 @@ theorem lvl2_monomialDeriv_t2sq_eq_two_t2 :
     CPolyG.cisZeroG (CPolyG.csubG (CPolyG.cmonomialDeriv lvl2Dt2 lvl2T2sq) lvl2TwoT2) = true := by
   native_decide
 
-/-- `D(t₂) = 1` over `ℚ(x)(t₁)[t₂]`: `cmonomialDeriv` of the monomial `t₂` is the constant `1`. -/
+-- `D(t₂) = 1` over `ℚ(x)(t₁)[t₂]`: `cmonomialDeriv` of the monomial `t₂` is the constant `1`.
 example :
     CPolyG.cisZeroG (CPolyG.csubG
       (CPolyG.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), CField.one]) [CField.one]) = true := by
   native_decide
 
-/-- `D(t₁·t₂)` over `ℚ(x)(t₁)[t₂]` is nonzero (`cisZeroG = false`): `cmonomialDeriv` differentiates the
-`t₂`-coefficients too, not just the `d/dt₂` part. -/
+-- `D(t₁·t₂)` over `ℚ(x)(t₁)[t₂]` is nonzero (`cisZeroG = false`): `cmonomialDeriv`
+-- differentiates the `t₂`-coefficients too, not just the `d/dt₂` part.
 example :
     CPolyG.cisZeroG (CPolyG.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), lvl2T1]) = false := by
   native_decide
 
-/-- `D(t₁·t₂) = t₁ + t₂` over `ℚ(x)(t₁)[t₂]` (checked via `cisZeroG` of the difference against
-`[t₁, 1]`). -/
+-- `D(t₁·t₂) = t₁ + t₂` over `ℚ(x)(t₁)[t₂]` (checked via `cisZeroG` of the difference
+-- against `[t₁, 1]`).
 example :
     CPolyG.cisZeroG (CPolyG.csubG
       (CPolyG.cmonomialDeriv lvl2Dt2 [(CField.zero : Lvl2), lvl2T1])
