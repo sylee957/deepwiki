@@ -78,7 +78,7 @@ def genResidueResultant (f g : CPolyG (QFunNZG ℚ)) (Dder : QFunNZG ℚ)
 
 end CPolyG
 
-/-! ### Validation 1: the trigonal curve `F = y³ + x·y + x` (`n = 3`)
+/-! ### Example: the trigonal curve `F = y³ + x·y + x` (`n = 3`)
 
 A non-hyperelliptic cubic curve over `K(x) = QFunNZG ℚ`. With `g = y` and `D = x − 1` (one simple pole at
 `x = 1`), the residue of `(y/D) dx` at a place `(x₀, y₀)` is `y₀`, so the residues are the roots of
@@ -110,9 +110,6 @@ def genResTrigR : CPolyG ℚ :=
 three roots `y₀` of the curve fiber `F(1, y) = y³ + y + 1`. -/
 def genResTrigExpected : CPolyG ℚ := [1, 1, 0, 1]
 
--- Sanity print: `R(Z) = Z³ + Z + 1`.
-#eval (cnormG genResTrigR : List ℚ)
-
 /-- The full double resultant on the trigonal cubic: for `∫ (y/(x − 1)) dx` on the non-hyperelliptic
 `y³ + xy + x = 0` (`n = 3`), `genResidueResultant` produces `R(Z) = Z³ + Z + 1 = F(1, Z)`, the curve
 fiber over the pole `x = 1`, via `cisZeroG` of `R − (Z³ + Z + 1)`. -/
@@ -124,7 +121,7 @@ theorem genResTrig_resultant_eq :
 theorem genResTrig_zero_not_residue :
     cIsResidue genResTrigR (0 : ℚ) = false := by native_decide
 
-/-! ### Validation 2: trigonal `g = 1` (constant in `y`) — residue `1` on all three sheets
+/-! ### Example: trigonal `g = 1` (constant in `y`) — residue `1` on all three sheets
 
 For the same trigonal curve with `g = 1` and `D = x − 1`, the residue at each of the three places above
 `x = 1` is the same `g/D' = 1`, so `R(Z) = (Z − 1)³` (a triple root at the common residue `1`). -/
@@ -188,17 +185,5 @@ example : cisZeroG (csubG
 
 The residue resultant `R(Z)` computed here feeds the divisor construction over the integral basis,
 the principal-divisor/torsion test, and the algebraic rational part. -/
-
-/-! ### Axiom check
-
-Each validation carries the standard `[propext, Classical.choice, Quot.sound]` plus the `native_decide`
-compiler axiom, no `sorry`. -/
-
--- The non-hyperelliptic trigonal curve `y³ + xy + x` (`n = 3`): the full double resultant.
-#print axioms genResTrig_resultant_eq
-#print axioms genResTrig1_resultant_eq
-
--- Conservativity: the general engine reproduces the hyperelliptic `cAlgResidueResultant`.
-#print axioms genResHyp_conservativity
 
 end DeepWiki.SymbolicIntegration
