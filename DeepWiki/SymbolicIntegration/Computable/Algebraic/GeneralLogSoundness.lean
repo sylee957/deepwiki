@@ -61,10 +61,10 @@ theorem mk_toPolyG_afLogSum2Wf (f : CPolyG α) (c₁ : α) (u₁ : CPolyG α) (c
           * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u₁))
           * Ideal.Quotient.mk (afIdeal f) (toPolyG u₂)
         + Polynomial.C (CFieldSpec.toK c₂)
-          * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u₂))
-          * Ideal.Quotient.mk (afIdeal f) (toPolyG u₁) := by
-  rw [afLogSum2Wf, toPolyG_caddG, map_add, mk_toPolyG_afMul _ _ _ hf,
-    mk_toPolyG_afMul _ _ _ hf, toPolyG_cscaleG, toPolyG_cscaleG, map_mul, map_mul]
+      * Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f u₂))
+      * Ideal.Quotient.mk (afIdeal f) (toPolyG u₁) := by
+  rw [afLogSum2Wf]
+  simp only [denote, map_add, map_mul, mk_toPolyG_afMul _ _ _ hf]
 
 /-- The residue-sum numerator `Σ cᵢ·afDerivWf(uᵢ)·cofᵢ` over a cofactor list. -/
 def afLogSumNumWf (f : CPolyG α) (args : List (α × CPolyG α)) (cofs : List (CPolyG α)) :
