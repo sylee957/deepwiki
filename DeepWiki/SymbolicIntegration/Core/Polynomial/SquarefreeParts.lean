@@ -96,6 +96,29 @@ theorem sqfreeFactPart_squarefree (A : D[X]) (i : ℕ) : Squarefree (sqfreeFactP
     exact (irreducible_of_normalized_factor P
       (Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1)).squarefree
 
+open Classical in
+/-- The squarefree-factorization parts are pairwise relatively prime: `IsRelPrime (Aᵢ) (Aⱼ)`
+for `i ≠ j`. -/
+theorem sqfreeFactPart_isRelPrime (A : D[X]) {i j : ℕ} (hij : i ≠ j) :
+    IsRelPrime (sqfreeFactPart A i) (sqfreeFactPart A j) := by
+  apply WfDvdMonoid.isRelPrime_of_no_irreducible_factors (fun h => sqfreeFactPart_ne_zero A i h.1)
+  intro z hz hzi hzj
+  rw [sqfreeFactPart] at hzi hzj
+  obtain ⟨P, hP, hzP⟩ := hz.prime.exists_mem_finset_dvd hzi
+  obtain ⟨Q, hQ, hzQ⟩ := hz.prime.exists_mem_finset_dvd hzj
+  have hPm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
+  have hQm := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hQ).1
+  have hPQa : Associated P Q :=
+    (hz.associated_of_dvd (irreducible_of_normalized_factor P hPm) hzP).symm.trans
+      (hz.associated_of_dvd (irreducible_of_normalized_factor Q hQm) hzQ)
+  have hPeqQ : P = Q := by
+    have := normalize_eq_normalize_iff_associated.mpr hPQa
+    rwa [normalize_normalized_factor P hPm, normalize_normalized_factor Q hQm] at this
+  have hi := (Finset.mem_filter.mp hP).2
+  have hj := (Finset.mem_filter.mp hQ).2
+  rw [hPeqQ] at hi
+  exact hij (hi.symm.trans hj)
+
 end SquarefreeParts
 
 end DeepWiki.SymbolicIntegration
