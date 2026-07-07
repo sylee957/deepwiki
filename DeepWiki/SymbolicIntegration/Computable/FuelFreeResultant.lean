@@ -199,7 +199,8 @@ theorem toPolyG_cresultantWf (p q : CPolyG α) :
       rw [← hdr, ← hdq]; simp only [cdegG]; omega
     have hqp : (toPolyG q).natDegree ≤ (toPolyG p).natDegree := by
       rw [← hdq, ← hdp]; simp only [cdegG]; omega
-    have hrnorm : toPolyG (cnormG (cmodWf p q)) = toPolyG (cmodWf p q) := toPolyG_cnormG _
+    have hrnorm : toPolyG (cnormG (cmodWf p q)) = toPolyG (cmodWf p q) := by
+      simp only [denote]
     have hdrnorm : cdegG (cnormG (cmodWf p q)) = cdegG (cmodWf p q) := cdegG_cnormG _
     have hdiv : toPolyG p
         = toPolyG (cmodWf p q) + toPolyG q * toPolyG (cdivWf p q) := by
