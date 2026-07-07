@@ -386,19 +386,16 @@ theorem ratFunc_denom_dvd_of_ratFuncOrd_bound {x : RatFunc K} {q : K[X]} (hq : q
 
 /-! ### Restatements -/
 
-/-- Restatement: `νₚ` reads through any nonzero representation. -/
+-- Restatement: `νₚ` reads through any nonzero representation.
 example (p : K[X]) (hp : Prime p) {a b : K[X]} (ha : a ≠ 0) (hb : b ≠ 0) :
     ratFuncOrd p (algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) b)
       = (multiplicity p a : ℤ) - (multiplicity p b : ℤ) :=
   ratFuncOrd_mk p hp ha hb
 
-/-- Restatement of the lift: `νₚ(D y) = νₚ(y) − 1` at a normal pole, `D = extendDeriv d`. -/
+-- Restatement of the lift: `νₚ(D y) = νₚ(y) − 1` at a normal pole, `D = extendDeriv d`.
 example [CharZero K] (d : Derivation ℤ K[X] K[X]) {p : K[X]} (hp : Prime p) (hnormal : ¬ p ∣ d p)
     {y : RatFunc K} (hpole : ratFuncOrd p y < 0) :
     ratFuncOrd p (extendDeriv d y) = ratFuncOrd p y - 1 :=
   ratFuncOrd_extendDeriv_eq_sub_one_of_normal d hp hnormal hpole
-
-#print axioms ratFuncOrd_mk
-#print axioms ratFuncOrd_extendDeriv_eq_sub_one_of_normal
 
 end DeepWiki.SymbolicIntegration
