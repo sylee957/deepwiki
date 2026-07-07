@@ -136,6 +136,30 @@ theorem isRelPrime_of_associated_sqfreeFactPart {K : Type*} [Field K]
     IsRelPrime V W :=
   ((sqfreeFactPart_isRelPrime A hij).of_dvd_left hV.dvd).of_dvd_right hW.dvd
 
+open Classical in
+/-- The squarefree part of a deflation as a product of higher parts: `(A⁻ᵏ)* = ∏_{j > k} Aⱼ`. -/
+theorem squarefreePart_deflation_eq_prod (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    squarefreePart (deflation A k)
+      = ∏ j ∈ ((normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P)).filter (fun j => k < j),
+        sqfreeFactPart A j := by
+  rw [squarefreePart_deflation A k hA,
+    ← Finset.prod_fiberwise_of_maps_to (t := ((normalizedFactors A.primPart).toFinset.image
+        (fun P => (normalizedFactors A.primPart).count P)).filter (fun j => k < j))
+        (g := fun P => (normalizedFactors A.primPart).count P) ?_]
+  · refine Finset.prod_congr rfl fun j hj => ?_
+    rw [sqfreeFactPart]
+    refine Finset.prod_congr ?_ (fun _ _ => rfl)
+    ext P
+    rw [Finset.mem_filter, Finset.mem_filter, Finset.mem_filter] at *
+    constructor
+    · rintro ⟨⟨h1, _⟩, h3⟩; exact ⟨h1, h3⟩
+    · rintro ⟨h1, h3⟩
+      exact ⟨⟨h1, by rw [h3]; exact hj.2⟩, h3⟩
+  · intro P hP
+    rw [Finset.mem_filter] at hP ⊢
+    exact ⟨Finset.mem_image_of_mem _ hP.1, hP.2⟩
+
 end SquarefreeParts
 
 end DeepWiki.SymbolicIntegration
