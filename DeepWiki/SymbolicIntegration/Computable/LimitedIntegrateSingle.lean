@@ -86,7 +86,7 @@ theorem cIntegratePrimPolyDegRaiseG_sound {α : Type*} [CField α] [CFieldSpec �
     ∀ (fuel : ℕ) (p q : CPolyG α), cIntegratePrimPolyDegRaiseG η limInt fuel p = some q →
       Differential.implicitDeriv (Polynomial.C (CFieldSpec.toK η)) (toPolyG q) = toPolyG p := by
   have hη : toPolyG ([η] : CPolyG α) = Polynomial.C (CFieldSpec.toK η) := by
-    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
+    simp only [denote, mul_zero, add_zero]
   intro fuel
   induction fuel with
   | zero =>
