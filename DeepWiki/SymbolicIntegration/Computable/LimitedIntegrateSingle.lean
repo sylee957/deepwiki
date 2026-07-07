@@ -1,20 +1,10 @@
 import DeepWiki.SymbolicIntegration.Computable.Parametric
 import DeepWiki.SymbolicIntegration.Computable.Tower.CarrierRec
 
-/-! # Base single-`w` limited integration (Phase 1 of `docs/tower-limited-integration.md`)
+/-! # Base single-`w` limited integration
 
-The operation the recursive primitive-polynomial case needs but currently lacks: **`LimitedIntegrate(a, η)`**
-(Bronstein §5.8/§5.12) — find `b ∈ k` and a constant `c` with
-
-```
-a = D(b) + c·η
-```
-
-for a **raw** generator `η = Dt` (the primitive's derivative — the `c·t` degree-raiser), over the base field
-`k = ℚ(x)`. This is `cParamRischDE`'s two-generator kernel `{(c₀,c₁) : c₀·a + c₁·η = Dp}`: take the `c₀ ≠ 0`
-vector, normalize `c₀ = 1` (so `a = Dp + (−c₁)·η`), and recover `b = p` by integrating the (polynomial) cleared
-residual. Scope = the **polynomial-`b`** regime (matches `cParamRischDE`); rational `b` (a Hermite pre-pass) is
-Phase 1b. -/
+Limited integration solves `a = D(b) + c·η` for a primitive generator derivative `η = Dt`, with
+`b` in the polynomial base regime over `ℚ(x)`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -112,78 +102,5 @@ theorem cIntegratePrimPolyDegRaiseG_sound {α : Type*} [CField α] [CFieldSpec �
       ring
 
 end CPolyG
-
-/-! ### Validation — the degree-raising example
-
-`a = 1 + 1/x`, `η = 1/x` (so `t` is the primitive with `Dt = 1/x`, i.e. `t = log x`): the antiderivative
-`∫(1 + 1/x) dx = x + log x = x + t`, i.e. `a = D(x) + 1·η`. So `LimitedIntegrate(a, η) = (x, 1)` — the constant
-`c = 1` is exactly the degree-raiser the current log-free discharge cannot produce. -/
-
-open CPolyG
-
-/-- `a = 1 + 1/x = (x+1)/x ∈ ℚ(x)`. -/
-def limIntSingleExampleA : QFunNZG ℚ := ⟨([1, 1], [0, 1]), by decide⟩
-/-- `η = 1/x ∈ ℚ(x)` (the primitive derivative `Dt = 1/x`). -/
-def limIntSingleExampleEta : QFunNZG ℚ := ⟨([1], [0, 1]), by decide⟩
-
--- **Sanity print.** `cLimitedIntegrateSingleBase (1+1/x) (1/x)` should give `(b, c)` with `b = x`, `c = 1`.
-#eval (cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta).map
-  (fun bc => (CPolyG.qnormPairG bc.1.1.1 bc.1.1.2, bc.2))
-
-/-- **The base single-`w` limited integration finds the degree-raising constant.** For `a = 1 + 1/x`,
-`η = 1/x`, `cLimitedIntegrateSingleBase` returns `(b, c)` satisfying the defining identity `a = D(b) + c·η`
-(with `D` the base derivation on `ℚ(x)`), i.e. `a − D(b) − c·η = 0`. The witness has `c = 1` (nonzero — the
-degree-raiser). -/
-theorem cLimitedIntegrateSingleBase_example :
-    (match cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta with
-      | some (b, c) =>
-          CField.isZero (CField.sub limIntSingleExampleA
-            (CField.add (CDiffField.cderiv b)
-              (CField.mul (CPolyG.qConstParamG c) limIntSingleExampleEta)))
-            && decide (c ≠ 0)
-      | none => false) = true := by native_decide
-
--- **Sanity print.** The num/den adapter on `(1+1/x, 1/x)`: `b = x = [0,1]/[1]`, `c = 1`.
-#eval (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
-  (fun r => (CPolyG.qnormPairG r.1.1 r.1.2, r.2))
-
-/-- **The num/den adapter matches `cLimitedIntegrateSingleBase`.** On `a = 1+1/x = (x+1)/x`, `η = 1/x`,
-`limitedIntegrateSingleBaseNumDen` returns `((bnum, bden), c)` with `bnum/bden = x` (`= [0,1]/[1]` in lowest
-terms) and `c = 1` — the degree-raising constant, in the shape a base `LawfulRischLevelLrt` instance's
-`limitedIntegrateSingle` field consumes (Phase 3-wire-2). -/
-theorem limitedIntegrateSingleBaseNumDen_example :
-    (limitedIntegrateSingleBaseNumDen [1, 1] [0, 1] [1] [0, 1]).map
-      (fun r => (CPolyG.qnormPairG r.1.1 r.1.2, r.2)) = some (([0, 1], [1]), 1) := by native_decide
-
-/-! ### 2-level end-to-end — the degree-raising primitive polynomial integral
-
-`k = ℚ(x)(t)`, `Dt = 1/x` (`t = log x`). Integrate `p = (1 + 1/x)·t + 1 ∈ ℚ(x)[t]`. The leading coefficient
-`1 + 1/x` has `LimitedIntegrate(1+1/x, 1/x) = (x, 1)` with `c = 1 ≠ 0`, so the antiderivative gains a degree:
-`∫p = t²/2 + x·t = (log x)²/2 + x·log x`. This is exactly the case the current log-free coefficient discharge
-declines. -/
-
-/-- The base single-`w` limited integrator wrapped to `α × α` (embedding the constant `c ∈ ℚ` as `qConstParamG c`),
-the `intR` the degree-raising recursion consumes at the base level. -/
-def limIntBaseWrap (η a : QFunNZG ℚ) : Option (QFunNZG ℚ × QFunNZG ℚ) :=
-  (cLimitedIntegrateSingleBase a η).map (fun bc => (bc.1, CPolyG.qConstParamG bc.2))
-
-/-- `p = 1 + (1 + 1/x)·t ∈ ℚ(x)[t]`. -/
-def prim2ExampleP : CPolyG (QFunNZG ℚ) := [qConstParamG 1, limIntSingleExampleA]
-
--- **Sanity print.** `∫p` should be `[0, x, 1/2]` = `x·t + (1/2)·t²` = `x·log x + (log x)²/2`.
-#eval (cIntegratePrimPolyDegRaiseG limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
-    prim2ExampleP).map (fun q => q.map (fun c => CPolyG.qnormPairG c.1.1 c.1.2))
-
-/-- **The degree-raising primitive-polynomial integrator is correct on the 2-level example.** With the Phase-1
-base `LimitedIntegrate` as `intR`, `cIntegratePrimPolyDegRaiseG` computes `q` with `D_tower(q) = p` for
-`p = (1+1/x)·t + 1` over `ℚ(x)(t)` (`Dt = 1/x`), and the antiderivative has **degree 2 = deg p + 1** — the
-degree-raising the log-free discharge cannot produce. -/
-theorem cIntegratePrimPolyDegRaiseG_example :
-    (match cIntegratePrimPolyDegRaiseG limIntSingleExampleEta (limIntBaseWrap limIntSingleExampleEta) 3
-        prim2ExampleP with
-      | some q =>
-          cisZeroG (csubG (cmonomialDeriv [limIntSingleExampleEta] q) prim2ExampleP)
-            && decide (cdegG q = 2)
-      | none => false) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

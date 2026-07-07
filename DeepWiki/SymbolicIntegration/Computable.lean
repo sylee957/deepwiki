@@ -53,6 +53,7 @@ import DeepWiki.SymbolicIntegration.Computable.NormalPartSoundness
 import DeepWiki.SymbolicIntegration.Computable.OneShotAssembly
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Computable.LimitedIntegrateSingle
+import DeepWiki.SymbolicIntegration.Computable.LimitedIntegrateSingleExamples
 import DeepWiki.SymbolicIntegration.Computable.Parallel
 import DeepWiki.SymbolicIntegration.Computable.Parametric
 import DeepWiki.SymbolicIntegration.Computable.PolyPartTower
