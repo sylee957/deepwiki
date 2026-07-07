@@ -3,16 +3,12 @@ import DeepWiki.SymbolicIntegration.Computable.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
 
-/-! # Discharging the residue-resultant nonvanishing `hR0` from normality `hE`
+/-! # Residue-resultant nonvanishing from pole normality
 
-`LrtReducedGenuineData` used to carry the Rothstein–Trager resultant nonvanishing
-`res_t(Dstar, hNum − z·D Dstar) ≠ 0` (`hR0`) as a **separate** field. Bronstein's residue criterion
-(Thm 5.6.1, §4.4) *derives* it from the genuine normality `hE` (`η ≠ β′` at the poles), which the book
-carries anyway. This file makes that derivation: over the concrete `E = AlgebraicClosure K`
-(`K = CFieldSpec.K α`, derivation from `DifferentialAlgebraicClosure`), normality gives `D(Dstar)(β) ≠ 0` at
-every root, so `rtResultantGen_ne_zero` shows the base-changed resultant — hence the `K`-level one, by
-injectivity of `algebraMap` — is nonzero. `hR0` is therefore **no longer a field**; the assembled reduced
-soundness `isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine` supplies it here. -/
+Derives nonvanishing of the tower residue resultant from genuine pole normality. Over
+`E = AlgebraicClosure K`, normality gives nonvanishing of the implicit derivative at each pole, so
+`rtResultantGen_ne_zero` proves the base-changed resultant nonzero; injectivity of `algebraMap` then returns
+the `K`-level result used by the reduced LRT integrator soundness theorem. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -123,11 +119,8 @@ theorem hm_of_genuineMonomial [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect 
 omit [CFracGcdCoreWf α] in
 open scoped Differential in
 /-- **Normality of a monic squarefree factor, from the genuine monomial property.** `IsCoprime v (D v)`
-(`D = implicitDeriv Dt`, the tower-derivative normality underlying `hcopgcd`) for monic squarefree `v` over `K`
-— by base change to `K̄` (`isCoprime_map`), where `v` splits (`monic_separable_eq_nodal`) and
-`isCoprime_prod_X_sub_C_implicitDeriv_iff` reduces coprimality to `η ≠ β′` at the roots, supplied by
-`GenuinePrimitiveMonomialLrt`. The reusable core of the `hcopgcd` subsumption (the remaining work is the Yun
-cofactor coprimality + the `cgcdWf`-unit bridge). -/
+(`D = implicitDeriv Dt`) for monic squarefree `v` over `K`. The proof base-changes to `K̄`, splits `v`, and
+reduces coprimality to rootwise genuine monomial normality. -/
 theorem isCoprime_implicitDeriv_of_genuineMonomial [CharZero (CFieldSpec.K α)] (Dt v : CPolyG α)
     (hgen : GenuinePrimitiveMonomialLrt Dt) (hmonic : (toPolyG v).Monic)
     (hsf : Squarefree (toPolyG v)) :
@@ -348,11 +341,8 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
 
 set_option maxHeartbeats 800000 in
 /-- **The reduced integrator is sound in the no-poles / trivial-normal-part case** (`deg Dstar = 0`). With a
-constant squarefree denominator there are no residues, so the log part is empty
-(`cLrtLogArgG_eq_nil_of_cdegG_zero`) and the leftover numerator vanishes (`(…).2.1 = 0`, from the `.degree`
-properness `hAD_degree_of_genuineMonomial` — `deg hNum < deg Dstar = 0`), leaving the pure Hermite identity
-`hherm_lrt_E`. This is Bronstein's §5.6 "no poles" branch (empty residue loop) — the `natDegree`-`hAD` gap where
-`0 < 0` fails but the reduced part is trivially sound. -/
+constant squarefree denominator there are no residues, the log part is empty, and the leftover numerator
+vanishes by properness, leaving the pure Hermite identity. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
     (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0) (hDtdeg : (toPolyG Dt).natDegree ≤ 1)
