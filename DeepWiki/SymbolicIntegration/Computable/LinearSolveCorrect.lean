@@ -748,6 +748,20 @@ theorem crref_rowlen (rows : List (List ℚ)) (ncols : ℕ)
     ∀ r ∈ (crref rows ncols).1, ncols ≤ r.length :=
   crref_go_rowlen ncols (ncols + rows.length + 1) 0 rows [] [] (by simpa using hrows)
 
+/-- A returned `cConstSolveUniqueQ` solution has length exactly `ncols`. -/
+theorem cConstSolveUniqueQ_length (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ)
+    (x : List ℚ) (hsome : cConstSolveUniqueQ Arows urhs ncols = some x) :
+    x.length = ncols := by
+  rw [cConstSolveUniqueQ] at hsome
+  set RPC := crref (List.zipWith (fun r u => r ++ [u]) Arows urhs) (ncols + 1)
+  by_cases hc1 : RPC.2.contains ncols
+  · simp only [hc1, if_true] at hsome; exact absurd hsome (by simp)
+  · simp only [hc1, Bool.false_eq_true, if_false] at hsome
+    by_cases hc2 : RPC.2.length < ncols
+    · simp only [hc2, if_true] at hsome; exact absurd hsome (by simp)
+    · simp only [hc2, if_false, Option.some.injEq] at hsome
+      rw [← hsome, List.length_map, List.length_range]
+
 /-- Soundness of `cConstSolveUniqueQ`: if it returns `some x`, then `x` solves `A·x = b` rowwise,
 `dotQ (Arows.getD i []) x = urhs.getD i 0` for each `i < Arows.length`. -/
 theorem cConstSolveUniqueQ_sound (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)

@@ -253,20 +253,6 @@ theorem padCoeffsQ_getD (z : CPolyG ℚ) (nrows k : ℕ) (hk : k < nrows) :
     (padCoeffsQ z nrows).getD k 0 = (toPolyG z).coeff k := by
   rw [padCoeffsQ, getD_range_map_q _ nrows k hk, toPolyG_coeff_q]
 
-/-- A returned `cConstSolveUniqueQ` solution has length exactly `ncols`. -/
-theorem cConstSolveUniqueQ_length (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ)
-    (x : List ℚ) (hsome : cConstSolveUniqueQ Arows urhs ncols = some x) :
-    x.length = ncols := by
-  rw [cConstSolveUniqueQ] at hsome
-  set RPC := crref (List.zipWith (fun r u => r ++ [u]) Arows urhs) (ncols + 1)
-  by_cases hc1 : RPC.2.contains ncols
-  · simp only [hc1, if_true] at hsome; exact absurd hsome (by simp)
-  · simp only [hc1, Bool.false_eq_true, if_false] at hsome
-    by_cases hc2 : RPC.2.length < ncols
-    · simp only [hc2, if_true] at hsome; exact absurd hsome (by simp)
-    · simp only [hc2, if_false, Option.some.injEq] at hsome
-      rw [← hsome, List.length_map, List.length_range]
-
 /-- First-row identity `coeff_r(D u1 + b1 u1 + a•(b2 u2)) = coeff_r(z1)` (`r < nrows`) from a solve. -/
 theorem coupledRow1_coeff_eq (a : ℚ) (b1 b2 z1 z2 : CPolyG ℚ) (d : ℕ) (sol : List ℚ)
     (nrows : ℕ) (hsollen : sol.length = 2 * (d + 1))
