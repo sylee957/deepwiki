@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.LaurentCoefficients.Engine
+import DeepWiki.SymbolicIntegration.LaurentCoefficients.Assembly
 
 /-! # Rational Laurent coefficients
 
-Aggregator for the Laurent-coefficient engine and its root-evaluation bridges. -/
+Aggregator for the Laurent-coefficient construction and its root-evaluation bridges. -/
