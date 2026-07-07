@@ -250,17 +250,6 @@ section SquarefreeYunStateLemmas
 
 variable {K : Type*} [Field K]
 
-open UniqueFactorizationMonoid in
-open Classical in
-/-- `squarefreePart (deflation A k)` is monic. -/
-theorem squarefreePart_deflation_monic (A : K[X]) (k : ℕ)
-    (hA : A.primPart ≠ 0) : (squarefreePart (deflation A k)).Monic := by
-  rw [squarefreePart_deflation A k hA]
-  refine monic_prod_of_monic _ _ (fun P hP => ?_)
-  have hmem := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
-  rw [← normalize_normalized_factor P hmem]
-  exact monic_normalize (irreducible_of_normalized_factor P hmem).ne_zero
-
 open Classical in
 /-- `Dabs A i = sqfreeFactPart A i * Yun A (i+1)`. -/
 theorem Dabs_eq_mul (A : K[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :

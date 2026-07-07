@@ -142,4 +142,21 @@ theorem squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
 
 end Deflation
 
+section DeflationField
+
+open UniqueFactorizationMonoid
+variable {K : Type*} [Field K]
+
+open Classical in
+/-- `squarefreePart (deflation A k)` is monic. -/
+theorem squarefreePart_deflation_monic (A : K[X]) (k : ℕ)
+    (hA : A.primPart ≠ 0) : (squarefreePart (deflation A k)).Monic := by
+  rw [squarefreePart_deflation A k hA]
+  refine monic_prod_of_monic _ _ (fun P hP => ?_)
+  have hmem := Multiset.mem_toFinset.mp (Finset.mem_filter.mp hP).1
+  rw [← normalize_normalized_factor P hmem]
+  exact monic_normalize (irreducible_of_normalized_factor P hmem).ne_zero
+
+end DeflationField
+
 end DeepWiki.SymbolicIntegration
