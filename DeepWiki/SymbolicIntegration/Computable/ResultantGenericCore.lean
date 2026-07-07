@@ -70,7 +70,7 @@ private def cinterpTermG (zs : List α) (p : α × α) : CPolyG α :=
     (clagNumG (zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)))
 
 /-- `toPolyG (cinterpolateG pts)` is the normalized sum of interpolation term images. -/
-theorem toPolyG_cinterpolateG (pts : List (α × α)) :
+@[denote] theorem toPolyG_cinterpolateG (pts : List (α × α)) :
     toPolyG (cinterpolateG pts)
       = (pts.map (fun p => toPolyG (cinterpTermG (pts.map Prod.fst) p))).sum := by
   rw [cinterpolateG]
@@ -117,7 +117,7 @@ theorem eval_toPolyG_cinterpolateG (pts : List (α × α))
     (hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup)
     {zk yk : α} (hmem : (zk, yk) ∈ pts) :
     (toPolyG (cinterpolateG pts)).eval (CFieldSpec.toK zk) = CFieldSpec.toK yk := by
-  rw [toPolyG_cinterpolateG]
+  simp only [denote]
   rw [show (List.map (fun p => toPolyG (cinterpTermG (pts.map Prod.fst) p)) pts).sum.eval
         (CFieldSpec.toK zk)
       = (Polynomial.evalRingHom (CFieldSpec.toK zk))
@@ -170,7 +170,7 @@ theorem natDegree_toPolyG_cinterpTermG_le (zs : List α) (p : α × α) :
 /-- `cinterpolateG` degree bound: the interpolant has degree `< |pts|`. -/
 theorem degree_toPolyG_cinterpolateG_lt (pts : List (α × α)) (hne : pts ≠ []) :
     (toPolyG (cinterpolateG pts)).degree < (pts.length : WithBot ℕ) := by
-  rw [toPolyG_cinterpolateG]
+  simp only [denote]
   have hlen : 1 ≤ pts.length := List.length_pos_iff.mpr hne
   refine lt_of_le_of_lt (degree_list_sum_le_of_forall_degree_le _ ((pts.length : ℕ) - 1 : ℕ) ?_) ?_
   · intro p hp
