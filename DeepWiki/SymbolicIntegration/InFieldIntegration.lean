@@ -138,7 +138,6 @@ theorem isRationalDerivative_iff [CharZero K] {f : RatFunc K} {g : K[X]} {A D : 
     refine ⟨algebraMap K[X] (RatFunc K) g, ?_⟩
     rw [hf, map_zero, zero_div, add_zero]
 
-/-- The criterion restated: `f` is a rational derivative iff the Hermite log-part numerator `A = 0`. -/
 example [CharZero K] {f : RatFunc K} {g A D : K[X]} (hD : Squarefree D) (hAD : IsCoprime A D)
     (hdeg : A.degree < D.degree)
     (hf : f = (algebraMap K[X] (RatFunc K) g)′
