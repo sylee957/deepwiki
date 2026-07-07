@@ -322,6 +322,29 @@ noncomputable def yunLoopAbs (A : K[X]) : K[X] × K[X] → ℕ → ℕ → List 
   | (b, d), i, (n + 1) =>
       gcd b d :: yunLoopAbs A (b / gcd b d, d / gcd b d - derivative (b / gcd b d)) (i + 1) n
 
+open Classical in
+/-- The abstract Yun loop is factorwise associated to consecutive squarefree parts. -/
+theorem yunLoopAbs_forall₂ [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0) :
+    ∀ (n i : ℕ) (b d : K[X]), 1 ≤ i → YunInv A i b d →
+      List.Forall₂ Associated (yunLoopAbs A (b, d) i n)
+        ((List.range n).map (fun j => sqfreeFactPart A (i + j))) := by
+  intro n
+  induction n with
+  | zero => intro i b d _ _; simp [yunLoopAbs]
+  | succ n ih =>
+    intro i b d hi hinv
+    rw [yunLoopAbs, List.range_succ_eq_map, List.map_cons]
+    refine List.Forall₂.cons (yunStep_emit_assoc A i hi hA hinv) ?_
+    have hstep := (yunStep_preserves A i hi hA hinv).2
+    have htail := ih (i + 1) (b / gcd b d) (d / gcd b d - derivative (b / gcd b d))
+      (by omega) hstep
+    rw [List.map_map]
+    have hreindex : (List.range n).map ((fun j => sqfreeFactPart A (i + j)) ∘ Nat.succ)
+        = (List.range n).map (fun j => sqfreeFactPart A ((i + 1) + j)) :=
+      List.map_congr_left (fun j _ => by simp only [Function.comp_apply]; congr 1; omega)
+    rw [hreindex]
+    exact htail
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration
