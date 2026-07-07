@@ -341,8 +341,8 @@ theorem cRdeNormalDenominatorGWf_cleared_lift (Dt : CPolyG α) (fnum fden gnum g
       rw [← hb]; exact toPolyG_cdivWf_exact_mul_gen bNum fden hfden0 hdvdB
     have hBeq : toPolyG bNum = toPolyG a * toPolyG fnum
         - toPolyG dn * Differential.implicitDeriv (toPolyG Dt) (toPolyG h) * toPolyG fden := by
-      rw [hbNum, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG,
-        toPolyG_cmonomialDeriv, ← ha, toPolyG_cmulG]
+      simp only [hbNum, denote]
+      rw [← hA]
     have hCexact : toPolyG c * toPolyG gden = toPolyG cNum := by
       rw [← hc]; exact toPolyG_cdivWf_exact_mul_gen cNum gden hgden0 hdvdC
     have hCeq : toPolyG cNum = toPolyG dn * toPolyG h ^ 2 * toPolyG gnum := by
