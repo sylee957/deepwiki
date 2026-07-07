@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Computable.Field
 /-! # The computable Risch-DE field oracle interface
 
 This file contains only the base oracle class and the constant-field instance, separated from the
-fueled tower implementation.
+tower implementation.
 -/
 
 namespace DeepWiki.SymbolicIntegration
