@@ -90,7 +90,8 @@ toPolyG (radDeriv n f b)` in `K[X]`. -/
 @[denote] theorem toPolyG_radDeriv_radAdd (n : ℕ) (f : α) (a b : RadElem α) :
     CPolyG.toPolyG (radDeriv n f (radAdd a b))
       = CPolyG.toPolyG (radDeriv n f a) + CPolyG.toPolyG (radDeriv n f b) := by
-  rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, radAdd, CPolyG.toPolyG_caddG, map_add]
+  rw [toPolyG_radDeriv, toPolyG_radDeriv, toPolyG_radDeriv, radAdd]
+  simp only [denote, map_add]
 
 /-! ### Leibniz for `radMul`, modulo `Xⁿ − C(toK f)`
 
