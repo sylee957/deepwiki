@@ -13,7 +13,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-! ### `clagNum`: the Lagrange-basis numerator `∏ (x − xⱼ)` -/
 
-/-- **`clagNum` realizes `∏ (X − C xⱼ)`**: `toPoly (clagNum xs) = ∏_{x ∈ xs} (X − C x)`. -/
+/-- `clagNum` realizes `∏ (X − C xⱼ)`: `toPoly (clagNum xs) = ∏_{x ∈ xs} (X − C x)`. -/
 theorem toPoly_clagNum (xs : List ℚ) :
     toPoly (clagNum xs) = (xs.map (fun x => Polynomial.X - Polynomial.C x)).prod := by
   induction xs with
@@ -24,7 +24,7 @@ theorem toPoly_clagNum (xs : List ℚ) :
       rw [toPoly_cons, toPoly_cons, toPoly_nil, map_neg, map_one]; ring
     rw [this]
 
-/-- **`toPoly` of the `cinterpolate` accumulator fold** is the running sum: folding `cadd acc (f p)`
+/-- `toPoly` of the `cinterpolate` accumulator fold is the running sum: folding `cadd acc (f p)`
 over `pts` maps under `toPoly` to `toPoly init + ∑ p, toPoly (f p)`. -/
 theorem toPoly_foldl_cadd (f : ℚ × ℚ → CPoly) (pts : List (ℚ × ℚ)) (init : CPoly) :
     toPoly (pts.foldl (fun acc p => cadd acc (f p)) init)
@@ -59,7 +59,7 @@ theorem prod_sub_ne_zero {xk : ℚ} {others : List ℚ} (hne : ∀ xj ∈ others
   obtain ⟨xj, hxj, hxeq⟩ := hy
   exact hne xj hxj (sub_eq_zero.mp hxeq).symm
 
-/-- **Eval of a Lagrange term polynomial at a node** `x`: `(C (yk/denom) · ∏(X − C xⱼ)).eval x =
+/-- Eval of a Lagrange term polynomial at a node `x`: `(C (yk/denom) · ∏(X − C xⱼ)).eval x =
 (yk/denom)·∏(x − xⱼ)`. -/
 theorem eval_term_poly (xk yk x : ℚ) (others : List ℚ) :
     (toPoly (cscale (yk / (others.foldl (fun acc xj => acc * (xk - xj)) 1))
@@ -99,7 +99,7 @@ private def cinterpTerm (xs : List ℚ) (p : ℚ × ℚ) : CPoly :=
   cscale (p.2 / ((xs.filter (· != p.1)).foldl (fun acc xj => acc * (p.1 - xj)) 1))
     (clagNum (xs.filter (· != p.1)))
 
-/-- **`cinterpolate` as a normalized sum of terms**: `toPoly (cinterpolate pts) =
+/-- `cinterpolate` as a normalized sum of terms: `toPoly (cinterpolate pts) =
 ∑_{(xk,yk) ∈ pts} toPoly (term (xk,yk))`. -/
 theorem toPoly_cinterpolate (pts : List (ℚ × ℚ)) :
     toPoly (cinterpolate pts)
