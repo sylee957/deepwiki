@@ -90,7 +90,8 @@ theorem pairToS_cmulI (x y : CPolyG ℚ × CPolyG ℚ) :
   unfold cmulI pairToS
   simp only [toS_sub, toS_add]
   have hmul : ∀ a b : CPolyG ℚ, toS (cmulG a b) = toS a * toS b := by
-    intro a b; unfold toS; rw [toPolyG_cmulG, map_mul]
+    intro a b
+    simp only [toS, denote, map_mul]
   rw [hmul, hmul, hmul, hmul]
   linear_combination (- (toS x.2 * toS y.2)) * iU_sq
 theorem pairToS_I : pairToS (([], [CField.one]) : CPolyG ℚ × CPolyG ℚ) = iU := by
