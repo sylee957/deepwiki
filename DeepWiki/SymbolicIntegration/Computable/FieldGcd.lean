@@ -18,14 +18,6 @@ variable [CFieldSpec α]
 Correctness (Euclidean identity through `toPolyG`) and the strict normalized-length / degree drop
 of the remainder loop. -/
 
-/-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
-theorem length_cnormG_of_ne (p : CPolyG α) (h : cnormG p ≠ []) :
-    (cnormG p : List α).length = (toPolyG p).natDegree + 1 := by
-  have hd := cdegG_eq_natDegree p
-  rw [cdegG] at hd
-  have hlen : 1 ≤ (cnormG p : List α).length := List.length_pos_iff.mpr h
-  omega
-
 /-- One Euclidean-division step strictly drops the degree in `(CFieldSpec.K α)[X]`: subtracting
 `C (lcP/lcQ)·X^(degP−degQ)·Q` cancels the top coefficient. -/
 theorem degreeG_reduce_step_lt {P Q : (CFieldSpec.K α)[X]} (hP : P ≠ 0) (hQ : Q ≠ 0)

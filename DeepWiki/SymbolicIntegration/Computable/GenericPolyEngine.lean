@@ -504,6 +504,15 @@ theorem cdegG_eq_natDegree {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG 
     rw [← toK_cleadG_eq_coeff]
     exact toK_cleadG_ne_zero h
 
+/-- For a nonzero generic polynomial, the normalized list length is `natDegree + 1`. -/
+theorem length_cnormG_of_ne {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α)
+    (h : cnormG p ≠ []) :
+    (cnormG p : List α).length = (toPolyG p).natDegree + 1 := by
+  have hd := cdegG_eq_natDegree p
+  rw [cdegG] at hd
+  have hlen : 1 ≤ (cnormG p : List α).length := List.length_pos_iff.mpr h
+  omega
+
 /-- `toK (cleadG p)` is the honest `leadingCoeff`: `toK (cleadG p) = (toPolyG p).leadingCoeff`. -/
 theorem toK_cleadG_eq_leadingCoeff {α : Type*} [CField α] [CFieldSpec α] (p : CPolyG α) :
     CFieldSpec.toK (cleadG p) = (toPolyG p).leadingCoeff := by
