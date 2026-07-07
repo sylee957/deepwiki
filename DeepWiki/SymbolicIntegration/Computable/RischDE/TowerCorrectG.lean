@@ -73,7 +73,7 @@ theorem cSPDE_peel_cleared_gen {α : Type*} [CField α] [CFieldSpec α] [CDiffFi
     toPolyG ad * Differential.implicitDeriv (toPolyG Dt) (toPolyG (caddG (cmulG ad h) r))
         + toPolyG bd * toPolyG (caddG (cmulG ad h) r)
       = toPolyG cd := by
-  rw [toPolyG_caddG, toPolyG_cmulG]
+  simp only [denote]
   exact spde_step_glue (Differential.implicitDeriv (toPolyG Dt))
     (toPolyG ad) (toPolyG bd) (toPolyG cd) (toPolyG r) (toPolyG z) (toPolyG h) hbez hred
 
