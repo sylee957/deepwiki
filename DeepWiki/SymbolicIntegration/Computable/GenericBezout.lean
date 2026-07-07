@@ -38,12 +38,10 @@ theorem toPolyG_clagNumG [CFieldSpec α] (zs : List α) :
   induction zs with
   | nil => simp [clagNumG, toPolyG_cons, CFieldSpec.toK_one]
   | cons z zs ih =>
-    rw [clagNumG, toPolyG_cmulG, ih, List.map_cons, List.prod_cons]
-    have hfac : toPolyG ([CField.neg z, CField.one] : CPolyG α)
-        = Polynomial.X - Polynomial.C (CFieldSpec.toK z) := by
-      rw [toPolyG_cons, toPolyG_cons, toPolyG_nil, CFieldSpec.toK_neg, CFieldSpec.toK_one, map_neg,
-        map_one]; ring
-    rw [hfac]
+    rw [clagNumG]
+    simp only [denote, ih, List.map_cons, List.prod_cons]
+    simp only [map_neg, map_one, mul_zero, add_zero]
+    ring
 
 /-- Generic Lagrange interpolation `cinterpolateG pts = R(z)` with `R(zₖ) = yₖ` for each
 `(zₖ, yₖ) ∈ pts` (distinct abscissas, over the field `α`): `∑ₖ yₖ · ∏_{j≠k}(z − zⱼ)/(zₖ − zⱼ)`. The
