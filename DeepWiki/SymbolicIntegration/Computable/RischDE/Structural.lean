@@ -186,7 +186,9 @@ theorem cSPDEGWf_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar
       have hnd : (toPolyG a').natDegree = 0 := by rw [← cdegG_eq_natDegree, hdeg]
       rw [ha0def, toK_cleadG_eq_leadingCoeff, Polynomial.leadingCoeff, hnd]
       conv_lhs => rw [Polynomial.eq_C_of_natDegree_eq_zero hnd]
-    rw [← hbbar, ← hcbar, toPolyG_cscaleG, toPolyG_cscaleG, CFieldSpec.toK_inv, ← ha0def] at hh
+    rw [← hbbar, ← hcbar] at hh
+    simp only [denote] at hh
+    rw [CFieldSpec.toK_inv, ← ha0def] at hh
     have hdivided : toPolyG a' * Differential.implicitDeriv (toPolyG Dt) (toPolyG h)
         + toPolyG b' * toPolyG h = toPolyG c' := by
       rw [hadC]
