@@ -1,11 +1,10 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 
-/-! # Generic fraction-free gcd over an arbitrary tower level
-The recursive fraction-free gcd `CFracGcd`/`cgcdFFGen` over `α[t]` for `α = QFunNZG β = Frac(β[s])`:
-clear denominators into `(β[s])[t]`, run a primitive PRS over the GCD-domain `β[s]` (content-gcd
-recursing one level down, bottoming at ℚ[x]). Coefficients stay bounded where the Euclidean `cgcdExtG`
-swells; `native_decide` witnesses pin the contrast at tower levels 1 and 2. -/
+/-! # Fraction-free gcd benchmark carriers over tower levels
+This file provides the bivariate dense carrier `GBPoly`, denominator-clearing helpers, and benchmark
+inputs for comparing fraction-free and Euclidean gcd behavior over tower coefficients. The public
+well-founded gcd class and correctness statements live in the tower gcd core/correctness modules. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -95,8 +94,6 @@ def gbprimitivePart (cgcdB : CPolyG B → CPolyG B → CPolyG B) (p : GBPoly B) 
 
 end GBPoly
 
-/-! ### The generic fraction-free gcd kernel — the primitive PRS over `CPolyG B = B[s]` -/
-
 /-! ### Clear denominators `CPolyG (QFunNZG β) ↔ GBPoly β` (`β(s)[t] ↔ (β[s])[t]`) -/
 
 namespace CPolyG
@@ -125,8 +122,6 @@ def liftGBPolyG (p : GBPoly β) : CPolyG (QFunNZG β) :=
   p.map (fun c => (⟨(c, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩ : QFunNZG β))
 
 end CPolyG
-
-/-! ### `class CFracGcd α` — the recursive fraction-free gcd over `α[t]` -/
 
 /-! ### Level-1 benchmark inputs over `QFunNZG ℚ ≅ ℚ(x)` -/
 
@@ -204,8 +199,6 @@ def gGcdSizeRaw (g : CPolyG (QFunNZG ℚ)) : ℕ :=
   (g : List (QFunNZG ℚ)).foldl (fun a z => a + gCoeffSizeRaw z) g.length
 
 end BenchG
-
-/-! #### The pinned witnesses (`native_decide`) -/
 
 open BenchG in
 open BenchG in
@@ -311,10 +304,9 @@ end BenchLvl2
 open BenchLvl2 in
 open BenchLvl2 in
 open BenchLvl2 in
-/-! ### Axioms and the remaining gap
-The witnesses are `native_decide`-validated. The generic FF gcd is flat at level 1 but not constant at
-level 2 (`82 → 103 → 3659` over degrees 3/4/5): the plain primitive PRS bounds the content swell but not
-the coprime coefficient degree; a subresultant PRS would flatten level 2. -/
+/-! ### Level-2 benchmark scope
+The level-2 inputs and size measures isolate coefficient swell in `ℚ(x)(t₁)[t₂]`; benchmark and
+correctness-facing modules can use these definitions without depending on the Euclidean gcd shape. -/
 
 
 end DeepWiki.SymbolicIntegration
