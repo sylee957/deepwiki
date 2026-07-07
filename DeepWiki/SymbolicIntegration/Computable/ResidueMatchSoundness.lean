@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Computable.ResidueLinearFactor
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
 import DeepWiki.SymbolicIntegration.PartialFraction
@@ -22,48 +23,6 @@ open Compute CPolyG QFunNZG
 namespace ResidueMatchTower
 
 variable {K : Type*} [Field K] [Differential K]
-
-/-! ### The monomial log-derivative of a linear factor in `K(t)`
-
-Under `extendDeriv (implicitDeriv v)`, the log-derivative of `t − α` reads `(v − C α′)/(t − α)`, not
-`1/(t − α)`. -/
-
-/-- **The monomial log-derivative of a linear factor** — over `extendDeriv (implicitDeriv v)`,
-`D(t−α)/(t−α) = algebraMap(v − C α′) / algebraMap(t − α)` in `RatFunc K`. -/
-theorem extendDeriv_implicitDeriv_logDeriv_X_sub_C [Algebra ℚ K] (v : K[X]) (α : K) :
-    extendDeriv (Differential.implicitDeriv v) (algebraMap K[X] (RatFunc K) (X - C α))
-        / algebraMap K[X] (RatFunc K) (X - C α)
-      = algebraMap K[X] (RatFunc K) (v - C (α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
-  rw [extendDeriv_logDeriv, implicitDeriv_X_sub_C]
-
-/-! ### The absorption identity at a simple root of `d`
-
-At a root `α` of the squarefree denominator `d`, the monomial derivative evaluates to
-`(Dd)(α) = d′(α)·(v(α) − α′)`; the `v(α) − α′` factor that the residue divides out is what makes the
-monomial RT sum reassemble `a/d` despite `D(t−α) ≠ 1`. -/
-
-/-- **`eval` of `mapCoeffs d` at a root of `d`** — for `d(α) = 0`, `(mapCoeffs d)(α) = −d′(α)·α′` over a
-differential field `K`, from `deriv_aeval_eq` with LHS `(0)′ = 0`. -/
-theorem eval_mapCoeffs_of_isRoot (d : K[X]) (α : K) (hα : d.eval α = 0) :
-    (Differential.mapCoeffs d).eval α = -((derivative d).eval α * α′) := by
-  have h := Differential.deriv_aeval_eq (A := K) (R := K) α d
-  simp only [Polynomial.aeval_def, Algebra.algebraMap_self, Polynomial.eval₂_id] at h
-  rw [hα] at h
-  -- `(0)′ = 0` since the derivation is additive
-  rw [show (0 : K)′ = 0 from map_zero _] at h
-  -- `0 = (mapCoeffs d)(α) + d′(α)·α′`, so `(mapCoeffs d)(α) = −d′(α)·α′`
-  linear_combination -h
-
-/-- **The absorption identity at a simple root** — for `d(α) = 0`, the monomial derivative
-`Dd = implicitDeriv v d` evaluates to `(Dd)(α) = d′(α)·(v(α) − α′)`. From
-`implicitDeriv = mapCoeffs + v·derivative` and `eval_mapCoeffs_of_isRoot`. -/
-theorem eval_implicitDeriv_of_isRoot (v d : K[X]) (α : K) (hα : d.eval α = 0) :
-    (Differential.implicitDeriv v d).eval α = (derivative d).eval α * (v.eval α - α′) := by
-  rw [Differential.implicitDeriv]
-  simp only [Derivation.add_apply, Derivation.coe_smul, Pi.smul_apply, smul_eq_mul,
-    Derivation.coe_restrictScalars, derivative'_apply, eval_add, eval_mul]
-  rw [eval_mapCoeffs_of_isRoot d α hα]
-  ring
 
 /-! ### The per-place residue matches the standard residue -/
 
@@ -128,27 +87,6 @@ theorem primitive_monomial_residue_match (s : Finset K) (a : K[X]) (w : K)
 For a non-primitive monomial (`deg_t v ≥ 1`), `D(t−α)/(t−α)` carries a polynomial part
 `q_α = (v − Cα′) /ₘ (t−α)`, and the RT sum equals `a/d` iff `∑_α c_α·q_α = 0` (an integrability
 condition, automatic in the primitive case). This is isolated as the hypothesis `hcancel`. -/
-
-omit [Differential K] [Algebra ℚ K] in
-/-- **Polynomial over a linear factor splits off its quotient and a simple pole** — in `RatFunc K`,
-`algebraMap p / algebraMap (X − C α) = algebraMap(p /ₘ (X − C α)) + algebraMap(C(p.eval α))/algebraMap(X
-− C α)`. From `modByMonic_add_div` and `modByMonic_X_sub_C_eq_C_eval`. -/
-theorem algebraMap_div_X_sub_C_split (p : K[X]) (α : K) :
-    algebraMap K[X] (RatFunc K) p / algebraMap K[X] (RatFunc K) (X - C α)
-      = algebraMap K[X] (RatFunc K) (p /ₘ (X - C α))
-        + algebraMap K[X] (RatFunc K) (C (p.eval α)) / algebraMap K[X] (RatFunc K) (X - C α) := by
-  have hsplit : (p : K[X]) = (X - C α) * (p /ₘ (X - C α)) + C (p.eval α) := by
-    have := modByMonic_add_div p (X - C α)
-    rw [modByMonic_X_sub_C_eq_C_eval] at this
-    linear_combination -this
-  have hXα : algebraMap K[X] (RatFunc K) (X - C α) ≠ 0 :=
-    (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr (X_sub_C_ne_zero α)
-  have hmap : algebraMap K[X] (RatFunc K) p
-      = algebraMap K[X] (RatFunc K) (X - C α) * algebraMap K[X] (RatFunc K) (p /ₘ (X - C α))
-        + algebraMap K[X] (RatFunc K) (C (p.eval α)) := by
-    rw [← map_mul, ← map_add]; exact congrArg _ hsplit
-  rw [hmap]
-  field_simp
 
 /-- **The general monomial Rothstein–Trager partial fraction, modulo polynomial-part cancellation** —
 for a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, an arbitrary monomial `Dt = v`, every root normal
@@ -255,7 +193,6 @@ Remaining for the full unconditional match (all monomials): the non-primitive po
 `∑ c_α·((v−Cα′) /ₘ (t−α)) = 0` (an integrability condition, e.g. `∑ c_α = 0` for `Dt = η′·t`), and the
 `List`↔`Finset` + grouped-GCD bridge to `logResidueSumG_eq_of_residue_match`. -/
 
-#print axioms ResidueMatchTower.eval_implicitDeriv_of_isRoot
 #print axioms ResidueMatchTower.primitive_monomial_residue_match
 #print axioms ResidueMatchTower.monomial_residue_match_of_cancel
 #print axioms ResidueMatchTower.primitive_cancel

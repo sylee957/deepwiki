@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
+import DeepWiki.SymbolicIntegration.Computable.ResidueLinearFactor
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
@@ -100,22 +101,6 @@ For a NON-primitive monomial the residue match needs `monomial_residue_match_of_
 integrability condition `∑_α c_α = 0` (the exponential-case correction: `a/d` integrable in the log part
 alone). We prove this reduction, pinning the precise general-case obstruction the engine's integrability
 witness must supply. -/
-
-omit [Differential K] [Algebra ℚ K] in
-/-- **The hyperexp polynomial part is the constant `C b`** — `(C b·X − C e) /ₘ (X − C a) = C b` over a field:
-the degree-1-over-degree-1 quotient of `C b·X − C e` by the monic `X − C a` is the leading coefficient `C b`
-(remainder `C(b·a − e)`, degree `0 < 1`). By `divByMonic` uniqueness from `modByMonic_add_div` (`C b·X − C e
-= (X − C a)·C b + C(b·a − e)`). The per-term polynomial part of the hyperexponential monomial `Dt = η′·t`
-(`v = C b·X`), which is α-independent — the source of the `hcancel` collapse to `∑ c_α = 0`. -/
-theorem divByMonic_C_mul_X_sub_C (b e a : K) :
-    (C b * X - C e) /ₘ (X - C a) = C b := by
-  -- the unique `(quot, rem)` with `f = (X−Ca)·quot + rem`, `deg rem < 1`: `quot = C b`, `rem = C(b·a − e)`
-  refine (div_modByMonic_unique (C b) (C (b * a - e)) (monic_X_sub_C a) ⟨?_, ?_⟩).1
-  · -- `C(b·a − e) + (X − C a)·C b = C b·X − C e`
-    rw [map_sub, map_mul]; ring
-  · -- the remainder `C(b·a − e)` has degree `0 < 1 = deg (X − C a)`
-    rw [degree_X_sub_C]
-    exact lt_of_le_of_lt degree_C_le (by decide)
 
 omit [Algebra ℚ K] in
 /-- **★ The hyperexponential `hcancel` sum is `algebraMap(C(b·∑c_α))`** — for the hyperexponential monomial
