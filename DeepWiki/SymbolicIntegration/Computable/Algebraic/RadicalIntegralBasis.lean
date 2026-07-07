@@ -77,12 +77,12 @@ def radSquarefreePartIsSquarefree (ρ : CPolyG α) : Bool :=
   let s := radSquarefreePart ρ
   cdegG (cgcdMonicWf s (cderivG s)) = 0
 
-/-- **`y/(d·P)` is NOT integral** `radNotIntegralFactor ρ P`: for a nonconstant `P`, `P² ∤ s` where
+/-- `radNotIntegralFactor ρ P` checks that `P² ∤ s` for nonconstant `P`, where
 `s = radSquarefreePart ρ`. The basis-maximality witness — `y/(d·P)` would need minimal polynomial
 `T² − s/P²` over `ℚ[x]`, but `P² ∤ s` (since `s` is squarefree, no nonconstant square divides it), so
-`s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the MAXIMAL integral element of
+`s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the maximal integral element of
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
-(`y/d` itself, which IS integral). Checked by `¬ (P² ∣ s)` via `cdvdGWf`. `[CField α]
+(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `cdvdGWf`. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
 def radNotIntegralFactor (ρ P : CPolyG α) : Bool :=
   let s := radSquarefreePart ρ
@@ -170,56 +170,52 @@ theorem radSquarefreePart_x5mX4 :
 For each radicand: the split `d²·s = ρ` is exact (`s` a genuine polynomial), `s` is squarefree (`y/d`
 integral), and `y/(d·P)` is not integral for a sample nonconstant `P` (maximality). -/
 
-/-- **★ Split exact `d²·s = ρ` for `x²(x+1)`** (`native_decide`): `x²·(x+1) = x³ + x²`, so
+/-- `radSplitExact` holds for `x²(x+1)` (`native_decide`): `x²·(x+1) = x³ + x²`, so
 `s = ρ/d² = x+1 ∈ ℚ[x]` is a genuine polynomial — `y/d = y/x` satisfies the monic `T² − (x+1) = 0` over
-`ℚ[x]`. THE BASIS ELEMENT `y/x` IS INTEGRAL (closure half 1). -/
+`ℚ[x]`. -/
 theorem radSplitExact_x3pX2 : radSplitExact basisRhoX3pX2 = true := by native_decide
 
-/-- **★ Split exact `d²·s = ρ` for `x⁴(x−1)`** (`native_decide`): `(x²)²·(x−1) = x⁵ − x⁴`, so
+/-- `radSplitExact` holds for `x⁴(x−1)` (`native_decide`): `(x²)²·(x−1) = x⁵ − x⁴`, so
 `s = x−1 ∈ ℚ[x]` and `y/x²` satisfies `T² − (x−1) = 0`. -/
 theorem radSplitExact_x5mX4 : radSplitExact basisRhoX5mX4 = true := by native_decide
 
-/-- **★ Split exact for squarefree `x³+1`** (`native_decide`): `1²·(x³+1) = x³+1`, the basis is `[1, y]`. -/
+/-- `radSplitExact` holds for squarefree `x³+1` (`native_decide`): `1²·(x³+1) = x³+1`. -/
 theorem radSplitExact_x3p1 : radSplitExact basisRhoX3p1 = true := by native_decide
 
-/-- **★ `s = x+1` is squarefree ⇒ `y/x` integral** (`native_decide`): `gcd(s, s') = gcd(x+1, 1) = 1`, so
-the minimal polynomial `T² − (x+1)` has squarefree constant term — `y/x` IS in the integral closure
+/-- `s = x+1` is squarefree (`native_decide`): `gcd(s, s') = gcd(x+1, 1) = 1`, so
+the minimal polynomial `T² − (x+1)` has squarefree constant term — `y/x` is in the integral closure
 (closure half 1, the squarefree certificate). -/
 theorem radSquarefree_x3pX2 : radSquarefreePartIsSquarefree basisRhoX3pX2 = true := by native_decide
 
-/-- **★ `s = x³+1` is squarefree** (`native_decide`): `gcd(x³+1, 3x²) = 1`, so `y = y/1` is integral
+/-- `s = x³+1` is squarefree (`native_decide`): `gcd(x³+1, 3x²) = 1`, so `y = y/1` is integral
 (`[1, y]` is the closure for squarefree radicand). -/
 theorem radSquarefree_x3p1 : radSquarefreePartIsSquarefree basisRhoX3p1 = true := by native_decide
 
-/-- **★ `s = x−1` is squarefree** (`native_decide`): `gcd(x−1, 1) = 1`, so `y/x²` is integral. -/
+/-- `s = x−1` is squarefree (`native_decide`): `gcd(x−1, 1) = 1`, so `y/x²` is integral. -/
 theorem radSquarefree_x5mX4 : radSquarefreePartIsSquarefree basisRhoX5mX4 = true := by native_decide
 
-/-- **★ `y/(x·(x+1))` is NOT integral for `x²(x+1)`** (`native_decide`): with `P = x+1`,
+/-- `y/(x·(x+1))` is not integral for `x²(x+1)` (`native_decide`): with `P = x+1`,
 `P² = (x+1)² ∤ s = x+1` (the squarefree `s` has no nonconstant square divisor), so the would-be minimal
-polynomial `T² − (x+1)/(x+1)²` is not over `ℚ[x]`. Hence `y/d = y/x` is the MAXIMAL integral element of
+polynomial `T² − (x+1)/(x+1)²` is not over `ℚ[x]`. Hence `y/d = y/x` is the maximal integral element of
 the form `y/q` (closure half 2, maximality). -/
 theorem radNotIntegral_x3pX2 :
     radNotIntegralFactor basisRhoX3pX2 [1, 1] = true := by native_decide
 
-/-- **★ `y/(x²·(x−1))` is NOT integral for `x⁴(x−1)`** (`native_decide`): with `P = x−1`,
+/-- `y/(x²·(x−1))` is not integral for `x⁴(x−1)` (`native_decide`): with `P = x−1`,
 `(x−1)² ∤ (x−1) = s`, so dividing the basis denominator further leaves the integral closure. Maximality of
 `y/x²`. -/
 theorem radNotIntegral_x5mX4 :
     radNotIntegralFactor basisRhoX5mX4 [-1, 1] = true := by native_decide
 
-/-- **★ `y·x` (i.e. `y/(1·x)`) is NOT integral for the squarefree `x³+1`** (`native_decide`): with
+/-- `y/x` is not integral for the squarefree `x³+1` (`native_decide`): with
 `P = x`, `x² ∤ x³+1`, so `y/x` is not integral — `y = y/1` is already maximal (the basis `[1, y]` cannot
 be improved). Maximality for the squarefree case. -/
 theorem radNotIntegral_x3p1 :
     radNotIntegralFactor basisRhoX3p1 [0, 1] = true := by native_decide
 
-/-- **★★ THE SIMPLE-RADICAL INTEGRAL BASIS COMPUTES AND VALIDATES** (`native_decide`) —
-for the three radicands `x³+1` (squarefree, basis `[1, y]`), `x²(x+1)` (basis `[1, y/x]`), and `x⁴(x−1)`
-(basis `[1, y/x²]`): the square-part split `ρ = d²·s` is EXACT (so `s = ρ/d²` is a genuine `ℚ[x]`
-polynomial), the squarefree part `s` is SQUAREFREE (so the basis element `y/d` satisfies the monic
-`T² − s = 0` over `ℚ[x]` and is INTEGRAL), and `y/(d·P)` for the displayed nonconstant `P` is NOT integral
-(so `y/d` is MAXIMAL). This is `[1, y/d]` realized as the integral closure of `ℚ[x]` in `ℚ(x)[y]/(y²−ρ)`,
-end to end. -/
+/-- The simple-radical integral-basis certificates validate for three sample radicands
+(`native_decide`): the split is exact, the squarefree part is squarefree, and the displayed denominator
+extensions are not integral. -/
 theorem radIntegralBasis_validates :
     (radSplitExact basisRhoX3p1 = true
       ∧ radSquarefreePartIsSquarefree basisRhoX3p1 = true
@@ -252,22 +248,17 @@ minimal polynomial `T² − (x³+1)`, discriminant `4(x³+1) = 4 + 4x³` (`[4,0,
 theorem radBasisDiscriminant_x3p1 :
     cisZeroG (csubG (radBasisDiscriminant basisRhoX3p1) [4, 0, 0, 4]) = true := by native_decide
 
-/-- **Genus 0 for `y² = x`** (`native_decide`): `s = x`, `deg s = 1`, `⌈1/2⌉ − 1 = 1 − 1 = 0` — the curve
-`y² = x` is RATIONAL (genus 0). -/
+/-- Genus `0` for `y² = x` (`native_decide`): `deg s = 1`, so `⌈1/2⌉ − 1 = 0`. -/
 theorem radGenus_x : radGenus basisRhoX = 0 := by native_decide
 
-/-- **★ Genus 1 for `y² = x³+1`** (`native_decide`): `s = x³+1`, `deg s = 3`, `⌈3/2⌉ − 1 = 2 − 1 = 1` —
-the curve `y² = x³+1` is ELLIPTIC (genus 1). The flagship hyperelliptic-genus check. -/
+/-- Genus `1` for `y² = x³+1` (`native_decide`): `deg s = 3`, so `⌈3/2⌉ − 1 = 1`. -/
 theorem radGenus_x3p1 : radGenus basisRhoX3p1 = 1 := by native_decide
 
-/-- **Genus 2 for `y² = x⁵+1`** (`native_decide`): `s = x⁵+1`, `deg s = 5`, `⌈5/2⌉ − 1 = 3 − 1 = 2` — the
-genus-2 hyperelliptic curve. -/
+/-- Genus `2` for `y² = x⁵+1` (`native_decide`): `deg s = 5`, so `⌈5/2⌉ − 1 = 2`. -/
 theorem radGenus_x5p1 : radGenus basisRhoX5p1 = 2 := by native_decide
 
-/-- **★ THE GENUS OF THE SIMPLE-RADICAL CURVE COMPUTES** (`native_decide`): `y² = x` is rational (`g = 0`),
-`y² = x³+1` is elliptic (`g = 1`),
-`y² = x⁵+1` is genus `2` — read off the squarefree part `s = radSquarefreePart ρ` of the integral-basis
-computation. -/
+/-- The simple-radical genus computation returns `0`, `1`, and `2` for the sample radicands
+(`native_decide`). -/
 theorem radGenus_validates :
     radGenus basisRhoX = 0 ∧ radGenus basisRhoX3p1 = 1 ∧ radGenus basisRhoX5p1 = 2 := by
   native_decide
