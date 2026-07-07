@@ -6,15 +6,8 @@ import Mathlib.LinearAlgebra.Lagrange
 
 /-! # General-derivation Rothstein–Trager / Lazard–Rioboo–Trager
 
-The abstract RT/LRT theory (`rtResultant`, `lrtSubresultant`, …) is stated with the plain polynomial
-`derivative D`. This file generalizes the *residue-object* layer to an **arbitrary** `B : K[X]` in place
-of `derivative D` — the setting needed for a general derivation, where `B = D_tower(D)` (`= implicitDeriv`).
-The residue resultant becomes `resultant_x(D, A − z·B)`; residues are `c = A(β)/B(β)` at roots `β` of `D`.
-
-Per the `derivative`-dependence map (see `docs/generalize-lrt-derivation.md`): the resultant/subresultant
-*defs and evaluation lemmas* treat `derivative D` **opaquely**, so they generalize verbatim. The residue↔root
-theory (next phase) replaces the single essential fact `D.Separable → D'(β) ≠ 0` with a **normality**
-hypothesis `IsCoprime D B` (equivalently `B(β) ≠ 0` at roots), keeping `Squarefree D`. -/
+Generalized RT/LRT resultants, subresultants, residue-root correspondences, degree bounds, and base
+change lemmas for an arbitrary denominator derivative image `B : K[X]`. -/
 
 open Polynomial
 
