@@ -333,14 +333,4 @@ theorem cdegG_le_cRdeBoundDegreeG_witness :
 
 end Witness
 
-/-! ### Axiom audit -/
-
-#print axioms natDegree_le_of_bDominates
-#print axioms natDegree_le_of_aDominates_nonlinear
-#print axioms natDegree_le_rdeBoundDegreeAbstract_of_balanced
-#print axioms natDegree_le_rdeBoundDegreeAbstract_of_topCoeff_ne_zero
-#print axioms cRdeBoundDegreeG_eq_abstract
-#print axioms cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol
-#print axioms hboundWf_of_cancellationResidualWf
-
 end DeepWiki.SymbolicIntegration
