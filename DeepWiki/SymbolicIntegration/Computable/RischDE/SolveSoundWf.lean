@@ -170,11 +170,8 @@ theorem crischDESolveSoundWf_field (f g y : QFunNZG β)
       = amG β (toPolyG g.1.1) / amG β (toPolyG g.1.2) :=
   hsound.sound y hsolve
 
-/-! ### Restatement against the intended wording (anonymous `example`) -/
+/-! ### Restatement example -/
 
--- ★ Task 3: the FUEL-FREE sound solver's success ⟹ the ORIGINAL field-level Risch-DE identity, from the
--- direct Wf soundness certificate — NO IsCanonNormalized hypothesis (the solver checks it).
--- Fuel-free at runtime. No native_decide.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (f g y : QFunNZG β) (hsolve : crischDESolveSoundWf f g = some y)
@@ -188,12 +185,12 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
 
 end Capstone
 
-/-! ## `native_decide` validations
+/-! ## `native_decide` examples
 
 The solver's behaviour over the level-2 field `ℚ(x)(t₁)`, checked by `native_decide`: the
 unsolvable witness returns `none`, and the solvable cases `Dy = 1` and `Dy + y = t₁ + 1` solve. -/
 
-section Validation
+section Examples
 
 /-- `crischDESolveSoundWf_witness_none`: `crischDESolveSoundWf witnessF 1 = none` on the unsolvable
 `f = 1/(t₁ − x)`, `g = 1`. -/
@@ -219,11 +216,6 @@ theorem crischDESolveSoundWf_solves_Dy_plus_y :
               towerRdeLvl2GPlusOne)
       | none => false) = true := by native_decide
 
-end Validation
-
-/-! ### Axiom audit -/
-
-#print axioms crischDESolveSoundWf_field
-#print axioms crischDERawSolveWf_some_iff
+end Examples
 
 end DeepWiki.SymbolicIntegration
