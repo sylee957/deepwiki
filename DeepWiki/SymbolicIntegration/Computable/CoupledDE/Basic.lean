@@ -443,7 +443,8 @@ theorem toPoly2_map_cmulG (s : CPolyG ℚ) (p : List (CPolyG ℚ)) :
   induction p with
   | nil => simp
   | cons c cs ih =>
-    rw [List.map_cons, toPoly2_cons, toPoly2_cons, ih, toPolyG_cmulG, map_mul]
+    rw [List.map_cons, toPoly2_cons, toPoly2_cons, ih]
+    simp only [denote, map_mul]
     ring
 
 open CPolyG in
