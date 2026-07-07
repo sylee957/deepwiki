@@ -15,14 +15,7 @@ namespace CPolyG
 
 variable {α : Type*} [CField α]
 
-/-! ### Reverse-coefficient (`t^k·p(1/t)`) and common-`t`-power cancellation -/
-
-/-- **Reverse-coefficient transform** `creverseDegG k p = t^k · p(1/t)` for `k ≥ deg p`: pad `p` to
-length `k + 1` then reverse the coefficient list (so the `t^j` coefficient is `p`'s `(k − j)` one).
-With `p(x) = Σ aᵢ xⁱ`, `creverseDegG k p` is `Σ aᵢ t^{k−i}` — the engine's `x = 1/t` substitution on a
-single polynomial. -/
-def creverseDegG (k : ℕ) (p : CPolyG α) : CPolyG α :=
-  (cpadG (k + 1) p).reverse
+/-! ### Common-`t`-power cancellation after reverse-coefficient substitution -/
 
 /-- **Count leading-zero coefficients** of a `CPolyG` (initial `isZero` run length) — the order of
 vanishing at `t = 0`, i.e. the `t`-power dividing `p`. -/

@@ -161,6 +161,11 @@ at least `n`. -/
 def cpadG {α : Type*} [CField α] (n : ℕ) (p : CPolyG α) : CPolyG α :=
   (p : List α) ++ List.replicate (n - (p : List α).length) CField.zero
 
+/-- Reverse coefficients after zero-padding to degree bound `k`: `creverseDegG k p` represents
+`X^k * p(X⁻¹)` when `k` bounds the degree of `p`. -/
+def creverseDegG {α : Type*} [CField α] (k : ℕ) (p : CPolyG α) : CPolyG α :=
+  (cpadG (k + 1) p).reverse
+
 /-- Normalize a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
 def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α
