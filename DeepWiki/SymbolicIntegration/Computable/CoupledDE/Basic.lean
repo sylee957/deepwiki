@@ -481,7 +481,7 @@ theorem toPoly2_mulT (p q : List (CPolyG ℚ)) :
   · rw [getD_range_map _ _ _ hk, toPolyG_foldl_caddG, toPolyG_nil, zero_add]
     apply Finset.sum_congr rfl
     intro i _
-    rw [toPolyG_cmulG, toPoly2_coeff, toPoly2_coeff]
+    simp only [denote, toPoly2_coeff]
   · rw [getD_out _ _ (by rw [List.length_map, List.length_range]; omega), toPolyG_nil]
     symm
     apply Finset.sum_eq_zero
