@@ -207,9 +207,8 @@ theorem rootMultiplicity_rtResultantGen_eq_natDegree_gcd [IsAlgClosed K] (A D B 
 
 /-! ## The LRT subresultant-similarity theorem for a general derivation `B`
 
-Bronstein Thm 2.5.1(ii) generalized: the LRT subresultant at the residue multiplicity index, specialized
-`z ↦ a`, is similar to `gcd(D, A − a·B)`. The subresultant/PRS engine is already `derivative`-agnostic;
-`derivative D` enters only via `E := A − a·B` (opaque) and the degree bound `deg B ≤ deg D − 1`. -/
+The subresultant/PRS engine is agnostic in the derivative polynomial: the specialized
+subresultant at the residue multiplicity index is similar to `gcd(D, A - C a * B)`. -/
 
 /-- Multi-step (`k ≥ 2`) LRT subresultant similarity for a general `B`. -/
 theorem isSimilar_lrtSubresultant_eval_gcd_gen {K : Type*} [Field K] [GCDMonoid K[X]]
@@ -292,11 +291,8 @@ theorem lazardRiobooTrager_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlgClosed 
     exact isSimilar_lrtSubresultant_eval_gcd_gen A D B a hDne hA hB_deg hk2 hk0 hknz
 
 open scoped Classical in
-/-- **The general-derivation LRT algorithm-output correctness (unified, no excluded case).** For any `a`,
-the LRT output curve `Sᵢ` at multiplicity `i = rootMultiplicity a (rtResultantGen A D B)` — namely `D` if
-`i = deg D`, else `lrtSubresultantGen A D B i` — specialized `z ↦ a`, is similar to `gcd(D, A − a·B)`.
-Generalizes `lazardRiobooTrager_output_isSimilar_gcd` from `derivative D` to an arbitrary `B` under
-normality `hB` (`B(α) ≠ 0` at roots of `D`). -/
+/-- The general-derivation LRT output at any residue is similar to
+`gcd D (A - C a * B)`. -/
 theorem lazardRiobooTrager_output_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlgClosed K]
     (A D B : K[X]) (hD : D.Separable) (hB : ∀ α ∈ D.roots, B.eval α ≠ 0)
     (hA : A.natDegree < D.natDegree) (hB_deg : B.natDegree ≤ D.natDegree - 1) (a : K) :
