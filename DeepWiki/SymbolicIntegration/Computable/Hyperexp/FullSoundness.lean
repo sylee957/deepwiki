@@ -231,7 +231,7 @@ theorem cIntegrateHyperexpNormalGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (
   have hAgden : amG α (toPolyG gden) ≠ 0 := amG_toPolyG_ne_zero hgden
   have hnewrat : amG α (toPolyG (csubG gnum (cmulG [intR] gden))) / amG α (toPolyG gden)
       = amG α (toPolyG gnum) / amG α (toPolyG gden) - amG α (Polynomial.C (CFieldSpec.toK intR)) := by
-    simp only [denote, map_sub, map_mul, toPolyG_cons, toPolyG_nil, mul_zero, add_zero]
+    simp only [denote, map_sub, map_mul, mul_zero, add_zero]
     rw [sub_div, mul_div_assoc, div_self hAgden, mul_one]
   rw [hnewrat, map_sub, hintR, hRval]
   have hover := field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot Dt a d cands s b
