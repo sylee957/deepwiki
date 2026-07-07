@@ -95,6 +95,13 @@ theorem count_normalizedFactors_deflation (A : D[X]) (k : ℕ) (Q : D[X]) :
       rw [show M.count P - k = 0 by omega, pow_zero])).symm
   rw [hdefl, normalizedFactors_prod_eq M' hirr, hnorm, hcountM' Q]
 
+open Classical in
+/-- A deflation is never zero (a product of nonzero prime powers). -/
+theorem deflation_ne_zero (A : D[X]) (k : ℕ) : deflation A k ≠ 0 := by
+  rw [deflation, Finset.prod_ne_zero_iff]
+  exact fun P hP =>
+    pow_ne_zero _ (irreducible_of_normalized_factor P (Multiset.mem_toFinset.mp hP)).ne_zero
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration

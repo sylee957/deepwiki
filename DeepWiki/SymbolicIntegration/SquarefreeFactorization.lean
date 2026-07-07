@@ -22,13 +22,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- A deflation is never zero (a product of nonzero prime powers). -/
-theorem deflation_ne_zero (A : D[X]) (k : ℕ) : deflation A k ≠ 0 := by
-  rw [deflation, Finset.prod_ne_zero_iff]
-  exact fun P hP =>
-    pow_ne_zero _ (irreducible_of_normalized_factor P (Multiset.mem_toFinset.mp hP)).ne_zero
-
-open Classical in
 /-- `A⁻⁽ᵏ⁺¹⁾ = (A⁻ᵏ)⁻¹`: the `(k+1)`-deflation is the deflation of the `k`-deflation. -/
 theorem deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     deflation A (k + 1) = deflation (deflation A k) 1 := by
