@@ -6,8 +6,9 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicCompleteness
 Turns the total `cIntegrateAlgebraicWf` (over `y² = ρ`) into a decision procedure by wiring in the
 torsion decision: it returns `some ⟨v, logs⟩` when the integral is elementary (no log part, principal
 `1·log u`, or torsion `(1/m)·log g`) and `none` when the residue divisor is non-torsion (not
-elementary). Proves soundness, completeness, and the decision-procedure capstone modulo the named
-frontiers, with end-to-end computed witnesses on both verdicts. -/
+elementary). The wrapper states soundness, completeness, and the decision criterion in terms of the
+residual hypotheses supplied by the algebraic log and torsion layers, with computed witnesses on
+both verdicts. -/
 
 open Polynomial
 
@@ -69,8 +70,8 @@ variable (residual : RadElem (QFunNZG ℚ)) (c : QFunNZG ℚ) (D : CPolyG ℚ) (
 variable (ρq : CPolyG ℚ) (gen : ℕ) (Dm : CPolyG.MumfordDivisor ℚ) (hasLogPart : Bool)
 variable (integrand : RadElem (QFunNZG ℚ))
 
-/-- The soundness residual `AlgebraicDecideSoundnessResidual …`: bundles the three
-frontier-instances (`hnolog`, `hprincipal`, `htorsion`) turning each `some F` branch of
+/-- The soundness residual `AlgebraicDecideSoundnessResidual …`: bundles the three branch
+hypotheses (`hnolog`, `hprincipal`, `htorsion`) turning each `some F` branch of
 `cIntegrateAlgebraicDecide` into `toPolyG (algDeriv ρ F) = toPolyG integrand`. -/
 structure AlgebraicDecideSoundnessResidual : Prop where
   /-- No-log branch (rational-part exhaustiveness): `D(⟨v, []⟩) = integrand`. -/
@@ -267,7 +268,7 @@ theorem decideWitnessPrincipal_some :
     (decideWitnessPrincipal.isSome, decideWitnessPrincipal.map fun F => F.logTerms.length)
       = (true, some 1) := by native_decide
 
-/-! ## The self-determining algebraic decision-procedure milestone -/
+/-! ## Self-determining algebraic decision validation -/
 
 /-- End-to-end validation that `cIntegrateAlgebraicDecide` decides elementarity: `none` on the
 non-torsion `(3,5)` of `y² = x³ − 2`, `some` with a `(1/3)·log` term on the torsion `(0,1)` of
