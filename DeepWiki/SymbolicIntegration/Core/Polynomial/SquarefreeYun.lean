@@ -360,6 +360,27 @@ theorem yunLoopAbs_squarefree [CharZero K] (A : K[X]) (hA : A.primPart ≠ 0) :
     · exact squarefree_of_associated_sqfreeFactPart A i (yunStep_emit_assoc A i hi hA hinv)
     · exact ih (i + 1) _ _ (by omega) (yunStep_preserves A i hi hA hinv).2 V hV
 
+open Classical in
+/-- Distinct-position factors emitted by the abstract Yun loop are relatively prime. -/
+theorem yunLoopAbs_pairwise_isRelPrime [CharZero K] (A : K[X])
+    (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d)
+    {p q : ℕ} (hpq : p ≠ q) (hp : p < (yunLoopAbs A (b, d) i n).length)
+    (hq : q < (yunLoopAbs A (b, d) i n).length) :
+    IsRelPrime ((yunLoopAbs A (b, d) i n).get ⟨p, hp⟩)
+      ((yunLoopAbs A (b, d) i n).get ⟨q, hq⟩) := by
+  have hF := yunLoopAbs_forall₂ A hA n i b d hi hinv
+  have hlen : (yunLoopAbs A (b, d) i n).length
+      = ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hF.length_eq
+  have hp' : p < ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hlen ▸ hp
+  have hq' : q < ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hlen ▸ hq
+  have hAp : Associated ((yunLoopAbs A (b, d) i n).get ⟨p, hp⟩) (sqfreeFactPart A (i + p)) := by
+    have h := hF.get hp hp'
+    simpa using h
+  have hAq : Associated ((yunLoopAbs A (b, d) i n).get ⟨q, hq⟩) (sqfreeFactPart A (i + q)) := by
+    have h := hF.get hq hq'
+    simpa using h
+  exact isRelPrime_of_associated_sqfreeFactPart A (by omega : i + p ≠ i + q) hAp hAq
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration

@@ -40,27 +40,6 @@ open Classical
 /-! ### The abstract Yun loop and its factor products -/
 
 open Classical in
-/-- Distinct-position factors emitted by the abstract Yun loop are relatively prime. -/
-theorem yunLoopAbs_pairwise_isRelPrime {K : Type*} [Field K] [CharZero K] (A : K[X])
-    (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d)
-    {p q : ℕ} (hpq : p ≠ q) (hp : p < (yunLoopAbs A (b, d) i n).length)
-    (hq : q < (yunLoopAbs A (b, d) i n).length) :
-    IsRelPrime ((yunLoopAbs A (b, d) i n).get ⟨p, hp⟩)
-      ((yunLoopAbs A (b, d) i n).get ⟨q, hq⟩) := by
-  have hF := yunLoopAbs_forall₂ A hA n i b d hi hinv
-  have hlen : (yunLoopAbs A (b, d) i n).length
-      = ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hF.length_eq
-  have hp' : p < ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hlen ▸ hp
-  have hq' : q < ((List.range n).map (fun j => sqfreeFactPart A (i + j))).length := hlen ▸ hq
-  have hAp : Associated ((yunLoopAbs A (b, d) i n).get ⟨p, hp⟩) (sqfreeFactPart A (i + p)) := by
-    have h := hF.get hp hp'
-    simpa using h
-  have hAq : Associated ((yunLoopAbs A (b, d) i n).get ⟨q, hq⟩) (sqfreeFactPart A (i + q)) := by
-    have h := hF.get hq hq'
-    simpa using h
-  exact isRelPrime_of_associated_sqfreeFactPart A (by omega : i + p ≠ i + q) hAp hAq
-
-open Classical in
 /-- The abstract Yun loop product is associated to the product of consecutive squarefree parts. -/
 theorem yunLoopAbs_prod_assoc {K : Type*} [Field K] [CharZero K] (A : K[X])
     (hA : A.primPart ≠ 0) (n i : ℕ) (b d : K[X]) (hi : 1 ≤ i) (hinv : YunInv A i b d) :
