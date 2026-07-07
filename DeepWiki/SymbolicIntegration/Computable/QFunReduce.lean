@@ -23,46 +23,41 @@ namespace QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- **The gcd of numerator and denominator** `reduceGcd a = cgcdMonicWf num den`, the common factor
-`qReduce` cancels. -/
+/-- The common factor `reduceGcd a = cgcdMonicWf num den` cancelled by `qReduce`. -/
 def reduceGcd (a : QFunNZG α) : CPolyG α :=
   cgcdMonicWf a.1.1 a.1.2
 
 /-! #### The denominator-nonzero discharge (`Prop`-erased) -/
 
-/-- **The reduce-gcd divides numerator and denominator** through the bridge: `toPolyG (reduceGcd a)`
-divides both `toPolyG num` and `toPolyG den` in `(CFieldSpec.K α)[X]`. -/
+/-- `toPolyG (reduceGcd a)` divides both numerator and denominator through the bridge. -/
 theorem toPolyG_reduceGcd_dvd (a : QFunNZG α) :
     toPolyG (reduceGcd a) ∣ toPolyG a.1.1 ∧ toPolyG (reduceGcd a) ∣ toPolyG a.1.2 :=
   toPolyG_cgcdMonicWf_dvd a.1.1 a.1.2
 
-/-- **The reduce-gcd is nonzero** (for a nonzero denominator): `cnormG (reduceGcd a) ≠ []`. From
-`toPolyG (reduceGcd a) ∣ toPolyG den` and `toPolyG den ≠ 0` (a divisor of a nonzero element is nonzero). -/
+/-- `reduceGcd a` is nonzero when the denominator of `a` is nonzero. -/
 theorem reduceGcd_ne_nil (a : QFunNZG α) : cnormG (reduceGcd a) ≠ [] := by
   have hden : toPolyG a.1.2 ≠ 0 := toPolyG_ne_zero_of_cisZeroG_false a.2
   intro hnil
   have hg0 : toPolyG (reduceGcd a) = 0 := (cnormG_eq_nil_iff _).mp hnil
   exact hden (eq_zero_of_zero_dvd (hg0 ▸ (toPolyG_reduceGcd_dvd a).2))
 
-/-- **The reduced numerator** `cdivWf num (reduceGcd a)` — the cancelled `num/g`. -/
+/-- The cancelled numerator `num/g`. -/
 def reduceNum (a : QFunNZG α) : CPolyG α := cdivWf a.1.1 (reduceGcd a)
 
-/-- **The reduced denominator** `cdivWf den (reduceGcd a)` — the cancelled `den/g`. -/
+/-- The cancelled denominator `den/g`. -/
 def reduceDen (a : QFunNZG α) : CPolyG α := cdivWf a.1.2 (reduceGcd a)
 
-/-- **Exact division of the numerator**: `(toPolyG (reduceNum a))·(toPolyG (reduceGcd a)) = toPolyG num`
-(the gcd divides the numerator, so its `cdivWf` quotient is exact). -/
+/-- Exact division of the numerator by `reduceGcd a`. -/
 theorem toPolyG_reduceNum_mul (a : QFunNZG α) :
     toPolyG (reduceNum a) * toPolyG (reduceGcd a) = toPolyG a.1.1 :=
   CPolyG.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).1
 
-/-- **Exact division of the denominator**: `(toPolyG (reduceDen a))·(toPolyG (reduceGcd a)) = toPolyG den`. -/
+/-- Exact division of the denominator by `reduceGcd a`. -/
 theorem toPolyG_reduceDen_mul (a : QFunNZG α) :
     toPolyG (reduceDen a) * toPolyG (reduceGcd a) = toPolyG a.1.2 :=
   CPolyG.toPolyG_cdivWf_exact _ _ (reduceGcd_ne_nil a) (toPolyG_reduceGcd_dvd a).2
 
-/-- **The reduced denominator is `cisZeroG`-nonzero**: `cisZeroG (reduceDen a) = false`, from
-`(toPolyG (reduceDen a))·(toPolyG (reduceGcd a)) = toPolyG den ≠ 0`. The den-nonzero subtype witness. -/
+/-- The reduced denominator satisfies `cisZeroG (reduceDen a) = false`. -/
 theorem cisZeroG_reduceDen (a : QFunNZG α) : cisZeroG (reduceDen a) = false := by
   rw [Bool.eq_false_iff, Ne, cisZeroG_iff]
   intro hz
@@ -72,10 +67,7 @@ theorem cisZeroG_reduceDen (a : QFunNZG α) : cisZeroG (reduceDen a) = false := 
 
 end QFunNZG
 
-/-- **Reduce a `QFunNZG α` fraction to lowest terms** `qReduce a = (num/g)/(den/g)` with
-`g = gcd(num, den)` computed by the fuel-free monic gcd `cgcdMonicWf`, cancelling the common factors that
-`QFunNZG`'s unreduced `qmulNZG`/`qinvNZG` accumulate. Computable (den-nonzero proof `Prop`-erased); the
-field value is preserved (`toQFunNZG_qReduce`). -/
+/-- Reduce a `QFunNZG α` fraction to `(num/g)/(den/g)` using the fuel-free monic gcd. -/
 def qReduce {α : Type*} [CField α] [CFieldSpec α] (a : QFunNZG α) : QFunNZG α :=
   ⟨(QFunNZG.reduceNum a, QFunNZG.reduceDen a), QFunNZG.cisZeroG_reduceDen a⟩
 
@@ -87,17 +79,14 @@ namespace QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- **`amG (toPolyG (reduceGcd a)) ≠ 0`**: the gcd is nonzero (`reduceGcd_ne_nil`) and `amG` is injective,
-so its rational-function image is nonzero — the cancellable factor in the invariant proof. -/
+/-- `amG (toPolyG (reduceGcd a)) ≠ 0`. -/
 theorem amG_toPolyG_reduceGcd_ne_zero (a : QFunNZG α) :
     amG α (toPolyG (reduceGcd a)) ≠ 0 :=
   amG_toPolyG_ne_zero (fun h => reduceGcd_ne_nil a ((cnormG_eq_nil_iff _).mpr h))
 
 end QFunNZG
 
-/-- **The reducer preserves the field value**: for every `a : QFunNZG α`,
-`toQFunNZG (qReduce a) = toQFunNZG a`. Cancelling `g = gcd(num, den)` does not change `num/den` in
-`RatFunc (CFieldSpec.K α)`. -/
+/-- `qReduce` preserves the field value in `RatFunc (CFieldSpec.K α)`. -/
 theorem toQFunNZG_qReduce {α : Type*} [CField α] [CFieldSpec α] (a : QFunNZG α) :
     QFunNZG.toQFunNZG (qReduce a) = QFunNZG.toQFunNZG a := by
   -- abbreviations in RatFunc (CFieldSpec.K α)
@@ -125,8 +114,7 @@ namespace QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- **`qReduce` preserves the zero test**: `isZeroNZG (qReduce x) = isZeroNZG x`, the Boolean corollary
-of `toQFunNZG_qReduce`. -/
+/-- `qReduce` preserves the Boolean zero test. -/
 theorem isZeroNZG_qReduce (x : QFunNZG α) :
     isZeroNZG (qReduce x) = isZeroNZG x := by
   have hval : toQFunNZG (qReduce x) = toQFunNZG x := toQFunNZG_qReduce x
@@ -142,8 +130,7 @@ end QFunNZG
 
 /-! ### Validation at `QFunNZG ℚ ≅ ℚ(x)` -/
 
-/-- **Field equality on `QFunNZG α`** `qReduceEq a b = isZero (a − b)` — the `Bool` test `a = b` via the
-`CField` zero test, sidestepping `DecidableEq` on the fraction subtype. -/
+/-- Field equality on `QFunNZG α`, tested as `isZero (a - b)`. -/
 def qReduceEq {α : Type*} [CField α] [CFieldDomain α] (a b : QFunNZG α) : Bool :=
   CField.isZero (CField.sub a b)
 
