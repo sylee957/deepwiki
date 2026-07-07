@@ -152,12 +152,7 @@ theorem hypCurveX3m2_torsionCeiling_eq1 :
       npHypOddDeg 11 (hypCurveX3m2 11), npHypOddDeg 13 (hypCurveX3m2 13)] = 1 := by
   native_decide
 
-/-! ## The lightweight general-torsion milestone -/
-
-/-- The lightweight `𝔽_p` point-count torsion ceiling `gcd_p N_p = gcd_p |Pic⁰(C)(𝔽_p)|`, in pure
-`ZMod p` arithmetic, computes on: the non-hyperelliptic Fermat cubic `x³ + y³ = 1` (ceiling `3`, its
-`ℤ/3` torsion), the hyperelliptic `y² = x³ + 1` (ceiling `6`), and the rank-1 `y² = x³ − 2` (ceiling
-`1`). -/
+/-- The `𝔽_p` point-count torsion ceiling computes the Fermat and hyperelliptic sample ceilings. -/
 theorem lightweight_general_torsion_validates :
     -- the non-hyperelliptic Fermat cubic: torsion ceiling 3
     (npFermatCubic 5 (fermatCubic 5), npFermatCubic 7 (fermatCubic 7),
@@ -171,12 +166,5 @@ theorem lightweight_general_torsion_validates :
     ∧ torsionCeiling [npHypOddDeg 5 (hypCurveX3m2 5), npHypOddDeg 7 (hypCurveX3m2 7),
         npHypOddDeg 11 (hypCurveX3m2 11), npHypOddDeg 13 (hypCurveX3m2 13)] = 1 := by
   native_decide
-
-/-! ## Related pieces
-
-The point count delivers the good-reduction torsion ceiling `order_ℚ(δ) ∣ gcd_p N_p`, which for genus 1
-pins the torsion order (the group being cyclic of order `N_p`). A matching divisor-class group law in this
-light representation — reading off the order of a specific class, and the higher-genus point count — is
-the natural continuation. -/
 
 end DeepWiki.SymbolicIntegration
