@@ -119,6 +119,14 @@ theorem sqfreeFactPart_isRelPrime (A : D[X]) {i j : ℕ} (hij : i ≠ j) :
   rw [hPeqQ] at hi
   exact hij (hi.symm.trans hj)
 
+open UniqueFactorizationMonoid in
+open Classical in
+/-- Any associate of `sqfreeFactPart A j` is squarefree. -/
+theorem squarefree_of_associated_sqfreeFactPart {K : Type*} [Field K]
+    {V : K[X]} (A : K[X]) (j : ℕ) (h : Associated V (sqfreeFactPart A j)) :
+    Squarefree V :=
+  h.squarefree_iff.mpr (sqfreeFactPart_squarefree A j)
+
 end SquarefreeParts
 
 end DeepWiki.SymbolicIntegration

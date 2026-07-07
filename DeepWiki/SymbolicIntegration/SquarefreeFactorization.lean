@@ -24,14 +24,6 @@ variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [No
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- Any associate of `sqfreeFactPart A j` is squarefree. -/
-theorem squarefree_of_associated_sqfreeFactPart {K : Type*} [Field K]
-    {V : K[X]} (A : K[X]) (j : ℕ) (h : Associated V (sqfreeFactPart A j)) :
-    Squarefree V :=
-  h.squarefree_iff.mpr (sqfreeFactPart_squarefree A j)
-
-open UniqueFactorizationMonoid in
-open Classical in
 /-- Associates of distinct squarefree-factorization parts are relatively prime. -/
 theorem isRelPrime_of_associated_sqfreeFactPart {K : Type*} [Field K]
     {V W : K[X]} (A : K[X]) {i j : ℕ} (hij : i ≠ j)
