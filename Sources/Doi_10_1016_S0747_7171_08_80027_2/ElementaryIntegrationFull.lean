@@ -63,13 +63,13 @@ derivation (`θ' = θ`), the generic solver — its entire Gaussian elimination 
 returns `N = (θ+2) − 2y`, and the COMPUTED `u = N/θ` passes the log-derivative certificate
 `radIsLogIntegral`. So `∫ dx/√(eˣ+1) = log((y−1)/(y+1))` is COMPUTED over the transcendental tower — the
 grand unification extended from the rational part to the LOG part, the argument now an engine OUTPUT. -/
-abbrev bie_logarg_exp := @expArg_compute_verify
+abbrev bie_logarg_exp := @expArg_isLogIntegral
 
 /-- **`radLogArgSolveG` reproduces the arcsinh log argument `u = x + y` at the ℚ base** (Bronstein 1990, log
 part; `native_decide`): at `β = ℚ` (`α ≅ ℚ(x)`) the generic solver computes the same `N` as the ℚ-specific
 `radLogArgSolve` for `∫ dx/√(x²+1) = log(x + y)` and the computed `u = N/1` passes the certificate — the
 ℚ → generic-`CField` generalization is conservative (it specializes back to the base level). -/
-abbrev bie_logarg_arcsinh_base := @genArg_arcsinh_compute_verify
+abbrev bie_logarg_arcsinh_base := @genArg_arcsinh_isLogIntegral
 
 /-! ## The unified integrator `cIntegrateElementaryG`: assembling `v + Σ cᵢ log uᵢ` over a tower -/
 

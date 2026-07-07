@@ -6,8 +6,9 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower
 The log-argument solve, generalized off `ℚ` to an arbitrary computable base `[CField β]`. When
 `α = QFunNZG β = β(x)`, the cleared log-derivative system is `β`-linear, so `gaussElimG`/`kernelVectorG`
 (the `CField`-generic analogues of `ratRref`/`ratKernelVector`) and `radLogArgSolveG` solve it over any
-`β`. Over `α = ℚ(x)(eˣ)`, `radLogArgSolveG` computes `N = (θ+2) − 2y` for `∫ dx/√(eˣ+1)`, whose `u = N/θ`
-passes the log-derivative certificate; the `ℚ`-base classics solve identically. -/
+`β`. Over `α = ℚ(x)(eˣ)`, `radLogArgSolveG` computes `N = (θ+2) − 2y` for `∫ dx/√(eˣ+1)`,
+whose `u = N/θ` passes the log-derivative certificate; the `ℚ`-base instance specializes
+to the classical arcsinh log argument. -/
 
 open Polynomial
 
@@ -94,10 +95,10 @@ def qOfNumG (num : CPolyG β) : QFunNZG β :=
 `qxMonomial`. -/
 def qMonomialG (k : ℕ) : QFunNZG β := qOfNumG (cshiftG k [(CField.one : β)])
 
-/-- **The numerator coefficient list of a `β(x)` element** `qNumG z = z.1.1 ∈ CPolyG β` (a `List β`). -/
+/-- The numerator coefficient list of a `β(x)` element: `qNumG z = z.1.1 ∈ CPolyG β`. -/
 def qNumG (z : QFunNZG β) : CPolyG β := z.1.1
 
-/-- **The denominator coefficient list of a `β(x)` element** `qDenG z = z.1.2 ∈ CPolyG β` (a `List β`). -/
+/-- The denominator coefficient list of a `β(x)` element: `qDenG z = z.1.2 ∈ CPolyG β`. -/
 def qDenG (z : QFunNZG β) : CPolyG β := z.1.2
 
 /-- The cleared log-derivative residual over `α = QFunNZG β`:
@@ -161,7 +162,7 @@ def radLogArgSolveG (ρ : QFunNZG β) (integrand : RadElem (QFunNZG β)) (D : CP
 
 end
 
-/-! ### Sanity: the ℚ-base classics solve identically under `radLogArgSolveG`
+/-! ### Generic solver over the rational base
 
 At `β = ℚ`, `radLogArgSolveG` reproduces the arcsinh solve `∫ dx/√(x²+1) = log(x + y)`, confirming the
 generalization is conservative. -/
@@ -180,12 +181,12 @@ def genArgX : QFunNZG ℚ := qxOfNum [0, 1]
 def genArgSolvedArcsinh : Option (RadElem (QFunNZG ℚ)) :=
   radLogArgSolveG genArgRhoArcsinh genArgIntegrandArcsinh [1] 1
 
--- Sanity print: the computed numerator `N` for arcsinh under the generic solver (a multiple of `x + y`).
+-- Computed numerator `N` for arcsinh under the generic solver, a multiple of `x + y`.
 #eval (genArgSolvedArcsinh.map (fun N => N.map (fun z => ((qNumG z : List ℚ), (qDenG z : List ℚ)))))
 
 /-- `radLogArgSolveG` computes `u = x + y` for `∫ dx/√(x²+1)` at `β = ℚ`: the solved `N` passes the
 log-derivative certificate, reproducing the `ℚ`-base solve. -/
-theorem genArg_arcsinh_compute_verify :
+theorem genArg_arcsinh_isLogIntegral :
     (genArgSolvedArcsinh.map (fun N =>
       radIsLogIntegral 2 genArgRhoArcsinh N genArgIntegrandArcsinh)) = some true := by
   native_decide
@@ -224,7 +225,7 @@ so `u = N/θ = (y−1)/(y+1)`). -/
 def expArgSolved : Option (RadElem Lvl2) :=
   @radLogArgSolveG _ _ _ expTowerDiff expArgRho expArgIntegrand expDenTheta 1
 
--- Sanity print: the computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower (a multiple of `(θ+2) − 2y`).
+-- Computed numerator `N` for `∫ dx/√(eˣ+1)` over the tower, a multiple of `(θ+2) − 2y`.
 #eval (expArgSolved.map (fun N => N.map (fun z =>
   ((qNumG (β := QFunNZG ℚ) z).map (fun w => (w.1.1 : List ℚ)),
    (qDenG (β := QFunNZG ℚ) z).map (fun w => (w.1.1 : List ℚ))))))
@@ -237,7 +238,7 @@ theorem expArg_solves :
 /-- The computed `u = N/θ` integrates `∫ dx/√(eˣ+1)` over `ℚ(x)(eˣ)`: the log argument `N` computed by
 `radLogArgSolveG` yields `u = N/θ` passing the log-derivative certificate at the exponential instance
 `expTowerDiff`, i.e. `∫ dx/√(eˣ+1) = log((y−1)/(y+1))`. -/
-theorem expArg_compute_verify :
+theorem expArg_isLogIntegral :
     (expArgSolved.map (fun N =>
       @radIsLogIntegral _ _ expTowerDiff 2 expArgRho
         [CField.div (N.getD 0 CField.zero) expTheta,
@@ -255,16 +256,15 @@ theorem expArg_matches_closed_form :
         (CField.mul a1 (CField.add expTheta (CField.add CField.one CField.one)))))) = some true := by
   native_decide
 
-/-! ### `#print axioms` — the generic solver at `β = ℚ` (conservative) and the log argument computed over
-the tower `α = ℚ(x)(eˣ)`. -/
+/-! ### Axiom audit for the generic log-argument solver -/
 
--- ℚ-base sanity: the generic solver reproduces `radLogArgSolve` at `β = ℚ`:
-#print axioms genArg_arcsinh_compute_verify
+-- The generic solver reproduces `radLogArgSolve` at `β = ℚ`.
+#print axioms genArg_arcsinh_isLogIntegral
 #print axioms genArg_arcsinh_matches_closed_form
 
--- The log argument computed over the tower `α = ℚ(x)(eˣ)`:
+-- The log argument computed over the tower `α = ℚ(x)(eˣ)`.
 #print axioms expArg_solves
-#print axioms expArg_compute_verify
+#print axioms expArg_isLogIntegral
 #print axioms expArg_matches_closed_form
 
 end DeepWiki.SymbolicIntegration
