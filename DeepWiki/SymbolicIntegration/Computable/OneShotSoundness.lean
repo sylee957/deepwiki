@@ -148,7 +148,7 @@ theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : C
     simp only [denote]
     simp
   have hzero : toPolyG ([CField.zero] : CPolyG α) = 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero]
+    simp only [denote, map_zero, mul_zero, add_zero]
   simp only [toPolyG_cmulG, toPolyG_caddG, toPolyG_csubG, hone, hzero]
   -- the rational-part numerator derivative `D(q)·1 − q·D(1)`, with `D(1) = 0`
   rw [toPolyG_cmonomialDeriv_one,
@@ -169,7 +169,8 @@ theorem field_identity_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] [Algeb
             (⟨(CPolyG.cIntegratePolyG c, ([CField.one] : CPolyG α)), []⟩ : IntegralResultG α).logs
       = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) := by
   have hone_ne : toPolyG ([CField.one] : CPolyG α) ≠ 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]; exact one_ne_zero
+    simp only [denote, map_one, mul_zero, add_zero]
+    exact one_ne_zero
   exact field_identity_of_checkIdentityG ([CField.one] : CPolyG α)
     ⟨(CPolyG.cIntegratePolyG c, ([CField.one] : CPolyG α)), []⟩ c ([CField.one] : CPolyG α)
     hone_ne hone_ne (by simp) (checkIdentityG_cIntegratePolyG_const c hconst)
