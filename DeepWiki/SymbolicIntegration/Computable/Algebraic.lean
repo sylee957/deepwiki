@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicCompleteness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicDecide
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicHermiteCompleteness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResidues
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResiduesExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicWfSoundness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.Bareiss
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissEngine

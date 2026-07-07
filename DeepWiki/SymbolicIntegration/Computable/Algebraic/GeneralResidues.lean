@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResidues
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResiduesExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgFunctionField
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant

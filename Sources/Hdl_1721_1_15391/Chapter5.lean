@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResidues
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResiduesExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogIntegral
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalResidueInfinity
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgument
