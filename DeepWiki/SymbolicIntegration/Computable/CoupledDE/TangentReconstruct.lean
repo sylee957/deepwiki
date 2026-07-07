@@ -575,7 +575,7 @@ theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPol
   · rw [toPoly2_tanDeriv_singleton, toPoly2_singleton, toPoly2_singleton, tdeg_zero_toPoly2 c1 hd1]
     simp only [Nat.cast_zero, map_zero, zero_mul, sub_zero]
     rw [show C (toPolyG (cderivQ s1)) = C (derivative (toPolyG s1)) from by
-        rw [cderivQ, toPolyG_cderivG]]
+        simp only [cderivQ, denote]]
     have h := congrArg (Polynomial.C (R := Polynomial ℚ)) hb1
     rw [map_add, map_add, map_mul, map_mul, map_mul] at h
     simp only [map_neg, map_one] at h
@@ -583,7 +583,7 @@ theorem reconstruct_base (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 : List (CPol
   · rw [toPoly2_tanDeriv_singleton, toPoly2_singleton, toPoly2_singleton, tdeg_zero_toPoly2 c2 hd2]
     simp only [Nat.cast_zero, map_zero, zero_mul, sub_zero]
     rw [show C (toPolyG (cderivQ s2)) = C (derivative (toPolyG s2)) from by
-        rw [cderivQ, toPolyG_cderivG]]
+        simp only [cderivQ, denote]]
     have h := congrArg (Polynomial.C (R := Polynomial ℚ)) hb2
     rw [map_add, map_add, map_mul, map_mul] at h
     linear_combination h
