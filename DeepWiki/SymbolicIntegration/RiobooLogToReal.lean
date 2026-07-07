@@ -77,8 +77,6 @@ theorem logToReal_conjugate_pair_atan [CharZero R] {i a b A : R} (hi : i ^ 2 = -
   rw [logToReal_conjugate_pair hi hAB, mul_one,
     logDeriv_imagQuot_eq_arctanDeriv_of_sq hi h1 h2]
 
-/-- Restatement: the conjugate pair `a±ib` contributes `(a+ib)·logDeriv(A+iB) + (a−ib)·logDeriv(A−iB)
-= a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))`. -/
 example {R : Type*} [Field R] [Differential R] (i a b A B : R) (hi : i ^ 2 = -1)
     (hAB : A ^ 2 + B ^ 2 ≠ 0) :
     (a + i * b) * Differential.logDeriv (A + i * B)
@@ -108,8 +106,6 @@ theorem logToReal_sum_atan [CharZero R] {ι : Type*} (s : Finset ι) {i : R} (hi
           + b k * (2 * ((A k)′ / (1 + (A k) ^ 2)))) :=
   Finset.sum_congr rfl fun k hk => logToReal_conjugate_pair_atan hi (h1 k hk) (h2 k hk)
 
-/-- Restatement: summing each conjugate pair's contribution over a family yields the real form
-`∑ₖ [a k·logDeriv((A k)²+(B k)²) + b k·(i·logDeriv((A k + i·B k)/(A k − i·B k)))]`. -/
 example {R : Type*} [Field R] [Differential R] {ι : Type*} (s : Finset ι) (i : R) (hi : i ^ 2 = -1)
     (a b A B : ι → R) (hAB : ∀ k ∈ s, (A k) ^ 2 + (B k) ^ 2 ≠ 0) :
     ∑ k ∈ s, ((a k + i * b k) * Differential.logDeriv (A k + i * B k)
@@ -140,8 +136,6 @@ theorem logToReal_sum_atanRun (hi : i ^ 2 = -1) (hφneg : ∀ p : Polynomial K, 
   -- replace the `i·logDeriv((φA+iφB)/(φA−iφB))` term with `atanDerivSum (L k)`
   rw [isLogToAtanRun_correct hi hφneg (hrun k hk), imagLog]
 
-/-- Restatement: with each pair's `LogToAtan` run computed, the sum is
-`∑ₖ [a k·logDeriv((φ(Apoly k))²+(φ(Bpoly k))²) + b k·atanDerivSum(L k)]`. -/
 example {R : Type*} [Field R] [Differential R] [CharZero R] {K : Type*} [Field K]
     {φ : Polynomial K →+* R} {i : R} (hi : i ^ 2 = -1) (hφneg : ∀ p : Polynomial K, φ (-p) = -φ p)
     {ι : Type*} (s : Finset ι) (a b : ι → R) (Apoly Bpoly : ι → Polynomial K) (L : ι → List R)
