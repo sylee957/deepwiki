@@ -201,14 +201,14 @@ theorem drvFullRun_length : drvFullRun.length = 1 := by native_decide
 #print axioms expRadGen_sq_eq_radicand
 #print axioms expRadDeriv_radGen_eq
 
--- ★★ The headline: `∫ eˣ/√(eˣ+1) dx = 2√(eˣ+1)` over ℚ(x)(eˣ):
+-- Exponential tower integral: `∫ eˣ/√(eˣ+1) dx = 2√(eˣ+1)` over ℚ(x)(eˣ).
 #print axioms expIntegral_eq
 
--- Logarithmic companion: `t₁' = 1/x`, `∫ dx/(x√(log x)) = 2√(log x)` over ℚ(x)(log x):
+-- Logarithmic tower integral: `t₁' = 1/x`, `∫ dx/(x√(log x)) = 2√(log x)` over ℚ(x)(log x).
 #print axioms logTheta_deriv_eq_oneOverX
 #print axioms logIntegral_eq
 
--- Stretch: the generic rational-part driver runs (and `D(∫) = rational-part`) over a tower base ℚ(x):
+-- Generic rational-part driver over the tower base ℚ(x): the run and its derivative identity.
 #print axioms drvDriver_integrates
 #print axioms drvFullRun_length
 
