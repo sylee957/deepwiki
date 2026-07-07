@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgFunctionField
 
 /-! # Agreement of the fraction-free Bareiss determinant with `fieldDet`
 
-Validations that `bareissDet M = fieldDet (fromQ M)`, that `bareissAdjugate`/`bareissSolve` satisfy
+Examples showing that `bareissDet M = fieldDet (fromQ M)`, that `bareissAdjugate`/`bareissSolve` satisfy
 `M·adj = det·I` and Cramer's rule, and a degree-swell benchmark on a `3×3` Cauchy matrix. -/
 
 open Polynomial
@@ -153,22 +153,5 @@ theorem bareissCauchyFlatDeg_eq : bareissCauchyFlatDeg = 6 := by native_decide
 /-- The fraction path's total degree is `21`: `fieldDet` over `ℚ(x)` carries the Cauchy determinant as
 an unreduced value of numerator degree `6` over denominator degree `15`. -/
 theorem bareissCauchyFracTotalDeg_eq : bareissCauchyFracTotalDeg = 21 := by native_decide
-
-/-! ### `#print axioms` for the Bareiss validations -/
-
--- Agreement of the fraction-free Bareiss determinant with the fraction-based `fieldDet`.
-#print axioms bareiss_eq_fieldDet_nonRad
-#print axioms bareiss_eq_fieldDet_trig
-#print axioms bareiss_eq_fieldDet_vander4
-
--- The fraction-free adjugate / solve identities `M·adj = det·I`, `M·(det·x) = det·b`.
-#print axioms bareiss_adjugate_nonRad
-#print axioms bareiss_adjugate_trig
-#print axioms bareiss_solve_nonRad
-
--- The swell benchmark: unreduced fraction-path total degree 21 vs flat fraction-free Bareiss degree 6.
-#print axioms bareissSwellWin
-#print axioms bareissCauchyFlatDeg_eq
-#print axioms bareissCauchyFracTotalDeg_eq
 
 end DeepWiki.SymbolicIntegration
