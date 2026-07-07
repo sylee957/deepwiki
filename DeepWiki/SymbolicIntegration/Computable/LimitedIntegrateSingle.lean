@@ -108,7 +108,7 @@ theorem cIntegratePrimPolyDegRaiseG_sound {α : Type*} [CField α] [CFieldSpec �
       obtain ⟨⟨b, c⟩, _hlim, hmap⟩ := h
       rw [Option.map_eq_some_iff] at hmap
       obtain ⟨qr, hrec, rfl⟩ := hmap
-      rw [toPolyG_caddG, map_add, ih _ _ hrec, toPolyG_csubG, toPolyG_cmonomialDeriv, hη]
+      simp only [denote, map_add, ih _ _ hrec, hη]
       ring
 
 end CPolyG
