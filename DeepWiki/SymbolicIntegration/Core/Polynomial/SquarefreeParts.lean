@@ -57,6 +57,16 @@ theorem deflation_eq_prod_sqfreeFactPart (A : D[X]) (k : ℕ) :
   rw [Finset.mem_filter] at hP
   rw [hP.2]
 
+open Classical in
+/-- `pp(A)` is associated to `∏ᵢ Aᵢⁱ`: the squarefree factorization of the primitive part. -/
+theorem primPart_associated_prod_sqfreeFactPart (A : D[X]) (hA : A.primPart ≠ 0) :
+    Associated A.primPart (∏ i ∈ (normalizedFactors A.primPart).toFinset.image
+      (fun P => (normalizedFactors A.primPart).count P), (sqfreeFactPart A i) ^ i) := by
+  have h := deflation_eq_prod_sqfreeFactPart A 0
+  simp only [Nat.sub_zero] at h
+  rw [← h]
+  exact (deflation_zero A hA).symm
+
 end SquarefreeParts
 
 end DeepWiki.SymbolicIntegration
