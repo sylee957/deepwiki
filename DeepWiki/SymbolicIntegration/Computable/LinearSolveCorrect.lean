@@ -41,8 +41,10 @@ def solvesRow (r x : List ℚ) : Prop := dotQ r x = 0
 /-- A vector solves every row in a list. -/
 def solvesAll (rows : List (List ℚ)) (x : List ℚ) : Prop := ∀ r ∈ rows, solvesRow r x
 
+/-- Every vector solves the empty row system. -/
 theorem solvesAll_nil (x : List ℚ) : solvesAll [] x := by intro r hr; simp at hr
 
+/-- Solving a cons row system is solving its head row and tail system. -/
 theorem solvesAll_cons {r : List ℚ} {rows : List (List ℚ)} {x : List ℚ} :
     solvesAll (r :: rows) x ↔ solvesRow r x ∧ solvesAll rows x := by
   constructor
