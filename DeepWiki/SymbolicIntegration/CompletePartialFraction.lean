@@ -171,17 +171,12 @@ theorem ratFunc_completePartialFraction {ι : Type*} (s : Finset ι) (D : ι →
 
 /-! ## Restatements -/
 
-/-- Restatement of the base-`g` digit expansion: `B = ∑_{j<e} Cⱼ·g^j` with proper digits
-`deg Cⱼ < deg g`. -/
 example (g : K[X]) (hg : g.Monic) (_hd : 0 < g.natDegree) (e : ℕ) (B : K[X])
     (hB : B.degree < ((e * g.natDegree : ℕ) : WithBot ℕ)) :
     ∃ C : ℕ → K[X], (∀ j, (C j).degree < g.degree) ∧
       B = ∑ j ∈ Finset.range e, C j * g ^ j :=
   ⟨baseDigit B g, fun j => degree_baseDigit_lt _ _ hg j, baseDigit_reconstruction g hg e B hB⟩
 
-/-- Restatement of the complete partial fraction decomposition: for a squarefree factorization
-`D = ∏ᵢ Dᵢ^{eᵢ}` (monic, pairwise-coprime, positive-degree `Dᵢ`, `eᵢ ≥ 1`),
-`A/D = P + ∑ᵢ ∑_{j=1}^{eᵢ} Hᵢⱼ/Dᵢ^j` with `deg Hᵢⱼ < deg Dᵢ` and `P` the polynomial part. -/
 example {ι : Type*} (s : Finset ι) (D : ι → K[X]) (e : ι → ℕ)
     (hD : ∀ i ∈ s, (D i).Monic) (hd : ∀ i ∈ s, 0 < (D i).natDegree) (he : ∀ i ∈ s, 1 ≤ e i)
     (hcop : Set.Pairwise ↑s fun i j => IsCoprime (D i) (D j)) (A : K[X]) :
