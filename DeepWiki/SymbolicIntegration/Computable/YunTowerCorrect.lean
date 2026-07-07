@@ -152,7 +152,8 @@ theorem toPolyG_yunDeflate_snd (hgcd : GcdFFCorrect (α := α)) (b d : CPolyG α
   rw [hp] at hexd
   have hd' : toPolyG (cdivWf d p) = toPolyG d / gcd (toPolyG b) (toPolyG d) :=
     eq_ediv_of_mul_eq hgne hexd
-  rw [toPolyG_csubG, toPolyG_cderivG, hd', toPolyG_yunDeflate_fst hgcd b d hb]
+  simp only [denote]
+  rw [hd', toPolyG_yunDeflate_fst hgcd b d hb]
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **The Yun radical divides the working polynomial.** The product of all Yun factors emitted from
