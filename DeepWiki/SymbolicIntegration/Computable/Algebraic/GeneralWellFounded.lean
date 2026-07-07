@@ -2,15 +2,11 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralQuotient
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralSetup
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 
-/-! # General (non-radical) algebraic-function integration
+/-! # General algebraic-function integration
 
-The integrator for an arbitrary plane curve `K(x)[y]/(f)`: unlike the radical case
-(`ComputableRadicalWellFounded`), it has no Hermite/pole-order descent of its own — the rational part `v`
-and the log argument `u` are both found by a single `K`-linear solve over the integral basis
-(`afRationalSolveWf` / `afLogArgSolveWf`, over a finite `ℚ`-matrix solved by `kernelBasisG`). The one
-recursive dependency is the Bézout cofactor computing `f_y⁻¹ mod f` (`afFyInvWf`, via `cdiophantineGWf`);
-everything else is a flat composition. `[CField α]`-only on the runtime fragment, so it `native_decide`s
-over the noncomputable `ℚ(x)` carrier. -/
+The integrator for a plane curve `K(x)[y]/(f)`: the rational part `v` and log
+argument `u` are found by `K`-linear solves over the integral basis, with the
+Bézout cofactor `f_y⁻¹ mod f` supplied by `afFyInvWf`. -/
 
 open Polynomial
 
@@ -280,7 +276,7 @@ def afLogArgSolveWf (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
         caddG acc (cscaleG (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPolyG (QFunNZG ℚ))
     some u
 
-/-! ## The top-level `afIntegrateAlgebraicWf` (the general `∫ = v + Σ log u`) -/
+/-! ## The top-level `afIntegrateAlgebraicWf` -/
 
 /-- The general-curve integrator `afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand =
 some (v, u)`: `∫ (ratIntegrand + logIntegrand) dx = v + log u` (principal case) — the rational part `v` by
@@ -295,7 +291,7 @@ def afIntegrateAlgebraicWf (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFu
   | some v, some u => some (v, u)
   | _, _ => none
 
-/-! ## Top-level validation: the cuspidal-cubic combined integral
+/-! ## Cuspidal-cubic combined integral
 
 `∫ (y + afDerivWf(y)/y) dx = (3/5)xy + log y` on `y³ = x²`, checked by `afDerivWf` (`native_decide`). -/
 
@@ -307,8 +303,8 @@ def gcCombineLogIntegrandWf : CPolyG (QFunNZG ℚ) :=
   afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
     [CField.zero, CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)]
 
-/-- The general integrator run `afIntegrateAlgebraicWf …`'s data, on the cuspidal cubic `y³ = x²`
-combined integral `∫ (y + afDerivWf(y)/y) dx`. -/
+/-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
+`∫ (y + afDerivWf(y)/y) dx`. -/
 def gcCombineSolvedWf : Option (CPolyG (QFunNZG ℚ) × CPolyG (QFunNZG ℚ)) :=
   afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrandWf gcCombineLogIntegrandWf
 
