@@ -3,13 +3,12 @@ import Mathlib.Analysis.Calculus.FDeriv.Basic
 import Mathlib.MeasureTheory.Measure.TightNormed
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction.TaylorExpansion
 
-/-! # The multivariate delta method (Brockwell–Davis Proposition 6.4.3) — assembly
-The delta method `(g(Xₙ) − g(p))/cₙ ⇒ D·V` splits as `D((Xₙ − p)/cₙ) + Rₙ` where `Rₙ` is the Taylor
-remainder `(g(Xₙ) − g(p) − D(Xₙ − p))/cₙ`. The linear part converges (continuous mapping), and once the
-remainder vanishes in probability, Slutsky (`tendstoInDistribution_of_tendstoInMeasure_sub`) gives the
-result. This file establishes the **assembly** with the remainder vanishing taken as a hypothesis; the
-remaining ingredient (the remainder is `o_p` from differentiability + tightness) is the deep stochastic
-step. -/
+/-! # The multivariate delta method
+
+The delta method `(g(Xₙ) − g(p))/cₙ ⇒ D·V` splits as `D((Xₙ − p)/cₙ) + Rₙ`, where `Rₙ`
+is the Taylor remainder `(g(Xₙ) − g(p) − D(Xₙ − p))/cₙ`. The file proves the Slutsky
+assembly, the differentiability-based remainder estimate, the tightness consequence of
+distributional convergence, and the resulting tightness-free finite-dimensional theorem. -/
 
 open MeasureTheory ProbabilityTheory Filter Topology
 open scoped ENNReal
@@ -132,12 +131,11 @@ theorem tendstoInMeasure_remainder_of_hasFDerivAt {E F : Type*}
   ext ω
   simp only [Set.mem_setOf_eq, Pi.zero_apply, sub_zero, Real.norm_eq_abs, halg ω]
 
-/-- **The multivariate delta method** (Brockwell–Davis Proposition 6.4.3, convergence-in-distribution
-form): if `g` is differentiable at `p` with derivative `D`, `Xₙ → p` in probability, the standardized
+/-- **The multivariate delta method, tightness-explicit form:** if `g` is differentiable at `p` with
+derivative `D`, `Xₙ → p` in probability, the standardized
 `(Xₙ − p)/cₙ` converges in distribution to `V`, and `‖(Xₙ − p)/cₙ‖` is uniformly tight, then
 `(g(Xₙ) − g(p))/cₙ` converges in distribution to `D V`. The linear part `D((Xₙ − p)/cₙ) ⇒ D V` (continuous
-mapping), the Taylor remainder vanishes in probability, and Slutsky combines them. (Tightness is the only
-hypothesis not yet derivable from `(Xₙ − p)/cₙ ⇒ V` in Mathlib — Prokhorov.) -/
+mapping), the Taylor remainder vanishes in probability, and Slutsky combines them. -/
 theorem tendstoInDistribution_smul_comp_of_hasFDerivAt {E F : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] [MeasurableSpace E] [BorelSpace E] [NormedAddCommGroup F] [NormedSpace ℝ F]
     [MeasurableSpace F] [BorelSpace F] [SecondCountableTopology F] [IsProbabilityMeasure μ]
@@ -195,9 +193,9 @@ theorem tight_of_tendstoInDistribution {E : Type*} [NormedAddCommGroup E] [Inner
           (Set.mem_range_self n)
     _ ≤ ε := hrε.le
 
-/-- **The multivariate delta method** (Brockwell–Davis Proposition 6.4.3, tightness-free form on a
-finite-dimensional inner-product space): if `g` is differentiable at `p` with derivative `D`, `Xₙ → p` in
-probability, and the standardized `(Xₙ − p)/cₙ` converges in distribution to `V`, then
+/-- **The multivariate delta method, tightness-free finite-dimensional form:** if `g` is differentiable
+at `p` with derivative `D`, `Xₙ → p` in probability, and the standardized `(Xₙ − p)/cₙ` converges in
+distribution to `V`, then
 `(g(Xₙ) − g(p))/cₙ ⇒ D V`. The tightness of `‖(Xₙ − p)/cₙ‖` needed for the Taylor remainder is automatic
 from the convergence (`tight_of_tendstoInDistribution`), so — unlike the general
 `tendstoInDistribution_smul_comp_of_hasFDerivAt` — no tightness hypothesis is required. -/
