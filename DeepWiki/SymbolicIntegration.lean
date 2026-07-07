@@ -1,5 +1,6 @@
 -- ## Abstract theory on Mathlib carriers
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
+import DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
 import DeepWiki.SymbolicIntegration.Constants
