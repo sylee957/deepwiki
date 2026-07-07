@@ -6,8 +6,8 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.GroebnerLazardStep
 
 /-! # Lazard descent from the base condition
 
-The base condition for Lazard's Lemma 3, an explicit obstruction showing it is
-not automatic, and the diagonal divisibility descent over the sorted basis. -/
+The base condition for diagonal Lazard divisibility, an explicit obstruction
+showing it is not automatic, and the descent over the sorted basis. -/
 
 open MvPolynomial MonomialOrder
 
@@ -84,7 +84,7 @@ abbrev HasLazardBaseDegreeZero {K : Type*} [Field K] {I : Ideal (MvPolynomial (F
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) : Prop :=
   ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0
 
-/-- **Lazard's Lemma 3 descent, strengthened induction**. Assuming the base divisibility
+/-- **Lazard diagonal descent, strengthened induction**. Assuming the base divisibility
 `C(g₀) ∣ lazardView f₀` at the minimal `y`-degree index, the divisibility
 `C(gᵢ) ∣ lazardView (sorted j)` holds for all `j ≤ i`. -/
 theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
@@ -133,7 +133,7 @@ theorem baseDvd_of_degreeOf_zero {K : Type*} [Field K]
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i0)) ∣ lazardView (sortedByYDegree hB i0) :=
   C_dvd_lazardView_of_degreeOf_zero (hbase i0 hi0)
 
-/-- **Lazard's Lemma 3, the diagonal descent**. Under the base divisibility,
+/-- **Lazard diagonal descent**. Under the base divisibility,
 each sorted basis element satisfies `C(leadingYCoeff (sorted i)) ∣ lazardView (sorted i)`. -/
 theorem lazard_lemma3_dvd {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
@@ -143,7 +143,7 @@ theorem lazard_lemma3_dvd {K : Type*} [Field K]
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
   C_dvd_lazardView_sortedByYDegree_of_le hB hbase i i le_rfl
 
-/-- **Lazard's Lemma 3, the diagonal descent from `f₀ ∈ K[x]`**. -/
+/-- **Lazard diagonal descent from `f₀ ∈ K[x]`**. -/
 theorem lazard_lemma3_dvd_of_degreeOf_zero {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
