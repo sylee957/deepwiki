@@ -50,6 +50,15 @@ theorem deflation_zero (A : D[X]) (hA : A.primPart ≠ 0) : Associated (deflatio
   rw [deflation]; simp only [Nat.sub_zero]
   rw [← Finset.prod_multiset_count]; exact prod_normalizedFactors hA
 
+open Classical in
+/-- Every deflation divides the primitive part: `A⁻ᵏ ∣ pp(A)` (each `Pᵢ^(eᵢ−k) ∣ Pᵢ^eᵢ`). -/
+theorem deflation_dvd_primPart (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    deflation A k ∣ A.primPart := by
+  have hdvd : deflation A k ∣ deflation A 0 := by
+    rw [deflation, deflation]
+    exact Finset.prod_dvd_prod_of_dvd _ _ (fun P _ => pow_dvd_pow P (by omega))
+  exact hdvd.trans (deflation_zero A hA).dvd
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration

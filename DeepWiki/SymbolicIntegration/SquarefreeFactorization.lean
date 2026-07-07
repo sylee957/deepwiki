@@ -22,15 +22,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- Every deflation divides the primitive part: `A⁻ᵏ ∣ pp(A)` (each `Pᵢ^(eᵢ−k) ∣ Pᵢ^eᵢ`). -/
-theorem deflation_dvd_primPart (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
-    deflation A k ∣ A.primPart := by
-  have hdvd : deflation A k ∣ deflation A 0 := by
-    rw [deflation, deflation]
-    exact Finset.prod_dvd_prod_of_dvd _ _ (fun P _ => pow_dvd_pow P (by omega))
-  exact hdvd.trans (deflation_zero A hA).dvd
-
-open Classical in
 /-- Every deflation `A⁻ᵏ` is primitive (a divisor of the primitive `pp(A)`). -/
 theorem deflation_isPrimitive (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     (deflation A k).IsPrimitive :=
