@@ -405,8 +405,8 @@ theorem toPoly2_singleton (s : CPolyG ℚ) : toPoly2 [s] = C (toPolyG s) := by
 theorem mapDeriv_shift (h : List (CPolyG ℚ)) :
     toPoly2 (([] :: h).map cderivQ) = X * toPoly2 (h.map cderivQ) := by
   rw [List.map_cons, toPoly2_cons]
-  rw [show toPolyG (cderivQ ([] : CPolyG ℚ)) = 0 from by rw [cderivQ, toPolyG_cderivG, toPolyG_nil,
-    derivative_zero]]
+  rw [show toPolyG (cderivQ ([] : CPolyG ℚ)) = 0 from by
+    simp only [cderivQ, denote, toPolyG_nil, derivative_zero]]
   rw [map_zero, zero_add]
 
 theorem toPoly2_tanDeriv_shift (h : List (CPolyG ℚ)) :
