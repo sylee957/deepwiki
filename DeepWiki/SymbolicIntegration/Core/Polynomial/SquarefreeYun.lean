@@ -223,4 +223,15 @@ theorem gcd_radical_yunStep_assoc (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
 
 end SquarefreeYunField
 
+section SquarefreeYunState
+
+variable {K : Type*} [Field K]
+
+open Classical in
+/-- Abstract Yun numerator `Babs A i = squarefreePart (deflation A (i−1))`. -/
+noncomputable def Babs (A : K[X]) (i : ℕ) : K[X] :=
+  squarefreePart (deflation A (i - 1))
+
+end SquarefreeYunState
+
 end DeepWiki.SymbolicIntegration
