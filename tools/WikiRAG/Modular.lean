@@ -11,8 +11,12 @@ are `--top=N` and `--prefix=NS`.
 
 Signals: **split** (internal Newman modularity `Q`), **misplacement** (`uses`-affinity to another
 module), **coupling** (size-normalised cross-directory), **directory granularity**, **conceptual
-cohesion** (docstring-embedding), and the **multi-objective regroup** — a Pareto view over
-`(structural, conceptual, evolutionary, disturbance)`, no weighting. -/
+cohesion** (docstring-embedding), the **multi-objective regroup** — a Pareto view over
+`(structural, conceptual, evolutionary, disturbance)`, no weighting — and the **community
+partition-diff**: the global `uses`-community structure diffed against the directory tree, surfacing
+*scattered themes* (one community spread over many directories → regroup) and *grab-bag directories*
+(one directory fractured into many communities → split). The local signals answer "does this decl/file
+belong here?"; the partition-diff answers "what modules *should* exist?" — the module-scale question. -/
 
 namespace WikiRAG
 open Std SQLite SQLite.Blob
@@ -295,6 +299,118 @@ def reportRegroup (g : Graph) (e : Embeds) (top : Nat) : IO Unit := do
   for c in (front.qsort (fun a b => a.str > b.str)).toList.take top do
     IO.println s!"  str={pctS c.str} con={pctS c.con} evo={pct c.evo} dis={pct c.dis}  {c.short}  [{leaf c.home}]→[{leaf c.alt}]"
 
+/-! ### Community partition-diff (global clustering vs. the directory tree)
+
+The local reports above all ask "does *this* decl/file belong where it sits?". This one asks the
+module-scale question: cluster the **whole** in-scope `uses` graph (label propagation, ignoring
+module/directory boundaries), then **diff the clustering against the directory tree**. A community
+spanning many directories is a theme the current layout scattered; a directory holding many
+communities is a grab-bag. These are the *reorganization projects* — whole clusters to regroup or
+split — that no per-file patrol surfaces. -/
+
+/-- A scattered-theme community: one `uses`-community whose decls live in ≥2 directories. -/
+structure Community where
+  size : Nat            -- #decls in the community
+  mods : Nat            -- #distinct modules it touches
+  dirs : Nat            -- #distinct directories it spans (≥2 ⇒ scattered)
+  coh : Float           -- fraction of the community's edge endpoints staying inside it
+  con : Float           -- conceptual cohesion (mean docstring-cosine to centroid); <0 = not embedded
+  score : Float         -- (dirs−1)·coh·concept·module-scale-prior — a *liftable* scattered theme
+                        --   ranks first; the graph backbone (a mega-community) is scored ~0
+  dirList : Array String
+  sample : Array String -- a few member short names, to name the theme
+
+/-- A fractured directory: one directory whose decls fall into several `uses`-communities. -/
+structure DirFracture where
+  dir : String
+  total : Nat           -- #decls in the directory
+  comms : Nat           -- #communities they scatter into
+  purity : Float        -- largest community's share of the directory (low ⇒ grab-bag)
+
+/-- Compiler-generated declarations (recursors, `noConfusion`, projections, match/proof helpers) that
+carry no design intent — excluded so they don't form spurious "themes". -/
+def isStructuralNoise (short : String) : Bool :=
+  #["casesOn", "noConfusion", "noConfusionType", "rec", "recAux", "below", "brecOn", "binductionOn",
+    "ndrec", "mk", "injEq", "toCtorIdx", "ofNat", "sizeOf"].contains short
+  || short.startsWith "match_" || short.startsWith "proof_" || short.startsWith "eq_"
+
+/-- COMMUNITIES + FRACTURE: cluster the whole in-scope graph and diff it against the directory tree —
+scattered themes to regroup and grab-bag directories to split. -/
+def reportCommunities (g : Graph) (eOpt : Option Embeds) (top : Nat) : IO Unit := do
+  let nodes := g.d2m.toArray.filterMap fun (n, _) =>
+    if isStructuralNoise (g.short.getD n n) then none else some n
+  if nodes.isEmpty then return
+  let label := labelProp nodes g.adj
+  let vmap : HashMap String (Array Float) :=
+    match eOpt with
+    | none => {}
+    | some e => e.rows.foldl (fun m r => m.insert r.1 r.2.2) {}
+  -- community → members
+  let mut mem : HashMap Nat (Array String) := {}
+  for n in nodes do
+    let c := label.getD n 0
+    mem := mem.insert c ((mem.getD c #[]).push n)
+  -- module-scale prior: peaks at the mean module size τ, so a *liftable* module-sized theme
+  -- outscores the graph backbone (a mega-community, size ≫ τ, decays to ~0) — data-driven, no cutoff.
+  let tau := nodes.size.toFloat / (Nat.max 1 g.sizeM.size).toFloat
+  -- scattered-theme communities (span ≥2 directories)
+  let mut rows : Array Community := #[]
+  for (c, members) in mem.toArray do
+    if members.size < 3 then continue
+    let modsArr := members.map (fun n => g.d2m.getD n "")
+    let dirSet := HashSet.ofArray (modsArr.map directory)
+    if dirSet.size < 2 then continue
+    let mut intra := 0; let mut inter := 0
+    for n in members do
+      for x in g.adj.getD n #[] do
+        if label.getD x 0 == c then intra := intra + 1 else inter := inter + 1
+    let coh := if intra + inter == 0 then 0.0 else intra.toFloat / (intra + inter).toFloat
+    let con : Float := Id.run do
+      if vmap.isEmpty then return -1.0
+      let mut cen : Array Float := #[]; let mut k := 0
+      for n in members do
+        match vmap.get? n with
+        | some v => cen := vadd cen v; k := k + 1
+        | none => pure ()
+      if k == 0 then return -1.0
+      let mut s := 0.0
+      for n in members do
+        match vmap.get? n with
+        | some v => s := s + cosine v cen
+        | none => pure ()
+      return s / k.toFloat
+    let conW := if con < 0.0 then 1.0 else con
+    let sz := members.size.toFloat
+    let sizePrior := sz * Float.exp (-sz / tau)   -- peaks at τ; ~0 for the backbone
+    let score := (dirSet.size - 1).toFloat * coh * conW * sizePrior
+    let sample := ((members.qsort (· < ·)).toList.take 4).map (fun n => g.short.getD n n) |>.toArray
+    rows := rows.push
+      { size := members.size, mods := (HashSet.ofArray modsArr).size, dirs := dirSet.size,
+        coh, con, score, dirList := dirSet.toArray.map leaf, sample }
+  IO.println "\n== COMMUNITIES (scattered themes: a uses-community spanning ≥2 directories → regroup) =="
+  IO.println s!"   score = (dirs−1)·cohesion·concept·module-scale-prior (τ≈{tau.round.toUInt64.toNat} decls) ;  con<0 = not embedded"
+  for r in (rows.qsort (fun a b => a.score > b.score)).toList.take top do
+    IO.println s!"  score={pct r.score} size={r.size} mods={r.mods} dirs={r.dirs} coh={pct r.coh}% con={pctS r.con}"
+    IO.println s!"      dirs: {", ".intercalate r.dirList.toList}"
+    IO.println s!"      e.g.: {", ".intercalate r.sample.toList}"
+  -- directory fracture: how many communities each directory scatters into
+  let mut dpart : HashMap String (HashMap Nat Nat) := {}
+  for n in nodes do
+    let d := directory (g.d2m.getD n "")
+    let c := label.getD n 0
+    let inner := dpart.getD d {}
+    dpart := dpart.insert d (inner.insert c ((inner.getD c 0) + 1))
+  let mut fr : Array DirFracture := #[]
+  for (d, inner) in dpart.toArray do
+    let total := inner.toArray.foldl (fun s kv => s + kv.2) 0
+    if total < 4 || inner.size < 2 then continue
+    let maj := inner.toArray.foldl (fun m kv => Nat.max m kv.2) 0
+    fr := fr.push { dir := d, total, comms := inner.size, purity := maj.toFloat / total.toFloat }
+  IO.println "\n== DIRECTORY FRACTURE (a directory split across many communities → grab-bag, split) =="
+  IO.println "   purity = largest community's share of the directory's decls (low = fractured)"
+  for r in (fr.qsort (fun a b => a.purity < b.purity)).toList.take top do
+    IO.println s!"  purity={pct r.purity}% communities={r.comms} decls={r.total}  {r.dir}"
+
 /-! ### The command -/
 
 /-- Run the scored modularity report on the graph restricted to modules under `--prefix`. -/
@@ -305,11 +421,13 @@ def modularityCmd (args : List String) : IO Unit := do
   let top := (argv.find? (·.startsWith "--top=")).bind (·.drop 6 |>.toString.toNat?) |>.getD 15
   let db ← openDb ((← IO.getEnv "WIKI_DB").getD defaultDbPath)
   let g ← loadGraph db pfx
+  let eOpt ← loadEmbeds db pfx
   reportSplit g top
   reportMisplaced g top
   reportCoupling g top
   reportDirectory g top
-  match ← loadEmbeds db pfx with
+  reportCommunities g eOpt top
+  match eOpt with
   | none => IO.println "\n(no embeddings — run `scripts/wiki index` for the conceptual/NL layer)"
   | some e => reportConceptual e top; reportRegroup g e top
 

@@ -21,11 +21,29 @@ between iterations; make the safe decision and proceed. Only end when you have m
 several fresh random samples in a row need no change — then print `CONVERGED`. If the turn is cut off
 by a limit, resume the same loop from a new random sample; there is no per-file hand-back.
 
-**1. Sample a random in-scope file.** Don't cherry-pick — take what the sample gives you, so coverage
-stays broad and even.
-```
-find DeepWiki -name '*.lean' | grep -vE '/(MeasureTheory|NetworkCalculus|ReactiveSystems|RelationalDatabases|TimeSeries)/' | shuf | head -1
-```
+**1. Pick a unit of work — alternate two modes, don't only ever sample files.** A random file only ever
+reveals *local* fixes (a docstring, a rename); module-scale reorganization is invisible one file at a
+time. So alternate:
+
+- **(a) File mode** — sample a random in-scope file and read it as a newcomer (step 2). Take what the
+  sample gives you; don't cherry-pick.
+  ```
+  find DeepWiki -name '*.lean' | grep -vE '/(MeasureTheory|NetworkCalculus|ReactiveSystems|RelationalDatabases|TimeSeries)/' | shuf | head -1
+  ```
+- **(b) Partition mode — the module-reorganization driver.** Run the global partition-diff and take a
+  *whole cluster* as the unit of work:
+  ```
+  scripts/wiki modularity --prefix=DeepWiki.SymbolicIntegration --top=15
+  ```
+  The **COMMUNITIES** block lists `uses`-communities that span ≥2 directories — scattered mathematical
+  themes (high `coh`/`con`, module-sized) that *should* be one module but aren't. The **DIRECTORY
+  FRACTURE** block lists directories split across many communities — grab-bags to break up. Take the
+  top-scoring theme (or the lowest-purity directory) and make the **module-level project**: `git mv`
+  the scattered decls into one module/subdirectory + aggregator, and — per the "reprove for theme
+  groupings" goal — *unify the near-duplicate parallel lemmas inside the theme into one abstraction*
+  (`wiki search`/`context` to find every member; `rdeps` before moving). This is the bold,
+  cross-module work random file-sampling never surfaces. Run partition mode at least as often as file
+  mode; prefer it whenever a fresh run still shows a high-score community or a low-purity directory.
 
 **2. Read it as a newcomer who landed here by chance.** Would someone with no prior context be oriented?
 Check: the module `/-! … -/` docstring says what the file is about and matches its contents; the file
