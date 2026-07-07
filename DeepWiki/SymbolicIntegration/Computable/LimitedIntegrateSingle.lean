@@ -58,10 +58,6 @@ def limitedIntegrateSingleBaseNumDen (anum aden ηnum ηden : CPolyG ℚ) :
     else none
   else none
 
-/-- `c · tⁿ` as a `CPolyG α` (`n` zeros then `c`). -/
-def cMonomialG {α : Type*} [CField α] (c : α) (n : ℕ) : CPolyG α :=
-  (List.replicate n (CField.zero) ++ [c] : List α)
-
 /-- **Degree-raising primitive-polynomial integration** `cIntegratePrimPolyDegRaiseG η limInt fuel p`
 (Bronstein `IntegratePrimitivePolynomial`, Thm 5.8.1): given the primitive derivation `Dt = η ∈ α`, a
 single-`w` limited integrator `limInt : a ↦ (b, c)` with `a = D(b) + c·η` (`c` the constant embedded in `α`),

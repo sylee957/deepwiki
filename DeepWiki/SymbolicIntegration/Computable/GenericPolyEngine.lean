@@ -166,6 +166,10 @@ def cpadG {α : Type*} [CField α] (n : ℕ) (p : CPolyG α) : CPolyG α :=
 def creverseDegG {α : Type*} [CField α] (k : ℕ) (p : CPolyG α) : CPolyG α :=
   (cpadG (k + 1) p).reverse
 
+/-- Monomial `c * X^n` as a `CPolyG`: `n` low-degree zeros followed by coefficient `c`. -/
+def cMonomialG {α : Type*} [CField α] (c : α) (n : ℕ) : CPolyG α :=
+  (List.replicate n CField.zero ++ [c] : List α)
+
 /-- Normalize a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
 def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α
