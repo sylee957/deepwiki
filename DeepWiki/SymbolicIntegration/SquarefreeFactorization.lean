@@ -22,12 +22,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- The `0`-deflation `A⁻⁰` is associated to the primitive part `pp(A)`. -/
-theorem deflation_zero (A : D[X]) (hA : A.primPart ≠ 0) : Associated (deflation A 0) A.primPart := by
-  rw [deflation]; simp only [Nat.sub_zero]
-  rw [← Finset.prod_multiset_count]; exact prod_normalizedFactors hA
-
-open Classical in
 /-- Every deflation divides the primitive part: `A⁻ᵏ ∣ pp(A)` (each `Pᵢ^(eᵢ−k) ∣ Pᵢ^eᵢ`). -/
 theorem deflation_dvd_primPart (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     deflation A k ∣ A.primPart := by

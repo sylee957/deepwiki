@@ -44,6 +44,12 @@ theorem squarefreePart_mul_deflation (A : D[X]) (hA : A.primPart ≠ 0) :
   rw [Finset.prod_congr rfl h, ← Finset.prod_multiset_count]
   exact prod_normalizedFactors hA
 
+open Classical in
+/-- The `0`-deflation `A⁻⁰` is associated to the primitive part `pp(A)`. -/
+theorem deflation_zero (A : D[X]) (hA : A.primPart ≠ 0) : Associated (deflation A 0) A.primPart := by
+  rw [deflation]; simp only [Nat.sub_zero]
+  rw [← Finset.prod_multiset_count]; exact prod_normalizedFactors hA
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
