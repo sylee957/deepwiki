@@ -444,7 +444,7 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : CPolyG α)
     cSPDEGWf_cleared_lifting_of_inputs Dt a0 b0 c0
       (cRdeBoundDegreeG Dt a0 b0 c0 : ℤ) bbar cbar m α' β hspde hin v hidentity
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote, mul_zero, add_zero, map_one]
   have hynum : toPolyG (cmulG Q [CField.one]) = toPolyG Q := by
     simp only [denote, hone, mul_one]
   have hlift := cRdeNormalDenominatorGWf_cleared_lift Dt fnum fden gnum gden a0 b0 c0 h0 Q
