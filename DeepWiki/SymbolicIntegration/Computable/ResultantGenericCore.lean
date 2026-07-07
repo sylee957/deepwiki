@@ -17,16 +17,6 @@ variable {α : Type*} [CField α] [CFieldSpec α]
 
 /-! ### `cresultantG` invariances -/
 
-/-- `toPolyG` of the `cinterpolateG` accumulator fold is the running sum of term images. -/
-theorem toPolyG_foldl_caddG (f : α × α → CPolyG α) (pts : List (α × α)) (init : CPolyG α) :
-    toPolyG (pts.foldl (fun acc p => caddG acc (f p)) init)
-      = toPolyG init + (pts.map (fun p => toPolyG (f p))).sum := by
-  induction pts generalizing init with
-  | nil => simp
-  | cons p ps ih =>
-    rw [List.foldl_cons, ih, toPolyG_caddG, List.map_cons, List.sum_cons]
-    ring
-
 /-- The product `∏_{zⱼ ∈ others}(toK zk − toK zⱼ)` is nonzero when every `toK zⱼ ≠ toK zk`. -/
 theorem prodG_sub_ne_zero {zk : α} {others : List α}
     (hne : ∀ zj ∈ others, CFieldSpec.toK zj ≠ CFieldSpec.toK zk) :
