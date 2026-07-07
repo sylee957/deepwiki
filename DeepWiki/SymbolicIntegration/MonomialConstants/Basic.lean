@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.SpecialFirstKind
+import DeepWiki.SymbolicIntegration.MonomialExtensions
 
 /-! # Basic monomial constant facts
 
