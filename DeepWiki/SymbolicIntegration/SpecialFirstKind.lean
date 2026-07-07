@@ -227,7 +227,7 @@ theorem isSpecial_map_of_isSpecial {v p : k[X]} (hp : p ∣ Differential.implici
       Differential.implicitDeriv (v.map (algebraMap k E)) (p.map (algebraMap k E)) := by
   rw [← implicitDeriv_map]; exact Polynomial.map_dvd _ hp
 
-section ThreeKind
+section FirstKindBaseChange
 -- ... viewed inside the common closure `Ω` (`k ⊆ E ⊆ Ω`).
 variable {Ω : Type*} [Field Ω] [Differential Ω] [Algebra k Ω] [Algebra E Ω] [IsScalarTower k E Ω]
 
@@ -250,7 +250,7 @@ theorem isSpecialFirstKind_map [Algebra.IsAlgebraic k Ω] {v p : k[X]}
   rw [residue_map] at hlog
   exact hp.2 α hroot hlog
 
-end ThreeKind
+end FirstKindBaseChange
 
 end AlgebraicExtension
 
