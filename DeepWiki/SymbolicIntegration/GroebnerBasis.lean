@@ -41,10 +41,10 @@ namespace DeepWiki.SymbolicIntegration
 variable {σ : Type*} {m : MonomialOrder σ} {R : Type*} [CommRing R]
 variable {I : Ideal (MvPolynomial σ R)} {B : Set (MvPolynomial σ R)}
 
-/-! ## Lazard's Lemma 3: the full descent in the no-common-factor case
+/-! ## Lazard descent in the no-common-factor case
 
-Lazard (1985), Theorem 1 proof + Lemma 3 (p.262–263). The descent `C(gᵢ) ∣ lazardView fᵢ`
-("`gᵢ ∣ fᵢ`") is proved by **upward** induction over the `y`-degree-sorted enumeration, in the
+The descent `C(gᵢ) ∣ lazardView fᵢ` ("`gᵢ ∣ fᵢ`") is proved by **upward**
+induction over the `y`-degree-sorted enumeration, in the
 strengthened form `P(i) : ∀ j ≤ i, C(gᵢ) ∣ lazardView (sorted j)`. The step `i → i+1` is
 non-circular: with `q = gᵢ/g_{i+1}` the reduction element `R = yConst q · f_{i+1} − y^{shift}·fᵢ`
 has `y`-degree `< d(i+1)`, so its GB-reduction uses only lower elements `sorted j (j ≤ i)`, all
@@ -58,9 +58,9 @@ content" enters: it is equivalent to `f₀ ∈ K[x]` (`degreeOf 0 f₀ = 0`), wh
 dividing the basis by `primpart(gcd) · content(gcd)` so the `fᵢ` have no common factor — recorded
 as the hypothesis `hbase`. -/
 
-/-! ## Part A: the common factor of the basis (Lazard's `P·Gₖ₊₁`) and the no-common-factor base
+/-! ## Part A: the common factor of the basis and the no-common-factor base
 
-Lazard (1985), Theorem 1 proof (p.262): the basis may be divided by `P·Gₖ₊₁` where
+The basis may be divided by `P·Gₖ₊₁` where
 `P = primpart(gcd(f₀,…,fₖ))` (the `y`-**primitive part**, a `K[x][y]` polynomial carrying the
 `y`-dependence) and `Gₖ₊₁ = content(gcd(f₀,…,fₖ))` (a `K[x]` polynomial), to reduce to the
 **no-common-factor** case where `P = Gₖ₊₁ = 1`. *Both* factors must be divided out for the base
@@ -74,19 +74,19 @@ Two layers, with **different** scope:
 * The `K[x][y]`-layer `P` (the `y`-content of the gcd) is **not** captured by `gₖ`: e.g. `I = (y)`
   has `gₖ = 1` (`IsUnit gₖ` holds) yet `f₀ = y ∉ K[x]`, because `P = primpart(gcd) = y` is still to
   be divided out. So `IsUnit gₖ` is *necessary but not sufficient* for the descent base. The base is
-  recorded directly as `hbase : degreeOf 0 (sorted 0) = 0` — see the §2.6 residual for why
-  discharging it needs the genuine `K[x][y]` divide-out construction, not just `gₖ`. -/
+  recorded directly as `hbase : degreeOf 0 (sorted 0) = 0`; discharging it needs the genuine
+  `K[x][y]` divide-out construction, not just `gₖ`. -/
 
 /-! ### Part A: dividing out a common factor preserves the Gröbner-basis structure
 
-Lazard (1985), Theorem 1 proof: `hgᵢ := fᵢ / (P·Gₖ₊₁)` is a minimal Gröbner basis iff the `fᵢ`
-are, "since `LM(P·Gₖ₊₁)` divides every `LM(fᵢ)` and the relations of divisibility between the
-leading monomials are preserved". The arithmetic core is the **leading-monomial shift**: writing
+If `hgᵢ := fᵢ / (P·Gₖ₊₁)`, minimal Gröbner-basis structure is preserved because the
+common leading monomial divides every `LM(fᵢ)` and the divisibility relations between leading monomials
+are unchanged. The arithmetic core is the **leading-monomial shift**: writing
 `b = h * q` (a common factor `h ∣ b`), `m.degree b = m.degree h + m.degree q` and
 `m.leadingCoeff b = m.leadingCoeff h * m.leadingCoeff q` — so every leading monomial of the divided
 set drops by exactly `m.degree h`, an order-isomorphism on degrees that preserves divisibility and
-minimality. This is the reachable framework half; the genuine wall (which `h` to divide by so the
-quotient's minimal element lands in `K[x]`) is Part B. -/
+minimality. The remaining structural question is which common factor makes the quotient's minimal
+element land in `K[x]`. -/
 
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] (r : MvPolynomial (Fin 1) K) :
