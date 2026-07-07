@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-section Property216
+section PolynomialSquares
 variable {K : Type*} [Field K]
 
 /-- A root of `X² + 1` over `K` is exactly a square root of `−1`: `IsSquare (-1 : K)` iff `X²+1`
@@ -60,9 +60,9 @@ theorem sq_add_sq_eq_zero_of_irreducible (h : Irreducible (X ^ 2 + 1 : K[X]))
   field_simp
   linear_combination -hlc
 
-end Property216
+end PolynomialSquares
 
-section Lemma281
+section ImaginaryLogDerivative
 variable {R : Type*} [Field R] [Differential R]
 
 /-- In a char-`0` differential field, `i² = −1` implies `i` is constant, `i′ = 0`. -/
@@ -96,9 +96,9 @@ example {R : Type*} [Field R] [Differential R] [CharZero R] (i u : R) (hi : i ^ 
     i * Differential.logDeriv ((u + i) / (u - i)) = 2 * (u′ / (1 + u ^ 2)) :=
   logDeriv_imagQuot_eq_arctanDeriv_of_sq hi h1 h2
 
-end Lemma281
+end ImaginaryLogDerivative
 
-section Theorem281
+section RealLogRecursion
 variable {R : Type*} [Field R] [Differential R]
 
 omit [Differential R] in
@@ -161,7 +161,7 @@ theorem logDeriv_imagQuot_eq_imagQuot_swap [CharZero R] {i A B : R} (hi : i ^ 2 
   rw [hquot, Differential.logDeriv_mul (-1 : R) _ (by norm_num) (div_ne_zero hmBpA hmBmA),
     hlogm1, zero_add]
 
-/-- Rioboo's recursion step: for `A²+B² ≠ 0`, `i² = −1`, `G := B·D − A·C ≠ 0`, `C²+D² ≠ 0`, and
+/-- Real logarithm recursion step: for `A²+B² ≠ 0`, `i² = −1`, `G := B·D − A·C ≠ 0`, `C²+D² ≠ 0`, and
 `P := (A·D + B·C)/G`, `i · logDeriv((A+iB)/(A−iB)) = 2·(P′/(1+P²)) + i · logDeriv((D+iC)/(D−iC))`. -/
 theorem logDeriv_imagQuot_eq_arctan_add_imagQuot [CharZero R] {i A B C D G : R} (hi : i ^ 2 = -1)
     (hAB : A ^ 2 + B ^ 2 ≠ 0) (hCD : C ^ 2 + D ^ 2 ≠ 0)
@@ -198,7 +198,7 @@ theorem logDeriv_imagQuot_eq_arctan_add_imagQuot [CharZero R] {i A B C D G : R} 
   rw [hfac,
     Differential.logDeriv_mul ((P + i) / (P - i)) ((D + i * C) / (D - i * C))
       (div_ne_zero hPpi hPmi) (div_ne_zero hDpC hDmC), mul_add]
-  -- Lemma 2.8.1 on `i·logDeriv((P+i)/(P−i))`.
+  -- Apply the imaginary quotient identity to `P`.
   rw [logDeriv_imagQuot_eq_arctanDeriv_of_sq hi hPpi hPmi]
 
 example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B : R) (hi : i ^ 2 = -1)
@@ -214,6 +214,6 @@ example {R : Type*} [Field R] [Differential R] [CharZero R] (i A B C D G : R) (h
         + i * Differential.logDeriv ((D + i * C) / (D - i * C)) :=
   logDeriv_imagQuot_eq_arctan_add_imagQuot hi hAB hCD hG hG0
 
-end Theorem281
+end RealLogRecursion
 
 end DeepWiki.SymbolicIntegration
