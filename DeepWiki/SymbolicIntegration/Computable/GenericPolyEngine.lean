@@ -156,6 +156,11 @@ abbrev CPolyG (α : Type*) := List α
 
 namespace CPolyG
 
+/-- Pad a `CPolyG` on the high-degree end with zeros up to length `n`; no-op if length is already
+at least `n`. -/
+def cpadG {α : Type*} [CField α] (n : ℕ) (p : CPolyG α) : CPolyG α :=
+  (p : List α) ++ List.replicate (n - (p : List α).length) CField.zero
+
 /-- Normalize a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
 def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α

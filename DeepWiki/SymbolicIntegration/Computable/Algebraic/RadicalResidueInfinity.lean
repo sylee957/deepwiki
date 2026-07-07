@@ -17,11 +17,6 @@ variable {α : Type*} [CField α]
 
 /-! ### Reverse-coefficient (`t^k·p(1/t)`) and common-`t`-power cancellation -/
 
-/-- **Pad** a `CPolyG` (low→high) on the high end with `CField.zero` up to length `n` (no-op if already
-≥ `n` long). The list view of zero-padding used by the reverse-coefficient transform. -/
-def cpadG (n : ℕ) (p : CPolyG α) : CPolyG α :=
-  (p : List α) ++ List.replicate (n - (p : List α).length) CField.zero
-
 /-- **Reverse-coefficient transform** `creverseDegG k p = t^k · p(1/t)` for `k ≥ deg p`: pad `p` to
 length `k + 1` then reverse the coefficient list (so the `t^j` coefficient is `p`'s `(k − j)` one).
 With `p(x) = Σ aᵢ xⁱ`, `creverseDegG k p` is `Σ aᵢ t^{k−i}` — the engine's `x = 1/t` substitution on a
