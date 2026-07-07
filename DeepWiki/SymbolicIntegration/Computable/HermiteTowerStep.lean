@@ -259,7 +259,8 @@ theorem hermiteTowerStep_field_identity_of_radical (Dt gnum gden a d Dstar W : C
   have hexact : amG α (toPolyG (cdivWf (cmulG resNum Dstar) resDen))
         * amG α (toPolyG resDen)
       = amG α (toPolyG resNum) * amG α (toPolyG Dstar) := by
-    rw [← map_mul, hexactP, toPolyG_cmulG, map_mul]
+    rw [← map_mul, hexactP]
+    simp only [denote, map_mul]
   exact hermiteTowerStep_field_identity Dt gnum gden a d
     (cdivWf (cmulG resNum Dstar) resDen) Dstar hd hgden hDstar hexact
 
