@@ -171,17 +171,18 @@ theorem field_identity_of_checkIdentityG (Dt : CPolyG α) (res : IntegralResultG
   -- `D(gnum/gden) = GP/GD²` (quotient rule); `logResidueSumG = LN/LD` (fold bridge)
   have hquot : towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden))
       = GP / GD ^ 2 := by
-    rw [towerFractionFieldDerivG_div, hGP, hgp, toPolyG_csubG, toPolyG_cmulG, toPolyG_cmulG,
-      toPolyG_cmonomialDeriv, toPolyG_cmonomialDeriv, map_sub, map_mul, map_mul, hGD]
+    rw [towerFractionFieldDerivG_div, hGP, hgp]
+    simp only [denote, map_sub, map_mul]
+    rw [hGD]
   have hLfield' : logResidueSumG Dt res.logs = LN / LD := by rw [← hLfield, hLN, hLD]
   -- ── the converse direction: extract the cleared polynomial identity from `checkIdentityG = true` ──
   rw [CPolyG.checkIdentityG] at hcheck
   simp only [← hgnum, ← hgdenE, ← hgp, ← hgden2, ← hfolded] at hcheck
-  rw [cisZeroG_iff, toPolyG_csubG, sub_eq_zero, toPolyG_cmulG, toPolyG_cmulG, toPolyG_caddG,
-    toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG] at hcheck
+  rw [cisZeroG_iff] at hcheck
+  simp only [denote, sub_eq_zero] at hcheck
   -- lift the cleared polynomial equation into the tower fraction field (amG injective)
   rw [← (RatFunc.algebraMap_injective (CFieldSpec.K α)).eq_iff] at hcheck
-  simp only [map_mul, map_add, hgden2, toPolyG_cmulG] at hcheck
+  simp only [map_mul, map_add, hgden2, denote] at hcheck
   -- now `hcheck` is the cleared field equation `(GP·LD + LN·GD²)·AD = AN·(GD²·LD)` (over the field)
   rw [← hGP, ← hLN, ← hLD, ← hAN, ← hAD, ← hGD] at hcheck
   -- divide through the nonzero `GD²·LD·AD` to land the field fraction identity `GP/GD² + LN/LD = AN/AD`
