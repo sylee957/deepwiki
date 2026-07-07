@@ -8,7 +8,7 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 For a simple radical extension `ℚ(x)[y]/(y² − ρ)` (`ρ ∈ ℚ[x]`) the integral closure of `ℚ[x]` has the
 explicit basis `[1, y/d]`, where `ρ = d²·s` splits into the square part `d = ∏ᵢ Pᵢ^{⌊i/2⌋}` and the
 squarefree part `s = ρ/d² = ∏_{i odd} Pᵢ` (from the multiplicity-indexed squarefree factorization). The
-basis is represented by the pair `(d, s)` with `(y/d)² = s`. Validation checks: `d²·s = ρ` exact, `s`
+basis is represented by the pair `(d, s)` with `(y/d)² = s`. The executable checks cover `d²·s = ρ`, `s`
 squarefree (`y/d` integral), and `y/(d·P)` not integral for nonconstant `P` (maximality); plus the basis
 discriminant `4s` and the hyperelliptic genus `⌈deg s/2⌉ − 1`. -/
 
@@ -88,12 +88,11 @@ def radNotIntegralFactor (ρ P : CPolyG α) : Bool :=
   let s := radSquarefreePart ρ
   if cdegG P = 0 then false else !(cdvdGWf (cmulG P P) s)
 
-/-! ### Discriminant and genus of the simple-radical basis (Trager Ch. 2 §5, STRETCH)
+/-! ### Discriminant and genus of the simple-radical basis
 
 For `y² = s` with `s` squarefree, the minimal polynomial of `y/d` is `T² − s`, whose discriminant is
 `4s` (up to the unit `1`). The genus of the hyperelliptic curve `y² = s` with `s` squarefree of degree
-`m` is `g = ⌈m/2⌉ − 1` (the standard hyperelliptic formula; Trager Ch. 2 §4's `g = d/2 − [K(x,y):K(x)] +
-1` specializes to this). `radSplitExact` guarantees `s = ρ/d²` is the genuine squarefree radicand. -/
+`m` is `g = ⌈m/2⌉ − 1`. `radSplitExact` guarantees `s = ρ/d²` is the genuine squarefree radicand. -/
 
 /-- **Basis discriminant** `radBasisDiscriminant ρ = 4·s` — the discriminant of the minimal
 polynomial `T² − s` of the basis element `y/d` (`s = radSquarefreePart ρ`): `disc(T² − s) = 0² − 4·1·(−s)
@@ -104,8 +103,8 @@ def radBasisDiscriminant (ρ : CPolyG α) : CPolyG α :=
 
 /-- **Genus** `radGenus ρ = ⌈deg s / 2⌉ − 1` — the genus of the hyperelliptic curve `y² = s`
 (`s = radSquarefreePart ρ` squarefree of degree `m`): `g = ⌈m/2⌉ − 1 = (m + 1)/2 − 1` (`ℕ`-division, so
-`(m + 1)/2` is `⌈m/2⌉`). Trager Ch. 2 §4's `g = d/2 − [K(x,y):K(x)] + 1` specialized to the simple radical
-`y² = s`. `g = 0` (rational) for `deg s ≤ 2`, `g = 1` (elliptic) for `deg s ∈ {3, 4}`, etc. `[CField α]
+`(m + 1)/2` is `⌈m/2⌉`). For simple radicals `y² = s`, `g = 0` (rational) for `deg s ≤ 2`, `g = 1`
+(elliptic) for `deg s ∈ {3, 4}`, etc. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
 def radGenus (ρ : CPolyG α) : ℕ :=
   let m := cdegG (radSquarefreePart ρ)
@@ -113,7 +112,7 @@ def radGenus (ρ : CPolyG α) : ℕ :=
 
 end CPolyG
 
-/-! ## ★ Validation over `ℚ[x]` (`native_decide`)
+/-! ## Examples over `ℚ[x]` (`native_decide`)
 
 `α = ℚ`, so `CPolyG ℚ = ℚ[x]` and the radicand `ρ ∈ ℚ[x]` is a coefficient list (low to high). All
 operations are list/`ℚ` arithmetic; the `CFracGcdCore ℚ` / `CField ℚ` instances reduce in the native
@@ -166,7 +165,7 @@ odd-multiplicity factor; `x⁴ = (x²)²` is entirely the square part). -/
 theorem radSquarefreePart_x5mX4 :
     cisZeroG (csubG (radSquarefreePart basisRhoX5mX4) [-1, 1]) = true := by native_decide
 
-/-! ### ★ The integral basis validates: `[1, y/d]` is the integral closure (`native_decide`)
+/-! ### The integral basis validates: `[1, y/d]` is the integral closure (`native_decide`)
 
 For each radicand: the split `d²·s = ρ` is exact (`s` a genuine polynomial), `s` is squarefree (`y/d`
 integral), and `y/(d·P)` is not integral for a sample nonconstant `P` (maximality). -/
@@ -214,7 +213,7 @@ be improved). Maximality for the squarefree case. -/
 theorem radNotIntegral_x3p1 :
     radNotIntegralFactor basisRhoX3p1 [0, 1] = true := by native_decide
 
-/-- **★★ THE SIMPLE-RADICAL INTEGRAL BASIS COMPUTES AND VALIDATES** (Trager Ch. 2 §5, `native_decide`) —
+/-- **★★ THE SIMPLE-RADICAL INTEGRAL BASIS COMPUTES AND VALIDATES** (`native_decide`) —
 for the three radicands `x³+1` (squarefree, basis `[1, y]`), `x²(x+1)` (basis `[1, y/x]`), and `x⁴(x−1)`
 (basis `[1, y/x²]`): the square-part split `ρ = d²·s` is EXACT (so `s = ρ/d²` is a genuine `ℚ[x]`
 polynomial), the squarefree part `s` is SQUAREFREE (so the basis element `y/d` satisfies the monic
@@ -232,7 +231,7 @@ theorem radIntegralBasis_validates :
       ∧ radSquarefreePartIsSquarefree basisRhoX5mX4 = true
       ∧ radNotIntegralFactor basisRhoX5mX4 [-1, 1] = true) := by native_decide
 
-/-! ### STRETCH — discriminant and genus (`native_decide`)
+/-! ### Discriminant and genus (`native_decide`)
 
 The basis discriminant `4s`, and the hyperelliptic genus `⌈deg s/2⌉ − 1`: `y² = x` (genus 0, rational),
 `y² = x³+1` (genus 1, elliptic ✓), `y² = x⁵+1` (genus 2). -/
@@ -265,22 +264,12 @@ theorem radGenus_x3p1 : radGenus basisRhoX3p1 = 1 := by native_decide
 genus-2 hyperelliptic curve. -/
 theorem radGenus_x5p1 : radGenus basisRhoX5p1 = 2 := by native_decide
 
-/-- **★ THE GENUS OF THE SIMPLE-RADICAL CURVE COMPUTES** (Trager Ch. 2 §5, hyperelliptic
-`g = ⌈deg s/2⌉ − 1`, `native_decide`): `y² = x` is rational (`g = 0`), `y² = x³+1` is elliptic (`g = 1`),
+/-- **★ THE GENUS OF THE SIMPLE-RADICAL CURVE COMPUTES** (`native_decide`): `y² = x` is rational (`g = 0`),
+`y² = x³+1` is elliptic (`g = 1`),
 `y² = x⁵+1` is genus `2` — read off the squarefree part `s = radSquarefreePart ρ` of the integral-basis
 computation. -/
 theorem radGenus_validates :
     radGenus basisRhoX = 0 ∧ radGenus basisRhoX3p1 = 1 ∧ radGenus basisRhoX5p1 = 2 := by
   native_decide
-
-/-! ### Deliverable: `#print axioms` of the integral-closure validation
-
-`[propext, Classical.choice, Quot.sound]` plus `Lean.ofReduceBool` (the `native_decide` kernel-reduction
-axiom). No `sorry`. -/
-
-/-- **Axiom audit of the integral-basis validation** — `[propext, Classical.choice, Quot.sound,
-Lean.ofReduceBool]` (the last is the `native_decide` axiom): the simple-radical integral-closure check
-runs on the standard classical + native-reduction base, no `sorry`. -/
-example : True := trivial
 
 end DeepWiki.SymbolicIntegration
