@@ -39,41 +39,6 @@ open Classical
 
 /-! ### The abstract Yun loop and its factor products -/
 
-open Classical UniqueFactorizationMonoid in
-/-- `prodPow` over enough squarefree parts reconstructs `A.primPart` up to association. -/
-theorem prodPow_one_sqfreeFactPart_range_associated {K : Type*} [Field K] [CharZero K] (A : K[X])
-    (hA : A.primPart ≠ 0) (n : ℕ)
-    (hn : (normalizedFactors A.primPart).toFinset.sup
-      (fun P => (normalizedFactors A.primPart).count P) ≤ n) :
-    Associated (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) A.primPart := by
-  rw [prodPow_range_map_eq_finset]
-  have hIco : ∏ k ∈ Finset.range n, sqfreeFactPart A (1 + k) ^ (1 + k)
-      = ∏ m ∈ Finset.Ico 1 (n + 1), sqfreeFactPart A m ^ m := by
-    rw [Finset.prod_Ico_eq_prod_range]
-    exact (Finset.prod_congr (by rw [Nat.add_sub_cancel]) (fun k _ => rfl)).symm
-  set image := (normalizedFactors A.primPart).toFinset.image
-    (fun P => (normalizedFactors A.primPart).count P) with himage
-  have hsub : image ⊆ Finset.Ico 1 (n + 1) := by
-    intro i hi
-    rw [himage, Finset.mem_image] at hi
-    obtain ⟨P, hP, rfl⟩ := hi
-    rw [Finset.mem_Ico]
-    refine ⟨Multiset.one_le_count_iff_mem.mpr (Multiset.mem_toFinset.mp hP), ?_⟩
-    have : (normalizedFactors A.primPart).count P ≤ (normalizedFactors A.primPart).toFinset.sup
-        (fun P => (normalizedFactors A.primPart).count P) :=
-      Finset.le_sup (f := fun P => (normalizedFactors A.primPart).count P) hP
-    omega
-  have hoff : ∀ m ∈ Finset.Ico 1 (n + 1), m ∉ image → sqfreeFactPart A m ^ m = 1 := by
-    intro m _ hm
-    have h1 : sqfreeFactPart A m = 1 := by
-      rw [sqfreeFactPart, Finset.prod_eq_one]
-      intro P hP
-      rw [Finset.mem_filter] at hP
-      exact absurd (hP.2 ▸ Finset.mem_image_of_mem _ hP.1) hm
-    rw [h1, one_pow]
-  rw [hIco, ← Finset.prod_subset hsub hoff]
-  exact (primPart_associated_prod_sqfreeFactPart A hA).symm
-
 open Classical in
 /-- The powered product of the abstract Yun loop matches the powered squarefree parts up to association. -/
 theorem yunLoopAbs_prodPow_assoc {K : Type*} [Field K] [CharZero K] (A : K[X])
