@@ -144,14 +144,18 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     set Vpow := cpowG v (j + 1) with hVpow
     set A' := csubG (cscaleG (CField.neg jval) C) (cmulG u (cmonomialDeriv Dt B)) with hA'
     have hVpow0 : toPolyG Vpow ≠ 0 := by
-      rw [hVpow, toPolyG_cpowG]; exact pow_ne_zero _ hv
+      rw [hVpow]
+      simp only [denote]
+      exact pow_ne_zero _ hv
     have hgnew : toPolyG (cmulG g.2 Vpow) ≠ 0 := by
-      rw [toPolyG_cmulG]; exact mul_ne_zero hg hVpow0
+      simp only [denote]
+      exact mul_ne_zero hg hVpow0
     -- the accumulator update reads as `⟦g⟧ + ⟦B/Vpow⟧`.
     have hstepadd := fieldFrac_step_add g.1 g.2 B Vpow hg hVpow0
     -- `Vpow = v^(j+1)`, `B/Vpow = am B / (am v)^(j+1)`.
     have hVpoweq : amG α (toPolyG Vpow) = amG α (toPolyG v) ^ (j + 1) := by
-      rw [hVpow, toPolyG_cpowG, map_pow]
+      rw [hVpow]
+      simp only [denote, map_pow]
     -- the Bézout relation at `(j, A)`, matched to M1's `hrel`.
     have hb := hbez j A
     rw [← hjval, ← hrhs, hBC] at hb
