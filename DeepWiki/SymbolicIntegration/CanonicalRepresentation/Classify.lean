@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import Mathlib.FieldTheory.RatFunc.Basic
 
 /-! # Canonical representation classifiers

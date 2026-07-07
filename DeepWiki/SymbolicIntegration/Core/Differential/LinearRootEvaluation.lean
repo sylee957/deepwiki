@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 
 /-! # Linear root evaluation
 

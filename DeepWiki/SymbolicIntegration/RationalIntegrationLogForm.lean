@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.PartialFraction
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 
 /-! # Rational-integration log form
 Closed log-form assembly for rational functions over split squarefree denominators. -/

@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt
 import Mathlib.LinearAlgebra.Lagrange
 

@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactor
 import DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Radical.Basic

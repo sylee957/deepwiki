@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.LinearRootEvaluation
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 
 /-! # Linear-factor support for residue matching
 

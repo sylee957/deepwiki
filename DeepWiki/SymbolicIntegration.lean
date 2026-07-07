@@ -15,6 +15,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.DiffPolyFractionDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
@@ -67,7 +68,6 @@ import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
 import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import DeepWiki.SymbolicIntegration.MonomialConstants
-import DeepWiki.SymbolicIntegration.MonomialExtensions
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.PseudoDivision
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence

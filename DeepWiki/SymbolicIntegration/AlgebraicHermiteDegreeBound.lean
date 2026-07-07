@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 
 /-! # Algebraic Hermite degree bounds
 

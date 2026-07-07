@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.PseudoDivision
 import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import Mathlib.Data.ZMod.Basic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.RingTheory.Polynomial.GaussLemma

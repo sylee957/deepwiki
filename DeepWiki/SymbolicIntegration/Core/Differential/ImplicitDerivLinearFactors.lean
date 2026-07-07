@@ -7,9 +7,10 @@ import Mathlib.RingTheory.Coprime.Lemmas
 import Mathlib.RingTheory.UniqueFactorizationDomain.Multiplicity
 import Mathlib.Algebra.Polynomial.Derivative
 
-/-! # Monomial extensions
-Specializes the core `IsNormal`/`IsSpecial` differential-ring API to the monomial
-derivation `implicitDeriv v` on `k[X]` (`X′ = v`) and products of linear factors. -/
+/-! # Implicit-derivative linear factors
+
+Linear-factor criteria and gcd formulas for the monomial derivation
+`implicitDeriv v` on `K[X]` (`X′ = v`). -/
 
 open scoped Differential
 

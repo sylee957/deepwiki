@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.MonomialExtensions
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 
 /-! # Worked differential-algebra facts
