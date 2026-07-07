@@ -170,6 +170,19 @@ def creverseDegG {α : Type*} [CField α] (k : ℕ) (p : CPolyG α) : CPolyG α 
 def cMonomialG {α : Type*} [CField α] (c : α) (n : ℕ) : CPolyG α :=
   (List.replicate n CField.zero ++ [c] : List α)
 
+/-- The generic denominator fold `∏ acc·(zk − zⱼ)` reads through `toK` as
+`toK init · ∏ (toK zk − toK zⱼ)`. -/
+theorem toK_foldl_csub_mul {α : Type*} [CField α] [CFieldSpec α]
+    (zk : α) (others : List α) (init : α) :
+    CFieldSpec.toK (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) init)
+      = CFieldSpec.toK init
+        * (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod := by
+  induction others generalizing init with
+  | nil => simp
+  | cons z zs ih =>
+    rw [List.foldl_cons, ih, CFieldSpec.toK_mul, CFieldSpec.toK_sub, List.map_cons, List.prod_cons]
+    ring
+
 /-- Normalize a `CPolyG` by stripping trailing (high-degree) zero coefficients (`isZero`-tested),
 so `cnormG` is a canonical form (the zero polynomial becomes `[]`). -/
 def cnormG {α : Type*} [CField α] : CPolyG α → CPolyG α
