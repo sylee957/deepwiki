@@ -16,13 +16,9 @@ import DeepWiki.SymbolicIntegration.Computable.Assemble
 
 /-! # The generic one-level Risch assembler
 
-The **generic** integrator `cIntegrateCase` (parameterized by a `MonomialCase` record), the canonical-split
-accessors (`crPoly`/…/`redNorm`), the canonical reconstruction, and the generic soundness `cIntegrateCase_sound`. The recursive Risch-solver abstraction `LawfulRischLevelLrt` (whose
-`.integrate`/`.soundFormalLrt`/… are derived from the LRT assembler `cIntegrateCaseLrt`) lives in `RischTowerLrt.lean`. The concrete *case instances*
-(`primitiveCase`, `hyperexpCase`), the `native_decide` validations, and the per-case reduced-stage
-realizations live in `IntegratorCases.lean`, which imports this file. The abstract soundness/completeness
-cores (`combineSN_isIntegralResult`, `IsElementaryIntegrableG`, `MonomialCase`, `combineSN`, `fieldFrac`)
-live in `Assemble.lean`. See `docs/risch-two-stage-discipline.md`.
+This file defines the `MonomialCase`-parameterized integrator `cIntegrateCase`, the canonical-split
+accessors (`crPoly`/…/`redNorm`), canonical reconstruction, and generic soundness theorem
+`cIntegrateCase_sound`.
 -/
 
 namespace DeepWiki.SymbolicIntegration
@@ -71,12 +67,7 @@ abbrev redNorm (Dt a d : CPolyG α) (cands : List α) : IntegralResultG α :=
   cIntegrateReducedGWf Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
 
 omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **Canonical reconstruction, modulo split correctness.** Given the special/normal split is a genuine
-factorization `d = dₛ·dₙ` with `dₛ, dₙ` coprime (their gcd a nonzero constant) and nonzero, the canonical
-pieces recombine: `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`. Assembles `toPolyG_cdivmodWf` (division),
-`toPolyG_cbezoutOneWf` + `toPolyG_cextendedEuclideanSplitWf` (Bézout split), and
-`canonicalRepFast_field_identity`. The only remaining input is the `cSplitFactorFastGWf` correctness
-(`hsplit`, coprimality) — the engine's split frontier. -/
+/-- Canonical split pieces recombine as `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`. -/
 theorem canonicalReconstruction (Dt a d : CPolyG α)
     (hd : toPolyG d ≠ 0)
     (hdn : toPolyG (crNormDen Dt a d) ≠ 0)
@@ -110,10 +101,7 @@ theorem canonicalReconstruction (Dt a d : CPolyG α)
     (toPolyG sn.1) (toPolyG sn.2) (toPolyG bc.1) (toPolyG bc.2) hd hdn hds hadiv hsplit hbcr
 
 omit [CRischField α] in
-/-- **Generic assembler soundness.** If `cIntegrateCase C` returns `res` with the special-part hook giving
-`(snum, sden)` (differentiating to `specialVal`) and the corrected normal part `nrm` (satisfying the
-antiderivative predicate `hNrmField`), and the parts reconstruct `a/d` (`hrecon`), then `res` is an
-antiderivative of `a/d`. Proven once, from the abstract core `combineSN_isIntegralResult`. -/
+/-- Generic soundness of `cIntegrateCase` from special-part, normal-part, and reconstruction hypotheses. -/
 theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (snum sden : CPolyG α) (nrm : IntegralResultG α)
     (specialVal : RatFunc (CFieldSpec.K α))
