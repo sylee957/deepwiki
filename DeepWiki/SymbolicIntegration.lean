@@ -12,6 +12,7 @@ import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
 import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.DiffPolyFractionDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
