@@ -306,6 +306,15 @@ theorem yunStep_preserves [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
   refine ⟨hgcd, c * w, mul_ne_zero hc hw0, hb', ?_⟩
   rw [hd', hb', derivative_C_mul, Dabs, Nat.add_sub_cancel, Babs, Nat.add_sub_cancel, mul_sub]
 
+open UniqueFactorizationMonoid in
+open Classical in
+/-- The factor emitted by one Yun step is associated to the `i`-th squarefree part. -/
+theorem yunStep_emit_assoc [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
+    (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
+    Associated (gcd b d) (sqfreeFactPart A i) := by
+  rw [(yunStep_preserves A i hi hA hinv).1]
+  exact normalize_associated (sqfreeFactPart A i)
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration

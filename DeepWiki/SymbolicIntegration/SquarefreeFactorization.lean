@@ -37,15 +37,6 @@ open Classical
 
 /-! ### The abstract Yun loop state and its recurrence -/
 
-open UniqueFactorizationMonoid in
-open Classical in
-/-- The factor emitted by one Yun step is associated to the `i`-th squarefree part. -/
-theorem yunStep_emit_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
-    (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
-    Associated (gcd b d) (sqfreeFactPart A i) := by
-  rw [(yunStep_preserves A i hi hA hinv).1]
-  exact normalize_associated (sqfreeFactPart A i)
-
 /-! ### The abstract Yun loop and its factor products -/
 
 open Classical in
