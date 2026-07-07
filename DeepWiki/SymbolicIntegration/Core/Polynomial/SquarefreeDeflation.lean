@@ -65,6 +65,36 @@ theorem deflation_isPrimitive (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
     (deflation A k).IsPrimitive :=
   isPrimitive_of_dvd (isPrimitive_primPart A) (deflation_dvd_primPart A k hA)
 
+open Classical in
+/-- The factor multiplicities of a deflation are the truncated originals:
+`count Q (normalizedFactors A⁻ᵏ) = count Q (normalizedFactors pp(A)) − k`. -/
+theorem count_normalizedFactors_deflation (A : D[X]) (k : ℕ) (Q : D[X]) :
+    (normalizedFactors (deflation A k)).count Q = (normalizedFactors A.primPart).count Q - k := by
+  set M := normalizedFactors A.primPart with hM
+  set M' := M - k • M.dedup with hM'
+  have hcountM' : ∀ R, M'.count R = M.count R - k := by
+    intro R
+    rw [hM', Multiset.count_sub, Multiset.count_nsmul, Multiset.count_dedup]
+    by_cases h : R ∈ M <;> simp [h, Multiset.count_eq_zero_of_notMem]
+  have hsub : M' ≤ M := Multiset.sub_le_self _ _
+  have hirr : ∀ R ∈ M', Irreducible R :=
+    fun R hR => irreducible_of_normalized_factor R (Multiset.mem_of_le hsub hR)
+  have hnorm : M'.map normalize = M' := by
+    rw [Multiset.map_congr rfl
+      (fun R hR => normalize_normalized_factor R (Multiset.mem_of_le hsub hR))]
+    exact Multiset.map_id' M'
+  have hsub'' : M'.toFinset ⊆ M.toFinset := by
+    intro P hP
+    rw [Multiset.mem_toFinset, ← Multiset.count_pos, hcountM'] at hP
+    rw [Multiset.mem_toFinset, ← Multiset.count_pos]; omega
+  have hdefl : deflation A k = M'.prod := by
+    rw [deflation, ← hM, Finset.prod_multiset_count M']
+    simp only [hcountM']
+    exact (Finset.prod_subset hsub'' (fun P _ hP' => by
+      rw [Multiset.mem_toFinset, ← Multiset.count_pos, hcountM'] at hP'
+      rw [show M.count P - k = 0 by omega, pow_zero])).symm
+  rw [hdefl, normalizedFactors_prod_eq M' hirr, hnorm, hcountM' Q]
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration
