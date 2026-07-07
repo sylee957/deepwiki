@@ -34,7 +34,8 @@ theorem toS_add (p q : CPolyG ℚ) : toS (caddG p q) = toS p + toS q := by
 theorem toS_sub (p q : CPolyG ℚ) : toS (csubG p q) = toS p - toS q := by
   simp only [toS, denote, map_sub]
 theorem toS_scale (c : ℚ) (p : CPolyG ℚ) : toS (cscaleG c p) = AdjoinRoot.of _ (C c) * toS p := by
-  unfold toS; rw [toPolyG_cscaleG, map_mul]; rfl
+  simp only [toS, denote, map_mul]
+  rfl
 theorem toS_nil : toS ([] : CPolyG ℚ) = 0 := by unfold toS; rw [toPolyG_nil, map_zero]
 theorem toS_scale_neg_one (p : CPolyG ℚ) : toS (cscaleG (-1) p) = - toS p := by
   rw [toS_scale]; simp [map_neg, map_one]
