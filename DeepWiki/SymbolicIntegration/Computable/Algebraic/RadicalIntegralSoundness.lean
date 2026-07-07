@@ -27,15 +27,7 @@ namespace RadElem
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
-/-! ### The Horner readings `toPolyG radGen = X` and `toPolyG [0, c] = C(toK c)·X` -/
-
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `toPolyG radGen = X`: the generator `y = √f` (`radGen = [0, 1]`) reads as `X` under the Horner
-bridge. -/
-@[denote] theorem toPolyG_radGen : CPolyG.toPolyG (radGen : RadElem α) = X := by
-  show CPolyG.toPolyG [CField.zero, CField.one] = X
-  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
-    CFieldSpec.toK_zero, CFieldSpec.toK_one, map_zero, map_one, zero_add, mul_one]
+/-! ### The Horner reading `toPolyG [0, c] = C(toK c)·X` -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPolyG [zero, c] = C (toK c) · X`: the pure-`y` element `c·y` reads as `C(toK c)·X`. -/

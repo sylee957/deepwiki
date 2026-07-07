@@ -22,6 +22,16 @@ namespace RadElem
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
+/-! ### Horner reading of the radical generator -/
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- `toPolyG radGen = X`: the generator `y = √f` (`radGen = [0, 1]`) reads as `X` under the Horner
+bridge. -/
+@[denote] theorem toPolyG_radGen : CPolyG.toPolyG (radGen : RadElem α) = X := by
+  show CPolyG.toPolyG [CField.zero, CField.one] = X
+  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
+    CFieldSpec.toK_zero, CFieldSpec.toK_one, map_zero, map_one, zero_add, mul_one]
+
 /-- The index-generalized diagonal map `radDerivFrom ℓ k p` = `(List.zipIdx p k).map (fun (a,i) ↦
 D(a) + a·(i·ℓ))`: the body of `radDeriv` with the `zipIdx` start index exposed as `k` (so `radDeriv n f =
 radDerivFrom (logDerRadicand n f) 0`). Generalizing `k` is what lets the closed-form `toPolyG` recursion
