@@ -57,7 +57,7 @@ theorem towerCoeffIntegrateLrt_sound (c b : QFunNZG β) (h : towerCoeffIntegrate
     intro num
     show QFunNZG.amG β (toPolyG num) / QFunNZG.amG β (toPolyG ([CField.one] : CPolyG β))
       = QFunNZG.amG β (toPolyG num)
-    rw [toPolyG_one_singleton, map_one, div_one]
+    simp only [denote, map_one, mul_zero, add_zero, div_one]
   have htoK_c : CFieldSpec.toK c
       = QFunNZG.amG β (toPolyG (qnumCoeffG c)) / QFunNZG.amG β (toPolyG (qdenCoeffG c)) := rfl
   rw [hcd, CFieldSpec.toK_div, htoK_embed bn, htoK_embed bd, htoK_c]
@@ -149,7 +149,8 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := QFunNZG β
         have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
         simpa only [denote, toPolyG_one_singleton, sub_eq_zero] using hh
       refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
-      · rw [toPolyG_one_singleton]; exact one_ne_zero
+      · simp only [denote, mul_zero, add_zero]
+        exact one_ne_zero
       · exact tower_special_identityLrt Dt (crPoly Dt a d) qp hDt1 hqp
       · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
           simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
