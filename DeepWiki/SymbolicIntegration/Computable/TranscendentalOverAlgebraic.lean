@@ -436,14 +436,16 @@ theorem toAdj_add (p q : RadExt α n f) : toAdj (RadExt.add p q) = toAdj p + toA
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radAdd p.toRad q.toRad))) = _
   rw [mk_canon]
   show AdjoinRoot.mk _ (CPolyG.toPolyG (CPolyG.caddG _ _)) = _
-  rw [CPolyG.toPolyG_caddG, map_add]; rfl
+  simp only [denote, map_add]
+  rfl
 
 /-- `toAdj` intertwines `RadExt.neg` with `-` — via `toPolyG_cnegG`. -/
 theorem toAdj_neg (p : RadExt α n f) : toAdj (RadExt.neg p) = - toAdj p := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radNeg p.toRad))) = _
   rw [mk_canon]
   show AdjoinRoot.mk _ (CPolyG.toPolyG (CPolyG.cnegG _)) = _
-  rw [CPolyG.toPolyG_cnegG, map_neg]; rfl
+  simp only [denote, map_neg]
+  rfl
 
 /-- **`toAdj` intertwines `RadExt.mul` with `*`** — the radical product is the quotient product
 (`mk_toPolyG_radMul`, the carrier ring structure `K[X] ⧸ (Xⁿ − C(toK f))`). -/
