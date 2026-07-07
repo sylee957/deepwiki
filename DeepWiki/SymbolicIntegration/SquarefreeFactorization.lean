@@ -6,6 +6,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYun
 
 /-! # Squarefree factorization via the derivative criterion
 The squarefree part and deflations of `A ∈ D[x]` are computed by gcds with `dA/dx`, since a prime
@@ -30,17 +31,6 @@ private theorem prod_pow_sub_mul_prod_erase (g : ℕ → D[X]) (s : Finset ℕ) 
       = g b ^ (b - j) * ∏ l ∈ s.erase b, g l ^ (l - j + 1) := by
   rw [← Finset.mul_prod_erase _ (fun l => g l ^ (l - j)) hb, mul_assoc, ← Finset.prod_mul_distrib]
   exact congrArg _ (Finset.prod_congr rfl fun l _ => (pow_succ (g l) (l - j)).symm)
-
-open Classical in
-/-- The polynomial `Yₖ = ∑_{i≥k} (i−k+1)·(dAᵢ/dx)·∏_{l≥k, l≠i} Aₗ` driving the
-squarefree-factorization recurrence. -/
-noncomputable def Yun (A : D[X]) (i : ℕ) : D[X] :=
-  ∑ a ∈ ((normalizedFactors A.primPart).toFinset.image
-      (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => i ≤ a),
-    C ((a - i + 1 : ℕ) : D) * derivative (sqfreeFactPart A a)
-      * ∏ l ∈ (((normalizedFactors A.primPart).toFinset.image
-          (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => i ≤ a)).erase a,
-        sqfreeFactPart A l
 
 open Classical in
 /-- Derivative recurrence `d(A⁻⁽ⁱ⁻¹⁾)/dx = A⁻ⁱ · Yᵢ` (`1 ≤ i`). -/
