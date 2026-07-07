@@ -16,7 +16,7 @@ namespace DeepWiki.SymbolicIntegration
 open scoped Differential
 open CPolyG
 
-/-! ## Part 1 — the integral result `GeneralCurveIntegralResult` and the decision statement -/
+/-! ## Result type and decision statement -/
 
 /-- The general-curve integral `∫ = v + Σ cᵢ log uᵢ`: rational part `ratPart : CPolyG (QFunNZG ℚ)`
 over `K(x)[y]/(f)` plus `logTerms` of `(cᵢ ∈ ℚ(x), uᵢ ∈ K(x)[y]/(f))`; the output of
@@ -75,7 +75,7 @@ def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis 
         | some term => some ⟨v, [term]⟩
         | none => none
 
-/-! ## Part 2 — structural readings of the decision's `some`/`none` branches -/
+/-! ## Branch structure of `some` and `none` results -/
 
 /-- A `none` output means the rational solve failed, or (log part present, principal solve failed,
 and) the torsion decision returned `none`: `afRationalSolveWf … = none ∨ (afLogArgSolveWf …
@@ -104,7 +104,7 @@ theorem genCurveTorsionLogTerm_none_of_decide_none (fuel : ℕ) (f : CPolyG (QFu
         | some term => rw [hT] at hnone; simp at hnone
         | none => exact Or.inr ⟨by simp, by simp⟩
 
-/-! ## Part 3 — soundness `some F → D(F) = integrand` (modulo the named frontier) -/
+/-! ## Soundness `some F → D(F) = integrand` -/
 
 section Soundness
 
@@ -178,7 +178,7 @@ theorem cIntegrateGeneralCurveDecide_sound
 
 end Soundness
 
-/-! ## Part 4 — the isolated torsion frontier `GeneralPicTorsionFrontier` -/
+/-! ## The isolated torsion frontier `GeneralPicTorsionFrontier` -/
 
 section PicTorsion
 
@@ -213,7 +213,7 @@ theorem genCurveTorsionLogTerm_complete_of_frontier {isTorsion elem : Prop}
 
 end PicTorsion
 
-/-! ## Part 5 — completeness `none → ¬ elementary` (modulo the frontier) -/
+/-! ## Completeness `none → ¬ elementary` -/
 
 section Completeness
 
@@ -246,7 +246,7 @@ theorem cIntegrateGeneralCurveDecide_complete {isTorsion elem : Prop} (v : CPoly
 
 end Completeness
 
-/-! ## Part 6 — the decision-procedure capstone `(∃ F, … = some F) ⟺ elementary` -/
+/-! ## Decision-procedure criterion `(∃ F, … = some F) ⟺ elementary` -/
 
 section Decides
 
@@ -280,7 +280,7 @@ theorem cIntegrateGeneralCurveDecide_decides {isTorsion elem : Prop} (v : CPolyG
 
 end Decides
 
-/-! ## Part 7 — end-to-end `native_decide` witnesses -/
+/-! ## End-to-end `native_decide` witnesses -/
 
 open CPolyG
 
@@ -323,7 +323,7 @@ def genCurveWitnessNonTorsion : Option GeneralCurveIntegralResult :=
 none`. -/
 theorem genCurveWitnessNonTorsion_none : genCurveWitnessNonTorsion = none := by native_decide
 
-/-! ## The end-to-end decision-procedure milestone (`native_decide`) -/
+/-! ## Combined decision witness -/
 
 /-- Both verdicts through `cIntegrateGeneralCurveDecide`: on `y³ = x²` the divisor `div(y)` gives
 `some` with a `(1/1)·log y` term, and on `y² = x³ + 1` the order-3 divisor with fuel 2 gives `none`. -/
@@ -378,7 +378,9 @@ example (fuel : ℕ) (f : CPolyG (QFunNZG ℚ)) (basis : List (CPolyG (QFunNZG �
 
 end Restatements
 
-/-! ### Axiom audit — the decision/soundness/completeness/capstone are axiom-clean
+/-! ### Axiom audit
+
+The decision, soundness, completeness, and criterion theorems are axiom-clean
 (`[propext, Classical.choice, Quot.sound]`); the witnesses use `native_decide` (`Lean.ofReduceBool`). -/
 
 
