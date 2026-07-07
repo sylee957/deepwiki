@@ -505,7 +505,7 @@ theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2)
   | [a, b], _ =>
     show CPolyG.toPolyG [a, b] = _
     rw [show radCoeff0 ([a, b] : RadElem α) = a from rfl, show radCoeff1 ([a, b] : RadElem α) = b from rfl]
-    simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]; ring
+    simp only [denote, mul_zero, add_zero]; ring
 
 /-- The conjugate-norm inverse identity (`n = 2`, length-`≤ 2` `q`, `N ≠ 0`): `mk (toPolyG q) · mk
 (toPolyG (radInv2 f q)) = 1` in `AdjoinRoot (X² − C(toK f))`. -/
