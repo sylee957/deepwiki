@@ -222,24 +222,8 @@ example {R Q : Type*} [CommRing R] [CommRing Q] [Algebra R Q] (D : Derivation R 
     D ((pairs.map (fun p => p.1 * p.2)).sum) = g :=
   FunctionAlgebra.derivation_recombine_eq D pairs g hidem hcomp hsum
 
--- ★★ The concrete function-algebra (zero-divisor) soundness `D(F) = integrand` over a REDUCIBLE curve is
--- `CPolyG.afIntegrateFunctionAlgebra_sound` (stated above; its `#print axioms` below confirms it is
--- axiom-clean). The recombined integral `F = Σ eᵢ Fᵢ` of the function algebra `K(x)[y]/(T)` differentiates
--- to the integrand in the carrier quotient — the irreducible-curve caveat removed.
-
-/-! ## `#print axioms` — the function-algebra soundness rests only on the kernel axioms
-
-The abstract framework and the concrete carrier soundness carry only
-`[propext, Classical.choice, Quot.sound]`; the worked-example component integrals additionally
-carry the `native_decide` compiler axiom. -/
-
--- ★ The abstract keystone — a derivation kills idempotents (the indicators are constants):
-#print axioms FunctionAlgebra.derivation_idempotent_eq_zero
--- ★ The abstract recombination soundness — `D(Σ eᵢ Fᵢ) = g` over a partition of unity by idempotents:
-#print axioms FunctionAlgebra.derivation_recombine_eq
--- ★ The concrete keystone — the engine's `afDerivWf` kills a carrier idempotent:
-#print axioms CPolyG.idempotent_isConstant
--- ★★ THE FUNCTION-ALGEBRA (ZERO-DIVISOR) SOUNDNESS — `D(F) = integrand` over a REDUCIBLE curve:
-#print axioms CPolyG.afIntegrateFunctionAlgebra_sound
+-- ★★ The concrete function-algebra soundness `D(F) = integrand` over a reducible curve is
+-- `CPolyG.afIntegrateFunctionAlgebra_sound`. The recombined integral `F = Σ eᵢ Fᵢ` of the function
+-- algebra `K(x)[y]/(T)` differentiates to the integrand in the carrier quotient.
 
 end DeepWiki.SymbolicIntegration
