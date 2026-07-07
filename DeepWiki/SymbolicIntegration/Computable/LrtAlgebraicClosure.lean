@@ -3,11 +3,9 @@ import DeepWiki.SymbolicIntegration.Computable.DifferentialAlgebraicClosure
 
 /-! # Instantiating the LRT `∀E` soundness at the algebraic closure
 
-`IsIntegralResultLrtG` is stated over *every* algebraically-closed differential extension `E` of
-`K = CFieldSpec.K α` — the "descent vehicle" that lets the log part carry algebraic residues without pinning
-a closure. With `Differential (AlgebraicClosure K)` now built
-(`DifferentialAlgebraicClosure.lean`), that `∀E` can finally be **instantiated** at the canonical
-`E = AlgebraicClosure K`, yielding a single concrete identity — no longer only "for all E". -/
+`IsIntegralResultLrtG` is stated over every algebraically closed differential extension `E` of
+`K = CFieldSpec.K α`, allowing the log part to carry algebraic residues without choosing a closure.
+This file instantiates that polymorphic statement at the canonical `E = AlgebraicClosure K`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -17,9 +15,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [CharZero (CFieldSpec.K α)]
 
 /-- **The LRT soundness, concretely over the algebraic closure.** Instantiates the `∀ E [IsAlgClosed E] …`
-identity of `IsIntegralResultLrtG` at `E = AlgebraicClosure (CFieldSpec.K α)` — every required instance now
-resolves (`Differential` / `DifferentialAlgebra` from `DifferentialAlgebraicClosure.lean`, `IsAlgClosed` and
-`Algebra` canonically). The `∀E` formulation is no longer a barrier to a concrete statement. -/
+identity of `IsIntegralResultLrtG` at `E = AlgebraicClosure (CFieldSpec.K α)`. -/
 theorem isIntegralResultLrtG_algebraicClosure (Dt anum aden : CPolyG α) (res : LrtResultG α)
     (h : IsIntegralResultLrtG Dt anum aden res) :
     (towerDerivExt Dt (amGExt (toPolyG res.rational.1) / amGExt (toPolyG res.rational.2))
