@@ -56,8 +56,6 @@ theorem logToReal_correct_of_partition {σ : Type*}
   refine congrArg _ (congrArg _ (Multiset.map_congr rfl fun p hp => ?_))
   exact logToReal_conjugate_pair_of_split hi (hAB p hp) (hSplus p hp) (hSminus p hp)
 
-/-- Restatement: given the partition, `∑ α·logDeriv(S α)` equals the real form
-`∑_{reals} α·logDeriv(S α) + ∑_{pairs} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]`. -/
 example {σ : Type*} (S : R → R) (reals : Multiset R) (pairs : Multiset σ)
     (a b A B : σ → R) {i : R} (hi : i ^ 2 = -1) (roots : Multiset R)
     (hpart : roots = reals + pairs.map (fun p => a p + i * b p)
@@ -255,8 +253,6 @@ theorem logToReal_correct {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K}
     (realPart σ) (imagPart σ i) A B hi R.roots
     (roots_partition hi hinv hb hmap hsplit) hSplus hSminus hAB
 
-/-- Restatement: with the partition constructed from the conjugation, `∑ α·logDeriv(S α)` equals
-`∑_{b·=0} α·logDeriv(S α) + ∑_{0<b·} [a·logDeriv(A²+B²) + b·(i·logDeriv((A+iB)/(A−iB)))]`. -/
 example {σ : L ≃+* L} {i : L} {R : L[X]} {b : L → K} (S A B : L → L)
     (hi : i ^ 2 = -1) (hinv : ∀ x, σ (σ x) = x)
     (hb : ∀ α, algebraMap K L (b α) = imagPart σ i α)
