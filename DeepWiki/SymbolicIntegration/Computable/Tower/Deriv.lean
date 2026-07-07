@@ -144,13 +144,13 @@ theorem toQFunNZG_towerDerivQFunNZG (Dt : CPolyG α) (x : QFunNZG α) :
 
 end QFunNZG
 
-/-! ### The construction's axioms -/
+/-! ### Axiom audit -/
 
--- The headline level-2 scalar derivation `D(t₁) = 1` (`native_decide`):
+-- The level-2 scalar derivation `D(t₁) = 1` (`native_decide`):
 -- `[propext, Classical.choice, Quot.sound, lvl2T1._native…, lvl2_deriv_t1_eq_one._native…]`.
 #print axioms lvl2_deriv_t1_eq_one
 
--- The headline level-2 monomial derivation `D(t₂²) = 2·t₂` (`native_decide`):
+-- The level-2 monomial derivation `D(t₂²) = 2·t₂` (`native_decide`):
 -- `[propext, Classical.choice, Quot.sound, lvl2_monomialDeriv_t2sq_eq_two_t2._native…]`.
 #print axioms lvl2_monomialDeriv_t2sq_eq_two_t2
 
