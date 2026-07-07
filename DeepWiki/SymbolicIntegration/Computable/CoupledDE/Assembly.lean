@@ -439,7 +439,8 @@ theorem coupledClearedCheck_of_cCoupledDESystem (a : ℚ) (b1 b2 z1 z2 y1 y2 : C
     have hndb1 : (toPolyG b1).natDegree ≤ cdegG b1 := by rw [cdegG_eq_natDegree]
     have hndb2 : (toPolyG b2).natDegree ≤ cdegG b2 := by rw [cdegG_eq_natDegree]
     have hndab2 : (toPolyG (cscaleG a b2)).natDegree ≤ cdegG b2 := by
-      rw [toPolyG_cscaleG]; exact le_trans (Polynomial.natDegree_C_mul_le _ _) hndb2
+      simp only [denote]
+      exact le_trans (Polynomial.natDegree_C_mul_le _ _) hndb2
     have hndz1 : (toPolyG z1).natDegree ≤ cdegG z1 := by rw [cdegG_eq_natDegree]
     have hndz2 : (toPolyG z2).natDegree ≤ cdegG z2 := by rw [cdegG_eq_natDegree]
     have hfold : ∀ x ∈ [cdegG b1 + d, cdegG b2 + d, cdegG z1, cdegG z2, d],
