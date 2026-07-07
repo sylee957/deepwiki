@@ -27,16 +27,6 @@ namespace RadElem
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
-/-! ### The Horner reading `toPolyG [0, c] = C(toK c)·X` -/
-
-omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `toPolyG [zero, c] = C (toK c) · X`: the pure-`y` element `c·y` reads as `C(toK c)·X`. -/
-theorem toPolyG_zero_cons (c : α) :
-    CPolyG.toPolyG ([CField.zero, c] : RadElem α) = Polynomial.C (CFieldSpec.toK c) * X := by
-  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
-    CFieldSpec.toK_zero, map_zero, zero_add]
-  ring
-
 /-! ### The soundness predicate and the concrete algebraic integrals -/
 
 /-- The radical rational-integral soundness predicate `IsRadicalRationalIntegral n f g v`: the radical

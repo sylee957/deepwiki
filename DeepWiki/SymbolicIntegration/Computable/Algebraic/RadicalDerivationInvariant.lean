@@ -22,7 +22,7 @@ namespace RadElem
 
 variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpec α]
 
-/-! ### Horner reading of the radical generator -/
+/-! ### Horner readings of basic radical terms -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPolyG radGen = X`: the generator `y = √f` (`radGen = [0, 1]`) reads as `X` under the Horner
@@ -31,6 +31,14 @@ bridge. -/
   show CPolyG.toPolyG [CField.zero, CField.one] = X
   rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
     CFieldSpec.toK_zero, CFieldSpec.toK_one, map_zero, map_one, zero_add, mul_one]
+
+omit [CDiffField α] [CDiffFieldSpec α] in
+/-- `toPolyG [zero, c] = C (toK c) · X`: the pure-`y` element `c·y` reads as `C(toK c)·X`. -/
+theorem toPolyG_zero_cons (c : α) :
+    CPolyG.toPolyG ([CField.zero, c] : RadElem α) = Polynomial.C (CFieldSpec.toK c) * X := by
+  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
+    CFieldSpec.toK_zero, map_zero, zero_add]
+  ring
 
 /-- The index-generalized diagonal map `radDerivFrom ℓ k p` = `(List.zipIdx p k).map (fun (a,i) ↦
 D(a) + a·(i·ℓ))`: the body of `radDeriv` with the `zipIdx` start index exposed as `k` (so `radDeriv n f =
