@@ -403,7 +403,9 @@ theorem toPoly2_tadd (p q : List (CPolyG ℚ)) :
   apply Finset.sum_congr rfl
   intro k hk
   rw [Finset.mem_range] at hk
-  rw [tadd, getD_range_map _ _ _ hk, toPolyG_caddG, map_add, add_mul]
+  rw [tadd, getD_range_map _ _ _ hk]
+  simp only [denote, map_add]
+  rw [add_mul]
 
 open CPolyG in
 /-- `toPoly2_tsub`: `toPoly2 (tsub p q) = toPoly2 p − toPoly2 q`. -/
@@ -416,7 +418,9 @@ theorem toPoly2_tsub (p q : List (CPolyG ℚ)) :
   apply Finset.sum_congr rfl
   intro k hk
   rw [Finset.mem_range] at hk
-  rw [tsub, getD_range_map _ _ _ hk, toPolyG_csubG, map_sub, sub_mul]
+  rw [tsub, getD_range_map _ _ _ hk]
+  simp only [denote, map_sub]
+  rw [sub_mul]
 
 open CPolyG in
 /-- `toPoly2_coeff`: `(toPoly2 p).coeff k = toPolyG (p.getD k [])`. -/
