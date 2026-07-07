@@ -33,7 +33,7 @@ def clagNumG : List α → CPolyG α
   | z :: zs => cmulG [CField.neg z, CField.one] (clagNumG zs)
 
 /-- `toPolyG (clagNumG zs) = ∏ (X − C (toK zⱼ))`: the basis numerator as a product of linear factors. -/
-theorem toPolyG_clagNumG [CFieldSpec α] (zs : List α) :
+@[denote] theorem toPolyG_clagNumG [CFieldSpec α] (zs : List α) :
     toPolyG (clagNumG zs) = (zs.map (fun z => Polynomial.X - Polynomial.C (CFieldSpec.toK z))).prod := by
   induction zs with
   | nil => simp [clagNumG, toPolyG_cons, CFieldSpec.toK_one]

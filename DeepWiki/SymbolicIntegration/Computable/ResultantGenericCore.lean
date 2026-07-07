@@ -25,7 +25,7 @@ theorem toPolyG_termG (zk yk : α) (others : List α) :
       = Polynomial.C (CFieldSpec.toK yk
           / (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod)
         * (others.map (fun z => Polynomial.X - Polynomial.C (CFieldSpec.toK z))).prod := by
-  simp only [denote, toPolyG_clagNumG, CFieldSpec.toK_div, toK_foldl_csub_mul, CFieldSpec.toK_one]
+  simp only [denote, CFieldSpec.toK_div, toK_foldl_csub_mul, CFieldSpec.toK_one]
   rw [one_mul]
 
 /-- Evaluation of a generic Lagrange term at a value `x`. -/
