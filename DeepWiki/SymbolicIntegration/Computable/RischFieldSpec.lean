@@ -138,13 +138,9 @@ theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : CPolyG α)
 
 end ClearedToField
 
-#print axioms towerFractionFieldDerivG_amG_C
-#print axioms rischDE_field_of_cleared
+/-! ### Recursive `CRischFieldSpec (QFunNZG β)` layer boundary
 
-/-! ### The recursive `CRischFieldSpec (QFunNZG β)` layer-bridge
-
-The recursive instance over `QFunNZG β` is not committed here: the cleared → field half is supplied
-(`rischDE_field_of_cleared`), but assembling the field-level spec additionally requires a structural
-decomposition theorem for the generic RDE pipeline that is not yet available. -/
+The cleared → field half is supplied by `rischDE_field_of_cleared`; a recursive instance over
+`QFunNZG β` also needs a structural decomposition theorem for the generic RDE pipeline. -/
 
 end DeepWiki.SymbolicIntegration
