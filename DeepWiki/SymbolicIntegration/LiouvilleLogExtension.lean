@@ -644,10 +644,18 @@ theorem containConstants_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u) 
   exact ⟨v₀, by rw [hxP, hbeq0, map_zero, zero_mul, add_zero, ← hfa v₀]⟩
 
 omit [CharZero F] in
-/-- Given `RationalToPolyObligation`, `PolyVReductionObligation`, and `logDeriv u ≠ 0`,
-`v′ ∈ F ⟹ v ∈ F` on `RatFunc F`. -/
-theorem mem_range_of_deriv_mem_range (u : F) (hrtp : RationalToPolyObligation u)
-    (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0) :
+/-- The range-reduction residuals turning `v′ ∈ F` into `v ∈ F`. -/
+structure IsLogRangeReduction (u : F) : Prop where
+  /-- Derivatives in the polynomial range force the rational function into the polynomial range. -/
+  rationalToPoly : RationalToPolyObligation u
+  /-- Degree-zero log-polynomial derivatives are constant polynomials. -/
+  polyReduction : PolyVReductionObligation u
+  /-- The logarithmic derivative of the defining element is nonzero. -/
+  logDeriv_ne_zero : logDeriv u ≠ 0
+
+omit [CharZero F] in
+/-- Given `IsLogRangeReduction`, `v′ ∈ F ⟹ v ∈ F` on `RatFunc F`. -/
+theorem mem_range_of_deriv_mem_range (u : F) (hrange : IsLogRangeReduction u) :
     letI := logDifferential u
     ∀ {v : RatFunc F}, v′ ∈ (algebraMap F (RatFunc F)).range →
       v ∈ (algebraMap F (RatFunc F)).range := by
@@ -658,7 +666,7 @@ theorem mem_range_of_deriv_mem_range (u : F) (hrtp : RationalToPolyObligation u)
   have hvpoly : v′ ∈ (algebraMap F[X] (RatFunc F)).range := by
     refine ⟨Polynomial.C b, ?_⟩
     rw [← algebraMap_eq_algebraMap_C, hb]
-  obtain ⟨p, hp⟩ := hrtp hu v hvpoly
+  obtain ⟨p, hp⟩ := hrange.rationalToPoly hrange.logDeriv_ne_zero v hvpoly
   -- Identify `D p = C b` via injectivity, hence `(D p).natDegree = 0`.
   have hderiv : algebraMap F[X] (RatFunc F) (logDerivPoly u p)
       = algebraMap F[X] (RatFunc F) (Polynomial.C b) := by
@@ -667,7 +675,8 @@ theorem mem_range_of_deriv_mem_range (u : F) (hrtp : RationalToPolyObligation u)
     FaithfulSMul.algebraMap_injective F[X] (RatFunc F) hderiv
   have hdeg0 : (logDerivPoly u p).natDegree = 0 := by rw [hDpCb]; exact natDegree_C b
   -- Descend `p` to a constant `C b₀` by the polynomial obligation; conclude `v ∈ F`.
-  obtain ⟨b₀, hb₀⟩ := eq_C_of_natDegree_logDerivPoly_le u hpv hu hdeg0
+  obtain ⟨b₀, hb₀⟩ :=
+    eq_C_of_natDegree_logDerivPoly_le u hrange.polyReduction hrange.logDeriv_ne_zero hdeg0
   rw [← hp]
   exact (algebraMap_poly_mem_range_iff p).mpr ⟨b₀, hb₀⟩
 
@@ -914,10 +923,10 @@ def SingleLogPoleObligation (u : F) : Prop :=
       ∧ v₀′ ∈ (algebraMap F (RatFunc F)).range
 
 omit [CharZero F] in
-/-- Given `SingleLogPoleObligation`, `RationalToPolyObligation`, `PolyVReductionObligation`, and
-`logDeriv u ≠ 0`, a single-log representation of `a ∈ F` yields `F`-data `w₀, v₀ ∈ F`. -/
+/-- Given `SingleLogPoleObligation` and `IsLogRangeReduction`, a single-log representation of `a ∈ F`
+yields `F`-data `w₀, v₀ ∈ F`. -/
 theorem singleLog_fData (u : F) (hslp : SingleLogPoleObligation u)
-    (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0)
+    (hrange : IsLogRangeReduction u)
     (a : F) (c : F) (hc : c′ = 0) (w v : RatFunc F)
     (h : letI := logDifferential u; letI := logDifferentialAlgebra u;
       algebraMap F (RatFunc F) a = algebraMap F (RatFunc F) c * logDeriv w + v′) :
@@ -932,7 +941,7 @@ theorem singleLog_fData (u : F) (hslp : SingleLogPoleObligation u)
   -- Pole-independence: pull the log argument into `F`, leaving a corrected `v₀` with `v₀′ ∈ F`.
   obtain ⟨w₀, v₁, h₁, hv₁⟩ := hslp a c hc w v h
   -- The corrected `v₁` has derivative in `F`, so by the `v ∈ F` reduction `v₁ ∈ F`.
-  obtain ⟨v₀, hv₀⟩ := mem_range_of_deriv_mem_range u hrtp hpv hu hv₁
+  obtain ⟨v₀, hv₀⟩ := mem_range_of_deriv_mem_range u hrange hv₁
   exact ⟨w₀, v₀, by rw [h₁, hv₀]⟩
 
 /-- The constant condition: given `logDeriv u ≠ 0`, `ContainConstants F (RatFunc F)` holds
@@ -1390,10 +1399,9 @@ theorem multiLogPoleObligation_of_nondegenerateLog (u : F) (hnd : NondegenerateL
     rw [map_sub, hh]; ring
 
 omit [CharZero F] in
-/-- Given `MultiLogPoleObligation`, `RationalToPolyObligation`, `PolyVReductionObligation`, and
-`logDeriv u ≠ 0`, `LiouvilleFDataReduction u` holds. -/
+/-- Given `MultiLogPoleObligation` and `IsLogRangeReduction`, `LiouvilleFDataReduction u` holds. -/
 theorem fDataReduction_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u)
-    (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0) :
+    (hrange : IsLogRangeReduction u) :
     LiouvilleFDataReduction u := by
   letI := logDifferential u
   letI := logDifferentialAlgebra u
@@ -1401,7 +1409,7 @@ theorem fDataReduction_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u)
   -- Multi-term pole-matching: log arguments into `F`, leaving a corrected `v₀` with `v₀′ ∈ F`.
   obtain ⟨w₀, v₁, h₁, hv₁⟩ := hmlp a ι c hc w v h
   -- The corrected `v₁` has derivative in `F`, so by the `v ∈ F` reduction `v₁ ∈ F`.
-  obtain ⟨v₀, hv₀⟩ := mem_range_of_deriv_mem_range u hrtp hpv hu hv₁
+  obtain ⟨v₀, hv₀⟩ := mem_range_of_deriv_mem_range u hrange hv₁
   exact ⟨w₀, v₀, by rw [h₁, hv₀]⟩
 
 omit [CharZero F] in
@@ -1461,15 +1469,14 @@ theorem isLiouville_of_fDataReduction (u : F) (hred : LiouvilleFDataReduction u)
   isLiouvilleReduction_of_fDataReduction u hred
 
 omit [CharZero F] in
-/-- Given `MultiLogPoleObligation`, `RationalToPolyObligation`, `PolyVReductionObligation`, and
-`logDeriv u ≠ 0`, `IsLiouville F (RatFunc F)` holds. -/
+/-- Given `MultiLogPoleObligation` and `IsLogRangeReduction`, `IsLiouville F (RatFunc F)` holds. -/
 theorem isLiouville_of_multiLogPole (u : F) (hmlp : MultiLogPoleObligation u)
-    (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligation u) (hu : logDeriv u ≠ 0) :
+    (hrange : IsLogRangeReduction u) :
     letI := logDifferential u
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   isLiouvilleReduction_of_fDataReduction u
-    (fDataReduction_of_multiLogPole u hmlp hrtp hpv hu)
+    (fDataReduction_of_multiLogPole u hmlp hrange)
 
 omit [CharZero F] in
 /-- `IsLiouvilleReductionObligation u` gives `IsLiouville F (RatFunc F)` on the log extension. -/
@@ -1589,7 +1596,7 @@ example (u : F) (hrtp : RationalToPolyObligation u) (hpv : PolyVReductionObligat
     letI := logDifferential u
     ∀ {v : RatFunc F}, v′ ∈ (algebraMap F (RatFunc F)).range →
       v ∈ (algebraMap F (RatFunc F)).range :=
-  mem_range_of_deriv_mem_range u hrtp hpv hu
+  mem_range_of_deriv_mem_range u ⟨hrtp, hpv, hu⟩
 -- The keystone closes from the multi-term pole-matching core: discharging `MultiLogPoleObligation`
 -- (+ the `v ∈ F` residues) yields the real `IsLiouville F (RatFunc F)` instance.
 example (u : F) (hmlp : MultiLogPoleObligation u) (hrtp : RationalToPolyObligation u)
@@ -1597,7 +1604,7 @@ example (u : F) (hmlp : MultiLogPoleObligation u) (hrtp : RationalToPolyObligati
     letI := logDifferential u
     letI := logDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
-  isLiouville_of_multiLogPole u hmlp hrtp hpv hu
+  isLiouville_of_multiLogPole u hmlp ⟨hrtp, hpv, hu⟩
 -- `PoleIndependenceObligation` is PROVEN from the engine once the transcendence residue
 -- `∀ j, D πⱼ ≠ 0` is supplied: feeding that residue into `poleIndependence_of_logDerivPoly_ne_zero`
 -- discharges the obligation, so the obligation ⟺ "no positive-degree monic irreducible is killed by `D`".
