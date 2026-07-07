@@ -328,7 +328,7 @@ def cParallelIntegrateTower (Dt a d : CPolyG (QFunNZG ℚ)) :
 
 end CPolyG
 
-/-! ### Validation — `native_decide`, the cleared antiderivative identity `D(∫f) = f`
+/-! ### Examples — `native_decide`, the cleared antiderivative identity `D(∫f) = f`
 
 Each example feeds an integrand `f = a/d` over `ℚ(t)` with a known elementary integral to
 `cParallelIntegrate`, then verifies the returned `∫f = b/s + Σ cⱼ log pⱼ` actually satisfies
@@ -345,10 +345,6 @@ def parallelExampleLogA : CPolyG ℚ := [0, 2]
 /-- The denominator `t²+1`. -/
 def parallelExampleLogD : CPolyG ℚ := [1, 0, 1]
 
--- **Sanity print.** `cParallelIntegrate` on `∫ 2t/(t²+1)` returns rational part `0/1` and one log
--- `(1, t²+1)`, i.e. `log(t²+1)`.
-#eval CPolyG.cParallelIntegrate [1] parallelExampleLogA parallelExampleLogD
-
 /-- **Pure-log parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
 `∫ 2t/(t²+1) dt` over `ℚ(t)` (`D = d/dt`), `cParallelIntegrate` returns `some res` whose reconstructed
 antiderivative `b/s + Σ cⱼ log pⱼ` is verified to **actually satisfy** `D(res) = 2t/(t²+1)` by the
@@ -358,8 +354,6 @@ theorem parallelIntegrate_log_example :
     (match cParallelIntegrate [1] parallelExampleLogA parallelExampleLogD with
       | some res => cParallelCheckQ [1] parallelExampleLogA parallelExampleLogD res
       | none => false) = true := by native_decide
-
-#print axioms parallelIntegrate_log_example
 
 /-! #### (2) Transcendental, `t = exp x` (`Dt = t = [0,1]`): `∫ t/(t+1)² dx = −1/(t+1)`.
 A genuine element of `ℚ(exp x)`: `D(−1/(t+1)) = Dt·1/(t+1)² = t/(t+1)²`. The squarefree factor `t+1` has
@@ -372,9 +366,6 @@ def parallelExampleExpD : CPolyG ℚ := [1, 2, 1]
 /-- The exponential monomial derivative `Dt = t` (`t = exp x`, `Dexp = exp`). -/
 def parallelExampleExpDt : CPolyG ℚ := [0, 1]
 
--- **Sanity print.** `∫ t/(t+1)²` with `t = exp x`: rational part `−1/(t+1)` (`b = −1`, `s = t+1`), no log.
-#eval CPolyG.cParallelIntegrate parallelExampleExpDt parallelExampleExpA parallelExampleExpD
-
 /-- **Transcendental parallel integration computes** (`native_decide`, Bronstein §10.3, book p.309). For
 `∫ exp(x)/(exp(x)+1)² dx` — `f = t/(t+1)²` over the genuine transcendental field `ℚ(exp x)` with the
 monomial derivation `Dt = t` — `cParallelIntegrate` returns `some res` (the rational part `−1/(t+1)`),
@@ -386,8 +377,6 @@ theorem parallelIntegrate_exp_example :
       | some res => cParallelCheckQ parallelExampleExpDt parallelExampleExpA parallelExampleExpD res
       | none => false) = true := by native_decide
 
-#print axioms parallelIntegrate_exp_example
-
 /-! #### (3) Transcendental mixed rational + log, `t = exp x` (`Dt = t`):
 `∫ (t²+2t)/(t+1)² dx = −1/(t+1) + log(t+1)`. The antiderivative carries **both** a rational part and a
 log simultaneously — the full Risch–Norman shape. `D(−1/(t+1) + log(t+1)) = t/(t+1)² + t/(t+1) =
@@ -395,9 +384,6 @@ log simultaneously — the full Risch–Norman shape. `D(−1/(t+1) + log(t+1)) 
 
 /-- Example: `f = (t²+2t)/(t+1)²`, `t = exp x` (`Dt = [0,1]`), antiderivative `−1/(t+1) + log(t+1)`. -/
 def parallelExampleMixA : CPolyG ℚ := [0, 2, 1]
-
--- **Sanity print.** `∫ (t²+2t)/(t+1)²` with `t = exp x`: rational part `−1/(t+1)` **and** log `(1, t+1)`.
-#eval CPolyG.cParallelIntegrate parallelExampleExpDt parallelExampleMixA parallelExampleExpD
 
 /-- **Mixed rational + log parallel integration computes** (`native_decide`, Bronstein §10.3, book
 p.309). For `∫ (exp(x)²+2exp(x))/(exp(x)+1)² dx` — `f = (t²+2t)/(t+1)²` over `ℚ(exp x)`, `Dt = t` — the
@@ -409,8 +395,6 @@ theorem parallelIntegrate_mixed_example :
     (match cParallelIntegrate parallelExampleExpDt parallelExampleMixA parallelExampleExpD with
       | some res => cParallelCheckQ parallelExampleExpDt parallelExampleMixA parallelExampleExpD res
       | none => false) = true := by native_decide
-
-#print axioms parallelIntegrate_mixed_example
 
 /-! #### (4) The heuristic *fails* — `∫ 1/(exp(x)+1) dx` is not elementary in the ansatz.
 With `t = exp x`, `Dt = t`, `f = 1/(t+1)`: the only candidate log is `t+1` with `Dp/p = t/(t+1)`, which
@@ -424,9 +408,6 @@ def parallelExampleFailA : CPolyG ℚ := [1]
 /-- The denominator `exp x + 1 = t + 1`. -/
 def parallelExampleFailD : CPolyG ℚ := [1, 1]
 
--- **Sanity print.** `cParallelIntegrate` returns `none`: the ansatz cannot capture `∫ dx/(eˣ+1)`.
-#eval CPolyG.cParallelIntegrate parallelExampleExpDt parallelExampleFailA parallelExampleFailD
-
 /-- **The parallel heuristic fails on a non-(ansatz-)elementary integrand** (`native_decide`, Bronstein
 §10.3, book p.298). `∫ 1/(exp(x)+1) dx` has antiderivative `x − log(exp x+1)`, which is **not** in the
 candidate space `b/(t+1) + c·log(t+1)` over `ℚ(exp x)` (it needs the generator `x = ∫1` outside the
@@ -436,7 +417,5 @@ proof of non-elementarity. -/
 theorem parallelIntegrate_failure_example :
     cParallelIntegrate parallelExampleExpDt parallelExampleFailA parallelExampleFailD = none := by
   native_decide
-
-#print axioms parallelIntegrate_failure_example
 
 end DeepWiki.SymbolicIntegration
