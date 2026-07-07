@@ -1,11 +1,9 @@
 import DeepWiki.SymbolicIntegration.Computable.RischDE.Completeness
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
 
-/-! # RDE completeness — the normal-denominator step preserves solvability (`hnorm`)
+/-! # RDE normal-denominator completeness
 
-`hnorm`: if the input RDE has a polynomial solution then `cRdeNormalDenominatorGWf` does not return `none`.
-The engine layer (the step's `isSome` is exactly its `cdvdGWf` divisibility guard) is closed here, reducing
-`hnorm` to the single divisibility `solution ⟹ eₙ ∣ dₙh²`, isolated as `RdeNormalDivisibilityResidualWf`. -/
+Completeness bridges for the normal-denominator step of the Wf Risch differential equation solver. -/
 
 open Polynomial Classical
 open scoped Differential
@@ -15,7 +13,7 @@ namespace DeepWiki.SymbolicIntegration
 open Compute CPolyG QFunNZG
 
 
-/-! ## The engine layer: `isSome` is exactly the `cdvdGWf` guard -/
+/-! ## Engine guard -/
 
 section WfEngineLayer
 
@@ -53,8 +51,7 @@ theorem cRdeNormalDenominatorGWf_isSome_iff (Dt : CPolyG α) (fnum fden gnum gde
   split <;> simp_all
 
 omit [CDiffField α] [CFracGcdCoreWf α] in
-/-- Mathematical divisibility `toPolyG q ∣ toPolyG p` (with `q ≠ 0`) forces the engine check
-`cdvdGWf q p = true`. -/
+/-- Mathematical divisibility `toPolyG q ∣ toPolyG p` forces `cdvdGWf q p = true`. -/
 theorem cdvdGWf_of_dvd (q p : CPolyG α) (hq0 : CPolyG.cnormG q ≠ [])
     (hdvd : toPolyG q ∣ toPolyG p) :
     CPolyG.cdvdGWf q p = true := by
@@ -75,15 +72,14 @@ theorem cRdeNormalDenominatorGWf_isSome_of_dvd (Dt : CPolyG α)
 end WfEngineLayer
 
 
-/-! ## The divisibility residual and `hnorm` -/
+/-! ## Divisibility residual -/
 
 section DivisibilityResidualWf
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
   [CRischField α]
 
-/-- The normal-denominator divisibility residual: a polynomial solution forces `eₙ ∣ dₙh²` (`hdvd`) and the
-normal part `eₙ` is nonzero (`hen0`). -/
+/-- `RdeNormalDivisibilityResidualWf` supplies `eₙ ∣ dₙh²` and nonzero `eₙ`. -/
 structure RdeNormalDivisibilityResidualWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
   /-- A polynomial solution forces `eₙ ∣ dₙh²`. -/
   hdvd : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
@@ -121,7 +117,7 @@ theorem hdvdWf_free_of_en_dvd_dn (Dt fnum fden gnum gden : CPolyG α)
 end DivisibilityResidualWf
 
 
-/-! ## Assembly from the normal-denominator residual -/
+/-! ## Inner completeness assembly -/
 
 section AssembleWf
 
@@ -150,7 +146,7 @@ theorem rischDEInnerCompletenessWf_of_norm_bound_solve (Dt fnum fden gnum gden :
 
 end AssembleWf
 
-/-! ### Restatement against `RischDEInnerCompletenessWf.hnorm`'s field type (anonymous `example`) -/
+/-! ### Restatements -/
 
 -- The Wf engine bridge: mathematical divisibility forces the Wf normal-denominator step to succeed.
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CFracGcdCoreWf α]
