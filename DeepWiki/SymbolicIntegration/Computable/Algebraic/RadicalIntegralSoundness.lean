@@ -702,9 +702,9 @@ theorem clearedKX2_of_cisZeroG (N M ρ : CPolyG ℚ)
             - CPolyG.toPolyG N * derivative (CPolyG.toPolyG ρ))
           + CPolyG.toPolyG N * derivative (CPolyG.toPolyG ρ)
       = (2 : (CFieldSpec.K ℚ)[X]) * CPolyG.toPolyG ρ * CPolyG.toPolyG M := by
-  rw [CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero, CPolyG.toPolyG_csubG,
-    CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cmulG, CPolyG.toPolyG_cscaleG, CPolyG.toPolyG_cmulG,
-    CPolyG.toPolyG_cscaleG, CPolyG.toPolyG_cderivG, CPolyG.toPolyG_cderivG] at hcheck
+  rw [CPolyG.cisZeroG_iff] at hcheck
+  simp only [denote] at hcheck
+  rw [sub_eq_zero] at hcheck
   -- `C (toK (2:ℚ)) = (2 : K[X])` (the scalar `2`)
   rw [show Polynomial.C (CFieldSpec.toK (2 : ℚ)) = (2 : (CFieldSpec.K ℚ)[X]) from by
     show Polynomial.C ((2 : ℚ) : ℚ) = (2 : ℚ[X]); rw [map_ofNat]] at hcheck
