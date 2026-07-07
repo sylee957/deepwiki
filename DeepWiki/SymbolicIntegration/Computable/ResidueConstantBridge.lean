@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
+import DeepWiki.SymbolicIntegration.Computable.YunSquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 
 /-! # The residue bridge — a passing guard forces the result residues constant

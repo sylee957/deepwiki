@@ -10,7 +10,7 @@ index `i-1`) is a *lawful* squarefree decomposition of `d` when its factors deno
 pairwise-coprime family whose powered product `∏ᵢ vᵢ^i` reconstructs `d` up to associates.
 
 See `docs/risch-two-stage-discipline.md`. The realization `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition`
-lives with the algorithm (`YunTowerCorrect`), not here. -/
+lives with the algorithm (`YunSquarefreeDecomposition`), not here. -/
 
 open Polynomial Classical
 

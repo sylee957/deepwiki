@@ -1,7 +1,7 @@
 import DeepWiki.Algebra.ListSums
 import DeepWiki.Algebra.ListProducts
 import DeepWiki.SymbolicIntegration.Computable.HermiteTowerStep
-import DeepWiki.SymbolicIntegration.Computable.YunTowerCorrect
+import DeepWiki.SymbolicIntegration.Computable.YunSquarefreeDecomposition
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import Mathlib.Data.List.Sigma
 
