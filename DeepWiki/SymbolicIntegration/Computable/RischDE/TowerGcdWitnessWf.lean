@@ -126,10 +126,9 @@ theorem hdvdB_of_dvd_wf (Dt : CPolyG β) (fnum fden h0 : CPolyG β)
         (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1 h0) fnum)
         (CPolyG.cmulG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf Dt fden).1
           (CPolyG.cmonomialDeriv Dt h0)) fden)) := by
-  simp only [CPolyG.toPolyG_csubG, CPolyG.toPolyG_cmulG]
+  simp only [denote] at hdvd ⊢
   apply dvd_sub
-  · rw [CPolyG.toPolyG_cmulG] at hdvd
-    exact hdvd.mul_right _
+  · exact hdvd.mul_right _
   · exact Dvd.intro_left _ rfl
 
 /-- If `gden ∣ dₙ·h0·h0`, then `gden` divides the `C`-numerator `dₙh²·gnum`. -/
