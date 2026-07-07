@@ -35,8 +35,6 @@ variable {K : Type*} [Field K] [CharZero K]
 
 open Classical
 
-/-! ### The abstract Yun loop state and its recurrence -/
-
 /-! ### The abstract Yun loop and its factor products -/
 
 /-- Over a characteristic-`0` field: if `Pʲ ∣ p` exactly (`P^{j+1} ∤ p`) for irreducible `P` and
