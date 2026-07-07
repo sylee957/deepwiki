@@ -171,7 +171,7 @@ instance isAlgClosed_constantsSubfield [IsAlgClosed E] :
     have := hqsep.eval₂_derivative_ne_zero (RingHom.id E) (x := c)
       (by rwa [Polynomial.eval₂_id])
     rwa [Polynomial.eval₂_id] at this
-  -- the root is a constant (Lemma 3.3.2(ii)), so it lies in the constant subfield.
+  -- The separable algebraic root is constant, so it lies in the constant subfield.
   have hcconst : c′ = 0 := deriv_eq_zero_of_separable_algebraic_const q hqconst hroot hsep
   refine ⟨⟨c, hcconst⟩, ?_⟩
   -- `p.eval ⟨c, _⟩ = 0` because `ι` is injective and `ι (p.eval ⟨c,_⟩) = q.eval c = 0`.
