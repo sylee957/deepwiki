@@ -12,6 +12,7 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.CantorComposition
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.DivisorOrder
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.FiniteFieldFactor
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralCurveDecide
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDerivatives
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDivisor
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDivisorExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDivisorOrder

@@ -1,36 +1,11 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.IntegralBasisFull
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralDerivatives
 
-/-! # Shared setup for general algebraic-function computations
+/-! # Concrete setup for general algebraic-function computations
 
-Partial derivatives, ansatz monomials, and common validation curves shared by
-the general algebraic-function modules. -/
+Ansatz monomials and the shared cuspidal-cubic fixture used by the general
+algebraic-function computation modules. -/
 
 namespace DeepWiki.SymbolicIntegration
-
-namespace CPolyG
-
-variable {α : Type*} [CField α]
-
-/-- The formal `y`-derivative `∂f/∂y` of a general curve polynomial. -/
-def afFy (f : CPolyG α) : CPolyG α := cderivG f
-
-section AfFyDenote
-
-variable [CFieldSpec α]
-
-/-- `afFy` reads as the formal derivative through `toPolyG`. -/
-theorem derivative_toPolyG_eq_afFy (f : CPolyG α) :
-    Polynomial.derivative (toPolyG f) = toPolyG (afFy f) := by
-  simp only [afFy, denote]
-
-end AfFyDenote
-
-variable [CDiffField α]
-
-/-- The coefficientwise base derivative `∂f/∂x` of a general curve polynomial. -/
-def afFx (f : CPolyG α) : CPolyG α := (f : List α).map CDiffField.cderiv
-
-end CPolyG
 
 open CPolyG
 
