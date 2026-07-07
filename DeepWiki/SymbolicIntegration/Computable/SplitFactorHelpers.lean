@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 
-/-! # Generic associate/derivative helpers for splitting-factorization correctness
+/-! # Generic associate/derivative helpers for splitting factorization
 Two field- and derivation-generic helpers: `gcd_derivative_dvd_gcd_implicitDeriv` (the denominator gcd
 divides the numerator gcd, char `0`) and `natDegree_eq_of_associated` (degree is associate-invariant). -/
 
