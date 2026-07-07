@@ -85,8 +85,7 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
       · rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
           toGBCoeffPoly_one, CPolyG.toPolyG_cmulG, map_mul, CPolyG.toPolyG_cmulG, map_mul]
         linear_combination hsc
-      · rw [CPolyG.toPolyG_cmulG]
-        exact mul_ne_zero hc' hlcq
+      · simpa only [denote] using mul_ne_zero hc' hlcq
 
 /-- **`gbpsremainderCore` lifts to a `β(s)[t]` Euclidean relation with a `β(s)`-unit multiplier**: if
 `gbisZeroCore (gbnormCore q) = false`, there is `(s, c)` with
