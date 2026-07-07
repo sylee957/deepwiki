@@ -57,6 +57,7 @@ import DeepWiki.SymbolicIntegration.Computable.LimitedIntegrateSingleExamples
 import DeepWiki.SymbolicIntegration.Computable.Parallel
 import DeepWiki.SymbolicIntegration.Computable.Parametric
 import DeepWiki.SymbolicIntegration.Computable.PolyPartTower
+import DeepWiki.SymbolicIntegration.Computable.PolyPartTowerExamples
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuarded
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuardedExamples
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveLrtDecision
