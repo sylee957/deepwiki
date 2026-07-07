@@ -265,9 +265,8 @@ theorem radDeriv_radGen_sound_qx :
 theorem radIsZero_radDeriv_radGen_qx :
     radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
         [CField.zero, radicandLogDer]) = true := by
-  rw [radIsZero, radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG]
-  rw [radDeriv_radGen_sound_qx]
-  simp only [denote]
+  rw [radIsZero, radSub, CPolyG.cisZeroG_iff]
+  simp only [denote, radDeriv_radGen_sound_qx]
   ring
 
 /-! ### Bridge (i): the `qxOfNum : CPolyG ℚ → QFunNZG ℚ` lift commutes with the derivation
