@@ -529,7 +529,9 @@ theorem toPoly2_mulDt (dpdt : List (CPolyG ℚ)) :
   intro k
   rw [toPoly2_coeff, add_mul, one_mul, Polynomial.coeff_add, Polynomial.coeff_X_pow_mul']
   by_cases hk : k < dpdt.length + 2
-  · rw [getD_range_map _ _ _ hk, toPolyG_caddG, toPoly2_coeff, apply_ite toPolyG, toPolyG_nil]
+  · rw [getD_range_map _ _ _ hk]
+    simp only [denote]
+    rw [toPoly2_coeff, apply_ite toPolyG, toPolyG_nil]
     by_cases h2 : 2 ≤ k
     · rw [if_pos h2, toPoly2_coeff]
     · rw [if_neg h2, toPoly2_coeff]
