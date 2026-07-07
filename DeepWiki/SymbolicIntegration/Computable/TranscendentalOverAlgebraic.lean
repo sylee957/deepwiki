@@ -500,8 +500,8 @@ theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2)
     show CPolyG.toPolyG [a] = _
     rw [show radCoeff0 ([a] : RadElem α) = a from rfl,
       show radCoeff1 ([a] : RadElem α) = CField.zero from rfl]
-    simp only [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]
-    rw [CFieldSpec.toK_zero, map_zero, zero_mul, add_zero]
+    simp only [denote, mul_zero, add_zero]
+    rw [map_zero, zero_mul, add_zero]
   | [a, b], _ =>
     show CPolyG.toPolyG [a, b] = _
     rw [show radCoeff0 ([a, b] : RadElem α) = a from rfl, show radCoeff1 ([a, b] : RadElem α) = b from rfl]
