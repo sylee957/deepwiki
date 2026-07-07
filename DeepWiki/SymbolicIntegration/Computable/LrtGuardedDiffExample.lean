@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Computable.LrtGuarded
 import DeepWiki.SymbolicIntegration.Computable.LrtCompleteness
 import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFF
 
-/-! # The integrability guard, validated non-trivially over a differential tower
+/-! # The integrability guard over a differential tower
 
 Over `ℚ` the guard `cResidueConstantGuardG` passes vacuously (`D ≡ 0`, so every residue is a constant). These
 `native_decide` checks run it over `ℚ(x)(log x)`, with base derivation `d/dx` and monomial `t = log x`,
