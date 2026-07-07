@@ -1,11 +1,10 @@
 import Mathlib.Algebra.GCDMonoid.Basic
-import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.Tactic
 
-/-! # Algebraic preliminaries
-The gcd *predicate* `IsGCD` with its API and uniqueness up to units, the resultant–root
-corollary (`res = 0` iff a common root), and gcd-multiplicativity and coprime-cancellation
-lemmas. -/
+/-! # GCD basics
+
+Abstract gcd predicates, uniqueness up to units, and gcd cancellation lemmas.
+-/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -33,15 +32,6 @@ theorem IsGCD.symm {x y z : R} (h : IsGCD x y z) : IsGCD y x z :=
 theorem IsGCD.associated [IsCancelMulZero R] {x y z t : R} (hz : IsGCD x y z) (ht : IsGCD x y t) :
     Associated z t :=
   associated_of_dvd_dvd (ht.dvd hz.dvd_left hz.dvd_right) (hz.dvd ht.dvd_left ht.dvd_right)
-
-open Polynomial in
-/-- For a nonzero `f` that splits, `res(f, g) = 0` iff some root `α` of `f` has `g(α) = 0`. -/
-theorem resultant_eq_zero_iff_exists_root {S : Type*} [CommRing S] [IsDomain S] {f g : S[X]}
-    (n : ℕ) (hg : g.natDegree ≤ n) (hf : f.Splits) (hf0 : f ≠ 0) :
-    Polynomial.resultant f g f.natDegree n = 0 ↔ ∃ α ∈ f.roots, g.eval α = 0 := by
-  rw [Polynomial.resultant_eq_prod_eval f g n hg hf, mul_eq_zero,
-    or_iff_right (pow_ne_zero n (leadingCoeff_ne_zero.mpr hf0)),
-    Multiset.prod_eq_zero_iff, Multiset.mem_map]
 
 section GCDMonoid
 variable {R : Type*} [CommMonoidWithZero R] [NormalizedGCDMonoid R]

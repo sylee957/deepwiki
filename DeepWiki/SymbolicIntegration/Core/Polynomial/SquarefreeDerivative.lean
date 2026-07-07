@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.FieldTheory.Perfect
-import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
+import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
 
 /-! # Polynomial derivative divisibility
 

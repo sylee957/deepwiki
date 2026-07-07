@@ -1,6 +1,5 @@
 -- ## Abstract theory on Mathlib carriers
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
-import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
 import DeepWiki.SymbolicIntegration.Constants
@@ -8,6 +7,7 @@ import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
+import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
 import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
@@ -41,6 +41,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import DeepWiki.SymbolicIntegration.Core.Polynomial.PolynomialNormalization
+import DeepWiki.SymbolicIntegration.Core.Polynomial.ResultantRoots
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives

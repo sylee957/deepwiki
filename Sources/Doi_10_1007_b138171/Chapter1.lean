@@ -1,4 +1,5 @@
-import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
+import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
+import DeepWiki.SymbolicIntegration.Core.Polynomial.ResultantRoots
 import DeepWiki.SymbolicIntegration.PseudoDivision
 import DeepWiki.SymbolicIntegration.Subresultants
 import DeepWiki.SymbolicIntegration.SubresultantPRS

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
-import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
+import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
 import Mathlib.RingTheory.Derivation.MapCoeffs
 import Mathlib.RingTheory.Coprime.Lemmas
 import Mathlib.RingTheory.UniqueFactorizationDomain.Multiplicity
