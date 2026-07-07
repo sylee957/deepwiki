@@ -83,7 +83,8 @@ theorem mk_toPolyG_afFyInvWf_mul_afFy (f : CPolyG α) (hf : cnormG f ≠ [])
         (toPolyG (afFyInvWf f) * toPolyG (afFy f)) = 1 := by
   have hbez := toPolyG_cdiophantineGWf (afFy f) f [CField.one] hf hgdeg hgne
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
+    simp only [denote]
+    simp
   rw [hone] at hbez
   rw [show toPolyG (afFyInvWf f) * toPolyG (afFy f)
       = 1 - toPolyG (cdiophantineGWf (afFy f) f [CField.one]).2 * toPolyG f from by
@@ -163,7 +164,8 @@ theorem mk_toPolyG_afDerivWf_one (f : CPolyG α) (hf : cnormG f ≠ []) :
     Ideal.Quotient.mk (afIdeal f) (toPolyG (afDerivWf f [CField.one])) = 0 := by
   rw [mk_toPolyG_afDerivWf f _ hf]
   have h1 : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]
+    simp only [denote]
+    simp
   rw [h1, Derivation.map_one_eq_zero, map_zero]
 
 omit [CDiffFieldSpec α] in
