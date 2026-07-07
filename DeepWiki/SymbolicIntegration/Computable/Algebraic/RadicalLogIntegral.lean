@@ -99,10 +99,10 @@ def radLogInvX : QFunNZG ℚ := CField.div CField.one radLogX
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`, lifted to `[0, 1/(x·ρ)]` over `ℚ(x)` (`R = 1/x`). -/
 def radLogIntegrandFinite : RadElem (QFunNZG ℚ) := radInvYLift radLogXRho CField.one
 
-/-- The **derived** finite-pole log argument `u = (y − 1)/x = [−1/x, 1/x]` for `∫ dx/(x√(x²+1))`. -/
+/-- The finite-pole log argument `u = (y − 1)/x = [−1/x, 1/x]` for `∫ dx/(x√(x²+1))`. -/
 def radLogUFinite : RadElem (QFunNZG ℚ) := [CField.neg radLogInvX, radLogInvX]
 
-/-- The wrong-sign candidate `u = (y + 1)/x = [1/x, 1/x]` — a **negative control** (fails the certificate). -/
+/-- The wrong-sign candidate `u = (y + 1)/x = [1/x, 1/x]`, which fails the certificate. -/
 def radLogUFiniteWrong : RadElem (QFunNZG ℚ) := [radLogInvX, radLogInvX]
 
 /-- `∫ dx/(x√(x²+1)) = log((√(x²+1) − 1)/x)`: the log-derivative certificate holds for `u = (y − 1)/x`,
@@ -196,8 +196,7 @@ theorem radLog_quadratic_heuristic :
     radIsLogIntegral 2 radLogRhoShift radLogUShift radLogIntegrandShift = true := by
   native_decide
 
-/-! ### `#print axioms` — the algebraic-log integrals validated through `radDeriv`, and the finite-pole
-residue match. -/
+/-! ### Axiom audit for the algebraic-log examples -/
 
 -- Algebraic-log integrals `∫ = log u` validated through `radDeriv`:
 #print axioms radLog_arcsinh
