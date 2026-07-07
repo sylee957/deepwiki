@@ -19,17 +19,24 @@ namespace DeepWiki.SymbolicIntegration
 variable {σ : Type*} {m : MonomialOrder σ}
 
 /-- **Divisibility propagates through a `K[x][y]` combination** (Part B core, IH-aggregation half).
-If `C d ∣ lazardView b` for every `b` in the support of a finite combination `R = ∑ b ∈ s, h b · b`,
-then `C d ∣ lazardView R` — `lazardView` is a ring hom, so the divisor of every factor divides the
-sum. This is the step that turns the per-element induction hypothesis `gᵢ ∣ f_j` into `gᵢ ∣ R`. -/
-theorem C_dvd_lazardView_sum {K : Type*} [Field K] {d : MvPolynomial (Fin 1) K}
+If `P ∣ lazardView b` for every `b` in the support of a finite combination `R = ∑ b ∈ s, h b · b`,
+then `P ∣ lazardView R` — `lazardView` is a ring hom, so the divisor of every factor divides the
+sum. This is the step that turns a per-element induction hypothesis into divisibility of `R`. -/
+theorem dvd_lazardView_sum {K : Type*} [Field K] {P : Polynomial (MvPolynomial (Fin 1) K)}
     {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
-    (hdvd : ∀ b ∈ s, Polynomial.C d ∣ lazardView b) :
-    Polynomial.C d ∣ lazardView (∑ b ∈ s, h b * b) := by
+    (hdvd : ∀ b ∈ s, P ∣ lazardView b) :
+    P ∣ lazardView (∑ b ∈ s, h b * b) := by
   rw [lazardView, map_sum]
   refine Finset.dvd_sum (fun b hb => ?_)
   rw [map_mul]
   exact Dvd.dvd.mul_left ((hdvd b hb)) _
+
+/-- The `Polynomial.C d` specialization of `dvd_lazardView_sum`. -/
+theorem C_dvd_lazardView_sum {K : Type*} [Field K] {d : MvPolynomial (Fin 1) K}
+    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
+    (hdvd : ∀ b ∈ s, Polynomial.C d ∣ lazardView b) :
+    Polynomial.C d ∣ lazardView (∑ b ∈ s, h b * b) :=
+  dvd_lazardView_sum hdvd
 
 /-- **Leading-`y`-coefficient divisibility along the sorted basis** (Lemma 2, one step on the
 enumeration): for `i < j`, the higher-`y`-degree `leadingYCoeff (sortedByYDegree hB j)` divides the
@@ -127,17 +134,14 @@ theorem exists_yDegree_bounded_representation {K : Type*} [Field K]
     rw [mul_comm] at hle
     exact le_trans (degreeOf_le_degreeOf_mul hbg) hle
 
-/-- **`C d` divides the `K[x][y]` view of any `y`-degree-bounded ideal member** (the bounded-rep +
-sum half of the descent). If `R ∈ I`, `R ≠ 0`, and `C d ∣ lazardView b` for every basis element `b`
-of `y`-degree `≤ degreeOf 0 R`, then `C d ∣ lazardView R`: GB-reduce `R = ∑ b ∈ B, g b · b` with each
-contributing `b` of bounded `y`-degree (`exists_yDegree_bounded_representation`), then aggregate by
-`C_dvd_lazardView_sum`. -/
-theorem C_dvd_lazardView_of_mem_of_dvd_bounded {K : Type*} [Field K]
+/-- A divisor of all bounded basis contributors divides the `lazardView` of the represented element. -/
+theorem dvd_lazardView_of_mem_of_dvd_bounded {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    {d : MvPolynomial (Fin 1) K} {R : MvPolynomial (Fin 2) K} (hRI : R ∈ I) (hR0 : R ≠ 0)
-    (hdvd : ∀ b ∈ B, degreeOf 0 b ≤ degreeOf 0 R → Polynomial.C d ∣ lazardView b) :
-    Polynomial.C d ∣ lazardView R := by
+    {P : Polynomial (MvPolynomial (Fin 1) K)} {R : MvPolynomial (Fin 2) K}
+    (hRI : R ∈ I) (hR0 : R ≠ 0)
+    (hdvd : ∀ b ∈ B, degreeOf 0 b ≤ degreeOf 0 R → P ∣ lazardView b) :
+    P ∣ lazardView R := by
   obtain ⟨g, hgsum, hgdeg⟩ := exists_yDegree_bounded_representation hB hRI hR0
   rw [hgsum, lazardView, map_sum]
   refine Finset.dvd_sum (fun b hb => ?_)
@@ -145,6 +149,19 @@ theorem C_dvd_lazardView_of_mem_of_dvd_bounded {K : Type*} [Field K]
   · rw [hbne, map_zero]; exact dvd_zero _
   · rw [map_mul]
     exact Dvd.dvd.mul_left (hdvd b hb (hgdeg b hb hbne)) _
+
+/-- **`C d` divides the `K[x][y]` view of any `y`-degree-bounded ideal member** (the bounded-rep +
+sum half of the descent). If `R ∈ I`, `R ≠ 0`, and `C d ∣ lazardView b` for every basis element `b`
+of `y`-degree `≤ degreeOf 0 R`, then `C d ∣ lazardView R`: GB-reduce `R = ∑ b ∈ B, g b · b` with each
+contributing `b` of bounded `y`-degree (`exists_yDegree_bounded_representation`), then aggregate by
+`dvd_lazardView_of_mem_of_dvd_bounded`. -/
+theorem C_dvd_lazardView_of_mem_of_dvd_bounded {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {d : MvPolynomial (Fin 1) K} {R : MvPolynomial (Fin 2) K} (hRI : R ∈ I) (hR0 : R ≠ 0)
+    (hdvd : ∀ b ∈ B, degreeOf 0 b ≤ degreeOf 0 R → Polynomial.C d ∣ lazardView b) :
+    Polynomial.C d ∣ lazardView R :=
+  dvd_lazardView_of_mem_of_dvd_bounded hB hRI hR0 hdvd
 
 /-- **`C(g_i) ∣ C q · lazardView fj` from `g_j ∣ fj` and `g_j·q = g_i`** (the higher-index transfer,
 the satisfiable form of the descent step's first hypothesis). Since `g_i = g_j·q`, divisibility of

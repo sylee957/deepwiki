@@ -9,32 +9,6 @@ open MvPolynomial MonomialOrder
 
 namespace DeepWiki.SymbolicIntegration
 
-/-- If `P` divides each support element's `lazardView`, then it divides the combination's view. -/
-theorem dvd_lazardView_sum {K : Type*} [Field K] {P : Polynomial (MvPolynomial (Fin 1) K)}
-    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
-    (hdvd : ∀ b ∈ s, P ∣ lazardView b) :
-    P ∣ lazardView (∑ b ∈ s, h b * b) := by
-  rw [lazardView, map_sum]
-  refine Finset.dvd_sum (fun b hb => ?_)
-  rw [map_mul]
-  exact Dvd.dvd.mul_left (hdvd b hb) _
-
-/-- A divisor of all bounded basis contributors divides the `lazardView` of the represented element. -/
-theorem dvd_lazardView_of_mem_of_dvd_bounded {K : Type*} [Field K]
-    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    {P : Polynomial (MvPolynomial (Fin 1) K)} {R : MvPolynomial (Fin 2) K}
-    (hRI : R ∈ I) (hR0 : R ≠ 0)
-    (hdvd : ∀ b ∈ B, degreeOf 0 b ≤ degreeOf 0 R → P ∣ lazardView b) :
-    P ∣ lazardView R := by
-  obtain ⟨g, hgsum, hgdeg⟩ := exists_yDegree_bounded_representation hB hRI hR0
-  rw [hgsum, lazardView, map_sum]
-  refine Finset.dvd_sum (fun b hb => ?_)
-  by_cases hbne : g b * b = 0
-  · rw [hbne, map_zero]; exact dvd_zero _
-  · rw [map_mul]
-    exact Dvd.dvd.mul_left (hdvd b hb (hgdeg b hb hbne)) _
-
 /-- A primitive divisor of `C c * g` divides `g`. -/
 theorem isPrimitive_dvd_of_dvd_C_mul {K : Type*} [Field K]
     {P g : Polynomial (MvPolynomial (Fin 1) K)} {c : MvPolynomial (Fin 1) K}
