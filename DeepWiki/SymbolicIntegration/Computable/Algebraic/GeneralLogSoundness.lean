@@ -106,7 +106,8 @@ theorem mk_toPolyG_afLogSumNumWf_eq_sum (f : CPolyG α) (args : List (α × CPol
     | nil => intro acc; simp
     | cons t ts ih =>
       intro acc
-      rw [List.foldl_cons, ih (caddG acc t), toPolyG_caddG, map_add, List.map_cons, List.sum_cons]
+      rw [List.foldl_cons, ih (caddG acc t)]
+      simp only [denote, map_add, List.map_cons, List.sum_cons]
       ring
   rw [hfold terms ([] : CPolyG α)]
   rw [toPolyG_nil, map_zero, zero_add, hterms, List.map_map]
