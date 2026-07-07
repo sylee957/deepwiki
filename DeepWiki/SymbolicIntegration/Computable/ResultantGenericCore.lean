@@ -73,8 +73,9 @@ private def cinterpTermG (zs : List α) (p : α × α) : CPolyG α :=
 theorem toPolyG_cinterpolateG (pts : List (α × α)) :
     toPolyG (cinterpolateG pts)
       = (pts.map (fun p => toPolyG (cinterpTermG (pts.map Prod.fst) p))).sum := by
-  rw [cinterpolateG, toPolyG_cnormG, toPolyG_foldl_caddG]
-  simp [cinterpTermG]
+  rw [cinterpolateG]
+  simp only [denote]
+  simp [cinterpTermG, denote, CFieldSpec.toK_div, toK_foldl_csub_mul, CFieldSpec.toK_one]
 
 open scoped Classical in
 /-- Summing `if toK p.1 = toK zk then toK p.2 else 0` over a points list whose abscissa images

@@ -317,7 +317,7 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
       ring
 
 /-- `toPolyG` of a `caddG` fold is the running sum of the term images. -/
-theorem toPolyG_foldl_caddG {α : Type*} [CField α] [CFieldSpec α]
+@[denote] theorem toPolyG_foldl_caddG {α : Type*} [CField α] [CFieldSpec α]
     (f : α × α → CPolyG α) (pts : List (α × α)) (init : CPolyG α) :
     toPolyG (pts.foldl (fun acc p => caddG acc (f p)) init)
       = toPolyG init + (pts.map (fun p => toPolyG (f p))).sum := by
