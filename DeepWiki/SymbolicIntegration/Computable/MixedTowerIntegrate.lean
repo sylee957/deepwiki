@@ -4,19 +4,16 @@ import DeepWiki.SymbolicIntegration.Computable.Hyperexp.Special
 
 /-! # Transcendental integrals over an algebraic base (the mixed tower)
 
-Equips the radical field `RadX3 = ℚ(x)[√(x³+1)]` with `CFracGcdCoreWf` and `CRischField` and runs the
-full tower integrator `cIntegrateGFullWf` at `α = RadX3`, integrating a transcendental monomial `t`
-over the algebraic `√(x³+1)`.  Validated `native_decide` examples: `∫ t dt = t²/2`, `∫ t² dt = t³/3`,
-`∫ (2t+1) dt = t²+t` (polynomial parts), `∫ dt/t = log t` (normal-part / Rothstein–Trager), the
-algebraic-coefficient boundary `∫ y dt` (does not validate, `y` not a `D`-constant), a multi-level RDE
-descent through the algebraic solver, and hyperexponential Laurent integrals whose special-part step
-descends through `crischDESolve` over `RadX3`. -/
+Equips the radical field `RadX3 = ℚ(x)[√(x³+1)]` with `CFracGcdCoreWf` and `CRischField`, then runs the
+full tower integrator `cIntegrateGFullWf` at `α = RadX3`. The validation examples cover polynomial parts,
+the normal-part route, a nonconstant algebraic-coefficient boundary, a multi-level RDE descent, and
+hyperexponential Laurent integrals descending through `crischDESolve` over `RadX3`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 open CPolyG
 
-/-! ### The remaining base typeclasses for the radical field `RadX3` -/
+/-! ### Base typeclasses for the radical field `RadX3` -/
 
 /-- `CFracGcdCoreWf RadX3`: the fuel-free raw fraction-free gcd over `RadX3[t]` is `(cgcdWf p q).1`. -/
 instance instCFracGcdCoreWfRadX3 : CFracGcdCoreWf RadX3 where
