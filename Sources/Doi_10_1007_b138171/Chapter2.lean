@@ -591,10 +591,12 @@ abbrev lazard_Pk_eq_Rk_Sk_unconditional :=
 /-- **Lazard (1985), Lemma 1** (cited in §2.6; J. Symb. Comp. 1, 261–270): in a reduced (minimal)
 Gröbner basis of a two-variable ideal `I ⊆ K[x,y]`, distinct elements have *distinct* leading
 y-degrees `(m.degree b) 1` — the foundational step of Lazard's bivariate GB structure theorem and
-the first stepping stone toward Czichowski's structural lemmas. The library's `lazard_lemma1`
+the first stepping stone toward Czichowski's structural lemmas. The library's
+`distinct_leadingYDegree_of_isReducedGroebnerBasis`
 (order sublemma `finsupp_fin_two_le_or_le_of_apply_eq` + minimality extraction
-`IsReducedGroebnerBasis.leadingMonomial_not_le`), with injectivity form `lazard_lemma1_injOn`. -/
-abbrev lazard_lemma1 := @DeepWiki.SymbolicIntegration.lazard_lemma1
+`IsReducedGroebnerBasis.leadingMonomial_not_le`), with injectivity form
+`injOn_leadingYDegree_of_isReducedGroebnerBasis`. -/
+abbrev lazard_lemma1 := @DeepWiki.SymbolicIntegration.distinct_leadingYDegree_of_isReducedGroebnerBasis
 
 /-- **The `MvPolynomial (Fin 2) K ↔ K[x][y]` representation bridge** (cited in §2.6; Lazard 1985,
 the framework step of his bivariate GB structure theory). With the convention `y = variable 0`

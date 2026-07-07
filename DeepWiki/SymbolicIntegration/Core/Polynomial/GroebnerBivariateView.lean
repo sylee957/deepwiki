@@ -53,7 +53,7 @@ theorem IsReducedGroebnerBasis.leadingMonomial_not_le {K : Type*} [Field K]
 
 /-- In a reduced Gröbner basis `B` of a two-variable ideal, distinct elements have distinct leading
 y-degrees `(m.degree ·) 1`. -/
-theorem lazard_lemma1 {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
+theorem distinct_leadingYDegree_of_isReducedGroebnerBasis {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
     ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → (m.degree b) 1 ≠ (m.degree b') 1 := by
@@ -65,13 +65,13 @@ theorem lazard_lemma1 {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
 
 /-- The leading-y-degree map `b ↦ (m.degree b) 1` is injective on a reduced Gröbner basis of a
 two-variable ideal. -/
-theorem lazard_lemma1_injOn {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
+theorem injOn_leadingYDegree_of_isReducedGroebnerBasis {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
     Set.InjOn (fun b => (m.degree b) 1) (↑B : Set (MvPolynomial (Fin 2) K)) := by
   intro b hb b' hb' hyeq
   by_contra hne
-  exact lazard_lemma1 hB b hb b' hb' hne hyeq
+  exact distinct_leadingYDegree_of_isReducedGroebnerBasis hB b hb b' hb' hne hyeq
 
 /-! ## The `MvPolynomial (Fin 2) K ↔ K[x][y]` representation bridge
 
@@ -306,7 +306,7 @@ example {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis m I (↑B : Set (MvPolynomial (Fin 2) K))) :
     ∀ b ∈ B, ∀ b' ∈ B, b ≠ b' → (m.degree b) 1 ≠ (m.degree b') 1 :=
-  lazard_lemma1 hB
+  distinct_leadingYDegree_of_isReducedGroebnerBasis hB
 
 example {K : Type*} [Field K] (k : ℕ) {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
     degreeOf 0 (X 0 ^ k * f) = degreeOf 0 f + k :=
