@@ -39,35 +39,6 @@ open Classical
 
 open UniqueFactorizationMonoid in
 open Classical in
-/-- One Yun step preserves `YunInv` and emits `normalize (sqfreeFactPart A i)`. -/
-theorem yunStep_preserves {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
-    (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
-    gcd b d = normalize (sqfreeFactPart A i) ∧
-      YunInv A (i + 1) (b / gcd b d) (d / gcd b d - derivative (b / gcd b d)) := by
-  obtain ⟨c, hc, hb, hd⟩ := hinv
-  set V := sqfreeFactPart A i with hV
-  have hV0 : V ≠ 0 := sqfreeFactPart_ne_zero A i
-  set w := V.leadingCoeff with hw
-  have hw0 : w ≠ 0 := leadingCoeff_ne_zero.mpr hV0
-  set Vn := normalize V with hVn
-  have hVn0 : Vn ≠ 0 := by rw [hVn]; simpa using hV0
-  have hgcd : gcd b d = Vn := by
-    rw [hb, hd, gcd_mul_left, normalize_eq_one.mpr (isUnit_C.mpr (isUnit_iff_ne_zero.mpr hc)),
-      one_mul, gcd_Babs_Dabs A i hi hA, ← hV, ← hVn]
-  have hVeq : V = Polynomial.C w * Vn := self_eq_C_leadingCoeff_mul_normalize V hV0
-  have hbfact : b = Vn * (Polynomial.C (c * w) * Babs A (i + 1)) := by
-    rw [hb, Babs_eq_mul A i hi hA, ← hV, hVeq, map_mul]; ring
-  have hdfact : d = Vn * (Polynomial.C (c * w) * Yun A (i + 1)) := by
-    rw [hd, Dabs_eq_mul A i hi hA, ← hV, hVeq, map_mul]; ring
-  have hb' : b / gcd b d = Polynomial.C (c * w) * Babs A (i + 1) := by
-    rw [hgcd, hbfact, mul_div_cancel_left₀ _ hVn0]
-  have hd' : d / gcd b d = Polynomial.C (c * w) * Yun A (i + 1) := by
-    rw [hgcd, hdfact, mul_div_cancel_left₀ _ hVn0]
-  refine ⟨hgcd, c * w, mul_ne_zero hc hw0, hb', ?_⟩
-  rw [hd', hb', derivative_C_mul, Dabs, Nat.add_sub_cancel, Babs, Nat.add_sub_cancel, mul_sub]
-
-open UniqueFactorizationMonoid in
-open Classical in
 /-- The factor emitted by one Yun step is associated to the `i`-th squarefree part. -/
 theorem yunStep_emit_assoc {K : Type*} [Field K] [CharZero K] (A : K[X]) (i : ℕ) (hi : 1 ≤ i)
     (hA : A.primPart ≠ 0) {b d : K[X]} (hinv : YunInv A i b d) :
