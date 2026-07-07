@@ -146,6 +146,26 @@ theorem range_sortedByYDegree {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fi
   · rw [Set.ncard_coe_finset, Set.ncard_range_of_injective (sortedByYDegree_injective hB)]
     simp [Nat.card_eq_fintype_card]
 
+/-- **A bounded `y`-degree basis element is a lower sorted index.** If `b ∈ B` has
+`degreeOf 0 b ≤ degreeOf 0 (sortedByYDegree hB i)`, then `b = sortedByYDegree hB j` for some `j ≤ i`
+(the sort is a `y`-degree bijection onto `B`, strictly increasing). -/
+theorem exists_sortedIndex_le_of_degreeOf_le {K : Type*} [Field K]
+    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
+    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
+    {i : Fin B.card} {b : MvPolynomial (Fin 2) K} (hbB : b ∈ B)
+    (hdeg : degreeOf 0 b ≤ degreeOf 0 (sortedByYDegree hB i)) :
+    ∃ j : Fin B.card, j ≤ i ∧ b = sortedByYDegree hB j := by
+  have hmem : b ∈ Set.range (sortedByYDegree hB) := by
+    rw [range_sortedByYDegree hB]; exact Finset.mem_coe.mpr hbB
+  obtain ⟨j, hj⟩ := hmem
+  refine ⟨j, ?_, hj.symm⟩
+  by_contra hlt
+  rw [not_le] at hlt
+  have hmono := degreeOf_sortedByYDegree_strictMono hB hlt
+  simp only at hmono
+  rw [← hj] at hdeg
+  exact absurd hdeg (not_le.mpr hmono)
+
 -- Restatements against the intended wording.
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}

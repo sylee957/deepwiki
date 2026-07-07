@@ -20,26 +20,6 @@ namespace DeepWiki.SymbolicIntegration
 The step uses the sorted basis, the leading-`y`-coefficient divisibility chain,
 and bounded Gröbner reduction of the cancellation polynomial. -/
 
-/-- **A bounded `y`-degree basis element is a lower sorted index.** If `b ∈ B` has
-`degreeOf 0 b ≤ degreeOf 0 (sortedByYDegree hB i)`, then `b = sortedByYDegree hB j` for some `j ≤ i`
-(the sort is a `y`-degree bijection onto `B`, strictly increasing). -/
-theorem exists_sortedIndex_le_of_degreeOf_le {K : Type*} [Field K]
-    {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
-    (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
-    {i : Fin B.card} {b : MvPolynomial (Fin 2) K} (hbB : b ∈ B)
-    (hdeg : degreeOf 0 b ≤ degreeOf 0 (sortedByYDegree hB i)) :
-    ∃ j : Fin B.card, j ≤ i ∧ b = sortedByYDegree hB j := by
-  have hmem : b ∈ Set.range (sortedByYDegree hB) := by
-    rw [range_sortedByYDegree hB]; exact Finset.mem_coe.mpr hbB
-  obtain ⟨j, hj⟩ := hmem
-  refine ⟨j, ?_, hj.symm⟩
-  by_contra hlt
-  rw [not_le] at hlt
-  have hmono := degreeOf_sortedByYDegree_strictMono hB hlt
-  simp only at hmono
-  rw [← hj] at hdeg
-  exact absurd hdeg (not_le.mpr hmono)
-
 /-- **The non-circular Lazard descent step.** Let
 `fi = sorted i`, `fj = sorted i1` with `i < i1` *immediate* (every `j < i1` has `j ≤ i`, `hsucc`).
 Given the induction hypothesis `C(gᵢ) ∣ lazardView (sorted j)` for **all** `j ≤ i` (`hIH`, which in
