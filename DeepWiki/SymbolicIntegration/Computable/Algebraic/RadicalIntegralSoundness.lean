@@ -41,30 +41,6 @@ theorem isRadicalRationalIntegral_radGen (n : ℕ) (f : α) :
   show CPolyG.toPolyG (radDeriv n (([f] : RadElem α).headD CField.zero) radGen) = _
   rw [List.headD_cons, toPolyG_radDeriv_radGen]
 
-/-! ### A general degree-`< n` antiderivative: `D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁ℓ)·y` -/
-
-/-- The diagonal-derivation identity for a two-term antiderivative:
-`toPolyG (radDeriv n f [a₀, a₁]) = toPolyG [D(a₀), D(a₁) + a₁·ℓ]` with `ℓ = logDerRadicand n f`, i.e.
-`D(a₀ + a₁y) = D(a₀) + (D(a₁) + a₁·ℓ)·y` in `K[X]`. -/
-theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
-    CPolyG.toPolyG (radDeriv n f ([a₀, a₁] : RadElem α))
-      = CPolyG.toPolyG ([CDiffField.cderiv a₀,
-          CField.add (CDiffField.cderiv a₁) (CField.mul a₁ (logDerRadicand n f))] : RadElem α) := by
-  rw [toPolyG_radDeriv]
-  -- read `toPolyG [a₀, a₁] = C(toK a₀) + C(toK a₁)·X` and the target coefficients through `toK`
-  have hv : CPolyG.toPolyG ([a₀, a₁] : RadElem α)
-      = Polynomial.C (CFieldSpec.toK a₀) + Polynomial.C (CFieldSpec.toK a₁) * X := by
-    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]; ring
-  -- `implicitDeriv` is a `Derivation`: `D(C a₀ + C a₁·X) = D(C a₀) + (C a₁·D X + X·D(C a₁))` (Leibniz on
-  -- the product, additive on the sum); `D(C b) = C b'`, `D X = C(toK ℓ)·X`.
-  rw [hv, map_add, Derivation.leibniz, Differential.implicitDeriv_C, Differential.implicitDeriv_C,
-    Differential.implicitDeriv_X, smul_eq_mul, smul_eq_mul]
-  -- the RHS coefficients, expanded through the `toK` homomorphism laws and `toK_cderiv`
-  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
-    CFieldSpec.toK_add, CFieldSpec.toK_mul, CDiffFieldSpec.toK_cderiv, CDiffFieldSpec.toK_cderiv,
-    map_add, map_mul]
-  ring
-
 /-- A two-term radical element integrates its computed diagonal derivative. -/
 theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
     IsRadicalRationalIntegral n [f]

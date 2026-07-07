@@ -109,6 +109,23 @@ theorem toPolyG_radDeriv_radGen (n : ℕ) (f : α) :
   rw [toPolyG_radDeriv, toPolyG_radGen, Differential.implicitDeriv_X,
     toPolyG_zero_cons (logDerRadicand n f)]
 
+/-- The two-term radical derivative has diagonal coefficients. -/
+theorem toPolyG_radDeriv_linear (n : ℕ) (f a₀ a₁ : α) :
+    CPolyG.toPolyG (radDeriv n f ([a₀, a₁] : RadElem α))
+      = CPolyG.toPolyG ([CDiffField.cderiv a₀,
+          CField.add (CDiffField.cderiv a₁) (CField.mul a₁ (logDerRadicand n f))] : RadElem α) := by
+  rw [toPolyG_radDeriv]
+  -- Read `a₀ + a₁X` in `K[X]` before applying the implicit derivation.
+  have hv : CPolyG.toPolyG ([a₀, a₁] : RadElem α)
+      = Polynomial.C (CFieldSpec.toK a₀) + Polynomial.C (CFieldSpec.toK a₁) * X := by
+    rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero]; ring
+  rw [hv, map_add, Derivation.leibniz, Differential.implicitDeriv_C, Differential.implicitDeriv_C,
+    Differential.implicitDeriv_X, smul_eq_mul, smul_eq_mul]
+  rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero,
+    CFieldSpec.toK_add, CFieldSpec.toK_mul, CDiffFieldSpec.toK_cderiv, CDiffFieldSpec.toK_cderiv,
+    map_add, map_mul]
+  ring
+
 /-! ### Additivity: `radDeriv` commutes with `radAdd` -/
 
 /-- `radDeriv` is additive: `toPolyG (radDeriv n f (radAdd a b)) = toPolyG (radDeriv n f a) +
