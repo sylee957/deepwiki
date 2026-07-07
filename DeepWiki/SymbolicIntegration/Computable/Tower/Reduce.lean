@@ -5,8 +5,8 @@ import DeepWiki.SymbolicIntegration.Computable.Hyperexp.ExampleData
 
 /-! # Tower-level demos for the `QFunNZG` gcd-cancel reducer `qReduce`
 `qReduce` divides a fraction's numerator and denominator by their monic gcd, preserving the field value
-(`toQFunNZG_qReduce`). These demos show it shrinks a swollen product and unblocks a hyperexponential
-residual that otherwise chokes `crischDESolve`. -/
+(`toQFunNZG_qReduce`). These examples show it shrinks a swollen product and lets a hyperexponential
+residual solver see a reduced constant residual. -/
 
 open Polynomial
 
@@ -14,7 +14,7 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute
 
-/-! ### SWELL demo: `qReduce` shrinks an unreduced product, value unchanged
+/-! ### Product-size example: `qReduce` shrinks an unreduced product
 
 `qmulNZG (t/(t−1)) ((t−1)/t)` stores the constant `1` as `(t·(t−1))/((t−1)·t)` (num/den length 3);
 `qReduce` cancels to `1/1` (length 1) with the field value unchanged. -/
@@ -65,17 +65,17 @@ Since `qReduce` preserves the field value, it preserves the zero test `isZeroNZG
 
 end QFunNZG
 
-/-! ### STRETCH demo: `qReduce` unblocks a hyperexponential residual that chokes `crischDESolve`
+/-! ### Residual-solver example: `qReduce` exposes a constant residual
 
 A residual that is the value `1` stored as `(2x)/(2x)` makes `crischDESolve 0 R` return `none`
-(`Rstuck_unreduced_chokes`); after `qReduce` collapses it to `1/1` the base solve succeeds, recovering
-`∫1 = x` (`Rstuck_reduced_solves`). The choke is representational and `qReduce` unblocks it. -/
+(`Rstuck_unreduced_returns_none`); after `qReduce` collapses it to `1/1` the base solve succeeds,
+recovering `∫1 = x` (`Rstuck_reduced_solves`). The obstruction is representational. -/
 
 namespace QFunNZG
 
 open CPolyG
 
-/-! #### The choke/unblock: an unreduced residual `crischDESolve` can't solve until `qReduce` -/
+/-! #### The unreduced and reduced residual cases -/
 
 /-- The residual `1 ∈ ℚ(x)` stored unreduced as `(2x)/(2x)` via `qmulNZG (2x/1) (1/(2x))` (num and den
 both length 2). -/
@@ -89,19 +89,19 @@ theorem Rstuck_eq_one : CField.isZero (CField.sub Rstuck (CField.one : QFunNZG �
 /-- `Rstuck`'s stored denominator is swollen: length 2 (`2x`, not the reduced `1`). -/
 theorem Rstuck_den_swollen : (CPolyG.cnormG Rstuck.1.2 : List ℚ).length = 2 := by native_decide
 
-/-- The unreduced residual chokes `crischDESolve`: `crischDESolve 0 Rstuck` returns `none` even though
-`Rstuck = 1`, tripped by the spurious `2x` denominator. -/
-theorem Rstuck_unreduced_chokes :
+/-- The unreduced residual makes `crischDESolve 0 Rstuck` return `none` even though `Rstuck = 1`,
+because the stored denominator is the spurious factor `2x`. -/
+theorem Rstuck_unreduced_returns_none :
     CRischField.crischDESolve (CField.zero : QFunNZG ℚ) Rstuck = none := by native_decide
 
-/-- `qReduce` unblocks the residual: `crischDESolve 0 (qReduce Rstuck)` returns `some y` with `y = x`,
+/-- The reduced residual solves: `crischDESolve 0 (qReduce Rstuck)` returns `some y` with `y = x`,
 recovering `∫1 = x`. -/
 theorem Rstuck_reduced_solves :
     (match CRischField.crischDESolve (CField.zero : QFunNZG ℚ) (qReduce Rstuck) with
       | some y => CField.isZero (CField.sub y nLvl1X)
       | none => false) = true := by native_decide
 
-#print axioms Rstuck_unreduced_chokes
+#print axioms Rstuck_unreduced_returns_none
 #print axioms Rstuck_reduced_solves
 
 end QFunNZG
