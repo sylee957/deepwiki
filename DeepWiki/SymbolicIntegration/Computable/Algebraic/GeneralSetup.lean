@@ -21,7 +21,7 @@ variable [CFieldSpec α]
 /-- `afFy` reads as the formal derivative through `toPolyG`. -/
 theorem derivative_toPolyG_eq_afFy (f : CPolyG α) :
     Polynomial.derivative (toPolyG f) = toPolyG (afFy f) := by
-  rw [afFy, toPolyG_cderivG]
+  simp only [afFy, denote]
 
 end AfFyDenote
 
