@@ -41,16 +41,12 @@ theorem inFieldIntegrable_iff [CharZero K] {f : RatFunc K} {g A D : K[X]}
   · intro hA; exact ⟨hA, inFieldIntegral_spec hA hf⟩
   · exact fun h => h.1
 
-/-- The constructive in-field-integral: `A = 0` ⟹ the Hermite quotient `g` is the antiderivative,
-`(algebraMap g)′ = f`. -/
 example {f : RatFunc K} {g A D : K[X]} (hA : A = 0)
     (hf : f = (algebraMap K[X] (RatFunc K) g)′
           + algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) D) :
     (algebraMap K[X] (RatFunc K) g)′ = f :=
   inFieldIntegral_spec hA hf
 
-/-- The in-field integrability decision-with-witness: `f` integrable iff `A = 0`, witness the Hermite
-quotient `g`. -/
 example [CharZero K] {f : RatFunc K} {g A D : K[X]} (hD : Squarefree D) (hAD : IsCoprime A D)
     (hdeg : A.degree < D.degree)
     (hf : f = (algebraMap K[X] (RatFunc K) g)′
