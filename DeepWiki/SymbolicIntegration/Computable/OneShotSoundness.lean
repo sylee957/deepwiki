@@ -124,7 +124,8 @@ theorem toPolyG_cmonomialDeriv_one : toPolyG
     (CPolyG.cmonomialDeriv ([CField.one] : CPolyG α) ([CField.one] : CPolyG α)) = 0 := by
   rw [toPolyG_cmonomialDeriv]
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, map_one, mul_zero, add_zero]
+    simp only [denote]
+    simp
   rw [hone]
   exact Derivation.map_one_eq_zero _
 
