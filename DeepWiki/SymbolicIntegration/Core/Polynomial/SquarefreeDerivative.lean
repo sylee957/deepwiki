@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Polynomial.Derivative
+import Mathlib.FieldTheory.Perfect
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 
 /-! # Polynomial derivative divisibility
@@ -68,5 +69,10 @@ theorem pow_succ_dvd_iff {A P : R[X]} {n : ℕ} (hn : 0 < n) (hP : Prime P)
     fun h => pow_succ_dvd_of_pow_dvd_derivative hn hP hPdeg h.1 h.2⟩
 
 end CharZero
+
+/-- Over a characteristic-`0` field, `A` is squarefree iff `IsCoprime A (dA/dx)`. -/
+theorem squarefree_iff_isCoprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
+    Squarefree A ↔ IsCoprime A (derivative A) :=
+  PerfectField.separable_iff_squarefree.symm.trans (separable_def A)
 
 end DeepWiki.SymbolicIntegration

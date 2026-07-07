@@ -1,5 +1,4 @@
 import Mathlib.Algebra.Polynomial.Derivative
-import Mathlib.FieldTheory.Perfect
 import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
@@ -16,11 +15,6 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 variable {R : Type*} [CommRing R]
-
-/-- Over a characteristic-`0` field, `A` is squarefree iff `IsCoprime A (dA/dx)`. -/
-theorem squarefree_iff_isCoprime_derivative {K : Type*} [Field K] [CharZero K] {A : K[X]} :
-    Squarefree A ↔ IsCoprime A (derivative A) :=
-  PerfectField.separable_iff_squarefree.symm.trans (separable_def A)
 
 section Deflation
 open UniqueFactorizationMonoid
