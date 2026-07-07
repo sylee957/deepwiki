@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
-import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerCorrectG
+import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalPoleOrderDrop
 
 /-! # The `K(t)`-valuation calculus for normal poles
 
