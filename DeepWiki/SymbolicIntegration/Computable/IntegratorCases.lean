@@ -273,7 +273,8 @@ theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
         = fieldFrac a d) :
     IsIntegralResultG ([CField.one] : CPolyG α) a d res := by
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
+    simp only [denote]
+    simp
   exact cIntegrateCase_primitive_sound ([CField.one] : CPolyG α) a d cands res qp
     (fieldFrac (crPoly ([CField.one] : CPolyG α) a d) [CField.one])
     (by rw [hone]; exact one_ne_zero) hgden hb hqp hsome
