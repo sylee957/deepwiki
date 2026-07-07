@@ -195,7 +195,7 @@ theorem picOrder_X3p1_matches_cantor :
 
 end DeepWiki.SymbolicIntegration
 
-/-! ## The point-list Picard-group-law milestone (`native_decide`) -/
+/-! ## Point-list Picard group law validation (`native_decide`) -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -220,11 +220,10 @@ theorem light_picard_group_law_validates :
         = cantorOrder 60 (polyToZMod 11 hypRhoX3p1) 1 (mumfordReduceModP 11 hypPt23) := by
   native_decide
 
-/-! ## Scope
+/-! ## Representation boundary
 
 The point-list layer supplies the class representation and the individual-order reader; the reduction
 engine is reused from the hyperelliptic Cantor `cantorCompose`/`cantorReduce` via the `ptToMum`/`mumToPts`
-round-trip. A fully self-contained point-list reduction, and the non-hyperelliptic general case (a plane
-curve with no explicit `y² = ρ` involution), build on top. -/
+round-trip. Non-hyperelliptic plane curves use the separate `L(D)` linear-solve representation. -/
 
 end DeepWiki.SymbolicIntegration
