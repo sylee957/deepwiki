@@ -109,7 +109,9 @@ theorem toPolyG_cresultantWf (p q : CPolyG α) :
     have hcz' : cisZeroG (cnormG q) = true := hcz
     have hp1' : (cnormG p : List α).length ≤ 1 := hp1
     have hqnil : cnormG q = [] := by simpa [cisZeroG, cnormG_idem] using hcz'
-    have hq0 : toPolyG q = 0 := by rw [← toPolyG_cnormG, hqnil, toPolyG_nil]
+    have hq0 : toPolyG q = 0 := by
+      have hnorm := congrArg toPolyG hqnil
+      simpa only [denote, toPolyG_nil] using hnorm
     have hdq : cdegG q = 0 := by simp [cdegG, hqnil]
     have hdp : cdegG p = 0 := by simp only [cdegG]; omega
     have hval : cresultantWf p q = CField.one := by
@@ -122,7 +124,9 @@ theorem toPolyG_cresultantWf (p q : CPolyG α) :
     have hcz' : cisZeroG (cnormG q) = true := hcz
     have hp1' : ¬ (cnormG p : List α).length ≤ 1 := hp1
     have hqnil : cnormG q = [] := by simpa [cisZeroG, cnormG_idem] using hcz'
-    have hq0 : toPolyG q = 0 := by rw [← toPolyG_cnormG, hqnil, toPolyG_nil]
+    have hq0 : toPolyG q = 0 := by
+      have hnorm := congrArg toPolyG hqnil
+      simpa only [denote, toPolyG_nil] using hnorm
     have hdq : cdegG q = 0 := by simp [cdegG, hqnil]
     have hdp : cdegG p ≠ 0 := by simp only [cdegG]; omega
     have hval : cresultantWf p q = CField.zero := by
