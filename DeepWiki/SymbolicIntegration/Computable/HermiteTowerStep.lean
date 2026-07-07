@@ -99,8 +99,8 @@ theorem fieldFrac_step_add (g1 g2 b Vpow : CPolyG α)
     (hg2 : toPolyG g2 ≠ 0) (hVpow : toPolyG Vpow ≠ 0) :
     amG α (toPolyG (caddG (cmulG g1 Vpow) (cmulG b g2))) / amG α (toPolyG (cmulG g2 Vpow))
       = amG α (toPolyG g1) / amG α (toPolyG g2) + amG α (toPolyG b) / amG α (toPolyG Vpow) := by
-  rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG, map_add, map_mul, map_mul, map_mul,
-    div_add_div _ _ (amG_toPolyG_ne_zero hg2) (amG_toPolyG_ne_zero hVpow)]
+  simp only [denote, map_add, map_mul]
+  rw [div_add_div _ _ (amG_toPolyG_ne_zero hg2) (amG_toPolyG_ne_zero hVpow)]
   ring
 
 open QFunNZG in
@@ -201,7 +201,7 @@ theorem hermiteTowerStep_field_identity (Dt gnum gden a d hNum Dstar : CPolyG α
         + amG α (toPolyG hNum) / amG α (toPolyG Dstar)
       = amG α (toPolyG a) / amG α (toPolyG d) := by
   rw [towerFractionFieldDerivG_div]
-  simp only [toPolyG_csubG, toPolyG_cmulG, toPolyG_cmonomialDeriv, map_sub, map_mul] at hexact ⊢
+  simp only [denote, map_sub, map_mul] at hexact ⊢
   set Dg := Differential.implicitDeriv (toPolyG Dt)
   -- `⟦hNum/Dstar⟧ = ⟦resNum/resDen⟧` from the exact-division relation.
   have hgden2 : amG α (toPolyG gden) ^ 2 ≠ 0 := pow_ne_zero _ hgden
