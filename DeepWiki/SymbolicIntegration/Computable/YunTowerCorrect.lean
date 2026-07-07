@@ -473,10 +473,14 @@ theorem toPolyG_cdivWf_pow_mul (d v : CPolyG α) (i : ℕ) (hv : toPolyG v ≠ 0
   have hcn : cnormG (cpowG v i) ≠ [] := by
     intro h
     have hz : toPolyG (cpowG v i) = 0 := (cisZeroG_iff _).mp (by simp [cisZeroG, h])
-    rw [toPolyG_cpowG] at hz; exact pow_ne_zero i hv hz
-  have hd2 : toPolyG (cpowG v i) ∣ toPolyG d := by rw [toPolyG_cpowG]; exact hdvd
+    simp only [denote] at hz
+    exact pow_ne_zero i hv hz
+  have hd2 : toPolyG (cpowG v i) ∣ toPolyG d := by
+    simp only [denote]
+    exact hdvd
   have h := toPolyG_cdivWf_exact d (cpowG v i) hcn hd2
-  rwa [toPolyG_cpowG] at h
+  simp only [denote] at h
+  exact h
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- **Each tower Yun factor is coprime to its derivative** (squarefree ⟹ coprime to `v'`, char 0). -/
