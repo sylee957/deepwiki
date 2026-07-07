@@ -100,7 +100,8 @@ theorem tower_special_identityLrt (Dt fp qp : CPolyG (QFunNZG β)) (hDt : toPoly
     towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = fieldFrac fp [CField.one] := by
   have hpoly := towerPolyIntegrateLrt_sound CField.one fp qp h
   rw [CFieldSpec.toK_one, Polynomial.C_1] at hpoly
-  have hone : toPolyG ([CField.one] : CPolyG (QFunNZG β)) = 1 := toPolyG_one_singleton
+  have hone : toPolyG ([CField.one] : CPolyG (QFunNZG β)) = 1 := by
+    simp only [denote, map_one, mul_zero, add_zero]
   have hbridge : towerFractionFieldDerivG Dt (QFunNZG.amG (QFunNZG β) (toPolyG qp))
       = QFunNZG.amG (QFunNZG β) (Differential.implicitDeriv (toPolyG Dt) (toPolyG qp)) := by
     have hd := towerFractionFieldDerivG_div Dt (toPolyG qp) 1
@@ -147,7 +148,7 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := QFunNZG β
       obtain ⟨rfl, rfl⟩ := hhook
       have hDt1 : toPolyG Dt = 1 := by
         have hh := (cisZeroG_iff (csubG Dt [CField.one])).mp hDt1g
-        simpa only [denote, toPolyG_one_singleton, sub_eq_zero] using hh
+        simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
       refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], ?_, ?_⟩
       · simp only [denote, mul_zero, add_zero]
         exact one_ne_zero
