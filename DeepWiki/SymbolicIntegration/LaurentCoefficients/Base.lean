@@ -2,7 +2,7 @@ import Mathlib.Algebra.MvPolynomial.Derivation
 import Mathlib.Algebra.MvPolynomial.Eval
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Algebra.Polynomial.Taylor
-import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
+import DeepWiki.SymbolicIntegration.Core.Differential.DiffPolyFractionDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
