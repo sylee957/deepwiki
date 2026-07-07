@@ -278,7 +278,9 @@ theorem toPolyG_yunEntry_YunInv [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
         (cderivG (cdivWf p (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)))))) := by
   set A := toPolyG p with hAdef
   set g := CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p) with hgdef
-  have hA'poly : toPolyG (cderivG p) = derivative A := by rw [toPolyG_cderivG, hAdef]
+  have hA'poly : toPolyG (cderivG p) = derivative A := by
+    simp only [denote]
+    rw [hAdef]
   set G := gcd A (derivative A) with hGdef
   have hG0 : G ≠ 0 := fun h => hp0 (zero_dvd_iff.mp (h ▸ gcd_dvd_left A (derivative A)))
   -- `toPolyG g ~ G`, hence `toPolyG g = C k · G` for a unit `k`.
