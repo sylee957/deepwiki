@@ -31,6 +31,22 @@ theorem derivation_ext_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Fie
   rw [smul_eq_mul, smul_eq_mul] at key
   exact mul_left_cancel₀ hbne key
 
+/-- A derivation on a fraction field `K` of `R` is unique if it extends the derivation on `R`. -/
+theorem unique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
+    [Algebra R K] [IsFractionRing R K] [Differential R] {Δ₁ Δ₂ : Derivation ℤ K K}
+    (h₁ : ∀ a : R, Δ₁ (algebraMap R K a) = algebraMap R K (a′))
+    (h₂ : ∀ a : R, Δ₂ (algebraMap R K a) = algebraMap R K (a′)) : Δ₁ = Δ₂ :=
+  derivation_ext_fractionRing (R := R) fun a => (h₁ a).trans (h₂ a).symm
+
+/-- A compatible differential structure on a fraction field gives the unique extending derivation. -/
+theorem existsUnique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
+    [Algebra R K] [IsFractionRing R K] [Differential R] [Differential K]
+    [DifferentialAlgebra R K] :
+    ∃! Δ : Derivation ℤ K K, ∀ a : R, Δ (algebraMap R K a) = algebraMap R K (a′) := by
+  refine ⟨Differential.deriv, fun a => ?_, fun Δ hΔ => ?_⟩
+  · rw [deriv_algebraMap]
+  · exact unique_derivation_fractionRing (R := R) hΔ (fun a => by rw [deriv_algebraMap])
+
 /-- A derivation on `R[X]` is determined by its values on constants and on `X`. -/
 theorem derivation_polynomial_ext {R : Type*} [CommRing R] {Δ₁ Δ₂ : Derivation ℤ R[X] R[X]}
     (hC : ∀ c : R, Δ₁ (Polynomial.C c) = Δ₂ (Polynomial.C c))

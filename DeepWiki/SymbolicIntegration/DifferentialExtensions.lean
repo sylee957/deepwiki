@@ -13,26 +13,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-section FractionField
-
-/-- A derivation on a fraction field `K` of `R` is unique if it extends the derivation on `R`. -/
-theorem unique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
-    [Algebra R K] [IsFractionRing R K] [Differential R] {Δ₁ Δ₂ : Derivation ℤ K K}
-    (h₁ : ∀ a : R, Δ₁ (algebraMap R K a) = algebraMap R K (a′))
-    (h₂ : ∀ a : R, Δ₂ (algebraMap R K a) = algebraMap R K (a′)) : Δ₁ = Δ₂ :=
-  derivation_ext_fractionRing (R := R) fun a => (h₁ a).trans (h₂ a).symm
-
-/-- A compatible differential structure on a fraction field gives the unique extending derivation. -/
-theorem existsUnique_derivation_fractionRing {R K : Type*} [CommRing R] [IsDomain R] [Field K]
-    [Algebra R K] [IsFractionRing R K] [Differential R] [Differential K]
-    [DifferentialAlgebra R K] :
-    ∃! Δ : Derivation ℤ K K, ∀ a : R, Δ (algebraMap R K a) = algebraMap R K (a′) := by
-  refine ⟨Differential.deriv, fun a => ?_, fun Δ hΔ => ?_⟩
-  · rw [deriv_algebraMap]
-  · exact unique_derivation_fractionRing (R := R) hΔ (fun a => by rw [deriv_algebraMap])
-
-end FractionField
-
 section Algebraic
 
 /-- `(aeval α P)' = aeval α (κ_D P) + aeval α P.derivative * α'` in a differential algebra. -/
