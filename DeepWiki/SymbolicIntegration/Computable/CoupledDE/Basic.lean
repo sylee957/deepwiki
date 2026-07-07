@@ -594,7 +594,7 @@ theorem toPoly2_twoT :
   rw [toPoly2_cons, toPoly2_cons, toPoly2_nil]
   simp only [toPolyG_nil, map_zero, mul_zero, add_zero, zero_add]
   rw [show toPolyG ([2] : CPolyG ℚ) = Polynomial.C 2 by
-    rw [show ([2] : CPolyG ℚ) = (2 : ℚ) :: ([] : CPolyG ℚ) from rfl, toPolyG_cons, toPolyG_nil]
+    simp only [denote]
     simp [CFieldSpec.toK]]
   ring
 
