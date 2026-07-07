@@ -99,6 +99,7 @@ theorem cdivWf_natDegree_add (p q : CPolyG α) (hp : cnormG p ≠ []) (hq : cnor
 
 /-- Sylvester-resultant identity for `cresultantWf`:
 `toK (cresultantWf p q) = Polynomial.resultant (toPolyG p) (toPolyG q) (deg p) (deg q)`. -/
+@[denote]
 theorem toPolyG_cresultantWf (p q : CPolyG α) :
     CFieldSpec.toK (cresultantWf p q)
       = Polynomial.resultant (toPolyG p) (toPolyG q) (cdegG p) (cdegG q) := by

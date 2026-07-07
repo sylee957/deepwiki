@@ -37,7 +37,8 @@ theorem toK_cresultantWf_cAmcDdG_eq_eval (Dt a d : CPolyG α) (c : α)
   have hEdeg : (toPolyG a - C (CFieldSpec.toK c) * B).natDegree ≤ (toPolyG d).natDegree - 1 := by
     refine (natDegree_sub_le _ _).trans (max_le (by omega) ?_)
     exact (natDegree_C_mul_le _ _).trans hBdeg
-  rw [toPolyG_cresultantWf, rtResultantGen_eval, cdegG_eq_natDegree d,
+  simp only [denote]
+  rw [rtResultantGen_eval, cdegG_eq_natDegree d,
     cdegG_eq_natDegree (cAmcDdG Dt a d c), htE]
   obtain ⟨k, hk⟩ :
       ∃ k, (toPolyG d).natDegree - 1 = (toPolyG a - C (CFieldSpec.toK c) * B).natDegree + k :=
