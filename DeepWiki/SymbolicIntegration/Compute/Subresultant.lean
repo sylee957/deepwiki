@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Compute.RtResultant
 /-! # Computable bivariate subresultant gcd / log argument over `ℚ[t]`
 The logarithmic part puts `S(t,x) = gcd_x(D(x), A(x) − t·D'(x))` inside the logarithms of
 `∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`. This bivariate `ℚ[t][x]` gcd is computed by the subresultant
-polynomial-remainder sequence over the non-field ring `ℚ[t]`, on a `#eval`-able carrier
+polynomial-remainder sequence over the non-field ring `ℚ[t]`, on an executable carrier
 `BPoly := List CPoly`. Agreement with the noncomputable `lrtSubresultant` is proven in
 `SubresultantCorrectness`. -/
 
