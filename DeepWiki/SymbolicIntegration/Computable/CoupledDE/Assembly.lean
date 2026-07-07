@@ -211,7 +211,7 @@ theorem coeff_residual_zero_of_ge (b1 ab2 y1 y2 : CPolyG ℚ) (d nrows r : ℕ)
     (toPolyG (cderivQ y1)).coeff r + (toPolyG (cmulG b1 y1)).coeff r
         + (toPolyG (cmulG ab2 y2)).coeff r = 0 := by
   have hderiv : (toPolyG (cderivQ y1)).coeff r = 0 := by
-    rw [cderivQ, toPolyG_cderivG]
+    simp only [cderivQ, denote]
     apply Polynomial.coeff_eq_zero_of_natDegree_lt
     exact lt_of_le_of_lt (Polynomial.natDegree_derivative_le _) (by omega)
   have hb1y1 : (toPolyG (cmulG b1 y1)).coeff r = 0 := by
