@@ -8,7 +8,7 @@ The tower step of the recursive LRT Risch solver — the algebraic-residue analo
 `instLawfulRischLevelTower`. Given an LRT solver for the coefficient field `[LawfulRischLevelLrt β]`, build one
 for `(QFunNZG β)(t)`. The polynomial part's coefficient integration recurses into `LawfulRischLevelLrt β`'s
 log-free integrator `integrateRationalLrt` (descent-free `K`-level, by the ∀E ⇒ K bridge
-`integrateRationalLrt_sound`) — so the whole tower stays on the *dischargeable* LRT track (its reduced frontier
+`integrateRationalLrt_sound`) — so the whole tower stays on the LRT track (its reduced frontier
 is `PrimitiveFrontierLrt`, not the undischargeable rational `PrimitiveFrontier`).
 
 Everything reuses the *generic* degree-raising coefficient recursion (`cIntegratePrimPolyDegRaiseG`,
@@ -74,11 +74,10 @@ def towerCoeffIntegrateSingleLrt (η c : QFunNZG β) : Option (QFunNZG β × QFu
   | some ((bn, bd), cc) => some (CField.div (qEmbedNumG bn) (qEmbedNumG bd), qEmbedNumG [cc])
   | none => (towerCoeffIntegrateLrt c).map fun b => (b, CField.zero)
 
-/-- The LRT tower step's polynomial-part integrator: the degree-raising Bronstein recursion
-`cIntegratePrimPolyDegRaiseG` (`IntegratePrimitivePolynomial`, Thm 5.8.1) with `towerCoeffIntegrateSingleLrt` as
-the single-`w` `limInt` (real `(b,c)` when the class provides `limitedIntegrateSingle`, else log-free `c = 0`).
-Soundness `D_tower(q) = p` is the telescoping `cIntegratePrimPolyDegRaiseG_sound` — no `limInt` correctness
-hypothesis, so it holds for the degree-raising `(b,c)` integrator too. -/
+/-- The LRT tower step's polynomial-part integrator: the degree-raising primitive-polynomial recursion
+`cIntegratePrimPolyDegRaiseG` with `towerCoeffIntegrateSingleLrt` as the single-`w` `limInt` (real `(b,c)` when
+the class provides `limitedIntegrateSingle`, else log-free `c = 0`). Soundness `D_tower(q) = p` is the
+telescoping `cIntegratePrimPolyDegRaiseG_sound` with no `limInt` correctness hypothesis. -/
 def towerPolyIntegrateLrt (η : QFunNZG β) (p : CPolyG (QFunNZG β)) : Option (CPolyG (QFunNZG β)) :=
   cIntegratePrimPolyDegRaiseG η (towerCoeffIntegrateSingleLrt η) (cdegG p + 2) p
 
@@ -162,7 +161,7 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := QFunNZG β
   · rw [if_neg hguard] at hhook; simp at hhook
 
 /-- The LRT tower step instance: `LawfulRischLevelLrt (QFunNZG β)` from a below-level LRT solver
-`[LawfulRischLevelLrt β]` and this level's *dischargeable* reduced frontier `[PrimitiveFrontierLrt (QFunNZG β)]`.
+`[LawfulRischLevelLrt β]` and this level's reduced LRT frontier `[PrimitiveFrontierLrt (QFunNZG β)]`.
 With the base (`instLawfulRischLevelLrtPrimitive`) the LRT solver resolves at every tower depth by recursion:
 the re-based recursion, now with a dischargeable frontier at every level. `specialSound` is the LRT coefficient
 recursion (`towerPrimitiveCaseLrt_specialSound`); `reducedSoundLrt` is `PrimitiveFrontierLrt.hreducedLrt`. -/
