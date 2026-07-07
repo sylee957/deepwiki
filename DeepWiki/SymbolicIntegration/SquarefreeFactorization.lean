@@ -4,6 +4,7 @@ import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
 import DeepWiki.SymbolicIntegration.AlgebraicPreliminaries
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
 
 /-! # Squarefree factorization via the derivative criterion
 The squarefree part and deflations of `A ∈ D[x]` are computed by gcds with `dA/dx`, since a prime
@@ -20,13 +21,6 @@ variable {R : Type*} [CommRing R]
 section Deflation
 open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
-
-open Classical in
-/-- Squarefree-factorization part `Aᵢ = ∏_{eₚ = i} P`: the product of the prime factors of `pp(A)`
-of multiplicity exactly `i`. -/
-noncomputable def sqfreeFactPart (A : D[X]) (i : ℕ) : D[X] :=
-  ∏ P ∈ (normalizedFactors A.primPart).toFinset.filter
-    (fun P => (normalizedFactors A.primPart).count P = i), P
 
 open Classical in
 /-- `(A⁻ⁱ)* · Aᵢ = (A⁻⁽ⁱ⁻¹⁾)*` (`1 ≤ i`): consecutive deflation squarefree parts differ exactly by
