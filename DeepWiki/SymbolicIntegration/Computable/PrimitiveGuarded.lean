@@ -40,7 +40,8 @@ omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZ
 derivative vanishes) implies `mapCoeffs (toPolyG fp) = 0` (coefficients are differential constants). -/
 theorem mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (fp : CPolyG α)
     (h : cisZeroG (cmapDeriv fp) = true) : Differential.mapCoeffs (toPolyG fp) = 0 := by
-  rw [← toPolyG_cmapDeriv]; exact (cisZeroG_iff _).mp h
+  have hzero : toPolyG (cmapDeriv fp) = 0 := (cisZeroG_iff _).mp h
+  simpa only [denote] using hzero
 
 omit [CFracGcdCoreWf α] in
 /-- **Generalized poly-RDE field identity for `toPolyG Dt = 1`.** The `Dt = [CField.one]` identity
