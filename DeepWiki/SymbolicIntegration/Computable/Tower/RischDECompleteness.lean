@@ -223,15 +223,17 @@ example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec
     (CRischField.crischDESolve b₀ c₀).isSome = true :=
   crischDESolve_isSome_of_complete hβ b₀ c₀ hsol
 
--- Wf STEP: the IH + the Wf per-level frontier give fuel-free wrapper completeness at level `n+1`.
+-- Wf step: the IH and per-level frontier give fuel-free wrapper completeness at level `n+1`.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
     (hβ : CRischFieldComplete β) (hstep : RischDEStepFrontierWf β) :
     CRischFieldCompleteWf β :=
   crischFieldCompleteWf_step hβ hstep
 
-/-! ### Axiom audit (the base case, the recursion-tie helper, and the Wf assembled step are
-axiom-clean; NO `native_decide`) -/
+/-! ### Axiom audit
+
+The base case, recursion-tie helper, and Wf assembled step are axiom-clean and do not rely on
+`native_decide`. -/
 
 
 end DeepWiki.SymbolicIntegration

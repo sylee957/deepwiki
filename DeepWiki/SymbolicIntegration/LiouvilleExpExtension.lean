@@ -738,8 +738,8 @@ example (u : F) (hnd : NondegenerateExp u) {v : RatFunc F}
     letI := expDifferential u
     v ∈ (algebraMap F[X] (RatFunc F)).range :=
   rationalToPoly_of_X_coprime u hnd hvpoly hcopX
--- ★ THE EXP `v∈F` STEP — PROVEN (the clean win): `v′ ∈ F ⟹ v ∈ F` OUTRIGHT (no surviving `b·t`,
--- unlike the log) via `NondegenerateExp` killing every Laurent coefficient `c_j` (`j ≠ 0`).
+-- The exp `v ∈ F` step: `v′ ∈ F` forces `v ∈ F`, with `NondegenerateExp` killing every
+-- nonzero Laurent coefficient `c_j`.
 example (u : F) (hnd : NondegenerateExp u) {v : RatFunc F}
     (hvpoly : letI := expDifferential u; v′ ∈ (algebraMap F (RatFunc F)).range) :
     letI := expDifferential u
@@ -749,15 +749,13 @@ example (u : F) (hnd : NondegenerateExp u) {v : RatFunc F}
 example (u : F) (hnd : NondegenerateExp u) {d : F[X]} (hm : d.Monic) (hdvd : d ∣ expDerivPoly u d) :
     d = Polynomial.X ^ d.natDegree :=
   eq_X_pow_of_dvd_expDerivPoly u hnd hm hdvd
--- THE EXP KEYSTONE: discharging the exp pole-matching `ExpFDataReduction u` yields the real
--- `IsLiouville F (RatFunc F)` instance — the setup + assembly are proven.
+-- The exp keystone: discharging `ExpFDataReduction u` gives `IsLiouville F (RatFunc F)`.
 example (u : F) (hred : ExpFDataReduction u) :
     letI := expDifferential u
     letI := expDifferentialAlgebra u
     IsLiouville F (RatFunc F) :=
   keystone u hred
--- ★ THE EXP KEYSTONE FROM THE SHARPER RESIDUAL: with the `v∈F` step PROVED, the keystone closes from
--- ONLY the `π≠X` pole-matching `ExpPoleMatching` (the `v`-term frontier is gone for the exponential).
+-- The sharper exp keystone: after the `v ∈ F` step, `π ≠ X` pole matching suffices.
 example (u : F) (hnd : NondegenerateExp u) (hpm : ExpPoleMatching u) :
     letI := expDifferential u
     letI := expDifferentialAlgebra u
