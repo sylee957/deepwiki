@@ -113,6 +113,15 @@ theorem lex_degree_apply_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
     rw [MonomialOrder.lex_le_iff] at hle
     exact apply_zero_le_of_toLex_le hle
 
+/-- Under lex, an order bound on leading monomials gives a bound on `y`-degrees. -/
+theorem degreeOf_le_of_lex_degree_le {K : Type*} [Field K] {bg R : MvPolynomial (Fin 2) K}
+    (hbg : bg ≠ 0) (hR : R ≠ 0)
+    (hle : MonomialOrder.lex.degree bg ≼[MonomialOrder.lex] MonomialOrder.lex.degree R) :
+    degreeOf 0 bg ≤ degreeOf 0 R := by
+  rw [MonomialOrder.lex_le_iff] at hle
+  have := apply_zero_le_of_toLex_le hle
+  rwa [lex_degree_apply_zero hbg, lex_degree_apply_zero hR] at this
+
 /-- The `K[x][y]` view of a bivariate polynomial (`y = variable 0`): `finSuccEquiv K 1 f`. -/
 noncomputable def lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     Polynomial (MvPolynomial (Fin 1) K) :=
@@ -174,6 +183,16 @@ theorem leadingYCoeff_mul {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
   rw [leadingYCoeff, leadingYCoeff, leadingYCoeff, lazardView, lazardView, lazardView, map_mul,
     Polynomial.leadingCoeff_mul]
 
+/-- A factor's `y`-degree is dominated by the product's `y`-degree. -/
+theorem degreeOf_le_degreeOf_mul {K : Type*} [Field K] {g b : MvPolynomial (Fin 2) K}
+    (hne : g * b ≠ 0) : degreeOf 0 b ≤ degreeOf 0 (g * b) := by
+  have hg : g ≠ 0 := fun h0 => hne (by rw [h0, zero_mul])
+  have hb : b ≠ 0 := fun h0 => hne (by rw [h0, mul_zero])
+  rw [← natDegree_lazardView, ← natDegree_lazardView, lazardView, lazardView, map_mul,
+    Polynomial.natDegree_mul (by rwa [← lazardView, Ne, lazardView_eq_zero_iff])
+      (by rwa [← lazardView, Ne, lazardView_eq_zero_iff])]
+  exact Nat.le_add_left _ _
+
 -- Restatements against the intended wording.
 example {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) : d ≤ d' ∨ d' ≤ d :=
   finsupp_fin_two_le_or_le_of_apply_eq h
@@ -181,6 +200,12 @@ example {d d' : Fin 2 →₀ ℕ} (h : d 1 = d' 1) : d ≤ d' ∨ d' ≤ d :=
 example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
     (MonomialOrder.lex.degree f) 0 = degreeOf 0 f :=
   lex_degree_apply_zero hf
+
+example {K : Type*} [Field K] {bg R : MvPolynomial (Fin 2) K}
+    (hbg : bg ≠ 0) (hR : R ≠ 0)
+    (hle : MonomialOrder.lex.degree bg ≼[MonomialOrder.lex] MonomialOrder.lex.degree R) :
+    degreeOf 0 bg ≤ degreeOf 0 R :=
+  degreeOf_le_of_lex_degree_le hbg hR hle
 
 example {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     (lazardView f).natDegree = degreeOf 0 f :=
@@ -197,6 +222,10 @@ example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
 example {K : Type*} [Field K] (f g : MvPolynomial (Fin 2) K) :
     leadingYCoeff (f * g) = leadingYCoeff f * leadingYCoeff g :=
   leadingYCoeff_mul f g
+
+example {K : Type*} [Field K] {g b : MvPolynomial (Fin 2) K}
+    (hne : g * b ≠ 0) : degreeOf 0 b ≤ degreeOf 0 (g * b) :=
+  degreeOf_le_degreeOf_mul hne
 
 /-! ## The `y`-shift toolbox
 

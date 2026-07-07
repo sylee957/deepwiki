@@ -63,28 +63,6 @@ theorem leadingYCoeff_sortedByYDegree_dvd_of_le {K : Type*} [Field K]
   · exact leadingYCoeff_sortedByYDegree_dvd_of_lt hB h
   · rw [h]
 
-/-- **A factor's `y`-degree is dominated by the product's**: `degreeOf 0 b ≤ degreeOf 0 (g * b)` for
-`g * b ≠ 0` (`natDegree` of the `K[x][y]` product adds, both factors nonzero). -/
-theorem degreeOf_le_degreeOf_mul {K : Type*} [Field K] {g b : MvPolynomial (Fin 2) K}
-    (hne : g * b ≠ 0) : degreeOf 0 b ≤ degreeOf 0 (g * b) := by
-  have hg : g ≠ 0 := fun h0 => hne (by rw [h0, zero_mul])
-  have hb : b ≠ 0 := fun h0 => hne (by rw [h0, mul_zero])
-  rw [← natDegree_lazardView, ← natDegree_lazardView, lazardView, lazardView, map_mul,
-    Polynomial.natDegree_mul (by rwa [← lazardView, Ne, lazardView_eq_zero_iff])
-      (by rwa [← lazardView, Ne, lazardView_eq_zero_iff])]
-  exact Nat.le_add_left _ _
-
-/-- **Under lex, the division-algorithm degree bound becomes a `y`-degree bound**: from
-`m.degree bg ≼[lex] m.degree R` (a `div_set` summand bound) with `bg, R ≠ 0`, the `y`-degree
-`degreeOf 0 bg ≤ degreeOf 0 R`. -/
-theorem degreeOf_le_of_lex_degree_le {K : Type*} [Field K] {bg R : MvPolynomial (Fin 2) K}
-    (hbg : bg ≠ 0) (hR : R ≠ 0)
-    (hle : MonomialOrder.lex.degree bg ≼[MonomialOrder.lex] MonomialOrder.lex.degree R) :
-    degreeOf 0 bg ≤ degreeOf 0 R := by
-  rw [MonomialOrder.lex_le_iff] at hle
-  have := apply_zero_le_of_toLex_le hle
-  rwa [lex_degree_apply_zero hbg, lex_degree_apply_zero hR] at this
-
 open scoped Classical in
 /-- **GB-reduction of an ideal member with `y`-degree control** (the combinatorial input to the
 descent). For a reduced Gröbner basis over lex and `R ∈ I`, `R = ∑ b ∈ B, (g b) · b` where every
