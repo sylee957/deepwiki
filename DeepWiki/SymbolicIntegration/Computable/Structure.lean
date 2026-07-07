@@ -72,7 +72,7 @@ def cLogRelationCoeffs (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Opti
 
 end CPolyG
 
-/-! ### Validation — the logarithmic-monomial structure decision over `ℚ(x)`
+/-! ### Logarithmic-monomial examples over `ℚ(x)`
 
 Logarithmic derivatives as `QFunNZG ℚ` values: `log(x) ⟹ 1/x`, `log(x²) ⟹ 2/x` (dependent, `2·(1/x)`),
 `log(x+1) ⟹ 1/(x+1)` (independent of `1/x`). -/
@@ -92,9 +92,8 @@ def structLogDerivX2 : QFunNZG ℚ := qFracStructG [2] [0, 1]
 `x+1 = [1,1]`. Independent of `1/x` over ℚ. -/
 def structLogDerivX1 : QFunNZG ℚ := qFracStructG [1] [1, 1]
 
--- **Sanity prints.** Against the existing monomial `log(x)` (`logDerivs = [1/x]`):
---   `log(x²)` (`w = 2/x`) is DEPENDENT (relation `2/x = 2·(1/x)`)  ⟹ `cLogIsNewMonomial = false`;
---   `log(x+1)` (`w = 1/(x+1)`) is a NEW monomial                  ⟹ `cLogIsNewMonomial = true`.
+-- Computed decisions against the existing monomial `log(x)` (`logDerivs = [1/x]`):
+-- `log(x²)` is dependent with relation `2/x = 2·(1/x)`, while `log(x+1)` is new.
 #eval CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX2   -- expect false
 #eval CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX1   -- expect true
 #eval CPolyG.cLogRelationCoeffs [structLogDerivX] structLogDerivX2  -- expect some [2]
@@ -115,13 +114,13 @@ theorem structureTheorem_example :
      && (match CPolyG.cLogRelationCoeffs [structLogDerivX] structLogDerivX2 with
          | some rs => structRelationCheck [structLogDerivX] structLogDerivX2 rs && (rs == [2])
          | none => false)
-     -- (2) `log(x+1)` is a NEW transcendental monomial over `C(x)(log x)`.
+     -- (2) `log(x+1)` is a new transcendental monomial over `C(x)(log x)`.
      && (CPolyG.cLogIsNewMonomial [structLogDerivX] structLogDerivX1 == true)) = true := by
   native_decide
 
 #print axioms structureTheorem_example
 
-/-! ### Validation — the exponential analogue
+/-! ### Exponential-monomial examples
 
 Over `C(x)(log x)`: `exp(b)` with `Db = 2/x` is not new (`Db = 2·(1/x)`), while `Db = 1/(x+1)` gives a
 new exponential monomial. -/
@@ -139,7 +138,7 @@ theorem expStructureTheorem_example :
 
 #print axioms expStructureTheorem_example
 
-/-! ### Validation — independence of `{log(x), log(x+1)}` and a multi-generator relation
+/-! ### Multi-generator logarithmic examples
 
 Over the 2-element tower `C(x)(log x, log(x+1))` (`1/x`, `1/(x+1)` ℚ-independent), `log(x²+x)` is
 dependent with relation `[1, 1]` (`1/x + 1/(x+1)`). -/
@@ -148,8 +147,8 @@ dependent with relation `[1, 1]` (`1/x + 1/(x+1)`). -/
 Numerator `2x+1 = [1,2]`, denominator `x²+x = [0,1,1]`. Equals `1·(1/x) + 1·(1/(x+1))`. -/
 def structLogDerivX2pX : QFunNZG ℚ := qFracStructG [1, 2] [0, 1, 1]
 
--- **Sanity prints.** Against the 2-element tower `[1/x, 1/(x+1)]`:
---   `log(x²+x)` (`(2x+1)/(x²+x)`) is DEPENDENT with relation `[1,1]` (`1/x + 1/(x+1)`).
+-- Computed decisions against the two-generator tower `[1/x, 1/(x+1)]`.
+-- `log(x²+x)` is dependent with relation `[1, 1]`.
 #eval CPolyG.cLogIsNewMonomial [structLogDerivX, structLogDerivX1] structLogDerivX2pX  -- false
 #eval CPolyG.cLogRelationCoeffs [structLogDerivX, structLogDerivX1] structLogDerivX2pX -- some [1,1]
 
