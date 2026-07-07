@@ -48,13 +48,13 @@ theorem leadingYCoeff_xyAddOne {K : Type*} [Field K] :
   rw [Polynomial.leadingCoeff, hd, Polynomial.coeff_add, Polynomial.coeff_C_mul,
     Polynomial.coeff_X_one, mul_one, Polynomial.coeff_one, if_neg (by decide), add_zero]
 
-/-- **`leadingYCoeff f₀` need not be a unit**: `xy + 1` has `leadingYCoeff = x`, not a unit of `K[x]`. -/
+/-- `leadingYCoeff f₀` need not be a unit: `xy + 1` has `leadingYCoeff = x`, not a unit of `K[x]`. -/
 theorem not_isUnit_leadingYCoeff_xyAddOne {K : Type*} [Field K] :
     ¬ IsUnit (leadingYCoeff (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K)) := by
   rw [leadingYCoeff_xyAddOne]
   exact fun h => leadingYCoeff_xyAddOne_not_dvd_one (isUnit_iff_dvd_one.mp h)
 
-/-- **The base divisibility `C(g₀) ∣ lazardView f₀` genuinely fails**: for `f = xy + 1`,
+/-- The base divisibility `C(g₀) ∣ lazardView f₀` genuinely fails: for `f = xy + 1`,
 `C(leadingYCoeff f) = C(x)` does not divide `lazardView f = C(x)·Y + 1`. -/
 theorem not_C_leadingYCoeff_dvd_lazardView_xyAddOne {K : Type*} [Field K] :
     ¬ Polynomial.C (leadingYCoeff (X 1 * X 0 + 1 : MvPolynomial (Fin 2) K))
@@ -84,7 +84,7 @@ abbrev HasLazardBaseDegreeZero {K : Type*} [Field K] {I : Ideal (MvPolynomial (F
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K))) : Prop :=
   ∀ i0 : Fin B.card, i0.val = 0 → degreeOf 0 (sortedByYDegree hB i0) = 0
 
-/-- **Lazard diagonal descent, strengthened induction**. Assuming the base divisibility
+/-- Lazard diagonal descent, strengthened induction. Assuming the base divisibility
 `C(g₀) ∣ lazardView f₀` at the minimal `y`-degree index, the divisibility
 `C(gᵢ) ∣ lazardView (sorted j)` holds for all `j ≤ i`. -/
 theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
@@ -123,7 +123,7 @@ theorem C_dvd_lazardView_sortedByYDegree_of_le {K : Type*} [Field K]
           leadingYCoeff_sortedByYDegree_dvd_of_le hB (le_of_lt hi'lt)
         exact dvd_trans (map_dvd Polynomial.C hchain) (hIH' j hji')
 
-/-- **The base divisibility from `f₀ ∈ K[x]`**: the `degreeOf 0 (sorted 0) = 0`
+/-- The base divisibility from `f₀ ∈ K[x]`: the `degreeOf 0 (sorted 0) = 0`
 base implies the weaker base divisibility. -/
 theorem baseDvd_of_degreeOf_zero {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
@@ -133,9 +133,9 @@ theorem baseDvd_of_degreeOf_zero {K : Type*} [Field K]
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i0)) ∣ lazardView (sortedByYDegree hB i0) :=
   C_dvd_lazardView_of_degreeOf_zero (hbase i0 hi0)
 
-/-- **Lazard diagonal descent**. Under the base divisibility,
+/-- Under the base divisibility,
 each sorted basis element satisfies `C(leadingYCoeff (sorted i)) ∣ lazardView (sorted i)`. -/
-theorem lazard_lemma3_dvd {K : Type*} [Field K]
+theorem C_dvd_lazardView_sortedByYDegree {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (hbase : HasLazardBaseDvd hB)
@@ -143,13 +143,13 @@ theorem lazard_lemma3_dvd {K : Type*} [Field K]
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
   C_dvd_lazardView_sortedByYDegree_of_le hB hbase i i le_rfl
 
-/-- **Lazard diagonal descent from `f₀ ∈ K[x]`**. -/
-theorem lazard_lemma3_dvd_of_degreeOf_zero {K : Type*} [Field K]
+/-- The degree-zero base condition gives sorted-basis divisibility by each leading `y`-coefficient. -/
+theorem C_dvd_lazardView_sortedByYDegree_of_degreeOf_zero {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (hbase : HasLazardBaseDegreeZero hB)
     (i : Fin B.card) :
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
-  lazard_lemma3_dvd hB (baseDvd_of_degreeOf_zero hB hbase) i
+  C_dvd_lazardView_sortedByYDegree hB (baseDvd_of_degreeOf_zero hB hbase) i
 
 end DeepWiki.SymbolicIntegration

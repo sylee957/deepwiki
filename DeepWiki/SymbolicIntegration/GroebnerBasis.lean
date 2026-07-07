@@ -170,7 +170,7 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     (hbase : HasLazardBaseDvd hB)
     (i : Fin B.card) :
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
-  lazard_lemma3_dvd hB hbase i
+  C_dvd_lazardView_sortedByYDegree hB hbase i
 
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}
@@ -178,7 +178,7 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     (hbase : HasLazardBaseDegreeZero hB)
     (i : Fin B.card) :
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
-  lazard_lemma3_dvd_of_degreeOf_zero hB hbase i
+  C_dvd_lazardView_sortedByYDegree_of_degreeOf_zero hB hbase i
 
 example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     {B : Finset (MvPolynomial (Fin 2) K)}

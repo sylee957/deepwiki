@@ -158,12 +158,12 @@ theorem degreeOf_min_eq_zero_of_hasNoCommonYFactor {K : Type*} [Field K]
   exact degreeOf_zero_iff_isUnit_primPart_lazardView.mpr hunit
 
 /-- Lazard descent divisibility follows from the no-common-`y`-factor condition. -/
-theorem lazard_lemma3_dvd_of_hasNoCommonYFactor {K : Type*} [Field K]
+theorem C_dvd_lazardView_sortedByYDegree_of_hasNoCommonYFactor {K : Type*} [Field K]
     {I : Ideal (MvPolynomial (Fin 2) K)} {B : Finset (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (hncf : HasNoCommonYFactor hB) (i : Fin B.card) :
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
-  lazard_lemma3_dvd_of_degreeOf_zero hB
+  C_dvd_lazardView_sortedByYDegree_of_degreeOf_zero hB
     (fun i0 hi0 => degreeOf_min_eq_zero_of_hasNoCommonYFactor hB hncf i0 hi0) i
 
 /-- Lazard factorization follows from the no-common-`y`-factor condition. -/
@@ -210,6 +210,6 @@ example {K : Type*} [Field K] {I : Ideal (MvPolynomial (Fin 2) K)}
     (hB : IsReducedGroebnerBasis MonomialOrder.lex I (↑B : Set (MvPolynomial (Fin 2) K)))
     (hncf : HasNoCommonYFactor hB) (i : Fin B.card) :
     Polynomial.C (leadingYCoeff (sortedByYDegree hB i)) ∣ lazardView (sortedByYDegree hB i) :=
-  lazard_lemma3_dvd_of_hasNoCommonYFactor hB hncf i
+  C_dvd_lazardView_sortedByYDegree_of_hasNoCommonYFactor hB hncf i
 
 end DeepWiki.SymbolicIntegration

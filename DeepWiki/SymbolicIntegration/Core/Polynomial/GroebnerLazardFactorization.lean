@@ -95,7 +95,7 @@ theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree {K : Type*} [Field K]
           (lazardView (sortedByYDegree hB i))) (leadingYCoeff (sortedByYDegree hB i)) ∧
         S.IsPrimitive ∧ IsUnit S.leadingCoeff :=
   lazard_Pk_eq_Rk_Sk (hB.ne_zero (Finset.mem_coe.mpr (sortedByYDegree_mem hB i)))
-    (lazard_lemma3_dvd hB hbase i)
+    (C_dvd_lazardView_sortedByYDegree hB hbase i)
 
 /-- Lazard factorization for every sorted basis element from the degree-zero base condition. -/
 theorem lazard_Pk_eq_Rk_Sk_of_sortedByYDegree_of_degreeOf_zero {K : Type*} [Field K]

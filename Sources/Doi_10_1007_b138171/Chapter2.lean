@@ -688,7 +688,7 @@ noncomputable abbrev lazard_Pk_eq_Rk_Sk := @DeepWiki.SymbolicIntegration.lazard_
 base is a real hypothesis, not a free lemma): `f = xy + 1` (`y = X 0`, `x = X 1`) generates a reduced
 Gröbner basis whose only — hence minimal-`y`-degree — element it is, with `leadingYCoeff f = x` **not a
 unit** of `K[x]` and `C(x) ∤ lazardView f = C(x)·Y + 1`. So the descent's base divisibility `C(g₀) ∣
-lazardView f₀` (and hence `lazard_lemma3_dvd`) is **false** here; no leading-coefficient unit fact
+lazardView f₀` (and hence `C_dvd_lazardView_sortedByYDegree`) is **false** here; no leading-coefficient unit fact
 discharges it, and Lazard's `P·Gₖ₊₁` divide-out is unavoidable (`I=(y)` further shows `IsUnit gₖ` alone
 is insufficient). The library's `not_C_leadingYCoeff_dvd_lazardView_xyAddOne` (unit half
 `not_isUnit_leadingYCoeff_xyAddOne`). -/
@@ -722,10 +722,10 @@ noncomputable abbrev lazard_lemma3_min_in_Kx :=
 /-- **Lazard (1985), Lemma 3 descent, unconditional** (cited in §2.6; the no-common-factor case): under
 `HasNoCommonYFactor` the base divisibility is discharged, so `gᵢ ∣ fᵢ` (`C(Rᵢ) ∣ lazardView fᵢ`) holds
 for every sorted element with **no** base hypothesis. The library's
-`lazard_lemma3_dvd_of_hasNoCommonYFactor`; the `Pₖ = Rₖ·Sₖ` split is
+`C_dvd_lazardView_sortedByYDegree_of_hasNoCommonYFactor`; the `Pₖ = Rₖ·Sₖ` split is
 `lazard_Pk_eq_Rk_Sk_of_hasNoCommonYFactor`. -/
 noncomputable abbrev lazard_lemma3_dvd_unconditional :=
-  @DeepWiki.SymbolicIntegration.lazard_lemma3_dvd_of_hasNoCommonYFactor
+  @DeepWiki.SymbolicIntegration.C_dvd_lazardView_sortedByYDegree_of_hasNoCommonYFactor
 
 /-- **Lazard (1985), Theorem 1, the `P·Gₖ₊₁` divide-out** (cited in §2.6; p.262, proof: "we may divide
 by `P·Gₖ₊₁` and suppose that the `fᵢ` have no common divisors"): from an **arbitrary** reduced bivariate
