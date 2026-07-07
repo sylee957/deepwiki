@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import Mathlib.LinearAlgebra.Lagrange
 
-/-! # Correctness of the computable Rothstein–Trager resultant
+/-! # Computable Rothstein–Trager resultant bridge
 `rtResultantCompute` recovers the bivariate resultant `res_x(D, A − t·D')` by evaluation and Lagrange
 interpolation on `CPoly = List ℚ`; this file proves it realizes `rtResultant` through the `toPoly`
 bridge, plus the base-change lemmas used for residue regularity. -/
@@ -421,6 +421,7 @@ theorem rootMultiplicity_pow {F : Type*} [Field F] {p : F[X]} (hp0 : p ≠ 0) (�
     rw [pow_succ, Polynomial.rootMultiplicity_mul (mul_ne_zero (pow_ne_zero m hp0) hp0), ih]
     ring
 
+/-- A nonzero scalar times `p^n` has multiplicity `n` at each root of separable `p`. -/
 theorem rootMultiplicity_C_mul_pow_of_separable {F : Type*} [Field F] {c : F} (hc : c ≠ 0)
     {p : F[X]} (hsep : p.Separable) {β : F} (hβ : p.IsRoot β) (n : ℕ) :
     Polynomial.rootMultiplicity β (Polynomial.C c * p ^ n) = n := by
