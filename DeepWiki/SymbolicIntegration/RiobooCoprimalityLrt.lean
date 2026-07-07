@@ -70,7 +70,7 @@ theorem exists_realImag_decomp (conj : K →+* K)
 
 end RealImagDecomp
 
-section Thm284
+section LrtCoprime
 variable {K : Type*} [Field K] [IsAlgClosed K] [CharZero K]
 
 open scoped Classical in
@@ -120,10 +120,10 @@ theorem rioboo_coprime_lrt (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDeg
     rw [hσdef, coe_mapRingHom, ← derivative_map, hDreal]
   -- `C r = C a + C i · C b`
   have hCr : C r = C a + C i * C b := by rw [hr, map_add, map_mul]
-  -- (2.27): `C − (a + i·b)·D' = (E₁ + i·E₂)·(A + i·B)`
+  -- The real and imaginary cofactors factor the shifted numerator.
   have h27 : Cnum - (C a + C i * C b) * derivative D = (E₁ + C i * E₂) * (A + C i * B) := by
     rw [← hCr, hE, hSrAB, ← hE12]; ring
-  -- (2.28): `D = (F₁ + i·F₂)·(A + i·B)`
+  -- The real and imaginary divisor cofactors factor the denominator.
   have h28 : D = (F₁ + C i * F₂) * (A + C i * B) := by
     rw [hF, hSrAB, ← hF12]; ring
   -- `b` is a unit, `D` separable ⟹ `IsCoprime D D'`
@@ -146,6 +146,6 @@ example (Cnum D : K[X]) (hD : D.Separable) (hCD : Cnum.natDegree < D.natDegree)
         (Polynomial.evalRingHom (a + i * b))) = A + C i * B) :=
   rioboo_coprime_lrt Cnum D hD hCD conj hconj hi hconji hCreal hDreal hareal hbreal hb hroot
 
-end Thm284
+end LrtCoprime
 
 end DeepWiki.SymbolicIntegration
