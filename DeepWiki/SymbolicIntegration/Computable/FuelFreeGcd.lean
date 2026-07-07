@@ -252,7 +252,8 @@ theorem toPolyG_cgcdWf_dvd (a b : CPolyG α) :
     rename_i hcz
     have hb0 : toPolyG b = 0 := (cisZeroG_iff b).mp hcz
     have hval : (cgcdWf a b).1 = cnormG a := by rw [cgcdWf.eq_def, if_pos hcz]
-    rw [hval, toPolyG_cnormG]
+    rw [hval]
+    simp only [denote]
     exact ⟨dvd_refl _, by rw [hb0]; exact dvd_zero _⟩
   | case2 a b =>
     -- recursing branch: `(cgcdWf a b).1 = (cgcdWf b r).1 = g`, IH `g ∣ b ∧ g ∣ r`, Euclid `a = q·b + r`
