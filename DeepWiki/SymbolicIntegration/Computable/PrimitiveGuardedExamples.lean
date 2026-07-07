@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuarded
 import DeepWiki.SymbolicIntegration.Computable.IntegratorCases
 
-/-! # Validation of the guarded primitive case (`native_decide`)
+/-! # Guarded primitive case examples (`native_decide`)
 
 The guarded primitive case `primitiveGuardedCase` (P2) integrates constant-coefficient canonical-primitive
 inputs and *declines* off-domain ones. These `native_decide` checks confirm it is non-vacuous (produces
@@ -28,13 +28,13 @@ theorem primitiveGuardedCase_polyT :
       | some res => checkIdentityG ([CField.one] : CPolyG Lvl1) res [CField.zero, CField.one] [CField.one]
       | none => false) = true := by native_decide
 
-/-- **Honest declining.** With a non-primitive `Dt = t` (`toPolyG Dt ≠ 1`), the guard fails and
+/-- With a non-primitive `Dt = t` (`toPolyG Dt ≠ 1`), the guard fails and
 `primitiveGuardedCase` returns `none` — it does not return a wrong answer. -/
 theorem primitiveGuardedCase_declines_nonPrimitive :
     cIntegrateCase primitiveGuardedCase ([CField.zero, CField.one] : CPolyG Lvl1)
         [CField.zero, CField.one] [CField.one] [] = none := by native_decide
 
-/-- **Automatic candidates find fractional residues.** `∫ 1/(t²−1) = ½log(t−1) − ½log(t+1)` has residues
+/-- Automatic candidates find fractional residues: `∫ 1/(t²−1) = ½log(t−1) − ½log(t+1)` has residues
 `±1/2`. With `candidates := defaultResidueCandidates 3` (the bounded rational sweep, *not* a hand-picked
 list), `primitiveGuardedCase` lands a `checkIdentityG`-passing result — `candidates` is computed
 automatically. -/
