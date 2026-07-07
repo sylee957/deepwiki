@@ -95,8 +95,8 @@ def cParamLogDeriv (fval θlogderiv : QFunNZG ℚ) :
     let Mw := CField.mul (qConstParamG ((M : ℚ))) θlogderiv
     let resid := CField.sub Nf Mw
     -- the residue `N·f − M·w`: a logarithmic derivative of a radical. The exactly-decidable witness is
-    -- `resid = 0` (then `v = 1`, `N·f = M·w`, so `n = N, m = M`); the general radical witness (§5.12
-    -- construction) is the documented continuation.
+    -- `resid = 0` (then `v = 1`, `N·f = M·w`, so `n = N, m = M`); nonzero radical witnesses are
+    -- returned as residual data for downstream certification.
     if CField.isZero resid then some (N, M, CField.one)
     else if !cParametricLogDeriv resid then none
     else some (N, M, resid)
@@ -135,42 +135,36 @@ def cLinearConstraintsQ (gnums gdens : List (CPolyG ℚ)) :
       (List.range m).map (fun j => cCoeffQ (rs.getD j []) i))
   (qs, M)
 
-/-- **Parametric Risch DE over the base monomial ℚ[t]** `cParamRischDE gnums gdens` (Bronstein §7.1,
-the `ParamRischDE(f, [g₁,…,gₘ], D)` pipeline, book p.217), specialized to `k = ℚ`, `D = d/dt`, the
-**reduced** equation `Dp = Σᵢ cᵢ·gᵢ` (`a = 1, b = 0`, eq. 7.5 after the trivial-over-ℚ RDE stages).
-Returns a **basis** `[c⃗₁, …, c⃗ᵣ]` of the `Const(k) = ℚ`-linear subspace of constant tuples
+/-- **Parametric Risch DE over the base monomial ℚ[t]** `cParamRischDE gnums gdens`, specialized to
+`k = ℚ`, `D = d/dt`, the **reduced** equation `Dp = Σᵢ cᵢ·gᵢ` (`a = 1, b = 0`). Returns a **basis**
+`[c⃗₁, …, c⃗ᵣ]` of the `Const(k) = ℚ`-linear subspace of constant tuples
 `(c₁, …, cₘ)` for which the equation has a polynomial solution `p ∈ ℚ[t]`:
 
-1. `(qs, M) ← LinearConstraints(1, 0, [g₁,…,gₘ], D)` (`cLinearConstraintsQ`): the eq. 7.6 homogeneous
-   matrix `M·(c₁,…,cₘ)ᵀ = 0` (entries in `Const(k) = ℚ`).
-2. **return** `cNullspaceBasisQ M m` — a basis of `ker(M)`, the constant solution subspace (book p.226:
-   "a basis of its kernel allows us to express some of the `cᵢ` in terms of others").
+1. `(qs, M) ← cLinearConstraintsQ gnums gdens`: the cleared homogeneous matrix
+   `M·(c₁,…,cₘ)ᵀ = 0` (entries in `Const(k) = ℚ`).
+2. **return** `cNullspaceBasisQ M m` — a basis of `ker(M)`, the constant solution subspace.
 
-The empty kernel (`[]`) means the only solution is `c₁ = … = cₘ = 0`. For each basis tuple `c⃗`, the
-companion polynomial solution `p` solves `Dp = Σ cᵢqᵢ` (eq. 7.7, the reduced polynomial RDE) — recoverable
-by integrating `Σ cᵢqᵢ` (`cIntegratePolyQ`), the `a = 1, b = 0` non-cancellation case. -/
+The empty kernel (`[]`) means the only solution is `c₁ = … = cₘ = 0`. For each basis tuple `c⃗`, a
+companion polynomial solution `p` is recoverable by integrating `Σ cᵢqᵢ` (`cIntegratePolyQ`). -/
 def cParamRischDE (gnums gdens : List (CPolyG ℚ)) : List (List ℚ) :=
   let (_qs, M) := cLinearConstraintsQ gnums gdens
   cNullspaceBasisQ M gnums.length
 
-/-! ### `cLimitedIntegrate` (Bronstein §7.2, the `LimitedIntegrate(f, [w₁,…,wₘ], D)` problem, book p.245)
+/-! ### `cLimitedIntegrate`
 
 Decide `f = Dv + Σᵢ cᵢ·log(wᵢ)` for constants `cᵢ` and `v ∈ k(t)`. Equivalently `f − Σ cᵢ·(Dwᵢ/wᵢ) = Dv`,
 the parametric Risch DE `Dv + 0·v = f − Σ cᵢ·(Dwᵢ/wᵢ)` — i.e. (7.1) with `gᵢ = Dwᵢ/wᵢ` and the additional
-"`f` itself" generator (book p.245: "Equation (7.30) can be considered a parametric Risch differential
-equation for `v`"). So it is the `gᵢ = Dwᵢ/wᵢ` specialization of `cParamRischDE`, with `f` appended as the
-forced generator `c₀ = 1`. -/
+"`f` itself" generator. So it is the `gᵢ = Dwᵢ/wᵢ` specialization of `cParamRischDE`, with `f`
+appended as the forced generator `c₀ = 1`. -/
 
 /-- **Limited integration over the base monomial ℚ[t]** `cLimitedIntegrate fnum fden wnums wdens`
-(Bronstein §7.2, the `LimitedIntegrate(f, [w₁,…,wₘ], D)` problem, book p.245), `k = ℚ`, `D = d/dt`.
-Decides `f = Dv + Σᵢ cᵢ·log(wᵢ)` for `cᵢ ∈ ℚ` and `v ∈ ℚ(t)`, returning the basis of admissible
-`(c₀, c₁, …, cₘ)` tuples (with `c₀` the coefficient of the forced generator `f`, so a genuine solution
-has `c₀ = 1`): the parametric Risch DE `Dv = c₀·f − Σᵢ cᵢ·(Dwᵢ/wᵢ)` (eq. 7.30 as (7.1) with generators
+over `k = ℚ`, `D = d/dt`. Decides `f = Dv + Σᵢ cᵢ·log(wᵢ)` for `cᵢ ∈ ℚ` and `v ∈ ℚ(t)`, returning the
+basis of admissible `(c₀, c₁, …, cₘ)` tuples (with `c₀` the coefficient of the forced generator `f`, so a
+genuine solution has `c₀ = 1`): the parametric Risch DE `Dv = c₀·f − Σᵢ cᵢ·(Dwᵢ/wᵢ)` (with generators
 `g₀ = f`, `gᵢ = Dwᵢ/wᵢ = wnumᵢ'/wnumᵢ`-style logarithmic derivatives). Built as `cParamRischDE` on the
 generator list `[f, Dw₁/w₁, …, Dwₘ/wₘ]`. The `wᵢ` arrive as numerator/denominator pairs; `Dwᵢ/wᵢ` is
-`(D(wnumᵢ)·wdenᵢ − wnumᵢ·D(wdenᵢ)) / (wnumᵢ·wdenᵢ)`. The full §7.2 simplification (Corollary 7.2.1's
-sharper `hₙ`-bound and the `c₀ = 1` back-substitution to a nonparametric RDE) is the documented
-refinement. -/
+`(D(wnumᵢ)·wdenᵢ − wnumᵢ·D(wdenᵢ)) / (wnumᵢ·wdenᵢ)`. Sharper denominator bounds and the
+`c₀ = 1` back-substitution to a nonparametric RDE are left to downstream specializations. -/
 def cLimitedIntegrate (fnum fden : CPolyG ℚ) (wnums wdens : List (CPolyG ℚ)) :
     List (List ℚ) :=
   -- generator `g₀ = f`, then `gᵢ = Dwᵢ/wᵢ` (logarithmic derivative of `wᵢ`).
@@ -196,7 +190,7 @@ def paramLogDerivExampleF : QFunNZG ℚ := CPolyG.qConstParamG 11
 /-- `Dθ/θ = 1` (exponential `θ`, `Dθ = θ`). -/
 def paramLogDerivExampleW : QFunNZG ℚ := CPolyG.qConstParamG 1
 
--- **Sanity print.** `cParamLogDeriv` on Example 7.3.2 returns `(n, m, v) = (1, 11, 1)`.
+-- **Sanity print.** `cParamLogDeriv` returns `(n, m, v) = (1, 11, 1)` on the constant example.
 #eval (CPolyG.cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW).map
   (fun (n, m, v) => (n, m, CPolyG.qnormPairG v.1.1 v.1.2))
 
@@ -235,8 +229,8 @@ def paramRischExampleG3num : CPolyG ℚ := [1]
 /-- `g₃`-denominator `t+1`. -/
 def paramRischExampleG3den : CPolyG ℚ := [1, 1]
 
--- **Sanity prints** (book p.224): `LinearConstraints` returns the eq. 7.6 system (rows = coefficients
--- of `t⁰, t¹`: `[[1,1,-1],[5,1,1]]`, the book's `[[5,1,1],[1,1,-1]]` up to equation order), and the
+-- **Sanity prints.** `LinearConstraints` returns the cleared coefficient system (rows = coefficients
+-- of `t⁰, t¹`: `[[1,1,-1],[5,1,1]]`, up to equation order), and the
 -- kernel basis (one vector, proportional to `(1,-3,-2)`: here `(-1/2, 3/2, 1) = -½·(1,-3,-2)`).
 #eval (CPolyG.cLinearConstraintsQ
     [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
@@ -246,7 +240,7 @@ def paramRischExampleG3den : CPolyG ℚ := [1, 1]
     [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]
 
 /-- **Cleared parametric-constraint check** `paramConstraintCheck gnums gdens cs`: `true` iff the
-constant tuple `cs = (c₁,…,cₘ)` satisfies the eq. 7.6 constraint `Σᵢ cᵢ·rᵢ = 0` (the remainders `rᵢ` of
+constant tuple `cs = (c₁,…,cₘ)` satisfies the cleared constraint `Σᵢ cᵢ·rᵢ = 0` (the remainders `rᵢ` of
 `d·gᵢ` by `d = lcm(denominators)`), i.e. `Σᵢ cᵢ·(numᵢ·(d/denᵢ) mod d) = 0` — the polynomial identity
 certifying that `(c₁,…,cₘ)` is a genuine solution of the parametric Risch DE's linear constraints. -/
 def paramConstraintCheck (gnums gdens : List (CPolyG ℚ)) (cs : List ℚ) : Bool :=
@@ -258,31 +252,30 @@ def paramConstraintCheck (gnums gdens : List (CPolyG ℚ)) (cs : List ℚ) : Boo
       caddG acc (cscaleG c ri)) []
   cisZeroG total
 
-/-- **Example 7.1.1 — the parametric Risch differential equation reduces to a constant linear system**
-(`native_decide`, Bronstein §7.1, the `LinearConstraints`/`ConstantSystem` boxes, book p.223/224). For
+/-- **The parametric Risch differential equation reduces to a constant linear system**
+(`native_decide`). For
 `Dp = c₁·(2t³+3t+1)/(t²−1) + c₂/(t−1) + c₃/(t+1)` over `k = ℚ`, `t` a monomial with `Dt = 1`:
 
 1. **Linear constraints.** `cLinearConstraintsQ` returns the homogeneous matrix `[[5,1,1],[1,1,-1]]`
-   (eq. 7.10), pinned componentwise against the book's values.
+   up to equation order, pinned componentwise against the expected values.
 2. **Constant solve.** `cParamRischDE` returns a **basis** of its kernel — a single vector `c⃗`
-   (one-dimensional solution space), each verified to **actually satisfy** the eq. 7.6 constraint
+   (one-dimensional solution space), each verified to **actually satisfy** the cleared constraint
    `Σᵢ cᵢ·rᵢ = 0` by `paramConstraintCheck` (the cleared polynomial identity), and confirmed nontrivial
-   (not all-zero). The book's solution space is `(c₁,c₂,c₃) = (λ,−3λ,−2λ)`; the returned basis vector is
+   (not all-zero). The solution space is `(c₁,c₂,c₃) = (λ,−3λ,−2λ)`; the returned basis vector is
    proportional to `(1,−3,−2)`, so the parametric problem reduces to the one-parameter `Dp = 2λt`.
 
-This is the §7.1 deliverable: the **parametric** Risch differential equation — where the right-hand side
-`Σ cᵢgᵢ` carries undetermined constants — reduces, via `LinearConstraints` (eq. 7.6) and the constant
-linear solve `cNullspaceBasisQ` (`ConstantSystem`, Lemma 7.1.2, here ordinary ℚ-Gaussian elimination
+This is the **parametric** Risch differential equation: the right-hand side `Σ cᵢgᵢ` carries
+undetermined constants and reduces, via `cLinearConstraintsQ` and the constant linear solve
+`cNullspaceBasisQ` (ordinary ℚ-Gaussian elimination
 since `Const(k) = ℚ`), to a basis of the constant solution subspace. -/
 theorem paramRischDE_example :
-    -- (1) the eq. 7.6 constraint matrix is the system `c₁(5t+1)+c₂(t+1)+c₃(t−1)=0`, i.e. (low→high in
-    -- `t`) the rows `t⁰: [1,1,-1]` and `t¹: [5,1,1]` (the book writes the two equations as
-    -- `[[5,1,1],[1,1,-1]]`; equating coefficients of `t⁰, t¹` is the same homogeneous system).
+    -- (1) the cleared constraint matrix is the system `c₁(5t+1)+c₂(t+1)+c₃(t−1)=0`, i.e. (low→high in
+    -- `t`) the rows `t⁰: [1,1,-1]` and `t¹: [5,1,1]`.
     (decide ((cLinearConstraintsQ
         [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
         [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]).2
       = [[1,1,-1],[5,1,1]])
-    -- (2) the kernel basis is one nontrivial vector, each satisfying the eq. 7.6 constraint.
+    -- (2) the kernel basis is one nontrivial vector, each satisfying the cleared constraint.
     && (let basis := cParamRischDE
           [paramRischExampleG1num, paramRischExampleG2num, paramRischExampleG3num]
           [paramRischExampleG1den, paramRischExampleG2den, paramRischExampleG3den]
@@ -295,7 +288,7 @@ theorem paramRischDE_example :
 
 #print axioms paramRischDE_example
 
-/-! ### Validation — Bronstein §7.2: the limited integration problem reduces to the parametric RDE
+/-! ### Validation — the limited integration problem reduces to the parametric RDE
 
 `k = ℚ`, `t` a monomial with `Dt = 1` (`D = d/dt`). The limited integration problem
 `f = Dv + Σᵢ cᵢ·log(wᵢ)` is the parametric Risch DE (7.1) with generators `g₀ = f`, `gᵢ = Dwᵢ/wᵢ`. For
@@ -305,23 +298,23 @@ basis vector witnessing `c₀·f = c₁·(Dw₁/w₁)` (i.e. `f = log(w₁)`, th
 
 open CPolyG
 
-/-- §7.2 example's `f = 1/t`: numerator `[1]`, denominator `t = [0,1]`. -/
+/-- Limited-integration example numerator for `f = 1/t`. -/
 def limitedIntExampleFnum : CPolyG ℚ := [1]
-/-- §7.2 example's `f`-denominator `t`. -/
+/-- Limited-integration example denominator `t`. -/
 def limitedIntExampleFden : CPolyG ℚ := [0, 1]
 
--- **Sanity print** (book §7.2): `cLimitedIntegrate` finds the relation `f = Dw₁/w₁` (`f = log(t)`),
+-- **Sanity print.** `cLimitedIntegrate` finds the relation `f = Dw₁/w₁` (`f = log(t)`),
 -- a one-dimensional kernel `[[-1, 1, 0]]` over generators `[f, Dw₁/w₁, Dw₂/w₂]`.
 #eval CPolyG.cLimitedIntegrate limitedIntExampleFnum limitedIntExampleFden [[0, 1], [1, 1]] [[1], [1]]
 
-/-- **§7.2 — the limited integration problem reduces to the parametric Risch DE** (`native_decide`,
-Bronstein §7.2, book p.245). For `f = Dv + c₁·log(t) + c₂·log(t+1)` with `f = 1/t` over `k = ℚ`,
+/-- **Limited integration reduces to the parametric Risch DE** (`native_decide`). For
+`f = Dv + c₁·log(t) + c₂·log(t+1)` with `f = 1/t` over `k = ℚ`,
 `cLimitedIntegrate` (the `gᵢ = Dwᵢ/wᵢ` specialization of `cParamRischDE`, with `f` the forced generator)
-returns a nonempty constant kernel basis, each vector verified to **actually satisfy** the eq. 7.6
+returns a nonempty constant kernel basis, each vector verified to **actually satisfy** the cleared
 constraint `c₀·f + Σᵢ cᵢ·(Dwᵢ/wᵢ) ≡ 0 (mod lcm)` by `paramConstraintCheck`. The relation found is
 `f = log(t)` (`c₀ = ±1`, `c₁ = ∓1`, `c₂ = 0`) — the limited-integral certificate that `∫ f = log(t)`.
-The full §7.2 simplification (Corollary 7.2.1's sharper denominator and the `c₀ = 1` back-substitution
-to a nonparametric RDE for `v`) is the documented refinement. -/
+Sharper denominator bounds and the `c₀ = 1` back-substitution to a nonparametric RDE for `v` are left to
+downstream specializations. -/
 theorem limitedIntegrate_example :
     (let wnums : List (CPolyG ℚ) := [[0, 1], [1, 1]]
      let wdens : List (CPolyG ℚ) := [[1], [1]]
