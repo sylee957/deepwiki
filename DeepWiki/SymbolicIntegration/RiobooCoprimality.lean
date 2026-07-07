@@ -106,7 +106,6 @@ end Coprimality
 section Restatement
 variable {S : Type*} [CommRing S] [IsDomain S] [CharZero S]
 
-/-- Restatement: from the gcd-cofactor relations with `D` squarefree and `b` a unit, `IsCoprime A B`. -/
 example {i a b C D D' E₁ E₂ F₁ F₂ A B : S} (hi : i ^ 2 = -1)
     (σ : S →+* S) (hσi : σ i = -i)
     (hσa : σ a = a) (hσb : σ b = b) (hσC : σ C = C) (hσD : σ D = D) (hσD' : σ D' = D')
