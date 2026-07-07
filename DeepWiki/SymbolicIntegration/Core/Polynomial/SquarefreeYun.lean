@@ -415,6 +415,16 @@ theorem prodPow_append_singleton (i : ℕ) (L : List K[X]) (x : K[X]) :
       show i + 1 + L.length = i + (L.length + 1) from by omega]
     ring
 
+open Classical in
+/-- `prodPow i` of a `range` map is the corresponding `Finset.range` powered product. -/
+theorem prodPow_range_map_eq_finset (i n : ℕ) (f : ℕ → K[X]) :
+    prodPow i ((List.range n).map f) = ∏ k ∈ Finset.range n, f k ^ (i + k) := by
+  induction n with
+  | zero => simp [prodPow]
+  | succ n ih =>
+    rw [List.range_succ, List.map_append, List.map_cons, List.map_nil, prodPow_append_singleton,
+      ih, Finset.prod_range_succ, List.length_map, List.length_range]
+
 end SquarefreeYunStateLemmas
 
 end DeepWiki.SymbolicIntegration

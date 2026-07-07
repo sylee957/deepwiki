@@ -39,16 +39,6 @@ open Classical
 
 /-! ### The abstract Yun loop and its factor products -/
 
-open Classical in
-/-- `prodPow i` of a `range` map is the corresponding `Finset.range` powered product. -/
-theorem prodPow_range_map_eq_finset {K : Type*} [Field K] (i n : ℕ) (f : ℕ → K[X]) :
-    prodPow i ((List.range n).map f) = ∏ k ∈ Finset.range n, f k ^ (i + k) := by
-  induction n with
-  | zero => simp [prodPow]
-  | succ n ih =>
-    rw [List.range_succ, List.map_append, List.map_cons, List.map_nil, prodPow_append_singleton,
-      ih, Finset.prod_range_succ, List.length_map, List.length_range]
-
 open Classical UniqueFactorizationMonoid in
 /-- `prodPow` over enough squarefree parts reconstructs `A.primPart` up to association. -/
 theorem prodPow_one_sqfreeFactPart_range_associated {K : Type*} [Field K] [CharZero K] (A : K[X])
