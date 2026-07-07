@@ -781,7 +781,10 @@ theorem radIsZero_radDeriv_c3itVlift
           (CPolyG.cmulG c3itRun.2 (CPolyG.cderivG c3itRho)))
           (CPolyG.cmulG (CPolyG.cscaleG (2 : ℚ) c3itRho) (CPolyG.csubG c3itC c3itRun.1))) = true) :
     radIsZero (radSub (radDeriv 2 c3itRhoQx c3itVlift) c3itRatLift) = true := by
-  rw [radIsZero, radSub, CPolyG.cisZeroG_iff, CPolyG.toPolyG_csubG, sub_eq_zero]
+  rw [radIsZero, radSub, CPolyG.cisZeroG_iff]
+  simp only [denote]
+  rw [sub_eq_zero]
+  change IsRadicalRationalIntegral 2 [qxOfNum c3itRho] c3itRatLift c3itVlift
   exact isRadicalRationalIntegral_c3itRun hcheck
 
 /-! ### The GENERAL rational-part soundness: what is now a theorem, and the precise residual
