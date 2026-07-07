@@ -196,13 +196,15 @@ theorem toPolyG_cAmcDdG (Dt a d : CPolyG α) (c : α) :
     toPolyG (cAmcDdG Dt a d c)
       = toPolyG a - Polynomial.C (CFieldSpec.toK c)
           * Differential.implicitDeriv (toPolyG Dt) (toPolyG d) := by
-  rw [cAmcDdG, toPolyG_csubG, toPolyG_cscaleG, toPolyG_cmonomialDeriv]
+  rw [cAmcDdG]
+  simp only [denote]
 /-- Per-term log-derivative reading:
 `towerFractionFieldDerivG Dt (amG v)/amG v = amG (toPolyG (cmonomialDeriv Dt v))/amG (toPolyG v)`. -/
 theorem towerFractionFieldDerivG_logDeriv (Dt v : CPolyG α) :
     towerFractionFieldDerivG Dt (amG α (toPolyG v)) / amG α (toPolyG v)
       = amG α (toPolyG (cmonomialDeriv Dt v)) / amG α (toPolyG v) := by
-  rw [towerFractionFieldDerivG, extendDeriv_algebraMap, toPolyG_cmonomialDeriv]
+  rw [towerFractionFieldDerivG, extendDeriv_algebraMap]
+  simp only [denote]
 
 /-- `logResidueSumG` reads as the monomial log-derivative sum
 `∑_{(c,v)} amG(C(toK c))·(towerFractionFieldDerivG Dt (amG v)/amG v)`. -/
