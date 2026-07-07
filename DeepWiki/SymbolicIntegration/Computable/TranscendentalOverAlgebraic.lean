@@ -431,7 +431,7 @@ theorem toAdj_one : toAdj (RadExt.one : RadExt α n f) = 1 := by
     rw [CPolyG.toPolyG_cons, CPolyG.toPolyG_nil, mul_zero, add_zero, CFieldSpec.toK_one, map_one]]
   exact map_one _
 
-/-- `toAdj` intertwines `RadExt.add` with `+` — via `toPolyG_caddG` and `RadExt.radCanon` absorption. -/
+/-- `toAdj` sends radical-extension addition to quotient-ring addition. -/
 theorem toAdj_add (p q : RadExt α n f) : toAdj (RadExt.add p q) = toAdj p + toAdj q := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radAdd p.toRad q.toRad))) = _
   rw [mk_canon]
@@ -439,7 +439,7 @@ theorem toAdj_add (p q : RadExt α n f) : toAdj (RadExt.add p q) = toAdj p + toA
   simp only [denote, map_add]
   rfl
 
-/-- `toAdj` intertwines `RadExt.neg` with `-` — via `toPolyG_cnegG`. -/
+/-- `toAdj` sends radical-extension negation to quotient-ring negation. -/
 theorem toAdj_neg (p : RadExt α n f) : toAdj (RadExt.neg p) = - toAdj p := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radNeg p.toRad))) = _
   rw [mk_canon]
