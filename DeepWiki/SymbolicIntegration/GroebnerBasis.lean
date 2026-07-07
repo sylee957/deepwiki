@@ -60,28 +60,18 @@ as the hypothesis `hbase`. -/
 
 /-! ## Part A: the common factor of the basis and the no-common-factor base
 
-The basis may be divided by `P·Gₖ₊₁` where
-`P = primpart(gcd(f₀,…,fₖ))` (the `y`-**primitive part**, a `K[x][y]` polynomial carrying the
-`y`-dependence) and `Gₖ₊₁ = content(gcd(f₀,…,fₖ))` (a `K[x]` polynomial), to reduce to the
-**no-common-factor** case where `P = Gₖ₊₁ = 1`. *Both* factors must be divided out for the base
-`f₀ ∈ K[x]` of the Lemma 3 descent.
-
-Two layers, with **different** scope:
-* The `K[x]`-layer `Gₖ₊₁` has a clean closed form: since the higher-`y`-degree `g_j` divides every
-  lower `gᵢ` (`leadingYCoeff_sortedByYDegree_dvd_of_le`), the **top** `gₖ = leadingYCoeff (sorted
-  top)` divides *all* `gᵢ`, so up to associates `Gₖ₊₁ ∼ gₖ` — recorded as `gbCommonContent` and the
-  predicate `gbLeadingCoeffIsUnit := IsUnit gₖ`.
-* The `K[x][y]`-layer `P` (the `y`-content of the gcd) is **not** captured by `gₖ`: e.g. `I = (y)`
-  has `gₖ = 1` (`IsUnit gₖ` holds) yet `f₀ = y ∉ K[x]`, because `P = primpart(gcd) = y` is still to
-  be divided out. So `IsUnit gₖ` is *necessary but not sufficient* for the descent base. The base is
-  recorded directly as `hbase : degreeOf 0 (sorted 0) = 0`; discharging it needs the genuine
-  `K[x][y]` divide-out construction, not just `gₖ`. -/
+The common factor decomposes into a `K[x]` content layer and a `K[x][y]`
+primitive layer. The `K[x]` layer has the closed-form representative
+`gbCommonContent`, because the leading `y`-coefficient of the top sorted basis
+element divides the lower leading `y`-coefficients. The `K[x][y]` layer is
+tracked separately: `gbLeadingCoeffIsUnit` only records the content layer, while
+the descent base is stated directly as `degreeOf 0 (sorted 0) = 0`. -/
 
 /-! ### Part A: dividing out a common factor preserves the Gröbner-basis structure
 
 If `hgᵢ := fᵢ / (P·Gₖ₊₁)`, minimal Gröbner-basis structure is preserved because the
 common leading monomial divides every `LM(fᵢ)` and the divisibility relations between leading monomials
-are unchanged. The arithmetic core is the **leading-monomial shift**: writing
+are unchanged. The arithmetic core is the leading-monomial shift: writing
 `b = h * q` (a common factor `h ∣ b`), `m.degree b = m.degree h + m.degree q` and
 `m.leadingCoeff b = m.leadingCoeff h * m.leadingCoeff q` — so every leading monomial of the divided
 set drops by exactly `m.degree h`, an order-isomorphism on degrees that preserves divisibility and
