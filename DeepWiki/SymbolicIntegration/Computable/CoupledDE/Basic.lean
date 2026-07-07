@@ -512,8 +512,9 @@ theorem toPoly2_dpdt (p : List (CPolyG ℚ)) :
       = Polynomial.derivative (toPoly2 p) := by
   apply Polynomial.ext
   intro k
-  rw [toPoly2_coeff, tanDeriv_dpdt_getD, toPolyG_cscaleG, Polynomial.coeff_derivative,
-    toPoly2_coeff]
+  rw [toPoly2_coeff, tanDeriv_dpdt_getD]
+  simp only [denote]
+  rw [Polynomial.coeff_derivative, toPoly2_coeff]
   simp only [CFieldSpec.toK, id_eq]
   rw [map_add, map_one, Polynomial.C_eq_natCast]
   ring
