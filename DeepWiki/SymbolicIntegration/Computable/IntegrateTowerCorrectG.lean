@@ -149,15 +149,15 @@ theorem field_identity_of_checkIdentityG (Dt : CPolyG α) (res : IntegralResultG
     ([CField.zero], [CField.one]) with hfolded
   -- the fold computes `logResidueSumG` over the field, with nonzero `Lden`
   have hseedden : toPolyG ([CField.one] : CPolyG α) ≠ 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero]; exact one_ne_zero
+    simp only [denote, mul_zero, add_zero]
+    exact one_ne_zero
   obtain ⟨hLden_ne, hLfield⟩ := checkIdentityG_fold_eq Dt res.logs [CField.zero] [CField.one]
     hseedden hlogs
   rw [← hfolded] at hLden_ne hLfield
   -- the seed fraction `0/1 = 0`
   have hseed0 : amG α (toPolyG ([CField.zero] : CPolyG α))
       / amG α (toPolyG ([CField.one] : CPolyG α)) = 0 := by
-    rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_zero, map_zero, mul_zero, add_zero, map_zero,
-      zero_div]
+    simp only [denote, map_zero, mul_zero, add_zero, zero_div]
   rw [hseed0, zero_add] at hLfield
   -- abbreviations over the field
   set GP := amG α (toPolyG gprimeNum) with hGP
