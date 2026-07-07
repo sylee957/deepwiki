@@ -308,11 +308,7 @@ theorem cCoupledDECancelTan_sound_of_check (dbound : ℕ) (b0 b2 : CPolyG ℚ)
       = toPoly2 c2 :=
   cancelTanClearedCheck_sound b0 b2 c1 c2 q1 q2 hcheck
 
-/-! ## Validation -/
-
--- **Sanity print** (book p.267): `cCoupledDECancelTan` returns `q₁ = t − 1`, `q₂ = 2x`.
-#eval (cCoupledDECancelTan 1 ([] : CPolyG ℚ) [0, 4] cancelTanC1 cancelTanC2 2).map
-  (fun p => (p.1.map (fun c => (c : List ℚ)), p.2.map (fun c => (c : List ℚ))))
+/-! ## Examples -/
 
 /-- `rischDE_cancelTan_example`: the tangent coupled system over `t = tan(x)` (`b₀ = 0`, `b₂ = 4x`,
 `c₁ = −t²+2t−8x²+1`, `c₂ = 2−4x`, degree bound `n = 2`) solves via `cCoupledDECancelTan` to
@@ -326,7 +322,7 @@ theorem rischDE_cancelTan_example :
 /-! ## Restatement of tangent soundness -/
 
 -- ★ Tangent RDE cancellation soundness, `native_decide`-free: a self-certifying `cCoupledDECancelTan` solve
--- gives both rows of the §8.4 tangent coupled `t`-system over `ℚ[x][t]` (`D = ∂/∂x + (t²+1)∂/∂t`).
+-- gives both rows of the tangent coupled `t`-system over `ℚ[x][t]` (`D = ∂/∂x + (t²+1)∂/∂t`).
 example (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)) (n : ℕ)
     (hsome : cCoupledDECancelTan dbound b0 b2 c1 c2 n = some (q1, q2))
     (hcheck : cancelTanClearedCheck b0 b2 c1 c2 q1 q2 = true) :
@@ -341,8 +337,5 @@ example (dbound : ℕ) (b0 b2 : CPolyG ℚ) (c1 c2 q1 q2 : List (CPolyG ℚ)) (n
             - Polynomial.C (Polynomial.C 2) * Polynomial.X * toPoly2 q2)
       = toPoly2 c2 :=
   cCoupledDECancelTan_sound_of_check dbound b0 b2 c1 c2 q1 q2 n hsome hcheck
-
-#print axioms rischDE_cancelTan_example
-#print axioms cancelTanClearedCheck_sound
 
 end DeepWiki.SymbolicIntegration
