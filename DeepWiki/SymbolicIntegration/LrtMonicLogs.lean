@@ -1,8 +1,8 @@
 import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
 
-/-! # LRT monic-log regularity (Bronstein §2 Exercise 2.7, the reachable core)
-Exercise 2.7 asks to modify Lazard–Rioboo–Trager so the polynomials inside the logarithms are *monic*
-in `x`; this is possible exactly because, at a residue `a` of multiplicity `i` in the Rothstein–Trager
+/-! # LRT monic-log regularity
+The Lazard–Rioboo–Trager logarithm arguments can be normalized to be *monic*
+in `x`: at a residue `a` of multiplicity `i` in the Rothstein–Trager
 resultant `R`, the specialized `i`-th LRT subresultant has `x`-degree *exactly* `i`, so its leading
 `x`-coefficient — the `i`-th principal subresultant coefficient — is nonzero there. This file proves
 that regularity (`leadingCoeff_lrtSubresultant_eval_ne_zero`) from the existing similarity
@@ -17,7 +17,7 @@ namespace DeepWiki.SymbolicIntegration
 variable {K : Type*} [Field K] [IsAlgClosed K]
 
 open scoped Classical in
-/-- **Exercise 2.7, the regularity core**: at a residue `a` (a root of the Rothstein–Trager resultant
+/-- At a residue `a` (a root of the Rothstein–Trager resultant
 `R = rtResultant A D`) of multiplicity `i < deg D`, the specialized `i`-th LRT subresultant has `x`-degree
 *exactly* `i`, so its leading `x`-coefficient — the `i`-th principal subresultant coefficient `sᵢ(a)` — is
 **nonzero**. From `lazardRiobooTrager_isSimilar_gcd` (the specialized subresultant is *similar* to
@@ -105,7 +105,7 @@ noncomputable def lrtQ (A D : K[X]) (i : ℕ) : K[X] :=
   (residueSetOfMult A D i).prod (fun a => X - C a)
 
 open scoped Classical in
-/-- **Exercise 2.7, the unit-in-`K[t]/(Qᵢ)` packaging**: the `i`-th principal subresultant coefficient
+/-- The `i`-th principal subresultant coefficient
 `sᵢ = lrtPsc A D i` is **coprime** to the multiplicity-`i` factor `Qᵢ = lrtQ A D i` (for `0 < i < deg D`),
 i.e. `sᵢ` is a **unit in `K[t]/(Qᵢ)`** — exactly what makes monic-normalizing the LRT logarithm arguments
 legitimate. Each linear factor `t − a` of `Qᵢ` has `a` a residue of multiplicity `i`, so by the regularity
@@ -134,7 +134,7 @@ theorem isCoprime_lrtPsc_lrtQ
   exact hne
 
 open scoped Classical in
--- `sᵢ` is a unit in `K[t]/(Qᵢ)` (coprime to `Qᵢ`) — Exercise 2.7's required fact.
+-- `sᵢ` is a unit in `K[t]/(Qᵢ)` (coprime to `Qᵢ`) for monic LRT log normalization.
 example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (i : ℕ) (hi : i < D.natDegree) :
     IsCoprime (lrtPsc A D i) (lrtQ A D i) :=
   isCoprime_lrtPsc_lrtQ A D hD hA i hi
@@ -143,7 +143,7 @@ example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (i : �
 
 omit [IsAlgClosed K] in
 open scoped Differential in
-/-- **`logDeriv` kills an `x`-constant factor** (the substance of the Exercise 2.7 modification): for a
+/-- **`logDeriv` kills an `x`-constant factor** in monic LRT normalization: for a
 nonzero constant `c ∈ K` (a `C`-constant, hence `x`-derivative `0`) and a nonzero polynomial `f ∈ K[x]`,
 the logarithmic derivatives of `C c · f` and of `f` over `K(x)` coincide,
 `logDeriv (C c · f) = logDeriv f`. The `log(c)` term is `x`-constant, so it drops out:
@@ -207,7 +207,7 @@ theorem lrtSubresultant_eval_eq_psc_mul_monicLrtLog (A D : K[X]) (a : K) (i : �
 
 open scoped Differential in
 open scoped Classical in
-/-- **Exercise 2.7, the algorithmic deliverable**: replacing the LRT log argument `Sᵢ(a,x)` by its
+/-- Replacing the LRT log argument `Sᵢ(a,x)` by its
 monic-in-`x` normalization `monicLrtLog A D i a` yields the **same** logarithmic-part derivative,
 `logDeriv (Sᵢ(a,x)) = logDeriv (monicLrtLog A D i a)` over `K(x)`. The two differ only by the nonzero
 `x`-constant leading coefficient `sᵢ(a)` (`lrtSubresultant_eval_eq_psc_mul_monicLrtLog`), and `logDeriv`
@@ -235,7 +235,7 @@ theorem logDeriv_monicLrtLog_eq (A D : K[X]) (hD : D.Separable) (hA : A.natDegre
 
 open scoped Differential in
 open scoped Classical in
--- Exercise 2.7 (modified LRT): the polynomials inside the logarithms can be made monic in `x` with no
+-- The polynomials inside the LRT logarithms can be made monic in `x` with no
 -- change to the integral — `logDeriv` of the specialized subresultant equals that of its monic form.
 example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (a : K)
     (ha : (rtResultant A D).IsRoot a)
