@@ -15,7 +15,7 @@ open MvPolynomial MonomialOrder
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ## Lazard's Lemma 3 successor step
+/-! ## Lazard successor step
 
 The step uses the sorted basis, the leading-`y`-coefficient divisibility chain,
 and bounded Gröbner reduction of the cancellation polynomial. -/
@@ -40,7 +40,7 @@ theorem exists_sortedIndex_le_of_degreeOf_le {K : Type*} [Field K]
   rw [← hj] at hdeg
   exact absurd hdeg (not_le.mpr hmono)
 
-/-- **The non-circular descent step** (Lazard 1985, p.263, Lemma 3 induction `i → i+1`). Let
+/-- **The non-circular Lazard descent step.** Let
 `fi = sorted i`, `fj = sorted i1` with `i < i1` *immediate* (every `j < i1` has `j ≤ i`, `hsucc`).
 Given the induction hypothesis `C(gᵢ) ∣ lazardView (sorted j)` for **all** `j ≤ i` (`hIH`, which in
 particular covers `fi`), one obtains `C(g_{i1}) ∣ lazardView f_{i1}`. Mechanism: with `q = gᵢ/g_{i1}`
