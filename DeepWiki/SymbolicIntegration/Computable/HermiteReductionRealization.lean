@@ -41,7 +41,8 @@ theorem cHermiteReduceTowerGWf_lawfulHermiteReduction [CharZero (CFieldSpec.K α
   squarefree := by
     rw [show toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = ((cSqfreeYunFFGWf d).map toPolyG).prod from by
       rw [cHermiteReduceTowerGWf]
-      simp only [toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, toPolyG_one_singleton, one_mul]]
+      simp only [denote, toPolyG_foldl_cmulG_plainList]
+      simp]
     exact (cSqfreeYunFFGWf_lawfulSquarefreeDecomposition hgcd d hd0 hpp).prod_squarefree
   proper := hproper
 
