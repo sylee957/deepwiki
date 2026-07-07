@@ -14,14 +14,11 @@ open Compute CPolyG QFunNZG
 
 /-! ### The differential-spec bridge `CDiffFieldSpec (QFunNZG ℚ)` -/
 
-/-- The base derivation `implicitDeriv (toPolyG 1) : Derivation ℤ ℚ[X] ℚ[X]` (`d/dx`), whose
-fraction-field extension realizes `towerDerivQFunNZG [1]` on `RatFunc ℚ`. -/
+/-- The base derivation `implicitDeriv (toPolyG 1)` whose fraction-field extension realizes `towerDerivQFunNZG [1]`. -/
 noncomputable def baseDerivQ : Derivation ℤ (CFieldSpec.K ℚ)[X] (CFieldSpec.K ℚ)[X] :=
   Differential.implicitDeriv (CPolyG.toPolyG ([CField.one] : CPolyG ℚ))
 
-/-- `CDiffFieldSpec (QFunNZG ℚ)`: the differential-spec bridge for the `ℚ(x)` carrier, with Mathlib
-derivation `fractionFieldDifferential baseDerivQ` on `RatFunc ℚ` and intertwining `toK_cderiv` from
-`toQFunNZG_towerDerivQFunNZG [1]`. Noncomputable. -/
+/-- `CDiffFieldSpec (QFunNZG ℚ)` using `fractionFieldDifferential baseDerivQ` and `toQFunNZG_towerDerivQFunNZG [1]`. -/
 noncomputable instance instCDiffFieldSpecQFunNZG : CDiffFieldSpec (QFunNZG ℚ) where
   diffK := fractionFieldDifferential baseDerivQ
   toK_cderiv a := by
