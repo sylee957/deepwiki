@@ -54,7 +54,8 @@ theorem field_identity_Dt1 (Dt c q : CPolyG α) (n : ℤ)
     towerFractionFieldDerivG Dt (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
       = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) := by
   have hcongr : towerFractionFieldDerivG Dt = towerFractionFieldDerivG ([CField.one] : CPolyG α) := by
-    unfold towerFractionFieldDerivG; rw [hDt1, toPolyG_one_singleton]
+    unfold towerFractionFieldDerivG
+    simp only [hDt1, denote, map_one, mul_zero, add_zero]
   have hsome1 : cPolyRischDEGWf ([CField.one] : CPolyG α) ([] : CPolyG α) c n = some q := by
     rw [cPolyRischDEGWf_nil_eq _ c n hc hdeg]
     rw [cPolyRischDEGWf_nil_eq _ c n hc hdeg] at hsome; exact hsome
