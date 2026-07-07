@@ -1,14 +1,11 @@
 import DeepWiki.SymbolicIntegration.Computable.HermiteReduction
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
 
-/-! # Realization (Stage 2): `cHermiteReduceTowerGWf` is a lawful Hermite reduction
+/-! # Tower Hermite reduction realization
 
-The single `LawfulHermiteReduction` realization theorem for the tower Hermite reducer. The cleared
-field identity comes from the pole-cancellation capstone (`cHermiteReduceTowerGWf_field_identity` +
-`toPolyG_hNum'_eq_2_1`); **`Dstar` squarefreeness is consumed from the squarefree-decomposition
-interface** (`cSqfreeYunFFGWf_lawfulSquarefreeDecomposition`, via `prod_squarefree`), NOT re-derived from
-the Yun loop; the leftover properness is the deg-`Dt`-≤1 contract, threaded. See
-`docs/risch-two-stage-discipline.md`. -/
+The tower Hermite reducer realizes the `LawfulHermiteReduction` interface: the field identity,
+squarefree leftover denominator, and properness clauses are assembled from the corresponding tower
+and squarefree-decomposition facts. -/
 
 open Polynomial Classical
 
@@ -19,9 +16,7 @@ open Compute CPolyG QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α]
 
-/-- **Realization: `cHermiteReduceTowerGWf` is a lawful Hermite reduction of `a/d`.** `field_identity` from
-the pole-cancellation capstone; `squarefree` consumed from `LawfulSquarefreeDecomposition`; `proper` the
-deg-`Dt`-≤1 leftover-properness contract. Under the differential-normality precondition `hcopgcd`. -/
+/-- `cHermiteReduceTowerGWf` is a lawful Hermite reduction of `a/d` under differential normality. -/
 theorem cHermiteReduceTowerGWf_lawfulHermiteReduction [CharZero (CFieldSpec.K α)]
     (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
     (hpp : (toPolyG d).primPart ≠ 0)
