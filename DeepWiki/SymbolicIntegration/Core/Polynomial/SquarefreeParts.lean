@@ -39,6 +39,24 @@ theorem squarefreePart_deflation_mul_sqfreeFactPart (A : D[X]) (i : ℕ) (hi : 1
   intro P _
   omega
 
+open Classical in
+/-- `A⁻ᵏ = ∏ᵢ Aᵢ^(i−k)`: the deflation regrouped by multiplicity `i` (terms with `i ≤ k`
+contribute `1`). -/
+theorem deflation_eq_prod_sqfreeFactPart (A : D[X]) (k : ℕ) :
+    deflation A k = ∏ i ∈ (normalizedFactors A.primPart).toFinset.image
+        (fun P => (normalizedFactors A.primPart).count P),
+      (sqfreeFactPart A i) ^ (i - k) := by
+  rw [deflation, ← Finset.prod_fiberwise_of_maps_to
+        (t := (normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P))
+        (g := fun P => (normalizedFactors A.primPart).count P)
+        (fun P hP => Finset.mem_image_of_mem _ hP)]
+  refine Finset.prod_congr rfl fun i _ => ?_
+  rw [sqfreeFactPart, ← Finset.prod_pow]
+  refine Finset.prod_congr rfl fun P hP => ?_
+  rw [Finset.mem_filter] at hP
+  rw [hP.2]
+
 end SquarefreeParts
 
 end DeepWiki.SymbolicIntegration
