@@ -184,6 +184,13 @@ def cshiftG {α : Type*} [CField α] : ℕ → CPolyG α → CPolyG α
   | 0, p => p
   | n + 1, p => CField.zero :: cshiftG n p
 
+/-- `(cshiftG k p).length = k + p.length`. -/
+theorem cshiftG_length {α : Type*} [CField α] (k : ℕ) (p : CPolyG α) :
+    (cshiftG k p : List α).length = k + (p : List α).length := by
+  induction k with
+  | zero => simp [cshiftG]
+  | succ m ih => rw [cshiftG]; simp only [List.length_cons, ih]; omega
+
 /-- Polynomial multiplication of `CPolyG`s (schoolbook convolution via `cshiftG`/`cscaleG`). -/
 def cmulG {α : Type*} [CField α] : CPolyG α → CPolyG α → CPolyG α
   | [], _ => []

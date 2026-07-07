@@ -365,13 +365,6 @@ theorem caddG_length (p q : CPolyG α) :
     | nil => simp [CPolyG.caddG]
     | cons b bs => simp only [CPolyG.caddG, List.length_cons, ih bs]; omega
 
-/-- `cshiftG` length — `(cshiftG k p).length = k + p.length` (prepend `k` zeros). -/
-theorem cshiftG_length (k : ℕ) (p : CPolyG α) :
-    (CPolyG.cshiftG k p : List α).length = k + (p : List α).length := by
-  induction k with
-  | zero => simp [CPolyG.cshiftG]
-  | succ m ih => rw [CPolyG.cshiftG]; simp only [List.length_cons, ih]; omega
-
 /-- The inner `radReduce` reaches `cnormG`-length `≤ n` (`n ≥ 1`, `fuel ≥ cnormG`-length) — each fold
 strictly drops the normalized length, so the loop hits the `length ≤ n` exit. -/
 theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : CPolyG α),
@@ -389,10 +382,10 @@ theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : CPolyG
       apply ih
       set q := CPolyG.cnormG u with hq
       have hstep : (CPolyG.caddG (q : List α).dropLast
-          (CPolyG.cshiftG ((q : List α).length - 1 - n)
+        (CPolyG.cshiftG ((q : List α).length - 1 - n)
             [CField.mul ((q : List α).getLast?.getD CField.zero) f]) : List α).length
           < (q : List α).length := by
-        rw [caddG_length, cshiftG_length]
+        rw [caddG_length, CPolyG.cshiftG_length]
         simp only [List.length_singleton, List.length_dropLast]; omega
       have := (cnormG_length_le _).trans_lt hstep; omega
 
