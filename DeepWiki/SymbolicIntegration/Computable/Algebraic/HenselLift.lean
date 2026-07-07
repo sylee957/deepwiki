@@ -320,38 +320,37 @@ theorem liftBezout_congr (p m : ℕ) (s t gp hp : List ℤ)
 Lift `x² + 1` from its mod-`5` factorization `(x + 3)(x + 2)` one quadratic step to mod `25` and
 verify multiply-back, on the list-level `mulL`/`reduceModN` output. -/
 
-/-- The mod-`5` defect of `x² + 1 = (x + 3)(x + 2)` vanishes: the factorization is exact mod `5`. -/
+-- The mod-`5` defect of `x² + 1 = (x + 3)(x + 2)` vanishes.
 example : reduceModN 5 (defectL [1, 0, 1] [3, 1] [2, 1]) = [0, 0, 0] := by native_decide
 
-/-- The Bézout relation `1·(x + 3) + (−1)·(x + 2) = 1` holds (list-level). -/
+-- The Bézout relation `1·(x + 3) + (−1)·(x + 2) = 1` holds at list level.
 example : subL (addL (mulL [1] [3, 1]) (mulL [-1] [2, 1])) [1] = [0, 0] := by native_decide
 
-/-- One quadratic Hensel step lifts `(x + 3, x + 2)` to `(6x + 8, 21x + 22)` mod `25`. -/
+-- One quadratic Hensel step lifts `(x + 3, x + 2)` to `(6x + 8, 21x + 22)` mod `25`.
 example : liftStep 5 1 [1, 0, 1] [3, 1] [2, 1] [1] [-1] = ([8, 6, 0], [22, 21, 0]) := by
   native_decide
 
-/-- Multiply-back mod `25`: the lifted factors `(6x + 8)(21x + 22)` reduce mod `25` to `x² + 1`. -/
+-- Multiply-back mod `25`: the lifted factors reduce to `x² + 1`.
 example :
     (let (g', h') := liftStep 5 1 [1, 0, 1] [3, 1] [2, 1] [1] [-1];
       reduceModN 25 (mulL g' h')) = [1, 0, 1, 0, 0] := by native_decide
 
-/-- The new defect `f − g'·h'` vanishes mod `25` after one step. -/
+-- The new defect `f − g'·h'` vanishes mod `25` after one step.
 example :
     (let (g', h') := liftStep 5 1 [1, 0, 1] [3, 1] [2, 1] [1] [-1];
       reduceModN 25 (defectL [1, 0, 1] g' h')) = [0, 0, 0, 0, 0] := by native_decide
 
-/-- Bézout cofactor lift mod `25`: lifting `s = 1, t = −1` for `(6x + 8, 21x + 22)` keeps the
-Bézout relation `s'·g' + t'·h' ≡ 1 (mod 25)`, so the step is ready to iterate. -/
+-- The lifted cofactors for `(6x + 8, 21x + 22)` still satisfy the Bézout relation mod `25`.
 example :
     (let (s', t') := liftBezout 5 1 [1] [-1] [8, 6, 0] [22, 21, 0];
       reduceModN 25 (bezoutDefectL s' t' [8, 6, 0] [22, 21, 0])) = [0, 0, 0, 0, 0] := by
   native_decide
 
-/-! ## From one step to a complete `ℚ`-irreducibility decider
+/-! ## Downstream iteration and recombination
 
-Built here: the single quadratic step `liftStep`/`liftStep_congr` and cofactor lift
-`liftBezout`/`liftBezout_congr`, so one iteration `(f, g, h, s, t) ↦ (f, g', h', s', t')` over
-`mod p^m → mod p^{2m}` is sound. Remaining: iterating the step to `mod p^k` past the Mignotte
-coefficient bound, and subset recombination to `ℤ`-factors. -/
+This file supplies the one-step Hensel primitives: `liftStep`/`liftStep_congr` and
+`liftBezout`/`liftBezout_congr`, giving one sound iteration
+`(f, g, h, s, t) ↦ (f, g', h', s', t')` over `mod p^m → mod p^{2m}`. The iterative lift and
+factor recombination live downstream in `ZassenhausDecider`. -/
 
 end DeepWiki.SymbolicIntegration
