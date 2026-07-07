@@ -149,10 +149,12 @@ theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : C
     simp
   have hzero : toPolyG ([CField.zero] : CPolyG α) = 0 := by
     simp only [denote, map_zero, mul_zero, add_zero]
-  simp only [toPolyG_cmulG, toPolyG_caddG, toPolyG_csubG, hone, hzero]
+  simp only [denote, hone, hzero]
   -- the rational-part numerator derivative `D(q)·1 − q·D(1)`, with `D(1) = 0`
-  rw [toPolyG_cmonomialDeriv_one,
-    toPolyG_cmonomialDeriv_cIntegratePolyG_const c hconst]
+  rw [Differential.implicitDeriv, Derivation.add_apply, hconst, zero_add,
+    Derivation.smul_apply, one_smul, Derivation.restrictScalars_apply,
+    Polynomial.derivative'_apply, derivative_toPolyG_cIntegratePolyG c,
+    Derivation.map_one_eq_zero]
   ring
 
 /-! ### The one-shot: compose the crux with the field bridge -/
