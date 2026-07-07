@@ -63,11 +63,6 @@ theorem bezoutDeriv_mul_derivative_modByMonic (Di : K[X]) (hDi : Di.Monic)
     rw [bezoutDeriv]; linear_combination hspec
   rw [hkey, sub_modByMonic, self_mul_modByMonic hDi, sub_zero]
 
-/-- A squarefree `Dᵢ` over a `CharZero` field is coprime to its derivative, `IsCoprime Dᵢ' Dᵢ`. -/
-theorem isCoprime_derivative_of_squarefree [CharZero K] {Di : K[X]} (hsf : Squarefree Di) :
-    IsCoprime (derivative Di) Di :=
-  (squarefree_iff_isCoprime_derivative.mp hsf).symm
-
 /-! ## The `Pᵢⱼ` numerator recursion -/
 
 /-- The numerator-recursion step: from the numerator `P` of `hᵢ^d/d! = P/(u^a·Eᵢ^b)` (`a = i+d`, `b = d+1`),
