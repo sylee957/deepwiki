@@ -29,6 +29,18 @@ theorem derivative_deflation (A : D[X]) (k : ℕ) :
   refine Finset.sum_congr rfl fun a _ => ?_
   rw [derivative_pow]
 
+open Classical in
+/-- The derivative of a squarefree part in factored form:
+`d(A⁻ᵏ)*/dx = ∑_{a > k} (∏_{b > k, b ≠ a} Aᵦ) · dAₐ/dx`. -/
+theorem derivative_squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    derivative (squarefreePart (deflation A k))
+      = ∑ a ∈ ((normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => k < a),
+        (∏ b ∈ (((normalizedFactors A.primPart).toFinset.image
+          (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => k < a)).erase a,
+          sqfreeFactPart A b) * derivative (sqfreeFactPart A a) := by
+  rw [squarefreePart_deflation_eq_prod A k hA, derivative_prod_finset]
+
 end SquarefreePartDerivatives
 
 end DeepWiki.SymbolicIntegration

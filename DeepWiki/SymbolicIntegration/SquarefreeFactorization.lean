@@ -77,18 +77,6 @@ theorem derivative_deflation_pred (A : D[X]) (i : ℕ) (hi : 1 ≤ i) :
     simp
 
 open Classical in
-/-- The derivative of a squarefree part in factored form:
-`d(A⁻ᵏ)*/dx = ∑_{a > k} (∏_{b > k, b ≠ a} Aᵦ) · dAₐ/dx`. -/
-theorem derivative_squarefreePart_deflation (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
-    derivative (squarefreePart (deflation A k))
-      = ∑ a ∈ ((normalizedFactors A.primPart).toFinset.image
-          (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => k < a),
-        (∏ b ∈ (((normalizedFactors A.primPart).toFinset.image
-          (fun P => (normalizedFactors A.primPart).count P)).filter (fun a => k < a)).erase a,
-          sqfreeFactPart A b) * derivative (sqfreeFactPart A a) := by
-  rw [squarefreePart_deflation_eq_prod A k hA, derivative_prod_finset]
-
-open Classical in
 /-- `Yᵢ − d(A⁻⁽ⁱ⁻¹⁾)*/dx = Aᵢ·Y_{i+1}` (`1 ≤ i`). -/
 theorem Yun_sub_derivative_squarefreePart (A : D[X]) (i : ℕ) (hi : 1 ≤ i) (hA : A.primPart ≠ 0) :
     Yun A i - derivative (squarefreePart (deflation A (i - 1)))
