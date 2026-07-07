@@ -131,10 +131,10 @@ theorem isRadicalLogTerm_radGen (n : ℕ) (f : α) :
 
 end RadElem
 
-/-! ### The residue-correctness core: reduction to named obligations
+/-! ### The residue-correctness core
 
 The residue-correctness core `Σ cᵢ radDeriv(uᵢ)/uᵢ = logpart` (that the integrator's log args
-carry the residues `cAlgResidueResultant` computes) reduces to three obligations, all proven
+carry the residues `cAlgResidueResultant` computes) is organized around three ingredients, all proven
 below:
 
 1. the residue-resultant root ↔ residue correspondence — the roots of the double resultant are
@@ -182,7 +182,7 @@ theorem mk_toPolyG_radLogSumNum_nil (n : ℕ) (ρ : α) (cofs : List (RadElem α
 
 end RadElem
 
-/-! ### Obligation 2 — the logarithmic-derivative residue, at the base-field level
+/-! ### Logarithmic-derivative residues at the base-field level
 
 The residue of `u'/u` at a root equals the vanishing order (the logarithmic-derivative residue
 theorem). Its algebraic heart is a `K[X]` fact: for `u = (X − a)^m · v` with `v(a) ≠ 0`, the
@@ -216,7 +216,7 @@ theorem logDeriv_residue_eq_multiplicity (a : K) (m : ℕ) (v : K[X])
     Polynomial.eval_C, sub_self, zero_mul, add_zero]
   rw [mul_div_assoc, div_self hv, mul_one]
 
-/-! #### Obligation 1's new ingredient: the norm quadratic factors into the two-sheet residues
+/-! #### The norm quadratic factors into the two-sheet residues
 
 Each per-root norm factor `norm(α, Z) = (Z·D'(α) − g₀(α))² − g₁(α)²·ρ(α)` is a quadratic in `Z`
 that splits into the two-sheet residues; we prove that `K[Z]`-factoring here. -/
@@ -254,7 +254,7 @@ theorem residueNorm_factor (c g h r s : K) (hc : c ≠ 0) (hs : s ^ 2 = h ^ 2 * 
   simp only [map_add, map_sub, map_pow]
   ring
 
-/-! #### Assembling obligation 1: the per-root and product root-sets
+/-! #### Per-root and product root-sets
 
 `roots_residueNorm` reads off the per-root root multiset `{r₊, r₋}`;
 `roots_residueResultant_eq_residues` assembles them over all roots `α` of `D` from the
@@ -446,7 +446,7 @@ theorem residue_is_partialFraction_coeff (A E B : K[X]) (c α : K) (hE : E.eval 
 
 end LogResidue
 
-/-! ### Obligation 3 (structural skeleton): the residue-sum telescoping over the pole list
+/-! ### Residue-sum telescoping over the pole list
 
 The structural half of obligation 3: the residue-sum numerator `radLogSumNum` is a `radAdd`-fold
 of per-term contributions, so `mk(radLogSumNum)` distributes over the args list as a sum of the
@@ -589,58 +589,58 @@ no `sorry`. -/
 -- The additivity floor: `radDeriv` distributes over the log-numerator fold:
 #print axioms RadElem.toPolyG_radDeriv_logFold
 
--- ★ Two log residues add (the structural core of the multi-term residue sum):
+-- Two log residues add (the structural core of the multi-term residue sum):
 #print axioms RadElem.mk_toPolyG_radLogSum2
 
--- ★ The concrete abstract single-log integral `D(log √f) = f'/(nf)` (log-part analogue of radGen):
+-- The concrete abstract single-log integral `D(log √f) = f'/(nf)`:
 #print axioms RadElem.isRadicalLogTerm_radGen
 
 -- The residue-sum numerator base case (empty log part contributes nothing):
 #print axioms RadElem.mk_toPolyG_radLogSumNum_nil
 
--- ★ Obligation 2 (the tractable core): the derivative factorization at a multiplicity-`m` root:
+-- Logarithmic-residue input: the derivative factorization at a multiplicity-`m` root:
 #print axioms LogResidue.derivative_X_sub_C_pow_mul
 
--- ★ Obligation 2 (value form): the logarithmic-derivative residue equals the vanishing order:
+-- Logarithmic-residue input: the residue equals the vanishing order:
 #print axioms LogResidue.logDeriv_residue_eq_multiplicity
 
--- ★ Obligation 1's new ingredient: the residue-norm quadratic factors into the two-sheet residues:
+-- Residue-resultant input: the residue-norm quadratic factors into the two-sheet residues:
 #print axioms LogResidue.residueNorm_factor
 
--- ★★ Obligation 1 CLOSED (abstract): the per-root norm's roots are the two-sheet residues:
+-- Residue-resultant input: the per-root norm's roots are the two-sheet residues:
 #print axioms LogResidue.roots_residueNorm
 
--- ★★ Obligation 1 CLOSED (abstract): the residue resultant's roots ARE Trager's residues (roots_rtResultant analogue):
+-- Residue-resultant input: the residue resultant's roots are the two-sheet residues:
 #print axioms LogResidue.roots_residueResultant_eq_residues
 
--- ★ Obligation 3 (structural skeleton): the residue-sum numerator distributes over the args list:
+-- Residue-sum input: the numerator distributes over the args list:
 #print axioms RadElem.mk_toPolyG_radLogSumNum_eq_sum
 
--- ★★ Obligation 3 composed: the log part is log-sound given the per-term residue match:
+-- Residue-sum composition: the log part is log-sound given the per-term residue match:
 #print axioms RadElem.isRadicalLogIntegral_of_residue_match
 
--- ★ The single-log instance of the composed log-part soundness:
+-- The single-log instance of the composed log-part soundness:
 #print axioms RadElem.isRadicalLogIntegral_singleton
 
--- ★ Input (a), compute-bridge: the residue-norm reads through `toPolyG` as the abstract norm:
+-- Compute bridge: the residue-norm reads through `toPolyG` as the abstract norm:
 #print axioms CPolyG.toPolyG_cAlgResidueNorm
 
--- ★ Input (a), compute-bridge per node: the engine's norm-resultant = `Polynomial.resultant` (toK-read):
+-- Compute bridge: the engine's norm-resultant is the abstract `Polynomial.resultant` under `toK`:
 #print axioms CPolyG.toK_cresultantG_cAlgResidueNorm
 
--- ★★ Input (b) VERDICT: the rational log-part per-term match IS the algebraic partial fraction (not analytic):
+-- Partial-fraction input: the rational log-part per-term match is algebraic:
 #print axioms LogResidue.ratLogPart_eq_residue_logDeriv_sum
 
--- ★ Input (b): the residues ARE the partial-fraction coefficients:
+-- Partial-fraction input: the residues are the partial-fraction coefficients:
 #print axioms LogResidue.residue_is_partialFraction_coeff
 
--- ★★ Priority 3: the full algebraic integral `D(∫f) = f` composes from the rational + log soundness:
+-- Full composition: the algebraic integral `D(∫f) = f` follows from rational and log soundness:
 #print axioms RadElem.isAlgebraicIntegral_of_parts
 
--- ★★ Input (a) CLOSED: the interpolation-uniqueness characterization of the engine's `cAlgResidueResultant`:
+-- Compute bridge: interpolation uniqueness characterizes the engine's `cAlgResidueResultant`:
 #print axioms CPolyG.toPolyG_cAlgResidueResultant_eq_of_eval
 
--- ★★ Input (b): the engine round-trip certificate IS the integrand split (un-cross-multiplied `D(F)=f`):
+-- Driver bridge: the engine round-trip certificate is the un-cross-multiplied integrand split:
 #print axioms toPolyG_algDeriv_eq_of_roundtrip
 
 end DeepWiki.SymbolicIntegration
