@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Computable.CanonicalReconstructionCharZero
 import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
 import DeepWiki.SymbolicIntegration.Computable.CoupledDE
 import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
-import DeepWiki.SymbolicIntegration.Computable.Field
+import DeepWiki.SymbolicIntegration.Computable.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
 import DeepWiki.SymbolicIntegration.Computable.Tower.CarrierRec

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Field
+import DeepWiki.SymbolicIntegration.Computable.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.MonomialExtensions
