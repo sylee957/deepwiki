@@ -543,7 +543,4 @@ example (Arows : List (List ℚ)) (urhs : List ℚ) (ncols : ℕ) (x : List ℚ)
     ∀ i, i < Arows.length → CPolyG.dotQ (Arows.getD i []) x = urhs.getD i 0 :=
   CPolyG.cConstSolveUniqueQ_sound Arows urhs ncols x hwidth hlen hsome
 
-#print axioms cCoupledDESystem_sound
-#print axioms CPolyG.cConstSolveUniqueQ_sound
-
 end DeepWiki.SymbolicIntegration
