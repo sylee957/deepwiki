@@ -153,21 +153,16 @@ lowest-terms form is `(x + 1)/(x + 3)`. Numerator `[-1, 0, 1] = x² − 1`, deno
 def swellFrac : QFunNZG ℚ :=
   ⟨([(-1 : ℚ), 0, 1], [(-3 : ℚ), 2, 1]), by native_decide⟩
 
-/-- **`qReduce` cancels the gcd `x − 1` in `swellFrac`**: the numerator drops from degree 2 (`x² − 1`) to
-degree 1. -/
+-- `qReduce` cancels the gcd `x − 1` in `swellFrac`, dropping the numerator to degree 1.
 example : cdegG (qReduce swellFrac).1.1 = 1 := by native_decide
 
-/-- **`qReduce` drops `swellFrac`'s denominator to degree 1** (a scalar multiple of `x + 3`), from the
-original degree 2 (`x² + 2x − 3`). -/
+-- `qReduce` drops `swellFrac`'s denominator to degree 1, a scalar multiple of `x + 3`.
 example : cdegG (qReduce swellFrac).1.2 = 1 := by native_decide
 
-/-- **`qReduce` is value-preserving on `swellFrac`**: `qReduce swellFrac = swellFrac` in `ℚ(x)` (the
-engine's field equality `qReduceEq` is `true`), even though the cancelled representative differs by a
-constant factor — `(c·(x+1))/(c·(x+3)) = (x²−1)/(x²+2x−3)`. -/
+-- `qReduce` is value-preserving on `swellFrac` in the engine's field equality test.
 example : qReduceEq (qReduce swellFrac) swellFrac = true := by native_decide
 
-/-- **The total degree drops**: `cdegG num + cdegG den` falls from `2 + 2 = 4` (`swellFrac`) to
-`1 + 1 = 2` (`qReduce swellFrac`) — the reducer strictly shrinks the representation. -/
+-- The total degree drops from `2 + 2 = 4` to `1 + 1 = 2`.
 example :
     cdegG (qReduce swellFrac).1.1 + cdegG (qReduce swellFrac).1.2
       < cdegG swellFrac.1.1 + cdegG swellFrac.1.2 := by native_decide
@@ -178,11 +173,10 @@ Numerator `[-1,0,0,0,1]`, denominator `(x − 1)·(x⁵+x⁴+x³+x²+x+1) = x⁶
 def swellFrac2 : QFunNZG ℚ :=
   ⟨([(-1 : ℚ), 0, 0, 0, 1], [(-1 : ℚ), 0, 0, 0, 0, 0, 1]), by native_decide⟩
 
-/-- **`qReduce` is value-preserving on the bigger swell** `(x⁴−1)/(x⁶−1)`. -/
+-- `qReduce` is value-preserving on the bigger swell `(x⁴−1)/(x⁶−1)`.
 example : qReduceEq (qReduce swellFrac2) swellFrac2 = true := by native_decide
 
-/-- **The bigger swell's degree drops** from `4 + 6 = 10` to `3 + 5 = 8`: `gcd(x⁴−1, x⁶−1) = x²−1`
-(degree 2) is cancelled, leaving `(x²+1)/(x⁴+x²+1)`. -/
+-- The bigger swell's total degree drops from `4 + 6 = 10` to `3 + 5 = 8`.
 example :
     cdegG (qReduce swellFrac2).1.1 + cdegG (qReduce swellFrac2).1.2
       < cdegG swellFrac2.1.1 + cdegG swellFrac2.1.2 := by native_decide
