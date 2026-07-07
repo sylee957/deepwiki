@@ -79,7 +79,7 @@ theorem cSPDE_peel_cleared_gen {α : Type*} [CField α] [CFieldSpec α] [CDiffFi
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
-/-! ### §6.2 — the generic normal-denominator cleared lifting and special-denominator primitive case -/
+/-! ### Generic normal-denominator cleared lifting and special-denominator primitive case -/
 
 omit [CDiffField α] [CDiffFieldSpec α] in
 /-- `toPolyG (cdivWf p q) * toPolyG q = toPolyG p` from `toPolyG q ∣ toPolyG p` (nonzero divisor). -/
@@ -220,12 +220,12 @@ end DerivationNormalOrderDrop
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
 
--- ★ Derivation-generic pole order-drop, lower bound: `q^n ∣ p ⟹ q^{n−1} ∣ D p` (the §6.1 νₚ kernel half).
+-- ★ Derivation-generic pole order-drop, lower bound: `q^n ∣ p ⟹ q^{n−1} ∣ D p`.
 example {R : Type*} [CommRing R] (D : Derivation ℤ R R) {p q : R} {n : ℕ} (hdvd : q ^ n ∣ p) :
     q ^ (n - 1) ∣ D p :=
   pow_sub_one_dvd_deriv_of_pow_dvd D hdvd
 
--- ★ Derivation-generic pole order-drop, exact at a normal prime: `νₚ(D(pⁿ·r)) = n − 1` (Bronstein Lem 6.1.1).
+-- ★ Derivation-generic pole order-drop, exact at a normal prime: `νₚ(D(pⁿ·r)) = n − 1`.
 example {K : Type*} [Field K] [CharZero K] (D : Derivation ℤ K[X] K[X]) {p r : K[X]} {n : ℕ}
     (hp : Prime p) (hnormal : ¬ p ∣ D p) (hn : 1 ≤ n) (hr : ¬ p ∣ r) :
     emultiplicity p (D (p ^ n * r)) = (n - 1 : ℕ) :=
