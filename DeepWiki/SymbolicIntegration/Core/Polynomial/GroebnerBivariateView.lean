@@ -139,6 +139,17 @@ theorem natDegree_lazardView {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) 
     (lazardView f).natDegree = degreeOf 0 f :=
   natDegree_finSuccEquiv f
 
+/-- A `y`-degree-`0` polynomial has `lazardView` divisible by its constant leading coefficient. -/
+theorem C_dvd_lazardView_of_degreeOf_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
+    (hf0 : degreeOf 0 f = 0) :
+    Polynomial.C (leadingYCoeff f) ∣ lazardView f := by
+  have hdeg : (lazardView f).natDegree = 0 := by rw [natDegree_lazardView, hf0]
+  have hC : lazardView f = Polynomial.C ((lazardView f).coeff 0) :=
+    Polynomial.eq_C_of_natDegree_eq_zero hdeg
+  have hlc : leadingYCoeff f = (lazardView f).coeff 0 := by
+    rw [leadingYCoeff, Polynomial.leadingCoeff, hdeg]
+  rw [hlc, ← hC]
+
 /-- Under a dominant order (`hdom`), the index-`0` component of `m.degree f` is the `K[x][y]`
 `natDegree` of `f`. -/
 theorem degree_apply_zero_eq_natDegree_lazardView {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
@@ -174,6 +185,10 @@ example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf : f ≠ 0) :
 example {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
     (lazardView f).natDegree = degreeOf 0 f :=
   natDegree_lazardView f
+
+example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf0 : degreeOf 0 f = 0) :
+    Polynomial.C (leadingYCoeff f) ∣ lazardView f :=
+  C_dvd_lazardView_of_degreeOf_zero hf0
 
 example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
     leadingYCoeff f ≠ 0 ↔ f ≠ 0 :=

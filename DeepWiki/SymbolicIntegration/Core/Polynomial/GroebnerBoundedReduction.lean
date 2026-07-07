@@ -63,19 +63,6 @@ theorem leadingYCoeff_sortedByYDegree_dvd_of_le {K : Type*} [Field K]
   · exact leadingYCoeff_sortedByYDegree_dvd_of_lt hB h
   · rw [h]
 
-/-- **Lazard descent, the base case.** A `y`-degree-`0` element
-has `lazardView f = C (leadingYCoeff f)` (a constant in `K[x][y]`), so trivially `gᵢ ∣ fᵢ` in the form
-`C (leadingYCoeff f) ∣ lazardView f`. This is the bottom of the descent. -/
-theorem C_dvd_lazardView_of_degreeOf_zero {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K}
-    (hf0 : degreeOf 0 f = 0) :
-    Polynomial.C (leadingYCoeff f) ∣ lazardView f := by
-  have hdeg : (lazardView f).natDegree = 0 := by rw [natDegree_lazardView, hf0]
-  have hC : lazardView f = Polynomial.C ((lazardView f).coeff 0) :=
-    Polynomial.eq_C_of_natDegree_eq_zero hdeg
-  have hlc : leadingYCoeff f = (lazardView f).coeff 0 := by
-    rw [leadingYCoeff, Polynomial.leadingCoeff, hdeg]
-  rw [hlc, ← hC]
-
 /-- **A factor's `y`-degree is dominated by the product's**: `degreeOf 0 b ≤ degreeOf 0 (g * b)` for
 `g * b ≠ 0` (`natDegree` of the `K[x][y]` product adds, both factors nonzero). -/
 theorem degreeOf_le_degreeOf_mul {K : Type*} [Field K] {g b : MvPolynomial (Fin 2) K}
