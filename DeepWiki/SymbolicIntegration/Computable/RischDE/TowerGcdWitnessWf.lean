@@ -156,6 +156,8 @@ theorem dvd_dn_h_one_wf {β : Type*} [CField β] [CFieldSpec β] [CDiffField β]
     [CTowerGcdWitnessWf β] (h0 : CPolyG β) :
     toPolyG ([CField.one] : CPolyG β)
       ∣ toPolyG (CPolyG.cmulG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) [CField.one]).1 h0) := by
-  rw [cSplitFactorFastGWf_one_eq, CPolyG.toPolyG_cmulG, toPolyG_cone_eq_one_wf]; exact one_dvd _
+  rw [cSplitFactorFastGWf_one_eq]
+  simp only [denote, toPolyG_cone_eq_one_wf]
+  exact one_dvd _
 
 end DeepWiki.SymbolicIntegration
