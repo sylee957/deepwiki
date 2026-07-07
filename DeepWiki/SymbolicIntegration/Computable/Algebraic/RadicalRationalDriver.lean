@@ -6,8 +6,8 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCore
 
 The multi-case rational-part front-end for `∫ R/(B·y)` over `y² = ρ`, whose denominator `B` mixes
 `V`-factors (coprime to `ρ`, Case 1) and `W`-factors (dividing `ρ`, Case 2). Provides the iterated
-Case-2 and Case-3 reductions, the partial-fraction front-end, factor classification, and the
-multi-case dispatch driver, each validated through the diagonal derivation `radDeriv`. -/
+Case-2 and Case-3 reductions, the partial-fraction front-end, and concrete multi-case driver
+validations through the diagonal derivation `radDeriv`. -/
 
 open Polynomial
 
@@ -72,16 +72,10 @@ and the numerator `vNum`. Master identity `∫ C/y = vNum/y + ∫ Crem/y`. Gener
 def radIntegrateCase3 (der : CPolyG α → CPolyG α) (f g C : CPolyG α) : CPolyG α × CPolyG α :=
   radReduceCase3Iterate der f g (cdegG C + 1) C []
 
-/-! ### The partial-fraction front-end and the multi-case dispatch
+/-! ### The partial-fraction front-end
 
-The integrand `R/(B·y)` has `B` squarefree-decomposed into prime-powers, each classified as a
-`V`-factor or `W`-factor, `R` partial-fractioned across them, and each piece dispatched to the
-matching iterated reduction. -/
-
-/-- Classify a squarefree denominator factor `radClassifyFactor Bi ρ = true` iff `Bi` is a `V`-factor
-(coprime to `ρ`, `gcd(Bi, ρ)` constant), `false` iff a `W`-factor (`Bi ∣ ρ`). Generic over `[CField α]`. -/
-def radClassifyFactor (Bi ρ : CPolyG α) : Bool :=
-  cdegG (cgcdWf Bi ρ).1 = 0
+The integrand `R/(B·y)` has `B` decomposed into coprime prime-power factors and `R`
+partial-fractioned across them before the resulting pieces are handled by the case reductions. -/
 
 /-- Partial fraction across coprime prime-powers `radPartialFractionCoprime R Gs = [N₁,…,Nₘ]`: for
 pairwise-coprime `Gs` with `B = ∏Gᵢ` and proper `R`, returns `Nᵢ` with `R/B = Σᵢ Nᵢ/Gᵢ`,
