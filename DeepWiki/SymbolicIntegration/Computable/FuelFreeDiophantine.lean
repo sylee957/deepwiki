@@ -64,11 +64,13 @@ theorem toPolyG_cbezoutOneWf (a b : CPolyG α)
   have hu : toPolyG (cbezoutOneWf a b).1 = Polynomial.C c⁻¹ * toPolyG s := by
     rw [cbezoutOneWf]
     show toPolyG (cscaleG (CField.inv (cleadG g)) s) = _
-    rw [toPolyG_cscaleG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+    simp only [denote]
+    rw [toK_cleadG_eq_leadingCoeff, ← hc]
   have hw : toPolyG (cbezoutOneWf a b).2 = Polynomial.C c⁻¹ * toPolyG t := by
     rw [cbezoutOneWf]
     show toPolyG (cscaleG (CField.inv (cleadG g)) t) = _
-    rw [toPolyG_cscaleG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+    simp only [denote]
+    rw [toK_cleadG_eq_leadingCoeff, ← hc]
   rw [hu, hw]
   have hcombine : Polynomial.C c⁻¹ * toPolyG s * toPolyG a
       + Polynomial.C c⁻¹ * toPolyG t * toPolyG b = Polynomial.C c⁻¹ * toPolyG g := by
@@ -166,9 +168,13 @@ theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
   set S := cscaleG (CField.inv (cleadG g)) (cmulG rhs s) with hSdef
   set T := cscaleG (CField.inv (cleadG g)) (cmulG rhs t) with hTdef
   have hSpoly : toPolyG S = Polynomial.C c⁻¹ * (toPolyG rhs * toPolyG s) := by
-    rw [hSdef, toPolyG_cscaleG, toPolyG_cmulG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+    rw [hSdef]
+    simp only [denote]
+    rw [toK_cleadG_eq_leadingCoeff, ← hc]
   have hTpoly : toPolyG T = Polynomial.C c⁻¹ * (toPolyG rhs * toPolyG t) := by
-    rw [hTdef, toPolyG_cscaleG, toPolyG_cmulG, CFieldSpec.toK_inv, toK_cleadG_eq_leadingCoeff, ← hc]
+    rw [hTdef]
+    simp only [denote]
+    rw [toK_cleadG_eq_leadingCoeff, ← hc]
   -- the Euclidean division `S = quo·q + b` (fuel-free).
   have hdivmod : toPolyG S
       = toPolyG (cdivmodWf S q).1 * toPolyG q + toPolyG (cdivmodWf S q).2 :=
