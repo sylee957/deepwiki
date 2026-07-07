@@ -102,6 +102,20 @@ theorem deflation_ne_zero (A : D[X]) (k : ℕ) : deflation A k ≠ 0 := by
   exact fun P hP =>
     pow_ne_zero _ (irreducible_of_normalized_factor P (Multiset.mem_toFinset.mp hP)).ne_zero
 
+open Classical in
+/-- `A⁻⁽ᵏ⁺¹⁾ = (A⁻ᵏ)⁻¹`: the `(k+1)`-deflation is the deflation of the `k`-deflation. -/
+theorem deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
+    deflation A (k + 1) = deflation (deflation A k) 1 := by
+  conv_rhs => rw [deflation, (deflation_isPrimitive A k hA).primPart_eq]
+  rw [deflation]
+  simp only [count_normalizedFactors_deflation A k, Nat.sub_sub]
+  refine (Finset.prod_subset (fun Q hQ => ?_) (fun P _ hP' => ?_)).symm
+  · rw [Multiset.mem_toFinset, ← Multiset.count_pos, count_normalizedFactors_deflation A k] at hQ
+    rw [Multiset.mem_toFinset, ← Multiset.count_pos]; omega
+  · rw [Multiset.mem_toFinset, ← Multiset.count_pos, count_normalizedFactors_deflation A k,
+      not_lt] at hP'
+    rw [show (normalizedFactors A.primPart).count P - (k + 1) = 0 by omega, pow_zero]
+
 end Deflation
 
 end DeepWiki.SymbolicIntegration

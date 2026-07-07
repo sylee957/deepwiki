@@ -22,20 +22,6 @@ open UniqueFactorizationMonoid
 variable {D : Type*} [CommRing D] [IsDomain D] [UniqueFactorizationMonoid D] [NormalizedGCDMonoid D]
 
 open Classical in
-/-- `A⁻⁽ᵏ⁺¹⁾ = (A⁻ᵏ)⁻¹`: the `(k+1)`-deflation is the deflation of the `k`-deflation. -/
-theorem deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
-    deflation A (k + 1) = deflation (deflation A k) 1 := by
-  conv_rhs => rw [deflation, (deflation_isPrimitive A k hA).primPart_eq]
-  rw [deflation]
-  simp only [count_normalizedFactors_deflation A k, Nat.sub_sub]
-  refine (Finset.prod_subset (fun Q hQ => ?_) (fun P _ hP' => ?_)).symm
-  · rw [Multiset.mem_toFinset, ← Multiset.count_pos, count_normalizedFactors_deflation A k] at hQ
-    rw [Multiset.mem_toFinset, ← Multiset.count_pos]; omega
-  · rw [Multiset.mem_toFinset, ← Multiset.count_pos, count_normalizedFactors_deflation A k,
-      not_lt] at hP'
-    rw [show (normalizedFactors A.primPart).count P - (k + 1) = 0 by omega, pow_zero]
-
-open Classical in
 /-- `(A⁻ᵏ)* · A⁻⁽ᵏ⁺¹⁾` is associated to `A⁻ᵏ`: the squarefree part of a deflation times the next
 deflation recovers it. -/
 theorem squarefreePart_mul_deflation_succ (A : D[X]) (k : ℕ) (hA : A.primPart ≠ 0) :
