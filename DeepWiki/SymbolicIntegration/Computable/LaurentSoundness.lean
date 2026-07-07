@@ -2,10 +2,9 @@ import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.Hyperexp.LaurentCore
 import DeepWiki.SymbolicIntegration.Computable.RischFieldSpec
 
-/-! # Laurent integrator soundness (M1: the derivation kernel)
+/-! # Laurent integrator soundness
 
-Toward discharging the hyperexp assembler's `hLaurField`: the base↔tower derivation bridge on polynomial
-images and the hyperexponential power rule `D(tᵏ) = k·η·tᵏ`. See `docs/laurent-soundness.md`.
+Soundness lemmas for Laurent-term integration in a monomial hyperexponential tower.
 -/
 
 open Polynomial
@@ -56,7 +55,7 @@ theorem toK_cLaurentShiftG_natCast [CRischField α] (η : α) (k : ℕ) :
   rw [cLaurentShiftG, Int.natAbs_natCast, if_neg (Int.not_lt.mpr (Int.natCast_nonneg k)),
     CFieldSpec.toK_mul, CPolyG.toK_cnatCastG]
 
-/-- **M2 (non-negative power): one Laurent term is an antiderivative.** For a hyperexponential monomial
+/-- **A non-negative Laurent term is an antiderivative.** For a hyperexponential monomial
 `Dt = η·t` and a solved coefficient `cLaurentIntCoeffG η k aₖ = some qₖ` (`k : ℕ`),
 `D_tower(⟦qₖ·tᵏ⟧) = ⟦aₖ·tᵏ⟧`. Product/power rule + `crischDESolve` soundness collapse `(qₖ)′ + k·η·qₖ` to
 `aₖ`. -/
@@ -92,7 +91,7 @@ theorem toK_cLaurentShiftG_negCast [CRischField α] (η : α) (i : ℕ) :
     CPolyG.toK_cnatCastG]
   push_cast; ring
 
-/-- **M2 (negative power): one Laurent term is an antiderivative.** For `Dt = η·t` and a solved
+/-- **A negative Laurent term is an antiderivative.** For `Dt = η·t` and a solved
 coefficient `cLaurentIntCoeffG η (-(i+1)) a = some q`, `D_tower(⟦q·t^{-(i+1)}⟧) = ⟦a·t^{-(i+1)}⟧`. Quotient
 rule + `crischDESolve` soundness on the negative shift. -/
 theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
@@ -126,11 +125,11 @@ theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
   push_cast
   ring
 
-/-! ### M3 (sum assembly): `D_tower` distributes over a list of solved Laurent terms -/
+/-! ### Laurent sum assembly -/
 
 /-- **The non-negative Laurent sum is an antiderivative.** For a list `l` of `(k, aₖ, qₖ)` where each `qₖ`
 solves the shift-`k` RDE, `D_tower(∑ₖ ⟦qₖ·tᵏ⟧) = ∑ₖ ⟦aₖ·tᵏ⟧`. The additive assembly of
-`cIntegrateHyperexpLaurent_pos_term` over the term list (`map_list_sum` + per-term M2). -/
+`cIntegrateHyperexpLaurent_pos_term` over the term list. -/
 theorem towerFractionFieldDerivG_laurent_pos_sum [CRischField α] [CRischFieldSpec α]
     (Dt : CPolyG α) (η : α) (l : List (ℕ × α × α))
     (hDt : IsHyperexpMonomial Dt η)
@@ -147,8 +146,8 @@ theorem towerFractionFieldDerivG_laurent_pos_sum [CRischField α] [CRischFieldSp
 
 /-- **The non-negative Laurent solve loop is sound (offset-generalized).** If the `posQ` foldr over
 `pos.zipIdx s` (shifts `s, s+1, …`) returns `coeffs`, then `D_tower(⟦tˢ·coeffs⟧) = ⟦tˢ·pos⟧`. Direct
-induction on `pos`, splitting the Horner list off the head and applying the single-term M2 identity plus
-the induction hypothesis at offset `s+1`. -/
+induction on `pos`, splitting the Horner list off the head and applying the single-term identity plus the
+induction hypothesis at offset `s+1`. -/
 theorem laurentPosGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPolyG α) (η : α)
     (hDt : IsHyperexpMonomial Dt η) :
     ∀ (pos coeffs : CPolyG α) (s : ℕ),
@@ -245,7 +244,7 @@ theorem laurentGo_length [CRischField α] (η : α) (sh : ℕ → ℤ) :
 /-- **The negative Laurent solve loop is sound (offset-generalized).** If the `negQ` foldr over
 `neg.zipIdx s` (shifts `-(s+1), -(s+2), …`) returns `negCoeffs`, then over the fixed denominator
 `t^(s+neg.length)`, `D_tower(⟦negCoeffs.reverse⟧/⟦t^(s+len)⟧) = ⟦neg.reverse⟧/⟦t^(s+len)⟧`. The head splits
-off the reversed list as `⟦q⟧/t^(s+1)` (neg-term M2) plus the tail at offset `s+1` (same denominator, IH). -/
+off the reversed list as `⟦q⟧/t^(s+1)` plus the tail at offset `s+1` (same denominator, IH). -/
 theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : CPolyG α) (η : α)
     (hDt : IsHyperexpMonomial Dt η) :
     ∀ (neg negCoeffs : List α) (s : ℕ),
