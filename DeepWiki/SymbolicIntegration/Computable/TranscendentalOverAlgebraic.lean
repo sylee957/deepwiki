@@ -417,7 +417,8 @@ theorem mk_canon (u : RadElem α) :
     AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (CPolyG.toPolyG (RadExt.radCanon n f u))
       = AdjoinRoot.mk _ (CPolyG.toPolyG u) := by
   show Ideal.Quotient.mk (radIdeal n f) _ = Ideal.Quotient.mk _ _
-  rw [RadExt.radCanon, CPolyG.toPolyG_cnormG, mk_toPolyG_radReduce]
+  simp only [RadExt.radCanon, denote]
+  rw [mk_toPolyG_radReduce]
 
 /-- `toAdj` sends `RadExt.zero` to `0`. -/
 theorem toAdj_zero : toAdj (RadExt.zero : RadExt α n f) = 0 := by
