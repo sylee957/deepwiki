@@ -127,6 +127,15 @@ theorem squarefree_of_associated_sqfreeFactPart {K : Type*} [Field K]
     Squarefree V :=
   h.squarefree_iff.mpr (sqfreeFactPart_squarefree A j)
 
+open UniqueFactorizationMonoid in
+open Classical in
+/-- Associates of distinct squarefree-factorization parts are relatively prime. -/
+theorem isRelPrime_of_associated_sqfreeFactPart {K : Type*} [Field K]
+    {V W : K[X]} (A : K[X]) {i j : ℕ} (hij : i ≠ j)
+    (hV : Associated V (sqfreeFactPart A i)) (hW : Associated W (sqfreeFactPart A j)) :
+    IsRelPrime V W :=
+  ((sqfreeFactPart_isRelPrime A hij).of_dvd_left hV.dvd).of_dvd_right hW.dvd
+
 end SquarefreeParts
 
 end DeepWiki.SymbolicIntegration
