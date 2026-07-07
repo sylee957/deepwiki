@@ -137,17 +137,4 @@ theorem torsion_log_branch_validates :
     ∧ ((torsionLogTerm 5 tltRhoX3m2 hypRhoX3m2 1 hypPt35).isNone = true
       ∧ (radIsZero tltResult35.ratPart, tltResult35.logTerms.length) = (true, 0)) := by native_decide
 
-/-! ### `#print axioms` -/
-
-#print axioms torsion_log_branch_validates
-#print axioms tltTerm01_eq
-#print axioms tltResult01_algDeriv
-
-/-! ## What is left: the residue → divisor front-end
-
-`torsionLogTerm` takes a residue divisor `D` directly. The full chain
-`integrand → residues → residue divisor → torsionLogTerm` needs the automatic wiring of the residue
-front-end (`cAlgResidueResultant`, `residueDivisorMumford`) into the branch, and a general principal
-generator for higher genus; `principalGenerator` is exact for the order-3 genus-1 case here. -/
-
 end DeepWiki.SymbolicIntegration
