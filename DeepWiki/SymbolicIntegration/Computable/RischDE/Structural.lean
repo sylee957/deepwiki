@@ -172,10 +172,8 @@ theorem cSPDEGWf_cleared_lifting_gen (Dt a b c : CPolyG α) (n : ℤ) (bbar cbar
     simp only [Prod.mk.injEq] at hspde
     obtain ⟨hbbar, hcbar, hm, hα, hβ⟩ := hspde
     subst hα; subst hβ
-    rw [toPolyG_caddG, toPolyG_cmulG, toPolyG_nil, add_zero]
-    have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
-      rw [toPolyG_cons, toPolyG_nil, CFieldSpec.toK_one, mul_zero, add_zero, map_one]
-    rw [hone, one_mul]
+    simp only [denote, toPolyG_nil, add_zero]
+    simp only [map_one, mul_zero, add_zero, one_mul]
     have hdvd' : (CFracGcdCoreWf.cgcdFFCoreWf a b).cdvdGWf c = true := hdvd
     rw [cSPDEGClearedGenWf] at hcert
     simp only [hn, hdvd'] at hcert
