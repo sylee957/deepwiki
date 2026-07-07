@@ -447,15 +447,13 @@ theorem toAdj_neg (p : RadExt α n f) : toAdj (RadExt.neg p) = - toAdj p := by
   simp only [denote, map_neg]
   rfl
 
-/-- **`toAdj` intertwines `RadExt.mul` with `*`** — the radical product is the quotient product
-(`mk_toPolyG_radMul`, the carrier ring structure `K[X] ⧸ (Xⁿ − C(toK f))`). -/
+/-- `toAdj` sends radical-extension multiplication to quotient-ring multiplication. -/
 theorem toAdj_mul (p q : RadExt α n f) : toAdj (RadExt.mul p q) = toAdj p * toAdj q := by
   show AdjoinRoot.mk _ (CPolyG.toPolyG (RadExt.radCanon n f (radMul n f p.toRad q.toRad))) = _
   rw [mk_canon]; show Ideal.Quotient.mk (radIdeal n f) _ = _ * _
   rw [mk_toPolyG_radMul]; rfl
 
-/-- `toAdj` reflects the zero test — `RadExt.isZero p = true ↔ toAdj p = 0` (`n ≥ 1`), via the
-canonical-rep degree bound and `AdjoinRoot.mk_ne_zero_of_natDegree_lt`. -/
+/-- `toAdj` identifies the computable zero test with quotient-ring equality to zero. -/
 theorem isZero_iff (hn : 1 ≤ n) (p : RadExt α n f) : RadExt.isZero p = true ↔ toAdj p = 0 := by
   rw [RadExt.isZero, toAdj]
   constructor
@@ -549,8 +547,7 @@ theorem toK_radNorm2_eq_zero_of_toPolyG_zero (q : RadElem α) (hq : (q : List α
   rw [radNorm2, CFieldSpec.toK_sub, CFieldSpec.toK_mul, CFieldSpec.toK_mul, CFieldSpec.toK_mul, hA, hB]
   ring
 
-/-- A canonical rep with `mk (toPolyG q) = 0` is `0` — `(q.length ≤ 2) → mk (toPolyG q) = 0 →
-toPolyG q = 0`, via `AdjoinRoot.mk_ne_zero_of_natDegree_lt`. -/
+/-- A reduced quadratic radical representative that maps to zero is the zero polynomial. -/
 theorem toPolyG_eq_zero_of_mk_zero [Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK f)))]
     (q : RadElem α) (hq : (q : List α).length ≤ 2)
     (h : AdjoinRoot.mk (X ^ 2 - C (CFieldSpec.toK f)) (CPolyG.toPolyG q) = 0) :
@@ -635,12 +632,9 @@ noncomputable instance instCFieldSpecRadExt {α : Type*} [CField α] [CFieldDoma
 `CFieldDomain RadX3` resolves concretely (no hypothesis), so `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` is an
 unconditional `CField` and `CDiffField`. -/
 
-/-- `CFieldDomain RadX3` — discharged concretely from `instCFieldSpecRadExt` via the global
-`instCFieldDomainOfCFieldSpec`. -/
 noncomputable example : CFieldDomain RadX3 := inferInstance
 
-/-- `QFunNZG RadX3` is a `CField`, unconditionally — `ℚ(x)[√(x³+1)](t)` resolves its `CField` outright
-(the `[CFieldDomain RadX3]` hypothesis now discharged). -/
+/-- `QFunNZG RadX3` has an unconditional computable-field structure. -/
 theorem cfield_qfunNZG_radX3_unconditional : Nonempty (CField (QFunNZG RadX3)) := ⟨inferInstance⟩
 
 /-- `QFunNZG RadX3` is a `CDiffField`, unconditionally — `ℚ(x)[√(x³+1)](t)` inheriting the full tower
