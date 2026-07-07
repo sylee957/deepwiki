@@ -81,7 +81,7 @@ noncomputable instance instCFieldDomainOfCFieldSpec {α : Type*} [CField α] [CF
     intro b d hb hd
     rw [Bool.eq_false_iff] at hb hd ⊢
     rw [Ne, CPolyG.cisZeroG_iff] at hb hd ⊢
-    rw [CPolyG.toPolyG_cmulG]
+    simp only [denote]
     exact mul_ne_zero hb hd
 
 namespace QFunNZG
