@@ -375,7 +375,9 @@ theorem toPolyG_foldl_caddG {α : Type*} [CField α] [CFieldSpec α]
     toPolyG (cpowG p n) = (toPolyG p) ^ n := by
   induction n with
   | zero => simp [cpowG, denote]
-  | succ n ih => rw [cpowG, toPolyG_cmulG, ih, pow_succ, mul_comm]
+  | succ n ih =>
+    rw [cpowG]
+    simp only [denote, ih, pow_succ, mul_comm]
 
 /-! ### Generic formal derivative `cderivG` over a `CField` -/
 
