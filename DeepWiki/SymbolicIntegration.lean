@@ -43,7 +43,9 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 import DeepWiki.SymbolicIntegration.Core.Polynomial.PolynomialNormalization
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYun
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.GroebnerBasis
@@ -84,6 +86,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.RtResultantCorrectness
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
+import DeepWiki.SymbolicIntegration.SpecialNormalCoprime
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantPRS
