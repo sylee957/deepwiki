@@ -311,11 +311,11 @@ theorem lazardRiobooTrager_output_isSimilar_gcd_gen {K : Type*} [Field K] [IsAlg
   · rw [if_neg hcase]
     exact lazardRiobooTrager_isSimilar_gcd_gen A D B hD hB hA hB_deg a (lt_of_le_of_ne hile hcase)
 
-/-! ## `z`-degree bound (over a general field, needed for the interpolation certification)
+/-! ## `z`-degree bounds over a general field
 
 `rtResultantGen A D B` has `z`-degree `≤ deg D`, generalizing `natDegree_rtResultant_le` (stated over `ℚ`)
-to any field `K` and arbitrary `B`. Needed to certify `cResidueResultantTowerGWf` (an interpolant of the
-resultant samples) via interpolation uniqueness. -/
+to any field `K` and arbitrary `B`; the same determinant estimate also bounds the bivariate
+subresultant coefficients used by interpolation uniqueness. -/
 
 /-- Column-degree bound for a matrix determinant (general field). -/
 theorem natDegree_det_le_sum_col_gen {ι : Type*} [DecidableEq ι] [Fintype ι]
@@ -386,8 +386,8 @@ theorem natDegree_implicitDeriv_le_of_monic {F : Type*} [Field F] [Differential 
 open scoped Differential in
 /-- **Exact degree drop for a genuine primitive monomial.** For monic `p` (`deg p ≥ 1`), constant `v`
 (`deg v = 0`, `η = v.coeff 0`) with `η` **not a derivative** (`∀ γ, γ′ ≠ η`), `implicitDeriv v p` has degree
-*exactly* `deg p − 1`. The sub-leading coefficient is `(cₙ₋₁)′ + n·η`; were it `0`, then `η = D(−cₙ₋₁/n)` would
-be a derivative — contradiction. This is the `hm` frontier condition, derived from the monomial property. -/
+*exactly* `deg p − 1`. The sub-leading coefficient is `(cₙ₋₁)′ + n·η`; were it `0`, then
+`η = D(−cₙ₋₁/n)` would be a derivative. -/
 theorem natDegree_implicitDeriv_eq_of_monic_of_not_range {F : Type*} [Field F] [Differential F] [CharZero F]
     (v p : F[X]) (hp : p.Monic) (hv : v.natDegree = 0) (hn : 1 ≤ p.natDegree)
     (hrange : ∀ (γ : F), γ′ ≠ v.coeff 0) :
@@ -421,11 +421,10 @@ theorem natDegree_implicitDeriv_eq_of_monic_of_not_range {F : Type*} [Field F] [
 open scoped Classical in
 /-- **`z`-degree bound on the bivariate subresultant coefficient.** Each `t`-coefficient of
 `lrtSubresultantGen A D B j` (a polynomial in the residue variable `z`) has degree `≤ deg D + (deg D − 1)`,
-hence `< N = deg D + (deg D − 1) + 1` — the node count of `cSubresultantParam`. This is what makes the
-engine's interpolation-in-`z` recover the true subresultant coefficient exactly (G4c). Proved by
+hence is determined by interpolation at `deg D + (deg D − 1) + 1` nodes. Proved by
 `natDegree_det_le_sum_col_gen`: every Sylvester entry is a coefficient of `D.map C` (`z`-constant) or of
-`A.map C − z·B.map C` (`z`-linear), so each is `z`-degree `≤ 1`, and the submatrix has `≤ deg D + (deg D − 1)`
-columns. -/
+`A.map C − z·B.map C` (`z`-linear), so each is `z`-degree `≤ 1`, and the submatrix has
+`≤ deg D + (deg D − 1)` columns. -/
 theorem natDegree_coeff_lrtSubresultantGen_le (A D B : K[X]) (j k : ℕ) :
     ((lrtSubresultantGen A D B j).coeff k).natDegree ≤ D.natDegree + (D.natDegree - 1) := by
   have hentry : ∀ (i l : Fin ((D.natDegree - 1) + D.natDegree)),
@@ -504,9 +503,7 @@ theorem lrtSubresultantGen_map {L : Type*} [Field L] (φ : K →+* L) (A D B : K
   simp
 
 /-- **`lrtSubresultantGen` base-changed and specialized at `z = c` is the residue subresultant over `L`.**
-`(lrtSubresultantGen A D B j).map (eval₂RingHom φ c) = subresultant (D.map φ) (A.map φ − C c·B.map φ) …`.
-This is exactly `evalLrtArg`'s raw value once the computable `Sᵢ` coefficients are read as `lrtSubresultantGen`
-coefficients (G4c). -/
+`(lrtSubresultantGen A D B j).map (eval₂RingHom φ c) = subresultant (D.map φ) (A.map φ − C c·B.map φ) …`. -/
 theorem lrtSubresultantGen_map_eval₂ {L : Type*} [Field L] (φ : K →+* L) (A D B : K[X]) (c : L) (j : ℕ)
     (hφ : Function.Injective φ) :
     (lrtSubresultantGen A D B j).map (Polynomial.eval₂RingHom φ c)
@@ -559,11 +556,9 @@ theorem gcd_nodal_eq_prod_residue_gen (s : Finset K) (A B : K[X]) (a : K)
   rw [hgsplits.eq_prod_roots_of_monic hgmonic, hroots, Finset.prod_eq_multiset_prod]
 
 open scoped Classical in
-/-- **The residue subresultant is similar to the residue-pole product** (over an alg-closed `E`). Combining
-G3 (`lazardRiobooTrager_output_isSimilar_gcd_gen`, `~ gcd`), `lrtSubresultantGen_eval` (the specialized
-subresultant), and G2 (`gcd_nodal_eq_prod_residue_gen`, `gcd = ∏`): for `D = nodal s`, the subresultant of
-`(D, A − c·B)` at index `i = rootMultiplicity c` (`< deg D`) is similar to `∏_{res β = c}(X−β)`. This is the
-`hsim` input to `evalLrtArg_cSubresultantParam_eq_prod`. -/
+/-- **The residue subresultant is similar to the residue-pole product** (over an alg-closed `E`). For
+`D = nodal s`, the subresultant of `(D, A − c·B)` at index `i = rootMultiplicity c` (`< deg D`) is
+similar to `∏_{res β = c}(X−β)`. -/
 theorem isSimilar_subresultant_prod {E : Type*} [Field E] [IsAlgClosed E] (A B : E[X]) (s : Finset E)
     (c : E) (hB : ∀ β ∈ s, B.eval β ≠ 0)
     (hA : A.natDegree < (Lagrange.nodal s id).natDegree)
@@ -609,10 +604,8 @@ theorem monicNormalize_of_associated_monic {p q : K[X]} (hq : q.Monic) (h : Asso
   refine monicNormalize_of_eq_C_mul_monic k⁻¹ (inv_ne_zero hk) hq ?_
   rw [← hu, hkC, mul_comm (C k⁻¹) (p * C k), mul_assoc, ← C_mul, mul_inv_cancel₀ hk, C_1, mul_one]
 
-/-- **The monic log argument is the residue-pole product.** If the (specialized) subresultant `S` is
-similar to `∏_{β}(t−β)`, its monic normalization equals `∏_{β}(t−β)` exactly. This is the P3 endpoint: with
-`S = lrtSubresultantGen … .map (evalRingHom c)` (`~ gcd` by G3) and `gcd = ∏_{res β = c}(t−β)` (by G2), the
-monic log argument is the residue-`c` linear-factor product. -/
+/-- **The monic log argument is the residue-pole product.** If the specialized subresultant `S` is
+similar to `∏_{β}(t−β)`, its monic normalization equals the residue-`c` linear-factor product exactly. -/
 theorem monicNormalize_eq_of_isSimilar_prod {S : K[X]} (poles : Multiset K)
     (hsim : IsSimilar S (poles.map (fun β => X - C β)).prod) :
     S * C S.leadingCoeff⁻¹ = (poles.map (fun β => X - C β)).prod :=
