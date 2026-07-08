@@ -49,6 +49,8 @@ One markdown file per issue (or extend an existing one if it's the same root cau
 
 ## Closing a note
 
-When a limitation gets fixed (the tool changes, the doc is updated, the convention is revised),
-set `Status: fixed in <commit>` in the note rather than deleting it — the history of *why* a tool
-works the way it does is useful. Prune only genuine duplicates.
+When a limitation is **resolved** — the tool changes, the doc/convention is updated, or the friction
+otherwise can no longer happen — **delete the note** in the same commit that resolves it. This
+directory is a list of *live* friction, not a changelog: the fix and its rationale live in the
+resolving commit (and, if durable, the tool/doc it changed), so a resolved note is just clutter. Prune
+duplicates the same way. A note survives only while its friction is still real.

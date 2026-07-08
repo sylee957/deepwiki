@@ -26,9 +26,10 @@ reveals *local* fixes (a docstring, a rename); module-scale reorganization is in
 time. So alternate:
 
 - **(a) File mode** — sample a random in-scope file and read it as a newcomer (step 2). Take what the
-  sample gives you; don't cherry-pick.
+  sample gives you; don't cherry-pick. (Portable reservoir sampler — `shuf` is GNU-only and absent on
+  this macOS host; `awk` here is *sampling*, not a bulk edit, so the "never `awk`" move rule doesn't apply.)
   ```
-  find DeepWiki -name '*.lean' | grep -vE '/(MeasureTheory|NetworkCalculus|ReactiveSystems|RelationalDatabases|TimeSeries)/' | shuf | head -1
+  find DeepWiki -name '*.lean' | grep -vE '/(MeasureTheory|NetworkCalculus|ReactiveSystems|RelationalDatabases|TimeSeries)/' | awk -v seed="$RANDOM$$" 'BEGIN{srand(seed)} rand()*NR<1{l=$0} END{if(l)print l}'
   ```
 - **(b) Partition mode — the module-reorganization driver.** Run the global partition-diff and take a
   *whole cluster* as the unit of work:
@@ -119,7 +120,7 @@ Decls to move (from `wiki show`/`context`):
   ...
 Impact (`wiki rdeps` on each): <callers to re-import>
 Unify: <near-duplicate lemmas in the cluster to collapse into one abstraction>
-Steps: 1) create target + aggregator  2) git mv / move decls  3) fix imports  4) gate  5) unify  6) gate
+Steps: 1) mkdir -p the target dir + create aggregator  2) git mv / move decls  3) fix imports  4) gate  5) unify  6) gate
 ```
 With the plan written, the moves are deterministic; follow it and let the gate confirm each step.
 
@@ -136,7 +137,9 @@ Bold means larger-scoped, not reckless — the discipline that keeps a bold move
   ruled out — not a risk you're taking.)
 - **A file/module rename** touches every import + the aggregator + doc-gen URLs — do it as a
   **`git mv`-only commit** (imports + aggregator only, zero declaration change), separate from content
-  edits, so the gate can verify it's moves-only.
+  edits, so the gate can verify it's moves-only. Moving into a *new* subdirectory: `git mv` does **not**
+  create intermediate dirs and reports a misleading "source … No such file or directory" — `mkdir -p`
+  the target directory first.
 - **When the gate goes red, it's doing its job** — read the error, fix the named site, re-gate. A red
   gate mid-reorg is normal and expected, not a signal to abandon the move; only an *unfixable* red gate
   (a genuine semantic clash) is a reason to `git` revert and rethink.
@@ -188,8 +191,14 @@ These notes are how the tools get better — treat improving them as part of the
   current — so the next iteration's candidates reflect the new structure.
 - `scripts/check.sh <module>` per file, then bare `scripts/check.sh` before finishing — must print
   `GATE: PASS` (warnings are failures). Restate a changed theorem as an `example` if a change is subtle.
+  **Run gates one at a time — never two `scripts/check.sh` concurrently.** Parallel `lake build`s race
+  on generated `.setup.json`/IR artifacts and produce a *spurious* `unexpected end of input` failure
+  unrelated to your edit; the loop is sequential, so keep gates sequential too.
 - Commit per logical change with a clear message; keep pure `git mv` splits/renames in their own commits.
-  Don't push unless asked.
+  **Stage explicitly and verify before committing** — after `git add`, check `git status` (a failed
+  `git add` pathspec does **not** abort the following `git commit`, which will then commit only whatever
+  was already staged — a partial commit). Prefer `git add -A -- <moved-paths> <plan-doc>` and confirm the
+  staged set is the whole change. Don't push unless asked.
 
 Repeat, sampling fresh files, until random samples consistently read as already well-organized and
 uniform to a newcomer.
