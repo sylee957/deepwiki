@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.AlgebraicConstants.Algebraic
+import DeepWiki.SymbolicIntegration.AlgebraicConstants.Closure
 
 /-! # Rational-extension constants
 

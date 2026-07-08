@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.AlgebraicConstants.Algebraic
 import DeepWiki.SymbolicIntegration.AlgebraicConstants.Closure
 import DeepWiki.SymbolicIntegration.AlgebraicConstants.NullstellensatzTransfer
 import DeepWiki.SymbolicIntegration.AlgebraicConstants.RationalExtension
