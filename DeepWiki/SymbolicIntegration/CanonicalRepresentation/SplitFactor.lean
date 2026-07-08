@@ -1,7 +1,4 @@
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.NormalSqfree
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
-import Mathlib.FieldTheory.RatFunc.Basic
-import Mathlib.RingTheory.Radical.Basic
 
 /-! # Canonical split-factor algorithm
 
