@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Transport.Units.Associates
-import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Transport.Units.Intersection
 
 /-! # Unit and associate transport for normal and special elements
 
