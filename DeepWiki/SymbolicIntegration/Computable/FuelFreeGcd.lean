@@ -387,6 +387,22 @@ theorem toPolyG_cdivWf_exact (p q : CPolyG α) (hq0 : cnormG q ≠ [])
     toPolyG_cmodWf_eq_zero_of_dvd p q hq0 hdvd
   rw [hid, hrem0, add_zero]
 
+/-- `u·v^i = d` where `u = cdivWf d (v^i)`, given `v^i ∣ d` and `v ≠ 0`. -/
+theorem toPolyG_cdivWf_pow_mul (d v : CPolyG α) (i : ℕ) (hv : toPolyG v ≠ 0)
+    (hdvd : toPolyG v ^ i ∣ toPolyG d) :
+    toPolyG (cdivWf d (cpowG v i)) * toPolyG v ^ i = toPolyG d := by
+  have hcn : cnormG (cpowG v i) ≠ [] := by
+    intro h
+    have hz : toPolyG (cpowG v i) = 0 := (cisZeroG_iff _).mp (by simp [cisZeroG, h])
+    simp only [denote] at hz
+    exact pow_ne_zero i hv hz
+  have hd2 : toPolyG (cpowG v i) ∣ toPolyG d := by
+    simp only [denote]
+    exact hdvd
+  have h := toPolyG_cdivWf_exact d (cpowG v i) hcn hd2
+  simp only [denote] at h
+  exact h
+
 /-! ### The monic gcd divides both inputs (through `toPolyG`) -/
 
 /-- The monic gcd divides both inputs (through `toPolyG`). -/
