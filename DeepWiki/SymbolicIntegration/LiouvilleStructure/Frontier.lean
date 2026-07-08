@@ -76,7 +76,7 @@ theorem isAlgebraicElementary_finiteDimensional_discharge
 
 end DischargeRealFrontier
 
-/-! ### Restatements and axiom audit -/
+/-! ### Restatements -/
 
 section Restatements
 
@@ -93,10 +93,5 @@ example (F : Type*) [Field F] [Differential F] [CharZero F]
   algebraicLiouvilleFrontier_finiteDimensional F K f h
 
 end Restatements
-
-#print axioms algebraicLiouvilleFrontier_form
-#print axioms algebraicLiouvilleFrontier_finiteDimensional
-#print axioms algebraicLiouvilleFrontier_proved
-#print axioms isAlgebraicElementary_finiteDimensional_discharge
 
 end DeepWiki.SymbolicIntegration.LiouvilleStructure
