@@ -27,7 +27,7 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralSetup
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralTorsionLight
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.GeneralWellFounded
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.HenselLift
-import DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound
+import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteDegreeBound
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.HermiteNormalForm
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.HyperellipticDivisor
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.IntegralBasisFull

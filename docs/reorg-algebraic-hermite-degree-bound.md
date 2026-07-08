@@ -1,17 +1,13 @@
-# Algebraic Hermite degree-bound relocation
+# Algebraic Hermite degree-bound reorg
 
 ## Target module
 
-`DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound`
-
-The current module
-`DeepWiki.SymbolicIntegration.Computable.Algebraic.HermiteDegreeBound`
-contains generic polynomial degree estimates in namespace
-`DeepWiki.SymbolicIntegration.AlgebraicHermite`. It is not an executable
-engine module, so the `Computable/Algebraic` placement hides source-neutral
-theorem API behind a computable path.
+`DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteDegreeBound`
 
 ## Declarations to move
+
+Move the whole module currently at
+`DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound`:
 
 - `AlgebraicHermite.hermiteBoundN`
 - `AlgebraicHermite.hermiteCandTopDegree`
@@ -21,30 +17,23 @@ theorem API behind a computable path.
 - `AlgebraicHermite.implicitDeriv_X2_X`
 - `AlgebraicHermite.hermite_degree_bound_witness`
 
-## Impact from `scripts/wiki rdeps`
+## Impact
 
-- `AlgebraicHermite.natDegree_hermiteNum_le` is used by:
-  - `Sources.Schultz_TragerRevisited.HermiteDegreeBound.eq_4_9_degreeBound`
-- `AlgebraicHermite.natDegree_hermiteNum_le_of_topCoeff_ne_zero` is used by:
-  - `Sources.Schultz_TragerRevisited.HermiteDegreeBound.hermite_degreeBound_topCoeff`
-  - `AlgebraicHermite.hermite_degree_bound_witness`
-- `Computable.Algebraic.AlgebraicHermiteCompleteness` imports the current file
-  directly and should import the root theorem module instead.
+`scripts/wiki rdeps AlgebraicHermite.natDegree_hermiteNum_le --depth 2` reports a
+source-catalog use through `Sources.Schultz_TragerRevisited.HermiteDegreeBound`.
+The main library consumer is `AlgebraicCompleteness/HermiteReduction.lean`.
 
 ## Unify list
 
-- Keep source-neutral degree estimates in the root SymbolicIntegration theory
-  layer.
-- Leave executable/computable algebraic Hermite modules in
-  `Computable/Algebraic`.
-- Do not change declaration names, statements, proofs, or namespace.
+- Keep the namespace `DeepWiki.SymbolicIntegration.AlgebraicHermite`.
+- Move only the module/file path so the degree-bound API sits beside the
+  algebraic Hermite completeness reduction that consumes it.
+- Update aggregators/imports mechanically.
 
 ## Steps
 
-1. `git mv` the file to `DeepWiki/SymbolicIntegration/AlgebraicHermiteDegreeBound.lean`.
-2. Update direct imports in `Computable/Algebraic.lean`,
-   `Computable/Algebraic/AlgebraicHermiteCompleteness.lean`, and the Schultz
-   catalog file.
-3. Gate the moved module, the computable algebraic consumer, the catalog target,
-   and the full library with `scripts/check.sh`.
-4. Rebuild the wiki graph and commit the relocation.
+1. `git mv` the root topic file into `AlgebraicCompleteness/HermiteDegreeBound.lean`.
+2. Rewrite imports from `DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound`
+   to `DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteDegreeBound`.
+3. Gate the moved module, the algebraic-completeness aggregator, and the full checker.
+4. Rebuild the wiki graph and commit the pure module relocation.

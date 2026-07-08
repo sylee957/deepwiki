@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.Frontier
-import DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound
+import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteDegreeBound
 import Mathlib.FieldTheory.Separable
 
 /-! # Hermite reduction and rational-part exhaustiveness

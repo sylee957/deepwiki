@@ -2,7 +2,7 @@
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness
 import DeepWiki.SymbolicIntegration.AlgebraicHermiteCompleteness
-import DeepWiki.SymbolicIntegration.AlgebraicHermiteDegreeBound
+import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteDegreeBound
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
 import DeepWiki.SymbolicIntegration.Constants
