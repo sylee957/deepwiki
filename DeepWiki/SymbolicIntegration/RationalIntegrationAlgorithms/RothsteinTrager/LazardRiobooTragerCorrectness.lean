@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 

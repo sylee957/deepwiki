@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness.PseudoRemainderStep
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
 
 /-! # LRT operands for subresultant correctness
 Identifies the computable LRT inputs inside `BPoly` and specializes the first

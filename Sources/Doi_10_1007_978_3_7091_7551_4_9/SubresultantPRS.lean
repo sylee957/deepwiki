@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.SubresultantPRS
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
-import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
 import Sources.Doi_10_1007_978_3_7091_7551_4_9.Source
 
 /-! # Loos subresultant-PRS theory — catalog

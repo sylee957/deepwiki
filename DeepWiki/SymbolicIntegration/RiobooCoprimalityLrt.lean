@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
-import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
 
 /-! # LRT discharges the Rioboo cofactor hypotheses
 The Lazard–Rioboo–Trager correctness theorem supplies the gcd-cofactor factorizations that

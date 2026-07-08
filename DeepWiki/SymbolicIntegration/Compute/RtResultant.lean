@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultant
 
 /-! # Computable Rothstein–Trager resultant over `ℚ`
 A `#eval`-able rendering of the resultant `R(t) = res_x(D, A − t·D')` on the carrier

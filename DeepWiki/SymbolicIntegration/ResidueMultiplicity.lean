@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultant
 import DeepWiki.SymbolicIntegration.Residues
 
 /-! # Residue multiplicity

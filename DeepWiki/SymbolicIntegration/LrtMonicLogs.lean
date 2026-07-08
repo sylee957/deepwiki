@@ -1,4 +1,6 @@
-import DeepWiki.SymbolicIntegration.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
 /-! # LRT monic-log regularity
 The Lazard–Rioboo–Trager logarithm arguments can be normalized to be *monic*

@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationGcdLogForm
 import DeepWiki.SymbolicIntegration.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.GroebnerBasis
-import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.CzichowskiNormalPosition
 import Sources.Doi_10_1006_jsco_1995_1043.Source
 
 /-! # Czichowski catalog — the integral connection (Lemma 2.3 + part (iii))

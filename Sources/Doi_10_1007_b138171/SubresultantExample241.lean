@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.RtResultantCorrectness
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 
 /-! # Example 2.4.1 worked example (Bronstein §2.4, p.48): the honest ℚ[t] LRT closure
