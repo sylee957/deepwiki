@@ -3,31 +3,15 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric
 
 /-! # Unified elementary integration over a transcendental tower.
 
-The carrier `AlgIntegralResultG` (`∫ = v + Σ cᵢ log uᵢ`), its derivative `algDerivG`, and
-the driver `cIntegrateElementaryG` over a tower base `α = QFunNZG β`. -/
+The driver `cIntegrateElementaryG` over a tower base `α = QFunNZG β`, assembling the carrier
+`AlgIntegralResultG` (`∫ = v + Σ cᵢ log uᵢ`, defined with its derivative `algDerivG` in
+`Computable.Algebraic.RadicalAssembly`). -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
 open RadElem CPolyG
-
-/-! ### `AlgIntegralResultG` and its derivative -/
-
-/-- Tower-generic elementary integral `∫ = v + Σ cᵢ log uᵢ`: rational part `v : RadElem α` plus
-log terms `[(cᵢ, uᵢ)]` (`cᵢ ∈ α`, `uᵢ ∈ α[y]/(y² − ρ)`). -/
-structure AlgIntegralResultG (α : Type*) [CField α] where
-  /-- The rational part `v` of `∫ = v + Σ cᵢ log uᵢ` (a `RadElem α`). -/
-  ratPart : RadElem α
-  /-- The log terms `[(cᵢ, uᵢ)]` (`cᵢ ∈ α`, `uᵢ : RadElem α`). -/
-  logTerms : List (α × RadElem α)
-
-/-- Derivative `algDerivG ρ F = radDeriv v + Σ cᵢ · radLogDeriv uᵢ` in `α[y]/(y² − ρ)`, using the
-tower's `CDiffField.cderiv` as base derivation. -/
-def algDerivG {α : Type*} [CField α] [CDiffField α] (ρ : α) (F : AlgIntegralResultG α) : RadElem α :=
-  F.logTerms.foldl
-    (fun acc (c, u) => radAdd acc (radScale c (radLogDeriv ρ u)))
-    (radDeriv 2 ρ F.ratPart)
 
 /-! ### `cIntegrateElementaryG` — the driver over a tower base `α = QFunNZG β` -/
 
