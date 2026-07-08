@@ -9,7 +9,7 @@ import WikiRAG.Modular
 
 /-! # `wiki` — graph-RAG CLI over the Lean library
 Subcommands: `build` (extract the graph), `index` (Ollama embeddings),
-`search`, `show`, `deps`, `rdeps`, `path`, `context`, `modularity`. All read
+`search`, `show`, `deps`, `rdeps`, `path`, `context`, `recommend`. All read
 commands emit human-readable text, or JSON with `--json`. -/
 
 open Lean WikiRAG SQLite
@@ -246,6 +246,6 @@ unsafe def main (args : List String) : IO Unit := do
   | "path" :: a :: b :: _ => pathCmd a b
   | "context" :: rest => contextCmd (parseOpts rest {})
   | "cochange" :: _ => do mineCochange (← openExisting)
-  | "modularity" :: rest => modularityCmd rest
+  | "recommend" :: rest => recommendCmd rest
   | "dot" :: rest => dotCmd rest
   | cmd :: _ => do IO.eprintln s!"unknown command: {cmd}\n"; IO.println usage

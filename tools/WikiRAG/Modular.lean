@@ -2,26 +2,22 @@ import WikiRAG.Query
 import WikiRAG.Cochange
 import Std.Data.HashMap
 
-/-! # Modularity analytics over the `uses` graph
+/-! # `recommend` — one sampled Pareto action over the `uses` graph
 
-Turns the exact `uses` dependency graph into **quantified, ranked** refactoring signals — a
-decision-support engine (it scores and ranks; the agent validates). Every signal is a *continuous
-score*, never a hard threshold. **The multi-objective reports (regroup, communities, merge) rank by
-Pareto non-domination over their own objective vectors — never a weighted scalar** (`dominatesVec` /
-`paretoFront`); the framework is the shared *method*, the axes are per report, and fronts are not
-compared across report types. Knobs are
-`--prefix=NS`, `--top=N`, and the clustering edge weights `--wcon=` (conceptual) / `--wevo=`
-(co-change) — objective *weights*, not cutoffs.
+Turns the exact `uses` dependency graph into **one concrete, Codex-ready recommendation**. Each action
+type is a Pareto front over its own objective vector (**no weighting**, `dominatesVec` / `paretoFront`):
+- **regroup-theme** — a `uses`-community spanning ≥2 directories (a scattered theme → one module);
+- **split-dir** — a directory fractured across many communities (a grab-bag → split);
+- **merge** — a thin module whose `uses` concentrate on one neighbour (absorb it — inverse of split);
+- **move-decl** — a declaration whose dependencies favour another module.
 
-Signals: **split** (internal Newman modularity `Q`), **misplacement** (`uses`-affinity to another
-module), **coupling** (size-normalised cross-directory), **directory granularity**, **conceptual
-cohesion** (docstring-embedding), the **multi-objective regroup** — a Pareto view over
-`(structural, conceptual, evolutionary, disturbance)`, no weighting — and the **community
-partition-diff**: the global `uses`-community structure diffed against the directory tree, surfacing
-*scattered themes* (one community spread over many directories → regroup) and *grab-bag directories*
-(one directory fractured into many communities → split); and **merge** — thin modules to absorb into a
-single neighbour (the inverse of split). The local signals answer "does this decl/file belong here?";
-the partition-diff and merge answer "what modules *should* exist?" — the module-scale question. -/
+Communities cluster with weighted Louvain over `uses` edges reinforced by conceptual agreement
+(`--wcon`·docstring-cosine) and module co-change (`--wevo`·evolutionary pull). Since within a front no
+candidate dominates another, the selector is **randomized**: `recommend` stratified-samples `--k`
+action(s) — a bucket (action type) then a member — so the loop rotates across action types instead of
+hammering one. `--seed=N` (the loop passes a fresh seed) makes any run reproducible.
+
+Knobs: `--prefix=NS`, `--k=N`, `--seed=N`, `--wcon=`, `--wevo=` — weights and sampling, never cutoffs. -/
 
 namespace WikiRAG
 open Std SQLite SQLite.Blob
@@ -87,49 +83,6 @@ def parseFloatD (s : String) (d : Float) : Float :=
 def vadd (a b : Array Float) : Array Float :=
   if a.size == b.size then (Array.range a.size).map (fun i => a[i]! + b[i]!) else b
 
-/-- Label propagation on an undirected subgraph, returning each node's community label. -/
-def labelProp (nodes : Array String) (adj : HashMap String (Array String)) :
-    HashMap String Nat := Id.run do
-  let mut label : HashMap String Nat := {}
-  let mut i := 0
-  for n in nodes do label := label.insert n i; i := i + 1
-  for _ in [0:6] do
-    let mut changed := false
-    for n in nodes do
-      let nbrs := adj.getD n #[]
-      if nbrs.isEmpty then continue
-      let mut cnt : HashMap Nat Nat := {}
-      for x in nbrs do
-        let l := label.getD x 0
-        cnt := cnt.insert l ((cnt.getD l 0) + 1)
-      let mut best := label.getD n 0; let mut bestC := 0
-      for (l, c) in cnt.toArray do if c > bestC then best := l; bestC := c
-      if label.getD n 0 != best then label := label.insert n best; changed := true
-    if !changed then break
-  return label
-
-/-- **Newman modularity `Q`** of the label-propagation partition of an undirected subgraph.
-High `Q` ⇒ genuine sub-community structure (a candidate to split); a flat bag scores ~0. Returns
-`(Q, #communities)`. -/
-def modularityQ (nodes : Array String) (adj : HashMap String (Array String)) : Float × Nat := Id.run do
-  let label := labelProp nodes adj
-  let mut twoE := 0
-  for n in nodes do twoE := twoE + (adj.getD n #[]).size
-  if twoE == 0 then return (0.0, 0)
-  let E2 := twoE.toFloat
-  let mut ec : HashMap Nat Nat := {}    -- 2 · (edges inside community)
-  let mut degc : HashMap Nat Nat := {}
-  for n in nodes do
-    let ln := label.getD n 0
-    let nbrs := adj.getD n #[]
-    degc := degc.insert ln ((degc.getD ln 0) + nbrs.size)
-    for x in nbrs do
-      if label.getD x 0 == ln then ec := ec.insert ln ((ec.getD ln 0) + 1)
-  let mut q := 0.0
-  for (c, e) in ec.toArray do
-    let a := (degc.getD c 0).toFloat / E2
-    q := q + e.toFloat / E2 - a * a
-  return (q, ec.toArray.size)
 
 /-! ### The loaded graph (built once, shared by every analysis) -/
 
@@ -195,65 +148,6 @@ def loadGraph (db : SQLite) (pfx : String) : IO Graph := do
     if da == dbb then intraD := bump intraD da else extD := bump extD da; extD := bump extD dbb
   return { d2m, short, sizeM, members, adj, intraM, extM, intraD, extD, pairX, cc, ccMax }
 
-/-! ### Structural analyses -/
-
-/-- SPLIT: rank modules by internal Newman modularity `Q` (genuine sub-community structure). -/
-def reportSplit (g : Graph) (top : Nat) : IO Unit := do
-  let mut rows : Array (String × Float × Float × Nat × Nat) := #[]
-  for (m, sz) in g.sizeM.toArray do
-    let members := g.members.getD m #[]
-    let memberSet := HashSet.ofArray members
-    let mut subAdj : HashMap String (Array String) := {}
-    for n in members do subAdj := subAdj.insert n ((g.adj.getD n #[]).filter memberSet.contains)
-    let (q, ncomm) := modularityQ members subAdj
-    rows := rows.push (m, q, g.cohesion m, ncomm, sz)
-  IO.println "\n== SPLIT (score = internal modularity Q; #communities = the split axis) =="
-  for (m, q, c, ncomm, sz) in (rows.qsort (fun a b => a.2.1 > b.2.1)).toList.take top do
-    IO.println s!"  Q={pct q}  {m}  size={sz} cohesion={pct c}% communities={ncomm}"
-
-/-- MISPLACED: rank decls by structural pull toward another module `(bestOther − home)·(1−1/deg)`. -/
-def reportMisplaced (g : Graph) (top : Nat) : IO Unit := do
-  let mut rows : Array (String × Float × String × String × Nat) := #[]
-  for (n, nbrs) in g.adj.toArray do
-    let deg := nbrs.size
-    if deg == 0 then continue
-    let home := g.d2m.getD n ""
-    let mut byMod : HashMap String Nat := {}
-    for x in nbrs do byMod := bump byMod (g.d2m.getD x "")
-    let mut alt := home; let mut cnt := 0
-    for (mm, c) in byMod.toArray do if mm != home && c > cnt then alt := mm; cnt := c
-    if alt == home then continue
-    let score := (cnt.toFloat / deg.toFloat - (byMod.getD home 0).toFloat / deg.toFloat)
-      * (1.0 - 1.0 / deg.toFloat)
-    rows := rows.push (g.short.getD n n, score, home, alt, deg)
-  IO.println "\n== MISPLACED (score = (bestOtherAffinity − homeAffinity)·(1−1/deg)) =="
-  for (s, sc, home, alt, deg) in (rows.qsort (fun a b => a.2.1 > b.2.1)).toList.take top do
-    IO.println s!"  {pct sc}  {s}  [{leaf home}]→[{leaf alt}] deg={deg}"
-
-/-- COUPLING: rank cross-directory module pairs by `cross / √(size₁·size₂)`. -/
-def reportCoupling (g : Graph) (top : Nat) : IO Unit := do
-  let mut rows : Array (String × String × Float × Nat) := #[]
-  for (k, w) in g.pairX.toArray do
-    let ps := k.splitOn "||"; let m1 := ps.getD 0 ""; let m2 := ps.getD 1 ""
-    if directory m1 != directory m2 then
-      let denom := Float.sqrt ((g.sizeM.getD m1 1) * (g.sizeM.getD m2 1)).toFloat
-      rows := rows.push (m1, m2, w.toFloat / denom, w)
-  IO.println "\n== COUPLING (score = cross / √(size₁·size₂); cross-directory) =="
-  for (m1, m2, sc, w) in (rows.qsort (fun a b => a.2.2.1 > b.2.2.1)).toList.take top do
-    IO.println s!"  {pct sc}  ({w} edges)  {m1}  ⇄  {m2}"
-
-/-- DIRECTORY granularity: cohesion + module-size distribution per directory (numbers, no flags). -/
-def reportDirectory (g : Graph) (top : Nat) : IO Unit := do
-  let mut dirMods : HashMap String (Array Nat) := {}
-  for (m, sz) in g.sizeM.toArray do
-    dirMods := dirMods.insert (directory m) ((dirMods.getD (directory m) #[]).push sz)
-  IO.println "\n== DIRECTORY granularity (cohesion, module count, mean size — no thresholds) =="
-  let rows := dirMods.toArray.map (fun (d, ss) =>
-    let n := ss.size
-    let avg := if n == 0 then 0 else (ss.foldl (·+·) 0) / n
-    (d, g.dirCohesion d, n, avg, ss.foldl Nat.max 0))
-  for (d, c, n, avg, mx) in (rows.qsort (fun a b => a.2.1 < b.2.1)).toList.take top do
-    IO.println s!"  cohesion={pct c}%  modules={n} mean={avg} max={mx}  {d}"
 
 /-! ### Conceptual (NL) layer — over the Ollama docstring embeddings -/
 
@@ -279,16 +173,6 @@ def loadEmbeds (db : SQLite) (pfx : String) : IO (Option Embeds) := do
     modVecs := modVecs.insert md ((modVecs.getD md #[]).push v)
   return some { rows, sums, modVecs }
 
-/-- CONCEPTUAL cohesion: rank modules by mean docstring-cosine of their decls to the module centroid. -/
-def reportConceptual (e : Embeds) (top : Nat) : IO Unit := do
-  let mut chS : HashMap String Float := {}; let mut chN : HashMap String Nat := {}
-  for (_, md, v) in e.rows do
-    chS := chS.insert md ((chS.getD md 0.0) + cosine v (e.sums.getD md #[])); chN := bump chN md
-  IO.println s!"\n== CONCEPTUAL cohesion (mean docstring-cosine of a module's decls; {e.rows.size} embedded) =="
-  let rows := e.sums.toArray.map (fun (md, _) => (md, (chS.getD md 0.0) / (chN.getD md 1).toFloat))
-  for (md, sc) in (rows.qsort (fun a b => a.2 < b.2)).toList.take top do
-    IO.println s!"  {pct sc}  {md}"
-
 /-! ### Multi-objective regroup (NSGA-style Pareto, no weighting) -/
 
 /-- A regroup candidate `home → alt` with its multi-objective vector (maximise `str`/`con`/`evo`,
@@ -306,10 +190,10 @@ structure Regroup where
 @[inline] def Regroup.vec (c : Regroup) : Array (Float × Bool) :=
   #[maxObj c.str, maxObj c.con, maxObj c.evo, costObj c.dis]
 
-/-- MULTI-OBJECTIVE regroup: each move-candidate carries `(str, con, evo, dis)`; keep the Pareto
-non-dominated set. The LLM judge picks — a high `dis` means the move would split a bonded pair (the
-`mul_left`/`mul_right` guard), made visible rather than hidden in a weighted sum. -/
-def reportRegroup (g : Graph) (e : Embeds) (top : Nat) : IO Unit := do
+/-- MOVE-DECL candidates: each carries `(str, con, evo, dis)`; return the Pareto non-dominated front.
+A high `dis` means the move would split a bonded pair (the `mul_left`/`mul_right` guard), visible as an
+objective rather than hidden in a weighted sum. -/
+def regroupCands (g : Graph) (e : Embeds) : Array Regroup := Id.run do
   let mut cand : Array Regroup := #[]
   for (nm, home, v) in e.rows do
     let nbrs := g.adj.getD nm #[]
@@ -331,10 +215,7 @@ def reportRegroup (g : Graph) (e : Embeds) (top : Nat) : IO Unit := do
         con := cosine v (e.sums.getD alt #[]) - cosine v (e.sums.getD home #[])
         evo := g.evoPull home alt
         dis }
-  let front := paretoFront cand Regroup.vec
-  IO.println s!"\n== MULTI-OBJECTIVE regroup — Pareto front {front.size}/{cand.size} (str=structural, con=conceptual, evo=co-change, dis=disturbance; high dis = splits a bonded pair) =="
-  for c in (front.qsort (fun a b => a.str > b.str)).toList.take top do
-    IO.println s!"  str={pctS c.str} con={pctS c.con} evo={pct c.evo} dis={pct c.dis}  {c.short}  [{leaf c.home}]→[{leaf c.alt}]"
+  return paretoFront cand Regroup.vec
 
 /-! ### Community partition-diff (global clustering vs. the directory tree)
 
@@ -414,10 +295,11 @@ def louvain (nodes : Array String) (wadj : HashMap String (Array (String × Floa
 scattered themes to regroup and grab-bag directories to split. Clusters with weighted Louvain over a
 graph whose `uses` edges are reinforced by conceptual agreement (`wcon`·docstring-cosine) and module
 co-change (`wevo`·evolutionary pull) — so the partition reflects meaning and history, not just calls. -/
-def reportCommunities (g : Graph) (eOpt : Option Embeds) (wcon wevo : Float) (top : Nat) : IO Unit := do
+def clusterAnalysis (g : Graph) (eOpt : Option Embeds) (wcon wevo : Float) :
+    Array Community × Array DirFracture := Id.run do
   let nodes := g.d2m.toArray.filterMap fun (n, _) =>
     if isStructuralNoise (g.short.getD n n) then none else some n
-  if nodes.isEmpty then return
+  if nodes.isEmpty then return (#[], #[])
   let vmap : HashMap String (Array Float) :=
     match eOpt with
     | none => {}
@@ -489,16 +371,10 @@ def reportCommunities (g : Graph) (eOpt : Option Embeds) (wcon wevo : Float) (to
       { size := members.size, mods := (HashSet.ofArray modsArr).size, dirs := dirSet.size,
         coh, con, score, dirList := dirSet.toArray.map leaf, sample }
   -- Pareto front over native axes (dispersion↑, cohesion↑, concept↑, module-scale fit↑); no weighting
-  let front := paretoFront rows (fun r =>
+  let commFront := paretoFront rows (fun r =>
     #[maxObj (r.dirs - 1).toFloat, maxObj r.coh, maxObj (conObj r.con),
       maxObj (r.size.toFloat * Float.exp (-r.size.toFloat / tau))])
-  IO.println s!"\n== COMMUNITIES — Pareto front {front.size}/{rows.size} (scattered themes spanning ≥2 dirs → regroup) =="
-  IO.println s!"   objectives: dispersion(dirs−1)↑ cohesion↑ concept↑ module-scale-fit↑ (τ≈{tau.round.toUInt64.toNat}) ; con<0 = not embedded"
-  for r in (front.qsort (fun a b => a.score > b.score)).toList.take top do
-    IO.println s!"  score={pct r.score} size={r.size} mods={r.mods} dirs={r.dirs} coh={pct r.coh}% con={pctS r.con}"
-    IO.println s!"      dirs: {", ".intercalate r.dirList.toList}"
-    IO.println s!"      e.g.: {", ".intercalate r.sample.toList}"
-  -- directory fracture: how many communities each directory scatters into
+  -- directory fracture: how many communities each directory scatters into (a grab-bag → split)
   let mut dpart : HashMap String (HashMap Nat Nat) := {}
   for n in nodes do
     let d := directory (g.d2m.getD n "")
@@ -511,10 +387,9 @@ def reportCommunities (g : Graph) (eOpt : Option Embeds) (wcon wevo : Float) (to
     if total < 4 || inner.size < 2 then continue
     let maj := inner.toArray.foldl (fun m kv => Nat.max m kv.2) 0
     fr := fr.push { dir := d, total, comms := inner.size, purity := maj.toFloat / total.toFloat }
-  IO.println "\n== DIRECTORY FRACTURE (a directory split across many communities → grab-bag, split) =="
-  IO.println "   purity = largest community's share of the directory's decls (low = fractured)"
-  for r in (fr.qsort (fun a b => a.purity < b.purity)).toList.take top do
-    IO.println s!"  purity={pct r.purity}% communities={r.comms} decls={r.total}  {r.dir}"
+  -- fracture front: low purity (cost) and many decls (a bigger grab-bag matters more)
+  let frFront := paretoFront fr (fun r => #[costObj r.purity, maxObj r.total.toFloat])
+  return (commFront, frFront)
 
 /-! ### Merge (thin-file absorption — the inverse of split) -/
 
@@ -535,7 +410,7 @@ dependencies point at one other module — so it reads as a fragment of that mod
 1-declaration "thin file" that adds a navigation hop with no cohesion gain. (Zero-declaration
 re-export shim *files* carry no `uses` edges, so they are invisible here — those are the retire-shim
 guardrail's job, found by grep, not this graph signal.) -/
-def reportMerge (g : Graph) (eOpt : Option Embeds) (top : Nat) : IO Unit := do
+def mergeCands (g : Graph) (eOpt : Option Embeds) : Array MergeCand := Id.run do
   let totalDecls := g.sizeM.toArray.foldl (fun s kv => s + kv.2) 0
   let tau := totalDecls.toFloat / (Nat.max 1 g.sizeM.size).toFloat
   let sums : HashMap String (Array Float) := match eOpt with | some e => e.sums | none => {}
@@ -560,38 +435,102 @@ def reportMerge (g : Graph) (eOpt : Option Embeds) (top : Nat) : IO Unit := do
     rows := rows.push
       { m, target, size, cohesion := coh, conc := tc.toFloat / ext.toFloat, con, score }
   -- Pareto front over native axes (absorb-need↑, smallness↑, target-concentration↑, concept↑)
-  let front := paretoFront rows (fun r =>
+  return paretoFront rows (fun r =>
     #[maxObj (1.0 - r.cohesion), maxObj (Float.exp (-r.size.toFloat / tau)),
       maxObj r.conc, maxObj (conObj r.con)])
-  IO.println s!"\n== MERGE — Pareto front {front.size}/{rows.size} (thin modules to absorb into one neighbour — inverse of split) =="
-  IO.println "   objectives: absorb-need(1−cohesion)↑ smallness↑ concentration↑ concept↑ ; conc = share of uses to target"
-  for r in (front.qsort (fun a b => a.score > b.score)).toList.take top do
-    IO.println s!"  score={pct r.score} size={r.size} coh={pct r.cohesion}% conc={pct r.conc}% con={pctS r.con}  {leaf r.m} → {leaf r.target}"
-    IO.println s!"      {r.m}  ⇒  {r.target}"
+
+/-! ### One sampled recommendation (Pareto fronts → stratified random draw) -/
+
+/-- A single concrete, Codex-ready recommendation: its action kind, a headline, and detail lines. -/
+structure Action where
+  kind : String
+  head : String
+  lines : Array String
+deriving Inhabited
+
+/-- Render an action as a card. -/
+def Action.render (a : Action) : String :=
+  s!"ACTION [{a.kind}]  {a.head}\n" ++ String.intercalate "\n" (a.lines.toList.map ("    " ++ ·))
+
+/-- Regroup a scattered theme (a `uses`-community spanning ≥2 directories) into one module. -/
+def Community.action (r : Community) : Action :=
+  { kind := "regroup-theme"
+    head := s!"gather a scattered theme — {r.size} decls across {r.dirs} directories → one module"
+    lines := #[
+      s!"why (Pareto-nondominated): dispersion {r.dirs} dirs · cohesion {pct r.coh}% · concept {pctS r.con}%",
+      s!"dirs:  {", ".intercalate r.dirList.toList}",
+      s!"e.g.:  {", ".intercalate r.sample.toList}",
+      "plan:  git mv these into one module + aggregator; unify near-duplicate lemmas (wiki rdeps first)"] }
+
+/-- Split a grab-bag directory (its decls scatter across many communities). -/
+def DirFracture.action (r : DirFracture) : Action :=
+  { kind := "split-dir"
+    head := s!"split a grab-bag directory — {r.comms} communities across {r.total} decls"
+    lines := #[
+      s!"why (Pareto-nondominated): purity {pct r.purity}% (largest community's share — low = fractured)",
+      s!"dir:   {r.dir}",
+      "plan:  split along the community axis into concept subdirectories + aggregator"] }
+
+/-- Absorb a thin module into the neighbour its `uses` concentrate on (the inverse of split). -/
+def MergeCand.action (r : MergeCand) : Action :=
+  { kind := "merge"
+    head := s!"absorb a thin module ({r.size} decls) into one neighbour"
+    lines := #[
+      s!"why (Pareto-nondominated): absorb-need {pct (1.0 - r.cohesion)}% · concentration {pct r.conc}% · concept {pctS r.con}%",
+      s!"{leaf r.m}  ⇒  {leaf r.target}   ({r.m})",
+      "plan:  wiki rdeps first; move the decls in; git rm the emptied file; gate"] }
+
+/-- Move a misplaced declaration to the module its dependencies favour. -/
+def Regroup.action (r : Regroup) : Action :=
+  { kind := "move-decl"
+    head := s!"move a misplaced declaration to its natural home"
+    lines := #[
+      s!"why (Pareto-nondominated): structural-pull {pctS r.str}% · concept {pctS r.con}% · co-change {pct r.evo}% · disturbance {pct r.dis}%",
+      s!"{r.short}:  [{leaf r.home}] → [{leaf r.alt}]",
+      "plan:  wiki rdeps first; move the decl; fix imports; gate  (skip if disturbance high — a bonded sibling)"] }
+
+/-- A tiny LCG step for seeded, reproducible sampling (no global RNG needed). -/
+@[inline] def lcgNext (s : Nat) : Nat := (6364136223846793005 * s + 1442695040888963407) % 18446744073709551616
 
 /-! ### The command -/
 
-/-- Run the scored modularity report on the graph restricted to modules under `--prefix`. -/
-def modularityCmd (args : List String) : IO Unit := do
+/-- `recommend`: compute every action type's Pareto front, pool them, and **stratified-sample** `--k`
+concrete action(s) to hand Codex. Randomization is the principled selector: within a Pareto front no
+candidate dominates another, so sampling (not argmax over a re-weighted scalar) is how you pick one —
+and stratifying by action type rotates Codex across regroup/split/merge/move over the loop rather than
+hammering one report. `--seed=N` makes a run reproducible (the loop passes a fresh seed each iteration). -/
+def recommendCmd (args : List String) : IO Unit := do
   let argv := args.toArray
   let pfx := (argv.find? (·.startsWith "--prefix=")).map (·.drop 9 |>.toString)
     |>.getD "DeepWiki.SymbolicIntegration"
-  let top := (argv.find? (·.startsWith "--top=")).bind (·.drop 6 |>.toString.toNat?) |>.getD 15
+  let k := (argv.find? (·.startsWith "--k=")).bind (·.drop 4 |>.toString.toNat?) |>.getD 1
   let flt (flag : String) (d : Float) : Float :=
     parseFloatD ((argv.find? (·.startsWith flag)).map (·.drop flag.length |>.toString) |>.getD "") d
   let wcon := flt "--wcon=" 1.5   -- conceptual reinforcement of clustering edges
   let wevo := flt "--wevo=" 1.0   -- co-change reinforcement of clustering edges
+  let seed0 ← match (argv.find? (·.startsWith "--seed=")).bind (·.drop 7 |>.toString.toNat?) with
+    | some n => pure n
+    | none   => IO.monoNanosNow
   let db ← openDb ((← IO.getEnv "WIKI_DB").getD defaultDbPath)
   let g ← loadGraph db pfx
   let eOpt ← loadEmbeds db pfx
-  reportSplit g top
-  reportMisplaced g top
-  reportCoupling g top
-  reportDirectory g top
-  reportCommunities g eOpt wcon wevo top
-  reportMerge g eOpt top
-  match eOpt with
-  | none => IO.println "\n(no embeddings — run `scripts/wiki index` for the conceptual/NL layer)"
-  | some e => reportConceptual e top; reportRegroup g e top
+  let (comms, frs) := clusterAnalysis g eOpt wcon wevo
+  let merges := mergeCands g eOpt
+  let moves := match eOpt with | some e => regroupCands g e | none => #[]
+  let buckets : Array (Array Action) := (#[
+      comms.map Community.action,
+      frs.map DirFracture.action,
+      merges.map MergeCand.action,
+      moves.map Regroup.action]).filter (!·.isEmpty)
+  if buckets.isEmpty then
+    IO.println "no recommendation — nothing non-dominated in scope (already well-organized?)"
+    return
+  IO.println s!"# {buckets.size} action type(s) live under {pfx}; sampling {k} (seed {seed0})"
+  let mut seed := seed0
+  for _ in [0:k] do
+    seed := lcgNext seed
+    let acts := buckets[seed % buckets.size]!
+    seed := lcgNext seed
+    IO.println ("\n" ++ (acts[seed % acts.size]!).render)
 
 end WikiRAG
