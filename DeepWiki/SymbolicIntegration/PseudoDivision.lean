@@ -1,4 +1,5 @@
 import Mathlib.Algebra.Polynomial.Div
+import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.Tactic
 
 /-! # Pseudo-division of polynomials over an integral domain
@@ -148,6 +149,29 @@ theorem IsSimilar.of_associated {x y : R[X]} (h : Associated x y) : IsSimilar x 
   obtain ⟨u, rfl⟩ := h
   obtain ⟨r, hr, hru⟩ := Polynomial.isUnit_iff.mp u.isUnit
   exact ⟨r, 1, hr.ne_zero, one_ne_zero, by rw [← hru, map_one]; ring⟩
+
+/-- `IsSimilar p q` over a domain lifts to `p = C η · q` in `Frac(D)[x]` for some nonzero `η ∈ Frac(D)`. -/
+theorem IsSimilar.exists_fractionRing {D : Type*} [CommRing D] [IsDomain D] {p q : D[X]}
+    (h : IsSimilar p q) :
+    ∃ η : FractionRing D, η ≠ 0 ∧
+      p.map (algebraMap D (FractionRing D)) = C η * q.map (algebraMap D (FractionRing D)) := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  have hinj := IsFractionRing.injective D (FractionRing D)
+  have hφa : algebraMap D (FractionRing D) a ≠ 0 := (map_ne_zero_iff _ hinj).mpr ha
+  have hφb : algebraMap D (FractionRing D) b ≠ 0 := (map_ne_zero_iff _ hinj).mpr hb
+  refine ⟨algebraMap D (FractionRing D) b / algebraMap D (FractionRing D) a,
+    div_ne_zero hφb hφa, ?_⟩
+  have key : C (algebraMap D (FractionRing D) a) * p.map (algebraMap D (FractionRing D))
+      = C (algebraMap D (FractionRing D) b) * q.map (algebraMap D (FractionRing D)) := by
+    rw [← Polynomial.map_C, ← Polynomial.map_C, ← Polynomial.map_mul, ← Polynomial.map_mul, hab]
+  calc p.map (algebraMap D (FractionRing D))
+      = C ((algebraMap D (FractionRing D) a)⁻¹) * (C (algebraMap D (FractionRing D) a)
+          * p.map (algebraMap D (FractionRing D))) := by
+        rw [← mul_assoc, ← map_mul, inv_mul_cancel₀ hφa, map_one, one_mul]
+    _ = C ((algebraMap D (FractionRing D) a)⁻¹) * (C (algebraMap D (FractionRing D) b)
+          * q.map (algebraMap D (FractionRing D))) := by rw [key]
+    _ = C (algebraMap D (FractionRing D) b / algebraMap D (FractionRing D) a)
+          * q.map (algebraMap D (FractionRing D)) := by rw [div_eq_mul_inv, map_mul]; ring
 
 /-- PRS gcd-invariance step: consecutive gcds are similar,
 `gcd(Rᵢ, Rᵢ₊₁) ~ gcd(Rᵢ₊₁, Rᵢ₊₂)`. -/
