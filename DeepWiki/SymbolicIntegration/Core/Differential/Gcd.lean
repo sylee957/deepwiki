@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv
-import DeepWiki.SymbolicIntegration.Core.Differential.GcdPrimeFactors
+import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.Derivative
+import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.PrimeFactors
 
 /-! # GCD derivation formulas
 

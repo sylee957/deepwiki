@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.Classify
-import DeepWiki.SymbolicIntegration.Core.Differential.GcdPrimeFactors
+import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.PrimeFactors
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.NormalSqfree
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactor
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors

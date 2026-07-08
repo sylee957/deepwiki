@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.Derivative
 import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Core
 import Mathlib.RingTheory.UniqueFactorizationDomain.Multiplicity
 

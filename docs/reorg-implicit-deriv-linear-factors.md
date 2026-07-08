@@ -41,7 +41,8 @@
 ## `wiki rdeps` impact
 
 - `dvd_X_sub_C_implicitDeriv_iff` is used by source restatements and the product/splitting formulas.
-- `associated_gcd_deriv_prod` / `associated_gcd_deriv_pow` from `GcdDeriv` feed the gcd formulas in this file.
+- `associated_gcd_deriv_prod` / `associated_gcd_deriv_pow` from `Core.Differential.Gcd.Derivative`
+  feed the gcd formulas in this file.
 - Downstream imports currently use the parent module, so the parent aggregator should preserve public import compatibility.
 
 ## Unify list
@@ -54,7 +55,7 @@
 
 1. Move the existing file to `ImplicitDerivLinearFactors/Basic.lean` and leave only the basic declarations there.
 2. Add `Products.lean` importing `Basic` and `NormalSpecial`.
-3. Add `Gcd.lean` importing `Products` and `GcdDeriv`.
+3. Add `Gcd.lean` importing `Products` and `Core.Differential.Gcd.Derivative`.
 4. Recreate `ImplicitDerivLinearFactors.lean` as an aggregator.
 5. Gate each new leaf, the parent aggregator, known direct consumers, and the full repository.
 6. Rebuild the wiki graph and commit the split.

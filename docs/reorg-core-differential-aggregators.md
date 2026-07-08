@@ -33,8 +33,8 @@ declaration modules remain unchanged.
   - `PolynomialFractionDeriv`
   - `DiffPolyFractionDeriv`
 - `DeepWiki.SymbolicIntegration.Core.Differential.Gcd`
-  - `GcdDeriv`
-  - `GcdPrimeFactors`
+  - `Gcd.Derivative`
+  - `Gcd.PrimeFactors`
 - Existing aggregators stay as conceptual entry points:
   - `DifferentialPolynomials`
   - `ImplicitDerivLinearFactors`

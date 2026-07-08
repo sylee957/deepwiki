@@ -2,7 +2,7 @@
 
 ## Target module
 
-`DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv`
+`DeepWiki.SymbolicIntegration.Core.Differential.Gcd.Derivative`
 
 This module should hold generic gcd-with-derivation lemmas over a differential
 ring. The current declarations are split between `MonomialExtensions` and
@@ -43,7 +43,7 @@ monomial extensions, special/normal predicates, or canonical representations.
 
 ## Steps
 
-1. Add `Core/Differential/GcdDeriv.lean` with the generic declarations.
+1. Add `Core/Differential/Gcd/Derivative.lean` with the generic declarations.
 2. Import it from `MonomialExtensions`, `CanonicalRepresentation/GcdFormula`,
    and the topic aggregator.
 3. Delete the moved declarations from their old modules.
