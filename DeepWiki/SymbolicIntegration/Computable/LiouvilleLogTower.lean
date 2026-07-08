@@ -235,14 +235,4 @@ example (nextLog : (S : LiouvilleStage F) → {u : S.carrier // NondegenerateLog
 
 end TowerExample
 
-/-! ### Axiom audit -/
-
-#print axioms differentialAlgebra_trans
-#print axioms containConstants_trans
-#print axioms containConstants_of_nondegenerateLog
-#print axioms isLiouville_ratFunc_step
-#print axioms LiouvilleTower.LiouvilleStage.tower_isLiouville
-#print axioms isLiouville_logTower_two
-#print axioms isLiouville_logTower_three
-
 end DeepWiki.SymbolicIntegration.LiouvilleTower
