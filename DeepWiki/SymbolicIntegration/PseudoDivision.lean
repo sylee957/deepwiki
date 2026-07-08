@@ -173,6 +173,78 @@ theorem IsSimilar.exists_fractionRing {D : Type*} [CommRing D] [IsDomain D] {p q
     _ = C (algebraMap D (FractionRing D) b / algebraMap D (FractionRing D) a)
           * q.map (algebraMap D (FractionRing D)) := by rw [div_eq_mul_inv, map_mul]; ring
 
+/-- A `ℚ[t]`-similarity `IsSimilar A B` whose witnesses stay `φ`-nonzero gives
+`IsSimilar (Φ A) (Φ B)` (`Φ = mapRingHom φ`). -/
+theorem isSimilar_mapRingHom {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) {A B : (ℚ[X])[X]}
+    (h : IsSimilar A B) (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 → Polynomial.C a * A = Polynomial.C b * B
+      → φ a ≠ 0 ∧ φ b ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom φ) A) ((Polynomial.mapRingHom φ) B) := by
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  obtain ⟨hφa, hφb⟩ := hne a b ha hb hab
+  refine ⟨φ a, φ b, hφa, hφb, ?_⟩
+  have hcong := congrArg (Polynomial.map φ) hab
+  rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
+  simpa only [Polynomial.coe_mapRingHom] using hcong
+
+/-- If `ker φ = (f)` for irreducible `f`, a similarity with nonzero mapped endpoints maps to a
+similarity. -/
+theorem isSimilar_mapRingHom_of_irreducible {S : Type*} [CommRing S] [IsDomain S]
+    (f : ℚ[X]) (hf : Irreducible f) (φ : ℚ[X] →+* S) (hker : ∀ x, φ x = 0 ↔ f ∣ x)
+    {A B : (ℚ[X])[X]} (h : IsSimilar A B)
+    (hA : (Polynomial.mapRingHom φ) A ≠ 0) (hB : (Polynomial.mapRingHom φ) B ≠ 0) :
+    IsSimilar ((Polynomial.mapRingHom φ) A) ((Polynomial.mapRingHom φ) B) := by
+  classical
+  obtain ⟨a, b, ha, hb, hab⟩ := h
+  set g := GCDMonoid.gcd a b with hg
+  have hgne : g ≠ 0 := gcd_ne_zero_of_left ha
+  set a' := a / g with ha'def
+  set b' := b / g with hb'def
+  have hcop : IsCoprime a' b' := isCoprime_div_gcd_div_gcd hb
+  have hga : g * a' = a := EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_left a b)
+  have hgb : g * b' = b := EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_right a b)
+  have ha'ne : a' ≠ 0 := by
+    intro h0; rw [h0, mul_zero] at hga; exact ha hga.symm
+  have hb'ne : b' ≠ 0 := by
+    intro h0; rw [h0, mul_zero] at hgb; exact hb hgb.symm
+  have hab' : Polynomial.C a' * A = Polynomial.C b' * B := by
+    have hcancel : Polynomial.C g * (Polynomial.C a' * A) = Polynomial.C g * (Polynomial.C b' * B) := by
+      rw [← mul_assoc, ← mul_assoc, ← Polynomial.C_mul, ← Polynomial.C_mul, hga, hgb, hab]
+    have hCg : (Polynomial.C g : (ℚ[X])[X]) ≠ 0 := by
+      simpa [Polynomial.C_eq_zero] using hgne
+    exact mul_left_cancel₀ hCg hcancel
+  have hφa' : φ a' ≠ 0 := by
+    intro h0
+    have hfa' : f ∣ a' := (hker a').1 h0
+    have himg := congrArg (Polynomial.map φ) hab'
+    rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at himg
+    simp only [Polynomial.coe_mapRingHom] at hA hB
+    rw [h0, map_zero, zero_mul] at himg
+    have hφb' : φ b' = 0 := by
+      by_contra hb0
+      exact hB (by
+        have : (Polynomial.C (φ b') : S[X]) ≠ 0 := by simpa [Polynomial.C_eq_zero] using hb0
+        exact (mul_eq_zero.mp himg.symm).resolve_left this)
+    have hfb' : f ∣ b' := (hker b').1 hφb'
+    exact hf.not_isUnit (hcop.isUnit_of_dvd' hfa' hfb')
+  have hφb' : φ b' ≠ 0 := by
+    intro h0
+    have hfb' : f ∣ b' := (hker b').1 h0
+    have himg := congrArg (Polynomial.map φ) hab'
+    rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at himg
+    simp only [Polynomial.coe_mapRingHom] at hA hB
+    rw [h0, map_zero, zero_mul] at himg
+    have hφa' : φ a' = 0 := by
+      by_contra ha0
+      exact hA (by
+        have : (Polynomial.C (φ a') : S[X]) ≠ 0 := by simpa [Polynomial.C_eq_zero] using ha0
+        exact (mul_eq_zero.mp himg).resolve_left this)
+    have hfa' : f ∣ a' := (hker a').1 hφa'
+    exact hf.not_isUnit (hcop.isUnit_of_dvd' hfa' hfb')
+  refine ⟨φ a', φ b', hφa', hφb', ?_⟩
+  have hcong := congrArg (Polynomial.map φ) hab'
+  rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
+  simpa only [Polynomial.coe_mapRingHom] using hcong
+
 /-- PRS gcd-invariance step: consecutive gcds are similar,
 `gcd(Rᵢ, Rᵢ₊₁) ~ gcd(Rᵢ₊₁, Rᵢ₊₂)`. -/
 theorem isSimilar_gcd_step [GCDMonoid R[X]] {A B : R[X]} {Rs : ℕ → R[X]} {β : ℕ → R}

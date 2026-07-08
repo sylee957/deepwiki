@@ -110,19 +110,6 @@ theorem mapRingHom_toBPoly_bmonicXmodR {S : Type*} [CommRing S] (φ : ℚ[X] →
 
 /-! ### The full `lrtGcdCompute ↔ lrtSubresultant` agreement over the residue ring `ℚ[t]/(R)` -/
 
-/-- A `ℚ[t]`-similarity `IsSimilar A B` whose witnesses stay `φ`-nonzero gives
-`IsSimilar (Φ A) (Φ B)` (`Φ = mapRingHom φ`). -/
-theorem isSimilar_mapRingHom {S : Type*} [CommRing S] (φ : ℚ[X] →+* S) {A B : (ℚ[X])[X]}
-    (h : IsSimilar A B) (hne : ∀ a b : ℚ[X], a ≠ 0 → b ≠ 0 → Polynomial.C a * A = Polynomial.C b * B
-      → φ a ≠ 0 ∧ φ b ≠ 0) :
-    IsSimilar ((Polynomial.mapRingHom φ) A) ((Polynomial.mapRingHom φ) B) := by
-  obtain ⟨a, b, ha, hb, hab⟩ := h
-  obtain ⟨hφa, hφb⟩ := hne a b ha hb hab
-  refine ⟨φ a, φ b, hφa, hφb, ?_⟩
-  have hcong := congrArg (Polynomial.map φ) hab
-  rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
-  simpa only [Polynomial.coe_mapRingHom] using hcong
-
 /-- The full `lrtGcdCompute ↔ lrtSubresultant` agreement over `S = ℚ[t]/(R)`: for a residue map
 `φ : ℚ[X] →+* S` killing `toPoly R`, under the whole-chain and regularity hypotheses,
 `IsSimilar (Φ (lrtSubresultant A D j)) (Φ (toBPoly (lrtGcdCompute fuel j R A D)))`. -/
@@ -656,87 +643,5 @@ theorem mapRingHom_mk_lrtSubresultant {K : Type*} [Field K] (f : K[X]) [Fact (Ir
   · -- the second LRT operand matches: `(A.map C − C X·D'.map C).map (mk f) = A.map σ − C α·(D.map σ)'`.
     rw [Polynomial.map_sub, Polynomial.map_mul, Polynomial.map_map, Polynomial.map_map, hmkC,
       Polynomial.map_C, AdjoinRoot.mk_X, derivative_map]
-
-/-! ### A *correct* residue-map bridge for `IsSimilar` (replacing the over-strong universal `hne`)
-The headline `lrtGcdCompute_isSimilar_lrtSubresultant` pushes a `ℚ[t]`-similarity through `φ` via
-`isSimilar_mapRingHom`, whose hypothesis `hne` quantifies over **all** witness pairs `(a, b)` of the
-similarity and demands `φ a ≠ 0 ∧ φ b ≠ 0`. That hypothesis is **unsatisfiable** whenever `φ` has a
-nontrivial kernel: if `(a₀, b₀)` is one witness pair, so is `(q·a₀, q·b₀)` for any `q ≠ 0`, and taking
-`q = f` (the modulus, which `φ` kills) gives a pair with `φ (q·a₀) = 0` — refuting `hne`. So `_concrete`
-cannot be instantiated to its (true) conclusion through that path.
-
-The fix: push through using only the **gcd-reduced** witness pair. For `φ = AdjoinRoot.mk f` with `f`
-irreducible (`ℚ[X]` a Euclidean domain), if `IsSimilar A B` and the `φ`-images `Φ A`, `Φ B` are nonzero,
-then `IsSimilar (Φ A) (Φ B)`: divide the witnesses `a, b` by `g = gcd a b` to get a coprime pair
-`(a', b')` with the same relation; were `φ a' = 0` then (as `Φ B ≠ 0`, `S[x]` a domain) `φ b' = 0` too, so
-`f ∣ a'` and `f ∣ b'`, forcing `IsUnit f` against irreducibility. Hence both `φ a', φ b' ≠ 0`, the genuine
-residue-ring similarity witnesses. -/
-
-/-- **The correct residue-map `IsSimilar` bridge**: for `φ : ℚ[X] →+* S` (`S` a domain) whose kernel is
-exactly the multiples of an *irreducible* `f` (`hker : ∀ x, φ x = 0 ↔ f ∣ x`), a `ℚ[t]`-similarity
-`IsSimilar A B` with **nonzero** `φ`-images `Φ A`, `Φ B` (`Φ = Polynomial.mapRingHom φ`) gives a residue-ring
-similarity `IsSimilar (Φ A) (Φ B)`. Unlike `isSimilar_mapRingHom`'s universal `hne` (unsatisfiable when
-`ker φ ≠ 0`), this uses the gcd-reduced (coprime) witness pair, whose `φ`-images cannot both vanish (else
-`f` divides a coprime pair, hence is a unit). -/
-theorem isSimilar_mapRingHom_of_irreducible {S : Type*} [CommRing S] [IsDomain S]
-    (f : ℚ[X]) (hf : Irreducible f) (φ : ℚ[X] →+* S) (hker : ∀ x, φ x = 0 ↔ f ∣ x)
-    {A B : (ℚ[X])[X]} (h : IsSimilar A B)
-    (hA : (Polynomial.mapRingHom φ) A ≠ 0) (hB : (Polynomial.mapRingHom φ) B ≠ 0) :
-    IsSimilar ((Polynomial.mapRingHom φ) A) ((Polynomial.mapRingHom φ) B) := by
-  classical
-  obtain ⟨a, b, ha, hb, hab⟩ := h
-  set g := GCDMonoid.gcd a b with hg
-  have hgne : g ≠ 0 := gcd_ne_zero_of_left ha
-  set a' := a / g with ha'def
-  set b' := b / g with hb'def
-  have hcop : IsCoprime a' b' := isCoprime_div_gcd_div_gcd hb
-  have hga : g * a' = a := EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_left a b)
-  have hgb : g * b' = b := EuclideanDomain.mul_div_cancel' hgne (gcd_dvd_right a b)
-  have ha'ne : a' ≠ 0 := by
-    intro h0; rw [h0, mul_zero] at hga; exact ha hga.symm
-  have hb'ne : b' ≠ 0 := by
-    intro h0; rw [h0, mul_zero] at hgb; exact hb hgb.symm
-  -- the gcd-reduced relation `C a' * A = C b' * B`
-  have hab' : Polynomial.C a' * A = Polynomial.C b' * B := by
-    have hcancel : Polynomial.C g * (Polynomial.C a' * A) = Polynomial.C g * (Polynomial.C b' * B) := by
-      rw [← mul_assoc, ← mul_assoc, ← Polynomial.C_mul, ← Polynomial.C_mul, hga, hgb, hab]
-    have hCg : (Polynomial.C g : (ℚ[X])[X]) ≠ 0 := by
-      simpa [Polynomial.C_eq_zero] using hgne
-    exact mul_left_cancel₀ hCg hcancel
-  -- φ-images of a', b' are nonzero (else f divides the coprime pair → f a unit)
-  have hφa' : φ a' ≠ 0 := by
-    intro h0
-    have hfa' : f ∣ a' := (hker a').1 h0
-    -- from C a' * A = C b' * B, φ: C(φ a')·ΦA = C(φ b')·ΦB ⟹ 0 = C(φ b')·ΦB ⟹ φ b' = 0
-    have himg := congrArg (Polynomial.map φ) hab'
-    rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at himg
-    simp only [Polynomial.coe_mapRingHom] at hA hB
-    rw [h0, map_zero, zero_mul] at himg
-    have hφb' : φ b' = 0 := by
-      by_contra hb0
-      exact hB (by
-        have : (Polynomial.C (φ b') : S[X]) ≠ 0 := by simpa [Polynomial.C_eq_zero] using hb0
-        exact (mul_eq_zero.mp himg.symm).resolve_left this)
-    have hfb' : f ∣ b' := (hker b').1 hφb'
-    exact hf.not_isUnit (hcop.isUnit_of_dvd' hfa' hfb')
-  have hφb' : φ b' ≠ 0 := by
-    intro h0
-    have hfb' : f ∣ b' := (hker b').1 h0
-    have himg := congrArg (Polynomial.map φ) hab'
-    rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at himg
-    simp only [Polynomial.coe_mapRingHom] at hA hB
-    rw [h0, map_zero, zero_mul] at himg
-    have hφa' : φ a' = 0 := by
-      by_contra ha0
-      exact hA (by
-        have : (Polynomial.C (φ a') : S[X]) ≠ 0 := by simpa [Polynomial.C_eq_zero] using ha0
-        exact (mul_eq_zero.mp himg).resolve_left this)
-    have hfa' : f ∣ a' := (hker a').1 hφa'
-    exact hf.not_isUnit (hcop.isUnit_of_dvd' hfa' hfb')
-  -- assemble the residue-ring similarity with witnesses (φ a', φ b')
-  refine ⟨φ a', φ b', hφa', hφb', ?_⟩
-  have hcong := congrArg (Polynomial.map φ) hab'
-  rw [Polynomial.map_mul, Polynomial.map_mul, Polynomial.map_C, Polynomial.map_C] at hcong
-  simpa only [Polynomial.coe_mapRingHom] using hcong
 
 end DeepWiki.SymbolicIntegration.Compute
