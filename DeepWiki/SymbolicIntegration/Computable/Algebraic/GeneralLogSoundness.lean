@@ -242,7 +242,7 @@ theorem genRatLogPart_eq_residue_logDeriv_sum (s : Finset K) (A : K[X]) (hA : A.
       = ∑ α ∈ s, algebraMap K[X] (RatFunc K)
           (Polynomial.C (A.eval α / eval α (derivative (Lagrange.nodal s id))))
             * Differential.logDeriv (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) :=
-  ratLogPart_eq_residue_logDeriv_sum s A hA
+  ratFunc_eq_sum_residue_logDeriv s A hA
 
 end LogResidue
 

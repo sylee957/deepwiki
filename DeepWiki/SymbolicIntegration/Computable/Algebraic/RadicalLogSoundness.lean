@@ -145,7 +145,7 @@ below:
 3. the residue-sum numerator distributes over the args list
    (`mk_toPolyG_radLogSumNum_eq_sum`), composing to `isRadicalLogIntegral_of_residue_match`
    with the per-term match discharged by the algebraic partial fraction
-   (`ratLogPart_eq_residue_logDeriv_sum`).
+   (`ratFunc_eq_sum_residue_logDeriv`).
 
 `isAlgebraicIntegral_of_parts` then composes the rational and log parts into the full
 `D(∫f) = f`, with the integrand split discharged for the driver by
@@ -423,29 +423,6 @@ over `K(x)`: `A/D = Σ_{α∈s} (A(α)/D'(α)) · logDeriv(X − α)` for square
 After rationalizing the radical log part to `ℚ(x)`, the residue sum is exactly its partial
 fraction, with the `cᵢ` the partial-fraction coefficients. -/
 
-namespace LogResidue
-
-variable {K : Type*} [Field K]
-
-open scoped Differential in
-/-- The rational log-part per-term match is the algebraic partial fraction: for squarefree
-`D = ∏_{α∈s}(X − α)` and `deg A < #s`, `A/D = Σ_{α∈s} (A(α)/D'(α))·logDeriv(X − α)` in `K(x)`. -/
-theorem ratLogPart_eq_residue_logDeriv_sum (s : Finset K) (A : K[X]) (hA : A.degree < s.card) :
-    algebraMap K[X] (RatFunc K) A / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id)
-      = ∑ α ∈ s, algebraMap K[X] (RatFunc K)
-          (Polynomial.C (A.eval α / eval α (derivative (Lagrange.nodal s id))))
-            * Differential.logDeriv (algebraMap K[X] (RatFunc K) (Polynomial.X - Polynomial.C α)) :=
-  ratFunc_eq_sum_residue_logDeriv s A hA
-
-/-- The residue is the partial-fraction coefficient: for `D = (X − α)·E` with `E(α) ≠ 0`, if
-`A = c·E + (X − α)·B` then `c = A(α)/D'(α)`. -/
-theorem residue_is_partialFraction_coeff (A E B : K[X]) (c α : K) (hE : E.eval α ≠ 0)
-    (hpf : A = Polynomial.C c * E + (Polynomial.X - Polynomial.C α) * B) :
-    c = A.eval α / (derivative ((Polynomial.X - Polynomial.C α) * E)).eval α :=
-  residue_of_partialFraction A E B c α hE hpf
-
-end LogResidue
-
 /-! ### Residue-sum telescoping over the pole list
 
 The structural half of obligation 3: the residue-sum numerator `radLogSumNum` is a `radAdd`-fold
@@ -629,10 +606,10 @@ no `sorry`. -/
 #print axioms CPolyG.toK_cresultantG_cAlgResidueNorm
 
 -- Partial-fraction input: the rational log-part per-term match is algebraic:
-#print axioms LogResidue.ratLogPart_eq_residue_logDeriv_sum
+#print axioms ratFunc_eq_sum_residue_logDeriv
 
 -- Partial-fraction input: the residues are the partial-fraction coefficients:
-#print axioms LogResidue.residue_is_partialFraction_coeff
+#print axioms residue_of_partialFraction
 
 -- Full composition: the algebraic integral `D(∫f) = f` follows from rational and log soundness:
 #print axioms RadElem.isAlgebraicIntegral_of_parts
