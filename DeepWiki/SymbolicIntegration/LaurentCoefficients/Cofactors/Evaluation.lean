@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RootEvaluation
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.Cofactors.Basic
 
 /-! # Laurent cofactor root evaluation
@@ -10,12 +11,6 @@ open Polynomial MvPolynomial
 namespace DeepWiki.SymbolicIntegration
 
 variable {K : Type*} [Field K]
-
-/-- `(P %ₘ Dᵢ).eval α = P.eval α` at a root `α` of a monic `Dᵢ`: the `%ₘ` reduction is invisible there. -/
-theorem eval_modByMonic_of_root {P Di : K[X]} {α : K} (_hDi : Di.Monic) (hα : Di.eval α = 0) :
-    (P %ₘ Di).eval α = P.eval α := by
-  conv_rhs => rw [← modByMonic_add_div P Di]
-  rw [Polynomial.eval_add, Polynomial.eval_mul, hα, zero_mul, add_zero]
 
 /-- `Bᵢ(α)·Eᵢ(α) = 1` at a root `α` of the monic `Dᵢ` (so `Bᵢ(α) = 1/Eᵢ(α)`). -/
 theorem bezoutE_mul_laurentE_eval {D Di : K[X]} {α : K} (i : ℕ) (hDi : Di.Monic)
