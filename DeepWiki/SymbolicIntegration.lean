@@ -54,6 +54,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYun
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
 import DeepWiki.SymbolicIntegration.DifferentialExtensions
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.GroebnerBasis

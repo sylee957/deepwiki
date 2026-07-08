@@ -6,7 +6,7 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYun
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
 
 /-! # Squarefree factorization via the derivative criterion
 The squarefree part and deflations of `A ∈ D[x]` are computed by gcds with `dA/dx`, since a prime

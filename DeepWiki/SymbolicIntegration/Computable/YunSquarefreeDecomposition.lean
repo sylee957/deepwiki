@@ -4,6 +4,7 @@ import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.SquarefreeDecomposition
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
