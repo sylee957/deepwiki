@@ -4,7 +4,6 @@ import DeepWiki.SymbolicIntegration.CanonicalRepresentation.NormalSqfree
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.RootCharacterization
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactor
-import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactorCorrect
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitSquarefreeFactor
 
 /-! # The canonical representation
