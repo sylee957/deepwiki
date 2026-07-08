@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
-import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.KappaD
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.LogArctan
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.Rao
 
