@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.Residues
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Diophantine
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultant
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 import Mathlib.RingTheory.Nullstellensatz

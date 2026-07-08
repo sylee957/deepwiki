@@ -1,7 +1,7 @@
 import Mathlib.Algebra.Polynomial.Taylor
 import Mathlib.FieldTheory.RatFunc.Basic
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 
 /-! # Local principal parts of rational functions
 

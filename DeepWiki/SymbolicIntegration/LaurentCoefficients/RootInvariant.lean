@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.FractionInvariant
+import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
 /-! # Laurent root rational invariant
 

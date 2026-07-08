@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Compute.Correctness
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 
 /-! # Computable Diophantine solver correctness
 Connects the concrete `cdiophantine` solver on `CPoly` with the abstract reduced Bezout solver

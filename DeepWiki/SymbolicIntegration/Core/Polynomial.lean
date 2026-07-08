@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerCriterion

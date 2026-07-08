@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Polynomial.Derivative
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 
 /-! # Laurent cofactor data
 

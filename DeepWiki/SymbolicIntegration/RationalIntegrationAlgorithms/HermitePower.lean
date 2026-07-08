@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Diophantine
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 import DeepWiki.SymbolicIntegration.RationalIntegration
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
