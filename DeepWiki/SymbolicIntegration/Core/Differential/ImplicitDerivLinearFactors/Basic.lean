@@ -73,6 +73,12 @@ theorem dvd_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K] (v 
     (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ v.eval a = a′ := by
   rw [implicitDeriv_X_sub_C, dvd_iff_isRoot, IsRoot.def, eval_sub, eval_C, sub_eq_zero]
 
+/-- If every scalar is constant, then `X - C a` is special for `implicitDeriv v` iff it divides `v`. -/
+theorem dvd_X_sub_C_implicitDeriv_iff_dvd {K : Type*} [Field K] [Differential K]
+    (hconst : ∀ a : K, (a : K)′ = 0) (v : K[X]) (a : K) :
+    (X - C a) ∣ Differential.implicitDeriv v (X - C a) ↔ (X - C a) ∣ v := by
+  rw [dvd_X_sub_C_implicitDeriv_iff, hconst a, dvd_iff_isRoot, IsRoot.def, eq_comm]
+
 /-- Linear-factor power, special: over char `0`, `(X − a)ⁿ` (`n ≥ 1`) is special iff `v(a) = a′`. -/
 theorem dvd_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Differential K]
     (v : K[X]) (a : K) {n : ℕ} (hn : 1 ≤ n) :

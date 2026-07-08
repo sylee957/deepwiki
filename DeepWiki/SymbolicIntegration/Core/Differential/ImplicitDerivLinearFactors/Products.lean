@@ -49,6 +49,30 @@ theorem dvd_prod_X_sub_C_implicitDeriv_iff {K : Type*} [Field K] [Differential K
     exact IsSpecial.prod s (fun a => X - C a)
       (fun a ha => (dvd_X_sub_C_implicitDeriv_iff v a).mpr (h a ha))
 
+/-- If every scalar is constant, then a product of linear factors is special for `implicitDeriv v` iff it divides `v`. -/
+theorem dvd_prod_X_sub_C_implicitDeriv_iff_dvd {K : Type*} [Field K] [Differential K]
+    (hconst : ∀ a : K, (a : K)′ = 0) (v : K[X]) (s : Finset K) :
+    (∏ a ∈ s, (X - C a)) ∣ Differential.implicitDeriv v (∏ a ∈ s, (X - C a))
+      ↔ (∏ a ∈ s, (X - C a)) ∣ v := by
+  rw [dvd_prod_X_sub_C_implicitDeriv_iff]
+  constructor
+  · intro h
+    refine Finset.prod_dvd_of_coprime (fun a _ b _ hab => isCoprime_X_sub_C_iff.mpr
+      (by rw [eval_sub, eval_X, eval_C]; exact sub_ne_zero.mpr hab)) (fun a ha => ?_)
+    rw [dvd_iff_isRoot, IsRoot.def, h a ha, hconst a]
+  · intro h a ha
+    rw [hconst a]
+    exact (dvd_iff_isRoot.mp ((Finset.dvd_prod_of_mem _ ha).trans h))
+
+/-- If every scalar is constant, then a product of linear factors is normal for `implicitDeriv v` iff it is coprime to `v`. -/
+theorem isCoprime_prod_X_sub_C_implicitDeriv_iff_isCoprime {K : Type*} [Field K] [Differential K]
+    (hconst : ∀ a : K, (a : K)′ = 0) (v : K[X]) (s : Finset K) :
+    IsCoprime (∏ a ∈ s, (X - C a)) (Differential.implicitDeriv v (∏ a ∈ s, (X - C a)))
+      ↔ IsCoprime (∏ a ∈ s, (X - C a)) v := by
+  rw [isCoprime_prod_X_sub_C_implicitDeriv_iff, IsCoprime.prod_left_iff]
+  refine forall₂_congr (fun a ha => ?_)
+  rw [isCoprime_X_sub_C_iff, hconst a, ne_comm]
+
 /-- General product, special: over char `0`, `∏_{a∈s}(X − a)^{eₐ}` (each `eₐ ≥ 1`) is special
 iff `∀ a ∈ s, v(a) = a′`. -/
 theorem dvd_prod_X_sub_C_pow_implicitDeriv_iff {K : Type*} [Field K] [CharZero K] [Differential K]
