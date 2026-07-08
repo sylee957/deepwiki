@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
-import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalPoleOrderDrop
+import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation.PolynomialOrderDrop
 import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGlue
 import DeepWiki.SymbolicIntegration.Computable.QFunNZGDiffSpec
 
