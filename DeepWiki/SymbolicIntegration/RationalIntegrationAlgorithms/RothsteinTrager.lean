@@ -1,14 +1,11 @@
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LogResidueTower
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.Resultant
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.Residue
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.Lrt
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.CzichowskiNormalPosition
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultantCorrectness
 
 /-! # Rothstein-Trager and Lazard-Rioboo-Trager primitives
 
-Aggregator for the RT resultant/residue-gcd API, residue multiplicities, LRT
-subresultants, generalized-derivation bridges, correctness proofs, and
-Czichowski normal-position theory.
+Aggregator for RT resultants, residue theory, LRT subresultants and
+correctness, generalized-derivation bridges, and Czichowski normal-position
+theory.
 -/

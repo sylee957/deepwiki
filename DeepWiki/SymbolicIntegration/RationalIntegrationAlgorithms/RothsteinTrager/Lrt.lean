@@ -1,0 +1,8 @@
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
+
+/-! # Lazard-Rioboo-Trager support
+
+Aggregator for LRT subresultants, correctness, and general-derivation bridges.
+-/
