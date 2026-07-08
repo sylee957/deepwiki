@@ -4,6 +4,7 @@ import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 
 /-! # The transcendental logarithmic Liouville extension
 
@@ -481,27 +482,6 @@ theorem logDeriv_monic_proper (u : F) {p : F[X]} (hm : p.Monic) (hdeg : 1 ≤ p.
 
 Lifting the polynomial `v ∈ F` descent to the fraction field. -/
 
-omit [Differential F] [CharZero F] in
-/-- `algebraMap F` factors through `F[t]` as `C`:
-`algebraMap F (RatFunc F) b = algebraMap F[t] (RatFunc F) (C b)`. -/
-theorem algebraMap_eq_algebraMap_C (b : F) :
-    algebraMap F (RatFunc F) b = algebraMap F[X] (RatFunc F) (Polynomial.C b) := by
-  rw [IsScalarTower.algebraMap_eq F F[X] (RatFunc F)]
-  simp [Polynomial.algebraMap_eq]
-
-omit [Differential F] [CharZero F] in
-/-- `algebraMap F[t] (RatFunc F) p ∈ range (algebraMap F (RatFunc F))` iff `p = C b` for some `b ∈ F`. -/
-theorem algebraMap_poly_mem_range_iff (p : F[X]) :
-    algebraMap F[X] (RatFunc F) p ∈ (algebraMap F (RatFunc F)).range
-      ↔ ∃ b : F, p = Polynomial.C b := by
-  constructor
-  · rintro ⟨b, hb⟩
-    refine ⟨b, ?_⟩
-    apply FaithfulSMul.algebraMap_injective F[X] (RatFunc F)
-    rw [← algebraMap_eq_algebraMap_C, hb]
-  · rintro ⟨b, rfl⟩
-    exact ⟨b, (algebraMap_eq_algebraMap_C b).symm⟩
-
 /-- The rational-to-polynomial condition: given `logDeriv u ≠ 0`, if `v′` is a polynomial then `v` is. -/
 def RationalToPolyObligation (u : F) : Prop :=
   letI := logDifferential u
@@ -578,13 +558,13 @@ theorem deriv_mem_range_imp_linear (u : F) (hnd : NondegenerateLog u) {v : RatFu
   obtain ⟨b, hb⟩ := hv
   have hvpoly : v′ ∈ (algebraMap F[X] (RatFunc F)).range := by
     refine ⟨Polynomial.C b, ?_⟩
-    rw [← algebraMap_eq_algebraMap_C, hb]
+    rw [← ratFunc_algebraMap_eq_algebraMap_C, hb]
   obtain ⟨p, hp⟩ := rationalToPolyObligation_of_nondegenerateLog u hnd
     (logDeriv_ne_zero_of_nondegenerateLog u hnd) v hvpoly
   -- `D p` is the constant `C b`, so `(D p).natDegree = 0` and `p.natDegree ≤ 1`.
   have hDpCb : logDerivPoly u p = Polynomial.C b :=
     FaithfulSMul.algebraMap_injective F[X] (RatFunc F) (by
-      rw [← derivExtends u p, hp, ← hb, algebraMap_eq_algebraMap_C])
+      rw [← derivExtends u p, hp, ← hb, ratFunc_algebraMap_eq_algebraMap_C])
   have hdeg0 : (logDerivPoly u p).natDegree = 0 := by rw [hDpCb]; exact natDegree_C b
   have hple1 : p.natDegree ≤ 1 := natDegree_le_one_of_logDerivPoly_natDegree_eq_zero u hnd hdeg0
   -- The linear coefficient is a constant: `(p.coeff 1)′ = 0` (index-`1` coefficient relation).
@@ -599,7 +579,7 @@ theorem deriv_mem_range_imp_linear (u : F) (hnd : NondegenerateLog u) {v : RatFu
   -- `p = C (p.coeff 1)·X + C (p.coeff 0)` (degree `≤ 1`), so `v = ↑(p.coeff 0) + ↑(p.coeff 1)·t`.
   refine ⟨p.coeff 0, p.coeff 1, hb1, ?_⟩
   conv_lhs => rw [← hp, Polynomial.eq_X_add_C_of_natDegree_le_one hple1, map_add, map_mul,
-    ← algebraMap_eq_algebraMap_C, ← algebraMap_eq_algebraMap_C]
+    ← ratFunc_algebraMap_eq_algebraMap_C, ← ratFunc_algebraMap_eq_algebraMap_C]
   rw [add_comm]
 
 /-- A nondegenerate log monomial introduces no new constants in `RatFunc F`. -/
@@ -614,7 +594,7 @@ theorem containConstants_of_nondegenerateLog (u : F) (hnd : NondegenerateLog u) 
   obtain ⟨v₀, b, hb0, hxeq⟩ := deriv_mem_range_imp_linear u hnd hxrange
   have hfa : ∀ a : F,
       algebraMap F (RatFunc F) a = algebraMap F[X] (RatFunc F) (Polynomial.C a) := by
-    intro a; rw [algebraMap_eq_algebraMap_C]
+    intro a; rw [ratFunc_algebraMap_eq_algebraMap_C]
   -- Rewrite `x` as the image of the degree-`≤ 1` polynomial `C v₀ + C b·X`.
   have hxP :
       x = algebraMap F[X] (RatFunc F) (Polynomial.C v₀ + Polynomial.C b * Polynomial.X) := by
@@ -665,12 +645,12 @@ theorem mem_range_of_deriv_mem_range (u : F) (hrange : IsLogRangeReduction u) :
   obtain ⟨b, hb⟩ := hv
   have hvpoly : v′ ∈ (algebraMap F[X] (RatFunc F)).range := by
     refine ⟨Polynomial.C b, ?_⟩
-    rw [← algebraMap_eq_algebraMap_C, hb]
+    rw [← ratFunc_algebraMap_eq_algebraMap_C, hb]
   obtain ⟨p, hp⟩ := hrange.rationalToPoly hrange.logDeriv_ne_zero v hvpoly
   -- Identify `D p = C b` via injectivity, hence `(D p).natDegree = 0`.
   have hderiv : algebraMap F[X] (RatFunc F) (logDerivPoly u p)
       = algebraMap F[X] (RatFunc F) (Polynomial.C b) := by
-    rw [← derivExtends u p, hp, ← hb, algebraMap_eq_algebraMap_C]
+    rw [← derivExtends u p, hp, ← hb, ratFunc_algebraMap_eq_algebraMap_C]
   have hDpCb : logDerivPoly u p = Polynomial.C b :=
     FaithfulSMul.algebraMap_injective F[X] (RatFunc F) hderiv
   have hdeg0 : (logDerivPoly u p).natDegree = 0 := by rw [hDpCb]; exact natDegree_C b
@@ -678,7 +658,7 @@ theorem mem_range_of_deriv_mem_range (u : F) (hrange : IsLogRangeReduction u) :
   obtain ⟨b₀, hb₀⟩ :=
     eq_C_of_natDegree_logDerivPoly_le u hrange.polyReduction hrange.logDeriv_ne_zero hdeg0
   rw [← hp]
-  exact (algebraMap_poly_mem_range_iff p).mpr ⟨b₀, hb₀⟩
+  exact (ratFunc_algebraMap_poly_mem_range_iff p).mpr ⟨b₀, hb₀⟩
 
 /-! ### The single-logarithm case
 
@@ -816,14 +796,14 @@ theorem logDeriv_eq_wConst_add_sum [DecidableEq F] (u : F) {w : RatFunc F} (hw :
   have hwconst : logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C n.leadingCoeff))
       - logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C d.leadingCoeff))
       = logDeriv (algebraMap F (RatFunc F) (wConst w)) := by
-    rw [wConst, ← hn, ← hd, map_div₀, algebraMap_eq_algebraMap_C, algebraMap_eq_algebraMap_C,
+    rw [wConst, ← hn, ← hd, map_div₀, ratFunc_algebraMap_eq_algebraMap_C, ratFunc_algebraMap_eq_algebraMap_C,
       logDeriv_div _ _ hAn hAd]
   -- A `count` weight `(k : RatFunc F)` is the constant `algebraMap (C (k : F))`.
   have hcast : ∀ (m : Multiset F[X]) (π : F[X]),
       ((m.count π : ℕ) : RatFunc F)
         = algebraMap F[X] (RatFunc F) (Polynomial.C ((m.count π : ℕ) : F)) := by
     intro m π
-    rw [← algebraMap_eq_algebraMap_C, map_natCast]
+    rw [← ratFunc_algebraMap_eq_algebraMap_C, map_natCast]
   -- Extend each factor sum over the union `factorsFinset w`; off-support counts are `0`.
   have hsub_n : (Mn.toFinset : Finset F[X]) ⊆ factorsFinset w := by
     rw [factorsFinset, ← hn]; exact Finset.subset_union_left
@@ -908,7 +888,7 @@ theorem sum_const_logDeriv_eq_wConst_add_pole [DecidableEq F] (u : F) {ι : Type
   refine Finset.sum_congr rfl fun π _ => ?_
   rw [map_sum, map_sum, Finset.sum_mul]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [algebraMap_eq_algebraMap_C, ← mul_assoc, ← map_mul, ← Polynomial.C_mul]
+  rw [ratFunc_algebraMap_eq_algebraMap_C, ← mul_assoc, ← map_mul, ← Polynomial.C_mul]
 
 /-- Single-log pole-independence: from `algebraMap a = c · logDeriv w + v′` (`a`, `c` in `F`, `c′ = 0`)
 there exist `w₀ ∈ F` and `v₀ ∈ RatFunc F` with the same sum, the log argument in `F`, and `v₀′ ∈ F`. -/
@@ -1115,7 +1095,7 @@ theorem sum_const_logDeriv_algebraMap_mem_range [Differential F] (u : F) {ι : T
   refine ⟨Polynomial.C (∑ i, c i * logDeriv (x i)), ?_⟩
   rw [map_sum, map_sum]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [logDeriv_algebraMap, ← algebraMap_eq_algebraMap_C, ← map_mul]
+  rw [logDeriv_algebraMap, ← ratFunc_algebraMap_eq_algebraMap_C, ← map_mul]
 
 omit [CharZero F] in
 /-- For monic irreducibles `S`, `(∑_{π∈S} ↑(C (r π)) · logDeriv (algebraMap π)) · algebraMap (∏_{π∈S} π)`
@@ -1354,7 +1334,7 @@ theorem multiLogPoleObligation_of_nondegenerateLog (u : F) (hnd : NondegenerateL
     sum_const_logDeriv_algebraMap_mem_range u c (fun i => wConst (w' i))
   obtain ⟨pF, hpF⟩ := hFpart
   obtain ⟨pa, hpa⟩ : algebraMap F (RatFunc F) a ∈ (algebraMap F[X] (RatFunc F)).range :=
-    ⟨Polynomial.C a, (algebraMap_eq_algebraMap_C a).symm⟩
+    ⟨Polynomial.C a, (ratFunc_algebraMap_eq_algebraMap_C a).symm⟩
   -- `v′ + (simple-pole sum) = algebraMap a − F-part`, a polynomial.
   set P : RatFunc F := ∑ π ∈ S, algebraMap F[X] (RatFunc F)
       (Polynomial.C (∑ i, c i * poleMult (w' i) π)) * logDeriv (algebraMap F[X] (RatFunc F) π)
@@ -1512,7 +1492,7 @@ theorem deriv_algebraMap_mul_X (u : F) {b : F} (hb : b′ = 0) :
     rw [logDeriv_algebraMap, logDeriv, hb, zero_div, map_zero]
   have hlogX : logDeriv (algebraMap F[X] (RatFunc F) X)
       = algebraMap F (RatFunc F) (logDeriv u) / algebraMap F[X] (RatFunc F) X := by
-    rw [logDeriv_algebraMap_eq u X, logDerivPoly_X, ← algebraMap_eq_algebraMap_C]
+    rw [logDeriv_algebraMap_eq u X, logDerivPoly_X, ← ratFunc_algebraMap_eq_algebraMap_C]
   have hlogmul : logDeriv (algebraMap F (RatFunc F) b * algebraMap F[X] (RatFunc F) X)
       = algebraMap F (RatFunc F) (logDeriv u) / algebraMap F[X] (RatFunc F) X := by
     rw [Differential.logDeriv_mul _ _ hbA hXA, hlogb, hlogX, zero_add]

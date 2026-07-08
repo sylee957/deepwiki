@@ -4,6 +4,7 @@ import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 
 /-! # The transcendental exponential Liouville extension
 
@@ -146,33 +147,13 @@ theorem logDeriv_algebraMap_eq (u : F) (p : F[X]) :
   unfold logDeriv
   rw [derivExtends u p]
 
-omit [Differential F] [CharZero F] in
-/-- `algebraMap F (RatFunc F) b = algebraMap F[t] (RatFunc F) (C b)`. -/
-theorem algebraMap_eq_algebraMap_C (b : F) :
-    algebraMap F (RatFunc F) b = algebraMap F[X] (RatFunc F) (Polynomial.C b) := by
-  rw [IsScalarTower.algebraMap_eq F F[X] (RatFunc F)]
-  simp [Polynomial.algebraMap_eq]
-
-omit [Differential F] [CharZero F] in
-/-- A `t`-polynomial image lies in `range (algebraMap F)` iff `p = C b` for some `b`. -/
-theorem algebraMap_poly_mem_range_iff (p : F[X]) :
-    algebraMap F[X] (RatFunc F) p ∈ (algebraMap F (RatFunc F)).range
-      ↔ ∃ b : F, p = Polynomial.C b := by
-  constructor
-  · rintro ⟨b, hb⟩
-    refine ⟨b, ?_⟩
-    apply FaithfulSMul.algebraMap_injective F[X] (RatFunc F)
-    rw [← algebraMap_eq_algebraMap_C, hb]
-  · rintro ⟨b, rfl⟩
-    exact ⟨b, (algebraMap_eq_algebraMap_C b).symm⟩
-
 omit [CharZero F] in
 /-- `logDeriv (exp u) = u'`: in `RatFunc F`, `logDeriv (algebraMap X) = algebraMap u'`. -/
 theorem logDeriv_X_eq (u : F) :
     letI := expDifferential u
     logDeriv (algebraMap F[X] (RatFunc F) X) = algebraMap F (RatFunc F) (u′) := by
   letI := expDifferential u
-  rw [logDeriv_algebraMap_eq u X, expDerivPoly_X, map_mul, algebraMap_eq_algebraMap_C,
+  rw [logDeriv_algebraMap_eq u X, expDerivPoly_X, map_mul, ratFunc_algebraMap_eq_algebraMap_C,
     mul_div_assoc]
   have hXne : algebraMap F[X] (RatFunc F) X ≠ 0 := RatFunc.algebraMap_ne_zero X_ne_zero
   rw [div_self hXne, mul_one]
@@ -448,7 +429,7 @@ theorem logDeriv_C_mul_X_pow_eq (u : F) {b : F} (hb : b ≠ 0) (k : ℕ) :
   have hXkA : algebraMap F[X] (RatFunc F) (Polynomial.X ^ k) ≠ 0 :=
     RatFunc.algebraMap_ne_zero (pow_ne_zero _ Polynomial.X_ne_zero)
   rw [map_mul, Differential.logDeriv_mul _ _ hbA hXkA,
-    ← algebraMap_eq_algebraMap_C, logDeriv_algebraMap,
+    ← ratFunc_algebraMap_eq_algebraMap_C, logDeriv_algebraMap,
     map_pow, logDeriv_pow, logDeriv_X_eq, map_add, map_mul, map_natCast]
 
 omit [CharZero F] in
@@ -523,7 +504,7 @@ theorem expDeriv_mem_range_imp_mem_range (u : F) (hnd : NondegenerateExp u) {v :
   · exact ⟨0, by rw [map_zero]⟩
   obtain ⟨b, hb⟩ := hvpoly
   have hvpoly' : v′ ∈ (algebraMap F[X] (RatFunc F)).range := by
-    refine ⟨Polynomial.C b, ?_⟩; rw [← algebraMap_eq_algebraMap_C, hb]
+    refine ⟨Polynomial.C b, ?_⟩; rw [← ratFunc_algebraMap_eq_algebraMap_C, hb]
   set d := RatFunc.denom v with hddef
   have hddvd : d ∣ expDerivPoly u d := denom_dvd_expDerivPoly_denom u hv0 hvpoly'
   have hdmon : d.Monic := RatFunc.monic_denom v
@@ -550,14 +531,14 @@ theorem expDeriv_mem_range_imp_mem_range (u : F) (hnd : NondegenerateExp u) {v :
   set M : F[X] := expDerivPoly u N - Polynomial.C ((k : F) * u′) * N with hMdef
   have hclear : v′ * algebraMap F[X] (RatFunc F) (Polynomial.X ^ k)
       = algebraMap F[X] (RatFunc F) M := by
-    rw [hv'eq, hlogv, hveq, hMdef, map_sub, map_mul, algebraMap_eq_algebraMap_C]
+    rw [hv'eq, hlogv, hveq, hMdef, map_sub, map_mul, ratFunc_algebraMap_eq_algebraMap_C]
     field_simp
     congr 1
-    rw [Polynomial.C_mul, map_mul, map_mul, algebraMap_eq_algebraMap_C, map_natCast]
+    rw [Polynomial.C_mul, map_mul, map_mul, ratFunc_algebraMap_eq_algebraMap_C, map_natCast]
     ring
   have hMeq : M = Polynomial.C b * Polynomial.X ^ k := by
     apply FaithfulSMul.algebraMap_injective F[X] (RatFunc F)
-    rw [map_mul, ← algebraMap_eq_algebraMap_C, ← hclear, ← hb]
+    rw [map_mul, ← ratFunc_algebraMap_eq_algebraMap_C, ← hclear, ← hb]
   have hNzero : ∀ i, i ≠ k → N.coeff i = 0 := N_coeff_eq_zero_of_eq_C_mul_X_pow u hnd N k b hMeq
   have hNmono : N = Polynomial.C (N.coeff k) * Polynomial.X ^ k := by
     ext i
@@ -567,7 +548,7 @@ theorem expDeriv_mem_range_imp_mem_range (u : F) (hnd : NondegenerateExp u) {v :
     · rw [hNzero i hik]; simp [hik]
   set cN := N.coeff k with hcNdef
   refine ⟨cN, ?_⟩
-  rw [hveq, hNmono, map_mul, ← algebraMap_eq_algebraMap_C,
+  rw [hveq, hNmono, map_mul, ← ratFunc_algebraMap_eq_algebraMap_C,
     mul_div_assoc, div_self hXkA, mul_one]
 
 end VDescent

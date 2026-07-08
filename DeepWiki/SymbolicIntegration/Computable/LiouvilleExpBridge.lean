@@ -101,13 +101,13 @@ theorem logDeriv_eq_wConst_add_sum [DecidableEq F] (u : F) {w : RatFunc F} (hw :
   have hwconst : logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C n.leadingCoeff))
       - logDeriv (algebraMap F[X] (RatFunc F) (Polynomial.C d.leadingCoeff))
       = logDeriv (algebraMap F (RatFunc F) (wConst w)) := by
-    rw [wConst, ← hn, ← hd, map_div₀, algebraMap_eq_algebraMap_C, algebraMap_eq_algebraMap_C,
+    rw [wConst, ← hn, ← hd, map_div₀, ratFunc_algebraMap_eq_algebraMap_C, ratFunc_algebraMap_eq_algebraMap_C,
       logDeriv_div _ _ hAn hAd]
   have hcast : ∀ (m : Multiset F[X]) (π : F[X]),
       ((m.count π : ℕ) : RatFunc F)
         = algebraMap F[X] (RatFunc F) (Polynomial.C ((m.count π : ℕ) : F)) := by
     intro m π
-    rw [← algebraMap_eq_algebraMap_C, map_natCast]
+    rw [← ratFunc_algebraMap_eq_algebraMap_C, map_natCast]
   have hsub_n : (Mn.toFinset : Finset F[X]) ⊆ factorsFinset w := by
     rw [factorsFinset, ← hn]; exact Finset.subset_union_left
   have hsub_d : (Md.toFinset : Finset F[X]) ⊆ factorsFinset w := by
@@ -155,7 +155,7 @@ theorem X_term_eq_algebraMap (u : F) (r : F) :
     algebraMap F[X] (RatFunc F) (Polynomial.C r) * logDeriv (algebraMap F[X] (RatFunc F) Polynomial.X)
       = algebraMap F (RatFunc F) (r * u′) := by
   letI := expDifferential u
-  rw [logDeriv_X_eq, ← algebraMap_eq_algebraMap_C (b := r), ← map_mul]
+  rw [logDeriv_X_eq, ← ratFunc_algebraMap_eq_algebraMap_C (b := r), ← map_mul]
 
 omit [CharZero F] in
 /-- Splits a `C`-residue pole sum `∑_{π ∈ S}` into the `F`-valued `X` term plus the genuine-pole part
@@ -188,7 +188,7 @@ theorem sum_const_logDeriv_algebraMap_mem_range (u : F) {ι : Type*} [Fintype ι
   refine ⟨Polynomial.C (∑ i, c i * logDeriv (x i)), ?_⟩
   rw [map_sum, map_sum]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [logDeriv_algebraMap, ← algebraMap_eq_algebraMap_C, ← map_mul]
+  rw [logDeriv_algebraMap, ← ratFunc_algebraMap_eq_algebraMap_C, ← map_mul]
 
 omit [CharZero F] in
 /-- Multi-term pole-collection: `∑ᵢ ↑(cᵢ)·logDeriv wᵢ = ∑ᵢ ↑(cᵢ)·logDeriv (↑(wConst wᵢ))
@@ -223,7 +223,7 @@ theorem sum_const_logDeriv_eq_wConst_add_pole [DecidableEq F] (u : F) {ι : Type
   refine Finset.sum_congr rfl fun π _ => ?_
   rw [map_sum, map_sum, Finset.sum_mul]
   refine Finset.sum_congr rfl fun i _ => ?_
-  rw [algebraMap_eq_algebraMap_C, ← mul_assoc, ← map_mul, ← Polynomial.C_mul]
+  rw [ratFunc_algebraMap_eq_algebraMap_C, ← mul_assoc, ← map_mul, ← Polynomial.C_mul]
 
 /-! ## Pole-independence over `π ≠ X` (exp port; the special factor is excluded) -/
 
@@ -498,10 +498,10 @@ theorem deriv_mul_X_pow_mem_range (u : F) {v : RatFunc F} {k : ℕ}
   set M : F[X] := expDerivPoly u N - Polynomial.C ((k : F) * u′) * N with hMdef
   have hclear : v′ * algebraMap F[X] (RatFunc F) (Polynomial.X ^ k)
       = algebraMap F[X] (RatFunc F) M := by
-    rw [hv'eq, hlogv, hveq, hMdef, map_sub, map_mul, algebraMap_eq_algebraMap_C]
+    rw [hv'eq, hlogv, hveq, hMdef, map_sub, map_mul, ratFunc_algebraMap_eq_algebraMap_C]
     field_simp
     congr 1
-    rw [Polynomial.C_mul, map_mul, map_mul, algebraMap_eq_algebraMap_C, map_natCast]
+    rw [Polynomial.C_mul, map_mul, map_mul, ratFunc_algebraMap_eq_algebraMap_C, map_natCast]
     ring
   exact ⟨M, hclear.symm⟩
 
@@ -612,7 +612,7 @@ theorem expPoleMatching_of_nondegenerateExp (u : F) (hnd : NondegenerateExp u) :
     sum_const_logDeriv_algebraMap_mem_range u c (fun i => wConst (w' i))
   obtain ⟨pF, hpF⟩ := hFpart
   obtain ⟨pa, hpa⟩ : algebraMap F (RatFunc F) a ∈ (algebraMap F[X] (RatFunc F)).range :=
-    ⟨Polynomial.C a, (algebraMap_eq_algebraMap_C a).symm⟩
+    ⟨Polynomial.C a, (ratFunc_algebraMap_eq_algebraMap_C a).symm⟩
   -- The constant `K = res X = ∑ᵢ cᵢ poleMult w'ᵢ X` and the `X`-term `↑(K·u')`.
   set K : F := res Polynomial.X with hKdef
   have hKconst : K′ = 0 := by
@@ -649,7 +649,7 @@ theorem expPoleMatching_of_nondegenerateExp (u : F) (hnd : NondegenerateExp u) :
   -- `v′ + Q ∈ F[t]` (the `F`-part, `Xterm`, and `↑a` are polynomials).
   have hvQ : v′ + Q ∈ (algebraMap F[X] (RatFunc F)).range := by
     have hXtermR : Xterm ∈ (algebraMap F[X] (RatFunc F)).range := by
-      rw [hXterm_eq]; exact ⟨Polynomial.C (K * u′), (algebraMap_eq_algebraMap_C _).symm⟩
+      rw [hXterm_eq]; exact ⟨Polynomial.C (K * u′), (ratFunc_algebraMap_eq_algebraMap_C _).symm⟩
     obtain ⟨pX, hpX⟩ := hXtermR
     refine ⟨pa - pF - pX, ?_⟩
     rw [map_sub, map_sub, hpa, hpF, hpX]
