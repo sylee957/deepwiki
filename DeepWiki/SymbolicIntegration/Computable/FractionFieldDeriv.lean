@@ -69,12 +69,5 @@ example (Dt : CPolyG (QFunNZG ℚ)) (p : (CFieldSpec.K (QFunNZG ℚ))[X]) :
       = algebraMap _ (RatFunc (CFieldSpec.K (QFunNZG ℚ))) (Differential.implicitDeriv (toPolyG Dt) p) :=
   towerFractionFieldDeriv_algebraMap Dt p
 
-/-! ### Axiom audit -/
-
-#print axioms towerFractionFieldDeriv
-#print axioms towerFractionFieldDeriv_algebraMap
-#print axioms towerFractionFieldDeriv_mk
-#print axioms towerFractionFieldDeriv_logDeriv
-#print axioms towerFractionFieldDifferential
 
 end DeepWiki.SymbolicIntegration
