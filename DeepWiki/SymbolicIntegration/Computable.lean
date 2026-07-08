@@ -50,6 +50,7 @@ import DeepWiki.SymbolicIntegration.Computable.LrtAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Computable.MixedTowerIntegrate
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Computable.NormalPartSoundness
+import DeepWiki.SymbolicIntegration.Computable.NormalPartSoundnessExamples
 import DeepWiki.SymbolicIntegration.Computable.OneShotAssembly
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Computable.LimitedIntegrateSingle
