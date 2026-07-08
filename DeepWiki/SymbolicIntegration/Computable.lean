@@ -62,7 +62,7 @@ import DeepWiki.SymbolicIntegration.Computable.PolyPartTowerExamples
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuarded
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuardedExamples
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveLrtDecision
-import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular
+import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular.Assembly
 import DeepWiki.SymbolicIntegration.Computable.QFunReduce
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation
 import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
