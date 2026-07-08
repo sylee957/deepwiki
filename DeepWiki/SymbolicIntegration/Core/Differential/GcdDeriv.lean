@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
 import DeepWiki.SymbolicIntegration.Core.Differential.DerivationBasic
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Core
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import Mathlib.RingTheory.Coprime.Lemmas
 
@@ -70,5 +71,16 @@ theorem associated_gcd_deriv_of_associated {R : Type*} [CommRing R] [NormalizedG
     isUnit_of_dvd_unit (gcd_dvd_left _ _) u.isUnit
   refine (hbase.trans ?_).symm
   exact (associated_mul_unit_right _ _ huu).symm
+
+/-- gcd form of special: `IsSpecial p ↔ Associated (gcd p p') p`. -/
+theorem isSpecial_iff_associated_gcd {R : Type*} [CommRing R] [Differential R] [GCDMonoid R]
+    {p : R} : IsSpecial p ↔ Associated (gcd p p′) p :=
+  ⟨fun h => associated_of_dvd_dvd (gcd_dvd_left p p′) (dvd_gcd dvd_rfl h),
+   fun h => h.symm.dvd.trans (gcd_dvd_right p p′)⟩
+
+/-- gcd form of normal: a normal `p` has `gcd(p, p')` a unit. -/
+theorem IsNormal.isUnit_gcd {R : Type*} [CommRing R] [Differential R] [GCDMonoid R] {p : R}
+    (h : IsNormal p) : IsUnit (gcd p p′) :=
+  gcd_isUnit_iff_isRelPrime.mpr h.isRelPrime
 
 end DeepWiki.SymbolicIntegration
