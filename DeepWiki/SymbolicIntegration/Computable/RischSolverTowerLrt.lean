@@ -126,7 +126,7 @@ def towerPrimitiveCaseLrt : MonomialCase (QFunNZG β) where
     else none
   reducedCorrect := (primitiveGuardedCase (α := QFunNZG β)).reducedCorrect
 
-/-- LRT tower primitive special-part soundness, the LRT analogue of `towerPrimitiveCase_specialSound`.
+/-- LRT tower primitive special-part soundness, the tower-recursion analogue of `primitiveGuardedCase_specialSound`.
 Under the guard (`b = 0`, `Dθ = 1`) the LRT polynomial recursion `towerPolyIntegrateLrt` yields `qp` with
 `D_tower(⟦qp⟧) = ⟦fp⟧` (`tower_special_identityLrt`), and `canonicalReconstruction_of_charZero` (special term
 vanishing, `b = 0`) closes; off the guard the hook returns `none`. This is the `specialSound` field of the LRT

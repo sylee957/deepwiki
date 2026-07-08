@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Computable.IntegratorCases
 import DeepWiki.SymbolicIntegration.Computable.CanonicalReconstructionCharZero
 import DeepWiki.SymbolicIntegration.Computable.PrimitiveGuarded
 
-/-! # Primitive-case special-part soundness (shared by the primitive solvers)
+/-! # Primitive-case special-part soundness (shared by the LRT primitive base and tower)
 
 `primitiveGuardedCase_specialSound`: the special (polynomial/RDE) part of the primitive monomial case
 integrates soundly. Under the `primitiveGuardedCase` guard (`b = 0`, `Dθ = 1`, constant `fₚ`) the polynomial
@@ -19,11 +19,11 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)]
 
-/-- Primitive special-part soundness shared by the rational and LRT primitive solvers. The special
+/-- Primitive special-part soundness shared by the LRT primitive base and tower solvers. The special
 part is `primitiveGuardedCase.integrateSpecial`: under the guard (`b = 0`, `Dθ = 1`, constant `fₚ`) it solves
 the polynomial RDE and the reconstruction (`canonicalReconstruction_of_charZero`) closes with the special term
-vanishing; off the guard the hook returns `none`. Independent of any reduced frontier, so both solvers reuse
-it. -/
+vanishing; off the guard the hook returns `none`. Independent of any reduced frontier, so the recursive solver
+reuses it. -/
 theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
     (Dt a d snum sden : CPolyG α) (hd0 : toPolyG d ≠ 0)
     (hhook : primitiveGuardedCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
