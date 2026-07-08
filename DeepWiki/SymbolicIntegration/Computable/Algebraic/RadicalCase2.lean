@@ -122,11 +122,4 @@ rational part `v = Bf/(W²√(x³−x))` equals `C/(W²√(x³−x)) + D/(W·√
 theorem case2cDriver_integrates :
     radIsZero (radSub (radDeriv 2 case2cFqx case2cVlift) case2cRatLift) = true := by native_decide
 
-/-! ### `#print axioms` -/
-
-#print axioms case2c_cofactor_eq
-#print axioms case2c_congruence
-#print axioms case2c_cleared_identity
-#print axioms case2cDriver_integrates
-
 end DeepWiki.SymbolicIntegration
