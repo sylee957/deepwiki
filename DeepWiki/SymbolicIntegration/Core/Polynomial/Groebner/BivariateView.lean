@@ -159,6 +159,24 @@ theorem C_dvd_lazardView_of_degreeOf_zero {K : Type*} [Field K] {f : MvPolynomia
     rw [leadingYCoeff, Polynomial.leadingCoeff, hdeg]
   rw [hlc, ← hC]
 
+/-- **Divisibility propagates through a `K[x][y]` combination**. If `P ∣ lazardView b` for every
+`b` in the support of a finite combination `R = ∑ b ∈ s, h b · b`, then `P ∣ lazardView R`. -/
+theorem dvd_lazardView_sum {K : Type*} [Field K] {P : Polynomial (MvPolynomial (Fin 1) K)}
+    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
+    (hdvd : ∀ b ∈ s, P ∣ lazardView b) :
+    P ∣ lazardView (∑ b ∈ s, h b * b) := by
+  rw [lazardView, map_sum]
+  refine Finset.dvd_sum (fun b hb => ?_)
+  rw [map_mul]
+  exact Dvd.dvd.mul_left ((hdvd b hb)) _
+
+/-- The `Polynomial.C d` specialization of `dvd_lazardView_sum`. -/
+theorem C_dvd_lazardView_sum {K : Type*} [Field K] {d : MvPolynomial (Fin 1) K}
+    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
+    (hdvd : ∀ b ∈ s, Polynomial.C d ∣ lazardView b) :
+    Polynomial.C d ∣ lazardView (∑ b ∈ s, h b * b) :=
+  dvd_lazardView_sum hdvd
+
 /-- Under a dominant order (`hdom`), the index-`0` component of `m.degree f` is the `K[x][y]`
 `natDegree` of `f`. -/
 theorem degree_apply_zero_eq_natDegree_lazardView {K : Type*} [Field K] {m : MonomialOrder (Fin 2)}
@@ -246,6 +264,12 @@ example {K : Type*} [Field K] (f : MvPolynomial (Fin 2) K) :
 example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} (hf0 : degreeOf 0 f = 0) :
     Polynomial.C (leadingYCoeff f) ∣ lazardView f :=
   C_dvd_lazardView_of_degreeOf_zero hf0
+
+example {K : Type*} [Field K] {P : Polynomial (MvPolynomial (Fin 1) K)}
+    {s : Finset (MvPolynomial (Fin 2) K)} {h : MvPolynomial (Fin 2) K → MvPolynomial (Fin 2) K}
+    (hdvd : ∀ b ∈ s, P ∣ lazardView b) :
+    P ∣ lazardView (∑ b ∈ s, h b * b) :=
+  dvd_lazardView_sum hdvd
 
 example {K : Type*} [Field K] {f : MvPolynomial (Fin 2) K} :
     leadingYCoeff f ≠ 0 ↔ f ≠ 0 :=
