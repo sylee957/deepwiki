@@ -519,6 +519,25 @@ theorem cnorm_eq_nil_iff (p : CPoly) : cnorm p = [] ↔ toPoly p = 0 := by
     rw [clead_eq_leadingCoeff, h, Polynomial.leadingCoeff_zero] at hcl
     exact hcl rfl
 
+/-- `cmonic` realizes `normalize` through `toPoly`: `toPoly (cmonic q) = normalize (toPoly q)`. -/
+theorem toPoly_cmonic_eq_normalize (q : CPoly) :
+    toPoly (cmonic q) = normalize (toPoly q) := by
+  unfold cmonic
+  by_cases h : cisZero (cnorm q)
+  · simp only [h, if_true]
+    have hq0 : toPoly q = 0 := by
+      have : cnorm q = [] := by simpa [cisZero] using h
+      rw [← toPoly_cnorm, this, toPoly_nil]
+    rw [toPoly_nil, hq0, normalize_zero]
+  · simp only [h, Bool.false_eq_true, if_false]
+    have hqn : cnorm q ≠ [] := by simpa [cisZero] using h
+    have hq0 : toPoly q ≠ 0 := fun hh => hqn ((cnorm_eq_nil_iff q).mpr hh)
+    rw [toPoly_cscale, toPoly_cnorm, clead_eq_leadingCoeff, normalize_apply,
+      Polynomial.coe_normUnit]
+    have hlc : (toPoly q).leadingCoeff ≠ 0 := leadingCoeff_ne_zero.mpr hq0
+    rw [show ((normUnit (toPoly q).leadingCoeff : ℚ) : ℚ) = (toPoly q).leadingCoeff⁻¹ from by
+          simp [hlc], toPoly_cnorm, mul_comm]
+
 /-- For a nonzero polynomial, the normalized list length is `natDegree + 1`. -/
 theorem length_cnorm_of_ne (p : CPoly) (h : cnorm p ≠ []) :
     (cnorm p).length = (toPoly p).natDegree + 1 := by
