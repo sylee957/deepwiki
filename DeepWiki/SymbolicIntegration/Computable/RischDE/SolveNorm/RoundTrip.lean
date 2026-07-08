@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.RischDE.TowerGcdWitnessWf
-import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalCorrect
+import DeepWiki.SymbolicIntegration.Computable.RischDE.Structural
 
 /-! # Field round-trip for weak-normalized Risch-DE solving
 
