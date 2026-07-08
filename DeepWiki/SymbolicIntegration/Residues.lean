@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Subresultants
+import Mathlib.LinearAlgebra.Lagrange
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 import Mathlib.FieldTheory.IsAlgClosed.Basic
 import Mathlib.FieldTheory.Separable
@@ -46,6 +47,49 @@ theorem isRoot_gcd_iff_residue (A D : F[X]) (a α : F) (hα : (derivative D).eva
       ↔ (D.IsRoot α ∧ A.eval α / (derivative D).eval α = a) := by
   rw [← dvd_iff_isRoot, dvd_gcd_iff, dvd_iff_isRoot, dvd_iff_isRoot,
     residue_eq_iff_isRoot_sub A D a α hα]
+
+open scoped Classical in
+/-- For split squarefree `D = Lagrange.nodal s id`, `gcd(D, A − a·D') = ∏_{α∈s, res(α)=a}(X−α)`. -/
+theorem gcd_nodal_eq_prod_residue (s : Finset F) (A : F[X]) (a : F) :
+    gcd (Lagrange.nodal s id) (A - C a * derivative (Lagrange.nodal s id))
+      = ∏ α ∈ s.filter
+          (fun α => A.eval α / eval α (derivative (Lagrange.nodal s id)) = a), (X - C α) := by
+  set D := Lagrange.nodal s id with hD
+  set res : F → F := fun α => A.eval α / eval α (derivative D) with hres
+  set E := A - C a * derivative D with hE
+  have hDprod : D = ∏ α ∈ s, (X - C α) := by simp [hD, Lagrange.nodal_eq, id]
+  have hDsep : D.Separable := by
+    rw [hDprod]; exact separable_prod_X_sub_C_iff'.mpr fun _ _ _ _ h => h
+  have hD0 : D ≠ 0 := hD ▸ Lagrange.nodal_ne_zero
+  have hDroots : D.roots = s.val := by rw [hDprod, roots_prod_X_sub_C]
+  have hd : ∀ {α : F}, D.IsRoot α → (derivative D).eval α ≠ 0 := by
+    intro α hα
+    have := hDsep.eval₂_derivative_ne_zero (RingHom.id F)
+      (by simpa [eval₂_eq_eval_map, Polynomial.map_id] using hα)
+    simpa [eval₂_eq_eval_map, Polynomial.map_id] using this
+  have hgsep : (gcd D E).Separable := hDsep.of_dvd (gcd_dvd_left _ _)
+  have hg0 : gcd D E ≠ 0 := fun h =>
+    hD0 (zero_dvd_iff.mp (h ▸ gcd_dvd_left D E))
+  have hgmonic : (gcd D E).Monic := normalize_gcd D E ▸ monic_normalize hg0
+  have hDsplits : D.Splits := by
+    rw [hDprod]; exact Splits.prod fun α _ => Splits.X_sub_C _
+  have hgsplits : (gcd D E).Splits := hDsplits.of_dvd hD0 (gcd_dvd_left D E)
+  have hroots : (gcd D E).roots = (s.filter (fun α => res α = a)).val := by
+    refine Multiset.Nodup.ext (nodup_roots hgsep) (s.filter (fun α => res α = a)).nodup |>.mpr
+      fun α => ?_
+    rw [mem_roots hg0, Finset.mem_val, Finset.mem_filter]
+    constructor
+    · intro hα
+      have hDα : D.IsRoot α := (dvd_iff_isRoot.mp ((dvd_iff_isRoot.mpr hα).trans (gcd_dvd_left D E)))
+      obtain ⟨_, hres'⟩ := (isRoot_gcd_iff_residue A D a α (hd hDα)).mp hα
+      have hαs : α ∈ s := by
+        have : α ∈ s.val := hDroots ▸ (mem_roots hD0).mpr hDα
+        exact this
+      exact ⟨hαs, hres'⟩
+    · rintro ⟨hαs, hres'⟩
+      have hDα : D.IsRoot α := (mem_roots hD0).mp (hDroots ▸ hαs)
+      exact (isRoot_gcd_iff_residue A D a α (hd hDα)).mpr ⟨hDα, hres'⟩
+  rw [hgsplits.eq_prod_roots_of_monic hgmonic, hroots, Finset.prod_eq_multiset_prod]
 
 /-- Over an algebraically closed field with separable `D`, the resultant `res_x(D, A − a·D') = 0` iff `a`
 is a residue `A(α)/D'(α)` at some root `α` of `D`. -/
