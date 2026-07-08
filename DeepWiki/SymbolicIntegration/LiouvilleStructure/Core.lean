@@ -1,13 +1,11 @@
 import Mathlib.FieldTheory.Differential.Liouville
 import Mathlib.RingTheory.Derivation.MapCoeffs
-import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.Frontier
 
 /-! # Structural Liouville descent
 
 The Weak Liouville Theorem over Mathlib's `Differential.IsLiouville`: for a Liouville extension
 `L ⊇ F` with no new constants, `g ∈ L` with `g′ ∈ F` gives `g′ = v₀′ + Σ cᵢ · logDeriv vᵢ` over `F`.
-Its contrapositive propagates base non-elementarity through Liouville towers and supplies the
-`AlgebraicLiouvilleFrontier` bridge used by algebraic-completeness statements. -/
+Its contrapositive propagates base non-elementarity through Liouville towers. -/
 
 open scoped Differential
 open Polynomial Differential
@@ -167,37 +165,6 @@ theorem weakLiouville_of_expResidual (hexp : ExponentialLayerResidual F)
 
 end ExpResidual
 
-/-! ## `AlgebraicLiouvilleFrontier` over `HasWeakLiouvilleForm` -/
-
-section DischargeFrontier
-
-variable (F : Type*) [Field F] [Differential F]
-
-/-- `AlgebraicLiouvilleFrontier` (as-stated form, over `HasWeakLiouvilleForm`): for every Liouville
-extension `K / F`, base non-elementarity propagates up. -/
-theorem algebraicLiouvilleFrontier_form :
-    ∀ (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K] [IsLiouville F K]
-      (f : F), ¬ HasWeakLiouvilleForm F F f → ¬ HasWeakLiouvilleForm F K f := by
-  intro K _ _ _ _ _ f h
-  exact weakLiouville_propagates F K f h
-
-end DischargeFrontier
-
-section DischargeFrontierAlgebraic
-
-variable (F : Type*) [Field F] [Differential F] [CharZero F]
-
-/-- `AlgebraicLiouvilleFrontier` for the finite-dimensional case, with `[IsLiouville F K]` dropped:
-for every finite-dimensional `K / F` (char 0), base non-elementarity propagates up. -/
-theorem algebraicLiouvilleFrontier_finiteDimensional
-    (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
-    [FiniteDimensional F K] (f : F) (h : ¬ HasWeakLiouvilleForm F F f) :
-    ¬ HasWeakLiouvilleForm F K f := by
-  haveI : IsLiouville F K := isLiouville_of_finiteDimensional
-  exact weakLiouville_propagates F K f h
-
-end DischargeFrontierAlgebraic
-
 /-! ### Restatements and axiom audit -/
 
 section Restatements
@@ -214,13 +181,6 @@ example (F L : Type*) [Field F] [Field L] [CharZero F] [Differential F] [Differe
     (h : (algebraMap F L a) = g′) : HasWeakLiouvilleForm F F a :=
   weakLiouville_finiteDimensional F L a g h
 
--- Finite-dimensional extensions preserve non-elementarity in the Weak Liouville form.
-example (F : Type*) [Field F] [Differential F] [CharZero F]
-    (K : Type) [Field K] [Differential K] [Algebra F K] [DifferentialAlgebra F K]
-    [FiniteDimensional F K] (f : F) (h : ¬ HasWeakLiouvilleForm F F f) :
-    ¬ HasWeakLiouvilleForm F K f :=
-  algebraicLiouvilleFrontier_finiteDimensional F K f h
-
 end Restatements
 
 #print axioms weakLiouville_descend
@@ -228,7 +188,5 @@ end Restatements
 #print axioms weakLiouville_finiteDimensional
 #print axioms not_weakElementary_finiteDimensional
 #print axioms isLiouville_tower
-#print axioms algebraicLiouvilleFrontier_form
-#print axioms algebraicLiouvilleFrontier_finiteDimensional
 
 end DeepWiki.SymbolicIntegration.LiouvilleStructure
