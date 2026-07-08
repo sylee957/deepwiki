@@ -1,5 +1,9 @@
 # Linear root-evaluation helper reorg
 
+Superseded note: the remaining computable `extendDeriv` linear-factor API was
+later renamed from `Computable.ResidueLinearFactor` to
+`Computable.FractionFieldDerivLinearFactor`.
+
 ## Target module
 
 Create `DeepWiki.SymbolicIntegration.Core.Differential.LinearRootEvaluation` for generic facts about a

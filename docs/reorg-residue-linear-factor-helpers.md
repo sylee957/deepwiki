@@ -1,5 +1,9 @@
 # Residue linear-factor helper reorg
 
+Superseded note: the computable linear-factor helper module was later renamed
+from `Computable.ResidueLinearFactor` to
+`Computable.FractionFieldDerivLinearFactor`.
+
 ## Target module
 
 `DeepWiki.SymbolicIntegration.Computable.ResidueLinearFactor`

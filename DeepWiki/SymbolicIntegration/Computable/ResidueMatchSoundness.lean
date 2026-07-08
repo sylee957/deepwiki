@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.ResidueLinearFactor
+import DeepWiki.SymbolicIntegration.Computable.FractionFieldDerivLinearFactor
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
 import DeepWiki.SymbolicIntegration.PartialFraction

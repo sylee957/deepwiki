@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
-import DeepWiki.SymbolicIntegration.Computable.ResidueLinearFactor
+import DeepWiki.SymbolicIntegration.Computable.FractionFieldDerivLinearFactor
 import DeepWiki.SymbolicIntegration.Computable.OneShotSoundness
 import DeepWiki.SymbolicIntegration.Computable.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart

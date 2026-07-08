@@ -1,5 +1,9 @@
 # Reorg: residue linear-factor support
 
+Superseded note: this support module was later renamed from
+`Computable.ResidueLinearFactor` to `Computable.FractionFieldDerivLinearFactor`
+after the generic root-evaluation lemmas moved into `Core.Differential`.
+
 Target module: `DeepWiki.SymbolicIntegration.Computable.ResidueLinearFactor`
 
 Decls to move:
