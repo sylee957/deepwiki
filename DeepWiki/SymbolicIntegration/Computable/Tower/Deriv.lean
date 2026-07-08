@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
-import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
 
 /-! # A computable derivation on the tower carrier `QFunNZG α`
 `towerDerivQFunNZG Dt` is the fraction-field quotient-rule derivation on `QFunNZG α`, and
