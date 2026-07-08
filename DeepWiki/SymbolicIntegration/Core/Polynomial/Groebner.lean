@@ -2,7 +2,6 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerCriterion
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerAlgorithm
-import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisExistence
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.OneVariableGcd

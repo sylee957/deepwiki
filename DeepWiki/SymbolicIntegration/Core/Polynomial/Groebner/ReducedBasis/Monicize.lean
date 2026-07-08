@@ -13,7 +13,6 @@ import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerCriterion
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerAlgorithm
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.AutoReduction
-import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisExistence
 
 /-! # Monicizing Gröbner bases
 

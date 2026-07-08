@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.AutoReduction
-import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisExistence
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis.Minimize
 
 /-! # Existence of reduced Gröbner bases
