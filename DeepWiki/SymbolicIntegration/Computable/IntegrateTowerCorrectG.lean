@@ -35,6 +35,14 @@ theorem towerFractionFieldDerivG_div (Dt : CPolyG α) (gnum gden : (CFieldSpec.K
   rw [towerFractionFieldDerivG, ← RatFunc.mk_eq_div, extendDeriv_mk, RatFunc.mk_eq_div, map_sub,
     map_mul, map_mul, map_pow]
 
+/-- Per-term log-derivative reading:
+`towerFractionFieldDerivG Dt (amG v)/amG v = amG (toPolyG (cmonomialDeriv Dt v))/amG (toPolyG v)`. -/
+theorem towerFractionFieldDerivG_logDeriv (Dt v : CPolyG α) :
+    towerFractionFieldDerivG Dt (amG α (toPolyG v)) / amG α (toPolyG v)
+      = amG α (toPolyG (cmonomialDeriv Dt v)) / amG α (toPolyG v) := by
+  rw [towerFractionFieldDerivG, extendDeriv_algebraMap]
+  simp only [denote]
+
 /-! ### The logarithmic-part residue sum -/
 
 /-- Logarithmic-part residue sum `∑_{(c,v)∈logs} amG(C(toK c))·(Δv)/v` over
@@ -59,6 +67,18 @@ theorem logResidueSumG_cons (Dt : CPolyG α) (cv : α × CPolyG α) (rest : List
           * (amG α (toPolyG (cmonomialDeriv Dt cv.2)) / amG α (toPolyG cv.2))
         + logResidueSumG Dt rest := by
   simp only [logResidueSumG, List.map_cons, List.sum_cons]
+
+/-- `logResidueSumG` reads as the monomial log-derivative sum
+`∑_{(c,v)} amG(C(toK c))·(towerFractionFieldDerivG Dt (amG v)/amG v)`. -/
+theorem logResidueSumG_eq_logDeriv_sum (Dt : CPolyG α) (logs : List (α × CPolyG α)) :
+    logResidueSumG Dt logs
+      = (logs.map (fun cv =>
+          amG α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum := by
+  rw [logResidueSumG]
+  refine congrArg List.sum (List.map_congr_left ?_)
+  intro cv _
+  rw [towerFractionFieldDerivG_logDeriv]
 
 /-! ### The `checkIdentityG` fold computes the residue sum -/
 

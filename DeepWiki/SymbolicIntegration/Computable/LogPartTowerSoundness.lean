@@ -30,25 +30,6 @@ theorem toPolyG_cAmcDdG (Dt a d : CPolyG α) (c : α) :
           * Differential.implicitDeriv (toPolyG Dt) (toPolyG d) := by
   rw [cAmcDdG]
   simp only [denote]
-/-- Per-term log-derivative reading:
-`towerFractionFieldDerivG Dt (amG v)/amG v = amG (toPolyG (cmonomialDeriv Dt v))/amG (toPolyG v)`. -/
-theorem towerFractionFieldDerivG_logDeriv (Dt v : CPolyG α) :
-    towerFractionFieldDerivG Dt (amG α (toPolyG v)) / amG α (toPolyG v)
-      = amG α (toPolyG (cmonomialDeriv Dt v)) / amG α (toPolyG v) := by
-  rw [towerFractionFieldDerivG, extendDeriv_algebraMap]
-  simp only [denote]
-
-/-- `logResidueSumG` reads as the monomial log-derivative sum
-`∑_{(c,v)} amG(C(toK c))·(towerFractionFieldDerivG Dt (amG v)/amG v)`. -/
-theorem logResidueSumG_eq_logDeriv_sum (Dt : CPolyG α) (logs : List (α × CPolyG α)) :
-    logResidueSumG Dt logs
-      = (logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum := by
-  rw [logResidueSumG]
-  refine congrArg List.sum (List.map_congr_left ?_)
-  intro cv _
-  rw [towerFractionFieldDerivG_logDeriv]
 
 /-! ### The RT residue identity: `logResidueSumG = a/d` from the residue match -/
 

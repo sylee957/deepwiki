@@ -22,21 +22,6 @@ open scoped Differential
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **The log-residue sum as a sum of logarithmic derivatives.** `logResidueSumG Dt logs = Σ_{(c,v)} c ·
-(Δ(amG v)/amG v)` with `Δ = towerFractionFieldDerivG Dt` — the Liouville form `Σ cᵢ·logDeriv uᵢ` with constant
-coefficients `cᵢ = amG(C(toK c))` and arguments `uᵢ = amG(toPolyG v)`. Each summand's numerator
-`amG(toPolyG(cmonomialDeriv Dt v))` is `Δ(amG(toPolyG v))` (`toPolyG_cmonomialDeriv` + `towerFractionFieldDerivG_amG`). -/
-theorem logResidueSumG_eq_logDerivForm (Dt : CPolyG α) (logs : List (α × CPolyG α)) :
-    logResidueSumG Dt logs
-      = (logs.map (fun cv => amG α (Polynomial.C (CFieldSpec.toK cv.1))
-          * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum := by
-  simp only [logResidueSumG]
-  apply congrArg List.sum
-  apply List.map_congr_left
-  intro cv _
-  simp only [denote]
-  rw [← towerFractionFieldDerivG_amG]
-
 /-- **`IsIntegralResultG` is the explicit Liouville form.** The formal integral identity is exactly
 `Δ(g) + Σ_{(c,v)} c·(Δ(amG v)/amG v) = a/d` — a rational-part derivative plus a constant-coefficient
 logarithmic-derivative sum, `Δ = towerFractionFieldDerivG Dt`. This exhibits the engine's soundness predicate
@@ -49,6 +34,6 @@ theorem isIntegralResultG_iff_liouvilleForm (Dt anum aden : CPolyG α) (res : In
             * (towerFractionFieldDerivG Dt (amG α (toPolyG cv.2)) / amG α (toPolyG cv.2)))).sum
         = amG α (toPolyG anum) / amG α (toPolyG aden) := by
   unfold IsIntegralResultG
-  rw [logResidueSumG_eq_logDerivForm]
+  rw [logResidueSumG_eq_logDeriv_sum]
 
 end DeepWiki.SymbolicIntegration
