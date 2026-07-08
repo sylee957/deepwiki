@@ -1,5 +1,9 @@
 # Algebraic completeness Hermite reorganization
 
+Superseded note: the import-only `AlgebraicHermiteCompleteness.lean`
+compatibility wrapper was later retired; import
+`AlgebraicCompleteness.HermiteReduction` directly.
+
 ## Target module
 
 Move the root-level `DeepWiki.SymbolicIntegration.AlgebraicHermiteCompleteness`

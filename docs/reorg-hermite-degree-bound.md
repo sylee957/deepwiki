@@ -1,5 +1,9 @@
 # Reorg: algebraic Hermite degree bound
 
+Superseded note: the intermediate `AlgebraicHermiteCompleteness` compatibility
+wrapper was later retired; Hermite completeness callers now import
+`AlgebraicCompleteness.HermiteReduction` directly.
+
 Target module: `DeepWiki.SymbolicIntegration.Computable.Algebraic.HermiteDegreeBound`
 
 Decls to move:

@@ -1,5 +1,9 @@
 # Algebraic Hermite Completeness Path Reorg
 
+Superseded note: the corrected root-level compatibility module was later
+retired once callers imported `AlgebraicCompleteness.HermiteReduction`
+directly.
+
 ## Target module
 
 `DeepWiki.SymbolicIntegration.AlgebraicHermiteCompleteness`
