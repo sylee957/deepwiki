@@ -11,6 +11,7 @@ import DeepWiki.SymbolicIntegration.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
+import DeepWiki.SymbolicIntegration.Core.Differential.DerivationBasic
 import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
 import DeepWiki.SymbolicIntegration.Core.Differential.DiffPolyFractionDeriv

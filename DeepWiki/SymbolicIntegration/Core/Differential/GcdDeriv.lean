@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
+import DeepWiki.SymbolicIntegration.Core.Differential.DerivationBasic
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import Mathlib.RingTheory.Coprime.Lemmas
 
@@ -10,11 +11,6 @@ Generic gcd identities for elements of a differential ring.
 open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
-
-/-- Leibniz product rule: `(p·b)′ = p·b′ + b·p′`. -/
-theorem deriv_mul_eq {R : Type*} [CommRing R] [Differential R] (p b : R) :
-    (p * b)′ = p * b′ + b * p′ := by
-  simp only [Derivation.leibniz, smul_eq_mul]
 
 /-- gcd of a derivative, two-factor case: for coprime `a, b`,
 `gcd(a·b, (a·b)′) ~ gcd(a, a′)·gcd(b, b′)`. -/
