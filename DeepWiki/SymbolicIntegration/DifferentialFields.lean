@@ -47,6 +47,11 @@ theorem deriv_one {R : Type*} [CommRing R] [Differential R] : (1 : R)′ = 0 :=
 theorem deriv_add {R : Type*} [CommRing R] [Differential R] (a b : R) : (a + b)′ = a′ + b′ := by
   simp only [map_add]
 
+/-- Leibniz product rule: `(p·b)′ = p·b′ + b·p′`. -/
+theorem deriv_mul_eq {R : Type*} [CommRing R] [Differential R] (p b : R) :
+    (p * b)′ = p * b′ + b * p′ := by
+  simp only [Derivation.leibniz, smul_eq_mul]
+
 /-- **Constant-linearity**: `(ca)′ = c·a′` for a constant `c` (so `D` is `constants R`-linear). -/
 theorem deriv_const_mul {R : Type*} [CommRing R] [Differential R] {c : R} (a : R) (hc : c′ = 0) :
     (c * a)′ = c * a′ := by

@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
-import DeepWiki.SymbolicIntegration.Core.Differential.DerivationBasic
+import DeepWiki.SymbolicIntegration.DifferentialFields
 
 /-! # Logarithm and arctangent cancellation
 
