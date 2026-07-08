@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.Computable.SubresultantSpec
 import DeepWiki.SymbolicIntegration.Computable.MonomialDeriv
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness

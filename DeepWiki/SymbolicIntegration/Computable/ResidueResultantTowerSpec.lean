@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 
 /-! # Connecting the computable tower residue resultant to the general-derivation abstract theory (G4b)

@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.LrtIntegrate
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Computable.SubresultantTowerSpec
-import DeepWiki.SymbolicIntegration.LrtGeneralDerivation
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.Computable.HermiteValuationTower
