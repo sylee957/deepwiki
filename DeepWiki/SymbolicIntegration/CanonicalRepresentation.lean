@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.Assembly
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.Classify
-import DeepWiki.SymbolicIntegration.CanonicalRepresentation.GcdFormula
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.NormalSqfree
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.RootCharacterization
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactor

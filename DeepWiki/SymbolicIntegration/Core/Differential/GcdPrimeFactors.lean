@@ -1,14 +1,11 @@
-import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SplitFactor
 import DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv
-import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Radical.Basic
 
-/-! # Gcd formulas for canonical split factors
+/-! # Prime-factor gcd formulas for derivations
 
-Prime-factor formulas for `gcd(p, Dp)` and the characteristic-zero specialization used by
-canonical split-factor correctness.
+Prime-factor formulas for `gcd(p, Dp)` and the characteristic-zero derivative specialization.
 -/
 
 open scoped Differential
