@@ -43,7 +43,7 @@ import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
-import DeepWiki.SymbolicIntegration.SpecialNormalCoprime
+import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.SubresultantCorrectness
 import DeepWiki.SymbolicIntegration.SubresultantPRS

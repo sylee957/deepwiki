@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
-import DeepWiki.SymbolicIntegration.SpecialNormalCoprime
+import DeepWiki.SymbolicIntegration.CanonicalRepresentation.SpecialNormalCoprime
 
 /-! # Canonical reconstruction with the split conditions discharged (`CharZero`)
 

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.CanonicalRepresentation
+import DeepWiki.SymbolicIntegration.CanonicalRepresentation.NormalSqfree
 
 /-! # Special ⊥ normal-squarefree coprimality
 
