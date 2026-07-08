@@ -176,6 +176,10 @@ def cfpow {α : Type*} [CField α] (c : α) : ℕ → α
   | 0 => CField.one
   | n + 1 => CField.mul c (cfpow c n)
 
+/-- Horner evaluation `cevalG p c = p(c)` for a dense coefficient list, low degree first. -/
+def cevalG {α : Type*} [CField α] (p : CPolyG α) (c : α) : α :=
+  (p : List α).foldr (fun coeff acc => CField.add coeff (CField.mul c acc)) CField.zero
+
 /-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/
 @[denote] theorem toK_cfpow {α : Type*} [CField α] [CFieldSpec α] (c : α) (n : ℕ) :
     CFieldSpec.toK (cfpow c n) = (CFieldSpec.toK c) ^ n := by
