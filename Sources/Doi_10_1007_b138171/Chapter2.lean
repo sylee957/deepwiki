@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegration
+import DeepWiki.SymbolicIntegration.RationalIntegrationExamples
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
 import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.PartialFraction
