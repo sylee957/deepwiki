@@ -10,7 +10,24 @@
 #   scripts/wiki rdeps <name> [--depth D]
 #   scripts/wiki path <a> <b>
 #   scripts/wiki context <query> [-k N] [--depth D]
+#   scripts/wiki recommend [--prefix=NS] [--seed=N] [--k=N]
 set -euo pipefail
 export PATH="$HOME/.elan/bin:$PATH"
 cd "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# `lake exe` rebuilds the `wiki` executable when stale; two concurrent invocations then race on the
+# generated `.setup.json`/IR artifacts (spurious "unexpected end of input"). Serialize *only* the build
+# behind a best-effort lock, then run the query outside it — queries are read-only and parallel-safe.
+LOCK="${TMPDIR:-/tmp}/deepwiki-wiki-build.lock"
+have_lock=0
+trap '[ "$have_lock" = 1 ] && rmdir "$LOCK" 2>/dev/null || true' EXIT
+for _ in $(seq 1 300); do
+  if mkdir "$LOCK" 2>/dev/null; then have_lock=1; break; fi
+  # steal a stale lock whose holder died (dir older than ~5 min)
+  if [ -n "$(find "$LOCK" -maxdepth 0 -mmin +5 2>/dev/null)" ]; then rm -rf "$LOCK" 2>/dev/null || true; continue; fi
+  sleep 1
+done
+lake build wiki >/dev/null 2>&1 || true          # serialized; errors resurface under `lake exe` below
+if [ "$have_lock" = 1 ]; then rmdir "$LOCK" 2>/dev/null || true; have_lock=0; fi
+
 exec lake exe wiki "$@"
