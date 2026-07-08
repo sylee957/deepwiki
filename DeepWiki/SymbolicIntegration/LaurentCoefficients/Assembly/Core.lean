@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalUniqueness
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootBridge
 
 /-! # Laurent coefficient assembly
