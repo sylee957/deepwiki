@@ -1,3 +1,4 @@
+import DeepWiki.Algebra.ListSums
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction.Operations
 
 /-! # Computable rational functions ℚ(x)
@@ -107,6 +108,25 @@ theorem toQFun_qderiv (x : QFun) (hb : toPoly x.2 ≠ 0) : toQFun (qderiv x) = (
   simp only [toQFun, qderiv, toPoly_csub, toPoly_cmul, toPoly_cderiv, map_sub, map_mul]
   rw [hderiv, pow_two]
   ring
+
+open scoped Differential in
+/-- The `qadd`-fold derivative is the sum of the increment derivatives. -/
+theorem deriv_toQFun_foldl_qadd (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0) :
+    (toQFun (gs.foldl qadd qzero))′ = (gs.map (fun g => (toQFun g)′)).sum := by
+  rw [toQFun_foldl_qadd gs qzero (by simp [qzero, toPoly_cons]) hgs, toQFun_qzero, zero_add]
+  rw [show ((gs.map toQFun).sum)′ = Differential.deriv (R := RatFunc ℚ) (gs.map toQFun).sum from rfl,
+    map_list_sum (Differential.deriv (R := RatFunc ℚ)) (gs.map toQFun), List.map_map]
+  rfl
+
+open scoped Differential in
+/-- If every increment satisfies `(toQFun gⱼ)′ = T - residⱼ`, the fold residual is `T - nT + ∑ residⱼ`. -/
+theorem foldl_residual_eq (gs : List QFun) (hgs : ∀ g ∈ gs, toPoly g.2 ≠ 0)
+    (T : RatFunc ℚ) (resid : QFun → RatFunc ℚ)
+    (hstep : ∀ g ∈ gs, (toQFun g)′ = T - resid g) :
+    T - (toQFun (gs.foldl qadd qzero))′
+      = T - gs.length • T + (gs.map resid).sum := by
+  rw [deriv_toQFun_foldl_qadd gs hgs, List.map_congr_left hstep, list_sum_map_const_sub]
+  abel
 
 /-- `qeq x y = true ↔ toQFun x = toQFun y` in `RatFunc ℚ` (for nonzero denominators). -/
 theorem qeq_iff (x y : QFun) (hb : toPoly x.2 ≠ 0) (hd : toPoly y.2 ≠ 0) :
