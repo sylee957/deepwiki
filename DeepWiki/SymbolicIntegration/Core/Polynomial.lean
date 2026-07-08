@@ -1,0 +1,43 @@
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerCriterion
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerAlgorithm
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisExistence
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReducedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateView
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.OneVariableGcd
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LeadingYCoeffGcd
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BivariateSorting
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.ReductionStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BoundedReduction
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardStep
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.CommonFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardDescent
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.LazardFactorization
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.NoCommonYFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.DivideOutCommonFactor
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.DividedBasis
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalUniqueness
+import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RootEvaluation
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEmbedding
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
+import DeepWiki.SymbolicIntegration.Core.Polynomial.PolynomialNormalization
+import DeepWiki.SymbolicIntegration.Core.Polynomial.ResultantRoots
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYun
+import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeYunLoop
+
+/-! # Core polynomial
+
+Aggregator for polynomial, rational-function, squarefree, and Groebner support.
+-/

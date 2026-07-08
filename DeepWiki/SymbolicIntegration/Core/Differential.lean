@@ -1,0 +1,18 @@
+import DeepWiki.SymbolicIntegration.Core.Differential.DerivationBasic
+import DeepWiki.SymbolicIntegration.Core.Differential.DerivationExt
+import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
+import DeepWiki.SymbolicIntegration.Core.Differential.DiffPolyFractionDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.GcdDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.GcdPrimeFactors
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivDegree
+import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
+import DeepWiki.SymbolicIntegration.Core.Differential.LinearRootEvaluation
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial
+import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
+import DeepWiki.SymbolicIntegration.Core.Differential.Wronskian
+
+/-! # Core differential algebra
+
+Aggregator for derivations, differential polynomials, implicit derivatives, and normal/special forms.
+-/
