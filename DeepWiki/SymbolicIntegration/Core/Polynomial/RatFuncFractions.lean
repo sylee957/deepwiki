@@ -2,7 +2,6 @@ import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Tactic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEmbedding
 
 /-! # Rational-function fraction arithmetic
 
@@ -14,6 +13,11 @@ open Polynomial
 namespace DeepWiki.SymbolicIntegration
 
 variable {K : Type*} [Field K]
+
+/-- The polynomial embedding into `RatFunc K` preserves nonzero polynomials. -/
+theorem ratFunc_algebraMap_ne_zero {q : K[X]} (hq : q ≠ 0) :
+    algebraMap K[X] (RatFunc K) q ≠ 0 :=
+  (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hq
 
 /-- Fraction addition for `RatFunc.mk`: `p/q + r/s = (p*s + r*q)/(q*s)`. -/
 theorem ratFunc_mk_add_mk (p r : K[X]) {q s : K[X]} (hq : q ≠ 0) (hs : s ≠ 0) :

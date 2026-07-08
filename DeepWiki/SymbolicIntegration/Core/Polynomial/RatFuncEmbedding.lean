@@ -11,11 +11,6 @@ namespace DeepWiki.SymbolicIntegration
 
 variable {K : Type*} [Field K]
 
-/-- The polynomial embedding into `RatFunc K` preserves nonzero polynomials. -/
-theorem ratFunc_algebraMap_ne_zero {q : K[X]} (hq : q ≠ 0) :
-    algebraMap K[X] (RatFunc K) q ≠ 0 :=
-  (map_ne_zero_iff _ (RatFunc.algebraMap_injective K)).mpr hq
-
 /-- `algebraMap K (RatFunc K) b = algebraMap K[X] (RatFunc K) (C b)`. -/
 theorem ratFunc_algebraMap_eq_algebraMap_C (b : K) :
     algebraMap K (RatFunc K) b = algebraMap K[X] (RatFunc K) (Polynomial.C b) := by
