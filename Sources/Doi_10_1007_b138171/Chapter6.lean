@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Computable.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Computable.Tower.RischDEWellFounded
 import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
-import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
+import DeepWiki.SymbolicIntegration.Computable.IntegratorAssembly
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Chapter 6: The Risch Differential Equation

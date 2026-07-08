@@ -1,7 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic
 import DeepWiki.SymbolicIntegration.Computable.CanonNormalizedReduce
 import DeepWiki.SymbolicIntegration.Computable.CanonicalReconstructionCharZero
-import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
 import DeepWiki.SymbolicIntegration.Computable.CoupledDE
 import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
 import DeepWiki.SymbolicIntegration.Computable.ConcreteCoherence

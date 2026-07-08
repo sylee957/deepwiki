@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.GcdFFCorrect
 import DeepWiki.SymbolicIntegration.Computable.Tower.Integrate
-import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
 
 /-! # `CDiffFieldSpec (QFunNZG ℚ)` differential-spec bridge for the `ℚ(x)` carrier.
 Noncomputable base derivation `baseDerivQ` on `ℚ[X]` and its fraction-field extension on `RatFunc ℚ`. -/

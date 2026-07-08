@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.PrimPRSRegular.Content
+import DeepWiki.SymbolicIntegration.Computable.SplitFactorHelpers
 
 /-! # Primitive PRS regularity: degree control
 

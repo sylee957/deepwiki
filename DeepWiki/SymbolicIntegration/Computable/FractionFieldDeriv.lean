@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
-import DeepWiki.SymbolicIntegration.Computable.CanonicalFieldIdentity
 import DeepWiki.SymbolicIntegration.Computable.Tower.Field
 
 /-! # Tower fraction-field derivations
