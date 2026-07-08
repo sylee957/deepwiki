@@ -1,12 +1,12 @@
+import DeepWiki.SymbolicIntegration.DifferentialFields
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.KappaD
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.LogArctan
-import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.LogDeriv
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts.Rao
 
 /-! # Worked differential-algebra facts
 
-Aggregator for coefficient-lifting derivations, finite-product logarithmic derivatives,
-logarithm/arctangent cancellation, and Rao normal/special polynomials.
+Aggregator for coefficient-lifting derivations, logarithm/arctangent cancellation,
+and Rao normal/special polynomials, with verification examples for adjacent differential-field facts.
 -/
 
 open scoped Differential

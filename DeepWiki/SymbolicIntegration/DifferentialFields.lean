@@ -144,6 +144,18 @@ theorem logDeriv_prod_zpow {F : Type*} [Field F] [Differential F] {ι : Type*}
   rw [Differential.logDeriv_prod _ _ _ (fun i hi => zpow_ne_zero _ (h i hi))]
   exact Finset.sum_congr rfl (fun i hi => logDeriv_zpow (u i) (e i) (h i hi))
 
+/-- Logarithmic-derivative identity for a finite product with integer exponents:
+`D(∏ᵢ uᵢ^{eᵢ}) / (∏ᵢ uᵢ^{eᵢ}) = ∑ᵢ eᵢ·(Duᵢ/uᵢ)` — `logDeriv_prod_zpow` in explicit `D(P)/P`
+shape. -/
+theorem logDeriv_prod_zpow_div {F : Type*} [Field F] [Differential F] {ι : Type*}
+    (s : Finset ι) (u : ι → F) (e : ι → ℤ) (h : ∀ i ∈ s, u i ≠ 0) :
+    (∏ i ∈ s, u i ^ e i)′ / (∏ i ∈ s, u i ^ e i)
+      = ∑ i ∈ s, (e i : F) * ((u i)′ / u i) := by
+  have hlhs : Differential.logDeriv (∏ i ∈ s, u i ^ e i)
+      = (∏ i ∈ s, u i ^ e i)′ / (∏ i ∈ s, u i ^ e i) := rfl
+  rw [← hlhs, logDeriv_prod_zpow s u e h]
+  exact Finset.sum_congr rfl fun i _ => by rw [Differential.logDeriv]
+
 end Field
 
 end DeepWiki.SymbolicIntegration
