@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtension
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtensionExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalCase2
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalWellFounded
 import Sources.Hdl_1721_1_15391.Source

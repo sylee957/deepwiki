@@ -37,6 +37,7 @@ import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalAssembly
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalCase2
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalDerivationInvariant
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtension
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtensionExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalGeneralN
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalGenericExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalIntegralBasis
