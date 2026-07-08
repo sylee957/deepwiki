@@ -21,6 +21,7 @@ import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
+import DeepWiki.SymbolicIntegration.Core.Differential.Wronskian
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
