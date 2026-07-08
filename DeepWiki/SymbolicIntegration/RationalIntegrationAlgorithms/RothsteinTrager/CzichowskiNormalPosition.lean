@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.GroebnerBasis
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Diophantine
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultant
-import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 import Mathlib.RingTheory.Nullstellensatz
 import Mathlib.RingTheory.Radical.Basic
 

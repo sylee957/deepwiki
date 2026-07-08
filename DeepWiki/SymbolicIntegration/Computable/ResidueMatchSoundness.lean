@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Computable.FractionFieldDerivLinearFactor
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogSoundness
 import DeepWiki.SymbolicIntegration.PartialFraction
-import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 
 /-! # The Rothstein–Trager residue-match identity over a monomial tower

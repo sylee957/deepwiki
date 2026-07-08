@@ -38,7 +38,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.RealFieldExamples
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
-import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
 import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt

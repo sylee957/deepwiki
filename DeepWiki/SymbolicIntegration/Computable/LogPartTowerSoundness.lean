@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.NormalPartSoundness
 import DeepWiki.SymbolicIntegration.PartialFraction
-import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 
 /-! # The Rothstein–Trager residue identity over the transcendental tower
 

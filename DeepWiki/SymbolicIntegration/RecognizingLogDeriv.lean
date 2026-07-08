@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
-import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 
 /-! # Recognizing logarithmic derivatives
 For `f = A/D ∈ K(x)` with `D` squarefree and `deg A < deg D`, `f` is the logarithmic derivative of a

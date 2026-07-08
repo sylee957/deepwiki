@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtSubresultant
 import DeepWiki.SymbolicIntegration.PseudoRemainderSequence
-import DeepWiki.SymbolicIntegration.ResidueMultiplicity
+import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 
 /-! # Lazard–Rioboo–Trager correctness
 The LRT log-part algorithm replaces the Rothstein-Trager per-residue gcds
