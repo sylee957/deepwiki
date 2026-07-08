@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGenericExamples
 import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
+import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrateExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalRationalTower
 
 /-! # Bronstein-1990 catalog — the FULL elementary integral `v + Σ log u` over a tower, both halves COMPUTED
