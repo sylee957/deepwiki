@@ -45,14 +45,6 @@ non-primitive cases (`deg_t v ≥ 1`) need a polynomial-part cancellation, isola
 
 variable [Algebra ℚ K]
 
-/-- **The monomial log-derivative of `t−α` over a primitive monomial** `Dt = C w` reads as the constant
-`C(w − α′)` over `t−α`: `D(t−α)/(t−α) = algebraMap(C(w − α′))/algebraMap(t−α)` in `RatFunc K`. -/
-theorem extendDeriv_implicitDeriv_C_logDeriv_X_sub_C (w α : K) :
-    extendDeriv (Differential.implicitDeriv (C w)) (algebraMap K[X] (RatFunc K) (X - C α))
-        / algebraMap K[X] (RatFunc K) (X - C α)
-      = algebraMap K[X] (RatFunc K) (C (w - α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
-  rw [extendDeriv_implicitDeriv_logDeriv_X_sub_C, ← C_sub]
-
 /-- **The primitive-case monomial Rothstein–Trager partial fraction** — for a squarefree
 `d = ∏_{α∈s}(t−α)`, `deg a < #s`, a primitive monomial `Dt = C w`, and every root normal (`w ≠ α′`), the
 monomial RT residue sum equals `a/d`: `∑_{α∈s} C(c_α)·(D(t−α)/(t−α)) = a/d` with `c_α = a(α)/(Dd)(α)`,

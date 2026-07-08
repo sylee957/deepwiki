@@ -24,9 +24,17 @@ theorem extendDeriv_implicitDeriv_logDeriv_X_sub_C [Algebra ℚ K] (v : K[X]) (�
       = algebraMap K[X] (RatFunc K) (v - C (α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
   rw [extendDeriv_logDeriv, implicitDeriv_X_sub_C]
 
+/-- The primitive-monomial log-derivative of a linear factor has constant numerator `C(w - α′)`. -/
+theorem extendDeriv_implicitDeriv_C_logDeriv_X_sub_C [Algebra ℚ K] (w α : K) :
+    extendDeriv (Differential.implicitDeriv (C w)) (algebraMap K[X] (RatFunc K) (X - C α))
+        / algebraMap K[X] (RatFunc K) (X - C α)
+      = algebraMap K[X] (RatFunc K) (C (w - α′)) / algebraMap K[X] (RatFunc K) (X - C α) := by
+  rw [extendDeriv_implicitDeriv_logDeriv_X_sub_C, ← C_sub]
+
 /-! ### Axiom audit -/
 
 #print axioms ResidueMatchTower.extendDeriv_implicitDeriv_logDeriv_X_sub_C
+#print axioms ResidueMatchTower.extendDeriv_implicitDeriv_C_logDeriv_X_sub_C
 
 end ResidueMatchTower
 
