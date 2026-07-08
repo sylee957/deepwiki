@@ -129,17 +129,11 @@ def csqfreePart (fuel : ℕ) (p : CPoly) : CPoly :=
   let (g, _, _) := cgcdExt fuel p (cderiv p)
   cmonic (cdiv fuel p g)
 
-/-! ### Bridge back to `ℚ[X]` and agreement
-`toPoly (cresultant …)` agrees with Mathlib's `Polynomial.resultant` and
-`toPoly (rtResultantCompute …)` with the noncomputable `rtResultant`, proven in `Correctness` and
-`RtResultantCorrectness`. -/
+/-! ### Bridge back to `ℚ[X]`
 
-/-- Agreement `Prop`: up to a nonzero scalar, `toPoly (rtResultantCompute fuel A D)` equals
-`rtResultant (toPoly A) (toPoly D)`. -/
-def rtResultantCompute_agrees_statement : Prop :=
-  ∀ (A D : CPoly) (fuel : ℕ), ∃ c : ℚ, c ≠ 0 ∧
-    toPoly (rtResultantCompute fuel A D)
-      = Polynomial.C c * rtResultant (toPoly A) (toPoly D)
+`toPoly (cresultant …)` agrees with Mathlib's `Polynomial.resultant`, and
+`toPoly (rtResultantCompute …)` agrees with the noncomputable `rtResultant`, in the correctness
+files for those algorithms. -/
 
 end Compute
 
