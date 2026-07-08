@@ -136,11 +136,13 @@ whose name/kind/signature/docstring are unchanged), then `scripts/wiki index` re
 new/changed ones (needs a local Ollama server; default `nomic-embed-text`); `reindex` to
 change model. `WikiRAG`/`wiki` are out of `defaultTargets`, so the gate is untouched.
 
-The `modularity` subcommand scores refactoring signals over the graph (`--prefix`, `--top`):
-per-decl/module local signals (split, misplaced, coupling, conceptual, the Pareto regroup
-vector) *and* the module-scale **community partition-diff** (`uses`-communities diffed against
-the directory tree — scattered themes to regroup, grab-bag directories to split). Use it, not
-intuition, to decide *what modules should exist*.
+The `recommend` subcommand emits **one sampled Pareto action** over the graph
+(`--prefix`, `--seed`, `--k`): each action type — **regroup-theme** (a `uses`-community spanning
+≥2 dirs → one module), **split-dir** (a grab-bag directory → split), **merge** (a thin module →
+absorb into its neighbour), **move-decl** (a misplaced declaration) — is a Pareto front over its
+own objectives (no weighting); it stratified-samples one action card with objectives + a plan.
+Communities cluster with weighted Louvain over `uses` edges reinforced by conceptual (`--wcon`)
+and co-change (`--wevo`) weight. Use it, not intuition, to decide *what modules should exist*.
 
 **Log tooling/workflow friction to `feedbacks/`.** When `scripts/wiki` (RAG) misleads you or
 misses something, the index is stale, or the gate/doc-gen/a convention behaves surprisingly,

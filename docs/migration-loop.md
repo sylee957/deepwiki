@@ -31,20 +31,21 @@ time. So alternate:
   ```
   find DeepWiki -name '*.lean' | grep -vE '/(MeasureTheory|NetworkCalculus|ReactiveSystems|RelationalDatabases|TimeSeries)/' | awk -v seed="$RANDOM$$" 'BEGIN{srand(seed)} rand()*NR<1{l=$0} END{if(l)print l}'
   ```
-- **(b) Partition mode — the module-reorganization driver.** Run the global partition-diff and take a
-  *whole cluster* as the unit of work:
+- **(b) Partition mode — the module-reorganization driver.** Ask the engine for one concrete action:
   ```
-  scripts/wiki modularity --prefix=DeepWiki.SymbolicIntegration --top=15
+  scripts/wiki recommend --prefix=DeepWiki.SymbolicIntegration --seed=$RANDOM
   ```
-  The **COMMUNITIES** block lists `uses`-communities that span ≥2 directories — scattered mathematical
-  themes (high `coh`/`con`, module-sized) that *should* be one module but aren't. The **DIRECTORY
-  FRACTURE** block lists directories split across many communities — grab-bags to break up. Take the
-  top-scoring theme (or the lowest-purity directory) and make the **module-level project**: `git mv`
-  the scattered decls into one module/subdirectory + aggregator, and — per the "reprove for theme
-  groupings" goal — *unify the near-duplicate parallel lemmas inside the theme into one abstraction*
-  (`wiki search`/`context` to find every member; `rdeps` before moving). This is the bold,
-  cross-module work random file-sampling never surfaces. Run partition mode at least as often as file
-  mode; prefer it whenever a fresh run still shows a high-score community or a low-purity directory.
+  It computes a Pareto front per action type — **regroup-theme** (a `uses`-community spanning ≥2 dirs →
+  one module), **split-dir** (a grab-bag directory → split), **merge** (a thin module → absorb into its
+  neighbour), **move-decl** (a misplaced declaration) — and **stratified-samples one action card** with
+  its Pareto objectives and a plan. (Since within a front nothing dominates, sampling is the principled
+  selector; the fresh `--seed` rotates you across action types and areas.) Take the card, sanity-check
+  it as a newcomer (keep-together guard? does it truly read better?), and make that **module-level
+  project** — for a regroup-theme, `git mv` the scattered decls into one module + aggregator and, per the
+  "reprove for theme groupings" goal, *unify the near-duplicate parallel lemmas into one abstraction*
+  (`wiki rdeps` before moving). If a card is a false positive, re-roll with a new `--seed`; ask for
+  `--k=5` to see a slate. This is the bold, cross-module work random file-sampling never surfaces —
+  prefer partition mode.
 
 **2. Read it as a newcomer who landed here by chance.** Would someone with no prior context be oriented?
 Check: the module `/-! … -/` docstring says what the file is about and matches its contents; the file
@@ -59,8 +60,8 @@ look at:
 - `scripts/wiki show <name>` — signature + docstring + immediate uses / used-by;
 - `scripts/wiki deps/rdeps <name>` — what it builds on / its impact set (**always before deleting,
   moving, or renaming**);
-- `scripts/wiki modularity --prefix=<namespace>` — cross-check split / regroup / coupling / the
-  community partition-diff / **MERGE** (thin files to absorb), and read the `(str, con, evo, dis)` vector.
+- `scripts/wiki recommend --prefix=<namespace> --seed=$RANDOM` — one sampled Pareto action
+  (regroup-theme / split-dir / merge / move-decl) with its objectives and a plan; `--k=N` for a slate.
 Query liberally; it's cheap and it shows you the whole graph a newcomer can't see.
 
 **4. Fix what's off** (whatever the file needs):
@@ -79,7 +80,7 @@ Query liberally; it's cheap and it shows you the whole graph a newcomer can't se
 - **split** — a file doing several things splits along the concept axis into a subdirectory + aggregator.
 - **merge** — the inverse of split: a thin file (few decls, weak internal cohesion) whose outward `uses`
   concentrate on one neighbour is a fragment of that neighbour — absorb it and delete the file. The
-  `modularity` **MERGE** report names each thin module and its absorption target; `rdeps` first, then
+  `recommend` **merge** action names each thin module and its absorption target; `rdeps` first, then
   move the decls in and `git rm` the emptied file.
 - **bundle / re-docstring** — collapse recurring hypothesis clusters into a `Prop` structure; make module
   and declaration docstrings orient a newcomer.
@@ -177,7 +178,7 @@ Bold means larger-scoped, not reckless — the discipline that keeps a bold move
 ## Log tooling friction to `feedbacks/`
 
 The RAG graph and this loop are themselves works in progress. Whenever a tool or step **surprises you** —
-`wiki search`/`context`/`modularity` missed something or pointed at the wrong change, the index was stale,
+`wiki search`/`context`/`recommend` missed something or pointed at the wrong change, the index was stale,
 the gate or doc-gen behaved oddly, a convention fought the natural change — **write a short note in
 `feedbacks/`** (see `feedbacks/README.md` for the format) *in the same turn*, before you forget the
 detail. A friction that is only felt and never recorded gets re-hit by the next agent. This is a standing
