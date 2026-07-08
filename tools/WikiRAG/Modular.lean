@@ -6,7 +6,10 @@ import Std.Data.HashMap
 
 Turns the exact `uses` dependency graph into **quantified, ranked** refactoring signals — a
 decision-support engine (it scores and ranks; the agent validates). Every signal is a *continuous
-score*, never a hard threshold: modules/decls/pairs are ranked and the top ones shown. Knobs are
+score*, never a hard threshold. **The multi-objective reports (regroup, communities, merge) rank by
+Pareto non-domination over their own objective vectors — never a weighted scalar** (`dominatesVec` /
+`paretoFront`); the framework is the shared *method*, the axes are per report, and fronts are not
+compared across report types. Knobs are
 `--prefix=NS`, `--top=N`, and the clustering edge weights `--wcon=` (conceptual) / `--wevo=`
 (co-change) — objective *weights*, not cutoffs.
 
@@ -46,6 +49,29 @@ def directory (m : String) : String :=
 
 /-- Unordered key `"a||b"` (lexicographically sorted) for a module pair. -/
 @[inline] def pairKey (a b : String) : String := if a < b then s!"{a}||{b}" else s!"{b}||{a}"
+
+/-! ### Generic Pareto core (shared by every ranked report)
+
+Every recommendation type ranks its candidates by **Pareto non-domination over its own objective
+vector**, never a weighted scalar — the framework is the method, the axes are per report. An objective
+is `(value, isCost)`: `isCost = false` is maximised, `true` is minimised. Fronts are *not* compared
+across report types (a split is not an alternative to a merge) — each report keeps its own front. -/
+
+/-- `d` Pareto-dominates `c`: weakly better on every objective, strictly better on at least one. -/
+def dominatesVec (d c : Array (Float × Bool)) : Bool :=
+  (Array.zip d c).all (fun p => if p.1.2 then p.1.1 ≤ p.2.1 else p.1.1 ≥ p.2.1)
+  && (Array.zip d c).any (fun p => if p.1.2 then p.1.1 < p.2.1 else p.1.1 > p.2.1)
+
+/-- The Pareto-non-dominated subset of `xs` under the objective vector `vec`. -/
+def paretoFront {α : Type} (xs : Array α) (vec : α → Array (Float × Bool)) : Array α :=
+  xs.filter (fun c => !xs.any (fun d => dominatesVec (vec d) (vec c)))
+
+/-- Maximise-objective helper: `(value, isCost := false)`. -/
+@[inline] def maxObj (x : Float) : Float × Bool := (x, false)
+/-- Minimise-objective (cost) helper: `(value, isCost := true)`. -/
+@[inline] def costObj (x : Float) : Float × Bool := (x, true)
+/-- Conceptual objective value: fold "not embedded" (`con < 0`) to a neutral `0`. -/
+@[inline] def conObj (con : Float) : Float := if con < 0.0 then 0.0 else con
 
 /-- Parse a non-negative decimal (`"1.5"`, `"2"`) for a CLI weight; `d` on any parse failure. -/
 def parseFloatD (s : String) (d : Float) : Float :=
@@ -276,10 +302,9 @@ structure Regroup where
   evo : Float    -- evolutionary pull (co-change of home & alt)
   dis : Float    -- disturbance (bond to nearest home sibling) — a cost
 
-/-- `c` is Pareto-dominated by `d` on `(str↑, con↑, evo↑, dis↓)`. -/
-def Regroup.dominatedBy (c d : Regroup) : Bool :=
-  d.str ≥ c.str && d.con ≥ c.con && d.evo ≥ c.evo && d.dis ≤ c.dis &&
-    (d.str > c.str || d.con > c.con || d.evo > c.evo || d.dis < c.dis)
+/-- Regroup's objective vector: `(str↑, con↑, evo↑, dis↓)` for the shared `paretoFront`. -/
+@[inline] def Regroup.vec (c : Regroup) : Array (Float × Bool) :=
+  #[maxObj c.str, maxObj c.con, maxObj c.evo, costObj c.dis]
 
 /-- MULTI-OBJECTIVE regroup: each move-candidate carries `(str, con, evo, dis)`; keep the Pareto
 non-dominated set. The LLM judge picks — a high `dis` means the move would split a bonded pair (the
@@ -306,7 +331,7 @@ def reportRegroup (g : Graph) (e : Embeds) (top : Nat) : IO Unit := do
         con := cosine v (e.sums.getD alt #[]) - cosine v (e.sums.getD home #[])
         evo := g.evoPull home alt
         dis }
-  let front := cand.filter (fun c => !cand.any c.dominatedBy)
+  let front := paretoFront cand Regroup.vec
   IO.println s!"\n== MULTI-OBJECTIVE regroup — Pareto front {front.size}/{cand.size} (str=structural, con=conceptual, evo=co-change, dis=disturbance; high dis = splits a bonded pair) =="
   for c in (front.qsort (fun a b => a.str > b.str)).toList.take top do
     IO.println s!"  str={pctS c.str} con={pctS c.con} evo={pct c.evo} dis={pct c.dis}  {c.short}  [{leaf c.home}]→[{leaf c.alt}]"
@@ -463,9 +488,13 @@ def reportCommunities (g : Graph) (eOpt : Option Embeds) (wcon wevo : Float) (to
     rows := rows.push
       { size := members.size, mods := (HashSet.ofArray modsArr).size, dirs := dirSet.size,
         coh, con, score, dirList := dirSet.toArray.map leaf, sample }
-  IO.println "\n== COMMUNITIES (scattered themes: a uses-community spanning ≥2 directories → regroup) =="
-  IO.println s!"   score = (dirs−1)·cohesion·concept·module-scale-prior (τ≈{tau.round.toUInt64.toNat} decls) ;  con<0 = not embedded"
-  for r in (rows.qsort (fun a b => a.score > b.score)).toList.take top do
+  -- Pareto front over native axes (dispersion↑, cohesion↑, concept↑, module-scale fit↑); no weighting
+  let front := paretoFront rows (fun r =>
+    #[maxObj (r.dirs - 1).toFloat, maxObj r.coh, maxObj (conObj r.con),
+      maxObj (r.size.toFloat * Float.exp (-r.size.toFloat / tau))])
+  IO.println s!"\n== COMMUNITIES — Pareto front {front.size}/{rows.size} (scattered themes spanning ≥2 dirs → regroup) =="
+  IO.println s!"   objectives: dispersion(dirs−1)↑ cohesion↑ concept↑ module-scale-fit↑ (τ≈{tau.round.toUInt64.toNat}) ; con<0 = not embedded"
+  for r in (front.qsort (fun a b => a.score > b.score)).toList.take top do
     IO.println s!"  score={pct r.score} size={r.size} mods={r.mods} dirs={r.dirs} coh={pct r.coh}% con={pctS r.con}"
     IO.println s!"      dirs: {", ".intercalate r.dirList.toList}"
     IO.println s!"      e.g.: {", ".intercalate r.sample.toList}"
@@ -530,9 +559,13 @@ def reportMerge (g : Graph) (eOpt : Option Embeds) (top : Nat) : IO Unit := do
     let score := (tc.toFloat / ext.toFloat) * (1.0 - coh) * Float.exp (-size.toFloat / tau) * conW
     rows := rows.push
       { m, target, size, cohesion := coh, conc := tc.toFloat / ext.toFloat, con, score }
-  IO.println "\n== MERGE (thin modules to absorb into one neighbour — the inverse of split) =="
-  IO.println "   score = concentration·(1−cohesion)·smallness·concept ; conc = share of uses to target"
-  for r in (rows.qsort (fun a b => a.score > b.score)).toList.take top do
+  -- Pareto front over native axes (absorb-need↑, smallness↑, target-concentration↑, concept↑)
+  let front := paretoFront rows (fun r =>
+    #[maxObj (1.0 - r.cohesion), maxObj (Float.exp (-r.size.toFloat / tau)),
+      maxObj r.conc, maxObj (conObj r.con)])
+  IO.println s!"\n== MERGE — Pareto front {front.size}/{rows.size} (thin modules to absorb into one neighbour — inverse of split) =="
+  IO.println "   objectives: absorb-need(1−cohesion)↑ smallness↑ concentration↑ concept↑ ; conc = share of uses to target"
+  for r in (front.qsort (fun a b => a.score > b.score)).toList.take top do
     IO.println s!"  score={pct r.score} size={r.size} coh={pct r.cohesion}% conc={pct r.conc}% con={pctS r.con}  {leaf r.m} → {leaf r.target}"
     IO.println s!"      {r.m}  ⇒  {r.target}"
 
