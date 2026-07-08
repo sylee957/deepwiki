@@ -10,7 +10,6 @@ import DeepWiki.SymbolicIntegration.Compute.HermiteQRegularity
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualCorrectness
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualBridge
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
-import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 import DeepWiki.SymbolicIntegration.Compute.RtResultant
 import DeepWiki.SymbolicIntegration.Compute.Squarefree

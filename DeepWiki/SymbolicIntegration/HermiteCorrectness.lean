@@ -11,7 +11,7 @@ import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorResidual
 import DeepWiki.SymbolicIntegration.Compute.HermiteQRegularity
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualCorrectness
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualBridge
-import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
+import DeepWiki.SymbolicIntegration.Compute.Subresultant
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 import DeepWiki.SymbolicIntegration.Compute.SquarefreeExact
 import DeepWiki.SymbolicIntegration.Compute.SquarefreeYun

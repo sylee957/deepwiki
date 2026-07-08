@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.LrtLogPart
+import DeepWiki.SymbolicIntegration.Compute.Subresultant
 
 /-! # Computable Hermite reduction over `ℚ`
 Computes the rational part of `∫ A/D` as `(g, B, D*)` with `∫ A/D = g + ∫ B/D*` and `D*` squarefree,
