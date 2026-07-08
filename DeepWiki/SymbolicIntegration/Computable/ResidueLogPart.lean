@@ -1,13 +1,10 @@
 import DeepWiki.SymbolicIntegration.Computable.IntegrateTowerCorrectG
 
-/-! # Interface: `LawfulResidueLogPart` (Stage-1 abstract)
+/-! # Residue logarithm part interface
 
 The Rothstein–Trager residue-logarithm stage of the Risch reduced case. A list of `logs = [(cᵢ, vᵢ)]` is a
-*lawful* residue-log part of `hNum/Dstar` when `Σᵢ cᵢ·D(log vᵢ) = ⟦hNum/Dstar⟧` — i.e. the logarithmic
-derivative sum reconstructs the (proper, squarefree-denominator) leftover fraction. No concrete algorithm.
-
-The law is stated in the `towerFractionFieldDerivG`/`amG` form the assembler consumes
-(`field_identity_of_reducedG_of_residueMatch`). See `docs/risch-two-stage-discipline.md`. -/
+*lawful* residue-log part of `hNum/Dstar` when its logarithmic derivative sum reconstructs the
+proper squarefree-denominator leftover fraction in the field form consumed by the reduced integrator. -/
 
 open Polynomial
 
@@ -18,8 +15,7 @@ open Compute CPolyG QFunNZG
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **Interface law: `logs` is a residue-log part of `hNum/Dstar`.** `Σᵢ cᵢ · D(log vᵢ) = ⟦hNum/Dstar⟧`
-(the Rothstein–Trager residue match), in the `towerFractionFieldDerivG` form the assembler recombines. -/
+/-- `logs` is a residue-log part of `hNum/Dstar`: `Σᵢ cᵢ · D(log vᵢ) = ⟦hNum/Dstar⟧`. -/
 structure LawfulResidueLogPart (Dt hNum Dstar : CPolyG α) (logs : List (α × CPolyG α)) : Prop where
   /-- `Σᵢ cᵢ · (D(amG vᵢ) / amG vᵢ) = ⟦hNum/Dstar⟧`. -/
   residue_match : (logs.map (fun cv => amG α (Polynomial.C (CFieldSpec.toK cv.1))
