@@ -41,7 +41,7 @@ import DeepWiki.SymbolicIntegration.Computable.LiouvilleExpBridge
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleFormBridge
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleLogBridge
 import DeepWiki.SymbolicIntegration.Computable.LiouvilleLogTower
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleStructure
+import DeepWiki.SymbolicIntegration.LiouvilleStructure
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.ResidueResultantTowerSpec
 import DeepWiki.SymbolicIntegration.Computable.SubresultantTowerSpec

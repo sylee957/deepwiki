@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleStructure
+import DeepWiki.SymbolicIntegration.LiouvilleStructure
 import Sources.Kaltofen_AlgebraicIntegration.Source
 
 /-! # Kaltofen §3 (Weak Liouville Theorem + degree lemmas) — catalog

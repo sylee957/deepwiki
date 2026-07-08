@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleStructure
+import DeepWiki.SymbolicIntegration.LiouvilleStructure
 
 /-! # Algebraic Liouville frontier bridge
 

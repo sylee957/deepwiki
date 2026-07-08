@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.LiouvilleFrontier
-import DeepWiki.SymbolicIntegration.Computable.LiouvilleStructure
+import DeepWiki.SymbolicIntegration.LiouvilleStructure
 import Sources.Doi_10_1007_978_3_030_98767_1.Source
 
 /-! # Rosenlicht, "Integration in Finite Terms" — catalog (chapter DOI `…_1`)
