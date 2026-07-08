@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Diophantine
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Hermite
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.HermitePower
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Horowitz

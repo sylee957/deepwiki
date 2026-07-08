@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.Diophantine
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.HermitePower
 
 /-! # Hermite reduction kernels
