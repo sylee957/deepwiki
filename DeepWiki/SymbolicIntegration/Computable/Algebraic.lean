@@ -5,8 +5,8 @@ import DeepWiki.SymbolicIntegration.AlgebraicHermiteCompleteness
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResidues
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicResiduesExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgebraicWfSoundness
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.Bareiss
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissEngine
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissQF
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.CantorComposition
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.DivisorOrder

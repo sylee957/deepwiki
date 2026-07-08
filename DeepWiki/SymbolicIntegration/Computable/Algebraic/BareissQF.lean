@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissEngine
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.Bareiss
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.BareissExamples
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.Round2IntegralBasis
 
 /-! # Agreement of the fraction-free `ℚ(x)` wrappers with `fieldDet`/`matInvG`
