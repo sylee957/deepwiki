@@ -59,10 +59,6 @@ elements `[xᵏ, 0]` then `[0, xᵏ]`, giving the matrix columns — specializat
 def radLogBasis (degBound : ℕ) : List (RadElem (QFunNZG ℚ)) :=
   radLogBasisG degBound
 
-/-- Pad a ℚ-list to length `len` with trailing zeros. -/
-def ratPadTo (len : ℕ) (p : List ℚ) : List ℚ :=
-  p ++ List.replicate (len - p.length) 0
-
 /-- The `ℚ`-matrix of the cleared log-derivative system: for each basis column `Nⱼ`, the residual's
 cleared numerators `Pᵢⱼ` (common denominator across columns), one row per `x`-power per component, one
 column per basis index; a kernel vector gives the coefficients of a solving `N`. -/
