@@ -1,10 +1,11 @@
-import DeepWiki.SymbolicIntegration.Computable.FractionFieldDeriv
+import DeepWiki.SymbolicIntegration.Core.Differential.FractionFieldDeriv
 import DeepWiki.SymbolicIntegration.Core.Differential.LinearRootEvaluation
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors
 
 /-! # Linear factors for fraction-field derivations
 
-Reusable `extendDeriv` log-derivative facts for the linear factor `X - C α`. -/
+Reusable `extendDeriv` log-derivative facts for the linear factor `X - C α`.
+-/
 
 open Polynomial Classical
 open scoped Differential
