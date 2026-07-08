@@ -125,12 +125,13 @@ theorem hyperexpSpecNorm_runs :
     (CPolyG.cIntegrateHyperexpG hyperexpDt hyperexpSpecNormA hyperexpSpecNormD
       hyperexpSpecNormCands).isSome = true := by native_decide
 
-/-- The special part `1/t` of the special+normal integrand integrates exactly: `cIntegrateHyperexpG` on
-`a = 1`, `d = t` gives `−1/t` satisfying `checkIdentityG`. -/
+/-- The special part `1/t` of the special+normal integrand integrates exactly: its special part is exactly
+the inverse integrand (`a = 1`, `d = t`), so this is `hyperexpInv_landsSpecialPart` — `cIntegrateHyperexpG`
+gives `−1/t` satisfying `checkIdentityG`. -/
 theorem hyperexpSpecNorm_specialPart_exact :
     (match CPolyG.cIntegrateHyperexpG hyperexpDt hyperexpInvA hyperexpInvD hyperexpInvCands with
       | some res => CPolyG.checkIdentityG hyperexpDt res hyperexpInvA hyperexpInvD
-      | none => false) = true := by native_decide
+      | none => false) = true := hyperexpInv_landsSpecialPart
 
 #print axioms hyperexpSpecNorm_runs
 
