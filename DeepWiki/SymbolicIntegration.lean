@@ -1,12 +1,9 @@
 -- ## Abstract theory on Mathlib carriers
 import DeepWiki.SymbolicIntegration.AlgebraicConstants
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness
-import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteReduction
-import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteDegreeBound
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 import DeepWiki.SymbolicIntegration.CompletePartialFraction
 import DeepWiki.SymbolicIntegration.Constants
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.CzichowskiNormalPosition
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraExamples
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 import DeepWiki.SymbolicIntegration.Core
@@ -18,11 +15,9 @@ import DeepWiki.SymbolicIntegration.HorowitzLinearSolve
 import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone
 import DeepWiki.SymbolicIntegration.LaurentCoefficients
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LazardRiobooTragerCorrectness
 import DeepWiki.SymbolicIntegration.LiouvilleExpExtension
 import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
 import DeepWiki.SymbolicIntegration.LiouvilleStructure
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import DeepWiki.SymbolicIntegration.MonomialConstants
 import DeepWiki.SymbolicIntegration.PartialFraction
@@ -38,7 +33,6 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 import DeepWiki.SymbolicIntegration.RationalIntegrationLogForm
 import DeepWiki.SymbolicIntegration.RealFieldExamples
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.RiobooCoprimality
 import DeepWiki.SymbolicIntegration.RiobooCoprimalityLrt
@@ -48,7 +42,6 @@ import DeepWiki.SymbolicIntegration.RiobooLogToReal
 import DeepWiki.SymbolicIntegration.RiobooLogToRealRecursion
 import DeepWiki.SymbolicIntegration.RiobooLogToRealSplit
 import DeepWiki.SymbolicIntegration.RiobooRealLogarithm
-import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.RtResultantCorrectness
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
 import DeepWiki.SymbolicIntegration.SpecialNormalCoprime
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
