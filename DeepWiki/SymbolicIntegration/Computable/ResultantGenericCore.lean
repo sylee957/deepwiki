@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
-import DeepWiki.SymbolicIntegration.Computable.FieldGcd
+import DeepWiki.SymbolicIntegration.Computable.ConcreteCoherence
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Generic resultant/interpolation correctness over `CFieldSpec`

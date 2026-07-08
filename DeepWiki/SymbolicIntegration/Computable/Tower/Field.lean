@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine
-import DeepWiki.SymbolicIntegration.Computable.FieldGcd
+import DeepWiki.SymbolicIntegration.Computable.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 

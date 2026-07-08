@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorHelpers
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
-import DeepWiki.SymbolicIntegration.Computable.FieldGcd
+import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Abstract correctness of the fuel-free splitting factorization `cSplitFactorFastGWf`

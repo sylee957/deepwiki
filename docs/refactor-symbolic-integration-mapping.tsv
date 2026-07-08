@@ -20,7 +20,6 @@ ComputableCoupledDETangentReconstruct	Computable/CoupledDE/TangentReconstruct
 ComputableDivisorOrder	Computable/Algebraic/DivisorOrder
 ComputableElementaryIntegrate	Computable/ElementaryIntegrate	# REVIEW: §3.2 cross-cutting -> default rule 6
 ComputableField	Computable/Field
-ComputableFieldGcd	Computable/FieldGcd
 ComputableFiniteFieldFactor	Computable/Algebraic/FiniteFieldFactor
 ComputableFractionFieldDeriv	Computable/FractionFieldDeriv
 ComputableFuelFreeDiophantine	Computable/FuelFreeDiophantine

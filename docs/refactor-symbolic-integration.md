@@ -49,7 +49,7 @@ DeepWiki/SymbolicIntegration/          -- abstract theory on Mathlib carriers (~
 ├── Compute/                           -- concrete Mathlib-Polynomial ℚ(x) computations (`Compute` namespace)
 │    Hermite, Subresultant, RtResultant, LogToAtan, Exercise22, …, Correctness
 └── Computable/                        -- the generic executable engine (CField/CPolyG world)
-     │   Field, FieldGcd, GenericPolyEngine, FuelFreeGcd, GenericBezout, SplitFactor…,
+     │   Field, GenericPolyEngine, FuelFreeGcd, GenericBezout, SplitFactor…,
      │   Hermite-, LogPart-, PolyPart-, Parametric-, Structure-, Parallel-, Integrate-,
      │   Liouville*- and OneShot-/Capstone-layer files
      ├── RischDE/    -- base Risch DE: Normal, Special, DegreeBound*, *Cancellation, Solve*, Completeness…

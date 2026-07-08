@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
-import DeepWiki.SymbolicIntegration.Computable.FieldGcd
+import DeepWiki.SymbolicIntegration.Computable.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Computable.SplitFactorWfCorrect
 import DeepWiki.SymbolicIntegration.Computable.LogPartTowerSoundness
 import DeepWiki.SymbolicIntegration.Computable.SquarefreeDecomposition
