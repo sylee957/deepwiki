@@ -147,15 +147,6 @@ namespace LogResidue
 
 variable {K : Type*} [Field K]
 
-/-- The logarithmic-derivative residue is the multiplicity: for `u = (X − a)^m·v` with `v(a) ≠ 0`, the
-residue of `u'/u` at `a` — read as the value of the numerator `(X − a)·u'` over `u`'s cofactor at `a` —
-equals `(m : K)`. The general-carrier framing of `logDeriv_residue_eq_multiplicity`. -/
-theorem genLogDeriv_residue_eq_multiplicity (a : K) (m : ℕ) (v : K[X])
-    (hv : v.eval a ≠ 0) :
-    (Polynomial.C (m : K) * v + (Polynomial.X - Polynomial.C a) * derivative v).eval a / v.eval a
-      = (m : K) :=
-  logDeriv_residue_eq_multiplicity a m v hv
-
 /-! ### The residue-norm factoring: `genResidueResultant` roots = residues -/
 
 /-- The residue-norm factors into the per-place residues: for `c ≠ 0` and a fiber multiset `fiber` with
@@ -375,9 +366,6 @@ end CPolyG
 The log-part predicates, the certificate bridge, the residue-norm factoring and root↔residue theorem, the
 partial fraction, the compute-bridge, and the full composition carry only `[propext, Classical.choice,
 Quot.sound]` — no `sorry`. -/
-
--- ★ Obligation 2 (general framing): the logarithmic-derivative residue equals the vanishing order:
-#print axioms LogResidue.genLogDeriv_residue_eq_multiplicity
 
 -- ★ Obligation 1's general ingredient: the general residue-norm factors into the per-place residues:
 #print axioms LogResidue.genNormFactor
