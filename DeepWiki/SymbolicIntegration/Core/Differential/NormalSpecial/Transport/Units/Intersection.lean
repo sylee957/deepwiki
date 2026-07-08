@@ -1,4 +1,5 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Core
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Normal
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Special
 
 /-! # Unit intersection for normal and special elements
 

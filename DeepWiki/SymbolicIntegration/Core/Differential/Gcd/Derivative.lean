@@ -1,6 +1,7 @@
 import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
 import DeepWiki.SymbolicIntegration.Core.Differential.DerivationBasic
-import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Core
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Normal
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Special
 import DeepWiki.SymbolicIntegration.DifferentialFields
 import Mathlib.RingTheory.Coprime.Lemmas
 

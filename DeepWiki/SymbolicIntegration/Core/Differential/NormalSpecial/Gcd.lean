@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.Derivative
-import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Core
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Special
 import Mathlib.RingTheory.UniqueFactorizationDomain.Multiplicity
 
 /-! # GCD API for normal and special elements
