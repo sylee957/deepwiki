@@ -58,8 +58,8 @@ look at:
 - `scripts/wiki show <name>` — signature + docstring + immediate uses / used-by;
 - `scripts/wiki deps/rdeps <name>` — what it builds on / its impact set (**always before deleting,
   moving, or renaming**);
-- `scripts/wiki modularity --prefix=<namespace>` — cross-check split / regroup / coupling and read the
-  `(str, con, evo, dis)` vector.
+- `scripts/wiki modularity --prefix=<namespace>` — cross-check split / regroup / coupling / the
+  community partition-diff / **MERGE** (thin files to absorb), and read the `(str, con, evo, dis)` vector.
 Query liberally; it's cheap and it shows you the whole graph a newcomer can't see.
 
 **4. Fix what's off** (whatever the file needs):
@@ -76,6 +76,10 @@ Query liberally; it's cheap and it shows you the whole graph a newcomer can't se
   from an earlier pass, removing them is itself good loop work.
 - **regroup / move** — a declaration whose home doesn't fit goes where it belongs.
 - **split** — a file doing several things splits along the concept axis into a subdirectory + aggregator.
+- **merge** — the inverse of split: a thin file (few decls, weak internal cohesion) whose outward `uses`
+  concentrate on one neighbour is a fragment of that neighbour — absorb it and delete the file. The
+  `modularity` **MERGE** report names each thin module and its absorption target; `rdeps` first, then
+  move the decls in and `git rm` the emptied file.
 - **bundle / re-docstring** — collapse recurring hypothesis clusters into a `Prop` structure; make module
   and declaration docstrings orient a newcomer.
 
