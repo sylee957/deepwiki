@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.Engine
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootInvariant
 

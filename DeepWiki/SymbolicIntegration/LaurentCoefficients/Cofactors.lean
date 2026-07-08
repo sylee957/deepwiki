@@ -1,19 +1,5 @@
-import Mathlib.Algebra.MvPolynomial.Derivation
-import Mathlib.Algebra.MvPolynomial.Eval
 import Mathlib.Algebra.Polynomial.Derivative
-import Mathlib.Algebra.Polynomial.Taylor
-import DeepWiki.SymbolicIntegration.Core.Differential.DiffPolyFractionDeriv
-import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialDerivatives
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalAssembly
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalDerivatives
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalUniqueness
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalRegularity
-import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms
-import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
-import DeepWiki.SymbolicIntegration.CompletePartialFraction
 
 /-! # Laurent cofactor data
 

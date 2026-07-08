@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootEvaluation
 
 /-! # Laurent Taylor coefficient bridge

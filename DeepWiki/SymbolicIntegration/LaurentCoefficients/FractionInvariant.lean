@@ -1,3 +1,4 @@
+import DeepWiki.SymbolicIntegration.Core.Differential.DiffPolyFractionDeriv
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.Base
 
 /-! # Laurent fraction invariants
