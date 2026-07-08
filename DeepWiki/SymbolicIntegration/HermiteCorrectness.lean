@@ -8,7 +8,6 @@ import DeepWiki.SymbolicIntegration.Compute.HermiteIncrementDenominator
 import DeepWiki.SymbolicIntegration.Compute.HermiteInterferenceDivisibility
 import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorIncrements
 import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorResidual
-import DeepWiki.SymbolicIntegration.Compute.HermitePower
 import DeepWiki.SymbolicIntegration.Compute.HermiteQRegularity
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualCorrectness
 import DeepWiki.SymbolicIntegration.Compute.HermiteResidualBridge
