@@ -15,6 +15,10 @@ variable {K : Type*} [Field K]
 /-- The cofactor `Eᵢ = D /ₘ Dᵢ^i`: the part of `D` complementary to the prime power `Dᵢ^i`. -/
 noncomputable def laurentE (D Di : K[X]) (i : ℕ) : K[X] := D /ₘ Di ^ i
 
+/-- `laurentE D Di 1 = D /ₘ Di`: the cofactor `E₁` at multiplicity one. -/
+theorem laurentE_one (D Di : K[X]) : laurentE D Di 1 = D /ₘ Di := by
+  rw [laurentE, pow_one]
+
 /-- The Bézout cofactor `Bᵢ` of `Eᵢ` in `Eᵢ·Bᵢ + Dᵢ·(…) = 1`, so `Bᵢ·Eᵢ ≡ 1 (mod Dᵢ)`. -/
 noncomputable def bezoutE (D Di : K[X]) (i : ℕ) : K[X] :=
   (diophantineSolve (laurentE D Di i) Di 1).1

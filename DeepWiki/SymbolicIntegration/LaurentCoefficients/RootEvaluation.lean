@@ -12,10 +12,6 @@ variable {K : Type*} [Field K]
 
 /-! ## The `i=1` residue: `H₁₁(α) = A(α)/D'(α)` -/
 
-/-- `laurentE D Di 1 = D /ₘ Di`: the cofactor `E₁` at multiplicity one. -/
-theorem laurentE_one (D Di : K[X]) : laurentE D Di 1 = D /ₘ Di := by
-  rw [laurentE, pow_one]
-
 open scoped Classical in
 /-- `laurentH A D Di 1 1 = (A · bezoutE D Di 1 · bezoutDeriv Di) %ₘ Di`: the `i=1` engine output. -/
 theorem laurentH_one_one (A D Di : K[X]) :
