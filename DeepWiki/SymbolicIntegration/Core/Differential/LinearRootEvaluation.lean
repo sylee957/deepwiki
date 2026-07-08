@@ -65,13 +65,6 @@ theorem divByMonic_C_mul_X_sub_C (b e a : K) :
   · rw [degree_X_sub_C]
     exact lt_of_le_of_lt degree_C_le (by decide)
 
-/-! ### Axiom audit -/
-
-#print axioms ResidueMatchTower.eval_mapCoeffs_of_isRoot
-#print axioms ResidueMatchTower.eval_implicitDeriv_of_isRoot
-#print axioms ResidueMatchTower.algebraMap_div_X_sub_C_split
-#print axioms ResidueMatchTower.divByMonic_C_mul_X_sub_C
-
 end ResidueMatchTower
 
 end DeepWiki.SymbolicIntegration

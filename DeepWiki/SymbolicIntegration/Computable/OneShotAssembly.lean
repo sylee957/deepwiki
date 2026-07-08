@@ -1423,26 +1423,6 @@ UNION of both bundles while each branch uses only its half — heavy plumbing fo
 Both per-branch one-shots are the citable facts; the general form is mechanical given a caller's chosen
 hypotheses. -/
 
-#print axioms ResidueMatchTower.primitive_residue_match_list
-#print axioms primitive_residue_match_list_engine
-#print axioms primitive_engine_hmatch
-#print axioms primitive_monomial_norm_of_const_roots
-#print axioms cLogArgTowerGWf_eq_linear_factor
-#print axioms field_identity_of_cIntegrateReducedGWf_primitive
-#print axioms cIntegrateReducedGWf_logs_eq_per_root
-#print axioms field_identity_of_cIntegrateReducedGWf_primitive_of_residueData
-#print axioms cIntegrateGFullWf_primitive_oneShot
-#print axioms cIntegrateGFullWf_primitive_oneShot_qfunNZG
-#print axioms ResidueMatchTower.hyperexp_cancel_iff_sum_zero
-#print axioms ResidueMatchTower.monomial_residue_sum_eq_cancel_add
-#print axioms ResidueMatchTower.hyperexp_residue_match_iff_sum_zero
-#print axioms hyperexp_engine_hmatch
-#print axioms field_identity_of_cIntegrateReducedGWf_hyperexp
-#print axioms cIntegrateGFullWf_hyperexp_oneShot
-#print axioms cIntegrateGFullWf_hyperexp_oneShot_qfunNZG
-#print axioms cIntegrateGFullWf_poly_eq
-#print axioms cIntegrateGFullWf_poly_oneShot
-#print axioms cIntegrateGFullWf_poly_oneShot_base
 -- ★ Composed into the PRIMITIVE one-shot: with `hA` produced by the bridge from leftover properness, the
 -- reduced-case identity `D(g) + logResidueSumG = a/d` holds — `hA` is no longer a free hypothesis but the
 -- proper-fraction property of the Hermite leftover.
@@ -1749,11 +1729,5 @@ theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
     (1 : CFieldSpec.K (QFunNZG ℚ)) hDt hherm hden hA hnorm hform
   exact cIntegrateGFullWf_poly_oneShot_base a d cands res qp hbranch hsome hqp hgden hconst hnormal
     hrecon
-
-/-! ### Axiom audit — the `hA`-discharged primitive one-shot rests only on the standard kernel axioms. -/
-
-#print axioms cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one
-#print axioms cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG
-#print axioms cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
 
 end DeepWiki.SymbolicIntegration
