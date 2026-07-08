@@ -1,13 +1,11 @@
 import DeepWiki.SymbolicIntegration.DifferentialFields
-import DeepWiki.SymbolicIntegration.AlgebraicConstants
-import DeepWiki.SymbolicIntegration.ConstantsAlgebraicClosure
 import DeepWiki.SymbolicIntegration.DifferentialAlgebraFacts
 
 /-! # Worked differential-algebra examples
 Concrete instances of the differential-field machinery: the induced derivation
 `Δ = κ_D + X·d/dX` on `R[X]` and its restriction to the substitution quotient `R[X]/(X) ≃ R`,
-the differential ideals of `(K[X], d/dX)`, the fraction-field uniqueness of derivation
-extensions, and constancy of elements algebraic over the constants in characteristic `0`. -/
+the differential ideals of `(K[X], d/dX)`, and the fraction-field uniqueness of derivation
+extensions. -/
 
 open scoped Differential
 open Polynomial
@@ -95,25 +93,5 @@ theorem differentialIdeal_bot_and_top :
    fun _ _ => Submodule.mem_top⟩
 
 end DifferentialIdealsPolynomial
-
-section AlgebraicOverConstants
-variable {F E : Type*} [Field F] [Field E] [Differential F] [Differential E] [Algebra F E]
-  [DifferentialAlgebra F E]
-
-/-- An element algebraic over the constants is itself a constant: if `α` is a root of a
-polynomial `q` with constant coefficients and `q'(α) ≠ 0` (separability), then `α′ = 0`. -/
-theorem deriv_eq_zero_of_separable_root_const_coeffs {α : E} (q : E[X]) (hq : ∀ i, (q.coeff i)′ = 0)
-    (hroot : q.eval α = 0) (hsep : q.derivative.eval α ≠ 0) : α′ = 0 :=
-  deriv_eq_zero_of_isAlgebraicOverConst q hq hroot hsep
-
-/-- Char-`0` characterisation: an element `α ∈ E` integral over `F` is a constant iff it is a
-root of a separable nonzero polynomial with constant coefficients — specialises
-`deriv_eq_zero_iff_isAlgebraicOverConst_separable`. -/
-theorem deriv_eq_zero_iff_separable_root_const_coeffs [CharZero F] {α : E} (hint : IsIntegral F α) :
-    α′ = 0 ↔ ∃ q : E[X], q ≠ 0 ∧ (∀ i, (q.coeff i)′ = 0) ∧ q.eval α = 0 ∧
-      q.derivative.eval α ≠ 0 :=
-  deriv_eq_zero_iff_isAlgebraicOverConst_separable hint
-
-end AlgebraicOverConstants
 
 end DeepWiki.SymbolicIntegration

@@ -93,6 +93,21 @@ theorem deriv_eq_zero_iff_isAlgebraicOverConst_separable [CharZero F] {c : E}
   · rintro ⟨q, _, hq, hroot, hsep⟩
     exact deriv_eq_zero_of_isAlgebraicOverConst q hq hroot hsep
 
+/-- An element algebraic over the constants is itself a constant: if `α` is a root of a
+polynomial `q` with constant coefficients and `q'(α) ≠ 0` (separability), then `α′ = 0`. -/
+theorem deriv_eq_zero_of_separable_root_const_coeffs {α : E} (q : E[X])
+    (hq : ∀ i, (q.coeff i)′ = 0) (hroot : q.eval α = 0) (hsep : q.derivative.eval α ≠ 0) :
+    α′ = 0 :=
+  deriv_eq_zero_of_isAlgebraicOverConst q hq hroot hsep
+
+/-- Char-`0` characterisation: an element `α ∈ E` integral over `F` is a constant iff it is a
+root of a separable nonzero polynomial with constant coefficients. -/
+theorem deriv_eq_zero_iff_separable_root_const_coeffs [CharZero F] {α : E}
+    (hint : IsIntegral F α) :
+    α′ = 0 ↔ ∃ q : E[X], q ≠ 0 ∧ (∀ i, (q.coeff i)′ = 0) ∧ q.eval α = 0 ∧
+      q.derivative.eval α ≠ 0 :=
+  deriv_eq_zero_iff_isAlgebraicOverConst_separable hint
+
 end AlgebraicClosureConstants
 
 section AlgebraicallyClosedConstants
