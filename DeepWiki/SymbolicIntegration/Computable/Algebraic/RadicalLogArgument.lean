@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogIntegral
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric
 
 /-! # Solving for the log argument `u` in `∫ = log u` (principal case)
 
@@ -19,57 +20,15 @@ open RadElem CPolyG
 `ratKernelVector` row-reduces the matrix and reads a kernel vector off a free column, or returns `none`
 for a trivial kernel. -/
 
-/-- Reduce a `ℚ`-matrix to reduced row-echelon form, returning `(rrefRows, pivotCols)` by Gauss–Jordan
-over `nCols` columns. -/
+/-- Reduce a `ℚ`-matrix to reduced row-echelon form, returning `(rrefRows, pivotCols)` — the `ℚ`-base
+specialization of the `[CField β]`-generic `gaussElimG`. -/
 def ratRref (nCols : ℕ) (rows : List (List ℚ)) : List (List ℚ) × List ℕ :=
-  -- mutable-style fold over columns, carrying (current rows, next pivot row index, pivot cols rev)
-  let step : (List (List ℚ) × ℕ × List ℕ) → ℕ → (List (List ℚ) × ℕ × List ℕ) :=
-    fun (rs, pr, piv) col =>
-      if pr ≥ rs.length then (rs, pr, piv)
-      else
-        -- find a row index ≥ pr whose `col`-entry is nonzero
-        match (List.range rs.length).find? (fun i => i ≥ pr && (rs[i]!.getD col 0 ≠ 0)) with
-        | none => (rs, pr, piv)
-        | some i =>
-          -- swap rows `pr` and `i`
-          let rowPr := rs[pr]!
-          let rowI := rs[i]!
-          let rs := rs.set pr rowI |>.set i rowPr
-          -- scale pivot row to leading 1
-          let pivRow := rs[pr]!
-          let lead := pivRow.getD col 0
-          let pivRow := pivRow.map (fun a => a / lead)
-          let rs := rs.set pr pivRow
-          -- eliminate `col` from all other rows
-          let rs := (List.range rs.length).foldl (fun acc r =>
-            if r = pr then acc
-            else
-              let row := acc[r]!
-              let factor := row.getD col 0
-              if factor = 0 then acc
-              else
-                let newRow := (List.range nCols).map (fun c =>
-                  (row.getD c 0) - factor * (pivRow.getD c 0))
-                acc.set r newRow) rs
-          (rs, pr + 1, col :: piv)
-  let (rs, _, pivRev) := (List.range nCols).foldl step (rows, 0, [])
-  (rs, pivRev.reverse)
+  gaussElimG nCols rows
 
 /-- A nonzero kernel vector of a `ℚ`-matrix: `ratKernelVector nCols rows = some c` with `M·c = 0`,
-`c ≠ 0`, read off the first free column after `ratRref`, or `none` for a trivial kernel. -/
+`c ≠ 0`, read off the first free column after `ratRref` — the `ℚ`-base specialization of `kernelVectorG`. -/
 def ratKernelVector (nCols : ℕ) (rows : List (List ℚ)) : Option (List ℚ) :=
-  let (rs, pivots) := ratRref nCols rows
-  let freeCols := (List.range nCols).filter (fun c => ¬ pivots.contains c)
-  match freeCols with
-  | [] => none
-  | fc :: _ =>
-    -- pivot variable `pivots[r]` is determined by row `r`: c[pivots[r]] = − rs[r][fc]
-    let base : List ℚ := (List.range nCols).map (fun c => if c = fc then (1 : ℚ) else 0)
-    let withPivots := (List.range pivots.length).foldl (fun (acc : List ℚ) r =>
-      let pc := pivots[r]!
-      let v := - ((rs[r]!).getD fc 0)
-      acc.set pc v) base
-    some withPivots
+  kernelVectorG nCols rows
 
 /-! ### Extracting the ℚ-linear system from the cleared log-derivative relation
 
@@ -77,30 +36,28 @@ The residual `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' − rad
 `ℚ`-linear in `N`; evaluating it on the monomial basis and clearing each `ℚ(x)` entry to a polynomial
 numerator gives the `ℚ`-matrix of the system. -/
 
-/-- The ℚ(x) value `xᵏ`: numerator the `k`-th monomial `[0,…,0,1]`, denominator `1`. -/
-def qxMonomial (k : ℕ) : QFunNZG ℚ := qxOfNum (cshiftG k [(1 : ℚ)])
+/-- The ℚ(x) value `xᵏ`: numerator the `k`-th monomial `[0,…,0,1]`, denominator `1` — the `ℚ`-base
+specialization of `qMonomialG`. -/
+def qxMonomial (k : ℕ) : QFunNZG ℚ := qMonomialG k
 
 /-- The cleared log-derivative residual `radLogResidual ρ integrand D N = radDeriv(N)·D − N·D' −
 radMul(N, integrand)·D` in `(QFunNZG ℚ)[y]/(y² − ρ)`, whose vanishing says `∫(integrand) dx = log(N/D)`;
-`ℚ`-linear in `N`. -/
+`ℚ`-linear in `N`. The `ℚ`-base specialization of `radLogResidualG` (which uses the actual base-field
+derivation `CDiffField.cderiv`, agreeing with the formal `cderivG` on the untowered base `ℚ(x)`). -/
 def radLogResidual (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPolyG ℚ)
     (N : RadElem (QFunNZG ℚ)) : RadElem (QFunNZG ℚ) :=
-  let Dq : QFunNZG ℚ := qxOfNum D
-  let Dpq : QFunNZG ℚ := qxOfNum (cderivG D)
-  radSub (radSub (radScale Dq (radDeriv 2 ρ N)) (radScale Dpq N))
-    (radScale Dq (radMul 2 ρ N integrand))
+  radLogResidualG ρ integrand D N
 
-/-- The numerator coefficient list `qxNum z = z.1.1 ∈ ℚ[x]` of a ℚ(x) element. -/
-def qxNum (z : QFunNZG ℚ) : CPolyG ℚ := z.1.1
+/-- The numerator coefficient list `qxNum z = z.1.1 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qNumG`. -/
+def qxNum (z : QFunNZG ℚ) : CPolyG ℚ := qNumG z
 
-/-- The denominator coefficient list `qxDen z = z.1.2 ∈ ℚ[x]` of a ℚ(x) element. -/
-def qxDen (z : QFunNZG ℚ) : CPolyG ℚ := z.1.2
+/-- The denominator coefficient list `qxDen z = z.1.2 ∈ ℚ[x]` of a ℚ(x) element — specialization of `qDenG`. -/
+def qxDen (z : QFunNZG ℚ) : CPolyG ℚ := qDenG z
 
 /-- The monomial basis `radLogBasis degBound` for the ansatz `N = a₀ + a₁·y`: the `2·(degBound+1)`
-elements `[xᵏ, 0]` then `[0, xᵏ]`, giving the matrix columns. -/
+elements `[xᵏ, 0]` then `[0, xᵏ]`, giving the matrix columns — specialization of `radLogBasisG`. -/
 def radLogBasis (degBound : ℕ) : List (RadElem (QFunNZG ℚ)) :=
-  ((List.range (degBound + 1)).map (fun k => ([qxMonomial k, CField.zero] : RadElem (QFunNZG ℚ)))) ++
-  ((List.range (degBound + 1)).map (fun k => ([CField.zero, qxMonomial k] : RadElem (QFunNZG ℚ))))
+  radLogBasisG degBound
 
 /-- Pad a ℚ-list to length `len` with trailing zeros. -/
 def ratPadTo (len : ℕ) (p : List ℚ) : List ℚ :=
@@ -111,31 +68,7 @@ cleared numerators `Pᵢⱼ` (common denominator across columns), one row per `x
 column per basis index; a kernel vector gives the coefficients of a solving `N`. -/
 def radLogMatrix (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPolyG ℚ)
     (degBound : ℕ) : List (List ℚ) × ℕ :=
-  let basis := radLogBasis degBound
-  let nCols := basis.length
-  -- residual of each basis element, as a length-2 RadElem [r₀, r₁]
-  let resids : List (RadElem (QFunNZG ℚ)) := basis.map (radLogResidual ρ integrand D)
-  -- build the rows for one component `i ∈ {0,1}`
-  let rowsForComp : ℕ → List (List ℚ) := fun i =>
-    -- the i-th residual entry of column j (default 0/1 fraction if list too short)
-    let entryOf : ℕ → QFunNZG ℚ := fun j => (resids[j]!).getD i CField.zero
-    -- numerators and denominators per column
-    let nums : List (CPolyG ℚ) := (List.range nCols).map (fun j => cnormG (qxNum (entryOf j)))
-    let dens : List (CPolyG ℚ) := (List.range nCols).map (fun j => cnormG (qxDen (entryOf j)))
-    -- cleared polynomial for column j: num_j · ∏_{k≠j} den_k
-    let cleared : List (CPolyG ℚ) := (List.range nCols).map (fun j =>
-      let prod := (List.range nCols).foldl (fun acc k =>
-        if k = j then acc else cmulG acc (dens[k]!)) [(1 : ℚ)]
-      cnormG (cmulG (nums[j]!) prod))
-    -- row width = max degree+1 across all cleared polys
-    let width := (cleared.foldl (fun acc p => max acc p.length) 0)
-    -- one row per x-power r: [coeff of xʳ in cleared[0], …, cleared[nCols-1]]
-    (List.range width).map (fun r =>
-      (List.range nCols).map (fun j => (cleared[j]!).getD r 0))
-  let allRows := rowsForComp 0 ++ rowsForComp 1
-  -- drop all-zero rows (they impose nothing) to keep the rref small
-  let nonzero := allRows.filter (fun row => row.any (fun a => a ≠ 0))
-  (nonzero, nCols)
+  radLogMatrixG ρ integrand D degBound
 
 /-! ### `radLogArgSolve`: compute the log argument `N` (so `u = N/D`) -/
 
@@ -144,16 +77,7 @@ def radLogMatrix (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPo
 `ℚ`-matrix `radLogMatrix` and reassembling `N = Σⱼ cⱼ Nⱼ`; `none` on trivial kernel. -/
 def radLogArgSolve (ρ : QFunNZG ℚ) (integrand : RadElem (QFunNZG ℚ)) (D : CPolyG ℚ)
     (degBound : ℕ) : Option (RadElem (QFunNZG ℚ)) :=
-  let (rows, nCols) := radLogMatrix ρ integrand D degBound
-  match ratKernelVector nCols rows with
-  | none => none
-  | some c =>
-    -- assemble a₀ = Σ_{k≤degBound} c[k]·xᵏ, a₁ = Σ_k c[degBound+1+k]·xᵏ
-    let a0 : QFunNZG ℚ := (List.range (degBound + 1)).foldl (fun acc k =>
-      CField.add acc (CField.mul (qxOfNum [c.getD k 0]) (qxMonomial k))) CField.zero
-    let a1 : QFunNZG ℚ := (List.range (degBound + 1)).foldl (fun acc k =>
-      CField.add acc (CField.mul (qxOfNum [c.getD (degBound + 1 + k) 0]) (qxMonomial k))) CField.zero
-    some [a0, a1]
+  radLogArgSolveG ρ integrand D degBound
 
 /-! ### Solve-then-verify: arcsinh / arccosh / finite-pole
 
