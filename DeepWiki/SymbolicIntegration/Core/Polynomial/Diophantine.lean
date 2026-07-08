@@ -2,7 +2,7 @@ import Mathlib.Algebra.Polynomial.FieldDivision
 import Mathlib.Algebra.Polynomial.Degree.Units
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Tactic
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RootEvaluation
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Basic
 
 /-! # Polynomial Diophantine solvers
 

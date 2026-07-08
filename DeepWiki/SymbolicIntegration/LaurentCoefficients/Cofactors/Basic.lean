@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RootEvaluation
+import DeepWiki.SymbolicIntegration.Core.Polynomial.Basic
 
 /-! # Laurent cofactor data
 
