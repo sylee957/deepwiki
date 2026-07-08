@@ -2,7 +2,7 @@
 
 ## The gap (faithfulness, Bronstein §5.8 / §5.12)
 
-Our recursive primitive-polynomial integrator `cLimitedIntegratePolyRatG` (`RischSolverTower.lean`) solves the
+The retired recursive primitive-polynomial integrator `cLimitedIntegratePolyRatG` solved the
 coefficient system `D(bᵢ) = aᵢ − (i+1)·η·bᵢ₊₁` with a **log-free in-field** discharge
 (`towerCoeffIntegrateLrt` → `integrateRationalLrt`, i.e. it only finds `b` with `Db = a`, the `c = 0` slice).
 
@@ -100,7 +100,7 @@ Each phase is its own gate-green commit.
 - **`cLimitedIntegratePolyRatG` (fixed-degree coefficient recursion) → ✅ RETIRED (Phase 3-wire).** Subsumed by
   `cIntegratePrimPolyDegRaiseG` (the `limInt` `(b,0)` slice recovers it). Deleted `limIntTopFirst`,
   `cLimitedIntegratePolyRatG`, `limIntTopFirst_drop`/`_eq`, `cLimitedIntegratePolyRatG_eq`/`_poly_sound` from
-  `RischSolverTower.lean` (~157 lines); only `qEmbedNumG` remains there.
+  the old tower-connector module (~157 lines); `qEmbedNumG` is now folded into `RischSolverTowerLrt.lean`.
 - **Already retired (prior LRT rebase):** the rational tower solver `towerPolyIntegrate`/`towerPrimitiveCase`
   (`RischTower.lean` deleted) — 0 uses.
 - `cLimitedIntegrate` (log variant) is **not** on the fix path (needs raw `η`, polynomial-only), but it is a

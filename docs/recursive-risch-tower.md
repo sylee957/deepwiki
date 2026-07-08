@@ -33,7 +33,7 @@ integrate `∫x·log x`, `∫x·eˣ`, or anything that needs it, and there can b
 
 ## The design
 
-`RischSolver α` (`RischSolverTower.lean`) — a recursive solver: `integrate Dt a d` integrates `a/d ∈ α(t)`
+The historical `RischSolver α` design — a recursive solver: `integrate Dt a d` integrates `a/d ∈ α(t)`
 to a genuine root-free `LrtResultG α`; `sound` certifies `IsGenuineIntegralResultLrtG`.
 
 - **Base** (`instRischSolverOfLawfulLrt`, priority 100) — the genuine one-level LRT solver *is* a

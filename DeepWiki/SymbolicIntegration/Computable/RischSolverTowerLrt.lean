@@ -1,5 +1,4 @@
 import DeepWiki.SymbolicIntegration.Computable.RischTowerLrt
-import DeepWiki.SymbolicIntegration.Computable.RischSolverTower
 import DeepWiki.SymbolicIntegration.Computable.LimitedIntegrateSingle
 
 /-! # Recursive LRT Risch tower step
@@ -27,6 +26,10 @@ open scoped Differential
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]
   [CFieldDomain β] [CRischField β] [CFracGcdCoreWf β] [Algebra ℚ (CFieldSpec.K β)]
   [CharZero (CFieldSpec.K β)] [Fact (GcdFFCorrect (α := β))] [LawfulRischLevelLrt β]
+
+/-- Embed a polynomial as a fraction `num/1 ∈ QFunNZG β`. -/
+def qEmbedNumG {β : Type*} [CField β] [CFieldDomain β] (num : CPolyG β) : QFunNZG β :=
+  ⟨(num, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 
 /-- Integrate a coefficient `c ∈ QFunNZG β = β(s)` by recursing into
 `LawfulRischLevelLrt β.integrateRationalLrt` (the log-free LRT integrator, whose soundness is descent-free
