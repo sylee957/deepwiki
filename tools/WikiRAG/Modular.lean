@@ -6,8 +6,9 @@ import Std.Data.HashMap
 
 Turns the exact `uses` dependency graph into **quantified, ranked** refactoring signals — a
 decision-support engine (it scores and ranks; the agent validates). Every signal is a *continuous
-score*, never a hard threshold: modules/decls/pairs are ranked and the top ones shown. The only knobs
-are `--top=N` and `--prefix=NS`.
+score*, never a hard threshold: modules/decls/pairs are ranked and the top ones shown. Knobs are
+`--prefix=NS`, `--top=N`, and the clustering edge weights `--wcon=` (conceptual) / `--wevo=`
+(co-change) — objective *weights*, not cutoffs.
 
 Signals: **split** (internal Newman modularity `Q`), **misplacement** (`uses`-affinity to another
 module), **coupling** (size-normalised cross-directory), **directory granularity**, **conceptual
@@ -44,6 +45,16 @@ def directory (m : String) : String :=
 
 /-- Unordered key `"a||b"` (lexicographically sorted) for a module pair. -/
 @[inline] def pairKey (a b : String) : String := if a < b then s!"{a}||{b}" else s!"{b}||{a}"
+
+/-- Parse a non-negative decimal (`"1.5"`, `"2"`) for a CLI weight; `d` on any parse failure. -/
+def parseFloatD (s : String) (d : Float) : Float :=
+  match s.splitOn "." with
+  | [i] => (i.toNat?).map (·.toFloat) |>.getD d
+  | [i, f] =>
+    match i.toNat?, f.toNat? with
+    | some ip, some fp => ip.toFloat + fp.toFloat / (Nat.pow 10 f.length).toFloat
+    | _, _ => d
+  | _ => d
 
 /-- Componentwise sum of two equal-length vectors (for embedding centroids). -/
 def vadd (a b : Array Float) : Array Float :=
@@ -334,17 +345,81 @@ def isStructuralNoise (short : String) : Bool :=
     "ndrec", "mk", "injEq", "toCtorIdx", "ofNat", "sizeOf"].contains short
   || short.startsWith "match_" || short.startsWith "proof_" || short.startsWith "eq_"
 
+/-- One level of **weighted Louvain** local-moving from singletons: greedily move each node to the
+neighbouring community with the largest modularity gain `kᵢ,in(c) − Σtot(c)·kᵢ/2m` until stable.
+Unlike label propagation, the degree penalty `Σtot·kᵢ/2m` makes merging into an already-large
+community costly, so it resists the giant-community collapse and yields balanced, module-sized
+communities. Single level *by design* — Louvain's aggregation phase coarsens communities, the
+opposite of what surfacing liftable themes needs. -/
+def louvain (nodes : Array String) (wadj : HashMap String (Array (String × Float)))
+    (kdeg : HashMap String Float) (twoM : Float) : HashMap String Nat := Id.run do
+  let mut comm : HashMap String Nat := {}
+  let mut sigmaTot : HashMap Nat Float := {}
+  let mut i := 0
+  for n in nodes do
+    comm := comm.insert n i
+    sigmaTot := sigmaTot.insert i (kdeg.getD n 0.0)
+    i := i + 1
+  let m2 := if twoM == 0.0 then 1.0 else twoM
+  for _ in [0:12] do
+    let mut moved := false
+    for n in nodes do
+      let cn := comm.getD n 0
+      let kn := kdeg.getD n 0.0
+      -- total weight from n to each neighbouring community
+      let mut kin : HashMap Nat Float := {}
+      for (x, w) in wadj.getD n #[] do
+        if x != n then
+          let cx := comm.getD x 0
+          kin := kin.insert cx ((kin.getD cx 0.0) + w)
+      -- isolate n, then choose the community (incl. staying) with the largest gain
+      sigmaTot := sigmaTot.insert cn ((sigmaTot.getD cn 0.0) - kn)
+      let mut best := cn
+      let mut bestGain := (kin.getD cn 0.0) - (sigmaTot.getD cn 0.0) * kn / m2
+      for (c, kic) in kin.toArray do
+        let gain := kic - (sigmaTot.getD c 0.0) * kn / m2
+        if gain > bestGain then best := c; bestGain := gain
+      sigmaTot := sigmaTot.insert best ((sigmaTot.getD best 0.0) + kn)
+      if best != cn then comm := comm.insert n best; moved := true
+    if !moved then break
+  return comm
+
 /-- COMMUNITIES + FRACTURE: cluster the whole in-scope graph and diff it against the directory tree —
-scattered themes to regroup and grab-bag directories to split. -/
-def reportCommunities (g : Graph) (eOpt : Option Embeds) (top : Nat) : IO Unit := do
+scattered themes to regroup and grab-bag directories to split. Clusters with weighted Louvain over a
+graph whose `uses` edges are reinforced by conceptual agreement (`wcon`·docstring-cosine) and module
+co-change (`wevo`·evolutionary pull) — so the partition reflects meaning and history, not just calls. -/
+def reportCommunities (g : Graph) (eOpt : Option Embeds) (wcon wevo : Float) (top : Nat) : IO Unit := do
   let nodes := g.d2m.toArray.filterMap fun (n, _) =>
     if isStructuralNoise (g.short.getD n n) then none else some n
   if nodes.isEmpty then return
-  let label := labelProp nodes g.adj
   let vmap : HashMap String (Array Float) :=
     match eOpt with
     | none => {}
     | some e => e.rows.foldl (fun m r => m.insert r.1 r.2.2) {}
+  -- weighted undirected graph: structural multiplicity, reinforced by concept cosine + co-change
+  let nodeSet := HashSet.ofArray nodes
+  let mut ew : HashMap String Float := {}
+  for (n, nbrs) in g.adj.toArray do
+    if nodeSet.contains n then
+      for x in nbrs do
+        if x != n && nodeSet.contains x then
+          let k := pairKey n x
+          ew := ew.insert k ((ew.getD k 0.0) + 1.0)
+  let mut wadj : HashMap String (Array (String × Float)) := {}
+  let mut kdeg : HashMap String Float := {}
+  let mut twoM := 0.0
+  for (k, sw) in ew.toArray do
+    let ps := k.splitOn "||"; let a := ps.getD 0 ""; let b := ps.getD 1 ""
+    let cw := match vmap.get? a, vmap.get? b with
+      | some va, some vb => let c := cosine va vb; if c > 0.0 then wcon * c else 0.0
+      | _, _ => 0.0
+    let w := sw + cw + wevo * g.evoPull (g.d2m.getD a "") (g.d2m.getD b "")
+    wadj := wadj.insert a ((wadj.getD a #[]).push (b, w))
+    wadj := wadj.insert b ((wadj.getD b #[]).push (a, w))
+    kdeg := kdeg.insert a ((kdeg.getD a 0.0) + w)
+    kdeg := kdeg.insert b ((kdeg.getD b 0.0) + w)
+    twoM := twoM + 2.0 * w
+  let label := louvain nodes wadj kdeg twoM
   -- community → members
   let mut mem : HashMap Nat (Array String) := {}
   for n in nodes do
@@ -419,6 +494,10 @@ def modularityCmd (args : List String) : IO Unit := do
   let pfx := (argv.find? (·.startsWith "--prefix=")).map (·.drop 9 |>.toString)
     |>.getD "DeepWiki.SymbolicIntegration"
   let top := (argv.find? (·.startsWith "--top=")).bind (·.drop 6 |>.toString.toNat?) |>.getD 15
+  let flt (flag : String) (d : Float) : Float :=
+    parseFloatD ((argv.find? (·.startsWith flag)).map (·.drop flag.length |>.toString) |>.getD "") d
+  let wcon := flt "--wcon=" 1.5   -- conceptual reinforcement of clustering edges
+  let wevo := flt "--wevo=" 1.0   -- co-change reinforcement of clustering edges
   let db ← openDb ((← IO.getEnv "WIKI_DB").getD defaultDbPath)
   let g ← loadGraph db pfx
   let eOpt ← loadEmbeds db pfx
@@ -426,7 +505,7 @@ def modularityCmd (args : List String) : IO Unit := do
   reportMisplaced g top
   reportCoupling g top
   reportDirectory g top
-  reportCommunities g eOpt top
+  reportCommunities g eOpt wcon wevo top
   match eOpt with
   | none => IO.println "\n(no embeddings — run `scripts/wiki index` for the conceptual/NL layer)"
   | some e => reportConceptual e top; reportRegroup g e top
