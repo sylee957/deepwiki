@@ -179,6 +179,16 @@ theorem toPoly_cmul (p q : CPoly) : toPoly (cmul p q) = toPoly p * toPoly q := b
     show toPoly (cadd (cscale a q) (0 :: cmul as q)) = toPoly (a :: as) * toPoly q
     rw [toPoly_cadd, toPoly_cscale, toPoly_cons, toPoly_cons, ih, map_zero]; ring
 
+/-- `foldl (·* V) init` over `range n` realizes `init · V^n` under `toPoly`. -/
+theorem toPoly_foldl_cmul (V : CPoly) (n : ℕ) (init : CPoly) :
+    toPoly ((List.range n).foldl (fun acc _ => cmul acc V) init)
+      = toPoly init * toPoly V ^ n := by
+  induction n generalizing init with
+  | zero => simp
+  | succ n ih =>
+    rw [List.range_succ, List.foldl_concat, toPoly_cmul, ih, pow_succ]
+    ring
+
 /-! ### Agreement with the `ℚ[X]`-level `logToAtanAux`
 The cofactor Bézout identity `B·D − A·C = G` under `toPoly` is proven in `logToAtan_cofactor_bezout`
 (`Correctness`), so the arctan argument fractions `(A·D + B·C)/G` are well-defined. -/
