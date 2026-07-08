@@ -69,7 +69,7 @@ import DeepWiki.SymbolicIntegration.Computable.RefinesPolyG
 import DeepWiki.SymbolicIntegration.Computable.QFunNZGDiffSpec
 import DeepWiki.SymbolicIntegration.Computable.ResidueConstantBridge
 import DeepWiki.SymbolicIntegration.Computable.TransferExamples
-import DeepWiki.SymbolicIntegration.Computable.ResidueLinearFactor
+import DeepWiki.SymbolicIntegration.Computable.FractionFieldDerivLinearFactor
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
