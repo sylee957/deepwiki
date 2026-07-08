@@ -7,7 +7,7 @@ Small notes for semantic consolidation targets discovered during the migration.
 - Done: `Core/Differential/PolynomialFractionDeriv.lean` contains the shared
   `PolynomialFractionDeriv` API extending a derivation on `F[X]` to any fraction field of
   `F[X]`.
-- Done: `LiouvilleLogExtension.lean` and `LiouvilleExpExtension.lean` now import that API
+- Done: `LiouvilleLog.lean` and `LiouvilleExpExtension.lean` now import that API
   instead of carrying parallel `fracDerivFun`/`fracDerivHom`/`fracDeriv` sections.
 - `Core/Differential/DifferentialPolynomials.lean` now contains the `DiffPoly`-specific
   quotient-rule derivation `fracDeriv`/`fracKDeriv`; keep it separate because its carrier is

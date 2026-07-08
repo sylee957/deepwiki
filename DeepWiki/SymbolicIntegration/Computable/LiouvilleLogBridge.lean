@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.Structure
-import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.LiouvilleLog
 import DeepWiki.SymbolicIntegration.RecognizingLogDeriv
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 

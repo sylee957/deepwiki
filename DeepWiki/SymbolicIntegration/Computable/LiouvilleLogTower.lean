@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.LiouvilleLog
 import Mathlib.Tactic
 
 /-! # The multi-level transcendental-log Liouville tower-induction

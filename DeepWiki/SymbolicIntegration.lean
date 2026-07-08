@@ -16,7 +16,7 @@ import DeepWiki.SymbolicIntegration.InFieldIntegration
 import DeepWiki.SymbolicIntegration.InFieldIntegrationCapstone
 import DeepWiki.SymbolicIntegration.LaurentCoefficients
 import DeepWiki.SymbolicIntegration.LiouvilleExpExtension
-import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.LiouvilleLog
 import DeepWiki.SymbolicIntegration.LiouvilleStructure
 import DeepWiki.SymbolicIntegration.LrtMonicLogs
 import DeepWiki.SymbolicIntegration.MonomialConstants

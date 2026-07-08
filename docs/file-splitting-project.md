@@ -20,7 +20,7 @@ a split with content edits.
 | `HermiteCorrectness.lean` | 3032 | reduction / valuation / correctness |
 | `LaurentCoefficients.lean` | 1981 | coefficient defs / identities |
 | `Computable/OneShotAssembly.lean` | 1957 | per-stage assembly |
-| `LiouvilleLogExtension.lean` | 1724 | log-extension pieces |
+| `LiouvilleLog.lean` | 1632 | log-extension pieces |
 | `Computable/LrtSoundness.lean` | 1567 | normal / reduced / genuine-data |
 | `SubresultantCorrectness.lean` | 1402 | PRS / subresultant identities |
 | `Computable/NormalPartSoundness.lean` | 1111 | normal-part stages |

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.LiouvilleLog
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
 import Mathlib.FieldTheory.Differential.Liouville
 

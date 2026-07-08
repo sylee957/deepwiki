@@ -158,7 +158,7 @@ IntegrationFunctionsCatalog	Computable/IntegrationFunctionsCatalog	# REVIEW: no 
 LaurentCoefficients	LaurentCoefficients
 LazardRiobooTragerCorrectness	LazardRiobooTragerCorrectness
 LiouvilleExpExtension	LiouvilleExpExtension
-LiouvilleLogExtension	LiouvilleLogExtension
+LiouvilleLogExtension	LiouvilleLog
 LogToAtanCompute	Compute/LogToAtan
 LrtMonicLogs	LrtMonicLogs
 MonomialConstants	MonomialConstants

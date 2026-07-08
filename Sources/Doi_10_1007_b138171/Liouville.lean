@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.RationalIntegrationLiouville
-import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.LiouvilleLog
 import Sources.Doi_10_1007_b138171.Source
 
 /-! # Symbolic Integration catalog — Liouville's Theorem (the completeness direction)

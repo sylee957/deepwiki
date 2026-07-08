@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.LiouvilleExpExtension
-import DeepWiki.SymbolicIntegration.LiouvilleLogExtension
+import DeepWiki.SymbolicIntegration.LiouvilleLog
 
 /-! # The exponential pole-matching, ported from the logarithmic case
 
