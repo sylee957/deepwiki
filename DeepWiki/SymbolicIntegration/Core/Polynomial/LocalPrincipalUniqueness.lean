@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
 
 /-! # Uniqueness of local principal parts

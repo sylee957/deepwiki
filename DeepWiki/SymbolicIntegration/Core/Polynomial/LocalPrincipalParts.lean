@@ -1,7 +1,6 @@
 import Mathlib.Algebra.Polynomial.Taylor
 import Mathlib.FieldTheory.RatFunc.Basic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
-import DeepWiki.SymbolicIntegration.Core.Polynomial.LinearFactors
 
 /-! # Local principal parts of rational functions
 
@@ -20,6 +19,13 @@ variable {K : Type*} [Field K]
 /-- The local inverse `N` of `M` modulo `(X−α)^i`: the Bézout cofactor with `M·N ≡ 1 (mod (X−α)^i)`. -/
 noncomputable def localInverse (M : K[X]) (α : K) (i : ℕ) : K[X] :=
   (diophantineSolve M ((Polynomial.X - Polynomial.C α) ^ i) 1).1
+
+/-- `M` is coprime to `(X - C α)^i` when `M.eval α ≠ 0`. -/
+theorem isCoprime_M_X_sub_C_pow {M : K[X]} {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
+    IsCoprime M ((Polynomial.X - Polynomial.C α) ^ i) := by
+  have hnd : ¬ (Polynomial.X - Polynomial.C α) ∣ M := by
+    rw [dvd_iff_isRoot]; exact fun h => hM h
+  exact (((prime_X_sub_C α).coprime_iff_not_dvd.mpr hnd).symm).pow_right
 
 /-- The local-inverse congruence: `(X−α)^i ∣ M·(localInverse M α i) − 1` for `M(α) ≠ 0`. -/
 theorem localInverse_spec {M : K[X]} {α : K} (i : ℕ) (hM : M.eval α ≠ 0) :
