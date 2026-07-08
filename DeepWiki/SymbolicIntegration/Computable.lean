@@ -11,7 +11,6 @@ import DeepWiki.SymbolicIntegration.Computable.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Computable.FunctionAlgebraIntegrate
-import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
 import DeepWiki.SymbolicIntegration.Computable.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 import DeepWiki.SymbolicIntegration.Computable.GenericPolyEngine

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.FilterProdMul
+import DeepWiki.SymbolicIntegration.Computable.FieldGcd
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 
 /-! # Generic associate/derivative helpers for splitting factorization
