@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LaurentCoefficients.Cofactors
+import DeepWiki.SymbolicIntegration.LaurentCoefficients.Cofactors.Basic
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.Base
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.Engine
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.FractionInvariant

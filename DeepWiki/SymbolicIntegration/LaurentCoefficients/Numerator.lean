@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Differential.DifferentialPolynomials
-import DeepWiki.SymbolicIntegration.LaurentCoefficients.Cofactors
+import DeepWiki.SymbolicIntegration.LaurentCoefficients.Cofactors.Basic
 
 /-! # Laurent numerator recursion
 
