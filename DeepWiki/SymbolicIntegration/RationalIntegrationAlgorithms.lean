@@ -6,6 +6,6 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrage
 
 /-! # Rational-function integration algorithms
 
-Aggregator for Diophantine solves, Hermite reduction, polynomial parts,
-Horowitz-Ostrogradsky splitting, and Rothstein-Trager resultants.
+Aggregator for Hermite reduction, polynomial parts, Horowitz-Ostrogradsky
+splitting, and Rothstein-Trager resultants.
 -/
