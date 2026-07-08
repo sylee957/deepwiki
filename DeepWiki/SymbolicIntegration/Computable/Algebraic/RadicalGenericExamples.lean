@@ -16,7 +16,7 @@ namespace DeepWiki.SymbolicIntegration
 Prime-`n` irreducibility (hence the genuine field `AdjoinRoot (Xⁿ − C(toK f))` and abstract
 `CFieldDomain`) is reachable from `X_pow_sub_C_irreducible_iff_of_prime` and a not-a-perfect-`p`-th-power
 argument. The computable `CField (RadExt α n f)` carrier is `n = 2` only until the general-`n` inverse
-(extended Euclid) lands; the four radicands here are members of that `n = 2` slice. -/
+(extended Euclid) lands; the three radicands here are members of that `n = 2` slice. -/
 
 /-! ### `#print axioms` -/
 
