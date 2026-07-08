@@ -64,26 +64,4 @@ theorem diophantineSolveReduced_fst_degree_lt {a b : K[X]} (hb : b ≠ 0) (c : K
   simp only [diophantineSolveReduced]
   exact Polynomial.degree_mod_lt _ hb
 
-/-- The Bézout cofactor `Cᵢ` of `Dᵢ'` in `Dᵢ'·Cᵢ + Dᵢ·(…) = 1`, so `Cᵢ·Dᵢ' ≡ 1 (mod Dᵢ)`. -/
-noncomputable def bezoutDeriv (Di : K[X]) : K[X] :=
-  (diophantineSolve (derivative Di) Di 1).1
-
-/-- The `Cᵢ` congruence: for `IsCoprime Dᵢ' Dᵢ`, `(bezoutDeriv Di * derivative Di) %ₘ Di = 1 %ₘ Di`. -/
-theorem bezoutDeriv_mul_derivative_modByMonic (Di : K[X]) (hDi : Di.Monic)
-    (hcop : IsCoprime (derivative Di) Di) :
-    (bezoutDeriv Di * derivative Di) %ₘ Di = (1 : K[X]) %ₘ Di := by
-  have hspec := diophantineSolve_spec hcop (1 : K[X])
-  have hkey : bezoutDeriv Di * derivative Di
-      = (1 : K[X]) - Di * (diophantineSolve (derivative Di) Di 1).2 := by
-    rw [bezoutDeriv]; linear_combination hspec
-  rw [hkey, sub_modByMonic, self_mul_modByMonic hDi, sub_zero]
-
-/-- `Cᵢ(α)·Dᵢ'(α) = 1` at a root `α` of the monic `Dᵢ` (so `Cᵢ(α) = 1/Dᵢ'(α)`). -/
-theorem bezoutDeriv_mul_derivative_eval {Di : K[X]} {α : K} (hDi : Di.Monic)
-    (hα : Di.eval α = 0) (hcop : IsCoprime (derivative Di) Di) :
-    (bezoutDeriv Di).eval α * (derivative Di).eval α = 1 := by
-  have h := bezoutDeriv_mul_derivative_modByMonic Di hDi hcop
-  have := congrArg (fun p => p.eval α) h
-  simpa [eval_modByMonic_of_root hDi hα, Polynomial.eval_mul] using this
-
 end DeepWiki.SymbolicIntegration
