@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.Derivative
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Special
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.RingTheory.Radical.Basic
 

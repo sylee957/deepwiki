@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Differential.Gcd.Derivative
+import DeepWiki.SymbolicIntegration.Core.Differential.NormalSpecial.Gcd
 import DeepWiki.SymbolicIntegration.Core.Differential.ImplicitDerivLinearFactors.Products
 
 /-! # GCD formulas for implicit-derivative linear factors
