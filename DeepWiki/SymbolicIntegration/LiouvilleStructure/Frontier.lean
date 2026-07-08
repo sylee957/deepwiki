@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.Frontier
-import DeepWiki.SymbolicIntegration.LiouvilleStructure
+import DeepWiki.SymbolicIntegration.LiouvilleStructure.Core
 
 /-! # Algebraic Liouville frontier bridge
 

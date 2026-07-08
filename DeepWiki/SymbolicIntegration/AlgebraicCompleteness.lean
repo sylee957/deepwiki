@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.Frontier
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteDegreeBound
 import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.HermiteReduction
-import DeepWiki.SymbolicIntegration.AlgebraicCompleteness.LiouvilleFrontier
+import DeepWiki.SymbolicIntegration.LiouvilleStructure.Frontier
 
 /-! # Algebraic completeness
 
