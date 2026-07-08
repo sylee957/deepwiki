@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation.Basic
+import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation.PolynomialOrderDrop
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation.NormalPole
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation.DenominatorBound
 

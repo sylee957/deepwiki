@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation.Basic
-import DeepWiki.SymbolicIntegration.Computable.RischDE.NormalPoleOrderDrop
+import DeepWiki.SymbolicIntegration.Computable.RatFuncValuation.PolynomialOrderDrop
 
 /-! # Normal-pole derivative valuation calculus
 
