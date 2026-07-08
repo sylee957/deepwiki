@@ -16,8 +16,9 @@ cohesion** (docstring-embedding), the **multi-objective regroup** — a Pareto v
 `(structural, conceptual, evolutionary, disturbance)`, no weighting — and the **community
 partition-diff**: the global `uses`-community structure diffed against the directory tree, surfacing
 *scattered themes* (one community spread over many directories → regroup) and *grab-bag directories*
-(one directory fractured into many communities → split). The local signals answer "does this decl/file
-belong here?"; the partition-diff answers "what modules *should* exist?" — the module-scale question. -/
+(one directory fractured into many communities → split); and **merge** — thin modules to absorb into a
+single neighbour (the inverse of split). The local signals answer "does this decl/file belong here?";
+the partition-diff and merge answer "what modules *should* exist?" — the module-scale question. -/
 
 namespace WikiRAG
 open Std SQLite SQLite.Blob
@@ -486,6 +487,55 @@ def reportCommunities (g : Graph) (eOpt : Option Embeds) (wcon wevo : Float) (to
   for r in (fr.qsort (fun a b => a.purity < b.purity)).toList.take top do
     IO.println s!"  purity={pct r.purity}% communities={r.comms} decls={r.total}  {r.dir}"
 
+/-! ### Merge (thin-file absorption — the inverse of split) -/
+
+/-- A thin module that should be absorbed into another: small, weakly self-cohesive, and with its
+outward `uses` concentrated on one neighbour (its natural home). -/
+structure MergeCand where
+  m : String        -- the thin module
+  target : String   -- the module to merge it into
+  size : Nat        -- #decls in the thin module
+  cohesion : Float  -- internal cohesion (low ⇒ doesn't earn a standalone file)
+  conc : Float      -- share of the module's external `uses` endpoints going to `target`
+  con : Float       -- conceptual cosine of the two module centroids (<0 = not embedded)
+  score : Float     -- conc·(1−cohesion)·smallness-prior·concept — a clear absorption candidate
+
+/-- MERGE: rank thin modules that should be absorbed into a single neighbour. A module scores high when
+it is small, has little internal structure to justify a standalone file, and most of its outward
+dependencies point at one other module — so it reads as a fragment of that module. Catches the
+1-declaration "thin file" that adds a navigation hop with no cohesion gain. (Zero-declaration
+re-export shim *files* carry no `uses` edges, so they are invisible here — those are the retire-shim
+guardrail's job, found by grep, not this graph signal.) -/
+def reportMerge (g : Graph) (eOpt : Option Embeds) (top : Nat) : IO Unit := do
+  let totalDecls := g.sizeM.toArray.foldl (fun s kv => s + kv.2) 0
+  let tau := totalDecls.toFloat / (Nat.max 1 g.sizeM.size).toFloat
+  let sums : HashMap String (Array Float) := match eOpt with | some e => e.sums | none => {}
+  let mut rows : Array MergeCand := #[]
+  for (m, size) in g.sizeM.toArray do
+    -- distribution of this module's outward `uses` over other modules
+    let mut byT : HashMap String Nat := {}
+    for n in g.members.getD m #[] do
+      for x in g.adj.getD n #[] do
+        let mt := g.d2m.getD x ""
+        if mt != m && mt != "" then byT := bump byT mt
+    let ext := byT.toArray.foldl (fun s kv => s + kv.2) 0
+    if ext == 0 then continue     -- self-contained; not a merge-by-coupling case
+    let mut target := ""; let mut tc := 0
+    for (t, c) in byT.toArray do if c > tc then target := t; tc := c
+    let coh := g.cohesion m
+    let con := match sums.get? m, sums.get? target with
+      | some a, some b => cosine a b
+      | _, _ => -1.0
+    let conW := if con < 0.0 then 1.0 else if con > 0.0 then con else 0.0
+    let score := (tc.toFloat / ext.toFloat) * (1.0 - coh) * Float.exp (-size.toFloat / tau) * conW
+    rows := rows.push
+      { m, target, size, cohesion := coh, conc := tc.toFloat / ext.toFloat, con, score }
+  IO.println "\n== MERGE (thin modules to absorb into one neighbour — the inverse of split) =="
+  IO.println "   score = concentration·(1−cohesion)·smallness·concept ; conc = share of uses to target"
+  for r in (rows.qsort (fun a b => a.score > b.score)).toList.take top do
+    IO.println s!"  score={pct r.score} size={r.size} coh={pct r.cohesion}% conc={pct r.conc}% con={pctS r.con}  {leaf r.m} → {leaf r.target}"
+    IO.println s!"      {r.m}  ⇒  {r.target}"
+
 /-! ### The command -/
 
 /-- Run the scored modularity report on the graph restricted to modules under `--prefix`. -/
@@ -506,6 +556,7 @@ def modularityCmd (args : List String) : IO Unit := do
   reportCoupling g top
   reportDirectory g top
   reportCommunities g eOpt wcon wevo top
+  reportMerge g eOpt top
   match eOpt with
   | none => IO.println "\n(no embeddings — run `scripts/wiki index` for the conceptual/NL layer)"
   | some e => reportConceptual e top; reportRegroup g e top
