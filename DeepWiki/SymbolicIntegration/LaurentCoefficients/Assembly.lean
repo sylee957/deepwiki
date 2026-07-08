@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootSubstitution
+import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootBridge
 
 /-! # Laurent coefficient assembly
 
