@@ -5,8 +5,8 @@ import Mathlib.RingTheory.Norm.Transitivity
 import Mathlib.FieldTheory.Galois.Basic
 
 /-! # Derivation extensions
-Uniqueness and compatibility lemmas for extending derivations to fraction fields, rational-function
-fields, finite algebraic extensions, and finite Galois trace/norm operations. -/
+Uniqueness and compatibility lemmas for algebraic differential extensions, intermediate fields,
+and finite Galois trace/norm operations. -/
 
 open scoped Differential
 open Polynomial
