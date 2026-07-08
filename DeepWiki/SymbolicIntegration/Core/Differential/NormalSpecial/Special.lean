@@ -14,15 +14,6 @@ namespace DeepWiki.SymbolicIntegration
 /-- `p` is *special* (w.r.t. `D`) if `p ∣ p'` (so `gcd(p, p') = p`). -/
 def IsSpecial {R : Type*} [CommRing R] [Differential R] (p : R) : Prop := p ∣ p′
 
-/-- A special polynomial spans a differential ideal: `p ∣ p' → IsDifferentialIdeal (span {p})`. -/
-theorem IsSpecial.isDifferentialIdeal {R : Type*} [CommRing R] [Differential R] {p : R}
-    (hp : IsSpecial p) : IsDifferentialIdeal (Ideal.span {p}) := by
-  intro a ha
-  rw [Ideal.mem_span_singleton] at ha ⊢
-  obtain ⟨b, rfl⟩ := ha
-  rw [deriv_mul_eq]
-  exact dvd_add (dvd_mul_right p b′) (hp.mul_left b)
-
 /-- Special polynomials are closed under multiplication. -/
 theorem IsSpecial.mul {R : Type*} [CommRing R] [Differential R] {p q : R}
     (hp : IsSpecial p) (hq : IsSpecial q) : IsSpecial (p * q) := by

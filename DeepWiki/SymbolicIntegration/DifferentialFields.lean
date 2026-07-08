@@ -7,8 +7,8 @@ import Mathlib.Tactic
 
 /-! # Differential rings and fields
 Basic differential calculus over Mathlib's `Differential` typeclass: the constant subring, the
-constant-linearity / quotient / power / chain rules, the logarithmic-derivative identity, the
-module of derivations, and differential ideals. -/
+constant-linearity / quotient / power / chain rules, the logarithmic-derivative identity, and the
+module of derivations. -/
 
 open scoped Differential
 open Polynomial
@@ -72,17 +72,6 @@ theorem deriv_eval_of_const_coeffs {R : Type*} [CommRing R] [Differential R]
   have hmc : (Differential.deriv : Derivation ℤ R R).mapCoeffs p = 0 :=
     Finsupp.ext fun i => by simp [Derivation.mapCoeffs_apply, hp i, PolynomialModule.zero_apply]
   rw [Derivation.apply_eval_eq, hmc, map_zero, zero_add, smul_eq_mul]
-
-/-- A **differential ideal** of `(R, D)` is an ideal `I` closed under `D` (`D I ⊆ I`). -/
-def IsDifferentialIdeal {R : Type*} [CommRing R] [Differential R] (I : Ideal R) : Prop :=
-  ∀ a ∈ I, a′ ∈ I
-
-/-- `⊥` is a differential ideal and `constants R` is closed under `D`. -/
-theorem isDifferentialIdeal_bot_and_deriv_mem_constants {R : Type*} [CommRing R] [Differential R] :
-    IsDifferentialIdeal (⊥ : Ideal R) ∧ ∀ a ∈ constants R, a′ ∈ constants R := by
-  refine ⟨fun a ha => ?_, fun a ha => ?_⟩
-  · simp only [Ideal.mem_bot] at ha ⊢; simp [ha]
-  · simp only [mem_constants] at ha ⊢; simp [ha]
 
 /-- `(c • D₁ + D₂) a = c * D₁ a + D₂ a`: a linear combination of derivations acts pointwise. -/
 theorem smul_add_derivation_apply {R : Type*} [CommRing R]
