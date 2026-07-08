@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.LaurentCoefficients.FractionInvariant
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootInvariant
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootSubstitution
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootEvaluation
-import DeepWiki.SymbolicIntegration.LaurentCoefficients.TaylorCoefficient
+import DeepWiki.SymbolicIntegration.LaurentCoefficients.RegularRoot
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.RootBridge
 import DeepWiki.SymbolicIntegration.LaurentCoefficients.Assembly
 

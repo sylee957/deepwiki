@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.LaurentCoefficients.TaylorCoefficient
+import DeepWiki.SymbolicIntegration.LaurentCoefficients.RegularRoot
 
 /-! # Laurent root-substitution bridge
 
