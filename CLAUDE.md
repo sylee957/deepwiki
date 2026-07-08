@@ -136,6 +136,18 @@ whose name/kind/signature/docstring are unchanged), then `scripts/wiki index` re
 new/changed ones (needs a local Ollama server; default `nomic-embed-text`); `reindex` to
 change model. `WikiRAG`/`wiki` are out of `defaultTargets`, so the gate is untouched.
 
+The `modularity` subcommand scores refactoring signals over the graph (`--prefix`, `--top`):
+per-decl/module local signals (split, misplaced, coupling, conceptual, the Pareto regroup
+vector) *and* the module-scale **community partition-diff** (`uses`-communities diffed against
+the directory tree — scattered themes to regroup, grab-bag directories to split). Use it, not
+intuition, to decide *what modules should exist*.
+
+**Log tooling/workflow friction to `feedbacks/`.** When `scripts/wiki` (RAG) misleads you or
+misses something, the index is stale, or the gate/doc-gen/a convention behaves surprisingly,
+write a short dated note in `feedbacks/` (format in `feedbacks/README.md`) *in the same turn* —
+so the next agent doesn't re-hit it and the tools actually improve. This is for *tooling &
+process* friction only; math adjudications and coverage status still go to memory and `Sources/`.
+
 ## Chapter structure & naming (`DeepWiki/NetworkCalculus/`)
 
 Each chapter: imports first, then a `/-! … -/` module docstring, then declarations in

@@ -63,8 +63,17 @@ look at:
 Query liberally; it's cheap and it shows you the whole graph a newcomer can't see.
 
 **4. Fix what's off** (whatever the file needs):
-- **retire / unify / subsume** — when `wiki search` shows two declarations saying the same thing, or one
-  generalizing another, keep the general one and retire the redundant one *through* it (`rdeps` first).
+- **retire / unify / subsume — and actually DELETE, don't leave a compatibility layer.** When `wiki
+  search` shows two declarations saying the same thing, or one generalizing another, keep the general one
+  and retire the redundant one *through* it (`rdeps` first). Crucially: after you rewire the callers,
+  **delete the old declaration outright** — do **not** leave a `@[deprecated] alias`, a forwarding
+  `abbrev old := new`, a re-export, or a thin wrapper "for compatibility." This library has **no external
+  consumers**, and Lean's `rdeps` + the gate let you update *every* caller safely, so a compat shim buys
+  nothing and costs a newcomer double the surface to understand. A migration is finished only when the old
+  name is *gone*, not aliased. (This is different from the intentional **base + `abbrev`** pattern for
+  sharing one definition across two carriers, and from a genuinely-load-bearing wrapper — those stay; only
+  *backwards-compatibility* shims for names you are retiring get deleted.) If you find such shims left over
+  from an earlier pass, removing them is itself good loop work.
 - **regroup / move** — a declaration whose home doesn't fit goes where it belongs.
 - **split** — a file doing several things splits along the concept axis into a subdirectory + aggregator.
 - **bundle / re-docstring** — collapse recurring hypothesis clusters into a `Prop` structure; make module
@@ -134,6 +143,16 @@ Bold means larger-scoped, not reckless — the discipline that keeps a bold move
 - **Move deliberately, never by script** — no `sed`/`awk` bulk moves; real edits so imports, `namespace`s,
   and proofs stay correct.
 - **Frozen topics and the executable/`native_decide` path are off-limits.**
+
+## Log tooling friction to `feedbacks/`
+
+The RAG graph and this loop are themselves works in progress. Whenever a tool or step **surprises you** —
+`wiki search`/`context`/`modularity` missed something or pointed at the wrong change, the index was stale,
+the gate or doc-gen behaved oddly, a convention fought the natural change — **write a short note in
+`feedbacks/`** (see `feedbacks/README.md` for the format) *in the same turn*, before you forget the
+detail. A friction that is only felt and never recorded gets re-hit by the next agent. This is a standing
+duty, not optional: over-recording a small friction is cheap; a silently re-hit RAG blind spot is not.
+These notes are how the tools get better — treat improving them as part of the loop.
 
 ## Refresh, gate, commit
 
