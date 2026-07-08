@@ -59,7 +59,7 @@ and the fuel'd Algebraic residue machinery), migrating every consumer to the fue
   `cgcdTerminatesG` (feeds GcdFFCorrect's `associated_toPolyG_cgcdFFCore` — check for a Wf twin lemma).
 - **G5:** re-point the Algebraic Trager machinery (cresultantG/cbezoutOne consumers) to Wf.
 - **G6:** now-orphaned: delete the fuel'd Tower API + `cresultantG`/`cbezoutOne` + `cgcdFFCore` +
-  their fuel'd correctness files (FieldGcd/ResultantGenericCore/GenericBezout fuel'd theorems, GcdFFCorrect).
+  their fuel'd correctness files (FieldGcd/GenericBezout fuel'd theorems, GcdFFCorrect).
 - **G7:** delete the fuel'd Euclidean base `cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG` from
   GenericPolyEngine once all consumers are gone. Final grep `(fuel : ℕ)` in the gcd core empty.
 
@@ -134,7 +134,7 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
 - G7 FINISH (fresh, delicate): (1) drop the truly-vestigial binders; (2) verify no LIVE code needs the fuel'd
   `CFracGcdCore` INSTANCE (instance resolution is invisible to name-scans — delete-and-build is the test);
   (3) delete the fuel'd instances + Euclidean base (`cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore`)
-  + fuel'd correctness (`FieldGcd`/`ResultantGenericCore` cdivG/cmodG parts/`GenericBezout`/`GcdFFCore`/`GcdFFCorrect`),
+  + fuel'd correctness (`FieldGcd`/`GenericBezout`/`GcdFFCore`/`GcdFFCorrect`),
   tracing each the dead-leaf way. The deepest layer; do with fresh focus (fatigue-errors surfaced here).
 
 ## G7 progress + the base-is-MIXED finding
@@ -148,7 +148,7 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
   - **GcdFFCorrect** = fuel'd `cgcdFFCore` correctness + LIVE GBPoly/PRS correctness (`CgcdBCorrect`,
     `CPrimPRSGenAssocReg`, `toGBCoeffPoly*`, `gbnormCore*`) used by the Wf fraction-free gcd via PrimPRSRegular.
   - **GenericPolyEngine** = LIVE CPolyG/CField base + the fuel'd Euclidean ops.
-  - **ResultantGenericCore** = LIVE interpolation lemmas + fuel'd cdivG/cmodG correctness.
+  - **GenericBezout** = LIVE natural casts, generic interpolation lemmas, and seed resultants.
 - G7 FINISH = SURGICAL per-decl deletion within these mixed files: remove ONLY the fuel'd ops
   (`cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore` + fuel'd instances/class) and their fuel'd
   correctness THEOREMS, keeping the pervasive live infra. A slip breaks the whole engine (cderivG is
@@ -157,7 +157,7 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
 
 ## G7 base-deletion ATTEMPT + entanglement finding (do NOT retry naively)
 Attempted the surgical base-op-correctness deletion (Field re-point + delete the fuel'd correctness theorems
-from TowerGlue/ResultantGenericCore/GcdFFCorrect/FieldGcd/GcdFF). It BUILT PARTIALLY then broke + was fully
+from TowerGlue/GenericBezout/GcdFFCorrect/FieldGcd/GcdFF). It BUILT PARTIALLY then broke + was fully
 reverted (tree green at HEAD). Two lessons:
 1. **GcdFF benchmarks are a cluster** — deleting `cgcdFFGen`/`gBenchFFGcd` orphans `benchFFGcd2_lt_benchExtGcd2`
    etc.; the whole fuel'd FF-gcd + swell-benchmark cluster must go together (or none).
@@ -166,7 +166,7 @@ reverted (tree green at HEAD). Two lessons:
    to an ops-reference scan. Deleting a fuel'd correctness lemma requires mapping its FULL transitive closure
    (everything using it as hypothesis or term), then deleting the whole closure coordinately.
 - ★ CORRECT G7-finish approach (fresh session): (a) build the complete fuel'd-correctness dependency graph
-  (nodes = decls in FieldGcd/GcdFFCorrect/ResultantGenericCore/GenericBezout/GcdFF that mention ANY of
+  (nodes = decls in FieldGcd/GcdFFCorrect/GenericBezout/GcdFF that mention ANY of
   cdivmodG/cmodG/cdivG/cdvdG/cgcdExtG/cgcdFFCore/cgcdFFGen/cgcdTerminatesG/the fuel'd instances — via term OR
   hypothesis), close it transitively, VERIFY the closure has no live (Wf/soundness) consumer; (b) delete the
   whole closure + the GcdFF benchmark cluster + the ops + class/instances in ONE coordinated pass, gate.
@@ -207,7 +207,7 @@ phases are LARGE interdependent cataloged-API cascades — deliberate focused se
 - **G7 (Euclidean base)** — `cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore` are held alive by the
   fuel'd gcd INSTANCES (`instCFracGcdCoreQ`/`RadX3`/`Q`, `instCTowerGcdWitnessQ`) + the Algebraic arc +
   `cgcdTerminatesG` (feeds the Wf gcd correctness). Blocked on G5. Once the fuel'd Algebraic consumers +
-  instances are gone, trace FieldGcd/ResultantGenericCore/GenericBezout the dead-leaf way and delete the base.
+  instances are gone, trace FieldGcd/GenericBezout the dead-leaf way and delete the base.
 - **REMAINING — split-factor correctness (G6b):** `SplitFactorTowerCorrectG` (10 decls) + `Tower/Unify`
   (2 decls) are a DECL-DEAD island — NO other file uses any of their decls in code (the one apparent hit was
   a docstring). BUT they are **import waypoints**: deleting them breaks RadicalIntegralSoundness et al., which

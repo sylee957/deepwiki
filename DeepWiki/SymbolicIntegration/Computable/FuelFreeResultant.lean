@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.FuelFreeGcd
-import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
+import DeepWiki.SymbolicIntegration.Computable.GenericBezout
 
 /-! # Well-founded generic resultant `cresultantWf`
 

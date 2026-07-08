@@ -95,7 +95,7 @@ ComputableRadicalResidueInfinity	Computable/Algebraic/RadicalResidueInfinity
 ComputableRadicalWellFounded	Computable/Algebraic/RadicalWellFounded
 ComputableRatFuncValuation	Computable/RatFuncValuation
 ComputableResidueMatchSoundness	Computable/ResidueMatchSoundness	# REVIEW: §3.2 cross-cutting -> default rule 6
-ComputableResultantGenericCore	Computable/ResultantGenericCore
+ComputableResultantGenericCore	Computable/GenericBezout
 ComputableRischDECompleteness	Computable/RischDE/Completeness
 ComputableRischDEDecisionProcedure	Computable/RischDE/DecisionProcedure
 ComputableRischDEDegreeBound	Computable/RischDE/DegreeBound

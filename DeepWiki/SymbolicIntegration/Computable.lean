@@ -67,7 +67,6 @@ import DeepWiki.SymbolicIntegration.Computable.ResidueConstantBridge
 import DeepWiki.SymbolicIntegration.Computable.TransferExamples
 import DeepWiki.SymbolicIntegration.Computable.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Computable.ResidueMatchSoundness
-import DeepWiki.SymbolicIntegration.Computable.ResultantGenericCore
 import DeepWiki.SymbolicIntegration.Computable.RischDE
 import DeepWiki.SymbolicIntegration.Computable.RischFieldCore
 import DeepWiki.SymbolicIntegration.Computable.RischFieldSpec
