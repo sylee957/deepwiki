@@ -119,6 +119,12 @@ Steps: 1) create target + aggregator  2) git mv / move decls  3) fix imports  4)
 ```
 With the plan written, the moves are deterministic; follow it and let the gate confirm each step.
 
+**The plan is scratch — `git rm` it in the same commit the reorg lands in.** `docs/reorg-*.md` is a
+throwaway you delete the moment the move is done, in the *same* commit; never leave it behind, never
+maintain it, and never edit an *old* landed plan with a "superseded" note — a landed plan is deleted,
+not annotated. Durable design rationale goes in the module docstring, not a reorg plan. If you find
+stale `docs/reorg-*.md` from earlier passes, deleting them is good loop work.
+
 Bold means larger-scoped, not reckless — the discipline that keeps a bold move clean:
 - **Always `scripts/wiki rdeps <name>` first** — a rename touches every reference; the plan lists them,
   then update them all in one deliberate, atomic change (real edits, not `sed`) and gate. Nothing
@@ -133,6 +139,23 @@ Bold means larger-scoped, not reckless — the discipline that keeps a bold move
 
 ## Guardrails
 
+- **Never leave a single-import re-export shim FILE.** The retire-don't-shim rule is not just about
+  declaration aliases — a *file* that imports one module, defines zero declarations, and re-exports it
+  "for compatibility" is the same anti-pattern at module scale. When you move decls out of `Old.lean`,
+  rewire the (few, `rdeps`-listed) callers to import the new home and **`git rm Old.lean`** — do not
+  leave it as a one-line forwarding import. A docstring that says "Compatibility aggregator/import" is a
+  self-admitted shim: delete it. (A *real* aggregator imports **≥2** sibling modules of a directory it
+  heads and carries a `/-! … -/` describing that directory — that stays; a 1-import re-export does not.)
+  Finding and retiring leftover shims from earlier passes is good loop work.
+- **When you move decls out of a file, fix that file's module docstring in the same edit.** A `/-! … -/`
+  that still advertises decls that have moved away misleads the next newcomer worse than no docstring.
+  The docstring must always match what the file *now* contains.
+- **A split must raise cohesion, not just count files.** Split a grab-bag into files that each hold a
+  coherent cluster of *related* declarations; do **not** manufacture single-declaration or single-import
+  leaf files just to make the tree deeper — that trades a real navigation cost for no cohesion gain and
+  is over-refactoring. If a proposed piece would be one decl with one import, it belongs *in* its
+  sibling, not in its own file. Aggregators (import-only directory heads) are the *only* legitimate tiny
+  files.
 - **Keep conceptually-bonded pairs together** — symmetric siblings (`_mul_left`/`_mul_right`, `_add`/`_sub`,
   `Minimal`/`Maximal`), near-identical docstrings, high `dis` in the regroup vector — even when their
   `uses`-dependencies differ. The structural view misleads there; do not split them.
