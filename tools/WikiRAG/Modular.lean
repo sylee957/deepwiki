@@ -32,6 +32,43 @@ def directory (m : String) : String :=
 /-- Last path component of a dotted module name. -/
 @[inline] def leaf (m : String) : String := m.splitOn "." |>.getLastD m
 
+/-- Split an identifier into lowercase word tokens on camelCase / non-alphanumeric boundaries —
+`LazardRiobooTrager` → `#["lazard","rioboo","trager"]`. Mechanical parsing of Lean's naming syntax
+(a code convention), *not* linguistic analysis — all meaning is left to the embeddings downstream. -/
+def words (s : String) : Array String := Id.run do
+  let mut out : Array String := #[]
+  let mut cur : String := ""
+  let mut prev : Char := ' '
+  for c in s.toList do
+    if c.isAlpha then
+      if c.isUpper && cur.length > 0 && (prev.isLower || prev.isDigit) then
+        out := out.push cur; cur := ""
+      cur := cur.push c.toLower
+    else
+      if cur.length > 0 then out := out.push cur
+      cur := ""
+    prev := c
+  if cur.length > 0 then out := out.push cur
+  return out
+
+/-- Levenshtein edit distance between two char arrays. -/
+def levenshtein (a b : Array Char) : Nat := Id.run do
+  let n := b.size
+  let mut prev := Array.range (n + 1)
+  for i in [1:a.size + 1] do
+    let mut cur : Array Nat := #[i]
+    for j in [1:n + 1] do
+      let cost := if a[i-1]! == b[j-1]! then 0 else 1
+      cur := cur.push (Nat.min (Nat.min (cur[j-1]! + 1) (prev[j]! + 1)) (prev[j-1]! + cost))
+    prev := cur
+  return prev[n]!
+
+/-- Spelling similarity ∈ [0,1]: `1 − edit-distance / max-length`. A mechanical string metric. -/
+def editSim (a b : String) : Float :=
+  let la := a.toList.toArray; let lb := b.toList.toArray
+  let m := Nat.max la.size lb.size
+  if m == 0 then 1.0 else 1.0 - (levenshtein la lb).toFloat / m.toFloat
+
 @[inline] def bump (m : HashMap String Nat) (k : String) : HashMap String Nat :=
   m.insert k ((m.getD k 0) + 1)
 
@@ -483,11 +520,114 @@ def MergeCand.action (r : MergeCand) : Action :=
 /-- Move a misplaced declaration to the module its dependencies favour. -/
 def Regroup.action (r : Regroup) : Action :=
   { kind := "move-decl"
-    head := s!"move a misplaced declaration to its natural home"
+    head := s!"move '{r.short}' to its natural home  ([{leaf r.home}] → [{leaf r.alt}])"
     lines := #[
       s!"why (Pareto-nondominated): structural-pull {pctS r.str}% · concept {pctS r.con}% · co-change {pct r.evo}% · disturbance {pct r.dis}%",
       s!"{r.short}:  [{leaf r.home}] → [{leaf r.alt}]",
       "plan:  wiki rdeps first; move the decl; fix imports; gate  (skip if disturbance high — a bonded sibling)"] }
+
+/-! ### Vocabulary / naming consistency (distributional semantics over the embeddings)
+
+Naming consistency without a word of hardcoded morphology: a name-token is only a **grouping key**
+(mechanical camelCase split); *all* same-vs-different judgment comes from the Ollama embeddings of the
+declarations a token names. Two model-driven signals, in the Deißenböck–Pizka frame:
+- **disambiguate** (one name → many concepts): a token whose decls split into ≥2 well-separated
+  embedding clusters — semantically overloaded.
+- **unify** (one concept → many names): two tokens whose decl **centroids** are near-identical —
+  synonyms, whatever their spelling (catches `deriv`↔`differential`, won't merge `norm`/`normal`). -/
+
+/-- A vocabulary finding: an overloaded token (`disambiguate`) or a synonym pair (`unify`). -/
+structure VocabCand where
+  kind : String    -- "unify" | "disambiguate"
+  term : String
+  other : String   -- unify: the near-synonym token; disambiguate: ""
+  sim : Float      -- unify: centroid cosine; disambiguate: semantic-dispersion (bimodal overload)
+  freq : Float     -- token frequency (min of the pair, for unify)
+  spell : Float    -- unify: spelling similarity of the pair; disambiguate: 0
+  cooc : Float     -- unify: name co-occurrence of the pair (a COST — collocates aren't synonyms)
+deriving Inhabited
+
+/-- Vocabulary fronts from the embeddings: `(unify, disambiguate)`, each Pareto-non-dominated. Tokens
+come from declaration short-names (excluding compiler-generated ones); a token needs ≥ `vmin` decls. -/
+def vocabCands (g : Graph) (e : Embeds) (vmin : Nat) (vspec : Float) :
+    Array VocabCand × Array VocabCand := Id.run do
+  -- token → the vectors of the decls it names (meaning is carried by the embeddings, not the string),
+  -- and token → those decl names (for name co-occurrence).
+  let mut tokVecs : HashMap String (Array (Array Float)) := {}
+  let mut tokDecls : HashMap String (Array String) := {}
+  for (name, _, v) in e.rows do
+    let sh := g.short.getD name name
+    if isStructuralNoise sh then continue
+    for t in words sh do
+      if t.length ≥ 2 then
+        tokVecs := tokVecs.insert t ((tokVecs.getD t #[]).push v)
+        tokDecls := tokDecls.insert t ((tokDecls.getD t #[]).push name)
+  -- centroids (unnormalised sums; cosine normalises)
+  let mut cen : HashMap String (Array Float) := {}
+  for (t, vs) in tokVecs.toArray do cen := cen.insert t (vs.foldl vadd #[])
+  -- specificity: a token's centroid distance from the corpus mean. Naming particles (`eq`, `of`, `to`)
+  -- are used everywhere, so their centroid ≈ the mean and specificity ≈ 0; concept tokens sit far from
+  -- it. This is the model-driven analogue of a stopword list — geometry, not a hardcoded word list.
+  let global := e.rows.foldl (fun acc r => vadd acc r.2.2) #[]
+  let toks := tokVecs.toArray.filter fun kv =>
+    kv.2.size ≥ vmin && 1.0 - cosine (cen.getD kv.1 #[]) global ≥ vspec
+  -- DISAMBIGUATE: a token is overloaded when its decls form two tight, well-separated clusters.
+  let mut disamb : Array VocabCand := #[]
+  for (t, vs) in toks do
+    let c := cen.getD t #[]
+    let mut poleA := vs[0]!; let mut ma := 2.0
+    for v in vs do let s := cosine v c; if s < ma then ma := s; poleA := v
+    let mut poleB := vs[0]!; let mut mb := 2.0
+    for v in vs do let s := cosine v poleA; if s < mb then mb := s; poleB := v
+    let sep := 1.0 - cosine poleA poleB                       -- how far apart the two poles are
+    let bimod := (vs.foldl (fun acc v =>                       -- how cleanly each decl picks a pole
+      let a := cosine v poleA; let b := cosine v poleB
+      acc + (if a > b then a else b)) 0.0) / vs.size.toFloat
+    disamb := disamb.push
+      { kind := "disambiguate", term := t, other := "", sim := sep * bimod, freq := vs.size.toFloat, spell := 0.0, cooc := 0.0 }
+  -- UNIFY: each token's nearest-centroid other token (synonym candidate); dedup the pair.
+  let names := toks.map (·.1)
+  let mut seen : HashMap String Bool := {}
+  let mut unify : Array VocabCand := #[]
+  for t in names do
+    let ct := cen.getD t #[]
+    let mut best := ""; let mut bestSim := -2.0
+    for u in names do
+      if u != t then
+        let s := cosine ct (cen.getD u #[])
+        if s > bestSim then bestSim := s; best := u
+    if best != "" then
+      let key := pairKey t best
+      if !seen.getD key false then
+        seen := seen.insert key true
+        let ft := (tokVecs.getD t #[]).size; let fb := (tokVecs.getD best #[]).size
+        -- co-occurrence: fraction of the rarer token's decls that also contain the other token.
+        -- High ⇒ they appear together (collocates, not substitutes) ⇒ not a rename — a cost.
+        let dset := HashSet.ofArray (tokDecls.getD t #[])
+        let inter := (tokDecls.getD best #[]).foldl (fun n d => if dset.contains d then n + 1 else n) 0
+        unify := unify.push
+          { kind := "unify", term := t, other := best, sim := bestSim,
+            freq := (Nat.min ft fb).toFloat, spell := editSim t best,
+            cooc := inter.toFloat / (Nat.max 1 (Nat.min ft fb)).toFloat }
+  let unifyFront := paretoFront unify (fun r => #[maxObj r.sim, maxObj r.freq, maxObj r.spell, costObj r.cooc])
+  let disambFront := paretoFront disamb (fun r => #[maxObj r.sim, maxObj r.freq])
+  return (unifyFront, disambFront)
+
+/-- A vocabulary finding as an action card — Codex makes the final unify/distinguish call. -/
+def VocabCand.action (r : VocabCand) : Action :=
+  if r.kind == "unify" then
+    { kind := "rename-unify"
+      head := s!"possible synonyms — '{r.term}' ≈ '{r.other}'  (verify they're the SAME concept)"
+      lines := #[
+        s!"why (Pareto-nondominated): centroid-cosine {pct r.sim} · min-freq {r.freq.toUInt64.toNat} decls · spelling-sim {pct r.spell}%",
+        "the two tokens name semantically near-identical declarations",
+        "plan:  judge — same concept spelled two ways? unify to one canonical token (wiki rdeps; rename; gate). If merely RELATED (e.g. gcd/remainder), skip."] }
+  else
+    { kind := "rename-disambiguate"
+      head := s!"overloaded name — '{r.term}' spans distinct concepts"
+      lines := #[
+        s!"why (Pareto-nondominated): semantic-dispersion {pct r.sim} (its decls split into 2 separated embedding clusters) · freq {r.freq.toUInt64.toNat} decls",
+        "plan:  give each concept a distinct, self-explaining name so a newcomer can't confuse them (keep the distinction, sharpen it)."] }
 
 /-- A tiny LCG step for seeded, reproducible sampling (no global RNG needed). -/
 @[inline] def lcgNext (s : Nat) : Nat := (6364136223846793005 * s + 1442695040888963407) % 18446744073709551616
@@ -514,23 +654,38 @@ def recommendCmd (args : List String) : IO Unit := do
   let db ← openDb ((← IO.getEnv "WIKI_DB").getD defaultDbPath)
   let g ← loadGraph db pfx
   let eOpt ← loadEmbeds db pfx
+  let vmin := (argv.find? (·.startsWith "--vmin=")).bind (·.drop 7 |>.toString.toNat?) |>.getD 5
+  let vspec := flt "--vspec=" 0.12   -- specificity floor: drop naming-particle tokens near the mean
   let (comms, frs) := clusterAnalysis g eOpt wcon wevo
   let merges := mergeCands g eOpt
   let moves := match eOpt with | some e => regroupCands g e | none => #[]
+  let (vUnify, vDisamb) := match eOpt with | some e => vocabCands g e vmin vspec | none => (#[], #[])
   let buckets : Array (Array Action) := (#[
       comms.map Community.action,
       frs.map DirFracture.action,
       merges.map MergeCand.action,
-      moves.map Regroup.action]).filter (!·.isEmpty)
+      moves.map Regroup.action,
+      vUnify.map VocabCand.action,
+      vDisamb.map VocabCand.action]).filter (!·.isEmpty)
   if buckets.isEmpty then
     IO.println "no recommendation — nothing non-dominated in scope (already well-organized?)"
     return
   IO.println s!"# {buckets.size} action type(s) live under {pfx}; sampling {k} (seed {seed0})"
   let mut seed := seed0
-  for _ in [0:k] do
+  let mut shown : HashMap String Bool := {}
+  let mut drawn := 0
+  let mut tries := 0
+  while drawn < k && tries < 20 * k + 20 do
+    tries := tries + 1
+    -- sample from the HIGH bits: an LCG's low bits have a short period (`% n` on them is badly biased)
     seed := lcgNext seed
-    let acts := buckets[seed % buckets.size]!
+    let acts := buckets[(seed >>> 33) % buckets.size]!
     seed := lcgNext seed
-    IO.println ("\n" ++ (acts[seed % acts.size]!).render)
+    let a := acts[(seed >>> 33) % acts.size]!
+    let key := a.render
+    if !shown.getD key false then
+      shown := shown.insert key true
+      drawn := drawn + 1
+      IO.println ("\n" ++ a.render)
 
 end WikiRAG
