@@ -1,5 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.AlgFunctionField
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric
+import DeepWiki.SymbolicIntegration.Computable.Tower.WellFounded
 
 /-! # The Ford–Zassenhaus Round-2 step: p-trace-radical + idealizer
 

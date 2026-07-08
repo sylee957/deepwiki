@@ -1,4 +1,5 @@
 import DeepWiki.SymbolicIntegration.Computable.ElementaryIntegrate
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower
 
 /-! # Computing the rational half over a transcendental tower
 

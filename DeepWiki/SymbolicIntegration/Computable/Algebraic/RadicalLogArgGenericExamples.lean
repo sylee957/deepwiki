@@ -1,4 +1,6 @@
 import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogArgGeneric
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogIntegral
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower
 
 /-! # Generic radical log-argument examples
 

@@ -1,5 +1,4 @@
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalLogIntegral
-import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalOverTower
+import DeepWiki.SymbolicIntegration.Computable.Algebraic.RadicalExtension
 
 /-! # Solving for the log argument `u` over a transcendental tower base
 
