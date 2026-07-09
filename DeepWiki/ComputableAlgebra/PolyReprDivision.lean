@@ -156,6 +156,13 @@ theorem toPoly_cgcdExt [CField α] [CRingSpec α] :
       rw [← hres] at ih
       rw [toPoly_csub, toPoly_mul, hdiv, ← ih]; ring
 
+/-- **Every common divisor divides the extended gcd** — immediate from the Bézout identity
+`s·a + t·b = g` (no termination argument). -/
+theorem dvd_cgcdExt [CField α] [CRingSpec α] (fuel : ℕ) (a b : P α) (d : (CRingSpec.R α)[X])
+    (ha : d ∣ toPoly a) (hb : d ∣ toPoly b) : d ∣ toPoly (cgcdExt fuel a b).1 := by
+  rw [← toPoly_cgcdExt fuel a b]
+  exact dvd_add (Dvd.dvd.mul_left ha _) (Dvd.dvd.mul_left hb _)
+
 /-- **Coprimality from Bézout:** if the extended-gcd component is a unit, `toPoly a` and `toPoly b`
 are coprime (scale the Bézout identity by the inverse unit). -/
 theorem isCoprime_of_cgcdExt_isUnit [CField α] [CRingSpec α] (fuel : ℕ) (a b : P α)
