@@ -1,4 +1,4 @@
-import DeepWiki.ComputableAlgebra.PolyReprDenote
+import DeepWiki.ComputableAlgebra.PolyReprDegree
 
 /-! # Migration bridge: the interface agrees with the existing `CPoly` engine (Step 4)
 
@@ -43,5 +43,30 @@ theorem toPoly_mul_eq_cmul (p q : List α) :
 theorem toPoly_neg_eq_cneg (p : List α) :
     CPoly.toPoly (CPolyRepr.neg p) = CPoly.toPoly (CPoly.cneg p) := by
   rw [← toPoly_list_eq, CPolyRepr.toPoly_neg, toPoly_list_eq, ← CPoly.toPolyG_cnegG]
+
+/-! ### Degree / leading-coefficient / zero-test / normalization agree with the engine (at `List`)
+
+These are exact value equalities (not just under `toPoly`) — the interface's exact-degree ops compute
+the same honest degree, leading coefficient (under `toR`), zero-test, and canonical form as the engine's,
+because both are pinned to the shared denotation `natDegree`/`leadingCoeff`/`= 0`. -/
+
+/-- The interface `cdeg` equals the engine `cdeg` at `List` (both are `(toPoly p).natDegree`). -/
+theorem cdeg_list_eq (p : List α) : CPolyRepr.cdeg p = CPoly.cdeg p := by
+  rw [CPolyRepr.cdeg_eq_natDegree, toPoly_list_eq, ← CPoly.cdegG_eq_natDegree]
+
+/-- The interface `clead` agrees with the engine `clead` under `toR` (both are `leadingCoeff`). -/
+theorem toR_clead_list_eq (p : List α) :
+    CRingSpec.toR (CPolyRepr.clead p) = CRingSpec.toR (CPoly.clead p) := by
+  rw [CPolyRepr.toR_clead_eq_leadingCoeff, toPoly_list_eq, ← CPoly.toR_cleadG_eq_leadingCoeff]
+
+/-- The interface `cisZero` equals the engine `cisZero` at `List` (both decide `toPoly p = 0`). -/
+theorem cisZero_list_eq (p : List α) : CPolyRepr.cisZero p = CPoly.cisZero p := by
+  rw [← Bool.coe_iff_coe, CPolyRepr.cisZero_iff, toPoly_list_eq, ← CPoly.cisZeroG_iff]
+
+/-- The interface `cnorm` agrees with the engine `cnorm` under the denotation (both strip trailing
+zeros to the same polynomial). -/
+theorem toPoly_cnorm_eq_cnorm (p : List α) :
+    CPoly.toPoly (CPolyRepr.cnorm p) = CPoly.toPoly (CPoly.cnorm p) := by
+  rw [← toPoly_list_eq, CPolyRepr.toPoly_cnorm, toPoly_list_eq, ← CPoly.toPolyG_cnormG]
 
 end DeepWiki.SymbolicIntegration
