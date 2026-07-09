@@ -117,4 +117,12 @@ theorem cgcd_dvd :
       · have ih := cgcd_dvd fuel b rem (by omega)
         exact ⟨by rw [hid]; exact dvd_add (Dvd.dvd.mul_right ih.1 _) ih.2, ih.1⟩
 
+/-- **`cgcd` is a genuine gcd:** it divides both inputs and is divisible by every common divisor
+(the universal property of a greatest common divisor), assembling `cgcd_dvd` and `dvd_cgcd`. This is
+the instance-free statement — no `DecidableEq`/`GCDMonoid` on the abstract field needed. -/
+theorem cgcd_isGCD (fuel : ℕ) (a b : P α) (h : cdeg b < fuel) :
+    toPoly (cgcd fuel a b) ∣ toPoly a ∧ toPoly (cgcd fuel a b) ∣ toPoly b ∧
+      ∀ e, e ∣ toPoly a → e ∣ toPoly b → e ∣ toPoly (cgcd fuel a b) :=
+  ⟨(cgcd_dvd fuel a b h).1, (cgcd_dvd fuel a b h).2, fun e hea heb => dvd_cgcd fuel a b e hea heb⟩
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
