@@ -218,6 +218,16 @@ theorem toR_ceval (x : α) (p : P α) :
 /-- `ceval` reduces (dense): `(1 + 2x + 3x²)` at `x = 2` is `1 + 4 + 12 = 17`. -/
 example : ceval (2 : ℚ) ([1, 2, 3] : List ℚ) = 17 := by native_decide
 
+/-- `ceval` is additive under `toR`: `toR (ceval x (p + q)) = toR (ceval x p) + toR (ceval x q)`. -/
+theorem toR_ceval_add (x : α) (p q : P α) :
+    CRingSpec.toR (ceval x (add p q)) = CRingSpec.toR (ceval x p) + CRingSpec.toR (ceval x q) := by
+  rw [toR_ceval, toR_ceval, toR_ceval, toPoly_add, Polynomial.eval_add]
+
+/-- `ceval` is multiplicative under `toR`: `toR (ceval x (p * q)) = toR (ceval x p) * toR (ceval x q)`. -/
+theorem toR_ceval_mul (x : α) (p q : P α) :
+    CRingSpec.toR (ceval x (mul p q)) = CRingSpec.toR (ceval x p) * CRingSpec.toR (ceval x q) := by
+  rw [toR_ceval, toR_ceval, toR_ceval, toPoly_mul, Polynomial.eval_mul]
+
 /-- **Factor theorem:** `r` is a root (`ceval r p` denotes `0`) iff `(X − r) ∣ toPoly p`. -/
 theorem ceval_eq_zero_iff_dvd (r : α) (p : P α) :
     CRingSpec.toR (ceval r p) = 0 ↔ (X - Polynomial.C (CRingSpec.toR r)) ∣ toPoly p := by
