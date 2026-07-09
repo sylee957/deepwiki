@@ -103,13 +103,34 @@ behaviour-preserving mechanical sweep, for two hard reasons established empirica
    the engine's correctness against the abstract interface**, which is the original engine-development
    effort, not a sweep.
 
-**What the delivered foundation gives instead.** The bridge (`toPoly_list_eq` + the op agreements) means
-that when a module *is* re-derived generically, its correctness transfers for free. The realistic port is
-therefore a **per-module re-derivation** (pick a module, generalise `CPoly α → P α`, replace `c* →
-CPolyRepr.*`, and re-prove its lemmas via the interface squares), gated one module at a time — a
-multi-week arc, not a mechanical pass. The `native_decide` showcases stay on the concrete `List`
-instance (where the interface ops *do* equal the engine ops). This foundation makes each such port safe;
-it does not make the aggregate small.
+## The `CPolyEngine` enabler — and why migration is connected-component-scale, not per-module
+
+`PolyEngine.lean` adds the **fat** interface `CPolyEngine extends CPolyRepr`: the polynomial ops are
+**class fields**, and the `List` instance supplies the *concrete engine ops* — `CPolyEngine.add (p :
+List α) = CPoly.cadd p` **definitionally**. So a declaration re-parametrised over `[CPolyEngine P]`
+computes *exactly* the engine's list output at `List`: **`native_decide` is preserved** and the ops need
+no bridge. The `SparsePoly` instance supplies the generic `ofFn` ops, so a migrated declaration also runs
+sparse. This is the enabler that removes the *op* mismatch (blocker #1 above).
+
+**But there is a second, harder coupling — the denotation.** A generic declaration `foo {P} [CPolyEngine
+P] (p : P α)` must state its correctness through the *generic* `CPolyRepr.toPoly` (the `List`-specific
+`CPoly.toPoly` doesn't typecheck at generic `P`). And `CPolyRepr.toPoly = CPoly.toPoly` at `List` is a
+*proven bridge* (`toPoly_list_eq`), **not** definitional. So the moment a module's `toPoly`-stated theorem
+is migrated, every downstream consumer that pattern-matches on `CPoly.toPoly` must migrate too. Migration
+therefore propagates along the `toPoly` dependency graph: it is **connected-component-scale**, not
+one-isolated-module-at-a-time. Even the smallest correctness module (`ReductionRealization`, 1 decl) has a
+downstream consumer.
+
+**The two honest ways to finish it**, both large:
+1. **Component-by-component** re-derivation: migrate a `toPoly`-closed set of modules together (module +
+   all consumers of its `toPoly` statements), gated per component. Correct, safe, multi-week.
+2. **Redefine the engine denotation** `CPoly.toPoly := CPolyRepr.toPoly` (make the bridge *definitional*),
+   re-proving the ~50 `toPolyG_*` satellites in `Polynomial.lean`, after which per-module migration
+   becomes transparent. Bounded to the core file but high-risk (it is imported by all 168 files).
+
+The delivered foundation (`CPolyRepr` + `CPolyEngine` + full correctness + bridge, all gate-green) is
+what makes *either* route safe. It does not make the aggregate small: the engine port is a genuine
+re-derivation effort, correctly scoped here rather than faked by breaking the 120 `native_decide` suites.
 
 ## Risks
 
