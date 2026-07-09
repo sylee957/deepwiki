@@ -1,0 +1,76 @@
+import DeepWiki.ComputableAlgebra.PolyReprDegree
+import DeepWiki.ComputableAlgebra.PolyReprSparse
+
+/-! # Generic Euclidean division on `CPolyRepr`
+
+`cdivmod fuel p q = (Q, R)` is Euclidean division of `p` by `q` over a computable field: repeatedly
+cancel `p`'s leading term with the monomial `(clead p / clead q)·X^(cdeg p − cdeg q)·q`. The **division
+identity** `toPoly p = toPoly q · toPoly Q + toPoly R` holds for *every* `fuel` by pure algebra and
+induction — each cancellation step preserves it and the base case `(0, p)` satisfies it trivially — so it
+needs no degree/termination argument. Representation-generic: it runs on any `CPolyRepr` (dense or sparse)
+and reduces under `native_decide`. See `docs/representation-independent-poly.md`. -/
+
+open Polynomial
+
+namespace DeepWiki.SymbolicIntegration.CPolyRepr
+
+variable {P : Type u → Type u} [CPolyRepr P] {α : Type u} [CCommRing α]
+
+/-- The zero polynomial as a length-0 representation. -/
+def czero : P α := ofFn 0 (fun _ => CCommRing.zero)
+
+section Spec
+variable [CRingSpec α]
+
+/-- `toPoly czero = 0`. -/
+theorem toPoly_czero : (toPoly (czero : P α)) = 0 := by
+  apply Polynomial.ext; intro k
+  rw [coeff_toPoly, czero, coeff_ofFn, if_neg (by omega), CRingSpec.toR_zero, Polynomial.coeff_zero]
+
+end Spec
+
+/-- Euclidean division `cdivmod fuel p q = (quotient, remainder)` over a computable field: each step
+cancels `p`'s leading term against `q`. -/
+def cdivmod [CField α] : ℕ → P α → P α → P α × P α
+  | 0, p, _ => (czero, p)
+  | fuel + 1, p, q =>
+    if cdeg p < cdeg q ∨ cisZero p then (czero, p)
+    else
+      let t := cmonomial (CField.div (clead p) (clead q)) (cdeg p - cdeg q)
+      let res := cdivmod fuel (csub p (mul t q)) q
+      (add t res.1, res.2)
+
+/-- **The division identity:** `toPoly p = toPoly q · toPoly Q + toPoly R` for `(Q, R) = cdivmod fuel
+p q`, at *every* `fuel`. Pure algebra + induction — no degree argument. Representation-generic. -/
+theorem toPoly_cdivmod [CField α] [CRingSpec α] :
+    ∀ (fuel : ℕ) (p q : P α),
+      toPoly p = toPoly q * toPoly (cdivmod fuel p q).1 + toPoly (cdivmod fuel p q).2
+  | 0, p, q => by rw [cdivmod, toPoly_czero (P := P)]; ring
+  | fuel + 1, p, q => by
+    rw [cdivmod]
+    by_cases h : cdeg p < cdeg q ∨ cisZero p
+    · rw [if_pos h, toPoly_czero (P := P)]; ring
+    · rw [if_neg h]
+      set t := cmonomial (P := P) (CField.div (clead p) (clead q)) (cdeg p - cdeg q) with ht
+      have ih := toPoly_cdivmod fuel (csub p (mul t q)) q
+      rw [toPoly_csub, toPoly_mul, sub_eq_iff_eq_add] at ih
+      simp only [toPoly_add]
+      rw [ih]; ring
+
+/-! ### `native_decide` showcase: `(x² − 1) / (x − 1) = (x + 1, 0)`
+
+The generic algorithm runs on the dense `List` carrier and the sparse `SparsePoly` carrier alike. -/
+
+/-- Dense: dividing `x² − 1` by `x − 1` leaves remainder `0`. -/
+example : cisZero (cdivmod 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2 = true := by native_decide
+/-- Dense: the quotient `(x² − 1)/(x − 1)` normalizes to `x + 1`. -/
+example : cnorm (cdivmod 5 ([-1, 0, 1] : List ℚ) [-1, 1]).1 = ([1, 1] : List ℚ) := by native_decide
+/-- Sparse: the same division on the sparse carrier — remainder `0`, quotient of honest degree `1`
+(`x + 1`). Same algorithm, different representation. -/
+example : cisZero (cdivmod 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
+    (SparsePoly.ofList [(0, -1), (1, 1)])).2 = true := by native_decide
+/-- Sparse: the quotient of `(x² − 1)/(x − 1)` has honest degree `1`. -/
+example : cdeg (cdivmod 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
+    (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
+
+end DeepWiki.SymbolicIntegration.CPolyRepr
