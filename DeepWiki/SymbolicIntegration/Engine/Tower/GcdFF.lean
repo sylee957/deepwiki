@@ -1,6 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFF.Carrier
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFF.Denominators
-import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFF.LevelOneBench
 
 /-! # Fraction-free gcd benchmark carriers over tower levels
 
