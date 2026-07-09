@@ -37,7 +37,20 @@ gate-green commit (a rename must be atomic — the intermediate state doesn't co
 - **P1 DONE** (commit): concrete `CPoly → CPolyQ`, 495 occ. Gate PASS.
 - **P2 DONE** (commit): generic `CPolyG → CPoly`, 5667 occ. Gate PASS. **The type inversion — the stated
   goal — is complete: generic is `CPoly α`, concrete is `CPolyQ`.**
-- **P3/P4 BLOCKED by multi-way name overloads** (do not force):
+- **P4 DONE** (Step A `git` + Step B `git`): the CPoly engine is fully de-`G`'d. **Generic ops now
+  carry clean unmarked names** — `caddG→cadd`, `cmulG→cmul`, `toPolyG→toPoly`, `cSubresultantG→cSubresultant`,
+  `cDetG→cDet`, `checkIdentityG→checkIdentity`, `cRatG→cRat`, … (88 ops, 12596 occ). The KEY INSIGHT that
+  unblocked it: **de-`G` (`\bcXG\b → cX`) is text-safe** — it matches only the `G`-suffixed generic name,
+  never a struct field (`.clead`), class method (`CDiffField.cderiv`), or the concrete `Compute.cX` twin
+  (different namespace; Compute/ files reference the generic *qualified* and never `open CPoly`). So the
+  concrete ops did NOT need relifting. The only scope work (Step A) was lifting the 3 root-namespace/
+  always-in-scope conflicts — algebraic `toPoly→listToPoly`, `commonDenom→commonDenomQ`,
+  `cinterpTerm→cinterpTermQ` — and dropping the 2 vestigial `open Compute` (Parametric, LaurentSpecialSoundness).
+  One struct-field clash fixed: `IsProperSpecialPart.clead → lc_nz`. `amG`/`QFunNZG`/`fieldFrac` kept
+  (separate fraction-field-tower layer, not the CPoly op layer). Residual: `cgcdExtG`/`cdivmodG`/`cresultantG`
+  are stale doc-comment mentions of deleted fuel ops (harmless prose).
+
+### (superseded) earlier assessment: P3/P4 seemed blocked by overloads
   - `toPoly` exists THREE ways in overlapping scopes — `Compute.toPoly` (concrete bridge), the top-level
     `DeepWiki.SymbolicIntegration.toPoly` (the algebraic/Zassenhaus `List R → R[X]` helper, used across
     ~10 `Engine/Algebraic/` files), and the would-be generic (from `toPolyG`). ~150 files `open CPoly`, so a

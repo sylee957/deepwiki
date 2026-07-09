@@ -22,7 +22,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
 `p < 0`, divided by `q`. -/
-def CPoly.cRatG (p : ℤ) (q : ℕ) : α :=
+def CPoly.cRat (p : ℤ) (q : ℕ) : α :=
   CField.div (if p < 0 then CField.neg (CPoly.cnatCast p.natAbs) else CPoly.cnatCast p.natAbs)
     (CPoly.cnatCast q)
 
@@ -33,7 +33,7 @@ a fixed computable function. Completeness is bounded (large / non-rational resid
 root-finding); soundness is unaffected (any candidate list is filtered to genuine roots). -/
 def CPoly.defaultResidueCandidates (bound : ℕ) : List α :=
   (List.range (2 * bound + 1)).flatMap (fun i =>
-    (List.range bound).map (fun j => CPoly.cRatG ((i : ℤ) - (bound : ℤ)) (j + 1)))
+    (List.range bound).map (fun j => CPoly.cRat ((i : ℤ) - (bound : ℤ)) (j + 1)))
 
 omit [CRischField α] [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] [CharZero (CFieldSpec.K α)] in
 /-- `cisZero (cmapDeriv fp) = true` proves that `fp` has constant coefficients. -/
