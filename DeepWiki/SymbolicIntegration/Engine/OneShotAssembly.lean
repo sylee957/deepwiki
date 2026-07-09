@@ -1007,8 +1007,7 @@ example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
 
 `cIntegrateGFullWf_poly_oneShot` is gated on `hpoly` (`D(amG qₚ) = amG fₚ`). For the primitive base
 `Dt = [CField.one]`, the `b = []` branch integrates `fₚ` term by term and the Wf dispatcher pins
-`qₚ = cIntegratePolyGWf fₚ`; since `cIntegratePolyGWf` is defeq to `cIntegratePolyG`, the existing constant
-coefficient field identity discharges `hpoly`. -/
+`qₚ = cIntegratePolyG fₚ`, so the existing constant-coefficient field identity discharges `hpoly`. -/
 
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf` with `hpoly` discharged
 (primitive base).** -/
@@ -1050,14 +1049,13 @@ theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracG
   set fp := (canonicalRepresentationFastGWf ([CField.one] : CPolyG α) a d).1 with hfpE
   have hfp := hbranch.poly_nonzero
   rw [← hfpE] at hfp
-  have hqp_eq : qp = CPolyG.cIntegratePolyGWf fp := by
+  have hqp_eq : qp = CPolyG.cIntegratePolyG fp := by
     rw [cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) fp ((CPolyG.cdegG fp : ℤ) + 1) hfp
       (le_refl _)] at hqp
     exact (Option.some.injEq _ _ ▸ hqp).symm
   have hpoly : towerFractionFieldDerivG ([CField.one] : CPolyG α) (amG α (toPolyG qp))
       = amG α (toPolyG fp) := by
     rw [hqp_eq]
-    rw [show CPolyG.cIntegratePolyGWf fp = CPolyG.cIntegratePolyG fp by rfl]
     exact towerFractionFieldDerivG_amG_cIntegratePolyG_const fp
       (cIntegratePolyG_const_coeff fp hconst)
   exact cIntegrateGFullWf_poly_oneShot ([CField.one] : CPolyG α) a d cands res qp hbranch hsome

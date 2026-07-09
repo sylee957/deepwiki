@@ -180,10 +180,10 @@ theorem field_identity_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] [Algeb
 /-! ### Keyed on the algorithm function `cPolyRischDEG` -/
 
 omit [CDiffFieldSpec α] in
-/-- `cPolyRischDEGWf` returns `cIntegratePolyGWf c` on the nonzero `b = 0` branch within budget. -/
+/-- `cPolyRischDEGWf` returns `cIntegratePolyG c` on the nonzero `b = 0` branch within budget. -/
 theorem cPolyRischDEGWf_nil_eq [CRischField α] (Dt : CPolyG α) (c : CPolyG α) (n : ℤ)
     (hc : CPolyG.cisZeroG c = false) (hdeg : (CPolyG.cdegG c : ℤ) + 1 ≤ n) :
-    CPolyG.cPolyRischDEGWf Dt ([] : CPolyG α) c n = some (CPolyG.cIntegratePolyGWf c) := by
+    CPolyG.cPolyRischDEGWf Dt ([] : CPolyG α) c n = some (CPolyG.cIntegratePolyG c) := by
   have hb : CPolyG.cisZeroG ([] : CPolyG α) = true := by rw [cisZeroG_iff, toPolyG_nil]
   simp only [CPolyG.cPolyRischDEGWf, hb, if_true, hc, Bool.false_eq_true, if_false]
   rw [if_neg (by omega : ¬ (CPolyG.cdegG c : ℤ) + 1 > n)]
@@ -201,16 +201,13 @@ theorem field_identity_of_cPolyRischDEGWf [CharZero (CFieldSpec.K α)] [Algebra 
     towerFractionFieldDerivG ([CField.one] : CPolyG α)
         (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
       = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) := by
-  -- the algorithm output is exactly `cIntegratePolyGWf c`
-  have hq : q = CPolyG.cIntegratePolyGWf c := by
+  -- the algorithm output is exactly `cIntegratePolyG c`
+  have hq : q = CPolyG.cIntegratePolyG c := by
     rw [cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) c n hc hdeg] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hq
-  have hconst' : Differential.mapCoeffs (toPolyG (CPolyG.cIntegratePolyG c)) = 0 := by
-    rwa [show CPolyG.cIntegratePolyGWf c = CPolyG.cIntegratePolyG c by rfl] at hconst
   -- empty logs ⇒ `logResidueSumG … [] = 0`, so the field-identity is exactly the bridge output
-  have h := field_identity_cIntegratePolyG_const (α := α) c hconst'
-  rw [show CPolyG.cIntegratePolyGWf c = CPolyG.cIntegratePolyG c by rfl]
+  have h := field_identity_cIntegratePolyG_const (α := α) c hconst
   rwa [logResidueSumG_nil, add_zero] at h
 
 /-! ### Discharging the constant-base hypothesis from integrand to antiderivative -/
@@ -261,16 +258,14 @@ theorem cPolyRischDEGWf_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra
     towerFractionFieldDerivG ([CField.one] : CPolyG α)
         (amG α (toPolyG q) / amG α (toPolyG ([CField.one] : CPolyG α)))
       = amG α (toPolyG c) / amG α (toPolyG ([CField.one] : CPolyG α)) := by
-  -- `q = cIntegratePolyGWf c`, so the output-side `mapCoeffs` follows from the input-side via the transport
-  have hq : q = CPolyG.cIntegratePolyGWf c := by
+  -- `q = cIntegratePolyG c`, so the output-side `mapCoeffs` follows from the input-side via the transport
+  have hq : q = CPolyG.cIntegratePolyG c := by
     rw [cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) c n hc hdeg] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hq
-  exact field_identity_of_cPolyRischDEGWf c (CPolyG.cIntegratePolyGWf c) n hc hdeg
+  exact field_identity_of_cPolyRischDEGWf c (CPolyG.cIntegratePolyG c) n hc hdeg
     (cPolyRischDEGWf_nil_eq ([CField.one] : CPolyG α) c n hc hdeg)
-    (by
-      rw [show CPolyG.cIntegratePolyGWf c = CPolyG.cIntegratePolyG c by rfl]
-      exact cIntegratePolyG_const_coeff c hconst)
+    (cIntegratePolyG_const_coeff c hconst)
 
 /-! ### The deliverable at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)` -/
 

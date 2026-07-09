@@ -357,20 +357,10 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-/-- Generic polynomial antiderivative `cIntegratePolyGWf c = q` with `Dq = c` and `q(0) = 0`, for the
-canonical primitive monomial (`Dt = 1`) and constant coefficients: termwise
-`∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}` (`cᵢ/(i+1) = CField.div cᵢ (cnatCastG (i+1))`). -/
-def cIntegratePolyGWf (c : CPolyG α) : CPolyG α :=
-  CField.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (cnatCastG (i + 1))))
-
-end CPolyG
-
-namespace CPolyG
-
 variable {α : Type*} [CField α] [CDiffField α] [CRischField α]
 
 /-- Generic Poly-Risch-DE dispatcher `cPolyRischDEGWf Dt b c n`: solves `Dq + b·q = c` for `q ∈ α[t]`,
-`deg(q) ≤ n`, routing by monomial type and `deg(b)`: `b = 0` ⇒ pure integration (`cIntegratePolyGWf`, with
+`deg(q) ≤ n`, routing by monomial type and `deg(b)`: `b = 0` ⇒ pure integration (`cIntegratePolyG`, with
 the `deg(c)+1 ≤ n` check); `deg(b) > max(0, δ−1)` ⇒ non-cancellation (`cPolyRischDENoCancelGWf`);
 `δ = 0, deg(b) = 0` ⇒ primitive cancellation (`cPolyRischDECancelPrimGWf`); `δ = 1, deg(b) = 0` ⇒
 hyperexponential cancellation (`cPolyRischDECancelExpGWf`); else (`δ ≥ 2`) ⇒ non-cancellation.
@@ -381,7 +371,7 @@ def cPolyRischDEGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) : Option (CPoly
   if cisZeroG b then
     if cisZeroG c then some []
     else if (cdegG c : ℤ) + 1 > n then none
-    else some (cIntegratePolyGWf c)
+    else some (cIntegratePolyG c)
   else if db > max 0 (δ - 1) then
     cPolyRischDENoCancelGWf Dt b c n
   else if δ = 0 ∧ db = 0 then
