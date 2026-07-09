@@ -47,7 +47,7 @@ theorem case2_cofactor_eq :
 theorem case2_congruence :
     cisZero (cmodWf
       (csub (cmul case2B
-        (cmul (csub [CField.div CField.one (cnatCast 2)] [cnatCast 2])
+        (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
           (cmul case2Wder case2H))) case2C)
       case2W) = true := by native_decide
 
@@ -56,11 +56,11 @@ theorem case2_cleared_identity :
     cisZero (csub
       (cadd
         (csub (cmul case2B
-          (cmul (csub [CField.div CField.one (cnatCast 2)] [cnatCast 2])
+          (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
             (cmul case2Wder case2H))) case2C)
         (cmul case2W
           (cadd (cmul (cderiv case2B) case2H)
-            (cmul [CField.div CField.one (cnatCast 2)] (cmul case2B (cderiv case2H))))))
+            (cmul [CField.div CCommRing.one (cnatCast 2)] (cmul case2B (cderiv case2H))))))
       (cmul case2W case2D)) = true := by native_decide
 
 /-- The residual `D = −x/3`, so the Case-2 step lowered the multiplicity of `W = x` from `k = 2` to `1`. -/

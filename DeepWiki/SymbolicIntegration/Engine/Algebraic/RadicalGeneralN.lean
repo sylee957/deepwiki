@@ -28,7 +28,7 @@ By extended Euclid: solve `s·g + t·(yⁿ − f) = 1` and reduce `s` mod `yⁿ 
 
 /-- The defining modulus `radModulus n f = [−f, 0, …, 0, 1] = yⁿ − f` as a `DensePoly α`. -/
 def radModulus (n : ℕ) (f : α) : DensePoly α :=
-  DensePoly.csub (DensePoly.cshift n [CField.one]) [f]
+  DensePoly.csub (DensePoly.cshift n [CCommRing.one]) [f]
 
 /-- The general-`n` inverse `radInvN n f g` of `g ∈ α[y]/(yⁿ − f)` via extended Euclid: from
 `cbezoutOneWf g (yⁿ − f) = (s, _)` with `s·g + t·(yⁿ − f) = 1`, the inverse is `s` reduced mod `yⁿ = f`.
@@ -158,13 +158,13 @@ theorem toK_cubeRadicand :
   show CFrac.toCFrac cubeRadicand = _
   rw [CFrac.toCFrac]
   show CFrac.am ℚ (toPoly ([1, 0, 1] : DensePoly ℚ))
-      / CFrac.am ℚ (toPoly ([CField.one] : DensePoly ℚ)) = _
+      / CFrac.am ℚ (toPoly ([CCommRing.one] : DensePoly ℚ)) = _
   have h1 : toPoly ([1, 0, 1] : DensePoly ℚ) = 1 + X ^ 2 := by
     simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 1 + X * 0)) = _
     simp; ring
-  have h2 : toPoly ([CField.one] : DensePoly ℚ) = 1 := by
-    show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
+  have h2 : toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
+    show C (CFieldSpec.toK (CCommRing.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h1, h2]
   show CFrac.am ℚ (1 + X ^ 2) / CFrac.am ℚ 1 = _
   rw [map_one, div_one]; rfl
@@ -204,35 +204,35 @@ noncomputable example : Field (AdjoinRoot (X ^ 3 - C (CFieldSpec.toK (cubeRadica
 Over `RadX3root = ℚ(x)[∛(x²+1)]`, through the typeclass projections: `y·y·y = f` (`radMul 3 f`),
 `D(y) = (f'/(3f))·y` (`radDeriv 3 f`), and `u · u⁻¹ = 1` (`radInvN 3 f`). -/
 
-/-- `y·y·y = f` in `RadX3root` through `CField.mul`: the cube of `y = ∛(x²+1)` folds `y³ → f = x²+1`. -/
+/-- `y·y·y = f` in `RadX3root` through `CCommRing.mul`: the cube of `y = ∛(x²+1)` folds `y³ → f = x²+1`. -/
 theorem cube_gen_cubed_eq_radicand :
-    CField.isZero (CField.sub (CField.mul (CField.mul cubeGen cubeGen) cubeGen)
+    CCommRing.isZero (CField.sub (CCommRing.mul (CCommRing.mul cubeGen cubeGen) cubeGen)
       (⟨[cubeRadicand]⟩ : RadX3root)) = true := by native_decide
 
 /-- `D(y) = (f'/(3f))·y` in `RadX3root` through `CDiffField.cderiv`: sends `y = ∛(x²+1)` to `ℓ·y`,
 `ℓ = 2x/(3(x²+1))`. -/
 theorem cube_cderiv_gen_eq :
-    CField.isZero (CField.sub (CDiffField.cderiv cubeGen)
-      (⟨[CField.zero, cubeLogDer]⟩ : RadX3root)) = true := by native_decide
+    CCommRing.isZero (CField.sub (CDiffField.cderiv cubeGen)
+      (⟨[CCommRing.zero, cubeLogDer]⟩ : RadX3root)) = true := by native_decide
 
-/-- `u · u⁻¹ = 1` in `RadX3root` through `CField.mul`/`CField.inv`: for `u = x + y`, the inverse
+/-- `u · u⁻¹ = 1` in `RadX3root` through `CCommRing.mul`/`CField.inv`: for `u = x + y`, the inverse
 `radInvN 3 (x²+1)` satisfies `u · u⁻¹ = 1`. -/
 theorem cube_mul_inv_eq_one :
-    CField.isZero (CField.sub (CField.mul (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root)
-      (CField.inv (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root))) CField.one) = true := by
+    CCommRing.isZero (CField.sub (CCommRing.mul (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root)
+      (CField.inv (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root))) CCommRing.one) = true := by
   native_decide
 
 /-- A cube-root inverse with a genuine `y²`-component: for `u = 1 + y + y²`, `radInvN 3 (x²+1)` inverts,
-`CField.mul u u⁻¹ = 1` — a full-degree element the conjugate-norm `radInv2` could not handle. -/
+`CCommRing.mul u u⁻¹ = 1` — a full-degree element the conjugate-norm `radInv2` could not handle. -/
 theorem cube_mul_inv_eq_one_deg2 :
-    CField.isZero (CField.sub (CField.mul (⟨[CField.one, CField.one, CField.one]⟩ : RadX3root)
-      (CField.inv (⟨[CField.one, CField.one, CField.one]⟩ : RadX3root))) CField.one) = true := by
+    CCommRing.isZero (CField.sub (CCommRing.mul (⟨[CCommRing.one, CCommRing.one, CCommRing.one]⟩ : RadX3root)
+      (CField.inv (⟨[CCommRing.one, CCommRing.one, CCommRing.one]⟩ : RadX3root))) CCommRing.one) = true := by
   native_decide
 
 /-- `D(1) = 0` and `D(0) = 0` in `RadX3root`: the cube-root derivation annihilates the unit and zero. -/
 theorem cube_cderiv_one_zero :
-    CField.isZero (CDiffField.cderiv (CField.one : RadX3root)) = true ∧
-    CField.isZero (CDiffField.cderiv (CField.zero : RadX3root)) = true := by
+    CCommRing.isZero (CDiffField.cderiv (CCommRing.one : RadX3root)) = true ∧
+    CCommRing.isZero (CDiffField.cderiv (CCommRing.zero : RadX3root)) = true := by
   constructor <;> native_decide
 
 /-! ### The general-`n` log-derivative `u'/u` and a cube-root integration check
@@ -253,7 +253,7 @@ end RadElem
 /-- A cube-root log integrand `u'/u` for `u = x + ∛(x²+1)`: `radLogDerivN 3 (x²+1) u` is a nonzero element
 of `ℚ(x)[∛(x²+1)]`, the integrand whose antiderivative is `log u`. -/
 theorem cube_radLogDerivN_nonzero :
-    radIsZero (radLogDerivN 3 cubeRadicand (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root).toRadN)
+    radIsZero (radLogDerivN 3 cubeRadicand (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root).toRadN)
       = false := by native_decide
 
 /-- `D(log u) · u = D(u)` over the cube root: for `u = x + ∛(x²+1)`, `(radLogDerivN 3 f u)·u = D(u)`, i.e.
@@ -261,8 +261,8 @@ theorem cube_radLogDerivN_nonzero :
 theorem cube_radLogDerivN_mul_eq_deriv :
     radIsZero (radSub
         (radMul 3 cubeRadicand (radLogDerivN 3 cubeRadicand
-          (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3root).toRadN) [qxOfNum [0, 1], CField.one])
-        (radDeriv 3 cubeRadicand [qxOfNum [0, 1], CField.one])) = true := by native_decide
+          (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3root).toRadN) [qxOfNum [0, 1], CCommRing.one])
+        (radDeriv 3 cubeRadicand [qxOfNum [0, 1], CCommRing.one])) = true := by native_decide
 
 /-! ### A transcendental monomial over the cube-root base
 
@@ -272,15 +272,15 @@ theorem cube_radLogDerivN_mul_eq_deriv :
 
 /-- The transcendental monomial `t = eˣ` over the cube-root base: `Dt = t`, as the
 `RadX3root[t]`-polynomial `[0, 1] = t`. -/
-def cubeDtExp : DensePoly RadX3root := [CField.zero, CField.one]
+def cubeDtExp : DensePoly RadX3root := [CCommRing.zero, CCommRing.one]
 
 /-- The `RadX3root[t]`-polynomial `y·t = [0, y]` (cube-root generator `y = ∛(x²+1)` times `t = eˣ`). -/
-def cubeGenT : DensePoly RadX3root := [CField.zero, cubeGen]
+def cubeGenT : DensePoly RadX3root := [CCommRing.zero, cubeGen]
 
 /-- The `RadX3root[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected `D(y·t)`
 (`ℓ = f'/(3f) = 2x/(3(x²+1))`): `ℓ·y` the cube-root part `D(y)`, `y` the monomial part `y·Dt = y·t`. -/
 def cubeGenTDeriv : DensePoly RadX3root :=
-  [CField.zero, CField.mul (⟨[CField.zero, CField.add cubeLogDer CField.one]⟩ : RadX3root) CField.one]
+  [CCommRing.zero, CCommRing.mul (⟨[CCommRing.zero, CCommRing.add cubeLogDer CCommRing.one]⟩ : RadX3root) CCommRing.one]
 
 /-- `D(y·t) = (ℓ+1)·y·t` over `RadX3root[t] = ℚ(x)[∛(x²+1)][eˣ]`: `cmonomialDeriv` runs both the cube-root
 coefficient derivation (`ℓ·y`) and the `d/dt` part (`y`). -/

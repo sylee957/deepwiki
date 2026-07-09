@@ -28,7 +28,7 @@ variable {α : Type*} [CField α]
 /-- `cisRootNat r n = true` iff `r(cnatCast n) = 0` in `α` (Horner via `cHorner`): whether the
 natural number `n`, lifted to `α`, is a root of `r`. -/
 def cisRootNat (r : DensePoly α) (n : ℕ) : Bool :=
-  CField.isZero (cHorner r (cnatCast n))
+  CCommRing.isZero (cHorner r (cnatCast n))
 
 /-- `cPosIntRoots r bound = [n ∈ {1,…,bound} : r(cnatCast n) = 0]`: the positive integer roots of
 `r` up to `bound`; empty for an already-weakly-normalized input. -/
@@ -76,7 +76,7 @@ monomial (`Dt = 1`) with constant coefficients this is termwise `∫ Σ cᵢtⁱ
 canonical primitive monomial (`Dt = 1`) and constant coefficients: termwise
 `∫ Σ cᵢtⁱ = Σ (cᵢ/(i+1)) t^{i+1}` (`cᵢ/(i+1) = CField.div cᵢ (cnatCast (i+1))`). -/
 def cIntegratePoly (c : DensePoly α) : DensePoly α :=
-  CField.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (cnatCast (i + 1))))
+  CCommRing.zero :: ((c : List α).zipIdx.map (fun (a, i) => CField.div a (cnatCast (i + 1))))
 
 end DensePoly
 
@@ -85,6 +85,6 @@ end DensePoly
 The level-2 right-hand side below is reused by the fuel-free RDE and sound-solver validations. -/
 
 /-- The level-2 right-hand side `g = t₁ + 1 ∈ Lvl2 = ℚ(x)(t₁)` (`lvl2T1` is `t₁`). -/
-def towerRdeLvl2GPlusOne : Lvl2 := CField.add lvl2T1 CField.one
+def towerRdeLvl2GPlusOne : Lvl2 := CCommRing.add lvl2T1 CCommRing.one
 
 end DeepWiki.SymbolicIntegration

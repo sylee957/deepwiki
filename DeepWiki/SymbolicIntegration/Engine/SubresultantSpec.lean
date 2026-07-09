@@ -58,7 +58,7 @@ theorem cSubColIdx_getD (n m j i : ℕ) (s : Fin (m + n - 2 * j)) :
 matrix, read through `toK`, equals the abstract `bSylvester (toPoly p) (toPoly q) n m` entry. -/
 theorem toK_cBSylvesterRows_getD (p q : DensePoly α) (n m : ℕ) {RR CC : ℕ}
     (hR : RR < m + n) (hC : CC < m + n) :
-    toK (((cBSylvesterRows p q n m).getD RR []).getD CC CField.zero)
+    toK (((cBSylvesterRows p q n m).getD RR []).getD CC CCommRing.zero)
       = bSylvester (toPoly p) (toPoly q) n m ⟨RR, hR⟩ ⟨CC, hC⟩ := by
   rw [cBSylvesterRows]
   simp only [bSylvester, Matrix.of_apply]
@@ -96,7 +96,7 @@ theorem matrixOfList_cSubmatrix (p q : DensePoly α) (n m j i : ℕ) :
   simp only [matrixOfList, Matrix.of_apply, Matrix.submatrix_apply]
   rw [cSubmatrix,
     getD_map_of_lt (fun row => row.map toK) _ _ ([] : List α) _ (by rwa [List.length_map]),
-    getD_map_of_lt toK _ _ CField.zero _ (by
+    getD_map_of_lt toK _ _ CCommRing.zero _ (by
       rw [getD_map_of_lt _ _ _ (0 : ℕ) _ hr, List.length_map]; exact hc),
     getD_map_of_lt _ _ _ (0 : ℕ) _ hr, getD_map_of_lt _ _ _ (0 : ℕ) _ hc,
     cSubRowIdx_getD n m j r, cSubColIdx_getD n m j i c,

@@ -97,7 +97,7 @@ def full_rtRatIntegrand : RadElem (CFrac ℚ) := algDerivQ rtRatRho ⟨full_rtRa
 /-- The recovered rational-only result for `∫ 1/((x−1)²√(x²+1))`: the rational part is reconstructed
 by `radIntegrateRationalWf`, and the non-principal residual gives an empty log list. -/
 def full_rtRatRecovered : AlgIntegralResult (CFrac ℚ) :=
-  cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CField.one [0, 0, 1] 1
+  cIntegrateAlgebraicWf rtRatRho rtRatR rtRatB rtRatNonPrincipalResidual CCommRing.one [0, 0, 1] 1
 
 /-- **★ Round-trip (rational-only): `∫ 1/((x−1)²√(x²+1))`** (Trager, Appendix A §2, `native_decide`): start
 from `F = ⟨v, []⟩` (the dispatch's rational part, no log term), differentiate to `integrand = radDeriv v`,
@@ -117,7 +117,7 @@ theorem full_roundtrip_rational_shape :
 /-- The recovered log-only result for `∫ dx/(x√(x²+1))`: empty rational part and one computed
 principal log term. -/
 def full_rtLogRecovered : AlgIntegralResult (CFrac ℚ) :=
-  cIntegrateAlgebraicWf rtLogRho [1] [1] rtLogIntegrand CField.one rtLogD 0
+  cIntegrateAlgebraicWf rtLogRho [1] [1] rtLogIntegrand CCommRing.one rtLogD 0
 
 /-- **★ Round-trip (log-only): `∫ dx/(x√(x²+1)) = log((y − 1)/x)`** (Trager, Ch. 5 §1, `native_decide`):
 `cIntegrateAlgebraicWf` computes an empty rational part and one log term `1·log u` with `u = N/x` the
@@ -138,7 +138,7 @@ def full_rtCombVdispatch : RadElem (CFrac ℚ) :=
   radAssembleRatPart rtCombRho (DensePoly.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
 
 /-- The combined starting antiderivative `F = full_rtCombVdispatch + log(rtCombU)`. -/
-def full_rtCombF : AlgIntegralResult (CFrac ℚ) := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩
+def full_rtCombF : AlgIntegralResult (CFrac ℚ) := ⟨full_rtCombVdispatch, [(CCommRing.one, rtCombU)]⟩
 
 /-- The combined benchmark integrand: `algDerivQ full_rtCombF`. -/
 def full_rtCombIntegrand : RadElem (CFrac ℚ) := algDerivQ rtCombRho full_rtCombF
@@ -146,7 +146,7 @@ def full_rtCombIntegrand : RadElem (CFrac ℚ) := algDerivQ rtCombRho full_rtCom
 /-- The recovered combined result for `F = v + log(x + y)`: both the rational part and the log
 argument are reconstructed by `cIntegrateAlgebraicWf`. -/
 def full_rtCombRecovered : AlgIntegralResult (CFrac ℚ) :=
-  cIntegrateAlgebraicWf rtCombRho rtCombR rtCombB rtCombLogResidual CField.one [1] 1
+  cIntegrateAlgebraicWf rtCombRho rtCombR rtCombB rtCombLogResidual CCommRing.one [1] 1
 
 /-- **★★ Round-trip (COMBINED): `F = v + c·log u`, BOTH parts nonzero** (Trager, Appendix A + Ch. 5,
 `native_decide`): THE FULL-INTEGRATOR PROOF. On `y² = x²+1`, start from `F = v + 1·log u` (`v` the

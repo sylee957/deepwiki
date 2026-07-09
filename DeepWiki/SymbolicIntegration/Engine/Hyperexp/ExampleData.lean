@@ -12,12 +12,12 @@ namespace DeepWiki.SymbolicIntegration
 abbrev NLvl1 : Type := CFrac ℚ
 
 /-- The base variable `x ∈ NLvl1 = ℚ(x)`, represented as the fraction `x/1`. -/
-def nLvl1X : NLvl1 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩
+def nLvl1X : NLvl1 := ⟨([CCommRing.zero, CCommRing.one], [CCommRing.one]), by native_decide⟩
 
 /-- The base value `x² ∈ NLvl1 = ℚ(x)`, represented as `x * x`. -/
-def nLvl1XSq : NLvl1 := CField.mul nLvl1X nLvl1X
+def nLvl1XSq : NLvl1 := CCommRing.mul nLvl1X nLvl1X
 
 /-- The base value `2x ∈ NLvl1 = ℚ(x)`. -/
-def nLvl1TwoX : NLvl1 := CField.mul (CField.add CField.one CField.one) nLvl1X
+def nLvl1TwoX : NLvl1 := CCommRing.mul (CCommRing.add CCommRing.one CCommRing.one) nLvl1X
 
 end DeepWiki.SymbolicIntegration

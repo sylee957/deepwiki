@@ -119,7 +119,7 @@ theorem ex_6_1_2 :
      let exB : DensePoly (CFrac ℚ) := [qConst6 (-1), qConst6 1, qConst6 (-1), qConst6 1]  -- `(t−1)(t²+1)`
      let exC : DensePoly (CFrac ℚ) := [qConst6 1]                                 -- `c = 1`
      let exH : DensePoly (CFrac ℚ) := [qConst6 0, qConst6 1]                       -- `h = t`
-     DensePoly.cisZero (DensePoly.csub (DensePoly.cWeakNormalizer Dt fnum fden) [CField.one])
+     DensePoly.cisZero (DensePoly.csub (DensePoly.cWeakNormalizer Dt fnum fden) [CCommRing.one])
      ∧ (match DensePoly.cRdeNormalDenominator Dt fnum fden gnum gden with
         | some (a, b, c, h) =>
             DensePoly.cisZero (DensePoly.csub a exA)
@@ -151,7 +151,7 @@ theorem ex_6_2_2 :
          DensePoly.cisZero (DensePoly.csub abar exA)
            && DensePoly.cisZero (DensePoly.csub bbar exB)
            && DensePoly.cisZero (DensePoly.csub cbar exC)
-           && DensePoly.cisZero (DensePoly.csub h [CField.one])) = true := by native_decide
+           && DensePoly.cisZero (DensePoly.csub h [CCommRing.one])) = true := by native_decide
 
 /-! ## §6.3 Degree Bounds — computable + validated -/
 
@@ -212,7 +212,7 @@ theorem ex_6_5_1 :
      let fden : DensePoly (CFrac ℚ) := [qConst6 1]
      -- `g = t³ + (x+1)t² + t + (x+2)` (low→high in `t`)
      let gnum : DensePoly (CFrac ℚ) :=
-       [CField.add qX6 (qConst6 2), qConst6 1, CField.add qX6 (qConst6 1), qConst6 1]
+       [CCommRing.add qX6 (qConst6 2), qConst6 1, CCommRing.add qX6 (qConst6 1), qConst6 1]
      match DensePoly.cRischDE Dt fnum fden gnum fden with
      | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum fden ynum yden
      | none => false) = true := by native_decide
@@ -308,7 +308,7 @@ theorem ex_6_6_baseRecursion :
        | some (ynum, yden) => rdeClearedCheckG6 Dt fnum fden gnum gden ynum yden
        | none => false)
      && (match CRischField.crischDESolve (qFrac6 [1] [0, 1]) (qConst6 2) with
-         | some s => CField.isZero (CField.sub s qX6)                            -- `s = x`
+         | some s => CCommRing.isZero (CField.sub s qX6)                            -- `s = x`
          | none => false)) = true := by native_decide
 
 /-- **Example (§6.6 eq. 6.23)**, standalone rational base solve: the generic tower base solve
@@ -317,7 +317,7 @@ pipeline at the base level over ℚ[x] (`instCRischFieldCFrac`, bottoming at `CR
 `s = x` directly over `CFrac ℚ` (`native_decide`). -/
 theorem ex_6_6_rationalRDE :
     (match CRischField.crischDESolve (qFrac6 [1] [0, 1]) (qConst6 2) with
-      | some s => CField.isZero (CField.sub s qX6)
+      | some s => CCommRing.isZero (CField.sub s qX6)
       | none => false) = true := by native_decide
 
 end DeepWiki.Si

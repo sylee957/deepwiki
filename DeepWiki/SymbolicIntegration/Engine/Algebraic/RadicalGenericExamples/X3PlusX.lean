@@ -62,24 +62,24 @@ def radX3pXGen : RadX3pX := RadExt.gen
 def radX3pXLogDer : CFrac ℚ := logDerRadicand 2 radicandX3pX
 
 /-- The `RadX3pX[t]`-polynomial `t² = [0,0,1]`. -/
-def radX3pXT2sq : DensePoly RadX3pX := [CField.zero, CField.zero, CField.one]
+def radX3pXT2sq : DensePoly RadX3pX := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The `RadX3pX[t]`-polynomial `2·t² = [0,0,2]`, the expected `D(t²)` for `t = eˣ`. -/
-def radX3pXTwoT2sq : DensePoly RadX3pX := [CField.zero, CField.zero, CField.add CField.one CField.one]
+def radX3pXTwoT2sq : DensePoly RadX3pX := [CCommRing.zero, CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX3pX` (`t = eˣ`). -/
-def radX3pXDtExp : DensePoly RadX3pX := [CField.zero, CField.one]
+def radX3pXDtExp : DensePoly RadX3pX := [CCommRing.zero, CCommRing.one]
 
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed-tower `d/dt` computation over `√(x³+x)`. -/
 theorem radX3pX_monomialDeriv_t2sq :
     cisZero (csub (cmonomialDeriv radX3pXDtExp radX3pXT2sq) radX3pXTwoT2sq) = true := by native_decide
 
 /-- The `RadX3pX[t]`-polynomial `y·t = [0, y]` (`y = √(x³+x)`, `t = eˣ`). -/
-def radX3pXGenT : DensePoly RadX3pX := [CField.zero, radX3pXGen]
+def radX3pXGenT : DensePoly RadX3pX := [CCommRing.zero, radX3pXGen]
 
 /-- The `RadX3pX[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`. -/
 def radX3pXGenTDeriv : DensePoly RadX3pX :=
-  [CField.zero, CField.mul (⟨[CField.zero, CField.add radX3pXLogDer CField.one]⟩ : RadX3pX) CField.one]
+  [CCommRing.zero, CCommRing.mul (⟨[CCommRing.zero, CCommRing.add radX3pXLogDer CCommRing.one]⟩ : RadX3pX) CCommRing.one]
 
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³+x)][eˣ]`: the mixed derivation over `√(x³+x)`
 (`ℓ = (3x²+1)/(2(x³+x))`). -/

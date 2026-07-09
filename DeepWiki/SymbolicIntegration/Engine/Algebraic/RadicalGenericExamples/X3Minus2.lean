@@ -69,13 +69,13 @@ def radX3m2Gen : RadX3m2 := RadExt.gen
 def radX3m2LogDer : CFrac ℚ := logDerRadicand 2 radicandX3m2
 
 /-- The `RadX3m2[t]`-polynomial `t² = [0,0,1]` (transcendental square over `√(x³−2)`). -/
-def radX3m2T2sq : DensePoly RadX3m2 := [CField.zero, CField.zero, CField.one]
+def radX3m2T2sq : DensePoly RadX3m2 := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The `RadX3m2[t]`-polynomial `2·t² = [0,0,2]`, the expected `D(t²)` for `t = eˣ`. -/
-def radX3m2TwoT2sq : DensePoly RadX3m2 := [CField.zero, CField.zero, CField.add CField.one CField.one]
+def radX3m2TwoT2sq : DensePoly RadX3m2 := [CCommRing.zero, CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX3m2` (`t = eˣ`). -/
-def radX3m2DtExp : DensePoly RadX3m2 := [CField.zero, CField.one]
+def radX3m2DtExp : DensePoly RadX3m2 := [CCommRing.zero, CCommRing.one]
 
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x³−2)][eˣ]`: `cmonomialDeriv` (`t = eˣ`, `Dt = t`, coefficient derivation
 `radDeriv 2 (x³−2)`) gives `2t·t = 2t²`. -/
@@ -84,12 +84,12 @@ theorem radX3m2_monomialDeriv_t2sq :
   native_decide
 
 /-- The `RadX3m2[t]`-polynomial `y·t = [0, y]` (`y = √(x³−2)`, `t = eˣ`). -/
-def radX3m2GenT : DensePoly RadX3m2 := [CField.zero, radX3m2Gen]
+def radX3m2GenT : DensePoly RadX3m2 := [CCommRing.zero, radX3m2Gen]
 
 /-- The `RadX3m2[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`
 (`ℓ = f'/(2f)`). -/
 def radX3m2GenTDeriv : DensePoly RadX3m2 :=
-  [CField.zero, CField.mul (⟨[CField.zero, CField.add radX3m2LogDer CField.one]⟩ : RadX3m2) CField.one]
+  [CCommRing.zero, CCommRing.mul (⟨[CCommRing.zero, CCommRing.add radX3m2LogDer CCommRing.one]⟩ : RadX3m2) CCommRing.one]
 
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x³−2)][eˣ]`: both `D(y) = ℓ·y` (`ℓ = 3x²/(2(x³−2))`) and `D(t) = t`
 fire. -/

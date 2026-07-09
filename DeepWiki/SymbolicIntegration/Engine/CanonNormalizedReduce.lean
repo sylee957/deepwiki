@@ -21,7 +21,7 @@ def cisCanonNormalizedCore (a : CFrac β) : Bool :=
 /-- The fuel-free wrapper canonical-normality check on the reduced denominator. -/
 def cisCanonNormalized (ftilde : CFrac β) : Bool :=
   DensePoly.cisZero (DensePoly.csub
-    (DensePoly.cSplitFactorFast ([CField.one] : DensePoly β)
+    (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β)
       (CFrac.reduceDen ftilde)).1
     (CFrac.reduceDen ftilde))
 
@@ -49,7 +49,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 
 /-- The fuel-free weak-normalization guarantee for a rational function denominator. -/
 def IsWeaklyNormalizedNormWf (h : CFrac β) : Prop :=
-  toPoly (DensePoly.cSplitFactorFast ([CField.one] : DensePoly β) h.1.2).1
+  toPoly (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) h.1.2).1
     = toPoly h.1.2
 
 /-- The fuel-free canonicalized weak-normalization guarantee. -/
@@ -76,19 +76,19 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreW
 core check on the reduced input equals the wrapper check on the pre-reduce input. -/
 theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : CFrac β) :
     cisCanonNormalizedCore (qReduce (weakNormalizedF f
-        (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2))))
+        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
       = cisCanonNormalized (weakNormalizedF f
-        (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2))) :=
+        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreG_qReduce
     (weakNormalizedF f
-      (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2)))
+      (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
 
 /-- The core check on the reduced weak-normalized input passes iff `IsCanonNormalizedWf` holds. -/
 theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f : CFrac β) :
     cisCanonNormalizedCore (qReduce (weakNormalizedF f
-        (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2)))) = true
+        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))) = true
       ↔ IsCanonNormalizedWf f
-        (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2)) := by
+        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)) := by
   rw [cisCanonNormalizedCoreG_qReduce_weakNormalized]
   exact cisCanonNormalizedG_iff f _
 
@@ -97,9 +97,9 @@ theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f 
 -- The same re-pin reconciliation stated entirely on the Wf gate.
 example (f : CFrac β) :
     cisCanonNormalizedCore (qReduce (weakNormalizedF f
-        (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2))))
+        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))))
       = cisCanonNormalized (weakNormalizedF f
-        (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2))) :=
+        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))) :=
   cisCanonNormalizedCoreG_qReduce_weakNormalized f
 
 end Repin
@@ -126,6 +126,6 @@ def witnessNegX : CFrac ℚ := ⟨([(0 : ℚ), -1], [1]), by native_decide⟩
 
 /-- The witness `f = 1/(t₁ − x) ∈ Lvl2 = ℚ(x)(t₁)`: a `D`-constant special pole with no
 positive-integer residue. -/
-def witnessF : Lvl2 := ⟨([CField.one], [witnessNegX, CField.one]), by native_decide⟩
+def witnessF : Lvl2 := ⟨([CCommRing.one], [witnessNegX, CCommRing.one]), by native_decide⟩
 
 end DeepWiki.SymbolicIntegration

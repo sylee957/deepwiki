@@ -117,7 +117,7 @@ theorem toPoly_cadd (p q : DensePoly ℚ) : toPoly (cadd p q) = toPoly p + toPol
     cases q with
     | nil => simp [cadd, DensePoly.cadd]
     | cons b bs =>
-      show toPoly (CField.add a b :: cadd as bs) = _
+      show toPoly (CCommRing.add a b :: cadd as bs) = _
       rw [toPoly_cons, ih bs, toPoly_cons, toPoly_cons]
       show C (a + b) + _ = _
       rw [map_add]; ring

@@ -69,7 +69,7 @@ def cIntegrateGeneralCurveDecide (fuel : ℕ) (f : DensePoly (CFrac ℚ)) (basis
       some ⟨v, []⟩
     else
       match afLogArgSolveWf f basis degBound logIntegrand with
-      | some u => some ⟨v, [(CField.one, u)]⟩
+      | some u => some ⟨v, [(CCommRing.one, u)]⟩
       | none =>
         match genCurveTorsionLogTerm fuel f basis tin with
         | some term => some ⟨v, [term]⟩
@@ -127,8 +127,8 @@ structure GeneralCurveDecideSoundnessResidual : Prop where
   hprincipal : ∀ v u, afRationalSolveWf f basis degBound ratIntegrand = some v →
     afLogArgSolveWf f basis degBound logIntegrand = some u →
     DensePoly.IsGeneralAlgebraicIntegralWf f integrand
-      (GeneralCurveIntegralResult.mk v [(CField.one, u)]).ratPart commonDenomQ
-      (GeneralCurveIntegralResult.mk v [(CField.one, u)]).logTerms cofs
+      (GeneralCurveIntegralResult.mk v [(CCommRing.one, u)]).ratPart commonDenomQ
+      (GeneralCurveIntegralResult.mk v [(CCommRing.one, u)]).logTerms cofs
   /-- Torsion branch: `D(⟨v, [term]⟩) = integrand`. -/
   htorsion : ∀ v term, afRationalSolveWf f basis degBound ratIntegrand = some v →
     genCurveTorsionLogTerm fuel f basis tin = some term →
@@ -295,7 +295,7 @@ def genCurveWitnessTorsionInputs : GeneralCurveTorsionInputs :=
 `logIntegrand = 1`, fuel `8`; expected `some ⟨v, [(1/1, y)]⟩`. -/
 def genCurveWitnessTorsion : Option GeneralCurveIntegralResult :=
   cIntegrateGeneralCurveDecide 8 gcuspCubicF gcuspCubicBasis 2
-    ([] : DensePoly (CFrac ℚ)) ([CField.one] : DensePoly (CFrac ℚ)) genCurveWitnessTorsionInputs true
+    ([] : DensePoly (CFrac ℚ)) ([CCommRing.one] : DensePoly (CFrac ℚ)) genCurveWitnessTorsionInputs true
 
 /-- The decision returns `some` with one `(1/1)·log` term on `y³ = x²`: `(isSome, logTerms.length,
 coefficient = 1/1) = (true, some 1, some true)`. -/
@@ -303,7 +303,7 @@ theorem genCurveWitnessTorsion_some :
     (genCurveWitnessTorsion.isSome,
      (genCurveWitnessTorsion.map fun F => F.logTerms.length),
      (genCurveWitnessTorsion.bind fun F =>
-        F.logTerms.head?.map fun t => CField.isZero (CField.sub t.1 (genOneOverM 1))))
+        F.logTerms.head?.map fun t => CCommRing.isZero (CField.sub t.1 (genOneOverM 1))))
       = (true, some 1, some true) := by native_decide
 
 /-! ### Witness B — the order-3 divisor on `y² = x³ + 1`, search starved to fuel 2 -/
@@ -317,7 +317,7 @@ def genCurveWitnessNonTorsionInputs : GeneralCurveTorsionInputs :=
 0`, `logIntegrand = 1`; expected `none`. -/
 def genCurveWitnessNonTorsion : Option GeneralCurveIntegralResult :=
   cIntegrateGeneralCurveDecide 2 hcubeF hcubeBasis 2
-    ([] : DensePoly (CFrac ℚ)) ([CField.one] : DensePoly (CFrac ℚ)) genCurveWitnessNonTorsionInputs true
+    ([] : DensePoly (CFrac ℚ)) ([CCommRing.one] : DensePoly (CFrac ℚ)) genCurveWitnessNonTorsionInputs true
 
 /-- The decision returns `none` on the order-3 divisor with fuel `2 < 3`: `genCurveWitnessNonTorsion =
 none`. -/
@@ -331,7 +331,7 @@ theorem self_determining_general_curve_decision_validates :
     (genCurveWitnessTorsion.isSome,
      (genCurveWitnessTorsion.map fun F => F.logTerms.length),
      (genCurveWitnessTorsion.bind fun F =>
-        F.logTerms.head?.map fun t => CField.isZero (CField.sub t.1 (genOneOverM 1))))
+        F.logTerms.head?.map fun t => CCommRing.isZero (CField.sub t.1 (genOneOverM 1))))
       = (true, some 1, some true)
     ∧ genCurveWitnessNonTorsion = none := by native_decide
 

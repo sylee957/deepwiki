@@ -11,7 +11,7 @@ open DensePoly
 
 /-- The cuspidal cubic `f = y³ - x² ∈ ℚ(x)[y]`. -/
 def gcuspCubicF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, -1], CField.zero, CField.zero, CField.one]
+  [qxOfNum [0, 0, -1], CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(y³ - x²)`. -/
 def gcuspCubicY : DensePoly (CFrac ℚ) := afBasisElem 1

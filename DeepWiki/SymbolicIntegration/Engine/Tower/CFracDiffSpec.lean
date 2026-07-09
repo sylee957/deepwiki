@@ -15,15 +15,15 @@ open DensePoly CFrac
 
 /-- The base derivation `implicitDeriv (toPoly 1)` whose fraction-field extension realizes `towerDerivCFrac [1]`. -/
 noncomputable def baseDerivQ : Derivation ℤ (CFieldSpec.K ℚ)[X] (CFieldSpec.K ℚ)[X] :=
-  Differential.implicitDeriv (DensePoly.toPoly ([CField.one] : DensePoly ℚ))
+  Differential.implicitDeriv (DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ))
 
 /-- `CDiffFieldSpec (CFrac ℚ)` using `fractionFieldDifferential baseDerivQ` and `toCFracG_towerDerivCFracG [1]`. -/
 noncomputable instance instCDiffFieldSpecCFrac : CDiffFieldSpec (CFrac ℚ) where
   diffK := fractionFieldDifferential baseDerivQ
   toK_cderiv a := by
-    show toCFrac (towerDerivCFrac [CField.one] a)
+    show toCFrac (towerDerivCFrac [CCommRing.one] a)
       = @Differential.deriv _ _ (fractionFieldDifferential baseDerivQ) (toCFrac a)
-    rw [toCFracG_towerDerivCFracG [CField.one] a]
+    rw [toCFracG_towerDerivCFracG [CCommRing.one] a]
     rfl
 
 

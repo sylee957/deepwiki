@@ -164,11 +164,11 @@ def appA_sqrtxRun : DensePoly ℚ × DensePoly ℚ :=
 
 /-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_sqrtxVlift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum appA_sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
+  [CCommRing.zero, CField.div (qxOfNum appA_sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
 
 /-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_sqrtxRatLift : RadElem (CFrac ℚ) :=
-  [CField.zero,
+  [CCommRing.zero,
     CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmul sqrtxV3 sqrtxF)))
       (CField.div (qxOfNum appA_sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
 
@@ -187,11 +187,11 @@ def appA_cubeRun : DensePoly ℚ × DensePoly ℚ :=
 
 /-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_cubeVlift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum appA_cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
+  [CCommRing.zero, CField.div (qxOfNum appA_cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
 
 /-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_cubeRatLift : RadElem (CFrac ℚ) :=
-  [CField.zero,
+  [CCommRing.zero,
     CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmul (cpow cubeV 3) cubeF)))
       (CField.div (qxOfNum appA_cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
 
@@ -234,18 +234,18 @@ def appA_mcW : DensePoly ℚ × ℕ × DensePoly ℚ × DensePoly ℚ × DensePo
 /-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (CFrac ℚ)`. -/
 def appA_mcVlift : RadElem (CFrac ℚ) :=
   radAdd
-    [CField.zero, CField.div (qxOfNum appA_mcV.2.2.2.1)
+    [CCommRing.zero, CField.div (qxOfNum appA_mcV.2.2.2.1)
       (qxOfNum (cmul (cpow appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
-    [CField.zero, CField.div (qxOfNum appA_mcW.2.2.2.1)
+    [CCommRing.zero, CField.div (qxOfNum appA_mcW.2.2.2.1)
       (qxOfNum (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho))]
 
 /-- The integrand's total rational part after subtracting the two `k = 1` leftovers. -/
 def appA_mcRatLift : RadElem (CFrac ℚ) :=
   radAdd
-    [CField.zero, CField.sub
+    [CCommRing.zero, CField.sub
       (CField.div (qxOfNum appA_mcV.2.2.1) (qxOfNum (cmul (cpow appA_mcV.1 appA_mcV.2.1) mcRho)))
       (CField.div (qxOfNum appA_mcV.2.2.2.2) (qxOfNum (cmul appA_mcV.1 mcRho)))]
-    [CField.zero, CField.sub
+    [CCommRing.zero, CField.sub
       (CField.div (qxOfNum appA_mcW.2.2.1) (qxOfNum (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho)))
       (CField.div (qxOfNum appA_mcW.2.2.2.2) (qxOfNum (cmul appA_mcW.1 mcRho)))]
 

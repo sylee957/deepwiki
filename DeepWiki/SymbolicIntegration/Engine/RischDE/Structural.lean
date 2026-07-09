@@ -429,11 +429,11 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : DensePoly α)
     (hidentity : Differential.implicitDeriv (toPoly Dt) (toPoly v) + toPoly bbar * toPoly v
       = toPoly cbar) :
     toPoly gden * toPoly fden
-        * (Differential.implicitDeriv (toPoly Dt) (toPoly (cmul (cadd (cmul α' v) β) [CField.one]))
+        * (Differential.implicitDeriv (toPoly Dt) (toPoly (cmul (cadd (cmul α' v) β) [CCommRing.one]))
               * toPoly h0
-            - toPoly (cmul (cadd (cmul α' v) β) [CField.one])
+            - toPoly (cmul (cadd (cmul α' v) β) [CCommRing.one])
               * Differential.implicitDeriv (toPoly Dt) (toPoly h0))
-        + toPoly gden * toPoly fnum * toPoly (cmul (cadd (cmul α' v) β) [CField.one]) * toPoly h0
+        + toPoly gden * toPoly fnum * toPoly (cmul (cadd (cmul α' v) β) [CCommRing.one]) * toPoly h0
       = toPoly gnum * toPoly fden * toPoly h0 ^ 2 := by
   set Q := cadd (cmul α' v) β with hQ
   have hspecial := cRdeSpecialDenominatorG_primitive_eq Dt a0 b0 c0 hprim
@@ -443,9 +443,9 @@ theorem rdeClearedIdentityWf_of_polyRDEIdentity (Dt : DensePoly α)
       = toPoly c0 :=
     cSPDEG_cleared_lifting_of_inputs Dt a0 b0 c0
       (cRdeBoundDegree Dt a0 b0 c0 : ℤ) bbar cbar m α' β hspde hin v hidentity
-  have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
+  have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
-  have hynum : toPoly (cmul Q [CField.one]) = toPoly Q := by
+  have hynum : toPoly (cmul Q [CCommRing.one]) = toPoly Q := by
     simp only [denote, hone, mul_one]
   have hlift := cRdeNormalDenominatorG_cleared_lift Dt fnum fden gnum gden a0 b0 c0 h0 Q
     hnorm hdn hfden0 hgden0 hdvdB hdvdC hred
@@ -517,7 +517,7 @@ theorem rdeClearedWf_of_success_and_residual (Dt : DensePoly α)
   have hcap := rdeClearedIdentityWf_of_polyRDEIdentity Dt fnum fden gnum gden a0 b0 c0 h0
     bbar cbar m α' β v hres'.hprim hnorm hres'.hdn hres'.hfden0 hres'.hgden0 hres'.hdvdB
     hres'.hdvdC hspde hres'.hin hidentity
-  have hh1 : (cRdeSpecialDenominator Dt a0 b0 c0).2.2.2 = ([CField.one] : DensePoly α) := by
+  have hh1 : (cRdeSpecialDenominator Dt a0 b0 c0).2.2.2 = ([CCommRing.one] : DensePoly α) := by
     rw [cRdeSpecialDenominatorG_primitive_eq Dt a0 b0 c0 hres'.hprim]
   rw [hh1] at hynum
   rw [hynum, hyden]

@@ -166,17 +166,17 @@ theorem field_identity_of_checkIdentityG (Dt : DensePoly α) (res : IntegralResu
       let Dv := cmonomialDeriv Dt v
       let termNum := cscale c Dv
       (cadd (cmul acc.1 v) (cmul termNum acc.2), cmul acc.2 v))
-    ([CField.zero], [CField.one]) with hfolded
+    ([CCommRing.zero], [CCommRing.one]) with hfolded
   -- the fold computes `logResidueSum` over the field, with nonzero `Lden`
-  have hseedden : toPoly ([CField.one] : DensePoly α) ≠ 0 := by
+  have hseedden : toPoly ([CCommRing.one] : DensePoly α) ≠ 0 := by
     simp only [denote, mul_zero, add_zero]
     exact one_ne_zero
-  obtain ⟨hLden_ne, hLfield⟩ := checkIdentityG_fold_eq Dt res.logs [CField.zero] [CField.one]
+  obtain ⟨hLden_ne, hLfield⟩ := checkIdentityG_fold_eq Dt res.logs [CCommRing.zero] [CCommRing.one]
     hseedden hlogs
   rw [← hfolded] at hLden_ne hLfield
   -- the seed fraction `0/1 = 0`
-  have hseed0 : am α (toPoly ([CField.zero] : DensePoly α))
-      / am α (toPoly ([CField.one] : DensePoly α)) = 0 := by
+  have hseed0 : am α (toPoly ([CCommRing.zero] : DensePoly α))
+      / am α (toPoly ([CCommRing.one] : DensePoly α)) = 0 := by
     simp only [denote, map_zero, mul_zero, add_zero, zero_div]
   rw [hseed0, zero_add] at hLfield
   -- abbreviations over the field

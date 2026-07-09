@@ -22,7 +22,7 @@ variable {α : Type*} [CField α]
 /-- Case-2 cofactor (`n = 2`) `radCase2CofactorC k W h C = B`: the degree-`< deg W` polynomial solving
 `B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantine ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderiv W`. -/
 def radCase2CofactorC (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CField.one (cnatCast 2)]              -- ½
+  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- ½
   let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- (½ − k)·W'·h
   (cdiophantine coef W C).1
 
@@ -30,7 +30,7 @@ def radCase2CofactorC (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderiv B`, `h'` is `cderiv h`, division by `W` is
 `cdivWf`. -/
 def radCase2ResidualC (k : ℕ) (W h C B : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CField.one (cnatCast 2)]              -- ½
+  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- ½
   let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- (½ − k)·W'·h
   let topNum := csub (cmul B coef) C                                      -- B·(½−k)W'h − C
   let quotient := cdivWf topNum W                                           -- /W
@@ -76,7 +76,7 @@ theorem case2c_residual_eq :
 theorem case2c_congruence :
     cisZero (cmodWf
       (csub (cmul case2cB
-        (cmul (csub [CField.div CField.one (cnatCast 2)] [cnatCast 2])
+        (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
           (cmul (cderiv case2cW) case2cH))) case2cC)
       case2cW) = true := by native_decide
 
@@ -85,11 +85,11 @@ theorem case2c_cleared_identity :
     cisZero (csub
       (cadd
         (csub (cmul case2cB
-          (cmul (csub [CField.div CField.one (cnatCast 2)] [cnatCast 2])
+          (cmul (csub [CField.div CCommRing.one (cnatCast 2)] [cnatCast 2])
             (cmul (cderiv case2cW) case2cH))) case2cC)
         (cmul case2cW
           (cadd (cmul (cderiv case2cB) case2cH)
-            (cmul [CField.div CField.one (cnatCast 2)] (cmul case2cB (cderiv case2cH))))))
+            (cmul [CField.div CCommRing.one (cnatCast 2)] (cmul case2cB (cderiv case2cH))))))
       (cmul case2cW case2cD)) = true := by native_decide
 
 /-! #### The end-to-end `radDeriv` validation
@@ -105,15 +105,15 @@ def case2cWk : DensePoly ℚ := cpow case2cW 2
 
 /-- The rational part `v = Bf/(Wᵏy)` lifted to the pure-`y` element `[0, (Bf/Wᵏ)/f] ∈ RadElem (CFrac ℚ)`. -/
 def case2cVlift : RadElem (CFrac ℚ) :=
-  [CField.zero,
+  [CCommRing.zero,
     CField.div (qxOfNum (cmul case2cB case2cF))
       (qxOfNum (cmul case2cWk case2cF))]
 
 /-- The integrand rational part `C/(Wᵏy) + D/(W^{k−1}y)` lifted to the pure-`y` element
 `[0, (C/Wᵏ)/f + (D/W^{k−1})/f] ∈ RadElem (CFrac ℚ)` (what `radDeriv(v)` equals). -/
 def case2cRatLift : RadElem (CFrac ℚ) :=
-  [CField.zero,
-    CField.add
+  [CCommRing.zero,
+    CCommRing.add
       (CField.div (qxOfNum case2cC) (qxOfNum (cmul case2cWk case2cF)))
       (CField.div (qxOfNum case2cD) (qxOfNum (cmul case2cW case2cF)))]
 

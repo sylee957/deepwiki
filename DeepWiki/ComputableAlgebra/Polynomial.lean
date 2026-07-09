@@ -30,7 +30,7 @@ namespace DensePoly
 /-- Pad a `DensePoly` on the high-degree end with zeros up to length `n`; no-op if length is already
 at least `n`. -/
 def cpad {α : Type*} [CField α] (n : ℕ) (p : DensePoly α) : DensePoly α :=
-  (p : List α) ++ List.replicate (n - (p : List α).length) CField.zero
+  (p : List α) ++ List.replicate (n - (p : List α).length) CCommRing.zero
 
 /-- Reverse coefficients after zero-padding to degree bound `k`: `creverseDeg k p` represents
 `X^k * p(X⁻¹)` when `k` bounds the degree of `p`. -/
@@ -39,16 +39,16 @@ def creverseDeg {α : Type*} [CField α] (k : ℕ) (p : DensePoly α) : DensePol
 
 /-- Monomial `c * X^n` as a `DensePoly`: `n` low-degree zeros followed by coefficient `c`. -/
 def cMonomial {α : Type*} [CField α] (c : α) (n : ℕ) : DensePoly α :=
-  (List.replicate n CField.zero ++ [c] : List α)
+  (List.replicate n CCommRing.zero ++ [c] : List α)
 
 /-- Generic power of a field element: `cfpow c n = cⁿ` over `[CField α]` by `ℕ`-recursion. -/
 def cfpow {α : Type*} [CField α] (c : α) : ℕ → α
-  | 0 => CField.one
-  | n + 1 => CField.mul c (cfpow c n)
+  | 0 => CCommRing.one
+  | n + 1 => CCommRing.mul c (cfpow c n)
 
 /-- Horner evaluation `ceval p c = p(c)` for a dense coefficient list, low degree first. -/
 def ceval {α : Type*} [CField α] (p : DensePoly α) (c : α) : α :=
-  (p : List α).foldr (fun coeff acc => CField.add coeff (CField.mul c acc)) CField.zero
+  (p : List α).foldr (fun coeff acc => CCommRing.add coeff (CCommRing.mul c acc)) CCommRing.zero
 
 /-- `toK (cfpow c n) = (toK c) ^ n`: generic constant power realizes the `K`-power. -/
 @[denote] theorem toK_cfpow {α : Type*} [CField α] [CFieldSpec α] (c : α) (n : ℕ) :
@@ -61,7 +61,7 @@ def ceval {α : Type*} [CField α] (p : DensePoly α) (c : α) : α :=
 `toK init · ∏ (toK zk − toK zⱼ)`. -/
 @[denote] theorem toK_foldl_csub_mul {α : Type*} [CField α] [CFieldSpec α]
     (zk : α) (others : List α) (init : α) :
-    CFieldSpec.toK (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) init)
+    CFieldSpec.toK (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) init)
       = CFieldSpec.toK init
         * (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod := by
   induction others generalizing init with
@@ -179,14 +179,14 @@ noncomputable def toPoly {α : Type*} [CCommRing α] [CRingSpec α] : DensePoly 
 @[simp, denote] theorem toPolyG_cons {α : Type*} [CCommRing α] [CRingSpec α] (a : α) (p : DensePoly α) :
     toPoly (a :: p) = Polynomial.C (CRingSpec.toR a) + X * toPoly p := rfl
 
-/-- `toPoly [CField.one] = 1`: the singleton coefficient list `[1]` reads as the polynomial `1`. -/
+/-- `toPoly [CCommRing.one] = 1`: the singleton coefficient list `[1]` reads as the polynomial `1`. -/
 @[denote] theorem toPolyG_one_singleton {α : Type*} [CCommRing α] [CRingSpec α] :
     toPoly ([CCommRing.one] : DensePoly α) = 1 := by
   rw [toPolyG_cons, toPolyG_nil, mul_zero, add_zero, CRingSpec.toR_one, map_one]
 
-/-- `toPoly [CField.one] ≠ 0`: the singleton coefficient list `[1]` reads nontrivially. -/
+/-- `toPoly [CCommRing.one] ≠ 0`: the singleton coefficient list `[1]` reads nontrivially. -/
 theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
-    toPoly ([CField.one] : DensePoly α) ≠ 0 := by
+    toPoly ([CCommRing.one] : DensePoly α) ≠ 0 := by
   simp only [denote, map_one, mul_zero, add_zero]
   exact (one_ne_zero : (1 : Polynomial (CFieldSpec.K α)) ≠ 0)
 
@@ -267,10 +267,10 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
 
 /-! ### Generic formal derivative `cderiv` over a `CField` -/
 
-/-- Generic `ℕ`-scaling `cnsmul k a = a + a + … + a` (`k` times), built from `CField.add`. -/
+/-- Generic `ℕ`-scaling `cnsmul k a = a + a + … + a` (`k` times), built from `CCommRing.add`. -/
 def cnsmul {α : Type*} [CField α] : ℕ → α → α
-  | 0, _ => CField.zero
-  | k + 1, a => CField.add a (cnsmul k a)
+  | 0, _ => CCommRing.zero
+  | k + 1, a => CCommRing.add a (cnsmul k a)
 
 /-- `toK (cnsmul k a) = k • toK a` in `K`. -/
 @[denote] theorem toK_nsmulG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (a : α) :
@@ -483,7 +483,7 @@ same readings phrased with `CFieldSpec.toK` for the field-only call sites. -/
 
 /-- Field-path alias: `toK` reads a normalized coefficient as the corresponding `toPoly` coefficient. -/
 theorem toK_cnormG_getD {α : Type*} [CField α] [CFieldSpec α] (p : DensePoly α) (k : ℕ) :
-    CFieldSpec.toK ((cnorm p : List α).getD k CField.zero) = (toPoly p).coeff k :=
+    CFieldSpec.toK ((cnorm p : List α).getD k CCommRing.zero) = (toPoly p).coeff k :=
   toR_cnormG_getD p k
 
 /-- Field-path alias: `toK (clead p) = (toPoly p).coeff (cdeg p)`. -/

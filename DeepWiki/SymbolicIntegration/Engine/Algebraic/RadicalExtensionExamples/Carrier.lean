@@ -25,7 +25,7 @@ theorem radGen_sq_eq_radicand :
 `ℓ = f'/(2f) = 3x²/(2(x³+1))`. -/
 theorem radDeriv_radGen_eq :
     radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (CFrac ℚ)))
-        [CField.zero, radicandLogDer]) = true := by native_decide
+        [CCommRing.zero, radicandLogDer]) = true := by native_decide
 
 /-- `D(1) = 0` over `ℚ(x)`: the radical derivation annihilates the constant `1`. -/
 theorem radDeriv_radOne_eq_zero :
@@ -39,8 +39,8 @@ theorem radMul_radOne_eq :
 /-- Ring sanity `(1+y)·(1+y) = 1 + 2y + f` over `ℚ(x)`: `1 + 2y + y²` folds `y² → f = x³+1`. -/
 theorem radMul_onePlusGen_sq :
     radIsZero (radSub
-        (radMul 2 radicandX3p1 [CField.one, CField.one] [(CField.one : CFrac ℚ), CField.one])
-        [CField.add CField.one radicandX3p1, CField.add CField.one CField.one]) = true := by
+        (radMul 2 radicandX3p1 [CCommRing.one, CCommRing.one] [(CCommRing.one : CFrac ℚ), CCommRing.one])
+        [CCommRing.add CCommRing.one radicandX3p1, CCommRing.add CCommRing.one CCommRing.one]) = true := by
   native_decide
 
 /-! #### `Tᵢ` decoupling validates over `√(x³+1)`

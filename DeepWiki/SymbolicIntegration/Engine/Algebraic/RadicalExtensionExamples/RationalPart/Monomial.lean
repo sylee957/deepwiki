@@ -27,14 +27,14 @@ def logDt : CFrac ℚ := qxOfFrac [1] [0, 1] (by decide)
 def clogLead : CFrac ℚ := qxOfFrac [1] [0, 2] (by decide)
 
 /-- The radicand `f = θ = log x ∈ ℚ(x)[θ]` (`y² = log x`), the `θ`-polynomial `[0, 1]`. -/
-def logF : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def logF : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- `g = 1/(2x)` as a degree-`0`-in-θ element of `ℚ(x)[θ]` (`(f/y)' = g/y`), `[1/(2x)]`. -/
 def clog : DensePoly (CFrac ℚ) := [clogLead]
 
 /-- The numerator `C = (5/(2x))θ² + θ ∈ ℚ(x)[θ]` (`deg_θ C = 2 ≥ m`), with leading coefficient
 `5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
-def logC : DensePoly (CFrac ℚ) := [CField.zero, CField.one, qxOfFrac [5] [0, 2] (by decide)]
+def logC : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one, qxOfFrac [5] [0, 2] (by decide)]
 
 /-- The `θ`-derivative as a polynomial `[θ'] = [1/x] ∈ ℚ(x)[θ]`, the `Dt` for `cmonomialDeriv`. -/
 def logDtPoly : DensePoly (CFrac ℚ) := [logDt]
@@ -51,7 +51,7 @@ def logD : DensePoly (CFrac ℚ) :=
 /-- The `log` cofactor is the constant monomial `B = θ²`: `b = (5/(2x))/((2)(1/x) + 1/(2x)) = 1` at
 degree `j+1 = 2`. -/
 theorem logCase_cofactor_eq :
-    cisZero (csub logB [CField.zero, CField.zero, (CField.one : CFrac ℚ)]) = true := by
+    cisZero (csub logB [CCommRing.zero, CCommRing.zero, (CCommRing.one : CFrac ℚ)]) = true := by
   native_decide
 
 /-- The `θ = log v` cleared identity `B'f + Bg − C = D` in `ℚ(x)[log x]` (`B = θ²`, `B' = cmonomialDeriv
@@ -63,7 +63,7 @@ theorem logCase_cleared_identity :
 
 /-- The `log` residual `D = −θ` has `θ`-degree `1`, strictly below `deg_θ C = 2`. -/
 theorem logCase_residual_eq :
-    cisZero (csub logD [CField.zero, (CField.neg CField.one : CFrac ℚ)]) = true := by native_decide
+    cisZero (csub logD [CCommRing.zero, (CCommRing.neg CCommRing.one : CFrac ℚ)]) = true := by native_decide
 
 /-- The `θ = log v` step strictly lowers `deg_θ C`: `deg D = 1 < deg C = 2` over `ℚ(x)[log x]`. -/
 theorem logCase_degree_drop : cdeg logD < cdeg logC := by native_decide
@@ -75,20 +75,20 @@ A 2-level exponential tower: base `ℚ(x)`, monomial `θ = exp x` (`θ' = θ`), 
 `B = [−1]`, residual `D = −1/2`, dropping `k = 1 → 0`. -/
 
 /-- The radicand `f = θ + 1 = eˣ + 1 ∈ ℚ(x)[θ]` (`y² = eˣ + 1`, `θ ∤ f`, `f₀ = 1`), `[1, 1]`. -/
-def expF : DensePoly (CFrac ℚ) := [CField.one, CField.one]
+def expF : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
 
 /-- `g = (1/2)θ ∈ ℚ(x)[θ]` for `f = θ+1`, `θ = exp x` (`(f/y)' = g/y`, `g₀ = 0`), `[0, 1/2]`. -/
-def cexp : DensePoly (CFrac ℚ) := [CField.zero, qxOfNum [1/2]]
+def cexp : DensePoly (CFrac ℚ) := [CCommRing.zero, qxOfNum [1/2]]
 
 /-- The numerator `C = θ + 1 ∈ ℚ(x)[θ]` (`c₀ = 1`), `[1, 1]`. -/
-def expC : DensePoly (CFrac ℚ) := [CField.one, CField.one]
+def expC : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
 
-/-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CField.one` of `CFrac ℚ`. -/
-def expVder : CFrac ℚ := CField.one
+/-- `v' = (x)' = 1 ∈ ℚ(x)` for `θ = exp x` (`v = x`), the `CCommRing.one` of `CFrac ℚ`. -/
+def expVder : CFrac ℚ := CCommRing.one
 
 /-- `θ' = v'·θ = θ` as the `Dt` polynomial `[0, 1] ∈ ℚ(x)[θ]` for `cmonomialDeriv` (`θ = exp x` is a
 factor of its own derivative). -/
-def expDtPoly : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def expDtPoly : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The solved `θ = exp v` `C/(θy)` cofactor `B = [b₀] = [−1]` (`b₀ = c₀/(g₀ − kv'f₀) = 1/(0−1) = −1`,
 a constant). -/
@@ -101,23 +101,23 @@ def expD : DensePoly (CFrac ℚ) :=
 
 /-- The `exp` cofactor is the constant `B = [−1]`: `b₀ = 1/(0 − 1·1·1) = −1` over `ℚ(x)[eˣ]`. -/
 theorem expCase_cofactor_eq :
-    cisZero (csub expB [(CField.neg CField.one : CFrac ℚ)]) = true := by native_decide
+    cisZero (csub expB [(CCommRing.neg CCommRing.one : CFrac ℚ)]) = true := by native_decide
 
 /-- The `θ = exp v` constant-term congruence `(B'f + Bg − kv'Bf) − C ≡ 0 (mod θ)`: the numerator `(−1/2)θ`
 is divisible by `θ`. -/
 theorem expCase_congruence :
     cisZero (cmodWf
       (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
-          (cmul [CField.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
-      [CField.zero, CField.one]) = true := by native_decide
+          (cmul [CCommRing.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
+      [CCommRing.zero, CCommRing.one]) = true := by native_decide
 
 /-- The `θ = exp v` cleared identity `(B'f + Bg − k·v'·B·f) − C = θ·D` in `ℚ(x)[eˣ]` (`B = [−1]`,
 `D = [−1/2]`). -/
 theorem expCase_cleared_identity :
     cisZero (csub
       (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
-          (cmul [CField.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
-      (cmul [CField.zero, CField.one] expD)) = true := by native_decide
+          (cmul [CCommRing.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
+      (cmul [CCommRing.zero, CCommRing.one] expD)) = true := by native_decide
 
 /-- The `exp` residual `D = −1/2` (a `θ`-constant): the `C/(θᵏy)` step lowered the `θ`-power multiplicity
 `k = 1 → 0`. -/

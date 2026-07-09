@@ -118,7 +118,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpe
 `IsRadicalLogTerm n [f].headD radGen [ℓ]` with `ℓ = logDerRadicand n f` — `u = √f = [0,1]` is a
 correct log argument for the constant integrand `[ℓ]` in `K[X] ⧸ radIdeal n f`, unconditionally. -/
 theorem isRadicalLogTerm_radGen (n : ℕ) (f : α) :
-    IsRadicalLogTerm n (([f] : RadElem α).headD CField.zero) (radGen : RadElem α)
+    IsRadicalLogTerm n (([f] : RadElem α).headD CCommRing.zero) (radGen : RadElem α)
       ([logDerRadicand n f] : RadElem α) := by
   rw [IsRadicalLogTerm, List.headD_cons]
   -- the integrand `[ℓ]` reads as `C(toK ℓ)`; `radGen` reads as `X`; `radDeriv radGen` reads as `C(toK ℓ)·X`

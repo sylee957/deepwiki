@@ -548,7 +548,7 @@ def ex351Ps : DensePoly (CFrac ℚ) := [qFrac3 [1, -2] [0, 0, 4], qFrac3 [1] [0,
 
 /-- Recombine a positional-by-multiplicity factor list `[q₁, q₂, …]` into `∏ᵢ qᵢ^i` over ℚ(x)[t]. -/
 def ex352Recombine (qs : List (DensePoly (CFrac ℚ))) : DensePoly (CFrac ℚ) :=
-  qs.zipIdx.foldl (fun acc (qi, i) => DensePoly.cmul acc (DensePoly.cpow qi (i + 1))) [CField.one]
+  qs.zipIdx.foldl (fun acc (qi, i) => DensePoly.cmul acc (DensePoly.cpow qi (i + 1))) [CCommRing.one]
 
 /-- Example 3.5.2's expected normal part `pₙ = N₁N₂² = 4x²(t−1)(xt−1)²` (book p.102), as `4x²·(t−1)·(xt−1)²`. -/
 def ex352Pn : DensePoly (CFrac ℚ) :=

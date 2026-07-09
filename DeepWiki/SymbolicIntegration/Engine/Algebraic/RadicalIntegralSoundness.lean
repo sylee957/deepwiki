@@ -33,21 +33,21 @@ variable {α : Type*} [CField α] [CDiffField α] [CFieldSpec α] [CDiffFieldSpe
 element `v` integrates `g` over `α[y]/(yⁿ − f)` (rational part), i.e. the genuine-field identity
 `toPoly (radDeriv n f v) = toPoly g` in `K[X]`. -/
 def IsRadicalRationalIntegral (n : ℕ) (f g v : RadElem α) : Prop :=
-  DensePoly.toPoly (radDeriv n (f.headD CField.zero) v) = DensePoly.toPoly g
+  DensePoly.toPoly (radDeriv n (f.headD CCommRing.zero) v) = DensePoly.toPoly g
 
 /-- `radGen` is a radical rational integral for its logarithmic-derivative integrand. -/
 theorem isRadicalRationalIntegral_radGen (n : ℕ) (f : α) :
-    IsRadicalRationalIntegral n [f] ([CField.zero, logDerRadicand n f]) (radGen : RadElem α) := by
-  show DensePoly.toPoly (radDeriv n (([f] : RadElem α).headD CField.zero) radGen) = _
+    IsRadicalRationalIntegral n [f] ([CCommRing.zero, logDerRadicand n f]) (radGen : RadElem α) := by
+  show DensePoly.toPoly (radDeriv n (([f] : RadElem α).headD CCommRing.zero) radGen) = _
   rw [List.headD_cons, toPolyG_radDeriv_radGen]
 
 /-- A two-term radical element integrates its computed diagonal derivative. -/
 theorem isRadicalRationalIntegral_linear (n : ℕ) (f a₀ a₁ : α) :
     IsRadicalRationalIntegral n [f]
       ([CDiffField.cderiv a₀,
-        CField.add (CDiffField.cderiv a₁) (CField.mul a₁ (logDerRadicand n f))])
+        CCommRing.add (CDiffField.cderiv a₁) (CCommRing.mul a₁ (logDerRadicand n f))])
       ([a₀, a₁] : RadElem α) := by
-  show DensePoly.toPoly (radDeriv n (([f] : RadElem α).headD CField.zero) [a₀, a₁]) = _
+  show DensePoly.toPoly (radDeriv n (([f] : RadElem α).headD CCommRing.zero) [a₀, a₁]) = _
   rw [List.headD_cons, toPolyG_radDeriv_linear]
 
 /-! ### The fuel-recursion telescoping invariant
@@ -120,8 +120,8 @@ equation (the cleared single-step Case identities certify it after clearing the 
 Proven from `toPolyG_radDeriv_zero_cons` + the injectivity of `C(·)·X ↦ ·` (`C` injective, `X` a
 nonzerodivisor). -/
 theorem isRadicalRationalIntegral_zero_cons_iff (n : ℕ) (f c γ : α) :
-    IsRadicalRationalIntegral n [f] ([CField.zero, γ]) ([CField.zero, c] : RadElem α)
-      ↔ CFieldSpec.toK (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f)))
+    IsRadicalRationalIntegral n [f] ([CCommRing.zero, γ]) ([CCommRing.zero, c] : RadElem α)
+      ↔ CFieldSpec.toK (CCommRing.add (CDiffField.cderiv c) (CCommRing.mul c (logDerRadicand n f)))
           = CFieldSpec.toK γ := by
   unfold IsRadicalRationalIntegral
   rw [List.headD_cons, toPolyG_radDeriv_zero_cons, toPolyG_zero_cons]
@@ -129,7 +129,7 @@ theorem isRadicalRationalIntegral_zero_cons_iff (n : ℕ) (f c γ : α) :
   · intro h
     -- `C a · X = C b · X` with `X` a nonzerodivisor ⟹ `C a = C b` ⟹ `a = b` (`C` injective)
     have hX : Polynomial.C (CFieldSpec.toK
-          (CField.add (CDiffField.cderiv c) (CField.mul c (logDerRadicand n f))))
+          (CCommRing.add (CDiffField.cderiv c) (CCommRing.mul c (logDerRadicand n f))))
         = Polynomial.C (CFieldSpec.toK γ) :=
       mul_right_cancel₀ X_ne_zero h
     exact Polynomial.C_injective hX
@@ -154,10 +154,10 @@ capstone in its telescoping shape: each cleared single-step Case identity, lifte
 fuel-telescoping `radReduceRationalTelescope` consumes. Proven from `toPolyG_radDeriv_zero_cons` +
 `toPolyG_zero_cons` + `C(·)·X` injectivity (`C` injective, `X` a nonzerodivisor). -/
 theorem toPolyG_radDeriv_zero_cons_sub_iff (n : ℕ) (f cB cC cD : α) :
-    DensePoly.toPoly (radDeriv n f ([CField.zero, cB] : RadElem α))
-        = DensePoly.toPoly ([CField.zero, cC] : RadElem α)
-          - DensePoly.toPoly ([CField.zero, cD] : RadElem α)
-      ↔ CFieldSpec.toK (CField.add (CDiffField.cderiv cB) (CField.mul cB (logDerRadicand n f)))
+    DensePoly.toPoly (radDeriv n f ([CCommRing.zero, cB] : RadElem α))
+        = DensePoly.toPoly ([CCommRing.zero, cC] : RadElem α)
+          - DensePoly.toPoly ([CCommRing.zero, cD] : RadElem α)
+      ↔ CFieldSpec.toK (CCommRing.add (CDiffField.cderiv cB) (CCommRing.mul cB (logDerRadicand n f)))
           = CFieldSpec.toK cC - CFieldSpec.toK cD := by
   rw [toPolyG_radDeriv_zero_cons, toPolyG_zero_cons, toPolyG_zero_cons, ← sub_mul, ← map_sub]
   constructor
@@ -191,13 +191,13 @@ driver run is supplying its per-step `K`-equations (the lifted cleared identitie
 theorem radDeriv_foldlRadAdd_zero_cons_telescope (n : ℕ) (f : α)
     (cBs : List α) (cCs : List α) (hlen : cBs.length + 1 = cCs.length)
     (hstep : ∀ i : ℕ, (hi : i < cBs.length) →
-      CFieldSpec.toK (CField.add (CDiffField.cderiv (cBs.get ⟨i, hi⟩))
-            (CField.mul (cBs.get ⟨i, hi⟩) (logDerRadicand n f)))
+      CFieldSpec.toK (CCommRing.add (CDiffField.cderiv (cBs.get ⟨i, hi⟩))
+            (CCommRing.mul (cBs.get ⟨i, hi⟩) (logDerRadicand n f)))
         = CFieldSpec.toK (cCs.get ⟨i, by omega⟩) - CFieldSpec.toK (cCs.get ⟨i + 1, by omega⟩)) :
     DensePoly.toPoly (radDeriv n f
-          ((cBs.map (fun cB => ([CField.zero, cB] : RadElem α))).foldl radAdd radZero))
-        + DensePoly.toPoly ([CField.zero, cCs.getLastD CField.zero] : RadElem α)
-      = DensePoly.toPoly ([CField.zero, cCs.headD CField.zero] : RadElem α) := by
+          ((cBs.map (fun cB => ([CCommRing.zero, cB] : RadElem α))).foldl radAdd radZero))
+        + DensePoly.toPoly ([CCommRing.zero, cCs.getLastD CCommRing.zero] : RadElem α)
+      = DensePoly.toPoly ([CCommRing.zero, cCs.headD CCommRing.zero] : RadElem α) := by
   -- peel `cCs = cC₀ :: rest`; the contributions are `cs = cBs.map (fun cB => [0, cB])`
   match cCs, hlen with
   | cC₀ :: rest, hlen =>
@@ -206,13 +206,13 @@ theorem radDeriv_foldlRadAdd_zero_cons_telescope (n : ℕ) (f : α)
     have hforall : List.Forall₂
         (fun c p => DensePoly.toPoly (radDeriv n f c)
             = DensePoly.toPoly p.1 - DensePoly.toPoly p.2)
-        (cBs.map (fun cB => ([CField.zero, cB] : RadElem α)))
-        (((cC₀ :: rest).map (fun cC => ([CField.zero, cC] : RadElem α))).zip
-          (rest.map (fun cC => ([CField.zero, cC] : RadElem α)))) := by
+        (cBs.map (fun cB => ([CCommRing.zero, cB] : RadElem α)))
+        (((cC₀ :: rest).map (fun cC => ([CCommRing.zero, cC] : RadElem α))).zip
+          (rest.map (fun cC => ([CCommRing.zero, cC] : RadElem α)))) := by
       rw [List.forall₂_iff_get]
-      have hleneq : (cBs.map (fun cB => ([CField.zero, cB] : RadElem α))).length
-          = (((cC₀ :: rest).map (fun cC => ([CField.zero, cC] : RadElem α))).zip
-              (rest.map (fun cC => ([CField.zero, cC] : RadElem α)))).length := by
+      have hleneq : (cBs.map (fun cB => ([CCommRing.zero, cB] : RadElem α))).length
+          = (((cC₀ :: rest).map (fun cC => ([CCommRing.zero, cC] : RadElem α))).zip
+              (rest.map (fun cC => ([CCommRing.zero, cC] : RadElem α)))).length := by
         rw [List.length_map, List.length_zip, List.length_map, List.length_map]
         simp only [List.length_cons]; omega
       refine ⟨hleneq, ?_⟩
@@ -224,12 +224,12 @@ theorem radDeriv_foldlRadAdd_zero_cons_telescope (n : ℕ) (f : α)
       have := hstep i hik
       simpa only [List.get_eq_getElem, List.getElem_cons_succ, List.getElem_cons_zero] using this
     -- the telescoping invariant closes it; `getLastD`/`headD` bookkeeping on `cC₀ :: rest`
-    have hkey := radReduceRationalTelescope n f ([CField.zero, cC₀] : RadElem α)
-      (rest.map (fun cC => ([CField.zero, cC] : RadElem α)))
-      (cBs.map (fun cB => ([CField.zero, cB] : RadElem α))) hforall
+    have hkey := radReduceRationalTelescope n f ([CCommRing.zero, cC₀] : RadElem α)
+      (rest.map (fun cC => ([CCommRing.zero, cC] : RadElem α)))
+      (cBs.map (fun cB => ([CCommRing.zero, cB] : RadElem α))) hforall
     rw [List.headD_cons]
     -- `(map g rest).getLastD (g cC₀) = g (rest.getLastD cC₀)`
-    rw [show ([CField.zero, cC₀] : RadElem α) = (fun cC => ([CField.zero, cC] : RadElem α)) cC₀ from rfl,
+    rw [show ([CCommRing.zero, cC₀] : RadElem α) = (fun cC => ([CCommRing.zero, cC] : RadElem α)) cC₀ from rfl,
       List.getLastD_map] at hkey
     -- align the goal's `(cC₀ :: rest).getLastD 0` with `rest.getLastD cC₀`
     rw [List.getLastD_cons]
@@ -257,14 +257,14 @@ open RadElem
 radicandX3p1 = radicandLogDer = 3x²/(2(x³+1))` are the engine's own definitions. -/
 theorem radDeriv_radGen_sound_qx :
     DensePoly.toPoly (radDeriv 2 radicandX3p1 (radGen : RadElem (CFrac ℚ)))
-      = DensePoly.toPoly ([CField.zero, radicandLogDer] : RadElem (CFrac ℚ)) := by
+      = DensePoly.toPoly ([CCommRing.zero, radicandLogDer] : RadElem (CFrac ℚ)) := by
   rw [toPolyG_radDeriv_radGen]
   rfl
 
 /-- The abstract zero-test form of the `√(x³+1)` radical-generator derivative. -/
 theorem radIsZero_radDeriv_radGen_qx :
     radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (CFrac ℚ)))
-        [CField.zero, radicandLogDer]) = true := by
+        [CCommRing.zero, radicandLogDer]) = true := by
   rw [radIsZero, radSub, DensePoly.cisZeroG_iff]
   simp only [denote, radDeriv_radGen_sound_qx]
   ring
@@ -292,8 +292,8 @@ polynomial-over-`1` element `qxOfNum p = ⟨(p, [1]), _⟩` is `am (toPoly p)` (
 bridge into an `extendDeriv ∘ algebraMap` computation. -/
 theorem toCFracG_qxOfNum (p : DensePoly ℚ) :
     CFrac.toCFrac (qxOfNum p) = CFrac.am ℚ (DensePoly.toPoly p) := by
-  show CFrac.am ℚ (DensePoly.toPoly p) / CFrac.am ℚ (DensePoly.toPoly ([CField.one] : DensePoly ℚ)) = _
-  have h1 : DensePoly.toPoly ([CField.one] : DensePoly ℚ) = 1 := by
+  show CFrac.am ℚ (DensePoly.toPoly p) / CFrac.am ℚ (DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ)) = _
+  have h1 : DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
     simp only [denote]
     simp
   rw [h1, map_one, div_one]
@@ -304,7 +304,7 @@ and over `ℚ` the base `Differential ℚ` is the zero derivation (`instDifferen
 0` and only `derivative'` survives. The base-derivation half of bridge (i). -/
 theorem baseDerivQ_apply (q : (CFieldSpec.K ℚ)[X]) :
     baseDerivQ q = Polynomial.derivative q := by
-  have h1 : DensePoly.toPoly ([CField.one] : DensePoly ℚ) = 1 := by
+  have h1 : DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
     simp only [denote]
     simp
   rw [baseDerivQ, h1, Differential.implicitDeriv]
@@ -330,10 +330,10 @@ theorem toCFracG_cderiv_qxOfNum (p : DensePoly ℚ) :
     CFrac.toCFrac (CDiffField.cderiv (qxOfNum p))
       = CFrac.toCFrac (qxOfNum (DensePoly.cderiv p)) := by
   -- `cderiv = towerDerivCFrac [1]`; realize it as `extendDeriv (implicitDeriv (toPoly [1]))`
-  show CFrac.toCFrac (CFrac.towerDerivCFrac [CField.one] (qxOfNum p)) = _
+  show CFrac.toCFrac (CFrac.towerDerivCFrac [CCommRing.one] (qxOfNum p)) = _
   rw [CFrac.toCFracG_towerDerivCFracG, toCFracG_qxOfNum, toCFracG_qxOfNum, CFrac.am]
   -- `extendDeriv (implicitDeriv (toPoly [1])) (algebraMap (toPoly p)) = algebraMap (baseDerivQ (toPoly p))`
-  rw [show Differential.implicitDeriv (DensePoly.toPoly ([CField.one] : DensePoly ℚ)) = baseDerivQ from rfl]
+  rw [show Differential.implicitDeriv (DensePoly.toPoly ([CCommRing.one] : DensePoly ℚ)) = baseDerivQ from rfl]
   erw [extendDeriv_algebraMap]
   rw [baseDerivQ_apply, DensePoly.toPolyG_cderivG]
   rfl
@@ -359,7 +359,7 @@ Rearranged from the crux scalar identity `toK_logDerRadicand_mul` (`n·toK ℓ·
 through by `n`. The denominator-clearing half of the literal-soundness composition. -/
 theorem toK_logDerRadicand_mul_radicand (n : ℕ) (f : α)
     (hnf : (n : CFieldSpec.K α) * CFieldSpec.toK f ≠ 0) :
-    CFieldSpec.toK (CField.mul (logDerRadicand n f) f)
+    CFieldSpec.toK (CCommRing.mul (logDerRadicand n f) f)
       = (n : CFieldSpec.K α)⁻¹ * CFieldSpec.toK (CDiffField.cderiv f) := by
   have hn : (n : CFieldSpec.K α) ≠ 0 := by
     intro h; rw [h, zero_mul] at hnf; exact hnf rfl
@@ -446,8 +446,8 @@ and `ρ̄ ≠ 0`. This is the (i)+(ii)+(iii) composition at one step: bridge (i)
 The genuine-field form of `radCase3Residual = 0`. -/
 theorem toK_step_qxOfNum_iff (n : ℕ) (ρ B C C' : DensePoly ℚ)
     (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : DensePoly.toPoly ρ ≠ 0) :
-    CFieldSpec.toK (CField.add (CDiffField.cderiv (qxOfNum B))
-          (CField.mul (qxOfNum B) (logDerRadicand n (qxOfNum ρ))))
+    CFieldSpec.toK (CCommRing.add (CDiffField.cderiv (qxOfNum B))
+          (CCommRing.mul (qxOfNum B) (logDerRadicand n (qxOfNum ρ))))
         = CFieldSpec.toK (qxOfNum C) - CFieldSpec.toK (qxOfNum C')
       ↔ (n : (CFieldSpec.K ℚ)[X]) * DensePoly.toPoly ρ * derivative (DensePoly.toPoly B)
             + DensePoly.toPoly B * derivative (DensePoly.toPoly ρ)
@@ -493,11 +493,11 @@ theorem radDeriv_foldlRadAdd_qxOfNum_telescope (n : ℕ) (ρ : DensePoly ℚ) (B
             * (DensePoly.toPoly (Cpolys.get ⟨i, by omega⟩)
               - DensePoly.toPoly (Cpolys.get ⟨i + 1, by omega⟩))) :
     DensePoly.toPoly (radDeriv n (qxOfNum ρ)
-          (((Bpolys.map qxOfNum).map (fun cB => ([CField.zero, cB] : RadElem (CFrac ℚ)))).foldl
+          (((Bpolys.map qxOfNum).map (fun cB => ([CCommRing.zero, cB] : RadElem (CFrac ℚ)))).foldl
             radAdd radZero))
         + DensePoly.toPoly
-            ([CField.zero, (Cpolys.map qxOfNum).getLastD CField.zero] : RadElem (CFrac ℚ))
-      = DensePoly.toPoly ([CField.zero, (Cpolys.map qxOfNum).headD CField.zero] : RadElem (CFrac ℚ)) := by
+            ([CCommRing.zero, (Cpolys.map qxOfNum).getLastD CCommRing.zero] : RadElem (CFrac ℚ))
+      = DensePoly.toPoly ([CCommRing.zero, (Cpolys.map qxOfNum).headD CCommRing.zero] : RadElem (CFrac ℚ)) := by
   -- the radicand exposed to `radDeriv` is `(qxOfNum ρ).headD = qxOfNum ρ`? no — `radDeriv` takes the
   -- radicand directly here. Apply the abstract telescope at the `qxOfNum`-lifted coefficient lists.
   have hlen' : (Bpolys.map qxOfNum).length + 1 = (Cpolys.map qxOfNum).length := by
@@ -563,8 +563,8 @@ reading. -/
 theorem isRadicalRationalIntegral_div_qxOfNum_iff (n : ℕ) (N M ρ : DensePoly ℚ)
     (hn : (n : RatFunc (CFieldSpec.K ℚ)) ≠ 0) (hρ : DensePoly.toPoly ρ ≠ 0) :
     IsRadicalRationalIntegral n [qxOfNum ρ]
-        ([CField.zero, CField.div (qxOfNum M) (qxOfNum ρ)])
-        ([CField.zero, CField.div (qxOfNum N) (qxOfNum ρ)] : RadElem (CFrac ℚ))
+        ([CCommRing.zero, CField.div (qxOfNum M) (qxOfNum ρ)])
+        ([CCommRing.zero, CField.div (qxOfNum N) (qxOfNum ρ)] : RadElem (CFrac ℚ))
       ↔ (n : (CFieldSpec.K ℚ)[X]) * (DensePoly.toPoly ρ * derivative (DensePoly.toPoly N)
               - DensePoly.toPoly N * derivative (DensePoly.toPoly ρ))
             + DensePoly.toPoly N * derivative (DensePoly.toPoly ρ)

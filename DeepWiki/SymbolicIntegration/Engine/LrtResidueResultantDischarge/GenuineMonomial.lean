@@ -209,18 +209,18 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
           else
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
-            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
+            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one]) with hg_def
+      ([CCommRing.zero], [CCommRing.one]) with hg_def
   -- raw-fold `g` ↔ `cnorm`-projection bridges (equal through `toPoly`)
   have hg1 : toPoly (cHermiteReduceTower Dt a d).1.1 = toPoly g.1 := by
     rw [hg_def]; simp only [cHermiteReduceTower, denote]
   have hg2 : toPoly (cHermiteReduceTower Dt a d).1.2 = toPoly g.2 := by
     rw [hg_def]; simp only [cHermiteReduceTower, denote]
   have hDsF : toPoly (cHermiteReduceTower Dt a d).2.2
-      = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) := by
+      = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) := by
     simp only [cHermiteReduceTower, denote]
-  have hDstar0 : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) ≠ 0 := by
+  have hDstar0 : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) ≠ 0 := by
     rw [← hDsF]; exact (toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0).ne_zero
   have hg2ne : toPoly g.2 ≠ 0 := by rw [← hg2]; exact hgd0
   refine cHermiteReduceTowerG_leftover_proper_of_degree_le_one Dt a d hDtdeg haProper
@@ -243,7 +243,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     have hHermDsNe : toPoly (cHermiteReduceTower Dt a d).2.2 ≠ 0 :=
       (toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0).ne_zero
     have hWD : toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2)
-        * toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) = toPoly d := by
+        * toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) = toPoly d := by
       rw [← hDsF]
       exact toPolyG_cdivWf_exact d (cHermiteReduceTower Dt a d).2.2
         (fun h => hHermDsNe ((cnormG_eq_nil_iff _).mp h))
@@ -265,7 +265,7 @@ theorem hAD_degree_of_genuineMonomial [CharZero (CFieldSpec.K α)]
     -- assemble `d·g.2² ∣ resNum·Dstar` from `W·g.2² ∣ resNum` and `d = W·Dstar`
     rw [toPolyG_cmulG, toPolyG_cmulG, toPolyG_cmulG]
     rw [show toPoly d * (toPoly g.2 * toPoly g.2)
-          = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])
+          = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
             * (toPoly (cdivWf d (cHermiteReduceTower Dt a d).2.2) * (toPoly g.2 * toPoly g.2))
         from by rw [← hWD]; ring,
       mul_comm (toPoly (csub (cmul a (cmul g.2 g.2))

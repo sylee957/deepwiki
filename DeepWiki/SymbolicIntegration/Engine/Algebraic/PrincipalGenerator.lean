@@ -81,7 +81,7 @@ open DensePoly RadElem
 `RadElem (CFrac ℚ)` `y − v(x)` of one Cantor reduction step, with the (genus-1) constant `v = [c]`
 embedded into `ℚ(x)` via `qxOfNum`. For the empty `v = []` (the factor `y`) this is `[0, 1]`. -/
 def genFactorOfV (v : DensePoly ℚ) : RadElem (CFrac ℚ) :=
-  [CField.neg (qxOfNum v), CField.one]
+  [CCommRing.neg (qxOfNum v), CCommRing.one]
 
 /-- The principal generator from tracked `v`s: `principalGeneratorOfVs ρ vs = ∏ᵢ (y − vᵢ)`, the
 product of the `y − vᵢ` step-functions (`genFactorOfV`) of a `cantorMulTracked` run, taken in the
@@ -111,7 +111,7 @@ def pgRhoX3p1 : CFrac ℚ := qxOfNum [1, 0, 0, 1]
 def pgGen01 : RadElem (CFrac ℚ) := principalGenerator pgRhoX3p1 hypRhoX3p1 1 3 hypPt01
 
 /-- The target generator `y − 1 = [−1, 1]` over `ℚ(x)` (the constant `v = 1` flex tangent line). -/
-def pgYm1 : RadElem (CFrac ℚ) := [CField.neg CField.one, CField.one]
+def pgYm1 : RadElem (CFrac ℚ) := [CCommRing.neg CCommRing.one, CCommRing.one]
 
 /-- The principal generator of `3·(0, 1)` on `y² = x³ + 1` is `y − 1` (`= [−1, 1]`): so
 `div(y − 1) = 3·(0, 1) − 3·∞ = 3·D` and the log term is `(1/3)·log(y − 1)`. -/
@@ -120,7 +120,7 @@ theorem principalGenerator_pt01_eq :
 
 /-- The recovered generator is the raw `RadElem` `[−1, 1]` (`= y − 1`). -/
 theorem pgGen01_raw :
-    radIsZero (radSub pgGen01 [CField.neg (CField.one : CFrac ℚ), CField.one]) = true := by
+    radIsZero (radSub pgGen01 [CCommRing.neg (CCommRing.one : CFrac ℚ), CCommRing.one]) = true := by
   native_decide
 
 /-! ### The `(1/3)·log(y − 1)` differential check
@@ -131,7 +131,7 @@ The log term is `(1/3)·log g` with `g = y − 1`, so its differential is `ι = 
 
 /-- The `(1/3)·log(y − 1)` differential `ι = (1/3)·g'/g` over `ℚ(x)`, `y² = x³ + 1`. -/
 def pgDiff01 : RadElem (CFrac ℚ) :=
-  radScale (CField.div CField.one (qxOfNum [3])) (radLogDeriv pgRhoX3p1 pgYm1)
+  radScale (CField.div CCommRing.one (qxOfNum [3])) (radLogDeriv pgRhoX3p1 pgYm1)
 
 /-- The `(1/3)·log(y − 1)` differential passes the log-derivative certificate
 `radDeriv g = radMul g (3·ι)`, confirming `(1/3)·log(y − 1)` is the torsion log term of the
@@ -155,7 +155,7 @@ passes the log-derivative certificate `radDeriv g = radMul g (3·ι)`. -/
 theorem principal_generator_validates :
     -- the recovered generator is y − 1
     (radIsZero (radSub pgGen01 pgYm1) = true
-      ∧ radIsZero (radSub pgGen01 [CField.neg (CField.one : CFrac ℚ), CField.one]) = true)
+      ∧ radIsZero (radSub pgGen01 [CCommRing.neg (CCommRing.one : CFrac ℚ), CCommRing.one]) = true)
     -- the order of D = (0,1) is 3 (the torsion decision feeding the construction)
     ∧ cantorOrder 8 hypRhoX3p1 1 hypPt01 = some 3
     -- the (1/3)·log(y − 1) differential passes the log-derivative certificate

@@ -84,12 +84,12 @@ theorem towerFractionFieldDerivG_amG_C (Dt : DensePoly α) (k : CFieldSpec.K α)
 `am (C (toK R))`. Discharges the base-oracle hypothesis `hintR` of
 `ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound`. -/
 theorem crischDESolve_zero_intDeriv (Dt : DensePoly α) (R intR : α)
-    (hsolve : CRischField.crischDESolve (CField.zero : α) R = some intR) :
+    (hsolve : CRischField.crischDESolve (CCommRing.zero : α) R = some intR) :
     towerFractionFieldDeriv Dt (am α (Polynomial.C (CFieldSpec.toK intR)))
       = am α (Polynomial.C (CFieldSpec.toK R)) := by
   rw [towerFractionFieldDerivG_amG_C]
   -- the `b = 0` spec: `(toK intR)′ + (toK 0)·(toK intR) = toK R`, and `toK 0 = 0`.
-  have hspec := CRischFieldSpec.crischDESolve_spec (CField.zero : α) R intR hsolve
+  have hspec := CRischFieldSpec.crischDESolve_spec (CCommRing.zero : α) R intR hsolve
   rw [CFieldSpec.toK_zero, zero_mul, add_zero] at hspec
   rw [hspec]
 

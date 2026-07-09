@@ -29,12 +29,12 @@ the `implicitDeriv`/`towerFractionFieldDerivG_div` bridge — so both `*_special
 theorem primitiveSpecialSoundCore [Fact (GcdFFCorrect (α := α))]
     (Dt a d qp : DensePoly α) (hd0 : toPoly d ≠ 0)
     (hb : cisZero (crSpecNum Dt a d) = true)
-    (hid : towerFractionFieldDeriv Dt (fieldFrac qp [CField.one])
-      = fieldFrac (crPoly Dt a d) [CField.one]) :
-    toPoly ([CField.one] : DensePoly α) ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
-      towerFractionFieldDeriv Dt (fieldFrac qp [CField.one]) = v ∧
+    (hid : towerFractionFieldDeriv Dt (fieldFrac qp [CCommRing.one])
+      = fieldFrac (crPoly Dt a d) [CCommRing.one]) :
+    toPoly ([CCommRing.one] : DensePoly α) ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
+      towerFractionFieldDeriv Dt (fieldFrac qp [CCommRing.one]) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
-  refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], hid, ?_⟩
+  refine ⟨?_, fieldFrac (crPoly Dt a d) [CCommRing.one], hid, ?_⟩
   · simp only [denote, mul_zero, add_zero]; exact one_ne_zero
   · have hvan : fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d) = 0 := by
       simp only [fieldFrac, (cisZeroG_iff (crSpecNum Dt a d)).mp hb, map_zero, zero_div]
@@ -55,7 +55,7 @@ theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
       towerFractionFieldDeriv Dt (fieldFrac snum sden) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
   simp only [primitiveGuardedCase] at hhook
-  by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CField.one])
+  by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CCommRing.one])
       && cisZero (cmapDeriv (crPoly Dt a d))) = true
   · rw [if_pos hguard] at hhook
     rw [Bool.and_eq_true, Bool.and_eq_true] at hguard
@@ -66,7 +66,7 @@ theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
       simp only [Option.some.injEq, Prod.mk.injEq] at hhook
       obtain ⟨rfl, rfl⟩ := hhook
       have hDt1 : toPoly Dt = 1 := by
-        have hh := (cisZeroG_iff (csub Dt [CField.one])).mp hDt1g
+        have hh := (cisZeroG_iff (csub Dt [CCommRing.one])).mp hDt1g
         simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
       have hconst := mapCoeffs_eq_zero_of_cisZeroG_cmapDeriv (crPoly Dt a d) hconstg
       exact primitiveSpecialSoundCore Dt a d qp hd0 hb

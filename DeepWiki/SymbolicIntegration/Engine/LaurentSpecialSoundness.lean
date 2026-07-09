@@ -25,7 +25,7 @@ structure IsProperSpecialPart (b ds : DensePoly α) : Prop where
   /-- The leading coefficient of `ds` denotes a nonzero field element. -/
   lc_nz : CFieldSpec.toK (clead ds) ≠ 0
   /-- The numerator `b` has no coefficients at or above `cdeg ds`. -/
-  proper : ∀ j, cdeg ds ≤ j → (b : List α).getD j CField.zero = CField.zero
+  proper : ∀ j, cdeg ds ≤ j → (b : List α).getD j CCommRing.zero = CCommRing.zero
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `ds` is the monomial denominator of a proper special part `b / ds`. -/
@@ -43,17 +43,17 @@ theorem cHyperexpSpecialNegG_reverse_smul [CRischField α] (b ds : DensePoly α)
       = toPoly b := by
   have hunfold : cHyperexpSpecialNeg b ds
       = (List.range (cdeg ds)).map (fun i =>
-          CField.mul ((b : List α).getD (cdeg ds - 1 - i) CField.zero) (CField.inv (clead ds))) := by
+          CCommRing.mul ((b : List α).getD (cdeg ds - 1 - i) CCommRing.zero) (CField.inv (clead ds))) := by
     rw [cHyperexpSpecialNeg, if_neg (by simp [hsp.nz]), if_neg (Nat.ne_of_gt hsp.mpos)]
   have hlen : (cHyperexpSpecialNeg b ds).length = cdeg ds := by
     rw [hunfold, List.length_map, List.length_range]
   apply Polynomial.ext
   intro j
   rw [Polynomial.coeff_C_mul, toPolyG_coeff, toPolyG_coeff]
-  simp only [toR_eq_toK, ccrZero_eq_cfield]
+  simp only [toR_eq_toK]
   by_cases hj : j < cdeg ds
-  · have hget : (cHyperexpSpecialNeg b ds).reverse.getD j CField.zero
-        = CField.mul ((b : List α).getD j CField.zero) (CField.inv (clead ds)) := by
+  · have hget : (cHyperexpSpecialNeg b ds).reverse.getD j CCommRing.zero
+        = CCommRing.mul ((b : List α).getD j CCommRing.zero) (CField.inv (clead ds)) := by
       rw [List.getD_eq_getElem?_getD, hunfold, List.getElem?_reverse
         (by rw [List.length_map, List.length_range]; exact hj),
         List.length_map, List.length_range, List.getElem?_map,
@@ -75,13 +75,13 @@ the special part `b/dₛ` faithfully. Cross-multiplies the polynomial identity t
 theorem cHyperexpSpecialNegG_frac [CRischField α] (b ds : DensePoly α)
     (hds : IsSpecialDenominator b ds) :
     am α (toPoly (cHyperexpSpecialNeg b ds).reverse)
-        / am α (toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CField.one] : DensePoly α)))
+        / am α (toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CCommRing.one] : DensePoly α)))
       = am α (toPoly b) / am α (toPoly ds) := by
   have hlen : (cHyperexpSpecialNeg b ds).length = cdeg ds := by
     rw [cHyperexpSpecialNeg, if_neg (by simp [hds.nz]), if_neg (Nat.ne_of_gt hds.mpos),
       List.length_map, List.length_range]
   have hpoly := cHyperexpSpecialNegG_reverse_smul b ds hds.toIsProperSpecialPart
-  have hdenpow : toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CField.one] : DensePoly α))
+  have hdenpow : toPoly (cshift (cHyperexpSpecialNeg b ds).length ([CCommRing.one] : DensePoly α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ cdeg ds := by
     rw [hlen]
     simp only [denote, mul_zero, add_zero, map_one, mul_one]

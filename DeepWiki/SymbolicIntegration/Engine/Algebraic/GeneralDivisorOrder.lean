@@ -144,7 +144,7 @@ On `y² = x³ + 1` (integral basis `[1, y]`), the inflection point `(0, 1)` give
 `P³ = div(y − 1)` is principal, so `order = 3`. -/
 
 /-- The curve `f = y² − (x³ + 1)` (`[−(x³+1), 0, 1]`) over `DensePoly (CFrac ℚ)`. -/
-def hcubeF : DensePoly (CFrac ℚ) := [qxOfNum [-1, 0, 0, -1], CField.zero, CField.one]
+def hcubeF : DensePoly (CFrac ℚ) := [qxOfNum [-1, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The integral basis `[1, y]` of `y² = x³ + 1` (no finite poles — the power basis, since `x³ + 1` is
 squarefree). -/
@@ -154,8 +154,8 @@ def hcubeBasis : List (DensePoly (CFrac ℚ)) := integralBasis hcubeF
 to a `2×2` ideal matrix by one `idealProduct` with the identity. -/
 def hcubeTorsionDiv : GenDivisor :=
   idealProduct hcubeF hcubeBasis
-    [ [qxOfNum [0, 1], CField.zero],
-      [CField.zero, qxOfNum [0, 1]],
+    [ [qxOfNum [0, 1], CCommRing.zero],
+      [CCommRing.zero, qxOfNum [0, 1]],
       [qxOfNum [-1], qxOfNum [1]],
       [qxOfNum [1, 0, 0, 1], qxOfNum [-1]] ]
     (idealIdentity 2)

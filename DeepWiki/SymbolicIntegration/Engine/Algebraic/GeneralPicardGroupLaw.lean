@@ -57,7 +57,7 @@ def rootsWithMult (scan : List α) (poly : DensePoly α) : List α :=
       | 0, _ => 0
       | k + 1, q =>
         if cisZero q then 0
-        else if CField.isZero (ceval q r) then 1 + mult k (cdivWf q [CField.neg r, CField.one])
+        else if CCommRing.isZero (ceval q r) then 1 + mult k (cdivWf q [CCommRing.neg r, CCommRing.one])
         else 0
     (List.replicate (mult (poly.length + 1) poly) r) ++ acc) []
 

@@ -38,7 +38,7 @@ namespace DeepWiki.Bie
 /-- **Generic Gaussian elimination over `[CField β]`** (Bronstein 1990, Integration of Elementary Functions,
 JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower, log part): `gaussElim`
 row-reduces a `β`-matrix to reduced row-echelon form, the `[CField β]`-generic analogue of the ℚ-pinned
-`ratRref`. Pure `CField`-arithmetic (`CField.isZero`/`CField.div`/`CField.sub`/`CField.mul`), so the linear
+`ratRref`. Pure `CField`-arithmetic (`CCommRing.isZero`/`CField.div`/`CField.sub`/`CCommRing.mul`), so the linear
 solve underlying log-argument computation runs over any computable tower level `β`, not just ℚ. -/
 abbrev bie_gaussElim_generic := @gaussElim
 

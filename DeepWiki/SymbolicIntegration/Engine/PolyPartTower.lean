@@ -32,7 +32,7 @@ def cPolyReduceTower (Dt : DensePoly α) : ℕ → DensePoly α → DensePoly α
       let n := cdeg p
       let m := n - delta + 1                                       -- `m = deg(p) − δ(t) + 1`
       let lam := clead Dt                                         -- `λ(t) = lc(Dt)`
-      let c := CField.div (clead p) (CField.mul (cnatCast m) lam) -- `lc(p)/(m·λ(t))`
+      let c := CField.div (clead p) (CCommRing.mul (cnatCast m) lam) -- `lc(p)/(m·λ(t))`
       let q0 := cshift m [c]                                      -- `c·tᵐ`
       let p' := csub p (cmonomialDeriv Dt q0)                     -- `p − D(q₀)`
       let (q, r) := cPolyReduceTower Dt fuel p'
@@ -60,7 +60,7 @@ def cPrimitivePolyIntegrate (Dt : DensePoly α) : ℕ → DensePoly α → Dense
       let mp1 : α := cnatCast (m + 1)
       -- `Dt ∈ k` is a constant `t`-polynomial; use its constant coefficient `Dt(0) = lc(Dt)`.
       let dtConst := clead Dt
-      let c := CField.div am (CField.mul mp1 dtConst)
+      let c := CField.div am (CCommRing.mul mp1 dtConst)
       let q0 := cshift (m + 1) [c]                                -- `c·t^(m+1)`
       let p' := csub p (cmonomialDeriv Dt q0)                     -- `p − D(q₀)`
       let (q, rem) := cPrimitivePolyIntegrate Dt fuel p'

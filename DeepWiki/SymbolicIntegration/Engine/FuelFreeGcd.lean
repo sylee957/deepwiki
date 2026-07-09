@@ -59,14 +59,14 @@ Termination is by `(cnorm b).length`, strictly dropped by the remainder (`cmodWf
 /-- Extended Euclidean algorithm on `DensePoly`: `cgcdWf a b = (g, s, t)` with `s·a + t·b = g` and
 `g = gcd(a, b)` over `K`. Well-founded on `(cnorm b).length`. -/
 def cgcdWf (a b : DensePoly α) : DensePoly α × DensePoly α × DensePoly α :=
-  if cisZero b then (cnorm a, [CField.one], [])
+  if cisZero b then (cnorm a, [CCommRing.one], [])
   else
     let q := cdivWf a b
     let r := cmodWf a b
     if (cnorm r : List α).length < (cnorm b : List α).length then
       let (g, s, t) := cgcdWf b r
       (g, t, csub s (cmul t q))
-    else (cnorm a, [CField.one], [])   -- unreachable over a genuine field (`cmodWf_length_lt`)
+    else (cnorm a, [CCommRing.one], [])   -- unreachable over a genuine field (`cmodWf_length_lt`)
 termination_by (cnorm b).length
 decreasing_by assumption
 
@@ -274,7 +274,7 @@ theorem toPolyG_cgcdWf (a b : DensePoly α) :
     -- `cisZero b`: `cgcdWf a b = (cnorm a, [1], [])`, Bézout `1·a + 0·b = a`
     rename_i hcz
     have hb0 : toPoly b = 0 := (cisZeroG_iff b).mp hcz
-    have hval : cgcdWf a b = (cnorm a, [CField.one], []) := by
+    have hval : cgcdWf a b = (cnorm a, [CCommRing.one], []) := by
       rw [cgcdWf.eq_def, if_pos hcz]
     rw [hval]
     simp [toPolyG_cnormG, toPolyG_cons, CFieldSpec.toK_one, hb0]

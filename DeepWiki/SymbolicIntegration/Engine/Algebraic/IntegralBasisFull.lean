@@ -75,14 +75,14 @@ back to power coordinates. -/
 /-- The `O`-to-power change-of-basis matrix `orderToPowerMatrix n O`: column `k` is `ωₖ` in power
 coordinates (`B[r][k] = coeff_r(ωₖ)`). Its inverse maps power coordinates to `O`-coordinates. -/
 def orderToPowerMatrix (n : ℕ) (O : List (DensePoly (CFrac ℚ))) : List (List (CFrac ℚ)) :=
-  (List.range n).map (fun r => (List.range n).map (fun k => (O.getD k []).getD r CField.zero))
+  (List.range n).map (fun r => (List.range n).map (fun k => (O.getD k []).getD r CCommRing.zero))
 
 /-- The `O`-coordinates of a `K(x, y)` element `toOCoords Binv n z = Binv · (z in power coords)`. -/
 def toOCoords (Binv : List (List (CFrac ℚ))) (n : ℕ) (z : DensePoly (CFrac ℚ)) : List (CFrac ℚ) :=
   (List.range n).map (fun r =>
     (List.range n).foldl (fun acc c =>
-      CField.add acc (CField.mul ((Binv.getD r []).getD c CField.zero) (z.getD c CField.zero)))
-      CField.zero)
+      CCommRing.add acc (CCommRing.mul ((Binv.getD r []).getD c CCommRing.zero) (z.getD c CCommRing.zero)))
+      CCommRing.zero)
 
 /-- The common denominator of a `K(x)`-matrix `commonDenom M`: the product of the distinct reduced
 entry denominators (each `qReduceNZ`-reduced, monic, skipping `1`). -/
@@ -90,8 +90,8 @@ def commonDenom (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
       let den := cnorm (qReduceNZ z).1.2
-      if cisZero den || cisZero (csub den [CField.one]) then a else cmul a den)
-      acc) [CField.one]
+      if cisZero den || cisZero (csub den [CCommRing.one]) then a else cmul a den)
+      acc) [CCommRing.one]
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at `δ` by exact division: `clearRowExact δ row = [(δ·numᵢ)/denᵢ]`
 via exact polynomial division (`cdivWf`, valid since `denᵢ | δ`), giving the integral row `δ·row`. -/
@@ -118,7 +118,7 @@ def idealizerOCoords (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ
       (List.range n).foldl (fun acc i =>
         cadd acc (cscale (qxOfNum (row.getD i [])) (O.getD i []))) ([] : DensePoly (CFrac ℚ)))
     let Bip : List (List (CFrac ℚ)) := (List.range n).map (fun r =>
-      (List.range n).map (fun k => (toOCoords Binv n (ipElems.getD k [])).getD r CField.zero))
+      (List.range n).map (fun k => (toOCoords Binv n (ipElems.getD k [])).getD r CCommRing.zero))
     match matInv n Bip with
     | none => O
     | some BipInv =>
@@ -127,7 +127,7 @@ def idealizerOCoords (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ
           let ιj := ipElems.getD j []
           let multO : List (List (CFrac ℚ)) := (List.range n).map (fun r =>
             (List.range n).map (fun i =>
-              (toOCoords Binv n (afMul f ιj (O.getD i []))).getD r CField.zero))
+              (toOCoords Binv n (afMul f ιj (O.getD i []))).getD r CCommRing.zero))
           (matMul BipInv multO) ++ acc) []
       let δ : DensePoly ℚ := commonDenom M
       let N : PolyMatrix ℚ := M.map (clearRowExact δ)
@@ -140,9 +140,9 @@ def idealizerOCoords (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ
         let δq : CFrac ℚ := qxOfNum δ
         (List.range n).map (fun col =>
           let uO : List (CFrac ℚ) := (List.range n).map (fun row =>
-            CField.mul δq ((NhatInv.getD row []).getD col CField.zero))
+            CCommRing.mul δq ((NhatInv.getD row []).getD col CCommRing.zero))
           (List.range n).foldl (fun acc i =>
-            cadd acc (cscale (uO.getD i CField.zero) (O.getD i []))) ([] : DensePoly (CFrac ℚ)))
+            cadd acc (cscale (uO.getD i CCommRing.zero) (O.getD i []))) ([] : DensePoly (CFrac ℚ)))
 
 end DensePoly
 
@@ -181,7 +181,7 @@ def orderEq (n : ℕ) (O1 O2 : List (DensePoly (CFrac ℚ))) : Bool :=
 def round2StepOrderAt (f : DensePoly (CFrac ℚ)) (O : List (DensePoly (CFrac ℚ))) (p : DensePoly ℚ) :
     List (DensePoly (CFrac ℚ)) :=
   let pm := cmonic p
-  let a : ℚ := CField.neg (pm.getD 0 CField.zero)
+  let a : ℚ := CCommRing.neg (pm.getD 0 CCommRing.zero)
   reduceOrder (idealizerOCoords f O (ipOCoords f O pm a))
 
 /-- One full pass of Round-2 over all bad primes of `O`: `round2Pass f O = (O', grew)` folds
@@ -229,8 +229,8 @@ def cuspIBGen : DensePoly (CFrac ℚ) := (integralBasis cuspF).getD 1 []
 
 /-- The cusp integral basis is `[1, y/x]`, integral (`(y/x)² = x`) and maximal. -/
 theorem cusp_integralBasis_eq :
-    (cisZero (csub cuspIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZero (csub ((integralBasis cuspF).getD 0 []) [CField.one])
+    (cisZero (csub cuspIBGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((integralBasis cuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul cuspF cuspIBGen cuspIBGen) [qxOfNum [0, 1]])
       && isMaximalOrder cuspF (integralBasis cuspF)) = true := by native_decide
 
@@ -242,8 +242,8 @@ def nodeIBGen : DensePoly (CFrac ℚ) := (integralBasis nodeF).getD 1 []
 
 /-- The node integral basis is `[1, y/x]`, integral (`(y/x)² = x + 1`) and maximal. -/
 theorem node_integralBasis_eq :
-    (cisZero (csub nodeIBGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZero (csub ((integralBasis nodeF).getD 0 []) [CField.one])
+    (cisZero (csub nodeIBGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((integralBasis nodeF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul nodeF nodeIBGen nodeIBGen) [qxOfNum [1, 1]])
       && isMaximalOrder nodeF (integralBasis nodeF)) = true := by native_decide
 
@@ -254,7 +254,7 @@ step, so a single step is not enough. -/
 
 /-- The worse cusp curve `f = y² − x⁵ ∈ ℚ(x)[y]`, the `DensePoly (CFrac ℚ)` `[−x⁵, 0, 1]`. -/
 def cusp5F : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, 0, 0, 0, -1], CField.zero, CField.one]
+  [qxOfNum [0, 0, 0, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The computed worse-cusp integral-basis generator `y/x²` = the second basis vector of
 `integralBasis cusp5F`. -/
@@ -274,13 +274,13 @@ def cusp5IBGen : DensePoly (CFrac ℚ) := (integralBasis cusp5F).getD 1 []
 theorem cusp5_oneStep_not_maximal :
     (((round2Step cusp5F).2)
       && cisZero (csub ((round2Step cusp5F).1.getD 1 [])
-            [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
+            [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
       && !isMaximalOrder cusp5F (reduceOrder (round2Step cusp5F).1)) = true := by native_decide
 
 /-- The full iteration reaches `[1, y/x²]` for `y² − x⁵` (two Round-2 steps). -/
 theorem cusp5_integralBasis_eq :
-    (cisZero (csub cusp5IBGen [CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)])
-      && cisZero (csub ((integralBasis cusp5F).getD 0 []) [CField.one])) = true := by native_decide
+    (cisZero (csub cusp5IBGen [CCommRing.zero, qxOfFrac [1] [0, 0, 1] (by decide)])
+      && cisZero (csub ((integralBasis cusp5F).getD 0 []) [CCommRing.one])) = true := by native_decide
 
 /-- The worse-cusp generator `y/x²` is integral (`(y/x²)² = x`) and `[1, y/x²]` is maximal. -/
 theorem cusp5_integralBasis_integral_maximal :
@@ -295,7 +295,7 @@ reaching `[1, y/(x(x − 1))]`. -/
 /-- The two-bad-prime curve `f = y² − x³(x − 1)² ∈ ℚ(x)[y]`, the `DensePoly (CFrac ℚ)`
 `[−(x⁵−2x⁴+x³), 0, 1]`. -/
 def biCuspF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, 0, -1, 2, -1], CField.zero, CField.one]
+  [qxOfNum [0, 0, 0, -1, 2, -1], CCommRing.zero, CCommRing.one]
 
 /-- The computed integral-basis generator `y/(x(x−1)) = y/(x² − x)` = the second basis vector of
 `integralBasis biCuspF`. -/
@@ -324,8 +324,8 @@ the generator `[0, 1/(x² − x)] = y/(x(x − 1))` and the first vector `1`; th
 (`afMul biCuspF g g = x`, i.e. `(y/(x(x−1)))² = x³(x−1)²/(x²(x−1)²) = x`); and `isMaximalOrder` is `true`. The
 single combined denominator `x(x − 1)` carries the enlargement at both primes at once. -/
 theorem biCusp_integralBasis_eq :
-    (cisZero (csub biCuspIBGen [CField.zero, qxOfFrac [1] [0, -1, 1] (by decide)])
-      && cisZero (csub ((integralBasis biCuspF).getD 0 []) [CField.one])
+    (cisZero (csub biCuspIBGen [CCommRing.zero, qxOfFrac [1] [0, -1, 1] (by decide)])
+      && cisZero (csub ((integralBasis biCuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul biCuspF biCuspIBGen biCuspIBGen) [qxOfNum [0, 1]])
       && isMaximalOrder biCuspF (integralBasis biCuspF)) = true := by native_decide
 

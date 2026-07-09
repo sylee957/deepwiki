@@ -28,7 +28,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 
 /-- Embed a polynomial as a fraction `num/1 ∈ CFrac β`. -/
 def qEmbedNum {β : Type*} [CField β] [CFieldDomain β] (num : DensePoly β) : CFrac β :=
-  ⟨(num, [CField.one]), CFrac.cisZeroG_one_singleton⟩
+  ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
 
 /-- Integrate a coefficient `c ∈ CFrac β = β(s)` by recursing into
 `LawfulRischLevelLrt β.integrateRationalLrt` (the log-free LRT integrator, whose soundness is descent-free
@@ -36,7 +36,7 @@ def qEmbedNum {β : Type*} [CField β] [CFieldDomain β] (num : DensePoly β) : 
 division. The coefficient integrator the LRT tower step feeds (wrapped) to `cIntegratePrimPolyDegRaise`,
 staying on the LRT track. -/
 def towerCoeffIntegrateLrt (c : CFrac β) : Option (CFrac β) :=
-  (LawfulRischLevelLrt.integrateRationalLrt [CField.one] (qnumCoeffCore c) (qdenCoeffCore c)).map fun bd =>
+  (LawfulRischLevelLrt.integrateRationalLrt [CCommRing.one] (qnumCoeffCore c) (qdenCoeffCore c)).map fun bd =>
     CField.div (qEmbedNum bd.1) (qEmbedNum bd.2)
 
 omit [CRischField β] in
@@ -48,16 +48,16 @@ theorem towerCoeffIntegrateLrt_sound (c b : CFrac β) (h : towerCoeffIntegrateLr
   unfold towerCoeffIntegrateLrt at h
   rw [Option.map_eq_some_iff] at h
   obtain ⟨⟨bn, bd⟩, hint, rfl⟩ := h
-  have hsound := LawfulRischLevelLrt.integrateRationalLrt_sound [CField.one]
+  have hsound := LawfulRischLevelLrt.integrateRationalLrt_sound [CCommRing.one]
     (qnumCoeffCore c) (qdenCoeffCore c) bn bd hint
   have hcd : CFieldSpec.toK (CDiffField.cderiv (CField.div (qEmbedNum bn) (qEmbedNum bd)))
-      = towerFractionFieldDeriv [CField.one]
+      = towerFractionFieldDeriv [CCommRing.one]
           (CFieldSpec.toK (CField.div (qEmbedNum bn) (qEmbedNum bd))) := by
     rw [CDiffFieldSpec.toK_cderiv]
     rfl
   have htoK_embed : ∀ num : DensePoly β, CFieldSpec.toK (qEmbedNum num) = CFrac.am β (toPoly num) := by
     intro num
-    show CFrac.am β (toPoly num) / CFrac.am β (toPoly ([CField.one] : DensePoly β))
+    show CFrac.am β (toPoly num) / CFrac.am β (toPoly ([CCommRing.one] : DensePoly β))
       = CFrac.am β (toPoly num)
     simp only [denote, map_one, mul_zero, add_zero, div_one]
   have htoK_c : CFieldSpec.toK c
@@ -74,7 +74,7 @@ def towerCoeffIntegrateSingleLrt (η c : CFrac β) : Option (CFrac β × CFrac �
   match LawfulRischLevelLrt.limitedIntegrateSingle (qnumCoeffCore c) (qdenCoeffCore c)
       (qnumCoeffCore η) (qdenCoeffCore η) with
   | some ((bn, bd), cc) => some (CField.div (qEmbedNum bn) (qEmbedNum bd), qEmbedNum [cc])
-  | none => (towerCoeffIntegrateLrt c).map fun b => (b, CField.zero)
+  | none => (towerCoeffIntegrateLrt c).map fun b => (b, CCommRing.zero)
 
 /-- The LRT tower step's polynomial-part integrator: the degree-raising primitive-polynomial recursion
 `cIntegratePrimPolyDegRaise` with `towerCoeffIntegrateSingleLrt` as the single-`w` `limInt` (real `(b,c)` when
@@ -97,11 +97,11 @@ omit [CRischField β] in
 polynomial antiderivative `qp` of `fp` gives `D_tower(⟦qp/1⟧) = ⟦fp/1⟧`. The `Dt` + `toPoly Dt = 1`
 special identity for the tower step, with GENERAL coefficients via the LRT recursion. -/
 theorem tower_special_identityLrt (Dt fp qp : DensePoly (CFrac β)) (hDt : toPoly Dt = 1)
-    (h : towerPolyIntegrateLrt CField.one fp = some qp) :
-    towerFractionFieldDeriv Dt (fieldFrac qp [CField.one]) = fieldFrac fp [CField.one] := by
-  have hpoly := towerPolyIntegrateLrt_sound CField.one fp qp h
+    (h : towerPolyIntegrateLrt CCommRing.one fp = some qp) :
+    towerFractionFieldDeriv Dt (fieldFrac qp [CCommRing.one]) = fieldFrac fp [CCommRing.one] := by
+  have hpoly := towerPolyIntegrateLrt_sound CCommRing.one fp qp h
   rw [CFieldSpec.toK_one, Polynomial.C_1] at hpoly
-  have hone : toPoly ([CField.one] : DensePoly (CFrac β)) = 1 := by
+  have hone : toPoly ([CCommRing.one] : DensePoly (CFrac β)) = 1 := by
     simp only [denote, map_one, mul_zero, add_zero]
   have hbridge : towerFractionFieldDeriv Dt (CFrac.am (CFrac β) (toPoly qp))
       = CFrac.am (CFrac β) (Differential.implicitDeriv (toPoly Dt) (toPoly qp)) := by
@@ -118,10 +118,10 @@ field is inert here (`cIntegrateCaseLrt` never calls it — the reduced part goe
 `cIntegrateReducedLrt`), so it reuses the shared guarded hook. -/
 def towerPrimitiveCaseLrt : MonomialCase (CFrac β) where
   integrateSpecial Dt fp b _ds :=
-    if cisZero b && cisZero (csub Dt [CField.one]) then
-      match towerPolyIntegrateLrt CField.one fp with
+    if cisZero b && cisZero (csub Dt [CCommRing.one]) then
+      match towerPolyIntegrateLrt CCommRing.one fp with
       | none => none
-      | some qp => some (qp, [CField.one])
+      | some qp => some (qp, [CCommRing.one])
     else none
   reducedCorrect := (primitiveGuardedCase (α := CFrac β)).reducedCorrect
 
@@ -138,17 +138,17 @@ theorem towerPrimitiveCaseLrt_specialSound [Fact (GcdFFCorrect (α := CFrac β))
       towerFractionFieldDeriv Dt (fieldFrac snum sden) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
   simp only [towerPrimitiveCaseLrt] at hhook
-  by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CField.one])) = true
+  by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CCommRing.one])) = true
   · rw [if_pos hguard] at hhook
     rw [Bool.and_eq_true] at hguard
     obtain ⟨hb, hDt1g⟩ := hguard
-    rcases hqp : towerPolyIntegrateLrt CField.one (crPoly Dt a d) with _ | qp
+    rcases hqp : towerPolyIntegrateLrt CCommRing.one (crPoly Dt a d) with _ | qp
     · rw [hqp] at hhook; simp at hhook
     · rw [hqp] at hhook
       simp only [Option.some.injEq, Prod.mk.injEq] at hhook
       obtain ⟨rfl, rfl⟩ := hhook
       have hDt1 : toPoly Dt = 1 := by
-        have hh := (cisZeroG_iff (csub Dt [CField.one])).mp hDt1g
+        have hh := (cisZeroG_iff (csub Dt [CCommRing.one])).mp hDt1g
         simpa only [denote, map_one, mul_zero, add_zero, sub_eq_zero] using hh
       exact primitiveSpecialSoundCore Dt a d qp hd0 hb
         (tower_special_identityLrt Dt (crPoly Dt a d) qp hDt1 hqp)

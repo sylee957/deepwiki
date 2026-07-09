@@ -24,10 +24,10 @@ abbrev QFun (α : Type*) [CField α] := DensePoly α × DensePoly α
 namespace QFun
 
 /-- Generic zero fraction `0/1` (numerator `[]`, denominator `[1]`). -/
-def qzero {α : Type*} [CField α] : QFun α := ([], [CField.one])
+def qzero {α : Type*} [CField α] : QFun α := ([], [CCommRing.one])
 
 /-- Generic one fraction `1/1` (numerator `[1]`, denominator `[1]`). -/
-def qone {α : Type*} [CField α] : QFun α := ([CField.one], [CField.one])
+def qone {α : Type*} [CField α] : QFun α := ([CCommRing.one], [CCommRing.one])
 
 /-- Generic fraction addition `a/b + c/d = (a·d + c·b)/(b·d)` (cross-multiply, no gcd reduction). -/
 def qadd {α : Type*} [CField α] (x y : QFun α) : QFun α :=
@@ -66,7 +66,7 @@ of two `cisZero`-nonzero `DensePoly`s is `cisZero`-nonzero. Carries no `CFieldSp
 the computable `CField (CFrac α)` instance. -/
 class CFieldDomain (α : Type*) [CField α] where
   /-- The constant `[1]` is `cisZero`-nonzero. -/
-  nz_one : DensePoly.cisZero ([CField.one] : DensePoly α) = false
+  nz_one : DensePoly.cisZero ([CCommRing.one] : DensePoly α) = false
   /-- The product of two `cisZero`-nonzero `DensePoly`s is `cisZero`-nonzero (no zero divisors). -/
   nz_mul : ∀ {b d : DensePoly α}, DensePoly.cisZero b = false → DensePoly.cisZero d = false →
     DensePoly.cisZero (DensePoly.cmul b d) = false
@@ -91,7 +91,7 @@ namespace CFrac
 
 /-- The constant `[1]` is `cisZero`-nonzero (from `CFieldDomain`). -/
 theorem cisZeroG_one_singleton {α : Type*} [CField α] [CFieldDomain α] :
-    DensePoly.cisZero ([CField.one] : DensePoly α) = false :=
+    DensePoly.cisZero ([CCommRing.one] : DensePoly α) = false :=
   CFieldDomain.nz_one
 
 /-- The product of two `cisZero`-nonzero `DensePoly`s is `cisZero`-nonzero (from `CFieldDomain`). -/
@@ -196,9 +196,9 @@ theorem toCFracG_qzeroNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain
 theorem toCFracG_qoneNZG {α : Type*} [CField α] [CFieldSpec α] [CFieldDomain α] :
     toCFrac (qoneNZ : CFrac α) = 1 := by
   rw [toCFrac]
-  show am α (DensePoly.toPoly ([CField.one] : DensePoly α))
-      / am α (DensePoly.toPoly ([CField.one] : DensePoly α)) = 1
-  have h1 : DensePoly.toPoly ([CField.one] : DensePoly α) = 1 := by
+  show am α (DensePoly.toPoly ([CCommRing.one] : DensePoly α))
+      / am α (DensePoly.toPoly ([CCommRing.one] : DensePoly α)) = 1
+  have h1 : DensePoly.toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
   rw [h1, map_one, div_self one_ne_zero]
 

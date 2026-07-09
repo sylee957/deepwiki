@@ -24,7 +24,7 @@ noncomputable local instance normalPartSoundnessExamplesAlgebraRatKCFracG :
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
 /-- The Hermite half over `ℚ(x)(t)`: the master Hermite telescoping `D(g) + h = a/d` (seed
-`([CField.zero], [CField.one])`) at the carrier `α = CFrac ℚ`, over `RatFunc ℚ`. -/
+`([CCommRing.zero], [CCommRing.one])`) at the carrier `α = CFrac ℚ`, over `RatFunc ℚ`. -/
 theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : DensePoly (CFrac ℚ))
     (L₀ : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ))
     (rest glocs : List (DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)))
@@ -38,11 +38,11 @@ theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : DensePoly (CFrac ℚ))
         (am (CFrac ℚ) (toPoly (glocs.foldl
             (fun (gAcc : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : DensePoly (CFrac ℚ)), ([CField.one] : DensePoly (CFrac ℚ)))).1)
+            (([CCommRing.zero] : DensePoly (CFrac ℚ)), ([CCommRing.one] : DensePoly (CFrac ℚ)))).1)
           / am (CFrac ℚ) (toPoly (glocs.foldl
             (fun (gAcc : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : DensePoly (CFrac ℚ)), ([CField.one] : DensePoly (CFrac ℚ)))).2))
+            (([CCommRing.zero] : DensePoly (CFrac ℚ)), ([CCommRing.one] : DensePoly (CFrac ℚ)))).2))
         + am (CFrac ℚ) (toPoly (rest.getLastD L₀).1)
           / am (CFrac ℚ) (toPoly (rest.getLastD L₀).2)
       = am (CFrac ℚ) (toPoly L₀.1) / am (CFrac ℚ) (toPoly L₀.2) :=
@@ -96,8 +96,8 @@ example (Dt : DensePoly α) (vi u : DensePoly α) (j : ℕ) (a : DensePoly α) (
     (hb : ∀ (rhs : DensePoly α),
       (toPoly (cdiophantine (cmul u (cmonomialDeriv Dt vi)) vi rhs).1).degree
         < (toPoly vi).degree) :
-    (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.1).degree
-      < (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.2).degree :=
+    (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.1).degree
+      < (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.2).degree :=
   cHermiteReduceTowerInner_gloc_proper Dt vi u j a ⟨hv, hb⟩
 
 example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
@@ -114,9 +114,9 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-              ([CField.zero], [CField.one])).1
+              ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-        ([CField.zero], [CField.one])).1).degree
+        ([CCommRing.zero], [CCommRing.one])).1).degree
       < (toPoly (factors.zipIdx.foldl
         (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
           let i := idx + 1
@@ -125,9 +125,9 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-              ([CField.zero], [CField.one])).1
+              ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-        ([CField.zero], [CField.one])).2).degree :=
+        ([CCommRing.zero], [CCommRing.one])).2).degree :=
   cHermiteReduceTowerG_g_proper Dt a d factors (fun p hp hskip => ⟨hv p hp hskip, hb p hp hskip⟩)
 
 example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
@@ -145,9 +145,9 @@ example (Dt : DensePoly α) (a d : DensePoly α) (factors : List (DensePoly α))
           let Vi_pow := cpow vi i
           let u := cdivWf d Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-            ([CField.zero], [CField.one])).1
+            ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one])
+      ([CCommRing.zero], [CCommRing.one])
     (toPoly (csub (cmul a (cmul g.2 g.2))
         (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
           (cmul g.1 (cmonomialDeriv Dt g.2)))))).degree

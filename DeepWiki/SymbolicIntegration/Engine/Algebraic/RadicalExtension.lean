@@ -37,10 +37,10 @@ variable {α : Type*} [CField α]
 def radZero : RadElem α := []
 
 /-- **One** of `α[y]/(yⁿ − f)`: the constant `1` (`[1]`). -/
-def radOne : RadElem α := [CField.one]
+def radOne : RadElem α := [CCommRing.one]
 
 /-- **The generator `y`** of `α[y]/(yⁿ − f)` (`[0, 1]`, i.e. `0 + 1·y`). -/
-def radGen : RadElem α := [CField.zero, CField.one]
+def radGen : RadElem α := [CCommRing.zero, CCommRing.one]
 
 /-- **Componentwise addition** in `α[y]/(yⁿ − f)` (the shorter list zero-extended). -/
 def radAdd (p q : RadElem α) : RadElem α := DensePoly.cadd p q
@@ -68,9 +68,9 @@ def radReduce (n : ℕ) (f : α) : ℕ → RadElem α → RadElem α
       -- to index `k` via `y^{n+k} = f·yᵏ`, then recurse.
       let m := (p : List α).length - 1
       let k := m - n
-      let am := (p : List α).getLast?.getD CField.zero
+      let am := (p : List α).getLast?.getD CCommRing.zero
       let p' := (p : List α).dropLast                       -- drop the top coefficient
-      let foldIn := DensePoly.cshift k [CField.mul am f]       -- `am·f · yᵏ`
+      let foldIn := DensePoly.cshift k [CCommRing.mul am f]       -- `am·f · yᵏ`
       radReduce n f fuel (DensePoly.cadd p' foldIn)
 
 /-- **Multiplication** in `α[y]/(yⁿ − f)`: free polynomial multiplication in `y` (`cmul`) followed by
@@ -92,20 +92,20 @@ variable [CDiffField α]
 /-- `logDerRadicand n f = f'/(n·f)` as a base element: the diagonal `radDeriv` multiplier, with
 `y' = logDerRadicand · y` and the `yⁱ`-component scaled by `i · logDerRadicand`. -/
 def logDerRadicand (n : ℕ) (f : α) : α :=
-  CField.div (CDiffField.cderiv f) (CField.mul (DensePoly.cnatCast n) f)
+  CField.div (CDiffField.cderiv f) (CCommRing.mul (DensePoly.cnatCast n) f)
 
 /-- The diagonal radical derivation `radDeriv n f [a₀,…] = [D a₀ + 0·a₀·ℓ, D a₁ + 1·a₁·ℓ, …]`
 (`ℓ = f'/(n·f)`): the `i`-th component maps `aᵢ ↦ D(aᵢ) + aᵢ·(i·ℓ)`, preserving each `yⁱ`-component. -/
 def radDeriv (n : ℕ) (f : α) (p : RadElem α) : RadElem α :=
   let ℓ := logDerRadicand n f
   (p.zipIdx.map (fun (a, i) =>
-    CField.add (CDiffField.cderiv a) (CField.mul a (CField.mul (DensePoly.cnatCast i) ℓ))))
+    CCommRing.add (CDiffField.cderiv a) (CCommRing.mul a (CCommRing.mul (DensePoly.cnatCast i) ℓ))))
 
 end RadElem
 
 /-- A `ℚ(x)` value (`CFrac ℚ`) from a numerator `DensePoly ℚ = List ℚ` over denominator `1`. -/
 def qxOfNum (num : DensePoly ℚ) : CFrac ℚ :=
-  ⟨(num, [CField.one]), CFrac.cisZeroG_one_singleton⟩
+  ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
 
 /-- A `ℚ(x)` value `num/den` from a numerator and a nonzero denominator `DensePoly ℚ`. -/
 def qxOfFrac (num den : DensePoly ℚ) (h : DensePoly.cisZero den = false) : CFrac ℚ :=
@@ -176,7 +176,7 @@ The piece `C/(Wᵏy)` where `W` is a squarefree factor of the radicand `f` (not 
 /-- Case-2 cofactor (`n = 2`) `radCase2Cofactor k W h C = B`: the degree-`< deg W` polynomial solving
 `B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantine ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderiv W`. -/
 def radCase2Cofactor (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CField.one (cnatCast 2)]              -- `½`
+  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- `½`
   let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
   (cdiophantine coef W C).1
 
@@ -184,7 +184,7 @@ def radCase2Cofactor (k : ℕ) (W h C : DensePoly α) : DensePoly α :=
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderiv B`, `h'` is `cderiv h`, division by `W` is
 `cdivWf`. -/
 def radCase2Residual (k : ℕ) (W h C B : DensePoly α) : DensePoly α :=
-  let half : DensePoly α := [CField.div CField.one (cnatCast 2)]              -- `½`
+  let half : DensePoly α := [CField.div CCommRing.one (cnatCast 2)]              -- `½`
   let coef := cmul (csub half [cnatCast k]) (cmul (cderiv W) h)        -- `(½ − k)·W'·h`
   let topNum := csub (cmul B coef) C                                      -- `B·(½−k)W'h − C`
   let quotient := cdivWf topNum W                                           -- `/W`
@@ -206,7 +206,7 @@ def radCase3Cofactor (f g C : DensePoly α) : DensePoly α :=
   if cisZero C || dC < dF then []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CField.add (cnatCast jp1) (clead g)            -- `(j+1) + lcf(g)`
+    let denom := CCommRing.add (cnatCast jp1) (clead g)            -- `(j+1) + lcf(g)`
     let b := CField.div (clead C) denom                          -- `b = lcf(C)/((j+1)+lcf(g))`
     cshift jp1 [b]                                                -- `b·θ^{j+1}`
 
@@ -232,7 +232,7 @@ def radCase3CofactorGen (Dt : α) (f g C : DensePoly α) : DensePoly α :=
   if cisZero C || dC < dF then []
   else
     let jp1 := dC - dF + 1                                         -- `j + 1 = deg C − deg f + 1`
-    let denom := CField.add (CField.mul (cnatCast jp1) Dt) (clead g)  -- `(j+1)·θ' + lcf(g)`
+    let denom := CCommRing.add (CCommRing.mul (cnatCast jp1) Dt) (clead g)  -- `(j+1)·θ' + lcf(g)`
     let b := CField.div (clead C) denom                          -- `b = lcf(C)/((j+1)θ' + lcf(g))`
     cshift jp1 [b]                                                -- `b·θ^{j+1}`
 
@@ -243,9 +243,9 @@ For `θ = exp v`, `θ` divides its own derivative (`θ' = v'·θ`); the new piec
 `c₀ = b₀g₀ − k·v'·b₀·f₀` on the constant-`b₀` slice gives `b₀ = c₀/(g₀ − k·v'·f₀)`, residual
 `D = ((B'f + Bg − kv'Bf) − C)/θ`, cleared identity `(B'f + Bg − kv'Bf) − C = θ·D`. -/
 
-/-- `radConstCoeff p`: the `θ⁰` (head) coefficient of `p` (`CField.zero` for the empty list), the
+/-- `radConstCoeff p`: the `θ⁰` (head) coefficient of `p` (`CCommRing.zero` for the empty list), the
 residue of `p` modulo `θ`. -/
-def radConstCoeff (p : DensePoly α) : α := (p : List α).headD CField.zero
+def radConstCoeff (p : DensePoly α) : α := (p : List α).headD CCommRing.zero
 
 /-- `θ = exp v` `C/(θᵏy)` cofactor `radExpCofactor k vder f g C = B`: the constant `B = [b₀]` with
 `b₀ = c₀ / (g₀ − k·v'·f₀)` (`f₀, g₀, c₀` the `θ⁰`-coefficients of `f, g, C`, `vder = v'`), solving the
@@ -254,16 +254,16 @@ def radExpCofactor (k : ℕ) (vder : α) (f g C : DensePoly α) : DensePoly α :
   let f0 := radConstCoeff f
   let g0 := radConstCoeff g
   let c0 := radConstCoeff C
-  let denom := CField.sub g0 (CField.mul (CField.mul (cnatCast k) vder) f0)  -- `g₀ − k·v'·f₀`
+  let denom := CField.sub g0 (CCommRing.mul (CCommRing.mul (cnatCast k) vder) f0)  -- `g₀ − k·v'·f₀`
   [CField.div c0 denom]                                                       -- `[b₀]`
 
 /-- `θ = exp v` `C/(θᵏy)` residual `radExpResidual k vder f g B C Bder = D`: the lowered-`k` numerator
 `D = ((B'f + Bg − k·v'·B·f) − C)/θ`. `vder = v'`, `Bder = B'`, `g` passed in; division by `θ` is
 `cdivWf _ [0,1]`. -/
 def radExpResidual (k : ℕ) (vder : α) (f g B C Bder : DensePoly α) : DensePoly α :=
-  let kvBf := cmul [CField.mul (cnatCast k) vder] (cmul B f)    -- `k·v'·B·f`
+  let kvBf := cmul [CCommRing.mul (cnatCast k) vder] (cmul B f)    -- `k·v'·B·f`
   let num := csub (csub (cadd (cmul Bder f) (cmul B g)) kvBf) C  -- `B'f + Bg − kv'Bf − C`
-  cdivWf num [CField.zero, CField.one]                             -- `… / θ`
+  cdivWf num [CCommRing.zero, CCommRing.one]                             -- `… / θ`
 
 end DensePoly
 

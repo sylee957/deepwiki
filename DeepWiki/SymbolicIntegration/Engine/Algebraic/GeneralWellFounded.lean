@@ -26,7 +26,7 @@ computed by the well-founded `cdiophantine`. -/
 /-- `f_y⁻¹ mod f` — `afFyInvWf f = (cdiophantine (afFy f) f [1]).1`, the first Bézout cofactor `s` of
 `s·f_y + t·f = 1`. The inverse of `∂f/∂y` in `K(x)[y]/(f)` (valid for separable `f`), degree `< deg f`. -/
 def afFyInvWf (f : DensePoly α) : DensePoly α :=
-  (cdiophantine (afFy f) f [CField.one]).1
+  (cdiophantine (afFy f) f [CCommRing.one]).1
 
 variable [CDiffField α]
 
@@ -78,16 +78,16 @@ theorem mk_toPolyG_afFyInvWf_mul_afFy (f : DensePoly α) (hf : cnorm f ≠ [])
     (hgne : toPoly (cgcdWf (afFy f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f)
         (toPoly (afFyInvWf f) * toPoly (afFy f)) = 1 := by
-  have hbez := toPolyG_cdiophantineG (afFy f) f [CField.one] hf hgdeg hgne
-  have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
+  have hbez := toPolyG_cdiophantineG (afFy f) f [CCommRing.one] hf hgdeg hgne
+  have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote]
     simp
   rw [hone] at hbez
   rw [show toPoly (afFyInvWf f) * toPoly (afFy f)
-      = 1 - toPoly (cdiophantine (afFy f) f [CField.one]).2 * toPoly f from by
+      = 1 - toPoly (cdiophantine (afFy f) f [CCommRing.one]).2 * toPoly f from by
         rw [afFyInvWf]; linear_combination hbez]
   have hmem : Ideal.Quotient.mk (afIdeal f)
-      (toPoly (cdiophantine (afFy f) f [CField.one]).2 * toPoly f) = 0 :=
+      (toPoly (cdiophantine (afFy f) f [CCommRing.one]).2 * toPoly f) = 0 :=
     Ideal.Quotient.eq_zero_iff_mem.mpr (mul_curve_mem f _)
   rw [map_sub, hmem, map_one, sub_zero]
 
@@ -158,9 +158,9 @@ theorem mk_toPolyG_afDerivWf_afMul (f a b : DensePoly α) (hf : cnorm f ≠ [])
 
 /-- `afDerivWf` kills `1` modulo the curve ideal. -/
 theorem mk_toPolyG_afDerivWf_one (f : DensePoly α) (hf : cnorm f ≠ []) :
-    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f [CField.one])) = 0 := by
+    Ideal.Quotient.mk (afIdeal f) (toPoly (afDerivWf f [CCommRing.one])) = 0 := by
   rw [mk_toPolyG_afDerivWf f _ hf]
-  have h1 : toPoly ([CField.one] : DensePoly α) = 1 := by
+  have h1 : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote]
     simp
   rw [h1, Derivation.map_one_eq_zero, map_zero]
@@ -194,7 +194,7 @@ def afRatMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac �
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
-    let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CField.zero
+    let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
     let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
     let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
@@ -245,7 +245,7 @@ def afLogMatrixWf (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac �
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
-    let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CField.zero
+    let entryOf : ℕ → CFrac ℚ := fun k => (cols[k]!).getD i CCommRing.zero
     let nums : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
     let dens : List (DensePoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
     let cleared : List (DensePoly ℚ) := (List.range nCols).map (fun k =>
@@ -301,7 +301,7 @@ def gcCombineRatIntegrandWf : DensePoly (CFrac ℚ) := gcuspCubicY
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
 def gcCombineLogIntegrandWf : DensePoly (CFrac ℚ) :=
   afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
-    [CField.zero, CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)]
+    [CCommRing.zero, CCommRing.zero, qxOfFrac [1] [0, 0, 1] (by decide)]
 
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
 `∫ (y + afDerivWf(y)/y) dx`. -/
@@ -318,9 +318,9 @@ theorem afIntegrateAlgebraicWf_cuspCubic_combine :
       let v := p.1
       let u := p.2
       cisZero (csub (afDerivWf gcuspCubicF v) gcCombineRatIntegrandWf)
-      && cisZero (csub v [CField.zero, qxOfNum [0, 3/5]])
+      && cisZero (csub v [CCommRing.zero, qxOfNum [0, 3/5]])
       && cisZero (afLogResidualWf gcuspCubicF gcCombineLogIntegrandWf u)
-      && cisZero [u.getD 0 CField.zero]
-      && !cisZero [u.getD 1 CField.zero])) = some true := by native_decide
+      && cisZero [u.getD 0 CCommRing.zero]
+      && !cisZero [u.getD 1 CCommRing.zero])) = some true := by native_decide
 
 end DeepWiki.SymbolicIntegration

@@ -173,13 +173,13 @@ def cstep (Dt : DensePoly α) (p : DensePoly α) : DensePoly α :=
 `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
 def cSplitFactorFast (Dt : DensePoly α) (p : DensePoly α) : DensePoly α × DensePoly α :=
   let S := cstep Dt p
-  if cdeg S = 0 then (p, [CField.one])
+  if cdeg S = 0 then (p, [CCommRing.one])
   else
     let pq := cdivWf p S
     if (cnorm pq : List α).length < (cnorm p : List α).length then
       let (qn, qs) := cSplitFactorFast Dt pq
       (qn, cmul S qs)
-    else (p, [CField.one])   -- unreachable on a real run (the special factor drops the degree)
+    else (p, [CCommRing.one])   -- unreachable on a real run (the special factor drops the degree)
 termination_by (cnorm p).length
 decreasing_by assumption
 
@@ -264,7 +264,7 @@ multiplicity `i ≥ 2`, run the inner loop `cHermiteReduceTowerInnerWf` (with `u
 def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
     (DensePoly α × DensePoly α) × (DensePoly α × DensePoly α) :=
   let factors := cSqfreeYunFF d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
-  let Dstar := factors.foldl (fun acc vi => cmul acc vi) [CField.one]   -- squarefree radical ∏ᵢ vᵢ
+  let Dstar := factors.foldl (fun acc vi => cmul acc vi) [CCommRing.one]   -- squarefree radical ∏ᵢ vᵢ
   let g : DensePoly α × DensePoly α := factors.zipIdx.foldl
     (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
       let i := idx + 1
@@ -272,9 +272,9 @@ def cHermiteReduceTower (Dt : DensePoly α) (a d : DensePoly α) :
       else
         let Vi_pow := cpow vi i
         let u := cdivWf d Vi_pow
-        let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])
+        let (gloc, _) := cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])
         (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))  -- gAcc + gloc
-    ([CField.zero], [CField.one])
+    ([CCommRing.zero], [CCommRing.one])
   let gprimeNum := csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2))
   let gden2 := cmul g.2 g.2
   let resNum := csub (cmul a gden2) (cmul d gprimeNum)
@@ -305,10 +305,10 @@ def cLogArgTower (Dt : DensePoly α) (a d : DensePoly α) (c : α) : DensePoly �
 
 /-- Generic rational/field residues `cRationalResidues Dt a d cands`: keep the candidates
 `c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTower Dt a d`,
-i.e. `R(c) = 0` (tested by `CField.isZero (cHorner R c)`). -/
+i.e. `R(c) = 0` (tested by `CCommRing.isZero (cHorner R c)`). -/
 def cRationalResidues (Dt : DensePoly α) (a d : DensePoly α) (cands : List α) : List α :=
   let R := cResidueResultantTower Dt a d
-  cands.filter (fun c => CField.isZero (cHorner R c))
+  cands.filter (fun c => CCommRing.isZero (cHorner R c))
 
 /-- Generic logarithmic part `cLogPart Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ residues]`: pair
 each residue `c : α` (from `cRationalResidues`) with its log argument `cLogArgTower Dt a d c`. -/
@@ -445,7 +445,7 @@ def cSPDE (Dt : DensePoly α) (a b c : DensePoly α) (n : ℤ) :
       let c' := cdivWf c g
       if cdeg a' = 0 then
         let ainv := CField.inv (clead a')
-        some (cscale ainv b', cscale ainv c', n, [CField.one], [])
+        some (cscale ainv b', cscale ainv c', n, [CCommRing.one], [])
       else
         let (r, z) := cdiophantine b' a' c'
         let Da := cmonomialDeriv Dt a'

@@ -117,11 +117,11 @@ over `α`, each solved by `CRischField.crischDESolve` and reassembled; a non-sca
 def radExtRischDESolve {α : Type*} [CField α] [CDiffField α] [CRischField α] {n : ℕ} {f : α}
     (B C : RadExt α n f) : Option (RadExt α n f) :=
   if RadExt.isScalar B then
-    let b₀ : α := (B.toRad : List α).headD CField.zero
+    let b₀ : α := (B.toRad : List α).headD CCommRing.zero
     let ℓ : α := RadElem.logDerRadicand n f
     (((List.range n).mapM fun i =>
-      let coeff : α := CField.add b₀ (CField.mul (DensePoly.cnatCast i) ℓ)
-      let Ci : α := (C.toRad : List α).getD i CField.zero
+      let coeff : α := CCommRing.add b₀ (CCommRing.mul (DensePoly.cnatCast i) ℓ)
+      let Ci : α := (C.toRad : List α).getD i CCommRing.zero
       CRischField.crischDESolve coeff Ci).map RadExt.ofRad)
   else none
 
@@ -142,27 +142,27 @@ abbrev RadX3 : Type := RadExt (CFrac ℚ) 2 radicandX3p1
 /-- The generator `y = √(x³+1)` as an element of `RadX3` (through the carrier `RadExt.gen`). -/
 def radX3Gen : RadX3 := RadExt.gen
 
-/-- `y·y = f` in `RadX3` through `CField.mul`: squaring `y = √(x³+1)` reduces `y² → f = x³+1`. -/
+/-- `y·y = f` in `RadX3` through `CCommRing.mul`: squaring `y = √(x³+1)` reduces `y² → f = x³+1`. -/
 theorem radX3_gen_sq_eq_radicand :
-    CField.isZero (CField.sub (CField.mul radX3Gen radX3Gen) (⟨[radicandX3p1]⟩ : RadX3)) = true := by
+    CCommRing.isZero (CField.sub (CCommRing.mul radX3Gen radX3Gen) (⟨[radicandX3p1]⟩ : RadX3)) = true := by
   native_decide
 
 /-- `D(y) = (f'/(2f))·y` in `RadX3` through `CDiffField.cderiv`: the diagonal derivation sends
 `y = √(x³+1)` to `ℓ·y` with `ℓ = 3x²/(2(x³+1))`. -/
 theorem radX3_cderiv_gen_eq :
-    CField.isZero (CField.sub (CDiffField.cderiv radX3Gen)
-      (⟨[CField.zero, radicandLogDer]⟩ : RadX3)) = true := by native_decide
+    CCommRing.isZero (CField.sub (CDiffField.cderiv radX3Gen)
+      (⟨[CCommRing.zero, radicandLogDer]⟩ : RadX3)) = true := by native_decide
 
-/-- `u · u⁻¹ = 1` in `RadX3` through `CField.mul`/`CField.inv`: for `u = x + y` the conjugate-norm
+/-- `u · u⁻¹ = 1` in `RadX3` through `CCommRing.mul`/`CField.inv`: for `u = x + y` the conjugate-norm
 inverse is genuine, so `RadExt` is a field, not just a ring. -/
 theorem radX3_mul_inv_eq_one :
-    CField.isZero (CField.sub (CField.mul (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3)
-      (CField.inv (⟨[qxOfNum [0, 1], CField.one]⟩ : RadX3))) CField.one) = true := by native_decide
+    CCommRing.isZero (CField.sub (CCommRing.mul (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3)
+      (CField.inv (⟨[qxOfNum [0, 1], CCommRing.one]⟩ : RadX3))) CCommRing.one) = true := by native_decide
 
 /-- `D(1) = 0` and `D(0) = 0` in `RadX3`: the derivation annihilates the unit and zero. -/
 theorem radX3_cderiv_one_zero :
-    CField.isZero (CDiffField.cderiv (CField.one : RadX3)) = true ∧
-    CField.isZero (CDiffField.cderiv (CField.zero : RadX3)) = true := by
+    CCommRing.isZero (CDiffField.cderiv (CCommRing.one : RadX3)) = true ∧
+    CCommRing.isZero (CDiffField.cderiv (CCommRing.zero : RadX3)) = true := by
   constructor <;> native_decide
 
 /-! ### The generic `CRischField (RadExt …)` solves a genuine algebraic RDE
@@ -172,7 +172,7 @@ carries a genuine `y`-component), the solve decouples into two base RDEs over �
 `radDeriv z + B·z = C`. -/
 
 /-- The scalar coefficient `B = 1 ∈ RadX3` for the algebraic-RDE validation. -/
-def radX3RischB : RadX3 := CField.one
+def radX3RischB : RadX3 := CCommRing.one
 
 /-- The target solution `z = x + 2·y ∈ RadX3`, from which the right-hand side `C` is built. -/
 def radX3RischZ : RadX3 := ⟨[qxOfNum [0, 1], qxOfNum [2]]⟩
@@ -213,13 +213,13 @@ A transcendental monomial `t` stacks on `RadX3 = ℚ(x)[√(x³+1)]`; `cmonomial
 
 /-- The transcendental monomial `t = eˣ` over the radical base: its derivative `Dt = t`, as the
 `RadX3[t]`-polynomial `[0, 1] = t` (the independent exponential, `Dt = t`). -/
-def radX3DtExp : DensePoly RadX3 := [CField.zero, CField.one]
+def radX3DtExp : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
 
 /-- The `RadX3[t]`-polynomial `t² = [0, 0, 1]` (a transcendental square over the radical base). -/
-def radX3T2sq : DensePoly RadX3 := [CField.zero, CField.zero, CField.one]
+def radX3T2sq : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The `RadX3[t]`-polynomial `2·t² = [0, 0, 2]` (`2 = 1 + 1`), the expected `D(t²)` for `t = eˣ`. -/
-def radX3TwoT2sq : DensePoly RadX3 := [CField.zero, CField.zero, CField.add CField.one CField.one]
+def radX3TwoT2sq : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- `D(t²) = 2t²` over `RadX3[t] = ℚ(x)[√(x³+1)][eˣ]`: `cmonomialDeriv` (with `t = eˣ`, `Dt = t`)
 computes `D(t²) = 2t·t = 2t²` over the algebraic base. -/
@@ -229,11 +229,11 @@ theorem radX3_monomialDeriv_t2sq_eq_two_t2sq :
 
 /-- The `RadX3[t]`-polynomial `y·t = [0, y]` (the radical generator `y = √(x³+1)` times the monomial
 `t = eˣ`): constant `t`-coefficient `0`, linear `t`-coefficient `y = radX3Gen`. -/
-def radX3GenT : DensePoly RadX3 := [CField.zero, radX3Gen]
+def radX3GenT : DensePoly RadX3 := [CCommRing.zero, radX3Gen]
 
 /-- The `RadX3[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected `D(y·t)` (`ℓ = f'/(2f)`). -/
 def radX3GenTDeriv : DensePoly RadX3 :=
-  [CField.zero, CField.mul (⟨[CField.zero, CField.add radicandLogDer CField.one]⟩ : RadX3) CField.one]
+  [CCommRing.zero, CCommRing.mul (⟨[CCommRing.zero, CCommRing.add radicandLogDer CCommRing.one]⟩ : RadX3) CCommRing.one]
 
 /-- `D(y·t) = (ℓ+1)·y·t` over `RadX3[t]`: the mixed tower derivation, with `D(y) = ℓ·y` (radical) and
 `Dt = t` (monomial) both firing via the product rule. -/
@@ -280,13 +280,13 @@ theorem toK_radicandX3p1 :
   show CFrac.toCFrac radicandX3p1 = _
   rw [CFrac.toCFrac]
   show CFrac.am ℚ (toPoly ([1, 0, 0, 1] : DensePoly ℚ))
-      / CFrac.am ℚ (toPoly ([CField.one] : DensePoly ℚ)) = _
+      / CFrac.am ℚ (toPoly ([CCommRing.one] : DensePoly ℚ)) = _
   have h1 : toPoly ([1, 0, 0, 1] : DensePoly ℚ) = 1 + X ^ 3 := by
     simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
     simp; ring
-  have h2 : toPoly ([CField.one] : DensePoly ℚ) = 1 := by
-    show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
+  have h2 : toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
+    show C (CFieldSpec.toK (CCommRing.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h1, h2]
   show CFrac.am ℚ (1 + X ^ 3) / CFrac.am ℚ 1 = _
   rw [map_one, div_one]; rfl
@@ -383,7 +383,7 @@ theorem cnormG_radReduce_length_le (hn : 1 ≤ n) : ∀ (fuel : ℕ) (u : DenseP
       set q := DensePoly.cnorm u with hq
       have hstep : (DensePoly.cadd (q : List α).dropLast
         (DensePoly.cshift ((q : List α).length - 1 - n)
-            [CField.mul ((q : List α).getLast?.getD CField.zero) f]) : List α).length
+            [CCommRing.mul ((q : List α).getLast?.getD CCommRing.zero) f]) : List α).length
           < (q : List α).length := by
         rw [caddG_length, DensePoly.cshiftG_length]
         simp only [List.length_singleton, List.length_dropLast]; omega
@@ -427,8 +427,8 @@ theorem toAdj_zero : toAdj (RadExt.zero : RadExt α n f) = 0 := by
 
 /-- `toAdj` sends `RadExt.one` to `1`. -/
 theorem toAdj_one : toAdj (RadExt.one : RadExt α n f) = 1 := by
-  show AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (DensePoly.toPoly ([CField.one] : RadElem α)) = 1
-  rw [show DensePoly.toPoly ([CField.one] : RadElem α) = (1 : (CFieldSpec.K α)[X]) by
+  show AdjoinRoot.mk (X ^ n - C (CFieldSpec.toK f)) (DensePoly.toPoly ([CCommRing.one] : RadElem α)) = 1
+  rw [show DensePoly.toPoly ([CCommRing.one] : RadElem α) = (1 : (CFieldSpec.K α)[X]) by
     simp only [denote]; simp]
   exact map_one _
 
@@ -487,7 +487,7 @@ theorem toPolyG_radInv2 (q : RadElem α) :
       = C (CFieldSpec.toK (CField.div (radCoeff0 q) (radNorm2 f q)))
         - C (CFieldSpec.toK (CField.div (radCoeff1 q) (radNorm2 f q))) * X := by
   show DensePoly.toPoly [CField.div (radCoeff0 q) (radNorm2 f q),
-      CField.neg (CField.div (radCoeff1 q) (radNorm2 f q))] = _
+      CCommRing.neg (CField.div (radCoeff1 q) (radNorm2 f q))] = _
   simp only [denote, mul_zero, add_zero]
   rw [map_neg]; ring
 
@@ -499,7 +499,7 @@ theorem toPolyG_of_len_le_two (q : RadElem α) (hq : (q : List α).length ≤ 2)
   | [a], _ =>
     show DensePoly.toPoly [a] = _
     rw [show radCoeff0 ([a] : RadElem α) = a from rfl,
-      show radCoeff1 ([a] : RadElem α) = CField.zero from rfl]
+      show radCoeff1 ([a] : RadElem α) = CCommRing.zero from rfl]
     simp only [denote, mul_zero, add_zero]
     rw [map_zero, zero_mul, add_zero]
   | [a, b], _ =>
@@ -644,18 +644,18 @@ theorem cdiffField_qfunNZG_radX3_unconditional : Nonempty (CDiffField (CFrac Rad
 
 /-- The transcendental monomial `t ∈ CFrac RadX3 = ℚ(x)[√(x³+1)](t)` (numerator `[0, 1]`, denominator
 `[1]`). -/
-def tOverRadX3 : CFrac RadX3 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩
+def tOverRadX3 : CFrac RadX3 := ⟨([CCommRing.zero, CCommRing.one], [CCommRing.one]), by native_decide⟩
 
 /-- `D(t) = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass derivation `CDiffField.cderiv` on `CFrac RadX3`
 sends the transcendental monomial `t` to `1` over the algebraic base. -/
 theorem cderiv_tOverRadX3_eq_one :
-    CField.isZero (CField.sub (CDiffField.cderiv tOverRadX3) (CField.one : CFrac RadX3)) = true := by
+    CCommRing.isZero (CField.sub (CDiffField.cderiv tOverRadX3) (CCommRing.one : CFrac RadX3)) = true := by
   native_decide
 
 /-- `t · t⁻¹ = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass field operations of `CFrac RadX3` invert
 the transcendental monomial `t` over the algebraic base. -/
 theorem mul_inv_tOverRadX3_eq_one :
-    CField.isZero (CField.sub (CField.mul tOverRadX3 (CField.inv tOverRadX3))
-      (CField.one : CFrac RadX3)) = true := by native_decide
+    CCommRing.isZero (CField.sub (CCommRing.mul tOverRadX3 (CField.inv tOverRadX3))
+      (CCommRing.one : CFrac RadX3)) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

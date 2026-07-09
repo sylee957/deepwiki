@@ -90,10 +90,10 @@ theorem cSplitFactorFastG_isSplittingFactorizationGen [CharZero (CFieldSpec.K α
         have hstepdeg : (splitFactorStep (toPoly Dt) (toPoly p)).natDegree = 0 := by
           rw [← natDegree_eq_of_associated hAstep, ← cdegG_eq_natDegree, hSdeg]
         have hnorm := isNormalSqfree_of_splitFactorStep_natDegree_zero (toPoly Dt) hp hstepdeg
-        have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
+        have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
           simp only [denote]
           simp
-        show IsSplittingFactorizationGen (toPoly p) (toPoly ([CField.one] : DensePoly α)) (toPoly p)
+        show IsSplittingFactorizationGen (toPoly p) (toPoly ([CCommRing.one] : DensePoly α)) (toPoly p)
         rw [hone]
         exact ⟨(one_mul _).symm, isSpecial_one, hnorm⟩
       · rw [if_neg hSdeg]

@@ -36,10 +36,10 @@ def mumfordValid (ρ : DensePoly α) (D : MumfordDivisor α) : Bool :=
 /-! ### The divisor of a single affine point, and the identity -/
 
 /-- The identity divisor `mumfordIdentity = (1, 0)` — the zero element of the Jacobian. -/
-def mumfordIdentity : MumfordDivisor α := ⟨[CField.one], []⟩
+def mumfordIdentity : MumfordDivisor α := ⟨[CCommRing.one], []⟩
 
 /-- The divisor of an affine point `mumfordPoint x0 y0 = (x − x₀, y₀)`: `u = [−x₀, 1]`, `v = [y₀]`. -/
-def mumfordPoint (x0 y0 : α) : MumfordDivisor α := ⟨[CField.neg x0, CField.one], [y0]⟩
+def mumfordPoint (x0 y0 : α) : MumfordDivisor α := ⟨[CCommRing.neg x0, CCommRing.one], [y0]⟩
 
 /-! ### The opposite (negation) `−D` -/
 
@@ -60,7 +60,7 @@ From support points `[(x₁, y₁), …]`: `u = ∏ᵢ (x − xᵢ)` monic, `v` 
 
 /-- Support polynomial `mumfordSupportPoly xs = ∏ᵢ (x − xᵢ)` (monic) for a support list `xs`. -/
 def mumfordSupportPoly (xs : List α) : DensePoly α :=
-  xs.foldl (fun acc xi => cmul acc [CField.neg xi, CField.one]) [CField.one]
+  xs.foldl (fun acc xi => cmul acc [CCommRing.neg xi, CCommRing.one]) [CCommRing.one]
 
 /-- The residue divisor as a Mumford pair `residueDivisorMumford pts = (u, v)`: from support points
 `pts = [(x₁, y₁), …]`, `u = ∏ᵢ (x − xᵢ)` and `v` the Lagrange interpolant through `(xᵢ, yᵢ)`. -/

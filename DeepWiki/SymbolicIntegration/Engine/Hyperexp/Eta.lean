@@ -14,7 +14,7 @@ variable {α : Type*} [CField α]
 
 /-- Hyperexponential coefficient `cExpEta Dt = Dt/t = η ∈ α` for a monomial `Dt = η·t`. -/
 def cExpEta (Dt : DensePoly α) : α :=
-  clead (cdivWf Dt (cshift 1 [CField.one]))
+  clead (cdivWf Dt (cshift 1 [CCommRing.one]))
 
 end DensePoly
 

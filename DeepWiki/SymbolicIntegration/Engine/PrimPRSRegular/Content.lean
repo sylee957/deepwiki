@@ -44,7 +44,7 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
       Polynomial.C (DensePoly.toPoly c) * toGBCoeffPoly p
           = toGBCoeffPoly s * toGBCoeffPoly q + toGBCoeffPoly (gbpsremainderCore fuel p q)
         ∧ DensePoly.toPoly c ≠ 0 := by
-  have hone : DensePoly.toPoly ([CField.one] : DensePoly β) = 1 := by
+  have hone : DensePoly.toPoly ([CCommRing.one] : DensePoly β) = 1 := by
     simp only [denote]
     simp
   -- `lc(gbnormCore q)` reads nonzero (the divisor is nonzero)
@@ -52,14 +52,14 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
     toPolyG_gblcCore_ne_zero hq
   induction fuel generalizing p with
   | zero =>
-    exact ⟨[], [CField.one], by simp [gbpsremainderCore, toGBCoeffPoly_gbnormCore, hone],
+    exact ⟨[], [CCommRing.one], by simp [gbpsremainderCore, toGBCoeffPoly_gbnormCore, hone],
       by rw [hone]; exact one_ne_zero⟩
   | succ fuel ih =>
     simp only [gbpsremainderCore]
     split_ifs with hqz hlen
-    · exact ⟨[], [CField.one], by simp [toGBCoeffPoly_gbnormCore, hone],
+    · exact ⟨[], [CCommRing.one], by simp [toGBCoeffPoly_gbnormCore, hone],
         by rw [hone]; exact one_ne_zero⟩
-    · exact ⟨[], [CField.one], by simp [toGBCoeffPoly_gbnormCore, hone],
+    · exact ⟨[], [CCommRing.one], by simp [toGBCoeffPoly_gbnormCore, hone],
         by rw [hone]; exact one_ne_zero⟩
     · obtain ⟨s', c', hsc, hc'⟩ := ih (gbnormCore (gbsubCore (gbscaleCCore (gblcCore (gbnormCore q))
         (gbnormCore p))
@@ -78,7 +78,7 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
         ring
       rw [hp', gbpsremainderCore_gbnormCore_right] at hsc
       refine ⟨gbaddCore s' (gbscaleCCore (DensePoly.cmul c' (gblcCore (gbnormCore p)))
-          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CField.one]])),
+          (gbshiftCore ((gbnormCore p).length - (gbnormCore q).length) [[CCommRing.one]])),
           DensePoly.cmul c' (gblcCore (gbnormCore q)), ?_, ?_⟩
       · rw [toGBCoeffPoly_gbaddCore, toGBCoeffPoly_gbscaleCCore, toGBCoeffPoly_gbshiftCore,
           toGBCoeffPoly_one]

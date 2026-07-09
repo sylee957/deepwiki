@@ -153,18 +153,18 @@ theorem cHermiteReduceTowerG_telescope (Dt : DensePoly α) (s : DensePoly α × 
 
 /-! ### The seed derivative vanishes (`0/1`) -/
 
-/-- The Hermite seed `([CField.zero], [CField.one])` reads as `0/1 = 0`, so its field derivative
+/-- The Hermite seed `([CCommRing.zero], [CCommRing.one])` reads as `0/1 = 0`, so its field derivative
 vanishes: `towerFractionFieldDeriv Dt (am 0 / am 1) = 0`. -/
 theorem towerFractionFieldDerivG_amG_seed (Dt : DensePoly α) :
     towerFractionFieldDeriv Dt
-        (am α (toPoly ([CField.zero] : DensePoly α)) / am α (toPoly ([CField.one] : DensePoly α))) = 0 := by
-  have hzero : am α (toPoly ([CField.zero] : DensePoly α)) = 0 := by
+        (am α (toPoly ([CCommRing.zero] : DensePoly α)) / am α (toPoly ([CCommRing.one] : DensePoly α))) = 0 := by
+  have hzero : am α (toPoly ([CCommRing.zero] : DensePoly α)) = 0 := by
     simp only [denote, map_zero, mul_zero, add_zero]
   rw [hzero, zero_div, map_zero]
 
 /-! ### The Hermite telescoping at the engine seed `0/1` -/
 
-/-- The Hermite telescoping at the seed `([CField.zero], [CField.one])`: `D(g) + h = a/d` for the `g`
+/-- The Hermite telescoping at the seed `([CCommRing.zero], [CCommRing.one])`: `D(g) + h = a/d` for the `g`
 accumulated by the `g`-fold, given the per-power identities `hstep` and the leftover chain `L₀ :: rest`. -/
 theorem cHermiteReduceTowerG_telescope_seed (Dt : DensePoly α)
     (L₀ : DensePoly α × DensePoly α) (rest glocs : List (DensePoly α × DensePoly α))
@@ -178,14 +178,14 @@ theorem cHermiteReduceTowerG_telescope_seed (Dt : DensePoly α)
         (am α (toPoly (glocs.foldl
             (fun (gAcc : DensePoly α × DensePoly α) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : DensePoly α), ([CField.one] : DensePoly α))).1)
+            (([CCommRing.zero] : DensePoly α), ([CCommRing.one] : DensePoly α))).1)
           / am α (toPoly (glocs.foldl
             (fun (gAcc : DensePoly α × DensePoly α) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : DensePoly α), ([CField.one] : DensePoly α))).2))
+            (([CCommRing.zero] : DensePoly α), ([CCommRing.one] : DensePoly α))).2))
         + am α (toPoly (rest.getLastD L₀).1) / am α (toPoly (rest.getLastD L₀).2)
       = am α (toPoly L₀.1) / am α (toPoly L₀.2) :=
-  cHermiteReduceTowerG_telescope Dt (([CField.zero] : DensePoly α), ([CField.one] : DensePoly α))
+  cHermiteReduceTowerG_telescope Dt (([CCommRing.zero] : DensePoly α), ([CCommRing.one] : DensePoly α))
     L₀ rest glocs DensePoly.toPolyG_one_singleton_ne_zero hmem (towerFractionFieldDerivG_amG_seed Dt) hstep
 
 end DeepWiki.SymbolicIntegration

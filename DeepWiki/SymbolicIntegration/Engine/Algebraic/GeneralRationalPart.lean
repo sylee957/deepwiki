@@ -29,8 +29,8 @@ def gcuspRho : CFrac ℚ := qxOfNum [0, 0, 0, 1]
 /-- The cusp integral basis is `[1, y/x]`, integral and maximal: `(y/x)² = x` and `isMaximalOrder` holds,
 the maximal-order datum the algebraic Hermite reduction consumes. -/
 theorem gcusp_integralBasis_eq :
-    (cisZero (csub ((integralBasis gcuspF).getD 1 []) [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZero (csub ((integralBasis gcuspF).getD 0 []) [CField.one])
+    (cisZero (csub ((integralBasis gcuspF).getD 1 []) [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((integralBasis gcuspF).getD 0 []) [CCommRing.one])
       && cisZero (csub (afMul gcuspF ((integralBasis gcuspF).getD 1 [])
             ((integralBasis gcuspF).getD 1 [])) [qxOfNum [0, 1]])
       && isMaximalOrder gcuspF (integralBasis gcuspF)) = true := by native_decide
@@ -41,10 +41,10 @@ The integrand is `y = [0, 1]`; the rational part is `v = (2/5)·x·y = [0, (2/5)
 `radDeriv 2 (x³) v = y`. -/
 
 /-- The rational part of `∫ y dx`: `v = (2/5)·x·y` as `RadElem (CFrac ℚ)` `[0, (2/5)x]`. -/
-def gcuspVY : RadElem (CFrac ℚ) := [CField.zero, qxOfNum [0, 2/5]]
+def gcuspVY : RadElem (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 2/5]]
 
 /-- The integrand `y = [0, 1]` as `RadElem (CFrac ℚ)`. -/
-def gcuspY : RadElem (CFrac ℚ) := [CField.zero, CField.one]
+def gcuspY : RadElem (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- `∫ y dx = (2/5)·x·y` on `y² = x³`: the diagonal radical derivation `radDeriv 2 (x³)` of the rational
 part `v = (2/5)·x·y` equals the integrand `y`, via `radIsZero` of `radDeriv 2 ρ v − y`. -/
@@ -76,12 +76,12 @@ theorem cusp_intY_driver_eq :
 /-- The driver-produced rational part `v = vNum/y` lifted to `RadElem (CFrac ℚ)` `[0, vNum/ρ]`; with
 `vNum = (2/5)x⁴`, `ρ = x³` this is `[0, (2/5)x]`. -/
 def gcuspVYlift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum gcuspYRun.2) gcuspRho]
+  [CCommRing.zero, CField.div (qxOfNum gcuspYRun.2) gcuspRho]
 
 /-- The integrand's rational part `(C − Crem)/y` lifted to `RadElem (CFrac ℚ)` `[0, (C − Crem)/ρ]`; with
 `C = x³`, `Crem = 0` this is `[0, 1] = y`. -/
 def gcuspYRatLift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum (csub gcuspRhoP gcuspYRun.1)) gcuspRho]
+  [CCommRing.zero, CField.div (qxOfNum (csub gcuspRhoP gcuspYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced rational
 part `v = (2/5)x·y` equals the integrand's rational part `(C − Crem)/y = y`, via `radIsZero` of the
@@ -99,10 +99,10 @@ The integrand `x·y = [0, x]` has rational part `v = (2/7)·x²·y = [0, (2/7)x�
 integrand: `xy = x⁴/y`, so the Case-3 driver on `C = x⁴` returns `(Crem = 0, vNum = (2/7)x⁵)`. -/
 
 /-- The rational part of `∫ x·y dx`: `v = (2/7)·x²·y` as `RadElem (CFrac ℚ)` `[0, (2/7)x²]`. -/
-def gcuspVXY : RadElem (CFrac ℚ) := [CField.zero, qxOfNum [0, 0, 2/7]]
+def gcuspVXY : RadElem (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 0, 2/7]]
 
 /-- The integrand `x·y = [0, x]` as `RadElem (CFrac ℚ)`. -/
-def gcuspXY : RadElem (CFrac ℚ) := [CField.zero, qxOfNum [0, 1]]
+def gcuspXY : RadElem (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 1]]
 
 /-- `∫ x·y dx = (2/7)·x²·y` on `y² = x³`: the diagonal radical derivation `radDeriv 2 (x³)` of
 `v = (2/7)·x²·y` equals `x·y`, via `radIsZero` of `radDeriv 2 ρ v − xy`. -/
@@ -123,12 +123,12 @@ theorem cusp_intXY_driver_eq :
 /-- The driver-produced rational part `v = vNum/y` for `∫ x·y dx`, lifted to `RadElem (CFrac ℚ)`:
 `[0, vNum/ρ] = [0, (2/7)x²]`. -/
 def gcuspVXYlift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum gcuspXYRun.2) gcuspRho]
+  [CCommRing.zero, CField.div (qxOfNum gcuspXYRun.2) gcuspRho]
 
 /-- The integrand's rational part `(x⁴ − Crem)/y` lifted to `RadElem (CFrac ℚ)` `[0, (x⁴ − Crem)/ρ]`;
 with `Crem = 0` this is `[0, x] = x·y`. -/
 def gcuspXYRatLift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum (csub [0, 0, 0, 0, 1] gcuspXYRun.1)) gcuspRho]
+  [CCommRing.zero, CField.div (qxOfNum (csub [0, 0, 0, 0, 1] gcuspXYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ x·y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced
 `v = (2/7)x²·y` equals the integrand `x·y`, via `radIsZero` of the difference. -/

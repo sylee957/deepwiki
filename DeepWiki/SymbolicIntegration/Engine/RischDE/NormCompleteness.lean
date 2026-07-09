@@ -156,8 +156,8 @@ end ClearingDivisibility
 /-- `fden ∣ dₙh` for the shape `fden = [1]`. -/
 theorem dvd_dn_h_one_wf {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
     [CTowerGcdWitnessWf β] (h0 : DensePoly β) :
-    toPoly ([CField.one] : DensePoly β)
-      ∣ toPoly (DensePoly.cmul (DensePoly.cSplitFactorFast ([CField.one] : DensePoly β) [CField.one]).1 h0) := by
+    toPoly ([CCommRing.one] : DensePoly β)
+      ∣ toPoly (DensePoly.cmul (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) [CCommRing.one]).1 h0) := by
   rw [cSplitFactorFastG_one_eq]
   simp only [denote, toPolyG_cone_eq_one_wf]
   exact one_dvd _

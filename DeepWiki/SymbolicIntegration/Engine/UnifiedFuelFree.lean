@@ -100,16 +100,16 @@ part. -/
 open DensePoly
 
 /-- Level-2 monomial derivative `Dt₂ = 1` over `DensePoly Lvl2 = ℚ(x)(t₁)[t₂]`. -/
-def towerFullLvl2Dt : DensePoly Lvl2 := [CField.one]
+def towerFullLvl2Dt : DensePoly Lvl2 := [CCommRing.one]
 
 /-- The level-2 integrand numerator `f = t₂` over `DensePoly Lvl2`. -/
-def towerFullLvl2A : DensePoly Lvl2 := [CField.zero, CField.one]
+def towerFullLvl2A : DensePoly Lvl2 := [CCommRing.zero, CCommRing.one]
 
 /-- The level-2 integrand denominator `d = 1` over `DensePoly Lvl2`. -/
-def towerFullLvl2D : DensePoly Lvl2 := [CField.one]
+def towerFullLvl2D : DensePoly Lvl2 := [CCommRing.one]
 
 /-- The level-2 residue candidate set for the no-log polynomial-part example. -/
-def towerFullLvl2Cands : List Lvl2 := [CField.zero, CField.one]
+def towerFullLvl2Cands : List Lvl2 := [CCommRing.zero, CCommRing.one]
 
 /-- `cIntegrateGFullWf` lands `∫ t₂ = (1/2)t₂²` at level 2, with `checkIdentity` verifying `D(∫f) = f`. -/
 theorem towerFullLvl2_landsPolynomialPartWf :

@@ -87,10 +87,10 @@ def radArgRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
 def radArgRhoArccosh : CFrac ℚ := qxOfNum [-1, 0, 1]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over ℚ(x) (`ρ = x²+1`). -/
-def radArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift radArgRhoArcsinh CField.one
+def radArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift radArgRhoArcsinh CCommRing.one
 
 /-- The integrand `1/y` of `∫ dx/√(x²−1)`, lifted to `[0, 1/ρ]` over ℚ(x) (`ρ = x²−1`). -/
-def radArgIntegrandArccosh : RadElem (CFrac ℚ) := radInvYLift radArgRhoArccosh CField.one
+def radArgIntegrandArccosh : RadElem (CFrac ℚ) := radInvYLift radArgRhoArccosh CCommRing.one
 
 /-- The computed log argument for `∫ dx/√(x²+1)`: `radLogArgSolveQ` with `ρ = x²+1`, `D = 1`, ansatz
 degree `1` (expected `N = x + y` up to a constant). -/
@@ -126,7 +126,7 @@ theorem radArg_arccosh_compute_verify :
 def radArgXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`, lifted to `[0, 1/(x·ρ)]` over ℚ(x). -/
-def radArgIntegrandFinite : RadElem (CFrac ℚ) := radInvYLift radArgXRho CField.one
+def radArgIntegrandFinite : RadElem (CFrac ℚ) := radInvYLift radArgXRho CCommRing.one
 
 /-- The field element `x ∈ ℚ(x)`, `[0,1]` — the fixed denominator `D = x` of the finite-pole case. -/
 def radArgXBaseX : CFrac ℚ := qxOfNum [0, 1]
@@ -145,8 +145,8 @@ correct sign `(y − 1)`. -/
 theorem radArg_finitePole_compute_verify :
     (radArgSolvedFinite.map (fun N =>
       radIsLogIntegral 2 radArgRhoArcsinh
-        [CField.div (N.getD 0 CField.zero) radArgXBaseX,
-         CField.div (N.getD 1 CField.zero) radArgXBaseX]
+        [CField.div (N.getD 0 CCommRing.zero) radArgXBaseX,
+         CField.div (N.getD 1 CCommRing.zero) radArgXBaseX]
         radArgIntegrandFinite)) = some true := by
   native_decide
 
@@ -156,10 +156,10 @@ theorem radArg_finitePole_compute_verify :
 `a₀ = a₁·x`, matching `u = x + y` up to scalar. -/
 theorem radArg_arcsinh_matches_closed_form :
     (radArgSolvedArcsinh.map (fun N =>
-      let a0 := N.getD 0 CField.zero
-      let a1 := N.getD 1 CField.zero
-      (CField.isZero a1 == false) &&
-      CField.isZero (CField.sub a0 (CField.mul a1 radArgXBaseX)))) = some true := by
+      let a0 := N.getD 0 CCommRing.zero
+      let a1 := N.getD 1 CCommRing.zero
+      (CCommRing.isZero a1 == false) &&
+      CCommRing.isZero (CField.sub a0 (CCommRing.mul a1 radArgXBaseX)))) = some true := by
   native_decide
 
 /-! ### Negative control: a non-principal target returns `none`
@@ -173,7 +173,7 @@ def radArgX2Rho : CFrac ℚ := qxOfNum [0, 0, 1, 0, 1]
 
 /-- The integrand `1/(x² y)` of `∫ dx/(x²√(x²+1))`, lifted to `[0, 1/(x²·ρ)]` over `ℚ(x)` (a double
 pole at `x = 0`). -/
-def radArgIntegrandDouble : RadElem (CFrac ℚ) := radInvYLift radArgX2Rho CField.one
+def radArgIntegrandDouble : RadElem (CFrac ℚ) := radInvYLift radArgX2Rho CCommRing.one
 
 /-- The solve for the double-pole target: `radLogArgSolveQ` with `ρ = x²+1`, `D = x²`, degree `1`
 (expected `none`). -/

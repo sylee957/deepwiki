@@ -105,7 +105,7 @@ def CancelPrimNoCancel (Dt b : DensePoly α) : Prop :=
 /-- `expCoeff Dt c b = clead b + (deg c)·cExpEta Dt`: the shifted base-RDE coefficient for the
 hyperexponential cancellation case. -/
 def expCoeff (Dt : DensePoly α) (c b : DensePoly α) : α :=
-  CField.add (clead b) (CField.mul (cnatCast (cdeg c)) (cExpEta Dt))
+  CCommRing.add (clead b) (CCommRing.mul (cnatCast (cdeg c)) (cExpEta Dt))
 
 /-- `CancelExpBaseOracle Dt b c q`: the base oracle `crischDESolve (expCoeff Dt c b) (clead c)` returns
 `some s` with `toK s = q.leadingCoeff` (hyperexp analogue of `CancelPrimBaseOracle`). -/

@@ -71,15 +71,15 @@ theorem pairListToS_append_singleton (Q : List (DensePoly ℚ × DensePoly ℚ))
 
 theorem go_append (L : List (DensePoly ℚ × DensePoly ℚ)) (carry : DensePoly ℚ × DensePoly ℚ)
     (acc : List (DensePoly ℚ × DensePoly ℚ)) :
-    divByTminusI.go ([], [CField.one]) L carry acc
-      = divByTminusI.go ([], [CField.one]) L carry [] ++ acc := by
+    divByTminusI.go ([], [CCommRing.one]) L carry acc
+      = divByTminusI.go ([], [CCommRing.one]) L carry [] ++ acc := by
   induction L generalizing carry acc with
   | nil => simp [divByTminusI.go]
   | cons a L ih =>
     rw [divByTminusI.go]
     conv_rhs => rw [divByTminusI.go]
-    rw [ih (divByTminusI.cadd' a (cmulI ([], [CField.one]) carry)) (carry :: acc)]
-    conv_rhs => rw [ih (divByTminusI.cadd' a (cmulI ([], [CField.one]) carry)) [carry]]
+    rw [ih (divByTminusI.cadd' a (cmulI ([], [CCommRing.one]) carry)) (carry :: acc)]
+    conv_rhs => rw [ih (divByTminusI.cadd' a (cmulI ([], [CCommRing.one]) carry)) [carry]]
     simp
 
 theorem pairToS_caddG' (x y : DensePoly ℚ × DensePoly ℚ) :
@@ -95,25 +95,25 @@ theorem pairToS_cmulI (x y : DensePoly ℚ × DensePoly ℚ) :
     simp only [toS, denote, map_mul]
   rw [hmul, hmul, hmul, hmul]
   linear_combination (- (toS x.2 * toS y.2)) * iU_sq
-theorem pairToS_I : pairToS (([], [CField.one]) : DensePoly ℚ × DensePoly ℚ) = iU := by
+theorem pairToS_I : pairToS (([], [CCommRing.one]) : DensePoly ℚ × DensePoly ℚ) = iU := by
   unfold pairToS
   simp only [toS_nil, zero_add]
-  rw [show toS ([CField.one] : DensePoly ℚ) = 1 from by
+  rw [show toS ([CCommRing.one] : DensePoly ℚ) = 1 from by
     unfold toS
-    rw [show ([CField.one] : DensePoly ℚ) = (CField.one : ℚ) :: ([] : DensePoly ℚ) from rfl,
+    rw [show ([CCommRing.one] : DensePoly ℚ) = (CCommRing.one : ℚ) :: ([] : DensePoly ℚ) from rfl,
       toPolyG_cons, toPolyG_nil]
-    rw [show CRingSpec.toR (CField.one : ℚ) = 1 from rfl]
+    rw [show CRingSpec.toR (CCommRing.one : ℚ) = 1 from rfl]
     simp]
   ring
 
 theorem quotOf_cons (a : DensePoly ℚ × DensePoly ℚ) (L : List (DensePoly ℚ × DensePoly ℚ))
     (carry : DensePoly ℚ × DensePoly ℚ) :
-    divByTminusI.go ([], [CField.one]) (a :: L) carry []
-      = divByTminusI.go ([], [CField.one]) L
-          (divByTminusI.cadd' a (cmulI ([], [CField.one]) carry)) [] ++ [carry] := by
+    divByTminusI.go ([], [CCommRing.one]) (a :: L) carry []
+      = divByTminusI.go ([], [CCommRing.one]) L
+          (divByTminusI.cadd' a (cmulI ([], [CCommRing.one]) carry)) [] ++ [carry] := by
   rw [divByTminusI.go, go_append]
 theorem quotOf_length (L : List (DensePoly ℚ × DensePoly ℚ)) (carry : DensePoly ℚ × DensePoly ℚ) :
-    (divByTminusI.go ([], [CField.one]) L carry []).length = L.length := by
+    (divByTminusI.go ([], [CCommRing.one]) L carry []).length = L.length := by
   induction L generalizing carry with
   | nil => simp [divByTminusI.go]
   | cons a L ih => rw [quotOf_cons]; simp [ih]
@@ -121,13 +121,13 @@ theorem quotOf_length (L : List (DensePoly ℚ × DensePoly ℚ)) (carry : Dense
 -- Master existential division invariant.
 theorem go_div_master (L : List (DensePoly ℚ × DensePoly ℚ)) (carry : DensePoly ℚ × DensePoly ℚ) :
     ∃ r : SGauss, pairListToS L.reverse + C (pairToS carry) * X ^ L.length
-      = (X - C iU) * pairListToS (divByTminusI.go ([], [CField.one]) L carry []) + C r := by
+      = (X - C iU) * pairListToS (divByTminusI.go ([], [CCommRing.one]) L carry []) + C r := by
   induction L generalizing carry with
   | nil =>
     refine ⟨pairToS carry, ?_⟩
     simp [pairListToS, divByTminusI.go]
   | cons a L ih =>
-    obtain ⟨r, hr⟩ := ih (divByTminusI.cadd' a (cmulI ([], [CField.one]) carry))
+    obtain ⟨r, hr⟩ := ih (divByTminusI.cadd' a (cmulI ([], [CCommRing.one]) carry))
     refine ⟨r, ?_⟩
     rw [quotOf_cons, pairListToS_append_singleton, quotOf_length]
     rw [List.reverse_cons, pairListToS_append_singleton]
@@ -136,8 +136,8 @@ theorem go_div_master (L : List (DensePoly ℚ × DensePoly ℚ)) (carry : Dense
     rw [pairToS_caddG', pairToS_cmulI, pairToS_I] at hr
     -- substitute hr (solve for pairListToS L.reverse) — use linear_combination
     have hexp : pairListToS L.reverse
-        = (X - C iU) * pairListToS (divByTminusI.go ([], [CField.one]) L
-            (divByTminusI.cadd' a (cmulI ([], [CField.one]) carry)) []) + C r
+        = (X - C iU) * pairListToS (divByTminusI.go ([], [CCommRing.one]) L
+            (divByTminusI.cadd' a (cmulI ([], [CCommRing.one]) carry)) []) + C r
           - C (pairToS a + iU * pairToS carry) * X ^ L.length := by
       linear_combination hr
     rw [hexp]
@@ -153,7 +153,7 @@ theorem divByTminusI_spec (p : List (DensePoly ℚ × DensePoly ℚ)) :
     unfold pairToS; simp [toS_nil]
   rw [hpair0, map_zero, zero_mul, add_zero] at hr
   -- divByTminusI p = go I p.reverse ([],[]) []
-  have hdef : divByTminusI p = divByTminusI.go ([], [CField.one]) p.reverse ([], []) [] := by
+  have hdef : divByTminusI p = divByTminusI.go ([], [CCommRing.one]) p.reverse ([], []) [] := by
     rw [divByTminusI]; simp
   rw [hdef]
   -- evaluate hr at iU to pin r
@@ -562,8 +562,8 @@ def TanSolves (b0 b2 : DensePoly ℚ) (n : ℕ) (c1 c2 q1 q2 : List (DensePoly �
       + (C (toPoly b0) - C (C ((n : ℚ))) * X) * toPoly2 q2 = toPoly2 c2
 
 /-- `toPoly (cscale nN [1]) = C nN`. -/
-theorem toPolyG_scale_one (nN : ℚ) : toPoly (cscale nN [CField.one]) = C nN := by
-  simp [show CFieldSpec.toK (CField.one : ℚ) = 1 from rfl,
+theorem toPolyG_scale_one (nN : ℚ) : toPoly (cscale nN [CCommRing.one]) = C nN := by
+  simp [show CFieldSpec.toK (CCommRing.one : ℚ) = 1 from rfl,
     show CFieldSpec.toK nN = nN from rfl]
 
 /-- Base case (`n = 0`, `q = [s]`): the singleton solution solves the level-0 coupled `t`-system. -/
@@ -617,7 +617,7 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
     set nN : ℚ := ((m : ℚ) + 1) with hnN
     set z1 := csub (evalAtI c1).1 (evalAtI c2).2 with hz1
     set z2 := cadd (evalAtI c1).2 (evalAtI c2).1 with hz2
-    set b2shift := csub b2 (cscale nN [CField.one]) with hb2shift
+    set b2shift := csub b2 (cscale nN [CCommRing.one]) with hb2shift
     rcases hbase : cCoupledDESystem (-1) b0 b2shift z1 z2 dbound with _ | ⟨s1, s2⟩
     · rw [hbase] at hsome; simp at hsome
     · rw [hbase] at hsome
@@ -627,13 +627,13 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
       set cpairs := (List.range (max realNum.length imagNum.length)).map
         (fun k => (realNum.getD k [], imagNum.getD k [])) with hcp
       set quot := divByTminusI cpairs with hquot
-      rcases hrec : cCoupledDECancelTan dbound b0 (cadd b2 [CField.one])
+      rcases hrec : cCoupledDECancelTan dbound b0 (cadd b2 [CCommRing.one])
         (quot.map Prod.fst) (quot.map Prod.snd) m with _ | ⟨h1, h2⟩
       · rw [hrec] at hsome; simp at hsome
       · rw [hrec] at hsome
         simp only [Option.some.injEq, Prod.mk.injEq] at hsome
         obtain ⟨hq1, hq2⟩ := hsome; subst hq1 hq2
-        have hih := ih (cadd b2 [CField.one]) (quot.map Prod.fst) (quot.map Prod.snd) h1 h2 hrec
+        have hih := ih (cadd b2 [CCommRing.one]) (quot.map Prod.fst) (quot.map Prod.snd) h1 h2 hrec
         have hred := reduction_real c1 c2 s1 s2 nN realNum imagNum hrN hiN cpairs hcp quot hquot
         obtain ⟨hb1, hb2⟩ := cCoupledDESystem_sound (-1) b0 b2shift z1 z2 dbound s1 s2 hbase
         -- Abbreviate.
@@ -641,8 +641,8 @@ theorem reconstruct (dbound : ℕ) (b0 : DensePoly ℚ) :
         set D1 := toPoly2 (quot.map Prod.fst) with hD1; set D2 := toPoly2 (quot.map Prod.snd) with hD2
         set DH1 := toPoly2 (tanDeriv h1); set DH2 := toPoly2 (tanDeriv h2)
         -- b2+1 in ℚ[X].
-        have hb2p1 : toPoly (cadd b2 [CField.one]) = toPoly b2 + 1 := by
-          simp [show CFieldSpec.toK (CField.one:ℚ) = 1 from rfl]
+        have hb2p1 : toPoly (cadd b2 [CCommRing.one]) = toPoly b2 + 1 := by
+          simp [show CFieldSpec.toK (CCommRing.one:ℚ) = 1 from rfl]
         -- IH conjuncts in toPoly2 form.
         rw [TanSolves, hb2p1] at hih
         obtain ⟨hI1, hI2⟩ := hih

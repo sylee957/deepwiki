@@ -18,7 +18,7 @@ variable {β : Type*} [CField β] [CFieldDomain β]
 
 /-- `qOfPolyNZ q`: lift a polynomial `q : DensePoly β` to `CFrac β` as `q/1`. -/
 def qOfPolyNZ (q : DensePoly β) : CFrac β :=
-  ⟨(q, [CField.one]), CFrac.cisZeroG_one_singleton⟩
+  ⟨(q, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
 
 end Lift
 
@@ -28,7 +28,7 @@ variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β]
 
 /-- `weakNormalizedF f q' = f − Dq'/q'` over `CFrac β`: the weakly-normalized field element. -/
 def weakNormalizedF (f q' : CFrac β) : CFrac β :=
-  qsubNZ f (qmulNZ (towerDerivCFrac ([CField.one] : DensePoly β) q') (qinvNZ q'))
+  qsubNZ f (qmulNZ (towerDerivCFrac ([CCommRing.one] : DensePoly β) q') (qinvNZ q'))
 
 end Helpers
 
@@ -55,7 +55,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 /-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its own normal part
 `toPoly (cSplitFactorFast [1] _ h.1.2).1 = toPoly h.1.2`. -/
 def IsWeaklyNormalizedNorm (h : CFrac β) : Prop :=
-  toPoly (DensePoly.cSplitFactorFast ([CField.one] : DensePoly β) h.1.2).1
+  toPoly (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) h.1.2).1
     = toPoly h.1.2
 
 end Normality

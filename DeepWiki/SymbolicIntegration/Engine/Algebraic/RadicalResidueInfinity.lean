@@ -19,7 +19,7 @@ variable {α : Type*} [CField α]
 
 /-- **Count leading-zero coefficients** of a `DensePoly` (initial `isZero` run length) — the order of
 vanishing at `t = 0`, i.e. the `t`-power dividing `p`. -/
-def cleadingZeros (p : DensePoly α) : ℕ := (p.takeWhile (fun a => CField.isZero a)).length
+def cleadingZeros (p : DensePoly α) : ℕ := (p.takeWhile (fun a => CCommRing.isZero a)).length
 
 /-- **Common `t`-power** `commonTPow ps` shared by every `DensePoly` in `ps`: the `min` of their
 leading-zero counts (`0` for the empty list). The maximal `t^k` dividing all of `ps` simultaneously. -/
@@ -65,13 +65,13 @@ def cAlgResidueAtInfinity (rho g0 g1 D : DensePoly α) : DensePoly α :=
 Isolates the single place `t = 0`, staying correct (residue `0`) even when `∞` is not a pole. -/
 def cResidueAtInfinityPlace (fuel : ℕ) (rho g0 g1 D : DensePoly α) : DensePoly α :=
   let (rhoT, g0T, g1T, DT) := radTransformAtInfinity rho g0 g1 D
-  let Dp0 := ceval (cderiv DT) CField.zero                     -- D̃'(0)
-  let a0 := ceval g0T CField.zero                               -- g̃₀(0)
-  let b0 := ceval g1T CField.zero                               -- g̃₁(0)
-  let r0 := ceval rhoT CField.zero                              -- ρ̃(0)
-  let lin : DensePoly α := [CField.neg a0, Dp0]                     -- D̃'(0)·Z − g̃₀(0)
+  let Dp0 := ceval (cderiv DT) CCommRing.zero                     -- D̃'(0)
+  let a0 := ceval g0T CCommRing.zero                               -- g̃₀(0)
+  let b0 := ceval g1T CCommRing.zero                               -- g̃₁(0)
+  let r0 := ceval rhoT CCommRing.zero                              -- ρ̃(0)
+  let lin : DensePoly α := [CCommRing.neg a0, Dp0]                     -- D̃'(0)·Z − g̃₀(0)
   let _ := fuel
-  csub (cmul lin lin) [CField.mul (CField.mul b0 b0) r0]       -- (·)² − g̃₁(0)²·ρ̃(0)
+  csub (cmul lin lin) [CCommRing.mul (CCommRing.mul b0 b0) r0]       -- (·)² − g̃₁(0)²·ρ̃(0)
 
 end DensePoly
 

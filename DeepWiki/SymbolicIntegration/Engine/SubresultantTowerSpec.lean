@@ -27,10 +27,10 @@ the per-node fact the interpolation extends to all residues). -/
 theorem toK_cSubresultantG_getD_eq_coeff (Dstar A Dd : DensePoly α) (c : α) (n m j k : ℕ) :
     CFieldSpec.toK
         (((cSubresultant Dstar (csub A (cscale c Dd)) n m j : DensePoly α) : List α).getD k
-          CField.zero)
+          CCommRing.zero)
       = (subresultant (toPoly Dstar)
           (toPoly A - C (CFieldSpec.toK c) * toPoly Dd) n m j).coeff k := by
-  rw [← ccrZero_eq_cfield, ← toR_eq_toK, ← toPolyG_coeff]
+  rw [← toR_eq_toK, ← toPolyG_coeff]
   simp only [denote]
 
 variable [CDiffField α] [CDiffFieldSpec α]
@@ -40,7 +40,7 @@ variable [CDiffField α] [CDiffFieldSpec α]
 theorem toK_cSubresultantG_getD_eq_coeff_monomial (Dt Dstar A : DensePoly α) (c : α) (n m j k : ℕ) :
     CFieldSpec.toK
         (((cSubresultant Dstar (csub A (cscale c (cmonomialDeriv Dt Dstar))) n m j : DensePoly α) :
-            List α).getD k CField.zero)
+            List α).getD k CCommRing.zero)
       = (subresultant (toPoly Dstar)
           (toPoly A - C (CFieldSpec.toK c)
             * Differential.implicitDeriv (toPoly Dt) (toPoly Dstar)) n m j).coeff k := by
@@ -73,13 +73,13 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
     have hget : (cSubresultantParam Dstar A Dd (cdeg Dstar) (cdeg Dd) j).getD k []
         = cinterpolate ((List.range N).map (fun jj =>
             (cnatCast jj, ((cSubresultant Dstar (csub A (cscale (cnatCast jj) Dd))
-              (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CField.zero))) := by
+              (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CCommRing.zero))) := by
       rw [cSubresultantParam]
       rw [List.getD_eq_getElem?_getD, List.getElem?_map, List.getElem?_range hk]
       rfl
     set pts : List (α × α) := (List.range N).map (fun jj =>
       (cnatCast jj, ((cSubresultant Dstar (csub A (cscale (cnatCast jj) Dd))
-        (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CField.zero)) with hpts
+        (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CCommRing.zero)) with hpts
     have hlen : pts.length = N := by rw [hpts, List.length_map, List.length_range]
     have hne : pts ≠ [] := by rw [hpts]; simp [hN]
     have hnodup : (pts.map (fun p => CFieldSpec.toK p.1)).Nodup := by
@@ -107,7 +107,7 @@ theorem toPolyG_cSubresultantParam_getD [CharZero (CFieldSpec.K α)] (Dstar A Dd
     · intro jj hjj
       rw [Finset.mem_range] at hjj
       have hmem : (cnatCast jj, ((cSubresultant Dstar (csub A (cscale (cnatCast jj) Dd))
-          (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CField.zero) ∈ pts := by
+          (cdeg Dstar) (cdeg Dd) j : DensePoly α) : List α).getD k CCommRing.zero) ∈ pts := by
         rw [hpts, List.mem_map]; exact ⟨jj, List.mem_range.mpr hjj, rfl⟩
       rw [show (jj : CFieldSpec.K α) = CFieldSpec.toK (cnatCast jj : α) from
           (DensePoly.toK_cnatCastG jj).symm]

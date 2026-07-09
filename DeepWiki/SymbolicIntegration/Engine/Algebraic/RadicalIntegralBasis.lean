@@ -32,13 +32,13 @@ variable [CFracGcdCoreWf α]
 squarefree. Monic. -/
 def radSquarePart (ρ : DensePoly α) : DensePoly α :=
   (cSqfreeYunFF ρ).zipIdx.foldl
-    (fun acc (Pi, i) => cmul acc (cpow Pi ((i + 1) / 2))) [CField.one]
+    (fun acc (Pi, i) => cmul acc (cpow Pi ((i + 1) / 2))) [CCommRing.one]
 
 /-- Squarefree part `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²`: one copy of each odd-multiplicity
 factor `Pᵢ`, so `ρ = d²·s` with `d = radSquarePart` and `s` squarefree by construction. Monic. -/
 def radSquarefreePart (ρ : DensePoly α) : DensePoly α :=
   (cSqfreeYunFF ρ).zipIdx.foldl
-    (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmul acc Pi else acc) [CField.one]
+    (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmul acc Pi else acc) [CCommRing.one]
 
 /-! ### The integral basis `[1, y/d]`
 
@@ -137,7 +137,7 @@ def basisRhoX5mX4 : DensePoly ℚ := [0, 0, 0, 0, -1, 1]
 /-- **Squarefree `ρ = x³+1` ⇒ `d = 1`** (`native_decide`): the square part of a squarefree radicand is the
 unit `1`, so the basis is `[1, y]`. -/
 theorem radSquarePart_x3p1 :
-    cisZero (csub (radSquarePart basisRhoX3p1) [CField.one]) = true := by native_decide
+    cisZero (csub (radSquarePart basisRhoX3p1) [CCommRing.one]) = true := by native_decide
 
 /-- **Squarefree `ρ = x³+1` ⇒ `s = x³+1`** (`native_decide`): the squarefree part of a squarefree radicand
 is the radicand itself (monic). -/

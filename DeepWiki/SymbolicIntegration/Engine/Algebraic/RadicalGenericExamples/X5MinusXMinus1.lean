@@ -64,13 +64,13 @@ def radX5Gen : RadX5 := RadExt.gen
 def radX5LogDer : CFrac ℚ := logDerRadicand 2 radicandX5mXm1
 
 /-- The `RadX5[t]`-polynomial `t² = [0,0,1]`. -/
-def radX5T2sq : DensePoly RadX5 := [CField.zero, CField.zero, CField.one]
+def radX5T2sq : DensePoly RadX5 := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The `RadX5[t]`-polynomial `2·t² = [0,0,2]`, the expected `D(t²)` for `t = eˣ`. -/
-def radX5TwoT2sq : DensePoly RadX5 := [CField.zero, CField.zero, CField.add CField.one CField.one]
+def radX5TwoT2sq : DensePoly RadX5 := [CCommRing.zero, CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- The monomial-derivative datum `Dt = t = [0,1]` over `RadX5` (`t = eˣ`). -/
-def radX5DtExp : DensePoly RadX5 := [CField.zero, CField.one]
+def radX5DtExp : DensePoly RadX5 := [CCommRing.zero, CCommRing.one]
 
 /-- `D(t²) = 2t²` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed-tower `d/dt` computation over the degree-5 radical
 base. -/
@@ -78,11 +78,11 @@ theorem radX5_monomialDeriv_t2sq :
     cisZero (csub (cmonomialDeriv radX5DtExp radX5T2sq) radX5TwoT2sq) = true := by native_decide
 
 /-- The `RadX5[t]`-polynomial `y·t = [0, y]` (`y = √(x⁵−x−1)`, `t = eˣ`). -/
-def radX5GenT : DensePoly RadX5 := [CField.zero, radX5Gen]
+def radX5GenT : DensePoly RadX5 := [CCommRing.zero, radX5Gen]
 
 /-- The `RadX5[t]`-polynomial `(ℓ+1)·y·t = [0, (ℓ+1)·y]`, the expected mixed `D(y·t)`. -/
 def radX5GenTDeriv : DensePoly RadX5 :=
-  [CField.zero, CField.mul (⟨[CField.zero, CField.add radX5LogDer CField.one]⟩ : RadX5) CField.one]
+  [CCommRing.zero, CCommRing.mul (⟨[CCommRing.zero, CCommRing.add radX5LogDer CCommRing.one]⟩ : RadX5) CCommRing.one]
 
 /-- `D(y·t) = (ℓ+1)·y·t` over `ℚ(x)[√(x⁵−x−1)][eˣ]`: the mixed derivation over the degree-5 radical base
 (`ℓ = (5x⁴−1)/(2(x⁵−x−1))`). -/

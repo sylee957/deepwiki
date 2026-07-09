@@ -121,7 +121,7 @@ def hermiteRank (M : PolyMatrix α) : ℕ :=
 upper-triangular matrix), used to certify row-equivalence up to a unit. -/
 def polyMatDiagProd (M : PolyMatrix α) : DensePoly α :=
   let n := min M.length (polyMatNCols M)
-  (List.range n).foldl (fun acc i => cmul acc (polyMatGet M i i)) [CField.one]
+  (List.range n).foldl (fun acc i => cmul acc (polyMatGet M i i)) [CCommRing.one]
 
 /-- The `2×2` polynomial determinant `M[0][0]·M[1][1] − M[0][1]·M[1][0]` of a `PolyMatrix`. -/
 def polyMat2x2Det (M : PolyMatrix α) : DensePoly α :=

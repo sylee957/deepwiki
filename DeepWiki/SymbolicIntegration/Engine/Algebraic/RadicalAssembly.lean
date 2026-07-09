@@ -21,23 +21,23 @@ namespace RadElem
 variable {α : Type*} [CField α]
 
 /-- **The `α`-component (`y⁰`) of a `RadElem`** `radCoeff0 u = a` for `u = [a, b, …]`. -/
-def radCoeff0 (u : RadElem α) : α := (u : List α).headD CField.zero
+def radCoeff0 (u : RadElem α) : α := (u : List α).headD CCommRing.zero
 
 /-- **The `y`-component (`y¹`) of a `RadElem`** `radCoeff1 u = b` for `u = [a, b, …]`. -/
-def radCoeff1 (u : RadElem α) : α := (u : List α).getD 1 CField.zero
+def radCoeff1 (u : RadElem α) : α := (u : List α).getD 1 CCommRing.zero
 
 /-- **The conjugate norm** `radNorm2 ρ u = a² − b²·ρ ∈ α` for `u = a + b·y`. -/
 def radNorm2 (ρ : α) (u : RadElem α) : α :=
   let a := radCoeff0 u
   let b := radCoeff1 u
-  CField.sub (CField.mul a a) (CField.mul (CField.mul b b) ρ)
+  CField.sub (CCommRing.mul a a) (CCommRing.mul (CCommRing.mul b b) ρ)
 
 /-- **The reciprocal in `α[y]/(y² − ρ)`** `radInv2 ρ u = [a/N, −b/N]` for `u = a + b·y`. -/
 def radInv2 (ρ : α) (u : RadElem α) : RadElem α :=
   let a := radCoeff0 u
   let b := radCoeff1 u
   let N := radNorm2 ρ u
-  [CField.div a N, CField.neg (CField.div b N)]
+  [CField.div a N, CCommRing.neg (CField.div b N)]
 
 variable [CDiffField α]
 
@@ -55,15 +55,15 @@ open RadElem
 def fullRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- The element `u = x + y = [x, 1]` over `ℚ(x)`, `y² = x²+1`. -/
-def fullUxPlusY : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CField.one]
+def fullUxPlusY : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CCommRing.one]
 
 /-- **`u · u⁻¹ = 1` in `(CFrac ℚ)[y]/(y² − (x²+1))`** (`native_decide`). -/
 theorem radInv2_mul_self_eq_one :
     radIsZero (radSub (radMul 2 fullRhoArcsinh fullUxPlusY (radInv2 fullRhoArcsinh fullUxPlusY))
-      [CField.one]) = true := by native_decide
+      [CCommRing.one]) = true := by native_decide
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over `ℚ(x)`. -/
-def fullIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift fullRhoArcsinh CField.one
+def fullIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift fullRhoArcsinh CCommRing.one
 
 /-- **`radLogDeriv` agrees with the arcsinh log-derivative certificate** (`native_decide`). -/
 theorem radLogDeriv_eq_integrand_arcsinh :
@@ -104,7 +104,7 @@ def radAssembleRatPart (ρ : CFrac ℚ)
     (fun acc (isV, fi, e, _, vNum, _) =>
       let denomPow := if isV then cpow fi (e - 1) else cpow fi e
       radAdd acc
-        [CField.zero, CField.div (qxOfNum vNum) (CField.mul (qxOfNum denomPow) ρ)])
+        [CCommRing.zero, CField.div (qxOfNum vNum) (CCommRing.mul (qxOfNum denomPow) ρ)])
     radZero
 
 /-! ### Shared round-trip inputs for algebraic integrators -/
@@ -119,7 +119,7 @@ def rtRatR : DensePoly ℚ := [1]
 def rtRatB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- A non-principal residual for the rational-only log solve. -/
-def rtRatNonPrincipalResidual : RadElem (CFrac ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CField.one
+def rtRatNonPrincipalResidual : RadElem (CFrac ℚ) := radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CCommRing.one
 
 /-- Log-only round-trip radicand `ρ = x² + 1 ∈ ℚ(x)`. -/
 def rtLogRho : CFrac ℚ := qxOfNum [1, 0, 1]
@@ -128,7 +128,7 @@ def rtLogRho : CFrac ℚ := qxOfNum [1, 0, 1]
 def rtLogXRho : CFrac ℚ := qxOfNum [0, 1, 0, 1]
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`. -/
-def rtLogIntegrand : RadElem (CFrac ℚ) := radInvYLift rtLogXRho CField.one
+def rtLogIntegrand : RadElem (CFrac ℚ) := radInvYLift rtLogXRho CCommRing.one
 
 /-- The fixed log-solve denominator `D = x`. -/
 def rtLogD : DensePoly ℚ := [0, 1]
@@ -143,9 +143,9 @@ def rtCombR : DensePoly ℚ := [1]
 def rtCombB : DensePoly ℚ := cpow [-1, 1] 2
 
 /-- The combined round-trip's log argument `u = x + y = [x, 1]`. -/
-def rtCombU : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CField.one]
+def rtCombU : RadElem (CFrac ℚ) := [qxOfNum [0, 1], CCommRing.one]
 
 /-- The log residual `[0, 1/(x²+1)]` absorbed by the combined log solve. -/
-def rtCombLogResidual : RadElem (CFrac ℚ) := radInvYLift rtCombRho CField.one
+def rtCombLogResidual : RadElem (CFrac ℚ) := radInvYLift rtCombRho CCommRing.one
 
 end DeepWiki.SymbolicIntegration

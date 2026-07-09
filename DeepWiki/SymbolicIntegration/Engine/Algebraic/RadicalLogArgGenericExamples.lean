@@ -22,7 +22,7 @@ generalization is conservative. -/
 def genArgRhoArcsinh : CFrac ℚ := qxOfNum [1, 0, 1]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over ℚ(x). -/
-def genArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift genArgRhoArcsinh CField.one
+def genArgIntegrandArcsinh : RadElem (CFrac ℚ) := radInvYLift genArgRhoArcsinh CCommRing.one
 
 /-- The field element `x ∈ ℚ(x)`, `[0,1]` — for matching `N = c·(x + y)`. -/
 def genArgX : CFrac ℚ := qxOfNum [0, 1]
@@ -46,10 +46,10 @@ theorem genArg_arcsinh_isLogIntegral :
 `a₀ = a₁·x`. -/
 theorem genArg_arcsinh_matches_closed_form :
     (genArgSolvedArcsinh.map (fun N =>
-      let a0 := N.getD 0 CField.zero
-      let a1 := N.getD 1 CField.zero
-      (CField.isZero a1 == false) &&
-      CField.isZero (CField.sub a0 (CField.mul a1 genArgX)))) = some true := by
+      let a0 := N.getD 0 CCommRing.zero
+      let a1 := N.getD 1 CCommRing.zero
+      (CCommRing.isZero a1 == false) &&
+      CCommRing.isZero (CField.sub a0 (CCommRing.mul a1 genArgX)))) = some true := by
   native_decide
 
 /-! ### Compute `∫ dx/√(eˣ+1) = log((y−1)/(y+1))` over `α = ℚ(x)(eˣ)`
@@ -61,14 +61,14 @@ theorem genArg_arcsinh_matches_closed_form :
 
 /-- The fixed denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as a `DensePoly β` (`β = ℚ(x)`): the polynomial `θ = t₁`,
 i.e. `[0, 1]`. -/
-def expDenTheta : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def expDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)(eˣ)` for the generic solve (the carrier value `expRadicand`). -/
 def expArgRho : Lvl2 := expRadicand
 
 /-- The integrand `1/√(eˣ+1) = 1/y` lifted to `[0, 1/ρ]` over `α = ℚ(x)(eˣ)` (`ρ = eˣ+1`), the `R/y` form
 for the log-derivative system. -/
-def expArgIntegrand : RadElem Lvl2 := radInvYLift expArgRho CField.one
+def expArgIntegrand : RadElem Lvl2 := radInvYLift expArgRho CCommRing.one
 
 /-- The computed log argument for `∫ dx/√(eˣ+1)` over the tower: `radLogArgSolve` at `β = ℚ(x)`,
 `α = ℚ(x)(eˣ)`, with `expTowerDiff`, `ρ = eˣ+1`, `D = θ`, ansatz degree `1` (expected `N = (θ+2) − 2y`,
@@ -92,19 +92,19 @@ theorem expArg_solves :
 theorem expArg_isLogIntegral :
     (expArgSolved.map (fun N =>
       @radIsLogIntegral _ _ expTowerDiff 2 expArgRho
-        [CField.div (N.getD 0 CField.zero) expTheta,
-         CField.div (N.getD 1 CField.zero) expTheta]
+        [CField.div (N.getD 0 CCommRing.zero) expTheta,
+         CField.div (N.getD 1 CCommRing.zero) expTheta]
         expArgIntegrand)) = some true := by native_decide
 
 /-- The computed tower `N = [a₀, a₁]` is a nonzero constant multiple of `(θ+2) − 2y`: `a₁ ≠ 0` and
 `a₀·(−2) = a₁·(θ+2)`, matching `u = (y−1)/(y+1)` up to scalar. -/
 theorem expArg_matches_closed_form :
     (expArgSolved.map (fun N =>
-      let a0 := N.getD 0 CField.zero
-      let a1 := N.getD 1 CField.zero
-      (CField.isZero a1 == false) &&
-      CField.isZero (CField.sub (CField.mul a0 (CField.neg (CField.add CField.one CField.one)))
-        (CField.mul a1 (CField.add expTheta (CField.add CField.one CField.one)))))) = some true := by
+      let a0 := N.getD 0 CCommRing.zero
+      let a1 := N.getD 1 CCommRing.zero
+      (CCommRing.isZero a1 == false) &&
+      CCommRing.isZero (CField.sub (CCommRing.mul a0 (CCommRing.neg (CCommRing.add CCommRing.one CCommRing.one)))
+        (CCommRing.mul a1 (CCommRing.add expTheta (CCommRing.add CCommRing.one CCommRing.one)))))) = some true := by
   native_decide
 
 /-! ### Axiom audit for the generic log-argument solver -/

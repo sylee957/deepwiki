@@ -25,7 +25,7 @@ correctness `GcdFFCorrect`, and `d ≠ 0`, the split is a genuine coprime factor
 canonical pieces recombine to `⟦a/d⟧`. -/
 theorem canonicalReconstruction_of_charZero (hgcd : GcdFFCorrect (α := α))
     (Dt a d : DensePoly α) (hd : toPoly d ≠ 0) :
-    fieldFrac (crPoly Dt a d) [CField.one]
+    fieldFrac (crPoly Dt a d) [CCommRing.one]
         + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
       = fieldFrac a d := by

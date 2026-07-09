@@ -36,9 +36,9 @@ def gdIdentity : GenDivisor := idealIdentity (cdeg gcuspCubicF)
 
 /-- The integral basis of `y³ = x²` is `[1, y, y²/x]`, not the power basis. -/
 theorem gd_integralBasis_nontrivial :
-    (cisZero (csub (gcuspCubicBasis.getD 2 []) [CField.zero, CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZero (csub (gcuspCubicBasis.getD 0 []) [CField.one])
-      && cisZero (csub (gcuspCubicBasis.getD 1 []) [CField.zero, CField.one])) = true := by
+    (cisZero (csub (gcuspCubicBasis.getD 2 []) [CCommRing.zero, CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub (gcuspCubicBasis.getD 0 []) [CCommRing.one])
+      && cisZero (csub (gcuspCubicBasis.getD 1 []) [CCommRing.zero, CCommRing.one])) = true := by
   native_decide
 
 /-! ### The Pic group law `div(y)·div(y) = div(y²)` on `y³ = x²` (`native_decide`) -/
@@ -70,7 +70,7 @@ theorem gd_divY_divYsq_integral :
 theorem gen_divisor_representation_validates :
     -- the integral basis is genuinely non-trivial (not the power basis)
     (cisZero (csub (gcuspCubicBasis.getD 2 [])
-        [CField.zero, CField.zero, qxOfFrac [1] [0, 1] (by decide)]))
+        [CCommRing.zero, CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)]))
     -- the Pic group law div(y)·div(y) = div(y²)
     ∧ idealEq (idealProduct gcuspCubicF gcuspCubicBasis gdDivY gdDivY) gdDivYsq = true
     -- the identity law I·O = I for two principal divisors

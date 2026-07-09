@@ -24,17 +24,17 @@ becomes `towerDerivCFrac [t₁]` (so `t₁' = t₁`) instead of the default `t�
 /-- A level-2 scalar `c ∈ Lvl2 = ℚ(x)(t₁)` from a numerator `DensePoly (CFrac ℚ)` over denominator `1`;
 the level-2 analogue of `qxOfNum`. -/
 def lvl2OfNum (num : DensePoly (CFrac ℚ)) : Lvl2 :=
-  ⟨(num, [CField.one]), CFrac.cisZeroG_one_singleton⟩
+  ⟨(num, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩
 
 /-- The exponential monomial `θ = t₁ = eˣ ∈ ℚ(x)(t₁)` (numerator `[0, 1]`, denominator `[1]`). -/
-def expTheta : Lvl2 := lvl2OfNum [(CField.zero : CFrac ℚ), CField.one]
+def expTheta : Lvl2 := lvl2OfNum [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The radicand `ρ = θ + 1 = eˣ + 1 ∈ ℚ(x)(t₁)` (numerator `[1, 1]`), the element with `y² = ρ`. -/
-def expRadicand : Lvl2 := lvl2OfNum [(CField.one : CFrac ℚ), CField.one]
+def expRadicand : Lvl2 := lvl2OfNum [(CCommRing.one : CFrac ℚ), CCommRing.one]
 
 /-- The new-monomial derivative `Dt₁ = t₁ = [0, 1] ∈ DensePoly (CFrac ℚ)` making `t₁` exponential
 (`t₁' = t₁`), fed to `towerDerivCFrac`. -/
-def expDt1 : DensePoly (CFrac ℚ) := [(CField.zero : CFrac ℚ), CField.one]
+def expDt1 : DensePoly (CFrac ℚ) := [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The exponential `CDiffField Lvl2` instance `cderiv := towerDerivCFrac [t₁]` (so `t₁' = t₁`, `t₁ = eˣ`).
 A local `def` passed to the radical ops via `@`, leaving the default `t₁' = 1` derivation untouched. -/
@@ -43,12 +43,12 @@ A local `def` passed to the radical ops via `@`, leaving the default `t₁' = 1`
 
 /-- `D(t₁) = t₁` under `expTowerDiff`: the derivation sends `t₁` to itself. -/
 theorem expTheta_deriv_eq_self :
-    CField.isZero (CField.sub (@CDiffField.cderiv _ _ expTowerDiff expTheta) expTheta)
+    CCommRing.isZero (CField.sub (@CDiffField.cderiv _ _ expTowerDiff expTheta) expTheta)
       = true := by native_decide
 
 /-- `D(t₁+1) = t₁`: the radicand derivative `ρ' = (t₁+1)' = t₁`, the numerator `ρ'` of `y' = ρ'/(2y)`. -/
 theorem expRadicand_deriv_eq_theta :
-    CField.isZero (CField.sub (@CDiffField.cderiv _ _ expTowerDiff expRadicand) expTheta)
+    CCommRing.isZero (CField.sub (@CDiffField.cderiv _ _ expTowerDiff expRadicand) expTheta)
       = true := by native_decide
 
 /-! ### The radical `y² = eˣ+1` over the exponential tower
@@ -68,7 +68,7 @@ theorem expRadGen_sq_eq_radicand :
 base derivation is `ℓ·y`, `ℓ = ρ'/(2ρ)`. -/
 theorem expRadDeriv_radGen_eq :
     radIsZero (radSub (@radDeriv _ _ expTowerDiff 2 expRadicand (radGen : RadElem Lvl2))
-        [CField.zero, expRadLogDer]) = true := by native_decide
+        [CCommRing.zero, expRadLogDer]) = true := by native_decide
 
 /-! ### `∫ eˣ/√(eˣ+1) dx = 2√(eˣ+1)` over ℚ(x)(eˣ)
 
@@ -77,11 +77,11 @@ through `radDeriv [0, 2] = integrand`. -/
 
 /-- The integrand `eˣ/√(eˣ+1) = θ/y` as the pure-`y` `RadElem` `[0, θ/(θ+1)]` over ℚ(x)(eˣ). -/
 def expIntegrand : RadElem Lvl2 :=
-  [CField.zero, CField.div expTheta expRadicand]
+  [CCommRing.zero, CField.div expTheta expRadicand]
 
 /-- The antiderivative `2√(eˣ+1) = 2y` as the `RadElem` `[0, 2]` over ℚ(x)(eˣ). -/
 def expAntideriv : RadElem Lvl2 :=
-  [CField.zero, CField.add CField.one CField.one]
+  [CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- `∫ eˣ/√(eˣ+1) dx = 2√(eˣ+1)`: `radDeriv` of the antiderivative `2y = [0, 2]` equals the integrand
 `θ/y = [0, θ/(θ+1)]` over the transcendental tower. -/
@@ -98,10 +98,10 @@ def lvl2OneOverX : Lvl2 :=
   lvl2OfNum [qxOfFrac [1] [0, 1] (by decide)]
 
 /-- The logarithmic monomial `θ = t₁ = log x ∈ ℚ(x)(log x)` (numerator `[0, 1]`, denominator `[1]`). -/
-def logTheta : Lvl2 := lvl2OfNum [(CField.zero : CFrac ℚ), CField.one]
+def logTheta : Lvl2 := lvl2OfNum [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The radicand `ρ = θ = log x ∈ ℚ(x)(log x)` (`y² = log x`), numerator `[0, 1]`, denominator `[1]`. -/
-def logRadicandT : Lvl2 := lvl2OfNum [(CField.zero : CFrac ℚ), CField.one]
+def logRadicandT : Lvl2 := lvl2OfNum [(CCommRing.zero : CFrac ℚ), CCommRing.one]
 
 /-- The new-monomial derivative `Dt₁ = θ' = 1/x ∈ DensePoly (CFrac ℚ)` making `t₁` logarithmic (`t₁' = 1/x`). -/
 def logDt1 : DensePoly (CFrac ℚ) := [qxOfFrac [1] [0, 1] (by decide)]
@@ -113,7 +113,7 @@ def logDt1 : DensePoly (CFrac ℚ) := [qxOfFrac [1] [0, 1] (by decide)]
 
 /-- `D(t₁) = 1/x` under `logTowerDiff`: the derivation sends `t₁ = log x` to `1/x`. -/
 theorem logTheta_deriv_eq_oneOverX :
-    CField.isZero (CField.sub (@CDiffField.cderiv _ _ logTowerDiff logTheta) lvl2OneOverX)
+    CCommRing.isZero (CField.sub (@CDiffField.cderiv _ _ logTowerDiff logTheta) lvl2OneOverX)
       = true := by native_decide
 
 /-- The diagonal multiplier `ℓ = ρ'/(2ρ) = (1/x)/(2·log x) ∈ ℚ(x)(log x)` for `D(y) = ℓ·y` at
@@ -127,11 +127,11 @@ theorem logRadGen_sq_eq_radicand :
 
 /-- The integrand `1/(x√(log x)) = (1/x)/y` as the pure-`y` `RadElem` `[0, (1/x)/(log x)]` over ℚ(x)(log x). -/
 def logIntegrand : RadElem Lvl2 :=
-  [CField.zero, CField.div lvl2OneOverX logRadicandT]
+  [CCommRing.zero, CField.div lvl2OneOverX logRadicandT]
 
 /-- The antiderivative `2√(log x) = 2y` as the `RadElem` `[0, 2]` over ℚ(x)(log x). -/
 def logAntideriv : RadElem Lvl2 :=
-  [CField.zero, CField.add CField.one CField.one]
+  [CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- `∫ dx/(x√(log x)) = 2√(log x)`: `radDeriv` of `2y = [0, 2]` equals the integrand
 `(1/x)/y = [0, (1/x)/(log x)]` over the logarithmic tower. -/
@@ -148,13 +148,13 @@ The multi-case rational-part drivers (`radIntegrateCase2Wf` / `radIntegrateRatio
 open DensePoly
 
 /-- Radicand `ρ = θ³ − θ = θ(θ−1)(θ+1) ∈ ℚ(x)[θ]` (`y² = ρ`, squarefree), `[0, −1, 0, 1]`. -/
-def drvRho : DensePoly (CFrac ℚ) := [CField.zero, qxOfNum [-1], CField.zero, qxOfNum [1]]
+def drvRho : DensePoly (CFrac ℚ) := [CCommRing.zero, qxOfNum [-1], CCommRing.zero, qxOfNum [1]]
 
 /-- Squarefree factor `W = θ ∈ ℚ(x)[θ]` (a branch place, `W ∣ ρ`), `[0, 1]`. -/
-def drvW : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def drvW : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- Numerator `C₀ = 1 ∈ ℚ(x)[θ]` (integrand `1/(θ²·√(θ³−θ))`), `[1]`. -/
-def drvC : DensePoly (CFrac ℚ) := [CField.one]
+def drvC : DensePoly (CFrac ℚ) := [CCommRing.one]
 
 /-- The Case-2 driver run `radIntegrateCase2Wf W ρ 2 C = (Crem, vNum)` on `∫ 1/(θ²·√(θ³−θ))` over
 `α = ℚ(x)`, returning the `k = 1` residual and the rational-part numerator over `W² = θ²`. -/
@@ -168,11 +168,11 @@ def drvW2 : DensePoly (CFrac ℚ) := cpow drvW 2
 
 /-- The rational part `v = vNum/(W²·y)` lifted to `RadElem Lvl2` as `[0, vNum/(W²·ρ)]`. -/
 def drvVlift : RadElem Lvl2 :=
-  [CField.zero, CField.div (lvl2OfNum drvRun.2) (lvl2OfNum (cmul drvW2 drvRho))]
+  [CCommRing.zero, CField.div (lvl2OfNum drvRun.2) (lvl2OfNum (cmul drvW2 drvRho))]
 
 /-- The integrand's rational part `C₀/(W²y) − Crem/(Wy)` lifted to `RadElem Lvl2`. -/
 def drvRatLift : RadElem Lvl2 :=
-  [CField.zero,
+  [CCommRing.zero,
     CField.sub (CField.div (lvl2OfNum drvC) (lvl2OfNum (cmul drvW2 drvRho)))
       (CField.div (lvl2OfNum drvRun.1) (lvl2OfNum (cmul drvW drvRho)))]
 
@@ -182,7 +182,7 @@ theorem drvDriver_integrates :
     radIsZero (radSub (radDeriv 2 drvRhoLvl2 drvVlift) drvRatLift) = true := by native_decide
 
 /-- Full-driver denominator `B = θ² ∈ ℚ(x)[θ]`, `[0, 0, 1]`. -/
-def drvB : DensePoly (CFrac ℚ) := [CField.zero, CField.zero, CField.one]
+def drvB : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The full multi-case driver run `radIntegrateRationalWf ρ R B` on `∫ 1/(θ²·√(θ³−θ))` over `α = ℚ(x)`:
 squarefree-decomposes `B = θ²`, classifies `θ` as a `W`-factor, dispatches to Case-2. Returns one

@@ -27,12 +27,12 @@ def qfLcm (a b : DensePoly α) : DensePoly α :=
 /-- The common denominator of a `ℚ(x)`-row `qfRowDen row`, the monic lcm of the entry denominators;
 scaling the row by this `D ∈ ℚ[x]` lands every entry in `ℚ[x]`. -/
 def qfRowDen (row : List (CFrac ℚ)) : DensePoly ℚ :=
-  row.foldl (fun acc z => qfLcm acc (cmonic (z.1.2 : DensePoly ℚ))) [CField.one]
+  row.foldl (fun acc z => qfLcm acc (cmonic (z.1.2 : DensePoly ℚ))) [CCommRing.one]
 
 /-- The common denominator of a whole `ℚ(x)`-matrix `qfMatDen M`, the lcm over all rows of `qfRowDen`;
 the single `D ∈ ℚ[x]` with `D·M ∈ ℚ[x]ⁿˣⁿ` and `det(D·M) = Dⁿ·det M`. -/
 def qfMatDen (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
-  M.foldl (fun acc row => qfLcm acc (qfRowDen row)) [CField.one]
+  M.foldl (fun acc row => qfLcm acc (qfRowDen row)) [CCommRing.one]
 
 /-! ### Clearing a `ℚ(x)`-row / matrix into `ℚ[x]` (`qfClearRow`/`qfClearMatrix`) -/
 
@@ -62,7 +62,7 @@ def qfDet (M : List (List (CFrac ℚ))) : CFrac ℚ :=
   let (M', D) := qfClearMatrix M
   let detPoly := bareissDet M'
   let Dn := cpow D n
-  CField.mul (qxOfNum detPoly) (CField.inv (qxOfNum Dn))
+  CCommRing.mul (qxOfNum detPoly) (CField.inv (qxOfNum Dn))
 
 /-- The fraction-free adjugate `(adj(D·M), D)` of a `ℚ(x)`-matrix `qfAdjugate M`: clear `M` to
 `M' = D·M ∈ ℚ[x]` and return the `ℚ[x]` adjugate `bareissAdjugate M'` paired with `D`; the genuine
@@ -84,7 +84,7 @@ def qfInv (M : List (List (CFrac ℚ))) : DensePoly ℚ × List (List (DensePoly
 det(M') : CFrac ℚ`, reading the `(i, j)` entry of `qfInv` back into `ℚ(x)`. -/
 def qfInvEntry (M : List (List (CFrac ℚ))) (i j : ℕ) : CFrac ℚ :=
   let dn := qfInv M
-  CField.mul (qxOfNum (getEntry dn.2 i j)) (CField.inv (qxOfNum dn.1))
+  CCommRing.mul (qxOfNum (getEntry dn.2 i j)) (CField.inv (qxOfNum dn.1))
 
 /-- The fraction-free Cramer solve of `M·x = b` over `ℚ(x)` `qfSolve M b`: clear `M` to `M' = D·M` and
 the rhs to `D·b`, then run `bareissSolve M' (D·b)`, giving `x = (det M'·x)/det M'` with one shared

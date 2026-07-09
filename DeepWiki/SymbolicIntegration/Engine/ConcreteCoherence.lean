@@ -27,7 +27,7 @@ theorem toPolyG_eq_toPoly : (toPoly : DensePoly ℚ → ℚ[X]) = Compute.toPoly
 /-- `cnsmul` at `ℚ` is multiplication by the natural-number cast: `cnsmul k a = (k : ℚ) * a`. -/
 theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (cnsmul k a : ℚ) = (k : ℚ) * a := by
   induction k with
-  | zero => show (CField.zero : ℚ) = _; rw [show (CField.zero : ℚ) = 0 from rfl]; simp
+  | zero => show (CCommRing.zero : ℚ) = _; rw [show (CCommRing.zero : ℚ) = 0 from rfl]; simp
   | succ n ih => rw [cnsmul]; show a + cnsmul n a = _; rw [ih]; push_cast; ring
 
 /-- `cderiv` at `ℚ` is the concrete `cderiv`. -/

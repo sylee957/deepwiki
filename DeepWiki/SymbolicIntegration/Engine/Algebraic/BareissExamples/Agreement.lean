@@ -23,7 +23,7 @@ def bareissNonRadT : List (List (DensePoly ℚ)) :=
 
 /-- `bareissDet = fieldDet ∘ fromQ` on the `2×2` trace matrix, both the discriminant `x² + 4x³`. -/
 theorem bareiss_eq_fieldDet_nonRad :
-    CField.isZero (CField.sub (fieldDet (fromQ bareissNonRadT))
+    CCommRing.isZero (CField.sub (fieldDet (fromQ bareissNonRadT))
       (qxOfNum (bareissDet bareissNonRadT))) = true := by native_decide
 
 /-- `bareissDet` of the `2×2` trace matrix is the discriminant `x² + 4x³`. -/
@@ -39,7 +39,7 @@ def bareissTrigT : List (List (DensePoly ℚ)) :=
 
 /-- `bareissDet = fieldDet ∘ fromQ` on the `3×3` trigonal trace matrix, both `−4x³ − 27x²`. -/
 theorem bareiss_eq_fieldDet_trig :
-    CField.isZero (CField.sub (fieldDet (fromQ bareissTrigT))
+    CCommRing.isZero (CField.sub (fieldDet (fromQ bareissTrigT))
       (qxOfNum (bareissDet bareissTrigT))) = true := by native_decide
 
 /-- `bareissDet` of the `3×3` trigonal trace matrix is the discriminant `−4x³ − 27x²`. -/
@@ -61,7 +61,7 @@ theorem bareissDet_vander4_eq :
 
 /-- `bareissDet = fieldDet` on the `4×4` Vandermonde, both the constant `12`. -/
 theorem bareiss_eq_fieldDet_vander4 :
-    CField.isZero (CField.sub (fieldDet (fromQ bareissVander4))
+    CCommRing.isZero (CField.sub (fieldDet (fromQ bareissVander4))
       (qxOfNum (bareissDet bareissVander4))) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

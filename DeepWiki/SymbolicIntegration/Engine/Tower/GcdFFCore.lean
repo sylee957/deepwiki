@@ -127,13 +127,13 @@ def cclearDenomsCore (p : DensePoly (CFrac β)) : GBPolyCore β :=
   let dens : List (DensePoly β) := cs.map qdenCoeffCore
   cs.zipIdx.map (fun (ci, i) =>
     let prodOthers := (dens.zipIdx.filter (fun (_, j) => j ≠ i)).foldl
-      (fun acc (d, _) => DensePoly.cmul acc d) [CField.one]
+      (fun acc (d, _) => DensePoly.cmul acc d) [CCommRing.one]
     DensePoly.cmul (qnumCoeffCore ci) prodOthers)
 
 /-- Lift back `liftGBPolyCore p ∈ DensePoly (CFrac β)`: read each `DensePoly β` coefficient `c` as the
 fraction `c/1`. -/
 def liftGBPolyCore (p : GBPolyCore β) : DensePoly (CFrac β) :=
-  p.map (fun c => (⟨(c, [CField.one]), CFrac.cisZeroG_one_singleton⟩ : CFrac β))
+  p.map (fun c => (⟨(c, [CCommRing.one]), CFrac.cisZeroG_one_singleton⟩ : CFrac β))
 
 end DensePoly
 

@@ -23,7 +23,7 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- Rational `p/q ∈ α` (`p : ℤ`, `q : ℕ`) via the `[CField α]` casts — `p.natAbs` lifted, negated when
 `p < 0`, divided by `q`. -/
 def DensePoly.cRat (p : ℤ) (q : ℕ) : α :=
-  CField.div (if p < 0 then CField.neg (DensePoly.cnatCast p.natAbs) else DensePoly.cnatCast p.natAbs)
+  CField.div (if p < 0 then CCommRing.neg (DensePoly.cnatCast p.natAbs) else DensePoly.cnatCast p.natAbs)
     (DensePoly.cnatCast q)
 
 /-- Automatic residue candidates from the bounded rational sweep `{p/q : |p| ≤ bound, 1 ≤ q ≤ bound}`.
@@ -48,12 +48,12 @@ theorem field_identity_Dt1 (Dt c q : DensePoly α) (n : ℤ)
     (hDt1 : toPoly Dt = 1) (hc : cisZero c = false) (hdeg : (cdeg c : ℤ) + 1 ≤ n)
     (hsome : cPolyRischDE Dt ([] : DensePoly α) c n = some q)
     (hconst : Differential.mapCoeffs (toPoly c) = 0) :
-    towerFractionFieldDeriv Dt (am α (toPoly q) / am α (toPoly ([CField.one] : DensePoly α)))
-      = am α (toPoly c) / am α (toPoly ([CField.one] : DensePoly α)) := by
-  have hcongr : towerFractionFieldDeriv Dt = towerFractionFieldDeriv ([CField.one] : DensePoly α) := by
+    towerFractionFieldDeriv Dt (am α (toPoly q) / am α (toPoly ([CCommRing.one] : DensePoly α)))
+      = am α (toPoly c) / am α (toPoly ([CCommRing.one] : DensePoly α)) := by
+  have hcongr : towerFractionFieldDeriv Dt = towerFractionFieldDeriv ([CCommRing.one] : DensePoly α) := by
     unfold towerFractionFieldDeriv
     simp only [hDt1, denote, map_one, mul_zero, add_zero]
-  have hsome1 : cPolyRischDE ([CField.one] : DensePoly α) ([] : DensePoly α) c n = some q := by
+  have hsome1 : cPolyRischDE ([CCommRing.one] : DensePoly α) ([] : DensePoly α) c n = some q := by
     rw [cPolyRischDEG_nil_eq _ c n hc hdeg]
     rw [cPolyRischDEG_nil_eq _ c n hc hdeg] at hsome; exact hsome
   rw [hcongr]
@@ -64,8 +64,8 @@ omit [CFracGcdCoreWf α] in
 theorem primitive_special_identity (Dt fp qp : DensePoly α)
     (hDt1 : toPoly Dt = 1) (hconst : Differential.mapCoeffs (toPoly fp) = 0)
     (hsome : cPolyRischDE Dt ([] : DensePoly α) fp ((cdeg fp : ℤ) + 1) = some qp) :
-    towerFractionFieldDeriv Dt (am α (toPoly qp) / am α (toPoly ([CField.one] : DensePoly α)))
-      = am α (toPoly fp) / am α (toPoly ([CField.one] : DensePoly α)) := by
+    towerFractionFieldDeriv Dt (am α (toPoly qp) / am α (toPoly ([CCommRing.one] : DensePoly α)))
+      = am α (toPoly fp) / am α (toPoly ([CCommRing.one] : DensePoly α)) := by
   by_cases hfp : cisZero fp = true
   · -- `fp = 0`: the poly-RDE returns `[]`, both sides vanish
     have hbnil : cisZero ([] : DensePoly α) = true := by rw [cisZeroG_iff, toPolyG_nil]
@@ -80,10 +80,10 @@ theorem primitive_special_identity (Dt fp qp : DensePoly α)
 /-- The guarded primitive monomial case. -/
 def primitiveGuardedCase : MonomialCase α where
   integrateSpecial Dt fp b _ds :=
-    if cisZero b && cisZero (csub Dt [CField.one]) && cisZero (cmapDeriv fp) then
+    if cisZero b && cisZero (csub Dt [CCommRing.one]) && cisZero (cmapDeriv fp) then
       match cPolyRischDE Dt [] fp ((cdeg fp : ℤ) + 1) with
       | none => none
-      | some qp => some (qp, [CField.one])
+      | some qp => some (qp, [CCommRing.one])
     else none
   reducedCorrect _Dt nrm :=
     if nrm.logs.all (fun cv => cisZero [CDiffField.cderiv cv.1]) then some nrm else none

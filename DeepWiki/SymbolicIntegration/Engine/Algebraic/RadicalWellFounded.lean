@@ -116,7 +116,7 @@ Returns the per-factor reductions `(isV, Bᵢ, eᵢ, Nᵢ, vNumᵢ, Cremᵢ)`. `
 the squarefree factorization. -/
 def radIntegrateRationalWf [CFracGcdCoreWf α] (ρ R B : DensePoly α) :
     List (Bool × DensePoly α × ℕ × DensePoly α × DensePoly α × DensePoly α) :=
-  let g : DensePoly α := cscale (CField.div CField.one (cnatCast 2)) (cderiv ρ)   -- `½·ρ'` (n = 2)
+  let g : DensePoly α := cscale (CField.div CCommRing.one (cnatCast 2)) (cderiv ρ)   -- `½·ρ'` (n = 2)
   let factored : List (DensePoly α × ℕ) :=
     (cSqfreeYunFF B).zipIdx.filterMap (fun (Bi, i) =>
       if cdeg Bi = 0 then none else some (Bi, i + 1))

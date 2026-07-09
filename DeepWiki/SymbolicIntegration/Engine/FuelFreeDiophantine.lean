@@ -225,11 +225,11 @@ def cHermiteReduceTowerInnerWf (Dt : DensePoly α) (v u : DensePoly α) :
     let jval : α := cnatCast (j + 1)                                 -- `j` as a field element
     let Dv := cmonomialDeriv Dt v
     let p := cmul u Dv
-    let rhs := cscale (CField.neg (CField.inv jval)) a               -- `−a/j`
+    let rhs := cscale (CCommRing.neg (CField.inv jval)) a               -- `−a/j`
     let (b, c) := cdiophantine p v rhs
     let Vpow := cpow v (j + 1)
     let g' := (cadd (cmul g.1 Vpow) (cmul b g.2), cmul g.2 Vpow)  -- `g + b/Vʲ` (cross-multiplied)
-    let a' := csub (cscale (CField.neg jval) c) (cmul u (cmonomialDeriv Dt b))  -- `−j·c − u·Db`
+    let a' := csub (cscale (CCommRing.neg jval) c) (cmul u (cmonomialDeriv Dt b))  -- `−j·c − u·Db`
     cHermiteReduceTowerInnerWf Dt v u j a' g'
 
 end DensePoly

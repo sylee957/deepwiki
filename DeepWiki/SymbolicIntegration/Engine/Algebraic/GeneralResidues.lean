@@ -39,7 +39,7 @@ constant-in-`y` term `z·D'(x)` (`qxOfNum [z] · Dder`, a singleton `DensePoly`)
 `Z`-dependent coefficient is the `y⁰` one, so `res_Y` of this against `F` has `Z`-degree
 `≤ deg_y F = n`. `Dder = D'(x) ∈ K(x)` is supplied by the caller. -/
 def zDderMinus (g : DensePoly (CFrac ℚ)) (Dder : CFrac ℚ) (z : ℚ) : DensePoly (CFrac ℚ) :=
-  csub [CField.mul (qxOfNum [z]) Dder] g
+  csub [CCommRing.mul (qxOfNum [z]) Dder] g
 
 /-- `resYAtNode f g Dder z = res_Y(z·D'(X) − g(X, Y), F(X, Y))` at the rational node `Z = z`,
 read as a `ℚ[X]`-polynomial: the resultant in `y` (`cresultantG fuelY` over the field
@@ -90,11 +90,11 @@ open DensePoly
 /-- The trigonal curve `F = y³ + x·y + x ∈ K(x)[y]` as `DensePoly (CFrac ℚ)` `[x, x, 0, 1]` — the `n = 3`
 non-hyperelliptic curve. -/
 def genResTrigF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 1], qxOfNum [0, 1], CField.zero, CField.one]
+  [qxOfNum [0, 1], qxOfNum [0, 1], CCommRing.zero, CCommRing.one]
 
 /-- The bivariate numerator `g = y` on the trigonal curve (`DensePoly (CFrac ℚ)` `[0, 1]`); its residue
 `y₀/D'` depends on the sheet, so `res_Y` cannot collapse to a norm. -/
-def genResTrig : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def genResTrig : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The denominator `D = x − 1` (`DensePoly ℚ` `[−1, 1]`): one simple pole at `x = 1`. -/
 def genResTrigD : DensePoly ℚ := [-1, 1]
@@ -128,7 +128,7 @@ For the same trigonal curve with `g = 1` and `D = x − 1`, the residue at each 
 
 /-- The constant-in-`y` numerator `g = 1` on the trigonal curve (`DensePoly (CFrac ℚ)` `[1]`): `f = 1/D`
 has the same residue on every sheet. -/
-def genResTrigG1 : DensePoly (CFrac ℚ) := [CField.one]
+def genResTrigG1 : DensePoly (CFrac ℚ) := [CCommRing.one]
 
 /-- The computed `R(Z)` for `∫ dx/(x − 1)` on the trigonal curve `y³ + xy + x = 0`. -/
 def genResTrigR1 : DensePoly ℚ :=
@@ -156,10 +156,10 @@ On the simple radical case `y² = x` with `g = y`, `D = x² − x`, the general 
 
 /-- The hyperelliptic curve `F = y² − x ∈ K(x)[y]` as a general-carrier polynomial (`DensePoly (CFrac ℚ)`
 `[−x, 0, 1]`, `ρ = x`) — the `cAlgResidueResultant` example `y = √x`, as a `genResidueResultant` curve. -/
-def genResHypF : DensePoly (CFrac ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
+def genResHypF : DensePoly (CFrac ℚ) := [qxOfNum [0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The numerator `g = y` on `y² = x` (`DensePoly (CFrac ℚ)` `[0, 1]`; `g₀ = 0`, `g₁ = 1`). -/
-def genResHyp : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def genResHyp : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The denominator `D = x² − x ∈ ℚ[x]` (`[0, −1, 1]`) and its derivative `D' = 2x − 1 ∈ K(x)`
 (`qxOfNum [−1, 2]`). -/

@@ -53,7 +53,7 @@ nonzero `n ∈ ℤ`, `z ∈ ℚ(x)*`), `false` iff provably not. A non-proper `b
 constant) is ruled out; a proper `b` is conservatively accepted. -/
 def cParametricLogDeriv (b : CFrac ℚ) : Bool :=
   -- `b = 0` is the trivial logarithmic derivative `Dz/z` with `z = 1`; a proper `b` is not ruled out.
-  CField.isZero b || cBaseIsProper b
+  CCommRing.isZero b || cBaseIsProper b
 
 /-! ### `cParamLogDeriv` — the parametric logarithmic derivative recognizer over `k = ℚ(x)`
 
@@ -65,7 +65,7 @@ radical. `f` and `Dθ/θ` are passed as reduced `CFrac ℚ` values. -/
 `ℚ(x)`, returned when `fval/wval` is a `ℚ`-constant (and `wval ≠ 0`), else `none`. -/
 def cParamLogDerivCandidate (fval wval : CFrac ℚ) : Option ℚ :=
   -- `c·wval = fval` over ℚ(x); a constant candidate `c ∈ ℚ` exists iff `fval/wval ∈ ℚ`.
-  if CField.isZero wval then none
+  if CCommRing.isZero wval then none
   else
     let r := CField.div fval wval
     -- `r ∈ ℚ` iff its lowest-terms denominator is a (nonzero) constant and numerator degree 0.
@@ -86,18 +86,18 @@ def cParamLogDeriv (fval θlogderiv : CFrac ℚ) :
     -- no constant candidate `c`: fall back to the pure logarithmic-derivative test `n·f = Dv/v`
     -- (`m = 0`). `f` is a log-derivative of a radical iff `cParametricLogDeriv` cannot rule it out and
     -- the residue obstruction is absent; report only the provable `f = 0` (trivial `v = 1`, `n` any).
-    if CField.isZero fval then some (1, 0, CField.one) else none
+    if CCommRing.isZero fval then some (1, 0, CCommRing.one) else none
   | some c =>
     -- `c = M/N` in lowest terms, `N > 0`. Test `N·f − M·(Dθ/θ) = Dv/v` (radical log-derivative).
     let N : ℤ := (c.den : ℤ)
     let M : ℤ := c.num
-    let Nf := CField.mul (qConstParam ((N : ℚ))) fval
-    let Mw := CField.mul (qConstParam ((M : ℚ))) θlogderiv
+    let Nf := CCommRing.mul (qConstParam ((N : ℚ))) fval
+    let Mw := CCommRing.mul (qConstParam ((M : ℚ))) θlogderiv
     let resid := CField.sub Nf Mw
     -- the residue `N·f − M·w`: a logarithmic derivative of a radical. The exactly-decidable witness is
     -- `resid = 0` (then `v = 1`, `N·f = M·w`, so `n = N, m = M`); nonzero radical witnesses are
     -- returned as residual data for downstream certification.
-    if CField.isZero resid then some (N, M, CField.one)
+    if CCommRing.isZero resid then some (N, M, CCommRing.one)
     else if !cParametricLogDeriv resid then none
     else some (N, M, resid)
 
@@ -201,9 +201,9 @@ theorem paramLogDeriv_example :
     (match cParamLogDeriv paramLogDerivExampleF paramLogDerivExampleW with
       | some (n, m, v) =>
           -- `n·f − m·(Dθ/θ) − Dv/v` cleared: with `v = 1`, `Dv/v = 0`, so check `n·f − m·w = 0`.
-          let nf := CField.mul (DensePoly.qConstParam ((n : ℚ))) paramLogDerivExampleF
-          let mw := CField.mul (DensePoly.qConstParam ((m : ℚ))) paramLogDerivExampleW
-          CField.isZero (CField.sub nf mw) && CField.isZero (CField.sub v CField.one)
+          let nf := CCommRing.mul (DensePoly.qConstParam ((n : ℚ))) paramLogDerivExampleF
+          let mw := CCommRing.mul (DensePoly.qConstParam ((m : ℚ))) paramLogDerivExampleW
+          CCommRing.isZero (CField.sub nf mw) && CCommRing.isZero (CField.sub v CCommRing.one)
             && decide (n ≠ 0)
       | none => false) = true := by native_decide
 

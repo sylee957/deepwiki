@@ -132,7 +132,7 @@ end CFrac
 
 /-- Field equality on `CFrac α`, tested as `isZero (a - b)`. -/
 def qReduceEq {α : Type*} [CField α] [CFieldDomain α] (a b : CFrac α) : Bool :=
-  CField.isZero (CField.sub a b)
+  CCommRing.isZero (CField.sub a b)
 
 /-- A reducible fraction over `ℚ(x)` whose lowest-terms form is `(x + 1)/(x + 3)`. -/
 def swellFrac : CFrac ℚ :=

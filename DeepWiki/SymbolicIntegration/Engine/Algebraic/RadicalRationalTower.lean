@@ -31,7 +31,7 @@ def radCase3CofactorTower (der : DensePoly α → DensePoly α) (f g C : DensePo
   if cisZero C || cdeg C < cdeg f then []
   else
     let m := cdeg C - cdeg g                                      -- `deg B`, so `deg(B·g) = deg C`
-    let trial := cshift m [CField.one]                            -- the unit cofactor `θ^m`
+    let trial := cshift m [CCommRing.one]                            -- the unit cofactor `θ^m`
     let κ := clead (cadd (cmul (der trial) f) (cmul trial g))  -- per-unit-`b` leading contribution
     let b := CField.div (clead C) κ                               -- `b = lcf(C)/κ`
     cshift m [b]                                                   -- `b·θ^m`
@@ -74,15 +74,15 @@ gives `C = ρ`, and `radIntegrateCase3G` computes `vNum = 2ρ`, so `v = 2y`. -/
 open RadElem DensePoly
 
 /-- The exp-tower radicand `ρ = θ+1 = eˣ+1 ∈ ℚ(x)[θ]` (`y² = ρ`) as `DensePoly (CFrac ℚ)` `[1,1]`. -/
-def expC3Rho : DensePoly (CFrac ℚ) := [CField.one, CField.one]
+def expC3Rho : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
 
 /-- The exp-tower Case-3 helper `g = ½ρ'` over `ℚ(x)[θ]` with the `θ' = θ` derivation: `ρ' = θ`, so
 `g = θ/2 = [0, 1/2]` (degree `1`, matching `deg f`). -/
 def expC3 : DensePoly (CFrac ℚ) :=
-  cscale (CField.div CField.one (cnatCast 2)) (cmonomialDeriv expDt1 expC3Rho)
+  cscale (CField.div CCommRing.one (cnatCast 2)) (cmonomialDeriv expDt1 expC3Rho)
 
 /-- The exp-tower Case-3 numerator `C = ρ = θ+1 ∈ ℚ(x)[θ]` (integrand `√(eˣ+1) = ρ/y`), `[1,1]`. -/
-def expC3C : DensePoly (CFrac ℚ) := [CField.one, CField.one]
+def expC3C : DensePoly (CFrac ℚ) := [CCommRing.one, CCommRing.one]
 
 /-- The Case-3-G run `radIntegrateCase3G (cmonomialDeriv expDt1) ρ (½ρ') C = (Crem, vNum)` on `∫√(eˣ+1) dx`
 with the `θ' = θ` derivation: the cofactor `B = [2]` gives `vNum = 2ρ`. -/
@@ -106,12 +106,12 @@ def expC3RhoLvl2 : Lvl2 := lvl2OfNum expC3Rho
 /-- The computed rational part `v = vNum/y = 2y` lifted to `RadElem Lvl2` as `[0, vNum/ρ]`; with
 `vNum = 2ρ` this is `[0, 2] = 2y`, the engine's output `expC3Run.2`. -/
 def expC3Vlift : RadElem Lvl2 :=
-  [CField.zero, CField.div (lvl2OfNum expC3Run.2) (lvl2OfNum expC3Rho)]
+  [CCommRing.zero, CField.div (lvl2OfNum expC3Run.2) (lvl2OfNum expC3Rho)]
 
 /-- The expected `eˣ/√(eˣ+1)` piece `[0, θ/(θ+1)]` over `ℚ(x)(eˣ)`, which `radDeriv(2y)` should equal
 (the same value as `expIntegrand`). -/
 def expC3RatContribution : RadElem Lvl2 :=
-  [CField.zero, CField.div expTheta expRadicand]
+  [CCommRing.zero, CField.div expTheta expRadicand]
 
 /-- Case-3-G's computed rational part `v = 2y` has `radDeriv(v) = eˣ/√(eˣ+1)`: `radDeriv 2 ρ` (with the
 exponential derivation `expTowerDiff`) of `v = vNum/y` (`vNum = 2ρ`) equals `[0, θ/(θ+1)]`. -/
@@ -129,7 +129,7 @@ def rtFullIntegrand : RadElem Lvl2 := (radGen : RadElem Lvl2)
 
 /-- The log residual `1/√(eˣ+1) = 1/y` lifted to `[0, 1/ρ]` over `ℚ(x)(eˣ)` (the log-derivative half the
 solver absorbs; `y` minus `radDeriv(2y) = eˣ/√(eˣ+1)` leaves `1/√(eˣ+1)`). -/
-def rtFullLogResidual : RadElem Lvl2 := radInvYLift expC3RhoLvl2 CField.one
+def rtFullLogResidual : RadElem Lvl2 := radInvYLift expC3RhoLvl2 CCommRing.one
 
 /-- The integrand splits exactly into the computed rational + log halves: the log residual `[0, 1/ρ]` equals
 `y` minus the computed rational-part derivative `radDeriv(v)` (`v = expC3Vlift`). -/
@@ -140,14 +140,14 @@ theorem rtFull_split_exact :
 
 /-- The fixed log-solve denominator `D = θ = eˣ ∈ ℚ(x)(eˣ)` as `DensePoly (CFrac ℚ)` `[0, 1]`; the
 denominator of `u = (y−1)/(y+1) = ((θ+2)−2y)/θ`. -/
-def rtFullDenTheta : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def rtFullDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The fully-computed recovered result `F'`: `cIntegrateElementary` over `ℚ(x)(eˣ)` with the computed
 rational part `expC3Vlift` (`v = 2y`) and the log argument computed from the residual by `radLogArgSolve`,
 assembling `F' = ⟨2y, [(1, u)]⟩`. -/
 def rtFullRecovered : AlgIntegralResult Lvl2 :=
   @cIntegrateElementary _ _ _ expTowerDiff expC3RhoLvl2 expC3Vlift rtFullLogResidual
-    CField.one rtFullDenTheta 1
+    CCommRing.one rtFullDenTheta 1
 
 -- Sanity print: the recovered rational part `v` (should be `2y = [0,2]`, i.e. coefficient `2` on `y`) and
 -- the recovered log argument `u` (a constant multiple of `(y−1)/(y+1) = ((θ+2)−2y)/θ`).
@@ -173,7 +173,7 @@ theorem rtFull_shape :
 checked by `radIsZero` of `v − [0,2]`. -/
 theorem rtFull_ratPart_eq_two_y :
     radIsZero (radSub rtFullRecovered.ratPart
-      [CField.zero, CField.add CField.one CField.one]) = true := by native_decide
+      [CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]) = true := by native_decide
 
 /-! ### `radIntegrateCase3G cderiv` reduces to the ℚ-base behavior at `α = ℚ(x)`
 

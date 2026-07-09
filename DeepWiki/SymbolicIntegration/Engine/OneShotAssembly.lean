@@ -1006,59 +1006,59 @@ example [CFracGcdCoreWf α] (Dt : DensePoly α) (a d : DensePoly α) (cands : Li
 /-! ### ★★★ The fuel-free POLYNOMIAL one-shot with `hpoly` discharged (primitive base)
 
 `cIntegrateGFullWf_poly_oneShot` is gated on `hpoly` (`D(am qₚ) = am fₚ`). For the primitive base
-`Dt = [CField.one]`, the `b = []` branch integrates `fₚ` term by term and the Wf dispatcher pins
+`Dt = [CCommRing.one]`, the `b = []` branch integrates `fₚ` term by term and the Wf dispatcher pins
 `qₚ = cIntegratePoly fₚ`, so the existing constant-coefficient field identity discharges `hpoly`. -/
 
 /-- **★★★ The fuel-free POLYNOMIAL one-shot for `cIntegrateGFullWf` with `hpoly` discharged
 (primitive base).** -/
 theorem cIntegrateGFullWf_poly_oneShot_base [CharZero (CFieldSpec.K α)] [CFracGcdCoreWf α]
     (a d : DensePoly α) (cands : List α) (res : IntegralResult α) (qp : DensePoly α)
-    (hbranch : IsPolynomialBranch ([CField.one] : DensePoly α) a d)
-    (hsome : DensePoly.cIntegrateGFullWf ([CField.one] : DensePoly α) a d cands = some res)
-    (hqp : DensePoly.cPolyRischDE ([CField.one] : DensePoly α) []
-        (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).1
-        ((DensePoly.cdeg (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).1 : ℤ) + 1)
+    (hbranch : IsPolynomialBranch ([CCommRing.one] : DensePoly α) a d)
+    (hsome : DensePoly.cIntegrateGFullWf ([CCommRing.one] : DensePoly α) a d cands = some res)
+    (hqp : DensePoly.cPolyRischDE ([CCommRing.one] : DensePoly α) []
+        (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).1
+        ((DensePoly.cdeg (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).1 : ℤ) + 1)
         = some qp)
-    (hgden : am α (toPoly (DensePoly.cIntegrateReduced ([CField.one] : DensePoly α)
-          (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.1
-          (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.2 cands).rational.2)
+    (hgden : am α (toPoly (DensePoly.cIntegrateReduced ([CCommRing.one] : DensePoly α)
+          (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.1
+          (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.2 cands).rational.2)
         ≠ 0)
     (hconst : Differential.mapCoeffs
-        (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).1) = 0)
-    (hnormal : towerFractionFieldDeriv ([CField.one] : DensePoly α)
-            (am α (toPoly (DensePoly.cIntegrateReduced ([CField.one] : DensePoly α)
-                  (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.2 cands).rational.1)
-              / am α (toPoly (DensePoly.cIntegrateReduced ([CField.one] : DensePoly α)
-                  (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.2 cands).rational.2))
-          + logResidueSum ([CField.one] : DensePoly α) (DensePoly.cIntegrateReduced
-              ([CField.one] : DensePoly α)
-              (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.1
-              (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.2 cands).logs
-        = am α (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.1)
-            / am α (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.2))
-    (hrecon : am α (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).1)
-          + am α (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.1)
-            / am α (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).2.2.2)
+        (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).1) = 0)
+    (hnormal : towerFractionFieldDeriv ([CCommRing.one] : DensePoly α)
+            (am α (toPoly (DensePoly.cIntegrateReduced ([CCommRing.one] : DensePoly α)
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.1
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.2 cands).rational.1)
+              / am α (toPoly (DensePoly.cIntegrateReduced ([CCommRing.one] : DensePoly α)
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.1
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.2 cands).rational.2))
+          + logResidueSum ([CCommRing.one] : DensePoly α) (DensePoly.cIntegrateReduced
+              ([CCommRing.one] : DensePoly α)
+              (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.1
+              (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.2 cands).logs
+        = am α (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.1)
+            / am α (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.2))
+    (hrecon : am α (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).1)
+          + am α (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.1)
+            / am α (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).2.2.2)
         = am α (toPoly a) / am α (toPoly d)) :
-    towerFractionFieldDeriv ([CField.one] : DensePoly α)
+    towerFractionFieldDeriv ([CCommRing.one] : DensePoly α)
         (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
-        + logResidueSum ([CField.one] : DensePoly α) res.logs
+        + logResidueSum ([CCommRing.one] : DensePoly α) res.logs
       = am α (toPoly a) / am α (toPoly d) := by
-  set fp := (canonicalRepresentationFast ([CField.one] : DensePoly α) a d).1 with hfpE
+  set fp := (canonicalRepresentationFast ([CCommRing.one] : DensePoly α) a d).1 with hfpE
   have hfp := hbranch.poly_nonzero
   rw [← hfpE] at hfp
   have hqp_eq : qp = DensePoly.cIntegratePoly fp := by
-    rw [cPolyRischDEG_nil_eq ([CField.one] : DensePoly α) fp ((DensePoly.cdeg fp : ℤ) + 1) hfp
+    rw [cPolyRischDEG_nil_eq ([CCommRing.one] : DensePoly α) fp ((DensePoly.cdeg fp : ℤ) + 1) hfp
       (le_refl _)] at hqp
     exact (Option.some.injEq _ _ ▸ hqp).symm
-  have hpoly : towerFractionFieldDeriv ([CField.one] : DensePoly α) (am α (toPoly qp))
+  have hpoly : towerFractionFieldDeriv ([CCommRing.one] : DensePoly α) (am α (toPoly qp))
       = am α (toPoly fp) := by
     rw [hqp_eq]
     exact towerFractionFieldDerivG_amG_cIntegratePolyG_const fp
       (cIntegratePolyG_const_coeff fp hconst)
-  exact cIntegrateGFullWf_poly_oneShot ([CField.one] : DensePoly α) a d cands res qp hbranch hsome
+  exact cIntegrateGFullWf_poly_oneShot ([CCommRing.one] : DensePoly α) a d cands res qp hbranch hsome
     hqp hgden hpoly hnormal hrecon
 
 /-! ### ★★★ Task 3 milestone: the HYPEREXPONENTIAL one-shot for `cIntegrateGFullWf`, GATED on `∑c = 0`
@@ -1485,13 +1485,13 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
           else
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
-            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
+            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one]))
+      ([CCommRing.zero], [CCommRing.one]))
     (hdvd : toPoly (cmul d (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul a (cmul g.2 g.2))
           (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2)))))
-        ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])))
+        ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul d (cmul g.2 g.2)) ≠ ([] : DensePoly (CFrac ℚ))) :
     (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card := by
   have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
@@ -1499,17 +1499,17 @@ theorem cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
     (fun p hp hskip => ⟨hv p hp hskip, hb p hp hskip⟩)
   simp only at hresProper
   subst hgeq
-  have hDstar : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])
+  have hDstar : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
       ≠ 0 := by
     have hd2 : toPoly (cHermiteReduceTower Dt a d).2.2
-        = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) := by
+        = toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) := by
       simp only [cHermiteReduceTower, denote]
     rw [← hd2, hden]; exact Lagrange.nodal_ne_zero
   have hproper := cHermiteReduceTowerG_leftover_proper_of_residual Dt a d
     (csub (cmul a (cmul _ _))
       (cmul d (csub (cmul (cmonomialDeriv Dt _) _) (cmul _ (cmonomialDeriv Dt _)))))
     (cmul d (cmul _ _))
-    ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])
+    ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
     (by simp only [cHermiteReduceTower, denote])
     (by simp only [cHermiteReduceTower, denote])
     hdvd hresDen hDstar hresProper
@@ -1580,15 +1580,15 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : DensePoly 
           let Vi_pow := cpow vi i
           let u := cdivWf (canonicalRepresentationFast Dt a d).2.2.2 Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1)
-            (canonicalRepresentationFast Dt a d).2.2.1 ([CField.zero], [CField.one])).1
+            (canonicalRepresentationFast Dt a d).2.2.1 ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one]))
+      ([CCommRing.zero], [CCommRing.one]))
     (hdvd : toPoly (cmul (canonicalRepresentationFast Dt a d).2.2.2 (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul (canonicalRepresentationFast Dt a d).2.2.1 (cmul g.2 g.2))
           (cmul (canonicalRepresentationFast Dt a d).2.2.2
             (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2)))))
         ((cSqfreeYunFF (canonicalRepresentationFast Dt a d).2.2.2).foldl
-          (fun acc vi => cmul acc vi) [CField.one])))
+          (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul (canonicalRepresentationFast Dt a d).2.2.2 (cmul g.2 g.2))
       ≠ ([] : DensePoly (CFrac ℚ))) :
     towerFractionFieldDeriv Dt
@@ -1608,7 +1608,7 @@ theorem cIntegrateGFullWf_primitive_oneShot_inputProper_qfunNZG (Dt : DensePoly 
 
 The polynomial-branch analogue of the primitive normal-part capstone, now over the fuel-free full driver.
 The primitive-base restriction remains essential: the termwise polynomial antiderivative proves `Dqₚ = fₚ`
-only for `Dt = [CField.one]`. The Wf theorem takes simple-part properness directly; the separate Wf canonical
+only for `Dt = [CCommRing.one]`. The Wf theorem takes simple-part properness directly; the separate Wf canonical
 simple-proper bridge is still a later cleanup target. -/
 
 /-- **The fuel-free primitive-base poly one-shot at `ℚ(x)(t)` with `hpoly` and `hA` discharged from simple
@@ -1616,114 +1616,114 @@ properness.** -/
 theorem cIntegrateGFullWf_poly_oneShot_simpleProper_qfunNZG
     (a d : DensePoly (CFrac ℚ)) (cands : List (CFrac ℚ)) (res : IntegralResult (CFrac ℚ))
     (qp : DensePoly (CFrac ℚ)) (s : Finset (CFieldSpec.K (CFrac ℚ)))
-    (hbranch : IsPolynomialBranch ([CField.one] : DensePoly (CFrac ℚ)) a d)
-    (hsome : DensePoly.cIntegrateGFullWf ([CField.one] : DensePoly (CFrac ℚ)) a d cands = some res)
-    (hqp : DensePoly.cPolyRischDE ([CField.one] : DensePoly (CFrac ℚ)) []
-        (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).1
-        ((DensePoly.cdeg (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).1 : ℤ) + 1)
+    (hbranch : IsPolynomialBranch ([CCommRing.one] : DensePoly (CFrac ℚ)) a d)
+    (hsome : DensePoly.cIntegrateGFullWf ([CCommRing.one] : DensePoly (CFrac ℚ)) a d cands = some res)
+    (hqp : DensePoly.cPolyRischDE ([CCommRing.one] : DensePoly (CFrac ℚ)) []
+        (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).1
+        ((DensePoly.cdeg (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).1 : ℤ) + 1)
         = some qp)
-    (hgden : am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced ([CField.one] : DensePoly (CFrac ℚ))
-          (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-          (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).rational.2)
+    (hgden : am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced ([CCommRing.one] : DensePoly (CFrac ℚ))
+          (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+          (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).rational.2)
         ≠ 0)
     (hconst : Differential.mapCoeffs
-        (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).1) = 0)
-    (hherm : towerFractionFieldDeriv ([CField.one] : DensePoly (CFrac ℚ))
-            (am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced ([CField.one] : DensePoly (CFrac ℚ))
-                  (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).rational.1)
-              / am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced ([CField.one] : DensePoly (CFrac ℚ))
-                  (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).rational.2))
-          + am (CFrac ℚ) (toPoly (cHermiteReduceTower ([CField.one] : DensePoly (CFrac ℚ))
-                (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-                (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.1)
-            / am (CFrac ℚ) (toPoly (cHermiteReduceTower ([CField.one] : DensePoly (CFrac ℚ))
-                (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-                (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.2)
+        (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).1) = 0)
+    (hherm : towerFractionFieldDeriv ([CCommRing.one] : DensePoly (CFrac ℚ))
+            (am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced ([CCommRing.one] : DensePoly (CFrac ℚ))
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).rational.1)
+              / am (CFrac ℚ) (toPoly (DensePoly.cIntegrateReduced ([CCommRing.one] : DensePoly (CFrac ℚ))
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).rational.2))
+          + am (CFrac ℚ) (toPoly (cHermiteReduceTower ([CCommRing.one] : DensePoly (CFrac ℚ))
+                (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+                (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.1)
+            / am (CFrac ℚ) (toPoly (cHermiteReduceTower ([CCommRing.one] : DensePoly (CFrac ℚ))
+                (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+                (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.2)
         = am (CFrac ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1)
+            (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1)
           / am (CFrac ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2))
-    (hden : toPoly (cHermiteReduceTower ([CField.one] : DensePoly (CFrac ℚ))
-          (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-          (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.2
+            (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2))
+    (hden : toPoly (cHermiteReduceTower ([CCommRing.one] : DensePoly (CFrac ℚ))
+          (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+          (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.2
         = Lagrange.nodal s id)
     (hnorm : ∀ β ∈ s, (1 : CFieldSpec.K (CFrac ℚ)) ≠ β′)
-    (hform : (DensePoly.cIntegrateReduced ([CField.one] : DensePoly (CFrac ℚ))
-            (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-            (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).logs.map
+    (hform : (DensePoly.cIntegrateReduced ([CCommRing.one] : DensePoly (CFrac ℚ))
+            (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+            (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))
         = s.toList.map (fun β =>
-            ((toPoly (cHermiteReduceTower ([CField.one] : DensePoly (CFrac ℚ))
-                  (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-                  (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.1).eval β
-                / (Differential.implicitDeriv (toPoly ([CField.one] : DensePoly (CFrac ℚ)))
+            ((toPoly (cHermiteReduceTower ([CCommRing.one] : DensePoly (CFrac ℚ))
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+                  (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).2.1).eval β
+                / (Differential.implicitDeriv (toPoly ([CCommRing.one] : DensePoly (CFrac ℚ)))
                     (Lagrange.nodal s id)).eval β,
               X - C β)))
-    (haProper : (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1).degree
-      < (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).degree)
+    (haProper : (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1).degree
+      < (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).degree)
     (hv : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast
-          ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).zipIdx,
+          ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → toPoly p.1 ≠ 0)
     (hbk : ∀ p ∈ (cSqfreeYunFF (canonicalRepresentationFast
-          ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).zipIdx,
+          ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).zipIdx,
         ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : DensePoly (CFrac ℚ)),
         (toPoly (cdiophantine
             (cmul (cdivWf (canonicalRepresentationFast
-              ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 (cpow p.1 (p.2 + 1)))
-              (cmonomialDeriv ([CField.one] : DensePoly (CFrac ℚ)) p.1)) p.1 rhs).1).degree
+              ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 (cpow p.1 (p.2 + 1)))
+              (cmonomialDeriv ([CCommRing.one] : DensePoly (CFrac ℚ)) p.1)) p.1 rhs).1).degree
           < (toPoly p.1).degree)
     (g : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ))
     (hgeq : g = (cSqfreeYunFF (canonicalRepresentationFast
-        ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).zipIdx.foldl
+        ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).zipIdx.foldl
       (fun (gAcc : DensePoly (CFrac ℚ) × DensePoly (CFrac ℚ)) (vi, idx) =>
         let i := idx + 1
         if i ≤ 1 then gAcc
         else
           let Vi_pow := cpow vi i
           let u := cdivWf (canonicalRepresentationFast
-            ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 Vi_pow
-          let gloc := (cHermiteReduceTowerInnerWf ([CField.one] : DensePoly (CFrac ℚ)) vi u (i - 1)
-            (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-            ([CField.zero], [CField.one])).1
+            ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 Vi_pow
+          let gloc := (cHermiteReduceTowerInnerWf ([CCommRing.one] : DensePoly (CFrac ℚ)) vi u (i - 1)
+            (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+            ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one]))
+      ([CCommRing.zero], [CCommRing.one]))
     (hdvd : toPoly (cmul (canonicalRepresentationFast
-          ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 (cmul g.2 g.2))
+          ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul (canonicalRepresentationFast
-            ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1 (cmul g.2 g.2))
-          (cmul (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2
-            (csub (cmul (cmonomialDeriv ([CField.one] : DensePoly (CFrac ℚ)) g.1) g.2)
-              (cmul g.1 (cmonomialDeriv ([CField.one] : DensePoly (CFrac ℚ)) g.2)))))
+            ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1 (cmul g.2 g.2))
+          (cmul (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2
+            (csub (cmul (cmonomialDeriv ([CCommRing.one] : DensePoly (CFrac ℚ)) g.1) g.2)
+              (cmul g.1 (cmonomialDeriv ([CCommRing.one] : DensePoly (CFrac ℚ)) g.2)))))
         ((cSqfreeYunFF (canonicalRepresentationFast
-          ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2).foldl (fun acc vi => cmul acc vi) [CField.one])))
+          ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul (canonicalRepresentationFast
-      ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 (cmul g.2 g.2)) ≠ ([] : DensePoly (CFrac ℚ)))
+      ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 (cmul g.2 g.2)) ≠ ([] : DensePoly (CFrac ℚ)))
     (hrecon : am (CFrac ℚ)
-          (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).1)
+          (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).1)
         + am (CFrac ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1)
+            (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1)
           / am (CFrac ℚ)
-            (toPoly (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2)
+            (toPoly (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2)
         = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d)) :
-    towerFractionFieldDeriv ([CField.one] : DensePoly (CFrac ℚ))
+    towerFractionFieldDeriv ([CCommRing.one] : DensePoly (CFrac ℚ))
         (am (CFrac ℚ) (toPoly res.rational.1) / am (CFrac ℚ) (toPoly res.rational.2))
-        + logResidueSum ([CField.one] : DensePoly (CFrac ℚ)) res.logs
+        + logResidueSum ([CCommRing.one] : DensePoly (CFrac ℚ)) res.logs
       = am (CFrac ℚ) (toPoly a) / am (CFrac ℚ) (toPoly d) := by
-  have hDt : toPoly ([CField.one] : DensePoly (CFrac ℚ)) = C (1 : CFieldSpec.K (CFrac ℚ)) := by
+  have hDt : toPoly ([CCommRing.one] : DensePoly (CFrac ℚ)) = C (1 : CFieldSpec.K (CFrac ℚ)) := by
     simp only [denote, map_one, mul_zero, add_zero]
-  have hDtdeg : (toPoly ([CField.one] : DensePoly (CFrac ℚ))).natDegree ≤ 1 := by
+  have hDtdeg : (toPoly ([CCommRing.one] : DensePoly (CFrac ℚ))).natDegree ≤ 1 := by
     rw [hDt, Polynomial.natDegree_C]; exact Nat.zero_le 1
   have hA := cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one
-    ([CField.one] : DensePoly (CFrac ℚ))
-    (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-    (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 s hDtdeg
+    ([CCommRing.one] : DensePoly (CFrac ℚ))
+    (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+    (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 s hDtdeg
     haProper hv hbk hden g hgeq hdvd hresDen
   have hnormal := field_identity_of_cIntegrateReducedG_primitive
-    ([CField.one] : DensePoly (CFrac ℚ))
-    (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.1
-    (canonicalRepresentationFast ([CField.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands s
+    ([CCommRing.one] : DensePoly (CFrac ℚ))
+    (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.1
+    (canonicalRepresentationFast ([CCommRing.one] : DensePoly (CFrac ℚ)) a d).2.2.2 cands s
     (1 : CFieldSpec.K (CFrac ℚ)) hDt hherm hden hA hnorm hform
   exact cIntegrateGFullWf_poly_oneShot_base a d cands res qp hbranch hsome hqp hgden hconst hnormal
     hrecon

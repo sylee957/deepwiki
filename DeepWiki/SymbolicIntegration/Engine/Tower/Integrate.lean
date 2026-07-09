@@ -36,18 +36,18 @@ common denominator `gden²·h_den·d`: `(gprimeNum·h_den + h_num·gden²)·d = 
 open CFrac
 
 /-- Level-2 scalar `2 = 1 + 1 ∈ Lvl2 = ℚ(x)(t₁)`. -/
-def lvl2Two : Lvl2 := CField.add CField.one CField.one
+def lvl2Two : Lvl2 := CCommRing.add CCommRing.one CCommRing.one
 
 /-- Level-2 monomial derivative `Dt₂ = t₂² + 1` over `DensePoly Lvl2 = ℚ(x)(t₁)[t₂]` (so `t₂ = tan`,
 Bronstein Example 5.3.1 lifted to level 2; constant coefficients in ℚ ⊂ ℚ(x)(t₁)). -/
-def towerHermiteLvl2Dt : DensePoly Lvl2 := [CField.one, CField.zero, CField.one]
+def towerHermiteLvl2Dt : DensePoly Lvl2 := [CCommRing.one, CCommRing.zero, CCommRing.one]
 
 /-- Level-2 numerator `a = 1` over `DensePoly Lvl2` (constant coefficient `1 ∈ ℚ(x)(t₁)`). -/
-def towerHermiteLvl2A : DensePoly Lvl2 := [CField.one]
+def towerHermiteLvl2A : DensePoly Lvl2 := [CCommRing.one]
 
 /-- Level-2 denominator `d = t₂²` over `DensePoly Lvl2` — the normal factor `t₂` of multiplicity 2 (under
 `Dt₂ = t₂² + 1`, `t₂` is normal and `t₂²` its square), so Hermite lowers the power. -/
-def towerHermiteLvl2D : DensePoly Lvl2 := [CField.zero, CField.zero, CField.one]
+def towerHermiteLvl2D : DensePoly Lvl2 := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-! ### Level-2 canonical-representation test data
 
@@ -60,22 +60,22 @@ clearing denominators: numerator `N = q·dₛ·dₙ + b·dₙ + c·dₛ`, identi
 scalar ambiguity). -/
 
 /-- Level-2 scalar `−1 ∈ Lvl2 = ℚ(x)(t₁)`. -/
-def lvl2NegOne : Lvl2 := CField.neg CField.one
+def lvl2NegOne : Lvl2 := CCommRing.neg CCommRing.one
 
 /-- Level-2 scalar `−2 ∈ Lvl2`. -/
-def lvl2NegTwo : Lvl2 := CField.neg (CField.add CField.one CField.one)
+def lvl2NegTwo : Lvl2 := CCommRing.neg (CCommRing.add CCommRing.one CCommRing.one)
 
 /-- Level-2 scalar `−3 ∈ Lvl2`. -/
-def lvl2NegThree : Lvl2 := CField.neg (CField.add CField.one (CField.add CField.one CField.one))
+def lvl2NegThree : Lvl2 := CCommRing.neg (CCommRing.add CCommRing.one (CCommRing.add CCommRing.one CCommRing.one))
 
 /-- Level-2 canonical-rep numerator `a = t₂³` over `ℚ(x)(t₁)[t₂]` (constant coefficients in ℚ). -/
-def towerCanRepLvl2A : DensePoly Lvl2 := [CField.zero, CField.zero, CField.zero, CField.one]
+def towerCanRepLvl2A : DensePoly Lvl2 := [CCommRing.zero, CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- Level-2 canonical-rep denominator `d = (t₂−1)(t₂−2) = t₂² − 3t₂ + 2` over `ℚ(x)(t₁)[t₂]` (monic). -/
-def towerCanRepLvl2D : DensePoly Lvl2 := [lvl2Two, lvl2NegThree, CField.one]
+def towerCanRepLvl2D : DensePoly Lvl2 := [lvl2Two, lvl2NegThree, CCommRing.one]
 
 /-- Level-2 monomial derivative `Dt₂ = t₂ − 1` (root `t₂ = 1` special, `t₂ = 2` normal). -/
-def towerCanRepLvl2Dt : DensePoly Lvl2 := [lvl2NegOne, CField.one]
+def towerCanRepLvl2Dt : DensePoly Lvl2 := [lvl2NegOne, CCommRing.one]
 
 /-! ## The logarithmic part (Rothstein-Trager §5.6) and the reduced-case capstone `cIntegrateReduced`
 
@@ -100,15 +100,15 @@ into any `[CField α]` via the numerator/denominator natural casts (`cnatCast`) 
 `CField` ops. The generic `ℚ → α` constant embedding (the generic `ofConstNZ` at the scalar level). -/
 def cratCast (q : ℚ) : α :=
   let n : α := cnatCast q.num.natAbs
-  let nsigned : α := if q.num < 0 then CField.neg n else n
-  CField.mul nsigned (CField.inv (cnatCast q.den))
+  let nsigned : α := if q.num < 0 then CCommRing.neg n else n
+  CCommRing.mul nsigned (CField.inv (cnatCast q.den))
 
 /-- Generic Horner evaluation `cHorner p c = p(c) ∈ α`: evaluate the dense coefficient list `p`
 (index = degree, low→high) at `c ∈ α` by Horner's rule. The generic mirror of `ceval`
 (`ComputableIntegrate`), redefined here to avoid that heavy import. Used to test whether a candidate
 residue `c` is a root of the residue resultant `R(c) = 0`. Needs only `[CField α]`. -/
 def cHorner (p : DensePoly α) (c : α) : α :=
-  (p : List α).foldr (fun coeff acc => CField.add coeff (CField.mul c acc)) CField.zero
+  (p : List α).foldr (fun coeff acc => CCommRing.add coeff (CCommRing.mul c acc)) CCommRing.zero
 
 end DensePoly
 
@@ -161,7 +161,7 @@ def checkIdentity (Dt : DensePoly α) (res : IntegralResult α) (anum aden : Den
   let gden := res.rational.2
   let gprimeNum := csub (cmul (cmonomialDeriv Dt gnum) gden) (cmul gnum (cmonomialDeriv Dt gden))
   let gden2 := cmul gden gden
-  let Lstart : DensePoly α × DensePoly α := ([CField.zero], [CField.one])
+  let Lstart : DensePoly α × DensePoly α := ([CCommRing.zero], [CCommRing.one])
   let (Lnum, Lden) := res.logs.foldl
     (fun (acc : DensePoly α × DensePoly α) (cv : α × DensePoly α) =>
       let c := cv.1
@@ -196,13 +196,13 @@ fuel-free validations are in `ComputableTowerWellFounded`. -/
 open DensePoly
 
 /-- Level-2 monomial derivative `Dt₂ = 1` over `DensePoly Lvl2 = ℚ(x)(t₁)[t₂]` (`t₂` independent). -/
-def towerIntLvl2Dt : DensePoly Lvl2 := [CField.one]
+def towerIntLvl2Dt : DensePoly Lvl2 := [CCommRing.one]
 
 /-- Level-2 log argument `v₊ = t₂ + 1` over `DensePoly Lvl2` (low→high in `t₂`). -/
-def towerIntLvl2VPlus : DensePoly Lvl2 := [CField.one, CField.one]
+def towerIntLvl2VPlus : DensePoly Lvl2 := [CCommRing.one, CCommRing.one]
 
 /-- Level-2 log argument `v₋ = t₂ − 1` over `DensePoly Lvl2`. -/
-def towerIntLvl2VMinus : DensePoly Lvl2 := [CField.neg CField.one, CField.one]
+def towerIntLvl2VMinus : DensePoly Lvl2 := [CCommRing.neg CCommRing.one, CCommRing.one]
 
 /-- Level-2 scalar `1/2 ∈ Lvl2` (the residue coefficient), via the generic `cratCast`. -/
 def towerIntLvl2Half : Lvl2 := cratCast (1/2)

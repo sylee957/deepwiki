@@ -80,7 +80,7 @@ def cisZeroI (x : DensePoly ℚ × DensePoly ℚ) : Bool := cisZero x.1 && cisZe
 /-- `divByTminusI p = q` with `p = (t − √−1)·q`: synthetic (Ruffini) division of a `k(√−1)[t]`-poly
 by `t − √−1`, exact when `p(√−1) = 0`; the remainder is dropped. -/
 def divByTminusI (p : List (DensePoly ℚ × DensePoly ℚ)) : List (DensePoly ℚ × DensePoly ℚ) :=
-  let I : DensePoly ℚ × DensePoly ℚ := ([], [CField.one])     -- √−1
+  let I : DensePoly ℚ × DensePoly ℚ := ([], [CCommRing.one])     -- √−1
   -- Horner from the top: coefficients of the quotient, high→low, then reverse.
   let rec go : List (DensePoly ℚ × DensePoly ℚ) → DensePoly ℚ × DensePoly ℚ →
       List (DensePoly ℚ × DensePoly ℚ) → List (DensePoly ℚ × DensePoly ℚ)
@@ -119,7 +119,7 @@ def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : DensePoly ℚ) :
     let z1 := csub e1.1 e2.2
     let z2 := cadd e1.2 e2.1
     -- base solve CoupledDESystem(b₀, b₂ − nη, z₁, z₂), η = 1 ⇒ shift b₂ by −(n+1).
-    let b2shift := csub b2 (cscale nN [CField.one])
+    let b2shift := csub b2 (cscale nN [CCommRing.one])
     match cCoupledDESystem (-1) b0 b2shift z1 z2 dbound with
     | none => none
     | some (s1, s2) =>
@@ -136,7 +136,7 @@ def cCoupledDECancelTan (dbound : ℕ) (b0 b2 : DensePoly ℚ) :
       let quot := divByTminusI cpairs
       let d1 : List (DensePoly ℚ) := quot.map Prod.fst
       let d2 : List (DensePoly ℚ) := quot.map Prod.snd
-      match cCoupledDECancelTan dbound b0 (cadd b2 [CField.one]) d1 d2 n with
+      match cCoupledDECancelTan dbound b0 (cadd b2 [CCommRing.one]) d1 d2 n with
       | none => none
       | some (h1, h2) =>
         -- return (h₁t + h₂ + s₁, h₂t − h₁ + s₂).

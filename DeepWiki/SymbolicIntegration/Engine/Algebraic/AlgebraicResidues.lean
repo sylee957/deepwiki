@@ -42,12 +42,12 @@ def cAlgResidueResultant (D rho g0 g1 : DensePoly α) : DensePoly α :=
 /-- Residue membership test `cIsResidue R c = ((Z − c) ∣ R)`: whether `c` is a root of `R(Z)`, via
 `cmodWf R (Z − c) = 0`. -/
 def cIsResidue (R : DensePoly α) (c : α) : Bool :=
-  cisZero (cmodWf R [CField.neg c, CField.one])          -- `R mod (Z − c) = 0`
+  cisZero (cmodWf R [CCommRing.neg c, CCommRing.one])          -- `R mod (Z − c) = 0`
 
 /-- Residue-factorization certificate `cResiduesMatch R factors`: whether `R(Z)` equals `∏ (Z − cᵢ)`
 up to a `K`-scalar (repetition encoding multiplicity), via `cisZero` of the monic difference. -/
 def cResiduesMatch (R : DensePoly α) (factors : List α) : Bool :=
-  let prod := factors.foldl (fun acc c => cmul acc [CField.neg c, CField.one]) [CField.one]
+  let prod := factors.foldl (fun acc c => cmul acc [CCommRing.neg c, CCommRing.one]) [CCommRing.one]
   cisZero (csub (cmonic R) (cmonic prod))
 
 end DensePoly

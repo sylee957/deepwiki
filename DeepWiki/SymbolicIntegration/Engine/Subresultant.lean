@@ -20,14 +20,14 @@ variable {α : Type*} [CField α]
 /-- **Generic cofactor-expansion determinant** on a row-list matrix, dimension-indexed for termination.
 `cDetGn n M` expands `M` (assumed `n × n`) along its first row: `Σ_j (−1)ʲ · M[0][j] · det(minorⱼ)`. -/
 def cDetGn : ℕ → List (List α) → α
-  | 0, _ => CField.one
-  | _ + 1, [] => CField.one
+  | 0, _ => CCommRing.one
+  | _ + 1, [] => CCommRing.one
   | n + 1, row :: rest =>
     ((List.range (n + 1)).map (fun j =>
-      let aij := row.getD j CField.zero
+      let aij := row.getD j CCommRing.zero
       let minor := rest.map (fun r => r.take j ++ r.drop (j + 1))
-      let term := CField.mul aij (cDetGn n minor)
-      if j % 2 = 0 then term else CField.neg term)).foldl CField.add CField.zero
+      let term := CCommRing.mul aij (cDetGn n minor)
+      if j % 2 = 0 then term else CCommRing.neg term)).foldl CCommRing.add CCommRing.zero
 
 /-- Determinant of a square row-list matrix (`cDetGn` at its own row-count). -/
 def cDet (M : List (List α)) : α := cDetGn M.length M
@@ -40,7 +40,7 @@ def cSylvesterRows (p q : DensePoly α) (n m : ℕ) : List (List α) :=
   let qc : List α := (cnorm q)
   let width := m + n
   let shiftRow (coeffs : List α) (k : ℕ) : List α :=
-    (List.replicate k CField.zero ++ coeffs ++ List.replicate width CField.zero).take width
+    (List.replicate k CCommRing.zero ++ coeffs ++ List.replicate width CCommRing.zero).take width
   (List.range m).map (fun i => shiftRow pc i) ++ (List.range n).map (fun i => shiftRow qc i)
 
 /-- The **exact `bSylvester` matrix** (matching `DeepWiki.SymbolicIntegration.bSylvester`): `m` `A`-rows then
@@ -51,9 +51,9 @@ def cBSylvesterRows (p q : DensePoly α) (n m : ℕ) : List (List α) :=
   let qc : List α := cnorm q
   let width := m + n
   let arow (i : ℕ) : List α := (List.range width).map (fun l =>
-    if i ≤ l ∧ l ≤ i + n then pc.getD (n + i - l) CField.zero else CField.zero)
+    if i ≤ l ∧ l ≤ i + n then pc.getD (n + i - l) CCommRing.zero else CCommRing.zero)
   let brow (i : ℕ) : List α := (List.range width).map (fun l =>
-    if i - m ≤ l ∧ l ≤ i then qc.getD (i - l) CField.zero else CField.zero)
+    if i - m ≤ l ∧ l ≤ i then qc.getD (i - l) CCommRing.zero else CCommRing.zero)
   (List.range m).map (fun i => arow i) ++ (List.range n).map (fun jj => brow (m + jj))
 
 /-- Row-index selector `subRow n m j` (delete the last `j` rows of each Sylvester block). -/
@@ -66,7 +66,7 @@ def cSubColIdx (n m j i : ℕ) : List ℕ :=
 
 /-- Extract the submatrix of `M` on the given row/column index lists. -/
 def cSubmatrix (M : List (List α)) (rows cols : List ℕ) : List (List α) :=
-  rows.map (fun r => cols.map (fun c => (M.getD r []).getD c CField.zero))
+  rows.map (fun r => cols.map (fun c => (M.getD r []).getD c CCommRing.zero))
 
 /-- **The `j`-th subresultant polynomial** `Sⱼ(p,q) = Σ_{i=0}^{j} det(ⱼSᵢ)·tⁱ` (coefficients low-to-high),
 mirroring `DeepWiki.SymbolicIntegration.subresultant p q n m j`. The symbolic (root-free) LRT log arguments
@@ -85,7 +85,7 @@ def cSubresultantParam (Dstar A Dd : DensePoly α) (n m j : ℕ) : List (DensePo
     cinterpolate ((List.range N).map (fun jj =>
       let c := cnatCast jj
       (c, ((cSubresultant Dstar (csub A (cscale c Dd)) n m j : DensePoly α) : List α).getD k
-        CField.zero))))
+        CCommRing.zero))))
 
 /-! ### `toK`-determinant homomorphism (L4b): certifying `cDet` against `Matrix.det` -/
 

@@ -24,7 +24,7 @@ variable {α : Type*} [CField α]
 /-- Hyperexponential normal-part residual `cHyperexpResidual η logs = η · ∑ᵢ cᵢ ∈ α`, the amount by which
 the log part overshoots the normal integrand (`cᵢ` the `logs` coefficients). -/
 def cHyperexpResidual (η : α) (logs : List (α × DensePoly α)) : α :=
-  CField.mul η (logs.foldl (fun acc cv => CField.add acc cv.1) CField.zero)
+  CCommRing.mul η (logs.foldl (fun acc cv => CCommRing.add acc cv.1) CCommRing.zero)
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
@@ -41,7 +41,7 @@ def cIntegrateHyperexpNormal (Dt : DensePoly α) (a d : DensePoly α) (cands : L
   let red := cIntegrateReduced Dt a d cands
   let η : α := cExpEta Dt
   let R : α := cHyperexpResidual η red.logs
-  match CRischField.crischDESolve (CField.zero : α) R with
+  match CRischField.crischDESolve (CCommRing.zero : α) R with
   | none => none
   | some intR =>
     let (gnum, gden) := red.rational

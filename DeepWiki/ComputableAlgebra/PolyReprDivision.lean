@@ -16,13 +16,16 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration.CPoly
 
-variable {P : Type u → Type u} [CPoly P] {α : Type u} [CCommRing α]
+-- `[CCommRing α]` is stated explicitly on the ring-only declarations below; the `[CField α]`
+-- declarations get their `CCommRing` instance from `CField` itself (it `extends CCommRing`), so keeping
+-- the ambient binder off them avoids an overlapping-instance diamond.
+variable {P : Type u → Type u} [CPoly P] {α : Type u}
 
 /-- The zero polynomial as a length-0 representation. -/
-def czero : P α := ofFn 0 (fun _ => CCommRing.zero)
+def czero [CCommRing α] : P α := ofFn 0 (fun _ => CCommRing.zero)
 
 section Spec
-variable [CRingSpec α]
+variable [CCommRing α] [CRingSpec α]
 
 /-- `toPoly czero = 0`. -/
 theorem toPoly_czero : (toPoly (czero : P α)) = 0 := by

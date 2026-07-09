@@ -93,7 +93,7 @@ theorem canonicalReconstruction (Dt a d : DensePoly α)
     (hsplit : toPoly d = toPoly (crSpecDen Dt a d) * toPoly (crNormDen Dt a d))
     (hgdeg : (toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1).natDegree = 0)
     (hgne : toPoly (cgcdWf (crNormDen Dt a d) (crSpecDen Dt a d)).1 ≠ 0) :
-    fieldFrac (crPoly Dt a d) [CField.one]
+    fieldFrac (crPoly Dt a d) [CCommRing.one]
         + fieldFrac (crSpecNum Dt a d) (crSpecDen Dt a d)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
       = fieldFrac a d := by
@@ -111,7 +111,7 @@ theorem canonicalReconstruction (Dt a d : DensePoly α)
   have hadiv : toPoly a = toPoly qr.1 * toPoly d + toPoly qr.2 := toPolyG_cdivmodWf a d hcnd
   have hbcr : toPoly bc.1 * toPoly sn.1 + toPoly bc.2 * toPoly sn.2 = toPoly qr.2 :=
     toPolyG_cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 hcns hbez
-  have hone : am α (toPoly ([CField.one] : DensePoly α)) = 1 := by
+  have hone : am α (toPoly ([CCommRing.one] : DensePoly α)) = 1 := by
     simp only [denote]
     simp
   rw [hone, div_one]

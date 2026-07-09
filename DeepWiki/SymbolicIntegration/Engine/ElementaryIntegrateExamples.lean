@@ -18,17 +18,17 @@ open RadElem DensePoly
 def elemRho : Lvl2 := expRadicand
 
 /-- The rational part `v = 2√(eˣ+1) = 2y` as the `RadElem Lvl2` `[0, 2]` over ℚ(x)(eˣ). -/
-def elemRatPart : RadElem Lvl2 := [CField.zero, CField.add CField.one CField.one]
+def elemRatPart : RadElem Lvl2 := [CCommRing.zero, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- The log argument `u = (y−1)/(y+1) = ((θ+2)−2y)/θ ∈ ℚ(x)(eˣ)[y]/(y²−ρ)`, the `RadElem`
 `[(θ+2)/θ, −2/θ]`. -/
 def elemLogArg : RadElem Lvl2 :=
-  [CField.div (CField.add expTheta (CField.add CField.one CField.one)) expTheta,
-   CField.div (CField.neg (CField.add CField.one CField.one)) expTheta]
+  [CField.div (CCommRing.add expTheta (CCommRing.add CCommRing.one CCommRing.one)) expTheta,
+   CField.div (CCommRing.neg (CCommRing.add CCommRing.one CCommRing.one)) expTheta]
 
 /-- The combined antiderivative `F = 2y + log((y−1)/(y+1))` over ℚ(x)(eˣ): `elemRatPart` plus one
 log term `(1, elemLogArg)`. -/
-def elemF : AlgIntegralResult Lvl2 := ⟨elemRatPart, [(CField.one, elemLogArg)]⟩
+def elemF : AlgIntegralResult Lvl2 := ⟨elemRatPart, [(CCommRing.one, elemLogArg)]⟩
 
 /-- The combined integrand `algDeriv F` over ℚ(x)(eˣ) with the exp-tower derivation, equal to
 `√(eˣ+1) = y`. -/
@@ -39,7 +39,7 @@ theorem elemIntegrand_eq_radGen :
     radIsZero (radSub elemIntegrand (radGen : RadElem Lvl2)) = true := by native_decide
 
 /-- The log residual `1/√(eˣ+1) = 1/y` lifted to `[0, 1/ρ]` over ℚ(x)(eˣ) (`ρ = eˣ+1`). -/
-def elemLogResidual : RadElem Lvl2 := radInvYLift elemRho CField.one
+def elemLogResidual : RadElem Lvl2 := radInvYLift elemRho CCommRing.one
 
 /-- The log residual equals `elemIntegrand − radDeriv(2y)` under the exp-tower derivation. -/
 theorem elemLogResidual_eq_integrand_sub_ratDeriv :
@@ -48,11 +48,11 @@ theorem elemLogResidual_eq_integrand_sub_ratDeriv :
   native_decide
 
 /-- The log-solve denominator `D = θ = eˣ` as the `DensePoly (CFrac ℚ)` `[0, 1]`. -/
-def elemDenTheta : DensePoly (CFrac ℚ) := [CField.zero, CField.one]
+def elemDenTheta : DensePoly (CFrac ℚ) := [CCommRing.zero, CCommRing.one]
 
 /-- The recovered result `F' = cIntegrateElementary ρ (2y) residual 1 θ 1` over ℚ(x)(eˣ). -/
 def elemRecovered : AlgIntegralResult Lvl2 :=
-  @cIntegrateElementary _ _ _ expTowerDiff elemRho elemRatPart elemLogResidual CField.one elemDenTheta 1
+  @cIntegrateElementary _ _ _ expTowerDiff elemRho elemRatPart elemLogResidual CCommRing.one elemDenTheta 1
 
 /-- Round-trip `algDeriv F' = elemIntegrand` over ℚ(x)(eˣ): `radIsZero (algDeriv F' − integrand)`. -/
 theorem rt_elementary_combined :
@@ -67,12 +67,12 @@ theorem rt_elementary_combined_shape :
 /-- The recovered log argument `u = [a₀, a₁]` has `a₁ ≠ 0` and `a₀·(−2) = a₁·(θ+2)`, i.e. it is a
 nonzero constant multiple of `(θ+2) − 2y`. -/
 theorem elemRecovered_logArg_matches_closed_form :
-    (elemRecovered.logTerms.headD (CField.one, []) |>.2 |> fun u =>
-      let a0 := u.getD 0 CField.zero
-      let a1 := u.getD 1 CField.zero
-      (CField.isZero a1 == false) &&
-      CField.isZero (CField.sub (CField.mul a0 (CField.neg (CField.add CField.one CField.one)))
-        (CField.mul a1 (CField.add expTheta (CField.add CField.one CField.one))))) = true := by
+    (elemRecovered.logTerms.headD (CCommRing.one, []) |>.2 |> fun u =>
+      let a0 := u.getD 0 CCommRing.zero
+      let a1 := u.getD 1 CCommRing.zero
+      (CCommRing.isZero a1 == false) &&
+      CCommRing.isZero (CField.sub (CCommRing.mul a0 (CCommRing.neg (CCommRing.add CCommRing.one CCommRing.one)))
+        (CCommRing.mul a1 (CCommRing.add expTheta (CCommRing.add CCommRing.one CCommRing.one))))) = true := by
   native_decide
 
 end DeepWiki.SymbolicIntegration

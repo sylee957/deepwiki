@@ -38,10 +38,10 @@ def kernelBasis {β : Type*} [CField β] (nCols : ℕ) (rows : List (List β)) :
   let freeCols := (List.range nCols).filter (fun c => ¬ pivots.contains c)
   freeCols.map (fun fc =>
     let base : List β := (List.range nCols).map (fun c =>
-      if c = fc then (CField.one : β) else CField.zero)
+      if c = fc then (CCommRing.one : β) else CCommRing.zero)
     (List.range pivots.length).foldl (fun (acc : List β) r =>
       let pc := pivots[r]!
-      let v := CField.neg ((rs[r]!).getD fc CField.zero)
+      let v := CCommRing.neg ((rs[r]!).getD fc CCommRing.zero)
       acc.set pc v) base)
 
 end DensePoly
@@ -72,7 +72,7 @@ def badPrimes (f : DensePoly (CFrac ℚ)) : List (DensePoly ℚ) :=
 /-- The cusp curve `f = y² − x³ ∈ ℚ(x)[y]` (`a₀ = −x³`, monic), `DensePoly (CFrac ℚ)` `[−x³, 0, 1]`. The
 equation order `[1, y]` is non-maximal at `x`. -/
 def cuspF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, 0, -1], CField.zero, CField.one]
+  [qxOfNum [0, 0, 0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The generator `y` of `ℚ(x)[y]/(y² − x³)` (`afBasisElem 1 = [0, 1]`). -/
 def cuspY : DensePoly (CFrac ℚ) := afBasisElem 1
@@ -92,7 +92,7 @@ namespace DensePoly
 /-- The power-basis coordinate row of an order element `afCoordRow n z = [num(c₀), …, num(c_{n−1})]`: the
 first `n` coefficients of `z : DensePoly (CFrac ℚ)` read as `ℚ[x]` numerators. -/
 def afCoordRow (n : ℕ) (z : DensePoly (CFrac ℚ)) : List (DensePoly ℚ) :=
-  (List.range n).map (fun i => ((z.getD i CField.zero : CFrac ℚ).1.1 : DensePoly ℚ))
+  (List.range n).map (fun i => ((z.getD i CCommRing.zero : CFrac ℚ).1.1 : DensePoly ℚ))
 
 /-- The trace matrix reduced at a linear prime root `a` `traceMatrixAtRoot f a`: the `n×n` `ℚ`-matrix
 `traceMatrix f (powerBasis f)` with every entry evaluated at `x = a` (`qEvalAtRoot`), i.e. `T mod (x − a)`.
@@ -157,15 +157,15 @@ def matMul {β : Type*} [CField β] (A Bm : List (List β)) : List (List β) :=
   A.map (fun rowA =>
     (List.range r).map (fun j =>
       ((List.range rowA.length).foldl (fun acc k =>
-        CField.add acc (CField.mul (rowA.getD k CField.zero) ((Bm.getD k []).getD j CField.zero)))
-        CField.zero)))
+        CCommRing.add acc (CCommRing.mul (rowA.getD k CCommRing.zero) ((Bm.getD k []).getD j CCommRing.zero)))
+        CCommRing.zero)))
 
 /-- Inverse of a square `n×n` matrix over a `[CField β]` `matInv n M = some M⁻¹` (or `none` if singular):
 Gauss–Jordan on the augmented `[M | Iₙ]`, reading the right half. Fuel-free. -/
 def matInv {β : Type*} [CField β] (n : ℕ) (M : List (List β)) : Option (List (List β)) :=
   -- augment each row with the identity
   let aug : List (List β) := (List.range n).map (fun i =>
-    (M.getD i []) ++ (List.range n).map (fun j => if i = j then (CField.one : β) else CField.zero))
+    (M.getD i []) ++ (List.range n).map (fun j => if i = j then (CCommRing.one : β) else CCommRing.zero))
   -- Gauss–Jordan over the 2n columns, pivoting on columns 0 … n−1
   let step : Option (List (List β)) → ℕ → Option (List (List β)) :=
     fun st col =>
@@ -173,30 +173,30 @@ def matInv {β : Type*} [CField β] (n : ℕ) (M : List (List β)) : Option (Lis
       | none => none
       | some rs =>
         match (List.range n).find?
-            (fun i => i ≥ col && (!CField.isZero ((rs.getD i []).getD col CField.zero))) with
+            (fun i => i ≥ col && (!CCommRing.isZero ((rs.getD i []).getD col CCommRing.zero))) with
         | none => none
         | some i =>
           let rowCol := rs.getD col []
           let rowI := rs.getD i []
           let rs := (rs.set col rowI).set i rowCol
           let pivRow := rs.getD col []
-          let lead := pivRow.getD col CField.zero
+          let lead := pivRow.getD col CCommRing.zero
           let pivRow := pivRow.map (fun a => CField.div a lead)
           let rs := rs.set col pivRow
           let rs := (List.range n).foldl (fun acc rr =>
             if rr = col then acc
             else
               let row := acc.getD rr []
-              let factor := row.getD col CField.zero
-              if CField.isZero factor then acc
+              let factor := row.getD col CCommRing.zero
+              if CCommRing.isZero factor then acc
               else
                 let newRow := (List.range (2 * n)).map (fun c =>
-                  CField.sub (row.getD c CField.zero) (CField.mul factor (pivRow.getD c CField.zero)))
+                  CField.sub (row.getD c CCommRing.zero) (CCommRing.mul factor (pivRow.getD c CCommRing.zero)))
                 acc.set rr newRow) rs
           some rs
   match (List.range n).foldl step (some aug) with
   | none => none
-  | some rs => some (rs.map (fun row => (List.range n).map (fun j => row.getD (n + j) CField.zero)))
+  | some rs => some (rs.map (fun row => (List.range n).map (fun j => row.getD (n + j) CCommRing.zero)))
 
 /-! #### `K(x) ↔ K[x]` denominator clearing and lifts -/
 
@@ -217,13 +217,13 @@ def commonDenomQ (M : List (List (CFrac ℚ))) : DensePoly ℚ :=
   M.foldl (fun acc row =>
     row.foldl (fun a z =>
       let den := cnorm (z.1.2 : DensePoly ℚ)
-      if cisZero den || cisZero (csub den [CField.one]) then a else cmul a den)
-      acc) [CField.one]
+      if cisZero den || cisZero (csub den [CCommRing.one]) then a else cmul a den)
+      acc) [CCommRing.one]
 
 /-- Clear a `K(x)`-row to a `K[x]`-row at denominator `δ` `clearRow δ row = [num(δ·zᵢ)]`: multiply each
 entry by `δ` and take the numerator; the integral row `δ·row` when `δ` is a common denominator. -/
 def clearRow (δ : DensePoly ℚ) (row : List (CFrac ℚ)) : List (DensePoly ℚ) :=
-  row.map (fun z => (CField.mul (qxOfNum δ) z).1.1)
+  row.map (fun z => (CCommRing.mul (qxOfNum δ) z).1.1)
 
 /-! #### The idealizer of `I_p`, given an order basis (`idealizerBasis`) -/
 
@@ -258,7 +258,7 @@ def idealizerBasis (f : DensePoly (CFrac ℚ)) (orderBasis : List (DensePoly (CF
       -- columns of δ·N̂⁻¹ are the new basis vectors (in the [1,y,…] order/power basis)
       let δq : CFrac ℚ := qxOfNum δ
       (List.range n).map (fun col =>
-        (List.range n).map (fun row => CField.mul δq ((NhatInv.getD row []).getD col CField.zero)))
+        (List.range n).map (fun row => CCommRing.mul δq ((NhatInv.getD row []).getD col CCommRing.zero)))
 
 end DensePoly
 
@@ -285,7 +285,7 @@ def round2Step (f : DensePoly (CFrac ℚ)) :
   | p :: _ =>
     let pm := cmonic p
     -- root of a monic linear prime `p = [−a, 1]` is `a = −p₀`
-    let a : ℚ := CField.neg (pm.getD 0 CField.zero)
+    let a : ℚ := CCommRing.neg (pm.getD 0 CCommRing.zero)
     let ip := pTraceRadical f pm a
     let newBasis := idealizerBasis f O ip
     (newBasis, !isPowerBasis n newBasis)
@@ -311,8 +311,8 @@ theorem cusp_round2_grew :
 /-- The enlarged generator is `y/x`: `round2Step cuspF` produces `[1, y/x]` (second vector `[0, 1/x]`, first
 `[1]`), checked by `cisZero (cuspNewGen − [0, 1/x])`. -/
 theorem cusp_round2_newGen_eq :
-    (cisZero (csub cuspNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZero (csub ((round2Step cuspF).1.getD 0 []) [CField.one])) = true := by native_decide
+    (cisZero (csub cuspNewGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((round2Step cuspF).1.getD 0 []) [CCommRing.one])) = true := by native_decide
 
 /-- The enlarged generator `y/x` is integral: `afMul f (y/x) (y/x) = x` in `ℚ(x)[y]/(y² − x³)`, checked by
 `cisZero (afMul f (y/x) (y/x) − x)`. -/
@@ -336,7 +336,7 @@ The node `f = y² − x³ − x²`: discriminant `4x²(x + 1)`, bad prime `x`; `
 /-- The node curve `f = y² − x²(x + 1) = y² − x³ − x² ∈ ℚ(x)[y]` (`a₀ = −(x³ + x²)`, monic), `DensePoly
 (CFrac ℚ)` `[−(x³ + x²), 0, 1]`. An ordinary double point; `[1, y]` is non-maximal at `x`. -/
 def nodeF : DensePoly (CFrac ℚ) :=
-  [qxOfNum [0, 0, -1, -1], CField.zero, CField.one]
+  [qxOfNum [0, 0, -1, -1], CCommRing.zero, CCommRing.one]
 
 /-- The enlarged generator `y/x ∈ ℚ(x)[y]/(y² − x²(x+1))`, the second basis vector of `round2Step nodeF`
 (`[0, 1/x]`). -/
@@ -347,8 +347,8 @@ new generator `[0, 1/x] = y/x`, first vector `1`. -/
 theorem node_round2_newGen_eq :
     ((badPrimes nodeF).map cmonic = [([0, 1] : DensePoly ℚ)]
       && (round2Step nodeF).2
-      && cisZero (csub nodeNewGen [CField.zero, qxOfFrac [1] [0, 1] (by decide)])
-      && cisZero (csub ((round2Step nodeF).1.getD 0 []) [CField.one])) = true := by
+      && cisZero (csub nodeNewGen [CCommRing.zero, qxOfFrac [1] [0, 1] (by decide)])
+      && cisZero (csub ((round2Step nodeF).1.getD 0 []) [CCommRing.one])) = true := by
   native_decide
 
 /-- The node's enlarged generator is integral with relation `(y/x)² = x + 1`: `afMul f (y/x) (y/x) = x + 1`

@@ -24,7 +24,7 @@ def primitiveCase : MonomialCase α where
     if cisZero b then
       match cPolyRischDE Dt [] fp ((cdeg fp : ℤ) + 1) with
       | none => none
-      | some qp => some (qp, [CField.one])
+      | some qp => some (qp, [CCommRing.one])
     else none
   reducedCorrect _Dt nrm := some nrm
 
@@ -36,7 +36,7 @@ def hyperexpCase : MonomialCase α where
   reducedCorrect Dt nrm :=
     let η := cExpEta Dt
     let R := cHyperexpResidual η nrm.logs
-    match CRischField.crischDESolve (CField.zero : α) R with
+    match CRischField.crischDESolve (CCommRing.zero : α) R with
     | none => none
     | some intR =>
       let gnum := nrm.rational.1
@@ -58,10 +58,10 @@ open DensePoly
 /-- Primitive case: `∫ 1/t² = −1/t` over `ℚ(x)[t]` with `Dt = 1` — `cIntegrateCase primitiveCase` returns a
 result satisfying `checkIdentity`. -/
 theorem cIntegrateCase_primitive_invSq :
-    (match cIntegrateCase (primitiveCase) ([CField.one] : DensePoly Lvl1)
-        [CField.one] [CField.zero, CField.zero, CField.one] [CField.zero] with
-      | some res => checkIdentity ([CField.one] : DensePoly Lvl1) res [CField.one]
-          [CField.zero, CField.zero, CField.one]
+    (match cIntegrateCase (primitiveCase) ([CCommRing.one] : DensePoly Lvl1)
+        [CCommRing.one] [CCommRing.zero, CCommRing.zero, CCommRing.one] [CCommRing.zero] with
+      | some res => checkIdentity ([CCommRing.one] : DensePoly Lvl1) res [CCommRing.one]
+          [CCommRing.zero, CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 /-- Hyperexp case: `∫ 1/exp = −1/exp` — `cIntegrateCase hyperexpCase` reproduces the hyperexp driver's

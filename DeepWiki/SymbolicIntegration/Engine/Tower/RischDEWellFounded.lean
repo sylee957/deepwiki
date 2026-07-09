@@ -65,7 +65,7 @@ def cPolyRischDECancelExp (Dt : DensePoly α) (b c : DensePoly α) (n : ℤ) :
   else
     let m : ℕ := cdeg c
     -- eq. 6.24 base RDE `Ds + (b₀ + m·η)·s = lc(c)` over `α`.
-    let coeff : α := CField.add b0 (CField.mul (cnatCast m) η)
+    let coeff : α := CCommRing.add b0 (CCommRing.mul (cnatCast m) η)
     match CRischField.crischDESolve coeff (clead c) with
     | none => none
     | some s =>
@@ -218,7 +218,7 @@ def cWeakNormalizer (Dt : DensePoly α) (fnum fden : DensePoly α) (boundRoots :
   let roots := cPosIntRoots r boundRoots
   roots.foldl (fun (acc : DensePoly α) (n : ℕ) =>
     let gi := CFracGcdCoreWf.cgcdFFCoreWf (csub a (cscale (cnatCast n) Dd1)) d1
-    cmul acc (cpow gi n)) [CField.one]
+    cmul acc (cpow gi n)) [CCommRing.one]
 
 /-- Generic normal-denominator reduction `cRdeNormalDenominator Dt fnum fden gnum gden` for weakly
 normalized `f = fnum/fden`, `g = gnum/gden`. Returns `none` or `some (a, b, c, h)` reducing `Dy + fy = g` to
@@ -255,7 +255,7 @@ def cSpecialPoly (Dt : DensePoly α) : DensePoly α :=
 def cRdeSpecialDenominator (Dt : DensePoly α) (a b c : DensePoly α) :
     DensePoly α × DensePoly α × DensePoly α × DensePoly α :=
   let p := cSpecialPoly Dt
-  if cdeg p = 0 then (a, b, c, [CField.one])
+  if cdeg p = 0 then (a, b, c, [CCommRing.one])
   else
     let nb : ℤ := (cValuation p b : ℤ)
     let nc : ℤ := (cValuation p c : ℤ)
@@ -267,7 +267,7 @@ def cRdeSpecialDenominator (Dt : DensePoly α) (a b c : DensePoly α) :
     let pN := cpow p Nnat
     let abar := cmul a pN
     let DpOverp := cdivWf (cmonomialDeriv Dt p) p
-    let bterm := cscale (CField.neg (cnatCast negn)) (cmul a DpOverp)
+    let bterm := cscale (CCommRing.neg (cnatCast negn)) (cmul a DpOverp)
     let bbar := cmul (cadd b bterm) pN
     let cbar := cmul c (cpow p Nminusn)
     let h := cpow p negn
@@ -277,7 +277,7 @@ def cRdeSpecialDenominator (Dt : DensePoly α) (a b c : DensePoly α) :
 constant, `cRdeSpecialDenominator Dt a b c = (a, b, c, [1])`. -/
 theorem cRdeSpecialDenominatorG_primitive_eq (Dt : DensePoly α) (a b c : DensePoly α)
     (hp : cdeg (cSpecialPoly Dt) = 0) :
-    cRdeSpecialDenominator Dt a b c = (a, b, c, [CField.one]) := by
+    cRdeSpecialDenominator Dt a b c = (a, b, c, [CCommRing.one]) := by
   rw [cRdeSpecialDenominator]
   simp only [hp, if_pos]
 
@@ -302,13 +302,13 @@ theorem cSpecialDenomNoClearG_always (Dt : DensePoly α) (b c : DensePoly α) :
 `cRdeSpecialDenominator` returns `h = [1]`. -/
 theorem cRdeSpecialDenominatorG_h1_eq_one_of_noClear (Dt : DensePoly α) (a b c : DensePoly α)
     (hp : cdeg (cSpecialPoly Dt) ≠ 0) (hn : CSpecialDenomNoClear Dt b c) :
-    (cRdeSpecialDenominator Dt a b c).2.2.2 = [CField.one] := by
+    (cRdeSpecialDenominator Dt a b c).2.2.2 = [CCommRing.one] := by
   rw [cRdeSpecialDenominator]
   simp only [if_neg hp]
   rw [CSpecialDenomNoClear] at hn
   show cpow (cSpecialPoly Dt) (-(min 0
     ((cValuation (cSpecialPoly Dt) c : ℤ)
-      - min 0 (cValuation (cSpecialPoly Dt) b : ℤ)))).toNat = [CField.one]
+      - min 0 (cValuation (cSpecialPoly Dt) b : ℤ)))).toNat = [CCommRing.one]
   rw [hn]
   rfl
 
@@ -316,7 +316,7 @@ theorem cRdeSpecialDenominatorG_h1_eq_one_of_noClear (Dt : DensePoly α) (a b c 
 regime. -/
 theorem cRdeSpecialDenominatorG_h1_eq_one_always (Dt : DensePoly α) (a b c : DensePoly α)
     (hp : cdeg (cSpecialPoly Dt) ≠ 0) :
-    (cRdeSpecialDenominator Dt a b c).2.2.2 = [CField.one] :=
+    (cRdeSpecialDenominator Dt a b c).2.2.2 = [CCommRing.one] :=
   cRdeSpecialDenominatorG_h1_eq_one_of_noClear Dt a b c hp
     (cSpecialDenomNoClearG_always Dt b c)
 
@@ -333,7 +333,7 @@ theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFieldSpec α] (Dt : 
     ∧ toPoly (cRdeSpecialDenominator Dt a b c).2.2.1 = toPoly c * toPoly pN := by
   intro pN
   rw [CSpecialDenomNoClear] at hn
-  have hbterm0 : CFieldSpec.toK (CField.neg (CField.zero : α)) = 0 := by
+  have hbterm0 : CFieldSpec.toK (CCommRing.neg (CCommRing.zero : α)) = 0 := by
     rw [CFieldSpec.toK_neg, CFieldSpec.toK_zero, neg_zero]
   refine ⟨?_, ?_, ?_⟩
   · rw [cRdeSpecialDenominator]
@@ -463,7 +463,7 @@ variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
 /-- The denominator-direct normality gate for tower RDE inputs. -/
 def cdenomNormalGate (a : CFrac β) : Bool :=
   DensePoly.cisZero (DensePoly.csub
-    (DensePoly.cSplitFactorFast ([CField.one] : DensePoly β) a.1.2).1
+    (DensePoly.cSplitFactorFast ([CCommRing.one] : DensePoly β) a.1.2).1
     a.1.2)
 
 end Gate

@@ -88,12 +88,12 @@ def sqrtxV3 : DensePoly ℚ := cpow sqrtxV 3
 
 /-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (CFrac ℚ)` as `[0, vNum/(V²·f)]`. -/
 def sqrtxVlift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
+  [CCommRing.zero, CField.div (qxOfNum sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
 
 /-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (CFrac ℚ)` as
 `[0, C₀/(V³·f) − Crem/(V·f)]`. -/
 def sqrtxRatLift : RadElem (CFrac ℚ) :=
-  [CField.zero,
+  [CCommRing.zero,
     CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmul sqrtxV3 sqrtxF)))
       (CField.div (qxOfNum sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
 
@@ -129,12 +129,12 @@ def cubeFqx : CFrac ℚ := qxOfNum [1, 0, 0, 1]
 /-- The rational part `v = vNum/(V²·y)` lifted to `RadElem (CFrac ℚ)` — the pure-`y` element
 `[0, vNum/(V²·f)]` over `ℚ(x)`. -/
 def cubeVlift : RadElem (CFrac ℚ) :=
-  [CField.zero, CField.div (qxOfNum cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
+  [CCommRing.zero, CField.div (qxOfNum cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
 
 /-- The integrand's rational part `C₀/(V³y) − Crem/(Vy)` lifted to `RadElem (CFrac ℚ)` — the pure-`y`
 element `[0, C₀/(V³·f) − Crem/(V·f)]` over `ℚ(x)`. -/
 def cubeRatLift : RadElem (CFrac ℚ) :=
-  [CField.zero,
+  [CCommRing.zero,
     CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmul (cpow cubeV 3) cubeF)))
       (CField.div (qxOfNum cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
 

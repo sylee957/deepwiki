@@ -18,8 +18,8 @@ omit [CRischField β] in
 /-- `towerFractionFieldDerivG_toCFracG`: `towerFractionFieldDeriv [1]` agrees with
 `towerDerivCFrac [1]` through `toCFrac`. -/
 theorem towerFractionFieldDerivG_toCFracG (x : CFrac β) :
-    towerFractionFieldDeriv ([CField.one] : DensePoly β) (toCFrac x)
-      = toCFrac (towerDerivCFrac ([CField.one] : DensePoly β) x) := by
+    towerFractionFieldDeriv ([CCommRing.one] : DensePoly β) (toCFrac x)
+      = toCFrac (towerDerivCFrac ([CCommRing.one] : DensePoly β) x) := by
   rw [towerFractionFieldDeriv, toCFracG_towerDerivCFracG]
 
 omit [CDiffField β] [CDiffFieldSpec β] [CRischField β]
@@ -28,7 +28,7 @@ omit [CDiffField β] [CDiffFieldSpec β] [CRischField β]
 theorem toCFracG_qOfPolyNZG_ne_zero (q : DensePoly β) (hq : DensePoly.cisZero q = false) :
     toCFrac (qOfPolyNZ q) ≠ 0 := by
   rw [toCFrac]
-  show am β (toPoly q) / am β (toPoly ([CField.one] : DensePoly β)) ≠ 0
+  show am β (toPoly q) / am β (toPoly ([CCommRing.one] : DensePoly β)) ≠ 0
   simp only [denote, map_one, mul_zero, add_zero, div_one]
   exact amG_toPolyG_ne_zero (DensePoly.toPolyG_ne_zero_of_cisZeroG_false hq)
 
@@ -38,7 +38,7 @@ towerFractionFieldDeriv [1] (toCFrac q') / toCFrac q'`. -/
 theorem toCFracG_weakNormalizedF (f q' : CFrac β) :
     toCFrac (weakNormalizedF f q')
       = toCFrac f
-        - towerFractionFieldDeriv ([CField.one] : DensePoly β) (toCFrac q') / toCFrac q' := by
+        - towerFractionFieldDeriv ([CCommRing.one] : DensePoly β) (toCFrac q') / toCFrac q' := by
   rw [weakNormalizedF, toCFracG_qsubNZG, toCFracG_qmulNZG, toCFracG_qinvNZG,
     towerFractionFieldDerivG_toCFracG, div_eq_mul_inv]
 

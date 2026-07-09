@@ -60,7 +60,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 /-- The inner RDE input pair: after weak normalization by `q`, the reduced transformed left-hand side
 paired with `q * g`, as `crischDESolveSoundWf` forms it before calling `crischDERawSolveWf`. -/
 def rischDEInnerInputWf (f g : CFrac β) : CFrac β × CFrac β :=
-  let q : DensePoly β := cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2
+  let q : DensePoly β := cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2
   let q' : CFrac β := qOfPolyNZ q
   (qReduce (weakNormalizedF f q'), qmulNZ q' g)
 
@@ -79,54 +79,54 @@ proof (`hinner`), and the denominator guard (`hden`). -/
 structure RischDEDecisionProcedureFrontierWf (f g : CFrac β) : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : FieldRDESolvable f g →
-    DensePoly.cisZero (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2) = false
+    DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
     IsCanonNormalizedWf f
-      (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2))
+      (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
     ∃ ynum yden,
-      IsCRischDEGPolySol ([CField.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
+      IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
         gtilde.1.1 gtilde.1.2 ynum yden
   /-- The inner-completeness proof for the weak-normalized, reduced input pair. -/
   hinner : FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    RischDEInnerCompletenessWf ([CField.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
+    RischDEInnerCompletenessWf ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
       gtilde.1.1 gtilde.1.2
   /-- The returned denominator of a successful inner solve is nonzero. -/
   hden : FieldRDESolvable f g → ∀ ynum yden : DensePoly β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    cRischDE ([CField.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+    cRischDE ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
         = some (ynum, yden) →
       DensePoly.cisZero yden = false
 
 /-- Assemble the field-level frontier from its inner residual-tip frontier. -/
 theorem decisionProcedureFrontierWf_of_innerFrontier (f g : CFrac β)
     (hwn : FieldRDESolvable f g →
-      DensePoly.cisZero (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2) = false)
+      DensePoly.cisZero (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2) = false)
     (hck : FieldRDESolvable f g →
       IsCanonNormalizedWf f
-        (qOfPolyNZ (cWeakNormalizer ([CField.one] : DensePoly β) f.1.1 f.1.2)))
+        (qOfPolyNZ (cWeakNormalizer ([CCommRing.one] : DensePoly β) f.1.1 f.1.2)))
     (hpolysol : FieldRDESolvable f g →
       let ftildeR := (rischDEInnerInputWf f g).1
       let gtilde := (rischDEInnerInputWf f g).2
       ∃ ynum yden,
-        IsCRischDEGPolySol ([CField.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
+        IsCRischDEGPolySol ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
           gtilde.1.1 gtilde.1.2 ynum yden)
     (hinnerFront : FieldRDESolvable f g →
       let ftildeR := (rischDEInnerInputWf f g).1
       let gtilde := (rischDEInnerInputWf f g).2
-      RischDEInnerDecisionFrontierWf ([CField.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
+      RischDEInnerDecisionFrontierWf ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2
         gtilde.1.1 gtilde.1.2)
     (hden : FieldRDESolvable f g → ∀ ynum yden : DensePoly β,
       let ftildeR := (rischDEInnerInputWf f g).1
       let gtilde := (rischDEInnerInputWf f g).2
-      cRischDE ([CField.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+      cRischDE ([CCommRing.one] : DensePoly β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
           = some (ynum, yden) →
         DensePoly.cisZero yden = false) :
     RischDEDecisionProcedureFrontierWf f g where
@@ -134,7 +134,7 @@ theorem decisionProcedureFrontierWf_of_innerFrontier (f g : CFrac β)
   hck := hck
   hpolysol := hpolysol
   hinner hsol :=
-    rischDEInnerCompletenessWf_of_decisionFrontierWf ([CField.one] : DensePoly β)
+    rischDEInnerCompletenessWf_of_decisionFrontierWf ([CCommRing.one] : DensePoly β)
       (rischDEInnerInputWf f g).1.1.1 (rischDEInnerInputWf f g).1.1.2
       (rischDEInnerInputWf f g).2.1.1 (rischDEInnerInputWf f g).2.1.2
       (hinnerFront hsol)

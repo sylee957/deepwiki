@@ -22,8 +22,8 @@ variable {α : Type*} [CField α] [CRischField α]
 /-- Signed scalar `cLaurentShift η j = j·η ∈ α`, the base-RDE coefficient of `Dqⱼ + (j·η)·qⱼ = aⱼ`. -/
 def cLaurentShift (η : α) (j : ℤ) : α :=
   let n : α := cnatCast j.natAbs
-  let nsigned : α := if j < 0 then CField.neg n else n
-  CField.mul nsigned η
+  let nsigned : α := if j < 0 then CCommRing.neg n else n
+  CCommRing.mul nsigned η
 
 /-- One Laurent term's antiderivative coefficient `cLaurentIntCoeff η j aⱼ = some qⱼ` solving
 `Dqⱼ + (j·η)·qⱼ = aⱼ` via `CRischField.crischDESolve`, or `none` if non-elementary. -/
@@ -64,7 +64,7 @@ def cIntegrateHyperexpLaurent (η : α) (pos : DensePoly α) (neg : List α) :
     -- `negCoeffs[i] = q_{−(i+1)}`; in `num` (index `j+m`) these go to indices `m-1, m-2, …, 0`,
     -- i.e. the reversed list is `num[0..m-1]`. `posCoeffs[k] = q_k` go to `num[m..]`.
     let num : DensePoly α := negCoeffs.reverse ++ posCoeffs
-    let den : DensePoly α := cshift m [CField.one]
+    let den : DensePoly α := cshift m [CCommRing.one]
     some (num, den)
   | _, _ => none
 
@@ -85,7 +85,7 @@ def cHyperexpSpecialNeg (b ds : DensePoly α) : List α :=
     -- coefficient of `t^{-(i+1)}` is `b_{m-1-i}/c`, for `i = 0 … m-1`.
     (List.range m).map (fun i =>
       let k : ℕ := m - 1 - i
-      CField.mul ((b : List α).getD k CField.zero) cinv)
+      CCommRing.mul ((b : List α).getD k CCommRing.zero) cinv)
 
 end DensePoly
 

@@ -14,16 +14,16 @@ open scoped Differential
 namespace DensePoly
 
 /-- The square-root component curve `T₁ = y² − x ∈ ℚ(x)[y]`. -/
-def sqrtComponentCurve : DensePoly (CFrac ℚ) := [qxOfNum [0, -1], CField.zero, CField.one]
+def sqrtComponentCurve : DensePoly (CFrac ℚ) := [qxOfNum [0, -1], CCommRing.zero, CCommRing.one]
 
 /-- The square-root component integral `F₁ = (2/3)·x·y`. -/
-def sqrtComponentIntegral : DensePoly (CFrac ℚ) := [CField.zero, qxOfNum [0, 2/3]]
+def sqrtComponentIntegral : DensePoly (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 2/3]]
 
 /-- The cube-root component curve `T₂ = y³ − x ∈ ℚ(x)[y]`. -/
-def cubeRootComponentCurve : DensePoly (CFrac ℚ) := [qxOfNum [0, -1], CField.zero, CField.zero, CField.one]
+def cubeRootComponentCurve : DensePoly (CFrac ℚ) := [qxOfNum [0, -1], CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- The cube-root component integral `F₂ = (3/4)·x·y`. -/
-def cubeRootComponentIntegral : DensePoly (CFrac ℚ) := [CField.zero, qxOfNum [0, 3/4]]
+def cubeRootComponentIntegral : DensePoly (CFrac ℚ) := [CCommRing.zero, qxOfNum [0, 3/4]]
 
 /-- The integrand `y = [0, 1]` (`afBasisElem 1`) of `∫y dx`. -/
 def componentIntegrandY : DensePoly (CFrac ℚ) := afBasisElem 1

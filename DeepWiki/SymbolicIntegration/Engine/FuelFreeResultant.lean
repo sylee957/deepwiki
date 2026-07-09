@@ -26,21 +26,21 @@ def cresultantWf (p q : DensePoly α) : α :=
   let pn := cnorm p
   let qn := cnorm q
   if cisZero qn then
-    if (pn : List α).length ≤ 1 then CField.one else CField.zero
+    if (pn : List α).length ≤ 1 then CCommRing.one else CCommRing.zero
   else if (qn : List α).length ≤ 1 then
     cfpow (clead qn) (cdeg pn)
   else if (pn : List α).length < (qn : List α).length then
-    let s := cfpow (CField.neg CField.one) (cdeg pn * cdeg qn)
+    let s := cfpow (CCommRing.neg CCommRing.one) (cdeg pn * cdeg qn)
     if cresultantMeasure q p < cresultantMeasure p q then
-      CField.mul s (cresultantWf q p)
+      CCommRing.mul s (cresultantWf q p)
     else s   -- unreachable over a genuine field (`cresultantMeasure_swap_lt`)
   else
     let r := cnorm (cmodWf p q)
-    let sign := cfpow (CField.neg CField.one) (cdeg pn * cdeg qn)
+    let sign := cfpow (CCommRing.neg CCommRing.one) (cdeg pn * cdeg qn)
     let lcpow := cfpow (clead qn) (cdeg pn - cdeg r)
     if cresultantMeasure q r < cresultantMeasure p q then
-      CField.mul (CField.mul sign lcpow) (cresultantWf q r)
-    else CField.mul sign lcpow   -- unreachable over a genuine field (`cresultantMeasure_reduce_lt`)
+      CCommRing.mul (CCommRing.mul sign lcpow) (cresultantWf q r)
+    else CCommRing.mul sign lcpow   -- unreachable over a genuine field (`cresultantMeasure_reduce_lt`)
 termination_by cresultantMeasure p q
 decreasing_by · assumption
               · assumption
@@ -114,7 +114,7 @@ theorem cdivWf_natDegree_add (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cn
       simpa only [denote, toPolyG_nil] using hnorm
     have hdq : cdeg q = 0 := by simp [cdeg, hqnil]
     have hdp : cdeg p = 0 := by simp only [cdeg]; omega
-    have hval : cresultantWf p q = CField.one := by
+    have hval : cresultantWf p q = CCommRing.one := by
       rw [cresultantWf.eq_def]; simp only [hcz', if_true, hp1']
     rw [hval, CFieldSpec.toK_one, hq0, Polynomial.resultant_zero_right, hdq, pow_zero, mul_one, hdp,
       pow_zero]
@@ -129,7 +129,7 @@ theorem cdivWf_natDegree_add (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cn
       simpa only [denote, toPolyG_nil] using hnorm
     have hdq : cdeg q = 0 := by simp [cdeg, hqnil]
     have hdp : cdeg p ≠ 0 := by simp only [cdeg]; omega
-    have hval : cresultantWf p q = CField.zero := by
+    have hval : cresultantWf p q = CCommRing.zero := by
       rw [cresultantWf.eq_def]; simp only [hcz', if_true, hp1', if_false]
     rw [hval, CFieldSpec.toK_zero, hq0, Polynomial.resultant_zero_right, hdq, pow_zero, mul_one,
       zero_pow hdp]
@@ -152,7 +152,7 @@ theorem cdivWf_natDegree_add (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cn
     have hpq' : (cnorm p : List α).length < (cnorm q : List α).length := hpq
     have hdec' : cresultantMeasure q p < cresultantMeasure p q := hdec
     have hval : CFieldSpec.toK (cresultantWf p q)
-        = CFieldSpec.toK (cfpow (CField.neg CField.one) (cdeg p * cdeg q))
+        = CFieldSpec.toK (cfpow (CCommRing.neg CCommRing.one) (cdeg p * cdeg q))
           * CFieldSpec.toK (cresultantWf q p) := by
       rw [cresultantWf.eq_def]
       simp only [hcz', Bool.false_eq_true, if_false, if_neg hqc', if_pos hpq',
@@ -180,7 +180,7 @@ theorem cdivWf_natDegree_add (p q : DensePoly α) (hp : cnorm p ≠ []) (hq : cn
     have hRlen : (cnorm (cmodWf p q) : List α).length < (cnorm q : List α).length :=
       cmodWf_length_lt p q hq
     have hval : CFieldSpec.toK (cresultantWf p q)
-        = CFieldSpec.toK (cfpow (CField.neg CField.one) (cdeg p * cdeg q))
+        = CFieldSpec.toK (cfpow (CCommRing.neg CCommRing.one) (cdeg p * cdeg q))
           * CFieldSpec.toK (cfpow (clead q) (cdeg p - cdeg (cnorm (cmodWf p q))))
           * CFieldSpec.toK (cresultantWf q (cnorm (cmodWf p q))) := by
       rw [cresultantWf.eq_def]

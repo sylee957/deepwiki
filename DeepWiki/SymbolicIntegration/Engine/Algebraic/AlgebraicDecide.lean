@@ -225,12 +225,12 @@ end Decides
 `[0, 1/(x²·(x²+1))]` for which `radLogArgSolveQ … [0,0,1] 1 = none`, forcing the torsion decision to
 govern the verdict. -/
 def decideNonPrincipalResidual : RadElem (CFrac ℚ) :=
-  radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CField.one
+  radInvYLift (qxOfNum [0, 0, 1, 0, 1]) CCommRing.one
 
 /-- `cIntegrateAlgebraicDecide` on the non-torsion `(3,5)` of `y² = x³ − 2`: a log-part input whose
 principal solve fails and whose residue divisor is non-torsion, expected to return `none`. -/
 def decideWitnessNonTorsion : Option (AlgIntegralResult (CFrac ℚ)) :=
-  cIntegrateAlgebraicDecide 5 tltRhoX3m2 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
+  cIntegrateAlgebraicDecide 5 tltRhoX3m2 [1] [1] decideNonPrincipalResidual CCommRing.one [0, 0, 1] 1
     hypRhoX3m2 1 hypPt35 true
 
 /-- `cIntegrateAlgebraicDecide` returns `none` on the non-torsion `(3,5)` of `y² = x³ − 2`: the
@@ -242,7 +242,7 @@ theorem decideWitnessNonTorsion_none : decideWitnessNonTorsion = none := by nati
 /-- `cIntegrateAlgebraicDecide` on the order-3 torsion flex `(0,1)` of `y² = x³ + 1`: a log-part
 input whose principal solve fails, expected to return `some ⟨v, [(1/3, y − 1)]⟩`. -/
 def decideWitnessTorsion : Option (AlgIntegralResult (CFrac ℚ)) :=
-  cIntegrateAlgebraicDecide 5 tltRhoX3p1 [1] [1] decideNonPrincipalResidual CField.one [0, 0, 1] 1
+  cIntegrateAlgebraicDecide 5 tltRhoX3p1 [1] [1] decideNonPrincipalResidual CCommRing.one [0, 0, 1] 1
     hypRhoX3p1 1 hypPt01 true
 
 /-- `cIntegrateAlgebraicDecide` returns `some F` with one `(1/3)·log` term on the torsion `(0,1)` of
@@ -259,7 +259,7 @@ theorem decideWitnessTorsion_some :
 a principal `radLogArgSolveQ = some N`, expected to return `some` with a `1·log(N/D)` term. -/
 def decideWitnessPrincipal : Option (AlgIntegralResult (CFrac ℚ)) :=
   cIntegrateAlgebraicDecide 5 rtRatRho [1] [1]
-    (radInvYLift rtRatRho CField.one) CField.one [1] 1
+    (radInvYLift rtRatRho CCommRing.one) CCommRing.one [1] 1
     (qxNum rtRatRho) 1 hypPt35 true
 
 /-- `cIntegrateAlgebraicDecide` returns `some F` with one principal log term on the `∫ 1/√(x²+1)`

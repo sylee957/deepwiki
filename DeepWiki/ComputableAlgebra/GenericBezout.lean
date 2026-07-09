@@ -16,10 +16,10 @@ namespace DensePoly
 variable {α : Type*} [CField α]
 
 /-- Natural number as a field element: `cnatCast k = 1 + 1 + … + 1` (`k` times), built from
-`CField.add`/`CField.one`; `[CField α]`-only. -/
+`CCommRing.add`/`CCommRing.one`; `[CField α]`-only. -/
 def cnatCast : ℕ → α
-  | 0 => CField.zero
-  | k + 1 => CField.add CField.one (cnatCast k)
+  | 0 => CCommRing.zero
+  | k + 1 => CCommRing.add CCommRing.one (cnatCast k)
 
 /-- `toK (cnatCast k) = (k : K)`: the computable natural cast reads as the genuine one. -/
 @[denote] theorem toK_cnatCastG [CFieldSpec α] (k : ℕ) :
@@ -31,8 +31,8 @@ def cnatCast : ℕ → α
 /-- Generic Lagrange basis numerator `clagNum zs = ∏ⱼ (z − zⱼ)` over abscissas `zs`, built from the
 degree-1 factors `[−zⱼ, 1]` via `cmul`. -/
 def clagNum : List α → DensePoly α
-  | [] => [CField.one]
-  | z :: zs => cmul [CField.neg z, CField.one] (clagNum zs)
+  | [] => [CCommRing.one]
+  | z :: zs => cmul [CCommRing.neg z, CCommRing.one] (clagNum zs)
 
 /-- `toPoly (clagNum zs) = ∏ (X − C (toK zⱼ))`: the basis numerator as a product of linear factors. -/
 @[denote] theorem toPolyG_clagNumG [CFieldSpec α] (zs : List α) :
@@ -51,9 +51,9 @@ scalar `1/∏(zₖ − zⱼ)` is a `CField.inv`; the per-term polynomial uses `c
 def cinterpolate (pts : List (α × α)) : DensePoly α :=
   let zs := pts.map Prod.fst
   let term : α × α → DensePoly α := fun (zk, yk) =>
-    let others := zs.filter (fun zj => CField.isZero (CField.sub zj zk) = false)
+    let others := zs.filter (fun zj => CCommRing.isZero (CField.sub zj zk) = false)
     let num := clagNum others
-    let denom := others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one
+    let denom := others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one
     cscale (CField.div yk denom) num
   cnorm (pts.foldl (fun acc p => cadd acc (term p)) [])
 
@@ -64,7 +64,7 @@ variable [CFieldSpec α]
 /-- `toPoly` of a single Lagrange interpolation term `cscale (yk/denom) (clagNum others)`. -/
 theorem toPolyG_termG (zk yk : α) (others : List α) :
     toPoly (cscale (CField.div yk
-        (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one))
+        (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
         (clagNum others))
       = Polynomial.C (CFieldSpec.toK yk
           / (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod)
@@ -75,7 +75,7 @@ theorem toPolyG_termG (zk yk : α) (others : List α) :
 /-- Evaluation of a generic Lagrange term at a value `x`. -/
 theorem eval_toPolyG_termG (zk yk : α) (others : List α) (x : CFieldSpec.K α) :
     (toPoly (cscale (CField.div yk
-        (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one))
+        (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
         (clagNum others))).eval x
       = (CFieldSpec.toK yk / (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod)
         * (others.map (fun zj => x - CFieldSpec.toK zj)).prod := by
@@ -91,7 +91,7 @@ theorem eval_toPolyG_termG (zk yk : α) (others : List α) (x : CFieldSpec.K α)
 theorem eval_toPolyG_termG_at_self (zk yk : α) (others : List α)
     (hne : ∀ zj ∈ others, CFieldSpec.toK zj ≠ CFieldSpec.toK zk) :
     (toPoly (cscale (CField.div yk
-        (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one))
+        (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
         (clagNum others))).eval (CFieldSpec.toK zk) = CFieldSpec.toK yk := by
   rw [eval_toPolyG_termG, div_mul_cancel₀]
   exact prodG_sub_ne_zero hne
@@ -99,7 +99,7 @@ theorem eval_toPolyG_termG_at_self (zk yk : α) (others : List α)
 /-- A generic Lagrange term evaluated at another node `toK x` with `x ∈ others` is `0`. -/
 theorem eval_toPolyG_termG_at_other (zk yk x : α) (others : List α) (hx : x ∈ others) :
     (toPoly (cscale (CField.div yk
-        (others.foldl (fun acc zj => CField.mul acc (CField.sub zk zj)) CField.one))
+        (others.foldl (fun acc zj => CCommRing.mul acc (CField.sub zk zj)) CCommRing.one))
         (clagNum others))).eval (CFieldSpec.toK x) = 0 := by
   rw [eval_toPolyG_termG]
   have : (others.map (fun zj => CFieldSpec.toK x - CFieldSpec.toK zj)).prod = 0 := by
@@ -109,9 +109,9 @@ theorem eval_toPolyG_termG_at_other (zk yk x : α) (others : List α) (hx : x �
 
 /-- The `cinterpolate` local `term` function for a points list with abscissas `zs`. -/
 private def cinterpTerm (zs : List α) (p : α × α) : DensePoly α :=
-  cscale (CField.div p.2 ((zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)).foldl
-      (fun acc zj => CField.mul acc (CField.sub p.1 zj)) CField.one))
-    (clagNum (zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)))
+  cscale (CField.div p.2 ((zs.filter (fun zj => CCommRing.isZero (CField.sub zj p.1) = false)).foldl
+      (fun acc zj => CCommRing.mul acc (CField.sub p.1 zj)) CCommRing.one))
+    (clagNum (zs.filter (fun zj => CCommRing.isZero (CField.sub zj p.1) = false)))
 
 /-- `toPoly (cinterpolate pts)` is the normalized sum of interpolation term images. -/
 @[denote] theorem toPolyG_cinterpolateG (pts : List (α × α)) :
@@ -179,7 +179,7 @@ theorem eval_toPolyG_cinterpolateG (pts : List (α × α))
       apply eval_toPolyG_termG_at_self
       intro zj hzj
       rw [List.mem_filter] at hzj
-      have hzj2 : CField.isZero (CField.sub zj a) = false := by
+      have hzj2 : CCommRing.isZero (CField.sub zj a) = false := by
         have := hzj.2; simpa using this
       rw [Bool.eq_false_iff, Ne, CFieldSpec.isZero_iff, CFieldSpec.toK_sub, sub_eq_zero] at hzj2
       exact hzj2
@@ -187,7 +187,7 @@ theorem eval_toPolyG_cinterpolateG (pts : List (α × α))
       apply eval_toPolyG_termG_at_other
       rw [List.mem_filter]
       refine ⟨by rw [hzs, List.mem_map]; exact ⟨(zk, yk), hmem, rfl⟩, ?_⟩
-      have hgoal : CField.isZero (CField.sub zk a) = false := by
+      have hgoal : CCommRing.isZero (CField.sub zk a) = false := by
         rw [Bool.eq_false_iff, Ne, CFieldSpec.isZero_iff, CFieldSpec.toK_sub, sub_eq_zero]
         exact fun h => hak h.symm
       simpa using hgoal
@@ -197,7 +197,7 @@ theorem eval_toPolyG_cinterpolateG (pts : List (α × α))
 /-- Each `cinterpolate` term has `natDegree ≤ |others|` (a product of `|others|` linear factors). -/
 theorem natDegree_toPolyG_cinterpTermG_le (zs : List α) (p : α × α) :
     (toPoly (cinterpTerm zs p)).natDegree
-      ≤ (zs.filter (fun zj => CField.isZero (CField.sub zj p.1) = false)).length := by
+      ≤ (zs.filter (fun zj => CCommRing.isZero (CField.sub zj p.1) = false)).length := by
   obtain ⟨a, b⟩ := p
   rw [cinterpTerm, toPolyG_termG]
   refine (natDegree_C_mul_le _ _).trans ?_
@@ -224,11 +224,11 @@ theorem degree_toPolyG_cinterpolateG_lt (pts : List (α × α)) (hne : pts ≠ [
     refine le_trans (natDegree_toPolyG_cinterpTermG_le (pts.map Prod.fst) q) ?_
     have hq1 : q.1 ∈ pts.map Prod.fst := List.mem_map.mpr ⟨q, hq, rfl⟩
     have hfilt : ((pts.map Prod.fst).filter
-          (fun zj => CField.isZero (CField.sub zj q.1) = false)).length
+          (fun zj => CCommRing.isZero (CField.sub zj q.1) = false)).length
         < (pts.map Prod.fst).length := by
       apply List.length_filter_lt_length_iff_exists.mpr
       refine ⟨q.1, hq1, ?_⟩
-      have hz : CField.isZero (CField.sub q.1 q.1) = true := by
+      have hz : CCommRing.isZero (CField.sub q.1 q.1) = true := by
         rw [CFieldSpec.isZero_iff, CFieldSpec.toK_sub, sub_self]
       simp [hz]
     rw [List.length_map] at hfilt

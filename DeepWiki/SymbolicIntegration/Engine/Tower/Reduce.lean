@@ -79,10 +79,10 @@ open DensePoly
 /-- The residual `1 ∈ ℚ(x)` stored unreduced as `(2x)/(2x)` via `qmulNZ (2x/1) (1/(2x))` (num and den
 both length 2). -/
 def Rstuck : CFrac ℚ :=
-  qmulNZ nLvl1TwoX ⟨([CField.one], [(0 : ℚ), (2 : ℚ)]), by native_decide⟩
+  qmulNZ nLvl1TwoX ⟨([CCommRing.one], [(0 : ℚ), (2 : ℚ)]), by native_decide⟩
 
 /-- `Rstuck` is the value `1`: `isZero (Rstuck − 1) = true`. -/
-theorem Rstuck_eq_one : CField.isZero (CField.sub Rstuck (CField.one : CFrac ℚ)) = true := by
+theorem Rstuck_eq_one : CCommRing.isZero (CField.sub Rstuck (CCommRing.one : CFrac ℚ)) = true := by
   native_decide
 
 /-- `Rstuck`'s stored denominator is swollen: length 2 (`2x`, not the reduced `1`). -/
@@ -91,13 +91,13 @@ theorem Rstuck_den_swollen : (DensePoly.cnorm Rstuck.1.2 : List ℚ).length = 2 
 /-- The unreduced residual makes `crischDESolve 0 Rstuck` return `none` even though `Rstuck = 1`,
 because the stored denominator is the spurious factor `2x`. -/
 theorem Rstuck_unreduced_returns_none :
-    CRischField.crischDESolve (CField.zero : CFrac ℚ) Rstuck = none := by native_decide
+    CRischField.crischDESolve (CCommRing.zero : CFrac ℚ) Rstuck = none := by native_decide
 
 /-- The reduced residual solves: `crischDESolve 0 (qReduce Rstuck)` returns `some y` with `y = x`,
 recovering `∫1 = x`. -/
 theorem Rstuck_reduced_solves :
-    (match CRischField.crischDESolve (CField.zero : CFrac ℚ) (qReduce Rstuck) with
-      | some y => CField.isZero (CField.sub y nLvl1X)
+    (match CRischField.crischDESolve (CCommRing.zero : CFrac ℚ) (qReduce Rstuck) with
+      | some y => CCommRing.isZero (CField.sub y nLvl1X)
       | none => false) = true := by native_decide
 
 #print axioms Rstuck_unreduced_returns_none

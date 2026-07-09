@@ -22,18 +22,18 @@ instance instCFracGcdCoreWfRadX3 : CFracGcdCoreWf RadX3 where
 /-! ### Shared integrand data over `RadX3[t]` -/
 
 /-- The primitive monomial derivative `Dt = 1` over `DensePoly RadX3` (`t` primitive, `t' = 1`). -/
-def mixedDt : DensePoly RadX3 := [CField.one]
+def mixedDt : DensePoly RadX3 := [CCommRing.one]
 
 /-- The integrand denominator `d = 1` over `DensePoly RadX3` (for the pure polynomial parts). -/
-def mixedD : DensePoly RadX3 := [CField.one]
+def mixedD : DensePoly RadX3 := [CCommRing.one]
 
 /-- The residue candidate set over `RadX3` (`0`, `1` — the log integrand `1/t` has residue `1`). -/
-def mixedCands : List RadX3 := [CField.zero, CField.one]
+def mixedCands : List RadX3 := [CCommRing.zero, CCommRing.one]
 
 /-! ### `∫ t dt = t²/2` over `RadX3[t]` -/
 
 /-- The integrand `f = t` over `DensePoly RadX3` (`[0, 1]`): a pure polynomial part. -/
-def mixedTa : DensePoly RadX3 := [CField.zero, CField.one]
+def mixedTa : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
 
 /-- `∫ t dt = t²/2` over `RadX3[t]`, validated `D(∫f) = f` via `checkIdentity`. -/
 theorem mixedT_integral_eq :
@@ -44,7 +44,7 @@ theorem mixedT_integral_eq :
 /-! ### `∫ t² dt = t³/3` and `∫ (2t+1) dt = t²+t` over `RadX3[t]` -/
 
 /-- The integrand `f = t²` over `DensePoly RadX3` (`[0,0,1]`). -/
-def mixedT2a : DensePoly RadX3 := [CField.zero, CField.zero, CField.one]
+def mixedT2a : DensePoly RadX3 := [CCommRing.zero, CCommRing.zero, CCommRing.one]
 
 /-- `∫ t² dt = t³/3` over `RadX3[t]`, validated `D(∫f) = f`. -/
 theorem mixedT2_integral_eq :
@@ -53,7 +53,7 @@ theorem mixedT2_integral_eq :
       | none => false) = true := by native_decide
 
 /-- The integrand `f = 2t + 1` over `DensePoly RadX3` (`[1,2]`). -/
-def mixedLina : DensePoly RadX3 := [CField.one, CField.add CField.one CField.one]
+def mixedLina : DensePoly RadX3 := [CCommRing.one, CCommRing.add CCommRing.one CCommRing.one]
 
 /-- `∫ (2t+1) dt = t²+t` over `RadX3[t]`, validated `D(∫f) = f`. -/
 theorem mixedLin_integral_eq :
@@ -64,10 +64,10 @@ theorem mixedLin_integral_eq :
 /-! ### `∫ dt/t = log t` over `RadX3[t]` — the normal-part / Rothstein–Trager log route -/
 
 /-- The integrand `f = 1/t` over `RadX3[t]` as `a/d` with `a = 1`, `d = t` (a pure normal part). -/
-def mixedRecipNum : DensePoly RadX3 := [CField.one]
+def mixedRecipNum : DensePoly RadX3 := [CCommRing.one]
 
 /-- The denominator `d = t = [0,1]` over `DensePoly RadX3`. -/
-def mixedRecipDen : DensePoly RadX3 := [CField.zero, CField.one]
+def mixedRecipDen : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
 
 /-- `∫ dt/t = log t` over `RadX3[t]`, validated `D(log t) = 1/t` via the residue-log route. -/
 theorem mixedRecip_integral_eq :
@@ -97,30 +97,30 @@ recursing into `crischDESolve` over `RadX3`, which decouples to ℚ(x).  Solves 
 (solution `y = t`). -/
 
 /-- The RDE coefficient `f = 1 ∈ RadX3[t]` (nonzero), forcing the primitive-cancellation branch. -/
-def mixedRdeF : DensePoly RadX3 := [CField.one]
+def mixedRdeF : DensePoly RadX3 := [CCommRing.one]
 
 /-- The RDE coefficient denominator `fden = 1 ∈ RadX3[t]`. -/
-def mixedRdeFden : DensePoly RadX3 := [CField.one]
+def mixedRdeFden : DensePoly RadX3 := [CCommRing.one]
 
 /-- The RDE right-hand side `g = t + 1 ∈ RadX3[t]` for `Dy + 1·y = t + 1`. -/
-def mixedRde : DensePoly RadX3 := [CField.one, CField.one]
+def mixedRde : DensePoly RadX3 := [CCommRing.one, CCommRing.one]
 
 /-- The RDE right-hand side denominator `gden = 1 ∈ RadX3[t]`. -/
-def mixedRdeGden : DensePoly RadX3 := [CField.one]
+def mixedRdeGden : DensePoly RadX3 := [CCommRing.one]
 
 /-- The RDE `Dy + 1·y = t + 1` over `RadX3[t]` is solved (`cRischDE` returns `some`). -/
 theorem mixedRde_radx3_isSome :
-    (DensePoly.cRischDE ([CField.one] : DensePoly RadX3)
+    (DensePoly.cRischDE ([CCommRing.one] : DensePoly RadX3)
       mixedRdeF mixedRdeFden mixedRde mixedRdeGden).isSome = true := by native_decide
 
 /-- A multi-level RDE descent: `Dy + 1·y = t + 1` solved over `RadX3[t]` with solution `y = t`, the
 RDE identity checked via `cisZero`; the solve recurses into `crischDESolve` over `RadX3`. -/
 theorem mixedRde_radx3_descends :
-    (match DensePoly.cRischDE ([CField.one] : DensePoly RadX3)
+    (match DensePoly.cRischDE ([CCommRing.one] : DensePoly RadX3)
         mixedRdeF mixedRdeFden mixedRde mixedRdeGden with
       | some (ynum, yden) =>
           DensePoly.cisZero (DensePoly.csub
-            (DensePoly.cadd (DensePoly.cmonomialDeriv ([CField.one] : DensePoly RadX3) ynum)
+            (DensePoly.cadd (DensePoly.cmonomialDeriv ([CCommRing.one] : DensePoly RadX3) ynum)
               (DensePoly.cmul mixedRdeF ynum))
             (DensePoly.cmul mixedRde yden))
       | none => false) = true := by native_decide
@@ -133,45 +133,45 @@ negative-index term calls `crischDESolve` with a nonzero scalar, descending to �
 `t = exp` (`η = 1`). -/
 
 /-- The hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `RadX3[t]` (`t = exp`, `η = 1`). -/
-def mixedHyperexpDt : DensePoly RadX3 := [CField.zero, CField.one]
+def mixedHyperexpDt : DensePoly RadX3 := [CCommRing.zero, CCommRing.one]
 
 /-- `η = Dt/t = 1` over `RadX3`: `cExpEta` reads `η = 1` off `Dt = [0, 1]`. -/
 theorem mixedHyperexp_eta_eq_one :
-    CField.isZero (CField.sub (cExpEta mixedHyperexpDt) (CField.one : RadX3)) = true := by
+    CCommRing.isZero (CField.sub (cExpEta mixedHyperexpDt) (CCommRing.one : RadX3)) = true := by
   native_decide
 
 /-- The per-term coefficient `(−1)·η = −1 ∈ RadX3` for the `t⁻¹` Laurent term (`cLaurentShift η (−1)`). -/
-def mixedLaurentShiftNeg1 : RadX3 := DensePoly.cLaurentShift (CField.one : RadX3) (-1)
+def mixedLaurentShiftNeg1 : RadX3 := DensePoly.cLaurentShift (CCommRing.one : RadX3) (-1)
 
 /-- The per-term coefficient `(−1)·η` is a nonzero scalar over `RadX3`:
-`RadExt.isScalar` is `true` and `CField.isZero` is `false`. -/
+`RadExt.isScalar` is `true` and `CCommRing.isZero` is `false`. -/
 theorem mixedLaurentShiftNeg1_nonzero_scalar :
     RadExt.isScalar mixedLaurentShiftNeg1 = true ∧
-    CField.isZero mixedLaurentShiftNeg1 = false := by
+    CCommRing.isZero mixedLaurentShiftNeg1 = false := by
   constructor <;> native_decide
 
 /-- The `∫ t⁻¹` term's base RDE `crischDESolve ((−1)·η) (1 : RadX3)` returns `some`, descending
 through the algebraic solver. -/
 theorem mixedLaurentTerm_descends :
-    (CRischField.crischDESolve mixedLaurentShiftNeg1 (CField.one : RadX3)).isSome = true := by
+    (CRischField.crischDESolve mixedLaurentShiftNeg1 (CCommRing.one : RadX3)).isSome = true := by
   native_decide
 
 /-- `∫ t⁻¹ = −t⁻¹` over `RadX3[t]` via the Laurent integrator, the special-part step descending
 through the algebraic solver, validated `D(∫f) = f`. -/
 theorem mixedHyperexpRecip_integral_descends :
-    (match DensePoly.cIntegrateHyperexpLaurent (CField.one : RadX3) [] [CField.one] with
+    (match DensePoly.cIntegrateHyperexpLaurent (CCommRing.one : RadX3) [] [CCommRing.one] with
       | some (num, den) =>
-          DensePoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩ [CField.one] [CField.zero, CField.one]
+          DensePoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩ [CCommRing.one] [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 /-- `∫ (t + t⁻¹) = t − t⁻¹` over `RadX3[t]` via the Laurent integrator (polynomial part plus a
 descending special part), validated `D(∫f) = f`. -/
 theorem mixedHyperexpPolySpec_integral_descends :
-    (match DensePoly.cIntegrateHyperexpLaurent (CField.one : RadX3) [CField.zero, CField.one]
-        [CField.one] with
+    (match DensePoly.cIntegrateHyperexpLaurent (CCommRing.one : RadX3) [CCommRing.zero, CCommRing.one]
+        [CCommRing.one] with
       | some (num, den) =>
           DensePoly.checkIdentity mixedHyperexpDt ⟨(num, den), []⟩
-            [CField.one, CField.zero, CField.one] [CField.zero, CField.one]
+            [CCommRing.one, CCommRing.zero, CCommRing.one] [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 /-! ### The full `cIntegrateHyperexp` top entry over `RadX3` -/
@@ -179,11 +179,11 @@ theorem mixedHyperexpPolySpec_integral_descends :
 /-- `cIntegrateHyperexp`'s top entry validates over `RadX3`: on `f = (t²+1)/t = t + t⁻¹` it returns
 `some res` with `checkIdentity` confirming `D(res) = f`. -/
 theorem mixedHyperexpG_topEntry_validates :
-    (match DensePoly.cIntegrateHyperexp mixedHyperexpDt [CField.one, CField.zero, CField.one]
-        [CField.zero, CField.one] [CField.zero, CField.one] with
+    (match DensePoly.cIntegrateHyperexp mixedHyperexpDt [CCommRing.one, CCommRing.zero, CCommRing.one]
+        [CCommRing.zero, CCommRing.one] [CCommRing.zero, CCommRing.one] with
       | some res =>
-          DensePoly.checkIdentity mixedHyperexpDt res [CField.one, CField.zero, CField.one]
-            [CField.zero, CField.one]
+          DensePoly.checkIdentity mixedHyperexpDt res [CCommRing.one, CCommRing.zero, CCommRing.one]
+            [CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 /-! ### Axiom audit -/

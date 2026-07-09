@@ -41,10 +41,10 @@ def tltTerm01 : Option (CFrac ℚ × RadElem (CFrac ℚ)) :=
   torsionLogTerm 5 tltRhoX3p1 hypRhoX3p1 1 hypPt01
 
 /-- The target generator `g = y − 1 = [−1, 1]` over `ℚ(x)` (the flex tangent line). -/
-def tltYm1 : RadElem (CFrac ℚ) := [CField.neg CField.one, CField.one]
+def tltYm1 : RadElem (CFrac ℚ) := [CCommRing.neg CCommRing.one, CCommRing.one]
 
-/-- Field equality on `ℚ(x)`: `qEq a b = CField.isZero (a − b)`, the `Bool` test `a = b` in `CFrac ℚ`. -/
-def qEq (a b : CFrac ℚ) : Bool := CField.isZero (CField.sub a b)
+/-- Field equality on `ℚ(x)`: `qEq a b = CCommRing.isZero (a − b)`, the `Bool` test `a = b` in `CFrac ℚ`. -/
+def qEq (a b : CFrac ℚ) : Bool := CCommRing.isZero (CField.sub a b)
 
 /-- The recovered-term check `tltTermCheck t`: `Bool` that a term `t = (c, g)` equals `(1/3, y − 1)`,
 i.e. `qEq c (oneOverMQ 3)` and `radIsZero (radSub g tltYm1)`. -/

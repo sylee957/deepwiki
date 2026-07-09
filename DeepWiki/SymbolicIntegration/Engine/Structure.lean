@@ -99,11 +99,11 @@ def structLogDerivX1 : CFrac ℚ := qFracStruct [1] [1, 1]
 #eval DensePoly.cLogRelationCoeffs [structLogDerivX] structLogDerivX2  -- expect some [2]
 
 /-- `structRelationCheck logDerivs w rs = true` iff the ℚ-coefficients `rs` satisfy `w = Σ rᵢ (Duᵢ/uᵢ)`
-over `ℚ(x)`, by `CField.isZero` of `w − Σ rᵢ (logDerivsᵢ)`. -/
+over `ℚ(x)`, by `CCommRing.isZero` of `w − Σ rᵢ (logDerivsᵢ)`. -/
 def structRelationCheck (logDerivs : List (CFrac ℚ)) (w : CFrac ℚ) (rs : List ℚ) : Bool :=
   let combo := (List.zip logDerivs rs).foldl
-    (fun acc (wi, r) => CField.add acc (CField.mul (qFracStruct [r] [1]) wi)) CField.zero
-  CField.isZero (CField.sub w combo)
+    (fun acc (wi, r) => CCommRing.add acc (CCommRing.mul (qFracStruct [r] [1]) wi)) CCommRing.zero
+  CCommRing.isZero (CField.sub w combo)
 
 /-- The logarithmic-monomial structure decision computes over `C(x)(log x)`: `log(x²)` is not a new
 monomial (`cLogRelationCoeffs = some [2]`, verified by `structRelationCheck`) and `log(x+1)` is a new

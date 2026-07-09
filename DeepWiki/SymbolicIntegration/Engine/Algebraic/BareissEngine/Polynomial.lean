@@ -46,9 +46,9 @@ def bareissDrive : ℕ → DensePoly α → ℕ → List (List (DensePoly α)) �
 M.length` pivots and read the final pivot `M⁽ⁿ⁾[n-1][n-1]`; the empty matrix has determinant `1`. -/
 def bareissDet (M : List (List (DensePoly α))) : DensePoly α :=
   let n := M.length
-  if n = 0 then [CField.one]
+  if n = 0 then [CCommRing.one]
   else
-    let M' := bareissDrive n [CField.one] 0 M
+    let M' := bareissDrive n [CCommRing.one] 0 M
     getEntry M' (n - 1) (n - 1)
 
 /-! ### Fraction-free solve and adjugate (the inverse representation `(det, adjugate)`) -/

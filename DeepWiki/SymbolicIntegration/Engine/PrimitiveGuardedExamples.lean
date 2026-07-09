@@ -14,36 +14,36 @@ open DensePoly
 /-- `∫ 1/t² = −1/t` over `ℚ(x)[t]` (`Dt = 1`): the poly part is `0` (guard passes trivially), the normal
 part `1/t²` integrates; `primitiveGuardedCase` lands a `checkIdentity`-passing result. -/
 theorem primitiveGuardedCase_invSq :
-    (match cIntegrateCase primitiveGuardedCase ([CField.one] : DensePoly Lvl1)
-        [CField.one] [CField.zero, CField.zero, CField.one] [CField.zero] with
-      | some res => checkIdentity ([CField.one] : DensePoly Lvl1) res [CField.one]
-          [CField.zero, CField.zero, CField.one]
+    (match cIntegrateCase primitiveGuardedCase ([CCommRing.one] : DensePoly Lvl1)
+        [CCommRing.one] [CCommRing.zero, CCommRing.zero, CCommRing.one] [CCommRing.zero] with
+      | some res => checkIdentity ([CCommRing.one] : DensePoly Lvl1) res [CCommRing.one]
+          [CCommRing.zero, CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 /-- `∫ t = t²/2` over `ℚ(x)[t]` (`Dt = 1`): a genuine polynomial part with constant coefficients — the guard
 passes and the `b = 0` poly-RDE integrates it. -/
 theorem primitiveGuardedCase_polyT :
-    (match cIntegrateCase primitiveGuardedCase ([CField.one] : DensePoly Lvl1)
-        [CField.zero, CField.one] [CField.one] [] with
-      | some res => checkIdentity ([CField.one] : DensePoly Lvl1) res [CField.zero, CField.one] [CField.one]
+    (match cIntegrateCase primitiveGuardedCase ([CCommRing.one] : DensePoly Lvl1)
+        [CCommRing.zero, CCommRing.one] [CCommRing.one] [] with
+      | some res => checkIdentity ([CCommRing.one] : DensePoly Lvl1) res [CCommRing.zero, CCommRing.one] [CCommRing.one]
       | none => false) = true := by native_decide
 
 /-- With a non-primitive `Dt = t` (`toPoly Dt ≠ 1`), the guard fails and
 `primitiveGuardedCase` returns `none` — it does not return a wrong answer. -/
 theorem primitiveGuardedCase_declines_nonPrimitive :
-    cIntegrateCase primitiveGuardedCase ([CField.zero, CField.one] : DensePoly Lvl1)
-        [CField.zero, CField.one] [CField.one] [] = none := by native_decide
+    cIntegrateCase primitiveGuardedCase ([CCommRing.zero, CCommRing.one] : DensePoly Lvl1)
+        [CCommRing.zero, CCommRing.one] [CCommRing.one] [] = none := by native_decide
 
 /-- Automatic candidates find fractional residues: `∫ 1/(t²−1) = ½log(t−1) − ½log(t+1)` has residues
 `±1/2`. With `candidates := defaultResidueCandidates 3` (the bounded rational sweep, *not* a hand-picked
 list), `primitiveGuardedCase` lands a `checkIdentity`-passing result — `candidates` is computed
 automatically. -/
 theorem primitiveGuardedCase_autoCands_log :
-    (match cIntegrateCase primitiveGuardedCase ([CField.one] : DensePoly Lvl1)
-        [CField.one] [CField.neg CField.one, CField.zero, CField.one]
+    (match cIntegrateCase primitiveGuardedCase ([CCommRing.one] : DensePoly Lvl1)
+        [CCommRing.one] [CCommRing.neg CCommRing.one, CCommRing.zero, CCommRing.one]
         (defaultResidueCandidates 3) with
-      | some res => checkIdentity ([CField.one] : DensePoly Lvl1) res [CField.one]
-          [CField.neg CField.one, CField.zero, CField.one]
+      | some res => checkIdentity ([CCommRing.one] : DensePoly Lvl1) res [CCommRing.one]
+          [CCommRing.neg CCommRing.one, CCommRing.zero, CCommRing.one]
       | none => false) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

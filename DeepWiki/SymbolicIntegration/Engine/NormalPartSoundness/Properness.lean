@@ -414,7 +414,7 @@ theorem cHermiteReduceTowerInner_g_proper (Dt : DensePoly α) (v u : DensePoly �
     intro a g hg
     rw [cHermiteReduceTowerInnerWf]
     -- the step's summand `(b, cpow v (j+1))` is proper, so the `fracAddG` step preserves properness.
-    set rhs := cscale (CField.neg (CField.inv (cnatCast (j + 1)))) a with hrhs
+    set rhs := cscale (CCommRing.neg (CField.inv (cnatCast (j + 1)))) a with hrhs
     set b := (cdiophantine (cmul u (cmonomialDeriv Dt v)) v rhs).1 with hbdef
     have hbproper : (toPoly b).degree
         < (toPoly (cpow v (j + 1))).degree :=
@@ -425,13 +425,13 @@ theorem cHermiteReduceTowerInner_g_proper (Dt : DensePoly α) (v u : DensePoly �
     exact ih _ _ hstep
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- The Hermite seed pair `([CField.zero], [CField.one])` is proper under `toPoly`:
-`deg (toPoly [CField.zero]) < deg (toPoly [CField.one])` (`⊥ < 0`). -/
+/-- The Hermite seed pair `([CCommRing.zero], [CCommRing.one])` is proper under `toPoly`:
+`deg (toPoly [CCommRing.zero]) < deg (toPoly [CCommRing.one])` (`⊥ < 0`). -/
 theorem toPolyG_seedPair_proper :
-    (toPoly ([CField.zero] : DensePoly α)).degree < (toPoly ([CField.one] : DensePoly α)).degree := by
-  have hzero : toPoly ([CField.zero] : DensePoly α) = 0 := by
+    (toPoly ([CCommRing.zero] : DensePoly α)).degree < (toPoly ([CCommRing.one] : DensePoly α)).degree := by
+  have hzero : toPoly ([CCommRing.zero] : DensePoly α) = 0 := by
     simp only [denote, map_zero, mul_zero, add_zero]
-  have hone : toPoly ([CField.one] : DensePoly α) = 1 := by
+  have hone : toPoly ([CCommRing.one] : DensePoly α) = 1 := by
     simp only [denote, map_one, mul_zero, add_zero]
   rw [hzero, hone, Polynomial.degree_zero, Polynomial.degree_one]
   exact bot_lt_iff_ne_bot.mpr (by simp)
@@ -440,9 +440,9 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Each per-factor `gloc` contribution is proper from inner-factor data. -/
 theorem cHermiteReduceTowerInner_gloc_proper (Dt : DensePoly α) (vi u : DensePoly α) (j : ℕ)
     (a : DensePoly α) (hfac : IsHermiteInnerFactor Dt vi u) :
-    (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.1).degree
-      < (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.2).degree :=
-  cHermiteReduceTowerInner_g_proper Dt vi u hfac j a ([CField.zero], [CField.one])
+    (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.1).degree
+      < (toPoly (cHermiteReduceTowerInnerWf Dt vi u j a ([CCommRing.zero], [CCommRing.one])).1.2).degree :=
+  cHermiteReduceTowerInner_g_proper Dt vi u hfac j a ([CCommRing.zero], [CCommRing.one])
     toPolyG_seedPair_proper
 
 /-! ### The assembled `g` is proper — the outer Hermite fold -/
@@ -460,9 +460,9 @@ theorem cHermiteReduceTowerG_g_proper (Dt : DensePoly α) (a d : DensePoly α)
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-              ([CField.zero], [CField.one])).1
+              ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-        ([CField.zero], [CField.one])).1).degree
+        ([CCommRing.zero], [CCommRing.one])).1).degree
       < (toPoly (factors.zipIdx.foldl
         (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
           let i := idx + 1
@@ -471,15 +471,15 @@ theorem cHermiteReduceTowerG_g_proper (Dt : DensePoly α) (a d : DensePoly α)
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-              ([CField.zero], [CField.one])).1
+              ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-        ([CField.zero], [CField.one])).2).degree :=
+        ([CCommRing.zero], [CCommRing.one])).2).degree :=
   foldl_guarded_fracAddG_proper
     (glocOf := fun (p : DensePoly α × ℕ) =>
       (cHermiteReduceTowerInnerWf Dt p.1 (cdivWf d (cpow p.1 (p.2 + 1))) (p.2 + 1 - 1) a
-        ([CField.zero], [CField.one])).1)
+        ([CCommRing.zero], [CCommRing.one])).1)
     (skip := fun (p : DensePoly α × ℕ) => p.2 + 1 ≤ 1)
-    factors.zipIdx ([CField.zero], [CField.one]) toPolyG_seedPair_proper
+    factors.zipIdx ([CCommRing.zero], [CCommRing.one]) toPolyG_seedPair_proper
     (fun p hp hskip => cHermiteReduceTowerInner_gloc_proper Dt p.1
       (cdivWf d (cpow p.1 (p.2 + 1))) (p.2 + 1 - 1) a (hfac p hp hskip))
 
@@ -499,9 +499,9 @@ theorem cHermiteReduceTowerG_residual_proper_of_degree_le_one (Dt : DensePoly α
           let Vi_pow := cpow vi i
           let u := cdivWf d Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-            ([CField.zero], [CField.one])).1
+            ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one])
+      ([CCommRing.zero], [CCommRing.one])
     (toPoly (csub (cmul a (cmul g.2 g.2))
         (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
           (cmul g.1 (cmonomialDeriv Dt g.2)))))).degree
@@ -527,9 +527,9 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : DensePo
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-              ([CField.zero], [CField.one])).1
+              ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-        ([CField.zero], [CField.one])).1).degree
+        ([CCommRing.zero], [CCommRing.one])).1).degree
           + (max 0 ((toPoly Dt).natDegree - 1) : ℕ)
         < (toPoly (factors.zipIdx.foldl
         (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
@@ -539,9 +539,9 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : DensePo
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
             let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-              ([CField.zero], [CField.one])).1
+              ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-        ([CField.zero], [CField.one])).2).degree) :
+        ([CCommRing.zero], [CCommRing.one])).2).degree) :
     let g := factors.zipIdx.foldl
       (fun (gAcc : DensePoly α × DensePoly α) (vi, idx) =>
         let i := idx + 1
@@ -550,9 +550,9 @@ theorem cHermiteReduceTowerG_residual_proper_of_margin_conditional (Dt : DensePo
           let Vi_pow := cpow vi i
           let u := cdivWf d Vi_pow
           let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a
-            ([CField.zero], [CField.one])).1
+            ([CCommRing.zero], [CCommRing.one])).1
           (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one])
+      ([CCommRing.zero], [CCommRing.one])
     (toPoly (csub (cmul a (cmul g.2 g.2))
         (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2)
           (cmul g.1 (cmonomialDeriv Dt g.2)))))).degree
@@ -583,15 +583,15 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
           else
             let Vi_pow := cpow vi i
             let u := cdivWf d Vi_pow
-            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CField.zero], [CField.one])).1
+            let gloc := (cHermiteReduceTowerInnerWf Dt vi u (i - 1) a ([CCommRing.zero], [CCommRing.one])).1
             (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-      ([CField.zero], [CField.one]))
+      ([CCommRing.zero], [CCommRing.one]))
     (hdvd : toPoly (cmul d (cmul g.2 g.2))
       ∣ toPoly (cmul (csub (cmul a (cmul g.2 g.2))
           (cmul d (csub (cmul (cmonomialDeriv Dt g.1) g.2) (cmul g.1 (cmonomialDeriv Dt g.2)))))
-        ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])))
+        ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])))
     (hresDen : cnorm (cmul d (cmul g.2 g.2)) ≠ ([] : DensePoly α))
-    (hDstar : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one]) ≠ 0) :
+    (hDstar : toPoly ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one]) ≠ 0) :
     (toPoly (cHermiteReduceTower Dt a d).2.1).degree
       < (toPoly (cHermiteReduceTower Dt a d).2.2).degree := by
   have hresProper := cHermiteReduceTowerG_residual_proper_of_degree_le_one Dt a d
@@ -602,7 +602,7 @@ theorem cHermiteReduceTowerG_leftover_proper_of_degree_le_one [CFracGcdCoreWf α
     (csub (cmul a (cmul _ _))
       (cmul d (csub (cmul (cmonomialDeriv Dt _) _) (cmul _ (cmonomialDeriv Dt _)))))
     (cmul d (cmul _ _))
-    ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CField.one])
+    ((cSqfreeYunFF d).foldl (fun acc vi => cmul acc vi) [CCommRing.one])
     (by simp only [cHermiteReduceTower, denote])
     (by simp only [cHermiteReduceTower, denote])
     hdvd hresDen hDstar hresProper

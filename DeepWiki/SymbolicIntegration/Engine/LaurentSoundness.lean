@@ -81,9 +81,9 @@ theorem cIntegrateHyperexpLaurent_neg_term [CRischField α] [CRischFieldSpec α]
     (hDt : IsHyperexpMonomial Dt η)
     (hsolve : cLaurentIntCoeff η (-(i + 1 : ℤ)) a = some q) :
     towerFractionFieldDeriv Dt
-        (am α (toPoly ([q] : DensePoly α)) / am α (toPoly (cshift (i + 1) ([CField.one] : DensePoly α))))
+        (am α (toPoly ([q] : DensePoly α)) / am α (toPoly (cshift (i + 1) ([CCommRing.one] : DensePoly α))))
       = am α (toPoly ([a] : DensePoly α))
-        / am α (toPoly (cshift (i + 1) ([CField.one] : DensePoly α))) := by
+        / am α (toPoly (cshift (i + 1) ([CCommRing.one] : DensePoly α))) := by
   have hspec := CRischFieldSpec.crischDESolve_spec (cLaurentShift η (-(i + 1 : ℤ))) a q hsolve
   rw [toK_cLaurentShiftG_negCast] at hspec
   simp only [denote, mul_zero, add_zero, map_one, mul_one]
@@ -239,9 +239,9 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : DensePoly
             | some q => some (q :: tail)) (some []) = some negCoeffs) →
       towerFractionFieldDeriv Dt
           (am α (toPoly negCoeffs.reverse)
-            / am α (toPoly (cshift (s + neg.length) ([CField.one] : DensePoly α))))
+            / am α (toPoly (cshift (s + neg.length) ([CCommRing.one] : DensePoly α))))
         = am α (toPoly neg.reverse)
-          / am α (toPoly (cshift (s + neg.length) ([CField.one] : DensePoly α))) := by
+          / am α (toPoly (cshift (s + neg.length) ([CCommRing.one] : DensePoly α))) := by
   intro neg
   induction neg with
   | nil =>
@@ -269,7 +269,7 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : DensePoly
         have hlen : restCoeffs.length = as.length := laurentGo_length η _ as restCoeffs (s + 1) hrest
         have hXne : am α (Polynomial.X : (CFieldSpec.K α)[X]) ≠ 0 :=
           (map_ne_zero_iff (am α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
-        have hden : ∀ k, toPoly (cshift k ([CField.one] : DensePoly α)) = (Polynomial.X : (CFieldSpec.K α)[X]) ^ k := by
+        have hden : ∀ k, toPoly (cshift k ([CCommRing.one] : DensePoly α)) = (Polynomial.X : (CFieldSpec.K α)[X]) ^ k := by
           intro k
           simp only [denote, mul_zero, add_zero, map_one, mul_one]
         have hqsingle : toPoly ([q] : DensePoly α) = Polynomial.C (CFieldSpec.toK q) := by
@@ -287,9 +287,9 @@ theorem laurentNegGo_sound [CRischField α] [CRischFieldSpec α] (Dt : DensePoly
           rw [List.length_cons]; ring
         have hfrac : ∀ c : α,
             am α (Polynomial.X ^ as.length * Polynomial.C (CFieldSpec.toK c))
-                / am α (toPoly (cshift (s + (a :: as).length) ([CField.one] : DensePoly α)))
+                / am α (toPoly (cshift (s + (a :: as).length) ([CCommRing.one] : DensePoly α)))
               = am α (toPoly ([c] : DensePoly α))
-                / am α (toPoly (cshift (s + 1) ([CField.one] : DensePoly α))) := by
+                / am α (toPoly (cshift (s + 1) ([CCommRing.one] : DensePoly α))) := by
           intro c
           rw [hden, hden,
             show s + (a :: as).length = as.length + (s + 1) from by rw [List.length_cons]; ring,
@@ -314,10 +314,10 @@ theorem cIntegrateHyperexpLaurentG_sound [CRischField α] [CRischFieldSpec α]
     towerFractionFieldDeriv Dt (am α (toPoly num) / am α (toPoly den))
       = am α (toPoly pos)
         + am α (toPoly neg.reverse)
-          / am α (toPoly (cshift neg.length ([CField.one] : DensePoly α))) := by
+          / am α (toPoly (cshift neg.length ([CCommRing.one] : DensePoly α))) := by
   have hXne : am α (Polynomial.X : (CFieldSpec.K α)[X]) ≠ 0 :=
     (map_ne_zero_iff (am α) (RatFunc.algebraMap_injective _)).mpr Polynomial.X_ne_zero
-  have hdenpow : toPoly (cshift neg.length ([CField.one] : DensePoly α))
+  have hdenpow : toPoly (cshift neg.length ([CCommRing.one] : DensePoly α))
       = (Polynomial.X : (CFieldSpec.K α)[X]) ^ neg.length := by
     simp only [denote, mul_zero, add_zero, map_one, mul_one]
   rw [cIntegrateHyperexpLaurent] at hsome
@@ -358,8 +358,8 @@ theorem cIntegrateHyperexpLaurentG_pos_sound [CRischField α] [CRischFieldSpec �
     simp only [List.reverse_nil, List.nil_append, Option.some.injEq, Prod.mk.injEq] at hsome
     obtain ⟨hnum, hden⟩ := hsome
     subst hnum; subst hden
-    have hden1 : toPoly (cshift (0 : ℕ) ([CField.one] : DensePoly α)) = 1 := by
-      show toPoly ([CField.one] : DensePoly α) = 1
+    have hden1 : toPoly (cshift (0 : ℕ) ([CCommRing.one] : DensePoly α)) = 1 := by
+      show toPoly ([CCommRing.one] : DensePoly α) = 1
       simp only [denote, mul_zero, add_zero, map_one]
     rw [hden1, map_one, div_one]
     simpa using laurentPosGo_sound Dt η hDt pos posCoeffs 0 hp

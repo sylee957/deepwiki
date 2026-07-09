@@ -21,18 +21,18 @@ open DensePoly
 `x² + 4x³`. -/
 theorem qfDet_eq_fieldDet_afNonRad :
     let T := traceMatrix afNonRadF (powerBasis afNonRadF)
-    CField.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
+    CCommRing.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- `qfDet = fieldDet` on the `3×3` trigonal trace matrix of `y³ + xy + x`, both the discriminant
 `−4x³ − 27x²`. -/
 theorem qfDet_eq_fieldDet_afTrig :
     let T := traceMatrix afTrigF (powerBasis afTrigF)
-    CField.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
+    CCommRing.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- `qfDet = fieldDet` on the cusp trace matrix of `y² − x³`, both the discriminant `4x³`. -/
 theorem qfDet_eq_fieldDet_cusp :
     let T := traceMatrix cuspF (powerBasis cuspF)
-    CField.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
+    CCommRing.isZero (CField.sub (qfDet T) (fieldDet T)) = true := by native_decide
 
 /-- A `3×3` `ℚ(x)`-matrix with genuine fraction entries (denominators `x+1, …, x+5`, a permuted
 Cauchy-style matrix), where `fieldDet` carries a ballooning denominator. -/
@@ -44,7 +44,7 @@ def qfFracMat3 : List (List (CFrac ℚ)) :=
 /-- `qfDet = fieldDet` on the `3×3` fraction matrix `qfFracMat3` as a `ℚ(x)` value, though `fieldDet`
 carries an unreduced fraction of total degree `24` and `qfDet` a flat polynomial. -/
 theorem qfDet_eq_fieldDet_fracMat3 :
-    CField.isZero (CField.sub (qfDet qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
+    CCommRing.isZero (CField.sub (qfDet qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
 
 /-! ### The fraction-free inverse agrees with `matInv` -/
 
@@ -54,7 +54,7 @@ theorem qfInv_eq_matInvG_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
     let Binv := (matInv 2 B).getD []
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
-      CField.isZero (CField.sub (qfInvEntry B i j) ((Binv.getD i []).getD j CField.zero)))) = true := by
+      CCommRing.isZero (CField.sub (qfInvEntry B i j) ((Binv.getD i []).getD j CCommRing.zero)))) = true := by
   native_decide
 
 /-- `qfInv` agrees with `matInv` entrywise on the `3×3` fraction matrix `qfFracMat3` as `ℚ(x)` values,
@@ -62,8 +62,8 @@ though `matInv` carries each entry as an unreduced fraction of total degree up t
 theorem qfInv_eq_matInvG_fracMat3 :
     let Minv := (matInv 3 qfFracMat3).getD []
     (List.range 3).all (fun i => (List.range 3).all (fun j =>
-      CField.isZero (CField.sub (qfInvEntry qfFracMat3 i j)
-        ((Minv.getD i []).getD j CField.zero)))) = true := by
+      CCommRing.isZero (CField.sub (qfInvEntry qfFracMat3 i j)
+        ((Minv.getD i []).getD j CCommRing.zero)))) = true := by
   native_decide
 
 /-! ### Adjugate / solve sanity over `ℚ(x)` -/
@@ -85,13 +85,13 @@ reading back `x` and multiplying `M·x` recovers `b`. -/
 theorem qfSolve_fracMat3 :
     let b : List (CFrac ℚ) := [qxOfNum [1], qxOfNum [1], qxOfNum [1]]
     let ds := qfSolve qfFracMat3 b
-    let xq : List (CFrac ℚ) := ds.2.map (fun s => CField.mul (qxOfNum s) (CField.inv (qxOfNum ds.1)))
+    let xq : List (CFrac ℚ) := ds.2.map (fun s => CCommRing.mul (qxOfNum s) (CField.inv (qxOfNum ds.1)))
     let lhs : List (CFrac ℚ) := (List.range 3).map (fun i =>
       (List.range 3).foldl (fun acc j =>
-        CField.add acc (CField.mul ((qfFracMat3.getD i []).getD j CField.zero) (xq.getD j CField.zero)))
-        CField.zero)
+        CCommRing.add acc (CCommRing.mul ((qfFracMat3.getD i []).getD j CCommRing.zero) (xq.getD j CCommRing.zero)))
+        CCommRing.zero)
     (List.range 3).all (fun i =>
-      CField.isZero (CField.sub (lhs.getD i CField.zero) (b.getD i CField.zero))) = true := by
+      CCommRing.isZero (CField.sub (lhs.getD i CCommRing.zero) (b.getD i CCommRing.zero))) = true := by
   native_decide
 
 /-! ### The swell benchmark: `qfDet`/`qfInv` vs `fieldDet`/`matInv`

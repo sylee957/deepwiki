@@ -25,7 +25,7 @@ abbrev GenDivisor := List (List (CFrac ℚ))
 /-- The identity divisor `idealIdentity n = Iₙ` — the order `O`, the Pic neutral element. -/
 def idealIdentity (n : ℕ) : GenDivisor :=
   (List.range n).map (fun i =>
-    (List.range n).map (fun j => if i = j then (CField.one : CFrac ℚ) else CField.zero))
+    (List.range n).map (fun j => if i = j then (CCommRing.one : CFrac ℚ) else CCommRing.zero))
 
 /-- Entrywise lowest-terms reduction `qReduceMat I = I.map (List.map qReduce)`, value-preserving on
 each `ℚ(x)` entry (cancels common polynomial factors only). -/
@@ -36,7 +36,7 @@ def qReduceMat (I : GenDivisor) : GenDivisor :=
 of `toOCoords`). -/
 def wToAf (basis : List (DensePoly (CFrac ℚ))) (row : List (CFrac ℚ)) : DensePoly (CFrac ℚ) :=
   (List.range basis.length).foldl (fun acc i =>
-    cadd acc (cscale (row.getD i CField.zero) (basis.getD i []))) ([] : DensePoly (CFrac ℚ))
+    cadd acc (cscale (row.getD i CCommRing.zero) (basis.getD i []))) ([] : DensePoly (CFrac ℚ))
 
 /-! ### `div(g) = g·O`: the principal divisor (`principalDivisor`) -/
 
@@ -87,7 +87,7 @@ def idealProduct (f : DensePoly (CFrac ℚ)) (basis : List (DensePoly (CFrac ℚ
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
         let dd := cnorm δ
-        if h : cisZero dd = false then qReduceNZ (qxOfFrac num dd h) else CField.zero)))
+        if h : cisZero dd = false then qReduceNZ (qxOfFrac num dd h) else CCommRing.zero)))
 
 /-! ### Normalization / equality of fractional ideals (`idealHNF`, `idealEq`, `idealIsIntegral`) -/
 
@@ -126,7 +126,7 @@ denominator `1` (i.e. `I ⊆ O`). -/
 def idealIsIntegral (I : GenDivisor) : Bool :=
   I.all (fun row => row.all (fun z =>
     let zz := qReduceNZ z
-    cisZero (csub (cnorm zz.1.2) [CField.one])))
+    cisZero (csub (cnorm zz.1.2) [CCommRing.one])))
 
 end DensePoly
 

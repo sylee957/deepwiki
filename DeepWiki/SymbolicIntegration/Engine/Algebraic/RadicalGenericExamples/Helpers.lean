@@ -49,9 +49,9 @@ theorem toK_qxOfNum (num : DensePoly ℚ) :
     CFieldSpec.toK (qxOfNum num : CFrac ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPoly num) := by
   show CFrac.toCFrac (qxOfNum num) = _
   rw [CFrac.toCFrac]
-  show CFrac.am ℚ (toPoly num) / CFrac.am ℚ (toPoly ([CField.one] : DensePoly ℚ)) = _
-  have h2 : toPoly ([CField.one] : DensePoly ℚ) = 1 := by
-    show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
+  show CFrac.am ℚ (toPoly num) / CFrac.am ℚ (toPoly ([CCommRing.one] : DensePoly ℚ)) = _
+  have h2 : toPoly ([CCommRing.one] : DensePoly ℚ) = 1 := by
+    show C (CFieldSpec.toK (CCommRing.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h2, map_one, div_one]
   rfl
 

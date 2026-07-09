@@ -24,9 +24,9 @@ def limIntSingleExampleEta : CFrac ℚ := ⟨([1], [0, 1]), by decide⟩
 theorem cLimitedIntegrateSingleBase_example :
     (match cLimitedIntegrateSingleBase limIntSingleExampleA limIntSingleExampleEta with
       | some (b, c) =>
-          CField.isZero (CField.sub limIntSingleExampleA
-            (CField.add (CDiffField.cderiv b)
-              (CField.mul (DensePoly.qConstParam c) limIntSingleExampleEta)))
+          CCommRing.isZero (CField.sub limIntSingleExampleA
+            (CCommRing.add (CDiffField.cderiv b)
+              (CCommRing.mul (DensePoly.qConstParam c) limIntSingleExampleEta)))
             && decide (c ≠ 0)
       | none => false) = true := by native_decide
 
