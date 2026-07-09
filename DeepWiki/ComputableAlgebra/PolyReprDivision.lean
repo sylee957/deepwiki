@@ -73,4 +73,37 @@ example : cisZero (cdivmod 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly �
 example : cdeg (cdivmod 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
     (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
+/-! ### Euclidean GCD and the common-divisor property
+
+`cgcd` is the Euclidean algorithm on `cdivmod` remainders. Its **common-divisor direction** — every
+common divisor of `a` and `b` divides `cgcd a b` — holds at *every* `fuel` from the division identity
+alone (each remainder step preserves common divisors, and the fuel-exhausted result is still one of the
+running arguments). The converse (that `cgcd` itself divides `a` and `b`) needs the remainder-degree
+termination argument and is left to the engine's verified gcd. -/
+
+/-- Euclidean GCD via `cdivmod` remainders. -/
+def cgcd [CField α] : ℕ → P α → P α → P α
+  | 0, a, _ => a
+  | fuel + 1, a, b =>
+    if cisZero b then a else cgcd fuel b (cdivmod (fuel + 1) a b).2
+
+/-- **Common-divisor property:** every common divisor of `toPoly a` and `toPoly b` divides
+`toPoly (cgcd fuel a b)`, at every `fuel`. From the division identity alone. Representation-generic. -/
+theorem dvd_cgcd [CField α] [CRingSpec α] :
+    ∀ (fuel : ℕ) (a b : P α) (d : (CRingSpec.R α)[X]),
+      d ∣ toPoly a → d ∣ toPoly b → d ∣ toPoly (cgcd fuel a b)
+  | 0, a, _, _, ha, _ => by rw [cgcd]; exact ha
+  | fuel + 1, a, b, d, ha, hb => by
+    rw [cgcd]
+    by_cases h : cisZero b
+    · rw [if_pos h]; exact ha
+    · rw [if_neg h]
+      have hrem : toPoly (cdivmod (fuel + 1) a b).2
+          = toPoly a - toPoly b * toPoly (cdivmod (fuel + 1) a b).1 := by
+        have hid := toPoly_cdivmod (fuel + 1) a b; rw [hid]; ring
+      exact dvd_cgcd fuel b _ d hb (hrem ▸ dvd_sub ha (dvd_mul_of_dvd_left hb _))
+
+/-- `cgcd` reduces (dense): `gcd(x² − 1, x − 1)` normalizes to `x − 1`. -/
+example : cnorm (cgcd 5 ([-1, 0, 1] : List ℚ) [-1, 1]) = ([-1, 1] : List ℚ) := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
