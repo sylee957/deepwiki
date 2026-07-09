@@ -61,11 +61,24 @@ loop) is reverted, not forced.
   Each earns `@[denote]` only if a second cross-file consumer appears. Item 1's *foundational* scope is
   closed; further tagging is by-exception, not a batch.
 
-## Item 2 — denotation-square discipline (NOT STARTED)
+## Item 2 — denotation-square discipline (SPIKED — mostly BLOCKED by the CField/CFieldSpec split)
 
-Relocate each `@[denote]` square to the file that *defines* its op (satellite-in-def-file rule). Many
-already are; the exceptions are squares stranded in `*Soundness`/`*Spec` files downstream of the def.
-High churn (imports), low math value. Do file-by-file, git-history-preserving.
+Relocate each `@[denote]` square to the file that *defines* its op (satellite-in-def-file rule).
+
+**Spike finding 2026-07-09 (why this has narrow scope):** the stranded squares are stranded for a
+*structural* reason, not neglect. A computable op is defined in the **Prop-free `CField`/`CDiffField`
+layer** (e.g. `cAmcDdG` in `Tower/Integrate.lean` under `[CField α] [CDiffField α]`, `cmonicG` in
+`GenericPolyEngine`), but its denotation square `toPolyG (op …) = …` needs the **`CFieldSpec`/
+`CDiffFieldSpec` bridge** (that's what `toPolyG`/`toK` *are*) — a heavier context the pure-def file
+deliberately does not establish. So the square naturally lives in the first *downstream* file that has
+the bridge instances in scope; moving it up to the def file forces the bridge (or, for `_eq_normalize`,
+a `NormalizationMonoid` import) upstream into the lean core — exactly the coupling this layering avoids.
+Two concrete attempts confirmed it: `toPolyG_cmonicG_eq_normalize` → GenericPolyEngine needs `normalize`
+(NormalizationMonoid) it doesn't import (reverted); `toPolyG_cAmcDdG` → Integrate.lean would need
+`CFieldSpec`/`CDiffFieldSpec` added to a Spec-free def context. **Verdict:** Item 2 is *not* a broad
+relocation sweep — most squares are already in the correct (first-bridge-available) file. Only squares
+stranded *below* their first-bridge-available file are real targets; treat this as by-exception, and
+never at the cost of pulling a bridge/normalization import into the Prop-free core.
 
 ## Item 3 — drop dead name markers (NOT STARTED)
 
