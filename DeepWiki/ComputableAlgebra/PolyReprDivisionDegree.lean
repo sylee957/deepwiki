@@ -145,6 +145,15 @@ theorem cdivmod_exact (fuel : ℕ) (p q : P α) (hq : ¬ cisZero (P := P) q = tr
       rw [← cdeg_eq_natDegree, ← cdeg_eq_natDegree] at hle
       omega
 
+/-- **Exact quotient recovers the dividend:** if `q ∣ p` then `p = q · (p / q)` — the cofactor
+factorization. Direct from the division identity with a zero remainder (`cdivmod_exact`). -/
+theorem toPoly_mul_cdiv_of_dvd (fuel : ℕ) (p q : P α) (hq : ¬ cisZero (P := P) q = true)
+    (hfuel : cdeg p < fuel) (hdvd : toPoly q ∣ toPoly p) :
+    toPoly p = toPoly q * toPoly (cdivmod fuel p q).1 := by
+  have hid := toPoly_cdivmod fuel p q
+  rw [(cisZero_iff _).mp (cdivmod_exact fuel p q hq hfuel hdvd), add_zero] at hid
+  exact hid
+
 /-! ### Monic normalization (the canonical associate) -/
 
 /-- Scale a polynomial to monic by its inverse leading coefficient. -/
