@@ -85,4 +85,36 @@ theorem cdivmod_remainder_reduced :
           exact Polynomial.natDegree_lt_natDegree hp'ne hdeg
         exact cdivmod_remainder_reduced fuel p' q hq (by omega)
 
+omit [CFieldSpec α] in
+/-- When the second argument is zero, `cgcd` returns the first. -/
+theorem cgcd_of_cisZero_snd (fuel : ℕ) (a b : P α) (h : cisZero (P := P) b = true) :
+    cgcd fuel a b = a := by
+  cases fuel with
+  | zero => rw [cgcd]
+  | succ n => rw [cgcd, if_pos h]
+
+/-- **Full gcd correctness (converse direction):** with `cdeg b < fuel`, `cgcd fuel a b` divides both
+`toPoly a` and `toPoly b`. Together with `dvd_cgcd` this makes `cgcd` a genuine gcd. Proven by fuel
+induction using `cdivmod_remainder_reduced` for the strictly-decreasing measure. -/
+theorem cgcd_dvd :
+    ∀ (fuel : ℕ) (a b : P α), cdeg b < fuel →
+      toPoly (cgcd fuel a b) ∣ toPoly a ∧ toPoly (cgcd fuel a b) ∣ toPoly b
+  | 0, _, _, h => absurd h (by omega)
+  | fuel + 1, a, b, hfuel => by
+    rw [cgcd]
+    by_cases hb : cisZero (P := P) b = true
+    · rw [if_pos hb]
+      exact ⟨dvd_refl _, by rw [(cisZero_iff b).mp hb]; exact dvd_zero _⟩
+    · rw [if_neg hb]
+      set rem := (cdivmod (cdeg a + 1) a b).2 with hremdef
+      have hid := toPoly_cdivmod (cdeg a + 1) a b
+      have hreduced := cdivmod_remainder_reduced (cdeg a + 1) a b hb (by omega)
+      rw [← hremdef] at hid hreduced
+      rcases hreduced with hz | hlt
+      · rw [cgcd_of_cisZero_snd fuel b rem hz]
+        rw [(cisZero_iff rem).mp hz, add_zero] at hid
+        exact ⟨by rw [hid]; exact dvd_mul_of_dvd_left (dvd_refl _) _, dvd_refl _⟩
+      · have ih := cgcd_dvd fuel b rem (by omega)
+        exact ⟨by rw [hid]; exact dvd_add (Dvd.dvd.mul_right ih.1 _) ih.2, ih.1⟩
+
 end DeepWiki.SymbolicIntegration.CPolyRepr

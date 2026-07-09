@@ -78,14 +78,16 @@ example : cdeg (cdivmod 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
 `cgcd` is the Euclidean algorithm on `cdivmod` remainders. Its **common-divisor direction** — every
 common divisor of `a` and `b` divides `cgcd a b` — holds at *every* `fuel` from the division identity
 alone (each remainder step preserves common divisors, and the fuel-exhausted result is still one of the
-running arguments). The converse (that `cgcd` itself divides `a` and `b`) needs the remainder-degree
-termination argument and is left to the engine's verified gcd. -/
+running arguments). The converse (`cgcd` itself divides `a` and `b`) is `cgcd_dvd` (needs the
+remainder-degree termination argument), in `PolyReprDivisionDegree.lean`. The inner division uses a
+`cdeg a + 1` fuel (always past `cdeg a`, so the remainder is fully reduced), decoupled from the gcd-step
+fuel that bounds the number of Euclidean steps. -/
 
-/-- Euclidean GCD via `cdivmod` remainders. -/
+/-- Euclidean GCD via `cdivmod` remainders (inner division fuel `cdeg a + 1` is always sufficient). -/
 def cgcd [CField α] : ℕ → P α → P α → P α
   | 0, a, _ => a
   | fuel + 1, a, b =>
-    if cisZero b then a else cgcd fuel b (cdivmod (fuel + 1) a b).2
+    if cisZero b then a else cgcd fuel b (cdivmod (cdeg a + 1) a b).2
 
 /-- **Common-divisor property:** every common divisor of `toPoly a` and `toPoly b` divides
 `toPoly (cgcd fuel a b)`, at every `fuel`. From the division identity alone. Representation-generic. -/
@@ -98,9 +100,9 @@ theorem dvd_cgcd [CField α] [CRingSpec α] :
     by_cases h : cisZero b
     · rw [if_pos h]; exact ha
     · rw [if_neg h]
-      have hrem : toPoly (cdivmod (fuel + 1) a b).2
-          = toPoly a - toPoly b * toPoly (cdivmod (fuel + 1) a b).1 := by
-        have hid := toPoly_cdivmod (fuel + 1) a b; rw [hid]; ring
+      have hrem : toPoly (cdivmod (cdeg a + 1) a b).2
+          = toPoly a - toPoly b * toPoly (cdivmod (cdeg a + 1) a b).1 := by
+        have hid := toPoly_cdivmod (cdeg a + 1) a b; rw [hid]; ring
       exact dvd_cgcd fuel b _ d hb (hrem ▸ dvd_sub ha (dvd_mul_of_dvd_left hb _))
 
 /-- `cgcd` reduces (dense): `gcd(x² − 1, x − 1)` normalizes to `x − 1`. -/
