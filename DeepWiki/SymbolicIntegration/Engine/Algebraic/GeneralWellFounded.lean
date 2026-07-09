@@ -178,23 +178,23 @@ end CPoly
 
 /-! ## The flat rational and log-argument solvers
 
-Build a `ℚ`-matrix from `afDerivWf` and solve it with `kernelBasisG`; specialized to `QFunNZG ℚ`. -/
+Build a `ℚ`-matrix from `afDerivWf` and solve it with `kernelBasis`; specialized to `QFunNZ ℚ`. -/
 
 /-- Rational-part residual columns `afRatColumnsWf f basis degBound integrand`: the per-monomial
 derivatives `afDerivWf f (xʲ wᵢ)` followed by the forced `−integrand` column. -/
-def afRatColumnsWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPoly (QFunNZG ℚ)) : List (CPoly (QFunNZG ℚ)) :=
+def afRatColumnsWf (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (degBound : ℕ) (integrand : CPoly (QFunNZ ℚ)) : List (CPoly (QFunNZ ℚ)) :=
   (afRatMonomials basis degBound).map (afDerivWf f) ++ [cneg integrand]
 
 /-- `ℚ`-matrix of the rational-part system `afRatMatrixWf f basis degBound integrand`: clear each `K(x)`
 coordinate of `afRatColumnsWf` to numerators over a common denominator, read off `x`-power coefficients. -/
-def afRatMatrixWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPoly (QFunNZG ℚ)) : List (List ℚ) × ℕ :=
+def afRatMatrixWf (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (degBound : ℕ) (integrand : CPoly (QFunNZ ℚ)) : List (List ℚ) × ℕ :=
   let cols := afRatColumnsWf f basis degBound integrand
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
-    let entryOf : ℕ → QFunNZG ℚ := fun k => (cols[k]!).getD i CField.zero
+    let entryOf : ℕ → QFunNZ ℚ := fun k => (cols[k]!).getD i CField.zero
     let nums : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
     let dens : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
     let cleared : List (CPoly ℚ) := (List.range nCols).map (fun k =>
@@ -211,41 +211,41 @@ def afRatMatrixWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
 /-- General rational-part solve `afRationalSolveWf f basis degBound integrand = some v`: the rational part
 `v = Σ c_{ij} xʲ wᵢ` with `afDeriv f v = integrand`, by a `K`-linear solve over the integral basis (build
 `afRatMatrixWf`, find a kernel vector with nonzero RHS coordinate, normalize, reassemble `v`). -/
-def afRationalSolveWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPoly (QFunNZG ℚ)) : Option (CPoly (QFunNZG ℚ)) :=
+def afRationalSolveWf (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (degBound : ℕ) (integrand : CPoly (QFunNZ ℚ)) : Option (CPoly (QFunNZ ℚ)) :=
   let (rows, nCols) := afRatMatrixWf f basis degBound integrand
-  let kers := kernelBasisG nCols rows
+  let kers := kernelBasis nCols rows
   match kers.find? (fun c => c.getD (nCols - 1) 0 ≠ 0) with
   | none => none
   | some c =>
     let rhs := c.getD (nCols - 1) 0
     let monos := afRatMonomials basis degBound
-    let v : CPoly (QFunNZG ℚ) :=
+    let v : CPoly (QFunNZ ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0 / rhs
-        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPoly (QFunNZG ℚ))
+        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPoly (QFunNZ ℚ))
     some v
 
 /-- Log-derivative residual `afLogResidualWf f integrand u = afDerivWf f u − afMul f u integrand`. -/
-def afLogResidualWf (f integrand u : CPoly (QFunNZG ℚ)) : CPoly (QFunNZG ℚ) :=
+def afLogResidualWf (f integrand u : CPoly (QFunNZ ℚ)) : CPoly (QFunNZ ℚ) :=
   csub (afDerivWf f u) (afMul f u integrand)
 
 /-- Log-argument residual columns `afLogColumnsWf f basis degBound integrand`: the per-monomial
 log-derivative residuals `afLogResidualWf f integrand (xʲ wᵢ)` (no forced `−integrand` column — the log
 system is homogeneous in `u`). -/
-def afLogColumnsWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPoly (QFunNZG ℚ)) : List (CPoly (QFunNZG ℚ)) :=
+def afLogColumnsWf (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (degBound : ℕ) (integrand : CPoly (QFunNZ ℚ)) : List (CPoly (QFunNZ ℚ)) :=
   (afRatMonomials basis degBound).map (afLogResidualWf f integrand)
 
 /-- `ℚ`-matrix of the log-argument system `afLogMatrixWf f basis degBound integrand`: identical extraction
 on the homogeneous columns `afLogColumnsWf`. -/
-def afLogMatrixWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPoly (QFunNZG ℚ)) : List (List ℚ) × ℕ :=
+def afLogMatrixWf (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (degBound : ℕ) (integrand : CPoly (QFunNZ ℚ)) : List (List ℚ) × ℕ :=
   let cols := afLogColumnsWf f basis degBound integrand
   let nCols := cols.length
   let n := cdeg f
   let rowsForCoord : ℕ → List (List ℚ) := fun i =>
-    let entryOf : ℕ → QFunNZG ℚ := fun k => (cols[k]!).getD i CField.zero
+    let entryOf : ℕ → QFunNZ ℚ := fun k => (cols[k]!).getD i CField.zero
     let nums : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.1)
     let dens : List (CPoly ℚ) := (List.range nCols).map (fun k => cnorm (entryOf k).1.2)
     let cleared : List (CPoly ℚ) := (List.range nCols).map (fun k =>
@@ -262,18 +262,18 @@ def afLogMatrixWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
 /-- General log-argument solve `afLogArgSolveWf f basis degBound integrand = some u`: the log argument
 `u = Σ c_{ij} xʲ wᵢ` with `afDeriv f u = afMul f u integrand` (`∫ integrand = log u`), by the homogeneous
 `K`-linear solve (build `afLogMatrixWf`, find the first nonzero kernel vector, reassemble `u`). -/
-def afLogArgSolveWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (degBound : ℕ) (integrand : CPoly (QFunNZG ℚ)) : Option (CPoly (QFunNZG ℚ)) :=
+def afLogArgSolveWf (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (degBound : ℕ) (integrand : CPoly (QFunNZ ℚ)) : Option (CPoly (QFunNZ ℚ)) :=
   let (rows, nCols) := afLogMatrixWf f basis degBound integrand
-  let kers := kernelBasisG nCols rows
+  let kers := kernelBasis nCols rows
   match kers.find? (fun c => c.any (fun a => a ≠ 0)) with
   | none => none
   | some c =>
     let monos := afRatMonomials basis degBound
-    let u : CPoly (QFunNZG ℚ) :=
+    let u : CPoly (QFunNZ ℚ) :=
       (List.range monos.length).foldl (fun acc idx =>
         let coeff : ℚ := c.getD idx 0
-        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPoly (QFunNZG ℚ))
+        cadd acc (cscale (qxOfNum [coeff]) (monos.getD idx []))) ([] : CPoly (QFunNZ ℚ))
     some u
 
 /-! ## The top-level `afIntegrateAlgebraicWf` -/
@@ -283,9 +283,9 @@ some (v, u)`: `∫ (ratIntegrand + logIntegrand) dx = v + log u` (principal case
 `afRationalSolveWf` (`afDeriv f v = ratIntegrand`) and the log argument `u` by `afLogArgSolveWf`
 (`afDeriv f u = afMul f u logIntegrand`), both `K`-linear solves through `afDerivWf`. `none` if either
 solve fails. The general analogue of `cIntegrateAlgebraicWf`. -/
-def afIntegrateAlgebraicWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (degBound : ℕ) (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ)) :
-    Option (CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) :=
+def afIntegrateAlgebraicWf (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (degBound : ℕ) (ratIntegrand logIntegrand : CPoly (QFunNZ ℚ)) :
+    Option (CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) :=
   match afRationalSolveWf f basis degBound ratIntegrand,
         afLogArgSolveWf f basis degBound logIntegrand with
   | some v, some u => some (v, u)
@@ -296,16 +296,16 @@ def afIntegrateAlgebraicWf (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunN
 `∫ (y + afDerivWf(y)/y) dx = (3/5)xy + log y` on `y³ = x²`, checked by `afDerivWf` (`native_decide`). -/
 
 /-- The rational summand input for the cuspidal-cubic combined validation. -/
-def gcCombineRatIntegrandWf : CPoly (QFunNZG ℚ) := gcuspCubicY
+def gcCombineRatIntegrandWf : CPoly (QFunNZ ℚ) := gcuspCubicY
 
 /-- The log-derivative input for the cuspidal-cubic combined validation. -/
-def gcCombineLogIntegrandWf : CPoly (QFunNZG ℚ) :=
+def gcCombineLogIntegrandWf : CPoly (QFunNZ ℚ) :=
   afMul gcuspCubicF (afDerivWf gcuspCubicF gcuspCubicY)
     [CField.zero, CField.zero, qxOfFrac [1] [0, 0, 1] (by decide)]
 
 /-- The `afIntegrateAlgebraicWf` run for the cuspidal-cubic combined integral
 `∫ (y + afDerivWf(y)/y) dx`. -/
-def gcCombineSolvedWf : Option (CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) :=
+def gcCombineSolvedWf : Option (CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) :=
   afIntegrateAlgebraicWf gcuspCubicF gcuspCubicBasis 2 gcCombineRatIntegrandWf gcCombineLogIntegrandWf
 
 /-- The general-curve integrator integrates `∫ (y + afDeriv(y)/y) dx = (3/5)xy + log y`:

@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.LrtGuarded
 
 The `←` sufficiency of `primitiveLrtDecides` needs: if the residue resultant `R` (monic) has `D`-constant
 coefficients (the guard `cResidueConstantGuard`), then each of its squarefree Yun factors does too
-(`allResiduesConstantLrtG`). Abstractly, over `K[X]` with `D = Differential.mapCoeffs` (the coefficient-wise
+(`allResiduesConstantLrt`). Abstractly, over `K[X]` with `D = Differential.mapCoeffs` (the coefficient-wise
 derivation, `D X = 0`): if `mapCoeffs P = 0` and `P = Qⁱ · M` with `Q` monic and coprime to `M` (a Yun
 factor at multiplicity `i ≥ 1`, char 0), then `mapCoeffs Q = 0`.
 
@@ -259,7 +259,7 @@ theorem all_cLrtLogArgG_residueConstant_of_guard (hgcd : GcdFFCorrect (α := α)
   simpa only [denote, hcm] using hRi0
 
 /-- **Stage 3b (the residue bridge).** A passing residue guard forces the reduced LRT result's residues to be
-constant: `cResidueConstantGuard a d = true → allResiduesConstantLrtG (cIntegrateReducedLrt a d) = true`.
+constant: `cResidueConstantGuard a d = true → allResiduesConstantLrt (cIntegrateReducedLrt a d) = true`.
 Both sides run on the same Hermite reduce, so this is `all_cLrtLogArgG_residueConstant_of_guard` at
 `(hNum, Dstar) = (H.2.1, H.2.2)`. The `hR0` precondition (nonzero residue resultant) is the same one the raw
 reduced soundness (`isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup`) requires, supplied by the setup. -/
@@ -267,7 +267,7 @@ theorem allResiduesConstantLrtG_of_guard (hgcd : GcdFFCorrect (α := α)) (Dt a 
     (hR0 : toPoly (cResidueResultantTower Dt (cHermiteReduceTower Dt a d).2.1
       (cHermiteReduceTower Dt a d).2.2) ≠ 0)
     (hguard : cResidueConstantGuard Dt a d = true) :
-    allResiduesConstantLrtG (cIntegrateReducedLrt Dt a d) = true :=
+    allResiduesConstantLrt (cIntegrateReducedLrt Dt a d) = true :=
   all_cLrtLogArgG_residueConstant_of_guard hgcd Dt _ _ hR0 hguard
 
 end DeepWiki.SymbolicIntegration

@@ -22,7 +22,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischFie
 over `D = cmonomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`
 or `none` (nonzero special part). A leaf substitution of `cIntegrateGFull`. -/
 def cIntegrateGFullWf (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
-    Option (IntegralResultG α) :=
+    Option (IntegralResult α) :=
   let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFast Dt a d
   if cisZero b then
     -- normal part: rational `gₙ/gₙd` + logs.
@@ -46,34 +46,34 @@ end CPoly
 
 /-- The fuel-free full driver field identity from its `checkIdentity` certificate — if
 `cIntegrateGFullWf Dt a d cands = some res` and the engine's own cleared antiderivative check passes, then
-`res` satisfies the field-level identity `D(res) + logResidueSumG Dt res.logs = a/d`. -/
+`res` satisfies the field-level identity `D(res) + logResidueSum Dt res.logs = a/d`. -/
 theorem field_identity_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
-    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResultG α)
+    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResult α)
     (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
     (hcheck : CPoly.checkIdentity Dt res a d = true) :
-    towerFractionFieldDerivG Dt
-        (QFunNZG.amG α (toPoly res.rational.1) / QFunNZG.amG α (toPoly res.rational.2))
-        + logResidueSumG Dt res.logs
-      = QFunNZG.amG α (toPoly a) / QFunNZG.amG α (toPoly d) :=
+    towerFractionFieldDeriv Dt
+        (QFunNZ.am α (toPoly res.rational.1) / QFunNZ.am α (toPoly res.rational.2))
+        + logResidueSum Dt res.logs
+      = QFunNZ.am α (toPoly a) / QFunNZ.am α (toPoly d) :=
 by
   have _ := hsome
   exact field_identity_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
 
-/-- `cIntegrateGFullWf` satisfies the semantic `IsIntegralResultG` spec from its `checkIdentity`
+/-- `cIntegrateGFullWf` satisfies the semantic `IsIntegralResult` spec from its `checkIdentity`
 certificate. -/
 theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
     [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
-    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResultG α)
+    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResult α)
     (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
     (hcheck : CPoly.checkIdentity Dt res a d = true) :
-    CPoly.IsIntegralResultG Dt a d res := by
+    CPoly.IsIntegralResult Dt a d res := by
   have _ := hsome
   exact CPoly.isIntegralResultG_of_checkIdentityG Dt res a d hgden haden hlogs hcheck
 
@@ -81,15 +81,15 @@ theorem isIntegralResultG_of_cIntegrateGFullWf_of_checkIdentityG {α : Type*}
 
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] [CRischField α]
-    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResultG α)
+    (Dt : CPoly α) (a d : CPoly α) (cands : List α) (res : IntegralResult α)
     (hsome : CPoly.cIntegrateGFullWf Dt a d cands = some res)
     (hgden : toPoly res.rational.2 ≠ 0) (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ res.logs, toPoly cv.2 ≠ 0)
     (hcheck : CPoly.checkIdentity Dt res a d = true) :
-    towerFractionFieldDerivG Dt
-        (QFunNZG.amG α (toPoly res.rational.1) / QFunNZG.amG α (toPoly res.rational.2))
-        + logResidueSumG Dt res.logs
-      = QFunNZG.amG α (toPoly a) / QFunNZG.amG α (toPoly d) :=
+    towerFractionFieldDeriv Dt
+        (QFunNZ.am α (toPoly res.rational.1) / QFunNZ.am α (toPoly res.rational.2))
+        + logResidueSum Dt res.logs
+      = QFunNZ.am α (toPoly a) / QFunNZ.am α (toPoly d) :=
   field_identity_of_cIntegrateGFullWf_of_checkIdentityG Dt a d cands res hsome hgden haden hlogs hcheck
 
 /-! ## Level-2 validation for the fuel-free top entry

@@ -226,7 +226,7 @@ private lemma nullspace_single_col (M : List (List ℚ)) :
 
 /-- `cLogIsNewMonomial [] w = true` iff the cleared coefficient column `(cLinearDepData [] w).1`
 has a nonzero entry — the empty-base test decides `w ≠ 0`. -/
-theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZG ℚ) :
+theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZ ℚ) :
     CPoly.cLogIsNewMonomial [] w =
       ((CPoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome := by
   have hbridge : CPoly.cLogIsNewMonomial [] w =
@@ -243,7 +243,7 @@ theorem cLogIsNewMonomial_nil_eq_col_nonzero (w : QFunNZG ℚ) :
 
 /-- `cExpIsNewMonomial ws b = cLogIsNewMonomial ws b`: the exponential structure test is
 definitionally the logarithmic one. -/
-theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (ws : List (QFunNZG ℚ)) (b : QFunNZG ℚ) :
+theorem cExpIsNewMonomial_eq_cLogIsNewMonomial (ws : List (QFunNZ ℚ)) (b : QFunNZ ℚ) :
     CPoly.cExpIsNewMonomial ws b = CPoly.cLogIsNewMonomial ws b := rfl
 
 end ComputableEmptyBase
@@ -266,7 +266,7 @@ example (u : F) (hno : ¬ ∃ s : F, s′ = logDeriv u) :
   isLiouville_of_no_antideriv u hno
 
 -- The empty-base computable test decides only "cleared column nonzero" (≈ `w ≠ 0`).
-example (w : QFunNZG ℚ) :
+example (w : QFunNZ ℚ) :
     CPoly.cLogIsNewMonomial [] w =
       ((CPoly.cLinearDepData [] w).1.find? (fun r => (r.getD 0 0) ≠ 0)).isSome :=
   cLogIsNewMonomial_nil_eq_col_nonzero w

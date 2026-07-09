@@ -10,16 +10,16 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
 /-- `logs` is a residue-log part of `hNum/Dstar`: `Σᵢ cᵢ · D(log vᵢ) = ⟦hNum/Dstar⟧`. -/
 structure LawfulResidueLogPart (Dt hNum Dstar : CPoly α) (logs : List (α × CPoly α)) : Prop where
-  /-- `Σᵢ cᵢ · (D(amG vᵢ) / amG vᵢ) = ⟦hNum/Dstar⟧`. -/
-  residue_match : (logs.map (fun cv => amG α (Polynomial.C (CFieldSpec.toK cv.1))
-        * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-      = amG α (toPoly hNum) / amG α (toPoly Dstar)
+  /-- `Σᵢ cᵢ · (D(am vᵢ) / am vᵢ) = ⟦hNum/Dstar⟧`. -/
+  residue_match : (logs.map (fun cv => am α (Polynomial.C (CFieldSpec.toK cv.1))
+        * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+      = am α (toPoly hNum) / am α (toPoly Dstar)
 
 end DeepWiki.SymbolicIntegration

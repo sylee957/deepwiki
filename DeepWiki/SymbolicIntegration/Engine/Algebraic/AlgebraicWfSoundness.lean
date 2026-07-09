@@ -27,9 +27,9 @@ proven `hrat` (rational-part telescoping), `hlog` (log-part residue match), and 
 `hsplit`, `IsAlgebraicIntegral 2 ρ f F.ratPart commonDenomQ F.logTerms cofs` holds for the literal
 output `F`. -/
 theorem cIntegrateAlgebraicWf_isAlgebraicIntegral
-    (ρ : QFunNZG ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZG ℚ))
-    (c : QFunNZG ℚ) (D : CPoly ℚ) (degBound : ℕ)
-    (f ratPart logPart commonDenomQ : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ)))
+    (ρ : QFunNZ ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZ ℚ))
+    (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ)
+    (f ratPart logPart commonDenomQ : RadElem (QFunNZ ℚ)) (cofs : List (RadElem (QFunNZ ℚ)))
     (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
           (CPoly.toPoly (radMul 2 ρ
             (radDeriv 2 ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart) commonDenomQ))
@@ -48,8 +48,8 @@ theorem cIntegrateAlgebraicWf_isAlgebraicIntegral
 `radIsZero (radSub (algDeriv ρ F) integrand) = true` alone, `toPoly (algDeriv ρ F) = toPoly
 integrand` — the un-cross-multiplied `D(v + Σ cᵢ log uᵢ) = f`. -/
 theorem cIntegrateAlgebraicWf_sound
-    (ρ : QFunNZG ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZG ℚ))
-    (c : QFunNZG ℚ) (D : CPoly ℚ) (degBound : ℕ) (integrand : RadElem (QFunNZG ℚ))
+    (ρ : QFunNZ ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZ ℚ))
+    (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ) (integrand : RadElem (QFunNZ ℚ))
     (hrt : RadElem.radIsZero
       (RadElem.radSub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
@@ -63,10 +63,10 @@ theorem cIntegrateAlgebraicWf_sound
 `IsGeneralAlgebraicIntegralWf`: given the proven `hrat`, `hlog`, and the round-trip `hsplit`,
 `IsGeneralAlgebraicIntegralWf f g v commonDenomQ [(c, u)] cofs` holds for the literal output. -/
 theorem afIntegrateAlgebraicWf_isGeneralAlgebraicIntegralWf
-    (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ)) (p : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ))
-    (g ratPart logPart commonDenomQ : CPoly (QFunNZG ℚ)) (c : QFunNZG ℚ)
-    (cofs : List (CPoly (QFunNZG ℚ)))
+    (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : CPoly (QFunNZ ℚ)) (p : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
+    (g ratPart logPart commonDenomQ : CPoly (QFunNZ ℚ)) (c : QFunNZ ℚ)
+    (cofs : List (CPoly (QFunNZ ℚ)))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hrat : Ideal.Quotient.mk (afIdeal f)
           (CPoly.toPoly (afMul f (afDerivWf f p.1) commonDenomQ))
@@ -92,9 +92,9 @@ theorem afIntegrateAlgebraicWf_isGeneralAlgebraicIntegralWf
 (csub (afDerivWf f v) ratIntegrand) = true` alone, `toPoly (afDerivWf f v) = toPoly ratIntegrand` —
 the faithful `D(v) = ratIntegrand` for the general rational part. -/
 theorem afIntegrateAlgebraicWf_sound
-    (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ))
-    (p : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ))
+    (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : CPoly (QFunNZ ℚ))
+    (p : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : CPoly.cisZero (CPoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     CPoly.toPoly (afDerivWf f
@@ -109,9 +109,9 @@ theorem afIntegrateAlgebraicWf_sound
 
 /-- The fuel-free general driver output satisfies `IsGeneralRationalIntegralWf`. -/
 theorem afIntegrateAlgebraicWf_isGeneralRationalIntegralWf
-    (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ))
-    (p : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ))
+    (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : CPoly (QFunNZ ℚ))
+    (p : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : CPoly.cisZero (CPoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     CPoly.IsGeneralRationalIntegralWf f ratIntegrand
@@ -128,8 +128,8 @@ theorem afIntegrateAlgebraicWf_isGeneralRationalIntegralWf
 
 -- ★ RADICAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free radical integrator's output
 -- differentiates to the integrand — `D(F) = integrand` in `K[X]`, from the engine round-trip certificate.
-example (ρ : QFunNZG ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZG ℚ))
-    (c : QFunNZG ℚ) (D : CPoly ℚ) (degBound : ℕ) (integrand : RadElem (QFunNZG ℚ))
+example (ρ : QFunNZ ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZ ℚ))
+    (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ) (integrand : RadElem (QFunNZ ℚ))
     (hrt : RadElem.radIsZero
       (RadElem.radSub (algDeriv ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound)) integrand)
       = true) :
@@ -139,9 +139,9 @@ example (ρ : QFunNZG ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZG ℚ))
 
 -- ★ GENERAL CAPSTONE (fuel-free, unconditional modulo round-trip): the fuel-free general integrator's
 -- rational part differentiates to the rational integrand — `D(v) = ratIntegrand`, from the engine check.
-example (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ))
-    (p : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ))
+example (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : CPoly (QFunNZ ℚ))
+    (p : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : CPoly.cisZero (CPoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     CPoly.toPoly (afDerivWf f
@@ -152,9 +152,9 @@ example (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound
 
 -- ★ GENERAL CAPSTONE predicate form: the fuel-free general integrator's rational part is an
 -- `IsGeneralRationalIntegralWf` witness.
-example (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound : ℕ)
-    (ratIntegrand logIntegrand : CPoly (QFunNZG ℚ))
-    (p : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ))
+example (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ))) (degBound : ℕ)
+    (ratIntegrand logIntegrand : CPoly (QFunNZ ℚ))
+    (p : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
     (hrun : afIntegrateAlgebraicWf f basis degBound ratIntegrand logIntegrand = some p)
     (hcheck : CPoly.cisZero (CPoly.csub (afDerivWf f p.1) ratIntegrand) = true) :
     CPoly.IsGeneralRationalIntegralWf f ratIntegrand
@@ -164,9 +164,9 @@ example (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ))) (degBound
 
 -- The cross-multiplied radical `IsAlgebraicIntegral` for the literal output (Form A): the proven
 -- telescoping + partial fraction, the split from the round-trip.
-example (ρ : QFunNZG ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZG ℚ))
-    (c : QFunNZG ℚ) (D : CPoly ℚ) (degBound : ℕ)
-    (f ratPart logPart commonDenomQ : RadElem (QFunNZG ℚ)) (cofs : List (RadElem (QFunNZG ℚ)))
+example (ρ : QFunNZ ℚ) (R B : CPoly ℚ) (residual : RadElem (QFunNZ ℚ))
+    (c : QFunNZ ℚ) (D : CPoly ℚ) (degBound : ℕ)
+    (f ratPart logPart commonDenomQ : RadElem (QFunNZ ℚ)) (cofs : List (RadElem (QFunNZ ℚ)))
     (hrat : Ideal.Quotient.mk (radIdeal 2 ρ)
           (CPoly.toPoly (radMul 2 ρ
             (radDeriv 2 ρ (cIntegrateAlgebraicWf ρ R B residual c D degBound).ratPart) commonDenomQ))

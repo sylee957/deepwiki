@@ -240,12 +240,12 @@ theorem gbpsremainderCore_degree_lt (q : GBPolyCore β) (hq : gbisZeroCore (gbno
           rwa [toGBCoeffPoly_gbnormCore] at h
         exact ih p' (by omega)
 
-/-- **`toGBPolyG` preserves the `t`-degree of `toGBCoeffPoly`**: `(toGBPolyG p).natDegree =
-(toGBCoeffPoly p).natDegree`. The coefficient lift `liftKG = mapRingHom (amG β)` is over the injective
-field embedding `amG β`, so `Polynomial.natDegree_map` applies. -/
+/-- **`toGBPoly` preserves the `t`-degree of `toGBCoeffPoly`**: `(toGBPoly p).natDegree =
+(toGBCoeffPoly p).natDegree`. The coefficient lift `liftK = mapRingHom (am β)` is over the injective
+field embedding `am β`, so `Polynomial.natDegree_map` applies. -/
 theorem natDegree_toGBPolyG (p : GBPolyCore β) :
-    (toGBPolyG p).natDegree = (toGBCoeffPoly p).natDegree := by
-  rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom,
+    (toGBPoly p).natDegree = (toGBCoeffPoly p).natDegree := by
+  rw [toGBPoly, liftK, Polynomial.coe_mapRingHom,
     Polynomial.natDegree_map_eq_of_injective (RatFunc.algebraMap_injective (CFieldSpec.K β))]
 
 /-- **The content strip preserves the `t`-degree**: under `CgcdBCorrect cgcdB` and the per-coefficient

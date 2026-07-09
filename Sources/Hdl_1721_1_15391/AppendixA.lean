@@ -7,7 +7,7 @@ import Sources.Hdl_1721_1_15391.Source
 Trager's practical reductions for a simple radical extension `F(y)` with `yⁿ = f ∈ F` (`F` a
 differential field, char 0) — the most common algebraic case. The `DeepWiki.SymbolicIntegration`
 library renders the appendix's **rational part** as computable algorithms over the generic
-ℚ(x) = `QFunNZG ℚ` carrier (`ComputableRadicalExtension` / `ComputableRadicalCase2` /
+ℚ(x) = `QFunNZ ℚ` carrier (`ComputableRadicalExtension` / `ComputableRadicalCase2` /
 `ComputableRadicalWellFounded`), each `native_decide`-validated on its cleared Hermite identity, and
 proves the end-to-end driver capstone `D(v) = (rational part of the integrand)` with the actual
 diagonal derivation `radDeriv`.
@@ -160,14 +160,14 @@ abbrev appA_radIntegrateCase1 := @CPoly.radIntegrateCase1Wf
 
 /-- The Case-1 driver run `radIntegrateCase1Wf cderiv V f g 3 C` on `∫ 1/((x−1)³√x)`. -/
 def appA_sqrtxRun : CPoly ℚ × CPoly ℚ :=
-  radIntegrateCase1Wf cderiv sqrtxV sqrtxF sqrtxG 3 sqrtxC
+  radIntegrateCase1Wf cderiv sqrtxV sqrtxF sqrtx 3 sqrtxC
 
-/-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
-def appA_sqrtxVlift : RadElem (QFunNZG ℚ) :=
+/-- The driver's rational part for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZ ℚ)`. -/
+def appA_sqrtxVlift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum appA_sqrtxRun.2) (qxOfNum (cmul sqrtxV2 sqrtxF))]
 
-/-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZG ℚ)`. -/
-def appA_sqrtxRatLift : RadElem (QFunNZG ℚ) :=
+/-- The rational-part target for `∫ 1/((x−1)³√x)` lifted to `RadElem (QFunNZ ℚ)`. -/
+def appA_sqrtxRatLift : RadElem (QFunNZ ℚ) :=
   [CField.zero,
     CField.sub (CField.div (qxOfNum sqrtxC) (qxOfNum (cmul sqrtxV3 sqrtxF)))
       (CField.div (qxOfNum appA_sqrtxRun.1) (qxOfNum (cmul sqrtxV sqrtxF)))]
@@ -185,12 +185,12 @@ theorem appA_sqrtxDriver_integrates :
 def appA_cubeRun : CPoly ℚ × CPoly ℚ :=
   radIntegrateCase1Wf cderiv cubeV cubeF cube 3 cubeC
 
-/-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
-def appA_cubeVlift : RadElem (QFunNZG ℚ) :=
+/-- The driver's rational part for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZ ℚ)`. -/
+def appA_cubeVlift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum appA_cubeRun.2) (qxOfNum (cmul (cpow cubeV 2) cubeF))]
 
-/-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZG ℚ)`. -/
-def appA_cubeRatLift : RadElem (QFunNZG ℚ) :=
+/-- The rational-part target for `∫ 1/((x−1)³√(x³+1))` lifted to `RadElem (QFunNZ ℚ)`. -/
+def appA_cubeRatLift : RadElem (QFunNZ ℚ) :=
   [CField.zero,
     CField.sub (CField.div (qxOfNum cubeC) (qxOfNum (cmul (cpow cubeV 3) cubeF)))
       (CField.div (qxOfNum appA_cubeRun.1) (qxOfNum (cmul cubeV cubeF)))]
@@ -231,8 +231,8 @@ def appA_mcV : CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ :=
 def appA_mcW : CPoly ℚ × ℕ × CPoly ℚ × CPoly ℚ × CPoly ℚ :=
   (appA_mcRun.getD 1 (false, [], 0, [], [], [])).2
 
-/-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (QFunNZG ℚ)`. -/
-def appA_mcVlift : RadElem (QFunNZG ℚ) :=
+/-- The assembled total rational part `v = v_V + v_W` lifted to `RadElem (QFunNZ ℚ)`. -/
+def appA_mcVlift : RadElem (QFunNZ ℚ) :=
   radAdd
     [CField.zero, CField.div (qxOfNum appA_mcV.2.2.2.1)
       (qxOfNum (cmul (cpow appA_mcV.1 (appA_mcV.2.1 - 1)) mcRho))]
@@ -240,7 +240,7 @@ def appA_mcVlift : RadElem (QFunNZG ℚ) :=
       (qxOfNum (cmul (cpow appA_mcW.1 appA_mcW.2.1) mcRho))]
 
 /-- The integrand's total rational part after subtracting the two `k = 1` leftovers. -/
-def appA_mcRatLift : RadElem (QFunNZG ℚ) :=
+def appA_mcRatLift : RadElem (QFunNZ ℚ) :=
   radAdd
     [CField.zero, CField.sub
       (CField.div (qxOfNum appA_mcV.2.2.1) (qxOfNum (cmul (cpow appA_mcV.1 appA_mcV.2.1) mcRho)))

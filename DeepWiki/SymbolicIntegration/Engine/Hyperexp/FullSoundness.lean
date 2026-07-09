@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 /-! ### The overshoot identity `D(logPart) = a/d + R` for the hyperexponential monomial
 
@@ -45,14 +45,14 @@ end ResidueMatchTower
 
 /-! ### The overshoot residue match over `K = CFieldSpec.K α` (engine vocabulary)
 
-The overshoot identity restated on the engine's per-root `List` sum, transported through `amG = algebraMap`
-and the `towerFractionFieldDerivG` unfolding. -/
+The overshoot identity restated on the engine's per-root `List` sum, transported through `am = algebraMap`
+and the `towerFractionFieldDeriv` unfolding. -/
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- Engine-vocabulary overshoot: the per-root `List` sum equals `amG(C(b·∑c)) + a/d` over
-`RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt`, unconditional in `∑c`. -/
+/-- Engine-vocabulary overshoot: the per-root `List` sum equals `am(C(b·∑c)) + a/d` over
+`RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDeriv Dt`, unconditional in `∑c`. -/
 theorem hyperexp_overshoot_list_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
     (a : (CFieldSpec.K α)[X]) (b : CFieldSpec.K α) (hDt : toPoly Dt = C b * X)
     (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′) :
@@ -60,11 +60,11 @@ theorem hyperexp_overshoot_list_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K
           (a.eval β / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
             X - C β))).map
         (fun cv =>
-          amG α (C cv.1)
-            * (towerFractionFieldDerivG Dt (amG α cv.2) / amG α cv.2))).sum
-      = amG α (C (b * ∑ β ∈ s,
+          am α (C cv.1)
+            * (towerFractionFieldDeriv Dt (am α cv.2) / am α cv.2))).sum
+      = am α (C (b * ∑ β ∈ s,
             a.eval β / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))
-        + amG α a / amG α (Lagrange.nodal s id) := by
+        + am α a / am α (Lagrange.nodal s id) := by
   show ((s.toList.map (fun β =>
           (a.eval β / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
             X - C β))).map
@@ -78,8 +78,8 @@ theorem hyperexp_overshoot_list_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K
   rw [List.map_map, Finset.sum_map_toList]
   exact ResidueMatchTower.hyperexp_residue_sum_eq_overshoot_add s a b hA hnorm
 
-/-- Engine residue-match overshoot: the log sum `∑_{(c,v)∈logs} amG(C(toK c))·D(log v)` equals
-`amG(C(b·∑c)) + amG(hNum)/amG(hDen)` over `RatFunc (CFieldSpec.K α)`, given the per-root form `hform`,
+/-- Engine residue-match overshoot: the log sum `∑_{(c,v)∈logs} am(C(toK c))·D(log v)` equals
+`am(C(b·∑c)) + am(hNum)/am(hDen)` over `RatFunc (CFieldSpec.K α)`, given the per-root form `hform`,
 unconditional in `∑c`. -/
 theorem hyperexp_engine_overshoot (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
     (hNum hDen : CPoly α) (b : CFieldSpec.K α) (logs : List (α × CPoly α))
@@ -92,19 +92,19 @@ theorem hyperexp_engine_overshoot (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
             X - C β))) :
     (logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-      = amG α (C (b * ∑ β ∈ s,
+          am α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+      = am α (C (b * ∑ β ∈ s,
             (toPoly hNum).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))
-        + amG α (toPoly hNum) / amG α (toPoly hDen) := by
+        + am α (toPoly hNum) / am α (toPoly hDen) := by
   -- the engine summand factors through `(toK cv.1, toPoly cv.2)`: rewrite the mapped list by `hform`
   have hsummand : (logs.map (fun cv =>
-        amG α (Polynomial.C (CFieldSpec.toK cv.1))
-          * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2))))
+        am α (Polynomial.C (CFieldSpec.toK cv.1))
+          * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2))))
       = (logs.map (fun cv => (CFieldSpec.toK cv.1, toPoly cv.2))).map
-          (fun p => amG α (Polynomial.C p.1)
-            * (towerFractionFieldDerivG Dt (amG α p.2) / amG α p.2)) := by
+          (fun p => am α (Polynomial.C p.1)
+            * (towerFractionFieldDeriv Dt (am α p.2) / am α p.2)) := by
     rw [List.map_map]; rfl
   rw [hsummand, hform, hden, List.map_map]
   -- now the per-root form of the bridge `hyperexp_overshoot_list_engine`
@@ -112,23 +112,23 @@ theorem hyperexp_engine_overshoot (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
   rw [List.map_map] at hbridge
   exact hbridge
 
-/-! ### The reduced-case overshoot field identity `D(g) + logResidueSumG = a/d + R`
+/-! ### The reduced-case overshoot field identity `D(g) + logResidueSum = a/d + R`
 
 Composing the Hermite half with the overshoot residue sum. -/
 
 /-- Reduced-case overshoot field identity: for `res = cIntegrateReduced Dt a d cands` and the Hermite
-half/per-root hypotheses, `D(g) + logResidueSumG Dt res.logs = amG a/amG d + amG(C(b·∑c))` over
+half/per-root hypotheses, `D(g) + logResidueSum Dt res.logs = am a/am d + am(C(b·∑c))` over
 `RatFunc (CFieldSpec.K α)`, unconditional in `∑c`. -/
 theorem field_identity_of_cIntegrateReducedG_hyperexp_overshoot [CFracGcdCoreWf α]
     (Dt : CPoly α) (a d : CPoly α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG α (toPoly a) / amG α (toPoly d))
+    (hherm : towerFractionFieldDeriv Dt
+            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
@@ -138,24 +138,24 @@ theorem field_identity_of_cIntegrateReducedG_hyperexp_overshoot [CFracGcdCoreWf 
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = amG α (toPoly a) / amG α (toPoly d)
-        + amG α (C (b * ∑ β ∈ s,
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = am α (toPoly a) / am α (toPoly d)
+        + am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β)) := by
   rw [logResidueSumG_eq_logDeriv_sum Dt (CPoly.cIntegrateReduced Dt a d cands).logs,
     hyperexp_engine_overshoot Dt s (cHermiteReduceTower Dt a d).2.1
       (cHermiteReduceTower Dt a d).2.2 b
       (CPoly.cIntegrateReduced Dt a d cands).logs hDt hden hA hnorm hform]
-  set Dg := towerFractionFieldDerivG Dt
-    (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-      / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2)) with hDg
-  set h := amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-    / amG α (toPoly (cHermiteReduceTower Dt a d).2.2) with hh
-  set R := amG α (C (b * ∑ β ∈ s,
+  set Dg := towerFractionFieldDeriv Dt
+    (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+      / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2)) with hDg
+  set h := am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+    / am α (toPoly (cHermiteReduceTower Dt a d).2.2) with hh
+  set R := am α (C (b * ∑ β ∈ s,
     (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
       / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β)) with hR
   rw [show Dg + (R + h) = (Dg + h) + R by ring, hherm]
@@ -173,7 +173,7 @@ omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Output shape of `cIntegrateHyperexpNormal`: when it returns `some res` and the base oracle succeeds
 on `R`, `res` has the same logs and rational part `g − ∫R`. -/
 theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : CPoly α)
-    (a d : CPoly α) (cands : List α) (res : IntegralResultG α) (intR : α)
+    (a d : CPoly α) (cands : List α) (res : IntegralResult α) (intR : α)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
         (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
@@ -189,7 +189,7 @@ theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : CPoly α)
 /-- Normal-part driver soundness `D(∫fₙ) = fₙ` for `cIntegrateHyperexpNormal`, unconditional in `∑c`,
 given the base-oracle residual `hintR` and the residual-read bridge `hRval`. -/
 theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α)
-    (cands : List α) (res : IntegralResultG α) (intR : α) (s : Finset (CFieldSpec.K α))
+    (cands : List α) (res : IntegralResult α) (intR : α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
     (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
@@ -197,12 +197,12 @@ theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d
         (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
     (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG α (toPoly a) / amG α (toPoly d))
+    (hherm : towerFractionFieldDeriv Dt
+            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
@@ -212,64 +212,64 @@ theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
-    (hintR : towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
-        = amG α (Polynomial.C (CFieldSpec.toK
+    (hintR : towerFractionFieldDeriv Dt (am α (Polynomial.C (CFieldSpec.toK intR)))
+        = am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs))))
-    (hRval : amG α (Polynomial.C (CFieldSpec.toK
+    (hRval : am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs)))
-        = amG α (C (b * ∑ β ∈ s,
+        = am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))) :
-    towerFractionFieldDerivG Dt (amG α (toPoly res.rational.1) / amG α (toPoly res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPoly a) / amG α (toPoly d) := by
+    towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
+        + logResidueSum Dt res.logs
+      = am α (toPoly a) / am α (toPoly d) := by
   rw [cIntegrateHyperexpNormalG_shape Dt a d cands res intR hintRsome hsome]
   set gnum := (CPoly.cIntegrateReduced Dt a d cands).rational.1 with hgnum
   set gden := (CPoly.cIntegrateReduced Dt a d cands).rational.2 with hgdenE
-  have hAgden : amG α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
-  have hnewrat : amG α (toPoly (csub gnum (cmul [intR] gden))) / amG α (toPoly gden)
-      = amG α (toPoly gnum) / amG α (toPoly gden) - amG α (Polynomial.C (CFieldSpec.toK intR)) := by
+  have hAgden : am α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hnewrat : am α (toPoly (csub gnum (cmul [intR] gden))) / am α (toPoly gden)
+      = am α (toPoly gnum) / am α (toPoly gden) - am α (Polynomial.C (CFieldSpec.toK intR)) := by
     simp only [denote, map_sub, map_mul, mul_zero, add_zero]
     rw [sub_div, mul_div_assoc, div_self hAgden, mul_one]
   rw [hnewrat, map_sub, hintR, hRval]
   have hover := field_identity_of_cIntegrateReducedG_hyperexp_overshoot Dt a d cands s b
     hDt hherm hden hA hnorm hform
-  set Dg := towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden)) with hDg
-  set L := logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs with hL
-  set R := amG α (C (b * ∑ β ∈ s,
+  set Dg := towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden)) with hDg
+  set L := logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs with hL
+  set R := am α (C (b * ∑ β ∈ s,
     (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
       / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β)) with hR
   rw [show Dg - R + L = (Dg + L) - R by ring, hover, add_sub_cancel_right]
 
-/-! ### The driver soundness at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)`
+/-! ### The driver soundness at the level-1 carrier `α = QFunNZ ℚ = ℚ(x)`
 
-The normal-part driver soundness instantiated at `α = QFunNZG ℚ` (`CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`),
+The normal-part driver soundness instantiated at `α = QFunNZ ℚ` (`CFieldSpec.K (QFunNZ ℚ) = RatFunc ℚ`),
 unconditional in `∑c`. -/
 
-/-- Local instance: the engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ` as a `ℚ`-algebra, matching
-the `Algebra ℚ` the bridge `towerFractionFieldDerivG` uses. -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
+/-- Local instance: the engine carrier `CFieldSpec.K (QFunNZ ℚ)` is `RatFunc ℚ` as a `ℚ`-algebra, matching
+the `Algebra ℚ` the bridge `towerFractionFieldDeriv` uses. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- Normal-part driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `QFunNZG ℚ` instance of
+/-- Normal-part driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `QFunNZ ℚ` instance of
 `cIntegrateHyperexpNormalG_sound`. -/
-theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (QFunNZG ℚ))
-    (a d : CPoly (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
-    (intR : QFunNZG ℚ) (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (b : CFieldSpec.K (QFunNZG ℚ))
+theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (QFunNZ ℚ))
+    (a d : CPoly (QFunNZ ℚ)) (cands : List (QFunNZ ℚ)) (res : IntegralResult (QFunNZ ℚ))
+    (intR : QFunNZ ℚ) (s : Finset (CFieldSpec.K (QFunNZ ℚ))) (b : CFieldSpec.K (QFunNZ ℚ))
     (hDt : toPoly Dt = C b * X)
     (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
-    (hintRsome : CRischField.crischDESolve (CField.zero : QFunNZG ℚ)
+    (hintRsome : CRischField.crischDESolve (CField.zero : QFunNZ ℚ)
         (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
     (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG (QFunNZG ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / amG (QFunNZG ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + amG (QFunNZG ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG (QFunNZG ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG (QFunNZG ℚ) (toPoly a) / amG (QFunNZG ℚ) (toPoly d))
+    (hherm : towerFractionFieldDeriv Dt
+            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
@@ -279,20 +279,20 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (QFunNZG ℚ))
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
-    (hintR : towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK intR)))
-        = amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
+    (hintR : towerFractionFieldDeriv Dt (am (QFunNZ ℚ) (Polynomial.C (CFieldSpec.toK intR)))
+        = am (QFunNZ ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs))))
-    (hRval : amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
+    (hRval : am (QFunNZ ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs)))
-        = amG (QFunNZG ℚ) (C (b * ∑ β ∈ s,
+        = am (QFunNZ ℚ) (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))) :
-    towerFractionFieldDerivG Dt
-        (amG (QFunNZG ℚ) (toPoly res.rational.1) / amG (QFunNZG ℚ) (toPoly res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG (QFunNZG ℚ) (toPoly a) / amG (QFunNZG ℚ) (toPoly d) :=
+    towerFractionFieldDeriv Dt
+        (am (QFunNZ ℚ) (toPoly res.rational.1) / am (QFunNZ ℚ) (toPoly res.rational.2))
+        + logResidueSum Dt res.logs
+      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) :=
   cIntegrateHyperexpNormalG_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
@@ -300,14 +300,14 @@ theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPoly (QFunNZG ℚ))
 
 `cIntegrateHyperexpFull` combines the Laurent special part with the normal part. Soundness composes the
 Laurent field identity `hLaurField`, the normal-part soundness, and the canonical reconstruction `hrecon`,
-giving `D(res) + logResidueSumG = a/d`, unconditional in `∑c`. -/
+giving `D(res) + logResidueSum = a/d`, unconditional in `∑c`. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Output shape of `cIntegrateHyperexpFull`: when it returns `some res` and both the Laurent and normal
 parts succeed, `res` is the combined rational part with the normal logs. -/
 theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : CPoly α)
-    (a d : CPoly α) (cands : List α) (res : IntegralResultG α) (lnum lden : CPoly α)
-    (nrm : IntegralResultG α)
+    (a d : CPoly α) (cands : List α) (res : IntegralResult α) (lnum lden : CPoly α)
+    (nrm : IntegralResult α)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
         (canonicalRepresentationFast Dt a d).1
         (cHyperexpSpecialNeg (canonicalRepresentationFast Dt a d).2.1.1
@@ -329,7 +329,7 @@ theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : CPoly α)
 `∑c` — composes the Laurent field identity, the normal-part field identity, and the canonical
 reconstruction. -/
 theorem cIntegrateHyperexpFullG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α)
-    (cands : List α) (res : IntegralResultG α) (lnum lden : CPoly α) (nrm : IntegralResultG α)
+    (cands : List α) (res : IntegralResult α) (lnum lden : CPoly α) (nrm : IntegralResult α)
     (fpPart : CPoly α) (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
         (canonicalRepresentationFast Dt a d).1
@@ -340,27 +340,27 @@ theorem cIntegrateHyperexpFullG_sound [CFracGcdCoreWf α] (Dt : CPoly α) (a d :
         (canonicalRepresentationFast Dt a d).2.2.1
         (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
     (hsome : CPoly.cIntegrateHyperexpFull Dt a d cands = some res)
-    (hLaurField : towerFractionFieldDerivG Dt (amG α (toPoly lnum) / amG α (toPoly lden))
-        = amG α (toPoly fpPart))
-    (hNrmField : towerFractionFieldDerivG Dt
-            (amG α (toPoly nrm.rational.1) / amG α (toPoly nrm.rational.2))
-          + logResidueSumG Dt nrm.logs
-        = amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-          / amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
-    (hrecon : amG α (toPoly fpPart)
-          + amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-            / amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
-        = amG α (toPoly a) / amG α (toPoly d)) :
-    towerFractionFieldDerivG Dt (amG α (toPoly res.rational.1) / amG α (toPoly res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPoly a) / amG α (toPoly d) := by
+    (hLaurField : towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
+        = am α (toPoly fpPart))
+    (hNrmField : towerFractionFieldDeriv Dt
+            (am α (toPoly nrm.rational.1) / am α (toPoly nrm.rational.2))
+          + logResidueSum Dt nrm.logs
+        = am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+          / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
+    (hrecon : am α (toPoly fpPart)
+          + am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+            / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
+        = am α (toPoly a) / am α (toPoly d)) :
+    towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
+        + logResidueSum Dt res.logs
+      = am α (toPoly a) / am α (toPoly d) := by
   rw [cIntegrateHyperexpFullG_shape Dt a d cands res lnum lden nrm hLaur hNrm hsome]
-  have hAlden : amG α (toPoly lden) ≠ 0 := amG_toPolyG_ne_zero hlden
-  have hAgden : amG α (toPoly nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
-  have hcombine : amG α (toPoly (cadd (cmul lnum nrm.rational.2) (cmul nrm.rational.1 lden)))
-        / amG α (toPoly (cmul lden nrm.rational.2))
-      = amG α (toPoly lnum) / amG α (toPoly lden)
-        + amG α (toPoly nrm.rational.1) / amG α (toPoly nrm.rational.2) := by
+  have hAlden : am α (toPoly lden) ≠ 0 := amG_toPolyG_ne_zero hlden
+  have hAgden : am α (toPoly nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hcombine : am α (toPoly (cadd (cmul lnum nrm.rational.2) (cmul nrm.rational.1 lden)))
+        / am α (toPoly (cmul lden nrm.rational.2))
+      = am α (toPoly lnum) / am α (toPoly lden)
+        + am α (toPoly nrm.rational.1) / am α (toPoly nrm.rational.2) := by
     simp only [denote, map_add, map_mul]
     field_simp
   rw [hcombine, map_add, hLaurField]
@@ -388,12 +388,12 @@ example {K : Type*} [Field K] [Differential K] [Algebra ℚ K] (s : Finset K) (a
 -- statement.
 example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
     (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hDt : toPoly Dt = C b * X)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG α (toPoly a) / amG α (toPoly d))
+    (hherm : towerFractionFieldDeriv Dt
+            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
@@ -403,12 +403,12 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = amG α (toPoly a) / amG α (toPoly d)
-        + amG α (C (b * ∑ β ∈ s,
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = am α (toPoly a) / am α (toPoly d)
+        + am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β)) :=
   field_identity_of_cIntegrateReducedG_hyperexp_overshoot Dt a d cands s b
@@ -417,19 +417,19 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
 -- The §5.9 normal-part driver soundness: `cIntegrateHyperexpNormal = some res ⟹ D(res) = a/d` under
 -- the same residual-oracle hypothesis.
 example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
-    (res : IntegralResultG α) (intR : α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
+    (res : IntegralResult α) (intR : α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
     (hDt : toPoly Dt = C b * X)
     (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
         (cHyperexpResidual (cExpEta Dt) (CPoly.cIntegrateReduced Dt a d cands).logs)
       = some intR)
     (hsome : CPoly.cIntegrateHyperexpNormal Dt a d cands = some res)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG α (toPoly a) / amG α (toPoly d))
+    (hherm : towerFractionFieldDeriv Dt
+            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am α (toPoly a) / am α (toPoly d))
     (hden : toPoly (cHermiteReduceTower Dt a d).2.2 = Lagrange.nodal s id)
     (hA : (toPoly (cHermiteReduceTower Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
@@ -439,26 +439,26 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
             ((toPoly (cHermiteReduceTower Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
-    (hintR : towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
-        = amG α (Polynomial.C (CFieldSpec.toK
+    (hintR : towerFractionFieldDeriv Dt (am α (Polynomial.C (CFieldSpec.toK intR)))
+        = am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs))))
-    (hRval : amG α (Polynomial.C (CFieldSpec.toK
+    (hRval : am α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidual (cExpEta Dt)
               (CPoly.cIntegrateReduced Dt a d cands).logs)))
-        = amG α (C (b * ∑ β ∈ s,
+        = am α (C (b * ∑ β ∈ s,
             (toPoly (cHermiteReduceTower Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))) :
-    towerFractionFieldDerivG Dt (amG α (toPoly res.rational.1) / amG α (toPoly res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPoly a) / amG α (toPoly d) :=
+    towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
+        + logResidueSum Dt res.logs
+      = am α (toPoly a) / am α (toPoly d) :=
   cIntegrateHyperexpNormalG_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
 -- The full hyperexp driver soundness: `cIntegrateHyperexpFull = some res ⟹ D(res) = a/d`, combining
 -- the canonical and normal parts.
 example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
-    (res : IntegralResultG α) (lnum lden : CPoly α) (nrm : IntegralResultG α) (fpPart : CPoly α)
+    (res : IntegralResult α) (lnum lden : CPoly α) (nrm : IntegralResult α) (fpPart : CPoly α)
     (hlden : toPoly lden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurent (cExpEta Dt)
         (canonicalRepresentationFast Dt a d).1
@@ -469,20 +469,20 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
         (canonicalRepresentationFast Dt a d).2.2.1
         (canonicalRepresentationFast Dt a d).2.2.2 cands = some nrm)
     (hsome : CPoly.cIntegrateHyperexpFull Dt a d cands = some res)
-    (hLaurField : towerFractionFieldDerivG Dt (amG α (toPoly lnum) / amG α (toPoly lden))
-        = amG α (toPoly fpPart))
-    (hNrmField : towerFractionFieldDerivG Dt
-            (amG α (toPoly nrm.rational.1) / amG α (toPoly nrm.rational.2))
-          + logResidueSumG Dt nrm.logs
-        = amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-          / amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
-    (hrecon : amG α (toPoly fpPart)
-          + amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
-            / amG α (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
-        = amG α (toPoly a) / amG α (toPoly d)) :
-    towerFractionFieldDerivG Dt (amG α (toPoly res.rational.1) / amG α (toPoly res.rational.2))
-        + logResidueSumG Dt res.logs
-      = amG α (toPoly a) / amG α (toPoly d) :=
+    (hLaurField : towerFractionFieldDeriv Dt (am α (toPoly lnum) / am α (toPoly lden))
+        = am α (toPoly fpPart))
+    (hNrmField : towerFractionFieldDeriv Dt
+            (am α (toPoly nrm.rational.1) / am α (toPoly nrm.rational.2))
+          + logResidueSum Dt nrm.logs
+        = am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+          / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2))
+    (hrecon : am α (toPoly fpPart)
+          + am α (toPoly (canonicalRepresentationFast Dt a d).2.2.1)
+            / am α (toPoly (canonicalRepresentationFast Dt a d).2.2.2)
+        = am α (toPoly a) / am α (toPoly d)) :
+    towerFractionFieldDeriv Dt (am α (toPoly res.rational.1) / am α (toPoly res.rational.2))
+        + logResidueSum Dt res.logs
+      = am α (toPoly a) / am α (toPoly d) :=
   cIntegrateHyperexpFullG_sound Dt a d cands res lnum lden nrm fpPart hlden hgden
     hLaur hNrm hsome hLaurField hNrmField hrecon
 

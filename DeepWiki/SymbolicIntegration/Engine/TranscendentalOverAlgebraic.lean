@@ -12,7 +12,7 @@ import Mathlib.RingTheory.AdjoinRoot
 /-! # Transcendental monomials over an algebraic base: `RadExt` as a Risch base
 Wraps the radical carrier `α[y]/(yⁿ − f)` in a type `RadExt α n f` and equips it with `CField`,
 `CFieldDomain`, `CDiffField` (diagonal derivation `y' = (f'/(nf))·y`), and `CRischField` (RDE by scalar
-decoupling), so a transcendental monomial `QFunNZG (RadExt α n f)` stacks on top. The worked base
+decoupling), so a transcendental monomial `QFunNZ (RadExt α n f)` stacks on top. The worked base
 `RadExt ℚ(x) 2 (x³+1)` gets a noncomputable `CFieldSpec` bridge into `AdjoinRoot (X² − C(toK f))`,
 discharging `CFieldDomain` concretely. -/
 
@@ -133,11 +133,11 @@ instance instCRischFieldRadExt {α : Type*} [CField α] [CDiffField α] [CFieldD
 
 /-! ### The base radical `√(x³+1)` over `ℚ(x)`, as a `CField`+`CDiffField`
 
-`RadX3 := RadExt (QFunNZG ℚ) 2 radicandX3p1 = ℚ(x)[√(x³+1)]`; the ring, derivation, and inverse are
+`RadX3 := RadExt (QFunNZ ℚ) 2 radicandX3p1 = ℚ(x)[√(x³+1)]`; the ring, derivation, and inverse are
 exhibited through the typeclass projections. -/
 
-/-- The base radical field `ℚ(x)[√(x³+1)] = RadExt (QFunNZG ℚ) 2 (x³+1)`. -/
-abbrev RadX3 : Type := RadExt (QFunNZG ℚ) 2 radicandX3p1
+/-- The base radical field `ℚ(x)[√(x³+1)] = RadExt (QFunNZ ℚ) 2 (x³+1)`. -/
+abbrev RadX3 : Type := RadExt (QFunNZ ℚ) 2 radicandX3p1
 
 /-- The generator `y = √(x³+1)` as an element of `RadX3` (through the carrier `RadExt.gen`). -/
 def radX3Gen : RadX3 := RadExt.gen
@@ -185,7 +185,7 @@ def radX3RischC : RadX3 :=
 
 /-- The right-hand side `C` has a genuine `y`-component (`radIsZero (C.toRad.tail) = false`). -/
 theorem radX3Risch_C_has_y_component :
-    RadElem.radIsZero ((radX3RischC.toRad : List (QFunNZG ℚ)).tail) = false := by native_decide
+    RadElem.radIsZero ((radX3RischC.toRad : List (QFunNZ ℚ)).tail) = false := by native_decide
 
 /-- `CRischField.crischDESolve B C` returns `some` on the algebraic RDE over `RadX3` (`B = 1`, `C`
 with a `y`-component). -/
@@ -249,21 +249,21 @@ theorem radX3_monomialDeriv_genT_runs_coeff :
       (CPoly.cmonomialDeriv radX3DtExp radX3GenT) radX3GenT) = false) := by
   constructor <;> native_decide
 
-/-! ### The keystone composes: a transcendental level `QFunNZG (RadExt …)` over the algebraic base
+/-! ### The keystone composes: a transcendental level `QFunNZ (RadExt …)` over the algebraic base
 
-Under `[CFieldDomain RadX3]`, `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` resolves its `CField` and `CDiffField`
+Under `[CFieldDomain RadX3]`, `QFunNZ RadX3 ≅ ℚ(x)[√(x³+1)](t)` resolves its `CField` and `CDiffField`
 automatically from the `RadExt` instances above. -/
 
 section
 variable [CFieldDomain RadX3]
 
-/-- `QFunNZG RadX3` is a `CField` (given `[CFieldDomain RadX3]`) — the transcendental level
+/-- `QFunNZ RadX3` is a `CField` (given `[CFieldDomain RadX3]`) — the transcendental level
 `ℚ(x)[√(x³+1)](t)` resolves automatically from the radical-base instance. -/
-theorem cfield_qfunNZG_radX3 : Nonempty (CField (QFunNZG RadX3)) := ⟨inferInstance⟩
+theorem cfield_qfunNZG_radX3 : Nonempty (CField (QFunNZ RadX3)) := ⟨inferInstance⟩
 
-/-- `QFunNZG RadX3` is a `CDiffField` (given `[CFieldDomain RadX3]`) — the transcendental level inherits
+/-- `QFunNZ RadX3` is a `CDiffField` (given `[CFieldDomain RadX3]`) — the transcendental level inherits
 the full tower derivation `d/dx + radical y' + ∂/∂t`. -/
-theorem cdiffField_qfunNZG_radX3 : Nonempty (CDiffField (QFunNZG RadX3)) := ⟨inferInstance⟩
+theorem cdiffField_qfunNZG_radX3 : Nonempty (CDiffField (QFunNZ RadX3)) := ⟨inferInstance⟩
 
 end
 
@@ -276,11 +276,11 @@ open CPoly in
 /-- `toK radicandX3p1 = algebraMap (1 + x³)` in `RatFunc ℚ`: the ℚ(x)-radicand of `RadX3` reads as the
 rational function `algebraMap ℚ[X] (RatFunc ℚ) (1 + x³)`. -/
 theorem toK_radicandX3p1 :
-    CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 3) := by
-  show QFunNZG.toQFunNZG radicandX3p1 = _
-  rw [QFunNZG.toQFunNZG]
-  show QFunNZG.amG ℚ (toPoly ([1, 0, 0, 1] : CPoly ℚ))
-      / QFunNZG.amG ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
+    CFieldSpec.toK (radicandX3p1 : QFunNZ ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 3) := by
+  show QFunNZ.toQFunNZ radicandX3p1 = _
+  rw [QFunNZ.toQFunNZ]
+  show QFunNZ.am ℚ (toPoly ([1, 0, 0, 1] : CPoly ℚ))
+      / QFunNZ.am ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
   have h1 : toPoly ([1, 0, 0, 1] : CPoly ℚ) = 1 + X ^ 3 := by
     simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 0 + X * (C 1 + X * 0))) = _
@@ -288,7 +288,7 @@ theorem toK_radicandX3p1 :
   have h2 : toPoly ([CField.one] : CPoly ℚ) = 1 := by
     show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h1, h2]
-  show QFunNZG.amG ℚ (1 + X ^ 3) / QFunNZG.amG ℚ 1 = _
+  show QFunNZ.am ℚ (1 + X ^ 3) / QFunNZ.am ℚ 1 = _
   rw [map_one, div_one]; rfl
 
 /-- `1 + x³ ≠ 0` in `ℚ[X]` (it has `natDegree 3`). -/
@@ -316,20 +316,20 @@ theorem not_square_X3p1 :
 /-- `y² − (x³+1)` is irreducible over `ℚ(x)` — `Irreducible (X² − C(toK radicandX3p1))`, from
 `X_pow_sub_C_irreducible_of_prime` and `not_square_X3p1`. -/
 theorem irreducible_radX3 :
-    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ))) := by
+    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZ ℚ))) := by
   rw [toK_radicandX3p1]
   exact X_pow_sub_C_irreducible_of_prime Nat.prime_two not_square_X3p1
 
 /-- The irreducibility as a `Fact`, so `AdjoinRoot.instField` resolves `Field (AdjoinRoot (X² −
 C(toK radicandX3p1)))`. -/
 instance fact_irreducible_radX3 :
-    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ)))) :=
+    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZ ℚ)))) :=
   ⟨irreducible_radX3⟩
 
 /-- `ℚ(x)[√(x³+1)]` is a field — `Field (AdjoinRoot (X² − C(toK radicandX3p1)))`, resolved from the
 irreducibility `Fact`. The genuine field the radical base `RadX3` represents; the integral-domain witness
 that `CFieldDomain RadX3` asserts (the discharge is the residual below). -/
-noncomputable example : Field (AdjoinRoot (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZG ℚ)))) :=
+noncomputable example : Field (AdjoinRoot (X ^ 2 - C (CFieldSpec.toK (radicandX3p1 : QFunNZ ℚ)))) :=
   inferInstance
 
 /-! ### The `CFieldSpec (RadExt α n f)` bridge into `AdjoinRoot (Xⁿ − C(toK f))`
@@ -612,7 +612,7 @@ end RadElem
 
 Assembling the bridge laws gives the noncomputable `CFieldSpec (RadExt α 2 f)`; the global
 `instCFieldDomainOfCFieldSpec` then supplies `CFieldDomain (RadExt α 2 f)`, discharging the hypothesis
-and making `QFunNZG (RadExt …)` an unconditional `CField` + `CDiffField`. -/
+and making `QFunNZ (RadExt …)` an unconditional `CField` + `CDiffField`. -/
 
 /-- `CFieldSpec (RadExt α 2 f)` — the field-homomorphism bridge into `K = AdjoinRoot (X² − C(toK f))`
 with `toK := RadElem.toAdj`, all laws the `RadElem.toAdj_*` bridge theorems. Noncomputable. -/
@@ -628,34 +628,34 @@ noncomputable instance instCFieldSpecRadExt {α : Type*} [CField α] [CFieldDoma
   toK_inv := RadElem.toAdj_inv
   isZero_iff p := RadElem.isZero_iff (by norm_num) p
 
-/-! ### Unconditional composition: `QFunNZG (RadExt ℚ(x) 2 (x³+1))` is a `CField` + `CDiffField`
+/-! ### Unconditional composition: `QFunNZ (RadExt ℚ(x) 2 (x³+1))` is a `CField` + `CDiffField`
 
-`CFieldDomain RadX3` resolves concretely (no hypothesis), so `QFunNZG RadX3 ≅ ℚ(x)[√(x³+1)](t)` is an
+`CFieldDomain RadX3` resolves concretely (no hypothesis), so `QFunNZ RadX3 ≅ ℚ(x)[√(x³+1)](t)` is an
 unconditional `CField` and `CDiffField`. -/
 
 noncomputable example : CFieldDomain RadX3 := inferInstance
 
-/-- `QFunNZG RadX3` has an unconditional computable-field structure. -/
-theorem cfield_qfunNZG_radX3_unconditional : Nonempty (CField (QFunNZG RadX3)) := ⟨inferInstance⟩
+/-- `QFunNZ RadX3` has an unconditional computable-field structure. -/
+theorem cfield_qfunNZG_radX3_unconditional : Nonempty (CField (QFunNZ RadX3)) := ⟨inferInstance⟩
 
-/-- `QFunNZG RadX3` is a `CDiffField`, unconditionally — `ℚ(x)[√(x³+1)](t)` inheriting the full tower
+/-- `QFunNZ RadX3` is a `CDiffField`, unconditionally — `ℚ(x)[√(x³+1)](t)` inheriting the full tower
 derivation `d/dx + radical y' + ∂/∂t`. -/
-theorem cdiffField_qfunNZG_radX3_unconditional : Nonempty (CDiffField (QFunNZG RadX3)) := ⟨inferInstance⟩
+theorem cdiffField_qfunNZG_radX3_unconditional : Nonempty (CDiffField (QFunNZ RadX3)) := ⟨inferInstance⟩
 
-/-- The transcendental monomial `t ∈ QFunNZG RadX3 = ℚ(x)[√(x³+1)](t)` (numerator `[0, 1]`, denominator
+/-- The transcendental monomial `t ∈ QFunNZ RadX3 = ℚ(x)[√(x³+1)](t)` (numerator `[0, 1]`, denominator
 `[1]`). -/
-def tOverRadX3 : QFunNZG RadX3 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩
+def tOverRadX3 : QFunNZ RadX3 := ⟨([CField.zero, CField.one], [CField.one]), by native_decide⟩
 
-/-- `D(t) = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass derivation `CDiffField.cderiv` on `QFunNZG RadX3`
+/-- `D(t) = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass derivation `CDiffField.cderiv` on `QFunNZ RadX3`
 sends the transcendental monomial `t` to `1` over the algebraic base. -/
 theorem cderiv_tOverRadX3_eq_one :
-    CField.isZero (CField.sub (CDiffField.cderiv tOverRadX3) (CField.one : QFunNZG RadX3)) = true := by
+    CField.isZero (CField.sub (CDiffField.cderiv tOverRadX3) (CField.one : QFunNZ RadX3)) = true := by
   native_decide
 
-/-- `t · t⁻¹ = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass field operations of `QFunNZG RadX3` invert
+/-- `t · t⁻¹ = 1` over `ℚ(x)[√(x³+1)](t)` — the typeclass field operations of `QFunNZ RadX3` invert
 the transcendental monomial `t` over the algebraic base. -/
 theorem mul_inv_tOverRadX3_eq_one :
     CField.isZero (CField.sub (CField.mul tOverRadX3 (CField.inv tOverRadX3))
-      (CField.one : QFunNZG RadX3)) = true := by native_decide
+      (CField.one : QFunNZ RadX3)) = true := by native_decide
 
 end DeepWiki.SymbolicIntegration

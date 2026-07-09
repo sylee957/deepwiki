@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 /-! ## Inner frontier -/
 
@@ -59,10 +59,10 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 
 /-- The inner RDE input pair: after weak normalization by `q`, the reduced transformed left-hand side
 paired with `q * g`, as `crischDESolveSoundWf` forms it before calling `crischDERawSolveWf`. -/
-def rischDEInnerInputWf (f g : QFunNZG β) : QFunNZG β × QFunNZG β :=
+def rischDEInnerInputWf (f g : QFunNZ β) : QFunNZ β × QFunNZ β :=
   let q : CPoly β := cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2
-  let q' : QFunNZG β := qOfPolyNZG q
-  (qReduce (weakNormalizedF f q'), qmulNZG q' g)
+  let q' : QFunNZ β := qOfPolyNZ q
+  (qReduce (weakNormalizedF f q'), qmulNZ q' g)
 
 end InnerInputWf
 
@@ -76,14 +76,14 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
 /-- `RischDEDecisionProcedureFrontierWf f g`: the field-level frontier — nonzero weak normalizer (`hwn`),
 canonical-normality (`hck`), a polynomial solution for the inner input (`hpolysol`), an inner-completeness
 proof (`hinner`), and the denominator guard (`hden`). -/
-structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
+structure RischDEDecisionProcedureFrontierWf (f g : QFunNZ β) : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : FieldRDESolvable f g →
     CPoly.cisZero (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
     IsCanonNormalizedWf f
-      (qOfPolyNZG (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2))
+      (qOfPolyNZ (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
@@ -106,12 +106,12 @@ structure RischDEDecisionProcedureFrontierWf (f g : QFunNZG β) : Prop where
       CPoly.cisZero yden = false
 
 /-- Assemble the field-level frontier from its inner residual-tip frontier. -/
-theorem decisionProcedureFrontierWf_of_innerFrontier (f g : QFunNZG β)
+theorem decisionProcedureFrontierWf_of_innerFrontier (f g : QFunNZ β)
     (hwn : FieldRDESolvable f g →
       CPoly.cisZero (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2) = false)
     (hck : FieldRDESolvable f g →
       IsCanonNormalizedWf f
-        (qOfPolyNZG (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2)))
+        (qOfPolyNZ (cWeakNormalizer ([CField.one] : CPoly β) f.1.1 f.1.2)))
     (hpolysol : FieldRDESolvable f g →
       let ftildeR := (rischDEInnerInputWf f g).1
       let gtilde := (rischDEInnerInputWf f g).2
@@ -142,7 +142,7 @@ theorem decisionProcedureFrontierWf_of_innerFrontier (f g : QFunNZG β)
 
 /-- The frontier produces `RischDECompletenessResidualWf`: the `hinner` clause comes from feeding the
 inner-completeness proof through the raw-solver bridge. -/
-theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
+theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZ β)
     (h : RischDEDecisionProcedureFrontierWf f g) :
     RischDECompletenessResidualWf f g where
   hwn hsol := h.hwn hsol
@@ -156,7 +156,7 @@ theorem completenessResidualWf_of_decisionProcedureFrontierWf (f g : QFunNZG β)
 
 /-- Under `RischDEDecisionProcedureFrontierWf f g` and `RischDESoundnessWf f g`, the recursive solver returns
 `some` iff the field-level Risch DE is solvable — `crischDESolveSoundWf f g = some _ ↔ FieldRDESolvable f g`. -/
-theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
+theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZ β)
     (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
@@ -170,7 +170,7 @@ theorem crischDESolveSoundWf_isDecisionProcedure (f g : QFunNZG β)
 -- direct Wf soundness certificate.
 example {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
     [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)]
-    (f g : QFunNZG β) (h : RischDEDecisionProcedureFrontierWf f g)
+    (f g : QFunNZ β) (h : RischDEDecisionProcedureFrontierWf f g)
     (hsound : RischDESoundnessWf f g) :
     (∃ y, crischDESolveSoundWf f g = some y) ↔ FieldRDESolvable f g :=
   crischDESolveSoundWf_isDecisionProcedure f g h hsound

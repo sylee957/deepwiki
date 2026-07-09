@@ -9,7 +9,7 @@ import DeepWiki.SymbolicIntegration.Engine.ResidueResultantTowerSpec
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator
 
-`IsIntegralResultLrtG` is the soundness contract for `cIntegrateReducedLrt`'s **symbolic** log part
+`IsIntegralResultLrt` is the soundness contract for `cIntegrateReducedLrt`'s **symbolic** log part
 `[(Rᵢ, Sᵢ)]`, denoting `Σᵢ Σ_{Rᵢ(c)=0} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)`. To handle **algebraic** residues without
 building a `Differential (AlgebraicClosure K)` instance, it is stated over an arbitrary differential
 extension `E` of `K = CFieldSpec.K α` in which every `Rᵢ` splits (the descent vehicle): `extendDeriv` /
@@ -19,7 +19,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 /-- The coefficient-list polynomial `Σ_{(a,k) ∈ l.zipIdx s} C a · Xᵏ = Σ_{i<len} C(l[i])·X^{s+i}`. -/
 theorem zipIdx_C_mul_X_pow_sum_eq {R : Type*} [Semiring R] (l : List R) (s : ℕ) :
@@ -200,7 +200,7 @@ theorem evalLrtArg_eq_fiber_prod [CharZero (CFieldSpec.K α)] [IsAlgClosed E]
 variable [Differential E] [Algebra ℚ E]
 
 /-- The `E`-tower derivation on `RatFunc E`: `extendDeriv` of `implicitDeriv (Dt base-changed to E)`. The
-generic (any differential extension `E`) analogue of `towerFractionFieldDerivG`. -/
+generic (any differential extension `E`) analogue of `towerFractionFieldDeriv`. -/
 noncomputable def towerDerivExt (Dt : CPoly α) : Derivation ℤ (RatFunc E) (RatFunc E) :=
   extendDeriv (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)))
 
@@ -217,24 +217,24 @@ theorem ratFuncBaseChange_nonZeroDivisors :
 
 variable (E) in
 /-- **The base-change ring hom** `RatFunc K →+* RatFunc E` induced by `algebraMap K E` (`K = CFieldSpec.K α`).
-Sends `amG p ↦ amGExt p`; used to transfer the `K`-level Hermite field identity to `E`. -/
+Sends `am p ↦ amGExt p`; used to transfer the `K`-level Hermite field identity to `E`. -/
 noncomputable def ratFuncBaseChange : RatFunc (CFieldSpec.K α) →+* RatFunc E :=
   RatFunc.mapRingHom (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
     ratFuncBaseChange_nonZeroDivisors
 
 omit [CDiffField α] [CDiffFieldSpec α] [Differential E] [Algebra ℚ E] in
-/-- The base-change hom sends `amG p / amG q ↦ amGExt p / amGExt q`. -/
+/-- The base-change hom sends `am p / am q ↦ amGExt p / amGExt q`. -/
 theorem ratFuncBaseChange_amG_div (p q : (CFieldSpec.K α)[X]) :
-    ratFuncBaseChange E (amG α p / amG α q) = amGExt (E := E) p / amGExt (E := E) q := by
+    ratFuncBaseChange E (am α p / am α q) = amGExt (E := E) p / amGExt (E := E) q := by
   erw [RatFunc.map_apply_div]
   rfl
   exact ratFuncBaseChange_nonZeroDivisors
 
 omit [CDiffField α] [CDiffFieldSpec α] [Differential E] [Algebra ℚ E] in
-/-- The base-change hom sends `amG p ↦ amGExt p`. -/
+/-- The base-change hom sends `am p ↦ amGExt p`. -/
 theorem ratFuncBaseChange_amG (p : (CFieldSpec.K α)[X]) :
-    ratFuncBaseChange E (amG α p) = amGExt (E := E) p := by
-  have h1 : amG α p = amG α p / amG α 1 := by simp [amG]
+    ratFuncBaseChange E (am α p) = amGExt (E := E) p := by
+  have h1 : am α p = am α p / am α 1 := by simp [am]
   rw [h1, ratFuncBaseChange_amG_div]
   simp [amGExt]
 
@@ -254,13 +254,13 @@ theorem towerDerivExt_div (Dt : CPoly α) (P Q : E[X]) :
     map_mul, map_pow]
 
 /-- **The base-change intertwines the tower derivation** (the crux of the `K→E` transfer): applying
-`ratFuncBaseChange` to a `K`-tower derivative of an `amG`-fraction gives the `E`-tower derivative of the
+`ratFuncBaseChange` to a `K`-tower derivative of an `am`-fraction gives the `E`-tower derivative of the
 corresponding `amGExt`-fraction. Via both quotient rules (`towerFractionFieldDerivG_div`, `towerDerivExt_div`)
 and `implicitDeriv_map` (the monomial derivation commutes with base change). -/
 theorem ratFuncBaseChange_towerFractionFieldDerivG [Algebra ℚ (CFieldSpec.K α)]
     [DifferentialAlgebra (CFieldSpec.K α) E] (Dt : CPoly α)
     (gnum gden : (CFieldSpec.K α)[X]) :
-    ratFuncBaseChange E (towerFractionFieldDerivG Dt (amG α gnum / amG α gden))
+    ratFuncBaseChange E (towerFractionFieldDeriv Dt (am α gnum / am α gden))
       = towerDerivExt Dt (amGExt (E := E) gnum / amGExt (E := E) gden) := by
   rw [towerFractionFieldDerivG_div, map_div₀, map_sub, map_mul, map_mul, map_pow]
   simp only [ratFuncBaseChange_amG, amGExt]
@@ -293,7 +293,7 @@ theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
 
 /-- The **algebraic residue sum** over `E`: `Σᵢ Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)` — the honest
 denotation of the symbolic LRT log part, summing over the residues (roots of each `Rᵢ`) in `E`. -/
-noncomputable def logResidueSumLrtG (Dt : CPoly α)
+noncomputable def logResidueSumLrt (Dt : CPoly α)
     (logs : List (CPoly α × List (CPoly α))) : RatFunc E :=
   (logs.map (fun p =>
     (((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
@@ -307,37 +307,37 @@ noncomputable def poleTerm (Dt : CPoly α) (β : E) : RatFunc E :=
     / algebraMap E[X] (RatFunc E) (X - C β)
 
 /-- The single-`(Rᵢ, Sᵢ)` residue term: `Σ_{c ∈ roots(Rᵢ in E)} c·(Δ Sᵢ(c,t))/Sᵢ(c,t)`. -/
-noncomputable def logResidueTermLrtG (Dt : CPoly α) (p : CPoly α × List (CPoly α)) : RatFunc E :=
+noncomputable def logResidueTermLrt (Dt : CPoly α) (p : CPoly α × List (CPoly α)) : RatFunc E :=
   (((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
     algebraMap E (RatFunc E) c
       * (towerDerivExt Dt (algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c))
           / algebraMap E[X] (RatFunc E) (evalLrtArg p.2 c)))).sum
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `logResidueSumLrtG` is the sum of the per-`(Rᵢ, Sᵢ)` terms. -/
+/-- `logResidueSumLrt` is the sum of the per-`(Rᵢ, Sᵢ)` terms. -/
 theorem logResidueSumLrtG_eq_sum (Dt : CPoly α) (logs : List (CPoly α × List (CPoly α))) :
-    logResidueSumLrtG (E := E) Dt logs = (logs.map (logResidueTermLrtG (E := E) Dt)).sum := rfl
+    logResidueSumLrt (E := E) Dt logs = (logs.map (logResidueTermLrt (E := E) Dt)).sum := rfl
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- Rewrite the residue sum termwise: if each `(Rᵢ, Sᵢ)` term equals `f p`, then `logResidueSumLrtG = Σ f`. -/
+/-- Rewrite the residue sum termwise: if each `(Rᵢ, Sᵢ)` term equals `f p`, then `logResidueSumLrt = Σ f`. -/
 theorem logResidueSumLrtG_eq_termwise (Dt : CPoly α) (logs : List (CPoly α × List (CPoly α)))
     (f : CPoly α × List (CPoly α) → RatFunc E)
-    (hterm : ∀ p ∈ logs, logResidueTermLrtG Dt p = f p) :
-    logResidueSumLrtG (E := E) Dt logs = (logs.map f).sum := by
+    (hterm : ∀ p ∈ logs, logResidueTermLrt Dt p = f p) :
+    logResidueSumLrt (E := E) Dt logs = (logs.map f).sum := by
   rw [logResidueSumLrtG_eq_sum]
   exact congrArg List.sum (List.map_congr_left hterm)
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `logResidueSumLrtG` of the empty log list is `0`. -/
+/-- `logResidueSumLrt` of the empty log list is `0`. -/
 @[simp] theorem logResidueSumLrtG_nil (Dt : CPoly α) :
-    logResidueSumLrtG (E := E) Dt ([] : List (CPoly α × List (CPoly α))) = 0 := rfl
+    logResidueSumLrt (E := E) Dt ([] : List (CPoly α × List (CPoly α))) = 0 := rfl
 
 omit [CDiffField α] [CDiffFieldSpec α] in
-/-- `logResidueSumLrtG` peels the head. -/
+/-- `logResidueSumLrt` peels the head. -/
 theorem logResidueSumLrtG_cons (Dt : CPoly α) (p : CPoly α × List (CPoly α))
     (rest : List (CPoly α × List (CPoly α))) :
-    logResidueSumLrtG (E := E) Dt (p :: rest)
-      = logResidueTermLrtG (E := E) Dt p + logResidueSumLrtG (E := E) Dt rest := by
+    logResidueSumLrt (E := E) Dt (p :: rest)
+      = logResidueTermLrt (E := E) Dt p + logResidueSumLrt (E := E) Dt rest := by
   rw [logResidueSumLrtG_eq_sum, logResidueSumLrtG_eq_sum, List.map_cons, List.sum_cons]
 
 /-! ### Log-derivative additivity (the residue↔pole reindexing core) -/
@@ -392,10 +392,10 @@ theorem logResidueTermLrtG_eq_pole_sum (Dt : CPoly α) (p : CPoly α × List (CP
     (fac : E → Multiset E)
     (hfac : ∀ c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
       evalLrtArg p.2 c = ((fac c).map (fun β => X - C β)).prod) :
-    logResidueTermLrtG Dt p
+    logResidueTermLrt Dt p
       = (((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun c =>
           algebraMap E (RatFunc E) c * ((fac c).map (poleTerm Dt)).sum)).sum := by
-  rw [logResidueTermLrtG]
+  rw [logResidueTermLrt]
   refine congrArg Multiset.sum (Multiset.map_congr rfl (fun c hc => ?_))
   rw [hfac c hc, towerDerivExt_div_algebraMap_prod Dt ((fac c).map (fun β => X - C β)) (by
     intro q hq
@@ -434,7 +434,7 @@ end Ext
 open scoped Classical in
 /-- **Residue↔pole regrouping.** Grouping poles `β` by residue value `res β = c`, the *residue*-indexed sum
 `Σ_c c·(Σ_{res β = c} term β)` equals the *pole*-indexed sum `Σ_β res(β)·term β`. This is the combinatorial
-core connecting `logResidueSumLrtG` (residue-indexed, via the `Rᵢ` roots) to the pole sum that
+core connecting `logResidueSumLrt` (residue-indexed, via the `Rᵢ` roots) to the pole sum that
 `monomial_residue_match_of_cancel` proves equals `hNum/Dstar`. -/
 theorem residue_pole_regroup {E : Type*} [Field E] (poles : Finset E) (res : E → E)
     (term : E → RatFunc E) :
@@ -462,7 +462,7 @@ theorem logResidueTermLrtG_eq_finset_pole_sum {α : Type*} [CField α] [CFieldSp
     (hroots : ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots = (polesᵢ.image res).val)
     (hfac : ∀ c ∈ ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots,
       evalLrtArg p.2 c = ((polesᵢ.filter (fun β => res β = c)).val.map (fun β => X - C β)).prod) :
-    logResidueTermLrtG Dt p = ∑ β ∈ polesᵢ, algebraMap E (RatFunc E) (res β) * poleTerm Dt β := by
+    logResidueTermLrt Dt p = ∑ β ∈ polesᵢ, algebraMap E (RatFunc E) (res β) * poleTerm Dt β := by
   rw [logResidueTermLrtG_eq_pole_sum Dt p
     (fun c => (polesᵢ.filter (fun β => res β = c)).val) hfac, hroots]
   exact residue_pole_regroup polesᵢ res (poleTerm Dt)
@@ -627,7 +627,7 @@ theorem roots_eq_image_res_filter {E : Type*} [Field E] (allpoles : Finset E) (r
 
 open scoped Classical in
 /-- **Log-part sum in pole form (partition assembly).** Summing the per-`Rᵢ` pole sums over a per-entry
-pole set `polesOf` that tiles the full pole set: `logResidueSumLrtG = Σ_{β ∈ allpoles} res(β)·poleTerm β`.
+pole set `polesOf` that tiles the full pole set: `logResidueSumLrt = Σ_{β ∈ allpoles} res(β)·poleTerm β`.
 Chains `logResidueSumLrtG_eq_termwise` (sum over entries) with `logResidueTermLrtG_eq_finset_pole_sum`
 (each entry ↦ its pole sum). `hpart` is the structural fact that the entries' pole sets partition
 `allpoles` (the LRT/Yun fiber-size decomposition). -/
@@ -642,7 +642,7 @@ theorem logResidueSumLrtG_eq_poleSum {α : Type*} [CField α] [CFieldSpec α] {E
     (hpart : (logs.map (fun p => ∑ β ∈ polesOf p,
         algebraMap E (RatFunc E) (res β) * poleTerm Dt β)).sum
       = ∑ β ∈ allpoles, algebraMap E (RatFunc E) (res β) * poleTerm Dt β) :
-    logResidueSumLrtG Dt logs = ∑ β ∈ allpoles, algebraMap E (RatFunc E) (res β) * poleTerm Dt β := by
+    logResidueSumLrt Dt logs = ∑ β ∈ allpoles, algebraMap E (RatFunc E) (res β) * poleTerm Dt β := by
   rw [logResidueSumLrtG_eq_termwise Dt logs
       (fun p => ∑ β ∈ polesOf p, algebraMap E (RatFunc E) (res β) * poleTerm Dt β)
       (fun p hp => logResidueTermLrtG_eq_finset_pole_sum Dt p (polesOf p) res (hroots p hp) (hfac p hp))]
@@ -650,7 +650,7 @@ theorem logResidueSumLrtG_eq_poleSum {α : Type*} [CField α] [CFieldSpec α] {E
 
 open scoped Differential Classical in
 /-- **LRT log-part soundness (the named theorem).** The tower derivative of the LRT symbolic log part
-denotes the normal integrand: `logResidueSumLrtG Dt logs = hNum/Dstar` over `E`, where `Dstar` splits as
+denotes the normal integrand: `logResidueSumLrt Dt logs = hNum/Dstar` over `E`, where `Dstar` splits as
 `∏_{β ∈ allpoles}(t−β)`. Composes `logResidueSumLrtG_eq_poleSum` (log sum ↦ residue-weighted pole sum,
 over a pole partition `polesOf`) with `pole_sum_eq_normalPart` (the Rothstein–Trager residue match
 `Σ_β res(β)·poleTerm β = hNum/Dstar`). The residue is fixed to the RT form
@@ -683,7 +683,7 @@ theorem logResidueSumLrtG_eq_normalPart {α : Type*} [CField α] [CFieldSpec α]
               / (Differential.implicitDeriv ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E))
                   (Lagrange.nodal allpoles id)).eval β)
           * ((((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) :
-    logResidueSumLrtG Dt logs
+    logResidueSumLrt Dt logs
       = algebraMap E[X] (RatFunc E) ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E))
         / algebraMap E[X] (RatFunc E) (Lagrange.nodal allpoles id) := by
   rw [logResidueSumLrtG_eq_poleSum Dt logs allpoles _ polesOf hroots hfac hpart]
@@ -695,7 +695,7 @@ open scoped Differential Classical in
 allpoles.filter (res · ∈ Rᵢ.roots)`, `logResidueSumLrtG_eq_normalPart`'s hypotheses discharge from: `hnodup`
 (each `Rᵢ` squarefree) + `hressub` (each root is a residue) ⟹ `hroots` (`roots_eq_image_res_filter`); `hdisj`
 (Yun coprimality) + `hcover` (reconstruction) ⟹ `hpart` (`sum_filter_rootSet_partition`); `hentry` (each entry
-log arg = its fiber product, from `evalLrtArg_eq_fiber_prod`) ⟹ `hfac`. Conclusion: `logResidueSumLrtG =
+log arg = its fiber product, from `evalLrtArg_eq_fiber_prod`) ⟹ `hfac`. Conclusion: `logResidueSumLrt =
 hNum/∏(t−β)`. -/
 theorem logResidueSumLrtG_eq_normalPart_of_yun {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
@@ -718,7 +718,7 @@ theorem logResidueSumLrtG_eq_normalPart_of_yun {α : Type*} [CField α] [CFieldS
     (hnorm : ∀ β ∈ allpoles, ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′)
     (hcancel : ∑ β ∈ allpoles, algebraMap E[X] (RatFunc E)
         (C (res β) * ((((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) :
-    logResidueSumLrtG Dt logs
+    logResidueSumLrt Dt logs
       = algebraMap E[X] (RatFunc E) ((toPoly hNum).map (algebraMap (CFieldSpec.K α) E))
         / algebraMap E[X] (RatFunc E) (Lagrange.nodal allpoles id) := by
   subst hres
@@ -742,17 +742,17 @@ theorem logResidueSumLrtG_eq_normalPart_of_yun {α : Type*} [CField α] [CFieldS
       (fun p => ((toPoly p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset) hdisj hcover
 
 /-- **LRT field-identity assembler** (the analogue of `field_identity_of_reducedG_of_residueMatch`, over
-`E`). Given the log-part match `hlog` (`logResidueSumLrtG = hNum/Dstar`, from
+`E`). Given the log-part match `hlog` (`logResidueSumLrt = hNum/Dstar`, from
 `logResidueSumLrtG_eq_normalPart`) and the Hermite half `hherm` (`D(g) + hNum/Dstar = a/d`), the full
-reduced field identity `D(g) + logResidueSumLrtG = a/d` holds. -/
+reduced field identity `D(g) + logResidueSumLrt = a/d` holds. -/
 theorem field_identity_lrt_of_hherm_of_logMatch {α : Type*} [CField α] [CFieldSpec α] {E : Type*}
     [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
     (Dt gnum gden hNum hDen anum aden : CPoly α) (logs : List (CPoly α × List (CPoly α)))
-    (hlog : (logResidueSumLrtG Dt logs : RatFunc E) = amGExt (toPoly hNum) / amGExt (toPoly hDen))
+    (hlog : (logResidueSumLrt Dt logs : RatFunc E) = amGExt (toPoly hNum) / amGExt (toPoly hDen))
     (hherm : (towerDerivExt Dt (amGExt (toPoly gnum) / amGExt (toPoly gden))
           + amGExt (toPoly hNum) / amGExt (toPoly hDen) : RatFunc E)
         = amGExt (toPoly anum) / amGExt (toPoly aden)) :
-    (towerDerivExt Dt (amGExt (toPoly gnum) / amGExt (toPoly gden)) + logResidueSumLrtG Dt logs
+    (towerDerivExt Dt (amGExt (toPoly gnum) / amGExt (toPoly gden)) + logResidueSumLrt Dt logs
         : RatFunc E)
       = amGExt (toPoly anum) / amGExt (toPoly aden) := by
   rw [hlog]; exact hherm
@@ -762,31 +762,31 @@ extension `E` of `K = CFieldSpec.K α` (so both `Dstar`'s poles and every residu
 in `E`), the `E`-tower derivative of the rational part plus the algebraic residue sum equals `anum/aden`
 (base-changed to `E`). The `E`-quantification is the descent vehicle (instantiate `E` at the algebraic closure
 to prove; injectivity of the base change gives the `K`-level statement). This is the root-free analogue of
-`IsIntegralResultG` handling algebraic residues. -/
-def IsIntegralResultLrtG (Dt anum aden : CPoly α) (res : LrtResultG α) : Prop :=
+`IsIntegralResult` handling algebraic residues. -/
+def IsIntegralResultLrt (Dt anum aden : CPoly α) (res : LrtResult α) : Prop :=
   ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
     [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
     (towerDerivExt Dt (amGExt (toPoly res.rational.1) / amGExt (toPoly res.rational.2))
-          + logResidueSumLrtG Dt res.logs : RatFunc E)
+          + logResidueSumLrt Dt res.logs : RatFunc E)
       = amGExt (toPoly anum) / amGExt (toPoly aden)
 
-/-- **`IsIntegralResultLrtG` from the log match + Hermite half.** Packages `field_identity_lrt_of_hherm_of_
+/-- **`IsIntegralResultLrt` from the log match + Hermite half.** Packages `field_identity_lrt_of_hherm_of_
 logMatch` under the `E`-quantifier: given, over every splitting extension `E`, the log-part match `hlog`
-(`logResidueSumLrtG res.logs = hNum/Dstar`) and the Hermite half `hherm` (`D(g) + hNum/Dstar = a/d`), the
-soundness predicate `IsIntegralResultLrtG` holds. This is the final-assembly skeleton: what remains is
+(`logResidueSumLrt res.logs = hNum/Dstar`) and the Hermite half `hherm` (`D(g) + hNum/Dstar = a/d`), the
+soundness predicate `IsIntegralResultLrt` holds. This is the final-assembly skeleton: what remains is
 discharging `hlog` (via `logResidueSumLrtG_eq_normalPart` + the Yun partition) and `hherm` (base-change of
 the Hermite tower soundness) for `res = cIntegrateReducedLrt`. -/
-theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPoly α) (res : LrtResultG α)
+theorem isIntegralResultLrtG_of_hherm_of_logMatch.{u} (Dt anum aden : CPoly α) (res : LrtResult α)
     (hNum hDen : CPoly α)
     (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-        (logResidueSumLrtG Dt res.logs : RatFunc E) = amGExt (toPoly hNum) / amGExt (toPoly hDen))
+        (logResidueSumLrt Dt res.logs : RatFunc E) = amGExt (toPoly hNum) / amGExt (toPoly hDen))
     (hherm : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
         (towerDerivExt Dt (amGExt (toPoly res.rational.1) / amGExt (toPoly res.rational.2))
             + amGExt (toPoly hNum) / amGExt (toPoly hDen) : RatFunc E)
           = amGExt (toPoly anum) / amGExt (toPoly aden)) :
-    IsIntegralResultLrtG.{_, u} Dt anum aden res := by
+    IsIntegralResultLrt.{_, u} Dt anum aden res := by
   intro E _ _ _ _ _ _
   exact field_identity_lrt_of_hherm_of_logMatch Dt res.rational.1 res.rational.2 hNum hDen anum aden
     res.logs (hlog E) (hherm E)
@@ -1316,9 +1316,9 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
 
 open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
-`IsIntegralResultLrtG` for `cIntegrateReducedLrt Dt a d`: the Hermite half is discharged outright by
+`IsIntegralResultLrt` for `cIntegrateReducedLrt Dt a d`: the Hermite half is discharged outright by
 `hherm_lrt_E` (base-change of `cHermiteReduceTowerG_field_identity`), leaving only the log-part match `hlog`
-(`logResidueSumLrtG (cLrtLogArg …) = hNum/Dstar` over every alg-closed `E`, provable via
+(`logResidueSumLrt (cLrtLogArg …) = hNum/Dstar` over every alg-closed `E`, provable via
 `logResidueSumLrtG_eq_normalPart_of_yun` + the Yun facts). `hd0`/`hpp`/`hcopgcd` are the genuine Hermite-side
 conditions. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K α)]
@@ -1331,11 +1331,11 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K �
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-        (logResidueSumLrtG Dt (cLrtLogArg Dt (cHermiteReduceTower Dt a d).2.1
+        (logResidueSumLrt Dt (cLrtLogArg Dt (cHermiteReduceTower Dt a d).2.1
               (cHermiteReduceTower Dt a d).2.2) : RatFunc E)
           = amGExt (toPoly (cHermiteReduceTower Dt a d).2.1)
             / amGExt (toPoly (cHermiteReduceTower Dt a d).2.2)) :
-    IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrt Dt a d) := by
+    IsIntegralResultLrt.{_, u} Dt a d (cIntegrateReducedLrt Dt a d) := by
   refine isIntegralResultLrtG_of_hherm_of_logMatch Dt a d (cIntegrateReducedLrt Dt a d)
     (cHermiteReduceTower Dt a d).2.1 (cHermiteReduceTower Dt a d).2.2 hlog ?_
   intro E _ _ _ _ _ _
@@ -1347,7 +1347,7 @@ variable [CFracGcdCoreWf α] in
 /-- **The final `hlog` wiring.** Plugs the five Yun facts into `logResidueSumLrtG_eq_normalPart_of_yun`,
 discharging `hsplit` via `monic_separable_eq_nodal` (`Dstar` monic + separable). The residue side
 conditions are normality, properness, degree control, and polynomial-part cancellation. Conclusion:
-`logResidueSumLrtG (cLrtLogArg …) = hNum/Dstar`, the capstone's `hlog`. -/
+`logResidueSumLrt (cLrtLogArg …) = hNum/Dstar`, the capstone's `hlog`. -/
 theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E] [DifferentialAlgebra (CFieldSpec.K α) E]
     [IsAlgClosed E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPoly α)
@@ -1374,7 +1374,7 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
                   (Lagrange.nodal ((toPoly Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
                     id)).eval β)
           * ((((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)) - C (β′)) /ₘ (X - C β))) = 0) :
-    (logResidueSumLrtG Dt (cLrtLogArg Dt hNum Dstar) : RatFunc E)
+    (logResidueSumLrt Dt (cLrtLogArg Dt hNum Dstar) : RatFunc E)
       = amGExt (toPoly hNum) / amGExt (toPoly Dstar) := by
   set φ := algebraMap (CFieldSpec.K α) E with hφdef
   set allpoles := ((toPoly Dstar).map φ).roots.toFinset with hallpoles
@@ -1433,7 +1433,7 @@ open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **The assembled LRT reduced-case soundness**: the root-free analogue of `hreduced`, fully composed.
 Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into the capstone
-`isIntegralResultLrtG_cIntegrateReducedLrtG`, yielding `IsIntegralResultLrtG Dt a d (cIntegrateReducedLrt Dt a d)`
+`isIntegralResultLrtG_cIntegrateReducedLrtG`, yielding `IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d)`
 outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTower Dt a d).2.2`
 monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerG_Dstar_monic`/`_squarefree`);
 `hDt0`/`hAD`/`hm` and `hR` are the `K`-level residue-data facts; `hR` bundles the residue
@@ -1467,7 +1467,7 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFiel
         ∀ β ∈ ((toPoly (cHermiteReduceTower Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
             ((toPoly Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′) :
-    IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrt Dt a d) := by
+    IsIntegralResultLrt.{_, u} Dt a d (cIntegrateReducedLrt Dt a d) := by
   have hDmonic := toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0
   have hDsep : (toPoly (cHermiteReduceTower Dt a d).2.2).Separable :=
     PerfectField.separable_iff_squarefree.mpr
@@ -1522,7 +1522,7 @@ open scoped Differential in
 open Classical in
 variable [CFracGcdCoreWf α] in
 /-- **The `∀E` residue pole-normality condition, as a universe-polymorphic `def`** (mirroring
-`IsIntegralResultLrtG`): at every algebraically-closed differential extension `E` of `K = CFieldSpec.K α`, the
+`IsIntegralResultLrt`): at every algebraically-closed differential extension `E` of `K = CFieldSpec.K α`, the
 monomial derivation `Dt` avoids the pole derivatives (`η ≠ β′`). Being a `def` — not an inline `∀ (E : Type u)`
 field — its `E`-universe auto-generalizes, so it can be instantiated at `E = AlgebraicClosure K` (whose universe
 is the *existential* one of `CFieldSpec.K`), which a rigid structure-field universe cannot. This is what lets

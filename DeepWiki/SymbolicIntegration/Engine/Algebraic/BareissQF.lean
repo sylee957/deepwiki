@@ -2,10 +2,10 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.BareissEngine
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.BareissExamples
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.Round2IntegralBasis
 
-/-! # Agreement of the fraction-free `ℚ(x)` wrappers with `fieldDet`/`matInvG`
+/-! # Agreement of the fraction-free `ℚ(x)` wrappers with `fieldDet`/`matInv`
 
 The `ℚ(x)` wrappers `qfDet`/`qfAdjugate`/`qfInv`/`qfSolve` (clear to `ℚ[x]`, run Bareiss, read back)
-agree with the fraction-based `fieldDet`/`matInvG` on the trace-matrix curves and `ℚ(x)`-fraction
+agree with the fraction-based `fieldDet`/`matInv` on the trace-matrix curves and `ℚ(x)`-fraction
 matrices, and the degree-swell benchmark `qfSwellWin` measures the fraction path's ballooning degrees
 against the flat fraction-free ones. -/
 
@@ -36,7 +36,7 @@ theorem qfDet_eq_fieldDet_cusp :
 
 /-- A `3×3` `ℚ(x)`-matrix with genuine fraction entries (denominators `x+1, …, x+5`, a permuted
 Cauchy-style matrix), where `fieldDet` carries a ballooning denominator. -/
-def qfFracMat3 : List (List (QFunNZG ℚ)) :=
+def qfFracMat3 : List (List (QFunNZ ℚ)) :=
   [[qxOfFrac [1] [1, 1] (by decide), qxOfFrac [1] [2, 1] (by decide), qxOfFrac [1] [3, 1] (by decide)],
    [qxOfFrac [1] [2, 1] (by decide), qxOfFrac [1] [3, 1] (by decide), qxOfFrac [1] [4, 1] (by decide)],
    [qxOfFrac [1] [4, 1] (by decide), qxOfFrac [1] [1, 1] (by decide), qxOfFrac [1] [5, 1] (by decide)]]
@@ -46,21 +46,21 @@ carries an unreduced fraction of total degree `24` and `qfDet` a flat polynomial
 theorem qfDet_eq_fieldDet_fracMat3 :
     CField.isZero (CField.sub (qfDet qfFracMat3) (fieldDet qfFracMat3)) = true := by native_decide
 
-/-! ### The fraction-free inverse agrees with `matInvG` -/
+/-! ### The fraction-free inverse agrees with `matInv` -/
 
-/-- `qfInv` agrees with `matInvG` entrywise on the cusp `I_x`-basis matrix `B = [[x, 0], [0, 1]]`, both
+/-- `qfInv` agrees with `matInv` entrywise on the cusp `I_x`-basis matrix `B = [[x, 0], [0, 1]]`, both
 `B⁻¹ = [[1/x, 0], [0, 1]]`. -/
 theorem qfInv_eq_matInvG_cuspBasis :
     let B := ipBasisMatrix 2 (pTraceRadical cuspF [0, 1] 0)
-    let Binv := (matInvG 2 B).getD []
+    let Binv := (matInv 2 B).getD []
     (List.range 2).all (fun i => (List.range 2).all (fun j =>
       CField.isZero (CField.sub (qfInvEntry B i j) ((Binv.getD i []).getD j CField.zero)))) = true := by
   native_decide
 
-/-- `qfInv` agrees with `matInvG` entrywise on the `3×3` fraction matrix `qfFracMat3` as `ℚ(x)` values,
-though `matInvG` carries each entry as an unreduced fraction of total degree up to `41`. -/
+/-- `qfInv` agrees with `matInv` entrywise on the `3×3` fraction matrix `qfFracMat3` as `ℚ(x)` values,
+though `matInv` carries each entry as an unreduced fraction of total degree up to `41`. -/
 theorem qfInv_eq_matInvG_fracMat3 :
-    let Minv := (matInvG 3 qfFracMat3).getD []
+    let Minv := (matInv 3 qfFracMat3).getD []
     (List.range 3).all (fun i => (List.range 3).all (fun j =>
       CField.isZero (CField.sub (qfInvEntry qfFracMat3 i j)
         ((Minv.getD i []).getD j CField.zero)))) = true := by
@@ -83,10 +83,10 @@ theorem qfAdjugate_mul_cuspBasis :
 /-- `qfSolve` solves `M·x = b` over `ℚ(x)` on the `3×3` fraction matrix `qfFracMat3` with `b = [1, 1, 1]`:
 reading back `x` and multiplying `M·x` recovers `b`. -/
 theorem qfSolve_fracMat3 :
-    let b : List (QFunNZG ℚ) := [qxOfNum [1], qxOfNum [1], qxOfNum [1]]
+    let b : List (QFunNZ ℚ) := [qxOfNum [1], qxOfNum [1], qxOfNum [1]]
     let ds := qfSolve qfFracMat3 b
-    let xq : List (QFunNZG ℚ) := ds.2.map (fun s => CField.mul (qxOfNum s) (CField.inv (qxOfNum ds.1)))
-    let lhs : List (QFunNZG ℚ) := (List.range 3).map (fun i =>
+    let xq : List (QFunNZ ℚ) := ds.2.map (fun s => CField.mul (qxOfNum s) (CField.inv (qxOfNum ds.1)))
+    let lhs : List (QFunNZ ℚ) := (List.range 3).map (fun i =>
       (List.range 3).foldl (fun acc j =>
         CField.add acc (CField.mul ((qfFracMat3.getD i []).getD j CField.zero) (xq.getD j CField.zero)))
         CField.zero)
@@ -94,9 +94,9 @@ theorem qfSolve_fracMat3 :
       CField.isZero (CField.sub (lhs.getD i CField.zero) (b.getD i CField.zero))) = true := by
   native_decide
 
-/-! ### The swell benchmark: `qfDet`/`qfInv` vs `fieldDet`/`matInvG`
+/-! ### The swell benchmark: `qfDet`/`qfInv` vs `fieldDet`/`matInv`
 
-On the `3×3` fraction matrix `qfFracMat3`, the fraction path (`fieldDet`/`matInvG` over `ℚ(x)`) carries
+On the `3×3` fraction matrix `qfFracMat3`, the fraction path (`fieldDet`/`matInv` over `ℚ(x)`) carries
 a determinant of total degree `24` and inverse entries of total degree up to `41`, while the
 fraction-free `qfDet`/`qfInv` stay flat with a single bounded `ℚ[x]` per matrix. -/
 
@@ -113,10 +113,10 @@ def qfDetFracTotalDeg : ℕ :=
 def qfDetFlatDeg : ℕ := cdeg (qfDet qfFracMat3).1.1
 
 /-- The fraction-path inverse max total degree `max over entries of (cdeg num + cdeg den)` of
-`matInvG 3 qfFracMat3`, the largest numerator+denominator degree among the unreduced `ℚ(x)` inverse
+`matInv 3 qfFracMat3`, the largest numerator+denominator degree among the unreduced `ℚ(x)` inverse
 entries (`= 41`). -/
 def qfInvFracMaxTotalDeg : ℕ :=
-  match matInvG 3 qfFracMat3 with
+  match matInv 3 qfFracMat3 with
   | none => 0
   | some Minv =>
     ((Minv.map (fun row => row.map (fun z => cdeg z.1.1 + cdeg z.1.2))).flatten).foldl max 0
@@ -136,7 +136,7 @@ theorem qfSwellWin :
 `15`. -/
 theorem qfDetFracTotalDeg_eq : qfDetFracTotalDeg = 24 := by native_decide
 
-/-- The fraction-path inverse max total degree is `41`: the largest `matInvG 3 qfFracMat3` inverse entry
+/-- The fraction-path inverse max total degree is `41`: the largest `matInv 3 qfFracMat3` inverse entry
 has numerator degree `22` over denominator degree `19`. -/
 theorem qfInvFracMaxTotalDeg_eq : qfInvFracMaxTotalDeg = 41 := by native_decide
 
@@ -160,7 +160,7 @@ theorem qfHeavyHeartbeats :
 #print axioms qfDet_eq_fieldDet_cusp
 #print axioms qfDet_eq_fieldDet_fracMat3
 
--- Agreement of the fraction-free `qfInv` with the fraction-based `matInvG` (the idealizer inverse).
+-- Agreement of the fraction-free `qfInv` with the fraction-based `matInv` (the idealizer inverse).
 #print axioms qfInv_eq_matInvG_cuspBasis
 #print axioms qfInv_eq_matInvG_fracMat3
 

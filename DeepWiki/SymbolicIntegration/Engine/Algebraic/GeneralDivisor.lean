@@ -20,12 +20,12 @@ open CPoly
 
 /-- A fractional `O`-ideal: an `n×n` matrix over `K(x)` whose row `i` is a generator
 `genᵢ = Σⱼ Mᵢⱼ wⱼ` in integral-basis `[w]`-coordinates. -/
-abbrev GenDivisor := List (List (QFunNZG ℚ))
+abbrev GenDivisor := List (List (QFunNZ ℚ))
 
 /-- The identity divisor `idealIdentity n = Iₙ` — the order `O`, the Pic neutral element. -/
 def idealIdentity (n : ℕ) : GenDivisor :=
   (List.range n).map (fun i =>
-    (List.range n).map (fun j => if i = j then (CField.one : QFunNZG ℚ) else CField.zero))
+    (List.range n).map (fun j => if i = j then (CField.one : QFunNZ ℚ) else CField.zero))
 
 /-- Entrywise lowest-terms reduction `qReduceMat I = I.map (List.map qReduce)`, value-preserving on
 each `ℚ(x)` entry (cancels common polynomial factors only). -/
@@ -34,19 +34,19 @@ def qReduceMat (I : GenDivisor) : GenDivisor :=
 
 /-- Reconstruct a `K(x, y)` element from `[w]`-coordinates: `wToAf basis row = Σⱼ rowⱼ·wⱼ` (inverse
 of `toOCoords`). -/
-def wToAf (basis : List (CPoly (QFunNZG ℚ))) (row : List (QFunNZG ℚ)) : CPoly (QFunNZG ℚ) :=
+def wToAf (basis : List (CPoly (QFunNZ ℚ))) (row : List (QFunNZ ℚ)) : CPoly (QFunNZ ℚ) :=
   (List.range basis.length).foldl (fun acc i =>
-    cadd acc (cscale (row.getD i CField.zero) (basis.getD i []))) ([] : CPoly (QFunNZG ℚ))
+    cadd acc (cscale (row.getD i CField.zero) (basis.getD i []))) ([] : CPoly (QFunNZ ℚ))
 
 /-! ### `div(g) = g·O`: the principal divisor (`principalDivisor`) -/
 
 /-- The principal divisor `principalDivisor f basis g = div(g) = g·O`: row `i` is the `[w]`-coordinates
 of `g·wᵢ = afMul f g wᵢ` (via `B⁻¹`); empty matrix if `B` is singular. -/
-def principalDivisor (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
-    (g : CPoly (QFunNZG ℚ)) : GenDivisor :=
+def principalDivisor (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
+    (g : CPoly (QFunNZ ℚ)) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
-  match matInvG n B with
+  match matInv n B with
   | none => []
   | some Binv =>
     basis.map (fun wi => toOCoords Binv n (afMul f g wi))
@@ -64,16 +64,16 @@ def idealClear (I : GenDivisor) : CPoly ℚ × PolyMatrix ℚ :=
 /-- The ideal product `idealProduct f basis I J` (the Pic group law): the fractional `O`-ideal from
 the `n²` cross-products `genᵢ·genₖ`, cleared to a common denominator and `hermiteRowReduce`d to `n`
 generators; `[]` if `B` is singular. -/
-def idealProduct (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
+def idealProduct (f : CPoly (QFunNZ ℚ)) (basis : List (CPoly (QFunNZ ℚ)))
     (I J : GenDivisor) : GenDivisor :=
   let n := cdeg f
   let B := orderToPowerMatrix n basis
-  match matInvG n B with
+  match matInv n B with
   | none => []
   | some Binv =>
     -- the n² cross-products genᵢ·genₖ in [w]-coords, each entry put in lowest terms (`qReduceMat`,
     -- value-preserving) before the common-denominator clearing below
-    let cross : List (List (QFunNZG ℚ)) :=
+    let cross : List (List (QFunNZ ℚ)) :=
       qReduceMat (I.flatMap (fun gi =>
         J.map (fun gk =>
           toOCoords Binv n (afMul f (wToAf basis gi) (wToAf basis gk)))))
@@ -87,7 +87,7 @@ def idealProduct (f : CPoly (QFunNZG ℚ)) (basis : List (CPoly (QFunNZG ℚ)))
       (List.range n).map (fun j =>
         let num := (nz.getD i []).getD j []
         let dd := cnorm δ
-        if h : cisZero dd = false then qReduceNZG (qxOfFrac num dd h) else CField.zero)))
+        if h : cisZero dd = false then qReduceNZ (qxOfFrac num dd h) else CField.zero)))
 
 /-! ### Normalization / equality of fractional ideals (`idealHNF`, `idealEq`, `idealIsIntegral`) -/
 
@@ -107,7 +107,7 @@ def idealEq (I J : GenDivisor) : Bool :=
   let scale : CPoly ℚ → GenDivisor → PolyMatrix ℚ := fun c K =>
     let cc := cnorm c
     K.map (fun row => row.map (fun z =>
-      let zz := qReduceNZG z
+      let zz := qReduceNZ z
       let num := zz.1.1
       let den := cnorm zz.1.2
       cdivWf (cmul cc num) den))
@@ -125,7 +125,7 @@ def idealEq (I J : GenDivisor) : Bool :=
 denominator `1` (i.e. `I ⊆ O`). -/
 def idealIsIntegral (I : GenDivisor) : Bool :=
   I.all (fun row => row.all (fun z =>
-    let zz := qReduceNZG z
+    let zz := qReduceNZ z
     cisZero (csub (cnorm zz.1.2) [CField.one])))
 
 end CPoly

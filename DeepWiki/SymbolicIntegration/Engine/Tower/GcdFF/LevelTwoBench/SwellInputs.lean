@@ -12,14 +12,14 @@ namespace BenchLvl2
 
 open CPoly
 
-/-- The `Lvl2 = ℚ(x)(t₁)` scalar `t₁ = s/1` (numerator the monomial `[0,1] ∈ (QFunNZG ℚ)[s]`). -/
+/-- The `Lvl2 = ℚ(x)(t₁)` scalar `t₁ = s/1` (numerator the monomial `[0,1] ∈ (QFunNZ ℚ)[s]`). -/
 def t1 : Lvl2 :=
-  ⟨([(CField.zero : QFunNZG ℚ), CField.one], [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
+  ⟨([(CField.zero : QFunNZ ℚ), CField.one], [CField.one]), QFunNZ.cisZeroG_one_singleton⟩
 
 /-- The `Lvl2` scalar `1/t₁ = 1/s` (numerator `[1]`, denominator `[0,1] = s`), a genuine `t₁`
 denominator. -/
 def invT1 : Lvl2 :=
-  ⟨([CField.one], [(CField.zero : QFunNZG ℚ), CField.one]), by native_decide⟩
+  ⟨([CField.one], [(CField.zero : QFunNZ ℚ), CField.one]), by native_decide⟩
 
 /-- The `Lvl2` scalar `t₁ + 1`. -/
 def t1p1 : Lvl2 := CField.add t1 CField.one
@@ -67,8 +67,8 @@ def benchQ2 (k : ℕ) : CPoly Lvl2 := cmul commonFactor2 (prod2B k)
 /-- The naive Euclidean gcd `cmonic (cgcdWf …)` of the level-2 benchmark pair (the swelling kernel). -/
 def benchExtGcd2 (k : ℕ) : CPoly Lvl2 := CPoly.cmonic (CPoly.cgcdWf (benchP2 k) (benchQ2 k)).1
 
-/-- The raw stored size of one `QFunNZG ℚ` scalar: list lengths + `Σ(|num|+den)` of the ℚ entries. -/
-def sizeLvl1 (z : QFunNZG ℚ) : ℕ :=
+/-- The raw stored size of one `QFunNZ ℚ` scalar: list lengths + `Σ(|num|+den)` of the ℚ entries. -/
+def sizeLvl1 (z : QFunNZ ℚ) : ℕ :=
   z.1.1.length + z.1.2.length +
     (z.1.1.foldl (fun a c => a + c.num.natAbs + c.den) 0) +
     (z.1.2.foldl (fun a c => a + c.num.natAbs + c.den) 0)

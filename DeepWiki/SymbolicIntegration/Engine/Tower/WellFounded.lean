@@ -104,7 +104,7 @@ inductive CPrimPRSGenRegular {B : Type*} [CField B] (cgcdB : CPoly B → CPoly B
 * `class CFracGcdCoreWf α` (one method `cgcdFFRawCoreWf`, the *raw* content-normalized gcd).
 * Base `instance CFracGcdCoreWf ℚ` — `ℚ[t]`'s raw fraction-free gcd is the generic Euclidean gcd
   `(cgcdWf p q).1`.
-* Recursive `instance CFracGcdCoreWf (QFunNZG β) [CFracGcdCoreWf β]` — clear denominators into
+* Recursive `instance CFracGcdCoreWf (QFunNZ β) [CFracGcdCoreWf β]` — clear denominators into
   `GBPolyCore β`, run the kernel `cprimPRSgcdGenCoreWf` with the level-`β` `cgcdFFRawCoreWf` as
   content-gcd, lift back. Bottoms at `CFracGcdCoreWf ℚ`.
 
@@ -137,18 +137,18 @@ instance instCFracGcdCoreWfQ : CFracGcdCoreWf ℚ where
 section
 variable {β : Type*} [CField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
-/-- `CFracGcdCoreWf (QFunNZG β)` — the *raw* fraction-free gcd over `β(s)[t]`, built by running the kernel
+/-- `CFracGcdCoreWf (QFunNZ β)` — the *raw* fraction-free gcd over `β(s)[t]`, built by running the kernel
 `cprimPRSgcdGenCoreWf` over the GCD-domain `CPoly β = β[s]` with the level-`β` `cgcdFFRawCoreWf` as
 content-gcd. Clear denominators of both inputs into `GBPolyCore β = (β[s])[t]`, order them by `t`-degree
 (the PRS needs the larger first), run the primitive PRS with `cgcdB := CFracGcdCoreWf.cgcdFFRawCoreWf`
 recursing one level down, and lift back to `β(s)[t]` — no `cmonic` (this is the raw method). Recurses
 strictly one level down, bottoming at `CFracGcdCoreWf ℚ`. -/
-instance instCFracGcdCoreWfQFunNZG : CFracGcdCoreWf (QFunNZG β) where
+instance instCFracGcdCoreWfQFunNZ : CFracGcdCoreWf (QFunNZ β) where
   cgcdFFRawCoreWf p q :=
     let P := CPoly.cclearDenomsCore p
     let Q := CPoly.cclearDenomsCore q
     let (P, Q) := if GBPolyCore.gbdegCore P < GBPolyCore.gbdegCore Q then (Q, P) else (P, Q)
-    CPoly.liftGBPolyCoreG (GBPolyCore.cprimPRSgcdGenCoreWf CFracGcdCoreWf.cgcdFFRawCoreWf P Q)
+    CPoly.liftGBPolyCore (GBPolyCore.cprimPRSgcdGenCoreWf CFracGcdCoreWf.cgcdFFRawCoreWf P Q)
 
 end
 
@@ -318,10 +318,10 @@ def cLogPart (Dt : CPoly α) (a d : CPoly α) (cands : List α) : List (α × CP
 /-- The generic reduced-case integration capstone `cIntegrateReduced Dt a d cands`: for `f = a/d`
 reduced/normal, `∫ f = g + ∑ c·log(v)`. Hermite-reduce (`cHermiteReduceTower`) to the rational part
 `g = gnum/gden` and the simple residual `h = h_num/h_den`, then take the residue log part of `h`
-(`cLogPart`, residues drawn from `cands : List α`). Returns the `IntegralResultG` `⟨(gnum, gden),
+(`cLogPart`, residues drawn from `cands : List α`). Returns the `IntegralResult` `⟨(gnum, gden),
 [(c, v)]⟩`. -/
 def cIntegrateReduced (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
-    IntegralResultG α :=
+    IntegralResult α :=
   let H := cHermiteReduceTower Dt a d
   let logs := cLogPart Dt H.2.1 H.2.2 cands
   ⟨(H.1.1, H.1.2), logs⟩
@@ -381,7 +381,7 @@ theorem towerIntLvl2_logs_lengthWf :
 
 /-- A full elementary tower integral at level 2 with `D(∫f) = f`. For
 `f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` over ℚ(x)(t₁)(t₂), the capstone `cIntegrateReduced` returns an
-`IntegralResultG` whose antiderivative identity `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds exactly
+`IntegralResult` whose antiderivative identity `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds exactly
 (`checkIdentity`). -/
 theorem towerIntLvl2_fullIntegralWf :
     CPoly.checkIdentity towerIntLvl2Dt

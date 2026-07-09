@@ -48,23 +48,23 @@ by the log-derivative certificate. -/
 open RadElem
 
 /-- The radicand `ρ = x² + 1 ∈ ℚ(x)` (`y = √(x²+1)`), numerator `[1, 0, 1]`. -/
-def radLogRhoArcsinh : QFunNZG ℚ := qxOfNum [1, 0, 1]
+def radLogRhoArcsinh : QFunNZ ℚ := qxOfNum [1, 0, 1]
 
 /-- The radicand `ρ = x² − 1 ∈ ℚ(x)` (`y = √(x²−1)`), numerator `[−1, 0, 1]`. -/
-def radLogRhoArccosh : QFunNZG ℚ := qxOfNum [-1, 0, 1]
+def radLogRhoArccosh : QFunNZ ℚ := qxOfNum [-1, 0, 1]
 
 /-- The field element `x ∈ ℚ(x)`, numerator `[0, 1]`. -/
-def radLogX : QFunNZG ℚ := qxOfNum [0, 1]
+def radLogX : QFunNZ ℚ := qxOfNum [0, 1]
 
 /-- The claimed log argument `u = x + y = [x, 1]` for both `arcsinh`/`arccosh` (`∫ dx/√(x²±1) =
 log(x + y)`). -/
-def radLogUxPlusY : RadElem (QFunNZG ℚ) := [radLogX, CField.one]
+def radLogUxPlusY : RadElem (QFunNZ ℚ) := [radLogX, CField.one]
 
 /-- The integrand `1/y` of `∫ dx/√(x²+1)`, lifted to `[0, 1/ρ]` over `ℚ(x)` (`ρ = x²+1`). -/
-def radLogIntegrandArcsinh : RadElem (QFunNZG ℚ) := radInvYLift radLogRhoArcsinh CField.one
+def radLogIntegrandArcsinh : RadElem (QFunNZ ℚ) := radInvYLift radLogRhoArcsinh CField.one
 
 /-- The integrand `1/y` of `∫ dx/√(x²−1)`, lifted to `[0, 1/ρ]` over `ℚ(x)` (`ρ = x²−1`). -/
-def radLogIntegrandArccosh : RadElem (QFunNZG ℚ) := radInvYLift radLogRhoArccosh CField.one
+def radLogIntegrandArccosh : RadElem (QFunNZ ℚ) := radInvYLift radLogRhoArccosh CField.one
 
 /-- `∫ dx/√(x²+1) = log(x + √(x²+1))`: the log-derivative certificate holds for `u = x + y`,
 `integrand = [0, 1/(x²+1)]`, `y² = x²+1`. -/
@@ -91,19 +91,19 @@ log argument `u = (y − 1)/x = [−1/x, 1/x]` passes the certificate (the wrong
 
 /-- The field element `x·ρ = x·(x²+1) = x + x³ ∈ ℚ(x)`, numerator `[0, 1, 0, 1]` — the denominator of the
 lifted integrand `1/(x·y)`. -/
-def radLogXRho : QFunNZG ℚ := qxOfNum [0, 1, 0, 1]
+def radLogXRho : QFunNZ ℚ := qxOfNum [0, 1, 0, 1]
 
 /-- The field element `1/x ∈ ℚ(x)`. -/
-def radLogInvX : QFunNZG ℚ := CField.div CField.one radLogX
+def radLogInvX : QFunNZ ℚ := CField.div CField.one radLogX
 
 /-- The integrand `1/(x y)` of `∫ dx/(x√(x²+1))`, lifted to `[0, 1/(x·ρ)]` over `ℚ(x)` (`R = 1/x`). -/
-def radLogIntegrandFinite : RadElem (QFunNZG ℚ) := radInvYLift radLogXRho CField.one
+def radLogIntegrandFinite : RadElem (QFunNZ ℚ) := radInvYLift radLogXRho CField.one
 
 /-- The finite-pole log argument `u = (y − 1)/x = [−1/x, 1/x]` for `∫ dx/(x√(x²+1))`. -/
-def radLogUFinite : RadElem (QFunNZG ℚ) := [CField.neg radLogInvX, radLogInvX]
+def radLogUFinite : RadElem (QFunNZ ℚ) := [CField.neg radLogInvX, radLogInvX]
 
 /-- The wrong-sign candidate `u = (y + 1)/x = [1/x, 1/x]`, which fails the certificate. -/
-def radLogUFiniteWrong : RadElem (QFunNZG ℚ) := [radLogInvX, radLogInvX]
+def radLogUFiniteWrong : RadElem (QFunNZ ℚ) := [radLogInvX, radLogInvX]
 
 /-- `∫ dx/(x√(x²+1)) = log((√(x²+1) − 1)/x)`: the log-derivative certificate holds for `u = (y − 1)/x`,
 `integrand = [0, 1/(x(x²+1))]`, `y² = x²+1`. -/
@@ -179,16 +179,16 @@ def radQuadraticLogArg (b : α) : RadElem α :=
 end RadElem
 
 /-- The shifted radicand `ρ = x² + 2x + 2 = (x+1)² + 1 ∈ ℚ(x)`, numerator `[2, 2, 1]`. -/
-def radLogRhoShift : QFunNZG ℚ := qxOfNum [2, 2, 1]
+def radLogRhoShift : QFunNZ ℚ := qxOfNum [2, 2, 1]
 
 /-- The field element `x + 1 ∈ ℚ(x)`, numerator `[1, 1]`. -/
-def radLogXPlusOne : QFunNZG ℚ := qxOfNum [1, 1]
+def radLogXPlusOne : QFunNZ ℚ := qxOfNum [1, 1]
 
 /-- The heuristic-computed log argument `u = (x + 1) + y = [x + 1, 1]` for `∫ dx/√(x² + 2x + 2)`. -/
-def radLogUShift : RadElem (QFunNZG ℚ) := [radLogXPlusOne, CField.one]
+def radLogUShift : RadElem (QFunNZ ℚ) := [radLogXPlusOne, CField.one]
 
 /-- The integrand `1/y` of `∫ dx/√(x² + 2x + 2)`, lifted to `[0, 1/ρ]` over `ℚ(x)` (`ρ = x²+2x+2`). -/
-def radLogIntegrandShift : RadElem (QFunNZG ℚ) := radInvYLift radLogRhoShift CField.one
+def radLogIntegrandShift : RadElem (QFunNZ ℚ) := radInvYLift radLogRhoShift CField.one
 
 /-- The quadratic heuristic computes a valid log argument: for `∫ dx/√(x² + 2x + 2)` the heuristic
 `u = (x + 1) + y` satisfies the log-derivative certificate over `ℚ(x)`, `y² = x²+2x+2`. -/

@@ -88,20 +88,20 @@ theorem toGBCoeffPoly_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore �
 
 /-- **`gbpsremainderCore` lifts to a `β(s)[t]` Euclidean relation with a `β(s)`-unit multiplier**: if
 `gbisZeroCore (gbnormCore q) = false`, there is `(s, c)` with
-`C (amG (toPoly c)) · toGBPolyG p = toGBPolyG s · toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)`
-and `amG (toPoly c) ≠ 0` in `(RatFunc (CFieldSpec.K β))[X]`. -/
+`C (am (toPoly c)) · toGBPoly p = toGBPoly s · toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)`
+and `am (toPoly c) ≠ 0` in `(RatFunc (CFieldSpec.K β))[X]`. -/
 theorem toGBPolyG_gbpsremainderCore_ne_zero (fuel : ℕ) (p q : GBPolyCore β)
     (hq : gbisZeroCore (gbnormCore q) = false) :
     ∃ (s : GBPolyCore β) (c : CPoly β),
-      Polynomial.C (QFunNZG.amG β (CPoly.toPoly c)) * toGBPolyG p
-          = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)
-        ∧ QFunNZG.amG β (CPoly.toPoly c) ≠ 0 := by
+      Polynomial.C (QFunNZ.am β (CPoly.toPoly c)) * toGBPoly p
+          = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)
+        ∧ QFunNZ.am β (CPoly.toPoly c) ≠ 0 := by
   obtain ⟨s, c, hsc, hc⟩ := toGBCoeffPoly_gbpsremainderCore_ne_zero fuel p q hq
-  refine ⟨s, c, ?_, QFunNZG.amG_toPolyG_ne_zero hc⟩
-  have hl := congrArg (liftKG β) hsc
+  refine ⟨s, c, ?_, QFunNZ.amG_toPolyG_ne_zero hc⟩
+  have hl := congrArg (liftK β) hsc
   simp only [map_add, map_mul] at hl
   rw [liftKG_C] at hl
-  simpa [toGBPolyG] using hl
+  simpa [toGBPoly] using hl
 
 /-! ## The total clause (iii): the content strip is a `β(s)`-unit scaling on any input
 
@@ -109,13 +109,13 @@ Bundling the nonzero-content case with the zero case (where `gbprimitivePartCore
 clause (iii) conditional only on `CgcdBCorrect cgcdB` plus the retained bookkeeping. -/
 
 /-- **The content strip is a `β(s)`-unit scaling on any input**: under `CgcdBCorrect cgcdB` and the
-per-`t`-coefficient size bound, `Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p)`.
+per-`t`-coefficient size bound, `Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)`.
 Splits on whether the content `gbcontentCore cgcdB p` is zero (identity, reflexive) or nonzero (unit
 scaling). -/
 theorem associated_toGBPolyG_gbprimitivePartCore_total (fuel : ℕ)
     (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
     (hfuel : ∀ a ∈ gbnormCore p, (CPoly.cnorm a : List β).length ≤ fuel) :
-    Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p) := by
+    Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p) := by
   by_cases hgz : CPoly.cisZero (gbcontentCore cgcdB p) = true
   · -- content zero: gbprimitivePartCore is the identity `gbnormCore p`
     have hid : gbprimitivePartCore cgcdB p = gbnormCore p := by

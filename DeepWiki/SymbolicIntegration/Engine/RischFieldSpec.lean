@@ -11,7 +11,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 /-! ### The `CRischFieldSpec` class
 
@@ -72,21 +72,21 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
   [CRischField α] [CRischFieldSpec α] [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CRischField α] [CRischFieldSpec α] in
-/-- `towerFractionFieldDerivG Dt (amG α (C k)) = amG α (C k′)`: the tower fraction-field derivation
+/-- `towerFractionFieldDeriv Dt (am α (C k)) = am α (C k′)`: the tower fraction-field derivation
 of a constant is the constant of its `CDiffFieldSpec` derivative. -/
 theorem towerFractionFieldDerivG_amG_C (Dt : CPoly α) (k : CFieldSpec.K α) :
-    towerFractionFieldDerivG Dt (amG α (Polynomial.C k))
-      = amG α (Polynomial.C (@Differential.deriv _ _ CDiffFieldSpec.diffK k)) := by
-  rw [towerFractionFieldDerivG, amG, extendDeriv_algebraMap, Differential.implicitDeriv_C]
+    towerFractionFieldDeriv Dt (am α (Polynomial.C k))
+      = am α (Polynomial.C (@Differential.deriv _ _ CDiffFieldSpec.diffK k)) := by
+  rw [towerFractionFieldDeriv, am, extendDeriv_algebraMap, Differential.implicitDeriv_C]
 
 /-- The pure-integration residual `D(∫R) = R`: if `crischDESolve 0 R = some intR`, the constant
-`intR` embedded into the tower fraction field as `amG (C (toK intR))` differentiates back to
-`amG (C (toK R))`. Discharges the base-oracle hypothesis `hintR` of
+`intR` embedded into the tower fraction field as `am (C (toK intR))` differentiates back to
+`am (C (toK R))`. Discharges the base-oracle hypothesis `hintR` of
 `ComputableHyperexpFullSoundness.cIntegrateHyperexpNormalG_sound`. -/
 theorem crischDESolve_zero_intDeriv (Dt : CPoly α) (R intR : α)
     (hsolve : CRischField.crischDESolve (CField.zero : α) R = some intR) :
-    towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
-      = amG α (Polynomial.C (CFieldSpec.toK R)) := by
+    towerFractionFieldDeriv Dt (am α (Polynomial.C (CFieldSpec.toK intR)))
+      = am α (Polynomial.C (CFieldSpec.toK R)) := by
   rw [towerFractionFieldDerivG_amG_C]
   -- the `b = 0` spec: `(toK intR)′ + (toK 0)·(toK intR) = toK R`, and `toK 0 = 0`.
   have hspec := CRischFieldSpec.crischDESolve_spec (CField.zero : α) R intR hsolve
@@ -111,36 +111,36 @@ open CPoly
 /-- Cleared-to-field layer bridge for the RDE oracle: given the cleared polynomial identity of
 `cRischDEG_rdeCleared_gen` (with `D = implicitDeriv (toPoly Dt)`) and the denominators `fden`,
 `gden`, `yden` nonzero, the field-level Risch-DE identity
-`towerFractionFieldDerivG Dt (amG ynum/amG yden) + (amG fnum/amG fden)·(amG ynum/amG yden)
-= amG gnum/amG gden` holds over `RatFunc (CFieldSpec.K α)`. -/
+`towerFractionFieldDeriv Dt (am ynum/am yden) + (am fnum/am fden)·(am ynum/am yden)
+= am gnum/am gden` holds over `RatFunc (CFieldSpec.K α)`. -/
 theorem rischDE_field_of_cleared (Dt fnum fden gnum gden ynum yden : CPoly α)
     (hfden : toPoly fden ≠ 0) (hgden : toPoly gden ≠ 0) (hyden : toPoly yden ≠ 0)
-    (hcleared : amG α (toPoly gden) * amG α (toPoly fden)
-          * (amG α (Differential.implicitDeriv (toPoly Dt) (toPoly ynum)) * amG α (toPoly yden)
-              - amG α (toPoly ynum) * amG α (Differential.implicitDeriv (toPoly Dt) (toPoly yden)))
-        + amG α (toPoly gden) * amG α (toPoly fnum) * amG α (toPoly ynum) * amG α (toPoly yden)
-      = amG α (toPoly gnum) * amG α (toPoly fden) * amG α (toPoly yden) ^ 2) :
-    towerFractionFieldDerivG Dt (amG α (toPoly ynum) / amG α (toPoly yden))
-        + amG α (toPoly fnum) / amG α (toPoly fden)
-          * (amG α (toPoly ynum) / amG α (toPoly yden))
-      = amG α (toPoly gnum) / amG α (toPoly gden) := by
+    (hcleared : am α (toPoly gden) * am α (toPoly fden)
+          * (am α (Differential.implicitDeriv (toPoly Dt) (toPoly ynum)) * am α (toPoly yden)
+              - am α (toPoly ynum) * am α (Differential.implicitDeriv (toPoly Dt) (toPoly yden)))
+        + am α (toPoly gden) * am α (toPoly fnum) * am α (toPoly ynum) * am α (toPoly yden)
+      = am α (toPoly gnum) * am α (toPoly fden) * am α (toPoly yden) ^ 2) :
+    towerFractionFieldDeriv Dt (am α (toPoly ynum) / am α (toPoly yden))
+        + am α (toPoly fnum) / am α (toPoly fden)
+          * (am α (toPoly ynum) / am α (toPoly yden))
+      = am α (toPoly gnum) / am α (toPoly gden) := by
   -- nonzero readings
-  have hFDne : amG α (toPoly fden) ≠ 0 := amG_toPolyG_ne_zero hfden
-  have hGDne : amG α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
-  have hYDne : amG α (toPoly yden) ≠ 0 := amG_toPolyG_ne_zero hyden
-  -- the quotient rule reads `D(YN/YD) = (amG(D ynum)·YD − YN·amG(D yden))/YD²`
+  have hFDne : am α (toPoly fden) ≠ 0 := amG_toPolyG_ne_zero hfden
+  have hGDne : am α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgden
+  have hYDne : am α (toPoly yden) ≠ 0 := amG_toPolyG_ne_zero hyden
+  -- the quotient rule reads `D(YN/YD) = (am(D ynum)·YD − YN·am(D yden))/YD²`
   rw [towerFractionFieldDerivG_div, div_mul_div_comm,
     div_add_div _ _ (pow_ne_zero 2 hYDne) (mul_ne_zero hFDne hYDne),
     div_eq_div_iff (mul_ne_zero (pow_ne_zero 2 hYDne) (mul_ne_zero hFDne hYDne)) hGDne]
   ring_nf
   ring_nf at hcleared
-  linear_combination amG α (toPoly yden) * hcleared
+  linear_combination am α (toPoly yden) * hcleared
 
 end ClearedToField
 
-/-! ### Recursive `CRischFieldSpec (QFunNZG β)` layer boundary
+/-! ### Recursive `CRischFieldSpec (QFunNZ β)` layer boundary
 
 The cleared → field half is supplied by `rischDE_field_of_cleared`; a recursive instance over
-`QFunNZG β` also needs a structural decomposition theorem for the generic RDE pipeline. -/
+`QFunNZ β` also needs a structural decomposition theorem for the generic RDE pipeline. -/
 
 end DeepWiki.SymbolicIntegration

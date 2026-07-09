@@ -4,7 +4,7 @@ import Mathlib.FieldTheory.IsAlgClosed.AlgebraicClosure
 /-! # A derivation on the algebraic closure (`Differential (AlgebraicClosure K)`)
 
 Mathlib's differential-field library extends a derivation to any **finite** extension
-(`differentialFiniteDimensional`) but stops there. The Risch LRT soundness `IsIntegralResultLrtG` is stated
+(`differentialFiniteDimensional`) but stops there. The Risch LRT soundness `IsIntegralResultLrt` is stated
 `∀ E [IsAlgClosed E] [Differential E] …` — to instantiate it at a concrete algebraically-closed extension we
 need `Differential (AlgebraicClosure K)`, which Mathlib lacks. This file builds it: every element of the
 algebraic closure lies in a finite simple subextension `K⟮x⟯` (which has a canonical derivation), and those
@@ -111,7 +111,7 @@ noncomputable def closureDerivation : Derivation ℤ (AlgebraicClosure K) (Algeb
 
 /-- **`Differential (AlgebraicClosure K)`** — a derivation on the algebraic closure extending `K`'s,
 built by gluing the finite-subextension derivations. Un-blocks instantiating the LRT soundness
-`IsIntegralResultLrtG` (`∀ E [IsAlgClosed E] [Differential E] …`) at `E = AlgebraicClosure K`. -/
+`IsIntegralResultLrt` (`∀ E [IsAlgClosed E] [Differential E] …`) at `E = AlgebraicClosure K`. -/
 noncomputable instance instDifferentialAlgebraicClosure : Differential (AlgebraicClosure K) where
   deriv := closureDerivation
 

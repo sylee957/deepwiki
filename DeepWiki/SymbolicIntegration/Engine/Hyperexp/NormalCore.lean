@@ -37,7 +37,7 @@ base, and subtracts it. -/
 `cIntegrateReduced`, read `R = η·∑ᵢ cᵢ`, integrate `∫R` by `crischDESolve 0 R`, and subtract it from the
 rational part (same logs); `none` if `∫R` is non-elementary. -/
 def cIntegrateHyperexpNormal (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
-    Option (IntegralResultG α) :=
+    Option (IntegralResult α) :=
   let red := cIntegrateReduced Dt a d cands
   let η : α := cExpEta Dt
   let R : α := cHyperexpResidual η red.logs
@@ -52,7 +52,7 @@ def cIntegrateHyperexpNormal (Dt : CPoly α) (a d : CPoly α) (cands : List α) 
 `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part by `cIntegrateHyperexpLaurent` and the normal part
 by `cIntegrateHyperexpNormal`, and combine the rational parts; `none` if either is non-elementary. -/
 def cIntegrateHyperexpFull (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
-    Option (IntegralResultG α) :=
+    Option (IntegralResult α) :=
   let η : α := cExpEta Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
   let neg : List α := cHyperexpSpecialNeg b ds

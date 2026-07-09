@@ -14,7 +14,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -23,18 +23,18 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 
 /-- The fuel-free reduced-case field identity from the `checkIdentity` certificate: for
 `res = cIntegrateReduced Dt a d cands`, if `checkIdentity Dt res a d = true`, then
-`D(g) + logResidueSumG Dt res.logs = amG a/amG d`. -/
+`D(g) + logResidueSum Dt res.logs = am a/am d`. -/
 theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPoly α)
     (a d : CPoly α) (cands : List α)
     (hgden : toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2 ≠ 0)
     (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ (CPoly.cIntegrateReduced Dt a d cands).logs, toPoly cv.2 ≠ 0)
     (hcheck : CPoly.checkIdentity Dt (CPoly.cIntegrateReduced Dt a d cands) a d = true) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = amG α (toPoly a) / amG α (toPoly d) :=
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = am α (toPoly a) / am α (toPoly d) :=
   field_identity_of_checkIdentityG Dt (CPoly.cIntegrateReduced Dt a d cands) a d
     hgden haden hlogs hcheck
 

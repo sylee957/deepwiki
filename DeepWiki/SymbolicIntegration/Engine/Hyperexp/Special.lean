@@ -30,7 +30,7 @@ Canonical-splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrates the Laurent par
 `cIntegrateHyperexpLaurent` and the normal part `cₙ/dₙ` by `cIntegrateReduced`, and combines the
 rational parts; `none` if the Laurent integration fails. -/
 def cIntegrateHyperexp (Dt : CPoly α) (a d : CPoly α) (cands : List α) :
-    Option (IntegralResultG α) :=
+    Option (IntegralResult α) :=
   let η : α := cExpEta Dt
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
   let neg : List α := cHyperexpSpecialNeg b ds
@@ -53,8 +53,8 @@ end CPoly
 
 open CPoly
 
-/-- Base field `Lvl1 = QFunNZG ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits. -/
-abbrev Lvl1 : Type := QFunNZG ℚ
+/-- Base field `Lvl1 = QFunNZ ℚ = ℚ(x)` over which the hyperexponential monomial `t = exp x` sits. -/
+abbrev Lvl1 : Type := QFunNZ ℚ
 
 /-- Hyperexponential monomial derivative `Dt = η·t = [0, 1]` over `CPoly Lvl1 = ℚ(x)[t]` (`t = exp x`,
 `η = 1`). -/

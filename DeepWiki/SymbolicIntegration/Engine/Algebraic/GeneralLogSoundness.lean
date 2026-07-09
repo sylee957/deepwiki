@@ -245,7 +245,7 @@ namespace CPoly
 `degree < cdeg f * cdeg D + 2` and `R.eval (k : ℚ) = cresultantWf (resYAtNode f g Dder (k : ℚ)) D`
 at each node `k`, then `toPoly (genResidueResultant f g Dder D) = R`. -/
 theorem toPolyG_genResidueResultant_eq_of_eval
-    (f g : CPoly (QFunNZG ℚ)) (Dder : QFunNZG ℚ) (D : CPoly ℚ)
+    (f g : CPoly (QFunNZ ℚ)) (Dder : QFunNZ ℚ) (D : CPoly ℚ)
     (R : ℚ[X])
     (hRdeg : R.degree < (cdeg f * cdeg D + 2 : ℕ))
     (hnode : ∀ k ∈ Finset.range (cdeg f * cdeg D + 1 + 1),

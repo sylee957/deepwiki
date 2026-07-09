@@ -20,7 +20,7 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
 
 ## The carrier and the recursion
 
-* **Carrier.** The tower is the iterated computable fraction field `QFunNZG` over the computable field
+* **Carrier.** The tower is the iterated computable fraction field `QFunNZ` over the computable field
   `CField` / polynomial `CPoly` (see `ComputableAlgebra.GenericPolyEngine`). Level `n` is
   `CPoly (QFunNZGⁿ K)`. Everything is `native_decide`-executable.
 * **The solver interface** is the class `LawfulRischLevelLrt` (`RischTowerLrt`). It bundles the
@@ -28,7 +28,7 @@ integrates `f = a/d ∈ K(x)(…)(t)` when `t` is primitive.
   the computable half reduces; the abstract soundness lives in the lawful half.
 * **The recursion** is two instances: `instLawfulRischLevelLrtPrimitive` (the base — constant-coefficient
   polynomials over `ℚ(x)`) and `instLawfulRischLevelLrtTower` (the step — given a solver for the
-  coefficient field `β`, build one for `(QFunNZG β)(t)`). Together they resolve the solver at every tower
+  coefficient field `β`, build one for `(QFunNZ β)(t)`). Together they resolve the solver at every tower
   depth by instance search.
 
 ## The algorithm, one level (`cIntegrateCaseLrt`, `LrtAssembly`)
@@ -48,12 +48,12 @@ Given `a/d`:
    Lazard–Rioboo–Trager reduced integrator. Hermite reduction gives the rational part; the LRT step
    emits **symbolic algebraic-residue logs** `Σ_{Rᵢ(c)=0} c · log Sᵢ(c,t)` — no root-finding, so residues
    that are algebraic over the constants are kept symbolic.
-4. **Assemble** — `combineSNLrt` (`Assemble`) combines the two into an `LrtResultG`: a rational part plus
+4. **Assemble** — `combineSNLrt` (`Assemble`) combines the two into an `LrtResult`: a rational part plus
    the symbolic log terms. The top entry is `LawfulRischLevelLrt.integrate`.
 
 ## Soundness (proofs — behind the API docs)
 
-`LawfulRischLevelLrt.soundFormalLrt`: any successful run satisfies `IsIntegralResultLrtG` — over **every**
+`LawfulRischLevelLrt.soundFormalLrt`: any successful run satisfies `IsIntegralResultLrt` — over **every**
 algebraically-closed differential extension `E`, `D_E(rational) + Σ residue-logs = a/d`. It is assembled
 from the two `LawfulRischLevelLrt` soundness fields:
 
@@ -75,7 +75,7 @@ properly-built tower satisfies, not provable from the computable data alone:
 ## Decision procedure (`PrimitiveLrtDecision`)
 
 With the Liouville frontier, `primitiveLrtDecides` turns the integrator into a **decision procedure**:
-`IsElementaryIntegrableGenuineLrtG Dt a d ↔ cResidueConstantGuard Dt a d = true` — a computable guard that
+`IsElementaryIntegrableGenuineLrt Dt a d ↔ cResidueConstantGuard Dt a d = true` — a computable guard that
 certifies genuine algebraic-residue elementary integrability (and its negation is a non-integrability
 certificate, `not_isElementaryIntegrable_reduced`).
 
@@ -84,6 +84,6 @@ certificate, `not_isElementaryIntegrable_reduced`).
 Complete as a **recursive, tower-general, `native_decide`-validated computable integrator** with a-priori
 soundness modulo the three genuine frontiers above; the recursion is validated at depth 2 by instance
 resolution (`RischTowerLrtGrounding`). The base LRT track replaced the earlier rational
-`LawfulRischLevel`/`PrimitiveFrontier`, whose rational reduced soundness (`IsIntegralResultG`) is *not*
+`LawfulRischLevel`/`PrimitiveFrontier`, whose rational reduced soundness (`IsIntegralResult`) is *not*
 universally dischargeable — it forces the reduced denominator to split over `K`, false for algebraic
 residues; the root-free LRT reduced frontier is the dischargeable analogue. -/

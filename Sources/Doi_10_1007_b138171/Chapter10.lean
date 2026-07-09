@@ -59,9 +59,9 @@ correctness deferred. -/
 def alg_10_3_parallelIntegrate := @cParallelIntegrate
 
 /-- **Parallel integration over the tower `ℚ(x)[t]`** (§10.3, the genuine-tower signature): the
-computable `cParallelIntegrateTower Dt a d` over `a d : CPoly (QFunNZG ℚ)`. The base-field case (`Dt, a,
+computable `cParallelIntegrateTower Dt a d` over `a d : CPoly (QFunNZ ℚ)`. The base-field case (`Dt, a,
 d` all with `ℚ`-constant coefficients, so `k = ℚ`) is routed through `cParallelIntegrate` and lifted back
-to `QFunNZG ℚ` coefficients; a genuine `x`-dependent coefficient (the full tower, needing the §10.2
+to `QFunNZ ℚ` coefficients; a genuine `x`-dependent coefficient (the full tower, needing the §10.2
 special-polynomial list + `F̄`-factorization) returns `none` — the documented continuation. -/
 def alg_10_3_parallelIntegrateTower := @cParallelIntegrateTower
 

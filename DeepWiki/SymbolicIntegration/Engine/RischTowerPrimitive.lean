@@ -13,7 +13,7 @@ frontier, so the recursive solver reuses it. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG Polynomial Classical
+open CPoly QFunNZ Polynomial Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -29,10 +29,10 @@ the `implicitDeriv`/`towerFractionFieldDerivG_div` bridge — so both `*_special
 theorem primitiveSpecialSoundCore [Fact (GcdFFCorrect (α := α))]
     (Dt a d qp : CPoly α) (hd0 : toPoly d ≠ 0)
     (hb : cisZero (crSpecNum Dt a d) = true)
-    (hid : towerFractionFieldDerivG Dt (fieldFrac qp [CField.one])
+    (hid : towerFractionFieldDeriv Dt (fieldFrac qp [CField.one])
       = fieldFrac (crPoly Dt a d) [CField.one]) :
     toPoly ([CField.one] : CPoly α) ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
-      towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = v ∧
+      towerFractionFieldDeriv Dt (fieldFrac qp [CField.one]) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
   refine ⟨?_, fieldFrac (crPoly Dt a d) [CField.one], hid, ?_⟩
   · simp only [denote, mul_zero, add_zero]; exact one_ne_zero
@@ -52,7 +52,7 @@ theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
     (hhook : primitiveGuardedCase.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d)
       (crSpecDen Dt a d) = some (snum, sden)) :
     toPoly sden ≠ 0 ∧ ∃ v : RatFunc (CFieldSpec.K α),
-      towerFractionFieldDerivG Dt (fieldFrac snum sden) = v ∧
+      towerFractionFieldDeriv Dt (fieldFrac snum sden) = v ∧
       v + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d := by
   simp only [primitiveGuardedCase] at hhook
   by_cases hguard : (cisZero (crSpecNum Dt a d) && cisZero (csub Dt [CField.one])

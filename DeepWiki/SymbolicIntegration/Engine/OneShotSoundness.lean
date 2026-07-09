@@ -14,7 +14,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
 
@@ -103,16 +103,16 @@ theorem toPolyG_cmonomialDeriv_cIntegratePolyG_const [CharZero (CFieldSpec.K α)
 
 /-- Field-level polynomial-part identity: over a constant base (`hconst`), the tower fraction-field
 derivation sends the antiderivative to the integrand,
-`towerFractionFieldDerivG [CField.one] (amG (toPoly (cIntegratePoly c))) = amG (toPoly c)` over
+`towerFractionFieldDeriv [CField.one] (am (toPoly (cIntegratePoly c))) = am (toPoly c)` over
 `RatFunc (CFieldSpec.K α)`. -/
 theorem towerFractionFieldDerivG_amG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (c : CPoly α)
     (hconst : Differential.mapCoeffs (toPoly (CPoly.cIntegratePoly c)) = 0) :
-    towerFractionFieldDerivG ([CField.one] : CPoly α)
-        (amG α (toPoly (CPoly.cIntegratePoly c)))
-      = amG α (toPoly c) := by
+    towerFractionFieldDeriv ([CField.one] : CPoly α)
+        (am α (toPoly (CPoly.cIntegratePoly c)))
+      = am α (toPoly c) := by
   -- the tower field derivation on a polynomial image is the image of the monomial derivation
-  rw [towerFractionFieldDerivG, extendDeriv_algebraMap, ← toPolyG_cmonomialDeriv]
+  rw [towerFractionFieldDeriv, extendDeriv_algebraMap, ← toPolyG_cmonomialDeriv]
   -- which the abstract atom identifies with `toPoly c`
   rw [toPolyG_cmonomialDeriv_cIntegratePolyG_const c hconst]
 
@@ -160,16 +160,16 @@ theorem checkIdentityG_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] (c : C
 /-! ### The one-shot: compose the crux with the field bridge -/
 
 /-- Checker-free one-shot `D(∫ fₚ) = fₚ` (polynomial branch): over a constant base, the antiderivative
-`g = amG(toPoly (cIntegratePoly c))/amG 1` satisfies
-`towerFractionFieldDerivG [1] g + logResidueSumG [1] [] = amG(toPoly c)/amG 1`, obtained by feeding the
+`g = am(toPoly (cIntegratePoly c))/am 1` satisfies
+`towerFractionFieldDeriv [1] g + logResidueSum [1] [] = am(toPoly c)/am 1`, obtained by feeding the
 abstractly-proven `checkIdentity = true` into `field_identity_of_checkIdentityG`. -/
 theorem field_identity_cIntegratePolyG_const [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
     (c : CPoly α) (hconst : Differential.mapCoeffs (toPoly (CPoly.cIntegratePoly c)) = 0) :
-    towerFractionFieldDerivG ([CField.one] : CPoly α)
-        (amG α (toPoly (CPoly.cIntegratePoly c)) / amG α (toPoly ([CField.one] : CPoly α)))
-        + logResidueSumG ([CField.one] : CPoly α)
-            (⟨(CPoly.cIntegratePoly c, ([CField.one] : CPoly α)), []⟩ : IntegralResultG α).logs
-      = amG α (toPoly c) / amG α (toPoly ([CField.one] : CPoly α)) := by
+    towerFractionFieldDeriv ([CField.one] : CPoly α)
+        (am α (toPoly (CPoly.cIntegratePoly c)) / am α (toPoly ([CField.one] : CPoly α)))
+        + logResidueSum ([CField.one] : CPoly α)
+            (⟨(CPoly.cIntegratePoly c, ([CField.one] : CPoly α)), []⟩ : IntegralResult α).logs
+      = am α (toPoly c) / am α (toPoly ([CField.one] : CPoly α)) := by
   have hone_ne : toPoly ([CField.one] : CPoly α) ≠ 0 := by
     simp only [denote, map_one, mul_zero, add_zero]
     exact one_ne_zero
@@ -190,7 +190,7 @@ theorem cPolyRischDEG_nil_eq [CRischField α] (Dt : CPoly α) (c : CPoly α) (n 
 
 /-- Checker-free one-shot keyed on `cPolyRischDE`: if `cPolyRischDE [CField.one] [] c n = some q`
 (nonzero `c` within the degree budget, constant base), then
-`towerFractionFieldDerivG [1] (amG(toPoly q)/amG 1) = amG(toPoly c)/amG 1` holds, no `checkIdentity`
+`towerFractionFieldDeriv [1] (am(toPoly q)/am 1) = am(toPoly c)/am 1` holds, no `checkIdentity`
 executed. -/
 theorem field_identity_of_cPolyRischDEG [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
     [CRischField α]
@@ -198,15 +198,15 @@ theorem field_identity_of_cPolyRischDEG [CharZero (CFieldSpec.K α)] [Algebra �
     (hc : CPoly.cisZero c = false) (hdeg : (CPoly.cdeg c : ℤ) + 1 ≤ n)
     (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly α) ([] : CPoly α) c n = some q)
     (hconst : Differential.mapCoeffs (toPoly q) = 0) :
-    towerFractionFieldDerivG ([CField.one] : CPoly α)
-        (amG α (toPoly q) / amG α (toPoly ([CField.one] : CPoly α)))
-      = amG α (toPoly c) / amG α (toPoly ([CField.one] : CPoly α)) := by
+    towerFractionFieldDeriv ([CField.one] : CPoly α)
+        (am α (toPoly q) / am α (toPoly ([CField.one] : CPoly α)))
+      = am α (toPoly c) / am α (toPoly ([CField.one] : CPoly α)) := by
   -- the algorithm output is exactly `cIntegratePoly c`
   have hq : q = CPoly.cIntegratePoly c := by
     rw [cPolyRischDEG_nil_eq ([CField.one] : CPoly α) c n hc hdeg] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm
   subst hq
-  -- empty logs ⇒ `logResidueSumG … [] = 0`, so the field-identity is exactly the bridge output
+  -- empty logs ⇒ `logResidueSum … [] = 0`, so the field-identity is exactly the bridge output
   have h := field_identity_cIntegratePolyG_const (α := α) c hconst
   rwa [logResidueSumG_nil, add_zero] at h
 
@@ -246,8 +246,8 @@ theorem cIntegratePolyG_const_coeff [CharZero (CFieldSpec.K α)] (c : CPoly α)
 
 /-- Fuel-free Poly-RDE soundness on the `b = 0` branch, keyed on the integrand: if
 `cPolyRischDE [CField.one] [] c n = some q` (nonzero `c` within the degree budget, primitive base
-`Dt = 1`) and `mapCoeffs (toPoly c) = 0`, then `towerFractionFieldDerivG [1] (amG(toPoly q)/amG 1)
-= amG(toPoly c)/amG 1`. Requires `Dt = [CField.one]`: term-by-term integration inverts the monomial
+`Dt = 1`) and `mapCoeffs (toPoly c) = 0`, then `towerFractionFieldDeriv [1] (am(toPoly q)/am 1)
+= am(toPoly c)/am 1`. Requires `Dt = [CField.one]`: term-by-term integration inverts the monomial
 derivation only when `D(t) = 1`. -/
 theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
     [CRischField α]
@@ -255,9 +255,9 @@ theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra �
     (hc : CPoly.cisZero c = false) (hdeg : (CPoly.cdeg c : ℤ) + 1 ≤ n)
     (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly α) ([] : CPoly α) c n = some q)
     (hconst : Differential.mapCoeffs (toPoly c) = 0) :
-    towerFractionFieldDerivG ([CField.one] : CPoly α)
-        (amG α (toPoly q) / amG α (toPoly ([CField.one] : CPoly α)))
-      = amG α (toPoly c) / amG α (toPoly ([CField.one] : CPoly α)) := by
+    towerFractionFieldDeriv ([CField.one] : CPoly α)
+        (am α (toPoly q) / am α (toPoly ([CField.one] : CPoly α)))
+      = am α (toPoly c) / am α (toPoly ([CField.one] : CPoly α)) := by
   -- `q = cIntegratePoly c`, so the output-side `mapCoeffs` follows from the input-side via the transport
   have hq : q = CPoly.cIntegratePoly c := by
     rw [cPolyRischDEG_nil_eq ([CField.one] : CPoly α) c n hc hdeg] at hsome
@@ -267,30 +267,30 @@ theorem cPolyRischDEG_nil_field_identity [CharZero (CFieldSpec.K α)] [Algebra �
     (cPolyRischDEG_nil_eq ([CField.one] : CPoly α) c n hc hdeg)
     (cIntegratePolyG_const_coeff c hconst)
 
-/-! ### The deliverable at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)` -/
+/-! ### The deliverable at the level-1 carrier `α = QFunNZ ℚ = ℚ(x)` -/
 
-/-- `CharZero (CFieldSpec.K (QFunNZG ℚ))` via `RatFunc ℚ`: local instance for the polynomial-branch
+/-- `CharZero (CFieldSpec.K (QFunNZ ℚ))` via `RatFunc ℚ`: local instance for the polynomial-branch
 one-shot over the carrier abbreviation. -/
-noncomputable local instance : CharZero (CFieldSpec.K (QFunNZG ℚ)) :=
+noncomputable local instance : CharZero (CFieldSpec.K (QFunNZ ℚ)) :=
   inferInstanceAs (CharZero (RatFunc ℚ))
 
-/-- Local `ℚ`-algebra structure on `CFieldSpec.K (QFunNZG ℚ)` via `RatFunc ℚ`. -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
+/-- Local `ℚ`-algebra structure on `CFieldSpec.K (QFunNZ ℚ)` via `RatFunc ℚ`. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
-/-- Fuel-free checker-free one-shot at `α = QFunNZG ℚ`: if `cPolyRischDE [CField.one] [] c n = some q`
-over `ℚ(x) = QFunNZG ℚ` (nonzero `c` within the degree budget, constant base), then
-`towerFractionFieldDerivG [1] (amG(toPoly q)/amG 1) = amG(toPoly c)/amG 1` over `RatFunc ℚ`. The
-`QFunNZG ℚ` instance of `field_identity_of_cPolyRischDEG`. -/
-theorem field_identity_of_cPolyRischDEG_qfunNZG (c q : CPoly (QFunNZG ℚ)) (n : ℤ)
+/-- Fuel-free checker-free one-shot at `α = QFunNZ ℚ`: if `cPolyRischDE [CField.one] [] c n = some q`
+over `ℚ(x) = QFunNZ ℚ` (nonzero `c` within the degree budget, constant base), then
+`towerFractionFieldDeriv [1] (am(toPoly q)/am 1) = am(toPoly c)/am 1` over `RatFunc ℚ`. The
+`QFunNZ ℚ` instance of `field_identity_of_cPolyRischDEG`. -/
+theorem field_identity_of_cPolyRischDEG_qfunNZG (c q : CPoly (QFunNZ ℚ)) (n : ℤ)
     (hc : CPoly.cisZero c = false) (hdeg : (CPoly.cdeg c : ℤ) + 1 ≤ n)
-    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (QFunNZG ℚ)) ([] : CPoly (QFunNZG ℚ)) c n
+    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (QFunNZ ℚ)) ([] : CPoly (QFunNZ ℚ)) c n
         = some q)
     (hconst : Differential.mapCoeffs (toPoly q) = 0) :
-    towerFractionFieldDerivG ([CField.one] : CPoly (QFunNZG ℚ))
-        (amG (QFunNZG ℚ) (toPoly q) / amG (QFunNZG ℚ) (toPoly ([CField.one] : CPoly (QFunNZG ℚ))))
-      = amG (QFunNZG ℚ) (toPoly c)
-          / amG (QFunNZG ℚ) (toPoly ([CField.one] : CPoly (QFunNZG ℚ))) :=
+    towerFractionFieldDeriv ([CField.one] : CPoly (QFunNZ ℚ))
+        (am (QFunNZ ℚ) (toPoly q) / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))))
+      = am (QFunNZ ℚ) (toPoly c)
+          / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))) :=
   field_identity_of_cPolyRischDEG c q n hc hdeg hsome hconst
 
 /-! ### Restatements of the polynomial-branch identities -/
@@ -308,16 +308,16 @@ example [CharZero (CFieldSpec.K α)] (c : CPoly α)
       = true :=
   checkIdentityG_cIntegratePolyG_const c hconst
 
--- At `α = QFunNZG ℚ`, a successful polynomial RDE solve differentiates back to the integrand.
-example (c q : CPoly (QFunNZG ℚ)) (n : ℤ)
+-- At `α = QFunNZ ℚ`, a successful polynomial RDE solve differentiates back to the integrand.
+example (c q : CPoly (QFunNZ ℚ)) (n : ℤ)
     (hc : CPoly.cisZero c = false) (hdeg : (CPoly.cdeg c : ℤ) + 1 ≤ n)
-    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (QFunNZG ℚ)) ([] : CPoly (QFunNZG ℚ)) c n
+    (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly (QFunNZ ℚ)) ([] : CPoly (QFunNZ ℚ)) c n
         = some q)
     (hconst : Differential.mapCoeffs (toPoly q) = 0) :
-    towerFractionFieldDerivG ([CField.one] : CPoly (QFunNZG ℚ))
-        (amG (QFunNZG ℚ) (toPoly q) / amG (QFunNZG ℚ) (toPoly ([CField.one] : CPoly (QFunNZG ℚ))))
-      = amG (QFunNZG ℚ) (toPoly c)
-          / amG (QFunNZG ℚ) (toPoly ([CField.one] : CPoly (QFunNZG ℚ))) :=
+    towerFractionFieldDeriv ([CField.one] : CPoly (QFunNZ ℚ))
+        (am (QFunNZ ℚ) (toPoly q) / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))))
+      = am (QFunNZ ℚ) (toPoly c)
+          / am (QFunNZ ℚ) (toPoly ([CField.one] : CPoly (QFunNZ ℚ))) :=
   field_identity_of_cPolyRischDEG_qfunNZG c q n hc hdeg hsome hconst
 
 -- Differential-constant integrand coefficients give differential-constant antiderivative coefficients.
@@ -332,9 +332,9 @@ example [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)] [CRischFiel
     (hc : CPoly.cisZero c = false) (hdeg : (CPoly.cdeg c : ℤ) + 1 ≤ n)
     (hsome : CPoly.cPolyRischDE ([CField.one] : CPoly α) ([] : CPoly α) c n = some q)
     (hconst : Differential.mapCoeffs (toPoly c) = 0) :
-    towerFractionFieldDerivG ([CField.one] : CPoly α)
-        (amG α (toPoly q) / amG α (toPoly ([CField.one] : CPoly α)))
-      = amG α (toPoly c) / amG α (toPoly ([CField.one] : CPoly α)) :=
+    towerFractionFieldDeriv ([CField.one] : CPoly α)
+        (am α (toPoly q) / am α (toPoly ([CField.one] : CPoly α)))
+      = am α (toPoly c) / am α (toPoly ([CField.one] : CPoly α)) :=
   cPolyRischDEG_nil_field_identity c q n hc hdeg hsome hconst
 
 /-! ## The cancellation-case soundness (`b ≠ 0`, `deg b = 0`)
@@ -437,39 +437,39 @@ variable [Algebra ℚ (CFieldSpec.K α)]
 
 omit [CRischField α] in
 /-- Field-level lift of a polynomial Risch-DE identity: from `Dq + b·q = c` over `(CFieldSpec.K α)[X]`
-(the `cmonomialDeriv`/`toPoly` form), `towerFractionFieldDerivG Dt (amG q) + amG b · amG q = amG c` over
+(the `cmonomialDeriv`/`toPoly` form), `towerFractionFieldDeriv Dt (am q) + am b · am q = am c` over
 `RatFunc (CFieldSpec.K α)`. -/
 theorem towerFractionFieldDerivG_amG_of_polyIdentity (Dt b c q : CPoly α)
     (hpoly : toPoly (CPoly.cmonomialDeriv Dt q) + toPoly b * toPoly q = toPoly c) :
-    towerFractionFieldDerivG Dt (amG α (toPoly q))
-        + amG α (toPoly b) * amG α (toPoly q)
-      = amG α (toPoly c) := by
-  rw [towerFractionFieldDerivG, extendDeriv_algebraMap, ← toPolyG_cmonomialDeriv,
+    towerFractionFieldDeriv Dt (am α (toPoly q))
+        + am α (toPoly b) * am α (toPoly q)
+      = am α (toPoly c) := by
+  rw [towerFractionFieldDeriv, extendDeriv_algebraMap, ← toPolyG_cmonomialDeriv,
     ← map_mul, ← map_add, hpoly]
 
 /-- Fuel-free field-level primitive-cancellation soundness: in the primitive regime (`cdeg Dt = 0`,
 `deg(b) = 0`, `b ≠ 0`), a dispatcher success `cPolyRischDE Dt b c m = some q` solves
-`towerFractionFieldDerivG Dt (amG q) + amG b · amG q = amG c` over `RatFunc (CFieldSpec.K α)`,
+`towerFractionFieldDeriv Dt (am q) + am b · am q = am c` over `RatFunc (CFieldSpec.K α)`,
 base-oracle-free. -/
 theorem cPolyRischDEG_cancelPrim_field (Dt b c q : CPoly α) (m : ℤ)
     (hδ : CPoly.cdeg Dt = 0) (hdb : CPoly.cdeg b = 0) (hb : CPoly.cisZero b = false)
     (hsome : CPoly.cPolyRischDE Dt b c m = some q) :
-    towerFractionFieldDerivG Dt (amG α (toPoly q))
-        + amG α (toPoly b) * amG α (toPoly q)
-      = amG α (toPoly c) :=
+    towerFractionFieldDeriv Dt (am α (toPoly q))
+        + am α (toPoly b) * am α (toPoly q)
+      = am α (toPoly c) :=
   towerFractionFieldDerivG_amG_of_polyIdentity Dt b c q
     (cPolyRischDEG_cancelPrim_sound Dt b c q m hδ hdb hb hsome)
 
 /-- Fuel-free field-level hyperexponential-cancellation soundness: in the hyperexponential regime
 (`cdeg Dt = 1`, `deg(b) = 0`, `b ≠ 0`), a dispatcher success `cPolyRischDE Dt b c m = some q` solves
-`towerFractionFieldDerivG Dt (amG q) + amG b · amG q = amG c` over `RatFunc (CFieldSpec.K α)`,
+`towerFractionFieldDeriv Dt (am q) + am b · am q = am c` over `RatFunc (CFieldSpec.K α)`,
 base-oracle-free. -/
 theorem cPolyRischDEG_cancelExp_field (Dt b c q : CPoly α) (m : ℤ)
     (hδ : CPoly.cdeg Dt = 1) (hdb : CPoly.cdeg b = 0) (hb : CPoly.cisZero b = false)
     (hsome : CPoly.cPolyRischDE Dt b c m = some q) :
-    towerFractionFieldDerivG Dt (amG α (toPoly q))
-        + amG α (toPoly b) * amG α (toPoly q)
-      = amG α (toPoly c) :=
+    towerFractionFieldDeriv Dt (am α (toPoly q))
+        + am α (toPoly b) * am α (toPoly q)
+      = am α (toPoly c) :=
   towerFractionFieldDerivG_amG_of_polyIdentity Dt b c q
     (cPolyRischDEG_cancelExp_sound Dt b c q m hδ hdb hb hsome)
 
@@ -479,9 +479,9 @@ theorem cPolyRischDEG_cancelExp_field (Dt b c q : CPoly α) (m : ℤ)
 example (Dt b c q : CPoly α) (m : ℤ)
     (hδ : CPoly.cdeg Dt = 0) (hdb : CPoly.cdeg b = 0) (hb : CPoly.cisZero b = false)
     (hsome : CPoly.cPolyRischDE Dt b c m = some q) :
-    towerFractionFieldDerivG Dt (amG α (toPoly q))
-        + amG α (toPoly b) * amG α (toPoly q)
-      = amG α (toPoly c) :=
+    towerFractionFieldDeriv Dt (am α (toPoly q))
+        + am α (toPoly b) * am α (toPoly q)
+      = am α (toPoly c) :=
   cPolyRischDEG_cancelPrim_field Dt b c q m hδ hdb hb hsome
 
 end Cancellation

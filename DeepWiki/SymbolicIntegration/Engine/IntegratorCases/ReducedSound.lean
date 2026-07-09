@@ -9,7 +9,7 @@ Rothstein-Trager residue interfaces.
 namespace DeepWiki.SymbolicIntegration
 
 open CPoly
-open QFunNZG Polynomial
+open QFunNZ Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -19,22 +19,22 @@ omit [CRischField α] in
 /-- **The reduced normal part is an integral result**, modulo the reduced-stage frontier: from the Hermite
 half (`hherm`) and the Rothstein–Trager residue match (`hmatch`), `cIntegrateReduced Dt a d cands`
 satisfies the antiderivative predicate. A restatement of
-`field_identity_of_cIntegrateReducedG_of_residueMatch` as `IsIntegralResultG`; `hherm`/`hmatch` are the
+`field_identity_of_cIntegrateReducedG_of_residueMatch` as `IsIntegralResult`; `hherm`/`hmatch` are the
 `cHermiteReduceTower` / RT-residue `native_decide` frontier. It discharges `hNrmField`. -/
 theorem cIntegrateReducedG_isIntegralResult (Dt a d : CPoly α) (cands : List α)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPoly (cIntegrateReduced Dt a d cands).rational.1)
-              / amG α (toPoly (cIntegrateReduced Dt a d cands).rational.2))
-          + amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG α (toPoly a) / amG α (toPoly d))
+    (hherm : towerFractionFieldDeriv Dt
+            (am α (toPoly (cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (cIntegrateReduced Dt a d cands).rational.2))
+          + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am α (toPoly a) / am α (toPoly d))
     (hmatch : ((cIntegrateReduced Dt a d cands).logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-        = amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-          / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)) :
-    IsIntegralResultG Dt a d (cIntegrateReduced Dt a d cands) := by
-  simp only [IsIntegralResultG]
+          am α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+        = am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+          / am α (toPoly (cHermiteReduceTower Dt a d).2.2)) :
+    IsIntegralResult Dt a d (cIntegrateReduced Dt a d cands) := by
+  simp only [IsIntegralResult]
   exact field_identity_of_cIntegrateReducedG_of_residueMatch Dt a d cands hherm hmatch
 
 omit [CRischField α] in
@@ -48,7 +48,7 @@ theorem cIntegrateReducedG_isIntegralResult_of_lawful (Dt a d : CPoly α) (cands
       (CPoly.cHermiteReduceTower Dt a d).2.2)
     (hres : LawfulResidueLogPart Dt (CPoly.cHermiteReduceTower Dt a d).2.1
       (CPoly.cHermiteReduceTower Dt a d).2.2 (CPoly.cIntegrateReduced Dt a d cands).logs) :
-    IsIntegralResultG Dt a d (CPoly.cIntegrateReduced Dt a d cands) :=
+    IsIntegralResult Dt a d (CPoly.cIntegrateReduced Dt a d cands) :=
   cIntegrateReducedG_isIntegralResult Dt a d cands hherm.field_identity hres.residue_match
 
 open Classical in
@@ -91,7 +91,7 @@ theorem cIntegrateReducedG_primitive_isIntegralResult_via_interfaces [CharZero (
       (gcd (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2)
           (toPoly (CPoly.cAmcDd Dt (CPoly.cHermiteReduceTower Dt a d).2.1
             (CPoly.cHermiteReduceTower Dt a d).2.2 (residueCand β))))) :
-    IsIntegralResultG Dt a d (CPoly.cIntegrateReduced Dt a d cands) :=
+    IsIntegralResult Dt a d (CPoly.cIntegrateReduced Dt a d cands) :=
   cIntegrateReducedG_isIntegralResult_of_lawful Dt a d cands
     (cHermiteReduceTowerG_lawfulHermiteReduction hgcd Dt a d hd0 hpp hcopgcd hproper)
     (cIntegrateReducedG_lawfulResidueLogPart Dt a d cands s w residueCand hDt hden hA hnorm hres
@@ -137,7 +137,7 @@ theorem cIntegrateReducedG_hyperexp_isIntegralResult_via_interfaces [CharZero (C
       (gcd (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2)
           (toPoly (CPoly.cAmcDd Dt (CPoly.cHermiteReduceTower Dt a d).2.1
             (CPoly.cHermiteReduceTower Dt a d).2.2 (residueCand β))))) :
-    IsIntegralResultG Dt a d (CPoly.cIntegrateReduced Dt a d cands) :=
+    IsIntegralResult Dt a d (CPoly.cIntegrateReduced Dt a d cands) :=
   cIntegrateReducedG_isIntegralResult_of_lawful Dt a d cands
     (cHermiteReduceTowerG_lawfulHermiteReduction hgcd Dt a d hd0 hpp hcopgcd hproper)
     (cIntegrateReducedG_lawfulResidueLogPart_hyperexp Dt a d cands s b residueCand hb hDt hden hA
@@ -146,21 +146,21 @@ theorem cIntegrateReducedG_hyperexp_isIntegralResult_via_interfaces [CharZero (C
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]
 
-open QFunNZG in
+open QFunNZ in
 /-- **Reduced-part soundness, Hermite half discharged.** Given the exact-division relation for the
 `cHermiteReduceTower` output (`hexact`) and the RT residue match (`hmatch`), the reduced normal part
 integrates correctly: `D(⟦reduced.rational⟧) + logResidueSum reduced.logs = ⟦a/d⟧`. The Hermite `hherm`
 is discharged by `hermiteTowerStep_field_identity`. -/
 theorem field_identity_of_cIntegrateReducedG_of_residueMatch_of_exact (Dt a d : CPoly α)
     (cands : List α)
-    (hd : amG α (toPoly d) ≠ 0)
-    (hgden : amG α (toPoly (CPoly.cHermiteReduceTower Dt a d).1.2) ≠ 0)
-    (hDstar : amG α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2) ≠ 0)
-    (hexact : amG α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.1)
-          * amG α (toPoly (CPoly.cmul d
+    (hd : am α (toPoly d) ≠ 0)
+    (hgden : am α (toPoly (CPoly.cHermiteReduceTower Dt a d).1.2) ≠ 0)
+    (hDstar : am α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2) ≠ 0)
+    (hexact : am α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.1)
+          * am α (toPoly (CPoly.cmul d
               (CPoly.cmul (CPoly.cHermiteReduceTower Dt a d).1.2
                 (CPoly.cHermiteReduceTower Dt a d).1.2)))
-        = amG α (toPoly (CPoly.csub
+        = am α (toPoly (CPoly.csub
             (CPoly.cmul a (CPoly.cmul (CPoly.cHermiteReduceTower Dt a d).1.2
               (CPoly.cHermiteReduceTower Dt a d).1.2))
             (CPoly.cmul d (CPoly.csub
@@ -168,17 +168,17 @@ theorem field_identity_of_cIntegrateReducedG_of_residueMatch_of_exact (Dt a d : 
                 (CPoly.cHermiteReduceTower Dt a d).1.2)
               (CPoly.cmul (CPoly.cHermiteReduceTower Dt a d).1.1
                 (CPoly.cmonomialDeriv Dt (CPoly.cHermiteReduceTower Dt a d).1.2))))))
-          * amG α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2))
+          * am α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2))
     (hmatch : ((CPoly.cIntegrateReduced Dt a d cands).logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-        = amG α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.1)
-          / amG α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2)) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = amG α (toPoly a) / amG α (toPoly d) :=
+          am α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+        = am α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.1)
+          / am α (toPoly (CPoly.cHermiteReduceTower Dt a d).2.2)) :
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = am α (toPoly a) / am α (toPoly d) :=
   field_identity_of_cIntegrateReducedG_of_residueMatch Dt a d cands
     (hermiteTowerStep_field_identity Dt (CPoly.cHermiteReduceTower Dt a d).1.1
       (CPoly.cHermiteReduceTower Dt a d).1.2 a d (CPoly.cHermiteReduceTower Dt a d).2.1

@@ -88,11 +88,11 @@ abbrev full_integrate := @cIntegrateAlgebraicWf
 
 /-- The dispatch's reconstructed rational part for `∫ 1/((x−1)²√(x²+1))`, built from
 `radIntegrateRationalWf`. -/
-def full_rtRatV : RadElem (QFunNZG ℚ) :=
+def full_rtRatV : RadElem (QFunNZ ℚ) :=
   radAssembleRatPart rtRatRho (CPoly.radIntegrateRationalWf (qxNum rtRatRho) rtRatR rtRatB)
 
 /-- The rational-only benchmark integrand: `algDeriv ⟨full_rtRatV, []⟩`. -/
-def full_rtRatIntegrand : RadElem (QFunNZG ℚ) := algDeriv rtRatRho ⟨full_rtRatV, []⟩
+def full_rtRatIntegrand : RadElem (QFunNZ ℚ) := algDeriv rtRatRho ⟨full_rtRatV, []⟩
 
 /-- The recovered rational-only result for `∫ 1/((x−1)²√(x²+1))`: the rational part is reconstructed
 by `radIntegrateRationalWf`, and the non-principal residual gives an empty log list. -/
@@ -134,14 +134,14 @@ theorem full_roundtrip_log_shape :
 
 /-- The dispatch's reconstructed rational part for the combined round-trip, built from
 `radIntegrateRationalWf`. -/
-def full_rtCombVdispatch : RadElem (QFunNZG ℚ) :=
+def full_rtCombVdispatch : RadElem (QFunNZ ℚ) :=
   radAssembleRatPart rtCombRho (CPoly.radIntegrateRationalWf (qxNum rtCombRho) rtCombR rtCombB)
 
 /-- The combined starting antiderivative `F = full_rtCombVdispatch + log(rtCombU)`. -/
 def full_rtCombF : AlgIntegralResult := ⟨full_rtCombVdispatch, [(CField.one, rtCombU)]⟩
 
 /-- The combined benchmark integrand: `algDeriv full_rtCombF`. -/
-def full_rtCombIntegrand : RadElem (QFunNZG ℚ) := algDeriv rtCombRho full_rtCombF
+def full_rtCombIntegrand : RadElem (QFunNZ ℚ) := algDeriv rtCombRho full_rtCombF
 
 /-- The recovered combined result for `F = v + log(x + y)`: both the rational part and the log
 argument are reconstructed by `cIntegrateAlgebraicWf`. -/

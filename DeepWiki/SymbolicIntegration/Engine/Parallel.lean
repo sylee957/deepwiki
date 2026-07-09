@@ -73,7 +73,7 @@ default educated guess; an integrand whose denominator factors into squarefree-b
 
 ## What is documented / deferred
 
-The genuine **multivariate tower** `ℚ(x)[t]` (`a d : CPoly (QFunNZG ℚ)`, the `cParallelIntegrateTower`
+The genuine **multivariate tower** `ℚ(x)[t]` (`a d : CPoly (QFunNZ ℚ)`, the `cParallelIntegrateTower`
 signature stub) needs the special-polynomial list `S^irr_{K:F}` and irreducible factorization over `F̄`
 (Theorems 10.2.1/10.2.2, Examples 10.3.2/10.3.4) — the documented continuation; the §10.1 multivariate
 `SplitFactor`/`SplitSquarefreeFactor` and the §10.4 simple-differential-field exponent bounds
@@ -263,7 +263,7 @@ def cParallelResultDerivQ (Dt : CPoly ℚ)
 parallel-integration result `res = ((b,s), logs)` satisfies `D(b/s + Σ cⱼ log pⱼ) = a/d` as rational
 functions over `ℚ(t)`, decided by `cisZero (num·d − a·den)` where `(num, den) =
 cParallelResultDerivQ … res`. This is the faithful `D(∫f) = f` certificate (no equality decision on
-`QFunNZG ℚ` needed — the polynomial cross-difference is `cisZero`-tested over `ℚ`). -/
+`QFunNZ ℚ` needed — the polynomial cross-difference is `cisZero`-tested over `ℚ`). -/
 def cParallelCheckQ (Dt a d : CPoly ℚ)
     (res : (CPoly ℚ × CPoly ℚ) × List (ℚ × CPoly ℚ)) : Bool :=
   let (num, den) := cParallelResultDerivQ Dt res
@@ -273,29 +273,29 @@ end CPoly
 
 /-! ### The genuine tower `ℚ(x)[t]` — documented signature stub
 
-The prompt's `cParallelIntegrate Dt fuel (a d : CPoly (QFunNZG ℚ))` over the genuine differential tower
+The prompt's `cParallelIntegrate Dt fuel (a d : CPoly (QFunNZ ℚ))` over the genuine differential tower
 `k(t) = ℚ(x)(t)` needs the special-polynomial list `S^irr_{K:F}` (Theorem 10.2.2) and the irreducible
 factorization of `dₙ` over `F̄ = ℚ̄(x)` (Theorem 10.2.1, Examples 10.3.2/10.3.4) before the eq. 10.6 solve
 — the matrix entries then lie in `F = ℚ(x)`, not `Const(k) = ℚ`, so Lemma 7.1.2's row-differentiation
 reduction to a `ℚ`-system precedes `crref` (cf. `ComputableParametric` §7.1). We expose the signature
-(over the **generic** ℚ(x) = `QFunNZG ℚ` carrier) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
-coefficient a `ℚ`-constant `QFunNZG ℚ`) through the landed `CPoly.cParallelIntegrate`; a coefficient with
+(over the **generic** ℚ(x) = `QFunNZ ℚ` carrier) and route the base-field case `Dt, a, d ∈ ℚ[t]` (every
+coefficient a `ℚ`-constant `QFunNZ ℚ`) through the landed `CPoly.cParallelIntegrate`; a coefficient with
 a genuine `x`-dependence returns `none` ("deferred to the tower construction"). -/
 
 namespace CPoly
 
-/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZG ℚ` element (the tower-coefficient builder, the `ℚ → QFunNZG ℚ`
+/-- A ℚ constant `n ∈ ℚ ⊂ ℚ(x)` as a `QFunNZ ℚ` element (the tower-coefficient builder, the `ℚ → QFunNZ ℚ`
 constant embedding; denominator `[1]` nonzero by `cisZeroG_one_singleton`). -/
-def qConstTowerG (n : ℚ) : QFunNZG ℚ := ⟨([n], [(1 : ℚ)]), QFunNZG.cisZeroG_one_singleton⟩
+def qConstTower (n : ℚ) : QFunNZ ℚ := ⟨([n], [(1 : ℚ)]), QFunNZ.cisZeroG_one_singleton⟩
 
-/-- **`QFunNZG ℚ`-coefficient `CPoly` to a `ℚ`-coefficient one, when every coefficient is a
+/-- **`QFunNZ ℚ`-coefficient `CPoly` to a `ℚ`-coefficient one, when every coefficient is a
 `ℚ`-constant.** `cToRatCoeffsQ p = some q` with `q : CPoly ℚ` iff each coefficient of
-`p : CPoly (QFunNZG ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
+`p : CPoly (QFunNZ ℚ)` reduces to a `ℚ`-constant (the numerator/denominator gcd-cancelled to degree-0
 numerator and denominator), else `none`. The base-field guard for the tower wrapper: the lowest-terms
 reduction divides `(num, den)` by their gcd (`cgcdWf`/`cdivWf`), and a `ℚ`-constant is exactly a
 degree-0 quotient over a degree-0 (nonzero) remainder denominator. -/
-def cToRatCoeffsQ (p : CPoly (QFunNZG ℚ)) : Option (CPoly ℚ) :=
-  (p : List (QFunNZG ℚ)).foldr (fun (z : QFunNZG ℚ) acc =>
+def cToRatCoeffsQ (p : CPoly (QFunNZ ℚ)) : Option (CPoly ℚ) :=
+  (p : List (QFunNZ ℚ)).foldr (fun (z : QFunNZ ℚ) acc =>
     match acc with
     | none => none
     | some qs =>
@@ -309,20 +309,20 @@ def cToRatCoeffsQ (p : CPoly (QFunNZG ℚ)) : Option (CPoly ℚ) :=
       else none) (some [])
 
 /-- **Parallel integration over the tower `ℚ(x)[t]`** `cParallelIntegrateTower fuel Dt a d` (Bronstein
-§10.3, `a d : CPoly (QFunNZG ℚ)`): the genuine-tower signature over the generic ℚ(x) = `QFunNZG ℚ`
+§10.3, `a d : CPoly (QFunNZ ℚ)`): the genuine-tower signature over the generic ℚ(x) = `QFunNZ ℚ`
 carrier. The base-field case — `Dt, a, d` all with `ℚ`-constant coefficients (so `k = ℚ`, the field
-`ℚ(t)`) — is routed through `cParallelIntegrate` and the result lifted back to `QFunNZG ℚ` coefficients
+`ℚ(t)`) — is routed through `cParallelIntegrate` and the result lifted back to `QFunNZ ℚ` coefficients
 (rational part `(b, s)` and log arguments `pⱼ`, with the `ℚ`-constants `cⱼ`). A genuine `x`-dependent
 coefficient (the full tower, needing the §10.2 special-poly list + `F̄`-factorization) returns `none` —
 the documented continuation. -/
-def cParallelIntegrateTower (Dt a d : CPoly (QFunNZG ℚ)) :
-    Option ((CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) × List (ℚ × CPoly (QFunNZG ℚ))) :=
+def cParallelIntegrateTower (Dt a d : CPoly (QFunNZ ℚ)) :
+    Option ((CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) × List (ℚ × CPoly (QFunNZ ℚ))) :=
   match cToRatCoeffsQ Dt, cToRatCoeffsQ a, cToRatCoeffsQ d with
   | some DtQ, some aQ, some dQ =>
     match cParallelIntegrate DtQ aQ dQ with
     | none => none
     | some ((b, s), logs) =>
-      let lift : CPoly ℚ → CPoly (QFunNZG ℚ) := fun p => (p : List ℚ).map qConstTowerG
+      let lift : CPoly ℚ → CPoly (QFunNZ ℚ) := fun p => (p : List ℚ).map qConstTower
       some ((lift b, lift s), logs.map (fun (c, p) => (c, lift p)))
   | _, _, _ => none
 

@@ -10,42 +10,42 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-! ### The deliverables at the level-1 carrier `α = QFunNZG ℚ = ℚ(x)` -/
+/-! ### The deliverables at the level-1 carrier `α = QFunNZ ℚ = ℚ(x)` -/
 
-/-- The engine carrier `CFieldSpec.K (QFunNZG ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
-`QFunNZG ℚ` deliverables synthesize the **same** `Algebra ℚ` the bridge `towerFractionFieldDerivG` uses. -/
+/-- The engine carrier `CFieldSpec.K (QFunNZ ℚ)` is `RatFunc ℚ`, a `ℚ`-algebra. Local instance so the
+`QFunNZ ℚ` deliverables synthesize the **same** `Algebra ℚ` the bridge `towerFractionFieldDeriv` uses. -/
 noncomputable local instance normalPartSoundnessExamplesAlgebraRatKQFunNZG :
-    Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
+    Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
 /-- The Hermite half over `ℚ(x)(t)`: the master Hermite telescoping `D(g) + h = a/d` (seed
-`([CField.zero], [CField.one])`) at the carrier `α = QFunNZG ℚ`, over `RatFunc ℚ`. -/
-theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPoly (QFunNZG ℚ))
-    (L₀ : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ))
-    (rest glocs : List (CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)))
+`([CField.zero], [CField.one])`) at the carrier `α = QFunNZ ℚ`, over `RatFunc ℚ`. -/
+theorem cHermiteReduceTowerG_telescope_seed_qfunNZG (Dt : CPoly (QFunNZ ℚ))
+    (L₀ : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ))
+    (rest glocs : List (CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)))
     (hmem : ∀ g ∈ glocs, toPoly g.2 ≠ 0)
     (hstep : List.Forall₂ (fun g p =>
-        towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (toPoly g.1) / amG (QFunNZG ℚ) (toPoly g.2))
-          = amG (QFunNZG ℚ) (toPoly (Prod.fst p).1) / amG (QFunNZG ℚ) (toPoly (Prod.fst p).2)
-            - amG (QFunNZG ℚ) (toPoly (Prod.snd p).1) / amG (QFunNZG ℚ) (toPoly (Prod.snd p).2))
+        towerFractionFieldDeriv Dt (am (QFunNZ ℚ) (toPoly g.1) / am (QFunNZ ℚ) (toPoly g.2))
+          = am (QFunNZ ℚ) (toPoly (Prod.fst p).1) / am (QFunNZ ℚ) (toPoly (Prod.fst p).2)
+            - am (QFunNZ ℚ) (toPoly (Prod.snd p).1) / am (QFunNZ ℚ) (toPoly (Prod.snd p).2))
         glocs ((L₀ :: rest).zip rest)) :
-    towerFractionFieldDerivG Dt
-        (amG (QFunNZG ℚ) (toPoly (glocs.foldl
-            (fun (gAcc : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) gloc =>
+    towerFractionFieldDeriv Dt
+        (am (QFunNZ ℚ) (toPoly (glocs.foldl
+            (fun (gAcc : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : CPoly (QFunNZG ℚ)), ([CField.one] : CPoly (QFunNZG ℚ)))).1)
-          / amG (QFunNZG ℚ) (toPoly (glocs.foldl
-            (fun (gAcc : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) gloc =>
+            (([CField.zero] : CPoly (QFunNZ ℚ)), ([CField.one] : CPoly (QFunNZ ℚ)))).1)
+          / am (QFunNZ ℚ) (toPoly (glocs.foldl
+            (fun (gAcc : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2))
-            (([CField.zero] : CPoly (QFunNZG ℚ)), ([CField.one] : CPoly (QFunNZG ℚ)))).2))
-        + amG (QFunNZG ℚ) (toPoly (rest.getLastD L₀).1)
-          / amG (QFunNZG ℚ) (toPoly (rest.getLastD L₀).2)
-      = amG (QFunNZG ℚ) (toPoly L₀.1) / amG (QFunNZG ℚ) (toPoly L₀.2) :=
+            (([CField.zero] : CPoly (QFunNZ ℚ)), ([CField.one] : CPoly (QFunNZ ℚ)))).2))
+        + am (QFunNZ ℚ) (toPoly (rest.getLastD L₀).1)
+          / am (QFunNZ ℚ) (toPoly (rest.getLastD L₀).2)
+      = am (QFunNZ ℚ) (toPoly L₀.1) / am (QFunNZ ℚ) (toPoly L₀.2) :=
   cHermiteReduceTowerG_telescope_seed Dt L₀ rest glocs hmem hstep
 
 /-! ### Restatements against the intended wording (anonymous `example`s) -/
@@ -206,21 +206,21 @@ example (Dt a d gnum gden : CPoly α) (hden : toPoly gden ≠ 0)
 
 example (Dt : CPoly α) (s L₀ : CPoly α × CPoly α) (rest glocs : List (CPoly α × CPoly α))
     (hs : toPoly s.2 ≠ 0) (hmem : ∀ g ∈ glocs, toPoly g.2 ≠ 0)
-    (hseed : towerFractionFieldDerivG Dt (amG α (toPoly s.1) / amG α (toPoly s.2)) = 0)
+    (hseed : towerFractionFieldDeriv Dt (am α (toPoly s.1) / am α (toPoly s.2)) = 0)
     (hstep : List.Forall₂ (fun g p =>
-        towerFractionFieldDerivG Dt (amG α (toPoly g.1) / amG α (toPoly g.2))
-          = amG α (toPoly (Prod.fst p).1) / amG α (toPoly (Prod.fst p).2)
-            - amG α (toPoly (Prod.snd p).1) / amG α (toPoly (Prod.snd p).2))
+        towerFractionFieldDeriv Dt (am α (toPoly g.1) / am α (toPoly g.2))
+          = am α (toPoly (Prod.fst p).1) / am α (toPoly (Prod.fst p).2)
+            - am α (toPoly (Prod.snd p).1) / am α (toPoly (Prod.snd p).2))
         glocs ((L₀ :: rest).zip rest)) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (glocs.foldl
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (glocs.foldl
             (fun (gAcc : CPoly α × CPoly α) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2)) s).1)
-          / amG α (toPoly (glocs.foldl
+          / am α (toPoly (glocs.foldl
             (fun (gAcc : CPoly α × CPoly α) gloc =>
               (cadd (cmul gAcc.1 gloc.2) (cmul gloc.1 gAcc.2), cmul gAcc.2 gloc.2)) s).2))
-        + amG α (toPoly (rest.getLastD L₀).1) / amG α (toPoly (rest.getLastD L₀).2)
-      = amG α (toPoly L₀.1) / amG α (toPoly L₀.2) :=
+        + am α (toPoly (rest.getLastD L₀).1) / am α (toPoly (rest.getLastD L₀).2)
+      = am α (toPoly L₀.1) / am α (toPoly L₀.2) :=
   cHermiteReduceTowerG_telescope Dt s L₀ rest glocs hs hmem hseed hstep
 
 example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
@@ -228,11 +228,11 @@ example [CFracGcdCoreWf α] (Dt : CPoly α) (a d : CPoly α) (cands : List α)
     (haden : toPoly d ≠ 0)
     (hlogs : ∀ cv ∈ (CPoly.cIntegrateReduced Dt a d cands).logs, toPoly cv.2 ≠ 0)
     (hcheck : CPoly.checkIdentity Dt (CPoly.cIntegrateReduced Dt a d cands) a d = true) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = amG α (toPoly a) / amG α (toPoly d) :=
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = am α (toPoly a) / am α (toPoly d) :=
   field_identity_of_cIntegrateReducedG_of_checkIdentityG Dt a d cands hgden haden hlogs hcheck
 
 #print axioms cHermiteReduceTowerG_telescope_seed_qfunNZG

@@ -61,7 +61,7 @@ import DeepWiki.SymbolicIntegration.Engine.PrimitiveCase
 import DeepWiki.SymbolicIntegration.Engine.PrimPRSRegular.Assembly
 import DeepWiki.SymbolicIntegration.Engine.QFunReduce
 import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation
-import DeepWiki.SymbolicIntegration.Engine.RefinesPolyG
+import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
 import DeepWiki.SymbolicIntegration.Engine.QFunNZGDiffSpec
 import DeepWiki.SymbolicIntegration.Engine.ResidueConstantBridge
 import DeepWiki.SymbolicIntegration.Engine.TransferExamples

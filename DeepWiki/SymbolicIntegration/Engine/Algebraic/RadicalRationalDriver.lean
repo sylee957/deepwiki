@@ -109,18 +109,18 @@ def c2itC : CPoly ℚ := [1]
 the residual and the numerator over `W³ = x³`. -/
 def c2itRun : CPoly ℚ × CPoly ℚ := radIntegrateCase2 c2itW c2itRho 3 c2itC
 
-/-- The radicand `ρ = x³ − x` lifted to `ℚ(x)` (`QFunNZG ℚ`), the radicand for `radDeriv 2`. -/
-def c2itRhoQx : QFunNZG ℚ := qxOfNum [0, -1, 0, 1]
+/-- The radicand `ρ = x³ − x` lifted to `ℚ(x)` (`QFunNZ ℚ`), the radicand for `radDeriv 2`. -/
+def c2itRhoQx : QFunNZ ℚ := qxOfNum [0, -1, 0, 1]
 
 /-- The common-denominator power `W³ = x³` as a `ℚ[x]` polynomial. -/
 def c2itW3 : CPoly ℚ := cpow c2itW 3
 
-/-- The rational part `v = vNum/(W³·y)` lifted to `RadElem (QFunNZG ℚ)` as `[0, vNum/(W³·ρ)]`. -/
-def c2itVlift : RadElem (QFunNZG ℚ) :=
+/-- The rational part `v = vNum/(W³·y)` lifted to `RadElem (QFunNZ ℚ)` as `[0, vNum/(W³·ρ)]`. -/
+def c2itVlift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum c2itRun.2) (qxOfNum (cmul c2itW3 c2itRho))]
 
-/-- The integrand's rational part `C₀/(W³y) − Crem/(Wy)` lifted to `RadElem (QFunNZG ℚ)`. -/
-def c2itRatLift : RadElem (QFunNZG ℚ) :=
+/-- The integrand's rational part `C₀/(W³y) − Crem/(Wy)` lifted to `RadElem (QFunNZ ℚ)`. -/
+def c2itRatLift : RadElem (QFunNZ ℚ) :=
   [CField.zero,
     CField.sub (CField.div (qxOfNum c2itC) (qxOfNum (cmul c2itW3 c2itRho)))
       (CField.div (qxOfNum c2itRun.1) (qxOfNum (cmul c2itW c2itRho)))]
@@ -148,15 +148,15 @@ def c3itC : CPoly ℚ := [0, 0, 0, 0, 1]
 irreducible residual and the numerator over `y`. -/
 def c3itRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3 cderiv c3itRho c3it c3itC
 
-/-- The radicand `ρ = x³ + 1` lifted to `ℚ(x)` (`QFunNZG ℚ`), the radicand for `radDeriv 2`. -/
-def c3itRhoQx : QFunNZG ℚ := qxOfNum [1, 0, 0, 1]
+/-- The radicand `ρ = x³ + 1` lifted to `ℚ(x)` (`QFunNZ ℚ`), the radicand for `radDeriv 2`. -/
+def c3itRhoQx : QFunNZ ℚ := qxOfNum [1, 0, 0, 1]
 
-/-- The rational part `v = vNum/y` lifted to `RadElem (QFunNZG ℚ)` as `[0, vNum/ρ]`. -/
-def c3itVlift : RadElem (QFunNZG ℚ) :=
+/-- The rational part `v = vNum/y` lifted to `RadElem (QFunNZ ℚ)` as `[0, vNum/ρ]`. -/
+def c3itVlift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum c3itRun.2) (qxOfNum c3itRho)]
 
-/-- The integrand's rational part `C/y − Crem/y` lifted to `RadElem (QFunNZG ℚ)` as `[0, (C − Crem)/ρ]`. -/
-def c3itRatLift : RadElem (QFunNZG ℚ) :=
+/-- The integrand's rational part `C/y − Crem/y` lifted to `RadElem (QFunNZ ℚ)` as `[0, (C − Crem)/ρ]`. -/
+def c3itRatLift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum (csub c3itC c3itRun.1)) (qxOfNum c3itRho)]
 
 /-- The Case-3 iterate integrates `∫ x⁴/√(x³+1)`: `radDeriv 2 (x³+1)` of the rational part `v = vNum/√(x³+1)`
@@ -179,6 +179,6 @@ def mcR : CPoly ℚ := [1]
 /-- Denominator `B = (x−1)²·x² = x⁴ − 2x³ + x²`, presented unfactored `[0,0,1,−2,1]`. -/
 def mcB : CPoly ℚ := cmul (cpow [-1, 1] 2) (cpow [0, 1] 2)
 
-/-- The radicand `ρ = x` as `QFunNZG ℚ`, the base of the `RadElem` lift for the multi-case
+/-- The radicand `ρ = x` as `QFunNZ ℚ`, the base of the `RadElem` lift for the multi-case
 `∫ 1/((x−1)²x²·√x)` validation. -/
-def mcRhoQx : QFunNZG ℚ := qxOfNum [0, 1]
+def mcRhoQx : QFunNZ ℚ := qxOfNum [0, 1]

@@ -21,10 +21,10 @@ coordinates over `[1, y/x]` are polynomials in `x`. Both `y` and `x·y` have pol
 with genus 0 their integrals are purely rational. -/
 
 /-- The cusp curve `f = y² − x³` over `ℚ(x)`, whose integral basis `[1, y/x]` bounds the finite poles. -/
-def gcuspF : CPoly (QFunNZG ℚ) := cuspF
+def gcuspF : CPoly (QFunNZ ℚ) := cuspF
 
 /-- The cusp radicand `ρ = x³ ∈ ℚ(x)` (so `y² = ρ`), for the diagonal radical derivation `radDeriv 2 ρ`. -/
-def gcuspRho : QFunNZG ℚ := qxOfNum [0, 0, 0, 1]
+def gcuspRho : QFunNZ ℚ := qxOfNum [0, 0, 0, 1]
 
 /-- The cusp integral basis is `[1, y/x]`, integral and maximal: `(y/x)² = x` and `isMaximalOrder` holds,
 the maximal-order datum the algebraic Hermite reduction consumes. -/
@@ -40,11 +40,11 @@ theorem gcusp_integralBasis_eq :
 The integrand is `y = [0, 1]`; the rational part is `v = (2/5)·x·y = [0, (2/5)x]`, with
 `radDeriv 2 (x³) v = y`. -/
 
-/-- The rational part of `∫ y dx`: `v = (2/5)·x·y` as `RadElem (QFunNZG ℚ)` `[0, (2/5)x]`. -/
-def gcuspVY : RadElem (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 2/5]]
+/-- The rational part of `∫ y dx`: `v = (2/5)·x·y` as `RadElem (QFunNZ ℚ)` `[0, (2/5)x]`. -/
+def gcuspVY : RadElem (QFunNZ ℚ) := [CField.zero, qxOfNum [0, 2/5]]
 
-/-- The integrand `y = [0, 1]` as `RadElem (QFunNZG ℚ)`. -/
-def gcuspY : RadElem (QFunNZG ℚ) := [CField.zero, CField.one]
+/-- The integrand `y = [0, 1]` as `RadElem (QFunNZ ℚ)`. -/
+def gcuspY : RadElem (QFunNZ ℚ) := [CField.zero, CField.one]
 
 /-- `∫ y dx = (2/5)·x·y` on `y² = x³`: the diagonal radical derivation `radDeriv 2 (x³)` of the rational
 part `v = (2/5)·x·y` equals the integrand `y`, via `radIsZero` of `radDeriv 2 ρ v − y`. -/
@@ -73,14 +73,14 @@ def gcuspYRun : CPoly ℚ × CPoly ℚ := radIntegrateCase3Wf cderiv gcuspRhoP g
 theorem cusp_intY_driver_eq :
     (cisZero gcuspYRun.1 && cisZero (csub gcuspYRun.2 [0, 0, 0, 0, 2/5])) = true := by native_decide
 
-/-- The driver-produced rational part `v = vNum/y` lifted to `RadElem (QFunNZG ℚ)` `[0, vNum/ρ]`; with
+/-- The driver-produced rational part `v = vNum/y` lifted to `RadElem (QFunNZ ℚ)` `[0, vNum/ρ]`; with
 `vNum = (2/5)x⁴`, `ρ = x³` this is `[0, (2/5)x]`. -/
-def gcuspVYlift : RadElem (QFunNZG ℚ) :=
+def gcuspVYlift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum gcuspYRun.2) gcuspRho]
 
-/-- The integrand's rational part `(C − Crem)/y` lifted to `RadElem (QFunNZG ℚ)` `[0, (C − Crem)/ρ]`; with
+/-- The integrand's rational part `(C − Crem)/y` lifted to `RadElem (QFunNZ ℚ)` `[0, (C − Crem)/ρ]`; with
 `C = x³`, `Crem = 0` this is `[0, 1] = y`. -/
-def gcuspYRatLift : RadElem (QFunNZG ℚ) :=
+def gcuspYRatLift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum (csub gcuspRhoP gcuspYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced rational
@@ -98,11 +98,11 @@ theorem cusp_intY_fully_rational : cisZero gcuspYRun.1 = true := by native_decid
 The integrand `x·y = [0, x]` has rational part `v = (2/7)·x²·y = [0, (2/7)x²]`. Derived from the
 integrand: `xy = x⁴/y`, so the Case-3 driver on `C = x⁴` returns `(Crem = 0, vNum = (2/7)x⁵)`. -/
 
-/-- The rational part of `∫ x·y dx`: `v = (2/7)·x²·y` as `RadElem (QFunNZG ℚ)` `[0, (2/7)x²]`. -/
-def gcuspVXY : RadElem (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 0, 2/7]]
+/-- The rational part of `∫ x·y dx`: `v = (2/7)·x²·y` as `RadElem (QFunNZ ℚ)` `[0, (2/7)x²]`. -/
+def gcuspVXY : RadElem (QFunNZ ℚ) := [CField.zero, qxOfNum [0, 0, 2/7]]
 
-/-- The integrand `x·y = [0, x]` as `RadElem (QFunNZG ℚ)`. -/
-def gcuspXY : RadElem (QFunNZG ℚ) := [CField.zero, qxOfNum [0, 1]]
+/-- The integrand `x·y = [0, x]` as `RadElem (QFunNZ ℚ)`. -/
+def gcuspXY : RadElem (QFunNZ ℚ) := [CField.zero, qxOfNum [0, 1]]
 
 /-- `∫ x·y dx = (2/7)·x²·y` on `y² = x³`: the diagonal radical derivation `radDeriv 2 (x³)` of
 `v = (2/7)·x²·y` equals `x·y`, via `radIsZero` of `radDeriv 2 ρ v − xy`. -/
@@ -120,14 +120,14 @@ theorem cusp_intXY_driver_eq :
     (cisZero gcuspXYRun.1 && cisZero (csub gcuspXYRun.2 [0, 0, 0, 0, 0, 2/7])) = true := by
   native_decide
 
-/-- The driver-produced rational part `v = vNum/y` for `∫ x·y dx`, lifted to `RadElem (QFunNZG ℚ)`:
+/-- The driver-produced rational part `v = vNum/y` for `∫ x·y dx`, lifted to `RadElem (QFunNZ ℚ)`:
 `[0, vNum/ρ] = [0, (2/7)x²]`. -/
-def gcuspVXYlift : RadElem (QFunNZG ℚ) :=
+def gcuspVXYlift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum gcuspXYRun.2) gcuspRho]
 
-/-- The integrand's rational part `(x⁴ − Crem)/y` lifted to `RadElem (QFunNZG ℚ)` `[0, (x⁴ − Crem)/ρ]`;
+/-- The integrand's rational part `(x⁴ − Crem)/y` lifted to `RadElem (QFunNZ ℚ)` `[0, (x⁴ − Crem)/ρ]`;
 with `Crem = 0` this is `[0, x] = x·y`. -/
-def gcuspXYRatLift : RadElem (QFunNZG ℚ) :=
+def gcuspXYRatLift : RadElem (QFunNZ ℚ) :=
   [CField.zero, CField.div (qxOfNum (csub [0, 0, 0, 0, 1] gcuspXYRun.1)) gcuspRho]
 
 /-- The Case-3 driver integrates `∫ x·y dx` end-to-end: `radDeriv 2 (x³)` of the driver-produced

@@ -284,28 +284,28 @@ theorem cRdeSpecialDenominatorG_primitive_eq (Dt : CPoly α) (a b c : CPoly α)
 /-- Special-denominator no-clear predicate: the special-denominator shift
 `n = min(0, ν_p(c) - min(0, ν_p(b)))` is zero, equivalently the reconstruction power `p^{-n}` is
 trivial. -/
-def CSpecialDenomNoClearG (Dt : CPoly α) (b c : CPoly α) : Prop :=
+def CSpecialDenomNoClear (Dt : CPoly α) (b c : CPoly α) : Prop :=
   let p := cSpecialPoly Dt
   min (0 : ℤ) ((cValuation p c : ℤ) - min 0 (cValuation p b : ℤ)) = 0
 
 /-- The special-denominator no-clear predicate holds for all inputs: `cValuation` is natural-valued,
 so both valuations are nonnegative after casting to `ℤ`. -/
 theorem cSpecialDenomNoClearG_always (Dt : CPoly α) (b c : CPoly α) :
-    CSpecialDenomNoClearG Dt b c := by
-  rw [CSpecialDenomNoClearG]
+    CSpecialDenomNoClear Dt b c := by
+  rw [CSpecialDenomNoClear]
   have hnb : (0 : ℤ) ≤ (cValuation (cSpecialPoly Dt) b : ℤ) := Int.natCast_nonneg _
   have hnc : (0 : ℤ) ≤ (cValuation (cSpecialPoly Dt) c : ℤ) := Int.natCast_nonneg _
   omega
 
 /-- The special-denominator reconstruction power is trivial under no-clear: if
-`CSpecialDenomNoClearG Dt b c` and the special polynomial is nonconstant, then
+`CSpecialDenomNoClear Dt b c` and the special polynomial is nonconstant, then
 `cRdeSpecialDenominator` returns `h = [1]`. -/
 theorem cRdeSpecialDenominatorG_h1_eq_one_of_noClear (Dt : CPoly α) (a b c : CPoly α)
-    (hp : cdeg (cSpecialPoly Dt) ≠ 0) (hn : CSpecialDenomNoClearG Dt b c) :
+    (hp : cdeg (cSpecialPoly Dt) ≠ 0) (hn : CSpecialDenomNoClear Dt b c) :
     (cRdeSpecialDenominator Dt a b c).2.2.2 = [CField.one] := by
   rw [cRdeSpecialDenominator]
   simp only [if_neg hp]
-  rw [CSpecialDenomNoClearG] at hn
+  rw [CSpecialDenomNoClear] at hn
   show cpow (cSpecialPoly Dt) (-(min 0
     ((cValuation (cSpecialPoly Dt) c : ℤ)
       - min 0 (cValuation (cSpecialPoly Dt) b : ℤ)))).toNat = [CField.one]
@@ -321,10 +321,10 @@ theorem cRdeSpecialDenominatorG_h1_eq_one_always (Dt : CPoly α) (a b c : CPoly 
     (cSpecialDenomNoClearG_always Dt b c)
 
 /-- The special-denominator coefficients factor as `(·)·pᴺ` in the no-clear regime: under
-`CSpecialDenomNoClearG`, the cleared coefficients are `a·pᴺ`, `b·pᴺ`, and `c·pᴺ` through `toPoly`. -/
+`CSpecialDenomNoClear`, the cleared coefficients are `a·pᴺ`, `b·pᴺ`, and `c·pᴺ` through `toPoly`. -/
 theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFieldSpec α] (Dt : CPoly α)
     (a b c : CPoly α) (hp : cdeg (cSpecialPoly Dt) ≠ 0)
-    (hn : CSpecialDenomNoClearG Dt b c) :
+    (hn : CSpecialDenomNoClear Dt b c) :
     let pN : CPoly α := cpow (cSpecialPoly Dt)
       (max (max 0 (-(cValuation (cSpecialPoly Dt) b : ℤ)))
         (-(cValuation (cSpecialPoly Dt) c : ℤ))).toNat
@@ -332,7 +332,7 @@ theorem toPolyG_cRdeSpecialDenominatorG_coeffs_of_noClear [CFieldSpec α] (Dt : 
     ∧ toPoly (cRdeSpecialDenominator Dt a b c).2.1 = toPoly b * toPoly pN
     ∧ toPoly (cRdeSpecialDenominator Dt a b c).2.2.1 = toPoly c * toPoly pN := by
   intro pN
-  rw [CSpecialDenomNoClearG] at hn
+  rw [CSpecialDenomNoClear] at hn
   have hbterm0 : CFieldSpec.toK (CField.neg (CField.zero : α)) = 0 := by
     rw [CFieldSpec.toK_neg, CFieldSpec.toK_zero, neg_zero]
   refine ⟨?_, ?_, ?_⟩
@@ -461,14 +461,14 @@ section Gate
 variable {β : Type*} [CField β] [CDiffField β] [CFracGcdCoreWf β]
 
 /-- The denominator-direct normality gate for tower RDE inputs. -/
-def cdenomNormalGate (a : QFunNZG β) : Bool :=
+def cdenomNormalGate (a : QFunNZ β) : Bool :=
   CPoly.cisZero (CPoly.csub
     (CPoly.cSplitFactorFast ([CField.one] : CPoly β) a.1.2).1
     a.1.2)
 
 end Gate
 
-/-! The validations of `cRischDE` at `QFunNZG ℚ` live in `Tower/RischDEInstance.lean`, which supplies
-the `CRischField (QFunNZG ℚ)` instance. -/
+/-! The validations of `cRischDE` at `QFunNZ ℚ` live in `Tower/RischDEInstance.lean`, which supplies
+the `CRischField (QFunNZ ℚ)` instance. -/
 
 end DeepWiki.SymbolicIntegration

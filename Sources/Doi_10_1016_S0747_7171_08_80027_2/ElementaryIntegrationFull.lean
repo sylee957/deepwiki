@@ -14,7 +14,7 @@ concrete `∫`, the principal case:
 
 * `DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogArgGenericExamples` — **computes the log
   argument** `u` over a tower via the `[CField β]`-generic solver
-  (`gaussElimG`/`kernelVectorG`/`radLogArgSolveG`), the whole linear solve running over the tower field
+  (`gaussElim`/`kernelVector`/`radLogArgSolveG`), the whole linear solve running over the tower field
   `β = ℚ(x)`; headline `∫ dx/√(eˣ+1) = log((y−1)/(y+1))` over ℚ(x)(eˣ).
 * `DeepWiki.SymbolicIntegration.Engine.ElementaryIntegrate` — the **unified integrator**
   `cIntegrateElementary` assembling `v + Σ cᵢ log uᵢ` (output `AlgIntegralResultG`, differentiated by the
@@ -36,23 +36,23 @@ namespace DeepWiki.Bie
 /-! ## Computing the log argument over a tower: the ℚ → generic-`CField` Gaussian elimination -/
 
 /-- **Generic Gaussian elimination over `[CField β]`** (Bronstein 1990, Integration of Elementary Functions,
-JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower, log part): `gaussElimG`
+JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower, log part): `gaussElim`
 row-reduces a `β`-matrix to reduced row-echelon form, the `[CField β]`-generic analogue of the ℚ-pinned
 `ratRref`. Pure `CField`-arithmetic (`CField.isZero`/`CField.div`/`CField.sub`/`CField.mul`), so the linear
 solve underlying log-argument computation runs over any computable tower level `β`, not just ℚ. -/
-abbrev bie_gaussElim_generic := @gaussElimG
+abbrev bie_gaussElim_generic := @gaussElim
 
 /-- **A nonzero kernel vector over `[CField β]`** (Bronstein 1990, log part; the generic linear-solve core):
-`kernelVectorG` returns a nonzero solution of a homogeneous `β`-linear system (or `none` when only the
+`kernelVector` returns a nonzero solution of a homogeneous `β`-linear system (or `none` when only the
 trivial kernel exists), the `[CField β]`-generic analogue of `ratKernelVector`. This is what extracts the
 log-argument numerator `N` from the cleared log-derivative system over a tower field. -/
-abbrev bie_kernelVector_generic := @kernelVectorG
+abbrev bie_kernelVector_generic := @kernelVector
 
 /-- **★ Solve for the log argument `u = N/D` over a transcendental tower** (Bronstein 1990, Integration of
 Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower,
 principal case, log part COMPUTED): `radLogArgSolveG ρ integrand D degBound` builds the cleared
-log-derivative `β`-linear system `radDeriv(N)·D − N·D' − radMul(N,integrand)·D = 0` over `α = QFunNZG β`,
-finds a nonzero kernel vector via `kernelVectorG`, and reassembles the radical-extension numerator
+log-derivative `β`-linear system `radDeriv(N)·D − N·D' − radMul(N,integrand)·D = 0` over `α = QFunNZ β`,
+finds a nonzero kernel vector via `kernelVector`, and reassembles the radical-extension numerator
 `N = a₀ + a₁·y`. The **whole linear solve runs over the tower field `β`**, so the log argument is computed
 over a transcendental tower (`β = ℚ(x)`, `α = ℚ(x)(eˣ)`), not just over ℚ. -/
 abbrev bie_logarg_over_tower := @radLogArgSolveG
@@ -77,7 +77,7 @@ abbrev bie_logarg_arcsinh_base := @genArg_arcsinh_isLogIntegral
 /-- **The tower-generic full elementary integral `∫ = v + Σ cᵢ log uᵢ`** (Bronstein 1990, Integration of
 Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower):
 `AlgIntegralResultG α` bundles a rational part `v` (a `RadElem α`) plus log terms `[(c₁, u₁), …]` over an
-arbitrary base field `α` (the tower level `QFunNZG β`). The generic analogue of `AlgIntegralResult`; the
+arbitrary base field `α` (the tower level `QFunNZ β`). The generic analogue of `AlgIntegralResult`; the
 OUTPUT of `cIntegrateElementary`, differentiated by `algDerivG`. -/
 abbrev bie_alg_integral_result := @AlgIntegralResultG
 
@@ -91,7 +91,7 @@ abbrev bie_unified_deriv := @algDerivG
 /-- **★ The UNIFIED elementary integrator over a transcendental tower** (Bronstein 1990, Integration of
 Elementary Functions, JSC 9:117-173 — elementary integral `v + Σ log u` over a transcendental tower,
 principal case): `cIntegrateElementary` fuses the rational part and the log part over a tower base
-`α = QFunNZG β`. Given the log-solve data, it **COMPUTES** the log argument on the residual via
+`α = QFunNZ β`. Given the log-solve data, it **COMPUTES** the log argument on the residual via
 `radLogArgSolveG` (the ACTUAL tower derivation) and assembles `v + c·log(N/D)` as an `AlgIntegralResultG`,
 returning the rational-only partial `⟨v, []⟩` when the log solve is non-principal. The general
 `v + Σ cᵢ log uᵢ` assembler — ONE driver for the full elementary integral over a transcendental tower. -/

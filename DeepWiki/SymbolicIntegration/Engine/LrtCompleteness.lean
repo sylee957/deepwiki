@@ -29,7 +29,7 @@ class LrtLiouvilleFrontier (α : Type*) [CField α] [CFieldSpec α] [CDiffField 
     [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)] where
   /-- Genuine (broad) elementary integrability ⟹ the residue-constancy guard passes. -/
   descendGenuineLrt : ∀ (Dt a d : CPoly α), toPoly d ≠ 0 →
-    IsElementaryIntegrableGenuineLrtG Dt a d → cResidueConstantGuard Dt a d = true
+    IsElementaryIntegrableGenuineLrt Dt a d → cResidueConstantGuard Dt a d = true
 
 /-- **Derived completeness — a decidable non-integrability certificate (root-free).** If the integrability
 guard *fails* (`cResidueConstantGuard = false`: some residue is non-constant), then `a/d` is **not** genuinely
@@ -37,7 +37,7 @@ guard *fails* (`cResidueConstantGuard = false`: some residue is non-constant), t
 `not_isElementaryIntegrableGenuine`) — modulo the Liouville frontier `descendGenuineLrt`. -/
 theorem not_isElementaryIntegrableGenuineLrt [LrtLiouvilleFrontier α] (Dt a d : CPoly α)
     (hd0 : toPoly d ≠ 0) (hguard : cResidueConstantGuard Dt a d = false) :
-    ¬ IsElementaryIntegrableGenuineLrtG Dt a d := by
+    ¬ IsElementaryIntegrableGenuineLrt Dt a d := by
   intro h
   rw [LrtLiouvilleFrontier.descendGenuineLrt Dt a d hd0 h] at hguard
   simp at hguard

@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.IntegratorCases
 
 The guarded primitive case `primitiveGuardedCase` (P2) integrates constant-coefficient canonical-primitive
 inputs and *declines* off-domain ones. These `native_decide` checks confirm it is non-vacuous (produces
-`checkIdentity`-passing antiderivatives) and honestly declining. `Lvl1 = QFunNZG ℚ = ℚ(x)`, `Dt = 1`. -/
+`checkIdentity`-passing antiderivatives) and honestly declining. `Lvl1 = QFunNZ ℚ = ℚ(x)`, `Dt = 1`. -/
 
 namespace DeepWiki.SymbolicIntegration
 

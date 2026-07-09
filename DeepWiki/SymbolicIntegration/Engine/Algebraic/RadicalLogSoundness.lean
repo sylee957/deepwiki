@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalIntegralSoundness
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
-import DeepWiki.SymbolicIntegration.Engine.RefinesPolyG
+import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalAssembly
@@ -47,7 +47,7 @@ theorem isRadicalLogTerm_of_radIsLogIntegral (n : ℕ) (ρ : α) (u integrand : 
   rw [radIsLogIntegral, radIsZero, radSub] at h
   have hderiv :
       CPoly.toPoly (radDeriv n ρ u) = CPoly.toPoly (radMul n ρ u integrand) :=
-    RefinesPolyG.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) h
+    RefinesPoly.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) h
   -- `toPoly(radDeriv u) = toPoly(radMul u integrand)` in `K[X]`; push through `mk` and read
   -- `mk(toPoly(radMul u integrand)) = mk(toPoly u)·mk(toPoly integrand)` (the quotient product).
   rw [IsRadicalLogTerm, hderiv, mk_toPolyG_radMul]
@@ -547,12 +547,12 @@ split un-cross-multiplied, since `algDeriv ρ F = radDeriv(v) + Σ cᵢ·radLogD
 /-- The engine round-trip certificate is the integrand split (un-cross-multiplied): for output
 `F : AlgIntegralResult` over `y² = ρ`, `radIsZero (radSub (algDeriv ρ F) integrand) = true`
 yields `toPoly (algDeriv ρ F) = toPoly integrand` in `K[X]`. -/
-theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZG ℚ) (F : AlgIntegralResult)
-    (integrand : RadElem (QFunNZG ℚ))
+theorem toPolyG_algDeriv_eq_of_roundtrip (ρ : QFunNZ ℚ) (F : AlgIntegralResult)
+    (integrand : RadElem (QFunNZ ℚ))
     (hrt : RadElem.radIsZero (RadElem.radSub (algDeriv ρ F) integrand) = true) :
     CPoly.toPoly (algDeriv ρ F) = CPoly.toPoly integrand := by
   rw [RadElem.radIsZero, RadElem.radSub] at hrt
-  exact RefinesPolyG.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) hrt
+  exact RefinesPoly.eq_of_csub_cisZero (refinesPolyG_self _) (refinesPolyG_self _) hrt
 
 /-! ### Axiom audit
 

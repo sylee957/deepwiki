@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 section RawSolveField
 
@@ -38,7 +38,7 @@ theorem cdegG_one_eq_zero_wf : cdeg ([CField.one] : CPoly β) = 0 := by
 
 /-- Residual hypotheses for `crischDERawSolveWf` field soundness: the structural residual, the
 positive-`deg(bbar)` dispatcher side-condition, and the two input-denominator nonzero facts. -/
-structure RawSolveResidualWf (ftilde gtilde : QFunNZG β) : Prop where
+structure RawSolveResidualWf (ftilde gtilde : QFunNZ β) : Prop where
   /-- The structural residual on the base solve, for the matching normal-denominator output. -/
   hres : ∀ a0 b0 c0 h0 : CPoly β,
     cRdeNormalDenominator ([CField.one] : CPoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
@@ -63,14 +63,14 @@ structure RawSolveResidualWf (ftilde gtilde : QFunNZG β) : Prop where
 
 /-- If `crischDERawSolveWf ftilde gtilde = some y` and `RawSolveResidualWf ftilde gtilde` holds, then
 `y = ynum/yden` solves the field-level Risch DE `D(Y) + F·Y = G` over `RatFunc (CFieldSpec.K β)`. -/
-theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : QFunNZG β)
+theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : QFunNZ β)
     (hsolve : crischDERawSolveWf ftilde gtilde = some y)
     (hres : RawSolveResidualWf ftilde gtilde) :
-    towerFractionFieldDerivG ([CField.one] : CPoly β)
-          (amG β (toPoly y.1.1) / amG β (toPoly y.1.2))
-        + amG β (toPoly ftilde.1.1) / amG β (toPoly ftilde.1.2)
-          * (amG β (toPoly y.1.1) / amG β (toPoly y.1.2))
-      = amG β (toPoly gtilde.1.1) / amG β (toPoly gtilde.1.2) := by
+    towerFractionFieldDeriv ([CField.one] : CPoly β)
+          (am β (toPoly y.1.1) / am β (toPoly y.1.2))
+        + am β (toPoly ftilde.1.1) / am β (toPoly ftilde.1.2)
+          * (am β (toPoly y.1.1) / am β (toPoly y.1.2))
+      = am β (toPoly gtilde.1.1) / am β (toPoly gtilde.1.2) := by
   -- unfold the raw solve to the bare `cRischDE [1]` success
   rw [show crischDERawSolveWf ftilde gtilde
       = (match CPoly.cRischDE ([CField.one] : CPoly β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with

@@ -13,7 +13,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 variable {α : Type*} [CField α] [CDiffField α]
 
@@ -547,12 +547,12 @@ theorem crischDEWf_field_of_success_and_residual (Dt : CPoly α)
             (cRdeSpecialDenominator Dt a0 b0 c0).2.2.1 : ℤ)
         = some (bbar, cbar, m, α', β) → 0 < cdeg bbar)
     (hfden : toPoly fden ≠ 0) (hgden : toPoly gden ≠ 0) (hyden : toPoly yden ≠ 0) :
-    towerFractionFieldDerivG Dt (amG α (toPoly ynum) / amG α (toPoly yden))
-        + amG α (toPoly fnum) / amG α (toPoly fden)
-          * (amG α (toPoly ynum) / amG α (toPoly yden))
-      = amG α (toPoly gnum) / amG α (toPoly gden) := by
+    towerFractionFieldDeriv Dt (am α (toPoly ynum) / am α (toPoly yden))
+        + am α (toPoly fnum) / am α (toPoly fden)
+          * (am α (toPoly ynum) / am α (toPoly yden))
+      = am α (toPoly gnum) / am α (toPoly gden) := by
   have hcleared := rdeClearedWf_of_success_and_residual Dt fnum fden gnum gden ynum yden hδ hsucc hres hdb
-  have hclam := congrArg (amG α) hcleared
+  have hclam := congrArg (am α) hcleared
   simp only [map_add, map_mul, map_sub, map_pow] at hclam
   exact rischDE_field_of_cleared Dt fnum fden gnum gden ynum yden hfden hgden hyden hclam
 

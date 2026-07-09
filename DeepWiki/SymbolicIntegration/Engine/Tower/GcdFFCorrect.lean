@@ -4,9 +4,9 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import Mathlib.RingTheory.Polynomial.Content
 
 /-! # Abstract correctness of the generic fraction-free gcd `cgcdFFRawCore` over a tower level
-The tower kernel fraction-free gcd `cgcdFFRawCore` over `α = QFunNZG β = Frac(β[s])` computes the
+The tower kernel fraction-free gcd `cgcdFFRawCore` over `α = QFunNZ β = Frac(β[s])` computes the
 polynomial gcd up to associates. The `gb*Core` engine reads through the bridges `toGBCoeffPoly` (into
-`R[X]`, `R = (CFieldSpec.K β)[X]`) and `toGBPolyG` (into `(RatFunc K)[X]`), and each clear-denominators /
+`R[X]`, `R = (CFieldSpec.K β)[X]`) and `toGBPoly` (into `(RatFunc K)[X]`), and each clear-denominators /
 Euclidean-step / primitive-part lemma is derived over `GBPolyCore β`. The content recursion is the tower
 induction: the content-gcd is the level-`β` `cgcdFFRawCore`, bottoming at the raw Euclidean gcd over ℚ. -/
 
@@ -267,49 +267,49 @@ theorem gbisZeroCore_iff_toGBCoeffPoly (p : GBPolyCore β) :
 
 end GBPolyCore
 
-/-! ### The field-coefficient lift `R[t] → (RatFunc K)[t]` and `toGBPolyG` -/
+/-! ### The field-coefficient lift `R[t] → (RatFunc K)[t]` and `toGBPoly` -/
 
-open QFunNZG in
-/-- The coefficient-ring lift `R[t] → (RatFunc K)[t]`, applying `amG β` to every `t`-coefficient. -/
-noncomputable abbrev liftKG (β : Type*) [CField β] [CFieldSpec β] :
+open QFunNZ in
+/-- The coefficient-ring lift `R[t] → (RatFunc K)[t]`, applying `am β` to every `t`-coefficient. -/
+noncomputable abbrev liftK (β : Type*) [CField β] [CFieldSpec β] :
     ((CFieldSpec.K β)[X])[X] →+* (RatFunc (CFieldSpec.K β))[X] :=
-  Polynomial.mapRingHom (QFunNZG.amG β)
+  Polynomial.mapRingHom (QFunNZ.am β)
 
-/-- `toGBPolyG p`: the `β(s)[t]` reading of a `GBPolyCore β`, `toGBCoeffPoly p` lifted through the
-coefficient embedding `amG β` into `(RatFunc (CFieldSpec.K β))[X]`. -/
-noncomputable def toGBPolyG {β : Type*} [CField β] [CFieldSpec β] (p : GBPolyCore β) :
+/-- `toGBPoly p`: the `β(s)[t]` reading of a `GBPolyCore β`, `toGBCoeffPoly p` lifted through the
+coefficient embedding `am β` into `(RatFunc (CFieldSpec.K β))[X]`. -/
+noncomputable def toGBPoly {β : Type*} [CField β] [CFieldSpec β] (p : GBPolyCore β) :
     (RatFunc (CFieldSpec.K β))[X] :=
-  liftKG β (GBPolyCore.toGBCoeffPoly p)
+  liftK β (GBPolyCore.toGBCoeffPoly p)
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 
-/-- `toGBPolyG [] = 0`. -/
-@[simp, denote] theorem toGBPolyG_nil : toGBPolyG ([] : GBPolyCore β) = 0 := by simp [toGBPolyG]
+/-- `toGBPoly [] = 0`. -/
+@[simp, denote] theorem toGBPolyG_nil : toGBPoly ([] : GBPolyCore β) = 0 := by simp [toGBPoly]
 
-/-- `liftKG (C c) = C (amG c)`: the lift sends a constant `β[s]`-coefficient to its `β(s)` embedding. -/
+/-- `liftK (C c) = C (am c)`: the lift sends a constant `β[s]`-coefficient to its `β(s)` embedding. -/
 theorem liftKG_C (c : (CFieldSpec.K β)[X]) :
-    liftKG β (Polynomial.C c) = Polynomial.C (QFunNZG.amG β c) := by
-  simp [liftKG, Polynomial.coe_mapRingHom, Polynomial.map_C]
+    liftK β (Polynomial.C c) = Polynomial.C (QFunNZ.am β c) := by
+  simp [liftK, Polynomial.coe_mapRingHom, Polynomial.map_C]
 
-/-- `toPoly (liftGBPolyCoreG p) = toGBPolyG p`: lifting coefficientwise as `c/1` then through `toPoly`
+/-- `toPoly (liftGBPolyCore p) = toGBPoly p`: lifting coefficientwise as `c/1` then through `toPoly`
 agrees with the coefficient-ring embedding. -/
 @[denote] theorem toPolyG_liftGBPolyCoreG (p : GBPolyCore β) :
-    toPoly (CPoly.liftGBPolyCoreG p) = toGBPolyG p := by
+    toPoly (CPoly.liftGBPolyCore p) = toGBPoly p := by
   apply Polynomial.ext
   intro i
-  rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
-    GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff, CPoly.liftGBPolyCoreG,
+  rw [toGBPoly, liftK, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
+    GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff, CPoly.liftGBPolyCore,
     List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map]
   cases h : p[i]? with
   | none => simp [CFieldSpec.toK_zero, toPolyG_nil, map_zero]
   | some c =>
     simp only [Option.map_some, Option.getD_some]
-    show QFunNZG.toQFunNZG _ = QFunNZG.amG β (CPoly.toPoly c)
-    rw [QFunNZG.toQFunNZG]
+    show QFunNZ.toQFunNZ _ = QFunNZ.am β (CPoly.toPoly c)
+    rw [QFunNZ.toQFunNZ]
     have h1 : CPoly.toPoly ([CField.one] : CPoly β) = 1 := by
       simp only [denote, mul_zero, add_zero, map_one]
-    show QFunNZG.amG β (CPoly.toPoly c) / QFunNZG.amG β (CPoly.toPoly ([CField.one] : CPoly β))
-      = QFunNZG.amG β (CPoly.toPoly c)
+    show QFunNZ.am β (CPoly.toPoly c) / QFunNZ.am β (CPoly.toPoly ([CField.one] : CPoly β))
+      = QFunNZ.am β (CPoly.toPoly c)
     rw [h1, map_one, div_one]
 
 /-! ### The `cclearDenomsCore` bridge `β(s)[t] ↔ (β[s])[t]`
@@ -319,30 +319,30 @@ Read back over `β(s)`, the cleared polynomial equals `C s · toPoly p` for the 
 variable [CFieldDomain β]
 
 omit [CFieldDomain β] in
-/-- A `QFunNZG β` coefficient reads as `amG (toPoly num) / amG (toPoly den)` in `RatFunc (CFieldSpec.K
+/-- A `QFunNZ β` coefficient reads as `am (toPoly num) / am (toPoly den)` in `RatFunc (CFieldSpec.K
 β)`. -/
-theorem toQFunNZG_eq_div (c : QFunNZG β) :
-    QFunNZG.toQFunNZG c
-      = QFunNZG.amG β (CPoly.toPoly (CPoly.qnumCoeffCoreG c))
-        / QFunNZG.amG β (CPoly.toPoly (CPoly.qdenCoeffCoreG c)) := by
+theorem toQFunNZG_eq_div (c : QFunNZ β) :
+    QFunNZ.toQFunNZ c
+      = QFunNZ.am β (CPoly.toPoly (CPoly.qnumCoeffCore c))
+        / QFunNZ.am β (CPoly.toPoly (CPoly.qdenCoeffCore c)) := by
   obtain ⟨⟨a, b⟩, hb⟩ := c; rfl
 
 omit [CFieldDomain β] in
-/-- A `QFunNZG β` coefficient's denominator has nonzero `toPoly` (by subtype membership
+/-- A `QFunNZ β` coefficient's denominator has nonzero `toPoly` (by subtype membership
 `cisZero _ = false`). -/
-theorem toPolyG_qdenCoeffCoreG_ne_zero (c : QFunNZG β) :
-    CPoly.toPoly (CPoly.qdenCoeffCoreG c) ≠ 0 := by
+theorem toPolyG_qdenCoeffCoreG_ne_zero (c : QFunNZ β) :
+    CPoly.toPoly (CPoly.qdenCoeffCore c) ≠ 0 := by
   obtain ⟨⟨a, b⟩, hb⟩ := c
-  exact QFunNZG.toPolyG_ne_zero_of_cisZeroG_false hb
+  exact QFunNZ.toPolyG_ne_zero_of_cisZeroG_false hb
 
 /-- The common-denominator scalar `commonDen p ∈ R`: the product of all the `β[s]`-denominators of `p`'s
 coefficients, the unit by which `cclearDenomsCore` scales `toPoly p`. -/
-noncomputable def commonDen (p : CPoly (QFunNZG β)) : (CFieldSpec.K β)[X] :=
-  ((p.map CPoly.qdenCoeffCoreG).map CPoly.toPoly).prod
+noncomputable def commonDen (p : CPoly (QFunNZ β)) : (CFieldSpec.K β)[X] :=
+  ((p.map CPoly.qdenCoeffCore).map CPoly.toPoly).prod
 
 omit [CFieldDomain β] in
 /-- `commonDen p ≠ 0`: a product of nonzero denominators. -/
-theorem commonDenG_ne_zero (p : CPoly (QFunNZG β)) : commonDen p ≠ 0 := by
+theorem commonDenG_ne_zero (p : CPoly (QFunNZ β)) : commonDen p ≠ 0 := by
   rw [commonDen]
   refine List.prod_ne_zero ?_
   intro hmem
@@ -353,8 +353,8 @@ theorem commonDenG_ne_zero (p : CPoly (QFunNZG β)) : commonDen p ≠ 0 := by
   exact toPolyG_qdenCoeffCoreG_ne_zero c hd0
 
 omit [CFieldDomain β] in
-/-- `amG (commonDen p) ≠ 0` (the field embedding of a nonzero product). -/
-theorem amG_commonDenG_ne_zero (p : CPoly (QFunNZG β)) : QFunNZG.amG β (commonDen p) ≠ 0 :=
+/-- `am (commonDen p) ≠ 0` (the field embedding of a nonzero product). -/
+theorem amG_commonDenG_ne_zero (p : CPoly (QFunNZ β)) : QFunNZ.am β (commonDen p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective (CFieldSpec.K β))).mpr (commonDenG_ne_zero p)
 
 omit [CFieldDomain β] in
@@ -370,9 +370,9 @@ list. -/
 
 omit [CFieldSpec β] in
 /-- The `i`-th cleared coefficient of `cclearDenomsCore p` (in range) is `numᵢ · (∏_{j≠i} denⱼ)`. -/
-theorem cclearDenomsCoreG_getElem (p : CPoly (QFunNZG β)) (i : ℕ) (hi : i < p.length) :
-    (CPoly.cclearDenomsCore p)[i]? = some (CPoly.cmul (CPoly.qnumCoeffCoreG (p.getD i CField.zero))
-      ((((p.map CPoly.qdenCoeffCoreG).zipIdx).filter (fun de => decide (de.2 ≠ i))).foldl
+theorem cclearDenomsCoreG_getElem (p : CPoly (QFunNZ β)) (i : ℕ) (hi : i < p.length) :
+    (CPoly.cclearDenomsCore p)[i]? = some (CPoly.cmul (CPoly.qnumCoeffCore (p.getD i CField.zero))
+      ((((p.map CPoly.qdenCoeffCore).zipIdx).filter (fun de => decide (de.2 ≠ i))).foldl
         (fun acc de => CPoly.cmul acc de.1) [CField.one])) := by
   unfold CPoly.cclearDenomsCore
   simp only
@@ -381,70 +381,70 @@ theorem cclearDenomsCoreG_getElem (p : CPoly (QFunNZG β)) (i : ℕ) (hi : i < p
 
 omit [CFieldSpec β] [CFieldDomain β] in
 /-- `cclearDenomsCore` preserves the `t`-length: `(cclearDenomsCore p).length = p.length`. -/
-theorem cclearDenomsCoreG_length (p : CPoly (QFunNZG β)) :
+theorem cclearDenomsCoreG_length (p : CPoly (QFunNZ β)) :
     (CPoly.cclearDenomsCore p).length = p.length := by
   unfold CPoly.cclearDenomsCore; simp
 
 /-- `toPoly p` vanishes past the list length (the out-of-range coefficient is `CField.zero = 0`). -/
-theorem toPolyG_coeff_eq_zero_of_length_leG (p : CPoly (QFunNZG β)) {i : ℕ} (hi : p.length ≤ i) :
+theorem toPolyG_coeff_eq_zero_of_length_leG (p : CPoly (QFunNZ β)) {i : ℕ} (hi : p.length ≤ i) :
     (toPoly p).coeff i = 0 := by
   rw [toPolyG_coeff, List.getD_eq_getElem?_getD, List.getElem?_eq_none hi]
-  show CFieldSpec.toK (CField.zero : QFunNZG β) = 0
+  show CFieldSpec.toK (CField.zero : QFunNZ β) = 0
   rw [CFieldSpec.toK_zero]
 
-/-- `(toGBPolyG (cclearDenomsCore p)).coeff i = amG (commonDen p) · (toPoly p).coeff i`. -/
-theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPoly (QFunNZG β)) (i : ℕ) :
-    (toGBPolyG (CPoly.cclearDenomsCore p)).coeff i
-      = QFunNZG.amG β (commonDen p) * (toPoly p).coeff i := by
+/-- `(toGBPoly (cclearDenomsCore p)).coeff i = am (commonDen p) · (toPoly p).coeff i`. -/
+theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPoly (QFunNZ β)) (i : ℕ) :
+    (toGBPoly (CPoly.cclearDenomsCore p)).coeff i
+      = QFunNZ.am β (commonDen p) * (toPoly p).coeff i := by
   rcases lt_or_ge i p.length with hi | hi
-  · rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
+  · rw [toGBPoly, liftK, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
       GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff,
       List.getD_eq_getElem?_getD, cclearDenomsCoreG_getElem p i hi, Option.getD_some]
     simp only [denote,
       show CPoly.toPoly ([CField.one] : CPoly β) = 1 by
         simp only [denote, mul_zero, add_zero, map_one],
       one_mul]
-    set dens := p.map CPoly.qdenCoeffCoreG with hdens
+    set dens := p.map CPoly.qdenCoeffCore with hdens
     have hcd : commonDen p = (dens.map CPoly.toPoly).prod := by rw [commonDen, hdens]
     have hlen : i < dens.length := by rw [hdens, List.length_map]; exact hi
     have hfilt := filter_prod_mul (CPoly.toPoly) ([] : CPoly β) dens 0 i (Nat.zero_le i)
       (by simpa using hlen)
     rw [Nat.sub_zero] at hfilt
-    have hdeni : CPoly.toPoly (dens.getD i []) = CPoly.toPoly (CPoly.qdenCoeffCoreG (p.getD i CField.zero)) := by
+    have hdeni : CPoly.toPoly (dens.getD i []) = CPoly.toPoly (CPoly.qdenCoeffCore (p.getD i CField.zero)) := by
       congr 1
       rw [hdens, List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map,
         List.getElem?_eq_getElem hi]
       simp
     have hcoeff : (CFieldSpec.toK (p.getD i CField.zero) : RatFunc (CFieldSpec.K β))
-        = QFunNZG.amG β (CPoly.toPoly (CPoly.qnumCoeffCoreG (p.getD i CField.zero)))
-          / QFunNZG.amG β (CPoly.toPoly (CPoly.qdenCoeffCoreG (p.getD i CField.zero))) := by
-      show QFunNZG.toQFunNZG (p.getD i CField.zero) = _
+        = QFunNZ.am β (CPoly.toPoly (CPoly.qnumCoeffCore (p.getD i CField.zero)))
+          / QFunNZ.am β (CPoly.toPoly (CPoly.qdenCoeffCore (p.getD i CField.zero))) := by
+      show QFunNZ.toQFunNZ (p.getD i CField.zero) = _
       rw [toQFunNZG_eq_div]
-    have hden0 : QFunNZG.amG β (CPoly.toPoly (CPoly.qdenCoeffCoreG (p.getD i CField.zero))) ≠ 0 :=
-      QFunNZG.amG_toPolyG_ne_zero (toPolyG_qdenCoeffCoreG_ne_zero _)
+    have hden0 : QFunNZ.am β (CPoly.toPoly (CPoly.qdenCoeffCore (p.getD i CField.zero))) ≠ 0 :=
+      QFunNZ.amG_toPolyG_ne_zero (toPolyG_qdenCoeffCoreG_ne_zero _)
     rw [hcoeff, hcd]
-    have hpushP : QFunNZG.amG β (((dens.zipIdx.filter (fun de => decide (de.2 ≠ i))).map
+    have hpushP : QFunNZ.am β (((dens.zipIdx.filter (fun de => decide (de.2 ≠ i))).map
         (fun de => CPoly.toPoly de.1)).prod)
-        * QFunNZG.amG β (CPoly.toPoly (CPoly.qdenCoeffCoreG (p.getD i CField.zero)))
-        = QFunNZG.amG β ((dens.map CPoly.toPoly).prod) := by
+        * QFunNZ.am β (CPoly.toPoly (CPoly.qdenCoeffCore (p.getD i CField.zero)))
+        = QFunNZ.am β ((dens.map CPoly.toPoly).prod) := by
       rw [← map_mul, ← hdeni, hfilt]
-    rw [map_mul, mul_comm (QFunNZG.amG β ((dens.map CPoly.toPoly).prod)) _, div_mul_eq_mul_div,
+    rw [map_mul, mul_comm (QFunNZ.am β ((dens.map CPoly.toPoly).prod)) _, div_mul_eq_mul_div,
       eq_div_iff hden0, mul_assoc, hpushP]
-  · rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
+  · rw [toGBPoly, liftK, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
       GBPolyCore.toGBCoeffPoly_coeff, List.getD_eq_getElem?_getD,
       List.getElem?_eq_none (by rw [cclearDenomsCoreG_length]; exact hi), Option.getD_none,
       toPolyG_nil, map_zero, toPolyG_coeff_eq_zero_of_length_leG p hi, mul_zero]
 
-/-- `toGBPolyG (cclearDenomsCore p) = C (amG (commonDen p)) * toPoly p` over β(s). -/
-theorem toGBPolyG_cclearDenomsCoreG (p : CPoly (QFunNZG β)) :
-    toGBPolyG (CPoly.cclearDenomsCore p) = Polynomial.C (QFunNZG.amG β (commonDen p)) * toPoly p := by
+/-- `toGBPoly (cclearDenomsCore p) = C (am (commonDen p)) * toPoly p` over β(s). -/
+theorem toGBPolyG_cclearDenomsCoreG (p : CPoly (QFunNZ β)) :
+    toGBPoly (CPoly.cclearDenomsCore p) = Polynomial.C (QFunNZ.am β (commonDen p)) * toPoly p := by
   ext i
   rw [toGBPolyG_cclearDenomsCoreG_coeff, Polynomial.coeff_C_mul]
 
-/-- `Associated (toGBPolyG (cclearDenomsCore p)) (toPoly p)`: fraction-clearing is a β(s)-unit
+/-- `Associated (toGBPoly (cclearDenomsCore p)) (toPoly p)`: fraction-clearing is a β(s)-unit
 scaling, preserving the gcd up to associates. -/
-theorem associated_toGBPolyG_cclearDenomsCoreG (p : CPoly (QFunNZG β)) :
-    Associated (toGBPolyG (CPoly.cclearDenomsCore p)) (toPoly p) := by
+theorem associated_toGBPolyG_cclearDenomsCoreG (p : CPoly (QFunNZ β)) :
+    Associated (toGBPoly (CPoly.cclearDenomsCore p)) (toPoly p) := by
   rw [toGBPolyG_cclearDenomsCoreG]
   exact (associated_unit_mul_left _ _
     (Polynomial.isUnit_C.mpr (amG_commonDenG_ne_zero p).isUnit))
@@ -515,35 +515,35 @@ end GBPolyCore
 open GBPolyCore
 
 omit [CFieldDomain β] in
-/-- The β(s)[t] lift of the pseudo-division identity: `C (amG (toPoly c)) · toGBPolyG p = toGBPolyG s ·
-toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q)` for some quotient `s` and multiplier `c`. -/
+/-- The β(s)[t] lift of the pseudo-division identity: `C (am (toPoly c)) · toGBPoly p = toGBPoly s ·
+toGBPoly q + toGBPoly (gbpsremainderCore fuel p q)` for some quotient `s` and multiplier `c`. -/
 theorem toGBPolyG_gbpsremainderCore (fuel : ℕ) (p q : GBPolyCore β) :
     ∃ (s : GBPolyCore β) (c : CPoly β),
-      Polynomial.C (QFunNZG.amG β (CPoly.toPoly c)) * toGBPolyG p
-        = toGBPolyG s * toGBPolyG q + toGBPolyG (gbpsremainderCore fuel p q) := by
+      Polynomial.C (QFunNZ.am β (CPoly.toPoly c)) * toGBPoly p
+        = toGBPoly s * toGBPoly q + toGBPoly (gbpsremainderCore fuel p q) := by
   obtain ⟨s, c, hsc⟩ := toGBCoeffPoly_gbpsremainderCore fuel p q
   refine ⟨s, c, ?_⟩
-  have hl := congrArg (liftKG β) hsc
+  have hl := congrArg (liftK β) hsc
   simp only [map_add, map_mul] at hl
   rw [liftKG_C] at hl
-  simpa [toGBPolyG] using hl
+  simpa [toGBPoly] using hl
 
 omit [CFieldDomain β] in
-/-- `toGBPolyG` ignores normalization: `toGBPolyG (gbnormCore p) = toGBPolyG p`. -/
+/-- `toGBPoly` ignores normalization: `toGBPoly (gbnormCore p) = toGBPoly p`. -/
 @[simp, denote] theorem toGBPolyG_gbnormCore (p : GBPolyCore β) :
-    toGBPolyG (gbnormCore p) = toGBPolyG p := by
-  rw [toGBPolyG, toGBCoeffPoly_gbnormCore, ← toGBPolyG]
+    toGBPoly (gbnormCore p) = toGBPoly p := by
+  rw [toGBPoly, toGBCoeffPoly_gbnormCore, ← toGBPoly]
 
 omit [CFieldDomain β] in
-/-- `toGBPolyG p = 0 ↔ toGBCoeffPoly p = 0` (the lift is injective, `amG` injective on coefficients). -/
-theorem toGBPolyG_eq_zero_iff (p : GBPolyCore β) : toGBPolyG p = 0 ↔ toGBCoeffPoly p = 0 := by
-  rw [toGBPolyG, liftKG, ← Polynomial.map_zero (QFunNZG.amG β)]
-  exact Polynomial.map_injective (QFunNZG.amG β) (RatFunc.algebraMap_injective (CFieldSpec.K β)) |>.eq_iff
+/-- `toGBPoly p = 0 ↔ toGBCoeffPoly p = 0` (the lift is injective, `am` injective on coefficients). -/
+theorem toGBPolyG_eq_zero_iff (p : GBPolyCore β) : toGBPoly p = 0 ↔ toGBCoeffPoly p = 0 := by
+  rw [toGBPoly, liftK, ← Polynomial.map_zero (QFunNZ.am β)]
+  exact Polynomial.map_injective (QFunNZ.am β) (RatFunc.algebraMap_injective (CFieldSpec.K β)) |>.eq_iff
 
 omit [CFieldDomain β] in
-/-- `toGBPolyG p = 0 ↔ gbisZeroCore p = true`. -/
+/-- `toGBPoly p = 0 ↔ gbisZeroCore p = true`. -/
 theorem toGBPolyG_eq_zero_iff_gbisZeroCore (p : GBPolyCore β) :
-    toGBPolyG p = 0 ↔ gbisZeroCore p = true := by
+    toGBPoly p = 0 ↔ gbisZeroCore p = true := by
   rw [toGBPolyG_eq_zero_iff, gbisZeroCore_iff_toGBCoeffPoly]
 
 /-! ### Step 2 — the primitive-PRS gcd invariant over β(s) -/
@@ -561,60 +561,60 @@ def CPrimPRSGenAssocReg (cgcdB : CPoly β → CPoly β → CPoly β) :
     ℕ → GBPolyCore β → GBPolyCore β → Prop
   | 0, P, Q =>
     gbisZeroCore Q = true ∧
-      Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB P)) (toGBPolyG P)
+      Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB P)) (toGBPoly P)
   | fuel + 1, P, Q =>
     (gbisZeroCore (GBPolyCore.gbnormCore Q) = true ∧
-      Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbnormCore P)))
-        (toGBPolyG P)) ∨
+      Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbnormCore P)))
+        (toGBPoly P)) ∨
       (¬ gbisZeroCore (GBPolyCore.gbnormCore Q) = true ∧
         (∃ (s : GBPolyCore β) (c : CPoly β),
-          Polynomial.C (QFunNZG.amG β (CPoly.toPoly c)) * toGBPolyG (GBPolyCore.gbnormCore P)
-            = toGBPolyG s * toGBPolyG (GBPolyCore.gbnormCore Q)
-              + toGBPolyG (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
+          Polynomial.C (QFunNZ.am β (CPoly.toPoly c)) * toGBPoly (GBPolyCore.gbnormCore P)
+            = toGBPoly s * toGBPoly (GBPolyCore.gbnormCore Q)
+              + toGBPoly (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
                   (GBPolyCore.gbnormCore Q))
-          ∧ QFunNZG.amG β (CPoly.toPoly c) ≠ 0) ∧
-        Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB
+          ∧ QFunNZ.am β (CPoly.toPoly c) ≠ 0) ∧
+        Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
-          (toGBPolyG (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
+          (toGBPoly (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P)
               (GBPolyCore.gbnormCore Q))) ∧
         CPrimPRSGenAssocReg cgcdB fuel (GBPolyCore.gbnormCore Q)
           (GBPolyCore.gbprimitivePartCore cgcdB
             (GBPolyCore.gbpsremainderCore 60 (GBPolyCore.gbnormCore P) (GBPolyCore.gbnormCore Q))))
 
 omit [CFieldDomain β] in
-/-- The primitive-PRS gcd invariant: for a regular run, `Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB
-fuel P Q)) (gcd (toGBPolyG P) (toGBPolyG Q))` over β(s). -/
+/-- The primitive-PRS gcd invariant: for a regular run, `Associated (toGBPoly (cprimPRSgcdGenCore cgcdB
+fuel P Q)) (gcd (toGBPoly P) (toGBPoly Q))` over β(s). -/
 theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPoly β → CPoly β → CPoly β) :
     ∀ (fuel : ℕ) (P Q : GBPolyCore β), CPrimPRSGenAssocReg cgcdB fuel P Q →
-      Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q))
-        (gcd (toGBPolyG P) (toGBPolyG Q)) := by
+      Associated (toGBPoly (cprimPRSgcdGenCore cgcdB fuel P Q))
+        (gcd (toGBPoly P) (toGBPoly Q)) := by
   intro fuel
   induction fuel with
   | zero =>
     intro P Q hreg
     obtain ⟨hQ, hprim⟩ := hreg
-    have hQ0 : toGBPolyG Q = 0 := (toGBPolyG_eq_zero_iff_gbisZeroCore Q).mpr hQ
-    show Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB P))
-      (gcd (toGBPolyG P) (toGBPolyG Q))
+    have hQ0 : toGBPoly Q = 0 := (toGBPolyG_eq_zero_iff_gbisZeroCore Q).mpr hQ
+    show Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB P))
+      (gcd (toGBPoly P) (toGBPoly Q))
     rw [hQ0]
-    exact hprim.trans (gcd_zero_right' (toGBPolyG P)).symm
+    exact hprim.trans (gcd_zero_right' (toGBPoly P)).symm
   | succ fuel ih =>
     intro P Q hreg
-    show Associated (toGBPolyG (
+    show Associated (toGBPoly (
         let P := GBPolyCore.gbnormCore P; let Q := GBPolyCore.gbnormCore Q;
         if GBPolyCore.gbisZeroCore Q then GBPolyCore.gbprimitivePartCore cgcdB P
         else cprimPRSgcdGenCore cgcdB fuel Q
           (GBPolyCore.gbprimitivePartCore cgcdB (GBPolyCore.gbpsremainderCore 60 P Q))))
-      (gcd (toGBPolyG P) (toGBPolyG Q))
+      (gcd (toGBPoly P) (toGBPoly Q))
     simp only
     by_cases hQ : GBPolyCore.gbisZeroCore (GBPolyCore.gbnormCore Q) = true
     · rw [if_pos hQ]
       rw [CPrimPRSGenAssocReg] at hreg
       rcases hreg with ⟨_, hprim⟩ | ⟨hne, _⟩
-      · have hQ0 : toGBPolyG Q = 0 := by
+      · have hQ0 : toGBPoly Q = 0 := by
           rw [← toGBPolyG_gbnormCore]; exact (toGBPolyG_eq_zero_iff_gbisZeroCore _).mpr hQ
         rw [hQ0]
-        exact hprim.trans (gcd_zero_right' (toGBPolyG P)).symm
+        exact hprim.trans (gcd_zero_right' (toGBPoly P)).symm
       · exact absurd hQ hne
     · rw [if_neg hQ]
       rw [CPrimPRSGenAssocReg] at hreg
@@ -625,16 +625,16 @@ theorem associated_toGBPolyG_cprimPRSgcdGenCore (cgcdB : CPoly β → CPoly β �
       set prem := GBPolyCore.gbpsremainderCore 60 Pn Qn with hprem
       set r := GBPolyCore.gbprimitivePartCore cgcdB prem with hr
       have hih := ih Qn r hrec
-      have hstep : Associated (gcd (toGBPolyG Pn) (toGBPolyG Qn))
-          (gcd (toGBPolyG Qn) (toGBPolyG r)) := by
-        have heuc : Associated (gcd (toGBPolyG Pn) (toGBPolyG Qn))
-            (gcd (toGBPolyG Qn) (toGBPolyG prem)) :=
-          associated_gcd_euclid_step_field (A := toGBPolyG Pn) (B := toGBPolyG Qn)
-            (R := toGBPolyG prem) (S := toGBPolyG s)
+      have hstep : Associated (gcd (toGBPoly Pn) (toGBPoly Qn))
+          (gcd (toGBPoly Qn) (toGBPoly r)) := by
+        have heuc : Associated (gcd (toGBPoly Pn) (toGBPoly Qn))
+            (gcd (toGBPoly Qn) (toGBPoly prem)) :=
+          associated_gcd_euclid_step_field (A := toGBPoly Pn) (B := toGBPoly Qn)
+            (R := toGBPoly prem) (S := toGBPoly s)
             (Polynomial.isUnit_C.mpr hc0.isUnit) (by linear_combination hrel)
         exact heuc.trans (associated_gcd_right_gbpolyG hassoc.symm)
-      rw [show toGBPolyG P = toGBPolyG Pn by rw [hPn, toGBPolyG_gbnormCore],
-        show toGBPolyG Q = toGBPolyG Qn by rw [hQn, toGBPolyG_gbnormCore]]
+      rw [show toGBPoly P = toGBPoly Pn by rw [hPn, toGBPolyG_gbnormCore],
+        show toGBPoly Q = toGBPoly Qn by rw [hQn, toGBPolyG_gbnormCore]]
       exact hih.trans hstep.symm
 
 /-! ### Discharging clause (iii) — the content strip is a β(s)-unit scaling
@@ -691,7 +691,7 @@ theorem toGBCoeffPoly_gbprimitivePartCore_exact (fuel : ℕ)
 
 omit [CFieldDomain β] in
 /-- Clause (iii): under the content-nonzero and content-divides-each-coefficient hypotheses, `Associated
-(toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p)` over β(s). -/
+(toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)` over β(s). -/
 theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)
     (cgcdB : CPoly β → CPoly β → CPoly β) (p : GBPolyCore β)
     (hg : ¬ CPoly.cisZero (gbcontentCore cgcdB p) = true)
@@ -699,21 +699,21 @@ theorem associated_toGBPolyG_gbprimitivePartCore (fuel : ℕ)
     (hg0 : CPoly.toPoly (gbcontentCore cgcdB p) ≠ 0)
     (hfuel : ∀ a ∈ gbnormCore p, (CPoly.cnorm a : List β).length ≤ fuel)
     (hdvd : ∀ a ∈ gbnormCore p, CPoly.toPoly (gbcontentCore cgcdB p) ∣ CPoly.toPoly a) :
-    Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p) := by
-  -- lift the toGBCoeffPoly-exact identity through liftKG to a C(amG g)-scaling on toGBPolyG
+    Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p) := by
+  -- lift the toGBCoeffPoly-exact identity through liftK to a C(am g)-scaling on toGBPoly
   have hexact := toGBCoeffPoly_gbprimitivePartCore_exact fuel cgcdB p hg hgcn hfuel hdvd
-  have hl := congrArg (liftKG β) hexact
+  have hl := congrArg (liftK β) hexact
   rw [map_mul, liftKG_C] at hl
-  -- hl : C (amG (toPoly g)) * toGBPolyG (gbprimitivePartCore …) = toGBPolyG p
-  have hl' : Polynomial.C (QFunNZG.amG β (CPoly.toPoly (gbcontentCore cgcdB p)))
-      * toGBPolyG (gbprimitivePartCore cgcdB p) = toGBPolyG p := by
-    simpa [toGBPolyG] using hl
-  refine ⟨(Polynomial.isUnit_C.mpr (QFunNZG.amG_toPolyG_ne_zero hg0).isUnit).unit, ?_⟩
+  -- hl : C (am (toPoly g)) * toGBPoly (gbprimitivePartCore …) = toGBPoly p
+  have hl' : Polynomial.C (QFunNZ.am β (CPoly.toPoly (gbcontentCore cgcdB p)))
+      * toGBPoly (gbprimitivePartCore cgcdB p) = toGBPoly p := by
+    simpa [toGBPoly] using hl
+  refine ⟨(Polynomial.isUnit_C.mpr (QFunNZ.amG_toPolyG_ne_zero hg0).isUnit).unit, ?_⟩
   rw [← hl']
-  show toGBPolyG (gbprimitivePartCore cgcdB p)
-      * Polynomial.C (QFunNZG.amG β (CPoly.toPoly (gbcontentCore cgcdB p)))
-    = Polynomial.C (QFunNZG.amG β (CPoly.toPoly (gbcontentCore cgcdB p)))
-      * toGBPolyG (gbprimitivePartCore cgcdB p)
+  show toGBPoly (gbprimitivePartCore cgcdB p)
+      * Polynomial.C (QFunNZ.am β (CPoly.toPoly (gbcontentCore cgcdB p)))
+    = Polynomial.C (QFunNZ.am β (CPoly.toPoly (gbcontentCore cgcdB p)))
+      * toGBPoly (gbprimitivePartCore cgcdB p)
   ring
 
 /-! ### The content-gcd divides every coefficient — from `cgcdB`'s gcd-correctness (the tower link) -/
@@ -764,14 +764,14 @@ theorem toPolyG_gbcontentCore_dvd_mem (cgcdB : CPoly β → CPoly β → CPoly �
   exact (toPolyG_foldl_cgcdB_dvd cgcdB hcorr [] (GBPolyCore.gbnormCore p)).2
 
 /-- Clause (iii) discharged from `CgcdBCorrect cgcdB` (plus content-nonzero and the per-coefficient
-bound): `Associated (toGBPolyG (gbprimitivePartCore cgcdB p)) (toGBPolyG p)`. -/
+bound): `Associated (toGBPoly (gbprimitivePartCore cgcdB p)) (toGBPoly p)`. -/
 theorem associated_toGBPolyG_gbprimitivePartCore_of_correct (fuel : ℕ)
     (cgcdB : CPoly β → CPoly β → CPoly β) (hcorr : CgcdBCorrect cgcdB) (p : GBPolyCore β)
     (hg : ¬ CPoly.cisZero (GBPolyCore.gbcontentCore cgcdB p) = true)
     (hgcn : CPoly.cnorm (GBPolyCore.gbcontentCore cgcdB p) ≠ [])
     (hg0 : CPoly.toPoly (GBPolyCore.gbcontentCore cgcdB p) ≠ 0)
     (hfuel : ∀ a ∈ GBPolyCore.gbnormCore p, (CPoly.cnorm a : List β).length ≤ fuel) :
-    Associated (toGBPolyG (GBPolyCore.gbprimitivePartCore cgcdB p)) (toGBPolyG p) :=
+    Associated (toGBPoly (GBPolyCore.gbprimitivePartCore cgcdB p)) (toGBPoly p) :=
   associated_toGBPolyG_gbprimitivePartCore fuel cgcdB p hg hgcn hg0 hfuel
     (toPolyG_gbcontentCore_dvd_mem cgcdB hcorr p)
 
@@ -786,7 +786,7 @@ Combining the lift-back (`toPolyG_liftGBPolyCoreG`), the primitive-PRS invariant
 -- β(s) = RatFunc (CFieldSpec.K β).
 example (cgcdB : CPoly β → CPoly β → CPoly β) (fuel : ℕ) (P Q : GBPolyCore β)
     (hreg : CPrimPRSGenAssocReg cgcdB fuel P Q) :
-    Associated (toGBPolyG (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPolyG P) (toGBPolyG Q)) :=
+    Associated (toGBPoly (cprimPRSgcdGenCore cgcdB fuel P Q)) (gcd (toGBPoly P) (toGBPoly Q)) :=
   associated_toGBPolyG_cprimPRSgcdGenCore cgcdB fuel P Q hreg
 
 

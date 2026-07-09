@@ -13,4 +13,4 @@ import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEWellFounded
 import DeepWiki.SymbolicIntegration.Engine.Tower.WellFounded
 
-/-! # Computable engine — arbitrary-depth towers (`QFunNZG`) aggregator. -/
+/-! # Computable engine — arbitrary-depth towers (`QFunNZ`) aggregator. -/

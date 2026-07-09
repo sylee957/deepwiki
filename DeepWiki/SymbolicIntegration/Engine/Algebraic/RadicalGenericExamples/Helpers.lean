@@ -31,9 +31,9 @@ theorem not_isSquare_algebraMap_of_odd_natDegree {p : ℚ[X]} (hodd : Odd p.natD
   rw [sq, RatFunc.intDegree_mul hb_ne hb_ne, RatFunc.intDegree_polynomial, hk] at hdeg
   omega
 
-/-- For `f : QFunNZG ℚ` with `∀ b, b² ≠ toK f`, `Irreducible (X² − C(toK f))` over `ℚ(x)` — the
+/-- For `f : QFunNZ ℚ` with `∀ b, b² ≠ toK f`, `Irreducible (X² − C(toK f))` over `ℚ(x)` — the
 `X_pow_sub_C_irreducible_of_prime Nat.prime_two` instance abstracted over the radicand. -/
-theorem irreducible_radDeg2_of_not_isSquare {f : QFunNZG ℚ}
+theorem irreducible_radDeg2_of_not_isSquare {f : QFunNZ ℚ}
     (h : ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK f) :
     Irreducible (X ^ 2 - C (CFieldSpec.toK f)) :=
   X_pow_sub_C_irreducible_of_prime Nat.prime_two h
@@ -46,10 +46,10 @@ per-radicand `natDegree` computation. -/
 /-- `toK (qxOfNum num) = algebraMap ℚ[X] (RatFunc ℚ) (toPoly num)`: a denominator-`1` ℚ(x)-value reads
 through the tower bridge as the algebra-map image of its numerator (denominator `toPoly [1] = 1`). -/
 theorem toK_qxOfNum (num : CPoly ℚ) :
-    CFieldSpec.toK (qxOfNum num : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPoly num) := by
-  show QFunNZG.toQFunNZG (qxOfNum num) = _
-  rw [QFunNZG.toQFunNZG]
-  show QFunNZG.amG ℚ (toPoly num) / QFunNZG.amG ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
+    CFieldSpec.toK (qxOfNum num : QFunNZ ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (toPoly num) := by
+  show QFunNZ.toQFunNZ (qxOfNum num) = _
+  rw [QFunNZ.toQFunNZ]
+  show QFunNZ.am ℚ (toPoly num) / QFunNZ.am ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
   have h2 : toPoly ([CField.one] : CPoly ℚ) = 1 := by
     show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h2, map_one, div_one]

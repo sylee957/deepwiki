@@ -14,7 +14,7 @@ non-constant case belongs to the general primitive recursion. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG Polynomial
+open CPoly QFunNZ Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -48,10 +48,10 @@ theorem field_identity_Dt1 (Dt c q : CPoly α) (n : ℤ)
     (hDt1 : toPoly Dt = 1) (hc : cisZero c = false) (hdeg : (cdeg c : ℤ) + 1 ≤ n)
     (hsome : cPolyRischDE Dt ([] : CPoly α) c n = some q)
     (hconst : Differential.mapCoeffs (toPoly c) = 0) :
-    towerFractionFieldDerivG Dt (amG α (toPoly q) / amG α (toPoly ([CField.one] : CPoly α)))
-      = amG α (toPoly c) / amG α (toPoly ([CField.one] : CPoly α)) := by
-  have hcongr : towerFractionFieldDerivG Dt = towerFractionFieldDerivG ([CField.one] : CPoly α) := by
-    unfold towerFractionFieldDerivG
+    towerFractionFieldDeriv Dt (am α (toPoly q) / am α (toPoly ([CField.one] : CPoly α)))
+      = am α (toPoly c) / am α (toPoly ([CField.one] : CPoly α)) := by
+  have hcongr : towerFractionFieldDeriv Dt = towerFractionFieldDeriv ([CField.one] : CPoly α) := by
+    unfold towerFractionFieldDeriv
     simp only [hDt1, denote, map_one, mul_zero, add_zero]
   have hsome1 : cPolyRischDE ([CField.one] : CPoly α) ([] : CPoly α) c n = some q := by
     rw [cPolyRischDEG_nil_eq _ c n hc hdeg]
@@ -64,8 +64,8 @@ omit [CFracGcdCoreWf α] in
 theorem primitive_special_identity (Dt fp qp : CPoly α)
     (hDt1 : toPoly Dt = 1) (hconst : Differential.mapCoeffs (toPoly fp) = 0)
     (hsome : cPolyRischDE Dt ([] : CPoly α) fp ((cdeg fp : ℤ) + 1) = some qp) :
-    towerFractionFieldDerivG Dt (amG α (toPoly qp) / amG α (toPoly ([CField.one] : CPoly α)))
-      = amG α (toPoly fp) / amG α (toPoly ([CField.one] : CPoly α)) := by
+    towerFractionFieldDeriv Dt (am α (toPoly qp) / am α (toPoly ([CField.one] : CPoly α)))
+      = am α (toPoly fp) / am α (toPoly ([CField.one] : CPoly α)) := by
   by_cases hfp : cisZero fp = true
   · -- `fp = 0`: the poly-RDE returns `[]`, both sides vanish
     have hbnil : cisZero ([] : CPoly α) = true := by rw [cisZeroG_iff, toPolyG_nil]

@@ -16,30 +16,30 @@ namespace DeepWiki.SymbolicIntegration
 
 open RadElem
 
-/-! ### The exponential tower base `α = ℚ(x)(eˣ) = QFunNZG (QFunNZG ℚ)`
+/-! ### The exponential tower base `α = ℚ(x)(eˣ) = QFunNZ (QFunNZ ℚ)`
 
-`Lvl2 = QFunNZG (QFunNZG ℚ)` is the field `ℚ(x)(t₁)`. To make `t₁ = eˣ` its `CDiffField` derivation
-becomes `towerDerivQFunNZG [t₁]` (so `t₁' = t₁`) instead of the default `t₁' = 1`. -/
+`Lvl2 = QFunNZ (QFunNZ ℚ)` is the field `ℚ(x)(t₁)`. To make `t₁ = eˣ` its `CDiffField` derivation
+becomes `towerDerivQFunNZ [t₁]` (so `t₁' = t₁`) instead of the default `t₁' = 1`. -/
 
-/-- A level-2 scalar `c ∈ Lvl2 = ℚ(x)(t₁)` from a numerator `CPoly (QFunNZG ℚ)` over denominator `1`;
+/-- A level-2 scalar `c ∈ Lvl2 = ℚ(x)(t₁)` from a numerator `CPoly (QFunNZ ℚ)` over denominator `1`;
 the level-2 analogue of `qxOfNum`. -/
-def lvl2OfNum (num : CPoly (QFunNZG ℚ)) : Lvl2 :=
-  ⟨(num, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
+def lvl2OfNum (num : CPoly (QFunNZ ℚ)) : Lvl2 :=
+  ⟨(num, [CField.one]), QFunNZ.cisZeroG_one_singleton⟩
 
 /-- The exponential monomial `θ = t₁ = eˣ ∈ ℚ(x)(t₁)` (numerator `[0, 1]`, denominator `[1]`). -/
-def expTheta : Lvl2 := lvl2OfNum [(CField.zero : QFunNZG ℚ), CField.one]
+def expTheta : Lvl2 := lvl2OfNum [(CField.zero : QFunNZ ℚ), CField.one]
 
 /-- The radicand `ρ = θ + 1 = eˣ + 1 ∈ ℚ(x)(t₁)` (numerator `[1, 1]`), the element with `y² = ρ`. -/
-def expRadicand : Lvl2 := lvl2OfNum [(CField.one : QFunNZG ℚ), CField.one]
+def expRadicand : Lvl2 := lvl2OfNum [(CField.one : QFunNZ ℚ), CField.one]
 
-/-- The new-monomial derivative `Dt₁ = t₁ = [0, 1] ∈ CPoly (QFunNZG ℚ)` making `t₁` exponential
-(`t₁' = t₁`), fed to `towerDerivQFunNZG`. -/
-def expDt1 : CPoly (QFunNZG ℚ) := [(CField.zero : QFunNZG ℚ), CField.one]
+/-- The new-monomial derivative `Dt₁ = t₁ = [0, 1] ∈ CPoly (QFunNZ ℚ)` making `t₁` exponential
+(`t₁' = t₁`), fed to `towerDerivQFunNZ`. -/
+def expDt1 : CPoly (QFunNZ ℚ) := [(CField.zero : QFunNZ ℚ), CField.one]
 
-/-- The exponential `CDiffField Lvl2` instance `cderiv := towerDerivQFunNZG [t₁]` (so `t₁' = t₁`, `t₁ = eˣ`).
+/-- The exponential `CDiffField Lvl2` instance `cderiv := towerDerivQFunNZ [t₁]` (so `t₁' = t₁`, `t₁ = eˣ`).
 A local `def` passed to the radical ops via `@`, leaving the default `t₁' = 1` derivation untouched. -/
 @[reducible] def expTowerDiff : CDiffField Lvl2 where
-  cderiv := QFunNZG.towerDerivQFunNZG expDt1
+  cderiv := QFunNZ.towerDerivQFunNZ expDt1
 
 /-- `D(t₁) = t₁` under `expTowerDiff`: the derivation sends `t₁` to itself. -/
 theorem expTheta_deriv_eq_self :
@@ -98,18 +98,18 @@ def lvl2OneOverX : Lvl2 :=
   lvl2OfNum [qxOfFrac [1] [0, 1] (by decide)]
 
 /-- The logarithmic monomial `θ = t₁ = log x ∈ ℚ(x)(log x)` (numerator `[0, 1]`, denominator `[1]`). -/
-def logTheta : Lvl2 := lvl2OfNum [(CField.zero : QFunNZG ℚ), CField.one]
+def logTheta : Lvl2 := lvl2OfNum [(CField.zero : QFunNZ ℚ), CField.one]
 
 /-- The radicand `ρ = θ = log x ∈ ℚ(x)(log x)` (`y² = log x`), numerator `[0, 1]`, denominator `[1]`. -/
-def logRadicandT : Lvl2 := lvl2OfNum [(CField.zero : QFunNZG ℚ), CField.one]
+def logRadicandT : Lvl2 := lvl2OfNum [(CField.zero : QFunNZ ℚ), CField.one]
 
-/-- The new-monomial derivative `Dt₁ = θ' = 1/x ∈ CPoly (QFunNZG ℚ)` making `t₁` logarithmic (`t₁' = 1/x`). -/
-def logDt1 : CPoly (QFunNZG ℚ) := [qxOfFrac [1] [0, 1] (by decide)]
+/-- The new-monomial derivative `Dt₁ = θ' = 1/x ∈ CPoly (QFunNZ ℚ)` making `t₁` logarithmic (`t₁' = 1/x`). -/
+def logDt1 : CPoly (QFunNZ ℚ) := [qxOfFrac [1] [0, 1] (by decide)]
 
-/-- The logarithmic `CDiffField Lvl2` instance `cderiv := towerDerivQFunNZG [1/x]` (so `t₁' = 1/x`,
+/-- The logarithmic `CDiffField Lvl2` instance `cderiv := towerDerivQFunNZ [1/x]` (so `t₁' = 1/x`,
 `t₁ = log x`). A local `def` supplied via `@`. -/
 @[reducible] def logTowerDiff : CDiffField Lvl2 where
-  cderiv := QFunNZG.towerDerivQFunNZG logDt1
+  cderiv := QFunNZ.towerDerivQFunNZ logDt1
 
 /-- `D(t₁) = 1/x` under `logTowerDiff`: the derivation sends `t₁ = log x` to `1/x`. -/
 theorem logTheta_deriv_eq_oneOverX :
@@ -142,29 +142,29 @@ theorem logIntegral_eq :
 /-! ### The generic rational-part driver over a tower base
 
 The multi-case rational-part drivers (`radIntegrateCase2Wf` / `radIntegrateRationalWf`) instantiate at
-`α = QFunNZG ℚ ≅ ℚ(x)`, giving the stacked extension `(ℚ(x)(t₁))[y]/(y² − ρ)`. Example: radicand
+`α = QFunNZ ℚ ≅ ℚ(x)`, giving the stacked extension `(ℚ(x)(t₁))[y]/(y² − ρ)`. Example: radicand
 `ρ = θ³ − θ`, `W = θ`, integrand `1/(θ²·√(θ³−θ))`, validated through `radDeriv 2` at level 2. -/
 
 open CPoly
 
 /-- Radicand `ρ = θ³ − θ = θ(θ−1)(θ+1) ∈ ℚ(x)[θ]` (`y² = ρ`, squarefree), `[0, −1, 0, 1]`. -/
-def drvRho : CPoly (QFunNZG ℚ) := [CField.zero, qxOfNum [-1], CField.zero, qxOfNum [1]]
+def drvRho : CPoly (QFunNZ ℚ) := [CField.zero, qxOfNum [-1], CField.zero, qxOfNum [1]]
 
 /-- Squarefree factor `W = θ ∈ ℚ(x)[θ]` (a branch place, `W ∣ ρ`), `[0, 1]`. -/
-def drvW : CPoly (QFunNZG ℚ) := [CField.zero, CField.one]
+def drvW : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
 
 /-- Numerator `C₀ = 1 ∈ ℚ(x)[θ]` (integrand `1/(θ²·√(θ³−θ))`), `[1]`. -/
-def drvC : CPoly (QFunNZG ℚ) := [CField.one]
+def drvC : CPoly (QFunNZ ℚ) := [CField.one]
 
 /-- The Case-2 driver run `radIntegrateCase2Wf W ρ 2 C = (Crem, vNum)` on `∫ 1/(θ²·√(θ³−θ))` over
 `α = ℚ(x)`, returning the `k = 1` residual and the rational-part numerator over `W² = θ²`. -/
-def drvRun : CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ) := radIntegrateCase2Wf drvW drvRho 2 drvC
+def drvRun : CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ) := radIntegrateCase2Wf drvW drvRho 2 drvC
 
 /-- The radicand `ρ = θ³ − θ` lifted to a level-2 scalar `ρ ∈ ℚ(x)(t₁) = Lvl2`. -/
 def drvRhoLvl2 : Lvl2 := lvl2OfNum drvRho
 
 /-- The common-denominator power `W² = θ²` over `ℚ(x)[θ]`, `cpow W 2`. -/
-def drvW2 : CPoly (QFunNZG ℚ) := cpow drvW 2
+def drvW2 : CPoly (QFunNZ ℚ) := cpow drvW 2
 
 /-- The rational part `v = vNum/(W²·y)` lifted to `RadElem Lvl2` as `[0, vNum/(W²·ρ)]`. -/
 def drvVlift : RadElem Lvl2 :=
@@ -182,13 +182,13 @@ theorem drvDriver_integrates :
     radIsZero (radSub (radDeriv 2 drvRhoLvl2 drvVlift) drvRatLift) = true := by native_decide
 
 /-- Full-driver denominator `B = θ² ∈ ℚ(x)[θ]`, `[0, 0, 1]`. -/
-def drvB : CPoly (QFunNZG ℚ) := [CField.zero, CField.zero, CField.one]
+def drvB : CPoly (QFunNZ ℚ) := [CField.zero, CField.zero, CField.one]
 
 /-- The full multi-case driver run `radIntegrateRationalWf ρ R B` on `∫ 1/(θ²·√(θ³−θ))` over `α = ℚ(x)`:
 squarefree-decomposes `B = θ²`, classifies `θ` as a `W`-factor, dispatches to Case-2. Returns one
 per-factor record. -/
 def drvFullRun :
-    List (Bool × CPoly (QFunNZG ℚ) × ℕ × CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ) × CPoly (QFunNZG ℚ)) :=
+    List (Bool × CPoly (QFunNZ ℚ) × ℕ × CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ) × CPoly (QFunNZ ℚ)) :=
   radIntegrateRationalWf drvRho drvC drvB
 
 /-- The full multi-case driver computes over the tower base, producing one per-factor record. -/

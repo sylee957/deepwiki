@@ -32,7 +32,7 @@ variable [CFracGcdCoreWf α]
 /-- The generic one-level Risch integrator, parameterized by a monomial case `C`: canonical-split, run the
 case's special-part hook, correct the reduced normal part, and combine. -/
 def cIntegrateCase (C : MonomialCase α) (Dt a d : CPoly α) (cands : List α) :
-    Option (IntegralResultG α) :=
+    Option (IntegralResult α) :=
   let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFast Dt a d
   match C.integrateSpecial Dt fp b ds with
   | none => none
@@ -44,7 +44,7 @@ def cIntegrateCase (C : MonomialCase α) (Dt a d : CPoly α) (cands : List α) :
 end CPoly
 
 open CPoly
-open QFunNZG Polynomial
+open QFunNZ Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]
@@ -81,7 +81,7 @@ abbrev crNormNum (Dt a d : CPoly α) : CPoly α := (canonicalRepresentationFast 
 /-- Normal-part denominator `dₙ` of the canonical split. -/
 abbrev crNormDen (Dt a d : CPoly α) : CPoly α := (canonicalRepresentationFast Dt a d).2.2.2
 /-- The reduced integral of the normal part `cₙ/dₙ`. -/
-abbrev redNorm (Dt a d : CPoly α) (cands : List α) : IntegralResultG α :=
+abbrev redNorm (Dt a d : CPoly α) (cands : List α) : IntegralResult α :=
   cIntegrateReduced Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
 
 omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -111,7 +111,7 @@ theorem canonicalReconstruction (Dt a d : CPoly α)
   have hadiv : toPoly a = toPoly qr.1 * toPoly d + toPoly qr.2 := toPolyG_cdivmodWf a d hcnd
   have hbcr : toPoly bc.1 * toPoly sn.1 + toPoly bc.2 * toPoly sn.2 = toPoly qr.2 :=
     toPolyG_cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 hcns hbez
-  have hone : amG α (toPoly ([CField.one] : CPoly α)) = 1 := by
+  have hone : am α (toPoly ([CField.one] : CPoly α)) = 1 := by
     simp only [denote]
     simp
   rw [hone, div_one]
@@ -121,17 +121,17 @@ theorem canonicalReconstruction (Dt a d : CPoly α)
 omit [CRischField α] in
 /-- Generic soundness of `cIntegrateCase` from special-part, normal-part, and reconstruction hypotheses. -/
 theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPoly α) (cands : List α)
-    (res : IntegralResultG α) (snum sden : CPoly α) (nrm : IntegralResultG α)
+    (res : IntegralResult α) (snum sden : CPoly α) (nrm : IntegralResult α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPoly sden ≠ 0) (hgden : toPoly nrm.rational.2 ≠ 0)
     (hSpec : C.integrateSpecial Dt (crPoly Dt a d) (crSpecNum Dt a d) (crSpecDen Dt a d)
       = some (snum, sden))
     (hCorr : C.reducedCorrect Dt (redNorm Dt a d cands) = some nrm)
     (hsome : cIntegrateCase C Dt a d cands = some res)
-    (hSpecField : towerFractionFieldDerivG Dt (fieldFrac snum sden) = specialVal)
-    (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
+    (hSpecField : towerFractionFieldDeriv Dt (fieldFrac snum sden) = specialVal)
+    (hNrmField : IsIntegralResult Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
     (hrecon : specialVal + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d) = fieldFrac a d) :
-    IsIntegralResultG Dt a d res := by
+    IsIntegralResult Dt a d res := by
   have hshape : res = combineSN snum sden nrm := by
     rw [cIntegrateCase] at hsome
     simp only [crPoly, crSpecNum, crSpecDen, redNorm, crNormNum, crNormDen] at hSpec hCorr

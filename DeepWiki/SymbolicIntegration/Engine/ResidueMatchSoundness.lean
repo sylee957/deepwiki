@@ -18,7 +18,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 namespace ResidueMatchTower
 
@@ -145,26 +145,26 @@ end ResidueMatchTower
 
 /-! ### The primitive RT residue match in the engine's vocabulary
 
-Restated over `amG α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))` and
-`towerFractionFieldDerivG Dt`, in the form `logResidueSumG_eq_of_residue_match` consumes. -/
+Restated over `am α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))` and
+`towerFractionFieldDeriv Dt`, in the form `logResidueSumG_eq_of_residue_match` consumes. -/
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
 
-/-- **The primitive RT residue match in the engine's `amG`/`towerFractionFieldDerivG` vocabulary** — for
+/-- **The primitive RT residue match in the engine's `am`/`towerFractionFieldDeriv` vocabulary** — for
 a primitive monomial with `toPoly Dt = C w`, a squarefree `d = ∏_{α∈s}(t−α)`, `deg a < #s`, and every
-root normal, the engine-shaped residue sum `∑_{α∈s} amG(C(c_α))·(D(t−α)/(t−α)) = a/d` over
-`RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDerivG Dt`. The unconditional `hmatch` for
+root normal, the engine-shaped residue sum `∑_{α∈s} am(C(c_α))·(D(t−α)/(t−α)) = a/d` over
+`RatFunc (CFieldSpec.K α)`, with `D = towerFractionFieldDeriv Dt`. The unconditional `hmatch` for
 primitive tower extensions. -/
 theorem primitive_monomial_residue_match_engine (Dt : CPoly α) (s : Finset (CFieldSpec.K α))
     (a : (CFieldSpec.K α)[X]) (w : CFieldSpec.K α) (hDt : toPoly Dt = C w)
     (hA : a.degree < s.card) (hnorm : ∀ β ∈ s, w ≠ β′) :
-    ∑ β ∈ s, amG α
+    ∑ β ∈ s, am α
           (C (a.eval β / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))
-        * (towerFractionFieldDerivG Dt (amG α (X - C β)) / amG α (X - C β))
-      = amG α a / amG α (Lagrange.nodal s id) := by
+        * (towerFractionFieldDeriv Dt (am α (X - C β)) / am α (X - C β))
+      = am α a / am α (Lagrange.nodal s id) := by
   show ∑ β ∈ s, algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))
           (C (a.eval β / (Differential.implicitDeriv (toPoly Dt) (Lagrange.nodal s id)).eval β))
         * (extendDeriv (Differential.implicitDeriv (toPoly Dt))

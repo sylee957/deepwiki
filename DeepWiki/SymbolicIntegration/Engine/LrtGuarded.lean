@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
 
 `cIntegrateReducedLrt` is *total* — it emits symbolic log terms for any input, including non-elementary
 reduced parts (e.g. `∫1/log x`), where those terms do **not** differentiate back. The reason: the residue sum
-`logResidueSumLrtG = Σ c·D(Sᵢ)/Sᵢ` multiplies each residue `c` in as a constant, so `D(g) + logResidueSumLrtG`
+`logResidueSumLrt = Σ c·D(Sᵢ)/Sᵢ` multiplies each residue `c` in as a constant, so `D(g) + logResidueSumLrt`
 equals the genuine derivative `D(g + Σ c·log Sᵢ)` *exactly when every residue `c` is a constant* — otherwise the
 real derivative carries an extra `Σ D(c)·log(Sᵢ)`.
 
@@ -33,7 +33,7 @@ def cResidueConstantGuard (Dt a d : CPoly α) : Bool :=
 /-- **The guarded root-free LRT reduced integrator.** Returns the LRT reduced result only when the
 integrability guard passes (residues are constants); `none` otherwise — correctly declining non-elementary
 reduced parts (e.g. `∫1/log x`, whose residue `x` is non-constant). -/
-def cIntegrateReducedLrtGuarded (Dt a d : CPoly α) : Option (LrtResultG α) :=
+def cIntegrateReducedLrtGuarded (Dt a d : CPoly α) : Option (LrtResult α) :=
   if cResidueConstantGuard Dt a d then some (cIntegrateReducedLrt Dt a d) else none
 
 /-- The guard passes iff `cResidueConstantGuard` is `true` (definitional unfolding of the `if`). -/
@@ -46,7 +46,7 @@ theorem cIntegrateReducedLrtGuardedG_eq_some_iff (Dt a d : CPoly α) :
 /-- **Extraction from a successful guarded run.** If the guarded integrator returns `res`, then the guard
 passed *and* `res` is exactly the unguarded LRT result — the bridge from the `Option`-valued integrator to the
 underlying soundness. -/
-theorem cIntegrateReducedLrtGuardedG_some (Dt a d : CPoly α) (res : LrtResultG α)
+theorem cIntegrateReducedLrtGuardedG_some (Dt a d : CPoly α) (res : LrtResult α)
     (h : cIntegrateReducedLrtGuarded Dt a d = some res) :
     cResidueConstantGuard Dt a d = true ∧ res = cIntegrateReducedLrt Dt a d := by
   unfold cIntegrateReducedLrtGuarded at h
@@ -66,10 +66,10 @@ verbatim. The guard makes the integrator *correctly partial* (declining non-elem
 unconditional claim is false); this is the shape a real Risch soundness theorem takes — `= some res ⇒ correct`
 — now with a **real** guard instead of the no-op `some nrm`. -/
 theorem cIntegrateReducedLrtGuardedG_sound {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
-    [CDiffFieldSpec α] [CFracGcdCoreWf α] (Dt a d : CPoly α) (res : LrtResultG α)
+    [CDiffFieldSpec α] [CFracGcdCoreWf α] (Dt a d : CPoly α) (res : LrtResult α)
     (hguarded : cIntegrateReducedLrtGuarded Dt a d = some res)
-    (hsound : IsIntegralResultLrtG Dt a d (cIntegrateReducedLrt Dt a d)) :
-    IsIntegralResultLrtG Dt a d res :=
+    (hsound : IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d)) :
+    IsIntegralResultLrt Dt a d res :=
   (cIntegrateReducedLrtGuardedG_some Dt a d res hguarded).2 ▸ hsound
 
 open CPoly in
@@ -77,35 +77,35 @@ open CPoly in
 `res.logs` has constant coefficients after monic normalization (`D(monic Rᵢ) = 0`, coefficient-wise
 `cmapDeriv`) — i.e. its roots, the algebraic residues, are constants. Monic normalization strips the
 resultant-scaling artifact (as in `cResidueConstantGuard`). The `Bool` guard the genuine integrator checks. -/
-def allResiduesConstantLrtG {α : Type*} [CField α] [CDiffField α] (res : LrtResultG α) : Bool :=
+def allResiduesConstantLrt {α : Type*} [CField α] [CDiffField α] (res : LrtResult α) : Bool :=
   res.logs.all (fun RS => cisZero (cmapDeriv (cmonic RS.1)))
 
-/-- **All LRT residues are constant** (`Prop`). The LRT analogue of `AllResiduesConstantG`; the residues here
+/-- **All LRT residues are constant** (`Prop`). The LRT analogue of `AllResiduesConstant`; the residues here
 are **roots of `Rᵢ`** (not explicit `α`), so constancy is `D(monic Rᵢ) = 0` rather than `D(cᵢ) = 0`. -/
-def AllResiduesConstantLrtG {α : Type*} [CField α] [CDiffField α] (res : LrtResultG α) : Prop :=
-  allResiduesConstantLrtG res = true
+def AllResiduesConstantLrt {α : Type*} [CField α] [CDiffField α] (res : LrtResult α) : Prop :=
+  allResiduesConstantLrt res = true
 
-/-- **Genuine LRT integral result**: the formal LRT identity `IsIntegralResultLrtG` **and** all residues
-constant (`AllResiduesConstantLrtG`). The conjunction certifies a *true* antiderivative
+/-- **Genuine LRT integral result**: the formal LRT identity `IsIntegralResultLrt` **and** all residues
+constant (`AllResiduesConstantLrt`). The conjunction certifies a *true* antiderivative
 `⟦g⟧ + Σᵢ Σ_{Rᵢ(c)=0} c·log Sᵢ(c,t)` with constant algebraic residues — the LRT analogue of
-`IsGenuineIntegralResultG`; `IsIntegralResultLrtG` alone is the formal (constant-treated) identity. -/
-def IsGenuineIntegralResultLrtG {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
-    (Dt anum aden : CPoly α) (res : LrtResultG α) : Prop :=
-  IsIntegralResultLrtG Dt anum aden res ∧ AllResiduesConstantLrtG res
+`IsGenuineIntegralResult`; `IsIntegralResultLrt` alone is the formal (constant-treated) identity. -/
+def IsGenuineIntegralResultLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+    (Dt anum aden : CPoly α) (res : LrtResult α) : Prop :=
+  IsIntegralResultLrt Dt anum aden res ∧ AllResiduesConstantLrt res
 
 /-- **Genuine (broad) elementary integrability** — the well-posed LRT completeness target: there is an
-`LrtResultG` that is a *genuine* integral result (LRT identity **and** constant residues). Unlike the formal
-`IsElementaryIntegrableLrtG` (which holds whenever the poles lie over `K`, regardless of residue-constancy),
+`LrtResult` that is a *genuine* integral result (LRT identity **and** constant residues). Unlike the formal
+`IsElementaryIntegrableLrt` (which holds whenever the poles lie over `K`, regardless of residue-constancy),
 its negation is a meaningful non-integrability statement. The algebraic-residue analogue of
-`IsElementaryIntegrableGenuineG`. -/
-def IsElementaryIntegrableGenuineLrtG {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
+`IsElementaryIntegrableGenuine`. -/
+def IsElementaryIntegrableGenuineLrt {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
     (Dt a d : CPoly α) : Prop :=
-  ∃ res : LrtResultG α, IsGenuineIntegralResultLrtG Dt a d res
+  ∃ res : LrtResult α, IsGenuineIntegralResultLrt Dt a d res
 
 /-- Any genuine LRT witness makes `a/d` genuinely (broadly) elementary integrable. -/
-theorem IsElementaryIntegrableGenuineLrtG.of_genuine {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
-    [CDiffFieldSpec α] {Dt a d : CPoly α} {res : LrtResultG α}
-    (h : IsGenuineIntegralResultLrtG Dt a d res) : IsElementaryIntegrableGenuineLrtG Dt a d :=
+theorem IsElementaryIntegrableGenuineLrt.of_genuine {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+    [CDiffFieldSpec α] {Dt a d : CPoly α} {res : LrtResult α}
+    (h : IsGenuineIntegralResultLrt Dt a d res) : IsElementaryIntegrableGenuineLrt Dt a d :=
   ⟨res, h⟩
 
 /-! ### Validation (`native_decide`) -/
@@ -118,7 +118,7 @@ theorem cResidueConstantGuardG_invT2m1 :
     cResidueConstantGuard ([1] : CPoly ℚ) [1] [-1, 0, 1] = true := by native_decide
 
 /-- The guarded integrator accepts `∫1/(t²−1)` over `ℚ`, returning the same result as the unguarded one
-(derived from the guard passing + the `= some` characterization, no `DecidableEq` on `LrtResultG` needed). -/
+(derived from the guard passing + the `= some` characterization, no `DecidableEq` on `LrtResult` needed). -/
 theorem cIntegrateReducedLrtGuardedG_invT2m1 :
     cIntegrateReducedLrtGuarded ([1] : CPoly ℚ) [1] [-1, 0, 1]
       = some (cIntegrateReducedLrt ([1] : CPoly ℚ) [1] [-1, 0, 1]) :=

@@ -6,18 +6,18 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrage
 Transports the algebraic Rothstein–Trager residue identity to the transcendental tower with the
 monomial derivation `D = cmonomialDeriv Dt`.  Delivers: the residue resultant's roots are the residues
 (`roots_residueResultantTowerG_eq_residues`); the log-argument gcd is the residue's linear factor
-(`residue_gcd_eq_linear_factor`); the `logResidueSumG` reading as a monomial log-derivative sum; and,
-given the residue match, `logResidueSumG = a/d`, assembled with the Hermite half into the fuel-free
-reduced-case field identity `D(g) + logResidueSumG = a/d` with no engine certificate. -/
+(`residue_gcd_eq_linear_factor`); the `logResidueSum` reading as a monomial log-derivative sum; and,
+given the residue match, `logResidueSum = a/d`, assembled with the Hermite half into the fuel-free
+reduced-case field identity `D(g) + logResidueSum = a/d` with no engine certificate. -/
 
 open Polynomial Classical
 open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
-/-! ### The `logResidueSumG` reading as a monomial log-derivative sum -/
+/-! ### The `logResidueSum` reading as a monomial log-derivative sum -/
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -31,36 +31,36 @@ omit [Algebra ℚ (CFieldSpec.K α)] in
   rw [cAmcDd]
   simp only [denote]
 
-/-! ### The RT residue identity: `logResidueSumG = a/d` from the residue match -/
+/-! ### The RT residue identity: `logResidueSum = a/d` from the residue match -/
 
-/-- `logResidueSumG = a/d` from the residue match: given the log-derivative sum equals `amG a/amG d`,
-so does `logResidueSumG Dt logs`. -/
+/-- `logResidueSum = a/d` from the residue match: given the log-derivative sum equals `am a/am d`,
+so does `logResidueSum Dt logs`. -/
 theorem logResidueSumG_eq_of_residue_match (Dt : CPoly α) (a d : CPoly α)
     (logs : List (α × CPoly α))
     (hmatch : (logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-        = amG α (toPoly a) / amG α (toPoly d)) :
-    logResidueSumG Dt logs = amG α (toPoly a) / amG α (toPoly d) := by
+          am α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+        = am α (toPoly a) / am α (toPoly d)) :
+    logResidueSum Dt logs = am α (toPoly a) / am α (toPoly d) := by
   rw [logResidueSumG_eq_logDeriv_sum Dt logs]
   exact hmatch
 
 /-! ### Assembly: the reduced-case field identity from the Hermite half + the RT residue match -/
 
 /-- The reduced-case field identity: given the Hermite half `D(g) + h = a/d` and the RT residue match
-(the residue logs' log-derivative sum equals `h`), `D(g) + logResidueSumG = a/d`. -/
+(the residue logs' log-derivative sum equals `h`), `D(g) + logResidueSum = a/d`. -/
 theorem field_identity_of_reducedG_of_residueMatch (Dt : CPoly α)
     (gnum gden hNum hDen anum aden : CPoly α) (logs : List (α × CPoly α))
-    (hherm : towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
-          + amG α (toPoly hNum) / amG α (toPoly hDen)
-        = amG α (toPoly anum) / amG α (toPoly aden))
+    (hherm : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
+          + am α (toPoly hNum) / am α (toPoly hDen)
+        = am α (toPoly anum) / am α (toPoly aden))
     (hmatch : (logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-        = amG α (toPoly hNum) / amG α (toPoly hDen)) :
-    towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
-        + logResidueSumG Dt logs
-      = amG α (toPoly anum) / amG α (toPoly aden) := by
+          am α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+        = am α (toPoly hNum) / am α (toPoly hDen)) :
+    towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
+        + logResidueSum Dt logs
+      = am α (toPoly anum) / am α (toPoly aden) := by
   rw [logResidueSumG_eq_of_residue_match Dt hNum hDen logs hmatch, hherm]
 
 /-! ### The fuel-free reduced-case one-shot for `cIntegrateReduced`
@@ -70,42 +70,42 @@ Reads `cIntegrateReduced`'s fields into `field_identity_of_reducedG_of_residueMa
 variable [CFracGcdCoreWf α]
 
 /-- The fuel-free reduced-case one-shot: for `res = cIntegrateReduced Dt a d cands`, given the
-Hermite half and the RT residue match, `D(g) + logResidueSumG Dt res.logs = a/d`. -/
+Hermite half and the RT residue match, `D(g) + logResidueSum Dt res.logs = a/d`. -/
 theorem field_identity_of_cIntegrateReducedG_of_residueMatch (Dt : CPoly α)
     (a d : CPoly α) (cands : List α)
-    (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG α (toPoly a) / amG α (toPoly d))
+    (hherm : towerFractionFieldDeriv Dt
+            (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am α (toPoly a) / am α (toPoly d))
     (hmatch : ((CPoly.cIntegrateReduced Dt a d cands).logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-        = amG α (toPoly (cHermiteReduceTower Dt a d).2.1)
-          / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / amG α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = amG α (toPoly a) / amG α (toPoly d) :=
+          am α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+        = am α (toPoly (cHermiteReduceTower Dt a d).2.1)
+          / am α (toPoly (cHermiteReduceTower Dt a d).2.2)) :
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am α (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = am α (toPoly a) / am α (toPoly d) :=
   field_identity_of_reducedG_of_residueMatch Dt
     (CPoly.cIntegrateReduced Dt a d cands).rational.1
     (CPoly.cIntegrateReduced Dt a d cands).rational.2
     (cHermiteReduceTower Dt a d).2.1 (cHermiteReduceTower Dt a d).2.2
     a d (CPoly.cIntegrateReduced Dt a d cands).logs hherm hmatch
 
-/-! ### The deliverables at the level-1 carrier `α = QFunNZG ℚ` -/
+/-! ### The deliverables at the level-1 carrier `α = QFunNZ ℚ` -/
 
-/-- `Algebra ℚ (CFieldSpec.K (QFunNZG ℚ))` via `CFieldSpec.K (QFunNZG ℚ) = RatFunc ℚ`. -/
-noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
+/-- `Algebra ℚ (CFieldSpec.K (QFunNZ ℚ))` via `CFieldSpec.K (QFunNZ ℚ) = RatFunc ℚ`. -/
+noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZ ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
 /-- The tower residue resultant's roots are the residues over `ℚ(x)`
 (`roots_residueResultantTowerG_eq_residues` at `K = RatFunc ℚ`). -/
-theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (QFunNZG ℚ)) (N : ℕ)
-    (droots : Multiset (CFieldSpec.K (QFunNZG ℚ))) (aval ddval : CFieldSpec.K (QFunNZG ℚ) → CFieldSpec.K (QFunNZG ℚ))
-    (hlc : lc ≠ 0) (hDd : ∀ α ∈ droots, ddval α ≠ 0) (R : (CFieldSpec.K (QFunNZG ℚ))[X])
+theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (QFunNZ ℚ)) (N : ℕ)
+    (droots : Multiset (CFieldSpec.K (QFunNZ ℚ))) (aval ddval : CFieldSpec.K (QFunNZ ℚ) → CFieldSpec.K (QFunNZ ℚ))
+    (hlc : lc ≠ 0) (hDd : ∀ α ∈ droots, ddval α ≠ 0) (R : (CFieldSpec.K (QFunNZ ℚ))[X])
     (hR : R = Polynomial.C lc ^ N
       * (droots.map (fun α =>
           Polynomial.C (aval α) - Polynomial.X * Polynomial.C (ddval α))).prod) :
@@ -113,26 +113,26 @@ theorem roots_residueResultantTowerG_eq_residues_qfunNZG (lc : CFieldSpec.K (QFu
   LogResidueTower.roots_residueResultantTowerG_eq_residues lc N droots aval ddval hlc hDd R hR
 
 /-- The fuel-free reduced-case RT one-shot over `ℚ(x)(t)`: for `res = cIntegrateReduced Dt a d
-cands`, given the Hermite half and the RT residue match, `D(g) + logResidueSumG Dt res.logs = amG a/amG d`. -/
-theorem field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG (Dt : CPoly (QFunNZG ℚ))
-    (a d : CPoly (QFunNZG ℚ)) (cands : List (QFunNZG ℚ))
-    (hherm : towerFractionFieldDerivG Dt
-            (amG (QFunNZG ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-              / amG (QFunNZG ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-          + amG (QFunNZG ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
-            / amG (QFunNZG ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
-        = amG (QFunNZG ℚ) (toPoly a) / amG (QFunNZG ℚ) (toPoly d))
+cands`, given the Hermite half and the RT residue match, `D(g) + logResidueSum Dt res.logs = am a/am d`. -/
+theorem field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG (Dt : CPoly (QFunNZ ℚ))
+    (a d : CPoly (QFunNZ ℚ)) (cands : List (QFunNZ ℚ))
+    (hherm : towerFractionFieldDeriv Dt
+            (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+              / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+          + am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
+            / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)
+        = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d))
     (hmatch : ((CPoly.cIntegrateReduced Dt a d cands).logs.map (fun cv =>
-          amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (toPoly cv.2))
-                / amG (QFunNZG ℚ) (toPoly cv.2)))).sum
-        = amG (QFunNZG ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
-          / amG (QFunNZG ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)) :
-    towerFractionFieldDerivG Dt
-        (amG (QFunNZG ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
-          / amG (QFunNZG ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPoly.cIntegrateReduced Dt a d cands).logs
-      = amG (QFunNZG ℚ) (toPoly a) / amG (QFunNZG ℚ) (toPoly d) :=
+          am (QFunNZ ℚ) (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am (QFunNZ ℚ) (toPoly cv.2))
+                / am (QFunNZ ℚ) (toPoly cv.2)))).sum
+        = am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.1)
+          / am (QFunNZ ℚ) (toPoly (cHermiteReduceTower Dt a d).2.2)) :
+    towerFractionFieldDeriv Dt
+        (am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.1)
+          / am (QFunNZ ℚ) (toPoly (CPoly.cIntegrateReduced Dt a d cands).rational.2))
+        + logResidueSum Dt (CPoly.cIntegrateReduced Dt a d cands).logs
+      = am (QFunNZ ℚ) (toPoly a) / am (QFunNZ ℚ) (toPoly d) :=
   field_identity_of_cIntegrateReducedG_of_residueMatch Dt a d cands hherm hmatch
 
 /-! ### Restatements -/
@@ -158,18 +158,18 @@ example {K : Type*} [Field K] [DecidableEq K] (s : Finset K) (a Dd : K[X])
   LogResidueTower.residue_gcd_eq_linear_factor s a Dd hDd hdist β hβ
 
 -- ★★ THE RT HALF (abstract, checker-free, no native_decide): the residue sum differentiates to the Hermite
--- leftover, so `D(g) + logResidueSumG = a/d` — given the abstract Hermite telescoping + the residue match.
+-- leftover, so `D(g) + logResidueSum = a/d` — given the abstract Hermite telescoping + the residue match.
 example (Dt : CPoly α) (gnum gden hNum hDen anum aden : CPoly α) (logs : List (α × CPoly α))
-    (hherm : towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
-          + amG α (toPoly hNum) / amG α (toPoly hDen)
-        = amG α (toPoly anum) / amG α (toPoly aden))
+    (hherm : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
+          + am α (toPoly hNum) / am α (toPoly hDen)
+        = am α (toPoly anum) / am α (toPoly aden))
     (hmatch : (logs.map (fun cv =>
-          amG α (Polynomial.C (CFieldSpec.toK cv.1))
-            * (towerFractionFieldDerivG Dt (amG α (toPoly cv.2)) / amG α (toPoly cv.2)))).sum
-        = amG α (toPoly hNum) / amG α (toPoly hDen)) :
-    towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
-        + logResidueSumG Dt logs
-      = amG α (toPoly anum) / amG α (toPoly aden) :=
+          am α (Polynomial.C (CFieldSpec.toK cv.1))
+            * (towerFractionFieldDeriv Dt (am α (toPoly cv.2)) / am α (toPoly cv.2)))).sum
+        = am α (toPoly hNum) / am α (toPoly hDen)) :
+    towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
+        + logResidueSum Dt logs
+      = am α (toPoly anum) / am α (toPoly aden) :=
   field_identity_of_reducedG_of_residueMatch Dt gnum gden hNum hDen anum aden logs hherm hmatch
 
 /-! ### Axiom audit -/

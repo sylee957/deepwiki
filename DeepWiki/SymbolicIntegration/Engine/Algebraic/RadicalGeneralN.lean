@@ -46,14 +46,14 @@ Over `ℚ(x)`, `n = 2`, `f = x²+1`: `radInvN` produces a genuine inverse matchi
 
 open RadElem
 
-/-- `radInvN` inverts at `n = 2`: over `(QFunNZG ℚ)[y]/(y² − (x²+1))`, `radMul 2 (x²+1) u (radInvN 2 …) = 1`
+/-- `radInvN` inverts at `n = 2`: over `(QFunNZ ℚ)[y]/(y² − (x²+1))`, `radMul 2 (x²+1) u (radInvN 2 …) = 1`
 for `u = x + y`. -/
 theorem radInvN_mul_self_eq_one_at_two :
     radIsZero (radSub (radMul 2 fullRhoArcsinh fullUxPlusY
         (radInvN 2 fullRhoArcsinh fullUxPlusY)) radOne) = true := by native_decide
 
 /-- `radInvN` agrees with `radInv2` at `n = 2`: `radInvN 2 ρ u = radInv2 ρ u` in
-`(QFunNZG ℚ)[y]/(y² − (x²+1))` for `u = x + y`. -/
+`(QFunNZ ℚ)[y]/(y² − (x²+1))` for `u = x + y`. -/
 theorem radInvN_eq_radInv2_at_two :
     radIsZero (radSub (radInvN 2 fullRhoArcsinh fullUxPlusY)
         (radInv2 fullRhoArcsinh fullUxPlusY)) = true := by native_decide
@@ -125,19 +125,19 @@ instance instCDiffFieldRadExtN {α : Type*} [CField α] [CDiffField α] {n : ℕ
 /-! ### The concrete cube root `∛(x²+1)` over `ℚ(x)` and its irreducibility
 
 `α = ℚ(x)`, `n = 3`, `f = x²+1`: `y³ − (x²+1)` is irreducible over `ℚ(x)` since `x²+1` (intDegree `2`) is
-not a perfect cube, so `RadX3root = RadExtN (QFunNZG ℚ) 3 (x²+1)` is an honest field. -/
+not a perfect cube, so `RadX3root = RadExtN (QFunNZ ℚ) 3 (x²+1)` is an honest field. -/
 
 /-- The cube radicand `f = x² + 1 ∈ ℚ(x)` (numerator `[1, 0, 1]`), `y = ∛(x²+1)`. -/
-def cubeRadicand : QFunNZG ℚ := qxOfNum [1, 0, 1]
+def cubeRadicand : QFunNZ ℚ := qxOfNum [1, 0, 1]
 
-/-- The cube-root field `ℚ(x)[∛(x²+1)] = RadExtN (QFunNZG ℚ) 3 (x²+1)`. -/
-abbrev RadX3root : Type := RadExtN (QFunNZG ℚ) 3 cubeRadicand
+/-- The cube-root field `ℚ(x)[∛(x²+1)] = RadExtN (QFunNZ ℚ) 3 (x²+1)`. -/
+abbrev RadX3root : Type := RadExtN (QFunNZ ℚ) 3 cubeRadicand
 
 /-- The cube-root generator `y = ∛(x²+1)` as an element of `RadX3root` (through `RadExtN.gen`). -/
 def cubeGen : RadX3root := RadExtN.gen
 
 /-- The diagonal multiplier `ℓ = f'/(3f) = 2x/(3(x²+1)) ∈ ℚ(x)` for `D(y) = ℓ·y`, `y = ∛(x²+1)`. -/
-def cubeLogDer : QFunNZG ℚ := logDerRadicand 3 cubeRadicand
+def cubeLogDer : QFunNZ ℚ := logDerRadicand 3 cubeRadicand
 
 /-- **`1 + x² ≠ 0` in `ℚ[X]`** (it has `natDegree 2`). -/
 theorem X2p1_ne_zero : (1 + X ^ 2 : ℚ[X]) ≠ 0 := by
@@ -154,11 +154,11 @@ open CPoly in
 /-- `toK cubeRadicand = algebraMap ℚ[X] (RatFunc ℚ) (1 + x²)`: the radicand reads through the tower bridge
 as the algebra-map image of `1 + x²`. -/
 theorem toK_cubeRadicand :
-    CFieldSpec.toK (cubeRadicand : QFunNZG ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
-  show QFunNZG.toQFunNZG cubeRadicand = _
-  rw [QFunNZG.toQFunNZG]
-  show QFunNZG.amG ℚ (toPoly ([1, 0, 1] : CPoly ℚ))
-      / QFunNZG.amG ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
+    CFieldSpec.toK (cubeRadicand : QFunNZ ℚ) = algebraMap (ℚ[X]) (RatFunc ℚ) (1 + X ^ 2) := by
+  show QFunNZ.toQFunNZ cubeRadicand = _
+  rw [QFunNZ.toQFunNZ]
+  show QFunNZ.am ℚ (toPoly ([1, 0, 1] : CPoly ℚ))
+      / QFunNZ.am ℚ (toPoly ([CField.one] : CPoly ℚ)) = _
   have h1 : toPoly ([1, 0, 1] : CPoly ℚ) = 1 + X ^ 2 := by
     simp only [denote]
     show C (1 : ℚ) + X * (C 0 + X * (C 1 + X * 0)) = _
@@ -166,7 +166,7 @@ theorem toK_cubeRadicand :
   have h2 : toPoly ([CField.one] : CPoly ℚ) = 1 := by
     show C (CFieldSpec.toK (CField.one : ℚ)) + X * 0 = 1; simp [CFieldSpec.toK_one]
   rw [h1, h2]
-  show QFunNZG.amG ℚ (1 + X ^ 2) / QFunNZG.amG ℚ 1 = _
+  show QFunNZ.am ℚ (1 + X ^ 2) / QFunNZ.am ℚ 1 = _
   rw [map_one, div_one]; rfl
 
 /-- `x²+1` is not a cube in `ℚ(x)`: `∀ b, b³ ≠ algebraMap (1 + x²)`, since a cube has `intDegree` divisible
@@ -184,19 +184,19 @@ theorem not_cube_X2p1 :
 /-- `y³ − (x²+1)` is irreducible over `ℚ(x)`: `Irreducible (X³ − C(toK cubeRadicand))`, from
 `X_pow_sub_C_irreducible_of_prime` (prime `3`) and `not_cube_X2p1`. -/
 theorem irreducible_cubeRad :
-    Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZG ℚ))) := by
+    Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZ ℚ))) := by
   rw [toK_cubeRadicand]
   exact X_pow_sub_C_irreducible_of_prime (by norm_num) not_cube_X2p1
 
 /-- The cube-root irreducibility as a `Fact`, so `AdjoinRoot.instField` resolves the field
 `ℚ(x)[∛(x²+1)]`. -/
 instance fact_irreducible_cubeRad :
-    Fact (Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZG ℚ)))) :=
+    Fact (Irreducible (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZ ℚ)))) :=
   ⟨irreducible_cubeRad⟩
 
 /-- `ℚ(x)[∛(x²+1)]` is a field: `Field (AdjoinRoot (X³ − C(toK cubeRadicand)))`, from the irreducibility
 `Fact`. -/
-noncomputable example : Field (AdjoinRoot (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZG ℚ)))) :=
+noncomputable example : Field (AdjoinRoot (X ^ 3 - C (CFieldSpec.toK (cubeRadicand : QFunNZ ℚ)))) :=
   inferInstance
 
 /-! ### The engine differentiates/multiplies/inverts a cube root

@@ -9,16 +9,16 @@ import Mathlib.Data.List.Sigma
 
 The valuation notion behind Hermite pole-cancellation, ported from `HermiteCorrectness.IsQRegular`
 (over `ℚ`, `d/dx`) to the tower carrier `RatFunc (CFieldSpec.K α)` with the monomial derivation
-`towerFractionFieldDerivG Dt`. `IsQRegularG Q f` says `f` has a representation with denominator coprime
+`towerFractionFieldDeriv Dt`. `IsQRegular Q f` says `f` has a representation with denominator coprime
 to `Q` — i.e. no `Q`-pole. The pure lemmas (`add`, `dvd_num_of_isQRegularG`) copy the abstract proofs;
-closure under the derivative (`IsQRegularG.deriv`) uses the tower quotient rule
+closure under the derivative (`IsQRegular.deriv`) uses the tower quotient rule
 `towerFractionFieldDerivG_div`. -/
 
 open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]
@@ -39,33 +39,33 @@ theorem toPolyG_cdivWf_congr [CFracGcdCoreWf α] (P1 Q1 P2 Q2 : CPoly α)
   apply mul_right_cancel₀ hQ1
   rw [h1, hP, ← h2, hQ]
 
-/-- `f` is `Q`-regular over the tower fraction field: it has a representation `amG p / amG q` with
+/-- `f` is `Q`-regular over the tower fraction field: it has a representation `am p / am q` with
 `q ≠ 0` coprime to `Q` (no `Q`-pole). -/
-def IsQRegularG (Q : (CFieldSpec.K α)[X]) (f : RatFunc (CFieldSpec.K α)) : Prop :=
+def IsQRegular (Q : (CFieldSpec.K α)[X]) (f : RatFunc (CFieldSpec.K α)) : Prop :=
   IsRatFuncRegular Q f
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `0` is `Q`-regular (denominator `1`). -/
-theorem isQRegularG_zero (Q : (CFieldSpec.K α)[X]) : IsQRegularG Q (0 : RatFunc (CFieldSpec.K α)) :=
+theorem isQRegularG_zero (Q : (CFieldSpec.K α)[X]) : IsQRegular Q (0 : RatFunc (CFieldSpec.K α)) :=
   isRatFuncRegular_zero Q
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `Q`-regular is closed under `+` (common denominator `q₁·q₂`, coprime to `Q`). -/
-theorem IsQRegularG.add {Q : (CFieldSpec.K α)[X]} {f g : RatFunc (CFieldSpec.K α)}
-    (hf : IsQRegularG Q f) (hg : IsQRegularG Q g) : IsQRegularG Q (f + g) :=
+theorem IsQRegular.add {Q : (CFieldSpec.K α)[X]} {f g : RatFunc (CFieldSpec.K α)}
+    (hf : IsQRegular Q f) (hg : IsQRegular Q g) : IsQRegular Q (f + g) :=
   IsRatFuncRegular.add hf hg
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- **Order extraction**: if `amG r/amG D` is `Q`-regular, `D ≠ 0`, `Q^e ∣ D`, then `Q^e ∣ r`. -/
+/-- **Order extraction**: if `am r/am D` is `Q`-regular, `D ≠ 0`, `Q^e ∣ D`, then `Q^e ∣ r`. -/
 theorem dvd_num_of_isQRegularG {Q r D : (CFieldSpec.K α)[X]} {e : ℕ} (hD : D ≠ 0) (hQe : Q ^ e ∣ D)
-    (hf : IsQRegularG Q (amG α r / amG α D)) : Q ^ e ∣ r :=
+    (hf : IsQRegular Q (am α r / am α D)) : Q ^ e ∣ r :=
   dvd_num_of_isRatFuncRegular hD hQe hf
 
-/-- **`Q`-regular is closed under the tower derivative** `towerFractionFieldDerivG Dt`: if `f = amG p/amG q`
+/-- **`Q`-regular is closed under the tower derivative** `towerFractionFieldDeriv Dt`: if `f = am p/am q`
 with `q` coprime to `Q`, then `D_tower f` has denominator `q²`, still coprime to `Q`. Uses the tower
 quotient rule. -/
-theorem IsQRegularG.deriv {Q : (CFieldSpec.K α)[X]} {f : RatFunc (CFieldSpec.K α)} (Dt : CPoly α)
-    (hf : IsQRegularG Q f) : IsQRegularG Q (towerFractionFieldDerivG Dt f) := by
+theorem IsQRegular.deriv {Q : (CFieldSpec.K α)[X]} {f : RatFunc (CFieldSpec.K α)} (Dt : CPoly α)
+    (hf : IsQRegular Q f) : IsQRegular Q (towerFractionFieldDeriv Dt f) := by
   obtain ⟨p, q, hq, hQ, hfeq⟩ := hf
   refine ⟨Differential.implicitDeriv (toPoly Dt) p * q - p * Differential.implicitDeriv (toPoly Dt) q,
     q ^ 2, pow_ne_zero 2 hq, hQ.pow_right, ?_⟩
@@ -98,10 +98,10 @@ omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 contributions `Vk`-regular in the fold. -/
 theorem gloc_isQRegularG (Dt v u : CPoly α) {Q : (CFieldSpec.K α)[X]} (hv : toPoly v ≠ 0)
     (hcop : IsRelPrime Q (toPoly v)) (j : ℕ) (a : CPoly α) :
-    IsQRegularG Q
-      (amG α (toPoly (cHermiteReduceTowerInnerWf Dt v u j a
+    IsQRegular Q
+      (am α (toPoly (cHermiteReduceTowerInnerWf Dt v u j a
           ([CField.zero], [CField.one])).1.1)
-        / amG α (toPoly (cHermiteReduceTowerInnerWf Dt v u j a
+        / am α (toPoly (cHermiteReduceTowerInnerWf Dt v u j a
           ([CField.zero], [CField.one])).1.2)) := by
   obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt v u j a
     ([CField.zero], [CField.one])
@@ -114,15 +114,15 @@ theorem gloc_isQRegularG (Dt v u : CPoly α) {Q : (CFieldSpec.K α)[X]} (hv : to
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- `Q`-regular is closed under list sums. -/
 theorem isQRegularG_list_sum {Q : (CFieldSpec.K α)[X]} (L : List (RatFunc (CFieldSpec.K α)))
-    (h : ∀ f ∈ L, IsQRegularG Q f) : IsQRegularG Q L.sum :=
+    (h : ∀ f ∈ L, IsQRegular Q f) : IsQRegular Q L.sum :=
   isRatFuncRegular_list_sum_self L h
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Cross-multiplied fraction-pair addition reads as the fraction sum:
 `⟦(a₁·b₂ + b₁·a₂) / (a₂·b₂)⟧ = ⟦a₁/a₂⟧ + ⟦b₁/b₂⟧` (denominators nonzero). -/
 theorem fracPair_add (a1 a2 b1 b2 : CPoly α) (ha2 : toPoly a2 ≠ 0) (hb2 : toPoly b2 ≠ 0) :
-    amG α (toPoly (cadd (cmul a1 b2) (cmul b1 a2))) / amG α (toPoly (cmul a2 b2))
-      = amG α (toPoly a1) / amG α (toPoly a2) + amG α (toPoly b1) / amG α (toPoly b2) := by
+    am α (toPoly (cadd (cmul a1 b2) (cmul b1 a2))) / am α (toPoly (cmul a2 b2))
+      = am α (toPoly a1) / am α (toPoly a2) + am α (toPoly b1) / am α (toPoly b2) := by
   simp only [denote, map_add, map_mul]
   rw [div_add_div _ _ (amG_toPolyG_ne_zero ha2) (amG_toPolyG_ne_zero hb2)]
   ring
@@ -135,15 +135,15 @@ theorem fracPair_foldl_sum {β : Type*} (glocOf : β → CPoly α × CPoly α) (
     [DecidablePred skip] :
     ∀ (L : List β) (init : CPoly α × CPoly α), toPoly init.2 ≠ 0 →
       (∀ x ∈ L, ¬ skip x → toPoly (glocOf x).2 ≠ 0) →
-      amG α (toPoly (L.foldl (fun acc x => if skip x then acc
+      am α (toPoly (L.foldl (fun acc x => if skip x then acc
               else (cadd (cmul acc.1 (glocOf x).2) (cmul (glocOf x).1 acc.2),
                 cmul acc.2 (glocOf x).2)) init).1)
-          / amG α (toPoly (L.foldl (fun acc x => if skip x then acc
+          / am α (toPoly (L.foldl (fun acc x => if skip x then acc
               else (cadd (cmul acc.1 (glocOf x).2) (cmul (glocOf x).1 acc.2),
                 cmul acc.2 (glocOf x).2)) init).2)
-        = amG α (toPoly init.1) / amG α (toPoly init.2)
+        = am α (toPoly init.1) / am α (toPoly init.2)
           + ((L.filter (fun x => ¬ skip x)).map
-              (fun x => amG α (toPoly (glocOf x).1) / amG α (toPoly (glocOf x).2))).sum := by
+              (fun x => am α (toPoly (glocOf x).1) / am α (toPoly (glocOf x).2))).sum := by
   intro L
   induction L with
   | nil => intro init _ _; simp
@@ -198,12 +198,12 @@ theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : CPoly α)
     (hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
       toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CField.zero], [CField.one])).1.2 ≠ 0) :
-    amG α (toPoly (cHermiteReduceTower Dt a d).1.1)
-        / amG α (toPoly (cHermiteReduceTower Dt a d).1.2)
+    am α (toPoly (cHermiteReduceTower Dt a d).1.1)
+        / am α (toPoly (cHermiteReduceTower Dt a d).1.2)
       = (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
-          (fun x => amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1
+          (fun x => am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1
                 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.1)
-            / amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+            / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
                 (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2))).sum := by
   have hone : toPoly ([CField.one] : CPoly α) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
@@ -219,17 +219,17 @@ theorem cHermiteReduceTowerG_frac_eq_sum (Dt a d : CPoly α)
   rw [hz, hone, map_zero, map_one, zero_div, zero_add]
 
 /-- The `gloc` fraction of a Hermite-fold factor `x = (v, idx)` (multiplicity `idx+1`). -/
-noncomputable def glocFracG (Dt a d : CPoly α) (x : CPoly α × ℕ) : RatFunc (CFieldSpec.K α) :=
-  amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+noncomputable def glocFrac (Dt a d : CPoly α) (x : CPoly α × ℕ) : RatFunc (CFieldSpec.K α) :=
+  am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
       ([CField.zero], [CField.one])).1.1)
-    / amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
+    / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
       ([CField.zero], [CField.one])).1.2)
 
 omit [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] in
 /-- A fold factor's `gloc` fraction is `Q`-regular for `Q` coprime to its `v`. -/
 theorem glocFracG_isQRegularG (Dt a d : CPoly α) {Q : (CFieldSpec.K α)[X]} (x : CPoly α × ℕ)
     (hv : toPoly x.1 ≠ 0) (hcop : IsRelPrime Q (toPoly x.1)) :
-    IsQRegularG Q (glocFracG Dt a d x) :=
+    IsQRegular Q (glocFrac Dt a d x) :=
   gloc_isQRegularG Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) hv hcop (x.2 + 1 - 1) a
 
 /-- **`D(⟦g⟧) − D(⟦gloc_k⟧)` is `Vk`-regular** — the pole-cancellation valuation core. `⟦g⟧ = Σ⟦gloc⟧`,
@@ -242,11 +242,11 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPoly α) (kelem : CPoly α × ℕ)
     (hV : ∀ x ∈ (cSqfreeYunFF d).zipIdx, toPoly x.1 ≠ 0)
     (hcop : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)), x ≠ kelem →
       IsRelPrime (toPoly kelem.1) (toPoly x.1)) :
-    IsQRegularG (toPoly kelem.1)
-      (towerFractionFieldDerivG Dt
-          (amG α (toPoly (cHermiteReduceTower Dt a d).1.1)
-            / amG α (toPoly (cHermiteReduceTower Dt a d).1.2))
-        - towerFractionFieldDerivG Dt (glocFracG Dt a d kelem)) := by
+    IsQRegular (toPoly kelem.1)
+      (towerFractionFieldDeriv Dt
+          (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
+            / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
+        - towerFractionFieldDeriv Dt (glocFrac Dt a d kelem)) := by
   classical
   set kept := (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)) with hkeptdef
   have hone : toPoly ([CField.one] : CPoly α) = 1 := by
@@ -258,16 +258,16 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPoly α) (kelem : CPoly α × ℕ)
     obtain ⟨N, hN⟩ := toPolyG_cHermiteReduceTowerInnerWf_den_eq_pow Dt x.1
       (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a ([CField.zero], [CField.one])
     rw [hN, hone, one_mul]; exact pow_ne_zero N (hV x hx)
-  -- `⟦g⟧ = Σ_{kept} glocFracG`, so `D⟦g⟧ = Σ D(glocFracG)`.
+  -- `⟦g⟧ = Σ_{kept} glocFrac`, so `D⟦g⟧ = Σ D(glocFrac)`.
   rw [cHermiteReduceTowerG_frac_eq_sum Dt a d hden,
-    map_list_sum (towerFractionFieldDerivG Dt), List.map_map, ← hkeptdef,
+    map_list_sum (towerFractionFieldDeriv Dt), List.map_map, ← hkeptdef,
     (List.perm_cons_erase hkmem).map _ |>.sum_eq, List.map_cons, List.sum_cons,
-    show (⇑(towerFractionFieldDerivG Dt) ∘ fun x =>
-        amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+    show (⇑(towerFractionFieldDeriv Dt) ∘ fun x =>
+        am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.1)
-          / amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+          / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2)) kelem
-      = towerFractionFieldDerivG Dt (glocFracG Dt a d kelem) from rfl,
+      = towerFractionFieldDeriv Dt (glocFrac Dt a d kelem) from rfl,
     add_sub_cancel_left]
   refine isQRegularG_list_sum _ (fun f hf => ?_)
   rw [List.mem_map] at hf
@@ -278,45 +278,45 @@ theorem deriv_fold_sub_isQRegularG (Dt a d : CPoly α) (kelem : CPoly α × ℕ)
     (hcop x (hkeptdef ▸ hx.2) hx.1)).deriv Dt
 
 /-- **The total fold residual** (per-factor identities `hstep` given): `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` with
-`R = C(1−m)·a + Σ residNumG`, `m` the number of kept factors. Sums `D⟦g⟧ = Σ D⟦gloc⟧` using each
-factor's `hstep : D⟦gloc x⟧ = ⟦a/d⟧ − ⟦residNumG x /d⟧`. Tower analog of `total_fold_residual_over_D`. -/
+`R = C(1−m)·a + Σ residNum`, `m` the number of kept factors. Sums `D⟦g⟧ = Σ D⟦gloc⟧` using each
+factor's `hstep : D⟦gloc x⟧ = ⟦a/d⟧ − ⟦residNum x /d⟧`. Tower analog of `total_fold_residual_over_D`. -/
 theorem total_fold_residual_tower (Dt a d : CPoly α)
-    (residNumG : CPoly α × ℕ → (CFieldSpec.K α)[X]) (hd : toPoly d ≠ 0)
+    (residNum : CPoly α × ℕ → (CFieldSpec.K α)[X]) (hd : toPoly d ≠ 0)
     (hden : ∀ x ∈ (cSqfreeYunFF d).zipIdx, ¬ (x.2 + 1 ≤ 1) →
       toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
         ([CField.zero], [CField.one])).1.2 ≠ 0)
     (hstep : ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      towerFractionFieldDerivG Dt (glocFracG Dt a d x)
-        = amG α (toPoly a) / amG α (toPoly d) - amG α (residNumG x) / amG α (toPoly d)) :
-    amG α (toPoly a) / amG α (toPoly d)
-        - towerFractionFieldDerivG Dt
-            (amG α (toPoly (cHermiteReduceTower Dt a d).1.1)
-              / amG α (toPoly (cHermiteReduceTower Dt a d).1.2))
-      = amG α (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
+      towerFractionFieldDeriv Dt (glocFrac Dt a d x)
+        = am α (toPoly a) / am α (toPoly d) - am α (residNum x) / am α (toPoly d)) :
+    am α (toPoly a) / am α (toPoly d)
+        - towerFractionFieldDeriv Dt
+            (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
+              / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
+      = am α (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
               (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPoly a
-            + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map residNumG).sum)
-        / amG α (toPoly d) := by
+            + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map residNum).sum)
+        / am α (toPoly d) := by
   set kept := (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)) with hkeptdef
-  have had : amG α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd
-  rw [cHermiteReduceTowerG_frac_eq_sum Dt a d hden, map_list_sum (towerFractionFieldDerivG Dt),
+  have had : am α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd
+  rw [cHermiteReduceTowerG_frac_eq_sum Dt a d hden, map_list_sum (towerFractionFieldDeriv Dt),
     List.map_map, ← hkeptdef]
   -- rewrite each `D⟦gloc⟧` via `hstep`, so the summed function is `a/d − residNum/d`.
-  have heq : (kept.map (⇑(towerFractionFieldDerivG Dt) ∘ fun x =>
-        amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+  have heq : (kept.map (⇑(towerFractionFieldDeriv Dt) ∘ fun x =>
+        am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.1)
-          / amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+          / am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
             (x.2 + 1 - 1) a ([CField.zero], [CField.one])).1.2)))
-      = kept.map (fun x => amG α (toPoly a) / amG α (toPoly d)
-          - amG α (residNumG x) / amG α (toPoly d)) := by
+      = kept.map (fun x => am α (toPoly a) / am α (toPoly d)
+          - am α (residNum x) / am α (toPoly d)) := by
     apply List.map_congr_left; intro x hx; exact hstep x hx
   rw [heq, list_sum_map_const_sub]
-  -- `Σ (residNum x /d) = amG (Σ residNum) / d`.
-  have hsumdiv : (kept.map (fun x => amG α (residNumG x) / amG α (toPoly d))).sum
-      = amG α (kept.map residNumG).sum / amG α (toPoly d) := by
-    rw [list_sum_map_div, map_list_sum (amG α), List.map_map]; rfl
-  have hCcast : amG α (Polynomial.C (1 - (kept.length : CFieldSpec.K α)))
+  -- `Σ (residNum x /d) = am (Σ residNum) / d`.
+  have hsumdiv : (kept.map (fun x => am α (residNum x) / am α (toPoly d))).sum
+      = am α (kept.map residNum).sum / am α (toPoly d) := by
+    rw [list_sum_map_div, map_list_sum (am α), List.map_map]; rfl
+  have hCcast : am α (Polynomial.C (1 - (kept.length : CFieldSpec.K α)))
       = 1 - (kept.length : RatFunc (CFieldSpec.K α)) := by
-    rw [amG, ← Polynomial.algebraMap_eq, ← IsScalarTower.algebraMap_apply, map_sub, map_one,
+    rw [am, ← Polynomial.algebraMap_eq, ← IsScalarTower.algebraMap_apply, map_sub, map_one,
       map_natCast]
   rw [hsumdiv, nsmul_eq_mul, map_add, map_mul, hCcast]
   field_simp
@@ -329,13 +329,13 @@ factor-`k` step (`Dgk = af − ⟦residNum_k/D⟧`), `Vk`-regularity of `Dg − 
 `vk^e ∣ residNum_k` gives `vk^e ∣ R`. Tower analog of `dvd_residNum_factor`. -/
 theorem dvd_R_of_factor {vk R residNum_k : (CFieldSpec.K α)[X]}
     {af Dg Dgk : RatFunc (CFieldSpec.K α)} (e : ℕ) (D : CPoly α) (hD : toPoly D ≠ 0)
-    (hR : af - Dg = amG α R / amG α (toPoly D))
-    (hstepk : Dgk = af - amG α residNum_k / amG α (toPoly D))
-    (hderiv : IsQRegularG vk (Dg - Dgk))
+    (hR : af - Dg = am α R / am α (toPoly D))
+    (hstepk : Dgk = af - am α residNum_k / am α (toPoly D))
+    (hderiv : IsQRegular vk (Dg - Dgk))
     (hpow : vk ^ (e + 1) ∣ toPoly D) (hresk : vk ^ e ∣ residNum_k) :
     vk ^ e ∣ R := by
-  have hDg : Dg = af - amG α R / amG α (toPoly D) := by linear_combination -hR
-  have heq : Dg - Dgk = amG α (residNum_k - R) / amG α (toPoly D) := by
+  have hDg : Dg = af - am α R / am α (toPoly D) := by linear_combination -hR
+  have heq : Dg - Dgk = am α (residNum_k - R) / am α (toPoly D) := by
     rw [hDg, hstepk, map_sub, sub_div]; ring
   rw [heq] at hderiv
   have hdvd : vk ^ (e + 1) ∣ residNum_k - R := dvd_num_of_isQRegularG hD hpow hderiv
@@ -378,11 +378,11 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPoly α)
     (hgne : toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
         (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hud : toPoly (cdivWf d (cpow x.1 (x.2 + 1))) * toPoly x.1 ^ (x.2 + 1) = toPoly d) :
-    towerFractionFieldDerivG Dt (glocFracG Dt a d x)
-      = amG α (toPoly a) / amG α (toPoly d)
-        - amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
+    towerFractionFieldDeriv Dt (glocFrac Dt a d x)
+      = am α (toPoly a) / am α (toPoly d)
+        - am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1)))
               (x.2 + 1 - 1) a ([CField.zero], [CField.one])).2 * toPoly x.1 ^ x.2)
-          / amG α (toPoly d) := by
+          / am α (toPoly d) := by
   set u := cdivWf d (cpow x.1 (x.2 + 1)) with hudef
   have hu : toPoly u ≠ 0 := fun h0 => hd (by rw [← hud, h0, zero_mul])
   have hqn : cnorm x.1 ≠ [] := fun h => hv ((cisZeroG_iff x.1).mp (by simp [cisZero, h]))
@@ -394,30 +394,30 @@ theorem glocFracG_step_identity [CharZero (CFieldSpec.K α)] (Dt a d : CPoly α)
   have hM2 := cHermiteReduceTowerInnerWf_spec_acc Dt x.1 u hu hv hbez x.2 a
     ([CField.zero], [CField.one]) hone
   -- the seed fraction ⟦0/1⟧ = 0.
-  have hz : amG α (toPoly ([CField.zero] : CPoly α)) = 0 := by
+  have hz : am α (toPoly ([CField.zero] : CPoly α)) = 0 := by
     simp only [denote, mul_zero, add_zero, map_zero]
-  have ho : amG α (toPoly ([CField.one] : CPoly α)) = 1 := by
+  have ho : am α (toPoly ([CField.one] : CPoly α)) = 1 := by
     simp only [denote, mul_zero, add_zero, map_one]
   rw [hz, ho, zero_div, map_zero, add_zero] at hM2
-  -- `amG u · amG v^(i) = amG d`.
-  have hamud : amG α (toPoly u) * amG α (toPoly x.1) ^ (x.2 + 1) = amG α (toPoly d) := by
+  -- `am u · am v^(i) = am d`.
+  have hamud : am α (toPoly u) * am α (toPoly x.1) ^ (x.2 + 1) = am α (toPoly d) := by
     rw [← map_pow, ← map_mul, hud]
-  have had : amG α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd
-  have hav : amG α (toPoly x.1) ≠ 0 := amG_toPolyG_ne_zero hv
-  have hau : amG α (toPoly u) ≠ 0 := amG_toPolyG_ne_zero hu
-  -- rearrange M2 to `D⟦gloc⟧ = amG a/(amG u·amG v^i) − amG afin/(amG u·amG v)`.
-  rw [show towerFractionFieldDerivG Dt (glocFracG Dt a d x)
-      = amG α (toPoly a) / (amG α (toPoly u) * amG α (toPoly x.1) ^ (x.2 + 1))
-        - amG α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 u x.2 a
-            ([CField.zero], [CField.one])).2) / (amG α (toPoly u) * amG α (toPoly x.1)) from by
-      rw [glocFracG]; simp only [Nat.add_sub_cancel]; linear_combination -hM2]
+  have had : am α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd
+  have hav : am α (toPoly x.1) ≠ 0 := amG_toPolyG_ne_zero hv
+  have hau : am α (toPoly u) ≠ 0 := amG_toPolyG_ne_zero hu
+  -- rearrange M2 to `D⟦gloc⟧ = am a/(am u·am v^i) − am afin/(am u·am v)`.
+  rw [show towerFractionFieldDeriv Dt (glocFrac Dt a d x)
+      = am α (toPoly a) / (am α (toPoly u) * am α (toPoly x.1) ^ (x.2 + 1))
+        - am α (toPoly (cHermiteReduceTowerInnerWf Dt x.1 u x.2 a
+            ([CField.zero], [CField.one])).2) / (am α (toPoly u) * am α (toPoly x.1)) from by
+      rw [glocFrac]; simp only [Nat.add_sub_cancel]; linear_combination -hM2]
   rw [Nat.add_sub_cancel, map_mul, map_pow, ← hamud]
-  have hvp : amG α (toPoly x.1) ^ (x.2 + 1) ≠ 0 := pow_ne_zero _ hav
+  have hvp : am α (toPoly x.1) ^ (x.2 + 1) ≠ 0 := pow_ne_zero _ hav
   field_simp
   ring
 
-/-- The per-factor residual numerator `residNumG x = afin · v^(i−1)` (`afin` the inner-loop residual). -/
-noncomputable def residNumG (Dt a d : CPoly α) (x : CPoly α × ℕ) : (CFieldSpec.K α)[X] :=
+/-- The per-factor residual numerator `residNum x = afin · v^(i−1)` (`afin` the inner-loop residual). -/
+noncomputable def residNum (Dt a d : CPoly α) (x : CPoly α × ℕ) : (CFieldSpec.K α)[X] :=
   toPoly (cHermiteReduceTowerInnerWf Dt x.1 (cdivWf d (cpow x.1 (x.2 + 1))) (x.2 + 1 - 1) a
     ([CField.zero], [CField.one])).2 * toPoly x.1 ^ x.2
 
@@ -432,9 +432,9 @@ theorem all_hstep [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) 
       ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
     ∀ x ∈ (cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
-      towerFractionFieldDerivG Dt (glocFracG Dt a d x)
-        = amG α (toPoly a) / amG α (toPoly d)
-          - amG α (residNumG Dt a d x) / amG α (toPoly d) := by
+      towerFractionFieldDeriv Dt (glocFrac Dt a d x)
+        = am α (toPoly a) / am α (toPoly d)
+          - am α (residNum Dt a d x) / am α (toPoly d) := by
   intro x hx
   have hxzip : x ∈ (cSqfreeYunFF d).zipIdx := List.mem_of_mem_filter hx
   obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
@@ -483,7 +483,7 @@ theorem toPolyG_cHermiteReduceTowerG_den_ne_zero [CharZero (CFieldSpec.K α)]
     (fun x => x.2 + 1 ≤ 1) (cSqfreeYunFF d).zipIdx ([CField.zero], [CField.one])
     (by rw [hone]; exact one_ne_zero) (hden_of hgcd Dt a d hd0 hpp)
 
-/-- **The `R` residual identity** `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` (`R = C(1−m)·a + Σ residNumG`), from
+/-- **The `R` residual identity** `⟦a/d⟧ − D⟦g⟧ = ⟦R/d⟧` (`R = C(1−m)·a + Σ residNum`), from
 `total_fold_residual_tower` fed by `all_hstep` and `hden_of`. Modulo the per-factor gcd coprimality. -/
 theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPoly α) (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0)
@@ -492,16 +492,16 @@ theorem R_residual_identity [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (�
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
-    amG α (toPoly a) / amG α (toPoly d)
-        - towerFractionFieldDerivG Dt
-            (amG α (toPoly (cHermiteReduceTower Dt a d).1.1)
-              / amG α (toPoly (cHermiteReduceTower Dt a d).1.2))
-      = amG α (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
+    am α (toPoly a) / am α (toPoly d)
+        - towerFractionFieldDeriv Dt
+            (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
+              / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
+      = am α (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
               (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPoly a
             + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
-                (residNumG Dt a d)).sum)
-        / amG α (toPoly d) :=
-  total_fold_residual_tower Dt a d (residNumG Dt a d) hd0 (hden_of hgcd Dt a d hd0 hpp)
+                (residNum Dt a d)).sum)
+        / am α (toPoly d) :=
+  total_fold_residual_tower Dt a d (residNum Dt a d) hd0 (hden_of hgcd Dt a d hd0 hpp)
     (all_hstep hgcd Dt a d hd0 hpp hcopgcd)
 
 /-- **Each `vk^idx` divides `R`** (the per-factor order bounds), by `dvd_R_of_factor` fed by the `R`
@@ -518,7 +518,7 @@ theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α :=
       toPoly x.1 ^ x.2 ∣ (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
               (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPoly a
             + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
-                (residNumG Dt a d)).sum) := by
+                (residNum Dt a d)).sum) := by
   have hV : ∀ y ∈ (cSqfreeYunFF d).zipIdx, toPoly y.1 ≠ 0 := by
     intro y hy
     obtain ⟨hidx, hget⟩ := List.getElem?_eq_some_iff.mp
@@ -545,7 +545,7 @@ theorem all_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α :=
   have hstepk := all_hstep hgcd Dt a d hd0 hpp hcopgcd x hx
   have hpow : toPoly x.1 ^ (x.2 + 1) ∣ toPoly d := by
     rw [← hxget, add_comm]; exact cSqfreeYunFFG_pow_dvd hgcd d hd0 hpp x.2 hxidx
-  have hresk : toPoly x.1 ^ x.2 ∣ residNumG Dt a d x := by rw [residNumG]; exact dvd_mul_left _ _
+  have hresk : toPoly x.1 ^ x.2 ∣ residNum Dt a d x := by rw [residNum]; exact dvd_mul_left _ _
   exact dvd_R_of_factor x.2 d hd0 hRid hstepk hderiv hpow hresk
 
 omit [CDiffField α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
@@ -585,14 +585,14 @@ theorem prod_vkidx_dvd_R [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α :
       ∣ (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
             (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPoly a
           + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
-              (residNumG Dt a d)).sum) := by
+              (residNum Dt a d)).sum) := by
   refine list_prod_dvd_of_pairwise _ _ (powers_pairwise_coprime hgcd d hd0 hpp) (fun p hp => ?_)
   rw [List.mem_map] at hp
   obtain ⟨x, hx, rfl⟩ := hp
   exact all_vkidx_dvd_R hgcd Dt a d hd0 hpp hcopgcd x hx
 
 /-- **`resNum = R·gden²`** (as polynomials): the def's residual numerator equals `R` times `gden²`,
-from the `R` residual identity + the quotient rule for `D⟦g⟧` + `amG` injectivity. Bridges the
+from the `R` residual identity + the quotient rule for `D⟦g⟧` + `am` injectivity. Bridges the
 valuation `R` (`prod_vkidx_dvd_R`) to the field-identity `resNum`. `hgden`: `gden ≠ 0` (a standard
 precondition). -/
 theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α))
@@ -612,7 +612,7 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
       = (Polynomial.C (1 - ((((cSqfreeYunFF d).zipIdx.filter
               (fun x => ¬ (x.2 + 1 ≤ 1))).length : CFieldSpec.K α))) * toPoly a
             + (((cSqfreeYunFF d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1))).map
-                (residNumG Dt a d)).sum)
+                (residNum Dt a d)).sum)
         * toPoly (cHermiteReduceTower Dt a d).1.2 ^ 2 := by
   set gnum := (cHermiteReduceTower Dt a d).1.1 with hgnum
   set gden := (cHermiteReduceTower Dt a d).1.2 with hgden
@@ -620,11 +620,11 @@ theorem resNum_eq_R_mul_gden_sq [CharZero (CFieldSpec.K α)] (hgcd : GcdFFCorrec
   have hRid := R_residual_identity hgcd Dt a d hd0 hpp hcopgcd
   rw [← hgnum, ← hgden] at hRid
   have hinj := RatFunc.algebraMap_injective (CFieldSpec.K α)
-  have had : amG α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd0
-  have hgd : amG α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgd0
-  have hDg : towerFractionFieldDerivG Dt (amG α (toPoly gnum) / amG α (toPoly gden))
-      = (amG α (D (toPoly gnum)) * amG α (toPoly gden)
-          - amG α (toPoly gnum) * amG α (D (toPoly gden))) / amG α (toPoly gden) ^ 2 := by
+  have had : am α (toPoly d) ≠ 0 := amG_toPolyG_ne_zero hd0
+  have hgd : am α (toPoly gden) ≠ 0 := amG_toPolyG_ne_zero hgd0
+  have hDg : towerFractionFieldDeriv Dt (am α (toPoly gnum) / am α (toPoly gden))
+      = (am α (D (toPoly gnum)) * am α (toPoly gden)
+          - am α (toPoly gnum) * am α (D (toPoly gden))) / am α (toPoly gden) ^ 2 := by
     rw [towerFractionFieldDerivG_div, ← map_pow]
   rw [hDg] at hRid
   apply hinj
@@ -731,10 +731,10 @@ theorem cHermiteReduceTowerG_field_identity [CharZero (CFieldSpec.K α)] (hgcd :
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPoly (cgcdWf (cmul (cdivWf d (cpow x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
-    towerFractionFieldDerivG Dt
-        (amG α (toPoly (cHermiteReduceTower Dt a d).1.1)
-          / amG α (toPoly (cHermiteReduceTower Dt a d).1.2))
-      + amG α (toPoly (cdivWf (cmul (csub
+    towerFractionFieldDeriv Dt
+        (am α (toPoly (cHermiteReduceTower Dt a d).1.1)
+          / am α (toPoly (cHermiteReduceTower Dt a d).1.2))
+      + am α (toPoly (cdivWf (cmul (csub
             (cmul a (cmul (cHermiteReduceTower Dt a d).1.2 (cHermiteReduceTower Dt a d).1.2))
             (cmul d (csub (cmul (cmonomialDeriv Dt (cHermiteReduceTower Dt a d).1.1)
                 (cHermiteReduceTower Dt a d).1.2)
@@ -743,8 +743,8 @@ theorem cHermiteReduceTowerG_field_identity [CharZero (CFieldSpec.K α)] (hgcd :
             (cHermiteReduceTower Dt a d).2.2)
           (cmul d (cmul (cHermiteReduceTower Dt a d).1.2
             (cHermiteReduceTower Dt a d).1.2))))
-        / amG α (toPoly (cHermiteReduceTower Dt a d).2.2)
-      = amG α (toPoly a) / amG α (toPoly d) := by
+        / am α (toPoly (cHermiteReduceTower Dt a d).2.2)
+      = am α (toPoly a) / am α (toPoly d) := by
   have hgd0 : toPoly (cHermiteReduceTower Dt a d).1.2 ≠ 0 :=
     toPolyG_cHermiteReduceTowerG_den_ne_zero hgcd Dt a d hd0 hpp
   have hDstar0 : toPoly (cHermiteReduceTower Dt a d).2.2 ≠ 0 := fun h =>

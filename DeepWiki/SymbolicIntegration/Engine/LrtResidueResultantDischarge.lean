@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.Engine.RefinesPolyG
+import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
 import DeepWiki.SymbolicIntegration.Engine.LrtResidueResultantDischarge.GenuineMonomial
 
 /-! # Residue-resultant nonvanishing from pole normality
@@ -13,7 +13,7 @@ the `K`-level result used by the reduced LRT integrator soundness theorem. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Polynomial CPoly QFunNZG Classical
+open Polynomial CPoly QFunNZ Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
@@ -87,7 +87,7 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles [CharZero (CFieldS
     (hd0 : toPoly d ≠ 0) (hpp : (toPoly d).primPart ≠ 0) (hDtdeg : (toPoly Dt).natDegree ≤ 1)
     (haProper : (toPoly a).degree < (toPoly d).degree) (hgen : GenuinePrimitiveMonomialLrt Dt)
     (hDstar0 : (toPoly (cHermiteReduceTower Dt a d).2.2).natDegree = 0) :
-    IsIntegralResultLrtG Dt a d (cIntegrateReducedLrt Dt a d) := by
+    IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d) := by
   have hcopgcd := hcopgcd_of_genuineMonomial hgcd Dt d hd0 hpp hgen
   have hADdeg := hAD_degree_of_genuineMonomial hgcd Dt a d hd0 hpp hDtdeg haProper hgen
   have hNum0 : toPoly (cHermiteReduceTower Dt a d).2.1 = 0 := by
@@ -114,7 +114,7 @@ theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_genuine [CharZero (CFieldS
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly α)
     (hd0 : toPoly d ≠ 0) (hDt0 : (toPoly Dt).natDegree = 0)
     (haProper : (toPoly a).degree < (toPoly d).degree) (hgen : LrtReducedGenuineData Dt a d) :
-    IsIntegralResultLrtG Dt a d (cIntegrateReducedLrt Dt a d) := by
+    IsIntegralResultLrt Dt a d (cIntegrateReducedLrt Dt a d) := by
   have hDtdeg : (toPoly Dt).natDegree ≤ 1 := hDt0 ▸ Nat.zero_le 1
   by_cases hDstar0 : (toPoly (cHermiteReduceTower Dt a d).2.2).natDegree = 0
   · -- no poles: `deg Dstar = 0` ⟹ trivially sound (the `.natDegree hAD = 0<0` gap)

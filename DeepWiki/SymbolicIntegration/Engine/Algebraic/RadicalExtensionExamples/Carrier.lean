@@ -12,34 +12,34 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The carrier validates: `y = √(x³+1)` over `ℚ(x)`
 
-`F = QFunNZG ℚ ≅ ℚ(x)`, `n = 2`, `f = x³+1`: checks `y·y = f` and `D(y) = (3x²/(2(x³+1)))·y`. -/
+`F = QFunNZ ℚ ≅ ℚ(x)`, `n = 2`, `f = x³+1`: checks `y·y = f` and `D(y) = (3x²/(2(x³+1)))·y`. -/
 
 open RadElem
 
-/-- `y·y = f` over `ℚ(x)`: `y = √(x³+1)` squared in `(QFunNZG ℚ)[y]/(y² − (x³+1))` folds to `f = x³+1`. -/
+/-- `y·y = f` over `ℚ(x)`: `y = √(x³+1)` squared in `(QFunNZ ℚ)[y]/(y² − (x³+1))` folds to `f = x³+1`. -/
 theorem radGen_sq_eq_radicand :
-    radIsZero (radSub (radMul 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)) radGen) [radicandX3p1])
+    radIsZero (radSub (radMul 2 radicandX3p1 (radGen : RadElem (QFunNZ ℚ)) radGen) [radicandX3p1])
       = true := by native_decide
 
 /-- `D(y) = (3x²/(2(x³+1)))·y` over `ℚ(x)`: the diagonal derivation of `y = √(x³+1)` is `ℓ·y`,
 `ℓ = f'/(2f) = 3x²/(2(x³+1))`. -/
 theorem radDeriv_radGen_eq :
-    radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)))
+    radIsZero (radSub (radDeriv 2 radicandX3p1 (radGen : RadElem (QFunNZ ℚ)))
         [CField.zero, radicandLogDer]) = true := by native_decide
 
 /-- `D(1) = 0` over `ℚ(x)`: the radical derivation annihilates the constant `1`. -/
 theorem radDeriv_radOne_eq_zero :
-    radIsZero (radDeriv 2 radicandX3p1 (radOne : RadElem (QFunNZG ℚ))) = true := by native_decide
+    radIsZero (radDeriv 2 radicandX3p1 (radOne : RadElem (QFunNZ ℚ))) = true := by native_decide
 
 /-- Ring sanity `y·1 = y` over `ℚ(x)`: `radMul` with `radOne` is the identity. -/
 theorem radMul_radOne_eq :
-    radIsZero (radSub (radMul 2 radicandX3p1 (radGen : RadElem (QFunNZG ℚ)) radOne) radGen)
+    radIsZero (radSub (radMul 2 radicandX3p1 (radGen : RadElem (QFunNZ ℚ)) radOne) radGen)
       = true := by native_decide
 
 /-- Ring sanity `(1+y)·(1+y) = 1 + 2y + f` over `ℚ(x)`: `1 + 2y + y²` folds `y² → f = x³+1`. -/
 theorem radMul_onePlusGen_sq :
     radIsZero (radSub
-        (radMul 2 radicandX3p1 [CField.one, CField.one] [(CField.one : QFunNZG ℚ), CField.one])
+        (radMul 2 radicandX3p1 [CField.one, CField.one] [(CField.one : QFunNZ ℚ), CField.one])
         [CField.add CField.one radicandX3p1, CField.add CField.one CField.one]) = true := by
   native_decide
 
@@ -49,19 +49,19 @@ theorem radMul_onePlusGen_sq :
 
 /-- `T₁(y) = y`: the projection onto the `y`-power fixes `y = √(x³+1)`. -/
 theorem radProj_one_radGen :
-    radIsZero (radSub (radProj 1 (radGen : RadElem (QFunNZG ℚ))) radGen) = true := by native_decide
+    radIsZero (radSub (radProj 1 (radGen : RadElem (QFunNZ ℚ))) radGen) = true := by native_decide
 
 /-- `T₀(y) = 0`: the projection onto the constant power kills `y`. -/
 theorem radProj_zero_radGen :
-    radIsZero (radProj 0 (radGen : RadElem (QFunNZG ℚ))) = true := by native_decide
+    radIsZero (radProj 0 (radGen : RadElem (QFunNZ ℚ))) = true := by native_decide
 
 /-- `T₁(1) = 0`: the projection onto the `y`-power kills the constant `1`. -/
 theorem radProj_one_radOne :
-    radIsZero (radProj 1 (radOne : RadElem (QFunNZG ℚ))) = true := by native_decide
+    radIsZero (radProj 1 (radOne : RadElem (QFunNZ ℚ))) = true := by native_decide
 
 /-- A mixed element `g = (x³+1) + 3x²·y ∈ ℚ(x)[y]/(y²−(x³+1))` (`g₀ = f`, `g₁ = f'`), test integrand for
 the `Tᵢ` decoupling. -/
-def mixedElem : RadElem (QFunNZG ℚ) := [radicandX3p1, radicandDeriv]
+def mixedElem : RadElem (QFunNZ ℚ) := [radicandX3p1, radicandDeriv]
 
 /-- `T₁ ∘ D = D ∘ T₁` on the mixed element: `T₁(D g) = D(T₁ g)` for `g = (x³+1) + 3x²·y`. -/
 theorem radProj_one_radDeriv_comm :

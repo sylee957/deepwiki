@@ -17,7 +17,7 @@ open RadElem CPoly
 A third radicand `√(x³ + x) = √(x(x²+1))`. Odd degree ⟹ the full carrier fires. -/
 
 /-- The radicand `f₃ = x³ + x ∈ ℚ(x)` (numerator `[0,1,0,1] = x + x³`) for `√(x³+x)`. -/
-def radicandX3pX : QFunNZG ℚ := qxOfNum [0, 1, 0, 1]
+def radicandX3pX : QFunNZ ℚ := qxOfNum [0, 1, 0, 1]
 
 /-- **`toPoly [0,1,0,1] = x + x³` has `natDegree 3`** in `ℚ[X]`. -/
 theorem natDeg_toPolyG_X3pX : (toPoly ([0, 1, 0, 1] : CPoly ℚ)).natDegree = 3 := by
@@ -29,37 +29,37 @@ theorem natDeg_toPolyG_X3pX : (toPoly ([0, 1, 0, 1] : CPoly ℚ)).natDegree = 3 
 
 /-- **`x³ + x` is not a square in `ℚ(x)`** — odd-degree helper (`natDegree 3`). -/
 theorem not_isSquare_radicandX3pX :
-    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3pX : QFunNZG ℚ) := by
+    ∀ b : RatFunc ℚ, b ^ 2 ≠ CFieldSpec.toK (radicandX3pX : QFunNZ ℚ) := by
   rw [radicandX3pX, toK_qxOfNum]
   exact not_isSquare_algebraMap_of_odd_natDegree (by rw [natDeg_toPolyG_X3pX]; decide)
 
 /-- **`y² − (x³+x)` is irreducible over `ℚ(x)`** — generic helper on the non-square `x³+x`. -/
 theorem irreducible_radX3pX :
-    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : QFunNZG ℚ))) :=
+    Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : QFunNZ ℚ))) :=
   irreducible_radDeg2_of_not_isSquare not_isSquare_radicandX3pX
 
 /-- The irreducibility `Fact` for `√(x³+x)`. -/
 instance fact_irreducible_radX3pX :
-    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : QFunNZG ℚ)))) :=
+    Fact (Irreducible (X ^ 2 - C (CFieldSpec.toK (radicandX3pX : QFunNZ ℚ)))) :=
   ⟨irreducible_radX3pX⟩
 
-/-- The radical field `ℚ(x)[√(x³+x)] = RadExt (QFunNZG ℚ) 2 (x³+x)`. -/
-abbrev RadX3pX : Type := RadExt (QFunNZG ℚ) 2 radicandX3pX
+/-- The radical field `ℚ(x)[√(x³+x)] = RadExt (QFunNZ ℚ) 2 (x³+x)`. -/
+abbrev RadX3pX : Type := RadExt (QFunNZ ℚ) 2 radicandX3pX
 
 /-- **`CFieldDomain RadX3pX` — discharged generically.** -/
 noncomputable example : CFieldDomain RadX3pX := inferInstance
 
 /-- **The mixed tower over `√(x³+x)` is a `CField`**. -/
-theorem cfield_qfunNZG_radX3pX : Nonempty (CField (QFunNZG RadX3pX)) := ⟨inferInstance⟩
+theorem cfield_qfunNZG_radX3pX : Nonempty (CField (QFunNZ RadX3pX)) := ⟨inferInstance⟩
 
 /-- **The mixed tower over `√(x³+x)` is a `CDiffField`**. -/
-theorem cdiffField_qfunNZG_radX3pX : Nonempty (CDiffField (QFunNZG RadX3pX)) := ⟨inferInstance⟩
+theorem cdiffField_qfunNZG_radX3pX : Nonempty (CDiffField (QFunNZ RadX3pX)) := ⟨inferInstance⟩
 
 /-- The generator `y = √(x³+x)` as an element of `RadX3pX`. -/
 def radX3pXGen : RadX3pX := RadExt.gen
 
 /-- The diagonal multiplier `ℓ = f'/(2f) = (3x²+1)/(2(x³+x)) ∈ ℚ(x)` for `D(y) = ℓ·y` over `√(x³+x)`. -/
-def radX3pXLogDer : QFunNZG ℚ := logDerRadicand 2 radicandX3pX
+def radX3pXLogDer : QFunNZ ℚ := logDerRadicand 2 radicandX3pX
 
 /-- The `RadX3pX[t]`-polynomial `t² = [0,0,1]`. -/
 def radX3pXT2sq : CPoly RadX3pX := [CField.zero, CField.zero, CField.one]

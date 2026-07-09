@@ -17,20 +17,20 @@ namespace CPoly
 /-! ### The ℚ-linear-dependence test among rational-function logarithmic derivatives -/
 
 /-- `cClearedNumCoeffs d w`: the dense `ℚ`-coefficient list of `w·d ∈ ℚ[x]` (well-defined because `d`
-is a common multiple of `w`'s denominator), via `qnormPairG`-reducing `w` then `numerator·(d/denom)`. -/
-def cClearedNumCoeffs (d : CPoly ℚ) (w : QFunNZG ℚ) : CPoly ℚ :=
-  let wn := qnormPairG w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
+is a common multiple of `w`'s denominator), via `qnormPair`-reducing `w` then `numerator·(d/denom)`. -/
+def cClearedNumCoeffs (d : CPoly ℚ) (w : QFunNZ ℚ) : CPoly ℚ :=
+  let wn := qnormPair w.1.1 w.1.2            -- `w` in lowest terms `(a, b)`
   -- `w·d = a·(d / b)` as a polynomial (`b ∣ d` since `d` is a common multiple of all denominators).
   cmul wn.1 (cdivWf d wn.2)
 
 /-- `cLinearDepData ws w = (M, m)`: clear `w₁,…,wₘ,w` to a common denominator and assemble the
 coefficient matrix `M` (`w` last) whose nullspace vectors are the ℚ-relations `Σ rⱼ wⱼ + r·w = 0`;
 `m = ws.length`. -/
-def cLinearDepData (ws : List (QFunNZG ℚ)) (w : QFunNZG ℚ) :
+def cLinearDepData (ws : List (QFunNZ ℚ)) (w : QFunNZ ℚ) :
     List (List ℚ) × ℕ :=
   let all := ws ++ [w]
   -- common denominator `d = lcm(denom wⱼ)` over the lowest-terms forms.
-  let dens := all.map (fun u => (qnormPairG u.1.1 u.1.2).2)
+  let dens := all.map (fun u => (qnormPair u.1.1 u.1.2).2)
   let d := dens.foldl (fun acc den => cLcmQ acc den) [(1 : ℚ)]
   let cols : List (CPoly ℚ) := all.map (fun u => cClearedNumCoeffs d u)
   let nrows := (cols.map cdeg).foldl Nat.max 0 + 1
@@ -41,7 +41,7 @@ def cLinearDepData (ws : List (QFunNZG ℚ)) (w : QFunNZG ℚ) :
 
 /-- `cLogIsNewMonomial logDerivs w = true` iff `log(u)` with logarithmic derivative `w = Du/u` is a
 new transcendental monomial, i.e. no `rᵢ ∈ ℚ` give `Du/u = Σ rᵢ (Duᵢ/uᵢ)`. -/
-def cLogIsNewMonomial (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool :=
+def cLogIsNewMonomial (logDerivs : List (QFunNZ ℚ)) (w : QFunNZ ℚ) : Bool :=
   let (M, m) := cLinearDepData logDerivs w
   let basis := cNullspaceBasisQ M (m + 1)
   -- `log(u)` is a *new* monomial iff NO nullspace relation involves the `w`-column (index `m`).
@@ -50,17 +50,17 @@ def cLogIsNewMonomial (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool 
 /-- `cExpIsNewMonomial logDerivs b = true` iff `exp(b)` with exponent derivative `Db` is a new
 transcendental monomial, i.e. no `rᵢ ∈ ℚ` give `Db = Σ rᵢ (Duᵢ/uᵢ)` — the same ℚ-linear-dependence
 test as the logarithm case applied to `Db`. -/
-def cExpIsNewMonomial (logDerivs : List (QFunNZG ℚ)) (b : QFunNZG ℚ) : Bool :=
+def cExpIsNewMonomial (logDerivs : List (QFunNZ ℚ)) (b : QFunNZ ℚ) : Bool :=
   cLogIsNewMonomial logDerivs b
 
 /-- `cLogRelationExists logDerivs w = !cLogIsNewMonomial …`: `true` iff `w = Du/u` is a ℚ-linear
 combination of the existing logarithmic derivatives (`log(u)` is dependent). -/
-def cLogRelationExists (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Bool :=
+def cLogRelationExists (logDerivs : List (QFunNZ ℚ)) (w : QFunNZ ℚ) : Bool :=
   !cLogIsNewMonomial logDerivs w
 
 /-- `cLogRelationCoeffs logDerivs w`: when a relation exists with nonzero `w`-coordinate, returns
 `some [r₁,…,rₘ]` with `Du/u = Σ rᵢ (Duᵢ/uᵢ)` (`w`-column normalized to `−1`); else `none`. -/
-def cLogRelationCoeffs (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) : Option (List ℚ) :=
+def cLogRelationCoeffs (logDerivs : List (QFunNZ ℚ)) (w : QFunNZ ℚ) : Option (List ℚ) :=
   let (M, m) := cLinearDepData logDerivs w
   let basis := cNullspaceBasisQ M (m + 1)
   match basis.find? (fun rel => rel.getD m 0 ≠ 0) with
@@ -74,23 +74,23 @@ end CPoly
 
 /-! ### Logarithmic-monomial examples over `ℚ(x)`
 
-Logarithmic derivatives as `QFunNZG ℚ` values: `log(x) ⟹ 1/x`, `log(x²) ⟹ 2/x` (dependent, `2·(1/x)`),
+Logarithmic derivatives as `QFunNZ ℚ` values: `log(x) ⟹ 1/x`, `log(x²) ⟹ 2/x` (dependent, `2·(1/x)`),
 `log(x+1) ⟹ 1/(x+1)` (independent of `1/x`). -/
 
 open CPoly
 
-/-- A ℚ(x) fraction `num/den` as a `QFunNZG ℚ` element (`den ≠ 0` discharged automatically). -/
-def qFracStructG (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : QFunNZG ℚ :=
+/-- A ℚ(x) fraction `num/den` as a `QFunNZ ℚ` element (`den ≠ 0` discharged automatically). -/
+def qFracStruct (num den : List ℚ) (h : CPoly.cisZero den = false := by native_decide) : QFunNZ ℚ :=
   ⟨(num, den), h⟩
 
 /-- `D(x)/x = 1/x`: the logarithmic derivative of `log(x)`. Numerator `[1]`, denominator `x = [0,1]`. -/
-def structLogDerivX : QFunNZG ℚ := qFracStructG [1] [0, 1]
+def structLogDerivX : QFunNZ ℚ := qFracStruct [1] [0, 1]
 /-- `D(x²)/x² = 2/x`: the logarithmic derivative of `log(x²)`. Numerator `[2]`, denominator `x = [0,1]`
 (`2x/x² = 2/x`). Equal to `2·structLogDerivX`, so `log(x²) = 2 log(x)` is a ℚ-linear relation. -/
-def structLogDerivX2 : QFunNZG ℚ := qFracStructG [2] [0, 1]
+def structLogDerivX2 : QFunNZ ℚ := qFracStruct [2] [0, 1]
 /-- `D(x+1)/(x+1) = 1/(x+1)`: the logarithmic derivative of `log(x+1)`. Numerator `[1]`, denominator
 `x+1 = [1,1]`. Independent of `1/x` over ℚ. -/
-def structLogDerivX1 : QFunNZG ℚ := qFracStructG [1] [1, 1]
+def structLogDerivX1 : QFunNZ ℚ := qFracStruct [1] [1, 1]
 
 -- Computed decisions against the existing monomial `log(x)` (`logDerivs = [1/x]`):
 -- `log(x²)` is dependent with relation `2/x = 2·(1/x)`, while `log(x+1)` is new.
@@ -100,9 +100,9 @@ def structLogDerivX1 : QFunNZG ℚ := qFracStructG [1] [1, 1]
 
 /-- `structRelationCheck logDerivs w rs = true` iff the ℚ-coefficients `rs` satisfy `w = Σ rᵢ (Duᵢ/uᵢ)`
 over `ℚ(x)`, by `CField.isZero` of `w − Σ rᵢ (logDerivsᵢ)`. -/
-def structRelationCheck (logDerivs : List (QFunNZG ℚ)) (w : QFunNZG ℚ) (rs : List ℚ) : Bool :=
+def structRelationCheck (logDerivs : List (QFunNZ ℚ)) (w : QFunNZ ℚ) (rs : List ℚ) : Bool :=
   let combo := (List.zip logDerivs rs).foldl
-    (fun acc (wi, r) => CField.add acc (CField.mul (qFracStructG [r] [1]) wi)) CField.zero
+    (fun acc (wi, r) => CField.add acc (CField.mul (qFracStruct [r] [1]) wi)) CField.zero
   CField.isZero (CField.sub w combo)
 
 /-- The logarithmic-monomial structure decision computes over `C(x)(log x)`: `log(x²)` is not a new
@@ -145,7 +145,7 @@ dependent with relation `[1, 1]` (`1/x + 1/(x+1)`). -/
 
 /-- `D(x²+x)/(x²+x) = (2x+1)/(x²+x) = 1/x + 1/(x+1)`: the logarithmic derivative of `log(x²+x)`.
 Numerator `2x+1 = [1,2]`, denominator `x²+x = [0,1,1]`. Equals `1·(1/x) + 1·(1/(x+1))`. -/
-def structLogDerivX2pX : QFunNZG ℚ := qFracStructG [1, 2] [0, 1, 1]
+def structLogDerivX2pX : QFunNZ ℚ := qFracStruct [1, 2] [0, 1, 1]
 
 -- Computed decisions against the two-generator tower `[1/x, 1/(x+1)]`.
 -- `log(x²+x)` is dependent with relation `[1, 1]`.

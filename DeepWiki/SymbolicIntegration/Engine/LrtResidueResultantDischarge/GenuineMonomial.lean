@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.LrtSoundness
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
-import DeepWiki.SymbolicIntegration.Engine.RefinesPolyG
+import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
 
 /-! # Genuine-monomial discharge for reduced LRT
 
@@ -10,7 +10,7 @@ genuine primitive monomial data for the reduced LRT integrator. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Polynomial CPoly QFunNZG Classical
+open Polynomial CPoly QFunNZ Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]

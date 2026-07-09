@@ -4,14 +4,14 @@ import DeepWiki.SymbolicIntegration.Engine.RischSolverTowerLrt
 
 The re-based recursive solver `LawfulRischLevelLrt` resolves at every tower depth (`instLawfulRischLevelLrtPrimitive`
 + `instLawfulRischLevelLrtTower`), and its assembled soundness `soundFormalLrt` produces a genuine `∀E`
-antiderivative. This file crystallizes what the solver **depends on**, on the concrete carrier `QFunNZG ℚ`
+antiderivative. This file crystallizes what the solver **depends on**, on the concrete carrier `QFunNZ ℚ`
 (the ℚ(x)-tower the whole engine runs over): the recursion bottoms out at exactly two **honest** frontiers per
 level, and no others:
 
 * `PrimitiveFrontierLrt` — the reduced-part soundness. Closed (`hreducedLrt_of_genuineAll`) to the bundled
   genuine data `LrtReducedGenuineData` — Bronstein's *necessary* residue/normality conditions, which a
   properly-built tower satisfies but which are not derivable from the computable data. This **replaced** the
-  rational `PrimitiveFrontier`, whose `IsIntegralResultG` was not dischargeable at all (it forces the reduced
+  rational `PrimitiveFrontier`, whose `IsIntegralResult` was not dischargeable at all (it forces the reduced
   denominator to split over `K`).
 * `Fact (GcdFFCorrect …)` — the fraction-free-gcd correctness. Proven unconditionally at `ℚ`
   (`instFactGcdFFCorrectQ`); at tower levels it is the engine's PRS-regularity frontier.
@@ -22,19 +22,19 @@ certificate) is the separate `LrtLiouvilleFrontier` (Liouville criterion). See `
 
 namespace DeepWiki.SymbolicIntegration
 
-open CPoly QFunNZG
+open CPoly QFunNZ
 
 /-- **★ The re-based recursive LRT solver is sound on the concrete ℚ(x)-tower, from the honest frontiers alone.**
-At carrier `QFunNZG ℚ` (so `a/d ∈ (QFunNZG ℚ)(t)`, a genuine two-level tower), a successful run of the
+At carrier `QFunNZ ℚ` (so `a/d ∈ (QFunNZ ℚ)(t)`, a genuine two-level tower), a successful run of the
 assembled integrator `LawfulRischLevelLrt.integrate` is a true `∀E` antiderivative — depending only on the two
 honest reduced frontiers (`PrimitiveFrontierLrt` at the base `ℚ` and at this level) and the tower-level gcd
 `Fact` (the base `Fact (GcdFFCorrect ℚ)` is a resolved instance). No rational-residue restriction, no
 undischargeable `PrimitiveFrontier`. -/
 theorem lrtSolver_sound_on_tower [PrimitiveFrontierLrt ℚ]
-    [Fact (GcdFFCorrect (α := QFunNZG ℚ))] [PrimitiveFrontierLrt (QFunNZG ℚ)]
-    (Dt a d : CPoly (QFunNZG ℚ)) (res : LrtResultG (QFunNZG ℚ))
+    [Fact (GcdFFCorrect (α := QFunNZ ℚ))] [PrimitiveFrontierLrt (QFunNZ ℚ)]
+    (Dt a d : CPoly (QFunNZ ℚ)) (res : LrtResult (QFunNZ ℚ))
     (h : LawfulRischLevelLrt.integrate Dt a d = some res) :
-    IsIntegralResultLrtG Dt a d res :=
+    IsIntegralResultLrt Dt a d res :=
   LawfulRischLevelLrt.soundFormalLrt Dt a d res h
 
 /-- **The reduced frontier reduces to the genuine data — the whole solver from `LrtReducedGenuineData`.**
@@ -42,13 +42,13 @@ Threading `hreducedLrt_of_genuineAll`: supplying Bronstein's genuine residue/nor
 input at each level *constructs* the `PrimitiveFrontierLrt` instances, hence (with the gcd `Fact`s) the whole
 recursive LRT solver at that depth. This is the honest closure — the solver's soundness rests on genuine
 integrability conditions, nothing opaque. -/
-noncomputable example [Fact (GcdFFCorrect (α := QFunNZG ℚ))]
+noncomputable example [Fact (GcdFFCorrect (α := QFunNZ ℚ))]
     (hgenℚ : ∀ (Dt a d : CPoly ℚ), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d)
-    (hgenℚx : ∀ (Dt a d : CPoly (QFunNZG ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
-    LawfulRischLevelLrt (QFunNZG ℚ) :=
+    (hgenℚx : ∀ (Dt a d : CPoly (QFunNZ ℚ)), toPoly d ≠ 0 → LrtReducedGenuineData Dt a d) :
+    LawfulRischLevelLrt (QFunNZ ℚ) :=
   letI : PrimitiveFrontierLrt ℚ := ⟨hreducedLrt_of_genuineAll gcdFFCorrect_Q hgenℚ⟩
-  letI : PrimitiveFrontierLrt (QFunNZG ℚ) :=
-    ⟨hreducedLrt_of_genuineAll (Fact.out (p := GcdFFCorrect (α := QFunNZG ℚ))) hgenℚx⟩
+  letI : PrimitiveFrontierLrt (QFunNZ ℚ) :=
+    ⟨hreducedLrt_of_genuineAll (Fact.out (p := GcdFFCorrect (α := QFunNZ ℚ))) hgenℚx⟩
   inferInstance
 
 end DeepWiki.SymbolicIntegration

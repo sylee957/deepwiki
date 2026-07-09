@@ -103,7 +103,7 @@ def mixedRdeF : CPoly RadX3 := [CField.one]
 def mixedRdeFden : CPoly RadX3 := [CField.one]
 
 /-- The RDE right-hand side `g = t + 1 ∈ RadX3[t]` for `Dy + 1·y = t + 1`. -/
-def mixedRdeG : CPoly RadX3 := [CField.one, CField.one]
+def mixedRde : CPoly RadX3 := [CField.one, CField.one]
 
 /-- The RDE right-hand side denominator `gden = 1 ∈ RadX3[t]`. -/
 def mixedRdeGden : CPoly RadX3 := [CField.one]
@@ -111,18 +111,18 @@ def mixedRdeGden : CPoly RadX3 := [CField.one]
 /-- The RDE `Dy + 1·y = t + 1` over `RadX3[t]` is solved (`cRischDE` returns `some`). -/
 theorem mixedRde_radx3_isSome :
     (CPoly.cRischDE ([CField.one] : CPoly RadX3)
-      mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden).isSome = true := by native_decide
+      mixedRdeF mixedRdeFden mixedRde mixedRdeGden).isSome = true := by native_decide
 
 /-- A multi-level RDE descent: `Dy + 1·y = t + 1` solved over `RadX3[t]` with solution `y = t`, the
 RDE identity checked via `cisZero`; the solve recurses into `crischDESolve` over `RadX3`. -/
 theorem mixedRde_radx3_descends :
     (match CPoly.cRischDE ([CField.one] : CPoly RadX3)
-        mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden with
+        mixedRdeF mixedRdeFden mixedRde mixedRdeGden with
       | some (ynum, yden) =>
           CPoly.cisZero (CPoly.csub
             (CPoly.cadd (CPoly.cmonomialDeriv ([CField.one] : CPoly RadX3) ynum)
               (CPoly.cmul mixedRdeF ynum))
-            (CPoly.cmul mixedRdeG yden))
+            (CPoly.cmul mixedRde yden))
       | none => false) = true := by native_decide
 
 /-! ### A hyperexponential Laurent integral whose special-part step descends through the algebraic solver

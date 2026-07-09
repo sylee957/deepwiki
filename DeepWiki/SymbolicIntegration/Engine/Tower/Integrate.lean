@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 
 /-! # The generic integration pipeline over arbitrary-depth differential towers
 The integration pipeline (special/normal split, canonical representation, transcendental Hermite
-reduction, Rothstein–Trager logarithmic part) over the generic tower carrier `QFunNZG α`. Pipeline defs
+reduction, Rothstein–Trager logarithmic part) over the generic tower carrier `QFunNZ α`. Pipeline defs
 carry the suffix `G`, run on the generic engine ops, and take every `t`-gcd from the flat fraction-free
 `CFracGcdCore.cgcdFFCore` to avoid fraction-field coefficient swell. This file keeps the fueled engine and
 the shared level-2 example data; the fuel-free `native_decide` validations live downstream. -/
@@ -17,7 +17,7 @@ namespace DeepWiki.SymbolicIntegration
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 
-This is the headline. We run `cHermiteReduceTower` over `CPoly (QFunNZG (QFunNZG ℚ)) =
+This is the headline. We run `cHermiteReduceTower` over `CPoly (QFunNZ (QFunNZ ℚ)) =
 ℚ(x)(t₁)[t₂]` (tower level 2, the new monomial `t₂`) on a concrete proper fraction whose
 denominator has a repeated `t₂`-factor, and certify `D(g) + h = f`. The setting is Bronstein's
 Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt₂ = t₂² + 1`), and
@@ -27,13 +27,13 @@ Example 5.3.1 lifted one level up: `t₂ = tan` (the monomial derivative is `Dt�
 `D(g) + h = (t₂²+1)/t₂² − 1 = 1/t₂² = f`.
 
 All coefficients are level-2 *constants* (elements of ℚ ⊂ ℚ(x)(t₁) = `Lvl2`), so the engine genuinely
-runs the level-2 `CField`/`CDiffField` instances over `CPoly Lvl2`. The `CField (QFunNZG (QFunNZG ℚ))`
-and `CDiffField (QFunNZG (QFunNZG ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
+runs the level-2 `CField`/`CDiffField` instances over `CPoly Lvl2`. The `CField (QFunNZ (QFunNZ ℚ))`
+and `CDiffField (QFunNZ (QFunNZ ℚ))` instances are `[CField …]`-computable with `Prop`-erased subtype
 proofs, so nothing noncomputable reaches the native compiler — `native_decide` reduces. The load-bearing
 check is the cleared-denominator form of `D(gnum/gden) + h_num/h_den = a/d`, equating numerators over the
 common denominator `gden²·h_den·d`: `(gprimeNum·h_den + h_num·gden²)·d = a·(gden²·h_den)`. -/
 
-open QFunNZG
+open QFunNZ
 
 /-- Level-2 scalar `2 = 1 + 1 ∈ Lvl2 = ℚ(x)(t₁)`. -/
 def lvl2Two : Lvl2 := CField.add CField.one CField.one
@@ -131,7 +131,7 @@ end CPoly
 
 /-! ### The generic integral result and the cleared antiderivative identity
 
-`IntegralResultG α` is the generic mirror of `IntegralResult`: the rational part `g = num/den ∈ α(t)`
+`IntegralResult α` is the generic mirror of `IntegralResult`: the rational part `g = num/den ∈ α(t)`
 plus the logarithmic part `[(cᵢ, vᵢ)]` (coefficients `cᵢ : α`, arguments `vᵢ : CPoly α`).
 `checkIdentity` verifies the antiderivative identity `D(g) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f`, cleared of
 denominators — the generic mirror of `IntegralResult.checkIdentity`. -/
@@ -139,7 +139,7 @@ denominators — the generic mirror of `IntegralResult.checkIdentity`. -/
 /-- The generic integral result: `∫ f = rational + ∑ᵢ coeff·log(arg)` over the tower, with
 `rational = (num, den)` the rational part `g = num/den ∈ α(t)` and `logs = [(cᵢ, vᵢ)]` the logarithmic
 part (each `cᵢ : α`, each `vᵢ : CPoly α`). The generic mirror of `IntegralResult`. -/
-structure IntegralResultG (α : Type*) [CField α] where
+structure IntegralResult (α : Type*) [CField α] where
   /-- The rational part `g = num/den ∈ α(t)` of `∫ f`. -/
   rational : CPoly α × CPoly α
   /-- The logarithmic part `∑ᵢ coeff·log(arg)` of `∫ f` (`α`-coefficients, `CPoly α` arguments). -/
@@ -156,7 +156,7 @@ add `D(g) = (D(gnum)·gden − gnum·D(gden))/gden²`, and equate with `f` over 
 `(gprimeNum·Lden + Lnum·gden²)·aden = anum·(gden²·Lden)`, by `cisZero` of the cleared difference. The
 generic mirror of `IntegralResult.checkIdentity` (`α` has no `DecidableEq`, hence the `cisZero∘csub`
 form). -/
-def checkIdentity (Dt : CPoly α) (res : IntegralResultG α) (anum aden : CPoly α) : Bool :=
+def checkIdentity (Dt : CPoly α) (res : IntegralResult α) (anum aden : CPoly α) : Bool :=
   let gnum := res.rational.1
   let gden := res.rational.2
   let gprimeNum := csub (cmul (cmonomialDeriv Dt gnum) gden) (cmul gnum (cmonomialDeriv Dt gden))
