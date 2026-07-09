@@ -36,7 +36,7 @@ theorem cHermiteReduceTowerGWf_lawfulHermiteReduction [CharZero (CFieldSpec.K α
   squarefree := by
     rw [show toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = ((cSqfreeYunFFGWf d).map toPolyG).prod from by
       rw [cHermiteReduceTowerGWf]
-      simp only [denote, toPolyG_foldl_cmulG_plainList]
+      simp only [denote]
       simp]
     exact (cSqfreeYunFFGWf_lawfulSquarefreeDecomposition hgcd d hd0 hpp).prod_squarefree
   proper := hproper

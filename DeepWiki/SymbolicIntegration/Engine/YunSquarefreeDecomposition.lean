@@ -228,7 +228,7 @@ theorem toPolyG_cHermiteReduceTowerGWf_Dstar_dvd (hgcd : GcdFFCorrect (α := α)
     (hd : toPolyG d ≠ 0) :
     toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ∣ toPolyG d := by
   rw [cHermiteReduceTowerGWf]
-  simp only [denote, toPolyG_foldl_cmulG_plainList, map_one, mul_zero, add_zero, one_mul]
+  simp only [denote, map_one, mul_zero, add_zero, one_mul]
   exact prod_map_cSqfreeYunFFGWf_dvd hgcd d hd
 
 omit [CDiffFieldSpec α] in
@@ -619,7 +619,7 @@ theorem toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree [CharZero (CFieldSpec.K 
     (hpp : (toPolyG d).primPart ≠ 0) :
     Squarefree (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2) := by
   rw [cHermiteReduceTowerGWf]
-  simp only [denote, toPolyG_foldl_cmulG_plainList, map_one, mul_zero, add_zero, one_mul]
+  simp only [denote, map_one, mul_zero, add_zero, one_mul]
   apply squarefree_list_prod
   · rw [List.pairwise_map, List.pairwise_iff_getElem]
     intro i j hi hj hij
@@ -650,7 +650,7 @@ omit [CDiffFieldSpec α] in
 theorem toPolyG_cHermiteReduceTowerGWf_Dstar_monic (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
     (hd0 : toPolyG d ≠ 0) : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Monic := by
   rw [cHermiteReduceTowerGWf]
-  simp only [denote, toPolyG_foldl_cmulG_plainList, map_one, mul_zero, add_zero, one_mul]
+  simp only [denote, map_one, mul_zero, add_zero, one_mul]
   apply monic_list_prod
   intro p hp
   rw [List.mem_map] at hp

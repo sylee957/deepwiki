@@ -647,7 +647,7 @@ theorem hWdvd_of_reconstruction (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPoly
   have hLprod : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2
       = ((cSqfreeYunFFGWf d).map toPolyG).prod := by
     rw [cHermiteReduceTowerGWf]
-    simp only [denote, toPolyG_cnormG, toPolyG_foldl_cmulG_plainList, map_one, mul_zero, add_zero, one_mul]
+    simp only [denote, toPolyG_cnormG, map_one, mul_zero, add_zero, one_mul]
   have hsplit := toPolyG_yunRadical_split hgcd Dt a d hd0
   have hDstar0 : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 ≠ 0 := by
     intro h; exact hd0 (by rw [hsplit, h, zero_mul])

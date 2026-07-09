@@ -69,7 +69,7 @@ theorem toPolyG_termG (zk yk : α) (others : List α) :
       = Polynomial.C (CFieldSpec.toK yk
           / (others.map (fun zj => CFieldSpec.toK zk - CFieldSpec.toK zj)).prod)
         * (others.map (fun z => Polynomial.X - Polynomial.C (CFieldSpec.toK z))).prod := by
-  simp only [denote, CFieldSpec.toK_div, toK_foldl_csub_mul, CFieldSpec.toK_one]
+  simp only [denote, CFieldSpec.toK_div, CFieldSpec.toK_one]
   rw [one_mul]
 
 /-- Evaluation of a generic Lagrange term at a value `x`. -/
@@ -119,7 +119,7 @@ private def cinterpTermG (zs : List α) (p : α × α) : CPolyG α :=
       = (pts.map (fun p => toPolyG (cinterpTermG (pts.map Prod.fst) p))).sum := by
   rw [cinterpolateG]
   simp only [denote]
-  simp [cinterpTermG, denote, CFieldSpec.toK_div, toK_foldl_csub_mul, CFieldSpec.toK_one]
+  simp [cinterpTermG, denote, CFieldSpec.toK_div, CFieldSpec.toK_one]
 
 open scoped Classical in
 /-- Summing `if toK p.1 = toK zk then toK p.2 else 0` over a points list whose abscissa images

@@ -400,7 +400,7 @@ theorem toGBPolyG_cclearDenomsCoreG_coeff (p : CPolyG (QFunNZG β)) (i : ℕ) :
   · rw [toGBPolyG, liftKG, Polynomial.coe_mapRingHom, Polynomial.coeff_map,
       GBPolyCore.toGBCoeffPoly_coeff, toPolyG_coeff,
       List.getD_eq_getElem?_getD, cclearDenomsCoreG_getElem p i hi, Option.getD_some]
-    simp only [denote, toPolyG_foldl_cmulG,
+    simp only [denote,
       show CPolyG.toPolyG ([CField.one] : CPolyG β) = 1 by
         simp only [denote, mul_zero, add_zero, map_one],
       one_mul]
