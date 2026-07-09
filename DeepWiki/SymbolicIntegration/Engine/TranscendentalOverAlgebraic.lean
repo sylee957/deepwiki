@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDEInstance
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalDerivationInvariant
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalAssembly
-import DeepWiki.SymbolicIntegration.Engine.Tower.Field
+import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import Mathlib.FieldTheory.KummerPolynomial

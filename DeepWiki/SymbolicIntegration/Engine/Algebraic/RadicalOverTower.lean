@@ -1,6 +1,6 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalExtension
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalWellFounded
-import DeepWiki.SymbolicIntegration.Engine.Tower.Field
+import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.GcdFFCore
 
