@@ -132,6 +132,30 @@ The delivered foundation (`CPolyRepr` + `CPolyEngine` + full correctness + bridg
 what makes *either* route safe. It does not make the aggregate small: the engine port is a genuine
 re-derivation effort, correctly scoped here rather than faked by breaking the 120 `native_decide` suites.
 
+## The bottom-up generic algorithm layer (the constructive route, in progress)
+
+Since the *existing* engine can't be migrated isolated-module-at-a-time, the constructive path is to
+**re-build the algorithm stack generically on the interface**, bottom-up — each layer a real, gated,
+`native_decide`-validated (dense *and* sparse) unit. Landed so far (all in `PolyReprDenote.lean` /
+`PolyReprDivision.lean`):
+
+- **`cpow p n = pⁿ`** — `toPoly_cpow : toPoly (cpow p n) = (toPoly p)^n`, by induction on the
+  multiplicative square.
+- **`csub` / `cmonomial c k = c·Xᵏ` / `cshift k p = Xᵏ·p`** — each with its denotation square, the
+  building blocks of a division step.
+- **`cderiv`** (formal derivative) — `toPoly_cderiv : toPoly (cderiv p) = (toPoly p).derivative`, via a
+  ring `ℕ`-multiple `natMul` (`CCommRing` has no `SMul ℕ`) and `toR_natMul`.
+- **`cdivmod fuel p q = (Q, R)`** (Euclidean division over a computable field) — the **division
+  identity** `toPoly p = toPoly q · toPoly Q + toPoly R` at *every* fuel, by pure algebra + induction (no
+  degree/termination argument needed).
+- **`cgcd` + `dvd_cgcd`** — the Euclidean gcd, with the common-divisor direction (every common divisor of
+  `a,b` divides `cgcd a b`) from the division identity alone.
+
+Each reduces under `native_decide` on both the dense `List` and sparse `SparsePoly` carriers — the same
+algorithm, two representations. Remaining frontier on this route: the **remainder-degree / termination**
+argument (`cdeg R < cdeg q`), which unlocks the converse gcd direction (`cgcd ∣ a, b`) and a full
+generic gcd correctness; it needs the leading-coefficient cancellation (`Polynomial.degree_sub_lt`).
+
 ## Risks
 
 - **Efficiency of `native_decide`.** The dense-list ops today use tight `List` recursion; the generic
