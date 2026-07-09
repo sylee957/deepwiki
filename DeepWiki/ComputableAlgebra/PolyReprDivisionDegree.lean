@@ -178,4 +178,33 @@ theorem cmonic_monic (p : P α) (hp : ¬ cisZero (P := P) p = true) : (toPoly (c
 /-- `cmonic` reduces (dense): `2 + 4x` scales to the monic `1/2 + x`. -/
 example : cmonic ([2, 4] : List ℚ) = ([1/2, 1] : List ℚ) := by native_decide
 
+/-! ### Squarefree part
+
+`csquarefreePart p = p / gcd(p, p')` — the Risch/integration entry point. Its **cofactor
+factorization** `p = gcd(p, p') · csquarefreePart p` is proven here (from the exact-quotient lemma);
+the fact that the quotient is genuinely squarefree is the deeper property left as a frontier. -/
+
+/-- The gcd of `p` and its derivative — the repeated-factor content, cofactor of the squarefree part. -/
+def csquarefreeCofactor (p : P α) : P α := cgcd (cdeg (cderiv p) + 1) p (cderiv p)
+
+/-- The squarefree part `p / gcd(p, p')`. -/
+def csquarefreePart (p : P α) : P α := (cdivmod (cdeg p + 1) p (csquarefreeCofactor p)).1
+
+/-- `gcd(p, p')` divides `p`. -/
+theorem csquarefreeCofactor_dvd (p : P α) : toPoly (csquarefreeCofactor p) ∣ toPoly p :=
+  (cgcd_dvd (cdeg (cderiv p) + 1) p (cderiv p) (by omega)).1
+
+/-- **Cofactor factorization:** `toPoly p = toPoly (gcd(p, p')) · toPoly (squarefreePart p)` for
+nonzero `p`. -/
+theorem toPoly_squarefree_factor (p : P α) (hp : ¬ cisZero (P := P) p = true) :
+    toPoly p = toPoly (csquarefreeCofactor p) * toPoly (csquarefreePart p) := by
+  have hdvd := csquarefreeCofactor_dvd p
+  have hg : ¬ cisZero (P := P) (csquarefreeCofactor p) = true := fun hz => by
+    rw [(cisZero_iff _).mp hz, zero_dvd_iff] at hdvd
+    exact hp ((cisZero_iff p).mpr hdvd)
+  exact toPoly_mul_cdiv_of_dvd (cdeg p + 1) p (csquarefreeCofactor p) hg (by omega) hdvd
+
+/-- `csquarefreePart` reduces (dense): the squarefree part of `(x − 1)² = 1 − 2x + x²` has degree `1`. -/
+example : cdeg (csquarefreePart ([1, -2, 1] : List ℚ)) = 1 := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
