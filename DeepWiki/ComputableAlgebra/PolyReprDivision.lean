@@ -165,6 +165,17 @@ theorem isCoprime_of_cgcdExt_isUnit [CField α] [CRingSpec α] (fuel : ℕ) (a b
     (↑u⁻¹ : (CRingSpec.R α)[X]) * toPoly (cgcdExt fuel a b).2.2, ?_⟩
   rw [mul_assoc, mul_assoc, ← mul_add, toPoly_cgcdExt, ← hu, Units.inv_mul]
 
+/-- **Partial-fraction existence:** for coprime `b, c`, every `a` splits as `a = e·c + f·b`
+(i.e. `a/(b·c) = f/c + e/b`) — the algebraic basis of partial-fraction decomposition. -/
+theorem exists_partialFraction [CField α] [CRingSpec α] (a b c : P α)
+    (hcop : IsCoprime (toPoly b) (toPoly c)) :
+    ∃ e f : (CRingSpec.R α)[X], toPoly a = e * toPoly c + f * toPoly b := by
+  obtain ⟨u, v, huv⟩ := hcop
+  refine ⟨toPoly a * v, toPoly a * u, ?_⟩
+  calc toPoly a = toPoly a * 1 := (mul_one _).symm
+    _ = toPoly a * (u * toPoly b + v * toPoly c) := by rw [huv]
+    _ = toPoly a * v * toPoly c + toPoly a * u * toPoly b := by ring
+
 /-- `cgcdExt` reduces (dense): the Bézout combination `s·(x²−1) + t·(x−1)` equals the gcd. -/
 example :
     cnorm (add (mul (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
