@@ -5,11 +5,11 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.FullSoundness
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
-import DeepWiki.SymbolicIntegration.Engine.HermiteTowerStep
-import DeepWiki.SymbolicIntegration.Engine.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Engine.Hermite.TowerStep
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 import DeepWiki.SymbolicIntegration.Engine.OneShotAssembly
-import DeepWiki.SymbolicIntegration.Engine.HermiteReduction
-import DeepWiki.SymbolicIntegration.Engine.HermiteReductionRealization
+import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart
 import DeepWiki.SymbolicIntegration.Engine.Assemble
 

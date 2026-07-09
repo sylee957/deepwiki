@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Engine.HermiteReduction
-import DeepWiki.SymbolicIntegration.Engine.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 
 /-! # Tower Hermite reduction realization
 

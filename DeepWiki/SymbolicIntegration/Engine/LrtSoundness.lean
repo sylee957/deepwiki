@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.Engine.SubresultantTowerSpec
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.LrtGeneralDerivation
 import DeepWiki.SymbolicIntegration.Engine.ResidueMatchSoundness
 import DeepWiki.SymbolicIntegration.SpecialFirstKind
-import DeepWiki.SymbolicIntegration.Engine.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 import DeepWiki.SymbolicIntegration.Engine.ResidueResultantTowerSpec
 
 /-! # Symbolic-log soundness for the root-free LRT reduced integrator

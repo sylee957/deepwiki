@@ -13,8 +13,8 @@ import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
 import DeepWiki.SymbolicIntegration.Engine.GenericBezout
 import DeepWiki.SymbolicIntegration.Engine.GenericPolyEngine
-import DeepWiki.SymbolicIntegration.Engine.HermiteReduction
-import DeepWiki.SymbolicIntegration.Engine.HermiteReductionRealization
+import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.IntegrationFunctionsCatalog
@@ -84,9 +84,9 @@ import DeepWiki.SymbolicIntegration.Engine.TranscendentalOverAlgebraic
 import DeepWiki.SymbolicIntegration.Engine.UnifiedFuelFree
 import DeepWiki.SymbolicIntegration.Engine.LaurentSoundness
 import DeepWiki.SymbolicIntegration.Engine.LaurentSpecialSoundness
-import DeepWiki.SymbolicIntegration.Engine.HermiteTowerStep
+import DeepWiki.SymbolicIntegration.Engine.Hermite.TowerStep
 import DeepWiki.SymbolicIntegration.Engine.YunSquarefreeDecomposition
-import DeepWiki.SymbolicIntegration.Engine.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 import DeepWiki.SymbolicIntegration.Engine.Assemble
 
 /-! # The generic executable Risch engine (`CField` / `CPolyG` world) — aggregator over the

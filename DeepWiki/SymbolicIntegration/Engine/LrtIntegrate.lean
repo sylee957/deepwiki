@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.LrtLogArg
-import DeepWiki.SymbolicIntegration.Engine.HermiteValuationTower
+import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 
 /-! # The symbolic (root-free) LRT reduced integrator `cIntegrateReducedLrtG` (L3)
 

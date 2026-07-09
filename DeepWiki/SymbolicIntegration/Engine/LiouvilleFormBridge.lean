@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
-import DeepWiki.SymbolicIntegration.Engine.HermiteTowerStep
+import DeepWiki.SymbolicIntegration.Engine.Hermite.TowerStep
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
 
 /-! # Bridge: the computable log-residue sum is a sum of logarithmic derivatives
