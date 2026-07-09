@@ -385,27 +385,27 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
 
 /-! ### Generic formal derivative `cderiv` over a `CField` -/
 
-/-- Generic `ℕ`-scaling `nsmulG k a = a + a + … + a` (`k` times), built from `CField.add`. -/
-def nsmulG {α : Type*} [CField α] : ℕ → α → α
+/-- Generic `ℕ`-scaling `cnsmul k a = a + a + … + a` (`k` times), built from `CField.add`. -/
+def cnsmul {α : Type*} [CField α] : ℕ → α → α
   | 0, _ => CField.zero
-  | k + 1, a => CField.add a (nsmulG k a)
+  | k + 1, a => CField.add a (cnsmul k a)
 
-/-- `toK (nsmulG k a) = k • toK a` in `K`. -/
+/-- `toK (cnsmul k a) = k • toK a` in `K`. -/
 @[denote] theorem toK_nsmulG {α : Type*} [CField α] [CFieldSpec α] (k : ℕ) (a : α) :
-    CFieldSpec.toK (nsmulG k a) = k • CFieldSpec.toK a := by
+    CFieldSpec.toK (cnsmul k a) = k • CFieldSpec.toK a := by
   induction k with
-  | zero => rw [nsmulG, CFieldSpec.toK_zero, zero_smul]
-  | succ n ih => rw [nsmulG, CFieldSpec.toK_add, ih, succ_nsmul']
+  | zero => rw [cnsmul, CFieldSpec.toK_zero, zero_smul]
+  | succ n ih => rw [cnsmul, CFieldSpec.toK_add, ih, succ_nsmul']
 
 /-- Generic formal derivative `cderiv [a₀,a₁,a₂,…] = [1·a₁, 2·a₂, 3·a₃, …]`. -/
 def cderiv {α : Type*} [CField α] : CPoly α → CPoly α
   | [] => []
   | _ :: as => go 1 as
 where
-  /-- Auxiliary: from degree `k`, emit `nsmulG k a` for each coefficient `a` (the derivative tail). -/
+  /-- Auxiliary: from degree `k`, emit `cnsmul k a` for each coefficient `a` (the derivative tail). -/
   go : ℕ → CPoly α → CPoly α
   | _, [] => []
-  | k, a :: as => nsmulG k a :: go (k + 1) as
+  | k, a :: as => cnsmul k a :: go (k + 1) as
 
 /-- `cderiv` realizes the `K[X]` derivative: `toPoly (cderiv p) = Polynomial.derivative (toPoly p)`. -/
 @[denote] theorem toPolyG_cderivG {α : Type*} [CField α] [CFieldSpec α] (p : CPoly α) :
@@ -424,10 +424,10 @@ where
   | nil => intro k; simp [cderiv.go]
   | cons b bs ih =>
     intro k
-    show toPoly (nsmulG k b :: cderiv.go (k + 1) bs) = _
+    show toPoly (cnsmul k b :: cderiv.go (k + 1) bs) = _
     rw [toPolyG_cons, ih (k + 1), toPolyG_cons, derivative_add, derivative_C, derivative_mul,
       derivative_X]
-    have hk : Polynomial.C (CFieldSpec.toK (nsmulG k b)) = (k : (CFieldSpec.K α)[X]) * Polynomial.C (CFieldSpec.toK b) := by
+    have hk : Polynomial.C (CFieldSpec.toK (cnsmul k b)) = (k : (CFieldSpec.K α)[X]) * Polynomial.C (CFieldSpec.toK b) := by
       rw [toK_nsmulG, nsmul_eq_mul, map_mul, map_natCast]
     rw [hk]; push_cast; ring
 

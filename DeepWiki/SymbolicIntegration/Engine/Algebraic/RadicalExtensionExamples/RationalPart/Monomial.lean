@@ -24,13 +24,13 @@ def logDt : QFunNZ ℚ := qxOfFrac [1] [0, 1] (by decide)
 
 /-- The ℚ(x) leading coefficient `lcf(g) = g = 1/(2x)` for `f = θ`, `g = (1/2)f'/f·f = 1/(2x)`
 (numerator `[1]`, denominator `[0,2] = 2x`). -/
-def logGlead : QFunNZ ℚ := qxOfFrac [1] [0, 2] (by decide)
+def clogLead : QFunNZ ℚ := qxOfFrac [1] [0, 2] (by decide)
 
 /-- The radicand `f = θ = log x ∈ ℚ(x)[θ]` (`y² = log x`), the `θ`-polynomial `[0, 1]`. -/
 def logF : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
 
 /-- `g = 1/(2x)` as a degree-`0`-in-θ element of `ℚ(x)[θ]` (`(f/y)' = g/y`), `[1/(2x)]`. -/
-def logG : CPoly (QFunNZ ℚ) := [logGlead]
+def clog : CPoly (QFunNZ ℚ) := [clogLead]
 
 /-- The numerator `C = (5/(2x))θ² + θ ∈ ℚ(x)[θ]` (`deg_θ C = 2 ≥ m`), with leading coefficient
 `5/(2x) = (j+1)θ' + lcf(g)` chosen so the constant `b = 1` solves eq. 5. -/
@@ -41,12 +41,12 @@ def logDtPoly : CPoly (QFunNZ ℚ) := [logDt]
 
 /-- The solved `θ = log v` leading-coefficient cofactor `B = b·θ² = 1·θ²` (`b = lcf(C)/bracket =
 (5/(2x))/(5/(2x)) = 1`, a constant). -/
-def logB : CPoly (QFunNZ ℚ) := radCase3CofactorGen logDt logF logG logC
+def logB : CPoly (QFunNZ ℚ) := radCase3CofactorGen logDt logF clog logC
 
 /-- The `θ = log v` residual `D = B'f + Bg − C`, with `B' = cmonomialDeriv [θ'] B` the full log-monomial
 derivative — expected `−θ` (degree `1 < deg_θ C = 2`). -/
 def logD : CPoly (QFunNZ ℚ) :=
-  radCase3Residual logF logG logB logC (cmonomialDeriv logDtPoly logB)
+  radCase3Residual logF clog logB logC (cmonomialDeriv logDtPoly logB)
 
 /-- The `log` cofactor is the constant monomial `B = θ²`: `b = (5/(2x))/((2)(1/x) + 1/(2x)) = 1` at
 degree `j+1 = 2`. -/
@@ -58,7 +58,7 @@ theorem logCase_cofactor_eq :
 [1/x] B`, `D = −θ`). -/
 theorem logCase_cleared_identity :
     cisZero (csub
-      (csub (cadd (cmul (cmonomialDeriv logDtPoly logB) logF) (cmul logB logG)) logC)
+      (csub (cadd (cmul (cmonomialDeriv logDtPoly logB) logF) (cmul logB clog)) logC)
       logD) = true := by native_decide
 
 /-- The `log` residual `D = −θ` has `θ`-degree `1`, strictly below `deg_θ C = 2`. -/
@@ -78,7 +78,7 @@ A 2-level exponential tower: base `ℚ(x)`, monomial `θ = exp x` (`θ' = θ`), 
 def expF : CPoly (QFunNZ ℚ) := [CField.one, CField.one]
 
 /-- `g = (1/2)θ ∈ ℚ(x)[θ]` for `f = θ+1`, `θ = exp x` (`(f/y)' = g/y`, `g₀ = 0`), `[0, 1/2]`. -/
-def expG : CPoly (QFunNZ ℚ) := [CField.zero, qxOfNum [1/2]]
+def cexp : CPoly (QFunNZ ℚ) := [CField.zero, qxOfNum [1/2]]
 
 /-- The numerator `C = θ + 1 ∈ ℚ(x)[θ]` (`c₀ = 1`), `[1, 1]`. -/
 def expC : CPoly (QFunNZ ℚ) := [CField.one, CField.one]
@@ -92,12 +92,12 @@ def expDtPoly : CPoly (QFunNZ ℚ) := [CField.zero, CField.one]
 
 /-- The solved `θ = exp v` `C/(θy)` cofactor `B = [b₀] = [−1]` (`b₀ = c₀/(g₀ − kv'f₀) = 1/(0−1) = −1`,
 a constant). -/
-def expB : CPoly (QFunNZ ℚ) := radExpCofactor 1 expVder expF expG expC
+def expB : CPoly (QFunNZ ℚ) := radExpCofactor 1 expVder expF cexp expC
 
 /-- The `θ = exp v` `C/(θy)` residual `D = ((B'f + Bg − kv'Bf) − C)/θ`, `B' = cmonomialDeriv [θ] B` —
 expected `−1/2` (the multiplicity dropped `k = 1 → 0`). -/
 def expD : CPoly (QFunNZ ℚ) :=
-  radExpResidual 1 expVder expF expG expB expC (cmonomialDeriv expDtPoly expB)
+  radExpResidual 1 expVder expF cexp expB expC (cmonomialDeriv expDtPoly expB)
 
 /-- The `exp` cofactor is the constant `B = [−1]`: `b₀ = 1/(0 − 1·1·1) = −1` over `ℚ(x)[eˣ]`. -/
 theorem expCase_cofactor_eq :
@@ -107,7 +107,7 @@ theorem expCase_cofactor_eq :
 is divisible by `θ`. -/
 theorem expCase_congruence :
     cisZero (cmodWf
-      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB expG))
+      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
           (cmul [CField.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
       [CField.zero, CField.one]) = true := by native_decide
 
@@ -115,7 +115,7 @@ theorem expCase_congruence :
 `D = [−1/2]`). -/
 theorem expCase_cleared_identity :
     cisZero (csub
-      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB expG))
+      (csub (csub (cadd (cmul (cmonomialDeriv expDtPoly expB) expF) (cmul expB cexp))
           (cmul [CField.mul (cnatCast 1) expVder] (cmul expB expF))) expC)
       (cmul [CField.zero, CField.one] expD)) = true := by native_decide
 

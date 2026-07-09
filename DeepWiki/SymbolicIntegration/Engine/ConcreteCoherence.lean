@@ -86,11 +86,11 @@ theorem toPolyG_eq_toPoly : (toPoly : CPoly ℚ → ℚ[X]) = Compute.toPoly := 
   | nil => rfl
   | cons a as ih => show Polynomial.C (CFieldSpec.toK a) + X * toPoly as = _; rw [ih]; rfl
 
-/-- `nsmulG` at `ℚ` is multiplication by the natural-number cast: `nsmulG k a = (k : ℚ) * a`. -/
-theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (nsmulG k a : ℚ) = (k : ℚ) * a := by
+/-- `cnsmul` at `ℚ` is multiplication by the natural-number cast: `cnsmul k a = (k : ℚ) * a`. -/
+theorem nsmulG_eq_natCast_mul (k : ℕ) (a : ℚ) : (cnsmul k a : ℚ) = (k : ℚ) * a := by
   induction k with
   | zero => show (CField.zero : ℚ) = _; rw [show (CField.zero : ℚ) = 0 from rfl]; simp
-  | succ n ih => rw [nsmulG]; show a + nsmulG n a = _; rw [ih]; push_cast; ring
+  | succ n ih => rw [cnsmul]; show a + cnsmul n a = _; rw [ih]; push_cast; ring
 
 /-- `cderiv` at `ℚ` is the concrete `cderiv`. -/
 theorem cderivG_eq_cderiv : (cderiv : CPoly ℚ → CPoly ℚ) = Compute.cderiv := by
@@ -99,7 +99,7 @@ theorem cderivG_eq_cderiv : (cderiv : CPoly ℚ → CPoly ℚ) = Compute.cderiv 
     induction as generalizing k with
     | nil => rfl
     | cons b bs ih =>
-      show nsmulG k b :: cderiv.go (k + 1) bs = ((k : ℚ) * b) :: Compute.cderiv.go (k + 1) bs
+      show cnsmul k b :: cderiv.go (k + 1) bs = ((k : ℚ) * b) :: Compute.cderiv.go (k + 1) bs
       rw [ih, nsmulG_eq_natCast_mul]
   funext p
   cases p with
