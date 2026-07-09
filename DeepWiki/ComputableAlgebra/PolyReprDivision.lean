@@ -156,6 +156,15 @@ theorem toPoly_cgcdExt [CField α] [CRingSpec α] :
       rw [← hres] at ih
       rw [toPoly_csub, toPoly_mul, hdiv, ← ih]; ring
 
+/-- **Coprimality from Bézout:** if the extended-gcd component is a unit, `toPoly a` and `toPoly b`
+are coprime (scale the Bézout identity by the inverse unit). -/
+theorem isCoprime_of_cgcdExt_isUnit [CField α] [CRingSpec α] (fuel : ℕ) (a b : P α)
+    (hu : IsUnit (toPoly (cgcdExt fuel a b).1)) : IsCoprime (toPoly a) (toPoly b) := by
+  obtain ⟨u, hu⟩ := hu
+  refine ⟨(↑u⁻¹ : (CRingSpec.R α)[X]) * toPoly (cgcdExt fuel a b).2.1,
+    (↑u⁻¹ : (CRingSpec.R α)[X]) * toPoly (cgcdExt fuel a b).2.2, ?_⟩
+  rw [mul_assoc, mul_assoc, ← mul_add, toPoly_cgcdExt, ← hu, Units.inv_mul]
+
 /-- `cgcdExt` reduces (dense): the Bézout combination `s·(x²−1) + t·(x−1)` equals the gcd. -/
 example :
     cnorm (add (mul (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
