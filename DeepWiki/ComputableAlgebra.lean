@@ -1,5 +1,7 @@
 import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.ComputableAlgebra.PolyRepr
+import DeepWiki.ComputableAlgebra.PolyReprDenote
+import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
 import DeepWiki.ComputableAlgebra.Fraction
