@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 
 /-! # Computable rational-function operations
 
-Executable operations on `QFun = CPoly × CPoly` representing rational functions over `ℚ(x)`.
+Executable operations on `QFun = CPolyQ × CPolyQ` representing rational functions over `ℚ(x)`.
 -/
 
 namespace DeepWiki.SymbolicIntegration.Compute

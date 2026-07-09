@@ -16,7 +16,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 `IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (Sⱼ(toBPoly (G m), toBPoly (G (m+1))))` at the elements'
 own degrees. -/
 theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
-    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (j m : ℕ)
+    (bt : ℕ → CPolyQ) (s : ℕ → BPoly) (c : ℕ → CPolyQ) (j m : ℕ)
     (hsc : ∀ l < m, Polynomial.C (toPoly (c l)) * toBPoly (G l)
         = toBPoly (s l) * toBPoly (G (l + 1)) + toBPoly (bpsremainder fuel (G l) (G (l + 1))))
     (hβcn : ∀ l < m, cnorm (bt l) ≠ [])
@@ -44,8 +44,8 @@ theorem isSimilar_subresPRS_telescope (fuel : ℕ) (G : ℕ → BPoly)
 /-! ### The chain endpoint: `Sⱼ` is similar to the degree-`j` `subresPRS` element -/
 
 /-- A divided subresultant PRS chain through index `m` with a regular endpoint. -/
-structure IsSubresPRSChainInput (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → CPoly)
-    (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ) : Prop where
+structure IsSubresPRSChainInput (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → CPolyQ)
+    (s : ℕ → BPoly) (c : ℕ → CPolyQ) (m : ℕ) : Prop where
   /-- Each pseudo-remainder step is exact after β-division. -/
   exact_step : ∀ l ≤ m, IsBdivCExactStep fuel (G l) (G (l + 1)) (bt l) (s l) (c l)
   /-- Each next chain element is the β-divided pseudo-remainder. -/
@@ -69,7 +69,7 @@ structure IsSubresPRSChainInput (fuel : ℕ) (G : ℕ → BPoly) (bt : ℕ → C
 /-- At the regular index `j = deg (toBPoly (G (m+2)))`,
 `IsSimilar (Sⱼ(toBPoly (G 0), toBPoly (G 1))) (toBPoly (G (m+2)))`. -/
 theorem isSimilar_subresPRS_elt (fuel : ℕ) (G : ℕ → BPoly)
-    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
+    (bt : ℕ → CPolyQ) (s : ℕ → BPoly) (c : ℕ → CPolyQ) (m : ℕ)
     (hchain : IsSubresPRSChainInput fuel G bt s c m) :
     IsSimilar
       (subresultant (toBPoly (G 0)) (toBPoly (G 1))
@@ -89,8 +89,8 @@ theorem isSimilar_subresPRS_elt (fuel : ℕ) (G : ℕ → BPoly)
 
 /-- For the LRT chain (`G 0 = liftCtoBPoly D`, `G 1 = bArgAmtD' A D`) with the regular formal degrees,
 `IsSimilar (lrtSubresultant A D (deg (G (m+2)))) (toBPoly (G (m+2)))`. -/
-theorem isSimilar_lrtSubresultant_subresPRS_elt (fuel : ℕ) (A D : CPoly) (G : ℕ → BPoly)
-    (bt : ℕ → CPoly) (s : ℕ → BPoly) (c : ℕ → CPoly) (m : ℕ)
+theorem isSimilar_lrtSubresultant_subresPRS_elt (fuel : ℕ) (A D : CPolyQ) (G : ℕ → BPoly)
+    (bt : ℕ → CPolyQ) (s : ℕ → BPoly) (c : ℕ → CPolyQ) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)

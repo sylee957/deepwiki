@@ -376,7 +376,7 @@ theorem mapRingHom_φ_toBPoly_lrtGcdCompute_ne_zero_ex22 {S : Type*} [CommRing S
   rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, toBPoly_coeff] at hcoeff
   -- the degree-1 `x`-coefficient of `lrtGcdCompute … = [c₀, [1]]` is `toPoly [1] = 1`, `φ 1 = 1 ≠ 0`
   rw [show (lrtGcdCompute 60 1 (cmonic cR22) cA22 cD22).getD 1 [] = [1] by native_decide] at hcoeff
-  rw [show toPoly ([1] : CPoly) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
+  rw [show toPoly ([1] : CPolyQ) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
   exact one_ne_zero hcoeff
 
 /-! ### Closing Exercise 2.2: the residue ring `ℚ[t]/(R)`, `R = cmonic cR22` irreducible

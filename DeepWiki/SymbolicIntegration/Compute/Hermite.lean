@@ -2,17 +2,17 @@ import DeepWiki.SymbolicIntegration.Compute.Subresultant
 
 /-! # Computable Hermite reduction over `ℚ`
 Computes the rational part of `∫ A/D` as `(g, B, D*)` with `∫ A/D = g + ∫ B/D*` and `D*` squarefree,
-on the dense coefficient carrier `CPoly := List ℚ`. `ratIntegrate` combines it with `lrtLogPart` for
+on the dense coefficient carrier `CPolyQ := List ℚ`. `ratIntegrate` combines it with `lrtLogPart` for
 the full `∫A/D = rational part + log part`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-! ### Rational-function arithmetic on `CPoly × CPoly` (numerator, denominator) -/
+/-! ### Rational-function arithmetic on `CPolyQ × CPolyQ` (numerator, denominator) -/
 
-/-- Rational function as a `(numerator, denominator)` pair of `CPoly`s. -/
-abbrev QFun := CPoly × CPoly
+/-- Rational function as a `(numerator, denominator)` pair of `CPolyQ`s. -/
+abbrev QFun := CPolyQ × CPolyQ
 
 /-- Zero rational function `0/1`. -/
 def qzero : QFun := ([], [1])
@@ -23,11 +23,11 @@ def qadd (x y : QFun) : QFun :=
   let (c, d) := y
   (cadd (cmul a d) (cmul c b), cmul b d)
 
-/-! ### Computable Bézout / Diophantine solver on `CPoly` -/
+/-! ### Computable Bézout / Diophantine solver on `CPolyQ` -/
 
 /-- Diophantine/Bézout solver `cdiophantine fuel p q rhs = (B, C)` solving `B·p + C·q = rhs` with
 `deg B < deg q`, for coprime `p, q`. -/
-def cdiophantine (fuel : ℕ) (p q rhs : CPoly) : CPoly × CPoly :=
+def cdiophantine (fuel : ℕ) (p q rhs : CPolyQ) : CPolyQ × CPolyQ :=
   let (g, s, t) := cgcdExt fuel p q
   let gc : ℚ := clead g
   let S := cscale gc⁻¹ (cmul rhs s)
@@ -41,7 +41,7 @@ def cdiophantine (fuel : ℕ) (p q rhs : CPoly) : CPoly × CPoly :=
 /-- Inner Hermite loop over one squarefree factor `V` of multiplicity `i`: with `U = D/Vⁱ`, peel the
 rational pieces `B/Vʲ` (`j = i−1 … 1`) into `g`, returning the rational part `g` and the final
 numerator `A`. -/
-def hermiteInner (fuel : ℕ) (V U : CPoly) : ℕ → CPoly → QFun → QFun × CPoly
+def hermiteInner (fuel : ℕ) (V U : CPolyQ) : ℕ → CPolyQ → QFun → QFun × CPolyQ
   | 0, A, g => (g, A)
   | j + 1, A, g =>
     let jval : ℚ := (j : ℚ) + 1
@@ -58,7 +58,7 @@ def hermiteInner (fuel : ℕ) (V U : CPoly) : ℕ → CPoly → QFun → QFun ×
 /-- Quadratic Hermite reduction `hermiteReduce fuel A D = ((gnum, gden), (B, Dstar))`: returns the
 rational part `g = gnum/gden` and the reduced integrand `B/Dstar` with `Dstar` squarefree, so
 `∫ A/D = g + ∫ B/Dstar`. -/
-def hermiteReduce (fuel : ℕ) (A D : CPoly) : QFun × QFun :=
+def hermiteReduce (fuel : ℕ) (A D : CPolyQ) : QFun × QFun :=
   let factors := csqfreeFactor fuel D
   let Dstar := factors.foldl (fun acc (Vi, _) => cmul acc Vi) [1]
   -- Accumulate the rational part `g`. Each factor of multiplicity `i ≥ 2` contributes via `hermiteInner`
@@ -88,7 +88,7 @@ def hermiteReduce (fuel : ℕ) (A D : CPoly) : QFun × QFun :=
 /-- Full rational-function integrator `ratIntegrate fuel A D = ((gnum, gden), logpart)`: the Hermite
 rational part `gnum/gden` plus the logarithmic part of the residual `∫B/Dstar`, giving
 `∫ A/D = gnum/gden + ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`. -/
-def ratIntegrate (fuel : ℕ) (A D : CPoly) : QFun × List (CPoly × BPoly) :=
+def ratIntegrate (fuel : ℕ) (A D : CPolyQ) : QFun × List (CPolyQ × BPoly) :=
   let ((gnum, gden), (B, Dstar)) := hermiteReduce fuel A D
   ((gnum, gden), lrtLogPart fuel B Dstar)
 

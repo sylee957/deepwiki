@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrage
 
 /-! # Computable Rothstein–Trager resultant over `ℚ`
 A `#eval`-able rendering of the resultant `R(t) = res_x(D, A − t·D')` on the carrier
-`CPoly := List ℚ`: a univariate `cresultant` via the Euclidean polynomial-remainder-sequence, then
+`CPolyQ := List ℚ`: a univariate `cresultant` via the Euclidean polynomial-remainder-sequence, then
 `R(t)` recovered by evaluation and Lagrange interpolation (`cinterpolate`). -/
 
 open Polynomial
@@ -12,23 +12,23 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-! ### Computable derivative on `CPoly` -/
+/-! ### Computable derivative on `CPolyQ` -/
 
 /-- Coefficient-shift derivative `cderiv [a₀,a₁,a₂,…] = [a₁, 2a₂, 3a₃, …]`. -/
-def cderiv : CPoly → CPoly
+def cderiv : CPolyQ → CPolyQ
   | [] => []
   | _ :: as => go 1 as
 where
   /-- From degree `k`, emit `k·a` for each coefficient `a` (the derivative tail). -/
-  go : ℕ → CPoly → CPoly
+  go : ℕ → CPolyQ → CPolyQ
   | _, [] => []
   | k, a :: as => ((k : ℚ) * a) :: go (k + 1) as
 
 /-- `toPoly (cderiv p) = derivative (toPoly p)`: `cderiv` realizes the `ℚ[X]` derivative. -/
-theorem toPoly_cderiv (p : CPoly) : toPoly (cderiv p) = derivative (toPoly p) := by
+theorem toPoly_cderiv (p : CPolyQ) : toPoly (cderiv p) = derivative (toPoly p) := by
   -- Generalize the starting degree: `toPoly (cderiv.go k as) = derivative (X * toPoly_at_degree)`…
   -- A direct two-list induction with the index threaded through is cleanest.
-  suffices h : ∀ (as : CPoly) (k : ℕ),
+  suffices h : ∀ (as : CPolyQ) (k : ℕ),
       toPoly (cderiv.go k as) = (k : ℚ[X]) * toPoly as + X * derivative (toPoly as) by
     cases p with
     | nil => simp [cderiv]
@@ -46,10 +46,10 @@ theorem toPoly_cderiv (p : CPoly) : toPoly (cderiv p) = derivative (toPoly p) :=
       derivative_X, map_mul, map_natCast]
     push_cast; ring
 
-/-! ### Computable univariate resultant on `CPoly` (Euclidean-PRS route) -/
+/-! ### Computable univariate resultant on `CPolyQ` (Euclidean-PRS route) -/
 
-/-- Degree of a `CPoly` as a `ℕ`: `cdeg p = (length of normalized p) − 1`, with `cdeg 0 = 0`. -/
-def cdeg (p : CPoly) : ℕ := (cnorm p).length - 1
+/-- Degree of a `CPolyQ` as a `ℕ`: `cdeg p = (length of normalized p) − 1`, with `cdeg 0 = 0`. -/
+def cdeg (p : CPolyQ) : ℕ := (cnorm p).length - 1
 
 /-- Power of a rational `c^n`, by `ℕ`-recursion. -/
 def cpow (c : ℚ) : ℕ → ℚ
@@ -59,7 +59,7 @@ def cpow (c : ℚ) : ℕ → ℚ
 /-- Computable univariate resultant `cresultant fuel p q = res_x(p, q) ∈ ℚ`, fuel-bounded, via the
 Euclidean polynomial-remainder-sequence identity
 `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q, r)` with `r = p mod q`. -/
-def cresultant : ℕ → CPoly → CPoly → ℚ
+def cresultant : ℕ → CPolyQ → CPolyQ → ℚ
   | 0, _, _ => 0
   | fuel + 1, p, q =>
     let p := cnorm p
@@ -80,21 +80,21 @@ def cresultant : ℕ → CPoly → CPoly → ℚ
       let lcpow := cpow (clead q) (cdeg p - cdeg r)
       sign * lcpow * cresultant fuel q r
 
-/-! ### Computable Lagrange interpolation on `CPoly` -/
+/-! ### Computable Lagrange interpolation on `CPolyQ` -/
 
-/-- Constant `CPoly` `cC c = [c]`, normalized to `[]` when `c = 0`. -/
-def cC (c : ℚ) : CPoly := cnorm [c]
+/-- Constant `CPolyQ` `cC c = [c]`, normalized to `[]` when `c = 0`. -/
+def cC (c : ℚ) : CPolyQ := cnorm [c]
 
 /-- Lagrange basis numerator `∏_{j} (x − xⱼ)` over the sample abscissas `xs`. -/
-def clagNum : List ℚ → CPoly
+def clagNum : List ℚ → CPolyQ
   | [] => [1]
   | x :: xs => cmul [(-x), 1] (clagNum xs)
 
 /-- Lagrange interpolation `cinterpolate pts = R(t)` with `R(xₖ) = yₖ` for each `(xₖ, yₖ) ∈ pts`
 (distinct abscissas over `ℚ`): `∑ₖ yₖ · ∏_{j≠k}(t − xⱼ)/(xₖ − xⱼ)`. -/
-def cinterpolate (pts : List (ℚ × ℚ)) : CPoly :=
+def cinterpolate (pts : List (ℚ × ℚ)) : CPolyQ :=
   let xs := pts.map Prod.fst
-  let term : ℚ × ℚ → CPoly := fun (xk, yk) =>
+  let term : ℚ × ℚ → CPolyQ := fun (xk, yk) =>
     let others := xs.filter (· != xk)
     let num := clagNum others
     let denom := others.foldl (fun acc xj => acc * (xk - xj)) 1
@@ -104,8 +104,8 @@ def cinterpolate (pts : List (ℚ × ℚ)) : CPoly :=
 /-! ### The Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')` -/
 
 /-- Computable Rothstein–Trager resultant `rtResultantCompute fuel A D = R(t) = res_x(D, A − t·D')`,
-returned as a `CPoly` in `t`, computed by sampling and Lagrange interpolation. -/
-def rtResultantCompute (fuel : ℕ) (A D : CPoly) : CPoly :=
+returned as a `CPolyQ` in `t`, computed by sampling and Lagrange interpolation. -/
+def rtResultantCompute (fuel : ℕ) (A D : CPolyQ) : CPolyQ :=
   let D' := cderiv D
   let n := cdeg D  -- `deg_t R ≤ deg_x D = n`, so `n + 1` sample points determine `R`.
   let pts : List (ℚ × ℚ) := (List.range (n + 1)).map (fun k =>
@@ -116,15 +116,15 @@ def rtResultantCompute (fuel : ℕ) (A D : CPoly) : CPoly :=
 
 /-! ### Squarefree (primitive) part -/
 
-/-- Make a `CPoly` monic (lead coefficient `1`) by dividing through by its leading coefficient; the
+/-- Make a `CPolyQ` monic (lead coefficient `1`) by dividing through by its leading coefficient; the
 zero polynomial stays `[]`. -/
-def cmonic (p : CPoly) : CPoly :=
+def cmonic (p : CPolyQ) : CPolyQ :=
   let p := cnorm p
   if cisZero p then [] else cscale (clead p)⁻¹ p
 
-/-- Squarefree part of a `CPoly` over `ℚ`, made monic: `csqfreePart fuel p = monic(p / gcd(p, p'))`,
+/-- Squarefree part of a `CPolyQ` over `ℚ`, made monic: `csqfreePart fuel p = monic(p / gcd(p, p'))`,
 the radical of `p`. -/
-def csqfreePart (fuel : ℕ) (p : CPoly) : CPoly :=
+def csqfreePart (fuel : ℕ) (p : CPolyQ) : CPolyQ :=
   let p := cnorm p
   let (g, _, _) := cgcdExt fuel p (cderiv p)
   cmonic (cdiv fuel p g)

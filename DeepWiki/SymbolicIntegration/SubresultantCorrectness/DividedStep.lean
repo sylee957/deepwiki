@@ -12,7 +12,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 
 /-- If every `x`-coefficient of `p` divides exactly by `c`, then
 `C(toPoly c) · toBPoly (p.map (cdiv fuel · c)) = toBPoly p`. -/
-theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
+theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPolyQ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
     Polynomial.C (toPoly c) * toBPoly (p.map (fun a => cdiv fuel a c)) = toBPoly p := by
   induction p with
@@ -27,7 +27,7 @@ theorem toBPoly_map_cdiv_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm 
 
 /-- `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p` when every `x`-coefficient of `p` divides
 exactly by `c`: `bdivC` is exact scalar `ℚ[t]`-division. -/
-theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
+theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : CPolyQ) (hc : cnorm c ≠ [])
     (hrem : ∀ a ∈ p, toPoly (cmod fuel a c) = 0) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p := by
   rw [bdivC, toBPoly_bnorm]
@@ -35,7 +35,7 @@ theorem toBPoly_bdivC_exact (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c �
 
 /-- `bdivC` exact division from divisibility: if `toPoly c ∣ toPoly a` for every `x`-coefficient `a`,
 then `C(toPoly c) · toBPoly (bdivC fuel p c) = toBPoly p`. -/
-theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : CPoly) (hc : cnorm c ≠ [])
+theorem toBPoly_bdivC_exact_of_dvd (fuel : ℕ) (p : BPoly) (c : CPolyQ) (hc : cnorm c ≠ [])
     (hfuel : ∀ a ∈ p, (cnorm a).length ≤ fuel) (hdvd : ∀ a ∈ p, toPoly c ∣ toPoly a) :
     Polynomial.C (toPoly c) * toBPoly (bdivC fuel p c) = toBPoly p :=
   toBPoly_bdivC_exact fuel p c hc
@@ -57,7 +57,7 @@ theorem toBPoly_bprimitivePartX_exact (fuel : ℕ) (p : BPoly)
 /-! ### One subresultant-PRS step on the β-divided remainder -/
 
 /-- A pseudo-division step whose β-division of the remainder is exact. -/
-structure IsBdivCExactStep (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (c : CPoly) : Prop where
+structure IsBdivCExactStep (fuel : ℕ) (p q : BPoly) (β : CPolyQ) (s : BPoly) (c : CPolyQ) : Prop where
   /-- The pseudo-division relation before β-division. -/
   relation : Polynomial.C (toPoly c) * toBPoly p
     = toBPoly s * toBPoly q + toBPoly (bpsremainder fuel p q)
@@ -68,8 +68,8 @@ structure IsBdivCExactStep (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (
 
 /-- One subresultant-PRS step on the β-divided remainder `r = bdivC fuel (bpsremainder fuel p q) β`:
 `C((toPoly c)^(m−j)) · Sⱼ(A,B; n,m) = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(B, toBPoly r; m,n)`. -/
-theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
-    (s : BPoly) (c : CPoly)
+theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (β : CPolyQ) (n m j : ℕ)
+    (s : BPoly) (c : CPolyQ)
     (hstep : IsBdivCExactStep fuel p q β s c)
     (hjm : j ≤ m) (hjn : j < n)
     (hB : (toBPoly q).natDegree ≤ m)
@@ -89,8 +89,8 @@ theorem subresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (p q : BPoly) (
 
 /-- LRT subresultant after one β-divided PRS step (next element `R₃ = bdivC fuel (bpsremainder fuel P Q) β`):
 `C((toPoly c)^(m−j)) · lrtSubresultant A D j = (-1)^((m−j)(n−j)) · C((toPoly β)^(m−j)) · Sⱼ(Q, R₃; m,n)`. -/
-theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
-    (s : BPoly) (c : CPoly)
+theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPolyQ) (β : CPolyQ) (j : ℕ)
+    (s : BPoly) (c : CPolyQ)
     (hstep : IsBdivCExactStep fuel (liftCtoBPoly D) (bArgAmtD' A D) β s c)
     (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
     (hB : (toBPoly (bArgAmtD' A D)).natDegree ≤ (toPoly D).natDegree - 1)
@@ -110,8 +110,8 @@ theorem lrtSubresultant_C_mul_eq_bdivC_of_bpsremainder (fuel : ℕ) (A D : CPoly
 
 /-- One divided PRS step as a `ℚ[t]`-similarity: with content factors nonzero,
 `IsSimilar (lrtSubresultant A D j) (Sⱼ(Q, bdivC … prem; m, n))`. -/
-theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) (β : CPoly) (j : ℕ)
-    (s : BPoly) (c : CPoly)
+theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPolyQ) (β : CPolyQ) (j : ℕ)
+    (s : BPoly) (c : CPolyQ)
     (hstep : IsBdivCExactStep fuel (liftCtoBPoly D) (bArgAmtD' A D) β s c)
     (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
     (hjm : j ≤ (toPoly D).natDegree - 1) (hjn : j < (toPoly D).natDegree)
@@ -134,8 +134,8 @@ theorem isSimilar_lrtSubresultant_subresultant_bdivC (fuel : ℕ) (A D : CPoly) 
 
 /-- Generic divided one-step similarity over arbitrary `BPoly`s: with `r = bdivC fuel (bpsremainder fuel
 p q) β`, `IsSimilar (Sⱼ(toBPoly p, toBPoly q; n, m)) (Sⱼ(toBPoly q, toBPoly r; m, n))`. -/
-theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly) (n m j : ℕ)
-    (s : BPoly) (c : CPoly)
+theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPolyQ) (n m j : ℕ)
+    (s : BPoly) (c : CPolyQ)
     (hstep : IsBdivCExactStep fuel p q β s c)
     (hc0 : toPoly c ≠ 0) (hβ0 : toPoly β ≠ 0)
     (hjm : j ≤ m) (hjn : j < n)
@@ -153,7 +153,7 @@ theorem isSimilar_subresultant_bdivC_step (fuel : ℕ) (p q : BPoly) (β : CPoly
 
 /-- The combined per-step PRS relation through `toBPoly`:
 `C(toPoly c)·toBPoly p = C(toPoly β)·toBPoly r + toBPoly q·toBPoly s` with `r = bdivC fuel (prem p q) β`. -/
-theorem toBPoly_prs_rel (fuel : ℕ) (p q : BPoly) (β : CPoly) (s : BPoly) (c : CPoly)
+theorem toBPoly_prs_rel (fuel : ℕ) (p q : BPoly) (β : CPolyQ) (s : BPoly) (c : CPolyQ)
     (hstep : IsBdivCExactStep fuel p q β s c) :
     Polynomial.C (toPoly c) * toBPoly p
       = Polynomial.C (toPoly β) * toBPoly (bdivC fuel (bpsremainder fuel p q) β)

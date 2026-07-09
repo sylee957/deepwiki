@@ -2,7 +2,7 @@ import DeepWiki.Algebra.ListSums
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction.Operations
 
 /-! # Computable rational functions ℚ(x)
-Completes `QFun = CPoly × CPoly` into a computable field ℚ(x): the field operations, the
+Completes `QFun = CPolyQ × CPolyQ` into a computable field ℚ(x): the field operations, the
 lowest-terms reduction `qnorm`, the `d/dx` derivation `qderiv`, and decidable equality `qeq`, each
 proven through the field homomorphism `toQFun : QFun → RatFunc ℚ` to realize its `RatFunc ℚ`
 counterpart. -/
@@ -16,12 +16,12 @@ namespace DeepWiki.SymbolicIntegration.Compute
 `toQFun (a, b) = am (toPoly a) / am (toPoly b)`. -/
 
 /-- `am (toPoly p) ≠ 0` whenever `toPoly p ≠ 0`. -/
-theorem am_toPoly_ne_zero {p : CPoly} (hp : toPoly p ≠ 0) :
+theorem am_toPoly_ne_zero {p : CPolyQ} (hp : toPoly p ≠ 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) ≠ 0 :=
   (map_ne_zero_iff _ (RatFunc.algebraMap_injective ℚ)).mpr hp
 
 /-- Exact computable division becomes division in `RatFunc ℚ`. -/
-theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPolyQ) (hq : cnorm q ≠ [])
     (hrem : toPoly (cmod fuel p q) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p) / algebraMap ℚ[X] (RatFunc ℚ) (toPoly q)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q)) := by
@@ -31,15 +31,15 @@ theorem am_cdiv_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
     div_self hqm, mul_one]
 
 /-- Exact computable division gives a multiplicative factorization in `RatFunc ℚ`. -/
-theorem am_eq_cdiv_mul_of_cmod_zero (fuel : ℕ) (p q : CPoly) (hq : cnorm q ≠ [])
+theorem am_eq_cdiv_mul_of_cmod_zero (fuel : ℕ) (p q : CPolyQ) (hq : cnorm q ≠ [])
     (hrem : toPoly (cmod fuel p q) = 0) :
     algebraMap ℚ[X] (RatFunc ℚ) (toPoly p)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel p q))
         * algebraMap ℚ[X] (RatFunc ℚ) (toPoly q) := by
   rw [← map_mul, toPoly_cdiv_of_cmod_zero fuel p q hq hrem]
 
-/-- `cisZero p = true ↔ toPoly p = 0`: the `CPoly` zero test agrees with vanishing in `ℚ[X]`. -/
-theorem cisZero_iff_toPoly_eq_zero (p : CPoly) : cisZero p = true ↔ toPoly p = 0 := by
+/-- `cisZero p = true ↔ toPoly p = 0`: the `CPolyQ` zero test agrees with vanishing in `ℚ[X]`. -/
+theorem cisZero_iff_toPoly_eq_zero (p : CPolyQ) : cisZero p = true ↔ toPoly p = 0 := by
   rw [cisZero, beq_iff_eq, cnorm_eq_nil_iff]
 
 /-! ### Field-homomorphism lemmas
@@ -151,14 +151,14 @@ theorem am_C_ne_zero {s : ℚ} (hs : s ≠ 0) :
 
 /-- Scaling numerator and denominator by a nonzero constant preserves the value:
 `toQFun (cscale s a, cscale s b) = toQFun (a, b)` for `s ≠ 0`. -/
-theorem toQFun_cscale_cscale (s : ℚ) (hs : s ≠ 0) (a b : CPoly) :
+theorem toQFun_cscale_cscale (s : ℚ) (hs : s ≠ 0) (a b : CPolyQ) :
     toQFun (cscale s a, cscale s b) = toQFun (a, b) := by
   simp only [toQFun, toPoly_cscale, map_mul]
   rw [mul_div_mul_left _ _ (am_C_ne_zero hs)]
 
 /-- Dividing numerator and denominator by an exact common divisor `q` preserves the value:
 `toQFun (cdiv fuel a q, cdiv fuel b q) = toQFun (a, b)`. -/
-theorem toQFun_cdiv_cdiv (fuel : ℕ) (a b q : CPoly) (hq : cnorm q ≠ [])
+theorem toQFun_cdiv_cdiv (fuel : ℕ) (a b q : CPolyQ) (hq : cnorm q ≠ [])
     (hra : toPoly (cmod fuel a q) = 0) (hrb : toPoly (cmod fuel b q) = 0) :
     toQFun (cdiv fuel a q, cdiv fuel b q) = toQFun (a, b) := by
   set am := algebraMap ℚ[X] (RatFunc ℚ) with hamdef

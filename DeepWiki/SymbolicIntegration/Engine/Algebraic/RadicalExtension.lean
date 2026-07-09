@@ -103,7 +103,7 @@ def radDeriv (n : ℕ) (f : α) (p : RadElem α) : RadElem α :=
 
 end RadElem
 
-/-- A `ℚ(x)` value (`QFunNZG ℚ`) from a numerator `CPoly = List ℚ` over denominator `1`. -/
+/-- A `ℚ(x)` value (`QFunNZG ℚ`) from a numerator `CPolyQ = List ℚ` over denominator `1`. -/
 def qxOfNum (num : CPolyG ℚ) : QFunNZG ℚ :=
   ⟨(num, [CField.one]), QFunNZG.cisZeroG_one_singleton⟩
 

@@ -31,13 +31,13 @@ namespace Compute
 
 /-! ### The Exercise 2.2 integrand `A/D` -/
 
-/-- **`A = 8x⁹+x⁸−12x⁷−4x⁶−26x⁵−6x⁴+30x³+23x²−2x−7`** as a `CPoly` (Exercise 2.2 numerator),
+/-- **`A = 8x⁹+x⁸−12x⁷−4x⁶−26x⁵−6x⁴+30x³+23x²−2x−7`** as a `CPolyQ` (Exercise 2.2 numerator),
 coefficients low→high. -/
-def cA22 : CPoly := [-7, -2, 23, 30, -6, -26, -4, -12, 1, 8]
+def cA22 : CPolyQ := [-7, -2, 23, 30, -6, -26, -4, -12, 1, 8]
 
-/-- **`D = x¹⁰−2x⁸−2x⁷−4x⁶+7x⁴+10x³+3x²−4x−2`** as a `CPoly` (Exercise 2.2 denominator),
+/-- **`D = x¹⁰−2x⁸−2x⁷−4x⁶+7x⁴+10x³+3x²−4x−2`** as a `CPolyQ` (Exercise 2.2 denominator),
 coefficients low→high. -/
-def cD22 : CPoly := [-2, -4, 3, 10, 7, 0, -4, -2, 0, -2, 1]
+def cD22 : CPolyQ := [-2, -4, 3, 10, 7, 0, -4, -2, 0, -2, 1]
 
 /-! ### `D` is squarefree — no Hermite reduction, pure LRT log part -/
 
@@ -49,9 +49,9 @@ theorem ex_2_2_D_squarefree :
 
 /-! ### The Rothstein–Trager resultant `R(t)` and its squarefree factorization -/
 
-/-- **The Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')`** of Exercise 2.2 as a `CPoly`
+/-- **The Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')`** of Exercise 2.2 as a `CPolyQ`
 (degree 10, integer coefficients) — the polynomial whose roots are the residues of `A/D`. -/
-def cR22 : CPoly :=
+def cR22 : CPolyQ :=
   [148964442861521664, -1328822210596308992, 3776846888776593920, -4127327364012019200,
    3496864403205884928, -3396064845300158976, 3917651441502789888, -3496048353394587648,
    1973139744286936320, -665922498162245632, 83240312270280704]

@@ -201,7 +201,7 @@ and `A ← C − B'·D*/D⁻*` (book `(B,C) = (8x²+4, x⁴−2x²+16x+4)` then 
 abbrev ex_2_2_3 := @DeepWiki.SymbolicIntegration.hermiteMack_trace_octic
 
 /-- **Example 2.2.1, the computable Hermite reduction** (§2.2, p.40–41): the genuinely `#eval`-able
-quadratic-Hermite engine `hermiteReduce` over `CPoly := List ℚ` runs on
+quadratic-Hermite engine `hermiteReduce` over `CPolyQ := List ℚ` runs on
 `(x⁷−24x⁴−4x²+8x−8)/(x⁸+6x⁶+12x⁴+8x²)` and returns the rational part `g = gnum/gden` plus the residual
 `B/Dstar` with `Dstar` squarefree. The squarefree factorization `D = x²·(x²+2)³` comes out as
 `[(x,2),(x²+2,3)]` (`hermite_ex221_factors`); the residual is `(x²+2)/(x³+2x) = 1/x` — the book's
@@ -1096,11 +1096,11 @@ reads off `atanDerivSum [...] = i · logDeriv((φA+iφB)/(φA−iφB))` from `lo
 abbrev ex_2_8_1 := @DeepWiki.SymbolicIntegration.ex281_logToAtan_correct
 
 /-- **`LogToAtan`, computable variant** (§2.8, p.63): a genuinely `#eval`-able rendering of Rioboo's
-recursion over a dense coefficient list `CPoly := List ℚ` (Mathlib's `ℚ[X]` arithmetic is
+recursion over a dense coefficient list `CPolyQ := List ℚ` (Mathlib's `ℚ[X]` arithmetic is
 noncomputable, so the abstract `logToAtanAux` cannot run). Branches mirror `logToAtan_algorithm`
 (base `B ∣ A`, swap `deg A < deg B`, step with extended-Euclidean cofactors `B·D − A·C = G`), fuel-
-bounded for termination, returning the arctan arguments as `(numerator, denominator)` `CPoly` pairs.
-The library's `logToAtanCompute`, with the `toPoly : CPoly → ℚ[X]` bridge and its homomorphism lemmas
+bounded for termination, returning the arctan arguments as `(numerator, denominator)` `CPolyQ` pairs.
+The library's `logToAtanCompute`, with the `toPoly : CPolyQ → ℚ[X]` bridge and its homomorphism lemmas
 (`toPoly_cadd`/`toPoly_cmul`/…). The full agreement with `logToAtanAux` is deferred. -/
 def logToAtan_compute := @DeepWiki.SymbolicIntegration.Compute.logToAtanCompute
 
@@ -1116,7 +1116,7 @@ theorem ex_2_8_1_compute :
   DeepWiki.SymbolicIntegration.Compute.logToAtanCompute_ex281
 
 /-- **Rothstein–Trager resultant, computable variant** (§2.4, eq 2.7, p.47): a genuinely `#eval`-able
-rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `CPoly := List ℚ` (Mathlib's
+rendering of `R(t) = res_x(D, A − t·D')` over the dense coefficient carrier `CPolyQ := List ℚ` (Mathlib's
 `ℚ[X]` resultant `rtResultant` is noncomputable). The univariate resultant `cresultant` uses the
 Euclidean-PRS identity `res(p,q) = (−1)^(deg p·deg q)·lc(q)^(deg p − deg r)·res(q,r)`; the bivariate RT
 resultant is recovered, staying univariate, by evaluation + Lagrange interpolation (`cinterpolate`).
@@ -1139,7 +1139,7 @@ theorem ex_2_4_1_compute :
 
 /-- **LRT log argument `S(t,x) = gcd_x(D, A − t·D')`, computable variant** (§2.5/§2.6, p.51/54): a
 genuinely `#eval`-able rendering of the bivariate polynomial that goes inside the logarithms of
-`∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`, over the bivariate carrier `BPoly := List CPoly` (`= ℚ[t][x]`;
+`∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`, over the bivariate carrier `BPoly := List CPolyQ` (`= ℚ[t][x]`;
 Mathlib's `lrtSubresultant` is noncomputable). Built from the subresultant PRS (Collins–Brown,
 `subresPRS`) via pseudo-division `bpsremainder` over the non-field ring `ℚ[t]`, taking the `x`-degree-`j`
 subresultant, then reducing modulo the resultant factor `R(t)` and making it monic in `x` over
