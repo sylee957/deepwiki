@@ -108,4 +108,13 @@ example : cResultant ([-1, 1] : List ℚ) [-2, 1] = -1 := by native_decide
 /-- `cResultant` reduces: `res(x² − 1, x − 1) = 0` (common factor ⇒ zero). -/
 example : cResultant ([-1, 0, 1] : List ℚ) [-1, 1] = 0 := by native_decide
 
+/-- The resultant of `p` with its derivative (the discriminant up to the leading factor): it vanishes
+exactly when `p` has a repeated factor. -/
+def cResultantDeriv (p : P α) : α := cResultant p (cderiv p)
+
+/-- `cResultantDeriv` reduces: `x² − 1` is squarefree, so `res(p, p') ≠ 0`. -/
+example : cResultantDeriv ([-1, 0, 1] : List ℚ) ≠ 0 := by native_decide
+/-- `cResultantDeriv` reduces: `(x − 1)²` has a repeated factor, so `res(p, p') = 0`. -/
+example : cResultantDeriv ([1, -2, 1] : List ℚ) = 0 := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
