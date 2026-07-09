@@ -333,8 +333,10 @@ theorem toCFracG_cderiv_qxOfNum (p : CPoly ℚ) :
   show CFrac.toCFrac (CFrac.towerDerivCFrac [CField.one] (qxOfNum p)) = _
   rw [CFrac.toCFracG_towerDerivCFracG, toCFracG_qxOfNum, toCFracG_qxOfNum, CFrac.am]
   -- `extendDeriv (implicitDeriv (toPoly [1])) (algebraMap (toPoly p)) = algebraMap (baseDerivQ (toPoly p))`
-  rw [show Differential.implicitDeriv (CPoly.toPoly ([CField.one] : CPoly ℚ)) = baseDerivQ from rfl,
-    extendDeriv_algebraMap, baseDerivQ_apply, CPoly.toPolyG_cderivG]
+  rw [show Differential.implicitDeriv (CPoly.toPoly ([CField.one] : CPoly ℚ)) = baseDerivQ from rfl]
+  erw [extendDeriv_algebraMap]
+  rw [baseDerivQ_apply, CPoly.toPolyG_cderivG]
+  rfl
 
 /-! ### Bridge (ii): `g = ℓ·f` in `K` — the integrand IS the diagonal multiplier times the radicand
 

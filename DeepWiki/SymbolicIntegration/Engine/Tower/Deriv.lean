@@ -133,7 +133,7 @@ theorem toCFracG_towerDerivCFracG (Dt : CPoly α) (x : CFrac α) :
   -- read `toCFrac x` as `RatFunc.mk (toPoly n) (toPoly d)`, apply the quotient rule `extendDeriv_mk`.
   have hxmk : toCFrac (⟨(n, d), hd⟩ : CFrac α)
       = RatFunc.mk (CPoly.toPoly n) (CPoly.toPoly d) := by
-    rw [toCFrac, RatFunc.mk_eq_div]
+    rw [toCFrac, RatFunc.mk_eq_div]; rfl
   rw [hxmk, extendDeriv_mk, RatFunc.mk_eq_div, map_sub, map_mul, map_mul, map_pow]
   -- the LHS numerator/denominator, read through `toPoly`, with `toPolyG_cmonomialDeriv` identifying
   -- the computable monomial derivation as `implicitDeriv (toPoly Dt)`.
@@ -141,6 +141,7 @@ theorem toCFracG_towerDerivCFracG (Dt : CPoly α) (x : CFrac α) :
         (CPoly.cmul (CPoly.cmonomialDeriv Dt n) d) (CPoly.cmul n (CPoly.cmonomialDeriv Dt d))))
       / am α (CPoly.toPoly (CPoly.cmul d d)) = _
   simp [CPoly.toPolyG_cmonomialDeriv, map_sub, map_mul, pow_two]
+  rfl
 
 end CFrac
 

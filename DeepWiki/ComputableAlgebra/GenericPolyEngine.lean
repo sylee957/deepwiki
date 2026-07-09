@@ -167,9 +167,20 @@ instance (priority := 100) instCRingSpecOfCFieldSpec {α : Type*} [CField α] [C
   toR_neg := CFieldSpec.toK_neg
   isZero_iff := CFieldSpec.isZero_iff
 
+/-- On a field coefficient the ring bridge IS the field bridge (`R = K`, `toR = toK`), by defeq. -/
+theorem toR_eq_toK {α : Type*} [CField α] [CFieldSpec α] (a : α) :
+    CRingSpec.toR a = CFieldSpec.toK a := rfl
+
+/-- `CRingSpec.R α = CFieldSpec.K α`, a `Field`, so field-level squares over the ring-generic
+`toPoly : CPoly α → (CRingSpec.R α)[X]` find `⁻¹`/`GroupWithZero` on the field path. -/
+instance (priority := 100) instFieldROfCFieldSpec {α : Type*} [CField α] [CFieldSpec α] :
+    Field (CRingSpec.R α) := instFieldK α
+
 -- The base `toK` homomorphism laws are the leaf denotation squares.
 attribute [denote] CFieldSpec.toK_zero CFieldSpec.toK_one CFieldSpec.toK_add
   CFieldSpec.toK_mul CFieldSpec.toK_neg CFieldSpec.toK_inv
+attribute [denote] CRingSpec.toR_zero CRingSpec.toR_one CRingSpec.toR_add
+  CRingSpec.toR_mul CRingSpec.toR_neg
 
 /-! ### `toK` homomorphism laws through the `CField ⇒ CCommRing` bridge
 Ring-generic engine ops (`cadd`/`cmul`/… weakened to `[CCommRing]`) put `CCommRing.add`/… in goals; on a
@@ -396,9 +407,9 @@ extra binder, while the engine ops above need only `[CField α]`. -/
 /-- Generic bridge to `(CFieldSpec.K α)[X]`: `toPoly p` reads a `CPoly` coefficient list (index =
 degree, low to high) as a `Polynomial (CFieldSpec.K α)` in Horner form `p₀ + x·(p₁ + x·(p₂ + …))`,
 each coefficient embedded via `toK`. -/
-noncomputable def toPoly {α : Type*} [CField α] [CFieldSpec α] : CPoly α → (CFieldSpec.K α)[X]
+noncomputable def toPoly {α : Type*} [CCommRing α] [CRingSpec α] : CPoly α → (CRingSpec.R α)[X]
   | [] => 0
-  | a :: p => Polynomial.C (CFieldSpec.toK a) + X * toPoly p
+  | a :: p => Polynomial.C (CRingSpec.toR a) + X * toPoly p
 
 /-- `toPoly [] = 0`: the empty coefficient list is the zero polynomial. -/
 @[simp, denote] theorem toPolyG_nil {α : Type*} [CField α] [CFieldSpec α] :

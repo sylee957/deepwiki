@@ -320,9 +320,9 @@ theorem reducedRdeSol_witness :
   show toPoly ([1] : CPoly ℚ)
         * Differential.implicitDeriv (toPoly ([1] : CPoly ℚ)) (toPoly ([0, 1] : CPoly ℚ))
       + toPoly ([1] : CPoly ℚ) * toPoly ([0, 1] : CPoly ℚ) = toPoly ([1, 1] : CPoly ℚ)
-  have h1 : toPoly ([1] : CPoly ℚ) = 1 := by simp [toPoly, CFieldSpec.toK]
-  have hx : toPoly ([0, 1] : CPoly ℚ) = X := by simp [toPoly, CFieldSpec.toK]
-  have hc : toPoly ([1, 1] : CPoly ℚ) = 1 + X := by simp [toPoly, CFieldSpec.toK]
+  have h1 : toPoly ([1] : CPoly ℚ) = 1 := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
+  have hx : toPoly ([0, 1] : CPoly ℚ) = X := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
+  have hc : toPoly ([1, 1] : CPoly ℚ) = 1 + X := by simp [toPoly, CRingSpec.toR, CFieldSpec.toK]
   rw [h1, hx, hc, Differential.implicitDeriv_X]; ring
 
 /-- The computable degree bound holds on the witness: for `1·Dq + 1·q = x + 1` over `ℚ[x]`, `q = x` has

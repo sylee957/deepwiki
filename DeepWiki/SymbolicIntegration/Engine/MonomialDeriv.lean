@@ -36,6 +36,11 @@ instance instDifferentialK (α : Type*) [CField α] [CFieldSpec α] [CDiffField 
     Differential (CFieldSpec.K α) :=
   CDiffFieldSpec.diffK
 
+/-- The same derivation on `CRingSpec.R α` (= `CFieldSpec.K α`) for ring-generic `toPoly` squares. -/
+instance instDifferentialR (α : Type*) [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] :
+    Differential (CRingSpec.R α) :=
+  CDiffFieldSpec.diffK
+
 /-! ### The constant base instance `ℚ` -/
 
 /-- The zero derivation on `ℚ` — `ℚ` is a field of constants under `d/dx`. -/
