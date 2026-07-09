@@ -143,28 +143,6 @@ example (A D : K[X]) (hD : D.Separable) (hA : A.natDegree < D.natDegree) (i : �
 
 /-! ## The monic modification: replacing each log argument by its monic-in-`x` normalization -/
 
-omit [IsAlgClosed K] in
-open scoped Differential in
-/-- `logDeriv` kills an `x`-constant factor in monic LRT normalization: for a
-nonzero constant `c ∈ K` (a `C`-constant, hence `x`-derivative `0`) and a nonzero polynomial `f ∈ K[x]`,
-the logarithmic derivatives of `C c · f` and of `f` over `K(x)` coincide,
-`logDeriv (C c · f) = logDeriv f`. The `log(c)` term is `x`-constant, so it drops out:
-`logDeriv (algebraMap (C c)) = (C c)′ / (C c) = 0` since `derivative (C c) = 0`. Hence monic-normalizing
-a logarithm argument by its (constant-in-`x`) leading coefficient does not change the integral. -/
-theorem logDeriv_algebraMap_C_mul_eq (c : K) (hc : c ≠ 0) (f : K[X]) (hf : f ≠ 0) :
-    Differential.logDeriv (algebraMap K[X] (RatFunc K) (C c * f))
-      = Differential.logDeriv (algebraMap K[X] (RatFunc K) f) := by
-  have hcne : algebraMap K[X] (RatFunc K) (C c) ≠ 0 := by
-    simpa [map_eq_zero_iff _ (RatFunc.algebraMap_injective K), C_eq_zero] using hc
-  have hfne : algebraMap K[X] (RatFunc K) f ≠ 0 := by
-    simpa [map_eq_zero_iff _ (RatFunc.algebraMap_injective K)] using hf
-  -- `logDeriv (C c) = (C c)′ / (C c) = 0` since `derivative (C c) = 0`
-  have hlogc : Differential.logDeriv (algebraMap K[X] (RatFunc K) (C c)) = 0 := by
-    rw [Differential.logDeriv_eq_zero,
-      show (algebraMap K[X] (RatFunc K) (C c))′ = ratFuncDeriv (algebraMap K[X] (RatFunc K) (C c))
-        from rfl, ratFuncDeriv_algebraMap, derivative_C, map_zero]
-  rw [map_mul, Differential.logDeriv_mul _ _ hcne hfne, hlogc, zero_add]
-
 open scoped Classical in
 /-- The monic-in-`x` normalization of the specialized LRT log argument `Sᵢ(a,x)`: the `i`-th LRT
 subresultant specialized at the residue `a` (`(lrtSubresultant A D i).map (evalRingHom a)`), divided by

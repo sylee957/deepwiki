@@ -3,6 +3,7 @@ import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.RingTheory.Derivation.DifferentialRing
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
+import DeepWiki.SymbolicIntegration.DifferentialFields
 
 /-! # The derivative `d/dx` on rational functions `K(x)`
 Builds `d/dx` on `RatFunc K` via the quotient rule `(p/q)' = (p'q − pq')/q²`, proves its derivation
@@ -104,5 +105,23 @@ noncomputable def ratFuncKDeriv : Derivation K (RatFunc K) (RatFunc K) :=
 noncomputable instance : Differential (RatFunc K) :=
   letI : Algebra ℤ (RatFunc K) := Ring.toIntAlgebra _
   ⟨ratFuncKDeriv.restrictScalars ℤ⟩
+
+open scoped Differential in
+/-- `logDeriv` kills a nonzero `x`-constant factor: for a nonzero constant `c ∈ K` (a `C`-constant, hence
+`x`-derivative `0`) and a nonzero polynomial `f ∈ K[x]`, `logDeriv (algebraMap (C c · f)) = logDeriv (algebraMap f)`
+over `K(x)`. General identity (associate-invariance of `logDeriv` under constant scaling); the `log(c)` term is
+`x`-constant so it drops. -/
+theorem logDeriv_algebraMap_C_mul_eq (c : K) (hc : c ≠ 0) (f : K[X]) (hf : f ≠ 0) :
+    Differential.logDeriv (algebraMap K[X] (RatFunc K) (C c * f))
+      = Differential.logDeriv (algebraMap K[X] (RatFunc K) f) := by
+  have hcne : algebraMap K[X] (RatFunc K) (C c) ≠ 0 := by
+    simpa [map_eq_zero_iff _ (RatFunc.algebraMap_injective K), C_eq_zero] using hc
+  have hfne : algebraMap K[X] (RatFunc K) f ≠ 0 := by
+    simpa [map_eq_zero_iff _ (RatFunc.algebraMap_injective K)] using hf
+  have hlogc : Differential.logDeriv (algebraMap K[X] (RatFunc K) (C c)) = 0 := by
+    rw [Differential.logDeriv_eq_zero,
+      show (algebraMap K[X] (RatFunc K) (C c))′ = ratFuncDeriv (algebraMap K[X] (RatFunc K) (C c))
+        from rfl, ratFuncDeriv_algebraMap, derivative_C, map_zero]
+  rw [map_mul, Differential.logDeriv_mul _ _ hcne hfne, hlogc, zero_add]
 
 end DeepWiki.SymbolicIntegration
