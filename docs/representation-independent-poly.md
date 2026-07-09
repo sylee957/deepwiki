@@ -157,10 +157,18 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   `a` and `b`, by fuel induction on the remainder-reduced measure). The inner division uses a `cdeg a + 1`
   fuel (always fully reduced), decoupled from the gcd-step fuel.
 
+- **Downstream of the gcd** (`PolyReprDivisionDegree.lean`): `cgcd_isGCD` (the greatest-common-divisor
+  universal property, instance-free), `cdivmod_exact` (`q ∣ p ⇒` zero remainder), `toPoly_mul_cdiv_of_dvd`
+  (`q ∣ p ⇒ p = q·(p/q)`, the cofactor factorization), `cmonic` monic normalization
+  (`cmonic_monic`), and the **squarefree part** `csquarefreePart p = p / gcd(p, p')` with its cofactor
+  factorization `toPoly_squarefree_factor : p = gcd(p, p') · squarefreePart p` (the Risch/integration
+  entry point; genuine squarefree-ness of the quotient is the remaining frontier).
+
 Each computable op reduces under `native_decide` on both the dense `List` and sparse `SparsePoly`
 carriers — the same algorithm, two representations — and the algebraic correctness is a-priori (not merely
-`native_decide`-validated). This is a complete, representation-independent Euclidean gcd theory built
-bottom-up on the interface.
+`native_decide`-validated). This is a complete, representation-independent polynomial Euclidean-domain
+theory (arithmetic · derivative · division · gcd · monic · squarefree part) built bottom-up on the
+interface — the constructive answer to the engine-migration impasse.
 
 ## Risks
 
