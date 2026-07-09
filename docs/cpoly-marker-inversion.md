@@ -33,6 +33,25 @@ gate-green commit (a rename must be atomic — the intermediate state doesn't co
   handle `cderiv`), then `\bcXG\b → cX` per op. Do in op-family batches; `amG`/`QFunNZG` are a *separate*
   decision (different concept — the fraction-field tower — not the `CPoly` op layer).
 
+## The rest of the generic engine (QFun tower + radical pairs) — DONE
+
+After the CPoly engine, the same safe de-`G` was extended to the **fraction-field-tower layer** (84 decl
+names, 4708 occ): `QFunNZG→QFunNZ`, `amG→am`, the QFun ops (`qmulG`/`qaddG`/`qinvG`/`qOfNumG`/…→`qmul`/…),
+tower bridges (`toQFunNZG`/`towerFractionFieldDerivG`/`toGBPolyG`/`liftKG`), matrix ops
+(`matMulG`/`matInvG`/`gaussElimG`/`kernelBasisG`), Prop/result types (`IntegralResultG`/`IsIntegralResultG`/
+`LrtResultG`/`logResidueSumG`/…); plus the **6 radical generic/ℚ twin pairs** (`algDerivG`/`algDeriv`,
+`AlgIntegralResultG`, `radLog{Basis,Matrix,Residual,ArgSolve}G`) relifted-then-de-`G`'d like CPoly.
+
+**New gotchas found:** (1) a **local `set am := amG α`** binding shadowed the de-`G`'d global `am` at a
+`rw [amG]` site → fix by qualifying `rw [QFunNZ.am]`; (2) `RefinesPolyG` is also a **module/file name** →
+`git mv RefinesPolyG.lean RefinesPoly.lean` (de-`G` rewrote the `import` path but not the file).
+
+**Justified exceptions kept with `G`:** `logG`/`expG` (would shadow `Real.log`/`Real.exp`), `nsmulG`
+(Mathlib `nsmul`), `radIntegrateCase3G`/`radReduceCase3IterateG` (genuinely-distinct driver-vs-tower
+functions sharing a polymorphic signature — de-`G` would duplicate-def). Satellite lemma *names* with a
+`opG_`/`toPolyG_` prefix keep the prefix (`\bopG\b` needs a trailing boundary; `_` blocks it) — cosmetic,
+harmless.
+
 ## Status
 - **P1 DONE** (commit): concrete `CPoly → CPolyQ`, 495 occ. Gate PASS.
 - **P2 DONE** (commit): generic `CPolyG → CPoly`, 5667 occ. Gate PASS. **The type inversion — the stated
