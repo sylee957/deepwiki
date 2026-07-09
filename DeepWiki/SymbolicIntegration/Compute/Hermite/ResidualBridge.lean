@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorResidual
-import DeepWiki.SymbolicIntegration.Compute.HermiteResidualCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Hermite.MultifactorResidual
+import DeepWiki.SymbolicIntegration.Compute.Hermite.ResidualCorrectness
 
 /-! # Hermite residual numerator bridge
 Compares the multifactor residual numerator with the quotient-rule residual numerator and transfers

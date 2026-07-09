@@ -1,7 +1,7 @@
 import DeepWiki.Algebra.ListSums
-import DeepWiki.SymbolicIntegration.Compute.HermiteInnerCorrectness
-import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorIncrements
-import DeepWiki.SymbolicIntegration.Compute.HermiteResidualCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Hermite.InnerCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Hermite.MultifactorIncrements
+import DeepWiki.SymbolicIntegration.Compute.Hermite.ResidualCorrectness
 
 /-! # Hermite multifactor residual skeleton
 Reduces the multifactor Hermite `g`-fold residual to one polynomial fraction over the global

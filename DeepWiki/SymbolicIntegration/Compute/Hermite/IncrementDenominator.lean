@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorIncrements
+import DeepWiki.SymbolicIntegration.Compute.Hermite.MultifactorIncrements
 
 /-! # Hermite increment denominator support
 Shows that each multifactor Hermite increment has denominator supported only on its own factor.

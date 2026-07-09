@@ -1,6 +1,6 @@
 import DeepWiki.Algebra.ListProducts
-import DeepWiki.SymbolicIntegration.Compute.HermiteQRegularity
-import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorResidual
+import DeepWiki.SymbolicIntegration.Compute.Hermite.QRegularity
+import DeepWiki.SymbolicIntegration.Compute.Hermite.MultifactorResidual
 
 /-! # Hermite multifactor interference divisibility
 Proves the per-factor and product divisibility that clears the multifactor Hermite residual.

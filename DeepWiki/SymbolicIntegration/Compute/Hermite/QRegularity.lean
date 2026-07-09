@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Compute.HermiteIncrementDenominator
-import DeepWiki.SymbolicIntegration.Compute.HermiteMultifactorResidual
+import DeepWiki.SymbolicIntegration.Compute.Hermite.IncrementDenominator
+import DeepWiki.SymbolicIntegration.Compute.Hermite.MultifactorResidual
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 
 /-! # Hermite `Q`-regularity for multifactor interference

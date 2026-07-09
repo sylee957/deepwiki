@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Compute.HermiteInnerCorrectness
+import DeepWiki.SymbolicIntegration.Compute.Hermite.InnerCorrectness
 
 /-! # Hermite multifactor increment list
 Defines the per-factor `gloc` increments used by the multifactor Hermite `g`-fold and proves the
