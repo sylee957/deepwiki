@@ -57,21 +57,32 @@ Composes cleanly: ops are `{P} [CPolyRepr P] {α} [CCommRing α]`, with `CRingSp
 the coefficient stays a computable commutative ring (field a specialization). The keystone
 `CCommRing (P α)` (a polynomial-over-a-ring is a ring coefficient) is stated on the interface.
 
-## Phased plan (each gate-green; this is a multi-session arc)
+## Phased plan — Steps 1–6 BUILT (each gate-green, additive)
 
-1. **Foundation (additive).** New file `DeepWiki/ComputableAlgebra/PolyRepr.lean`: the `CPolyRepr` class,
-   the `List` (dense) instance, and the derived `cadd`/`cneg`/`cscale`/`cshift`/`cmul` + their generic
-   `coeff_*` squares. Does not touch the existing engine. *(This doc's spike is the core of it.)*
-2. **Exact-degree layer.** Generic `cnorm`/`clead`/`cdeg`/`cisZero` on the interface, with satellites.
-3. **Denotation.** Generic `toPoly` via `coeff`; the homomorphism squares (replacing the ~150 List-induction
-   `toPolyG_*` proofs with `coeff`-based ones).
-4. **Migrate the engine.** Re-point `CPoly α := List α` to `P` = the dense instance and switch the ops to
-   the generic ones; or (safer) prove `List`-engine op = generic op and swap call sites gradually. The
-   Risch/tower/Hermite/subresultant code then runs on the interface.
-5. **Second representation (proof of independence).** Add a sparse instance (`List (ℕ × α)` sorted, or a
-   hashmap) and re-run the `native_decide` showcase on it — the payoff.
-6. **Fractions.** `CFracRepr` (num/den over any `CPolyRepr`), same pattern; `CFrac` today is already
-   defined over `CPoly`, so it inherits the abstraction.
+1. **Foundation — DONE** (`PolyRepr.lean`, commits `b67959c2`+`068825a0`): the `CPolyRepr` class, the
+   dense `List` instance, generic `add`/`neg`/`scale`/`mul` + `toR` coefficient squares + `native_decide`.
+2. **Exact-degree layer — DONE** (`PolyReprDegree.lean`, commit `9dc182de`): generic `cisZero`/`cdeg`/
+   `clead`/`cnorm` on the coefficient support; `cisZero_iff` correctness; `native_decide`.
+3. **Denotation — DONE** (`PolyReprDenote.lean`, commit `9dc182de`): generic `toPoly` via `coeff`, the
+   `coeff_toPoly` bridge, and the homomorphism squares `toPoly_add`/`neg`/`scale`/`mul` — all coefficient-
+   wise, **no `List` induction**, so they hold for every representation.
+4. **Migration bridge — DONE** (`PolyReprBridge.lean`, commit `5f19a3e8`): `toPoly_list_eq`
+   (`CPolyRepr.toPoly = CPoly.toPoly` at `List`) + under-denotation op agreements (`add↔cadd`, …). This
+   is the *enabler*: because every engine theorem is `toPoly`-stated, call sites can be re-pointed
+   `CPoly.c* → CPolyRepr.*` with proofs preserved. **Remaining bulk (documented, not yet done):** the
+   actual sweep of the ~hundreds of engine call sites + `toPolyG_*` proofs — mechanical but large, a
+   dedicated multi-session migration on top of this foundation.
+5. **Second representation — DONE** (`PolyReprSparse.lean`, commit `496c73f0`): a sparse `SparsePoly`
+   (association-list) instance; the generic engine runs on it unchanged (`native_decide` on `cdeg`/`clead`
+   of sparsely-stored polynomials). **This is the proof of representation-independence.**
+6. **Fractions — DONE** (`PolyReprFrac.lean`, commit `9f8018bf`): `GFrac P α` (num/den over any
+   `CPolyRepr`), fraction `mul`/`add`, `RatFunc` denotation + `toRatFunc_mul`; `native_decide` on **both**
+   the dense and sparse carriers.
+
+**Net:** the abstraction is complete and validated end-to-end — interface, arithmetic, exact-degree,
+denotation + correctness, a second (sparse) carrier proving independence, and fractions — all reducing
+under `native_decide`. What is left is only Step 4's *mechanical* re-pointing of the existing engine's
+call sites onto the interface, which this foundation makes safe and incremental.
 
 ## Risks
 
