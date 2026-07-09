@@ -1,5 +1,5 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEmbedding
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
+import DeepWiki.Algebra.RatFuncEmbedding
+import DeepWiki.Algebra.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncFractions
 import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncRegular
 

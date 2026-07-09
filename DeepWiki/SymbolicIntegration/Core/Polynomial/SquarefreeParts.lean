@@ -1,5 +1,5 @@
 import Mathlib.Algebra.Squarefree.Basic
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
+import DeepWiki.Algebra.SquarefreeDeflation
 
 /-! # Polynomial squarefree-factorization parts
 

@@ -1,6 +1,6 @@
 import Mathlib.Algebra.Polynomial.Div
-import DeepWiki.SymbolicIntegration.Core.Polynomial.PolynomialNormalization
-import DeepWiki.SymbolicIntegration.Core.Polynomial.ResultantRoots
+import DeepWiki.Algebra.PolynomialNormalization
+import DeepWiki.Algebra.ResultantRoots
 
 /-! # Basic polynomial support
 

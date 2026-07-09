@@ -8,7 +8,7 @@ import Mathlib.RingTheory.Bezout
 import Mathlib.Data.Finsupp.PWO
 import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Finsupp.MonomialOrder
-import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
+import DeepWiki.Algebra.GroebnerBasisBasic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.SPolynomial
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerCriterion
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerAlgorithm

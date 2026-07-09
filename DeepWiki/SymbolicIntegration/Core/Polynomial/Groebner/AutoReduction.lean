@@ -1,7 +1,7 @@
 import Mathlib.RingTheory.MvPolynomial.Groebner
 import Mathlib.RingTheory.MvPolynomial.Ideal
 import Mathlib.Data.Finsupp.MonomialOrder
-import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BasisBasic
+import DeepWiki.Algebra.GroebnerBasisBasic
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Groebner.BuchbergerAlgorithm
 
 /-! # Gröbner auto-reduction

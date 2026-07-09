@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Algebra.GcdBasics
+import DeepWiki.Algebra.GcdBasics
 
 /-! # Core algebra
 

@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
+import DeepWiki.Algebra.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.PartialFraction
 import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.RationalIntegrationAlgorithms.RothsteinTrager.ResidueMultiplicity

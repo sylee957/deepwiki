@@ -1,6 +1,6 @@
 import Mathlib.Algebra.GCDMonoid.Basic
 import Mathlib.FieldTheory.Separable
-import DeepWiki.SymbolicIntegration.Core.Polynomial.PolynomialNormalization
+import DeepWiki.Algebra.PolynomialNormalization
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 
 /-! # Polynomial Yun recurrence terms

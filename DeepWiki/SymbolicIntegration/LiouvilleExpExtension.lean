@@ -4,7 +4,7 @@ import Mathlib.FieldTheory.RatFunc.AsPolynomial
 import Mathlib.Algebra.Polynomial.PartialFractions
 import Mathlib.Tactic
 import DeepWiki.SymbolicIntegration.Core.Differential.PolynomialFractionDeriv
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEmbedding
+import DeepWiki.Algebra.RatFuncEmbedding
 
 /-! # The transcendental exponential Liouville extension
 

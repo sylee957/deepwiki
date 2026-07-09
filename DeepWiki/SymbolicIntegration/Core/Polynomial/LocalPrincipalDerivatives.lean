@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Core.Polynomial.LocalPrincipalParts
-import DeepWiki.SymbolicIntegration.Core.Polynomial.RatFuncEvaluation
+import DeepWiki.Algebra.RatFuncEvaluation
 import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 

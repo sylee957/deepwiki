@@ -1,8 +1,8 @@
 import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.RingTheory.Polynomial.GaussLemma
 import Mathlib.RingTheory.UniqueFactorizationDomain.Basic
-import DeepWiki.SymbolicIntegration.Core.Polynomial.PolynomialNormalization
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
+import DeepWiki.Algebra.PolynomialNormalization
+import DeepWiki.Algebra.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts

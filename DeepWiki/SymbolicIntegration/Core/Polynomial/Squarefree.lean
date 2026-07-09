@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDeflation
+import DeepWiki.Algebra.SquarefreeDeflation
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeDerivative
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreePartDerivatives
 import DeepWiki.SymbolicIntegration.Core.Polynomial.SquarefreeParts
