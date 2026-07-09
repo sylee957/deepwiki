@@ -3,8 +3,8 @@ import DeepWiki.SymbolicIntegration.Engine.LimitedIntegrateSingle
 
 /-! # Recursive LRT Risch tower step
 
-The tower step of the recursive LRT Risch solver — the algebraic-residue analogue of
-`instLawfulRischLevelTower`. Given an LRT solver for the coefficient field `[LawfulRischLevelLrt β]`, build one
+The tower step of the recursive LRT Risch solver (`instLawfulRischLevelLrtTower`, paired with the base
+`instLawfulRischLevelLrtPrimitive`). Given an LRT solver for the coefficient field `[LawfulRischLevelLrt β]`, build one
 for `(QFunNZG β)(t)`. The polynomial part's coefficient integration recurses into `LawfulRischLevelLrt β`'s
 log-free integrator `integrateRationalLrt` (descent-free `K`-level, by the ∀E ⇒ K bridge
 `integrateRationalLrt_sound`) — so the whole tower stays on the LRT track (its reduced frontier
@@ -15,8 +15,7 @@ Everything reuses the *generic* degree-raising coefficient recursion (`cIntegrat
 integrator `limInt` changes to `LawfulRischLevelLrt.integrateRationalLrt` (wrapped `b ↦ (b, 0)`; the
 degree-raising `c` is used when the base level supplies a `(b,c)` limited integrator). The special-part
 soundness `towerPrimitiveCaseLrt_specialSound` and the log-tower special identity `tower_special_identityLrt`
-mirror their rational counterparts (`towerPrimitiveCase_specialSound`, `tower_special_identity`); the reduced
-part goes through the root-free assembler `cIntegrateCaseLrt`. -/
+close the polynomial part; the reduced part goes through the root-free assembler `cIntegrateCaseLrt`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -42,8 +41,8 @@ def towerCoeffIntegrateLrt (c : QFunNZG β) : Option (QFunNZG β) :=
 
 omit [CRischField β] in
 /-- LRT coefficient-recursion soundness: `toK (cderiv b) = toK c` in
-`RatFunc (CFieldSpec.K β)`, from `integrateRationalLrt_sound` (descent-free `K`-level). Verbatim the
-`towerCoeffIntegrate_sound` proof with the log-free LRT integrator in place of the rational one. -/
+`RatFunc (CFieldSpec.K β)`, reassembling `integrateRationalLrt_sound` (descent-free `K`-level) through the
+`QFunNZG β` field division that `towerCoeffIntegrateLrt` performs. -/
 theorem towerCoeffIntegrateLrt_sound (c b : QFunNZG β) (h : towerCoeffIntegrateLrt c = some b) :
     CFieldSpec.toK (CDiffField.cderiv b) = CFieldSpec.toK c := by
   unfold towerCoeffIntegrateLrt at h
@@ -95,8 +94,8 @@ theorem towerPolyIntegrateLrt_sound (η : QFunNZG β) (p q : CPolyG (QFunNZG β)
 
 omit [CRischField β] in
 /-- The LRT tower step's special-part field identity (`Dθ = 1`): from `towerPolyIntegrateLrt_sound`, the
-polynomial antiderivative `qp` of `fp` gives `D_tower(⟦qp/1⟧) = ⟦fp/1⟧`. Mirrors `tower_special_identity`
-(same `Dt` + `toPolyG Dt = 1` shape, GENERAL coefficients via the LRT recursion). -/
+polynomial antiderivative `qp` of `fp` gives `D_tower(⟦qp/1⟧) = ⟦fp/1⟧`. The `Dt` + `toPolyG Dt = 1`
+special identity for the tower step, with GENERAL coefficients via the LRT recursion. -/
 theorem tower_special_identityLrt (Dt fp qp : CPolyG (QFunNZG β)) (hDt : toPolyG Dt = 1)
     (h : towerPolyIntegrateLrt CField.one fp = some qp) :
     towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = fieldFrac fp [CField.one] := by
