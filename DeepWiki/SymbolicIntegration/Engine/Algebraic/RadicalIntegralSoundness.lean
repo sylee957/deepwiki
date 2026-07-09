@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalDerivationInvariant
-import DeepWiki.SymbolicIntegration.Engine.CFracGDiffSpec
+import DeepWiki.SymbolicIntegration.Engine.Tower.CFracDiffSpec
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalRationalDriver
 
 /-! # Abstract soundness of the radical rational-part integrator: `radDeriv v = g` in `K[X]`

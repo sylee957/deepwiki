@@ -62,7 +62,7 @@ import DeepWiki.SymbolicIntegration.Engine.PrimPRSRegular.Assembly
 import DeepWiki.SymbolicIntegration.Engine.QFunReduce
 import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation
 import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
-import DeepWiki.SymbolicIntegration.Engine.CFracGDiffSpec
+import DeepWiki.SymbolicIntegration.Engine.Tower.CFracDiffSpec
 import DeepWiki.SymbolicIntegration.Engine.ResidueConstantBridge
 import DeepWiki.SymbolicIntegration.Engine.TransferExamples
 import DeepWiki.SymbolicIntegration.Engine.ResidueLogPart

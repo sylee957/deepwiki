@@ -1,7 +1,7 @@
 import DeepWiki.SymbolicIntegration.Engine.Tower.RischDE
 import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation.PolynomialOrderDrop
 import DeepWiki.SymbolicIntegration.Engine.RischDE.TowerGlue
-import DeepWiki.SymbolicIntegration.Engine.CFracGDiffSpec
+import DeepWiki.SymbolicIntegration.Engine.Tower.CFracDiffSpec
 
 /-! # Carrier-generic RDE cleared-identity building blocks
 
