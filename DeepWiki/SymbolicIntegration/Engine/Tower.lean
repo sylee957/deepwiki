@@ -1,4 +1,3 @@
-import DeepWiki.SymbolicIntegration.Engine.Tower.Bench
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.Tower.Deriv
 import DeepWiki.SymbolicIntegration.Engine.Tower.Lvl2
