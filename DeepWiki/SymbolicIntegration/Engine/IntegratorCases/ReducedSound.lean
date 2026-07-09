@@ -8,7 +8,6 @@ Rothstein-Trager residue interfaces.
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 open CPolyG
 open QFunNZG Polynomial
 open scoped Differential

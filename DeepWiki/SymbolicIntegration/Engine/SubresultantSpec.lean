@@ -12,7 +12,7 @@ computational bridge of the root-free LRT log part. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute Polynomial Matrix
+open Polynomial Matrix
 
 namespace CPolyG
 

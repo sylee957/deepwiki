@@ -10,7 +10,6 @@ Euclidean gcd over ℚ. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 variable {B : Type*} [CField B]
 

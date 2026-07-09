@@ -8,7 +8,6 @@ Generic `GBPoly` operations and pseudo-division over coefficient polynomials.
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 variable {B : Type*} [CField B]
 

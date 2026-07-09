@@ -18,7 +18,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 namespace ResidueMatchTower
 
@@ -148,7 +148,7 @@ end ResidueMatchTower
 Restated over `amG α = algebraMap (CFieldSpec.K α)[X] (RatFunc (CFieldSpec.K α))` and
 `towerFractionFieldDerivG Dt`, in the form `logResidueSumG_eq_of_residue_match` consumes. -/
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]

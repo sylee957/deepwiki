@@ -7,7 +7,7 @@ cleared checks imply genuine bivariate polynomial identities. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-! ## The `t`-polynomial bivariate bridge `toPoly2 : ℚ[x][t]` -/
 

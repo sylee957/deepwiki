@@ -16,7 +16,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-! ## The fraction-free gcd `cgcdFFCoreWf`
 

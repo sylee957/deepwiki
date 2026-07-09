@@ -13,7 +13,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

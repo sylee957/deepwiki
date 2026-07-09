@@ -15,7 +15,6 @@ This file adds that guard, turning the integrator into an `Option` that declines
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

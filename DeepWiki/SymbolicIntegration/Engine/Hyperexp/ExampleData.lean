@@ -7,7 +7,6 @@ Common `QFunNZG ℚ` constants used by hyperexponential `native_decide` examples
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-- The base field `NLvl1 = QFunNZG ℚ = ℚ(x)` used by hyperexponential tower examples. -/
 abbrev NLvl1 : Type := QFunNZG ℚ

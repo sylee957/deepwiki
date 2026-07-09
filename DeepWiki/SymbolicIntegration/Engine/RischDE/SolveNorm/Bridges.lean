@@ -9,7 +9,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG GBPolyCore
+open CPolyG QFunNZG GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β] [CFieldDomain β]
   [CRischField β] [Algebra ℚ (CFieldSpec.K β)]

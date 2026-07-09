@@ -12,7 +12,6 @@ depth automatically. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-- **`CharZero` iterates up the tower.** `CFieldSpec.K (QFunNZG α) = RatFunc (CFieldSpec.K α)` is `CharZero`
 whenever `CFieldSpec.K α` is — one recursive instance for the whole tower. -/

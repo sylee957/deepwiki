@@ -14,7 +14,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-- **The product of pairwise-coprime squarefree polynomials is squarefree** (list form). -/
 theorem squarefree_list_prod {K : Type*} [Field K] (L : List K[X])
@@ -37,7 +37,7 @@ theorem monic_list_prod {K : Type*} [Field K] (L : List K[X]) (h : ∀ p ∈ L, 
     rw [List.prod_cons]
     exact (h a (List.mem_cons_self ..)).mul (ih (fun p hp => h p (List.mem_cons_of_mem a hp)))
 
-open Compute CPolyG
+open CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 

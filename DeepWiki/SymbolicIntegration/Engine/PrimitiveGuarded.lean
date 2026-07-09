@@ -14,7 +14,7 @@ non-constant case belongs to the general primitive recursion. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG Polynomial
+open CPolyG QFunNZG Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CRischField α]

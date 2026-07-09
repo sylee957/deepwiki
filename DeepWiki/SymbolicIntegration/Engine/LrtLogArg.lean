@@ -11,7 +11,6 @@ the symbolic pairs `[(Rᵢ, Sᵢ)]` without computing roots. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 
@@ -41,7 +40,7 @@ end DeepWiki.SymbolicIntegration
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-- The residue resultant of `1/(t²−1)` is `R(z) = 1 − 4z²` (roots `±1/2` — the residues). -/
 theorem cResidueResultant_invT2m1 :

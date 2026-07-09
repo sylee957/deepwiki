@@ -6,7 +6,7 @@ Executable checks for polynomial reduction and primitive-case integration over `
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-! ### Example helpers -/
 

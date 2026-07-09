@@ -8,7 +8,7 @@ single ℚ-linear solve; cleared-check bridges lift passing self-checks to `ℚ[
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 namespace CPolyG
 

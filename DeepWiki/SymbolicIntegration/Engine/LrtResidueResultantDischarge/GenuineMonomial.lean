@@ -10,7 +10,7 @@ genuine primitive monomial data for the reduced LRT integrator. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Polynomial Compute CPolyG QFunNZG Classical
+open Polynomial CPolyG QFunNZG Classical
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]

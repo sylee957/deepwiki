@@ -22,7 +22,6 @@ accessors (`crPoly`/…/`redNorm`), canonical reconstruction, and generic soundn
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

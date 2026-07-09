@@ -8,7 +8,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 section CoreWf
 

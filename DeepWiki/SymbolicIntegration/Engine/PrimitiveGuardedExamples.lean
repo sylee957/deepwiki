@@ -9,7 +9,7 @@ inputs and *declines* off-domain ones. These `native_decide` checks confirm it i
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-- `∫ 1/t² = −1/t` over `ℚ(x)[t]` (`Dt = 1`): the poly part is `0` (guard passes trivially), the normal
 part `1/t²` integrates; `primitiveGuardedCase` lands a `checkIdentityG`-passing result. -/

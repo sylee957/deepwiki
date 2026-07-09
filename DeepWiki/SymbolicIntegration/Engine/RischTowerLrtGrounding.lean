@@ -22,7 +22,7 @@ certificate) is the separate `LrtLiouvilleFrontier` (Liouville criterion). See `
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-- **★ The re-based recursive LRT solver is sound on the concrete ℚ(x)-tower, from the honest frontiers alone.**
 At carrier `QFunNZG ℚ` (so `a/d ∈ (QFunNZG ℚ)(t)`, a genuine two-level tower), a successful run of the

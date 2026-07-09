@@ -6,7 +6,7 @@ Executable checks for the single-generator limited integrator over `ℚ(x)`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG Polynomial
+open CPolyG Polynomial
 
 /-! ### Base limited integration -/
 

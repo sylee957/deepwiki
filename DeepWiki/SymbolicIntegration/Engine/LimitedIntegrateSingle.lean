@@ -8,7 +8,7 @@ Limited integration solves `a = D(b) + c·η` for a primitive generator derivati
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG Polynomial
+open CPolyG Polynomial
 
 namespace CPolyG
 

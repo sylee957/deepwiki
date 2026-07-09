@@ -14,7 +14,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-! ### Positive-integer-root test for residue resultants
 

@@ -7,7 +7,6 @@ monomial `Dt = η·t`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

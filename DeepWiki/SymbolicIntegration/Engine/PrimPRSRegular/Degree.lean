@@ -10,7 +10,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG GBPolyCore
+open CPolyG GBPolyCore
 
 variable {β : Type*} [CField β] [CFieldSpec β]
 

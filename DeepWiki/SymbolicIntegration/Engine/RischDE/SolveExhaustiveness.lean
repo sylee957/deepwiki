@@ -14,7 +14,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-! ## Engine layer: `cRischDEG.isSome` from stage `some`s -/
 

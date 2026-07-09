@@ -10,7 +10,7 @@ where it discriminates integrable from non-integrable reduced parts by residue-c
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-- The residue-constant guard declines the reduced part `1/t` over `ℚ(x)(log x)`. -/
 theorem cResidueConstantGuardG_declines_invLog :

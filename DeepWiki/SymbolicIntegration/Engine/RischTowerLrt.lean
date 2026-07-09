@@ -20,7 +20,7 @@ the coefficient field) is built in `RischSolverTowerLrt.lean`. See `docs/recursi
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG Polynomial
+open CPolyG QFunNZG Polynomial
 open scoped Differential
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]

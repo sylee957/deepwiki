@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-! ### The overshoot identity `D(logPart) = a/d + R` for the hyperexponential monomial
 

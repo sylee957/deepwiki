@@ -14,7 +14,7 @@ analogue of `LiouvilleFrontier` / `not_isElementaryIntegrableGenuine`, with **no
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [Algebra ℚ (CFieldSpec.K α)]

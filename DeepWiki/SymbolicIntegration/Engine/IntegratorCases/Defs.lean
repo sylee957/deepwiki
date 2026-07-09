@@ -8,7 +8,6 @@ The primitive and hyperexponential `MonomialCase` realizations, plus concrete
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

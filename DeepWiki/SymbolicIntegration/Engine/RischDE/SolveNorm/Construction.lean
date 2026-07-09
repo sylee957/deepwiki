@@ -10,7 +10,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG GBPolyCore
+open CPolyG QFunNZG GBPolyCore
 
 section Lift
 

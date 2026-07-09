@@ -12,7 +12,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-! ### The reducer `qReduce`
 

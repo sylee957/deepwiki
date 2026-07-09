@@ -11,7 +11,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-- `CTowerGcdWitnessWf α`: the `Prop`-class asserting `toPolyG (cgcdFFCoreWf a b)` is `Associated` to
 `gcd (toPolyG a) (toPolyG b)` in `(CFieldSpec.K α)[X]`. -/

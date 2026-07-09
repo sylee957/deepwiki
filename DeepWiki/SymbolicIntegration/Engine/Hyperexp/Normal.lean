@@ -11,7 +11,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-! ### Examples: `∫ 1/(exp x − 1) dx = log(exp x − 1) − x`
 

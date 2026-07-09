@@ -19,7 +19,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-- The coefficient-list polynomial `Σ_{(a,k) ∈ l.zipIdx s} C a · Xᵏ = Σ_{i<len} C(l[i])·X^{s+i}`. -/
 theorem zipIdx_C_mul_X_pow_sum_eq {R : Type*} [Semiring R] (l : List R) (s : ℕ) :

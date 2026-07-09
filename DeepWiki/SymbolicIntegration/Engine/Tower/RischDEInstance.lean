@@ -10,7 +10,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 section
 variable {β : Type*} [CField β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β]

@@ -14,7 +14,7 @@ open Polynomial Classical
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 /-! ### Generic gcd-step lemmas over an arbitrary field's polynomial ring `F[X]` -/
 

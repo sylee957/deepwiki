@@ -54,7 +54,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-! ### Task 1 (engine vocabulary): the list↔Finset bridge over `K = CFieldSpec.K α`
 
@@ -64,7 +64,7 @@ vocabulary. Its `List`-form bridge restates `primitive_residue_match_list` over 
 `towerFractionFieldDerivG` unfolding — the `List`-shaped primitive residue match exactly as the engine's
 `logResidueSumG_eq_of_residue_match` consumes it (a `List` of `(residue, factor)` pairs over `CFieldSpec.K α`). -/
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [Algebra ℚ (CFieldSpec.K α)]

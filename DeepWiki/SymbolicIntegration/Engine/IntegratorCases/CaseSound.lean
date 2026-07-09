@@ -8,7 +8,6 @@ generic case assembler and reduced-stage soundness.
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 open CPolyG
 open QFunNZG Polynomial
 open scoped Differential

@@ -14,7 +14,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-! ### The KEY VALIDATION: tower integration, RATIONAL PART, at LEVEL 2 (`native_decide`)
 

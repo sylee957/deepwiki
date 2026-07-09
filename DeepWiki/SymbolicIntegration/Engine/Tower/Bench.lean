@@ -8,7 +8,7 @@ variant. Naive Euclidean coefficients swell super-exponentially; the fraction-fr
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute QFunNZG CPolyG
+open QFunNZG CPolyG
 
 namespace Bench
 

@@ -10,7 +10,6 @@ integrator. See `docs/computable-lrt.md`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-- A symbolic-residue reduced-integration result: a rational part `gnum/gden` plus symbolic log terms
 `[(Rᵢ, Sᵢ)]`, each denoting `Σ_{Rᵢ(c)=0} c·log(Sᵢ(c,t))`. -/

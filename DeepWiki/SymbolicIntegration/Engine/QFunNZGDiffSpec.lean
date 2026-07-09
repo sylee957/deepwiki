@@ -9,7 +9,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-! ### The differential-spec bridge `CDiffFieldSpec (QFunNZG ℚ)` -/
 

@@ -12,7 +12,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 /-! ## The uniform field-level RDE solvability and per-level completeness predicates -/
 

@@ -83,7 +83,7 @@ its **cleared antiderivative identity** `D(∫f) = f` over `ℚ(t)`. No `sorry`.
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 namespace CPolyG
 

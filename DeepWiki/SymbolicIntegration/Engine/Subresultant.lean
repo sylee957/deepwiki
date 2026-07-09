@@ -12,7 +12,6 @@ polynomial column (`Σ_i (scalar cofactor det)·tⁱ`), mirroring the abstract
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

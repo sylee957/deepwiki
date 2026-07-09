@@ -19,7 +19,7 @@ close the polynomial part; the reduced part goes through the root-free assembler
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG Polynomial
+open CPolyG QFunNZG Polynomial
 open scoped Differential
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpec β]

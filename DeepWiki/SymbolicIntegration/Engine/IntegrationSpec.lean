@@ -9,7 +9,7 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 namespace CPolyG
 

@@ -8,7 +8,6 @@ monomial in the constant-coefficient sub-case. Both generic over `[CField α] [C
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

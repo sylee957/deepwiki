@@ -12,7 +12,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-! ### Product-size example: `qReduce` shrinks an unreduced product
 

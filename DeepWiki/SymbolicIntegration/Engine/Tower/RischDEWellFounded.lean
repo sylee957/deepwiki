@@ -14,7 +14,6 @@ open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 /-! ## The three remaining recursive bottoms
 

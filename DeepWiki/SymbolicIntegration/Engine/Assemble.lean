@@ -11,7 +11,6 @@ per-case `MonomialCase` instances, the reduced-stage realizations, and the end-t
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute
 
 namespace CPolyG
 

@@ -7,7 +7,7 @@ Executable `t = tan(x)` coupled-system operations and the degree-dropping cancel
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG
+open CPolyG
 
 namespace CPolyG
 

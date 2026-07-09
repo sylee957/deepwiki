@@ -112,7 +112,7 @@ end DeepWiki.SymbolicIntegration.ResidueBridge
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG Polynomial Classical
+open CPolyG Polynomial Classical
 
 variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α]
   [CFracGcdCoreWf α] [CharZero (CFieldSpec.K α)]

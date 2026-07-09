@@ -13,7 +13,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG
+open CPolyG QFunNZG
 
 variable {α : Type*} [CField α] [CDiffField α]
 

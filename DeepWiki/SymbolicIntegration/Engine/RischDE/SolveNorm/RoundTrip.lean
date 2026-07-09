@@ -10,7 +10,7 @@ open scoped Differential
 
 namespace DeepWiki.SymbolicIntegration
 
-open Compute CPolyG QFunNZG GBPolyCore
+open CPolyG QFunNZG GBPolyCore
 
 variable {K : Type*} [Field K] (D : Derivation ℤ (RatFunc K) (RatFunc K))
 
