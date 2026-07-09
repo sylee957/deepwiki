@@ -120,4 +120,46 @@ theorem dvd_cgcd [CField α] [CRingSpec α] :
 /-- `cgcd` reduces (dense): `gcd(x² − 1, x − 1)` normalizes to `x − 1`. -/
 example : cnorm (cgcd 5 ([-1, 0, 1] : List ℚ) [-1, 1]) = ([-1, 1] : List ℚ) := by native_decide
 
+/-! ### Extended Euclidean algorithm (Bézout coefficients)
+
+`cgcdExt fuel a b = (g, s, t)` with the **Bézout identity** `s·a + t·b = g`, holding at *every* fuel by
+pure algebra + the division identity (no degree argument). The basis for partial fractions and coprime
+combination. -/
+
+/-- Extended Euclidean: `cgcdExt fuel a b = (gcd, s, t)` with `s·a + t·b = gcd`. -/
+def cgcdExt [CField α] : ℕ → P α → P α → P α × P α × P α
+  | 0, a, _ => (a, one, czero)
+  | fuel + 1, a, b =>
+    if cisZero b then (a, one, czero)
+    else
+      let dm := cdivmod (cdeg a + 1) a b
+      let res := cgcdExt fuel b dm.2
+      (res.1, res.2.2, csub res.2.1 (mul res.2.2 dm.1))
+
+/-- **The Bézout identity:** `toPoly s · toPoly a + toPoly t · toPoly b = toPoly g` for
+`(g, s, t) = cgcdExt fuel a b`, at every `fuel`. From the division identity + induction. -/
+theorem toPoly_cgcdExt [CField α] [CRingSpec α] :
+    ∀ (fuel : ℕ) (a b : P α),
+      toPoly (cgcdExt fuel a b).2.1 * toPoly a + toPoly (cgcdExt fuel a b).2.2 * toPoly b
+        = toPoly (cgcdExt fuel a b).1
+  | 0, a, b => by rw [cgcdExt, toPoly_one (P := P), toPoly_czero (P := P)]; ring
+  | fuel + 1, a, b => by
+    rw [cgcdExt]
+    by_cases h : cisZero (P := P) b = true
+    · rw [if_pos h, toPoly_one (P := P), toPoly_czero (P := P)]; ring
+    · rw [if_neg h]
+      set dm := cdivmod (cdeg a + 1) a b with hdm
+      have hdiv := toPoly_cdivmod (cdeg a + 1) a b
+      rw [← hdm] at hdiv
+      set res := cgcdExt fuel b dm.2 with hres
+      have ih := toPoly_cgcdExt fuel b dm.2
+      rw [← hres] at ih
+      rw [toPoly_csub, toPoly_mul, hdiv, ← ih]; ring
+
+/-- `cgcdExt` reduces (dense): the Bézout combination `s·(x²−1) + t·(x−1)` equals the gcd. -/
+example :
+    cnorm (add (mul (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
+      (mul (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.2 [-1, 1]))
+      = cnorm (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).1 := by native_decide
+
 end DeepWiki.SymbolicIntegration.CPolyRepr
