@@ -1,5 +1,5 @@
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalCase2
-import DeepWiki.ComputableAlgebra.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 

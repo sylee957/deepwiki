@@ -1,5 +1,5 @@
 import DeepWiki.Algebra.ListProducts
-import DeepWiki.ComputableAlgebra.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.SymbolicIntegration.HermiteCorrectness
 
 /-! # Interface: `LawfulSquarefreeDecomposition`

@@ -1,4 +1,4 @@
-import DeepWiki.ComputableAlgebra.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction

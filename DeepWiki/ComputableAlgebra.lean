@@ -1,7 +1,7 @@
-import DeepWiki.ComputableAlgebra.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.ComputableAlgebra.ListDet
-import DeepWiki.ComputableAlgebra.FractionField
+import DeepWiki.ComputableAlgebra.Fraction
 
 /-! # Computable algebra — the generic executable field & polynomial layer
 

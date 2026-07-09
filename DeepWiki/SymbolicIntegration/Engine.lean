@@ -12,7 +12,7 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 import DeepWiki.SymbolicIntegration.Engine.FunctionAlgebraIntegrate
 import DeepWiki.SymbolicIntegration.Engine.DifferentialAlgebraicClosure
 import DeepWiki.ComputableAlgebra.GenericBezout
-import DeepWiki.ComputableAlgebra.GenericPolyEngine
+import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.SymbolicIntegration.Engine.Hermite.Reduction
 import DeepWiki.SymbolicIntegration.Engine.Hermite.ReductionRealization
 import DeepWiki.SymbolicIntegration.Engine.Hyperexp
