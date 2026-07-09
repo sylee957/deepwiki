@@ -148,13 +148,19 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
 - **`cdivmod fuel p q = (Q, R)`** (Euclidean division over a computable field) — the **division
   identity** `toPoly p = toPoly q · toPoly Q + toPoly R` at *every* fuel, by pure algebra + induction (no
   degree/termination argument needed).
-- **`cgcd` + `dvd_cgcd`** — the Euclidean gcd, with the common-divisor direction (every common divisor of
-  `a,b` divides `cgcd a b`) from the division identity alone.
+- **Termination** (`PolyReprDivisionDegree.lean`) — `degree_reduce_step_lt` (one cancellation step
+  strictly lowers `degree`, via `Polynomial.degree_sub_lt` leading-coefficient cancellation), and
+  `cdivmod_remainder_reduced` (with `fuel > cdeg p` the remainder is zero or of degree `< cdeg q` — the
+  Euclidean remainder property).
+- **`cgcd` — a genuine gcd, both directions proven**: `dvd_cgcd` (every common divisor of `a,b` divides
+  `cgcd a b`, from the division identity) *and* `cgcd_dvd` (with `cdeg b < fuel`, `cgcd a b` divides both
+  `a` and `b`, by fuel induction on the remainder-reduced measure). The inner division uses a `cdeg a + 1`
+  fuel (always fully reduced), decoupled from the gcd-step fuel.
 
-Each reduces under `native_decide` on both the dense `List` and sparse `SparsePoly` carriers — the same
-algorithm, two representations. Remaining frontier on this route: the **remainder-degree / termination**
-argument (`cdeg R < cdeg q`), which unlocks the converse gcd direction (`cgcd ∣ a, b`) and a full
-generic gcd correctness; it needs the leading-coefficient cancellation (`Polynomial.degree_sub_lt`).
+Each computable op reduces under `native_decide` on both the dense `List` and sparse `SparsePoly`
+carriers — the same algorithm, two representations — and the algebraic correctness is a-priori (not merely
+`native_decide`-validated). This is a complete, representation-independent Euclidean gcd theory built
+bottom-up on the interface.
 
 ## Risks
 
