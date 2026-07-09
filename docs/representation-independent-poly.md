@@ -79,10 +79,37 @@ the coefficient stays a computable commutative ring (field a specialization). Th
    `CPolyRepr`), fraction `mul`/`add`, `RatFunc` denotation + `toRatFunc_mul`; `native_decide` on **both**
    the dense and sparse carriers.
 
-**Net:** the abstraction is complete and validated end-to-end — interface, arithmetic, exact-degree,
-denotation + correctness, a second (sparse) carrier proving independence, and fractions — all reducing
-under `native_decide`. What is left is only Step 4's *mechanical* re-pointing of the existing engine's
-call sites onto the interface, which this foundation makes safe and incremental.
+**Net:** the abstraction is complete and validated end-to-end — interface, arithmetic, exact-degree
+(`cisZero_iff`, `cdeg_eq_natDegree`, `toR_clead_eq_leadingCoeff`, `toPoly_cnorm`), denotation +
+correctness, a second (sparse) carrier proving independence, and fractions — all reducing under
+`native_decide`. The engine-agreement bridge proves every engine op equals the interface op at `List`.
+
+## ⚠ Step 4's engine call-site sweep is NOT a mechanical rename (evidence)
+
+Re-pointing the ~168 engine files that use `CPoly.c*` onto the interface **cannot** be done as a
+behaviour-preserving mechanical sweep, for two hard reasons established empirically:
+
+1. **The interface ops ≠ the engine ops as raw lists, over generic `[CCommRing α]`.** The engine's
+   `cadd` (list recursion) gives `cadd [1,2] [3] = [4,2]`; the coefficient relation `coeff (add p q) i =
+   add (coeff p i) (coeff q i)` needs `CCommRing.add x 0 = x` — a *ring law* the Prop-free `CCommRing`
+   does not have. `cmul` differs by a trailing zero even at `ℚ` (`[3,10,8]` vs `[3,10,8,0]`). The ops
+   agree only **under the denotation** `toPoly` (that is exactly what the bridge proves), not as the raw
+   representations the engine computes with. So swapping `cadd → CPolyRepr.add` changes what the generic
+   engine *computes*.
+2. **120 of the engine files carry `native_decide` examples** pinned to exact list outputs, and the
+   engine's thousands of correctness proofs are **representation-specific** (`List` induction on `::`/`[]`,
+   `getD`, `length`). Re-parametrising a declaration by `{P} [CPolyRepr P]` forces every one of its proofs
+   to be re-done through the interface's denotation squares instead of list lemmas — i.e. **re-deriving
+   the engine's correctness against the abstract interface**, which is the original engine-development
+   effort, not a sweep.
+
+**What the delivered foundation gives instead.** The bridge (`toPoly_list_eq` + the op agreements) means
+that when a module *is* re-derived generically, its correctness transfers for free. The realistic port is
+therefore a **per-module re-derivation** (pick a module, generalise `CPoly α → P α`, replace `c* →
+CPolyRepr.*`, and re-prove its lemmas via the interface squares), gated one module at a time — a
+multi-week arc, not a mechanical pass. The `native_decide` showcases stay on the concrete `List`
+instance (where the interface ops *do* equal the engine ops). This foundation makes each such port safe;
+it does not make the aggregate small.
 
 ## Risks
 
