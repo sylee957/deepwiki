@@ -1,4 +1,4 @@
-import DeepWiki.ComputableAlgebra.Polynomial
+import DeepWiki.ComputableAlgebra.PolyReprDense
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-! # Generic Bézout cofactors, resultant, and Lagrange interpolation

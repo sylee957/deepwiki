@@ -1,3 +1,4 @@
+import DeepWiki.ComputableAlgebra.PolyRepr
 import DeepWiki.ComputableAlgebra.Field
 import Mathlib.Algebra.Polynomial.Basic
 import Mathlib.Algebra.Polynomial.Degree.Defs
@@ -5,25 +6,63 @@ import Mathlib.Algebra.Polynomial.Derivative
 import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.RingTheory.Polynomial.Basic
 
-/-! # A dense polynomial engine over a computable field
+/-! # The dense computable-polynomial representation and engine
 
-Over any `[CField α]` (with `[CCommRing α]`/`[CRingSpec α]`/`[CFieldSpec α]` from `CommRing.lean` /
-`Field.lean`), the dense-coefficient-list engine `DensePoly α := List α` provides computable polynomial
-arithmetic with a Horner bridge `toPoly : DensePoly α → (CRingSpec.R α)[X]`. -/
+`DensePoly α := List α` is the dense coefficient-list carrier. It supplies both the representation-
+independent `CPoly` instance and the concrete dense arithmetic engine with its Horner denotation
+`DensePoly.toPoly : DensePoly α → (CRingSpec.R α)[X]`. -/
 
 open Polynomial
 
 namespace DeepWiki.SymbolicIntegration
 
-/-! ### The polynomial engine `DensePoly α := List α`
+universe u
+
+/-- Generic dense coefficient list over a computable ring `α` (index = degree, low to high).
+A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
+ℚ-specialization stays definitionally equal to `List ℚ`. -/
+abbrev DensePoly (α : Type u) := List α
+
+namespace CPoly
+
+/-! ### The representation-independent dense-list instance -/
+
+/-- Dense-coefficient-list representation (index = degree, low to high). -/
+instance instList : CPoly DensePoly where
+  coeff p i := (p : List _).getD i CCommRing.zero
+  degBound p := (p : List _).length
+  ofFn n f := (List.range n).map f
+  coeff_ofFn n f i := by
+    show ((List.range n).map f).getD i CCommRing.zero = if i < n then f i else CCommRing.zero
+    rw [List.getD_eq_getElem?_getD, List.getElem?_map]
+    rcases Nat.lt_or_ge i n with h | h
+    · rw [List.getElem?_range h, Option.map_some, Option.getD_some, if_pos h]
+    · rw [List.getElem?_eq_none (by simpa using h), Option.map_none, Option.getD_none,
+        if_neg (by simpa using h)]
+  coeff_ge p i h := by
+    show (p : List _).getD i CCommRing.zero = CCommRing.zero
+    rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none h, Option.getD_none]
+
+/-! ### The generic arithmetic reduces on the dense representation -/
+
+/-- Generic `add` reduces under `native_decide` at the dense instance. -/
+example : (add ([1, 2, 3] : DensePoly ℚ) [10, 20]) = [11, 22, 3] := by native_decide
+
+/-- Generic `neg` reduces under `native_decide` at the dense instance. -/
+example : (neg ([1, -2, 3] : DensePoly ℚ)) = [-1, 2, -3] := by native_decide
+
+/-- Generic `scale` reduces under `native_decide` at the dense instance. -/
+example : (scale (2 : ℚ) ([1, -2, 3] : DensePoly ℚ)) = [2, -4, 6] := by native_decide
+
+/-- Generic `mul` reduces on the dense representation, retaining its degree-bound trailing zero. -/
+example : (mul ([1, 2] : DensePoly ℚ) [3, 4]) = [3, 10, 8, 0] := by native_decide
+
+end CPoly
+
+/-! ### The polynomial engine on `DensePoly`
 
 Dense-coefficient lists (index = degree, low to high) over `[CField α]`, with arithmetic built from
 the `CField` operations and a Horner bridge `toPoly` into `(CFieldSpec.K α)[X]`. -/
-
-/-- Generic dense coefficient list over a computable field `α` (index = degree, low to high).
-A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
-ℚ-specialization `DensePoly ℚ := DensePoly ℚ` stays defeq to `List ℚ`. -/
-abbrev DensePoly (α : Type*) := List α
 
 namespace DensePoly
 

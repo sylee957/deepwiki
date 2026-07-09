@@ -1,5 +1,6 @@
 import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse
+import Mathlib.RingTheory.Coprime.Basic
 
 /-! # Generic Euclidean division on `CPoly`
 

@@ -7,7 +7,8 @@ import Mathlib.Algebra.Field.Rat
 `CField α`: computable field operations (`zero`/`one`/`add`/`mul`/`neg`/`inv`, zero test), bridge-free
 so instances stay computable; every `CField` is a `CCommRing` (bridge below). `CFieldSpec α`: the
 companion homomorphism `toK : α → K` into a Mathlib `Field K` (a `CRingSpec` with `R = K`). `ℚ` is the
-base instance. See `CommRing.lean` for the ring layer, `Polynomial.lean` for the `DensePoly` engine. -/
+base instance. See `CommRing.lean` for the ring layer and `PolyReprDense.lean` for the `DensePoly`
+engine. -/
 
 namespace DeepWiki.SymbolicIntegration
 

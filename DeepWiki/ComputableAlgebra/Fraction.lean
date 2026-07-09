@@ -1,4 +1,4 @@
-import DeepWiki.ComputableAlgebra.Polynomial
+import DeepWiki.ComputableAlgebra.PolyReprDense
 import Mathlib.FieldTheory.RatFunc.Basic
 import Mathlib.FieldTheory.RatFunc.AsPolynomial
 

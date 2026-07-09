@@ -1,4 +1,5 @@
 import DeepWiki.ComputableAlgebra.PolyReprDegree
+import DeepWiki.ComputableAlgebra.PolyReprDense
 
 /-! # Migration bridge: the interface agrees with the existing `DensePoly` engine (Step 4)
 

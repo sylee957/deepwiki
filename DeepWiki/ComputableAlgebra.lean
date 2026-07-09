@@ -1,7 +1,7 @@
 import DeepWiki.ComputableAlgebra.CommRing
 import DeepWiki.ComputableAlgebra.Field
-import DeepWiki.ComputableAlgebra.Polynomial
 import DeepWiki.ComputableAlgebra.PolyRepr
+import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.ComputableAlgebra.PolyReprDenote
 import DeepWiki.ComputableAlgebra.PolyReprDegree
 import DeepWiki.ComputableAlgebra.PolyReprSparse

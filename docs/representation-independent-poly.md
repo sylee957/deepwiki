@@ -59,8 +59,10 @@ the coefficient stays a computable commutative ring (field a specialization). Th
 
 ## Phased plan — Steps 1–6 BUILT (each gate-green, additive)
 
-1. **Foundation — DONE** (`PolyRepr.lean`, commits `b67959c2`+`068825a0`): the `CPoly` class, the
-   dense `List` instance, generic `add`/`neg`/`scale`/`mul` + `toR` coefficient squares + `native_decide`.
+1. **Foundation — DONE** (`PolyRepr.lean`, `PolyReprDense.lean`, commits
+   `b67959c2`+`068825a0`): the representation-neutral `CPoly` class and generic
+   `add`/`neg`/`scale`/`mul` + `toR` coefficient squares, plus the dense `DensePoly` instance and its
+   `native_decide` checks in a concrete-representation module symmetric to `PolyReprSparse.lean`.
 2. **Exact-degree layer — DONE** (`PolyReprDegree.lean`, commit `9dc182de`): generic `cisZero`/`cdeg`/
    `clead`/`cnorm` on the coefficient support; `cisZero_iff` correctness; `native_decide`.
 3. **Denotation — DONE** (`PolyReprDenote.lean`, commit `9dc182de`): generic `toPoly` via `coeff`, the
@@ -125,7 +127,7 @@ downstream consumer.
 1. **Component-by-component** re-derivation: migrate a `toPoly`-closed set of modules together (module +
    all consumers of its `toPoly` statements), gated per component. Correct, safe, multi-week.
 2. **Redefine the engine denotation** `DensePoly.toPoly := CPoly.toPoly` (make the bridge *definitional*),
-   re-proving the ~50 `toPolyG_*` satellites in `Polynomial.lean`, after which per-module migration
+   re-proving the ~50 `toPolyG_*` satellites in `PolyReprDense.lean`, after which per-module migration
    becomes transparent. Bounded to the core file but high-risk (it is imported by all 168 files).
 
 The delivered foundation (`CPoly` + `CPolyEngine` + full correctness + bridge, all gate-green) is

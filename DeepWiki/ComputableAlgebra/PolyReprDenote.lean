@@ -1,5 +1,6 @@
-import DeepWiki.ComputableAlgebra.PolyRepr
+import DeepWiki.ComputableAlgebra.PolyReprDense
 import Mathlib.Algebra.Polynomial.Div
+import Mathlib.Algebra.Polynomial.Derivative
 
 /-! # Representation-generic denotation for `CPoly` (Step 3)
 
