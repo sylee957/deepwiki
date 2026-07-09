@@ -171,6 +171,11 @@ Since the *existing* engine can't be migrated isolated-module-at-a-time, the con
   (`:= cgcdExtCore (cdeg b + 1) a b`) with the **Bézout identity** `toPoly_cgcdExt : s·a + t·b = g` (at
   every fuel on the core, from the division identity), and `isCoprime_of_cgcdExt_isUnit` (unit gcd ⇒
   Mathlib `IsCoprime`) — the partial-fractions entry point.
+- **Adopting the fuel-less engine downstream** — new generic algorithms built *on* the fuel-less
+  `cgcdExt`/`cdivmod`: `cdiophantine a b c` solves `s·a + t·b = c` when `gcd(a,b) ∣ c`
+  (`toPoly_cdiophantine`, scaling the Bézout pair by the exact quotient `c/g`), and
+  `GFrac.reduce` normalises a fraction to lowest terms (num/den ÷ their gcd) with
+  `toRatFunc_reduce` (value-preserving). Both `native_decide`-validated, purely additive.
 - **Evaluation** (`PolyReprDenote.lean`): `ceval` with `toR_ceval` (= Mathlib `eval`), the ring-hom
   squares `toR_ceval_add`/`toR_ceval_mul`, and the factor theorem `ceval_eq_zero_iff_dvd`.
 - **Resultant** (`PolyReprResultant.lean`, COMPLETE): `clistDetn` (computable cofactor determinant over
