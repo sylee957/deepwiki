@@ -27,6 +27,56 @@ def clistDetn : ℕ → List (List α) → α
       let term := CCommRing.mul aij (clistDetn n minor)
       if j % 2 = 0 then term else CCommRing.neg term)).foldl CCommRing.add CCommRing.zero
 
+section Bridge
+variable [CRingSpec α]
+
+/-- `toR` carries a `CCommRing.add`-`foldl` to the Mathlib `+`-`foldl` of the images. -/
+theorem toR_foldl_add (L : List α) (acc : α) :
+    CRingSpec.toR (L.foldl CCommRing.add acc)
+      = (L.map CRingSpec.toR).foldl (· + ·) (CRingSpec.toR acc) := by
+  induction L generalizing acc with
+  | nil => rfl
+  | cons a as ih => rw [List.foldl_cons, List.map_cons, List.foldl_cons, ih, CRingSpec.toR_add]
+
+/-- Mapping `toR` over the matrix commutes with the minor (delete-column) operation. -/
+theorem map_minor_comm (rest : List (List α)) (j : ℕ) :
+    (rest.map (fun r => r.take j ++ r.drop (j + 1))).map (fun row => row.map CRingSpec.toR)
+      = (rest.map (fun row => row.map CRingSpec.toR)).map (fun r => r.take j ++ r.drop (j + 1)) := by
+  rw [List.map_map, List.map_map]
+  apply List.map_congr_left
+  intro r _
+  simp only [Function.comp_apply, List.map_append, List.map_take, List.map_drop]
+
+/-- `toR (row.getD j 0) = (row.map toR).getD j 0`. -/
+theorem toR_getD (row : List α) (j : ℕ) :
+    CRingSpec.toR (row.getD j CCommRing.zero) = (row.map CRingSpec.toR).getD j 0 := by
+  rw [List.getD_eq_getElem?_getD, List.getD_eq_getElem?_getD, List.getElem?_map]
+  cases row[j]? with
+  | none => simp [CRingSpec.toR_zero]
+  | some a => rfl
+
+/-- **The determinant bridge:** `toR (clistDetn n M) = listDetn n (M.map (map toR))` — the computable
+determinant denotes the Mathlib `listDetn` (hence, via `listDetn_eq_det`, `Matrix.det`). -/
+theorem toR_clistDetn : ∀ (n : ℕ) (M : List (List α)),
+    CRingSpec.toR (clistDetn n M) = listDetn n (M.map (fun row => row.map CRingSpec.toR))
+  | 0, _ => by rw [clistDetn, listDetn, CRingSpec.toR_one]
+  | _ + 1, [] => by rw [clistDetn, List.map_nil, listDetn, CRingSpec.toR_one]
+  | n + 1, row :: rest => by
+    rw [clistDetn, List.map_cons, listDetn, toR_foldl_add, CRingSpec.toR_zero, List.map_map]
+    congr 1
+    apply List.map_congr_left
+    intro j _
+    simp only [Function.comp_apply]
+    have hminor : CRingSpec.toR (clistDetn n (rest.map (fun r => r.take j ++ r.drop (j + 1))))
+        = listDetn n ((rest.map (fun row => row.map CRingSpec.toR)).map
+          (fun r => r.take j ++ r.drop (j + 1))) := by
+      rw [toR_clistDetn n, map_minor_comm]
+    split_ifs with hpar
+    · rw [CRingSpec.toR_mul, toR_getD, hminor]
+    · rw [CRingSpec.toR_neg, CRingSpec.toR_mul, toR_getD, hminor]
+
+end Bridge
+
 /-- `clistDetn` reduces: the 2×2 determinant `|1 2; 3 4| = -2`. -/
 example : clistDetn 2 ([[1, 2], [3, 4]] : List (List ℚ)) = -2 := by native_decide
 /-- `clistDetn` reduces: a 3×3 determinant `|2 0 1; 1 3 2; 0 1 1| = 3`. -/
