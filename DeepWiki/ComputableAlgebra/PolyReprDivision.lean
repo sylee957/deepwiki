@@ -201,5 +201,9 @@ example :
     cnorm (add (mul (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
       (mul (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.2 [-1, 1]))
       = cnorm (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).1 := by native_decide
+/-- Sparse: the extended Euclidean algorithm runs on the sparse carrier too — the gcd of
+`x² − 1` and `x − 1` has honest degree `1`. -/
+example : cdeg (cgcdExt 5 (SparsePoly.ofList [(0, -1), (2, 1)] : SparsePoly ℚ)
+    (SparsePoly.ofList [(0, -1), (1, 1)])).1 = 1 := by native_decide
 
 end DeepWiki.SymbolicIntegration.CPolyRepr
