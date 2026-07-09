@@ -176,6 +176,19 @@ theorem exists_partialFraction [CField α] [CRingSpec α] (a b c : P α)
     _ = toPoly a * (u * toPoly b + v * toPoly c) := by rw [huv]
     _ = toPoly a * v * toPoly c + toPoly a * u * toPoly b := by ring
 
+/-- **Chinese Remainder Theorem:** for coprime moduli `m₁, m₂` and any residues `r₁, r₂` there is an
+`x` congruent to `rᵢ` modulo `mᵢ` (`mᵢ ∣ x − rᵢ`). From Bézout. -/
+theorem exists_crt [CField α] [CRingSpec α] (m₁ m₂ r₁ r₂ : P α)
+    (hcop : IsCoprime (toPoly m₁) (toPoly m₂)) :
+    ∃ x : (CRingSpec.R α)[X], toPoly m₁ ∣ (x - toPoly r₁) ∧ toPoly m₂ ∣ (x - toPoly r₂) := by
+  obtain ⟨u, v, huv⟩ := hcop
+  refine ⟨toPoly r₁ * (v * toPoly m₂) + toPoly r₂ * (u * toPoly m₁),
+    ⟨u * (toPoly r₂ - toPoly r₁), ?_⟩, ⟨v * (toPoly r₁ - toPoly r₂), ?_⟩⟩
+  · have h1 : v * toPoly m₂ = 1 - u * toPoly m₁ := by rw [← huv]; ring
+    rw [h1]; ring
+  · have h2 : u * toPoly m₁ = 1 - v * toPoly m₂ := by rw [← huv]; ring
+    rw [h2]; ring
+
 /-- `cgcdExt` reduces (dense): the Bézout combination `s·(x²−1) + t·(x−1)` equals the gcd. -/
 example :
     cnorm (add (mul (cgcdExt 5 ([-1, 0, 1] : List ℚ) [-1, 1]).2.1 [-1, 0, 1])
