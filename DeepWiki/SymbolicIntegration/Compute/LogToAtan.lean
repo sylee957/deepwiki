@@ -3,7 +3,7 @@ import DeepWiki.ComputableAlgebra.PolyReprDense
 
 /-! # Computable `LogToAtan` over `ℚ`
 An executable rendering of the `LogToAtan` algorithm on the dense coefficient carrier
-`DensePoly ℚ := List ℚ`, with a `toPoly : DensePoly ℚ → ℚ[X]` bridge back to the `ℚ[X]`-level theory. -/
+`DensePoly ℚ := List ℚ`, reusing its canonical operations and `toPoly` bridge to the `ℚ[X]` theory. -/
 
 open Polynomial
 
@@ -11,16 +11,61 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
--- The concrete `ℚ` engine reuses the generic ring-engine ops directly — `Compute.{cnorm,cadd,cneg,
--- cscale,cshift,cmul,clead}` are re-exports of the generic `DensePoly.*` (they specialize to `ℚ`
--- identically), not separate definitions; only the genuinely `ℚ`-specific fuel ops live here.
-export DensePoly (cnorm cadd cneg cscale cshift cmul clead)
+-- The concrete `ℚ` engine re-exports the canonical dense operations and denotation; only the
+-- genuinely `LogToAtan`-specific fuel-bounded algorithms are defined here.
+export DensePoly
+  (cnorm cadd cneg csub cscale cshift cmul clead cisZero cdeg cderiv cmonic)
 
-/-- Subtraction of `DensePoly ℚ`s, `p − q := p + (−q)`. -/
-def csub (p q : DensePoly ℚ) : DensePoly ℚ := cadd p (cneg q)
+/-- The canonical dense denotation specialized to the concrete codomain `ℚ[X]`. -/
+noncomputable def toPoly (p : DensePoly ℚ) : ℚ[X] := DensePoly.toPoly p
 
-/-- Zero test for a `DensePoly ℚ`: `true` iff it normalizes to `[]`. -/
-def cisZero (p : DensePoly ℚ) : Bool := cnorm p == []
+/-! ### Pinned `ℚ[X]` denotation API -/
+
+/-- The pinned denotation sends the empty dense polynomial to zero. -/
+@[simp] theorem toPoly_nil : toPoly ([] : DensePoly ℚ) = 0 := rfl
+
+/-- The pinned denotation obeys the dense Horner recursion. -/
+@[simp] theorem toPoly_cons (a : ℚ) (p : DensePoly ℚ) :
+    toPoly (a :: p) = Polynomial.C a + X * toPoly p := rfl
+
+/-- The pinned denotation preserves dense addition. -/
+theorem toPoly_cadd (p q : DensePoly ℚ) : toPoly (cadd p q) = toPoly p + toPoly q := by
+  simpa only [toPoly] using DensePoly.toPolyG_caddG p q
+
+/-- The pinned denotation preserves dense negation. -/
+theorem toPoly_cneg (p : DensePoly ℚ) : toPoly (cneg p) = -toPoly p := by
+  simpa only [toPoly] using DensePoly.toPolyG_cnegG p
+
+/-- The pinned denotation preserves dense subtraction. -/
+theorem toPoly_csub (p q : DensePoly ℚ) : toPoly (csub p q) = toPoly p - toPoly q := by
+  simpa only [toPoly] using DensePoly.toPolyG_csubG p q
+
+/-- The pinned denotation preserves dense scalar multiplication. -/
+theorem toPoly_cscale (c : ℚ) (p : DensePoly ℚ) :
+    toPoly (cscale c p) = Polynomial.C c * toPoly p := by
+  simpa only [toPoly, show CRingSpec.toR c = c from rfl] using DensePoly.toPolyG_cscaleG c p
+
+/-- The pinned denotation preserves dense degree shifts. -/
+theorem toPoly_cshift (k : ℕ) (p : DensePoly ℚ) : toPoly (cshift k p) = X ^ k * toPoly p := by
+  simpa only [toPoly] using DensePoly.toPolyG_cshiftG k p
+
+/-- The pinned denotation preserves dense multiplication. -/
+theorem toPoly_cmul (p q : DensePoly ℚ) : toPoly (cmul p q) = toPoly p * toPoly q := by
+  simpa only [toPoly] using DensePoly.toPolyG_cmulG p q
+
+/-- The pinned denotation is unchanged by dense normalization. -/
+@[simp] theorem toPoly_cnorm (p : DensePoly ℚ) : toPoly (cnorm p) = toPoly p := by
+  simpa only [toPoly] using DensePoly.toPolyG_cnormG p
+
+/-- The pinned denotation preserves the dense formal derivative. -/
+theorem toPoly_cderiv (p : DensePoly ℚ) : toPoly (cderiv p) = derivative (toPoly p) := by
+  simpa only [toPoly] using DensePoly.toPolyG_cderivG p
+
+/-- Repeated dense multiplication denotes a power in the pinned codomain. -/
+theorem toPoly_foldl_cmul (V : DensePoly ℚ) (n : ℕ) (init : DensePoly ℚ) :
+    toPoly ((List.range n).foldl (fun acc _ => cmul acc V) init)
+      = toPoly init * toPoly V ^ n := by
+  simpa only [toPoly] using DensePoly.toPolyG_foldl_range_cmulG V n init
 
 /-- Euclidean division of `DensePoly ℚ`s, fuel-bounded: `cdivmod fuel p q = (quotient, remainder)` with
 `p = quotient · q + remainder`, `deg remainder < deg q`. -/
@@ -92,85 +137,10 @@ theorem logToAtanCompute_ex281 :
       = [([0, -1, 0, 3, 0, -1], [-2]), ([0, 0, 0, -1], [-1]), ([0, 1], [1])] := by
   native_decide
 
-/-! ### Bridge back to `ℚ[X]`
-`toPoly` reads a `DensePoly ℚ` as a `Polynomial ℚ`; the homomorphism lemmas show the `DensePoly ℚ` operations
-realize the `ℚ[X]` operations. -/
-
-/-- Bridge `toPoly p` reading a `DensePoly ℚ` coefficient list (index = degree, low to high) as a
-`Polynomial ℚ` in Horner form `p₀ + x·(p₁ + x·(p₂ + …))`. -/
-noncomputable def toPoly : DensePoly ℚ → ℚ[X]
-  | [] => 0
-  | a :: p => Polynomial.C a + X * toPoly p
-
-/-- `toPoly [] = 0`: the empty coefficient list is the zero polynomial. -/
-@[simp] theorem toPoly_nil : toPoly ([] : DensePoly ℚ) = 0 := rfl
-
-/-- `toPoly (a :: p) = C a + X · toPoly p` (Horner recursion). -/
-@[simp] theorem toPoly_cons (a : ℚ) (p : DensePoly ℚ) :
-    toPoly (a :: p) = Polynomial.C a + X * toPoly p := rfl
-
-/-- `toPoly` is additive: `toPoly (cadd p q) = toPoly p + toPoly q`. -/
-theorem toPoly_cadd (p q : DensePoly ℚ) : toPoly (cadd p q) = toPoly p + toPoly q := by
-  induction p generalizing q with
-  | nil => simp [cadd, DensePoly.cadd]
-  | cons a as ih =>
-    cases q with
-    | nil => simp [cadd, DensePoly.cadd]
-    | cons b bs =>
-      show toPoly (CCommRing.add a b :: cadd as bs) = _
-      rw [toPoly_cons, ih bs, toPoly_cons, toPoly_cons]
-      show C (a + b) + _ = _
-      rw [map_add]; ring
-
-/-- `toPoly` commutes with negation: `toPoly (cneg p) = − toPoly p`. -/
-theorem toPoly_cneg (p : DensePoly ℚ) : toPoly (cneg p) = - toPoly p := by
-  induction p with
-  | nil => simp [cneg, DensePoly.cneg]
-  | cons a as ih =>
-    show toPoly (-a :: cneg as) = -toPoly (a :: as)
-    rw [toPoly_cons, toPoly_cons, ih, map_neg]; ring
-
-/-- `toPoly` realizes subtraction: `toPoly (csub p q) = toPoly p − toPoly q`. -/
-theorem toPoly_csub (p q : DensePoly ℚ) : toPoly (csub p q) = toPoly p - toPoly q := by
-  rw [csub, toPoly_cadd, toPoly_cneg, sub_eq_add_neg]
-
-/-- `toPoly` realizes scalar multiplication: `toPoly (cscale c p) = C c · toPoly p`. -/
-theorem toPoly_cscale (c : ℚ) (p : DensePoly ℚ) : toPoly (cscale c p) = Polynomial.C c * toPoly p := by
-  induction p with
-  | nil => simp [cscale, DensePoly.cscale]
-  | cons a as ih =>
-    show toPoly (c * a :: cscale c as) = Polynomial.C c * toPoly (a :: as)
-    rw [toPoly_cons, toPoly_cons, ih, map_mul]; ring
-
-/-- `toPoly` realizes the degree shift: `toPoly (cshift k p) = X^k · toPoly p`. -/
-theorem toPoly_cshift (k : ℕ) (p : DensePoly ℚ) : toPoly (cshift k p) = X ^ k * toPoly p := by
-  induction k with
-  | zero => simp [cshift, DensePoly.cshift]
-  | succ n ih =>
-    show toPoly (0 :: cshift n p) = X ^ (n + 1) * toPoly p
-    rw [toPoly_cons, ih, map_zero]; ring
-
-/-- `toPoly` is multiplicative: `toPoly (cmul p q) = toPoly p · toPoly q`. -/
-theorem toPoly_cmul (p q : DensePoly ℚ) : toPoly (cmul p q) = toPoly p * toPoly q := by
-  induction p with
-  | nil => simp [cmul, DensePoly.cmul]
-  | cons a as ih =>
-    show toPoly (cadd (cscale a q) (0 :: cmul as q)) = toPoly (a :: as) * toPoly q
-    rw [toPoly_cadd, toPoly_cscale, toPoly_cons, toPoly_cons, ih, map_zero]; ring
-
-/-- `foldl (·* V) init` over `range n` realizes `init · V^n` under `toPoly`. -/
-theorem toPoly_foldl_cmul (V : DensePoly ℚ) (n : ℕ) (init : DensePoly ℚ) :
-    toPoly ((List.range n).foldl (fun acc _ => cmul acc V) init)
-      = toPoly init * toPoly V ^ n := by
-  induction n generalizing init with
-  | zero => simp
-  | succ n ih =>
-    rw [List.range_succ, List.foldl_concat, toPoly_cmul, ih, pow_succ]
-    ring
-
 /-! ### Agreement with the `ℚ[X]`-level `logToAtanAux`
-The cofactor Bézout identity `B·D − A·C = G` under `toPoly` is proven in `logToAtan_cofactor_bezout`
-(`Correctness`), so the arctan argument fractions `(A·D + B·C)/G` are well-defined. -/
+The cofactor Bézout identity `B·D − A·C = G` under `DensePoly.toPoly` is proven in
+`logToAtan_cofactor_bezout` (`Correctness`), so the arctan argument fractions
+`(A·D + B·C)/G` are well-defined. -/
 
 end Compute
 

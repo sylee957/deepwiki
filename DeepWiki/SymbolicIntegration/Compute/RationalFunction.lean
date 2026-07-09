@@ -40,7 +40,7 @@ theorem am_eq_cdiv_mul_of_cmod_zero (fuel : ℕ) (p q : DensePoly ℚ) (hq : cno
 
 /-- `cisZero p = true ↔ toPoly p = 0`: the `DensePoly ℚ` zero test agrees with vanishing in `ℚ[X]`. -/
 theorem cisZero_iff_toPoly_eq_zero (p : DensePoly ℚ) : cisZero p = true ↔ toPoly p = 0 := by
-  rw [cisZero, beq_iff_eq, cnorm_eq_nil_iff]
+  simpa [cisZero] using cnorm_eq_nil_iff p
 
 /-! ### Field-homomorphism lemmas
 Each computable operation realizes the corresponding `RatFunc ℚ` field operation through `toQFun`. -/

@@ -26,6 +26,7 @@ theorem toPoly_cmonic_dvd (q : DensePoly ℚ) : toPoly (cmonic q) ∣ toPoly q :
     rw [toPoly_cscale, toPoly_cnorm]
     have hc : clead (cnorm q) ≠ 0 := clead_ne_zero (by simpa [cisZero] using h)
     refine ⟨Polynomial.C (clead (cnorm q)), ?_⟩
+    rw [show CField.inv (clead (cnorm q)) = (clead (cnorm q))⁻¹ from rfl]
     rw [mul_comm (Polynomial.C (clead (cnorm q))⁻¹) (toPoly q), mul_assoc, ← map_mul,
       inv_mul_cancel₀ hc, map_one, mul_one]
 

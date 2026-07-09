@@ -3,6 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalLogIntegral
 import DeepWiki.SymbolicIntegration.Engine.RefinesPoly
 import DeepWiki.ComputableAlgebra.GenericBezout
 import DeepWiki.SymbolicIntegration.PartialFraction
+import DeepWiki.SymbolicIntegration.Residues
 import DeepWiki.SymbolicIntegration.Engine.Algebraic.RadicalAssembly
 
 /-! # Log-part soundness for the radical integrator: `D(Σ cᵢ log uᵢ) = logpart`

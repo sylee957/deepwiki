@@ -4,7 +4,6 @@ import DeepWiki.SymbolicIntegration.Engine.CanonicalReconstructionCharZero
 import DeepWiki.SymbolicIntegration.Engine.CoupledDE
 import DeepWiki.SymbolicIntegration.Engine.ElementaryIntegrate
 import DeepWiki.SymbolicIntegration.Engine.ElementaryIntegrateExamples
-import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Engine.Tower.CarrierRec
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeGcd

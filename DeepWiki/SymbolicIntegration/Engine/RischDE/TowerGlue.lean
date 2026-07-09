@@ -1,5 +1,4 @@
 import DeepWiki.ComputableAlgebra.GenericBezout
-import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
 import DeepWiki.SymbolicIntegration.Engine.FuelFreeDiophantine
 
 /-! # Generic RDE glue lemmas

@@ -12,49 +12,7 @@ namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-! ### Computable derivative on `DensePoly ℚ` -/
-
-/-- Coefficient-shift derivative `cderiv [a₀,a₁,a₂,…] = [a₁, 2a₂, 3a₃, …]`. -/
-def cderiv : DensePoly ℚ → DensePoly ℚ
-  | [] => []
-  | _ :: as => go 1 as
-where
-  /-- From degree `k`, emit `k·a` for each coefficient `a` (the derivative tail). -/
-  go : ℕ → DensePoly ℚ → DensePoly ℚ
-  | _, [] => []
-  | k, a :: as => ((k : ℚ) * a) :: go (k + 1) as
-
-/-- `toPoly (cderiv p) = derivative (toPoly p)`: `cderiv` realizes the `ℚ[X]` derivative. -/
-theorem toPoly_cderiv (p : DensePoly ℚ) : toPoly (cderiv p) = derivative (toPoly p) := by
-  -- Generalize the starting degree: `toPoly (cderiv.go k as) = derivative (X * toPoly_at_degree)`…
-  -- A direct two-list induction with the index threaded through is cleanest.
-  suffices h : ∀ (as : DensePoly ℚ) (k : ℕ),
-      toPoly (cderiv.go k as) = (k : ℚ[X]) * toPoly as + X * derivative (toPoly as) by
-    cases p with
-    | nil => simp [cderiv]
-    | cons a as =>
-      show toPoly (cderiv.go 1 as) = derivative (toPoly (a :: as))
-      rw [h as 1, toPoly_cons, derivative_add, derivative_C, derivative_mul, derivative_X]
-      push_cast; ring
-  intro as
-  induction as with
-  | nil => intro k; simp [cderiv.go]
-  | cons b bs ih =>
-    intro k
-    show toPoly (((k : ℚ) * b) :: cderiv.go (k + 1) bs) = _
-    rw [toPoly_cons, ih (k + 1), toPoly_cons, derivative_add, derivative_C, derivative_mul,
-      derivative_X, map_mul, map_natCast]
-    push_cast; ring
-
 /-! ### Computable univariate resultant on `DensePoly ℚ` (Euclidean-PRS route) -/
-
-/-- Degree of a `DensePoly ℚ` as a `ℕ`: `cdeg p = (length of normalized p) − 1`, with `cdeg 0 = 0`. -/
-def cdeg (p : DensePoly ℚ) : ℕ := (cnorm p).length - 1
-
-/-- Power of a rational `c^n`, by `ℕ`-recursion. -/
-def cpow (c : ℚ) : ℕ → ℚ
-  | 0 => 1
-  | n + 1 => c * cpow c n
 
 /-- Computable univariate resultant `cresultant fuel p q = res_x(p, q) ∈ ℚ`, fuel-bounded, via the
 Euclidean polynomial-remainder-sequence identity
@@ -69,15 +27,15 @@ def cresultant : ℕ → DensePoly ℚ → DensePoly ℚ → ℚ
       if p.length ≤ 1 then 1 else 0
     else if q.length ≤ 1 then
       -- `q = c` constant: `res(p, c) = c^(deg p)`.
-      cpow (clead q) (cdeg p)
+      DensePoly.cfpow (clead q) (cdeg p)
     else if p.length < q.length then
       -- `deg p < deg q`: swap, picking up the sign `(−1)^(deg p · deg q)`.
-      let s := cpow (-1) (cdeg p * cdeg q)
+      let s := DensePoly.cfpow (-1) (cdeg p * cdeg q)
       s * cresultant fuel q p
     else
       let r := cnorm (cmod (fuel + 1) p q)
-      let sign := cpow (-1) (cdeg p * cdeg q)
-      let lcpow := cpow (clead q) (cdeg p - cdeg r)
+      let sign := DensePoly.cfpow (-1) (cdeg p * cdeg q)
+      let lcpow := DensePoly.cfpow (clead q) (cdeg p - cdeg r)
       sign * lcpow * cresultant fuel q r
 
 /-! ### Computable Lagrange interpolation on `DensePoly ℚ` -/
@@ -115,12 +73,6 @@ def rtResultantCompute (fuel : ℕ) (A D : DensePoly ℚ) : DensePoly ℚ :=
   cinterpolate pts
 
 /-! ### Squarefree (primitive) part -/
-
-/-- Make a `DensePoly ℚ` monic (lead coefficient `1`) by dividing through by its leading coefficient; the
-zero polynomial stays `[]`. -/
-def cmonic (p : DensePoly ℚ) : DensePoly ℚ :=
-  let p := cnorm p
-  if cisZero p then [] else cscale (clead p)⁻¹ p
 
 /-- Squarefree part of a `DensePoly ℚ` over `ℚ`, made monic: `csqfreePart fuel p = monic(p / gcd(p, p'))`,
 the radical of `p`. -/

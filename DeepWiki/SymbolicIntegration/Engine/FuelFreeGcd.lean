@@ -1,5 +1,6 @@
-import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
+import DeepWiki.ComputableAlgebra.PolyReprDense
 import Mathlib.RingTheory.Polynomial.Content
+import Mathlib.Tactic.LinearCombination
 
 /-! # Well-founded generic Euclidean division and gcd
 

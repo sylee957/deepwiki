@@ -295,6 +295,17 @@ theorem toPolyG_one_singleton_ne_zero {α : Type*} [CField α] [CFieldSpec α] :
     show toPoly (cadd (cscale a q) (CCommRing.zero :: cmul as q)) = toPoly (a :: as) * toPoly q
     simp only [denote, ih, map_zero]; ring
 
+/-- Repeated right multiplication over `List.range n` denotes multiplication by `toPoly V ^ n`. -/
+@[denote] theorem toPolyG_foldl_range_cmulG {α : Type*} [CCommRing α] [CRingSpec α]
+    (V : DensePoly α) (n : ℕ) (init : DensePoly α) :
+    toPoly ((List.range n).foldl (fun acc _ => cmul acc V) init)
+      = toPoly init * toPoly V ^ n := by
+  induction n generalizing init with
+  | zero => simp
+  | succ n ih =>
+    rw [List.range_succ, List.foldl_concat, toPolyG_cmulG, ih, pow_succ]
+    ring
+
 /-- `toPoly` realizes the `ℕ`-power: `toPoly (cpow p n) = (toPoly p) ^ n`. -/
 @[simp, denote] theorem toPolyG_cpowG {α : Type*} [CCommRing α] [CRingSpec α] (p : DensePoly α) (n : ℕ) :
     toPoly (cpow p n) = (toPoly p) ^ n := by

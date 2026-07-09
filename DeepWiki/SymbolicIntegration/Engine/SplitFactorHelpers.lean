@@ -1,4 +1,4 @@
-import DeepWiki.SymbolicIntegration.Engine.ConcreteCoherence
+import DeepWiki.ComputableAlgebra.PolyReprDense
 import DeepWiki.SymbolicIntegration.CanonicalRepresentation
 
 /-! # Generic associate helper for splitting factorization
