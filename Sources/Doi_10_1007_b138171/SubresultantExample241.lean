@@ -17,11 +17,11 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-! ### Example 2.4.1 (§2.4, p.48): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
 `res_x(D, A−t·D') = 45796·(4t²+1)³`, primitive part `R = 4t²+1` -/
 
-/-- **`x⁴ − 3x² + 6`** as a `CPolyQ` (Example 2.4.1's `A`): coefficients `[6, 0, −3, 0, 1]`. -/
-def cA241 : CPolyQ := [6, 0, -3, 0, 1]
+/-- **`x⁴ − 3x² + 6`** as a `CPoly ℚ` (Example 2.4.1's `A`): coefficients `[6, 0, −3, 0, 1]`. -/
+def cA241 : CPoly ℚ := [6, 0, -3, 0, 1]
 
-/-- **`x⁶ − 5x⁴ + 5x² + 4`** as a `CPolyQ` (Example 2.4.1's `D`): coefficients `[4, 0, 5, 0, −5, 0, 1]`. -/
-def cD241 : CPolyQ := [4, 0, 5, 0, -5, 0, 1]
+/-- **`x⁶ − 5x⁴ + 5x² + 4`** as a `CPoly ℚ` (Example 2.4.1's `D`): coefficients `[4, 0, 5, 0, −5, 0, 1]`. -/
+def cD241 : CPoly ℚ := [4, 0, 5, 0, -5, 0, 1]
 
 -- **Example 2.4.1, `D' = cderiv D`** should be `6x⁵ − 20x³ + 10x` = `[0, 10, 0, −20, 0, 6]`.
 #eval cderiv cD241
@@ -54,11 +54,11 @@ theorem rtResultant_ex241_sqfree :
 /-! ### Example 2.4.1 (§2.4/§2.6, p.48/54): `A = x⁴−3x²+6`, `D = x⁶−5x⁴+5x²+4`,
 LRT log argument `S(t,x) = x³ + 2t·x² − 3x − 4t` (Czichowski/Gröbner `B = {4t²+1, x³+2tx²−3x−4t}`). -/
 
-/-- **The Rothstein–Trager resultant factor `R(t) = 4t²+1`** of Example 2.4.1 as a `CPolyQ`
+/-- **The Rothstein–Trager resultant factor `R(t) = 4t²+1`** of Example 2.4.1 as a `CPoly ℚ`
 (`[1, 0, 4]` = `1 + 4t²`); the residues are its roots, and `ℚ[t]/(R)` is the residue ring the LRT log
 argument is normalized over. (Up to the leading scalar this is the squarefree part `csqfreePart` of the
 full resultant `45796·(4t²+1)³`.) -/
-def cR241 : CPolyQ := [1, 0, 4]
+def cR241 : CPoly ℚ := [1, 0, 4]
 
 -- **Example 2.4.1, the lifted `A − t·D'`** (sanity print): `A − t·(6x⁵−20x³+10x)`.
 #eval bArgAmtD' cA241 cD241
@@ -102,9 +102,9 @@ theorem natDegree_cA241_lt_cD241 : (toPoly cA241).natDegree < (toPoly cD241).nat
   rw [← cdeg_eq_natDegree, ← cdeg_eq_natDegree]; decide
 
 open Polynomial in
-/-- **The dense `CPolyQ` `[45796,0,549552,0,2198208,0,2930944]` reads as `45796·(4t²+1)³`** in `ℚ[t]`. -/
+/-- **The dense `CPoly ℚ` `[45796,0,549552,0,2198208,0,2930944]` reads as `45796·(4t²+1)³`** in `ℚ[t]`. -/
 theorem toPoly_ex241_value :
-    toPoly ([45796, 0, 549552, 0, 2198208, 0, 2930944] : CPolyQ)
+    toPoly ([45796, 0, 549552, 0, 2198208, 0, 2930944] : CPoly ℚ)
       = Polynomial.C 45796 * (Polynomial.C 4 * Polynomial.X ^ 2 + Polynomial.C 1) ^ 3 := by
   simp only [toPoly_cons, toPoly_nil, map_ofNat, map_one, map_zero]
   ring
@@ -518,7 +518,7 @@ theorem mapRingHom_φ241_toBPoly_lrtGcdCompute_ne_zero :
   rw [Polynomial.coe_mapRingHom, Polynomial.coeff_map, lrtGcd_ex241, toBPoly_coeff] at hcoeff
   -- (toBPoly [[0,-4],[-3],[0,2],[1]]).coeff 3 = toPoly [1] = 1, φ241 1 = 1 ≠ 0
   rw [show ([[0, -4], [-3], [0, 2], [1]] : BPoly).getD 3 [] = [1] from rfl] at hcoeff
-  rw [show toPoly ([1] : CPolyQ) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
+  rw [show toPoly ([1] : CPoly ℚ) = 1 by rw [toPoly_cons, toPoly_nil]; simp, map_one] at hcoeff
   exact one_ne_zero hcoeff
 
 /-! ### The ℚ[t]-similarity `lrtSubresultant ∼ lrtSubresultantCompute` for Ex 2.4.1 (all chain hyps discharged)

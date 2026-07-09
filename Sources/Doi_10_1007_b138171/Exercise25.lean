@@ -9,7 +9,7 @@ The denominator's constant term involves the algebraic number `θ = √(−1+√
 is genuinely over the **field extension** `ℚ(θ)`, not over `ℚ`: `θ² = √3−1`, hence `(θ²+1)² = 3`, i.e.
 `θ⁴+2θ²−2 = 0`. So `θ` is a root of the (Eisenstein-at-2, irreducible) `q(y) = y⁴+2y²−2`, and
 `K := ℚ(θ) = ℚ[y]/(q)` is a degree-4 field. We therefore build a small **computable extension carrier**:
-`ECoeff := CPolyQ` interpreted **mod `q`** (`ered`), with field arithmetic `eadd`/`emul`/`einv` (inverses
+`ECoeff := CPoly ℚ` interpreted **mod `q`** (`ered`), with field arithmetic `eadd`/`emul`/`einv` (inverses
 via `cgcdExt`, since `ℚ[y]/(q)` is a field for irreducible `q`). On top of it we re-run the LRT engine of
 `SubresultantCompute` one level up: `EPoly := List ECoeff = K[t]`, then `EBPoly := List EPoly = K[t][x]`,
 with the same pseudo-division / subresultant-PRS / mod-`R` monic-in-`x` normalization, now over `K[t]`.
@@ -40,15 +40,15 @@ namespace Compute
 
 /-! ### The computable extension field `K = ℚ(θ) = ℚ[y]/(q)`, `q = y⁴+2y²−2` -/
 
-/-- **The minimal polynomial** `q(y) = y⁴+2y²−2` of `θ = √(−1+√3)` as a `CPolyQ` (in `y`), low→high:
+/-- **The minimal polynomial** `q(y) = y⁴+2y²−2` of `θ = √(−1+√3)` as a `CPoly ℚ` (in `y`), low→high:
 `[-2, 0, 2, 0, 1]`. Eisenstein at `2`, so irreducible over `ℚ`; thus `K := ℚ[y]/(q)` is a field. -/
-def ex25_qmin : CPolyQ := [-2, 0, 2, 0, 1]
+def ex25_qmin : CPoly ℚ := [-2, 0, 2, 0, 1]
 
 /-- **Fuel** for the inner `ℚ[y]` / `K`-arithmetic (`q` has degree 4; a generous bound). -/
 abbrev ex25EF : ℕ := 40
 
-/-- **The extension carrier** `ECoeff := CPolyQ` — a `ℚ[y]`-representative of an element of `K = ℚ(θ)`. -/
-abbrev ECoeff := CPolyQ
+/-- **The extension carrier** `ECoeff := CPoly ℚ` — a `ℚ[y]`-representative of an element of `K = ℚ(θ)`. -/
+abbrev ECoeff := CPoly ℚ
 
 /-- **Reduce a representative mod `q`** `ered c = c mod q`: the canonical degree-`< 4` representative of
 `c ∈ K`. -/
@@ -443,7 +443,7 @@ theorem ex25_prs_degrees :
 `c₀ʳᵃʷ(t) = 1 + (−2−12θ)t + (−32+104θ)t² + (96−224θ)t³`,
 `c₁(t) = (3−4θ) + (−40+52θ)t + (184−224θ)t² + (−288+320θ)t³`.
 Small integer coefficients over `K`, pinned by `native_decide`. (Inner lists are `K`-elements as
-`CPolyQ`-in-`θ`, low→high; outer two entries are the `x⁰`- and `x¹`-coefficients, low→high in `x`.) -/
+`CPoly ℚ`-in-`θ`, low→high; outer two entries are the `x⁰`- and `x¹`-coefficients, low→high in `x`.) -/
 theorem ex25_raw_subresultant :
     ex25S1raw.map (·.map cnorm) =
       [[[1], [-2, -12], [-32, 104], [96, -224]],
@@ -486,7 +486,7 @@ theorem ex25_logpart_monic_linear :
 -- **`D` over `K`**: `x⁵+x⁴+2x³+2x²+(−2+4θ)` (constant term `[-2, 4] = −2+4θ`).
 #eval ex25D.map cnorm
 
--- **The RT resultant `R(t) ∈ K[t]`** (degree 5; coefficients in `K = ℚ(θ)`, each a `CPolyQ`-in-`θ`).
+-- **The RT resultant `R(t) ∈ K[t]`** (degree 5; coefficients in `K = ℚ(θ)`, each a `CPoly ℚ`-in-`θ`).
 #eval ex25Rt.map cnorm
 
 -- **The RAW degree-1 subresultant** (small integers over `K`): leading `x`-coeff is a degree-3

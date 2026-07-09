@@ -20,7 +20,7 @@ import DeepWiki.SymbolicIntegration.RationalFunctionDerivative
 import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Correctness of the computable Hermite reduction (`cdiophantine`/`hermiteInner`)
-Proves the computable Hermite engine correct in `RatFunc ℚ` through the `toPoly : CPolyQ → ℚ[X]`
+Proves the computable Hermite engine correct in `RatFunc ℚ` through the `toPoly : CPoly ℚ → ℚ[X]`
 bridge: the Bézout solver `cdiophantine` realizes the abstract `diophantineSolveReduced`, the
 `hermiteInner` loop and `hermiteReduce` wrapper reduce `A/D` to a residual over the squarefree
 radical, and the multi-factor interference divisibility is discharged. -/
@@ -72,7 +72,7 @@ open scoped Differential in
 -- conditional ONLY on the single interference divisibility `W ∣ R` (`W = D/Dstar`,
 -- `R = C(1−n)·A + Σ Afinalᵢ·Vi^{i−1}`), everything else (the over-`D` residual skeleton, the radical
 -- clause `Dstar ∣ D`) proven.
-example (fuel : ℕ) (A D Dstar W : CPolyQ) (factors : List (CPolyQ × ℕ))
+example (fuel : ℕ) (A D Dstar W : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
     (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)
     (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
@@ -111,8 +111,8 @@ identities (`hstep`), pairwise-coprime kept factors (`hpw`), distinct kept facto
 `am A/am D = (toQFun g)′ + am (R/W)/am Dstar` — **no `W ∣ R` hypothesis**, the interference divisibility
 is discharged internally by `prod_dvd_residNum`. The residual integrand lives over the squarefree radical
 `Dstar`. -/
-theorem hermiteReduce_residual_correct_uncond' (fuel : ℕ) (A D Dstar : CPolyQ)
-    (factors : List (CPolyQ × ℕ))
+theorem hermiteReduce_residual_correct_uncond' (fuel : ℕ) (A D Dstar : CPoly ℚ)
+    (factors : List (CPoly ℚ × ℕ))
     (W : ℚ[X]) (hWeq : W = ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map
         (fun Vi => toPoly Vi.1 ^ (Vi.2 - 1))).prod)
     (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)
@@ -155,7 +155,7 @@ open scoped Differential in
 -- radical** `Dstar` — with NO interference-divisibility hypothesis (`W ∣ R` discharged internally). The
 -- per-factor data alone (residual identities, pairwise-coprime kept factors, `Vk^{ik} ∣ D`, the radical
 -- decomposition `D = Dstar·W`, `W = ∏ Vk^{ik−1}`) suffices.
-example (fuel : ℕ) (A D Dstar : CPolyQ) (factors : List (CPolyQ × ℕ))
+example (fuel : ℕ) (A D Dstar : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
     (W : ℚ[X]) (hWeq : W = ((factors.filter (fun Vi => decide (2 ≤ Vi.2))).map
         (fun Vi => toPoly Vi.1 ^ (Vi.2 - 1))).prod)
     (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)

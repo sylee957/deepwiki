@@ -29,7 +29,7 @@ content `Vi^i ∣ D` (`am_eq_cdiv_mul_of_cmod_zero`), supplied here as a hypothe
 
 /-- The `glocIncr` denominator `Uᵢ·Vi` (the per-factor residual denominator): for the kept factor
 `(Vi, i)` with `Uᵢ = D/Vi^i`, the residual fraction `residᵢ` has denominator `am Uᵢ·am Vi`. -/
-noncomputable def glocResidDen (fuel : ℕ) (D : CPolyQ) (Vi : CPolyQ × ℕ) : RatFunc ℚ :=
+noncomputable def glocResidDen (fuel : ℕ) (D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) : RatFunc ℚ :=
   let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
   algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D Vi_pow))
     * algebraMap ℚ[X] (RatFunc ℚ) (toPoly Vi.1)
@@ -41,7 +41,7 @@ side conditions of `hermiteInner_spec_of`, the increment derivative reduces the 
 `(toQFun (glocIncr fuel A D (Vi, j+2)))′ = am A/am D − am Afinalᵢ/(am Uᵢ·am Vi)`, where `Afinalᵢ =
 (hermiteInner fuel Vi Uᵢ (j+1) A qzero).2`. The single `hermiteInner_spec_of` term cast onto the global
 denominator via the reconciliation. -/
-theorem glocIncr_residual (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ) (j : ℕ)
+theorem glocIncr_residual (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ) (j : ℕ)
     (hU : toPoly (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
     (hV : toPoly Vi ≠ 0)
     (hbez : IsHermiteInnerBezoutInput fuel Vi
@@ -90,8 +90,8 @@ of `factors` satisfies the per-factor residual identity `(toQFun (glocIncr fuel 
 `T − (toQFun g)′ = T − (#kept)•T + Σ_{kept} resid Vi`. The exact overcounting skeleton: `#kept`
 increments each reduce the whole `T`, so the fold overcounts by `(#kept − 1)` copies of `T`, which the
 `Σ resid` interference must clear. -/
-theorem total_fold_residual (fuel : ℕ) (A D : CPolyQ) (factors : List (CPolyQ × ℕ))
-    (T : RatFunc ℚ) (resid : CPolyQ × ℕ → RatFunc ℚ)
+theorem total_fold_residual (fuel : ℕ) (A D : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
+    (T : RatFunc ℚ) (resid : CPoly ℚ × ℕ → RatFunc ℚ)
     (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
       (toQFun (glocIncr fuel A D Vi))′ = T - resid Vi) :
@@ -136,8 +136,8 @@ open scoped Differential in
 global denominator, given the reconciliation `am D = am Uᵢ·am Vi^{i}` and `D, Vi ≠ 0`. The numerator is
 `Afinalᵢ` raised through the factor power `Vi^{j+1} = Vi^{i−1}` — the per-factor contribution to the
 single-fraction-over-`D` numerator. -/
-theorem glocResidDen_eq_over_D (fuel : ℕ) (D : CPolyQ) (Vi : CPolyQ) (j : ℕ)
-    (Afinal : CPolyQ) (hD : toPoly D ≠ 0) (hV : toPoly Vi ≠ 0)
+theorem glocResidDen_eq_over_D (fuel : ℕ) (D : CPoly ℚ) (Vi : CPoly ℚ) (j : ℕ)
+    (Afinal : CPoly ℚ) (hD : toPoly D ≠ 0) (hV : toPoly Vi ≠ 0)
     (hU : toPoly (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
     (hDrec : algebraMap ℚ[X] (RatFunc ℚ) (toPoly D)
       = algebraMap ℚ[X] (RatFunc ℚ) (toPoly (cdiv fuel D
@@ -173,7 +173,7 @@ to denominator `Dstar` precisely when `am (D/Dstar) ∣ am R`, the **named open 
 
 /-- **The per-factor `Afinal`** of `hermiteReduce`'s `g`-fold: the residual numerator
 `(hermiteInner fuel Vi Uᵢ (i−1) A qzero).2` left over the radical-reduced denominator after peeling. -/
-def afinalIncr (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ × ℕ) : CPolyQ :=
+def afinalIncr (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) : CPoly ℚ :=
   let Vi_pow := (List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]
   let U := cdiv fuel D Vi_pow
   (hermiteInner fuel Vi.1 U (Vi.2 - 1) A qzero).2
@@ -181,7 +181,7 @@ def afinalIncr (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ × ℕ) : CPolyQ :=
 /-- **The per-factor residual numerator over `D`** `residNumIncr fuel A D (Vi, i) = Afinalᵢ·Vi^{i−1}`:
 the polynomial numerator the factor `(Vi, i)` contributes to the single-fraction-over-`D` residual
 `am (Σᵢ Afinalᵢ·Vi^{i−1})/am D`. -/
-noncomputable def residNumIncr (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ × ℕ) : ℚ[X] :=
+noncomputable def residNumIncr (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) : ℚ[X] :=
   toPoly (afinalIncr fuel A D Vi) * toPoly Vi.1 ^ (Vi.2 - 1)
 
 open scoped Differential in
@@ -192,7 +192,7 @@ kept factor `(Vi, i)`, the entire residual of `hermiteReduce`'s `g`-fold is
 polynomial (`n` = #kept). This is the honest single-fraction-over-`D` form of the multi-factor
 interference: the whole fold residual is one polynomial fraction over the global `D`; the remaining
 content (clearing to denominator `Dstar`) is the divisibility `am (D/Dstar) ∣ am R`. -/
-theorem total_fold_residual_over_D (fuel : ℕ) (A D : CPolyQ) (factors : List (CPolyQ × ℕ))
+theorem total_fold_residual_over_D (fuel : ℕ) (A D : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
     (hD : toPoly D ≠ 0) (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
       (toQFun (glocIncr fuel A D Vi))′
@@ -275,8 +275,8 @@ identities (`hstep`, the `glocIncr_residual` conclusion over `D`), the radical d
 `W ∣ R` with `R = C(1−n)·A + Σ residNumIncr` and `n = #kept`, the reduction is correct:
 `am A/am D = (toQFun g)′ + am (R/W)/am Dstar`. The residual integrand lives over the squarefree radical
 `Dstar`. Only `W ∣ R` is unproven here — the abstract multi-factor interference-clearing content. -/
-theorem hermiteReduce_residual_correct_multifactor (fuel : ℕ) (A D Dstar W : CPolyQ)
-    (factors : List (CPolyQ × ℕ))
+theorem hermiteReduce_residual_correct_multifactor (fuel : ℕ) (A D Dstar W : CPoly ℚ)
+    (factors : List (CPoly ℚ × ℕ))
     (hD : toPoly D ≠ 0) (hDstar : toPoly Dstar ≠ 0)
     (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
@@ -320,7 +320,7 @@ reconciliation `hDrec : am D = am Uᵢ·am Vi^{j+2}` (the exactness `Vi^{j+2} �
 `(toQFun (glocIncr fuel A D (Vi, j+2)))′ = am A/am D − am (residNumIncr fuel A D (Vi, j+2))/am D`. The
 `hstep` per-factor input to the multi-factor wrapper, discharged for one factor from `glocIncr_residual`
 + `glocResidDen_eq_over_D`. -/
-theorem glocIncr_hstep (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ) (j : ℕ) (hD : toPoly D ≠ 0)
+theorem glocIncr_hstep (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ) (j : ℕ) (hD : toPoly D ≠ 0)
     (hU : toPoly (cdiv fuel D ((List.range (j + 2)).foldl (fun acc _ => cmul acc Vi) [1])) ≠ 0)
     (hV : toPoly Vi ≠ 0)
     (hbez : IsHermiteInnerBezoutInput fuel Vi

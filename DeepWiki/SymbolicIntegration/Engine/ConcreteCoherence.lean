@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Compute.LogToAtan
 import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Compute.RationalFunction
 
-/-! # Coherence of the generic polynomial engine with the concrete `CPolyQ := List ℚ` engine
+/-! # Coherence of the generic polynomial engine with the concrete `CPoly ℚ := List ℚ` engine
 
 Coherence lemmas showing the generic engine specializes at `α = ℚ` back to the concrete
 `Compute.*` engine (`cadd (α := ℚ) = cadd`, …, `toPoly (α := ℚ) = toPoly`). -/
@@ -16,7 +16,7 @@ namespace CPoly
 
 variable {α : Type*} [CField α]
 
-/-! ### Coherence with the concrete `CPolyQ` engine at `α = ℚ` -/
+/-! ### Coherence with the concrete `CPoly ℚ` engine at `α = ℚ` -/
 
 /-- `cadd` at `ℚ` is the concrete `cadd` (both add coefficientwise with `ℚ`'s `+`). -/
 theorem caddG_eq_cadd : (cadd : CPoly ℚ → CPoly ℚ → CPoly ℚ) = Compute.cadd := by

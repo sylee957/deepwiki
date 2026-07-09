@@ -4,7 +4,7 @@ import DeepWiki.SymbolicIntegration.SquarefreeFactorization
 
 /-! # Concrete Yun correctness for `csqfreeFactor`
 
-Bridges the computable `CPolyQ` Yun loop to the abstract squarefree-factorization API.
+Bridges the computable `CPoly ℚ` Yun loop to the abstract squarefree-factorization API.
 -/
 
 open Polynomial
@@ -14,7 +14,7 @@ namespace DeepWiki.SymbolicIntegration.Compute
 /-! ### Bridging the concrete `csqfreeFactor` monic gcd to the abstract `gcd` -/
 
 /-- The concrete monic gcd realizes the abstract `gcd` under gcd termination. -/
-theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : CPolyQ) (hterm : cgcdTerminates fuel b d) :
+theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : CPoly ℚ) (hterm : cgcdTerminates fuel b d) :
     toPoly (cmonic (cgcdExt fuel b d).1) = gcd (toPoly b) (toPoly d) := by
   rw [toPoly_cmonic_eq_normalize]
   obtain ⟨hgb, hgd⟩ := toPoly_cgcdExt_dvd fuel b d hterm
@@ -27,7 +27,7 @@ theorem toPoly_cmonic_cgcdExt (fuel : ℕ) (b d : CPolyQ) (hterm : cgcdTerminate
 /-! ### The concrete `csqfreeFactor.go` carries the abstract `YunInv` -/
 
 /-- Per-step honesty bundle for `csqfreeFactor.go` to realize the abstract Yun step. -/
-def GoYun (fuel : ℕ) : ℕ → CPolyQ → CPolyQ → Prop
+def GoYun (fuel : ℕ) : ℕ → CPoly ℚ → CPoly ℚ → Prop
   | 0, _, _ => True
   | fo + 1, b, d =>
     if b.length ≤ 1 then True
@@ -184,10 +184,10 @@ private theorem eq_div_of_eq_mul {a b c : ℚ[X]} (hc : c ≠ 0) (h : a = c * b)
   rw [h, mul_div_cancel_left₀ _ hc]
 
 /-- The concrete Yun loop's kept factors are associated to the squarefree parts. -/
-theorem go_factor_assoc (fuel : ℕ) (A : CPolyQ) :
-    ∀ (fo : ℕ) (b d : CPolyQ) (i : ℕ), 1 ≤ i → GoYun fuel fo b d →
+theorem go_factor_assoc (fuel : ℕ) (A : CPoly ℚ) :
+    ∀ (fo : ℕ) (b d : CPoly ℚ) (i : ℕ), 1 ≤ i → GoYun fuel fo b d →
       YunInv (toPoly A) i (toPoly b) (toPoly d) →
-      ∀ (Vm : CPolyQ × ℕ), Vm ∈ csqfreeFactor.go fuel fo b d i →
+      ∀ (Vm : CPoly ℚ × ℕ), Vm ∈ csqfreeFactor.go fuel fo b d i →
         Associated (toPoly Vm.1) (sqfreeFactPart (toPoly A) Vm.2) ∧ i ≤ Vm.2 := by
   intro fo
   induction fo with
@@ -247,7 +247,7 @@ theorem isRelPrime_of_associated_sqfreeFactPart_rat (A : ℚ[X]) (V W : ℚ[X]) 
   · rw [← sqfreeFactPart_rat_eq A j]; exact hW
 
 /-- Engine-honesty bundle for `csqfreeFactor fuel D`. -/
-def SqfreeYun (fuel : ℕ) (D : CPolyQ) : Prop :=
+def SqfreeYun (fuel : ℕ) (D : CPoly ℚ) : Prop :=
   let p := cnorm D
   let g := (cgcdExt fuel p (cderiv p)).1
   let b1 := cdiv fuel p g
@@ -255,8 +255,8 @@ def SqfreeYun (fuel : ℕ) (D : CPolyQ) : Prop :=
   YunInv (toPoly D) 1 (toPoly b1) (toPoly d1) ∧ GoYun fuel fuel b1 d1
 
 /-- Every `csqfreeFactor` factor is associated to a squarefree part. -/
-theorem csqfreeFactor_factor_assoc (fuel : ℕ) (D : CPolyQ) (hex : SqfreeYun fuel D)
-    (Vm : CPolyQ × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
+theorem csqfreeFactor_factor_assoc (fuel : ℕ) (D : CPoly ℚ) (hex : SqfreeYun fuel D)
+    (Vm : CPoly ℚ × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
     Associated (toPoly Vm.1) (sqfreeFactPart (toPoly D) Vm.2) ∧ 1 ≤ Vm.2 := by
   rw [SqfreeYun] at hex
   obtain ⟨hinv, hgo⟩ := hex
@@ -264,14 +264,14 @@ theorem csqfreeFactor_factor_assoc (fuel : ℕ) (D : CPolyQ) (hex : SqfreeYun fu
   exact go_factor_assoc fuel D fuel _ _ 1 (le_refl 1) hgo hinv Vm hVm
 
 /-- Every `csqfreeFactor` factor is squarefree under `SqfreeYun`. -/
-theorem csqfreeFactor_squarefree (fuel : ℕ) (D : CPolyQ) (hex : SqfreeYun fuel D)
-    (Vm : CPolyQ × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
+theorem csqfreeFactor_squarefree (fuel : ℕ) (D : CPoly ℚ) (hex : SqfreeYun fuel D)
+    (Vm : CPoly ℚ × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
     Squarefree (toPoly Vm.1) :=
   squarefree_of_associated_sqfreeFactPart_rat (toPoly D) _ Vm.2
     (csqfreeFactor_factor_assoc fuel D hex Vm hVm).1
 
 /-- Every recorded multiplicity emitted by `csqfreeFactor.go fuel fo b d i` is at least `i`. -/
-theorem go_mult_ge (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ) (i : ℕ) (Vm : CPolyQ × ℕ),
+theorem go_mult_ge (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly ℚ) (i : ℕ) (Vm : CPoly ℚ × ℕ),
     Vm ∈ csqfreeFactor.go fuel fo b d i → i ≤ Vm.2 := by
   intro fo
   induction fo with
@@ -294,8 +294,8 @@ theorem go_mult_ge (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ) (i : ℕ) (Vm : 
         · exact le_trans (Nat.le_succ i) (ih b' d' (i + 1) Vm hVm)
 
 /-- The recorded multiplicities are pairwise distinct across `csqfreeFactor.go`. -/
-theorem go_mult_pairwise (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ) (i : ℕ),
-    List.Pairwise (fun x y : CPolyQ × ℕ => x.2 ≠ y.2) (csqfreeFactor.go fuel fo b d i) := by
+theorem go_mult_pairwise (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly ℚ) (i : ℕ),
+    List.Pairwise (fun x y : CPoly ℚ × ℕ => x.2 ≠ y.2) (csqfreeFactor.go fuel fo b d i) := by
   intro fo
   induction fo with
   | zero => intro b d i; rw [csqfreeFactor.go.eq_def]; simp
@@ -316,12 +316,12 @@ theorem go_mult_pairwise (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ) (i : ℕ),
         omega
 
 /-- The `csqfreeFactor` factors have pairwise-distinct multiplicities. -/
-theorem csqfreeFactor_mult_pairwise (fuel : ℕ) (D : CPolyQ) :
-    List.Pairwise (fun x y : CPolyQ × ℕ => x.2 ≠ y.2) (csqfreeFactor fuel D) := by
+theorem csqfreeFactor_mult_pairwise (fuel : ℕ) (D : CPoly ℚ) :
+    List.Pairwise (fun x y : CPoly ℚ × ℕ => x.2 ≠ y.2) (csqfreeFactor fuel D) := by
   rw [csqfreeFactor.eq_def]; exact go_mult_pairwise fuel fuel _ _ 1
 
 /-- The `csqfreeFactor` factors are pairwise relatively prime under `SqfreeYun`. -/
-theorem csqfreeFactor_pairwise_isRelPrime (fuel : ℕ) (D : CPolyQ) (hex : SqfreeYun fuel D)
+theorem csqfreeFactor_pairwise_isRelPrime (fuel : ℕ) (D : CPoly ℚ) (hex : SqfreeYun fuel D)
     (p q : ℕ) (hpq : p ≠ q) (hp : p < (csqfreeFactor fuel D).length)
     (hq : q < (csqfreeFactor fuel D).length) :
     IsRelPrime (toPoly ((csqfreeFactor fuel D).get ⟨p, hp⟩).1)
@@ -361,12 +361,12 @@ example {K : Type*} [Field K] [CharZero K] (A : K[X]) (hA0 : A ≠ 0) (hA : A.pr
       (prodPow 1 ((List.range n).map (fun j => sqfreeFactPart A (1 + j)))) :=
   yunFactorizationAbs_prodPow_assoc A hA0 hA n
 
-example (fuel : ℕ) (D : CPolyQ) (hex : SqfreeYun fuel D)
-    (Vm : CPolyQ × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
+example (fuel : ℕ) (D : CPoly ℚ) (hex : SqfreeYun fuel D)
+    (Vm : CPoly ℚ × ℕ) (hVm : Vm ∈ csqfreeFactor fuel D) :
     Squarefree (toPoly Vm.1) :=
   csqfreeFactor_squarefree fuel D hex Vm hVm
 
-example (fuel : ℕ) (D : CPolyQ) (hex : SqfreeYun fuel D)
+example (fuel : ℕ) (D : CPoly ℚ) (hex : SqfreeYun fuel D)
     (p q : ℕ) (hpq : p ≠ q) (hp : p < (csqfreeFactor fuel D).length)
     (hq : q < (csqfreeFactor fuel D).length) :
     IsRelPrime (toPoly ((csqfreeFactor fuel D).get ⟨p, hp⟩).1)

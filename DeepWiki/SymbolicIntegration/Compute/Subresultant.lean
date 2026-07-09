@@ -4,20 +4,20 @@ import DeepWiki.SymbolicIntegration.Compute.Squarefree
 The logarithmic part puts `S(t,x) = gcd_x(D(x), A(x) − t·D'(x))` inside the logarithms of
 `∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`. This bivariate `ℚ[t][x]` gcd is computed by the subresultant
 polynomial-remainder sequence over the non-field ring `ℚ[t]`, on an executable carrier
-`BPoly := List CPolyQ`. Agreement with the noncomputable `lrtSubresultant` is proven in
+`BPoly := List (CPoly ℚ)`. Agreement with the noncomputable `lrtSubresultant` is proven in
 `SubresultantCorrectness`. -/
 
 namespace DeepWiki.SymbolicIntegration
 
 namespace Compute
 
-/-! ### The bivariate carrier `BPoly = List CPolyQ` (`ℚ[t][x]`) -/
+/-! ### The bivariate carrier `BPoly = List (CPoly ℚ)` (`ℚ[t][x]`) -/
 
-/-- Bivariate dense carrier `BPoly := List CPolyQ`: a polynomial in `x` whose coefficients are `CPolyQ`
+/-- Bivariate dense carrier `BPoly := List (CPoly ℚ)`: a polynomial in `x` whose coefficients are `CPoly ℚ`
 (`= ℚ[t]`), index = `x`-degree low→high. -/
-abbrev BPoly := List CPolyQ
+abbrev BPoly := List (CPoly ℚ)
 
-/-- Normalize a `BPoly`: normalize each `CPolyQ` coefficient, then strip trailing (high-`x`-degree)
+/-- Normalize a `BPoly`: normalize each `CPoly ℚ` coefficient, then strip trailing (high-`x`-degree)
 zero coefficients. -/
 def bnorm : BPoly → BPoly
   | [] => []
@@ -27,25 +27,25 @@ def bnorm : BPoly → BPoly
     | [] => if cisZero a then [] else [a]
     | r => a :: r
 
-/-! The `BPoly` arithmetic is the ring-generalized generic engine at coefficient `CPolyQ`
-(`BPoly = CPoly CPolyQ`, keystone `CCommRing (CPoly ℚ)`): each `b*` is the corresponding `c*`. -/
+/-! The `BPoly` arithmetic is the ring-generalized generic engine at coefficient `CPoly ℚ`
+(`BPoly = CPoly (CPoly ℚ)`, keystone `CCommRing (CPoly ℚ)`): each `b*` is the corresponding `c*`. -/
 
-/-- Coefficientwise addition of two `BPoly`s in `x` — the generic `cadd` at coefficient `CPolyQ`. -/
+/-- Coefficientwise addition of two `BPoly`s in `x` — the generic `cadd` at coefficient `CPoly ℚ`. -/
 def badd : BPoly → BPoly → BPoly := CPoly.cadd
 
-/-- Negation of a `BPoly` — the generic `cneg` at coefficient `CPolyQ`. -/
+/-- Negation of a `BPoly` — the generic `cneg` at coefficient `CPoly ℚ`. -/
 def bneg (p : BPoly) : BPoly := CPoly.cneg p
 
-/-- Subtraction of `BPoly`s — the generic `csub` at coefficient `CPolyQ`. -/
+/-- Subtraction of `BPoly`s — the generic `csub` at coefficient `CPoly ℚ`. -/
 def bsub (p q : BPoly) : BPoly := CPoly.csub p q
 
-/-- Scale by a `CPolyQ` (a `ℚ[t]` scalar) — the generic `cscale` at coefficient `CPolyQ`. -/
-def bscaleC (c : CPolyQ) (p : BPoly) : BPoly := CPoly.cscale c p
+/-- Scale by a `CPoly ℚ` (a `ℚ[t]` scalar) — the generic `cscale` at coefficient `CPoly ℚ`. -/
+def bscaleC (c : CPoly ℚ) (p : BPoly) : BPoly := CPoly.cscale c p
 
-/-- Shift in `x` `bshift k p = xᵏ · p` — the generic `cshift` at coefficient `CPolyQ`. -/
+/-- Shift in `x` `bshift k p = xᵏ · p` — the generic `cshift` at coefficient `CPoly ℚ`. -/
 def bshift (k : ℕ) (p : BPoly) : BPoly := CPoly.cshift k p
 
-/-- Polynomial multiplication of `BPoly`s in `x` — the generic `cmul` at coefficient `CPolyQ`. -/
+/-- Polynomial multiplication of `BPoly`s in `x` — the generic `cmul` at coefficient `CPoly ℚ`. -/
 def bmul : BPoly → BPoly → BPoly := CPoly.cmul
 
 /-- Zero test for a `BPoly`: `true` iff it normalizes to `[]`. -/
@@ -54,9 +54,9 @@ def bisZero (p : BPoly) : Bool := bnorm p == []
 /-- `x`-degree of a `BPoly` as a `ℕ`: `(length of bnorm p) − 1`, with `bdeg 0 = 0`. -/
 def bdeg (p : BPoly) : ℕ := (bnorm p).length - 1
 
-/-- Leading `x`-coefficient `blc p ∈ CPolyQ` (`= ℚ[t]`): the top nonzero `x`-coefficient, `[]` for the
+/-- Leading `x`-coefficient `blc p ∈ CPoly ℚ` (`= ℚ[t]`): the top nonzero `x`-coefficient, `[]` for the
 zero polynomial. -/
-def blc (p : BPoly) : CPolyQ := (bnorm p).getLast?.getD []
+def blc (p : BPoly) : CPoly ℚ := (bnorm p).getLast?.getD []
 
 /-! ### Pseudo-division over the coefficient ring `ℚ[t]` -/
 
@@ -79,8 +79,8 @@ def bpsremainder : ℕ → BPoly → BPoly → BPoly
 
 /-! ### `ℚ[t]`-content management (so the LRT gcd comes out clean) -/
 
-/-- `ℚ[t]`-content of a `BPoly`: the `CPolyQ`-gcd of all its `x`-coefficients. -/
-def bcontentX (fuel : ℕ) (p : BPoly) : CPolyQ :=
+/-- `ℚ[t]`-content of a `BPoly`: the `CPoly ℚ`-gcd of all its `x`-coefficients. -/
+def bcontentX (fuel : ℕ) (p : BPoly) : CPoly ℚ :=
   (bnorm p).foldl (fun g c => (cgcdExt fuel g c).1) []
 
 /-- Strip the `ℚ[t]`-content in `x`: `bprimitivePartX fuel p = p / content_x(p)`, the
@@ -95,36 +95,36 @@ The degree-`j` subresultant reduced mod `R` and made monic in `x` over `ℚ[t]/(
 log argument `S(t,x)`; the leading `x`-coefficient is a unit there, so monic normalization is exact
 via the extended-Euclidean inverse. -/
 
-/-- Reduce a `CPolyQ` modulo `R`: `credR fuel R c = c mod R`, the representative in `ℚ[t]/(R)`. -/
-def credR (fuel : ℕ) (R c : CPolyQ) : CPolyQ := cmod fuel c R
+/-- Reduce a `CPoly ℚ` modulo `R`: `credR fuel R c = c mod R`, the representative in `ℚ[t]/(R)`. -/
+def credR (fuel : ℕ) (R c : CPoly ℚ) : CPoly ℚ := cmod fuel c R
 
 /-- Reduce every `x`-coefficient of a `BPoly` modulo `R`: `bredR fuel R p`, the image of `p` in
 `(ℚ[t]/(R))[x]`. -/
-def bredR (fuel : ℕ) (R : CPolyQ) (p : BPoly) : BPoly := bnorm (p.map (credR fuel R))
+def bredR (fuel : ℕ) (R : CPoly ℚ) (p : BPoly) : BPoly := bnorm (p.map (credR fuel R))
 
-/-- Inverse of a `CPolyQ` modulo `R`: `cinvMod fuel R c = c⁻¹` in `ℚ[t]/(R)` (assumes `c` a unit mod
+/-- Inverse of a `CPoly ℚ` modulo `R`: `cinvMod fuel R c = c⁻¹` in `ℚ[t]/(R)` (assumes `c` a unit mod
 `R`), via `c⁻¹ ≡ s/g (mod R)` from the Bézout relation `s·c + ·R = g`. -/
-def cinvMod (fuel : ℕ) (R c : CPolyQ) : CPolyQ :=
+def cinvMod (fuel : ℕ) (R c : CPoly ℚ) : CPoly ℚ :=
   let (g, s, _) := cgcdExt fuel c R
   credR fuel R (cscale (clead g)⁻¹ s)
 
 /-- Make a `BPoly` monic in `x` over `ℚ[t]/(R)`: `bmonicXmodR fuel R p` reduces mod `R` and scales by
 the mod-`R` inverse of the leading `x`-coefficient. -/
-def bmonicXmodR (fuel : ℕ) (R : CPolyQ) (p : BPoly) : BPoly :=
+def bmonicXmodR (fuel : ℕ) (R : CPoly ℚ) (p : BPoly) : BPoly :=
   let p := bredR fuel R p
   if bisZero p then []
   else
     let inv := cinvMod fuel R (blc p)
     bnorm (p.map (fun c => credR fuel R (cmul c inv)))
 
-/-! ### Exact `ℚ[t]`-division of a `BPoly` by a `CPolyQ`, and `ℚ[t]` powers -/
+/-! ### Exact `ℚ[t]`-division of a `BPoly` by a `CPoly ℚ`, and `ℚ[t]` powers -/
 
 /-- Exact `ℚ[t]`-scalar division `bdivC fuel p c = p / c`: divide every `x`-coefficient of `p` by the
-`CPolyQ` scalar `c`. -/
-def bdivC (fuel : ℕ) (p : BPoly) (c : CPolyQ) : BPoly := bnorm (p.map (fun a => cdiv fuel a c))
+`CPoly ℚ` scalar `c`. -/
+def bdivC (fuel : ℕ) (p : BPoly) (c : CPoly ℚ) : BPoly := bnorm (p.map (fun a => cdiv fuel a c))
 
-/-- `ℚ[t]`-power `cpowP c n = cⁿ` (`CPolyQ` power, by `ℕ`-recursion). -/
-def cpowP (c : CPolyQ) : ℕ → CPolyQ
+/-- `ℚ[t]`-power `cpowP c n = cⁿ` (`CPoly ℚ` power, by `ℕ`-recursion). -/
+def cpowP (c : CPoly ℚ) : ℕ → CPoly ℚ
   | 0 => [1]
   | n + 1 => cmul c (cpowP c n)
 
@@ -137,19 +137,19 @@ subresultant. -/
 `R₂ = Q`; the degree-`j` element is the `j`-th subresultant up to sign. Fuel-bounded. -/
 def subresPRS (fuel : ℕ) (P Q : BPoly) : List BPoly :=
   -- `go Ri_1 Ri psi delta_prev fuelOuter`: `delta_prev = δ` of the step that produced `Ri` from `Ri_1`.
-  let rec go : ℕ → BPoly → BPoly → CPolyQ → ℕ → List BPoly
+  let rec go : ℕ → BPoly → BPoly → CPoly ℚ → ℕ → List BPoly
     | 0, _, _, _, _ => []
     | fo + 1, Ri_1, Ri, psi, deltaPrev =>
       if bisZero Ri then []
       else
-        let lcRi_1 : CPolyQ := blc Ri_1
+        let lcRi_1 : CPoly ℚ := blc Ri_1
         -- update ψ: ψ' = (−lc Ri_1)^δ / ψ^{δ−1}  (δ = deltaPrev ≥ 1)
-        let negLc : CPolyQ := cneg lcRi_1
-        let psi' : CPolyQ :=
+        let negLc : CPoly ℚ := cneg lcRi_1
+        let psi' : CPoly ℚ :=
           if deltaPrev = 0 then psi
           else cdiv fuel (cpowP negLc deltaPrev) (cpowP psi (deltaPrev - 1))
         -- β = −lc(Ri_1) · ψ'^δ
-        let beta : CPolyQ := cmul negLc (cpowP psi' deltaPrev)
+        let beta : CPoly ℚ := cmul negLc (cpowP psi' deltaPrev)
         let pr : BPoly := bpsremainder fuel Ri_1 Ri
         let Ri1 : BPoly := bdivC fuel pr beta
         let deltaNew : ℕ := bdeg Ri - bdeg Ri1
@@ -161,36 +161,36 @@ whose `x`-degree is `j` (the subresultant `Sⱼ` up to sign), or `[]` if none. -
 def bsubresultantGcd (fuel : ℕ) (j : ℕ) (P Q : BPoly) : BPoly :=
   ((subresPRS fuel P Q).filter (fun R => decide (bdeg R = j ∧ ¬ bisZero R))).getLast?.getD []
 
-/-! ### Lifting `ℚ[x]` (a `CPolyQ`) into `BPoly`, and building `A − t·D'` -/
+/-! ### Lifting `ℚ[x]` (a `CPoly ℚ`) into `BPoly`, and building `A − t·D'` -/
 
-/-- Lift a `CPolyQ` (`= ℚ[x]`) into `BPoly`: `liftCtoBPoly p` makes each `x`-coefficient `aᵢ` the
+/-- Lift a `CPoly ℚ` (`= ℚ[x]`) into `BPoly`: `liftCtoBPoly p` makes each `x`-coefficient `aᵢ` the
 constant `ℚ[t]` polynomial `[aᵢ]`. -/
-def liftCtoBPoly (p : CPolyQ) : BPoly := p.map cC
+def liftCtoBPoly (p : CPoly ℚ) : BPoly := p.map cC
 
-/-- The variable `t` as a `CPolyQ`: `ctVar = [0, 1]`. -/
-def ctVar : CPolyQ := [0, 1]
+/-- The variable `t` as a `CPoly ℚ`: `ctVar = [0, 1]`. -/
+def ctVar : CPoly ℚ := [0, 1]
 
 /-- The log argument's second operand `bArgAmtD' A D = A − t·D'` as a `BPoly`: `A` lifted with
 constant `t`-coefficients, minus `t · D'`. -/
-def bArgAmtD' (A D : CPolyQ) : BPoly :=
+def bArgAmtD' (A D : CPoly ℚ) : BPoly :=
   bsub (liftCtoBPoly A) (bscaleC ctVar (liftCtoBPoly (cderiv D)))
 
 /-- The raw degree-`j` subresultant `lrtSubresultantCompute fuel j A D = Sⱼ(D, A − t·D')`: the
 bivariate subresultant of `D` (lifted) and `A − t·D'` at `x`-degree `j`, `ℚ[t]`-primitive in `x`. -/
-def lrtSubresultantCompute (fuel : ℕ) (j : ℕ) (A D : CPolyQ) : BPoly :=
+def lrtSubresultantCompute (fuel : ℕ) (j : ℕ) (A D : CPoly ℚ) : BPoly :=
   bprimitivePartX fuel (bsubresultantGcd fuel j (liftCtoBPoly D) (bArgAmtD' A D))
 
 /-- The computable log argument `lrtGcdCompute fuel j R A D = S(t,x)`: the degree-`j` subresultant
 reduced modulo `R(t)` and made monic in `x` over `ℚ[t]/(R)`, the `S(t,x)` inside the logarithms of
 `∫ A/D = ∑_{R(a)=0} a·log(S(a,x))`. -/
-def lrtGcdCompute (fuel : ℕ) (j : ℕ) (R A D : CPolyQ) : BPoly :=
+def lrtGcdCompute (fuel : ℕ) (j : ℕ) (R A D : CPoly ℚ) : BPoly :=
   bmonicXmodR fuel R (lrtSubresultantCompute fuel j A D)
 
 /-! ### Logarithmic-part assembly -/
 
 /-- Logarithmic part of `∫A/D`: `lrtLogPart fuel A D` returns the `(Qᵢ, Sᵢ)` pairs meaning
 `∫A/D = ∑ᵢ ∑_{Qᵢ(a)=0} a·log(Sᵢ(a,x))`, for squarefree `D`. -/
-def lrtLogPart (fuel : ℕ) (A D : CPolyQ) : List (CPolyQ × BPoly) :=
+def lrtLogPart (fuel : ℕ) (A D : CPoly ℚ) : List (CPoly ℚ × BPoly) :=
   let R := rtResultantCompute fuel A D
   (csqfreeFactor fuel R).map (fun (Qi, i) => (Qi, lrtGcdCompute fuel i Qi A D))
 

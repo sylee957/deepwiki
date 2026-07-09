@@ -281,7 +281,7 @@ the `CField` operations and a Horner bridge `toPoly` into `(CFieldSpec.K α)[X]`
 
 /-- Generic dense coefficient list over a computable field `α` (index = degree, low to high).
 A reducible `abbrev` for `List α` so the `List` instances (`BEq`/`DecidableEq`/…) transfer and the
-ℚ-specialization `CPolyQ := CPoly ℚ` stays defeq to `List ℚ`. -/
+ℚ-specialization `CPoly ℚ := CPoly ℚ` stays defeq to `List ℚ`. -/
 abbrev CPoly (α : Type*) := List α
 
 namespace CPoly

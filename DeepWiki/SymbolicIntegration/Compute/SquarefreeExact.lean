@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Compute.Squarefree
 
 /-! # Exactness certificates for computable squarefree factorization
 
-Decidable exact-division witnesses for `csqfreeFactor` under the `toPoly : CPolyQ → ℚ[X]` bridge. -/
+Decidable exact-division witnesses for `csqfreeFactor` under the `toPoly : CPoly ℚ → ℚ[X]` bridge. -/
 
 open Polynomial
 
@@ -14,7 +14,7 @@ namespace Compute
 /-! ### The Yun radical `Dstar` divides `D` through `toPoly` -/
 
 /-- `cmonic q` divides `q` through `toPoly`: `toPoly (cmonic q) ∣ toPoly q`. -/
-theorem toPoly_cmonic_dvd (q : CPolyQ) : toPoly (cmonic q) ∣ toPoly q := by
+theorem toPoly_cmonic_dvd (q : CPoly ℚ) : toPoly (cmonic q) ∣ toPoly q := by
   unfold cmonic
   by_cases h : cisZero (cnorm q)
   · simp only [h, if_true]
@@ -30,10 +30,10 @@ theorem toPoly_cmonic_dvd (q : CPolyQ) : toPoly (cmonic q) ∣ toPoly q := by
       inv_mul_cancel₀ hc, map_one, mul_one]
 
 /-- The `toPoly`-product of the first components of a factor list: `goProd l = ∏ⱼ toPoly Vⱼ`. -/
-noncomputable def goProd (l : List (CPolyQ × ℕ)) : ℚ[X] := (l.map (fun vi => toPoly vi.1)).prod
+noncomputable def goProd (l : List (CPoly ℚ × ℕ)) : ℚ[X] := (l.map (fun vi => toPoly vi.1)).prod
 
 /-- `GoExact fuel fo b d` records exact Yun-loop divisions through `toPoly`. -/
-def GoExact (fuel : ℕ) : ℕ → CPolyQ → CPolyQ → Prop
+def GoExact (fuel : ℕ) : ℕ → CPoly ℚ → CPoly ℚ → Prop
   | 0, _, _ => True
   | fo + 1, b, d =>
     if b.length ≤ 1 then True
@@ -44,7 +44,7 @@ def GoExact (fuel : ℕ) : ℕ → CPolyQ → CPolyQ → Prop
       toPoly b = toPoly q * toPoly b' ∧ GoExact fuel fo b' d'
 
 /-- Under `GoExact`, the product emitted by `csqfreeFactor.go fuel fo b d i` divides `toPoly b`. -/
-theorem goProd_dvd (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ) (i : ℕ),
+theorem goProd_dvd (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly ℚ) (i : ℕ),
     GoExact fuel fo b d → goProd (csqfreeFactor.go fuel fo b d i) ∣ toPoly b := by
   intro fo
   induction fo with
@@ -75,7 +75,7 @@ theorem goProd_dvd (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ) (i : ℕ),
         exact mul_dvd_mul_left (toPoly q) ihrest
 
 /-- `goProd` realizes the radical fold: `toPoly (l.foldl (cmul · vi.1) init) = toPoly init · goProd l`. -/
-theorem toPoly_foldl_cmul_fst (l : List (CPolyQ × ℕ)) (init : CPolyQ) :
+theorem toPoly_foldl_cmul_fst (l : List (CPoly ℚ × ℕ)) (init : CPoly ℚ) :
     toPoly (l.foldl (fun acc vi => cmul acc vi.1) init) = toPoly init * goProd l := by
   induction l generalizing init with
   | nil => simp [goProd]
@@ -85,13 +85,13 @@ theorem toPoly_foldl_cmul_fst (l : List (CPolyQ × ℕ)) (init : CPolyQ) :
     ring
 
 /-- The radical fold reads to `goProd`: `toPoly (l.foldl (cmul · vi.1) [1]) = goProd l`. -/
-theorem toPoly_Dstar_eq (l : List (CPolyQ × ℕ)) :
-    toPoly (l.foldl (fun acc (vi : CPolyQ × ℕ) => cmul acc vi.1) [1]) = goProd l := by
+theorem toPoly_Dstar_eq (l : List (CPoly ℚ × ℕ)) :
+    toPoly (l.foldl (fun acc (vi : CPoly ℚ × ℕ) => cmul acc vi.1) [1]) = goProd l := by
   rw [toPoly_foldl_cmul_fst]
   simp [toPoly_cons, toPoly_nil]
 
 /-- One Yun step is exact when the extended gcd terminates with enough fuel. -/
-theorem step_exact (fuel : ℕ) (b d : CPolyQ) (hbne : cnorm b ≠ [])
+theorem step_exact (fuel : ℕ) (b d : CPoly ℚ) (hbne : cnorm b ≠ [])
     (hterm : cgcdTerminates fuel b d) (hfuel : (cnorm b).length ≤ fuel) :
     toPoly b = toPoly (cmonic (cgcdExt fuel b d).1)
         * toPoly (cdiv fuel b (cmonic (cgcdExt fuel b d).1)) := by
@@ -106,7 +106,7 @@ theorem step_exact (fuel : ℕ) (b d : CPolyQ) (hbne : cnorm b ≠ [])
   rw [toPoly_cdiv_of_cmod_zero fuel b q hqne hrem]; ring
 
 /-- `SqfreeExact fuel D` bundles exact initial deflation and exact Yun-loop divisions. -/
-def SqfreeExact (fuel : ℕ) (D : CPolyQ) : Prop :=
+def SqfreeExact (fuel : ℕ) (D : CPoly ℚ) : Prop :=
   let p := cnorm D
   let g := (cgcdExt fuel p (cderiv p)).1
   let b1 := cdiv fuel p g
@@ -114,8 +114,8 @@ def SqfreeExact (fuel : ℕ) (D : CPolyQ) : Prop :=
   toPoly p = toPoly g * toPoly b1 ∧ GoExact fuel fuel b1 d1
 
 /-- Under `SqfreeExact fuel D`, the Yun radical of `csqfreeFactor fuel D` divides `toPoly D`. -/
-theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPolyQ) (hex : SqfreeExact fuel D) :
-    toPoly ((csqfreeFactor fuel D).foldl (fun acc (vi : CPolyQ × ℕ) => cmul acc vi.1) [1])
+theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPoly ℚ) (hex : SqfreeExact fuel D) :
+    toPoly ((csqfreeFactor fuel D).foldl (fun acc (vi : CPoly ℚ × ℕ) => cmul acc vi.1) [1])
       ∣ toPoly D := by
   rw [toPoly_Dstar_eq, csqfreeFactor.eq_def]
   rw [SqfreeExact] at hex
@@ -132,7 +132,7 @@ theorem toPoly_Dstar_dvd_D (fuel : ℕ) (D : CPolyQ) (hex : SqfreeExact fuel D) 
 /-! ### Computable witnesses -/
 
 /-- `GoExactComp fuel fo b d` records vanishing `cmod` remainders for each Yun-loop division. -/
-def GoExactComp (fuel : ℕ) : ℕ → CPolyQ → CPolyQ → Prop
+def GoExactComp (fuel : ℕ) : ℕ → CPoly ℚ → CPoly ℚ → Prop
   | 0, _, _ => True
   | fo + 1, b, d =>
     if b.length ≤ 1 then True
@@ -143,7 +143,7 @@ def GoExactComp (fuel : ℕ) : ℕ → CPolyQ → CPolyQ → Prop
       cnorm (cmod fuel b q) = [] ∧ cnorm q ≠ [] ∧ GoExactComp fuel fo b' d'
 
 /-- `GoExactComp` is decidable. -/
-instance decGoExactComp (fuel fo : ℕ) (b d : CPolyQ) : Decidable (GoExactComp fuel fo b d) := by
+instance decGoExactComp (fuel fo : ℕ) (b d : CPoly ℚ) : Decidable (GoExactComp fuel fo b d) := by
   induction fo generalizing b d with
   | zero => exact inferInstanceAs (Decidable True)
   | succ fo ih =>
@@ -157,7 +157,7 @@ instance decGoExactComp (fuel fo : ℕ) (b d : CPolyQ) : Decidable (GoExactComp 
       infer_instance
 
 /-- `GoExactComp` implies `GoExact` by turning each vanishing `cmod` into exact division. -/
-theorem GoExactComp_to_GoExact (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ),
+theorem GoExactComp_to_GoExact (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPoly ℚ),
     GoExactComp fuel fo b d → GoExact fuel fo b d := by
   intro fo
   induction fo with
@@ -177,7 +177,7 @@ theorem GoExactComp_to_GoExact (fuel : ℕ) : ∀ (fo : ℕ) (b d : CPolyQ),
         (mul_comm _ _)
 
 /-- `SqfreeExactComp fuel D` bundles vanishing `cmod` remainders for squarefree factorization. -/
-def SqfreeExactComp (fuel : ℕ) (D : CPolyQ) : Prop :=
+def SqfreeExactComp (fuel : ℕ) (D : CPoly ℚ) : Prop :=
   let p := cnorm D
   let g := (cgcdExt fuel p (cderiv p)).1
   let b1 := cdiv fuel p g
@@ -185,11 +185,11 @@ def SqfreeExactComp (fuel : ℕ) (D : CPolyQ) : Prop :=
   (cnorm (cmod fuel p g) = [] ∧ cnorm g ≠ []) ∧ GoExactComp fuel fuel b1 d1
 
 /-- `SqfreeExactComp` is decidable. -/
-instance decSqfreeExactComp (fuel : ℕ) (D : CPolyQ) : Decidable (SqfreeExactComp fuel D) := by
+instance decSqfreeExactComp (fuel : ℕ) (D : CPoly ℚ) : Decidable (SqfreeExactComp fuel D) := by
   unfold SqfreeExactComp; infer_instance
 
 /-- `SqfreeExactComp` implies `SqfreeExact` through the `toPoly` exact-division bridge. -/
-theorem SqfreeExactComp_to_SqfreeExact (fuel : ℕ) (D : CPolyQ) :
+theorem SqfreeExactComp_to_SqfreeExact (fuel : ℕ) (D : CPoly ℚ) :
     SqfreeExactComp fuel D → SqfreeExact fuel D := by
   intro h
   rw [SqfreeExactComp] at h

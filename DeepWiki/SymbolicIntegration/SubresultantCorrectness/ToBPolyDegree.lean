@@ -30,7 +30,7 @@ theorem natDegree_toBPoly_le (p : BPoly) : (toBPoly p).natDegree ≤ (bnorm p).l
   rfl
 
 /-- `bnorm` has no trailing zero `x`-coefficient: its `getLast?` never `toPoly`-vanishes. -/
-theorem bnorm_getLast?_toPoly_ne_zero (p : BPoly) {v : CPolyQ}
+theorem bnorm_getLast?_toPoly_ne_zero (p : BPoly) {v : CPoly ℚ}
     (h : (bnorm p).getLast? = some v) : toPoly v ≠ 0 := by
   induction p with
   | nil => simp at h

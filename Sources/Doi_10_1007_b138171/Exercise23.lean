@@ -48,13 +48,13 @@ namespace Compute
 
 /-! ### The Exercise 2.3 integrand `A/D` -/
 
-/-- **`A = 72x⁷+256x⁶−192x⁵−1280x⁴−312x³+1440x²+576x−96`** as a `CPolyQ` (Exercise 2.3 numerator),
+/-- **`A = 72x⁷+256x⁶−192x⁵−1280x⁴−312x³+1440x²+576x−96`** as a `CPoly ℚ` (Exercise 2.3 numerator),
 coefficients low→high. -/
-def cA23 : CPolyQ := [-96, 576, 1440, -312, -1280, -192, 256, 72]
+def cA23 : CPoly ℚ := [-96, 576, 1440, -312, -1280, -192, 256, 72]
 
-/-- **`D = 9x⁸+36x⁷−32x⁶−252x⁵−78x⁴+468x³+288x²−108x+9`** as a `CPolyQ` (Exercise 2.3 denominator),
+/-- **`D = 9x⁸+36x⁷−32x⁶−252x⁵−78x⁴+468x³+288x²−108x+9`** as a `CPoly ℚ` (Exercise 2.3 denominator),
 coefficients low→high. -/
-def cD23 : CPolyQ := [9, -108, 288, 468, -78, -252, -32, 36, 9]
+def cD23 : CPoly ℚ := [9, -108, 288, 468, -78, -252, -32, 36, 9]
 
 /-! ### `D` is squarefree — no Hermite reduction, pure LRT log part -/
 
@@ -67,9 +67,9 @@ theorem ex_2_3_D_squarefree :
 /-! ### The Rothstein–Trager resultant `R(t)` and its squarefree factorization -/
 
 /-- **The Rothstein–Trager resultant `R(t) = res_x(D, A − t·D')`** of Exercise 2.3, **integer-scaled**
-(`× 35` to clear the interpolation denominators): a **degree-8** integer polynomial as a `CPolyQ`,
+(`× 35` to clear the interpolation denominators): a **degree-8** integer polynomial as a `CPoly ℚ`,
 whose eight roots are the residues of `A/D`. -/
-def cR23full : CPolyQ :=
+def cR23full : CPoly ℚ :=
   [308968180946762622566400000, -2224790613523141913676349440, 7119004320619849916809740288,
    -13214217409385836237364920320, 15556524718983817104036200448, -11892577979384454690876948480,
    5766090564628913275243855872, -1621712378874467003179991040, 202714028968345223804485632]
@@ -82,7 +82,7 @@ theorem ex_2_3_resultant : cscale 35 (rtResultantCompute 80 cA23 cD23) = cR23ful
 /-- **The monic squarefree Rothstein–Trager resultant `R(t)`** of Exercise 2.3 (the radical of the
 degree-8 resultant, made monic over `ℚ`): the polynomial `ℚ[t]/(R)` over which the LRT log argument is
 normalized. The residues are its roots. -/
-def cR23 : CPolyQ := csqfreePart 80 (rtResultantCompute 80 cA23 cD23)
+def cR23 : CPoly ℚ := csqfreePart 80 (rtResultantCompute 80 cA23 cD23)
 
 /-- **Exercise 2.3: `R(t)` is degree 8** (eight distinct residues): the monic squarefree resultant has
 `9` coefficients. Proved by `native_decide`. -/
@@ -122,15 +122,15 @@ theorem ex_2_3_logpart :
 /-! ### Part a) — the symbolic definite integral over `[−2, −2/3]` -/
 
 /-- **Evaluate a `BPoly` in `x` at a rational bound** `bevalX a p = p(t, a) ∈ ℚ[t]` (Horner in `x`):
-collapses the `x`-variable of a `BPoly` (`= ℚ[t][x]`) at `x = a`, leaving a `CPolyQ` (`= ℚ[t]`). Used to
+collapses the `x`-variable of a `BPoly` (`= ℚ[t][x]`) at `x = a`, leaving a `CPoly ℚ` (`= ℚ[t]`). Used to
 read the LRT log argument `S(t, x)` at the integration bounds. -/
-def bevalX (a : ℚ) (p : BPoly) : CPolyQ := p.foldr (fun c acc => cadd c (cscale a acc)) []
+def bevalX (a : ℚ) (p : BPoly) : CPoly ℚ := p.foldr (fun c acc => cadd c (cscale a acc)) []
 
 /-- **The log argument at the upper bound** `S₁(t, −2/3) = −2/3 + c₀(t) ∈ ℚ[t]/(R)`. -/
-def cS1_23_upper : CPolyQ := cnorm (bevalX (-2/3) cS1_23)
+def cS1_23_upper : CPoly ℚ := cnorm (bevalX (-2/3) cS1_23)
 
 /-- **The log argument at the lower bound** `S₁(t, −2) = −2 + c₀(t) ∈ ℚ[t]/(R)`. -/
-def cS1_23_lower : CPolyQ := cnorm (bevalX (-2) cS1_23)
+def cS1_23_lower : CPoly ℚ := cnorm (bevalX (-2) cS1_23)
 
 /-- **Exercise 2.3, part a) — the symbolic definite-integral data** (§2.9, p.72): the definite integral
 `∫_{−2}^{−2/3} A/D = ∑_{R(a)=0} a · [log(S₁(a, −2/3)) − log(S₁(a, −2))]` is determined by the two log
@@ -145,7 +145,7 @@ theorem ex_2_3_definite_integral_data :
 /-! ### Part b) — the Rioboo real form (`LogToReal`/`LogToAtan`) -/
 
 -- **Exercise 2.3, the Rioboo engine sanity run.** `logToAtanCompute` (the validated real-form engine,
--- `logToAtanCompute_ex281`) runs on the same `CPolyQ` carrier the LRT output lives on. For Example
+-- `logToAtanCompute_ex281`) runs on the same `CPoly ℚ` carrier the LRT output lives on. For Example
 -- 2.8.1's pair `(x³−3x, x²−2)` it returns the three arctan arguments; the Exercise 2.3 conjugate-pair
 -- contributions feed the same recursion. This `#eval` confirms the engine executes (printed at build).
 #eval logToAtanCompute 20 cX3m3X cX2m2

@@ -27,8 +27,8 @@ open scoped Differential in
 kept factor, and `Vk^{ik} ∣ D`, the whole-fold residual numerator
 `R = C(1−n)·A + Σ residNumIncr` is divisible by `Vk^{ik−1}`. The order argument: `R − residNumIncrₖ`
 over `D` is `Vk`-regular, so `Vk^{ik} ∣ (R − residNumIncrₖ)`, and `Vk^{ik−1} ∣ residNumIncrₖ`. -/
-theorem dvd_residNum_factor (fuel : ℕ) (A D : CPolyQ) (factors : List (CPolyQ × ℕ))
-    (kelem : CPolyQ × ℕ) (hkmem : kelem ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)))
+theorem dvd_residNum_factor (fuel : ℕ) (A D : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
+    (kelem : CPoly ℚ × ℕ) (hkmem : kelem ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)))
     (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
     (hD : toPoly D ≠ 0) (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
@@ -92,7 +92,7 @@ C(1−n)·A + Σ residNumIncr`, given the per-factor residual identities (`hstep
 the kept factors `Vk` (`hpw`), each `Vk^{ik} ∣ D`, the product `∏_{kept} Vk^{ik−1}` divides `R`. The
 per-factor order bounds `Vk^{ik−1} ∣ R` (`dvd_residNum_factor`) assemble over the coprime powers
 (`list_prod_dvd_of_pairwise`): the multi-factor interference numerator clears. -/
-theorem prod_dvd_residNum (fuel : ℕ) (A D : CPolyQ) (factors : List (CPolyQ × ℕ))
+theorem prod_dvd_residNum (fuel : ℕ) (A D : CPoly ℚ) (factors : List (CPoly ℚ × ℕ))
     (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
     (hD : toPoly D ≠ 0) (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)
     (hstep : ∀ Vi ∈ factors, 2 ≤ Vi.2 →
@@ -119,7 +119,7 @@ theorem prod_dvd_residNum (fuel : ℕ) (A D : CPolyQ) (factors : List (CPolyQ ×
   rw [List.mem_map] at ha
   obtain ⟨kelem, hkelem, rfl⟩ := ha
   -- the localization coprimality for the OTHER kept factors at `kelem`.
-  haveI hsymInst : Std.Symm (fun a b : CPolyQ × ℕ => IsRelPrime (toPoly a.1) (toPoly b.1)) :=
+  haveI hsymInst : Std.Symm (fun a b : CPoly ℚ × ℕ => IsRelPrime (toPoly a.1) (toPoly b.1)) :=
     ⟨fun {_ _} (h : IsRelPrime _ _) => h.symm⟩
   have hcop : ∀ Vi ∈ kept, Vi ≠ kelem → IsRelPrime (toPoly kelem.1) (toPoly Vi.1) := by
     intro Vi hVi hne

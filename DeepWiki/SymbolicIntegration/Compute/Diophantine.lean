@@ -2,7 +2,7 @@ import DeepWiki.SymbolicIntegration.Compute.Correctness
 import DeepWiki.SymbolicIntegration.Core.Polynomial.Diophantine
 
 /-! # Computable Diophantine solver correctness
-Connects the concrete `cdiophantine` solver on `CPolyQ` with the abstract reduced Bezout solver
+Connects the concrete `cdiophantine` solver on `CPoly ℚ` with the abstract reduced Bezout solver
 `diophantineSolveReduced` over `ℚ[X]`. -/
 
 open Polynomial
@@ -37,7 +37,7 @@ theorem reduced_bezout_snd_unique {p q B C₁ C₂ rhs : ℚ[X]} (hq : q ≠ 0)
 /-! ### `cdiophantine` realizes `diophantineSolveReduced` -/
 
 /-- The first computable cofactor is the normalized remainder of the scaled Bezout cofactor. -/
-theorem cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPolyQ) :
+theorem cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPoly ℚ) :
     (cdiophantine fuel p q rhs).1
       = cnorm (cmod fuel
           (cscale (clead (cgcdExt fuel p q).1)⁻¹ (cmul rhs (cgcdExt fuel p q).2.1)) q) := by
@@ -45,7 +45,7 @@ theorem cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPolyQ) :
   simp only [cdiophantine, hgst, cmod]
 
 /-- The first computable cofactor has degree below `q` when the remainder computation has enough fuel. -/
-theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : CPolyQ) (hq : cnorm q ≠ [])
+theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : CPoly ℚ) (hq : cnorm q ≠ [])
     (hfuel : (cnorm (cscale (clead (cgcdExt fuel p q).1)⁻¹
         (cmul rhs (cgcdExt fuel p q).2.1))).length ≤ fuel) :
     (toPoly (cdiophantine fuel p q rhs).1).degree < (toPoly q).degree := by
@@ -68,7 +68,7 @@ theorem cdiophantine_fst_degree_lt (fuel : ℕ) (p q rhs : CPolyQ) (hq : cnorm q
     exact hndlt
 
 /-- Input certificates for comparing `cdiophantine` with `diophantineSolveReduced`. -/
-structure IsCDiophantineInput (fuel : ℕ) (p q rhs : CPolyQ) : Prop where
+structure IsCDiophantineInput (fuel : ℕ) (p q rhs : CPoly ℚ) : Prop where
   /-- The computable denominator is nonzero. -/
   q_ne : cnorm q ≠ []
   /-- The abstract inputs are coprime. -/
@@ -83,7 +83,7 @@ structure IsCDiophantineInput (fuel : ℕ) (p q rhs : CPolyQ) : Prop where
 
 open Classical in
 /-- First-cofactor agreement: `cdiophantine` realizes `diophantineSolveReduced` through `toPoly`. -/
-theorem toPoly_cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPolyQ)
+theorem toPoly_cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPoly ℚ)
     (hinput : IsCDiophantineInput fuel p q rhs) :
     toPoly (cdiophantine fuel p q rhs).1
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).1 := by
@@ -101,7 +101,7 @@ theorem toPoly_cdiophantine_fst_eq (fuel : ℕ) (p q rhs : CPolyQ)
 
 open Classical in
 /-- Second-cofactor agreement: the second `cdiophantine` cofactor matches the abstract one. -/
-theorem toPoly_cdiophantine_snd_eq (fuel : ℕ) (p q rhs : CPolyQ)
+theorem toPoly_cdiophantine_snd_eq (fuel : ℕ) (p q rhs : CPoly ℚ)
     (hinput : IsCDiophantineInput fuel p q rhs) :
     toPoly (cdiophantine fuel p q rhs).2
       = (diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs)).2 := by
@@ -121,14 +121,14 @@ theorem toPoly_cdiophantine_snd_eq (fuel : ℕ) (p q rhs : CPolyQ)
 
 open Classical in
 /-- Full cofactor agreement: `cdiophantine` realizes `diophantineSolveReduced` as a pair. -/
-theorem toPoly_cdiophantine_eq (fuel : ℕ) (p q rhs : CPolyQ)
+theorem toPoly_cdiophantine_eq (fuel : ℕ) (p q rhs : CPoly ℚ)
     (hinput : IsCDiophantineInput fuel p q rhs) :
     (toPoly (cdiophantine fuel p q rhs).1, toPoly (cdiophantine fuel p q rhs).2)
       = diophantineSolveReduced (toPoly p) (toPoly q) (toPoly rhs) :=
   Prod.ext (toPoly_cdiophantine_fst_eq fuel p q rhs hinput)
     (toPoly_cdiophantine_snd_eq fuel p q rhs hinput)
 
-example (fuel : ℕ) (p q rhs : CPolyQ)
+example (fuel : ℕ) (p q rhs : CPoly ℚ)
     (hq : cnorm q ≠ []) (hcop : IsCoprime (toPoly p) (toPoly q))
     (hg : toPoly (cgcdExt fuel p q).1 = Polynomial.C (clead (cgcdExt fuel p q).1))
     (hgc : clead (cgcdExt fuel p q).1 ≠ 0)

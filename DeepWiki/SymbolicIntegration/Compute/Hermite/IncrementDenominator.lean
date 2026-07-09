@@ -14,8 +14,8 @@ namespace DeepWiki.SymbolicIntegration.Compute
 `toPoly (hermiteInner fuel V U j A g).1.2 = toPoly g.2 · (toPoly V)^m`. Each loop step `qadd`s
 `(B, V^{j+1})`, multiplying the denominator by `V^{j+1}`; so the accumulated denominator is the seed
 times a power of `V`. The structural fact that `glocᵢ` has poles only at `Vi`. -/
-theorem hermiteInner_den_eq_pow (fuel : ℕ) (V U : CPolyQ) :
-    ∀ (j : ℕ) (A : CPolyQ) (g : QFun),
+theorem hermiteInner_den_eq_pow (fuel : ℕ) (V U : CPoly ℚ) :
+    ∀ (j : ℕ) (A : CPoly ℚ) (g : QFun),
       ∃ m : ℕ, toPoly (hermiteInner fuel V U j A g).1.2 = toPoly g.2 * toPoly V ^ m := by
   intro j
   induction j with
@@ -38,7 +38,7 @@ theorem hermiteInner_den_eq_pow (fuel : ℕ) (V U : CPolyQ) :
 `toPoly (glocIncr fuel A D Vi).2 = (toPoly Vi.1)^m`. From `hermiteInner_den_eq_pow` at the `qzero`
 seed (denominator `1`). So `glocIncr Vi` (and its derivative) has poles only at `Vi` — regular at every
 other irreducible factor. -/
-theorem glocIncr_den_eq_pow (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ × ℕ) :
+theorem glocIncr_den_eq_pow (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) :
     ∃ m : ℕ, toPoly (glocIncr fuel A D Vi).2 = toPoly Vi.1 ^ m := by
   obtain ⟨m, hm⟩ := hermiteInner_den_eq_pow fuel Vi.1
     (cdiv fuel D ((List.range Vi.2).foldl (fun acc _ => cmul acc Vi.1) [1]))
@@ -55,7 +55,7 @@ denominator of `glocIncr fuel A D Vi` to any positive power beyond what `P ∣ V
 `IsRelPrime P (toPoly (glocIncr fuel A D Vi).2)` whenever `IsRelPrime P (toPoly Vi.1)`. The denominator
 is `Vi^m` (`glocIncr_den_eq_pow`), coprime to `P`. This is the regularity that localizes `g′`'s pole at
 each `Vk` to the single factor `k`. -/
-theorem glocIncr_den_isRelPrime (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ × ℕ) (P : ℚ[X])
+theorem glocIncr_den_isRelPrime (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) (P : ℚ[X])
     (hP : IsRelPrime P (toPoly Vi.1)) :
     IsRelPrime P (toPoly (glocIncr fuel A D Vi).2) := by
   obtain ⟨m, hm⟩ := glocIncr_den_eq_pow fuel A D Vi

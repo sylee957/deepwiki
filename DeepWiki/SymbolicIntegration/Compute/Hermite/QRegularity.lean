@@ -59,7 +59,7 @@ theorem IsQRegular.deriv {Q : ℚ[X]} {f : RatFunc ℚ} (hf : IsQRegular Q f) :
 `(toPoly Vi.1)^m` (`glocIncr_den_eq_pow`), coprime to `Q` whenever `IsRelPrime Q (toPoly Vi.1)`. So the
 increment's rational read has no pole at any other irreducible factor — the localization that confines
 factor `i`'s pole to `Vi`. -/
-theorem glocIncr_toQFun_isQRegular (fuel : ℕ) (A D : CPolyQ) (Vi : CPolyQ × ℕ) {Q : ℚ[X]}
+theorem glocIncr_toQFun_isQRegular (fuel : ℕ) (A D : CPoly ℚ) (Vi : CPoly ℚ × ℕ) {Q : ℚ[X]}
     (hV : toPoly Vi.1 ≠ 0) (hQ : IsRelPrime Q (toPoly Vi.1)) :
     IsQRegular Q (toQFun (glocIncr fuel A D Vi)) := by
   obtain ⟨m, hm⟩ := glocIncr_den_eq_pow fuel A D Vi
@@ -84,8 +84,8 @@ glocᵢ′` minus the `k`-term `glocₖ′` is the sum `Σ_{i∈kept.erase k} gl
 every summand is `glocᵢ′` for `i ≠ k` — pole-free at `Vk` by `glocIncr_toQFun_isQRegular` +
 `IsQRegular.deriv`. Hence the whole interference difference has no pole at `Vk`. The structural heart of
 the per-factor order argument: removing factor `k`'s own contribution leaves a `Vk`-regular remainder. -/
-theorem deriv_fold_sub_glocIncr_isQRegular (fuel : ℕ) (A D : CPolyQ)
-    (factors : List (CPolyQ × ℕ)) (kelem : CPolyQ × ℕ)
+theorem deriv_fold_sub_glocIncr_isQRegular (fuel : ℕ) (A D : CPoly ℚ)
+    (factors : List (CPoly ℚ × ℕ)) (kelem : CPoly ℚ × ℕ)
     (hkmem : kelem ∈ factors.filter (fun Vi => decide (2 ≤ Vi.2)))
     (hnd : (factors.filter (fun Vi => decide (2 ≤ Vi.2))).Nodup)
     (hV : ∀ Vi ∈ factors, toPoly Vi.1 ≠ 0)

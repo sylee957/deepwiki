@@ -37,8 +37,8 @@ theorem toBPoly_bsubresultantGcd_eq_of_filter_singleton (fuel : ℕ) (P Q : BPol
 
 /-- Given the filter identity `hfilt`, `IsSimilar (lrtSubresultant A D j) (toBPoly (bsubresultantGcd
 fuel j (G 0) (G 1)))` at `j = deg (toBPoly (G (m+2)))`. -/
-theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPolyQ) (G : ℕ → BPoly)
-    (bt : ℕ → CPolyQ) (s : ℕ → BPoly) (c : ℕ → CPolyQ) (m : ℕ)
+theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPoly ℚ) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly ℚ) (s : ℕ → BPoly) (c : ℕ → CPoly ℚ) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
@@ -53,8 +53,8 @@ theorem isSimilar_lrtSubresultant_bsubresultantGcd (fuel : ℕ) (A D : CPolyQ) (
 
 /-- As `isSimilar_lrtSubresultant_bsubresultantGcd`, but with the filter identity derived from the
 singleton-filter hypothesis `hfil` instead of taken directly. -/
-theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : CPolyQ) (G : ℕ → BPoly)
-    (bt : ℕ → CPolyQ) (s : ℕ → BPoly) (c : ℕ → CPolyQ) (m : ℕ)
+theorem isSimilar_lrtSubresultant_bsubresultantGcd_real (fuel : ℕ) (A D : CPoly ℚ) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly ℚ) (s : ℕ → BPoly) (c : ℕ → CPoly ℚ) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
@@ -90,8 +90,8 @@ theorem isSimilar_toBPoly_bprimitivePartX (fuel : ℕ) (p : BPoly)
 
 /-- Given the endpoint hypotheses, the filter identity `hfilt`, and content-exactness of `bprimitivePartX`,
 `IsSimilar (lrtSubresultant A D j) (toBPoly (lrtSubresultantCompute fuel j A D))`. -/
-theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPolyQ) (G : ℕ → BPoly)
-    (bt : ℕ → CPolyQ) (s : ℕ → BPoly) (c : ℕ → CPolyQ) (m : ℕ)
+theorem isSimilar_lrtSubresultant_lrtSubresultantCompute (fuel : ℕ) (A D : CPoly ℚ) (G : ℕ → BPoly)
+    (bt : ℕ → CPoly ℚ) (s : ℕ → BPoly) (c : ℕ → CPoly ℚ) (m : ℕ)
     (hG0 : G 0 = liftCtoBPoly D) (hG1 : G 1 = bArgAmtD' A D)
     (hd0 : (toBPoly (G 0)).natDegree = (toPoly D).natDegree)
     (hd1 : (toBPoly (G 1)).natDegree = (toPoly D).natDegree - 1)
