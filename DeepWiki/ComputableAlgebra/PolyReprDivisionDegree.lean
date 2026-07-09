@@ -125,6 +125,26 @@ theorem cgcd_isGCD (fuel : ℕ) (a b : P α) (h : cdeg b < fuel) :
       ∀ e, e ∣ toPoly a → e ∣ toPoly b → e ∣ toPoly (cgcd fuel a b) :=
   ⟨(cgcd_dvd fuel a b h).1, (cgcd_dvd fuel a b h).2, fun e hea heb => dvd_cgcd fuel a b e hea heb⟩
 
+/-- **Exact division:** if `q ∣ p` (and `q ≠ 0`, `fuel > cdeg p`), the `cdivmod` remainder is zero.
+The reduced remainder is a multiple of `q` of degree `< cdeg q`, hence zero. Gateway to exact quotients
+(cofactors, squarefree parts). -/
+theorem cdivmod_exact (fuel : ℕ) (p q : P α) (hq : ¬ cisZero (P := P) q = true)
+    (hfuel : cdeg p < fuel) (hdvd : toPoly q ∣ toPoly p) :
+    cisZero (P := P) (cdivmod fuel p q).2 = true := by
+  rcases cdivmod_remainder_reduced fuel p q hq hfuel with hz | hlt
+  · exact hz
+  · have hqR : toPoly q ∣ toPoly (cdivmod fuel p q).2 := by
+      have hid := toPoly_cdivmod fuel p q
+      have : toPoly (cdivmod fuel p q).2
+          = toPoly p - toPoly q * toPoly (cdivmod fuel p q).1 := by rw [hid]; ring
+      rw [this]; exact dvd_sub hdvd (dvd_mul_right _ _)
+    by_cases hR0 : toPoly (cdivmod fuel p q).2 = 0
+    · exact (cisZero_iff _).mpr hR0
+    · exfalso
+      have hle := Polynomial.natDegree_le_natDegree (Polynomial.degree_le_of_dvd hqR hR0)
+      rw [← cdeg_eq_natDegree, ← cdeg_eq_natDegree] at hle
+      omega
+
 /-! ### Monic normalization (the canonical associate) -/
 
 /-- Scale a polynomial to monic by its inverse leading coefficient. -/
