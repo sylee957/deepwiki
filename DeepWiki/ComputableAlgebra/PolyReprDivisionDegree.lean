@@ -125,6 +125,22 @@ theorem cgcd_isGCD (fuel : ℕ) (a b : P α) (h : cdeg b < fuel) :
       ∀ e, e ∣ toPoly a → e ∣ toPoly b → e ∣ toPoly (cgcd fuel a b) :=
   ⟨(cgcd_dvd fuel a b h).1, (cgcd_dvd fuel a b h).2, fun e hea heb => dvd_cgcd fuel a b e hea heb⟩
 
+/-! ### Degree of products and powers (over a field the coefficient ring is a domain) -/
+
+/-- `cdeg (p·q) = cdeg p + cdeg q` for nonzero `p, q` (field coefficients ⇒ no zero divisors). -/
+theorem cdeg_cmul (p q : P α) (hp : ¬ cisZero (P := P) p = true) (hq : ¬ cisZero (P := P) q = true) :
+    cdeg (mul p q) = cdeg p + cdeg q := by
+  have hP : toPoly p ≠ 0 := fun h => hp ((cisZero_iff p).mpr h)
+  have hQ : toPoly q ≠ 0 := fun h => hq ((cisZero_iff q).mpr h)
+  rw [cdeg_eq_natDegree, toPoly_mul, Polynomial.natDegree_mul hP hQ, ← cdeg_eq_natDegree,
+    ← cdeg_eq_natDegree]
+
+/-- `cdeg (pⁿ) = n · cdeg p` for nonzero `p`. -/
+theorem cdeg_cpow (p : P α) (n : ℕ) (hp : ¬ cisZero (P := P) p = true) :
+    cdeg (cpow p n) = n * cdeg p := by
+  have hP : toPoly p ≠ 0 := fun h => hp ((cisZero_iff p).mpr h)
+  rw [cdeg_eq_natDegree, toPoly_cpow, Polynomial.natDegree_pow, ← cdeg_eq_natDegree]
+
 /-- **Exact division:** if `q ∣ p` (and `q ≠ 0`, `fuel > cdeg p`), the `cdivmod` remainder is zero.
 The reduced remainder is a multiple of `q` of degree `< cdeg q`, hence zero. Gateway to exact quotients
 (cofactors, squarefree parts). -/
