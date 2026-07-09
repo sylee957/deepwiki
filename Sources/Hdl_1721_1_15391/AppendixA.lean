@@ -23,7 +23,7 @@ unformalized — see those catalogs and the block below.
 
 ## NOT YET FORMALIZED (audit 2026-06-26)
 App. A §2.1 Case 1 (`C/(Vᵏy)`): the `k = 1` lower-coefficient solve (the residual `Crem/(Vy)`,
-  a Risch first-order ODE) is the deferred `cRischDEGWf` glue `[deferred]`.
+  a Risch first-order ODE) is the deferred `cRischDEG` glue `[deferred]`.
 App. A §2.4 `θ = exp v`: the `C/y` sub-case (eq. 6) and the *lower* (non-leading,
   non-constant) coefficient ODE solves of the `θ = log v` / `θ = exp v` variants
   (Risch first-order ODE for each coefficient) `[deferred]`.
@@ -72,7 +72,7 @@ abbrev appA_radDeriv_decouples := @radDeriv_decouples
 /-! ## Case 1 — `C/(Vᵏy)`, `θ' = 1` (App. A §2.1) -/
 
 /-- **Case 1 cofactor** (Trager, Appendix A §2.1, p.75–76): `radCase1Cofactor` solves the
-Hermite congruence `(1−k)V'fB ≡ C (mod V)` via the fuel-free Bézout solver `cdiophantineGWf`, giving
+Hermite congruence `(1−k)V'fB ≡ C (mod V)` via the fuel-free Bézout solver `cdiophantineG`, giving
 the numerator `B` of the lowered term `Bf/(V^{k−1}y)`. -/
 abbrev appA_case1_cofactor := @radCase1Cofactor
 
@@ -89,7 +89,7 @@ abbrev appA_case1_cleared_identity := @case1_cleared_identity
 
 /-- **Case 2 cofactor** (Trager, Appendix A §2.2, p.76–77, `n = 2`): `radCase2Cofactor` solves
 the `radDeriv`-validated congruence `B·(½−k)W'h ≡ C (mod W)` (`h = f/W`; the bracket `½−k =
-1−k−eⱼ/n` is Trager's at `eⱼ = 1, n = 2`) via `cdiophantineGWf`, clearing `f`-factors from
+1−k−eⱼ/n` is Trager's at `eⱼ = 1, n = 2`) via `cdiophantineG`, clearing `f`-factors from
 denominators. -/
 abbrev appA_case2_cofactor := @radCase2Cofactor
 

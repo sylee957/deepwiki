@@ -41,18 +41,18 @@ open Compute CPolyG QFunNZG
 -- `cIntegratePolyG`: PARTIAL soundness — the constant case only.
 #check @field_identity_cIntegratePolyG_const
 
--- `cIntegrateReducedGWf`: the conditional fuel-free reduced-case field identities.
-#check @field_identity_of_cIntegrateReducedGWf_primitive
-#check @field_identity_of_cIntegrateReducedGWf_hyperexp
-#check @field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
-#check @field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot
+-- `cIntegrateReducedG`: the conditional fuel-free reduced-case field identities.
+#check @field_identity_of_cIntegrateReducedG_primitive
+#check @field_identity_of_cIntegrateReducedG_hyperexp
+#check @field_identity_of_cIntegrateReducedG_of_checkIdentityG
+#check @field_identity_of_cIntegrateReducedG_hyperexp_overshoot
 
--- `cIntegrateHyperexpNormalGWf`: unconditional fuel-free normal-part soundness.
-#check @cIntegrateHyperexpNormalGWf_sound
-#check @cIntegrateHyperexpNormalGWf_sound_qfunNZG
+-- `cIntegrateHyperexpNormalG`: unconditional fuel-free normal-part soundness.
+#check @cIntegrateHyperexpNormalG_sound
+#check @cIntegrateHyperexpNormalG_sound_qfunNZG
 
--- `cIntegrateHyperexpFullGWf`: the fuel-free full hyperexponential driver soundness.
-#check @cIntegrateHyperexpFullGWf_sound
+-- `cIntegrateHyperexpFullG`: the fuel-free full hyperexponential driver soundness.
+#check @cIntegrateHyperexpFullG_sound
 
 -- `field_identity_of_checkIdentityG`: the carrier-agnostic `checkIdentityG` ⟹ field-identity bridge
 -- (`ComputableIntegrateTowerCorrectG`), consumed by the a-priori one-shots above.

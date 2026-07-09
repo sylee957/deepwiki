@@ -21,12 +21,12 @@ variable {α : Type*} [CField α]
 /-! ## The general derivation `afDerivWf`
 
 `afReduce`/`afMul` already carry a self-computed bound; the one recursive dependency, `f_y⁻¹ mod f`, is
-computed by the well-founded `cdiophantineGWf`. -/
+computed by the well-founded `cdiophantineG`. -/
 
-/-- `f_y⁻¹ mod f` — `afFyInvWf f = (cdiophantineGWf (afFy f) f [1]).1`, the first Bézout cofactor `s` of
+/-- `f_y⁻¹ mod f` — `afFyInvWf f = (cdiophantineG (afFy f) f [1]).1`, the first Bézout cofactor `s` of
 `s·f_y + t·f = 1`. The inverse of `∂f/∂y` in `K(x)[y]/(f)` (valid for separable `f`), degree `< deg f`. -/
 def afFyInvWf (f : CPolyG α) : CPolyG α :=
-  (cdiophantineGWf (afFy f) f [CField.one]).1
+  (cdiophantineG (afFy f) f [CField.one]).1
 
 variable [CDiffField α]
 
@@ -78,16 +78,16 @@ theorem mk_toPolyG_afFyInvWf_mul_afFy (f : CPolyG α) (hf : cnormG f ≠ [])
     (hgne : toPolyG (cgcdWf (afFy f) f).1 ≠ 0) :
     Ideal.Quotient.mk (afIdeal f)
         (toPolyG (afFyInvWf f) * toPolyG (afFy f)) = 1 := by
-  have hbez := toPolyG_cdiophantineGWf (afFy f) f [CField.one] hf hgdeg hgne
+  have hbez := toPolyG_cdiophantineG (afFy f) f [CField.one] hf hgdeg hgne
   have hone : toPolyG ([CField.one] : CPolyG α) = 1 := by
     simp only [denote]
     simp
   rw [hone] at hbez
   rw [show toPolyG (afFyInvWf f) * toPolyG (afFy f)
-      = 1 - toPolyG (cdiophantineGWf (afFy f) f [CField.one]).2 * toPolyG f from by
+      = 1 - toPolyG (cdiophantineG (afFy f) f [CField.one]).2 * toPolyG f from by
         rw [afFyInvWf]; linear_combination hbez]
   have hmem : Ideal.Quotient.mk (afIdeal f)
-      (toPolyG (cdiophantineGWf (afFy f) f [CField.one]).2 * toPolyG f) = 0 :=
+      (toPolyG (cdiophantineG (afFy f) f [CField.one]).2 * toPolyG f) = 0 :=
     Ideal.Quotient.eq_zero_iff_mem.mpr (mul_curve_mem f _)
   rw [map_sub, hmem, map_one, sub_zero]
 

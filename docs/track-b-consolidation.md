@@ -80,10 +80,27 @@ relocation sweep — most squares are already in the correct (first-bridge-avail
 stranded *below* their first-bridge-available file are real targets; treat this as by-exception, and
 never at the cost of pulling a bridge/normalization import into the Prop-free core.
 
-## Item 3 — drop dead name markers (NOT STARTED)
+## Item 3 — drop dead name markers (GWf family DONE)
 
-Retire implementation-history suffixes from names where they no longer disambiguate: `Wf`/`WellFounded`
-(fuel retirement is complete — the `Wf` twin is now the only one), `Full`/`Fast`, and the `G`
-generic-suffix where no non-`G` sibling remains. Pure `git mv`/rename, touches thousands of refs
-(`toPolyG_cgcdWf`, `cIntegrateGFullWf`, …). Highest churn, cosmetic. Batch by op-family, one rename per
-commit, `wiki rdeps` before each.
+Retire implementation-history suffixes from names where they no longer disambiguate.
+
+**`GWf → G` DONE 2026-07-09** (2600 occurrences, 72 `.lean` + 15 `.md` files, one atomic gate-green
+commit). The fuel migration (`docs/gcd-core-fuel-migration.md`) is complete, so the fueled generic
+`…G` twins are deleted and the fuel-free `…GWf` engine is the sole generic version — `Wf` on a `GWf`
+name is a dead marker, and dropping it restores the natural generic `…G` name (`cHermiteReduceTowerGWf`
+→ `cHermiteReduceTowerG`, `cRischDEGWf` → `cRischDEG`, …). **Collision analysis:** across *all* decl
+kinds only `cIntegratePolyGWf` collided (with the abstract `cIntegratePolyG`) — and it was a byte-identical
+`rfl`-duplicate, subsumed first (its own commit). So `GWf → G` is exception-free. `GWf` is never an
+English word, so substring-replace is false-positive-safe even in prose/docstrings; line numbers are
+stable, so the tutorial's `file#L` anchors are unaffected.
+
+**Remaining Item-3 markers are BLOCKED / not-dead:**
+- **Bare `Wf`** (e.g. `cgcdWf`, `cdivWf`, `cmodWf`, `cdivmodWf`, `cresultantWf`, the `radIntegrateCase*Wf`
+  family): 15 collide with a live twin — the concrete `Compute` layer (`Compute.cdivmod`/`cmod`/`cdiv`,
+  `RtResultant.cresultant`) or an abstract-spec twin. `Wf` there still disambiguates fuel-free-generic
+  from the fueled-concrete/abstract sibling. Not a clean drop.
+- **`G` alone:** disambiguates generic-engine ops from the concrete `Compute` ℚ ops (live twins). Keep.
+- **`Full`:** semantic — the full end-to-end integrator (`cIntegrateGFullWf`→now `cIntegrateGFull`) vs the
+  per-case integrators (`cIntegrateHyperexpG`, …). Keep.
+- **`Fast`:** ambiguous (no slow generic twin, but possibly distinguishes from a concrete variant); low
+  value, defer.

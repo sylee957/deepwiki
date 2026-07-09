@@ -7,8 +7,8 @@ import DeepWiki.SymbolicIntegration.Engine.FuelFreeResultant
 /-! # Well-founded generic tower integration engine
 
 The generic tower integration pipeline, by well-founded recursion. Three recursive bottoms — the
-fraction-free gcd kernel `cprimPRSgcdGenCoreWf`, the split loop `cSplitFactorFastGWf`, and Yun's main loop
-`cSqfreeYunFFGgoWf` — and a flat composition (`canonicalRepresentationFastGWf`, `cHermiteReduceTowerGWf`, the
+fraction-free gcd kernel `cprimPRSgcdGenCoreWf`, the split loop `cSplitFactorFastG`, and Yun's main loop
+`cSqfreeYunFFGgoWf` — and a flat composition (`canonicalRepresentationFastG`, `cHermiteReduceTowerG`, the
 logarithmic part) over those leaves. `[CField α]`-only on the runtime fragment (plus
 `[CDiffField α]`/`[CFracGcdCoreWf α]` where needed), so it `native_decide`s over the noncomputable tower. -/
 
@@ -155,30 +155,30 @@ end
 
 /-! ## The remaining recursive bottoms: the §3.5 split and Yun's main loop
 
-The §3.5 split loop `cSplitFactorFastGWf` (`t`-degree drop) and Yun's main loop `cSqfreeYunFFGgoWf`
+The §3.5 split loop `cSplitFactorFastG` (`t`-degree drop) and Yun's main loop `cSqfreeYunFFGgoWf`
 (multiplicity counter), generic and `[CField α]`-only. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
-/-- The generic `SplitFactor` step `cstepGWf Dt p = cdivWf (cgcdFFCoreWf p (cmonomialDeriv Dt p))
+/-- The generic `SplitFactor` step `cstepG Dt p = cdivWf (cgcdFFCoreWf p (cmonomialDeriv Dt p))
 (cgcdFFCoreWf p (cderivG p))` — the special-factor candidate `S = gcd(p, Dp)/gcd(p, dp/dt)`. -/
-def cstepGWf (Dt : CPolyG α) (p : CPolyG α) : CPolyG α :=
+def cstepG (Dt : CPolyG α) (p : CPolyG α) : CPolyG α :=
   cdivWf (CFracGcdCoreWf.cgcdFFCoreWf p (cmonomialDeriv Dt p))
     (CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p))
 
-/-- Generic splitting-factorization loop `cSplitFactorFastGWf Dt p = (pₙ, pₛ)`: one step extracts
-`S = cstepGWf Dt p`; a constant `S` (`cdegG S = 0`) ⇒ `p` is normal, else recurse on the exact quotient
+/-- Generic splitting-factorization loop `cSplitFactorFastG Dt p = (pₙ, pₛ)`: one step extracts
+`S = cstepG Dt p`; a constant `S` (`cdegG S = 0`) ⇒ `p` is normal, else recurse on the exact quotient
 `p/S = cdivWf p S` and accumulate `S` into the special part. Well-founded on `(cnormG p).length`.
 `[CField α] [CDiffField α] [CFracGcdCoreWf α]`-generic. -/
-def cSplitFactorFastGWf (Dt : CPolyG α) (p : CPolyG α) : CPolyG α × CPolyG α :=
-  let S := cstepGWf Dt p
+def cSplitFactorFastG (Dt : CPolyG α) (p : CPolyG α) : CPolyG α × CPolyG α :=
+  let S := cstepG Dt p
   if cdegG S = 0 then (p, [CField.one])
   else
     let pq := cdivWf p S
     if (cnormG pq : List α).length < (cnormG p : List α).length then
-      let (qn, qs) := cSplitFactorFastGWf Dt pq
+      let (qn, qs) := cSplitFactorFastG Dt pq
       (qn, cmulG S qs)
     else (p, [CField.one])   -- unreachable on a real run (the special factor drops the degree)
 termination_by (cnormG p).length
@@ -194,7 +194,7 @@ variable {α : Type*} [CField α] [CFracGcdCoreWf α]
 multiplicity counter `fo` (so the loop never stops early — unlike a degree-guarded loop, which truncates
 at skipped multiplicities). Stops when `b` is constant (`cdegG b = 0`) or the counter is exhausted, else
 emits `p = cmonicG (cgcdFFCoreWf b d)`, recurses on `b' = cdivWf b p`, `d' = cdivWf d p − b'` with `fo`
-decremented. The counter `fo` is supplied once by the entry `cSqfreeYunFFGWf` as `cyunBoundG`.
+decremented. The counter `fo` is supplied once by the entry `cSqfreeYunFFG` as `cyunBoundG`.
 `[CField α] [CFracGcdCoreWf α]`-generic. -/
 def cSqfreeYunFFGgoWf : ℕ → CPolyG α → CPolyG α → List (CPolyG α)
   | 0, _, _ => []
@@ -211,22 +211,22 @@ runs one step per multiplicity slot, and the max multiplicity is `≤ deg p < (c
 once from the input. The generic analogue of `yunBound`. -/
 def cyunBoundG (p : CPolyG α) : ℕ := (cnormG p : List α).length
 
-/-- Generic Yun squarefree factorization in `t` `cSqfreeYunFFGWf p = [p₁, …, pₘ]`: with
+/-- Generic Yun squarefree factorization in `t` `cSqfreeYunFFG p = [p₁, …, pₘ]`: with
 `g = cgcdFFCoreWf p (cderivG p)`, `b₁ = cdivWf p g`, `d₁ = cderivG p/g − b₁'`, runs the Yun loop
 `cSqfreeYunFFGgoWf (cyunBoundG p) b₁ d₁` with the internally-computed counter `cyunBoundG p`. `p` is
 associate to `∏ᵢ pᵢ^i`. Correct even at skipped multiplicities. `[CField α] [CFracGcdCoreWf α]`-generic. -/
-def cSqfreeYunFFGWf (p : CPolyG α) : List (CPolyG α) :=
+def cSqfreeYunFFG (p : CPolyG α) : List (CPolyG α) :=
   let g := CFracGcdCoreWf.cgcdFFCoreWf p (cderivG p)
   let b1 := cdivWf p g
   let d1 := csubG (cdivWf (cderivG p) g) (cderivG b1)
   cSqfreeYunFFGgoWf (cyunBoundG p) b1 d1
 
-/-- Generic split-squarefree-factor over the tower `cSplitSquarefreeFactorFastGWf Dt p =
-((N₁,…,Nₘ), (S₁,…,Sₘ))`. Yun-factor `p` in `t` (`cSqfreeYunFFGWf`); per factor `pᵢ`,
+/-- Generic split-squarefree-factor over the tower `cSplitSquarefreeFactorFastG Dt p =
+((N₁,…,Nₘ), (S₁,…,Sₘ))`. Yun-factor `p` in `t` (`cSqfreeYunFFG`); per factor `pᵢ`,
 `Sᵢ = cgcdFFCoreWf pᵢ (cmonomialDeriv Dt pᵢ)` (the special part) and `Nᵢ = cdivWf pᵢ Sᵢ` (normal part). -/
-def cSplitSquarefreeFactorFastGWf [CDiffField α] (Dt : CPolyG α) (p : CPolyG α) :
+def cSplitSquarefreeFactorFastG [CDiffField α] (Dt : CPolyG α) (p : CPolyG α) :
     List (CPolyG α) × List (CPolyG α) :=
-  let ps := cSqfreeYunFFGWf p
+  let ps := cSqfreeYunFFG p
   let parts := ps.map (fun pf =>
     let si := CFracGcdCoreWf.cgcdFFCoreWf pf (cmonomialDeriv Dt pf)
     let ni := cdivWf pf si
@@ -238,7 +238,7 @@ end CPolyG
 /-! ## The flat-composition pipeline
 
 Everything past the three recursive bottoms is a flat composition over the leaves above plus the generic
-`cbezoutOneWf`, `cextendedEuclideanSplitWf`, `cdiophantineGWf`, `cHermiteReduceTowerInnerWf`,
+`cbezoutOneWf`, `cextendedEuclideanSplitWf`, `cdiophantineG`, `cHermiteReduceTowerInnerWf`,
 `cPrimitivePolyIntegrateWf`, `cdivWf`, and the §5.6 `cresultantWf`/`cinterpolateG`/`cHornerG`. -/
 
 namespace CPolyG
@@ -246,25 +246,25 @@ namespace CPolyG
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- Generic canonical representation over the tower:
-`canonicalRepresentationFastGWf Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).
-Divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFastGWf`); Bézout-split
+`canonicalRepresentationFastG Dt a d = (fₚ, fₛ, fₙ) = (q, (b, dₛ), (c, dₙ))` for `f = a/d` (`d` monic).
+Divide `a = q·d + r` (`cdivmodWf`); split the denominator `d = dₛ·dₙ` (`cSplitFactorFastG`); Bézout-split
 `r` over the coprime `(dₙ, dₛ)` (`cextendedEuclideanSplitWf` with `cbezoutOneWf`). Stated with `.1`/`.2`
 projections. -/
-def canonicalRepresentationFastGWf (Dt : CPolyG α) (a d : CPolyG α) :
+def canonicalRepresentationFastG (Dt : CPolyG α) (a d : CPolyG α) :
     CPolyG α × (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
   let qr := cdivmodWf a d
-  let dnds := cSplitFactorFastGWf Dt d
+  let dnds := cSplitFactorFastG Dt d
   let uw := cbezoutOneWf dnds.1 dnds.2
   let bc := cextendedEuclideanSplitWf dnds.1 dnds.2 qr.2 uw.1 uw.2
   (qr.1, (bc.1, dnds.2), (bc.2, dnds.1))
 
-/-- Generic transcendental Hermite reduction `cHermiteReduceTowerGWf Dt a d = ((gnum, gden),
-(h_num, h_den))` over the tower: squarefree-factor `d` with `cSqfreeYunFFGWf`; for each factor `(v, i)` of
+/-- Generic transcendental Hermite reduction `cHermiteReduceTowerG Dt a d = ((gnum, gden),
+(h_num, h_den))` over the tower: squarefree-factor `d` with `cSqfreeYunFFG`; for each factor `(v, i)` of
 multiplicity `i ≥ 2`, run the inner loop `cHermiteReduceTowerInnerWf` (with `u = d/vⁱ` via `cdivWf`); recover
 `h_num` over the squarefree radical `Dstar` via `cdivWf`. Stated with `.1`/`.2` projections. -/
-def cHermiteReduceTowerGWf (Dt : CPolyG α) (a d : CPolyG α) :
+def cHermiteReduceTowerG (Dt : CPolyG α) (a d : CPolyG α) :
     (CPolyG α × CPolyG α) × (CPolyG α × CPolyG α) :=
-  let factors := cSqfreeYunFFGWf d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
+  let factors := cSqfreeYunFFG d                          -- `[v₁, …, vₘ]`, vᵢ of multiplicity i
   let Dstar := factors.foldl (fun acc vi => cmulG acc vi) [CField.one]   -- squarefree radical ∏ᵢ vᵢ
   let g : CPolyG α × CPolyG α := factors.zipIdx.foldl
     (fun (gAcc : CPolyG α × CPolyG α) (vi, idx) =>
@@ -285,46 +285,46 @@ def cHermiteReduceTowerGWf (Dt : CPolyG α) (a d : CPolyG α) :
 
 /-! ### The generic logarithmic part (Rothstein–Trager)
 
-`cResidueResultantTowerGWf`/`cLogArgTowerGWf`/`cRationalResiduesGWf`/`cLogPartGWf`, taking the residue
+`cResidueResultantTowerG`/`cLogArgTowerG`/`cRationalResiduesG`/`cLogPartG`, taking the residue
 candidates as `α` elements; the resultant runs through `cresultantWf`, the log argument through
 `cgcdFFCoreWf`. -/
 
-/-- Generic residue resultant `cResidueResultantTowerGWf Dt a d = R(z) = res_t(d, a − z·Dd)`. Sample
+/-- Generic residue resultant `cResidueResultantTowerG Dt a d = R(z) = res_t(d, a − z·Dd)`. Sample
 `R(zₖ) = res_t(d, a − zₖ·Dd)` at the natural nodes `zₖ = cnatCastG k` (`k = 0…deg_t d`) with the
 Euclidean-PRS resultant `cresultantWf`, then Lagrange-interpolate (`cinterpolateG`). -/
-def cResidueResultantTowerGWf (Dt : CPolyG α) (a d : CPolyG α) : CPolyG α :=
+def cResidueResultantTowerG (Dt : CPolyG α) (a d : CPolyG α) : CPolyG α :=
   let n := cdegG d
   let pts : List (α × α) := (List.range (n + 1)).map (fun k =>
     let zk : α := cnatCastG k
     (zk, cresultantWf d (cAmcDdG Dt a d zk)))
   cinterpolateG pts
 
-/-- Generic log argument `cLogArgTowerGWf Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`: the
+/-- Generic log argument `cLogArgTowerG Dt a d c = gcd_t(d, a − c·Dd)` for a residue `c : α`: the
 fraction-free gcd `cgcdFFCoreWf` of `d` and `a − c·Dd`. -/
-def cLogArgTowerGWf (Dt : CPolyG α) (a d : CPolyG α) (c : α) : CPolyG α :=
+def cLogArgTowerG (Dt : CPolyG α) (a d : CPolyG α) (c : α) : CPolyG α :=
   CFracGcdCoreWf.cgcdFFCoreWf d (cAmcDdG Dt a d c)
 
-/-- Generic rational/field residues `cRationalResiduesGWf Dt a d cands`: keep the candidates
-`c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTowerGWf Dt a d`,
+/-- Generic rational/field residues `cRationalResiduesG Dt a d cands`: keep the candidates
+`c ∈ cands : List α` that are roots of the residue resultant `R(z) = cResidueResultantTowerG Dt a d`,
 i.e. `R(c) = 0` (tested by `CField.isZero (cHornerG R c)`). -/
-def cRationalResiduesGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List α :=
-  let R := cResidueResultantTowerGWf Dt a d
+def cRationalResiduesG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List α :=
+  let R := cResidueResultantTowerG Dt a d
   cands.filter (fun c => CField.isZero (cHornerG R c))
 
-/-- Generic logarithmic part `cLogPartGWf Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ residues]`: pair
-each residue `c : α` (from `cRationalResiduesGWf`) with its log argument `cLogArgTowerGWf Dt a d c`. -/
-def cLogPartGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List (α × CPolyG α) :=
-  (cRationalResiduesGWf Dt a d cands).map (fun c => (c, cLogArgTowerGWf Dt a d c))
+/-- Generic logarithmic part `cLogPartG Dt a d cands = [(c, gcd_t(d, a − c·Dd)) | c ∈ residues]`: pair
+each residue `c : α` (from `cRationalResiduesG`) with its log argument `cLogArgTowerG Dt a d c`. -/
+def cLogPartG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) : List (α × CPolyG α) :=
+  (cRationalResiduesG Dt a d cands).map (fun c => (c, cLogArgTowerG Dt a d c))
 
-/-- The generic reduced-case integration capstone `cIntegrateReducedGWf Dt a d cands`: for `f = a/d`
-reduced/normal, `∫ f = g + ∑ c·log(v)`. Hermite-reduce (`cHermiteReduceTowerGWf`) to the rational part
+/-- The generic reduced-case integration capstone `cIntegrateReducedG Dt a d cands`: for `f = a/d`
+reduced/normal, `∫ f = g + ∑ c·log(v)`. Hermite-reduce (`cHermiteReduceTowerG`) to the rational part
 `g = gnum/gden` and the simple residual `h = h_num/h_den`, then take the residue log part of `h`
-(`cLogPartGWf`, residues drawn from `cands : List α`). Returns the `IntegralResultG` `⟨(gnum, gden),
+(`cLogPartG`, residues drawn from `cands : List α`). Returns the `IntegralResultG` `⟨(gnum, gden),
 [(c, v)]⟩`. -/
-def cIntegrateReducedGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+def cIntegrateReducedG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     IntegralResultG α :=
-  let H := cHermiteReduceTowerGWf Dt a d
-  let logs := cLogPartGWf Dt H.2.1 H.2.2 cands
+  let H := cHermiteReduceTowerG Dt a d
+  let logs := cLogPartG Dt H.2.1 H.2.2 cands
   ⟨(H.1.1, H.1.2), logs⟩
 
 end CPolyG
@@ -339,7 +339,7 @@ logs — computes over the tower at level 2 and the returned `g + ∑ cᵢ·log(
 /-- The Hermite reducer computes the rational part at level 2: for `f = 1/t₂²` over `ℚ(x)(t₁)[t₂]` with
 `Dt₂ = t₂² + 1`, the returned rational part and residual satisfy the cleared Hermite identity. -/
 theorem towerHermiteLvl2_rationalPartWf :
-    (let res := CPolyG.cHermiteReduceTowerGWf towerHermiteLvl2Dt
+    (let res := CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt
         towerHermiteLvl2A towerHermiteLvl2D
       let gnum := res.1.1
       let gden := res.1.2
@@ -356,12 +356,12 @@ theorem towerHermiteLvl2_rationalPartWf :
 
 /-- The level-2 residual denominator has degree 1. -/
 theorem towerHermiteLvl2_residual_degreeWf :
-    CPolyG.cdegG (CPolyG.cHermiteReduceTowerGWf towerHermiteLvl2Dt
+    CPolyG.cdegG (CPolyG.cHermiteReduceTowerG towerHermiteLvl2Dt
       towerHermiteLvl2A towerHermiteLvl2D).2.2 = 1 := by native_decide
 
 /-- The canonical representation recombines to `f` at level 2. -/
 theorem towerCanRepLvl2_recombinesWf :
-    (let res := CPolyG.canonicalRepresentationFastGWf towerCanRepLvl2Dt
+    (let res := CPolyG.canonicalRepresentationFastG towerCanRepLvl2Dt
         towerCanRepLvl2A towerCanRepLvl2D
       let q := res.1
       let b := res.2.1.1
@@ -377,34 +377,34 @@ theorem towerCanRepLvl2_recombinesWf :
 /-- The recovered level-2 logarithmic part has length 2: the residue scan over `ℚ(x)(t₁)[t₂]` finds
 exactly the two rational residues `±1/2` (log arguments `t₂ ± 1`). -/
 theorem towerIntLvl2_logs_lengthWf :
-    (CPolyG.cIntegrateReducedGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
+    (CPolyG.cIntegrateReducedG towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
       towerIntLvl2Cands).logs.length = 2 := by native_decide
 
 /-- A full elementary tower integral at level 2 with `D(∫f) = f`. For
-`f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` over ℚ(x)(t₁)(t₂), the capstone `cIntegrateReducedGWf` returns an
+`f = (1/2)/(t₂+1) − (1/2)/(t₂−1)` over ℚ(x)(t₁)(t₂), the capstone `cIntegrateReducedG` returns an
 `IntegralResultG` whose antiderivative identity `D(rational) + ∑ᵢ cᵢ·(D(vᵢ)/vᵢ) = f` holds exactly
 (`checkIdentityG`). -/
 theorem towerIntLvl2_fullIntegralWf :
     CPolyG.checkIdentityG towerIntLvl2Dt
-      (CPolyG.cIntegrateReducedGWf towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
+      (CPolyG.cIntegrateReducedG towerIntLvl2Dt towerIntLvl2Num towerIntLvl2Den
         towerIntLvl2Cands)
       towerIntLvl2Num towerIntLvl2Den = true := by native_decide
 
 /-! ## The remaining RDE (PolyRischDE / SPDE) recursive bottoms
 
 Two more `[CField α]`-generic degree-recursion bottoms of the RDE pipeline — the non-cancellation solve
-`cPolyRischDENoCancelGWf` and the SPDE `cSPDEGWf`. The cancellation cases and the top driver `cRischDEGWf`
+`cPolyRischDENoCancelG` and the SPDE `cSPDEG`. The cancellation cases and the top driver `cRischDEG`
 continue in `Tower/RischDEWellFounded`. -/
 
 namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α]
 
-/-- Generic non-cancellation Poly-Risch-DE `cPolyRischDENoCancelGWf Dt b c n`: solves `Dq + b·q = c` for
+/-- Generic non-cancellation Poly-Risch-DE `cPolyRischDENoCancelG Dt b c n`: solves `Dq + b·q = c` for
 `q ∈ α[t]` with `deg(q) ≤ n` (`n : ℤ`), top-down — `p = (lc(c)/lc(b))·tᵐ` (`m = deg(c) − deg(b)`), recurse on
 `c' = c − D(p) − b·p` (`D = cmonomialDeriv Dt`). Returns `none` or `some q`. Well-founded on
 `(cnormG c).length`. `[CField α] [CDiffField α]`-generic. -/
-def cPolyRischDENoCancelGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
+def cPolyRischDENoCancelG (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
     Option (CPolyG α) :=
   if cisZeroG c then some []
   else
@@ -415,7 +415,7 @@ def cPolyRischDENoCancelGWf (Dt : CPolyG α) (b c : CPolyG α) (n : ℤ) :
       let p := cshiftG m.toNat [coeff]
       let c' := csubG (csubG c (cmonomialDeriv Dt p)) (cmulG b p)
       if (cnormG c' : List α).length < (cnormG c : List α).length then
-        match cPolyRischDENoCancelGWf Dt b c' (m - 1) with
+        match cPolyRischDENoCancelG Dt b c' (m - 1) with
         | none => none
         | some q => some (caddG p q)
       else none   -- unreachable on a non-cancellation run (the leading term cancels, degree drops)
@@ -428,19 +428,19 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
-/-- Generic SPDE `cSPDEGWf Dt a b c n`: the `g = gcd(a, b)`-peel reducing the degree-bounded
+/-- Generic SPDE `cSPDEG Dt a b c n`: the `g = gcd(a, b)`-peel reducing the degree-bounded
 `a·Dq + b·q = c` to one with `a = 1`. Returns `none` or `some (b̄, c̄, m, α', β)` so any solution is
 `q = α'·h + β` with `h` solving `Dh + b̄·h = c̄`, `deg(h) ≤ m`. Peels `g = cgcdFFCoreWf a b`; the constant
-`a/g` base case returns the identity reconstruction, else solves the Bézout `cdiophantineGWf b̄ ā c̄` and
+`a/g` base case returns the identity reconstruction, else solves the Bézout `cdiophantineG b̄ ā c̄` and
 recurses on `ā = a/g` at `n − deg(ā)`. Well-founded on `(n+1).toNat`. `[CField α] [CDiffField α]
 [CFracGcdCoreWf α]`-generic. -/
-def cSPDEGWf (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ) :
+def cSPDEG (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ) :
     Option (CPolyG α × CPolyG α × ℤ × CPolyG α × CPolyG α) :=
   if n < 0 then
     if cisZeroG c then some ([], [], 0, [], []) else none
   else
     let g := CFracGcdCoreWf.cgcdFFCoreWf a b
-    if cdvdGWf g c then
+    if cdvdG g c then
       let a' := cdivWf a g
       let b' := cdivWf b g
       let c' := cdivWf c g
@@ -448,11 +448,11 @@ def cSPDEGWf (Dt : CPolyG α) (a b c : CPolyG α) (n : ℤ) :
         let ainv := CField.inv (cleadG a')
         some (cscaleG ainv b', cscaleG ainv c', n, [CField.one], [])
       else
-        let (r, z) := cdiophantineGWf b' a' c'
+        let (r, z) := cdiophantineG b' a' c'
         let Da := cmonomialDeriv Dt a'
         let Dr := cmonomialDeriv Dt r
         if (n - (cdegG a' : ℤ) + 1).toNat < (n + 1).toNat then
-          match cSPDEGWf Dt a' (caddG b' Da) (csubG z Dr) (n - (cdegG a' : ℤ)) with
+          match cSPDEG Dt a' (caddG b' Da) (csubG z Dr) (n - (cdegG a' : ℤ)) with
           | none => none
           | some (bbar, cbar, m, α', β) =>
               some (bbar, cbar, m, cmulG a' α', caddG (cmulG a' β) r)

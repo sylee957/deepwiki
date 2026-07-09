@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.RatFuncValuation
 
 /-! # RDE inner-solve exhaustiveness (`hsolveWf`)
 
-The assembled solve `cRischDEGWf` succeeds iff its three stages (normal-denominator, SPDE, poly-RDE
+The assembled solve `cRischDEG` succeeds iff its three stages (normal-denominator, SPDE, poly-RDE
 dispatcher) each return `some`; `RischDESolveExhaustiveResidualWf` bundles the three stage-`some`
 implications and yields the `hsolveWf` completeness clause, assembled into `RischDEInnerCompletenessWf`. -/
 
@@ -16,49 +16,49 @@ namespace DeepWiki.SymbolicIntegration
 
 open Compute CPolyG QFunNZG
 
-/-! ## Engine layer: `cRischDEGWf.isSome` from stage `some`s -/
+/-! ## Engine layer: `cRischDEG.isSome` from stage `some`s -/
 
 section EngineLayerWf
 
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischField α]
 
-/-- The Wf stage `some`s force `cRischDEGWf.isSome`. -/
-theorem cRischDEGWf_isSome_of_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α)
+/-- The Wf stage `some`s force `cRischDEG.isSome`. -/
+theorem cRischDEG_isSome_of_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α)
     (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α)
-    (hnorm : cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0))
-    (hspde : cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+    (hnorm : cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0))
+    (hspde : cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β))
-    (hpoly : cPolyRischDEGWf Dt bbar cbar m = some v) :
-    (cRischDEGWf Dt fnum fden gnum gden).isSome = true := by
-  rw [cRischDEGWf, hnorm]
+    (hpoly : cPolyRischDEG Dt bbar cbar m = some v) :
+    (cRischDEG Dt fnum fden gnum gden).isSome = true := by
+  rw [cRischDEG, hnorm]
   simp only [hspde, hpoly, Option.isSome_some]
 
 /-- The fuel-free assembled solve succeeds iff its three Wf stages succeed. -/
-theorem cRischDEGWf_isSome_iff_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
-    (cRischDEGWf Dt fnum fden gnum gden).isSome = true ↔
+theorem cRischDEG_isSome_iff_stages (Dt : CPolyG α) (fnum fden gnum gden : CPolyG α) :
+    (cRischDEG Dt fnum fden gnum gden).isSome = true ↔
       ∃ (a0 b0 c0 h0 bbar cbar : CPolyG α) (m : ℤ) (α' β v : CPolyG α),
-        cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0)
-        ∧ cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
-            (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-              (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-              (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+        cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0)
+        ∧ cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
+            (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+              (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+              (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 : ℤ)
           = some (bbar, cbar, m, α', β)
-        ∧ cPolyRischDEGWf Dt bbar cbar m = some v := by
+        ∧ cPolyRischDEG Dt bbar cbar m = some v := by
   constructor
   · intro h
     obtain ⟨⟨ynum, yden⟩, hy⟩ := Option.isSome_iff_exists.mp h
     obtain ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly, _, _⟩ :=
-      cRischDEGWf_some_imp_stages_structural Dt fnum fden gnum gden ynum yden hy
+      cRischDEG_some_imp_stages_structural Dt fnum fden gnum gden ynum yden hy
     exact ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly⟩
   · rintro ⟨a0, b0, c0, h0, bbar, cbar, m, α', β, v, hnorm, hspde, hpoly⟩
-    exact cRischDEGWf_isSome_of_stages Dt fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
+    exact cRischDEG_isSome_of_stages Dt fnum fden gnum gden a0 b0 c0 h0 bbar cbar m α' β v
       hnorm hspde hpoly
 
 end EngineLayerWf
@@ -137,42 +137,42 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 structure RischDESolveExhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
   /-- A polynomial solution makes the normal-denominator step return `some`. -/
   hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true
+    (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true
   /-- A solution makes the SPDE peel return `some`. -/
   hspde : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     ∀ a0 b0 c0 h0 : CPolyG α,
-      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
-      (cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
-          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)).isSome = true
+      cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      (cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 : ℤ)).isSome = true
   /-- For the SPDE output, a solution makes the poly-RDE dispatcher return `some`. -/
   hpoly : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
     ∀ a0 b0 c0 h0 bbar cbar : CPolyG α, ∀ m : ℤ, ∀ α' β : CPolyG α,
-      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
-      cSPDEGWf Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
-          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 : ℤ)
+      cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      cSPDEG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
+          (cRdeBoundDegreeG Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 : ℤ)
         = some (bbar, cbar, m, α', β) →
-      (cPolyRischDEGWf Dt bbar cbar m).isSome = true
+      (cPolyRischDEG Dt bbar cbar m).isSome = true
 
 /-- The Wf exhaustiveness residual produces the exact Wf `hsolve` clause. -/
 theorem hsolveWf_of_exhaustiveResidualWf (Dt fnum fden gnum gden : CPolyG α)
     (hres : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
     (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRischDEGWf Dt fnum fden gnum gden).isSome = true := by
+      (cRischDEG Dt fnum fden gnum gden).isSome = true := by
   intro hsol
   obtain ⟨⟨a0, b0, c0, h0⟩, hnorm⟩ := Option.isSome_iff_exists.mp (hres.hnorm hsol)
   obtain ⟨⟨bbar, cbar, m, α', β⟩, hspde⟩ :=
     Option.isSome_iff_exists.mp (hres.hspde hsol a0 b0 c0 h0 hnorm)
   obtain ⟨v, hpoly⟩ :=
     Option.isSome_iff_exists.mp (hres.hpoly hsol a0 b0 c0 h0 bbar cbar m α' β hnorm hspde)
-  exact cRischDEGWf_isSome_of_stages Dt fnum fden gnum gden
+  exact cRischDEG_isSome_of_stages Dt fnum fden gnum gden
     a0 b0 c0 h0 bbar cbar m α' β v hnorm hspde hpoly
 
 end ExhaustiveResidualWf
@@ -202,17 +202,17 @@ end AssembleWf
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
     [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
     (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true)
+      (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true)
     (hbound : ∀ a0 b0 c0 h0 : CPolyG α,
-      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
       ∀ q : CPolyG α,
-        IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 q →
         cdegG q ≤ cRdeBoundDegreeG Dt
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1)
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1)
     (hres : RischDESolveExhaustiveResidualWf Dt fnum fden gnum gden) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
   { hnorm := hnorm

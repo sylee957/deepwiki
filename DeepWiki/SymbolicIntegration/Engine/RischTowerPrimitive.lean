@@ -24,7 +24,7 @@ omit [CRischField α] in
 identity `hid : D_tower(⟦qp/1⟧) = ⟦fₚ/1⟧` and the vanishing special numerator `hb : crSpecNum = 0`, the
 `specialSound` conclusion follows: `⟦1⟧ ≠ 0`, the witness `v = ⟦fₚ/1⟧` is the special derivative (`hid`), and
 `v + ⟦cₙ/dₙ⟧ = a/d` from `canonicalReconstruction_of_charZero` with the special term dropping (`b = 0`).
-Agnostic to HOW `hid` was obtained — the base proves it via `cPolyRischDEGWf_nil_field_identity`, the tower via
+Agnostic to HOW `hid` was obtained — the base proves it via `cPolyRischDEG_nil_field_identity`, the tower via
 the `implicitDeriv`/`towerFractionFieldDerivG_div` bridge — so both `*_specialSound` proofs reduce to this. -/
 theorem primitiveSpecialSoundCore [Fact (GcdFFCorrect (α := α))]
     (Dt a d qp : CPolyG α) (hd0 : toPolyG d ≠ 0)
@@ -60,7 +60,7 @@ theorem primitiveGuardedCase_specialSound [Fact (GcdFFCorrect (α := α))]
   · rw [if_pos hguard] at hhook
     rw [Bool.and_eq_true, Bool.and_eq_true] at hguard
     obtain ⟨⟨hb, hDt1g⟩, hconstg⟩ := hguard
-    rcases hqp : cPolyRischDEGWf Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) with _ | qp
+    rcases hqp : cPolyRischDEG Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) with _ | qp
     · rw [hqp] at hhook; simp at hhook
     · rw [hqp] at hhook
       simp only [Option.some.injEq, Prod.mk.injEq] at hhook

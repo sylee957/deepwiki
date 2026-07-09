@@ -24,10 +24,10 @@ the argument is `Dstar` itself; otherwise it is the parametric degree-`i` subres
 Root-free residues stay implicit as the roots of `Rᵢ`. -/
 def cLrtLogArgG (Dt hNum Dstar : CPolyG α) : List (CPolyG α × List (CPolyG α)) :=
   let Dd := cmonomialDeriv Dt Dstar
-  let R := cResidueResultantTowerGWf Dt hNum Dstar
+  let R := cResidueResultantTowerG Dt hNum Dstar
   let n := cdegG Dstar
   let m := cdegG Dd
-  (cSqfreeYunFFGWf R).zipIdx.filterMap (fun (Ri, idx) =>
+  (cSqfreeYunFFG R).zipIdx.filterMap (fun (Ri, idx) =>
     let i := idx + 1
     if (cnormG Ri : List α).length ≤ 1 then none
     else if i = n then some (Ri, Dstar.map (fun c => ([c] : CPolyG α)))
@@ -45,7 +45,7 @@ open Compute CPolyG
 
 /-- The residue resultant of `1/(t²−1)` is `R(z) = 1 − 4z²` (roots `±1/2` — the residues). -/
 theorem cResidueResultant_invT2m1 :
-    cResidueResultantTowerGWf ([1] : CPolyG ℚ) [1] [-1, 0, 1] = [1, 0, -4] := by native_decide
+    cResidueResultantTowerG ([1] : CPolyG ℚ) [1] [-1, 0, 1] = [1, 0, -4] := by native_decide
 
 /-- The root-free LRT log part of `∫ 1/(t²−1)`: one pair `(z²−1/4, S₁)` — the residue minimal polynomial
 `Rᵢ = z²−1/4` (residues `±1/2` stay *implicit*) and the parametric subresultant `S₁(z,t) = 1 − 2z·t`

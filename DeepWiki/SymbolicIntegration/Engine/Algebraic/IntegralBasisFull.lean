@@ -168,7 +168,7 @@ discriminant numerator with `p² | d` — where `O` may still be non-maximal. -/
 def badPrimesOrder (f : CPolyG (QFunNZG ℚ)) (O : List (CPolyG (QFunNZG ℚ))) :
     List (CPolyG ℚ) :=
   let d := discNumOrder f O
-  let distinct := ((cSqfreeYunFFGWf d).map cmonicG).filter (fun p => 0 < cdegG p)
+  let distinct := ((cSqfreeYunFFG d).map cmonicG).filter (fun p => 0 < cdegG p)
   distinct.filter (fun p => cisZeroG (cmodWf d (cmulG p p)))
 
 /-- `true` iff two order bases agree: each `O1ᵢ` is `cisZeroG`-equal to `O2ᵢ` over the `n`

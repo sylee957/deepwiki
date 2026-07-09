@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.RischDE.Structural
 
 /-! # Field-level soundness of the raw RDE solve `crischDERawSolveWf`
 
-A successful `crischDERawSolveWf` returns a `cRischDEGWf [1]`-success pair, so the field-level
+A successful `crischDERawSolveWf` returns a `cRischDEG [1]`-success pair, so the field-level
 Risch-DE identity follows from the isolated residual `RawSolveResidualWf`. -/
 
 open Polynomial Classical
@@ -41,20 +41,20 @@ positive-`deg(bbar)` dispatcher side-condition, and the two input-denominator no
 structure RawSolveResidualWf (ftilde gtilde : QFunNZG β) : Prop where
   /-- The structural residual on the base solve, for the matching normal-denominator output. -/
   hres : ∀ a0 b0 c0 h0 : CPolyG β,
-    cRdeNormalDenominatorGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+    cRdeNormalDenominatorG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
         = some (a0, b0, c0, h0) →
       RischDEStructuralResidualWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
         a0 b0 c0 h0
   /-- The positive-`deg(bbar)` dispatcher side-condition (non-cancellation routing). -/
   hdb : ∀ a0 b0 c0 bbar cbar : CPolyG β, ∀ m : ℤ, ∀ α' β' : CPolyG β,
-    cSPDEGWf ([CField.one] : CPolyG β)
-        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
-        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
-        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
+    cSPDEG ([CField.one] : CPolyG β)
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
         (cRdeBoundDegreeG ([CField.one] : CPolyG β)
-          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β') → 0 < cdegG bbar
   /-- The input `ftilde`'s denominator is nonzero. -/
   hfden : toPolyG ftilde.1.2 ≠ 0
@@ -71,13 +71,13 @@ theorem crischDERawSolveWf_field_of_residual (ftilde gtilde y : QFunNZG β)
         + amG β (toPolyG ftilde.1.1) / amG β (toPolyG ftilde.1.2)
           * (amG β (toPolyG y.1.1) / amG β (toPolyG y.1.2))
       = amG β (toPolyG gtilde.1.1) / amG β (toPolyG gtilde.1.2) := by
-  -- unfold the raw solve to the bare `cRischDEGWf [1]` success
+  -- unfold the raw solve to the bare `cRischDEG [1]` success
   rw [show crischDERawSolveWf ftilde gtilde
-      = (match CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
+      = (match CPolyG.cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
          | none => none
          | some (ynum, yden) =>
            if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none) from rfl] at hsolve
-  rcases hsucc : CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+  rcases hsucc : CPolyG.cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
     with _ | ⟨ynum, yden⟩ <;> rw [hsucc] at hsolve
   · exact absurd hsolve (by simp)
   · simp only at hsolve

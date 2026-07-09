@@ -5,7 +5,7 @@ import DeepWiki.SymbolicIntegration.Engine.MonomialDeriv
 /-! # Generic Bézout/Diophantine helpers
 
 Bézout cofactors (`cbezoutOneWf`), the extended-Euclidean split (`cextendedEuclideanSplitWf`), the
-Diophantine solve (`cdiophantineGWf`), and the inner Hermite loop over one squarefree factor
+Diophantine solve (`cdiophantineG`), and the inner Hermite loop over one squarefree factor
 (`cHermiteReduceTowerInnerWf`), built on `cgcdWf`/`cdivmodWf`. The defs are `[CField α]`-only (plus
 `[CDiffField α]` for the Hermite loop), so they `native_decide` over noncomputable-`CFieldSpec`
 carriers; correctness is proved through `toPolyG` over `K[X]`. -/
@@ -28,8 +28,8 @@ def cextendedEuclideanSplitWf (dn ds r u w : CPolyG α) : CPolyG α × CPolyG α
   let (quo, rem) := cdivmodWf ur ds
   (rem, caddG (cmulG w r) (cmulG quo dn))
 
-/-- Generic Diophantine solver `cdiophantineGWf p q rhs = (b, c)` for `b·p + c·q = rhs`. -/
-def cdiophantineGWf (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
+/-- Generic Diophantine solver `cdiophantineG p q rhs = (b, c)` for `b·p + c·q = rhs`. -/
+def cdiophantineG (p q rhs : CPolyG α) : CPolyG α × CPolyG α :=
   let (g, s, t) := cgcdWf p q
   let ginv := CField.inv (cleadG g)
   let S := cscaleG ginv (cmulG rhs s)
@@ -143,13 +143,13 @@ theorem cextendedEuclideanSplitWf_snd_degree_lt (dn ds r u w d : CPolyG α)
   rw [add_comm (toPolyG ds).degree (toPolyG dn).degree] at hcdsdeg
   exact (WithBot.add_lt_add_iff_right hdsdeg).mp hcdsdeg
 
-/-- `cdiophantineGWf` solves the generic Diophantine equation over `K[X]` for coprime inputs. -/
-theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
+/-- `cdiophantineG` solves the generic Diophantine equation over `K[X]` for coprime inputs. -/
+theorem toPolyG_cdiophantineG (p q rhs : CPolyG α)
     (hq0 : cnormG q ≠ [])
     (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf p q).1 ≠ 0) :
-    toPolyG (cdiophantineGWf p q rhs).1 * toPolyG p
-        + toPolyG (cdiophantineGWf p q rhs).2 * toPolyG q = toPolyG rhs := by
+    toPolyG (cdiophantineG p q rhs).1 * toPolyG p
+        + toPolyG (cdiophantineG p q rhs).2 * toPolyG q = toPolyG rhs := by
   set g := (cgcdWf p q).1 with hg
   set s := (cgcdWf p q).2.1 with hs
   set t := (cgcdWf p q).2.2 with ht
@@ -175,11 +175,11 @@ theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
       = toPolyG (cdivmodWf S q).1 * toPolyG q + toPolyG (cdivmodWf S q).2 :=
     toPolyG_cdivmodWf S q hq0
   -- the output components `b = cnormG (cdivmodWf S q).2`, `c = cnormG (T + quo·p)`.
-  have hbval : (cdiophantineGWf p q rhs).1 = cnormG (cdivmodWf S q).2 := by
-    rw [cdiophantineGWf]
-  have hcval : (cdiophantineGWf p q rhs).2
+  have hbval : (cdiophantineG p q rhs).1 = cnormG (cdivmodWf S q).2 := by
+    rw [cdiophantineG]
+  have hcval : (cdiophantineG p q rhs).2
       = cnormG (caddG T (cmulG (cdivmodWf S q).1 p)) := by
-    rw [cdiophantineGWf]
+    rw [cdiophantineG]
   simp only [hbval, hcval, denote]
   -- `b = S − quo·q`, so `b·p + (T + quo·p)·q = S·p + T·q = C(c⁻¹)·rhs·(s·p + t·q) = C(c⁻¹)·rhs·g = rhs`.
   have hbpoly : toPolyG (cdivmodWf S q).2 = toPolyG S - toPolyG (cdivmodWf S q).1 * toPolyG q := by
@@ -197,14 +197,14 @@ theorem toPolyG_cdiophantineGWf (p q rhs : CPolyG α)
       = (Polynomial.C c⁻¹ * Polynomial.C c) * toPolyG rhs := by ring
     _ = toPolyG rhs := by rw [hCcancel, one_mul]
 
-/-- `cdiophantineGWf`'s first cofactor is proper: `deg (cdiophantineGWf p q rhs).1 < deg q` for nonzero `q`. -/
-theorem cdiophantineGWf_fst_degree_lt (p q rhs : CPolyG α) (hq : cnormG q ≠ []) :
-    (toPolyG (cdiophantineGWf p q rhs).1).degree < (toPolyG q).degree := by
+/-- `cdiophantineG`'s first cofactor is proper: `deg (cdiophantineG p q rhs).1 < deg q` for nonzero `q`. -/
+theorem cdiophantineG_fst_degree_lt (p q rhs : CPolyG α) (hq : cnormG q ≠ []) :
+    (toPolyG (cdiophantineG p q rhs).1).degree < (toPolyG q).degree := by
   set g := (cgcdWf p q).1 with hg
   set s := (cgcdWf p q).2.1 with hs
   set S := cscaleG (CField.inv (cleadG g)) (cmulG rhs s) with hS
-  have hfst : (cdiophantineGWf p q rhs).1 = cnormG (cmodWf S q) := by
-    rw [cdiophantineGWf]
+  have hfst : (cdiophantineG p q rhs).1 = cnormG (cmodWf S q) := by
+    rw [cdiophantineG]
     simp only [← hg, ← hs, ← hS, cmodWf]
   rw [hfst]
   refine toPolyG_degree_lt_of_length_lt _ _ hq ?_
@@ -226,7 +226,7 @@ def cHermiteReduceTowerInnerWf (Dt : CPolyG α) (v u : CPolyG α) :
     let Dv := cmonomialDeriv Dt v
     let p := cmulG u Dv
     let rhs := cscaleG (CField.neg (CField.inv jval)) a               -- `−a/j`
-    let (b, c) := cdiophantineGWf p v rhs
+    let (b, c) := cdiophantineG p v rhs
     let Vpow := cpowG v (j + 1)
     let g' := (caddG (cmulG g.1 Vpow) (cmulG b g.2), cmulG g.2 Vpow)  -- `g + b/Vʲ` (cross-multiplied)
     let a' := csubG (cscaleG (CField.neg jval) c) (cmulG u (cmonomialDeriv Dt b))  -- `−j·c − u·Db`

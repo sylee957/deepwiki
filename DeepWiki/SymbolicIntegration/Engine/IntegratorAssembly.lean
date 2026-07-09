@@ -34,11 +34,11 @@ variable [CFracGcdCoreWf α]
 case's special-part hook, correct the reduced normal part, and combine. -/
 def cIntegrateCase (C : MonomialCase α) (Dt a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
   match C.integrateSpecial Dt fp b ds with
   | none => none
   | some (snum, sden) =>
-    match C.reducedCorrect Dt (cIntegrateReducedGWf Dt cn dn cands) with
+    match C.reducedCorrect Dt (cIntegrateReducedG Dt cn dn cands) with
     | none => none
     | some nrm => some (combineSN snum sden nrm)
 
@@ -71,19 +71,19 @@ theorem canonicalRepFast_field_identity {K : Type*} [Field K] (a d q r dn ds b c
   field_simp
   ring
 
-/-- Polynomial part `fₚ` of `canonicalRepresentationFastGWf Dt a d`. -/
-abbrev crPoly (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).1
+/-- Polynomial part `fₚ` of `canonicalRepresentationFastG Dt a d`. -/
+abbrev crPoly (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastG Dt a d).1
 /-- Special-part numerator `b` of the canonical split. -/
-abbrev crSpecNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.1.1
+abbrev crSpecNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastG Dt a d).2.1.1
 /-- Special-part denominator `dₛ` of the canonical split. -/
-abbrev crSpecDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.1.2
+abbrev crSpecDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastG Dt a d).2.1.2
 /-- Normal-part numerator `cₙ` of the canonical split. -/
-abbrev crNormNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.2.1
+abbrev crNormNum (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastG Dt a d).2.2.1
 /-- Normal-part denominator `dₙ` of the canonical split. -/
-abbrev crNormDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastGWf Dt a d).2.2.2
+abbrev crNormDen (Dt a d : CPolyG α) : CPolyG α := (canonicalRepresentationFastG Dt a d).2.2.2
 /-- The reduced integral of the normal part `cₙ/dₙ`. -/
 abbrev redNorm (Dt a d : CPolyG α) (cands : List α) : IntegralResultG α :=
-  cIntegrateReducedGWf Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
+  cIntegrateReducedG Dt (crNormNum Dt a d) (crNormDen Dt a d) cands
 
 omit [CDiffFieldSpec α] [CRischField α] [Algebra ℚ (CFieldSpec.K α)] in
 /-- Canonical split pieces recombine as `⟦fₚ⟧ + ⟦b/dₛ⟧ + ⟦cₙ/dₙ⟧ = ⟦a/d⟧`. -/
@@ -99,11 +99,11 @@ theorem canonicalReconstruction (Dt a d : CPolyG α)
         + fieldFrac (crNormNum Dt a d) (crNormDen Dt a d)
       = fieldFrac a d := by
   set qr := cdivmodWf a d with hqr
-  set sn := cSplitFactorFastGWf Dt d with hsn
+  set sn := cSplitFactorFastG Dt d with hsn
   set uw := cbezoutOneWf sn.1 sn.2 with huw
   set bc := cextendedEuclideanSplitWf sn.1 sn.2 qr.2 uw.1 uw.2 with hbc
-  have hcanon : canonicalRepresentationFastGWf Dt a d = (qr.1, (bc.1, sn.2), (bc.2, sn.1)) := by
-    rw [canonicalRepresentationFastGWf, ← hqr, ← hsn, ← huw, ← hbc]
+  have hcanon : canonicalRepresentationFastG Dt a d = (qr.1, (bc.1, sn.2), (bc.2, sn.1)) := by
+    rw [canonicalRepresentationFastG, ← hqr, ← hsn, ← huw, ← hbc]
   simp only [crPoly, crSpecNum, crSpecDen, crNormNum, crNormDen, fieldFrac, hcanon] at hdn hds hsplit hgdeg hgne ⊢
   have hcnd : cnormG d ≠ [] := fun h => hd ((cisZeroG_iff d).mp (by simp [cisZeroG, h]))
   have hcns : cnormG sn.2 ≠ [] := fun h => hds ((cisZeroG_iff sn.2).mp (by simp [cisZeroG, h]))
@@ -136,7 +136,7 @@ theorem cIntegrateCase_sound (C : MonomialCase α) (Dt a d : CPolyG α) (cands :
   have hshape : res = combineSN snum sden nrm := by
     rw [cIntegrateCase] at hsome
     simp only [crPoly, crSpecNum, crSpecDen, redNorm, crNormNum, crNormDen] at hSpec hCorr
-    rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rcases hcrep : canonicalRepresentationFastG Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
     rw [hcrep] at hsome hSpec hCorr
     simp only [hSpec, hCorr] at hsome
     exact (Option.some.injEq _ _ ▸ hsome).symm

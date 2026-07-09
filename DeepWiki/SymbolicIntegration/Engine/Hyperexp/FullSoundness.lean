@@ -116,53 +116,53 @@ theorem hyperexp_engine_overshoot (Dt : CPolyG α) (s : Finset (CFieldSpec.K α)
 
 Composing the Hermite half with the overshoot residue sum. -/
 
-/-- Reduced-case overshoot field identity: for `res = cIntegrateReducedGWf Dt a d cands` and the Hermite
+/-- Reduced-case overshoot field identity: for `res = cIntegrateReducedG Dt a d cands` and the Hermite
 half/per-root hypotheses, `D(g) + logResidueSumG Dt res.logs = amG a/amG d + amG(C(b·∑c))` over
 `RatFunc (CFieldSpec.K α)`, unconditional in `∑c`. -/
-theorem field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot [CFracGcdCoreWf α]
+theorem field_identity_of_cIntegrateReducedG_hyperexp_overshoot [CFracGcdCoreWf α]
     (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPolyG Dt = C b * X)
     (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.2)
         = amG α (toPolyG a) / amG α (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hden : toPolyG (cHermiteReduceTowerG Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+    (hform : (CPolyG.cIntegrateReducedG Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
         = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            ((toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d)
         + amG α (C (b * ∑ β ∈ s,
-            (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            (toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) := by
-  rw [logResidueSumG_eq_logDeriv_sum Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs,
-    hyperexp_engine_overshoot Dt s (cHermiteReduceTowerGWf Dt a d).2.1
-      (cHermiteReduceTowerGWf Dt a d).2.2 b
-      (CPolyG.cIntegrateReducedGWf Dt a d cands).logs hDt hden hA hnorm hform]
+  rw [logResidueSumG_eq_logDeriv_sum Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs,
+    hyperexp_engine_overshoot Dt s (cHermiteReduceTowerG Dt a d).2.1
+      (cHermiteReduceTowerG Dt a d).2.2 b
+      (CPolyG.cIntegrateReducedG Dt a d cands).logs hDt hden hA hnorm hform]
   set Dg := towerFractionFieldDerivG Dt
-    (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-      / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2)) with hDg
-  set h := amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-    / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2) with hh
+    (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+      / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2)) with hDg
+  set h := amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+    / amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.2) with hh
   set R := amG α (C (b * ∑ β ∈ s,
-    (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+    (toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
       / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) with hR
   rw [show Dg + (R + h) = (Dg + h) + R by ring, hherm]
 
-/-! ### The normal-part driver soundness `cIntegrateHyperexpNormalGWf_sound`
+/-! ### The normal-part driver soundness `cIntegrateHyperexpNormalG_sound`
 
-`cIntegrateHyperexpNormalGWf` runs the reduced capstone, reads `R = cHyperexpResidualG η red.logs`,
+`cIntegrateHyperexpNormalG` runs the reduced capstone, reads `R = cHyperexpResidualG η red.logs`,
 integrates `∫R` by the base-RDE oracle, and subtracts it; the new rational part `g − ∫R` differentiates to
 `(a/d + R) − R = a/d`. The residual `hintR : D(∫R) = R` and the residual-read bridge `hRval : toK R = b·∑c`
 are carried as hypotheses. -/
@@ -170,76 +170,76 @@ are carried as hypotheses. -/
 variable [CRischField α]
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- Output shape of `cIntegrateHyperexpNormalGWf`: when it returns `some res` and the base oracle succeeds
+/-- Output shape of `cIntegrateHyperexpNormalG`: when it returns `some res` and the base oracle succeeds
 on `R`, `res` has the same logs and rational part `g − ∫R`. -/
-theorem cIntegrateHyperexpNormalGWf_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
+theorem cIntegrateHyperexpNormalG_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (intR : α)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt a d cands).logs)
       = some intR)
-    (hsome : CPolyG.cIntegrateHyperexpNormalGWf Dt a d cands = some res) :
-    res = ⟨(csubG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1
-              (cmulG [intR] (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2),
-            (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2),
-          (CPolyG.cIntegrateReducedGWf Dt a d cands).logs⟩ := by
-  rw [CPolyG.cIntegrateHyperexpNormalGWf] at hsome
+    (hsome : CPolyG.cIntegrateHyperexpNormalG Dt a d cands = some res) :
+    res = ⟨(csubG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1
+              (cmulG [intR] (CPolyG.cIntegrateReducedG Dt a d cands).rational.2),
+            (CPolyG.cIntegrateReducedG Dt a d cands).rational.2),
+          (CPolyG.cIntegrateReducedG Dt a d cands).logs⟩ := by
+  rw [CPolyG.cIntegrateHyperexpNormalG] at hsome
   simp only [hintRsome] at hsome
   exact (Option.some.injEq _ _ ▸ hsome).symm
 
-/-- Normal-part driver soundness `D(∫fₙ) = fₙ` for `cIntegrateHyperexpNormalGWf`, unconditional in `∑c`,
+/-- Normal-part driver soundness `D(∫fₙ) = fₙ` for `cIntegrateHyperexpNormalG`, unconditional in `∑c`,
 given the base-oracle residual `hintR` and the residual-read bridge `hRval`. -/
-theorem cIntegrateHyperexpNormalGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
+theorem cIntegrateHyperexpNormalG_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (intR : α) (s : Finset (CFieldSpec.K α))
     (b : CFieldSpec.K α)
     (hDt : toPolyG Dt = C b * X)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt a d cands).logs)
       = some intR)
-    (hsome : CPolyG.cIntegrateHyperexpNormalGWf Dt a d cands = some res)
+    (hsome : CPolyG.cIntegrateHyperexpNormalG Dt a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.2)
         = amG α (toPolyG a) / amG α (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hden : toPolyG (cHermiteReduceTowerG Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+    (hform : (CPolyG.cIntegrateReducedG Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
         = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            ((toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
     (hintR : towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
         = amG α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidualG (cExpEtaG Dt)
-              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs))))
+              (CPolyG.cIntegrateReducedG Dt a d cands).logs))))
     (hRval : amG α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidualG (cExpEtaG Dt)
-              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)))
+              (CPolyG.cIntegrateReducedG Dt a d cands).logs)))
         = amG α (C (b * ∑ β ∈ s,
-            (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            (toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))) :
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) := by
-  rw [cIntegrateHyperexpNormalGWf_shape Dt a d cands res intR hintRsome hsome]
-  set gnum := (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1 with hgnum
-  set gden := (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 with hgdenE
+  rw [cIntegrateHyperexpNormalG_shape Dt a d cands res intR hintRsome hsome]
+  set gnum := (CPolyG.cIntegrateReducedG Dt a d cands).rational.1 with hgnum
+  set gden := (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 with hgdenE
   have hAgden : amG α (toPolyG gden) ≠ 0 := amG_toPolyG_ne_zero hgden
   have hnewrat : amG α (toPolyG (csubG gnum (cmulG [intR] gden))) / amG α (toPolyG gden)
       = amG α (toPolyG gnum) / amG α (toPolyG gden) - amG α (Polynomial.C (CFieldSpec.toK intR)) := by
     simp only [denote, map_sub, map_mul, mul_zero, add_zero]
     rw [sub_div, mul_div_assoc, div_self hAgden, mul_one]
   rw [hnewrat, map_sub, hintR, hRval]
-  have hover := field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot Dt a d cands s b
+  have hover := field_identity_of_cIntegrateReducedG_hyperexp_overshoot Dt a d cands s b
     hDt hherm hden hA hnorm hform
   set Dg := towerFractionFieldDerivG Dt (amG α (toPolyG gnum) / amG α (toPolyG gden)) with hDg
-  set L := logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs with hL
+  set L := logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs with hL
   set R := amG α (C (b * ∑ β ∈ s,
-    (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+    (toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
       / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) with hR
   rw [show Dg - R + L = (Dg + L) - R by ring, hover, add_sub_cancel_right]
 
@@ -254,107 +254,107 @@ noncomputable local instance : Algebra ℚ (CFieldSpec.K (QFunNZG ℚ)) :=
   inferInstanceAs (Algebra ℚ (RatFunc ℚ))
 
 /-- Normal-part driver soundness over `ℚ(x)(t)`, unconditional in `∑c` — the `QFunNZG ℚ` instance of
-`cIntegrateHyperexpNormalGWf_sound`. -/
-theorem cIntegrateHyperexpNormalGWf_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
+`cIntegrateHyperexpNormalG_sound`. -/
+theorem cIntegrateHyperexpNormalG_sound_qfunNZG (Dt : CPolyG (QFunNZG ℚ))
     (a d : CPolyG (QFunNZG ℚ)) (cands : List (QFunNZG ℚ)) (res : IntegralResultG (QFunNZG ℚ))
     (intR : QFunNZG ℚ) (s : Finset (CFieldSpec.K (QFunNZG ℚ))) (b : CFieldSpec.K (QFunNZG ℚ))
     (hDt : toPolyG Dt = C b * X)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : QFunNZG ℚ)
-        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt a d cands).logs)
       = some intR)
-    (hsome : CPolyG.cIntegrateHyperexpNormalGWf Dt a d cands = some res)
+    (hsome : CPolyG.cIntegrateHyperexpNormalG Dt a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
-            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+            (amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+              / amG (QFunNZG ℚ) (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+          + amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+            / amG (QFunNZG ℚ) (toPolyG (cHermiteReduceTowerG Dt a d).2.2)
         = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hden : toPolyG (cHermiteReduceTowerG Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+    (hform : (CPolyG.cIntegrateReducedG Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
         = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            ((toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
     (hintR : towerFractionFieldDerivG Dt (amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK intR)))
         = amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidualG (cExpEtaG Dt)
-              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs))))
+              (CPolyG.cIntegrateReducedG Dt a d cands).logs))))
     (hRval : amG (QFunNZG ℚ) (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidualG (cExpEtaG Dt)
-              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)))
+              (CPolyG.cIntegrateReducedG Dt a d cands).logs)))
         = amG (QFunNZG ℚ) (C (b * ∑ β ∈ s,
-            (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            (toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))) :
     towerFractionFieldDerivG Dt
         (amG (QFunNZG ℚ) (toPolyG res.rational.1) / amG (QFunNZG ℚ) (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG (QFunNZG ℚ) (toPolyG a) / amG (QFunNZG ℚ) (toPolyG d) :=
-  cIntegrateHyperexpNormalGWf_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
+  cIntegrateHyperexpNormalG_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
-/-! ### The full driver soundness `cIntegrateHyperexpFullGWf_sound`
+/-! ### The full driver soundness `cIntegrateHyperexpFullG_sound`
 
-`cIntegrateHyperexpFullGWf` combines the Laurent special part with the normal part. Soundness composes the
+`cIntegrateHyperexpFullG` combines the Laurent special part with the normal part. Soundness composes the
 Laurent field identity `hLaurField`, the normal-part soundness, and the canonical reconstruction `hrecon`,
 giving `D(res) + logResidueSumG = a/d`, unconditional in `∑c`. -/
 
 omit [CFieldSpec α] [CDiffFieldSpec α] [Algebra ℚ (CFieldSpec.K α)] in
-/-- Output shape of `cIntegrateHyperexpFullGWf`: when it returns `some res` and both the Laurent and normal
+/-- Output shape of `cIntegrateHyperexpFullG`: when it returns `some res` and both the Laurent and normal
 parts succeed, `res` is the combined rational part with the normal logs. -/
-theorem cIntegrateHyperexpFullGWf_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
+theorem cIntegrateHyperexpFullG_shape [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (lnum lden : CPolyG α)
     (nrm : IntegralResultG α)
     (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
-        (canonicalRepresentationFastGWf Dt a d).1
-        (cHyperexpSpecialNegG (canonicalRepresentationFastGWf Dt a d).2.1.1
-          (canonicalRepresentationFastGWf Dt a d).2.1.2)
+        (canonicalRepresentationFastG Dt a d).1
+        (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt a d).2.1.1
+          (canonicalRepresentationFastG Dt a d).2.1.2)
       = some (lnum, lden))
-    (hNrm : CPolyG.cIntegrateHyperexpNormalGWf Dt
-        (canonicalRepresentationFastGWf Dt a d).2.2.1
-        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands = some nrm)
-    (hsome : CPolyG.cIntegrateHyperexpFullGWf Dt a d cands = some res) :
+    (hNrm : CPolyG.cIntegrateHyperexpNormalG Dt
+        (canonicalRepresentationFastG Dt a d).2.2.1
+        (canonicalRepresentationFastG Dt a d).2.2.2 cands = some nrm)
+    (hsome : CPolyG.cIntegrateHyperexpFullG Dt a d cands = some res) :
     res = ⟨(caddG (cmulG lnum nrm.rational.2) (cmulG nrm.rational.1 lden), cmulG lden nrm.rational.2),
           nrm.logs⟩ := by
-  rw [CPolyG.cIntegrateHyperexpFullGWf] at hsome
-  rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+  rw [CPolyG.cIntegrateHyperexpFullG] at hsome
+  rcases hcrep : canonicalRepresentationFastG Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
   rw [hcrep] at hsome hLaur hNrm
   simp only [hLaur, hNrm] at hsome
   exact (Option.some.injEq _ _ ▸ hsome).symm
 
-/-- Full hyperexponential driver soundness `D(∫f) = f` for `cIntegrateHyperexpFullGWf`, unconditional in
+/-- Full hyperexponential driver soundness `D(∫f) = f` for `cIntegrateHyperexpFullG`, unconditional in
 `∑c` — composes the Laurent field identity, the normal-part field identity, and the canonical
 reconstruction. -/
-theorem cIntegrateHyperexpFullGWf_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
+theorem cIntegrateHyperexpFullG_sound [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α)
     (cands : List α) (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α)
     (fpPart : CPolyG α) (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
-        (canonicalRepresentationFastGWf Dt a d).1
-        (cHyperexpSpecialNegG (canonicalRepresentationFastGWf Dt a d).2.1.1
-          (canonicalRepresentationFastGWf Dt a d).2.1.2)
+        (canonicalRepresentationFastG Dt a d).1
+        (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt a d).2.1.1
+          (canonicalRepresentationFastG Dt a d).2.1.2)
       = some (lnum, lden))
-    (hNrm : CPolyG.cIntegrateHyperexpNormalGWf Dt
-        (canonicalRepresentationFastGWf Dt a d).2.2.1
-        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands = some nrm)
-    (hsome : CPolyG.cIntegrateHyperexpFullGWf Dt a d cands = some res)
+    (hNrm : CPolyG.cIntegrateHyperexpNormalG Dt
+        (canonicalRepresentationFastG Dt a d).2.2.1
+        (canonicalRepresentationFastG Dt a d).2.2.2 cands = some nrm)
+    (hsome : CPolyG.cIntegrateHyperexpFullG Dt a d cands = some res)
     (hLaurField : towerFractionFieldDerivG Dt (amG α (toPolyG lnum) / amG α (toPolyG lden))
         = amG α (toPolyG fpPart))
     (hNrmField : towerFractionFieldDerivG Dt
             (amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2))
           + logResidueSumG Dt nrm.logs
-        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
+        = amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.2))
     (hrecon : amG α (toPolyG fpPart)
-          + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+          + amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.2)
         = amG α (toPolyG a) / amG α (toPolyG d)) :
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) := by
-  rw [cIntegrateHyperexpFullGWf_shape Dt a d cands res lnum lden nrm hLaur hNrm hsome]
+  rw [cIntegrateHyperexpFullG_shape Dt a d cands res lnum lden nrm hLaur hNrm hsome]
   have hAlden : amG α (toPolyG lden) ≠ 0 := amG_toPolyG_ne_zero hlden
   have hAgden : amG α (toPolyG nrm.rational.2) ≠ 0 := amG_toPolyG_ne_zero hgden
   have hcombine : amG α (toPolyG (caddG (cmulG lnum nrm.rational.2) (cmulG nrm.rational.1 lden)))
@@ -384,106 +384,106 @@ example {K : Type*} [Field K] [Differential K] [Algebra ℚ K] (s : Finset K) (a
         + algebraMap K[X] (RatFunc K) a / algebraMap K[X] (RatFunc K) (Lagrange.nodal s id) :=
   ResidueMatchTower.hyperexp_residue_sum_eq_overshoot_add s a b hA hnorm
 
--- The reduced-capstone overshoot identity: `cIntegrateReducedGWf` has the same hyperexp overshoot
+-- The reduced-capstone overshoot identity: `cIntegrateReducedG` has the same hyperexp overshoot
 -- statement.
 example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α) (hDt : toPolyG Dt = C b * X)
     (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.2)
         = amG α (toPolyG a) / amG α (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hden : toPolyG (cHermiteReduceTowerG Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+    (hform : (CPolyG.cIntegrateReducedG Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
         = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            ((toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β))) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d)
         + amG α (C (b * ∑ β ∈ s,
-            (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            (toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β)) :=
-  field_identity_of_cIntegrateReducedGWf_hyperexp_overshoot Dt a d cands s b
+  field_identity_of_cIntegrateReducedG_hyperexp_overshoot Dt a d cands s b
     hDt hherm hden hA hnorm hform
 
--- The §5.9 normal-part driver soundness: `cIntegrateHyperexpNormalGWf = some res ⟹ D(res) = a/d` under
+-- The §5.9 normal-part driver soundness: `cIntegrateHyperexpNormalG = some res ⟹ D(res) = a/d` under
 -- the same residual-oracle hypothesis.
 example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (intR : α) (s : Finset (CFieldSpec.K α)) (b : CFieldSpec.K α)
     (hDt : toPolyG Dt = C b * X)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
     (hintRsome : CRischField.crischDESolve (CField.zero : α)
-        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)
+        (cHyperexpResidualG (cExpEtaG Dt) (CPolyG.cIntegrateReducedG Dt a d cands).logs)
       = some intR)
-    (hsome : CPolyG.cIntegrateHyperexpNormalGWf Dt a d cands = some res)
+    (hsome : CPolyG.cIntegrateHyperexpNormalG Dt a d cands = some res)
     (hherm : towerFractionFieldDerivG Dt
-            (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-              / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-          + amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-            / amG α (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)
+            (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+              / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+          + amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+            / amG α (toPolyG (cHermiteReduceTowerG Dt a d).2.2)
         = amG α (toPolyG a) / amG α (toPolyG d))
-    (hden : toPolyG (cHermiteReduceTowerGWf Dt a d).2.2 = Lagrange.nodal s id)
-    (hA : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).degree < s.card)
+    (hden : toPolyG (cHermiteReduceTowerG Dt a d).2.2 = Lagrange.nodal s id)
+    (hA : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).degree < s.card)
     (hnorm : ∀ β ∈ s, (C b * X).eval β ≠ β′)
-    (hform : (CPolyG.cIntegrateReducedGWf Dt a d cands).logs.map
+    (hform : (CPolyG.cIntegrateReducedG Dt a d cands).logs.map
           (fun cv => (CFieldSpec.toK cv.1, toPolyG cv.2))
         = s.toList.map (fun β =>
-            ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            ((toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
                 / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β,
               X - C β)))
     (hintR : towerFractionFieldDerivG Dt (amG α (Polynomial.C (CFieldSpec.toK intR)))
         = amG α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidualG (cExpEtaG Dt)
-              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs))))
+              (CPolyG.cIntegrateReducedG Dt a d cands).logs))))
     (hRval : amG α (Polynomial.C (CFieldSpec.toK
             (cHyperexpResidualG (cExpEtaG Dt)
-              (CPolyG.cIntegrateReducedGWf Dt a d cands).logs)))
+              (CPolyG.cIntegrateReducedG Dt a d cands).logs)))
         = amG α (C (b * ∑ β ∈ s,
-            (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).eval β
+            (toPolyG (cHermiteReduceTowerG Dt a d).2.1).eval β
               / (Differential.implicitDeriv (toPolyG Dt) (Lagrange.nodal s id)).eval β))) :
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateHyperexpNormalGWf_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
+  cIntegrateHyperexpNormalG_sound Dt a d cands res intR s b hDt hgden hintRsome hsome hherm hden
     hA hnorm hform hintR hRval
 
--- The full hyperexp driver soundness: `cIntegrateHyperexpFullGWf = some res ⟹ D(res) = a/d`, combining
+-- The full hyperexp driver soundness: `cIntegrateHyperexpFullG = some res ⟹ D(res) = a/d`, combining
 -- the canonical and normal parts.
 example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
     (res : IntegralResultG α) (lnum lden : CPolyG α) (nrm : IntegralResultG α) (fpPart : CPolyG α)
     (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt)
-        (canonicalRepresentationFastGWf Dt a d).1
-        (cHyperexpSpecialNegG (canonicalRepresentationFastGWf Dt a d).2.1.1
-          (canonicalRepresentationFastGWf Dt a d).2.1.2)
+        (canonicalRepresentationFastG Dt a d).1
+        (cHyperexpSpecialNegG (canonicalRepresentationFastG Dt a d).2.1.1
+          (canonicalRepresentationFastG Dt a d).2.1.2)
       = some (lnum, lden))
-    (hNrm : CPolyG.cIntegrateHyperexpNormalGWf Dt
-        (canonicalRepresentationFastGWf Dt a d).2.2.1
-        (canonicalRepresentationFastGWf Dt a d).2.2.2 cands = some nrm)
-    (hsome : CPolyG.cIntegrateHyperexpFullGWf Dt a d cands = some res)
+    (hNrm : CPolyG.cIntegrateHyperexpNormalG Dt
+        (canonicalRepresentationFastG Dt a d).2.2.1
+        (canonicalRepresentationFastG Dt a d).2.2.2 cands = some nrm)
+    (hsome : CPolyG.cIntegrateHyperexpFullG Dt a d cands = some res)
     (hLaurField : towerFractionFieldDerivG Dt (amG α (toPolyG lnum) / amG α (toPolyG lden))
         = amG α (toPolyG fpPart))
     (hNrmField : towerFractionFieldDerivG Dt
             (amG α (toPolyG nrm.rational.1) / amG α (toPolyG nrm.rational.2))
           + logResidueSumG Dt nrm.logs
-        = amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-          / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2))
+        = amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.1)
+          / amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.2))
     (hrecon : amG α (toPolyG fpPart)
-          + amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.1)
-            / amG α (toPolyG (canonicalRepresentationFastGWf Dt a d).2.2.2)
+          + amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.1)
+            / amG α (toPolyG (canonicalRepresentationFastG Dt a d).2.2.2)
         = amG α (toPolyG a) / amG α (toPolyG d)) :
     towerFractionFieldDerivG Dt (amG α (toPolyG res.rational.1) / amG α (toPolyG res.rational.2))
         + logResidueSumG Dt res.logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  cIntegrateHyperexpFullGWf_sound Dt a d cands res lnum lden nrm fpPart hlden hgden
+  cIntegrateHyperexpFullG_sound Dt a d cands res lnum lden nrm fpPart hlden hgden
     hLaur hNrm hsome hLaurField hNrmField hrecon
 
 end DeepWiki.SymbolicIntegration

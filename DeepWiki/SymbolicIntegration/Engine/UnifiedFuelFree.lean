@@ -5,8 +5,8 @@ import DeepWiki.SymbolicIntegration.Engine.IntegrateTowerCorrectG
 import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
 
 /-! # The fuel-free transcendental top entry `cIntegrateGFullWf`.
-Fuel-free companion of `cIntegrateGFull`: a leaf substitution routing to `canonicalRepresentationFastGWf`,
-`cIntegrateReducedGWf`, and `cPolyRischDEGWf`, plus the check-identity soundness bridge. -/
+Fuel-free companion of `cIntegrateGFull`: a leaf substitution routing to `canonicalRepresentationFastG`,
+`cIntegrateReducedG`, and `cPolyRischDEG`, plus the check-identity soundness bridge. -/
 
 namespace DeepWiki.SymbolicIntegration
 
@@ -23,16 +23,16 @@ over `D = cmonomialDeriv Dt`, returning `some ⟨(num, den), logs⟩` with `∫ 
 or `none` (nonzero special part). A leaf substitution of `cIntegrateGFull`. -/
 def cIntegrateGFullWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
-  let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+  let (fp, (b, _ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
   if cisZeroG b then
     -- normal part: rational `gₙ/gₙd` + logs.
-    let nrm := cIntegrateReducedGWf Dt cn dn cands
+    let nrm := cIntegrateReducedG Dt cn dn cands
     let (gnum, gden) := nrm.rational
     if cisZeroG fp then
       some nrm
     else
       -- polynomial part: solve `Dqₚ = fₚ` by the `b = 0` RDE oracle (primitive case).
-      match cPolyRischDEGWf Dt [] fp ((cdegG fp : ℤ) + 1) with
+      match cPolyRischDEG Dt [] fp ((cdegG fp : ℤ) + 1) with
       | none => none
       | some qp =>
         -- combine `qₚ + gₙ/gₙd = (qₚ·gₙd + gₙ)/gₙd`.

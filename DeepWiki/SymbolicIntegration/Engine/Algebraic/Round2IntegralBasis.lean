@@ -59,7 +59,7 @@ numerator (Yun factorization) with `p² ∣ d` (tested by `cisZeroG (cmodWf d (p
 equation order may be non-maximal. -/
 def badPrimes (f : CPolyG (QFunNZG ℚ)) : List (CPolyG ℚ) :=
   let d := discNum f
-  let sqf := cSqfreeYunFFGWf d
+  let sqf := cSqfreeYunFFG d
   -- distinct nonconstant squarefree factors, each made monic
   let distinct := (sqf.map cmonicG).filter (fun p => 0 < cdegG p)
   distinct.filter (fun p => cisZeroG (cmodWf d (cmulG p p)))

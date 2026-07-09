@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.CanonNormalizedReduce
 
 /-! # The sound recursive Risch-DE solver `crischDESolveSoundWf`
 
-Weak-normalize, gate on `cisCanonNormalizedGWf`, and solve the inner RDE through `cRischDEGWf`.
+Weak-normalize, gate on `cisCanonNormalizedG`, and solve the inner RDE through `cRischDEG`.
 `crischDESolveSoundWf_field` derives `D(Y) + F·Y = G` from the `RischDESoundnessWf` certificate. -/
 
 open Polynomial Classical
@@ -15,33 +15,33 @@ open Compute CPolyG QFunNZG
 
 /-! ## The solver `crischDESolveSoundWf`
 
-Pipeline: weak-normalize, run the solvability check `cisCanonNormalizedGWf`, reduce to lowest
-terms, solve the inner RDE via `cRischDEGWf`, and transform back by `y = ỹ/q'`. -/
+Pipeline: weak-normalize, run the solvability check `cisCanonNormalizedG`, reduce to lowest
+terms, solve the inner RDE via `cRischDEG`, and transform back by `y = ỹ/q'`. -/
 
 section Solver
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β]
   [CFracGcdCoreWf β] [CRischField β]
 
-/-- `crischDERawSolveWf ftilde gtilde`: run `cRischDEGWf [1]` on the num/den components, re-lifting
+/-- `crischDERawSolveWf ftilde gtilde`: run `cRischDEG [1]` on the num/den components, re-lifting
 the returned `(ynum, yden)` to `QFunNZG β` under a `cisZeroG` denominator guard. -/
 def crischDERawSolveWf (ftilde gtilde : QFunNZG β) : Option (QFunNZG β) :=
-  match CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
+  match CPolyG.cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
   | none => none
   | some (ynum, yden) =>
     if h : CPolyG.cisZeroG yden = false then some ⟨(ynum, yden), h⟩ else none
 
 omit [CFieldSpec β] [CFieldDomain β] in
-/-- `crischDERawSolveWf` returns `some y` exactly when `cRischDEGWf [1]` returns a pair with nonzero
+/-- `crischDERawSolveWf` returns `some y` exactly when `cRischDEG [1]` returns a pair with nonzero
 denominator and `y` is its `QFunNZG` lift. -/
 theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZG β) :
     crischDERawSolveWf ftilde gtilde = some y ↔
       ∃ ynum yden, ∃ hden : CPolyG.cisZeroG yden = false,
-        CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
+        CPolyG.cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2
             = some (ynum, yden) ∧
           ⟨(ynum, yden), hden⟩ = y := by
   cases h :
-      CPolyG.cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
+      CPolyG.cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 with
   | none =>
       simp [crischDERawSolveWf, h]
   | some ypair =>
@@ -50,15 +50,15 @@ theorem crischDERawSolveWf_some_iff (ftilde gtilde y : QFunNZG β) :
       · simp [crischDERawSolveWf, h, hden]
       · simp [crischDERawSolveWf, h, hden]
 
-/-- `crischDESolveSoundWf f g`: weak-normalize `f`, gate on `cisCanonNormalizedGWf`, reduce to lowest
+/-- `crischDESolveSoundWf f g`: weak-normalize `f`, gate on `cisCanonNormalizedG`, reduce to lowest
 terms, solve via `crischDERawSolveWf`, and transform back by `y = ỹ/q'`. -/
 def crischDESolveSoundWf (f g : QFunNZG β) : Option (QFunNZG β) :=
-  let q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2
+  let q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2
   if CPolyG.cisZeroG q then none
   else
     let q' : QFunNZG β := qOfPolyNZG q
     let ftilde : QFunNZG β := weakNormalizedF f q'
-    if cisCanonNormalizedGWf ftilde then
+    if cisCanonNormalizedG ftilde then
       match reduceSoundOpt ftilde with
       | none => none
       | some ftildeR =>
@@ -83,13 +83,13 @@ omit [CFieldSpec β] in
 /-- A successful Wf sound solve has a nonzero Wf weak normalizer. -/
 theorem crischDESolveSoundWf_weakNormalizer_ne_zero (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y) :
-    CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false := by
-  set q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
+    CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2) = false := by
+  set q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
   set q' : QFunNZG β := qOfPolyNZG q with hq'
   set ftilde : QFunNZG β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if CPolyG.cisZeroG q then none
-         else if cisCanonNormalizedGWf ftilde then
+         else if cisCanonNormalizedG ftilde then
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
@@ -108,14 +108,14 @@ omit [CFieldSpec β] in
 /-- A successful Wf sound solve passed the canonical-normality check. -/
 theorem crischDESolveSoundWf_check (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y) :
-    cisCanonNormalizedGWf (weakNormalizedF f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true := by
-  set q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
+    cisCanonNormalizedG (weakNormalizedF f
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true := by
+  set q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
   set q' : QFunNZG β := qOfPolyNZG q with hq'
   set ftilde : QFunNZG β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if CPolyG.cisZeroG q then none
-         else if cisCanonNormalizedGWf ftilde then
+         else if cisCanonNormalizedG ftilde then
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
@@ -127,7 +127,7 @@ theorem crischDESolveSoundWf_check (f g y : QFunNZG β)
   · rw [if_pos hqz] at hsolve
     exact absurd hsolve (by simp)
   · rw [if_neg hqz] at hsolve
-    by_cases hck : cisCanonNormalizedGWf ftilde = true
+    by_cases hck : cisCanonNormalizedG ftilde = true
     · simpa [hq, hq', hft] using hck
     · rw [if_neg hck] at hsolve
       exact absurd hsolve (by simp)
@@ -136,8 +136,8 @@ theorem crischDESolveSoundWf_check (f g y : QFunNZG β)
 theorem crischDESolveSoundWf_isCanonNormalized (f g y : QFunNZG β)
     (hsolve : crischDESolveSoundWf f g = some y) :
     IsCanonNormalizedWf f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) :=
-  (cisCanonNormalizedGWf_iff f _).mp (crischDESolveSoundWf_check f g y hsolve)
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)) :=
+  (cisCanonNormalizedG_iff f _).mp (crischDESolveSoundWf_check f g y hsolve)
 
 end Reductions
 

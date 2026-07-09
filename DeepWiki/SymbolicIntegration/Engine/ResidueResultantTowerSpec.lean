@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.LogPartTowerSoundness
 
 /-! # Connecting the computable tower residue resultant to the general-derivation abstract theory (G4b)
 
-`cResidueResultantTowerGWf Dt a d` interpolates the resultant samples `res_t(d, a − zₖ·Dd)` (`Dd =
+`cResidueResultantTowerG Dt a d` interpolates the resultant samples `res_t(d, a − zₖ·Dd)` (`Dd =
 cmonomialDeriv Dt d`). This file certifies it against the general-derivation abstract residue resultant
 `rtResultantGen (toPolyG a) (toPolyG d) B` with `B = implicitDeriv (toPolyG Dt) (toPolyG d)` (G1–G3), for
 the **primitive** reduced case (`Dt` constant, `Dstar` monic). Sample agreement is the core; the full
@@ -49,22 +49,22 @@ theorem toK_cresultantWf_cAmcDdG_eq_eval (Dt a d : CPolyG α) (c : α)
     hDmonic.leadingCoeff, one_pow, one_mul]
 
 open scoped Classical in
-/-- **The tower residue-resultant certification (G4b).** `toPolyG (cResidueResultantTowerGWf Dt a d) =
+/-- **The tower residue-resultant certification (G4b).** `toPolyG (cResidueResultantTowerG Dt a d) =
 rtResultantGen (toPolyG a) (toPolyG d) B` (`B = implicitDeriv (toPolyG Dt) (toPolyG d)`), for **monic** `d`,
 **constant** `Dt`, and proper `a`. The computable engine's residue resultant (an interpolant of the
 resultant samples) provably computes the general-derivation abstract residue resultant — via interpolation
 uniqueness (both have `z`-degree `≤ deg d` and agree at the `deg d + 1` integer nodes). This is the object
 `lazardRiobooTrager_output_isSimilar_gcd_gen` (G3) reasons about. -/
-theorem toPolyG_cResidueResultantTowerGWf [CharZero (CFieldSpec.K α)] (Dt a d : CPolyG α)
+theorem toPolyG_cResidueResultantTowerG [CharZero (CFieldSpec.K α)] (Dt a d : CPolyG α)
     (hDmonic : (toPolyG d).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG a).natDegree < (toPolyG d).natDegree) :
-    toPolyG (cResidueResultantTowerGWf Dt a d)
+    toPolyG (cResidueResultantTowerG Dt a d)
       = rtResultantGen (toPolyG a) (toPolyG d)
           (Differential.implicitDeriv (toPolyG Dt) (toPolyG d)) := by
   set B := Differential.implicitDeriv (toPolyG Dt) (toPolyG d) with hBdef
   set pts : List (α × α) := (List.range (cdegG d + 1)).map
     (fun k => (cnatCastG k, cresultantWf d (cAmcDdG Dt a d (cnatCastG k)))) with hpts
-  have hcompute : cResidueResultantTowerGWf Dt a d = cinterpolateG pts := rfl
+  have hcompute : cResidueResultantTowerG Dt a d = cinterpolateG pts := rfl
   have hfst : pts.map (fun p => CFieldSpec.toK p.1)
       = (List.range (cdegG d + 1)).map (Nat.cast : ℕ → CFieldSpec.K α) := by
     rw [hpts, List.map_map]
@@ -101,12 +101,12 @@ theorem toPolyG_cResidueResultantTowerGWf [CharZero (CFieldSpec.K α)] (Dt a d :
       toK_cresultantWf_cAmcDdG_eq_eval Dt a d (cnatCastG k) hDmonic hDt0 hAD]
 
 omit [CDiffFieldSpec α] in
-/-- **The residue resultant of a constant is a constant** (`cdegG d = 0 ⟹ cdegG (cResidueResultantTowerGWf
+/-- **The residue resultant of a constant is a constant** (`cdegG d = 0 ⟹ cdegG (cResidueResultantTowerG
 Dt a d) = 0`): the interpolation runs over `n + 1 = 1` node, and a single-point Lagrange interpolant is a
 constant (`degree_toPolyG_cinterpolateG_lt`). The no-poles residue-resultant fact behind `cLrtLogArgG = []`. -/
-theorem cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero (Dt a d : CPolyG α) (hd : cdegG d = 0) :
-    cdegG (cResidueResultantTowerGWf Dt a d) = 0 := by
-  rw [cResidueResultantTowerGWf]
+theorem cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero (Dt a d : CPolyG α) (hd : cdegG d = 0) :
+    cdegG (cResidueResultantTowerG Dt a d) = 0 := by
+  rw [cResidueResultantTowerG]
   simp only [hd, Nat.zero_add]
   set pts : List (α × α) := (List.range 1).map (fun k =>
     (cnatCastG k, cresultantWf d (cAmcDdG Dt a d (cnatCastG k)))) with hpts

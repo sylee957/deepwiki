@@ -1,7 +1,7 @@
 # Risch — the two-stage discipline (abstract architecture ↔ per-solver realization)
 
 This is the organizing discipline for the whole Risch development. It supersedes the ad-hoc wiring that
-accreted in `Computable/Assemble.lean` (concrete `cHermiteReduceTowerGWf`/`cSqfreeYunFFGWf`/`QFunNZG ℚ`
+accreted in `Computable/Assemble.lean` (concrete `cHermiteReduceTowerG`/`cSqfreeYunFFG`/`QFunNZG ℚ`
 lemmas mixed into the assembler). It refines — does not replace — `docs/risch-typeclass-architecture.md`;
 that doc describes the *assembler shape*, this one fixes the *proof organization law* it must obey.
 
@@ -9,7 +9,7 @@ that doc describes the *assembler shape*, this one fixes the *proof organization
 
 **Stage 1 — the architecture is proven abstractly.** The one-level Risch assembler and its
 soundness/completeness are stated and proven **only** against stage *interfaces* and their *laws*. No
-concrete algorithm name (`cHermiteReduceTowerGWf`, `cSqfreeYunFFGWf`, `cIntegrateReducedGWf`, `QFunNZG ℚ`)
+concrete algorithm name (`cHermiteReduceTowerG`, `cSqfreeYunFFG`, `cIntegrateReducedG`, `QFunNZG ℚ`)
 appears anywhere in the architecture file. Stage 1 says: *"Risch is correct given each stage does its job."*
 
 **Stage 2 — each solver realizes its interface, independently.** Every concrete algorithm has **exactly
@@ -28,7 +28,7 @@ gcd, RischDE, …) hangs off a realization theorem and is otherwise invisible to
 ## Encoding decision — `Lawful` Prop-bundles keyed on the concrete op
 
 Following the repo's `CField`/`LawfulCField` and `@[denote]` idiom (CLAUDE.md): a stage is a **Prop-free
-computable op** (already exists — `cSqfreeYunFFGWf`, etc.; keep it `native_decide`-reducible) plus a
+computable op** (already exists — `cSqfreeYunFFG`, etc.; keep it `native_decide`-reducible) plus a
 **`Lawful…` Prop-bundle** carrying the denotation laws (and any genuine preconditions as hypotheses).
 The op stays reducible; the abstract carrier is mentioned only in the `Lawful` half. This preserves the
 engine's `native_decide` story while giving the assembler a law-only surface to prove against.
@@ -53,26 +53,26 @@ Four interfaces, one assembler.
 Notation: `⟦p⟧ := amG α (toPolyG p) : RatFunc (CFieldSpec.K α)`; `D := towerFractionFieldDerivG Dt`.
 
 ### 1. `SquarefreeDecomposition` (leaf; consumed by Hermite)
-- **Op** (exists): `cSqfreeYunFFGWf : CPolyG α → List (CPolyG α)` — `d ↦ [v₁,…,vₘ]`, `vᵢ` of multiplicity `i`.
+- **Op** (exists): `cSqfreeYunFFG : CPolyG α → List (CPolyG α)` — `d ↦ [v₁,…,vₘ]`, `vᵢ` of multiplicity `i`.
 - **`LawfulSquarefreeDecomposition d`** (laws): `Associated (toPolyG d) (prodPow 1 (map toPolyG (op d)))`
   (reconstruction) ∧ each factor squarefree ∧ pairwise `IsRelPrime` ∧ each monic.
-- **Realizer** (Stage 2, `YunTowerCorrect`): `cSqfreeYunFFGWf_reconstruction` + `_squarefree` + `_isRelPrime`
-  + `cSqfreeYunFFGWf_monic`. **These already exist** — Phase 1 just bundles them.
+- **Realizer** (Stage 2, `YunTowerCorrect`): `cSqfreeYunFFG_reconstruction` + `_squarefree` + `_isRelPrime`
+  + `cSqfreeYunFFG_monic`. **These already exist** — Phase 1 just bundles them.
 
 ### 2. `HermiteReduction` (consumes SquarefreeDecomposition)
-- **Op** (exists): `cHermiteReduceTowerGWf Dt a d = ((gnum,gden),(hNum,Dstar))`.
+- **Op** (exists): `cHermiteReduceTowerG Dt a d = ((gnum,gden),(hNum,Dstar))`.
 - **`LawfulHermiteReduction Dt a d`** (laws, under the normality precondition): `D ⟦gnum/gden⟧ + ⟦hNum/Dstar⟧
   = ⟦a/d⟧` (field identity) ∧ `Squarefree (toPolyG Dstar)` ∧ `(toPolyG hNum).degree < (toPolyG Dstar).degree`
   (properness, for deg Dt ≤ 1) ∧ `toPolyG Dstar = C·nodal(roots)` is *derived*, not assumed.
 - **Precondition (contract):** `hcopgcd` (differential normality) + input properness `deg a < deg d` + the
   gcd frontier.
-- **Realizer** (Stage 2, new `HermiteReduction`/`.Realization` file): `cHermiteReduceTowerGWf_field_identity`
-  (this session), `toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree`, `cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one`.
+- **Realizer** (Stage 2, new `HermiteReduction`/`.Realization` file): `cHermiteReduceTowerG_field_identity`
+  (this session), `toPolyG_cHermiteReduceTowerG_Dstar_squarefree`, `cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one`.
 
 ### 3. `ResidueLogPart` (Rothstein–Trager)
-- **Op** (exists): the `logs` of `cIntegrateReducedGWf`.
+- **Op** (exists): the `logs` of `cIntegrateReducedG`.
 - **`LawfulResidueLogPart Dt hNum Dstar`** (law, under rational-residue + distinctness): `(Σ over logs of cᵢ·D(log vᵢ)) = ⟦hNum/Dstar⟧`.
-- **Realizer** (Stage 2): `cIntegrateReducedGWf_logs_eq_per_root` + `primitive_engine_hmatch` and the
+- **Realizer** (Stage 2): `cIntegrateReducedG_logs_eq_per_root` + `primitive_engine_hmatch` and the
   discharges (`hDd`/`hnorm`/`hgcdread` — this session).
 
 ### 4. `MonomialCase` (case dispatch; already a record)
@@ -91,39 +91,39 @@ four interface `Lawful` classes, `cIntegrate_sound` against them, `cIntegrate_co
 - Interface / law: **`<Notion>`** (op, Prop-free) and **`Lawful<Notion>`** (Prop-bundle). Math theorems
   about the abstraction: `Lawful<Notion>.<fact>`.
 - Realization: **`<algorithm>_lawful<Notion>`** — the single theorem `Lawful<Notion> … (op := <algorithm>)`.
-  (e.g. `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition`, `cHermiteReduceTowerGWf_lawfulHermiteReduction`.)
+  (e.g. `cSqfreeYunFFG_lawfulSquarefreeDecomposition`, `cHermiteReduceTowerG_lawfulHermiteReduction`.)
 - No concrete-op name in any Stage-1 theorem; no `Lawful<Notion>`-proof body in the assembler.
 - Legacy names migrate gradually (git-mv/rename-only commits), per CLAUDE.md's gradual-improvement rule.
 
 ## Evicted (2026-07-04) ✓
 
 The four superseded concrete lemmas + two `local instance`s were REMOVED from `Assemble.lean` — the
-interface path (`cIntegrateReducedGWf_isIntegralResult_of_lawful` + the two realizations) supersedes them.
+interface path (`cIntegrateReducedG_isIntegralResult_of_lawful` + the two realizations) supersedes them.
 What remains in Assemble: the abstract assembler (`cIntegrateCase`/`cIntegrateCase_sound`), the interface
 composition `_of_lawful`, and the end-to-end `_via_interfaces` corollary — all interface-consuming.
 
 ## (historical) Was misplaced
 
-`field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd`,
-`cIntegrateReducedGWf_isIntegralResult_of_hcopgcd`,
-`field_identity_of_cIntegrateReducedGWf_primitive_maximal`,
+`field_identity_of_cIntegrateReducedG_of_residueMatch_of_hcopgcd`,
+`cIntegrateReducedG_isIntegralResult_of_hcopgcd`,
+`field_identity_of_cIntegrateReducedG_primitive_maximal`,
 `cIntegrateGFullWf_primitive_oneShot_hcopgcd_qfunNZG`, and the two `local instance`s — all Stage-2/concrete.
 They move to per-solver realization files as the interfaces land.
 
 ## Phase plan (dependency-ordered; each phase = one gate-green commit sequence)
 
 - [ ] **P0 — this note.** Fixes the discipline, encoding, interface signatures, naming.
-- [x] **P1 — `SquarefreeDecomposition`.** DONE (`SquarefreeDecomposition.lean` interface + `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition` realization in `YunTowerCorrect`). Define the interface + `LawfulSquarefreeDecomposition`; prove
-  `cSqfreeYunFFGWf_lawfulSquarefreeDecomposition` bundling the four existing facts. Leaf, no consumers yet.
-- [x] **P2 — `HermiteReduction`.** DONE (interface `HermiteReduction.lean` + realization `cHermiteReduceTowerGWf_lawfulHermiteReduction` in `HermiteReductionRealization.lean`; `squarefree` consumed via `LawfulSquarefreeDecomposition.prod_squarefree`). Assemble-file eviction of the residue/one-shot lemmas is P3–P5. Define the interface + `LawfulHermiteReduction` consuming a
+- [x] **P1 — `SquarefreeDecomposition`.** DONE (`SquarefreeDecomposition.lean` interface + `cSqfreeYunFFG_lawfulSquarefreeDecomposition` realization in `YunTowerCorrect`). Define the interface + `LawfulSquarefreeDecomposition`; prove
+  `cSqfreeYunFFG_lawfulSquarefreeDecomposition` bundling the four existing facts. Leaf, no consumers yet.
+- [x] **P2 — `HermiteReduction`.** DONE (interface `HermiteReduction.lean` + realization `cHermiteReduceTowerG_lawfulHermiteReduction` in `HermiteReductionRealization.lean`; `squarefree` consumed via `LawfulSquarefreeDecomposition.prod_squarefree`). Assemble-file eviction of the residue/one-shot lemmas is P3–P5. Define the interface + `LawfulHermiteReduction` consuming a
   `SquarefreeDecomposition` abstractly (dr-squarefree comes from the interface, not the Yun loop). Prove
-  `cHermiteReduceTowerGWf_lawfulHermiteReduction` (this session's `_field_identity` + squarefree + properness).
+  `cHermiteReduceTowerG_lawfulHermiteReduction` (this session's `_field_identity` + squarefree + properness).
   Evict the concrete Hermite lemmas from `Assemble.lean` into the realization file.
-- [x] **P3 — `ResidueLogPart`.** DONE (interface `ResidueLogPart.lean` + primitive realization `cIntegrateReducedGWf_lawfulResidueLogPart` in `OneShotAssembly`). Eviction of the Assemble one-shots is P5. Define interface + `LawfulResidueLogPart`; prove the `cIntegrateReducedGWf`
+- [x] **P3 — `ResidueLogPart`.** DONE (interface `ResidueLogPart.lean` + primitive realization `cIntegrateReducedG_lawfulResidueLogPart` in `OneShotAssembly`). Eviction of the Assemble one-shots is P5. Define interface + `LawfulResidueLogPart`; prove the `cIntegrateReducedG`
   realization. Evict the residue lemmas.
-- [x] **P4 (part 1) — abstract composition.** DONE (`cIntegrateReducedGWf_isIntegralResult_of_lawful` in Assemble: `LawfulHermiteReduction` + `LawfulResidueLogPart` → `IsIntegralResultG`, interface-only). Full eviction of the concrete one-shots is P5. Original P4: Restate `cIntegrateCase_sound` to consume `Lawful{Hermite,ResidueLogPart,
+- [x] **P4 (part 1) — abstract composition.** DONE (`cIntegrateReducedG_isIntegralResult_of_lawful` in Assemble: `LawfulHermiteReduction` + `LawfulResidueLogPart` → `IsIntegralResultG`, interface-only). Full eviction of the concrete one-shots is P5. Original P4: Restate `cIntegrateCase_sound` to consume `Lawful{Hermite,ResidueLogPart,
   MonomialCase}` + `LawfulSquarefreeDecomposition`. `Assemble.lean` becomes abstract-only.
-- [x] **P5 (core) — end-to-end via interfaces.** DONE (`cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces`: the primitive reduced-part soundness assembled from the two realizations through `_of_lawful`, zero concrete re-derivation). Removing the now-superseded concrete `_of_hcopgcd`/`_maximal`/`_qfunNZG` lemmas from Assemble is the remaining cleanup. Original P5: Primitive/hyperexp/poly one-shots become thin corollaries in their
+- [x] **P5 (core) — end-to-end via interfaces.** DONE (`cIntegrateReducedG_primitive_isIntegralResult_via_interfaces`: the primitive reduced-part soundness assembled from the two realizations through `_of_lawful`, zero concrete re-derivation). Removing the now-superseded concrete `_of_hcopgcd`/`_maximal`/`_qfunNZG` lemmas from Assemble is the remaining cleanup. Original P5: Primitive/hyperexp/poly one-shots become thin corollaries in their
   solver files (the evicted `_qfunNZG` theorems, now one-liners).
 - [ ] **P6 — completeness.** Same discipline: `LawfulDecidesElementary` interface + per-case realizations +
   one abstract `cIntegrate_complete`.
@@ -136,15 +136,15 @@ assembler never sees a concrete op. Keep this file current as phases land.
 
 Done, all gate-green:
 - **Three shared-stage interfaces** with realizations: `LawfulSquarefreeDecomposition`
-  (`cSqfreeYunFFGWf_lawfulSquarefreeDecomposition`), `LawfulHermiteReduction`
-  (`cHermiteReduceTowerGWf_lawfulHermiteReduction`, consuming the squarefree interface via
-  `prod_squarefree`), `LawfulResidueLogPart` (`cIntegrateReducedGWf_lawfulResidueLogPart` **for both**
+  (`cSqfreeYunFFG_lawfulSquarefreeDecomposition`), `LawfulHermiteReduction`
+  (`cHermiteReduceTowerG_lawfulHermiteReduction`, consuming the squarefree interface via
+  `prod_squarefree`), `LawfulResidueLogPart` (`cIntegrateReducedG_lawfulResidueLogPart` **for both**
   primitive and hyperexp).
-- **The assembler consumes interfaces**: `cIntegrateReducedGWf_isIntegralResult_of_lawful`
+- **The assembler consumes interfaces**: `cIntegrateReducedG_isIntegralResult_of_lawful`
   (`LawfulHermiteReduction`+`LawfulResidueLogPart` → `IsIntegralResultG`); and
   `cIntegrateCase_sound` was ALREADY Stage-1 abstract (takes `hSpecField`/`hNrmField`/`hrecon`, no concrete
   op in its proof) — the interface work makes `hNrmField` flow through the interfaces.
-- **End-to-end** for both solvers: `cIntegrateReducedGWf_{primitive,hyperexp}_isIntegralResult_via_interfaces`
+- **End-to-end** for both solvers: `cIntegrateReducedG_{primitive,hyperexp}_isIntegralResult_via_interfaces`
   compose the realizations through the abstract law, zero concrete re-derivation.
 - **Assemble cleaned**: the four tangled concrete lemmas + two `local instance`s evicted.
 
@@ -157,8 +157,8 @@ application like soundness was. **P7 naming sweep** — a large gradual legacy-r
 
 ## Making Assemble.lean concrete-algorithm-free — DONE
 
-Goal (user directive): NO concrete algorithm name (`cIntegrateCase`, `canonicalRepresentationFastGWf`,
-`cIntegrateReducedGWf`, `cHermiteReduceTowerGWf`, …) in `Assemble.lean` — only abstract structure + laws.
+Goal (user directive): NO concrete algorithm name (`cIntegrateCase`, `canonicalRepresentationFastG`,
+`cIntegrateReducedG`, `cHermiteReduceTowerG`, …) in `Assemble.lean` — only abstract structure + laws.
 
 **Done:** `combineSN_isIntegralResult` — the assembler soundness proven purely over abstract stage data
 (special fraction, normal result + its `IsIntegralResultG`, canonical reconstruction), NO concrete
@@ -171,7 +171,7 @@ algorithm. `cIntegrateCase_sound` is now a thin wrapper over it.
   (`toPolyG`/`caddG`/`cmulG`).
 - **MOVES** to a new `IntegratorAssembly.lean` (imports `Assemble`): `cIntegrateCase` (def),
   `primitiveCase`/`hyperexpCase`, the `native_decide` validations, the `cr*` wrappers + `redNorm` +
-  `canonicalReconstruction`, `cIntegrateReducedGWf_isIntegralResult(_of_lawful)`, the two
+  `canonicalReconstruction`, `cIntegrateReducedG_isIntegralResult(_of_lawful)`, the two
   `_via_interfaces` corollaries, `cIntegrateCase_sound` + the case corollaries, and
   `field_identity_…_of_exact`.
 Care points: the split crosses two scopes (`namespace CPolyG` for `MonomialCase`/`combineSN`/`cIntegrateCase`
@@ -207,7 +207,7 @@ are exactly the obligations a new solver must discharge:
 - `case : MonomialCase α` — the computable hooks (the algorithm).
 - `specialVal` + `specialSound` — the special-part field-identity law (discharged by the case's `hSpecField`).
 - `reducedSound` — the reduced-part antiderivative law (discharged via `LawfulHermiteReduction` +
-  `LawfulResidueLogPart` through `cIntegrateReducedGWf_isIntegralResult_of_lawful`).
+  `LawfulResidueLogPart` through `cIntegrateReducedG_isIntegralResult_of_lawful`).
 - `recon` — canonical reconstruction (discharged by `canonicalReconstruction`).
 - `SpecElem`/`NrmElem` + `descend` — the completeness frontier contract.
 

@@ -53,9 +53,9 @@ section Normality
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain β] [CFracGcdCoreWf β]
 
 /-- `IsWeaklyNormalizedNorm h`: `h`'s denominator equals its own normal part
-`toPolyG (cSplitFactorFastGWf [1] _ h.1.2).1 = toPolyG h.1.2`. -/
+`toPolyG (cSplitFactorFastG [1] _ h.1.2).1 = toPolyG h.1.2`. -/
 def IsWeaklyNormalizedNorm (h : QFunNZG β) : Prop :=
-  toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) h.1.2).1
+  toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) h.1.2).1
     = toPolyG h.1.2
 
 end Normality

@@ -21,8 +21,8 @@ certifies.
 
 ## The gap and the plan
 
-The engine's reduced integrator (`cLogPartGWf`) uses an explicit rational-candidate list; there is **no
-computable subresultant / LRT integrator**. The pattern to reuse: `cResidueResultantTowerGWf` computes the
+The engine's reduced integrator (`cLogPartG`) uses an explicit rational-candidate list; there is **no
+computable subresultant / LRT integrator**. The pattern to reuse: `cResidueResultantTowerG` computes the
 residue resultant `R(z)` by **interpolation in `z`** (evaluate `cresultantWf` at `z=0,1,…,deg` and
 `cinterpolateG`) — avoiding bivariate polynomials. The LRT log-arguments admit the same treatment.
 
@@ -53,7 +53,7 @@ Phases (each its own gate-green commit):
   `hNum − z·D(Dstar)`, computed by **interpolation in `z`** (evaluate `cSubresultantG` at `z=0,1,…` per
   `t`-coefficient). Output: a list `[(Rᵢ, Sᵢ(z,t))]` over `K`, no roots.
 - **L3 — the LRT reduced integrator `cIntegrateReducedLrtG`**: Hermite rational part (reuse
-  `cHermiteReduceTowerGWf`) + `cLrtLogArgG` symbolic log part. `IntegralResultG` with logs keyed by the
+  `cHermiteReduceTowerG`) + `cLrtLogArgG` symbolic log part. `IntegralResultG` with logs keyed by the
   `(Rᵢ, Sᵢ)` pairs (a symbolic-residue `logs` variant).
 - **L4 — correctness bridge**: `IsIntegralResultG Dt cn dn (cIntegrateReducedLrtG …)` from
   `lazardRiobooTrager_output_isSimilar_gcd` + `ratFunc_eq_sum_residue_gcd`, discharging the residue match

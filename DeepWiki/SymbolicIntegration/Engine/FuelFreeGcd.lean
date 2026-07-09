@@ -436,33 +436,33 @@ namespace CPolyG
 
 variable {α : Type*} [CField α] [CFieldSpec α]
 
-/-- Divisibility test `cdvdGWf q p = cisZeroG (cmodWf p q)`: decides `q ∣ p` by remainder-is-zero.
+/-- Divisibility test `cdvdG q p = cisZeroG (cmodWf p q)`: decides `q ∣ p` by remainder-is-zero.
 Generic over `[CField α]`. -/
-def cdvdGWf (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
+def cdvdG (q p : CPolyG α) : Bool := cisZeroG (cmodWf p q)
 
-/-- `cdvdGWf q p = true ↔ toPolyG (cmodWf p q) = 0`: the divisibility test reads as
+/-- `cdvdG q p = true ↔ toPolyG (cmodWf p q) = 0`: the divisibility test reads as
 remainder-zero through `toPolyG`. -/
-theorem cdvdGWf_iff (q p : CPolyG α) :
-    cdvdGWf q p = true ↔ toPolyG (cmodWf p q) = 0 := by
-  rw [cdvdGWf, cisZeroG_iff]
+theorem cdvdG_iff (q p : CPolyG α) :
+    cdvdG q p = true ↔ toPolyG (cmodWf p q) = 0 := by
+  rw [cdvdG, cisZeroG_iff]
 
-/-- A true `cdvdGWf q p` certifies polynomial divisibility `toPolyG q ∣ toPolyG p`
+/-- A true `cdvdG q p` certifies polynomial divisibility `toPolyG q ∣ toPolyG p`
 (nonzero divisor `cnormG q ≠ []`). -/
-theorem dvd_of_cdvdGWf (q p : CPolyG α) (hq : cnormG q ≠ []) (h : cdvdGWf q p = true) :
+theorem dvd_of_cdvdG (q p : CPolyG α) (hq : cnormG q ≠ []) (h : cdvdG q p = true) :
     toPolyG q ∣ toPolyG p := by
-  have hrem : toPolyG (cmodWf p q) = 0 := (cdvdGWf_iff q p).mp h
+  have hrem : toPolyG (cmodWf p q) = 0 := (cdvdG_iff q p).mp h
   have heuclid : toPolyG p = toPolyG (cdivWf p q) * toPolyG q + toPolyG (cmodWf p q) :=
     toPolyG_cmodWf p q hq
   rw [hrem, add_zero] at heuclid
   exact ⟨toPolyG (cdivWf p q), by rw [heuclid]; ring⟩
 
-/-- A false `cdvdGWf q p` refutes polynomial divisibility `¬ toPolyG q ∣ toPolyG p`
+/-- A false `cdvdG q p` refutes polynomial divisibility `¬ toPolyG q ∣ toPolyG p`
 (nonzero divisor `cnormG q ≠ []`). -/
-theorem not_dvd_of_cdvdGWf_false (q p : CPolyG α) (hq : cnormG q ≠ [])
-    (h : cdvdGWf q p = false) : ¬ toPolyG q ∣ toPolyG p := by
+theorem not_dvd_of_cdvdG_false (q p : CPolyG α) (hq : cnormG q ≠ [])
+    (h : cdvdG q p = false) : ¬ toPolyG q ∣ toPolyG p := by
   intro hdvd
   have hrem : toPolyG (cmodWf p q) = 0 := toPolyG_cmodWf_eq_zero_of_dvd p q hq hdvd
-  have htrue : cdvdGWf q p = true := (cdvdGWf_iff q p).mpr hrem
+  have htrue : cdvdG q p = true := (cdvdG_iff q p).mpr hrem
   rw [htrue] at h
   exact Bool.noConfusion h
 

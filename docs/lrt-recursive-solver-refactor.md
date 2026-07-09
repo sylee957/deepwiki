@@ -32,7 +32,7 @@
 
 1. **Why can't the primitive integrator just "use LRT"?** The main solver `LawfulRischLevel`
    is built on `IntegralResultG`, whose log part is `List (α × CPolyG α)` — the residue is a
-   **rational constant** `α`. Its reduced call is the rational `cIntegrateReducedGWf`. LRT
+   **rational constant** `α`. Its reduced call is the rational `cIntegrateReducedG`. LRT
    produces `LrtResultG`, whose log part is `List (CPolyG α × List (CPolyG α))` — the residue
    is a **root of a polynomial `Rᵢ`** (algebraic, implicit). `LrtResultG` is strictly more
    general; the two result types are incompatible (no `IsIntegralResultLrtG → IsIntegralResultG`),

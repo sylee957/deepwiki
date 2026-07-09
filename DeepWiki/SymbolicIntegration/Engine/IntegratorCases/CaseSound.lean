@@ -23,7 +23,7 @@ theorem cIntegrateCase_hyperexp_sound (Dt a d : CPolyG α)
     (fpPart : CPolyG α) (hlden : toPolyG lden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)
     (hLaur : cIntegrateHyperexpLaurentG (cExpEtaG Dt) (crPoly Dt a d)
         (cHyperexpSpecialNegG (crSpecNum Dt a d) (crSpecDen Dt a d)) = some (lnum, lden))
-    (hNrm : cIntegrateHyperexpNormalGWf Dt (crNormNum Dt a d) (crNormDen Dt a d) cands = some nrm)
+    (hNrm : cIntegrateHyperexpNormalG Dt (crNormNum Dt a d) (crNormDen Dt a d) cands = some nrm)
     (hsome : cIntegrateCase hyperexpCase Dt a d cands = some res)
     (hLaurField : towerFractionFieldDerivG Dt (fieldFrac lnum lden) = amG α (toPolyG fpPart))
     (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) nrm)
@@ -39,7 +39,7 @@ theorem cIntegrateCase_primitive_sound (Dt a d : CPolyG α) (cands : List α) (r
     (hsden : toPolyG ([CField.one] : CPolyG α) ≠ 0)
     (hgden : toPolyG (redNorm Dt a d cands).rational.2 ≠ 0)
     (hb : cisZeroG (crSpecNum Dt a d) = true)
-    (hqp : cPolyRischDEGWf Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) = some qp)
+    (hqp : cPolyRischDEG Dt [] (crPoly Dt a d) ((cdegG (crPoly Dt a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase Dt a d cands = some res)
     (hSpecField : towerFractionFieldDerivG Dt (fieldFrac qp [CField.one]) = specialVal)
     (hNrmField : IsIntegralResultG Dt (crNormNum Dt a d) (crNormDen Dt a d) (redNorm Dt a d cands))
@@ -52,7 +52,7 @@ theorem cIntegrateCase_primitive_sound (Dt a d : CPolyG α) (cands : List α) (r
     specialVal hsden hgden hSpec rfl hsome hSpecField hNrmField hrecon
 
 /-- **Primitive case with the special-part identity discharged** (canonical primitive `Dt = 1`, `fₚ ≠ 0`):
-`hSpecField` is no longer a hypothesis — it follows from `cPolyRischDEGWf_nil_field_identity` (the engine's
+`hSpecField` is no longer a hypothesis — it follows from `cPolyRischDEG_nil_field_identity` (the engine's
 own poly-RDE soundness), leaving only the shared reduced identity (`hNrmField`) and reconstruction
 (`hrecon`). One step closer to unconditional. -/
 theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
@@ -61,7 +61,7 @@ theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
     (hb : cisZeroG (crSpecNum ([CField.one] : CPolyG α) a d) = true)
     (hfp : cisZeroG (crPoly ([CField.one] : CPolyG α) a d) = false)
     (hconst : Differential.mapCoeffs (toPolyG (crPoly ([CField.one] : CPolyG α) a d)) = 0)
-    (hqp : cPolyRischDEGWf ([CField.one] : CPolyG α) [] (crPoly ([CField.one] : CPolyG α) a d)
+    (hqp : cPolyRischDEG ([CField.one] : CPolyG α) [] (crPoly ([CField.one] : CPolyG α) a d)
         ((cdegG (crPoly ([CField.one] : CPolyG α) a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase ([CField.one] : CPolyG α) a d cands = some res)
     (hNrmField : IsIntegralResultG ([CField.one] : CPolyG α) (crNormNum ([CField.one] : CPolyG α) a d)
@@ -76,14 +76,14 @@ theorem cIntegrateCase_primitive_sound_polyRDE [CharZero (CFieldSpec.K α)]
   exact cIntegrateCase_primitive_sound ([CField.one] : CPolyG α) a d cands res qp
     (fieldFrac (crPoly ([CField.one] : CPolyG α) a d) [CField.one])
     (by rw [hone]; exact one_ne_zero) hgden hb hqp hsome
-    (cPolyRischDEGWf_nil_field_identity (crPoly ([CField.one] : CPolyG α) a d) qp _ hfp (le_refl _)
+    (cPolyRischDEG_nil_field_identity (crPoly ([CField.one] : CPolyG α) a d) qp _ hfp (le_refl _)
       hqp hconst)
     hNrmField hrecon
 
 /-- **Primitive case with BOTH `hSpecField` and `hrecon` discharged** (canonical primitive `Dt = 1`,
 `fₚ ≠ 0`, special part `b = 0`): the special-part identity comes from the poly-RDE soundness and the
 reconstruction from `canonicalReconstruction` (the `b = 0` special term vanishes). The only remaining
-inputs are the shared reduced identity (`hNrmField`) and the `cSplitFactorFastGWf` split-correctness facts
+inputs are the shared reduced identity (`hNrmField`) and the `cSplitFactorFastG` split-correctness facts
 (`hsplit`, coprimality) — the engine's split frontier. -/
 theorem cIntegrateCase_primitive_sound_full [CharZero (CFieldSpec.K α)]
     (a d : CPolyG α) (cands : List α) (res : IntegralResultG α) (qp : CPolyG α)
@@ -91,7 +91,7 @@ theorem cIntegrateCase_primitive_sound_full [CharZero (CFieldSpec.K α)]
     (hb : cisZeroG (crSpecNum ([CField.one] : CPolyG α) a d) = true)
     (hfp : cisZeroG (crPoly ([CField.one] : CPolyG α) a d) = false)
     (hconst : Differential.mapCoeffs (toPolyG (crPoly ([CField.one] : CPolyG α) a d)) = 0)
-    (hqp : cPolyRischDEGWf ([CField.one] : CPolyG α) [] (crPoly ([CField.one] : CPolyG α) a d)
+    (hqp : cPolyRischDEG ([CField.one] : CPolyG α) [] (crPoly ([CField.one] : CPolyG α) a d)
         ((cdegG (crPoly ([CField.one] : CPolyG α) a d) : ℤ) + 1) = some qp)
     (hsome : cIntegrateCase primitiveCase ([CField.one] : CPolyG α) a d cands = some res)
     (hNrmField : IsIntegralResultG ([CField.one] : CPolyG α) (crNormNum ([CField.one] : CPolyG α) a d)

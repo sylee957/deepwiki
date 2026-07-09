@@ -81,7 +81,7 @@ theorem soundFormalLrt [LawfulRischLevelLrt α] (Dt a d : CPolyG α) (res : LrtR
     have hd0 : toPolyG d ≠ 0 := fun hh => hdz ((cisZeroG_iff d).mpr hh)
     have h0 : cIntegrateCaseLrt case Dt a d = some res := h
     rw [cIntegrateCaseLrt] at h
-    rcases hcrep : canonicalRepresentationFastGWf Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
+    rcases hcrep : canonicalRepresentationFastG Dt a d with ⟨fp, ⟨b, ds⟩, ⟨cn, dn⟩⟩
     rw [hcrep] at h
     dsimp only at h
     rcases hspec : case.integrateSpecial Dt fp b ds with _ | ⟨snum, sden⟩
@@ -144,9 +144,9 @@ integrability **iff** the root-free residue guard passes. The `←` (sufficiency
 argument*, never a class field — so `soundFormalLrt` stays independent of it (the deliberate decoupling). -/
 theorem reducedDecides [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hDt0 : (toPolyG Dt).natDegree = 0)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt
-        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
-        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0) :
+    (hR0 : toPolyG (cResidueResultantTowerG Dt
+        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0) :
     IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d)
       ↔ cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = true :=
   primitiveLrtDecides_of_setup hgcd Dt (crNormNum Dt a d) (crNormDen Dt a d)
@@ -158,9 +158,9 @@ solver's class produces directly (given the Liouville frontier). -/
 theorem not_isElementaryIntegrable_reduced [LawfulRischLevelLrt α] [LrtLiouvilleFrontier α]
     (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0)
     (hDt0 : (toPolyG Dt).natDegree = 0)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt
-        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
-        (cHermiteReduceTowerGWf Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0)
+    (hR0 : toPolyG (cResidueResultantTowerG Dt
+        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.1
+        (cHermiteReduceTowerG Dt (crNormNum Dt a d) (crNormDen Dt a d)).2.2) ≠ 0)
     (hguard : cResidueConstantGuardG Dt (crNormNum Dt a d) (crNormDen Dt a d) = false) :
     ¬ IsElementaryIntegrableGenuineLrtG Dt (crNormNum Dt a d) (crNormDen Dt a d) := by
   rw [reducedDecides hgcd Dt a d hd0 hDt0 hR0, hguard]; simp

@@ -121,7 +121,7 @@ variable {α : Type*} [CField α] [CDiffField α]
 
 `cAmcDdG` is the polynomial in `t` whose `t`-gcd with `d` is the Rothstein–Trager log argument at a
 residue `c` — the shared building block of the fuel-free residue resultant / log-argument engine
-(`cResidueResultantTowerGWf` / `cLogArgTowerGWf`, `Tower/WellFounded`). -/
+(`cResidueResultantTowerG` / `cLogArgTowerG`, `Tower/WellFounded`). -/
 
 /-- Generic `a − c·Dd` `cAmcDdG Dt a d c` for a residue value `c : α`: `a − c·(cmonomialDeriv Dt d)`,
 the polynomial in `t` whose `t`-gcd with `d` is the log argument at `c`. Generic mirror of `cAmcDd`. -/

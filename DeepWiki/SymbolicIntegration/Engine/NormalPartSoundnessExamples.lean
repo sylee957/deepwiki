@@ -56,15 +56,15 @@ example {K : Type*} [Field K] {H D2 N S : K[X]}
   degree_lt_of_exact_div hid hND hS
 
 example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (resNum resDen Dstar : CPolyG α)
-    (hnum : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1
+    (hnum : toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.1
       = toPolyG (cdivWf (cmulG resNum Dstar) resDen))
-    (hden : toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2 = toPolyG Dstar)
+    (hden : toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.2 = toPolyG Dstar)
     (hdvd : toPolyG resDen ∣ toPolyG (cmulG resNum Dstar))
     (hresDen : cnormG resDen ≠ []) (hDstar : toPolyG Dstar ≠ 0)
     (hresProper : (toPolyG resNum).degree < (toPolyG resDen).degree) :
-    (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.1).degree
-      < (toPolyG (CPolyG.cHermiteReduceTowerGWf Dt a d).2.2).degree :=
-  cHermiteReduceTowerGWf_leftover_proper_of_residual Dt a d resNum resDen Dstar
+    (toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.1).degree
+      < (toPolyG (CPolyG.cHermiteReduceTowerG Dt a d).2.2).degree :=
+  cHermiteReduceTowerG_leftover_proper_of_residual Dt a d resNum resDen Dstar
     hnum hden hdvd hresDen hDstar hresProper
 
 example {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Prop) [DecidablePred skip]
@@ -84,7 +84,7 @@ example {β : Type*} (glocOf : β → CPolyG α × CPolyG α) (skip : β → Pro
 
 example (Dt : CPolyG α) (v u : CPolyG α) (hv : toPolyG v ≠ 0)
     (hb : ∀ (rhs : CPolyG α),
-      (toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v rhs).1).degree
+      (toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v rhs).1).degree
         < (toPolyG v).degree)
     (j : ℕ) (a : CPolyG α) (g : CPolyG α × CPolyG α)
     (hg : (toPolyG g.1).degree < (toPolyG g.2).degree) :
@@ -94,7 +94,7 @@ example (Dt : CPolyG α) (v u : CPolyG α) (hv : toPolyG v ≠ 0)
 
 example (Dt : CPolyG α) (vi u : CPolyG α) (j : ℕ) (a : CPolyG α) (hv : toPolyG vi ≠ 0)
     (hb : ∀ (rhs : CPolyG α),
-      (toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt vi)) vi rhs).1).degree
+      (toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt vi)) vi rhs).1).degree
         < (toPolyG vi).degree) :
     (toPolyG (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.1).degree
       < (toPolyG (cHermiteReduceTowerInnerWf Dt vi u j a ([CField.zero], [CField.one])).1.2).degree :=
@@ -103,7 +103,7 @@ example (Dt : CPolyG α) (vi u : CPolyG α) (j : ℕ) (a : CPolyG α) (hv : toPo
 example (Dt : CPolyG α) (a d : CPolyG α) (factors : List (CPolyG α))
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
-      (toPolyG (cdiophantineGWf
+      (toPolyG (cdiophantineG
           (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPolyG p.1).degree) :
     (toPolyG (factors.zipIdx.foldl
@@ -134,7 +134,7 @@ example (Dt : CPolyG α) (a d : CPolyG α) (factors : List (CPolyG α))
     (hDt : (toPolyG Dt).natDegree ≤ 1) (haProper : (toPolyG a).degree < (toPolyG d).degree)
     (hv : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → toPolyG p.1 ≠ 0)
     (hb : ∀ p ∈ factors.zipIdx, ¬ (p.2 + 1 ≤ 1) → ∀ (rhs : CPolyG α),
-      (toPolyG (cdiophantineGWf
+      (toPolyG (cdiophantineG
           (cmulG (cdivWf d (cpowG p.1 (p.2 + 1))) (cmonomialDeriv Dt p.1)) p.1 rhs).1).degree
         < (toPolyG p.1).degree) :
     let g := factors.zipIdx.foldl
@@ -224,16 +224,16 @@ example (Dt : CPolyG α) (s L₀ : CPolyG α × CPolyG α) (rest glocs : List (C
   cHermiteReduceTowerG_telescope Dt s L₀ rest glocs hs hmem hseed hstep
 
 example [CFracGcdCoreWf α] (Dt : CPolyG α) (a d : CPolyG α) (cands : List α)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
     (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedGWf Dt a d cands).logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands) a d = true) :
+    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedG Dt a d cands).logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt a d cands) a d = true) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_cIntegrateReducedGWf_of_checkIdentityG Dt a d cands hgden haden hlogs hcheck
+  field_identity_of_cIntegrateReducedG_of_checkIdentityG Dt a d cands hgden haden hlogs hcheck
 
 #print axioms cHermiteReduceTowerG_telescope_seed_qfunNZG
 

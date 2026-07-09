@@ -20,11 +20,11 @@ namespace CPolyG
 variable {α : Type*} [CField α]
 
 /-- Case-2 cofactor (`n = 2`) `radCase2CofactorC k W h C = B`: the degree-`< deg W` polynomial solving
-`B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantineGWf ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderivG W`. -/
+`B·(½−k)·W'·h ≡ C (mod W)` via `cdiophantineG ((½−k)W'h) W C`. `h = f/W`, `W'` is `cderivG W`. -/
 def radCase2CofactorC (k : ℕ) (W h C : CPolyG α) : CPolyG α :=
   let half : CPolyG α := [CField.div CField.one (cnatCastG 2)]              -- ½
   let coef := cmulG (csubG half [cnatCastG k]) (cmulG (cderivG W) h)        -- (½ − k)·W'·h
-  (cdiophantineGWf coef W C).1
+  (cdiophantineG coef W C).1
 
 /-- Case-2 residual (`n = 2`) `radCase2ResidualC k W h C B = D`: the lowered-`k` numerator
 `D = (B·(½−k)W'h − C)/W + B'h + ½Bh'`; `B'` is `cderivG B`, `h'` is `cderivG h`, division by `W` is

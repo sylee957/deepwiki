@@ -7,7 +7,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.LaurentCore
 
 For a hyperexponential monomial `t` (`Dt = η·t`), the polynomial + special part `fₚ + fₛ` is a Laurent
 polynomial `∑ⱼ aⱼ tʲ`; each term integrates by solving the base RDE `Dqⱼ + (j·η)·qⱼ = aⱼ` via
-`CRischField.crischDESolve`, and the normal part goes through `cIntegrateReducedGWf`. -/
+`CRischField.crischDESolve`, and the normal part goes through `cIntegrateReducedG`. -/
 
 open Polynomial
 
@@ -22,23 +22,23 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischFie
 /-! ### The full hyperexponential integral driver `cIntegrateHyperexpG`
 
 `cIntegrateHyperexpG Dt a d cands` canonical-splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, routes the Laurent part
-through `cIntegrateHyperexpLaurentG` and the normal part through `cIntegrateReducedGWf`, and combines the
+through `cIntegrateHyperexpLaurentG` and the normal part through `cIntegrateReducedG`, and combines the
 rational parts. -/
 
 /-- Full hyperexponential integral `cIntegrateHyperexpG Dt a d cands` for `f = a/d ∈ k(t)` with a monomial
 `t` (`Dt = η·t`): returns `some ⟨(num, den), logs⟩` with `∫ f = num/den + ∑ᵢ cᵢ·log(vᵢ)`, or `none`.
 Canonical-splits `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrates the Laurent part `fₚ + b/dₛ` by
-`cIntegrateHyperexpLaurentG` and the normal part `cₙ/dₙ` by `cIntegrateReducedGWf`, and combines the
+`cIntegrateHyperexpLaurentG` and the normal part `cₙ/dₙ` by `cIntegrateReducedG`, and combines the
 rational parts; `none` if the Laurent integration fails. -/
 def cIntegrateHyperexpG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let η : α := cExpEtaG Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
   let neg : List α := cHyperexpSpecialNegG b ds
   match cIntegrateHyperexpLaurentG η fp neg with
   | none => none
   | some (lnum, lden) =>
-    let nrm := cIntegrateReducedGWf Dt cn dn cands
+    let nrm := cIntegrateReducedG Dt cn dn cands
     let (gnum, gden) := nrm.rational
     -- combine `lnum/lden + gnum/gden`.
     let num := caddG (cmulG lnum gden) (cmulG gnum lden)

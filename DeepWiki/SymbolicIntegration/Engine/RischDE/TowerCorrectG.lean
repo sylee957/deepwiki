@@ -54,12 +54,12 @@ theorem cdivWf_b_exact_of_gcd {α : Type*} [CField α] [CFieldSpec α] (a b g : 
   have hgdvd : toPolyG g ∣ toPolyG b := hgassoc.dvd.trans (gcd_dvd_right _ _)
   exact toPolyG_cdivWf_exact b g hg0 hgdvd
 
-/-- `toPolyG (cdivWf c g) * toPolyG g = toPolyG c` from `cdvdGWf g c = true` (`g ∣ c`). -/
-theorem cdivWf_c_exact_of_cdvdGWf {α : Type*} [CField α] [CFieldSpec α] (c g : CPolyG α)
+/-- `toPolyG (cdivWf c g) * toPolyG g = toPolyG c` from `cdvdG g c = true` (`g ∣ c`). -/
+theorem cdivWf_c_exact_of_cdvdG {α : Type*} [CField α] [CFieldSpec α] (c g : CPolyG α)
     (hg0 : cnormG g ≠ [])
-    (hdvd : cdvdGWf g c = true) :
+    (hdvd : cdvdG g c = true) :
     toPolyG (cdivWf c g) * toPolyG g = toPolyG c := by
-  have hgdvd : toPolyG g ∣ toPolyG c := dvd_of_cdvdGWf g c hg0 hdvd
+  have hgdvd : toPolyG g ∣ toPolyG c := dvd_of_cdvdG g c hg0 hdvd
   exact toPolyG_cdivWf_exact c g hg0 hgdvd
 
 /-- One `cSPDEG` peel's cleared lifting: with `D = implicitDeriv (toPolyG Dt)`, Bézout certificate

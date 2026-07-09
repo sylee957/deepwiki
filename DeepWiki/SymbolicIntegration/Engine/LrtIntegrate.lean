@@ -3,7 +3,7 @@ import DeepWiki.SymbolicIntegration.Engine.Hermite.ValuationTower
 
 /-! # The symbolic (root-free) LRT reduced integrator `cIntegrateReducedLrtG` (L3)
 
-Combines the Hermite rational part (`cHermiteReduceTowerGWf`) with the symbolic Lazard–Rioboo–Trager log part
+Combines the Hermite rational part (`cHermiteReduceTowerG`) with the symbolic Lazard–Rioboo–Trager log part
 (`cLrtLogArgG`) into a `LrtResultG`: a rational function plus a list of symbolic log terms `(Rᵢ, Sᵢ)`, each
 denoting `Σ_{Rᵢ(c)=0} c·log(Sᵢ(c,t))`. **No residues are computed** — this is the root-finding-free reduced
 integrator. See `docs/computable-lrt.md`. -/
@@ -28,7 +28,7 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 /-- **The symbolic root-free LRT reduced integrator.** Hermite rational part + symbolic LRT log part. For
 `a/d` (reduced, normal), returns the rational antiderivative and the symbolic log terms — no roots. -/
 def cIntegrateReducedLrtG (Dt a d : CPolyG α) : LrtResultG α :=
-  let H := cHermiteReduceTowerGWf Dt a d
+  let H := cHermiteReduceTowerG Dt a d
   ⟨(H.1.1, H.1.2), cLrtLogArgG Dt H.2.1 H.2.2⟩
 
 end CPolyG

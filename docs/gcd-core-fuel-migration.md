@@ -23,13 +23,13 @@ Goal: delete the fuel'd Euclidean base (`cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcd
 and the fuel'd Algebraic residue machinery), migrating every consumer to the fuel-free `…Wf` twins.
 
 ## Wf twins (mostly exist)
-- Base: `cdivmodG→cdivmodWf`, `cmodG→cmodWf`, `cdivG→cdivWf`, `cdvdG→cdvdGWf`, `cgcdExtG→cgcdWf`
+- Base: `cdivmodG→cdivmodWf`, `cmodG→cmodWf`, `cdivG→cdivWf`, `cdvdG→cdvdG`, `cgcdExtG→cgcdWf`
   (FuelFreeGcd); `cbezoutOne→cbezoutOneWf` (FuelFreeDiophantine).
 - Tower gcd: `cgcdFFCore→cgcdFFCoreWf` (Tower/WellFounded; its raw core uses `cgcdWf`, NOT `cgcdExtG`).
-- Tower API: `cSplitFactorFastGWf`, `canonicalRepresentationFastGWf`, `cResidueResultantTowerGWf`,
-  `cLogArgTowerGWf`, `cSqfreeYunFFGWf` (Tower/WellFounded).
-- MISSING twins to build: `cSplitSquarefreeFactorFastGWf`, `cParallelIntegrateTowerWf`, and a fuel-free
-  resultant if `cresultantG` has none reachable (check `cresultantGWf`).
+- Tower API: `cSplitFactorFastG`, `canonicalRepresentationFastG`, `cResidueResultantTowerG`,
+  `cLogArgTowerG`, `cSqfreeYunFFG` (Tower/WellFounded).
+- MISSING twins to build: `cSplitSquarefreeFactorFastG`, `cParallelIntegrateTowerWf`, and a fuel-free
+  resultant if `cresultantG` has none reachable (check `cresultantG`).
 
 ## Pins keeping the fuel'd base alive (beyond runtime)
 1. Cataloged native_decide examples (Sources): `ex_3_5_2` (cSplitSquarefreeFactorFastG),
@@ -43,16 +43,16 @@ and the fuel'd Algebraic residue machinery), migrating every consumer to the fue
 ## Phase order (delete consumers before the ops they use)
 - **G1 (done-first, safe):** re-point the swell-demo benchmarks' `cgcdExtG` → `cgcdWf` (fuel-free naive
   Euclidean; preserves the swell demonstration). Clears `cgcdExtG`'s Bench/GcdFF runtime consumers.
-- **G2:** build the two missing Wf twins (`cSplitSquarefreeFactorFastGWf`, `cParallelIntegrateTowerWf`)
-  + `cresultantGWf` if absent; add `…Wf_eq`/native_decide equivalence at the cataloged inputs.
+- **G2:** build the two missing Wf twins (`cSplitSquarefreeFactorFastG`, `cParallelIntegrateTowerWf`)
+  + `cresultantG` if absent; add `…Wf_eq`/native_decide equivalence at the cataloged inputs.
 - **G3:** re-point runtime consumers of the fuel'd Tower API to the Wf twins (Tower/Integrate internal
   chain, MixedTowerIntegrate, Hyperexp); re-catalog the book examples to the Wf versions.
 - **G4:** migrate the Wf soundness proofs off the fuel'd defs. REFINED (probed 2026-07-03): the
-  Wf soundness lemmas ALREADY EXIST in `OneShotAssembly` (`cLogArgTowerGWf_eq_linear_factor`,
-  `cIntegrateReducedGWf_logs_eq_per_root`). The fuel'd soundness lemmas in `LogPartTowerSoundness`
+  Wf soundness lemmas ALREADY EXIST in `OneShotAssembly` (`cLogArgTowerG_eq_linear_factor`,
+  `cIntegrateReducedG_logs_eq_per_root`). The fuel'd soundness lemmas in `LogPartTowerSoundness`
   (`cLogArgTowerG_eq_linear_factor`, `cLogArgTowerG_associated_linear_factor`,
   `roots_residueResultantTowerG_eq_residues[_qfunNZG]`) feed exactly ONE live theorem:
-  `field_identity_of_cIntegrateReducedGWf_of_residueMatch_qfunNZG` (Wf-facing, but its *proof* routes
+  `field_identity_of_cIntegrateReducedG_of_residueMatch_qfunNZG` (Wf-facing, but its *proof* routes
   through the fuel'd lemmas). So G4 = re-route that one theorem's proof through the OneShotAssembly Wf
   lemmas, then the fuel'd `LogPartTowerSoundness` soundness island (cLogArgTowerG/cResidueResultantTowerG
   fuel'd theorems) is orphaned and deletable. Bounded proof work, not from-scratch. Similarly probe
@@ -67,12 +67,12 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
 
 ## Progress log
 - **G1** ✅ benchmarks `cgcdExtG`→`cgcdWf`.
-- **G2a** ✅ built `cSplitSquarefreeFactorFastGWf`. (Resultant twin `cresultantWf` already existed.)
-- **G3a** ✅ `cIntegrateHyperexpG` made fully fuel-free (re-point to `canonicalRepresentationFastGWf` +
+- **G2a** ✅ built `cSplitSquarefreeFactorFastG`. (Resultant twin `cresultantWf` already existed.)
+- **G3a** ✅ `cIntegrateHyperexpG` made fully fuel-free (re-point to `canonicalRepresentationFastG` +
   drop `fuel`; 6 native_decide sites updated) — removed `canonicalRepresentationFastG`'s last runtime pin.
 - **G3b** ✅ re-cataloged Ch3 (`ex_3_5_1/2`) + Ch5 (`alg_5_6_*`, `ex_5_6_2`) to the Wf Tower API.
 - **G4** ✅ retired the fuel'd residue engine: the fuel'd `cLogArgTowerG` soundness was a DEAD LEAF island
-  (`cLogArgTowerG_eq_linear_factor` only in `#print axioms`; superseded by `cLogArgTowerGWf_eq_linear_factor`
+  (`cLogArgTowerG_eq_linear_factor` only in `#print axioms`; superseded by `cLogArgTowerG_eq_linear_factor`
   in OneShotAssembly) — deleted the 2 theorems, orphaning + deleting `cLogArgTowerG` + `cResidueResultantTowerG`.
   Kept shared `cAmcDdG`.
 - **G6a** ✅ deleted orphaned `cSplitSquarefreeFactorFastG`.
@@ -85,14 +85,14 @@ Each phase: block-comment-aware consumer scan INCLUDING Sources/, gate-green per
 
 ## G5 Algebraic — cSqfreeYunFFG arc COMPLETE (G5a–e)
 - **G5a** ✅ radical integral-basis family (`radSquarePart`…`radGenus`) made fuel-free (re-point to
-  `cSqfreeYunFFGWf`, drop fuel; downstream CantorComposition/HyperellipticDivisor + ch2 docstrings fixed).
+  `cSqfreeYunFFG`, drop fuel; downstream CantorComposition/HyperellipticDivisor + ch2 docstrings fixed).
 - **G5b** ✅ deleted the redundant fuel'd `cIntegrateAlgebraic` island (RadicalIntegrateFull, 15 decls,
   superseded by `cIntegrateAlgebraicWf` which the Hdl catalog already uses).
 - **G5c** ✅ deleted the orphaned fuel'd `radIntegrateRational` + its mc-dispatch validation (redundant with
   `radIntegrateRationalWf`); kept shared `mcRho/mcR/mcB/mcRhoQx` (Sources AppendixA uses them — build cross-check
   caught a missed `mcRhoQx`).
 - **G5d** ✅ made `badPrimes`/`round2Step` fuel-free (the PRODUCTION path `integralBasisLoop→round2Pass→
-  badPrimesOrder` was ALREADY fuel-free — `badPrimesOrder` uses `cSqfreeYunFFGWf`, `integralBasisLoop`'s fuel is a
+  badPrimesOrder` was ALREADY fuel-free — `badPrimesOrder` uses `cSqfreeYunFFG`, `integralBasisLoop`'s fuel is a
   STRUCTURAL iteration bound; only the standalone example versions still threaded gcd-fuel).
 - **G5e** ✅ deleted the now-orphaned fuel'd `cSqfreeYunFFG` + `cSqfreeYunFFGgo`.
 - ★★ KEY DISTINCTION: **GCD-fuel** (threads to `cSqfreeYunFFG`/`cgcdFFCore` — REMOVE) vs **STRUCTURAL fuel**
@@ -201,7 +201,7 @@ phases are LARGE interdependent cataloged-API cascades — deliberate focused se
   by CantorComposition/HyperellipticDivisor/GeneralPicard* — dropping fuel there has a huge blast radius and
   requires re-cataloging the algebraic-function book (`Sources/Hdl_1721_1_15391/Chapter2` `ch2_integralBasis`).
   Also `cresultantG`→`cAlgResidueResultant`/`discResultant`/`genResidueResultant` and `cbezoutOne`→`radInvN`.
-  Wf twins (`cSqfreeYunFFGWf`/`cresultantWf`/`cbezoutOneWf`) all exist — the work is re-point + drop-fuel +
+  Wf twins (`cSqfreeYunFFG`/`cresultantWf`/`cbezoutOneWf`) all exist — the work is re-point + drop-fuel +
   re-catalog across the whole Algebraic arc. ★ SCOPE DECISION NEEDED: re-catalog ch2 to the Wf versions?
 - **G2b (parallel)** — port `cParallelIntegrate`→`SystemQ`→`AnsatzQ`→`SquarefreeFactorsQ` to Wf; re-catalog `alg_10_3`.
 - **G7 (Euclidean base)** — `cdivmodG`/`cmodG`/`cdivG`/`cdvdG`/`cgcdExtG`/`cgcdFFCore` are held alive by the

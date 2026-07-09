@@ -31,13 +31,13 @@ variable [CFracGcdCoreWf α]
 (each squarefree part `Pᵢ` of multiplicity `i` contributes `Pᵢ^{⌊i/2⌋}`), so `d² ∣ ρ` and `ρ/d²` is
 squarefree. Monic. -/
 def radSquarePart (ρ : CPolyG α) : CPolyG α :=
-  (cSqfreeYunFFGWf ρ).zipIdx.foldl
+  (cSqfreeYunFFG ρ).zipIdx.foldl
     (fun acc (Pi, i) => cmulG acc (cpowG Pi ((i + 1) / 2))) [CField.one]
 
 /-- Squarefree part `radSquarefreePart ρ = s = ∏_{i odd} Pᵢ = ρ/d²`: one copy of each odd-multiplicity
 factor `Pᵢ`, so `ρ = d²·s` with `d = radSquarePart` and `s` squarefree by construction. Monic. -/
 def radSquarefreePart (ρ : CPolyG α) : CPolyG α :=
-  (cSqfreeYunFFGWf ρ).zipIdx.foldl
+  (cSqfreeYunFFG ρ).zipIdx.foldl
     (fun acc (Pi, i) => if (i + 1) % 2 = 1 then cmulG acc Pi else acc) [CField.one]
 
 /-! ### The integral basis `[1, y/d]`
@@ -82,11 +82,11 @@ def radSquarefreePartIsSquarefree (ρ : CPolyG α) : Bool :=
 `T² − s/P²` over `ℚ[x]`, but `P² ∤ s` (since `s` is squarefree, no nonconstant square divides it), so
 `s/P²` is not a polynomial and `y/(d·P)` is not integral. Hence `y/d` is the maximal integral element of
 the form `y/q`. Returns `true` (= "not integral", `P² ∤ s`) for nonconstant `P`; `false` for constant `P`
-(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `cdvdGWf`. `[CField α]
+(`y/d` itself, which is integral). Checked by `¬ (P² ∣ s)` via `cdvdG`. `[CField α]
 [CFracGcdCoreWf α]`-generic. -/
 def radNotIntegralFactor (ρ P : CPolyG α) : Bool :=
   let s := radSquarefreePart ρ
-  if cdegG P = 0 then false else !(cdvdGWf (cmulG P P) s)
+  if cdegG P = 0 then false else !(cdvdG (cmulG P P) s)
 
 /-! ### Discriminant and genus of the simple-radical basis
 

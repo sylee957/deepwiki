@@ -258,34 +258,34 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-- The degree-bound cancellation residual over the special-cleared coefficients. -/
 def RdeBoundCancellationResidualWf (Dt fnum fden gnum gden : CPolyG α) : Prop :=
   ∀ a0 b0 c0 h0 : CPolyG α,
-    cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+    cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
     ∀ q : CPolyG α,
-      IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
-      (toPolyG (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1).coeff
+      IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 q →
+      (toPolyG (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1).coeff
           (candTopDegree (toPolyG Dt)
-            (toPolyG (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1)
-            (toPolyG (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1)
+            (toPolyG (cRdeSpecialDenominatorG Dt a0 b0 c0).1)
+            (toPolyG (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1)
             (toPolyG q)) = 0 →
       cdegG q ≤ cRdeBoundDegreeG Dt
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
 
 /-- The `hbound` field follows from the cancellation residual. -/
 theorem hboundWf_of_cancellationResidualWf (Dt fnum fden gnum gden : CPolyG α)
     (hres : RdeBoundCancellationResidualWf Dt fnum fden gnum gden) :
     ∀ a0 b0 c0 h0 : CPolyG α,
-      cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+      cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
       ∀ q : CPolyG α,
-        IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-            (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+        IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+            (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 q →
         cdegG q ≤ cRdeBoundDegreeG Dt
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 := by
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 := by
   intro a0 b0 c0 h0 hnorm q hsol
   exact cdegG_le_cRdeBoundDegreeG_of_isReducedRdeSol Dt _ _ _ q hsol
     (hres a0 b0 c0 h0 hnorm q hsol)
@@ -298,9 +298,9 @@ end WiringWf
 example {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpec α] [CFracGcdCoreWf α]
     [CRischField α] (Dt fnum fden gnum gden : CPolyG α)
     (hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true)
+      (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true)
     (hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-      (cRischDEGWf Dt fnum fden gnum gden).isSome = true)
+      (cRischDEG Dt fnum fden gnum gden).isSome = true)
     (hres : RdeBoundCancellationResidualWf Dt fnum fden gnum gden) :
     RischDEInnerCompletenessWf Dt fnum fden gnum gden :=
   { hnorm := hnorm

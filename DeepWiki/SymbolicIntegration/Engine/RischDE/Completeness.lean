@@ -43,25 +43,25 @@ passes on the weak-normalized input, and `crischDERawSolveWf` succeeds on the re
 transformed back by `q⁻¹`). -/
 theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
     crischDESolveSoundWf f g = some y ↔
-      (CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
+      (CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)
           = false
-        ∧ cisCanonNormalizedGWf (weakNormalizedF f
-            (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+        ∧ cisCanonNormalizedG (weakNormalizedF f
+            (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)))
           = true
         ∧ ∃ ytilde : QFunNZG β,
             crischDERawSolveWf
                 (qReduce (weakNormalizedF f
-                  (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-                (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+                  (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+                (qmulNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
               = some ytilde
-              ∧ y = qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β)
+              ∧ y = qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β)
                   f.1.1 f.1.2)))) := by
-  set q : CPolyG β := cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
+  set q : CPolyG β := cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2 with hq
   set q' : QFunNZG β := qOfPolyNZG q with hq'
   set ftilde : QFunNZG β := weakNormalizedF f q' with hft
   rw [show crischDESolveSoundWf f g
       = (if CPolyG.cisZeroG q then none
-         else if cisCanonNormalizedGWf ftilde then
+         else if cisCanonNormalizedG ftilde then
                 match reduceSoundOpt ftilde with
                 | none => none
                 | some ftildeR =>
@@ -75,7 +75,7 @@ theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
     intro h; exact absurd h (by simp)
   · rw [if_neg hqz]
     rw [Bool.not_eq_true] at hqz
-    by_cases hck : cisCanonNormalizedGWf ftilde = true
+    by_cases hck : cisCanonNormalizedG ftilde = true
     · rw [if_pos hck, reduceSoundOpt_eq]
       rcases hinner : crischDERawSolveWf (qReduce ftilde) (qmulNZG q' g) with _ | ytilde
       · simp only [hinner, hqz, hck, true_and]
@@ -94,36 +94,36 @@ theorem crischDESolveSoundWf_some_iff (f g y : QFunNZG β) :
 /-- If the weak normalizer is nonzero, the canon-normality gate passes, and `crischDERawSolveWf` returns
 `some ỹ`, then `crischDESolveSoundWf f g = some (ỹ/q')`. -/
 theorem crischDESolveSoundWf_some_of_stages (f g ytilde : QFunNZG β)
-    (hq : CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
+    (hq : CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)
         = false)
-    (hck : cisCanonNormalizedGWf (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+    (hck : cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)))
         = true)
     (hinner : crischDERawSolveWf
         (qReduce (weakNormalizedF f
-          (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-        (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+          (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+        (qmulNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
         = some ytilde) :
     crischDESolveSoundWf f g
-      = some (qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β)
+      = some (qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β)
           f.1.1 f.1.2)))) :=
   (crischDESolveSoundWf_some_iff f g _).mpr ⟨hq, hck, ytilde, hinner, rfl⟩
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 example (f g ytilde : QFunNZG β)
-    (hq : CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)
+    (hq : CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)
         = false)
-    (hck : cisCanonNormalizedGWf (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+    (hck : cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)))
         = true)
     (hinner : crischDERawSolveWf
         (qReduce (weakNormalizedF f
-          (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-        (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+          (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+        (qmulNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
         = some ytilde) :
     crischDESolveSoundWf f g
-      = some (qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β)
+      = some (qmulNZG ytilde (qinvNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β)
           f.1.1 f.1.2)))) :=
   crischDESolveSoundWf_some_of_stages f g ytilde hq hck hinner
 
@@ -203,34 +203,34 @@ on polynomial-solvable inputs. -/
 structure RischDEInnerCompletenessWf (Dt fnum fden gnum gden : CPolyG α) : Prop where
   /-- A polynomial-solvable RDE's normal-denominator reduction succeeds. -/
   hnorm : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    (cRdeNormalDenominatorGWf Dt fnum fden gnum gden).isSome = true
+    (cRdeNormalDenominatorG Dt fnum fden gnum gden).isSome = true
   /-- Any reduced polynomial solution has degree at most `cRdeBoundDegreeG`. -/
   hbound : ∀ a0 b0 c0 h0 : CPolyG α,
-    cRdeNormalDenominatorGWf Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
+    cRdeNormalDenominatorG Dt fnum fden gnum gden = some (a0, b0, c0, h0) →
     ∀ q : CPolyG α,
-      IsReducedRdeSol Dt (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1 q →
+      IsReducedRdeSol Dt (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1 q →
       cdegG q ≤ cRdeBoundDegreeG Dt
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.1
-        (cRdeSpecialDenominatorGWf Dt a0 b0 c0).2.2.1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG Dt a0 b0 c0).2.2.1
   /-- A polynomial-solvable RDE makes the inner solver succeed. -/
   hsolve : (∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) →
-    (cRischDEGWf Dt fnum fden gnum gden).isSome = true
+    (cRischDEG Dt fnum fden gnum gden).isSome = true
 
-/-- `RischDEInnerCompletenessWf` yields `cRischDEGWf = some _` on a polynomial-solvable input. -/
-theorem cRischDEGWf_isSome_of_innerCompletenessWf (Dt fnum fden gnum gden : CPolyG α)
+/-- `RischDEInnerCompletenessWf` yields `cRischDEG = some _` on a polynomial-solvable input. -/
+theorem cRischDEG_isSome_of_innerCompletenessWf (Dt fnum fden gnum gden : CPolyG α)
     (hinner : RischDEInnerCompletenessWf Dt fnum fden gnum gden)
     (hsol : ∃ ynum yden, IsCRischDEGPolySol Dt fnum fden gnum gden ynum yden) :
-    (cRischDEGWf Dt fnum fden gnum gden).isSome = true :=
+    (cRischDEG Dt fnum fden gnum gden).isSome = true :=
   hinner.hsolve hsol
 
 end InnerSubResidualWf
 
 /-! ## Raw inner-solver bridge
 
-Move the inner-completeness result across the `QFunNZG` denominator guard from `cRischDEGWf` to the wrapper's
+Move the inner-completeness result across the `QFunNZG` denominator guard from `cRischDEG` to the wrapper's
 `crischDERawSolveWf`. -/
 
 section RawInnerWf
@@ -239,12 +239,12 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CDiffFieldSpe
   [CFracGcdCoreWf β] [CRischField β]
 
 omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
-/-- If `cRischDEGWf [1]` succeeds and every returned denominator is nonzero, then `crischDERawSolveWf`
+/-- If `cRischDEG [1]` succeeds and every returned denominator is nonzero, then `crischDERawSolveWf`
 returns `some`. -/
-theorem crischDERawSolveWf_isSome_of_cRischDEGWf_some_den (ftilde gtilde : QFunNZG β)
-    (hsome : (cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2).isSome = true)
+theorem crischDERawSolveWf_isSome_of_cRischDEG_some_den (ftilde gtilde : QFunNZG β)
+    (hsome : (cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2).isSome = true)
     (hden : ∀ ynum yden : CPolyG β,
-      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
       CPolyG.cisZeroG yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
   obtain ⟨⟨ynum, yden⟩, hp⟩ := Option.isSome_iff_exists.mp hsome
@@ -254,29 +254,29 @@ theorem crischDERawSolveWf_isSome_of_cRischDEGWf_some_den (ftilde gtilde : QFunN
 
 omit [CFieldSpec β] [CDiffFieldSpec β] [CFieldDomain β] in
 /-- Inner stage successes plus the returned-denominator guard imply `crischDERawSolveWf` succeeds. -/
-theorem crischDERawSolveWf_isSome_of_cRischDEGWf_stages_den (ftilde gtilde : QFunNZG β)
+theorem crischDERawSolveWf_isSome_of_cRischDEG_stages_den (ftilde gtilde : QFunNZG β)
     (a0 b0 c0 h0 bbar cbar : CPolyG β) (m : ℤ) (α' β' v : CPolyG β)
-    (hnorm : cRdeNormalDenominatorGWf ([CField.one] : CPolyG β)
+    (hnorm : cRdeNormalDenominatorG ([CField.one] : CPolyG β)
       ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (a0, b0, c0, h0))
-    (hspde : cSPDEGWf ([CField.one] : CPolyG β) (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β)
+    (hspde : cSPDEG ([CField.one] : CPolyG β) (cRdeSpecialDenominatorG ([CField.one] : CPolyG β)
         a0 b0 c0).1
-        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
-        (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
-        (cRdeBoundDegreeG ([CField.one] : CPolyG β) (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β)
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.1
+        (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.2.1
+        (cRdeBoundDegreeG ([CField.one] : CPolyG β) (cRdeSpecialDenominatorG ([CField.one] : CPolyG β)
           a0 b0 c0).1
-          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.1
-          (cRdeSpecialDenominatorGWf ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.1
+          (cRdeSpecialDenominatorG ([CField.one] : CPolyG β) a0 b0 c0).2.2.1 : ℤ)
       = some (bbar, cbar, m, α', β'))
-    (hpoly : cPolyRischDEGWf ([CField.one] : CPolyG β) bbar cbar m = some v)
+    (hpoly : cPolyRischDEG ([CField.one] : CPolyG β) bbar cbar m = some v)
     (hden : ∀ ynum yden : CPolyG β,
-      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
       CPolyG.cisZeroG yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde := by
-  have hsome : (cRischDEGWf ([CField.one] : CPolyG β)
+  have hsome : (cRischDEG ([CField.one] : CPolyG β)
       ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2).isSome = true := by
-    rw [cRischDEGWf, hnorm]
+    rw [cRischDEG, hnorm]
     simp only [hspde, hpoly, Option.isSome_some]
-  exact crischDERawSolveWf_isSome_of_cRischDEGWf_some_den ftilde gtilde hsome hden
+  exact crischDERawSolveWf_isSome_of_cRischDEG_some_den ftilde gtilde hsome hden
 
 omit [CFieldDomain β] in
 /-- An inner-completeness residual, a polynomial solution, and the denominator guard imply
@@ -287,11 +287,11 @@ theorem crischDERawSolveWf_isSome_of_innerCompletenessWf (ftilde gtilde : QFunNZ
     (hsol : ∃ ynum yden,
       IsCRischDEGPolySol ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 ynum yden)
     (hden : ∀ ynum yden : CPolyG β,
-      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
       CPolyG.cisZeroG yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde :=
-  crischDERawSolveWf_isSome_of_cRischDEGWf_some_den ftilde gtilde
-    (cRischDEGWf_isSome_of_innerCompletenessWf ([CField.one] : CPolyG β)
+  crischDERawSolveWf_isSome_of_cRischDEG_some_den ftilde gtilde
+    (cRischDEG_isSome_of_innerCompletenessWf ([CField.one] : CPolyG β)
       ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 hinner hsol)
     hden
 
@@ -303,7 +303,7 @@ example (ftilde gtilde : QFunNZG β)
     (hsol : ∃ ynum yden,
       IsCRischDEGPolySol ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 ynum yden)
     (hden : ∀ ynum yden : CPolyG β,
-      cRischDEGWf ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
+      cRischDEG ([CField.one] : CPolyG β) ftilde.1.1 ftilde.1.2 gtilde.1.1 gtilde.1.2 = some (ynum, yden) →
       CPolyG.cisZeroG yden = false) :
     ∃ ytilde, crischDERawSolveWf ftilde gtilde = some ytilde :=
   crischDERawSolveWf_isSome_of_innerCompletenessWf ftilde gtilde hinner hsol hden
@@ -333,18 +333,18 @@ inner solver success (`hinner`) on a solvable RDE. -/
 structure RischDECompletenessResidualWf (f g : QFunNZG β) : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : FieldRDESolvable f g →
-    CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
+    CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : FieldRDESolvable f g →
     IsCanonNormalizedWf f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))
   /-- A solvable RDE makes the inner solve succeed on the reduced pair. -/
   hinner : FieldRDESolvable f g →
     ∃ ytilde : QFunNZG β,
       crischDERawSolveWf
           (qReduce (weakNormalizedF f
-            (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-          (qmulNZG (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
+            (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+          (qmulNZG (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)) g)
         = some ytilde
 
 /-- If the RDE is solvable and `RischDECompletenessResidualWf` holds, then `crischDESolveSoundWf`
@@ -353,9 +353,9 @@ theorem crischDESolveSoundWf_complete_of_residualWf (f g : QFunNZG β)
     (hsol : FieldRDESolvable f g) (hres : RischDECompletenessResidualWf f g) :
     ∃ y, crischDESolveSoundWf f g = some y := by
   obtain ⟨ytilde, hinner⟩ := hres.hinner hsol
-  have hck : cisCanonNormalizedGWf (weakNormalizedF f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true :=
-    (cisCanonNormalizedGWf_iff f _).mpr (hres.hck hsol)
+  have hck : cisCanonNormalizedG (weakNormalizedF f
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))) = true :=
+    (cisCanonNormalizedG_iff f _).mpr (hres.hck hsol)
   exact ⟨_, crischDESolveSoundWf_some_of_stages f g ytilde (hres.hwn hsol) hck hinner⟩
 
 /-- Modulo `RischDECompletenessResidualWf` and `RischDESoundnessWf`, `crischDESolveSoundWf f g` returns
@@ -385,7 +385,7 @@ end CompleteWf
 #print axioms crischDESolveSoundWf_some_iff
 #print axioms crischDESolveSoundWf_some_of_stages
 #print axioms rischDE_complete_base
-#print axioms crischDERawSolveWf_isSome_of_cRischDEGWf_stages_den
+#print axioms crischDERawSolveWf_isSome_of_cRischDEG_stages_den
 #print axioms crischDESolveSoundWf_complete_of_residualWf
 #print axioms crischDESolveSoundWf_decides_of_residualWf
 

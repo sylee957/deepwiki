@@ -166,11 +166,11 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
     [CFieldDomain β] [CFracGcdCoreWf β] [CRischField β] [Algebra ℚ (CFieldSpec.K β)] : Prop where
   /-- A solvable RDE has a nonzero weak normalizer. -/
   hwn : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
-    CPolyG.cisZeroG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
+    CPolyG.cisZeroG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2) = false
   /-- A solvable RDE satisfies the canonical-normality guarantee. -/
   hck : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     IsCanonNormalizedWf f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))
   /-- A solvable field RDE has a polynomial solution for the inner input. -/
   hpolysol : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g →
     let ftildeR := (rischDEInnerInputWf f g).1
@@ -188,7 +188,7 @@ structure RischDEStepFrontierWf (β : Type*) [CField β] [CFieldSpec β] [CDiffF
   hden : CRischFieldComplete β → ∀ f g : QFunNZG β, FieldRDESolvable f g → ∀ ynum yden : CPolyG β,
     let ftildeR := (rischDEInnerInputWf f g).1
     let gtilde := (rischDEInnerInputWf f g).2
-    cRischDEGWf ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
+    cRischDEG ([CField.one] : CPolyG β) ftildeR.1.1 ftildeR.1.2 gtilde.1.1 gtilde.1.2
         = some (ynum, yden) →
       CPolyG.cisZeroG yden = false
   /-- The direct soundness certificate for each solvable next-level RDE. -/

@@ -22,14 +22,14 @@ namespace CPolyG
 variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α]
 
 /-- **The primitive-case integrability guard** (Bronstein §5.6, root-free): the residues (**roots** of the
-Rothstein–Trager residue resultant `R = cResidueResultantTowerGWf Dt hNum Dstar`, `hNum/Dstar` the Hermite
+Rothstein–Trager residue resultant `R = cResidueResultantTowerG Dt hNum Dstar`, `hNum/Dstar` the Hermite
 residual) are all **constants** iff the **monic** `R` has constant coefficients (its elementary symmetric
 functions in the roots are constant), i.e. `D(cmonicG R) = 0` — checked coefficient-wise by `cmapDeriv`.
 Monic-normalizing is essential: the raw `R` may carry a non-constant leading factor (e.g. `1/x`) that is a
 resultant-scaling artifact, not residue non-constancy. Decidable, no root-finding. -/
 def cResidueConstantGuardG (Dt a d : CPolyG α) : Bool :=
-  let H := cHermiteReduceTowerGWf Dt a d
-  cisZeroG (cmapDeriv (cmonicG (cResidueResultantTowerGWf Dt H.2.1 H.2.2)))
+  let H := cHermiteReduceTowerG Dt a d
+  cisZeroG (cmapDeriv (cmonicG (cResidueResultantTowerG Dt H.2.1 H.2.2)))
 
 /-- **The guarded root-free LRT reduced integrator.** Returns the LRT reduced result only when the
 integrability guard passes (residues are constants); `none` otherwise — correctly declining non-elementary

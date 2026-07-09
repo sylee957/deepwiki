@@ -31,15 +31,15 @@ variable {α : Type*} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CRischFie
 
 /-! ### The normal-part integrator `∫ fₙ = logPart − ∫R`
 
-`cIntegrateHyperexpNormalGWf` runs the reduced integrator, reads the residual `R`, integrates `∫R` over the
+`cIntegrateHyperexpNormalG` runs the reduced integrator, reads the residual `R`, integrates `∫R` over the
 base, and subtracts it. -/
 
-/-- Hyperexponential normal-part integral `cIntegrateHyperexpNormalGWf Dt a d cands`: run
-`cIntegrateReducedGWf`, read `R = η·∑ᵢ cᵢ`, integrate `∫R` by `crischDESolve 0 R`, and subtract it from the
+/-- Hyperexponential normal-part integral `cIntegrateHyperexpNormalG Dt a d cands`: run
+`cIntegrateReducedG`, read `R = η·∑ᵢ cᵢ`, integrate `∫R` by `crischDESolve 0 R`, and subtract it from the
 rational part (same logs); `none` if `∫R` is non-elementary. -/
-def cIntegrateHyperexpNormalGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+def cIntegrateHyperexpNormalG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
-  let red := cIntegrateReducedGWf Dt a d cands
+  let red := cIntegrateReducedG Dt a d cands
   let η : α := cExpEtaG Dt
   let R : α := cHyperexpResidualG η red.logs
   match CRischField.crischDESolve (CField.zero : α) R with
@@ -49,18 +49,18 @@ def cIntegrateHyperexpNormalGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List
     let newNum := csubG gnum (cmulG [intR] gden)
     some ⟨(newNum, gden), red.logs⟩
 
-/-- Full hyperexponential integral `cIntegrateHyperexpFullGWf Dt a d cands`: canonical-split
+/-- Full hyperexponential integral `cIntegrateHyperexpFullG Dt a d cands`: canonical-split
 `f = fₚ + (b/dₛ) + (cₙ/dₙ)`, integrate the Laurent part by `cIntegrateHyperexpLaurentG` and the normal part
-by `cIntegrateHyperexpNormalGWf`, and combine the rational parts; `none` if either is non-elementary. -/
-def cIntegrateHyperexpFullGWf (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
+by `cIntegrateHyperexpNormalG`, and combine the rational parts; `none` if either is non-elementary. -/
+def cIntegrateHyperexpFullG (Dt : CPolyG α) (a d : CPolyG α) (cands : List α) :
     Option (IntegralResultG α) :=
   let η : α := cExpEtaG Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt a d
   let neg : List α := cHyperexpSpecialNegG b ds
   match cIntegrateHyperexpLaurentG η fp neg with
   | none => none
   | some (lnum, lden) =>
-    match cIntegrateHyperexpNormalGWf Dt cn dn cands with
+    match cIntegrateHyperexpNormalG Dt cn dn cands with
     | none => none
     | some nrm =>
       let (gnum, gden) := nrm.rational

@@ -267,25 +267,25 @@ theorem ratFuncBaseChange_towerFractionFieldDerivG [Algebra ℚ (CFieldSpec.K α
   rw [towerDerivExt_div, implicitDeriv_map, implicitDeriv_map]
 
 open Classical in
-/-- **The Hermite half over `E`** (`hherm`): base-changing the `K`-level `cHermiteReduceTowerGWf_field_identity`
+/-- **The Hermite half over `E`** (`hherm`): base-changing the `K`-level `cHermiteReduceTowerG_field_identity`
 to `E` via `ratFuncBaseChange`. `D_E(g) + hNum/Dstar = a/d` over `RatFunc E`, with `hNum = H.2.1` (the residual
 identified via `toPolyG_hNum'_eq_2_1`), `Dstar = H.2.2`. `hcopgcd` is the genuine differential-normality side
 condition. This is the `hherm` input to `isIntegralResultLrtG_of_hherm_of_logMatch`. -/
 theorem hherm_lrt_E [CharZero (CFieldSpec.K α)] [Algebra ℚ (CFieldSpec.K α)]
     [DifferentialAlgebra (CFieldSpec.K α) E] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
-    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFG d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0) :
-    (towerDerivExt Dt (amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).1.1)
-          / amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).1.2))
-        + amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-          / amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2) : RatFunc E)
+    (towerDerivExt Dt (amGExt (toPolyG (cHermiteReduceTowerG Dt a d).1.1)
+          / amGExt (toPolyG (cHermiteReduceTowerG Dt a d).1.2))
+        + amGExt (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+          / amGExt (toPolyG (cHermiteReduceTowerG Dt a d).2.2) : RatFunc E)
       = amGExt (toPolyG a) / amGExt (toPolyG d) := by
   have hK := congrArg (ratFuncBaseChange E)
-    (cHermiteReduceTowerGWf_field_identity hgcd Dt a d hd0 hpp hcopgcd)
+    (cHermiteReduceTowerG_field_identity hgcd Dt a d hd0 hpp hcopgcd)
   rw [map_add, ratFuncBaseChange_towerFractionFieldDerivG, ratFuncBaseChange_amG_div,
     ratFuncBaseChange_amG_div] at hK
   rw [← toPolyG_hNum'_eq_2_1 hgcd Dt a d hd0 hpp hcopgcd]
@@ -483,26 +483,26 @@ theorem monic_separable_eq_nodal {E : Type*} [Field E] [IsAlgClosed E] (p : E[X]
   simpa using hprod
 
 /-- **The concrete residue resultant base-changed to `E` is the abstract `rtResultantGen`.** Combines
-(`toPolyG_cResidueResultantTowerGWf`, `R = rtResultantGen` over `K`), `rtResultantGen_map` (base change), and
+(`toPolyG_cResidueResultantTowerG`, `R = rtResultantGen` over `K`), `rtResultantGen_map` (base change), and
 `implicitDeriv_map` (the derivation image commutes). Over an alg-closed `E`, `roots_rtResultantGen` then reads
 off the residues from this. -/
-theorem toPolyG_cResidueResultantTowerGWf_map {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
+theorem toPolyG_cResidueResultantTowerG_map {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
     [CDiffFieldSpec α] [CharZero (CFieldSpec.K α)] {E : Type*} [Field E] [Algebra (CFieldSpec.K α) E]
     [Differential E] [DifferentialAlgebra (CFieldSpec.K α) E]
     (Dt a d : CPolyG α) (hDmonic : (toPolyG d).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG a).natDegree < (toPolyG d).natDegree) :
-    (toPolyG (cResidueResultantTowerGWf Dt a d)).map (algebraMap (CFieldSpec.K α) E)
+    (toPolyG (cResidueResultantTowerG Dt a d)).map (algebraMap (CFieldSpec.K α) E)
       = rtResultantGen ((toPolyG a).map (algebraMap (CFieldSpec.K α) E))
           ((toPolyG d).map (algebraMap (CFieldSpec.K α) E))
           (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
             ((toPolyG d).map (algebraMap (CFieldSpec.K α) E))) := by
-  rw [toPolyG_cResidueResultantTowerGWf Dt a d hDmonic hDt0 hAD,
+  rw [toPolyG_cResidueResultantTowerG Dt a d hDmonic hDt0 hAD,
     rtResultantGen_map (algebraMap (CFieldSpec.K α) E) _ _ _
       (algebraMap (CFieldSpec.K α) E).injective, implicitDeriv_map]
 
 open Classical in
 /-- **The residue resultant's roots over `E` are the residues.** Composes
-`toPolyG_cResidueResultantTowerGWf_map` (concrete `R_E = rtResultantGen`) with `roots_rtResultantGen` (roots =
+`toPolyG_cResidueResultantTowerG_map` (concrete `R_E = rtResultantGen`) with `roots_rtResultantGen` (roots =
 residues) over an alg-closed `E`: `(R_E).roots = Dstar_E.roots.map (β ↦ hNum(β)/D(Dstar)(β))`. `hB` is the
 Rothstein–Trager normality (`D(Dstar)(β) ≠ 0` at poles). This is the `hroots` residue structure for `hlog`. -/
 theorem residueResultant_map_roots {α : Type*} [CField α] [CFieldSpec α] [CDiffField α]
@@ -516,12 +516,12 @@ theorem residueResultant_map_roots {α : Type*} [CField α] [CFieldSpec α] [CDi
     (hB_deg : (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
           ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).natDegree
         ≤ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1) :
-    ((toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map (algebraMap (CFieldSpec.K α) E)).roots
+    ((toPolyG (cResidueResultantTowerG Dt hNum Dstar)).map (algebraMap (CFieldSpec.K α) E)).roots
       = ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots.map (fun β =>
           ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
             / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
                 ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).eval β) := by
-  rw [toPolyG_cResidueResultantTowerGWf_map Dt hNum Dstar hDmonic hDt0 hAD]
+  rw [toPolyG_cResidueResultantTowerG_map Dt hNum Dstar hDmonic hDt0 hAD]
   refine roots_rtResultantGen _ _ _ ?_ hB ?_ hB_deg
   · exact (hDmonic.map (algebraMap (CFieldSpec.K α) E)).ne_zero
   · rw [natDegree_map_eq_of_injective (algebraMap (CFieldSpec.K α) E).injective,
@@ -795,23 +795,23 @@ omit [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **The symbolic log part is empty when the squarefree denominator is a constant** (`cdegG Dstar = 0`):
 there are no poles and hence no residues. The residue resultant of a constant is constant
-(`cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero`), whose Yun factorization is empty
-(`cSqfreeYunFFGWf_eq_nil_of_cdegG_zero`), so the `filterMap` runs over the empty list. The trivial-normal-part
+(`cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero`), whose Yun factorization is empty
+(`cSqfreeYunFFG_eq_nil_of_cdegG_zero`), so the `filterMap` runs over the empty list. The trivial-normal-part
 (no-poles) base of the reduced soundness. -/
 theorem cLrtLogArgG_eq_nil_of_cdegG_zero (Dt hNum Dstar : CPolyG α) (hDstar : cdegG Dstar = 0) :
     cLrtLogArgG Dt hNum Dstar = [] := by
-  have hR := cSqfreeYunFFGWf_eq_nil_of_cdegG_zero (cResidueResultantTowerGWf Dt hNum Dstar)
-    (cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero Dt hNum Dstar hDstar)
+  have hR := cSqfreeYunFFG_eq_nil_of_cdegG_zero (cResidueResultantTowerG Dt hNum Dstar)
+    (cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero Dt hNum Dstar hDstar)
   simp only [cLrtLogArgG, hR, List.zipIdx_nil, List.filterMap_nil]
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **Membership in `cLrtLogArgG`.** Each entry `p` comes from a `(Rᵢ, idx)` in the Yun factorization
-`cSqfreeYunFFGWf R` (`R = cResidueResultantTowerGWf …`) with `Rᵢ` non-constant, and `p = (Rᵢ, cSubresultantParam
+`cSqfreeYunFFG R` (`R = cResidueResultantTowerG …`) with `Rᵢ` non-constant, and `p = (Rᵢ, cSubresultantParam
 … (idx+1))`. Unfolds the `filterMap ∘ zipIdx`; the foundation for the per-entry Yun facts. -/
 theorem mem_cLrtLogArgG (Dt hNum Dstar : CPolyG α) (p : CPolyG α × List (CPolyG α))
     (hp : p ∈ cLrtLogArgG Dt hNum Dstar) :
-    ∃ idx, (p.1, idx) ∈ (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).zipIdx
+    ∃ idx, (p.1, idx) ∈ (cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar)).zipIdx
       ∧ ¬ ((cnormG p.1 : List α).length ≤ 1)
       ∧ (idx + 1 ≠ cdegG Dstar → p.2 = cSubresultantParam Dstar hNum (cmonomialDeriv Dt Dstar) (cdegG Dstar)
           (cdegG (cmonomialDeriv Dt Dstar)) (idx + 1))
@@ -845,21 +845,21 @@ open Classical in
 omit [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
 /-- **`hnodup` per entry.** Each entry's `Rᵢ` is a Yun factor of `R`, hence squarefree
-(`cSqfreeYunFFGWf_squarefree`), so over char-zero `K` it is separable, and its base change to `E` stays
+(`cSqfreeYunFFG_squarefree`), so over char-zero `K` it is separable, and its base change to `E` stays
 separable ⟹ `Nodup` roots. -/
 theorem nodup_roots_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
-    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
+    (hR : IsYunFactorizationInput (cResidueResultantTowerG Dt hNum Dstar))
     (p : CPolyG α × List (CPolyG α)) (hp : p ∈ cLrtLogArgG Dt hNum Dstar) :
     ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.Nodup := by
   obtain ⟨idx, hmem, _, _⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
-  have hget : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar))[idx]? = some p.1 :=
+  have hget : (cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar))[idx]? = some p.1 :=
     List.mk_mem_zipIdx_iff_getElem?.mp hmem
   obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp hget
-  have hp1 : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
+  have hp1 : (cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
     rw [List.get_eq_getElem]; exact hp1'
   have hsqf : Squarefree (toPolyG p.1) :=
-    hp1 ▸ cSqfreeYunFFGWf_squarefree hgcd _ hR.nonzero hR.primPart_nonzero idx hj
+    hp1 ▸ cSqfreeYunFFG_squarefree hgcd _ hR.nonzero hR.primPart_nonzero idx hj
   exact Polynomial.nodup_roots
     ((PerfectField.separable_iff_squarefree.mpr hsqf).map)
 
@@ -995,15 +995,15 @@ theorem disjoint_roots_of_isCoprime {E : Type*} [Field E] [DecidableEq E] (p q :
 open Classical in
 omit [CDiffField α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
-/-- **Distinct Yun factors have disjoint roots over `E`.** `cSqfreeYunFFGWf_isRelPrime` (`IsRelPrime`) ⟹
+/-- **Distinct Yun factors have disjoint roots over `E`.** `cSqfreeYunFFG_isRelPrime` (`IsRelPrime`) ⟹
 `IsCoprime` (PID) ⟹ `IsCoprime` over `E` (base change) ⟹ disjoint roots. -/
 theorem disjoint_yun_factors [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
-    (hR : IsYunFactorizationInput R) {j k : ℕ} (hj : j < (cSqfreeYunFFGWf R).length)
-    (hk : k < (cSqfreeYunFFGWf R).length) (hjk : j ≠ k) :
-    Disjoint ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
-      ((toPolyG ((cSqfreeYunFFGWf R).get ⟨k, hk⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset := by
-  have hcopE := ((cSqfreeYunFFGWf_isRelPrime hgcd R hR.nonzero hR.primPart_nonzero hj hk hjk).isCoprime).map
+    (hR : IsYunFactorizationInput R) {j k : ℕ} (hj : j < (cSqfreeYunFFG R).length)
+    (hk : k < (cSqfreeYunFFG R).length) (hjk : j ≠ k) :
+    Disjoint ((toPolyG ((cSqfreeYunFFG R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
+      ((toPolyG ((cSqfreeYunFFG R).get ⟨k, hk⟩)).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset := by
+  have hcopE := ((cSqfreeYunFFG_isRelPrime hgcd R hR.nonzero hR.primPart_nonzero hj hk hjk).isCoprime).map
     (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
   simp only [Polynomial.coe_mapRingHom] at hcopE
   exact disjoint_roots_of_isCoprime _ _ hcopE
@@ -1015,10 +1015,10 @@ variable [CFracGcdCoreWf α] in
 `E` (base change) ⟹ squarefree over `E`. -/
 theorem yun_factor_map_squarefree [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
-    (hR : IsYunFactorizationInput R) {j : ℕ} (hj : j < (cSqfreeYunFFGWf R).length) :
-    Squarefree ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)) :=
+    (hR : IsYunFactorizationInput R) {j : ℕ} (hj : j < (cSqfreeYunFFG R).length) :
+    Squarefree ((toPolyG ((cSqfreeYunFFG R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E)) :=
   ((PerfectField.separable_iff_squarefree.mpr
-    (cSqfreeYunFFGWf_squarefree hgcd R hR.nonzero hR.primPart_nonzero j hj)).map).squarefree
+    (cSqfreeYunFFG_squarefree hgcd R hR.nonzero hR.primPart_nonzero j hj)).map).squarefree
 
 open Classical in
 omit [CDiffField α] [CDiffFieldSpec α] in
@@ -1029,24 +1029,24 @@ variable [CFracGcdCoreWf α] in
 elsewhere), so `rootMult_prodPow_of_unique` gives `1 + idx`. -/
 theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (R : CPolyG α)
-    (hR : IsYunFactorizationInput R) (idx : ℕ) (hidx : idx < (cSqfreeYunFFGWf R).length) (c : E)
-    (hc : c ∈ ((toPolyG ((cSqfreeYunFFGWf R).get ⟨idx, hidx⟩)).map (algebraMap (CFieldSpec.K α) E)).roots) :
+    (hR : IsYunFactorizationInput R) (idx : ℕ) (hidx : idx < (cSqfreeYunFFG R).length) (c : E)
+    (hc : c ∈ ((toPolyG ((cSqfreeYunFFG R).get ⟨idx, hidx⟩)).map (algebraMap (CFieldSpec.K α) E)).roots) :
     rootMultiplicity c ((toPolyG R).map (algebraMap (CFieldSpec.K α) E)) = idx + 1 := by
-  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd R hR.nonzero hR.primPart_nonzero).map
+  have hrec := (cSqfreeYunFFG_reconstruction hgcd R hR.nonzero hR.primPart_nonzero).map
     (Polynomial.mapRingHom (algebraMap (CFieldSpec.K α) E))
   simp only [Polynomial.coe_mapRingHom, prodPow_map] at hrec
   rw [associated_rootMultiplicity_eq hrec c]
-  have hprodne : prodPow 1 (((cSqfreeYunFFGWf R).map toPolyG).map
+  have hprodne : prodPow 1 (((cSqfreeYunFFG R).map toPolyG).map
       (Polynomial.map (algebraMap (CFieldSpec.K α) E))) ≠ 0 :=
     fun h => ((Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hR.nonzero)
       (hrec.eq_zero_iff.mpr h)
-  have hlen : idx < (((cSqfreeYunFFGWf R).map toPolyG).map
+  have hlen : idx < (((cSqfreeYunFFG R).map toPolyG).map
       (Polynomial.map (algebraMap (CFieldSpec.K α) E))).length := by
     rw [List.length_map, List.length_map]; exact hidx
-  have hget : ∀ (j : ℕ) (hj : j < (cSqfreeYunFFGWf R).length),
-      (((cSqfreeYunFFGWf R).map toPolyG).map (Polynomial.map (algebraMap (CFieldSpec.K α) E)))[j]'
+  have hget : ∀ (j : ℕ) (hj : j < (cSqfreeYunFFG R).length),
+      (((cSqfreeYunFFG R).map toPolyG).map (Polynomial.map (algebraMap (CFieldSpec.K α) E)))[j]'
           (by rw [List.length_map, List.length_map]; exact hj)
-        = (toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E) := by
+        = (toPolyG ((cSqfreeYunFFG R).get ⟨j, hj⟩)).map (algebraMap (CFieldSpec.K α) E) := by
     intro j hj; rw [List.getElem_map, List.getElem_map]; rfl
   rw [rootMult_prodPow_of_unique c _ 1 idx one_ne_zero hlen hprodne ?_ ?_]
   · omega
@@ -1054,11 +1054,11 @@ theorem rootMult_R_map_eq_idx_succ [CharZero (CFieldSpec.K α)] {E : Type*} [Fie
     exact squarefree_rootMultiplicity_eq_one (yun_factor_map_squarefree hgcd R hR hidx) c
       (Polynomial.isRoot_of_mem_roots hc)
   · intro j hj hjne
-    have hj' : j < (cSqfreeYunFFGWf R).length := by rw [List.length_map, List.length_map] at hj; exact hj
+    have hj' : j < (cSqfreeYunFFG R).length := by rw [List.length_map, List.length_map] at hj; exact hj
     rw [hget j hj']
     apply Polynomial.rootMultiplicity_eq_zero
     intro hroot
-    have hcj : c ∈ ((toPolyG ((cSqfreeYunFFGWf R).get ⟨j, hj'⟩)).map
+    have hcj : c ∈ ((toPolyG ((cSqfreeYunFFG R).get ⟨j, hj'⟩)).map
         (algebraMap (CFieldSpec.K α) E)).roots :=
       Polynomial.mem_roots'.mpr ⟨(yun_factor_map_squarefree hgcd R hR hj').ne_zero, hroot⟩
     exact (Finset.disjoint_left.mp (disjoint_yun_factors hgcd R hR hidx hj' (Ne.symm hjne))
@@ -1076,7 +1076,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
     (hDmonic : (toPolyG Dstar).Monic) (hDt0 : (toPolyG Dt).natDegree = 0)
     (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
     (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
-    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
+    (hR : IsYunFactorizationInput (cResidueResultantTowerG Dt hNum Dstar))
     (hm : cdegG (cmonomialDeriv Dt Dstar) = cdegG Dstar - 1)
     (hB : ∀ β ∈ allpoles, ((toPolyG (cmonomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E)).eval β ≠ 0)
@@ -1092,7 +1092,7 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
               (Lagrange.nodal allpoles id)).eval β = c)).val.map (fun β => X - C β)).prod := by
   obtain ⟨idx, hmem, _, hp2imp, hp2n⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
   obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp (List.mk_mem_zipIdx_iff_getElem?.mp hmem)
-  have hp1 : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
+  have hp1 : (cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar)).get ⟨idx, hj⟩ = p.1 := by
     rw [List.get_eq_getElem]; exact hp1'
   -- `Dd_E = implicitDeriv Dt_E (nodal)` (fiber alignment)
   have hDd : (toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E)
@@ -1103,8 +1103,8 @@ theorem entry_log_eq_fiber_prod [CharZero (CFieldSpec.K α)] {E : Type*} [Field 
   -- `rtResultantGen hNum_E (nodal) Dd_E = R_E`, hence `rootMult = idx+1`
   have hRR : rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
         (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map (algebraMap (CFieldSpec.K α) E))
-      = (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map (algebraMap (CFieldSpec.K α) E) := by
-    rw [hDd, ← hsplit, ← toPolyG_cResidueResultantTowerGWf_map Dt hNum Dstar hDmonic hDt0 hAD]
+      = (toPolyG (cResidueResultantTowerG Dt hNum Dstar)).map (algebraMap (CFieldSpec.K α) E) := by
+    rw [hDd, ← hsplit, ← toPolyG_cResidueResultantTowerG_map Dt hNum Dstar hDmonic hDt0 hAD]
   have hindex : idx + 1 = (rtResultantGen ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E))
       (Lagrange.nodal allpoles id) ((toPolyG (cmonomialDeriv Dt Dstar)).map
         (algebraMap (CFieldSpec.K α) E))).rootMultiplicity c := by
@@ -1169,15 +1169,15 @@ distinct Yun-factor position, and distinct Yun factors are coprime hence disjoin
 Via `List.pairwise_filterMap` over the `zipIdx`. -/
 theorem disjoint_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [Algebra (CFieldSpec.K α) E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
-    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar)) :
+    (hR : IsYunFactorizationInput (cResidueResultantTowerG Dt hNum Dstar)) :
     (cLrtLogArgG Dt hNum Dstar).Pairwise (fun p q =>
       Disjoint ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset
         ((toPolyG q.1).map (algebraMap (CFieldSpec.K α) E)).roots.toFinset) := by
   rw [cLrtLogArgG, List.pairwise_filterMap, List.pairwise_iff_getElem]
   intro i j hi hj hij b hb b' hb'
-  have hi' : i < (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).length := by
+  have hi' : i < (cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar)).length := by
     rwa [List.length_zipIdx] at hi
-  have hj' : j < (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).length := by
+  have hj' : j < (cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar)).length := by
     rwa [List.length_zipIdx] at hj
   rw [List.getElem_zipIdx] at hb hb'
   simp only [Nat.zero_add] at hb hb'
@@ -1225,20 +1225,20 @@ theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type
           ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).natDegree
         ≤ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1)
     (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
-    (hR0 : toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) ≠ 0)
+    (hR0 : toPolyG (cResidueResultantTowerG Dt hNum Dstar) ≠ 0)
     (p : CPolyG α × List (CPolyG α)) (hp : p ∈ cLrtLogArgG Dt hNum Dstar)
     (c : E) (hc : c ∈ ((toPolyG p.1).map (algebraMap (CFieldSpec.K α) E)).roots) :
     ∃ β ∈ allpoles, ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
         / (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
             (Lagrange.nodal allpoles id)).eval β = c := by
   obtain ⟨idx, hmem, _, _⟩ := mem_cLrtLogArgG Dt hNum Dstar p hp
-  have hp1mem : p.1 ∈ cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar) := by
+  have hp1mem : p.1 ∈ cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar) := by
     obtain ⟨hj, hp1'⟩ := List.getElem?_eq_some_iff.mp (List.mk_mem_zipIdx_iff_getElem?.mp hmem)
     exact hp1' ▸ List.getElem_mem hj
-  have hdvd : toPolyG p.1 ∣ toPolyG (cResidueResultantTowerGWf Dt hNum Dstar) :=
+  have hdvd : toPolyG p.1 ∣ toPolyG (cResidueResultantTowerG Dt hNum Dstar) :=
     (List.dvd_prod (List.mem_map_of_mem (f := toPolyG) hp1mem)).trans
-      (prod_map_cSqfreeYunFFGWf_dvd hgcd _ hR0)
-  have hR0E : (toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map
+      (prod_map_cSqfreeYunFFG_dvd hgcd _ hR0)
+  have hR0E : (toPolyG (cResidueResultantTowerG Dt hNum Dstar)).map
       (algebraMap (CFieldSpec.K α) E) ≠ 0 :=
     (Polynomial.map_ne_zero_iff (algebraMap (CFieldSpec.K α) E).injective).mpr hR0
   have hcR := Multiset.mem_of_le
@@ -1249,12 +1249,12 @@ theorem residue_of_root_cLrtLogArgG_entry [CharZero (CFieldSpec.K α)] {E : Type
 
 omit [CFieldSpec α] [CDiffFieldSpec α] in
 variable [CFracGcdCoreWf α] in
-/-- **Reverse membership in `cLrtLogArgG`.** A non-constant Yun factor `Rᵢ = (cSqfreeYunFFGWf R)[idx]` hosts an
+/-- **Reverse membership in `cLrtLogArgG`.** A non-constant Yun factor `Rᵢ = (cSqfreeYunFFG R)[idx]` hosts an
 entry `(Rᵢ, Sᵢ) ∈ cLrtLogArgG` — `Sᵢ` is `Dstar` (`idx+1 = deg Dstar`, the single-pure-log branch) or the
 subresultant otherwise. The constructive direction of `mem_cLrtLogArgG`, used by `hcover` (which only needs the
 hosting entry's `Rᵢ`, not its `Sᵢ`). -/
 theorem mem_cLrtLogArgG_of_yun_factor (Dt hNum Dstar : CPolyG α) (idx : ℕ) (Ri : CPolyG α)
-    (hget : (cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar))[idx]? = some Ri)
+    (hget : (cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar))[idx]? = some Ri)
     (hlen : ¬ ((cnormG Ri : List α).length ≤ 1)) :
     ∃ Si, (Ri, Si) ∈ cLrtLogArgG Dt hNum Dstar := by
   refine ⟨if idx + 1 = cdegG Dstar then Dstar.map (fun c => ([c] : CPolyG α))
@@ -1283,7 +1283,7 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
           ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E))).natDegree
         ≤ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1)
     (hsplit : (toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E) = Lagrange.nodal allpoles id)
-    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
+    (hR : IsYunFactorizationInput (cResidueResultantTowerG Dt hNum Dstar))
     (β : E) (hβ : β ∈ allpoles) :
     ∃ p ∈ cLrtLogArgG Dt hNum Dstar,
       ((toPolyG hNum).map (algebraMap (CFieldSpec.K α) E)).eval β
@@ -1293,13 +1293,13 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   set φ := algebraMap (CFieldSpec.K α) E
   set res := ((toPolyG hNum).map φ).eval β
       / (Differential.implicitDeriv ((toPolyG Dt).map φ) (Lagrange.nodal allpoles id)).eval β
-  have hresR : res ∈ ((toPolyG (cResidueResultantTowerGWf Dt hNum Dstar)).map φ).roots := by
+  have hresR : res ∈ ((toPolyG (cResidueResultantTowerG Dt hNum Dstar)).map φ).roots := by
     rw [residueResultant_map_roots Dt hNum Dstar hDmonic hDt0 hAD hB hB_deg, hsplit]
     exact Multiset.mem_map.mpr ⟨β, nodal_roots allpoles ▸ Finset.mem_val.mpr hβ, rfl⟩
-  have hrec := (cSqfreeYunFFGWf_reconstruction hgcd _ hR.nonzero hR.primPart_nonzero).map
+  have hrec := (cSqfreeYunFFG_reconstruction hgcd _ hR.nonzero hR.primPart_nonzero).map
     (Polynomial.mapRingHom φ)
   simp only [Polynomial.coe_mapRingHom, prodPow_map] at hrec
-  have hprodne : prodPow 1 ((cSqfreeYunFFGWf (cResidueResultantTowerGWf Dt hNum Dstar)).map toPolyG
+  have hprodne : prodPow 1 ((cSqfreeYunFFG (cResidueResultantTowerG Dt hNum Dstar)).map toPolyG
       |>.map (Polynomial.map φ)) ≠ 0 :=
     fun h => ((Polynomial.map_ne_zero_iff φ.injective).mpr hR.nonzero) (hrec.eq_zero_iff.mpr h)
   have hresP := Multiset.mem_of_le (Polynomial.roots.le_of_dvd hprodne hrec.dvd) hresR
@@ -1307,7 +1307,7 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
   rw [List.map_map, List.mem_map] at hv
   obtain ⟨Ri, hRimem, hRiv⟩ := hv
   obtain ⟨idx, hidx⟩ := List.getElem?_of_mem hRimem
-  have hRi0 : toPolyG Ri ≠ 0 := (cSqfreeYunFFGWf_monic hgcd _ hR.nonzero Ri hRimem).ne_zero
+  have hRi0 : toPolyG Ri ≠ 0 := (cSqfreeYunFFG_monic hgcd _ hR.nonzero Ri hRimem).ne_zero
   have hresRi : res ∈ ((toPolyG Ri).map φ).roots := by
     rw [Function.comp_apply] at hRiv; rwa [← hRiv] at hresv
   obtain ⟨Si, hSi⟩ := mem_cLrtLogArgG_of_yun_factor Dt hNum Dstar idx Ri hidx
@@ -1317,27 +1317,27 @@ theorem cover_cLrtLogArgG [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
 open Classical in
 /-- **★ The complete LRT reduced-case soundness** (modulo the log-part match). Assembles the whole
 `IsIntegralResultLrtG` for `cIntegrateReducedLrtG Dt a d`: the Hermite half is discharged outright by
-`hherm_lrt_E` (base-change of `cHermiteReduceTowerGWf_field_identity`), leaving only the log-part match `hlog`
+`hherm_lrt_E` (base-change of `cHermiteReduceTowerG_field_identity`), leaving only the log-part match `hlog`
 (`logResidueSumLrtG (cLrtLogArgG …) = hNum/Dstar` over every alg-closed `E`, provable via
 `logResidueSumLrtG_eq_normalPart_of_yun` + the Yun facts). `hd0`/`hpp`/`hcopgcd` are the genuine Hermite-side
 conditions. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG.{u} [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] [CFracGcdCoreWf α] (hgcd : GcdFFCorrect (α := α))
     (Dt a d : CPolyG α) (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
-    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFG d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hlog : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-        (logResidueSumLrtG Dt (cLrtLogArgG Dt (cHermiteReduceTowerGWf Dt a d).2.1
-              (cHermiteReduceTowerGWf Dt a d).2.2) : RatFunc E)
-          = amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1)
-            / amGExt (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2)) :
+        (logResidueSumLrtG Dt (cLrtLogArgG Dt (cHermiteReduceTowerG Dt a d).2.1
+              (cHermiteReduceTowerG Dt a d).2.2) : RatFunc E)
+          = amGExt (toPolyG (cHermiteReduceTowerG Dt a d).2.1)
+            / amGExt (toPolyG (cHermiteReduceTowerG Dt a d).2.2)) :
     IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) := by
   refine isIntegralResultLrtG_of_hherm_of_logMatch Dt a d (cIntegrateReducedLrtG Dt a d)
-    (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hlog ?_
+    (cHermiteReduceTowerG Dt a d).2.1 (cHermiteReduceTowerG Dt a d).2.2 hlog ?_
   intro E _ _ _ _ _ _
   exact hherm_lrt_E hgcd Dt a d hd0 hpp hcopgcd
 
@@ -1353,7 +1353,7 @@ theorem logMatch_of_setup [CharZero (CFieldSpec.K α)] {E : Type*} [Field E]
     [IsAlgClosed E] (hgcd : GcdFFCorrect (α := α)) (Dt hNum Dstar : CPolyG α)
     (hDmonic : (toPolyG Dstar).Monic) (hDsep : (toPolyG Dstar).Separable)
     (hDt0 : (toPolyG Dt).natDegree = 0) (hAD : (toPolyG hNum).natDegree < (toPolyG Dstar).natDegree)
-    (hR : IsYunFactorizationInput (cResidueResultantTowerGWf Dt hNum Dstar))
+    (hR : IsYunFactorizationInput (cResidueResultantTowerG Dt hNum Dstar))
     (hm : cdegG (cmonomialDeriv Dt Dstar) = cdegG Dstar - 1)
     (hB : ∀ β ∈ ((toPolyG Dstar).map (algebraMap (CFieldSpec.K α) E)).roots,
         (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
@@ -1434,8 +1434,8 @@ variable [CFracGcdCoreWf α] in
 /-- **The assembled LRT reduced-case soundness**: the root-free analogue of `hreduced`, fully composed.
 Threads `logMatch_of_setup` (the log-part match, from the five Yun facts) into the capstone
 `isIntegralResultLrtG_cIntegrateReducedLrtG`, yielding `IsIntegralResultLrtG Dt a d (cIntegrateReducedLrtG Dt a d)`
-outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerGWf Dt a d).2.2`
-monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`/`_squarefree`);
+outright. `hd0`/`hpp`/`hcopgcd` are the Hermite-side conditions; `Dstar = (cHermiteReduceTowerG Dt a d).2.2`
+monic + separable is *discharged internally* (`toPolyG_cHermiteReduceTowerG_Dstar_monic`/`_squarefree`);
 `hDt0`/`hAD`/`hm` and `hR` are the `K`-level residue-data facts; `hR` bundles the residue
 resultant nonzero and primitive-part nonzero hypotheses. `hE`
 bundles the **two genuine** per-splitting-extension conditions: `implicitDeriv` nonvanishing at the poles
@@ -1449,72 +1449,72 @@ Unlike the rational `hreduced`, this is general: residues may be algebraic. -/
 theorem isIntegralResultLrtG_cIntegrateReducedLrtG_of_setup.{u} [CharZero (CFieldSpec.K α)]
     [Algebra ℚ (CFieldSpec.K α)] (hgcd : GcdFFCorrect (α := α)) (Dt a d : CPolyG α)
     (hd0 : toPolyG d ≠ 0) (hpp : (toPolyG d).primPart ≠ 0)
-    (hcopgcd : ∀ x ∈ (cSqfreeYunFFGWf d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
+    (hcopgcd : ∀ x ∈ (cSqfreeYunFFG d).zipIdx.filter (fun x => ¬ (x.2 + 1 ≤ 1)),
       (toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1).natDegree = 0
       ∧ toPolyG (cgcdWf (cmulG (cdivWf d (cpowG x.1 (x.2 + 1)))
           (cmonomialDeriv Dt x.1)) x.1).1 ≠ 0)
     (hDt0 : (toPolyG Dt).natDegree = 0)
-    (hAD : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).natDegree
-        < (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).natDegree)
+    (hAD : (toPolyG (cHermiteReduceTowerG Dt a d).2.1).natDegree
+        < (toPolyG (cHermiteReduceTowerG Dt a d).2.2).natDegree)
     (hR : IsYunFactorizationInput
-        (cResidueResultantTowerGWf Dt (cHermiteReduceTowerGWf Dt a d).2.1
-          (cHermiteReduceTowerGWf Dt a d).2.2))
-    (hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerGWf Dt a d).2.2)
-        = cdegG (cHermiteReduceTowerGWf Dt a d).2.2 - 1)
+        (cResidueResultantTowerG Dt (cHermiteReduceTowerG Dt a d).2.1
+          (cHermiteReduceTowerG Dt a d).2.2))
+    (hm : cdegG (cmonomialDeriv Dt (cHermiteReduceTowerG Dt a d).2.2)
+        = cdegG (cHermiteReduceTowerG Dt a d).2.2 - 1)
     (hE : ∀ (E : Type u) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
         [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-        ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+        ∀ β ∈ ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
                 (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
             ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′) :
     IsIntegralResultLrtG.{_, u} Dt a d (cIntegrateReducedLrtG Dt a d) := by
-  have hDmonic := toPolyG_cHermiteReduceTowerGWf_Dstar_monic hgcd Dt a d hd0
-  have hDsep : (toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).Separable :=
+  have hDmonic := toPolyG_cHermiteReduceTowerG_Dstar_monic hgcd Dt a d hd0
+  have hDsep : (toPolyG (cHermiteReduceTowerG Dt a d).2.2).Separable :=
     PerfectField.separable_iff_squarefree.mpr
-      (toPolyG_cHermiteReduceTowerGWf_Dstar_squarefree hgcd Dt a d hd0 hpp)
+      (toPolyG_cHermiteReduceTowerG_Dstar_squarefree hgcd Dt a d hd0 hpp)
   refine isIntegralResultLrtG_cIntegrateReducedLrtG hgcd Dt a d hd0 hpp hcopgcd (fun E _ _ _ _ _ _ => ?_)
   have hnorm := hE E
   -- The degree-side conditions are *discharged internally* from the `K`-level facts by base change
   -- (`φ = algebraMap (CFieldSpec.K α) E` preserves `natDegree` over a field), leaving only the genuine
   -- normality `hnorm`. (`hB` — `implicitDeriv` nonvanishing at the poles — is now *derived* from `hnorm`:
   -- `hnorm` ⟺ `IsCoprime Dstar_E (implicitDeriv Dt_E Dstar_E)`, and coprimality means no shared root.)
-  have hAnd : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).natDegree
-      < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
+  have hAnd : ((toPolyG (cHermiteReduceTowerG Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).natDegree
+      < ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
     rw [Polynomial.natDegree_map, Polynomial.natDegree_map]; exact hAD
-  have hDmonicE : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+  have hDmonicE : ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
       (algebraMap (CFieldSpec.K α) E)).Monic := hDmonic.map _
-  have hDsepE : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+  have hDsepE : ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
       (algebraMap (CFieldSpec.K α) E)).Separable := hDsep.map
-  have hB : ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+  have hB : ∀ β ∈ ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
           (algebraMap (CFieldSpec.K α) E)).roots,
       (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
-        ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+        ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
           (algebraMap (CFieldSpec.K α) E))).eval β ≠ 0 := by
     intro β hβ
-    have hcop : IsCoprime ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))
+    have hcop : IsCoprime ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))
         (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
-          ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))) := by
+          ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))) := by
       rw [monic_separable_eq_nodal _ hDmonicE hDsepE, Lagrange.nodal]
       exact (isCoprime_prod_X_sub_C_implicitDeriv_iff _ _).mpr (by simpa using hnorm)
     exact isCoprime_X_sub_C_iff.mp (hcop.of_isCoprime_of_dvd_left
       (dvd_iff_isRoot.mpr (Polynomial.isRoot_of_mem_roots hβ)))
-  have hcard : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+  have hcard : ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
         (algebraMap (CFieldSpec.K α) E)).roots.toFinset.card
-      = ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
+      = ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree := by
     conv_rhs => rw [monic_separable_eq_nodal _ hDmonicE hDsepE]
     rw [Lagrange.natDegree_nodal]
-  have hAdeg : ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).degree
-      < ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+  have hAdeg : ((toPolyG (cHermiteReduceTowerG Dt a d).2.1).map (algebraMap (CFieldSpec.K α) E)).degree
+      < ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
           (algebraMap (CFieldSpec.K α) E)).roots.toFinset.card := by
     rw [hcard]; exact lt_of_le_of_lt Polynomial.degree_le_natDegree (by exact_mod_cast hAnd)
   have hB_deg : (Differential.implicitDeriv ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E))
-        ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))).natDegree
-      = ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1 := by
+        ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E))).natDegree
+      = ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map (algebraMap (CFieldSpec.K α) E)).natDegree - 1 := by
     rw [← implicitDeriv_map, ← toPolyG_cmonomialDeriv, Polynomial.natDegree_map, Polynomial.natDegree_map,
       ← cdegG_eq_natDegree, ← cdegG_eq_natDegree, hm]
-  exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerGWf Dt a d).2.1
-    (cHermiteReduceTowerGWf Dt a d).2.2 hDmonic hDsep hDt0 hAD hR hm hB hB_deg.le hAnd hAdeg hnorm
-    (hcancel_of_primitive Dt (cHermiteReduceTowerGWf Dt a d).2.1 (cHermiteReduceTowerGWf Dt a d).2.2 hDt0)
+  exact logMatch_of_setup hgcd Dt (cHermiteReduceTowerG Dt a d).2.1
+    (cHermiteReduceTowerG Dt a d).2.2 hDmonic hDsep hDt0 hAD hR hm hB hB_deg.le hAnd hAdeg hnorm
+    (hcancel_of_primitive Dt (cHermiteReduceTowerG Dt a d).2.1 (cHermiteReduceTowerG Dt a d).2.2 hDt0)
 
 universe u
 
@@ -1530,7 +1530,7 @@ is the *existential* one of `CFieldSpec.K`), which a rigid structure-field unive
 def LrtPoleNormalityData (Dt a d : CPolyG α) : Prop :=
   ∀ (E : Type*) [Field E] [Algebra (CFieldSpec.K α) E] [Differential E] [Algebra ℚ E]
     [DifferentialAlgebra (CFieldSpec.K α) E] [IsAlgClosed E],
-    ∀ β ∈ ((toPolyG (cHermiteReduceTowerGWf Dt a d).2.2).map
+    ∀ β ∈ ((toPolyG (cHermiteReduceTowerG Dt a d).2.2).map
             (algebraMap (CFieldSpec.K α) E)).roots.toFinset,
         ((toPolyG Dt).map (algebraMap (CFieldSpec.K α) E)).eval β ≠ β′
 

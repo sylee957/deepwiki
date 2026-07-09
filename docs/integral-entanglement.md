@@ -6,18 +6,18 @@ the findings, the verdict on each, and the phased work.
 
 ## Call graph (arcs = lanes; cross-lane edges = coupling)
 
-- **Transcendental main:** `cIntegrateGFullWf` → { `canonicalRepresentationFastGWf`,
-  `cIntegrateReducedGWf`, `cPolyRischDEGWf` }.
-- **Reduced core + residue logs:** `cIntegrateReducedGWf` → { `cHermiteReduceTowerGWf`, `cLogPartGWf` };
-  `cLogPartGWf` → { `cRationalResiduesGWf` → `cResidueResultantTowerGWf`, `cLogArgTowerGWf` }.
-- **Risch DE recursion:** `crischDESolve` → `cRischDEGWf` → `cPolyRischDEGWf` → `cIntegratePolyGWf`.
-- **Hyperexponential:** `cIntegrateHyperexpFullGWf` → { `cIntegrateHyperexpNormalGWf`
-  (→ `cIntegrateReducedGWf`, `crischDESolve`), `cIntegrateHyperexpLaurentG` }; plus the leaf
+- **Transcendental main:** `cIntegrateGFullWf` → { `canonicalRepresentationFastG`,
+  `cIntegrateReducedG`, `cPolyRischDEG` }.
+- **Reduced core + residue logs:** `cIntegrateReducedG` → { `cHermiteReduceTowerG`, `cLogPartG` };
+  `cLogPartG` → { `cRationalResiduesG` → `cResidueResultantTowerG`, `cLogArgTowerG` }.
+- **Risch DE recursion:** `crischDESolve` → `cRischDEG` → `cPolyRischDEG` → `cIntegratePolyG`.
+- **Hyperexponential:** `cIntegrateHyperexpFullG` → { `cIntegrateHyperexpNormalG`
+  (→ `cIntegrateReducedG`, `crischDESolve`), `cIntegrateHyperexpLaurentG` }; plus the leaf
   `cIntegrateHyperexpG` (examples only).
 - **Algebraic / radical** (`cIntegrateAlgebraicDecide → …Wf`, `cIntegrateElementaryG → radLogArgSolveG`)
   and **Parallel** (`cParallelIntegrateTower → cParallelIntegrate`): isolated, zero coupling to the core.
 
-Shared hubs `canonicalRepresentationFastGWf` and `cIntegrateReducedGWf` are each called by three
+Shared hubs `canonicalRepresentationFastG` and `cIntegrateReducedG` are each called by three
 drivers — the legitimate shared core and the entire main↔hyperexp coupling surface.
 
 ## Findings & verdicts
@@ -25,15 +25,15 @@ drivers — the legitimate shared core and the entire main↔hyperexp coupling s
 ### B — retire `cIntegrateHyperexpG`  ·  DO NOT (it is a deliberate counterexample)
 
 Initial read: `cIntegrateHyperexpG` (`Hyperexp/Special.lean`) is a leaf driver (no integrator calls it,
-only `native_decide` examples) whose normal part routes through `cIntegrateReducedGWf` **without** the
-base-RDE correction — so it **overshoots on a special+normal mix**, which `cIntegrateHyperexpFullGWf`
-(`Hyperexp/NormalCore.lean`) fixes via `cIntegrateHyperexpNormalGWf` (`∫R = η·Σcᵢ` subtracted through
+only `native_decide` examples) whose normal part routes through `cIntegrateReducedG` **without** the
+base-RDE correction — so it **overshoots on a special+normal mix**, which `cIntegrateHyperexpFullG`
+(`Hyperexp/NormalCore.lean`) fixes via `cIntegrateHyperexpNormalG` (`∫R = η·Σcᵢ` subtracted through
 `crischDESolve`). Looked like a redundant fueled-era twin to delete.
 
 Investigation refuted this. `Hyperexp/Normal.lean` carries a deliberate contrast pair on the *same*
 integrand `f = (2t−1)/(t²−t)`:
 - `nSpecNorm_specialOnly_overshoots` — `cIntegrateHyperexpG` gives `checkIdentityG = false`;
-- `nSpecNorm_full_lands` — `cIntegrateHyperexpFullGWf` gives `checkIdentityG = true`.
+- `nSpecNorm_full_lands` — `cIntegrateHyperexpFullG` gives `checkIdentityG = true`.
 
 So `cIntegrateHyperexpG` is a **retained weaker driver used as a counterexample** in the correctness
 ladder (the CLAUDE.md "ship the negative theorem too" discipline). Deleting it destroys
@@ -42,16 +42,16 @@ Its coupling to the shared hubs is the cost of a genuine (if weaker) driver, not
 
 ### C — "unify the two RDE entries"  ·  DROP (not a real coupling)
 
-`cIntegrateGFullWf → cPolyRischDEGWf` integrates the **polynomial part** (`Dqₚ = fₚ`, primitive `b=0`
+`cIntegrateGFullWf → cPolyRischDEG` integrates the **polynomial part** (`Dqₚ = fₚ`, primitive `b=0`
 case, returns a polynomial). `crischDESolve` is the **base-field scalar RDE** (`Dy+f·y=g`, `y ∈ α`). These
-are different operations that happen to bottom out at the same `cPolyRischDEGWf`; merging their entry
+are different operations that happen to bottom out at the same `cPolyRischDEG`; merging their entry
 points would be semantically wrong. The apparent "double entry" in the graph is correct separation, not
 entanglement. No action.
 
 ### D — stop threading `cands` through the pipeline  ·  DEFER [infra]
 
-`cands : List α` is a parameter of `cIntegrateGFullWf`, `cIntegrateReducedGWf`, `cLogPartGWf`,
-`cRationalResiduesGWf`, the hyperexp variants — and ~50 soundness theorem signatures
+`cands : List α` is a parameter of `cIntegrateGFullWf`, `cIntegrateReducedG`, `cLogPartG`,
+`cRationalResiduesG`, the hyperexp variants — and ~50 soundness theorem signatures
 (`OneShotAssembly`, `FullSoundness`, `NormalPartSoundness`, `LogPartTowerSoundness`). It cannot be removed
 without a large proof-surface change. The only safe move is **additive**: a concrete-ℚ residue enumerator
 `cResidueCandidatesQ` + an auto wrapper `cIntegrateGFullAutoWf`, so ℚ call sites stop hand-building lists.

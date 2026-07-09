@@ -4,8 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.IntegrationSpec
 /-! # The abstract one-level Risch assembler (Stage-1)
 
 The abstract soundness *core* of the one-level Risch integrator, proven purely over stage-result data —
-**no concrete algorithm** (`cIntegrateCase`, `canonicalRepresentationFastGWf`, `cIntegrateReducedGWf`,
-`cHermiteReduceTowerGWf`, …) appears in this file. The concrete assembler (the `cIntegrateCase` def, the
+**no concrete algorithm** (`cIntegrateCase`, `canonicalRepresentationFastG`, `cIntegrateReducedG`,
+`cHermiteReduceTowerG`, …) appears in this file. The concrete assembler (the `cIntegrateCase` def, the
 per-case `MonomialCase` instances, the reduced-stage realizations, and the end-to-end one-shots) lives in
 `IntegratorAssembly.lean`, which imports this file. See `docs/risch-two-stage-discipline.md`. -/
 
@@ -49,7 +49,7 @@ results — a special-part fraction `snum/sden` differentiating to `specialVal`,
 that is an antiderivative of `cn/dn` (`hNrmField`), and the canonical reconstruction `specialVal + ⟦cn/dn⟧ =
 ⟦a/d⟧` (`hrecon`) — the combined result `combineSN snum sden nrm` is an antiderivative of `a/d`. This is the
 soundness proven *against the interface data*; the concrete assembler (`IntegratorAssembly.lean`) is a
-wrapper that supplies these from `canonicalRepresentationFastGWf` / the reduced stage. -/
+wrapper that supplies these from `canonicalRepresentationFastG` / the reduced stage. -/
 theorem combineSN_isIntegralResult (Dt a d cn dn snum sden : CPolyG α) (nrm : IntegralResultG α)
     (specialVal : RatFunc (CFieldSpec.K α))
     (hsden : toPolyG sden ≠ 0) (hgden : toPolyG nrm.rational.2 ≠ 0)

@@ -13,7 +13,7 @@ Bronstein's Fig. 5.1 is: **shared reductions** (Hermite, polynomial reduction, r
 **case dispatch** (primitive / hyperexponential / hypertangent). Today two drivers hardcode both halves:
 
 - `cIntegrateGFullWf` = canonicalRep + reduced (Hermite+logs) + poly-RDE, requires special part `b = 0`.
-- `cIntegrateHyperexpFullGWf` = canonicalRep + reduced + **Laurent special part** + normal RDE correction.
+- `cIntegrateHyperexpFullG` = canonicalRep + reduced + **Laurent special part** + normal RDE correction.
 
 They differ in exactly one thing: **how the special part is integrated.** Everything else (canonicalRep,
 Hermite, residue logs, the recombination) is duplicated. That duplicated wiring around a shared core *is*
@@ -57,14 +57,14 @@ class CMonomialCase (α : Type*) [CField α] [CDiffField α] where
 
 Instances: `instPrimitiveCase` (special = poly-RDE, `reducedResidual = pure`), `instHyperexpCase`
 (`integrateSpecial = Laurent`, `reducedResidual` = the `crischDESolve` subtraction currently inside
-`cIntegrateHyperexpNormalGWf`), `instHypertangentCase` (coupled-DE). These are *thin* — each names existing
+`cIntegrateHyperexpNormalG`), `instHypertangentCase` (coupled-DE). These are *thin* — each names existing
 functions.
 
 ## Layer 3b — automated residue candidates (`CResidueSource`)
 
 Today `cands : List α` is a manual parameter: the residues are the roots of the Rothstein–Trager resultant
-`R(z) = cResidueResultantTowerGWf Dt cn dn`, so they depend on the integrand, and the Prop-free engine has
-no root/factor oracle — so the caller supplies candidates and `cRationalResiduesGWf` **filters** them to the
+`R(z) = cResidueResultantTowerG Dt cn dn`, so they depend on the integrand, and the Prop-free engine has
+no root/factor oracle — so the caller supplies candidates and `cRationalResiduesG` **filters** them to the
 genuine roots (`R(c)=0`). Candidate generation is a property of the **constant field of `α`**, independent of
 the monomial case, so it is its own class keyed on `α`:
 
@@ -74,7 +74,7 @@ class CResidueSource (α : Type*) [CField α] where
   residueCandidates : CPolyG α → List α
 ```
 
-Because `cRationalResiduesGWf` filters to genuine roots, **soundness holds for any source** — a wrong or
+Because `cRationalResiduesG` filters to genuine roots, **soundness holds for any source** — a wrong or
 partial list can only drop terms, never fabricate one. So the source's only law is a **completeness**
 obligation (return every constant root of `R`):
 
@@ -100,10 +100,10 @@ variable {α} [CField α] [CDiffField α] [CFracGcdCoreWf α] [CMonomialCase α]
 /-- One-level Risch integration, generic in the monomial case. No manual `cands`. -/
 def cIntegrate (a d : CPolyG α) : Option (IntegralResultG α) :=
   let Dt := CMonomialCase.Dt
-  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastGWf Dt a d    -- SHARED
-  let R     := cResidueResultantTowerGWf Dt cn dn                         -- SHARED (compute the resultant)
+  let (fp, (b, ds), (cn, dn)) := canonicalRepresentationFastG Dt a d    -- SHARED
+  let R     := cResidueResultantTowerG Dt cn dn                         -- SHARED (compute the resultant)
   let cands := CResidueSource.residueCandidates R                         -- AUTOMATED — no caller param
-  let nrm   := cIntegrateReducedGWf Dt cn dn cands                        -- SHARED (Hermite + residue logs)
+  let nrm   := cIntegrateReducedG Dt cn dn cands                        -- SHARED (Hermite + residue logs)
   match CMonomialCase.reducedResidual nrm with                           -- CASE hook
   | none => none
   | some nrm' =>
@@ -112,7 +112,7 @@ def cIntegrate (a d : CPolyG α) : Option (IntegralResultG α) :=
     | some (snum, sden) => some (combineRational nrm' snum sden)          -- SHARED
 ```
 
-`cIntegrateReducedGWf` keeps its explicit `cands` internally (it is the mechanism); the source supplies it
+`cIntegrateReducedG` keeps its explicit `cands` internally (it is the mechanism); the source supplies it
 at the top, so the ~50 soundness signatures that thread `cands` are untouched — only the public entry drops
 it. The companion carries the commuting squares:
 
@@ -134,7 +134,7 @@ theorem cIntegrate_sound [LawfulCMonomialCase α] (a d : CPolyG α)
     towerFractionFieldDerivG Dt ⟦res.rational⟧ + logResidueSumG Dt res.logs = ⟦a⟧/⟦d⟧ := …
 ```
 
-proven from: `canonicalRepresentationFastGWf` faithful (Layer 2 lemma) + `cIntegrateReducedGWf` sound
+proven from: `canonicalRepresentationFastG` faithful (Layer 2 lemma) + `cIntegrateReducedG` sound
 (Layer 2, the Hermite + Rothstein–Trager squares) + the two hook laws. **Note it needs no
 `LawfulCResidueSource`** — the residue filter makes soundness independent of the candidate source;
 `LawfulCResidueSource` is consumed only by the *completeness* theorem (Layer, below).
@@ -168,7 +168,7 @@ Wins:
 
 Cost / risk (honest):
 - `OneShotAssembly` (~98 refs) and `Hyperexp/FullSoundness` are written against the concrete `cIntegrateGFullWf`
-  / `cIntegrateHyperexpFullGWf`. Migration is: (1) introduce the classes + generic assembler, (2) prove the
+  / `cIntegrateHyperexpFullG`. Migration is: (1) introduce the classes + generic assembler, (2) prove the
   concrete drivers *equal* `@cIntegrate _ _ inst…` (a `native_decide`/`rfl`-level bridge), (3) re-express the
   existing soundness as corollaries of `cIntegrate_sound` through that bridge, (4) retire the bespoke
   assemblies. Each step gate-green; the driver-equality bridge (step 2) de-risks the proof migration.
@@ -182,7 +182,7 @@ Cost / risk (honest):
   assemblable component is a record (`integrateSpecial` / `reducedCorrect` hooks) passed explicitly. Same
   "plug in a case" idea; correct Lean encoding.
 - **P1 done.** `cIntegrateCase (C : MonomialCase α) Dt a d cands`, with `primitiveCase` and `hyperexpCase`.
-  Bridge `cIntegrateHyperexpFullGWf = cIntegrateCase hyperexpCase` holds by **`rfl`** (the hyperexp driver's
+  Bridge `cIntegrateHyperexpFullG = cIntegrateCase hyperexpCase` holds by **`rfl`** (the hyperexp driver's
   combine is already the uniform fraction form). `native_decide` validates the assembler reproduces
   `checkIdentityG` on the primitive (∫1/t²) and hyperexp (∫1/exp, special+normal mix) cases.
 - **P2 done.** `cIntegrateCase_sound` proves `D(res.rational) + logResidueSum res.logs = a/d` for the generic
@@ -192,7 +192,7 @@ Cost / risk (honest):
   and `cIntegrateCase_primitive_sound` (special part `qₚ/1` from the `b=0` RDE, uncorrected reduced) — the
   latter is what the `rfl` bridge alone could not give.
 - **P2+ started — discharging the hypotheses from deep stage lemmas.** `cIntegrateCase_primitive_sound_polyRDE`
-  (canonical primitive `Dt=1`, `fₚ≠0`) drops `hSpecField`: it follows from `cPolyRischDEGWf_nil_field_identity`
+  (canonical primitive `Dt=1`, `fₚ≠0`) drops `hSpecField`: it follows from `cPolyRischDEG_nil_field_identity`
   (the engine's own poly-RDE soundness). First case law discharged.
 
 ### Unconditionality dependency map (what's left for "sound, full stop")
@@ -202,23 +202,23 @@ and hyperexp still consumes `hLaurField`. Status of the deep lemmas that would d
 
 | hypothesis | deep lemma | status |
 | --- | --- | --- |
-| primitive `hSpecField` | `cPolyRischDEGWf_nil_field_identity` | **exists — discharged** |
+| primitive `hSpecField` | `cPolyRischDEG_nil_field_identity` | **exists — discharged** |
 | `hrecon` (canonical) | `canonicalReconstruction` (new) | **discharged, modulo the split frontier** |
-| `hNrmField` (reduced) | `cIntegrateReducedGWf_isIntegralResult` (new) | **wired — reduces to Hermite + RT frontier** |
-| split factorization `d = dₛ·dₙ` (special·normal) | `cSplitFactorFastGWf_isSplittingFactorizationGen` (new) | **PROVEN abstractly (uncond. at ℚ; general modulo `GcdFFCorrect`)** |
-| Hermite half `hherm` | `cHermiteReduceTowerGWf` | **DISCHARGED (2026-07-04)** — `cHermiteReduceTowerGWf_field_identity` proves it abstractly modulo only `hcopgcd` (differential normality); wired via `field_identity_of_cIntegrateReducedGWf_of_residueMatch_of_hcopgcd` and `cIntegrateReducedGWf_isIntegralResult_of_hcopgcd`. No longer `native_decide`-only. |
-| RT residue match — `hform` core | `cIntegrateReducedGWf_logs_eq_per_root` | **already abstract** (via `residue_gcd_eq_linear_factor` + `cLogArgTowerGWf_eq_linear_factor`); takes `hden`/`hres`/`hDd`/`hdist`/`hcand`/`hgcdread` as side conditions. |
-| RT residue match — `hden` | `toPolyG_cHermiteReduceTowerGWf_Dstar_eq_nodal` | **DISCHARGED (2026-07-04)** — `Dstar = nodal(roots)` modulo only `hsplit` (rational-residue split); monic + squarefree proven from the Yun structure (`YunTowerCorrect`). No longer `native_decide`-only. |
+| `hNrmField` (reduced) | `cIntegrateReducedG_isIntegralResult` (new) | **wired — reduces to Hermite + RT frontier** |
+| split factorization `d = dₛ·dₙ` (special·normal) | `cSplitFactorFastG_isSplittingFactorizationGen` (new) | **PROVEN abstractly (uncond. at ℚ; general modulo `GcdFFCorrect`)** |
+| Hermite half `hherm` | `cHermiteReduceTowerG` | **DISCHARGED (2026-07-04)** — `cHermiteReduceTowerG_field_identity` proves it abstractly modulo only `hcopgcd` (differential normality); wired via `field_identity_of_cIntegrateReducedG_of_residueMatch_of_hcopgcd` and `cIntegrateReducedG_isIntegralResult_of_hcopgcd`. No longer `native_decide`-only. |
+| RT residue match — `hform` core | `cIntegrateReducedG_logs_eq_per_root` | **already abstract** (via `residue_gcd_eq_linear_factor` + `cLogArgTowerG_eq_linear_factor`); takes `hden`/`hres`/`hDd`/`hdist`/`hcand`/`hgcdread` as side conditions. |
+| RT residue match — `hden` | `toPolyG_cHermiteReduceTowerG_Dstar_eq_nodal` | **DISCHARGED (2026-07-04)** — `Dstar = nodal(roots)` modulo only `hsplit` (rational-residue split); monic + squarefree proven from the Yun structure (`YunTowerCorrect`). No longer `native_decide`-only. |
 | RT residue match — `hDd` | `implicitDeriv_C_nodal_eval_ne_zero` | **DISCHARGED (2026-07-04)** — resolvent derivative ≠ 0 at roots, modulo constant roots + `w ≠ 0` (`mapCoeffs(nodal)=0` for constant roots + `Lagrange.nodalWeight`). |
 | RT residue match — `hnorm` | `primitive_monomial_norm_of_const_roots` | discharged modulo constant roots + `w ≠ 0` (pre-existing). |
 | RT residue match — `hdist` | — | **GENUINE side condition** (residue distinctness); correctly a hypothesis, not a gap. |
 | RT residue match — `hres` | — | **engine-external** (caller enumerates residue candidates); correctly a hypothesis. |
-| RT residue match — `hgcdread` | `cLogArgTowerGWf` (= `cgcdFFCoreWf d (cAmcDdG …)`) | **DISCHARGED (2026-07-04)** — it IS the `GcdFFCorrect` frontier (unconditional at ℚ), `fun β _ => hgcd …`. |
+| RT residue match — `hgcdread` | `cLogArgTowerG` (= `cgcdFFCoreWf d (cAmcDdG …)`) | **DISCHARGED (2026-07-04)** — it IS the `GcdFFCorrect` frontier (unconditional at ℚ), `fun β _ => hgcd …`. |
 | RT residue match — `hcand` | caller `residueCand` | **residue-data condition** (the candidate value = the RT residue `hNum(β)/D′(β)`); caller-supplied like `hres`, a genuine hypothesis. |
-| leftover properness `hA` | `cHermiteReduceTowerGWf_numer_degree_lt_of_degree_le_one` | **ALREADY DISCHARGED for deg Dt ≤ 1** (primitive/exp/log) — the earlier §5.3 chain (`toPolyG_residualFraction_proper_of_degree_le_one` + `cHermiteReduceTowerG_g_proper` + exact-division cancellation). The "Large residual, never proven abstractly" comment was STALE; NOT a gap for the transcendental base regime. |
+| leftover properness `hA` | `cHermiteReduceTowerG_numer_degree_lt_of_degree_le_one` | **ALREADY DISCHARGED for deg Dt ≤ 1** (primitive/exp/log) — the earlier §5.3 chain (`toPolyG_residualFraction_proper_of_degree_le_one` + `cHermiteReduceTowerG_g_proper` + exact-division cancellation). The "Large residual, never proven abstractly" comment was STALE; NOT a gap for the transcendental base regime. |
 
 **Composed (2026-07-04):**
-- `field_identity_of_cIntegrateReducedGWf_primitive_maximal` (Assemble) — the primitive REDUCED case,
+- `field_identity_of_cIntegrateReducedG_primitive_maximal` (Assemble) — the primitive REDUCED case,
   discharging FIVE side conditions (`hherm`, `hden`, `hnorm`, `hDd`, `hgcdread`); remaining inputs `hA`,
   `hres`/`hdist`/`hcand` (residue-data).
 - **`cIntegrateGFullWf_primitive_oneShot_hcopgcd_qfunNZG` (Assemble)** — the FULL primitive driver at
@@ -235,8 +235,8 @@ case.
 | RT residue match `hmatch` | Rothstein–Trager residue↔root | frontier (`native_decide`-only) |
 | hyperexp `hLaurField` (Laurent) | `cIntegrateHyperexpLaurentG_special_sound` (new) | **PROVEN modulo special-part shape** |
 
-**`cSplitFactorFastGWf` split correctness is now PROVEN** (`SplitFactorWfCorrect.lean`, not `native_decide`):
-M1 per-step bridge `cstepGWf ~ splitFactorStep` → M2 well-founded recursion → `IsSplittingFactorizationGen`
+**`cSplitFactorFastG` split correctness is now PROVEN** (`SplitFactorWfCorrect.lean`, not `native_decide`):
+M1 per-step bridge `cstepG ~ splitFactorStep` → M2 well-founded recursion → `IsSplittingFactorizationGen`
 (`toPolyG d = toPolyG dₛ · toPolyG dₙ`, `dₛ` special, `dₙ` normal-squarefree), reduced to a single gcd
 frontier `GcdFFCorrect` and **discharged unconditionally at the ℚ base** (`gcdFFCorrect_Q`, where the
 fraction-free gcd is the plain monic Euclidean gcd). This feeds `hsplit` in `canonicalReconstruction`
@@ -245,17 +245,17 @@ engine-compute frontiers is now off the `native_decide`-only list.
 
 `canonicalReconstruction` assembles `toPolyG_cdivmodWf` + `toPolyG_cbezoutOneWf` +
 `toPolyG_cextendedEuclideanSplitWf` + `canonicalRepFast_field_identity`, so `hrecon` reduces to
-`cSplitFactorFastGWf` split-correctness. `cIntegrateReducedGWf_isIntegralResult` restates
-`field_identity_of_cIntegrateReducedGWf_of_residueMatch` as `IsIntegralResultG`, so `hNrmField` reduces to
+`cSplitFactorFastG` split-correctness. `cIntegrateReducedG_isIntegralResult` restates
+`field_identity_of_cIntegrateReducedG_of_residueMatch` as `IsIntegralResultG`, so `hNrmField` reduces to
 the Hermite half + the RT residue match. `cIntegrateCase_primitive_sound_full` already discharges
 `hSpecField` (poly-RDE) and `hrecon`.
 
-**Net for the primitive case:** `cIntegrateCase_primitive_sound_full ∘ cIntegrateReducedGWf_isIntegralResult_of_hcopgcd`
-is sound given **two named engine-compute frontiers plus one genuine side condition** — `cSplitFactorFastGWf`
+**Net for the primitive case:** `cIntegrateCase_primitive_sound_full ∘ cIntegrateReducedG_isIntegralResult_of_hcopgcd`
+is sound given **two named engine-compute frontiers plus one genuine side condition** — `cSplitFactorFastG`
 split correctness (PROVEN, gcd-only), the RT residue match (still `native_decide`-only), and `hcopgcd`
 (the differential-normality side condition, a *genuine* Bronstein hypothesis, not a gap). **The
-`cHermiteReduceTowerGWf` Hermite half is now abstract** (2026-07-04 pole-cancellation arc): the reduced
-identity `hNrmField` is produced by `cIntegrateReducedGWf_isIntegralResult_of_hcopgcd` from `hcopgcd` +
+`cHermiteReduceTowerG` Hermite half is now abstract** (2026-07-04 pole-cancellation arc): the reduced
+identity `hNrmField` is produced by `cIntegrateReducedG_isIntegralResult_of_hcopgcd` from `hcopgcd` +
 `hmatch`, replacing the old `native_decide`-only Hermite frontier. So of the original three engine-compute
 frontiers, two are discharged (split, Hermite) and only the **RT residue match** remains `native_decide`-only.
 
@@ -267,11 +267,11 @@ frontiers, two are discharged (split, Hermite) and only the **RT residue match**
 
 - [ ] P0 — `CResidueSource α` + `CResidueSource ℚ` (rational-root enumeration) + `CResidueSource (QFunNZG β)`
   (delegate to ℚ). Self-contained and additive: gives "no manual `cands`" ergonomics via a top wrapper
-  `cIntegrateGFullAutoWf a d := cIntegrateGFullWf a d (residueCandidates (cResidueResultantTowerGWf …))`
+  `cIntegrateGFullAutoWf a d := cIntegrateGFullWf a d (residueCandidates (cResidueResultantTowerG …))`
   *before* any assembler work; validate it reproduces the hand-built `cands` on the existing examples.
 - [ ] P1 — `CMonomialCase` + `instPrimitiveCase`/`instHyperexpCase`, generic `cIntegrate` (consuming
   `CResidueSource`); prove `cIntegrateGFullWf a d cands = @cIntegrate _ _ instPrimitiveCase a d` when
-  `cands` covers the residues, and likewise for `cIntegrateHyperexpFullGWf` (bridge lemmas).
+  `cands` covers the residues, and likewise for `cIntegrateHyperexpFullG` (bridge lemmas).
 - [ ] P2 — `LawfulCMonomialCase` + `cIntegrate_sound`; re-derive the two drivers' soundness as corollaries.
 - [ ] P3 — `CDecidesElementary` + `LawfulCResidueSource`-consuming completeness assembly.
 - [ ] P4 — retire the bespoke assemblies; `instHypertangentCase` folds the CoupledDE arc in too.

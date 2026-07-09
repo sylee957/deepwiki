@@ -12,11 +12,11 @@ The reduced soundness is `IsIntegralResultG Dt a d res := towerFractionFieldDeri
 logResidueSumG Dt res.logs = a/d`. The candidate route factors it (`field_identity_of_reducedG_of_residueMatch`,
 `LogPartTowerSoundness.lean`) into:
 - **`hherm`** — the Hermite half `D(g) + hNum/Dstar = a/d`. **`cIntegrateReducedLrtG` shares the *same*
-  Hermite part** (`cHermiteReduceTowerGWf`), so `hherm` transfers verbatim from the existing capstone.
+  Hermite part** (`cHermiteReduceTowerG`), so `hherm` transfers verbatim from the existing capstone.
 - **`hmatch`** — the residue-log-derivative sum equals `hNum/Dstar`. **This is the only gap.**
 
 For the *enumerated* case (residues in a `Finset s ⊂ K`, `Dstar = Lagrange.nodal s id` splits over `K`),
-`hmatch` is DONE (`cIntegrateReducedGWf_logs_eq_per_root` + `ratFunc_eq_sum_residue_gcd`). The LRT route's
+`hmatch` is DONE (`cIntegrateReducedG_logs_eq_per_root` + `ratFunc_eq_sum_residue_gcd`). The LRT route's
 `hmatch` sums over the roots of `Rᵢ` in `K̄` — the algebraic-closure residue sum.
 
 ## Strategy: base-change to `K̄` + injectivity descent (avoids full Galois descent)
@@ -29,10 +29,10 @@ that intertwines the tower derivation* and is **injective**. Plan:
    `logResidueSumLrtG` as the honest `K̄`-sum `Σᵢ Σ_{Rᵢ(c)=0 in K̄} c · logDeriv(Sᵢ(c,t))` where `Sᵢ(c,t) =
    Σₖ (eval₂ (algebraMap K K̄) c (toPolyG Sᵢ[k])) tᵏ`.
 2. **Prove the `K̄`-`hmatch` by reusing the tower machinery over `K̄`.** Over `K̄` everything splits, so the
-   enumerated `cIntegrateReducedGWf_logs_eq_per_root`-style argument applies with `s = (toPolyG Dstar).roots
+   enumerated `cIntegrateReducedG_logs_eq_per_root`-style argument applies with `s = (toPolyG Dstar).roots
    in K̄`. The bridges are the DONE pieces:
-   - `Rᵢ`'s roots `= ` the residues, grouped by multiplicity `i` (via G4b `toPolyG_cResidueResultantTowerGWf`
-     = `rtResultantGen`, whose roots are the residues by G2 `roots_rtResultantGen`; `cSqfreeYunFFGWf`
+   - `Rᵢ`'s roots `= ` the residues, grouped by multiplicity `i` (via G4b `toPolyG_cResidueResultantTowerG`
+     = `rtResultantGen`, whose roots are the residues by G2 `roots_rtResultantGen`; `cSqfreeYunFFG`
      multiplicity `↔` `rootMultiplicity`).
    - `Sᵢ(c,t) ~ gcd(Dstar, hNum − c·B)` at a residue `c` (via G4c `toPolyG_cSubresultantParam_getD`
      = `lrtSubresultantGen` coeff, then G3 `lazardRiobooTrager_output_isSimilar_gcd_gen`:
@@ -82,8 +82,8 @@ that intertwines the tower derivation* and is **injective**. Plan:
   residues are constants, the elementary case). `extendDeriv`/`implicitDeriv` needed `[Algebra ℚ E]`;
   `E : Type*` makes the def universe-polymorphic.
 - **P2 — the residue↔root grouping.** `Rᵢ`'s roots in `K̄` are the residues of multiplicity `i`
-  (`cSqfreeYunFFGWf` mult ↔ `rootMultiplicity` of `rtResultantGen`, via G4b + G2). Reuse
-  `cResidueResultantTowerGWf` = `rtResultantGen`.
+  (`cSqfreeYunFFG` mult ↔ `rootMultiplicity` of `rtResultantGen`, via G4b + G2). Reuse
+  `cResidueResultantTowerG` = `rtResultantGen`.
 - **P3 — `Sᵢ` at a residue = the RT gcd.** `toPolyG_cSubresultantParam_getD` (G4c) + `lazardRiobooTrager_
   output_isSimilar_gcd_gen` (G3), specialised at each root `c` of `Rᵢ`; the normality `hB` from
   `isCoprime_X_sub_C_implicitDeriv_iff` (the genuine `hcopgcd`).
@@ -222,13 +222,13 @@ The **entire mathematical content of LRT log-part soundness** is now assembled a
 - **`isIntegralResultLrtG_of_hherm_of_logMatch`** — packages it under the `∀E` quantifier (shared universe
   `u`), producing the full `IsIntegralResultLrtG Dt anum aden res` from **two clean per-`E` inputs**:
   - `hlog` — `logResidueSumLrtG res.logs = hNum/Dstar` (⇐ `logResidueSumLrtG_eq_normalPart` + Yun partition).
-  - `hherm` — `D(g) + hNum/Dstar = a/d` (⇐ base-change of `cHermiteReduceTowerGWf_field_identity`).
+  - `hherm` — `D(g) + hNum/Dstar = a/d` (⇐ base-change of `cHermiteReduceTowerG_field_identity`).
 - **`sum_over_list_partition`** — reduces `hpart` to plain pairwise-disjointness + union.
 
 ### ★★★ `hherm` DISCHARGED (2026-07-04) — only `hlog` (Yun partition) remains
 
 `hherm_lrt_E` (`LrtSoundness.lean`) proves the Hermite half over `E` outright, by base-changing the DONE
-K-level `cHermiteReduceTowerGWf_field_identity` (`HermiteValuationTower.lean:762`). The K→E transfer
+K-level `cHermiteReduceTowerG_field_identity` (`HermiteValuationTower.lean:762`). The K→E transfer
 machinery, all gate-green:
 - `ratFuncBaseChange : RatFunc K →+* RatFunc E` = `RatFunc.mapRingHom (Polynomial.mapRingHom (algebraMap K E))`
   (+ `_nonZeroDivisors`, `_amG`, `_amG_div` : `amG p ↦ amGExt p`).
@@ -253,7 +253,7 @@ splits as `nodal allpoles`. This is the one intricate combinatorial/structural l
   splitting hypothesis is **dropped** (automatic). Rationale: the pole-match sums over `Dstar`'s **poles**,
   which must lie in `E`; `Dstar`-splits ⟹ residues ∈ `E` ⟹ `Rᵢ` splits, and the descent uses the algebraic
   closure anyway. `isIntegralResultLrtG_of_hherm_of_logMatch` updated in lockstep (`hherm_lrt_E` still fits).
-- **`Dstar` is monic** (`toPolyG_cHermiteReduceTowerGWf_Dstar_monic`) **and squarefree** — so the
+- **`Dstar` is monic** (`toPolyG_cHermiteReduceTowerG_Dstar_monic`) **and squarefree** — so the
   leading-coefficient subtlety vanishes: `Dstar_E = nodal allpoles` **exactly**.
 - **`monic_separable_eq_nodal`** (`LrtSoundness.lean`) — the geometric foundation: over alg-closed `E`, a monic
   separable poly `= Lagrange.nodal p.roots.toFinset id` (splits + monic ⟹ `∏(X−β)`; separable ⟹ `Nodup` ⟹
@@ -267,7 +267,7 @@ Remaining `hlog` pieces (each a real engine→abstract connection over `E`): res
 ### ★★★ `hlog` ASSEMBLED (2026-07-04) — `logResidueSumLrtG_eq_normalPart_of_yun`
 
 The full `hlog` now reduces to clean Yun-structure hypotheses. Built (`LrtSoundness.lean`, all gate-green):
-- Residue structure: `rtResultantGen_map` (residue resultant base-changes) + `toPolyG_cResidueResultantTowerGWf_map`
+- Residue structure: `rtResultantGen_map` (residue resultant base-changes) + `toPolyG_cResidueResultantTowerG_map`
   (concrete `R_E = rtResultantGen`) + `residueResultant_map_roots` (`R_E.roots = residues`, via `roots_rtResultantGen`).
 - Geometric: `monic_separable_eq_nodal` (`Dstar_E = nodal allpoles`, monic+squarefree).
 - **Three discharge cores**: `sum_filter_rootSet_partition` (`hpart`, via Yun coprimality + `mem_foldr_union_iff`),
@@ -278,7 +278,7 @@ The full `hlog` now reduces to clean Yun-structure hypotheses. Built (`LrtSoundn
   `logResidueSumLrtG = hNum/∏(t−β)` modulo the Yun facts `hnodup`/`hressub`/`hdisj`/`hcover`/`hentry` + RT setup.
 
 **Remaining:** discharge those Yun facts for the concrete `cLrtLogArgG Dt hNum Dstar` over `E` — base-change
-`cSqfreeYunFFGWf`'s correctness (`YunTowerCorrect`: squarefree/coprime/reconstruction) to `E`, and the per-entry
+`cSqfreeYunFFG`'s correctness (`YunTowerCorrect`: squarefree/coprime/reconstruction) to `E`, and the per-entry
 index = `rootMultiplicity` match (`hentry` via `evalLrtArg_eq_fiber_prod`). Then the final assembly +
 `E→K` descent + swap the primitive base.
 
@@ -329,7 +329,7 @@ step is proven.
 ### ★ ARCHITECTURAL FINDING (2026-07-05) — `hreduced` is `IsIntegralResultG` (rational), not LRT
 
 `PrimitiveFrontier.hreduced` (`RischTowerPrimitive.lean:42`) demands `IsIntegralResultG Dt (crNormNum) (crNormDen)
-nrm` for `nrm = redNorm … = cIntegrateReducedGWf …` — the **rational-residue** reduced integrator with the
+nrm` for `nrm = redNorm … = cIntegrateReducedG …` — the **rational-residue** reduced integrator with the
 `logResidueSumG` (rational `α × CPolyG`) log form. The LRT track (`cIntegrateReducedLrtG` + `logResidueSumLrtG`
 + `IsIntegralResultLrtG`) is a **different, root-free** integrator with a *symbolic* `CPolyG × List` log form and
 *algebraic* residues over the closure. There is no existing LRT frontier/instance. So the LRT soundness does
@@ -350,12 +350,12 @@ in the solver (closing an LRT-analogue of `hreduced`) is a separate architectura
 Scoping confirmed no research gap remains; `hlog` is a (large) mechanical assembly of proven pieces:
 - **residue roots = residues** — `roots_rtResultantGen` (`LrtGeneralDerivation.lean:131`, `[IsAlgClosed K]`)
   already proves `(rtResultantGen A D B).roots = residues`, via `Polynomial.resultant_eq_prod_eval` (the
-  Poisson product formula, present in the repo). G4b (`toPolyG_cResidueResultantTowerGWf`) connects the
+  Poisson product formula, present in the repo). G4b (`toPolyG_cResidueResultantTowerG`) connects the
   concrete `R` to `rtResultantGen` (needs base-change to `E`).
 - **gcd = linear factor** — `residue_gcd_associated_linear_factor` (`LogPartTowerSoundness.lean:75`, generic).
 - **`Sᵢ` = ∏ residue poles** — `isSimilar_subresultant_prod` + `evalLrtArg_cSubresultantParam_eq_prod` (done).
 - **pole sum = normal part** — `pole_sum_eq_normalPart` (the tower residue match; done).
-- **Yun structure** — `YunTowerCorrect` (`cSqfreeYunFFGWf_squarefree/_isRelPrime/_monic/_reconstruction`, all
+- **Yun structure** — `YunTowerCorrect` (`cSqfreeYunFFG_squarefree/_isRelPrime/_monic/_reconstruction`, all
   proven) gives the coprime squarefree factors for the fiber-size partition.
 - **`Dstar` splits** — `monic_separable_eq_nodal` (done) + `Dstar` monic/squarefree.
 

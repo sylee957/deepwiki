@@ -72,7 +72,7 @@ transport step, then the math).
    as the following step.
 2. **Simp-list — swap for `denote`.** `simp only [toPolyG_a, toPolyG_b, …, <non-denote lemmas>]` →
    `simp only [denote, <non-denote lemmas>]` (drop every `toPolyG_c*`; keep the rest, e.g. a def unfold
-   like `cHermiteReduceTowerGWf`, `map_*`, `← hDef`).
+   like `cHermiteReduceTowerG`, `map_*`, `← hDef`).
 3. **`have` synthesis — `transfer%`** *only when the RHS is exactly the denote-normal form*:
    `have h : toPolyG (cop …) = <denote-normal> := by rw [toPolyG_c…]` → `have h := transfer% (toPolyG (cop …))`.
    Most `have`s do NOT qualify (RHS uses a local abbrev, or the LHS is a variable needing a hypothesis

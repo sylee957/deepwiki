@@ -19,11 +19,11 @@ variable [CFracGcdCoreWf α]
 variable [CRischField α]
 
 /-- Primitive monomial case (`Dt ∈ α`): the special part is empty (`b = 0` required), the polynomial part
-`fₚ` is integrated by the `b = 0` RDE `cPolyRischDEGWf` as `qₚ/1`; the reduced part needs no correction. -/
+`fₚ` is integrated by the `b = 0` RDE `cPolyRischDEG` as `qₚ/1`; the reduced part needs no correction. -/
 def primitiveCase : MonomialCase α where
   integrateSpecial Dt fp b _ds :=
     if cisZeroG b then
-      match cPolyRischDEGWf Dt [] fp ((cdegG fp : ℤ) + 1) with
+      match cPolyRischDEG Dt [] fp ((cdegG fp : ℤ) + 1) with
       | none => none
       | some qp => some (qp, [CField.one])
     else none
@@ -45,8 +45,8 @@ def hyperexpCase : MonomialCase α where
       some ⟨(csubG gnum (cmulG [intR] gden), gden), nrm.logs⟩
 
 /-- **Bridge (hyperexp): the hyperexponential driver is definitionally the hyperexp case.** -/
-theorem cIntegrateHyperexpFullGWf_eq_case (Dt a d : CPolyG α) (cands : List α) :
-    cIntegrateHyperexpFullGWf Dt a d cands = cIntegrateCase hyperexpCase Dt a d cands := rfl
+theorem cIntegrateHyperexpFullG_eq_case (Dt a d : CPolyG α) (cands : List α) :
+    cIntegrateHyperexpFullG Dt a d cands = cIntegrateCase hyperexpCase Dt a d cands := rfl
 
 end CPolyG
 

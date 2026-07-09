@@ -77,21 +77,21 @@ runtime — then the branch *knows* it holds, so it stops being a frontier hypot
 ## The `hAD` discharge — roadmap (~150–200L, generic; steps 1+2a LANDED 2026-07-06)
 
 `crNormNum = (cextendedEuclideanSplitWf dnds.1 dnds.2 qr.2 uw.1 uw.2).2`, `crNormDen = dnds.1`
-(from `canonicalRepresentationFastGWf`, `Tower/WellFounded.lean`), so:
+(from `canonicalRepresentationFastG`, `Tower/WellFounded.lean`), so:
 
 1. **✅ crNorm properness `deg crNormNum < deg crNormDen`** (`crNormNum_degree_lt_crNormDen`,
    `CanonicalReconstructionCharZero`, commit `e02807e8`) — the never-done "cleanup target", now LANDED
    generically (`.degree` form, unconditional on `d ≠ 0`, incl. `crNormNum = 0` via `⊥ < deg dₙ`). From
    `cextendedEuclideanSplitWf_snd_degree_lt` + the split `d = ds·dn`
-   (`cSplitFactorFastGWf_isSplittingFactorizationGen`) + special⊥normal Bézout
+   (`cSplitFactorFastG_isSplittingFactorizationGen`) + special⊥normal Bézout
    (`isCoprime_of_isSpecial_isNormalSqfree`, `toPolyG_cbezoutOneWf`) + remainder bound (`cmodWf_length_lt`).
-2. **✅ (2a) Generic `.degree` leftover-proper** (`cHermiteReduceTowerGWf_leftover_proper_of_degree_le_one`,
+2. **✅ (2a) Generic `.degree` leftover-proper** (`cHermiteReduceTowerG_leftover_proper_of_degree_le_one`,
    `NormalPartSoundness`, commit `61198cf6`) — `deg (…).2.1 < deg (…).2.2` from `deg a < deg d` + `deg Dt ≤ 1`
    + the per-factor `hv`/`hb` + residual divisibility `hdvd` (+ `hresDen`/`hDstar`).
 3. **✅ (2b) FULL `.degree` discharge** (`hAD_degree_of_genuineMonomial`, `LrtResidueResultantDischarge`,
    commit `dea5c480`, axiom-clean) — `deg (…).2.1 < deg (…).2.2` from **only** `(hgcd, hd0, hpp, deg Dt ≤ 1,
    deg a < deg d, hgen)`. Every leftover-proper hypothesis discharged: `hv`/`hb` (Yun `get_ne_zero` +
-   `cdiophantineGWf_fst_degree_lt`), `hDstar`/`hresDen` (`Dstar_monic`/`den_ne_zero`), and **`hdvd`** from
+   `cdiophantineG_fst_degree_lt`), `hDstar`/`hresDen` (`Dstar_monic`/`den_ne_zero`), and **`hdvd`** from
    `hWgd_of_multiplicity` (`hcopgcd` derived from `hgen`) via the `d = W·Dstar` cancellation, bridging the raw
    fold `g` to the `cnormG`-projections through `toPolyG` (`set g` + `toPolyG_cnormG` leaf rewrites `hg1`/`hg2`).
    The residual-divisibility assembly — the hard mathematical core — is DONE.
@@ -103,8 +103,8 @@ runtime — then the branch *knows* it holds, so it stops being a frontier hypot
    - `deg Dstar = 0` (no poles, the `0<0` edge, ⟺ trivial normal part): the **no-poles soundness**
      `isIntegralResultLrtG_cIntegrateReducedLrtG_of_noPoles` — assembled from the *hAD-independent* Hermite
      identity `hherm_lrt_E` + the empty log part `cLrtLogArgG_eq_nil_of_cdegG_zero` (constant `Dstar` ⟹ constant
-     residue resultant `cdegG_cResidueResultantTowerGWf_eq_zero_of_cdegG_zero` ⟹ empty Yun factorization
-     `cSqfreeYunFFGWf_eq_nil_of_cdegG_zero`) + the vanishing leftover numerator (`H.2.1 = 0` from `.degree hAD`).
+     residue resultant `cdegG_cResidueResultantTowerG_eq_zero_of_cdegG_zero` ⟹ empty Yun factorization
+     `cSqfreeYunFFG_eq_nil_of_cdegG_zero`) + the vanishing leftover numerator (`H.2.1 = 0` from `.degree hAD`).
    The `hAD` field is dropped ⟹ **`LrtReducedGenuineData = {hE}`**.
 
 ## ✅ DONE — the frontier is a single genuine monomial property

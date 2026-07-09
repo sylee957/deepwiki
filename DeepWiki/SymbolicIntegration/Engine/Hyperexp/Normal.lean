@@ -4,8 +4,8 @@ import DeepWiki.SymbolicIntegration.Engine.Hyperexp.ExampleData
 
 /-! # The hyperexponential normal part via residual feedback
 
-Worked examples of the residual-feedback hyperexponential integrators `cIntegrateHyperexpNormalGWf` /
-`cIntegrateHyperexpFullGWf`, e.g. `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
+Worked examples of the residual-feedback hyperexponential integrators `cIntegrateHyperexpNormalG` /
+`cIntegrateHyperexpFullG`, e.g. `∫ 1/(exp x − 1) = log(exp x − 1) − x`. -/
 
 open Polynomial
 
@@ -40,7 +40,7 @@ capstone's logs equals `1`. -/
 theorem nNormInv_residual_eq_one :
     CField.isZero (CField.sub
       (cHyperexpResidualG (cExpEtaG nHyperexpDt)
-        (cIntegrateReducedGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands).logs)
+        (cIntegrateReducedG nHyperexpDt nNormInvA nNormInvD nNormInvCands).logs)
       (CField.one : NLvl1)) = true := by native_decide
 
 /-- The base residual integral `∫R = ∫1 = x`: `crischDESolve 0 1` over `ℚ(x)` recovers `y = x`. -/
@@ -49,24 +49,24 @@ theorem nNormInv_baseIntegral_eq_x :
       | some y => CField.isZero (CField.sub y nLvl1X)
       | none => false) = true := by native_decide
 
-/-- The plain reduced driver overshoots on `f = 1/(exp x − 1)`: `cIntegrateReducedGWf` returns `log(t−1)`,
+/-- The plain reduced driver overshoots on `f = 1/(exp x − 1)`: `cIntegrateReducedG` returns `log(t−1)`,
 which overshoots by `R = 1`, so `checkIdentityG = false`. -/
 theorem nNormInv_reduced_overshoots :
     CPolyG.checkIdentityG nHyperexpDt
-      (cIntegrateReducedGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands)
+      (cIntegrateReducedG nHyperexpDt nNormInvA nNormInvD nNormInvCands)
       nNormInvA nNormInvD = false := by native_decide
 
 /-- The residual-feedback driver lands `∫ 1/(exp x − 1) = log(exp x − 1) − x` with `D(∫f) = f`:
-`cIntegrateHyperexpNormalGWf` returns `some res` satisfying `checkIdentityG`. -/
+`cIntegrateHyperexpNormalG` returns `some res` satisfying `checkIdentityG`. -/
 theorem nNormInv_landsNormalPart :
-    (match CPolyG.cIntegrateHyperexpNormalGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands with
+    (match CPolyG.cIntegrateHyperexpNormalG nHyperexpDt nNormInvA nNormInvD nNormInvCands with
       | some res => CPolyG.checkIdentityG nHyperexpDt res nNormInvA nNormInvD
       | none => false) = true := by native_decide
 
 /-- The driver's result on `f = 1/(exp x − 1)` is exactly `log(t−1) − x`: rational part `−x` and a single
 log with argument `t − 1`. Pins the shape, not just the derivative identity. -/
 theorem nNormInv_result_is_logTMinus1_minus_x :
-    (match CPolyG.cIntegrateHyperexpNormalGWf nHyperexpDt nNormInvA nNormInvD nNormInvCands with
+    (match CPolyG.cIntegrateHyperexpNormalG nHyperexpDt nNormInvA nNormInvD nNormInvCands with
       | some res =>
         CPolyG.cisZeroG (CPolyG.csubG res.rational.1 [CField.neg nLvl1X])
           && res.logs.length == 1
@@ -97,10 +97,10 @@ theorem nSpecNorm_specialOnly_overshoots :
       | none => false) = false := by native_decide
 
 /-- The full driver lands `∫ (1/exp + 1/(exp−1)) = −1/exp + log(exp−1) − x` with `D(∫f) = f`:
-`cIntegrateHyperexpFullGWf` integrates the special part to `−1/t` and the normal part to `log(t−1) − x`,
+`cIntegrateHyperexpFullG` integrates the special part to `−1/t` and the normal part to `log(t−1) − x`,
 returning `some res` satisfying `checkIdentityG`. -/
 theorem nSpecNorm_full_lands :
-    (match CPolyG.cIntegrateHyperexpFullGWf nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
+    (match CPolyG.cIntegrateHyperexpFullG nHyperexpDt nSpecNormA nSpecNormD nSpecNormCands with
       | some res => CPolyG.checkIdentityG nHyperexpDt res nSpecNormA nSpecNormD
       | none => false) = true := by native_decide
 
@@ -130,7 +130,7 @@ non-constant rational function of `x`. -/
 theorem nVarNorm_residual_eq_twoX :
     CField.isZero (CField.sub
       (cHyperexpResidualG (cExpEtaG nVarDt)
-        (cIntegrateReducedGWf nVarDt nVarNormA nVarNormD nVarNormCands).logs)
+        (cIntegrateReducedG nVarDt nVarNormA nVarNormD nVarNormCands).logs)
       nLvl1TwoX) = true := by native_decide
 
 /-- The non-constant base residual integral `∫R = ∫2x = x²`: `crischDESolve 0 (2x)` over `ℚ(x)` recovers
@@ -141,10 +141,10 @@ theorem nVarNorm_baseIntegral_eq_xSq :
       | none => false) = true := by native_decide
 
 /-- The driver lands `∫ 2x/(exp(x²) − 1) = log(exp(x²) − 1) − x²` with `D(∫f) = f`:
-`cIntegrateHyperexpNormalGWf` reads the non-constant residual `R = 2x`, integrates `∫R = x²`, and returns
+`cIntegrateHyperexpNormalG` reads the non-constant residual `R = 2x`, integrates `∫R = x²`, and returns
 `log(t−1) − x²` (rational part `−x²`, one log) satisfying `checkIdentityG`. -/
 theorem nVarNorm_landsNormalPart :
-    (match CPolyG.cIntegrateHyperexpNormalGWf nVarDt nVarNormA nVarNormD nVarNormCands with
+    (match CPolyG.cIntegrateHyperexpNormalG nVarDt nVarNormA nVarNormD nVarNormCands with
       | some res =>
         CPolyG.checkIdentityG nVarDt res nVarNormA nVarNormD
           && CPolyG.cisZeroG (CPolyG.csubG res.rational.1 [CField.neg nLvl1XSq])

@@ -108,15 +108,15 @@ def mixedRdeG : CPolyG RadX3 := [CField.one, CField.one]
 /-- The RDE right-hand side denominator `gden = 1 ∈ RadX3[t]`. -/
 def mixedRdeGden : CPolyG RadX3 := [CField.one]
 
-/-- The RDE `Dy + 1·y = t + 1` over `RadX3[t]` is solved (`cRischDEGWf` returns `some`). -/
+/-- The RDE `Dy + 1·y = t + 1` over `RadX3[t]` is solved (`cRischDEG` returns `some`). -/
 theorem mixedRde_radx3_isSome :
-    (CPolyG.cRischDEGWf ([CField.one] : CPolyG RadX3)
+    (CPolyG.cRischDEG ([CField.one] : CPolyG RadX3)
       mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden).isSome = true := by native_decide
 
 /-- A multi-level RDE descent: `Dy + 1·y = t + 1` solved over `RadX3[t]` with solution `y = t`, the
 RDE identity checked via `cisZeroG`; the solve recurses into `crischDESolve` over `RadX3`. -/
 theorem mixedRde_radx3_descends :
-    (match CPolyG.cRischDEGWf ([CField.one] : CPolyG RadX3)
+    (match CPolyG.cRischDEG ([CField.one] : CPolyG RadX3)
         mixedRdeF mixedRdeFden mixedRdeG mixedRdeGden with
       | some (ynum, yden) =>
           CPolyG.cisZeroG (CPolyG.csubG

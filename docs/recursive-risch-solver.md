@@ -45,7 +45,7 @@ Integrating the special part `fₚ + b/dₛ` at level *n* does **not** reduce to
 rational function* — that has the same problem shape and would loop. The genuine descent lives in the
 **polynomial Risch DE**: solving `D(q) + f·q = c` at level *n* reduces to integrating/solving RDEs whose
 *coefficients* live in `k(t₁)…(tₙ₋₁)`. So the recursion payload is the special-part field identity, and the
-cross-level bridge is engine-internal (`cPolyRischDEGWf`'s coefficient recursion). In the class world this
+cross-level bridge is engine-internal (`cPolyRischDEG`'s coefficient recursion). In the class world this
 bridge is the one `sorry`-free frontier field of the tower-step instance.
 
 ## What recursion buys — and what it doesn't
@@ -78,31 +78,31 @@ soundness.** Recursion reorganizes the tower; it does not remove the leaves.
 - **P2 recursion (tower step)** — the `instance [LawfulRischLevel α] : LawfulRischLevel (QFunNZG α)`, deriving
   `specialSound` from the lower instance's `sound`. **Found
   2026-07-04 (an ALGORITHM task, not just a proof):** the engine's primitive-polynomial integration is
-  **constant-coefficient-only**. `cPolyRischDEGWf …[]… = cIntegratePolyG` is term-by-term
+  **constant-coefficient-only**. `cPolyRischDEG …[]… = cIntegratePolyG` is term-by-term
   `∫cᵢtⁱ = cᵢtⁱ⁺¹/(i+1)` (correct only when `D cᵢ = 0`); `cPrimitivePolyIntegrate`'s own docstring says
   "constant-coefficient sub-case"; `cLimitedIntegrate` exists only over the base `k = ℚ`. For non-constant
   coefficients the algorithm returns a genuinely *wrong* `some`, so `specialSound` is *false* off-regime —
   a hypothesis-free primitive `RischSolver α` is impossible with today's engine. P2 must first **implement**
   the general primitive-polynomial integrator: the top-down recursion `qⱼ′ = cⱼ − (j+1)·qⱼ₊₁` solved by a
-  **tower** `cLimitedIntegrate`/`cRischDEGWf` recursing into the coefficient field (Bronstein
+  **tower** `cLimitedIntegrate`/`cRischDEG` recursing into the coefficient field (Bronstein
   `IntegratePrimitivePolynomial`), then prove its soundness — which *is* the tower-step instance. See the
   memory note `leanproofs-primitive-poly-constant-coeff-only`.
 - **P3 status (2026-07-04).** Split **DONE** (below). Denominator **DONE**: `reducedSound`'s
-  `toPolyG nrm.rational.2 ≠ 0` conjunct is proven (`toPolyG_cHermiteReduceTowerGWf_den_ne_zero` +
+  `toPolyG nrm.rational.2 ≠ 0` conjunct is proven (`toPolyG_cHermiteReduceTowerG_den_ne_zero` +
   `crNormDen_ne_zero_of_charZero`), so `PrimitiveFrontier.hreduced` is now the *single* `IsIntegralResultG`
   (Rothstein–Trager) obligation. **Remaining P3 = abstract RT correctness** (the residue-data conditions of
-  `cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces`: nodal `Dstar`, distinct residues, computed
+  `cIntegrateReducedG_primitive_isIntegralResult_via_interfaces`: nodal `Dstar`, distinct residues, computed
   residues/log-args correct). This is the deep frontier the whole soundness arc reduced to `native_decide`; a
-  guard here needs the RT algorithm's correctness (that `cRationalResiduesGWf`/`cLogPartGWf` compute the
+  guard here needs the RT algorithm's correctness (that `cRationalResiduesG`/`cLogPartG` compute the
   mathematically-correct residues), not merely a domain check — genuine multi-session research.
 - **P3 (original)** — discharge the shared per-level compute-correctness abstractly (Hermite / RT residue / split).
   **Split DONE (2026-07-04):** `canonicalReconstruction_of_charZero` (`CanonicalReconstructionCharZero.lean`)
   discharges the whole canonical reconstruction from `[CharZero]` + `GcdFFCorrect` + `d ≠ 0`, via the abstract
-  split correctness `cSplitFactorFastGWf_isSplittingFactorizationGen` and the new special ⊥ normal coprimality
+  split correctness `cSplitFactorFastG_isSplittingFactorizationGen` and the new special ⊥ normal coprimality
   `isCoprime_of_isSpecial_isNormalSqfree` (`SpecialNormalCoprime.lean`). `PrimitiveFrontier` dropped its
   `hrecon` field; the reconstruction is now proven. `GcdFFCorrect` is itself a theorem at the `ℚ` base
   (`gcdFFCorrect_Q`). **Reduced part** (`hreduced`) is *grounded* in
-  `cIntegrateReducedGWf_primitive_isIntegralResult_via_interfaces` (a real theorem, not `native_decide`) but
+  `cIntegrateReducedG_primitive_isIntegralResult_via_interfaces` (a real theorem, not `native_decide`) but
   stays a field — its Rothstein–Trager residue-data conditions (nodal denominator, *distinct* residues) are
   genuinely per-input and can fail, so it is not unconditionally closeable.
 - **P4** — the base `LawfulRischLevel` over `ℚ(x)` fully closed; assemble a genuine 2-level tower instance.

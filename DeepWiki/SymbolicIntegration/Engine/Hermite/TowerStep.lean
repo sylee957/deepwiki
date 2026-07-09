@@ -101,16 +101,16 @@ theorem fieldFrac_step_add (g1 g2 b Vpow : CPolyG α)
 
 open QFunNZG in
 /-- The inner Hermite loop invariant with a general accumulator. For `u, v ≠ 0`, the tower
-derivation `D = implicitDeriv (toPolyG Dt)`, and every step's `cdiophantineGWf` cofactors satisfying
+derivation `D = implicitDeriv (toPolyG Dt)`, and every step's `cdiophantineG` cofactors satisfying
 the Bézout relation `hbez`, the loop `cHermiteReduceTowerInnerWf Dt v u j A g` telescopes M1:
 `⟦A/(u·v^(j+1))⟧ + D_tower(⟦g⟧) = D_tower(⟦result.g⟧) + ⟦result.a/(u·v)⟧`. -/
 theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u : CPolyG α)
     (hu : toPolyG u ≠ 0) (hv : toPolyG v ≠ 0)
     (hbez : ∀ (j' : ℕ) (A' : CPolyG α),
-      toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+      toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v
             (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).1
           * (toPolyG u * Differential.implicitDeriv (toPolyG Dt) (toPolyG v))
-        + toPolyG (cdiophantineGWf (cmulG u (cmonomialDeriv Dt v)) v
+        + toPolyG (cdiophantineG (cmulG u (cmonomialDeriv Dt v)) v
             (cscaleG (CField.neg (CField.inv (cnatCastG (j' + 1)))) A')).2 * toPolyG v
       = -toPolyG A' * Polynomial.C (((j' : CFieldSpec.K α) + 1)⁻¹)) :
     ∀ (j : ℕ) (A : CPolyG α) (g : CPolyG α × CPolyG α), toPolyG g.2 ≠ 0 →
@@ -134,7 +134,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
     set Dv := cmonomialDeriv Dt v with hDv
     set p := cmulG u Dv with hp
     set rhs := cscaleG (CField.neg (CField.inv jval)) A with hrhs
-    rcases hBC : cdiophantineGWf p v rhs with ⟨B, C⟩
+    rcases hBC : cdiophantineG p v rhs with ⟨B, C⟩
     simp only []
     set Vpow := cpowG v (j + 1) with hVpow
     set A' := csubG (cscaleG (CField.neg jval) C) (cmulG u (cmonomialDeriv Dt B)) with hA'
@@ -176,7 +176,7 @@ theorem cHermiteReduceTowerInnerWf_spec_acc [CharZero (CFieldSpec.K α)] (Dt v u
 
 /-! ### Whole-step field identity from exact division
 
-`cHermiteReduceTowerGWf Dt a d = ((gnum,gden),(hNum,Dstar))` computes the residual `hNum/Dstar` so
+`cHermiteReduceTowerG Dt a d = ((gnum,gden),(hNum,Dstar))` computes the residual `hNum/Dstar` so
 that it equals `a/d - D(g)` by construction: `resNum/resDen = (a·gden² - d·gp)/(d·gden²)` with
 `gp = D(gnum)·gden - gnum·D(gden)` the quotient numerator, and `hNum = (resNum·Dstar)/resDen`. So the
 step identity `D(⟦g⟧) + ⟦hNum/Dstar⟧ = ⟦a/d⟧` is a clean algebraic assembly reducing to the single

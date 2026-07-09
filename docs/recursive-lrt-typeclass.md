@@ -20,7 +20,7 @@ soundness *and* completeness, no assumed hypotheses left.
 
 | Frontier | File | Field | Discharge status |
 |---|---|---|---|
-| `PrimitiveFrontier` | `RischTowerPrimitive` | `hreduced : IsIntegralResultG` (rational reduced) | normal-part soundness PROVEN for δ≤1 (`cHermiteReduceTowerGWf_numer_degree_lt…`); needs materialization at the concrete carrier |
+| `PrimitiveFrontier` | `RischTowerPrimitive` | `hreduced : IsIntegralResultG` (rational reduced) | normal-part soundness PROVEN for δ≤1 (`cHermiteReduceTowerG_numer_degree_lt…`); needs materialization at the concrete carrier |
 | ~~`LiouvilleFrontier`~~ | ~~`LiouvilleCompleteness`~~ | ~~`descendGenuine` (rational completeness)~~ | **RETIRED (701dbf95)** — redundant with `LrtLiouvilleFrontier`; sole consumer migrated to the LRT certificate |
 | `PrimitiveFrontierLrt` | `RischTowerPrimitiveLrt` | `hreducedLrt : IsIntegralResultLrtG` (algebraic reduced) | **closed to `LrtReducedGenuineData`** (`hreducedLrt_of_genuineAll`); remaining = the genuine Bronstein conditions per input |
 | `LrtLiouvilleFrontier` | `LrtCompleteness` | `descendGenuineLrt` (algebraic completeness) | keystone done; remaining = computable→abstract residue bridge |
@@ -33,7 +33,7 @@ soundness *and* completeness, no assumed hypotheses left.
 `PrimitiveFrontier.hreduced` concludes `IsIntegralResultG` (rational, K-level residues). But the rational
 reduced soundness needs the **rational-residue split data** — `hden : ⟦Dstar⟧ = Lagrange.nodal s id` (the
 reduced denominator splits into *distinct linear* factors over `K`), plus the residue formula/distinctness (the
-now-retired `cIntegrateReducedGWf_primitive_of_splitData` made this explicit). For an input whose residues
+now-retired `cIntegrateReducedG_primitive_of_splitData` made this explicit). For an input whose residues
 are algebraic (don't split over `K`), `IsIntegralResultG` is **false** — the rational reduced integrator gives
 wrong/incomplete logs. So `PrimitiveFrontier` can never be materialized as a ground instance; it is a genuine
 frontier, not an unproven-but-true statement.
@@ -119,7 +119,7 @@ believed-correct algorithms, plus genuine scope conditions** — eliminable *in 
      `_of_genuine` drop the `hilt` field from the `hE` bundle.
   5. **Drop `hR0` — DONE (`884f0b44`).** `residueResultant_ne_zero_of_hnormAlgClosure` (new
      `LrtResidueResultantDischarge.lean`): instantiate at `E = AlgebraicClosure (CFieldSpec.K α)`, derive `hB`
-     from `hnorm`, then `toPolyG_cResidueResultantTowerGWf_map` + `rtResultantGen_ne_zero` + `map` injectivity
+     from `hnorm`, then `toPolyG_cResidueResultantTowerG_map` + `rtResultantGen_ne_zero` + `map` injectivity
      ⟹ `R ≠ 0`. `_of_genuine` moved here (it now derives `hR0`) and supplies `hRpp` via `primPart_ne_zero`.
      **★ Universe trap (this was the exact snag that stalled the prior attempt):** instantiating the *inline
      structure field* `hE : ∀ (E : Type u) …` at `AlgebraicClosure K` fails with "failed to synthesize

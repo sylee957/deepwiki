@@ -22,20 +22,20 @@ variable {α : Type*} [CField α] [CFieldSpec α] [CDiffField α] [CDiffFieldSpe
 /-! ### The normal-part assembly through the `checkIdentityG` certificate -/
 
 /-- The fuel-free reduced-case field identity from the `checkIdentityG` certificate: for
-`res = cIntegrateReducedGWf Dt a d cands`, if `checkIdentityG Dt res a d = true`, then
+`res = cIntegrateReducedG Dt a d cands`, if `checkIdentityG Dt res a d = true`, then
 `D(g) + logResidueSumG Dt res.logs = amG a/amG d`. -/
-theorem field_identity_of_cIntegrateReducedGWf_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPolyG α)
+theorem field_identity_of_cIntegrateReducedG_of_checkIdentityG [CFracGcdCoreWf α] (Dt : CPolyG α)
     (a d : CPolyG α) (cands : List α)
-    (hgden : toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2 ≠ 0)
+    (hgden : toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2 ≠ 0)
     (haden : toPolyG d ≠ 0)
-    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedGWf Dt a d cands).logs, toPolyG cv.2 ≠ 0)
-    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands) a d = true) :
+    (hlogs : ∀ cv ∈ (CPolyG.cIntegrateReducedG Dt a d cands).logs, toPolyG cv.2 ≠ 0)
+    (hcheck : CPolyG.checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt a d cands) a d = true) :
     towerFractionFieldDerivG Dt
-        (amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.1)
-          / amG α (toPolyG (CPolyG.cIntegrateReducedGWf Dt a d cands).rational.2))
-        + logResidueSumG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands).logs
+        (amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.1)
+          / amG α (toPolyG (CPolyG.cIntegrateReducedG Dt a d cands).rational.2))
+        + logResidueSumG Dt (CPolyG.cIntegrateReducedG Dt a d cands).logs
       = amG α (toPolyG a) / amG α (toPolyG d) :=
-  field_identity_of_checkIdentityG Dt (CPolyG.cIntegrateReducedGWf Dt a d cands) a d
+  field_identity_of_checkIdentityG Dt (CPolyG.cIntegrateReducedG Dt a d cands) a d
     hgden haden hlogs hcheck
 
 /-! ### Axiom audit — rests only on the standard kernel axioms
@@ -46,7 +46,7 @@ theorem field_identity_of_cIntegrateReducedGWf_of_checkIdentityG [CFracGcdCoreWf
 #print axioms towerFractionFieldDerivG_amG_fracAccG
 #print axioms sum_towerFractionFieldDerivG_telescope
 #print axioms degree_lt_of_exact_div
-#print axioms cHermiteReduceTowerGWf_leftover_proper_of_residual
+#print axioms cHermiteReduceTowerG_leftover_proper_of_residual
 #print axioms degree_fracAdd_lt_of_proper
 #print axioms degree_fracAdd_lt_of_margin
 #print axioms toPolyG_fracAddG_margin
@@ -70,5 +70,5 @@ theorem field_identity_of_cIntegrateReducedGWf_of_checkIdentityG [CFracGcdCoreWf
 #print axioms cHermiteReduceTowerG_residual_proper_of_degree_le_one
 #print axioms cHermiteReduceTowerG_telescope
 #print axioms cHermiteReduceTowerG_telescope_seed
-#print axioms field_identity_of_cIntegrateReducedGWf_of_checkIdentityG
+#print axioms field_identity_of_cIntegrateReducedG_of_checkIdentityG
 end DeepWiki.SymbolicIntegration

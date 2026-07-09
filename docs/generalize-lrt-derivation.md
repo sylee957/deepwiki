@@ -3,7 +3,7 @@
 **Goal.** The repo's abstract Lazard–Rioboo–Trager (LRT) / Rothstein–Trager theory
 (`rtResultant`, `lrtSubresultant`, `lazardRiobooTrager`, `..._output_isSimilar_gcd`,
 `ratFunc_eq_sum_residue_gcd`) is stated for the **plain polynomial `derivative D`**. The computable
-tower engine (`cResidueResultantTowerGWf`, `cLrtLogArgG`) uses the **tower derivation**:
+tower engine (`cResidueResultantTowerG`, `cLrtLogArgG`) uses the **tower derivation**:
 `toPolyG (cmonomialDeriv Dt p) = Differential.implicitDeriv (toPolyG Dt) (toPolyG p)` (`@[denote]`,
 `MonomialDeriv.lean`). They coincide only when `Dt = 1` + constant coefficients (the pure rational
 case). To close `hreduced` via the **root-free LRT path** for the primitive *tower* case, the abstract
@@ -41,7 +41,7 @@ is normal (not special). `D` itself stays separable/squarefree (that's about `D`
 `ratFunc_eq_sum_residue_gcd` (`RationalIntegrationGcdLogForm.lean:77`) is the K(x)-with-`d/dx` analytic
 identity. Rather than lift it to the tower differential field from scratch (Bronstein Thm 5.6.1's
 analytic content), **reuse the candidate route's already-proven tower per-root identity**
-(`residue_gcd_eq_linear_factor` / `cIntegrateReducedGWf_logs_eq_per_root`, `LogPartTowerSoundness.lean` /
+(`residue_gcd_eq_linear_factor` / `cIntegrateReducedG_logs_eq_per_root`, `LogPartTowerSoundness.lean` /
 `OneShotAssembly.lean` — the tower-derivation residue↔linear-factor + per-root log-sum = the reduced
 integrand). The generalized *algebraic* LRT (below) connects the **symbolic** LRT output
 `[(Rᵢ, Sᵢ)]` to those **enumerated** per-root residues (Rᵢ's roots ARE the residues; `Sᵢ` at a root IS
@@ -76,7 +76,7 @@ route's tower analytic identity).
 - **G4a ✅ DONE** — `natDegree_rtResultantGen_le` (the `z`-degree bound `≤ deg D`, over any field `K`) +
   `natDegree_det_le_sum_col_gen`; and `natDegree_implicitDeriv_le_of_monic` (the tight `deg B ≤ deg D − 1`
   for monic `D` + constant `Dt` — the primitive case).
-- **G4b ✅ DONE** (`Computable/ResidueResultantTowerSpec.lean`) — **`toPolyG_cResidueResultantTowerGWf`**:
+- **G4b ✅ DONE** (`Computable/ResidueResultantTowerSpec.lean`) — **`toPolyG_cResidueResultantTowerG`**:
   the computable tower residue resultant equals `rtResultantGen (toPolyG a) (toPolyG d) (implicitDeriv
   (toPolyG Dt) (toPolyG d))` for monic `d` + constant `Dt` + proper `a`. Via the sample-agreement lemma
   `toK_cresultantWf_cAmcDdG_eq_eval` (`Polynomial.resultant_add_right_deg` reconciles the engine's
@@ -96,7 +96,7 @@ route's tower analytic identity).
   **⟹ the entire computable→abstract LRT connection is certified: residue resultant (G4b) + parametric
   subresultant (G4c).**
 - **G5** — assemble with the candidate route's tower per-root analytic identity
-  (`residue_gcd_eq_linear_factor` / `cIntegrateReducedGWf_logs_eq_per_root`) into a symbolic-log soundness
+  (`residue_gcd_eq_linear_factor` / `cIntegrateReducedG_logs_eq_per_root`) into a symbolic-log soundness
   `IsIntegralResultLrtG` for `cIntegrateReducedLrtG`; swap the primitive base (closes `hreduced` **without**
   the rational-residue restriction).
 

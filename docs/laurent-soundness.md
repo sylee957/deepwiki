@@ -97,7 +97,7 @@ The special-part connector is proven, completing the discharge:
 
 The remaining inputs are the special-part *shape* hypotheses (`dₛ = c·tᵐ` a monomial, `b` proper, `c ≠ 0`)
 — canonical-representation properties of the hyperexponential special part, on the same footing as the
-`cSplitFactorFastGWf`/Hermite/RT engine frontiers the primitive case reduces to.
+`cSplitFactorFastG`/Hermite/RT engine frontiers the primitive case reduces to.
 
 **LAURENT SOUNDNESS COMPLETE** — the hyperexponential Laurent integrator is formally verified, and the
 hyperexp case reaches the same frontier-only footing as the primitive case.

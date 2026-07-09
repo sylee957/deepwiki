@@ -88,18 +88,18 @@ namespace CPolyG
 
 /-- Restatement: the fuel-free divisibility check reads as honest divisibility. -/
 example {α : Type*} [CField α] [CFieldSpec α] (q p : CPolyG α)
-    (hq : cnormG q ≠ []) (hdvd : cdvdGWf q p = true) :
+    (hq : cnormG q ≠ []) (hdvd : cdvdG q p = true) :
     toPolyG q ∣ toPolyG p :=
-  dvd_of_cdvdGWf q p hq hdvd
+  dvd_of_cdvdG q p hq hdvd
 
 /-- Restatement: the fuel-free generic Diophantine solver satisfies the Bézout identity. -/
 example {α : Type*} [CField α] [CFieldSpec α] (p q rhs : CPolyG α)
     (hq0 : cnormG q ≠ [])
     (hgdeg : (toPolyG (cgcdWf p q).1).natDegree = 0)
     (hgne : toPolyG (cgcdWf p q).1 ≠ 0) :
-    toPolyG (cdiophantineGWf p q rhs).1 * toPolyG p
-        + toPolyG (cdiophantineGWf p q rhs).2 * toPolyG q = toPolyG rhs :=
-  toPolyG_cdiophantineGWf p q rhs hq0 hgdeg hgne
+    toPolyG (cdiophantineG p q rhs).1 * toPolyG p
+        + toPolyG (cdiophantineG p q rhs).2 * toPolyG q = toPolyG rhs :=
+  toPolyG_cdiophantineG p q rhs hq0 hgdeg hgne
 
 end CPolyG
 

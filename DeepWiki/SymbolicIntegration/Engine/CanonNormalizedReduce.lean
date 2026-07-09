@@ -15,13 +15,13 @@ section CoreWf
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
 /-- The fuel-free denominator-direct canonical-normality check. -/
-def cisCanonNormalizedCoreGWf (a : QFunNZG β) : Bool :=
-  cdenomNormalGateGWf a
+def cisCanonNormalizedCoreG (a : QFunNZG β) : Bool :=
+  cdenomNormalGateG a
 
 /-- The fuel-free wrapper canonical-normality check on the reduced denominator. -/
-def cisCanonNormalizedGWf (ftilde : QFunNZG β) : Bool :=
+def cisCanonNormalizedG (ftilde : QFunNZG β) : Bool :=
   CPolyG.cisZeroG (CPolyG.csubG
-    (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β)
+    (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β)
       (QFunNZG.reduceDen ftilde)).1
     (QFunNZG.reduceDen ftilde))
 
@@ -34,10 +34,10 @@ section Bridge
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
 /-- The fuel-free core check on `qReduce x` is the fuel-free wrapper check on `x`. -/
-theorem cisCanonNormalizedCoreGWf_qReduce (x : QFunNZG β) :
-    cisCanonNormalizedCoreGWf (qReduce x) = cisCanonNormalizedGWf x := rfl
+theorem cisCanonNormalizedCoreG_qReduce (x : QFunNZG β) :
+    cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x := rfl
 
-example (x : QFunNZG β) : cisCanonNormalizedCoreGWf (qReduce x) = cisCanonNormalizedGWf x := rfl
+example (x : QFunNZG β) : cisCanonNormalizedCoreG (qReduce x) = cisCanonNormalizedG x := rfl
 
 end Bridge
 
@@ -49,7 +49,7 @@ variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFieldDomain 
 
 /-- The fuel-free weak-normalization guarantee for a rational function denominator. -/
 def IsWeaklyNormalizedNormWf (h : QFunNZG β) : Prop :=
-  toPolyG (CPolyG.cSplitFactorFastGWf ([CField.one] : CPolyG β) h.1.2).1
+  toPolyG (CPolyG.cSplitFactorFastG ([CField.one] : CPolyG β) h.1.2).1
     = toPolyG h.1.2
 
 /-- The fuel-free canonicalized weak-normalization guarantee. -/
@@ -57,9 +57,9 @@ def IsCanonNormalizedWf (f q' : QFunNZG β) : Prop :=
   IsWeaklyNormalizedNormWf (qReduce (weakNormalizedF f q'))
 
 /-- The fuel-free Boolean check decides `IsCanonNormalizedWf`. -/
-theorem cisCanonNormalizedGWf_iff (f q' : QFunNZG β) :
-    cisCanonNormalizedGWf (weakNormalizedF f q') = true ↔ IsCanonNormalizedWf f q' := by
-  unfold cisCanonNormalizedGWf IsCanonNormalizedWf IsWeaklyNormalizedNormWf
+theorem cisCanonNormalizedG_iff (f q' : QFunNZG β) :
+    cisCanonNormalizedG (weakNormalizedF f q') = true ↔ IsCanonNormalizedWf f q' := by
+  unfold cisCanonNormalizedG IsCanonNormalizedWf IsWeaklyNormalizedNormWf
   rw [CPolyG.cisZeroG_iff]
   simp only [denote, sub_eq_zero]
   rfl
@@ -72,42 +72,42 @@ section Repin
 
 variable {β : Type*} [CField β] [CFieldSpec β] [CDiffField β] [CFracGcdCoreWf β]
 
-/-- For `ftilde = weakNormalizedF f q'` (`q'` the lift of `cWeakNormalizerGWf [1] f.1.1 f.1.2`), the
+/-- For `ftilde = weakNormalizedF f q'` (`q'` the lift of `cWeakNormalizerG [1] f.1.1 f.1.2`), the
 core check on the reduced input equals the wrapper check on the pre-reduce input. -/
-theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized (f : QFunNZG β) :
-    cisCanonNormalizedCoreGWf (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-      = cisCanonNormalizedGWf (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
-  cisCanonNormalizedCoreGWf_qReduce
+theorem cisCanonNormalizedCoreG_qReduce_weakNormalized (f : QFunNZG β) :
+    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+      = cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
+  cisCanonNormalizedCoreG_qReduce
     (weakNormalizedF f
-      (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))
+      (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)))
 
 /-- The core check on the reduced weak-normalized input passes iff `IsCanonNormalizedWf` holds. -/
-theorem cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
-    cisCanonNormalizedCoreGWf (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)))) = true
+theorem cisCanonNormalizedCoreG_qReduce_weakNormalized_iff [CFieldDomain β] (f : QFunNZG β) :
+    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)))) = true
       ↔ IsCanonNormalizedWf f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2)) := by
-  rw [cisCanonNormalizedCoreGWf_qReduce_weakNormalized]
-  exact cisCanonNormalizedGWf_iff f _
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2)) := by
+  rw [cisCanonNormalizedCoreG_qReduce_weakNormalized]
+  exact cisCanonNormalizedG_iff f _
 
 /-! ### Restatement against the intended wording (anonymous `example`) -/
 
 -- The same re-pin reconciliation stated entirely on the Wf gate.
 example (f : QFunNZG β) :
-    cisCanonNormalizedCoreGWf (qReduce (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))))
-      = cisCanonNormalizedGWf (weakNormalizedF f
-        (qOfPolyNZG (cWeakNormalizerGWf ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
-  cisCanonNormalizedCoreGWf_qReduce_weakNormalized f
+    cisCanonNormalizedCoreG (qReduce (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))))
+      = cisCanonNormalizedG (weakNormalizedF f
+        (qOfPolyNZG (cWeakNormalizerG ([CField.one] : CPolyG β) f.1.1 f.1.2))) :=
+  cisCanonNormalizedCoreG_qReduce_weakNormalized f
 
 end Repin
 
 /-! ### Axiom audit -/
 
-#print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized
-#print axioms cisCanonNormalizedCoreGWf_qReduce_weakNormalized_iff
+#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized
+#print axioms cisCanonNormalizedCoreG_qReduce_weakNormalized_iff
 
 /-! ### The canonical-normality predicate and soundness-gate witness -/
 
